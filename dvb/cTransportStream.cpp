@@ -476,8 +476,7 @@ int cTransportStream::cPidInfo::addToBuffer (uint8_t* buf, int bufSize) {
 //}}}
 //{{{  class cTransportStream::cService
 //{{{
-cTransportStream::cService::cService (uint16_t sid, ::cOptions* options) :
-   mSid(sid), mOptions(options) {
+cTransportStream::cService::cService (uint16_t sid, cBaseOptions* options) : mSid(sid), mOptions(options) {
 
   mRenderStreams[eRenderVideo].setLabel ("vid:");
   mRenderStreams[eRenderAudio].setLabel ("aud:");
@@ -732,10 +731,8 @@ void cTransportStream::cService::writeSection (uint8_t* ts, uint8_t* tsSectionSt
 //}}}
 //}}}
 
-cTransportStream::cTransportStream (const cDvbMultiplex& dvbMultiplex, ::cOptions* options) :
-  mDvbMultiplex(dvbMultiplex),
-  mOptions(options),
-  mTransportStreamOptions(dynamic_cast<cTransportStream::cOptions*>(options)) {}
+cTransportStream::cTransportStream (const cDvbMultiplex& dvbMultiplex, cBaseOptions* options) :
+  mDvbMultiplex(dvbMultiplex), mOptions(options) {}
 
 // gets
 //{{{
@@ -1009,8 +1006,8 @@ cTransportStream::cPidInfo* cTransportStream::getPsiPidInfo (uint16_t pid) {
 //{{{
 void cTransportStream::foundService (cService& service) {
 
-  if (mTransportStreamOptions->mShowAllServices ||
-      (mTransportStreamOptions->mShowFirstService && !mShowingFirstService)) {
+  if ((dynamic_cast<cOptions*>(mOptions))->mShowAllServices ||
+      ((dynamic_cast<cOptions*>(mOptions))->mShowFirstService && !mShowingFirstService)) {
 
     if (service.getRenderStream (eRenderType(eRenderVideo)).isDefined()) {
       service.toggleAll();
@@ -1032,10 +1029,10 @@ void cTransportStream::startServiceProgram (cService& service,
   lock_guard<mutex> lockGuard (mRecordFileMutex);
   service.closeFile();
 
-  if ((selected || service.getChannelRecord() || (dynamic_cast<cTransportStream::cOptions*>(mOptions))->mRecordAll) &&
+  if ((selected || service.getChannelRecord() || (dynamic_cast<cOptions*>(mOptions))->mRecordAll) &&
       service.getRenderStream (eRenderVideo).isDefined() &&
       (service.getRenderStream(eRenderAudio).isDefined())) {
-    string filePath = mTransportStreamOptions->mRecordRoot +
+    string filePath = (dynamic_cast<cOptions*>(mOptions))->mRecordRoot +
                       service.getChannelRecordName() +
                       date::format ("%d %b %y %a %H.%M.%S ", date::floor<chrono::seconds>(tdtTime)) +
                       utils::getValidFileString (programName) +

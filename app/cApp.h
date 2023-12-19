@@ -17,9 +17,8 @@ struct ImFont;
 class cApp {
 public:
   //{{{
-  class cOptions : public ::cOptions {
+  class cOptions : public cBaseOptions {
   public:
-    cOptions() = default;
     virtual ~cOptions() = default;
 
     std::string getString() const { return "log123 full free"; }
@@ -71,7 +70,7 @@ public:
     };
   //}}}
 
-  cApp (const std::string& name, cApp::cOptions* options, iUI* ui);
+  cApp (const std::string& name, cOptions* options, iUI* ui);
   virtual ~cApp();
 
   // get interfaces

@@ -29,8 +29,7 @@ public:
     };
   //}}}
 
-  cRender (bool queued, const std::string& name, const std::string& threadName,
-           ::cOptions* options,
+  cRender (bool queued, const std::string& name, const std::string& threadName, cBaseOptions* options,
            uint8_t streamType, uint16_t pid,
            int64_t ptsDuration, size_t maxFrames,
            std::function <cFrame* ()> getFrameCallback,
@@ -67,7 +66,8 @@ protected:
   size_t getQueueSize() const;
   float getQueueFrac() const;
 
-  ::cOptions* mOptions;
+  // vars
+  cBaseOptions* mOptions;
 
   std::shared_mutex mSharedMutex;
   cDecoder* mDecoder = nullptr;

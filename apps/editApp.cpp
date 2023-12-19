@@ -43,8 +43,6 @@
 #include "../app/cPlatform.h"
 #include "../app/cGraphics.h"
 #include "../app/myImgui.h"
-#include "../font/itcSymbolBold.h"
-#include "../font/droidSansMono.h"
 
 using namespace std;
 //}}}
@@ -4663,8 +4661,6 @@ int main (int numArgs, char* args[]) {
 
   // app
   cEditApp editApp (options, new cEditUI());
-  editApp.setMainFont (ImGui::GetIO().Fonts->AddFontFromMemoryCompressedTTF (&itcSymbolBold, itcSymbolBoldSize, 16.f));
-  editApp.setMonoFont (ImGui::GetIO().Fonts->AddFontFromMemoryCompressedTTF (&droidSansMono, droidSansMonoSize, 16.f));
   editApp.setDocumentName (fileName.empty() ? "../../fed/cEditUI.cpp" : fileName, memEdit);
   editApp.mainUILoop();
 

@@ -31,7 +31,7 @@ constexpr size_t kMaxFrames = 0;
 
 // public:
 //{{{
-cSubtitleRender::cSubtitleRender (const string& name, uint8_t streamType, uint16_t pid, ::cOptions* options)
+cSubtitleRender::cSubtitleRender (const string& name, uint8_t streamType, uint16_t pid, cBaseOptions* options)
     : cRender(kQueued, name, "sub", options, streamType, pid, kPtsPer25HzFrame, kMaxFrames,
 
               // getFrame lambda

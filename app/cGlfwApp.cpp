@@ -38,6 +38,8 @@
 // app
 #include "cPlatform.h"
 #include "cGraphics.h"
+#include "../font/itcSymbolBold.h"
+#include "../font/droidSansMono.h"
 
 // utils
 #include "../common/cLog.h"
@@ -321,6 +323,9 @@ cApp::cApp (const string& name, cApp::cOptions* options, iUI* ui) :
       }
     else
       cLog::log (LOGERROR, "cApp - graphics init failed");
+
+    setMainFont (ImGui::GetIO().Fonts->AddFontFromMemoryCompressedTTF (&itcSymbolBold, itcSymbolBoldSize, 16.f));
+    setMonoFont (ImGui::GetIO().Fonts->AddFontFromMemoryCompressedTTF (&droidSansMono, droidSansMonoSize, 16.f));
     }
   }
 //}}}

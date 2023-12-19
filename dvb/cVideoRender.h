@@ -22,7 +22,7 @@ public:
     };
   //}}}
 
-  cVideoRender (const std::string& name, uint8_t streamType, uint16_t pid, ::cOptions* options);
+  cVideoRender (const std::string& name, uint8_t streamType, uint16_t pid, cBaseOptions* options);
   virtual ~cVideoRender() = default;
 
   uint16_t getWidth() const { return mWidth; }

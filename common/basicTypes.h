@@ -438,9 +438,9 @@ struct cColor {
 //}}}
 
 //{{{
-class cOptions {
+class cBaseOptions {
 public:
-  virtual ~cOptions() = default;
+  virtual ~cBaseOptions() = default;
   };
 //}}}
 

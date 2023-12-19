@@ -208,7 +208,7 @@ public:
   //{{{
   class cService {
   public:
-    cService (uint16_t sid, ::cOptions* options);
+    cService (uint16_t sid, cBaseOptions* options);
     ~cService();
 
     // gets
@@ -267,7 +267,7 @@ public:
     //{{{  vars
     // var
     const uint16_t mSid;
-    ::cOptions* mOptions = nullptr;
+    cBaseOptions* mOptions = nullptr;
 
     uint16_t mProgramPid = 0;
 
@@ -287,7 +287,7 @@ public:
     };
   //}}}
 
-  cTransportStream (const cDvbMultiplex& dvbMultiplex, ::cOptions* options);
+  cTransportStream (const cDvbMultiplex& dvbMultiplex, cBaseOptions* options);
   virtual ~cTransportStream() { clear(); }
 
   //{{{  gets
@@ -343,8 +343,7 @@ private:
 
   // vars
   const cDvbMultiplex mDvbMultiplex;
-  ::cOptions* mOptions;
-  cOptions* mTransportStreamOptions;
+  cBaseOptions* mOptions;
   bool mShowingFirstService = false;
 
   std::mutex mMutex;

@@ -42,8 +42,6 @@
 #include "../app/cPlatform.h"
 #include "../app/cGraphics.h"
 #include "../app/myImgui.h"
-#include "../font/itcSymbolBold.h"
-#include "../font/droidSansMono.h"
 
 // decoders
 //{{{  libav
@@ -1726,9 +1724,11 @@ namespace {
         tellyApp.toggleShowSubtitle();
       //}}}
       //{{{  draw motionVectors button
-      ImGui::SameLine();
-      if (toggleButton ("motion", tellyApp.getOptions()->mShowMotionVectors))
-        tellyApp.toggleShowMotionVectors();
+      if (tellyApp.getOptions()->mHasMotionVectors) {
+        ImGui::SameLine();
+        if (toggleButton ("motion", tellyApp.getOptions()->mShowMotionVectors))
+          tellyApp.toggleShowMotionVectors();
+        }
       //}}}
       //{{{  draw fullScreen button
       if (tellyApp.getPlatform().hasFullScreen()) {
@@ -2194,27 +2194,20 @@ int main (int numArgs, char* args[]) {
                                      options->cTellyOptions::getString()));
   if (options->mPlaySong) {
     cSongApp songApp (options, new cSongUI());
-    songApp.setMainFont (ImGui::GetIO().Fonts->AddFontFromMemoryCompressedTTF (&itcSymbolBold, itcSymbolBoldSize, 20.f));
-    songApp.setMonoFont (ImGui::GetIO().Fonts->AddFontFromMemoryCompressedTTF (&droidSansMono, droidSansMonoSize, 20.f));
     songApp.setSongName (options->mFileName);
     songApp.mainUILoop();
-    }
-  else {
-    cTellyApp tellyApp (options, new cTellyUI());
-    if (options->mHasGui) {
-      tellyApp.setMainFont (ImGui::GetIO().Fonts->AddFontFromMemoryCompressedTTF (&itcSymbolBold, itcSymbolBoldSize, 18.f));
-      tellyApp.setMonoFont (ImGui::GetIO().Fonts->AddFontFromMemoryCompressedTTF (&droidSansMono, droidSansMonoSize, 18.f));
-      }
-    if (options->mFileName.empty()) {
-      options->mRecordRoot = kRootDir;
-      tellyApp.liveDvbSource (options->mMultiplex, options);
-      }
-    else {
-      options->mShowFirstService = true;
-      tellyApp.fileSource (options->mFileName, options);
-      }
-    tellyApp.mainUILoop();
+    return EXIT_SUCCESS;
     }
 
+  cTellyApp tellyApp (options, new cTellyUI());
+  if (options->mFileName.empty()) {
+    options->mRecordRoot = kRootDir;
+    tellyApp.liveDvbSource (options->mMultiplex, options);
+    }
+  else {
+    options->mShowFirstService = true;
+    tellyApp.fileSource (options->mFileName, options);
+    }
+  tellyApp.mainUILoop();
   return EXIT_SUCCESS;
   }
