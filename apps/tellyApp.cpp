@@ -86,16 +86,16 @@ using namespace std;
 //}}}
 namespace {
   //{{{
-  class cTellyOptions : public cApp::cAppOptions,
-                        public cTransportStream::cTransportStreamOptions,
-                        public cRender::cRenderOptions,
-                        public cAudioRender::cAudioRenderOptions,
-                        public cVideoRender::cVideoRenderOptions,
-                        public cFFmpegVideoDecoder::cFFmpegVideoDecoderOptions {
+  class cTellyOptions : public cApp::cOptions,
+                        public cTransportStream::cOptions,
+                        public cRender::cOptions,
+                        public cAudioRender::cOptions,
+                        public cVideoRender::cOptions,
+                        public cFFmpegVideoDecoder::cOptions {
   public:
     virtual ~cTellyOptions() = default;
 
-    string getOptionsString() const { return "song sub motion multiplex filename"; }
+    string getString() const { return "song sub motion multiplex filename"; }
 
     // vars
     bool mPlaySong = false;
@@ -2190,8 +2190,8 @@ int main (int numArgs, char* args[]) {
   // log
   cLog::init (options->mLogLevel);
   cLog::log (LOGNOTICE, fmt::format ("tellyApp head all simple {} {}",
-                                     options->cApp::cAppOptions::getOptionsString(),
-                                     options->cTellyOptions::getOptionsString()));
+                                     (dynamic_cast<cApp::cOptions*>(options))->cApp::cOptions::getString(),
+                                     options->cTellyOptions::getString()));
   if (options->mPlaySong) {
     cSongApp songApp (options, new cSongUI());
     songApp.setMainFont (ImGui::GetIO().Fonts->AddFontFromMemoryCompressedTTF (&itcSymbolBold, itcSymbolBoldSize, 20.f));

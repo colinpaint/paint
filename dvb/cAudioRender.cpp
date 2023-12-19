@@ -46,9 +46,9 @@ constexpr int64_t kDefaultPtsPerFrame = 1920;
 
 // cAudioRender
 //{{{
-cAudioRender::cAudioRender (const string& name, uint8_t streamType, uint16_t pid, cOptions* options)
+cAudioRender::cAudioRender (const string& name, uint8_t streamType, uint16_t pid, ::cOptions* options)
     : cRender(kQueued, name, "aud", options, streamType, pid,
-              kDefaultPtsPerFrame, (dynamic_cast<cRenderOptions*>(options))->mIsLive ? kLiveMaxFrames : kFileMaxFrames,
+              kDefaultPtsPerFrame, (dynamic_cast<cRender::cOptions*>(options))->mIsLive ? kLiveMaxFrames : kFileMaxFrames,
 
               // getFrame lambda
               [&]() noexcept {
@@ -73,7 +73,7 @@ cAudioRender::cAudioRender (const string& name, uint8_t streamType, uint16_t pid
                 cRender::addFrame (frame);
 
                 if (!mPlayer) {
-                  mPlayer = new cPlayer (*this, mSampleRate, getPid(), (dynamic_cast<cAudioRenderOptions*>(mOptions)->mHasAudio));
+                  mPlayer = new cPlayer (*this, mSampleRate, getPid(), (dynamic_cast<cAudioRender::cOptions*>(mOptions)->mHasAudio));
                   mPlayer->startPlayPts (audioFrame->getPts());
                   }
                 }),
@@ -107,7 +107,7 @@ string cAudioRender::getInfoString() const {
 //{{{
 bool cAudioRender::processPes (uint16_t pid, uint8_t* pes, uint32_t pesSize, int64_t pts, int64_t dts, bool skip) {
 
-  if (!((dynamic_cast<cRenderOptions*>(mOptions))->mIsLive))
+  if (!((dynamic_cast<cRender::cOptions*>(mOptions))->mIsLive))
     if (mPlayer)
       while (throttle (mPlayer->getPts()))
         this_thread::sleep_for (1ms);

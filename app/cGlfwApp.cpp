@@ -291,7 +291,7 @@ private:
 
 // cApp
 //{{{
-cApp::cApp (const string& name, cAppOptions* options, iUI* ui) :
+cApp::cApp (const string& name, cApp::cOptions* options, iUI* ui) :
     mName(name), mOptions(options), mUI(ui) {
 
   if (options->mHasGui) {

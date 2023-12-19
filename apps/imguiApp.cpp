@@ -47,7 +47,7 @@ using namespace std;
 //{{{
 class cImguiApp : public cApp {
 public:
-  cImguiApp (cAppOptions* options, iUI* ui) : cApp ("imguiApp", options, ui) {}
+  cImguiApp (cApp::cOptions* options, iUI* ui) : cApp ("imguiApp", options, ui) {}
   virtual ~cImguiApp() = default;
 
   virtual void drop (const vector<string>& dropItems) final {
@@ -94,7 +94,7 @@ public:
 int main (int numArgs, char* args[]) {
 
   // params
-  cApp::cAppOptions* options = new cApp::cAppOptions();
+  cApp::cOptions* options = new cApp::cOptions();
   options->parse (numArgs, args);
 
   // log

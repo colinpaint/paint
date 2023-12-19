@@ -28,9 +28,9 @@ enum eRenderType { eRenderVideo, eRenderAudio, eRenderDescription, eRenderSubtit
 class cTransportStream {
 public:
   //{{{
-  class cTransportStreamOptions {
+  class cOptions {
   public:
-    virtual ~cTransportStreamOptions() = default;
+    virtual ~cOptions() = default;
 
     std::string mRecordRoot;
     bool mRecordAll = false;
@@ -208,7 +208,7 @@ public:
   //{{{
   class cService {
   public:
-    cService (uint16_t sid, cOptions* options);
+    cService (uint16_t sid, ::cOptions* options);
     ~cService();
 
     // gets
@@ -267,7 +267,7 @@ public:
     //{{{  vars
     // var
     const uint16_t mSid;
-    cOptions* mOptions = nullptr;
+    ::cOptions* mOptions = nullptr;
 
     uint16_t mProgramPid = 0;
 
@@ -287,7 +287,7 @@ public:
     };
   //}}}
 
-  cTransportStream (const cDvbMultiplex& dvbMultiplex, cOptions* options);
+  cTransportStream (const cDvbMultiplex& dvbMultiplex, ::cOptions* options);
   virtual ~cTransportStream() { clear(); }
 
   //{{{  gets
@@ -343,8 +343,8 @@ private:
 
   // vars
   const cDvbMultiplex mDvbMultiplex;
-  cOptions* mOptions;
-  cTransportStreamOptions* mTransportStreamOptions;
+  ::cOptions* mOptions;
+  cOptions* mTransportStreamOptions;
   bool mShowingFirstService = false;
 
   std::mutex mMutex;

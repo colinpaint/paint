@@ -11,7 +11,7 @@ class cSubtitleImage;
 
 class cSubtitleRender : public cRender {
 public:
-  cSubtitleRender (const std::string& name, uint8_t streamType, uint16_t pid, cOptions* options);
+  cSubtitleRender (const std::string& name, uint8_t streamType, uint16_t pid, ::cOptions* options);
   virtual ~cSubtitleRender() = default;
 
   size_t getNumLines() const;

@@ -1516,7 +1516,7 @@ namespace {
   //{{{
   class cEditApp : public cApp {
   public:
-    cEditApp (cAppOptions* options, iUI* ui) : cApp ("fed", options, ui) {}
+    cEditApp (cApp::cOptions* options, iUI* ui) : cApp ("fed", options, ui) {}
     virtual ~cEditApp() = default;
 
     bool getMemEditing() const { return mMemEditing; };
@@ -4641,7 +4641,7 @@ namespace {
 
 int main (int numArgs, char* args[]) {
 
-  cApp::cAppOptions* options = new cApp::cAppOptions();
+  cApp::cOptions* options = new cApp::cOptions();
 
   bool memEdit = false;
   string fileName;

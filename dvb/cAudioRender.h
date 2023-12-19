@@ -16,15 +16,15 @@ class cPlayer;
 class cAudioRender : public cRender {
 public:
   //{{{
-  class cAudioRenderOptions {
+  class cOptions {
   public:
-    virtual ~cAudioRenderOptions() = default;
+    virtual ~cOptions() = default;
 
     bool mHasAudio = true;
     };
   //}}}
 
-  cAudioRender (const std::string& name, uint8_t streamType, uint16_t pid, cOptions* options);
+  cAudioRender (const std::string& name, uint8_t streamType, uint16_t pid, ::cOptions* options);
   virtual ~cAudioRender() = default;
 
   // gets

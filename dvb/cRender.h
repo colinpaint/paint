@@ -21,16 +21,16 @@ class cDecoder;
 class cRender {
 public:
   //{{{
-  class cRenderOptions {
+  class cOptions {
   public:
-    virtual ~cRenderOptions() = default;
+    virtual ~cOptions() = default;
 
     bool mIsLive = false;
     };
   //}}}
 
   cRender (bool queued, const std::string& name, const std::string& threadName,
-           cOptions* options,
+           ::cOptions* options,
            uint8_t streamType, uint16_t pid,
            int64_t ptsDuration, size_t maxFrames,
            std::function <cFrame* ()> getFrameCallback,
@@ -67,7 +67,7 @@ protected:
   size_t getQueueSize() const;
   float getQueueFrac() const;
 
-  cOptions* mOptions;
+  ::cOptions* mOptions;
 
   std::shared_mutex mSharedMutex;
   cDecoder* mDecoder = nullptr;

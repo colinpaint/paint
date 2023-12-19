@@ -17,12 +17,12 @@ struct ImFont;
 class cApp {
 public:
   //{{{
-  class cAppOptions : public cOptions {
+  class cOptions : public ::cOptions {
   public:
-    cAppOptions() = default;
-    virtual ~cAppOptions() = default;
+    cOptions() = default;
+    virtual ~cOptions() = default;
 
-    std::string getOptionsString() const { return "log123 full free"; }
+    std::string getString() const { return "log123 full free"; }
 
     //{{{
     bool parse (std::string param) {
@@ -71,7 +71,7 @@ public:
     };
   //}}}
 
-  cApp (const std::string& name, cAppOptions* options, iUI* ui);
+  cApp (const std::string& name, cApp::cOptions* options, iUI* ui);
   virtual ~cApp();
 
   // get interfaces
@@ -96,7 +96,7 @@ public:
 
 private:
   std::string mName;
-  cAppOptions* mOptions;
+  cApp::cOptions* mOptions;
   iUI* mUI;
 
   cPlatform* mPlatform = nullptr;

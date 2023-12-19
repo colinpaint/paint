@@ -476,7 +476,7 @@ int cTransportStream::cPidInfo::addToBuffer (uint8_t* buf, int bufSize) {
 //}}}
 //{{{  class cTransportStream::cService
 //{{{
-cTransportStream::cService::cService (uint16_t sid, cOptions* options) :
+cTransportStream::cService::cService (uint16_t sid, ::cOptions* options) :
    mSid(sid), mOptions(options) {
 
   mRenderStreams[eRenderVideo].setLabel ("vid:");
@@ -732,10 +732,10 @@ void cTransportStream::cService::writeSection (uint8_t* ts, uint8_t* tsSectionSt
 //}}}
 //}}}
 
-cTransportStream::cTransportStream (const cDvbMultiplex& dvbMultiplex, cOptions* options) :
+cTransportStream::cTransportStream (const cDvbMultiplex& dvbMultiplex, ::cOptions* options) :
   mDvbMultiplex(dvbMultiplex),
   mOptions(options),
-  mTransportStreamOptions(dynamic_cast<cTransportStreamOptions*>(options)) {}
+  mTransportStreamOptions(dynamic_cast<cTransportStream::cOptions*>(options)) {}
 
 // gets
 //{{{
@@ -1032,7 +1032,7 @@ void cTransportStream::startServiceProgram (cService& service,
   lock_guard<mutex> lockGuard (mRecordFileMutex);
   service.closeFile();
 
-  if ((selected || service.getChannelRecord() || (dynamic_cast<cTransportStreamOptions*>(mOptions))->mRecordAll) &&
+  if ((selected || service.getChannelRecord() || (dynamic_cast<cTransportStream::cOptions*>(mOptions))->mRecordAll) &&
       service.getRenderStream (eRenderVideo).isDefined() &&
       (service.getRenderStream(eRenderAudio).isDefined())) {
     string filePath = mTransportStreamOptions->mRecordRoot +
