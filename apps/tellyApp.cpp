@@ -2150,10 +2150,9 @@ int main (int numArgs, char* args[]) {
   cTellyOptions* options = new cTellyOptions();
   options->mMultiplex = kDvbMultiplexes[0];
   //{{{  parse commandLine params to options
-  // parse params
   for (int i = 1; i < numArgs; i++) {
     string param = args[i];
-    if (options->parse (param)) // parsed cApp option
+    if (options->parse (param)) // found cApp option
       ;
     else if (param == "head") {
       options->mHasGui = false;
