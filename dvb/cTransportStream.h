@@ -20,6 +20,7 @@ class cRender;
 #include "cDvbMultiplex.h"
 //}}}
 
+constexpr int kH264StreamType = 27;
 enum eRenderType { eRenderVideo, eRenderAudio, eRenderDescription, eRenderSubtitle };
 
 class cTransportStream {

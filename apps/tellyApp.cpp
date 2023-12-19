@@ -93,17 +93,11 @@ namespace {
                         public cVideoRender::cVideoRenderOptions,
                         public cFFmpegVideoDecoder::cFFmpegVideoDecoderOptions {
   public:
-    cTellyOptions() : cApp::cAppOptions(),
-                      cTransportStream::cTransportStreamOptions(),
-                      cRender::cRenderOptions(),
-                      cAudioRender::cAudioRenderOptions(),
-                      cVideoRender::cVideoRenderOptions(),
-                      cFFmpegVideoDecoder::cFFmpegVideoDecoderOptions() {}
-
+    cTellyOptions()= default;
     virtual ~cTellyOptions() = default;
 
-    bool mPlaySong = false;
     string mFileName;
+    bool mPlaySong = false;
 
     bool mShowSubtitle = false;
     bool mShowMotionVectors = false;
@@ -1566,7 +1560,7 @@ namespace {
                 if (_stat64 (mOptions->mFileName.c_str(), &st) != -1)
               #else
                 struct stat st;
-                if (stat (mFileName.c_str(), &st) != -1)
+                if (stat (mOptions->mFileName.c_str(), &st) != -1)
               #endif
                   mFileSize = st.st_size;
               //}}}

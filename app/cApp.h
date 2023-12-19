@@ -1,5 +1,4 @@
-// cApp.h - base class - application context, platform,graphics interface, platform,graphics independent stuff
-// - should work up as proper singleton
+// cApp.h, app base class, application context, options, ui, platform,graphics
 #pragma once
 //{{{  includes
 #include <string>
@@ -25,7 +24,7 @@ public:
 
     //{{{
     bool parse (std::string param) {
-    // parse params, true if recognised
+    // parse param, true if cAppOption recognised
 
       if (param == "log1")
         mLogLevel = LOGINFO1;
@@ -34,7 +33,7 @@ public:
       else if (param == "log3")
         mLogLevel = LOGINFO3;
       else if (param == "full")
-        mFullScreen;
+        mFullScreen = true;
       else if (param == "free")
         mVsync = false;
       else

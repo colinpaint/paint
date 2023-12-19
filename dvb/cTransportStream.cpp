@@ -733,7 +733,7 @@ void cTransportStream::cService::writeSection (uint8_t* ts, uint8_t* tsSectionSt
 //}}}
 
 cTransportStream::cTransportStream (const cDvbMultiplex& dvbMultiplex, cOptions* options) :
-  mDvbMultiplex(dvbMultiplex), 
+  mDvbMultiplex(dvbMultiplex),
   mOptions(options),
   mTransportStreamOptions(dynamic_cast<cTransportStreamOptions*>(options)) {}
 
@@ -1401,7 +1401,7 @@ void cTransportStream::parsePmt (cPidInfo* pidInfo, uint8_t* buf) {
        esPidInfo.setStreamType (pmtInfo->stream_type);
        switch (esPidInfo.getStreamType()) {
          case   2: // ISO 13818-2 video
-         case  27: // H264 video
+         case  kH264StreamType: // 27 - H264 video
            service.getRenderStream (eRenderVideo).setPidStreamType (esPid, esPidInfo.getStreamType()); break;
 
          case   3: // ISO 11172-3 audio
