@@ -93,7 +93,7 @@ namespace {
   public:
     virtual ~cTellyOptions() = default;
 
-    string getString() const { return "song sub motion multiplex filename"; }
+    string getString() const { return "song sub motion hd|bbc|itv filename"; }
 
     // vars
     bool mPlaySong = false;
@@ -901,6 +901,13 @@ namespace {
   //}}}
 
   // telly
+  //{{{  const string kRootDir
+  #ifdef _WIN32
+    const string kRootDir = "/tv/";
+  #else
+    const string kRootDir = "/home/pi/tv/";
+  #endif
+  //}}}
   //{{{
   const vector <cDvbMultiplex> kDvbMultiplexes = {
       { "hd", 626000000,
@@ -922,600 +929,12 @@ namespace {
       }
     };
   //}}}
-  //{{{  const string kRootDir
-  #ifdef _WIN32
-    const string kRootDir = "/tv/";
-  #else
-    const string kRootDir = "/home/pi/tv/";
-  #endif
-  //}}}
-  //{{{
-  class cView {
-  public:
-    cView (cTransportStream::cService& service) : mService(service) {}
-    //{{{
-    ~cView() {
-      delete mVideoQuad;
-
-      for (size_t i = 0; i < kMaxSubtitleLines; i++) {
-        delete mSubtitleQuads[i];
-        delete mSubtitleTextures[i];
-        }
-      }
-    //}}}
-
-    uint16_t getId() const { return mService.getSid(); }
-    bool getHover() const { return mHover; }
-
-    // verbose selectState gets
-    bool getUnselected() const { return mSelect == eUnselected; }
-    bool getSelected() const { return mSelect != eUnselected; }
-    bool getSelectedFull() const { return mSelect == eSelectedFull; }
-
-    bool pick (cVec2 pos) { return mRect.isInside (pos); }
-    //{{{
-    bool hover() {
-      mHover = ImGui::IsMouseHoveringRect (ImVec2 ((float)mRect.left, (float)mRect.top),
-                                           ImVec2 ((float)mRect.right, (float)mRect.bottom));
-      return mHover;
-      }
-    //}}}
-    //{{{
-    bool select (uint16_t id) {
-
-      if (id != getId())
-        mSelect = eUnselected;
-      else if (mSelect == eUnselected)
-        mSelect = eSelected;
-      else if (mSelect == eSelectedFull)
-        mSelect = eSelected;
-      else if (mSelect == eSelected) {
-        mSelect = eSelectedFull;
-        return true;
-        }
-
-      return false;
-      }
-    //}}}
-
-    //{{{
-    void draw (cGraphics& graphics, cTellyOptions* options, bool selectFull, size_t numViews, size_t viewIndex) {
-
-      cVideoRender& videoRender = dynamic_cast<cVideoRender&> (
-        mService.getRenderStream (eRenderVideo).getRender());
-
-      int64_t playPts = mService.getRenderStream (eRenderAudio).getPts();
-      if (mService.getRenderStream (eRenderAudio).isEnabled()) {
-        //{{{  get playPts from audioStream
-        cAudioRender& audioRender = dynamic_cast<cAudioRender&>(
-          mService.getRenderStream (eRenderAudio).getRender());
-
-        if (audioRender.getPlayer())
-          playPts = audioRender.getPlayer()->getPts();
-        }
-        //}}}
-
-      if (!selectFull || getSelected()) {
-        // view selected or no views selected
-        float viewportWidth = ImGui::GetWindowWidth();
-        float viewportHeight = ImGui::GetWindowHeight();
-        cMat4x4 projection (0.f,viewportWidth, 0.f,viewportHeight, -1.f,1.f);
-
-        float scale = getScale (numViews);
-
-        // show nearest videoFrame to playPts
-        cVideoFrame* videoFrame = videoRender.getVideoFrameAtOrAfterPts (playPts);
-        if (videoFrame) {
-          //{{{  draw video
-          mVideoShader->use();
-
-          // texture
-          cTexture& texture = videoFrame->getTexture (graphics);
-          texture.setSource();
-
-          // model
-          mModel = cMat4x4();
-          cVec2 fraction = gridFractionalPosition (viewIndex, numViews);
-          mModel.setTranslate ({ (fraction.x - (0.5f * scale)) * viewportWidth,
-                                 (fraction.y - (0.5f * scale)) * viewportHeight });
-          mModel.size ({ scale * viewportWidth / videoFrame->getWidth(),
-                         scale * viewportHeight / videoFrame->getHeight() });
-          mVideoShader->setModelProjection (mModel, projection);
-
-          // ensure quad is created and drawIt
-          if (!mVideoQuad)
-            mVideoQuad = graphics.createQuad (videoFrame->getSize());
-
-          mVideoQuad->draw();
-
-          mRect = cRect (mModel.transform (cVec2(0, videoFrame->getHeight()), viewportHeight),
-                         mModel.transform (cVec2(videoFrame->getWidth(), 0), viewportHeight));
-
-          if (getSelectedFull() && options->mShowMotionVectors)
-            for (auto& motionVector : videoFrame->getMotionVectors())
-              ImGui::GetWindowDrawList()->AddLine (
-                { (float)mRect.left + (motionVector.mSrcx * viewportWidth / videoFrame->getWidth()),
-                  (float)mRect.top +  (motionVector.mSrcy * viewportHeight / videoFrame->getHeight()) },
-                { (float)mRect.left + (motionVector.mDstx * viewportWidth / videoFrame->getWidth()),
-                  (float)mRect.top +  (motionVector.mDsty * viewportHeight / videoFrame->getHeight()) },
-                motionVector.mSource > 0 ? 0xc0c0c0c0 : 0xc000c0c0, 1.f);
-          //}}}
-
-          if ((getHover() || getSelected()) && !getSelectedFull())
-            //{{{  draw select rectangle
-            ImGui::GetWindowDrawList()->AddRect ({ (float)mRect.left, (float)mRect.top },
-                                                 { (float)mRect.right, (float)mRect.bottom },
-                                                 getHover() ? 0xff20ffff : 0xff20ff20, 4.f, 0, 4.f);
-            //}}}
-
-          if (options->mShowSubtitle) {
-            cSubtitleRender& subtitleRender = dynamic_cast<cSubtitleRender&> (
-              mService.getRenderStream (eRenderSubtitle).getRender());
-            if (mService.getRenderStream (eRenderAudio).isEnabled()) {
-              //{{{  draw subtitles
-              mSubtitleShader->use();
-
-              for (size_t line = 0; line < subtitleRender.getNumLines(); line++) {
-                cSubtitleImage& subtitleImage = subtitleRender.getImage (line);
-
-                if (!mSubtitleTextures[line])
-                  mSubtitleTextures[line] = graphics.createTexture (cTexture::eRgba, subtitleImage.getSize());
-                mSubtitleTextures[line]->setSource();
-
-                // update subtitle texture if image dirty
-                if (subtitleImage.isDirty())
-                  mSubtitleTextures[line]->setPixels (subtitleImage.getPixels(), nullptr);
-                subtitleImage.setDirty (false);
-
-                float xpos = (float)subtitleImage.getXpos() / videoFrame->getWidth();
-                float ypos = (float)(videoFrame->getHeight() - subtitleImage.getYpos()) / videoFrame->getHeight();
-                mModel.setTranslate ({ (fraction.x + ((xpos - 0.5f) * scale)) * viewportWidth,
-                                       (fraction.y + ((ypos - 0.5f) * scale)) * viewportHeight });
-                mSubtitleShader->setModelProjection (mModel, projection);
-
-                // ensure quad is created (assumes same size) and drawIt
-                if (!mSubtitleQuads[line])
-                  mSubtitleQuads[line] = graphics.createQuad (mSubtitleTextures[line]->getSize());
-                mSubtitleQuads[line]->draw();
-                }
-              }
-              //}}}
-            }
-          }
-
-        if (mService.getRenderStream (eRenderAudio).isEnabled()) {
-          //{{{  mute, draw audioMeter, draw framesGraphic
-          cAudioRender& audioRender = dynamic_cast<cAudioRender&>(
-            mService.getRenderStream (eRenderAudio).getRender());
-
-          if (audioRender.getPlayer())
-            audioRender.getPlayer()->setMute (getUnselected());
-
-          // draw audio meter
-          mAudioMeterView.draw (audioRender, playPts,
-                                ImVec2((float)mRect.right - (0.5f * ImGui::GetTextLineHeight()),
-                                       (float)mRect.bottom - (0.5f * ImGui::GetTextLineHeight())));
-          if (getSelectedFull())
-            mFramesView.draw (audioRender, videoRender, playPts,
-                              ImVec2((float)mRect.getCentre().x,
-                                     (float)mRect.bottom - (0.5f * ImGui::GetTextLineHeight())));
-          }
-          //}}}
-
-        //{{{  draw service title
-        string title = mService.getChannelName();
-        if (getSelectedFull())
-          title += " " + mService.getNowTitleString();
-
-        ImGui::SetCursorPos ({(float)mRect.left + (ImGui::GetTextLineHeight() * 0.25f),
-                              (float)mRect.bottom - ImGui::GetTextLineHeight()});
-        ImGui::TextColored ({0.f, 0.f,0.f,1.f}, title.c_str());
-
-        ImGui::SetCursorPos ({(float)mRect.left - 2.f + (ImGui::GetTextLineHeight() * 0.25f),
-                              (float)mRect.bottom - 2.f - ImGui::GetTextLineHeight()});
-        ImGui::TextColored ({1.f, 1.f,1.f,1.f}, title.c_str());
-        //}}}
-        }
-      }
-    //}}}
-
-    inline static cTextureShader* mVideoShader = nullptr;
-    inline static cTextureShader* mSubtitleShader = nullptr;
-
-  private:
-    enum eSelect { eUnselected, eSelected, eSelectedFull };
-    //{{{
-    class cFramesView {
-    public:
-      cFramesView() {}
-      ~cFramesView() = default;
-
-      //{{{
-      void draw (cAudioRender& audioRender, cVideoRender& videoRender, int64_t playerPts, ImVec2 pos) {
-
-        float ptsScale = mPixelsPerVideoFrame / videoRender.getPtsDuration();
-
-        { // lock video during iterate
-        shared_lock<shared_mutex> lock (videoRender.getSharedMutex());
-        for (auto& frame : videoRender.getFramesMap()) {
-          //{{{  draw video frames
-          float posL = pos.x + (frame.second->getPts() - playerPts) * ptsScale;
-          float posR = pos.x + ((frame.second->getPts() - playerPts + frame.second->getPtsDuration()) * ptsScale) - 1.f;
-
-          // pesSize I white / P purple / B blue - ABGR color
-          cVideoFrame* videoFrame = dynamic_cast<cVideoFrame*>(frame.second);
-          ImGui::GetWindowDrawList()->AddRectFilled (
-            { posL, pos.y - addValue ((float)videoFrame->getPesSize(), mMaxPesSize, mMaxDisplayPesSize,
-                                         kLines * ImGui::GetTextLineHeight()) },
-            { posR, pos.y },
-            (videoFrame->mFrameType == 'I') ?
-              0xffffffff : (videoFrame->mFrameType == 'P') ?
-                0xffFF40ff : 0xffFF4040);
-          }
-          //}}}
-        }
-
-        { // lock audio during iterate
-        shared_lock<shared_mutex> lock (audioRender.getSharedMutex());
-        for (auto& frame : audioRender.getFramesMap()) {
-          //{{{  draw audio frames
-          float posL = pos.x + (frame.second->getPts() - playerPts) * ptsScale;
-          float posR = pos.x + ((frame.second->getPts() - playerPts + frame.second->getPtsDuration()) * ptsScale) - 1.f;
-
-          cAudioFrame* audioFrame = dynamic_cast<cAudioFrame*>(frame.second);
-          ImGui::GetWindowDrawList()->AddRectFilled (
-            { posL, pos.y - addValue (audioFrame->getSimplePower(), mMaxPower, mMaxDisplayPower,
-                                      kLines * ImGui::GetTextLineHeight()) },
-            { posR, pos.y },
-            0x8000ff00);
-          }
-          //}}}
-        }
-
-        // draw playPts centre bar
-        ImGui::GetWindowDrawList()->AddRectFilled (
-          { pos.x-1.f, pos.y - (kLines * ImGui::GetTextLineHeight()) },
-          { pos.x+1.f, pos.y },
-          0xffffffff);
-
-        // agc scaling back to max display values from max values
-        agc (mMaxPesSize, mMaxDisplayPesSize, 100.f, 10000.f);
-        agc (mMaxPower, mMaxDisplayPower, 0.001f, 0.1f);
-        }
-      //}}}
-
-    private:
-      //{{{
-      float addValue (float value, float& maxValue, float& maxDisplayValue, float scale) {
-
-        if (value > maxValue)
-          maxValue = value;
-        if (value > maxDisplayValue)
-          maxDisplayValue = value;
-
-        return scale * value / maxValue;
-        }
-      //}}}
-      //{{{
-      void agc (float& maxValue, float& maxDisplayValue, float revert, float minValue) {
-
-        // slowly adjust scale to displayMaxValue
-        if (maxDisplayValue < maxValue)
-          maxValue += (maxDisplayValue - maxValue) / revert;
-
-        if (maxValue < minValue)
-          maxValue = minValue;
-
-        // reset displayed max value
-        maxDisplayValue = 0.f;
-        }
-      //}}}
-
-      //  vars
-      const float kLines = 2.f;
-      const float mPixelsPerVideoFrame = 6.f;
-      const float mPixelsPerAudioChannel = 6.f;
-
-      float mMaxPower = 0.f;
-      float mMaxDisplayPower = 0.f;
-
-      float mMaxPesSize = 0.f;
-      float mMaxDisplayPesSize = 0.f;
-      };
-    //}}}
-    //{{{
-    class cAudioMeterView {
-    public:
-      cAudioMeterView() {}
-      ~cAudioMeterView() = default;
-
-      void draw (cAudioRender& audioRender, int64_t playerPts, ImVec2 pos) {
-        cAudioFrame* audioFrame = audioRender.getAudioFrameAtPts (playerPts);
-        if (audioFrame) {
-          size_t drawChannels = audioFrame->getNumChannels();
-          bool audio51 = (audioFrame->getNumChannels() == 6);
-          array <size_t, 6> channelOrder;
-          if (audio51) {
-            channelOrder = { 4, 0, 2, 1, 5, 3 };
-            drawChannels--;
-            }
-          else
-            channelOrder = { 0, 1, 2, 3, 4, 5 };
-
-          // draw channels
-          float x = pos.x - (drawChannels * mPixelsPerAudioChannel);
-          pos.y += 1.f;
-          float height = 8.f * ImGui::GetTextLineHeight();
-          for (size_t i = 0; i < drawChannels; i++) {
-            ImGui::GetWindowDrawList()->AddRectFilled (
-              { x, pos.y - (audioFrame->mPowerValues[channelOrder[i]] * height) },
-              { x + mPixelsPerAudioChannel - 1.f, pos.y },
-              0xff00ff00);
-            x += mPixelsPerAudioChannel;
-            }
-
-          // draw 5.1 woofer red
-          if (audio51)
-            ImGui::GetWindowDrawList()->AddRectFilled (
-              {pos.x - (5 * mPixelsPerAudioChannel), pos.y - (audioFrame->mPowerValues[channelOrder[5]] * height)},
-              {pos.x - 1.f, pos.y},
-              0x800000ff);
-          }
-        }
-
-    private:
-      //  vars
-      const float mAudioLines = 1.f;
-      const float mPixelsPerAudioChannel = 6.f;
-      };
-    //}}}
-
-    //{{{
-    float getScale (size_t numViews) const {
-      return (numViews <= 1) ? 1.f :
-        ((numViews <= 4) ? 0.5f :
-          ((numViews <= 9) ? 0.33f :
-            ((numViews <= 16) ? 0.25f : 0.20f)));
-      }
-    //}}}
-    //{{{
-    cVec2 gridFractionalPosition (size_t index, size_t numViews) {
-
-      switch (numViews) {
-        //{{{
-        case 2: // 2x1
-          switch (index) {
-            case 0: return { 1.f / 4.f, 0.5f };
-            case 1: return { 3.f / 4.f, 0.5f };
-            }
-          return { 0.5f, 0.5f };
-        //}}}
-
-        case 3:
-        //{{{
-        case 4: // 2x2
-          switch (index) {
-            case 0: return { 1.f / 4.f, 3.f / 4.f };
-            case 1: return { 3.f / 4.f, 3.f / 4.f };
-
-            case 2: return { 1.f / 4.f, 1.f / 4.f };
-            case 3: return { 3.f / 4.f, 1.f / 4.f };
-            }
-          return { 0.5f, 0.5f };
-        //}}}
-
-        case 5:
-        //{{{
-        case 6: // 3x2
-          switch (index) {
-            case 0: return { 1.f / 6.f, 4.f / 6.f };
-            case 1: return { 3.f / 6.f, 4.f / 6.f };
-            case 2: return { 5.f / 6.f, 4.f / 6.f };
-
-            case 3: return { 1.f / 6.f, 2.f / 6.f };
-            case 4: return { 3.f / 6.f, 2.f / 6.f };
-            case 5: return { 5.f / 6.f, 2.f / 6.f };
-            }
-          return { 0.5f, 0.5f };
-        //}}}
-
-        case 7:
-        case 8:
-        //{{{
-        case 9: // 3x3
-          switch (index) {
-            case 0: return { 1.f / 6.f, 5.f / 6.f };
-            case 1: return { 3.f / 6.f, 5.f / 6.f };
-            case 2: return { 5.f / 6.f, 5.f / 6.f };
-
-            case 3: return { 1.f / 6.f, 0.5f };
-            case 4: return { 3.f / 6.f, 0.5f };
-            case 5: return { 5.f / 6.f, 0.5f };
-
-            case 6: return { 1.f / 6.f, 1.f / 6.f };
-            case 7: return { 3.f / 6.f, 1.f / 6.f };
-            case 8: return { 5.f / 6.f, 1.f / 6.f };
-            }
-          return { 0.5f, 0.5f };
-        //}}}
-
-        case 10:
-        case 11:
-        case 12:
-        case 13:
-        case 14:
-        case 15:
-        //{{{
-        case 16: // 4x4
-          switch (index) {
-            case  0: return { 1.f / 8.f, 7.f / 8.f };
-            case  1: return { 3.f / 8.f, 7.f / 8.f };
-            case  2: return { 5.f / 8.f, 7.f / 8.f };
-            case  3: return { 7.f / 8.f, 7.f / 8.f };
-
-            case  4: return { 1.f / 8.f, 5.f / 8.f };
-            case  5: return { 3.f / 8.f, 5.f / 8.f };
-            case  6: return { 5.f / 8.f, 5.f / 8.f };
-            case  7: return { 7.f / 8.f, 5.f / 8.f };
-
-            case  8: return { 1.f / 8.f, 3.f / 8.f };
-            case  9: return { 3.f / 8.f, 3.f / 8.f };
-            case 10: return { 5.f / 8.f, 3.f / 8.f };
-            case 11: return { 7.f / 8.f, 3.f / 8.f };
-
-            case 12: return { 1.f / 8.f, 1.f / 8.f };
-            case 13: return { 3.f / 8.f, 1.f / 8.f };
-            case 14: return { 5.f / 8.f, 1.f / 8.f };
-            case 15: return { 7.f / 8.f, 1.f / 8.f };
-            }
-          return { 0.5f, 0.5f };
-        //}}}
-
-        default: // 1x1
-          return { 0.5f, 0.5f };
-        }
-      }
-    //}}}
-
-    // vars
-    cTransportStream::cService& mService;
-
-    bool mHover = false;
-    eSelect mSelect = eUnselected;
-
-    // video
-    cMat4x4 mModel;
-    cRect mRect = { 0,0,0,0 };
-    cQuad* mVideoQuad = nullptr;
-
-    // subtitle
-    static const size_t kMaxSubtitleLines = 4;
-    array <cQuad*, kMaxSubtitleLines> mSubtitleQuads = { nullptr };
-    array <cTexture*, kMaxSubtitleLines> mSubtitleTextures = { nullptr };
-
-    cFramesView mFramesView;
-    cAudioMeterView mAudioMeterView;
-    };
-  //}}}
-  //{{{
-  class cMultiView {
-  public:
-    size_t getNumViews() const { return mViewMap.size(); }
-
-    //{{{
-    bool hover() {
-    // run for every item to ensure mHover flag get set
-
-      bool result = false;
-
-      for (auto& view : mViewMap)
-        if (view.second.hover())
-          result = true;;
-
-      return result;
-      }
-    //}}}
-    //{{{
-    uint16_t pick (cVec2 mousePosition) {
-    // pick first view that matches
-
-      for (auto& view : mViewMap)
-        if (view.second.pick (mousePosition))
-          return view.second.getId();
-
-      return 0;
-      }
-    //}}}
-    //{{{
-    void selectById (uint16_t id) {
-    // select if id nonZero
-
-      if (id) {
-        bool selectFull = false;
-        for (auto& view : mViewMap)
-          selectFull |= view.second.select (id);
-
-        mSelectFull = selectFull;
-        }
-      }
-    //}}}
-
-    //{{{
-    void moveLeft() {
-      cLog::log (LOGINFO, fmt::format ("moveLeft"));
-      }
-    //}}}
-    //{{{
-    void moveRight() {
-      cLog::log (LOGINFO, fmt::format ("moveRight"));
-      }
-    //}}}
-    //{{{
-    void moveUp() {
-      cLog::log (LOGINFO, fmt::format ("moveUp"));
-      }
-    //}}}
-    //{{{
-    void moveDown() {
-      cLog::log (LOGINFO, fmt::format ("moveDown"));
-      }
-    //}}}
-    //{{{
-    void enter() {
-      cLog::log (LOGINFO, fmt::format ("enter"));
-      }
-    //}}}
-    //{{{
-    void space() {
-      cLog::log (LOGINFO, fmt::format ("space"));
-      }
-    //}}}
-
-    //{{{
-    void draw (cTransportStream& transportStream, cGraphics& graphics, cTellyOptions* options) {
-
-      if (!cView::mVideoShader)
-       cView::mVideoShader = graphics.createTextureShader (cTexture::eYuv420);
-
-      if (!cView::mSubtitleShader)
-        cView::mSubtitleShader = graphics.createTextureShader (cTexture::eRgba);
-
-      // update viewMap from enabled services, take care to reuse cView's
-      for (auto& pair : transportStream.getServiceMap()) {
-        cTransportStream::cService& service = pair.second;
-
-        // find service sid in viewMap
-        auto it = mViewMap.find (pair.first);
-        if (it == mViewMap.end()) {
-          if (service.getRenderStream (eRenderVideo).isEnabled())
-            // enabled and not found, add service to viewMap
-            mViewMap.emplace (service.getSid(), cView (service));
-          }
-        else if (!service.getRenderStream (eRenderVideo).isEnabled())
-          // found, but not enabled, remove service from viewMap
-          mViewMap.erase (it);
-        }
-
-      // draw views
-      size_t viewIndex = 0;
-      for (auto& view : mViewMap)
-        view.second.draw (graphics, options, mSelectFull, mSelectFull ? 1 : getNumViews(), viewIndex++);
-      }
-    //}}}
-
-  private:
-    map <uint16_t, cView> mViewMap;
-
-    bool mSelectFull = false;
-    };
-  //}}}
   //{{{
   class cTellyApp : public cApp {
   public:
     cTellyApp (cTellyOptions* options, iUI* ui) : cApp ("telly", options, ui), mOptions(options) {}
     virtual ~cTellyApp() = default;
 
-    cMultiView& getMultiView() { return mMultiView; }
     cTellyOptions* getOptions() { return mOptions; }
 
     bool hasTransportStream() { return mTransportStream; }
@@ -1523,63 +942,6 @@ namespace {
 
     void toggleShowSubtitle() { mOptions->mShowSubtitle = !mOptions->mShowSubtitle; }
     void toggleShowMotionVectors() { mOptions->mShowMotionVectors = !mOptions->mShowMotionVectors; }
-
-    // fileSource
-    bool isFileSource() const { return !mOptions->mFileName.empty(); }
-    std::string getFileName() const { return mOptions->mFileName; }
-    uint64_t getFilePos() const { return mFilePos; }
-    size_t getFileSize() const { return mFileSize; }
-    //{{{
-    void fileSource (const string& filename, cTellyOptions* options) {
-    // create fileSource, any channel
-
-      mTransportStream = new cTransportStream ({ "file", 0, {}, {}, {} }, options);
-      if (!mTransportStream) {
-        cLog::log (LOGERROR, "cTellyApp::cTransportStream create failed");
-        return;
-        }
-
-      // launch fileSource thread
-      mOptions->mFileName = cFileUtils::resolve (filename);
-      FILE* file = fopen (mOptions->mFileName.c_str(), "rb");
-      if (file) {
-        // create fileRead thread
-        thread ([=]() {
-          cLog::setThreadName ("file");
-
-          size_t blockSize = 188 * 256;
-          uint8_t* buffer = new uint8_t[blockSize];
-
-          mFilePos = 0;
-          while (true) {
-            size_t bytesRead = fread (buffer, 1, blockSize, file);
-            if (bytesRead > 0)
-              mFilePos += mTransportStream->demux (buffer, bytesRead, mFilePos, false);
-            else
-              break;
-            //{{{  get mFileSize
-            #ifdef _WIN32
-              // windows platform nonsense
-              struct _stati64 st;
-              if (_stat64 (mOptions->mFileName.c_str(), &st) != -1)
-            #else
-              struct stat st;
-              if (stat (mOptions->mFileName.c_str(), &st) != -1)
-            #endif
-                mFileSize = st.st_size;
-            //}}}
-            }
-
-          fclose (file);
-          delete [] buffer;
-          cLog::log (LOGERROR, "exit");
-          }).detach();
-        return;
-        }
-
-      cLog::log (LOGERROR, fmt::format ("cTellyApp::fileSource failed to open{}", mOptions->mFileName));
-      }
-    //}}}
 
     // liveDvbSource
     bool isDvbSource() const { return mDvbSource; }
@@ -1667,6 +1029,64 @@ namespace {
       }
     //}}}
 
+    // fileSource
+    bool isFileSource() const { return !mOptions->mFileName.empty(); }
+    std::string getFileName() const { return mOptions->mFileName; }
+    uint64_t getFilePos() const { return mFilePos; }
+    size_t getFileSize() const { return mFileSize; }
+    //{{{
+    void fileSource (const string& filename, cTellyOptions* options) {
+    // create fileSource, any channel
+
+      mTransportStream = new cTransportStream ({ "file", 0, {}, {}, {} }, options);
+      if (!mTransportStream) {
+        cLog::log (LOGERROR, "cTellyApp::cTransportStream create failed");
+        return;
+        }
+
+      // launch fileSource thread
+      mOptions->mFileName = cFileUtils::resolve (filename);
+      FILE* file = fopen (mOptions->mFileName.c_str(), "rb");
+      if (file) {
+        // create fileRead thread
+        thread ([=]() {
+          cLog::setThreadName ("file");
+
+          size_t blockSize = 188 * 256;
+          uint8_t* buffer = new uint8_t[blockSize];
+
+          mFilePos = 0;
+          while (true) {
+            size_t bytesRead = fread (buffer, 1, blockSize, file);
+            if (bytesRead > 0)
+              mFilePos += mTransportStream->demux (buffer, bytesRead, mFilePos, false);
+            else
+              break;
+            //{{{  get mFileSize
+            #ifdef _WIN32
+              // windows platform nonsense
+              struct _stati64 st;
+              if (_stat64 (mOptions->mFileName.c_str(), &st) != -1)
+            #else
+              struct stat st;
+              if (stat (mOptions->mFileName.c_str(), &st) != -1)
+            #endif
+                mFileSize = st.st_size;
+            //}}}
+            }
+
+          fclose (file);
+          delete [] buffer;
+          cLog::log (LOGERROR, "exit");
+          }).detach();
+        return;
+        }
+
+      cLog::log (LOGERROR, fmt::format ("cTellyApp::fileSource failed to open{}", mOptions->mFileName));
+      }
+    //}}}
+
+    // drop file
     //{{{
     void drop (const vector<string>& dropItems) {
     // drop fileSource
@@ -1682,18 +1102,16 @@ namespace {
     cTellyOptions* mOptions;
     cTransportStream* mTransportStream = nullptr;
 
-    cMultiView mMultiView;
-
-    // fileSource
-    FILE* mFile = nullptr;
-    uint64_t mFilePos = 0;
-    size_t mFileSize = 0;
-
     // liveDvbSource
     thread mLiveThread;
     cDvbSource* mDvbSource = nullptr;
     cDvbMultiplex mMultiplex;
     string mRecordRoot;
+
+    // fileSource
+    FILE* mFile = nullptr;
+    uint64_t mFilePos = 0;
+    size_t mFileSize = 0;
     };
   //}}}
   //{{{
@@ -1713,11 +1131,20 @@ namespace {
                                       ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove |
                                       ImGuiWindowFlags_NoScrollbar);
 
-      // draw multiView
-      if (tellyApp.hasTransportStream())
-        tellyApp.getMultiView().draw (tellyApp.getTransportStream(), tellyApp.getGraphics(), tellyApp.getOptions());
+      if (tellyApp.hasTransportStream()) {
+        // draw multiView piccies
+        mMultiView.draw (tellyApp.getTransportStream(), tellyApp.getGraphics(), tellyApp.getOptions());
 
-      drawTabs (tellyApp);
+        // draw tabs
+        ImGui::SetCursorPos ({ 0.f,0.f });
+        if (tellyApp.getTransportStream().getRecordPrograms().size())
+          mTab = (eTab)interlockedButtons (kTabNamesRecord, (uint8_t)mTab, {0.f,0.f}, true);
+        else if (tellyApp.getTransportStream().getServiceMap().size() > 1)
+          mTab = (eTab)interlockedButtons (kTabNames, (uint8_t)mTab, {0.f,0.f}, true);
+        else
+          mTab = (eTab)interlockedButtons (kTabNamesSingle, (uint8_t)mTab, {0.f,0.f}, true);
+        }
+
       //{{{  draw subtitle button
       ImGui::SameLine();
       if (toggleButton ("sub", tellyApp.getOptions()->mShowSubtitle))
@@ -1750,12 +1177,6 @@ namespace {
 
       if (tellyApp.hasTransportStream()) {
         cTransportStream& transportStream = tellyApp.getTransportStream();
-        if (transportStream.hasTdtTime()) {
-          //{{{  draw tdtTime info
-          ImGui::SameLine();
-          ImGui::TextUnformatted (transportStream.getTdtTimeString().c_str());
-          }
-          //}}}
         if (tellyApp.isFileSource()) {
           //{{{  draw filePos info
           ImGui::SameLine();
@@ -1764,14 +1185,14 @@ namespace {
           }
           //}}}
         else if (tellyApp.isDvbSource()) {
-          //{{{  draw dvbSource signal,errors info
+          //{{{  draw dvbSource signal,errors
           ImGui::SameLine();
           ImGui::TextUnformatted (fmt::format ("{} {}", tellyApp.getDvbSource().getTuneString(),
                                                         tellyApp.getDvbSource().getStatusString()).c_str());
           }
           //}}}
         if (tellyApp.getTransportStream().getNumErrors()) {
-          //{{{  draw transportStream errors info
+          //{{{  draw transportStream errors
           ImGui::SameLine();
           ImGui::TextUnformatted (fmt::format ("error:{}", tellyApp.getTransportStream().getNumErrors()).c_str());
           }
@@ -1791,12 +1212,13 @@ namespace {
         // invisible bgnd button for mouse
         ImGui::SetCursorPos ({ 0.f,0.f });
         if (ImGui::InvisibleButton ("bgnd", { ImGui::GetIO().DisplaySize.x, ImGui::GetIO().DisplaySize.y }))
-          tellyApp.getMultiView().selectById (
-            tellyApp.getMultiView().pick ({ ImGui::GetMousePos().x, ImGui::GetMousePos().y }));
-        tellyApp.getMultiView().hover();
+          mMultiView.selectById (
+            mMultiView.pick ({ ImGui::GetMousePos().x, ImGui::GetMousePos().y }));
+        mMultiView.hover();
 
         if (tellyApp.hasTransportStream() && transportStream.hasTdtTime()) {
           //{{{  draw clock
+          //ImGui::TextUnformatted (transportStream.getTdtTimeString().c_str());
           ImGui::SetCursorPos ({ ImGui::GetWindowWidth() - 90.f, 0.f} );
           clockButton ("clock", transportStream.getTdtTime(), { 80.f, 80.f });
           }
@@ -1812,6 +1234,589 @@ namespace {
     //}}}
 
   private:
+    //{{{
+    class cMultiView {
+    public:
+      size_t getNumViews() const { return mViewMap.size(); }
+
+      //{{{
+      bool hover() {
+      // run for every item to ensure mHover flag get set
+
+        bool result = false;
+
+        for (auto& view : mViewMap)
+          if (view.second.hover())
+            result = true;;
+
+        return result;
+        }
+      //}}}
+      //{{{
+      uint16_t pick (cVec2 mousePosition) {
+      // pick first view that matches
+
+        for (auto& view : mViewMap)
+          if (view.second.pick (mousePosition))
+            return view.second.getId();
+
+        return 0;
+        }
+      //}}}
+      //{{{
+      void selectById (uint16_t id) {
+      // select if id nonZero
+
+        if (id) {
+          bool selectFull = false;
+          for (auto& view : mViewMap)
+            selectFull |= view.second.select (id);
+
+          mSelectFull = selectFull;
+          }
+        }
+      //}}}
+
+      //{{{
+      void moveLeft() {
+        cLog::log (LOGINFO, fmt::format ("moveLeft"));
+        }
+      //}}}
+      //{{{
+      void moveRight() {
+        cLog::log (LOGINFO, fmt::format ("moveRight"));
+        }
+      //}}}
+      //{{{
+      void moveUp() {
+        cLog::log (LOGINFO, fmt::format ("moveUp"));
+        }
+      //}}}
+      //{{{
+      void moveDown() {
+        cLog::log (LOGINFO, fmt::format ("moveDown"));
+        }
+      //}}}
+      //{{{
+      void enter() {
+        cLog::log (LOGINFO, fmt::format ("enter"));
+        }
+      //}}}
+      //{{{
+      void space() {
+        cLog::log (LOGINFO, fmt::format ("space"));
+        }
+      //}}}
+
+      //{{{
+      void draw (cTransportStream& transportStream, cGraphics& graphics, cTellyOptions* options) {
+
+        // create static shaders here, first time see graphics interface
+        if (!cView::mVideoShader)
+          cView::mVideoShader = graphics.createTextureShader (cTexture::eYuv420);
+        if (!cView::mSubtitleShader)
+          cView::mSubtitleShader = graphics.createTextureShader (cTexture::eRgba);
+
+
+        // update viewMap from enabled services, take care to reuse cView's
+        for (auto& pair : transportStream.getServiceMap()) {
+          cTransportStream::cService& service = pair.second;
+
+          // find service sid in viewMap
+          auto it = mViewMap.find (pair.first);
+          if (it == mViewMap.end()) {
+            if (service.getRenderStream (eVideo).isDefined())
+              // enabled and not found, add service to viewMap
+              mViewMap.emplace (service.getSid(), cView (service));
+            }
+          //else if (!service.getRenderStream (eVideo).isEnabled())
+            // found, but not enabled, remove service from viewMap
+           // mViewMap.erase (it);
+          }
+
+        // draw views
+        size_t viewIndex = 0;
+        for (auto& view : mViewMap)
+          view.second.draw (graphics, options, mSelectFull, mSelectFull ? 1 : getNumViews(), viewIndex++);
+        }
+      //}}}
+
+    private:
+      //{{{
+      class cView {
+      public:
+        cView (cTransportStream::cService& service) : mService(service) {}
+        //{{{
+        ~cView() {
+          delete mVideoQuad;
+
+          for (size_t i = 0; i < kMaxSubtitleLines; i++) {
+            delete mSubtitleQuads[i];
+            delete mSubtitleTextures[i];
+            }
+          }
+        //}}}
+
+        uint16_t getId() const { return mService.getSid(); }
+        bool getHover() const { return mHover; }
+
+        // verbose selectState gets
+        bool getUnselected() const { return mSelect == eUnselected; }
+        bool getSelected() const { return mSelect != eUnselected; }
+        bool getSelectedFull() const { return mSelect == eSelectedFull; }
+
+        bool pick (cVec2 pos) { return mRect.isInside (pos); }
+        //{{{
+        bool hover() {
+          mHover = ImGui::IsMouseHoveringRect (ImVec2 ((float)mRect.left, (float)mRect.top),
+                                               ImVec2 ((float)mRect.right, (float)mRect.bottom));
+          return mHover;
+          }
+        //}}}
+        //{{{
+        bool select (uint16_t id) {
+
+          if (id != getId())
+            mSelect = eUnselected;
+          else if (mSelect == eUnselected)
+            mSelect = eSelected;
+          else if (mSelect == eSelectedFull)
+            mSelect = eSelected;
+          else if (mSelect == eSelected) {
+            mSelect = eSelectedFull;
+            return true;
+            }
+
+          return false;
+          }
+        //}}}
+
+        //{{{
+        void draw (cGraphics& graphics, cTellyOptions* options, bool selectFull, size_t numViews, size_t viewIndex) {
+
+          bool enabled = mService.getRenderStream (eVideo).isEnabled();
+          if (enabled) {
+            int64_t playPts = mService.getRenderStream (eAudio).getPts();
+            if (mService.getRenderStream (eAudio).isEnabled()) {
+              //{{{  get playPts from audioStream
+              cAudioRender& audioRender = dynamic_cast<cAudioRender&>(
+                mService.getRenderStream (eAudio).getRender());
+
+              if (audioRender.getPlayer())
+                playPts = audioRender.getPlayer()->getPts();
+              }
+              //}}}
+
+            if (!selectFull || getSelected()) {
+              // view selected or no views selected
+              float viewportWidth = ImGui::GetWindowWidth();
+              float viewportHeight = ImGui::GetWindowHeight();
+              cMat4x4 projection (0.f,viewportWidth, 0.f,viewportHeight, -1.f,1.f);
+              float scale = getScale (numViews);
+
+              // show nearest videoFrame to playPts
+              cVideoRender& videoRender = dynamic_cast<cVideoRender&>(
+                                            mService.getRenderStream (eVideo).getRender());
+              cVideoFrame* videoFrame = videoRender.getVideoFrameAtOrAfterPts (playPts);
+              if (videoFrame) {
+                //{{{  draw video
+                mVideoShader->use();
+
+                // texture
+                cTexture& texture = videoFrame->getTexture (graphics);
+                texture.setSource();
+
+                // model
+                mModel = cMat4x4();
+                cVec2 fraction = gridFractionalPosition (viewIndex, numViews);
+                mModel.setTranslate ({ (fraction.x - (0.5f * scale)) * viewportWidth,
+                                       (fraction.y - (0.5f * scale)) * viewportHeight });
+                mModel.size ({ scale * viewportWidth / videoFrame->getWidth(),
+                               scale * viewportHeight / videoFrame->getHeight() });
+                mVideoShader->setModelProjection (mModel, projection);
+
+                // ensure quad is created and drawIt
+                if (!mVideoQuad)
+                  mVideoQuad = graphics.createQuad (videoFrame->getSize());
+
+                mVideoQuad->draw();
+
+                mRect = cRect (mModel.transform (cVec2(0, videoFrame->getHeight()), viewportHeight),
+                               mModel.transform (cVec2(videoFrame->getWidth(), 0), viewportHeight));
+
+                if (getSelectedFull() && options->mShowMotionVectors)
+                  for (auto& motionVector : videoFrame->getMotionVectors())
+                    ImGui::GetWindowDrawList()->AddLine (
+                      { (float)mRect.left + (motionVector.mSrcx * viewportWidth / videoFrame->getWidth()),
+                        (float)mRect.top +  (motionVector.mSrcy * viewportHeight / videoFrame->getHeight()) },
+                      { (float)mRect.left + (motionVector.mDstx * viewportWidth / videoFrame->getWidth()),
+                        (float)mRect.top +  (motionVector.mDsty * viewportHeight / videoFrame->getHeight()) },
+                      motionVector.mSource > 0 ? 0xc0c0c0c0 : 0xc000c0c0, 1.f);
+                //}}}
+                if (options->mShowSubtitle) {
+                  //{{{  draw subtitles
+                  cSubtitleRender& subtitleRender = dynamic_cast<cSubtitleRender&> (
+                                                      mService.getRenderStream (eSubtitle).getRender());
+
+                  mSubtitleShader->use();
+
+                  for (size_t line = 0; line < subtitleRender.getNumLines(); line++) {
+                    cSubtitleImage& subtitleImage = subtitleRender.getImage (line);
+
+                    if (!mSubtitleTextures[line])
+                      mSubtitleTextures[line] = graphics.createTexture (cTexture::eRgba, subtitleImage.getSize());
+                    mSubtitleTextures[line]->setSource();
+
+                    // update subtitle texture if image dirty
+                    if (subtitleImage.isDirty())
+                      mSubtitleTextures[line]->setPixels (subtitleImage.getPixels(), nullptr);
+                    subtitleImage.setDirty (false);
+
+                    float xpos = (float)subtitleImage.getXpos() / videoFrame->getWidth();
+                    float ypos = (float)(videoFrame->getHeight() - subtitleImage.getYpos()) / videoFrame->getHeight();
+                    mModel.setTranslate ({ (fraction.x + ((xpos - 0.5f) * scale)) * viewportWidth,
+                                           (fraction.y + ((ypos - 0.5f) * scale)) * viewportHeight });
+                    mSubtitleShader->setModelProjection (mModel, projection);
+
+                    // ensure quad is created (assumes same size) and drawIt
+                    if (!mSubtitleQuads[line])
+                      mSubtitleQuads[line] = graphics.createQuad (mSubtitleTextures[line]->getSize());
+                    mSubtitleQuads[line]->draw();
+                    }
+                  }
+                  //}}}
+                }
+
+              if (mService.getRenderStream (eAudio).isEnabled()) {
+                //{{{  mute, draw audioMeter, draw framesGraphic
+                cAudioRender& audioRender = dynamic_cast<cAudioRender&>(mService.getRenderStream (eAudio).getRender());
+
+                if (audioRender.getPlayer())
+                  audioRender.getPlayer()->setMute (getUnselected());
+
+                // draw audio meter
+                mAudioMeterView.draw (audioRender, playPts,
+                                      ImVec2((float)mRect.right - (0.5f * ImGui::GetTextLineHeight()),
+                                             (float)mRect.bottom - (0.5f * ImGui::GetTextLineHeight())));
+                if (getSelectedFull())
+                  mFramesView.draw (audioRender, videoRender, playPts,
+                                    ImVec2((float)mRect.getCentre().x,
+                                           (float)mRect.bottom - (0.5f * ImGui::GetTextLineHeight())));
+                }
+                //}}}
+              }
+            }
+
+          if (!enabled || !getSelectedFull()) {
+            //{{{  draw channel title bottomLeft
+            string channelString = mService.getChannelName();
+            if (getSelectedFull())
+              channelString += " " + mService.getNowTitleString();
+
+            ImGui::SetCursorPos ({(float)mRect.left + (ImGui::GetTextLineHeight() * 0.25f),
+                                  (float)mRect.bottom - ImGui::GetTextLineHeight()});
+            ImGui::TextColored ({0.f, 0.f,0.f,1.f}, channelString.c_str());
+
+            ImGui::SetCursorPos ({(float)mRect.left - 2.f + (ImGui::GetTextLineHeight() * 0.25f),
+                                  (float)mRect.bottom - 2.f - ImGui::GetTextLineHeight()});
+            ImGui::TextColored ({1.f, 1.f,1.f,1.f}, channelString.c_str());
+            }
+            //}}}
+
+          if ((getHover() || getSelected()) && !getSelectedFull())
+            //{{{  draw select rect
+            ImGui::GetWindowDrawList()->AddRect ({ (float)mRect.left, (float)mRect.top },
+                                                 { (float)mRect.right, (float)mRect.bottom },
+                                                 getHover() ? 0xff20ffff : 0xff20ff20, 4.f, 0, 4.f);
+            //}}}
+          }
+        //}}}
+
+        inline static cTextureShader* mVideoShader = nullptr;
+        inline static cTextureShader* mSubtitleShader = nullptr;
+
+      private:
+        static const size_t kMaxSubtitleLines = 4;
+        enum eSelect { eUnselected, eSelected, eSelectedFull };
+        //{{{
+        class cFramesView {
+        public:
+          cFramesView() {}
+          ~cFramesView() = default;
+
+          //{{{
+          void draw (cAudioRender& audioRender, cVideoRender& videoRender, int64_t playerPts, ImVec2 pos) {
+
+            float ptsScale = mPixelsPerVideoFrame / videoRender.getPtsDuration();
+
+            { // lock video during iterate
+            shared_lock<shared_mutex> lock (videoRender.getSharedMutex());
+            for (auto& frame : videoRender.getFramesMap()) {
+              //{{{  draw video frames
+              float posL = pos.x + (frame.second->getPts() - playerPts) * ptsScale;
+              float posR = pos.x + ((frame.second->getPts() - playerPts + frame.second->getPtsDuration()) * ptsScale) - 1.f;
+
+              // pesSize I white / P purple / B blue - ABGR color
+              cVideoFrame* videoFrame = dynamic_cast<cVideoFrame*>(frame.second);
+              ImGui::GetWindowDrawList()->AddRectFilled (
+                { posL, pos.y - addValue ((float)videoFrame->getPesSize(), mMaxPesSize, mMaxDisplayPesSize,
+                                             kLines * ImGui::GetTextLineHeight()) },
+                { posR, pos.y },
+                (videoFrame->mFrameType == 'I') ?
+                  0xffffffff : (videoFrame->mFrameType == 'P') ?
+                    0xffFF40ff : 0xffFF4040);
+              }
+              //}}}
+            }
+
+            { // lock audio during iterate
+            shared_lock<shared_mutex> lock (audioRender.getSharedMutex());
+            for (auto& frame : audioRender.getFramesMap()) {
+              //{{{  draw audio frames
+              float posL = pos.x + (frame.second->getPts() - playerPts) * ptsScale;
+              float posR = pos.x + ((frame.second->getPts() - playerPts + frame.second->getPtsDuration()) * ptsScale) - 1.f;
+
+              cAudioFrame* audioFrame = dynamic_cast<cAudioFrame*>(frame.second);
+              ImGui::GetWindowDrawList()->AddRectFilled (
+                { posL, pos.y - addValue (audioFrame->getSimplePower(), mMaxPower, mMaxDisplayPower,
+                                          kLines * ImGui::GetTextLineHeight()) },
+                { posR, pos.y },
+                0x8000ff00);
+              }
+              //}}}
+            }
+
+            // draw playPts centre bar
+            ImGui::GetWindowDrawList()->AddRectFilled (
+              { pos.x-1.f, pos.y - (kLines * ImGui::GetTextLineHeight()) },
+              { pos.x+1.f, pos.y },
+              0xffffffff);
+
+            // agc scaling back to max display values from max values
+            agc (mMaxPesSize, mMaxDisplayPesSize, 100.f, 10000.f);
+            agc (mMaxPower, mMaxDisplayPower, 0.001f, 0.1f);
+            }
+          //}}}
+
+        private:
+          //{{{
+          float addValue (float value, float& maxValue, float& maxDisplayValue, float scale) {
+
+            if (value > maxValue)
+              maxValue = value;
+            if (value > maxDisplayValue)
+              maxDisplayValue = value;
+
+            return scale * value / maxValue;
+            }
+          //}}}
+          //{{{
+          void agc (float& maxValue, float& maxDisplayValue, float revert, float minValue) {
+
+            // slowly adjust scale to displayMaxValue
+            if (maxDisplayValue < maxValue)
+              maxValue += (maxDisplayValue - maxValue) / revert;
+
+            if (maxValue < minValue)
+              maxValue = minValue;
+
+            // reset displayed max value
+            maxDisplayValue = 0.f;
+            }
+          //}}}
+
+          //  vars
+          const float kLines = 2.f;
+          const float mPixelsPerVideoFrame = 6.f;
+          const float mPixelsPerAudioChannel = 6.f;
+
+          float mMaxPower = 0.f;
+          float mMaxDisplayPower = 0.f;
+
+          float mMaxPesSize = 0.f;
+          float mMaxDisplayPesSize = 0.f;
+          };
+        //}}}
+        //{{{
+        class cAudioMeterView {
+        public:
+          cAudioMeterView() {}
+          ~cAudioMeterView() = default;
+
+          void draw (cAudioRender& audioRender, int64_t playerPts, ImVec2 pos) {
+            cAudioFrame* audioFrame = audioRender.getAudioFrameAtPts (playerPts);
+            if (audioFrame) {
+              size_t drawChannels = audioFrame->getNumChannels();
+              bool audio51 = (audioFrame->getNumChannels() == 6);
+              array <size_t, 6> channelOrder;
+              if (audio51) {
+                channelOrder = { 4, 0, 2, 1, 5, 3 };
+                drawChannels--;
+                }
+              else
+                channelOrder = { 0, 1, 2, 3, 4, 5 };
+
+              // draw channels
+              float x = pos.x - (drawChannels * mPixelsPerAudioChannel);
+              pos.y += 1.f;
+              float height = 8.f * ImGui::GetTextLineHeight();
+              for (size_t i = 0; i < drawChannels; i++) {
+                ImGui::GetWindowDrawList()->AddRectFilled (
+                  { x, pos.y - (audioFrame->mPowerValues[channelOrder[i]] * height) },
+                  { x + mPixelsPerAudioChannel - 1.f, pos.y },
+                  0xff00ff00);
+                x += mPixelsPerAudioChannel;
+                }
+
+              // draw 5.1 woofer red
+              if (audio51)
+                ImGui::GetWindowDrawList()->AddRectFilled (
+                  {pos.x - (5 * mPixelsPerAudioChannel), pos.y - (audioFrame->mPowerValues[channelOrder[5]] * height)},
+                  {pos.x - 1.f, pos.y},
+                  0x800000ff);
+              }
+            }
+
+        private:
+          //  vars
+          const float mAudioLines = 1.f;
+          const float mPixelsPerAudioChannel = 6.f;
+          };
+        //}}}
+
+        //{{{
+        float getScale (size_t numViews) const {
+          return (numViews <= 1) ? 1.f :
+            ((numViews <= 4) ? 0.5f :
+              ((numViews <= 9) ? 0.33f :
+                ((numViews <= 16) ? 0.25f : 0.20f)));
+          }
+        //}}}
+        //{{{
+        cVec2 gridFractionalPosition (size_t index, size_t numViews) {
+
+          switch (numViews) {
+            //{{{
+            case 2: // 2x1
+              switch (index) {
+                case 0: return { 1.f / 4.f, 0.5f };
+                case 1: return { 3.f / 4.f, 0.5f };
+                }
+              return { 0.5f, 0.5f };
+            //}}}
+
+            case 3:
+            //{{{
+            case 4: // 2x2
+              switch (index) {
+                case 0: return { 1.f / 4.f, 3.f / 4.f };
+                case 1: return { 3.f / 4.f, 3.f / 4.f };
+
+                case 2: return { 1.f / 4.f, 1.f / 4.f };
+                case 3: return { 3.f / 4.f, 1.f / 4.f };
+                }
+              return { 0.5f, 0.5f };
+            //}}}
+
+            case 5:
+            //{{{
+            case 6: // 3x2
+              switch (index) {
+                case 0: return { 1.f / 6.f, 4.f / 6.f };
+                case 1: return { 3.f / 6.f, 4.f / 6.f };
+                case 2: return { 5.f / 6.f, 4.f / 6.f };
+
+                case 3: return { 1.f / 6.f, 2.f / 6.f };
+                case 4: return { 3.f / 6.f, 2.f / 6.f };
+                case 5: return { 5.f / 6.f, 2.f / 6.f };
+                }
+              return { 0.5f, 0.5f };
+            //}}}
+
+            case 7:
+            case 8:
+            //{{{
+            case 9: // 3x3
+              switch (index) {
+                case 0: return { 1.f / 6.f, 5.f / 6.f };
+                case 1: return { 3.f / 6.f, 5.f / 6.f };
+                case 2: return { 5.f / 6.f, 5.f / 6.f };
+
+                case 3: return { 1.f / 6.f, 0.5f };
+                case 4: return { 3.f / 6.f, 0.5f };
+                case 5: return { 5.f / 6.f, 0.5f };
+
+                case 6: return { 1.f / 6.f, 1.f / 6.f };
+                case 7: return { 3.f / 6.f, 1.f / 6.f };
+                case 8: return { 5.f / 6.f, 1.f / 6.f };
+                }
+              return { 0.5f, 0.5f };
+            //}}}
+
+            case 10:
+            case 11:
+            case 12:
+            case 13:
+            case 14:
+            case 15:
+            //{{{
+            case 16: // 4x4
+              switch (index) {
+                case  0: return { 1.f / 8.f, 7.f / 8.f };
+                case  1: return { 3.f / 8.f, 7.f / 8.f };
+                case  2: return { 5.f / 8.f, 7.f / 8.f };
+                case  3: return { 7.f / 8.f, 7.f / 8.f };
+
+                case  4: return { 1.f / 8.f, 5.f / 8.f };
+                case  5: return { 3.f / 8.f, 5.f / 8.f };
+                case  6: return { 5.f / 8.f, 5.f / 8.f };
+                case  7: return { 7.f / 8.f, 5.f / 8.f };
+
+                case  8: return { 1.f / 8.f, 3.f / 8.f };
+                case  9: return { 3.f / 8.f, 3.f / 8.f };
+                case 10: return { 5.f / 8.f, 3.f / 8.f };
+                case 11: return { 7.f / 8.f, 3.f / 8.f };
+
+                case 12: return { 1.f / 8.f, 1.f / 8.f };
+                case 13: return { 3.f / 8.f, 1.f / 8.f };
+                case 14: return { 5.f / 8.f, 1.f / 8.f };
+                case 15: return { 7.f / 8.f, 1.f / 8.f };
+                }
+              return { 0.5f, 0.5f };
+            //}}}
+
+            default: // 1x1
+              return { 0.5f, 0.5f };
+            }
+          }
+        //}}}
+
+        // vars
+        cTransportStream::cService& mService;
+
+        bool mHover = false;
+        eSelect mSelect = eUnselected;
+
+        // video
+        cMat4x4 mModel;
+        cRect mRect = { 0,0,0,0 };
+        cQuad* mVideoQuad = nullptr;
+
+        // graphics
+        cFramesView mFramesView;
+        cAudioMeterView mAudioMeterView;
+
+        // subtitle
+        array <cQuad*, kMaxSubtitleLines> mSubtitleQuads = { nullptr };
+        array <cTexture*, kMaxSubtitleLines> mSubtitleTextures = { nullptr };
+        };
+      //}}}
+
+      map <uint16_t, cView> mViewMap;
+      bool mSelectFull = false;
+      };
+    //}}}
+
     enum eTab { eTelly, eServices, ePidMap, eChannels, eRecordings };
     inline static const vector<string> kTabNamesRecord = { "telly", "services", "pids", "channels", "recorded" };
     inline static const vector<string> kTabNames =       { "telly", "services", "pids", "channels" };
@@ -1824,21 +1829,6 @@ namespace {
     //}}}
 
     //{{{
-    void drawTabs (cTellyApp& tellyApp) {
-
-      ImGui::SetCursorPos ({ 0.f,0.f });
-
-      if (tellyApp.hasTransportStream()) {
-        if (tellyApp.getTransportStream().getRecordPrograms().size())
-          mTab = (eTab)interlockedButtons (kTabNamesRecord, (uint8_t)mTab, {0.f,0.f}, true);
-        else if (tellyApp.getTransportStream().getServiceMap().size() > 1)
-          mTab = (eTab)interlockedButtons (kTabNames, (uint8_t)mTab, {0.f,0.f}, true);
-        else
-          mTab = (eTab)interlockedButtons (kTabNamesSingle, (uint8_t)mTab, {0.f,0.f}, true);
-        }
-      }
-    //}}}
-    //{{{
     void drawChannels (cTransportStream& transportStream) {
 
       // draw services/channels
@@ -1848,10 +1838,10 @@ namespace {
           service.toggleAll();
           }
 
-        if (service.getRenderStream (eRenderAudio).isDefined()) {
+        if (service.getRenderStream (eAudio).isDefined()) {
           ImGui::SameLine();
           ImGui::TextUnformatted (fmt::format ("{}{}",
-            service.getRenderStream (eRenderAudio).isEnabled() ? "*":"", service.getNowTitleString()).c_str());
+            service.getRenderStream (eAudio).isEnabled() ? "*":"", service.getNowTitleString()).c_str());
           }
 
         while (service.getChannelName().size() > mMaxNameChars)
@@ -1873,7 +1863,7 @@ namespace {
         while (service.getProgramPid() > pow (10, mMaxPgmChars))
           mMaxPgmChars++;
 
-        for (uint8_t renderType = eRenderVideo; renderType <= eRenderSubtitle; renderType++) {
+        for (uint8_t renderType = eVideo; renderType <= eSubtitle; renderType++) {
           uint16_t pid = service.getRenderStream (eRenderType(renderType)).getPid();
           while (pid > pow (10, mPidMaxChars[renderType]))
             mPidMaxChars[renderType]++;
@@ -1888,7 +1878,7 @@ namespace {
           }
 
        // iterate definedStreams
-        for (uint8_t renderType = eRenderVideo; renderType <= eRenderSubtitle; renderType++) {
+        for (uint8_t renderType = eVideo; renderType <= eSubtitle; renderType++) {
           cTransportStream::cStream& stream = service.getRenderStream (eRenderType(renderType));
           if (stream.isDefined()) {
             ImGui::SameLine();
@@ -1910,18 +1900,18 @@ namespace {
           //}}}
 
         // iterate enabledStreams
-        for (uint8_t renderType = eRenderVideo; renderType <= eRenderSubtitle; renderType++) {
+        for (uint8_t renderType = eVideo; renderType <= eSubtitle; renderType++) {
           cTransportStream::cStream& stream = service.getRenderStream (eRenderType(renderType));
           if (stream.isEnabled()) {
             switch (eRenderType(renderType)) {
-              case eRenderVideo:
+              case eVideo:
                 drawVideoInfo (service.getSid(), stream.getRender()); break;
 
-              case eRenderAudio:
-              case eRenderDescription:
+              case eAudio:
+              case eDescription:
                 drawAudioInfo (service.getSid(), stream.getRender());  break;
 
-              case eRenderSubtitle:
+              case eSubtitle:
                 drawSubtitle (service.getSid(), stream.getRender(), graphics);  break;
 
               default:;
@@ -2085,12 +2075,12 @@ namespace {
       //}}}
       const vector<sActionKey> kActionKeys = {
         //alt    ctrl   shift  guiKey               function
-        { false, false, false, ImGuiKey_LeftArrow,  [this,&tellyApp] { tellyApp.getMultiView().moveLeft(); }},
-        { false, false, false, ImGuiKey_RightArrow, [this,&tellyApp] { tellyApp.getMultiView().moveRight(); }},
-        { false, false, false, ImGuiKey_UpArrow,    [this,&tellyApp] { tellyApp.getMultiView().moveUp(); }},
-        { false, false, false, ImGuiKey_DownArrow,  [this,&tellyApp] { tellyApp.getMultiView().moveDown(); }},
-        { false, false, false, ImGuiKey_Enter,      [this,&tellyApp] { tellyApp.getMultiView().enter(); }},
-        { false, false, false, ImGuiKey_Space,      [this,&tellyApp] { tellyApp.getMultiView().space(); }},
+        { false, false, false, ImGuiKey_LeftArrow,  [this,&tellyApp] { mMultiView.moveLeft(); }},
+        { false, false, false, ImGuiKey_RightArrow, [this,&tellyApp] { mMultiView.moveRight(); }},
+        { false, false, false, ImGuiKey_UpArrow,    [this,&tellyApp] { mMultiView.moveUp(); }},
+        { false, false, false, ImGuiKey_DownArrow,  [this,&tellyApp] { mMultiView.moveDown(); }},
+        { false, false, false, ImGuiKey_Enter,      [this,&tellyApp] { mMultiView.enter(); }},
+        { false, false, false, ImGuiKey_Space,      [this,&tellyApp] { mMultiView.space(); }},
         { false, false, false, ImGuiKey_F,          [this,&tellyApp] { tellyApp.getPlatform().toggleFullScreen(); }},
         { false, false, false, ImGuiKey_S,          [this,&tellyApp] { tellyApp.toggleShowSubtitle(); }},
         { false, false, false, ImGuiKey_L,          [this,&tellyApp] { tellyApp.toggleShowMotionVectors(); }},
@@ -2140,6 +2130,8 @@ namespace {
 
     // !!! wrong !!! needed per service
     array <cTexture*,4> mSubtitleTextures = { nullptr };
+
+    cMultiView mMultiView;
     };
   //}}}
   }
@@ -2201,13 +2193,18 @@ int main (int numArgs, char* args[]) {
 
   cTellyApp tellyApp (options, new cTellyUI());
   if (options->mFileName.empty()) {
+    // liveDvb source
+    options->mIsLive = true;
     options->mRecordRoot = kRootDir;
     tellyApp.liveDvbSource (options->mMultiplex, options);
     }
   else {
+    // file source
     options->mShowFirstService = true;
     tellyApp.fileSource (options->mFileName, options);
     }
+
   tellyApp.mainUILoop();
+
   return EXIT_SUCCESS;
   }

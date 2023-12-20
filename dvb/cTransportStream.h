@@ -23,7 +23,7 @@ class cRender;
 constexpr int kAacLatmStreamType = 17;
 constexpr int kH264StreamType = 27;
 
-enum eRenderType { eRenderVideo, eRenderAudio, eRenderDescription, eRenderSubtitle };
+enum eRenderType { eVideo, eAudio, eDescription, eSubtitle };
 
 class cTransportStream {
 public:
