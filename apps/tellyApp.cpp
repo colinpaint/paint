@@ -1477,14 +1477,31 @@ namespace {
                   }
                   //}}}
                 if (options->mShowMotionVectors && (mSelect == eSelectedFull))
-                  //{{{  draw motion vectors
-
+                  //{{{  draw motion vectors1
+                  //for (auto& motionVector : videoFrame->getMotionVectors())
+                    //ImGui::GetWindowDrawList()->AddLine (
+                      //{ (float)mRect.left + (motionVector.mSrcx * viewportWidth / videoFrame->getWidth()),
+                        //(float)mRect.top +  (motionVector.mSrcy * viewportHeight / videoFrame->getHeight()) },
+                      //{ (float)mRect.left + (motionVector.mDstx * viewportWidth / videoFrame->getWidth()),
+                        //(float)mRect.top +  (motionVector.mDsty * viewportHeight / videoFrame->getHeight()) },
+                      //motionVector.mSource > 0 ? 0xc0c0c0c0 : 0xc000c0c0, 1.f);
+                  //}}}
+                  //{{{  draw motion vectors2
+                  //for (auto& motionVector : videoFrame->getMotionVectors())
+                    //ImGui::GetWindowDrawList()->AddLine (
+                      //{ (float)mRect.left + (motionVector.mSrcx * viewportWidth / videoFrame->getWidth()),
+                        //(float)mRect.top +  (motionVector.mSrcy * viewportHeight / videoFrame->getHeight()) },
+                      //{ (float)mRect.left + ((motionVector.mSrcx + motionVector.mX) * viewportWidth / videoFrame->getWidth()),
+                        //(float)mRect.top +  ((motionVector.mSrcy + motionVector.mY) * viewportHeight / videoFrame->getHeight()) },
+                      //motionVector.mSource > 0 ? 0xc0c0c0c0 : 0xc000c0c0, 1.f);
+                  //}}}
+                  //{{{  draw motion vectors3
                   for (auto& motionVector : videoFrame->getMotionVectors())
                     ImGui::GetWindowDrawList()->AddLine (
                       { (float)mRect.left + (motionVector.mSrcx * viewportWidth / videoFrame->getWidth()),
                         (float)mRect.top +  (motionVector.mSrcy * viewportHeight / videoFrame->getHeight()) },
-                      { (float)mRect.left + (motionVector.mDstx * viewportWidth / videoFrame->getWidth()),
-                        (float)mRect.top +  (motionVector.mDsty * viewportHeight / videoFrame->getHeight()) },
+                      { (float)mRect.left + ((motionVector.mSrcx + (motionVector.mX / motionVector.mScale)) * viewportWidth / videoFrame->getWidth()),
+                        (float)mRect.top +  ((motionVector.mSrcy + (motionVector.mY / motionVector.mScale)) * viewportHeight / videoFrame->getHeight()) },
                       motionVector.mSource > 0 ? 0xc0c0c0c0 : 0xc000c0c0, 1.f);
                   //}}}
                 }

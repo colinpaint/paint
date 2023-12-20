@@ -16,8 +16,9 @@
 
 //{{{
 struct sMotionVector {
-  sMotionVector (int source, float srcx, float srcy, float dstx, float dsty) :
-    mSource(source), mSrcx(srcx), mSrcy(srcy), mDstx(dstx), mDsty(dsty) {}
+  sMotionVector (int source, float srcx, float srcy, float dstx, float dsty,
+                 float x, float y, float scale) :
+    mSource(source), mSrcx(srcx), mSrcy(srcy), mDstx(dstx), mDsty(dsty), mX(x), mY(y), mScale(scale) {}
   ~sMotionVector() = default;
 
   int mSource;
@@ -25,6 +26,9 @@ struct sMotionVector {
   float mSrcy;
   float mDstx;
   float mDsty;
+  float mX;
+  float mY;
+  float mScale;
   };
 //}}}
 

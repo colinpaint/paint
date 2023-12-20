@@ -55,7 +55,8 @@ public:
         size_t num = sideData->size / sizeof(AVMotionVector);
         for (size_t i = 0; i < num; i++) {
           const AVMotionVector* mv = &mvs[i];
-          mMotionVectors.push_back (sMotionVector(mv->source, mv->src_x, mv->src_y, mv->dst_x, mv->dst_y));
+          mMotionVectors.push_back (sMotionVector(mv->source, mv->src_x, mv->src_y, mv->dst_x, mv->dst_y,
+                                                  mv->motion_x, mv->motion_y, mv->motion_scale));
           // mv->w, mv->h, mv->flags, mv->motion_x, mv->motion_y, mv->motion_scale));
           }
         }
