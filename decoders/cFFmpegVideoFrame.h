@@ -51,10 +51,12 @@ public:
     if (hasMotionVectors) {
       AVFrameSideData* sideData = av_frame_get_side_data (avFrame, AV_FRAME_DATA_MOTION_VECTORS);
       if (sideData) {
-        const AVMotionVector* mvs = (const AVMotionVector*)sideData->data;
+        AVMotionVector* mvs = (AVMotionVector*)sideData->data;
         size_t num = sideData->size / sizeof(AVMotionVector);
+        AVMotionVector* mv = &mvs[0];
+        cLog::log (LOGINFO, fmt::format ("motion {} {} {}", num, mv->w, mv->h));
         for (size_t i = 0; i < num; i++) {
-          const AVMotionVector* mv = &mvs[i];
+          mv = &mvs[i];
           mMotionVectors.push_back (sMotionVector(mv->source, mv->src_x, mv->src_y, mv->dst_x, mv->dst_y,
                                                   mv->motion_x, mv->motion_y, mv->motion_scale));
           // mv->w, mv->h, mv->flags, mv->motion_x, mv->motion_y, mv->motion_scale));
