@@ -17,6 +17,7 @@
 class cRender;
 
 #include "../common/basicTypes.h"
+#include "../common/cBaseOptions.h"
 #include "cDvbMultiplex.h"
 //}}}
 

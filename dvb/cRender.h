@@ -11,6 +11,7 @@
 #include <shared_mutex>
 
 #include "../common/basicTypes.h"
+#include "../common/cBaseOptions.h"
 #include "../common/cMiniLog.h"
 #include "../common/readerWriterQueue.h"
 

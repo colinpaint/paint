@@ -7,6 +7,7 @@
 
 // utils
 #include "../common/basicTypes.h"
+#include "../common/cBaseOptions.h"
 #include "../common/cLog.h"
 
 class cPlatform;
@@ -21,7 +22,7 @@ public:
   public:
     virtual ~cOptions() = default;
 
-    std::string getString() const { return "log123 full free"; }
+    std::string getString() const { return "log123 nogui full free"; }
 
     //{{{
     bool parse (std::string param) {
@@ -37,6 +38,8 @@ public:
         mFullScreen = true;
       else if (param == "free")
         mVsync = false;
+      else if (param == "nogui")
+        mHasGui = false;
       else
         return false;
 
@@ -54,11 +57,10 @@ public:
 
     eLogLevel mLogLevel = LOGINFO;
 
+    bool mHasGui = true;
     cPoint mWindowSize = { 1920/2, 1080/2 };
     bool mFullScreen = false;
     bool mVsync = true;
-
-    bool mHasGui = true;
     };
   //}}}
   //{{{

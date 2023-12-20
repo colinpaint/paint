@@ -32,6 +32,8 @@
 //}}}
 
 // utils
+#include "../common/basicTypes.h"
+#include "../common/cBaseOptions.h"
 #include "../common/date.h"
 #include "../common/utils.h"
 #include "../common/fileUtils.h"
@@ -1359,12 +1361,6 @@ namespace {
 
         uint16_t getId() const { return mService.getSid(); }
         bool getHover() const { return mHover; }
-
-        // verbose selectState gets
-        bool getUnselected() const { return mSelect == eUnselected; }
-        bool getSelected() const { return mSelect != eUnselected; }
-        bool getSelectedFull() const { return mSelect == eSelectedFull; }
-
         bool pick (cVec2 pos) { return mRect.isInside (pos); }
         //{{{
         bool hover() {
@@ -1407,7 +1403,7 @@ namespace {
               }
               //}}}
 
-            if (!selectFull || getSelected()) {
+            if (!selectFull || (mSelect != eUnselected)) {
               // view selected or no views selected
               float viewportWidth = ImGui::GetWindowWidth();
               float viewportHeight = ImGui::GetWindowHeight();
@@ -1444,7 +1440,7 @@ namespace {
                 mRect = cRect (mModel.transform (cVec2(0, videoFrame->getHeight()), viewportHeight),
                                mModel.transform (cVec2(videoFrame->getWidth(), 0), viewportHeight));
 
-                if (getSelectedFull() && options->mShowMotionVectors)
+                if ((mSelect == eSelectedFull) && options->mShowMotionVectors)
                   for (auto& motionVector : videoFrame->getMotionVectors())
                     ImGui::GetWindowDrawList()->AddLine (
                       { (float)mRect.left + (motionVector.mSrcx * viewportWidth / videoFrame->getWidth()),
@@ -1492,13 +1488,13 @@ namespace {
                 cAudioRender& audioRender = dynamic_cast<cAudioRender&>(mService.getRenderStream (eAudio).getRender());
 
                 if (audioRender.getPlayer())
-                  audioRender.getPlayer()->setMute (getUnselected());
+                  audioRender.getPlayer()->setMute (mSelect == eUnselected);
 
                 // draw audio meter
                 mAudioMeterView.draw (audioRender, playPts,
                                       ImVec2((float)mRect.right - (0.5f * ImGui::GetTextLineHeight()),
                                              (float)mRect.bottom - (0.5f * ImGui::GetTextLineHeight())));
-                if (getSelectedFull())
+                if (mSelect == eSelectedFull)
                   mFramesView.draw (audioRender, videoRender, playPts,
                                     ImVec2((float)mRect.getCentre().x,
                                            (float)mRect.bottom - (0.5f * ImGui::GetTextLineHeight())));
@@ -1507,10 +1503,10 @@ namespace {
               }
             }
 
-          if (!enabled || !getSelectedFull()) {
+          if (!enabled || (mSelect != eSelectedFull)) {
             //{{{  draw channel title bottomLeft
             string channelString = mService.getChannelName();
-            if (getSelectedFull())
+            if (mSelect == eSelectedFull)
               channelString += " " + mService.getNowTitleString();
 
             ImGui::SetCursorPos ({(float)mRect.left + (ImGui::GetTextLineHeight() * 0.25f),
@@ -1523,7 +1519,7 @@ namespace {
             }
             //}}}
 
-          if ((getHover() || getSelected()) && !getSelectedFull())
+          if ((getHover() || (mSelect != eUnselected)) && (mSelect != eSelectedFull))
             //{{{  draw select rect
             ImGui::GetWindowDrawList()->AddRect ({ (float)mRect.left, (float)mRect.top },
                                                  { (float)mRect.right, (float)mRect.bottom },
@@ -1834,9 +1830,8 @@ namespace {
       // draw services/channels
       for (auto& pair : transportStream.getServiceMap()) {
         cTransportStream::cService& service = pair.second;
-        if (ImGui::Button (fmt::format ("{:{}s}", service.getChannelName(), mMaxNameChars).c_str())) {
+        if (ImGui::Button (fmt::format ("{:{}s}", service.getChannelName(), mMaxNameChars).c_str()))
           service.toggleAll();
-          }
 
         if (service.getRenderStream (eAudio).isDefined()) {
           ImGui::SameLine();
