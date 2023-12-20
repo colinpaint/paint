@@ -1319,7 +1319,6 @@ namespace {
         if (!cView::mSubtitleShader)
           cView::mSubtitleShader = graphics.createTextureShader (cTexture::eRgba);
 
-
         // update viewMap from enabled services, take care to reuse cView's
         for (auto& pair : transportStream.getServiceMap()) {
           cTransportStream::cService& service = pair.second;
@@ -1372,7 +1371,9 @@ namespace {
         //{{{
         bool select (uint16_t id) {
 
-          if (id != getId())
+          if (!mService.getRenderStream (eVideo).isEnabled())
+            mService.toggleAll();
+          else if (id != getId())
             mSelect = eUnselected;
           else if (mSelect == eUnselected)
             mSelect = eSelected;
@@ -1403,51 +1404,49 @@ namespace {
               }
               //}}}
 
+            float viewportWidth = ImGui::GetWindowWidth();
+            float viewportHeight = ImGui::GetWindowHeight();
+            cMat4x4 projection (0.f,viewportWidth, 0.f,viewportHeight, -1.f,1.f);
+            float scale = getScale (numViews);
+            cVec2 fraction = gridFractionalPosition (viewIndex, numViews);
+
+            cMat4x4 model = cMat4x4();
+            model.setTranslate ({(fraction.x - (0.5f * scale)) * viewportWidth,
+                                  (fraction.y - (0.5f * scale)) * viewportHeight});
+            model.size ({ scale * viewportWidth, scale * viewportHeight });
+            mRect = cRect (model.transform (cVec2(0, 1), viewportHeight),
+                           model.transform (cVec2(1, 0), viewportHeight));
+
             if (!selectFull || (mSelect != eUnselected)) {
               // view selected or no views selected
-              float viewportWidth = ImGui::GetWindowWidth();
-              float viewportHeight = ImGui::GetWindowHeight();
-              cMat4x4 projection (0.f,viewportWidth, 0.f,viewportHeight, -1.f,1.f);
-              float scale = getScale (numViews);
-
               // show nearest videoFrame to playPts
               cVideoRender& videoRender = dynamic_cast<cVideoRender&>(
                                             mService.getRenderStream (eVideo).getRender());
               cVideoFrame* videoFrame = videoRender.getVideoFrameAtOrAfterPts (playPts);
               if (videoFrame) {
                 //{{{  draw video
+                mModel = cMat4x4();
+                mModel.setTranslate ({(fraction.x - (0.5f * scale)) * viewportWidth,
+                                      (fraction.y - (0.5f * scale)) * viewportHeight});
+                mModel.size ({ scale * viewportWidth / videoFrame->getWidth(),
+                               scale * viewportHeight / videoFrame->getHeight() });
                 mVideoShader->use();
+                mVideoShader->setModelProjection (mModel, projection);
 
                 // texture
                 cTexture& texture = videoFrame->getTexture (graphics);
                 texture.setSource();
 
-                // model
-                mModel = cMat4x4();
-                cVec2 fraction = gridFractionalPosition (viewIndex, numViews);
-                mModel.setTranslate ({ (fraction.x - (0.5f * scale)) * viewportWidth,
-                                       (fraction.y - (0.5f * scale)) * viewportHeight });
-                mModel.size ({ scale * viewportWidth / videoFrame->getWidth(),
-                               scale * viewportHeight / videoFrame->getHeight() });
-                mVideoShader->setModelProjection (mModel, projection);
-
-                // ensure quad is created and drawIt
+                // ensure quad is created
                 if (!mVideoQuad)
                   mVideoQuad = graphics.createQuad (videoFrame->getSize());
 
+                // draw quad
                 mVideoQuad->draw();
 
                 mRect = cRect (mModel.transform (cVec2(0, videoFrame->getHeight()), viewportHeight),
                                mModel.transform (cVec2(videoFrame->getWidth(), 0), viewportHeight));
 
-                if ((mSelect == eSelectedFull) && options->mShowMotionVectors)
-                  for (auto& motionVector : videoFrame->getMotionVectors())
-                    ImGui::GetWindowDrawList()->AddLine (
-                      { (float)mRect.left + (motionVector.mSrcx * viewportWidth / videoFrame->getWidth()),
-                        (float)mRect.top +  (motionVector.mSrcy * viewportHeight / videoFrame->getHeight()) },
-                      { (float)mRect.left + (motionVector.mDstx * viewportWidth / videoFrame->getWidth()),
-                        (float)mRect.top +  (motionVector.mDsty * viewportHeight / videoFrame->getHeight()) },
-                      motionVector.mSource > 0 ? 0xc0c0c0c0 : 0xc000c0c0, 1.f);
                 //}}}
                 if (options->mShowSubtitle) {
                   //{{{  draw subtitles
@@ -1480,6 +1479,17 @@ namespace {
                     mSubtitleQuads[line]->draw();
                     }
                   }
+                  //}}}
+                if (options->mShowMotionVectors && (mSelect == eSelectedFull))
+                  //{{{  draw motion vectors
+
+                  for (auto& motionVector : videoFrame->getMotionVectors())
+                    ImGui::GetWindowDrawList()->AddLine (
+                      { (float)mRect.left + (motionVector.mSrcx * viewportWidth / videoFrame->getWidth()),
+                        (float)mRect.top +  (motionVector.mSrcy * viewportHeight / videoFrame->getHeight()) },
+                      { (float)mRect.left + (motionVector.mDstx * viewportWidth / videoFrame->getWidth()),
+                        (float)mRect.top +  (motionVector.mDsty * viewportHeight / videoFrame->getHeight()) },
+                      motionVector.mSource > 0 ? 0xc0c0c0c0 : 0xc000c0c0, 1.f);
                   //}}}
                 }
 
