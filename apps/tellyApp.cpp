@@ -1410,12 +1410,12 @@ namespace {
             float scale = getScale (numViews);
             cVec2 fraction = gridFractionalPosition (viewIndex, numViews);
 
-            cMat4x4 model = cMat4x4();
-            model.setTranslate ({(fraction.x - (0.5f * scale)) * viewportWidth,
-                                  (fraction.y - (0.5f * scale)) * viewportHeight});
-            model.size ({ scale * viewportWidth, scale * viewportHeight });
-            mRect = cRect (model.transform (cVec2(0, 1), viewportHeight),
-                           model.transform (cVec2(1, 0), viewportHeight));
+            cMat4x4 rectModel = cMat4x4();
+            rectModel.setTranslate ({(fraction.x - (0.5f * scale)) * viewportWidth,
+                                     (fraction.y - (0.5f * scale)) * viewportHeight});
+            rectModel.size ({ scale * viewportWidth, scale * viewportHeight });
+            mRect = cRect (rectModel.transform (cVec2(0, 1), viewportHeight),
+                           rectModel.transform (cVec2(1, 0), viewportHeight));
 
             if (!selectFull || (mSelect != eUnselected)) {
               // view selected or no views selected
@@ -1425,13 +1425,13 @@ namespace {
               cVideoFrame* videoFrame = videoRender.getVideoFrameAtOrAfterPts (playPts);
               if (videoFrame) {
                 //{{{  draw video
-                mModel = cMat4x4();
-                mModel.setTranslate ({(fraction.x - (0.5f * scale)) * viewportWidth,
-                                      (fraction.y - (0.5f * scale)) * viewportHeight});
-                mModel.size ({ scale * viewportWidth / videoFrame->getWidth(),
-                               scale * viewportHeight / videoFrame->getHeight() });
+                cMat4x4 videoModel = cMat4x4();
+                videoModel.setTranslate ({(fraction.x - (0.5f * scale)) * viewportWidth,
+                                          (fraction.y - (0.5f * scale)) * viewportHeight});
+                videoModel.size ({ scale * viewportWidth / videoFrame->getWidth(),
+                                   scale * viewportHeight / videoFrame->getHeight() });
                 mVideoShader->use();
-                mVideoShader->setModelProjection (mModel, projection);
+                mVideoShader->setModelProjection (videoModel, projection);
 
                 // texture
                 cTexture& texture = videoFrame->getTexture (graphics);
@@ -1443,10 +1443,6 @@ namespace {
 
                 // draw quad
                 mVideoQuad->draw();
-
-                mRect = cRect (mModel.transform (cVec2(0, videoFrame->getHeight()), viewportHeight),
-                               mModel.transform (cVec2(videoFrame->getWidth(), 0), viewportHeight));
-
                 //}}}
                 if (options->mShowSubtitle) {
                   //{{{  draw subtitles
@@ -1469,9 +1465,9 @@ namespace {
 
                     float xpos = (float)subtitleImage.getXpos() / videoFrame->getWidth();
                     float ypos = (float)(videoFrame->getHeight() - subtitleImage.getYpos()) / videoFrame->getHeight();
-                    mModel.setTranslate ({ (fraction.x + ((xpos - 0.5f) * scale)) * viewportWidth,
-                                           (fraction.y + ((ypos - 0.5f) * scale)) * viewportHeight });
-                    mSubtitleShader->setModelProjection (mModel, projection);
+                    videoModel.setTranslate ({ (fraction.x + ((xpos - 0.5f) * scale)) * viewportWidth,
+                                               (fraction.y + ((ypos - 0.5f) * scale)) * viewportHeight });
+                    mSubtitleShader->setModelProjection (videoModel, projection);
 
                     // ensure quad is created (assumes same size) and drawIt
                     if (!mSubtitleQuads[line])
@@ -1804,7 +1800,6 @@ namespace {
         eSelect mSelect = eUnselected;
 
         // video
-        cMat4x4 mModel;
         cRect mRect = { 0,0,0,0 };
         cQuad* mVideoQuad = nullptr;
 
