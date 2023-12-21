@@ -24,7 +24,7 @@ public:
     };
   //}}}
 
-  cAudioRender (const std::string& name, uint8_t streamType, uint16_t pid, cBaseOptions* options);
+  cAudioRender (const std::string& name, uint8_t streamType, uint16_t pid, iOptions* options);
   virtual ~cAudioRender() = default;
 
   // gets

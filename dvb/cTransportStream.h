@@ -17,7 +17,7 @@
 class cRender;
 
 #include "../common/basicTypes.h"
-#include "../common/cBaseOptions.h"
+#include "../common/iOptions.h"
 #include "cDvbMultiplex.h"
 //}}}
 
@@ -209,7 +209,7 @@ public:
   //{{{
   class cService {
   public:
-    cService (uint16_t sid, cBaseOptions* options);
+    cService (uint16_t sid, iOptions* options);
     ~cService();
 
     // gets
@@ -268,7 +268,7 @@ public:
     //{{{  vars
     // var
     const uint16_t mSid;
-    cBaseOptions* mOptions = nullptr;
+    iOptions* mOptions = nullptr;
 
     uint16_t mProgramPid = 0;
 
@@ -288,7 +288,7 @@ public:
     };
   //}}}
 
-  cTransportStream (const cDvbMultiplex& dvbMultiplex, cBaseOptions* options);
+  cTransportStream (const cDvbMultiplex& dvbMultiplex, iOptions* options);
   virtual ~cTransportStream() { clear(); }
 
   //{{{  gets
@@ -344,7 +344,7 @@ private:
 
   // vars
   const cDvbMultiplex mDvbMultiplex;
-  cBaseOptions* mOptions;
+  iOptions* mOptions;
   bool mShowingFirstService = false;
 
   std::mutex mMutex;

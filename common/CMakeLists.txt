@@ -1,6 +1,5 @@
 project (common VERSION 1.0.0)
-  add_library (${PROJECT_NAME} basicTypes.h date.h utils.h fileUtils.h
-                               cBaseOptions.h
+  add_library (${PROJECT_NAME} basicTypes.h date.h utils.h fileUtils.h iOptions.h
                                cBipBuffer.h readerWriterQueue.h
                                cDvbUtils.h cDvbUtils.cpp cDvbUtilsHuff.cpp
                                cLog.h cLog.cpp

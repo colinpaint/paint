@@ -10,8 +10,7 @@
 constexpr int kPtsPerSecond = 90000;
 constexpr int64_t kPtsPer25HzFrame = kPtsPerSecond / 25;
 
-class cBaseOptions {
+class iOptions {
 public:
-  virtual ~cBaseOptions() = default;
+  virtual ~iOptions() = default;
   };
-

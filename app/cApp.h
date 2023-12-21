@@ -7,7 +7,7 @@
 
 // utils
 #include "../common/basicTypes.h"
-#include "../common/cBaseOptions.h"
+#include "../common/iOptions.h"
 #include "../common/cLog.h"
 
 class cPlatform;
@@ -18,7 +18,7 @@ struct ImFont;
 class cApp {
 public:
   //{{{
-  class cOptions : public cBaseOptions {
+  class cOptions : public iOptions {
   public:
     virtual ~cOptions() = default;
 

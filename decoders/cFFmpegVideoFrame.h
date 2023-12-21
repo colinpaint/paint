@@ -54,7 +54,7 @@ public:
         AVMotionVector* mvs = (AVMotionVector*)sideData->data;
         size_t num = sideData->size / sizeof(AVMotionVector);
         AVMotionVector* mv = &mvs[0];
-        cLog::log (LOGINFO, fmt::format ("motion {} {} {}", num, mv->w, mv->h));
+        //cLog::log (LOGINFO, fmt::format ("motion {} {} {}", num, mv->w, mv->h));
         for (size_t i = 0; i < num; i++) {
           mv = &mvs[i];
           mMotionVectors.push_back (sMotionVector(mv->source, mv->src_x, mv->src_y, mv->dst_x, mv->dst_y,

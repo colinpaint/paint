@@ -53,7 +53,7 @@ public:
   //}}}
 
   //{{{
-  cFFmpegVideoDecoder (bool h264, cBaseOptions* options) :
+  cFFmpegVideoDecoder (bool h264, iOptions* options) :
       cDecoder(), mH264(h264), mOptions(options),
        mStreamName(h264 ? "h264" : "mpeg2"),
        mAvCodec(avcodec_find_decoder (h264 ? AV_CODEC_ID_H264 : AV_CODEC_ID_MPEG2VIDEO)) {
@@ -147,7 +147,7 @@ public:
 
 private:
   const bool mH264 = false;
-  cBaseOptions* mOptions;
+  iOptions* mOptions;
   const std::string mStreamName;
   const AVCodec* mAvCodec = nullptr;
 

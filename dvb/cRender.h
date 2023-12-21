@@ -11,7 +11,7 @@
 #include <shared_mutex>
 
 #include "../common/basicTypes.h"
-#include "../common/cBaseOptions.h"
+#include "../common/iOptions.h"
 #include "../common/cMiniLog.h"
 #include "../common/readerWriterQueue.h"
 
@@ -30,7 +30,7 @@ public:
     };
   //}}}
 
-  cRender (bool queued, const std::string& name, const std::string& threadName, cBaseOptions* options,
+  cRender (bool queued, const std::string& name, const std::string& threadName, iOptions* options,
            uint8_t streamType, uint16_t pid,
            int64_t ptsDuration, size_t maxFrames,
            std::function <cFrame* ()> getFrameCallback,
@@ -68,7 +68,7 @@ protected:
   float getQueueFrac() const;
 
   // vars
-  cBaseOptions* mOptions;
+  iOptions* mOptions;
 
   std::shared_mutex mSharedMutex;
   cDecoder* mDecoder = nullptr;

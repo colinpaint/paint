@@ -476,7 +476,7 @@ int cTransportStream::cPidInfo::addToBuffer (uint8_t* buf, int bufSize) {
 //}}}
 //{{{  class cTransportStream::cService
 //{{{
-cTransportStream::cService::cService (uint16_t sid, cBaseOptions* options) : mSid(sid), mOptions(options) {
+cTransportStream::cService::cService (uint16_t sid, iOptions* options) : mSid(sid), mOptions(options) {
 
   mRenderStreams[eVideo].setLabel ("vid:");
   mRenderStreams[eAudio].setLabel ("aud:");
@@ -731,7 +731,7 @@ void cTransportStream::cService::writeSection (uint8_t* ts, uint8_t* tsSectionSt
 //}}}
 //}}}
 
-cTransportStream::cTransportStream (const cDvbMultiplex& dvbMultiplex, cBaseOptions* options) :
+cTransportStream::cTransportStream (const cDvbMultiplex& dvbMultiplex, iOptions* options) :
   mDvbMultiplex(dvbMultiplex), mOptions(options) {}
 
 // gets

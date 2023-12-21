@@ -52,7 +52,7 @@ constexpr size_t kFileMaxFrames = 50;
 
 // cVideoRender
 //{{{
-cVideoRender::cVideoRender (const string& name, uint8_t streamType, uint16_t pid, cBaseOptions* options) :
+cVideoRender::cVideoRender (const string& name, uint8_t streamType, uint16_t pid, iOptions* options) :
     cRender(kQueued, name, "vid", options, streamType, pid,
             kPtsPer25HzFrame, (dynamic_cast<cRender::cOptions*>(options))->mIsLive ? kLiveMaxFrames : kFileMaxFrames,
 

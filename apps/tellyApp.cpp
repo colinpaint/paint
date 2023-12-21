@@ -33,7 +33,7 @@
 
 // utils
 #include "../common/basicTypes.h"
-#include "../common/cBaseOptions.h"
+#include "../common/iOptions.h"
 #include "../common/date.h"
 #include "../common/utils.h"
 #include "../common/fileUtils.h"
@@ -222,16 +222,22 @@ namespace {
       //{{{  draw radio buttons
       if (ImGui::Button ("radio1"))
         songApp.setSongSpec (kRadio1);
+
       if (ImGui::Button ("radio2"))
         songApp.setSongSpec (kRadio2);
+
       if (ImGui::Button ("radio3"))
         songApp.setSongSpec (kRadio3);
+
       if (ImGui::Button ("radio4"))
         songApp.setSongSpec (kRadio4);
+
       if (ImGui::Button ("radio5"))
         songApp.setSongSpec (kRadio5);
+
       if (ImGui::Button ("radio6"))
         songApp.setSongSpec (kRadio6);
+
       if (ImGui::Button ("wqxr"))
         songApp.setSongSpec (kWqxr);
       //}}}
@@ -1406,16 +1412,15 @@ namespace {
 
             float viewportWidth = ImGui::GetWindowWidth();
             float viewportHeight = ImGui::GetWindowHeight();
-            cMat4x4 projection (0.f,viewportWidth, 0.f,viewportHeight, -1.f,1.f);
-            float scale = getScale (numViews);
-            cVec2 fraction = gridFractionalPosition (viewIndex, numViews);
+            float scale;
+            cVec2 pos = getPosScale (viewIndex, numViews, scale);
+            mRect = cRect (int32_t((pos.x - (scale/2.f)) * viewportWidth),
+                           int32_t((pos.x + (scale/2.f)) * viewportWidth),
+                           int32_t((pos.y - (scale/2.f)) * viewportHeight),
+                           int32_t((pos.y + (scale/2.f)) * viewportHeight));
 
-            cMat4x4 rectModel = cMat4x4();
-            rectModel.setTranslate ({(fraction.x - (0.5f * scale)) * viewportWidth,
-                                     (fraction.y - (0.5f * scale)) * viewportHeight});
-            rectModel.size ({ scale * viewportWidth, scale * viewportHeight });
-            mRect = cRect (rectModel.transform (cVec2(0, 1), viewportHeight),
-                           rectModel.transform (cVec2(1, 0), viewportHeight));
+            cLog::log (LOGINFO, fmt::format ("{:4.3f},{:4.3f}:{:4.3f} {},{} -> {},{} {},{}",
+                       pos.x, pos.y, scale, viewportWidth, viewportHeight, mRect.left, mRect.right, mRect.top, mRect.bottom));
 
             if (!selectFull || (mSelect != eUnselected)) {
               // view selected or no views selected
@@ -1426,10 +1431,13 @@ namespace {
               if (videoFrame) {
                 //{{{  draw video
                 cMat4x4 videoModel = cMat4x4();
-                videoModel.setTranslate ({(fraction.x - (0.5f * scale)) * viewportWidth,
-                                          (fraction.y - (0.5f * scale)) * viewportHeight});
+                videoModel.setTranslate ({(pos.x - (0.5f * scale)) * viewportWidth,
+                                          (pos.y - (0.5f * scale)) * viewportHeight});
                 videoModel.size ({ scale * viewportWidth / videoFrame->getWidth(),
                                    scale * viewportHeight / videoFrame->getHeight() });
+
+                cMat4x4 projection (0.f,viewportWidth, 0.f,viewportHeight, -1.f,1.f);
+
                 mVideoShader->use();
                 mVideoShader->setModelProjection (videoModel, projection);
 
@@ -1465,8 +1473,8 @@ namespace {
 
                     float xpos = (float)subtitleImage.getXpos() / videoFrame->getWidth();
                     float ypos = (float)(videoFrame->getHeight() - subtitleImage.getYpos()) / videoFrame->getHeight();
-                    videoModel.setTranslate ({ (fraction.x + ((xpos - 0.5f) * scale)) * viewportWidth,
-                                               (fraction.y + ((ypos - 0.5f) * scale)) * viewportHeight });
+                    videoModel.setTranslate ({ (pos.x + ((xpos - 0.5f) * scale)) * viewportWidth,
+                                               (pos.y + ((ypos - 0.5f) * scale)) * viewportHeight });
                     mSubtitleShader->setModelProjection (videoModel, projection);
 
                     // ensure quad is created (assumes same size) and drawIt
@@ -1686,15 +1694,12 @@ namespace {
         //}}}
 
         //{{{
-        float getScale (size_t numViews) const {
-          return (numViews <= 1) ? 1.f :
-            ((numViews <= 4) ? 0.5f :
-              ((numViews <= 9) ? 0.33f :
-                ((numViews <= 16) ? 0.25f : 0.20f)));
-          }
-        //}}}
-        //{{{
-        cVec2 gridFractionalPosition (size_t index, size_t numViews) {
+        cVec2 getPosScale (size_t index, size_t numViews, float& scale) {
+
+          scale = (numViews <= 1) ? 1.f :
+            ((numViews <= 4) ? 1.f/2.f :
+              ((numViews <= 9) ? 1.f/3.f :
+                ((numViews <= 16) ? 1.f/4.f : 1.f/5.f)));
 
           switch (numViews) {
             //{{{
@@ -1753,6 +1758,7 @@ namespace {
                 }
               return { 0.5f, 0.5f };
             //}}}
+
 
             case 10:
             case 11:

@@ -46,7 +46,7 @@ constexpr int64_t kDefaultPtsPerFrame = 1920;
 
 // cAudioRender
 //{{{
-cAudioRender::cAudioRender (const string& name, uint8_t streamType, uint16_t pid, cBaseOptions* options)
+cAudioRender::cAudioRender (const string& name, uint8_t streamType, uint16_t pid, iOptions* options)
     : cRender(kQueued, name, "aud", options, streamType, pid,
               kDefaultPtsPerFrame, (dynamic_cast<cRender::cOptions*>(options))->mIsLive ? kLiveMaxFrames : kFileMaxFrames,
 

@@ -18,7 +18,7 @@ using namespace std;
 constexpr size_t kMaxLogSize = 64;
 
 //{{{
-cRender::cRender (bool queued, const string& name, const string& threadName, cBaseOptions* options,
+cRender::cRender (bool queued, const string& name, const string& threadName, iOptions* options,
                   uint8_t streamType, uint16_t pid,
                   int64_t ptsDuration, size_t maxFrames,
                   function <cFrame* ()> getFrameCallback,
