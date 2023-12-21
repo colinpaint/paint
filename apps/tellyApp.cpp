@@ -1427,16 +1427,16 @@ namespace {
               cVideoFrame* videoFrame = videoRender.getVideoFrameAtOrAfterPts (playPts);
               if (videoFrame) {
                 //{{{  draw video
-                cMat4x4 videoModel = cMat4x4();
-                videoModel.setTranslate ({(grid.x - (0.5f * scale)) * viewportWidth,
-                                          ((1.f-grid.y) - (0.5f * scale)) * viewportHeight});
-                videoModel.size ({ scale * viewportWidth / videoFrame->getWidth(),
-                                   scale * viewportHeight / videoFrame->getHeight() });
+                cMat4x4 model = cMat4x4();
+                model.setTranslate ({(grid.x - (0.5f * scale)) * viewportWidth,
+                                     ((1.f-grid.y) - (0.5f * scale)) * viewportHeight});
+                model.size ({scale * viewportWidth / videoFrame->getWidth(),
+                             scale * viewportHeight / videoFrame->getHeight()});
 
                 cMat4x4 projection (0.f,viewportWidth, 0.f,viewportHeight, -1.f,1.f);
 
                 mVideoShader->use();
-                mVideoShader->setModelProjection (videoModel, projection);
+                mVideoShader->setModelProjection (model, projection);
 
                 // texture
                 cTexture& texture = videoFrame->getTexture (graphics);
@@ -1470,9 +1470,9 @@ namespace {
 
                     float xpos = (float)subtitleImage.getXpos() / videoFrame->getWidth();
                     float ypos = (float)(videoFrame->getHeight() - subtitleImage.getYpos()) / videoFrame->getHeight();
-                    videoModel.setTranslate ({(grid.x + ((xpos - 0.5f) * scale)) * viewportWidth,
-                                              ((1.0f-grid.y) + ((ypos - 0.5f) * scale)) * viewportHeight });
-                    mSubtitleShader->setModelProjection (videoModel, projection);
+                    model.setTranslate ({(grid.x + ((xpos - 0.5f) * scale)) * viewportWidth,
+                                         ((1.0f-grid.y) + ((ypos - 0.5f) * scale)) * viewportHeight});
+                    mSubtitleShader->setModelProjection (model, projection);
 
                     // ensure quad is created (assumes same size) and drawIt
                     if (!mSubtitleQuads[line])
@@ -1501,22 +1501,20 @@ namespace {
                 }
 
               if (mService.getRenderStream (eAudio).isEnabled()) {
-                //{{{  mute, draw audioMeter, draw framesGraphic
                 cAudioRender& audioRender = dynamic_cast<cAudioRender&>(mService.getRenderStream (eAudio).getRender());
-
                 if (audioRender.getPlayer())
                   audioRender.getPlayer()->setMute (mSelect == eUnselected);
 
-                // draw audio meter
+                // draw audioMeter graphic
                 mAudioMeterView.draw (audioRender, playPts,
                                       ImVec2((float)mRect.right - (0.5f * ImGui::GetTextLineHeight()),
                                              (float)mRect.bottom - (0.5f * ImGui::GetTextLineHeight())));
+                // draw frames graphic
                 if (mSelect == eSelectedFull)
                   mFramesView.draw (audioRender, videoRender, playPts,
                                     ImVec2((float)mRect.getCentre().x,
                                            (float)mRect.bottom - (0.5f * ImGui::GetTextLineHeight())));
                 }
-                //}}}
               }
             }
 

@@ -50,7 +50,7 @@ public:
   //}}}
 
   //{{{
-  void setAVFrame (AVFrame* avFrame) {
+  void setAVFrame (AVFrame* avFrame, bool motionVectors) {
 
     if (kFrameDebug)
       cLog::log (LOGINFO, fmt::format ("cFFmpegVideoFrame::setAVFrame"));
@@ -67,12 +67,14 @@ public:
     mInterlaced = avFrame->flags && AV_FRAME_FLAG_INTERLACED;
     mTopFieldFirst = avFrame->flags && AV_FRAME_FLAG_TOP_FIELD_FIRST;
 
-    AVFrameSideData* avFrameSideData = av_frame_get_side_data (avFrame, AV_FRAME_DATA_MOTION_VECTORS);
-    if (avFrameSideData) {
-      // take a copy of motion vectors, avFrame lifetime is shorter than display
-      mMotionVectors = realloc (mMotionVectors, avFrameSideData->size);
-      memcpy (mMotionVectors, avFrameSideData->data, avFrameSideData->size);
-      mNumMotionVectors = avFrameSideData->size / sizeof(AVMotionVector);
+    if (motionVectors) {
+      AVFrameSideData* avFrameSideData = av_frame_get_side_data (avFrame, AV_FRAME_DATA_MOTION_VECTORS);
+      if (avFrameSideData) {
+        // take a copy of motion vectors, avFrame lifetime is shorter than display
+        mMotionVectors = realloc (mMotionVectors, avFrameSideData->size);
+        memcpy (mMotionVectors, avFrameSideData->data, avFrameSideData->size);
+        mNumMotionVectors = avFrameSideData->size / sizeof(AVMotionVector);
+        }
       }
     }
   //}}}
