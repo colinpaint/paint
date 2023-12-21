@@ -126,7 +126,7 @@ public:
           ffmpegVideoFrame->setPtsDuration ((kPtsPerSecond * mAvContext->framerate.den) / mAvContext->framerate.num);
           ffmpegVideoFrame->setPesSize (frameSize);
           ffmpegVideoFrame->mFrameType = frameType;
-          ffmpegVideoFrame->setAVFrame (avFrame, (dynamic_cast<cOptions*>(mOptions))->mHasMotionVectors);
+          ffmpegVideoFrame->setAVFrame (avFrame);
           addFrameCallback (ffmpegVideoFrame);
           avFrame = av_frame_alloc();
 

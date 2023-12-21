@@ -14,24 +14,6 @@
 #include "../app/cGraphics.h"
 //}}}
 
-//{{{
-struct sMotionVector {
-  sMotionVector (int32_t source, int16_t srcx, int16_t srcy, int16_t dstx, int16_t dsty,
-                 int32_t x, int32_t y, uint16_t scale) :
-    mSource(source), mSrcx(srcx), mSrcy(srcy), mDstx(dstx), mDsty(dsty), mX(x), mY(y), mScale(scale) {}
-  ~sMotionVector() = default;
-
-  int32_t mSource;
-  int16_t mSrcx;
-  int16_t mSrcy;
-  int16_t mDstx;
-  int16_t mDsty;
-  int32_t mX;
-  int32_t mY;
-  uint16_t mScale;
-  };
-//}}}
-
 class cVideoFrame : public cFrame {
 public:
   cVideoFrame(cTexture::eTextureType textureType) : mTextureType(textureType) {}
@@ -66,7 +48,7 @@ public:
   }
   //}}}
 
-  virtual std::vector<sMotionVector>& getMotionVectors() = 0;
+  virtual AVMotionVector* getMotionVectors (size_t& numMotionVectors);
 
   void setWidth (uint16_t width) { mWidth = width; }
   void setHeight (uint16_t height) { mHeight = height; }

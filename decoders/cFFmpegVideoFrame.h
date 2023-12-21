@@ -31,14 +31,24 @@ extern "C" {
 class cFFmpegVideoFrame : public cVideoFrame {
 public:
   cFFmpegVideoFrame() : cVideoFrame(cTexture::eYuv420) {}
+  //{{{
   virtual ~cFFmpegVideoFrame() {
     if (kFrameDebug)
       cLog::log (LOGINFO, fmt::format ("cFFmpegVideoFrame::~cFFmpegVideoFrame"));
     }
+  //}}}
 
-  virtual std::vector<sMotionVector>& getMotionVectors() final { return mMotionVectors; }
+  //{{{
+  virtual AVMotionVector* getMotionVectors (size_t& numMotionVectors) final {
 
-  void setAVFrame (AVFrame* avFrame, bool hasMotionVectors) {
+    AVFrameSideData* sideData = av_frame_get_side_data (mAvFrame, AV_FRAME_DATA_MOTION_VECTORS);
+    numMotionVectors = sideData->size / sizeof(AVMotionVector);
+    return (AVMotionVector*)(sideData->data);
+    }
+  //}}}
+
+  //{{{
+  void setAVFrame (AVFrame* avFrame) {
     // release old AVframe before owning new AVframe
     if (kFrameDebug)
       cLog::log (LOGINFO, fmt::format ("cFFmpegVideoFrame::setAVFrame"));
@@ -47,23 +57,6 @@ public:
 
     mAvFrame = avFrame;
 
-    mMotionVectors.clear();
-    if (hasMotionVectors) {
-      AVFrameSideData* sideData = av_frame_get_side_data (avFrame, AV_FRAME_DATA_MOTION_VECTORS);
-      if (sideData) {
-        AVMotionVector* mvs = (AVMotionVector*)sideData->data;
-        size_t num = sideData->size / sizeof(AVMotionVector);
-        AVMotionVector* mv = &mvs[0];
-        //cLog::log (LOGINFO, fmt::format ("motion {} {} {}", num, mv->w, mv->h));
-        for (size_t i = 0; i < num; i++) {
-          mv = &mvs[i];
-          mMotionVectors.push_back (sMotionVector(mv->source, mv->src_x, mv->src_y, mv->dst_x, mv->dst_y,
-                                                  mv->motion_x, mv->motion_y, mv->motion_scale));
-          // mv->w, mv->h, mv->flags, mv->motion_x, mv->motion_y, mv->motion_scale));
-          }
-        }
-      }
-
     mWidth = (uint16_t)avFrame->width;
     mHeight = (uint16_t)avFrame->height;
     mStrideY = (uint16_t)avFrame->linesize[0];
@@ -71,11 +64,12 @@ public:
     mInterlaced = avFrame->flags && AV_FRAME_FLAG_INTERLACED;
     mTopFieldFirst = avFrame->flags && AV_FRAME_FLAG_TOP_FIELD_FIRST;
     }
+  //}}}
 
 protected:
   virtual uint8_t** getPixels() final { return mAvFrame->data; }
   virtual int* getStrides() final { return mAvFrame->linesize; }
-
+  //{{{
   virtual void releasePixels() final {
     if (kFrameDebug)
       cLog::log (LOGINFO, fmt::format ("cFFmpegVideoFrame::~releasePixels"));
@@ -88,9 +82,8 @@ protected:
       av_frame_free (&avFrame);
       }
     }
+  //}}}
 
 private:
   AVFrame* mAvFrame = nullptr;
-
-  std::vector <sMotionVector> mMotionVectors;
   };

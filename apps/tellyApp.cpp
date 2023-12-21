@@ -1413,11 +1413,11 @@ namespace {
             float viewportWidth = ImGui::GetWindowWidth();
             float viewportHeight = ImGui::GetWindowHeight();
             float scale;
-            cVec2 fractionalPos = getPosScale (viewIndex, numViews, scale);
-            mRect = cRect (int32_t((fractionalPos.x - (scale/2.f)) * viewportWidth),
-                           int32_t((fractionalPos.y - (scale/2.f)) * viewportHeight),
-                           int32_t((fractionalPos.x + (scale/2.f)) * viewportWidth),
-                           int32_t((fractionalPos.y + (scale/2.f)) * viewportHeight));
+            cVec2 grid = getPosScale (viewIndex, numViews, scale);
+            mRect = cRect (int32_t((grid.x - (scale/2.f)) * viewportWidth),
+                           int32_t((grid.y - (scale/2.f)) * viewportHeight),
+                           int32_t((grid.x + (scale/2.f)) * viewportWidth),
+                           int32_t((grid.y + (scale/2.f)) * viewportHeight));
 
             if (!selectFull || (mSelect != eUnselected)) {
               // view selected or no views selected
@@ -1428,8 +1428,8 @@ namespace {
               if (videoFrame) {
                 //{{{  draw video
                 cMat4x4 videoModel = cMat4x4();
-                videoModel.setTranslate ({(fractionalPos.x - (0.5f * scale)) * viewportWidth,
-                                          ((1.f-fractionalPos.y) - (0.5f * scale)) * viewportHeight});
+                videoModel.setTranslate ({(grid.x - (0.5f * scale)) * viewportWidth,
+                                          ((1.f-grid.y) - (0.5f * scale)) * viewportHeight});
                 videoModel.size ({ scale * viewportWidth / videoFrame->getWidth(),
                                    scale * viewportHeight / videoFrame->getHeight() });
 
@@ -1470,8 +1470,8 @@ namespace {
 
                     float xpos = (float)subtitleImage.getXpos() / videoFrame->getWidth();
                     float ypos = (float)(videoFrame->getHeight() - subtitleImage.getYpos()) / videoFrame->getHeight();
-                    videoModel.setTranslate ({(fractionalPos.x + ((xpos - 0.5f) * scale)) * viewportWidth,
-                                              ((1.0f-fractionalPos.y) + ((ypos - 0.5f) * scale)) * viewportHeight });
+                    videoModel.setTranslate ({(grid.x + ((xpos - 0.5f) * scale)) * viewportWidth,
+                                              ((1.0f-grid.y) + ((ypos - 0.5f) * scale)) * viewportHeight });
                     mSubtitleShader->setModelProjection (videoModel, projection);
 
                     // ensure quad is created (assumes same size) and drawIt
@@ -1481,15 +1481,21 @@ namespace {
                     }
                   }
                   //}}}
-                if (options->mShowMotionVectors && (mSelect == eSelectedFull))
+                if (options->mShowMotionVectors && (mSelect == eSelectedFull)) {
                   //{{{  draw motion vectors
-                  for (auto& motionVector : videoFrame->getMotionVectors())
+                  size_t numMotionVectors;
+                  AVMotionVector* mvs = videoFrame->getMotionVectors (numMotionVectors);
+
+                  for (size_t i = 0; i < numMotionVectors; i++) {
+                    AVMotionVector* mv = &mvs[i];
                     ImGui::GetWindowDrawList()->AddLine (
-                      { (float)mRect.left + (motionVector.mSrcx * viewportWidth / videoFrame->getWidth()),
-                        (float)mRect.top +  (motionVector.mSrcy * viewportHeight / videoFrame->getHeight()) },
-                      { (float)mRect.left + ((motionVector.mSrcx + (motionVector.mX / motionVector.mScale)) * viewportWidth / videoFrame->getWidth()),
-                        (float)mRect.top +  ((motionVector.mSrcy + (motionVector.mY / motionVector.mScale)) * viewportHeight / videoFrame->getHeight()) },
-                      motionVector.mSource > 0 ? 0xc0c0c0c0 : 0xc000c0c0, 1.f);
+                      {(float)mRect.left + (mv->src_x * viewportWidth / videoFrame->getWidth()),
+                       (float)mRect.top +  (mv->src_y * viewportHeight / videoFrame->getHeight())},
+                      {(float)mRect.left + ((mv->src_x + (mv->motion_x / mv->motion_scale)) * viewportWidth / videoFrame->getWidth()),
+                       (float)mRect.top +  ((mv->src_y + (mv->motion_y / mv->motion_scale)) * viewportHeight / videoFrame->getHeight())},
+                      mv->source > 0 ? 0xc0c0c0c0 : 0xc000c0c0, 1.f);
+                    }
+                  }
                   //}}}
                 }
 

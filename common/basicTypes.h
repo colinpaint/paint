@@ -436,3 +436,7 @@ struct cColor {
   //}}}
   };
 //}}}
+
+// no oidea where to put these
+constexpr int kPtsPerSecond = 90000;
+constexpr int64_t kPtsPer25HzFrame = kPtsPerSecond / 25;

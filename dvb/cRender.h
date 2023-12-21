@@ -19,6 +19,7 @@
 class cDecoder;
 #include "../decoders/cDecoderQueueItem.h"
 //}}}
+
 class cRender {
 public:
   //{{{
