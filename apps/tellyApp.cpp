@@ -86,6 +86,27 @@ using namespace std;
 //}}}
 namespace {
   //{{{
+  const vector <cDvbMultiplex> kDvbMultiplexes = {
+      { "hd", 626000000,
+        { "BBC ONE SW HD", "BBC TWO HD", "BBC THREE HD", "BBC FOUR HD", "ITV1 HD", "Channel 4 HD", "Channel 5 HD" },
+        { "bbc1",          "bbc2",       "bbc3",         "bbc4",        "itv",     "c4",           "c5" },
+        { 1,               2,            3,              4,             6,         7,              5 }
+      },
+
+      { "itv", 650000000,
+        { "ITV1",   "ITV2",   "ITV3",   "ITV4",   "Channel 4", "Channel 4+1", "More 4",  "Film4" ,  "E4",   "Channel 5" },
+        { "itv1sd", "itv2sd", "itv3sd", "itv4sd", "chn4sd",    "c4+1sd",      "more4sd", "film4sd", "e4sd", "chn5sd" },
+        { 1,        2,        3,        4,        5,           6,             7,         8,         9,      0 }
+      },
+
+      { "bbc", 674000000,
+        { "BBC ONE S West", "BBC TWO", "BBC FOUR" },
+        { "bbc1sd",         "bbc2sd",  "bbc4sd" },
+        { 1,                2,         4 }
+      }
+    };
+  //}}}
+  //{{{
   class cTellyOptions : public cApp::cOptions,
                         public cTransportStream::cOptions,
                         public cRender::cOptions,
@@ -102,7 +123,7 @@ namespace {
     bool mShowSubtitle = false;
     bool mShowMotionVectors = false;
 
-    cDvbMultiplex mMultiplex;
+    cDvbMultiplex mMultiplex = kDvbMultiplexes[0];
     string mFileName;
     };
   //}}}
@@ -915,27 +936,6 @@ namespace {
   #else
     const string kRootDir = "/home/pi/tv/";
   #endif
-  //}}}
-  //{{{
-  const vector <cDvbMultiplex> kDvbMultiplexes = {
-      { "hd", 626000000,
-        { "BBC ONE SW HD", "BBC TWO HD", "BBC THREE HD", "BBC FOUR HD", "ITV1 HD", "Channel 4 HD", "Channel 5 HD" },
-        { "bbc1",          "bbc2",       "bbc3",         "bbc4",        "itv",     "c4",           "c5" },
-        { 1,               2,            3,              4,             6,         7,              5 }
-      },
-
-      { "itv", 650000000,
-        { "ITV1",   "ITV2",   "ITV3",   "ITV4",   "Channel 4", "Channel 4+1", "More 4",  "Film4" ,  "E4",   "Channel 5" },
-        { "itv1sd", "itv2sd", "itv3sd", "itv4sd", "chn4sd",    "c4+1sd",      "more4sd", "film4sd", "e4sd", "chn5sd" },
-        { 1,        2,        3,        4,        5,           6,             7,         8,         9,      0 }
-      },
-
-      { "bbc", 674000000,
-        { "BBC ONE S West", "BBC TWO", "BBC FOUR" },
-        { "bbc1sd",         "bbc2sd",  "bbc4sd" },
-        { 1,                2,         4 }
-      }
-    };
   //}}}
   //{{{
   class cTellyApp : public cApp {
@@ -2146,7 +2146,6 @@ namespace {
 int main (int numArgs, char* args[]) {
 
   cTellyOptions* options = new cTellyOptions();
-  options->mMultiplex = kDvbMultiplexes[0];
   //{{{  parse commandLine params to options
   for (int i = 1; i < numArgs; i++) {
     string param = args[i];
@@ -2211,6 +2210,5 @@ int main (int numArgs, char* args[]) {
     }
 
   tellyApp.mainUILoop();
-
   return EXIT_SUCCESS;
   }
