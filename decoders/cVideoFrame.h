@@ -48,7 +48,7 @@ public:
   }
   //}}}
 
-  virtual AVMotionVector* getMotionVectors (size_t& numMotionVectors);
+  virtual void* getMotionVectors (size_t& numMotionVectors) = 0;
 
   void setWidth (uint16_t width) { mWidth = width; }
   void setHeight (uint16_t height) { mHeight = height; }

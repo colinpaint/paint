@@ -1484,16 +1484,17 @@ namespace {
                 if (options->mShowMotionVectors && (mSelect == eSelectedFull)) {
                   //{{{  draw motion vectors
                   size_t numMotionVectors;
-                  AVMotionVector* mvs = videoFrame->getMotionVectors (numMotionVectors);
-
-                  for (size_t i = 0; i < numMotionVectors; i++) {
-                    AVMotionVector* mv = &mvs[i];
-                    ImGui::GetWindowDrawList()->AddLine (
-                      {(float)mRect.left + (mv->src_x * viewportWidth / videoFrame->getWidth()),
-                       (float)mRect.top +  (mv->src_y * viewportHeight / videoFrame->getHeight())},
-                      {(float)mRect.left + ((mv->src_x + (mv->motion_x / mv->motion_scale)) * viewportWidth / videoFrame->getWidth()),
-                       (float)mRect.top +  ((mv->src_y + (mv->motion_y / mv->motion_scale)) * viewportHeight / videoFrame->getHeight())},
-                      mv->source > 0 ? 0xc0c0c0c0 : 0xc000c0c0, 1.f);
+                  AVMotionVector* mv = (AVMotionVector*)(videoFrame->getMotionVectors (numMotionVectors));
+                  if (numMotionVectors) {
+                    for (size_t i = 0; i < numMotionVectors; i++) {
+                      ImGui::GetWindowDrawList()->AddLine (
+                        {(float)mRect.left + (mv->src_x * viewportWidth / videoFrame->getWidth()),
+                         (float)mRect.top +  (mv->src_y * viewportHeight / videoFrame->getHeight())},
+                        {(float)mRect.left + ((mv->src_x + (mv->motion_x / mv->motion_scale)) * viewportWidth / videoFrame->getWidth()),
+                         (float)mRect.top +  ((mv->src_y + (mv->motion_y / mv->motion_scale)) * viewportHeight / videoFrame->getHeight())},
+                        mv->source > 0 ? 0xc0c0c0c0 : 0xc000c0c0, 1.f);
+                      mv++;
+                      }
                     }
                   }
                   //}}}
