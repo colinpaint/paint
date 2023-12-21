@@ -1413,14 +1413,11 @@ namespace {
             float viewportWidth = ImGui::GetWindowWidth();
             float viewportHeight = ImGui::GetWindowHeight();
             float scale;
-            cVec2 pos = getPosScale (viewIndex, numViews, scale);
-            mRect = cRect (int32_t((pos.x - (scale/2.f)) * viewportWidth),
-                           int32_t((pos.x + (scale/2.f)) * viewportWidth),
-                           int32_t((pos.y - (scale/2.f)) * viewportHeight),
-                           int32_t((pos.y + (scale/2.f)) * viewportHeight));
-
-            cLog::log (LOGINFO, fmt::format ("{:4.3f},{:4.3f}:{:4.3f} {},{} -> {},{} {},{}",
-                       pos.x, pos.y, scale, viewportWidth, viewportHeight, mRect.left, mRect.right, mRect.top, mRect.bottom));
+            cVec2 fractionalPos = getPosScale (viewIndex, numViews, scale);
+            mRect = cRect (int32_t((fractionalPos.x - (scale/2.f)) * viewportWidth),
+                           int32_t((fractionalPos.y - (scale/2.f)) * viewportHeight),
+                           int32_t((fractionalPos.x + (scale/2.f)) * viewportWidth),
+                           int32_t((fractionalPos.y + (scale/2.f)) * viewportHeight));
 
             if (!selectFull || (mSelect != eUnselected)) {
               // view selected or no views selected
@@ -1431,8 +1428,8 @@ namespace {
               if (videoFrame) {
                 //{{{  draw video
                 cMat4x4 videoModel = cMat4x4();
-                videoModel.setTranslate ({(pos.x - (0.5f * scale)) * viewportWidth,
-                                          (pos.y - (0.5f * scale)) * viewportHeight});
+                videoModel.setTranslate ({(fractionalPos.x - (0.5f * scale)) * viewportWidth,
+                                          ((1.f-fractionalPos.y) - (0.5f * scale)) * viewportHeight});
                 videoModel.size ({ scale * viewportWidth / videoFrame->getWidth(),
                                    scale * viewportHeight / videoFrame->getHeight() });
 
@@ -1473,8 +1470,8 @@ namespace {
 
                     float xpos = (float)subtitleImage.getXpos() / videoFrame->getWidth();
                     float ypos = (float)(videoFrame->getHeight() - subtitleImage.getYpos()) / videoFrame->getHeight();
-                    videoModel.setTranslate ({ (pos.x + ((xpos - 0.5f) * scale)) * viewportWidth,
-                                               (pos.y + ((ypos - 0.5f) * scale)) * viewportHeight });
+                    videoModel.setTranslate ({(fractionalPos.x + ((xpos - 0.5f) * scale)) * viewportWidth,
+                                              ((1.0f-fractionalPos.y) + ((ypos - 0.5f) * scale)) * viewportHeight });
                     mSubtitleShader->setModelProjection (videoModel, projection);
 
                     // ensure quad is created (assumes same size) and drawIt
@@ -1534,8 +1531,8 @@ namespace {
 
           if ((getHover() || (mSelect != eUnselected)) && (mSelect != eSelectedFull))
             //{{{  draw select rect
-            ImGui::GetWindowDrawList()->AddRect ({ (float)mRect.left, (float)mRect.top },
-                                                 { (float)mRect.right, (float)mRect.bottom },
+            ImGui::GetWindowDrawList()->AddRect ({(float)mRect.left, (float)mRect.top},
+                                                 {(float)mRect.right, (float)mRect.bottom},
                                                  getHover() ? 0xff20ffff : 0xff20ff20, 4.f, 0, 4.f);
             //}}}
           }
@@ -1715,11 +1712,11 @@ namespace {
             //{{{
             case 4: // 2x2
               switch (index) {
-                case 0: return { 1.f / 4.f, 3.f / 4.f };
-                case 1: return { 3.f / 4.f, 3.f / 4.f };
+                case 0: return { 1.f / 4.f, 1.f / 4.f };
+                case 1: return { 3.f / 4.f, 1.f / 4.f };
 
-                case 2: return { 1.f / 4.f, 1.f / 4.f };
-                case 3: return { 3.f / 4.f, 1.f / 4.f };
+                case 2: return { 1.f / 4.f, 3.f / 4.f };
+                case 3: return { 3.f / 4.f, 3.f / 4.f };
                 }
               return { 0.5f, 0.5f };
             //}}}
@@ -1728,13 +1725,13 @@ namespace {
             //{{{
             case 6: // 3x2
               switch (index) {
-                case 0: return { 1.f / 6.f, 4.f / 6.f };
-                case 1: return { 3.f / 6.f, 4.f / 6.f };
-                case 2: return { 5.f / 6.f, 4.f / 6.f };
+                case 0: return { 1.f / 6.f, 2.f / 6.f };
+                case 1: return { 3.f / 6.f, 2.f / 6.f };
+                case 2: return { 5.f / 6.f, 2.f / 6.f };
 
-                case 3: return { 1.f / 6.f, 2.f / 6.f };
-                case 4: return { 3.f / 6.f, 2.f / 6.f };
-                case 5: return { 5.f / 6.f, 2.f / 6.f };
+                case 3: return { 1.f / 6.f, 4.f / 6.f };
+                case 4: return { 3.f / 6.f, 4.f / 6.f };
+                case 5: return { 5.f / 6.f, 4.f / 6.f };
                 }
               return { 0.5f, 0.5f };
             //}}}
@@ -1744,21 +1741,20 @@ namespace {
             //{{{
             case 9: // 3x3
               switch (index) {
-                case 0: return { 1.f / 6.f, 5.f / 6.f };
-                case 1: return { 3.f / 6.f, 5.f / 6.f };
-                case 2: return { 5.f / 6.f, 5.f / 6.f };
+                case 0: return { 1.f / 6.f, 1.f / 6.f };
+                case 1: return { 3.f / 6.f, 1.f / 6.f };
+                case 2: return { 5.f / 6.f, 1.f / 6.f };
 
                 case 3: return { 1.f / 6.f, 0.5f };
                 case 4: return { 3.f / 6.f, 0.5f };
                 case 5: return { 5.f / 6.f, 0.5f };
 
-                case 6: return { 1.f / 6.f, 1.f / 6.f };
-                case 7: return { 3.f / 6.f, 1.f / 6.f };
-                case 8: return { 5.f / 6.f, 1.f / 6.f };
+                case 6: return { 1.f / 6.f, 5.f / 6.f };
+                case 7: return { 3.f / 6.f, 5.f / 6.f };
+                case 8: return { 5.f / 6.f, 5.f / 6.f };
                 }
               return { 0.5f, 0.5f };
             //}}}
-
 
             case 10:
             case 11:
@@ -1769,25 +1765,25 @@ namespace {
             //{{{
             case 16: // 4x4
               switch (index) {
-                case  0: return { 1.f / 8.f, 7.f / 8.f };
-                case  1: return { 3.f / 8.f, 7.f / 8.f };
-                case  2: return { 5.f / 8.f, 7.f / 8.f };
-                case  3: return { 7.f / 8.f, 7.f / 8.f };
+                case  0: return { 1.f / 8.f, 1.f / 8.f };
+                case  1: return { 3.f / 8.f, 1.f / 8.f };
+                case  2: return { 5.f / 8.f, 1.f / 8.f };
+                case  3: return { 7.f / 8.f, 1.f / 8.f };
 
-                case  4: return { 1.f / 8.f, 5.f / 8.f };
-                case  5: return { 3.f / 8.f, 5.f / 8.f };
-                case  6: return { 5.f / 8.f, 5.f / 8.f };
-                case  7: return { 7.f / 8.f, 5.f / 8.f };
+                case  4: return { 1.f / 8.f, 3.f / 8.f };
+                case  5: return { 3.f / 8.f, 3.f / 8.f };
+                case  6: return { 5.f / 8.f, 3.f / 8.f };
+                case  7: return { 7.f / 8.f, 3.f / 8.f };
 
-                case  8: return { 1.f / 8.f, 3.f / 8.f };
-                case  9: return { 3.f / 8.f, 3.f / 8.f };
-                case 10: return { 5.f / 8.f, 3.f / 8.f };
-                case 11: return { 7.f / 8.f, 3.f / 8.f };
+                case  8: return { 1.f / 8.f, 5.f / 8.f };
+                case  9: return { 3.f / 8.f, 5.f / 8.f };
+                case 10: return { 5.f / 8.f, 5.f / 8.f };
+                case 11: return { 7.f / 8.f, 5.f / 8.f };
 
-                case 12: return { 1.f / 8.f, 1.f / 8.f };
-                case 13: return { 3.f / 8.f, 1.f / 8.f };
-                case 14: return { 5.f / 8.f, 1.f / 8.f };
-                case 15: return { 7.f / 8.f, 1.f / 8.f };
+                case 12: return { 1.f / 8.f, 7.f / 8.f };
+                case 13: return { 3.f / 8.f, 7.f / 8.f };
+                case 14: return { 5.f / 8.f, 7.f / 8.f };
+                case 15: return { 7.f / 8.f, 7.f / 8.f };
                 }
               return { 0.5f, 0.5f };
             //}}}
