@@ -1301,15 +1301,15 @@ namespace {
 
         // draw views
         bool viewHit = false;
+        size_t viewHitIndex = 0;
         size_t viewIndex = 0;
-        size_t hitViewIndex = 0;
         for (auto& view : mViewMap) {
           if (!selectedFull || view.second.getSelectedFull())
             if (view.second.draw (graphics, options,
                                   selectedFull, selectedFull ? 1 : getNumViews(), viewIndex,
                                   mVideoShader, mSubtitleShader)) {
               viewHit = true;
-              hitViewIndex = viewIndex;
+              viewHitIndex = viewIndex;
               }
           viewIndex++;
           }
@@ -1318,7 +1318,7 @@ namespace {
         if (viewHit) {
           size_t unselectViewIndex = 0;
           for (auto& view : mViewMap) {
-            if (unselectViewIndex != hitViewIndex)
+            if (unselectViewIndex != viewHitIndex)
               view.second.unselect();
             unselectViewIndex++;
             }
