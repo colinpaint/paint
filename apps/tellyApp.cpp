@@ -1354,9 +1354,9 @@ namespace {
           cVec2 layoutPos = getLayout (viewIndex, numViews, layoutScale);
           float viewportWidth = ImGui::GetWindowWidth();
           float viewportHeight = ImGui::GetWindowHeight();
-          mTl = {(layoutPos.x - (layoutScale/2.f)) * viewportWidth, 
+          mTl = {(layoutPos.x - (layoutScale/2.f)) * viewportWidth,
                  (layoutPos.y - (layoutScale/2.f)) * viewportHeight};
-          mBr = {(layoutPos.x + (layoutScale/2.f)) * viewportWidth, 
+          mBr = {(layoutPos.x + (layoutScale/2.f)) * viewportWidth,
                  (layoutPos.y + (layoutScale/2.f)) * viewportHeight};
 
           bool enabled = mService.getRenderStream (eVideo).isEnabled();
@@ -1396,7 +1396,7 @@ namespace {
                 //}}}
                 if (options->mShowSubtitle) {
                   //{{{  draw subtitles
-                  cSubtitleRender& subtitleRender = 
+                  cSubtitleRender& subtitleRender =
                     dynamic_cast<cSubtitleRender&> (mService.getRenderStream (eSubtitle).getRender());
 
                   subtitleShader->use();
@@ -1652,7 +1652,7 @@ namespace {
         cVec2 getLayout (size_t index, size_t numViews, float& scale) {
         // return layout scale, and position as fraction of viewPort
 
-          scale = (numViews <= 1) ? 1.f : 
+          scale = (numViews <= 1) ? 1.f :
                     ((numViews <= 4) ? 1.f/2.f :
                       ((numViews <= 9) ? 1.f/3.f :
                         ((numViews <= 16) ? 1.f/4.f : 1.f/5.f)));
