@@ -375,7 +375,7 @@ void cApp::windowResize (int width, int height) {
 //{{{
 void cApp::mainUILoop() {
 
-  if (mPlatform && mGraphics & mUi) {
+  if (mPlatform && mGraphics && mUI) {
     while (mPlatform->pollEvents()) {
       mGraphics->newFrame();
       mPlatform->newFrame();
