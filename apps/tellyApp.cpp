@@ -1369,8 +1369,7 @@ namespace {
         bool pick (cVec2 pos) { return mRect.isInside (pos); }
         //{{{
         bool hover() {
-          mHover = ImGui::IsMouseHoveringRect (ImVec2 ((float)mRect.left, (float)mRect.top),
-                                               ImVec2 ((float)mRect.right, (float)mRect.bottom));
+          mHover = ImGui::IsMouseHoveringRect (mTl, mBr);
           return mHover;
           }
         //}}}
@@ -1414,16 +1413,14 @@ namespace {
             float viewportHeight = ImGui::GetWindowHeight();
             float scale;
             cVec2 grid = getPosScale (viewIndex, numViews, scale);
-            mRect = cRect (int32_t((grid.x - (scale/2.f)) * viewportWidth),
-                           int32_t((grid.y - (scale/2.f)) * viewportHeight),
-                           int32_t((grid.x + (scale/2.f)) * viewportWidth),
-                           int32_t((grid.y + (scale/2.f)) * viewportHeight));
+            mTl = {(grid.x - (scale/2.f)) * viewportWidth, (grid.y - (scale/2.f)) * viewportHeight};
+            mBr = {(grid.x + (scale/2.f)) * viewportWidth, (grid.y + (scale/2.f)) * viewportHeight};
+            mRect = cRect (int32_t(mTl.x), int32_t(mTl.y), int32_t(mBr.x), int32_t(mBr.y));
 
             if (!selectFull || (mSelect != eUnselected)) {
               // view selected or no views selected
               // show nearest videoFrame to playPts
-              cVideoRender& videoRender = dynamic_cast<cVideoRender&>(
-                                            mService.getRenderStream (eVideo).getRender());
+              cVideoRender& videoRender = dynamic_cast<cVideoRender&>(mService.getRenderStream (eVideo).getRender());
               cVideoFrame* videoFrame = videoRender.getVideoFrameAtOrAfterPts (playPts);
               if (videoFrame) {
                 //{{{  draw video
@@ -1432,9 +1429,7 @@ namespace {
                                      ((1.f-grid.y) - (0.5f * scale)) * viewportHeight});
                 model.size ({scale * viewportWidth / videoFrame->getWidth(),
                              scale * viewportHeight / videoFrame->getHeight()});
-
                 cMat4x4 projection (0.f,viewportWidth, 0.f,viewportHeight, -1.f,1.f);
-
                 mVideoShader->use();
                 mVideoShader->setModelProjection (model, projection);
 
@@ -1458,7 +1453,6 @@ namespace {
 
                   for (size_t line = 0; line < subtitleRender.getNumLines(); line++) {
                     cSubtitleImage& subtitleImage = subtitleRender.getImage (line);
-
                     if (!mSubtitleTextures[line])
                       mSubtitleTextures[line] = graphics.createTexture (cTexture::eRgba, subtitleImage.getSize());
                     mSubtitleTextures[line]->setSource();
@@ -1488,10 +1482,10 @@ namespace {
                   if (numMotionVectors) {
                     for (size_t i = 0; i < numMotionVectors; i++) {
                       ImGui::GetWindowDrawList()->AddLine (
-                        {(float)mRect.left + (mv->src_x * viewportWidth / videoFrame->getWidth()),
-                         (float)mRect.top +  (mv->src_y * viewportHeight / videoFrame->getHeight())},
-                        {(float)mRect.left + ((mv->src_x + (mv->motion_x / mv->motion_scale)) * viewportWidth / videoFrame->getWidth()),
-                         (float)mRect.top +  ((mv->src_y + (mv->motion_y / mv->motion_scale)) * viewportHeight / videoFrame->getHeight())},
+                        {mTl.x + (mv->src_x * viewportWidth / videoFrame->getWidth()),
+                         mTl.y +  (mv->src_y * viewportHeight / videoFrame->getHeight())},
+                        {mBr.x + ((mv->src_x + (mv->motion_x / mv->motion_scale)) * viewportWidth / videoFrame->getWidth()),
+                         mBr.y +  ((mv->src_y + (mv->motion_y / mv->motion_scale)) * viewportHeight / videoFrame->getHeight())},
                         mv->source > 0 ? 0xc0c0c0c0 : 0xc000c0c0, 1.f);
                       mv++;
                       }
@@ -1507,13 +1501,12 @@ namespace {
 
                 // draw audioMeter graphic
                 mAudioMeterView.draw (audioRender, playPts,
-                                      ImVec2((float)mRect.right - (0.5f * ImGui::GetTextLineHeight()),
-                                             (float)mRect.bottom - (0.5f * ImGui::GetTextLineHeight())));
+                                      ImVec2(mBr.x - (0.5f * ImGui::GetTextLineHeight()),
+                                             mBr.y - (0.5f * ImGui::GetTextLineHeight())));
                 // draw frames graphic
                 if (mSelect == eSelectedFull)
                   mFramesView.draw (audioRender, videoRender, playPts,
-                                    ImVec2((float)mRect.getCentre().x,
-                                           (float)mRect.bottom - (0.5f * ImGui::GetTextLineHeight())));
+                                    ImVec2((mTl.x + mBr.x)/2.f, mBr.y - (0.5f * ImGui::GetTextLineHeight())));
                 }
               }
             }
@@ -1524,22 +1517,19 @@ namespace {
             if (mSelect == eSelectedFull)
               channelString += " " + mService.getNowTitleString();
 
-            ImGui::SetCursorPos ({(float)mRect.left + (ImGui::GetTextLineHeight() * 0.25f),
-                                  (float)mRect.bottom - ImGui::GetTextLineHeight()});
+            ImGui::SetCursorPos ({mTl.x + (ImGui::GetTextLineHeight() * 0.25f),
+                                  mBr.y - ImGui::GetTextLineHeight()});
             ImGui::TextColored ({0.f, 0.f,0.f,1.f}, channelString.c_str());
 
-            ImGui::SetCursorPos ({(float)mRect.left - 2.f + (ImGui::GetTextLineHeight() * 0.25f),
-                                  (float)mRect.bottom - 2.f - ImGui::GetTextLineHeight()});
+            ImGui::SetCursorPos ({mTl.x - 2.f + (ImGui::GetTextLineHeight() * 0.25f),
+                                  mBr.y - 2.f - ImGui::GetTextLineHeight()});
             ImGui::TextColored ({1.f, 1.f,1.f,1.f}, channelString.c_str());
             }
             //}}}
 
+          //    draw select rect
           if ((getHover() || (mSelect != eUnselected)) && (mSelect != eSelectedFull))
-            //{{{  draw select rect
-            ImGui::GetWindowDrawList()->AddRect ({(float)mRect.left, (float)mRect.top},
-                                                 {(float)mRect.right, (float)mRect.bottom},
-                                                 getHover() ? 0xff20ffff : 0xff20ff20, 4.f, 0, 4.f);
-            //}}}
+            ImGui::GetWindowDrawList()->AddRect (mTl, mBr, getHover() ? 0xff20ffff : 0xff20ff20, 4.f, 0, 4.f);
           }
         //}}}
 
@@ -1807,6 +1797,8 @@ namespace {
 
         // video
         cRect mRect = { 0,0,0,0 };
+        ImVec2 mTl;
+        ImVec2 mBr;
         cQuad* mVideoQuad = nullptr;
 
         // graphics
