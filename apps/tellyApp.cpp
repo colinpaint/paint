@@ -1236,8 +1236,6 @@ namespace {
     //{{{
     class cMultiView {
     public:
-      size_t getNumViews() const { return mViewMap.size(); }
-
       //{{{
       void moveLeft() {
         cLog::log (LOGINFO, fmt::format ("moveLeft"));
@@ -1272,7 +1270,7 @@ namespace {
       //{{{
       void draw (cTransportStream& transportStream, cGraphics& graphics, cTellyOptions* options) {
 
-        // create shaders, this is first time see graphics interface
+        // create shaders, firsttime we see graphics interface
         if (!mVideoShader)
           mVideoShader = graphics.createTextureShader (cTexture::eYuv420);
         if (!mSubtitleShader)
@@ -1306,15 +1304,16 @@ namespace {
         for (auto& view : mViewMap) {
           if (!selectedFull || view.second.getSelectedFull())
             if (view.second.draw (graphics, options,
-                                  selectedFull, selectedFull ? 1 : getNumViews(), viewIndex,
+                                  selectedFull, selectedFull ? 1 : mViewMap.size(), viewIndex,
                                   mVideoShader, mSubtitleShader)) {
+              // view hit
               viewHit = true;
               viewHitIndex = viewIndex;
               }
           viewIndex++;
           }
 
-        // unselect any other view
+        // unselect other views
         if (viewHit) {
           size_t unselectViewIndex = 0;
           for (auto& view : mViewMap) {
