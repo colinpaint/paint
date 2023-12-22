@@ -46,7 +46,7 @@
 #include "../app/myImgui.h"
 
 // decoders
-//{{{  libav
+//{{{  include libav
 #ifdef _WIN32
   #pragma warning (push)
   #pragma warning (disable: 4244)
@@ -205,6 +205,8 @@ namespace {
   class cSongUI : public cApp::iUI {
   public:
     virtual void draw (cApp& app, cGraphics& graphics) final {
+      (void)graphics;
+
       cSongApp& songApp = (cSongApp&)app;
 
       ImGui::SetNextWindowPos (ImVec2(0,0));
