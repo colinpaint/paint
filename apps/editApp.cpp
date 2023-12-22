@@ -4596,7 +4596,9 @@ namespace {
   //{{{
   class cEditUI : public cApp::iUI {
   public:
-    virtual void draw (cApp& app) final {
+    virtual void draw (cApp& app, cGraphics& graphics) final {
+      (void) graphics;
+
       ImGui::SetNextWindowPos (ImVec2(0,0));
       ImGui::SetNextWindowSize (ImGui::GetIO().DisplaySize);
 

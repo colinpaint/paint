@@ -204,7 +204,7 @@ namespace {
   //{{{
   class cSongUI : public cApp::iUI {
   public:
-    virtual void draw (cApp& app) final {
+    virtual void draw (cApp& app, cGraphics& graphics) final {
       cSongApp& songApp = (cSongApp&)app;
 
       ImGui::SetNextWindowPos (ImVec2(0,0));
@@ -1126,11 +1126,11 @@ namespace {
   class cTellyUI : public cApp::iUI {
   public:
     //{{{
-    virtual void draw (cApp& app) final {
+    virtual void draw (cApp& app, cGraphics& graphics) final {
 
       cTellyApp& tellyApp = (cTellyApp&)app;
-      tellyApp.getGraphics().clear ({(int32_t)ImGui::GetIO().DisplaySize.x,
-                                     (int32_t)ImGui::GetIO().DisplaySize.y});
+      graphics.clear ({(int32_t)ImGui::GetIO().DisplaySize.x,
+                       (int32_t)ImGui::GetIO().DisplaySize.y});
 
       ImGui::SetKeyboardFocusHere();
       ImGui::SetNextWindowPos ({ 0.f,0.f });
@@ -1141,7 +1141,7 @@ namespace {
 
       if (tellyApp.hasTransportStream()) {
         // draw piccies
-        mMultiView.draw (tellyApp.getTransportStream(), tellyApp.getGraphics(), tellyApp.getOptions());
+        mMultiView.draw (tellyApp.getTransportStream(), graphics, tellyApp.getOptions());
 
         // draw tabs
         ImGui::SetCursorPos ({ 0.f,0.f });
@@ -1184,8 +1184,9 @@ namespace {
       //}}}
 
       if (tellyApp.hasTransportStream()) {
-        // draw transportStream info
+        //{{{  draw transportStream info
         cTransportStream& transportStream = tellyApp.getTransportStream();
+
         if (tellyApp.isFileSource()) {
           //{{{  draw filePos info
           ImGui::SameLine();
@@ -1200,6 +1201,7 @@ namespace {
                                                         tellyApp.getDvbSource().getStatusString()).c_str());
           }
           //}}}
+
         if (tellyApp.getTransportStream().getNumErrors()) {
           //{{{  draw transportStream errors
           ImGui::SameLine();
@@ -1211,7 +1213,7 @@ namespace {
         ImGui::PushFont (tellyApp.getMonoFont());
         switch (mTab) {
           case eChannels:   drawChannels (transportStream); break;
-          case eServices:   drawServices (transportStream, tellyApp.getGraphics()); break;
+          case eServices:   drawServices (transportStream, graphics); break;
           case ePidMap:     drawPidMap (transportStream); break;
           case eRecordings: drawRecordings (transportStream); break;
           default:;
@@ -1226,6 +1228,7 @@ namespace {
           }
           //}}}
         }
+        //}}}
 
       keyboard (tellyApp);
       ImGui::End();
@@ -1348,6 +1351,7 @@ namespace {
             mSelect = eUnselected;
           }
         //}}}
+
         //{{{
         bool draw (cGraphics& graphics, cTellyOptions* options,
                    bool selectFull, size_t numViews, size_t viewIndex,
