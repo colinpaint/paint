@@ -1135,25 +1135,14 @@ namespace {
                        (int32_t)ImGui::GetIO().DisplaySize.y});
 
       ImGui::SetKeyboardFocusHere();
-      ImGui::SetNextWindowPos ({ 0.f,0.f });
+      ImGui::SetNextWindowPos ({0.f,0.f});
       ImGui::SetNextWindowSize (ImGui::GetIO().DisplaySize);
       ImGui::Begin ("telly", nullptr, ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoBackground |
                                       ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove |
                                       ImGuiWindowFlags_NoScrollbar);
 
-      if (tellyApp.hasTransportStream()) {
-        // draw piccies
-        mMultiView.draw (tellyApp.getTransportStream(), graphics, tellyApp.getOptions());
-
-        // draw tabs
-        ImGui::SetCursorPos ({ 0.f,0.f });
-        if (tellyApp.getTransportStream().getRecordPrograms().size())
-          mTab = (eTab)interlockedButtons (kTabNamesRecord, (uint8_t)mTab, {0.f,0.f}, true);
-        else if (tellyApp.getTransportStream().getServiceMap().size() > 1)
-          mTab = (eTab)interlockedButtons (kTabNames, (uint8_t)mTab, {0.f,0.f}, true);
-        else
-          mTab = (eTab)interlockedButtons (kTabNamesSingle, (uint8_t)mTab, {0.f,0.f}, true);
-        }
+      if (tellyApp.hasTransportStream()) 
+        mTab = (eTab)interlockedButtons (kTabNames, (uint8_t)mTab, {0.f,0.f}, true);
 
       //{{{  draw subtitle button
       ImGui::SameLine();
@@ -1186,7 +1175,6 @@ namespace {
       //}}}
 
       if (tellyApp.hasTransportStream()) {
-        //{{{  draw transportStream info
         cTransportStream& transportStream = tellyApp.getTransportStream();
 
         if (tellyApp.isFileSource()) {
@@ -1211,26 +1199,28 @@ namespace {
           }
           //}}}
 
-        // draw tab with monoSpaced font
+        //{{{  draw tab subMenu with monoSpaced font
         ImGui::PushFont (tellyApp.getMonoFont());
         switch (mTab) {
-          case eChannels:   drawChannels (transportStream); break;
           case eServices:   drawServices (transportStream, graphics); break;
           case ePidMap:     drawPidMap (transportStream); break;
           case eRecordings: drawRecordings (transportStream); break;
           default:;
           }
         ImGui::PopFont();
+        //}}}
 
-        if (tellyApp.hasTransportStream() && transportStream.hasTdtTime()) {
+        if (transportStream.hasTdtTime()) {
           //{{{  draw clock
           //ImGui::TextUnformatted (transportStream.getTdtTimeString().c_str());
           ImGui::SetCursorPos ({ ImGui::GetWindowWidth() - 90.f, 0.f} );
           clockButton ("clock", transportStream.getTdtTime(), { 80.f, 80.f });
           }
           //}}}
+
+        // draw piccies, strange order, after buttons displayed above ???
+        mMultiView.draw (transportStream, graphics, tellyApp.getOptions());
         }
-        //}}}
 
       keyboard (tellyApp);
       ImGui::End();
@@ -1789,10 +1779,8 @@ namespace {
       };
     //}}}
 
-    enum eTab { eTelly, eServices, ePidMap, eChannels, eRecordings };
-    inline static const vector<string> kTabNamesRecord = { "telly", "services", "pids", "channels", "recorded" };
-    inline static const vector<string> kTabNames =       { "telly", "services", "pids", "channels" };
-    inline static const vector<string> kTabNamesSingle = { "telly", "services", "pids" };
+    enum eTab { eTelly, eServices, ePidMap, eRecordings };
+    inline static const vector<string> kTabNames = { "telly", "services", "pids", "recorded" };
 
     //{{{
     void hitShow (eTab tab) {
@@ -1800,26 +1788,6 @@ namespace {
       }
     //}}}
 
-    //{{{
-    void drawChannels (cTransportStream& transportStream) {
-
-      // draw services/channels
-      for (auto& pair : transportStream.getServiceMap()) {
-        cTransportStream::cService& service = pair.second;
-        if (ImGui::Button (fmt::format ("{:{}s}", service.getChannelName(), mMaxNameChars).c_str()))
-          service.toggleAll();
-
-        if (service.getRenderStream (eAudio).isDefined()) {
-          ImGui::SameLine();
-          ImGui::TextUnformatted (fmt::format ("{}{}",
-            service.getRenderStream (eAudio).isEnabled() ? "*":"", service.getNowTitleString()).c_str());
-          }
-
-        while (service.getChannelName().size() > mMaxNameChars)
-          mMaxNameChars = service.getChannelName().size();
-        }
-      }
-    //}}}
     //{{{
     void drawServices (cTransportStream& transportStream, cGraphics& graphics) {
 
@@ -2057,7 +2025,6 @@ namespace {
         { false, false, false, ImGuiKey_S,          [this,&tellyApp] { tellyApp.toggleShowSubtitle(); }},
         { false, false, false, ImGuiKey_L,          [this,&tellyApp] { tellyApp.toggleShowMotionVectors(); }},
         { false, false, false, ImGuiKey_T,          [this,&tellyApp] { hitShow (eTelly); }},
-        { false, false, false, ImGuiKey_C,          [this,&tellyApp] { hitShow (eChannels); }},
         { false, false, false, ImGuiKey_V,          [this,&tellyApp] { hitShow (eServices); }},
         { false, false, false, ImGuiKey_P,          [this,&tellyApp] { hitShow (ePidMap); }},
         { false, false, false, ImGuiKey_R,          [this,&tellyApp] { hitShow (eRecordings); }},
