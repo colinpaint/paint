@@ -1141,7 +1141,7 @@ namespace {
                                       ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove |
                                       ImGuiWindowFlags_NoScrollbar);
 
-      if (tellyApp.hasTransportStream()) 
+      if (tellyApp.hasTransportStream())
         mTab = (eTab)interlockedButtons (kTabNames, (uint8_t)mTab, {0.f,0.f}, true);
 
       //{{{  draw subtitle button
@@ -1350,12 +1350,14 @@ namespace {
                    cTextureShader* videoShader, cTextureShader* subtitleShader) {
         // return true if hit
 
-          float gridScale;
-          cVec2 gridPos = getLayout (viewIndex, numViews, gridScale);
+          float layoutScale;
+          cVec2 layoutPos = getLayout (viewIndex, numViews, layoutScale);
           float viewportWidth = ImGui::GetWindowWidth();
           float viewportHeight = ImGui::GetWindowHeight();
-          mTl = {(gridPos.x - (gridScale/2.f)) * viewportWidth, (gridPos.y - (gridScale/2.f)) * viewportHeight};
-          mBr = {(gridPos.x + (gridScale/2.f)) * viewportWidth, (gridPos.y + (gridScale/2.f)) * viewportHeight};
+          mTl = {(layoutPos.x - (layoutScale/2.f)) * viewportWidth, 
+                 (layoutPos.y - (layoutScale/2.f)) * viewportHeight};
+          mBr = {(layoutPos.x + (layoutScale/2.f)) * viewportWidth, 
+                 (layoutPos.y + (layoutScale/2.f)) * viewportHeight};
 
           bool enabled = mService.getRenderStream (eVideo).isEnabled();
           if (enabled) {
@@ -1373,10 +1375,10 @@ namespace {
               if (videoFrame) {
                 //{{{  draw video
                 cMat4x4 model = cMat4x4();
-                model.setTranslate ({(gridPos.x - (0.5f * gridScale)) * viewportWidth,
-                                     ((1.f-gridPos.y) - (0.5f * gridScale)) * viewportHeight});
-                model.size ({gridScale * viewportWidth / videoFrame->getWidth(),
-                             gridScale * viewportHeight / videoFrame->getHeight()});
+                model.setTranslate ({(layoutPos.x - (0.5f * layoutScale)) * viewportWidth,
+                                     ((1.f-layoutPos.y) - (0.5f * layoutScale)) * viewportHeight});
+                model.size ({layoutScale * viewportWidth / videoFrame->getWidth(),
+                             layoutScale * viewportHeight / videoFrame->getHeight()});
                 cMat4x4 projection (0.f,viewportWidth, 0.f,viewportHeight, -1.f,1.f);
                 videoShader->use();
                 videoShader->setModelProjection (model, projection);
@@ -1394,11 +1396,10 @@ namespace {
                 //}}}
                 if (options->mShowSubtitle) {
                   //{{{  draw subtitles
-                  cSubtitleRender& subtitleRender = dynamic_cast<cSubtitleRender&> (
-                                                      mService.getRenderStream (eSubtitle).getRender());
+                  cSubtitleRender& subtitleRender = 
+                    dynamic_cast<cSubtitleRender&> (mService.getRenderStream (eSubtitle).getRender());
 
                   subtitleShader->use();
-
                   for (size_t line = 0; line < subtitleRender.getNumLines(); line++) {
                     cSubtitleImage& subtitleImage = subtitleRender.getImage (line);
                     if (!mSubtitleTextures[line])
@@ -1412,11 +1413,12 @@ namespace {
 
                     float xpos = (float)subtitleImage.getXpos() / videoFrame->getWidth();
                     float ypos = (float)(videoFrame->getHeight() - subtitleImage.getYpos()) / videoFrame->getHeight();
-                    model.setTranslate ({(gridPos.x + ((xpos - 0.5f) * gridScale)) * viewportWidth,
-                                         ((1.0f-gridPos.y) + ((ypos - 0.5f) * gridScale)) * viewportHeight});
+                    model.setTranslate (
+                      {(layoutPos.x + ((xpos - 0.5f) * layoutScale)) * viewportWidth,
+                       ((1.0f - layoutPos.y) + ((ypos - 0.5f) * layoutScale)) * viewportHeight});
                     subtitleShader->setModelProjection (model, projection);
 
-                    // ensure quad is created (assumes same size) and drawIt
+                    // ensure quad is created (assumes same size) and draw
                     if (!mSubtitleQuads[line])
                       mSubtitleQuads[line] = graphics.createQuad (mSubtitleTextures[line]->getSize());
                     mSubtitleQuads[line]->draw();
@@ -1432,8 +1434,8 @@ namespace {
                       ImGui::GetWindowDrawList()->AddLine (
                         {mTl.x + (mv->src_x * viewportWidth / videoFrame->getWidth()),
                          mTl.y +  (mv->src_y * viewportHeight / videoFrame->getHeight())},
-                        {mBr.x + ((mv->src_x + (mv->motion_x / mv->motion_scale)) * viewportWidth / videoFrame->getWidth()),
-                         mBr.y +  ((mv->src_y + (mv->motion_y / mv->motion_scale)) * viewportHeight / videoFrame->getHeight())},
+                        {mTl.x + ((mv->src_x + (mv->motion_x / mv->motion_scale)) * viewportWidth / videoFrame->getWidth()),
+                         mTl.y +  ((mv->src_y + (mv->motion_y / mv->motion_scale)) * viewportHeight / videoFrame->getHeight())},
                         mv->source > 0 ? 0xc0c0c0c0 : 0xc000c0c0, 1.f);
                       mv++;
                       }
@@ -1460,21 +1462,19 @@ namespace {
               //}}}
             }
 
-          if (!enabled || (mSelect != eSelectedFull)) {
-            //{{{  draw channel title bottomLeft
-            string channelString = mService.getChannelName();
-            if (mSelect == eSelectedFull)
-              channelString += " " + mService.getNowTitleString();
+          //{{{  draw channel title bottomLeft
+          string channelString = mService.getChannelName();
+          if (!enabled || (mSelect == eSelectedFull))
+            channelString += " " + mService.getNowTitleString();
 
-            ImGui::SetCursorPos ({mTl.x + (ImGui::GetTextLineHeight() * 0.25f),
-                                  mBr.y - ImGui::GetTextLineHeight()});
-            ImGui::TextColored ({0.f, 0.f,0.f,1.f}, channelString.c_str());
+          ImGui::SetCursorPos ({mTl.x + (ImGui::GetTextLineHeight() * 0.25f),
+                                mBr.y - ImGui::GetTextLineHeight()});
+          ImGui::TextColored ({0.f, 0.f,0.f,1.f}, channelString.c_str());
 
-            ImGui::SetCursorPos ({mTl.x - 2.f + (ImGui::GetTextLineHeight() * 0.25f),
-                                  mBr.y - 2.f - ImGui::GetTextLineHeight()});
-            ImGui::TextColored ({1.f, 1.f,1.f,1.f}, channelString.c_str());
-            }
-            //}}}
+          ImGui::SetCursorPos ({mTl.x - 2.f + (ImGui::GetTextLineHeight() * 0.25f),
+                                mBr.y - 2.f - ImGui::GetTextLineHeight()});
+          ImGui::TextColored ({1.f, 1.f,1.f,1.f}, channelString.c_str());
+          //}}}
 
           // draw select rect
           mHover = ImGui::IsMouseHoveringRect (mTl, mBr);
@@ -1483,7 +1483,7 @@ namespace {
 
           ImGui::SetCursorPos (mTl);
           if (ImGui::InvisibleButton (fmt::format ("view##{}", mService.getSid()).c_str(), mBr-mTl)) {
-            // hit
+            // hit view, select action
             if (!mService.getRenderStream (eVideo).isEnabled())
               mService.toggleAll();
             else if (mSelect == eUnselected)
@@ -1650,11 +1650,12 @@ namespace {
 
         //{{{
         cVec2 getLayout (size_t index, size_t numViews, float& scale) {
+        // return layout scale, and position as fraction of viewPort
 
-          scale = (numViews <= 1) ? 1.f :
-            ((numViews <= 4) ? 1.f/2.f :
-              ((numViews <= 9) ? 1.f/3.f :
-                ((numViews <= 16) ? 1.f/4.f : 1.f/5.f)));
+          scale = (numViews <= 1) ? 1.f : 
+                    ((numViews <= 4) ? 1.f/2.f :
+                      ((numViews <= 9) ? 1.f/3.f :
+                        ((numViews <= 16) ? 1.f/4.f : 1.f/5.f)));
 
           switch (numViews) {
             //{{{
