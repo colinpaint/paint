@@ -1129,8 +1129,8 @@ namespace {
     virtual void draw (cApp& app) final {
 
       cTellyApp& tellyApp = (cTellyApp&)app;
-      tellyApp.getGraphics().clear ({ (int32_t)ImGui::GetIO().DisplaySize.x,
-                                      (int32_t)ImGui::GetIO().DisplaySize.y });
+      tellyApp.getGraphics().clear ({(int32_t)ImGui::GetIO().DisplaySize.x,
+                                     (int32_t)ImGui::GetIO().DisplaySize.y});
 
       ImGui::SetKeyboardFocusHere();
       ImGui::SetNextWindowPos ({ 0.f,0.f });
@@ -1140,7 +1140,7 @@ namespace {
                                       ImGuiWindowFlags_NoScrollbar);
 
       if (tellyApp.hasTransportStream()) {
-        // draw multiView piccies
+        // draw piccies
         mMultiView.draw (tellyApp.getTransportStream(), tellyApp.getGraphics(), tellyApp.getOptions());
 
         // draw tabs
@@ -1184,6 +1184,7 @@ namespace {
       //}}}
 
       if (tellyApp.hasTransportStream()) {
+        // draw transportStream info
         cTransportStream& transportStream = tellyApp.getTransportStream();
         if (tellyApp.isFileSource()) {
           //{{{  draw filePos info
@@ -1217,13 +1218,6 @@ namespace {
           }
         ImGui::PopFont();
 
-        // invisible bgnd button for mouse
-        ImGui::SetCursorPos ({ 0.f,0.f });
-        if (ImGui::InvisibleButton ("bgnd", { ImGui::GetIO().DisplaySize.x, ImGui::GetIO().DisplaySize.y }))
-          mMultiView.selectById (
-            mMultiView.pick ({ ImGui::GetMousePos().x, ImGui::GetMousePos().y }));
-        mMultiView.hover();
-
         if (tellyApp.hasTransportStream() && transportStream.hasTdtTime()) {
           //{{{  draw clock
           //ImGui::TextUnformatted (transportStream.getTdtTimeString().c_str());
@@ -1231,13 +1225,10 @@ namespace {
           clockButton ("clock", transportStream.getTdtTime(), { 80.f, 80.f });
           }
           //}}}
-
-        //if (ImGui::IsWindowHovered())
-        //  ImGui::SetMouseCursor (ImGuiMouseCursor_TextInput);
-        keyboard (tellyApp);
-
-        ImGui::End();
         }
+
+      keyboard (tellyApp);
+      ImGui::End();
       }
     //}}}
 
@@ -1246,44 +1237,6 @@ namespace {
     class cMultiView {
     public:
       size_t getNumViews() const { return mViewMap.size(); }
-
-      //{{{
-      bool hover() {
-      // run for every item to ensure mHover flag get set
-
-        bool result = false;
-
-        for (auto& view : mViewMap)
-          if (view.second.hover())
-            result = true;;
-
-        return result;
-        }
-      //}}}
-      //{{{
-      uint16_t pick (cVec2 mousePosition) {
-      // pick first view that matches
-
-        for (auto& view : mViewMap)
-          if (view.second.pick (mousePosition))
-            return view.second.getId();
-
-        return 0;
-        }
-      //}}}
-      //{{{
-      void selectById (uint16_t id) {
-      // select if id nonZero
-
-        if (id) {
-          bool selectFull = false;
-          for (auto& view : mViewMap)
-            selectFull |= view.second.select (id);
-
-          mSelectFull = selectFull;
-          }
-        }
-      //}}}
 
       //{{{
       void moveLeft() {
@@ -1319,11 +1272,11 @@ namespace {
       //{{{
       void draw (cTransportStream& transportStream, cGraphics& graphics, cTellyOptions* options) {
 
-        // create static shaders here, first time see graphics interface
-        if (!cView::mVideoShader)
-          cView::mVideoShader = graphics.createTextureShader (cTexture::eYuv420);
-        if (!cView::mSubtitleShader)
-          cView::mSubtitleShader = graphics.createTextureShader (cTexture::eRgba);
+        // create shaders, this is first time see graphics interface
+        if (!mVideoShader)
+          mVideoShader = graphics.createTextureShader (cTexture::eYuv420);
+        if (!mSubtitleShader)
+          mSubtitleShader = graphics.createTextureShader (cTexture::eRgba);
 
         // update viewMap from enabled services, take care to reuse cView's
         for (auto& pair : transportStream.getServiceMap()) {
@@ -1341,10 +1294,35 @@ namespace {
            // mViewMap.erase (it);
           }
 
-        // draw views
-        size_t viewIndex = 0;
+        // any view selectedFull ?
+        bool selectedFull = false;
         for (auto& view : mViewMap)
-          view.second.draw (graphics, options, mSelectFull, mSelectFull ? 1 : getNumViews(), viewIndex++);
+          selectedFull |= (view.second.getSelectedFull());
+
+        // draw views
+        bool viewHit = false;
+        size_t viewIndex = 0;
+        size_t hitViewIndex = 0;
+        for (auto& view : mViewMap) {
+          if (!selectedFull || view.second.getSelectedFull())
+            if (view.second.draw (graphics, options,
+                                  selectedFull, selectedFull ? 1 : getNumViews(), viewIndex,
+                                  mVideoShader, mSubtitleShader)) {
+              viewHit = true;
+              hitViewIndex = viewIndex;
+              }
+          viewIndex++;
+          }
+
+        // unselect any other view
+        if (viewHit) {
+          size_t unselectViewIndex = 0;
+          for (auto& view : mViewMap) {
+            if (unselectViewIndex != hitViewIndex)
+              view.second.unselect();
+            unselectViewIndex++;
+            }
+          }
         }
       //}}}
 
@@ -1364,74 +1342,49 @@ namespace {
           }
         //}}}
 
-        uint16_t getId() const { return mService.getSid(); }
-        bool getHover() const { return mHover; }
-        bool pick (cVec2 pos) { return mRect.isInside (pos); }
+        bool getSelectedFull() const { return mSelect == eSelectedFull; }
         //{{{
-        bool hover() {
-          mHover = ImGui::IsMouseHoveringRect (mTl, mBr);
-          return mHover;
-          }
-        //}}}
-        //{{{
-        bool select (uint16_t id) {
-
-          if (!mService.getRenderStream (eVideo).isEnabled())
-            mService.toggleAll();
-          else if (id != getId())
+        void unselect() {
+          if (mSelect == eSelected)
             mSelect = eUnselected;
-          else if (mSelect == eUnselected)
-            mSelect = eSelected;
-          else if (mSelect == eSelectedFull)
-            mSelect = eSelected;
-          else if (mSelect == eSelected) {
-            mSelect = eSelectedFull;
-            return true;
-            }
-
-          return false;
           }
         //}}}
-
         //{{{
-        void draw (cGraphics& graphics, cTellyOptions* options, bool selectFull, size_t numViews, size_t viewIndex) {
+        bool draw (cGraphics& graphics, cTellyOptions* options,
+                   bool selectFull, size_t numViews, size_t viewIndex,
+                   cTextureShader* videoShader, cTextureShader* subtitleShader) {
+        // return true if hit
+
+          float gridScale;
+          cVec2 gridPos = getLayout (viewIndex, numViews, gridScale);
+          float viewportWidth = ImGui::GetWindowWidth();
+          float viewportHeight = ImGui::GetWindowHeight();
+          mTl = {(gridPos.x - (gridScale/2.f)) * viewportWidth, (gridPos.y - (gridScale/2.f)) * viewportHeight};
+          mBr = {(gridPos.x + (gridScale/2.f)) * viewportWidth, (gridPos.y + (gridScale/2.f)) * viewportHeight};
 
           bool enabled = mService.getRenderStream (eVideo).isEnabled();
           if (enabled) {
             int64_t playPts = mService.getRenderStream (eAudio).getPts();
             if (mService.getRenderStream (eAudio).isEnabled()) {
-              //{{{  get playPts from audioStream
-              cAudioRender& audioRender = dynamic_cast<cAudioRender&>(
-                mService.getRenderStream (eAudio).getRender());
-
+              // get playPts from audioStream
+              cAudioRender& audioRender = dynamic_cast<cAudioRender&>(mService.getRenderStream (eAudio).getRender());
               if (audioRender.getPlayer())
                 playPts = audioRender.getPlayer()->getPts();
               }
-              //}}}
-
-            float viewportWidth = ImGui::GetWindowWidth();
-            float viewportHeight = ImGui::GetWindowHeight();
-            float scale;
-            cVec2 grid = getPosScale (viewIndex, numViews, scale);
-            mTl = {(grid.x - (scale/2.f)) * viewportWidth, (grid.y - (scale/2.f)) * viewportHeight};
-            mBr = {(grid.x + (scale/2.f)) * viewportWidth, (grid.y + (scale/2.f)) * viewportHeight};
-            mRect = cRect (int32_t(mTl.x), int32_t(mTl.y), int32_t(mBr.x), int32_t(mBr.y));
-
             if (!selectFull || (mSelect != eUnselected)) {
-              // view selected or no views selected
-              // show nearest videoFrame to playPts
+              //{{{  view selected or no views selected, show nearest videoFrame to playPts
               cVideoRender& videoRender = dynamic_cast<cVideoRender&>(mService.getRenderStream (eVideo).getRender());
               cVideoFrame* videoFrame = videoRender.getVideoFrameAtOrAfterPts (playPts);
               if (videoFrame) {
                 //{{{  draw video
                 cMat4x4 model = cMat4x4();
-                model.setTranslate ({(grid.x - (0.5f * scale)) * viewportWidth,
-                                     ((1.f-grid.y) - (0.5f * scale)) * viewportHeight});
-                model.size ({scale * viewportWidth / videoFrame->getWidth(),
-                             scale * viewportHeight / videoFrame->getHeight()});
+                model.setTranslate ({(gridPos.x - (0.5f * gridScale)) * viewportWidth,
+                                     ((1.f-gridPos.y) - (0.5f * gridScale)) * viewportHeight});
+                model.size ({gridScale * viewportWidth / videoFrame->getWidth(),
+                             gridScale * viewportHeight / videoFrame->getHeight()});
                 cMat4x4 projection (0.f,viewportWidth, 0.f,viewportHeight, -1.f,1.f);
-                mVideoShader->use();
-                mVideoShader->setModelProjection (model, projection);
+                videoShader->use();
+                videoShader->setModelProjection (model, projection);
 
                 // texture
                 cTexture& texture = videoFrame->getTexture (graphics);
@@ -1449,7 +1402,7 @@ namespace {
                   cSubtitleRender& subtitleRender = dynamic_cast<cSubtitleRender&> (
                                                       mService.getRenderStream (eSubtitle).getRender());
 
-                  mSubtitleShader->use();
+                  subtitleShader->use();
 
                   for (size_t line = 0; line < subtitleRender.getNumLines(); line++) {
                     cSubtitleImage& subtitleImage = subtitleRender.getImage (line);
@@ -1464,9 +1417,9 @@ namespace {
 
                     float xpos = (float)subtitleImage.getXpos() / videoFrame->getWidth();
                     float ypos = (float)(videoFrame->getHeight() - subtitleImage.getYpos()) / videoFrame->getHeight();
-                    model.setTranslate ({(grid.x + ((xpos - 0.5f) * scale)) * viewportWidth,
-                                         ((1.0f-grid.y) + ((ypos - 0.5f) * scale)) * viewportHeight});
-                    mSubtitleShader->setModelProjection (model, projection);
+                    model.setTranslate ({(gridPos.x + ((xpos - 0.5f) * gridScale)) * viewportWidth,
+                                         ((1.0f-gridPos.y) + ((ypos - 0.5f) * gridScale)) * viewportHeight});
+                    subtitleShader->setModelProjection (model, projection);
 
                     // ensure quad is created (assumes same size) and drawIt
                     if (!mSubtitleQuads[line])
@@ -1509,6 +1462,7 @@ namespace {
                                     ImVec2((mTl.x + mBr.x)/2.f, mBr.y - (0.5f * ImGui::GetTextLineHeight())));
                 }
               }
+              //}}}
             }
 
           if (!enabled || (mSelect != eSelectedFull)) {
@@ -1527,14 +1481,28 @@ namespace {
             }
             //}}}
 
-          //    draw select rect
-          if ((getHover() || (mSelect != eUnselected)) && (mSelect != eSelectedFull))
-            ImGui::GetWindowDrawList()->AddRect (mTl, mBr, getHover() ? 0xff20ffff : 0xff20ff20, 4.f, 0, 4.f);
+          // draw select rect
+          mHover = ImGui::IsMouseHoveringRect (mTl, mBr);
+          if ((mHover || (mSelect != eUnselected)) && (mSelect != eSelectedFull))
+            ImGui::GetWindowDrawList()->AddRect (mTl, mBr, mHover ? 0xff20ffff : 0xff20ff20, 4.f, 0, 4.f);
+
+          ImGui::SetCursorPos (mTl);
+          if (ImGui::InvisibleButton (fmt::format ("view##{}", mService.getSid()).c_str(), mBr-mTl)) {
+            // hit
+            if (!mService.getRenderStream (eVideo).isEnabled())
+              mService.toggleAll();
+            else if (mSelect == eUnselected)
+              mSelect = eSelected;
+            else if (mSelect == eSelected)
+              mSelect = eSelectedFull;
+            else if (mSelect == eSelectedFull)
+              mSelect = eSelected;
+            return true;
+            }
+
+          return false;
           }
         //}}}
-
-        inline static cTextureShader* mVideoShader = nullptr;
-        inline static cTextureShader* mSubtitleShader = nullptr;
 
       private:
         static const size_t kMaxSubtitleLines = 4;
@@ -1686,7 +1654,7 @@ namespace {
         //}}}
 
         //{{{
-        cVec2 getPosScale (size_t index, size_t numViews, float& scale) {
+        cVec2 getLayout (size_t index, size_t numViews, float& scale) {
 
           scale = (numViews <= 1) ? 1.f :
             ((numViews <= 4) ? 1.f/2.f :
@@ -1796,7 +1764,6 @@ namespace {
         eSelect mSelect = eUnselected;
 
         // video
-        cRect mRect = { 0,0,0,0 };
         ImVec2 mTl;
         ImVec2 mBr;
         cQuad* mVideoQuad = nullptr;
@@ -1810,9 +1777,10 @@ namespace {
         array <cTexture*, kMaxSubtitleLines> mSubtitleTextures = { nullptr };
         };
       //}}}
-
       map <uint16_t, cView> mViewMap;
-      bool mSelectFull = false;
+
+      cTextureShader* mVideoShader = nullptr;
+      cTextureShader* mSubtitleShader = nullptr;
       };
     //}}}
 
@@ -1893,7 +1861,8 @@ namespace {
         if (service.getChannelRecord()) {
           //{{{  draw record pathName
           ImGui::SameLine();
-          ImGui::Button (fmt::format ("rec:{}##{}", service.getChannelRecordName(), service.getSid()).c_str());
+          ImGui::Button (fmt::format ("rec:{}##{}",
+                                      service.getChannelRecordName(), service.getSid()).c_str());
           }
           //}}}
 
