@@ -22,10 +22,10 @@ class cRender;
 //}}}
 constexpr int kAacLatmStreamType = 17;
 constexpr int kH264StreamType = 27;
-enum eStreamType { eVideo, eAudio, eDescription, eSubtitle };
 
 class cTransportStream {
 public:
+  enum eStreamType { eVideo, eAudio, eDescription, eSubtitle, eStreamTypeSize };
   //{{{
   class cEpgItem {
   public:
@@ -253,8 +253,10 @@ public:
     // var
     const uint16_t mSid;
     iOptions* mOptions = nullptr;
-
     uint16_t mProgramPid = 0;
+
+    // streams
+    std::array <cStream, eStreamTypeSize> mStreams;
 
     // record
     std::string mChannelName;
@@ -265,9 +267,6 @@ public:
     // epg
     cEpgItem* mNowEpgItem = nullptr;
     std::map <std::chrono::system_clock::time_point, cEpgItem*> mEpgItemMap;
-
-    // streams - match sizeof eStream
-    std::array <cStream,4> mStreams;
     //}}}
     };
   //}}}
