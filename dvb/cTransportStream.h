@@ -307,9 +307,6 @@ public:
   cService* getService (uint16_t sid);
   std::vector <std::string>& getRecordPrograms() { return mRecordPrograms; }
   //}}}
-
-  void toggleStream (cService& service, eRenderType renderType);
-
   int64_t demux (uint8_t* chunk, int64_t chunkSize, int64_t streamPos, int64_t skipPts);
 
 private:

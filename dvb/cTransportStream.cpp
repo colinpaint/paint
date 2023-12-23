@@ -748,15 +748,6 @@ cTransportStream::cService* cTransportStream::getService (uint16_t sid) {
   }
 //}}}
 
-// stream
-//{{{
-void cTransportStream::toggleStream (cService& service, eRenderType streamType) {
-
-  lock_guard<mutex> lockGuard (mMutex);
-  service.toggleStream (streamType);
-  }
-//}}}
-
 // demux
 //{{{
 int64_t cTransportStream::demux (uint8_t* chunk, int64_t chunkSize, int64_t streamPos, int64_t skipPts) {
