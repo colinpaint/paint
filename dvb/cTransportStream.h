@@ -310,7 +310,7 @@ public:
 
   void toggleStream (cService& service, eRenderType renderType);
 
-  int64_t demux (uint8_t* tsBuf, int64_t tsBufSize, int64_t streamPos, int64_t skipPts);
+  int64_t demux (uint8_t* chunk, int64_t chunkSize, int64_t streamPos, int64_t skipPts);
 
 private:
   void clear();

@@ -732,7 +732,7 @@ void cTransportStream::cService::writeSection (uint8_t* ts, uint8_t* tsSectionSt
 //}}}
 
 cTransportStream::cTransportStream (const cDvbMultiplex& dvbMultiplex, iOptions* options) :
-  mDvbMultiplex(dvbMultiplex), mOptions(options) {}
+    mDvbMultiplex(dvbMultiplex), mOptions(options) {}
 
 // gets
 //{{{
@@ -759,14 +759,14 @@ void cTransportStream::toggleStream (cService& service, eRenderType streamType) 
 
 // demux
 //{{{
-int64_t cTransportStream::demux (uint8_t* tsBuf, int64_t tsBufSize, int64_t streamPos, int64_t skipPts) {
-// demux from tsBuffer to tsBuffer + tsBufferSize, streamPos is offset into full stream of first packet
+int64_t cTransportStream::demux (uint8_t* chunk, int64_t chunkSize, int64_t streamPos, int64_t skipPts) {
+// demux from chunk to chunk + chunkSize, streamPos offset from first packet
 
   if (skipPts != 0)
     clearPidContinuity();
 
-  uint8_t* ts = tsBuf;
-  uint8_t* tsEnd = tsBuf + tsBufSize;
+  uint8_t* ts = chunk;
+  uint8_t* tsEnd = chunk + chunkSize;
 
   uint8_t* nextPacket = ts + 188;
   while (nextPacket <= tsEnd) {
@@ -861,18 +861,18 @@ int64_t cTransportStream::demux (uint8_t* tsBuf, int64_t tsBufSize, int64_t stre
               tsBytesLeft -= headerBytes;
 
               if (payloadStart) {
-                if ((*(uint32_t*)ts & 0x00FFFFFF) == 0x010000) {
+                if ((*(uint32_t*)ts & 0x00FFFFFF) == 0x00010000) {
                   //{{{  process previous pesBuffer, use new pesBuffer
                   uint8_t streamId = (*((uint32_t*)(ts+3))) & 0xFF;
                   if ((streamId == 0xB0) || // program stream map
                       (streamId == 0xB1) || // private stream1
-                      (streamId == 0xBF))  // private stream2
+                      (streamId == 0xBF))   // private stream2
                     cLog::log (LOGINFO, fmt::format ("recognised pesHeader - pid:{} streamId:{:8x}", pid, streamId));
 
                   else if ((streamId == 0xBD) ||
                            (streamId == 0xBE) ||// ???
-                           ((streamId >= 0xC0) && (streamId <= 0xEF))) { 
-                    // subtitle, audio, video streams
+                           ((streamId >= 0xC0) && (streamId <= 0xEF))) {
+                    // subtitle, audio, video streamId
                     if (pidInfo->mBufPtr)
                       if (processPesByPid (*pidInfo, skipPts))
                         pidInfo->mBuffer = (uint8_t*)malloc (pidInfo->mBufSize);
@@ -901,8 +901,7 @@ int64_t cTransportStream::demux (uint8_t* tsBuf, int64_t tsBufSize, int64_t stre
                   }
                   //}}}
                 else
-                  cLog::log (LOGINFO, fmt::format ("unrecognised pesHeader {} {:8x}",
-                                                   pid, *(uint32_t*)ts));
+                  cLog::log (LOGINFO, fmt::format ("unrecognised pesHeader {} {:8x}", pid, *(uint32_t*)ts));
                 }
 
               // add payload to buffer
@@ -922,12 +921,12 @@ int64_t cTransportStream::demux (uint8_t* tsBuf, int64_t tsBufSize, int64_t stre
     else {
       //{{{  sync error, return
       cLog::log (LOGERROR, "demux - lostSync");
-      return tsEnd - tsBuf;
+      return tsEnd - chunk;
       }
       //}}}
     }
 
-  return ts - tsBuf;
+  return ts - chunk;
   }
 //}}}
 

@@ -1019,7 +1019,7 @@ namespace {
               if (bytesRead) {
                 streamPos += mTransportStream->demux (chunk, bytesRead, 0, 0);
                 if (options->mRecordAll && mFile)
-                  fwrite (cChunk, 1, bytesRead, mFile);
+                  fwrite (chunk, 1, bytesRead, mFile);
                 }
               else
                 cLog::log (LOGINFO, fmt::format ("liveDvbSource - no bytes"));
@@ -1079,9 +1079,10 @@ namespace {
         while (true) {
           size_t bytesRead = fread (chunk, 1, chunkSize, file);
           if (bytesRead > 0)
-            mFilePos += mTransportStream->demux (chunk, bytesRead, mFilePos, 0);
+            mFilePos += mTransportStream->demux (chunk, bytesRead, mFilePos, mSkipPts);
           else
             break;
+          mSkipPts = 0;
           //{{{  update fileSize
           #ifdef _WIN32
             // windows platform nonsense
@@ -1106,13 +1107,13 @@ namespace {
     //{{{
     void moveLeft() {
       cLog::log (LOGINFO, fmt::format ("tellyApp moveLeft"));
-      mFilePos -= 188 * 256;
+      mSkipPts = -90000;
       }
     //}}}
     //{{{
     void moveRight() {
       cLog::log (LOGINFO, fmt::format ("tellyApp moveRight"));
-      mFilePos += 188 * 256;
+      mSkipPts = 90000;
       }
     //}}}
 
@@ -1141,6 +1142,8 @@ namespace {
     FILE* mFile = nullptr;
     uint64_t mFilePos = 0;
     size_t mFileSize = 0;
+
+    int64_t mSkipPts = 0;
 
     cTellyOptions* mOptions;
     cTransportStream* mTransportStream = nullptr;
