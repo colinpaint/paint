@@ -759,11 +759,10 @@ void cTransportStream::toggleStream (cService& service, eRenderType streamType) 
 
 // demux
 //{{{
-int64_t cTransportStream::demux (uint8_t* tsBuf, int64_t tsBufSize, int64_t streamPos, bool skip) {
+int64_t cTransportStream::demux (uint8_t* tsBuf, int64_t tsBufSize, int64_t streamPos, int64_t skipPts) {
 // demux from tsBuffer to tsBuffer + tsBufferSize, streamPos is offset into full stream of first packet
-// decodePid1 = -1 use all
 
-  if (skip)
+  if (skipPts != 0)
     clearPidContinuity();
 
   uint8_t* ts = tsBuf;
@@ -867,14 +866,15 @@ int64_t cTransportStream::demux (uint8_t* tsBuf, int64_t tsBufSize, int64_t stre
                   uint8_t streamId = (*((uint32_t*)(ts+3))) & 0xFF;
                   if ((streamId == 0xB0) || // program stream map
                       (streamId == 0xB1) || // private stream1
-                      (streamId == 0xBF)) { // private stream2
+                      (streamId == 0xBF))  // private stream2
                     cLog::log (LOGINFO, fmt::format ("recognised pesHeader - pid:{} streamId:{:8x}", pid, streamId));
-                    }
+
                   else if ((streamId == 0xBD) ||
                            (streamId == 0xBE) ||// ???
-                           ((streamId >= 0xC0) && (streamId <= 0xEF))) { // subtitle, audio, video streams
+                           ((streamId >= 0xC0) && (streamId <= 0xEF))) { 
+                    // subtitle, audio, video streams
                     if (pidInfo->mBufPtr)
-                      if (processPesByPid (*pidInfo, skip))
+                      if (processPesByPid (*pidInfo, skipPts))
                         pidInfo->mBuffer = (uint8_t*)malloc (pidInfo->mBufSize);
                     }
                   else
@@ -1069,7 +1069,7 @@ void cTransportStream::stopServiceProgram (cService& service) {
   }
 //}}}
 //{{{
-bool cTransportStream::processPesByPid (cPidInfo& pidInfo, bool skip) {
+bool cTransportStream::processPesByPid (cPidInfo& pidInfo, int64_t skipPts) {
 
   cService* service = getService (pidInfo.getSid());
   if (service) {
@@ -1079,7 +1079,7 @@ bool cTransportStream::processPesByPid (cPidInfo& pidInfo, bool skip) {
       if (stream->isEnabled())
         return stream->getRender().processPes (pidInfo.getPid(),
                                                pidInfo.mBuffer, pidInfo.getBufUsed(),
-                                               pidInfo.getPts(), pidInfo.getDts(), skip);
+                                               pidInfo.getPts(), pidInfo.getDts(), skipPts);
       }
     }
 

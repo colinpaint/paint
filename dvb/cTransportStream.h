@@ -310,7 +310,7 @@ public:
 
   void toggleStream (cService& service, eRenderType renderType);
 
-  int64_t demux (uint8_t* tsBuf, int64_t tsBufSize, int64_t streamPos, bool skip);
+  int64_t demux (uint8_t* tsBuf, int64_t tsBufSize, int64_t streamPos, int64_t skipPts);
 
 private:
   void clear();
@@ -330,7 +330,7 @@ private:
   void programPesPacket (uint16_t sid, uint16_t pid, uint8_t* ts);
   void stopServiceProgram (cService& service);
 
-  bool processPesByPid (cPidInfo& pidInfo, bool skip);
+  bool processPesByPid (cPidInfo& pidInfo, int64_t skipPts);
   //{{{  parsers
   void parsePat (cPidInfo* pidInfo, uint8_t* buf);
   void parseNit (cPidInfo* pidInfo, uint8_t* buf);

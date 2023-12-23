@@ -39,7 +39,8 @@ public:
 
   // overrides
   virtual std::string getInfoString() const final;
-  virtual bool processPes (uint16_t pid, uint8_t* pes, uint32_t pesSize, int64_t pts, int64_t dts, bool skip) final;
+  virtual bool processPes (uint16_t pid, uint8_t* pes, uint32_t pesSize,
+                           int64_t pts, int64_t dts, int64_t skipPts) final;
 
 private:
   uint32_t mSampleRate;

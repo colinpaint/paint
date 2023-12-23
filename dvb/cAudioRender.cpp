@@ -105,13 +105,14 @@ string cAudioRender::getInfoString() const {
   }
 //}}}
 //{{{
-bool cAudioRender::processPes (uint16_t pid, uint8_t* pes, uint32_t pesSize, int64_t pts, int64_t dts, bool skip) {
+bool cAudioRender::processPes (uint16_t pid, uint8_t* pes, uint32_t pesSize,
+                               int64_t pts, int64_t dts, int64_t skipPts) {
 
   if (!((dynamic_cast<cRender::cOptions*>(mOptions))->mIsLive))
     if (mPlayer)
       while (throttle (mPlayer->getPts()))
         this_thread::sleep_for (1ms);
 
-  return cRender::processPes (pid, pes, pesSize, pts, dts, skip);
+  return cRender::processPes (pid, pes, pesSize, pts, dts, skipPts);
   }
 //}}}

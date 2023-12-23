@@ -953,6 +953,8 @@ namespace {
     void toggleShowSubtitle() { mOptions->mShowSubtitle = !mOptions->mShowSubtitle; }
     void toggleShowMotionVectors() { mOptions->mShowMotionVectors = !mOptions->mShowMotionVectors; }
 
+    bool isFileSource() { return mFileSource; }
+
     // liveDvbSource
     bool isDvbSource() const { return mDvbSource; }
     cDvbSource& getDvbSource() { return *mDvbSource; }
@@ -964,6 +966,7 @@ namespace {
                                        multiplex.mName, multiplex.mFrequency/1000.f,
                                        options->mRecordRoot, options->mShowAllServices ? "all " : ""));
 
+      mFileSource = false;
       mMultiplex = multiplex;
       mRecordRoot = options->mRecordRoot;
       if (multiplex.mFrequency)
@@ -991,7 +994,7 @@ namespace {
               auto ptr = mDvbSource->getBlockBDA (blockSize);
               if (blockSize) {
                 //  read and demux block
-                streamPos += mTransportStream->demux (ptr, blockSize, streamPos, false);
+                streamPos += mTransportStream->demux (ptr, blockSize, streamPos, 0);
                 if (options->mRecordAll && mFile)
                   fwrite (ptr, 1, blockSize, mFile);
                 mDvbSource->releaseBlock (blockSize);
@@ -1007,22 +1010,22 @@ namespace {
             sch_params.sched_priority = sched_get_priority_max (SCHED_RR);
             pthread_setschedparam (mLiveThread.native_handle(), SCHED_RR, &sch_params);
 
-            constexpr int kDvrReadBufferSize = 188 * 64;
-            uint8_t* buffer = new uint8_t[kDvrReadBufferSize];
+            constexpr int kDvrReadChunkSize = 188 * 64;
+            uint8_t* chunk = new uint8_t[kDvrReadChunkSize];
 
             uint64_t streamPos = 0;
             while (true) {
-              int bytesRead = mDvbSource->getBlock (buffer, kDvrReadBufferSize);
+              int bytesRead = mDvbSource->getBlock (chunk, kDvrReadChunkSize);
               if (bytesRead) {
-                streamPos += mTransportStream->demux (buffer, bytesRead, 0, false);
+                streamPos += mTransportStream->demux (chunk, bytesRead, 0, 0);
                 if (options->mRecordAll && mFile)
-                  fwrite (buffer, 1, bytesRead, mFile);
+                  fwrite (cChunk, 1, bytesRead, mFile);
                 }
               else
-                cLog::log (LOGINFO, fmt::format ("cTellyApp::liveDvbSource - no bytes"));
+                cLog::log (LOGINFO, fmt::format ("liveDvbSource - no bytes"));
               }
 
-            delete [] buffer;
+            delete[] chunk;
             //}}}
           #endif
 
@@ -1031,6 +1034,7 @@ namespace {
 
           cLog::log (LOGINFO, "exit");
           });
+
         mLiveThread.detach();
         }
 
@@ -1040,59 +1044,75 @@ namespace {
     //}}}
 
     // fileSource
-    bool isFileSource() const { return !mOptions->mFileName.empty(); }
     std::string getFileName() const { return mOptions->mFileName; }
     uint64_t getFilePos() const { return mFilePos; }
     size_t getFileSize() const { return mFileSize; }
     //{{{
     void fileSource (const string& filename, cTellyOptions* options) {
-    // create fileSource, any channel
+    // create fileSource
 
+      // create transportStream
       mTransportStream = new cTransportStream ({ "file", 0, {}, {}, {} }, options);
       if (!mTransportStream) {
-        cLog::log (LOGERROR, "cTellyApp::cTransportStream create failed");
+        cLog::log (LOGERROR, "fileSource cTransportStream create failed");
         return;
         }
 
-      // launch fileSource thread
+      // open fileSource
       mOptions->mFileName = cFileUtils::resolve (filename);
       FILE* file = fopen (mOptions->mFileName.c_str(), "rb");
-      if (file) {
-        // create fileRead thread
-        thread ([=]() {
-          cLog::setThreadName ("file");
-
-          size_t blockSize = 188 * 256;
-          uint8_t* buffer = new uint8_t[blockSize];
-
-          mFilePos = 0;
-          while (true) {
-            size_t bytesRead = fread (buffer, 1, blockSize, file);
-            if (bytesRead > 0)
-              mFilePos += mTransportStream->demux (buffer, bytesRead, mFilePos, false);
-            else
-              break;
-            //{{{  get mFileSize
-            #ifdef _WIN32
-              // windows platform nonsense
-              struct _stati64 st;
-              if (_stat64 (mOptions->mFileName.c_str(), &st) != -1)
-            #else
-              struct stat st;
-              if (stat (mOptions->mFileName.c_str(), &st) != -1)
-            #endif
-                mFileSize = st.st_size;
-            //}}}
-            }
-
-          fclose (file);
-          delete [] buffer;
-          cLog::log (LOGERROR, "exit");
-          }).detach();
+      if (!file) {
+        cLog::log (LOGERROR, fmt::format ("fileSource failed to open {}", mOptions->mFileName));
         return;
         }
 
-      cLog::log (LOGERROR, fmt::format ("cTellyApp::fileSource failed to open{}", mOptions->mFileName));
+      mFileSource = true;
+
+      // create fileRead thread
+      thread ([=]() {
+        cLog::setThreadName ("file");
+
+        size_t chunkSize = 188 * 256;
+        uint8_t* chunk = new uint8_t[chunkSize];
+
+        mFilePos = 0;
+        while (true) {
+          size_t bytesRead = fread (chunk, 1, chunkSize, file);
+          if (bytesRead > 0)
+            mFilePos += mTransportStream->demux (chunk, bytesRead, mFilePos, 0);
+          else
+            break;
+          //{{{  update fileSize
+          #ifdef _WIN32
+            // windows platform nonsense
+            struct _stati64 st;
+            if (_stat64 (mOptions->mFileName.c_str(), &st) != -1)
+          #else
+            struct stat st;
+            if (stat (mOptions->mFileName.c_str(), &st) != -1)
+          #endif
+              mFileSize = st.st_size;
+          //}}}
+          }
+
+        fclose (file);
+        delete[] chunk;
+
+        cLog::log (LOGERROR, "exit");
+        }).detach();
+      }
+    //}}}
+
+    //{{{
+    void moveLeft() {
+      cLog::log (LOGINFO, fmt::format ("tellyApp moveLeft"));
+      mFilePos -= 188 * 256;
+      }
+    //}}}
+    //{{{
+    void moveRight() {
+      cLog::log (LOGINFO, fmt::format ("tellyApp moveRight"));
+      mFilePos += 188 * 256;
       }
     //}}}
 
@@ -1109,8 +1129,7 @@ namespace {
     //}}}
 
   private:
-    cTellyOptions* mOptions;
-    cTransportStream* mTransportStream = nullptr;
+    bool mFileSource = false;
 
     // liveDvbSource
     thread mLiveThread;
@@ -1122,6 +1141,9 @@ namespace {
     FILE* mFile = nullptr;
     uint64_t mFilePos = 0;
     size_t mFileSize = 0;
+
+    cTellyOptions* mOptions;
+    cTransportStream* mTransportStream = nullptr;
     };
   //}}}
   //{{{
@@ -1233,32 +1255,32 @@ namespace {
     public:
       //{{{
       void moveLeft() {
-        cLog::log (LOGINFO, fmt::format ("moveLeft"));
+        cLog::log (LOGINFO, fmt::format ("multiView moveLeft"));
         }
       //}}}
       //{{{
       void moveRight() {
-        cLog::log (LOGINFO, fmt::format ("moveRight"));
+        cLog::log (LOGINFO, fmt::format ("multiView moveRight"));
         }
       //}}}
       //{{{
       void moveUp() {
-        cLog::log (LOGINFO, fmt::format ("moveUp"));
+        cLog::log (LOGINFO, fmt::format ("multiView moveUp"));
         }
       //}}}
       //{{{
       void moveDown() {
-        cLog::log (LOGINFO, fmt::format ("moveDown"));
+        cLog::log (LOGINFO, fmt::format ("multiView moveDown"));
         }
       //}}}
       //{{{
       void enter() {
-        cLog::log (LOGINFO, fmt::format ("enter"));
+        cLog::log (LOGINFO, fmt::format ("multiView enter"));
         }
       //}}}
       //{{{
       void space() {
-        cLog::log (LOGINFO, fmt::format ("space"));
+        cLog::log (LOGINFO, fmt::format ("multiView space"));
         }
       //}}}
 
@@ -2003,6 +2025,22 @@ namespace {
     //}}}
 
     //{{{
+    void moveLeft (cTellyApp& tellyApp) {
+      if (tellyApp.isFileSource())
+        tellyApp.moveLeft();
+      else
+        mMultiView.moveLeft();
+      }
+    //}}}
+    //{{{
+    void moveRight (cTellyApp& tellyApp) {
+      if (tellyApp.isFileSource())
+        tellyApp.moveRight();
+      else
+        mMultiView.moveRight();
+      }
+    //}}}
+    //{{{
     void keyboard (cTellyApp& tellyApp) {
 
       //{{{
@@ -2016,8 +2054,8 @@ namespace {
       //}}}
       const vector<sActionKey> kActionKeys = {
         //alt    ctrl   shift  guiKey               function
-        { false, false, false, ImGuiKey_LeftArrow,  [this,&tellyApp] { mMultiView.moveLeft(); }},
-        { false, false, false, ImGuiKey_RightArrow, [this,&tellyApp] { mMultiView.moveRight(); }},
+        { false, false, false, ImGuiKey_LeftArrow,  [this,&tellyApp] { moveLeft (tellyApp); }},
+        { false, false, false, ImGuiKey_RightArrow, [this,&tellyApp] { moveRight (tellyApp); }},
         { false, false, false, ImGuiKey_UpArrow,    [this,&tellyApp] { mMultiView.moveUp(); }},
         { false, false, false, ImGuiKey_DownArrow,  [this,&tellyApp] { mMultiView.moveDown(); }},
         { false, false, false, ImGuiKey_Enter,      [this,&tellyApp] { mMultiView.enter(); }},

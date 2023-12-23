@@ -103,8 +103,9 @@ string cVideoRender::getInfoString() const {
   }
 //}}}
 //{{{
-bool cVideoRender::processPes (uint16_t pid, uint8_t* pes, uint32_t pesSize, int64_t pts, int64_t dts, bool skip) {
+bool cVideoRender::processPes (uint16_t pid, uint8_t* pes, uint32_t pesSize,
+                               int64_t pts, int64_t dts, int64_t skipPts) {
 
-  return cRender::processPes (pid, pes, pesSize, pts, dts, skip);
+  return cRender::processPes (pid, pes, pesSize, pts, dts, skipPts);
   }
 //}}}

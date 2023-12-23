@@ -139,11 +139,13 @@ string cRender::getInfoString() const {
   }
 //}}}
 //{{{
-bool cRender::processPes (uint16_t pid, uint8_t* pes, uint32_t pesSize, int64_t pts, int64_t dts, bool skip) {
-  (void)skip;
+bool cRender::processPes (uint16_t pid, uint8_t* pes, uint32_t pesSize,
+                          int64_t pts, int64_t dts, int64_t skipPts) {
+  (void)skipPts;
 
   if (isQueued()) {
-    mDecodeQueue.enqueue (new cDecodeQueueItem (mDecoder, pid, pes, pesSize, pts, dts, mGetFrameCallback, mAddFrameCallback));
+    mDecodeQueue.enqueue (new cDecodeQueueItem (mDecoder, pid, pes, pesSize,
+                                                pts, dts, mGetFrameCallback, mAddFrameCallback));
     return true;
     }
 
