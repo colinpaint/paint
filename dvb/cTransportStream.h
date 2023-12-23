@@ -29,49 +29,54 @@ enum eRenderType { eVideo, eAudio, eDescription, eSubtitle };
 class cTransportStream {
 public:
   //{{{
-  class cOptions {
+  class cEpgItem {
   public:
-    virtual ~cOptions() = default;
+    //{{{
+    cEpgItem (bool now, bool record,
+              std::chrono::system_clock::time_point time,
+              std::chrono::seconds duration,
+              const std::string& titleString, const std::string& infoString)
+      : mNow(now), mRecord(record),
+        mTime(time), mDuration(duration),
+        mTitleString(titleString), mInfoString(infoString) {}
+    //}}}
+    ~cEpgItem() {}
 
-    std::string mRecordRoot;
-    bool mRecordAll = false;
+    std::string getTitleString() { return mTitleString; }
+    std::string getDesriptionString() { return mInfoString; }
 
-    bool mShowFirstService = false;
-    bool mShowAllServices = true;
-    };
-  //}}}
-  //{{{
-  class cStream {
-  public:
-    ~cStream();
+    std::chrono::seconds getDuration() { return mDuration; }
+    std::chrono::system_clock::time_point getTime() { return mTime; }
 
-    bool isDefined() const { return mDefined; }
-    bool isEnabled() const { return mRender; }
+    bool getRecord() { return mRecord; }
+    //{{{
+    bool toggleRecord() {
+      mRecord = !mRecord;
+      return mRecord;
+      }
+    //}}}
 
-    std::string getLabel() const { return mLabel; }
-    uint16_t getPid() const { return mPid; }
-    uint8_t getTypeId() const { return mTypeId; }
-    std::string getTypeName() const { return mTypeName; }
-    int64_t getPts() const { return mPts; }
-    cRender& getRender() const { return *mRender; }
+    //{{{
+    void set (std::chrono::system_clock::time_point time,
+              std::chrono::seconds duration,
+              const std::string& titleString, const std::string& infoString) {
 
-    void setLabel (const std::string& label) { mLabel = label; }
-    void setPidStreamType (uint16_t pid, uint8_t streamType);
-    void setPts (int64_t pts) { mPts = pts; }
-    void setRender (cRender* render) { mRender = render; }
-
-    bool toggle();
+      mTime = time;
+      mDuration = duration;
+      mTitleString = titleString;
+      mInfoString = infoString;
+      }
+    //}}}
 
   private:
-    bool mDefined = false;
+    const bool mNow = false;
+    bool mRecord = false;
 
-    std::string mLabel;
-    uint16_t mPid = 0;
-    uint8_t mTypeId = 0;
-    std::string mTypeName;
+    std::chrono::system_clock::time_point mTime;
+    std::chrono::seconds mDuration;
 
-    int64_t mPts = -1;
-    cRender* mRender = nullptr;
+    std::string mTitleString;
+    std::string mInfoString;
     };
   //}}}
   //{{{
@@ -156,54 +161,37 @@ public:
     };
   //}}}
   //{{{
-  class cEpgItem {
+  class cStream {
   public:
-    //{{{
-    cEpgItem (bool now, bool record,
-              std::chrono::system_clock::time_point time,
-              std::chrono::seconds duration,
-              const std::string& titleString, const std::string& infoString)
-      : mNow(now), mRecord(record),
-        mTime(time), mDuration(duration),
-        mTitleString(titleString), mInfoString(infoString) {}
-    //}}}
-    ~cEpgItem() {}
+    ~cStream();
 
-    std::string getTitleString() { return mTitleString; }
-    std::string getDesriptionString() { return mInfoString; }
+    bool isDefined() const { return mDefined; }
+    bool isEnabled() const { return mRender; }
 
-    std::chrono::seconds getDuration() { return mDuration; }
-    std::chrono::system_clock::time_point getTime() { return mTime; }
+    std::string getLabel() const { return mLabel; }
+    uint16_t getPid() const { return mPid; }
+    uint8_t getTypeId() const { return mTypeId; }
+    std::string getTypeName() const { return mTypeName; }
+    int64_t getPts() const { return mPts; }
+    cRender& getRender() const { return *mRender; }
 
-    bool getRecord() { return mRecord; }
-    //{{{
-    bool toggleRecord() {
-      mRecord = !mRecord;
-      return mRecord;
-      }
-    //}}}
+    void setLabel (const std::string& label) { mLabel = label; }
+    void setPidStreamType (uint16_t pid, uint8_t streamType);
+    void setPts (int64_t pts) { mPts = pts; }
+    void setRender (cRender* render) { mRender = render; }
 
-    //{{{
-    void set (std::chrono::system_clock::time_point time,
-              std::chrono::seconds duration,
-              const std::string& titleString, const std::string& infoString) {
-
-      mTime = time;
-      mDuration = duration;
-      mTitleString = titleString;
-      mInfoString = infoString;
-      }
-    //}}}
+    bool toggle();
 
   private:
-    const bool mNow = false;
-    bool mRecord = false;
+    bool mDefined = false;
 
-    std::chrono::system_clock::time_point mTime;
-    std::chrono::seconds mDuration;
+    std::string mLabel;
+    uint16_t mPid = 0;
+    uint8_t mTypeId = 0;
+    std::string mTypeName;
 
-    std::string mTitleString;
-    std::string mInfoString;
+    int64_t mPts = -1;
+    cRender* mRender = nullptr;
     };
   //}}}
   //{{{
@@ -283,6 +271,18 @@ public:
     // streams - match sizeof eRenderType
     std::array <cStream,4> mStreams;
     //}}}
+    };
+  //}}}
+  //{{{
+  class cOptions {
+  public:
+    virtual ~cOptions() = default;
+
+    std::string mRecordRoot;
+    bool mRecordAll = false;
+
+    bool mShowFirstService = false;
+    bool mShowAllServices = true;
     };
   //}}}
 

@@ -401,35 +401,6 @@ struct itemExtendedEvent {
 //}}}
 //}}}
 
-//{{{  class cTransportStream::cStream
-cTransportStream::cStream::~cStream() { delete mRender; }
-
-//{{{
-void cTransportStream::cStream::setPidStreamType (uint16_t pid, uint8_t streamType) {
-
-  mDefined = true;
-
-  mPid = pid;
-  mTypeId = streamType;
-  mTypeName = cDvbUtils::getStreamTypeName (streamType);
-  }
-//}}}
-//{{{
-bool cTransportStream::cStream::toggle() {
-// return true if enabling
-
-  if (mRender) {
-    // remove render
-    cRender* mTemp = mRender;
-    mRender = nullptr;
-    delete mTemp;
-    return false;
-    }
-
-  return true;
-  }
-//}}}
-//}}}
 //{{{  class cTransportStream::cPidInfo
 //{{{
 string cTransportStream::cPidInfo::getTypeName() const {
@@ -471,6 +442,35 @@ int cTransportStream::cPidInfo::addToBuffer (uint8_t* buf, int bufSize) {
   mBufPtr += bufSize;
 
   return getBufUsed();
+  }
+//}}}
+//}}}
+//{{{  class cTransportStream::cStream
+cTransportStream::cStream::~cStream() { delete mRender; }
+
+//{{{
+void cTransportStream::cStream::setPidStreamType (uint16_t pid, uint8_t streamType) {
+
+  mDefined = true;
+
+  mPid = pid;
+  mTypeId = streamType;
+  mTypeName = cDvbUtils::getStreamTypeName (streamType);
+  }
+//}}}
+//{{{
+bool cTransportStream::cStream::toggle() {
+// return true if enabling
+
+  if (mRender) {
+    // remove render
+    cRender* mTemp = mRender;
+    mRender = nullptr;
+    delete mTemp;
+    return false;
+    }
+
+  return true;
   }
 //}}}
 //}}}
