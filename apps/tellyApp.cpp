@@ -1227,7 +1227,6 @@ namespace {
         //{{{  draw tab subMenu with monoSpaced font
         ImGui::PushFont (tellyApp.getMonoFont());
         switch (mTab) {
-          case eServices:   drawServices (transportStream, graphics); break;
           case ePidMap:     drawPidMap (transportStream); break;
           case eRecordings: drawRecordings (transportStream); break;
           default:;
@@ -1805,8 +1804,8 @@ namespace {
       };
     //}}}
 
-    enum eTab { eTelly, eServices, ePidMap, eRecordings };
-    inline static const vector<string> kTabNames = { "telly", "services", "pids", "recorded" };
+    enum eTab { eTelly, ePidMap, eRecordings };
+    inline static const vector<string> kTabNames = { "telly", "pids", "recorded" };
 
     //{{{
     void hitShow (eTab tab) {
@@ -1814,79 +1813,6 @@ namespace {
       }
     //}}}
 
-    //{{{
-    void drawServices (cTransportStream& transportStream, cGraphics& graphics) {
-
-      // iterate services
-      for (auto& pair : transportStream.getServiceMap()) {
-        cTransportStream::cService& service = pair.second;
-        //{{{  update button maxChars for uniform width
-        while (service.getChannelName().size() > mMaxNameChars)
-          mMaxNameChars = service.getChannelName().size();
-        while (service.getSid() > pow (10, mMaxSidChars))
-          mMaxSidChars++;
-        while (service.getProgramPid() > pow (10, mMaxPgmChars))
-          mMaxPgmChars++;
-
-        for (uint8_t renderType = eVideo; renderType <= eSubtitle; renderType++) {
-          uint16_t pid = service.getRenderStream (eRenderType(renderType)).getPid();
-          while (pid > pow (10, mPidMaxChars[renderType]))
-            mPidMaxChars[renderType]++;
-          }
-        //}}}
-
-        // draw channel name pgm,sid - sid ensures unique button name
-        if (ImGui::Button (fmt::format ("{:{}s} {:{}d}:{:{}d}",
-                           service.getChannelName(), mMaxNameChars,
-                           service.getProgramPid(), mMaxPgmChars, service.getSid(), mMaxSidChars).c_str())) {
-          service.toggleAll();
-          }
-
-       // iterate definedStreams
-        for (uint8_t renderType = eVideo; renderType <= eSubtitle; renderType++) {
-          cTransportStream::cStream& stream = service.getRenderStream (eRenderType(renderType));
-          if (stream.isDefined()) {
-            ImGui::SameLine();
-            // draw definedStream button - hidden sid for unique buttonName
-            if (toggleButton (fmt::format ("{}{:{}d}:{}##{}",
-                                           stream.getLabel(), stream.getPid(),
-                                           mPidMaxChars[renderType], stream.getTypeName(),
-                                           service.getSid()).c_str(),
-                              stream.isEnabled()))
-             transportStream.toggleStream (service, eRenderType(renderType));
-            }
-          }
-
-        if (service.getChannelRecord()) {
-          //{{{  draw record pathName
-          ImGui::SameLine();
-          ImGui::Button (fmt::format ("rec:{}##{}",
-                                      service.getChannelRecordName(), service.getSid()).c_str());
-          }
-          //}}}
-
-        // iterate enabledStreams
-        for (uint8_t renderType = eVideo; renderType <= eSubtitle; renderType++) {
-          cTransportStream::cStream& stream = service.getRenderStream (eRenderType(renderType));
-          if (stream.isEnabled()) {
-            switch (eRenderType(renderType)) {
-              case eVideo:
-                drawVideoInfo (service.getSid(), stream.getRender()); break;
-
-              case eAudio:
-              case eDescription:
-                drawAudioInfo (service.getSid(), stream.getRender());  break;
-
-              case eSubtitle:
-                drawSubtitle (service.getSid(), stream.getRender(), graphics);  break;
-
-              default:;
-              }
-            }
-          }
-        }
-      }
-    //}}}
     //{{{
     void drawPidMap (cTransportStream& transportStream) {
     // draw pids
@@ -1944,90 +1870,6 @@ namespace {
     //}}}
 
     //{{{
-    void drawSubtitle (uint16_t sid, cRender& render, cGraphics& graphics) {
-
-      cSubtitleRender& subtitleRender = dynamic_cast<cSubtitleRender&>(render);
-
-      const float potSize = ImGui::GetTextLineHeight() / 2.f;
-      size_t line;
-      for (line = 0; line < subtitleRender.getNumLines(); line++) {
-        cSubtitleImage& subtitleImage = subtitleRender.getImage (line);
-
-        // draw clut colorPots
-        ImVec2 pos = ImGui::GetCursorScreenPos();
-        for (size_t pot = 0; pot < subtitleImage.mColorLut.max_size(); pot++) {
-          //{{{  draw pot
-          ImVec2 potPos {pos.x + (pot % 8) * potSize, pos.y + (pot / 8) * potSize};
-          uint32_t color = subtitleRender.getImage (line).mColorLut[pot];
-          ImGui::GetWindowDrawList()->AddRectFilled (potPos, { potPos.x + potSize - 1.f,
-                                                               potPos.y + potSize - 1.f }, color);
-          }
-          //}}}
-
-        if (ImGui::InvisibleButton (fmt::format ("##sub{}{}", sid, line).c_str(),
-                                    { 4 * ImGui::GetTextLineHeight(), ImGui::GetTextLineHeight() }))
-          subtitleRender.toggleLog();
-
-        // draw pos
-        ImGui::SameLine();
-        ImGui::TextUnformatted (fmt::format ("{:3d},{:3d}",
-                                              subtitleImage.getXpos(), subtitleImage.getYpos()).c_str());
-
-        if (!mSubtitleTextures[line])
-           mSubtitleTextures[line] = graphics.createTexture (cTexture::eRgba, subtitleImage.getSize());
-        mSubtitleTextures[line]->setSource();
-
-        // update gui texture from subtitleImage
-        if (subtitleImage.isDirty())
-          mSubtitleTextures[line]->setPixels (subtitleImage.getPixels(), nullptr);
-        subtitleImage.setDirty (false);
-
-        // draw gui texture, scaled to fit line
-        ImGui::SameLine();
-        ImGui::Image ((void*)(intptr_t)mSubtitleTextures[line]->getTextureId(),
-                      { ImGui::GetTextLineHeight() *
-                          mSubtitleTextures[line]->getWidth() / mSubtitleTextures[line]->getHeight(),
-                        ImGui::GetTextLineHeight() });
-        }
-
-      // pad with invisible buttons to highwaterMark
-      for (; line < subtitleRender.getHighWatermark(); line++)
-        if (ImGui::InvisibleButton (fmt::format ("##sub{}{}", sid, line).c_str(),
-                                    { ImGui::GetWindowWidth() - ImGui::GetTextLineHeight(),
-                                      ImGui::GetTextLineHeight() }))
-          subtitleRender.toggleLog();
-
-      drawMiniLog (subtitleRender.getLog());
-      }
-    //}}}
-    //{{{
-    void drawAudioInfo (uint16_t sid, cRender& render) {
-
-      cAudioRender& audioRender = dynamic_cast<cAudioRender&>(render);
-      ImGui::TextUnformatted (audioRender.getInfoString().c_str());
-
-      if (ImGui::InvisibleButton (fmt::format ("##audLog{}", sid).c_str(),
-                                  {4 * ImGui::GetTextLineHeight(), ImGui::GetTextLineHeight()}))
-        audioRender.toggleLog();
-
-      drawMiniLog (audioRender.getLog());
-      }
-    //}}}
-    //{{{
-    void drawVideoInfo (uint16_t sid, cRender& render) {
-
-      cVideoRender& videoRender = dynamic_cast<cVideoRender&>(render);
-      ImGui::TextUnformatted (videoRender.getInfoString().c_str());
-
-      if (ImGui::InvisibleButton (fmt::format ("##vidLog{}", sid).c_str(),
-                                  {4 * ImGui::GetTextLineHeight(), ImGui::GetTextLineHeight()}))
-        videoRender.toggleLog();
-
-      drawMiniLog (videoRender.getLog());
-      }
-    //}}}
-
-    //{{{
     void moveLeft (cTellyApp& tellyApp) {
       if (tellyApp.isFileSource())
         tellyApp.moveLeft();
@@ -2067,7 +1909,6 @@ namespace {
         { false, false, false, ImGuiKey_S,          [this,&tellyApp] { tellyApp.toggleShowSubtitle(); }},
         { false, false, false, ImGuiKey_L,          [this,&tellyApp] { tellyApp.toggleShowMotionVectors(); }},
         { false, false, false, ImGuiKey_T,          [this,&tellyApp] { hitShow (eTelly); }},
-        { false, false, false, ImGuiKey_V,          [this,&tellyApp] { hitShow (eServices); }},
         { false, false, false, ImGuiKey_P,          [this,&tellyApp] { hitShow (ePidMap); }},
         { false, false, false, ImGuiKey_R,          [this,&tellyApp] { hitShow (eRecordings); }},
         };
