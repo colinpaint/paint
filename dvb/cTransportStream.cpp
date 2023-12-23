@@ -478,10 +478,10 @@ int cTransportStream::cPidInfo::addToBuffer (uint8_t* buf, int bufSize) {
 //{{{
 cTransportStream::cService::cService (uint16_t sid, iOptions* options) : mSid(sid), mOptions(options) {
 
-  mRenderStreams[eVideo].setLabel ("vid:");
-  mRenderStreams[eAudio].setLabel ("aud:");
-  mRenderStreams[eDescription].setLabel ("des:");
-  mRenderStreams[eSubtitle].setLabel ("sub:");
+  mStreams[eVideo].setLabel ("vid:");
+  mStreams[eAudio].setLabel ("aud:");
+  mStreams[eDescription].setLabel ("des:");
+  mStreams[eSubtitle].setLabel ("sub:");
   }
 //}}}
 //{{{
@@ -518,9 +518,9 @@ void cTransportStream::cService::writePacket (uint8_t* ts, uint16_t pid) {
 //  pes ts packet, save only recognised pids
 
   if (mFile &&
-      ((pid == mRenderStreams[eVideo].getPid()) ||
-       (pid == mRenderStreams[eAudio].getPid()) ||
-       (pid == mRenderStreams[eSubtitle].getPid())))
+      ((pid == mStreams[eVideo].getPid()) ||
+       (pid == mStreams[eAudio].getPid()) ||
+       (pid == mStreams[eSubtitle].getPid())))
     fwrite (ts, 1, 188, mFile);
   }
 //}}}
@@ -581,12 +581,12 @@ bool cTransportStream::cService::setEpg (bool record,
 
 // stream
 //{{{
-cTransportStream::cStream* cTransportStream::cService::getRenderStreamByPid (uint16_t pid) {
+cTransportStream::cStream* cTransportStream::cService::getStreamByPid (uint16_t pid) {
 
   for (uint8_t renderType = eVideo; renderType <= eSubtitle; renderType++) {
-    cTransportStream::cStream& stream = getRenderStream (eRenderType(renderType));
+    cTransportStream::cStream& stream = getStream (eRenderType(renderType));
     if (stream.isDefined() && (stream.getPid() == pid))
-      return &mRenderStreams[renderType];
+      return &mStreams[renderType];
     }
 
   return nullptr;
@@ -596,15 +596,15 @@ cTransportStream::cStream* cTransportStream::cService::getRenderStreamByPid (uin
 void cTransportStream::cService::enableStreams() {
 
   // improve to one on all off , if all off all on
-  cStream& videoStream = getRenderStream (eVideo);
+  cStream& videoStream = getStream (eVideo);
   videoStream.setRender (
     new cVideoRender (getChannelName(), videoStream.getTypeId(), videoStream.getPid(), mOptions));
 
-  cStream& audioStream = getRenderStream (eAudio);
+  cStream& audioStream = getStream (eAudio);
   audioStream.setRender (
     new cAudioRender (getChannelName(), audioStream.getTypeId(), audioStream.getPid(), mOptions));
 
-  cStream& subtitleStream = getRenderStream (eSubtitle);
+  cStream& subtitleStream = getStream (eSubtitle);
   subtitleStream.setRender (
     new cSubtitleRender (getChannelName(), subtitleStream.getTypeId(), subtitleStream.getPid(), mOptions));
   }
@@ -672,30 +672,30 @@ void cTransportStream::cService::writePmt() {
   *tsPtr++ = 0x00; // first section number = 0
   *tsPtr++ = 0x00; // last section number = 0
 
-  *tsPtr++ = 0xE0 | ((mRenderStreams[eVideo].getPid() & 0x1F00) >> 8);
-  *tsPtr++ = mRenderStreams[eVideo].getPid() & 0x00FF;
+  *tsPtr++ = 0xE0 | ((mStreams[eVideo].getPid() & 0x1F00) >> 8);
+  *tsPtr++ = mStreams[eVideo].getPid() & 0x00FF;
 
   *tsPtr++ = 0xF0;
   *tsPtr++ = 0; // program_info_length;
 
   // video es
-  *tsPtr++ = mRenderStreams[eVideo].getTypeId(); // elementary stream_type
-  *tsPtr++ = 0xE0 | ((mRenderStreams[eVideo].getPid() & 0x1F00) >> 8); // elementary_PID
-  *tsPtr++ = mRenderStreams[eVideo].getPid() & 0x00FF;
+  *tsPtr++ = mStreams[eVideo].getTypeId(); // elementary stream_type
+  *tsPtr++ = 0xE0 | ((mStreams[eVideo].getPid() & 0x1F00) >> 8); // elementary_PID
+  *tsPtr++ = mStreams[eVideo].getPid() & 0x00FF;
   *tsPtr++ = ((0 & 0xFF00) >> 8) | 0xF0;       // ES_info_length
   *tsPtr++ = 0 & 0x00FF;
 
   // audio es
-  *tsPtr++ = mRenderStreams[eAudio].getTypeId(); // elementary stream_type
-  *tsPtr++ = 0xE0 | ((mRenderStreams[eAudio].getPid() & 0x1F00) >> 8); // elementary_PID
-  *tsPtr++ = mRenderStreams[eAudio].getPid() & 0x00FF;
+  *tsPtr++ = mStreams[eAudio].getTypeId(); // elementary stream_type
+  *tsPtr++ = 0xE0 | ((mStreams[eAudio].getPid() & 0x1F00) >> 8); // elementary_PID
+  *tsPtr++ = mStreams[eAudio].getPid() & 0x00FF;
   *tsPtr++ = ((0 & 0xFF00) >> 8) | 0xF0;       // ES_info_length
   *tsPtr++ = 0 & 0x00FF;
 
   // subtitle es
-  *tsPtr++ = mRenderStreams[eSubtitle].getTypeId(); // elementary stream_type
-  *tsPtr++ = 0xE0 | ((mRenderStreams[eSubtitle].getPid() & 0x1F00) >> 8); // elementary_PID
-  *tsPtr++ = mRenderStreams[eSubtitle].getPid() & 0x00FF;
+  *tsPtr++ = mStreams[eSubtitle].getTypeId(); // elementary stream_type
+  *tsPtr++ = 0xE0 | ((mStreams[eSubtitle].getPid() & 0x1F00) >> 8); // elementary_PID
+  *tsPtr++ = mStreams[eSubtitle].getPid() & 0x00FF;
   *tsPtr++ = ((0 & 0xFF00) >> 8) | 0xF0;       // ES_info_length
   *tsPtr++ = 0 & 0x00FF;
 
@@ -984,7 +984,7 @@ void cTransportStream::foundService (cService& service) {
 
   if ((dynamic_cast<cOptions*>(mOptions))->mShowAllServices ||
       ((dynamic_cast<cOptions*>(mOptions))->mShowFirstService && !mShowingFirstService)) {
-    if (service.getRenderStream (eRenderType(eVideo)).isDefined()) {
+    if (service.getStream (eRenderType(eVideo)).isDefined()) {
       service.enableStreams();
       mShowingFirstService = true;
       }
@@ -1005,8 +1005,8 @@ void cTransportStream::startServiceProgram (cService& service,
   service.closeFile();
 
   if ((selected || service.getChannelRecord() || (dynamic_cast<cOptions*>(mOptions))->mRecordAll) &&
-      service.getRenderStream (eVideo).isDefined() &&
-      (service.getRenderStream(eAudio).isDefined())) {
+      service.getStream (eVideo).isDefined() &&
+      (service.getStream(eAudio).isDefined())) {
     string filePath = (dynamic_cast<cOptions*>(mOptions))->mRecordRoot +
                       service.getChannelRecordName() +
                       date::format ("%d %b %y %a %H.%M.%S ", date::floor<chrono::seconds>(tdtTime)) +
@@ -1049,7 +1049,7 @@ bool cTransportStream::processPesByPid (cPidInfo& pidInfo, int64_t skipPts) {
 
   cService* service = getService (pidInfo.getSid());
   if (service) {
-    cStream* stream = service->getRenderStreamByPid (pidInfo.getPid());
+    cStream* stream = service->getStreamByPid (pidInfo.getPid());
     if (stream) {
       stream->setPts (pidInfo.getPts());
       if (stream->isEnabled())
@@ -1282,8 +1282,8 @@ void cTransportStream::parseEit (cPidInfo* pidInfo, uint8_t* buf) {
               if (running &&
                   !service->getChannelName().empty() &&
                   service->getProgramPid() &&
-                  service->getRenderStream (eVideo).isDefined() &&
-                  service->getRenderStream (eAudio).isDefined()) {
+                  service->getStream (eVideo).isDefined() &&
+                  service->getStream (eAudio).isDefined()) {
                   //(service->getSubPid())) {
                 // now event for named service with valid pgmPid, vidPid, audPid, subPid
                 if (service->setNow (service->isEpgRecord (titleString, startTime),
@@ -1374,24 +1374,24 @@ void cTransportStream::parsePmt (cPidInfo* pidInfo, uint8_t* buf) {
         switch (esPidInfo.getStreamType()) {
           case   2: // ISO 13818-2 video
           case  kH264StreamType: // 27 - H264 video
-            service.getRenderStream (eVideo).setPidStreamType (esPid, esPidInfo.getStreamType()); break;
+            service.getStream (eVideo).setPidStreamType (esPid, esPidInfo.getStreamType()); break;
 
           case   3: // ISO 11172-3 audio
           case   4: // ISO 13818-3 audio
           case  15: // ADTS AAC audio
           case  kAacLatmStreamType: // 17 - LATM AAC audio
           case 129: // AC3 audio
-            if (!service.getRenderStream (eAudio).isDefined())
-              service.getRenderStream (eAudio).setPidStreamType (esPid, esPidInfo.getStreamType());
-            else if (esPid != service.getRenderStream (eAudio).getPid()) {
+            if (!service.getStream (eAudio).isDefined())
+              service.getStream (eAudio).setPidStreamType (esPid, esPidInfo.getStreamType());
+            else if (esPid != service.getStream (eAudio).getPid()) {
               // got main eAudio, use new audPid as eDescription
-              if (!service.getRenderStream (eDescription).isDefined())
-                service.getRenderStream (eDescription).setPidStreamType (esPid,  esPidInfo.getStreamType());
+              if (!service.getStream (eDescription).isDefined())
+                service.getStream (eDescription).setPidStreamType (esPid,  esPidInfo.getStreamType());
               }
             break;
 
           case   6: // subtitle
-            service.getRenderStream (eSubtitle).setPidStreamType (esPid, esPidInfo.getStreamType()); break;
+            service.getStream (eSubtitle).setPidStreamType (esPid, esPidInfo.getStreamType()); break;
 
           case   5: // private mpeg2 tabled data - private
           case  11: // dsm cc u_n

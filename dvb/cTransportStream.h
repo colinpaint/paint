@@ -252,8 +252,8 @@ public:
     //}}}
 
     // stream
-    cStream* getRenderStreamByPid (uint16_t pid);
-    cStream& getRenderStream (eRenderType renderType) { return mRenderStreams[renderType]; }
+    cStream* getStreamByPid (uint16_t pid);
+    cStream& getStream (eRenderType renderType) { return mStreams[renderType]; }
     void enableStreams();
 
   private:
@@ -281,7 +281,7 @@ public:
     std::map <std::chrono::system_clock::time_point, cEpgItem*> mEpgItemMap;
 
     // streams - match sizeof eRenderType
-    std::array <cStream,4> mRenderStreams;
+    std::array <cStream,4> mStreams;
     //}}}
     };
   //}}}
