@@ -20,11 +20,9 @@ class cRender;
 #include "../common/iOptions.h"
 #include "cDvbMultiplex.h"
 //}}}
-
 constexpr int kAacLatmStreamType = 17;
 constexpr int kH264StreamType = 27;
-
-enum eRenderType { eVideo, eAudio, eDescription, eSubtitle };
+enum eStreamType { eVideo, eAudio, eDescription, eSubtitle };
 
 class cTransportStream {
 public:
@@ -87,13 +85,13 @@ public:
 
     bool isPsi() const { return mPsi; }
     uint16_t getPid() const { return mPid; }
+    uint16_t getSid() const { return mSid; }
 
     int64_t getPts() const { return mPts; }
     int64_t getFirstPts() const { return mFirstPts; }
     int64_t getLastPts() const { return mLastPts; }
     int64_t getDts() const { return mDts; }
 
-    uint16_t getSid() const { return mSid; }
     uint8_t getStreamType() const { return mStreamType; }
     std::string getTypeName() const ;
     std::string getInfoString() const { return mInfoString; }
@@ -239,9 +237,9 @@ public:
                  const std::string& titleString, const std::string& infoString);
     //}}}
 
-    // stream
+    // streams
     cStream* getStreamByPid (uint16_t pid);
-    cStream& getStream (eRenderType renderType) { return mStreams[renderType]; }
+    cStream& getStream (eStreamType streamType) { return mStreams[streamType]; }
     void enableStreams();
 
   private:
@@ -268,7 +266,7 @@ public:
     cEpgItem* mNowEpgItem = nullptr;
     std::map <std::chrono::system_clock::time_point, cEpgItem*> mEpgItemMap;
 
-    // streams - match sizeof eRenderType
+    // streams - match sizeof eStream
     std::array <cStream,4> mStreams;
     //}}}
     };
@@ -289,14 +287,14 @@ public:
   cTransportStream (const cDvbMultiplex& dvbMultiplex, iOptions* options);
   virtual ~cTransportStream() { clear(); }
 
-  //{{{  gets
+  // gets
   uint64_t getNumPackets() const { return mNumPackets; }
   uint64_t getNumErrors() const { return mNumErrors; }
 
   // tdtTime
+  std::string getTdtTimeString() const;
   bool hasTdtTime() const { return mFirstTimeDefined; }
   std::chrono::system_clock::time_point getTdtTime() const { return mTdtTime; }
-  std::string getTdtTimeString() const;
 
   // maps
   std::map <uint16_t, cPidInfo>& getPidInfoMap() { return mPidInfoMap; };
@@ -304,7 +302,6 @@ public:
 
   cService* getService (uint16_t sid);
   std::vector <std::string>& getRecordPrograms() { return mRecordPrograms; }
-  //}}}
   int64_t demux (uint8_t* chunk, int64_t chunkSize, int64_t streamPos, int64_t skipPts);
 
 private:
@@ -316,6 +313,7 @@ private:
   cPidInfo* getPsiPidInfo (uint16_t pid);
 
   void foundService (cService& service);
+  bool renderPes (cPidInfo& pidInfo, int64_t skipPts);
 
   void startServiceProgram (cService& service,
                             std::chrono::system_clock::time_point tdtTime,
@@ -325,7 +323,6 @@ private:
   void programPesPacket (uint16_t sid, uint16_t pid, uint8_t* ts);
   void stopServiceProgram (cService& service);
 
-  bool processPesByPid (cPidInfo& pidInfo, int64_t skipPts);
   //{{{  parsers
   void parsePat (cPidInfo* pidInfo, uint8_t* buf);
   void parseNit (cPidInfo* pidInfo, uint8_t* buf);

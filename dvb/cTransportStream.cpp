@@ -498,6 +498,36 @@ cTransportStream::cService::~cService() {
   }
 //}}}
 
+// streams
+//{{{
+cTransportStream::cStream* cTransportStream::cService::getStreamByPid (uint16_t pid) {
+
+  for (uint8_t streamType = eVideo; streamType <= eSubtitle; streamType++) {
+    cTransportStream::cStream& stream = getStream (eStreamType(streamType));
+    if (stream.isDefined() && (stream.getPid() == pid))
+      return &mStreams[streamType];
+    }
+
+  return nullptr;
+  }
+//}}}
+//{{{
+void cTransportStream::cService::enableStreams() {
+
+  cStream& videoStream = getStream (eVideo);
+  videoStream.setRender (
+    new cVideoRender (getChannelName(), videoStream.getTypeId(), videoStream.getPid(), mOptions));
+
+  cStream& audioStream = getStream (eAudio);
+  audioStream.setRender (
+    new cAudioRender (getChannelName(), audioStream.getTypeId(), audioStream.getPid(), mOptions));
+
+  cStream& subtitleStream = getStream (eSubtitle);
+  subtitleStream.setRender (
+    new cSubtitleRender (getChannelName(), subtitleStream.getTypeId(), subtitleStream.getPid(), mOptions));
+  }
+//}}}
+
 // record
 //{{{
 bool cTransportStream::cService::openFile (const string& fileName, uint16_t tsid) {
@@ -576,36 +606,6 @@ bool cTransportStream::cService::setEpg (bool record,
     it->second->set (startTime, duration, titleString, infoString);
 
   return true;
-  }
-//}}}
-
-// streams
-//{{{
-cTransportStream::cStream* cTransportStream::cService::getStreamByPid (uint16_t pid) {
-
-  for (uint8_t renderType = eVideo; renderType <= eSubtitle; renderType++) {
-    cTransportStream::cStream& stream = getStream (eRenderType(renderType));
-    if (stream.isDefined() && (stream.getPid() == pid))
-      return &mStreams[renderType];
-    }
-
-  return nullptr;
-  }
-//}}}
-//{{{
-void cTransportStream::cService::enableStreams() {
-
-  cStream& videoStream = getStream (eVideo);
-  videoStream.setRender (
-    new cVideoRender (getChannelName(), videoStream.getTypeId(), videoStream.getPid(), mOptions));
-
-  cStream& audioStream = getStream (eAudio);
-  audioStream.setRender (
-    new cAudioRender (getChannelName(), audioStream.getTypeId(), audioStream.getPid(), mOptions));
-
-  cStream& subtitleStream = getStream (eSubtitle);
-  subtitleStream.setRender (
-    new cSubtitleRender (getChannelName(), subtitleStream.getTypeId(), subtitleStream.getPid(), mOptions));
   }
 //}}}
 
@@ -850,7 +850,7 @@ int64_t cTransportStream::demux (uint8_t* chunk, int64_t chunkSize, int64_t stre
                            ((streamId >= 0xC0) && (streamId <= 0xEF))) {
                     // subtitle, audio, video streamId
                     if (pidInfo->mBufPtr)
-                      if (processPesByPid (*pidInfo, skipPts))
+                      if (renderPes (*pidInfo, skipPts))
                         pidInfo->mBuffer = (uint8_t*)malloc (pidInfo->mBufSize);
                     }
                   else
@@ -983,11 +983,30 @@ void cTransportStream::foundService (cService& service) {
 
   if ((dynamic_cast<cOptions*>(mOptions))->mShowAllServices ||
       ((dynamic_cast<cOptions*>(mOptions))->mShowFirstService && !mShowingFirstService)) {
-    if (service.getStream (eRenderType(eVideo)).isDefined()) {
+    if (service.getStream (eStreamType(eVideo)).isDefined()) {
       service.enableStreams();
       mShowingFirstService = true;
       }
     }
+  }
+//}}}
+//{{{
+bool cTransportStream::renderPes (cPidInfo& pidInfo, int64_t skipPts) {
+// dispatch pes to render stream, return true if pes ownership transferred to stream
+
+  cService* service = getService (pidInfo.getSid());
+  if (service) {
+    cStream* stream = service->getStreamByPid (pidInfo.getPid());
+    if (stream) {
+      stream->setPts (pidInfo.getPts());
+      if (stream->isEnabled())
+        return stream->getRender().processPes (pidInfo.getPid(),
+                                               pidInfo.mBuffer, pidInfo.getBufUsed(),
+                                               pidInfo.getPts(), pidInfo.getDts(), skipPts);
+      }
+    }
+
+  return false;
   }
 //}}}
 
@@ -1041,24 +1060,6 @@ void cTransportStream::stopServiceProgram (cService& service) {
 
   lock_guard<mutex> lockGuard (mRecordFileMutex);
   service.closeFile();
-  }
-//}}}
-//{{{
-bool cTransportStream::processPesByPid (cPidInfo& pidInfo, int64_t skipPts) {
-
-  cService* service = getService (pidInfo.getSid());
-  if (service) {
-    cStream* stream = service->getStreamByPid (pidInfo.getPid());
-    if (stream) {
-      stream->setPts (pidInfo.getPts());
-      if (stream->isEnabled())
-        return stream->getRender().processPes (pidInfo.getPid(),
-                                               pidInfo.mBuffer, pidInfo.getBufUsed(),
-                                               pidInfo.getPts(), pidInfo.getDts(), skipPts);
-      }
-    }
-
-  return false;
   }
 //}}}
 
