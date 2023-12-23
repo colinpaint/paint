@@ -579,7 +579,7 @@ bool cTransportStream::cService::setEpg (bool record,
   }
 //}}}
 
-// stream
+// streams
 //{{{
 cTransportStream::cStream* cTransportStream::cService::getStreamByPid (uint16_t pid) {
 
@@ -595,7 +595,6 @@ cTransportStream::cStream* cTransportStream::cService::getStreamByPid (uint16_t 
 //{{{
 void cTransportStream::cService::enableStreams() {
 
-  // improve to one on all off , if all off all on
   cStream& videoStream = getStream (eVideo);
   videoStream.setRender (
     new cVideoRender (getChannelName(), videoStream.getTypeId(), videoStream.getPid(), mOptions));
