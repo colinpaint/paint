@@ -593,34 +593,20 @@ cTransportStream::cStream* cTransportStream::cService::getRenderStreamByPid (uin
   }
 //}}}
 //{{{
-void cTransportStream::cService::toggleStream (eRenderType renderType) {
-
-  cStream& stream = getRenderStream (renderType);
-  if (stream.toggle()) {
-    switch (renderType) {
-      case eVideo :
-        stream.setRender (new cVideoRender (getChannelName(), stream.getTypeId(), stream.getPid(), mOptions));
-        return;
-
-      case eAudio :
-      case eDescription:
-        stream.setRender (new cAudioRender (getChannelName(), stream.getTypeId(), stream.getPid(), mOptions));
-        return;
-
-      case eSubtitle :
-        stream.setRender (new cSubtitleRender (getChannelName(), stream.getTypeId(), stream.getPid(), mOptions));
-        return;
-      }
-    }
-  }
-//}}}
-//{{{
 void cTransportStream::cService::enableStreams() {
 
   // improve to one on all off , if all off all on
-  toggleStream (eVideo);
-  toggleStream (eAudio);
-  toggleStream (eSubtitle);
+  cStream& videoStream = getRenderStream (eVideo);
+  videoStream.setRender (
+    new cVideoRender (getChannelName(), videoStream.getTypeId(), videoStream.getPid(), mOptions));
+
+  cStream& audioStream = getRenderStream (eAudio);
+  audioStream.setRender (
+    new cAudioRender (getChannelName(), audioStream.getTypeId(), audioStream.getPid(), mOptions));
+
+  cStream& subtitleStream = getRenderStream (eSubtitle);
+  subtitleStream.setRender (
+    new cSubtitleRender (getChannelName(), subtitleStream.getTypeId(), subtitleStream.getPid(), mOptions));
   }
 //}}}
 

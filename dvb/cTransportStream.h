@@ -254,8 +254,6 @@ public:
     // stream
     cStream* getRenderStreamByPid (uint16_t pid);
     cStream& getRenderStream (eRenderType renderType) { return mRenderStreams[renderType]; }
-
-    void toggleStream (eRenderType renderType);
     void enableStreams();
 
   private:
