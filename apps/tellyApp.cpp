@@ -1509,7 +1509,7 @@ namespace {
           if (ImGui::InvisibleButton (fmt::format ("view##{}", mService.getSid()).c_str(), mBr-mTl)) {
             // hit view, select action
             if (!mService.getRenderStream (eVideo).isEnabled())
-              mService.toggleAll();
+              mService.enableStreams();
             else if (mSelect == eUnselected)
               mSelect = eSelected;
             else if (mSelect == eSelected)

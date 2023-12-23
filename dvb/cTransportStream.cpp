@@ -615,7 +615,7 @@ void cTransportStream::cService::toggleStream (eRenderType renderType) {
   }
 //}}}
 //{{{
-void cTransportStream::cService::toggleAll() {
+void cTransportStream::cService::enableStreams() {
 
   // improve to one on all off , if all off all on
   toggleStream (eVideo);
@@ -1008,7 +1008,7 @@ void cTransportStream::foundService (cService& service) {
   if ((dynamic_cast<cOptions*>(mOptions))->mShowAllServices ||
       ((dynamic_cast<cOptions*>(mOptions))->mShowFirstService && !mShowingFirstService)) {
     if (service.getRenderStream (eRenderType(eVideo)).isDefined()) {
-      service.toggleAll();
+      service.enableStreams();
       mShowingFirstService = true;
       }
     }

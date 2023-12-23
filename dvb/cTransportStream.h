@@ -256,7 +256,7 @@ public:
     cStream& getRenderStream (eRenderType renderType) { return mRenderStreams[renderType]; }
 
     void toggleStream (eRenderType renderType);
-    void toggleAll();
+    void enableStreams();
 
   private:
     uint8_t* tsHeader (uint8_t* ts, uint16_t pid, uint8_t continuityCount);
