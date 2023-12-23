@@ -979,7 +979,7 @@ cTransportStream::cPidInfo* cTransportStream::getPsiPidInfo (uint16_t pid) {
 //}}}
 
 //{{{
-void cTransportStream::foundService (cService& service) {
+void cTransportStream::addServiceStreams (cService& service) {
 
   if ((dynamic_cast<cOptions*>(mOptions))->mShowAllServices ||
       ((dynamic_cast<cOptions*>(mOptions))->mShowFirstService && !mShowingFirstService)) {
@@ -1196,7 +1196,7 @@ void cTransportStream::parseSdt (cPidInfo* pidInfo, uint8_t* buf) {
                   }
                 service->setChannelName (name, channelRecognised, channelRecordName);
 
-                cLog::log (LOGINFO, fmt::format ("SDT named sid:{} {} {} {}",
+                cLog::log (LOGINFO, fmt::format ("SDT named sid:{} as {} {} {}",
                                                  sid, name, channelRecognised ? "record" : "", channelRecordName));
                 }
               }
@@ -1411,7 +1411,7 @@ void cTransportStream::parsePmt (cPidInfo* pidInfo, uint8_t* buf) {
         buf += loopLength;
         }
 
-      foundService (service);
+      addServiceStreams (service);
       }
       //}}}
     }

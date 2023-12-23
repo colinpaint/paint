@@ -311,7 +311,7 @@ private:
   cPidInfo& getPidInfo (uint16_t pid);
   cPidInfo* getPsiPidInfo (uint16_t pid);
 
-  void foundService (cService& service);
+  void addServiceStreams (cService& service);
   bool renderPes (cPidInfo& pidInfo, int64_t skipPts);
 
   void startServiceProgram (cService& service,
