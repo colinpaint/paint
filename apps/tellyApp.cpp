@@ -1234,7 +1234,7 @@ namespace {
         ImGui::PopFont();
         //}}}
 
-        if (transportStream.hasTdt()) {
+        if (transportStream.hasFirstTdt()) {
           //{{{  draw clock
           //ImGui::TextUnformatted (transportStream.getTdtString().c_str());
           ImGui::SetCursorPos ({ ImGui::GetWindowWidth() - 90.f, 0.f} );
@@ -2019,11 +2019,8 @@ int main (int numArgs, char* args[]) {
     options->mRecordRoot = kRootDir;
     tellyApp.liveDvbSource (options->mMultiplex, options);
     }
-  else {
-    // file source
-    options->mShowFirstService = true;
+  else // file source
     tellyApp.fileSource (options->mFileName, options);
-    }
 
   tellyApp.mainUILoop();
   return EXIT_SUCCESS;

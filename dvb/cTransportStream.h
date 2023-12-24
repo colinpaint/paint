@@ -277,8 +277,6 @@ public:
 
     std::string mRecordRoot;
     bool mRecordAll = false;
-
-    bool mShowFirstService = false;
     bool mShowAllServices = true;
     };
   //}}}
@@ -292,15 +290,16 @@ public:
 
   // tdt
   std::string getTdtString() const;
-  bool hasTdt() const { return mFirstTdtDefined; }
+  bool hasFirstTdt() const { return mHasFirstTdt; }
   std::chrono::system_clock::time_point getTdt() const { return mTdt; }
+
+  std::vector <std::string>& getRecorded() { return mRecorded; }
 
   // maps
   std::map <uint16_t, cPidInfo>& getPidInfoMap() { return mPidInfoMap; };
   std::map <uint16_t, cService>& getServiceMap() { return mServiceMap; };
 
-  cService* getService (uint16_t sid);
-  std::vector <std::string>& getRecorded() { return mRecorded; }
+  // demux
   int64_t demux (uint8_t* chunk, int64_t chunkSize, int64_t streamPos, int64_t skipPts);
 
 private:
@@ -310,8 +309,8 @@ private:
 
   cPidInfo& getPidInfo (uint16_t pid);
   cPidInfo* getPsiPidInfo (uint16_t pid);
+  cService* getServiceBySid (uint16_t sid);
 
-  void addServiceStreams (cService& service);
   bool renderPes (cPidInfo& pidInfo, int64_t skipPts);
 
   void startServiceProgram (cService& service,
@@ -351,7 +350,7 @@ private:
   std::vector <std::string> mRecorded;
 
   // time
-  bool mFirstTdtDefined = false;
+  bool mHasFirstTdt = false;
   std::chrono::system_clock::time_point mFirstTdt; // first tdt seen
   std::chrono::system_clock::time_point mTdt;      // now tdt
   };

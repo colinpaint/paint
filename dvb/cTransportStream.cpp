@@ -725,13 +725,6 @@ string cTransportStream::getTdtString() const {
   return date::format ("%T", date::floor<chrono::seconds>(mTdt));
   }
 //}}}
-//{{{
-cTransportStream::cService* cTransportStream::getService (uint16_t sid) {
-
-  auto it = mServiceMap.find (sid);
-  return (it == mServiceMap.end()) ? nullptr : &it->second;
-  }
-//}}}
 
 // demux
 //{{{
@@ -918,7 +911,7 @@ void cTransportStream::clear() {
 
   mNumErrors = 0;
 
-  mFirstTdtDefined = false;
+  mHasFirstTdt = false;
   }
 //}}}
 //{{{
@@ -977,24 +970,19 @@ cTransportStream::cPidInfo* cTransportStream::getPsiPidInfo (uint16_t pid) {
   return &pidInfoIt->second;
   }
 //}}}
-
 //{{{
-void cTransportStream::addServiceStreams (cService& service) {
+cTransportStream::cService* cTransportStream::getServiceBySid (uint16_t sid) {
 
-  if ((dynamic_cast<cOptions*>(mOptions))->mShowAllServices ||
-      ((dynamic_cast<cOptions*>(mOptions))->mShowFirstService && !mShowingFirstService)) {
-    if (service.getStream (eStreamType(eVideo)).isDefined()) {
-      service.enableStreams();
-      mShowingFirstService = true;
-      }
-    }
+  auto it = mServiceMap.find (sid);
+  return (it == mServiceMap.end()) ? nullptr : &it->second;
   }
 //}}}
+
 //{{{
 bool cTransportStream::renderPes (cPidInfo& pidInfo, int64_t skipPts) {
-// dispatch pes to render stream, return true if pes ownership transferred to stream
+// send pes to render stream, return true if pes ownership transferred
 
-  cService* service = getService (pidInfo.getSid());
+  cService* service = getServiceBySid (pidInfo.getSid());
   if (service) {
     cStream* stream = service->getStreamByPid (pidInfo.getPid());
     if (stream) {
@@ -1049,7 +1037,7 @@ void cTransportStream::programPesPacket (uint16_t sid, uint16_t pid, uint8_t* ts
 
   lock_guard<mutex> lockGuard (mRecordFileMutex);
 
-  cService* service = getService (sid);
+  cService* service = getServiceBySid (sid);
   if (service)
     service->writePacket (ts, pid);
   }
@@ -1179,7 +1167,7 @@ void cTransportStream::parseSdt (cPidInfo* pidInfo, uint8_t* buf) {
             //{{{  service
             string serviceName = cDvbUtils::getDvbString (buf + sizeof(descrService) +
                                                           ((descrService*)buf)->provider_name_length);
-            cService* service = getService (sid);
+            cService* service = getServiceBySid (sid);
             if (service) {
               if (service->getName().empty()) {
                 bool found = false;
@@ -1260,7 +1248,7 @@ void cTransportStream::parseEit (cPidInfo* pidInfo, uint8_t* buf) {
       while (loopLength > 0) {
         if (getDescrTag (buf) == DESCR_SHORT_EVENT)  {
           //{{{  shortEvent
-          cService* service = getService (sid);
+          cService* service = getServiceBySid (sid);
           if (service) {
             // known service
             auto startTime = chrono::system_clock::from_time_t (
@@ -1323,9 +1311,9 @@ void cTransportStream::parseTdt (cPidInfo* pidInfo, uint8_t* buf) {
     mTdt =
       chrono::system_clock::from_time_t (MjdToEpochTime (tdt->utc_mjd) + BcdTimeToSeconds (tdt->utc_time));
 
-    if (!mFirstTdtDefined) {
+    if (!mHasFirstTdt) {
       mFirstTdt = mTdt;
-      mFirstTdtDefined = true;
+      mHasFirstTdt = true;
       }
 
     pidInfo->setInfoString (date::format ("%T", date::floor<chrono::seconds>(mFirstTdt)) +
@@ -1348,7 +1336,7 @@ void cTransportStream::parsePmt (cPidInfo* pidInfo, uint8_t* buf) {
 
   if (pmt->table_id == TID_PMT) {
     uint16_t sid = HILO (pmt->program_number);
-    if (!getService (sid)) {
+    if (!getServiceBySid (sid)) {
       // found new service, create cService
       cLog::log (LOGINFO, fmt::format ("create service {}", sid));
       cService& service = mServiceMap.emplace (sid, cService(sid, mOptions)).first->second;
@@ -1411,7 +1399,11 @@ void cTransportStream::parsePmt (cPidInfo* pidInfo, uint8_t* buf) {
         buf += loopLength;
         }
 
-      addServiceStreams (service);
+      if (!mShowingFirstService || (dynamic_cast<cOptions*>(mOptions))->mShowAllServices)
+        if (service.getStream (eStreamType(eVideo)).isDefined()) {
+          service.enableStreams();
+          mShowingFirstService = true;
+          }
       }
     }
   }
