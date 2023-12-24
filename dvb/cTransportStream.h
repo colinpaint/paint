@@ -33,12 +33,12 @@ public:
     cEpgItem (bool now, bool record,
               std::chrono::system_clock::time_point time,
               std::chrono::seconds duration,
-              const std::string& titleString, const std::string& infoString)
-      : mNow(now), mRecord(record),
+              const std::string& titleString, const std::string& infoString) :
+        mNow(now), mRecord(record),
         mTime(time), mDuration(duration),
         mTitleString(titleString), mInfoString(infoString) {}
     //}}}
-    ~cEpgItem() {}
+    ~cEpgItem() = default;
 
     std::string getTitleString() { return mTitleString; }
     std::string getDesriptionString() { return mInfoString; }
@@ -93,7 +93,7 @@ public:
     int64_t getDts() const { return mDts; }
 
     uint8_t getStreamType() const { return mStreamType; }
-    std::string getTypeName() const ;
+    std::string getPidName() const ;
     std::string getInfoString() const { return mInfoString; }
 
     int getBufUsed() const { return int(mBufPtr - mBuffer); }
@@ -178,7 +178,7 @@ public:
     void setPts (int64_t pts) { mPts = pts; }
     void setRender (cRender* render) { mRender = render; }
 
-    bool toggle();
+    bool disable();
 
   private:
     bool mDefined = false;
@@ -213,6 +213,12 @@ public:
       }
     //}}}
 
+    // streams
+    cStream* getStreamByPid (uint16_t pid);
+    cStream& getStream (eStreamType streamType) { return mStreams[streamType]; }
+    void enableStreams();
+    void skipStreams (int64_t skipPts);
+
     // record
     bool getChannelRecord() const { return mChannelRecord; }
     std::string getName() const { return mName; }
@@ -236,11 +242,6 @@ public:
                  std::chrono::system_clock::time_point startTime, std::chrono::seconds duration,
                  const std::string& titleString, const std::string& infoString);
     //}}}
-
-    // streams
-    cStream* getStreamByPid (uint16_t pid);
-    cStream& getStream (eStreamType streamType) { return mStreams[streamType]; }
-    void enableStreams();
 
   private:
     uint8_t* tsHeader (uint8_t* ts, uint16_t pid, uint8_t continuityCount);
@@ -300,6 +301,7 @@ public:
   std::map <uint16_t, cService>& getServiceMap() { return mServiceMap; };
 
   // demux
+  void skip (int64_t skipPts);
   int64_t demux (uint8_t* chunk, int64_t chunkSize, int64_t streamPos, int64_t skipPts);
 
 private:

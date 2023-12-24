@@ -403,7 +403,7 @@ struct itemExtendedEvent {
 
 //{{{  class cTransportStream::cPidInfo
 //{{{
-string cTransportStream::cPidInfo::getTypeName() const {
+string cTransportStream::cPidInfo::getPidName() const {
 
   // known pids
   switch (mPid) {
@@ -459,8 +459,8 @@ void cTransportStream::cStream::setPidStreamType (uint16_t pid, uint8_t streamTy
   }
 //}}}
 //{{{
-bool cTransportStream::cStream::toggle() {
-// return true if enabling
+bool cTransportStream::cStream::disable() {
+// return true if not enabled
 
   if (mRender) {
     // remove render
@@ -525,6 +525,11 @@ void cTransportStream::cService::enableStreams() {
   cStream& subtitleStream = getStream (eSubtitle);
   subtitleStream.setRender (
     new cSubtitleRender (getName(), subtitleStream.getTypeId(), subtitleStream.getPid(), mOptions));
+  }
+//}}}
+//{{{
+void cTransportStream::cService::skipStreams (int64_t skipPts) {
+  cLog::log (LOGINFO, fmt::format ("cTransportStream::cService::skip {}", skipPts));
   }
 //}}}
 
@@ -716,8 +721,11 @@ void cTransportStream::cService::writeSection (uint8_t* ts, uint8_t* tsSectionSt
 //}}}
 //}}}
 
+// cTransportStream
+//{{{
 cTransportStream::cTransportStream (const cDvbMultiplex& dvbMultiplex, iOptions* options) :
     mDvbMultiplex(dvbMultiplex), mOptions(options) {}
+//}}}
 
 // gets
 //{{{
@@ -727,6 +735,13 @@ string cTransportStream::getTdtString() const {
 //}}}
 
 // demux
+//{{{
+void cTransportStream::skip (int64_t skipPts) {
+
+  for (auto& service : mServiceMap)
+    service.second.skipStreams (skipPts);
+  }
+//}}}
 //{{{
 int64_t cTransportStream::demux (uint8_t* chunk, int64_t chunkSize, int64_t streamPos, int64_t skipPts) {
 // demux from chunk to chunk + chunkSize, streamPos offset from first packet
@@ -839,11 +854,11 @@ int64_t cTransportStream::demux (uint8_t* chunk, int64_t chunkSize, int64_t stre
                     cLog::log (LOGINFO, fmt::format ("recognised pesHeader - pid:{} streamId:{:8x}", pid, streamId));
 
                   else if ((streamId == 0xBD) ||
-                           (streamId == 0xBE) ||// ???
+                           (streamId == 0xBE) || // ???
                            ((streamId >= 0xC0) && (streamId <= 0xEF))) {
                     // subtitle, audio, video streamId
                     if (pidInfo->mBufPtr)
-                      if (renderPes (*pidInfo, skipPts))
+                      if (renderPes (*pidInfo, skipPts)) // transferred ownership of mBuffer to render
                         pidInfo->mBuffer = (uint8_t*)malloc (pidInfo->mBufSize);
                     }
                   else

@@ -1079,10 +1079,9 @@ namespace {
         while (true) {
           size_t bytesRead = fread (chunk, 1, chunkSize, file);
           if (bytesRead > 0)
-            mFilePos += mTransportStream->demux (chunk, bytesRead, mFilePos, mSkipPts);
+            mFilePos += mTransportStream->demux (chunk, bytesRead, mFilePos, 0);
           else
             break;
-          mSkipPts = 0;
           //{{{  update fileSize
           #ifdef _WIN32
             // windows platform nonsense
@@ -1107,13 +1106,13 @@ namespace {
     //{{{
     void moveLeft() {
       cLog::log (LOGINFO, fmt::format ("tellyApp moveLeft"));
-      mSkipPts = -90000;
+      mTransportStream->skip (-90000);
       }
     //}}}
     //{{{
     void moveRight() {
       cLog::log (LOGINFO, fmt::format ("tellyApp moveRight"));
-      mSkipPts = 90000;
+      mTransportStream->skip (90000);
       }
     //}}}
 
@@ -1142,8 +1141,6 @@ namespace {
     FILE* mFile = nullptr;
     uint64_t mFilePos = 0;
     size_t mFileSize = 0;
-
-    int64_t mSkipPts = 0;
 
     cTellyOptions* mOptions;
     cTransportStream* mTransportStream = nullptr;
@@ -1836,7 +1833,7 @@ namespace {
                                 pidInfo.mPackets, mPacketChars, pidInfo.mErrors, errorChars, pidInfo.getPid(),
                                 utils::getFullPtsString (pidInfo.getPts()),
                                 utils::getFullPtsString (pidInfo.getDts()),
-                                pidInfo.getTypeName()).c_str());
+                                pidInfo.getPidName()).c_str());
 
         // draw stream bar
         ImGui::SameLine();
