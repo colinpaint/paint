@@ -990,7 +990,7 @@ namespace {
               auto ptr = mDvbSource->getBlockBDA (blockSize);
               if (blockSize) {
                 //  read and demux block
-                streamPos += mTransportStream->demux (ptr, blockSize, streamPos, 0);
+                streamPos += mTransportStream->demux (ptr, blockSize, streamPos, false);
                 if (options->mRecordAll && mFile)
                   fwrite (ptr, 1, blockSize, mFile);
                 mDvbSource->releaseBlock (blockSize);
@@ -1013,7 +1013,7 @@ namespace {
             while (true) {
               int bytesRead = mDvbSource->getBlock (chunk, kDvrReadChunkSize);
               if (bytesRead) {
-                streamPos += mTransportStream->demux (chunk, bytesRead, 0, 0);
+                streamPos += mTransportStream->demux (chunk, bytesRead, 0, false);
                 if (options->mRecordAll && mFile)
                   fwrite (chunk, 1, bytesRead, mFile);
                 }
@@ -1075,7 +1075,7 @@ namespace {
         while (true) {
           size_t bytesRead = fread (chunk, 1, chunkSize, file);
           if (bytesRead > 0)
-            mFilePos += mTransportStream->demux (chunk, bytesRead, mFilePos, 0);
+            mFilePos += mTransportStream->demux (chunk, bytesRead, mFilePos, false);
           else
             break;
           //{{{  update fileSize
@@ -1496,9 +1496,9 @@ namespace {
           ImGui::TextColored ({1.f, 1.f,1.f,1.f}, channelString.c_str());
           //}}}
 
-          ImGui::SetCursorPos ({mBr.x - 2.f - ImGui::GetTextLineHeight() * 8.f,
+          ImGui::SetCursorPos ({mBr.x - ImGui::GetTextLineHeight() * 6.f,
                                 mBr.y - 2.f - ImGui::GetTextLineHeight()});
-          ImGui::TextColored ({1.f, 1.f,1.f,1.f}, utils::getFullPtsString (mService.getPtsFromStart()).c_str());
+          ImGui::TextColored ({1.f, 1.f,1.f,1.f}, utils::getPtsString (mService.getPtsFromStart()).c_str());
 
           // draw select rect
           mHover = ImGui::IsMouseHoveringRect (mTl, mBr);

@@ -140,9 +140,9 @@ string cRender::getInfoString() const {
 //}}}
 //{{{
 bool cRender::processPes (uint16_t pid, uint8_t* pes, uint32_t pesSize,
-                          int64_t pts, int64_t dts, int64_t streamPos, int64_t skipPts) {
+                          int64_t pts, int64_t dts, int64_t streamPos, bool skip) {
   (void)streamPos;
-  (void)skipPts;
+  (void)skip;
 
   if (isQueued()) {
     mDecodeQueue.enqueue (new cDecodeQueueItem (mDecoder, pid, pes, pesSize,

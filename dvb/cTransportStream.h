@@ -88,7 +88,6 @@ public:
     bool isPsi() const { return mPsi; }
     uint16_t getPid() const { return mPid; }
     uint16_t getSid() const { return mSid; }
-
     int64_t getPts() const { return mPts; }
     int64_t getDts() const { return mDts; }
 
@@ -291,7 +290,7 @@ public:
   void skip (int64_t skipPts);
 
   // demux
-  int64_t demux (uint8_t* chunk, int64_t chunkSize, int64_t streamPos, int64_t skipPts);
+  int64_t demux (uint8_t* chunk, int64_t chunkSize, int64_t streamPos, bool skip);
 
 private:
   void clear();

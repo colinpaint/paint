@@ -777,10 +777,10 @@ void cTransportStream::skip (int64_t skipPts) {
 
 // demux
 //{{{
-int64_t cTransportStream::demux (uint8_t* chunk, int64_t chunkSize, int64_t streamPos, int64_t skipPts) {
+int64_t cTransportStream::demux (uint8_t* chunk, int64_t chunkSize, int64_t streamPos, bool skip) {
 // demux from chunk to chunk + chunkSize, streamPos offset from first packet
 
-  if (skipPts != 0)
+  if (skip)
     clearPidContinuity();
 
   uint8_t* ts = chunk;
@@ -892,7 +892,7 @@ int64_t cTransportStream::demux (uint8_t* chunk, int64_t chunkSize, int64_t stre
                            ((streamId >= 0xC0) && (streamId <= 0xEF))) {
                     // subtitle, audio, video streamId
                     if (pidInfo->mBufPtr)
-                      if (renderPes (*pidInfo, skipPts)) // transferred ownership of mBuffer to render
+                      if (renderPes (*pidInfo, skip)) // transferred ownership of mBuffer to render
                         pidInfo->mBuffer = (uint8_t*)malloc (pidInfo->mBufSize);
                     }
                   else
@@ -1038,7 +1038,7 @@ bool cTransportStream::renderPes (cPidInfo& pidInfo, int64_t skipPts) {
       if (stream->isEnabled())
         return stream->getRender().processPes (pidInfo.getPid(),
                                                pidInfo.mBuffer, pidInfo.getBufUsed(),
-                                               pidInfo.getPts(), pidInfo.getDts(), 
+                                               pidInfo.getPts(), pidInfo.getDts(),
                                                pidInfo.mStreamPos, skipPts);
 
     }
