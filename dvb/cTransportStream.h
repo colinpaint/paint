@@ -184,7 +184,6 @@ public:
     uint16_t getSid() const { return mSid; }
     std::string getName() const { return mName; }
     uint16_t getProgramPid() const { return mProgramPid; }
-
     int64_t getPtsFromStart();
 
     // sets
@@ -204,7 +203,8 @@ public:
     void enableStreams();
     void togglePlay();
     void hitEnter();
-    void skipStreams (int64_t skipPts);
+    int64_t skipStreams (int64_t skipPts);
+    bool throttle();
 
     // record
     bool getRecord() const { return mRecord; }
@@ -287,7 +287,8 @@ public:
   // actions
   void togglePlay();
   void hitEnter();
-  void skip (int64_t skipPts);
+  int64_t skip (int64_t skipPts);
+  bool throttle();
 
   // demux
   int64_t demux (uint8_t* chunk, int64_t chunkSize, int64_t streamPos, bool skip);
@@ -301,7 +302,7 @@ private:
   cPidInfo* getPsiPidInfo (uint16_t pid);
   cService* getServiceBySid (uint16_t sid);
 
-  bool renderPes (cPidInfo& pidInfo, int64_t skipPts);
+  bool renderPes (cPidInfo& pidInfo, bool skip);
 
   void startServiceProgram (cService& service,
                             std::chrono::system_clock::time_point tdt,

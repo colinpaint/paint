@@ -18,19 +18,19 @@ public:
 
   int64_t getPts() const { return mPts; }
   int64_t getPtsDuration() const { return mPtsDuration; }
-  uint32_t getPesSize() const { return mPesSize; }
   int64_t getStreamPos() const { return mStreamPos; }
+  uint32_t getPesSize() const { return mPesSize; }
 
   void setPts (int64_t pts) { mPts = pts; }
   void setPtsDuration (int64_t ptsDuration) { mPtsDuration = ptsDuration; }
-  void setPesSize (uint32_t pesSize) { mPesSize = pesSize; }
   void setStreamPos (int64_t streamPos) { mStreamPos = streamPos; }
+  void setPesSize (uint32_t pesSize) { mPesSize = pesSize; }
 
   virtual void releaseResources() = 0;
 
 private:
   int64_t mPts = 0;
   int64_t mPtsDuration = 0;
-  uint32_t mPesSize = 0;
   int64_t mStreamPos = 0;
+  uint32_t mPesSize = 0;
   };

@@ -107,18 +107,24 @@ string cAudioRender::getInfoString() const {
 bool cAudioRender::processPes (uint16_t pid, uint8_t* pes, uint32_t pesSize,
                                int64_t pts, int64_t dts, int64_t streamPos, bool skip) {
 
-  if (!((dynamic_cast<cRender::cOptions*>(mOptions))->mIsLive))
-    if (mPlayer)
-      while (throttle (mPlayer->getPts()))
-        this_thread::sleep_for (1ms);
-
   return cRender::processPes (pid, pes, pesSize, pts, dts, streamPos, skip);
   }
 //}}}
 //{{{
-void cAudioRender::skip (int64_t skipPts) {
+int64_t cAudioRender::skip (int64_t skipPts) {
   if (mPlayer)
     mPlayer->startPlayPts (getPts() + skipPts);
+
+  return cRender::skip (skipPts);
+  }
+//}}}
+//{{{
+bool cAudioRender::throttle() {
+
+  if (mPlayer)
+    return cRender::throttle (mPlayer->getPts());
+
+  return false;
   }
 //}}}
 //{{{

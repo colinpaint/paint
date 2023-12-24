@@ -47,28 +47,14 @@ public:
   int64_t getPtsDuration() const { return mPtsDuration; }
   float getStreamPosPerPts() const { return mStreamPosPerPts; }
 
-  //{{{
-  void setPts (int64_t pts, int64_t ptsDuration, int64_t streamPos) {
-
-    mPts = pts;
-    mPtsDuration = ptsDuration; 
-
-    if ((pts != -1) && (mFirstPts == -1))
-      mFirstPts = pts;
-    if ((pts != -1) && (pts > mFirstPts))
-      mStreamPosPerPts = streamPos / float(pts - mFirstPts);
-    if ((pts != -1) && (pts > mLastPts))
-      mLastPts = pts;
-    }
-  //}}}
-
   std::shared_mutex& getSharedMutex() { return mSharedMutex; }
   std::map<int64_t,cFrame*> getFramesMap() { return mFramesMap; }
   bool hasMaxFrames() const { return mFramesMap.size() >= mMaxFrames; }
 
+  void setPts (int64_t pts, int64_t ptsDuration, int64_t streamPos);
+
   cFrame* getFrameAtPts (int64_t pts);
   cFrame* getFrameAtOrAfterPts (int64_t pts);
-  bool throttle (int64_t pts);
   cFrame* reuseBestFrame();
   void addFrame (cFrame* frame);
 
@@ -76,7 +62,8 @@ public:
   virtual bool processPes (uint16_t pid, uint8_t* pes, uint32_t pesSize,
                            int64_t pts, int64_t dts, int64_t streamPos, bool skip);
   virtual void togglePlay() {}
-  virtual void skip (int64_t skipPts) { (void)skipPts; }
+  virtual bool throttle() { return false; }
+  virtual int64_t skip (int64_t skipPts) { return int64_t(skipPts * mStreamPosPerPts); }
 
   void toggleLog();
   void header();
@@ -85,6 +72,7 @@ public:
 protected:
   size_t getQueueSize() const;
   float getQueueFrac() const;
+  bool throttle (int64_t pts);
 
   // vars
   iOptions* mOptions;

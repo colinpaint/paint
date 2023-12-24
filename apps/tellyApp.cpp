@@ -1041,8 +1041,8 @@ namespace {
 
     // fileSource
     std::string getFileName() const { return mOptions->mFileName; }
-    uint64_t getFilePos() const { return mFilePos; }
-    size_t getFileSize() const { return mFileSize; }
+    uint64_t getStreamPos() const { return mStreamPos; }
+    size_t getStreamSize() const { return mStreamSize; }
     //{{{
     void fileSource (const string& filename, cTellyOptions* options) {
     // create fileSource
@@ -1071,11 +1071,14 @@ namespace {
         size_t chunkSize = 188 * 256;
         uint8_t* chunk = new uint8_t[chunkSize];
 
-        mFilePos = 0;
+        mStreamPos = 0;
         while (true) {
+          while (mTransportStream->throttle())
+            this_thread::sleep_for (1ms);
+
           size_t bytesRead = fread (chunk, 1, chunkSize, file);
           if (bytesRead > 0)
-            mFilePos += mTransportStream->demux (chunk, bytesRead, mFilePos, false);
+            mStreamPos += mTransportStream->demux (chunk, bytesRead, mStreamPos, false);
           else
             break;
           //{{{  update fileSize
@@ -1087,7 +1090,7 @@ namespace {
             struct stat st;
             if (stat (mOptions->mFileName.c_str(), &st) != -1)
           #endif
-              mFileSize = st.st_size;
+              mStreamSize = st.st_size;
           //}}}
           }
 
@@ -1104,16 +1107,8 @@ namespace {
 
     void hitEnter() { mTransportStream->hitEnter(); }
     void hitSpace() { mTransportStream->togglePlay(); }
-    //{{{
-    void moveLeft() {
-      mTransportStream->skip (-90000);
-      }
-    //}}}
-    //{{{
-    void moveRight() {
-      mTransportStream->skip (90000);
-      }
-    //}}}
+    void moveLeft() { mStreamPos += mTransportStream->skip (-90000); }
+    void moveRight() { mStreamPos +=  mTransportStream->skip (90000); }
 
     // drop file
     //{{{
@@ -1141,8 +1136,8 @@ namespace {
 
     // fileSource
     FILE* mFile = nullptr;
-    uint64_t mFilePos = 0;
-    size_t mFileSize = 0;
+    uint64_t mStreamPos = 0;
+    size_t mStreamSize = 0;
     };
   //}}}
   //{{{
@@ -1199,10 +1194,10 @@ namespace {
         cTransportStream& transportStream = tellyApp.getTransportStream();
 
         if (tellyApp.isFileSource()) {
-          //{{{  draw filePos info
+          //{{{  draw streamPos info
           ImGui::SameLine();
-          ImGui::TextUnformatted (fmt::format ("{:4.3f}%", tellyApp.getFilePos() * 100.f /
-                                                           tellyApp.getFileSize()).c_str());
+          ImGui::TextUnformatted (fmt::format ("{:4.3f}%", tellyApp.getStreamPos() * 100.f /
+                                                           tellyApp.getStreamSize()).c_str());
           }
           //}}}
         else if (tellyApp.isDvbSource()) {

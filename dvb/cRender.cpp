@@ -78,29 +78,24 @@ cFrame* cRender::getFrameAtOrAfterPts (int64_t pts) {
 //}}}
 
 //{{{
-bool cRender::throttle (int64_t pts) {
-// return true if fileRead should throttle
-// - if mFramesMap not reached max, and frames beforePts < mMaxFrames/2
+void cRender::setPts (int64_t pts, int64_t ptsDuration, int64_t streamPos) {
 
-  if (mFramesMap.size() < mMaxFrames) // no throttle
-    return false;
+  mPts = pts;
+  mPtsDuration = ptsDuration;
 
-  { // locked
-  unique_lock<shared_mutex> lock (mSharedMutex);
+  if (pts != -1) {
+    if (mFirstPts == -1)
+      mFirstPts = pts;
 
-  size_t numFramesBeforePts = 0;
-  auto it = mFramesMap.begin();
-  while ((it != mFramesMap.end()) && (it->first < (pts / mPtsDuration))) {
-    if (++numFramesBeforePts >= mMaxFrames/2) // if mFramesMap at least centred about pts, no throttle
-      return false;
-    ++it;
+    if (pts > mFirstPts)
+      mStreamPosPerPts = streamPos / float(pts - mFirstPts);
+
+    if (pts > mLastPts)
+      mLastPts = pts;
     }
-
-  // not centred about pts, throttle
-  return true;
-  }
   }
 //}}}
+
 //{{{
 cFrame* cRender::reuseBestFrame() {
 
@@ -169,6 +164,30 @@ size_t cRender::getQueueSize() const {
 //{{{
 float cRender::getQueueFrac() const {
   return (float)mDecodeQueue.size_approx() / mDecodeQueue.max_capacity();
+  }
+//}}}
+//{{{
+bool cRender::throttle (int64_t pts) {
+// return true if fileRead should throttle
+// - if mFramesMap not reached max, and frames beforePts < mMaxFrames/2
+
+  if (mFramesMap.size() < mMaxFrames) // no throttle
+    return false;
+
+  { // locked
+  unique_lock<shared_mutex> lock (mSharedMutex);
+
+  size_t numFramesBeforePts = 0;
+  auto it = mFramesMap.begin();
+  while ((it != mFramesMap.end()) && (it->first < (pts / mPtsDuration))) {
+    if (++numFramesBeforePts >= mMaxFrames/2) // if mFramesMap at least centred about pts, no throttle
+      return false;
+    ++it;
+    }
+
+  // not centred about pts, throttle
+  return true;
+  }
   }
 //}}}
 

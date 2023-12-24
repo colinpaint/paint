@@ -28,6 +28,8 @@
 using namespace std;
 //}}}
 //{{{  defines, const, struct
+constexpr uint8_t kPacketSize = 188;
+
 #define HILO(x) (x##_hi << 8 | x##_lo)
 
 #define MjdToEpochTime(x) (unsigned int)((((x##_hi << 8) | x##_lo) - 40587) * 86400)
@@ -548,11 +550,21 @@ void cTransportStream::cService::togglePlay() {
   }
 //}}}
 //{{{
-void cTransportStream::cService::skipStreams (int64_t skipPts) {
+int64_t cTransportStream::cService::skipStreams (int64_t skipPts) {
 
   cStream& audioStream = getStream (eAudio);
   if (audioStream.isEnabled())
-    audioStream.getRender().skip (skipPts);
+    return audioStream.getRender().skip (skipPts);
+
+  return 0;
+  }
+//}}}
+//{{{
+bool cTransportStream::cService::throttle() {
+// return true if audioStream needs throttle
+
+  cStream& audioStream = getStream (eAudio);
+  return audioStream.isEnabled() && audioStream.getRender().throttle();
   }
 //}}}
 
@@ -579,7 +591,7 @@ void cTransportStream::cService::writePacket (uint8_t* ts, uint16_t pid) {
       ((pid == mStreams[eVideo].getPid()) ||
        (pid == mStreams[eAudio].getPid()) ||
        (pid == mStreams[eSubtitle].getPid())))
-    fwrite (ts, 1, 188, mFile);
+    fwrite (ts, 1, kPacketSize, mFile);
   }
 //}}}
 //{{{
@@ -641,7 +653,7 @@ bool cTransportStream::cService::setEpg (bool record,
 //{{{
 uint8_t* cTransportStream::cService::tsHeader (uint8_t* ts, uint16_t pid, uint8_t continuityCount) {
 
-  memset (ts, 0xFF, 188);
+  memset (ts, 0xFF, kPacketSize);
 
   *ts++ = 0x47;                         // sync byte
   *ts++ = 0x40 | ((pid & 0x1f00) >> 8); // payload_unit_start_indicator + pid upper
@@ -656,7 +668,7 @@ uint8_t* cTransportStream::cService::tsHeader (uint8_t* ts, uint16_t pid, uint8_
 //{{{
 void cTransportStream::cService::writePat (uint16_t tsid) {
 
-  uint8_t ts[188];
+  uint8_t ts[kPacketSize];
   uint8_t* tsSectionStart = tsHeader (ts, PID_PAT, 0);
   uint8_t* tsPtr = tsSectionStart;
 
@@ -683,7 +695,7 @@ void cTransportStream::cService::writePat (uint16_t tsid) {
 //{{{
 void cTransportStream::cService::writePmt() {
 
-  uint8_t ts[188];
+  uint8_t ts[kPacketSize];
   uint8_t* tsSectionStart = tsHeader (ts, mProgramPid, 0);
   uint8_t* tsPtr = tsSectionStart;
 
@@ -739,7 +751,7 @@ void cTransportStream::cService::writeSection (uint8_t* ts, uint8_t* tsSectionSt
   *tsPtr++ = (crc & 0x0000ff00) >>  8;
   *tsPtr++ =  crc & 0x000000ff;
 
-  fwrite (ts, 1, 188, mFile);
+  fwrite (ts, 1, kPacketSize, mFile);
   }
 //}}}
 //}}}
@@ -769,9 +781,25 @@ void cTransportStream::togglePlay() {
   }
 //}}}
 //{{{
-void cTransportStream::skip (int64_t skipPts) {
+int64_t cTransportStream::skip (int64_t skipPts) {
+// return streamPosOffset to match pts skip
+
+  int64_t streamPosOffset = 0;
   for (auto& service : mServiceMap)
-    service.second.skipStreams (skipPts);
+    streamPosOffset = max (streamPosOffset, service.second.skipStreams (skipPts));
+
+  return ((streamPosOffset + kPacketSize - 1) / kPacketSize) * kPacketSize;
+  }
+//}}}
+//{{{
+bool cTransportStream::throttle() {
+// return true if any service needs throttle
+
+  for (auto& service : mServiceMap)
+    if (service.second.throttle())
+      return true;
+
+  return false;
   }
 //}}}
 
@@ -786,12 +814,12 @@ int64_t cTransportStream::demux (uint8_t* chunk, int64_t chunkSize, int64_t stre
   uint8_t* ts = chunk;
   uint8_t* tsEnd = chunk + chunkSize;
 
-  uint8_t* nextPacket = ts + 188;
+  uint8_t* nextPacket = ts + kPacketSize;
   while (nextPacket <= tsEnd) {
     if (*ts == 0x47) {
-      if ((ts+188 >= tsEnd) || (*(ts+188) == 0x47)) {
+      if ((ts+kPacketSize >= tsEnd) || (*(ts+kPacketSize) == 0x47)) {
         ts++;
-        int tsBytesLeft = 188-1;
+        int tsBytesLeft = kPacketSize-1;
 
         uint16_t pid = ((ts[0] & 0x1F) << 8) | ts[1];
         if (pid != 0x1FFF) {
@@ -931,8 +959,8 @@ int64_t cTransportStream::demux (uint8_t* chunk, int64_t chunkSize, int64_t stre
           }
 
         ts = nextPacket;
-        nextPacket += 188;
-        streamPos += 188;
+        nextPacket += kPacketSize;
+        streamPos += kPacketSize;
         mNumPackets++;
         }
       }
@@ -1028,7 +1056,7 @@ cTransportStream::cService* cTransportStream::getServiceBySid (uint16_t sid) {
 //}}}
 
 //{{{
-bool cTransportStream::renderPes (cPidInfo& pidInfo, int64_t skipPts) {
+bool cTransportStream::renderPes (cPidInfo& pidInfo, bool skip) {
 // send pes to render stream, return true if pes ownership transferred
 
   cService* service = getServiceBySid (pidInfo.getSid());
@@ -1039,7 +1067,7 @@ bool cTransportStream::renderPes (cPidInfo& pidInfo, int64_t skipPts) {
         return stream->getRender().processPes (pidInfo.getPid(),
                                                pidInfo.mBuffer, pidInfo.getBufUsed(),
                                                pidInfo.getPts(), pidInfo.getDts(),
-                                               pidInfo.mStreamPos, skipPts);
+                                               pidInfo.mStreamPos, skip);
 
     }
 

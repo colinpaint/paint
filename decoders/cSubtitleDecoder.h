@@ -47,7 +47,7 @@ public:
   cSubtitleImage& getImage (size_t line) { return mPage.mImages[line]; }
 
   //{{{
-  virtual int64_t decode (uint16_t pid, uint8_t* pes, uint32_t pesSize, 
+  virtual int64_t decode (uint16_t pid, uint8_t* pes, uint32_t pesSize,
                           int64_t pts, int64_t dts, int64_t streamPos,
                           std::function<cFrame* ()> getFrameCallback,
                           std::function<void (cFrame* frame)> addFrameCallback) final {
