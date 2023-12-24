@@ -1053,6 +1053,27 @@ void cTransportStream::stopServiceProgram (cService& service) {
 
 // parse
 //{{{
+int cTransportStream::parsePsi (cPidInfo* pidInfo, uint8_t* buf) {
+// return sectionLength
+
+  switch (pidInfo->getPid()) {
+    case PID_PAT: parsePat (pidInfo, buf); break;
+    case PID_NIT: parseNit (pidInfo, buf); break;
+    case PID_SDT: parseSdt (pidInfo, buf); break;
+    case PID_EIT: parseEit (pidInfo, buf); break;
+    case PID_TDT: parseTdt (pidInfo, buf); break;
+
+    case PID_CAT:
+    case PID_RST:
+    case PID_SYN: break;
+
+    default: parsePmt (pidInfo, buf); break;
+    }
+
+  return ((buf[1] & 0x0F) << 8) + buf[2] + 3;
+  }
+//}}}
+//{{{
 void cTransportStream::parsePat (cPidInfo* pidInfo, uint8_t* buf) {
 // PAT declares programPid,sid to mProgramMap to recognise programPid PMT to declare service streams
 
@@ -1351,7 +1372,7 @@ void cTransportStream::parsePmt (cPidInfo* pidInfo, uint8_t* buf) {
 
       buf += programInfoLength;
       while (streamLength > 0) {
-        //{{{  set service elementary stream pids
+        //{{{  iterate service streams, set service elementary stream pids
         sPmtInfo* pmtInfo = (sPmtInfo*)buf;
         uint16_t esPid = HILO (pmtInfo->elementary_PID);
         cPidInfo& esPidInfo = getPidInfo (esPid);
@@ -1399,33 +1420,13 @@ void cTransportStream::parsePmt (cPidInfo* pidInfo, uint8_t* buf) {
         buf += loopLength;
         }
 
+      // enable at least one service streams
       if (!mShowingFirstService || (dynamic_cast<cOptions*>(mOptions))->mShowAllServices)
         if (service.getStream (eStreamType(eVideo)).isDefined()) {
-          service.enableStreams();
           mShowingFirstService = true;
+          service.enableStreams();
           }
       }
     }
-  }
-//}}}
-//{{{
-int cTransportStream::parsePsi (cPidInfo* pidInfo, uint8_t* buf) {
-// return sectionLength
-
-  switch (pidInfo->getPid()) {
-    case PID_PAT: parsePat (pidInfo, buf); break;
-    case PID_NIT: parseNit (pidInfo, buf); break;
-    case PID_SDT: parseSdt (pidInfo, buf); break;
-    case PID_EIT: parseEit (pidInfo, buf); break;
-    case PID_TDT: parseTdt (pidInfo, buf); break;
-
-    case PID_CAT:
-    case PID_RST:
-    case PID_SYN: break;
-
-    default: parsePmt (pidInfo, buf); break;
-    }
-
-  return ((buf[1] & 0x0F) << 8) + buf[2] + 3;
   }
 //}}}

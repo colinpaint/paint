@@ -322,14 +322,14 @@ private:
   void stopServiceProgram (cService& service);
 
   //{{{  parsers
+  int parsePsi (cPidInfo* pidInfo, uint8_t* buf);
+
   void parsePat (cPidInfo* pidInfo, uint8_t* buf);
   void parseNit (cPidInfo* pidInfo, uint8_t* buf);
   void parseSdt (cPidInfo* pidInfo, uint8_t* buf);
   void parseEit (cPidInfo* pidInfo, uint8_t* buf);
   void parseTdt (cPidInfo* pidInfo, uint8_t* buf);
   void parsePmt (cPidInfo* pidInfo, uint8_t* buf);
-
-  int parsePsi (cPidInfo* pidInfo, uint8_t* buf);
   //}}}
 
   // vars
