@@ -63,8 +63,7 @@ cVideoRender::cVideoRender (const string& name, uint8_t streamType, uint16_t pid
 
             // addFrame lambda
             [&](cFrame* frame) noexcept {
-              setPts (frame->getPts());
-              setPtsDuration (frame->getPtsDuration());
+              setPts (frame->getPts(), frame->getPtsDuration(), frame->getStreamPos());
               cVideoFrame* videoFrame = dynamic_cast<cVideoFrame*>(frame);
               videoFrame->mQueueSize = getQueueSize();
               videoFrame->mTextureDirty = true;
@@ -104,8 +103,8 @@ string cVideoRender::getInfoString() const {
 //}}}
 //{{{
 bool cVideoRender::processPes (uint16_t pid, uint8_t* pes, uint32_t pesSize,
-                               int64_t pts, int64_t dts, int64_t skipPts) {
+                               int64_t pts, int64_t dts, int64_t streamPos, int64_t skipPts) {
 
-  return cRender::processPes (pid, pes, pesSize, pts, dts, skipPts);
+  return cRender::processPes (pid, pes, pesSize, pts, dts, streamPos, skipPts);
   }
 //}}}

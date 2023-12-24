@@ -34,7 +34,7 @@ public:
   // overrides
   virtual std::string getInfoString() const final;
   virtual bool processPes (uint16_t pid, uint8_t* pes, uint32_t pesSize,
-                           int64_t pts, int64_t dts, int64_t skipPts) final;
+                           int64_t pts, int64_t dts, int64_t streamPos, int64_t skipPts) final;
 
 private:
   uint16_t mWidth = 0;

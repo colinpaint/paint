@@ -42,8 +42,7 @@ cSubtitleRender::cSubtitleRender (const string& name, uint8_t streamType, uint16
 
               // addFrame lambda
               [&](cFrame* frame) noexcept {
-                setPts (frame->getPts());
-                setPtsDuration (frame->getPtsDuration());
+                setPts (frame->getPts(), frame->getPtsDuration(), frame->getStreamPos());
                 //cRender::addframe (frame);
                 //cLog::log (LOGINFO, fmt::format ("subtitle addFrame {}", getPtsString (frame->mPts)));
                 }

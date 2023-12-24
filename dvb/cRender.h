@@ -43,9 +43,24 @@ public:
   cMiniLog& getLog() { return mMiniLog; }
 
   int64_t getPts() const { return mPts; }
+  int64_t getPtsFromStart() const { return mPts - mFirstPts; }
   int64_t getPtsDuration() const { return mPtsDuration; }
-  void setPts (int64_t pts) { mPts = pts; }
-  void setPtsDuration (int64_t ptsDuration) { mPtsDuration = ptsDuration; }
+  float getStreamPosPerPts() const { return mStreamPosPerPts; }
+
+  //{{{
+  void setPts (int64_t pts, int64_t ptsDuration, int64_t streamPos) {
+
+    mPts = pts;
+    mPtsDuration = ptsDuration; 
+
+    if ((pts != -1) && (mFirstPts == -1))
+      mFirstPts = pts;
+    if ((pts != -1) && (pts > mFirstPts))
+      mStreamPosPerPts = streamPos / float(pts - mFirstPts);
+    if ((pts != -1) && (pts > mLastPts))
+      mLastPts = pts;
+    }
+  //}}}
 
   std::shared_mutex& getSharedMutex() { return mSharedMutex; }
   std::map<int64_t,cFrame*> getFramesMap() { return mFramesMap; }
@@ -59,7 +74,7 @@ public:
 
   virtual std::string getInfoString() const;
   virtual bool processPes (uint16_t pid, uint8_t* pes, uint32_t pesSize,
-                           int64_t pts, int64_t dts, int64_t skipPts);
+                           int64_t pts, int64_t dts, int64_t streamPos, int64_t skipPts);
   virtual void togglePlay() {}
   virtual void skip (int64_t skipPts) { (void)skipPts; }
 
@@ -103,5 +118,8 @@ private:
   const size_t mMaxLogSize;
 
   int64_t mPts = 0;
-  int64_t mPtsDuration;
+  int64_t mPtsDuration = 0;
+  int64_t mFirstPts = -1;
+  int64_t mLastPts = -1;
+  float mStreamPosPerPts = 1.f;
   };

@@ -90,8 +90,6 @@ public:
     uint16_t getSid() const { return mSid; }
 
     int64_t getPts() const { return mPts; }
-    int64_t getFirstPts() const { return mFirstPts; }
-    int64_t getLastPts() const { return mLastPts; }
     int64_t getDts() const { return mDts; }
 
     uint8_t getStreamType() const { return mStreamType; }
@@ -103,19 +101,7 @@ public:
     void setSid (uint16_t sid) { mSid = sid; }
     void setStreamType (uint8_t streamType) { mStreamType = streamType; }
     void setInfoString (const std::string infoString) { mInfoString = infoString; }
-    //{{{
-    void setPts (int64_t pts) {
-
-      mPts = pts;
-
-      if ((pts != -1) && (mFirstPts == -1))
-        mFirstPts = pts;
-      if ((pts != -1) && (pts > mFirstPts))
-        mStreamPosPerPts = mStreamPos / float(pts - mFirstPts);
-      if ((pts != -1) && (pts > mLastPts))
-        mLastPts = pts;
-      }
-    //}}}
+    void setPts (int64_t pts) { mPts = pts; }
     void setDts (int64_t dts) { mDts = dts; }
 
     int addToBuffer (uint8_t* buf, int bufSize);
@@ -150,17 +136,13 @@ public:
   private:
     const uint16_t mPid;
     const bool mPsi;
-
     uint16_t mSid = 0;
     uint8_t mStreamType = 0;
 
     std::string mInfoString;
 
     int64_t mPts = -1;
-    int64_t mFirstPts = -1;
-    int64_t mLastPts = -1;
     int64_t mDts = -1;
-    float mStreamPosPerPts = 1.f;
     };
   //}}}
   //{{{
@@ -177,18 +159,8 @@ public:
     std::string getTypeName() const { return mTypeName; }
     cRender& getRender() const { return *mRender; }
 
-    int64_t getPts() const { return mPts; }
-    int64_t getPtsFromStart() const { return mPts - mFirstPts; }
-
     void setLabel (const std::string& label) { mLabel = label; }
     void setPidStreamType (uint16_t pid, uint8_t streamType);
-    //{{{
-    void setPts (int64_t pts) {
-      mPts = pts;
-      if ((pts != -1) && (mFirstPts == -1))
-        mFirstPts = pts;
-      }
-    //}}}
     void setRender (cRender* render) { mRender = render; }
 
     bool disable();
@@ -201,9 +173,6 @@ public:
     uint16_t mPid = 0;
     uint8_t mTypeId = 0;
     std::string mTypeName;
-
-    int64_t mPts = -1;
-    int64_t mFirstPts = -1;
     };
   //}}}
   //{{{

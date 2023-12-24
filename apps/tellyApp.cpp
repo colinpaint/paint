@@ -946,12 +946,8 @@ namespace {
     virtual ~cTellyApp() = default;
 
     cTellyOptions* getOptions() { return mOptions; }
-
     bool hasTransportStream() { return mTransportStream; }
     cTransportStream& getTransportStream() { return *mTransportStream; }
-
-    void toggleShowSubtitle() { mOptions->mShowSubtitle = !mOptions->mShowSubtitle; }
-    void toggleShowMotionVectors() { mOptions->mShowMotionVectors = !mOptions->mShowMotionVectors; }
 
     bool isFileSource() { return mFileSource; }
 
@@ -1103,6 +1099,9 @@ namespace {
       }
     //}}}
 
+    void toggleShowSubtitle() { mOptions->mShowSubtitle = !mOptions->mShowSubtitle; }
+    void toggleShowMotionVectors() { mOptions->mShowMotionVectors = !mOptions->mShowMotionVectors; }
+
     void hitEnter() { mTransportStream->hitEnter(); }
     void hitSpace() { mTransportStream->togglePlay(); }
     //{{{
@@ -1129,6 +1128,9 @@ namespace {
     //}}}
 
   private:
+    cTellyOptions* mOptions;
+    cTransportStream* mTransportStream = nullptr;
+
     bool mFileSource = false;
 
     // liveDvbSource
@@ -1141,9 +1143,6 @@ namespace {
     FILE* mFile = nullptr;
     uint64_t mFilePos = 0;
     size_t mFileSize = 0;
-
-    cTellyOptions* mOptions;
-    cTransportStream* mTransportStream = nullptr;
     };
   //}}}
   //{{{
@@ -1382,7 +1381,7 @@ namespace {
 
           bool enabled = mService.getStream (cTransportStream::eVideo).isEnabled();
           if (enabled) {
-            int64_t playPts = mService.getStream (cTransportStream::eAudio).getPts();
+            int64_t playPts = mService.getStream (cTransportStream::eAudio).getRender().getPts();
             if (mService.getStream (cTransportStream::eAudio).isEnabled()) {
               // get playPts from audioStream
               cAudioRender& audioRender = dynamic_cast<cAudioRender&>(mService.getStream (cTransportStream::eAudio).getRender());

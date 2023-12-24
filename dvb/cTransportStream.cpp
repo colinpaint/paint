@@ -504,7 +504,7 @@ int64_t cTransportStream::cService::getPtsFromStart() {
 
   cStream& audioStream = getStream (eAudio);
   if (audioStream.isEnabled())
-    return audioStream.getPtsFromStart();
+    return audioStream.getRender().getPtsFromStart();
 
   return 0;
   }
@@ -1034,13 +1034,13 @@ bool cTransportStream::renderPes (cPidInfo& pidInfo, int64_t skipPts) {
   cService* service = getServiceBySid (pidInfo.getSid());
   if (service) {
     cStream* stream = service->getStreamByPid (pidInfo.getPid());
-    if (stream) {
-      stream->setPts (pidInfo.getPts());
+    if (stream)
       if (stream->isEnabled())
         return stream->getRender().processPes (pidInfo.getPid(),
                                                pidInfo.mBuffer, pidInfo.getBufUsed(),
-                                               pidInfo.getPts(), pidInfo.getDts(), skipPts);
-      }
+                                               pidInfo.getPts(), pidInfo.getDts(), 
+                                               pidInfo.mStreamPos, skipPts);
+
     }
 
   return false;

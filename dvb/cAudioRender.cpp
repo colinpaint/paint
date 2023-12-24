@@ -64,8 +64,7 @@ cAudioRender::cAudioRender (const string& name, uint8_t streamType, uint16_t pid
                   mSampleRate = audioFrame->getSampleRate();
                   }
 
-                setPts (frame->getPts());
-                setPtsDuration (frame->getPtsDuration());
+                setPts (frame->getPts(), frame->getPtsDuration(), frame->getStreamPos());
                 mSamplesPerFrame = audioFrame->getSamplesPerFrame();
                 mFrameInfo = audioFrame->getInfoString();
                 audioFrame->calcPower();
@@ -106,14 +105,14 @@ string cAudioRender::getInfoString() const {
 //}}}
 //{{{
 bool cAudioRender::processPes (uint16_t pid, uint8_t* pes, uint32_t pesSize,
-                               int64_t pts, int64_t dts, int64_t skipPts) {
+                               int64_t pts, int64_t dts, int64_t streamPos, int64_t skipPts) {
 
   if (!((dynamic_cast<cRender::cOptions*>(mOptions))->mIsLive))
     if (mPlayer)
       while (throttle (mPlayer->getPts()))
         this_thread::sleep_for (1ms);
 
-  return cRender::processPes (pid, pes, pesSize, pts, dts, skipPts);
+  return cRender::processPes (pid, pes, pesSize, pts, dts, streamPos, skipPts);
   }
 //}}}
 //{{{
