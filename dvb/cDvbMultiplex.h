@@ -15,7 +15,7 @@ class cDvbMultiplex {
 public:
   std::string mName;
   int mFrequency;
-  std::vector <std::string> mChannels;
-  std::vector <std::string> mChannelRecordNames;
+  std::vector <std::string> mNames;
+  std::vector <std::string> mRecordNames;
   std::vector <int> mChannelNums;
   };

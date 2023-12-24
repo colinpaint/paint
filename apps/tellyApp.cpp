@@ -1234,11 +1234,11 @@ namespace {
         ImGui::PopFont();
         //}}}
 
-        if (transportStream.hasTdtTime()) {
+        if (transportStream.hasTdt()) {
           //{{{  draw clock
-          //ImGui::TextUnformatted (transportStream.getTdtTimeString().c_str());
+          //ImGui::TextUnformatted (transportStream.getTdtString().c_str());
           ImGui::SetCursorPos ({ ImGui::GetWindowWidth() - 90.f, 0.f} );
-          clockButton ("clock", transportStream.getTdtTime(), { 80.f, 80.f });
+          clockButton ("clock", transportStream.getTdt(), { 80.f, 80.f });
           }
           //}}}
 
@@ -1487,7 +1487,7 @@ namespace {
             }
 
           //{{{  draw channel title bottomLeft
-          string channelString = mService.getChannelName();
+          string channelString = mService.getName();
           if (!enabled || (mSelect == eSelectedFull))
             channelString += " " + mService.getNowTitleString();
 
@@ -1864,7 +1864,7 @@ namespace {
     //{{{
     void drawRecordings (cTransportStream& transportStream) {
 
-      for (auto& program : transportStream.getRecordPrograms())
+      for (auto& program : transportStream.getRecorded())
         ImGui::TextUnformatted (program.c_str());
       }
     //}}}

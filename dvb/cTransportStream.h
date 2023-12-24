@@ -205,18 +205,18 @@ public:
     // sets
     void setProgramPid (uint16_t pid) { mProgramPid = pid; }
     //{{{
-    void setChannelName (const std::string& name, bool record, const std::string& recordName) {
+    void setName (const std::string& name, bool record, const std::string& recordName) {
 
-      mChannelName = name;
+      mName = name;
       mChannelRecord = record;
-      mChannelRecordName = recordName;
+      mRecordName = recordName;
       }
     //}}}
 
     // record
     bool getChannelRecord() const { return mChannelRecord; }
-    std::string getChannelName() const { return mChannelName; }
-    std::string getChannelRecordName() const { return mChannelRecordName; }
+    std::string getName() const { return mName; }
+    std::string getRecordName() const { return mRecordName; }
     bool openFile (const std::string& fileName, uint16_t tsid);
     void writePacket (uint8_t* ts, uint16_t pid);
     void closeFile();
@@ -259,9 +259,9 @@ public:
     std::array <cStream, eStreamTypeSize> mStreams;
 
     // record
-    std::string mChannelName;
+    std::string mName;
     bool mChannelRecord = false;
-    std::string mChannelRecordName;
+    std::string mRecordName;
     FILE* mFile = nullptr;
 
     // epg
@@ -290,17 +290,17 @@ public:
   uint64_t getNumPackets() const { return mNumPackets; }
   uint64_t getNumErrors() const { return mNumErrors; }
 
-  // tdtTime
-  std::string getTdtTimeString() const;
-  bool hasTdtTime() const { return mFirstTimeDefined; }
-  std::chrono::system_clock::time_point getTdtTime() const { return mTdtTime; }
+  // tdt
+  std::string getTdtString() const;
+  bool hasTdt() const { return mFirstTdtDefined; }
+  std::chrono::system_clock::time_point getTdt() const { return mTdt; }
 
   // maps
   std::map <uint16_t, cPidInfo>& getPidInfoMap() { return mPidInfoMap; };
   std::map <uint16_t, cService>& getServiceMap() { return mServiceMap; };
 
   cService* getService (uint16_t sid);
-  std::vector <std::string>& getRecordPrograms() { return mRecordPrograms; }
+  std::vector <std::string>& getRecorded() { return mRecorded; }
   int64_t demux (uint8_t* chunk, int64_t chunkSize, int64_t streamPos, int64_t skipPts);
 
 private:
@@ -315,7 +315,7 @@ private:
   bool renderPes (cPidInfo& pidInfo, int64_t skipPts);
 
   void startServiceProgram (cService& service,
-                            std::chrono::system_clock::time_point tdtTime,
+                            std::chrono::system_clock::time_point tdt,
                             const std::string& programName,
                             std::chrono::system_clock::time_point programStartTime,
                             bool selected);
@@ -348,10 +348,10 @@ private:
 
   // record
   std::mutex mRecordFileMutex;
-  std::vector <std::string> mRecordPrograms;
+  std::vector <std::string> mRecorded;
 
   // time
-  bool mFirstTimeDefined = false;
-  std::chrono::system_clock::time_point mFirstTime; // first tdtTime seen
-  std::chrono::system_clock::time_point mTdtTime;   // now tdtTime
+  bool mFirstTdtDefined = false;
+  std::chrono::system_clock::time_point mFirstTdt; // first tdt seen
+  std::chrono::system_clock::time_point mTdt;      // now tdt
   };

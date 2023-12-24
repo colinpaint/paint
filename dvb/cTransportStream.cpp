@@ -516,15 +516,15 @@ void cTransportStream::cService::enableStreams() {
 
   cStream& videoStream = getStream (eVideo);
   videoStream.setRender (
-    new cVideoRender (getChannelName(), videoStream.getTypeId(), videoStream.getPid(), mOptions));
+    new cVideoRender (getName(), videoStream.getTypeId(), videoStream.getPid(), mOptions));
 
   cStream& audioStream = getStream (eAudio);
   audioStream.setRender (
-    new cAudioRender (getChannelName(), audioStream.getTypeId(), audioStream.getPid(), mOptions));
+    new cAudioRender (getName(), audioStream.getTypeId(), audioStream.getPid(), mOptions));
 
   cStream& subtitleStream = getStream (eSubtitle);
   subtitleStream.setRender (
-    new cSubtitleRender (getChannelName(), subtitleStream.getTypeId(), subtitleStream.getPid(), mOptions));
+    new cSubtitleRender (getName(), subtitleStream.getTypeId(), subtitleStream.getPid(), mOptions));
   }
 //}}}
 
@@ -721,8 +721,8 @@ cTransportStream::cTransportStream (const cDvbMultiplex& dvbMultiplex, iOptions*
 
 // gets
 //{{{
-string cTransportStream::getTdtTimeString() const {
-  return date::format ("%T", date::floor<chrono::seconds>(mTdtTime));
+string cTransportStream::getTdtString() const {
+  return date::format ("%T", date::floor<chrono::seconds>(mTdt));
   }
 //}}}
 //{{{
@@ -918,7 +918,7 @@ void cTransportStream::clear() {
 
   mNumErrors = 0;
 
-  mFirstTimeDefined = false;
+  mFirstTdtDefined = false;
   }
 //}}}
 //{{{
@@ -1012,7 +1012,7 @@ bool cTransportStream::renderPes (cPidInfo& pidInfo, int64_t skipPts) {
 
 //{{{
 void cTransportStream::startServiceProgram (cService& service,
-                                            chrono::system_clock::time_point tdtTime,
+                                            chrono::system_clock::time_point tdt,
                                             const string& programName,
                                             chrono::system_clock::time_point programStartTime,
                                             bool selected) {
@@ -1026,8 +1026,8 @@ void cTransportStream::startServiceProgram (cService& service,
       service.getStream (eVideo).isDefined() &&
       (service.getStream(eAudio).isDefined())) {
     string filePath = (dynamic_cast<cOptions*>(mOptions))->mRecordRoot +
-                      service.getChannelRecordName() +
-                      date::format ("%d %b %y %a %H.%M.%S ", date::floor<chrono::seconds>(tdtTime)) +
+                      service.getRecordName() +
+                      date::format ("%d %b %y %a %H.%M.%S ", date::floor<chrono::seconds>(tdt)) +
                       utils::getValidFileString (programName) +
                       ".ts";
 
@@ -1035,7 +1035,7 @@ void cTransportStream::startServiceProgram (cService& service,
     service.openFile (filePath, 0x1234);
 
     // gui
-    mRecordPrograms.push_back (filePath);
+    mRecorded.push_back (filePath);
 
     // log program start time,date filename
     string eitStartTime = date::format ("%H.%M.%S %a %d %b %y", date::floor<chrono::seconds>(programStartTime));
@@ -1177,31 +1177,30 @@ void cTransportStream::parseSdt (cPidInfo* pidInfo, uint8_t* buf) {
         switch (getDescrTag (buf)) {
           case DESCR_SERVICE: {
             //{{{  service
-            string name = cDvbUtils::getDvbString (buf + sizeof(descrService) +
-                                                   ((descrService*)buf)->provider_name_length);
+            string serviceName = cDvbUtils::getDvbString (buf + sizeof(descrService) +
+                                                          ((descrService*)buf)->provider_name_length);
             cService* service = getService (sid);
             if (service) {
-              if (service->getChannelName().empty()) {
-                bool channelRecognised = false;
-                string channelRecordName;
+              if (service->getName().empty()) {
+                bool found = false;
+                string recordName;
                 size_t i = 0;
-                for (auto& channelName : mDvbMultiplex.mChannels) {
-                  if (name == channelName) {
-                    channelRecognised = true;
-                    if (i < mDvbMultiplex.mChannelRecordNames.size())
-                      channelRecordName = mDvbMultiplex.mChannelRecordNames[i] +  " ";
+                for (auto& name : mDvbMultiplex.mNames) {
+                  if (serviceName == name) {
+                    found = true;
+                    if (i < mDvbMultiplex.mRecordNames.size())
+                      recordName = mDvbMultiplex.mRecordNames[i] +  " ";
                     break;
                     }
                   i++;
                   }
-                service->setChannelName (name, channelRecognised, channelRecordName);
-
+                service->setName (serviceName, found, recordName);
                 cLog::log (LOGINFO, fmt::format ("SDT named sid:{} as {} {} {}",
-                                                 sid, name, channelRecognised ? "record" : "", channelRecordName));
+                                                 sid, serviceName, found ? "record" : "", recordName));
                 }
               }
             else
-              cLog::log (LOGINFO, fmt::format ("SDT - before PMT - ignored {} {}", sid, name));
+              cLog::log (LOGINFO, fmt::format ("SDT - before PMT - ignored {} {}", sid, serviceName));
 
             break;
             }
@@ -1280,7 +1279,7 @@ void cTransportStream::parseEit (cPidInfo* pidInfo, uint8_t* buf) {
               // now event
               bool running = (eitEvent->running_status == 0x04);
               if (running &&
-                  !service->getChannelName().empty() &&
+                  !service->getName().empty() &&
                   service->getProgramPid() &&
                   service->getStream (eVideo).isDefined() &&
                   service->getStream (eAudio).isDefined()) {
@@ -1292,11 +1291,10 @@ void cTransportStream::parseEit (cPidInfo* pidInfo, uint8_t* buf) {
                   auto pidInfoIt = mPidInfoMap.find (service->getProgramPid());
                   if (pidInfoIt != mPidInfoMap.end())
                     // update service pgmPid infoStr with new now event
-                    pidInfoIt->second.setInfoString (service->getChannelName() + " " + service->getNowTitleString());
+                    pidInfoIt->second.setInfoString (service->getName() + " " + service->getNowTitleString());
 
                   // callback to override to start new serviceItem program
-                  startServiceProgram (*service, mTdtTime,
-                                       titleString, startTime,
+                  startServiceProgram (*service, mTdt, titleString, startTime,
                                        service->isEpgRecord (titleString, startTime));
                   }
                 }
@@ -1322,15 +1320,16 @@ void cTransportStream::parseTdt (cPidInfo* pidInfo, uint8_t* buf) {
 
   sTdt* tdt = (sTdt*)buf;
   if (tdt->table_id == TID_TDT) {
-    mTdtTime = chrono::system_clock::from_time_t (
-                 MjdToEpochTime (tdt->utc_mjd) + BcdTimeToSeconds (tdt->utc_time));
-    if (!mFirstTimeDefined) {
-      mFirstTime = mTdtTime;
-      mFirstTimeDefined = true;
+    mTdt =
+      chrono::system_clock::from_time_t (MjdToEpochTime (tdt->utc_mjd) + BcdTimeToSeconds (tdt->utc_time));
+
+    if (!mFirstTdtDefined) {
+      mFirstTdt = mTdt;
+      mFirstTdtDefined = true;
       }
 
-    pidInfo->setInfoString (date::format ("%T", date::floor<chrono::seconds>(mFirstTime)) +
-                            " to " + getTdtTimeString());
+    pidInfo->setInfoString (date::format ("%T", date::floor<chrono::seconds>(mFirstTdt)) +
+                            " to " + getTdtString());
     }
   }
 //}}}
@@ -1350,7 +1349,7 @@ void cTransportStream::parsePmt (cPidInfo* pidInfo, uint8_t* buf) {
   if (pmt->table_id == TID_PMT) {
     uint16_t sid = HILO (pmt->program_number);
     if (!getService (sid)) {
-      //{{{  found new service, create cService
+      // found new service, create cService
       cLog::log (LOGINFO, fmt::format ("create service {}", sid));
       cService& service = mServiceMap.emplace (sid, cService(sid, mOptions)).first->second;
 
@@ -1364,22 +1363,22 @@ void cTransportStream::parsePmt (cPidInfo* pidInfo, uint8_t* buf) {
 
       buf += programInfoLength;
       while (streamLength > 0) {
+        //{{{  set service elementary stream pids
         sPmtInfo* pmtInfo = (sPmtInfo*)buf;
-
-        // set service elementary stream pids
         uint16_t esPid = HILO (pmtInfo->elementary_PID);
         cPidInfo& esPidInfo = getPidInfo (esPid);
         esPidInfo.setSid (sid);
+
         esPidInfo.setStreamType (pmtInfo->stream_type);
         switch (esPidInfo.getStreamType()) {
-          case   2: // ISO 13818-2 video
-          case  kH264StreamType: // 27 - H264 video
+          case 2: // ISO 13818-2 video
+          case kH264StreamType: // 27 - H264 video
             service.getStream (eVideo).setPidStreamType (esPid, esPidInfo.getStreamType()); break;
 
-          case   3: // ISO 11172-3 audio
-          case   4: // ISO 13818-3 audio
-          case  15: // ADTS AAC audio
-          case  kAacLatmStreamType: // 17 - LATM AAC audio
+          case 3: // ISO 11172-3 audio
+          case 4: // ISO 13818-3 audio
+          case 15: // ADTS AAC audio
+          case kAacLatmStreamType: // 17 - LATM AAC audio
           case 129: // AC3 audio
             if (!service.getStream (eAudio).isDefined())
               service.getStream (eAudio).setPidStreamType (esPid, esPidInfo.getStreamType());
@@ -1390,20 +1389,21 @@ void cTransportStream::parsePmt (cPidInfo* pidInfo, uint8_t* buf) {
               }
             break;
 
-          case   6: // subtitle
-            service.getStream (eSubtitle).setPidStreamType (esPid, esPidInfo.getStreamType()); break;
+          case 6: // subtitle
+            service.getStream (eSubtitle).setPidStreamType (esPid, esPidInfo.getStreamType());
+            break;
 
-          case   5: // private mpeg2 tabled data - private
-          case  11: // dsm cc u_n
-          case  13: // dsm cc tabled data
+          case 5: // private mpeg2 tabled data - private
+          case 11: // dsm cc u_n
+          case 13: // dsm cc tabled data
           case 134: break;
-          //{{{
+
           default:
             cLog::log (LOGERROR, fmt::format ("parsePmt - unknown stream sid:{} pid:{} streamType:{}",
                                               sid, esPid, esPidInfo.getStreamType()));
             break;
-          //}}}
           }
+        //}}}
 
         uint16_t loopLength = HILO (pmtInfo->ES_info_length);
         buf += sizeof(sPmtInfo);
@@ -1413,7 +1413,6 @@ void cTransportStream::parsePmt (cPidInfo* pidInfo, uint8_t* buf) {
 
       addServiceStreams (service);
       }
-      //}}}
     }
   }
 //}}}
