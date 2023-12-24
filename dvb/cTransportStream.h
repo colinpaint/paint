@@ -217,6 +217,8 @@ public:
     cStream* getStreamByPid (uint16_t pid);
     cStream& getStream (eStreamType streamType) { return mStreams[streamType]; }
     void enableStreams();
+    void togglePlay();
+    void hitEnter();
     void skipStreams (int64_t skipPts);
 
     // record
@@ -294,14 +296,16 @@ public:
   bool hasFirstTdt() const { return mHasFirstTdt; }
   std::chrono::system_clock::time_point getTdt() const { return mTdt; }
 
-  std::vector <std::string>& getRecorded() { return mRecorded; }
-
-  // maps
   std::map <uint16_t, cPidInfo>& getPidInfoMap() { return mPidInfoMap; };
   std::map <uint16_t, cService>& getServiceMap() { return mServiceMap; };
+  std::vector <std::string>& getRecorded() { return mRecorded; }
+
+  // actions
+  void togglePlay();
+  void hitEnter();
+  void skip (int64_t skipPts);
 
   // demux
-  void skip (int64_t skipPts);
   int64_t demux (uint8_t* chunk, int64_t chunkSize, int64_t streamPos, int64_t skipPts);
 
 private:
@@ -323,7 +327,7 @@ private:
   void programPesPacket (uint16_t sid, uint16_t pid, uint8_t* ts);
   void stopServiceProgram (cService& service);
 
-  //{{{  parsers
+  //{{{  parse
   int parsePsi (cPidInfo* pidInfo, uint8_t* buf);
 
   void parsePat (cPidInfo* pidInfo, uint8_t* buf);

@@ -528,9 +528,16 @@ void cTransportStream::cService::enableStreams() {
   }
 //}}}
 //{{{
+void cTransportStream::cService::togglePlay() {
+
+  cStream& audioStream = getStream (eAudio);
+  if (audioStream.isEnabled())
+    audioStream.getRender().togglePlay();
+  }
+//}}}
+//{{{
 void cTransportStream::cService::skipStreams (int64_t skipPts) {
 
-  cLog::log (LOGINFO, fmt::format ("cTransportStream::cService::skip {}", skipPts));
   cStream& audioStream = getStream (eAudio);
   if (audioStream.isEnabled())
     audioStream.getRender().skip (skipPts);
@@ -738,14 +745,25 @@ string cTransportStream::getTdtString() const {
   }
 //}}}
 
-// demux
+// actions
+//{{{
+void cTransportStream::hitEnter() {
+  }
+//}}}
+//{{{
+void cTransportStream::togglePlay() {
+  for (auto& service : mServiceMap)
+    service.second.togglePlay();
+  }
+//}}}
 //{{{
 void cTransportStream::skip (int64_t skipPts) {
-
   for (auto& service : mServiceMap)
     service.second.skipStreams (skipPts);
   }
 //}}}
+
+// demux
 //{{{
 int64_t cTransportStream::demux (uint8_t* chunk, int64_t chunkSize, int64_t streamPos, int64_t skipPts) {
 // demux from chunk to chunk + chunkSize, streamPos offset from first packet

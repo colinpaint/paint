@@ -116,9 +116,19 @@ bool cAudioRender::processPes (uint16_t pid, uint8_t* pes, uint32_t pesSize,
   return cRender::processPes (pid, pes, pesSize, pts, dts, skipPts);
   }
 //}}}
-
+//{{{
 void cAudioRender::skip (int64_t skipPts) {
+
   cLog::log (LOGINFO, fmt::format ("cAudioRender::skip {}", skipPts));
-  if (mPlayer) 
+  if (mPlayer)
     mPlayer->startPlayPts (getPts() + skipPts);
   }
+//}}}
+//{{{
+void cAudioRender::togglePlay() {
+
+  cLog::log (LOGINFO, fmt::format ("cAudioRender::togglePlay"));
+  if (mPlayer)
+    mPlayer->togglePlay();
+  }
+//}}}

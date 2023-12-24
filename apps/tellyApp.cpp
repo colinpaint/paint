@@ -1103,18 +1103,10 @@ namespace {
       }
     //}}}
 
-    //{{{
-    void moveLeft() {
-      cLog::log (LOGINFO, fmt::format ("tellyApp moveLeft"));
-      mTransportStream->skip (-90000);
-      }
-    //}}}
-    //{{{
-    void moveRight() {
-      cLog::log (LOGINFO, fmt::format ("tellyApp moveRight"));
-      mTransportStream->skip (90000);
-      }
-    //}}}
+    void hitEnter() { mTransportStream->hitEnter(); }
+    void hitSpace() { mTransportStream->togglePlay(); }
+    void moveLeft() { mTransportStream->skip (-90000); }
+    void moveRight() { mTransportStream->skip (90000); }
 
     // drop file
     //{{{
@@ -1253,6 +1245,16 @@ namespace {
     class cMultiView {
     public:
       //{{{
+      void hitEnter() {
+        cLog::log (LOGINFO, fmt::format ("multiView hitEnter"));
+        }
+      //}}}
+      //{{{
+      void hitSpace() {
+        cLog::log (LOGINFO, fmt::format ("multiView hitSpace"));
+        }
+      //}}}
+      //{{{
       void moveLeft() {
         cLog::log (LOGINFO, fmt::format ("multiView moveLeft"));
         }
@@ -1270,16 +1272,6 @@ namespace {
       //{{{
       void moveDown() {
         cLog::log (LOGINFO, fmt::format ("multiView moveDown"));
-        }
-      //}}}
-      //{{{
-      void enter() {
-        cLog::log (LOGINFO, fmt::format ("multiView enter"));
-        }
-      //}}}
-      //{{{
-      void space() {
-        cLog::log (LOGINFO, fmt::format ("multiView space"));
         }
       //}}}
 
@@ -1867,6 +1859,24 @@ namespace {
     //}}}
 
     //{{{
+    void hitSpace (cTellyApp& tellyApp) {
+
+      if (tellyApp.isFileSource())
+        tellyApp.hitSpace();
+      else
+        mMultiView.hitSpace();
+      }
+    //}}}
+    //{{{
+    void hitEnter (cTellyApp& tellyApp) {
+
+      if (tellyApp.isFileSource())
+        tellyApp.hitEnter();
+      else
+        mMultiView.hitEnter();
+      }
+    //}}}
+    //{{{
     void moveLeft (cTellyApp& tellyApp) {
       if (tellyApp.isFileSource())
         tellyApp.moveLeft();
@@ -1900,8 +1910,8 @@ namespace {
         { false, false, false, ImGuiKey_RightArrow, [this,&tellyApp] { moveRight (tellyApp); }},
         { false, false, false, ImGuiKey_UpArrow,    [this,&tellyApp] { mMultiView.moveUp(); }},
         { false, false, false, ImGuiKey_DownArrow,  [this,&tellyApp] { mMultiView.moveDown(); }},
-        { false, false, false, ImGuiKey_Enter,      [this,&tellyApp] { mMultiView.enter(); }},
-        { false, false, false, ImGuiKey_Space,      [this,&tellyApp] { mMultiView.space(); }},
+        { false, false, false, ImGuiKey_Enter,      [this,&tellyApp] { hitEnter (tellyApp); }},
+        { false, false, false, ImGuiKey_Space,      [this,&tellyApp] { hitSpace (tellyApp); }},
         { false, false, false, ImGuiKey_F,          [this,&tellyApp] { tellyApp.getPlatform().toggleFullScreen(); }},
         { false, false, false, ImGuiKey_S,          [this,&tellyApp] { tellyApp.toggleShowSubtitle(); }},
         { false, false, false, ImGuiKey_L,          [this,&tellyApp] { tellyApp.toggleShowMotionVectors(); }},
@@ -1938,19 +1948,14 @@ namespace {
 
     // vars
     eTab mTab = eTelly;
+    cMultiView mMultiView;
 
+    // pid info tabs
     int64_t mMaxPidPackets = 0;
     size_t mPacketChars = 3;
     size_t mMaxNameChars = 3;
     size_t mMaxSidChars = 3;
     size_t mMaxPgmChars = 3;
-
-    array <size_t,4> mPidMaxChars = { 3 };
-
-    // !!! wrong !!! needed per service
-    array <cTexture*,4> mSubtitleTextures = { nullptr };
-
-    cMultiView mMultiView;
     };
   //}}}
   }
