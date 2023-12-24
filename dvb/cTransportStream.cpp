@@ -529,7 +529,11 @@ void cTransportStream::cService::enableStreams() {
 //}}}
 //{{{
 void cTransportStream::cService::skipStreams (int64_t skipPts) {
+
   cLog::log (LOGINFO, fmt::format ("cTransportStream::cService::skip {}", skipPts));
+  cStream& audioStream = getStream (eAudio);
+  if (audioStream.isEnabled())
+    audioStream.getRender().skip (skipPts);
   }
 //}}}
 
