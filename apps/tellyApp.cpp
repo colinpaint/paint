@@ -1105,8 +1105,16 @@ namespace {
 
     void hitEnter() { mTransportStream->hitEnter(); }
     void hitSpace() { mTransportStream->togglePlay(); }
-    void moveLeft() { mTransportStream->skip (-90000); }
-    void moveRight() { mTransportStream->skip (90000); }
+    //{{{
+    void moveLeft() {
+      mTransportStream->skip (-90000);
+      }
+    //}}}
+    //{{{
+    void moveRight() {
+      mTransportStream->skip (90000);
+      }
+    //}}}
 
     // drop file
     //{{{
@@ -1488,6 +1496,10 @@ namespace {
                                 mBr.y - 2.f - ImGui::GetTextLineHeight()});
           ImGui::TextColored ({1.f, 1.f,1.f,1.f}, channelString.c_str());
           //}}}
+
+          ImGui::SetCursorPos ({mBr.x - 2.f - ImGui::GetTextLineHeight() * 8.f,
+                                mBr.y - 2.f - ImGui::GetTextLineHeight()});
+          ImGui::TextColored ({1.f, 1.f,1.f,1.f}, utils::getFullPtsString (mService.getPtsFromStart()).c_str());
 
           // draw select rect
           mHover = ImGui::IsMouseHoveringRect (mTl, mBr);

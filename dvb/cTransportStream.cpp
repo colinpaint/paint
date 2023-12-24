@@ -498,6 +498,18 @@ cTransportStream::cService::~cService() {
   }
 //}}}
 
+//{{{
+int64_t cTransportStream::cService::getPtsFromStart() {
+// service pts is audio playPts
+
+  cStream& audioStream = getStream (eAudio);
+  if (audioStream.isEnabled())
+    return audioStream.getPtsFromStart();
+
+  return 0;
+  }
+//}}}
+
 // streams
 //{{{
 cTransportStream::cStream* cTransportStream::cService::getStreamByPid (uint16_t pid) {
@@ -873,7 +885,7 @@ int64_t cTransportStream::demux (uint8_t* chunk, int64_t chunkSize, int64_t stre
                   if ((streamId == 0xB0) || // program stream map
                       (streamId == 0xB1) || // private stream1
                       (streamId == 0xBF))   // private stream2
-                    cLog::log (LOGINFO, fmt::format ("recognised pesHeader - pid:{} streamId:{:8x}", pid, streamId));
+                    cLog::log (LOGINFO, fmt::format ("recognised pesHeader pid:{} streamId:{:8x}", pid, streamId));
 
                   else if ((streamId == 0xBD) ||
                            (streamId == 0xBE) || // ???
@@ -893,11 +905,11 @@ int64_t cTransportStream::demux (uint8_t* chunk, int64_t chunkSize, int64_t stre
                   pidInfo->mStreamPos = streamPos;
 
                   // pts
-                  if (ts[7] & 0x80)
+                  if (ts[7] & 0x80)  // hasPts
                     pidInfo->setPts ((ts[7] & 0x80) ? cDvbUtils::getPts (ts+9) : -1);
 
                   // dts
-                  if (ts[7] & 0x40)
+                  if (ts[7] & 0x40) // hasDts
                     pidInfo->setDts ((ts[7] & 0x80) ? cDvbUtils::getPts (ts+14) : -1);
 
                   // skip past pesHeader
@@ -1047,7 +1059,7 @@ void cTransportStream::startServiceProgram (cService& service,
   lock_guard<mutex> lockGuard (mRecordFileMutex);
   service.closeFile();
 
-  if ((selected || service.getChannelRecord() || (dynamic_cast<cOptions*>(mOptions))->mRecordAll) &&
+  if ((selected || service.getRecord() || (dynamic_cast<cOptions*>(mOptions))->mRecordAll) &&
       service.getStream (eVideo).isDefined() &&
       (service.getStream(eAudio).isDefined())) {
     string filePath = (dynamic_cast<cOptions*>(mOptions))->mRecordRoot +

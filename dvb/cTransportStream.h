@@ -18,6 +18,8 @@ class cRender;
 
 #include "../common/basicTypes.h"
 #include "../common/iOptions.h"
+#include "../common/utils.h"
+
 #include "cDvbMultiplex.h"
 //}}}
 constexpr int kAacLatmStreamType = 17;
@@ -106,8 +108,10 @@ public:
 
       mPts = pts;
 
-      if ((pts != -1) && (mFirstPts != -1))
+      if ((pts != -1) && (mFirstPts == -1))
         mFirstPts = pts;
+      if ((pts != -1) && (pts > mFirstPts))
+        mStreamPosPerPts = mStreamPos / float(pts - mFirstPts);
       if ((pts != -1) && (pts > mLastPts))
         mLastPts = pts;
       }
@@ -156,6 +160,7 @@ public:
     int64_t mFirstPts = -1;
     int64_t mLastPts = -1;
     int64_t mDts = -1;
+    float mStreamPosPerPts = 1.f;
     };
   //}}}
   //{{{
@@ -170,18 +175,27 @@ public:
     uint16_t getPid() const { return mPid; }
     uint8_t getTypeId() const { return mTypeId; }
     std::string getTypeName() const { return mTypeName; }
-    int64_t getPts() const { return mPts; }
     cRender& getRender() const { return *mRender; }
+
+    int64_t getPts() const { return mPts; }
+    int64_t getPtsFromStart() const { return mPts - mFirstPts; }
 
     void setLabel (const std::string& label) { mLabel = label; }
     void setPidStreamType (uint16_t pid, uint8_t streamType);
-    void setPts (int64_t pts) { mPts = pts; }
+    //{{{
+    void setPts (int64_t pts) {
+      mPts = pts;
+      if ((pts != -1) && (mFirstPts == -1))
+        mFirstPts = pts;
+      }
+    //}}}
     void setRender (cRender* render) { mRender = render; }
 
     bool disable();
 
   private:
     bool mDefined = false;
+    cRender* mRender = nullptr;
 
     std::string mLabel;
     uint16_t mPid = 0;
@@ -189,7 +203,7 @@ public:
     std::string mTypeName;
 
     int64_t mPts = -1;
-    cRender* mRender = nullptr;
+    int64_t mFirstPts = -1;
     };
   //}}}
   //{{{
@@ -200,7 +214,10 @@ public:
 
     // gets
     uint16_t getSid() const { return mSid; }
+    std::string getName() const { return mName; }
     uint16_t getProgramPid() const { return mProgramPid; }
+
+    int64_t getPtsFromStart();
 
     // sets
     void setProgramPid (uint16_t pid) { mProgramPid = pid; }
@@ -208,7 +225,7 @@ public:
     void setName (const std::string& name, bool record, const std::string& recordName) {
 
       mName = name;
-      mChannelRecord = record;
+      mRecord = record;
       mRecordName = recordName;
       }
     //}}}
@@ -222,8 +239,7 @@ public:
     void skipStreams (int64_t skipPts);
 
     // record
-    bool getChannelRecord() const { return mChannelRecord; }
-    std::string getName() const { return mName; }
+    bool getRecord() const { return mRecord; }
     std::string getRecordName() const { return mRecordName; }
     bool openFile (const std::string& fileName, uint16_t tsid);
     void writePacket (uint8_t* ts, uint16_t pid);
@@ -253,17 +269,17 @@ public:
     void writeSection (uint8_t* ts, uint8_t* tsSectionStart, uint8_t* tsPtr);
 
     //{{{  vars
-    // var
     const uint16_t mSid;
     iOptions* mOptions = nullptr;
+
+    std::string mName;
     uint16_t mProgramPid = 0;
 
     // streams
     std::array <cStream, eStreamTypeSize> mStreams;
 
     // record
-    std::string mName;
-    bool mChannelRecord = false;
+    bool mRecord = false;
     std::string mRecordName;
     FILE* mFile = nullptr;
 
