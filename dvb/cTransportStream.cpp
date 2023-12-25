@@ -558,7 +558,7 @@ void cTransportStream::cService::togglePlay() {
   }
 //}}}
 //{{{
-int64_t cTransportStream::cService::skipStreams (int64_t skipPts) {
+int64_t cTransportStream::cService::skip (int64_t skipPts) {
 
   cStream& audioStream = getStream (eAudio);
   if (audioStream.isEnabled())
@@ -789,13 +789,24 @@ void cTransportStream::togglePlay() {
 //}}}
 //{{{
 int64_t cTransportStream::skip (int64_t skipPts) {
-// return streamPosOffset to match pts skip
+// return approx streamPosOffset to match skipPts
 
-  int64_t offset = 0;
-  for (auto& service : mServiceMap)
-    offset = max (offset, service.second.skipStreams (skipPts));
+  bool backwards = false;
+  int64_t maxOffset = 0;
 
-  return ((offset + kPacketSize - 1) / kPacketSize) * kPacketSize;
+  for (auto& service : mServiceMap) {
+    int64_t offset = service.second.skip (skipPts);
+    backwards = offset < 0;
+    if (backwards)
+      offset = -offset;
+    maxOffset = max (offset, maxOffset);
+    }
+
+  // round up to next packet
+  int64_t packetsOffset = ((maxOffset + kPacketSize - 1) / kPacketSize) * kPacketSize;
+
+  // apply sign
+  return backwards ? -packetsOffset : packetsOffset;
   }
 //}}}
 

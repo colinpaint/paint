@@ -1127,7 +1127,7 @@ namespace {
     //{{{
     void skip (int64_t skipPts) {
 
-      int64_t offset = mTransportStream->skip (-90000);
+      int64_t offset = mTransportStream->skip (skipPts);
       cLog::log (LOGINFO, fmt::format ("skip:{} offset:{} pos:{}", skipPts, offset, mStreamPos));
       mStreamPos += offset;
       }

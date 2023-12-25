@@ -203,7 +203,7 @@ public:
     void enableStreams();
     bool throttle();
     void togglePlay();
-    int64_t skipStreams (int64_t skipPts);
+    int64_t skip (int64_t skipPts);
 
     // record
     bool getRecord() const { return mRecord; }
