@@ -134,12 +134,12 @@ string cRender::getInfoString() const {
   }
 //}}}
 //{{{
-bool cRender::processPes (uint8_t* pes, uint32_t pesSize,
-                          int64_t pts, int64_t dts, int64_t streamPos, bool skip) {
+bool cRender::decodePes (uint8_t* pes, uint32_t pesSize,
+                         int64_t pts, int64_t dts, int64_t streamPos, bool skip) {
 
   if (isQueued()) {
     mDecodeQueue.enqueue (new cDecodeQueueItem (mDecoder, pes, pesSize,
-                                                pts, dts, streamPos, skip, 
+                                                pts, dts, streamPos, skip,
                                                 mGetFrameCallback, mAddFrameCallback));
     return true;
     }
