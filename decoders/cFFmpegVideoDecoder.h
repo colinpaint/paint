@@ -92,13 +92,11 @@ public:
 
   virtual std::string getInfoString() const final { return mH264 ? "ffmpeg h264" : "ffmpeg mpeg"; }
   //{{{
-  virtual int64_t decode (uint16_t pid, uint8_t* pes, uint32_t pesSize,
+  virtual int64_t decode (uint8_t* pes, uint32_t pesSize,
                           int64_t pts, int64_t dts, int64_t streamPos, bool skip,
                           std::function<cFrame*()> allocFrameCallback,
                           std::function<void (cFrame* frame)> addFrameCallback) final {
-    (void)pid;
     (void)pts;
-    (void)streamPos;
     (void)skip;
 
     AVFrame* avFrame = av_frame_alloc();
@@ -125,10 +123,9 @@ public:
           // allocFrame
           cFFmpegVideoFrame* ffmpegVideoFrame = dynamic_cast<cFFmpegVideoFrame*>(allocFrameCallback());
           ffmpegVideoFrame->addTime (std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::system_clock::now() - now).count());
-          ffmpegVideoFrame->setPts (mGotIframe ? mInterpolatedPts : dts);
-          ffmpegVideoFrame->setPtsDuration ((kPtsPerSecond * mAvContext->framerate.den) / mAvContext->framerate.num);
-          ffmpegVideoFrame->setStreamPos (streamPos);
-          ffmpegVideoFrame->setPesSize (frameSize);
+          ffmpegVideoFrame->set (mGotIframe ? mInterpolatedPts : dts,
+                                 (kPtsPerSecond * mAvContext->framerate.den) / mAvContext->framerate.num,
+                                 streamPos, frameSize);
           ffmpegVideoFrame->mFrameType = frameType;
           ffmpegVideoFrame->setAVFrame (avFrame, (dynamic_cast<cOptions*>(mOptions))->mHasMotionVectors);
           addFrameCallback (ffmpegVideoFrame);

@@ -1052,8 +1052,7 @@ bool cTransportStream::renderPes (cPidInfo& pidInfo, bool skip) {
     cStream* stream = service->getStreamByPid (pidInfo.getPid());
     if (stream)
       if (stream->isEnabled())
-        return stream->getRender().processPes (pidInfo.getPid(),
-                                               pidInfo.mBuffer, pidInfo.getBufUsed(),
+        return stream->getRender().processPes (pidInfo.mBuffer, pidInfo.getBufUsed(),
                                                pidInfo.getPts(), pidInfo.getDts(),
                                                pidInfo.mStreamPos, skip);
 

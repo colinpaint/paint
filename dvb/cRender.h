@@ -59,7 +59,7 @@ public:
   void addFrame (cFrame* frame);
 
   virtual std::string getInfoString() const;
-  virtual bool processPes (uint16_t pid, uint8_t* pes, uint32_t pesSize,
+  virtual bool processPes (uint8_t* pes, uint32_t pesSize,
                            int64_t pts, int64_t dts, int64_t streamPos, bool skip);
   virtual bool throttle() { return false; }
   virtual void togglePlay() {}

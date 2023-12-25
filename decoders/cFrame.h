@@ -21,10 +21,12 @@ public:
   int64_t getStreamPos() const { return mStreamPos; }
   uint32_t getPesSize() const { return mPesSize; }
 
-  void setPts (int64_t pts) { mPts = pts; }
-  void setPtsDuration (int64_t ptsDuration) { mPtsDuration = ptsDuration; }
-  void setStreamPos (int64_t streamPos) { mStreamPos = streamPos; }
-  void setPesSize (uint32_t pesSize) { mPesSize = pesSize; }
+  void set (int64_t pts, int64_t ptsDuration, int64_t streamPos, uint32_t pesSize) {
+    mPts = pts;
+    mPtsDuration = ptsDuration; 
+    mStreamPos = streamPos;
+    mPesSize = pesSize; 
+    }
 
   virtual void releaseResources() = 0;
 

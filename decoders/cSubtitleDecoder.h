@@ -47,15 +47,14 @@ public:
   cSubtitleImage& getImage (size_t line) { return mPage.mImages[line]; }
 
   //{{{
-  virtual int64_t decode (uint16_t pid, uint8_t* pes, uint32_t pesSize,
+  virtual int64_t decode (uint8_t* pes, uint32_t pesSize,
                           int64_t pts, int64_t dts, int64_t streamPos, bool skip,
                           std::function<cFrame* ()> getFrameCallback,
                           std::function<void (cFrame* frame)> addFrameCallback) final {
-    (void)streamPos;
     (void)skip;
 
-    mRender.log ("pes", fmt::format ("pid {} pts {} dts {} size {}",
-                                     pid, utils::getFullPtsString (pts), utils::getFullPtsString (dts), pesSize));
+    mRender.log ("pes", fmt::format ("pts {} dts {} size {}",
+                                     utils::getFullPtsString (pts), utils::getFullPtsString (dts), pesSize));
 
     mPage.mPts = pts;
     mPage.mPesSize = pesSize;
@@ -134,9 +133,7 @@ public:
           {
           cSubtitleFrame* subtitleFrame = dynamic_cast<cSubtitleFrame*>(getFrameCallback());
 
-          subtitleFrame->setPts (pts);
-          subtitleFrame->setPtsDuration (90000 / 25);
-          subtitleFrame->setPesSize (pesSize);
+          subtitleFrame->set (pts, 90000 / 25, streamPos, pesSize);
 
           endDisplay();
 
