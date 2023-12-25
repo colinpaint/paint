@@ -946,10 +946,9 @@ namespace {
     virtual ~cTellyApp() = default;
 
     cTellyOptions* getOptions() { return mOptions; }
-    bool hasTransportStream() { return mTransportStream; }
+    bool hasTransportStream() { return mTransportStream != nullptr; }
     cTransportStream& getTransportStream() { return *mTransportStream; }
 
-    bool isFileSource() { return mFileSource; }
 
     // liveDvbSource
     bool isDvbSource() const { return mDvbSource; }
@@ -1040,6 +1039,7 @@ namespace {
     //}}}
 
     // fileSource
+    bool isFileSource() { return mFileSource; }
     std::string getFileName() const { return mOptions->mFileName; }
     uint64_t getStreamPos() const { return mStreamPos; }
     size_t getStreamSize() const { return mStreamSize; }
@@ -1102,13 +1102,14 @@ namespace {
       }
     //}}}
 
+    // actions
+    void hitSpace()  { mTransportStream->togglePlay(); }
+    void moveLeft()  { mStreamPos += mTransportStream->skip (-90000); }
+    void moveRight() { mStreamPos += mTransportStream->skip (90000); }
+    void moveUp()    { mStreamPos += mTransportStream->skip (-900000); }
+    void moveDown()  { mStreamPos += mTransportStream->skip (900000); }
     void toggleShowSubtitle() { mOptions->mShowSubtitle = !mOptions->mShowSubtitle; }
     void toggleShowMotionVectors() { mOptions->mShowMotionVectors = !mOptions->mShowMotionVectors; }
-
-    void hitEnter() { mTransportStream->hitEnter(); }
-    void hitSpace() { mTransportStream->togglePlay(); }
-    void moveLeft() { mStreamPos += mTransportStream->skip (-90000); }
-    void moveRight() { mStreamPos +=  mTransportStream->skip (90000); }
 
     // drop file
     //{{{
@@ -1126,8 +1127,6 @@ namespace {
     cTellyOptions* mOptions;
     cTransportStream* mTransportStream = nullptr;
 
-    bool mFileSource = false;
-
     // liveDvbSource
     thread mLiveThread;
     cDvbSource* mDvbSource = nullptr;
@@ -1135,6 +1134,7 @@ namespace {
     string mRecordRoot;
 
     // fileSource
+    bool mFileSource = false;
     FILE* mFile = nullptr;
     uint64_t mStreamPos = 0;
     size_t mStreamSize = 0;
@@ -1874,12 +1874,8 @@ namespace {
       }
     //}}}
     //{{{
-    void hitEnter (cTellyApp& tellyApp) {
-
-      if (tellyApp.isFileSource())
-        tellyApp.hitEnter();
-      else
-        mMultiView.hitEnter();
+    void hitEnter() {
+      mMultiView.hitEnter();
       }
     //}}}
     //{{{
@@ -1899,6 +1895,22 @@ namespace {
       }
     //}}}
     //{{{
+    void moveUp (cTellyApp& tellyApp) {
+      if (tellyApp.isFileSource())
+        tellyApp.moveUp();
+      else
+        mMultiView.moveUp();
+      }
+    //}}}
+    //{{{
+    void moveDown (cTellyApp& tellyApp) {
+      if (tellyApp.isFileSource())
+        tellyApp.moveDown();
+      else
+        mMultiView.moveDown();
+      }
+    //}}}
+    //{{{
     void keyboard (cTellyApp& tellyApp) {
 
       //{{{
@@ -1914,9 +1926,9 @@ namespace {
         //alt    ctrl   shift  guiKey               function
         { false, false, false, ImGuiKey_LeftArrow,  [this,&tellyApp] { moveLeft (tellyApp); }},
         { false, false, false, ImGuiKey_RightArrow, [this,&tellyApp] { moveRight (tellyApp); }},
-        { false, false, false, ImGuiKey_UpArrow,    [this,&tellyApp] { mMultiView.moveUp(); }},
-        { false, false, false, ImGuiKey_DownArrow,  [this,&tellyApp] { mMultiView.moveDown(); }},
-        { false, false, false, ImGuiKey_Enter,      [this,&tellyApp] { hitEnter (tellyApp); }},
+        { false, false, false, ImGuiKey_UpArrow,    [this,&tellyApp] { moveUp (tellyApp); }},
+        { false, false, false, ImGuiKey_DownArrow,  [this,&tellyApp] { moveDown (tellyApp); }},
+        { false, false, false, ImGuiKey_Enter,      [this,&tellyApp] { hitEnter(); }},
         { false, false, false, ImGuiKey_Space,      [this,&tellyApp] { hitSpace (tellyApp); }},
         { false, false, false, ImGuiKey_F,          [this,&tellyApp] { tellyApp.getPlatform().toggleFullScreen(); }},
         { false, false, false, ImGuiKey_S,          [this,&tellyApp] { tellyApp.toggleShowSubtitle(); }},

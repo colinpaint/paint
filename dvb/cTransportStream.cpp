@@ -771,7 +771,14 @@ string cTransportStream::getTdtString() const {
 
 // actions
 //{{{
-void cTransportStream::hitEnter() {
+bool cTransportStream::throttle() {
+// return true if any service needs throttle
+
+  for (auto& service : mServiceMap)
+    if (service.second.throttle())
+      return true;
+
+  return false;
   }
 //}}}
 //{{{
@@ -789,17 +796,6 @@ int64_t cTransportStream::skip (int64_t skipPts) {
     streamPosOffset = max (streamPosOffset, service.second.skipStreams (skipPts));
 
   return ((streamPosOffset + kPacketSize - 1) / kPacketSize) * kPacketSize;
-  }
-//}}}
-//{{{
-bool cTransportStream::throttle() {
-// return true if any service needs throttle
-
-  for (auto& service : mServiceMap)
-    if (service.second.throttle())
-      return true;
-
-  return false;
   }
 //}}}
 
@@ -887,18 +883,10 @@ int64_t cTransportStream::demux (uint8_t* chunk, int64_t chunkSize, int64_t stre
                 pidInfo->addToBuffer (ts, tsBytesLeft);
               }
               //}}}
-            else if (pidInfo->getStreamType() == 5) {
-              //{{{  mtd - do nothing
+            else if ((pidInfo->getStreamType() == 5) ||  // mtd
+                     (pidInfo->getStreamType() == 11) || // dsm
+                     (pidInfo->getStreamType() == 134)) {
               }
-              //}}}
-            else if (pidInfo->getStreamType() == 11) {
-              //{{{  dsm - do nothing
-              }
-              //}}}
-            else if (pidInfo->getStreamType() == 134) {
-              //{{{  ??? - do nothing
-              }
-              //}}}
             else {
               //{{{  pes
               programPesPacket (pidInfo->getSid(), pidInfo->getPid(), ts - 1);
@@ -966,7 +954,7 @@ int64_t cTransportStream::demux (uint8_t* chunk, int64_t chunkSize, int64_t stre
       }
     else {
       //{{{  sync error, return
-      cLog::log (LOGERROR, "demux - lostSync");
+      cLog::log (LOGERROR, "cTransportStream::demux - lostSync");
       return tsEnd - chunk;
       }
       //}}}

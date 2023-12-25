@@ -202,7 +202,6 @@ public:
     cStream& getStream (eStreamType streamType) { return mStreams[streamType]; }
     void enableStreams();
     void togglePlay();
-    void hitEnter();
     int64_t skipStreams (int64_t skipPts);
     bool throttle();
 
@@ -285,10 +284,10 @@ public:
   std::vector <std::string>& getRecorded() { return mRecorded; }
 
   // actions
+  bool throttle();
   void togglePlay();
   void hitEnter();
   int64_t skip (int64_t skipPts);
-  bool throttle();
 
   // demux
   int64_t demux (uint8_t* chunk, int64_t chunkSize, int64_t streamPos, bool skip);
