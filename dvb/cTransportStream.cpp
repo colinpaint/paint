@@ -542,6 +542,14 @@ void cTransportStream::cService::enableStreams() {
   }
 //}}}
 //{{{
+bool cTransportStream::cService::throttle() {
+// return true if audioStream needs throttle
+
+  cStream& audioStream = getStream (eAudio);
+  return audioStream.isEnabled() && audioStream.getRender().throttle();
+  }
+//}}}
+//{{{
 void cTransportStream::cService::togglePlay() {
 
   cStream& audioStream = getStream (eAudio);
@@ -557,14 +565,6 @@ int64_t cTransportStream::cService::skipStreams (int64_t skipPts) {
     return audioStream.getRender().skip (skipPts);
 
   return 0;
-  }
-//}}}
-//{{{
-bool cTransportStream::cService::throttle() {
-// return true if audioStream needs throttle
-
-  cStream& audioStream = getStream (eAudio);
-  return audioStream.isEnabled() && audioStream.getRender().throttle();
   }
 //}}}
 
@@ -791,11 +791,11 @@ void cTransportStream::togglePlay() {
 int64_t cTransportStream::skip (int64_t skipPts) {
 // return streamPosOffset to match pts skip
 
-  int64_t streamPosOffset = 0;
+  int64_t offset = 0;
   for (auto& service : mServiceMap)
-    streamPosOffset = max (streamPosOffset, service.second.skipStreams (skipPts));
+    offset = max (offset, service.second.skipStreams (skipPts));
 
-  return ((streamPosOffset + kPacketSize - 1) / kPacketSize) * kPacketSize;
+  return ((offset + kPacketSize - 1) / kPacketSize) * kPacketSize;
   }
 //}}}
 

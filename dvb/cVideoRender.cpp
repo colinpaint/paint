@@ -101,10 +101,3 @@ string cVideoRender::getInfoString() const {
   return fmt::format ("vid {} {} {}", cRender::getInfoString(), mDecoder->getInfoString(), mFrameInfo);
   }
 //}}}
-//{{{
-bool cVideoRender::processPes (uint16_t pid, uint8_t* pes, uint32_t pesSize,
-                               int64_t pts, int64_t dts, int64_t streamPos, bool skip) {
-
-  return cRender::processPes (pid, pes, pesSize, pts, dts, streamPos, skip);
-  }
-//}}}

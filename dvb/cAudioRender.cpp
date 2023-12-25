@@ -103,21 +103,7 @@ string cAudioRender::getInfoString() const {
   return fmt::format ("aud {} {} {}", cRender::getInfoString(), mDecoder->getInfoString(), mFrameInfo);
   }
 //}}}
-//{{{
-bool cAudioRender::processPes (uint16_t pid, uint8_t* pes, uint32_t pesSize,
-                               int64_t pts, int64_t dts, int64_t streamPos, bool skip) {
 
-  return cRender::processPes (pid, pes, pesSize, pts, dts, streamPos, skip);
-  }
-//}}}
-//{{{
-int64_t cAudioRender::skip (int64_t skipPts) {
-  if (mPlayer)
-    mPlayer->startPlayPts (getPts() + skipPts);
-
-  return cRender::skip (skipPts);
-  }
-//}}}
 //{{{
 bool cAudioRender::throttle() {
 
@@ -131,5 +117,14 @@ bool cAudioRender::throttle() {
 void cAudioRender::togglePlay() {
   if (mPlayer)
     mPlayer->togglePlay();
+  }
+//}}}
+//{{{
+int64_t cAudioRender::skip (int64_t skipPts) {
+
+  if (mPlayer)
+    mPlayer->startPlayPts (mPlayer->getPts() + skipPts);
+
+  return cRender::skip (skipPts);
   }
 //}}}

@@ -201,9 +201,9 @@ public:
     cStream* getStreamByPid (uint16_t pid);
     cStream& getStream (eStreamType streamType) { return mStreams[streamType]; }
     void enableStreams();
+    bool throttle();
     void togglePlay();
     int64_t skipStreams (int64_t skipPts);
-    bool throttle();
 
     // record
     bool getRecord() const { return mRecord; }

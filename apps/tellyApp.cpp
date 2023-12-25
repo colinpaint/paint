@@ -955,7 +955,6 @@ namespace {
     cDvbSource& getDvbSource() { return *mDvbSource; }
     //{{{
     void liveDvbSource (const cDvbMultiplex& multiplex, cTellyOptions* options) {
-    // create liveDvbSource from dvbMultiplex
 
       cLog::log (LOGINFO, fmt::format ("using multiplex {} {:4.1f} record {} {}",
                                        multiplex.mName, multiplex.mFrequency/1000.f,
@@ -1045,22 +1044,25 @@ namespace {
     size_t getStreamSize() const { return mStreamSize; }
     //{{{
     void fileSource (const string& filename, cTellyOptions* options) {
-    // create fileSource
 
       // create transportStream
       mTransportStream = new cTransportStream ({ "file", 0, {}, {}, {} }, options);
       if (!mTransportStream) {
+        //{{{  error, return
         cLog::log (LOGERROR, "fileSource cTransportStream create failed");
         return;
         }
+        //}}}
 
       // open fileSource
       mOptions->mFileName = cFileUtils::resolve (filename);
       FILE* file = fopen (mOptions->mFileName.c_str(), "rb");
       if (!file) {
+        //{{{  error, return
         cLog::log (LOGERROR, fmt::format ("fileSource failed to open {}", mOptions->mFileName));
         return;
         }
+        //}}}
 
       mFileSource = true;
 
@@ -1068,10 +1070,9 @@ namespace {
       thread ([=]() {
         cLog::setThreadName ("file");
 
+        mStreamPos = 0;
         size_t chunkSize = 188 * 256;
         uint8_t* chunk = new uint8_t[chunkSize];
-
-        mStreamPos = 0;
         while (true) {
           while (mTransportStream->throttle())
             this_thread::sleep_for (1ms);
@@ -1081,9 +1082,9 @@ namespace {
             mStreamPos += mTransportStream->demux (chunk, bytesRead, mStreamPos, false);
           else
             break;
-          //{{{  update fileSize
+
+          // update fileSize
           #ifdef _WIN32
-            // windows platform nonsense
             struct _stati64 st;
             if (_stat64 (mOptions->mFileName.c_str(), &st) != -1)
           #else
@@ -1091,7 +1092,6 @@ namespace {
             if (stat (mOptions->mFileName.c_str(), &st) != -1)
           #endif
               mStreamSize = st.st_size;
-          //}}}
           }
 
         fclose (file);
@@ -1104,14 +1104,14 @@ namespace {
 
     // actions
     void hitSpace()  { mTransportStream->togglePlay(); }
-    void moveLeft()  { mStreamPos += mTransportStream->skip (-90000); }
-    void moveRight() { mStreamPos += mTransportStream->skip (90000); }
-    void moveUp()    { mStreamPos += mTransportStream->skip (-900000); }
-    void moveDown()  { mStreamPos += mTransportStream->skip (900000); }
+    void moveLeft()  { skip (-90000); }
+    void moveRight() { skip (90000); }
+    void moveUp()    { skip (-900000); }
+    void moveDown()  { skip (900000); }
     void toggleShowSubtitle() { mOptions->mShowSubtitle = !mOptions->mShowSubtitle; }
     void toggleShowMotionVectors() { mOptions->mShowMotionVectors = !mOptions->mShowMotionVectors; }
 
-    // drop file
+    // drop files
     //{{{
     void drop (const vector<string>& dropItems) {
     // drop fileSource
@@ -1124,6 +1124,15 @@ namespace {
     //}}}
 
   private:
+    //{{{
+    void skip (int64_t skipPts) {
+
+      int64_t offset = mTransportStream->skip (-90000);
+      cLog::log (LOGINFO, fmt::format ("skip:{} offset:{} pos:{}", skipPts, offset, mStreamPos));
+      mStreamPos += offset;
+      }
+    //}}}
+
     cTellyOptions* mOptions;
     cTransportStream* mTransportStream = nullptr;
 
@@ -1874,12 +1883,8 @@ namespace {
       }
     //}}}
     //{{{
-    void hitEnter() {
-      mMultiView.hitEnter();
-      }
-    //}}}
-    //{{{
     void moveLeft (cTellyApp& tellyApp) {
+
       if (tellyApp.isFileSource())
         tellyApp.moveLeft();
       else
@@ -1888,6 +1893,7 @@ namespace {
     //}}}
     //{{{
     void moveRight (cTellyApp& tellyApp) {
+
       if (tellyApp.isFileSource())
         tellyApp.moveRight();
       else
@@ -1896,6 +1902,7 @@ namespace {
     //}}}
     //{{{
     void moveUp (cTellyApp& tellyApp) {
+
       if (tellyApp.isFileSource())
         tellyApp.moveUp();
       else
@@ -1904,6 +1911,7 @@ namespace {
     //}}}
     //{{{
     void moveDown (cTellyApp& tellyApp) {
+
       if (tellyApp.isFileSource())
         tellyApp.moveDown();
       else
@@ -1924,12 +1932,12 @@ namespace {
       //}}}
       const vector<sActionKey> kActionKeys = {
         //alt    ctrl   shift  guiKey               function
+        { false, false, false, ImGuiKey_Space,      [this,&tellyApp] { hitSpace (tellyApp); }},
         { false, false, false, ImGuiKey_LeftArrow,  [this,&tellyApp] { moveLeft (tellyApp); }},
         { false, false, false, ImGuiKey_RightArrow, [this,&tellyApp] { moveRight (tellyApp); }},
         { false, false, false, ImGuiKey_UpArrow,    [this,&tellyApp] { moveUp (tellyApp); }},
         { false, false, false, ImGuiKey_DownArrow,  [this,&tellyApp] { moveDown (tellyApp); }},
-        { false, false, false, ImGuiKey_Enter,      [this,&tellyApp] { hitEnter(); }},
-        { false, false, false, ImGuiKey_Space,      [this,&tellyApp] { hitSpace (tellyApp); }},
+        { false, false, false, ImGuiKey_Enter,      [this,&tellyApp] { mMultiView.hitEnter(); }},
         { false, false, false, ImGuiKey_F,          [this,&tellyApp] { tellyApp.getPlatform().toggleFullScreen(); }},
         { false, false, false, ImGuiKey_S,          [this,&tellyApp] { tellyApp.toggleShowSubtitle(); }},
         { false, false, false, ImGuiKey_L,          [this,&tellyApp] { tellyApp.toggleShowMotionVectors(); }},

@@ -39,11 +39,9 @@ public:
 
   // overrides
   virtual std::string getInfoString() const final;
-  virtual bool processPes (uint16_t pid, uint8_t* pes, uint32_t pesSize,
-                           int64_t pts, int64_t dts, int64_t streamPos, bool skip) final;
-  virtual int64_t skip (int64_t skipPts) final;
   virtual bool throttle() final;
   virtual void togglePlay() final;
+  virtual int64_t skip (int64_t skipPts) final;
 
 private:
   uint32_t mSampleRate;

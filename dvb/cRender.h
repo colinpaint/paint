@@ -61,8 +61,8 @@ public:
   virtual std::string getInfoString() const;
   virtual bool processPes (uint16_t pid, uint8_t* pes, uint32_t pesSize,
                            int64_t pts, int64_t dts, int64_t streamPos, bool skip);
-  virtual void togglePlay() {}
   virtual bool throttle() { return false; }
+  virtual void togglePlay() {}
   virtual int64_t skip (int64_t skipPts) { return int64_t(skipPts * mStreamPosPerPts); }
 
   void toggleLog();
