@@ -1078,7 +1078,7 @@ namespace {
           while (mTransportStream->throttle())
             this_thread::sleep_for (1ms);
 
-          // seek and read file chunk
+          // seek and read chunk from file
           bool skip = mStreamPos != mFilePos;
           if (skip) {
             //{{{  seek to mStreamPos
@@ -1119,17 +1119,16 @@ namespace {
     //}}}
 
     // actions
-    void hitSpace()  { mTransportStream->togglePlay(); }
     void hitControlLeft()  { skip (-90000 / 25); }
     void hitControlRight() { skip ( 90000 / 25); }
     void hitLeft()         { skip (-90000); }
     void hitRight()        { skip ( 90000); }
     void hitUp()           { skip (-900000); }
     void hitDown()         { skip ( 900000); }
+    void hitSpace() { mTransportStream->togglePlay(); }
     void toggleShowSubtitle() { mOptions->mShowSubtitle = !mOptions->mShowSubtitle; }
     void toggleShowMotionVectors() { mOptions->mShowMotionVectors = !mOptions->mShowMotionVectors; }
 
-    // drop files
     //{{{
     void drop (const vector<string>& dropItems) {
     // drop fileSource
@@ -1456,9 +1455,8 @@ namespace {
 
                     float xpos = (float)subtitleImage.getXpos() / videoFrame->getWidth();
                     float ypos = (float)(videoFrame->getHeight() - subtitleImage.getYpos()) / videoFrame->getHeight();
-                    model.setTranslate (
-                      {(layoutPos.x + ((xpos - 0.5f) * layoutScale)) * viewportWidth,
-                       ((1.0f - layoutPos.y) + ((ypos - 0.5f) * layoutScale)) * viewportHeight});
+                    model.setTranslate ({(layoutPos.x + ((xpos - 0.5f) * layoutScale)) * viewportWidth,
+                                         ((1.0f - layoutPos.y) + ((ypos - 0.5f) * layoutScale)) * viewportHeight});
                     subtitleShader->setModelProjection (model, projection);
 
                     // ensure quad is created (assumes same size) and draw
@@ -1475,10 +1473,10 @@ namespace {
                   if (numMotionVectors) {
                     for (size_t i = 0; i < numMotionVectors; i++) {
                       ImGui::GetWindowDrawList()->AddLine (
-                        {mTl.x + (mv->src_x * viewportWidth / videoFrame->getWidth()),
-                         mTl.y +  (mv->src_y * viewportHeight / videoFrame->getHeight())},
-                        {mTl.x + ((mv->src_x + (mv->motion_x / mv->motion_scale)) * viewportWidth / videoFrame->getWidth()),
-                         mTl.y +  ((mv->src_y + (mv->motion_y / mv->motion_scale)) * viewportHeight / videoFrame->getHeight())},
+                        mTl + ImVec2(mv->src_x * viewportWidth / videoFrame->getWidth(),
+                                     mv->src_y * viewportHeight / videoFrame->getHeight()),
+                        mTl + ImVec2((mv->src_x + (mv->motion_x / mv->motion_scale)) * viewportWidth / videoFrame->getWidth(),
+                                      (mv->src_y + (mv->motion_y / mv->motion_scale)) * viewportHeight / videoFrame->getHeight()),
                         mv->source > 0 ? 0xc0c0c0c0 : 0xc000c0c0, 1.f);
                       mv++;
                       }
@@ -1499,7 +1497,8 @@ namespace {
                 // draw frames graphic
                 if (mSelect == eSelectedFull)
                   mFramesView.draw (audioRender, videoRender, playPts,
-                                    ImVec2((mTl.x + mBr.x)/2.f, mBr.y - (0.5f * ImGui::GetTextLineHeight())));
+                                    ImVec2((mTl.x + mBr.x)/2.f,
+                                           mBr.y - (0.5f * ImGui::GetTextLineHeight())));
                 }
               }
               //}}}
@@ -1510,23 +1509,27 @@ namespace {
           if (!enabled || (mSelect == eSelectedFull))
             channelString += " " + mService.getNowTitleString();
 
-          ImGui::SetCursorPos ({mTl.x + (ImGui::GetTextLineHeight() * 0.25f),
-                                mBr.y - ImGui::GetTextLineHeight()});
-          ImGui::TextColored ({0.f, 0.f,0.f,1.f}, channelString.c_str());
-
-          ImGui::SetCursorPos ({mTl.x - 2.f + (ImGui::GetTextLineHeight() * 0.25f),
-                                mBr.y - 2.f - ImGui::GetTextLineHeight()});
+          ImVec2 pos = {mTl.x + (ImGui::GetTextLineHeight() * 0.25f),
+                        mBr.y - ImGui::GetTextLineHeight()};
+          ImGui::SetCursorPos (pos);
+          ImGui::TextColored ({0.f,0.f,0.f,1.f}, channelString.c_str());
+          ImGui::SetCursorPos (pos - ImVec2(2.f,2.f));
           ImGui::TextColored ({1.f, 1.f,1.f,1.f}, channelString.c_str());
           //}}}
+          //{{{  draw ptsFromStart bottom right
+          string ptsFromStartString = utils::getPtsString (mService.getPtsFromStart());
 
-          ImGui::SetCursorPos ({mBr.x - ImGui::GetTextLineHeight() * 6.f,
-                                mBr.y - 2.f - ImGui::GetTextLineHeight()});
-          ImGui::TextColored ({1.f, 1.f,1.f,1.f}, utils::getPtsString (mService.getPtsFromStart()).c_str());
+          pos = mBr - ImVec2(ImGui::GetTextLineHeight() * 6.f, ImGui::GetTextLineHeight());
+          ImGui::SetCursorPos (pos);
+          ImGui::TextColored ({0.f,0.f,0.f,1.f}, ptsFromStartString.c_str());
+          ImGui::SetCursorPos (pos - ImVec2(2.f,2.f));
+          ImGui::TextColored ({1.f,1.f,1.f,1.f}, ptsFromStartString.c_str());
+          //}}}
 
           // draw select rect
-          mHover = ImGui::IsMouseHoveringRect (mTl, mBr);
-          if ((mHover || (mSelect != eUnselected)) && (mSelect != eSelectedFull))
-            ImGui::GetWindowDrawList()->AddRect (mTl, mBr, mHover ? 0xff20ffff : 0xff20ff20, 4.f, 0, 4.f);
+          bool hover = ImGui::IsMouseHoveringRect (mTl, mBr);
+          if ((hover || (mSelect != eUnselected)) && (mSelect != eSelectedFull))
+            ImGui::GetWindowDrawList()->AddRect (mTl, mBr, hover ? 0xff20ffff : 0xff20ff20, 4.f, 0, 4.f);
 
           ImGui::SetCursorPos (mTl);
           if (ImGui::InvisibleButton (fmt::format ("view##{}", mService.getSid()).c_str(), mBr-mTl)) {
@@ -1802,8 +1805,6 @@ namespace {
 
         // vars
         cTransportStream::cService& mService;
-
-        bool mHover = false;
         eSelect mSelect = eUnselected;
 
         // video
