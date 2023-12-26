@@ -1039,10 +1039,10 @@ namespace {
 
     // fileSource
     bool isFileSource() { return mFileSource; }
-    std::string getFileName() const { return mOptions->mFileName; }
+    uint64_t getStreamPos() const { return mStreamPos; }
     uint64_t getFilePos() const { return mFilePos; }
     size_t getFileSize() const { return mFileSize; }
-    uint64_t getStreamPos() const { return mStreamPos; }
+    std::string getFileName() const { return mOptions->mFileName; }
     //{{{
     void fileSource (const string& filename, cTellyOptions* options) {
 
