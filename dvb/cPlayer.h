@@ -21,6 +21,12 @@ public:
   void toggleMute() { mMute = !mMute; }
 
   //{{{
+  void skipPlayPts (int64_t pts) {
+    mPts = pts;
+    mSkip = true;
+    }
+  //}}}
+  //{{{
   void startPlayPts (int64_t pts) {
     mPts = pts;
     mPlaying = true;
@@ -35,6 +41,7 @@ private:
   std::thread mPlayerThread;
 
   bool mMute = true;
+  bool mSkip = false;
   bool mPlaying = false;
   bool mRunning = true;
   bool mExit = false;

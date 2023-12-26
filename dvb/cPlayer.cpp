@@ -31,7 +31,7 @@ using namespace std;
 
 cPlayer::cPlayer (cAudioRender& audioRender, uint32_t sampleRate, uint16_t pid, bool hasAudio) :
     mAudioRender(audioRender), mSampleRate(sampleRate) {
-  
+
   (void)hasAudio;
   mPlayerThread = thread ([=]() {
     cLog::setThreadName (fmt::format ("{:4d}", pid));
@@ -72,7 +72,8 @@ cPlayer::cPlayer (cAudioRender& audioRender, uint32_t sampleRate, uint16_t pid, 
       numSamples = (int)mAudioRender.getSamplesPerFrame();
       int64_t ptsDuration = 0;
 
-      if (mPlaying) {
+      if (mPlaying || mSkip) {
+        mSkip = false;
         cAudioFrame* audioFrame = mAudioRender.getAudioFrameAtPts (mPts);
         if (audioFrame)
           mSyncedUp = true;

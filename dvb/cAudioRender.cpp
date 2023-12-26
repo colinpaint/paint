@@ -123,7 +123,7 @@ void cAudioRender::togglePlay() {
 int64_t cAudioRender::skip (int64_t skipPts) {
 
   if (mPlayer)
-    mPlayer->startPlayPts (mPlayer->getPts() + skipPts);
+    mPlayer->skipPlayPts (mPlayer->getPts() + skipPts);
   return cRender::skip (skipPts);
   }
 //}}}

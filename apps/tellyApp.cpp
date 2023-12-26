@@ -1040,8 +1040,9 @@ namespace {
     // fileSource
     bool isFileSource() { return mFileSource; }
     std::string getFileName() const { return mOptions->mFileName; }
+    uint64_t getFilePos() const { return mFilePos; }
+    size_t getFileSize() const { return mFileSize; }
     uint64_t getStreamPos() const { return mStreamPos; }
-    size_t getStreamSize() const { return mStreamSize; }
     //{{{
     void fileSource (const string& filename, cTellyOptions* options) {
 
@@ -1063,13 +1064,13 @@ namespace {
         return;
         }
         //}}}
-
       mFileSource = true;
 
       // create fileRead thread
       thread ([=]() {
         cLog::setThreadName ("file");
 
+        mFilePos = 0;
         mStreamPos = 0;
         size_t chunkSize = 188 * 256;
         uint8_t* chunk = new uint8_t[chunkSize];
@@ -1077,9 +1078,24 @@ namespace {
           while (mTransportStream->throttle())
             this_thread::sleep_for (1ms);
 
+          // seek and read file chunk
+          if (mStreamPos != mFilePos) {
+            //{{{  seek to mStreamPos
+            if (fseek (file, (long)mStreamPos, SEEK_SET))
+              cLog::log (LOGERROR, fmt::format ("seek failed {}", mStreamPos));
+            else {
+              cLog::log (LOGINFO, fmt::format ("seek {}", mStreamPos));
+              mFilePos = mStreamPos;
+              }
+            }
+            //}}}
           size_t bytesRead = fread (chunk, 1, chunkSize, file);
-          if (bytesRead > 0)
-            mStreamPos += mTransportStream->demux (chunk, bytesRead, mStreamPos, false);
+          mFilePos = mFilePos + bytesRead;
+          if (bytesRead > 0) {
+            size_t bytesUsed = mTransportStream->demux (chunk, bytesRead, mStreamPos, false);
+            mStreamPos += bytesUsed;
+            //cLog::log (LOGINFO, fmt::format ("{}:{} {}:{}", mStreamPos, mFilePos, bytesRead, bytesUsed));
+            }
           else
             break;
 
@@ -1087,11 +1103,12 @@ namespace {
           #ifdef _WIN32
             struct _stati64 st;
             if (_stat64 (mOptions->mFileName.c_str(), &st) != -1)
+              mFileSize = st.st_size;
           #else
             struct stat st;
             if (stat (mOptions->mFileName.c_str(), &st) != -1)
+              mFileSize = st.st_size;
           #endif
-              mStreamSize = st.st_size;
           }
 
         fclose (file);
@@ -1104,10 +1121,12 @@ namespace {
 
     // actions
     void hitSpace()  { mTransportStream->togglePlay(); }
-    void moveLeft()  { skip (-90000); }
-    void moveRight() { skip (90000); }
-    void moveUp()    { skip (-900000); }
-    void moveDown()  { skip (900000); }
+    void hitControlLeft()  { skip (-90000 / 25); }
+    void hitControlRight() { skip ( 90000 / 25); }
+    void hitLeft()         { skip (-90000); }
+    void hitRight()        { skip ( 90000); }
+    void hitUp()           { skip (-900000); }
+    void hitDown()         { skip ( 900000); }
     void toggleShowSubtitle() { mOptions->mShowSubtitle = !mOptions->mShowSubtitle; }
     void toggleShowMotionVectors() { mOptions->mShowMotionVectors = !mOptions->mShowMotionVectors; }
 
@@ -1145,8 +1164,9 @@ namespace {
     // fileSource
     bool mFileSource = false;
     FILE* mFile = nullptr;
-    uint64_t mStreamPos = 0;
-    size_t mStreamSize = 0;
+    int64_t mStreamPos = 0;
+    int64_t mFilePos = 0;
+    size_t mFileSize = 0;
     };
   //}}}
   //{{{
@@ -1206,7 +1226,7 @@ namespace {
           //{{{  draw streamPos info
           ImGui::SameLine();
           ImGui::TextUnformatted (fmt::format ("{:4.3f}%", tellyApp.getStreamPos() * 100.f /
-                                                           tellyApp.getStreamSize()).c_str());
+                                                           tellyApp.getFileSize()).c_str());
           }
           //}}}
         else if (tellyApp.isDvbSource()) {
@@ -1266,23 +1286,23 @@ namespace {
         }
       //}}}
       //{{{
-      void moveLeft() {
-        cLog::log (LOGINFO, fmt::format ("multiView moveLeft"));
+      void hitLeft() {
+        cLog::log (LOGINFO, fmt::format ("multiView hitLeft"));
         }
       //}}}
       //{{{
-      void moveRight() {
-        cLog::log (LOGINFO, fmt::format ("multiView moveRight"));
+      void hitRight() {
+        cLog::log (LOGINFO, fmt::format ("multiView hitRight"));
         }
       //}}}
       //{{{
-      void moveUp() {
-        cLog::log (LOGINFO, fmt::format ("multiView moveUp"));
+      void hitUp() {
+        cLog::log (LOGINFO, fmt::format ("multiView hitUp"));
         }
       //}}}
       //{{{
-      void moveDown() {
-        cLog::log (LOGINFO, fmt::format ("multiView moveDown"));
+      void hitDown() {
+        cLog::log (LOGINFO, fmt::format ("multiView hitDown"));
         }
       //}}}
 
@@ -1883,39 +1903,53 @@ namespace {
       }
     //}}}
     //{{{
-    void moveLeft (cTellyApp& tellyApp) {
+    void hitControlLeft (cTellyApp& tellyApp) {
 
       if (tellyApp.isFileSource())
-        tellyApp.moveLeft();
-      else
-        mMultiView.moveLeft();
+        tellyApp.hitControlLeft();
       }
     //}}}
     //{{{
-    void moveRight (cTellyApp& tellyApp) {
+    void hitControlRight (cTellyApp& tellyApp) {
 
       if (tellyApp.isFileSource())
-        tellyApp.moveRight();
-      else
-        mMultiView.moveRight();
+        tellyApp.hitControlRight();
       }
     //}}}
     //{{{
-    void moveUp (cTellyApp& tellyApp) {
+    void hitLeft (cTellyApp& tellyApp) {
 
       if (tellyApp.isFileSource())
-        tellyApp.moveUp();
+        tellyApp.hitLeft();
       else
-        mMultiView.moveUp();
+        mMultiView.hitLeft();
       }
     //}}}
     //{{{
-    void moveDown (cTellyApp& tellyApp) {
+    void hitRight (cTellyApp& tellyApp) {
 
       if (tellyApp.isFileSource())
-        tellyApp.moveDown();
+        tellyApp.hitRight();
       else
-        mMultiView.moveDown();
+        mMultiView.hitRight();
+      }
+    //}}}
+    //{{{
+    void hitUp (cTellyApp& tellyApp) {
+
+      if (tellyApp.isFileSource())
+        tellyApp.hitUp();
+      else
+        mMultiView.hitUp();
+      }
+    //}}}
+    //{{{
+    void hitDown (cTellyApp& tellyApp) {
+
+      if (tellyApp.isFileSource())
+        tellyApp.hitDown();
+      else
+        mMultiView.hitDown();
       }
     //}}}
     //{{{
@@ -1924,26 +1958,28 @@ namespace {
       //{{{
       struct sActionKey {
         bool mAlt;
-        bool mCtrl;
+        bool mControl;
         bool mShift;
         ImGuiKey mGuiKey;
         function <void()> mActionFunc;
         };
       //}}}
       const vector<sActionKey> kActionKeys = {
-        //alt    ctrl   shift  guiKey               function
-        { false, false, false, ImGuiKey_Space,      [this,&tellyApp] { hitSpace (tellyApp); }},
-        { false, false, false, ImGuiKey_LeftArrow,  [this,&tellyApp] { moveLeft (tellyApp); }},
-        { false, false, false, ImGuiKey_RightArrow, [this,&tellyApp] { moveRight (tellyApp); }},
-        { false, false, false, ImGuiKey_UpArrow,    [this,&tellyApp] { moveUp (tellyApp); }},
-        { false, false, false, ImGuiKey_DownArrow,  [this,&tellyApp] { moveDown (tellyApp); }},
-        { false, false, false, ImGuiKey_Enter,      [this,&tellyApp] { mMultiView.hitEnter(); }},
-        { false, false, false, ImGuiKey_F,          [this,&tellyApp] { tellyApp.getPlatform().toggleFullScreen(); }},
-        { false, false, false, ImGuiKey_S,          [this,&tellyApp] { tellyApp.toggleShowSubtitle(); }},
-        { false, false, false, ImGuiKey_L,          [this,&tellyApp] { tellyApp.toggleShowMotionVectors(); }},
-        { false, false, false, ImGuiKey_T,          [this,&tellyApp] { hitShow (eTelly); }},
-        { false, false, false, ImGuiKey_P,          [this,&tellyApp] { hitShow (ePidMap); }},
-        { false, false, false, ImGuiKey_R,          [this,&tellyApp] { hitShow (eRecordings); }},
+      //  alt    control shift  guiKey               function
+        { false, false,  false, ImGuiKey_Space,      [this,&tellyApp] { hitSpace (tellyApp); }},
+        { false, true,   false, ImGuiKey_LeftArrow,  [this,&tellyApp] { hitControlLeft (tellyApp); }},
+        { false, true,   false, ImGuiKey_RightArrow, [this,&tellyApp] { hitControlRight (tellyApp); }},
+        { false, false,  false, ImGuiKey_LeftArrow,  [this,&tellyApp] { hitLeft (tellyApp); }},
+        { false, false,  false, ImGuiKey_RightArrow, [this,&tellyApp] { hitRight (tellyApp); }},
+        { false, false,  false, ImGuiKey_UpArrow,    [this,&tellyApp] { hitUp (tellyApp); }},
+        { false, false,  false, ImGuiKey_DownArrow,  [this,&tellyApp] { hitDown (tellyApp); }},
+        { false, false,  false, ImGuiKey_Enter,      [this,&tellyApp] { mMultiView.hitEnter(); }},
+        { false, false,  false, ImGuiKey_F,          [this,&tellyApp] { tellyApp.getPlatform().toggleFullScreen(); }},
+        { false, false,  false, ImGuiKey_S,          [this,&tellyApp] { tellyApp.toggleShowSubtitle(); }},
+        { false, false,  false, ImGuiKey_L,          [this,&tellyApp] { tellyApp.toggleShowMotionVectors(); }},
+        { false, false,  false, ImGuiKey_T,          [this,&tellyApp] { hitShow (eTelly); }},
+        { false, false,  false, ImGuiKey_P,          [this,&tellyApp] { hitShow (ePidMap); }},
+        { false, false,  false, ImGuiKey_R,          [this,&tellyApp] { hitShow (eRecordings); }},
         };
 
       ImGui::GetIO().WantTextInput = true;
@@ -1951,12 +1987,12 @@ namespace {
 
       // look for action keys
       bool altKeyPressed = ImGui::GetIO().KeyAlt;
-      bool ctrlKeyPressed = ImGui::GetIO().KeyCtrl;
+      bool controlKeyPressed = ImGui::GetIO().KeyCtrl;
       bool shiftKeyPressed = ImGui::GetIO().KeyShift;
       for (auto& actionKey : kActionKeys)
         if (ImGui::IsKeyPressed (actionKey.mGuiKey) &&
             (actionKey.mAlt == altKeyPressed) &&
-            (actionKey.mCtrl == ctrlKeyPressed) &&
+            (actionKey.mControl == controlKeyPressed) &&
             (actionKey.mShift == shiftKeyPressed)) {
           actionKey.mActionFunc();
           break;
@@ -1966,7 +2002,7 @@ namespace {
       for (int i = 0; i < ImGui::GetIO().InputQueueCharacters.Size; i++) {
         ImWchar ch = ImGui::GetIO().InputQueueCharacters[i];
         cLog::log (LOGINFO, fmt::format ("enter {:4x} {} {} {}",
-                                         ch,altKeyPressed, ctrlKeyPressed, shiftKeyPressed));
+                                         ch, altKeyPressed, controlKeyPressed, shiftKeyPressed));
         }
       ImGui::GetIO().InputQueueCharacters.resize (0);
       }
