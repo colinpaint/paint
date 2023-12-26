@@ -1079,7 +1079,8 @@ namespace {
             this_thread::sleep_for (1ms);
 
           // seek and read file chunk
-          if (mStreamPos != mFilePos) {
+          bool skip = mStreamPos != mFilePos;
+          if (skip) {
             //{{{  seek to mStreamPos
             if (fseek (file, (long)mStreamPos, SEEK_SET))
               cLog::log (LOGERROR, fmt::format ("seek failed {}", mStreamPos));
@@ -1091,15 +1092,12 @@ namespace {
             //}}}
           size_t bytesRead = fread (chunk, 1, chunkSize, file);
           mFilePos = mFilePos + bytesRead;
-          if (bytesRead > 0) {
-            size_t bytesUsed = mTransportStream->demux (chunk, bytesRead, mStreamPos, false);
-            mStreamPos += bytesUsed;
-            //cLog::log (LOGINFO, fmt::format ("{}:{} {}:{}", mStreamPos, mFilePos, bytesRead, bytesUsed));
-            }
+          if (bytesRead > 0)
+            mStreamPos += mTransportStream->demux (chunk, bytesRead, mStreamPos, skip);
           else
             break;
 
-          // update fileSize
+          //{{{  update fileSize
           #ifdef _WIN32
             struct _stati64 st;
             if (_stat64 (mOptions->mFileName.c_str(), &st) != -1)
@@ -1109,6 +1107,7 @@ namespace {
             if (stat (mOptions->mFileName.c_str(), &st) != -1)
               mFileSize = st.st_size;
           #endif
+          //}}}
           }
 
         fclose (file);
@@ -1965,45 +1964,44 @@ namespace {
         };
       //}}}
       const vector<sActionKey> kActionKeys = {
-      //  alt    control shift  guiKey               function
-        { false, false,  false, ImGuiKey_Space,      [this,&tellyApp] { hitSpace (tellyApp); }},
-        { false, true,   false, ImGuiKey_LeftArrow,  [this,&tellyApp] { hitControlLeft (tellyApp); }},
-        { false, true,   false, ImGuiKey_RightArrow, [this,&tellyApp] { hitControlRight (tellyApp); }},
-        { false, false,  false, ImGuiKey_LeftArrow,  [this,&tellyApp] { hitLeft (tellyApp); }},
-        { false, false,  false, ImGuiKey_RightArrow, [this,&tellyApp] { hitRight (tellyApp); }},
-        { false, false,  false, ImGuiKey_UpArrow,    [this,&tellyApp] { hitUp (tellyApp); }},
-        { false, false,  false, ImGuiKey_DownArrow,  [this,&tellyApp] { hitDown (tellyApp); }},
-        { false, false,  false, ImGuiKey_Enter,      [this,&tellyApp] { mMultiView.hitEnter(); }},
-        { false, false,  false, ImGuiKey_F,          [this,&tellyApp] { tellyApp.getPlatform().toggleFullScreen(); }},
-        { false, false,  false, ImGuiKey_S,          [this,&tellyApp] { tellyApp.toggleShowSubtitle(); }},
-        { false, false,  false, ImGuiKey_L,          [this,&tellyApp] { tellyApp.toggleShowMotionVectors(); }},
-        { false, false,  false, ImGuiKey_T,          [this,&tellyApp] { hitShow (eTelly); }},
-        { false, false,  false, ImGuiKey_P,          [this,&tellyApp] { hitShow (ePidMap); }},
-        { false, false,  false, ImGuiKey_R,          [this,&tellyApp] { hitShow (eRecordings); }},
+      //  alt    control shift  ImGuiKey             function
+        { false, false,  false, ImGuiKey_Space,      [this,&tellyApp]{ hitSpace (tellyApp); }},
+        { false, true,   false, ImGuiKey_LeftArrow,  [this,&tellyApp]{ hitControlLeft (tellyApp); }},
+        { false, true,   false, ImGuiKey_RightArrow, [this,&tellyApp]{ hitControlRight (tellyApp); }},
+        { false, false,  false, ImGuiKey_LeftArrow,  [this,&tellyApp]{ hitLeft (tellyApp); }},
+        { false, false,  false, ImGuiKey_RightArrow, [this,&tellyApp]{ hitRight (tellyApp); }},
+        { false, false,  false, ImGuiKey_UpArrow,    [this,&tellyApp]{ hitUp (tellyApp); }},
+        { false, false,  false, ImGuiKey_DownArrow,  [this,&tellyApp]{ hitDown (tellyApp); }},
+        { false, false,  false, ImGuiKey_Enter,      [this,&tellyApp]{ mMultiView.hitEnter(); }},
+        { false, false,  false, ImGuiKey_F,          [this,&tellyApp]{ tellyApp.getPlatform().toggleFullScreen(); }},
+        { false, false,  false, ImGuiKey_S,          [this,&tellyApp]{ tellyApp.toggleShowSubtitle(); }},
+        { false, false,  false, ImGuiKey_L,          [this,&tellyApp]{ tellyApp.toggleShowMotionVectors(); }},
+        { false, false,  false, ImGuiKey_T,          [this,&tellyApp]{ hitShow (eTelly); }},
+        { false, false,  false, ImGuiKey_P,          [this,&tellyApp]{ hitShow (ePidMap); }},
+        { false, false,  false, ImGuiKey_R,          [this,&tellyApp]{ hitShow (eRecordings); }},
         };
 
       ImGui::GetIO().WantTextInput = true;
       ImGui::GetIO().WantCaptureKeyboard = true;
 
-      // look for action keys
-      bool altKeyPressed = ImGui::GetIO().KeyAlt;
-      bool controlKeyPressed = ImGui::GetIO().KeyCtrl;
-      bool shiftKeyPressed = ImGui::GetIO().KeyShift;
+      // action keys
+      bool altKey = ImGui::GetIO().KeyAlt;
+      bool controlKey = ImGui::GetIO().KeyCtrl;
+      bool shiftKey = ImGui::GetIO().KeyShift;
       for (auto& actionKey : kActionKeys)
         if (ImGui::IsKeyPressed (actionKey.mGuiKey) &&
-            (actionKey.mAlt == altKeyPressed) &&
-            (actionKey.mControl == controlKeyPressed) &&
-            (actionKey.mShift == shiftKeyPressed)) {
+            (actionKey.mAlt == altKey) &&
+            (actionKey.mControl == controlKey) &&
+            (actionKey.mShift == shiftKey)) {
           actionKey.mActionFunc();
           break;
           }
 
-      // other queued keys
-      for (int i = 0; i < ImGui::GetIO().InputQueueCharacters.Size; i++) {
-        ImWchar ch = ImGui::GetIO().InputQueueCharacters[i];
-        cLog::log (LOGINFO, fmt::format ("enter {:4x} {} {} {}",
-                                         ch, altKeyPressed, controlKeyPressed, shiftKeyPressed));
-        }
+      // queued keys
+      //for (int i = 0; i < ImGui::GetIO().InputQueueCharacters.Size; i++) {
+      //  ImWchar ch = ImGui::GetIO().InputQueueCharacters[i];
+      //  cLog::log (LOGINFO, fmt::format ("enter {:4x} {} {} {}", ch, altKey, controlKey, shiftKey));
+      //  }
       ImGui::GetIO().InputQueueCharacters.resize (0);
       }
     //}}}
