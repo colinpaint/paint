@@ -283,10 +283,8 @@ public:
   std::map <uint16_t, cService>& getServiceMap() { return mServiceMap; };
   std::vector <std::string>& getRecorded() { return mRecorded; }
 
-  // actions
   bool throttle();
   void togglePlay();
-  void hitEnter();
   int64_t skip (int64_t skipPts);
 
   // demux
