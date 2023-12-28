@@ -570,21 +570,35 @@ int64_t cTransportStream::cService::skip (int64_t skipPts) {
 
 // record to file
 //{{{
-bool cTransportStream::cService::openFile (const string& fileName, uint16_t tsid) {
+void cTransportStream::cService::startProgram (chrono::system_clock::time_point tdt,
+                                               const string& programName,
+                                               chrono::system_clock::time_point programStartTime,
+                                               bool selected) {
+// start recording program
 
-  mFile = fopen (fileName.c_str(), "wb");
-  if (mFile) {
-    writePat (tsid);
-    writePmt();
-    return true;
+  // close prev program
+  closeFile();
+
+  if ((selected || getRecord() || (dynamic_cast<cOptions*>(mOptions))->mRecordAll) &&
+      getStream (eVideo).isDefined() && (getStream(eAudio).isDefined())) {
+    string filePath = (dynamic_cast<cOptions*>(mOptions))->mRecordRoot +
+                      getRecordName() + date::format ("%d %b %y %a %H.%M.%S ",
+                        date::floor<chrono::seconds>(tdt)) + utils::getValidFileString (programName) + ".ts";
+
+    // open new record program
+    openFile (filePath, 0x1234);
+
+    // gui
+    mRecorded.push_back (filePath);
+
+    cLog::log (LOGINFO, fmt::format ("{} {}",
+      date::format ("%H.%M.%S %a %d %b %y", date::floor<chrono::seconds>(programStartTime)),
+      filePath));
     }
-
-  cLog::log (LOGERROR, "cService::openFile " + fileName);
-  return false;
   }
 //}}}
 //{{{
-void cTransportStream::cService::writePacket (uint8_t* ts, uint16_t pid) {
+void cTransportStream::cService::programPesPacket (uint16_t pid, uint8_t* ts) {
 //  pes ts packet, save only recognised pids
 
   if (mFile &&
@@ -592,15 +606,6 @@ void cTransportStream::cService::writePacket (uint8_t* ts, uint16_t pid) {
        (pid == mStreams[eAudio].getPid()) ||
        (pid == mStreams[eSubtitle].getPid())))
     fwrite (ts, 1, kPacketSize, mFile);
-  }
-//}}}
-//{{{
-void cTransportStream::cService::closeFile() {
-
-  if (mFile)
-    fclose (mFile);
-
-  mFile = nullptr;
   }
 //}}}
 
@@ -668,7 +673,6 @@ uint8_t* cTransportStream::cService::tsHeader (uint8_t* ts, uint16_t pid, uint8_
   return ts;
   }
 //}}}
-
 //{{{
 void cTransportStream::cService::writePat (uint16_t tsid) {
 
@@ -758,6 +762,30 @@ void cTransportStream::cService::writeSection (uint8_t* ts, uint8_t* tsSectionSt
   fwrite (ts, 1, kPacketSize, mFile);
   }
 //}}}
+
+//{{{
+bool cTransportStream::cService::openFile (const string& fileName, uint16_t tsid) {
+
+  mFile = fopen (fileName.c_str(), "wb");
+  if (mFile) {
+    writePat (tsid);
+    writePmt();
+    return true;
+    }
+
+  cLog::log (LOGERROR, "cService::openFile " + fileName);
+  return false;
+  }
+//}}}
+//{{{
+void cTransportStream::cService::closeFile() {
+
+  if (mFile)
+    fclose (mFile);
+
+  mFile = nullptr;
+  }
+//}}}
 //}}}
 
 // cTransportStream
@@ -770,6 +798,18 @@ cTransportStream::cTransportStream (const cDvbMultiplex& dvbMultiplex, iOptions*
 //{{{
 string cTransportStream::getTdtString() const {
   return date::format ("%T", date::floor<chrono::seconds>(mTdt));
+  }
+//}}}
+//{{{
+vector<string> cTransportStream::getRecorded() {
+
+  vector <string> recorded;
+  for (auto& service : mServiceMap) 
+    for (auto& name : service.second.getRecorded())
+      recorded.push_back (name);
+    
+
+  return recorded;
   }
 //}}}
 
@@ -904,7 +944,12 @@ int64_t cTransportStream::demux (uint8_t* chunk, int64_t chunkSize, int64_t stre
               }
             else {
               //{{{  pes
-              programPesPacket (pidInfo->getSid(), pidInfo->getPid(), ts - 1);
+              {
+              lock_guard<mutex> fileLockGuard (mRecordFileMutex);
+              cService* service = getServiceBySid (pidInfo->getSid());
+              if (service)
+                service->programPesPacket (pidInfo->getPid(), ts - 1);
+              }
 
               ts += headerBytes;
               tsBytesLeft -= headerBytes;
@@ -1072,57 +1117,6 @@ bool cTransportStream::renderPes (cPidInfo& pidInfo, bool skip) {
     }
 
   return false;
-  }
-//}}}
-
-//{{{
-void cTransportStream::startServiceProgram (cService& service,
-                                            chrono::system_clock::time_point tdt,
-                                            const string& programName,
-                                            chrono::system_clock::time_point programStartTime,
-                                            bool selected) {
-// start recording service program
-
-  // close prev program on this service
-  lock_guard<mutex> lockGuard (mRecordFileMutex);
-  service.closeFile();
-
-  if ((selected || service.getRecord() || (dynamic_cast<cOptions*>(mOptions))->mRecordAll) &&
-      service.getStream (eVideo).isDefined() && (service.getStream(eAudio).isDefined())) {
-    string filePath = (dynamic_cast<cOptions*>(mOptions))->mRecordRoot +
-                      service.getRecordName() + date::format ("%d %b %y %a %H.%M.%S ",
-                        date::floor<chrono::seconds>(tdt)) + utils::getValidFileString (programName) + ".ts";
-
-    // record
-    service.openFile (filePath, 0x1234);
-
-    // gui
-    mRecorded.push_back (filePath);
-
-    // log program start time,date filename
-    string eitStartTime = date::format ("%H.%M.%S %a %d %b %y",
-                                        date::floor<chrono::seconds>(programStartTime));
-    cLog::log (LOGINFO, fmt::format ("{} {}", eitStartTime, filePath));
-    }
-  }
-//}}}
-//{{{
-void cTransportStream::programPesPacket (uint16_t sid, uint16_t pid, uint8_t* ts) {
-// send pes ts packet to sid service
-
-  lock_guard<mutex> lockGuard (mRecordFileMutex);
-
-  cService* service = getServiceBySid (sid);
-  if (service)
-    service->writePacket (ts, pid);
-  }
-//}}}
-//{{{
-void cTransportStream::stopServiceProgram (cService& service) {
-// stop recording service, never called
-
-  lock_guard<mutex> lockGuard (mRecordFileMutex);
-  service.closeFile();
   }
 //}}}
 
@@ -1377,9 +1371,9 @@ void cTransportStream::parseEit (cPidInfo* pidInfo, uint8_t* buf) {
                     // update service pgmPid infoStr with new now event
                     pidInfoIt->second.setInfoString (service->getName() + " " + service->getNowTitleString());
 
-                  // start new service program
-                  startServiceProgram (*service, mTdt, titleString, startTime,
-                                       service->isEpgRecord (titleString, startTime));
+                  // start new program on service
+                  lock_guard<mutex> lockGuard (mRecordFileMutex);
+                  service->startProgram (mTdt, titleString, startTime, service->isEpgRecord (titleString, startTime));
                   }
                 }
               }

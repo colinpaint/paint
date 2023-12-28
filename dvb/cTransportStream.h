@@ -185,6 +185,7 @@ public:
     std::string getName() const { return mName; }
     uint16_t getProgramPid() const { return mProgramPid; }
     int64_t getPtsFromStart();
+    std::vector <std::string> getRecorded() { return mRecorded; };
 
     // sets
     void setProgramPid (uint16_t pid) { mProgramPid = pid; }
@@ -208,9 +209,12 @@ public:
     // record
     bool getRecord() const { return mRecord; }
     std::string getRecordName() const { return mRecordName; }
-    bool openFile (const std::string& fileName, uint16_t tsid);
-    void writePacket (uint8_t* ts, uint16_t pid);
-    void closeFile();
+
+    void startProgram (std::chrono::system_clock::time_point tdt,
+                       const std::string& programName,
+                       std::chrono::system_clock::time_point programStartTime,
+                       bool selected);
+    void programPesPacket (uint16_t pid, uint8_t* ts);
 
     // epg
     bool isEpgRecord (const std::string& title, std::chrono::system_clock::time_point startTime);
@@ -230,10 +234,12 @@ public:
 
   private:
     uint8_t* tsHeader (uint8_t* ts, uint16_t pid, uint8_t continuityCount);
-
     void writePat (uint16_t tsid);
     void writePmt();
     void writeSection (uint8_t* ts, uint8_t* tsSectionStart, uint8_t* tsPtr);
+
+    bool openFile (const std::string& fileName, uint16_t tsid);
+    void closeFile();
 
     //{{{  vars
     const uint16_t mSid;
@@ -249,6 +255,7 @@ public:
     bool mRecord = false;
     std::string mRecordName;
     FILE* mFile = nullptr;
+    std::vector <std::string> mRecorded;
 
     // epg
     cEpgItem* mNowEpgItem = nullptr;
@@ -281,7 +288,7 @@ public:
 
   std::map <uint16_t, cPidInfo>& getPidInfoMap() { return mPidInfoMap; };
   std::map <uint16_t, cService>& getServiceMap() { return mServiceMap; };
-  std::vector <std::string>& getRecorded() { return mRecorded; }
+  std::vector<std::string> getRecorded();
 
   bool throttle();
   void togglePlay();
@@ -300,14 +307,6 @@ private:
   cService* getServiceBySid (uint16_t sid);
 
   bool renderPes (cPidInfo& pidInfo, bool skip);
-
-  void startServiceProgram (cService& service,
-                            std::chrono::system_clock::time_point tdt,
-                            const std::string& programName,
-                            std::chrono::system_clock::time_point programStartTime,
-                            bool selected);
-  void programPesPacket (uint16_t sid, uint16_t pid, uint8_t* ts);
-  void stopServiceProgram (cService& service);
 
   //{{{  parse
   int parsePsi (cPidInfo* pidInfo, uint8_t* buf);
@@ -335,7 +334,6 @@ private:
 
   // record
   std::mutex mRecordFileMutex;
-  std::vector <std::string> mRecorded;
 
   // time
   bool mHasFirstTdt = false;
