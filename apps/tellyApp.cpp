@@ -1245,8 +1245,8 @@ namespace {
         //{{{  draw tab subMenu with monoSpaced font
         ImGui::PushFont (tellyApp.getMonoFont());
         switch (mTab) {
-          case ePidMap:     drawPidMap (transportStream); break;
-          case eRecordings: drawRecordings (transportStream); break;
+          case ePids: drawPidMap (transportStream); break;
+          case eRecord: drawRecordedFileNames (transportStream); break;
           default:;
           }
         ImGui::PopFont();
@@ -1828,7 +1828,7 @@ namespace {
       };
     //}}}
 
-    enum eTab { eTelly, ePidMap, eRecordings };
+    enum eTab { eTelly, ePids, eRecord };
     inline static const vector<string> kTabNames = { "telly", "pids", "recorded" };
 
     //{{{
@@ -1886,9 +1886,9 @@ namespace {
       }
     //}}}
     //{{{
-    void drawRecordings (cTransportStream& transportStream) {
+    void drawRecordedFileNames (cTransportStream& transportStream) {
 
-      for (auto& program : transportStream.getRecorded())
+      for (auto& program : transportStream.getRecordedFileNames())
         ImGui::TextUnformatted (program.c_str());
       }
     //}}}
@@ -1978,8 +1978,8 @@ namespace {
         { false, false,  false, ImGuiKey_S,          [this,&tellyApp]{ tellyApp.toggleShowSubtitle(); }},
         { false, false,  false, ImGuiKey_L,          [this,&tellyApp]{ tellyApp.toggleShowMotionVectors(); }},
         { false, false,  false, ImGuiKey_T,          [this,&tellyApp]{ hitShow (eTelly); }},
-        { false, false,  false, ImGuiKey_P,          [this,&tellyApp]{ hitShow (ePidMap); }},
-        { false, false,  false, ImGuiKey_R,          [this,&tellyApp]{ hitShow (eRecordings); }},
+        { false, false,  false, ImGuiKey_P,          [this,&tellyApp]{ hitShow (ePids); }},
+        { false, false,  false, ImGuiKey_R,          [this,&tellyApp]{ hitShow (eRecord); }},
         };
 
       ImGui::GetIO().WantTextInput = true;

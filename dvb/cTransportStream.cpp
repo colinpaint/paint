@@ -568,7 +568,7 @@ int64_t cTransportStream::cService::skip (int64_t skipPts) {
   }
 //}}}
 
-// record to file
+// record program
 //{{{
 void cTransportStream::cService::startProgram (chrono::system_clock::time_point tdt,
                                                const string& programName,
@@ -588,8 +588,7 @@ void cTransportStream::cService::startProgram (chrono::system_clock::time_point 
     // open new record program
     openFile (filePath, 0x1234);
 
-    // gui
-    mRecorded.push_back (filePath);
+    mRecordedFileNames.push_back (filePath);
 
     cLog::log (LOGINFO, fmt::format ("{} {}",
       date::format ("%H.%M.%S %a %d %b %y", date::floor<chrono::seconds>(programStartTime)),
@@ -658,7 +657,7 @@ bool cTransportStream::cService::setEpg (bool record,
   }
 //}}}
 
-// private:
+// private statics
 //{{{
 uint8_t* cTransportStream::cService::tsHeader (uint8_t* ts, uint16_t pid, uint8_t continuityCount) {
 
@@ -671,6 +670,35 @@ uint8_t* cTransportStream::cService::tsHeader (uint8_t* ts, uint16_t pid, uint8_
   *ts++ = 0;                            // pointerField
 
   return ts;
+  }
+//}}}
+//{{{
+void cTransportStream::cService::writeSection (FILE* file, uint8_t* ts, uint8_t* tsSectionStart, uint8_t* tsPtr) {
+
+  // tsSection crc, calc from tsSection start to here
+  uint32_t crc = cDvbUtils::getCrc32 (tsSectionStart, int(tsPtr - tsSectionStart));
+  *tsPtr++ = (crc & 0xff000000) >> 24;
+  *tsPtr++ = static_cast<uint8_t>((crc & 0x00ff0000) >> 16);
+  *tsPtr++ = (crc & 0x0000ff00) >>  8;
+  *tsPtr++ =  crc & 0x000000ff;
+
+  fwrite (ts, 1, kPacketSize, file);
+  }
+//}}}
+
+// private
+//{{{
+bool cTransportStream::cService::openFile (const string& fileName, uint16_t tsid) {
+
+  mFile = fopen (fileName.c_str(), "wb");
+  if (mFile) {
+    writePat (tsid);
+    writePmt();
+    return true;
+    }
+
+  cLog::log (LOGERROR, "cService::openFile " + fileName);
+  return false;
   }
 //}}}
 //{{{
@@ -697,7 +725,7 @@ void cTransportStream::cService::writePat (uint16_t tsid) {
   *tsPtr++ = 0xE0 | ((mProgramPid & 0x1F00) >> 8);   // first section pgmPid
   *tsPtr++ = mProgramPid & 0x00FF;
 
-  writeSection (ts, tsSectionStart, tsPtr);
+  writeSection (mFile, ts, tsSectionStart, tsPtr);
   }
 //}}}
 //{{{
@@ -746,35 +774,7 @@ void cTransportStream::cService::writePmt() {
   *tsPtr++ = ((0 & 0xFF00) >> 8) | 0xF0; // ES_info_length
   *tsPtr++ = 0 & 0x00FF;
 
-  writeSection (ts, tsSectionStart, tsPtr);
-  }
-//}}}
-//{{{
-void cTransportStream::cService::writeSection (uint8_t* ts, uint8_t* tsSectionStart, uint8_t* tsPtr) {
-
-  // tsSection crc, calc from tsSection start to here
-  uint32_t crc = cDvbUtils::getCrc32 (tsSectionStart, int(tsPtr - tsSectionStart));
-  *tsPtr++ = (crc & 0xff000000) >> 24;
-  *tsPtr++ = static_cast<uint8_t>((crc & 0x00ff0000) >> 16);
-  *tsPtr++ = (crc & 0x0000ff00) >>  8;
-  *tsPtr++ =  crc & 0x000000ff;
-
-  fwrite (ts, 1, kPacketSize, mFile);
-  }
-//}}}
-
-//{{{
-bool cTransportStream::cService::openFile (const string& fileName, uint16_t tsid) {
-
-  mFile = fopen (fileName.c_str(), "wb");
-  if (mFile) {
-    writePat (tsid);
-    writePmt();
-    return true;
-    }
-
-  cLog::log (LOGERROR, "cService::openFile " + fileName);
-  return false;
+  writeSection (mFile, ts, tsSectionStart, tsPtr);
   }
 //}}}
 //{{{
@@ -801,15 +801,15 @@ string cTransportStream::getTdtString() const {
   }
 //}}}
 //{{{
-vector<string> cTransportStream::getRecorded() {
+vector<string> cTransportStream::getRecordedFileNames() {
 
-  vector <string> recorded;
-  for (auto& service : mServiceMap) 
-    for (auto& name : service.second.getRecorded())
-      recorded.push_back (name);
-    
+  vector <string> recordedFileNames;
 
-  return recorded;
+  for (auto& service : mServiceMap)
+    for (auto& name : service.second.getRecordedFileNames())
+      recordedFileNames.push_back (name);
+
+  return recordedFileNames;
   }
 //}}}
 

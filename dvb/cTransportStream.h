@@ -185,7 +185,7 @@ public:
     std::string getName() const { return mName; }
     uint16_t getProgramPid() const { return mProgramPid; }
     int64_t getPtsFromStart();
-    std::vector <std::string> getRecorded() { return mRecorded; };
+    std::vector <std::string> getRecordedFileNames() { return mRecordedFileNames; };
 
     // sets
     void setProgramPid (uint16_t pid) { mProgramPid = pid; }
@@ -233,12 +233,12 @@ public:
     //}}}
 
   private:
-    uint8_t* tsHeader (uint8_t* ts, uint16_t pid, uint8_t continuityCount);
-    void writePat (uint16_t tsid);
-    void writePmt();
-    void writeSection (uint8_t* ts, uint8_t* tsSectionStart, uint8_t* tsPtr);
+    static uint8_t* tsHeader (uint8_t* ts, uint16_t pid, uint8_t continuityCount);
+    static void writeSection (FILE* file, uint8_t* ts, uint8_t* tsSectionStart, uint8_t* tsPtr);
 
     bool openFile (const std::string& fileName, uint16_t tsid);
+    void writePat (uint16_t tsid);
+    void writePmt();
     void closeFile();
 
     //{{{  vars
@@ -255,7 +255,7 @@ public:
     bool mRecord = false;
     std::string mRecordName;
     FILE* mFile = nullptr;
-    std::vector <std::string> mRecorded;
+    std::vector <std::string> mRecordedFileNames;
 
     // epg
     cEpgItem* mNowEpgItem = nullptr;
@@ -288,7 +288,7 @@ public:
 
   std::map <uint16_t, cPidInfo>& getPidInfoMap() { return mPidInfoMap; };
   std::map <uint16_t, cService>& getServiceMap() { return mServiceMap; };
-  std::vector<std::string> getRecorded();
+  std::vector<std::string> getRecordedFileNames();
 
   bool throttle();
   void togglePlay();
