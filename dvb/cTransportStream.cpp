@@ -967,9 +967,19 @@ int64_t cTransportStream::demux (uint8_t* chunk, int64_t chunkSize, int64_t stre
                            (streamId == 0xBE) || // ???
                            ((streamId >= 0xC0) && (streamId <= 0xEF))) {
                     // subtitle, audio, video streamId
-                    if (pidInfo->mBufPtr)
-                      if (renderPes (*pidInfo, skip)) // transferred ownership of mBuffer to render
-                        pidInfo->mBuffer = (uint8_t*)malloc (pidInfo->mBufSize);
+                    if (pidInfo->mBufPtr) {
+                      cService* service = getServiceBySid (pidInfo->getSid());
+                      if (service) {
+                        cStream* stream = service->getStreamByPid (pidInfo->getPid());
+                        if (stream)
+                          if (stream->isEnabled())
+                            if (stream->getRender().decodePes (pidInfo->mBuffer, pidInfo->getBufUsed(),
+                                                               pidInfo->getPts(), pidInfo->getDts(),
+                                                               pidInfo->mStreamPos, skip))
+                              // transferred ownership of mBuffer to render, create new one
+                              pidInfo->mBuffer = (uint8_t*)malloc (pidInfo->mBufSize);
+                        }
+                      }
                     }
                   else
                     cLog::log (LOGINFO, fmt::format ("cTransportStream::demux unknown streamId:{:2x}", streamId));
@@ -1099,24 +1109,6 @@ cTransportStream::cService* cTransportStream::getServiceBySid (uint16_t sid) {
 
   auto it = mServiceMap.find (sid);
   return (it == mServiceMap.end()) ? nullptr : &it->second;
-  }
-//}}}
-
-//{{{
-bool cTransportStream::renderPes (cPidInfo& pidInfo, bool skip) {
-// send pes to render stream, return true if pes ownership transferred
-
-  cService* service = getServiceBySid (pidInfo.getSid());
-  if (service) {
-    cStream* stream = service->getStreamByPid (pidInfo.getPid());
-    if (stream)
-      if (stream->isEnabled())
-        return stream->getRender().decodePes (pidInfo.mBuffer, pidInfo.getBufUsed(),
-                                              pidInfo.getPts(), pidInfo.getDts(), pidInfo.mStreamPos, skip);
-
-    }
-
-  return false;
   }
 //}}}
 
@@ -1361,14 +1353,13 @@ void cTransportStream::parseEit (cPidInfo* pidInfo, uint8_t* buf) {
                   service->getProgramPid() &&
                   service->getStream (eVideo).isDefined() &&
                   service->getStream (eAudio).isDefined()) {
-                  //(service->getSubPid())) {
-                // now event for named service with valid pgmPid, vidPid, audPid, subPid
+                // now event for named service with valid pgmPid,vidPid,audPid
                 if (service->setNow (service->isEpgRecord (titleString, startTime),
                                      startTime, duration, titleString, infoString)) {
-                  // new now event
+                  // new nowEvent
                   auto pidInfoIt = mPidInfoMap.find (service->getProgramPid());
                   if (pidInfoIt != mPidInfoMap.end())
-                    // update service pgmPid infoStr with new now event
+                    // update service pgmPid infoStr with new nowEvent
                     pidInfoIt->second.setInfoString (service->getName() + " " + service->getNowTitleString());
 
                   // start new program on service

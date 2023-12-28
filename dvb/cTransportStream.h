@@ -306,8 +306,6 @@ private:
   cPidInfo* getPsiPidInfo (uint16_t pid);
   cService* getServiceBySid (uint16_t sid);
 
-  bool renderPes (cPidInfo& pidInfo, bool skip);
-
   //{{{  parse
   int parsePsi (cPidInfo* pidInfo, uint8_t* buf);
 
