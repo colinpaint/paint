@@ -568,7 +568,7 @@ int64_t cTransportStream::cService::skip (int64_t skipPts) {
   }
 //}}}
 
-// record
+// record to file
 //{{{
 bool cTransportStream::cService::openFile (const string& fileName, uint16_t tsid) {
 
@@ -620,8 +620,10 @@ bool cTransportStream::cService::isEpgRecord (const string& title, chrono::syste
 //}}}
 //{{{
 bool cTransportStream::cService::setNow (bool record,
-                                   chrono::system_clock::time_point time, chrono::seconds duration,
-                                   const string& titleString, const string& infoString) {
+                                         chrono::system_clock::time_point time,
+                                         chrono::seconds duration,
+                                         const string& titleString,
+                                         const string& infoString) {
 
   if (mNowEpgItem && (mNowEpgItem->getTime() == time))
     return false;
@@ -635,8 +637,10 @@ bool cTransportStream::cService::setNow (bool record,
 //}}}
 //{{{
 bool cTransportStream::cService::setEpg (bool record,
-                                   chrono::system_clock::time_point startTime, chrono::seconds duration,
-                                   const string& titleString, const string& infoString) {
+                                         chrono::system_clock::time_point startTime,
+                                         chrono::seconds duration,
+                                         const string& titleString,
+                                         const string& infoString) {
 // could return true only if changed
 
   auto it = mEpgItemMap.find (startTime);
@@ -721,21 +725,21 @@ void cTransportStream::cService::writePmt() {
   *tsPtr++ = mStreams[eVideo].getTypeId(); // elementary stream_type
   *tsPtr++ = 0xE0 | ((mStreams[eVideo].getPid() & 0x1F00) >> 8); // elementary_PID
   *tsPtr++ = mStreams[eVideo].getPid() & 0x00FF;
-  *tsPtr++ = ((0 & 0xFF00) >> 8) | 0xF0;       // ES_info_length
+  *tsPtr++ = ((0 & 0xFF00) >> 8) | 0xF0; // ES_info_length
   *tsPtr++ = 0 & 0x00FF;
 
   // audio es
   *tsPtr++ = mStreams[eAudio].getTypeId(); // elementary stream_type
   *tsPtr++ = 0xE0 | ((mStreams[eAudio].getPid() & 0x1F00) >> 8); // elementary_PID
   *tsPtr++ = mStreams[eAudio].getPid() & 0x00FF;
-  *tsPtr++ = ((0 & 0xFF00) >> 8) | 0xF0;       // ES_info_length
+  *tsPtr++ = ((0 & 0xFF00) >> 8) | 0xF0; // ES_info_length
   *tsPtr++ = 0 & 0x00FF;
 
   // subtitle es
   *tsPtr++ = mStreams[eSubtitle].getTypeId(); // elementary stream_type
   *tsPtr++ = 0xE0 | ((mStreams[eSubtitle].getPid() & 0x1F00) >> 8); // elementary_PID
   *tsPtr++ = mStreams[eSubtitle].getPid() & 0x00FF;
-  *tsPtr++ = ((0 & 0xFF00) >> 8) | 0xF0;       // ES_info_length
+  *tsPtr++ = ((0 & 0xFF00) >> 8) | 0xF0; // ES_info_length
   *tsPtr++ = 0 & 0x00FF;
 
   writeSection (ts, tsSectionStart, tsPtr);
@@ -788,7 +792,7 @@ void cTransportStream::togglePlay() {
   }
 //}}}
 //{{{
-int64_t cTransportStream::skip (int64_t skipPts) {
+int64_t cTransportStream::getSkipOffset (int64_t skipPts) {
 // return approx streamPosOffset to match skipPts
 
   bool backwards = false;
@@ -923,7 +927,7 @@ int64_t cTransportStream::demux (uint8_t* chunk, int64_t chunkSize, int64_t stre
                         pidInfo->mBuffer = (uint8_t*)malloc (pidInfo->mBufSize);
                     }
                   else
-                    cLog::log (LOGINFO, fmt::format ("cTransportStream::demux - unknown streamId:{:2x}", streamId));
+                    cLog::log (LOGINFO, fmt::format ("cTransportStream::demux unknown streamId:{:2x}", streamId));
 
                   // reset pesBuffer pointer
                   pidInfo->mBufPtr = pidInfo->mBuffer;
@@ -965,7 +969,7 @@ int64_t cTransportStream::demux (uint8_t* chunk, int64_t chunkSize, int64_t stre
       }
     else {
       //{{{  sync error, return
-      cLog::log (LOGERROR, "cTransportStream::demux - lostSync");
+      cLog::log (LOGERROR, "cTransportStream::demux lostSync");
       return tsEnd - chunk;
       }
       //}}}
@@ -1007,7 +1011,7 @@ void cTransportStream::clearPidContinuity() {
 
 //{{{
 cTransportStream::cPidInfo& cTransportStream::getPidInfo (uint16_t pid) {
-// find or create pidInfo by pid
+// find/create pidInfo by pid
 
   auto pidInfoIt = mPidInfoMap.find (pid);
   if (pidInfoIt == mPidInfoMap.end()) {
@@ -1024,14 +1028,13 @@ cTransportStream::cPidInfo& cTransportStream::getPidInfo (uint16_t pid) {
 //}}}
 //{{{
 cTransportStream::cPidInfo* cTransportStream::getPsiPidInfo (uint16_t pid) {
-// find or create pidInfo by pid
+// find/create recognised psi pidInfo by pid
 
   auto pidInfoIt = mPidInfoMap.find (pid);
   if (pidInfoIt == mPidInfoMap.end()) {
     if ((pid == PID_PAT) || (pid == PID_CAT) || (pid == PID_NIT) || (pid == PID_SDT) ||
         (pid == PID_EIT) || (pid == PID_RST) || (pid == PID_TDT) || (pid == PID_SYN) ||
         (mProgramMap.find (pid) != mProgramMap.end())) {
-
       // create new psi cPidInfo
       pidInfoIt = mPidInfoMap.emplace (pid, cPidInfo (pid, true)).first;
 
@@ -1085,13 +1088,10 @@ void cTransportStream::startServiceProgram (cService& service,
   service.closeFile();
 
   if ((selected || service.getRecord() || (dynamic_cast<cOptions*>(mOptions))->mRecordAll) &&
-      service.getStream (eVideo).isDefined() &&
-      (service.getStream(eAudio).isDefined())) {
+      service.getStream (eVideo).isDefined() && (service.getStream(eAudio).isDefined())) {
     string filePath = (dynamic_cast<cOptions*>(mOptions))->mRecordRoot +
-                      service.getRecordName() +
-                      date::format ("%d %b %y %a %H.%M.%S ", date::floor<chrono::seconds>(tdt)) +
-                      utils::getValidFileString (programName) +
-                      ".ts";
+                      service.getRecordName() + date::format ("%d %b %y %a %H.%M.%S ",
+                        date::floor<chrono::seconds>(tdt)) + utils::getValidFileString (programName) + ".ts";
 
     // record
     service.openFile (filePath, 0x1234);
@@ -1100,7 +1100,8 @@ void cTransportStream::startServiceProgram (cService& service,
     mRecorded.push_back (filePath);
 
     // log program start time,date filename
-    string eitStartTime = date::format ("%H.%M.%S %a %d %b %y", date::floor<chrono::seconds>(programStartTime));
+    string eitStartTime = date::format ("%H.%M.%S %a %d %b %y",
+                                        date::floor<chrono::seconds>(programStartTime));
     cLog::log (LOGINFO, fmt::format ("{} {}", eitStartTime, filePath));
     }
   }
@@ -1157,7 +1158,7 @@ void cTransportStream::parsePat (cPidInfo* pidInfo, uint8_t* buf) {
   uint16_t sectionLength = HILO(pat->section_length) + 3;
   if (cDvbUtils::getCrc32(buf, sectionLength) != 0) {
     //{{{  bad crc error, return
-    cLog::log (LOGERROR, fmt::format("parsePAT - bad crc - sectionLength:{}",sectionLength));
+    cLog::log (LOGERROR, fmt::format("parsePAT bad crc sectionLength:{}",sectionLength));
     return;
     }
     //}}}
@@ -1187,7 +1188,7 @@ void cTransportStream::parseNit (cPidInfo* pidInfo, uint8_t* buf) {
   uint16_t sectionLength = HILO(nit->section_length) + 3;
   if (cDvbUtils::getCrc32 (buf, sectionLength) != 0) {
     //{{{  bad crc, error, return
-    cLog::log (LOGERROR, fmt::format("parseNIT - bad crc {}",sectionLength));
+    cLog::log (LOGERROR, fmt::format("parseNIT bad crc {}",sectionLength));
     return;
     }
     //}}}
@@ -1195,7 +1196,7 @@ void cTransportStream::parseNit (cPidInfo* pidInfo, uint8_t* buf) {
       (nit->table_id != TID_NIT_OTH) &&
       (nit->table_id != TID_BAT)) {
     //{{{  wrong tid, error, return
-    cLog::log (LOGERROR, fmt::format ("parseNIT - wrong TID {}", (int)(nit->table_id)));
+    cLog::log (LOGERROR, fmt::format ("parseNIT wrong TID {}", (int)(nit->table_id)));
     return;
     }
     //}}}
@@ -1239,7 +1240,7 @@ void cTransportStream::parseSdt (cPidInfo* pidInfo, uint8_t* buf) {
   uint16_t sectionLength = HILO(sdt->section_length) + 3;
   if (cDvbUtils::getCrc32 (buf, sectionLength) != 0) {
     //{{{  wrong crc, error, return
-    cLog::log (LOGERROR, fmt::format("parseSDT - bad crc {}",sectionLength));
+    cLog::log (LOGERROR, fmt::format("parseSDT bad crc {}",sectionLength));
     return;
     }
     //}}}
@@ -1283,7 +1284,7 @@ void cTransportStream::parseSdt (cPidInfo* pidInfo, uint8_t* buf) {
                 }
               }
             else
-              cLog::log (LOGINFO, fmt::format ("SDT - before PMT - ignored {} {}", sid, serviceName));
+              cLog::log (LOGINFO, fmt::format ("SDT before PMT ignored {} {}", sid, serviceName));
 
             break;
             }
@@ -1296,7 +1297,7 @@ void cTransportStream::parseSdt (cPidInfo* pidInfo, uint8_t* buf) {
           case 0x7e: // FTA_content_management
           case 0x7f: // extension
             break;
-          default: cLog::log (LOGINFO, fmt::format ("SDT - unexpected tag {}", (int)getDescrTag(buf)));
+          default: cLog::log (LOGINFO, fmt::format ("SDT unexpected tag {}", (int)getDescrTag(buf)));
           }
 
         descrLength += getDescrLength (buf);
@@ -1317,7 +1318,7 @@ void cTransportStream::parseEit (cPidInfo* pidInfo, uint8_t* buf) {
   uint16_t sectionLength = HILO(eit->section_length) + 3;
   if (cDvbUtils::getCrc32 (buf, sectionLength) != 0) {
     //{{{  bad crc, error, return
-    cLog::log (LOGERROR, fmt::format("parseEit - bad CRC {}",sectionLength));
+    cLog::log (LOGERROR, fmt::format("parseEit bad CRC {}",sectionLength));
     return;
     }
     //}}}
@@ -1376,7 +1377,7 @@ void cTransportStream::parseEit (cPidInfo* pidInfo, uint8_t* buf) {
                     // update service pgmPid infoStr with new now event
                     pidInfoIt->second.setInfoString (service->getName() + " " + service->getNowTitleString());
 
-                  // callback to override to start new serviceItem program
+                  // start new service program
                   startServiceProgram (*service, mTdt, titleString, startTime,
                                        service->isEpgRecord (titleString, startTime));
                   }
@@ -1395,7 +1396,7 @@ void cTransportStream::parseEit (cPidInfo* pidInfo, uint8_t* buf) {
       }
     }
   else if (!next)
-    cLog::log (LOGERROR, fmt::format("parseEIT - unexpected tid {}",tid));
+    cLog::log (LOGERROR, fmt::format("parseEIT unexpected tid {}",tid));
   }
 //}}}
 //{{{
@@ -1418,13 +1419,13 @@ void cTransportStream::parseTdt (cPidInfo* pidInfo, uint8_t* buf) {
 //}}}
 //{{{
 void cTransportStream::parsePmt (cPidInfo* pidInfo, uint8_t* buf) {
-// PMT declares pgmPid and streams for a service
+// PMT declares service pgmPid,streams
 
   sPmt* pmt = (sPmt*)buf;
   uint16_t sectionLength = HILO(pmt->section_length) + 3;
   if (cDvbUtils::getCrc32 (buf, sectionLength) != 0) {
     //{{{  badCrc error, return
-    cLog::log (LOGERROR, "parsePMT - pid:%d bad crc %d", pidInfo->getPid(), sectionLength);
+    cLog::log (LOGERROR, "parsePMT pid:%d bad crc %d", pidInfo->getPid(), sectionLength);
     return;
     }
     //}}}
@@ -1433,7 +1434,7 @@ void cTransportStream::parsePmt (cPidInfo* pidInfo, uint8_t* buf) {
     uint16_t sid = HILO (pmt->program_number);
     if (!getServiceBySid (sid)) {
       // found new service, create cService
-      cLog::log (LOGINFO, fmt::format ("create service {}", sid));
+      cLog::log (LOGINFO, fmt::format ("create new service sid:{}", sid));
       cService& service = mServiceMap.emplace (sid, cService(sid, mOptions)).first->second;
 
       service.setProgramPid (pidInfo->getPid());
@@ -1456,7 +1457,8 @@ void cTransportStream::parsePmt (cPidInfo* pidInfo, uint8_t* buf) {
         switch (esPidInfo.getStreamType()) {
           case 2: // ISO 13818-2 video
           case kH264StreamType: // 27 - H264 video
-            service.getStream (eVideo).setPidStreamType (esPid, esPidInfo.getStreamType()); break;
+            service.getStream (eVideo).setPidStreamType (esPid, esPidInfo.getStreamType());
+            break;
 
           case 3: // ISO 11172-3 audio
           case 4: // ISO 13818-3 audio
@@ -1479,10 +1481,11 @@ void cTransportStream::parsePmt (cPidInfo* pidInfo, uint8_t* buf) {
           case 5: // private mpeg2 tabled data - private
           case 11: // dsm cc u_n
           case 13: // dsm cc tabled data
-          case 134: break;
+          case 134:
+            break;
 
           default:
-            cLog::log (LOGERROR, fmt::format ("parsePmt - unknown stream sid:{} pid:{} streamType:{}",
+            cLog::log (LOGERROR, fmt::format ("parsePmt unknown stream sid:{} pid:{} streamType:{}",
                                               sid, esPid, esPidInfo.getStreamType()));
             break;
           }
@@ -1494,7 +1497,7 @@ void cTransportStream::parsePmt (cPidInfo* pidInfo, uint8_t* buf) {
         buf += loopLength;
         }
 
-      // enable at least one service streams
+      // enable at least one service stream
       if (!mShowingFirstService || (dynamic_cast<cOptions*>(mOptions))->mShowAllServices)
         if (service.getStream (eStreamType(eVideo)).isDefined()) {
           mShowingFirstService = true;
