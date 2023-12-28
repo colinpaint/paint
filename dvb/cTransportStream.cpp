@@ -945,7 +945,7 @@ int64_t cTransportStream::demux (uint8_t* chunk, int64_t chunkSize, int64_t stre
             else {
               //{{{  pes
               {
-              lock_guard<mutex> fileLockGuard (mRecordFileMutex);
+              lock_guard<mutex> fileLockGuard (mRecordMutex);
               cService* service = getServiceBySid (pidInfo->getSid());
               if (service)
                 service->programPesPacket (pidInfo->getPid(), ts - 1);
@@ -1372,7 +1372,7 @@ void cTransportStream::parseEit (cPidInfo* pidInfo, uint8_t* buf) {
                     pidInfoIt->second.setInfoString (service->getName() + " " + service->getNowTitleString());
 
                   // start new program on service
-                  lock_guard<mutex> lockGuard (mRecordFileMutex);
+                  lock_guard<mutex> lockGuard (mRecordMutex);
                   service->startProgram (mTdt, titleString, startTime, service->isEpgRecord (titleString, startTime));
                   }
                 }

@@ -333,7 +333,7 @@ private:
   std::map <uint16_t, cService> mServiceMap;
 
   // record
-  std::mutex mRecordFileMutex;
+  std::mutex mRecordMutex;
 
   // time
   bool mHasFirstTdt = false;
