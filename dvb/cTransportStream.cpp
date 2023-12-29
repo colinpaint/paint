@@ -1265,7 +1265,7 @@ void cTransportStream::parseSdt (cPidInfo* pidInfo, uint8_t* buf) {
                   i++;
                   }
                 service->setName (serviceName, found, recordName);
-                cLog::log (LOGINFO, fmt::format ("SDT named sid:{} as {} {} {}",
+                cLog::log (LOGINFO, fmt::format ("SDT declares sid:{} as {} {} {}",
                                                  sid, serviceName, found ? "record" : "", recordName));
                 }
               }
@@ -1418,10 +1418,9 @@ void cTransportStream::parsePmt (cPidInfo* pidInfo, uint8_t* buf) {
   if (pmt->table_id == TID_PMT) {
     uint16_t sid = HILO (pmt->program_number);
     if (!getServiceBySid (sid)) {
-      // found new service, create cService
-      cLog::log (LOGINFO, fmt::format ("create new service sid:{}", sid));
+      // create cService
+      cLog::log (LOGINFO, fmt::format ("PMT program pid:{} declares service sid:{}", pidInfo->getPid(), sid));
       cService& service = mServiceMap.emplace (sid, cService(sid, mOptions)).first->second;
-
       service.setProgramPid (pidInfo->getPid());
       pidInfo->setSid (sid);
 
@@ -1475,7 +1474,6 @@ void cTransportStream::parsePmt (cPidInfo* pidInfo, uint8_t* buf) {
             break;
           }
         //}}}
-
         uint16_t loopLength = HILO (pmtInfo->ES_info_length);
         buf += sizeof(sPmtInfo);
         streamLength -= loopLength + sizeof(sPmtInfo);

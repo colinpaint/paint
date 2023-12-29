@@ -969,7 +969,7 @@ namespace {
       mTransportStream = new cTransportStream (multiplex, options);
       if (mTransportStream) {
         mLiveThread = thread ([=]() {
-          cLog::setThreadName ("dvb");
+          cLog::setThreadName ("dvb ");
 
           FILE* mFile = options->mRecordAll ?
             fopen ((mRecordRoot + mMultiplex.mName + ".ts").c_str(), "wb") : nullptr;
