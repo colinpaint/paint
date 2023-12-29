@@ -580,7 +580,7 @@ void cTransportStream::cService::startProgram (chrono::system_clock::time_point 
   closeFile();
 
   if ((selected || getRecord() || (dynamic_cast<cOptions*>(mOptions))->mRecordAll) &&
-      getStream (eVideo).isDefined() && (getStream(eAudio).isDefined())) {
+      getStream (eVideo).isDefined() && getStream(eAudio).isDefined()) {
     string filePath = (dynamic_cast<cOptions*>(mOptions))->mRecordRoot +
                       getRecordName() + date::format ("%d %b %y %a %H.%M.%S ",
                         date::floor<chrono::seconds>(tdt)) + utils::getValidFileString (programName) + ".ts";

@@ -185,7 +185,7 @@ public:
     std::string getName() const { return mName; }
     uint16_t getProgramPid() const { return mProgramPid; }
     int64_t getPtsFromStart();
-    std::vector <std::string> getRecordedFileNames() { return mRecordedFileNames; };
+    std::vector <std::string>& getRecordedFileNames() { return mRecordedFileNames; };
 
     // sets
     void setProgramPid (uint16_t pid) { mProgramPid = pid; }
@@ -223,13 +223,17 @@ public:
     std::map <std::chrono::system_clock::time_point, cEpgItem*>& getEpgItemMap() { return mEpgItemMap; }
     //{{{
     bool setNow (bool record,
-                 std::chrono::system_clock::time_point time, std::chrono::seconds duration,
-                 const std::string& str1, const std::string& str2);
+                 std::chrono::system_clock::time_point time,
+                 std::chrono::seconds duration,
+                 const std::string& str1,
+                 const std::string& str2);
     //}}}
     //{{{
     bool setEpg (bool record,
-                 std::chrono::system_clock::time_point startTime, std::chrono::seconds duration,
-                 const std::string& titleString, const std::string& infoString);
+                 std::chrono::system_clock::time_point startTime,
+                 std::chrono::seconds duration,
+                 const std::string& titleString,
+                 const std::string& infoString);
     //}}}
 
   private:
@@ -275,7 +279,7 @@ public:
   //}}}
 
   cTransportStream (const cDvbMultiplex& dvbMultiplex, iOptions* options);
-  virtual ~cTransportStream() { clear(); }
+  ~cTransportStream() { clear(); }
 
   // gets
   uint64_t getNumPackets() const { return mNumPackets; }
@@ -326,8 +330,8 @@ private:
   uint64_t mNumPackets = 0;
   uint64_t mNumErrors = 0;
 
-  std::map <uint16_t, uint16_t> mProgramMap;
   std::map <uint16_t, cPidInfo> mPidInfoMap;
+  std::map <uint16_t, uint16_t> mProgramMap;
   std::map <uint16_t, cService> mServiceMap;
 
   // record

@@ -2011,7 +2011,7 @@ namespace {
     eTab mTab = eTelly;
     cMultiView mMultiView;
 
-    // pid info tabs
+    // pidInfo tabs
     int64_t mMaxPidPackets = 0;
     size_t mPacketChars = 3;
     size_t mMaxNameChars = 3;
