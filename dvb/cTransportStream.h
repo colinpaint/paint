@@ -246,10 +246,9 @@ public:
     void writePmt();
     void closeFile();
 
-    //{{{  vars
+    // vars
     const uint16_t mSid;
     iOptions* mOptions = nullptr;
-
     std::string mName;
     uint16_t mProgramPid = 0;
 
@@ -265,7 +264,6 @@ public:
     // epg
     cEpgItem* mNowEpgItem = nullptr;
     std::map <std::chrono::system_clock::time_point, cEpgItem*> mEpgItemMap;
-    //}}}
     };
   //}}}
   //{{{

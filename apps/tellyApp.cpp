@@ -120,6 +120,7 @@ namespace {
 
     // vars
     bool mPlaySong = false;
+    bool mShowEpg = true;
     bool mShowSubtitle = false;
     bool mShowMotionVectors = false;
 
@@ -949,7 +950,6 @@ namespace {
     bool hasTransportStream() { return mTransportStream != nullptr; }
     cTransportStream& getTransportStream() { return *mTransportStream; }
 
-
     // liveDvbSource
     bool isDvbSource() const { return mDvbSource; }
     cDvbSource& getDvbSource() { return *mDvbSource; }
@@ -1126,6 +1126,7 @@ namespace {
     void hitUp()           { skip (-900000); }
     void hitDown()         { skip ( 900000); }
     void hitSpace() { mTransportStream->togglePlay(); }
+    void toggleShowEpg() { mOptions->mShowEpg = !mOptions->mShowEpg; }
     void toggleShowSubtitle() { mOptions->mShowSubtitle = !mOptions->mShowSubtitle; }
     void toggleShowMotionVectors() { mOptions->mShowMotionVectors = !mOptions->mShowMotionVectors; }
 
@@ -1187,6 +1188,11 @@ namespace {
       if (tellyApp.hasTransportStream())
         mTab = (eTab)interlockedButtons (kTabNames, (uint8_t)mTab, {0.f,0.f}, true);
 
+      //{{{  draw epg button
+      ImGui::SameLine();
+      if (toggleButton ("epg", tellyApp.getOptions()->mShowEpg))
+        tellyApp.toggleShowEpg();
+      //}}}
       //{{{  draw subtitle button
       ImGui::SameLine();
       if (toggleButton ("sub", tellyApp.getOptions()->mShowSubtitle))
@@ -1261,7 +1267,7 @@ namespace {
           //}}}
 
         // draw piccies, strange order, after buttons displayed above ???
-        mMultiView.draw (transportStream, graphics, tellyApp.getOptions());
+        mMultiView.draw (transportStream, graphics, tellyApp);
         }
 
       keyboard (tellyApp);
@@ -1305,7 +1311,7 @@ namespace {
       //}}}
 
       //{{{
-      void draw (cTransportStream& transportStream, cGraphics& graphics, cTellyOptions* options) {
+      void draw (cTransportStream& transportStream, cGraphics& graphics, cTellyApp& tellyApp) {
 
         // create shaders, firsttime we see graphics interface
         if (!mVideoShader)
@@ -1340,7 +1346,7 @@ namespace {
         size_t viewIndex = 0;
         for (auto& view : mViewMap) {
           if (!selectedFull || view.second.getSelectedFull())
-            if (view.second.draw (graphics, options,
+            if (view.second.draw (transportStream, graphics, tellyApp,
                                   selectedFull, selectedFull ? 1 : mViewMap.size(), viewIndex,
                                   mVideoShader, mSubtitleShader)) {
               // view hit
@@ -1387,10 +1393,12 @@ namespace {
         //}}}
 
         //{{{
-        bool draw (cGraphics& graphics, cTellyOptions* options,
+        bool draw (cTransportStream& transportStream, cGraphics& graphics, cTellyApp& tellyApp,
                    bool selectFull, size_t numViews, size_t viewIndex,
                    cTextureShader* videoShader, cTextureShader* subtitleShader) {
         // return true if hit
+
+          cTellyOptions* options = tellyApp.getOptions();
 
           float layoutScale;
           cVec2 layoutPos = getLayout (viewIndex, numViews, layoutScale);
@@ -1503,6 +1511,29 @@ namespace {
               }
               //}}}
             }
+
+          if ((mSelect == eSelectedFull) && (options->mShowEpg)) {
+            //{{{  draw epg
+            auto nowDatePoint = date::floor<date::days>(transportStream.getNowTdt());
+
+            ImVec2 pos = mTl + ImVec2(ImGui::GetTextLineHeight(), ImGui::GetTextLineHeight()*2);
+            for (auto& epgItem : mService.getEpgItemMap()) {
+              auto startTime = epgItem.second->getTime();
+              if ((startTime > transportStream.getNowTdt()) &&
+                  (date::floor<date::days>(startTime) == nowDatePoint)) {
+                string epg = date::format ("%T", date::floor<chrono::seconds>(startTime)) +
+                             " " + epgItem.second->getTitleString();
+
+                ImGui::SetCursorPos (pos);
+                ImGui::TextColored ({0.f,0.f,0.f,1.f}, epg.c_str());
+                ImGui::SetCursorPos (pos - ImVec2(2.f,2.f));
+                ImGui::TextColored ({1.f, 1.f,1.f,1.f}, epg.c_str());
+
+                pos.y += ImGui::GetTextLineHeight();
+                }
+              }
+            }
+            //}}}
 
           //{{{  draw channel title bottomLeft
           string channelString = mService.getName();
@@ -1975,6 +2006,7 @@ namespace {
         { false, false,  false, ImGuiKey_DownArrow,  [this,&tellyApp]{ hitDown (tellyApp); }},
         { false, false,  false, ImGuiKey_Enter,      [this,&tellyApp]{ mMultiView.hitEnter(); }},
         { false, false,  false, ImGuiKey_F,          [this,&tellyApp]{ tellyApp.getPlatform().toggleFullScreen(); }},
+        { false, false,  false, ImGuiKey_E,          [this,&tellyApp]{ tellyApp.toggleShowEpg(); }},
         { false, false,  false, ImGuiKey_S,          [this,&tellyApp]{ tellyApp.toggleShowSubtitle(); }},
         { false, false,  false, ImGuiKey_L,          [this,&tellyApp]{ tellyApp.toggleShowMotionVectors(); }},
         { false, false,  false, ImGuiKey_T,          [this,&tellyApp]{ hitShow (eTelly); }},
