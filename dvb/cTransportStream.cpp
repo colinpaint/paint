@@ -1,4 +1,4 @@
-// cTransportStream.cpp - mpeg transport stream demux
+// cTransportStream.cpp - minimal mpeg transportStream demux for freeview streams
 //{{{  includes
 #ifdef _WIN32
   #define _CRT_SECURE_NO_WARNINGS
@@ -1360,16 +1360,15 @@ void cTransportStream::parseTDT (cPidInfo& pidInfo, uint8_t* buf) {
 
   sTdt* tdt = (sTdt*)buf;
   if (tdt->table_id == TID_TDT) {
-    mTdt =
-      chrono::system_clock::from_time_t (MjdToEpochTime (tdt->utc_mjd) + BcdTimeToSeconds (tdt->utc_time));
-
+    mTdt = chrono::system_clock::from_time_t (MjdToEpochTime (tdt->utc_mjd) + 
+                                              BcdTimeToSeconds (tdt->utc_time));
     if (!mHasFirstTdt) {
       mFirstTdt = mTdt;
       mHasFirstTdt = true;
       }
 
-    pidInfo.setInfoString (date::format ("%T", date::floor<chrono::seconds>(mFirstTdt)) +
-                           " to " + getTdtString());
+    pidInfo.setInfoString (
+      date::format ("%T", date::floor<chrono::seconds>(mFirstTdt)) + " to " + getTdtString());
     }
   }
 //}}}
