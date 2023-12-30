@@ -2030,14 +2030,17 @@ int main (int numArgs, char* args[]) {
     string param = args[i];
     if (options->parse (param)) // found cApp option
       ;
+    else if (param == "all")
+      options->mRecordAll = true;
     else if (param == "head") {
       options->mHasGui = false;
       options->mShowAllServices = false;
+      options->mShowFirstService = false;
       }
-    else if (param == "all")
-      options->mRecordAll = true;
-    else if (param == "simple")
+    else if (param == "single") {
       options->mShowAllServices = false;
+      options->mShowFirstService = true;
+      }
     else if (param == "noaudio")
       options->mHasAudio = false;
     else if (param == "song")
@@ -2065,7 +2068,7 @@ int main (int numArgs, char* args[]) {
 
   // log
   cLog::init (options->mLogLevel);
-  cLog::log (LOGNOTICE, fmt::format ("tellyApp head all simple {} {}",
+  cLog::log (LOGNOTICE, fmt::format ("tellyApp head all single noaudio {} {}",
                                      (dynamic_cast<cApp::cOptions*>(options))->cApp::cOptions::getString(),
                                      options->cTellyOptions::getString()));
   if (options->mPlaySong) {

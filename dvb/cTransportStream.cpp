@@ -461,7 +461,7 @@ void cTransportStream::cStream::setPidStreamType (uint16_t pid, uint8_t streamTy
   }
 //}}}
 //{{{
-bool cTransportStream::cStream::disable() {
+void cTransportStream::cStream::disable() {
 // return true if not enabled
 
   if (mRender) {
@@ -469,10 +469,7 @@ bool cTransportStream::cStream::disable() {
     cRender* mTemp = mRender;
     mRender = nullptr;
     delete mTemp;
-    return false;
     }
-
-  return true;
   }
 //}}}
 //}}}
@@ -526,19 +523,40 @@ cTransportStream::cStream* cTransportStream::cService::getStreamByPid (uint16_t 
   }
 //}}}
 //{{{
+void cTransportStream::cService::enableStream (eStreamType streamType, bool enable) {
+
+  if (enable)
+    switch (streamType) {
+      case eVideo: {
+        cStream& stream = getStream (eVideo);
+        stream.setRender (new cVideoRender (mName, stream.getTypeId(), stream.getPid(), mOptions));
+        break;
+        }
+
+      case eAudio: {
+        cStream& stream = getStream (eAudio);
+        stream.setRender (new cAudioRender (mName, stream.getTypeId(), stream.getPid(), mOptions));
+        break;
+        }
+
+      case eSubtitle: {
+        cStream& stream = getStream (eSubtitle);
+        stream.setRender (new cSubtitleRender (mName, stream.getTypeId(), stream.getPid(), mOptions));
+        break;
+        }
+
+      default: break;
+      }
+  else
+    getStream (streamType).disable();
+  }
+//}}}
+//{{{
 void cTransportStream::cService::enableStreams() {
 
-  cStream& videoStream = getStream (eVideo);
-  videoStream.setRender (
-    new cVideoRender (getName(), videoStream.getTypeId(), videoStream.getPid(), mOptions));
-
-  cStream& audioStream = getStream (eAudio);
-  audioStream.setRender (
-    new cAudioRender (getName(), audioStream.getTypeId(), audioStream.getPid(), mOptions));
-
-  cStream& subtitleStream = getStream (eSubtitle);
-  subtitleStream.setRender (
-    new cSubtitleRender (getName(), subtitleStream.getTypeId(), subtitleStream.getPid(), mOptions));
+  enableStream (eVideo, true);
+  enableStream (eAudio, true);
+  enableStream (eSubtitle, true);
   }
 //}}}
 //{{{
@@ -1360,7 +1378,7 @@ void cTransportStream::parseTDT (cPidInfo& pidInfo, uint8_t* buf) {
 
   sTdt* tdt = (sTdt*)buf;
   if (tdt->table_id == TID_TDT) {
-    mTdt = chrono::system_clock::from_time_t (MjdToEpochTime (tdt->utc_mjd) + 
+    mTdt = chrono::system_clock::from_time_t (MjdToEpochTime (tdt->utc_mjd) +
                                               BcdTimeToSeconds (tdt->utc_time));
     if (!mHasFirstTdt) {
       mFirstTdt = mTdt;
@@ -1450,9 +1468,11 @@ void cTransportStream::parsePMT (cPidInfo& pidInfo, uint8_t* buf) {
         buf += loopLength;
         }
 
-      // enable at least one service stream
-      if (!mShowingFirstService || (dynamic_cast<cOptions*>(mOptions))->mShowAllServices)
+      // test to enable service stream
+      if ((dynamic_cast<cOptions*>(mOptions))->mShowAllServices ||
+          (!mShowingFirstService && (dynamic_cast<cOptions*>(mOptions))->mShowFirstService))
         if (service.getStream (eStreamType(eVideo)).isDefined()) {
+          // only video services
           mShowingFirstService = true;
           service.enableStreams();
           }

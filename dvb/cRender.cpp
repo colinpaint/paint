@@ -1,5 +1,4 @@
-// cRender.cpp - dvb stream render base class
-// - mFrameMap indexed by pts/ptsDuration
+// cRender.cpp - dvb stream render base class - mFrameMap indexed by pts/ptsDuration
 //{{{  includes
 #include "cRender.h"
 

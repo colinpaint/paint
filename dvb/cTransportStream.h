@@ -162,7 +162,7 @@ public:
     void setPidStreamType (uint16_t pid, uint8_t streamType);
     void setRender (cRender* render) { mRender = render; }
 
-    bool disable();
+    void disable();
 
   private:
     bool mDefined = false;
@@ -201,6 +201,7 @@ public:
     // streams
     cStream* getStreamByPid (uint16_t pid);
     cStream& getStream (eStreamType streamType) { return mStreams[streamType]; }
+    void enableStream (eStreamType streamType, bool enable);
     void enableStreams();
     bool throttle();
     void togglePlay();
@@ -275,6 +276,7 @@ public:
     std::string mRecordRoot;
     bool mRecordAll = false;
     bool mShowAllServices = true;
+    bool mShowFirstService = false;
     };
   //}}}
 
@@ -286,9 +288,9 @@ public:
   uint64_t getNumErrors() const { return mNumErrors; }
 
   // tdt
-  std::string getTdtString() const;
   bool hasFirstTdt() const { return mHasFirstTdt; }
   std::chrono::system_clock::time_point getTdt() const { return mTdt; }
+  std::string getTdtString() const;
 
   std::map <uint16_t, cPidInfo>& getPidInfoMap() { return mPidInfoMap; };
   std::map <uint16_t, cService>& getServiceMap() { return mServiceMap; };
