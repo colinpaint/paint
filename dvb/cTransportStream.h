@@ -289,12 +289,12 @@ public:
 
   // tdt
   bool hasFirstTdt() const { return mHasFirstTdt; }
-  std::chrono::system_clock::time_point getTdt() const { return mTdt; }
+  std::chrono::system_clock::time_point getNowTdt() const { return mNowTdt; }
   std::string getTdtString() const;
 
   std::map <uint16_t, cPidInfo>& getPidInfoMap() { return mPidInfoMap; };
   std::map <uint16_t, cService>& getServiceMap() { return mServiceMap; };
-  std::vector<std::string> getRecordedFileNames();
+  std::vector <std::string> getRecordedFileNames();
 
   bool throttle();
   void togglePlay();
@@ -340,5 +340,5 @@ private:
   // time
   bool mHasFirstTdt = false;
   std::chrono::system_clock::time_point mFirstTdt; // first tdt seen
-  std::chrono::system_clock::time_point mTdt;      // now tdt
+  std::chrono::system_clock::time_point mNowTdt;   // now tdt
   };

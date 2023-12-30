@@ -815,7 +815,7 @@ cTransportStream::cTransportStream (const cDvbMultiplex& dvbMultiplex, iOptions*
 // gets
 //{{{
 string cTransportStream::getTdtString() const {
-  return date::format ("%T", date::floor<chrono::seconds>(mTdt));
+  return date::format ("%T", date::floor<chrono::seconds>(mNowTdt));
   }
 //}}}
 //{{{
@@ -1353,7 +1353,7 @@ void cTransportStream::parseEIT (uint8_t* buf) {
 
                   // start new program on service
                   lock_guard<mutex> lockGuard (mRecordMutex);
-                  service->startProgram (mTdt, titleString, startTime, service->isEpgRecord (titleString, startTime));
+                  service->startProgram (mNowTdt, titleString, startTime, service->isEpgRecord (titleString, startTime));
                   }
                 }
               }
@@ -1378,10 +1378,10 @@ void cTransportStream::parseTDT (cPidInfo& pidInfo, uint8_t* buf) {
 
   sTdt* tdt = (sTdt*)buf;
   if (tdt->table_id == TID_TDT) {
-    mTdt = chrono::system_clock::from_time_t (MjdToEpochTime (tdt->utc_mjd) +
-                                              BcdTimeToSeconds (tdt->utc_time));
+    mNowTdt = chrono::system_clock::from_time_t (MjdToEpochTime (tdt->utc_mjd) +
+                                                 BcdTimeToSeconds (tdt->utc_time));
     if (!mHasFirstTdt) {
-      mFirstTdt = mTdt;
+      mFirstTdt = mNowTdt;
       mHasFirstTdt = true;
       }
 

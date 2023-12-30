@@ -72,7 +72,8 @@ cAudioRender::cAudioRender (const string& name, uint8_t streamType, uint16_t pid
                 cRender::addFrame (frame);
 
                 if (!mPlayer) {
-                  mPlayer = new cPlayer (*this, mSampleRate, getPid(), (dynamic_cast<cAudioRender::cOptions*>(mOptions)->mHasAudio));
+                  mPlayer = new cPlayer (*this, mSampleRate, getPid(), 
+                                         (dynamic_cast<cAudioRender::cOptions*>(mOptions)->mHasAudio));
                   mPlayer->startPlayPts (audioFrame->getPts());
                   }
                 }),

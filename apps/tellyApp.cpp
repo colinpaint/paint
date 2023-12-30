@@ -1256,7 +1256,7 @@ namespace {
           //{{{  draw clock
           //ImGui::TextUnformatted (transportStream.getTdtString().c_str());
           ImGui::SetCursorPos ({ ImGui::GetWindowWidth() - 90.f, 0.f} );
-          clockButton ("clock", transportStream.getTdt(), { 80.f, 80.f });
+          clockButton ("clock", transportStream.getNowTdt(), { 80.f, 80.f });
           }
           //}}}
 
