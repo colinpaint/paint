@@ -310,16 +310,14 @@ private:
   cPidInfo* getPsiPidInfo (uint16_t pid);
   cService* getServiceBySid (uint16_t sid);
 
-  //{{{  parse
-  int parsePsi (cPidInfo* pidInfo, uint8_t* buf);
-
-  void parsePat (cPidInfo* pidInfo, uint8_t* buf);
-  void parseNit (cPidInfo* pidInfo, uint8_t* buf);
-  void parseSdt (cPidInfo* pidInfo, uint8_t* buf);
-  void parseEit (cPidInfo* pidInfo, uint8_t* buf);
-  void parseTdt (cPidInfo* pidInfo, uint8_t* buf);
-  void parsePmt (cPidInfo* pidInfo, uint8_t* buf);
-  //}}}
+  //  parse
+  void parsePAT (uint8_t* buf);
+  void parseNIT (uint8_t* buf);
+  void parseSDT (uint8_t* buf);
+  void parseEIT (uint8_t* buf);
+  void parseTDT (cPidInfo& pidInfo, uint8_t* buf);
+  void parsePMT (cPidInfo& pidInfo, uint8_t* buf);
+  uint16_t parsePSI (cPidInfo& pidInfo, uint8_t* buf);
 
   // vars
   const cDvbMultiplex mDvbMultiplex;

@@ -917,13 +917,13 @@ int64_t cTransportStream::demux (uint8_t* chunk, int64_t chunkSize, int64_t stre
                     if (bufPtr[0] == 0xFF) // invalid tid, end of psi sections
                       break;
                     else // valid tid, parse psi section
-                      bufPtr += parsePsi (pidInfo, bufPtr);
+                      bufPtr += parsePSI (*pidInfo, bufPtr);
                   }
 
                 while ((tsBytesLeft >= 3) &&
                        (ts[0] != 0xFF) && (tsBytesLeft >= (((ts[1] & 0x0F) << 8) + ts[2] + 3))) {
                   // parse section without buffering
-                  uint32_t sectionLength = parsePsi (pidInfo, ts);
+                  uint32_t sectionLength = parsePSI (*pidInfo, ts);
                   ts += sectionLength;
                   tsBytesLeft -= sectionLength;
                   }
@@ -1114,31 +1114,8 @@ cTransportStream::cService* cTransportStream::getServiceBySid (uint16_t sid) {
 
 // parse
 //{{{
-int cTransportStream::parsePsi (cPidInfo* pidInfo, uint8_t* buf) {
-// return sectionLength
-
-  switch (pidInfo->getPid()) {
-    case PID_PAT: parsePat (pidInfo, buf); break;
-    case PID_NIT: parseNit (pidInfo, buf); break;
-    case PID_SDT: parseSdt (pidInfo, buf); break;
-    case PID_EIT: parseEit (pidInfo, buf); break;
-    case PID_TDT: parseTdt (pidInfo, buf); break;
-
-    case PID_CAT:
-    case PID_RST:
-    case PID_SYN: break;
-
-    default: parsePmt (pidInfo, buf); break;
-    }
-
-  return ((buf[1] & 0x0F) << 8) + buf[2] + 3;
-  }
-//}}}
-//{{{
-void cTransportStream::parsePat (cPidInfo* pidInfo, uint8_t* buf) {
+void cTransportStream::parsePAT (uint8_t* buf) {
 // PAT declares programPid,sid to mProgramMap to recognise programPid PMT to declare service streams
-
-  (void)pidInfo;
 
   sPat* pat = (sPat*)buf;
   uint16_t sectionLength = HILO(pat->section_length) + 3;
@@ -1166,9 +1143,7 @@ void cTransportStream::parsePat (cPidInfo* pidInfo, uint8_t* buf) {
   }
 //}}}
 //{{{
-void cTransportStream::parseNit (cPidInfo* pidInfo, uint8_t* buf) {
-
-  (void)pidInfo;
+void cTransportStream::parseNIT (uint8_t* buf) {
 
   sNit* nit = (sNit*)buf;
   uint16_t sectionLength = HILO(nit->section_length) + 3;
@@ -1217,10 +1192,8 @@ void cTransportStream::parseNit (cPidInfo* pidInfo, uint8_t* buf) {
   }
 //}}}
 //{{{
-void cTransportStream::parseSdt (cPidInfo* pidInfo, uint8_t* buf) {
+void cTransportStream::parseSDT (uint8_t* buf) {
 // SDT name services in mServiceMap
-
-  (void)pidInfo;
 
   sSdt* sdt = (sSdt*)buf;
   uint16_t sectionLength = HILO(sdt->section_length) + 3;
@@ -1296,9 +1269,7 @@ void cTransportStream::parseSdt (cPidInfo* pidInfo, uint8_t* buf) {
   }
 //}}}
 //{{{
-void cTransportStream::parseEit (cPidInfo* pidInfo, uint8_t* buf) {
-
-  (void)pidInfo;
+void cTransportStream::parseEIT (uint8_t* buf) {
 
   sEit* eit = (sEit*)buf;
   uint16_t sectionLength = HILO(eit->section_length) + 3;
@@ -1385,7 +1356,7 @@ void cTransportStream::parseEit (cPidInfo* pidInfo, uint8_t* buf) {
   }
 //}}}
 //{{{
-void cTransportStream::parseTdt (cPidInfo* pidInfo, uint8_t* buf) {
+void cTransportStream::parseTDT (cPidInfo& pidInfo, uint8_t* buf) {
 
   sTdt* tdt = (sTdt*)buf;
   if (tdt->table_id == TID_TDT) {
@@ -1397,20 +1368,20 @@ void cTransportStream::parseTdt (cPidInfo* pidInfo, uint8_t* buf) {
       mHasFirstTdt = true;
       }
 
-    pidInfo->setInfoString (date::format ("%T", date::floor<chrono::seconds>(mFirstTdt)) +
-                            " to " + getTdtString());
+    pidInfo.setInfoString (date::format ("%T", date::floor<chrono::seconds>(mFirstTdt)) +
+                           " to " + getTdtString());
     }
   }
 //}}}
 //{{{
-void cTransportStream::parsePmt (cPidInfo* pidInfo, uint8_t* buf) {
+void cTransportStream::parsePMT (cPidInfo& pidInfo, uint8_t* buf) {
 // PMT declares service pgmPid,streams
 
   sPmt* pmt = (sPmt*)buf;
   uint16_t sectionLength = HILO(pmt->section_length) + 3;
   if (cDvbUtils::getCrc32 (buf, sectionLength) != 0) {
     //{{{  badCrc error, return
-    cLog::log (LOGERROR, "parsePMT pid:%d bad crc %d", pidInfo->getPid(), sectionLength);
+    cLog::log (LOGERROR, "parsePMT pid:%d bad crc %d", pidInfo.getPid(), sectionLength);
     return;
     }
     //}}}
@@ -1419,10 +1390,10 @@ void cTransportStream::parsePmt (cPidInfo* pidInfo, uint8_t* buf) {
     uint16_t sid = HILO (pmt->program_number);
     if (!getServiceBySid (sid)) {
       // create cService
-      cLog::log (LOGINFO, fmt::format ("PMT program pid:{} declares service sid:{}", pidInfo->getPid(), sid));
+      cLog::log (LOGINFO, fmt::format ("PMT program pid:{} declares service sid:{}", pidInfo.getPid(), sid));
       cService& service = mServiceMap.emplace (sid, cService(sid, mOptions)).first->second;
-      service.setProgramPid (pidInfo->getPid());
-      pidInfo->setSid (sid);
+      service.setProgramPid (pidInfo.getPid());
+      pidInfo.setSid (sid);
 
       buf += sizeof(sPmt);
       sectionLength -= 4;
@@ -1488,5 +1459,26 @@ void cTransportStream::parsePmt (cPidInfo* pidInfo, uint8_t* buf) {
           }
       }
     }
+  }
+//}}}
+//{{{
+uint16_t cTransportStream::parsePSI (cPidInfo& pidInfo, uint8_t* buf) {
+// return sectionLength
+
+  switch (pidInfo.getPid()) {
+    case PID_PAT: parsePAT (buf); break;
+    case PID_NIT: parseNIT (buf); break;
+    case PID_SDT: parseSDT (buf); break;
+    case PID_EIT: parseEIT (buf); break;
+    case PID_TDT: parseTDT (pidInfo, buf); break;
+
+    case PID_CAT:
+    case PID_RST:
+    case PID_SYN: break;
+
+    default: parsePMT (pidInfo, buf); break;
+    }
+
+  return ((buf[1] & 0x0F) << 8) + buf[2] + 3;
   }
 //}}}
