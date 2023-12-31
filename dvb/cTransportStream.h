@@ -226,7 +226,7 @@ public:
     std::map <std::chrono::system_clock::time_point, cEpgItem*>& getOtherEpg() { return mOtherEpg; }
     //{{{
     bool setNow (bool record,
-                 std::chrono::system_clock::time_point time,
+                 std::chrono::system_clock::time_point startTime,
                  std::chrono::seconds duration,
                  const std::string& title,
                  const std::string& info);

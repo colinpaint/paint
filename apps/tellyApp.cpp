@@ -1043,7 +1043,7 @@ namespace {
     void fileSource (const string& filename, cTellyOptions* options) {
 
       // create transportStream
-      mTransportStream = new cTransportStream ({ "file", 0, {}, {} }, options);
+      mTransportStream = new cTransportStream ({"file", 0, {}, {}}, options);
       if (!mTransportStream) {
         //{{{  error, return
         cLog::log (LOGERROR, "fileSource cTransportStream create failed");
@@ -1514,7 +1514,7 @@ namespace {
             }
 
           if ((mSelect == eSelectedFull) && options->mShowEpg) {
-            //{{{  draw today epg
+            //{{{  draw todays epg
             ImVec2 pos = mTL + ImVec2(ImGui::GetTextLineHeight(), ImGui::GetTextLineHeight()*2);
 
             for (auto& epgItem : mService.getTodayEpg()) {

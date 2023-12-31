@@ -649,18 +649,18 @@ bool cTransportStream::cService::isEpgRecord (const string& title, chrono::syste
 //}}}
 //{{{
 bool cTransportStream::cService::setNow (bool record,
-                                         chrono::system_clock::time_point time,
+                                         chrono::system_clock::time_point startTime,
                                          chrono::seconds duration,
                                          const string& title,
                                          const string& info) {
-// return true if new nowEpgItem
+// return true if new now epgItem
 
-  if (mNowEpgItem && (mNowEpgItem->getStartTime() == time))
+  if (mNowEpgItem && (mNowEpgItem->getStartTime() == startTime))
     return false;
 
   delete mNowEpgItem;
 
-  mNowEpgItem = new cEpgItem (true, record, time, duration, title, info);
+  mNowEpgItem = new cEpgItem (true, record, startTime, duration, title, info);
   return true;
   }
 //}}}
@@ -683,7 +683,7 @@ void cTransportStream::cService::setEpg (bool record,
       it->second->set (startTime, duration, title, info);
     }
   else {
-    // not today
+    // other
     auto it = mOtherEpg.find (startTime);
     if (it == mOtherEpg.end())
       mOtherEpg.emplace (startTime, new cEpgItem (false, record, startTime, duration, title, info));
