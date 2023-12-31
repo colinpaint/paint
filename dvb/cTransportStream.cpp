@@ -29,18 +29,9 @@ using namespace std;
 //}}}
 //{{{  defines, const, struct
 constexpr uint8_t kPacketSize = 188;
-
-#define HILO(x) (x##_hi << 8 | x##_lo)
-
-#define mjdToEpochTime(x) (unsigned int)((((x##_hi << 8) | x##_lo) - 40587) * 86400)
-
-#define bcdTimeToSeconds(x) ((3600 * ((10*((x##_h & 0xF0)>>4)) + (x##_h & 0xF))) + \
-                               (60 * ((10*((x##_m & 0xF0)>>4)) + (x##_m & 0xF))) + \
-                                     ((10*((x##_s & 0xF0)>>4)) + (x##_s & 0xF)))
-
 const int kInitBufSize = 512;
 
-//{{{  pids
+// pids
 #define PID_PAT   0x00   /* Program Association Table */
 #define PID_CAT   0x01   /* Conditional Access Table */
 #define PID_NIT   0x10   /* Network Information Table */
@@ -49,22 +40,6 @@ const int kInitBufSize = 512;
 #define PID_RST   0x13   /* Running Status Table */
 #define PID_TDT   0x14   /* Time Date Table */
 #define PID_SYN   0x15   /* Network sync */
-//}}}
-
-//{{{
-struct sTdt {
-  uint8_t table_id                 :8;
-  uint8_t section_length_hi        :4;
-  uint8_t                          :3;
-  uint8_t section_syntax_indicator :1;
-  uint8_t section_length_lo        :8;
-  uint8_t utc_mjd_hi               :8;
-  uint8_t utc_mjd_lo               :8;
-  uint8_t utc_time_h               :8;
-  uint8_t utc_time_m               :8;
-  uint8_t utc_time_s               :8;
-  } ;
-//}}}
 
 //{{{
 struct sPat {
@@ -97,45 +72,6 @@ struct sPatProg {
   uint8_t                   :3;
   uint8_t network_pid_lo    :8;
   /* or program_map_pid (if prog_num=0)*/
-  } ;
-//}}}
-
-//{{{
-struct sPmt {
-   unsigned char table_id           :8;
-
-   uint8_t section_length_hi        :4;
-   uint8_t                          :2;
-   uint8_t dummy                    :1; // has to be 0
-   uint8_t section_syntax_indicator :1;
-   uint8_t section_length_lo        :8;
-
-   uint8_t program_number_hi        :8;
-   uint8_t program_number_lo        :8;
-   uint8_t current_next_indicator   :1;
-   uint8_t version_number           :5;
-   uint8_t                          :2;
-   uint8_t section_number           :8;
-   uint8_t last_section_number      :8;
-   uint8_t PCR_PID_hi               :5;
-   uint8_t                          :3;
-   uint8_t PCR_PID_lo               :8;
-   uint8_t program_info_length_hi   :4;
-   uint8_t                          :4;
-   uint8_t program_info_length_lo   :8;
-   //descrs
-  } ;
-//}}}
-//{{{
-struct sPmtInfo {
-   uint8_t stream_type       :8;
-   uint8_t elementary_PID_hi :5;
-   uint8_t                   :3;
-   uint8_t elementary_PID_lo :8;
-   uint8_t ES_info_length_hi :4;
-   uint8_t                   :4;
-   uint8_t ES_info_length_lo :8;
-   // descrs
   } ;
 //}}}
 
@@ -280,6 +216,60 @@ struct sEitEvent {
   } ;
 //}}}
 
+//{{{
+struct sTdt {
+  uint8_t table_id                 :8;
+  uint8_t section_length_hi        :4;
+  uint8_t                          :3;
+  uint8_t section_syntax_indicator :1;
+  uint8_t section_length_lo        :8;
+  uint8_t utc_mjd_hi               :8;
+  uint8_t utc_mjd_lo               :8;
+  uint8_t utc_time_h               :8;
+  uint8_t utc_time_m               :8;
+  uint8_t utc_time_s               :8;
+  } ;
+//}}}
+
+//{{{
+struct sPmt {
+   unsigned char table_id           :8;
+
+   uint8_t section_length_hi        :4;
+   uint8_t                          :2;
+   uint8_t dummy                    :1; // has to be 0
+   uint8_t section_syntax_indicator :1;
+   uint8_t section_length_lo        :8;
+
+   uint8_t program_number_hi        :8;
+   uint8_t program_number_lo        :8;
+   uint8_t current_next_indicator   :1;
+   uint8_t version_number           :5;
+   uint8_t                          :2;
+   uint8_t section_number           :8;
+   uint8_t last_section_number      :8;
+   uint8_t PCR_PID_hi               :5;
+   uint8_t                          :3;
+   uint8_t PCR_PID_lo               :8;
+   uint8_t program_info_length_hi   :4;
+   uint8_t                          :4;
+   uint8_t program_info_length_lo   :8;
+   //descrs
+  } ;
+//}}}
+//{{{
+struct sPmtInfo {
+   uint8_t stream_type       :8;
+   uint8_t elementary_PID_hi :5;
+   uint8_t                   :3;
+   uint8_t elementary_PID_lo :8;
+   uint8_t ES_info_length_hi :4;
+   uint8_t                   :4;
+   uint8_t ES_info_length_lo :8;
+   // descrs
+  } ;
+//}}}
+
 //{{{  descr defines
 #define DESCR_VIDEO_STREAM          0x02
 #define DESCR_AUDIO_STREAM          0x03
@@ -401,6 +391,14 @@ struct itemExtendedEvent {
 
 #define CastExtendedEventItem(x) ((itemExtendedEvent*)(x))
 //}}}
+
+#define HILO(x) (x##_hi << 8 | x##_lo)
+
+#define mjdToEpochTime(x) (unsigned int)((((x##_hi << 8) | x##_lo) - 40587) * 86400)
+
+#define bcdTimeToSeconds(x) ((3600 * ((10*((x##_h & 0xF0)>>4)) + (x##_h & 0xF))) + \
+                               (60 * ((10*((x##_m & 0xF0)>>4)) + (x##_m & 0xF))) + \
+                                     ((10*((x##_s & 0xF0)>>4)) + (x##_s & 0xF)))
 //}}}
 
 //{{{  class cTransportStream::cPidInfo
