@@ -1512,22 +1512,18 @@ namespace {
               //}}}
             }
 
-          if ((mSelect == eSelectedFull) && (options->mShowEpg)) {
+          if ((mSelect == eSelectedFull) && options->mShowEpg) {
             //{{{  draw epg
-            auto nowDatePoint = date::floor<date::days>(transportStream.getNowTdt());
-
             ImVec2 pos = mTl + ImVec2(ImGui::GetTextLineHeight(), ImGui::GetTextLineHeight()*2);
-            for (auto& epgItem : mService.getEpgItemMap()) {
-              auto startTime = epgItem.second->getTime();
-              if ((startTime > transportStream.getNowTdt()) &&
-                  (date::floor<date::days>(startTime) == nowDatePoint)) {
-                string epg = date::format ("%T", date::floor<chrono::seconds>(startTime)) +
-                             " " + epgItem.second->getTitleString();
+            for (auto& epgItem : mService.getTodayEpg()) {
+              if (epgItem.first + epgItem.second->getDuration() > transportStream.getNowTdt()) {
+                string epgTitle = date::format ("%T", date::floor<chrono::seconds>(epgItem.first)) +
+                                  " " + epgItem.second->getTitleString();
 
                 ImGui::SetCursorPos (pos);
-                ImGui::TextColored ({0.f,0.f,0.f,1.f}, epg.c_str());
+                ImGui::TextColored ({0.f,0.f,0.f,1.f}, epgTitle.c_str());
                 ImGui::SetCursorPos (pos - ImVec2(2.f,2.f));
-                ImGui::TextColored ({1.f, 1.f,1.f,1.f}, epg.c_str());
+                ImGui::TextColored ({1.f, 1.f,1.f,1.f}, epgTitle.c_str());
 
                 pos.y += ImGui::GetTextLineHeight();
                 }

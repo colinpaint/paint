@@ -221,20 +221,22 @@ public:
     bool isEpgRecord (const std::string& title, std::chrono::system_clock::time_point startTime);
     cEpgItem* getNowEpgItem() { return mNowEpgItem; }
     std::string getNowTitleString() const { return mNowEpgItem ? mNowEpgItem->getTitleString() : ""; }
-    std::map <std::chrono::system_clock::time_point, cEpgItem*>& getEpgItemMap() { return mEpgItemMap; }
+    std::map <std::chrono::system_clock::time_point, cEpgItem*>& getTodayEpg() { return mTodayEpg; }
+    std::map <std::chrono::system_clock::time_point, cEpgItem*>& getEpg() { return mEpg; }
     //{{{
     bool setNow (bool record,
                  std::chrono::system_clock::time_point time,
                  std::chrono::seconds duration,
-                 const std::string& str1,
-                 const std::string& str2);
+                 const std::string& title,
+                 const std::string& info);
     //}}}
     //{{{
-    bool setEpg (bool record,
+    void setEpg (bool record,
+                 std::chrono::system_clock::time_point nowTime,
                  std::chrono::system_clock::time_point startTime,
                  std::chrono::seconds duration,
-                 const std::string& titleString,
-                 const std::string& infoString);
+                 const std::string& title,
+                 const std::string& info);
     //}}}
 
   private:
@@ -263,7 +265,8 @@ public:
 
     // epg
     cEpgItem* mNowEpgItem = nullptr;
-    std::map <std::chrono::system_clock::time_point, cEpgItem*> mEpgItemMap;
+    std::map <std::chrono::system_clock::time_point, cEpgItem*> mTodayEpg;
+    std::map <std::chrono::system_clock::time_point, cEpgItem*> mEpg;
     };
   //}}}
   //{{{

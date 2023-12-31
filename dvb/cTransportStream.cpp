@@ -488,10 +488,13 @@ cTransportStream::cService::~cService() {
 
   delete mNowEpgItem;
 
-  for (auto& epgItem : mEpgItemMap)
+  for (auto& epgItem : mTodayEpg)
+    delete epgItem.second;
+  for (auto& epgItem : mEpg)
     delete epgItem.second;
 
-  mEpgItemMap.clear();
+  mTodayEpg.clear();
+  mEpg.clear();
 
   closeFile();
   }
@@ -631,8 +634,14 @@ void cTransportStream::cService::programPesPacket (uint16_t pid, uint8_t* ts) {
 bool cTransportStream::cService::isEpgRecord (const string& title, chrono::system_clock::time_point startTime) {
 // return true if startTime, title selected to record in epg
 
-  auto it = mEpgItemMap.find (startTime);
-  if (it != mEpgItemMap.end())
+  auto it = mTodayEpg.find (startTime);
+  if (it != mTodayEpg.end())
+    if (title == it->second->getTitleString())
+      if (it->second->getRecord())
+        return true;
+
+  it = mEpg.find (startTime);
+  if (it != mEpg.end())
     if (title == it->second->getTitleString())
       if (it->second->getRecord())
         return true;
@@ -644,34 +653,45 @@ bool cTransportStream::cService::isEpgRecord (const string& title, chrono::syste
 bool cTransportStream::cService::setNow (bool record,
                                          chrono::system_clock::time_point time,
                                          chrono::seconds duration,
-                                         const string& titleString,
-                                         const string& infoString) {
+                                         const string& title,
+                                         const string& info) {
+// return true if new nowEpgItem
 
   if (mNowEpgItem && (mNowEpgItem->getTime() == time))
     return false;
 
   delete mNowEpgItem;
 
-  mNowEpgItem = new cEpgItem (true, record, time, duration, titleString, infoString);
-
+  mNowEpgItem = new cEpgItem (true, record, time, duration, title, info);
   return true;
   }
 //}}}
 //{{{
-bool cTransportStream::cService::setEpg (bool record,
+void cTransportStream::cService::setEpg (bool record,
+                                         chrono::system_clock::time_point nowTime,
                                          chrono::system_clock::time_point startTime,
                                          chrono::seconds duration,
-                                         const string& titleString,
-                                         const string& infoString) {
-// could return true only if changed
+                                         const string& title,
+                                         const string& info) {
 
-  auto it = mEpgItemMap.find (startTime);
-  if (it == mEpgItemMap.end())
-    mEpgItemMap.emplace (startTime, new cEpgItem (false, record, startTime, duration, titleString, infoString));
-  else
-    it->second->set (startTime, duration, titleString, infoString);
-
-  return true;
+  auto nowDay = date::floor<date::days>(nowTime);
+  auto startDay = date::floor<date::days>(startTime);
+  if (startDay == nowDay) {
+    // today
+    auto it = mTodayEpg.find (startTime);
+    if (it == mTodayEpg.end())
+      mTodayEpg.emplace (startTime, new cEpgItem (false, record, startTime, duration, title, info));
+    else
+      it->second->set (startTime, duration, title, info);
+    }
+  else {
+    // not today
+    auto it = mEpg.find (startTime);
+    if (it == mEpg.end())
+      mEpg.emplace (startTime, new cEpgItem (false, record, startTime, duration, title, info));
+    else
+      it->second->set (startTime, duration, title, info);
+    }
   }
 //}}}
 
@@ -1328,11 +1348,11 @@ void cTransportStream::parseEIT (uint8_t* buf) {
 
             // get title
             auto bufPtr = buf + sizeof(descrShortEvent) - 1;
-            auto titleString = cDvbUtils::getDvbString (bufPtr);
+            auto title = cDvbUtils::getDvbString (bufPtr);
 
             // get info
             bufPtr += ((descrShortEvent*)buf)->event_name_length;
-            string infoString = cDvbUtils::getDvbString (bufPtr);
+            string info = cDvbUtils::getDvbString (bufPtr);
 
             if (now) {
               // now event
@@ -1343,8 +1363,8 @@ void cTransportStream::parseEIT (uint8_t* buf) {
                   service->getStream (eVideo).isDefined() &&
                   service->getStream (eAudio).isDefined()) {
                 // now event for named service with valid pgmPid,vidPid,audPid
-                if (service->setNow (service->isEpgRecord (titleString, startTime),
-                                     startTime, duration, titleString, infoString)) {
+                if (service->setNow (service->isEpgRecord (title, startTime),
+                                     startTime, duration, title, info)) {
                   // new nowEvent
                   auto pidInfoIt = mPidInfoMap.find (service->getProgramPid());
                   if (pidInfoIt != mPidInfoMap.end())
@@ -1353,12 +1373,12 @@ void cTransportStream::parseEIT (uint8_t* buf) {
 
                   // start new program on service
                   lock_guard<mutex> lockGuard (mRecordMutex);
-                  service->startProgram (mNowTdt, titleString, startTime, service->isEpgRecord (titleString, startTime));
+                  service->startProgram (mNowTdt, title, startTime, service->isEpgRecord (title, startTime));
                   }
                 }
               }
             else // epg event, add it
-              service->setEpg (false, startTime, duration, titleString, infoString);
+              service->setEpg (false, getNowTdt(), startTime, duration, title, info);
             }
           }
           //}}}
