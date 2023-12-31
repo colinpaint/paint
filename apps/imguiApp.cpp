@@ -61,9 +61,11 @@ public:
 //{{{
 class cImguiUI : public cApp::iUI {
 public:
-  void virtual draw (cApp& app, cGraphics& graphics) final {
+  void virtual draw (cApp& app) final {
 
     bool show_demo_window = true;
+
+    cGraphics& graphics = app.getGraphics();
     graphics.clear (cPoint((int)ImGui::GetWindowWidth(), (int)ImGui::GetWindowHeight()));
 
     if (app.getPlatform().hasFullScreen()) {

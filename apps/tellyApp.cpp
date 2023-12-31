@@ -205,8 +205,7 @@ namespace {
   //{{{
   class cSongUI : public cApp::iUI {
   public:
-    virtual void draw (cApp& app, cGraphics& graphics) final {
-      (void)graphics;
+    virtual void draw (cApp& app) final {
 
       cSongApp& songApp = (cSongApp&)app;
 
@@ -1172,9 +1171,11 @@ namespace {
   class cTellyUI : public cApp::iUI {
   public:
     //{{{
-    virtual void draw (cApp& app, cGraphics& graphics) final {
+    virtual void draw (cApp& app) final {
 
       cTellyApp& tellyApp = (cTellyApp&)app;
+
+      cGraphics& graphics = app.getGraphics();
       graphics.clear ({(int32_t)ImGui::GetIO().DisplaySize.x,
                        (int32_t)ImGui::GetIO().DisplaySize.y});
 
@@ -1267,7 +1268,7 @@ namespace {
           //}}}
 
         // draw piccies, strange order, after buttons displayed above ???
-        mMultiView.draw (transportStream, graphics, tellyApp);
+        mMultiView.draw (tellyApp, transportStream);
         }
 
       keyboard (tellyApp);
@@ -1311,7 +1312,9 @@ namespace {
       //}}}
 
       //{{{
-      void draw (cTransportStream& transportStream, cGraphics& graphics, cTellyApp& tellyApp) {
+      void draw (cTellyApp& tellyApp, cTransportStream& transportStream) {
+
+        cGraphics& graphics = tellyApp.getGraphics();
 
         // create shaders, firsttime we see graphics interface
         if (!mVideoShader)
@@ -1346,7 +1349,7 @@ namespace {
         size_t viewIndex = 0;
         for (auto& view : mViewMap) {
           if (!selectedFull || view.second.getSelectedFull())
-            if (view.second.draw (transportStream, graphics, tellyApp,
+            if (view.second.draw (tellyApp, transportStream,
                                   selectedFull, selectedFull ? 1 : mViewMap.size(), viewIndex,
                                   mVideoShader, mSubtitleShader)) {
               // view hit
@@ -1393,11 +1396,12 @@ namespace {
         //}}}
 
         //{{{
-        bool draw (cTransportStream& transportStream, cGraphics& graphics, cTellyApp& tellyApp,
+        bool draw (cTellyApp& tellyApp, cTransportStream& transportStream,
                    bool selectFull, size_t numViews, size_t viewIndex,
                    cTextureShader* videoShader, cTextureShader* subtitleShader) {
         // return true if hit
 
+          cGraphics& graphics = tellyApp.getGraphics();
           cTellyOptions* options = tellyApp.getOptions();
 
           float layoutScale;
@@ -1706,8 +1710,8 @@ namespace {
               float height = 8.f * ImGui::GetTextLineHeight();
               for (size_t i = 0; i < drawChannels; i++) {
                 ImGui::GetWindowDrawList()->AddRectFilled (
-                  { x, pos.y - (audioFrame->mPowerValues[channelOrder[i]] * height) },
-                  { x + mPixelsPerAudioChannel - 1.f, pos.y },
+                  {x, pos.y - (audioFrame->mPowerValues[channelOrder[i]] * height)},
+                  {x + mPixelsPerAudioChannel - 1.f, pos.y},
                   0xff00ff00);
                 x += mPixelsPerAudioChannel;
                 }
@@ -1924,6 +1928,61 @@ namespace {
     //}}}
 
     //{{{
+    void keyboard (cTellyApp& tellyApp) {
+
+      //{{{
+      struct sActionKey {
+        bool mAlt;
+        bool mControl;
+        bool mShift;
+        ImGuiKey mGuiKey;
+        function <void()> mActionFunc;
+        };
+      //}}}
+      const vector<sActionKey> kActionKeys = {
+      //  alt    control shift  ImGuiKey             function
+        { false, false,  false, ImGuiKey_Space,      [this,&tellyApp]{ hitSpace (tellyApp); }},
+        { false, true,   false, ImGuiKey_LeftArrow,  [this,&tellyApp]{ hitControlLeft (tellyApp); }},
+        { false, true,   false, ImGuiKey_RightArrow, [this,&tellyApp]{ hitControlRight (tellyApp); }},
+        { false, false,  false, ImGuiKey_LeftArrow,  [this,&tellyApp]{ hitLeft (tellyApp); }},
+        { false, false,  false, ImGuiKey_RightArrow, [this,&tellyApp]{ hitRight (tellyApp); }},
+        { false, false,  false, ImGuiKey_UpArrow,    [this,&tellyApp]{ hitUp (tellyApp); }},
+        { false, false,  false, ImGuiKey_DownArrow,  [this,&tellyApp]{ hitDown (tellyApp); }},
+        { false, false,  false, ImGuiKey_Enter,      [this,&tellyApp]{ mMultiView.hitEnter(); }},
+        { false, false,  false, ImGuiKey_F,          [this,&tellyApp]{ tellyApp.getPlatform().toggleFullScreen(); }},
+        { false, false,  false, ImGuiKey_E,          [this,&tellyApp]{ tellyApp.toggleShowEpg(); }},
+        { false, false,  false, ImGuiKey_S,          [this,&tellyApp]{ tellyApp.toggleShowSubtitle(); }},
+        { false, false,  false, ImGuiKey_L,          [this,&tellyApp]{ tellyApp.toggleShowMotionVectors(); }},
+        { false, false,  false, ImGuiKey_T,          [this,&tellyApp]{ hitShow (eTelly); }},
+        { false, false,  false, ImGuiKey_P,          [this,&tellyApp]{ hitShow (ePids); }},
+        { false, false,  false, ImGuiKey_R,          [this,&tellyApp]{ hitShow (eRecord); }},
+        };
+
+      ImGui::GetIO().WantTextInput = true;
+      ImGui::GetIO().WantCaptureKeyboard = true;
+
+      // action keys
+      bool altKey = ImGui::GetIO().KeyAlt;
+      bool controlKey = ImGui::GetIO().KeyCtrl;
+      bool shiftKey = ImGui::GetIO().KeyShift;
+      for (auto& actionKey : kActionKeys)
+        if (ImGui::IsKeyPressed (actionKey.mGuiKey) &&
+            (actionKey.mAlt == altKey) &&
+            (actionKey.mControl == controlKey) &&
+            (actionKey.mShift == shiftKey)) {
+          actionKey.mActionFunc();
+          break;
+          }
+
+      // queued keys
+      //for (int i = 0; i < ImGui::GetIO().InputQueueCharacters.Size; i++) {
+      //  ImWchar ch = ImGui::GetIO().InputQueueCharacters[i];
+      //  cLog::log (LOGINFO, fmt::format ("enter {:4x} {} {} {}", ch, altKey, controlKey, shiftKey));
+      //  }
+      ImGui::GetIO().InputQueueCharacters.resize (0);
+      }
+    //}}}
+    //{{{
     void hitSpace (cTellyApp& tellyApp) {
 
       if (tellyApp.isFileSource())
@@ -1980,61 +2039,6 @@ namespace {
         tellyApp.hitDown();
       else
         mMultiView.hitDown();
-      }
-    //}}}
-    //{{{
-    void keyboard (cTellyApp& tellyApp) {
-
-      //{{{
-      struct sActionKey {
-        bool mAlt;
-        bool mControl;
-        bool mShift;
-        ImGuiKey mGuiKey;
-        function <void()> mActionFunc;
-        };
-      //}}}
-      const vector<sActionKey> kActionKeys = {
-      //  alt    control shift  ImGuiKey             function
-        { false, false,  false, ImGuiKey_Space,      [this,&tellyApp]{ hitSpace (tellyApp); }},
-        { false, true,   false, ImGuiKey_LeftArrow,  [this,&tellyApp]{ hitControlLeft (tellyApp); }},
-        { false, true,   false, ImGuiKey_RightArrow, [this,&tellyApp]{ hitControlRight (tellyApp); }},
-        { false, false,  false, ImGuiKey_LeftArrow,  [this,&tellyApp]{ hitLeft (tellyApp); }},
-        { false, false,  false, ImGuiKey_RightArrow, [this,&tellyApp]{ hitRight (tellyApp); }},
-        { false, false,  false, ImGuiKey_UpArrow,    [this,&tellyApp]{ hitUp (tellyApp); }},
-        { false, false,  false, ImGuiKey_DownArrow,  [this,&tellyApp]{ hitDown (tellyApp); }},
-        { false, false,  false, ImGuiKey_Enter,      [this,&tellyApp]{ mMultiView.hitEnter(); }},
-        { false, false,  false, ImGuiKey_F,          [this,&tellyApp]{ tellyApp.getPlatform().toggleFullScreen(); }},
-        { false, false,  false, ImGuiKey_E,          [this,&tellyApp]{ tellyApp.toggleShowEpg(); }},
-        { false, false,  false, ImGuiKey_S,          [this,&tellyApp]{ tellyApp.toggleShowSubtitle(); }},
-        { false, false,  false, ImGuiKey_L,          [this,&tellyApp]{ tellyApp.toggleShowMotionVectors(); }},
-        { false, false,  false, ImGuiKey_T,          [this,&tellyApp]{ hitShow (eTelly); }},
-        { false, false,  false, ImGuiKey_P,          [this,&tellyApp]{ hitShow (ePids); }},
-        { false, false,  false, ImGuiKey_R,          [this,&tellyApp]{ hitShow (eRecord); }},
-        };
-
-      ImGui::GetIO().WantTextInput = true;
-      ImGui::GetIO().WantCaptureKeyboard = true;
-
-      // action keys
-      bool altKey = ImGui::GetIO().KeyAlt;
-      bool controlKey = ImGui::GetIO().KeyCtrl;
-      bool shiftKey = ImGui::GetIO().KeyShift;
-      for (auto& actionKey : kActionKeys)
-        if (ImGui::IsKeyPressed (actionKey.mGuiKey) &&
-            (actionKey.mAlt == altKey) &&
-            (actionKey.mControl == controlKey) &&
-            (actionKey.mShift == shiftKey)) {
-          actionKey.mActionFunc();
-          break;
-          }
-
-      // queued keys
-      //for (int i = 0; i < ImGui::GetIO().InputQueueCharacters.Size; i++) {
-      //  ImWchar ch = ImGui::GetIO().InputQueueCharacters[i];
-      //  cLog::log (LOGINFO, fmt::format ("enter {:4x} {} {} {}", ch, altKey, controlKey, shiftKey));
-      //  }
-      ImGui::GetIO().InputQueueCharacters.resize (0);
       }
     //}}}
 

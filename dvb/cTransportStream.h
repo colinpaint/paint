@@ -314,13 +314,13 @@ private:
   cService* getServiceBySid (uint16_t sid);
 
   //  parse
-  void parsePAT (uint8_t* buf);
+  uint16_t parsePSI (cPidInfo& pidInfo, uint8_t* buf);
   void parseNIT (uint8_t* buf);
+  void parseTDT (cPidInfo& pidInfo, uint8_t* buf);
+  void parsePAT (uint8_t* buf);
   void parseSDT (uint8_t* buf);
   void parseEIT (uint8_t* buf);
-  void parseTDT (cPidInfo& pidInfo, uint8_t* buf);
   void parsePMT (cPidInfo& pidInfo, uint8_t* buf);
-  uint16_t parsePSI (cPidInfo& pidInfo, uint8_t* buf);
 
   // vars
   const cDvbMultiplex mDvbMultiplex;

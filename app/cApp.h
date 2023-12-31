@@ -68,7 +68,7 @@ public:
   public:
     virtual ~iUI() = default;
 
-    virtual void draw (cApp& app, cGraphics& graphics) = 0;
+    virtual void draw (cApp& app) = 0;
     };
   //}}}
 

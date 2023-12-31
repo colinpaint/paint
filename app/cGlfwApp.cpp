@@ -363,7 +363,7 @@ void cApp::windowResize (int width, int height) {
   mPlatform->newFrame();
   ImGui::NewFrame();
 
-  mUI->draw (*this, *mGraphics);
+  mUI->draw (*this);
   ImGui::Render();
   mGraphics->renderDrawData();
 
@@ -381,7 +381,7 @@ void cApp::mainUILoop() {
       mPlatform->newFrame();
       ImGui::NewFrame();
 
-      mUI->draw (*this, *mGraphics);
+      mUI->draw (*this);
       ImGui::Render();
       mGraphics->renderDrawData();
 
