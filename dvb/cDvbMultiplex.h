@@ -17,5 +17,4 @@ public:
   int mFrequency;
   std::vector <std::string> mNames;
   std::vector <std::string> mRecordNames;
-  std::vector <int> mChannelNums;
   };

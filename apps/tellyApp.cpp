@@ -87,22 +87,19 @@ using namespace std;
 namespace {
   //{{{
   const vector <cDvbMultiplex> kDvbMultiplexes = {
-      { "hd", 626000000,
-        { "BBC ONE SW HD", "BBC TWO HD", "BBC THREE HD", "BBC FOUR HD", "ITV1 HD", "Channel 4 HD", "Channel 5 HD" },
-        { "bbc1",          "bbc2",       "bbc3",         "bbc4",        "itv",     "c4",           "c5" },
-        { 1,               2,            3,              4,             6,         7,              5 }
+      {"hd", 626000000,
+        {"BBC ONE SW HD", "BBC TWO HD", "BBC THREE HD", "BBC FOUR HD", "Channel 5 HD", "ITV1 HD", "Channel 4 HD"},
+        {"bbc1",          "bbc2",       "bbc3",         "bbc4",        "c5",           "itv",     "c4"}
       },
 
-      { "itv", 650000000,
-        { "ITV1",   "ITV2",   "ITV3",   "ITV4",   "Channel 4", "Channel 4+1", "More 4",  "Film4" ,  "E4",   "Channel 5" },
-        { "itv1sd", "itv2sd", "itv3sd", "itv4sd", "chn4sd",    "c4+1sd",      "more4sd", "film4sd", "e4sd", "chn5sd" },
-        { 1,        2,        3,        4,        5,           6,             7,         8,         9,      0 }
+      {"itv", 650000000,
+        {"ITV1",   "ITV2",   "ITV3",   "ITV4",   "Channel 4", "More 4",  "Film4" ,  "E4",   "Channel 5"},
+        {"itv1sd", "itv2sd", "itv3sd", "itv4sd", "c4sd",      "more4sd", "film4sd", "e4sd", "c5sd"}
       },
 
-      { "bbc", 674000000,
-        { "BBC ONE S West", "BBC TWO", "BBC FOUR" },
-        { "bbc1sd",         "bbc2sd",  "bbc4sd" },
-        { 1,                2,         4 }
+      {"bbc", 674000000,
+        {"BBC ONE S West", "BBC TWO", "BBC THREE", "BBC FOUR", "BBC NEWS"},
+        {"bbc1sd",         "bbc2sd",  "bbc3sd",    "bbc4sd",   "bbcNewsSd"}
       }
     };
   //}}}
@@ -1046,7 +1043,7 @@ namespace {
     void fileSource (const string& filename, cTellyOptions* options) {
 
       // create transportStream
-      mTransportStream = new cTransportStream ({ "file", 0, {}, {}, {} }, options);
+      mTransportStream = new cTransportStream ({ "file", 0, {}, {} }, options);
       if (!mTransportStream) {
         //{{{  error, return
         cLog::log (LOGERROR, "fileSource cTransportStream create failed");
