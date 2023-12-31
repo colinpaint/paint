@@ -33,20 +33,20 @@ public:
   public:
     //{{{
     cEpgItem (bool now, bool record,
-              std::chrono::system_clock::time_point time,
+              std::chrono::system_clock::time_point startTime,
               std::chrono::seconds duration,
-              const std::string& titleString, const std::string& infoString) :
+              const std::string& title, const std::string& info) :
         mNow(now), mRecord(record),
-        mTime(time), mDuration(duration),
-        mTitleString(titleString), mInfoString(infoString) {}
+        mStartTime(startTime), mDuration(duration),
+        mTitle(title), mInfo(info) {}
     //}}}
     ~cEpgItem() = default;
 
-    std::string getTitleString() { return mTitleString; }
-    std::string getDesriptionString() { return mInfoString; }
+    std::string getTitle() { return mTitle; }
+    std::string getInfo() { return mInfo; }
 
+    std::chrono::system_clock::time_point getStartTime() { return mStartTime; }
     std::chrono::seconds getDuration() { return mDuration; }
-    std::chrono::system_clock::time_point getTime() { return mTime; }
 
     bool getRecord() { return mRecord; }
     //{{{
@@ -57,14 +57,15 @@ public:
     //}}}
 
     //{{{
-    void set (std::chrono::system_clock::time_point time,
+    void set (std::chrono::system_clock::time_point startTime,
               std::chrono::seconds duration,
-              const std::string& titleString, const std::string& infoString) {
+              const std::string& title,
+              const std::string& info) {
 
-      mTime = time;
+      mStartTime = startTime;
       mDuration = duration;
-      mTitleString = titleString;
-      mInfoString = infoString;
+      mTitle = title;
+      mInfo = info;
       }
     //}}}
 
@@ -72,11 +73,11 @@ public:
     const bool mNow = false;
     bool mRecord = false;
 
-    std::chrono::system_clock::time_point mTime;
+    std::chrono::system_clock::time_point mStartTime;
     std::chrono::seconds mDuration;
 
-    std::string mTitleString;
-    std::string mInfoString;
+    std::string mTitle;
+    std::string mInfo;
     };
   //}}}
   //{{{
@@ -93,13 +94,13 @@ public:
 
     uint8_t getStreamType() const { return mStreamType; }
     std::string getPidName() const ;
-    std::string getInfoString() const { return mInfoString; }
+    std::string getInfo() const { return mInfo; }
 
     int getBufUsed() const { return int(mBufPtr - mBuffer); }
 
     void setSid (uint16_t sid) { mSid = sid; }
     void setStreamType (uint8_t streamType) { mStreamType = streamType; }
-    void setInfoString (const std::string infoString) { mInfoString = infoString; }
+    void setInfo (const std::string info) { mInfo = info; }
     void setPts (int64_t pts) { mPts = pts; }
     void setDts (int64_t dts) { mDts = dts; }
 
@@ -138,7 +139,7 @@ public:
     uint16_t mSid = 0;
     uint8_t mStreamType = 0;
 
-    std::string mInfoString;
+    std::string mInfo;
 
     int64_t mPts = -1;
     int64_t mDts = -1;
@@ -220,9 +221,9 @@ public:
     // epg
     bool isEpgRecord (const std::string& title, std::chrono::system_clock::time_point startTime);
     cEpgItem* getNowEpgItem() { return mNowEpgItem; }
-    std::string getNowTitleString() const { return mNowEpgItem ? mNowEpgItem->getTitleString() : ""; }
+    std::string getNowTitleString() const { return mNowEpgItem ? mNowEpgItem->getTitle() : ""; }
     std::map <std::chrono::system_clock::time_point, cEpgItem*>& getTodayEpg() { return mTodayEpg; }
-    std::map <std::chrono::system_clock::time_point, cEpgItem*>& getEpg() { return mEpg; }
+    std::map <std::chrono::system_clock::time_point, cEpgItem*>& getOtherEpg() { return mOtherEpg; }
     //{{{
     bool setNow (bool record,
                  std::chrono::system_clock::time_point time,
@@ -266,7 +267,7 @@ public:
     // epg
     cEpgItem* mNowEpgItem = nullptr;
     std::map <std::chrono::system_clock::time_point, cEpgItem*> mTodayEpg;
-    std::map <std::chrono::system_clock::time_point, cEpgItem*> mEpg;
+    std::map <std::chrono::system_clock::time_point, cEpgItem*> mOtherEpg;
     };
   //}}}
   //{{{

@@ -1524,10 +1524,12 @@ namespace {
               if (epgItem.first + epgItem.second->getDuration() > transportStream.getNowTdt()) {
                 // epgItem now or later today
                 string epgTitle = date::format ("%T", date::floor<chrono::seconds>(epgItem.first)) +
-                                  " " + epgItem.second->getTitleString();
+                                  " " + epgItem.second->getTitle();
+                                  //+ " " + epgItem.second->getInfo();
 
                 ImGui::SetCursorPos (pos);
                 ImGui::TextColored ({0.f,0.f,0.f,1.f}, epgTitle.c_str());
+
                 ImGui::SetCursorPos (pos - ImVec2(2.f,2.f));
                 ImGui::TextColored ({1.f, 1.f,1.f,1.f}, epgTitle.c_str());
 
@@ -1906,10 +1908,10 @@ namespace {
         ImGui::GetWindowDrawList()->AddRectFilled (pos, posTo, 0xff00ffff);
 
         // draw stream label
-        string streamText = pidInfo.getInfoString();
+        string info = pidInfo.getInfo();
         if ((pidInfo.getStreamType() == 0) && (pidInfo.getSid() != 0xFFFF))
-          streamText = fmt::format ("{} ", pidInfo.getSid()) + streamText;
-        ImGui::TextUnformatted (streamText.c_str());
+          info = fmt::format ("{} ", pidInfo.getSid()) + info;
+        ImGui::TextUnformatted (info.c_str());
 
         // adjust packet number width
         if (pidInfo.mPackets > pow (10, mPacketChars))

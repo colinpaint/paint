@@ -32,9 +32,9 @@ constexpr uint8_t kPacketSize = 188;
 
 #define HILO(x) (x##_hi << 8 | x##_lo)
 
-#define MjdToEpochTime(x) (unsigned int)((((x##_hi << 8) | x##_lo) - 40587) * 86400)
+#define mjdToEpochTime(x) (unsigned int)((((x##_hi << 8) | x##_lo) - 40587) * 86400)
 
-#define BcdTimeToSeconds(x) ((3600 * ((10*((x##_h & 0xF0)>>4)) + (x##_h & 0xF))) + \
+#define bcdTimeToSeconds(x) ((3600 * ((10*((x##_h & 0xF0)>>4)) + (x##_h & 0xF))) + \
                                (60 * ((10*((x##_m & 0xF0)>>4)) + (x##_m & 0xF))) + \
                                      ((10*((x##_s & 0xF0)>>4)) + (x##_s & 0xF)))
 
@@ -490,11 +490,11 @@ cTransportStream::cService::~cService() {
 
   for (auto& epgItem : mTodayEpg)
     delete epgItem.second;
-  for (auto& epgItem : mEpg)
-    delete epgItem.second;
-
   mTodayEpg.clear();
-  mEpg.clear();
+
+  for (auto& epgItem : mOtherEpg)
+    delete epgItem.second;
+  mOtherEpg.clear();
 
   closeFile();
   }
@@ -636,13 +636,13 @@ bool cTransportStream::cService::isEpgRecord (const string& title, chrono::syste
 
   auto it = mTodayEpg.find (startTime);
   if (it != mTodayEpg.end())
-    if (title == it->second->getTitleString())
+    if (title == it->second->getTitle())
       if (it->second->getRecord())
         return true;
 
-  it = mEpg.find (startTime);
-  if (it != mEpg.end())
-    if (title == it->second->getTitleString())
+  it = mOtherEpg.find (startTime);
+  if (it != mOtherEpg.end())
+    if (title == it->second->getTitle())
       if (it->second->getRecord())
         return true;
 
@@ -657,7 +657,7 @@ bool cTransportStream::cService::setNow (bool record,
                                          const string& info) {
 // return true if new nowEpgItem
 
-  if (mNowEpgItem && (mNowEpgItem->getTime() == time))
+  if (mNowEpgItem && (mNowEpgItem->getStartTime() == time))
     return false;
 
   delete mNowEpgItem;
@@ -686,9 +686,9 @@ void cTransportStream::cService::setEpg (bool record,
     }
   else {
     // not today
-    auto it = mEpg.find (startTime);
-    if (it == mEpg.end())
-      mEpg.emplace (startTime, new cEpgItem (false, record, startTime, duration, title, info));
+    auto it = mOtherEpg.find (startTime);
+    if (it == mOtherEpg.end())
+      mOtherEpg.emplace (startTime, new cEpgItem (false, record, startTime, duration, title, info));
     else
       it->second->set (startTime, duration, title, info);
     }
@@ -1177,15 +1177,14 @@ void cTransportStream::parseTDT (cPidInfo& pidInfo, uint8_t* buf) {
 
   sTdt* tdt = (sTdt*)buf;
   if (tdt->table_id == TID_TDT) {
-    mNowTdt = chrono::system_clock::from_time_t (MjdToEpochTime (tdt->utc_mjd) +
-                                                 BcdTimeToSeconds (tdt->utc_time));
+    mNowTdt = chrono::system_clock::from_time_t (mjdToEpochTime (tdt->utc_mjd) +
+                                                 bcdTimeToSeconds (tdt->utc_time));
     if (!mHasFirstTdt) {
       mFirstTdt = mNowTdt;
       mHasFirstTdt = true;
       }
 
-    pidInfo.setInfoString (
-      date::format ("%T", date::floor<chrono::seconds>(mFirstTdt)) + " to " + getTdtString());
+    pidInfo.setInfo (date::format ("%T", date::floor<chrono::seconds>(mFirstTdt)) + " " + getTdtString());
     }
   }
 //}}}
@@ -1380,13 +1379,13 @@ void cTransportStream::parseEIT (uint8_t* buf) {
           cService* service = getServiceBySid (sid);
           if (service) {
             // known service
-            auto startTime = chrono::system_clock::from_time_t (
-              MjdToEpochTime (eitEvent->mjd) + BcdTimeToSeconds (eitEvent->start_time));
-            chrono::seconds duration (BcdTimeToSeconds (eitEvent->duration));
+            auto startTime = chrono::system_clock::from_time_t (mjdToEpochTime (eitEvent->mjd) +
+                                                                bcdTimeToSeconds (eitEvent->start_time));
+            chrono::seconds duration (bcdTimeToSeconds (eitEvent->duration));
 
             // get title
-            auto bufPtr = buf + sizeof(descrShortEvent) - 1;
-            auto title = cDvbUtils::getDvbString (bufPtr);
+            uint8_t* bufPtr = buf + sizeof(descrShortEvent) - 1;
+            string title = cDvbUtils::getDvbString (bufPtr);
 
             // get info
             bufPtr += ((descrShortEvent*)buf)->event_name_length;
@@ -1407,7 +1406,7 @@ void cTransportStream::parseEIT (uint8_t* buf) {
                   auto pidInfoIt = mPidInfoMap.find (service->getProgramPid());
                   if (pidInfoIt != mPidInfoMap.end())
                     // update service pgmPid infoStr with new nowEvent
-                    pidInfoIt->second.setInfoString (service->getName() + " " + service->getNowTitleString());
+                    pidInfoIt->second.setInfo (service->getName() + " " + service->getNowTitleString());
 
                   // start new program on service
                   lock_guard<mutex> lockGuard (mRecordMutex);
