@@ -947,7 +947,7 @@ namespace {
     cTransportStream& getTransportStream() { return *mTransportStream; }
 
     // liveDvbSource
-    bool isDvbSource() const { return mDvbSource; }
+    bool hasDvbSource() const { return mDvbSource; }
     cDvbSource& getDvbSource() { return *mDvbSource; }
     //{{{
     void liveDvbSource (const cDvbMultiplex& multiplex, cTellyOptions* options) {
@@ -1034,7 +1034,7 @@ namespace {
     //}}}
 
     // fileSource
-    bool isFileSource() { return mFileSource; }
+    bool hasFileSource() { return mFileSource; }
     uint64_t getStreamPos() const { return mStreamPos; }
     uint64_t getFilePos() const { return mFilePos; }
     size_t getFileSize() const { return mFileSize; }
@@ -1115,13 +1115,15 @@ namespace {
     //}}}
 
     // actions
-    void hitControlLeft()  { skip (-90000 / 25); }
-    void hitControlRight() { skip ( 90000 / 25); }
-    void hitLeft()         { skip (-90000); }
-    void hitRight()        { skip ( 90000); }
-    void hitUp()           { skip (-900000); }
-    void hitDown()         { skip ( 900000); }
-    void hitSpace() { mTransportStream->togglePlay(); }
+    //{{{
+    void skip (int64_t skipPts) {
+
+      int64_t offset = mTransportStream->getSkipOffset (skipPts);
+      cLog::log (LOGINFO, fmt::format ("skip:{} offset:{} pos:{}", skipPts, offset, mStreamPos));
+      mStreamPos += offset;
+      }
+    //}}}
+    void togglePlay() { mTransportStream->togglePlay(); }
     void toggleShowEpg() { mOptions->mShowEpg = !mOptions->mShowEpg; }
     void toggleShowSubtitle() { mOptions->mShowSubtitle = !mOptions->mShowSubtitle; }
     void toggleShowMotionVectors() { mOptions->mShowMotionVectors = !mOptions->mShowMotionVectors; }
@@ -1138,14 +1140,6 @@ namespace {
     //}}}
 
   private:
-    //{{{
-    void skip (int64_t skipPts) {
-
-      int64_t offset = mTransportStream->getSkipOffset (skipPts);
-      cLog::log (LOGINFO, fmt::format ("skip:{} offset:{} pos:{}", skipPts, offset, mStreamPos));
-      mStreamPos += offset;
-      }
-    //}}}
 
     cTellyOptions* mOptions;
     cTransportStream* mTransportStream = nullptr;
@@ -1170,91 +1164,68 @@ namespace {
     //{{{
     virtual void draw (cApp& app) final {
 
-      cTellyApp& tellyApp = (cTellyApp&)app;
-
       cGraphics& graphics = app.getGraphics();
-      graphics.clear ({(int32_t)ImGui::GetIO().DisplaySize.x,
-                       (int32_t)ImGui::GetIO().DisplaySize.y});
+      graphics.clear ({(int32_t)ImGui::GetIO().DisplaySize.x, (int32_t)ImGui::GetIO().DisplaySize.y});
 
       ImGui::SetKeyboardFocusHere();
-      ImGui::SetNextWindowPos ({0.f,0.f});
       ImGui::SetNextWindowSize (ImGui::GetIO().DisplaySize);
       ImGui::Begin ("telly", nullptr, ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoBackground |
                                       ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove |
                                       ImGuiWindowFlags_NoScrollbar);
 
-      if (tellyApp.hasTransportStream())
-        mTab = (eTab)interlockedButtons (kTabNames, (uint8_t)mTab, {0.f,0.f}, true);
-
-      //{{{  draw epg button
-      ImGui::SameLine();
-      if (toggleButton ("epg", tellyApp.getOptions()->mShowEpg))
-        tellyApp.toggleShowEpg();
-      //}}}
-      //{{{  draw subtitle button
-      ImGui::SameLine();
-      if (toggleButton ("sub", tellyApp.getOptions()->mShowSubtitle))
-        tellyApp.toggleShowSubtitle();
-      //}}}
-      //{{{  draw motionVectors button
-      if (tellyApp.getOptions()->mHasMotionVectors) {
-        ImGui::SameLine();
-        if (toggleButton ("motion", tellyApp.getOptions()->mShowMotionVectors))
-          tellyApp.toggleShowMotionVectors();
-        }
-      //}}}
-      //{{{  draw fullScreen button
-      if (tellyApp.getPlatform().hasFullScreen()) {
-        ImGui::SameLine();
-        if (toggleButton ("full", tellyApp.getPlatform().getFullScreen()))
-          tellyApp.getPlatform().toggleFullScreen();
-        }
-      //}}}
-      //{{{  draw vsync button
-      ImGui::SameLine();
-      if (tellyApp.getPlatform().hasVsync())
-        if (toggleButton ("vsync", tellyApp.getPlatform().getVsync()))
-          tellyApp.getPlatform().toggleVsync();
-      //}}}
-      //{{{  draw frameRate info
-      ImGui::SameLine();
-      ImGui::TextUnformatted(fmt::format("{}:fps", static_cast<uint32_t>(ImGui::GetIO().Framerate)).c_str());
-      //}}}
-
+      cTellyApp& tellyApp = (cTellyApp&)app;
       if (tellyApp.hasTransportStream()) {
         cTransportStream& transportStream = tellyApp.getTransportStream();
 
-        if (tellyApp.isFileSource()) {
-          //{{{  draw streamPos info
+        ImGui::SetCursorPos ({0.f,ImGui::GetIO().DisplaySize.y - ImGui::GetTextLineHeight()*2.f});
+        mTab = (eTab)interlockedButtons (kTabNames, (uint8_t)mTab, {0.f,0.f}, true);
+        //{{{  draw epg button
+        ImGui::SameLine();
+        if (toggleButton ("epg", tellyApp.getOptions()->mShowEpg))
+          tellyApp.toggleShowEpg();
+        //}}}
+        //{{{  draw subtitle button
+        ImGui::SameLine();
+        if (toggleButton ("sub", tellyApp.getOptions()->mShowSubtitle))
+          tellyApp.toggleShowSubtitle();
+        //}}}
+        //{{{  draw motionVectors button
+        if (tellyApp.getOptions()->mHasMotionVectors) {
           ImGui::SameLine();
-          ImGui::TextUnformatted (fmt::format ("{:4.3f}%", tellyApp.getStreamPos() * 100.f /
-                                                           tellyApp.getFileSize()).c_str());
+          if (toggleButton ("motion", tellyApp.getOptions()->mShowMotionVectors))
+            tellyApp.toggleShowMotionVectors();
           }
-          //}}}
-        else if (tellyApp.isDvbSource()) {
+        //}}}
+        //{{{  draw fullScreen button
+        if (tellyApp.getPlatform().hasFullScreen()) {
+          ImGui::SameLine();
+          if (toggleButton ("full", tellyApp.getPlatform().getFullScreen()))
+            tellyApp.getPlatform().toggleFullScreen();
+          }
+        //}}}
+        //{{{  draw vsync button
+        ImGui::SameLine();
+        if (tellyApp.getPlatform().hasVsync())
+          if (toggleButton ("vsync", tellyApp.getPlatform().getVsync()))
+            tellyApp.getPlatform().toggleVsync();
+        //}}}
+        //{{{  draw frameRate info
+        ImGui::SameLine();
+        ImGui::TextUnformatted(fmt::format("{}:fps", static_cast<uint32_t>(ImGui::GetIO().Framerate)).c_str());
+        //}}}
+        if (tellyApp.hasDvbSource()) {
           //{{{  draw dvbSource signal,errors
           ImGui::SameLine();
           ImGui::TextUnformatted (fmt::format ("{} {}", tellyApp.getDvbSource().getTuneString(),
                                                         tellyApp.getDvbSource().getStatusString()).c_str());
           }
           //}}}
-
         if (tellyApp.getTransportStream().getNumErrors()) {
           //{{{  draw transportStream errors
           ImGui::SameLine();
           ImGui::TextUnformatted (fmt::format ("error:{}", tellyApp.getTransportStream().getNumErrors()).c_str());
           }
           //}}}
-
-        //{{{  draw tab subMenu with monoSpaced font
-        ImGui::PushFont (tellyApp.getMonoFont());
-        switch (mTab) {
-          case ePids: drawPidMap (transportStream); break;
-          case eRecord: drawRecordedFileNames (transportStream); break;
-          default:;
-          }
-        ImGui::PopFont();
-        //}}}
 
         if (transportStream.hasFirstTdt()) {
           //{{{  draw clock
@@ -1263,6 +1234,17 @@ namespace {
           clockButton ("clock", transportStream.getNowTdt(), { 80.f, 80.f });
           }
           //}}}
+
+        //{{{  draw tab subMenu with monoSpaced font
+        ImGui::SetCursorPos ({0.f,0.f});
+        ImGui::PushFont (tellyApp.getMonoFont());
+        switch (mTab) {
+          case ePids: drawPidMap (transportStream); break;
+          case eRecord: drawRecordedFileNames (transportStream); break;
+          default:;
+          }
+        ImGui::PopFont();
+        //}}}
 
         // draw piccies, strange order, after buttons displayed above ???
         mMultiView.draw (tellyApp, transportStream);
@@ -1398,6 +1380,7 @@ namespace {
                    cTextureShader* videoShader, cTextureShader* subtitleShader) {
         // return true if hit
 
+          bool result = false;
           cGraphics& graphics = tellyApp.getGraphics();
           cTellyOptions* options = tellyApp.getOptions();
 
@@ -1409,6 +1392,9 @@ namespace {
                  (layoutPos.y - (layoutScale/2.f)) * viewportHeight};
           mBR = {(layoutPos.x + (layoutScale/2.f)) * viewportWidth,
                  (layoutPos.y + (layoutScale/2.f)) * viewportHeight};
+
+          ImGui::SetCursorPos (mTL);
+          ImGui::BeginChild (fmt::format ("child##{}", mService.getSid()).c_str(), mBR-mTL);
 
           bool enabled = mService.getStream (cTransportStream::eVideo).isEnabled();
           if (enabled) {
@@ -1513,44 +1499,48 @@ namespace {
               //}}}
             }
 
-          if ((mSelect == eSelectedFull) && options->mShowEpg) {
-            //{{{  draw todays epg
-            ImVec2 pos = mTL + ImVec2(ImGui::GetTextLineHeight(), ImGui::GetTextLineHeight()*2);
+          // draw select rect
+          bool hover = ImGui::IsMouseHoveringRect (mTL, mBR);
+          if ((hover || (mSelect != eUnselected)) && (mSelect != eSelectedFull))
+            ImGui::GetWindowDrawList()->AddRect (mTL, mBR, hover ? 0xff20ffff : 0xff20ff20, 4.f, 0, 4.f);
 
+          ImGui::SetCursorPos ({0.f,0.f});
+          //{{{  draw channel title
+          string channelString = mService.getName();
+          if (!enabled || (mSelect == eSelectedFull))
+            channelString += " " + mService.getNowTitleString();
+
+          ImVec2 pos = {ImGui::GetTextLineHeight() * 0.25f, 0.f};
+          ImGui::SetCursorPos (pos);
+          ImGui::TextColored ({0.f,0.f,0.f,1.f}, channelString.c_str());
+
+          ImGui::SetCursorPos (pos - ImVec2(2.f,2.f));
+          ImGui::TextColored ({1.f, 1.f,1.f,1.f}, channelString.c_str());
+          //}}}
+          //if ((mSelect == eSelectedFull) && options->mShowEpg) {
+          if (options->mShowEpg) {
+            //{{{  draw todays epg
             for (auto& epgItem : mService.getTodayEpg()) {
               if (epgItem.first + epgItem.second->getDuration() > transportStream.getNowTdt()) {
                 // epgItem now or later today
-                string epgTitle = date::format ("%T", date::floor<chrono::seconds>(epgItem.first)) +
-                                  " " + epgItem.second->getTitle();
+                string epgTitle = date::format ("%H:%M ", date::floor<chrono::seconds>(epgItem.first)) +
+                                  epgItem.second->getTitle();
                                   //+ " " + epgItem.second->getInfo();
 
+                pos.y += ImGui::GetTextLineHeight();
                 ImGui::SetCursorPos (pos);
                 ImGui::TextColored ({0.f,0.f,0.f,1.f}, epgTitle.c_str());
 
                 ImGui::SetCursorPos (pos - ImVec2(2.f,2.f));
                 ImGui::TextColored ({1.f, 1.f,1.f,1.f}, epgTitle.c_str());
-
-                pos.y += ImGui::GetTextLineHeight();
                 }
               }
             }
             //}}}
-          //{{{  draw channel title bottomLeft
-          string channelString = mService.getName();
-          if (!enabled || (mSelect == eSelectedFull))
-            channelString += " " + mService.getNowTitleString();
-
-          ImVec2 pos = {mTL.x + (ImGui::GetTextLineHeight() * 0.25f),
-                        mBR.y - ImGui::GetTextLineHeight()};
-          ImGui::SetCursorPos (pos);
-          ImGui::TextColored ({0.f,0.f,0.f,1.f}, channelString.c_str());
-          ImGui::SetCursorPos (pos - ImVec2(2.f,2.f));
-          ImGui::TextColored ({1.f, 1.f,1.f,1.f}, channelString.c_str());
-          //}}}
           //{{{  draw ptsFromStart bottom right
           string ptsFromStartString = utils::getPtsString (mService.getPtsFromStart());
 
-          pos = mBR - ImVec2(ImGui::GetTextLineHeight() * 7.f, ImGui::GetTextLineHeight());
+          pos = mBR - mTL - ImVec2(ImGui::GetTextLineHeight() * 7.f, ImGui::GetTextLineHeight());
 
           ImGui::SetCursorPos (pos);
           ImGui::TextColored ({0.f,0.f,0.f,1.f}, ptsFromStartString.c_str());
@@ -1559,12 +1549,7 @@ namespace {
           ImGui::TextColored ({1.f,1.f,1.f,1.f}, ptsFromStartString.c_str());
           //}}}
 
-          // draw select rect
-          bool hover = ImGui::IsMouseHoveringRect (mTL, mBR);
-          if ((hover || (mSelect != eUnselected)) && (mSelect != eSelectedFull))
-            ImGui::GetWindowDrawList()->AddRect (mTL, mBR, hover ? 0xff20ffff : 0xff20ff20, 4.f, 0, 4.f);
-
-          ImGui::SetCursorPos (mTL);
+          ImGui::SetCursorPos ({0.f,0.f});
           if (ImGui::InvisibleButton (fmt::format ("view##{}", mService.getSid()).c_str(), mBR-mTL)) {
             // hit view, select action
             if (!mService.getStream (cTransportStream::eVideo).isEnabled())
@@ -1575,10 +1560,13 @@ namespace {
               mSelect = eSelectedFull;
             else if (mSelect == eSelectedFull)
               mSelect = eSelected;
-            return true;
+            result = true;
             }
+          else
+            result = false;
 
-          return false;
+          ImGui::EndChild();
+          return result;
           }
         //}}}
 
@@ -1984,8 +1972,8 @@ namespace {
     //{{{
     void hitSpace (cTellyApp& tellyApp) {
 
-      if (tellyApp.isFileSource())
-        tellyApp.hitSpace();
+      if (tellyApp.hasFileSource())
+        tellyApp.togglePlay();
       else
         mMultiView.hitSpace();
       }
@@ -1993,22 +1981,22 @@ namespace {
     //{{{
     void hitControlLeft (cTellyApp& tellyApp) {
 
-      if (tellyApp.isFileSource())
-        tellyApp.hitControlLeft();
+      if (tellyApp.hasFileSource())
+        tellyApp.skip (-90000 / 25);
       }
     //}}}
     //{{{
     void hitControlRight (cTellyApp& tellyApp) {
 
-      if (tellyApp.isFileSource())
-        tellyApp.hitControlRight();
+      if (tellyApp.hasFileSource())
+        tellyApp.skip (90000 / 25);
       }
     //}}}
     //{{{
     void hitLeft (cTellyApp& tellyApp) {
 
-      if (tellyApp.isFileSource())
-        tellyApp.hitLeft();
+      if (tellyApp.hasFileSource())
+        tellyApp.skip (-90000);
       else
         mMultiView.hitLeft();
       }
@@ -2016,8 +2004,8 @@ namespace {
     //{{{
     void hitRight (cTellyApp& tellyApp) {
 
-      if (tellyApp.isFileSource())
-        tellyApp.hitRight();
+      if (tellyApp.hasFileSource())
+        tellyApp.skip (90000 / 25);
       else
         mMultiView.hitRight();
       }
@@ -2025,8 +2013,8 @@ namespace {
     //{{{
     void hitUp (cTellyApp& tellyApp) {
 
-      if (tellyApp.isFileSource())
-        tellyApp.hitUp();
+      if (tellyApp.hasFileSource())
+        tellyApp.skip (-900000 / 25);
       else
         mMultiView.hitUp();
       }
@@ -2034,8 +2022,8 @@ namespace {
     //{{{
     void hitDown (cTellyApp& tellyApp) {
 
-      if (tellyApp.isFileSource())
-        tellyApp.hitDown();
+      if (tellyApp.hasFileSource())
+        tellyApp.skip (900000 / 25);
       else
         mMultiView.hitDown();
       }
