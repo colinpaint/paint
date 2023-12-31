@@ -1404,9 +1404,9 @@ namespace {
           cVec2 layoutPos = getLayout (viewIndex, numViews, layoutScale);
           float viewportWidth = ImGui::GetWindowWidth();
           float viewportHeight = ImGui::GetWindowHeight();
-          mTl = {(layoutPos.x - (layoutScale/2.f)) * viewportWidth,
+          mTL = {(layoutPos.x - (layoutScale/2.f)) * viewportWidth,
                  (layoutPos.y - (layoutScale/2.f)) * viewportHeight};
-          mBr = {(layoutPos.x + (layoutScale/2.f)) * viewportWidth,
+          mBR = {(layoutPos.x + (layoutScale/2.f)) * viewportWidth,
                  (layoutPos.y + (layoutScale/2.f)) * viewportHeight};
 
           bool enabled = mService.getStream (cTransportStream::eVideo).isEnabled();
@@ -1481,9 +1481,9 @@ namespace {
                   if (numMotionVectors) {
                     for (size_t i = 0; i < numMotionVectors; i++) {
                       ImGui::GetWindowDrawList()->AddLine (
-                        mTl + ImVec2(mv->src_x * viewportWidth / videoFrame->getWidth(),
+                        mTL + ImVec2(mv->src_x * viewportWidth / videoFrame->getWidth(),
                                      mv->src_y * viewportHeight / videoFrame->getHeight()),
-                        mTl + ImVec2((mv->src_x + (mv->motion_x / mv->motion_scale)) * viewportWidth / videoFrame->getWidth(),
+                        mTL + ImVec2((mv->src_x + (mv->motion_x / mv->motion_scale)) * viewportWidth / videoFrame->getWidth(),
                                       (mv->src_y + (mv->motion_y / mv->motion_scale)) * viewportHeight / videoFrame->getHeight()),
                         mv->source > 0 ? 0xc0c0c0c0 : 0xc000c0c0, 1.f);
                       mv++;
@@ -1500,23 +1500,25 @@ namespace {
 
                 // draw audioMeter graphic
                 mAudioMeterView.draw (audioRender, playPts,
-                                      ImVec2(mBr.x - (0.5f * ImGui::GetTextLineHeight()),
-                                             mBr.y - (0.5f * ImGui::GetTextLineHeight())));
+                                      ImVec2(mBR.x - (0.5f * ImGui::GetTextLineHeight()),
+                                             mBR.y - (0.5f * ImGui::GetTextLineHeight())));
                 // draw frames graphic
                 if (mSelect == eSelectedFull)
                   mFramesView.draw (audioRender, videoRender, playPts,
-                                    ImVec2((mTl.x + mBr.x)/2.f,
-                                           mBr.y - (0.5f * ImGui::GetTextLineHeight())));
+                                    ImVec2((mTL.x + mBR.x)/2.f,
+                                           mBR.y - (0.5f * ImGui::GetTextLineHeight())));
                 }
               }
               //}}}
             }
 
           if ((mSelect == eSelectedFull) && options->mShowEpg) {
-            //{{{  draw epg
-            ImVec2 pos = mTl + ImVec2(ImGui::GetTextLineHeight(), ImGui::GetTextLineHeight()*2);
+            //{{{  draw today epg
+            ImVec2 pos = mTL + ImVec2(ImGui::GetTextLineHeight(), ImGui::GetTextLineHeight()*2);
+
             for (auto& epgItem : mService.getTodayEpg()) {
               if (epgItem.first + epgItem.second->getDuration() > transportStream.getNowTdt()) {
+                // epgItem now or later today
                 string epgTitle = date::format ("%T", date::floor<chrono::seconds>(epgItem.first)) +
                                   " " + epgItem.second->getTitleString();
 
@@ -1530,14 +1532,13 @@ namespace {
               }
             }
             //}}}
-
           //{{{  draw channel title bottomLeft
           string channelString = mService.getName();
           if (!enabled || (mSelect == eSelectedFull))
             channelString += " " + mService.getNowTitleString();
 
-          ImVec2 pos = {mTl.x + (ImGui::GetTextLineHeight() * 0.25f),
-                        mBr.y - ImGui::GetTextLineHeight()};
+          ImVec2 pos = {mTL.x + (ImGui::GetTextLineHeight() * 0.25f),
+                        mBR.y - ImGui::GetTextLineHeight()};
           ImGui::SetCursorPos (pos);
           ImGui::TextColored ({0.f,0.f,0.f,1.f}, channelString.c_str());
           ImGui::SetCursorPos (pos - ImVec2(2.f,2.f));
@@ -1546,20 +1547,22 @@ namespace {
           //{{{  draw ptsFromStart bottom right
           string ptsFromStartString = utils::getPtsString (mService.getPtsFromStart());
 
-          pos = mBr - ImVec2(ImGui::GetTextLineHeight() * 6.f, ImGui::GetTextLineHeight());
+          pos = mBR - ImVec2(ImGui::GetTextLineHeight() * 7.f, ImGui::GetTextLineHeight());
+
           ImGui::SetCursorPos (pos);
           ImGui::TextColored ({0.f,0.f,0.f,1.f}, ptsFromStartString.c_str());
+
           ImGui::SetCursorPos (pos - ImVec2(2.f,2.f));
           ImGui::TextColored ({1.f,1.f,1.f,1.f}, ptsFromStartString.c_str());
           //}}}
 
           // draw select rect
-          bool hover = ImGui::IsMouseHoveringRect (mTl, mBr);
+          bool hover = ImGui::IsMouseHoveringRect (mTL, mBR);
           if ((hover || (mSelect != eUnselected)) && (mSelect != eSelectedFull))
-            ImGui::GetWindowDrawList()->AddRect (mTl, mBr, hover ? 0xff20ffff : 0xff20ff20, 4.f, 0, 4.f);
+            ImGui::GetWindowDrawList()->AddRect (mTL, mBR, hover ? 0xff20ffff : 0xff20ff20, 4.f, 0, 4.f);
 
-          ImGui::SetCursorPos (mTl);
-          if (ImGui::InvisibleButton (fmt::format ("view##{}", mService.getSid()).c_str(), mBr-mTl)) {
+          ImGui::SetCursorPos (mTL);
+          if (ImGui::InvisibleButton (fmt::format ("view##{}", mService.getSid()).c_str(), mBR-mTL)) {
             // hit view, select action
             if (!mService.getStream (cTransportStream::eVideo).isEnabled())
               mService.enableStreams();
@@ -1835,8 +1838,8 @@ namespace {
         eSelect mSelect = eUnselected;
 
         // video
-        ImVec2 mTl;
-        ImVec2 mBr;
+        ImVec2 mTL;
+        ImVec2 mBR;
         cQuad* mVideoQuad = nullptr;
 
         // graphics
