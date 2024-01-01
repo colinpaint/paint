@@ -2099,16 +2099,19 @@ int main (int numArgs, char* args[]) {
     return EXIT_SUCCESS;
     }
 
-  cTellyApp tellyApp (options, new cTellyUI());
   if (options->mFileName.empty()) {
     // liveDvb source
     options->mIsLive = true;
     options->mRecordRoot = kRootDir;
+    cTellyApp tellyApp (options, new cTellyUI());
     tellyApp.liveDvbSource (options->mMultiplex, options);
+    tellyApp.mainUILoop();
     }
-  else // file source
+  else { 
+    // file source
+    cTellyApp tellyApp (options, new cTellyUI());
     tellyApp.fileSource (options->mFileName, options);
-
-  tellyApp.mainUILoop();
+    tellyApp.mainUILoop();
+    }
   return EXIT_SUCCESS;
   }
