@@ -204,8 +204,8 @@ namespace {
   public:
     virtual void draw (cApp& app) final {
 
-      cGraphics& graphics = app.getGraphics();
-      graphics.clear ({(int32_t)ImGui::GetIO().DisplaySize.x, (int32_t)ImGui::GetIO().DisplaySize.y});
+      app.getGraphics().clear ({(int32_t)ImGui::GetIO().DisplaySize.x,
+                                (int32_t)ImGui::GetIO().DisplaySize.y});
 
       ImGui::SetNextWindowSize (ImGui::GetIO().DisplaySize);
       ImGui::Begin ("song", nullptr, ImGuiWindowFlags_NoTitleBar |
@@ -1163,8 +1163,8 @@ namespace {
     //{{{
     virtual void draw (cApp& app) final {
 
-      cGraphics& graphics = app.getGraphics();
-      graphics.clear ({(int32_t)ImGui::GetIO().DisplaySize.x, (int32_t)ImGui::GetIO().DisplaySize.y});
+      app.getGraphics().clear ({(int32_t)ImGui::GetIO().DisplaySize.x,
+                                (int32_t)ImGui::GetIO().DisplaySize.y});
 
       ImGui::SetKeyboardFocusHere();
       ImGui::SetNextWindowSize (ImGui::GetIO().DisplaySize);
@@ -1174,69 +1174,76 @@ namespace {
 
       cTellyApp& tellyApp = (cTellyApp&)app;
       if (tellyApp.hasTransportStream()) {
-        ImGui::SetCursorPos ({0.f,ImGui::GetIO().DisplaySize.y - ImGui::GetTextLineHeight()*2.f});
+        cTransportStream& transportStream = tellyApp.getTransportStream();
+
+        // multiVeiw piccies
+        mMultiView.draw (tellyApp, transportStream);
+
+        // menu
+        ImGui::SetCursorPos ({0.f,ImGui::GetIO().DisplaySize.y - ImGui::GetTextLineHeight()*1.5f});
+        ImGui::BeginChild ("menu", {ImGui::GetIO().DisplaySize.x, ImGui::GetTextLineHeight()*1.5f});
         mTab = (eTab)interlockedButtons (kTabNames, (uint8_t)mTab, {0.f,0.f}, true);
-        //{{{  draw epg button
+        //{{{  epg button
         ImGui::SameLine();
         if (toggleButton ("epg", tellyApp.getOptions()->mShowEpg))
           tellyApp.toggleShowEpg();
         //}}}
-        //{{{  draw subtitle button
+        //{{{  subtitle button
         ImGui::SameLine();
         if (toggleButton ("sub", tellyApp.getOptions()->mShowSubtitle))
           tellyApp.toggleShowSubtitle();
         //}}}
-        //{{{  draw motionVectors button
         if (tellyApp.getOptions()->mHasMotionVectors) {
+          //{{{  motionVectors button
           ImGui::SameLine();
           if (toggleButton ("motion", tellyApp.getOptions()->mShowMotionVectors))
             tellyApp.toggleShowMotionVectors();
           }
-        //}}}
-        //{{{  draw fullScreen button
+          //}}}
         if (tellyApp.getPlatform().hasFullScreen()) {
+          //{{{  fullScreen button
           ImGui::SameLine();
           if (toggleButton ("full", tellyApp.getPlatform().getFullScreen()))
             tellyApp.getPlatform().toggleFullScreen();
           }
-        //}}}
-        //{{{  draw vsync button
-        ImGui::SameLine();
-        if (tellyApp.getPlatform().hasVsync())
+          //}}}
+        if (tellyApp.getPlatform().hasVsync()) {
+          //{{{  vsync button
+          ImGui::SameLine();
           if (toggleButton ("vsync", tellyApp.getPlatform().getVsync()))
             tellyApp.getPlatform().toggleVsync();
-        //}}}
-        //{{{  draw frameRate info
+          }
+          //}}}
+        //{{{  frameRate info
         ImGui::SameLine();
-        ImGui::TextUnformatted(fmt::format("{}:fps", static_cast<uint32_t>(ImGui::GetIO().Framerate)).c_str());
+        ImGui::TextUnformatted (fmt::format("{}:fps", static_cast<uint32_t>(ImGui::GetIO().Framerate)).c_str());
         //}}}
-
         if (tellyApp.hasDvbSource()) {
-          //{{{  draw dvbSource signal,errors
+          //{{{  dvbSource signal,errors
           ImGui::SameLine();
           ImGui::TextUnformatted (fmt::format ("{} {}", tellyApp.getDvbSource().getTuneString(),
                                                         tellyApp.getDvbSource().getStatusString()).c_str());
           }
           //}}}
-
-        // transportStream boxes
-        cTransportStream& transportStream = tellyApp.getTransportStream();
         if (transportStream.getNumErrors()) {
-          //{{{  draw transportStream errors
+          //{{{  transportStream errors
           ImGui::SameLine();
           ImGui::TextUnformatted (fmt::format ("error:{}", tellyApp.getTransportStream().getNumErrors()).c_str());
           }
           //}}}
+        ImGui::EndChild();
+
         if (transportStream.hasFirstTdt()) {
-          //{{{  draw clock
+          //{{{  clock
           //ImGui::TextUnformatted (transportStream.getTdtString().c_str());
           ImGui::SetCursorPos ({ ImGui::GetWindowWidth() - 90.f, 0.f} );
           clockButton ("clock", transportStream.getNowTdt(), { 80.f, 80.f });
           }
           //}}}
 
-        //{{{  draw tab subMenu with monoSpaced font
+        //{{{  tabbed subMenu
         ImGui::SetCursorPos ({0.f,0.f});
+
         ImGui::PushFont (tellyApp.getMonoFont());
         switch (mTab) {
           case ePids: drawPidMap (transportStream); break;
@@ -1245,9 +1252,6 @@ namespace {
           }
         ImGui::PopFont();
         //}}}
-
-        // draw piccies, strange order, after buttons displayed above ???
-        mMultiView.draw (tellyApp, transportStream);
         }
 
       keyboard (tellyApp);
@@ -1378,20 +1382,19 @@ namespace {
         // return true if hit
 
           bool result = false;
-          cGraphics& graphics = tellyApp.getGraphics();
-          cTellyOptions* options = tellyApp.getOptions();
 
           float layoutScale;
           cVec2 layoutPos = getLayout (viewIndex, numViews, layoutScale);
           float viewportWidth = ImGui::GetWindowWidth();
           float viewportHeight = ImGui::GetWindowHeight();
-          mTL = {(layoutPos.x - (layoutScale/2.f)) * viewportWidth,
-                 (layoutPos.y - (layoutScale/2.f)) * viewportHeight};
-          mBR = {(layoutPos.x + (layoutScale/2.f)) * viewportWidth,
-                 (layoutPos.y + (layoutScale/2.f)) * viewportHeight};
+          mSize = {layoutScale * viewportWidth, layoutScale * viewportHeight};
+          mTL = {(layoutPos.x * viewportWidth) - mSize.x*0.5f,
+                 (layoutPos.y * viewportHeight) - mSize.y*0.5f};
+          mBR = {(layoutPos.x * viewportWidth) + mSize.x*0.5f,
+                 (layoutPos.y * viewportHeight) + mSize.y*0.5f};
 
           ImGui::SetCursorPos (mTL);
-          ImGui::BeginChild (fmt::format ("child##{}", mService.getSid()).c_str(), mBR-mTL);
+          ImGui::BeginChild (fmt::format ("viewChild##{}", mService.getSid()).c_str(), mSize);
 
           bool enabled = mService.getStream (cTransportStream::eVideo).isEnabled();
           if (enabled) {
@@ -1405,11 +1408,10 @@ namespace {
               }
             //}}}
             if (!selectFull || (mSelect != eUnselected)) {
-              //{{{  view selected or no views selected, draw video,framesGraphic,audioMeter for playPts
               cVideoRender& videoRender = dynamic_cast<cVideoRender&>(mService.getStream (cTransportStream::eVideo).getRender());
-
               cVideoFrame* videoFrame = videoRender.getVideoFrameAtOrAfterPts (playPts);
               if (videoFrame) {
+                //{{{  video, subtitle, motionVectors
                 //{{{  draw video
                 cMat4x4 model = cMat4x4();
                 model.setTranslate ({(layoutPos.x - (0.5f * layoutScale)) * viewportWidth,
@@ -1421,17 +1423,17 @@ namespace {
                 videoShader->setModelProjection (model, projection);
 
                 // texture
-                cTexture& texture = videoFrame->getTexture (graphics);
+                cTexture& texture = videoFrame->getTexture (tellyApp.getGraphics());
                 texture.setSource();
 
                 // ensure quad is created
                 if (!mVideoQuad)
-                  mVideoQuad = graphics.createQuad (videoFrame->getSize());
+                  mVideoQuad = tellyApp.getGraphics().createQuad (videoFrame->getSize());
 
                 // draw quad
                 mVideoQuad->draw();
                 //}}}
-                if (options->mShowSubtitle) {
+                if (tellyApp.getOptions()->mShowSubtitle) {
                   //{{{  draw subtitles
                   cSubtitleRender& subtitleRender =
                     dynamic_cast<cSubtitleRender&> (mService.getStream (cTransportStream::eSubtitle).getRender());
@@ -1440,7 +1442,7 @@ namespace {
                   for (size_t line = 0; line < subtitleRender.getNumLines(); line++) {
                     cSubtitleImage& subtitleImage = subtitleRender.getImage (line);
                     if (!mSubtitleTextures[line])
-                      mSubtitleTextures[line] = graphics.createTexture (cTexture::eRgba, subtitleImage.getSize());
+                      mSubtitleTextures[line] = tellyApp.getGraphics().createTexture (cTexture::eRgba, subtitleImage.getSize());
                     mSubtitleTextures[line]->setSource();
 
                     // update subtitle texture if image dirty
@@ -1456,12 +1458,12 @@ namespace {
 
                     // ensure quad is created (assumes same size) and draw
                     if (!mSubtitleQuads[line])
-                      mSubtitleQuads[line] = graphics.createQuad (mSubtitleTextures[line]->getSize());
+                      mSubtitleQuads[line] = tellyApp.getGraphics().createQuad (mSubtitleTextures[line]->getSize());
                     mSubtitleQuads[line]->draw();
                     }
                   }
                   //}}}
-                if (options->mShowMotionVectors && (mSelect == eSelectedFull)) {
+                if (tellyApp.getOptions()->mShowMotionVectors && (mSelect == eSelectedFull)) {
                   //{{{  draw motion vectors
                   size_t numMotionVectors;
                   AVMotionVector* mv = (AVMotionVector*)(videoFrame->getMotionVectors (numMotionVectors));
@@ -1479,24 +1481,28 @@ namespace {
                   }
                   //}}}
                 }
-
+                //}}}
               if (mService.getStream (cTransportStream::eAudio).isEnabled()) {
+                //{{{  audio mute, audioMeter, framesGraphic
                 cAudioRender& audioRender = dynamic_cast<cAudioRender&>(mService.getStream (cTransportStream::eAudio).getRender());
+
+                // mute audio of unselected
                 if (audioRender.getPlayer())
                   audioRender.getPlayer()->setMute (mSelect == eUnselected);
 
                 // draw audioMeter graphic
                 mAudioMeterView.draw (audioRender, playPts,
-                                      ImVec2(mBR.x - (0.5f * ImGui::GetTextLineHeight()),
-                                             mBR.y - (0.5f * ImGui::GetTextLineHeight())));
+                                      ImVec2(mBR.x - ImGui::GetTextLineHeight()*0.5f, 
+                                             mBR.y - ImGui::GetTextLineHeight()*0.25f));
+
                 // draw frames graphic
                 if (mSelect == eSelectedFull)
                   mFramesView.draw (audioRender, videoRender, playPts,
-                                    ImVec2((mTL.x + mBR.x)/2.f,
-                                           mBR.y - (0.5f * ImGui::GetTextLineHeight())));
+                                    ImVec2((mTL.x + mBR.x)/2.f, 
+                                           mBR.y - ImGui::GetTextLineHeight()*0.25f));
                 }
+                //}}}
               }
-              //}}}
             }
 
           // draw select rect
@@ -1520,11 +1526,11 @@ namespace {
 
           pos.y += ImGui::GetTextLineHeight() * 1.5f;
           //}}}
-          if (options->mShowEpg) {
+          if (tellyApp.getOptions()->mShowEpg) {
             //{{{  draw todays epg
             for (auto& epgItem : mService.getTodayEpg()) {
               auto time = epgItem.first;
-              if (enabled && (mSelect != eSelectedFull)) 
+              if (enabled && (mSelect != eSelectedFull))
                 time += epgItem.second->getDuration();
               if (time > transportStream.getNowTdt()) {
                 // epgItem now or later today
@@ -1544,7 +1550,7 @@ namespace {
             //{{{  draw ptsFromStart
             string ptsFromStartString = utils::getPtsString (mService.getPtsFromStart());
 
-            pos = mBR - mTL - ImVec2(ImGui::GetTextLineHeight() * 10.f, ImGui::GetTextLineHeight()*1.5f);
+            pos = ImVec2 (mSize.x - ImGui::GetTextLineHeight() * 10.f, mSize.y - ImGui::GetTextLineHeight()*1.5f);
 
             ImGui::PushFont (tellyApp.getLargeFont());
             ImGui::SetCursorPos (pos);
@@ -1556,7 +1562,7 @@ namespace {
             //}}}
 
           ImGui::SetCursorPos ({0.f,0.f});
-          if (ImGui::InvisibleButton (fmt::format ("view##{}", mService.getSid()).c_str(), mBR-mTL)) {
+          if (ImGui::InvisibleButton (fmt::format ("viewInvisible##{}", mService.getSid()).c_str(), mSize)) {
             //{{{  hit view, select action
             if (!mService.getStream (cTransportStream::eVideo).isEnabled())
               mService.enableStreams();
@@ -1836,6 +1842,7 @@ namespace {
         eSelect mSelect = eUnselected;
 
         // video
+        ImVec2 mSize;
         ImVec2 mTL;
         ImVec2 mBR;
         cQuad* mVideoQuad = nullptr;
