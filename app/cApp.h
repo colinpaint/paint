@@ -86,8 +86,11 @@ public:
   // fonts
   ImFont* getMainFont() const { return mMainFont; }
   ImFont* getMonoFont() const { return mMonoFont; }
+  ImFont* getLargeFont() const { return mLargeFont; }
+
   void setMainFont (ImFont* font) { mMainFont = font; }
   void setMonoFont (ImFont* font) { mMonoFont = font; }
+  void setLargeFont (ImFont* font) { mLargeFont = font; }
 
   // callbacks
   void windowResize (int width, int height);
@@ -105,4 +108,5 @@ private:
 
   ImFont* mMainFont;
   ImFont* mMonoFont;
+  ImFont* mLargeFont;
   };

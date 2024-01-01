@@ -208,9 +208,9 @@ namespace {
       graphics.clear ({(int32_t)ImGui::GetIO().DisplaySize.x, (int32_t)ImGui::GetIO().DisplaySize.y});
 
       ImGui::SetNextWindowSize (ImGui::GetIO().DisplaySize);
-      ImGui::Begin ("song", nullptr, ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoBackground |
-                                     ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove |
-                                     ImGuiWindowFlags_NoScrollbar);
+      ImGui::Begin ("song", nullptr, ImGuiWindowFlags_NoTitleBar |
+                                     ImGuiWindowFlags_NoBackground | ImGuiWindowFlags_NoResize |
+                                     ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoScrollbar);
       //{{{  draw top buttons
       // monoSpaced buttom
       if (toggleButton ("mono",  mShowMonoSpaced))
@@ -1168,14 +1168,12 @@ namespace {
 
       ImGui::SetKeyboardFocusHere();
       ImGui::SetNextWindowSize (ImGui::GetIO().DisplaySize);
-      ImGui::Begin ("telly", nullptr, ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoBackground |
-                                      ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove |
-                                      ImGuiWindowFlags_NoScrollbar);
+      ImGui::Begin ("telly", nullptr, ImGuiWindowFlags_NoTitleBar |
+                                      ImGuiWindowFlags_NoBackground | ImGuiWindowFlags_NoResize |
+                                      ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoScrollbar);
 
       cTellyApp& tellyApp = (cTellyApp&)app;
       if (tellyApp.hasTransportStream()) {
-        cTransportStream& transportStream = tellyApp.getTransportStream();
-
         ImGui::SetCursorPos ({0.f,ImGui::GetIO().DisplaySize.y - ImGui::GetTextLineHeight()*2.f});
         mTab = (eTab)interlockedButtons (kTabNames, (uint8_t)mTab, {0.f,0.f}, true);
         //{{{  draw epg button
@@ -1212,6 +1210,7 @@ namespace {
         ImGui::SameLine();
         ImGui::TextUnformatted(fmt::format("{}:fps", static_cast<uint32_t>(ImGui::GetIO().Framerate)).c_str());
         //}}}
+
         if (tellyApp.hasDvbSource()) {
           //{{{  draw dvbSource signal,errors
           ImGui::SameLine();
@@ -1219,13 +1218,15 @@ namespace {
                                                         tellyApp.getDvbSource().getStatusString()).c_str());
           }
           //}}}
-        if (tellyApp.getTransportStream().getNumErrors()) {
+
+        // transportStream boxes
+        cTransportStream& transportStream = tellyApp.getTransportStream();
+        if (transportStream.getNumErrors()) {
           //{{{  draw transportStream errors
           ImGui::SameLine();
           ImGui::TextUnformatted (fmt::format ("error:{}", tellyApp.getTransportStream().getNumErrors()).c_str());
           }
           //}}}
-
         if (transportStream.hasFirstTdt()) {
           //{{{  draw clock
           //ImGui::TextUnformatted (transportStream.getTdtString().c_str());
@@ -1292,21 +1293,18 @@ namespace {
       //{{{
       void draw (cTellyApp& tellyApp, cTransportStream& transportStream) {
 
-        cGraphics& graphics = tellyApp.getGraphics();
-
         // create shaders, firsttime we see graphics interface
         if (!mVideoShader)
-          mVideoShader = graphics.createTextureShader (cTexture::eYuv420);
+          mVideoShader = tellyApp.getGraphics().createTextureShader (cTexture::eYuv420);
         if (!mSubtitleShader)
-          mSubtitleShader = graphics.createTextureShader (cTexture::eRgba);
+          mSubtitleShader = tellyApp.getGraphics().createTextureShader (cTexture::eRgba);
 
         // update viewMap from enabled services, take care to reuse cView's
         for (auto& pair : transportStream.getServiceMap()) {
-          cTransportStream::cService& service = pair.second;
-
           // find service sid in viewMap
           auto it = mViewMap.find (pair.first);
           if (it == mViewMap.end()) {
+            cTransportStream::cService& service = pair.second;
             if (service.getStream (cTransportStream::eVideo).isDefined())
               // enabled and not found, add service to viewMap
               mViewMap.emplace (service.getSid(), cView (service));
@@ -1397,6 +1395,7 @@ namespace {
 
           bool enabled = mService.getStream (cTransportStream::eVideo).isEnabled();
           if (enabled) {
+            //{{{  get audio playPts
             int64_t playPts = mService.getStream (cTransportStream::eAudio).getRender().getPts();
             if (mService.getStream (cTransportStream::eAudio).isEnabled()) {
               // get playPts from audioStream
@@ -1404,9 +1403,11 @@ namespace {
               if (audioRender.getPlayer())
                 playPts = audioRender.getPlayer()->getPts();
               }
+            //}}}
             if (!selectFull || (mSelect != eUnselected)) {
-              //{{{  view selected or no views selected, show nearest videoFrame to playPts
+              //{{{  view selected or no views selected, draw video,framesGraphic,audioMeter for playPts
               cVideoRender& videoRender = dynamic_cast<cVideoRender&>(mService.getStream (cTransportStream::eVideo).getRender());
+
               cVideoFrame* videoFrame = videoRender.getVideoFrameAtOrAfterPts (playPts);
               if (videoFrame) {
                 //{{{  draw video
@@ -1503,54 +1504,60 @@ namespace {
           if ((hover || (mSelect != eUnselected)) && (mSelect != eSelectedFull))
             ImGui::GetWindowDrawList()->AddRect (mTL, mBR, hover ? 0xff20ffff : 0xff20ff20, 4.f, 0, 4.f);
 
-          ImGui::SetCursorPos ({0.f,0.f});
-          //{{{  draw channel title
-          string channelString = mService.getName();
+          //{{{  draw service title
+          string title = mService.getName();
           if (!enabled || (mSelect == eSelectedFull))
-            channelString += " " + mService.getNowTitleString();
+            title += " " + mService.getNowTitleString();
 
           ImVec2 pos = {ImGui::GetTextLineHeight() * 0.25f, 0.f};
-          ImGui::SetCursorPos (pos);
-          ImGui::TextColored ({0.f,0.f,0.f,1.f}, channelString.c_str());
 
+          ImGui::PushFont (tellyApp.getLargeFont());
+          ImGui::SetCursorPos (pos);
+          ImGui::TextColored ({0.f,0.f,0.f,1.f}, title.c_str());
           ImGui::SetCursorPos (pos - ImVec2(2.f,2.f));
-          ImGui::TextColored ({1.f, 1.f,1.f,1.f}, channelString.c_str());
+          ImGui::TextColored ({1.f, 1.f,1.f,1.f}, title.c_str());
+          ImGui::PopFont();
+
+          pos.y += ImGui::GetTextLineHeight() * 1.5f;
           //}}}
-          //if ((mSelect == eSelectedFull) && options->mShowEpg) {
           if (options->mShowEpg) {
             //{{{  draw todays epg
             for (auto& epgItem : mService.getTodayEpg()) {
-              if (epgItem.first + epgItem.second->getDuration() > transportStream.getNowTdt()) {
+              auto time = epgItem.first;
+              if (enabled && (mSelect != eSelectedFull)) 
+                time += epgItem.second->getDuration();
+              if (time > transportStream.getNowTdt()) {
                 // epgItem now or later today
                 string epgTitle = date::format ("%H:%M ", date::floor<chrono::seconds>(epgItem.first)) +
                                   epgItem.second->getTitle();
                                   //+ " " + epgItem.second->getInfo();
-
-                pos.y += ImGui::GetTextLineHeight();
                 ImGui::SetCursorPos (pos);
                 ImGui::TextColored ({0.f,0.f,0.f,1.f}, epgTitle.c_str());
-
                 ImGui::SetCursorPos (pos - ImVec2(2.f,2.f));
                 ImGui::TextColored ({1.f, 1.f,1.f,1.f}, epgTitle.c_str());
+                pos.y += ImGui::GetTextLineHeight();
                 }
               }
             }
             //}}}
-          //{{{  draw ptsFromStart bottom right
-          string ptsFromStartString = utils::getPtsString (mService.getPtsFromStart());
+          if (mSelect == eSelectedFull) {
+            //{{{  draw ptsFromStart
+            string ptsFromStartString = utils::getPtsString (mService.getPtsFromStart());
 
-          pos = mBR - mTL - ImVec2(ImGui::GetTextLineHeight() * 7.f, ImGui::GetTextLineHeight());
+            pos = mBR - mTL - ImVec2(ImGui::GetTextLineHeight() * 10.f, ImGui::GetTextLineHeight()*1.5f);
 
-          ImGui::SetCursorPos (pos);
-          ImGui::TextColored ({0.f,0.f,0.f,1.f}, ptsFromStartString.c_str());
-
-          ImGui::SetCursorPos (pos - ImVec2(2.f,2.f));
-          ImGui::TextColored ({1.f,1.f,1.f,1.f}, ptsFromStartString.c_str());
-          //}}}
+            ImGui::PushFont (tellyApp.getLargeFont());
+            ImGui::SetCursorPos (pos);
+            ImGui::TextColored ({0.f,0.f,0.f,1.f}, ptsFromStartString.c_str());
+            ImGui::SetCursorPos (pos - ImVec2(2.f,2.f));
+            ImGui::TextColored ({1.f,1.f,1.f,1.f}, ptsFromStartString.c_str());
+            ImGui::PopFont();
+            }
+            //}}}
 
           ImGui::SetCursorPos ({0.f,0.f});
           if (ImGui::InvisibleButton (fmt::format ("view##{}", mService.getSid()).c_str(), mBR-mTL)) {
-            // hit view, select action
+            //{{{  hit view, select action
             if (!mService.getStream (cTransportStream::eVideo).isEnabled())
               mService.enableStreams();
             else if (mSelect == eUnselected)
@@ -1561,6 +1568,7 @@ namespace {
               mSelect = eSelected;
             result = true;
             }
+            //}}}
           else
             result = false;
 
@@ -1841,8 +1849,8 @@ namespace {
         array <cTexture*, kMaxSubtitleLines> mSubtitleTextures = { nullptr };
         };
       //}}}
-      map <uint16_t, cView> mViewMap;
 
+      map <uint16_t, cView> mViewMap;
       cTextureShader* mVideoShader = nullptr;
       cTextureShader* mSubtitleShader = nullptr;
       };
@@ -2093,25 +2101,28 @@ int main (int numArgs, char* args[]) {
                                      (dynamic_cast<cApp::cOptions*>(options))->cApp::cOptions::getString(),
                                      options->cTellyOptions::getString()));
   if (options->mPlaySong) {
+    //{{{  songApp
     cSongApp songApp (options, new cSongUI());
     songApp.setSongName (options->mFileName);
     songApp.mainUILoop();
-    return EXIT_SUCCESS;
     }
-
-  if (options->mFileName.empty()) {
-    // liveDvb source
+    //}}}
+  else if (options->mFileName.empty()) {
+    //{{{  tellyApp with liveDvb source
     options->mIsLive = true;
     options->mRecordRoot = kRootDir;
     cTellyApp tellyApp (options, new cTellyUI());
     tellyApp.liveDvbSource (options->mMultiplex, options);
     tellyApp.mainUILoop();
     }
-  else { 
-    // file source
+    //}}}
+  else {
+    //{{{  tellyApp with file source
     cTellyApp tellyApp (options, new cTellyUI());
     tellyApp.fileSource (options->mFileName, options);
     tellyApp.mainUILoop();
     }
+    //}}}
+
   return EXIT_SUCCESS;
   }
