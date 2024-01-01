@@ -9,7 +9,7 @@ project (common VERSION 1.0.0)
 
   target_link_libraries (${PROJECT_NAME} PUBLIC fmt)
 
-  if (CMAKE_HOST_SYSTEM_NAME STREQUAL Windows)
+  if (CMAKE_HOST_WIN32)
     target_compile_options (${PROJECT_NAME} PUBLIC /W4
                                                    /fp:fast
                                                    /EHsc

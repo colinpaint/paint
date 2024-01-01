@@ -13,7 +13,7 @@ project (app VERSION 1.0.0)
     target_link_libraries (${PROJECT_NAME} PRIVATE glfw glad)
     find_package (OpenGL REQUIRED)
 
-    if (CMAKE_HOST_SYSTEM_NAME STREQUAL Windows)
+    if (CMAKE_HOST_WIN32)
       target_link_libraries (${PROJECT_NAME} PRIVATE opengl32)
     else()
       target_link_libraries (${PROJECT_NAME} PRIVATE GL)
@@ -23,7 +23,7 @@ project (app VERSION 1.0.0)
           BUILD_GRAPHICS STREQUAL "GLES31" OR
           BUILD_GRAPHICS STREQUAL "GLES32")
     # openGLES 3
-    if (CMAKE_HOST_SYSTEM_NAME STREQUAL Windows)
+    if (CMAKE_HOST_WIN32)
       message (FATAL_ERROR, "GLES unavailable in Windows BUILD_GRAPHICS = ${BUILD_GRAPHICS}")
     else()
       message (STATUS "building GLES app with BUILD_GRAPHICS ${BUILD_GRAPHICS}")

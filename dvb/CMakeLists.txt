@@ -5,14 +5,13 @@ project (dvb VERSION 1.0.0)
                                cVideoRender.h cVideoRender.cpp
                                cAudioRender.h cAudioRender.cpp
                                cSubtitleRender.h cSubtitleRender.cpp
-                               cPlayer.h cPlayer.cpp
-                               )
+                               cPlayer.h cPlayer.cpp)
 
-  if (CMAKE_HOST_SYSTEM_NAME STREQUAL Windows)
+  if (CMAKE_HOST_WIN32)
     # windows
     target_include_directories (${PROJECT_NAME} PUBLIC ../include/ffmpeg)
-    target_link_libraries (${PROJECT_NAME} PUBLIC
-                           avdevice avfilter avformat avcodec avutil swresample swscale)
+    target_link_libraries (${PROJECT_NAME} PUBLIC 
+                           decoders common avdevice avfilter avformat avcodec avutil swresample swscale)
 
   else ()
     # linux
@@ -20,8 +19,6 @@ project (dvb VERSION 1.0.0)
     pkg_check_modules (FFMPEG REQUIRED IMPORTED_TARGET
                        libavdevice libavfilter libavformat libavcodec libavutil libswresample libswscale)
     target_include_directories (${PROJECT_NAME} PRIVATE PkgConfig::FFMPEG)
-    target_link_libraries (${PROJECT_NAME} PUBLIC PkgConfig::FFMPEG)
+    target_link_libraries (${PROJECT_NAME} PUBLIC decoders common PkgConfig::FFMPEG)
 
   endif()
-
-  target_link_libraries (${PROJECT_NAME} PUBLIC decoders common)

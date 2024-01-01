@@ -204,12 +204,13 @@ namespace {
   public:
     virtual void draw (cApp& app) final {
 
-      cSongApp& songApp = (cSongApp&)app;
+      cGraphics& graphics = app.getGraphics();
+      graphics.clear ({(int32_t)ImGui::GetIO().DisplaySize.x, (int32_t)ImGui::GetIO().DisplaySize.y});
 
-      ImGui::SetNextWindowPos (ImVec2(0,0));
       ImGui::SetNextWindowSize (ImGui::GetIO().DisplaySize);
-      ImGui::Begin ("song", &mOpen, ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoTitleBar);
-
+      ImGui::Begin ("song", nullptr, ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoBackground |
+                                     ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove |
+                                     ImGuiWindowFlags_NoScrollbar);
       //{{{  draw top buttons
       // monoSpaced buttom
       if (toggleButton ("mono",  mShowMonoSpaced))
@@ -239,6 +240,8 @@ namespace {
       ImGui::Text (fmt::format ("{}:{}",
                    ImGui::GetIO().MetricsRenderVertices, ImGui::GetIO().MetricsRenderIndices/3).c_str());
       //}}}
+
+      cSongApp& songApp = (cSongApp&)app;
       //{{{  draw radio buttons
       if (ImGui::Button ("radio1"))
         songApp.setSongSpec (kRadio1);
@@ -261,20 +264,18 @@ namespace {
       if (ImGui::Button ("wqxr"))
         songApp.setSongSpec (kWqxr);
       //}}}
-      //{{{  draw clockButton
-      ImGui::SetCursorPos ({ImGui::GetWindowWidth() - 130.f, 0.f});
-      clockButton ("clock", app.getNow(), {110.f,110.f});
-      //}}}
 
       // draw song
       if (isDrawMonoSpaced())
         ImGui::PushFont (app.getMonoFont());
-
       mDrawSong.draw (songApp.getSong(), isDrawMonoSpaced());
-
       if (isDrawMonoSpaced())
         ImGui::PopFont();
 
+      //{{{  draw clockButton
+      ImGui::SetCursorPos ({ImGui::GetWindowWidth() - 130.f, 0.f});
+      clockButton ("clock", app.getNow(), {110.f,110.f});
+      //}}}
       ImGui::End();
       }
 
@@ -922,8 +923,6 @@ namespace {
 
     // vars
     cDrawSong mDrawSong;
-
-    bool mOpen = true;
     bool mShowMonoSpaced = false;
     };
   //}}}
