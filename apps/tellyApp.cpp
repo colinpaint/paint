@@ -104,10 +104,10 @@ namespace {
     };
   //}}}
   //{{{
-  class cTellyOptions : public cApp::cOptions,
+  class cTellyOptions : public cApp::cOptions, 
                         public cTransportStream::cOptions,
-                        public cRender::cOptions,
-                        public cAudioRender::cOptions,
+                        public cRender::cOptions, 
+                        public cAudioRender::cOptions, 
                         public cVideoRender::cOptions,
                         public cFFmpegVideoDecoder::cOptions {
   public:
@@ -1169,8 +1169,9 @@ namespace {
       ImGui::SetKeyboardFocusHere();
       ImGui::SetNextWindowSize (ImGui::GetIO().DisplaySize);
       ImGui::Begin ("telly", nullptr, ImGuiWindowFlags_NoTitleBar |
-                                      ImGuiWindowFlags_NoBackground | ImGuiWindowFlags_NoResize |
-                                      ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoScrollbar);
+                                      ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove |
+                                      ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse |
+                                      ImGuiWindowFlags_NoBackground);
 
       cTellyApp& tellyApp = (cTellyApp&)app;
       if (tellyApp.hasTransportStream()) {
