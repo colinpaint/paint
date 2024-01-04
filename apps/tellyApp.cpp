@@ -104,10 +104,10 @@ namespace {
     };
   //}}}
   //{{{
-  class cTellyOptions : public cApp::cOptions, 
+  class cTellyOptions : public cApp::cOptions,
                         public cTransportStream::cOptions,
-                        public cRender::cOptions, 
-                        public cAudioRender::cOptions, 
+                        public cRender::cOptions,
+                        public cAudioRender::cOptions,
                         public cVideoRender::cOptions,
                         public cFFmpegVideoDecoder::cOptions {
   public:
@@ -1397,6 +1397,11 @@ namespace {
           ImGui::SetCursorPos (mTL);
           ImGui::BeginChild (fmt::format ("viewChild##{}", mService.getSid()).c_str(), mSize);
 
+          // draw select rect
+          bool hover = ImGui::IsMouseHoveringRect (mTL, mBR);
+          if ((hover || (mSelect != eUnselected)) && (mSelect != eSelectedFull))
+            ImGui::GetWindowDrawList()->AddRect (mTL, mBR, hover ? 0xff20ffff : 0xff20ff20, 4.f, 0, 4.f);
+
           bool enabled = mService.getStream (cTransportStream::eVideo).isEnabled();
           if (enabled) {
             //{{{  get audio playPts
@@ -1413,7 +1418,7 @@ namespace {
               cVideoFrame* videoFrame = videoRender.getVideoFrameAtOrAfterPts (playPts);
               if (videoFrame) {
                 //{{{  video, subtitle, motionVectors
-                //{{{  draw video
+                // draw video
                 cMat4x4 model = cMat4x4();
                 model.setTranslate ({(layoutPos.x - (0.5f * layoutScale)) * viewportWidth,
                                      ((1.f-layoutPos.y) - (0.5f * layoutScale)) * viewportHeight});
@@ -1433,7 +1438,7 @@ namespace {
 
                 // draw quad
                 mVideoQuad->draw();
-                //}}}
+
                 if (tellyApp.getOptions()->mShowSubtitle) {
                   //{{{  draw subtitles
                   cSubtitleRender& subtitleRender =
@@ -1464,6 +1469,7 @@ namespace {
                     }
                   }
                   //}}}
+
                 if (tellyApp.getOptions()->mShowMotionVectors && (mSelect == eSelectedFull)) {
                   //{{{  draw motion vectors
                   size_t numMotionVectors;
@@ -1506,20 +1512,17 @@ namespace {
               }
             }
 
-          // draw select rect
-          bool hover = ImGui::IsMouseHoveringRect (mTL, mBR);
-          if ((hover || (mSelect != eUnselected)) && (mSelect != eSelectedFull))
-            ImGui::GetWindowDrawList()->AddRect (mTL, mBR, hover ? 0xff20ffff : 0xff20ff20, 4.f, 0, 4.f);
-
-          //{{{  draw service title
+          //{{{  draw title
           string title = mService.getName();
           if (!enabled || (mSelect == eSelectedFull))
             title += " " + mService.getNowTitleString();
 
+
+          // drop shadow title at top
           ImVec2 pos = {ImGui::GetTextLineHeight() * 0.25f, 0.f};
+          ImGui::SetCursorPos (pos);
 
           ImGui::PushFont (tellyApp.getLargeFont());
-          ImGui::SetCursorPos (pos);
           ImGui::TextColored ({0.f,0.f,0.f,1.f}, title.c_str());
           ImGui::SetCursorPos (pos - ImVec2(2.f,2.f));
           ImGui::TextColored ({1.f, 1.f,1.f,1.f}, title.c_str());
@@ -1528,7 +1531,12 @@ namespace {
           pos.y += ImGui::GetTextLineHeight() * 1.5f;
           //}}}
           if (tellyApp.getOptions()->mShowEpg) {
-            //{{{  draw todays epg
+            //{{{  draw epg
+            ImGui::BeginChild (fmt::format ("epg##{}", mService.getSid()).c_str(),
+                               mSize - ImVec2 ({0.f, ImGui::GetTextLineHeight() * 1.5f}),
+                               ImGuiChildFlags_None, ImGuiWindowFlags_NoScrollbar);
+
+            ImVec2 posEpg = {0.f,0.f};
             for (auto& epgItem : mService.getTodayEpg()) {
               auto time = epgItem.first;
               if (enabled && (mSelect != eSelectedFull))
@@ -1538,32 +1546,37 @@ namespace {
                 string epgTitle = date::format ("%H:%M ", date::floor<chrono::seconds>(epgItem.first)) +
                                   epgItem.second->getTitle();
                                   //+ " " + epgItem.second->getInfo();
-                ImGui::SetCursorPos (pos);
+
+                // drop shadow epg
+                ImGui::SetCursorPos (posEpg);
                 ImGui::TextColored ({0.f,0.f,0.f,1.f}, epgTitle.c_str());
-                ImGui::SetCursorPos (pos - ImVec2(2.f,2.f));
+                ImGui::SetCursorPos (posEpg - ImVec2(2.f,2.f));
                 ImGui::TextColored ({1.f, 1.f,1.f,1.f}, epgTitle.c_str());
-                pos.y += ImGui::GetTextLineHeight();
+
+                posEpg.y += ImGui::GetTextLineHeight();
                 }
               }
+
+            ImGui::SetCursorPos ({0.f,0.f});
+            if (ImGui::InvisibleButton (fmt::format ("viewEpgInvisible##{}", mService.getSid()).c_str(), mSize)) {
+              //{{{  hit view, select action
+              if (!mService.getStream (cTransportStream::eVideo).isEnabled())
+                mService.enableStreams();
+              else if (mSelect == eUnselected)
+                mSelect = eSelected;
+              else if (mSelect == eSelected)
+                mSelect = eSelectedFull;
+              else if (mSelect == eSelectedFull)
+                mSelect = eSelected;
+
+              result = true;
+              }
+              //}}}
+
+            ImGui::EndChild();
             }
             //}}}
-          if (mSelect == eSelectedFull) {
-            //{{{  draw ptsFromStart
-            string ptsFromStartString = utils::getPtsString (mService.getPtsFromStart());
-
-            pos = ImVec2 (mSize.x - ImGui::GetTextLineHeight() * 10.f, mSize.y - ImGui::GetTextLineHeight()*1.5f);
-
-            ImGui::PushFont (tellyApp.getLargeFont());
-            ImGui::SetCursorPos (pos);
-            ImGui::TextColored ({0.f,0.f,0.f,1.f}, ptsFromStartString.c_str());
-            ImGui::SetCursorPos (pos - ImVec2(2.f,2.f));
-            ImGui::TextColored ({1.f,1.f,1.f,1.f}, ptsFromStartString.c_str());
-            ImGui::PopFont();
-            }
-            //}}}
-
-          ImGui::SetCursorPos ({0.f,0.f});
-          if (ImGui::InvisibleButton (fmt::format ("viewInvisible##{}", mService.getSid()).c_str(), mSize)) {
+          else if (ImGui::InvisibleButton (fmt::format ("viewInvisible##{}", mService.getSid()).c_str(), mSize)) {
             //{{{  hit view, select action
             if (!mService.getStream (cTransportStream::eVideo).isEnabled())
               mService.enableStreams();
@@ -1573,11 +1586,28 @@ namespace {
               mSelect = eSelectedFull;
             else if (mSelect == eSelectedFull)
               mSelect = eSelected;
+
             result = true;
             }
             //}}}
           else
             result = false;
+
+          if (mSelect == eSelectedFull) {
+            //{{{  draw ptsFromStart
+            string ptsFromStartString = utils::getPtsString (mService.getPtsFromStart());
+
+            ImGui::PushFont (tellyApp.getLargeFont());
+
+            pos = ImVec2 (mSize.x - ImGui::GetTextLineHeight() * 10.f, mSize.y - ImGui::GetTextLineHeight()*1.5f);
+            ImGui::SetCursorPos (pos);
+            ImGui::TextColored ({0.f,0.f,0.f,1.f}, ptsFromStartString.c_str());
+            ImGui::SetCursorPos (pos - ImVec2(2.f,2.f));
+            ImGui::TextColored ({1.f,1.f,1.f,1.f}, ptsFromStartString.c_str());
+
+            ImGui::PopFont();
+            }
+            //}}}
 
           ImGui::EndChild();
           return result;
