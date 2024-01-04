@@ -36,6 +36,7 @@ set (GLFW_BUILD_INSTALL OFF CACHE BOOL "" FORCE)
 add_subdirectory (glfw)
 
 # subdirectories
+add_subdirectory (date)
 add_subdirectory (fmt)
 add_subdirectory (common)
 add_subdirectory (imgui)

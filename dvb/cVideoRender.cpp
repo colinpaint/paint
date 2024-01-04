@@ -19,7 +19,6 @@
 #include "../common/cDvbUtils.h"
 #include "../app/cGraphics.h"
 
-#include "../common/date.h"
 #include "../common/cLog.h"
 #include "../common/utils.h"
 

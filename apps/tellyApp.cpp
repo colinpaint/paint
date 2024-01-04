@@ -32,9 +32,9 @@
 //}}}
 
 // utils
+#include "../date/include/date/date.h"
 #include "../common/basicTypes.h"
 #include "../common/iOptions.h"
-#include "../common/date.h"
 #include "../common/utils.h"
 #include "../common/fileUtils.h"
 #include "../common/cLog.h"
@@ -1492,13 +1492,13 @@ namespace {
 
                 // draw audioMeter graphic
                 mAudioMeterView.draw (audioRender, playPts,
-                                      ImVec2(mBR.x - ImGui::GetTextLineHeight()*0.5f, 
+                                      ImVec2(mBR.x - ImGui::GetTextLineHeight()*0.5f,
                                              mBR.y - ImGui::GetTextLineHeight()*0.25f));
 
                 // draw frames graphic
                 if (mSelect == eSelectedFull)
                   mFramesView.draw (audioRender, videoRender, playPts,
-                                    ImVec2((mTL.x + mBR.x)/2.f, 
+                                    ImVec2((mTL.x + mBR.x)/2.f,
                                            mBR.y - ImGui::GetTextLineHeight()*0.25f));
                 }
                 //}}}

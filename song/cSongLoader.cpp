@@ -16,8 +16,8 @@
 
 // utils
 #include "../common/utils.h"
-#include "../common/date.h"
 #include "../common/cLog.h"
+#include "../date/include/date/date.h"
 #include "fmt/format.h"
 
 // song
@@ -1379,8 +1379,8 @@ public:
               auto samples = audioDecoder->decodeFrame (buffer, frameSize, pts);
               if (samples) {
                 if (!mSong)
-                  mSong = new cSong (frameType, 
-                                     (int)audioDecoder->getNumChannels(), 
+                  mSong = new cSong (frameType,
+                                     (int)audioDecoder->getNumChannels(),
                                      (int)audioDecoder->getSampleRate(),
                                      (int)audioDecoder->getNumSamplesPerFrame(), 0);
 
@@ -2739,10 +2739,10 @@ public:
         if (samples) {
           if (!mSong)
             // first decoded frame gives aacHE sampleRate,samplesPerFrame
-            mSong = new cSong (mAudioFrameType, 
-                               (int)decoder->getNumChannels(), 
+            mSong = new cSong (mAudioFrameType,
+                               (int)decoder->getNumChannels(),
                                (int)decoder->getSampleRate(),
-                               (int)decoder->getNumSamplesPerFrame(), 
+                               (int)decoder->getNumSamplesPerFrame(),
                                0);
 
           // add frame to song

@@ -11,7 +11,6 @@
 #include "../decoders/cSubtitleFrame.h"
 #include "../decoders/cSubtitleDecoder.h"
 
-#include "../common/date.h"
 #include "../common/cLog.h"
 #include "../common/utils.h"
 

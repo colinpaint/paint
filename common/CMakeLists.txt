@@ -1,5 +1,5 @@
 project (common VERSION 1.0.0)
-  add_library (${PROJECT_NAME} basicTypes.h date.h utils.h fileUtils.h iOptions.h
+  add_library (${PROJECT_NAME} basicTypes.h utils.h fileUtils.h iOptions.h
                                cBipBuffer.h readerWriterQueue.h
                                cDvbUtils.h cDvbUtils.cpp cDvbUtilsHuff.cpp
                                cLog.h cLog.cpp
@@ -7,7 +7,7 @@ project (common VERSION 1.0.0)
                                cFileView.h cFileView.cpp
                                tinyfiledialogs.h tinyfiledialogs.c)
 
-  target_link_libraries (${PROJECT_NAME} PUBLIC fmt)
+  target_link_libraries (${PROJECT_NAME} PUBLIC date fmt)
 
   if (CMAKE_HOST_WIN32)
     target_compile_options (${PROJECT_NAME} PUBLIC /W4

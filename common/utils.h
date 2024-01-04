@@ -2,7 +2,6 @@
 //{{{  includes
 #pragma once
 #include <cstdint>
-#include <string>
 
 #include "../fmt/include/fmt/format.h"
 
@@ -11,6 +10,8 @@
   #define NOMINMAX
   #include <windows.h>
 #endif
+
+#include <string>
 //}}}
 
 namespace utils {
