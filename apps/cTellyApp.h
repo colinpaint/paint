@@ -1,7 +1,6 @@
 // cTellyApp.h
-//{{{  includes
 #pragma once
-
+//{{{  includes
 #include <cstdint>
 #include <string>
 #include <vector>
@@ -13,14 +12,7 @@
 
 // app
 #include "../app/cApp.h"
-#include "../app/cPlatform.h"
-#include "../app/cGraphics.h"
 #include "../app/myImgui.h"
-
-// dvb
-#include "../dvb/cDvbMultiplex.h"
-#include "../dvb/cDvbSource.h"
-#include "../dvb/cTransportStream.h"
 
 // decoders
 //{{{  include libav
@@ -47,6 +39,9 @@ extern "C" {
 #include "../decoders/cFFmpegVideoDecoder.h"
 
 // dvb
+#include "../dvb/cDvbMultiplex.h"
+#include "../dvb/cDvbSource.h"
+#include "../dvb/cTransportStream.h"
 #include "../dvb/cVideoRender.h"
 #include "../dvb/cAudioRender.h"
 #include "../dvb/cSubtitleRender.h"

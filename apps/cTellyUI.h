@@ -1,11 +1,8 @@
 // cTellyUI.h
-//{{{  includes
 #pragma once
-
-//#include <cstdint>
+//{{{  includes
+#include <cstdint>
 #include <string>
-#include <vector>
-#include <thread>
 
 #include "../date/include/date/date.h"
 #include "../common/basicTypes.h"

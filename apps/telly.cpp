@@ -13,7 +13,6 @@
 #include <algorithm>
 #include <thread>
 
-#include <sys/stat.h>
 
 // utils
 #include "../date/include/date/date.h"
@@ -25,7 +24,7 @@
 #include "cTellyUI.h"
 
 // app
-#include "../app/cApp.h"
+#include "../app/cPlatform.h"
 #include "../app/myImgui.h"
 
 // song
