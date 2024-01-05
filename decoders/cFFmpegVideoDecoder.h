@@ -24,6 +24,7 @@ extern "C" {
 #endif
 //}}}
 
+#include "../common/iOptions.h"
 #include "../common/utils.h"
 #include "../common/cDvbUtils.h"
 #include "../common/cLog.h"

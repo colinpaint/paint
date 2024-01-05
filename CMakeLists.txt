@@ -77,8 +77,10 @@ project (editApp VERSION 1.0.0)
   endif()
 
 # tellyApp
-project (tellyApp VERSION 1.0.0)
-  add_executable (${PROJECT_NAME} apps/tellyApp.cpp)
+project (telly VERSION 1.0.0)
+  add_executable (${PROJECT_NAME} apps/telly.cpp
+                                  apps/cTellyApp.h apps/cTellyApp.cpp
+                                  apps/CTellyUI.h apps/cTellyUI.cpp)
 
   target_compile_definitions (${PROJECT_NAME} PRIVATE BUILD_IMPLOT)
   target_include_directories (${PROJECT_NAME} PRIVATE stb)
