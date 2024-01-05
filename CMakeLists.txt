@@ -47,16 +47,16 @@ add_subdirectory (decoders)
 add_subdirectory (audio)
 add_subdirectory (song)
 
-# windows audio captureApp
+# windows audio capture
 if (CMAKE_HOST_WIN32)
-  project (captureApp VERSION 1.0.0)
-    add_executable (${PROJECT_NAME} apps/captureApp.cpp)
+  project (capture VERSION 1.0.0)
+    add_executable (${PROJECT_NAME} apps/capture.cpp)
     target_link_libraries (${PROJECT_NAME} PRIVATE decoders audio winmm avrt)
 endif()
 
 # imguiApp
-project (imguiApp VERSION 1.0.0)
-  add_executable (${PROJECT_NAME} apps/imguiApp.cpp)
+project (imguiTest VERSION 1.0.0)
+  add_executable (${PROJECT_NAME} apps/imguiTest.cpp)
 
   target_include_directories (${PROJECT_NAME} PRIVATE stb)
   if (CMAKE_HOST_WIN32)
@@ -65,9 +65,9 @@ project (imguiApp VERSION 1.0.0)
     target_link_libraries (${PROJECT_NAME} PRIVATE app GL)
   endif()
 
-# editApp
-project (editApp VERSION 1.0.0)
-  add_executable (${PROJECT_NAME} apps/editApp.cpp)
+# edit
+project (edit VERSION 1.0.0)
+  add_executable (${PROJECT_NAME} apps/edit.cpp)
 
   target_include_directories (${PROJECT_NAME} PRIVATE stb)
   if (CMAKE_HOST_WIN32)

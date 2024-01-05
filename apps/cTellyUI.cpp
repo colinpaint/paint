@@ -9,7 +9,6 @@
 #include <string>
 #include <array>
 
-// utils
 #include "../date/include/date/date.h"
 #include "../common/utils.h"
 #include "../common/fileUtils.h"
@@ -756,12 +755,6 @@ void cTellyUI::draw (cApp& app) {
 
 // private:
 //{{{
-void  cTellyUI::hitTab (eTab tab) {
-  mTab = (tab == mTab) ? eTelly : tab;
-  }
-//}}}
-
-//{{{
 void cTellyUI::drawPidMap (cTransportStream& transportStream) {
 // draw pids
 
@@ -929,5 +922,10 @@ void cTellyUI::hitDown (cTellyApp& tellyApp) {
     tellyApp.skip (900000 / 25);
   else
     mMultiView.hitDown();
+  }
+//}}}
+//{{{
+void cTellyUI::hitTab (eTab tab) {
+  mTab = (tab == mTab) ? eTelly : tab;
   }
 //}}}

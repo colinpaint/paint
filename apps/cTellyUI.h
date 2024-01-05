@@ -58,7 +58,6 @@ public:
 
 private:
   enum eTab { eTelly, ePids, eRecord };
-  void hitTab (eTab tab);
 
   void drawPidMap (cTransportStream& transportStream);
   void drawRecordedFileNames (cTransportStream& transportStream);
@@ -71,6 +70,7 @@ private:
   void hitRight (cTellyApp& tellyApp);
   void hitUp (cTellyApp& tellyApp);
   void hitDown (cTellyApp& tellyApp);
+  void hitTab (eTab tab);
 
   // vars
   eTab mTab = eTelly;

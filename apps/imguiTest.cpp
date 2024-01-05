@@ -1,4 +1,4 @@
-// imguiApp.cpp - imgui app
+// imguiTest.cpp - imgui test
 //{{{  includes
 #ifdef _WIN32
   #define _CRT_SECURE_NO_WARNINGS
@@ -46,7 +46,7 @@ using namespace std;
 //{{{
 class cImguiApp : public cApp {
 public:
-  cImguiApp (cApp::cOptions* options, iUI* ui) : cApp ("imguiApp", options, ui) {}
+  cImguiApp (cApp::cOptions* options, iUI* ui) : cApp ("imGuiApp", options, ui) {}
   virtual ~cImguiApp() = default;
 
   virtual void drop (const vector<string>& dropItems) final {
@@ -101,7 +101,7 @@ int main (int numArgs, char* args[]) {
 
   // log
   cLog::init (options->mLogLevel);
-  cLog::log (LOGNOTICE, fmt::format ("fed"));
+  cLog::log (LOGNOTICE, fmt::format ("ImGuiTestfed"));
 
   // ImguiApp
   cImguiApp imguiApp (options, new cImguiUI());
