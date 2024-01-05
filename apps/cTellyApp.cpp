@@ -123,6 +123,7 @@ void cTellyApp::liveDvbSource (const cDvbMultiplex& multiplex, cTellyOptions* op
     cLog::log (LOGINFO, "cTellyApp::setLiveDvbSource - failed to create liveDvbSource");
   }
 //}}}
+
 //{{{
 void cTellyApp::fileSource (const string& filename, cTellyOptions* options) {
 
@@ -197,7 +198,6 @@ void cTellyApp::fileSource (const string& filename, cTellyOptions* options) {
     }).detach();
   }
 //}}}
-
 //{{{
 void cTellyApp::skip (int64_t skipPts) {
 
