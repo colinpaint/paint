@@ -11,11 +11,6 @@
 // app
 #include "../app/cApp.h"
 
-// dvb
-#include "../dvb/cDvbMultiplex.h"
-#include "../dvb/cDvbSource.h"
-#include "../dvb/cTransportStream.h"
-
 // decoders
 //{{{  include libav
 #ifdef _WIN32
@@ -41,6 +36,7 @@ extern "C" {
 #include "../decoders/cFFmpegVideoDecoder.h"
 
 // dvb
+#include "../dvb/cTransportStream.h"
 #include "../dvb/cVideoRender.h"
 #include "../dvb/cAudioRender.h"
 #include "../dvb/cSubtitleRender.h"
@@ -57,13 +53,12 @@ class cTellyUI : public cApp::iUI {
 public:
   cTellyUI();
   virtual ~cTellyUI() = default;
+
   void draw (cApp& app);
 
 private:
   enum eTab { eTelly, ePids, eRecord };
-  inline static const std::vector<std::string> kTabNames = { "telly", "pids", "recorded" };
-
-  void hitShow (eTab tab);
+  void hitTab (eTab tab);
 
   void drawPidMap (cTransportStream& transportStream);
   void drawRecordedFileNames (cTransportStream& transportStream);

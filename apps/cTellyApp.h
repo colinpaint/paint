@@ -34,9 +34,9 @@ extern "C" {
 //}}}
 #include "../decoders/cAudioFrame.h"
 #include "../decoders/cVideoFrame.h"
+#include "../decoders/cFFmpegVideoDecoder.h"
 #include "../decoders/cSubtitleFrame.h"
 #include "../decoders/cSubtitleImage.h"
-#include "../decoders/cFFmpegVideoDecoder.h"
 
 // dvb
 #include "../dvb/cDvbMultiplex.h"

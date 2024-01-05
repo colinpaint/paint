@@ -5,6 +5,10 @@
   #define NOMINMAX
 #endif
 
+#include <cstdint>
+#include <string>
+#include <array>
+
 // utils
 #include "../date/include/date/date.h"
 #include "../common/utils.h"
@@ -21,16 +25,14 @@
 
 using namespace std;
 //}}}
+namespace {
+  const vector <string> kTabNames = { "telly", "pids", "recorded" };
+  }
 
 //{{{
 class cFramesView {
 public:
-  cFramesView() {}
-  ~cFramesView() = default;
-
-  //{{{
   void draw (cAudioRender& audioRender, cVideoRender& videoRender, int64_t playerPts, ImVec2 pos) {
-
     float ptsScale = mPixelsPerVideoFrame / videoRender.getPtsDuration();
 
     { // lock video during iterate
@@ -80,7 +82,6 @@ public:
     agc (mMaxPesSize, mMaxDisplayPesSize, 100.f, 10000.f);
     agc (mMaxPower, mMaxDisplayPower, 0.001f, 0.1f);
     }
-  //}}}
 
 private:
   //{{{
@@ -124,9 +125,6 @@ private:
 //{{{
 class cAudioMeterView {
 public:
-  cAudioMeterView() {}
-  ~cAudioMeterView() = default;
-
   void draw (cAudioRender& audioRender, int64_t playerPts, ImVec2 pos) {
     cAudioFrame* audioFrame = audioRender.getAudioFrameAtPts (playerPts);
     if (audioFrame) {
@@ -673,12 +671,13 @@ void cTellyUI::draw (cApp& app) {
   if (tellyApp.hasTransportStream()) {
     cTransportStream& transportStream = tellyApp.getTransportStream();
 
-    // multiVeiw piccies
+    // multiView piccies
     mMultiView.draw (tellyApp, transportStream);
 
     // menu
     ImGui::SetCursorPos ({0.f,ImGui::GetIO().DisplaySize.y - ImGui::GetTextLineHeight()*1.5f});
     ImGui::BeginChild ("menu", {ImGui::GetIO().DisplaySize.x, ImGui::GetTextLineHeight()*1.5f});
+
     mTab = (eTab)interlockedButtons (kTabNames, (uint8_t)mTab, {0.f,0.f}, true);
     //{{{  epg button
     ImGui::SameLine();
@@ -737,7 +736,6 @@ void cTellyUI::draw (cApp& app) {
       clockButton ("clock", transportStream.getNowTdt(), { 80.f, 80.f });
       }
       //}}}
-
     //{{{  tabbed subMenu
     ImGui::SetCursorPos ({0.f,0.f});
 
@@ -758,7 +756,7 @@ void cTellyUI::draw (cApp& app) {
 
 // private:
 //{{{
-void  cTellyUI::hitShow (eTab tab) {
+void  cTellyUI::hitTab (eTab tab) {
   mTab = (tab == mTab) ? eTelly : tab;
   }
 //}}}
@@ -845,9 +843,9 @@ void cTellyUI::keyboard (cTellyApp& tellyApp) {
     { false, false,  false, ImGuiKey_E,          [this,&tellyApp]{ tellyApp.toggleShowEpg(); }},
     { false, false,  false, ImGuiKey_S,          [this,&tellyApp]{ tellyApp.toggleShowSubtitle(); }},
     { false, false,  false, ImGuiKey_L,          [this,&tellyApp]{ tellyApp.toggleShowMotionVectors(); }},
-    { false, false,  false, ImGuiKey_T,          [this,&tellyApp]{ hitShow (eTelly); }},
-    { false, false,  false, ImGuiKey_P,          [this,&tellyApp]{ hitShow (ePids); }},
-    { false, false,  false, ImGuiKey_R,          [this,&tellyApp]{ hitShow (eRecord); }},
+    { false, false,  false, ImGuiKey_T,          [this,&tellyApp]{ hitTab (eTelly); }},
+    { false, false,  false, ImGuiKey_P,          [this,&tellyApp]{ hitTab (ePids); }},
+    { false, false,  false, ImGuiKey_R,          [this,&tellyApp]{ hitTab (eRecord); }},
     };
 
   ImGui::GetIO().WantTextInput = true;
