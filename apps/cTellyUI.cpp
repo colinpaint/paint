@@ -25,6 +25,7 @@
 using namespace std;
 //}}}
 namespace {
+  const size_t kMaxSubtitleLines = 4;
   const vector <string> kTabNames = { "telly", "pids", "recorded" };
   }
 
@@ -189,7 +190,7 @@ public:
 
   //{{{
   bool draw (cTellyApp& tellyApp, cTransportStream& transportStream,
-             bool selectFull, size_t numViews, size_t viewIndex,
+             bool selectFull, size_t viewIndex, size_t numViews,
              cTextureShader* videoShader, cTextureShader* subtitleShader) {
   // return true if hit
 
@@ -206,7 +207,7 @@ public:
            (layoutPos.y * viewportHeight) + mSize.y*0.5f};
 
     ImGui::SetCursorPos (mTL);
-    ImGui::BeginChild (fmt::format ("viewChild##{}", mService.getSid()).c_str(), mSize);
+    ImGui::BeginChild (fmt::format ("view##{}", mService.getSid()).c_str(), mSize);
 
     // draw select rect
     bool hover = ImGui::IsMouseHoveringRect (mTL, mBR);
@@ -328,7 +329,6 @@ public:
     if (!enabled || (mSelect == eSelectedFull))
       title += " " + mService.getNowTitleString();
 
-
     // drop shadow title at top
     ImVec2 pos = {ImGui::GetTextLineHeight() * 0.25f, 0.f};
     ImGui::SetCursorPos (pos);
@@ -343,7 +343,7 @@ public:
     //}}}
     if (tellyApp.getOptions()->mShowEpg) {
       //{{{  draw epg
-      ImGui::BeginChild (fmt::format ("epg##{}", mService.getSid()).c_str(),
+      ImGui::BeginChild (fmt::format ("viewEpg##{}", mService.getSid()).c_str(),
                          mSize - ImVec2 ({0.f, ImGui::GetTextLineHeight() * 1.5f}),
                          ImGuiChildFlags_None, ImGuiWindowFlags_NoScrollbar);
 
@@ -370,7 +370,7 @@ public:
 
       ImGui::SetCursorPos ({0.f,0.f});
       if (ImGui::InvisibleButton (fmt::format ("viewEpgInvisible##{}", mService.getSid()).c_str(), mSize)) {
-        //{{{  hit view, select action
+        // hit view, select action
         if (!mService.getStream (cTransportStream::eVideo).isEnabled())
           mService.enableStreams();
         else if (mSelect == eUnselected)
@@ -382,7 +382,6 @@ public:
 
         result = true;
         }
-        //}}}
 
       ImGui::EndChild();
       }
@@ -401,8 +400,6 @@ public:
       result = true;
       }
       //}}}
-    else
-      result = false;
 
     if (mSelect == eSelectedFull) {
       //{{{  draw ptsFromStart
@@ -426,7 +423,6 @@ public:
   //}}}
 
 private:
-  static const size_t kMaxSubtitleLines = 4;
   enum eSelect { eUnselected, eSelected, eSelectedFull };
 
   //{{{
@@ -557,37 +553,6 @@ private:
 class cMultiView {
 public:
   //{{{
-  void hitEnter() {
-    cLog::log (LOGINFO, fmt::format ("multiView hitEnter"));
-    }
-  //}}}
-  //{{{
-  void hitSpace() {
-    cLog::log (LOGINFO, fmt::format ("multiView hitSpace"));
-    }
-  //}}}
-  //{{{
-  void hitLeft() {
-    cLog::log (LOGINFO, fmt::format ("multiView hitLeft"));
-    }
-  //}}}
-  //{{{
-  void hitRight() {
-    cLog::log (LOGINFO, fmt::format ("multiView hitRight"));
-    }
-  //}}}
-  //{{{
-  void hitUp() {
-    cLog::log (LOGINFO, fmt::format ("multiView hitUp"));
-    }
-  //}}}
-  //{{{
-  void hitDown() {
-    cLog::log (LOGINFO, fmt::format ("multiView hitDown"));
-    }
-  //}}}
-
-  //{{{
   void draw (cTellyApp& tellyApp, cTransportStream& transportStream) {
 
     // create shaders, firsttime we see graphics interface
@@ -623,7 +588,7 @@ public:
     for (auto& view : mViewMap) {
       if (!selectedFull || view.second.getSelectedFull())
         if (view.second.draw (tellyApp, transportStream,
-                              selectedFull, selectedFull ? 1 : mViewMap.size(), viewIndex,
+                              selectedFull,  viewIndex, selectedFull ? 1 : mViewMap.size(),
                               mVideoShader, mSubtitleShader)) {
           // view hit
           viewHit = true;
@@ -641,6 +606,37 @@ public:
         unselectViewIndex++;
         }
       }
+    }
+  //}}}
+
+  //{{{
+  void hitEnter() {
+    cLog::log (LOGINFO, fmt::format ("multiView hitEnter"));
+    }
+  //}}}
+  //{{{
+  void hitSpace() {
+    cLog::log (LOGINFO, fmt::format ("multiView hitSpace"));
+    }
+  //}}}
+  //{{{
+  void hitLeft() {
+    cLog::log (LOGINFO, fmt::format ("multiView hitLeft"));
+    }
+  //}}}
+  //{{{
+  void hitRight() {
+    cLog::log (LOGINFO, fmt::format ("multiView hitRight"));
+    }
+  //}}}
+  //{{{
+  void hitUp() {
+    cLog::log (LOGINFO, fmt::format ("multiView hitUp"));
+    }
+  //}}}
+  //{{{
+  void hitDown() {
+    cLog::log (LOGINFO, fmt::format ("multiView hitDown"));
     }
   //}}}
 
