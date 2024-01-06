@@ -59,7 +59,7 @@ public:
 private:
   enum eTab { eTelly, ePids, eRecord };
 
-  void drawPidMap (cTransportStream& transportStream);
+  void drawPids (cTransportStream& transportStream);
   void drawRecordedFileNames (cTransportStream& transportStream);
 
   void keyboard (cTellyApp& tellyApp);

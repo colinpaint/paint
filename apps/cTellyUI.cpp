@@ -25,7 +25,7 @@
 using namespace std;
 //}}}
 namespace {
-  const size_t kMaxSubtitleLines = 4;
+  constexpr size_t kMaxSubtitleLines = 4;
   const vector <string> kTabNames = { "telly", "pids", "recorded" };
   }
 
@@ -647,7 +647,7 @@ private:
   };
 //}}}
 
-// public:
+// public
 cTellyUI::cTellyUI() : mMultiView (*(new cMultiView())) {}
 //{{{
 void cTellyUI::draw (cApp& app) {
@@ -736,7 +736,7 @@ void cTellyUI::draw (cApp& app) {
 
     ImGui::PushFont (tellyApp.getMonoFont());
     switch (mTab) {
-      case ePids: drawPidMap (transportStream); break;
+      case ePids: drawPids (transportStream); break;
       case eRecord: drawRecordedFileNames (transportStream); break;
       default:;
       }
@@ -749,9 +749,9 @@ void cTellyUI::draw (cApp& app) {
   }
 //}}}
 
-// private:
+// private
 //{{{
-void cTellyUI::drawPidMap (cTransportStream& transportStream) {
+void cTellyUI::drawPids (cTransportStream& transportStream) {
 // draw pids
 
   // calc error number width
