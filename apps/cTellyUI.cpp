@@ -420,7 +420,6 @@ public:
 
 private:
   enum eSelect { eUnselected, eSelected, eSelectedFull };
-
   //{{{
   cVec2 getLayout (size_t index, size_t numViews, float& scale) {
   // return layout scale, and position as fraction of viewPort
