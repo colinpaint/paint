@@ -325,27 +325,39 @@ public:
         }
       }
 
-    //{{{  draw title
-    std::string title = mService.getName();
+    ImGui::PushFont (tellyApp.getLargeFont());
+    string title = mService.getName();
     if (!enabled || (mSelect == eSelectedFull))
       title += " " + mService.getNowTitleString();
-
-    // drop shadow title at top
+    //{{{  draw dropShadow title topLeft
     ImVec2 pos = {ImGui::GetTextLineHeight() * 0.25f, 0.f};
     ImGui::SetCursorPos (pos);
-
-    ImGui::PushFont (tellyApp.getLargeFont());
     ImGui::TextColored ({0.f,0.f,0.f,1.f}, title.c_str());
     ImGui::SetCursorPos (pos - ImVec2(2.f,2.f));
     ImGui::TextColored ({1.f, 1.f,1.f,1.f}, title.c_str());
+    pos.y += ImGui::GetTextLineHeight() * 1.5f;
+
+    ImVec2 epgSize = mSize - ImVec2(0.f, ImGui::GetTextLineHeight() * 1.5f);
+    //}}}
+    if (mSelect == eSelectedFull) {
+      //{{{  draw ptsFromStart bottomRight
+      string ptsFromStartString = utils::getPtsString (mService.getPtsFromStart());
+
+      pos = ImVec2 (mSize.x - ImGui::GetTextLineHeight() * 10.f, mSize.y - ImGui::GetTextLineHeight()*1.5f);
+      ImGui::SetCursorPos (pos);
+      ImGui::TextColored ({0.f,0.f,0.f,1.f}, ptsFromStartString.c_str());
+      ImGui::SetCursorPos (pos - ImVec2(2.f,2.f));
+      ImGui::TextColored ({1.f,1.f,1.f,1.f}, ptsFromStartString.c_str());
+
+      epgSize -= ImVec2(0.f, ImGui::GetTextLineHeight() * 1.5f);
+      }
+      //}}}
     ImGui::PopFont();
 
-    pos.y += ImGui::GetTextLineHeight() * 1.5f;
-    //}}}
     if (tellyApp.getOptions()->mShowEpg) {
       //{{{  draw epg in childWindow, hit epg, select action
-      ImGui::BeginChild (fmt::format ("epg##{}", mService.getSid()).c_str(),
-                         mSize - ImVec2 ({0.f, ImGui::GetTextLineHeight() * 1.5f}),
+      ImGui::SetCursorPos ({0.f, ImGui::GetTextLineHeight() * 1.5f});
+      ImGui::BeginChild (fmt::format ("epg##{}", mService.getSid()).c_str(), epgSize,
                          ImGuiChildFlags_None, ImGuiWindowFlags_NoScrollbar);
 
       ImVec2 posEpg = {0.f,0.f};
@@ -369,7 +381,7 @@ public:
         }
 
       ImGui::SetCursorPos ({0.f,0.f});
-      if (ImGui::InvisibleButton (fmt::format ("epgInvisible##{}", mService.getSid()).c_str(), mSize)) {
+      if (ImGui::InvisibleButton (fmt::format ("epgBox##{}", mService.getSid()).c_str(), epgSize)) {
         // hit view, select action
         if (!mService.getStream (cTransportStream::eVideo).isEnabled())
           mService.enableStreams();
@@ -386,7 +398,7 @@ public:
       ImGui::EndChild();
       }
       //}}}
-    else if (ImGui::InvisibleButton (fmt::format ("viewInvisible##{}", mService.getSid()).c_str(), mSize)) {
+    else if (ImGui::InvisibleButton (fmt::format ("viewBox##{}", mService.getSid()).c_str(), mSize)) {
       //{{{  hit view, select action
       if (!mService.getStream (cTransportStream::eVideo).isEnabled())
         mService.enableStreams();
@@ -398,22 +410,6 @@ public:
         mSelect = eSelected;
 
       result = true;
-      }
-      //}}}
-
-    if (mSelect == eSelectedFull) {
-      //{{{  draw ptsFromStart
-      std::string ptsFromStartString = utils::getPtsString (mService.getPtsFromStart());
-
-      ImGui::PushFont (tellyApp.getLargeFont());
-
-      pos = ImVec2 (mSize.x - ImGui::GetTextLineHeight() * 10.f, mSize.y - ImGui::GetTextLineHeight()*1.5f);
-      ImGui::SetCursorPos (pos);
-      ImGui::TextColored ({0.f,0.f,0.f,1.f}, ptsFromStartString.c_str());
-      ImGui::SetCursorPos (pos - ImVec2(2.f,2.f));
-      ImGui::TextColored ({1.f,1.f,1.f,1.f}, ptsFromStartString.c_str());
-
-      ImGui::PopFont();
       }
       //}}}
 
@@ -760,58 +756,67 @@ void cTellyUI::draw (cApp& app) {
 
 // private
 //{{{
-void cTellyUI::drawPids (cTransportStream& transportStream) {
-// draw pids
-
-  // calc error number width
-  int errorChars = 1;
-  while (transportStream.getNumErrors() > pow (10, errorChars))
-    errorChars++;
-
-  int prevSid = 0;
-  for (auto& pidInfoItem : transportStream.getPidInfoMap()) {
-    // iterate for pidInfo
-    cTransportStream::cPidInfo& pidInfo = pidInfoItem.second;
-
-    // draw separator, crude test for new service, fails sometimes
-    if ((pidInfo.getSid() != prevSid) && (pidInfo.getStreamType() != 5) && (pidInfo.getStreamType() != 11))
-      ImGui::Separator();
-
-    // draw pid label
-    ImGui::TextUnformatted (fmt::format ("{:{}d} {:{}d} {:4d} {} {} {}",
-                            pidInfo.mPackets, mPacketChars, pidInfo.mErrors, errorChars, pidInfo.getPid(),
-                            utils::getFullPtsString (pidInfo.getPts()),
-                            utils::getFullPtsString (pidInfo.getDts()),
-                            pidInfo.getPidName()).c_str());
-
-    // draw stream bar
-    ImGui::SameLine();
-    ImVec2 pos = ImGui::GetCursorScreenPos();
-    mMaxPidPackets = max (mMaxPidPackets, pidInfo.mPackets);
-    float frac = pidInfo.mPackets / float(mMaxPidPackets);
-    ImVec2 posTo = {pos.x + (frac * (ImGui::GetWindowWidth() - pos.x - ImGui::GetTextLineHeight())),
-                    pos.y + ImGui::GetTextLineHeight()};
-    ImGui::GetWindowDrawList()->AddRectFilled (pos, posTo, 0xff00ffff);
-
-    // draw stream label
-    string info = pidInfo.getInfo();
-    if ((pidInfo.getStreamType() == 0) && (pidInfo.getSid() != 0xFFFF))
-      info = fmt::format ("{} ", pidInfo.getSid()) + info;
-    ImGui::TextUnformatted (info.c_str());
-
-    // adjust packet number width
-    if (pidInfo.mPackets > pow (10, mPacketChars))
-      mPacketChars++;
-
-    prevSid = pidInfo.getSid();
-    }
+void cTellyUI::hitTab (eTab tab) {
+  mTab = (tab == mTab) ? eTelly : tab;
   }
 //}}}
 //{{{
-void cTellyUI::drawRecordedFileNames (cTransportStream& transportStream) {
+void cTellyUI::hitSpace (cTellyApp& tellyApp) {
 
-  for (auto& program : transportStream.getRecordedFileNames())
-    ImGui::TextUnformatted (program.c_str());
+  if (tellyApp.hasFileSource())
+    tellyApp.togglePlay();
+  else
+    mMultiView.hitSpace();
+  }
+//}}}
+//{{{
+void cTellyUI::hitControlLeft (cTellyApp& tellyApp) {
+
+  if (tellyApp.hasFileSource())
+    tellyApp.skip (-90000 / 25);
+  }
+//}}}
+//{{{
+void cTellyUI::hitControlRight (cTellyApp& tellyApp) {
+
+  if (tellyApp.hasFileSource())
+    tellyApp.skip (90000 / 25);
+  }
+//}}}
+//{{{
+void cTellyUI::hitLeft (cTellyApp& tellyApp) {
+
+  if (tellyApp.hasFileSource())
+    tellyApp.skip (-90000);
+  else
+    mMultiView.hitLeft();
+  }
+//}}}
+//{{{
+void cTellyUI::hitRight (cTellyApp& tellyApp) {
+
+  if (tellyApp.hasFileSource())
+    tellyApp.skip (90000 / 25);
+  else
+    mMultiView.hitRight();
+  }
+//}}}
+//{{{
+void cTellyUI::hitUp (cTellyApp& tellyApp) {
+
+  if (tellyApp.hasFileSource())
+    tellyApp.skip (-900000 / 25);
+  else
+    mMultiView.hitUp();
+  }
+//}}}
+//{{{
+void cTellyUI::hitDown (cTellyApp& tellyApp) {
+
+  if (tellyApp.hasFileSource())
+    tellyApp.skip (900000 / 25);
+  else
+    mMultiView.hitDown();
   }
 //}}}
 
@@ -872,66 +877,57 @@ void cTellyUI::keyboard (cTellyApp& tellyApp) {
 //}}}
 
 //{{{
-void cTellyUI::hitSpace (cTellyApp& tellyApp) {
+void cTellyUI::drawPids (cTransportStream& transportStream) {
+// draw pids
 
-  if (tellyApp.hasFileSource())
-    tellyApp.togglePlay();
-  else
-    mMultiView.hitSpace();
+  // calc error number width
+  int errorChars = 1;
+  while (transportStream.getNumErrors() > pow (10, errorChars))
+    errorChars++;
+
+  int prevSid = 0;
+  for (auto& pidInfoItem : transportStream.getPidInfoMap()) {
+    // iterate for pidInfo
+    cTransportStream::cPidInfo& pidInfo = pidInfoItem.second;
+
+    // draw separator, crude test for new service, fails sometimes
+    if ((pidInfo.getSid() != prevSid) && (pidInfo.getStreamType() != 5) && (pidInfo.getStreamType() != 11))
+      ImGui::Separator();
+
+    // draw pid label
+    ImGui::TextUnformatted (fmt::format ("{:{}d} {:{}d} {:4d} {} {} {}",
+                            pidInfo.mPackets, mPacketChars, pidInfo.mErrors, errorChars, pidInfo.getPid(),
+                            utils::getFullPtsString (pidInfo.getPts()),
+                            utils::getFullPtsString (pidInfo.getDts()),
+                            pidInfo.getPidName()).c_str());
+
+    // draw stream bar
+    ImGui::SameLine();
+    ImVec2 pos = ImGui::GetCursorScreenPos();
+    mMaxPidPackets = max (mMaxPidPackets, pidInfo.mPackets);
+    float frac = pidInfo.mPackets / float(mMaxPidPackets);
+    ImVec2 posTo = {pos.x + (frac * (ImGui::GetWindowWidth() - pos.x - ImGui::GetTextLineHeight())),
+                    pos.y + ImGui::GetTextLineHeight()};
+    ImGui::GetWindowDrawList()->AddRectFilled (pos, posTo, 0xff00ffff);
+
+    // draw stream label
+    string info = pidInfo.getInfo();
+    if ((pidInfo.getStreamType() == 0) && (pidInfo.getSid() != 0xFFFF))
+      info = fmt::format ("{} ", pidInfo.getSid()) + info;
+    ImGui::TextUnformatted (info.c_str());
+
+    // adjust packet number width
+    if (pidInfo.mPackets > pow (10, mPacketChars))
+      mPacketChars++;
+
+    prevSid = pidInfo.getSid();
+    }
   }
 //}}}
 //{{{
-void cTellyUI::hitControlLeft (cTellyApp& tellyApp) {
+void cTellyUI::drawRecordedFileNames (cTransportStream& transportStream) {
 
-  if (tellyApp.hasFileSource())
-    tellyApp.skip (-90000 / 25);
-  }
-//}}}
-//{{{
-void cTellyUI::hitControlRight (cTellyApp& tellyApp) {
-
-  if (tellyApp.hasFileSource())
-    tellyApp.skip (90000 / 25);
-  }
-//}}}
-//{{{
-void cTellyUI::hitLeft (cTellyApp& tellyApp) {
-
-  if (tellyApp.hasFileSource())
-    tellyApp.skip (-90000);
-  else
-    mMultiView.hitLeft();
-  }
-//}}}
-//{{{
-void cTellyUI::hitRight (cTellyApp& tellyApp) {
-
-  if (tellyApp.hasFileSource())
-    tellyApp.skip (90000 / 25);
-  else
-    mMultiView.hitRight();
-  }
-//}}}
-//{{{
-void cTellyUI::hitUp (cTellyApp& tellyApp) {
-
-  if (tellyApp.hasFileSource())
-    tellyApp.skip (-900000 / 25);
-  else
-    mMultiView.hitUp();
-  }
-//}}}
-//{{{
-void cTellyUI::hitDown (cTellyApp& tellyApp) {
-
-  if (tellyApp.hasFileSource())
-    tellyApp.skip (900000 / 25);
-  else
-    mMultiView.hitDown();
-  }
-//}}}
-//{{{
-void cTellyUI::hitTab (eTab tab) {
-  mTab = (tab == mTab) ? eTelly : tab;
+  for (auto& program : transportStream.getRecordedFileNames())
+    ImGui::TextUnformatted (program.c_str());
   }
 //}}}
