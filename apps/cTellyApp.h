@@ -114,8 +114,8 @@ public:
   // actions
   void skip (int64_t skipPts);
 
+  void setShowEpg (bool showEpg) { mOptions->mShowEpg = showEpg; }
   void togglePlay() { mTransportStream->togglePlay(); }
-  void toggleShowEpg() { mOptions->mShowEpg = !mOptions->mShowEpg; }
   void toggleShowSubtitle() { mOptions->mShowSubtitle = !mOptions->mShowSubtitle; }
   void toggleShowMotionVectors() { mOptions->mShowMotionVectors = !mOptions->mShowMotionVectors; }
 

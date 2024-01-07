@@ -57,7 +57,7 @@ public:
   void draw (cApp& app);
 
 private:
-  enum eTab { eTelly, ePids, eRecord };
+  enum eTab { eTelly, ePids, eRecord, eEpg };
 
   void drawPids (cTransportStream& transportStream);
   void drawRecordedFileNames (cTransportStream& transportStream);

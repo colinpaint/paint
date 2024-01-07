@@ -1,4 +1,4 @@
-// tellyApp.cpp
+// tellyUI.cpp
 //{{{  includes
 #ifdef _WIN32
   #define _CRT_SECURE_NO_WARNINGS
@@ -26,7 +26,7 @@ using namespace std;
 //}}}
 namespace {
   constexpr size_t kMaxSubtitleLines = 4;
-  const vector <string> kTabNames = { "telly", "pids", "recorded" };
+  const vector <string> kTabNames = { "telly", "pids", "recorded", "epg" };
   }
 
 //{{{
@@ -207,7 +207,8 @@ public:
            (layoutPos.y * viewportHeight) + mSize.y*0.5f};
 
     ImGui::SetCursorPos (mTL);
-    ImGui::BeginChild (fmt::format ("view##{}", mService.getSid()).c_str(), mSize);
+    ImGui::BeginChild (fmt::format ("view##{}", mService.getSid()).c_str(), mSize,
+                       ImGuiChildFlags_None, ImGuiWindowFlags_NoScrollbar);
 
     // draw select rect
     bool hover = ImGui::IsMouseHoveringRect (mTL, mBR);
@@ -342,8 +343,8 @@ public:
     pos.y += ImGui::GetTextLineHeight() * 1.5f;
     //}}}
     if (tellyApp.getOptions()->mShowEpg) {
-      //{{{  draw epg
-      ImGui::BeginChild (fmt::format ("viewEpg##{}", mService.getSid()).c_str(),
+      //{{{  draw epg in childWindow, hit epg, select action
+      ImGui::BeginChild (fmt::format ("epg##{}", mService.getSid()).c_str(),
                          mSize - ImVec2 ({0.f, ImGui::GetTextLineHeight() * 1.5f}),
                          ImGuiChildFlags_None, ImGuiWindowFlags_NoScrollbar);
 
@@ -353,10 +354,9 @@ public:
         if (enabled && (mSelect != eSelectedFull))
           time += epgItem.second->getDuration();
         if (time > transportStream.getNowTdt()) {
-          // epgItem now or later today
+          // draw epgItem title
           std::string epgTitle = date::format ("%H:%M ", date::floor<chrono::seconds>(epgItem.first)) +
-                                  epgItem.second->getTitle();
-                            //+ " " + epgItem.second->getInfo();
+                                   epgItem.second->getTitle();
 
           // drop shadow epg
           ImGui::SetCursorPos (posEpg);
@@ -369,7 +369,7 @@ public:
         }
 
       ImGui::SetCursorPos ({0.f,0.f});
-      if (ImGui::InvisibleButton (fmt::format ("viewEpgInvisible##{}", mService.getSid()).c_str(), mSize)) {
+      if (ImGui::InvisibleButton (fmt::format ("epgInvisible##{}", mService.getSid()).c_str(), mSize)) {
         // hit view, select action
         if (!mService.getStream (cTransportStream::eVideo).isEnabled())
           mService.enableStreams();
@@ -652,10 +652,12 @@ cTellyUI::cTellyUI() : mMultiView (*(new cMultiView())) {}
 //{{{
 void cTellyUI::draw (cApp& app) {
 
+  ImGui::SetKeyboardFocusHere();
+
   app.getGraphics().clear ({(int32_t)ImGui::GetIO().DisplaySize.x,
                             (int32_t)ImGui::GetIO().DisplaySize.y});
 
-  ImGui::SetKeyboardFocusHere();
+  ImGui::SetNextWindowPos ({0.f,0.f});
   ImGui::SetNextWindowSize (ImGui::GetIO().DisplaySize);
   ImGui::Begin ("telly", nullptr, ImGuiWindowFlags_NoTitleBar |
                                   ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove |
@@ -670,14 +672,13 @@ void cTellyUI::draw (cApp& app) {
     mMultiView.draw (tellyApp, transportStream);
 
     // menu
-    ImGui::SetCursorPos ({0.f,ImGui::GetIO().DisplaySize.y - ImGui::GetTextLineHeight()*1.5f});
-    ImGui::BeginChild ("menu", {ImGui::GetIO().DisplaySize.x, ImGui::GetTextLineHeight()*1.5f});
+    ImGui::SetCursorPos ({0.f, ImGui::GetIO().DisplaySize.y - ImGui::GetTextLineHeight() * 1.5f});
+    ImGui::BeginChild ("menu", {0.f, ImGui::GetTextLineHeight() * 1.5f});
 
+    ImGui::SetCursorPos ({0.f,0.f});
+    //{{{  tab interlocked buttons
     mTab = (eTab)interlockedButtons (kTabNames, (uint8_t)mTab, {0.f,0.f}, true);
-    //{{{  epg button
-    ImGui::SameLine();
-    if (toggleButton ("epg", tellyApp.getOptions()->mShowEpg))
-      tellyApp.toggleShowEpg();
+    tellyApp.setShowEpg (mTab == eEpg);
     //}}}
     //{{{  subtitle button
     ImGui::SameLine();
@@ -724,6 +725,25 @@ void cTellyUI::draw (cApp& app) {
       //}}}
     ImGui::EndChild();
 
+    //{{{  tabbed subMenu
+    switch (mTab) {
+      case ePids:
+        ImGui::PushFont (tellyApp.getMonoFont());
+        ImGui::SetCursorPos ({0.f,0.f});
+        drawPids (transportStream);
+        ImGui::PopFont();
+        break;
+
+      case eRecord:
+        ImGui::PushFont (tellyApp.getMonoFont());
+        ImGui::SetCursorPos ({0.f,0.f});
+        drawRecordedFileNames (transportStream);
+        ImGui::PopFont();
+        break;
+
+      default:;
+      }
+    //}}}
     if (transportStream.hasFirstTdt()) {
       //{{{  clock
       //ImGui::TextUnformatted (transportStream.getTdtString().c_str());
@@ -731,17 +751,6 @@ void cTellyUI::draw (cApp& app) {
       clockButton ("clock", transportStream.getNowTdt(), { 80.f, 80.f });
       }
       //}}}
-    //{{{  tabbed subMenu
-    ImGui::SetCursorPos ({0.f,0.f});
-
-    ImGui::PushFont (tellyApp.getMonoFont());
-    switch (mTab) {
-      case ePids: drawPids (transportStream); break;
-      case eRecord: drawRecordedFileNames (transportStream); break;
-      default:;
-      }
-    ImGui::PopFont();
-    //}}}
     }
 
   keyboard (tellyApp);
@@ -829,13 +838,13 @@ void cTellyUI::keyboard (cTellyApp& tellyApp) {
     { false, false,  false, ImGuiKey_DownArrow,  [this,&tellyApp]{ hitDown (tellyApp); }},
     { false, false,  false, ImGuiKey_Enter,      [this,&tellyApp]{ mMultiView.hitEnter(); }},
     { false, false,  false, ImGuiKey_F,          [this,&tellyApp]{ tellyApp.getPlatform().toggleFullScreen(); }},
-    { false, false,  false, ImGuiKey_E,          [this,&tellyApp]{ tellyApp.toggleShowEpg(); }},
     { false, false,  false, ImGuiKey_S,          [this,&tellyApp]{ tellyApp.toggleShowSubtitle(); }},
     { false, false,  false, ImGuiKey_L,          [this,&tellyApp]{ tellyApp.toggleShowMotionVectors(); }},
     { false, false,  false, ImGuiKey_T,          [this,&tellyApp]{ hitTab (eTelly); }},
     { false, false,  false, ImGuiKey_P,          [this,&tellyApp]{ hitTab (ePids); }},
     { false, false,  false, ImGuiKey_R,          [this,&tellyApp]{ hitTab (eRecord); }},
-    };
+    { false, false,  false, ImGuiKey_E,          [this,&tellyApp]{ hitTab (eEpg); }},
+  };
 
   ImGui::GetIO().WantTextInput = true;
   ImGui::GetIO().WantCaptureKeyboard = true;
@@ -861,6 +870,7 @@ void cTellyUI::keyboard (cTellyApp& tellyApp) {
   ImGui::GetIO().InputQueueCharacters.resize (0);
   }
 //}}}
+
 //{{{
 void cTellyUI::hitSpace (cTellyApp& tellyApp) {
 
