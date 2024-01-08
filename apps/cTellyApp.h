@@ -80,7 +80,7 @@ public:
 
   // vars
   bool mPlaySong = false;
-  bool mShowEpg = true;
+  bool mShowEpg = false;
   bool mShowSubtitle = false;
   bool mShowMotionVectors = false;
 

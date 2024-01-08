@@ -671,7 +671,9 @@ void cTellyUI::draw (cApp& app) {
     ImGui::BeginChild ("menu", {0.f, ImGui::GetTextLineHeight() * 1.5f});
 
     ImGui::SetCursorPos ({0.f,0.f});
-    hitTab (tellyApp, oneOnlyButton (kTabNames, mTabIndex, {0.f,0.f}, true));
+    uint8_t index = mTabIndex;
+    if (maxOneButton (kTabNames, index, {0.f,0.f}, true))
+      hitTab (tellyApp, index);
     //{{{  subtitle button
     ImGui::SameLine();
     if (toggleButton ("sub", tellyApp.getOptions()->mShowSubtitle))
@@ -755,7 +757,7 @@ void cTellyUI::draw (cApp& app) {
 // private
 //{{{
 void cTellyUI::hitTab (cTellyApp& tellyApp, int8_t tabIndex) {
-  mTabIndex = (tabIndex == mTabIndex) ? 0 : tabIndex;
+  mTabIndex = tabIndex;
   tellyApp.setShowEpg (mTabIndex == eEpg);
   }
 //}}}

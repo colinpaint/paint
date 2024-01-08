@@ -183,6 +183,7 @@ bool clockButton (const string& label, chrono::system_clock::time_point timePoin
   return pressed;
   }
 //}}}
+
 //{{{
 bool toggleButton (const string& label, bool toggleOn, const ImVec2& size) {
 // imGui custom widget - based on ImGui::ButtonEx
@@ -227,49 +228,43 @@ bool toggleButton (const string& label, bool toggleOn, const ImVec2& size) {
   return pressed;
   }
 //}}}
+
 //{{{
-uint8_t oneOnlyButton (const vector<string>& buttons, uint8_t buttonIndex,
-                       const ImVec2& size, bool horizontalLayout) {
-// group buttons helper
-// draw buttonVector as toggleButtons with buttonIndex toggled on
-// return index of pressed menu button, or if none pressed, current buttonIndex
+bool groupButton (bool oneOnly, const vector<string>& buttons, uint8_t& buttonIndex,
+                  const ImVec2& size, bool horizontalLayout) {
+// group button helper
+
+  bool pressed = false;
 
   ImGui::BeginGroup();
+  auto it = buttons.begin();
+  if (!oneOnly) // don't show dummy noButton selection
+    ++it;
 
-  for (auto it = buttons.begin(); it != buttons.end(); ++it) {
-    if (toggleButton (*it, buttonIndex == static_cast<int8_t>(it - buttons.begin()), size))
-      buttonIndex = static_cast<int8_t>(it - buttons.begin());
+  for (; it != buttons.end(); ++it) {
+    uint8_t index = (uint8_t)(it - buttons.begin());
+    bool toggleOn = buttonIndex == index;
+    if (toggleButton (*it, toggleOn, size)) {
+      pressed = true;
+      buttonIndex = toggleOn ? 0 : index;
+      }
     if (horizontalLayout)
       ImGui::SameLine();
     }
-
   ImGui::EndGroup();
 
-  return buttonIndex;
+  return pressed;
   }
 //}}}
 //{{{
-uint8_t maxOneButton (const vector<string>& buttons, uint8_t buttonIndex,
-                       const ImVec2& size, bool horizontalLayout) {
-// maxOne button group interlock
-// draw buttonVector as toggleButtons with buttonIndex toggled on
-// return index of pressed menu button, or if none pressed, current buttonIndex
-
-  ImGui::BeginGroup();
-
-  // skip past no button selected
-  auto it = buttons.begin();
-  ++it;
-
-  for (; it != buttons.end(); ++it) {
-    if (toggleButton (*it, buttonIndex == static_cast<int8_t>(it - buttons.begin()), size))
-      buttonIndex = static_cast<int8_t>(it - buttons.begin());
-    if (horizontalLayout)
-      ImGui::SameLine();
-    }
-
-  ImGui::EndGroup();
-
-  return buttonIndex;
+bool maxOneButton (const vector<string>& buttons, uint8_t& buttonIndex,
+                   const ImVec2& size, bool horizontalLayout) {
+  return groupButton (false, buttons, buttonIndex, size, horizontalLayout);
+  }
+//}}}
+//{{{
+bool oneOnlyButton (const vector<string>& buttons, uint8_t& buttonIndex,
+                    const ImVec2& size, bool horizontalLayout) {
+  return groupButton (true, buttons, buttonIndex, size, horizontalLayout);
   }
 //}}}

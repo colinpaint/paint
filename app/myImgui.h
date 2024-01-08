@@ -1,6 +1,5 @@
 // myImgui.h - my imgui widgets - freestanding routines like ImGui::Button but with string and other stuff
 #pragma once
-//includes
 #include <cstdint>
 #include <string>
 #include <vector>
@@ -169,20 +168,17 @@ void drawMiniLog (cMiniLog& miniLog);
 void printHex (uint8_t* ptr, uint32_t numBytes, uint32_t columnsPerRow, uint32_t address, bool full);
 
 // button helpers
-bool clockButton (const std::string& label,
-                  std::chrono::system_clock::time_point timePoint,
-                  const ImVec2& size_arg = ImVec2(0,0),
-                  bool drawDate = false, bool drawTime = false);
+bool clockButton (const std::string& label, std::chrono::system_clock::time_point timePoint,
+                  const ImVec2& size = ImVec2(0,0), bool drawDate = false, bool drawTime = false);
 
-bool toggleButton (const std::string& label,
-                   bool toggleOn,
-                   const ImVec2& size_arg = ImVec2(0,0));
+bool toggleButton (const std::string& label, bool toggleOn, const ImVec2& size = ImVec2(0,0));
 
-uint8_t oneOnlyButton (const std::vector<std::string>& buttons,
-                       uint8_t buttonIndex,
-                       const ImVec2& size_arg = ImVec2(0,0),
-                       bool horizontalLayout = false);
-uint8_t maxOneButton (const std::vector<std::string>& buttons,
-                      uint8_t buttonIndex,
-                      const ImVec2& size_arg = ImVec2(0,0),
-                      bool horizontalLayout = false);
+bool groupButton (bool oneOnly,
+                  const std::vector<std::string>& buttons, uint8_t& buttonIndex,
+                  const ImVec2& size = ImVec2(0,0), bool horizontalLayout = false);
+
+bool maxOneButton (const std::vector<std::string>& buttons, uint8_t& buttonIndex,
+                   const ImVec2& size = ImVec2(0,0), bool horizontalLayout = false);
+
+bool oneOnlyButton (const std::vector<std::string>& buttons, uint8_t& buttonIndex,
+                    const ImVec2& size = ImVec2(0,0), bool horizontalLayout = false);
