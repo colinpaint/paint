@@ -208,12 +208,13 @@ public:
 
     ImGui::SetCursorPos (mTL);
     ImGui::BeginChild (fmt::format ("view##{}", mService.getSid()).c_str(), mSize,
-                       ImGuiChildFlags_None, ImGuiWindowFlags_NoScrollbar);
-
-    // draw select rect
+                       ImGuiChildFlags_None,
+                       ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse);
+    //{{{  draw select rect
     bool hover = ImGui::IsMouseHoveringRect (mTL, mBR);
     if ((hover || (mSelect != eUnselected)) && (mSelect != eSelectedFull))
       ImGui::GetWindowDrawList()->AddRect (mTL, mBR, hover ? 0xff20ffff : 0xff20ff20, 4.f, 0, 4.f);
+    //}}}
 
     bool enabled = mService.getStream (cTransportStream::eVideo).isEnabled();
     if (enabled) {
@@ -398,22 +399,26 @@ public:
       ImGui::EndChild();
       }
       //}}}
-    else if (ImGui::InvisibleButton (fmt::format ("viewBox##{}", mService.getSid()).c_str(), mSize)) {
-      //{{{  hit view, select action
-      if (!mService.getStream (cTransportStream::eVideo).isEnabled())
-        mService.enableStreams();
-      else if (mSelect == eUnselected)
-        mSelect = eSelected;
-      else if (mSelect == eSelected)
-        mSelect = eSelectedFull;
-      else if (mSelect == eSelectedFull)
-        mSelect = eSelected;
+    else {
+      ImGui::SetCursorPos ({0.f, 0.f});
+      if (ImGui::InvisibleButton (fmt::format ("viewBox##{}", mService.getSid()).c_str(), mSize)) {
+        //{{{  hit view, select action
+        if (!mService.getStream (cTransportStream::eVideo).isEnabled())
+          mService.enableStreams();
+        else if (mSelect == eUnselected)
+          mSelect = eSelected;
+        else if (mSelect == eSelected)
+          mSelect = eSelectedFull;
+        else if (mSelect == eSelectedFull)
+          mSelect = eSelected;
 
-      result = true;
+        result = true;
+        }
+        //}}}
       }
-      //}}}
 
     ImGui::EndChild();
+
     return result;
     }
   //}}}
