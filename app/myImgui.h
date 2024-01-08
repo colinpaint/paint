@@ -164,17 +164,25 @@ private:
   };
 //}}}
 
+// miniLog
 void drawMiniLog (cMiniLog& miniLog);
-
 void printHex (uint8_t* ptr, uint32_t numBytes, uint32_t columnsPerRow, uint32_t address, bool full);
 
+// button helpers
 bool clockButton (const std::string& label,
                   std::chrono::system_clock::time_point timePoint,
                   const ImVec2& size_arg = ImVec2(0,0),
                   bool drawDate = false, bool drawTime = false);
 
-bool toggleButton (const std::string& label, bool toggleOn,
+bool toggleButton (const std::string& label,
+                   bool toggleOn,
                    const ImVec2& size_arg = ImVec2(0,0));
 
-uint8_t interlockedButtons (const std::vector<std::string>& buttonVector, uint8_t index,
-                            const ImVec2& size_arg = ImVec2(0,0), bool tabbed = false);
+uint8_t oneOnlyButton (const std::vector<std::string>& buttons,
+                       uint8_t buttonIndex,
+                       const ImVec2& size_arg = ImVec2(0,0),
+                       bool horizontalLayout = false);
+uint8_t maxOneButton (const std::vector<std::string>& buttons,
+                      uint8_t buttonIndex,
+                      const ImVec2& size_arg = ImVec2(0,0),
+                      bool horizontalLayout = false);

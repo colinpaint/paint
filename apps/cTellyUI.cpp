@@ -26,7 +26,7 @@ using namespace std;
 //}}}
 namespace {
   constexpr size_t kMaxSubtitleLines = 4;
-  const vector <string> kTabNames = { "telly", "pids", "recorded", "epg" };
+  const vector <string> kTabNames = { "none", "epg", "pids", "recorded" };
   }
 
 //{{{
@@ -671,10 +671,7 @@ void cTellyUI::draw (cApp& app) {
     ImGui::BeginChild ("menu", {0.f, ImGui::GetTextLineHeight() * 1.5f});
 
     ImGui::SetCursorPos ({0.f,0.f});
-    //{{{  tab interlocked buttons
-    mTab = (eTab)interlockedButtons (kTabNames, (uint8_t)mTab, {0.f,0.f}, true);
-    tellyApp.setShowEpg (mTab == eEpg);
-    //}}}
+    hitTab (tellyApp, oneOnlyButton (kTabNames, mTabIndex, {0.f,0.f}, true));
     //{{{  subtitle button
     ImGui::SameLine();
     if (toggleButton ("sub", tellyApp.getOptions()->mShowSubtitle))
@@ -720,8 +717,8 @@ void cTellyUI::draw (cApp& app) {
       //}}}
     ImGui::EndChild();
 
-    //{{{  tabbed subMenu
-    switch (mTab) {
+    //{{{  draw tab subMenu
+    switch (mTabIndex) {
       case ePids:
         ImGui::PushFont (tellyApp.getMonoFont());
         ImGui::SetCursorPos ({0.f,0.f});
@@ -736,7 +733,9 @@ void cTellyUI::draw (cApp& app) {
         ImGui::PopFont();
         break;
 
-      default:;
+      case eEpg:
+      default:
+        break;
       }
     //}}}
     if (transportStream.hasFirstTdt()) {
@@ -755,8 +754,9 @@ void cTellyUI::draw (cApp& app) {
 
 // private
 //{{{
-void cTellyUI::hitTab (eTab tab) {
-  mTab = (tab == mTab) ? eTelly : tab;
+void cTellyUI::hitTab (cTellyApp& tellyApp, int8_t tabIndex) {
+  mTabIndex = (tabIndex == mTabIndex) ? 0 : tabIndex;
+  tellyApp.setShowEpg (mTabIndex == eEpg);
   }
 //}}}
 //{{{
@@ -844,10 +844,9 @@ void cTellyUI::keyboard (cTellyApp& tellyApp) {
     { false, false,  false, ImGuiKey_F,          [this,&tellyApp]{ tellyApp.getPlatform().toggleFullScreen(); }},
     { false, false,  false, ImGuiKey_S,          [this,&tellyApp]{ tellyApp.toggleShowSubtitle(); }},
     { false, false,  false, ImGuiKey_L,          [this,&tellyApp]{ tellyApp.toggleShowMotionVectors(); }},
-    { false, false,  false, ImGuiKey_T,          [this,&tellyApp]{ hitTab (eTelly); }},
-    { false, false,  false, ImGuiKey_P,          [this,&tellyApp]{ hitTab (ePids); }},
-    { false, false,  false, ImGuiKey_R,          [this,&tellyApp]{ hitTab (eRecord); }},
-    { false, false,  false, ImGuiKey_E,          [this,&tellyApp]{ hitTab (eEpg); }},
+    { false, false,  false, ImGuiKey_P,          [this,&tellyApp]{ hitTab (tellyApp, ePids); }},
+    { false, false,  false, ImGuiKey_R,          [this,&tellyApp]{ hitTab (tellyApp, eRecord); }},
+    { false, false,  false, ImGuiKey_E,          [this,&tellyApp]{ hitTab (tellyApp, eEpg); }},
   };
 
   ImGui::GetIO().WantTextInput = true;

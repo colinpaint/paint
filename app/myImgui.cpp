@@ -11,14 +11,59 @@
 
 #include "myImgui.h"
 
-#include "../common/date.h"
+#include "../date/include/date/date.h"
 #include "../common/cLog.h"
 #include "../common/cMiniLog.h"
-#include "fmt/core.h" //  fmt::format core, used by a lot of logging
 
 using namespace std;
 //}}}
 
+// miniLog
+//{{{
+void drawMiniLog (cMiniLog& miniLog) {
+
+  if (miniLog.getEnable()) {
+    if (ImGui::Button (miniLog.getHeader().c_str()))
+      miniLog.clear();
+
+    bool filtered = false;
+    for (auto& tag : miniLog.getTags()) {
+      ImGui::SameLine();
+      if (toggleButton (tag.mName.c_str(), tag.mEnable))
+        tag.mEnable = !tag.mEnable;
+      filtered |= tag.mEnable;
+      }
+
+    // draw log
+    ImGui::BeginChild (fmt::format ("##log{}", miniLog.getName()).c_str(),
+                       {ImGui::GetWindowWidth(), 12 * ImGui::GetTextLineHeight() }, true,
+                       ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoNav | ImGuiWindowFlags_HorizontalScrollbar);
+
+    if (filtered) {
+      // tag filtered draw
+      for (auto& line : miniLog.getLines())
+        if (miniLog.getTags()[line.mTagIndex].mEnable)
+          ImGui::TextUnformatted ((date::format ("%M.%S ", line.mTimeStamp) +
+                                  miniLog.getTags()[line.mTagIndex].mName + " " + line.mText).c_str());
+      }
+    else {
+      // simple unfiltered draw, can use imgui ImGuiListClipper
+      for (auto& line : miniLog.getLines())
+        ImGui::TextUnformatted ((date::format ("%M.%S ", line.mTimeStamp) +
+                                miniLog.getTags()[line.mTagIndex].mName + " " + line.mText).c_str());
+      }
+
+    // autoScroll child
+    if (ImGui::GetScrollY() >= ImGui::GetScrollMaxY())
+      ImGui::SetScrollHereY(1.0f);
+
+    ImGui::EndChild();
+
+    if (!miniLog.getFooter().empty())
+      ImGui::TextUnformatted (miniLog.getFooter().c_str());
+    }
+  }
+//}}}
 //{{{
 void printHex (uint8_t* ptr, uint32_t numBytes, uint32_t columnsPerRow, uint32_t address, bool full) {
 
@@ -65,52 +110,7 @@ void printHex (uint8_t* ptr, uint32_t numBytes, uint32_t columnsPerRow, uint32_t
   }
 //}}}
 
-//{{{
-void drawMiniLog (cMiniLog& miniLog) {
-
-  if (miniLog.getEnable()) {
-    if (ImGui::Button (miniLog.getHeader().c_str()))
-      miniLog.clear();
-
-    bool filtered = false;
-    for (auto& tag : miniLog.getTags()) {
-      ImGui::SameLine();
-      if (toggleButton (tag.mName.c_str(), tag.mEnable))
-        tag.mEnable = !tag.mEnable;
-      filtered |= tag.mEnable;
-      }
-
-    // draw log
-    ImGui::BeginChild (fmt::format ("##log{}", miniLog.getName()).c_str(),
-                       {ImGui::GetWindowWidth(), 12 * ImGui::GetTextLineHeight() }, true,
-                       ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoNav | ImGuiWindowFlags_HorizontalScrollbar);
-
-    if (filtered) {
-      // tag filtered draw
-      for (auto& line : miniLog.getLines())
-        if (miniLog.getTags()[line.mTagIndex].mEnable)
-          ImGui::TextUnformatted ((date::format ("%M.%S ", line.mTimeStamp) +
-                                  miniLog.getTags()[line.mTagIndex].mName + " " + line.mText).c_str());
-      }
-    else {
-      // simple unfiltered draw, can use imgui ImGuiListClipper
-      for (auto& line : miniLog.getLines())
-        ImGui::TextUnformatted ((date::format ("%M.%S ", line.mTimeStamp) +
-                                miniLog.getTags()[line.mTagIndex].mName + " " + line.mText).c_str());
-      }
-
-    // autoScroll child
-    if (ImGui::GetScrollY() >= ImGui::GetScrollMaxY())
-      ImGui::SetScrollHereY(1.0f);
-
-    ImGui::EndChild();
-
-    if (!miniLog.getFooter().empty())
-      ImGui::TextUnformatted (miniLog.getFooter().c_str());
-    }
-  }
-//}}}
-
+// button helpers
 //{{{
 bool clockButton (const string& label, chrono::system_clock::time_point timePoint, const ImVec2& size,
                   bool drawDate, bool drawTime) {
@@ -228,22 +228,48 @@ bool toggleButton (const string& label, bool toggleOn, const ImVec2& size) {
   }
 //}}}
 //{{{
-uint8_t interlockedButtons (const vector<string>& buttonVector, uint8_t index, const ImVec2& size, bool tabbed) {
-// interlockedButtons helper
-// draw buttonVector as toggleButtons with index toggled on
-// return index of last or pressed menu button
+uint8_t oneOnlyButton (const vector<string>& buttons, uint8_t buttonIndex,
+                       const ImVec2& size, bool horizontalLayout) {
+// group buttons helper
+// draw buttonVector as toggleButtons with buttonIndex toggled on
+// return index of pressed menu button, or if none pressed, current buttonIndex
 
   ImGui::BeginGroup();
 
-  for (auto it = buttonVector.begin(); it != buttonVector.end(); ++it) {
-    if (toggleButton (*it, index == static_cast<uint8_t>(it - buttonVector.begin()), size))
-      index = static_cast<uint8_t>(it - buttonVector.begin());
-    if (tabbed)
+  for (auto it = buttons.begin(); it != buttons.end(); ++it) {
+    if (toggleButton (*it, buttonIndex == static_cast<int8_t>(it - buttons.begin()), size))
+      buttonIndex = static_cast<int8_t>(it - buttons.begin());
+    if (horizontalLayout)
       ImGui::SameLine();
     }
 
   ImGui::EndGroup();
 
-  return index;
+  return buttonIndex;
+  }
+//}}}
+//{{{
+uint8_t maxOneButton (const vector<string>& buttons, uint8_t buttonIndex,
+                       const ImVec2& size, bool horizontalLayout) {
+// maxOne button group interlock
+// draw buttonVector as toggleButtons with buttonIndex toggled on
+// return index of pressed menu button, or if none pressed, current buttonIndex
+
+  ImGui::BeginGroup();
+
+  // skip past no button selected
+  auto it = buttons.begin();
+  ++it;
+
+  for (; it != buttons.end(); ++it) {
+    if (toggleButton (*it, buttonIndex == static_cast<int8_t>(it - buttons.begin()), size))
+      buttonIndex = static_cast<int8_t>(it - buttons.begin());
+    if (horizontalLayout)
+      ImGui::SameLine();
+    }
+
+  ImGui::EndGroup();
+
+  return buttonIndex;
   }
 //}}}

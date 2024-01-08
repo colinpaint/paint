@@ -57,9 +57,9 @@ public:
   void draw (cApp& app);
 
 private:
-  enum eTab { eTelly, ePids, eRecord, eEpg };
+  enum eTab { eNone, eEpg, ePids, eRecord };
 
-  void hitTab (eTab tab);
+  void hitTab (cTellyApp& tellyApp, int8_t tabIndex);
   void hitSpace (cTellyApp& tellyApp);
   void hitControlLeft (cTellyApp& tellyApp);
   void hitControlRight (cTellyApp& tellyApp);
@@ -73,7 +73,7 @@ private:
   void drawRecordedFileNames (cTransportStream& transportStream);
 
   // vars
-  eTab mTab = eTelly;
+  uint8_t mTabIndex = eNone;
   cMultiView& mMultiView;
 
   // pidInfo tabs

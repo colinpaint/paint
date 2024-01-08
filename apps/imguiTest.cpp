@@ -62,7 +62,7 @@ class cImguiUI : public cApp::iUI {
 public:
   void virtual draw (cApp& app) final {
 
-    bool show_demo_window = true;
+    bool showDemoWindow = true;
 
     cGraphics& graphics = app.getGraphics();
     graphics.clear (cPoint((int)ImGui::GetWindowWidth(), (int)ImGui::GetWindowHeight()));
@@ -88,7 +88,7 @@ public:
     ImGui::Text (fmt::format ("{}:{}",
                  ImGui::GetIO().MetricsRenderVertices, ImGui::GetIO().MetricsRenderIndices/3).c_str());
 
-    ImGui::ShowDemoWindow (&show_demo_window);
+    ImGui::ShowDemoWindow (&showDemoWindow);
     }
   };
 //}}}
