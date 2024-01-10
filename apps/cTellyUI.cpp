@@ -209,7 +209,8 @@ public:
     ImGui::SetCursorPos (mTL);
     ImGui::BeginChild (fmt::format ("view##{}", mService.getSid()).c_str(), mSize,
                        ImGuiChildFlags_None,
-                       ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse);
+                       ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse |
+                       ImGuiWindowFlags_NoBackground);
     //{{{  draw select rect
     bool hover = ImGui::IsMouseHoveringRect (mTL, mBR);
     if ((hover || (mSelect != eUnselected)) && (mSelect != eSelectedFull))
@@ -327,6 +328,7 @@ public:
       }
 
     ImGui::PushFont (tellyApp.getLargeFont());
+
     string title = mService.getName();
     if (!enabled || (mSelect == eSelectedFull))
       title += " " + mService.getNowTitleString();
@@ -337,30 +339,30 @@ public:
     ImGui::SetCursorPos (pos - ImVec2(2.f,2.f));
     ImGui::TextColored ({1.f, 1.f,1.f,1.f}, title.c_str());
     pos.y += ImGui::GetTextLineHeight() * 1.5f;
-
-    ImVec2 epgSize = mSize - ImVec2(0.f, ImGui::GetTextLineHeight() * 1.5f);
     //}}}
+    ImVec2 viewSubBoxSize = mSize - ImVec2(0.f, ImGui::GetTextLineHeight() * 1.5f);
+
     if (mSelect == eSelectedFull) {
       //{{{  draw ptsFromStart bottomRight
       string ptsFromStartString = utils::getPtsString (mService.getPtsFromStart());
 
-      pos = ImVec2 (mSize.x - ImGui::GetTextLineHeight() * 10.f, mSize.y - ImGui::GetTextLineHeight()*1.5f);
+      pos = ImVec2 (mSize - ImVec2(ImGui::GetTextLineHeight() * 7.f, ImGui::GetTextLineHeight()));
       ImGui::SetCursorPos (pos);
       ImGui::TextColored ({0.f,0.f,0.f,1.f}, ptsFromStartString.c_str());
       ImGui::SetCursorPos (pos - ImVec2(2.f,2.f));
       ImGui::TextColored ({1.f,1.f,1.f,1.f}, ptsFromStartString.c_str());
 
-      epgSize -= ImVec2(0.f, ImGui::GetTextLineHeight() * 1.5f);
+      viewSubBoxSize -= ImVec2(0.f, ImGui::GetTextLineHeight() * 1.5f);
       }
       //}}}
     ImGui::PopFont();
 
     if (tellyApp.getOptions()->mShowEpg) {
-      //{{{  draw epg in childWindow, hit epg, select action
       ImGui::SetCursorPos ({0.f, ImGui::GetTextLineHeight() * 1.5f});
-      ImGui::BeginChild (fmt::format ("epg##{}", mService.getSid()).c_str(), epgSize,
-                         ImGuiChildFlags_None, ImGuiWindowFlags_NoScrollbar);
-
+      ImGui::BeginChild (fmt::format ("epg##{}", mService.getSid()).c_str(), viewSubBoxSize,
+                         ImGuiChildFlags_None,
+                         ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoBackground);
+      //{{{  draw epg
       ImVec2 posEpg = {0.f,0.f};
       for (auto& epgItem : mService.getTodayEpg()) {
         auto time = epgItem.first;
@@ -380,45 +382,27 @@ public:
           posEpg.y += ImGui::GetTextLineHeight();
           }
         }
+      //}}}
+      }
+    ImGui::SetCursorPos ({0.f,0.f});
+    if (ImGui::InvisibleButton (fmt::format ("viewBox##{}", mService.getSid()).c_str(), viewSubBoxSize)) {
+      //{{{  hit view, select action
+      if (!mService.getStream (cTransportStream::eVideo).isEnabled())
+        mService.enableStreams();
+      else if (mSelect == eUnselected)
+        mSelect = eSelected;
+      else if (mSelect == eSelected)
+        mSelect = eSelectedFull;
+      else if (mSelect == eSelectedFull)
+        mSelect = eSelected;
 
-      ImGui::SetCursorPos ({0.f,0.f});
-      if (ImGui::InvisibleButton (fmt::format ("epgBox##{}", mService.getSid()).c_str(), epgSize)) {
-        // hit view, select action
-        if (!mService.getStream (cTransportStream::eVideo).isEnabled())
-          mService.enableStreams();
-        else if (mSelect == eUnselected)
-          mSelect = eSelected;
-        else if (mSelect == eSelected)
-          mSelect = eSelectedFull;
-        else if (mSelect == eSelectedFull)
-          mSelect = eSelected;
-
-        result = true;
-        }
-
-      ImGui::EndChild();
+      result = true;
       }
       //}}}
-    else {
-      ImGui::SetCursorPos ({0.f, 0.f});
-      if (ImGui::InvisibleButton (fmt::format ("viewBox##{}", mService.getSid()).c_str(), mSize)) {
-        //{{{  hit view, select action
-        if (!mService.getStream (cTransportStream::eVideo).isEnabled())
-          mService.enableStreams();
-        else if (mSelect == eUnselected)
-          mSelect = eSelected;
-        else if (mSelect == eSelected)
-          mSelect = eSelectedFull;
-        else if (mSelect == eSelectedFull)
-          mSelect = eSelected;
-
-        result = true;
-        }
-        //}}}
-      }
+    if (tellyApp.getOptions()->mShowEpg)
+      ImGui::EndChild();
 
     ImGui::EndChild();
-
     return result;
     }
   //}}}
@@ -672,9 +656,11 @@ void cTellyUI::draw (cApp& app) {
     // draw multiView piccies
     mMultiView.draw (tellyApp, transportStream);
 
-    // draw mmenu
+    // draw menu
     ImGui::SetCursorPos ({0.f, ImGui::GetIO().DisplaySize.y - ImGui::GetTextLineHeight() * 1.5f});
-    ImGui::BeginChild ("menu", {0.f, ImGui::GetTextLineHeight() * 1.5f});
+    ImGui::BeginChild ("menu", {0.f, ImGui::GetTextLineHeight() * 1.5f},
+                       ImGuiChildFlags_None,
+                       ImGuiWindowFlags_NoBackground);
 
     ImGui::SetCursorPos ({0.f,0.f});
     uint8_t index = mTabIndex;
