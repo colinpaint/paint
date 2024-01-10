@@ -59,7 +59,7 @@ public:
 private:
   enum eTab { eNone, eEpg, ePids, eRecord };
 
-  void hitTab (cTellyApp& tellyApp, int8_t tabIndex);
+  void hitTab (cTellyApp& tellyApp, uint8_t tabIndex);
   void hitSpace (cTellyApp& tellyApp);
   void hitControlLeft (cTellyApp& tellyApp);
   void hitControlRight (cTellyApp& tellyApp);

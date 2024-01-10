@@ -657,6 +657,7 @@ void cTellyUI::draw (cApp& app) {
   app.getGraphics().clear ({(int32_t)ImGui::GetIO().DisplaySize.x,
                             (int32_t)ImGui::GetIO().DisplaySize.y});
 
+  // draw UI
   ImGui::SetNextWindowPos ({0.f,0.f});
   ImGui::SetNextWindowSize (ImGui::GetIO().DisplaySize);
   ImGui::Begin ("telly", nullptr, ImGuiWindowFlags_NoTitleBar |
@@ -668,10 +669,10 @@ void cTellyUI::draw (cApp& app) {
   if (tellyApp.hasTransportStream()) {
     cTransportStream& transportStream = tellyApp.getTransportStream();
 
-    // multiView piccies
+    // draw multiView piccies
     mMultiView.draw (tellyApp, transportStream);
 
-    // menu
+    // draw mmenu
     ImGui::SetCursorPos ({0.f, ImGui::GetIO().DisplaySize.y - ImGui::GetTextLineHeight() * 1.5f});
     ImGui::BeginChild ("menu", {0.f, ImGui::GetTextLineHeight() * 1.5f});
 
@@ -679,45 +680,45 @@ void cTellyUI::draw (cApp& app) {
     uint8_t index = mTabIndex;
     if (maxOneButton (kTabNames, index, {0.f,0.f}, true))
       hitTab (tellyApp, index);
-    //{{{  subtitle button
+    //{{{  draw msubtitle button
     ImGui::SameLine();
     if (toggleButton ("sub", tellyApp.getOptions()->mShowSubtitle))
       tellyApp.toggleShowSubtitle();
     //}}}
     if (tellyApp.getOptions()->mHasMotionVectors) {
-      //{{{  motionVectors button
+      //{{{  draw mmotionVectors button
       ImGui::SameLine();
       if (toggleButton ("motion", tellyApp.getOptions()->mShowMotionVectors))
         tellyApp.toggleShowMotionVectors();
       }
       //}}}
     if (tellyApp.getPlatform().hasFullScreen()) {
-      //{{{  fullScreen button
+      //{{{  draw mfullScreen button
       ImGui::SameLine();
       if (toggleButton ("full", tellyApp.getPlatform().getFullScreen()))
         tellyApp.getPlatform().toggleFullScreen();
       }
       //}}}
     if (tellyApp.getPlatform().hasVsync()) {
-      //{{{  vsync button
+      //{{{  draw mvsync button
       ImGui::SameLine();
       if (toggleButton ("vsync", tellyApp.getPlatform().getVsync()))
         tellyApp.getPlatform().toggleVsync();
       }
       //}}}
-    //{{{  frameRate info
+    //{{{  draw mframeRate info
     ImGui::SameLine();
     ImGui::TextUnformatted (fmt::format("{}:fps", static_cast<uint32_t>(ImGui::GetIO().Framerate)).c_str());
     //}}}
     if (tellyApp.hasDvbSource()) {
-      //{{{  dvbSource signal,errors
+      //{{{  draw mdvbSource signal,errors
       ImGui::SameLine();
       ImGui::TextUnformatted (fmt::format ("{} {}", tellyApp.getDvbSource().getTuneString(),
                                                     tellyApp.getDvbSource().getStatusString()).c_str());
       }
       //}}}
     if (transportStream.getNumErrors()) {
-      //{{{  transportStream errors
+      //{{{  draw mtransportStream errors
       ImGui::SameLine();
       ImGui::TextUnformatted (fmt::format ("error:{}", tellyApp.getTransportStream().getNumErrors()).c_str());
       }
@@ -746,23 +747,23 @@ void cTellyUI::draw (cApp& app) {
       }
     //}}}
     if (transportStream.hasFirstTdt()) {
-      //{{{  clock
+      //{{{  draw mclock
       //ImGui::TextUnformatted (transportStream.getTdtString().c_str());
       ImGui::SetCursorPos ({ ImGui::GetWindowWidth() - 90.f, 0.f} );
       clockButton ("clock", transportStream.getNowTdt(), { 80.f, 80.f });
       }
       //}}}
     }
+  ImGui::End();
 
   keyboard (tellyApp);
-  ImGui::End();
   }
 //}}}
 
 // private
 //{{{
-void cTellyUI::hitTab (cTellyApp& tellyApp, int8_t tabIndex) {
-  mTabIndex = tabIndex;
+void cTellyUI::hitTab (cTellyApp& tellyApp, uint8_t tabIndex) {
+  mTabIndex = (mTabIndex == tabIndex) ? eNone : tabIndex;
   tellyApp.setShowEpg (mTabIndex == eEpg);
   }
 //}}}
