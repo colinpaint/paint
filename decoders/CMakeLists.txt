@@ -18,7 +18,9 @@ project (decoders VERSION 1.0.0)
     pkg_check_modules (FFMPEG REQUIRED IMPORTED_TARGET
                        libavdevice libavfilter libavformat libavcodec libavutil libswresample libswscale)
     target_include_directories (${PROJECT_NAME} PUBLIC PkgConfig::FFMPEG)
-    target_link_libraries (${PROJECT_NAME} PUBLIC PkgConfig::FFMPEG)
+    #
+    # add drm lib for now, ffmpeg screwup
+    target_link_libraries (${PROJECT_NAME} PUBLIC PkgConfig::FFMPEG drm)
 
   endif()
 
