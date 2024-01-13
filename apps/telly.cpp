@@ -123,6 +123,7 @@ namespace {
       app.getGraphics().clear ({(int32_t)ImGui::GetIO().DisplaySize.x,
                                 (int32_t)ImGui::GetIO().DisplaySize.y});
 
+      ImGui::SetNextWindowPos ({0.f,0.f});
       ImGui::SetNextWindowSize (ImGui::GetIO().DisplaySize);
       ImGui::Begin ("song", nullptr, ImGuiWindowFlags_NoTitleBar |
                                      ImGuiWindowFlags_NoBackground | ImGuiWindowFlags_NoResize |
