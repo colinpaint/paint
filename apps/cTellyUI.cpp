@@ -749,7 +749,7 @@ void cTellyUI::draw (cApp& app) {
 // private
 //{{{
 void cTellyUI::hitTab (cTellyApp& tellyApp, uint8_t tabIndex) {
-  mTabIndex = (mTabIndex == tabIndex) ? eNone : tabIndex;
+  mTabIndex = (mTabIndex == tabIndex) ? (uint8_t)eNone : tabIndex;
   tellyApp.setShowEpg (mTabIndex == eEpg);
   }
 //}}}
