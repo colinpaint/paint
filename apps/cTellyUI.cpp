@@ -327,8 +327,8 @@ public:
         }
       }
 
+    // largeFont for title and pts
     ImGui::PushFont (tellyApp.getLargeFont());
-
     string title = mService.getName();
     if (!enabled || (mSelect == eSelectedFull))
       title += " " + mService.getNowTitleString();
@@ -340,30 +340,27 @@ public:
     ImGui::TextColored ({1.f, 1.f,1.f,1.f}, title.c_str());
     pos.y += ImGui::GetTextLineHeight() * 1.5f;
     //}}}
-    ImVec2 viewSubBoxSize = mSize - ImVec2(0.f, ImGui::GetTextLineHeight() * 1.5f);
-
     if (mSelect == eSelectedFull) {
       //{{{  draw ptsFromStart bottomRight
       string ptsFromStartString = utils::getPtsString (mService.getPtsFromStart());
-
       pos = ImVec2 (mSize - ImVec2(ImGui::GetTextLineHeight() * 7.f, ImGui::GetTextLineHeight()));
       ImGui::SetCursorPos (pos);
       ImGui::TextColored ({0.f,0.f,0.f,1.f}, ptsFromStartString.c_str());
       ImGui::SetCursorPos (pos - ImVec2(2.f,2.f));
       ImGui::TextColored ({1.f,1.f,1.f,1.f}, ptsFromStartString.c_str());
-
-      viewSubBoxSize -= ImVec2(0.f, ImGui::GetTextLineHeight() * 1.5f);
       }
       //}}}
     ImGui::PopFont();
 
+    ImVec2 viewSubSize = mSize - ImVec2(0.f, ImGui::GetTextLineHeight() *
+                                               ((layoutPos.y + (layoutScale/2.f) >= 0.99f) ? 3.f : 1.5f));
     if (tellyApp.getOptions()->mShowEpg) {
       ImGui::SetCursorPos ({0.f, ImGui::GetTextLineHeight() * 1.5f});
-      ImGui::BeginChild (fmt::format ("epg##{}", mService.getSid()).c_str(), viewSubBoxSize,
+      ImGui::BeginChild (fmt::format ("epg##{}", mService.getSid()).c_str(), viewSubSize,
                          ImGuiChildFlags_None,
                          ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoBackground);
       //{{{  draw epg
-      ImVec2 posEpg = {0.f,0.f};
+      ImVec2 posEpg = {0.25f,0.f};
       for (auto& epgItem : mService.getTodayEpg()) {
         auto time = epgItem.first;
         if (enabled && (mSelect != eSelectedFull))
@@ -384,8 +381,10 @@ public:
         }
       //}}}
       }
+
+    // invisbleButton over view sub area
     ImGui::SetCursorPos ({0.f,0.f});
-    if (ImGui::InvisibleButton (fmt::format ("viewBox##{}", mService.getSid()).c_str(), viewSubBoxSize)) {
+    if (ImGui::InvisibleButton (fmt::format ("viewBox##{}", mService.getSid()).c_str(), viewSubSize)) {
       //{{{  hit view, select action
       if (!mService.getStream (cTransportStream::eVideo).isEnabled())
         mService.enableStreams();
@@ -715,16 +714,12 @@ void cTellyUI::draw (cApp& app) {
     switch (mTabIndex) {
       case ePids:
         ImGui::PushFont (tellyApp.getMonoFont());
-        ImGui::SetCursorPos ({0.f,0.f});
         drawPids (transportStream);
         ImGui::PopFont();
         break;
 
       case eRecord:
-        ImGui::PushFont (tellyApp.getMonoFont());
-        ImGui::SetCursorPos ({0.f,0.f});
-        drawRecordedFileNames (transportStream);
-        ImGui::PopFont();
+        drawRecordedFileNames (transportStream, {0.f,ImGui::GetTextLineHeight() * 1.5f});
         break;
 
       case eEpg:
@@ -872,6 +867,8 @@ void cTellyUI::keyboard (cTellyApp& tellyApp) {
 void cTellyUI::drawPids (cTransportStream& transportStream) {
 // draw pids
 
+  ImGui::SetCursorPos ({0.f,0.f});
+
   // calc error number width
   int errorChars = 1;
   while (transportStream.getNumErrors() > pow (10, errorChars))
@@ -917,9 +914,16 @@ void cTellyUI::drawPids (cTransportStream& transportStream) {
   }
 //}}}
 //{{{
-void cTellyUI::drawRecordedFileNames (cTransportStream& transportStream) {
+void cTellyUI::drawRecordedFileNames (cTransportStream& transportStream, ImVec2 pos) {
 
-  for (auto& program : transportStream.getRecordedFileNames())
-    ImGui::TextUnformatted (program.c_str());
+  for (auto& program : transportStream.getRecordedFileNames()) {
+    // drop shadow epg
+    ImGui::SetCursorPos (pos);
+    ImGui::TextColored ({0.f,0.f,0.f,1.f}, program.c_str());
+    ImGui::SetCursorPos (pos - ImVec2(2.f,2.f));
+    ImGui::TextColored ({1.f, 1.f,1.f,1.f}, program.c_str());
+
+    pos.y += ImGui::GetTextLineHeight();
+    }
   }
 //}}}

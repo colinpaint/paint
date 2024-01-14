@@ -70,7 +70,7 @@ private:
   void keyboard (cTellyApp& tellyApp);
 
   void drawPids (cTransportStream& transportStream);
-  void drawRecordedFileNames (cTransportStream& transportStream);
+  void drawRecordedFileNames (cTransportStream& transportStream, ImVec2 pos);
 
   // vars
   uint8_t mTabIndex = eNone;
