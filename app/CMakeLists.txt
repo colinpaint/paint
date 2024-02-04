@@ -47,4 +47,3 @@ project (app VERSION 1.0.0)
     message (FATAL_ERROR, "app - unknown BUILD_GRAPHICS = ${BUILD_GRAPHICS}")
 
   endif()
-
