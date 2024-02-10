@@ -68,9 +68,6 @@ public:
   //{{{
   virtual ~cFFmpegAudioDecoder() {
 
-    if (mAvContext)
-      avcodec_close (mAvContext);
-
     if (mAvParser)
       av_parser_close (mAvParser);
     }

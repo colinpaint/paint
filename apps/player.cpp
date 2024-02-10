@@ -13,6 +13,8 @@
 #include <algorithm>
 #include <thread>
 
+#include <sys/stat.h>
+
 // utils
 #include "../date/include/date/date.h"
 #include "../common/basicTypes.h"
