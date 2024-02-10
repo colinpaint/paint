@@ -1,4 +1,4 @@
-// tellyUI.cpp
+// PlayerUI.cpp
 //{{{  includes
 #ifdef _WIN32
   #define _CRT_SECURE_NO_WARNINGS
@@ -20,13 +20,12 @@
 #include "../app/cGraphics.h"
 #include "../app/myImgui.h"
 
-#include "cTellyUI.h"
+#include "cPlayerUI.h"
 
 using namespace std;
 //}}}
 namespace {
   constexpr size_t kMaxSubtitleLines = 4;
-  const vector <string> kTabNames = { "none", "epg", "pids", "recorded" };
   }
 
 //{{{
@@ -189,7 +188,7 @@ public:
   //}}}
 
   //{{{
-  bool draw (cTellyApp& tellyApp, cTransportStream& transportStream,
+  bool draw (cPlayerApp& playerApp, cTransportStream& transportStream,
              bool selectFull, size_t viewIndex, size_t numViews,
              cTextureShader* videoShader, cTextureShader* subtitleShader) {
   // return true if hit
@@ -244,17 +243,17 @@ public:
           videoShader->setModelProjection (model, projection);
 
           // texture
-          cTexture& texture = videoFrame->getTexture (tellyApp.getGraphics());
+          cTexture& texture = videoFrame->getTexture (playerApp.getGraphics());
           texture.setSource();
 
           // ensure quad is created
           if (!mVideoQuad)
-            mVideoQuad = tellyApp.getGraphics().createQuad (videoFrame->getSize());
+            mVideoQuad = playerApp.getGraphics().createQuad (videoFrame->getSize());
 
           // draw quad
           mVideoQuad->draw();
 
-          if (tellyApp.getOptions()->mShowSubtitle) {
+          if (playerApp.getOptions()->mShowSubtitle) {
             //{{{  draw subtitles
             cSubtitleRender& subtitleRender =
               dynamic_cast<cSubtitleRender&> (mService.getStream (cTransportStream::eSubtitle).getRender());
@@ -263,7 +262,7 @@ public:
             for (size_t line = 0; line < subtitleRender.getNumLines(); line++) {
               cSubtitleImage& subtitleImage = subtitleRender.getImage (line);
               if (!mSubtitleTextures[line])
-                mSubtitleTextures[line] = tellyApp.getGraphics().createTexture (cTexture::eRgba, subtitleImage.getSize());
+                mSubtitleTextures[line] = playerApp.getGraphics().createTexture (cTexture::eRgba, subtitleImage.getSize());
               mSubtitleTextures[line]->setSource();
 
               // update subtitle texture if image dirty
@@ -279,13 +278,13 @@ public:
 
               // ensure quad is created (assumes same size) and draw
               if (!mSubtitleQuads[line])
-                mSubtitleQuads[line] = tellyApp.getGraphics().createQuad (mSubtitleTextures[line]->getSize());
+                mSubtitleQuads[line] = playerApp.getGraphics().createQuad (mSubtitleTextures[line]->getSize());
               mSubtitleQuads[line]->draw();
               }
             }
             //}}}
 
-          if (tellyApp.getOptions()->mShowMotionVectors && (mSelect == eSelectedFull)) {
+          if (playerApp.getOptions()->mShowMotionVectors && (mSelect == eSelectedFull)) {
             //{{{  draw motion vectors
             size_t numMotionVectors;
             AVMotionVector* mv = (AVMotionVector*)(videoFrame->getMotionVectors (numMotionVectors));
@@ -328,7 +327,7 @@ public:
       }
 
     // largeFont for title and pts
-    ImGui::PushFont (tellyApp.getLargeFont());
+    ImGui::PushFont (playerApp.getLargeFont());
     string title = mService.getName();
     if (!enabled || (mSelect == eSelectedFull))
       title += " " + mService.getNowTitleString();
@@ -354,7 +353,7 @@ public:
 
     ImVec2 viewSubSize = mSize - ImVec2(0.f, ImGui::GetTextLineHeight() *
                                                ((layoutPos.y + (layoutScale/2.f) >= 0.99f) ? 3.f : 1.5f));
-    if (tellyApp.getOptions()->mShowEpg) {
+    if (playerApp.getOptions()->mShowEpg) {
       ImGui::SetCursorPos ({0.f, ImGui::GetTextLineHeight() * 1.5f});
       ImGui::BeginChild (fmt::format ("epg##{}", mService.getSid()).c_str(), viewSubSize,
                          ImGuiChildFlags_None,
@@ -398,7 +397,7 @@ public:
       result = true;
       }
       //}}}
-    if (tellyApp.getOptions()->mShowEpg)
+    if (playerApp.getOptions()->mShowEpg)
       ImGui::EndChild();
 
     ImGui::EndChild();
@@ -536,13 +535,13 @@ private:
 class cMultiView {
 public:
   //{{{
-  void draw (cTellyApp& tellyApp, cTransportStream& transportStream) {
+  void draw (cPlayerApp& playerApp, cTransportStream& transportStream) {
 
     // create shaders, firsttime we see graphics interface
     if (!mVideoShader)
-      mVideoShader = tellyApp.getGraphics().createTextureShader (cTexture::eYuv420);
+      mVideoShader = playerApp.getGraphics().createTextureShader (cTexture::eYuv420);
     if (!mSubtitleShader)
-      mSubtitleShader = tellyApp.getGraphics().createTextureShader (cTexture::eRgba);
+      mSubtitleShader = playerApp.getGraphics().createTextureShader (cTexture::eRgba);
 
     // update viewMap from enabled services, take care to reuse cView's
     for (auto& pair : transportStream.getServiceMap()) {
@@ -570,7 +569,7 @@ public:
     size_t viewIndex = 0;
     for (auto& view : mViewMap) {
       if (!selectedFull || view.second.getSelectedFull())
-        if (view.second.draw (tellyApp, transportStream,
+        if (view.second.draw (playerApp, transportStream,
                               selectedFull,  viewIndex, selectedFull ? 1 : mViewMap.size(),
                               mVideoShader, mSubtitleShader)) {
           // view hit
@@ -631,9 +630,9 @@ private:
 //}}}
 
 // public
-cTellyUI::cTellyUI() : mMultiView (*(new cMultiView())) {}
+cPlayerUI::cPlayerUI() : mMultiView (*(new cMultiView())) {}
 //{{{
-void cTellyUI::draw (cApp& app) {
+void cPlayerUI::draw (cApp& app) {
 
   ImGui::SetKeyboardFocusHere();
 
@@ -643,17 +642,17 @@ void cTellyUI::draw (cApp& app) {
   // draw UI
   ImGui::SetNextWindowPos ({0.f,0.f});
   ImGui::SetNextWindowSize (ImGui::GetIO().DisplaySize);
-  ImGui::Begin ("telly", nullptr, ImGuiWindowFlags_NoTitleBar |
+  ImGui::Begin ("Player", nullptr, ImGuiWindowFlags_NoTitleBar |
                                   ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove |
                                   ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse |
                                   ImGuiWindowFlags_NoBackground);
 
-  cTellyApp& tellyApp = (cTellyApp&)app;
-  if (tellyApp.hasTransportStream()) {
-    cTransportStream& transportStream = tellyApp.getTransportStream();
+  cPlayerApp& playerApp = (cPlayerApp&)app;
+  if (playerApp.hasTransportStream()) {
+    cTransportStream& transportStream = playerApp.getTransportStream();
 
     // draw multiView piccies
-    mMultiView.draw (tellyApp, transportStream);
+    mMultiView.draw (playerApp, transportStream);
 
     // draw menu
     ImGui::SetCursorPos ({0.f, ImGui::GetIO().DisplaySize.y - ImGui::GetTextLineHeight() * 1.5f});
@@ -662,94 +661,109 @@ void cTellyUI::draw (cApp& app) {
                        ImGuiWindowFlags_NoBackground);
 
     ImGui::SetCursorPos ({0.f,0.f});
-    uint8_t index = mTabIndex;
-    if (maxOneButton (kTabNames, index, {0.f,0.f}, true))
-      hitTab (tellyApp, index);
     //{{{  draw msubtitle button
     ImGui::SameLine();
-    if (toggleButton ("sub", tellyApp.getOptions()->mShowSubtitle))
-      tellyApp.toggleShowSubtitle();
+    if (toggleButton ("sub", playerApp.getOptions()->mShowSubtitle))
+      playerApp.toggleShowSubtitle();
     //}}}
-    if (tellyApp.getOptions()->mHasMotionVectors) {
+    if (playerApp.getOptions()->mHasMotionVectors) {
       //{{{  draw mmotionVectors button
       ImGui::SameLine();
-      if (toggleButton ("motion", tellyApp.getOptions()->mShowMotionVectors))
-        tellyApp.toggleShowMotionVectors();
+      if (toggleButton ("motion", playerApp.getOptions()->mShowMotionVectors))
+        playerApp.toggleShowMotionVectors();
       }
       //}}}
-    if (tellyApp.getPlatform().hasFullScreen()) {
+    if (playerApp.getPlatform().hasFullScreen()) {
       //{{{  draw mfullScreen button
       ImGui::SameLine();
-      if (toggleButton ("full", tellyApp.getPlatform().getFullScreen()))
-        tellyApp.getPlatform().toggleFullScreen();
+      if (toggleButton ("full", playerApp.getPlatform().getFullScreen()))
+        playerApp.getPlatform().toggleFullScreen();
       }
       //}}}
-    if (tellyApp.getPlatform().hasVsync()) {
+    if (playerApp.getPlatform().hasVsync()) {
       //{{{  draw mvsync button
       ImGui::SameLine();
-      if (toggleButton ("vsync", tellyApp.getPlatform().getVsync()))
-        tellyApp.getPlatform().toggleVsync();
+      if (toggleButton ("vsync", playerApp.getPlatform().getVsync()))
+        playerApp.getPlatform().toggleVsync();
       }
       //}}}
     //{{{  draw mframeRate info
     ImGui::SameLine();
     ImGui::TextUnformatted (fmt::format("{}:fps", static_cast<uint32_t>(ImGui::GetIO().Framerate)).c_str());
     //}}}
-    if (tellyApp.hasDvbSource()) {
-      //{{{  draw mdvbSource signal,errors
-      ImGui::SameLine();
-      ImGui::TextUnformatted (fmt::format ("{} {}", tellyApp.getDvbSource().getTuneString(),
-                                                    tellyApp.getDvbSource().getStatusString()).c_str());
-      }
-      //}}}
-    if (transportStream.getNumErrors()) {
-      //{{{  draw mtransportStream errors
-      ImGui::SameLine();
-      ImGui::TextUnformatted (fmt::format ("error:{}", tellyApp.getTransportStream().getNumErrors()).c_str());
-      }
-      //}}}
     ImGui::EndChild();
-
-    //{{{  draw tab subMenu
-    switch (mTabIndex) {
-      case ePids:
-        ImGui::PushFont (tellyApp.getMonoFont());
-        drawPids (transportStream);
-        ImGui::PopFont();
-        break;
-
-      case eRecord:
-        drawRecordedFileNames (transportStream, {0.f,ImGui::GetTextLineHeight() * 1.5f});
-        break;
-
-      case eEpg:
-      default:
-        break;
-      }
-    //}}}
-    if (transportStream.hasFirstTdt()) {
-      //{{{  draw mclock
-      //ImGui::TextUnformatted (transportStream.getTdtString().c_str());
-      ImGui::SetCursorPos ({ ImGui::GetWindowWidth() - 90.f, 0.f} );
-      clockButton ("clock", transportStream.getNowTdt(), { 80.f, 80.f });
-      }
-      //}}}
     }
   ImGui::End();
 
-  keyboard (tellyApp);
+  keyboard (playerApp);
   }
 //}}}
 
 // private
 //{{{
-void cTellyUI::hitTab (cTellyApp& tellyApp, uint8_t tabIndex) {
-  mTabIndex = (mTabIndex == tabIndex) ? (uint8_t)eNone : tabIndex;
-  tellyApp.setShowEpg (mTabIndex == eEpg);
+void cPlayerUI::hitSpace (cPlayerApp& playerApp) {
+
+  if (playerApp.hasFileSource())
+    playerApp.togglePlay();
+  else
+    mMultiView.hitSpace();
   }
 //}}}
 //{{{
-void cTellyUI::keyboard (cTellyApp& tellyApp) {
+void cPlayerUI::hitControlLeft (cPlayerApp& playerApp) {
+
+  if (playerApp.hasFileSource())
+    playerApp.skip (-90000 / 25);
+  }
+//}}}
+//{{{
+//{{{
+void cPlayerUI::hitControlRight (cPlayerApp& playerApp) {
+//}}}
+
+  if (playerApp.hasFileSource())
+    playerApp.skip (90000 / 25);
+  }
+//}}}
+//{{{
+void cPlayerUI::hitLeft (cPlayerApp& playerApp) {
+
+  if (playerApp.hasFileSource())
+    playerApp.skip (-90000);
+  else
+    mMultiView.hitLeft();
+  }
+//}}}
+//{{{
+void cPlayerUI::hitRight (cPlayerApp& playerApp) {
+
+  if (playerApp.hasFileSource())
+    playerApp.skip (90000 / 25);
+  else
+    mMultiView.hitRight();
+  }
+//}}}
+//{{{
+void cPlayerUI::hitUp (cPlayerApp& playerApp) {
+
+  if (playerApp.hasFileSource())
+    playerApp.skip (-900000 / 25);
+  else
+    mMultiView.hitUp();
+  }
+//}}}
+//{{{
+void cPlayerUI::hitDown (cPlayerApp& playerApp) {
+
+  if (playerApp.hasFileSource())
+    playerApp.skip (900000 / 25);
+  else
+    mMultiView.hitDown();
+  }
+//}}}
+
+//{{{
+void cPlayerUI::keyboard (cPlayerApp& playerApp) {
 
   //{{{
   struct sActionKey {
@@ -762,13 +776,17 @@ void cTellyUI::keyboard (cTellyApp& tellyApp) {
   //}}}
   const vector<sActionKey> kActionKeys = {
   //  alt    control shift  ImGuiKey             function
-    { false, false,  false, ImGuiKey_Enter,      [this,&tellyApp]{ mMultiView.hitEnter(); }},
-    { false, false,  false, ImGuiKey_F,          [this,&tellyApp]{ tellyApp.getPlatform().toggleFullScreen(); }},
-    { false, false,  false, ImGuiKey_S,          [this,&tellyApp]{ tellyApp.toggleShowSubtitle(); }},
-    { false, false,  false, ImGuiKey_L,          [this,&tellyApp]{ tellyApp.toggleShowMotionVectors(); }},
-    { false, false,  false, ImGuiKey_P,          [this,&tellyApp]{ hitTab (tellyApp, ePids); }},
-    { false, false,  false, ImGuiKey_R,          [this,&tellyApp]{ hitTab (tellyApp, eRecord); }},
-    { false, false,  false, ImGuiKey_E,          [this,&tellyApp]{ hitTab (tellyApp, eEpg); }},
+    { false, false,  false, ImGuiKey_Space,      [this,&playerApp]{ hitSpace (playerApp); }},
+    { false, true,   false, ImGuiKey_LeftArrow,  [this,&playerApp]{ hitControlLeft (playerApp); }},
+    { false, true,   false, ImGuiKey_RightArrow, [this,&playerApp]{ hitControlRight (playerApp); }},
+    { false, false,  false, ImGuiKey_LeftArrow,  [this,&playerApp]{ hitLeft (playerApp); }},
+    { false, false,  false, ImGuiKey_RightArrow, [this,&playerApp]{ hitRight (playerApp); }},
+    { false, false,  false, ImGuiKey_UpArrow,    [this,&playerApp]{ hitUp (playerApp); }},
+    { false, false,  false, ImGuiKey_DownArrow,  [this,&playerApp]{ hitDown (playerApp); }},
+    { false, false,  false, ImGuiKey_Enter,      [this,&playerApp]{ mMultiView.hitEnter(); }},
+    { false, false,  false, ImGuiKey_F,          [this,&playerApp]{ playerApp.getPlatform().toggleFullScreen(); }},
+    { false, false,  false, ImGuiKey_S,          [this,&playerApp]{ playerApp.toggleShowSubtitle(); }},
+    { false, false,  false, ImGuiKey_L,          [this,&playerApp]{ playerApp.toggleShowMotionVectors(); }},
   };
 
   ImGui::GetIO().WantTextInput = true;
@@ -793,70 +811,5 @@ void cTellyUI::keyboard (cTellyApp& tellyApp) {
   //  cLog::log (LOGINFO, fmt::format ("enter {:4x} {} {} {}", ch, altKey, controlKey, shiftKey));
   //  }
   ImGui::GetIO().InputQueueCharacters.resize (0);
-  }
-//}}}
-
-//{{{
-void cTellyUI::drawPids (cTransportStream& transportStream) {
-// draw pids
-
-  ImGui::SetCursorPos ({0.f,0.f});
-
-  // calc error number width
-  int errorChars = 1;
-  while (transportStream.getNumErrors() > pow (10, errorChars))
-    errorChars++;
-
-  int prevSid = 0;
-  for (auto& pidInfoItem : transportStream.getPidInfoMap()) {
-    // iterate for pidInfo
-    cTransportStream::cPidInfo& pidInfo = pidInfoItem.second;
-
-    // draw separator, crude test for new service, fails sometimes
-    if ((pidInfo.getSid() != prevSid) && (pidInfo.getStreamType() != 5) && (pidInfo.getStreamType() != 11))
-      ImGui::Separator();
-
-    // draw pid label
-    ImGui::TextUnformatted (fmt::format ("{:{}d} {:{}d} {:4d} {} {} {}",
-                            pidInfo.mPackets, mPacketChars, pidInfo.mErrors, errorChars, pidInfo.getPid(),
-                            utils::getFullPtsString (pidInfo.getPts()),
-                            utils::getFullPtsString (pidInfo.getDts()),
-                            pidInfo.getPidName()).c_str());
-
-    // draw stream bar
-    ImGui::SameLine();
-    ImVec2 pos = ImGui::GetCursorScreenPos();
-    mMaxPidPackets = max (mMaxPidPackets, pidInfo.mPackets);
-    float frac = pidInfo.mPackets / float(mMaxPidPackets);
-    ImVec2 posTo = {pos.x + (frac * (ImGui::GetWindowWidth() - pos.x - ImGui::GetTextLineHeight())),
-                    pos.y + ImGui::GetTextLineHeight()};
-    ImGui::GetWindowDrawList()->AddRectFilled (pos, posTo, 0xff00ffff);
-
-    // draw stream label
-    string info = pidInfo.getInfo();
-    if ((pidInfo.getStreamType() == 0) && (pidInfo.getSid() != 0xFFFF))
-      info = fmt::format ("{} ", pidInfo.getSid()) + info;
-    ImGui::TextUnformatted (info.c_str());
-
-    // adjust packet number width
-    if (pidInfo.mPackets > pow (10, mPacketChars))
-      mPacketChars++;
-
-    prevSid = pidInfo.getSid();
-    }
-  }
-//}}}
-//{{{
-void cTellyUI::drawRecordedFileNames (cTransportStream& transportStream, ImVec2 pos) {
-
-  for (auto& program : transportStream.getRecordedFileNames()) {
-    // drop shadow epg
-    ImGui::SetCursorPos (pos);
-    ImGui::TextColored ({0.f,0.f,0.f,1.f}, program.c_str());
-    ImGui::SetCursorPos (pos - ImVec2(2.f,2.f));
-    ImGui::TextColored ({1.f, 1.f,1.f,1.f}, program.c_str());
-
-    pos.y += ImGui::GetTextLineHeight();
-    }
   }
 //}}}

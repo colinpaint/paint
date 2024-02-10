@@ -1,4 +1,4 @@
-// cTellyApp.h
+// cPlayerApp.h
 #pragma once
 //{{{  includes
 #include <cstdint>
@@ -67,46 +67,42 @@ const std::vector <cDvbMultiplex> kDvbMultiplexes = {
   };
 //}}}
 //{{{
-class cTellyOptions : public cApp::cOptions,
-                      public cTransportStream::cOptions,
-                      public cRender::cOptions,
-                      public cAudioRender::cOptions,
-                      public cVideoRender::cOptions,
-                      public cFFmpegVideoDecoder::cOptions {
+class cPlayerOptions : public cApp::cOptions,
+                       public cTransportStream::cOptions,
+                       public cRender::cOptions,
+                       public cAudioRender::cOptions,
+                       public cVideoRender::cOptions,
+                       public cFFmpegVideoDecoder::cOptions {
 public:
-  virtual ~cTellyOptions() = default;
+  virtual ~cPlayerOptions() = default;
 
-  std::string getString() const { return "sub motion hd|bbc|itv filename"; }
+  std::string getString() const { return "song sub filename"; }
 
   // vars
   bool mPlaySong = false;
   bool mShowEpg = false;
   bool mShowSubtitle = false;
   bool mShowMotionVectors = false;
-
-  cDvbMultiplex mMultiplex = kDvbMultiplexes[0];
   std::string mFileName;
   };
 //}}}
 
-class cTellyApp : public cApp {
+class cPlayerApp : public cApp {
 public:
-  cTellyApp (cTellyOptions* options, iUI* ui) : cApp ("telly", options, ui), mOptions(options) {}
-  virtual ~cTellyApp() = default;
+  cPlayerApp (cPlayerOptions* options, iUI* ui) : cApp ("Player", options, ui), mOptions(options) {}
+  virtual ~cPlayerApp() = default;
 
-  cTellyOptions* getOptions() { return mOptions; }
+  cPlayerOptions* getOptions() { return mOptions; }
   bool hasTransportStream() { return mTransportStream != nullptr; }
   cTransportStream& getTransportStream() { return *mTransportStream; }
 
-  // liveDvbSource
-  bool hasDvbSource() const { return mDvbSource; }
-  cDvbSource& getDvbSource() { return *mDvbSource; }
-  void liveDvbSource (const cDvbMultiplex& multiplex, cTellyOptions* options);
-
   // fileSource
   bool hasFileSource() { return mFileSource; }
+  uint64_t getStreamPos() const { return mStreamPos; }
+  uint64_t getFilePos() const { return mFilePos; }
+  size_t getFileSize() const { return mFileSize; }
   std::string getFileName() const { return mOptions->mFileName; }
-  void fileSource (const std::string& filename, cTellyOptions* options);
+  void fileSource (const std::string& filename, cPlayerOptions* options);
 
   // actions
   void skip (int64_t skipPts);
@@ -116,18 +112,16 @@ public:
   void toggleShowSubtitle() { mOptions->mShowSubtitle = !mOptions->mShowSubtitle; }
   void toggleShowMotionVectors() { mOptions->mShowMotionVectors = !mOptions->mShowMotionVectors; }
 
-  void drop (const std::vector<std::string>& dropItems) { (void)dropItems; }
+  void drop (const std::vector<std::string>& dropItems);
 
 private:
-  cTellyOptions* mOptions;
+  cPlayerOptions* mOptions;
   cTransportStream* mTransportStream = nullptr;
 
-  // liveDvbSource
-  std::thread mLiveThread;
-  cDvbSource* mDvbSource = nullptr;
-  cDvbMultiplex mMultiplex;
-  std::string mRecordRoot;
-
-  FILE* mFile = nullptr;
+  // fileSource
   bool mFileSource = false;
+  FILE* mFile = nullptr;
+  int64_t mStreamPos = 0;
+  int64_t mFilePos = 0;
+  size_t mFileSize = 0;
   };

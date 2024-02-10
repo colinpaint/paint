@@ -1,4 +1,4 @@
-// cTellyUI.h
+// cPlayerUI.h
 #pragma once
 //{{{  includes
 #include <cstdint>
@@ -42,37 +42,31 @@ extern "C" {
 #include "../dvb/cSubtitleRender.h"
 #include "../dvb/cPlayer.h"
 
-#include "cTellyApp.h"
+#include "cPlayerApp.h"
 
 using namespace std;
 
 class cMultiView;
 //}}}
 
-class cTellyUI : public cApp::iUI {
+class cPlayerUI : public cApp::iUI {
 public:
-  cTellyUI();
-  virtual ~cTellyUI() = default;
+  cPlayerUI();
+  virtual ~cPlayerUI() = default;
 
   void draw (cApp& app);
 
 private:
-  enum eTab { eNone, eEpg, ePids, eRecord };
-
-  void hitTab (cTellyApp& tellyApp, uint8_t tabIndex);
-  void keyboard (cTellyApp& tellyApp);
-
-  void drawPids (cTransportStream& transportStream);
-  void drawRecordedFileNames (cTransportStream& transportStream, ImVec2 pos);
+  void hitTab (cPlayerApp& PlayerApp, uint8_t tabIndex);
+  void hitSpace (cPlayerApp& playerApp);
+  void hitControlLeft (cPlayerApp& tellyApp);
+  void hitControlRight (cPlayerApp& tellyApp);
+  void hitLeft (cPlayerApp& tellyApp);
+  void hitRight (cPlayerApp& tellyApp);
+  void hitUp (cPlayerApp& tellyApp);
+  void hitDown (cPlayerApp& tellyApp);
+  void keyboard (cPlayerApp& tellyApp);
 
   // vars
-  uint8_t mTabIndex = eNone;
   cMultiView& mMultiView;
-
-  // pidInfo tabs
-  int64_t mMaxPidPackets = 0;
-  size_t mPacketChars = 3;
-  size_t mMaxNameChars = 3;
-  size_t mMaxSidChars = 3;
-  size_t mMaxPgmChars = 3;
   };

@@ -123,7 +123,6 @@ void cTellyApp::liveDvbSource (const cDvbMultiplex& multiplex, cTellyOptions* op
     cLog::log (LOGINFO, "cTellyApp::setLiveDvbSource - failed to create liveDvbSource");
   }
 //}}}
-
 //{{{
 void cTellyApp::fileSource (const string& filename, cTellyOptions* options) {
 
@@ -151,8 +150,8 @@ void cTellyApp::fileSource (const string& filename, cTellyOptions* options) {
   thread ([=]() {
     cLog::setThreadName ("file");
 
-    mFilePos = 0;
-    mStreamPos = 0;
+    int64_t mStreamPos = 0;
+    int64_t mFilePos = 0;
     size_t chunkSize = 188 * 256;
     uint8_t* chunk = new uint8_t[chunkSize];
     while (true) {
@@ -177,18 +176,6 @@ void cTellyApp::fileSource (const string& filename, cTellyOptions* options) {
         mStreamPos += mTransportStream->demux (chunk, bytesRead, mStreamPos, skip);
       else
         break;
-
-      //{{{  update fileSize
-      #ifdef _WIN32
-        struct _stati64 st;
-        if (_stat64 (mOptions->mFileName.c_str(), &st) != -1)
-          mFileSize = st.st_size;
-      #else
-        struct stat st;
-        if (stat (mOptions->mFileName.c_str(), &st) != -1)
-          mFileSize = st.st_size;
-      #endif
-      //}}}
       }
 
     fclose (file);
@@ -196,24 +183,5 @@ void cTellyApp::fileSource (const string& filename, cTellyOptions* options) {
 
     cLog::log (LOGERROR, "exit");
     }).detach();
-  }
-//}}}
-//{{{
-void cTellyApp::skip (int64_t skipPts) {
-
-  int64_t offset = mTransportStream->getSkipOffset (skipPts);
-  cLog::log (LOGINFO, fmt::format ("skip:{} offset:{} pos:{}", skipPts, offset, mStreamPos));
-  mStreamPos += offset;
-  }
-//}}}
-
-//{{{
-void cTellyApp::drop (const vector<string>& dropItems) {
-// drop fileSource
-
-  for (auto& item : dropItems) {
-    cLog::log (LOGINFO, fmt::format ("cTellyApp::drop {}", item));
-    fileSource (item, mOptions);
-    }
   }
 //}}}
