@@ -76,11 +76,9 @@ project (edit VERSION 1.0.0)
     target_link_libraries (${PROJECT_NAME} PRIVATE app stdc++fs)
   endif()
 
-# playeryApp
+# player
 project (player VERSION 1.0.0)
-  add_executable (${PROJECT_NAME} apps/player.cpp
-                                  apps/cPlayerApp.h apps/cPlayerApp.cpp
-                                  apps/cPlayerUI.h apps/cPlayerUI.cpp)
+  add_executable (${PROJECT_NAME} apps/player.cpp)
 
   target_compile_definitions (${PROJECT_NAME} PRIVATE BUILD_IMPLOT)
   target_include_directories (${PROJECT_NAME} PRIVATE stb)
@@ -90,16 +88,14 @@ project (player VERSION 1.0.0)
     target_link_libraries (${PROJECT_NAME} PRIVATE app dvb song net audio stdc++fs pthread)
   endif()
 
-# tellyApp
+# telly
 project (telly VERSION 1.0.0)
-  add_executable (${PROJECT_NAME} apps/telly.cpp
-                                  apps/cTellyApp.h apps/cTellyApp.cpp
-                                  apps/cTellyUI.h apps/cTellyUI.cpp)
+  add_executable (${PROJECT_NAME} apps/telly.cpp)
 
   target_compile_definitions (${PROJECT_NAME} PRIVATE BUILD_IMPLOT)
   target_include_directories (${PROJECT_NAME} PRIVATE stb)
   if (CMAKE_HOST_WIN32)
-    target_link_libraries (${PROJECT_NAME} PRIVATE app dvb song net audio ws2_32)
+    target_link_libraries (${PROJECT_NAME} PRIVATE app dvb audio ws2_32)
   else()
-    target_link_libraries (${PROJECT_NAME} PRIVATE app dvb song net audio stdc++fs pthread)
+    target_link_libraries (${PROJECT_NAME} PRIVATE app dvb audio stdc++fs pthread)
   endif()
