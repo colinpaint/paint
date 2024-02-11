@@ -557,7 +557,7 @@ void cTransportStream::cService::start (chrono::system_clock::time_point tdt,
   // close prev program
   closeFile();
 
-  if ((selected || getRecord() || (dynamic_cast<cOptions*>(mOptions))->mRecordAll) &&
+  if ((selected || getRecord() || (dynamic_cast<cOptions*>(mOptions))->mRecordAllServices) &&
       getStream (eVideo).isDefined() && getStream(eAudio).isDefined()) {
     string filePath = (dynamic_cast<cOptions*>(mOptions))->mRecordRoot +
                       getRecordName() + date::format ("%d %b %y %a %H.%M.%S ",
@@ -1401,13 +1401,8 @@ void cTransportStream::parsePMT (cPidInfo& pidInfo, uint8_t* buf) {
         buf += loopLength;
         }
 
-      // test to enable service stream
-      if ((dynamic_cast<cOptions*>(mOptions))->mShowAllServices ||
-          (!mShowingFirstService && (dynamic_cast<cOptions*>(mOptions))->mShowFirstService)) {
-        // only video services
-        mAddServiceCallback (service);
-        mShowingFirstService = true;
-        }
+      // callback to add new service
+      mAddServiceCallback (service);
       }
     }
   }

@@ -903,11 +903,17 @@ namespace {
         {"file", 0, {}, {}}, options,
         [&](cTransportStream::cService& service) noexcept {
           cLog::log (LOGINFO, fmt::format ("addService sid:{}", service.getSid()));
+          if (service.getStream (cTransportStream::eStreamType(cTransportStream::eVideo)).isDefined())
+            service.enableStreams();
           },
         [&](cTransportStream::cService& service, cTransportStream::cPidInfo& pidInfo) noexcept {
-          cLog::log (LOGINFO, fmt::format ("pes sid:{} pid:{} size:{}",
+          cLog::log (LOGINFO, fmt::format ("pes {}:{:5d} size:{:6d} {:8d} {} {}",
                                            service.getSid(),
-                                           pidInfo.getPid(), pidInfo.getBufSize()));
+                                           pidInfo.getPid(), pidInfo.getBufSize(),
+                                           pidInfo.getStreamPos(),
+                                           utils::getPtsString (pidInfo.getPts()),
+                                           utils::getPtsString (pidInfo.getDts())
+                                           ));
           });
 
       if (!mTransportStream) {

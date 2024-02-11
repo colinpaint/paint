@@ -92,6 +92,7 @@ public:
     uint16_t getSid() const { return mSid; }
     int64_t getPts() const { return mPts; }
     int64_t getDts() const { return mDts; }
+    int64_t getStreamPos() const { return mStreamPos; }
 
     uint8_t getStreamType() const { return mStreamType; }
     std::string getPidName() const ;
@@ -276,16 +277,17 @@ public:
   public:
     virtual ~cOptions() = default;
 
+    bool mRecordAllServices = false;
     std::string mRecordRoot;
-    bool mRecordAll = false;
-    bool mShowAllServices = true;
-    bool mShowFirstService = false;
     };
   //}}}
 
-  cTransportStream (const cDvbMultiplex& dvbMultiplex, iOptions* options,
-                    const std::function<void (cService& service)> addServiceCallback = [](cService& service) {},
-                    const std::function<void (cService& service, cPidInfo&pidInfo)> pesCallback = [](cService& service, cPidInfo& pidInfo) {});
+  cTransportStream (const cDvbMultiplex& dvbMultiplex, 
+                    iOptions* options,
+                    const std::function<void (cService& service)> addServiceCallback = 
+                      [](cService& service) { (void)service; },
+                    const std::function<void (cService& service, cPidInfo&pidInfo)> pesCallback = 
+                      [](cService& service, cPidInfo& pidInfo) { (void)service;  (void)pidInfo;});
   ~cTransportStream() { clear(); }
 
   // gets

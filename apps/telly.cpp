@@ -97,12 +97,13 @@ namespace {
   public:
     virtual ~cTellyOptions() = default;
 
-    string getString() const { return "epg sub motion hd|bbc|itv|file.ts"; }
+    string getString() const { return "none epg sub motion hd|bbc|itv|file.ts"; }
 
     // vars
     bool mShowEpg = false;
     bool mShowSubtitle = false;
     bool mShowMotionVectors = false;
+    bool mShowAllServices = true;
 
     cDvbMultiplex mMultiplex = kDvbMultiplexes[0];
     string mFileName;
@@ -137,9 +138,90 @@ namespace {
       mTransportStream = new cTransportStream (multiplex, options,
         [&](cTransportStream::cService& service) noexcept {
           cLog::log (LOGINFO, fmt::format ("service {}", service.getSid()));
-          if (service.getStream (cTransportStream::eStreamType(cTransportStream::eVideo)).isDefined()) {
-            service.enableStreams();
+          if (options->mShowAllServices)
+            if (service.getStream (cTransportStream::eStreamType(cTransportStream::eVideo)).isDefined())
+              service.enableStreams();
+          },
+        [&](cTransportStream::cService& service, cTransportStream::cPidInfo& pidInfo) noexcept {
+          cLog::log (LOGINFO, fmt::format ("pes sid:{} pid:{} size:{}",
+                                           service.getSid(),
+                                           pidInfo.getPid(), pidInfo.getBufSize()));
+          });
+
+      if (!mTransportStream) {
+        //{{{  error, return
+        cLog::log (LOGERROR, "cTellyApp::setLiveDvbSource - failed to create liveDvbSource");
+        return;
+        }
+        //}}}
+
+      FILE* mFile = options->mRecordAllServices ?
+        fopen ((mRecordRoot + mMultiplex.mName + ".ts").c_str(), "wb") : nullptr;
+
+      #ifdef _WIN32
+        //{{{  windows
+        mDvbSource->run();
+
+        int64_t streamPos = 0;
+        int blockSize = 0;
+
+        while (true) {
+          auto ptr = mDvbSource->getBlockBDA (blockSize);
+          if (blockSize) {
+            //  read and demux block
+            streamPos += mTransportStream->demux (ptr, blockSize, streamPos, false);
+            if (options->mRecordAllServices && mFile)
+              fwrite (ptr, 1, blockSize, mFile);
+            mDvbSource->releaseBlock (blockSize);
             }
+          else
+            this_thread::sleep_for (1ms);
+          }
+        //}}}
+      #else
+        //{{{  linux
+        constexpr int kDvrReadChunkSize = 188 * 64;
+        uint8_t* chunk = new uint8_t[kDvrReadChunkSize];
+
+        uint64_t streamPos = 0;
+        while (true) {
+          int bytesRead = mDvbSource->getBlock (chunk, kDvrReadChunkSize);
+          if (bytesRead) {
+            streamPos += mTransportStream->demux (chunk, bytesRead, 0, false);
+            if (options->mRecordAllServices && mFile)
+              fwrite (chunk, 1, bytesRead, mFile);
+            }
+          else
+            cLog::log (LOGINFO, fmt::format ("liveDvbSource - no bytes"));
+          }
+
+        delete[] chunk;
+        //}}}
+      #endif
+
+      if (mFile)
+        fclose (mFile);
+      }
+    //}}}
+    //{{{
+    void liveDvbSourceThread (const cDvbMultiplex& multiplex, cTellyOptions* options) {
+
+      cLog::log (LOGINFO, fmt::format ("using multiplex {} {:4.1f} record {} {}",
+                                       multiplex.mName, multiplex.mFrequency/1000.f,
+                                       options->mRecordRoot, options->mShowAllServices ? "all " : ""));
+
+      mFileSource = false;
+      mMultiplex = multiplex;
+      mRecordRoot = options->mRecordRoot;
+      if (multiplex.mFrequency)
+        mDvbSource = new cDvbSource (multiplex.mFrequency, 0);
+
+      mTransportStream = new cTransportStream (multiplex, options,
+        [&](cTransportStream::cService& service) noexcept {
+          cLog::log (LOGINFO, fmt::format ("service {}", service.getSid()));
+          if (options->mShowAllServices)
+            if (service.getStream (cTransportStream::eStreamType(cTransportStream::eVideo)).isDefined())
+              service.enableStreams();
           },
         [&](cTransportStream::cService& service, cTransportStream::cPidInfo& pidInfo) noexcept {
           cLog::log (LOGINFO, fmt::format ("pes sid:{} pid:{} size:{}",
@@ -157,61 +239,16 @@ namespace {
       mLiveThread = thread ([=]() {
         cLog::setThreadName ("dvb ");
 
-        FILE* mFile = options->mRecordAll ?
-          fopen ((mRecordRoot + mMultiplex.mName + ".ts").c_str(), "wb") : nullptr;
-
+         // raise thread priority
         #ifdef _WIN32
-          //{{{  windows
-          // raise thread priority
           SetThreadPriority (GetCurrentThread(), THREAD_PRIORITY_TIME_CRITICAL);
-
-          mDvbSource->run();
-
-          int64_t streamPos = 0;
-          int blockSize = 0;
-
-          while (true) {
-            auto ptr = mDvbSource->getBlockBDA (blockSize);
-            if (blockSize) {
-              //  read and demux block
-              streamPos += mTransportStream->demux (ptr, blockSize, streamPos, false);
-              if (options->mRecordAll && mFile)
-                fwrite (ptr, 1, blockSize, mFile);
-              mDvbSource->releaseBlock (blockSize);
-              }
-            else
-              this_thread::sleep_for (1ms);
-            }
-          //}}}
         #else
-          //{{{  linux
-          // raise thread priority
           sched_param sch_params;
           sch_params.sched_priority = sched_get_priority_max (SCHED_RR);
           pthread_setschedparam (mLiveThread.native_handle(), SCHED_RR, &sch_params);
-
-          constexpr int kDvrReadChunkSize = 188 * 64;
-          uint8_t* chunk = new uint8_t[kDvrReadChunkSize];
-
-          uint64_t streamPos = 0;
-          while (true) {
-            int bytesRead = mDvbSource->getBlock (chunk, kDvrReadChunkSize);
-            if (bytesRead) {
-              streamPos += mTransportStream->demux (chunk, bytesRead, 0, false);
-              if (options->mRecordAll && mFile)
-                fwrite (chunk, 1, bytesRead, mFile);
-              }
-            else
-              cLog::log (LOGINFO, fmt::format ("liveDvbSource - no bytes"));
-            }
-
-          delete[] chunk;
-          //}}}
         #endif
 
-        if (mFile)
-          fclose (mFile);
-
+        liveDvbSource (multiplex, options);
         cLog::log (LOGINFO, "exit");
         });
 
@@ -229,9 +266,9 @@ namespace {
       mTransportStream = new cTransportStream ({"file", 0, {}, {}}, options,
         [&](cTransportStream::cService& service) noexcept {
           cLog::log (LOGINFO, fmt::format ("service {}", service.getSid()));
-          if (service.getStream (cTransportStream::eStreamType(cTransportStream::eVideo)).isDefined()) {
-            service.enableStreams();
-            }
+          if (options->mShowAllServices)
+            if (service.getStream (cTransportStream::eStreamType(cTransportStream::eVideo)).isDefined())
+              service.enableStreams();
           },
         [&](cTransportStream::cService& service, cTransportStream::cPidInfo& pidInfo) noexcept {
           cLog::log (LOGINFO, fmt::format ("pes sid:{} pid:{} size:{}",
@@ -1132,17 +1169,13 @@ int main (int numArgs, char* args[]) {
     string param = args[i];
     if (options->parse (param)) {
       // found a cApp option
-      if (options->mHasGui) {
+      if (!options->mHasGui)
         options->mShowAllServices = false;
-        options->mShowFirstService = false;
-        }
       }
-    else if (param == "all")
-      options->mRecordAll = true;
-    else if (param == "single") {
+    else if (param == "none")
       options->mShowAllServices = false;
-      options->mShowFirstService = true;
-      }
+    else if (param == "all")
+      options->mRecordAllServices = true;
     else if (param == "noaudio")
       options->mHasAudio = false;
     else if (param == "sub")
@@ -1169,7 +1202,7 @@ int main (int numArgs, char* args[]) {
 
   // log
   cLog::init (options->mLogLevel);
-  cLog::log (LOGNOTICE, fmt::format ("telly head all single noaudio {} {}",
+  cLog::log (LOGNOTICE, fmt::format ("telly head all noaudio {} {}",
                                      (dynamic_cast<cApp::cOptions*>(options))->cApp::cOptions::getString(),
                                      options->cTellyOptions::getString()));
 
