@@ -444,10 +444,10 @@ int64_t cTransportStream::cService::getPtsFromStart() {
 
 // streams
 //{{{
-cTransportStream::cStream* cTransportStream::cService::getStreamByPid (uint16_t pid) {
+cStream* cTransportStream::cService::getStreamByPid (uint16_t pid) {
 
   for (uint8_t streamType = eVideo; streamType <= eSubtitle; streamType++) {
-    cTransportStream::cStream& stream = getStream (eStreamType(streamType));
+    cStream& stream = getStream (eStreamType(streamType));
     if (stream.isDefined() && (stream.getPid() == pid))
       return &mStreams[streamType];
     }

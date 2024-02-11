@@ -27,9 +27,46 @@ class cRender;
 constexpr int kAacLatmStreamType = 17;
 constexpr int kH264StreamType = 27;
 
+enum eStreamType { eVideo, eAudio, eDescription, eSubtitle, eStreamTypeSize };
+//{{{
+class cStream {
+public:
+  bool isDefined() const { return mDefined; }
+  bool isEnabled() const { return mRender; }
+
+  std::string getLabel() const { return mLabel; }
+  uint16_t getPid() const { return mPid; }
+  uint8_t getTypeId() const { return mTypeId; }
+  std::string getTypeName() const { return mTypeName; }
+  cRender& getRender() const { return *mRender; }
+
+  void setLabel (const std::string& label) { mLabel = label; }
+
+  //{{{
+  void setPidStreamType (uint16_t pid, uint8_t streamType) {
+
+    mDefined = true;
+
+    mPid = pid;
+    mTypeId = streamType;
+    mTypeName = cDvbUtils::getStreamTypeName (streamType);
+    }
+  //}}}
+  void setRender (cRender* render) { mRender = render; }
+
+private:
+  bool mDefined = false;
+  cRender* mRender = nullptr;
+
+  std::string mLabel;
+  uint16_t mPid = 0;
+  uint8_t mTypeId = 0;
+  std::string mTypeName;
+  };
+//}}}
+
 class cTransportStream {
 public:
-  enum eStreamType { eVideo, eAudio, eDescription, eSubtitle, eStreamTypeSize };
   //{{{
   class cEpgItem {
   public:
@@ -146,43 +183,6 @@ public:
 
     int64_t mPts = -1;
     int64_t mDts = -1;
-    };
-  //}}}
-  //{{{
-  class cStream {
-  public:
-    bool isDefined() const { return mDefined; }
-    bool isEnabled() const { return mRender; }
-
-    std::string getLabel() const { return mLabel; }
-    uint16_t getPid() const { return mPid; }
-    uint8_t getTypeId() const { return mTypeId; }
-    std::string getTypeName() const { return mTypeName; }
-    cRender& getRender() const { return *mRender; }
-
-    void setLabel (const std::string& label) { mLabel = label; }
-
-
-    //{{{
-    void setPidStreamType (uint16_t pid, uint8_t streamType) {
-
-      mDefined = true;
-
-      mPid = pid;
-      mTypeId = streamType;
-      mTypeName = cDvbUtils::getStreamTypeName (streamType);
-      }
-    //}}}
-    void setRender (cRender* render) { mRender = render; }
-
-  private:
-    bool mDefined = false;
-    cRender* mRender = nullptr;
-
-    std::string mLabel;
-    uint16_t mPid = 0;
-    uint8_t mTypeId = 0;
-    std::string mTypeName;
     };
   //}}}
   //{{{

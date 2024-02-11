@@ -912,10 +912,10 @@ namespace {
       mTransportStream = new cTransportStream (
         {"file", 0, {}, {}}, options,
         [&](cTransportStream::cService& service) noexcept {
-          if (service.getStream (cTransportStream::eStreamType(cTransportStream::eVideo)).isDefined()) {
-            service.enableStream (cTransportStream::eVideo);
-            service.enableStream (cTransportStream::eAudio);
-            service.enableStream (cTransportStream::eSubtitle);
+          if (service.getStream (eStreamType(eVideo)).isDefined()) {
+            service.enableStream (eVideo);
+            service.enableStream (eAudio);
+            service.enableStream (eSubtitle);
             }
           },
         [&](cTransportStream::cService& service, cTransportStream::cPidInfo& pidInfo, bool skip) noexcept {
@@ -926,7 +926,7 @@ namespace {
                                            utils::getFullPtsString (pidInfo.getPts()),
                                            utils::getFullPtsString (pidInfo.getDts())
                                            ));
-          cTransportStream::cStream* stream = service.getStreamByPid (pidInfo.getPid());
+          cStream* stream = service.getStreamByPid (pidInfo.getPid());
           if (stream && stream->isEnabled())
             if (stream->getRender().decodePes (pidInfo.mBuffer, pidInfo.getBufSize(),
                                                pidInfo.getPts(), pidInfo.getDts(),
@@ -1292,19 +1292,19 @@ namespace {
           ImGui::GetWindowDrawList()->AddRect (mTL, mBR, hover ? 0xff20ffff : 0xff20ff20, 4.f, 0, 4.f);
         //}}}
 
-        bool enabled = mService.getStream (cTransportStream::eVideo).isEnabled();
+        bool enabled = mService.getStream (eVideo).isEnabled();
         if (enabled) {
           //{{{  get audio playPts
-          int64_t playPts = mService.getStream (cTransportStream::eAudio).getRender().getPts();
-          if (mService.getStream (cTransportStream::eAudio).isEnabled()) {
+          int64_t playPts = mService.getStream (eAudio).getRender().getPts();
+          if (mService.getStream (eAudio).isEnabled()) {
             // get playPts from audioStream
-            cAudioRender& audioRender = dynamic_cast<cAudioRender&>(mService.getStream (cTransportStream::eAudio).getRender());
+            cAudioRender& audioRender = dynamic_cast<cAudioRender&>(mService.getStream (eAudio).getRender());
             if (audioRender.getPlayer())
               playPts = audioRender.getPlayer()->getPts();
             }
           //}}}
           if (!selectFull || (mSelect != eUnselected)) {
-            cVideoRender& videoRender = dynamic_cast<cVideoRender&>(mService.getStream (cTransportStream::eVideo).getRender());
+            cVideoRender& videoRender = dynamic_cast<cVideoRender&>(mService.getStream (eVideo).getRender());
             cVideoFrame* videoFrame = videoRender.getVideoFrameAtOrAfterPts (playPts);
             if (videoFrame) {
               //{{{  video, subtitle, motionVectors
@@ -1332,7 +1332,7 @@ namespace {
               if (playerApp.getOptions()->mShowSubtitle) {
                 //{{{  draw subtitles
                 cSubtitleRender& subtitleRender =
-                  dynamic_cast<cSubtitleRender&> (mService.getStream (cTransportStream::eSubtitle).getRender());
+                  dynamic_cast<cSubtitleRender&> (mService.getStream (eSubtitle).getRender());
 
                 subtitleShader->use();
                 for (size_t line = 0; line < subtitleRender.getNumLines(); line++) {
@@ -1379,9 +1379,9 @@ namespace {
                 //}}}
               }
               //}}}
-            if (mService.getStream (cTransportStream::eAudio).isEnabled()) {
+            if (mService.getStream (eAudio).isEnabled()) {
               //{{{  audio mute, audioMeter, framesGraphic
-              cAudioRender& audioRender = dynamic_cast<cAudioRender&>(mService.getStream (cTransportStream::eAudio).getRender());
+              cAudioRender& audioRender = dynamic_cast<cAudioRender&>(mService.getStream (eAudio).getRender());
 
               // mute audio of unselected
               if (audioRender.getPlayer())
@@ -1434,10 +1434,10 @@ namespace {
         ImGui::SetCursorPos ({0.f,0.f});
         if (ImGui::InvisibleButton (fmt::format ("viewBox##{}", mService.getSid()).c_str(), viewSubSize)) {
           //{{{  hit view, select action
-          if (!mService.getStream (cTransportStream::eVideo).isEnabled()) {
-            mService.enableStream (cTransportStream::eVideo);
-            mService.enableStream (cTransportStream::eAudio);
-            mService.enableStream (cTransportStream::eSubtitle);
+          if (!mService.getStream (eVideo).isEnabled()) {
+            mService.enableStream (eVideo);
+            mService.enableStream (eAudio);
+            mService.enableStream (eSubtitle);
             }
           else if (mSelect == eUnselected)
             mSelect = eSelected;
@@ -1600,13 +1600,10 @@ namespace {
           auto it = mViewMap.find (pair.first);
           if (it == mViewMap.end()) {
             cTransportStream::cService& service = pair.second;
-            if (service.getStream (cTransportStream::eVideo).isDefined())
+            if (service.getStream (eVideo).isDefined())
               // enabled and not found, add service to viewMap
               mViewMap.emplace (service.getSid(), cView (service));
             }
-          //else if (!service.getStream (eVideo).isEnabled())
-            // found, but not enabled, remove service from viewMap
-           // mViewMap.erase (it);
           }
 
         // any view selectedFull ?
