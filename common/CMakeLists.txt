@@ -10,9 +10,9 @@ project (common VERSION 1.0.0)
   target_link_libraries (${PROJECT_NAME} PUBLIC date fmt)
 
   if (CMAKE_HOST_WIN32)
-    target_compile_options (${PROJECT_NAME} PUBLIC /W4
-                                                   /fp:fast
+    target_compile_options (${PROJECT_NAME} PUBLIC /W3
                                                    /EHsc
+                                                   /fp:fast
                                                    ${BUILD_MSVC_COMPILE_OPTIONS})
     if (USE_AVX512)
       message (STATUS "windows built with AVX X2 AVX512")

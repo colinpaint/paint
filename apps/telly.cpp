@@ -62,6 +62,13 @@ using namespace std;
 //}}}
 
 namespace {
+  //{{{  const string kRootDir
+    #ifdef _WIN32
+      const string kRootDir = "/tv/";
+    #else
+      const string kRootDir = "/home/pi/tv/";
+    #endif
+    //}}}
   //{{{
   const vector <cDvbMultiplex> kDvbMultiplexes = {
       {"hd", 626000000,
@@ -80,14 +87,6 @@ namespace {
       }
     };
   //}}}
-  //{{{  const string kRootDir
-    #ifdef _WIN32
-      const string kRootDir = "/tv/";
-    #else
-      const string kRootDir = "/home/pi/tv/";
-    #endif
-    //}}}
-
   //{{{
   class cTellyOptions : public cApp::cOptions,
                         public cTransportStream::cOptions,
@@ -98,7 +97,7 @@ namespace {
   public:
     virtual ~cTellyOptions() = default;
 
-    string getString() const { return "sub motion hd|bbc|itv filename"; }
+    string getString() const { return "epg sub motion hd|bbc|itv|file.ts"; }
 
     // vars
     bool mShowEpg = false;
@@ -1110,14 +1109,13 @@ int main (int numArgs, char* args[]) {
     string param = args[i];
     if (options->parse (param)) {
       // found a cApp option
+      if (options->mHasGui) {
+        options->mShowAllServices = false;
+        options->mShowFirstService = false;
+        }
       }
     else if (param == "all")
       options->mRecordAll = true;
-    else if (param == "head") {
-      options->mHasGui = false;
-      options->mShowAllServices = false;
-      options->mShowFirstService = false;
-      }
     else if (param == "single") {
       options->mShowAllServices = false;
       options->mShowFirstService = true;
@@ -1145,7 +1143,6 @@ int main (int numArgs, char* args[]) {
     }
   //}}}
   options->mRecordRoot = kRootDir;
-  options->mIsLive = options->mFileName.empty();
 
   // log
   cLog::init (options->mLogLevel);
@@ -1154,11 +1151,17 @@ int main (int numArgs, char* args[]) {
                                      options->cTellyOptions::getString()));
 
   cTellyApp tellyApp (options, new cTellyUI());
-  if (options->mIsLive)
+  if (options->mFileName.empty()) {
+    options->mIsLive = true;
     tellyApp.liveDvbSource (options->mMultiplex, options);
-  else
+    tellyApp.mainUILoop();
+    }
+  else if (options->mFileName.substr (options->mFileName.size() - 3, 3) == ".ts") {
     tellyApp.fileSource (options->mFileName, options);
-  tellyApp.mainUILoop();
+    tellyApp.mainUILoop();
+    }
+  else
+    cLog::log (LOGERROR, fmt::format ("file not .ts {}", options->mFileName));
 
   return EXIT_SUCCESS;
   }

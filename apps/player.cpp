@@ -77,14 +77,12 @@ namespace {
   public:
     virtual ~cPlayerOptions() = default;
 
-    string getString() const { return "song sub filename"; }
+    string getString() const { return "sub motion filename"; }
 
     // vars
-    bool mSong = false;
-    bool mShowEpg = false;
+    string mFileName;
     bool mShowSubtitle = false;
     bool mShowMotionVectors = false;
-    string mFileName;
     };
   //}}}
 
@@ -972,7 +970,6 @@ namespace {
     //}}}
 
     // actions
-    void setShowEpg (bool showEpg) { mOptions->mShowEpg = showEpg; }
     void togglePlay() { mTransportStream->togglePlay(); }
     void toggleShowSubtitle() { mOptions->mShowSubtitle = !mOptions->mShowSubtitle; }
     void toggleShowMotionVectors() { mOptions->mShowMotionVectors = !mOptions->mShowMotionVectors; }
@@ -1747,14 +1744,13 @@ namespace {
 // main
 int main (int numArgs, char* args[]) {
 
+  // options
   cPlayerOptions* options = new cPlayerOptions();
   //{{{  parse commandLine options
   for (int i = 1; i < numArgs; i++) {
     string param = args[i];
     if (options->parse (param)) // found cApp option
       ;
-    else if (param == "song")
-      options->mSong = true;
     else if (param == "sub")
       options->mShowSubtitle = true;
     else if (param == "motion")
@@ -1769,15 +1765,18 @@ int main (int numArgs, char* args[]) {
   cLog::log (LOGNOTICE, fmt::format ("player {} {}",
                                      (dynamic_cast<cApp::cOptions*>(options))->cApp::cOptions::getString(),
                                      options->cPlayerOptions::getString()));
-  if (options->mSong) {
-    cSongApp songApp (options, new cSongUI());
-    songApp.setSongName (options->mFileName);
-    songApp.mainUILoop();
-    }
-  else {
+
+  // launch
+  if (!options->mFileName.empty() &&
+      options->mFileName.substr (options->mFileName.size() - 3, 3) == ".ts") {
     cPlayerApp playerApp (options, new cPlayerUI());
     playerApp.addFileName (options->mFileName, options);
     playerApp.mainUILoop();
+    }
+  else {
+    cSongApp songApp (options, new cSongUI());
+    songApp.setSongName (options->mFileName);
+    songApp.mainUILoop();
     }
 
   return EXIT_SUCCESS;

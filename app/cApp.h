@@ -22,7 +22,7 @@ public:
   public:
     virtual ~cOptions() = default;
 
-    std::string getString() const { return "log123 nogui full free"; }
+    std::string getString() const { return "log123 head full"; }
 
     //{{{
     bool parse (std::string param) {
@@ -36,9 +36,7 @@ public:
         mLogLevel = LOGINFO3;
       else if (param == "full")
         mFullScreen = true;
-      else if (param == "free")
-        mVsync = false;
-      else if (param == "nogui")
+      else if (param == "head")
         mHasGui = false;
       else
         return false;
