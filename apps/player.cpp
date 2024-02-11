@@ -898,7 +898,7 @@ namespace {
     //{{{
     void addFile (const string& fileName, cPlayerOptions* options) {
 
-      // open fileName
+      // open file
       mFileName = cFileUtils::resolve (fileName);
       FILE* file = fopen (mFileName.c_str(), "rb");
       if (!file) {
@@ -908,7 +908,7 @@ namespace {
         }
         //}}}
 
-      // create transportStream
+      //{{{  create transportStream
       mTransportStream = new cTransportStream (
         {"file", 0, {}, {}}, options,
         [&](cTransportStream::cService& service) noexcept {
@@ -934,6 +934,7 @@ namespace {
               // transferred ownership of mBuffer to render, create new one
               pidInfo.mBuffer = (uint8_t*)malloc (pidInfo.mBufSize);
           });
+      //}}}
       if (!mTransportStream) {
         //{{{  error, return
         cLog::log (LOGERROR, "addFile cTransportStream create failed");
