@@ -787,11 +787,11 @@ void cTransportStream::cService::closeFile() {
 // cTransportStream
 //{{{
 cTransportStream::cTransportStream (const cDvbMultiplex& dvbMultiplex, iOptions* options,
-                                    const function<void (cService& service)> serviceCallback,
+                                    const function<void (cService& service)> addServiceCallback,
                                     const function<void (cService& service, cPidInfo& pidInfo)> pesCallback) :
     mDvbMultiplex(dvbMultiplex),
     mOptions(options),
-    mServiceCallback(serviceCallback),
+    mAddServiceCallback(addServiceCallback),
     mPesCallback(pesCallback) {}
 //}}}
 
@@ -1403,13 +1403,11 @@ void cTransportStream::parsePMT (cPidInfo& pidInfo, uint8_t* buf) {
 
       // test to enable service stream
       if ((dynamic_cast<cOptions*>(mOptions))->mShowAllServices ||
-          (!mShowingFirstService && (dynamic_cast<cOptions*>(mOptions))->mShowFirstService))
-        if (service.getStream (eStreamType(eVideo)).isDefined()) {
-          // only video services
-          mServiceCallback (service);
-          mShowingFirstService = true;
-          service.enableStreams();
-          }
+          (!mShowingFirstService && (dynamic_cast<cOptions*>(mOptions))->mShowFirstService)) {
+        // only video services
+        mAddServiceCallback (service);
+        mShowingFirstService = true;
+        }
       }
     }
   }

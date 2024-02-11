@@ -284,7 +284,7 @@ public:
   //}}}
 
   cTransportStream (const cDvbMultiplex& dvbMultiplex, iOptions* options,
-                    const std::function<void (cService& service)> serviceCallback = [](cService& service) {},
+                    const std::function<void (cService& service)> addServiceCallback = [](cService& service) {},
                     const std::function<void (cService& service, cPidInfo&pidInfo)> pesCallback = [](cService& service, cPidInfo& pidInfo) {});
   ~cTransportStream() { clear(); }
 
@@ -341,7 +341,7 @@ private:
   std::mutex mServiceMapMutex;
 
   // callbacks
-  const std::function<void (cService& service)> mServiceCallback;
+  const std::function<void (cService& service)> mAddServiceCallback;
   const std::function<void (cService& service, cPidInfo& pidInfo)> mPesCallback;
 
   // time

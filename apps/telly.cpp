@@ -134,7 +134,19 @@ namespace {
       if (multiplex.mFrequency)
         mDvbSource = new cDvbSource (multiplex.mFrequency, 0);
 
-      mTransportStream = new cTransportStream (multiplex, options);
+      mTransportStream = new cTransportStream (multiplex, options,
+        [&](cTransportStream::cService& service) noexcept {
+          cLog::log (LOGINFO, fmt::format ("service {}", service.getSid()));
+          if (service.getStream (cTransportStream::eStreamType(cTransportStream::eVideo)).isDefined()) {
+            service.enableStreams();
+            }
+          },
+        [&](cTransportStream::cService& service, cTransportStream::cPidInfo& pidInfo) noexcept {
+          cLog::log (LOGINFO, fmt::format ("pes sid:{} pid:{} size:{}",
+                                           service.getSid(),
+                                           pidInfo.getPid(), pidInfo.getBufSize()));
+          });
+
       if (!mTransportStream) {
         //{{{  error, return
         cLog::log (LOGERROR, "cTellyApp::setLiveDvbSource - failed to create liveDvbSource");
@@ -214,7 +226,18 @@ namespace {
     void fileSource (const string& filename, cTellyOptions* options) {
 
       // create transportStream
-      mTransportStream = new cTransportStream ({"file", 0, {}, {}}, options);
+      mTransportStream = new cTransportStream ({"file", 0, {}, {}}, options,
+        [&](cTransportStream::cService& service) noexcept {
+          cLog::log (LOGINFO, fmt::format ("service {}", service.getSid()));
+          if (service.getStream (cTransportStream::eStreamType(cTransportStream::eVideo)).isDefined()) {
+            service.enableStreams();
+            }
+          },
+        [&](cTransportStream::cService& service, cTransportStream::cPidInfo& pidInfo) noexcept {
+          cLog::log (LOGINFO, fmt::format ("pes sid:{} pid:{} size:{}",
+                                           service.getSid(),
+                                           pidInfo.getPid(), pidInfo.getBufSize()));
+          });
       if (!mTransportStream) {
         //{{{  error, return
         cLog::log (LOGERROR, "fileSource cTransportStream create failed");

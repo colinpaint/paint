@@ -902,11 +902,11 @@ namespace {
       mTransportStream = new cTransportStream (
         {"file", 0, {}, {}}, options,
         [&](cTransportStream::cService& service) noexcept {
-          cLog::log (LOGINFO, fmt::format ("service {}", service.getSid()));
+          cLog::log (LOGINFO, fmt::format ("addService sid:{}", service.getSid()));
           },
         [&](cTransportStream::cService& service, cTransportStream::cPidInfo& pidInfo) noexcept {
-          cLog::log (LOGINFO, fmt::format ("pes sid:{} pid:{} size:{}", 
-                                           service.getSid(), 
+          cLog::log (LOGINFO, fmt::format ("pes sid:{} pid:{} size:{}",
+                                           service.getSid(),
                                            pidInfo.getPid(), pidInfo.getBufSize()));
           });
 
