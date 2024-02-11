@@ -42,7 +42,6 @@ public:
   cRender& getRender() const { return *mRender; }
 
   void setLabel (const std::string& label) { mLabel = label; }
-
   //{{{
   void setPidStreamType (uint16_t pid, uint8_t streamType) {
 
