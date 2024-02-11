@@ -1209,8 +1209,12 @@ int main (int numArgs, char* args[]) {
   cTellyApp tellyApp (options, new cTellyUI());
   if (options->mFileName.empty()) {
     options->mIsLive = true;
-    tellyApp.liveDvbSource (options->mMultiplex, options);
-    tellyApp.mainUILoop();
+    if (options->mHasGui) {
+      tellyApp.liveDvbSourceThread (options->mMultiplex, options);
+      tellyApp.mainUILoop();
+      }
+    else
+      tellyApp.liveDvbSource (options->mMultiplex, options);
     }
   else if (options->mFileName.substr (options->mFileName.size() - 3, 3) == ".ts") {
     tellyApp.fileSource (options->mFileName, options);
