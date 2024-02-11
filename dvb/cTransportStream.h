@@ -27,10 +27,11 @@ class cRender;
 constexpr int kAacLatmStreamType = 17;
 constexpr int kH264StreamType = 27;
 
-enum eStreamType { eVideo, eAudio, eDescription, eSubtitle, eStreamTypeSize };
 //{{{
 class cStream {
 public:
+  enum eStreamType { eVideo, eAudio, eDescription, eSubtitle, eStreamTypeSize };
+
   bool isDefined() const { return mDefined; }
   bool isEnabled() const { return mRender; }
 
@@ -210,8 +211,8 @@ public:
 
     // streams
     cStream* getStreamByPid (uint16_t pid);
-    cStream& getStream (eStreamType streamType) { return mStreams[streamType]; }
-    void enableStream (eStreamType streamType);
+    cStream& getStream (cStream::eStreamType streamType) { return mStreams[streamType]; }
+    void enableStream (cStream::eStreamType streamType);
 
     bool throttle();
     void togglePlay();
@@ -265,7 +266,7 @@ public:
     uint16_t mProgramPid = 0;
 
     // streams
-    std::array <cStream, eStreamTypeSize> mStreams;
+    std::array <cStream, cStream::eStreamTypeSize> mStreams;
 
     // record
     bool mRecord = false;

@@ -139,10 +139,10 @@ namespace {
         [&](cTransportStream::cService& service) noexcept {
           cLog::log (LOGINFO, fmt::format ("addService {}", service.getSid()));
           if (options->mShowAllServices)
-            if (service.getStream (eStreamType(eVideo)).isDefined()) {
-              service.enableStream (eVideo);
-              service.enableStream (eAudio);
-              service.enableStream (eSubtitle);
+            if (service.getStream (cStream::eVideo).isDefined()) {
+              service.enableStream (cStream::eVideo);
+              service.enableStream (cStream::eAudio);
+              service.enableStream (cStream::eSubtitle);
               }
           },
         [&](cTransportStream::cService& service, cTransportStream::cPidInfo& pidInfo, bool skip) noexcept {
@@ -228,10 +228,10 @@ namespace {
         [&](cTransportStream::cService& service) noexcept {
           cLog::log (LOGINFO, fmt::format ("addService {}", service.getSid()));
           if (options->mShowAllServices)
-            if (service.getStream (eStreamType(eVideo)).isDefined()) {
-              service.enableStream (eVideo);
-              service.enableStream (eAudio);
-              service.enableStream (eSubtitle);
+            if (service.getStream (cStream::eVideo).isDefined()) {
+              service.enableStream (cStream::eVideo);
+              service.enableStream (cStream::eAudio);
+              service.enableStream (cStream::eSubtitle);
               }
           },
         [&](cTransportStream::cService& service, cTransportStream::cPidInfo& pidInfo, bool skip) noexcept {
@@ -325,10 +325,10 @@ namespace {
         [&](cTransportStream::cService& service) noexcept {
           cLog::log (LOGINFO, fmt::format ("addService {}", service.getSid()));
           if (options->mShowAllServices)
-            if (service.getStream (eStreamType(eVideo)).isDefined()) {
-              service.enableStream (eVideo);
-              service.enableStream (eAudio);
-              service.enableStream (eSubtitle);
+            if (service.getStream (cStream::eVideo).isDefined()) {
+              service.enableStream (cStream::eVideo);
+              service.enableStream (cStream::eAudio);
+              service.enableStream (cStream::eSubtitle);
               }
           },
         [&](cTransportStream::cService& service, cTransportStream::cPidInfo& pidInfo, bool skip) noexcept {
@@ -726,19 +726,19 @@ namespace {
           ImGui::GetWindowDrawList()->AddRect (mTL, mBR, hover ? 0xff20ffff : 0xff20ff20, 4.f, 0, 4.f);
         //}}}
 
-        bool enabled = mService.getStream (eVideo).isEnabled();
+        bool enabled = mService.getStream (cStream::eVideo).isEnabled();
         if (enabled) {
           //{{{  get audio playPts
-          int64_t playPts = mService.getStream (eAudio).getRender().getPts();
-          if (mService.getStream (eAudio).isEnabled()) {
+          int64_t playPts = mService.getStream (cStream::eAudio).getRender().getPts();
+          if (mService.getStream (cStream::eAudio).isEnabled()) {
             // get playPts from audioStream
-            cAudioRender& audioRender = dynamic_cast<cAudioRender&>(mService.getStream (eAudio).getRender());
+            cAudioRender& audioRender = dynamic_cast<cAudioRender&>(mService.getStream (cStream::eAudio).getRender());
             if (audioRender.getPlayer())
               playPts = audioRender.getPlayer()->getPts();
             }
           //}}}
           if (!selectFull || (mSelect != eUnselected)) {
-            cVideoRender& videoRender = dynamic_cast<cVideoRender&>(mService.getStream (eVideo).getRender());
+            cVideoRender& videoRender = dynamic_cast<cVideoRender&>(mService.getStream (cStream::eVideo).getRender());
             cVideoFrame* videoFrame = videoRender.getVideoFrameAtOrAfterPts (playPts);
             if (videoFrame) {
               //{{{  video, subtitle, motionVectors
@@ -766,7 +766,7 @@ namespace {
               if (tellyApp.getOptions()->mShowSubtitle) {
                 //{{{  draw subtitles
                 cSubtitleRender& subtitleRender =
-                  dynamic_cast<cSubtitleRender&> (mService.getStream (eSubtitle).getRender());
+                  dynamic_cast<cSubtitleRender&> (mService.getStream (cStream::eSubtitle).getRender());
 
                 subtitleShader->use();
                 for (size_t line = 0; line < subtitleRender.getNumLines(); line++) {
@@ -813,9 +813,9 @@ namespace {
                 //}}}
               }
               //}}}
-            if (mService.getStream (eAudio).isEnabled()) {
+            if (mService.getStream (cStream::eAudio).isEnabled()) {
               //{{{  audio mute, audioMeter, framesGraphic
-              cAudioRender& audioRender = dynamic_cast<cAudioRender&>(mService.getStream (eAudio).getRender());
+              cAudioRender& audioRender = dynamic_cast<cAudioRender&>(mService.getStream (cStream::eAudio).getRender());
 
               // mute audio of unselected
               if (audioRender.getPlayer())
@@ -895,10 +895,10 @@ namespace {
         ImGui::SetCursorPos ({0.f,0.f});
         if (ImGui::InvisibleButton (fmt::format ("viewBox##{}", mService.getSid()).c_str(), viewSubSize)) {
           //{{{  hit view, select action
-          if (!mService.getStream (eVideo).isEnabled()) {
-            mService.enableStream (eVideo);
-            mService.enableStream (eAudio);
-            mService.enableStream (eSubtitle);
+          if (!mService.getStream (cStream::eVideo).isEnabled()) {
+            mService.enableStream (cStream::eVideo);
+            mService.enableStream (cStream::eAudio);
+            mService.enableStream (cStream::eSubtitle);
             }
           else if (mSelect == eUnselected)
             mSelect = eSelected;
@@ -1062,7 +1062,7 @@ namespace {
           auto it = mViewMap.find (pair.first);
           if (it == mViewMap.end()) {
             cTransportStream::cService& service = pair.second;
-            if (service.getStream (eVideo).isDefined())
+            if (service.getStream (cStream::eVideo).isDefined())
               // enabled and not found, add service to viewMap
               mViewMap.emplace (service.getSid(), cView (service));
             }
