@@ -391,10 +391,6 @@ namespace {
             ImGui::PopFont();
             break;
 
-          case eRecord:
-            drawRecordedFileNames (transportStream, {0.f,ImGui::GetTextLineHeight() * 1.5f});
-            break;
-
           case eEpg:
           default:
             break;
@@ -415,8 +411,8 @@ namespace {
     //}}}
 
   private:
-    enum eTab { eNone, eEpg, ePids, eRecord };
-    static inline const vector <string> kTabNames = { "none", "epg", "pids", "recorded" };
+    enum eTab { eNone, eEpg, ePids };
+    static inline const vector <string> kTabNames = { "none", "epg", "pids" };
     static inline const size_t kMaxSubtitleLines = 4;
 
     //{{{
@@ -1013,7 +1009,6 @@ namespace {
         { false, false,  false, ImGuiKey_S,          [this,&tellyApp]{ tellyApp.toggleShowSubtitle(); }},
         { false, false,  false, ImGuiKey_L,          [this,&tellyApp]{ tellyApp.toggleShowMotionVectors(); }},
         { false, false,  false, ImGuiKey_P,          [this,&tellyApp]{ hitTab (tellyApp, ePids); }},
-        { false, false,  false, ImGuiKey_R,          [this,&tellyApp]{ hitTab (tellyApp, eRecord); }},
         { false, false,  false, ImGuiKey_E,          [this,&tellyApp]{ hitTab (tellyApp, eEpg); }},
       };
 
@@ -1092,21 +1087,6 @@ namespace {
         }
       }
     //}}}
-    //{{{
-    void drawRecordedFileNames (cTransportStream& transportStream, ImVec2 pos) {
-
-      for (auto& program : transportStream.getRecordedFileNames()) {
-        // drop shadow epg
-        ImGui::SetCursorPos (pos);
-        ImGui::TextColored ({0.f,0.f,0.f,1.f}, program.c_str());
-        ImGui::SetCursorPos (pos - ImVec2(2.f,2.f));
-        ImGui::TextColored ({1.f, 1.f,1.f,1.f}, program.c_str());
-
-        pos.y += ImGui::GetTextLineHeight();
-        }
-      }
-    //}}}
-
     // vars
     uint8_t mTabIndex = eNone;
     cMultiView& mMultiView;

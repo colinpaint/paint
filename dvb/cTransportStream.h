@@ -186,7 +186,6 @@ public:
     std::string getName() const { return mName; }
     uint16_t getProgramPid() const { return mProgramPid; }
     int64_t getPtsFromStart();
-    std::vector <std::string>& getRecordedFileNames() { return mRecordedFileNames; };
 
     // sets
     void setProgramPid (uint16_t pid) { mProgramPid = pid; }
@@ -262,7 +261,6 @@ public:
     bool mRecord = false;
     std::string mRecordName;
     FILE* mFile = nullptr;
-    std::vector <std::string> mRecordedFileNames;
 
     // epg
     cEpgItem* mNowEpgItem = nullptr;
@@ -296,7 +294,6 @@ public:
 
   std::map <uint16_t, cPidInfo>& getPidInfoMap() { return mPidInfoMap; };
   std::map <uint16_t, cService>& getServiceMap() { return mServiceMap; };
-  std::vector <std::string> getRecordedFileNames();
 
   bool throttle();
   void togglePlay();
@@ -316,7 +313,6 @@ private:
 
   //  parse
   uint16_t parsePSI (cPidInfo& pidInfo, uint8_t* buf);
-  void parseNIT (uint8_t* buf);
   void parseTDT (cPidInfo& pidInfo, uint8_t* buf);
   void parsePAT (uint8_t* buf);
   void parseSDT (uint8_t* buf);

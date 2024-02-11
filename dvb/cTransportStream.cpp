@@ -76,48 +76,6 @@ struct sPatProg {
 //}}}
 
 //{{{
-struct sNit {
-  uint8_t table_id                 :8;
-
-  uint8_t section_length_hi        :4;
-  uint8_t                          :3;
-  uint8_t section_syntax_indicator :1;
-  uint8_t section_length_lo        :8;
-
-  uint8_t network_id_hi            :8;
-  uint8_t network_id_lo            :8;
-  uint8_t current_next_indicator   :1;
-  uint8_t version_number           :5;
-  uint8_t                          :2;
-  uint8_t section_number           :8;
-  uint8_t last_section_number      :8;
-  uint8_t network_descr_length_hi  :4;
-  uint8_t                          :4;
-  uint8_t network_descr_length_lo  :8;
-  /* descrs */
-  } ;
-//}}}
-//{{{
-struct sNitMid {
-  uint8_t transport_stream_loop_length_hi  :4;
-  uint8_t                                  :4;
-  uint8_t transport_stream_loop_length_lo  :8;
-  } ;
-//}}}
-//{{{
-struct sNitTs {
-  uint8_t transport_stream_id_hi      :8;
-  uint8_t transport_stream_id_lo      :8;
-  uint8_t original_network_id_hi      :8;
-  uint8_t original_network_id_lo      :8;
-  uint8_t transport_descrs_length_hi  :4;
-  uint8_t                             :4;
-  uint8_t transport_descrs_length_lo  :8;
-  /* descrs  */
-  } ;
-//}}}
-
-//{{{
 struct sSdt {
   uint8_t table_id                 :8;
   uint8_t section_length_hi        :4;
@@ -607,8 +565,6 @@ void cTransportStream::cService::startProgram (chrono::system_clock::time_point 
     // open new record program
     openFile (filePath, 0x1234);
 
-    mRecordedFileNames.push_back (filePath);
-
     cLog::log (LOGINFO, fmt::format ("{} {}",
       date::format ("%H.%M.%S %a %d %b %y", date::floor<chrono::seconds>(programStartTime)),
       filePath));
@@ -834,18 +790,6 @@ cTransportStream::cTransportStream (const cDvbMultiplex& dvbMultiplex, iOptions*
 //{{{
 string cTransportStream::getTdtString() const {
   return date::format ("%T", date::floor<chrono::seconds>(mNowTdt));
-  }
-//}}}
-//{{{
-vector<string> cTransportStream::getRecordedFileNames() {
-
-  vector <string> recordedFileNames;
-
-  for (auto& service : mServiceMap)
-    for (auto& name : service.second.getRecordedFileNames())
-      recordedFileNames.push_back (name);
-
-  return recordedFileNames;
   }
 //}}}
 
@@ -1155,11 +1099,11 @@ uint16_t cTransportStream::parsePSI (cPidInfo& pidInfo, uint8_t* buf) {
 
   switch (pidInfo.getPid()) {
     case PID_PAT: parsePAT (buf); break;
-    case PID_NIT: parseNIT (buf); break;
     case PID_SDT: parseSDT (buf); break;
     case PID_EIT: parseEIT (buf); break;
     case PID_TDT: parseTDT (pidInfo, buf); break;
 
+    case PID_NIT:
     case PID_CAT:
     case PID_RST:
     case PID_SYN: break;
@@ -1183,55 +1127,6 @@ void cTransportStream::parseTDT (cPidInfo& pidInfo, uint8_t* buf) {
       }
 
     pidInfo.setInfo (date::format ("%T", date::floor<chrono::seconds>(mFirstTdt)) + " " + getTdtString());
-    }
-  }
-//}}}
-//{{{
-void cTransportStream::parseNIT (uint8_t* buf) {
-
-  sNit* nit = (sNit*)buf;
-  uint16_t sectionLength = HILO(nit->section_length) + 3;
-  if (cDvbUtils::getCrc32 (buf, sectionLength) != 0) {
-    //{{{  bad crc, error, return
-    cLog::log (LOGERROR, fmt::format("parseNIT bad crc {}",sectionLength));
-    return;
-    }
-    //}}}
-  if ((nit->table_id != TID_NIT_ACT) &&
-      (nit->table_id != TID_NIT_OTH) &&
-      (nit->table_id != TID_BAT)) {
-    //{{{  wrong tid, error, return
-    cLog::log (LOGERROR, fmt::format ("parseNIT wrong TID {}", (int)(nit->table_id)));
-    return;
-    }
-    //}}}
-
-  //auto networkId = HILO (nit->network_id);
-  buf += sizeof(sNit);
-  uint16_t loopLength = HILO (nit->network_descr_length);
-
-  sectionLength -= sizeof(sNit) + 4;
-  if (loopLength <= sectionLength) {
-    sectionLength -= loopLength;
-
-    buf += loopLength;
-    auto nitMid = (sNitMid*)buf;
-    loopLength = HILO (nitMid->transport_stream_loop_length);
-    if ((sectionLength > 0) && (loopLength <= sectionLength)) {
-      // iterate nitMids
-      sectionLength -= sizeof(sNitMid);
-      buf += sizeof(sNitMid);
-
-      while (loopLength > 0) {
-        auto TSDesc = (sNitTs*)buf;
-        //auto tsid = HILO (TSDesc->transport_stream_id);
-        uint16_t loopLength2 = HILO (TSDesc->transport_descrs_length);
-        buf += sizeof(sNitTs);
-        loopLength -= loopLength2 + sizeof(sNitTs);
-        sectionLength -= loopLength2 + sizeof(sNitTs);
-        buf += loopLength2;
-        }
-      }
     }
   }
 //}}}
