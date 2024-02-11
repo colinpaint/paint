@@ -386,12 +386,12 @@ string cTransportStream::cPidInfo::getPidName() const {
 //{{{
 int cTransportStream::cPidInfo::addToBuffer (uint8_t* buf, int bufSize) {
 
-  if (getBufUsed() + bufSize > mBufSize) {
+  if (getBufSize() + bufSize > mBufSize) {
     // realloc buffer to twice size
     mBufSize = mBufSize * 2;
     cLog::log (LOGINFO1, fmt::format ("demux pid:{} realloc {}", mPid,mBufSize));
 
-    int ptrOffset = getBufUsed();
+    int ptrOffset = getBufSize();
     mBuffer = (uint8_t*)realloc (mBuffer, mBufSize);
     mBufPtr = mBuffer + ptrOffset;
     }
@@ -399,7 +399,7 @@ int cTransportStream::cPidInfo::addToBuffer (uint8_t* buf, int bufSize) {
   memcpy (mBufPtr, buf, bufSize);
   mBufPtr += bufSize;
 
-  return getBufUsed();
+  return getBufSize();
   }
 //}}}
 //}}}
@@ -518,6 +518,7 @@ void cTransportStream::cService::enableStreams() {
   enableStream (eSubtitle, true);
   }
 //}}}
+
 //{{{
 bool cTransportStream::cService::throttle() {
 // return true if audioStream needs throttle
@@ -863,7 +864,7 @@ int64_t cTransportStream::demux (uint8_t* chunk, int64_t chunkSize, int64_t stre
           if (pidInfo) {
             if ((pidInfo->mContinuity >= 0) &&
                 (continuityCount != ((pidInfo->mContinuity+1) & 0x0F))) {
-              //{{{  continuity error
+              //{{{  continuity error, abandon multi packet buffering
               if (pidInfo->mContinuity == continuityCount) // strange case of bbc subtitles
                 pidInfo->mRepeatContinuity++;
               else {
@@ -924,9 +925,10 @@ int64_t cTransportStream::demux (uint8_t* chunk, int64_t chunkSize, int64_t stre
               }
             else {
               //{{{  pes
+              cService* service;
               {
               lock_guard<mutex> fileLockGuard (mRecordMutex);
-              cService* service = getServiceBySid (pidInfo->getSid());
+              service = getServiceBySid (pidInfo->getSid());
               if (service)
                 service->programPesPacket (pidInfo->getPid(), ts - 1);
               }
@@ -936,24 +938,15 @@ int64_t cTransportStream::demux (uint8_t* chunk, int64_t chunkSize, int64_t stre
 
               if (payloadStart) {
                 if ((*(uint32_t*)ts & 0x00FFFFFF) == 0x00010000) {
-                  //{{{  process previous pesBuffer, use new pesBuffer
+                  // process previous pesBuffer, use new pesBuffer
                   uint8_t streamId = (*((uint32_t*)(ts+3))) & 0xFF;
-                  if ((streamId == 0xB0) || // program stream map
-                      (streamId == 0xB1) || // private stream1
-                      (streamId == 0xBF))   // private stream2
-                    cLog::log (LOGINFO, fmt::format ("recognised pesHeader pid:{} streamId:{:8x}", pid, streamId));
-
-                  else if ((streamId == 0xBD) ||
-                           (streamId == 0xBE) || // ???
-                           ((streamId >= 0xC0) && (streamId <= 0xEF))) {
-                    // subtitle, audio, video streamId
+                  if ((streamId == 0xBD) || (streamId == 0xBE) || ((streamId >= 0xC0) && (streamId <= 0xEF))) {
                     if (pidInfo->mBufPtr) {
-                      cService* service = getServiceBySid (pidInfo->getSid());
                       if (service) {
                         cStream* stream = service->getStreamByPid (pidInfo->getPid());
                         if (stream)
                           if (stream->isEnabled())
-                            if (stream->getRender().decodePes (pidInfo->mBuffer, pidInfo->getBufUsed(),
+                            if (stream->getRender().decodePes (pidInfo->mBuffer, pidInfo->getBufSize(),
                                                                pidInfo->getPts(), pidInfo->getDts(),
                                                                pidInfo->mStreamPos, skip))
                               // transferred ownership of mBuffer to render, create new one
@@ -961,8 +954,10 @@ int64_t cTransportStream::demux (uint8_t* chunk, int64_t chunkSize, int64_t stre
                         }
                       }
                     }
+                  else if ((streamId == 0xB0) || (streamId == 0xB1) || (streamId == 0xBF))
+                    cLog::log (LOGINFO, fmt::format ("demux known pesHeader pid:{} streamId:{:8x}", pid, streamId));
                   else
-                    cLog::log (LOGINFO, fmt::format ("cTransportStream::demux unknown streamId:{:2x}", streamId));
+                    cLog::log (LOGINFO, fmt::format ("demux unknown pesHeader pid:{} streamId:{:8x}", pid, streamId));
 
                   // reset pesBuffer pointer
                   pidInfo->mBufPtr = pidInfo->mBuffer;
@@ -970,12 +965,12 @@ int64_t cTransportStream::demux (uint8_t* chunk, int64_t chunkSize, int64_t stre
                   // save ts streamPos for start of new pesBuffer
                   pidInfo->mStreamPos = streamPos;
 
-                  // pts
-                  if (ts[7] & 0x80)  // hasPts
+                  // hasPts ?
+                  if (ts[7] & 0x80)
                     pidInfo->setPts ((ts[7] & 0x80) ? cDvbUtils::getPts (ts+9) : -1);
 
-                  // dts
-                  if (ts[7] & 0x40) // hasDts
+                  // hasDts ?
+                  if (ts[7] & 0x40)
                     pidInfo->setDts ((ts[7] & 0x80) ? cDvbUtils::getPts (ts+14) : -1);
 
                   // skip past pesHeader
@@ -983,7 +978,6 @@ int64_t cTransportStream::demux (uint8_t* chunk, int64_t chunkSize, int64_t stre
                   ts += pesHeaderBytes;
                   tsBytesLeft -= pesHeaderBytes;
                   }
-                  //}}}
                 else
                   cLog::log (LOGINFO, fmt::format ("unrecognised pesHeader {} {:8x}", pid, *(uint32_t*)ts));
                 }

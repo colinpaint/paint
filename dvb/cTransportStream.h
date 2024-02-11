@@ -96,7 +96,7 @@ public:
     std::string getPidName() const ;
     std::string getInfo() const { return mInfo; }
 
-    int getBufUsed() const { return int(mBufPtr - mBuffer); }
+    int getBufSize() const { return int(mBufPtr - mBuffer); }
 
     void setSid (uint16_t sid) { mSid = sid; }
     void setStreamType (uint8_t streamType) { mStreamType = streamType; }
