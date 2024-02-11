@@ -77,7 +77,7 @@ namespace {
   public:
     virtual ~cPlayerOptions() = default;
 
-    string getString() const { return "sub motion filename"; }
+    string getString() const { return "sub motion fileName"; }
 
     // vars
     string mFileName;
@@ -898,11 +898,21 @@ namespace {
     //{{{
     void addFileName (const string& fileName, cPlayerOptions* options) {
 
+      // open fileName
+      mFileName = cFileUtils::resolve (fileName);
+      FILE* file = fopen (mFileName.c_str(), "rb");
+      if (!file) {
+        //{{{  error, return
+        cLog::log (LOGERROR, fmt::format ("addFileName failed to open {}", mOptions->mFileName));
+        return;
+        }
+        //}}}
+
       // create transportStream
       mTransportStream = new cTransportStream (
         {"file", 0, {}, {}}, options,
         [&](cTransportStream::cService& service) noexcept {
-          cLog::log (LOGINFO, fmt::format ("addService sid:{}", service.getSid()));
+          cLog::log (LOGINFO, fmt::format ("addService {}", service.getSid()));
           if (service.getStream (cTransportStream::eStreamType(cTransportStream::eVideo)).isDefined())
             service.enableStreams();
           },
@@ -911,24 +921,13 @@ namespace {
                                            service.getSid(),
                                            pidInfo.getPid(), pidInfo.getBufSize(),
                                            pidInfo.getStreamPos(),
-                                           utils::getPtsString (pidInfo.getPts()),
-                                           utils::getPtsString (pidInfo.getDts())
+                                           utils::getFullPtsString (pidInfo.getPts()),
+                                           utils::getFullPtsString (pidInfo.getDts())
                                            ));
           });
-
       if (!mTransportStream) {
         //{{{  error, return
         cLog::log (LOGERROR, "addFileName cTransportStream create failed");
-        return;
-        }
-        //}}}
-
-      // open fileName
-      mFileName = cFileUtils::resolve (fileName);
-      FILE* file = fopen (mFileName.c_str(), "rb");
-      if (!file) {
-        //{{{  error, return
-        cLog::log (LOGERROR, fmt::format ("addFileName failed to open {}", mOptions->mFileName));
         return;
         }
         //}}}
