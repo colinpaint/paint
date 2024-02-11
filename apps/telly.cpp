@@ -299,8 +299,6 @@ namespace {
     //}}}
 
     // fileSource
-    bool hasFileSource() { return mFileSource; }
-    string getFileName() const { return mOptions->mFileName; }
     //{{{
     void fileSource (const string& filename, cTellyOptions* options) {
 
@@ -378,10 +376,7 @@ namespace {
     //}}}
 
     // actions
-    void skip (int64_t skipPts);
-
     void setShowEpg (bool showEpg) { mOptions->mShowEpg = showEpg; }
-    void togglePlay() { mTransportStream->togglePlay(); }
     void toggleShowSubtitle() { mOptions->mShowSubtitle = !mOptions->mShowSubtitle; }
     void toggleShowMotionVectors() { mOptions->mShowMotionVectors = !mOptions->mShowMotionVectors; }
 
