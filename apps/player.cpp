@@ -993,6 +993,52 @@ namespace {
         }).detach();
       }
     //}}}
+    //{{{
+    void addFileAnal (const string& fileName, cPlayerOptions* options) {
+
+      // open file
+      string resolvedFileName = cFileUtils::resolve (fileName);
+      FILE* file = fopen (resolvedFileName.c_str(), "rb");
+
+      cTransportStream* ts = new cTransportStream (
+        {"anal", 0, {}, {}}, options,
+        [&](cTransportStream::cService& service) noexcept {
+          },
+        [&](cTransportStream::cService& service, cTransportStream::cPidInfo& pidInfo, bool skip) noexcept {
+          cLog::log (LOGINFO, fmt::format ("pes {}:{:5d} size:{:6d} {:8d} {} {}",
+                                           service.getSid(),
+                                           pidInfo.getPid(), pidInfo.getBufSize(),
+                                           pidInfo.getStreamPos(),
+                                           utils::getFullPtsString (pidInfo.getPts()),
+                                           utils::getFullPtsString (pidInfo.getDts())
+                                           ));
+          });
+
+      if (file && ts) {
+        // create analyse thread
+        thread ([=]() {
+          cLog::setThreadName ("anal");
+
+          size_t chunkSize = 188 * 256;
+          uint8_t* chunk = new uint8_t[chunkSize];
+
+          int64_t streamPos = 0;
+          while (true) {
+            size_t bytesRead = fread (chunk, 1, chunkSize, file);
+            if (bytesRead > 0)
+              streamPos += ts->demux (chunk, bytesRead, streamPos, false);
+            else
+              break;
+            }
+          delete[] chunk;
+          delete ts;
+          fclose (file);
+
+          cLog::log (LOGERROR, "exit");
+          }).detach();
+        }
+      }
+    //}}}
 
     // actions
     void togglePlay() { mTransportStream->togglePlay(); }
@@ -1796,6 +1842,7 @@ int main (int numArgs, char* args[]) {
       options->mFileName.substr (options->mFileName.size() - 3, 3) == ".ts") {
     cPlayerApp playerApp (options, new cPlayerUI());
     playerApp.addFile (options->mFileName, options);
+    playerApp.addFileAnal (options->mFileName, options);
     playerApp.mainUILoop();
     }
   else {
