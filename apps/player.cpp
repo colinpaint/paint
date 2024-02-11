@@ -899,7 +899,17 @@ namespace {
     void addFileName (const string& fileName, cPlayerOptions* options) {
 
       // create transportStream
-      mTransportStream = new cTransportStream ({"file", 0, {}, {}}, options);
+      mTransportStream = new cTransportStream (
+        {"file", 0, {}, {}}, options,
+        [&](cTransportStream::cService& service) noexcept {
+          cLog::log (LOGINFO, fmt::format ("service {}", service.getSid()));
+          },
+        [&](cTransportStream::cService& service, cTransportStream::cPidInfo& pidInfo) noexcept {
+          cLog::log (LOGINFO, fmt::format ("pes sid:{} pid:{} size:{}", 
+                                           service.getSid(), 
+                                           pidInfo.getPid(), pidInfo.getBufSize()));
+          });
+
       if (!mTransportStream) {
         //{{{  error, return
         cLog::log (LOGERROR, "addFileName cTransportStream create failed");

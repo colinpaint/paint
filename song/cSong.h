@@ -6,7 +6,6 @@
 #include <string>
 #include <vector>
 #include <map>
-#include <functional>
 #include <algorithm>
 #include <mutex>
 #include <shared_mutex>

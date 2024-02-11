@@ -12,6 +12,7 @@
 #include <array>
 #include <map>
 #include <chrono>
+#include <functional>
 #include <mutex>
 
 class cRender;
@@ -211,11 +212,11 @@ public:
     bool getRecord() const { return mRecord; }
     std::string getRecordName() const { return mRecordName; }
 
-    void startProgram (std::chrono::system_clock::time_point tdt,
-                       const std::string& programName,
-                       std::chrono::system_clock::time_point programStartTime,
-                       bool selected);
-    void programPesPacket (uint16_t pid, uint8_t* ts);
+    void start (std::chrono::system_clock::time_point tdt,
+                const std::string& programName,
+                std::chrono::system_clock::time_point programStartTime,
+                bool selected);
+    void pesPacket (uint16_t pid, uint8_t* ts);
 
     // epg
     bool isEpgRecord (const std::string& title, std::chrono::system_clock::time_point startTime);
@@ -260,6 +261,8 @@ public:
     // record
     bool mRecord = false;
     std::string mRecordName;
+
+    bool mRecording = false;
     FILE* mFile = nullptr;
 
     // epg
@@ -280,7 +283,9 @@ public:
     };
   //}}}
 
-  cTransportStream (const cDvbMultiplex& dvbMultiplex, iOptions* options);
+  cTransportStream (const cDvbMultiplex& dvbMultiplex, iOptions* options,
+                    const std::function<void (cService& service)> serviceCallback = [](cService& service) {},
+                    const std::function<void (cService& service, cPidInfo&pidInfo)> pesCallback = [](cService& service, cPidInfo& pidInfo) {});
   ~cTransportStream() { clear(); }
 
   // gets
@@ -333,7 +338,11 @@ private:
   std::map <uint16_t, cService> mServiceMap;
 
   // record
-  std::mutex mRecordMutex;
+  std::mutex mServiceMapMutex;
+
+  // callbacks
+  const std::function<void (cService& service)> mServiceCallback;
+  const std::function<void (cService& service, cPidInfo& pidInfo)> mPesCallback;
 
   // time
   bool mHasFirstTdt = false;

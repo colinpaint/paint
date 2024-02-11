@@ -548,10 +548,10 @@ int64_t cTransportStream::cService::skip (int64_t skipPts) {
 
 // record program
 //{{{
-void cTransportStream::cService::startProgram (chrono::system_clock::time_point tdt,
-                                               const string& programName,
-                                               chrono::system_clock::time_point programStartTime,
-                                               bool selected) {
+void cTransportStream::cService::start (chrono::system_clock::time_point tdt,
+                                        const string& programName,
+                                        chrono::system_clock::time_point programStartTime,
+                                        bool selected) {
 // start recording program
 
   // close prev program
@@ -573,10 +573,10 @@ void cTransportStream::cService::startProgram (chrono::system_clock::time_point 
   }
 //}}}
 //{{{
-void cTransportStream::cService::programPesPacket (uint16_t pid, uint8_t* ts) {
-//  pes ts packet, save only recognised pids
+void cTransportStream::cService::pesPacket (uint16_t pid, uint8_t* ts) {
+//  ts pes packet, write only video,audio,subtitle pids to file
 
-  if (mFile &&
+  if (mRecording && mFile &&
       ((pid == mStreams[eVideo].getPid()) ||
        (pid == mStreams[eAudio].getPid()) ||
        (pid == mStreams[eSubtitle].getPid())))
@@ -687,6 +687,7 @@ bool cTransportStream::cService::openFile (const string& fileName, uint16_t tsid
   if (mFile) {
     writePat (tsid);
     writePmt();
+    mRecording = true;
     return true;
     }
 
@@ -777,14 +778,21 @@ void cTransportStream::cService::closeFile() {
     fclose (mFile);
 
   mFile = nullptr;
+  mRecording = false;
   }
+
 //}}}
 //}}}
 
 // cTransportStream
 //{{{
-cTransportStream::cTransportStream (const cDvbMultiplex& dvbMultiplex, iOptions* options) :
-    mDvbMultiplex(dvbMultiplex), mOptions(options) {}
+cTransportStream::cTransportStream (const cDvbMultiplex& dvbMultiplex, iOptions* options,
+                                    const function<void (cService& service)> serviceCallback,
+                                    const function<void (cService& service, cPidInfo& pidInfo)> pesCallback) :
+    mDvbMultiplex(dvbMultiplex),
+    mOptions(options),
+    mServiceCallback(serviceCallback),
+    mPesCallback(pesCallback) {}
 //}}}
 
 // gets
@@ -927,37 +935,35 @@ int64_t cTransportStream::demux (uint8_t* chunk, int64_t chunkSize, int64_t stre
               //{{{  pes
               cService* service;
               {
-              lock_guard<mutex> fileLockGuard (mRecordMutex);
+              lock_guard<mutex> fileLockGuard (mServiceMapMutex);
               service = getServiceBySid (pidInfo->getSid());
-              if (service)
-                service->programPesPacket (pidInfo->getPid(), ts - 1);
               }
+              if (service)
+                service->pesPacket (pidInfo->getPid(), ts - 1);
 
               ts += headerBytes;
               tsBytesLeft -= headerBytes;
 
               if (payloadStart) {
                 if ((*(uint32_t*)ts & 0x00FFFFFF) == 0x00010000) {
-                  // process previous pesBuffer, use new pesBuffer
-                  uint8_t streamId = (*((uint32_t*)(ts+3))) & 0xFF;
-                  if ((streamId == 0xBD) || (streamId == 0xBE) || ((streamId >= 0xC0) && (streamId <= 0xEF))) {
-                    if (pidInfo->mBufPtr) {
-                      if (service) {
-                        cStream* stream = service->getStreamByPid (pidInfo->getPid());
-                        if (stream)
-                          if (stream->isEnabled())
-                            if (stream->getRender().decodePes (pidInfo->mBuffer, pidInfo->getBufSize(),
-                                                               pidInfo->getPts(), pidInfo->getDts(),
-                                                               pidInfo->mStreamPos, skip))
-                              // transferred ownership of mBuffer to render, create new one
-                              pidInfo->mBuffer = (uint8_t*)malloc (pidInfo->mBufSize);
-                        }
+                  if (service && pidInfo->mBufPtr) {
+                    uint8_t streamId = (*((uint32_t*)(ts+3))) & 0xFF;
+                    if ((streamId == 0xBD) || (streamId == 0xBE) || ((streamId >= 0xC0) && (streamId <= 0xEF))) {
+                      mPesCallback (*service, *pidInfo);
+                      // decode current pesBuffer
+                      cStream* stream = service->getStreamByPid (pidInfo->getPid());
+                      if (stream && stream->isEnabled())
+                        if (stream->getRender().decodePes (pidInfo->mBuffer, pidInfo->getBufSize(),
+                                                           pidInfo->getPts(), pidInfo->getDts(),
+                                                           pidInfo->mStreamPos, skip))
+                          // transferred ownership of mBuffer to render, create new one
+                          pidInfo->mBuffer = (uint8_t*)malloc (pidInfo->mBufSize);
                       }
+                    else if ((streamId == 0xB0) || (streamId == 0xB1) || (streamId == 0xBF))
+                      cLog::log (LOGINFO, fmt::format ("demux known pesPayload pid:{:4d} streamId:{:8x}", pid, streamId));
+                    else
+                      cLog::log (LOGINFO, fmt::format ("demux unknown pesPayload pid:{:4d} streamId:{:8x}", pid, streamId));
                     }
-                  else if ((streamId == 0xB0) || (streamId == 0xB1) || (streamId == 0xBF))
-                    cLog::log (LOGINFO, fmt::format ("demux known pesHeader pid:{} streamId:{:8x}", pid, streamId));
-                  else
-                    cLog::log (LOGINFO, fmt::format ("demux unknown pesHeader pid:{} streamId:{:8x}", pid, streamId));
 
                   // reset pesBuffer pointer
                   pidInfo->mBufPtr = pidInfo->mBuffer;
@@ -1296,8 +1302,8 @@ void cTransportStream::parseEIT (uint8_t* buf) {
                     pidInfoIt->second.setInfo (service->getName() + " " + service->getNowTitleString());
 
                   // start new program on service
-                  lock_guard<mutex> lockGuard (mRecordMutex);
-                  service->startProgram (mNowTdt, title, startTime, service->isEpgRecord (title, startTime));
+                  lock_guard<mutex> lockGuard (mServiceMapMutex);
+                  service->start (mNowTdt, title, startTime, service->isEpgRecord (title, startTime));
                   }
                 }
               }
@@ -1400,6 +1406,7 @@ void cTransportStream::parsePMT (cPidInfo& pidInfo, uint8_t* buf) {
           (!mShowingFirstService && (dynamic_cast<cOptions*>(mOptions))->mShowFirstService))
         if (service.getStream (eStreamType(eVideo)).isDefined()) {
           // only video services
+          mServiceCallback (service);
           mShowingFirstService = true;
           service.enableStreams();
           }
