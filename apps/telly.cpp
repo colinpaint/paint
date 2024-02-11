@@ -137,7 +137,7 @@ namespace {
 
       mTransportStream = new cTransportStream (multiplex, options,
         [&](cTransportStream::cService& service) noexcept {
-          cLog::log (LOGINFO, fmt::format ("addService {}", service.getSid()));
+          //cLog::log (LOGINFO, fmt::format ("addService {}", service.getSid()));
           if (options->mShowAllServices)
             if (service.getStream (cRenderStream::eVideo).isDefined()) {
               service.enableStream (cRenderStream::eVideo);
@@ -226,7 +226,7 @@ namespace {
 
       mTransportStream = new cTransportStream (multiplex, options,
         [&](cTransportStream::cService& service) noexcept {
-          cLog::log (LOGINFO, fmt::format ("addService {}", service.getSid()));
+          //cLog::log (LOGINFO, fmt::format ("addService {}", service.getSid()));
           if (options->mShowAllServices)
             if (service.getStream (cRenderStream::eVideo).isDefined()) {
               service.enableStream (cRenderStream::eVideo);
@@ -321,7 +321,7 @@ namespace {
       // create transportStream
       mTransportStream = new cTransportStream ({"file", 0, {}, {}}, options,
         [&](cTransportStream::cService& service) noexcept {
-          cLog::log (LOGINFO, fmt::format ("addService {}", service.getSid()));
+          //cLog::log (LOGINFO, fmt::format ("addService {}", service.getSid()));
           if (options->mShowAllServices)
             if (service.getStream (cRenderStream::eVideo).isDefined()) {
               service.enableStream (cRenderStream::eVideo);
