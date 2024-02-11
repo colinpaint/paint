@@ -1178,7 +1178,7 @@ namespace {
         cTransportStream::cPidInfo& pidInfo = pidInfoItem.second;
 
         // draw separator, crude test for new service, fails sometimes
-        if ((pidInfo.getSid() != prevSid) && (pidInfo.getStreamType() != 5) && (pidInfo.getStreamType() != 11))
+        if ((pidInfo.getSid() != prevSid) && (pidInfo.getStreamTypeId() != 5) && (pidInfo.getStreamTypeId() != 11))
           ImGui::Separator();
 
         // draw pid label
@@ -1199,7 +1199,7 @@ namespace {
 
         // draw stream label
         string info = pidInfo.getInfo();
-        if ((pidInfo.getStreamType() == 0) && (pidInfo.getSid() != 0xFFFF))
+        if ((pidInfo.getStreamTypeId() == 0) && (pidInfo.getSid() != 0xFFFF))
           info = fmt::format ("{} ", pidInfo.getSid()) + info;
         ImGui::TextUnformatted (info.c_str());
 

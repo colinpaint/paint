@@ -376,7 +376,7 @@ string cTransportStream::cPidInfo::getPidName() const {
     }
 
   if (mSid)
-    return cDvbUtils::getStreamTypeName (mStreamType);
+    return cDvbUtils::getStreamTypeName (mStreamTypeId);
 
   // unknown pid
   return "---";
@@ -890,9 +890,9 @@ int64_t cTransportStream::demux (uint8_t* chunk, int64_t chunkSize, int64_t stre
                 pidInfo->addToBuffer (ts, tsBytesLeft);
               }
               //}}}
-            else if ((pidInfo->getStreamType() == 5) ||  // mtd
-                     (pidInfo->getStreamType() == 11) || // dsm
-                     (pidInfo->getStreamType() == 134)) {
+            else if ((pidInfo->getStreamTypeId() == 5) ||  // mtd
+                     (pidInfo->getStreamTypeId() == 11) || // dsm
+                     (pidInfo->getStreamTypeId() == 134)) {
               }
             else {
               //{{{  pes
@@ -1318,11 +1318,11 @@ void cTransportStream::parsePMT (cPidInfo& pidInfo, uint8_t* buf) {
         cPidInfo& esPidInfo = getPidInfo (esPid);
         esPidInfo.setSid (sid);
 
-        esPidInfo.setStreamType (pmtInfo->stream_type);
-        switch (esPidInfo.getStreamType()) {
+        esPidInfo.setStreamTypeId (pmtInfo->stream_type);
+        switch (esPidInfo.getStreamTypeId()) {
           case 2: // ISO 13818-2 video
           case kH264StreamType: // 27 - H264 video
-            service.getStream (cRenderStream::eVideo).setPidStreamType (esPid, esPidInfo.getStreamType());
+            service.getStream (cRenderStream::eVideo).setPidTypeId (esPid, esPidInfo.getStreamTypeId());
             break;
 
           case 3: // ISO 11172-3 audio
@@ -1331,16 +1331,16 @@ void cTransportStream::parsePMT (cPidInfo& pidInfo, uint8_t* buf) {
           case kAacLatmStreamType: // 17 - LATM AAC audio
           case 129: // AC3 audio
             if (!service.getStream (cRenderStream::eAudio).isDefined())
-              service.getStream (cRenderStream::eAudio).setPidStreamType (esPid, esPidInfo.getStreamType());
+              service.getStream (cRenderStream::eAudio).setPidTypeId (esPid, esPidInfo.getStreamTypeId());
             else if (esPid != service.getStream (cRenderStream::eAudio).getPid()) {
               // got main eAudio, use new audPid as eDescription
               if (!service.getStream (cRenderStream::eDescription).isDefined())
-                service.getStream (cRenderStream::eDescription).setPidStreamType (esPid,  esPidInfo.getStreamType());
+                service.getStream (cRenderStream::eDescription).setPidTypeId (esPid,  esPidInfo.getStreamTypeId());
               }
             break;
 
           case 6: // subtitle
-            service.getStream (cRenderStream::eSubtitle).setPidStreamType (esPid, esPidInfo.getStreamType());
+            service.getStream (cRenderStream::eSubtitle).setPidTypeId (esPid, esPidInfo.getStreamTypeId());
             break;
 
           case 5: // private mpeg2 tabled data - private
@@ -1350,8 +1350,8 @@ void cTransportStream::parsePMT (cPidInfo& pidInfo, uint8_t* buf) {
             break;
 
           default:
-            cLog::log (LOGERROR, fmt::format ("parsePmt unknown stream sid:{} pid:{} streamType:{}",
-                                              sid, esPid, esPidInfo.getStreamType()));
+            cLog::log (LOGERROR, fmt::format ("parsePmt unknown stream sid:{} pid:{} streamTypeId:{}",
+                                              sid, esPid, esPidInfo.getStreamTypeId()));
             break;
           }
         //}}}

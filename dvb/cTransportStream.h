@@ -43,13 +43,13 @@ public:
 
   void setLabel (const std::string& label) { mLabel = label; }
   //{{{
-  void setPidStreamType (uint16_t pid, uint8_t streamType) {
+  void setPidTypeId (uint16_t pid, uint8_t typeId) {
 
     mDefined = true;
 
     mPid = pid;
-    mTypeId = streamType;
-    mTypeName = cDvbUtils::getStreamTypeName (streamType);
+    mTypeId = typeId;
+    mTypeName = cDvbUtils::getStreamTypeName (typeId);
     }
   //}}}
   void setRender (cRender* render) { mRender = render; }
@@ -132,14 +132,14 @@ public:
     int64_t getDts() const { return mDts; }
     int64_t getStreamPos() const { return mStreamPos; }
 
-    uint8_t getStreamType() const { return mStreamType; }
+    uint8_t getStreamTypeId() const { return mStreamTypeId; }
     std::string getPidName() const ;
     std::string getInfo() const { return mInfo; }
 
     int getBufSize() const { return int(mBufPtr - mBuffer); }
 
     void setSid (uint16_t sid) { mSid = sid; }
-    void setStreamType (uint8_t streamType) { mStreamType = streamType; }
+    void setStreamTypeId (uint8_t streamTypeId) { mStreamTypeId = streamTypeId; }
     void setInfo (const std::string info) { mInfo = info; }
     void setPts (int64_t pts) { mPts = pts; }
     void setDts (int64_t dts) { mDts = dts; }
@@ -177,7 +177,7 @@ public:
     const uint16_t mPid;
     const bool mPsi;
     uint16_t mSid = 0;
-    uint8_t mStreamType = 0;
+    uint8_t mStreamTypeId = 0;
 
     std::string mInfo;
 
