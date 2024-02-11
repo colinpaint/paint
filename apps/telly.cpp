@@ -315,10 +315,8 @@ namespace {
       mLiveThread.detach();
       }
     //}}}
-
-    // fileSource
     //{{{
-    void fileSource (const string& filename, cTellyOptions* options) {
+    void fileSourceThread (const string& filename, cTellyOptions* options) {
 
       // create transportStream
       mTransportStream = new cTransportStream ({"file", 0, {}, {}}, options,
@@ -1284,7 +1282,7 @@ int main (int numArgs, char* args[]) {
       tellyApp.liveDvbSource (options->mMultiplex, options);
     }
   else if (options->mFileName.substr (options->mFileName.size() - 3, 3) == ".ts") {
-    tellyApp.fileSource (options->mFileName, options);
+    tellyApp.fileSourceThread (options->mFileName, options);
     tellyApp.mainUILoop();
     }
   else

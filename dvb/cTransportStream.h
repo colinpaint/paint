@@ -295,7 +295,7 @@ public:
                     const std::function<void (cService& service)> addServiceCallback =
                       [](cService& service) { (void)service; },
                     const std::function<void (cService& service, cPidInfo&pidInfo, bool skip)> pesCallback =
-                      [](cService& service, cPidInfo& pidInfo, bool skip) { (void)service;  (void)pidInfo;});
+                      [](cService& service, cPidInfo& pidInfo, bool skip) { (void)service;  (void)pidInfo; (void)skip; });
   ~cTransportStream() { clear(); }
 
   // gets
