@@ -20,6 +20,7 @@ class cRender;
 #include "../common/basicTypes.h"
 #include "../common/iOptions.h"
 #include "../common/utils.h"
+#include "../common/cDvbUtils.h"
 
 #include "cDvbMultiplex.h"
 //}}}
@@ -150,8 +151,6 @@ public:
   //{{{
   class cStream {
   public:
-    ~cStream();
-
     bool isDefined() const { return mDefined; }
     bool isEnabled() const { return mRender; }
 
@@ -162,10 +161,19 @@ public:
     cRender& getRender() const { return *mRender; }
 
     void setLabel (const std::string& label) { mLabel = label; }
-    void setPidStreamType (uint16_t pid, uint8_t streamType);
-    void setRender (cRender* render) { mRender = render; }
 
-    void disable();
+
+    //{{{
+    void setPidStreamType (uint16_t pid, uint8_t streamType) {
+
+      mDefined = true;
+
+      mPid = pid;
+      mTypeId = streamType;
+      mTypeName = cDvbUtils::getStreamTypeName (streamType);
+      }
+    //}}}
+    void setRender (cRender* render) { mRender = render; }
 
   private:
     bool mDefined = false;
@@ -203,8 +211,8 @@ public:
     // streams
     cStream* getStreamByPid (uint16_t pid);
     cStream& getStream (eStreamType streamType) { return mStreams[streamType]; }
-    void enableStream (eStreamType streamType, bool enable);
-    void enableStreams();
+    void enableStream (eStreamType streamType);
+
     bool throttle();
     void togglePlay();
     int64_t skip (int64_t skipPts);
@@ -282,12 +290,12 @@ public:
     };
   //}}}
 
-  cTransportStream (const cDvbMultiplex& dvbMultiplex, 
+  cTransportStream (const cDvbMultiplex& dvbMultiplex,
                     iOptions* options,
-                    const std::function<void (cService& service)> addServiceCallback = 
+                    const std::function<void (cService& service)> addServiceCallback =
                       [](cService& service) { (void)service; },
-                    const std::function<void (cService& service, cPidInfo&pidInfo)> pesCallback = 
-                      [](cService& service, cPidInfo& pidInfo) { (void)service;  (void)pidInfo;});
+                    const std::function<void (cService& service, cPidInfo&pidInfo, bool skip)> pesCallback =
+                      [](cService& service, cPidInfo& pidInfo, bool skip) { (void)service;  (void)pidInfo;});
   ~cTransportStream() { clear(); }
 
   // gets
@@ -329,22 +337,20 @@ private:
   // vars
   const cDvbMultiplex mDvbMultiplex;
   iOptions* mOptions;
-  bool mShowingFirstService = false;
 
-  std::mutex mMutex;
   uint64_t mNumPackets = 0;
   uint64_t mNumErrors = 0;
 
+  std::mutex mPidInfoMutex;
   std::map <uint16_t, cPidInfo> mPidInfoMap;
   std::map <uint16_t, uint16_t> mProgramMap;
-  std::map <uint16_t, cService> mServiceMap;
 
-  // record
   std::mutex mServiceMapMutex;
+  std::map <uint16_t, cService> mServiceMap;
 
   // callbacks
   const std::function<void (cService& service)> mAddServiceCallback;
-  const std::function<void (cService& service, cPidInfo& pidInfo)> mPesCallback;
+  const std::function<void (cService& service, cPidInfo& pidInfo, bool skip)> mPesCallback;
 
   // time
   bool mHasFirstTdt = false;

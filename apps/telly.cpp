@@ -100,13 +100,14 @@ namespace {
     string getString() const { return "none epg sub motion hd|bbc|itv|*.ts"; }
 
     // vars
-    string mFileName;
     bool mShowSubtitle = false;
     bool mShowMotionVectors = false;
 
-    cDvbMultiplex mMultiplex = kDvbMultiplexes[0];
     bool mShowAllServices = true;
     bool mShowEpg = false;
+
+    cDvbMultiplex mMultiplex = kDvbMultiplexes[0];
+    string mFileName;
     };
   //}}}
   //{{{
@@ -138,12 +139,20 @@ namespace {
         [&](cTransportStream::cService& service) noexcept {
           cLog::log (LOGINFO, fmt::format ("addService {}", service.getSid()));
           if (options->mShowAllServices)
-            if (service.getStream (cTransportStream::eStreamType(cTransportStream::eVideo)).isDefined())
-              service.enableStreams();
+            if (service.getStream (cTransportStream::eStreamType(cTransportStream::eVideo)).isDefined()) {
+              service.enableStream (cTransportStream::eVideo);
+              service.enableStream (cTransportStream::eAudio);
+              service.enableStream (cTransportStream::eSubtitle);
+              }
           },
-        [&](cTransportStream::cService& service, cTransportStream::cPidInfo& pidInfo) noexcept {
-          (void)service;
-          (void)pidInfo;
+        [&](cTransportStream::cService& service, cTransportStream::cPidInfo& pidInfo, bool skip) noexcept {
+          cTransportStream::cStream* stream = service.getStreamByPid (pidInfo.getPid());
+          if (stream && stream->isEnabled())
+            if (stream->getRender().decodePes (pidInfo.mBuffer, pidInfo.getBufSize(),
+                                               pidInfo.getPts(), pidInfo.getDts(),
+                                               pidInfo.mStreamPos, skip))
+              // transferred ownership of mBuffer to render, create new one
+              pidInfo.mBuffer = (uint8_t*)malloc (pidInfo.mBufSize);
           //cLog::log (LOGINFO, fmt::format ("pes sid:{} pid:{} size:{}",
           //                                 service.getSid(), pidInfo.getPid(), pidInfo.getBufSize()));
           });
@@ -219,12 +228,21 @@ namespace {
         [&](cTransportStream::cService& service) noexcept {
           cLog::log (LOGINFO, fmt::format ("addService {}", service.getSid()));
           if (options->mShowAllServices)
-            if (service.getStream (cTransportStream::eStreamType(cTransportStream::eVideo)).isDefined())
-              service.enableStreams();
+            if (service.getStream (cTransportStream::eStreamType(cTransportStream::eVideo)).isDefined()) {
+              service.enableStream (cTransportStream::eVideo);
+              service.enableStream (cTransportStream::eAudio);
+              service.enableStream (cTransportStream::eSubtitle);
+              }
           },
-        [&](cTransportStream::cService& service, cTransportStream::cPidInfo& pidInfo) noexcept {
-          (void)service;
-          (void)pidInfo;
+        [&](cTransportStream::cService& service, cTransportStream::cPidInfo& pidInfo, bool skip) noexcept {
+          cTransportStream::cStream* stream = service.getStreamByPid (pidInfo.getPid());
+          if (stream && stream->isEnabled())
+            if (stream->getRender().decodePes (pidInfo.mBuffer, pidInfo.getBufSize(),
+                                               pidInfo.getPts(), pidInfo.getDts(),
+                                               pidInfo.mStreamPos, skip))
+              // transferred ownership of mBuffer to render, create new one
+              pidInfo.mBuffer = (uint8_t*)malloc (pidInfo.mBufSize);
+
           //cLog::log (LOGINFO, fmt::format ("pes sid:{} pid:{} size:{}",
           //                                 service.getSid(), pidInfo.getPid(), pidInfo.getBufSize()));
           });
@@ -236,11 +254,11 @@ namespace {
         }
         //}}}
 
+      FILE* mFile = options->mRecordAllServices ?
+        fopen ((mRecordRoot + mMultiplex.mName + ".ts").c_str(), "wb") : nullptr;
+
       mLiveThread = thread ([=]() {
         cLog::setThreadName ("dvb ");
-
-        FILE* mFile = options->mRecordAllServices ?
-          fopen ((mRecordRoot + mMultiplex.mName + ".ts").c_str(), "wb") : nullptr;
 
         #ifdef _WIN32
           //{{{  windows
@@ -290,7 +308,7 @@ namespace {
 
         if (mFile)
           fclose (mFile);
-        liveDvbSource (multiplex, options);
+
         cLog::log (LOGINFO, "exit");
         });
 
@@ -307,12 +325,20 @@ namespace {
         [&](cTransportStream::cService& service) noexcept {
           cLog::log (LOGINFO, fmt::format ("addService {}", service.getSid()));
           if (options->mShowAllServices)
-            if (service.getStream (cTransportStream::eStreamType(cTransportStream::eVideo)).isDefined())
-              service.enableStreams();
+            if (service.getStream (cTransportStream::eStreamType(cTransportStream::eVideo)).isDefined()) {
+              service.enableStream (cTransportStream::eVideo);
+              service.enableStream (cTransportStream::eAudio);
+              service.enableStream (cTransportStream::eSubtitle);
+              }
           },
-        [&](cTransportStream::cService& service, cTransportStream::cPidInfo& pidInfo) noexcept {
-          (void)service;
-          (void)pidInfo;
+        [&](cTransportStream::cService& service, cTransportStream::cPidInfo& pidInfo, bool skip) noexcept {
+          cTransportStream::cStream* stream = service.getStreamByPid (pidInfo.getPid());
+          if (stream && stream->isEnabled())
+            if (stream->getRender().decodePes (pidInfo.mBuffer, pidInfo.getBufSize(),
+                                               pidInfo.getPts(), pidInfo.getDts(),
+                                               pidInfo.mStreamPos, skip))
+              // transferred ownership of mBuffer to render, create new one
+              pidInfo.mBuffer = (uint8_t*)malloc (pidInfo.mBufSize);
           //cLog::log (LOGINFO, fmt::format ("pes sid:{} pid:{} size:{}",
           //                                 service.getSid(), pidInfo.getPid(), pidInfo.getBufSize()));
           });
@@ -869,8 +895,11 @@ namespace {
         ImGui::SetCursorPos ({0.f,0.f});
         if (ImGui::InvisibleButton (fmt::format ("viewBox##{}", mService.getSid()).c_str(), viewSubSize)) {
           //{{{  hit view, select action
-          if (!mService.getStream (cTransportStream::eVideo).isEnabled())
-            mService.enableStreams();
+          if (!mService.getStream (cTransportStream::eVideo).isEnabled()) {
+            mService.enableStream (cTransportStream::eVideo);
+            mService.enableStream (cTransportStream::eAudio);
+            mService.enableStream (cTransportStream::eSubtitle);
+            }
           else if (mSelect == eUnselected)
             mSelect = eSelected;
           else if (mSelect == eSelected)

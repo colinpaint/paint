@@ -403,32 +403,6 @@ int cTransportStream::cPidInfo::addToBuffer (uint8_t* buf, int bufSize) {
   }
 //}}}
 //}}}
-//{{{  class cTransportStream::cStream
-cTransportStream::cStream::~cStream() { delete mRender; }
-
-//{{{
-void cTransportStream::cStream::setPidStreamType (uint16_t pid, uint8_t streamType) {
-
-  mDefined = true;
-
-  mPid = pid;
-  mTypeId = streamType;
-  mTypeName = cDvbUtils::getStreamTypeName (streamType);
-  }
-//}}}
-//{{{
-void cTransportStream::cStream::disable() {
-// return true if not enabled
-
-  if (mRender) {
-    // remove render
-    cRender* mTemp = mRender;
-    mRender = nullptr;
-    delete mTemp;
-    }
-  }
-//}}}
-//}}}
 //{{{  class cTransportStream::cService
 //{{{
 cTransportStream::cService::cService (uint16_t sid, iOptions* options) : mSid(sid), mOptions(options) {
@@ -482,40 +456,29 @@ cTransportStream::cStream* cTransportStream::cService::getStreamByPid (uint16_t 
   }
 //}}}
 //{{{
-void cTransportStream::cService::enableStream (eStreamType streamType, bool enable) {
+void cTransportStream::cService::enableStream (eStreamType streamType) {
 
-  if (enable)
-    switch (streamType) {
-      case eVideo: {
-        cStream& stream = getStream (eVideo);
-        stream.setRender (new cVideoRender (mName, stream.getTypeId(), stream.getPid(), mOptions));
-        break;
-        }
-
-      case eAudio: {
-        cStream& stream = getStream (eAudio);
-        stream.setRender (new cAudioRender (mName, stream.getTypeId(), stream.getPid(), mOptions));
-        break;
-        }
-
-      case eSubtitle: {
-        cStream& stream = getStream (eSubtitle);
-        stream.setRender (new cSubtitleRender (mName, stream.getTypeId(), stream.getPid(), mOptions));
-        break;
-        }
-
-      default: break;
+  switch (streamType) {
+    case eVideo: {
+      cStream& stream = getStream (eVideo);
+      stream.setRender (new cVideoRender (mName, stream.getTypeId(), stream.getPid(), mOptions));
+      break;
       }
-  else
-    getStream (streamType).disable();
-  }
-//}}}
-//{{{
-void cTransportStream::cService::enableStreams() {
 
-  enableStream (eVideo, true);
-  enableStream (eAudio, true);
-  enableStream (eSubtitle, true);
+    case eAudio: {
+      cStream& stream = getStream (eAudio);
+      stream.setRender (new cAudioRender (mName, stream.getTypeId(), stream.getPid(), mOptions));
+      break;
+      }
+
+    case eSubtitle: {
+      cStream& stream = getStream (eSubtitle);
+      stream.setRender (new cSubtitleRender (mName, stream.getTypeId(), stream.getPid(), mOptions));
+      break;
+      }
+
+    default: break;
+    }
   }
 //}}}
 
@@ -788,7 +751,7 @@ void cTransportStream::cService::closeFile() {
 //{{{
 cTransportStream::cTransportStream (const cDvbMultiplex& dvbMultiplex, iOptions* options,
                                     const function<void (cService& service)> addServiceCallback,
-                                    const function<void (cService& service, cPidInfo& pidInfo)> pesCallback) :
+                                    const function<void (cService& service, cPidInfo& pidInfo, bool skip)> pesCallback) :
     mDvbMultiplex(dvbMultiplex),
     mOptions(options),
     mAddServiceCallback(addServiceCallback),
@@ -867,7 +830,7 @@ int64_t cTransportStream::demux (uint8_t* chunk, int64_t chunkSize, int64_t stre
           int continuityCount = ts[2] & 0x0F;
           int headerBytes =    (ts[2] & 0x20) ? (4 + ts[3]) : 3; // adaption field
 
-          lock_guard<mutex> lockGuard (mMutex);
+          lock_guard<mutex> lockGuard (mPidInfoMutex);
           cPidInfo* pidInfo = getPsiPidInfo (pid);
           if (pidInfo) {
             if ((pidInfo->mContinuity >= 0) &&
@@ -948,19 +911,10 @@ int64_t cTransportStream::demux (uint8_t* chunk, int64_t chunkSize, int64_t stre
                 if ((*(uint32_t*)ts & 0x00FFFFFF) == 0x00010000) {
                   if (service && pidInfo->mBufPtr) {
                     uint8_t streamId = (*((uint32_t*)(ts+3))) & 0xFF;
-                    if ((streamId == 0xBD) || (streamId == 0xBE) || ((streamId >= 0xC0) && (streamId <= 0xEF))) {
-                      mPesCallback (*service, *pidInfo);
-                      // decode current pesBuffer
-                      cStream* stream = service->getStreamByPid (pidInfo->getPid());
-                      if (stream && stream->isEnabled())
-                        if (stream->getRender().decodePes (pidInfo->mBuffer, pidInfo->getBufSize(),
-                                                           pidInfo->getPts(), pidInfo->getDts(),
-                                                           pidInfo->mStreamPos, skip))
-                          // transferred ownership of mBuffer to render, create new one
-                          pidInfo->mBuffer = (uint8_t*)malloc (pidInfo->mBufSize);
-                      }
+                    if ((streamId == 0xBD) || (streamId == 0xBE) || ((streamId >= 0xC0) && (streamId <= 0xEF)))
+                      mPesCallback (*service, *pidInfo, skip);
                     else if ((streamId == 0xB0) || (streamId == 0xB1) || (streamId == 0xBF))
-                      cLog::log (LOGINFO, fmt::format ("demux known pesPayload pid:{:4d} streamId:{:8x}", pid, streamId));
+                      cLog::log (LOGINFO, fmt::format ("demux unused pesPayload pid:{:4d} streamId:{:8x}", pid, streamId));
                     else
                       cLog::log (LOGINFO, fmt::format ("demux unknown pesPayload pid:{:4d} streamId:{:8x}", pid, streamId));
                     }
@@ -1018,14 +972,19 @@ int64_t cTransportStream::demux (uint8_t* chunk, int64_t chunkSize, int64_t stre
 //{{{
 void cTransportStream::clear() {
 
-  lock_guard<mutex> lockGuard (mMutex);
-
+  {
+  lock_guard<mutex> lockGuard (mServiceMapMutex);
   mServiceMap.clear();
-  mProgramMap.clear();
+  }
+
+  {
+  lock_guard<mutex> lockGuard (mPidInfoMutex);
   mPidInfoMap.clear();
+  mProgramMap.clear();
+  }
 
   mNumErrors = 0;
-
+  mNumPackets = 0;
   mHasFirstTdt = false;
   }
 //}}}

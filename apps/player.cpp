@@ -80,9 +80,9 @@ namespace {
     string getString() const { return "sub motion fileName"; }
 
     // vars
-    string mFileName;
     bool mShowSubtitle = false;
     bool mShowMotionVectors = false;
+    string mFileName;
     };
   //}}}
 
@@ -896,14 +896,14 @@ namespace {
     uint64_t getFilePos() const { return mFilePos; }
     size_t getFileSize() const { return mFileSize; }
     //{{{
-    void addFileName (const string& fileName, cPlayerOptions* options) {
+    void addFile (const string& fileName, cPlayerOptions* options) {
 
       // open fileName
       mFileName = cFileUtils::resolve (fileName);
       FILE* file = fopen (mFileName.c_str(), "rb");
       if (!file) {
         //{{{  error, return
-        cLog::log (LOGERROR, fmt::format ("addFileName failed to open {}", mOptions->mFileName));
+        cLog::log (LOGERROR, fmt::format ("addFile failed to open {}", mOptions->mFileName));
         return;
         }
         //}}}
@@ -912,11 +912,13 @@ namespace {
       mTransportStream = new cTransportStream (
         {"file", 0, {}, {}}, options,
         [&](cTransportStream::cService& service) noexcept {
-          cLog::log (LOGINFO, fmt::format ("addService {}", service.getSid()));
-          if (service.getStream (cTransportStream::eStreamType(cTransportStream::eVideo)).isDefined())
-            service.enableStreams();
+          if (service.getStream (cTransportStream::eStreamType(cTransportStream::eVideo)).isDefined()) {
+            service.enableStream (cTransportStream::eVideo);
+            service.enableStream (cTransportStream::eAudio);
+            service.enableStream (cTransportStream::eSubtitle);
+            }
           },
-        [&](cTransportStream::cService& service, cTransportStream::cPidInfo& pidInfo) noexcept {
+        [&](cTransportStream::cService& service, cTransportStream::cPidInfo& pidInfo, bool skip) noexcept {
           cLog::log (LOGINFO, fmt::format ("pes {}:{:5d} size:{:6d} {:8d} {} {}",
                                            service.getSid(),
                                            pidInfo.getPid(), pidInfo.getBufSize(),
@@ -924,10 +926,17 @@ namespace {
                                            utils::getFullPtsString (pidInfo.getPts()),
                                            utils::getFullPtsString (pidInfo.getDts())
                                            ));
+          cTransportStream::cStream* stream = service.getStreamByPid (pidInfo.getPid());
+          if (stream && stream->isEnabled())
+            if (stream->getRender().decodePes (pidInfo.mBuffer, pidInfo.getBufSize(),
+                                               pidInfo.getPts(), pidInfo.getDts(),
+                                               pidInfo.mStreamPos, skip))
+              // transferred ownership of mBuffer to render, create new one
+              pidInfo.mBuffer = (uint8_t*)malloc (pidInfo.mBufSize);
           });
       if (!mTransportStream) {
         //{{{  error, return
-        cLog::log (LOGERROR, "addFileName cTransportStream create failed");
+        cLog::log (LOGERROR, "addFile cTransportStream create failed");
         return;
         }
         //}}}
@@ -1004,7 +1013,7 @@ namespace {
 
       for (auto& item : dropItems) {
         cLog::log (LOGINFO, fmt::format ("cPlayerApp::drop {}", item));
-        addFileName (item, mOptions);
+        addFile (item, mOptions);
         }
       }
     //}}}
@@ -1425,8 +1434,11 @@ namespace {
         ImGui::SetCursorPos ({0.f,0.f});
         if (ImGui::InvisibleButton (fmt::format ("viewBox##{}", mService.getSid()).c_str(), viewSubSize)) {
           //{{{  hit view, select action
-          if (!mService.getStream (cTransportStream::eVideo).isEnabled())
-            mService.enableStreams();
+          if (!mService.getStream (cTransportStream::eVideo).isEnabled()) {
+            mService.enableStream (cTransportStream::eVideo);
+            mService.enableStream (cTransportStream::eAudio);
+            mService.enableStream (cTransportStream::eSubtitle);
+            }
           else if (mSelect == eUnselected)
             mSelect = eSelected;
           else if (mSelect == eSelected)
@@ -1785,7 +1797,7 @@ int main (int numArgs, char* args[]) {
   if (!options->mFileName.empty() &&
       options->mFileName.substr (options->mFileName.size() - 3, 3) == ".ts") {
     cPlayerApp playerApp (options, new cPlayerUI());
-    playerApp.addFileName (options->mFileName, options);
+    playerApp.addFile (options->mFileName, options);
     playerApp.mainUILoop();
     }
   else {
