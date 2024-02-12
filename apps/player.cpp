@@ -1041,11 +1041,10 @@ namespace {
     //}}}
 
     string getFileName() const { return mFileName; }
+    cTransportStream& getTransportStream() { return *mTransportStream; }
+    int64_t getStreamPos() const { return mStreamPos; }
     int64_t getFilePos() const { return mFilePos; }
     size_t getFileSize() const { return mFileSize; }
-    int64_t getStreamPos() const { return mStreamPos; }
-
-    cTransportStream& getTransportStream() { return *mTransportStream; }
 
     //{{{
     void incStreamPos (int64_t offset) {
@@ -1059,9 +1058,9 @@ namespace {
 
     FILE* mFile = nullptr;
     cTransportStream* mTransportStream = nullptr;
+    int64_t mStreamPos = 0;
     int64_t mFilePos = 0;
     size_t mFileSize = 0;
-    int64_t mStreamPos = 0;
 
     FILE* mFileAnal = nullptr;
     cTransportStream* mTransportStreamAnal = nullptr;
@@ -1075,6 +1074,14 @@ namespace {
     cPlayerApp (cPlayerOptions* options, iUI* ui) : cApp ("Player", options, ui), mOptions(options) {}
     virtual ~cPlayerApp() = default;
 
+    //{{{
+    void addFile (const string& fileName, cPlayerOptions* options) {
+
+      mFileStreams.push_back (cFileStream (fileName, options));
+      mFileStreams.back().open();
+      }
+    //}}}
+
     cPlayerOptions* getOptions() { return mOptions; }
     bool hasTransportStream() { return !mFileStreams.empty(); }
     cTransportStream& getTransportStream() { return mFileStreams[0].getTransportStream(); }
@@ -1083,13 +1090,6 @@ namespace {
     uint64_t getStreamPos() const { return mFileStreams[0].getStreamPos(); }
     uint64_t getFilePos() const { return mFileStreams[0].getFilePos(); }
     size_t getFileSize() const { return mFileStreams[0].getFileSize(); }
-    //{{{
-    void addFile (const string& fileName, cPlayerOptions* options) {
-
-      mFileStreams.push_back (cFileStream (fileName, options));
-      mFileStreams.back().open();
-      }
-    //}}}
 
     // actions
     void togglePlay() { getTransportStream().togglePlay(); }
@@ -1118,7 +1118,6 @@ namespace {
 
   private:
     cPlayerOptions* mOptions;
-
     vector<cFileStream> mFileStreams;
     };
   //}}}
@@ -1144,51 +1143,48 @@ namespace {
                                        ImGuiWindowFlags_NoBackground);
 
       cPlayerApp& playerApp = (cPlayerApp&)app;
-      if (playerApp.hasTransportStream()) {
-        cTransportStream& transportStream = playerApp.getTransportStream();
 
-        // draw multiView piccies
-        mMultiView.draw (playerApp, transportStream);
+      // draw multiView piccies
+      mMultiView.draw (playerApp, playerApp.getTransportStream());
 
-        // draw menu
-        ImGui::SetCursorPos ({0.f, ImGui::GetIO().DisplaySize.y - ImGui::GetTextLineHeight() * 1.5f});
-        ImGui::BeginChild ("menu", {0.f, ImGui::GetTextLineHeight() * 1.5f},
-                           ImGuiChildFlags_None,
-                           ImGuiWindowFlags_NoBackground);
+      // draw menu
+      ImGui::SetCursorPos ({0.f, ImGui::GetIO().DisplaySize.y - ImGui::GetTextLineHeight() * 1.5f});
+      ImGui::BeginChild ("menu", {0.f, ImGui::GetTextLineHeight() * 1.5f},
+                         ImGuiChildFlags_None,
+                         ImGuiWindowFlags_NoBackground);
 
-        ImGui::SetCursorPos ({0.f,0.f});
-        //{{{  draw subtitle button
+      ImGui::SetCursorPos ({0.f,0.f});
+      //{{{  draw subtitle button
+      ImGui::SameLine();
+      if (toggleButton ("sub", playerApp.getOptions()->mShowSubtitle))
+        playerApp.toggleShowSubtitle();
+      //}}}
+      if (playerApp.getOptions()->mHasMotionVectors) {
+        //{{{  draw motionVectors button
         ImGui::SameLine();
-        if (toggleButton ("sub", playerApp.getOptions()->mShowSubtitle))
-          playerApp.toggleShowSubtitle();
-        //}}}
-        if (playerApp.getOptions()->mHasMotionVectors) {
-          //{{{  draw motionVectors button
-          ImGui::SameLine();
-          if (toggleButton ("motion", playerApp.getOptions()->mShowMotionVectors))
-            playerApp.toggleShowMotionVectors();
-          }
-          //}}}
-        if (playerApp.getPlatform().hasFullScreen()) {
-          //{{{  draw fullScreen button
-          ImGui::SameLine();
-          if (toggleButton ("full", playerApp.getPlatform().getFullScreen()))
-            playerApp.getPlatform().toggleFullScreen();
-          }
-          //}}}
-        if (playerApp.getPlatform().hasVsync()) {
-          //{{{  draw vsync button
-          ImGui::SameLine();
-          if (toggleButton ("vsync", playerApp.getPlatform().getVsync()))
-            playerApp.getPlatform().toggleVsync();
-          }
-          //}}}
-        //{{{  draw frameRate info
-        ImGui::SameLine();
-        ImGui::TextUnformatted (fmt::format("{}:fps", static_cast<uint32_t>(ImGui::GetIO().Framerate)).c_str());
-        //}}}
-        ImGui::EndChild();
+        if (toggleButton ("motion", playerApp.getOptions()->mShowMotionVectors))
+          playerApp.toggleShowMotionVectors();
         }
+        //}}}
+      if (playerApp.getPlatform().hasFullScreen()) {
+        //{{{  draw fullScreen button
+        ImGui::SameLine();
+        if (toggleButton ("full", playerApp.getPlatform().getFullScreen()))
+          playerApp.getPlatform().toggleFullScreen();
+        }
+        //}}}
+      if (playerApp.getPlatform().hasVsync()) {
+        //{{{  draw vsync button
+        ImGui::SameLine();
+        if (toggleButton ("vsync", playerApp.getPlatform().getVsync()))
+          playerApp.getPlatform().toggleVsync();
+        }
+        //}}}
+      //{{{  draw frameRate info
+      ImGui::SameLine();
+      ImGui::TextUnformatted (fmt::format("{}:fps", static_cast<uint32_t>(ImGui::GetIO().Framerate)).c_str());
+      //}}}
+      ImGui::EndChild();
       ImGui::End();
 
       keyboard (playerApp);
