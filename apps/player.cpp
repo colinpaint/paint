@@ -973,8 +973,9 @@ namespace {
           }
 
         delete[] chunk;
-        delete transportStream;
         fclose (file);
+
+        delete transportStream;
 
         cLog::log (LOGINFO, fmt::format ("size:{:8d}:{:8d} took {}ms",
           mPesBytes, mFileSize,
@@ -1024,7 +1025,6 @@ namespace {
           }
         //}}}
         );
-
       if (!mTransportStream) {
         //{{{  error, return
         cLog::log (LOGERROR, "cFileStream::play ts create failed");
@@ -1061,8 +1061,8 @@ namespace {
           #endif
           }
 
-        fclose (file);
         delete[] chunk;
+        fclose (file);
         cLog::log (LOGERROR, "exit");
         }).detach();
 
