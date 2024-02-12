@@ -1059,6 +1059,7 @@ namespace {
       for (auto& item : dropItems) {
         cLog::log (LOGINFO, fmt::format ("cPlayerApp::drop {}", item));
         addFile (item, mOptions);
+        addFileAnal (item, mOptions);
         }
       }
     //}}}
