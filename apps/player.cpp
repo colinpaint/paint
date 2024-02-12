@@ -908,112 +908,17 @@ namespace {
     //}}}
 
     //{{{
-    bool open() {
+    bool analyse() {
 
-      // open play file
-      mFile = fopen (mFileName.c_str(), "rb");
-      if (!mFile) {
+      FILE* file = fopen (mFileName.c_str(), "rb");
+      if (!file) {
         //{{{  error, return
-        cLog::log (LOGERROR, fmt::format ("cFileStream::start readfailed to open {}", mFileName));
-        return false;
-        }
-        //}}}
-      //{{{  create play transportStream
-      mTransportStream = new cTransportStream (
-        {"file", 0, {}, {}}, mOptions,
-        [&](cTransportStream::cService& service) noexcept {
-          if (service.getStream (cRenderStream::eVideo).isDefined()) {
-            service.enableStream (cRenderStream::eVideo);
-            service.enableStream (cRenderStream::eAudio);
-            service.enableStream (cRenderStream::eSubtitle);
-            }
-          },
-        [&](cTransportStream::cService& service, cTransportStream::cPidInfo& pidInfo, bool skip) noexcept {
-          if (kPesDebug)
-            cLog::log (LOGINFO, fmt::format ("pes {}:{:5d} size:{:6d} {:8d} {} {}",
-                                             service.getSid(),
-                                             pidInfo.getPid(), pidInfo.getBufSize(),
-                                             pidInfo.getStreamPos(),
-                                             utils::getFullPtsString (pidInfo.getPts()),
-                                             utils::getFullPtsString (pidInfo.getDts())));
-          cRenderStream* stream = service.getStreamByPid (pidInfo.getPid());
-          if (stream && stream->isEnabled())
-            if (stream->getRender().decodePes (pidInfo.mBuffer, pidInfo.getBufSize(),
-                                               pidInfo.getPts(), pidInfo.getDts(),
-                                               pidInfo.mStreamPos, skip))
-              // transferred ownership of mBuffer to render, create new one
-              pidInfo.mBuffer = (uint8_t*)malloc (pidInfo.mBufSize);
-          });
-      //}}}
-
-      if (!mTransportStream) {
-        //{{{  error, return
-        cLog::log (LOGERROR, "cFileStream::start read ts create failed");
-        return false;
-        }
-        //}}}
-      //{{{  create play file thread
-      thread ([=]() {
-        cLog::setThreadName ("file");
-
-        mFilePos = 0;
-        mStreamPos = 0;
-        size_t chunkSize = 188 * 256;
-        uint8_t* chunk = new uint8_t[chunkSize];
-        while (true) {
-          while (mTransportStream->throttle())
-            this_thread::sleep_for (1ms);
-
-          // seek and read chunk from file
-          bool skip = mStreamPos != mFilePos;
-          if (skip) {
-            //{{{  seek to mStreamPos
-            if (fseek (mFile, (long)mStreamPos, SEEK_SET))
-              cLog::log (LOGERROR, fmt::format ("seek failed {}", mStreamPos));
-            else {
-              cLog::log (LOGINFO, fmt::format ("seek {}", mStreamPos));
-              mFilePos = mStreamPos;
-              }
-            }
-            //}}}
-          size_t bytesRead = fread (chunk, 1, chunkSize, mFile);
-          mFilePos = mFilePos + bytesRead;
-          if (bytesRead > 0)
-            mStreamPos += mTransportStream->demux (chunk, bytesRead, mStreamPos, skip);
-          else
-            break;
-
-          //{{{  update fileSize
-          #ifdef _WIN32
-            struct _stati64 st;
-            if (_stat64 (mFileName.c_str(), &st) != -1)
-              mFileSize = st.st_size;
-          #else
-            struct stat st;
-            if (stat (mFileName.c_str(), &st) != -1)
-              mFileSize = st.st_size;
-          #endif
-          //}}}
-          }
-
-        fclose (mFile);
-        delete[] chunk;
-
-        cLog::log (LOGERROR, "exit");
-        }).detach();
-      //}}}
-
-      // open analyser file
-      mFileAnal = fopen (mFileName.c_str(), "rb");
-      if (!mFileAnal) {
-        //{{{  error, return
-        cLog::log (LOGERROR, fmt::format ("cFileStream::start analyser readfailed to open {}", mFileName));
+        cLog::log (LOGERROR, fmt::format ("cFileStream::analyse to open {}", mFileName));
         return false;
         }
         //}}}
 
-      // create analyser transportStream
-      mTransportStreamAnal = new cTransportStream (
+      cTransportStream* transportStream = new cTransportStream (
         {"anal", 0, {}, {}}, mOptions,
         //{{{  newService lambda
         [&](cTransportStream::cService& service) noexcept {
@@ -1046,9 +951,9 @@ namespace {
           }
         //}}}
         );
-      if (!mTransportStreamAnal) {
+      if (!transportStream) {
         //{{{  error, return
-        cLog::log (LOGERROR, "cFileStream::start analyser ts create failed");
+        cLog::log (LOGERROR, "cFileStream::analyser ts create failed");
         return false;
         }
         //}}}
@@ -1062,16 +967,16 @@ namespace {
         uint8_t* chunk = new uint8_t[chunkSize];
         int64_t streamPos = 0;
         while (true) {
-          size_t bytesRead = fread (chunk, 1, chunkSize, mFileAnal);
+          size_t bytesRead = fread (chunk, 1, chunkSize, file);
           if (bytesRead > 0)
-            streamPos += mTransportStreamAnal->demux (chunk, bytesRead, streamPos, false);
+            streamPos += transportStream->demux (chunk, bytesRead, streamPos, false);
           else
             break;
           }
 
         delete[] chunk;
-        delete mTransportStreamAnal;
-        fclose (mFileAnal);
+        delete transportStream;
+        fclose (file);
 
         cLog::log (LOGINFO, fmt::format ("size:{:8d}:{:8d} took {}ms",
           mPesBytes, mFileSize,
@@ -1088,6 +993,107 @@ namespace {
                                          mSubtitlePesMap.size(),
                                          utils::getFullPtsString (mSubtitlePesMap.begin()->first),
                                          utils::getFullPtsString (mSubtitlePesMap.rbegin()->first)));
+        cLog::log (LOGERROR, "exit");
+        }).detach();
+
+      return true;
+      }
+    //}}}
+    //{{{
+    bool play() {
+
+      // open play file
+      FILE* file = fopen (mFileName.c_str(), "rb");
+      if (!file) {
+        //{{{  error, return
+        cLog::log (LOGERROR, fmt::format ("cFileStream::play failed to open {}", mFileName));
+        return false;
+        }
+        //}}}
+
+      mTransportStream = new cTransportStream (
+        {"file", 0, {}, {}}, mOptions,
+        //{{{  newService lambda
+        [&](cTransportStream::cService& service) noexcept {
+          if (service.getStream (cRenderStream::eVideo).isDefined()) {
+            service.enableStream (cRenderStream::eVideo);
+            service.enableStream (cRenderStream::eAudio);
+            service.enableStream (cRenderStream::eSubtitle);
+            }
+          },
+        //}}}
+        //{{{  pes lambda
+        [&](cTransportStream::cService& service, cTransportStream::cPidInfo& pidInfo, bool skip) noexcept {
+          if (kPesDebug)
+            cLog::log (LOGINFO, fmt::format ("pes {}:{:5d} size:{:6d} {:8d} {} {}",
+                                             service.getSid(),
+                                             pidInfo.getPid(), pidInfo.getBufSize(),
+                                             pidInfo.getStreamPos(),
+                                             utils::getFullPtsString (pidInfo.getPts()),
+                                             utils::getFullPtsString (pidInfo.getDts())));
+          cRenderStream* stream = service.getStreamByPid (pidInfo.getPid());
+          if (stream && stream->isEnabled())
+            if (stream->getRender().decodePes (pidInfo.mBuffer, pidInfo.getBufSize(),
+                                               pidInfo.getPts(), pidInfo.getDts(),
+                                               pidInfo.mStreamPos, skip))
+              // transferred ownership of mBuffer to render, create new one
+              pidInfo.mBuffer = (uint8_t*)malloc (pidInfo.mBufSize);
+          }
+        //}}}
+        );
+
+      if (!mTransportStream) {
+        //{{{  error, return
+        cLog::log (LOGERROR, "cFileStream::play ts create failed");
+        return false;
+        }
+        //}}}
+
+      // create play file thread
+      thread ([=]() {
+        cLog::setThreadName ("file");
+        mFilePos = 0;
+        mStreamPos = 0;
+        size_t chunkSize = 188 * 256;
+        uint8_t* chunk = new uint8_t[chunkSize];
+        while (true) {
+          while (mTransportStream->throttle())
+            this_thread::sleep_for (1ms);
+
+          // seek and read chunk from file
+          bool skip = mStreamPos != mFilePos;
+          if (skip) {
+            //{{{  seek to mStreamPos
+            if (fseek (file, (long)mStreamPos, SEEK_SET))
+              cLog::log (LOGERROR, fmt::format ("seek failed {}", mStreamPos));
+            else {
+              cLog::log (LOGINFO, fmt::format ("seek {}", mStreamPos));
+              mFilePos = mStreamPos;
+              }
+            }
+            //}}}
+          size_t bytesRead = fread (chunk, 1, chunkSize, file);
+          mFilePos = mFilePos + bytesRead;
+          if (bytesRead > 0)
+            mStreamPos += mTransportStream->demux (chunk, bytesRead, mStreamPos, skip);
+          else
+            break;
+
+          //{{{  update fileSize
+          #ifdef _WIN32
+            struct _stati64 st;
+            if (_stat64 (mFileName.c_str(), &st) != -1)
+              mFileSize = st.st_size;
+          #else
+            struct stat st;
+            if (stat (mFileName.c_str(), &st) != -1)
+              mFileSize = st.st_size;
+          #endif
+          //}}}
+          }
+
+        fclose (file);
+        delete[] chunk;
         cLog::log (LOGERROR, "exit");
         }).detach();
 
@@ -1111,19 +1117,15 @@ namespace {
     string mFileName;
     cPlayerOptions* mOptions;
 
-    FILE* mFile = nullptr;
     cTransportStream* mTransportStream = nullptr;
     int64_t mStreamPos = 0;
     int64_t mFilePos = 0;
     size_t mFileSize = 0;
 
-    FILE* mFileAnal = nullptr;
-    cTransportStream* mTransportStreamAnal = nullptr;
-    int64_t mPesBytes = 0;
-
     map <int64_t, cPes> mVideoPesMap;
     map <int64_t, cPes> mAudioPesMap;
     map <int64_t, cPes> mSubtitlePesMap;
+    int64_t mPesBytes = 0;
     };
   //}}}
   //{{{
@@ -1136,7 +1138,8 @@ namespace {
     void addFile (const string& fileName, cPlayerOptions* options) {
 
       mFileStreams.push_back (cFileStream (fileName, options));
-      mFileStreams.back().open();
+      mFileStreams.back().analyse();
+      mFileStreams.back().play();
       }
     //}}}
 
@@ -1410,12 +1413,10 @@ namespace {
       //}}}
 
       //{{{
-      bool draw (cPlayerApp& playerApp, cTransportStream& transportStream,
-                 bool selectFull, size_t viewIndex, size_t numViews,
+      bool draw (cPlayerApp& playerApp, bool selectFull, size_t viewIndex, size_t numViews,
                  cTextureShader* videoShader, cTextureShader* subtitleShader) {
       // return true if hit
 
-        (void)transportStream;
         bool result = false;
 
         float layoutScale;
@@ -1764,8 +1765,7 @@ namespace {
         size_t viewIndex = 0;
         for (auto& view : mViewMap) {
           if (!selectedFull || view.second.getSelectedFull())
-            if (view.second.draw (playerApp, transportStream,
-                                  selectedFull,  viewIndex, selectedFull ? 1 : mViewMap.size(),
+            if (view.second.draw (playerApp, selectedFull,  viewIndex, selectedFull ? 1 : mViewMap.size(),
                                   mVideoShader, mSubtitleShader)) {
               // view hit
               viewHit = true;
