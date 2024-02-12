@@ -881,11 +881,31 @@ namespace {
   //}}}
 
   //{{{
+  class cPes {
+  public:
+    cPes (uint8_t* data, size_t size, int64_t pts, int64_t dts) :
+      mData(data), mSize(size), mPts(pts), mDts(dts) {}
+    ~cPes() = default;
+
+  //private:
+    const uint8_t* mData;
+    const size_t mSize;
+    const int64_t mPts;
+    const int64_t mDts;
+    };
+  //}}}
+  //{{{
   class cFileStream {
   public:
     cFileStream (string fileName, cPlayerOptions* options) :
       mFileName(cFileUtils::resolve (fileName)), mOptions(options) {}
-    ~cFileStream() = default;
+    //{{{
+    ~cFileStream() {
+      mVideoPesMap.clear();
+      mAudioPesMap.clear();
+      mSubtitlePesMap.clear();
+      }
+    //}}}
 
     //{{{
     bool open() {
@@ -992,33 +1012,54 @@ namespace {
         }
         //}}}
 
-      //{{{  create analyser transportStream
+      // create analyser transportStream
       mTransportStreamAnal = new cTransportStream (
         {"anal", 0, {}, {}}, mOptions,
+        //{{{  newService lambda
         [&](cTransportStream::cService& service) noexcept {
           cLog::log (LOGINFO, fmt::format ("newService sid:{}", service.getSid()));
           },
+        //}}}
+        //{{{  pes lambda
         [&](cTransportStream::cService& service, cTransportStream::cPidInfo& pidInfo, bool skip) noexcept {
           mPesBytes += pidInfo.getBufSize();
-          if (!(++mPes % 1000))
-            cLog::log (LOGINFO, fmt::format ("pes {:8d}:{:8d} {}",
-                                             mPesBytes, pidInfo.getStreamPos(),
-                                             utils::getFullPtsString (pidInfo.getPts())));
-          });
-      //}}}
+          uint8_t* buffer = (uint8_t*)malloc (pidInfo.getBufSize());
+          memcpy (buffer, pidInfo.mBuffer, pidInfo.getBufSize());
+
+          // add pes to maps
+          if (pidInfo.getPid() == service.getVideoPid())
+            mVideoPesMap.emplace (pidInfo.getPts(),
+                                  cPes(buffer, pidInfo.getBufSize(), pidInfo.getPts(), pidInfo.getDts()));
+
+          else if (pidInfo.getPid() == service.getAudioPid())
+            mAudioPesMap.emplace (pidInfo.getPts(),
+                                  cPes(buffer, pidInfo.getBufSize(), pidInfo.getPts(), pidInfo.getDts()));
+
+          else if (pidInfo.getPid() == service.getSubtitlePid()) {
+            if (pidInfo.getBufSize())
+              mSubtitlePesMap.emplace (pidInfo.getPts(),
+                                       cPes(buffer, pidInfo.getBufSize(), pidInfo.getPts(), pidInfo.getDts()));
+            }
+
+          else
+            cLog::log (LOGERROR, fmt::format ("unused pes {}", pidInfo.getPid()));
+          }
+        //}}}
+        );
       if (!mTransportStreamAnal) {
         //{{{  error, return
         cLog::log (LOGERROR, "cFileStream::start analyser ts create failed");
         return false;
         }
         //}}}
-      //{{{  create analyser thread
+
       thread ([=]() {
         cLog::setThreadName ("anal");
 
+        auto now = chrono::system_clock::now();
+
         size_t chunkSize = 188 * 256;
         uint8_t* chunk = new uint8_t[chunkSize];
-
         int64_t streamPos = 0;
         while (true) {
           size_t bytesRead = fread (chunk, 1, chunkSize, mFileAnal);
@@ -1032,9 +1073,23 @@ namespace {
         delete mTransportStreamAnal;
         fclose (mFileAnal);
 
+        cLog::log (LOGINFO, fmt::format ("size:{:8d}:{:8d} took {}ms",
+          mPesBytes, mFileSize,
+          chrono::duration_cast<chrono::milliseconds>(chrono::system_clock::now() - now).count()));
+        cLog::log (LOGINFO, fmt::format ("- vid:{:6d} {} to {}",
+                                         mVideoPesMap.size(),
+                                         utils::getFullPtsString (mVideoPesMap.begin()->first),
+                                         utils::getFullPtsString (mVideoPesMap.rbegin()->first)));
+        cLog::log (LOGINFO, fmt::format ("- aud:{:6d} {} to {}",
+                                         mAudioPesMap.size(),
+                                         utils::getFullPtsString (mAudioPesMap.begin()->first),
+                                         utils::getFullPtsString (mAudioPesMap.rbegin()->first)));
+        cLog::log (LOGINFO, fmt::format ("- sub:{:6d} {} to {}",
+                                         mSubtitlePesMap.size(),
+                                         utils::getFullPtsString (mSubtitlePesMap.begin()->first),
+                                         utils::getFullPtsString (mSubtitlePesMap.rbegin()->first)));
         cLog::log (LOGERROR, "exit");
         }).detach();
-      //}}}
 
       return true;
       }
@@ -1064,8 +1119,11 @@ namespace {
 
     FILE* mFileAnal = nullptr;
     cTransportStream* mTransportStreamAnal = nullptr;
-    int64_t mPes = 0;
     int64_t mPesBytes = 0;
+
+    map <int64_t, cPes> mVideoPesMap;
+    map <int64_t, cPes> mAudioPesMap;
+    map <int64_t, cPes> mSubtitlePesMap;
     };
   //}}}
   //{{{
@@ -1083,13 +1141,12 @@ namespace {
     //}}}
 
     cPlayerOptions* getOptions() { return mOptions; }
-    bool hasTransportStream() { return !mFileStreams.empty(); }
-    cTransportStream& getTransportStream() { return mFileStreams[0].getTransportStream(); }
+    cTransportStream& getTransportStream() { return mFileStreams.front().getTransportStream(); }
 
     // fileSource
-    uint64_t getStreamPos() const { return mFileStreams[0].getStreamPos(); }
-    uint64_t getFilePos() const { return mFileStreams[0].getFilePos(); }
-    size_t getFileSize() const { return mFileStreams[0].getFileSize(); }
+    uint64_t getStreamPos() const { return mFileStreams.front().getStreamPos(); }
+    uint64_t getFilePos() const { return mFileStreams.front().getFilePos(); }
+    size_t getFileSize() const { return mFileStreams.front().getFileSize(); }
 
     // actions
     void togglePlay() { getTransportStream().togglePlay(); }
@@ -1100,8 +1157,9 @@ namespace {
     void skip (int64_t skipPts) {
 
       int64_t offset = getTransportStream().getSkipOffset (skipPts);
-      cLog::log (LOGINFO, fmt::format ("skip:{} offset:{} pos:{}", skipPts, offset, mFileStreams[0].getStreamPos()));
-      mFileStreams[0].incStreamPos (offset);
+      cLog::log (LOGINFO, fmt::format ("skip:{} offset:{} pos:{}",
+                                       skipPts, offset, mFileStreams.front().getStreamPos()));
+      mFileStreams.front().incStreamPos (offset);
       }
     //}}}
 

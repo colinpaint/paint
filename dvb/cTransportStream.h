@@ -195,10 +195,16 @@ public:
     uint16_t getSid() const { return mSid; }
     std::string getName() const { return mName; }
     uint16_t getProgramPid() const { return mProgramPid; }
+    uint16_t getVideoPid() const { return mVideoPid; }
+    uint16_t getAudioPid() const { return mAudioPid; }
+    uint16_t getSubtitlePid() const { return mSubtitlePid; }
     int64_t getPtsFromStart();
 
     // sets
     void setProgramPid (uint16_t pid) { mProgramPid = pid; }
+    void setVideoPid (uint16_t pid) { mVideoPid = pid; }
+    void setAudioPid (uint16_t pid) { mAudioPid = pid; }
+    void setSubtitlePid (uint16_t pid) { mSubtitlePid = pid; }
     //{{{
     void setName (const std::string& name, bool record, const std::string& recordName) {
 
@@ -262,7 +268,12 @@ public:
     const uint16_t mSid;
     iOptions* mOptions = nullptr;
     std::string mName;
+
     uint16_t mProgramPid = 0;
+
+    uint16_t mVideoPid = 0;
+    uint16_t mAudioPid = 0;
+    uint16_t mSubtitlePid = 0;
 
     // streams
     std::array <cRenderStream, cRenderStream::eTypeSize> mStreams;
