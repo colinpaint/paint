@@ -1102,6 +1102,7 @@ namespace {
         }
       //}}}
 
+
     private:
       map <uint16_t, cView> mViewMap;
       cTextureShader* mVideoShader = nullptr;

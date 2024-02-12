@@ -198,13 +198,31 @@ public:
     uint16_t getVideoPid() const { return mVideoPid; }
     uint16_t getAudioPid() const { return mAudioPid; }
     uint16_t getSubtitlePid() const { return mSubtitlePid; }
+    uint8_t getVideoStreamTypeId() const { return mVideoStreamTypeId; }
+    uint8_t getAudioStreamTypeId() const { return mAudioStreamTypeId; }
+    uint8_t getSubtitleStreamTypeId() const { return mSubtitleStreamTypeId; }
     int64_t getPtsFromStart();
 
     // sets
     void setProgramPid (uint16_t pid) { mProgramPid = pid; }
-    void setVideoPid (uint16_t pid) { mVideoPid = pid; }
-    void setAudioPid (uint16_t pid) { mAudioPid = pid; }
-    void setSubtitlePid (uint16_t pid) { mSubtitlePid = pid; }
+    //{{{
+    void setVideoStream (uint16_t pid, uint8_t streamTypeId) {
+      mVideoPid = pid;
+      mVideoStreamTypeId = streamTypeId;
+      }
+    //}}}
+    //{{{
+    void setAudioStream (uint16_t pid, uint8_t streamTypeId) {
+      mAudioPid = pid;
+      mAudioStreamTypeId = streamTypeId;
+      }
+    //}}}
+    //{{{
+    void setSubtitleStream (uint16_t pid, uint8_t streamTypeId) {
+      mSubtitlePid = pid;
+      mSubtitleStreamTypeId = streamTypeId;
+      }
+    //}}}
     //{{{
     void setName (const std::string& name, bool record, const std::string& recordName) {
 
@@ -274,6 +292,9 @@ public:
     uint16_t mVideoPid = 0;
     uint16_t mAudioPid = 0;
     uint16_t mSubtitlePid = 0;
+    uint8_t mVideoStreamTypeId = 0;
+    uint8_t mAudioStreamTypeId = 0;
+    uint8_t mSubtitleStreamTypeId = 0;
 
     // streams
     std::array <cRenderStream, cRenderStream::eTypeSize> mStreams;

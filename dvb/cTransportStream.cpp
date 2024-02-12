@@ -1322,7 +1322,7 @@ void cTransportStream::parsePMT (cPidInfo& pidInfo, uint8_t* buf) {
         switch (esPidInfo.getStreamTypeId()) {
           case 2: // ISO 13818-2 video
           case kH264StreamType: // 27 - H264 video
-            service.setVideoPid (esPid);
+            service.setVideoStream (esPid, esPidInfo.getStreamTypeId());
             service.getStream (cRenderStream::eVideo).setPidTypeId (esPid, esPidInfo.getStreamTypeId());
             break;
 
@@ -1332,7 +1332,7 @@ void cTransportStream::parsePMT (cPidInfo& pidInfo, uint8_t* buf) {
           case kAacLatmStreamType: // 17 - LATM AAC audio
           case 129: // AC3 audio
             if (!service.getStream (cRenderStream::eAudio).isDefined()) {
-              service.setAudioPid (esPid);
+              service.setAudioStream (esPid, esPidInfo.getStreamTypeId());
               service.getStream (cRenderStream::eAudio).setPidTypeId (esPid, esPidInfo.getStreamTypeId());
               }
             else if (esPid != service.getStream (cRenderStream::eAudio).getPid()) {
@@ -1343,7 +1343,7 @@ void cTransportStream::parsePMT (cPidInfo& pidInfo, uint8_t* buf) {
             break;
 
           case 6: // subtitle
-            service.setSubtitlePid (esPid);
+            service.setSubtitleStream (esPid, esPidInfo.getStreamTypeId());
             service.getStream (cRenderStream::eSubtitle).setPidTypeId (esPid, esPidInfo.getStreamTypeId());
             break;
 

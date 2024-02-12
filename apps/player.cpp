@@ -1,4 +1,5 @@
 // player.cpp
+constexpr bool kLocal = false;
 //{{{  includes
 #ifdef _WIN32
   #define _CRT_SECURE_NO_WARNINGS
@@ -893,6 +894,7 @@ namespace {
 
     string getFileName() const { return mFileName; }
     cTransportStream& getTransportStream() { return *mTransportStream; }
+    cTransportStream::cService* getService() { return mService; }
 
     int64_t getFirstVideoPts() const { return mVideoPesMap.empty() ? -1 : mVideoPesMap.begin()->first; }
     int64_t getFirstAudioPts() const { return mAudioPesMap.empty() ? -1 : mAudioPesMap.begin()->first; }
@@ -923,9 +925,19 @@ namespace {
         [&](cTransportStream::cService& service) noexcept {
           if (!mService) {
             mService = &service;
-            mService->enableStream (cRenderStream::eVideo);
-            mService->enableStream (cRenderStream::eAudio);
-            mService->enableStream (cRenderStream::eSubtitle);
+            if (kLocal) {
+              mVideoRender = new cVideoRender ("vid", mService->getVideoStreamTypeId(),
+                                                      mService->getVideoPid(), mOptions);
+              mAudioRender = new cAudioRender ("aud", mService->getAudioStreamTypeId(),
+                                                      mService->getAudioPid(), mOptions);
+              mSubtitleRender = new cSubtitleRender ("sub", mService->getSubtitleStreamTypeId(),
+                                                            mService->getSubtitlePid(), mOptions);
+              }
+            else {
+              mService->enableStream (cRenderStream::eVideo);
+              mService->enableStream (cRenderStream::eAudio);
+              mService->enableStream (cRenderStream::eSubtitle);
+              }
             }
           },
         //{{{  pes lambda
@@ -1017,12 +1029,41 @@ namespace {
         {"file", 0, {}, {}}, mOptions,
         [&](cTransportStream::cService& service) noexcept {}, // newService lambda
         [&](cTransportStream::cService& service, cTransportStream::cPidInfo& pidInfo, bool skip) noexcept {
-          cRenderStream* stream = service.getStreamByPid (pidInfo.getPid());
-          if (stream && stream->isEnabled()) {
-            uint8_t* buffer = (uint8_t*)malloc (pidInfo.getBufSize());
-            memcpy (buffer, pidInfo.mBuffer, pidInfo.getBufSize());
-            stream->getRender().decodePes (buffer, pidInfo.getBufSize(),
-                                           pidInfo.getPts(), pidInfo.getDts(), pidInfo.mStreamPos, skip);
+          if (kLocal) {
+            if (pidInfo.getPid() == service.getVideoPid()) {
+              if (mVideoRender) {
+                uint8_t* buffer = (uint8_t*)malloc (pidInfo.getBufSize());
+                memcpy (buffer, pidInfo.mBuffer, pidInfo.getBufSize());
+                mVideoRender->decodePes (buffer, pidInfo.getBufSize(),
+                                         pidInfo.getPts(), pidInfo.getDts(), pidInfo.mStreamPos, skip);
+                }
+              }
+            else if (pidInfo.getPid() == service.getAudioPid()) {
+              if (mAudioRender) {
+                uint8_t* buffer = (uint8_t*)malloc (pidInfo.getBufSize());
+                memcpy (buffer, pidInfo.mBuffer, pidInfo.getBufSize());
+                mAudioRender->decodePes (buffer, pidInfo.getBufSize(),
+                                         pidInfo.getPts(), pidInfo.getDts(), pidInfo.mStreamPos, skip);
+                }
+              }
+            else if (pidInfo.getPid() == service.getSubtitlePid()) {
+              if (pidInfo.getBufSize())
+                if (mSubtitleRender) {
+                  uint8_t* buffer = (uint8_t*)malloc (pidInfo.getBufSize());
+                  memcpy (buffer, pidInfo.mBuffer, pidInfo.getBufSize());
+                  mSubtitleRender->decodePes (buffer, pidInfo.getBufSize(),
+                                              pidInfo.getPts(), pidInfo.getDts(), pidInfo.mStreamPos, skip);
+                  }
+              }
+            }
+          else {
+            cRenderStream* stream = service.getStreamByPid (pidInfo.getPid());
+            if (stream && stream->isEnabled()) {
+              uint8_t* buffer = (uint8_t*)malloc (pidInfo.getBufSize());
+              memcpy (buffer, pidInfo.mBuffer, pidInfo.getBufSize());
+              stream->getRender().decodePes (buffer, pidInfo.getBufSize(),
+                                             pidInfo.getPts(), pidInfo.getDts(), pidInfo.mStreamPos, skip);
+              }
             }
           }
         );
@@ -1090,15 +1131,19 @@ namespace {
     string mFileName;
     cPlayerOptions* mOptions;
 
-    cTransportStream::cService* mService;
     cTransportStream* mTransportStream = nullptr;
+    cTransportStream::cService* mService = nullptr;
 
     size_t mFileSize = 0;
-
-    map <int64_t, cPes> mVideoPesMap;
-    map <int64_t, cPes> mAudioPesMap;
-    map <int64_t, cPes> mSubtitlePesMap;
     int64_t mPesBytes = 0;
+
+    map <int64_t,cPes> mVideoPesMap;
+    map <int64_t,cPes> mAudioPesMap;
+    map <int64_t,cPes> mSubtitlePesMap;
+
+    cRender* mVideoRender = nullptr;
+    cRender* mAudioRender = nullptr;
+    cRender* mSubtitleRender = nullptr;
     };
   //}}}
   //{{{
@@ -1117,6 +1162,8 @@ namespace {
     //}}}
 
     cPlayerOptions* getOptions() { return mOptions; }
+    vector <cFilePlayer>& getFilePlayers() { return mFilePlayers; }
+    cFilePlayer& getFilePlayer() { return mFilePlayers.front(); }
     cTransportStream& getTransportStream() { return mFilePlayers.front().getTransportStream(); }
 
     // actions
@@ -1126,7 +1173,6 @@ namespace {
 
     //{{{
     void skip (int64_t skipPts) {
-
       int64_t offset = getTransportStream().getSkipOffset (skipPts);
       cLog::log (LOGINFO, fmt::format ("skip:{} offset:{}", skipPts, offset));
       }
@@ -1172,7 +1218,7 @@ namespace {
       cPlayerApp& playerApp = (cPlayerApp&)app;
 
       // draw multiView piccies
-      mMultiView.draw (playerApp, playerApp.getTransportStream());
+      mMultiView.draw (playerApp, playerApp.getTransportStream(), playerApp.getFilePlayers());
 
       // draw menu
       ImGui::SetCursorPos ({0.f, ImGui::GetIO().DisplaySize.y - ImGui::GetTextLineHeight() * 1.5f});
@@ -1701,7 +1747,7 @@ namespace {
     class cMultiView {
     public:
       //{{{
-      void draw (cPlayerApp& playerApp, cTransportStream& transportStream) {
+      void draw (cPlayerApp& playerApp, cTransportStream& transportStream, vector <cFilePlayer>& filePlayers) {
 
         // create shaders, firsttime we see graphics interface
         if (!mVideoShader)
@@ -1709,15 +1755,26 @@ namespace {
         if (!mSubtitleShader)
           mSubtitleShader = playerApp.getGraphics().createTextureShader (cTexture::eRgba);
 
-        // update viewMap from enabled services, take care to reuse cView's
-        for (auto& pair : transportStream.getServiceMap()) {
-          // find service sid in viewMap
-          auto it = mViewMap.find (pair.first);
-          if (it == mViewMap.end()) {
-            cTransportStream::cService& service = pair.second;
-            if (service.getStream (cRenderStream::eVideo).isDefined())
-              // enabled and not found, add service to viewMap
-              mViewMap.emplace (service.getSid(), cView (service));
+        if (kLocal) {
+          // update viewMap from enabled services
+          for (auto& filePlayer : filePlayers) {
+            // find service sid in viewMap
+            auto it = mViewMap.find (filePlayer.getService()->getSid());
+            if (it == mViewMap.end())
+              mViewMap.emplace (filePlayer.getService()->getSid(), cView (*filePlayer.getService()));
+            }
+          }
+        else {
+          // update viewMap from enabled services, take care to reuse cView's
+          for (auto& pair : transportStream.getServiceMap()) {
+            // find service sid in viewMap
+            auto it = mViewMap.find (pair.first);
+            if (it == mViewMap.end()) {
+              cTransportStream::cService& service = pair.second;
+              if (service.getStream (cRenderStream::eVideo).isDefined())
+                // enabled and not found, add service to viewMap
+                mViewMap.emplace (service.getSid(), cView (service));
+              }
             }
           }
 
