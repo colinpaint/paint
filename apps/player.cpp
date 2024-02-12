@@ -896,6 +896,8 @@ namespace {
     string getFileName() const { return mFileName; }
     cTransportStream& getTransportStream() { return *mTransportStream; }
 
+    int64_t getFirstVideoPts() const { return mVideoPesMap.empty() ? -1 : mVideoPesMap.begin()->first; }
+    int64_t getFirstAudioPts() const { return mAudioPesMap.empty() ? -1 : mAudioPesMap.begin()->first; }
     //{{{
     bool analyse() {
 
@@ -906,6 +908,17 @@ namespace {
         return false;
         }
         //}}}
+
+      // update fileSize
+      #ifdef _WIN32
+        struct _stati64 st;
+         if (_stat64 (mFileName.c_str(), &st) != -1)
+          mFileSize = st.st_size;
+      #else
+        struct stat st;
+        if (stat (mFileName.c_str(), &st) != -1)
+          mFileSize = st.st_size;
+      #endif
 
       cTransportStream* transportStream = new cTransportStream (
         {"anal", 0, {}, {}}, mOptions,
