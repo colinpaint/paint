@@ -65,27 +65,7 @@ extern "C" {
 
 using namespace std;
 //}}}
-constexpr bool kPesDebug = false;
 namespace {
-  //{{{
-  class cPlayerOptions : public cApp::cOptions,
-                         public cTransportStream::cOptions,
-                         public cRender::cOptions,
-                         public cAudioRender::cOptions,
-                         public cVideoRender::cOptions,
-                         public cFFmpegVideoDecoder::cOptions {
-  public:
-    virtual ~cPlayerOptions() = default;
-
-    string getString() const { return "sub motion fileName"; }
-
-    // vars
-    bool mShowSubtitle = false;
-    bool mShowMotionVectors = false;
-    string mFileName;
-    };
-  //}}}
-
   //{{{  const song channels
   const vector<string> kRadio1 = {"r1", "a128"};
   const vector<string> kRadio2 = {"r2", "a128"};
@@ -106,7 +86,7 @@ namespace {
   class cSongApp : public cApp {
   public:
     //{{{
-    cSongApp (cPlayerOptions* options, iUI* ui) : cApp("songApp", options, ui) {
+    cSongApp (cApp::cOptions* options, iUI* ui) : cApp("songApp", options, ui) {
       mSongLoader = new cSongLoader();
       }
     //}}}
@@ -146,7 +126,7 @@ namespace {
     //}}}
 
   private:
-    cPlayerOptions* mOptions;
+    cApp::cOptions* mOptions;
     cSongLoader* mSongLoader;
     string mSongName;
     };
@@ -881,6 +861,24 @@ namespace {
   //}}}
 
   //{{{
+  class cPlayerOptions : public cApp::cOptions,
+                         public cTransportStream::cOptions,
+                         public cRender::cOptions,
+                         public cAudioRender::cOptions,
+                         public cVideoRender::cOptions,
+                         public cFFmpegVideoDecoder::cOptions {
+  public:
+    virtual ~cPlayerOptions() = default;
+
+    string getString() const { return "sub motion fileName"; }
+
+    // vars
+    bool mShowSubtitle = false;
+    bool mShowMotionVectors = false;
+    string mFileName;
+    };
+  //}}}
+  //{{{
   class cFileStream {
   public:
     cFileStream (string fileName, cPlayerOptions* options) :
@@ -890,12 +888,12 @@ namespace {
       mVideoPesMap.clear();
       mAudioPesMap.clear();
       mSubtitlePesMap.clear();
+
+      delete mTransportStream;
       }
     //}}}
 
     string getFileName() const { return mFileName; }
-    int64_t getFilePos() const { return mFilePos; }
-    size_t getFileSize() const { return mFileSize; }
     cTransportStream& getTransportStream() { return *mTransportStream; }
 
     //{{{
@@ -913,11 +911,20 @@ namespace {
         {"anal", 0, {}, {}}, mOptions,
         //{{{  newService lambda
         [&](cTransportStream::cService& service) noexcept {
+
           cLog::log (LOGINFO, fmt::format ("newService sid:{}", service.getSid()));
+
+          mService = &service;
+          if (service.getStream (cRenderStream::eVideo).isDefined()) {
+            service.enableStream (cRenderStream::eVideo);
+            service.enableStream (cRenderStream::eAudio);
+            service.enableStream (cRenderStream::eSubtitle);
+            }
           },
         //}}}
         //{{{  pes lambda
         [&](cTransportStream::cService& service, cTransportStream::cPidInfo& pidInfo, bool skip) noexcept {
+          (void)skip;
           mPesBytes += pidInfo.getBufSize();
           uint8_t* buffer = (uint8_t*)malloc (pidInfo.getBufSize());
           memcpy (buffer, pidInfo.mBuffer, pidInfo.getBufSize());
@@ -952,10 +959,10 @@ namespace {
       thread ([=]() {
         cLog::setThreadName ("anal");
 
-        auto now = chrono::system_clock::now();
-
         size_t chunkSize = 188 * 256;
         uint8_t* chunk = new uint8_t[chunkSize];
+
+        auto now = chrono::system_clock::now();
         int64_t streamPos = 0;
         while (true) {
           size_t bytesRead = fread (chunk, 1, chunkSize, file);
@@ -1004,31 +1011,16 @@ namespace {
 
       mTransportStream = new cTransportStream (
         {"file", 0, {}, {}}, mOptions,
-        //{{{  newService lambda
-        [&](cTransportStream::cService& service) noexcept {
-          if (service.getStream (cRenderStream::eVideo).isDefined()) {
-            service.enableStream (cRenderStream::eVideo);
-            service.enableStream (cRenderStream::eAudio);
-            service.enableStream (cRenderStream::eSubtitle);
-            }
-          },
-        //}}}
+        [&](cTransportStream::cService& service) noexcept {}, // newService lambda
         //{{{  pes lambda
         [&](cTransportStream::cService& service, cTransportStream::cPidInfo& pidInfo, bool skip) noexcept {
-          if (kPesDebug)
-            cLog::log (LOGINFO, fmt::format ("pes {}:{:5d} size:{:6d} {:8d} {} {}",
-                                             service.getSid(),
-                                             pidInfo.getPid(), pidInfo.getBufSize(),
-                                             pidInfo.getStreamPos(),
-                                             utils::getFullPtsString (pidInfo.getPts()),
-                                             utils::getFullPtsString (pidInfo.getDts())));
           cRenderStream* stream = service.getStreamByPid (pidInfo.getPid());
-          if (stream && stream->isEnabled())
-            if (stream->getRender().decodePes (pidInfo.mBuffer, pidInfo.getBufSize(),
-                                               pidInfo.getPts(), pidInfo.getDts(),
-                                               pidInfo.mStreamPos, skip))
-              // transferred ownership of mBuffer to render, create new one
-              pidInfo.mBuffer = (uint8_t*)malloc (pidInfo.mBufSize);
+          if (stream && stream->isEnabled()) {
+            uint8_t* buffer = (uint8_t*)malloc (pidInfo.getBufSize());
+            memcpy (buffer, pidInfo.mBuffer, pidInfo.getBufSize());
+            stream->getRender().decodePes (buffer, pidInfo.getBufSize(),
+                                           pidInfo.getPts(), pidInfo.getDts(), pidInfo.mStreamPos, skip);
+            }
           }
         //}}}
         );
@@ -1040,25 +1032,24 @@ namespace {
         }
         //}}}
 
-      // create play file thread
+      // launch play file thread
       thread ([=]() {
         cLog::setThreadName ("file");
-        uint64_t mStreamPos = 0;
-        mFilePos = 0;
+
         size_t chunkSize = 188 * 256;
         uint8_t* chunk = new uint8_t[chunkSize];
+
+        uint64_t streamPos = 0;
         while (true) {
           while (mTransportStream->throttle())
             this_thread::sleep_for (1ms);
 
           size_t bytesRead = fread (chunk, 1, chunkSize, file);
-          mFilePos = mFilePos + bytesRead;
-          if (bytesRead > 0)
-            mStreamPos += mTransportStream->demux (chunk, bytesRead, mStreamPos, false);
-          else
+          if (bytesRead <= 0)
             break;
+          streamPos += mTransportStream->demux (chunk, bytesRead, streamPos, false);
 
-          //{{{  update fileSize
+          // update fileSize
           #ifdef _WIN32
             struct _stati64 st;
             if (_stat64 (mFileName.c_str(), &st) != -1)
@@ -1068,7 +1059,6 @@ namespace {
             if (stat (mFileName.c_str(), &st) != -1)
               mFileSize = st.st_size;
           #endif
-          //}}}
           }
 
         fclose (file);
@@ -1099,9 +1089,10 @@ namespace {
     string mFileName;
     cPlayerOptions* mOptions;
 
-    int64_t mFilePos = 0;
-    size_t mFileSize = 0;
+    cTransportStream::cService* mService;
     cTransportStream* mTransportStream = nullptr;
+
+    size_t mFileSize = 0;
 
     map <int64_t, cPes> mVideoPesMap;
     map <int64_t, cPes> mAudioPesMap;
@@ -1126,10 +1117,6 @@ namespace {
 
     cPlayerOptions* getOptions() { return mOptions; }
     cTransportStream& getTransportStream() { return mFileStreams.front().getTransportStream(); }
-
-    // fileSource
-    uint64_t getFilePos() const { return mFileStreams.front().getFilePos(); }
-    size_t getFileSize() const { return mFileStreams.front().getFileSize(); }
 
     // actions
     void togglePlay() { getTransportStream().togglePlay(); }
@@ -1223,6 +1210,7 @@ namespace {
       ImGui::SameLine();
       ImGui::TextUnformatted (fmt::format("{}:fps", static_cast<uint32_t>(ImGui::GetIO().Framerate)).c_str());
       //}}}
+
       ImGui::EndChild();
       ImGui::End();
 
