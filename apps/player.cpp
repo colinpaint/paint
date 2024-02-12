@@ -881,20 +881,6 @@ namespace {
   //}}}
 
   //{{{
-  class cPes {
-  public:
-    cPes (uint8_t* data, size_t size, int64_t pts, int64_t dts) :
-      mData(data), mSize(size), mPts(pts), mDts(dts) {}
-    ~cPes() = default;
-
-  //private:
-    const uint8_t* mData;
-    const size_t mSize;
-    const int64_t mPts;
-    const int64_t mDts;
-    };
-  //}}}
-  //{{{
   class cFileStream {
   public:
     cFileStream (string fileName, cPlayerOptions* options) :
@@ -906,6 +892,11 @@ namespace {
       mSubtitlePesMap.clear();
       }
     //}}}
+
+    string getFileName() const { return mFileName; }
+    int64_t getFilePos() const { return mFilePos; }
+    size_t getFileSize() const { return mFileSize; }
+    cTransportStream& getTransportStream() { return *mTransportStream; }
 
     //{{{
     bool analyse() {
@@ -1052,30 +1043,18 @@ namespace {
       // create play file thread
       thread ([=]() {
         cLog::setThreadName ("file");
+        uint64_t mStreamPos = 0;
         mFilePos = 0;
-        mStreamPos = 0;
         size_t chunkSize = 188 * 256;
         uint8_t* chunk = new uint8_t[chunkSize];
         while (true) {
           while (mTransportStream->throttle())
             this_thread::sleep_for (1ms);
 
-          // seek and read chunk from file
-          bool skip = mStreamPos != mFilePos;
-          if (skip) {
-            //{{{  seek to mStreamPos
-            if (fseek (file, (long)mStreamPos, SEEK_SET))
-              cLog::log (LOGERROR, fmt::format ("seek failed {}", mStreamPos));
-            else {
-              cLog::log (LOGINFO, fmt::format ("seek {}", mStreamPos));
-              mFilePos = mStreamPos;
-              }
-            }
-            //}}}
           size_t bytesRead = fread (chunk, 1, chunkSize, file);
           mFilePos = mFilePos + bytesRead;
           if (bytesRead > 0)
-            mStreamPos += mTransportStream->demux (chunk, bytesRead, mStreamPos, skip);
+            mStreamPos += mTransportStream->demux (chunk, bytesRead, mStreamPos, false);
           else
             break;
 
@@ -1101,26 +1080,28 @@ namespace {
       }
     //}}}
 
-    string getFileName() const { return mFileName; }
-    cTransportStream& getTransportStream() { return *mTransportStream; }
-    int64_t getStreamPos() const { return mStreamPos; }
-    int64_t getFilePos() const { return mFilePos; }
-    size_t getFileSize() const { return mFileSize; }
-
+  private:
     //{{{
-    void incStreamPos (int64_t offset) {
-      mStreamPos += offset;
-      }
+    class cPes {
+    public:
+      cPes (uint8_t* data, size_t size, int64_t pts, int64_t dts) :
+        mData(data), mSize(size), mPts(pts), mDts(dts) {}
+      ~cPes() = default;
+
+    //private:
+      const uint8_t* mData;
+      const size_t mSize;
+      const int64_t mPts;
+      const int64_t mDts;
+      };
     //}}}
 
-  private:
     string mFileName;
     cPlayerOptions* mOptions;
 
-    cTransportStream* mTransportStream = nullptr;
-    int64_t mStreamPos = 0;
     int64_t mFilePos = 0;
     size_t mFileSize = 0;
+    cTransportStream* mTransportStream = nullptr;
 
     map <int64_t, cPes> mVideoPesMap;
     map <int64_t, cPes> mAudioPesMap;
@@ -1147,7 +1128,6 @@ namespace {
     cTransportStream& getTransportStream() { return mFileStreams.front().getTransportStream(); }
 
     // fileSource
-    uint64_t getStreamPos() const { return mFileStreams.front().getStreamPos(); }
     uint64_t getFilePos() const { return mFileStreams.front().getFilePos(); }
     size_t getFileSize() const { return mFileStreams.front().getFileSize(); }
 
@@ -1160,9 +1140,7 @@ namespace {
     void skip (int64_t skipPts) {
 
       int64_t offset = getTransportStream().getSkipOffset (skipPts);
-      cLog::log (LOGINFO, fmt::format ("skip:{} offset:{} pos:{}",
-                                       skipPts, offset, mFileStreams.front().getStreamPos()));
-      mFileStreams.front().incStreamPos (offset);
+      cLog::log (LOGINFO, fmt::format ("skip:{} offset:{}", skipPts, offset));
       }
     //}}}
 
