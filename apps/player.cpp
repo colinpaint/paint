@@ -95,13 +95,16 @@ public:
   //}}}
 
   string getFileName() const { return mFileName; }
+
   cTransportStream::cService* getService() { return mService; }
+
+  cAudioRender* getAudioRender() { return mAudioRender; }
+  cVideoRender* getVideoRender() { return mVideoRender; }
+  cSubtitleRender* getSubtitleRender() { return mSubtitleRender; }
 
   int64_t getFirstVideoPts() const { return mVideoPesMap.empty() ? -1 : mVideoPesMap.begin()->first; }
   int64_t getFirstAudioPts() const { return mAudioPesMap.empty() ? -1 : mAudioPesMap.begin()->first; }
 
-  cAudioRender* getAudioRender() { return (cAudioRender*)(mAudioRender); }
-  cVideoRender* getVideoRender() { return (cVideoRender*)(mVideoRender); }
   //{{{
   bool analyse() {
   // launch analyser thread
@@ -137,16 +140,17 @@ public:
         uint8_t* buffer = (uint8_t*)malloc (pidInfo.getBufSize());
         memcpy (buffer, pidInfo.mBuffer, pidInfo.getBufSize());
 
-        //unique_lock<shared_mutex> lock (mAudioMutex);
-
         // add pes to maps
+        unique_lock<shared_mutex> lock (mAudioMutex);
         if (pidInfo.getPid() == service.getVideoPid())
-          mVideoPesMap.emplace (pidInfo.getPts(), cPes(buffer, pidInfo.getBufSize(), pidInfo.getPts(), pidInfo.getDts()));
+          mVideoPesMap.emplace (pidInfo.getPts(), 
+                                cPes(buffer, pidInfo.getBufSize(), pidInfo.getPts(), pidInfo.getDts()));
         else if (pidInfo.getPid() == service.getAudioPid())
-          mAudioPesMap.emplace (pidInfo.getPts(), cPes(buffer, pidInfo.getBufSize(), pidInfo.getPts(), pidInfo.getDts()));
-        else if (pidInfo.getPid() == service.getSubtitlePid())
-          if (pidInfo.getBufSize())
-            mSubtitlePesMap.emplace (pidInfo.getPts(), cPes(buffer, pidInfo.getBufSize(), pidInfo.getPts(), pidInfo.getDts()));
+          mAudioPesMap.emplace (pidInfo.getPts(), 
+                                cPes(buffer, pidInfo.getBufSize(), pidInfo.getPts(), pidInfo.getDts()));
+        else if ((pidInfo.getPid() == service.getSubtitlePid()) && pidInfo.getBufSize())
+          mSubtitlePesMap.emplace (pidInfo.getPts(), 
+                                   cPes(buffer, pidInfo.getBufSize(), pidInfo.getPts(), pidInfo.getDts()));
         }
       //}}}
       );
@@ -236,8 +240,8 @@ public:
   //}}}
   //{{{
   void skip (int64_t skipPts) {
-    if (mService)
-      mService->skip (skipPts);
+    if (mAudioRender)
+      mAudioRender->skip (skipPts);
     }
   //}}}
 
@@ -259,9 +263,9 @@ private:
   string mFileName;
   cPlayerOptions* mOptions;
 
+  size_t mFileSize = 0;
   cTransportStream::cService* mService = nullptr;
 
-  size_t mFileSize = 0;
   int64_t mPesBytes = 0;
 
   shared_mutex mAudioMutex;
@@ -269,9 +273,9 @@ private:
   map <int64_t,cPes> mVideoPesMap;
   map <int64_t,cPes> mSubtitlePesMap;
 
-  cRender* mVideoRender = nullptr;
-  cRender* mAudioRender = nullptr;
-  cRender* mSubtitleRender = nullptr;
+  cVideoRender* mVideoRender = nullptr;
+  cAudioRender* mAudioRender = nullptr;
+  cSubtitleRender* mSubtitleRender = nullptr;
   };
 //}}}
 //{{{
