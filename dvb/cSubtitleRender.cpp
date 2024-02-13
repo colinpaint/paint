@@ -30,8 +30,8 @@ constexpr size_t kMaxFrames = 0;
 
 // public:
 //{{{
-cSubtitleRender::cSubtitleRender (const string& name, uint8_t streamType, uint16_t pid, iOptions* options)
-    : cRender(kQueued, name, "sub", options, streamType, pid, kPtsPer25HzFrame, kMaxFrames,
+cSubtitleRender::cSubtitleRender (bool queue, const string& name, uint8_t streamType, uint16_t pid, iOptions* options)
+    : cRender(queue, name, "sub", options, streamType, pid, kPtsPer25HzFrame, kMaxFrames,
 
               // getFrame lambda
               [&]() noexcept {

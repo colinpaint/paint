@@ -38,15 +38,15 @@ extern "C" {
 
 using namespace std;
 //}}}
-constexpr bool kQueued = true;
 constexpr size_t kLiveMaxFrames = 24;
 constexpr size_t kFileMaxFrames = 48;
 constexpr int64_t kDefaultPtsPerFrame = 1920;
 
 // cAudioRender
 //{{{
-cAudioRender::cAudioRender (const string& name, uint8_t streamType, uint16_t pid, iOptions* options)
-    : cRender(kQueued, name, "aud", options, streamType, pid,
+cAudioRender::cAudioRender (bool queue, const string& name,
+                            uint8_t streamType, uint16_t pid, iOptions* options)
+    : cRender(queue, name, "aud", options, streamType, pid,
               kDefaultPtsPerFrame, (dynamic_cast<cRender::cOptions*>(options))->mIsLive ? kLiveMaxFrames : kFileMaxFrames,
               //{{{  getFrame lambda
               [&]() noexcept {

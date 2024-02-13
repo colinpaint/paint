@@ -60,6 +60,7 @@ public:
 
   bool decodePes (uint8_t* pes, uint32_t pesSize,
                   int64_t pts, int64_t dts, int64_t streamPos = 0, bool skip = false);
+  virtual bool throttle (int64_t pts);
 
   virtual std::string getInfoString() const;
   virtual bool throttle() { return false; }
@@ -73,7 +74,6 @@ public:
 protected:
   size_t getQueueSize() const;
   float getQueueFrac() const;
-  bool throttle (int64_t pts);
 
   // vars
   iOptions* mOptions;

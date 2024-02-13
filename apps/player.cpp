@@ -106,6 +106,41 @@ public:
   int64_t getFirstAudioPts() const { return mAudioPesMap.empty() ? -1 : mAudioPesMap.begin()->first; }
 
   //{{{
+  void start() {
+    analyse();
+    audioLoader();
+    videoLoader();
+    }
+  //}}}
+  //{{{
+  void togglePlay() {
+    if (mAudioRender)
+      mAudioRender->togglePlay();
+    }
+  //}}}
+  //{{{
+  void skip (int64_t skipPts) {
+    if (mAudioRender)
+      mAudioRender->skip (skipPts);
+    }
+  //}}}
+
+private:
+  //{{{
+  class cPes {
+  public:
+    cPes (uint8_t* data, uint32_t size, int64_t pts, int64_t dts) :
+      mData(data), mSize(size), mPts(pts), mDts(dts) {}
+    ~cPes() = default;
+
+    uint8_t* mData;
+    uint32_t mSize;
+    int64_t mPts;
+    int64_t mDts;
+    };
+  //}}}
+
+  //{{{
   bool analyse() {
   // launch analyser thread
 
@@ -123,11 +158,11 @@ public:
       [&](cTransportStream::cService& service) noexcept {
         if (!mService) {
           mService = &service;
-          mAudioRender = new cAudioRender ("aud", mService->getAudioStreamTypeId(),
+          mAudioRender = new cAudioRender (false, "aud", mService->getAudioStreamTypeId(),
                                                   mService->getAudioPid(), mOptions);
-          mVideoRender = new cVideoRender ("vid", mService->getVideoStreamTypeId(),
+          mVideoRender = new cVideoRender (false, "vid", mService->getVideoStreamTypeId(),
                                                   mService->getVideoPid(), mOptions);
-          mSubtitleRender = new cSubtitleRender ("sub", mService->getSubtitleStreamTypeId(),
+          mSubtitleRender = new cSubtitleRender (false, "sub", mService->getSubtitleStreamTypeId(),
                                                         mService->getSubtitlePid(), mOptions);
           }
         },
@@ -213,23 +248,21 @@ public:
     }
   //}}}
   //{{{
-  void loader() {
-  // launch loader thread
+  void audioLoader() {
+  // launch audioLoader thread
 
     thread ([=]() {
-      cLog::setThreadName ("load");
+      cLog::setThreadName ("audL");
 
       while (mAudioPesMap.begin() == mAudioPesMap.end()) {
-        cLog::log (LOGINFO, fmt::format ("load start wait first pes"));
+        cLog::log (LOGINFO, fmt::format ("audioLoader::start wait"));
         this_thread::sleep_for (100ms);
         }
 
       auto it = mAudioPesMap.begin();
       mAudioRender->decodePes (it->second.mData, it->second.mSize, it->second.mPts, it->second.mDts);
       ++it;
-      this_thread::sleep_for (100ms);
 
-      // crude loader
       //unique_lock<shared_mutex> lock (mAudioMutex);
       while (it != mAudioPesMap.end()) {
         int64_t diff = it->first - mAudioRender->getPlayer()->getPts();
@@ -239,7 +272,7 @@ public:
                                          utils::getFullPtsString (mAudioRender->getPlayer()->getPts())));
         mAudioRender->decodePes (it->second.mData, it->second.mSize, it->second.mPts, it->second.mDts);
         ++it;
-        while (mAudioRender->throttle())
+        while (mAudioRender->throttle (mAudioRender->getPlayer()->getPts()))
           this_thread::sleep_for (1ms);
         }
 
@@ -247,33 +280,35 @@ public:
       }).detach();
     }
   //}}}
-
   //{{{
-  void togglePlay() {
-    if (mAudioRender)
-      mAudioRender->togglePlay();
+  void videoLoader() {
+  // launch videoLoader thread
+
+    thread ([=]() {
+      cLog::setThreadName ("vidL");
+
+      while ((mVideoPesMap.begin() == mVideoPesMap.end()) || !mAudioRender || !mAudioRender->getPlayer()) {
+        cLog::log (LOGINFO, fmt::format ("videoLoader::start wait"));
+        this_thread::sleep_for (100ms);
+        }
+
+      //unique_lock<shared_mutex> lock (mAudioMutex);
+      auto it = mVideoPesMap.begin();
+      while (it != mVideoPesMap.end()) {
+        int64_t diff = it->first - mAudioRender->getPlayer()->getPts();
+        cLog::log (LOGINFO, fmt::format ("load {:5d} {} - {}",
+                                         diff,
+                                         utils::getFullPtsString (it->first),
+                                         utils::getFullPtsString (mAudioRender->getPlayer()->getPts())));
+        mVideoRender->decodePes (it->second.mData, it->second.mSize, it->second.mPts, it->second.mDts);
+        ++it;
+        while (mVideoRender->throttle (mAudioRender->getPlayer()->getPts()))
+          this_thread::sleep_for (1ms);
+        }
+
+      cLog::log (LOGERROR, "exit");
+      }).detach();
     }
-  //}}}
-  //{{{
-  void skip (int64_t skipPts) {
-    if (mAudioRender)
-      mAudioRender->skip (skipPts);
-    }
-  //}}}
-
-private:
-  //{{{
-  class cPes {
-  public:
-    cPes (uint8_t* data, uint32_t size, int64_t pts, int64_t dts) :
-      mData(data), mSize(size), mPts(pts), mDts(dts) {}
-    ~cPes() = default;
-
-    uint8_t* mData;
-    uint32_t mSize;
-    int64_t mPts;
-    int64_t mDts;
-    };
   //}}}
 
   string mFileName;
@@ -311,8 +346,7 @@ public:
     cFilePlayer* filePlayer = new cFilePlayer (fileName, options);
 
     mFilePlayers.push_back (filePlayer);
-    filePlayer->analyse();
-    filePlayer->loader();
+    filePlayer->start();
     }
   //}}}
 
@@ -427,66 +461,61 @@ private:
   //{{{
   class cFramesView {
   public:
-    void draw (cAudioRender& audioRender, cVideoRender& videoRender, int64_t playerPts, ImVec2 pos) {
-      float ptsScale = mPixelsPerVideoFrame / videoRender.getPtsDuration();
+    void draw (cAudioRender* audioRender, cVideoRender* videoRender, int64_t playerPts, ImVec2 pos) {
 
-      { // lock video during iterate
-      shared_lock<shared_mutex> lock (videoRender.getSharedMutex());
-      for (auto& frame : videoRender.getFramesMap()) {
-        //{{{  draw video frames
-        float posL = pos.x + (frame.second->getPts() - playerPts) * ptsScale;
-        float posR = pos.x + ((frame.second->getPts() - playerPts + frame.second->getPtsDuration()) * ptsScale) - 1.f;
+     float ptsScale = 6.f / videoRender->getPtsDuration();
+      if (videoRender) {
+        // lock video during iterate
+        shared_lock<shared_mutex> lock (videoRender->getSharedMutex());
+        for (auto& frame : videoRender->getFramesMap()) {
+          //{{{  draw video frames
+          float posL = pos.x + (frame.second->getPts() - playerPts) * ptsScale;
+          float posR = pos.x + ((frame.second->getPts() - playerPts + frame.second->getPtsDuration()) * ptsScale) - 1.f;
 
-        // pesSize I white / P purple / B blue - ABGR color
-        cVideoFrame* videoFrame = dynamic_cast<cVideoFrame*>(frame.second);
-        ImGui::GetWindowDrawList()->AddRectFilled (
-          { posL, pos.y - addValue ((float)videoFrame->getPesSize(), mMaxPesSize, mMaxDisplayPesSize,
-                                       kLines * ImGui::GetTextLineHeight()) },
-          { posR, pos.y },
-          (videoFrame->mFrameType == 'I') ?
-            0xffffffff : (videoFrame->mFrameType == 'P') ?
-              0xffFF40ff : 0xffFF4040);
+          // pesSize I white / P purple / B blue - ABGR color
+          cVideoFrame* videoFrame = dynamic_cast<cVideoFrame*>(frame.second);
+          ImGui::GetWindowDrawList()->AddRectFilled (
+            { posL, pos.y - addValue ((float)videoFrame->getPesSize(), mMaxPesSize,
+                                         2.f * ImGui::GetTextLineHeight()) },
+            { posR, pos.y },
+            (videoFrame->mFrameType == 'I') ?
+              0xffffffff : (videoFrame->mFrameType == 'P') ?
+                0xffFF40ff : 0xffFF4040);
+          }
+          //}}}
         }
-        //}}}
-      }
 
-      { // lock audio during iterate
-      shared_lock<shared_mutex> lock (audioRender.getSharedMutex());
-      for (auto& frame : audioRender.getFramesMap()) {
-        //{{{  draw audio frames
-        float posL = pos.x + (frame.second->getPts() - playerPts) * ptsScale;
-        float posR = pos.x + ((frame.second->getPts() - playerPts + frame.second->getPtsDuration()) * ptsScale) - 1.f;
+      if (audioRender) {
+        // lock audio during iterate
+        shared_lock<shared_mutex> lock (audioRender->getSharedMutex());
+        for (auto& frame : audioRender->getFramesMap()) {
+          //{{{  draw audio frames
+          float posL = pos.x + (frame.second->getPts() - playerPts) * ptsScale;
+          float posR = pos.x + ((frame.second->getPts() - playerPts + frame.second->getPtsDuration()) * ptsScale) - 1.f;
 
-        cAudioFrame* audioFrame = dynamic_cast<cAudioFrame*>(frame.second);
-        ImGui::GetWindowDrawList()->AddRectFilled (
-          { posL, pos.y - addValue (audioFrame->getSimplePower(), mMaxPower, mMaxDisplayPower,
-                                    kLines * ImGui::GetTextLineHeight()) },
-          { posR, pos.y },
-          0x8000ff00);
+          cAudioFrame* audioFrame = dynamic_cast<cAudioFrame*>(frame.second);
+          ImGui::GetWindowDrawList()->AddRectFilled (
+            { posL, pos.y - addValue (audioFrame->getSimplePower(), mMaxPower,
+                                      2.f * ImGui::GetTextLineHeight()) },
+            { posR, pos.y },
+            0x8000ff00);
+          }
+          //}}}
         }
-        //}}}
-      }
 
       // draw playPts centre bar
       ImGui::GetWindowDrawList()->AddRectFilled (
-        { pos.x-1.f, pos.y - (kLines * ImGui::GetTextLineHeight()) },
+        { pos.x-1.f, pos.y - (2.f * ImGui::GetTextLineHeight()) },
         { pos.x+1.f, pos.y },
         0xffffffff);
-
-      // agc scaling back to max display values from max values
-      agc (mMaxPesSize, mMaxDisplayPesSize, 100.f, 10000.f);
-      agc (mMaxPower, mMaxDisplayPower, 0.001f, 0.1f);
       }
 
   private:
     //{{{
-    float addValue (float value, float& maxValue, float& maxDisplayValue, float scale) {
+    float addValue (float value, float& maxValue, float scale) {
 
       if (value > maxValue)
         maxValue = value;
-      if (value > maxDisplayValue)
-        maxDisplayValue = value;
-
       return scale * value / maxValue;
       }
     //}}}
@@ -506,22 +535,16 @@ private:
     //}}}
 
     //  vars
-    const float kLines = 2.f;
-    const float mPixelsPerVideoFrame = 6.f;
     const float mPixelsPerAudioChannel = 6.f;
-
     float mMaxPower = 0.f;
-    float mMaxDisplayPower = 0.f;
-
     float mMaxPesSize = 0.f;
-    float mMaxDisplayPesSize = 0.f;
     };
   //}}}
   //{{{
   class cAudioMeterView {
   public:
-    void draw (cAudioRender& audioRender, int64_t playerPts, ImVec2 pos) {
-      cAudioFrame* audioFrame = audioRender.getAudioFrameAtPts (playerPts);
+    void draw (cAudioRender* audioRender, int64_t playerPts, ImVec2 pos) {
+      cAudioFrame* audioFrame = audioRender->getAudioFrameAtPts (playerPts);
       if (audioFrame) {
         size_t drawChannels = audioFrame->getNumChannels();
         bool audio51 = (audioFrame->getNumChannels() == 6);
@@ -534,30 +557,25 @@ private:
           channelOrder = { 0, 1, 2, 3, 4, 5 };
 
         // draw channels
-        float x = pos.x - (drawChannels * mPixelsPerAudioChannel);
+        float x = pos.x - (6.f * drawChannels);
         pos.y += 1.f;
         float height = 8.f * ImGui::GetTextLineHeight();
         for (size_t i = 0; i < drawChannels; i++) {
           ImGui::GetWindowDrawList()->AddRectFilled (
             {x, pos.y - (audioFrame->mPowerValues[channelOrder[i]] * height)},
-            {x + mPixelsPerAudioChannel - 1.f, pos.y},
+            {x + 6.f - 1.f, pos.y},
             0xff00ff00);
-          x += mPixelsPerAudioChannel;
+          x += 6.f;
           }
 
         // draw 5.1 woofer red
         if (audio51)
           ImGui::GetWindowDrawList()->AddRectFilled (
-            {pos.x - (5 * mPixelsPerAudioChannel), pos.y - (audioFrame->mPowerValues[channelOrder[5]] * height)},
+            {pos.x - (5 * 6.f), pos.y - (audioFrame->mPowerValues[channelOrder[5]] * height)},
             {pos.x - 1.f, pos.y},
             0x800000ff);
         }
       }
-
-  private:
-    //  vars
-    const float mAudioLines = 1.f;
-    const float mPixelsPerAudioChannel = 6.f;
     };
   //}}}
   //{{{
@@ -698,36 +716,40 @@ private:
             //}}}
 
           //if (mSelect == eSelectedFull) // draw framesView
-          mFramesView.draw (*audioRender, *videoRender, playPts,
+          mFramesView.draw (audioRender, videoRender, playPts,
                             ImVec2((mTL.x + mBR.x)/2.f, mBR.y - ImGui::GetTextLineHeight()*0.25f));
           }
 
-        if (audioRender) // draw audioMeterView
-          mAudioMeterView.draw (*audioRender, playPts,
-                                ImVec2(mBR.x - ImGui::GetTextLineHeight()*0.5f,
-                                       mBR.y - ImGui::GetTextLineHeight()*0.25f));
-
-        // largeFont for title and pts
+        // largeFont
         ImGui::PushFont (playerApp.getLargeFont());
+        //{{{  draw title topLeft
         string title = "title";
-        //{{{  draw dropShadow title topLeft
+
         ImVec2 pos = {ImGui::GetTextLineHeight() * 0.25f, 0.f};
         ImGui::SetCursorPos (pos);
         ImGui::TextColored ({0.f,0.f,0.f,1.f}, title.c_str());
         ImGui::SetCursorPos (pos - ImVec2(2.f,2.f));
         ImGui::TextColored ({1.f, 1.f,1.f,1.f}, title.c_str());
+
         pos.y += ImGui::GetTextLineHeight() * 1.5f;
         //}}}
-        //{{{  draw ptsFromStart bottomRight
-        string ptsFromStartString = utils::getPtsString (mService.getPtsFromStart());
+        if (audioRender) {
+          //{{{  draw playPts bottomRight
+          string ptsFromStartString = utils::getPtsString (audioRender->getPts());
 
-        pos = ImVec2 (mSize - ImVec2(ImGui::GetTextLineHeight() * 7.f, ImGui::GetTextLineHeight()));
-        ImGui::SetCursorPos (pos);
-        ImGui::TextColored ({0.f,0.f,0.f,1.f}, ptsFromStartString.c_str());
-        ImGui::SetCursorPos (pos - ImVec2(2.f,2.f));
-        ImGui::TextColored ({1.f,1.f,1.f,1.f}, ptsFromStartString.c_str());
-        //}}}
+          pos = ImVec2 (mSize - ImVec2(ImGui::GetTextLineHeight() * 7.f, ImGui::GetTextLineHeight()));
+          ImGui::SetCursorPos (pos);
+          ImGui::TextColored ({0.f,0.f,0.f,1.f}, ptsFromStartString.c_str());
+          ImGui::SetCursorPos (pos - ImVec2(2.f,2.f));
+          ImGui::TextColored ({1.f,1.f,1.f,1.f}, ptsFromStartString.c_str());
+          }
+          //}}}
         ImGui::PopFont();
+
+        if (audioRender)
+          mAudioMeterView.draw (audioRender, playPts,
+                                ImVec2(mBR.x - ImGui::GetTextLineHeight()*0.5f,
+                                       mBR.y - ImGui::GetTextLineHeight()*0.25f));
         }
 
       ImVec2 viewSubSize = mSize - ImVec2(0.f,
@@ -987,23 +1009,33 @@ private:
     }
   //}}}
   //{{{
+  void hitShiftLeft (cPlayerApp& playerApp) {
+    playerApp.skipPlay (-(90000 * 10) / 25);
+    }
+  //}}}
+  //{{{
+  void hitShiftRight (cPlayerApp& playerApp) {
+    playerApp.skipPlay ((90000 * 10) / 25);
+    }
+  //}}}
+  //{{{
   void hitLeft (cPlayerApp& playerApp) {
     playerApp.skipPlay (-90000);
     }
   //}}}
   //{{{
   void hitRight (cPlayerApp& playerApp) {
-    playerApp.skipPlay (90000 / 25);
+    playerApp.skipPlay (90000);
     }
   //}}}
   //{{{
   void hitUp (cPlayerApp& playerApp) {
-    playerApp.skipPlay (-900000 / 25);
+    playerApp.skipPlay (-900000);
     }
   //}}}
   //{{{
   void hitDown (cPlayerApp& playerApp) {
-    playerApp.skipPlay (900000 / 25);
+    playerApp.skipPlay (900000);
     }
   //}}}
   //{{{
@@ -1020,13 +1052,15 @@ private:
     //}}}
     const vector<sActionKey> kActionKeys = {
     //  alt    control shift  ImGuiKey             function
-      { false, false,  false, ImGuiKey_Space,      [this,&playerApp]{ hitSpace (playerApp); }},
       { false, true,   false, ImGuiKey_LeftArrow,  [this,&playerApp]{ hitControlLeft (playerApp); }},
-      { false, true,   false, ImGuiKey_RightArrow, [this,&playerApp]{ hitControlRight (playerApp); }},
+      { false, false,  true,  ImGuiKey_LeftArrow,  [this,&playerApp]{ hitShiftLeft (playerApp); }},
       { false, false,  false, ImGuiKey_LeftArrow,  [this,&playerApp]{ hitLeft (playerApp); }},
+      { false, false,  true,  ImGuiKey_RightArrow, [this,&playerApp]{ hitShiftRight (playerApp); }},
+      { false, true,   false, ImGuiKey_RightArrow, [this,&playerApp]{ hitControlRight (playerApp); }},
       { false, false,  false, ImGuiKey_RightArrow, [this,&playerApp]{ hitRight (playerApp); }},
       { false, false,  false, ImGuiKey_UpArrow,    [this,&playerApp]{ hitUp (playerApp); }},
       { false, false,  false, ImGuiKey_DownArrow,  [this,&playerApp]{ hitDown (playerApp); }},
+      { false, false,  false, ImGuiKey_Space,      [this,&playerApp]{ hitSpace (playerApp); }},
       { false, false,  false, ImGuiKey_Enter,      [this,&playerApp]{ mMultiView.hitEnter(); }},
       { false, false,  false, ImGuiKey_F,          [this,&playerApp]{ playerApp.getPlatform().toggleFullScreen(); }},
       { false, false,  false, ImGuiKey_S,          [this,&playerApp]{ playerApp.toggleShowSubtitle(); }},

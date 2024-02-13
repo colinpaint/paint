@@ -148,22 +148,6 @@ bool cRender::decodePes (uint8_t* pes, uint32_t pesSize,
   }
 //}}}
 
-// log
-void cRender::toggleLog() { mMiniLog.toggleEnable(); }
-void cRender::header() { mMiniLog.setHeader (fmt::format ("header")); }
-void cRender::log (const string& tag, const string& text) { mMiniLog.log (tag, text); }
-
-// protected
-//{{{
-size_t cRender::getQueueSize() const {
-  return mDecodeQueue.size_approx();
-  }
-//}}}
-//{{{
-float cRender::getQueueFrac() const {
-  return (float)mDecodeQueue.size_approx() / mDecodeQueue.max_capacity();
-  }
-//}}}
 //{{{
 bool cRender::throttle (int64_t pts) {
 // return true if fileRead should throttle
@@ -186,6 +170,23 @@ bool cRender::throttle (int64_t pts) {
   // not centred about pts, throttle
   return true;
   }
+  }
+//}}}
+
+// log
+void cRender::toggleLog() { mMiniLog.toggleEnable(); }
+void cRender::header() { mMiniLog.setHeader (fmt::format ("header")); }
+void cRender::log (const string& tag, const string& text) { mMiniLog.log (tag, text); }
+
+// protected
+//{{{
+size_t cRender::getQueueSize() const {
+  return mDecodeQueue.size_approx();
+  }
+//}}}
+//{{{
+float cRender::getQueueFrac() const {
+  return (float)mDecodeQueue.size_approx() / mDecodeQueue.max_capacity();
   }
 //}}}
 
