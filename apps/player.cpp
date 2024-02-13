@@ -229,18 +229,18 @@ public:
       ++it;
       this_thread::sleep_for (100ms);
 
-      //unique_lock<shared_mutex> lock (mAudioMutex);
-
       // crude loader
+      //unique_lock<shared_mutex> lock (mAudioMutex);
       while (it != mAudioPesMap.end()) {
         int64_t diff = it->first - mAudioRender->getPlayer()->getPts();
-        cLog::log (LOGINFO, fmt::format ("load diff::{} cur:{} player:{}",
+        cLog::log (LOGINFO, fmt::format ("load {:5d} {} - {}",
                                          diff,
                                          utils::getFullPtsString (it->first),
                                          utils::getFullPtsString (mAudioRender->getPlayer()->getPts())));
         mAudioRender->decodePes (it->second.mData, it->second.mSize, it->second.mPts, it->second.mDts);
         ++it;
-        this_thread::sleep_for (120ms);
+        while (mAudioRender->throttle())
+          this_thread::sleep_for (1ms);
         }
 
       cLog::log (LOGERROR, "exit");
@@ -698,8 +698,8 @@ private:
             //}}}
 
           //if (mSelect == eSelectedFull) // draw framesView
-            mFramesView.draw (*audioRender, *videoRender, playPts,
-                              ImVec2((mTL.x + mBR.x)/2.f, mBR.y - ImGui::GetTextLineHeight()*0.25f));
+          mFramesView.draw (*audioRender, *videoRender, playPts,
+                            ImVec2((mTL.x + mBR.x)/2.f, mBR.y - ImGui::GetTextLineHeight()*0.25f));
           }
 
         if (audioRender) // draw audioMeterView
@@ -718,17 +718,15 @@ private:
         ImGui::TextColored ({1.f, 1.f,1.f,1.f}, title.c_str());
         pos.y += ImGui::GetTextLineHeight() * 1.5f;
         //}}}
-        if (mSelect == eSelectedFull) {
-          //{{{  draw ptsFromStart bottomRight
-          string ptsFromStartString = utils::getPtsString (mService.getPtsFromStart());
+        //{{{  draw ptsFromStart bottomRight
+        string ptsFromStartString = utils::getPtsString (mService.getPtsFromStart());
 
-          pos = ImVec2 (mSize - ImVec2(ImGui::GetTextLineHeight() * 7.f, ImGui::GetTextLineHeight()));
-          ImGui::SetCursorPos (pos);
-          ImGui::TextColored ({0.f,0.f,0.f,1.f}, ptsFromStartString.c_str());
-          ImGui::SetCursorPos (pos - ImVec2(2.f,2.f));
-          ImGui::TextColored ({1.f,1.f,1.f,1.f}, ptsFromStartString.c_str());
-          }
-          //}}}
+        pos = ImVec2 (mSize - ImVec2(ImGui::GetTextLineHeight() * 7.f, ImGui::GetTextLineHeight()));
+        ImGui::SetCursorPos (pos);
+        ImGui::TextColored ({0.f,0.f,0.f,1.f}, ptsFromStartString.c_str());
+        ImGui::SetCursorPos (pos - ImVec2(2.f,2.f));
+        ImGui::TextColored ({1.f,1.f,1.f,1.f}, ptsFromStartString.c_str());
+        //}}}
         ImGui::PopFont();
         }
 
