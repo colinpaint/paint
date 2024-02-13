@@ -266,7 +266,7 @@ private:
       //unique_lock<shared_mutex> lock (mAudioMutex);
       while (it != mAudioPesMap.end()) {
         int64_t diff = it->first - mAudioRender->getPlayer()->getPts();
-        cLog::log (LOGINFO, fmt::format ("load {:5d} {} - {}",
+        cLog::log (LOGINFO, fmt::format ("{:5d} {} - {}",
                                          diff,
                                          utils::getFullPtsString (it->first),
                                          utils::getFullPtsString (mAudioRender->getPlayer()->getPts())));
@@ -296,7 +296,7 @@ private:
       auto it = mVideoPesMap.begin();
       while (it != mVideoPesMap.end()) {
         int64_t diff = it->first - mAudioRender->getPlayer()->getPts();
-        cLog::log (LOGINFO, fmt::format ("load {:5d} {} - {}",
+        cLog::log (LOGINFO, fmt::format ("{:5d} {} - {}",
                                          diff,
                                          utils::getFullPtsString (it->first),
                                          utils::getFullPtsString (mAudioRender->getPlayer()->getPts())));
