@@ -143,13 +143,13 @@ public:
         // add pes to maps
         unique_lock<shared_mutex> lock (mAudioMutex);
         if (pidInfo.getPid() == service.getVideoPid())
-          mVideoPesMap.emplace (pidInfo.getPts(), 
+          mVideoPesMap.emplace (pidInfo.getPts(),
                                 cPes(buffer, pidInfo.getBufSize(), pidInfo.getPts(), pidInfo.getDts()));
         else if (pidInfo.getPid() == service.getAudioPid())
-          mAudioPesMap.emplace (pidInfo.getPts(), 
+          mAudioPesMap.emplace (pidInfo.getPts(),
                                 cPes(buffer, pidInfo.getBufSize(), pidInfo.getPts(), pidInfo.getDts()));
         else if ((pidInfo.getPid() == service.getSubtitlePid()) && pidInfo.getBufSize())
-          mSubtitlePesMap.emplace (pidInfo.getPts(), 
+          mSubtitlePesMap.emplace (pidInfo.getPts(),
                                    cPes(buffer, pidInfo.getBufSize(), pidInfo.getPts(), pidInfo.getDts()));
         }
       //}}}
@@ -219,11 +219,27 @@ public:
     thread ([=]() {
       cLog::setThreadName ("load");
 
+      while (mAudioPesMap.begin() == mAudioPesMap.end()) {
+        cLog::log (LOGINFO, fmt::format ("load start wait first pes"));
+        this_thread::sleep_for (100ms);
+        }
+
+      auto it = mAudioPesMap.begin();
+      mAudioRender->decodePes (it->second.mData, it->second.mSize, it->second.mPts, it->second.mDts);
+      ++it;
       this_thread::sleep_for (100ms);
 
-      for (auto& pair : mAudioPesMap) {
-        //cLog::log (LOGINFO, fmt::format ("- load audio pes {}", utils::getFullPtsString (pair.first)));
-        mAudioRender->decodePes (pair.second.mData, pair.second.mSize, pair.second.mPts, pair.second.mDts);
+      //unique_lock<shared_mutex> lock (mAudioMutex);
+
+      // crude loader
+      while (it != mAudioPesMap.end()) {
+        int64_t diff = it->first - mAudioRender->getPlayer()->getPts();
+        cLog::log (LOGINFO, fmt::format ("load diff::{} cur:{} player:{}",
+                                         diff,
+                                         utils::getFullPtsString (it->first),
+                                         utils::getFullPtsString (mAudioRender->getPlayer()->getPts())));
+        mAudioRender->decodePes (it->second.mData, it->second.mSize, it->second.mPts, it->second.mDts);
+        ++it;
         this_thread::sleep_for (120ms);
         }
 
