@@ -48,13 +48,12 @@ constexpr int64_t kDefaultPtsPerFrame = 1920;
 cAudioRender::cAudioRender (const string& name, uint8_t streamType, uint16_t pid, iOptions* options)
     : cRender(kQueued, name, "aud", options, streamType, pid,
               kDefaultPtsPerFrame, (dynamic_cast<cRender::cOptions*>(options))->mIsLive ? kLiveMaxFrames : kFileMaxFrames,
-
-              // getFrame lambda
+              //{{{  getFrame lambda
               [&]() noexcept {
                 return hasMaxFrames() ? reuseBestFrame() : new cAudioFrame();
                 },
-
-              // addFrame lambda
+              //}}}
+              //{{{  addFrame lambda
               [&](cFrame* frame) noexcept {
                 cAudioFrame* audioFrame = dynamic_cast<cAudioFrame*>(frame);
                 if (mSampleRate != audioFrame->getSampleRate()) {
@@ -71,11 +70,15 @@ cAudioRender::cAudioRender (const string& name, uint8_t streamType, uint16_t pid
                 cRender::addFrame (frame);
 
                 if (!mPlayer) {
+                  cLog::log (LOGINFO, fmt::format ("cAudioRender::addFrame start {}",
+                                                   utils::getFullPtsString (audioFrame->getPts())));
                   mPlayer = new cPlayer (*this, mSampleRate, getPid(),
                                          (dynamic_cast<cAudioRender::cOptions*>(mOptions)->mHasAudio));
                   mPlayer->startPlayPts (audioFrame->getPts());
                   }
-                }),
+                }
+              //}}}
+              ),
       mSampleRate(48000), mSamplesPerFrame(1024) {
 
   mDecoder = new cFFmpegAudioDecoder ((streamType == 17) ? eAudioFrameType::eAacLatm : eAudioFrameType::eMp3);
