@@ -87,11 +87,11 @@ public:
   cFilePlayer (string fileName, cPlayerOptions* options) :
     mFileName(cFileUtils::resolve (fileName)), mOptions(options) {}
   //{{{
-  //virtual ~cFilePlayer() {
-    //mVideoPesMap.clear();
-    //mAudioPesMap.clear();
-    //mSubtitlePesMap.clear();
-    //}
+  virtual ~cFilePlayer() {
+    mVideoPesMap.clear();
+    mAudioPesMap.clear();
+    mSubtitlePesMap.clear();
+    }
   //}}}
 
   string getFileName() const { return mFileName; }
@@ -113,17 +113,6 @@ public:
       return false;
       }
       //}}}
-
-    // get fileSize
-    #ifdef _WIN32
-      struct _stati64 st;
-       if (_stat64 (mFileName.c_str(), &st) != -1)
-        mFileSize = st.st_size;
-    #else
-      struct stat st;
-      if (stat (mFileName.c_str(), &st) != -1)
-        mFileSize = st.st_size;
-    #endif
 
     cTransportStream* transportStream = new cTransportStream (
       {"anal", 0, {}, {}}, mOptions,
@@ -184,6 +173,18 @@ public:
       delete[] chunk;
       fclose (file);
       delete transportStream;
+
+      //{{{  get fileSize
+      #ifdef _WIN32
+        struct _stati64 st;
+         if (_stat64 (mFileName.c_str(), &st) != -1)
+          mFileSize = st.st_size;
+      #else
+        struct stat st;
+        if (stat (mFileName.c_str(), &st) != -1)
+          mFileSize = st.st_size;
+      #endif
+      //}}}
       //{{{  log totals
       cLog::log (LOGINFO, fmt::format ("size:{:8d}:{:8d} took {}ms",
         mPesBytes, mFileSize,
@@ -214,14 +215,12 @@ public:
     thread ([=]() {
       cLog::setThreadName ("load");
 
-      // wait to get going
       this_thread::sleep_for (100ms);
 
       for (auto& pair : mAudioPesMap) {
-        cLog::log (LOGINFO, fmt::format ("- load audio pes {}", utils::getFullPtsString (pair.first)));
-        mAudioRender->decodePes (pair.second.mData, pair.second.mSize,
-                                 pair.second.mPts, pair.second.mDts, 0, false);
-        this_thread::sleep_for (126ms);
+        //cLog::log (LOGINFO, fmt::format ("- load audio pes {}", utils::getFullPtsString (pair.first)));
+        mAudioRender->decodePes (pair.second.mData, pair.second.mSize, pair.second.mPts, pair.second.mDts);
+        this_thread::sleep_for (120ms);
         }
 
       cLog::log (LOGERROR, "exit");
@@ -241,8 +240,6 @@ public:
       mService->skip (skipPts);
     }
   //}}}
-
-  shared_mutex mAudioMutex;
 
 private:
   //{{{
@@ -267,6 +264,7 @@ private:
   size_t mFileSize = 0;
   int64_t mPesBytes = 0;
 
+  shared_mutex mAudioMutex;
   map <int64_t,cPes> mAudioPesMap;
   map <int64_t,cPes> mVideoPesMap;
   map <int64_t,cPes> mSubtitlePesMap;
@@ -679,7 +677,7 @@ private:
             }
             //}}}
 
-          if (mSelect == eSelectedFull) // draw framesView
+          //if (mSelect == eSelectedFull) // draw framesView
             mFramesView.draw (*audioRender, *videoRender, playPts,
                               ImVec2((mTL.x + mBR.x)/2.f, mBR.y - ImGui::GetTextLineHeight()*0.25f));
           }
