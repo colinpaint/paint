@@ -58,9 +58,10 @@ public:
   cFrame* reuseBestFrame();
   void addFrame (cFrame* frame);
 
+  bool decodePes (uint8_t* pes, uint32_t pesSize,
+                  int64_t pts, int64_t dts, int64_t streamPos = 0, bool skip = false);
+
   virtual std::string getInfoString() const;
-  virtual bool decodePes (uint8_t* pes, uint32_t pesSize,
-                          int64_t pts, int64_t dts, int64_t streamPos, bool skip);
   virtual bool throttle() { return false; }
   virtual void togglePlay() {}
   virtual int64_t skip (int64_t skipPts) { return int64_t(skipPts * mStreamPosPerPts); }

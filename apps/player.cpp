@@ -220,8 +220,8 @@ public:
       for (auto& pair : mAudioPesMap) {
         cLog::log (LOGINFO, fmt::format ("- load audio pes {}", utils::getFullPtsString (pair.first)));
         mAudioRender->decodePes (pair.second.mData, pair.second.mSize,
-                                 0, pair.second.mPts, pair.second.mDts, false);
-        this_thread::sleep_for (21ms);
+                                 pair.second.mPts, pair.second.mDts, 0, false);
+        this_thread::sleep_for (126ms);
         }
 
       cLog::log (LOGERROR, "exit");
