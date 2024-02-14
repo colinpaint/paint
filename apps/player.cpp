@@ -191,7 +191,6 @@ private:
 
           if (pidInfo.getPid() == service.getVideoPid()) {
             // video
-            mPesBytes += pidInfo.getBufSize();
             uint8_t* buffer = (uint8_t*)malloc (pidInfo.getBufSize());
             memcpy (buffer, pidInfo.mBuffer, pidInfo.getBufSize());
 
@@ -205,9 +204,7 @@ private:
               mVideoGopMap.rbegin()->second.addPes (sPes(buffer, pidInfo.getBufSize(),
                                                          pidInfo.getPts(), pidInfo.getDts(), frameType));
             else
-              mVideoPesMap.emplace (pidInfo.getDts(),
-                                    sPes(buffer, pidInfo.getBufSize(),
-                                         pidInfo.getPts(), pidInfo.getDts(), frameType));
+              free (buffer);
             //{{{  debug
             cLog::log (LOGINFO, fmt::format (" V {}:{:2d} dts:{} {} size:{:6d}",
                                              frameType,
@@ -221,7 +218,6 @@ private:
             }
           else if (pidInfo.getPid() == service.getAudioPid()) {
             // audio
-            mPesBytes += pidInfo.getBufSize();
             uint8_t* buffer = (uint8_t*)malloc (pidInfo.getBufSize());
             memcpy (buffer, pidInfo.mBuffer, pidInfo.getBufSize());
 
@@ -237,7 +233,6 @@ private:
             }
           else if ((pidInfo.getPid() == service.getSubtitlePid()) && pidInfo.getBufSize()) {
             // subtitle
-            mPesBytes += pidInfo.getBufSize();
             uint8_t* buffer = (uint8_t*)malloc (pidInfo.getBufSize());
             memcpy (buffer, pidInfo.mBuffer, pidInfo.getBufSize());
 
@@ -271,14 +266,13 @@ private:
       fclose (file);
 
       //{{{  log totals
-      cLog::log (LOGINFO, fmt::format ("size:{:8d}:{:8d} took {}ms",
-        mPesBytes, mFileSize,
-        chrono::duration_cast<chrono::milliseconds>(chrono::system_clock::now() - now).count()));
-      cLog::log (LOGINFO, fmt::format ("- vid:{:6d} {} to {} gop:{} nonGopPes:{}",
+      cLog::log (LOGINFO, fmt::format ("size:{:8d} took {}ms",
+        mFileSize, chrono::duration_cast<chrono::milliseconds>(chrono::system_clock::now() - now).count()));
+      cLog::log (LOGINFO, fmt::format ("- vid:{:6d} {} to {} gop:{}",
                                        mNumVideoPes,
                                        utils::getFullPtsString (mVideoGopMap.begin()->second.mPesVector.front().mPts),
                                        utils::getFullPtsString (mVideoGopMap.rbegin()->second.mPesVector.front().mPts),
-                                       mVideoGopMap.size(), mVideoPesMap.size()));
+                                       mVideoGopMap.size()));
       cLog::log (LOGINFO, fmt::format ("- aud:{:6d} {} to {}",
                                        mAudioPesMap.size(),
                                        utils::getFullPtsString (mAudioPesMap.begin()->first),
@@ -334,7 +328,7 @@ private:
     thread ([=]() {
       cLog::setThreadName ("vidL");
 
-      while ((mVideoPesMap.begin() == mVideoPesMap.end()) || !mAudioRender || !mAudioRender->getPlayer()) {
+      while ((mVideoGopMap.begin() == mVideoGopMap.end()) || !mAudioRender || !mAudioRender->getPlayer()) {
         if (kLoadDebug)
           cLog::log (LOGINFO, fmt::format ("videoLoader::start wait"));
         this_thread::sleep_for (100ms);
@@ -394,17 +388,11 @@ private:
   size_t mFileSize = 0;
   cTransportStream::cService* mService = nullptr;
 
-  int64_t mPesBytes = 0;
-  int64_t mLastI = -1;
-
   // pes
   shared_mutex mAudioMutex;
   map <int64_t,sPes> mAudioPesMap;
-
   int64_t mNumVideoPes = 0;
-  map <int64_t,sPes> mVideoPesMap;
   map <int64_t,cGop> mVideoGopMap;
-
   map <int64_t,sPes> mSubtitlePesMap;
 
   // render
@@ -697,10 +685,8 @@ private:
       float viewportWidth = ImGui::GetWindowWidth();
       float viewportHeight = ImGui::GetWindowHeight();
       mSize = {layoutScale * viewportWidth, layoutScale * viewportHeight};
-      mTL = {(layoutPos.x * viewportWidth) - mSize.x*0.5f,
-             (layoutPos.y * viewportHeight) - mSize.y*0.5f};
-      mBR = {(layoutPos.x * viewportWidth) + mSize.x*0.5f,
-             (layoutPos.y * viewportHeight) + mSize.y*0.5f};
+      mTL = {(layoutPos.x * viewportWidth) - mSize.x*0.5f, (layoutPos.y * viewportHeight) - mSize.y*0.5f};
+      mBR = {(layoutPos.x * viewportWidth) + mSize.x*0.5f, (layoutPos.y * viewportHeight) + mSize.y*0.5f};
 
       ImGui::SetCursorPos (mTL);
       ImGui::BeginChild (fmt::format ("view##{}", mService.getSid()).c_str(), mSize,
@@ -715,7 +701,6 @@ private:
 
       cAudioRender* audioRender = playerApp.getFilePlayer()->getAudioRender();
       if (audioRender) {
-        //  get audio playPts
         int64_t playPts = audioRender->getPts();
         if (audioRender->getPlayer()) {
           playPts = audioRender->getPlayer()->getPts();
@@ -798,8 +783,6 @@ private:
               //}}}
             }
             //}}}
-
-          //if (mSelect == eSelectedFull) // draw framesView
           mFramesView.draw (audioRender, videoRender, playPts,
                             ImVec2((mTL.x + mBR.x)/2.f, mBR.y - ImGui::GetTextLineHeight()*0.25f));
           }
@@ -830,18 +813,16 @@ private:
           //}}}
         ImGui::PopFont();
 
-        if (audioRender)
-          mAudioMeterView.draw (audioRender, playPts,
-                                ImVec2(mBR.x - ImGui::GetTextLineHeight()*0.5f,
-                                       mBR.y - ImGui::GetTextLineHeight()*0.25f));
+        mAudioMeterView.draw (audioRender, playPts,
+          ImVec2(mBR.x - ImGui::GetTextLineHeight()*0.5f, mBR.y - ImGui::GetTextLineHeight()*0.25f));
         }
-
-      ImVec2 viewSubSize = mSize - ImVec2(0.f,
-          ImGui::GetTextLineHeight() * ((layoutPos.y + (layoutScale/2.f) >= 0.99f) ? 3.f : 1.5f));
 
       // invisbleButton over view sub area
       ImGui::SetCursorPos ({0.f,0.f});
+      ImVec2 viewSubSize = mSize - 
+        ImVec2(0.f, ImGui::GetTextLineHeight() * ((layoutPos.y + (layoutScale/2.f) >= 0.99f) ? 3.f : 1.5f));
       if (ImGui::InvisibleButton (fmt::format ("viewBox##{}", mService.getSid()).c_str(), viewSubSize)) {
+
         //{{{  hit view, select action
         if (mSelect == eUnselected)
           mSelect = eSelected;
