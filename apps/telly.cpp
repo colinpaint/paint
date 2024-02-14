@@ -48,15 +48,15 @@ extern "C" {
 #include "../decoders/cFFmpegVideoDecoder.h"
 #include "../decoders/cSubtitleFrame.h"
 #include "../decoders/cSubtitleImage.h"
+#include "../decoders/cVideoRender.h"
+#include "../decoders/cAudioRender.h"
+#include "../decoders/cSubtitleRender.h"
+#include "../decoders/cPlayer.h"
 
 // dvb
 #include "../dvb/cDvbMultiplex.h"
 #include "../dvb/cDvbSource.h"
 #include "../dvb/cTransportStream.h"
-#include "../dvb/cVideoRender.h"
-#include "../dvb/cAudioRender.h"
-#include "../dvb/cSubtitleRender.h"
-#include "../dvb/cPlayer.h"
 
 using namespace std;
 //}}}

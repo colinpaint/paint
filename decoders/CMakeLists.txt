@@ -3,7 +3,12 @@ project (decoders VERSION 1.0.0)
                                cFrame.h cAudioFrame.h cVideoFrame.h cFFmpegVideoFrame.h cSubtitleFrame.h
                                cDecoder.h cDecoderQueueItem.h
                                cFFmpegAudioDecoder.h cFFmpegVideoDecoder.h
-                               cSubtitleImage.h cSubtitleDecoder.h)
+                               cSubtitleImage.h cSubtitleDecoder.h
+                               cRender.h cRender.cpp
+                               cVideoRender.h cVideoRender.cpp
+                               cAudioRender.h cAudioRender.cpp
+                               cSubtitleRender.h cSubtitleRender.cpp
+                               cPlayer.h cPlayer.cpp)
 
   if (CMAKE_HOST_WIN32)
     # windows

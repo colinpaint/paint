@@ -21,9 +21,9 @@
 #include "../common/cDvbUtils.h"
 #include "../common/cLog.h"
 
-#include "cVideoRender.h"
-#include "cAudioRender.h"
-#include "cSubtitleRender.h"
+#include "../decoders/cVideoRender.h"
+#include "../decoders/cAudioRender.h"
+#include "../decoders/cSubtitleRender.h"
 
 using namespace std;
 //}}}
