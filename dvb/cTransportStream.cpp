@@ -469,6 +469,7 @@ void cTransportStream::cService::enableStream (cRenderStream::eType streamType) 
     case cRenderStream::eAudio: {
       cRenderStream& stream = getStream (cRenderStream::eAudio);
       stream.setRender (new cAudioRender (true, 48,
+                                          true, (dynamic_cast<cAudioRender::cOptions*>(mOptions)->mHasAudio),
                                           mName, stream.getTypeId(), stream.getPid(), mOptions));
       break;
       }

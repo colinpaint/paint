@@ -65,7 +65,6 @@ public:
   virtual std::string getInfoString() const;
   virtual bool throttle() { return false; }
   virtual void togglePlay() {}
-  virtual void skip (int64_t skipPts) {}
 
   void toggleLog();
   void header();

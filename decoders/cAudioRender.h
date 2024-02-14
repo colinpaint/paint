@@ -25,6 +25,7 @@ public:
   //}}}
 
   cAudioRender (bool queue, size_t maxFrames,
+                bool player, bool playerAudio,
                 const std::string& name, uint8_t streamType, uint16_t pid, iOptions* options);
   virtual ~cAudioRender() = default;
 

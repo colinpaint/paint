@@ -29,4 +29,4 @@ project (decoders VERSION 1.0.0)
 
   endif()
 
-  target_link_libraries (${PROJECT_NAME} PUBLIC common)
+  target_link_libraries (${PROJECT_NAME} PUBLIC common audio)

@@ -41,37 +41,35 @@ using namespace std;
 
 //{{{
 cAudioRender::cAudioRender (bool queue, size_t maxFrames,
+                            bool player, bool playerAudio,
                             const string& name, uint8_t streamType, uint16_t pid, iOptions* options)
     : cRender(queue, name, "aud", options, streamType, pid, 1920, maxFrames,
-              //{{{  getFrame lambda
-              [&]() noexcept {
-                return hasMaxFrames() ? reuseBestFrame() : new cAudioFrame();
-                },
-              //}}}
-              //{{{  addFrame lambda
-              [&](cFrame* frame) noexcept {
-                cAudioFrame* audioFrame = dynamic_cast<cAudioFrame*>(frame);
-                if (mSampleRate != audioFrame->getSampleRate()) {
-                  cLog::log (LOGERROR, fmt::format ("cAudioRender::addFrame sampleRate changed {} to {}",
-                                                    mSampleRate, audioFrame->getSampleRate()));
-                  mSampleRate = audioFrame->getSampleRate();
-                  }
+        // getFrame lambda
+        [&]() noexcept {
+          return hasMaxFrames() ? reuseBestFrame() : new cAudioFrame();
+          },
+        // addFrame lambda
+        [&](cFrame* frame) noexcept {
+          cAudioFrame* audioFrame = dynamic_cast<cAudioFrame*>(frame);
+          if (mSampleRate != audioFrame->getSampleRate()) {
+            cLog::log (LOGERROR, fmt::format ("cAudioRender::addFrame sampleRate changed {} to {}",
+                                              mSampleRate, audioFrame->getSampleRate()));
+            mSampleRate = audioFrame->getSampleRate();
+            }
 
-                setPts (frame->getPts(), frame->getPtsDuration(), frame->getStreamPos());
-                mSamplesPerFrame = audioFrame->getSamplesPerFrame();
-                mFrameInfo = audioFrame->getInfoString();
-                audioFrame->calcPower();
+          setPts (frame->getPts(), frame->getPtsDuration(), frame->getStreamPos());
+          mSamplesPerFrame = audioFrame->getSamplesPerFrame();
+          mFrameInfo = audioFrame->getInfoString();
+          audioFrame->calcPower();
 
-                cRender::addFrame (frame);
+          cRender::addFrame (frame);
 
-                if (!mPlayer) {
-                  mPlayer = new cPlayer (*this, mSampleRate, getPid(),
-                                         (dynamic_cast<cAudioRender::cOptions*>(mOptions)->mHasAudio));
-                  mPlayer->startPlayPts (audioFrame->getPts());
-                  }
-                }
-              //}}}
-              ),
+          if (player && !mPlayer) {
+            mPlayer = new cPlayer (*this, mSampleRate, getPid(), playerAudio);
+            mPlayer->startPlayPts (audioFrame->getPts());
+            }
+          }
+        ),
       mSampleRate(48000), mSamplesPerFrame(1024) {
 
   mDecoder = new cFFmpegAudioDecoder ((streamType == 17) ? eAudioFrameType::eAacLatm : eAudioFrameType::eMp3);

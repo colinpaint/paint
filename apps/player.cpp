@@ -301,8 +301,8 @@ private:
         this_thread::sleep_for (100ms);
         }
 
-      mAudioRender = new cAudioRender (
-        false, 100, "aud", mService->getAudioStreamTypeId(), mService->getAudioPid(), mOptions);
+      mAudioRender = new cAudioRender (false, 100, true, true, 
+                                       "aud", mService->getAudioStreamTypeId(), mService->getAudioPid(), mOptions);
 
       //unique_lock<shared_mutex> lock (mAudioMutex);
       auto it = mAudioPesMap.begin();
