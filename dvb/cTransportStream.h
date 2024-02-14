@@ -239,7 +239,6 @@ public:
 
     bool throttle();
     void togglePlay();
-    int64_t skip (int64_t skipPts);
 
     // record
     bool getRecord() const { return mRecord; }
@@ -344,7 +343,6 @@ public:
 
   bool throttle();
   void togglePlay();
-  int64_t getSkipOffset (int64_t skipPts);
 
   // demux
   int64_t demux (uint8_t* chunk, int64_t chunkSize, int64_t streamPos, bool skip);

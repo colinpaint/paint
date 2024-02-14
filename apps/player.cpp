@@ -314,14 +314,11 @@ private:
       mAudioRender = new cAudioRender (
         false, 100, "aud", mService->getAudioStreamTypeId(), mService->getAudioPid(), mOptions);
 
-      auto it = mAudioPesMap.begin();
-      mAudioRender->decodePes (it->second.mData, it->second.mSize, it->second.mPts, it->second.mDts);
-      ++it;
-
       //unique_lock<shared_mutex> lock (mAudioMutex);
+      auto it = mAudioPesMap.begin();
       while (it != mAudioPesMap.end()) {
         if (kLoadDebug)
-          cLog::log (LOGINFO, fmt::format ("load aud {} play:{}",
+          cLog::log (LOGINFO, fmt::format ("load aud pts:{} player:{}",
                                            utils::getFullPtsString (it->first),
                                            utils::getFullPtsString (mAudioRender->getPlayer()->getPts())));
         mAudioRender->decodePes (it->second.mData, it->second.mSize, it->second.mPts, it->second.mDts);
@@ -353,19 +350,13 @@ private:
       auto gopIt = mVideoGopMap.begin();
       while (gopIt != mVideoGopMap.end()) {
         if (kLoadDebug)
-          cLog::log (LOGINFO, fmt::format ("load gop {} - {}",
-                                           utils::getFullPtsString (gopIt->first),
-                                           utils::getFullPtsString (mAudioRender->getPlayer()->getPts())));
+          cLog::log (LOGINFO, fmt::format ("load gop {}", utils::getFullPtsString (gopIt->first)));
 
         auto& pesVector = gopIt->second.mPesVector;
         auto it = pesVector.begin();
         while (it != pesVector.end()) {
-          int64_t diff = it->mPts - mAudioRender->getPlayer()->getPts();
           if (kLoadDebug)
-            cLog::log (LOGINFO, fmt::format ("- load pes {:5d} {} - {}",
-                                             diff,
-                                             utils::getFullPtsString (it->mPts),
-                                             utils::getFullPtsString (mAudioRender->getPlayer()->getPts())));
+            cLog::log (LOGINFO, fmt::format ("- load pes {}", utils::getFullPtsString (it->mPts)));
           mVideoRender->decodePes (it->mData, it->mSize, it->mPts, it->mDts);
           ++it;
 

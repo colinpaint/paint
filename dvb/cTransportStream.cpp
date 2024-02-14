@@ -501,16 +501,6 @@ void cTransportStream::cService::togglePlay() {
     audioStream.getRender().togglePlay();
   }
 //}}}
-//{{{
-int64_t cTransportStream::cService::skip (int64_t skipPts) {
-
-  cRenderStream& audioStream = getStream (cRenderStream::eAudio);
-  if (audioStream.isEnabled())
-    return audioStream.getRender().skip (skipPts);
-
-  return 0;
-  }
-//}}}
 
 // record program
 //{{{
@@ -784,28 +774,6 @@ bool cTransportStream::throttle() {
 void cTransportStream::togglePlay() {
   for (auto& service : mServiceMap)
     service.second.togglePlay();
-  }
-//}}}
-//{{{
-int64_t cTransportStream::getSkipOffset (int64_t skipPts) {
-// return approx streamPosOffset to match skipPts
-
-  bool backwards = false;
-  int64_t maxOffset = 0;
-
-  for (auto& service : mServiceMap) {
-    int64_t offset = service.second.skip (skipPts);
-    backwards = offset < 0;
-    if (backwards)
-      offset = -offset;
-    maxOffset = max (offset, maxOffset);
-    }
-
-  // round up to next packet
-  int64_t packetsOffset = ((maxOffset + kPacketSize - 1) / kPacketSize) * kPacketSize;
-
-  // apply sign
-  return backwards ? -packetsOffset : packetsOffset;
   }
 //}}}
 
