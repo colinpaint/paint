@@ -1,4 +1,5 @@
 // cVideoRender.cpp
+constexpr bool kAddFrameDebug = false;
 //{{{  includes
 #ifdef _WIN32
   #define _CRT_SECURE_NO_WARNINGS
@@ -48,7 +49,7 @@ using namespace std;
 
 // cVideoRender
 //{{{
-cVideoRender::cVideoRender (bool queue, size_t maxFrames, 
+cVideoRender::cVideoRender (bool queue, size_t maxFrames,
                             const string& name, uint8_t streamType, uint16_t pid, iOptions* options) :
     cRender(queue, name, "vid", options, streamType, pid, kPtsPer25HzFrame, maxFrames,
             // getFrame lambda
@@ -57,7 +58,9 @@ cVideoRender::cVideoRender (bool queue, size_t maxFrames,
               },
             // addFrame lambda
             [&](cFrame* frame) noexcept {
-              cLog::log (LOGINFO, fmt::format (" - add {}", utils::getFullPtsString (frame->getPts())));
+              if (kAddFrameDebug)
+                cLog::log (LOGINFO, fmt::format ("- cVideoRender::addFrame {}", 
+                                                 utils::getFullPtsString (frame->getPts())));
 
               setPts (frame->getPts(), frame->getPtsDuration(), frame->getStreamPos());
               cVideoFrame* videoFrame = dynamic_cast<cVideoFrame*>(frame);

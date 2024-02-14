@@ -172,19 +172,7 @@ private:
 
     cTransportStream* transportStream = new cTransportStream (
       {"anal", 0, {}, {}}, mOptions,
-      //{{{  newService lambda
-      [&](cTransportStream::cService& service) noexcept {
-        if (!mService) {
-          mService = &service;
-          mAudioRender = new cAudioRender (
-            false, 50, "aud", mService->getAudioStreamTypeId(), mService->getAudioPid(), mOptions);
-          mVideoRender = new cVideoRender (
-            false, 50, "vid", mService->getVideoStreamTypeId(), mService->getVideoPid(), mOptions);
-          mSubtitleRender = new cSubtitleRender (
-            false, 0, "sub", mService->getSubtitleStreamTypeId(), mService->getSubtitlePid(), mOptions);
-          }
-        },
-      //}}}
+      [&](cTransportStream::cService& service) noexcept { mService = &service; }, // newService lambda
       //{{{  pes lambda
       [&](cTransportStream::cService& service, cTransportStream::cPidInfo& pidInfo, bool skip) noexcept {
 
@@ -195,19 +183,29 @@ private:
 
         // add pes to map
         if (pidInfo.getPid() == service.getVideoPid()) {
+          mNumVideoPes++;
           char frameType = cDvbUtils::getFrameType (buffer, pidInfo.getBufSize(), true);
-          mVideoPesMap.emplace (pidInfo.getDts(),
-                                sPes(buffer, pidInfo.getBufSize(), pidInfo.getPts(), pidInfo.getDts(), frameType));
 
-          cLog::log (LOGINFO, fmt::format ("{} {} {} {:6d} GOP:{}",
+          if (frameType == 'I')
+            mVideoGopMap.emplace (pidInfo.getPts(),
+                                  cGop(sPes(buffer, pidInfo.getBufSize(),
+                                            pidInfo.getPts(), pidInfo.getDts(), frameType)));
+          else if (!mVideoGopMap.empty())
+            mVideoGopMap.rbegin()->second.addPes (sPes(buffer, pidInfo.getBufSize(),
+                                                       pidInfo.getPts(), pidInfo.getDts(), frameType));
+          else
+            mVideoPesMap.emplace (pidInfo.getDts(),
+                                  sPes(buffer, pidInfo.getBufSize(),
+                                       pidInfo.getPts(), pidInfo.getDts(), frameType));
+
+          cLog::log (LOGINFO, fmt::format ("{}:{:2d} dts:{} {} size:{:6d}",
                                            frameType,
+                                           mVideoGopMap.empty() ? 0 : mVideoGopMap.rbegin()->second.mPesVector.size(),
                                            utils::getFullPtsString (pidInfo.getDts()),
                                            utils::getFullPtsString (pidInfo.getPts()),
-                                           pidInfo.getBufSize(),
-                                           (pidInfo.getPts() - mLastI) * 25 / 90000
+                                           pidInfo.getBufSize()
                                            ));
-          if (frameType == 'I') 
-            mLastI = pidInfo.getPts();
+
           }
         else if (pidInfo.getPid() == service.getAudioPid()) {
           //cLog::log (LOGINFO, fmt::format ("A {:6d} {} {}",
@@ -264,10 +262,11 @@ private:
       cLog::log (LOGINFO, fmt::format ("size:{:8d}:{:8d} took {}ms",
         mPesBytes, mFileSize,
         chrono::duration_cast<chrono::milliseconds>(chrono::system_clock::now() - now).count()));
-      cLog::log (LOGINFO, fmt::format ("- vid:{:6d} {} to {}",
-                                       mVideoPesMap.size(),
+      cLog::log (LOGINFO, fmt::format ("- vid:{:6d} {} to {} gop:{} nonGopPes:{}",
+                                       mNumVideoPes,
                                        utils::getFullPtsString (mVideoPesMap.begin()->first),
-                                       utils::getFullPtsString (mVideoPesMap.rbegin()->first)));
+                                       utils::getFullPtsString (mVideoPesMap.rbegin()->first),
+                                       mVideoGopMap.size(), mVideoPesMap.size()));
       cLog::log (LOGINFO, fmt::format ("- aud:{:6d} {} to {}",
                                        mAudioPesMap.size(),
                                        utils::getFullPtsString (mAudioPesMap.begin()->first),
@@ -294,6 +293,9 @@ private:
         cLog::log (LOGINFO, fmt::format ("audioLoader::start wait"));
         this_thread::sleep_for (100ms);
         }
+
+      mAudioRender = new cAudioRender (
+        false, 50, "aud", mService->getAudioStreamTypeId(), mService->getAudioPid(), mOptions);
 
       auto it = mAudioPesMap.begin();
       mAudioRender->decodePes (it->second.mData, it->second.mSize, it->second.mPts, it->second.mDts);
@@ -328,19 +330,53 @@ private:
         this_thread::sleep_for (100ms);
         }
 
-      //unique_lock<shared_mutex> lock (mAudioMutex);
-      auto it = mVideoPesMap.begin();
-      while (it != mVideoPesMap.end()) {
-        int64_t diff = it->first - mAudioRender->getPlayer()->getPts();
-        cLog::log (LOGINFO, fmt::format (" - play {:5d} {} - {}",
-                                         diff,
-                                         utils::getFullPtsString (it->first),
+      mVideoRender = new cVideoRender (
+        false, 50, "vid", mService->getVideoStreamTypeId(), mService->getVideoPid(), mOptions);
+
+      auto gopIt = mVideoGopMap.begin();
+      while (gopIt != mVideoGopMap.end()) {
+        int64_t gopDiff = gopIt->first - mAudioRender->getPlayer()->getPts();
+        cLog::log (LOGINFO, fmt::format (" - play Gop {:5d} {} - {}",
+                                         gopDiff,
+                                         utils::getFullPtsString (gopIt->first),
                                          utils::getFullPtsString (mAudioRender->getPlayer()->getPts())));
-        mVideoRender->decodePes (it->second.mData, it->second.mSize, it->second.mPts, it->second.mDts);
-        ++it;
-        while (mVideoRender->throttle (mAudioRender->getPlayer()->getPts()))
-          this_thread::sleep_for (1ms);
+
+        auto& pesVector = gopIt->second.mPesVector;
+        auto it = pesVector.begin();
+        while (it != pesVector.end()) {
+          int64_t diff = it->mPts - mAudioRender->getPlayer()->getPts();
+          cLog::log (LOGINFO, fmt::format ("   - play Pes {:5d} {} - {}",
+                                           diff,
+                                           utils::getFullPtsString (it->mPts),
+                                           utils::getFullPtsString (mAudioRender->getPlayer()->getPts())));
+          mVideoRender->decodePes (it->mData, it->mSize, it->mPts, it->mDts);
+          ++it;
+
+          while (mVideoRender->throttle (mAudioRender->getPlayer()->getPts()))
+            this_thread::sleep_for (1ms);
+          }
+
+        ++gopIt;
         }
+
+      cLog::log (LOGERROR, "exit");
+      }).detach();
+    }
+  //}}}
+  //{{{
+  void subtitleLoader() {
+  // launch subtitleLoader thread
+
+    thread ([=]() {
+      cLog::setThreadName ("subL");
+
+      while ((mSubtitlePesMap.begin() == mSubtitlePesMap.end()) || !mAudioRender || !mAudioRender->getPlayer()) {
+        cLog::log (LOGINFO, fmt::format ("subtitleLoader::start wait"));
+        this_thread::sleep_for (100ms);
+        }
+
+      mSubtitleRender = new cSubtitleRender (
+        false, 0, "sub", mService->getSubtitleStreamTypeId(), mService->getSubtitlePid(), mOptions);
 
       cLog::log (LOGERROR, "exit");
       }).detach();
@@ -360,6 +396,7 @@ private:
   shared_mutex mAudioMutex;
   map <int64_t,sPes> mAudioPesMap;
 
+  int64_t mNumVideoPes = 0;
   map <int64_t,sPes> mVideoPesMap;
   map <int64_t,cGop> mVideoGopMap;
 
