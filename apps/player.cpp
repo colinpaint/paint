@@ -295,7 +295,7 @@ private:
         }
 
       mAudioRender = new cAudioRender (
-        false, 50, "aud", mService->getAudioStreamTypeId(), mService->getAudioPid(), mOptions);
+        false, 100, "aud", mService->getAudioStreamTypeId(), mService->getAudioPid(), mOptions);
 
       auto it = mAudioPesMap.begin();
       mAudioRender->decodePes (it->second.mData, it->second.mSize, it->second.mPts, it->second.mDts);
