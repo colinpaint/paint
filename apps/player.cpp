@@ -1,4 +1,5 @@
 // player.cpp
+constexpr bool kLoadDebug = false;
 //{{{  includes
 #ifdef _WIN32
   #define _CRT_SECURE_NO_WARNINGS
@@ -305,7 +306,8 @@ private:
       cLog::setThreadName ("audL");
 
       while (mAudioPesMap.begin() == mAudioPesMap.end()) {
-        cLog::log (LOGINFO, fmt::format ("audioLoader::start wait"));
+        if (kLoadDebug)
+          cLog::log (LOGINFO, fmt::format ("audioLoader::start wait"));
         this_thread::sleep_for (100ms);
         }
 
@@ -318,11 +320,10 @@ private:
 
       //unique_lock<shared_mutex> lock (mAudioMutex);
       while (it != mAudioPesMap.end()) {
-        //int64_t diff = it->first - mAudioRender->getPlayer()->getPts();
-        //cLog::log (LOGINFO, fmt::format ("{:5d} {} - {}",
-        //                                 diff,
-        //                                 utils::getFullPtsString (it->first),
-        //                                 utils::getFullPtsString (mAudioRender->getPlayer()->getPts())));
+        if (kLoadDebug)
+          cLog::log (LOGINFO, fmt::format ("load aud {} play:{}",
+                                           utils::getFullPtsString (it->first),
+                                           utils::getFullPtsString (mAudioRender->getPlayer()->getPts())));
         mAudioRender->decodePes (it->second.mData, it->second.mSize, it->second.mPts, it->second.mDts);
         ++it;
         while (mAudioRender->throttle (mAudioRender->getPlayer()->getPts()))
@@ -341,7 +342,8 @@ private:
       cLog::setThreadName ("vidL");
 
       while ((mVideoPesMap.begin() == mVideoPesMap.end()) || !mAudioRender || !mAudioRender->getPlayer()) {
-        cLog::log (LOGINFO, fmt::format ("videoLoader::start wait"));
+        if (kLoadDebug)
+          cLog::log (LOGINFO, fmt::format ("videoLoader::start wait"));
         this_thread::sleep_for (100ms);
         }
 
@@ -350,20 +352,20 @@ private:
 
       auto gopIt = mVideoGopMap.begin();
       while (gopIt != mVideoGopMap.end()) {
-        int64_t gopDiff = gopIt->first - mAudioRender->getPlayer()->getPts();
-        cLog::log (LOGINFO, fmt::format (" - play Gop {:5d} {} - {}",
-                                         gopDiff,
-                                         utils::getFullPtsString (gopIt->first),
-                                         utils::getFullPtsString (mAudioRender->getPlayer()->getPts())));
+        if (kLoadDebug)
+          cLog::log (LOGINFO, fmt::format ("load gop {} - {}",
+                                           utils::getFullPtsString (gopIt->first),
+                                           utils::getFullPtsString (mAudioRender->getPlayer()->getPts())));
 
         auto& pesVector = gopIt->second.mPesVector;
         auto it = pesVector.begin();
         while (it != pesVector.end()) {
           int64_t diff = it->mPts - mAudioRender->getPlayer()->getPts();
-          cLog::log (LOGINFO, fmt::format ("   - play Pes {:5d} {} - {}",
-                                           diff,
-                                           utils::getFullPtsString (it->mPts),
-                                           utils::getFullPtsString (mAudioRender->getPlayer()->getPts())));
+          if (kLoadDebug)
+            cLog::log (LOGINFO, fmt::format ("- load pes {:5d} {} - {}",
+                                             diff,
+                                             utils::getFullPtsString (it->mPts),
+                                             utils::getFullPtsString (mAudioRender->getPlayer()->getPts())));
           mVideoRender->decodePes (it->mData, it->mSize, it->mPts, it->mDts);
           ++it;
 
@@ -386,7 +388,8 @@ private:
       cLog::setThreadName ("subL");
 
       while ((mSubtitlePesMap.begin() == mSubtitlePesMap.end()) || !mAudioRender || !mAudioRender->getPlayer()) {
-        cLog::log (LOGINFO, fmt::format ("subtitleLoader::start wait"));
+        if (kLoadDebug)
+          cLog::log (LOGINFO, fmt::format ("subtitleLoader::start wait"));
         this_thread::sleep_for (100ms);
         }
 
