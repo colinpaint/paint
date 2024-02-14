@@ -93,7 +93,7 @@ public:
   virtual ~cFilePlayer() {
     mAudioPesMap.clear();
     mSubtitlePesMap.clear();
-    mVideoGopMap.clear();
+    mGopMap.clear();
     }
   //}}}
 
@@ -196,22 +196,19 @@ private:
             uint8_t* buffer = (uint8_t*)malloc (pidInfo.getBufSize());
             memcpy (buffer, pidInfo.mBuffer, pidInfo.getBufSize());
 
-            mNumVideoPes++;
             char frameType = cDvbUtils::getFrameType (buffer, pidInfo.getBufSize(), true);
-            if (frameType == 'I')
-              mVideoGopMap.emplace (pidInfo.getPts(),
-                                    cGop(sPes(buffer, pidInfo.getBufSize(),
-                                              pidInfo.getPts(), pidInfo.getDts(), frameType)));
-            else if (!mVideoGopMap.empty())
-              mVideoGopMap.rbegin()->second.addPes (sPes(buffer, pidInfo.getBufSize(),
-                                                         pidInfo.getPts(), pidInfo.getDts(), frameType));
+            if ((frameType == 'I') || mGopMap.empty())
+              mGopMap.emplace (pidInfo.getPts(),
+                               cGop(sPes(buffer, pidInfo.getBufSize(),
+                                         pidInfo.getPts(), pidInfo.getDts(), frameType)));
             else
-              free (buffer);
+              mGopMap.rbegin()->second.addPes (sPes(buffer, pidInfo.getBufSize(),
+                                                    pidInfo.getPts(), pidInfo.getDts(), frameType));
             if (kAnalDebug)
               //{{{  debug
               cLog::log (LOGINFO, fmt::format ("V {}:{:2d} dts:{} pts:{} size:{}",
                                                frameType,
-                                               mVideoGopMap.empty() ? 0 : mVideoGopMap.rbegin()->second.mPesVector.size(),
+                                               mGopMap.empty() ? 0 : mGopMap.rbegin()->second.mPesVector.size(),
                                                getFullPtsString (pidInfo.getDts()),
                                                getFullPtsString (pidInfo.getPts()),
                                                pidInfo.getBufSize()
@@ -263,13 +260,18 @@ private:
       fclose (file);
 
       //{{{  log totals
-      cLog::log (LOGINFO, fmt::format ("size:{:8d} took {}ms",
-        mFileSize, chrono::duration_cast<chrono::milliseconds>(chrono::system_clock::now() - now).count()));
+      cLog::log (LOGINFO, fmt::format ("{}m took {}ms",
+        mFileSize/1000000,
+        chrono::duration_cast<chrono::milliseconds>(chrono::system_clock::now() - now).count()));
+
+      size_t numVidPes = 0;
+      for (auto& gop : mGopMap)
+        numVidPes += gop.second.mPesVector.size();
       cLog::log (LOGINFO, fmt::format ("- vid:{:6d} {} to {} gop:{}",
-                                       mNumVideoPes,
-                                       getFullPtsString (mVideoGopMap.begin()->second.mPesVector.front().mPts),
-                                       getFullPtsString (mVideoGopMap.rbegin()->second.mPesVector.front().mPts),
-                                       mVideoGopMap.size()));
+                                       numVidPes,
+                                       getFullPtsString (mGopMap.begin()->second.mPesVector.front().mPts),
+                                       getFullPtsString (mGopMap.rbegin()->second.mPesVector.front().mPts),
+                                       mGopMap.size()));
       cLog::log (LOGINFO, fmt::format ("- aud:{:6d} {} to {}",
                                        mAudioPesMap.size(),
                                        getFullPtsString (mAudioPesMap.begin()->first),
@@ -325,7 +327,7 @@ private:
     thread ([=]() {
       cLog::setThreadName ("vidL");
 
-      while ((mVideoGopMap.begin() == mVideoGopMap.end()) || !mAudioRender || !mAudioRender->getPlayer()) {
+      while ((mGopMap.begin() == mGopMap.end()) || !mAudioRender || !mAudioRender->getPlayer()) {
         if (kLoadDebug)
           cLog::log (LOGINFO, fmt::format ("videoLoader::start wait"));
         this_thread::sleep_for (100ms);
@@ -334,8 +336,8 @@ private:
       mVideoRender = new cVideoRender (
         false, 50, "vid", mService->getVideoStreamTypeId(), mService->getVideoPid(), mOptions);
 
-      auto gopIt = mVideoGopMap.begin();
-      while (gopIt != mVideoGopMap.end()) {
+      auto gopIt = mGopMap.begin();
+      while (gopIt != mGopMap.end()) {
         if (kLoadDebug)
           cLog::log (LOGINFO, fmt::format ("load gop {}", getFullPtsString (gopIt->first)));
 
@@ -389,7 +391,7 @@ private:
   shared_mutex mAudioMutex;
   map <int64_t,sPes> mAudioPesMap;
   int64_t mNumVideoPes = 0;
-  map <int64_t,cGop> mVideoGopMap;
+  map <int64_t,cGop> mGopMap;
   map <int64_t,sPes> mSubtitlePesMap;
 
   // render
