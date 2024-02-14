@@ -819,7 +819,7 @@ private:
 
       // invisbleButton over view sub area
       ImGui::SetCursorPos ({0.f,0.f});
-      ImVec2 viewSubSize = mSize - 
+      ImVec2 viewSubSize = mSize -
         ImVec2(0.f, ImGui::GetTextLineHeight() * ((layoutPos.y + (layoutScale/2.f) >= 0.99f) ? 3.f : 1.5f));
       if (ImGui::InvisibleButton (fmt::format ("viewBox##{}", mService.getSid()).c_str(), viewSubSize)) {
 
