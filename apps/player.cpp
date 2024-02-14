@@ -1,5 +1,6 @@
 // player.cpp
-constexpr bool kAnalDebug = true;
+constexpr bool kAnalDebug = false;
+constexpr bool kAnalTotals = true;
 constexpr bool kLoadDebug = false;
 //{{{  includes
 #ifdef _WIN32
@@ -256,29 +257,34 @@ private:
       delete[] chunk;
       fclose (file);
 
-      //{{{  log totals
-      cLog::log (LOGINFO, fmt::format ("{}m took {}ms",
-        mFileSize/1000000,
-        chrono::duration_cast<chrono::milliseconds>(chrono::system_clock::now() - now).count()));
+      if (kAnalTotals) {
+        //{{{  totals
+        cLog::log (LOGINFO, fmt::format ("{}m took {}ms",
+          mFileSize/1000000,
+          chrono::duration_cast<chrono::milliseconds>(chrono::system_clock::now() - now).count()));
 
-      size_t numVidPes = 0;
-      for (auto& gop : mGopMap)
-        numVidPes += gop.second.mPesVector.size();
-      cLog::log (LOGINFO, fmt::format ("- vid:{:6d} {} to {} gop:{}",
-                                       numVidPes,
-                                       getFullPtsString (mGopMap.begin()->second.mPesVector.front().mPts),
-                                       getFullPtsString (mGopMap.rbegin()->second.mPesVector.front().mPts),
-                                       mGopMap.size()));
-      cLog::log (LOGINFO, fmt::format ("- aud:{:6d} {} to {}",
-                                       mAudioPesMap.size(),
-                                       getFullPtsString (mAudioPesMap.begin()->first),
-                                       getFullPtsString (mAudioPesMap.rbegin()->first)));
-      cLog::log (LOGINFO, fmt::format ("- sub:{:6d} {} to {}",
-                                       mSubtitlePesMap.size(),
-                                       getFullPtsString (mSubtitlePesMap.begin()->first),
-                                       getFullPtsString (mSubtitlePesMap.rbegin()->first)));
+        size_t numVidPes = 0;
+        for (auto& gop : mGopMap)
+          numVidPes += gop.second.mPesVector.size();
+
+        cLog::log (LOGINFO, fmt::format ("- vid:{:6d} {} to {} gop:{}",
+                                         numVidPes,
+                                         getFullPtsString (mGopMap.begin()->second.mPesVector.front().mPts),
+                                         getFullPtsString (mGopMap.rbegin()->second.mPesVector.front().mPts),
+                                         mGopMap.size()));
+
+        cLog::log (LOGINFO, fmt::format ("- aud:{:6d} {} to {}",
+                                         mAudioPesMap.size(),
+                                         getFullPtsString (mAudioPesMap.begin()->first),
+                                         getFullPtsString (mAudioPesMap.rbegin()->first)));
+
+        cLog::log (LOGINFO, fmt::format ("- sub:{:6d} {} to {}",
+                                         mSubtitlePesMap.size(),
+                                         getFullPtsString (mSubtitlePesMap.begin()->first),
+                                         getFullPtsString (mSubtitlePesMap.rbegin()->first)));
+        }
+        //}}}
       cLog::log (LOGERROR, "exit");
-      //}}}
       }).detach();
 
     return true;
