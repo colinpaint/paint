@@ -169,6 +169,17 @@ private:
       return false;
       }
       //}}}
+    //{{{  get fileSize
+    #ifdef _WIN32
+      struct _stati64 st;
+       if (_stat64 (mFileName.c_str(), &st) != -1)
+        mFileSize = st.st_size;
+    #else
+      struct stat st;
+      if (stat (mFileName.c_str(), &st) != -1)
+        mFileSize = st.st_size;
+    #endif
+    //}}}
 
     cTransportStream* transportStream = new cTransportStream (
       {"anal", 0, {}, {}}, mOptions,
@@ -234,6 +245,7 @@ private:
       cLog::setThreadName ("anal");
       size_t chunkSize = 188 * 256;
       uint8_t* chunk = new uint8_t[chunkSize];
+
       auto now = chrono::system_clock::now();
       int64_t streamPos = 0;
       while (true) {
@@ -243,21 +255,11 @@ private:
         else
           break;
         }
+
       delete[] chunk;
       fclose (file);
       delete transportStream;
 
-      //{{{  get fileSize
-      #ifdef _WIN32
-        struct _stati64 st;
-         if (_stat64 (mFileName.c_str(), &st) != -1)
-          mFileSize = st.st_size;
-      #else
-        struct stat st;
-        if (stat (mFileName.c_str(), &st) != -1)
-          mFileSize = st.st_size;
-      #endif
-      //}}}
       //{{{  log totals
       cLog::log (LOGINFO, fmt::format ("size:{:8d}:{:8d} took {}ms",
         mPesBytes, mFileSize,
