@@ -77,7 +77,7 @@ cFrame* cRender::getFrameAtOrAfterPts (int64_t pts) {
 //}}}
 
 //{{{
-void cRender::setPts (int64_t pts, int64_t ptsDuration, int64_t streamPos) {
+void cRender::setPts (int64_t pts, int64_t ptsDuration) {
 
   mPts = pts;
   mPtsDuration = ptsDuration;
@@ -85,9 +85,6 @@ void cRender::setPts (int64_t pts, int64_t ptsDuration, int64_t streamPos) {
   if (pts != -1) {
     if (mFirstPts == -1)
       mFirstPts = pts;
-
-    if (pts > mFirstPts)
-      mStreamPosPerPts = streamPos / float(pts - mFirstPts);
 
     if (pts > mLastPts)
       mLastPts = pts;
@@ -133,17 +130,15 @@ string cRender::getInfoString() const {
   }
 //}}}
 //{{{
-bool cRender::decodePes (uint8_t* pes, uint32_t pesSize,
-                         int64_t pts, int64_t dts, int64_t streamPos) {
+bool cRender::decodePes (uint8_t* pes, uint32_t pesSize, int64_t pts, int64_t dts) {
 
   if (isQueued()) {
-    mDecodeQueue.enqueue (new cDecodeQueueItem (mDecoder, pes, pesSize,
-                                                pts, dts, streamPos,
+    mDecodeQueue.enqueue (new cDecodeQueueItem (mDecoder, pes, pesSize, pts, dts,
                                                 mGetFrameCallback, mAddFrameCallback));
     return true;
     }
 
-  mDecoder->decode (pes, pesSize, pts, dts, streamPos, mGetFrameCallback, mAddFrameCallback);
+  mDecoder->decode (pes, pesSize, pts, dts, mGetFrameCallback, mAddFrameCallback);
   return false;
   }
 //}}}
@@ -202,7 +197,7 @@ void cRender::startQueueThread (const string& name) {
     cDecodeQueueItem* queueItem;
     if (mDecodeQueue.wait_dequeue_timed (queueItem, 40000)) {
       queueItem->mDecoder->decode (queueItem->mPes, queueItem->mPesSize,
-                                   queueItem->mPts, queueItem->mDts, queueItem->mStreamPos,
+                                   queueItem->mPts, queueItem->mDts, 
                                    queueItem->mGetFrameCallback, queueItem->mAddFrameCallback);
       delete queueItem;
       }

@@ -90,8 +90,7 @@ public:
 
   virtual std::string getInfoString() const final { return mH264 ? "ffmpeg h264" : "ffmpeg mpeg"; }
   //{{{
-  virtual int64_t decode (uint8_t* pes, uint32_t pesSize,
-                          int64_t pts, int64_t dts, int64_t streamPos,
+  virtual int64_t decode (uint8_t* pes, uint32_t pesSize, int64_t pts, int64_t dts, 
                           std::function<cFrame*()> allocFrameCallback,
                           std::function<void (cFrame* frame)> addFrameCallback) final {
     (void)pts;
@@ -122,7 +121,7 @@ public:
           ffmpegVideoFrame->addTime (std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::system_clock::now() - now).count());
           ffmpegVideoFrame->set (mGotIframe ? mInterpolatedPts : dts,
                                  (kPtsPerSecond * mAvContext->framerate.den) / mAvContext->framerate.num,
-                                 streamPos, frameSize);
+                                 frameSize);
           ffmpegVideoFrame->mFrameType = frameType;
           ffmpegVideoFrame->setAVFrame (avFrame, (dynamic_cast<cOptions*>(mOptions))->mHasMotionVectors);
           addFrameCallback (ffmpegVideoFrame);

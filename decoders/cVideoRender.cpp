@@ -59,10 +59,9 @@ cVideoRender::cVideoRender (bool queue, size_t maxFrames,
             // addFrame lambda
             [&](cFrame* frame) noexcept {
               if (kAddFrameDebug)
-                cLog::log (LOGINFO, fmt::format ("- cVideoRender::addFrame {}", 
-                                                 utils::getFullPtsString (frame->getPts())));
+                cLog::log (LOGINFO, fmt::format ("- cVideoRender::addFrame {}", utils::getFullPtsString (frame->getPts())));
 
-              setPts (frame->getPts(), frame->getPtsDuration(), frame->getStreamPos());
+              setPts (frame->getPts(), frame->getPtsDuration());
               cVideoFrame* videoFrame = dynamic_cast<cVideoFrame*>(frame);
               videoFrame->mQueueSize = getQueueSize();
               videoFrame->mTextureDirty = true;

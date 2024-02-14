@@ -39,7 +39,7 @@ cSubtitleRender::cSubtitleRender (bool queue, size_t maxFrames,
                 },
               // addFrame lambda
               [&](cFrame* frame) noexcept {
-                setPts (frame->getPts(), frame->getPtsDuration(), frame->getStreamPos());
+                setPts (frame->getPts(), frame->getPtsDuration());
                 //cRender::addframe (frame);
                 //cLog::log (LOGINFO, fmt::format ("subtitle addFrame {}", getPtsString (frame->mPts)));
                 }

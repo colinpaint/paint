@@ -45,20 +45,19 @@ public:
   int64_t getPts() const { return mPts; }
   int64_t getPtsFromStart() const { return mPts - mFirstPts; }
   int64_t getPtsDuration() const { return mPtsDuration; }
-  float getStreamPosPerPts() const { return mStreamPosPerPts; }
 
   std::shared_mutex& getSharedMutex() { return mSharedMutex; }
   std::map<int64_t,cFrame*> getFramesMap() { return mFramesMap; }
   bool hasMaxFrames() const { return mFramesMap.size() >= mMaxFrames; }
 
-  void setPts (int64_t pts, int64_t ptsDuration, int64_t streamPos);
+  void setPts (int64_t pts, int64_t ptsDuration);
 
   cFrame* getFrameAtPts (int64_t pts);
   cFrame* getFrameAtOrAfterPts (int64_t pts);
   cFrame* reuseBestFrame();
   void addFrame (cFrame* frame);
 
-  bool decodePes (uint8_t* pes, uint32_t pesSize, int64_t pts, int64_t dts, int64_t streamPos = 0);
+  bool decodePes (uint8_t* pes, uint32_t pesSize, int64_t pts, int64_t dts);
   virtual bool throttle (int64_t pts);
 
   virtual std::string getInfoString() const;
@@ -108,5 +107,4 @@ private:
   int64_t mPtsDuration = 0;
   int64_t mFirstPts = -1;
   int64_t mLastPts = -1;
-  float mStreamPosPerPts = 1.f;
   };

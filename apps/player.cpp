@@ -245,11 +245,10 @@ private:
       uint8_t* chunk = new uint8_t[chunkSize];
 
       auto now = chrono::system_clock::now();
-      int64_t streamPos = 0;
       while (true) {
         size_t bytesRead = fread (chunk, 1, chunkSize, file);
         if (bytesRead > 0)
-          streamPos += transportStream.demux (chunk, bytesRead, streamPos);
+          transportStream.demux (chunk, bytesRead);
         else
           break;
         }

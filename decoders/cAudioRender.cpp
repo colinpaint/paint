@@ -57,7 +57,7 @@ cAudioRender::cAudioRender (bool queue, size_t maxFrames,
             mSampleRate = audioFrame->getSampleRate();
             }
 
-          setPts (frame->getPts(), frame->getPtsDuration(), frame->getStreamPos());
+          setPts (frame->getPts(), frame->getPtsDuration());
           mSamplesPerFrame = audioFrame->getSamplesPerFrame();
           mFrameInfo = audioFrame->getInfoString();
           audioFrame->calcPower();

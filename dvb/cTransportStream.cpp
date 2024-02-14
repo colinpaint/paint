@@ -780,8 +780,8 @@ void cTransportStream::togglePlay() {
 
 // demux
 //{{{
-int64_t cTransportStream::demux (uint8_t* chunk, int64_t chunkSize, int64_t streamPos) {
-// demux from chunk to chunk + chunkSize, streamPos offset from first packet
+int64_t cTransportStream::demux (uint8_t* chunk, int64_t chunkSize) {
+// demux from chunk to chunk + chunkSize
 
   uint8_t* ts = chunk;
   uint8_t* tsEnd = chunk + chunkSize;
@@ -891,9 +891,6 @@ int64_t cTransportStream::demux (uint8_t* chunk, int64_t chunkSize, int64_t stre
                   // reset pesBuffer pointer
                   pidInfo->mBufPtr = pidInfo->mBuffer;
 
-                  // save ts streamPos for start of new pesBuffer
-                  pidInfo->mStreamPos = streamPos;
-
                   // hasPts ?
                   if (ts[7] & 0x80)
                     pidInfo->setPts ((ts[7] & 0x80) ? cDvbUtils::getPts (ts+9) : -1);
@@ -921,7 +918,6 @@ int64_t cTransportStream::demux (uint8_t* chunk, int64_t chunkSize, int64_t stre
 
         ts = nextPacket;
         nextPacket += kPacketSize;
-        streamPos += kPacketSize;
         mNumPackets++;
         }
       }

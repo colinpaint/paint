@@ -130,7 +130,6 @@ public:
     uint16_t getSid() const { return mSid; }
     int64_t getPts() const { return mPts; }
     int64_t getDts() const { return mDts; }
-    int64_t getStreamPos() const { return mStreamPos; }
 
     uint8_t getStreamTypeId() const { return mStreamTypeId; }
     std::string getPidName() const ;
@@ -156,7 +155,6 @@ public:
     //{{{
     void clearContinuity() {
       mBufPtr = nullptr;
-      mStreamPos = -1;
       mContinuity = -1;
       }
     //}}}
@@ -170,8 +168,6 @@ public:
     int mBufSize = 0;
     uint8_t* mBuffer = nullptr;
     uint8_t* mBufPtr = nullptr;
-
-    int64_t mStreamPos = -1;
 
   private:
     const uint16_t mPid;
@@ -345,7 +341,7 @@ public:
   void togglePlay();
 
   // demux
-  int64_t demux (uint8_t* chunk, int64_t chunkSize, int64_t streamPos);
+  int64_t demux (uint8_t* chunk, int64_t chunkSize);
 
 private:
   void clear();

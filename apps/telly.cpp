@@ -149,8 +149,7 @@ namespace {
           cRenderStream* stream = service.getStreamByPid (pidInfo.getPid());
           if (stream && stream->isEnabled())
             if (stream->getRender().decodePes (pidInfo.mBuffer, pidInfo.getBufSize(),
-                                               pidInfo.getPts(), pidInfo.getDts(),
-                                               pidInfo.mStreamPos))
+                                               pidInfo.getPts(), pidInfo.getDts()))
               // transferred ownership of mBuffer to render, create new one
               pidInfo.mBuffer = (uint8_t*)malloc (pidInfo.mBufSize);
           //cLog::log (LOGINFO, fmt::format ("pes sid:{} pid:{} size:{}",
@@ -171,14 +170,13 @@ namespace {
         //{{{  windows
         mDvbSource->run();
 
-        int64_t streamPos = 0;
         int blockSize = 0;
 
         while (true) {
           auto ptr = mDvbSource->getBlockBDA (blockSize);
           if (blockSize) {
             //  read and demux block
-            streamPos += mTransportStream->demux (ptr, blockSize, streamPos);
+            mTransportStream->demux (ptr, blockSize);
             if (options->mRecordAllServices && mFile)
               fwrite (ptr, 1, blockSize, mFile);
             mDvbSource->releaseBlock (blockSize);
@@ -192,11 +190,10 @@ namespace {
         constexpr int kDvrReadChunkSize = 188 * 64;
         uint8_t* chunk = new uint8_t[kDvrReadChunkSize];
 
-        uint64_t streamPos = 0;
         while (true) {
           int bytesRead = mDvbSource->getBlock (chunk, kDvrReadChunkSize);
           if (bytesRead) {
-            streamPos += mTransportStream->demux (chunk, bytesRead, 0, false);
+            mTransportStream->demux (chunk, bytesRead);
             if (options->mRecordAllServices && mFile)
               fwrite (chunk, 1, bytesRead, mFile);
             }
@@ -238,8 +235,7 @@ namespace {
           cRenderStream* stream = service.getStreamByPid (pidInfo.getPid());
           if (stream && stream->isEnabled())
             if (stream->getRender().decodePes (pidInfo.mBuffer, pidInfo.getBufSize(),
-                                               pidInfo.getPts(), pidInfo.getDts(),
-                                               pidInfo.mStreamPos))
+                                               pidInfo.getPts(), pidInfo.getDts()))
               // transferred ownership of mBuffer to render, create new one
               pidInfo.mBuffer = (uint8_t*)malloc (pidInfo.mBufSize);
 
@@ -265,14 +261,13 @@ namespace {
           SetThreadPriority (GetCurrentThread(), THREAD_PRIORITY_TIME_CRITICAL);
           mDvbSource->run();
 
-          int64_t streamPos = 0;
           int blockSize = 0;
 
           while (true) {
             auto ptr = mDvbSource->getBlockBDA (blockSize);
             if (blockSize) {
               //  read and demux block
-              streamPos += mTransportStream->demux (ptr, blockSize, streamPos);
+              mTransportStream->demux (ptr, blockSize);
               if (options->mRecordAllServices && mFile)
                 fwrite (ptr, 1, blockSize, mFile);
               mDvbSource->releaseBlock (blockSize);
@@ -290,11 +285,10 @@ namespace {
           constexpr int kDvrReadChunkSize = 188 * 64;
           uint8_t* chunk = new uint8_t[kDvrReadChunkSize];
 
-          uint64_t streamPos = 0;
           while (true) {
             int bytesRead = mDvbSource->getBlock (chunk, kDvrReadChunkSize);
             if (bytesRead) {
-              streamPos += mTransportStream->demux (chunk, bytesRead, 0, false);
+              mTransportStream->demux (chunk, bytesRead);
               if (options->mRecordAllServices && mFile)
                 fwrite (chunk, 1, bytesRead, mFile);
               }
@@ -320,6 +314,7 @@ namespace {
 
       // create transportStream
       mTransportStream = new cTransportStream ({"file", 0, {}, {}}, options,
+        //{{{  newSevice lambda
         [&](cTransportStream::cService& service) noexcept {
           //cLog::log (LOGINFO, fmt::format ("addService {}", service.getSid()));
           if (options->mShowAllServices)
@@ -329,17 +324,20 @@ namespace {
               service.enableStream (cRenderStream::eSubtitle);
               }
           },
+        //}}}
+        //{{{  addPes lambda
         [&](cTransportStream::cService& service, cTransportStream::cPidInfo& pidInfo) noexcept {
           cRenderStream* stream = service.getStreamByPid (pidInfo.getPid());
           if (stream && stream->isEnabled())
             if (stream->getRender().decodePes (pidInfo.mBuffer, pidInfo.getBufSize(),
-                                               pidInfo.getPts(), pidInfo.getDts(),
-                                               pidInfo.mStreamPos))
+                                               pidInfo.getPts(), pidInfo.getDts()))
               // transferred ownership of mBuffer to render, create new one
               pidInfo.mBuffer = (uint8_t*)malloc (pidInfo.mBufSize);
           //cLog::log (LOGINFO, fmt::format ("pes sid:{} pid:{} size:{}",
           //                                 service.getSid(), pidInfo.getPid(), pidInfo.getBufSize()));
-          });
+          }
+        //}}}
+        );
       if (!mTransportStream) {
         //{{{  error, return
         cLog::log (LOGERROR, "fileSource cTransportStream create failed");
@@ -363,7 +361,6 @@ namespace {
       thread ([=]() {
         cLog::setThreadName ("file");
 
-        int64_t mStreamPos = 0;
         size_t chunkSize = 188 * 256;
         uint8_t* chunk = new uint8_t[chunkSize];
         while (true) {
@@ -372,7 +369,7 @@ namespace {
 
           size_t bytesRead = fread (chunk, 1, chunkSize, file);
           if (bytesRead > 0)
-            mStreamPos += mTransportStream->demux (chunk, bytesRead, mStreamPos);
+            mTransportStream->demux (chunk, bytesRead);
           else
             break;
           }
