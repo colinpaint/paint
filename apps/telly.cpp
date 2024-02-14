@@ -20,11 +20,6 @@
 #include "../common/cLog.h"
 #include "../common/iOptions.h"
 
-// app
-#include "../app/cApp.h"
-#include "../app/cPlatform.h"
-#include "../app/myImgui.h"
-
 // decoders
 //{{{  include libav
 #ifdef _WIN32
@@ -57,6 +52,11 @@ extern "C" {
 #include "../dvb/cDvbMultiplex.h"
 #include "../dvb/cDvbSource.h"
 #include "../dvb/cTransportStream.h"
+
+// app
+#include "../app/cApp.h"
+#include "../app/cPlatform.h"
+#include "../app/myImgui.h"
 
 using namespace std;
 //}}}
