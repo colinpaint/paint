@@ -88,9 +88,10 @@ public:
     mFileName(cFileUtils::resolve (fileName)), mOptions(options) {}
   //{{{
   virtual ~cFilePlayer() {
-    mVideoPesMap.clear();
     mAudioPesMap.clear();
     mSubtitlePesMap.clear();
+    mVideoPesMap.clear();
+    mVideoGopMap.clear();
     }
   //}}}
 
@@ -127,17 +128,33 @@ public:
 
 private:
   //{{{
-  class cPes {
+  struct sPes {
   public:
-    cPes (uint8_t* data, uint32_t size, int64_t pts, int64_t dts, char type = '?') :
+    sPes (uint8_t* data, uint32_t size, int64_t pts, int64_t dts, char type = '?') :
       mData(data), mSize(size), mPts(pts), mDts(dts), mType(type) {}
-    ~cPes() = default;
 
     uint8_t* mData;
     uint32_t mSize;
     int64_t mPts;
     int64_t mDts;
     char mType;
+    };
+  //}}}
+  //{{{
+  class cGop {
+  public:
+    cGop (sPes pes) {
+      mPesVector.push_back (pes);
+      }
+    virtual ~cGop() {
+      mPesVector.clear();
+      }
+
+    void addPes (sPes pes) {
+      mPesVector.push_back (pes);
+      }
+
+    vector <sPes> mPesVector;
     };
   //}}}
 
@@ -159,12 +176,12 @@ private:
       [&](cTransportStream::cService& service) noexcept {
         if (!mService) {
           mService = &service;
-          mAudioRender = new cAudioRender (false, 50,
-                                           "aud", mService->getAudioStreamTypeId(), mService->getAudioPid(), mOptions);
-          mVideoRender = new cVideoRender (false, 50,
-                                           "vid", mService->getVideoStreamTypeId(), mService->getVideoPid(), mOptions);
-          mSubtitleRender = new cSubtitleRender (false, 0,
-                                                 "sub", mService->getSubtitleStreamTypeId(), mService->getSubtitlePid(), mOptions);
+          mAudioRender = new cAudioRender (
+            false, 50, "aud", mService->getAudioStreamTypeId(), mService->getAudioPid(), mOptions);
+          mVideoRender = new cVideoRender (
+            false, 50, "vid", mService->getVideoStreamTypeId(), mService->getVideoPid(), mOptions);
+          mSubtitleRender = new cSubtitleRender (
+            false, 0, "sub", mService->getSubtitleStreamTypeId(), mService->getSubtitlePid(), mOptions);
           }
         },
       //}}}
@@ -179,19 +196,18 @@ private:
         // add pes to map
         if (pidInfo.getPid() == service.getVideoPid()) {
           char frameType = cDvbUtils::getFrameType (buffer, pidInfo.getBufSize(), true);
-          if (frameType == 'I') {
-            mVideoPesMap.emplace (pidInfo.getPts(),
-                                  cPes(buffer, pidInfo.getBufSize(), pidInfo.getPts(), pidInfo.getDts(), frameType));
+          mVideoPesMap.emplace (pidInfo.getDts(),
+                                sPes(buffer, pidInfo.getBufSize(), pidInfo.getPts(), pidInfo.getDts(), frameType));
 
-            cLog::log (LOGINFO, fmt::format ("{} {} {} {:6d} GOP:{}",
-                                             frameType,
-                                             utils::getFullPtsString (pidInfo.getDts()),
-                                             utils::getFullPtsString (pidInfo.getPts()),
-                                             pidInfo.getBufSize(),
-                                             (pidInfo.getPts() - mLastI) * 25 / 90000
-                                             ));
+          cLog::log (LOGINFO, fmt::format ("{} {} {} {:6d} GOP:{}",
+                                           frameType,
+                                           utils::getFullPtsString (pidInfo.getDts()),
+                                           utils::getFullPtsString (pidInfo.getPts()),
+                                           pidInfo.getBufSize(),
+                                           (pidInfo.getPts() - mLastI) * 25 / 90000
+                                           ));
+          if (frameType == 'I') 
             mLastI = pidInfo.getPts();
-            }
           }
         else if (pidInfo.getPid() == service.getAudioPid()) {
           //cLog::log (LOGINFO, fmt::format ("A {:6d} {} {}",
@@ -201,11 +217,11 @@ private:
 
           unique_lock<shared_mutex> lock (mAudioMutex);
           mAudioPesMap.emplace (pidInfo.getPts(),
-                                cPes(buffer, pidInfo.getBufSize(), pidInfo.getPts(), pidInfo.getDts()));
+                                sPes(buffer, pidInfo.getBufSize(), pidInfo.getPts(), pidInfo.getDts()));
           }
         else if ((pidInfo.getPid() == service.getSubtitlePid()) && pidInfo.getBufSize())
           mSubtitlePesMap.emplace (pidInfo.getPts(),
-                                   cPes(buffer, pidInfo.getBufSize(), pidInfo.getPts(), pidInfo.getDts()));
+                                   sPes(buffer, pidInfo.getBufSize(), pidInfo.getPts(), pidInfo.getDts()));
         }
       //}}}
       );
@@ -340,11 +356,16 @@ private:
   int64_t mPesBytes = 0;
   int64_t mLastI = -1;
 
+  // pes
   shared_mutex mAudioMutex;
-  map <int64_t,cPes> mAudioPesMap;
-  map <int64_t,cPes> mVideoPesMap;
-  map <int64_t,cPes> mSubtitlePesMap;
+  map <int64_t,sPes> mAudioPesMap;
 
+  map <int64_t,sPes> mVideoPesMap;
+  map <int64_t,cGop> mVideoGopMap;
+
+  map <int64_t,sPes> mSubtitlePesMap;
+
+  // render
   cVideoRender* mVideoRender = nullptr;
   cAudioRender* mAudioRender = nullptr;
   cSubtitleRender* mSubtitleRender = nullptr;
