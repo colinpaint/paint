@@ -181,68 +181,82 @@ private:
     #endif
     //}}}
 
-    cTransportStream* transportStream = new cTransportStream (
-      {"anal", 0, {}, {}}, mOptions,
-      [&](cTransportStream::cService& service) noexcept { mService = &service; }, // newService lambda
-      //{{{  pes lambda
-      [&](cTransportStream::cService& service, cTransportStream::cPidInfo& pidInfo, bool skip) noexcept {
-
-        (void)skip;
-        mPesBytes += pidInfo.getBufSize();
-        uint8_t* buffer = (uint8_t*)malloc (pidInfo.getBufSize());
-        memcpy (buffer, pidInfo.mBuffer, pidInfo.getBufSize());
-
-        // add pes to map
-        if (pidInfo.getPid() == service.getVideoPid()) {
-          mNumVideoPes++;
-          char frameType = cDvbUtils::getFrameType (buffer, pidInfo.getBufSize(), true);
-
-          if (frameType == 'I')
-            mVideoGopMap.emplace (pidInfo.getPts(),
-                                  cGop(sPes(buffer, pidInfo.getBufSize(),
-                                            pidInfo.getPts(), pidInfo.getDts(), frameType)));
-          else if (!mVideoGopMap.empty())
-            mVideoGopMap.rbegin()->second.addPes (sPes(buffer, pidInfo.getBufSize(),
-                                                       pidInfo.getPts(), pidInfo.getDts(), frameType));
-          else
-            mVideoPesMap.emplace (pidInfo.getDts(),
-                                  sPes(buffer, pidInfo.getBufSize(),
-                                       pidInfo.getPts(), pidInfo.getDts(), frameType));
-
-          cLog::log (LOGINFO, fmt::format ("{}:{:2d} dts:{} {} size:{:6d}",
-                                           frameType,
-                                           mVideoGopMap.empty() ? 0 : mVideoGopMap.rbegin()->second.mPesVector.size(),
-                                           utils::getFullPtsString (pidInfo.getDts()),
-                                           utils::getFullPtsString (pidInfo.getPts()),
-                                           pidInfo.getBufSize()
-                                           ));
-
-          }
-        else if (pidInfo.getPid() == service.getAudioPid()) {
-          //cLog::log (LOGINFO, fmt::format ("A {:6d} {} {}",
-          //                                 pidInfo.getBufSize(),
-          //                                 utils::getFullPtsString (pidInfo.getDts()),
-          //                                 utils::getFullPtsString (pidInfo.getPts())));
-
-          unique_lock<shared_mutex> lock (mAudioMutex);
-          mAudioPesMap.emplace (pidInfo.getPts(),
-                                sPes(buffer, pidInfo.getBufSize(), pidInfo.getPts(), pidInfo.getDts()));
-          }
-        else if ((pidInfo.getPid() == service.getSubtitlePid()) && pidInfo.getBufSize())
-          mSubtitlePesMap.emplace (pidInfo.getPts(),
-                                   sPes(buffer, pidInfo.getBufSize(), pidInfo.getPts(), pidInfo.getDts()));
-        }
-      //}}}
-      );
-    if (!transportStream) {
-      //{{{  error, return
-      cLog::log (LOGERROR, "cFilePlayer::analyser ts create failed");
-      return false;
-      }
-      //}}}
-
     thread ([=]() {
       cLog::setThreadName ("anal");
+
+      cTransportStream transportStream (
+        {"anal", 0, {}, {}}, mOptions,
+        // newService lambda
+        [&](cTransportStream::cService& service) noexcept { mService = &service; },
+        //{{{  pes lambda
+        [&](cTransportStream::cService& service, cTransportStream::cPidInfo& pidInfo, bool skip) noexcept {
+          (void)skip;
+
+          if (pidInfo.getPid() == service.getVideoPid()) {
+            // video
+            mPesBytes += pidInfo.getBufSize();
+            uint8_t* buffer = (uint8_t*)malloc (pidInfo.getBufSize());
+            memcpy (buffer, pidInfo.mBuffer, pidInfo.getBufSize());
+
+            mNumVideoPes++;
+            char frameType = cDvbUtils::getFrameType (buffer, pidInfo.getBufSize(), true);
+            if (frameType == 'I')
+              mVideoGopMap.emplace (pidInfo.getPts(),
+                                    cGop(sPes(buffer, pidInfo.getBufSize(),
+                                              pidInfo.getPts(), pidInfo.getDts(), frameType)));
+            else if (!mVideoGopMap.empty())
+              mVideoGopMap.rbegin()->second.addPes (sPes(buffer, pidInfo.getBufSize(),
+                                                         pidInfo.getPts(), pidInfo.getDts(), frameType));
+            else
+              mVideoPesMap.emplace (pidInfo.getDts(),
+                                    sPes(buffer, pidInfo.getBufSize(),
+                                         pidInfo.getPts(), pidInfo.getDts(), frameType));
+            //{{{  debug
+            cLog::log (LOGINFO, fmt::format (" V {}:{:2d} dts:{} {} size:{:6d}",
+                                             frameType,
+                                             mVideoGopMap.empty() ? 0 : mVideoGopMap.rbegin()->second.mPesVector.size(),
+                                             utils::getFullPtsString (pidInfo.getDts()),
+                                             utils::getFullPtsString (pidInfo.getPts()),
+                                             pidInfo.getBufSize()
+                                             ));
+
+            //}}}
+            }
+          else if (pidInfo.getPid() == service.getAudioPid()) {
+            // audio
+            mPesBytes += pidInfo.getBufSize();
+            uint8_t* buffer = (uint8_t*)malloc (pidInfo.getBufSize());
+            memcpy (buffer, pidInfo.mBuffer, pidInfo.getBufSize());
+
+            //{{{  debug
+            //cLog::log (LOGINFO, fmt::format ("A {:6d} {} {}",
+                                             //pidInfo.getBufSize(),
+                                             //utils::getFullPtsString (pidInfo.getDts()),
+                                             //utils::getFullPtsString (pidInfo.getPts())));
+            //}}}
+            unique_lock<shared_mutex> lock (mAudioMutex);
+            mAudioPesMap.emplace (pidInfo.getPts(),
+                                  sPes(buffer, pidInfo.getBufSize(), pidInfo.getPts(), pidInfo.getDts()));
+            }
+          else if ((pidInfo.getPid() == service.getSubtitlePid()) && pidInfo.getBufSize()) {
+            // subtitle
+            mPesBytes += pidInfo.getBufSize();
+            uint8_t* buffer = (uint8_t*)malloc (pidInfo.getBufSize());
+            memcpy (buffer, pidInfo.mBuffer, pidInfo.getBufSize());
+
+            //{{{  debug
+            //cLog::log (LOGINFO, fmt::format ("S {:6d} {} {}",
+                                             //pidInfo.getBufSize(),
+                                             //utils::getFullPtsString (pidInfo.getDts()),
+                                             //utils::getFullPtsString (pidInfo.getPts())));
+            //}}}
+            mSubtitlePesMap.emplace (pidInfo.getPts(),
+                                     sPes(buffer, pidInfo.getBufSize(), pidInfo.getPts(), pidInfo.getDts()));
+            }
+          }
+        //}}}
+        );
+
       size_t chunkSize = 188 * 256;
       uint8_t* chunk = new uint8_t[chunkSize];
 
@@ -251,14 +265,13 @@ private:
       while (true) {
         size_t bytesRead = fread (chunk, 1, chunkSize, file);
         if (bytesRead > 0)
-          streamPos += transportStream->demux (chunk, bytesRead, streamPos, false);
+          streamPos += transportStream.demux (chunk, bytesRead, streamPos, false);
         else
           break;
         }
 
       delete[] chunk;
       fclose (file);
-      delete transportStream;
 
       //{{{  log totals
       cLog::log (LOGINFO, fmt::format ("size:{:8d}:{:8d} took {}ms",
@@ -305,7 +318,7 @@ private:
 
       //unique_lock<shared_mutex> lock (mAudioMutex);
       while (it != mAudioPesMap.end()) {
-        int64_t diff = it->first - mAudioRender->getPlayer()->getPts();
+        //int64_t diff = it->first - mAudioRender->getPlayer()->getPts();
         //cLog::log (LOGINFO, fmt::format ("{:5d} {} - {}",
         //                                 diff,
         //                                 utils::getFullPtsString (it->first),
