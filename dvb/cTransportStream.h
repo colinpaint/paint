@@ -325,8 +325,8 @@ public:
                     iOptions* options,
                     const std::function<void (cService& service)> addServiceCallback =
                       [](cService& service) { (void)service; },
-                    const std::function<void (cService& service, cPidInfo&pidInfo, bool skip)> pesCallback =
-                      [](cService& service, cPidInfo& pidInfo, bool skip) { (void)service;  (void)pidInfo; (void)skip; });
+                    const std::function<void (cService& service, cPidInfo&pidInfo)> pesCallback =
+                      [](cService& service, cPidInfo& pidInfo) { (void)service;  (void)pidInfo; });
   ~cTransportStream() { clear(); }
 
   // gets
@@ -345,7 +345,7 @@ public:
   void togglePlay();
 
   // demux
-  int64_t demux (uint8_t* chunk, int64_t chunkSize, int64_t streamPos, bool skip);
+  int64_t demux (uint8_t* chunk, int64_t chunkSize, int64_t streamPos);
 
 private:
   void clear();
@@ -380,7 +380,7 @@ private:
 
   // callbacks
   const std::function<void (cService& service)> mAddServiceCallback;
-  const std::function<void (cService& service, cPidInfo& pidInfo, bool skip)> mPesCallback;
+  const std::function<void (cService& service, cPidInfo& pidInfo)> mPesCallback;
 
   // time
   bool mHasFirstTdt = false;

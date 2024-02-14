@@ -188,9 +188,7 @@ private:
         // newService lambda
         [&](cTransportStream::cService& service) noexcept { mService = &service; },
         //{{{  pes lambda
-        [&](cTransportStream::cService& service, cTransportStream::cPidInfo& pidInfo, bool skip) noexcept {
-          (void)skip;
-
+        [&](cTransportStream::cService& service, cTransportStream::cPidInfo& pidInfo) noexcept {
           if (pidInfo.getPid() == service.getVideoPid()) {
             // video
             uint8_t* buffer = (uint8_t*)malloc (pidInfo.getBufSize());
@@ -251,7 +249,7 @@ private:
       while (true) {
         size_t bytesRead = fread (chunk, 1, chunkSize, file);
         if (bytesRead > 0)
-          streamPos += transportStream.demux (chunk, bytesRead, streamPos, false);
+          streamPos += transportStream.demux (chunk, bytesRead, streamPos);
         else
           break;
         }

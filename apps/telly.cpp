@@ -145,12 +145,12 @@ namespace {
               service.enableStream (cRenderStream::eSubtitle);
               }
           },
-        [&](cTransportStream::cService& service, cTransportStream::cPidInfo& pidInfo, bool skip) noexcept {
+        [&](cTransportStream::cService& service, cTransportStream::cPidInfo& pidInfo) noexcept {
           cRenderStream* stream = service.getStreamByPid (pidInfo.getPid());
           if (stream && stream->isEnabled())
             if (stream->getRender().decodePes (pidInfo.mBuffer, pidInfo.getBufSize(),
                                                pidInfo.getPts(), pidInfo.getDts(),
-                                               pidInfo.mStreamPos, skip))
+                                               pidInfo.mStreamPos))
               // transferred ownership of mBuffer to render, create new one
               pidInfo.mBuffer = (uint8_t*)malloc (pidInfo.mBufSize);
           //cLog::log (LOGINFO, fmt::format ("pes sid:{} pid:{} size:{}",
@@ -178,7 +178,7 @@ namespace {
           auto ptr = mDvbSource->getBlockBDA (blockSize);
           if (blockSize) {
             //  read and demux block
-            streamPos += mTransportStream->demux (ptr, blockSize, streamPos, false);
+            streamPos += mTransportStream->demux (ptr, blockSize, streamPos);
             if (options->mRecordAllServices && mFile)
               fwrite (ptr, 1, blockSize, mFile);
             mDvbSource->releaseBlock (blockSize);
@@ -234,12 +234,12 @@ namespace {
               service.enableStream (cRenderStream::eSubtitle);
               }
           },
-        [&](cTransportStream::cService& service, cTransportStream::cPidInfo& pidInfo, bool skip) noexcept {
+        [&](cTransportStream::cService& service, cTransportStream::cPidInfo& pidInfo) noexcept {
           cRenderStream* stream = service.getStreamByPid (pidInfo.getPid());
           if (stream && stream->isEnabled())
             if (stream->getRender().decodePes (pidInfo.mBuffer, pidInfo.getBufSize(),
                                                pidInfo.getPts(), pidInfo.getDts(),
-                                               pidInfo.mStreamPos, skip))
+                                               pidInfo.mStreamPos))
               // transferred ownership of mBuffer to render, create new one
               pidInfo.mBuffer = (uint8_t*)malloc (pidInfo.mBufSize);
 
@@ -272,7 +272,7 @@ namespace {
             auto ptr = mDvbSource->getBlockBDA (blockSize);
             if (blockSize) {
               //  read and demux block
-              streamPos += mTransportStream->demux (ptr, blockSize, streamPos, false);
+              streamPos += mTransportStream->demux (ptr, blockSize, streamPos);
               if (options->mRecordAllServices && mFile)
                 fwrite (ptr, 1, blockSize, mFile);
               mDvbSource->releaseBlock (blockSize);
@@ -329,12 +329,12 @@ namespace {
               service.enableStream (cRenderStream::eSubtitle);
               }
           },
-        [&](cTransportStream::cService& service, cTransportStream::cPidInfo& pidInfo, bool skip) noexcept {
+        [&](cTransportStream::cService& service, cTransportStream::cPidInfo& pidInfo) noexcept {
           cRenderStream* stream = service.getStreamByPid (pidInfo.getPid());
           if (stream && stream->isEnabled())
             if (stream->getRender().decodePes (pidInfo.mBuffer, pidInfo.getBufSize(),
                                                pidInfo.getPts(), pidInfo.getDts(),
-                                               pidInfo.mStreamPos, skip))
+                                               pidInfo.mStreamPos))
               // transferred ownership of mBuffer to render, create new one
               pidInfo.mBuffer = (uint8_t*)malloc (pidInfo.mBufSize);
           //cLog::log (LOGINFO, fmt::format ("pes sid:{} pid:{} size:{}",
@@ -364,29 +364,15 @@ namespace {
         cLog::setThreadName ("file");
 
         int64_t mStreamPos = 0;
-        int64_t mFilePos = 0;
         size_t chunkSize = 188 * 256;
         uint8_t* chunk = new uint8_t[chunkSize];
         while (true) {
           while (mTransportStream->throttle())
             this_thread::sleep_for (1ms);
 
-          // seek and read chunk from file
-          bool skip = mStreamPos != mFilePos;
-          if (skip) {
-            //{{{  seek to mStreamPos
-            if (fseek (file, (long)mStreamPos, SEEK_SET))
-              cLog::log (LOGERROR, fmt::format ("seek failed {}", mStreamPos));
-            else {
-              cLog::log (LOGINFO, fmt::format ("seek {}", mStreamPos));
-              mFilePos = mStreamPos;
-              }
-            }
-            //}}}
           size_t bytesRead = fread (chunk, 1, chunkSize, file);
-          mFilePos = mFilePos + bytesRead;
           if (bytesRead > 0)
-            mStreamPos += mTransportStream->demux (chunk, bytesRead, mStreamPos, skip);
+            mStreamPos += mTransportStream->demux (chunk, bytesRead, mStreamPos);
           else
             break;
           }

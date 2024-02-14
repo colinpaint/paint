@@ -134,16 +134,16 @@ string cRender::getInfoString() const {
 //}}}
 //{{{
 bool cRender::decodePes (uint8_t* pes, uint32_t pesSize,
-                         int64_t pts, int64_t dts, int64_t streamPos, bool skip) {
+                         int64_t pts, int64_t dts, int64_t streamPos) {
 
   if (isQueued()) {
     mDecodeQueue.enqueue (new cDecodeQueueItem (mDecoder, pes, pesSize,
-                                                pts, dts, streamPos, skip,
+                                                pts, dts, streamPos,
                                                 mGetFrameCallback, mAddFrameCallback));
     return true;
     }
 
-  mDecoder->decode (pes, pesSize, pts, dts, streamPos, skip, mGetFrameCallback, mAddFrameCallback);
+  mDecoder->decode (pes, pesSize, pts, dts, streamPos, mGetFrameCallback, mAddFrameCallback);
   return false;
   }
 //}}}
@@ -202,7 +202,7 @@ void cRender::startQueueThread (const string& name) {
     cDecodeQueueItem* queueItem;
     if (mDecodeQueue.wait_dequeue_timed (queueItem, 40000)) {
       queueItem->mDecoder->decode (queueItem->mPes, queueItem->mPesSize,
-                                   queueItem->mPts, queueItem->mDts, queueItem->mStreamPos, queueItem->mSkip,
+                                   queueItem->mPts, queueItem->mDts, queueItem->mStreamPos,
                                    queueItem->mGetFrameCallback, queueItem->mAddFrameCallback);
       delete queueItem;
       }

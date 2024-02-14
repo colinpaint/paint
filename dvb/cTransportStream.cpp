@@ -745,7 +745,7 @@ void cTransportStream::cService::closeFile() {
 //{{{
 cTransportStream::cTransportStream (const cDvbMultiplex& dvbMultiplex, iOptions* options,
                                     const function<void (cService& service)> addServiceCallback,
-                                    const function<void (cService& service, cPidInfo& pidInfo, bool skip)> pesCallback) :
+                                    const function<void (cService& service, cPidInfo& pidInfo)> pesCallback) :
     mDvbMultiplex(dvbMultiplex),
     mOptions(options),
     mAddServiceCallback(addServiceCallback),
@@ -780,11 +780,8 @@ void cTransportStream::togglePlay() {
 
 // demux
 //{{{
-int64_t cTransportStream::demux (uint8_t* chunk, int64_t chunkSize, int64_t streamPos, bool skip) {
+int64_t cTransportStream::demux (uint8_t* chunk, int64_t chunkSize, int64_t streamPos) {
 // demux from chunk to chunk + chunkSize, streamPos offset from first packet
-
-  if (skip)
-    clearPidContinuity();
 
   uint8_t* ts = chunk;
   uint8_t* tsEnd = chunk + chunkSize;
@@ -884,7 +881,7 @@ int64_t cTransportStream::demux (uint8_t* chunk, int64_t chunkSize, int64_t stre
                   if (service && pidInfo->mBufPtr) {
                     uint8_t streamId = (*((uint32_t*)(ts+3))) & 0xFF;
                     if ((streamId == 0xBD) || (streamId == 0xBE) || ((streamId >= 0xC0) && (streamId <= 0xEF)))
-                      mPesCallback (*service, *pidInfo, skip);
+                      mPesCallback (*service, *pidInfo);
                     else if ((streamId == 0xB0) || (streamId == 0xB1) || (streamId == 0xBF))
                       cLog::log (LOGINFO, fmt::format ("demux unused pesPayload pid:{:4d} streamId:{:8x}", pid, streamId));
                     else
