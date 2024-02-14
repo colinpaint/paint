@@ -1,4 +1,5 @@
 // player.cpp
+constexpr bool kAnalDebug = true;
 constexpr bool kLoadDebug = false;
 //{{{  includes
 #ifdef _WIN32
@@ -62,6 +63,7 @@ extern "C" {
 #include "../app/myImgui.h"
 
 using namespace std;
+using namespace utils;
 //}}}
 
 //{{{
@@ -205,28 +207,26 @@ private:
                                                          pidInfo.getPts(), pidInfo.getDts(), frameType));
             else
               free (buffer);
-            //{{{  debug
-            cLog::log (LOGINFO, fmt::format (" V {}:{:2d} dts:{} {} size:{:6d}",
-                                             frameType,
-                                             mVideoGopMap.empty() ? 0 : mVideoGopMap.rbegin()->second.mPesVector.size(),
-                                             utils::getFullPtsString (pidInfo.getDts()),
-                                             utils::getFullPtsString (pidInfo.getPts()),
-                                             pidInfo.getBufSize()
-                                             ));
+            if (kAnalDebug)
+              //{{{  debug
+              cLog::log (LOGINFO, fmt::format ("V {}:{:2d} dts:{} pts:{} size:{}",
+                                               frameType,
+                                               mVideoGopMap.empty() ? 0 : mVideoGopMap.rbegin()->second.mPesVector.size(),
+                                               getFullPtsString (pidInfo.getDts()),
+                                               getFullPtsString (pidInfo.getPts()),
+                                               pidInfo.getBufSize()
+                                               ));
 
-            //}}}
+              //}}}
             }
           else if (pidInfo.getPid() == service.getAudioPid()) {
             // audio
             uint8_t* buffer = (uint8_t*)malloc (pidInfo.getBufSize());
             memcpy (buffer, pidInfo.mBuffer, pidInfo.getBufSize());
 
-            //{{{  debug
-            //cLog::log (LOGINFO, fmt::format ("A {:6d} {} {}",
-                                             //pidInfo.getBufSize(),
-                                             //utils::getFullPtsString (pidInfo.getDts()),
-                                             //utils::getFullPtsString (pidInfo.getPts())));
-            //}}}
+            if (kAnalDebug)
+              cLog::log (LOGINFO, fmt::format ("A pts:{} size:{}",
+                                               getFullPtsString (pidInfo.getPts()), pidInfo.getBufSize()));
             unique_lock<shared_mutex> lock (mAudioMutex);
             mAudioPesMap.emplace (pidInfo.getPts(),
                                   sPes(buffer, pidInfo.getBufSize(), pidInfo.getPts(), pidInfo.getDts()));
@@ -236,12 +236,9 @@ private:
             uint8_t* buffer = (uint8_t*)malloc (pidInfo.getBufSize());
             memcpy (buffer, pidInfo.mBuffer, pidInfo.getBufSize());
 
-            //{{{  debug
-            //cLog::log (LOGINFO, fmt::format ("S {:6d} {} {}",
-                                             //pidInfo.getBufSize(),
-                                             //utils::getFullPtsString (pidInfo.getDts()),
-                                             //utils::getFullPtsString (pidInfo.getPts())));
-            //}}}
+            if (kAnalDebug)
+              cLog::log (LOGINFO, fmt::format ("S pts:{} size:{}",
+                                               getFullPtsString (pidInfo.getPts()), pidInfo.getBufSize()));
             mSubtitlePesMap.emplace (pidInfo.getPts(),
                                      sPes(buffer, pidInfo.getBufSize(), pidInfo.getPts(), pidInfo.getDts()));
             }
@@ -270,17 +267,17 @@ private:
         mFileSize, chrono::duration_cast<chrono::milliseconds>(chrono::system_clock::now() - now).count()));
       cLog::log (LOGINFO, fmt::format ("- vid:{:6d} {} to {} gop:{}",
                                        mNumVideoPes,
-                                       utils::getFullPtsString (mVideoGopMap.begin()->second.mPesVector.front().mPts),
-                                       utils::getFullPtsString (mVideoGopMap.rbegin()->second.mPesVector.front().mPts),
+                                       getFullPtsString (mVideoGopMap.begin()->second.mPesVector.front().mPts),
+                                       getFullPtsString (mVideoGopMap.rbegin()->second.mPesVector.front().mPts),
                                        mVideoGopMap.size()));
       cLog::log (LOGINFO, fmt::format ("- aud:{:6d} {} to {}",
                                        mAudioPesMap.size(),
-                                       utils::getFullPtsString (mAudioPesMap.begin()->first),
-                                       utils::getFullPtsString (mAudioPesMap.rbegin()->first)));
+                                       getFullPtsString (mAudioPesMap.begin()->first),
+                                       getFullPtsString (mAudioPesMap.rbegin()->first)));
       cLog::log (LOGINFO, fmt::format ("- sub:{:6d} {} to {}",
                                        mSubtitlePesMap.size(),
-                                       utils::getFullPtsString (mSubtitlePesMap.begin()->first),
-                                       utils::getFullPtsString (mSubtitlePesMap.rbegin()->first)));
+                                       getFullPtsString (mSubtitlePesMap.begin()->first),
+                                       getFullPtsString (mSubtitlePesMap.rbegin()->first)));
       cLog::log (LOGERROR, "exit");
       //}}}
       }).detach();
@@ -301,7 +298,7 @@ private:
         this_thread::sleep_for (100ms);
         }
 
-      mAudioRender = new cAudioRender (false, 100, true, true, 
+      mAudioRender = new cAudioRender (false, 100, true, true,
                                        "aud", mService->getAudioStreamTypeId(), mService->getAudioPid(), mOptions);
 
       //unique_lock<shared_mutex> lock (mAudioMutex);
@@ -309,8 +306,8 @@ private:
       while (it != mAudioPesMap.end()) {
         if (kLoadDebug)
           cLog::log (LOGINFO, fmt::format ("load aud pts:{} player:{}",
-                                           utils::getFullPtsString (it->first),
-                                           utils::getFullPtsString (mAudioRender->getPlayer()->getPts())));
+                                           getFullPtsString (it->first),
+                                           getFullPtsString (mAudioRender->getPlayer()->getPts())));
         mAudioRender->decodePes (it->second.mData, it->second.mSize, it->second.mPts, it->second.mDts);
         ++it;
         while (mAudioRender->throttle (mAudioRender->getPlayer()->getPts()))
@@ -340,13 +337,13 @@ private:
       auto gopIt = mVideoGopMap.begin();
       while (gopIt != mVideoGopMap.end()) {
         if (kLoadDebug)
-          cLog::log (LOGINFO, fmt::format ("load gop {}", utils::getFullPtsString (gopIt->first)));
+          cLog::log (LOGINFO, fmt::format ("load gop {}", getFullPtsString (gopIt->first)));
 
         auto& pesVector = gopIt->second.mPesVector;
         auto it = pesVector.begin();
         while (it != pesVector.end()) {
           if (kLoadDebug)
-            cLog::log (LOGINFO, fmt::format ("- load pes {}", utils::getFullPtsString (it->mPts)));
+            cLog::log (LOGINFO, fmt::format ("- load pes {}", getFullPtsString (it->mPts)));
           mVideoRender->decodePes (it->mData, it->mSize, it->mPts, it->mDts);
           ++it;
 
@@ -802,7 +799,7 @@ private:
         //}}}
         if (audioRender) {
           //{{{  draw playPts bottomRight
-          string ptsFromStartString = utils::getPtsString (audioRender->getPts());
+          string ptsFromStartString = getPtsString (audioRender->getPts());
 
           pos = ImVec2 (mSize - ImVec2(ImGui::GetTextLineHeight() * 7.f, ImGui::GetTextLineHeight()));
           ImGui::SetCursorPos (pos);
