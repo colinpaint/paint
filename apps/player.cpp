@@ -91,7 +91,6 @@ public:
   virtual ~cFilePlayer() {
     mAudioPesMap.clear();
     mSubtitlePesMap.clear();
-    mVideoPesMap.clear();
     mVideoGopMap.clear();
     }
   //}}}
@@ -103,9 +102,6 @@ public:
   cAudioRender* getAudioRender() { return mAudioRender; }
   cVideoRender* getVideoRender() { return mVideoRender; }
   cSubtitleRender* getSubtitleRender() { return mSubtitleRender; }
-
-  int64_t getFirstVideoPts() const { return mVideoPesMap.empty() ? -1 : mVideoPesMap.begin()->first; }
-  int64_t getFirstAudioPts() const { return mAudioPesMap.empty() ? -1 : mAudioPesMap.begin()->first; }
 
   //{{{
   void start() {
@@ -280,8 +276,8 @@ private:
         chrono::duration_cast<chrono::milliseconds>(chrono::system_clock::now() - now).count()));
       cLog::log (LOGINFO, fmt::format ("- vid:{:6d} {} to {} gop:{} nonGopPes:{}",
                                        mNumVideoPes,
-                                       utils::getFullPtsString (mVideoPesMap.begin()->first),
-                                       utils::getFullPtsString (mVideoPesMap.rbegin()->first),
+                                       utils::getFullPtsString (mVideoGopMap.begin()->second.mPesVector.front().mPts),
+                                       utils::getFullPtsString (mVideoGopMap.rbegin()->second.mPesVector.front().mPts),
                                        mVideoGopMap.size(), mVideoPesMap.size()));
       cLog::log (LOGINFO, fmt::format ("- aud:{:6d} {} to {}",
                                        mAudioPesMap.size(),
