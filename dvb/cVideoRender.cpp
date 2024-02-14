@@ -45,22 +45,20 @@ extern "C" {
 
 using namespace std;
 //}}}
-constexpr size_t kLiveMaxFrames = 40;
-constexpr size_t kFileMaxFrames = 50;
 
 // cVideoRender
 //{{{
-cVideoRender::cVideoRender (bool queue, const string& name, uint8_t streamType, uint16_t pid, iOptions* options) :
-    cRender(queue, name, "vid", options, streamType, pid,
-            kPtsPer25HzFrame, (dynamic_cast<cRender::cOptions*>(options))->mIsLive ? kLiveMaxFrames : kFileMaxFrames,
-
+cVideoRender::cVideoRender (bool queue, size_t maxFrames, 
+                            const string& name, uint8_t streamType, uint16_t pid, iOptions* options) :
+    cRender(queue, name, "vid", options, streamType, pid, kPtsPer25HzFrame, maxFrames,
             // getFrame lambda
             [&]() noexcept {
               return hasMaxFrames() ? reuseBestFrame() : new cFFmpegVideoFrame();
               },
-
             // addFrame lambda
             [&](cFrame* frame) noexcept {
+              cLog::log (LOGINFO, fmt::format (" - add {}", utils::getFullPtsString (frame->getPts())));
+
               setPts (frame->getPts(), frame->getPtsDuration(), frame->getStreamPos());
               cVideoFrame* videoFrame = dynamic_cast<cVideoFrame*>(frame);
               videoFrame->mQueueSize = getQueueSize();

@@ -24,7 +24,8 @@ public:
     };
   //}}}
 
-  cAudioRender (bool queue, const std::string& name, uint8_t streamType, uint16_t pid, iOptions* options);
+  cAudioRender (bool queue, size_t maxFrames,
+                const std::string& name, uint8_t streamType, uint16_t pid, iOptions* options);
   virtual ~cAudioRender() = default;
 
   // gets

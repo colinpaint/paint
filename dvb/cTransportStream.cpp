@@ -461,19 +461,22 @@ void cTransportStream::cService::enableStream (cRenderStream::eType streamType) 
   switch (streamType) {
     case cRenderStream::eVideo: {
       cRenderStream& stream = getStream (cRenderStream::eVideo);
-      stream.setRender (new cVideoRender (true, mName, stream.getTypeId(), stream.getPid(), mOptions));
+      stream.setRender (new cVideoRender (true, 50,
+                                          mName, stream.getTypeId(), stream.getPid(), mOptions));
       break;
       }
 
     case cRenderStream::eAudio: {
       cRenderStream& stream = getStream (cRenderStream::eAudio);
-      stream.setRender (new cAudioRender (true, mName, stream.getTypeId(), stream.getPid(), mOptions));
+      stream.setRender (new cAudioRender (true, 48,
+                                          mName, stream.getTypeId(), stream.getPid(), mOptions));
       break;
       }
 
     case cRenderStream::eSubtitle: {
       cRenderStream& stream = getStream (cRenderStream::eSubtitle);
-      stream.setRender (new cSubtitleRender (true, mName, stream.getTypeId(), stream.getPid(), mOptions));
+      stream.setRender (new cSubtitleRender (true, 1,
+                                             mName, stream.getTypeId(), stream.getPid(), mOptions));
       break;
       }
 

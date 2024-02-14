@@ -26,19 +26,17 @@ using namespace std;
 #define BGRA(r,g,b,a) static_cast<uint32_t>(((a << 24) ) | (b << 16) | (g <<  8) | r)
 //}}}
 constexpr bool kQueued = true;
-constexpr size_t kMaxFrames = 0;
 
 // public:
 //{{{
-cSubtitleRender::cSubtitleRender (bool queue, const string& name, uint8_t streamType, uint16_t pid, iOptions* options)
-    : cRender(queue, name, "sub", options, streamType, pid, kPtsPer25HzFrame, kMaxFrames,
-
+cSubtitleRender::cSubtitleRender (bool queue, size_t maxFrames, 
+                                  const string& name, uint8_t streamType, uint16_t pid, iOptions* options)
+    : cRender(queue, name, "sub", options, streamType, pid, kPtsPer25HzFrame, maxFrames,
               // getFrame lambda
               [&]() noexcept {
                 // !!! no relloacate yet !!!
                 return hasMaxFrames() ? new cSubtitleFrame() : new cSubtitleFrame();
                 },
-
               // addFrame lambda
               [&](cFrame* frame) noexcept {
                 setPts (frame->getPts(), frame->getPtsDuration(), frame->getStreamPos());

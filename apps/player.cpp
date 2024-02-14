@@ -129,14 +129,15 @@ private:
   //{{{
   class cPes {
   public:
-    cPes (uint8_t* data, uint32_t size, int64_t pts, int64_t dts) :
-      mData(data), mSize(size), mPts(pts), mDts(dts) {}
+    cPes (uint8_t* data, uint32_t size, int64_t pts, int64_t dts, char type = '?') :
+      mData(data), mSize(size), mPts(pts), mDts(dts), mType(type) {}
     ~cPes() = default;
 
     uint8_t* mData;
     uint32_t mSize;
     int64_t mPts;
     int64_t mDts;
+    char mType;
     };
   //}}}
 
@@ -158,12 +159,12 @@ private:
       [&](cTransportStream::cService& service) noexcept {
         if (!mService) {
           mService = &service;
-          mAudioRender = new cAudioRender (false, "aud", mService->getAudioStreamTypeId(),
-                                                  mService->getAudioPid(), mOptions);
-          mVideoRender = new cVideoRender (false, "vid", mService->getVideoStreamTypeId(),
-                                                  mService->getVideoPid(), mOptions);
-          mSubtitleRender = new cSubtitleRender (false, "sub", mService->getSubtitleStreamTypeId(),
-                                                        mService->getSubtitlePid(), mOptions);
+          mAudioRender = new cAudioRender (false, 50,
+                                           "aud", mService->getAudioStreamTypeId(), mService->getAudioPid(), mOptions);
+          mVideoRender = new cVideoRender (false, 50,
+                                           "vid", mService->getVideoStreamTypeId(), mService->getVideoPid(), mOptions);
+          mSubtitleRender = new cSubtitleRender (false, 0,
+                                                 "sub", mService->getSubtitleStreamTypeId(), mService->getSubtitlePid(), mOptions);
           }
         },
       //}}}
@@ -175,14 +176,33 @@ private:
         uint8_t* buffer = (uint8_t*)malloc (pidInfo.getBufSize());
         memcpy (buffer, pidInfo.mBuffer, pidInfo.getBufSize());
 
-        // add pes to maps
-        unique_lock<shared_mutex> lock (mAudioMutex);
-        if (pidInfo.getPid() == service.getVideoPid())
-          mVideoPesMap.emplace (pidInfo.getPts(),
-                                cPes(buffer, pidInfo.getBufSize(), pidInfo.getPts(), pidInfo.getDts()));
-        else if (pidInfo.getPid() == service.getAudioPid())
+        // add pes to map
+        if (pidInfo.getPid() == service.getVideoPid()) {
+          char frameType = cDvbUtils::getFrameType (buffer, pidInfo.getBufSize(), true);
+          if (frameType == 'I') {
+            mVideoPesMap.emplace (pidInfo.getPts(),
+                                  cPes(buffer, pidInfo.getBufSize(), pidInfo.getPts(), pidInfo.getDts(), frameType));
+
+            cLog::log (LOGINFO, fmt::format ("{} {} {} {:6d} GOP:{}",
+                                             frameType,
+                                             utils::getFullPtsString (pidInfo.getDts()),
+                                             utils::getFullPtsString (pidInfo.getPts()),
+                                             pidInfo.getBufSize(),
+                                             (pidInfo.getPts() - mLastI) * 25 / 90000
+                                             ));
+            mLastI = pidInfo.getPts();
+            }
+          }
+        else if (pidInfo.getPid() == service.getAudioPid()) {
+          //cLog::log (LOGINFO, fmt::format ("A {:6d} {} {}",
+          //                                 pidInfo.getBufSize(),
+          //                                 utils::getFullPtsString (pidInfo.getDts()),
+          //                                 utils::getFullPtsString (pidInfo.getPts())));
+
+          unique_lock<shared_mutex> lock (mAudioMutex);
           mAudioPesMap.emplace (pidInfo.getPts(),
                                 cPes(buffer, pidInfo.getBufSize(), pidInfo.getPts(), pidInfo.getDts()));
+          }
         else if ((pidInfo.getPid() == service.getSubtitlePid()) && pidInfo.getBufSize())
           mSubtitlePesMap.emplace (pidInfo.getPts(),
                                    cPes(buffer, pidInfo.getBufSize(), pidInfo.getPts(), pidInfo.getDts()));
@@ -266,10 +286,10 @@ private:
       //unique_lock<shared_mutex> lock (mAudioMutex);
       while (it != mAudioPesMap.end()) {
         int64_t diff = it->first - mAudioRender->getPlayer()->getPts();
-        cLog::log (LOGINFO, fmt::format ("{:5d} {} - {}",
-                                         diff,
-                                         utils::getFullPtsString (it->first),
-                                         utils::getFullPtsString (mAudioRender->getPlayer()->getPts())));
+        //cLog::log (LOGINFO, fmt::format ("{:5d} {} - {}",
+        //                                 diff,
+        //                                 utils::getFullPtsString (it->first),
+        //                                 utils::getFullPtsString (mAudioRender->getPlayer()->getPts())));
         mAudioRender->decodePes (it->second.mData, it->second.mSize, it->second.mPts, it->second.mDts);
         ++it;
         while (mAudioRender->throttle (mAudioRender->getPlayer()->getPts()))
@@ -296,7 +316,7 @@ private:
       auto it = mVideoPesMap.begin();
       while (it != mVideoPesMap.end()) {
         int64_t diff = it->first - mAudioRender->getPlayer()->getPts();
-        cLog::log (LOGINFO, fmt::format ("{:5d} {} - {}",
+        cLog::log (LOGINFO, fmt::format (" - play {:5d} {} - {}",
                                          diff,
                                          utils::getFullPtsString (it->first),
                                          utils::getFullPtsString (mAudioRender->getPlayer()->getPts())));
@@ -318,6 +338,7 @@ private:
   cTransportStream::cService* mService = nullptr;
 
   int64_t mPesBytes = 0;
+  int64_t mLastI = -1;
 
   shared_mutex mAudioMutex;
   map <int64_t,cPes> mAudioPesMap;
