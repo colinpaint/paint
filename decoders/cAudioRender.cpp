@@ -66,7 +66,7 @@ cAudioRender::cAudioRender (bool queue, size_t maxFrames,
 
           if (player && !mPlayer) {
             mPlayer = new cPlayer (*this, mSampleRate, getPid(), playerAudio);
-            mPlayer->startPlayPts (audioFrame->getPts());
+            mPlayer->startPts (audioFrame->getPts());
             }
           }
         ),
@@ -111,12 +111,5 @@ bool cAudioRender::throttle() {
 void cAudioRender::togglePlay() {
   if (mPlayer)
     mPlayer->togglePlay();
-  }
-//}}}
-//{{{
-void cAudioRender::skip (int64_t skipPts) {
-
-  if (mPlayer)
-    mPlayer->skipPlayPts (mPlayer->getPts() + skipPts);
   }
 //}}}

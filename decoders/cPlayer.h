@@ -21,15 +21,9 @@ public:
   void toggleMute() { mMute = !mMute; }
 
   //{{{
-  void startPlayPts (int64_t pts) {
+  void startPts (int64_t pts) {
     mPts = pts;
     mPlaying = true;
-    }
-  //}}}
-  //{{{
-  void skipPlayPts (int64_t pts) {
-    mPts = pts;
-    mSkip = true;
     }
   //}}}
   void togglePlay() { mPlaying = !mPlaying; }
