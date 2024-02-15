@@ -1,7 +1,4 @@
 // player.cpp
-constexpr bool kAnalDebug = false;
-constexpr bool kAnalTotals = true;
-constexpr bool kLoadDebug = false;
 //{{{  includes
 #ifdef _WIN32
   #define _CRT_SECURE_NO_WARNINGS
@@ -70,6 +67,9 @@ extern "C" {
 using namespace std;
 using namespace utils;
 //}}}
+constexpr bool kAnalDebug = false;
+constexpr bool kAnalTotals = true;
+constexpr bool kLoadDebug = false;
 
 namespace {
   //{{{
@@ -478,8 +478,8 @@ namespace {
           this_thread::sleep_for (100ms);
           }
 
-        mAudioRender = new cAudioRender (false, 100, true, true,
-                                         "aud", mService->getAudioStreamTypeId(), mService->getAudioPid(), mOptions);
+        mAudioRender = new cAudioRender (
+          false, 100, false, false, "aud", mService->getAudioStreamTypeId(), mService->getAudioPid(), mOptions);
 
         //  ??? could wait for first decode ???
         mAudioPlayer = new cAudioPlayer (mAudioRender, 48000, mAudioPesMap.begin()->second.mPts);
@@ -600,14 +600,14 @@ namespace {
     void addFile (const string& fileName, cPlayerOptions* options) {
 
       cFilePlayer* filePlayer = new cFilePlayer (fileName, options);
-
-      mFilePlayers.push_back (filePlayer);
+      mFilePlayers.emplace_back (filePlayer);
       filePlayer->start();
       }
     //}}}
 
     cPlayerOptions* getOptions() { return mOptions; }
-    cFilePlayer* getFilePlayer() { return mFilePlayers.front(); }
+    vector<cFilePlayer*>& getFilePlayers() { return mFilePlayers; }
+    cFilePlayer* getFirstFilePlayer() { return mFilePlayers.front(); }
 
     // actions
     void toggleShowSubtitle() { mOptions->mShowSubtitle = !mOptions->mShowSubtitle; }
@@ -883,16 +883,16 @@ namespace {
           ImGui::GetWindowDrawList()->AddRect (mTL, mBR, hover ? 0xff20ffff : 0xff20ff20, 4.f, 0, 4.f);
         //}}}
 
-        cAudioRender* audioRender = playerApp.getFilePlayer()->getAudioRender();
+        cAudioRender* audioRender = playerApp.getFirstFilePlayer()->getAudioRender();
         if (audioRender) {
-          cAudioPlayer* audioPlayer = playerApp.getFilePlayer()->getAudioPlayer();
+          cAudioPlayer* audioPlayer = playerApp.getFirstFilePlayer()->getAudioPlayer();
           int64_t playPts = audioRender->getPts();
           if (audioRender->getPlayer()) {
             playPts = audioPlayer->getPts();
             audioPlayer->setMute (false);
             }
 
-          cVideoRender* videoRender = playerApp.getFilePlayer()->getVideoRender();
+          cVideoRender* videoRender = playerApp.getFirstFilePlayer()->getVideoRender();
           if (videoRender) {
             cVideoFrame* videoFrame = videoRender->getVideoFrameAtOrAfterPts (playPts);
             if (videoFrame) {
@@ -1165,8 +1165,7 @@ namespace {
           mSubtitleShader = playerApp.getGraphics().createTextureShader (cTexture::eRgba);
 
         // update viewMap from filePlayers
-        cFilePlayer* filePlayer = playerApp.getFilePlayer();
-
+        cFilePlayer* filePlayer = playerApp.getFirstFilePlayer();
         auto it = mViewMap.find (filePlayer->getService()->getSid());
         if (it == mViewMap.end()) {
           mViewMap.emplace (filePlayer->getService()->getSid(), cView (*filePlayer->getService()));

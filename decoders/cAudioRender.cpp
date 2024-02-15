@@ -40,8 +40,7 @@ using namespace std;
 //}}}
 
 //{{{
-cAudioRender::cAudioRender (bool queue, size_t maxFrames,
-                            bool player, bool playerAudio,
+cAudioRender::cAudioRender (bool queue, size_t maxFrames, bool player, bool playerAudio,
                             const string& name, uint8_t streamType, uint16_t pid, iOptions* options)
     : cRender(queue, name, "aud", options, streamType, pid, 1920, maxFrames,
         // getFrame lambda
