@@ -10,29 +10,20 @@
 
 class cAudioFrame;
 class cAudioDecoder;
-class cPlayer;
+class cAudioPlayer;
 //}}}
 
 class cAudioRender : public cRender {
 public:
-  //{{{
-  class cOptions {
-  public:
-    virtual ~cOptions() = default;
-
-    bool mHasAudio = true;
-    };
-  //}}}
-
-  cAudioRender (bool queue, size_t maxFrames, bool player, bool playerAudio,
-                const std::string& name, uint8_t streamType, uint16_t pid, iOptions* options);
+  cAudioRender (bool queue, size_t maxFrames, bool playerCreate, bool playerHasAudio,
+                const std::string& name, uint8_t streamType, uint16_t pid);
   virtual ~cAudioRender() = default;
 
   // gets
   size_t getSampleRate() const { return mSampleRate; }
   size_t getSamplesPerFrame() const { return mSamplesPerFrame; }
 
-  cPlayer* getPlayer() { return mPlayer; }
+  cAudioPlayer* getAudioPlayer() { return mAudioPlayer; }
 
   // find
   cAudioFrame* getAudioFrameAtPts (int64_t pts);
@@ -49,7 +40,9 @@ private:
   uint32_t mSampleRate;
   size_t mSamplesPerFrame;
 
-  cPlayer* mPlayer = nullptr;
+  const bool mPlayerCreate = false;
+  const bool mPlayerHasAudio = false;
+  cAudioPlayer* mAudioPlayer = nullptr;
 
   std::string mFrameInfo;
   };

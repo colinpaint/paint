@@ -22,16 +22,7 @@ class cDecoder;
 
 class cRender {
 public:
-  //{{{
-  class cOptions {
-  public:
-    virtual ~cOptions() = default;
-
-    bool mIsLive = false;
-    };
-  //}}}
-
-  cRender (bool queued, const std::string& name, const std::string& threadName, iOptions* options,
+  cRender (bool queued, const std::string& name, const std::string& threadName, 
            uint8_t streamType, uint16_t pid,
            int64_t ptsDuration, size_t maxFrames,
            std::function <cFrame* ()> getFrameCallback,
@@ -61,8 +52,9 @@ public:
   virtual bool throttle (int64_t pts);
 
   virtual std::string getInfoString() const;
-  virtual bool throttle() { return false; }
   virtual void togglePlay() {}
+  virtual bool throttle() { return false; }
+  bool found (int64_t pts);
 
   void toggleLog();
   void header();
@@ -73,8 +65,6 @@ protected:
   float getQueueFrac() const;
 
   // vars
-  iOptions* mOptions;
-
   std::shared_mutex mSharedMutex;
   cDecoder* mDecoder = nullptr;
 

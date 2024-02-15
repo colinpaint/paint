@@ -1,11 +1,11 @@
-// cPlayer.cpp
+// cAudioPlayer.cpp
 //{{{  includes
 #ifdef _WIN32
   #define _CRT_SECURE_NO_WARNINGS
   #define WIN32_LEAN_AND_MEAN
 #endif
 
-#include "cPlayer.h"
+#include "cAudioPlayer.h"
 
 #ifdef _WIN32
   #include "../audio/audioWASAPI.h"
@@ -23,13 +23,13 @@
 #include "../common/cLog.h"
 #include "../common/utils.h"
 
-#include "../decoders/cAudioFrame.h"
+#include "cAudioFrame.h"
 #include "cAudioRender.h"
 
 using namespace std;
 //}}}
 
-cPlayer::cPlayer (cAudioRender& audioRender, uint32_t sampleRate, uint16_t pid, bool hasAudio) :
+cAudioPlayer::cAudioPlayer (cAudioRender& audioRender, uint32_t sampleRate, uint16_t pid, bool hasAudio) :
     mAudioRender(audioRender), mSampleRate(sampleRate) {
 
   (void)hasAudio;
@@ -154,7 +154,7 @@ cPlayer::cPlayer (cAudioRender& audioRender, uint32_t sampleRate, uint16_t pid, 
   mPlayerThread.detach();
   }
 
-cPlayer::~cPlayer() {
+cAudioPlayer::~cAudioPlayer() {
   mExit = true;
   while (mRunning)
     this_thread::sleep_for (1ms);

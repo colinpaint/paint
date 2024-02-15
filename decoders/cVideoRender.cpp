@@ -50,8 +50,8 @@ using namespace std;
 // cVideoRender
 //{{{
 cVideoRender::cVideoRender (bool queue, size_t maxFrames,
-                            const string& name, uint8_t streamType, uint16_t pid, iOptions* options) :
-    cRender(queue, name, "vid", options, streamType, pid, kPtsPer25HzFrame, maxFrames,
+                            const string& name, uint8_t streamType, uint16_t pid) :
+    cRender(queue, name, "vid", streamType, pid, kPtsPer25HzFrame, maxFrames,
             // getFrame lambda
             [&]() noexcept {
               return hasMaxFrames() ? reuseBestFrame() : new cFFmpegVideoFrame();
@@ -74,7 +74,7 @@ cVideoRender::cVideoRender (bool queue, size_t maxFrames,
               cRender::addFrame (frame);
               }) {
 
-  mDecoder = new cFFmpegVideoDecoder (streamType == 27, mOptions);
+  mDecoder = new cFFmpegVideoDecoder (streamType == 27);
   }
 //}}}
 

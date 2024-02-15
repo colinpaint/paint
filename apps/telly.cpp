@@ -1,4 +1,4 @@
-// telly.cpp - telly app
+ // telly.cpp - telly app
 //{{{  includes
 #ifdef _WIN32
   #define _CRT_SECURE_NO_WARNINGS
@@ -46,7 +46,7 @@ extern "C" {
 #include "../decoders/cVideoRender.h"
 #include "../decoders/cAudioRender.h"
 #include "../decoders/cSubtitleRender.h"
-#include "../decoders/cPlayer.h"
+#include "../decoders/cAudioPlayer.h"
 
 // dvb
 #include "../dvb/cDvbMultiplex.h"
@@ -88,12 +88,7 @@ namespace {
     };
   //}}}
   //{{{
-  class cTellyOptions : public cApp::cOptions,
-                        public cTransportStream::cOptions,
-                        public cRender::cOptions,
-                        public cAudioRender::cOptions,
-                        public cVideoRender::cOptions,
-                        public cFFmpegVideoDecoder::cOptions {
+  class cTellyOptions : public cApp::cOptions, public cTransportStream::cOptions {
   public:
     virtual ~cTellyOptions() = default;
 
@@ -101,9 +96,8 @@ namespace {
 
     // vars
     bool mShowSubtitle = false;
-    bool mShowMotionVectors = false;
-
     bool mShowAllServices = true;
+    bool mShowMotionVectors = false;
     bool mShowEpg = false;
 
     cDvbMultiplex mMultiplex = kDvbMultiplexes[0];
@@ -447,13 +441,11 @@ namespace {
         if (toggleButton ("sub", tellyApp.getOptions()->mShowSubtitle))
           tellyApp.toggleShowSubtitle();
         //}}}
-        if (tellyApp.getOptions()->mHasMotionVectors) {
-          //{{{  draw mmotionVectors button
-          ImGui::SameLine();
-          if (toggleButton ("motion", tellyApp.getOptions()->mShowMotionVectors))
-            tellyApp.toggleShowMotionVectors();
-          }
-          //}}}
+        //{{{  draw motionVectors button
+        ImGui::SameLine();
+        if (toggleButton ("motion", tellyApp.getOptions()->mShowMotionVectors))
+          tellyApp.toggleShowMotionVectors();
+        //}}}
         if (tellyApp.getPlatform().hasFullScreen()) {
           //{{{  draw mfullScreen button
           ImGui::SameLine();
@@ -714,8 +706,8 @@ namespace {
           if (mService.getStream (cRenderStream::eAudio).isEnabled()) {
             // get playPts from audioStream
             cAudioRender& audioRender = dynamic_cast<cAudioRender&>(mService.getStream (cRenderStream::eAudio).getRender());
-            if (audioRender.getPlayer())
-              playPts = audioRender.getPlayer()->getPts();
+            if (audioRender.getAudioPlayer())
+              playPts = audioRender.getAudioPlayer()->getPts();
             }
           //}}}
           if (!selectFull || (mSelect != eUnselected)) {
@@ -799,8 +791,8 @@ namespace {
               cAudioRender& audioRender = dynamic_cast<cAudioRender&>(mService.getStream (cRenderStream::eAudio).getRender());
 
               // mute audio of unselected
-              if (audioRender.getPlayer())
-                audioRender.getPlayer()->setMute (mSelect == eUnselected);
+              if (audioRender.getAudioPlayer())
+                audioRender.getAudioPlayer()->setMute (mSelect == eUnselected);
 
               // draw audioMeter graphic
               mAudioMeterView.draw (audioRender, playPts,
@@ -1226,12 +1218,8 @@ int main (int numArgs, char* args[]) {
       options->mShowAllServices = false;
     else if (param == "all")
       options->mRecordAllServices = true;
-    else if (param == "noaudio")
-      options->mHasAudio = false;
     else if (param == "sub")
       options->mShowSubtitle = true;
-    else if (param == "motion")
-      options->mHasMotionVectors = true;
     else {
       // assume filename
       options->mFileName = param;
@@ -1258,7 +1246,6 @@ int main (int numArgs, char* args[]) {
 
   cTellyApp tellyApp (options, new cTellyUI());
   if (options->mFileName.empty()) {
-    options->mIsLive = true;
     if (options->mHasGui) {
       tellyApp.liveDvbSourceThread (options->mMultiplex, options);
       tellyApp.mainUILoop();

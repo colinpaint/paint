@@ -17,12 +17,6 @@
 
 #include <sys/stat.h>
 
-#ifdef _WIN32
-  #include "../audio/audioWASAPI.h"
-#else
-  #include "../audio/cLinuxAudio.h"
-#endif
-
 // utils
 #include "../date/include/date/date.h"
 #include "../common/basicTypes.h"
@@ -58,6 +52,7 @@ extern "C" {
 #include "../decoders/cAudioRender.h"
 #include "../decoders/cSubtitleRender.h"
 #include "../decoders/cFFmpegVideoDecoder.h"
+#include "../decoders/cAudioPlayer.h"
 
 // app
 #include "../app/cApp.h"
@@ -69,176 +64,13 @@ using namespace utils;
 //}}}
 constexpr bool kAnalDebug = false;
 constexpr bool kAnalTotals = true;
-constexpr bool kLoadDebug = false;
+constexpr bool kAudioLoadDebug = true;
+constexpr bool kVideoLoadDebug = false;
+constexpr bool kSubtitleLoadDebug = false;
 
 namespace {
   //{{{
-  class cAudioPlayer {
-  // minimal audioPlayer - mPts is almost current playPts, actually last loaded
-  public:
-    //{{{
-    cAudioPlayer (cAudioRender* audioRender, uint32_t sampleRate, int64_t pts) {
-
-      mThread = thread ([=]() {
-        cLog::setThreadName ("play");
-        //{{{  startup
-        #ifdef _WIN32
-          // windows
-          optional<cAudioDevice> audioDevice = getDefaultAudioOutputDevice();
-          if (!audioDevice) {
-            cLog::log (LOGERROR, fmt::format ("cAudioPlayer - failed to create WASPI device"));
-            return;
-            }
-          //cLog::log (LOGINFO, fmt::format ("created windows WASPI device {}hz", sampleRate));
-
-          SetThreadPriority (GetCurrentThread(), THREAD_PRIORITY_TIME_CRITICAL);
-          audioDevice->setSampleRate (sampleRate);
-          audioDevice->start();
-
-        #else
-          // linux
-          cAudio audio (2, sampleRate, 4096);
-
-          // raise to max priority
-          sched_param sch_params;
-          sch_params.sched_priority = sched_get_priority_max (SCHED_RR);
-          pthread_setschedparam (mThread.native_handle(), SCHED_RR, &sch_params);
-        #endif
-        //}}}
-
-        mPts = pts;
-        mPlaying = true;
-
-        while (!mExit) {
-          #ifdef _WIN32 // open process lambda
-            audioDevice->process ([&](float*& srcSamples, int& numSamples) mutable noexcept {
-          #else
-            float* srcSamples;
-            int numSamples;
-          #endif
-
-          srcSamples = mSilenceSamples.data();
-          numSamples = (int)audioRender->getSamplesPerFrame();
-          int64_t ptsDuration = 0;
-
-          if (mPlaying || mSkip) {
-            mSkip = false;
-            cAudioFrame* audioFrame = audioRender->getAudioFrameAtPts (mPts);
-            if (audioFrame)
-              mSynced = true;
-            else {
-              // skip to nextFrame
-              audioFrame = audioRender->getAudioFrameAtOrAfterPts (mPts);
-              if (audioFrame) {// found it, adjust pts
-                mPts = audioFrame->getPts();
-                //cLog::log (LOGINFO, fmt::format ("skipped {}", utils::getFullPtsString (mPts)));
-                }
-              if (!audioFrame && mSynced)
-                cLog::log (LOGINFO, fmt::format ("missed {}", utils::getFullPtsString (mPts)));
-              }
-
-            if (audioFrame) {
-              if (!mMute) {
-                float* src = audioFrame->mSamples.data();
-                float* dst = mSamples.data();
-                switch (audioFrame->getNumChannels()) {
-                  //{{{
-                  case 1: // mono to 2 interleaved channels
-                    for (size_t i = 0; i < audioFrame->getSamplesPerFrame(); i++) {
-                      *dst++ = *src;
-                      *dst++ = *src++;
-                      }
-                    break;
-                  //}}}
-                  //{{{
-                  case 2: // interleaved stereo to 2 interleaved channels
-                    memcpy (dst, src, audioFrame->getSamplesPerFrame() * 8);
-                    break;
-                  //}}}
-                  //{{{
-                  case 6: // interleaved 5.1 to 2 interleaved channels
-                    for (size_t i = 0; i < audioFrame->getSamplesPerFrame(); i++) {
-                      *dst++ = src[0] + src[2] + src[3] + src[4]; // left
-                      *dst++ = src[1] + src[2] + src[3] + src[5]; // right
-                      src += 6;
-                      }
-                    break;
-                  //}}}
-                  //{{{
-                  default:
-                    cLog::log (LOGERROR, fmt::format ("cAudioPlayer unknown num channels {}", audioFrame->getNumChannels()));
-                  //}}}
-                  }
-                srcSamples = mSamples.data();
-                }
-              numSamples = (int)audioFrame->getSamplesPerFrame();
-              ptsDuration = audioFrame->getPtsDuration();
-              }
-            }
-          if (mPlaying)
-            mPts += ptsDuration;
-
-          #ifdef _WIN32 // close process lambda
-            });
-          #else
-            audio.play (2, srcSamples, numSamples, 1.f);
-          #endif
-          }
-
-        //{{{  close audioDevice
-        #ifdef _WIN32
-          audioDevice->stop();
-        #endif
-        //}}}
-        mRunning = false;
-        cLog::log (LOGINFO, "exit");
-        });
-      mThread.detach();
-      }
-    //}}}
-    //{{{
-    virtual ~cAudioPlayer() {
-      mExit = true;
-      while (mRunning)
-        this_thread::sleep_for (1ms);
-      }
-    //}}}
-
-    bool isPlaying() const { return mPlaying; }
-    int64_t getPts() const { return mPts; }
-
-    void toggleMute() { mMute = !mMute; }
-    void setMute (bool mute) { mMute = mute; }
-
-    void play() { mPlaying = true; }
-    void stopPlay() { mPlaying = false; }
-    void togglePlay() { mPlaying = !mPlaying; }
-    void setPts (int64_t pts) { mPts = pts; mSkip = true; }
-    void skipPts (int64_t pts) { mPts += pts; mSkip = true; }
-
-  private:
-    thread mThread;
-    bool mRunning = true;
-    bool mExit = false;
-
-    bool mMute = true;
-    bool mSkip = false;
-    bool mPlaying = false;
-    bool mSynced = false;
-
-    int64_t mPts = 0;
-
-    array <float, 2048*2> mSamples;
-    inline static array <float, 2048*2> mSilenceSamples = { 0.f };
-    };
-  //}}}
-  //{{{
-  class cPlayerOptions : public cApp::cOptions,
-                         public cTransportStream::cOptions,
-                         public cRender::cOptions,
-                         public cAudioRender::cOptions,
-                         public cVideoRender::cOptions,
-                         public cFFmpegVideoDecoder::cOptions {
+  class cPlayerOptions : public cApp::cOptions, public cTransportStream::cOptions {
   public:
     virtual ~cPlayerOptions() = default;
 
@@ -272,17 +104,17 @@ namespace {
     cSubtitleRender* getSubtitleRender() { return mSubtitleRender; }
 
     // audioPlayer
-    cAudioPlayer* getAudioPlayer() { return mAudioPlayer; }
+    cAudioPlayer* getAudioPlayer() { return mAudioRender ? mAudioRender->getAudioPlayer() : nullptr; }
     //{{{
     void togglePlay() {
-      if (mAudioPlayer)
-        mAudioPlayer->togglePlay();
+      if (getAudioPlayer())
+        getAudioPlayer()->togglePlay();
       }
     //}}}
     //{{{
     void skip (int64_t skipPts) {
-      if (mAudioPlayer)
-        mAudioPlayer->skipPts (skipPts);
+      if (getAudioPlayer())
+        getAudioPlayer()->skipPts (skipPts);
       }
     //}}}
 
@@ -473,29 +305,33 @@ namespace {
 
         while (mAudioPesMap.begin() == mAudioPesMap.end()) {
           // wait for analyse to see some audioPes
-          if (kLoadDebug)
-            cLog::log (LOGINFO, fmt::format ("audioLoader::start wait"));
+          if (kAudioLoadDebug)
+            cLog::log (LOGINFO, fmt::format ("audioLoader start wait"));
           this_thread::sleep_for (100ms);
           }
 
-        mAudioRender = new cAudioRender (
-          false, 100, false, false, "aud", mService->getAudioStreamTypeId(), mService->getAudioPid(), mOptions);
-
-        //  ??? could wait for first decode ???
-        mAudioPlayer = new cAudioPlayer (mAudioRender, 48000, mAudioPesMap.begin()->second.mPts);
+        // creates audioPlayer on first audio pes
+        mAudioRender = new cAudioRender (false, 100, true, true,
+                                         "aud", mService->getAudioStreamTypeId(), mService->getAudioPid());
 
         //unique_lock<shared_mutex> lock (mAudioMutex);
         auto pesIt = mAudioPesMap.begin();
+        if (kAudioLoadDebug)
+          cLog::log (LOGINFO, fmt::format ("A pts:{}", getFullPtsString (pesIt->first)));
+        mAudioRender->decodePes (pesIt->second.mData, pesIt->second.mSize, pesIt->second.mPts, pesIt->second.mDts);
+        mLastLoadedAudioPts = pesIt->first;
+        ++pesIt;
+
         while (pesIt != mAudioPesMap.end()) {
-          if (kLoadDebug)
-            cLog::log (LOGINFO, fmt::format ("load aud pts:{} player:{}",
+          if (kAudioLoadDebug)
+            cLog::log (LOGINFO, fmt::format ("A pts:{} player:{}",
                                              getFullPtsString (pesIt->first),
-                                             getFullPtsString (mAudioPlayer->getPts())));
+                                             getFullPtsString (getAudioPlayer()->getPts())));
           mAudioRender->decodePes (pesIt->second.mData, pesIt->second.mSize, pesIt->second.mPts, pesIt->second.mDts);
-          mLastLoadedAudioPts = pesIt->second.mPts;
+          mLastLoadedAudioPts = pesIt->first;
           ++pesIt;
 
-          while (mAudioRender->throttle (mAudioPlayer->getPts()))
+          while (mAudioRender->throttle (getAudioPlayer()->getPts()))
             this_thread::sleep_for (1ms);
           }
 
@@ -510,30 +346,29 @@ namespace {
       thread ([=]() {
         cLog::setThreadName ("vidL");
 
-        while ((mGopMap.begin() == mGopMap.end()) || !mAudioRender || ! mAudioPlayer) {
+        while ((mGopMap.begin() == mGopMap.end()) || !mAudioRender || ! getAudioPlayer()) {
           // wait for analyse to see some videoPes
-          if (kLoadDebug)
-            cLog::log (LOGINFO, fmt::format ("videoLoader::start wait"));
+          if (kVideoLoadDebug)
+            cLog::log (LOGINFO, fmt::format ("videoLoader start wait"));
           this_thread::sleep_for (100ms);
           }
 
-        mVideoRender = new cVideoRender (
-          false, 50, "vid", mService->getVideoStreamTypeId(), mService->getVideoPid(), mOptions);
+        mVideoRender = new cVideoRender (false, 50, "vid", mService->getVideoStreamTypeId(), mService->getVideoPid());
 
         auto gopIt = mGopMap.begin();
         while (gopIt != mGopMap.end()) {
-          if (kLoadDebug)
-            cLog::log (LOGINFO, fmt::format ("load gop {}", getFullPtsString (gopIt->first)));
+          if (kVideoLoadDebug)
+            cLog::log (LOGINFO, fmt::format ("V gop {}", getFullPtsString (gopIt->first)));
 
           auto& pesVector = gopIt->second.mPesVector;
           auto pesIt = pesVector.begin();
           while (pesIt != pesVector.end()) {
-            if (kLoadDebug)
-              cLog::log (LOGINFO, fmt::format ("- load pes {}", getFullPtsString (pesIt->mPts)));
+            if (kVideoLoadDebug)
+              cLog::log (LOGINFO, fmt::format ("- V pes {}", getFullPtsString (pesIt->mPts)));
             mVideoRender->decodePes (pesIt->mData, pesIt->mSize, pesIt->mPts, pesIt->mDts);
             ++pesIt;
 
-            while (mVideoRender->throttle (mAudioPlayer->getPts()))
+            while (mVideoRender->throttle (getAudioPlayer()->getPts()))
               this_thread::sleep_for (1ms);
             }
 
@@ -551,15 +386,14 @@ namespace {
       thread ([=]() {
         cLog::setThreadName ("subL");
 
-        while ((mSubtitlePesMap.begin() == mSubtitlePesMap.end()) || !mAudioRender || !mAudioPlayer) {
+        while ((mSubtitlePesMap.begin() == mSubtitlePesMap.end()) || !mAudioRender || !getAudioPlayer()) {
           // wait for analyse to see some subtitlePes
-          if (kLoadDebug)
-            cLog::log (LOGINFO, fmt::format ("subtitleLoader::start wait"));
+          if (kSubtitleLoadDebug)
+            cLog::log (LOGINFO, fmt::format ("subtitleLoader start wait"));
           this_thread::sleep_for (100ms);
           }
 
-        mSubtitleRender = new cSubtitleRender (
-          false, 0, "sub", mService->getSubtitleStreamTypeId(), mService->getSubtitlePid(), mOptions);
+        mSubtitleRender = new cSubtitleRender (false, 0, "sub", mService->getSubtitleStreamTypeId(), mService->getSubtitlePid());
 
         cLog::log (LOGERROR, "exit");
         }).detach();
@@ -585,8 +419,6 @@ namespace {
     cVideoRender* mVideoRender = nullptr;
     cAudioRender* mAudioRender = nullptr;
     cSubtitleRender* mSubtitleRender = nullptr;
-
-    cAudioPlayer* mAudioPlayer = nullptr;
     };
   //}}}
   //{{{
@@ -684,13 +516,11 @@ namespace {
       if (toggleButton ("sub", playerApp.getOptions()->mShowSubtitle))
         playerApp.toggleShowSubtitle();
       //}}}
-      if (playerApp.getOptions()->mHasMotionVectors) {
-        //{{{  draw motionVectors button
-        ImGui::SameLine();
-        if (toggleButton ("motion", playerApp.getOptions()->mShowMotionVectors))
-          playerApp.toggleShowMotionVectors();
-        }
-        //}}}
+      //{{{  draw motionVectors button
+      ImGui::SameLine();
+      if (toggleButton ("motion", playerApp.getOptions()->mShowMotionVectors))
+        playerApp.toggleShowMotionVectors();
+      //}}}
       if (playerApp.getPlatform().hasFullScreen()) {
         //{{{  draw fullScreen button
         ImGui::SameLine();
@@ -891,7 +721,7 @@ namespace {
         if (audioRender) {
           cAudioPlayer* audioPlayer = playerApp.getFirstFilePlayer()->getAudioPlayer();
           int64_t playPts = audioRender->getPts();
-          if (audioRender->getPlayer()) {
+          if (audioRender->getAudioPlayer()) {
             playPts = audioPlayer->getPts();
             audioPlayer->setMute (false);
             }
@@ -1170,10 +1000,12 @@ namespace {
 
         // update viewMap from filePlayers
         cFilePlayer* filePlayer = playerApp.getFirstFilePlayer();
-        auto it = mViewMap.find (filePlayer->getService()->getSid());
-        if (it == mViewMap.end()) {
-          mViewMap.emplace (filePlayer->getService()->getSid(), cView (*filePlayer->getService()));
-          cLog::log (LOGINFO, fmt::format ("cMultiView::draw add view {}", filePlayer->getService()->getSid()));
+        if (filePlayer->getService()) {
+          auto it = mViewMap.find (filePlayer->getService()->getSid());
+          if (it == mViewMap.end()) {
+            mViewMap.emplace (filePlayer->getService()->getSid(), cView (*filePlayer->getService()));
+            cLog::log (LOGINFO, fmt::format ("cMultiView::draw add view {}", filePlayer->getService()->getSid()));
+            }
           }
 
         // any view selectedFull ?
@@ -1404,8 +1236,6 @@ int main (int numArgs, char* args[]) {
       ;
     else if (param == "sub")
       options->mShowSubtitle = true;
-    else if (param == "motion")
-      options->mHasMotionVectors = true;
     else
       options->mFileName = param;
     }

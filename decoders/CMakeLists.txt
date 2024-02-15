@@ -8,7 +8,7 @@ project (decoders VERSION 1.0.0)
                                cVideoRender.h cVideoRender.cpp
                                cAudioRender.h cAudioRender.cpp
                                cSubtitleRender.h cSubtitleRender.cpp
-                               cPlayer.h cPlayer.cpp)
+                               cAudioPlayer.h cAudioPlayer.cpp)
 
   if (CMAKE_HOST_WIN32)
     # windows

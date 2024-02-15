@@ -32,17 +32,17 @@ extern "C" {
   #pragma warning (pop)
 #endif
 //}}}
-#include "../decoders/cAudioParser.h"
-#include "../decoders/cFFmpegAudioDecoder.h"
-#include "cPlayer.h"
+#include "cAudioParser.h"
+#include "cFFmpegAudioDecoder.h"
+#include "cAudioPlayer.h"
 
 using namespace std;
 //}}}
 
 //{{{
-cAudioRender::cAudioRender (bool queue, size_t maxFrames, bool player, bool playerAudio,
-                            const string& name, uint8_t streamType, uint16_t pid, iOptions* options)
-    : cRender(queue, name, "aud", options, streamType, pid, 1920, maxFrames,
+cAudioRender::cAudioRender (bool queue, size_t maxFrames, bool playerCreate, bool playerHasAudio,
+                            const string& name, uint8_t streamType, uint16_t pid)
+    : cRender(queue, name, "aud", streamType, pid, 1920, maxFrames,
         // getFrame lambda
         [&]() noexcept {
           return hasMaxFrames() ? reuseBestFrame() : new cAudioFrame();
@@ -63,13 +63,14 @@ cAudioRender::cAudioRender (bool queue, size_t maxFrames, bool player, bool play
 
           cRender::addFrame (frame);
 
-          if (player && !mPlayer) {
-            mPlayer = new cPlayer (*this, mSampleRate, getPid(), playerAudio);
-            mPlayer->startPts (audioFrame->getPts());
+          if (mPlayerCreate && !mAudioPlayer) {
+            mAudioPlayer = new cAudioPlayer (*this, mSampleRate, getPid(), mPlayerHasAudio);
+            mAudioPlayer->startPts (audioFrame->getPts());
             }
           }
         ),
-      mSampleRate(48000), mSamplesPerFrame(1024) {
+      mSampleRate(48000), mSamplesPerFrame(1024),
+      mPlayerCreate(playerCreate), mPlayerHasAudio(playerHasAudio) {
 
   mDecoder = new cFFmpegAudioDecoder ((streamType == 17) ? eAudioFrameType::eAacLatm : eAudioFrameType::eMp3);
   }
@@ -100,15 +101,15 @@ string cAudioRender::getInfoString() const {
 //{{{
 bool cAudioRender::throttle() {
 
-  if (mPlayer)
-    return cRender::throttle (mPlayer->getPts());
+  if (mAudioPlayer)
+    return cRender::throttle (mAudioPlayer->getPts());
 
   return false;
   }
 //}}}
 //{{{
 void cAudioRender::togglePlay() {
-  if (mPlayer)
-    mPlayer->togglePlay();
+  if (mAudioPlayer)
+    mAudioPlayer->togglePlay();
   }
 //}}}

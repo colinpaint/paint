@@ -15,15 +15,8 @@ class cVideoFrame;
 
 class cVideoRender : public cRender {
 public:
-  //{{{
-  class cOptions {
-  public:
-    virtual ~cOptions() = default;
-    };
-  //}}}
-
   cVideoRender (bool queue, size_t maxFrames,
-                const std::string& name, uint8_t streamType, uint16_t pid, iOptions* options);
+                const std::string& name, uint8_t streamType, uint16_t pid);
   virtual ~cVideoRender() = default;
 
   uint16_t getWidth() const { return mWidth; }

@@ -22,7 +22,7 @@ public:
   public:
     virtual ~cOptions() = default;
 
-    std::string getString() const { return "log123 head full"; }
+    std::string getString() const { return "log123 head full noaudio"; }
 
     //{{{
     bool parse (std::string param) {

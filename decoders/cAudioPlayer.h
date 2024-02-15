@@ -9,10 +9,10 @@
 class cAudioRender;
 //}}}
 
-class cPlayer {
+class cAudioPlayer {
 public:
-  cPlayer (cAudioRender& audioRender, uint32_t sampleRate, uint16_t pid, bool hasAudio);
-  virtual ~cPlayer();
+  cAudioPlayer (cAudioRender& audioRender, uint32_t sampleRate, uint16_t pid, bool hasAudio);
+  virtual ~cAudioPlayer();
 
   bool isPlaying() const { return mPlaying; }
   int64_t getPts() const { return mPts; }

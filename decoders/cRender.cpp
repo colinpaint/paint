@@ -17,12 +17,11 @@ using namespace std;
 constexpr size_t kMaxLogSize = 64;
 
 //{{{
-cRender::cRender (bool queued, const string& name, const string& threadName, iOptions* options,
+cRender::cRender (bool queued, const string& name, const string& threadName, 
                   uint8_t streamType, uint16_t pid,
                   int64_t ptsDuration, size_t maxFrames,
                   function <cFrame* ()> getFrameCallback,
                   function <void (cFrame* frame)> addFrameCallback) :
-    mOptions(options),
     mQueued(queued), mName(name), mThreadName(threadName),
     mStreamType(streamType), mPid(pid),
     mMaxFrames(maxFrames),
@@ -124,12 +123,6 @@ void cRender::addFrame (cFrame* frame) {
 
 // process
 //{{{
-string cRender::getInfoString() const {
-  return fmt::format ("frames:{:2d}:{:d} pts:{} dur:{}",
-                      mFramesMap.size(), getQueueSize(), utils::getFullPtsString (mPts), mPtsDuration);
-  }
-//}}}
-//{{{
 bool cRender::decodePes (uint8_t* pes, uint32_t pesSize, int64_t pts, int64_t dts) {
 
   if (isQueued()) {
@@ -143,6 +136,12 @@ bool cRender::decodePes (uint8_t* pes, uint32_t pesSize, int64_t pts, int64_t dt
   }
 //}}}
 
+//{{{
+string cRender::getInfoString() const {
+  return fmt::format ("frames:{:2d}:{:d} pts:{} dur:{}",
+                      mFramesMap.size(), getQueueSize(), utils::getFullPtsString (mPts), mPtsDuration);
+  }
+//}}}
 //{{{
 bool cRender::throttle (int64_t pts) {
 // return true if fileRead should throttle
@@ -164,6 +163,21 @@ bool cRender::throttle (int64_t pts) {
 
   // not centred about pts, throttle
   return true;
+  }
+  }
+//}}}
+//{{{
+bool cRender::found (int64_t pts) {
+// return true if pts i nmFramesMap range
+
+  { // locked
+  unique_lock<shared_mutex> lock (mSharedMutex);
+
+  for (auto pair : mFramesMap)
+    if ((pts >= pair.second->getPts()) && (pts < (pair.second->getPts() + mPtsDuration)))
+      return true;
+
+  return false;
   }
   }
 //}}}
@@ -197,7 +211,7 @@ void cRender::startQueueThread (const string& name) {
     cDecodeQueueItem* queueItem;
     if (mDecodeQueue.wait_dequeue_timed (queueItem, 40000)) {
       queueItem->mDecoder->decode (queueItem->mPes, queueItem->mPesSize,
-                                   queueItem->mPts, queueItem->mDts, 
+                                   queueItem->mPts, queueItem->mDts,
                                    queueItem->mGetFrameCallback, queueItem->mAddFrameCallback);
       delete queueItem;
       }
