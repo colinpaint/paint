@@ -92,12 +92,12 @@ namespace {
   public:
     virtual ~cTellyOptions() = default;
 
-    string getString() const { return "none epg sub motion hd|bbc|itv|*.ts"; }
+    string getString() const { return "sub motion none epg hd|bbc|itv|*.ts"; }
 
     // vars
     bool mShowSubtitle = false;
-    bool mShowAllServices = true;
     bool mShowMotionVectors = false;
+    bool mShowAllServices = true;
     bool mShowEpg = false;
 
     cDvbMultiplex mMultiplex = kDvbMultiplexes[0];
@@ -1211,7 +1211,7 @@ int main (int numArgs, char* args[]) {
     string param = args[i];
     if (options->parse (param)) {
       // found a cApp option
-      if (!options->mHasGui)
+      if (options->mHeadless)
         options->mShowAllServices = false;
       }
     else if (param == "none")
@@ -1246,12 +1246,12 @@ int main (int numArgs, char* args[]) {
 
   cTellyApp tellyApp (options, new cTellyUI());
   if (options->mFileName.empty()) {
-    if (options->mHasGui) {
+    if (options->mHeadless) 
+      tellyApp.liveDvbSource (options->mMultiplex, options);
+    else {
       tellyApp.liveDvbSourceThread (options->mMultiplex, options);
       tellyApp.mainUILoop();
       }
-    else
-      tellyApp.liveDvbSource (options->mMultiplex, options);
     }
   else if (options->mFileName.substr (options->mFileName.size() - 3, 3) == ".ts") {
     tellyApp.fileSourceThread (options->mFileName, options);

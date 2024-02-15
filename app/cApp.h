@@ -37,7 +37,7 @@ public:
       else if (param == "full")
         mFullScreen = true;
       else if (param == "head")
-        mHasGui = false;
+        mHeadless = true;
       else
         return false;
 
@@ -55,7 +55,7 @@ public:
 
     eLogLevel mLogLevel = LOGINFO;
 
-    bool mHasGui = true;
+    bool mHeadless = false;
     cPoint mWindowSize = { 1920/2, 1080/2 };
     bool mFullScreen = false;
     bool mVsync = true;

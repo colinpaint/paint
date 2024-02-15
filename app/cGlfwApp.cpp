@@ -296,7 +296,7 @@ private:
 cApp::cApp (const string& name, cApp::cOptions* options, iUI* ui) :
     mName(name), mOptions(options), mUI(ui) {
 
-  if (options->mHasGui) {
+  if (!options->mHeadless) {
     // create GLFW platform
     cGlfwPlatform* glfwPlatform = new cGlfwPlatform (name);
     if (!glfwPlatform || !glfwPlatform->init (options->mWindowSize)) {
