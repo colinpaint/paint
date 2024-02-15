@@ -692,111 +692,104 @@ namespace {
 
         bool enabled = mService.getStream (cRenderStream::eVideo).isEnabled();
         if (enabled) {
-          //{{{  get audio playPts
-          int64_t playPts = mService.getStream (cRenderStream::eAudio).getRender().getPts();
           if (mService.getStream (cRenderStream::eAudio).isEnabled()) {
-            // get playPts from audioStream
             cAudioRender& audioRender = dynamic_cast<cAudioRender&>(mService.getStream (cRenderStream::eAudio).getRender());
-            if (audioRender.getAudioPlayer())
-              playPts = audioRender.getAudioPlayer()->getPts();
-            }
-          //}}}
-          if (!selectFull || (mSelect != eUnselected)) {
-            cVideoRender& videoRender = dynamic_cast<cVideoRender&>(mService.getStream (cRenderStream::eVideo).getRender());
-            cVideoFrame* videoFrame = videoRender.getVideoFrameAtOrAfterPts (playPts);
-            if (videoFrame) {
-              //{{{  video, subtitle, motionVectors
-              // draw video
-              cMat4x4 model = cMat4x4();
-              model.setTranslate ({(layoutPos.x - (0.5f * layoutScale)) * viewportWidth,
-                                   ((1.f-layoutPos.y) - (0.5f * layoutScale)) * viewportHeight});
-              model.size ({layoutScale * viewportWidth / videoFrame->getWidth(),
-                           layoutScale * viewportHeight / videoFrame->getHeight()});
-              cMat4x4 projection (0.f,viewportWidth, 0.f,viewportHeight, -1.f,1.f);
-              videoShader->use();
-              videoShader->setModelProjection (model, projection);
+            if (audioRender.getAudioPlayer()) {
+              int64_t playPts = audioRender.getAudioPlayer()->getPts();
+              if (!selectFull || (mSelect != eUnselected)) {
+                cVideoRender& videoRender = dynamic_cast<cVideoRender&>(mService.getStream (cRenderStream::eVideo).getRender());
+                cVideoFrame* videoFrame = videoRender.getVideoFrameAtOrAfterPts (playPts);
+                if (videoFrame) {
+                  //{{{  video, subtitle, motionVectors
+                  // draw video
+                  cMat4x4 model = cMat4x4();
+                  model.setTranslate ({(layoutPos.x - (0.5f * layoutScale)) * viewportWidth,
+                                       ((1.f-layoutPos.y) - (0.5f * layoutScale)) * viewportHeight});
+                  model.size ({layoutScale * viewportWidth / videoFrame->getWidth(),
+                               layoutScale * viewportHeight / videoFrame->getHeight()});
+                  cMat4x4 projection (0.f,viewportWidth, 0.f,viewportHeight, -1.f,1.f);
+                  videoShader->use();
+                  videoShader->setModelProjection (model, projection);
 
-              // texture
-              cTexture& texture = videoFrame->getTexture (tellyApp.getGraphics());
-              texture.setSource();
+                  // texture
+                  cTexture& texture = videoFrame->getTexture (tellyApp.getGraphics());
+                  texture.setSource();
 
-              // ensure quad is created
-              if (!mVideoQuad)
-                mVideoQuad = tellyApp.getGraphics().createQuad (videoFrame->getSize());
+                  // ensure quad is created
+                  if (!mVideoQuad)
+                    mVideoQuad = tellyApp.getGraphics().createQuad (videoFrame->getSize());
 
-              // draw quad
-              mVideoQuad->draw();
+                  // draw quad
+                  mVideoQuad->draw();
 
-              if (tellyApp.getOptions()->mShowSubtitle) {
-                //{{{  draw subtitles
-                cSubtitleRender& subtitleRender =
-                  dynamic_cast<cSubtitleRender&> (mService.getStream (cRenderStream::eSubtitle).getRender());
+                  if (tellyApp.getOptions()->mShowSubtitle) {
+                    //{{{  draw subtitles
+                    cSubtitleRender& subtitleRender =
+                      dynamic_cast<cSubtitleRender&> (mService.getStream (cRenderStream::eSubtitle).getRender());
 
-                subtitleShader->use();
-                for (size_t line = 0; line < subtitleRender.getNumLines(); line++) {
-                  cSubtitleImage& subtitleImage = subtitleRender.getImage (line);
-                  if (!mSubtitleTextures[line])
-                    mSubtitleTextures[line] = tellyApp.getGraphics().createTexture (cTexture::eRgba, subtitleImage.getSize());
-                  mSubtitleTextures[line]->setSource();
+                    subtitleShader->use();
+                    for (size_t line = 0; line < subtitleRender.getNumLines(); line++) {
+                      cSubtitleImage& subtitleImage = subtitleRender.getImage (line);
+                      if (!mSubtitleTextures[line])
+                        mSubtitleTextures[line] = tellyApp.getGraphics().createTexture (cTexture::eRgba, subtitleImage.getSize());
+                      mSubtitleTextures[line]->setSource();
 
-                  // update subtitle texture if image dirty
-                  if (subtitleImage.isDirty())
-                    mSubtitleTextures[line]->setPixels (subtitleImage.getPixels(), nullptr);
-                  subtitleImage.setDirty (false);
+                      // update subtitle texture if image dirty
+                      if (subtitleImage.isDirty())
+                        mSubtitleTextures[line]->setPixels (subtitleImage.getPixels(), nullptr);
+                      subtitleImage.setDirty (false);
 
-                  float xpos = (float)subtitleImage.getXpos() / videoFrame->getWidth();
-                  float ypos = (float)(videoFrame->getHeight() - subtitleImage.getYpos()) / videoFrame->getHeight();
-                  model.setTranslate ({(layoutPos.x + ((xpos - 0.5f) * layoutScale)) * viewportWidth,
-                                       ((1.0f - layoutPos.y) + ((ypos - 0.5f) * layoutScale)) * viewportHeight});
-                  subtitleShader->setModelProjection (model, projection);
+                      float xpos = (float)subtitleImage.getXpos() / videoFrame->getWidth();
+                      float ypos = (float)(videoFrame->getHeight() - subtitleImage.getYpos()) / videoFrame->getHeight();
+                      model.setTranslate ({(layoutPos.x + ((xpos - 0.5f) * layoutScale)) * viewportWidth,
+                                           ((1.0f - layoutPos.y) + ((ypos - 0.5f) * layoutScale)) * viewportHeight});
+                      subtitleShader->setModelProjection (model, projection);
 
-                  // ensure quad is created (assumes same size) and draw
-                  if (!mSubtitleQuads[line])
-                    mSubtitleQuads[line] = tellyApp.getGraphics().createQuad (mSubtitleTextures[line]->getSize());
-                  mSubtitleQuads[line]->draw();
-                  }
-                }
-                //}}}
-
-              if (tellyApp.getOptions()->mShowMotionVectors && (mSelect == eSelectedFull)) {
-                //{{{  draw motion vectors
-                size_t numMotionVectors;
-                AVMotionVector* mv = (AVMotionVector*)(videoFrame->getMotionVectors (numMotionVectors));
-                if (numMotionVectors) {
-                  for (size_t i = 0; i < numMotionVectors; i++) {
-                    ImGui::GetWindowDrawList()->AddLine (
-                      mTL + ImVec2(mv->src_x * viewportWidth / videoFrame->getWidth(),
-                                   mv->src_y * viewportHeight / videoFrame->getHeight()),
-                      mTL + ImVec2((mv->src_x + (mv->motion_x / mv->motion_scale)) * viewportWidth / videoFrame->getWidth(),
-                                    (mv->src_y + (mv->motion_y / mv->motion_scale)) * viewportHeight / videoFrame->getHeight()),
-                      mv->source > 0 ? 0xc0c0c0c0 : 0xc000c0c0, 1.f);
-                    mv++;
+                      // ensure quad is created (assumes same size) and draw
+                      if (!mSubtitleQuads[line])
+                        mSubtitleQuads[line] = tellyApp.getGraphics().createQuad (mSubtitleTextures[line]->getSize());
+                      mSubtitleQuads[line]->draw();
+                      }
                     }
+                    //}}}
+
+                  if (tellyApp.getOptions()->mShowMotionVectors && (mSelect == eSelectedFull)) {
+                    //{{{  draw motion vectors
+                    size_t numMotionVectors;
+                    AVMotionVector* mv = (AVMotionVector*)(videoFrame->getMotionVectors (numMotionVectors));
+                    if (numMotionVectors) {
+                      for (size_t i = 0; i < numMotionVectors; i++) {
+                        ImGui::GetWindowDrawList()->AddLine (
+                          mTL + ImVec2(mv->src_x * viewportWidth / videoFrame->getWidth(),
+                                       mv->src_y * viewportHeight / videoFrame->getHeight()),
+                          mTL + ImVec2((mv->src_x + (mv->motion_x / mv->motion_scale)) * viewportWidth / videoFrame->getWidth(),
+                                        (mv->src_y + (mv->motion_y / mv->motion_scale)) * viewportHeight / videoFrame->getHeight()),
+                          mv->source > 0 ? 0xc0c0c0c0 : 0xc000c0c0, 1.f);
+                        mv++;
+                        }
+                      }
+                    }
+                    //}}}
                   }
-                }
-                //}}}
-              }
-              //}}}
-            if (mService.getStream (cRenderStream::eAudio).isEnabled()) {
-              //{{{  audio mute, audioMeter, framesGraphic
-              cAudioRender& audioRender = dynamic_cast<cAudioRender&>(mService.getStream (cRenderStream::eAudio).getRender());
+                  //}}}
+                //{{{  audio mute, audioMeter, framesGraphic
+                // mute audio of unselected
+                if (audioRender.getAudioPlayer())
+                  audioRender.getAudioPlayer()->setMute (mSelect == eUnselected);
 
-              // mute audio of unselected
-              if (audioRender.getAudioPlayer())
-                audioRender.getAudioPlayer()->setMute (mSelect == eUnselected);
+                // draw audioMeter graphic
+                mAudioMeterView.draw (audioRender, playPts,
+                                      ImVec2(mBR.x - ImGui::GetTextLineHeight()*0.5f,
+                                             mBR.y - ImGui::GetTextLineHeight()*0.25f));
 
-              // draw audioMeter graphic
-              mAudioMeterView.draw (audioRender, playPts,
-                                    ImVec2(mBR.x - ImGui::GetTextLineHeight()*0.5f,
+                // draw frames graphic
+                if (mSelect == eSelectedFull)
+                  mFramesView.draw (audioRender, videoRender, playPts,
+                                    ImVec2((mTL.x + mBR.x)/2.f,
                                            mBR.y - ImGui::GetTextLineHeight()*0.25f));
-
-              // draw frames graphic
-              if (mSelect == eSelectedFull)
-                mFramesView.draw (audioRender, videoRender, playPts,
-                                  ImVec2((mTL.x + mBR.x)/2.f,
-                                         mBR.y - ImGui::GetTextLineHeight()*0.25f));
+                //}}}
+                }
               }
-              //}}}
             }
           }
 
