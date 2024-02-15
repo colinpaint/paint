@@ -74,40 +74,43 @@ using namespace utils;
 namespace {
   //{{{
   class cAudioPlayer {
+  // minimal audioPlayer - mPts is almost current playPts, actually last loaded
   public:
     //{{{
-    cAudioPlayer (cAudioRender& audioRender, uint32_t sampleRate) :
-        mAudioRender(audioRender), mSampleRate(sampleRate) {
+    cAudioPlayer (cAudioRender* audioRender, uint32_t sampleRate, int64_t pts) {
 
-      mAudioPlayerThread = thread ([=]() {
+      mThread = thread ([=]() {
         cLog::setThreadName ("play");
         //{{{  startup
         #ifdef _WIN32
           // windows
           optional<cAudioDevice> audioDevice = getDefaultAudioOutputDevice();
           if (!audioDevice) {
-            cLog::log (LOGERROR, fmt::format ("- failed to create WASPI device"));
+            cLog::log (LOGERROR, fmt::format ("cAudioPlayer - failed to create WASPI device"));
             return;
             }
-          //cLog::log (LOGINFO, fmt::format ("created windows WASPI device {}hz", mSampleRate));
+          //cLog::log (LOGINFO, fmt::format ("created windows WASPI device {}hz", sampleRate));
 
           SetThreadPriority (GetCurrentThread(), THREAD_PRIORITY_TIME_CRITICAL);
-          audioDevice->setSampleRate (mSampleRate);
+          audioDevice->setSampleRate (sampleRate);
           audioDevice->start();
 
         #else
           // linux
-          cAudio audio (2, mSampleRate, 4096);
+          cAudio audio (2, sampleRate, 4096);
 
           // raise to max priority
           sched_param sch_params;
           sch_params.sched_priority = sched_get_priority_max (SCHED_RR);
-          pthread_setschedparam (mAudioPlayerThread.native_handle(), SCHED_RR, &sch_params);
+          pthread_setschedparam (mThread.native_handle(), SCHED_RR, &sch_params);
         #endif
         //}}}
 
+        mPts = pts;
+        mPlaying = true;
+
         while (!mExit) {
-          #ifdef _WIN32
+          #ifdef _WIN32 // open process lambda
             audioDevice->process ([&](float*& srcSamples, int& numSamples) mutable noexcept {
           #else
             float* srcSamples;
@@ -115,17 +118,17 @@ namespace {
           #endif
 
           srcSamples = mSilenceSamples.data();
-          numSamples = (int)mAudioRender.getSamplesPerFrame();
+          numSamples = (int)audioRender->getSamplesPerFrame();
           int64_t ptsDuration = 0;
 
           if (mPlaying || mSkip) {
             mSkip = false;
-            cAudioFrame* audioFrame = mAudioRender.getAudioFrameAtPts (mPts);
+            cAudioFrame* audioFrame = audioRender->getAudioFrameAtPts (mPts);
             if (audioFrame)
               mSynced = true;
             else {
               // skip to nextFrame
-              audioFrame = mAudioRender.getAudioFrameAtOrAfterPts (mPts);
+              audioFrame = audioRender->getAudioFrameAtOrAfterPts (mPts);
               if (audioFrame) {// found it, adjust pts
                 mPts = audioFrame->getPts();
                 //cLog::log (LOGINFO, fmt::format ("skipped {}", utils::getFullPtsString (mPts)));
@@ -172,17 +175,14 @@ namespace {
               ptsDuration = audioFrame->getPtsDuration();
               }
             }
+          if (mPlaying)
+            mPts += ptsDuration;
 
-          #ifndef _WIN32
+          #ifdef _WIN32 // close process lambda
+            });
+          #else
             audio.play (2, srcSamples, numSamples, 1.f);
           #endif
-
-          mPts += ptsDuration;
-          //{{{  close windows play lamda
-          #ifdef _WIN32
-            });
-          #endif
-          //}}}
           }
 
         //{{{  close audioDevice
@@ -193,7 +193,7 @@ namespace {
         mRunning = false;
         cLog::log (LOGINFO, "exit");
         });
-      mAudioPlayerThread.detach();
+      mThread.detach();
       }
     //}}}
     //{{{
@@ -210,32 +210,21 @@ namespace {
     void toggleMute() { mMute = !mMute; }
     void setMute (bool mute) { mMute = mute; }
 
+    void play() { mPlaying = true; }
+    void stopPlay() { mPlaying = false; }
     void togglePlay() { mPlaying = !mPlaying; }
-    //{{{
-    void startPts (int64_t pts) {
-      mPts = pts;
-      mPlaying = true;
-      }
-    //}}}
-    //{{{
-    void skipPts (int64_t pts) {
-      mPts += pts;
-      mSkip = true;
-      }
-    //}}}
+    void setPts (int64_t pts) { mPts = pts; mSkip = true; }
+    void skipPts (int64_t pts) { mPts += pts; mSkip = true; }
 
   private:
-    cAudioRender& mAudioRender;
-    const uint32_t mSampleRate;
-
-    thread mAudioPlayerThread;
-
+    thread mThread;
     bool mRunning = true;
+    bool mExit = false;
+
     bool mMute = true;
     bool mSkip = false;
     bool mPlaying = false;
     bool mSynced = false;
-    bool mExit = false;
 
     int64_t mPts = 0;
 
@@ -299,9 +288,9 @@ namespace {
 
     //{{{
     void start() {
-      analyse();
-      audioLoader();
-      videoLoader();
+      analyseThread();
+      audioLoaderThread();
+      videoLoaderThread();
       }
     //}}}
 
@@ -338,7 +327,7 @@ namespace {
     //}}}
 
     //{{{
-    bool analyse() {
+    bool analyseThread() {
     // launch analyser thread
 
       FILE* file = fopen (mFileName.c_str(), "rb");
@@ -351,7 +340,7 @@ namespace {
       //{{{  get fileSize
       #ifdef _WIN32
         struct _stati64 st;
-         if (_stat64 (mFileName.c_str(), &st) != -1)
+        if (_stat64 (mFileName.c_str(), &st) != -1)
           mFileSize = st.st_size;
       #else
         struct stat st;
@@ -365,20 +354,19 @@ namespace {
 
         cTransportStream transportStream (
           {"anal", 0, {}, {}}, mOptions,
-          // newService lambda
+          // newService lambda, !!! hardly used !!!
           [&](cTransportStream::cService& service) noexcept { mService = &service; },
           //{{{  pes lambda
           [&](cTransportStream::cService& service, cTransportStream::cPidInfo& pidInfo) noexcept {
             if (pidInfo.getPid() == service.getVideoPid()) {
-              // video
+              // add video pes, take copy of pes
               uint8_t* buffer = (uint8_t*)malloc (pidInfo.getBufSize());
               memcpy (buffer, pidInfo.mBuffer, pidInfo.getBufSize());
 
               char frameType = cDvbUtils::getFrameType (buffer, pidInfo.getBufSize(), true);
               if ((frameType == 'I') || mGopMap.empty())
-                mGopMap.emplace (pidInfo.getPts(),
-                                 cGop(sPes(buffer, pidInfo.getBufSize(),
-                                           pidInfo.getPts(), pidInfo.getDts(), frameType)));
+                mGopMap.emplace (pidInfo.getPts(), cGop(sPes(buffer, pidInfo.getBufSize(),
+                                                             pidInfo.getPts(), pidInfo.getDts(), frameType)));
               else
                 mGopMap.rbegin()->second.addPes (sPes(buffer, pidInfo.getBufSize(),
                                                       pidInfo.getPts(), pidInfo.getDts(), frameType));
@@ -394,29 +382,35 @@ namespace {
 
                 //}}}
               }
+
             else if (pidInfo.getPid() == service.getAudioPid()) {
-              // audio
+              // add audio pes, take copy of pes
               uint8_t* buffer = (uint8_t*)malloc (pidInfo.getBufSize());
               memcpy (buffer, pidInfo.mBuffer, pidInfo.getBufSize());
-
               if (kAnalDebug)
                 cLog::log (LOGINFO, fmt::format ("A pts:{} size:{}",
                                                  getFullPtsString (pidInfo.getPts()), pidInfo.getBufSize()));
+
               unique_lock<shared_mutex> lock (mAudioMutex);
               mAudioPesMap.emplace (pidInfo.getPts(),
                                     sPes(buffer, pidInfo.getBufSize(), pidInfo.getPts(), pidInfo.getDts()));
               }
-            else if ((pidInfo.getPid() == service.getSubtitlePid()) && pidInfo.getBufSize()) {
-              // subtitle
-              uint8_t* buffer = (uint8_t*)malloc (pidInfo.getBufSize());
-              memcpy (buffer, pidInfo.mBuffer, pidInfo.getBufSize());
-
-              if (kAnalDebug)
-                cLog::log (LOGINFO, fmt::format ("S pts:{} size:{}",
+            else if (pidInfo.getPid() == service.getSubtitlePid()) {
+              if (pidInfo.getBufSize()) {
+                // add subtitle pes, take copy of pes
+                uint8_t* buffer = (uint8_t*)malloc (pidInfo.getBufSize());
+                memcpy (buffer, pidInfo.mBuffer, pidInfo.getBufSize());
+                if (kAnalDebug)
+                  cLog::log (LOGINFO, fmt::format ("S pts:{} size:{}",
                                                  getFullPtsString (pidInfo.getPts()), pidInfo.getBufSize()));
-              mSubtitlePesMap.emplace (pidInfo.getPts(),
-                                       sPes(buffer, pidInfo.getBufSize(), pidInfo.getPts(), pidInfo.getDts()));
+
+                mSubtitlePesMap.emplace (pidInfo.getPts(),
+                                         sPes(buffer, pidInfo.getBufSize(), pidInfo.getPts(), pidInfo.getDts()));
+                }
               }
+
+            else
+              cLog::log (LOGERROR, fmt::format ("cFilePlayer analyse addPes - unknown pid:{}", pidInfo.getPid()));
             }
           //}}}
           );
@@ -437,7 +431,7 @@ namespace {
         fclose (file);
 
         if (kAnalTotals) {
-          //{{{  totals
+          //{{{  report totals
           cLog::log (LOGINFO, fmt::format ("{}m took {}ms",
             mFileSize/1000000,
             chrono::duration_cast<chrono::milliseconds>(chrono::system_clock::now() - now).count()));
@@ -463,6 +457,7 @@ namespace {
                                            getFullPtsString (mSubtitlePesMap.rbegin()->first)));
           }
           //}}}
+
         cLog::log (LOGERROR, "exit");
         }).detach();
 
@@ -470,13 +465,14 @@ namespace {
       }
     //}}}
     //{{{
-    void audioLoader() {
+    void audioLoaderThread() {
     // launch audioLoader thread
 
       thread ([=]() {
         cLog::setThreadName ("audL");
 
         while (mAudioPesMap.begin() == mAudioPesMap.end()) {
+          // wait for analyse to see some audioPes
           if (kLoadDebug)
             cLog::log (LOGINFO, fmt::format ("audioLoader::start wait"));
           this_thread::sleep_for (100ms);
@@ -484,8 +480,9 @@ namespace {
 
         mAudioRender = new cAudioRender (false, 100, true, true,
                                          "aud", mService->getAudioStreamTypeId(), mService->getAudioPid(), mOptions);
-        mAudioPlayer = new cAudioPlayer (*mAudioRender, 48000);
-        mAudioPlayer->startPts (mAudioPesMap.begin()->second.mPts);
+
+        //  ??? could wait for first decode ???
+        mAudioPlayer = new cAudioPlayer (mAudioRender, 48000, mAudioPesMap.begin()->second.mPts);
 
         //unique_lock<shared_mutex> lock (mAudioMutex);
         auto it = mAudioPesMap.begin();
@@ -505,13 +502,14 @@ namespace {
       }
     //}}}
     //{{{
-    void videoLoader() {
+    void videoLoaderThread() {
     // launch videoLoader thread
 
       thread ([=]() {
         cLog::setThreadName ("vidL");
 
         while ((mGopMap.begin() == mGopMap.end()) || !mAudioRender || ! mAudioPlayer) {
+          // wait for analyse to see some videoPes
           if (kLoadDebug)
             cLog::log (LOGINFO, fmt::format ("videoLoader::start wait"));
           this_thread::sleep_for (100ms);
@@ -545,13 +543,14 @@ namespace {
       }
     //}}}
     //{{{
-    void subtitleLoader() {
+    void subtitleLoaderThread() {
     // launch subtitleLoader thread
 
       thread ([=]() {
         cLog::setThreadName ("subL");
 
         while ((mSubtitlePesMap.begin() == mSubtitlePesMap.end()) || !mAudioRender || !mAudioPlayer) {
+          // wait for analyse to see some subtitlePes
           if (kLoadDebug)
             cLog::log (LOGINFO, fmt::format ("subtitleLoader::start wait"));
           this_thread::sleep_for (100ms);
