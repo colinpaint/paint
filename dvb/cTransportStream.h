@@ -338,7 +338,6 @@ public:
   std::map <uint16_t, cService>& getServiceMap() { return mServiceMap; };
 
   bool throttle();
-  void togglePlay();
 
   // demux
   int64_t demux (uint8_t* chunk, int64_t chunkSize);

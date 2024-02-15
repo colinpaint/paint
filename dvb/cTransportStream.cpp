@@ -483,21 +483,12 @@ void cTransportStream::cService::enableStream (cRenderStream::eType streamType) 
     }
   }
 //}}}
-
 //{{{
 bool cTransportStream::cService::throttle() {
 // return true if audioStream needs throttle
 
   cRenderStream& audioStream = getStream (cRenderStream::eAudio);
   return audioStream.isEnabled() && audioStream.getRender().throttle();
-  }
-//}}}
-//{{{
-void cTransportStream::cService::togglePlay() {
-
-  cRenderStream& audioStream = getStream (cRenderStream::eAudio);
-  if (audioStream.isEnabled())
-    audioStream.getRender().togglePlay();
   }
 //}}}
 
@@ -769,13 +760,6 @@ bool cTransportStream::throttle() {
   return false;
   }
 //}}}
-//{{{
-void cTransportStream::togglePlay() {
-  for (auto& service : mServiceMap)
-    service.second.togglePlay();
-  }
-//}}}
-
 // demux
 //{{{
 int64_t cTransportStream::demux (uint8_t* chunk, int64_t chunkSize) {

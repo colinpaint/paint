@@ -107,9 +107,3 @@ bool cAudioRender::throttle() {
   return false;
   }
 //}}}
-//{{{
-void cAudioRender::togglePlay() {
-  if (mAudioPlayer)
-    mAudioPlayer->togglePlay();
-  }
-//}}}

@@ -34,7 +34,6 @@ public:
   // overrides
   virtual std::string getInfoString() const final;
   virtual bool throttle() final;
-  virtual void togglePlay() final;
 
 private:
   uint32_t mSampleRate;
