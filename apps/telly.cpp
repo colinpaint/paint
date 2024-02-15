@@ -130,8 +130,8 @@ namespace {
         mDvbSource = new cDvbSource (multiplex.mFrequency, 0);
 
       mTransportStream = new cTransportStream (multiplex, options,
+        // newService lambda
         [&](cTransportStream::cService& service) noexcept {
-          //cLog::log (LOGINFO, fmt::format ("addService {}", service.getSid()));
           if (options->mShowAllServices)
             if (service.getStream (cRenderStream::eVideo).isDefined()) {
               service.enableStream (cRenderStream::eVideo);
@@ -139,6 +139,7 @@ namespace {
               service.enableStream (cRenderStream::eSubtitle);
               }
           },
+        // addPes lambda
         [&](cTransportStream::cService& service, cTransportStream::cPidInfo& pidInfo) noexcept {
           cRenderStream* stream = service.getStreamByPid (pidInfo.getPid());
           if (stream && stream->isEnabled()) {
@@ -214,8 +215,8 @@ namespace {
         mDvbSource = new cDvbSource (multiplex.mFrequency, 0);
 
       mTransportStream = new cTransportStream (multiplex, options,
+        // newService lambda
         [&](cTransportStream::cService& service) noexcept {
-          //cLog::log (LOGINFO, fmt::format ("addService {}", service.getSid()));
           if (options->mShowAllServices)
             if (service.getStream (cRenderStream::eVideo).isDefined()) {
               service.enableStream (cRenderStream::eVideo);
@@ -223,6 +224,7 @@ namespace {
               service.enableStream (cRenderStream::eSubtitle);
               }
           },
+        // addPes lambda
         [&](cTransportStream::cService& service, cTransportStream::cPidInfo& pidInfo) noexcept {
           cRenderStream* stream = service.getStreamByPid (pidInfo.getPid());
           if (stream && stream->isEnabled()) {
@@ -301,11 +303,9 @@ namespace {
     //{{{
     void fileSourceThread (const string& filename, cTellyOptions* options) {
 
-      // create transportStream
       mTransportStream = new cTransportStream ({"file", 0, {}, {}}, options,
-        //{{{  newSevice lambda
+        // newSevice lambda
         [&](cTransportStream::cService& service) noexcept {
-          //cLog::log (LOGINFO, fmt::format ("addService {}", service.getSid()));
           if (options->mShowAllServices)
             if (service.getStream (cRenderStream::eVideo).isDefined()) {
               service.enableStream (cRenderStream::eVideo);
@@ -313,8 +313,7 @@ namespace {
               service.enableStream (cRenderStream::eSubtitle);
               }
           },
-        //}}}
-        //{{{  addPes lambda
+        // addPes lambda
         [&](cTransportStream::cService& service, cTransportStream::cPidInfo& pidInfo) noexcept {
           cRenderStream* stream = service.getStreamByPid (pidInfo.getPid());
           if (stream && stream->isEnabled()) {
@@ -323,7 +322,6 @@ namespace {
             stream->getRender().decodePes (buffer, pidInfo.getBufSize(), pidInfo.getPts(), pidInfo.getDts());
             }
           }
-        //}}}
         );
       if (!mTransportStream) {
         //{{{  error, return

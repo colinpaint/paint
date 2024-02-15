@@ -126,21 +126,17 @@ cAudioPlayer::cAudioPlayer (cAudioRender& audioRender, uint32_t sampleRate, uint
           ptsDuration = audioFrame->getPtsDuration();
           }
         }
+      if (mPlaying)
+        mPts += ptsDuration;
 
-      //{{{  linux play srcSamples
-      #ifndef _WIN32
+      #ifdef _WIN32 
+        }); // close lambda
+      #else
         if (hasAudio)
           audio.play (2, srcSamples, numSamples, 1.f);
         else
           this_thread::sleep_for (21333us); // !!!! crude HD bodge for noAudio raspberry pi !!!
       #endif
-      //}}}
-      mPts += ptsDuration;
-      //{{{  close windows play lamda
-      #ifdef _WIN32
-        });
-      #endif
-      //}}}
       }
 
     //{{{  close audioDevice
