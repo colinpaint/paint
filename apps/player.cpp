@@ -311,8 +311,7 @@ namespace {
           }
 
         // creates audioPlayer on first audio pes
-        mAudioRender = new cAudioRender (false, 100, true, true,
-                                         "aud", mService->getAudioStreamTypeId(), mService->getAudioPid());
+        mAudioRender = new cAudioRender (false, 100, true, mService->getAudioStreamTypeId(), mService->getAudioPid());
 
         //unique_lock<shared_mutex> lock (mAudioMutex);
         auto pesIt = mAudioPesMap.begin();
@@ -353,7 +352,7 @@ namespace {
           this_thread::sleep_for (100ms);
           }
 
-        mVideoRender = new cVideoRender (false, 50, "vid", mService->getVideoStreamTypeId(), mService->getVideoPid());
+        mVideoRender = new cVideoRender (false, 50, mService->getVideoStreamTypeId(), mService->getVideoPid());
 
         auto gopIt = mGopMap.begin();
         while (gopIt != mGopMap.end()) {
@@ -393,7 +392,7 @@ namespace {
           this_thread::sleep_for (100ms);
           }
 
-        mSubtitleRender = new cSubtitleRender (false, 0, "sub", mService->getSubtitleStreamTypeId(), mService->getSubtitlePid());
+        mSubtitleRender = new cSubtitleRender (false, 0, mService->getSubtitleStreamTypeId(), mService->getSubtitlePid());
 
         cLog::log (LOGERROR, "exit");
         }).detach();

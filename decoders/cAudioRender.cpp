@@ -40,9 +40,9 @@ using namespace std;
 //}}}
 
 //{{{
-cAudioRender::cAudioRender (bool queue, size_t maxFrames, bool playerCreate, bool playerHasAudio,
-                            const string& name, uint8_t streamType, uint16_t pid)
-    : cRender(queue, name, "aud", streamType, pid, 1920, maxFrames,
+cAudioRender::cAudioRender (bool queue, size_t maxFrames, bool playerHasAudio, 
+                            uint8_t streamType, uint16_t pid)
+    : cRender(queue, "aud", streamType, pid, 1920, maxFrames,
         // getFrame lambda
         [&]() noexcept {
           return hasMaxFrames() ? reuseBestFrame() : new cAudioFrame();
@@ -63,14 +63,13 @@ cAudioRender::cAudioRender (bool queue, size_t maxFrames, bool playerCreate, boo
 
           cRender::addFrame (frame);
 
-          if (mPlayerCreate && !mAudioPlayer) {
+          if (!mAudioPlayer) {
             mAudioPlayer = new cAudioPlayer (*this, mSampleRate, getPid(), mPlayerHasAudio);
             mAudioPlayer->startPts (audioFrame->getPts());
             }
           }
         ),
-      mSampleRate(48000), mSamplesPerFrame(1024),
-      mPlayerCreate(playerCreate), mPlayerHasAudio(playerHasAudio) {
+      mSampleRate(48000), mSamplesPerFrame(1024), mPlayerHasAudio(playerHasAudio) {
 
   mDecoder = new cFFmpegAudioDecoder ((streamType == 17) ? eAudioFrameType::eAacLatm : eAudioFrameType::eMp3);
   }

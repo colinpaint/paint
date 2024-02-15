@@ -15,8 +15,7 @@ class cAudioPlayer;
 
 class cAudioRender : public cRender {
 public:
-  cAudioRender (bool queue, size_t maxFrames, bool playerCreate, bool playerHasAudio,
-                const std::string& name, uint8_t streamType, uint16_t pid);
+  cAudioRender (bool queue, size_t maxFrames, bool playerHasAudio, uint8_t streamType, uint16_t pid);
   virtual ~cAudioRender() = default;
 
   // gets
@@ -38,9 +37,8 @@ public:
 private:
   uint32_t mSampleRate;
   size_t mSamplesPerFrame;
-
-  const bool mPlayerCreate = false;
   const bool mPlayerHasAudio = false;
+
   cAudioPlayer* mAudioPlayer = nullptr;
 
   std::string mFrameInfo;

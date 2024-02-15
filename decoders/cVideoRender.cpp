@@ -50,8 +50,8 @@ using namespace std;
 // cVideoRender
 //{{{
 cVideoRender::cVideoRender (bool queue, size_t maxFrames,
-                            const string& name, uint8_t streamType, uint16_t pid) :
-    cRender(queue, name, "vid", streamType, pid, kPtsPer25HzFrame, maxFrames,
+                            uint8_t streamType, uint16_t pid) :
+    cRender(queue, "vid", streamType, pid, kPtsPer25HzFrame, maxFrames,
             // getFrame lambda
             [&]() noexcept {
               return hasMaxFrames() ? reuseBestFrame() : new cFFmpegVideoFrame();

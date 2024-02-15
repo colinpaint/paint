@@ -30,8 +30,8 @@ constexpr bool kQueued = true;
 // public:
 //{{{
 cSubtitleRender::cSubtitleRender (bool queue, size_t maxFrames,
-                                  const string& name, uint8_t streamType, uint16_t pid)
-    : cRender(queue, name, "sub", streamType, pid, kPtsPer25HzFrame, maxFrames,
+                                  uint8_t streamType, uint16_t pid)
+    : cRender(queue, "sub", streamType, pid, kPtsPer25HzFrame, maxFrames,
               // getFrame lambda
               [&]() noexcept {
                 // !!! no relloacate yet !!!

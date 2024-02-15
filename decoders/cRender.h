@@ -22,7 +22,7 @@ class cDecoder;
 
 class cRender {
 public:
-  cRender (bool queued, const std::string& name, const std::string& threadName, 
+  cRender (bool queued, const std::string& threadName,
            uint8_t streamType, uint16_t pid,
            int64_t ptsDuration, size_t maxFrames,
            std::function <cFrame* ()> getFrameCallback,
@@ -82,7 +82,6 @@ private:
 
   // vars
   const bool mQueued;
-  const std::string mName;
   const std::string mThreadName;
   const uint8_t mStreamType;
   const uint16_t mPid;
