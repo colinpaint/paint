@@ -48,12 +48,12 @@ public:
   cFrame* reuseBestFrame();
   void addFrame (cFrame* frame);
 
-  bool decodePes (uint8_t* pes, uint32_t pesSize, int64_t pts, int64_t dts);
-  virtual bool throttle (int64_t pts);
+  void decodePes (uint8_t* pes, uint32_t pesSize, int64_t pts, int64_t dts);
 
   virtual std::string getInfoString() const;
   virtual void togglePlay() {}
   virtual bool throttle() { return false; }
+  virtual bool throttle (int64_t pts);
   bool found (int64_t pts);
 
   void toggleLog();

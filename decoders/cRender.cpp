@@ -123,16 +123,13 @@ void cRender::addFrame (cFrame* frame) {
 
 // process
 //{{{
-bool cRender::decodePes (uint8_t* pes, uint32_t pesSize, int64_t pts, int64_t dts) {
+void cRender::decodePes (uint8_t* pes, uint32_t pesSize, int64_t pts, int64_t dts) {
 
-  if (isQueued()) {
+  if (isQueued())
     mDecodeQueue.enqueue (new cDecodeQueueItem (mDecoder, pes, pesSize, pts, dts,
                                                 mGetFrameCallback, mAddFrameCallback));
-    return true;
-    }
-
-  mDecoder->decode (pes, pesSize, pts, dts, mGetFrameCallback, mAddFrameCallback);
-  return false;
+  else
+    mDecoder->decode (pes, pesSize, pts, dts, mGetFrameCallback, mAddFrameCallback);
   }
 //}}}
 

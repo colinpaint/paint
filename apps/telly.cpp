@@ -141,13 +141,11 @@ namespace {
           },
         [&](cTransportStream::cService& service, cTransportStream::cPidInfo& pidInfo) noexcept {
           cRenderStream* stream = service.getStreamByPid (pidInfo.getPid());
-          if (stream && stream->isEnabled())
-            if (stream->getRender().decodePes (pidInfo.mBuffer, pidInfo.getBufSize(),
-                                               pidInfo.getPts(), pidInfo.getDts()))
-              // transferred ownership of mBuffer to render, create new one
-              pidInfo.mBuffer = (uint8_t*)malloc (pidInfo.mBufSize);
-          //cLog::log (LOGINFO, fmt::format ("pes sid:{} pid:{} size:{}",
-          //                                 service.getSid(), pidInfo.getPid(), pidInfo.getBufSize()));
+          if (stream && stream->isEnabled()) {
+            uint8_t* buffer = (uint8_t*)malloc (pidInfo.getBufSize());
+            memcpy (buffer, pidInfo.mBuffer, pidInfo.getBufSize());
+            stream->getRender().decodePes (buffer, pidInfo.getBufSize(), pidInfo.getPts(), pidInfo.getDts());
+            }
           });
 
       if (!mTransportStream) {
@@ -227,14 +225,11 @@ namespace {
           },
         [&](cTransportStream::cService& service, cTransportStream::cPidInfo& pidInfo) noexcept {
           cRenderStream* stream = service.getStreamByPid (pidInfo.getPid());
-          if (stream && stream->isEnabled())
-            if (stream->getRender().decodePes (pidInfo.mBuffer, pidInfo.getBufSize(),
-                                               pidInfo.getPts(), pidInfo.getDts()))
-              // transferred ownership of mBuffer to render, create new one
-              pidInfo.mBuffer = (uint8_t*)malloc (pidInfo.mBufSize);
-
-          //cLog::log (LOGINFO, fmt::format ("pes sid:{} pid:{} size:{}",
-          //                                 service.getSid(), pidInfo.getPid(), pidInfo.getBufSize()));
+          if (stream && stream->isEnabled()) {
+            uint8_t* buffer = (uint8_t*)malloc (pidInfo.getBufSize());
+            memcpy (buffer, pidInfo.mBuffer, pidInfo.getBufSize());
+            stream->getRender().decodePes (buffer, pidInfo.getBufSize(), pidInfo.getPts(), pidInfo.getDts());
+            }
           });
 
       if (!mTransportStream) {
@@ -322,13 +317,11 @@ namespace {
         //{{{  addPes lambda
         [&](cTransportStream::cService& service, cTransportStream::cPidInfo& pidInfo) noexcept {
           cRenderStream* stream = service.getStreamByPid (pidInfo.getPid());
-          if (stream && stream->isEnabled())
-            if (stream->getRender().decodePes (pidInfo.mBuffer, pidInfo.getBufSize(),
-                                               pidInfo.getPts(), pidInfo.getDts()))
-              // transferred ownership of mBuffer to render, create new one
-              pidInfo.mBuffer = (uint8_t*)malloc (pidInfo.mBufSize);
-          //cLog::log (LOGINFO, fmt::format ("pes sid:{} pid:{} size:{}",
-          //                                 service.getSid(), pidInfo.getPid(), pidInfo.getBufSize()));
+          if (stream && stream->isEnabled()) {
+            uint8_t* buffer = (uint8_t*)malloc (pidInfo.getBufSize());
+            memcpy (buffer, pidInfo.mBuffer, pidInfo.getBufSize());
+            stream->getRender().decodePes (buffer, pidInfo.getBufSize(), pidInfo.getPts(), pidInfo.getDts());
+            }
           }
         //}}}
         );
@@ -358,14 +351,14 @@ namespace {
         size_t chunkSize = 188 * 256;
         uint8_t* chunk = new uint8_t[chunkSize];
         while (true) {
-          while (mTransportStream->throttle())
-            this_thread::sleep_for (1ms);
-
           size_t bytesRead = fread (chunk, 1, chunkSize, file);
           if (bytesRead > 0)
             mTransportStream->demux (chunk, bytesRead);
           else
             break;
+
+          while (mTransportStream->throttle())
+            this_thread::sleep_for (1ms);
           }
 
         fclose (file);
@@ -1246,7 +1239,7 @@ int main (int numArgs, char* args[]) {
 
   cTellyApp tellyApp (options, new cTellyUI());
   if (options->mFileName.empty()) {
-    if (options->mHeadless) 
+    if (options->mHeadless)
       tellyApp.liveDvbSource (options->mMultiplex, options);
     else {
       tellyApp.liveDvbSourceThread (options->mMultiplex, options);
