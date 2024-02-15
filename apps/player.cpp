@@ -485,14 +485,16 @@ namespace {
         mAudioPlayer = new cAudioPlayer (mAudioRender, 48000, mAudioPesMap.begin()->second.mPts);
 
         //unique_lock<shared_mutex> lock (mAudioMutex);
-        auto it = mAudioPesMap.begin();
-        while (it != mAudioPesMap.end()) {
+        auto pesIt = mAudioPesMap.begin();
+        while (pesIt != mAudioPesMap.end()) {
           if (kLoadDebug)
             cLog::log (LOGINFO, fmt::format ("load aud pts:{} player:{}",
-                                             getFullPtsString (it->first),
+                                             getFullPtsString (pesIt->first),
                                              getFullPtsString (mAudioPlayer->getPts())));
-          mAudioRender->decodePes (it->second.mData, it->second.mSize, it->second.mPts, it->second.mDts);
-          ++it;
+          mAudioRender->decodePes (pesIt->second.mData, pesIt->second.mSize, pesIt->second.mPts, pesIt->second.mDts);
+          mLastLoadedAudioPts = pesIt->second.mPts;
+          ++pesIt;
+
           while (mAudioRender->throttle (mAudioPlayer->getPts()))
             this_thread::sleep_for (1ms);
           }
@@ -524,12 +526,12 @@ namespace {
             cLog::log (LOGINFO, fmt::format ("load gop {}", getFullPtsString (gopIt->first)));
 
           auto& pesVector = gopIt->second.mPesVector;
-          auto it = pesVector.begin();
-          while (it != pesVector.end()) {
+          auto pesIt = pesVector.begin();
+          while (pesIt != pesVector.end()) {
             if (kLoadDebug)
-              cLog::log (LOGINFO, fmt::format ("- load pes {}", getFullPtsString (it->mPts)));
-            mVideoRender->decodePes (it->mData, it->mSize, it->mPts, it->mDts);
-            ++it;
+              cLog::log (LOGINFO, fmt::format ("- load pes {}", getFullPtsString (pesIt->mPts)));
+            mVideoRender->decodePes (pesIt->mData, pesIt->mSize, pesIt->mPts, pesIt->mDts);
+            ++pesIt;
 
             while (mVideoRender->throttle (mAudioPlayer->getPts()))
               this_thread::sleep_for (1ms);
@@ -573,6 +575,8 @@ namespace {
     // pes
     shared_mutex mAudioMutex;
     map <int64_t,sPes> mAudioPesMap;
+    int64_t mLastLoadedAudioPts = -1;
+
     int64_t mNumVideoPes = 0;
     map <int64_t,cGop> mGopMap;
     map <int64_t,sPes> mSubtitlePesMap;
@@ -1243,50 +1247,87 @@ namespace {
     //}}}
 
     //{{{
-    void hitSpace (cPlayerApp& playerApp) {
-      playerApp.togglePlay();
-      }
-    //}}}
-    //{{{
     void hitControlLeft (cPlayerApp& playerApp) {
+    // frame
       playerApp.skipPlay (-90000 / 25);
       }
     //}}}
     //{{{
-    void hitControlRight (cPlayerApp& playerApp) {
-      playerApp.skipPlay (90000 / 25);
-      }
-    //}}}
-    //{{{
     void hitShiftLeft (cPlayerApp& playerApp) {
+    // 10 frames
       playerApp.skipPlay (-(90000 * 10) / 25);
       }
     //}}}
     //{{{
+    void hitLeft (cPlayerApp& playerApp) {
+    // second
+      playerApp.skipPlay (-90000);
+      }
+    //}}}
+
+    //{{{
+    void hitControlRight (cPlayerApp& playerApp) {
+    // frame
+      playerApp.skipPlay (90000 / 25);
+      }
+    //}}}
+    //{{{
     void hitShiftRight (cPlayerApp& playerApp) {
+    // 10 frames
       playerApp.skipPlay ((90000 * 10) / 25);
       }
     //}}}
     //{{{
-    void hitLeft (cPlayerApp& playerApp) {
-      playerApp.skipPlay (-90000);
-      }
-    //}}}
-    //{{{
     void hitRight (cPlayerApp& playerApp) {
+    // second
       playerApp.skipPlay (90000);
       }
     //}}}
+
     //{{{
     void hitUp (cPlayerApp& playerApp) {
-      playerApp.skipPlay (-900000);
+    // 10 seconds
+      playerApp.skipPlay (-90000 * 10);
       }
     //}}}
     //{{{
-    void hitDown (cPlayerApp& playerApp) {
-      playerApp.skipPlay (900000);
+    void hitControlUp (cPlayerApp& playerApp) {
+    // minute
+      playerApp.skipPlay (-90000 * 60);
       }
     //}}}
+    //{{{
+    void hitShiftUp (cPlayerApp& playerApp) {
+    // 5 minutes
+      playerApp.skipPlay (-90000 * 60 * 5);
+      }
+    //}}}
+
+    //{{{
+    void hitDown (cPlayerApp& playerApp) {
+    // 10 seconds
+      playerApp.skipPlay (90000 * 10);
+      }
+    //}}}
+    //{{{
+    void hitControlDown (cPlayerApp& playerApp) {
+    // minute
+      playerApp.skipPlay (90000 * 60);
+      }
+    //}}}
+    //{{{
+    void hitShiftDown (cPlayerApp& playerApp) {
+    // 5 minutes
+      playerApp.skipPlay (90000 * 60 * 5);
+      }
+    //}}}
+
+    //{{{
+    void hitSpace (cPlayerApp& playerApp) {
+      playerApp.togglePlay();
+      }
+    //}}}
+
     //{{{
     void keyboard (cPlayerApp& playerApp) {
 
@@ -1301,16 +1342,25 @@ namespace {
       //}}}
       const vector<sActionKey> kActionKeys = {
       //  alt    control shift  ImGuiKey             function
-        { false, true,   false, ImGuiKey_LeftArrow,  [this,&playerApp]{ hitControlLeft (playerApp); }},
-        { false, false,  true,  ImGuiKey_LeftArrow,  [this,&playerApp]{ hitShiftLeft (playerApp); }},
         { false, false,  false, ImGuiKey_LeftArrow,  [this,&playerApp]{ hitLeft (playerApp); }},
-        { false, false,  true,  ImGuiKey_RightArrow, [this,&playerApp]{ hitShiftRight (playerApp); }},
-        { false, true,   false, ImGuiKey_RightArrow, [this,&playerApp]{ hitControlRight (playerApp); }},
+        { false, false,  true,  ImGuiKey_LeftArrow,  [this,&playerApp]{ hitShiftLeft (playerApp); }},
+        { false, true,   false, ImGuiKey_LeftArrow,  [this,&playerApp]{ hitControlLeft (playerApp); }},
+
         { false, false,  false, ImGuiKey_RightArrow, [this,&playerApp]{ hitRight (playerApp); }},
+        { false, true,   false, ImGuiKey_RightArrow, [this,&playerApp]{ hitControlRight (playerApp); }},
+        { false, false,  true,  ImGuiKey_RightArrow, [this,&playerApp]{ hitShiftRight (playerApp); }},
+
         { false, false,  false, ImGuiKey_UpArrow,    [this,&playerApp]{ hitUp (playerApp); }},
+        { false, false,  true,  ImGuiKey_UpArrow,    [this,&playerApp]{ hitShiftUp (playerApp); }},
+        { false, true,   false, ImGuiKey_UpArrow,    [this,&playerApp]{ hitControlUp (playerApp); }},
+
         { false, false,  false, ImGuiKey_DownArrow,  [this,&playerApp]{ hitDown (playerApp); }},
+        { false, false,  true,  ImGuiKey_DownArrow,  [this,&playerApp]{ hitShiftDown (playerApp); }},
+        { false, true,   false, ImGuiKey_DownArrow,  [this,&playerApp]{ hitControlDown (playerApp); }},
+
         { false, false,  false, ImGuiKey_Space,      [this,&playerApp]{ hitSpace (playerApp); }},
         { false, false,  false, ImGuiKey_Enter,      [this,&playerApp]{ mMultiView.hitEnter(); }},
+
         { false, false,  false, ImGuiKey_F,          [this,&playerApp]{ playerApp.getPlatform().toggleFullScreen(); }},
         { false, false,  false, ImGuiKey_S,          [this,&playerApp]{ playerApp.toggleShowSubtitle(); }},
         { false, false,  false, ImGuiKey_L,          [this,&playerApp]{ playerApp.toggleShowMotionVectors(); }},

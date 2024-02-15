@@ -1116,6 +1116,7 @@ namespace {
         { false, false,  false, ImGuiKey_F,          [this,&tellyApp]{ tellyApp.getPlatform().toggleFullScreen(); }},
         { false, false,  false, ImGuiKey_S,          [this,&tellyApp]{ tellyApp.toggleShowSubtitle(); }},
         { false, false,  false, ImGuiKey_L,          [this,&tellyApp]{ tellyApp.toggleShowMotionVectors(); }},
+
         { false, false,  false, ImGuiKey_P,          [this,&tellyApp]{ hitTab (tellyApp, ePids); }},
         { false, false,  false, ImGuiKey_E,          [this,&tellyApp]{ hitTab (tellyApp, eEpg); }},
       };
