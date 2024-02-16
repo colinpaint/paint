@@ -47,8 +47,8 @@ public:
   cSubtitleImage& getImage (size_t line) { return mPage.mImages[line]; }
 
   //{{{
-  virtual int64_t decode (uint8_t* pes, uint32_t pesSize, int64_t pts, int64_t dts, 
-                          std::function<cFrame* ()> getFrameCallback,
+  virtual int64_t decode (uint8_t* pes, uint32_t pesSize, int64_t pts, int64_t dts, bool allocFront,
+                          std::function<cFrame* (bool allocFront)> getFrameCallback,
                           std::function<void (cFrame* frame)> addFrameCallback) final {
     mRender.log ("pes", fmt::format ("pts {} dts {} size {}",
                                      utils::getFullPtsString (pts), utils::getFullPtsString (dts), pesSize));
@@ -128,7 +128,7 @@ public:
         //{{{
         case 0x80: // end of display set segment
           {
-          cSubtitleFrame* subtitleFrame = dynamic_cast<cSubtitleFrame*>(getFrameCallback());
+          cSubtitleFrame* subtitleFrame = dynamic_cast<cSubtitleFrame*>(getFrameCallback (true));
 
           subtitleFrame->set (pts, 90000 / 25, pesSize);
 

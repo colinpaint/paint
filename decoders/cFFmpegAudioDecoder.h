@@ -79,8 +79,8 @@ public:
 
   virtual std::string getInfoString() const final { return "ffmpeg " + mStreamTypeName; }
   //{{{
-  virtual int64_t decode (uint8_t* pes, uint32_t pesSize, int64_t pts, int64_t dts, 
-                          std::function<cFrame* ()> allocFrameCallback,
+  virtual int64_t decode (uint8_t* pes, uint32_t pesSize, int64_t pts, int64_t dts, bool allocFront,
+                          std::function<cFrame* (bool allocFront)> allocFrameCallback,
                           std::function<void (cFrame* frame)> addFrameCallback) final  {
     (void)dts;
 
@@ -105,7 +105,7 @@ public:
 
           if (avFrame->nb_samples > 0) {
             // call allocAudioFrame callback
-            cAudioFrame* audioFrame = dynamic_cast<cAudioFrame*>(allocFrameCallback());
+            cAudioFrame* audioFrame = dynamic_cast<cAudioFrame*>(allocFrameCallback (allocFront));
             audioFrame->addTime (std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::system_clock::now() - now).count());
             audioFrame->set (interpolatedPts,
                              avFrame->sample_rate ? avFrame->nb_samples * 90000 / avFrame->sample_rate : 48000,

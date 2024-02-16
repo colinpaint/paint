@@ -25,7 +25,7 @@ public:
   cRender (bool queued, const std::string& threadName,
            uint8_t streamType, uint16_t pid,
            int64_t ptsDuration, size_t maxFrames,
-           std::function <cFrame* ()> getFrameCallback,
+           std::function <cFrame* (bool allocFront)> getFrameCallback,
            std::function <void (cFrame* frame)> addFrameCallback);
   virtual ~cRender();
 
@@ -45,11 +45,12 @@ public:
 
   cFrame* getFrameAtPts (int64_t pts);
   cFrame* getFrameAtOrAfterPts (int64_t pts);
-  cFrame* reuseBestFrame();
+  cFrame* removeFirstFrame();
+  cFrame* removeLastFrame();
   void addFrame (cFrame* frame);
   void clearFrames();
 
-  void decodePes (uint8_t* pes, uint32_t pesSize, int64_t pts, int64_t dts);
+  void decodePes (uint8_t* pes, uint32_t pesSize, int64_t pts, int64_t dts, bool allocFront);
 
   virtual std::string getInfoString() const;
   virtual void togglePlay() {}
@@ -87,7 +88,7 @@ private:
   const uint8_t mStreamType;
   const uint16_t mPid;
   const size_t mMaxFrames;
-  const std::function <cFrame* ()> mGetFrameCallback;
+  const std::function <cFrame* (bool allocFront)> mGetFrameCallback;
   const std::function <void (cFrame* frame)> mAddFrameCallback;
 
   cMiniLog mMiniLog;

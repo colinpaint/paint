@@ -52,27 +52,28 @@ using namespace std;
 cVideoRender::cVideoRender (bool queue, size_t maxFrames,
                             uint8_t streamType, uint16_t pid) :
     cRender(queue, "vid", streamType, pid, kPtsPer25HzFrame, maxFrames,
-            // getFrame lambda
-            [&]() noexcept {
-              return hasMaxFrames() ? reuseBestFrame() : new cFFmpegVideoFrame();
-              },
-            // addFrame lambda
-            [&](cFrame* frame) noexcept {
-              if (kAddFrameDebug)
-                cLog::log (LOGINFO, fmt::format ("- cVideoRender::addFrame {}", utils::getFullPtsString (frame->getPts())));
+      // getFrame lambda
+      [&](bool allocFront) noexcept {
+        return hasMaxFrames() ? removeFirstFrame() : new cFFmpegVideoFrame();
+        },
 
-              setPts (frame->getPts(), frame->getPtsDuration());
-              cVideoFrame* videoFrame = dynamic_cast<cVideoFrame*>(frame);
-              videoFrame->mQueueSize = getQueueSize();
-              videoFrame->mTextureDirty = true;
+      // addFrame lambda
+      [&](cFrame* frame) noexcept {
+        if (kAddFrameDebug)
+          cLog::log (LOGINFO, fmt::format ("- cVideoRender::addFrame {}", utils::getFullPtsString (frame->getPts())));
 
-              // save some videoFrame info
-              mWidth = videoFrame->getWidth();
-              mHeight = videoFrame->getHeight();
-              mFrameInfo = videoFrame->getInfoString();
+        setPts (frame->getPts(), frame->getPtsDuration());
+        cVideoFrame* videoFrame = dynamic_cast<cVideoFrame*>(frame);
+        videoFrame->mQueueSize = getQueueSize();
+        videoFrame->mTextureDirty = true;
 
-              cRender::addFrame (frame);
-              }) {
+        // save some videoFrame info
+        mWidth = videoFrame->getWidth();
+        mHeight = videoFrame->getHeight();
+        mFrameInfo = videoFrame->getInfoString();
+
+        cRender::addFrame (frame);
+        }) {
 
   mDecoder = new cFFmpegVideoDecoder (streamType == 27);
   }

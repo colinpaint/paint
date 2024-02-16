@@ -40,13 +40,14 @@ using namespace std;
 //}}}
 
 //{{{
-cAudioRender::cAudioRender (bool queue, size_t maxFrames, bool playerHasAudio, 
+cAudioRender::cAudioRender (bool queue, size_t maxFrames, bool playerHasAudio,
                             uint8_t streamType, uint16_t pid)
     : cRender(queue, "aud", streamType, pid, 1920, maxFrames,
         // getFrame lambda
-        [&]() noexcept {
-          return hasMaxFrames() ? reuseBestFrame() : new cAudioFrame();
+        [&](bool allocFront) noexcept {
+          return hasMaxFrames() ? removeFirstFrame() : new cAudioFrame();
           },
+
         // addFrame lambda
         [&](cFrame* frame) noexcept {
           cAudioFrame* audioFrame = dynamic_cast<cAudioFrame*>(frame);

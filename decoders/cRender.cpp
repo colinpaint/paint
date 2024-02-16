@@ -13,6 +13,7 @@
 #include "../decoders/cDecoder.h"
 
 using namespace std;
+using namespace utils;
 //}}}
 constexpr size_t kMaxLogSize = 64;
 
@@ -20,7 +21,7 @@ constexpr size_t kMaxLogSize = 64;
 cRender::cRender (bool queued, const string& threadName,
                   uint8_t streamType, uint16_t pid,
                   int64_t ptsDuration, size_t maxFrames,
-                  function <cFrame* ()> getFrameCallback,
+                  function <cFrame* (bool allocFront)> getFrameCallback,
                   function <void (cFrame* frame)> addFrameCallback) :
     mQueued(queued), mThreadName(threadName),
     mStreamType(streamType), mPid(pid),
@@ -87,9 +88,9 @@ void cRender::setPts (int64_t pts, int64_t ptsDuration) {
 //}}}
 
 //{{{
-cFrame* cRender::reuseBestFrame() {
+cFrame* cRender::removeFirstFrame() {
 
-  cFrame* frame;
+  cFrame* frame = nullptr;
 
   { // locked
   unique_lock<shared_mutex> lock (mSharedMutex);
@@ -100,7 +101,25 @@ cFrame* cRender::reuseBestFrame() {
   mFramesMap.erase (it);
   }
 
-  //cLog::log (LOGINFO, fmt::format ("reuseBestFrame:{}", utils::getFullPtsString (frame->getPts())));
+  //cLog::log (LOGINFO, fmt::format ("removeFirstFrame:{}", getPtsString (frame->getPts())));
+  frame->releaseResources();
+  return frame;
+  }
+//}}}
+//{{{
+cFrame* cRender::removeLastFrame() {
+
+  cFrame* frame = nullptr;
+
+  { // locked
+  unique_lock<shared_mutex> lock (mSharedMutex);
+
+  auto it = --mFramesMap.end();
+  frame = it->second;
+  mFramesMap.erase (it);
+  }
+
+  //cLog::log (LOGINFO, fmt::format ("removeLastFrame:{}", getPtsString (frame->getPts())));
   frame->releaseResources();
   return frame;
   }
@@ -109,8 +128,8 @@ cFrame* cRender::reuseBestFrame() {
 void cRender::addFrame (cFrame* frame) {
 
   //cLog::log (LOGINFO, fmt::format ("addFrame {} {}",
-  //                                 utils::getFullPtsString (frame->getPts()),
-  //                                 utils::getFullPtsString ((frame->getPts() / frame->getPtsDuration()) * frame->getPtsDuration())));
+  //                                 getFullPtsString (frame->getPts()),
+  //                                 getFullPtsString ((frame->getPts() / frame->getPtsDuration()) * frame->getPtsDuration())));
   unique_lock<shared_mutex> lock (mSharedMutex);
   mFramesMap.emplace (frame->getPts() / frame->getPtsDuration(), frame);
   }
@@ -129,20 +148,20 @@ void cRender::clearFrames() {
 
 // process
 //{{{
-void cRender::decodePes (uint8_t* pes, uint32_t pesSize, int64_t pts, int64_t dts) {
+void cRender::decodePes (uint8_t* pes, uint32_t pesSize, int64_t pts, int64_t dts, bool allocFront) {
 
   if (isQueued())
-    mDecodeQueue.enqueue (new cDecodeQueueItem (mDecoder, pes, pesSize, pts, dts,
+    mDecodeQueue.enqueue (new cDecodeQueueItem (mDecoder, pes, pesSize, pts, dts, allocFront,
                                                 mGetFrameCallback, mAddFrameCallback));
   else
-    mDecoder->decode (pes, pesSize, pts, dts, mGetFrameCallback, mAddFrameCallback);
+    mDecoder->decode (pes, pesSize, pts, dts, allocFront, mGetFrameCallback, mAddFrameCallback);
   }
 //}}}
 
 //{{{
 string cRender::getInfoString() const {
   return fmt::format ("frames:{:2d}:{:d} pts:{} dur:{}",
-                      mFramesMap.size(), getQueueSize(), utils::getFullPtsString (mPts), mPtsDuration);
+                      mFramesMap.size(), getQueueSize(), getFullPtsString (mPts), mPtsDuration);
   }
 //}}}
 //{{{
@@ -214,7 +233,7 @@ void cRender::startQueueThread (const string& name) {
     cDecodeQueueItem* queueItem;
     if (mDecodeQueue.wait_dequeue_timed (queueItem, 40000)) {
       queueItem->mDecoder->decode (queueItem->mPes, queueItem->mPesSize,
-                                   queueItem->mPts, queueItem->mDts,
+                                   queueItem->mPts, queueItem->mDts, queueItem->mAllocFront,
                                    queueItem->mGetFrameCallback, queueItem->mAddFrameCallback);
       delete queueItem;
       }
