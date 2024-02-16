@@ -105,6 +105,7 @@ namespace {
 
     // audioPlayer
     cAudioPlayer* getAudioPlayer() { return mAudioRender ? mAudioRender->getAudioPlayer() : nullptr; }
+    int64_t getAudioPlayerPts() { return mAudioRender->getAudioPlayer()->getPts(); }
     //{{{
     void togglePlay() {
       if (getAudioPlayer())
@@ -113,8 +114,11 @@ namespace {
     //}}}
     //{{{
     void skip (int64_t skipPts) {
-      if (getAudioPlayer())
+      if (getAudioPlayer()) {
+        cLog::log (LOGERROR, fmt::format ("-------- skipped {}",
+                                          getPtsString (getAudioPlayer()->getPts() + skipPts)));
         getAudioPlayer()->skipPts (skipPts);
+        }
       }
     //}}}
 
@@ -303,34 +307,63 @@ namespace {
       thread ([=]() {
         cLog::setThreadName ("audL");
 
+        // wait for analyse to see some audioPes
         while (mAudioPesMap.begin() == mAudioPesMap.end()) {
-          // wait for analyse to see some audioPes
           if (kAudioLoadDebug)
-            cLog::log (LOGINFO, fmt::format ("audioLoader start wait"));
-          this_thread::sleep_for (100ms);
+            cLog::log (LOGINFO, fmt::format ("audioLoader wait analyse"));
+          this_thread::sleep_for (1ms);
           }
 
         // creates audioPlayer on first audio pes
         mAudioRender = new cAudioRender (false, 100, true, mService->getAudioStreamTypeId(), mService->getAudioPid());
 
-        //unique_lock<shared_mutex> lock (mAudioMutex);
-        auto pesIt = mAudioPesMap.begin();
+        // load first audio pes
+        sPes& pes = mAudioPesMap.begin()->second;
         if (kAudioLoadDebug)
-          cLog::log (LOGINFO, fmt::format ("A pts:{}", getFullPtsString (pesIt->first)));
-        mAudioRender->decodePes (pesIt->second.mData, pesIt->second.mSize, pesIt->second.mPts, pesIt->second.mDts);
-        mLastLoadedAudioPts = pesIt->first;
-        ++pesIt;
+          cLog::log (LOGINFO, fmt::format ("load firstAudPts:{}", getFullPtsString (pes.mPts)));
+        mAudioRender->decodePes (pes.mData, pes.mSize, pes.mPts, pes.mDts);
+        int64_t lastLoadedPts = pes.mPts;
 
-        while (pesIt != mAudioPesMap.end()) {
+        while (!getAudioPlayer()) {
           if (kAudioLoadDebug)
-            cLog::log (LOGINFO, fmt::format ("A pts:{} player:{}",
-                                             getFullPtsString (pesIt->first),
-                                             getFullPtsString (getAudioPlayer()->getPts())));
-          mAudioRender->decodePes (pesIt->second.mData, pesIt->second.mSize, pesIt->second.mPts, pesIt->second.mDts);
-          mLastLoadedAudioPts = pesIt->first;
-          ++pesIt;
+            cLog::log (LOGINFO, fmt::format ("audioLoader wait player"));
+          this_thread::sleep_for (1ms);
+          }
 
-          while (mAudioRender->throttle (getAudioPlayer()->getPts()))
+        //unique_lock<shared_mutex> lock (mAudioMutex);
+        while (true) {
+          bool found = mAudioRender->found (getAudioPlayerPts());
+          if (found) {
+            auto pesIt = mAudioPesMap.find (lastLoadedPts);
+            ++pesIt;
+            if (pesIt != mAudioPesMap.end()) {
+              if (kAudioLoadDebug)
+                cLog::log (LOGINFO, fmt::format ("load nextAudPts:{}", getPtsString (pesIt->first)));
+              mAudioRender->decodePes (pesIt->second.mData, pesIt->second.mSize, pesIt->second.mPts, pesIt->second.mDts);
+              lastLoadedPts = pesIt->second.mPts;
+              }
+            }
+          else {
+            cLog::log (LOGINFO, fmt::format ("load aud skip"));
+            auto pesIt = mAudioPesMap.upper_bound (getAudioPlayerPts());
+            --pesIt;
+            if (pesIt != mAudioPesMap.end()) {
+              if (kAudioLoadDebug)
+                cLog::log (LOGINFO, fmt::format ("load skipAudPts:{} player:{}",
+                                                 getPtsString (pesIt->first), getPtsString (getAudioPlayerPts())));
+              if (pesIt->first < lastLoadedPts) {
+                if (kAudioLoadDebug)
+                  cLog::log (LOGINFO, fmt::format ("load skipAudPts clear"));
+                mAudioRender->clearFrames();
+                }
+              mAudioRender->decodePes (pesIt->second.mData, pesIt->second.mSize, pesIt->second.mPts, pesIt->second.mDts);
+              lastLoadedPts = pesIt->second.mPts;
+              }
+            }
+
+          // idle if playPts in full audioRender cache
+          while (mAudioRender->found (getAudioPlayerPts()) &&
+                 mAudioRender->throttle (getAudioPlayerPts()))
             this_thread::sleep_for (1ms);
           }
 
@@ -456,7 +489,7 @@ namespace {
     //}}}
     //{{{
     void skipPlay (int64_t skipPts) {
-      cLog::log (LOGINFO, fmt::format ("skip:{}", skipPts));
+      //cLog::log (LOGINFO, fmt::format ("skip:{}", skipPts));
       mFilePlayers.front()->skip (skipPts);
       }
     //}}}
@@ -719,120 +752,119 @@ namespace {
         cAudioRender* audioRender = playerApp.getFirstFilePlayer()->getAudioRender();
         if (audioRender) {
           cAudioPlayer* audioPlayer = playerApp.getFirstFilePlayer()->getAudioPlayer();
-          int64_t playPts = audioRender->getPts();
-          if (audioRender->getAudioPlayer()) {
-            playPts = audioPlayer->getPts();
-            audioPlayer->setMute (false);
-            }
-
-          cVideoRender* videoRender = playerApp.getFirstFilePlayer()->getVideoRender();
-          if (videoRender) {
-            cVideoFrame* videoFrame = videoRender->getVideoFrameAtOrAfterPts (playPts);
-            if (videoFrame) {
-              //{{{
-              // draw video
-              cMat4x4 model = cMat4x4();
-              model.setTranslate ({(layoutPos.x - (0.5f * layoutScale)) * viewportWidth,
-                                   ((1.f-layoutPos.y) - (0.5f * layoutScale)) * viewportHeight});
-              model.size ({layoutScale * viewportWidth / videoFrame->getWidth(),
-                           layoutScale * viewportHeight / videoFrame->getHeight()});
-              cMat4x4 projection (0.f,viewportWidth, 0.f,viewportHeight, -1.f,1.f);
-              videoShader->use();
-              videoShader->setModelProjection (model, projection);
-
-              // texture
-              cTexture& texture = videoFrame->getTexture (playerApp.getGraphics());
-              texture.setSource();
-
-              // ensure quad is created
-              if (!mVideoQuad)
-                mVideoQuad = playerApp.getGraphics().createQuad (videoFrame->getSize());
-
-              // draw quad
-              mVideoQuad->draw();
-
-              //if (playerApp.getOptions()->mShowSubtitle) {
-                //{{{  draw subtitles
-                //cSubtitleRender& subtitleRender =
-                  //dynamic_cast<cSubtitleRender&> (mService.getStream (cRenderStream::eSubtitle).getRender());
-
-                //subtitleShader->use();
-                //for (size_t line = 0; line < subtitleRender.getNumLines(); line++) {
-                  //cSubtitleImage& subtitleImage = subtitleRender.getImage (line);
-                  //if (!mSubtitleTextures[line])
-                    //mSubtitleTextures[line] = playerApp.getGraphics().createTexture (cTexture::eRgba, subtitleImage.getSize());
-                  //mSubtitleTextures[line]->setSource();
-
-                  //// update subtitle texture if image dirty
-                  //if (subtitleImage.isDirty())
-                    //mSubtitleTextures[line]->setPixels (subtitleImage.getPixels(), nullptr);
-                  //subtitleImage.setDirty (false);
-
-                  //float xpos = (float)subtitleImage.getXpos() / videoFrame->getWidth();
-                  //float ypos = (float)(videoFrame->getHeight() - subtitleImage.getYpos()) / videoFrame->getHeight();
-                  //model.setTranslate ({(layoutPos.x + ((xpos - 0.5f) * layoutScale)) * viewportWidth,
-                                       //((1.0f - layoutPos.y) + ((ypos - 0.5f) * layoutScale)) * viewportHeight});
-                  //subtitleShader->setModelProjection (model, projection);
-
-                  //// ensure quad is created (assumes same size) and draw
-                  //if (!mSubtitleQuads[line])
-                    //mSubtitleQuads[line] = playerApp.getGraphics().createQuad (mSubtitleTextures[line]->getSize());
-                  //mSubtitleQuads[line]->draw();
-                  //}
-                //}
-                //}}}
-
-              //if (playerApp.getOptions()->mShowMotionVectors && (mSelect == eSelectedFull)) {
-                //{{{  draw motion vectors
-                //size_t numMotionVectors;
-                //AVMotionVector* mv = (AVMotionVector*)(videoFrame->getMotionVectors (numMotionVectors));
-                //if (numMotionVectors) {
-                  //for (size_t i = 0; i < numMotionVectors; i++) {
-                    //ImGui::GetWindowDrawList()->AddLine (
-                      //mTL + ImVec2(mv->src_x * viewportWidth / videoFrame->getWidth(),
-                                   //mv->src_y * viewportHeight / videoFrame->getHeight()),
-                      //mTL + ImVec2((mv->src_x + (mv->motion_x / mv->motion_scale)) * viewportWidth / videoFrame->getWidth(),
-                                    //(mv->src_y + (mv->motion_y / mv->motion_scale)) * viewportHeight / videoFrame->getHeight()),
-                      //mv->source > 0 ? 0xc0c0c0c0 : 0xc000c0c0, 1.f);
-                    //mv++;
-                    //}
-                  //}
-                //}
-                //}}}
+          if (audioPlayer) {
+            int64_t playPts = audioRender->getPts();
+            if (audioRender->getAudioPlayer()) {
+              playPts = audioPlayer->getPts();
+              audioPlayer->setMute (false);
               }
-              //}}}
-            mFramesView.draw (audioRender, videoRender, playPts,
-                              ImVec2((mTL.x + mBR.x)/2.f, mBR.y - ImGui::GetTextLineHeight()*0.25f));
-            }
+            //{{{  draw audio meter
+            mAudioMeterView.draw (audioRender, playPts,
+              ImVec2(mBR.x - ImGui::GetTextLineHeight()*0.5f, mBR.y - ImGui::GetTextLineHeight()*0.25f));
+            //}}}
+            //{{{  draw fileName and playPts with largeFont
+            ImGui::PushFont (playerApp.getLargeFont());
 
-          // largeFont
-          ImGui::PushFont (playerApp.getLargeFont());
-          //{{{  draw title topLeft
-          string title = "title";
+            string title = playerApp.getFirstFilePlayer()->getFileName();
+            ImVec2 pos = {ImGui::GetTextLineHeight() * 0.25f, 0.f};
+            ImGui::SetCursorPos (pos);
+            ImGui::TextColored ({0.f,0.f,0.f,1.f}, title.c_str());
+            ImGui::SetCursorPos (pos - ImVec2(2.f,2.f));
+            ImGui::TextColored ({1.f, 1.f,1.f,1.f}, title.c_str());
 
-          ImVec2 pos = {ImGui::GetTextLineHeight() * 0.25f, 0.f};
-          ImGui::SetCursorPos (pos);
-          ImGui::TextColored ({0.f,0.f,0.f,1.f}, title.c_str());
-          ImGui::SetCursorPos (pos - ImVec2(2.f,2.f));
-          ImGui::TextColored ({1.f, 1.f,1.f,1.f}, title.c_str());
+            pos.y += ImGui::GetTextLineHeight() * 1.5f;
 
-          pos.y += ImGui::GetTextLineHeight() * 1.5f;
-          //}}}
-          if (audioRender) {
-            //{{{  draw playPts bottomRight
-            string ptsFromStartString = getPtsString (audioRender->getPts());
-
+            string ptsFromStartString = getPtsString (playPts);
             pos = ImVec2 (mSize - ImVec2(ImGui::GetTextLineHeight() * 7.f, ImGui::GetTextLineHeight()));
             ImGui::SetCursorPos (pos);
             ImGui::TextColored ({0.f,0.f,0.f,1.f}, ptsFromStartString.c_str());
             ImGui::SetCursorPos (pos - ImVec2(2.f,2.f));
             ImGui::TextColored ({1.f,1.f,1.f,1.f}, ptsFromStartString.c_str());
-            }
-            //}}}
-          ImGui::PopFont();
 
-          mAudioMeterView.draw (audioRender, playPts,
-            ImVec2(mBR.x - ImGui::GetTextLineHeight()*0.5f, mBR.y - ImGui::GetTextLineHeight()*0.25f));
+            ImGui::PopFont();
+            //}}}
+
+            cVideoRender* videoRender = playerApp.getFirstFilePlayer()->getVideoRender();
+            if (videoRender) {
+              cVideoFrame* videoFrame = videoRender->getVideoFrameAtOrAfterPts (playPts);
+              if (videoFrame) {
+                //{{{  draw video
+                cMat4x4 model = cMat4x4();
+                model.setTranslate ({(layoutPos.x - (0.5f * layoutScale)) * viewportWidth,
+                                     ((1.f-layoutPos.y) - (0.5f * layoutScale)) * viewportHeight});
+                model.size ({layoutScale * viewportWidth / videoFrame->getWidth(),
+                             layoutScale * viewportHeight / videoFrame->getHeight()});
+                cMat4x4 projection (0.f,viewportWidth, 0.f,viewportHeight, -1.f,1.f);
+                videoShader->use();
+                videoShader->setModelProjection (model, projection);
+
+                // texture
+                cTexture& texture = videoFrame->getTexture (playerApp.getGraphics());
+                texture.setSource();
+
+                // ensure quad is created
+                if (!mVideoQuad)
+                  mVideoQuad = playerApp.getGraphics().createQuad (videoFrame->getSize());
+
+                // draw quad
+                mVideoQuad->draw();
+
+                //if (playerApp.getOptions()->mShowSubtitle) {
+                  //{{{  draw subtitles
+                  //cSubtitleRender& subtitleRender =
+                    //dynamic_cast<cSubtitleRender&> (mService.getStream (cRenderStream::eSubtitle).getRender());
+
+                  //subtitleShader->use();
+                  //for (size_t line = 0; line < subtitleRender.getNumLines(); line++) {
+                    //cSubtitleImage& subtitleImage = subtitleRender.getImage (line);
+                    //if (!mSubtitleTextures[line])
+                      //mSubtitleTextures[line] = playerApp.getGraphics().createTexture (cTexture::eRgba, subtitleImage.getSize());
+                    //mSubtitleTextures[line]->setSource();
+
+                    //// update subtitle texture if image dirty
+                    //if (subtitleImage.isDirty())
+                      //mSubtitleTextures[line]->setPixels (subtitleImage.getPixels(), nullptr);
+                    //subtitleImage.setDirty (false);
+
+                    //float xpos = (float)subtitleImage.getXpos() / videoFrame->getWidth();
+                    //float ypos = (float)(videoFrame->getHeight() - subtitleImage.getYpos()) / videoFrame->getHeight();
+                    //model.setTranslate ({(layoutPos.x + ((xpos - 0.5f) * layoutScale)) * viewportWidth,
+                                         //((1.0f - layoutPos.y) + ((ypos - 0.5f) * layoutScale)) * viewportHeight});
+                    //subtitleShader->setModelProjection (model, projection);
+
+                    //// ensure quad is created (assumes same size) and draw
+                    //if (!mSubtitleQuads[line])
+                      //mSubtitleQuads[line] = playerApp.getGraphics().createQuad (mSubtitleTextures[line]->getSize());
+                    //mSubtitleQuads[line]->draw();
+                    //}
+                  //}
+                  //}}}
+
+                //if (playerApp.getOptions()->mShowMotionVectors && (mSelect == eSelectedFull)) {
+                  //{{{  draw motion vectors
+                  //size_t numMotionVectors;
+                  //AVMotionVector* mv = (AVMotionVector*)(videoFrame->getMotionVectors (numMotionVectors));
+                  //if (numMotionVectors) {
+                    //for (size_t i = 0; i < numMotionVectors; i++) {
+                      //ImGui::GetWindowDrawList()->AddLine (
+                        //mTL + ImVec2(mv->src_x * viewportWidth / videoFrame->getWidth(),
+                                     //mv->src_y * viewportHeight / videoFrame->getHeight()),
+                        //mTL + ImVec2((mv->src_x + (mv->motion_x / mv->motion_scale)) * viewportWidth / videoFrame->getWidth(),
+                                      //(mv->src_y + (mv->motion_y / mv->motion_scale)) * viewportHeight / videoFrame->getHeight()),
+                        //mv->source > 0 ? 0xc0c0c0c0 : 0xc000c0c0, 1.f);
+                      //mv++;
+                      //}
+                    //}
+                  //}
+                  //}}}
+                }
+                //}}}
+              //{{{  draw renderFrames
+              mFramesView.draw (audioRender, videoRender, playPts, 
+                                ImVec2((mTL.x + mBR.x)/2.f, mBR.y - ImGui::GetTextLineHeight()*0.25f));
+              //}}}
+              }
+            }
           }
 
         // invisbleButton over view sub area

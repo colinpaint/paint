@@ -47,6 +47,7 @@ public:
   cFrame* getFrameAtOrAfterPts (int64_t pts);
   cFrame* reuseBestFrame();
   void addFrame (cFrame* frame);
+  void clearFrames();
 
   void decodePes (uint8_t* pes, uint32_t pesSize, int64_t pts, int64_t dts);
 

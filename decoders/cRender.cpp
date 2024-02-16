@@ -38,12 +38,7 @@ cRender::cRender (bool queued, const string& threadName,
 cRender::~cRender() {
 
   stopQueueThread();
-
-  unique_lock<shared_mutex> lock (mSharedMutex);
-
-  for (auto& frame : mFramesMap)
-    delete (frame.second);
-  mFramesMap.clear();
+  clearFrames();
   }
 //}}}
 
@@ -118,6 +113,17 @@ void cRender::addFrame (cFrame* frame) {
   //                                 utils::getFullPtsString ((frame->getPts() / frame->getPtsDuration()) * frame->getPtsDuration())));
   unique_lock<shared_mutex> lock (mSharedMutex);
   mFramesMap.emplace (frame->getPts() / frame->getPtsDuration(), frame);
+  }
+//}}}
+//{{{
+void cRender::clearFrames() {
+
+  unique_lock<shared_mutex> lock (mSharedMutex);
+
+  for (auto& frame : mFramesMap)
+    delete (frame.second);
+
+  mFramesMap.clear();
   }
 //}}}
 
