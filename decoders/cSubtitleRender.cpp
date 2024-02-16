@@ -32,12 +32,12 @@ constexpr bool kQueued = true;
 cSubtitleRender::cSubtitleRender (bool queue, size_t maxFrames,
                                   uint8_t streamType, uint16_t pid)
     : cRender(queue, "sub", streamType, pid, kPtsPer25HzFrame, maxFrames,
-              // getFrame lambda
+              // allocFrameCallback lambda
               [&](bool allocFront) noexcept {
                 // !!! no relloacate yet !!!
                 return hasMaxFrames() ? new cSubtitleFrame() : new cSubtitleFrame();
                 },
-              // addFrame lambda
+              // addFrameCallback lambda
               [&](cFrame* frame) noexcept {
                 setPts (frame->getPts(), frame->getPtsDuration());
                 //cRender::addframe (frame);

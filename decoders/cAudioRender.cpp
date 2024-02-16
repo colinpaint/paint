@@ -40,37 +40,36 @@ using namespace std;
 //}}}
 
 //{{{
-cAudioRender::cAudioRender (bool queue, size_t maxFrames, bool playerHasAudio,
-                            uint8_t streamType, uint16_t pid)
-    : cRender(queue, "aud", streamType, pid, 1920, maxFrames,
-        // getFrame lambda
-        [&](bool allocFront) noexcept {
-          return hasMaxFrames() ? removeFirstFrame() : new cAudioFrame();
-          },
+cAudioRender::cAudioRender (bool queue, size_t maxFrames, bool hasAudio, uint8_t streamType, uint16_t pid) :
+    cRender(queue, "aud", streamType, pid, 1920, maxFrames,
+      // allocFrameCallback lambda
+      [&](bool allocFront) noexcept {
+        return hasMaxFrames() ? removeFirstFrame() : new cAudioFrame();
+        },
 
-        // addFrame lambda
-        [&](cFrame* frame) noexcept {
-          cAudioFrame* audioFrame = dynamic_cast<cAudioFrame*>(frame);
-          if (mSampleRate != audioFrame->getSampleRate()) {
-            cLog::log (LOGERROR, fmt::format ("cAudioRender::addFrame sampleRate changed {} to {}",
-                                              mSampleRate, audioFrame->getSampleRate()));
-            mSampleRate = audioFrame->getSampleRate();
-            }
-
-          setPts (frame->getPts(), frame->getPtsDuration());
-          mSamplesPerFrame = audioFrame->getSamplesPerFrame();
-          mFrameInfo = audioFrame->getInfoString();
-          audioFrame->calcPower();
-
-          cRender::addFrame (frame);
-
-          if (!mAudioPlayer) {
-            mAudioPlayer = new cAudioPlayer (*this, mSampleRate, getPid(), mPlayerHasAudio);
-            mAudioPlayer->startPts (audioFrame->getPts());
-            }
+      // addFrameCallback lambda
+      [&](cFrame* frame) noexcept {
+        cAudioFrame* audioFrame = dynamic_cast<cAudioFrame*>(frame);
+        if (mSampleRate != audioFrame->getSampleRate()) {
+          cLog::log (LOGERROR, fmt::format ("cAudioRender::addFrame sampleRate changed {} to {}",
+                                            mSampleRate, audioFrame->getSampleRate()));
+          mSampleRate = audioFrame->getSampleRate();
           }
-        ),
-      mSampleRate(48000), mSamplesPerFrame(1024), mPlayerHasAudio(playerHasAudio) {
+
+        setPts (frame->getPts(), frame->getPtsDuration());
+        mSamplesPerFrame = audioFrame->getSamplesPerFrame();
+        mFrameInfo = audioFrame->getInfoString();
+        audioFrame->calcPower();
+
+        cRender::addFrame (frame);
+
+        if (!mAudioPlayer) {
+          mAudioPlayer = new cAudioPlayer (*this, mSampleRate, getPid(), mHasAudio);
+          mAudioPlayer->startPts (audioFrame->getPts());
+          }
+        }
+      ),
+    mSampleRate(48000), mSamplesPerFrame(1024), mHasAudio(hasAudio) {
 
   mDecoder = new cFFmpegAudioDecoder ((streamType == 17) ? eAudioFrameType::eAacLatm : eAudioFrameType::eMp3);
   }

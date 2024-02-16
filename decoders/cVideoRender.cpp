@@ -49,15 +49,14 @@ using namespace std;
 
 // cVideoRender
 //{{{
-cVideoRender::cVideoRender (bool queue, size_t maxFrames,
-                            uint8_t streamType, uint16_t pid) :
+cVideoRender::cVideoRender (bool queue, size_t maxFrames, uint8_t streamType, uint16_t pid) :
     cRender(queue, "vid", streamType, pid, kPtsPer25HzFrame, maxFrames,
-      // getFrame lambda
+      // allocFrameCallback lambda
       [&](bool allocFront) noexcept {
         return hasMaxFrames() ? removeFirstFrame() : new cFFmpegVideoFrame();
         },
 
-      // addFrame lambda
+      // addFrameCallback lambda
       [&](cFrame* frame) noexcept {
         if (kAddFrameDebug)
           cLog::log (LOGINFO, fmt::format ("- cVideoRender::addFrame {}", utils::getFullPtsString (frame->getPts())));

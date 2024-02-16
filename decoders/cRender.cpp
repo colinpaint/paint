@@ -21,12 +21,12 @@ constexpr size_t kMaxLogSize = 64;
 cRender::cRender (bool queued, const string& threadName,
                   uint8_t streamType, uint16_t pid,
                   int64_t ptsDuration, size_t maxFrames,
-                  function <cFrame* (bool allocFront)> getFrameCallback,
+                  function <cFrame* (bool allocFront)> allocFrameCallback,
                   function <void (cFrame* frame)> addFrameCallback) :
     mQueued(queued), mThreadName(threadName),
     mStreamType(streamType), mPid(pid),
     mMaxFrames(maxFrames),
-    mGetFrameCallback(getFrameCallback),
+    mAllocFrameCallback(allocFrameCallback),
     mAddFrameCallback(addFrameCallback),
     mMiniLog ("log"), mMaxLogSize(kMaxLogSize),
     mPtsDuration(ptsDuration) {
@@ -152,9 +152,9 @@ void cRender::decodePes (uint8_t* pes, uint32_t pesSize, int64_t pts, int64_t dt
 
   if (isQueued())
     mDecodeQueue.enqueue (new cDecodeQueueItem (mDecoder, pes, pesSize, pts, dts, allocFront,
-                                                mGetFrameCallback, mAddFrameCallback));
+                                                mAllocFrameCallback, mAddFrameCallback));
   else
-    mDecoder->decode (pes, pesSize, pts, dts, allocFront, mGetFrameCallback, mAddFrameCallback);
+    mDecoder->decode (pes, pesSize, pts, dts, allocFront, mAllocFrameCallback, mAddFrameCallback);
   }
 //}}}
 
@@ -234,7 +234,7 @@ void cRender::startQueueThread (const string& name) {
     if (mDecodeQueue.wait_dequeue_timed (queueItem, 40000)) {
       queueItem->mDecoder->decode (queueItem->mPes, queueItem->mPesSize,
                                    queueItem->mPts, queueItem->mDts, queueItem->mAllocFront,
-                                   queueItem->mGetFrameCallback, queueItem->mAddFrameCallback);
+                                   queueItem->mAllocFrameCallback, queueItem->mAddFrameCallback);
       delete queueItem;
       }
     }

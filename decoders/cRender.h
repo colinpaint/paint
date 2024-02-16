@@ -25,7 +25,7 @@ public:
   cRender (bool queued, const std::string& threadName,
            uint8_t streamType, uint16_t pid,
            int64_t ptsDuration, size_t maxFrames,
-           std::function <cFrame* (bool allocFront)> getFrameCallback,
+           std::function <cFrame* (bool allocFront)> allocFrameCallback,
            std::function <void (cFrame* frame)> addFrameCallback);
   virtual ~cRender();
 
@@ -88,7 +88,7 @@ private:
   const uint8_t mStreamType;
   const uint16_t mPid;
   const size_t mMaxFrames;
-  const std::function <cFrame* (bool allocFront)> mGetFrameCallback;
+  const std::function <cFrame* (bool allocFront)> mAllocFrameCallback;
   const std::function <void (cFrame* frame)> mAddFrameCallback;
 
   cMiniLog mMiniLog;
