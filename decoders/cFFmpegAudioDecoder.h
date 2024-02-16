@@ -80,7 +80,7 @@ public:
   virtual std::string getInfoString() const final { return "ffmpeg " + mStreamTypeName; }
   //{{{
   virtual int64_t decode (uint8_t* pes, uint32_t pesSize, int64_t pts, int64_t dts, bool allocFront,
-                          std::function<cFrame* (bool allocFront)> allocFrameCallback,
+                          std::function<cFrame* (bool front)> allocFrameCallback,
                           std::function<void (cFrame* frame)> addFrameCallback) final  {
     (void)dts;
 

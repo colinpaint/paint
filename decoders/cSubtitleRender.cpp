@@ -33,8 +33,8 @@ cSubtitleRender::cSubtitleRender (bool queue, size_t maxFrames,
                                   uint8_t streamType, uint16_t pid)
     : cRender(queue, "sub", streamType, pid, kPtsPer25HzFrame, maxFrames,
               // allocFrameCallback lambda
-              [&](bool allocFront) noexcept {
-                // !!! no relloacate yet !!!
+              [&](bool front) noexcept {
+                (void)front;
                 return hasMaxFrames() ? new cSubtitleFrame() : new cSubtitleFrame();
                 },
               // addFrameCallback lambda

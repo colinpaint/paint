@@ -314,31 +314,25 @@ namespace {
           this_thread::sleep_for (1ms);
           }
 
-        // creates audioPlayer on first audio pes
         mAudioRender = new cAudioRender (false, 100, true, mService->getAudioStreamTypeId(), mService->getAudioPid());
 
-        // load first audio pes
+        // load first audioPes which creates audioPlayer
         sPes& pes = mAudioPesMap.begin()->second;
         if (kAudioLoadDebug)
           cLog::log (LOGINFO, fmt::format ("load firstAudPts:{}", getFullPtsString (pes.mPts)));
         mAudioRender->decodePes (pes.mData, pes.mSize, pes.mPts, pes.mDts, true);
         int64_t lastLoadedPts = pes.mPts;
-
-        while (!getAudioPlayer()) {
-          if (kAudioLoadDebug)
-            cLog::log (LOGINFO, fmt::format ("audioLoader wait player"));
-          this_thread::sleep_for (1ms);
-          }
+        if (!getAudioPlayer()) 
+          cLog::log (LOGERROR, fmt::format ("audioLoader wait player"));
 
         //unique_lock<shared_mutex> lock (mAudioMutex);
         while (true) {
-          bool found = mAudioRender->found (getAudioPlayerPts());
-          if (found) {
+          if (mAudioRender->found (getAudioPlayerPts())) {
+            //{{{  load next audioPes
             auto pesIt = ++mAudioPesMap.find (lastLoadedPts);
             if (pesIt != mAudioPesMap.end()) {
               if (kAudioLoadDebug)
-                cLog::log (LOGINFO, fmt::format ("load nextAudPts:{}", 
-                                                 getPtsString (pesIt->first)));
+                cLog::log (LOGINFO, fmt::format ("load nextAudPts:{}", getPtsString (pesIt->first)));
               mAudioRender->decodePes (pesIt->second.mData, pesIt->second.mSize,
                                        pesIt->second.mPts, pesIt->second.mDts, true);
               lastLoadedPts = pesIt->second.mPts;
@@ -346,7 +340,9 @@ namespace {
             else
               cLog::log (LOGERROR, fmt::format ("load aud skip end"));
             }
+            //}}}
           else {
+            //{{{  load skipped audioPes
             auto pesIt = --mAudioPesMap.upper_bound (getAudioPlayerPts());
             if (pesIt != mAudioPesMap.end()) {
               if (kAudioLoadDebug)
@@ -355,15 +351,15 @@ namespace {
                                                  getPtsString (getAudioPlayerPts()),
                                                  (pesIt->first >= getAudioPlayerPts()) ? "front":"back"));
               mAudioRender->decodePes (pesIt->second.mData, pesIt->second.mSize,
-                                       pesIt->second.mPts, pesIt->second.mDts, 
+                                       pesIt->second.mPts, pesIt->second.mDts,
                                        pesIt->first >= getAudioPlayerPts());
               lastLoadedPts = pesIt->second.mPts;
               }
             else
               cLog::log (LOGERROR, fmt::format ("load aud skip begin"));
             }
+            //}}}
 
-          // idle if playPts in full audioRender cache
           while (mAudioRender->found (getAudioPlayerPts()) &&
                  mAudioRender->throttle (getAudioPlayerPts()))
             this_thread::sleep_for (1ms);

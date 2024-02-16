@@ -48,16 +48,14 @@ public:
 
   //{{{
   virtual int64_t decode (uint8_t* pes, uint32_t pesSize, int64_t pts, int64_t dts, bool allocFront,
-                          std::function<cFrame* (bool allocFront)> allocFrameCallback,
+                          std::function<cFrame* (bool front)> allocFrameCallback,
                           std::function<void (cFrame* frame)> addFrameCallback) final {
-    mRender.log ("pes", fmt::format ("pts {} dts {} size {}",
-                                     utils::getFullPtsString (pts), utils::getFullPtsString (dts), pesSize));
+    (void)allocFront;
 
     mPage.mPts = pts;
     mPage.mPesSize = pesSize;
     if (pesSize < 8) {
       //{{{  strange empty pes, common on itv multiplex
-      mRender.log ("pes", "empty pes");
       return false;
       }
       //}}}
@@ -74,8 +72,6 @@ public:
       uint8_t syncByte = *pesPtr++;
       if (syncByte != 0x0f) {
         //{{{  syncByte error, return, common on bbc mulitplex
-        mRender.log ("pes", fmt::format ("missing syncByte:{:x} offset:{} size:{}",
-                                         syncByte, int(pesPtr - pes), pesSize));
         return false;
         }
         //}}}
@@ -423,11 +419,6 @@ private:
       buf += 2;
       }
 
-    mRender.header();
-    mRender.log ("display", fmt::format ("{} x: {} y: {} w: {} h: {}",
-                                         displayWindow != 0 ? " window" : "",
-                                         mDisplayDefinition.mX, mDisplayDefinition.mY,
-                                         mDisplayDefinition.mWidth, mDisplayDefinition.mHeight));
     return true;
     }
   //}}}
@@ -471,10 +462,6 @@ private:
       regionDebug += fmt::format ("{}:{},{} ", regionId, xPos, yPos);
       }
 
-    mRender.header();
-    mRender.log ("page", fmt::format ("v:{:2d} s: {:1d} t: {} {} {}",
-                                      mPage.mVersion, mPage.mState, mPage.mTimeout,
-                                      regionDebug.empty() ? "noRegions" : "regionIds", regionDebug));
     return true;
     }
   //}}}
@@ -549,12 +536,6 @@ private:
       objectDebug += fmt::format ("{}:{},{} ", objectId, object.mXpos, object.mYpos);
       }
 
-    mRender.header();
-    mRender.log ("region", fmt::format ("id:{}:{:2d} {}x{} lut:{} bgnd:{} {} {}",
-                                        region.mId, region.mVersion,
-                                        region.mWidth, region.mHeight,
-                                        region.mColorLutDepth, region.mBackgroundColor,
-                                        objectDebug.empty() ? "noObjects" : "objectIds", objectDebug));
     return true;
     }
   //}}}
@@ -620,9 +601,6 @@ private:
           cLog::log (LOGERROR, fmt::format("colorLut depth:{} entryId:{}", depth, entryId));
         }
       }
-
-    mRender.header();
-    mRender.log ("lut", fmt::format ("id:{} version:{}", colorLut.mId, colorLut.mVersion));
 
     return true;
     }
@@ -805,8 +783,6 @@ private:
     uint16_t objectId = AVRB16(buf);
     buf += 2;
 
-    mRender.log ("object", fmt::format ("id:{}", objectId));
-
     cObject* object = findObject (objectId);
     if (!object) // not declared by region, ignore
       return false;
@@ -885,14 +861,6 @@ private:
     mPage.mNumLines = line;
     if (line > mPage.mHighwaterMark)
       mPage.mHighwaterMark = line;
-
-    mRender.header();
-    if (mPage.mRegionDisplays.size())
-      mRender.log ("end", fmt::format ("{} - {} lines",
-                                       utils::getFullPtsString (mPage.mPts), mPage.mRegionDisplays.size()));
-    else
-      mRender.log ("end", fmt::format ("{} - noLines",
-                                       utils::getFullPtsString (mPage.mPts)));
     }
   //}}}
 

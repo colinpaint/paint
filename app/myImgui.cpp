@@ -13,57 +13,10 @@
 
 #include "../date/include/date/date.h"
 #include "../common/cLog.h"
-#include "../common/cMiniLog.h"
 
 using namespace std;
 //}}}
 
-// miniLog
-//{{{
-void drawMiniLog (cMiniLog& miniLog) {
-
-  if (miniLog.getEnable()) {
-    if (ImGui::Button (miniLog.getHeader().c_str()))
-      miniLog.clear();
-
-    bool filtered = false;
-    for (auto& tag : miniLog.getTags()) {
-      ImGui::SameLine();
-      if (toggleButton (tag.mName.c_str(), tag.mEnable))
-        tag.mEnable = !tag.mEnable;
-      filtered |= tag.mEnable;
-      }
-
-    // draw log
-    ImGui::BeginChild (fmt::format ("##log{}", miniLog.getName()).c_str(),
-                       {ImGui::GetWindowWidth(), 12 * ImGui::GetTextLineHeight() }, true,
-                       ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoNav | ImGuiWindowFlags_HorizontalScrollbar);
-
-    if (filtered) {
-      // tag filtered draw
-      for (auto& line : miniLog.getLines())
-        if (miniLog.getTags()[line.mTagIndex].mEnable)
-          ImGui::TextUnformatted ((date::format ("%M.%S ", line.mTimeStamp) +
-                                  miniLog.getTags()[line.mTagIndex].mName + " " + line.mText).c_str());
-      }
-    else {
-      // simple unfiltered draw, can use imgui ImGuiListClipper
-      for (auto& line : miniLog.getLines())
-        ImGui::TextUnformatted ((date::format ("%M.%S ", line.mTimeStamp) +
-                                miniLog.getTags()[line.mTagIndex].mName + " " + line.mText).c_str());
-      }
-
-    // autoScroll child
-    if (ImGui::GetScrollY() >= ImGui::GetScrollMaxY())
-      ImGui::SetScrollHereY(1.0f);
-
-    ImGui::EndChild();
-
-    if (!miniLog.getFooter().empty())
-      ImGui::TextUnformatted (miniLog.getFooter().c_str());
-    }
-  }
-//}}}
 //{{{
 void printHex (uint8_t* ptr, uint32_t numBytes, uint32_t columnsPerRow, uint32_t address, bool full) {
 

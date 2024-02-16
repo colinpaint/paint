@@ -21,14 +21,13 @@ constexpr size_t kMaxLogSize = 64;
 cRender::cRender (bool queued, const string& threadName,
                   uint8_t streamType, uint16_t pid,
                   int64_t ptsDuration, size_t maxFrames,
-                  function <cFrame* (bool allocFront)> allocFrameCallback,
+                  function <cFrame* (bool front)> allocFrameCallback,
                   function <void (cFrame* frame)> addFrameCallback) :
     mQueued(queued), mThreadName(threadName),
     mStreamType(streamType), mPid(pid),
     mMaxFrames(maxFrames),
     mAllocFrameCallback(allocFrameCallback),
     mAddFrameCallback(addFrameCallback),
-    mMiniLog ("log"), mMaxLogSize(kMaxLogSize),
     mPtsDuration(ptsDuration) {
 
   if (queued)
@@ -203,11 +202,6 @@ bool cRender::found (int64_t pts) {
   }
   }
 //}}}
-
-// log
-void cRender::toggleLog() { mMiniLog.toggleEnable(); }
-void cRender::header() { mMiniLog.setHeader (fmt::format ("header")); }
-void cRender::log (const string& tag, const string& text) { mMiniLog.log (tag, text); }
 
 // protected
 //{{{

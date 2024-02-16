@@ -52,7 +52,8 @@ using namespace std;
 cVideoRender::cVideoRender (bool queue, size_t maxFrames, uint8_t streamType, uint16_t pid) :
     cRender(queue, "vid", streamType, pid, kPtsPer25HzFrame, maxFrames,
       // allocFrameCallback lambda
-      [&](bool allocFront) noexcept {
+      [&](bool front) noexcept {
+        (void)front;
         return hasMaxFrames() ? removeFirstFrame() : new cFFmpegVideoFrame();
         },
 

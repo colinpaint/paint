@@ -43,8 +43,8 @@ using namespace std;
 cAudioRender::cAudioRender (bool queue, size_t maxFrames, bool hasAudio, uint8_t streamType, uint16_t pid) :
     cRender(queue, "aud", streamType, pid, 1920, maxFrames,
       // allocFrameCallback lambda
-      [&](bool allocFront) noexcept {
-        return hasMaxFrames() ? removeFirstFrame() : new cAudioFrame();
+      [&](bool front) noexcept {
+        return hasMaxFrames() ? (front ? removeFirstFrame() : removeLastFrame()) : new cAudioFrame();
         },
 
       // addFrameCallback lambda

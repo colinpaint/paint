@@ -12,7 +12,6 @@
 
 #include "../common/basicTypes.h"
 #include "../common/iOptions.h"
-#include "../common/cMiniLog.h"
 #include "../common/readerWriterQueue.h"
 
 #include "../decoders/cFrame.h"
@@ -25,13 +24,12 @@ public:
   cRender (bool queued, const std::string& threadName,
            uint8_t streamType, uint16_t pid,
            int64_t ptsDuration, size_t maxFrames,
-           std::function <cFrame* (bool allocFront)> allocFrameCallback,
+           std::function <cFrame* (bool front)> allocFrameCallback,
            std::function <void (cFrame* frame)> addFrameCallback);
   virtual ~cRender();
 
   bool isQueued() const { return mQueued; }
   uint16_t getPid() const { return mPid; }
-  cMiniLog& getLog() { return mMiniLog; }
 
   int64_t getPts() const { return mPts; }
   int64_t getPtsFromStart() const { return mPts - mFirstPts; }
@@ -57,10 +55,6 @@ public:
   virtual bool throttle() { return false; }
   virtual bool throttle (int64_t pts);
   bool found (int64_t pts);
-
-  void toggleLog();
-  void header();
-  void log (const std::string& tag, const std::string& text);
 
 protected:
   size_t getQueueSize() const;
@@ -88,11 +82,8 @@ private:
   const uint8_t mStreamType;
   const uint16_t mPid;
   const size_t mMaxFrames;
-  const std::function <cFrame* (bool allocFront)> mAllocFrameCallback;
+  const std::function <cFrame* (bool front)> mAllocFrameCallback;
   const std::function <void (cFrame* frame)> mAddFrameCallback;
-
-  cMiniLog mMiniLog;
-  const size_t mMaxLogSize;
 
   int64_t mPts = 0;
   int64_t mPtsDuration = 0;

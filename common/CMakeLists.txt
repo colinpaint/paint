@@ -3,7 +3,6 @@ project (common VERSION 1.0.0)
                                cBipBuffer.h readerWriterQueue.h
                                cDvbUtils.h cDvbUtils.cpp cDvbUtilsHuff.cpp
                                cLog.h cLog.cpp
-                               cMiniLog.h cMiniLog.cpp
                                cFileView.h cFileView.cpp
                                tinyfiledialogs.h tinyfiledialogs.c)
 
