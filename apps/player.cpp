@@ -101,7 +101,7 @@ namespace {
     //{{{
     void skip (int64_t skipPts) {
       if (getAudioPlayer()) {
-        cLog::log (LOGERROR, fmt::format ("-------- skipped {}",
+        cLog::log (LOGERROR, fmt::format ("------- skip to {}",
                                           getPtsString (getAudioPlayer()->getPts() + skipPts)));
         getAudioPlayer()->skipPts (skipPts);
         }
@@ -305,9 +305,8 @@ namespace {
         // load first audioPes, creates audioPlayer
         sPes& pes = mAudioPesMap.begin()->second;
         if (kAudioLoadDebug)
-          cLog::log (LOGINFO, fmt::format ("load firstAudPts:{}", getFullPtsString (pes.mPts)));
+          cLog::log (LOGINFO, fmt::format ("firstAudPts:{}", getFullPtsString (pes.mPts)));
         mAudioRender->decodePes (pes.mData, pes.mSize, pes.mPts, pes.mDts);
-
         int64_t lastPts = pes.mPts;
         //{{{  check for audioPlayer
         if (!getAudioPlayer())
@@ -317,47 +316,31 @@ namespace {
         //unique_lock<shared_mutex> lock (mAudioMutex);
         while (true) {
           if (mAudioRender->found (getAudioPlayerPts())) {
-            //{{{  load next audioPes
+            // load next audioPes
             auto it = ++mAudioPesMap.find (lastPts);
-            if (it != mAudioPesMap.end()) {
-              if (mAudioRender->found (it->second.mPts)) {
-                if (kAudioLoadDebug)
-                  cLog::log (LOGINFO, fmt::format ("miss nextAudPts:{} play:{} already loaded",
-                                                   getPtsString (it->first),
-                                                   getPtsString (getAudioPlayerPts())));
-                }
-              else {
-                if (kAudioLoadDebug)
-                  cLog::log (LOGINFO, fmt::format ("load nextAudPts:{} play:{}",
-                                                   getPtsString (it->first),
-                                                   getPtsString (getAudioPlayerPts())));
-                mAudioRender->decodePes (it->second.mData, it->second.mSize, it->second.mPts, it->second.mDts);
-                }
-              lastPts = it->second.mPts;
-
-              }
-            else
+            if (it == mAudioPesMap.end())
               cLog::log (LOGERROR, fmt::format ("load audSkip end"));
-
-            while (mAudioRender->throttle (getAudioPlayerPts()))
-              this_thread::sleep_for (100ms);
+            else {
+              cLog::log (LOGINFO, fmt::format ("nextAudPts:{} play:{}",
+                                               getPtsString (it->first), getPtsString (getAudioPlayerPts())));
+              mAudioRender->decodePes (it->second.mData, it->second.mSize, it->second.mPts, it->second.mDts);
+              lastPts = it->second.mPts;
+              while (mAudioRender->throttle (getAudioPlayerPts()))
+                this_thread::sleep_for (1ms);
+              }
             }
-            //}}}
           else {
-            //{{{  load skipped audioPes
+            // load skipped audioPes
             auto it = --mAudioPesMap.upper_bound (getAudioPlayerPts());
-            if (it != mAudioPesMap.end()) {
-              if (kAudioLoadDebug)
-                cLog::log (LOGINFO, fmt::format ("load skipAudPts:{} play:{}",
-                                                 getPtsString (it->first),
-                                                 getPtsString (getAudioPlayerPts())));
+            if (it == mAudioPesMap.end())
+              cLog::log (LOGERROR, fmt::format ("load audSkip end"));
+            else {
+              cLog::log (LOGINFO, fmt::format ("skipAudPts:{} play:{}",
+                                               getPtsString (it->first), getPtsString (getAudioPlayerPts())));
               mAudioRender->decodePes (it->second.mData, it->second.mSize, it->second.mPts, it->second.mDts);
               lastPts = it->second.mPts;
               }
-            else
-              cLog::log (LOGERROR, fmt::format ("load audSkip front"));
             }
-            //}}}
           }
 
         cLog::log (LOGERROR, "exit");
