@@ -17,19 +17,26 @@ public:
     }
 
   int64_t getPts() const { return mPts; }
+  int64_t getPtsEnd() const { return mPtsEnd; }
   int64_t getPtsDuration() const { return mPtsDuration; }
   uint32_t getPesSize() const { return mPesSize; }
 
   void set (int64_t pts, int64_t ptsDuration, uint32_t pesSize) {
     mPts = pts;
+    mPtsEnd = pts + ptsDuration;
     mPtsDuration = ptsDuration;
     mPesSize = pesSize;
+    }
+
+  bool contains (int64_t pts) {
+    return (pts >= mPts) && (pts < mPtsEnd);
     }
 
   virtual void releaseResources() = 0;
 
 private:
   int64_t mPts = 0;
+  int64_t mPtsEnd = 0;
   int64_t mPtsDuration = 0;
   uint32_t mPesSize = 0;
   };

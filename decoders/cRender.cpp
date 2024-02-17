@@ -135,9 +135,14 @@ bool cRender::found (int64_t pts) {
 
   // locked
   unique_lock<shared_mutex> lock (mSharedMutex);
-  for (auto pair : mFramesMap)
-    if ((pts >= pair.second->getPts()) && (pts < (pair.second->getPts() + mPtsDuration)))
+
+  auto it = mFramesMap.begin();
+  while (it != mFramesMap.end()) {
+    if (it->second->contains (pts))
       return true;
+    ++it;
+    }
+
   return false;
   }
 //}}}
@@ -148,7 +153,7 @@ bool cRender::after (int64_t pts) {
   // locked
   unique_lock<shared_mutex> lock (mSharedMutex);
   auto it = mFramesMap.rbegin();
-  return pts >= it->second->getPts() + mPtsDuration;
+  return pts >= it->second->getPtsEnd();
   }
 //}}}
 //{{{
