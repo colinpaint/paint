@@ -177,7 +177,10 @@ bool cRender::throttle (int64_t pts) {
 //{{{
 void cRender::decodePes (uint8_t* pes, uint32_t pesSize, int64_t pts, int64_t dts) {
 
+  // frame reuse allocation
+  // - reuse from front if pts after mFramesMap range
   bool allocFront = mFramesMap.empty() || after (pts);
+
   if (isQueued())
     mDecodeQueue.enqueue (new cDecodeQueueItem (mDecoder, pes, pesSize, pts, dts, allocFront,
                                                 mAllocFrameCallback, mAddFrameCallback));

@@ -104,8 +104,10 @@ public:
             break;
 
           if (avFrame->nb_samples > 0) {
-            // call allocAudioFrame callback
+            // alloc audioFrame 
             cAudioFrame* audioFrame = dynamic_cast<cAudioFrame*>(allocFrameCallback (allocFront));
+
+            // set info
             audioFrame->addTime (std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::system_clock::now() - now).count());
             audioFrame->set (interpolatedPts,
                              avFrame->sample_rate ? avFrame->nb_samples * 90000 / avFrame->sample_rate : 48000,
@@ -141,6 +143,8 @@ public:
                 //}}}
               default:;
               }
+
+            // addFrame
             addFrameCallback (audioFrame);
 
             interpolatedPts += audioFrame->getPtsDuration();

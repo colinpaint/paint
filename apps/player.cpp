@@ -599,12 +599,12 @@ namespace {
             // pesSize I white / P purple / B blue - ABGR color
             cVideoFrame* videoFrame = dynamic_cast<cVideoFrame*>(frame.second);
             ImGui::GetWindowDrawList()->AddRectFilled (
-              { posL, pos.y - addValue ((float)videoFrame->getPesSize(), mMaxPesSize,
-                                           2.f * ImGui::GetTextLineHeight()) },
-              { posR, pos.y },
-              (videoFrame->mFrameType == 'I') ?
-                0xffffffff : (videoFrame->mFrameType == 'P') ?
-                  0xffFF40ff : 0xffFF4040);
+              {posL, pos.y - addValue ((float)videoFrame->getPesSize(), mMaxPesSize, 2.f * ImGui::GetTextLineHeight())},
+              {posR, pos.y },
+              (videoFrame->mFrameType == 'I') ?                  // I - white
+                0xffffffff : (videoFrame->mFrameType == 'P') ?   // P - purple
+                  0xffFF40ff : (videoFrame->mFrameType == 'B') ? // B - blue
+                    0xffFF4040 : 0xff40FFFF);                    // ? = yellow
             }
             //}}}
           }
@@ -619,9 +619,8 @@ namespace {
 
             cAudioFrame* audioFrame = dynamic_cast<cAudioFrame*>(frame.second);
             ImGui::GetWindowDrawList()->AddRectFilled (
-              { posL, pos.y - addValue (audioFrame->getSimplePower(), mMaxPower,
-                                        2.f * ImGui::GetTextLineHeight()) },
-              { posR, pos.y },
+              {posL, pos.y - addValue (audioFrame->getSimplePower(), mMaxPower, 2.f * ImGui::GetTextLineHeight())},
+              {posR, pos.y },
               0x8000ff00);
             }
             //}}}
@@ -641,20 +640,6 @@ namespace {
         if (value > maxValue)
           maxValue = value;
         return scale * value / maxValue;
-        }
-      //}}}
-      //{{{
-      void agc (float& maxValue, float& maxDisplayValue, float revert, float minValue) {
-
-        // slowly adjust scale to displayMaxValue
-        if (maxDisplayValue < maxValue)
-          maxValue += (maxDisplayValue - maxValue) / revert;
-
-        if (maxValue < minValue)
-          maxValue = minValue;
-
-        // reset displayed max value
-        maxDisplayValue = 0.f;
         }
       //}}}
 

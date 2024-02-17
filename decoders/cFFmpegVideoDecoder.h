@@ -105,14 +105,18 @@ public:
             mGotIframe = true;
             }
 
-          // allocFrame
+          // alloc videoFrame
           cFFmpegVideoFrame* ffmpegVideoFrame = dynamic_cast<cFFmpegVideoFrame*>(allocFrameCallback (allocFront));
+
+          // set info
           ffmpegVideoFrame->addTime (std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::system_clock::now() - now).count());
           ffmpegVideoFrame->set (mGotIframe ? mInterpolatedPts : dts,
                                  (kPtsPerSecond * mAvContext->framerate.den) / mAvContext->framerate.num,
                                  frameSize);
           ffmpegVideoFrame->mFrameType = frameType;
           ffmpegVideoFrame->setAVFrame (avFrame, kMotionVectors);
+
+          // addFrame
           addFrameCallback (ffmpegVideoFrame);
           avFrame = av_frame_alloc();
 
