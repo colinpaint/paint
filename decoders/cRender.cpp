@@ -153,25 +153,22 @@ bool cRender::after (int64_t pts) {
 //}}}
 //{{{
 bool cRender::throttle (int64_t pts) {
-// return true
-// - if max mFramesMap, and less than halfFrames after pts
+
+  // locked
+  unique_lock<shared_mutex> lock (mSharedMutex);
 
   if (mFramesMap.size() < mMaxFrames)
     return false;
 
-  { // locked
-  unique_lock<shared_mutex> lock (mSharedMutex);
-
-  size_t numFramesBeforePts = 0;
+  size_t numFramesAfterPts = 0;
   auto it = mFramesMap.begin();
-  while ((it != mFramesMap.end()) && (it->first < (pts / mPtsDuration))) {
-    if (++numFramesBeforePts >= mMaxFrames/2) // more than half maxFrames before pts
-      return false;
+  while (it != mFramesMap.end()) {
+    if (pts < it->second->getPts())
+      numFramesAfterPts++;
     ++it;
     }
 
-  return true;
-  }
+  return numFramesAfterPts >= mMaxFrames/2;
   }
 //}}}
 //{{{

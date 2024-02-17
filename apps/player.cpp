@@ -293,27 +293,29 @@ namespace {
       thread ([=]() {
         cLog::setThreadName ("audL");
 
-        // wait for analyse to see some audioPes
+        //{{{  wait for first audioPes
         while (mAudioPesMap.begin() == mAudioPesMap.end()) {
           if (kAudioLoadDebug)
             cLog::log (LOGINFO, fmt::format ("audioLoader wait analyse"));
           this_thread::sleep_for (1ms);
           }
-
+        //}}}
         mAudioRender = new cAudioRender (false, 100, true, mService->getAudioStreamTypeId(), mService->getAudioPid());
 
-        // load first audioPes which creates audioPlayer
+        // load first audioPes, creates audioPlayer
         sPes& pes = mAudioPesMap.begin()->second;
         if (kAudioLoadDebug)
           cLog::log (LOGINFO, fmt::format ("load firstAudPts:{}", getFullPtsString (pes.mPts)));
         mAudioRender->decodePes (pes.mData, pes.mSize, pes.mPts, pes.mDts);
+
         int64_t lastPts = pes.mPts;
+        //{{{  check for audioPlayer
         if (!getAudioPlayer())
           cLog::log (LOGERROR, fmt::format ("audioLoader wait player"));
+        //}}}
 
         //unique_lock<shared_mutex> lock (mAudioMutex);
         while (true) {
-          // is playerPts loaded
           if (mAudioRender->found (getAudioPlayerPts())) {
             //{{{  load next audioPes
             auto it = ++mAudioPesMap.find (lastPts);
@@ -332,12 +334,13 @@ namespace {
                 mAudioRender->decodePes (it->second.mData, it->second.mSize, it->second.mPts, it->second.mDts);
                 }
               lastPts = it->second.mPts;
+
               }
             else
               cLog::log (LOGERROR, fmt::format ("load audSkip end"));
 
             while (mAudioRender->throttle (getAudioPlayerPts()))
-              this_thread::sleep_for (1ms);
+              this_thread::sleep_for (100ms);
             }
             //}}}
           else {
