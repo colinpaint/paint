@@ -519,11 +519,12 @@ namespace {
           cVideoFrame* videoFrame = dynamic_cast<cVideoFrame*>(frame.second);
           ImGui::GetWindowDrawList()->AddRectFilled (
             { posL, pos.y - addValue ((float)videoFrame->getPesSize(), mMaxPesSize, mMaxDisplayPesSize,
-                                         kLines * ImGui::GetTextLineHeight()) },
+                                      kLines * ImGui::GetTextLineHeight()) },
             { posR, pos.y },
-            (videoFrame->mFrameType == 'I') ?
-              0xffffffff : (videoFrame->mFrameType == 'P') ?
-                0xffFF40ff : 0xffFF4040);
+            (videoFrame->mFrameType == 'I') ?                  // I - white
+              0xffffffff : (videoFrame->mFrameType == 'P') ?   // P - purple
+                0xffFF40ff : (videoFrame->mFrameType == 'B') ? // B - blue
+                  0xffFF4040 : 0xff40FFFF);                    // ? = yellow
           }
           //}}}
         }

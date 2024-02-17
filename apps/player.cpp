@@ -583,11 +583,11 @@ namespace {
 
   private:
     //{{{
-    class cFramesView {
+    class cRenderView {
     public:
       void draw (cAudioRender* audioRender, cVideoRender* videoRender, int64_t playerPts, ImVec2 pos) {
 
-       float ptsScale = 6.f / videoRender->getPtsDuration();
+        float ptsScale = 6.f / (videoRender ? videoRender->getPtsDuration() : 90000/25);
         if (videoRender) {
           // lock video during iterate
           shared_lock<shared_mutex> lock (videoRender->getSharedMutex());
@@ -738,6 +738,7 @@ namespace {
 
         cAudioRender* audioRender = playerApp.getFirstFilePlayer()->getAudioRender();
         if (audioRender) {
+          // get audio player pts
           cAudioPlayer* audioPlayer = playerApp.getFirstFilePlayer()->getAudioPlayer();
           if (audioPlayer) {
             int64_t playPts = audioRender->getPts();
@@ -745,32 +746,8 @@ namespace {
               playPts = audioPlayer->getPts();
               audioPlayer->setMute (false);
               }
-            //{{{  draw audio meter
-            mAudioMeterView.draw (audioRender, playPts,
-              ImVec2(mBR.x - ImGui::GetTextLineHeight()*0.5f, mBR.y - ImGui::GetTextLineHeight()*0.25f));
-            //}}}
-            //{{{  draw fileName and playPts with largeFont
-            ImGui::PushFont (playerApp.getLargeFont());
 
-            string title = playerApp.getFirstFilePlayer()->getFileName();
-            ImVec2 pos = {ImGui::GetTextLineHeight() * 0.25f, 0.f};
-            ImGui::SetCursorPos (pos);
-            ImGui::TextColored ({0.f,0.f,0.f,1.f}, title.c_str());
-            ImGui::SetCursorPos (pos - ImVec2(2.f,2.f));
-            ImGui::TextColored ({1.f, 1.f,1.f,1.f}, title.c_str());
-
-            pos.y += ImGui::GetTextLineHeight() * 1.5f;
-
-            string ptsFromStartString = getPtsString (playPts);
-            pos = ImVec2 (mSize - ImVec2(ImGui::GetTextLineHeight() * 7.f, ImGui::GetTextLineHeight()));
-            ImGui::SetCursorPos (pos);
-            ImGui::TextColored ({0.f,0.f,0.f,1.f}, ptsFromStartString.c_str());
-            ImGui::SetCursorPos (pos - ImVec2(2.f,2.f));
-            ImGui::TextColored ({1.f,1.f,1.f,1.f}, ptsFromStartString.c_str());
-
-            ImGui::PopFont();
-            //}}}
-
+            // get videoFrame
             cVideoRender* videoRender = playerApp.getFirstFilePlayer()->getVideoRender();
             if (videoRender) {
               cVideoFrame* videoFrame = videoRender->getVideoFrameAtOrAfterPts (playPts);
@@ -845,11 +822,37 @@ namespace {
                   }
                   //}}}
                 }
-              //{{{  draw renderFrames
-              mFramesView.draw (audioRender, videoRender, playPts,
-                                ImVec2((mTL.x + mBR.x)/2.f, mBR.y - ImGui::GetTextLineHeight()*0.25f));
-              //}}}
               }
+
+            //{{{  draw fileName and playPts with largeFont
+            ImGui::PushFont (playerApp.getLargeFont());
+
+            string title = playerApp.getFirstFilePlayer()->getFileName();
+            ImVec2 pos = {ImGui::GetTextLineHeight() * 0.25f, 0.f};
+            ImGui::SetCursorPos (pos);
+            ImGui::TextColored ({0.f,0.f,0.f,1.f}, title.c_str());
+            ImGui::SetCursorPos (pos - ImVec2(2.f,2.f));
+            ImGui::TextColored ({1.f, 1.f,1.f,1.f}, title.c_str());
+
+            pos.y += ImGui::GetTextLineHeight() * 1.5f;
+
+            string ptsFromStartString = getPtsString (playPts);
+            pos = ImVec2 (mSize - ImVec2(ImGui::GetTextLineHeight() * 7.f, ImGui::GetTextLineHeight()));
+            ImGui::SetCursorPos (pos);
+            ImGui::TextColored ({0.f,0.f,0.f,1.f}, ptsFromStartString.c_str());
+            ImGui::SetCursorPos (pos - ImVec2(2.f,2.f));
+            ImGui::TextColored ({1.f,1.f,1.f,1.f}, ptsFromStartString.c_str());
+
+            ImGui::PopFont();
+            //}}}
+            //{{{  draw audio meter
+            mAudioMeterView.draw (audioRender, playPts,
+              ImVec2(mBR.x - ImGui::GetTextLineHeight()*0.5f, mBR.y - ImGui::GetTextLineHeight()*0.25f));
+            //}}}
+            //{{{  draw render frames graphic
+            mRenderView.draw (audioRender, videoRender, playPts,
+                              ImVec2((mTL.x + mBR.x)/2.f, mBR.y - ImGui::GetTextLineHeight()*0.25f));
+            //}}}
             }
           }
 
@@ -995,8 +998,8 @@ namespace {
       cQuad* mVideoQuad = nullptr;
 
       // graphics
-      cFramesView mFramesView;
       cAudioMeterView mAudioMeterView;
+      cRenderView mRenderView;
 
       // subtitle
       array <cQuad*, kMaxSubtitleLines> mSubtitleQuads = { nullptr };
