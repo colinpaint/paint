@@ -87,43 +87,6 @@ void cRender::setPts (int64_t pts, int64_t ptsDuration) {
 //}}}
 
 //{{{
-cFrame* cRender::removeFirstFrame() {
-
-  cFrame* frame = nullptr;
-
-  { // locked
-  unique_lock<shared_mutex> lock (mSharedMutex);
-
-  // reuse youngestfor now, could be different if seeking
-  auto it = mFramesMap.begin();
-  frame = it->second;
-  mFramesMap.erase (it);
-  }
-
-  //cLog::log (LOGINFO, fmt::format ("removeFirstFrame:{}", getPtsString (frame->getPts())));
-  frame->releaseResources();
-  return frame;
-  }
-//}}}
-//{{{
-cFrame* cRender::removeLastFrame() {
-
-  cFrame* frame = nullptr;
-
-  { // locked
-  unique_lock<shared_mutex> lock (mSharedMutex);
-
-  auto it = --mFramesMap.end();
-  frame = it->second;
-  mFramesMap.erase (it);
-  }
-
-  //cLog::log (LOGINFO, fmt::format ("removeLastFrame:{}", getPtsString (frame->getPts())));
-  frame->releaseResources();
-  return frame;
-  }
-//}}}
-//{{{
 void cRender::addFrame (cFrame* frame) {
 
   //cLog::log (LOGINFO, fmt::format ("addFrame {} {}",
@@ -131,6 +94,25 @@ void cRender::addFrame (cFrame* frame) {
   //                                 getFullPtsString ((frame->getPts() / frame->getPtsDuration()) * frame->getPtsDuration())));
   unique_lock<shared_mutex> lock (mSharedMutex);
   mFramesMap.emplace (frame->getPts() / frame->getPtsDuration(), frame);
+  }
+//}}}
+//{{{
+cFrame* cRender::removeFrame (bool front) {
+
+  cFrame* frame = nullptr;
+
+  { // locked
+  unique_lock<shared_mutex> lock (mSharedMutex);
+
+  auto it = front ? mFramesMap.begin() : --mFramesMap.end();
+  frame = it->second;
+  mFramesMap.erase (it);
+  }
+
+  //cLog::log (LOGINFO, fmt::format ("removeFrame {} {}",
+  //                                 front ? "front":"back", getPtsString (frame->getPts())));
+  frame->releaseResources();
+  return frame;
   }
 //}}}
 //{{{
@@ -147,20 +129,18 @@ void cRender::clearFrames() {
 
 // process
 //{{{
-void cRender::decodePes (uint8_t* pes, uint32_t pesSize, int64_t pts, int64_t dts, bool allocFront) {
+bool cRender::found (int64_t pts) {
+// return true if pts i nmFramesMap range
 
-  if (isQueued())
-    mDecodeQueue.enqueue (new cDecodeQueueItem (mDecoder, pes, pesSize, pts, dts, allocFront,
-                                                mAllocFrameCallback, mAddFrameCallback));
-  else
-    mDecoder->decode (pes, pesSize, pts, dts, allocFront, mAllocFrameCallback, mAddFrameCallback);
+  { // locked
+  unique_lock<shared_mutex> lock (mSharedMutex);
+
+  for (auto pair : mFramesMap)
+    if ((pts >= pair.second->getPts()) && (pts < (pair.second->getPts() + mPtsDuration)))
+      return true;
+
+  return false;
   }
-//}}}
-
-//{{{
-string cRender::getInfoString() const {
-  return fmt::format ("frames:{:2d}:{:d} pts:{} dur:{}",
-                      mFramesMap.size(), getQueueSize(), getFullPtsString (mPts), mPtsDuration);
   }
 //}}}
 //{{{
@@ -188,18 +168,20 @@ bool cRender::throttle (int64_t pts) {
   }
 //}}}
 //{{{
-bool cRender::found (int64_t pts) {
-// return true if pts i nmFramesMap range
+void cRender::decodePes (uint8_t* pes, uint32_t pesSize, int64_t pts, int64_t dts, bool allocFront) {
 
-  { // locked
-  unique_lock<shared_mutex> lock (mSharedMutex);
-
-  for (auto pair : mFramesMap)
-    if ((pts >= pair.second->getPts()) && (pts < (pair.second->getPts() + mPtsDuration)))
-      return true;
-
-  return false;
+  if (isQueued())
+    mDecodeQueue.enqueue (new cDecodeQueueItem (mDecoder, pes, pesSize, pts, dts, allocFront,
+                                                mAllocFrameCallback, mAddFrameCallback));
+  else
+    mDecoder->decode (pes, pesSize, pts, dts, allocFront, mAllocFrameCallback, mAddFrameCallback);
   }
+//}}}
+
+//{{{
+string cRender::getInfoString() const {
+  return fmt::format ("frames:{:2d}:{:d} pts:{} dur:{}",
+                      mFramesMap.size(), getQueueSize(), getFullPtsString (mPts), mPtsDuration);
   }
 //}}}
 

@@ -44,7 +44,7 @@ cAudioRender::cAudioRender (bool queue, size_t maxFrames, bool hasAudio, uint8_t
     cRender(queue, "aud", streamType, pid, 1920, maxFrames,
       // allocFrameCallback lambda
       [&](bool front) noexcept {
-        return hasMaxFrames() ? (front ? removeFirstFrame() : removeLastFrame()) : new cAudioFrame();
+        return hasMaxFrames() ? removeFrame (front) : new cAudioFrame();
         },
 
       // addFrameCallback lambda

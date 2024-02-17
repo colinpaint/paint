@@ -53,8 +53,7 @@ cVideoRender::cVideoRender (bool queue, size_t maxFrames, uint8_t streamType, ui
     cRender(queue, "vid", streamType, pid, kPtsPer25HzFrame, maxFrames,
       // allocFrameCallback lambda
       [&](bool front) noexcept {
-        (void)front;
-        return hasMaxFrames() ? removeFirstFrame() : new cFFmpegVideoFrame();
+        return hasMaxFrames() ? removeFrame (front) : new cFFmpegVideoFrame();
         },
 
       // addFrameCallback lambda

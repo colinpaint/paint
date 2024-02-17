@@ -43,18 +43,18 @@ public:
 
   cFrame* getFrameAtPts (int64_t pts);
   cFrame* getFrameAtOrAfterPts (int64_t pts);
-  cFrame* removeFirstFrame();
-  cFrame* removeLastFrame();
+
   void addFrame (cFrame* frame);
+  cFrame* removeFrame (bool front);
   void clearFrames();
 
+  bool found (int64_t pts);
+  bool throttle (int64_t pts);
   void decodePes (uint8_t* pes, uint32_t pesSize, int64_t pts, int64_t dts, bool allocFront);
 
   virtual std::string getInfoString() const;
-  virtual void togglePlay() {}
   virtual bool throttle() { return false; }
-  virtual bool throttle (int64_t pts);
-  bool found (int64_t pts);
+  virtual void togglePlay() {}
 
 protected:
   size_t getQueueSize() const;
