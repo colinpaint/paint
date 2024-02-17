@@ -130,25 +130,33 @@ void cRender::clearFrames() {
 // process
 //{{{
 bool cRender::found (int64_t pts) {
-// return true if pts i nmFramesMap range
+// return true if pts in mFramesMap range
+// - rend check as well quicker ???
 
-  { // locked
+  // locked
   unique_lock<shared_mutex> lock (mSharedMutex);
-
   for (auto pair : mFramesMap)
     if ((pts >= pair.second->getPts()) && (pts < (pair.second->getPts() + mPtsDuration)))
       return true;
-
   return false;
   }
+//}}}
+//{{{
+bool cRender::after (int64_t pts) {
+// return true if pts is after mFramesMap range
+
+  // locked
+  unique_lock<shared_mutex> lock (mSharedMutex);
+  auto it = mFramesMap.rbegin();
+  return pts >= it->second->getPts() + mPtsDuration;
   }
 //}}}
 //{{{
 bool cRender::throttle (int64_t pts) {
-// return true if fileRead should throttle
-// - if mFramesMap not reached max, and frames beforePts < mMaxFrames/2
+// return true
+// - if max mFramesMap, and less than halfFrames after pts
 
-  if (mFramesMap.size() < mMaxFrames) // no throttle
+  if (mFramesMap.size() < mMaxFrames)
     return false;
 
   { // locked
@@ -157,19 +165,19 @@ bool cRender::throttle (int64_t pts) {
   size_t numFramesBeforePts = 0;
   auto it = mFramesMap.begin();
   while ((it != mFramesMap.end()) && (it->first < (pts / mPtsDuration))) {
-    if (++numFramesBeforePts >= mMaxFrames/2) // if mFramesMap at least centred about pts, no throttle
+    if (++numFramesBeforePts >= mMaxFrames/2) // more than half maxFrames before pts
       return false;
     ++it;
     }
 
-  // not centred about pts, throttle
   return true;
   }
   }
 //}}}
 //{{{
-void cRender::decodePes (uint8_t* pes, uint32_t pesSize, int64_t pts, int64_t dts, bool allocFront) {
+void cRender::decodePes (uint8_t* pes, uint32_t pesSize, int64_t pts, int64_t dts) {
 
+  bool allocFront = mFramesMap.empty() || after (pts);
   if (isQueued())
     mDecodeQueue.enqueue (new cDecodeQueueItem (mDecoder, pes, pesSize, pts, dts, allocFront,
                                                 mAllocFrameCallback, mAddFrameCallback));

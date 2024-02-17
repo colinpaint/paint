@@ -49,8 +49,9 @@ public:
   void clearFrames();
 
   bool found (int64_t pts);
+  bool after (int64_t pts);
   bool throttle (int64_t pts);
-  void decodePes (uint8_t* pes, uint32_t pesSize, int64_t pts, int64_t dts, bool allocFront);
+  void decodePes (uint8_t* pes, uint32_t pesSize, int64_t pts, int64_t dts);
 
   virtual std::string getInfoString() const;
   virtual bool throttle() { return false; }
