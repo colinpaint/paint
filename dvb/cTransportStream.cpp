@@ -498,17 +498,20 @@ void cTransportStream::cService::start (chrono::system_clock::time_point tdt,
                                         bool selected) {
 // start recording program
 
-  // close prev program
+  // close prev program file
   closeFile();
 
+  // do we want to record ?
   if (getStream(cRenderStream::eAudio).isDefined() &&
       getStream (cRenderStream::eVideo).isDefined() &&
-      (selected || getRecord() || ((dynamic_cast<cOptions*>(mOptions))->mRecordAllServices))) {
+      (selected || 
+       getRecord() || 
+       (mOptions && ((dynamic_cast<cOptions*>(mOptions))->mRecordAllServices)))) {
     string filePath = (dynamic_cast<cOptions*>(mOptions))->mRecordRoot +
                       getRecordName() + date::format ("%d %b %y %a %H.%M.%S ",
                         date::floor<chrono::seconds>(tdt)) + utils::getValidFileString (programName) + ".ts";
 
-    // open new record program
+    // open new record program file
     openFile (filePath, 0x1234);
 
     cLog::log (LOGINFO, fmt::format ("{} {}",

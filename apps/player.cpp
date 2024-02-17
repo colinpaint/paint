@@ -70,23 +70,10 @@ constexpr bool kSubtitleLoadDebug = false;
 
 namespace {
   //{{{
-  class cPlayerOptions : public cApp::cOptions, public cTransportStream::cOptions {
-  public:
-    virtual ~cPlayerOptions() = default;
-
-    string getString() const { return "sub motion fileName"; }
-
-    // vars
-    bool mShowSubtitle = false;
-    bool mShowMotionVectors = false;
-    string mFileName;
-    };
-  //}}}
-  //{{{
   class cFilePlayer {
   public:
-    cFilePlayer (string fileName, cPlayerOptions* options) :
-      mFileName(cFileUtils::resolve (fileName)), mOptions(options) {}
+    cFilePlayer (string fileName) :
+      mFileName(cFileUtils::resolve (fileName)) {}
     //{{{
     virtual ~cFilePlayer() {
       mAudioPesMap.clear();
@@ -189,7 +176,7 @@ namespace {
         cLog::setThreadName ("anal");
 
         cTransportStream transportStream (
-          {"anal", 0, {}, {}}, mOptions,
+          {"anal", 0, {}, {}}, nullptr,
           // newService lambda, !!! hardly used !!!
           [&](cTransportStream::cService& service) noexcept { mService = &service; },
           //{{{  pes lambda
@@ -322,7 +309,7 @@ namespace {
           cLog::log (LOGINFO, fmt::format ("load firstAudPts:{}", getFullPtsString (pes.mPts)));
         mAudioRender->decodePes (pes.mData, pes.mSize, pes.mPts, pes.mDts, true);
         int64_t lastLoadedPts = pes.mPts;
-        if (!getAudioPlayer()) 
+        if (!getAudioPlayer())
           cLog::log (LOGERROR, fmt::format ("audioLoader wait player"));
 
         //unique_lock<shared_mutex> lock (mAudioMutex);
@@ -431,7 +418,6 @@ namespace {
     //}}}
 
     string mFileName;
-    cPlayerOptions* mOptions;
 
     size_t mFileSize = 0;
     cTransportStream::cService* mService = nullptr;
@@ -452,6 +438,19 @@ namespace {
     };
   //}}}
   //{{{
+  class cPlayerOptions : public cApp::cOptions {
+  public:
+    virtual ~cPlayerOptions() = default;
+
+    string getString() const { return "sub motion fileName"; }
+
+    // vars
+    bool mShowSubtitle = false;
+    bool mShowMotionVectors = false;
+    string mFileName;
+    };
+  //}}}
+  //{{{
   class cPlayerApp : public cApp {
   public:
     cPlayerApp (cPlayerOptions* options, iUI* ui) : cApp ("Player", options, ui), mOptions(options) {}
@@ -465,7 +464,7 @@ namespace {
     //{{{
     void addFile (const string& fileName, cPlayerOptions* options) {
 
-      cFilePlayer* filePlayer = new cFilePlayer (fileName, options);
+      cFilePlayer* filePlayer = new cFilePlayer (fileName);
       mFilePlayers.emplace_back (filePlayer);
       filePlayer->start();
       }
