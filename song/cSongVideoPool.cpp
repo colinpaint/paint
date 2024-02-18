@@ -114,6 +114,7 @@ extern "C" {
 #endif
 
 using namespace std;
+using namespace utils;
 //}}}
 constexpr int kPtsPerSecond = 90000;
 
@@ -1652,7 +1653,7 @@ public:
       if ((mGuessPts >= 0) && (mGuessPts != dts))
         //{{{  debug
         cLog::log (LOGERROR, fmt::format ("lost:{} to:{} type:{} {}",
-          utils::getPtsFramesString (mGuessPts, 1800), utils::getPtsFramesString (dts, 1800),frameType,pesSize));
+          getFramesPtsString (mGuessPts, 1800), getFramesPtsString (dts, 1800),frameType,pesSize));
         //}}}
       mGuessPts = dts;
       mSeenIFrame = true;
@@ -1660,7 +1661,7 @@ public:
     if (!mSeenIFrame) {
       //{{{  debug
       cLog::log (LOGINFO, fmt::format("waiting for Iframe {} to:{} type:{} size:{}",
-                                      utils::getPtsFramesString (mGuessPts, 1800), utils::getPtsFramesString (dts, 1800),frameType,pesSize));
+                                      getFramesPtsString (mGuessPts, 1800), getFramesPtsString (dts, 1800),frameType,pesSize));
       //}}}
       return;
       }

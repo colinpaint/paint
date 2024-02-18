@@ -86,7 +86,7 @@ namespace utils {
     }
   //}}}
   //{{{
-  inline std::string getPtsFramesString (int64_t pts, int64_t ptsDuration) {
+  inline std::string getFramesPtsString (int64_t pts, int64_t ptsDuration) {
   // return 90khz int64_t pts - as frames.subframes
 
     int64_t frames = pts / ptsDuration;
