@@ -29,13 +29,13 @@ private:
   const uint32_t mSampleRate;
 
   std::thread mPlayerThread;
-
-  bool mMute = true;
-  bool mSkip = false;
-  bool mPlaying = false;
   bool mRunning = true;
   bool mExit = false;
-  bool mSyncedUp = false;
+
+  bool mMute = true;
+  bool mPlaying = false;
+  bool mSkip = false;
+  bool mSynced = false;
 
   int64_t mPts = 0;
 

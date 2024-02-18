@@ -73,20 +73,23 @@ cAudioPlayer::cAudioPlayer (cAudioRender& audioRender, uint32_t sampleRate, uint
       int64_t ptsDuration = 0;
 
       if (mPlaying || mSkip) {
-        mSkip = false;
         cAudioFrame* audioFrame = mAudioRender.getAudioFrameAtPts (mPts);
-        if (audioFrame)
-          mSyncedUp = true;
-        else {
+        if (audioFrame) {
+          mSynced = true;
+          mSkip = false;
+          }
+        else if (mPlaying) {
           // skip to nextFrame
           audioFrame = mAudioRender.getAudioFrameAtOrAfterPts (mPts);
           if (audioFrame) {// found it, adjust pts
             mPts = audioFrame->getPts();
             //cLog::log (LOGINFO, fmt::format ("skipped {}", utils::getFullPtsString (mPts)));
             }
-          if (!audioFrame && mSyncedUp)
-            cLog::log (LOGINFO, fmt::format ("missed {}", utils::getFullPtsString (mPts)));
+          if (!audioFrame && mSynced)
+            cLog::log (LOGINFO, fmt::format ("play missed:{}", utils::getFullPtsString (mPts)));
           }
+        else
+          cLog::log (LOGINFO, fmt::format ("skip missed:{}", utils::getFullPtsString (mPts)));
 
         if (audioFrame) {
           if (!mMute) {
@@ -129,7 +132,7 @@ cAudioPlayer::cAudioPlayer (cAudioRender& audioRender, uint32_t sampleRate, uint
       if (mPlaying)
         mPts += ptsDuration;
 
-      #ifdef _WIN32 
+      #ifdef _WIN32
         }); // close lambda
       #else
         if (hasAudio)
