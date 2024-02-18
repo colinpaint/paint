@@ -131,15 +131,24 @@ void cRender::clearFrames() {
 //{{{
 int64_t cRender::load (int64_t pts) {
 
-  int64_t loadPts = -1;
-  if (found (pts)) {
-    // look for next
-    }
-  else {
-    // load it
+  if (!found (pts))
+    return pts;
+
+  int64_t loadPts = pts;
+  for (int64_t i = 0; i < ((int64_t)mMaxFrames/2)-6; i++) {
+    loadPts += mPtsDuration;
+    if (!found (loadPts))
+      return loadPts;
     }
 
-  return loadPts;
+  loadPts = pts;
+  for (int64_t i = 0; i < ((int64_t)mMaxFrames/2)-6; i++) {
+    loadPts -= mPtsDuration;
+    if (!found (loadPts))
+      return loadPts;
+    }
+
+  return -1;
   }
 //}}}
 //{{{

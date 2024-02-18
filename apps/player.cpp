@@ -323,14 +323,19 @@ namespace {
           if (loadPts == -1)
             this_thread::sleep_for (1ms);
           else {
-            {
-            unique_lock<shared_mutex> lock (mAudioMutex);
-            auto it = --mAudioPesMap.upper_bound (loadPts);
-            pes = it->second;
-            }
-            cLog::log (LOGINFO, fmt::format ("load:{} play:{}",
-                                             getCompletePtsString (pes.mPts), getCompletePtsString (playPts)));
-            mAudioRender->decodePes (pes.mData, pes.mSize, pes.mPts, pes.mDts);
+            //unique_lock<shared_mutex> lock (mAudioMutex);
+            auto it = mAudioPesMap.upper_bound (loadPts);
+            if (it == mAudioPesMap.end()) 
+              this_thread::sleep_for (1ms);
+            else if (it == mAudioPesMap.begin())
+              this_thread::sleep_for (1ms);
+            else {
+              --it;
+              pes = it->second;
+              cLog::log (LOGINFO, fmt::format ("load:{} play:{}",
+                                               getCompletePtsString (pes.mPts), getCompletePtsString (playPts)));
+              mAudioRender->decodePes (pes.mData, pes.mSize, pes.mPts, pes.mDts);
+              }
             }
           }
 
