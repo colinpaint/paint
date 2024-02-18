@@ -48,6 +48,7 @@ public:
   cFrame* removeFrame (bool front);
   void clearFrames();
 
+  int64_t load (int64_t pts);
   bool found (int64_t pts);
   bool after (int64_t pts);
   bool throttle (int64_t pts);

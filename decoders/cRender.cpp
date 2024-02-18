@@ -129,6 +129,20 @@ void cRender::clearFrames() {
 
 // process
 //{{{
+int64_t cRender::load (int64_t pts) {
+
+  int64_t loadPts = -1;
+  if (found (pts)) {
+    // look for next
+    }
+  else {
+    // load it
+    }
+
+  return loadPts;
+  }
+//}}}
+//{{{
 bool cRender::found (int64_t pts) {
 // return true if pts in mFramesMap
 

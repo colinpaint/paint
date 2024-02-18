@@ -309,30 +309,28 @@ namespace {
                                          mService->getAudioStreamTypeId(), mService->getAudioPid());
 
         // load first audioPes, creates audioPlayer
-        auto it = mAudioPesMap.begin();
-        cLog::log (LOGINFO, fmt::format ("firstAudPts:{}", getCompletePtsString (it->second.mPts)));
-        sPes pes = it->second;
-        ++it;
+        sPes pes = mAudioPesMap.begin()->second;
+        cLog::log (LOGINFO, fmt::format ("first load:{}", getCompletePtsString (pes.mPts)));
         mAudioRender->decodePes (pes.mData, pes.mSize, pes.mPts, pes.mDts);
         //{{{  audioPlayer ok?
         if (!getAudioPlayer())
           cLog::log (LOGERROR, fmt::format ("audioLoader wait player"));
         //}}}
 
-        //unique_lock<shared_mutex> lock (mAudioMutex);
-        while (it != mAudioPesMap.end()) {
+        while (true) {
           int64_t playPts = getAudioPlayerPts();
-          int64_t diff = it->second.mPts - playPts;
-          if (diff > 90000)
+          int64_t loadPts = mAudioRender->load (playPts);
+          if (loadPts == -1)
             this_thread::sleep_for (1ms);
           else {
-            cLog::log (LOGINFO, fmt::format ("load:{} play:{} diff:{}",
-                                             getCompletePtsString (it->second.mPts),
-                                             getCompletePtsString (playPts),
-                                             diff));
-            sPes pes = it->second;
+            {
+            unique_lock<shared_mutex> lock (mAudioMutex);
+            auto it = --mAudioPesMap.upper_bound (loadPts);
+            pes = it->second;
+            }
+            cLog::log (LOGINFO, fmt::format ("load:{} play:{}",
+                                             getCompletePtsString (pes.mPts), getCompletePtsString (playPts)));
             mAudioRender->decodePes (pes.mData, pes.mSize, pes.mPts, pes.mDts);
-            ++it;
             }
           }
 
