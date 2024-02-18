@@ -24,7 +24,7 @@ public:
   cRender (bool queued, const std::string& threadName,
            uint8_t streamType, uint16_t pid,
            int64_t ptsDuration, size_t maxFrames,
-           std::function <cFrame* (bool front)> allocFrameCallback,
+           std::function <cFrame* (int64_t pts, bool front)> allocFrameCallback,
            std::function <void (cFrame* frame)> addFrameCallback);
   virtual ~cRender();
 
@@ -45,7 +45,7 @@ public:
   cFrame* getFrameAtOrAfterPts (int64_t pts);
 
   void addFrame (cFrame* frame);
-  cFrame* removeFrame (bool front);
+  cFrame* removeFrame (int64_t pts, bool front);
   void clearFrames();
 
   int64_t load (int64_t pts);
@@ -84,7 +84,7 @@ private:
   const uint8_t mStreamType;
   const uint16_t mPid;
   const size_t mMaxFrames;
-  const std::function <cFrame* (bool front)> mAllocFrameCallback;
+  const std::function <cFrame* (int64_t pts, bool front)> mAllocFrameCallback;
   const std::function <void (cFrame* frame)> mAddFrameCallback;
 
   int64_t mPts = 0;

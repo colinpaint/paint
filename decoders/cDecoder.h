@@ -15,6 +15,6 @@ public:
   virtual std::string getInfoString() const = 0;
 
   virtual int64_t decode (uint8_t* pes, uint32_t pesSize, int64_t pts, int64_t dts, bool allocFront,
-                          std::function<cFrame* (bool front)> allocFrameCallback,
+                          std::function<cFrame* (int64_t pts, bool front)> allocFrameCallback,
                           std::function<void (cFrame* frame)> addFrameCallback) = 0;
   };

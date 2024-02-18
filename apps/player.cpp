@@ -305,7 +305,7 @@ namespace {
           this_thread::sleep_for (1ms);
           }
         //}}}
-        mAudioRender = new cAudioRender (false, 100, true,
+        mAudioRender = new cAudioRender (false, 101, true,
                                          mService->getAudioStreamTypeId(), mService->getAudioPid());
 
         // load first audioPes, creates audioPlayer
@@ -325,7 +325,7 @@ namespace {
           else {
             //unique_lock<shared_mutex> lock (mAudioMutex);
             auto it = mAudioPesMap.upper_bound (loadPts);
-            if (it == mAudioPesMap.end()) 
+            if (it == mAudioPesMap.end())
               this_thread::sleep_for (1ms);
             else if (it == mAudioPesMap.begin())
               this_thread::sleep_for (1ms);

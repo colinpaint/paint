@@ -44,8 +44,8 @@ using namespace utils;
 cAudioRender::cAudioRender (bool queue, size_t maxFrames, bool hasAudio, uint8_t streamType, uint16_t pid) :
     cRender(queue, "aud", streamType, pid, 1920, maxFrames,
       // allocFrameCallback lambda
-      [&](bool front) noexcept {
-        return hasMaxFrames() ? removeFrame (front) : new cAudioFrame();
+      [&](int64_t pts, bool front) noexcept {
+        return hasMaxFrames() ? removeFrame (pts, front) : new cAudioFrame();
         },
 
       // addFrameCallback lambda

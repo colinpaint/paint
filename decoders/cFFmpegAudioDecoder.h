@@ -80,7 +80,7 @@ public:
   virtual std::string getInfoString() const final { return "ffmpeg " + mStreamTypeName; }
   //{{{
   virtual int64_t decode (uint8_t* pes, uint32_t pesSize, int64_t pts, int64_t dts, bool allocFront,
-                          std::function<cFrame* (bool front)> allocFrameCallback,
+                          std::function<cFrame* (int64_t pts, bool front)> allocFrameCallback,
                           std::function<void (cFrame* frame)> addFrameCallback) final  {
     (void)dts;
 
@@ -105,49 +105,52 @@ public:
 
           if (avFrame->nb_samples > 0) {
             // alloc audioFrame
-            cAudioFrame* audioFrame = dynamic_cast<cAudioFrame*>(allocFrameCallback (allocFront));
+            cAudioFrame* audioFrame =
+              dynamic_cast<cAudioFrame*>(allocFrameCallback (interpolatedPts, allocFront));
+            if (audioFrame) {
+              // set info
+              audioFrame->addTime (std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::system_clock::now() - now).count());
+              audioFrame->set (interpolatedPts,
+                               avFrame->sample_rate ? avFrame->nb_samples * 90000 / avFrame->sample_rate : 48000,
+                               bytesUsed);
+              audioFrame->setSamplesPerFrame (avFrame->nb_samples);
+              audioFrame->setSampleRate (avFrame->sample_rate);
+              audioFrame->setNumChannels (avFrame->ch_layout.nb_channels);
 
-            // set info
-            audioFrame->addTime (std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::system_clock::now() - now).count());
-            audioFrame->set (interpolatedPts,
-                             avFrame->sample_rate ? avFrame->nb_samples * 90000 / avFrame->sample_rate : 48000,
-                             bytesUsed);
-            audioFrame->setSamplesPerFrame (avFrame->nb_samples);
-            audioFrame->setSampleRate (avFrame->sample_rate);
-            audioFrame->setNumChannels (avFrame->ch_layout.nb_channels);
+              if (kDebug)
+                cLog::log (LOGINFO, fmt::format ("pts:{} {} chans:{}:{}:{} {} {}",
+                                                 utils::getFullPtsString (pts),
+                                                 utils::getFullPtsString (interpolatedPts),
+                                                 audioFrame->getNumChannels(),
+                                                 audioFrame->getSampleRate(),
+                                                 audioFrame->getSamplesPerFrame(),
+                                                 audioFrame->getPtsDuration(),
+                                                 pesSize));
+              float* dst = audioFrame->mSamples.data();
+              switch (mAvContext->sample_fmt) {
+                case AV_SAMPLE_FMT_FLTP:
+                  //{{{  32bit float planar, copy to interleaved
+                  for (int sample = 0; sample < avFrame->nb_samples; sample++)
+                    for (int channel = 0; channel < avFrame->ch_layout.nb_channels; channel++)
+                      *dst++ = *(((float*)avFrame->data[channel]) + sample);
+                  break;
+                  //}}}
+                case AV_SAMPLE_FMT_S16P:
+                  //{{{  16bit signed planar, scale to interleaved
+                  for (int sample = 0; sample < avFrame->nb_samples; sample++)
+                    for (int channel = 0; channel < avFrame->ch_layout.nb_channels; channel++)
+                      *dst++ = (*(((short*)avFrame->data[channel]) + sample)) / (float)0x8000;
+                  break;
+                  //}}}
+                default:;
+                }
 
-            if (kDebug)
-              cLog::log (LOGINFO, fmt::format ("pts:{} {} chans:{}:{}:{} {} {}",
-                                               utils::getFullPtsString (pts),
-                                               utils::getFullPtsString (interpolatedPts),
-                                               audioFrame->getNumChannels(),
-                                               audioFrame->getSampleRate(),
-                                               audioFrame->getSamplesPerFrame(),
-                                               audioFrame->getPtsDuration(),
-                                               pesSize));
-            float* dst = audioFrame->mSamples.data();
-            switch (mAvContext->sample_fmt) {
-              case AV_SAMPLE_FMT_FLTP:
-                //{{{  32bit float planar, copy to interleaved
-                for (int sample = 0; sample < avFrame->nb_samples; sample++)
-                  for (int channel = 0; channel < avFrame->ch_layout.nb_channels; channel++)
-                    *dst++ = *(((float*)avFrame->data[channel]) + sample);
-                break;
-                //}}}
-              case AV_SAMPLE_FMT_S16P:
-                //{{{  16bit signed planar, scale to interleaved
-                for (int sample = 0; sample < avFrame->nb_samples; sample++)
-                  for (int channel = 0; channel < avFrame->ch_layout.nb_channels; channel++)
-                    *dst++ = (*(((short*)avFrame->data[channel]) + sample)) / (float)0x8000;
-                break;
-                //}}}
-              default:;
+              // addFrame
+              addFrameCallback (audioFrame);
+              interpolatedPts += audioFrame->getPtsDuration();
               }
-
-            // addFrame
-            addFrameCallback (audioFrame);
-
-            interpolatedPts += audioFrame->getPtsDuration();
+            else
+              interpolatedPts += 1920;
             }
           }
         }

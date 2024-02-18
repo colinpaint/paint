@@ -81,7 +81,7 @@ public:
   virtual std::string getInfoString() const final { return mH264 ? "ffmpeg h264" : "ffmpeg mpeg"; }
   //{{{
   virtual int64_t decode (uint8_t* pes, uint32_t pesSize, int64_t pts, int64_t dts, bool allocFront,
-                          std::function<cFrame*(bool front)> allocFrameCallback,
+                          std::function<cFrame*(int64_t pts, bool front)> allocFrameCallback,
                           std::function<void (cFrame* frame)> addFrameCallback) final {
     (void)pts;
 
@@ -107,21 +107,24 @@ public:
             }
 
           // alloc videoFrame
-          cFFmpegVideoFrame* ffmpegVideoFrame = dynamic_cast<cFFmpegVideoFrame*>(allocFrameCallback (allocFront));
+          cFFmpegVideoFrame* ffmpegVideoFrame =
+            dynamic_cast<cFFmpegVideoFrame*>(allocFrameCallback (mInterpolatedPts, allocFront));
+          if (ffmpegVideoFrame) {
+            // set info
+            ffmpegVideoFrame->addTime (std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::system_clock::now() - now).count());
+            ffmpegVideoFrame->set (mGotIframe ? mInterpolatedPts : dts,
+                                   (kPtsPerSecond * mAvContext->framerate.den) / mAvContext->framerate.num,
+                                   frameSize);
+            ffmpegVideoFrame->mFrameType = frameType;
+            ffmpegVideoFrame->setAVFrame (avFrame, kMotionVectors);
 
-          // set info
-          ffmpegVideoFrame->addTime (std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::system_clock::now() - now).count());
-          ffmpegVideoFrame->set (mGotIframe ? mInterpolatedPts : dts,
-                                 (kPtsPerSecond * mAvContext->framerate.den) / mAvContext->framerate.num,
-                                 frameSize);
-          ffmpegVideoFrame->mFrameType = frameType;
-          ffmpegVideoFrame->setAVFrame (avFrame, kMotionVectors);
-
-          // addFrame
-          addFrameCallback (ffmpegVideoFrame);
-          avFrame = av_frame_alloc();
-
-          mInterpolatedPts += ffmpegVideoFrame->getPtsDuration();
+            // addFrame
+            addFrameCallback (ffmpegVideoFrame);
+            avFrame = av_frame_alloc();
+            mInterpolatedPts += ffmpegVideoFrame->getPtsDuration();
+            }
+          else
+            mInterpolatedPts += 3600;
           }
         }
       frame += bytesUsed;

@@ -21,7 +21,7 @@ constexpr size_t kMaxLogSize = 64;
 cRender::cRender (bool queued, const string& threadName,
                   uint8_t streamType, uint16_t pid,
                   int64_t ptsDuration, size_t maxFrames,
-                  function <cFrame* (bool front)> allocFrameCallback,
+                  function <cFrame* (int64_t pts, bool front)> allocFrameCallback,
                   function <void (cFrame* frame)> addFrameCallback) :
     mQueued(queued), mThreadName(threadName),
     mStreamType(streamType), mPid(pid),
@@ -97,20 +97,22 @@ void cRender::addFrame (cFrame* frame) {
   }
 //}}}
 //{{{
-cFrame* cRender::removeFrame (bool front) {
+cFrame* cRender::removeFrame (int64_t pts, bool front) {
 
   cFrame* frame = nullptr;
 
+  // if frame find, return it, else reuse front/back
+  //auto it = mFramesMap.find (pts / mPtsDuration);
+  //if (it == mFramesMap.end())
+  //  it = front ? mFramesMap.begin() : --mFramesMap.end();
+
   { // locked
   unique_lock<shared_mutex> lock (mSharedMutex);
-
   auto it = front ? mFramesMap.begin() : --mFramesMap.end();
   frame = it->second;
   mFramesMap.erase (it);
   }
 
-  //cLog::log (LOGINFO, fmt::format ("removeFrame {} {}",
-  //                                 front ? "front":"back", getPtsString (frame->getPts())));
   frame->releaseResources();
   return frame;
   }
@@ -131,19 +133,20 @@ void cRender::clearFrames() {
 //{{{
 int64_t cRender::load (int64_t pts) {
 
+  // load pts
   if (!found (pts))
     return pts;
 
-  int64_t loadPts = pts;
-  for (int64_t i = 0; i < ((int64_t)mMaxFrames/2)-6; i++) {
-    loadPts += mPtsDuration;
+  // then preload after pts
+  for (int i = 1; i < 44; i++) {
+    int64_t loadPts = pts + (i * mPtsDuration);
     if (!found (loadPts))
       return loadPts;
     }
 
-  loadPts = pts;
-  for (int64_t i = 0; i < ((int64_t)mMaxFrames/2)-6; i++) {
-    loadPts -= mPtsDuration;
+  // then preload before pts
+  for (int i = 1; i < 44; i++) {
+    int64_t loadPts = pts - (i * mPtsDuration);
     if (!found (loadPts))
       return loadPts;
     }
