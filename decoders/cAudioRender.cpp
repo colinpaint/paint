@@ -37,6 +37,7 @@ extern "C" {
 #include "cAudioPlayer.h"
 
 using namespace std;
+using namespace utils;
 //}}}
 
 //{{{
@@ -55,6 +56,9 @@ cAudioRender::cAudioRender (bool queue, size_t maxFrames, bool hasAudio, uint8_t
                                             mSampleRate, audioFrame->getSampleRate()));
           mSampleRate = audioFrame->getSampleRate();
           }
+
+        cLog::log (LOGINFO, fmt::format ("cAudioRender::addFrame {}",
+                                         getCompletePtsString (frame->getPts())));
 
         setPts (frame->getPts(), frame->getPtsDuration());
         mSamplesPerFrame = audioFrame->getSamplesPerFrame();

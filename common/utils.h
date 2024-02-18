@@ -87,6 +87,28 @@ namespace utils {
     }
   //}}}
   //{{{
+  inline std::string getCompletePtsString (int64_t pts) {
+  // 90khz int64_t pts  - all digits
+
+    if (pts < 0)
+      return "--:--:--:--";
+    else {
+      uint32_t clocks = pts % 90000;
+
+      pts /= 90000;
+      uint32_t secs = pts % 60;
+
+      pts /= 60;
+      uint32_t mins = pts % 60;
+
+      pts /= 60;
+      uint32_t hours = pts % 60;
+
+      return fmt::format ("{:02d}:{:02d}:{:02d}.{:05d}", hours, mins, secs, clocks);
+      }
+    }
+  //}}}
+  //{{{
   inline std::string getPtsFramesString (int64_t pts, int64_t ptsDuration) {
   // return 90khz int64_t pts - as frames.subframes
 

@@ -104,7 +104,7 @@ public:
             break;
 
           if (avFrame->nb_samples > 0) {
-            // alloc audioFrame 
+            // alloc audioFrame
             cAudioFrame* audioFrame = dynamic_cast<cAudioFrame*>(allocFrameCallback (allocFront));
 
             // set info
@@ -162,7 +162,7 @@ public:
 
   //{{{
   float* decodeFrame (const uint8_t* framePtr, int frameLen, int64_t pts) {
-  // return frame decoded to a buffer of floats
+  // return frame decoded as floats
 
     float* samples = nullptr;
 
@@ -219,7 +219,7 @@ public:
                 }
               //}}}
               //{{{
-              case AV_SAMPLE_FMT_S16P: // 16bit signed planar, copy scale and copy to interleaved
+              case AV_SAMPLE_FMT_S16P: { // 16bit signed planar, copy scale and copy to interleaved
                 mChannels =  avFrame->ch_layout.nb_channels;
                 mSampleRate = avFrame->sample_rate;
                 mSamplesPerFrame = avFrame->nb_samples;
@@ -235,6 +235,7 @@ public:
                     }
                   }
                 break;
+                }
               //}}}
               default:;
               }

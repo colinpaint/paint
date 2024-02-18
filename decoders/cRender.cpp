@@ -130,20 +130,11 @@ void cRender::clearFrames() {
 // process
 //{{{
 bool cRender::found (int64_t pts) {
-// return true if pts in mFramesMap range
-// - rend check as well quicker ???
+// return true if pts in mFramesMap
 
   // locked
   unique_lock<shared_mutex> lock (mSharedMutex);
-
-  auto it = mFramesMap.begin();
-  while (it != mFramesMap.end()) {
-    if (it->second->contains (pts))
-      return true;
-    ++it;
-    }
-
-  return false;
+  return mFramesMap.find (pts / mPtsDuration) != mFramesMap.end();
   }
 //}}}
 //{{{
@@ -179,8 +170,7 @@ bool cRender::throttle (int64_t pts) {
 //{{{
 void cRender::decodePes (uint8_t* pes, uint32_t pesSize, int64_t pts, int64_t dts) {
 
-  // frame reuse allocation
-  // - reuse from front if pts after mFramesMap range
+  // if pts after mFramesMap, reuse from front
   bool allocFront = mFramesMap.empty() || after (pts);
 
   if (isQueued())

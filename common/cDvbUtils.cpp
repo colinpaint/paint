@@ -12,9 +12,8 @@
 
 using namespace std;
 //}}}
-
-namespace { // anonymous
-  constexpr bool kDebug = false;
+constexpr bool kDebug = false;
+namespace {
   //{{{
   // CRC32 lookup table for polynomial 0x04c11db7
   const uint32_t kCrcTable[256] = {
@@ -129,6 +128,7 @@ std::string cDvbUtils::getStreamTypeName (uint16_t streamType) {
      }
   }
 //}}}
+
 //{{{
 char cDvbUtils::getFrameType (uint8_t* pes, int64_t pesSize, bool h264) {
 // return frameType of video pes
@@ -363,7 +363,7 @@ char cDvbUtils::getFrameType (uint8_t* pes, int64_t pesSize, bool h264) {
   char frameType = '?';
   uint8_t* pesEnd = pes + pesSize;
   if (h264) {
-    // h264 minimal parser, broken for newer streams
+    // h264 minimal parser
     while (pes < pesEnd) {
       //{{{  skip past startcode, find next startcode
       uint8_t* buf = pes;
@@ -408,7 +408,7 @@ char cDvbUtils::getFrameType (uint8_t* pes, int64_t pesSize, bool h264) {
         int nalType = bitstream.getBits (5);
         switch (nalType) {
           //{{{
-          case 1: {
+          case 1: { // nonIdr
             bitstream.getUe();
             int nalSubtype = bitstream.getUe();
             if (kDebug)
@@ -418,32 +418,32 @@ char cDvbUtils::getFrameType (uint8_t* pes, int64_t pesSize, bool h264) {
               case 0:  return 'P';
               case 1:  return 'B';
               case 2:  return 'I';
-              default: return '?';
+              //default: return '?';
               }
 
             break;
             }
           //}}}
           //{{{
-          case 2:
+          case 2:   // parta
             if (kDebug)
               cLog::log (LOGINFO, "nal partA");
             break;
           //}}}
           //{{{
-          case 3:
+          case 3:   // partb
             if (kDebug)
               cLog::log (LOGINFO, "nal partB");
             break;
           //}}}
           //{{{
-          case 4:
+          case 4:   // partc
             if (kDebug)
               cLog::log (LOGINFO, "nal partC");
             break;
           //}}}
           //{{{
-          case 5: {
+          case 5: { // idr
             bitstream.getUe();
             int nalSubtype = bitstream.getUe();
 
@@ -461,79 +461,79 @@ char cDvbUtils::getFrameType (uint8_t* pes, int64_t pesSize, bool h264) {
             }
           //}}}
           //{{{
-          case 6:
+          case 6:   // sei
             if (kDebug)
               cLog::log (LOGINFO, "nal SEI");
             break;
           //}}}
           //{{{
-          case 7:
+          case 7:   // sps
             if (kDebug)
               cLog::log (LOGINFO, "nal SPS");
             break;
           //}}}
           //{{{
-          case 8:
+          case 8:   // pps
             if (kDebug)
               cLog::log (LOGINFO, "nal PPS");
             break;
           //}}}
           //{{{
-          case 9:
+          case 9:   // avd
             if (kDebug)
               cLog::log (LOGINFO,  "nal AUD");
             break;
           //}}}
           //{{{
-          case 10:
+          case 10:  // eoSeq
             if (kDebug)
               cLog::log (LOGINFO,  "nal EOseq");
             break;
           //}}}
           //{{{
-          case 11:
+          case 11:  // eoStream
             if (kDebug)
               cLog::log (LOGINFO,  "nal EOstream");
             break;
           //}}}
           //{{{
-          case 12:
+          case 12:  // filler
             if (kDebug)
               cLog::log (LOGINFO,  "nal filler");
             break;
           //}}}
           //{{{
-          case 13:
+          case 13:  // seqext
             if (kDebug)
               cLog::log (LOGINFO,  "nal seqExt");
             break;
           //}}}
           //{{{
-          case 14:
+          case 14:  // prefix
             if (kDebug)
               cLog::log (LOGINFO, "nal prefix");
             break;
           //}}}
           //{{{
-          case 15:
+          case 15:  // subsetSps
             if (kDebug)
               cLog::log (LOGINFO, "nal subsetSPS");
             break;
           //}}}
           //{{{
-          case 19:
+          case 19:  // aux
             if (kDebug)
               cLog::log (LOGINFO, "nal aux");
             break;
           //}}}
           //{{{
-          case 20:
+          case 20:  // sliceExt
             if (kDebug)
               cLog::log (LOGINFO, "nal sliceExt");
             break;
           //}}}
           //{{{
-          case 21:
+          case 21:  // sliceExtDepth
             if (kDebug)
               cLog::log (LOGINFO, "nal sliceExtDepth");
             break;
@@ -544,7 +544,6 @@ char cDvbUtils::getFrameType (uint8_t* pes, int64_t pesSize, bool h264) {
           //}}}
           }
         }
-
       pes += nalSize;
       }
     }
