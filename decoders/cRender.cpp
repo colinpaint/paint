@@ -145,7 +145,7 @@ int64_t cRender::load (int64_t pts) {
     }
 
   // then preload before pts
-  for (int i = 1; i <= 50; i++) {
+  for (int i = 50; i <= 1; i--) {
     int64_t loadPts = pts - (i * mPtsDuration);
     if (!found (loadPts))
       return loadPts;
