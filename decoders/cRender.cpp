@@ -138,14 +138,14 @@ int64_t cRender::load (int64_t pts) {
     return pts;
 
   // then preload after pts
-  for (int i = 1; i < 44; i++) {
+  for (int i = 1; i <= 50; i++) {
     int64_t loadPts = pts + (i * mPtsDuration);
     if (!found (loadPts))
       return loadPts;
     }
 
   // then preload before pts
-  for (int i = 1; i < 44; i++) {
+  for (int i = 1; i <= 50; i++) {
     int64_t loadPts = pts - (i * mPtsDuration);
     if (!found (loadPts))
       return loadPts;

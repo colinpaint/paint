@@ -67,7 +67,7 @@ constexpr bool kAnalTotals = true;
 constexpr bool kAudioLoadDebug = true;
 constexpr bool kVideoLoadDebug = false;
 constexpr bool kSubtitleLoadDebug = false;
-constexpr bool kPlayVideo = false;
+constexpr bool kPlayVideo = true;
 
 namespace {
   //{{{
@@ -305,7 +305,7 @@ namespace {
           this_thread::sleep_for (1ms);
           }
         //}}}
-        mAudioRender = new cAudioRender (false, 101, true,
+        mAudioRender = new cAudioRender (false, 121, true,
                                          mService->getAudioStreamTypeId(), mService->getAudioPid());
 
         // load first audioPes, creates audioPlayer
@@ -320,23 +320,23 @@ namespace {
         while (true) {
           int64_t playPts = getAudioPlayerPts();
           int64_t loadPts = mAudioRender->load (playPts);
-          if (loadPts == -1)
-            this_thread::sleep_for (1ms);
-          else {
-            //unique_lock<shared_mutex> lock (mAudioMutex);
-            auto it = mAudioPesMap.upper_bound (loadPts);
-            if (it == mAudioPesMap.end())
-              this_thread::sleep_for (1ms);
-            else if (it == mAudioPesMap.begin())
-              this_thread::sleep_for (1ms);
-            else {
-              --it;
-              pes = it->second;
-              cLog::log (LOGINFO, fmt::format ("load:{} play:{}",
-                                               getCompletePtsString (pes.mPts), getCompletePtsString (playPts)));
-              mAudioRender->decodePes (pes.mData, pes.mSize, pes.mPts, pes.mDts);
-              }
+          if (loadPts == -1) {
+            // all preloaded
+            this_thread::sleep_for (10ms);
+            continue;
             }
+
+          //unique_lock<shared_mutex> lock (mAudioMutex);
+          auto it = mAudioPesMap.upper_bound (loadPts);
+          if (it == mAudioPesMap.begin()) {
+            this_thread::sleep_for (1ms);
+            continue;
+            }
+          --it;
+          pes = it->second;
+          cLog::log (LOGINFO, fmt::format ("load:{} play:{}",
+                                           getCompletePtsString (pes.mPts), getCompletePtsString (playPts)));
+          mAudioRender->decodePes (pes.mData, pes.mSize, pes.mPts, pes.mDts);
           }
 
         cLog::log (LOGERROR, "exit");
@@ -732,7 +732,7 @@ namespace {
             // get videoFrame
             cVideoRender* videoRender = nullptr;
             if (kPlayVideo) {
-              playerApp.getFirstFilePlayer()->getVideoRender();
+              videoRender = playerApp.getFirstFilePlayer()->getVideoRender();
               if (videoRender) {
                 cVideoFrame* videoFrame = videoRender->getVideoFrameAtOrAfterPts (playPts);
                 if (videoFrame) {

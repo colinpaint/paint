@@ -45,6 +45,7 @@ cAudioRender::cAudioRender (bool queue, size_t maxFrames, bool hasAudio, uint8_t
     cRender(queue, "aud", streamType, pid, 1920, maxFrames,
       // allocFrameCallback lambda
       [&](int64_t pts, bool front) noexcept {
+        cLog::log (LOGINFO, fmt::format ("cAudioRender::allocFrame {} {}", front, getCompletePtsString(pts)));
         return hasMaxFrames() ? removeFrame (pts, front) : new cAudioFrame();
         },
 
