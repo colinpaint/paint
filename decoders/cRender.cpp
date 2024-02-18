@@ -165,7 +165,7 @@ bool cRender::found (int64_t pts) {
 //}}}
 //{{{
 bool cRender::after (int64_t pts) {
-// return true if pts is after mFramesMap range
+// return true if pts is after last mFramesMap frame
 
   // locked
   unique_lock<shared_mutex> lock (mSharedMutex);
