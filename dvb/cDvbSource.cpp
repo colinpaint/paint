@@ -70,7 +70,7 @@
 #include <thread>
 
 #include "cDvbSource.h"
-#include "../common/cDvbUtils.h"
+#include "cDvbUtils.h"
 
 #include "../common/cLog.h"
 

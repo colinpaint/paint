@@ -17,11 +17,12 @@ constexpr bool kAddFrameDebug = false;
 #include <thread>
 #include <functional>
 
-#include "../common/cDvbUtils.h"
-#include "../app/cGraphics.h"
-
 #include "../common/cLog.h"
 #include "../common/utils.h"
+
+#include "../dvb/cDvbUtils.h"
+
+#include "../app/cGraphics.h"
 
 //{{{  include libav
 #ifdef _WIN32

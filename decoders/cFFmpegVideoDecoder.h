@@ -26,8 +26,9 @@ extern "C" {
 //}}}
 
 #include "../common/utils.h"
-#include "../common/cDvbUtils.h"
 #include "../common/cLog.h"
+
+#include "../dvb/cDvbUtils.h"
 //}}}
 
 namespace {

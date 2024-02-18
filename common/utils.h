@@ -16,29 +16,6 @@
 
 namespace utils {
   //{{{
-  inline std::string getTimeString (int64_t value, int daylightSeconds) {
-
-    int64_t subSeconds = (value % 100);
-    value /= 100;
-
-    value += daylightSeconds;
-    int64_t seconds = value % 60;
-    value /= 60;
-
-    int64_t minutes = value % 60;
-    value /= 60;
-
-    int64_t hours = value;
-
-    if (hours > 0)
-      return fmt::format ("{}:{:02d}:{:02d}:{:02d}", hours, minutes, seconds, subSeconds);
-    else if (minutes > 0)
-      return fmt::format ("{}:{:02d}:{:02d}", minutes, seconds, subSeconds);
-    else
-      return fmt::format ("{}:{:02d}", seconds, subSeconds);
-    }
-  //}}}
-  //{{{
   inline std::string getPtsString (int64_t pts) {
   // 90khz int64_t pts - miss out zeros
 
@@ -46,7 +23,7 @@ namespace utils {
       return "--:--:--";
     else {
       pts /= 900;
-      uint32_t hs = pts % 100;
+      uint32_t subSecs = pts % 100;
 
       pts /= 100;
       uint32_t secs = pts % 60;
@@ -59,7 +36,7 @@ namespace utils {
 
 
       std::string hourMinString = hours ? fmt::format ("{}:{:02}", hours,mins) : fmt::format ("{}",mins);
-      return fmt::format ("{}:{:02d}:{:02d}", hourMinString, secs, hs);
+      return fmt::format ("{}:{:02d}:{:02d}", hourMinString, secs, subSecs);
       }
     }
   //}}}
@@ -71,7 +48,7 @@ namespace utils {
       return "--:--:--:--";
     else {
       pts /= 900;
-      uint32_t hs = pts % 100;
+      uint32_t subSecs = pts % 100;
 
       pts /= 100;
       uint32_t secs = pts % 60;
@@ -82,13 +59,13 @@ namespace utils {
       pts /= 60;
       uint32_t hours = pts % 60;
 
-      return fmt::format ("{:02d}:{:02d}:{:02d}:{:02d}", hours, mins, secs, hs);
+      return fmt::format ("{:02d}:{:02d}:{:02d}:{:02d}", hours, mins, secs, subSecs);
       }
     }
   //}}}
   //{{{
   inline std::string getCompletePtsString (int64_t pts) {
-  // 90khz int64_t pts  - all digits
+  // 90khz int64_t pts  show clock rather than subSecond
 
     if (pts < 0)
       return "--:--:--:--";
@@ -115,6 +92,30 @@ namespace utils {
     int64_t frames = pts / ptsDuration;
     int64_t subFrames = pts % ptsDuration;
     return fmt::format ("{}.{:04d}", frames,subFrames);
+    }
+  //}}}
+
+  //{{{
+  inline std::string getTimeString (int64_t value, int daylightSeconds) {
+
+    int64_t subSeconds = (value % 100);
+    value /= 100;
+
+    value += daylightSeconds;
+    int64_t seconds = value % 60;
+    value /= 60;
+
+    int64_t minutes = value % 60;
+    value /= 60;
+
+    int64_t hours = value;
+
+    if (hours > 0)
+      return fmt::format ("{}:{:02d}:{:02d}:{:02d}", hours, minutes, seconds, subSeconds);
+    else if (minutes > 0)
+      return fmt::format ("{}:{:02d}:{:02d}", minutes, seconds, subSeconds);
+    else
+      return fmt::format ("{}:{:02d}", seconds, subSeconds);
     }
   //}}}
 

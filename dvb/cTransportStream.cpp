@@ -18,12 +18,13 @@
 
 #include "../date/include/date/date.h"
 #include "../common/utils.h"
-#include "../common/cDvbUtils.h"
 #include "../common/cLog.h"
 
 #include "../decoders/cVideoRender.h"
 #include "../decoders/cAudioRender.h"
 #include "../decoders/cSubtitleRender.h"
+
+#include "cDvbUtils.h"
 
 using namespace std;
 //}}}

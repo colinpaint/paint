@@ -20,7 +20,7 @@ class cRender;
 #include "../common/basicTypes.h"
 #include "../common/iOptions.h"
 #include "../common/utils.h"
-#include "../common/cDvbUtils.h"
+#include "cDvbUtils.h"
 
 #include "cDvbMultiplex.h"
 //}}}

@@ -35,7 +35,7 @@
 #include "../net/cHttp.h"
 
 // dvb
-#include "../common/cDvbUtils.h"
+#include "../dvb/cDvbUtils.h"
 
 using namespace std;
 //}}}

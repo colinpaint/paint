@@ -16,8 +16,9 @@
 
 // utils
 #include "../common/utils.h"
-#include "../common/cDvbUtils.h"
 #include "../common/cLog.h"
+
+#include "../dvb/cDvbUtils.h"
 
 #include "cSong.h"
 
