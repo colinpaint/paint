@@ -300,32 +300,31 @@ namespace {
 
         //{{{  wait for first audioPes
         while (mAudioPesMap.begin() == mAudioPesMap.end()) {
-          if (kAudioLoadDebug)
-            cLog::log (LOGINFO, fmt::format ("audioLoader wait analyse"));
+          cLog::log (LOGINFO, fmt::format ("audioLoader wait analyse"));
           this_thread::sleep_for (1ms);
           }
         //}}}
-        mAudioRender = new cAudioRender (false, 100, true, mService->getAudioStreamTypeId(), mService->getAudioPid());
+        mAudioRender = new cAudioRender (false, 100, true, 
+                                         mService->getAudioStreamTypeId(), mService->getAudioPid());
 
         // load first audioPes, creates audioPlayer
-        sPes& pes = mAudioPesMap.begin()->second;
-        if (kAudioLoadDebug)
-          cLog::log (LOGINFO, fmt::format ("firstAudPts:{}", getFullPtsString (pes.mPts)));
-        mAudioRender->decodePes (pes.mData, pes.mSize, pes.mPts, pes.mDts);
-        //{{{  check for audioPlayer
+        auto it = mAudioPesMap.begin();
+        cLog::log (LOGINFO, fmt::format ("firstAudPts:{}", getCompletePtsString (it->second.mPts)));
+        mAudioRender->decodePes (it->second.mData, it->second.mSize, it->second.mPts, it->second.mDts);
+        ++it;
+        //{{{  audioPlayer ok?
         if (!getAudioPlayer())
           cLog::log (LOGERROR, fmt::format ("audioLoader wait player"));
         //}}}
 
         //unique_lock<shared_mutex> lock (mAudioMutex);
-        auto it = mAudioPesMap.begin();
         while (it != mAudioPesMap.end()) {
           int64_t playPts = getAudioPlayerPts();
-          if ((it->second.mPts - playPts) > 90000/2)
+          if ((it->second.mPts - playPts) > 90000)
             this_thread::sleep_for (1ms);
           else {
             cLog::log (LOGINFO, fmt::format (
-              "audPts:{} play:{}", getCompletePtsString (it->second.mPts), getCompletePtsString (playPts)));
+              "load:{} play:{}", getCompletePtsString (it->second.mPts), getCompletePtsString (playPts)));
             mAudioRender->decodePes (it->second.mData, it->second.mSize, it->second.mPts, it->second.mDts);
             ++it;
             }
