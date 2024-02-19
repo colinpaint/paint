@@ -62,7 +62,7 @@ extern "C" {
 using namespace std;
 using namespace utils;
 //}}}
-constexpr bool kPlayVideo = false;
+constexpr bool kPlayVideo = true;
 constexpr bool kAudioLoadDebug = true;
 constexpr bool kVideoLoadDebug = false;
 constexpr bool kSubtitleLoadDebug = false;
