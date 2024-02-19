@@ -62,7 +62,7 @@ extern "C" {
 using namespace std;
 using namespace utils;
 //}}}
-constexpr bool kPlayVideo = false;
+constexpr bool kPlayVideo = true;
 constexpr bool kAudioLoadDebug = false;
 constexpr bool kVideoLoadDebug = false;
 constexpr bool kSubtitleLoadDebug = false;
@@ -321,16 +321,15 @@ namespace {
         //}}}
 
         while (true) {
-          int64_t playPts = getAudioPlayerPts();
           bool allocFront;
-          int64_t loadPts = mAudioRender->load (playPts, allocFront);
+          int64_t loadPts = mAudioRender->load (getAudioPlayerPts(), allocFront);
           if (loadPts == -1) {
             // all loaded
             this_thread::sleep_for (1ms);
             continue;
             }
 
-          { // locked
+          { // lock
           unique_lock<shared_mutex> lock (mAudioMutex);
           auto it = mAudioPesMap.upper_bound (loadPts);
           if (it == mAudioPesMap.begin()) {
@@ -340,10 +339,9 @@ namespace {
           --it;
           pes = it->second;
           }
-
           if (kAudioLoadDebug)
-            cLog::log (LOGINFO, fmt::format ("- load:{} chunk:{}",
-                                             getFullPtsString (loadPts), getFullPtsString (pes.mPts)));
+            cLog::log (LOGINFO, fmt::format ("- loader chunk:{}:{}",
+                                             getFullPtsString (pes.mPts), getFullPtsString (loadPts)));
           mAudioRender->decodePes (pes.mData, pes.mSize, pes.mPts, pes.mDts, allocFront);
           }
 
