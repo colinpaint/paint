@@ -46,12 +46,11 @@ cAudioRender::cAudioRender (bool queue, size_t maxFrames, size_t preLoadFrames,
                             bool hasAudio, uint8_t streamType, uint16_t pid) :
     cRender(queue, "aud", streamType, pid, 1920, maxFrames, preLoadFrames,
       // allocFrame lambda
-      [&](int64_t pts, bool front) noexcept {
+      [&](int64_t pts) noexcept {
         if (kAllocFrameDebug)
-          cLog::log (LOGINFO, fmt::format ("cAudioRender::allocFrame {} from {}",
-                                           getFullPtsString(pts), front?"front":"back"));
+          cLog::log (LOGINFO, fmt::format ("cAudioRender::allocFrame {}", getFullPtsString(pts)));
 
-        return hasMaxFrames() ? allocFrame (pts, front) : new cAudioFrame();
+        return hasMaxFrames() ? allocFrame (pts) : new cAudioFrame();
         },
 
       // addFrame lambda

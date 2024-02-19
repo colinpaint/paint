@@ -32,25 +32,23 @@ constexpr bool kAddFrameDebug = false;
 // public:
 //{{{
 cSubtitleRender::cSubtitleRender (bool queue, size_t maxFrames, size_t preLoadFrames,
-                                  uint8_t streamType, uint16_t pid)
-    : cRender(queue, "sub", streamType, pid, kPtsPer25HzFrame, maxFrames, preLoadFrames,
-              // allocFrame lambda
-              [&](int64_t pts, bool front) noexcept {
-                if (kAllocFrameDebug)
-                  cLog::log (LOGINFO, fmt::format ("cAudioRender::allocFrame {} {}",
-                                                   front, getCompletePtsString(pts)));
-                return hasMaxFrames() ? new cSubtitleFrame() : new cSubtitleFrame();
-                },
+                                  uint8_t streamType, uint16_t pid) : 
+    cRender(queue, "sub", streamType, pid, kPtsPer25HzFrame, maxFrames, preLoadFrames,
+      // allocFrame lambda
+      [&](int64_t pts) noexcept {
+        if (kAllocFrameDebug)
+          cLog::log (LOGINFO, fmt::format ("cSubtitleRender::allocFrame {} {}", getFullPtsString(pts)));
+        return hasMaxFrames() ? new cSubtitleFrame() : new cSubtitleFrame();
+        },
 
-              // addFrameCall lambda
-              [&](cFrame* frame) noexcept {
-                setPts (frame->getPts(), frame->getPtsDuration());
-                //cRender::addframe (frame);
-                if (kAddFrameDebug)
-                  cLog::log (LOGINFO, fmt::format ("subtitle addFrame {}", getPtsString (frame->getPts())));
-                }
-              ) {
-
+      // addFrameCall lambda
+      [&](cFrame* frame) noexcept {
+        setPts (frame->getPts(), frame->getPtsDuration());
+        //cRender::addframe (frame);
+        if (kAddFrameDebug)
+          cLog::log (LOGINFO, fmt::format ("cSubtitleRender::addFrame {}", getPtsString (frame->getPts())));
+        }
+      ) {
   mDecoder = new cSubtitleDecoder (*this);
   }
 //}}}

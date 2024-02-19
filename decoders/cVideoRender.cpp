@@ -55,8 +55,8 @@ cVideoRender::cVideoRender (bool queue, size_t maxFrames, size_t preLoadFrames,
                             uint8_t streamType, uint16_t pid) :
     cRender(queue, "vid", streamType, pid, kPtsPer25HzFrame, maxFrames, preLoadFrames,
       // allocFrame lambda
-      [&](int64_t pts, bool front) noexcept {
-        return hasMaxFrames() ? allocFrame (pts, front) : new cFFmpegVideoFrame();
+      [&](int64_t pts) noexcept {
+        return hasMaxFrames() ? allocFrame (pts) : new cFFmpegVideoFrame();
         },
 
       // addFrame lambda

@@ -314,15 +314,14 @@ namespace {
         // load first audioPes, creates audioPlayer
         sPes pes = mAudioPesMap.begin()->second;
         cLog::log (LOGINFO, fmt::format ("first load:{}", getFullPtsString (pes.mPts)));
-        mAudioRender->decodePes (pes.mData, pes.mSize, pes.mPts, pes.mDts, true);
+        mAudioRender->decodePes (pes.mData, pes.mSize, pes.mPts, pes.mDts);
         //{{{  audioPlayer ok?
         if (!getAudioPlayer())
           cLog::log (LOGERROR, fmt::format ("audioLoader wait player"));
         //}}}
 
         while (true) {
-          bool allocFront;
-          int64_t loadPts = mAudioRender->load (getAudioPlayerPts(), allocFront);
+          int64_t loadPts = mAudioRender->load (getAudioPlayerPts());
           if (loadPts == -1) {
             // all loaded
             this_thread::sleep_for (1ms);
@@ -342,7 +341,7 @@ namespace {
           if (kAudioLoadDebug)
             cLog::log (LOGINFO, fmt::format ("- loader chunk:{}:{}",
                                              getFullPtsString (pes.mPts), getFullPtsString (loadPts)));
-          mAudioRender->decodePes (pes.mData, pes.mSize, pes.mPts, pes.mDts, allocFront);
+          mAudioRender->decodePes (pes.mData, pes.mSize, pes.mPts, pes.mDts);
           }
 
         cLog::log (LOGERROR, "exit");
@@ -376,7 +375,7 @@ namespace {
           while (pesIt != pesVector.end()) {
             if (kVideoLoadDebug)
               cLog::log (LOGINFO, fmt::format ("- V pes {}", getFullPtsString (pesIt->mPts)));
-            mVideoRender->decodePes (pesIt->mData, pesIt->mSize, pesIt->mPts, pesIt->mDts, true);
+            mVideoRender->decodePes (pesIt->mData, pesIt->mSize, pesIt->mPts, pesIt->mDts);
             ++pesIt;
 
             while (mVideoRender->throttle (getAudioPlayer()->getPts()))

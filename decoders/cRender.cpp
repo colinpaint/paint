@@ -16,13 +16,14 @@ using namespace std;
 using namespace utils;
 //}}}
 constexpr bool kLoadDebug = false;
+constexpr bool kAllocFarthest = true;
 constexpr bool kAllocAddFrameDebug = false;
 
 //{{{
 cRender::cRender (bool queued, const string& threadName,
                   uint8_t streamType, uint16_t pid,
                   int64_t ptsDuration, size_t maxFrames, size_t preLoadFrames,
-                  function <cFrame* (int64_t pts, bool front)> allocFrameCallback,
+                  function <cFrame* (int64_t pts)> allocFrameCallback,
                   function <void (cFrame* frame)> addFrameCallback) :
     mQueued(queued), mThreadName(threadName),
     mStreamType(streamType), mPid(pid),
@@ -88,7 +89,7 @@ void cRender::setPts (int64_t pts, int64_t ptsDuration) {
 //}}}
 
 //{{{
-cFrame* cRender::allocFrame (int64_t pts, bool front) {
+cFrame* cRender::allocFrame (int64_t pts) {
 
   cFrame* frame = nullptr;
 
@@ -102,14 +103,15 @@ cFrame* cRender::allocFrame (int64_t pts, bool front) {
     return nullptr;
     }
 
-  auto it = front ? mFramesMap.begin() : --mFramesMap.end();
+  int64_t frontDist = pts - mFramesMap.begin()->second->getPts();
+  int64_t backDist = mFramesMap.rbegin()->second->getPts() - pts;
+  auto it = frontDist > backDist ? mFramesMap.begin() : --mFramesMap.end();
   frame = it->second;
   mFramesMap.erase (it);
   }
 
   if (kAllocAddFrameDebug)
-    cLog::log (LOGINFO, fmt::format ("- allocFrame {} from {}",
-                                     getFullPtsString (frame->getPts()), front?"front":"back"));
+    cLog::log (LOGINFO, fmt::format ("- allocFrame {}", getFullPtsString (frame->getPts())));
 
   frame->releaseResources();
   return frame;
@@ -142,12 +144,11 @@ void cRender::clearFrames() {
 
 // process
 //{{{
-int64_t cRender::load (int64_t pts, bool& allocFront) {
+int64_t cRender::load (int64_t pts) {
 // return first unloaded frame in preLoad order
 // - 0, 1..maxPreLoadFrames, -maxPreLoadFrames..-1
 
   // load pts
-  allocFront = true;
   int index = 0;
   if (!find (pts)) {
     if (kLoadDebug)
@@ -169,7 +170,6 @@ int64_t cRender::load (int64_t pts, bool& allocFront) {
   for (index = -(int)mPreLoadFrames; index <= -1; index++) {
     int64_t loadPts = pts + (index * mPtsDuration);
     if (!find (loadPts)) {
-      allocFront = false;
       if (kLoadDebug)
         cLog::log (LOGINFO, fmt::format ("load index:{} pts:{}", index, getFullPtsString (loadPts)));
       return loadPts;
@@ -201,14 +201,13 @@ bool cRender::throttle (int64_t pts) {
   }
 //}}}
 //{{{
-void cRender::decodePes (uint8_t* pes, uint32_t pesSize, int64_t pts, int64_t dts, bool allocFront) {
+void cRender::decodePes (uint8_t* pes, uint32_t pesSize, int64_t pts, int64_t dts) {
 
   if (isQueued())
     mDecodeQueue.enqueue (new cDecodeQueueItem (mDecoder, pes, pesSize, pts, dts,
-                                                allocFront, mAllocFrameCallback, mAddFrameCallback));
+                                                mAllocFrameCallback, mAddFrameCallback));
   else
-    mDecoder->decode (pes, pesSize, pts, dts,
-                      allocFront, mAllocFrameCallback, mAddFrameCallback);
+    mDecoder->decode (pes, pesSize, pts, dts, mAllocFrameCallback, mAddFrameCallback);
   }
 //}}}
 
@@ -264,7 +263,7 @@ void cRender::startQueueThread (const string& name) {
     cDecodeQueueItem* queueItem;
     if (mDecodeQueue.wait_dequeue_timed (queueItem, 40000)) {
       queueItem->mDecoder->decode (queueItem->mPes, queueItem->mPesSize,
-                                   queueItem->mPts, queueItem->mDts, queueItem->mAllocFront,
+                                   queueItem->mPts, queueItem->mDts,
                                    queueItem->mAllocFrameCallback, queueItem->mAddFrameCallback);
       delete queueItem;
       }

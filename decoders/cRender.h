@@ -24,7 +24,7 @@ public:
   cRender (bool queued, const std::string& threadName,
            uint8_t streamType, uint16_t pid,
            int64_t ptsDuration, size_t maxFrames, size_t preLoadFrames,
-           std::function <cFrame* (int64_t pts, bool front)> allocFrameCallback,
+           std::function <cFrame* (int64_t pts)> allocFrameCallback,
            std::function <void (cFrame* frame)> addFrameCallback);
   virtual ~cRender();
 
@@ -44,13 +44,13 @@ public:
   cFrame* getFrameAtPts (int64_t pts);
   cFrame* getFrameAtOrAfterPts (int64_t pts);
 
-  cFrame* allocFrame (int64_t pts, bool front);
+  cFrame* allocFrame (int64_t pts);
   void addFrame (cFrame* frame);
   void clearFrames();
 
-  int64_t load (int64_t pts, bool& allocFront);
+  int64_t load (int64_t pts);
   bool throttle (int64_t pts);
-  void decodePes (uint8_t* pes, uint32_t pesSize, int64_t pts, int64_t dts, bool allocFront);
+  void decodePes (uint8_t* pes, uint32_t pesSize, int64_t pts, int64_t dts);
 
   virtual std::string getInfoString() const;
   virtual bool throttle() { return false; }
@@ -86,7 +86,7 @@ private:
   const uint16_t mPid;
   const size_t mMaxFrames;
   const size_t mPreLoadFrames;
-  const std::function <cFrame* (int64_t pts, bool front)> mAllocFrameCallback;
+  const std::function <cFrame* (int64_t pts)> mAllocFrameCallback;
   const std::function <void (cFrame* frame)> mAddFrameCallback;
 
   int64_t mPts = 0;

@@ -80,8 +80,8 @@ public:
 
   virtual std::string getInfoString() const final { return mH264 ? "ffmpeg h264" : "ffmpeg mpeg"; }
   //{{{
-  virtual int64_t decode (uint8_t* pes, uint32_t pesSize, int64_t pts, int64_t dts, bool allocFront,
-                          std::function<cFrame*(int64_t pts, bool front)> allocFrameCallback,
+  virtual int64_t decode (uint8_t* pes, uint32_t pesSize, int64_t pts, int64_t dts,
+                          std::function<cFrame*(int64_t pts)> allocFrameCallback,
                           std::function<void (cFrame* frame)> addFrameCallback) final {
     (void)pts;
 
@@ -108,7 +108,7 @@ public:
 
           // alloc videoFrame
           cFFmpegVideoFrame* ffmpegVideoFrame =
-            dynamic_cast<cFFmpegVideoFrame*>(allocFrameCallback (mInterpolatedPts, allocFront));
+            dynamic_cast<cFFmpegVideoFrame*>(allocFrameCallback (mInterpolatedPts));
           if (ffmpegVideoFrame) {
             // set info
             ffmpegVideoFrame->addTime (std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::system_clock::now() - now).count());
