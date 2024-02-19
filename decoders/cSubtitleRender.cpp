@@ -15,6 +15,7 @@
 #include "../common/utils.h"
 
 using namespace std;
+using namespace utils;
 //}}}
 //{{{  defines
 #define AVRB16(p) ((*(p) << 8) | *(p+1))
@@ -25,24 +26,28 @@ using namespace std;
 
 #define BGRA(r,g,b,a) static_cast<uint32_t>(((a << 24) ) | (b << 16) | (g <<  8) | r)
 //}}}
-constexpr bool kQueued = true;
+constexpr bool kAllocFrameDebug = false;
+constexpr bool kAddFrameDebug = false;
 
 // public:
 //{{{
-cSubtitleRender::cSubtitleRender (bool queue, size_t maxFrames,
+cSubtitleRender::cSubtitleRender (bool queue, size_t maxFrames, size_t preLoadFrames,
                                   uint8_t streamType, uint16_t pid)
-    : cRender(queue, "sub", streamType, pid, kPtsPer25HzFrame, maxFrames,
-              // allocFrameCallback lambda
+    : cRender(queue, "sub", streamType, pid, kPtsPer25HzFrame, maxFrames, preLoadFrames,
+              // allocFrame lambda
               [&](int64_t pts, bool front) noexcept {
-                (void)pts;
-                (void)front;
+                if (kAllocFrameDebug)
+                  cLog::log (LOGINFO, fmt::format ("cAudioRender::allocFrame {} {}",
+                                                   front, getCompletePtsString(pts)));
                 return hasMaxFrames() ? new cSubtitleFrame() : new cSubtitleFrame();
                 },
-              // addFrameCallback lambda
+
+              // addFrameCall lambda
               [&](cFrame* frame) noexcept {
                 setPts (frame->getPts(), frame->getPtsDuration());
                 //cRender::addframe (frame);
-                //cLog::log (LOGINFO, fmt::format ("subtitle addFrame {}", getPtsString (frame->mPts)));
+                if (kAddFrameDebug)
+                  cLog::log (LOGINFO, fmt::format ("subtitle addFrame {}", getPtsString (frame->getPts())));
                 }
               ) {
 

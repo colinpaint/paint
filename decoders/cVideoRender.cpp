@@ -46,21 +46,24 @@ extern "C" {
 #include "../decoders/cFFmpegVideoDecoder.h"
 
 using namespace std;
+using namespace utils;
 //}}}
 
 // cVideoRender
 //{{{
-cVideoRender::cVideoRender (bool queue, size_t maxFrames, uint8_t streamType, uint16_t pid) :
-    cRender(queue, "vid", streamType, pid, kPtsPer25HzFrame, maxFrames,
-      // allocFrameCallback lambda
+cVideoRender::cVideoRender (bool queue, size_t maxFrames, size_t preLoadFrames,
+                            uint8_t streamType, uint16_t pid) :
+    cRender(queue, "vid", streamType, pid, kPtsPer25HzFrame, maxFrames, preLoadFrames,
+      // allocFrame lambda
       [&](int64_t pts, bool front) noexcept {
         return hasMaxFrames() ? removeFrame (pts, front) : new cFFmpegVideoFrame();
         },
 
-      // addFrameCallback lambda
+      // addFrame lambda
       [&](cFrame* frame) noexcept {
         if (kAddFrameDebug)
-          cLog::log (LOGINFO, fmt::format ("- cVideoRender::addFrame {}", utils::getFullPtsString (frame->getPts())));
+          cLog::log (LOGINFO, fmt::format ("cVideoRender::addFrame {}", 
+                                           getFullPtsString (frame->getPts())));
 
         setPts (frame->getPts(), frame->getPtsDuration());
         cVideoFrame* videoFrame = dynamic_cast<cVideoFrame*>(frame);

@@ -62,12 +62,12 @@ extern "C" {
 using namespace std;
 using namespace utils;
 //}}}
-constexpr bool kAnalDebug = false;
-constexpr bool kAnalTotals = true;
+constexpr bool kPlayVideo = false;
 constexpr bool kAudioLoadDebug = true;
 constexpr bool kVideoLoadDebug = false;
 constexpr bool kSubtitleLoadDebug = false;
-constexpr bool kPlayVideo = true;
+constexpr bool kAnalDebug = false;
+constexpr bool kAnalTotals = true;
 
 namespace {
   //{{{
@@ -103,7 +103,7 @@ namespace {
     void skip (int64_t skipPts) {
       if (getAudioPlayer()) {
         cLog::log (LOGERROR, fmt::format ("------- skip to {}",
-                                          getPtsString (getAudioPlayer()->getPts() + skipPts)));
+                                          getCompletePtsString (getAudioPlayer()->getPts() + skipPts)));
         getAudioPlayer()->skipPts (skipPts);
         }
       }
@@ -305,13 +305,13 @@ namespace {
           this_thread::sleep_for (1ms);
           }
         //}}}
-        mAudioRender = new cAudioRender (false, 121, true,
+        mAudioRender = new cAudioRender (false, 56, 3, true,
                                          mService->getAudioStreamTypeId(), mService->getAudioPid());
 
         // load first audioPes, creates audioPlayer
         sPes pes = mAudioPesMap.begin()->second;
         cLog::log (LOGINFO, fmt::format ("first load:{}", getCompletePtsString (pes.mPts)));
-        mAudioRender->decodePes (pes.mData, pes.mSize, pes.mPts, pes.mDts);
+        mAudioRender->decodePes (pes.mData, pes.mSize, pes.mPts, pes.mDts, true);
         //{{{  audioPlayer ok?
         if (!getAudioPlayer())
           cLog::log (LOGERROR, fmt::format ("audioLoader wait player"));
@@ -319,14 +319,16 @@ namespace {
 
         while (true) {
           int64_t playPts = getAudioPlayerPts();
-          int64_t loadPts = mAudioRender->load (playPts);
+          int loadIndex;
+          int64_t loadPts = mAudioRender->load (playPts, loadIndex);
           if (loadPts == -1) {
-            // all preloaded
+            // all loaded
             this_thread::sleep_for (10ms);
             continue;
             }
 
-          //unique_lock<shared_mutex> lock (mAudioMutex);
+          { // locked
+          unique_lock<shared_mutex> lock (mAudioMutex);
           auto it = mAudioPesMap.upper_bound (loadPts);
           if (it == mAudioPesMap.begin()) {
             this_thread::sleep_for (1ms);
@@ -334,9 +336,14 @@ namespace {
             }
           --it;
           pes = it->second;
-          cLog::log (LOGINFO, fmt::format ("load:{} play:{}",
-                                           getCompletePtsString (pes.mPts), getCompletePtsString (playPts)));
-          mAudioRender->decodePes (pes.mData, pes.mSize, pes.mPts, pes.mDts);
+          }
+
+          if (kAudioLoadDebug)
+            cLog::log (LOGINFO, fmt::format ("- {} low:{} p:{}",
+                                             getCompletePtsString (loadPts),
+                                             getCompletePtsString (pes.mPts),
+                                             getCompletePtsString (playPts)));
+          mAudioRender->decodePes (pes.mData, pes.mSize, pes.mPts, pes.mDts, loadIndex >= 0);
           }
 
         cLog::log (LOGERROR, "exit");
@@ -357,7 +364,8 @@ namespace {
           this_thread::sleep_for (100ms);
           }
 
-        mVideoRender = new cVideoRender (false, 50, mService->getVideoStreamTypeId(), mService->getVideoPid());
+        mVideoRender = new cVideoRender (false, 50, 56,
+                                         mService->getVideoStreamTypeId(), mService->getVideoPid());
 
         auto gopIt = mGopMap.begin();
         while (gopIt != mGopMap.end()) {
@@ -369,7 +377,7 @@ namespace {
           while (pesIt != pesVector.end()) {
             if (kVideoLoadDebug)
               cLog::log (LOGINFO, fmt::format ("- V pes {}", getFullPtsString (pesIt->mPts)));
-            mVideoRender->decodePes (pesIt->mData, pesIt->mSize, pesIt->mPts, pesIt->mDts);
+            mVideoRender->decodePes (pesIt->mData, pesIt->mSize, pesIt->mPts, pesIt->mDts, true);
             ++pesIt;
 
             while (mVideoRender->throttle (getAudioPlayer()->getPts()))
@@ -397,7 +405,8 @@ namespace {
           this_thread::sleep_for (100ms);
           }
 
-        mSubtitleRender = new cSubtitleRender (false, 0, mService->getSubtitleStreamTypeId(), mService->getSubtitlePid());
+        mSubtitleRender = new cSubtitleRender (
+          false, 0, 0, mService->getSubtitleStreamTypeId(), mService->getSubtitlePid());
 
         cLog::log (LOGERROR, "exit");
         }).detach();
@@ -821,12 +830,12 @@ namespace {
 
             pos.y += ImGui::GetTextLineHeight() * 1.5f;
 
-            string ptsFromStartString = getPtsString (playPts);
+            string ptsString = getCompletePtsString (playPts);
             pos = ImVec2 (mSize - ImVec2(ImGui::GetTextLineHeight() * 7.f, ImGui::GetTextLineHeight()));
             ImGui::SetCursorPos (pos);
-            ImGui::TextColored ({0.f,0.f,0.f,1.f}, ptsFromStartString.c_str());
+            ImGui::TextColored ({0.f,0.f,0.f,1.f}, ptsString.c_str());
             ImGui::SetCursorPos (pos - ImVec2(2.f,2.f));
-            ImGui::TextColored ({1.f,1.f,1.f,1.f}, ptsFromStartString.c_str());
+            ImGui::TextColored ({1.f,1.f,1.f,1.f}, ptsString.c_str());
 
             ImGui::PopFont();
             //}}}

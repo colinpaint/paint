@@ -1,4 +1,6 @@
 // cAudioRender.cpp
+constexpr bool kAllocFrameDebug = false;
+constexpr bool kAddFrameDebug = false;
 //{{{  includes
 #ifdef _WIN32
   #define _CRT_SECURE_NO_WARNINGS
@@ -41,15 +43,18 @@ using namespace utils;
 //}}}
 
 //{{{
-cAudioRender::cAudioRender (bool queue, size_t maxFrames, bool hasAudio, uint8_t streamType, uint16_t pid) :
-    cRender(queue, "aud", streamType, pid, 1920, maxFrames,
-      // allocFrameCallback lambda
+cAudioRender::cAudioRender (bool queue, size_t maxFrames, size_t preLoadFrames,
+                            bool hasAudio, uint8_t streamType, uint16_t pid) :
+    cRender(queue, "aud", streamType, pid, 1920, maxFrames, preLoadFrames,
+      // allocFrame lambda
       [&](int64_t pts, bool front) noexcept {
-        cLog::log (LOGINFO, fmt::format ("cAudioRender::allocFrame {} {}", front, getCompletePtsString(pts)));
+        if (kAllocFrameDebug)
+          cLog::log (LOGINFO, fmt::format ("cAudioRender::allocFrame {} {}", 
+                                           front, getCompletePtsString(pts)));
         return hasMaxFrames() ? removeFrame (pts, front) : new cAudioFrame();
         },
 
-      // addFrameCallback lambda
+      // addFrame lambda
       [&](cFrame* frame) noexcept {
         cAudioFrame* audioFrame = dynamic_cast<cAudioFrame*>(frame);
         if (mSampleRate != audioFrame->getSampleRate()) {
@@ -58,8 +63,9 @@ cAudioRender::cAudioRender (bool queue, size_t maxFrames, bool hasAudio, uint8_t
           mSampleRate = audioFrame->getSampleRate();
           }
 
-        cLog::log (LOGINFO, fmt::format ("cAudioRender::addFrame {}",
-                                         getCompletePtsString (frame->getPts())));
+        if (kAddFrameDebug)
+          cLog::log (LOGINFO, fmt::format ("cAudioRender::addFrame {}",
+                                           getCompletePtsString (frame->getPts())));
 
         setPts (frame->getPts(), frame->getPtsDuration());
         mSamplesPerFrame = audioFrame->getSamplesPerFrame();

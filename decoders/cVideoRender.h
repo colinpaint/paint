@@ -15,7 +15,7 @@ class cVideoFrame;
 
 class cVideoRender : public cRender {
 public:
-  cVideoRender (bool queue, size_t maxFrames, uint8_t streamType, uint16_t pid);
+  cVideoRender (bool queue, size_t maxFrames, size_t preLoadFrames, uint8_t streamType, uint16_t pid);
   virtual ~cVideoRender() = default;
 
   uint16_t getWidth() const { return mWidth; }

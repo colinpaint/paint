@@ -145,7 +145,7 @@ namespace {
           if (stream && stream->isEnabled()) {
             uint8_t* buffer = (uint8_t*)malloc (pidInfo.getBufSize());
             memcpy (buffer, pidInfo.mBuffer, pidInfo.getBufSize());
-            stream->getRender().decodePes (buffer, pidInfo.getBufSize(), pidInfo.getPts(), pidInfo.getDts());
+            stream->getRender().decodePes (buffer, pidInfo.getBufSize(), pidInfo.getPts(), pidInfo.getDts(), true);
             }
           });
 
@@ -230,7 +230,7 @@ namespace {
           if (stream && stream->isEnabled()) {
             uint8_t* buffer = (uint8_t*)malloc (pidInfo.getBufSize());
             memcpy (buffer, pidInfo.mBuffer, pidInfo.getBufSize());
-            stream->getRender().decodePes (buffer, pidInfo.getBufSize(), pidInfo.getPts(), pidInfo.getDts());
+            stream->getRender().decodePes (buffer, pidInfo.getBufSize(), pidInfo.getPts(), pidInfo.getDts(), true);
             }
           });
 
@@ -319,7 +319,7 @@ namespace {
           if (stream && stream->isEnabled()) {
             uint8_t* buffer = (uint8_t*)malloc (pidInfo.getBufSize());
             memcpy (buffer, pidInfo.mBuffer, pidInfo.getBufSize());
-            stream->getRender().decodePes (buffer, pidInfo.getBufSize(), pidInfo.getPts(), pidInfo.getDts());
+            stream->getRender().decodePes (buffer, pidInfo.getBufSize(), pidInfo.getPts(), pidInfo.getDts(), true);
             }
           }
         );

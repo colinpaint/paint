@@ -15,7 +15,8 @@ class cAudioPlayer;
 
 class cAudioRender : public cRender {
 public:
-  cAudioRender (bool queue, size_t maxFrames, bool hasAudio, uint8_t streamType, uint16_t pid);
+  cAudioRender (bool queue, size_t maxFrames, size_t preLoadFrames, 
+                bool hasAudio, uint8_t streamType, uint16_t pid);
   virtual ~cAudioRender() = default;
 
   // gets

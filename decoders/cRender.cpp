@@ -15,17 +15,19 @@
 using namespace std;
 using namespace utils;
 //}}}
-constexpr size_t kMaxLogSize = 64;
+constexpr bool kLoadDebug = true;
+constexpr bool kAddFrameDebug = false;
+constexpr bool kRemoveFrameDebug = true;
 
 //{{{
 cRender::cRender (bool queued, const string& threadName,
                   uint8_t streamType, uint16_t pid,
-                  int64_t ptsDuration, size_t maxFrames,
+                  int64_t ptsDuration, size_t maxFrames, size_t preLoadFrames,
                   function <cFrame* (int64_t pts, bool front)> allocFrameCallback,
                   function <void (cFrame* frame)> addFrameCallback) :
     mQueued(queued), mThreadName(threadName),
     mStreamType(streamType), mPid(pid),
-    mMaxFrames(maxFrames),
+    mMaxFrames(maxFrames), mPreLoadFrames(preLoadFrames),
     mAllocFrameCallback(allocFrameCallback),
     mAddFrameCallback(addFrameCallback),
     mPtsDuration(ptsDuration) {
@@ -89,9 +91,10 @@ void cRender::setPts (int64_t pts, int64_t ptsDuration) {
 //{{{
 void cRender::addFrame (cFrame* frame) {
 
-  //cLog::log (LOGINFO, fmt::format ("addFrame {} {}",
-  //                                 getFullPtsString (frame->getPts()),
-  //                                 getFullPtsString ((frame->getPts() / frame->getPtsDuration()) * frame->getPtsDuration())));
+  if (kAddFrameDebug)
+    cLog::log (LOGINFO, fmt::format ("addFrame {} {}",
+                                     getFullPtsString (frame->getPts()),
+                                     getFullPtsString ((frame->getPts() / frame->getPtsDuration()) * frame->getPtsDuration())));
   unique_lock<shared_mutex> lock (mSharedMutex);
   mFramesMap.emplace (frame->getPts() / frame->getPtsDuration(), frame);
   }
@@ -113,6 +116,12 @@ cFrame* cRender::removeFrame (int64_t pts, bool front) {
   mFramesMap.erase (it);
   }
 
+  if (kRemoveFrameDebug)
+    cLog::log (LOGINFO, fmt::format ("cRender::removeFrame pts:{} frame:{} {}",
+                                     getCompletePtsString (pts),
+                                     getCompletePtsString (frame->getPts()),
+                                     front ?"front":"back"));
+
   frame->releaseResources();
   return frame;
   }
@@ -131,26 +140,37 @@ void cRender::clearFrames() {
 
 // process
 //{{{
-int64_t cRender::load (int64_t pts) {
+int64_t cRender::load (int64_t pts, int& index) {
 
   // load pts
-  if (!found (pts))
+  index = 0;
+  if (!found (pts)) {
+    if (kLoadDebug)
+      cLog::log (LOGINFO, fmt::format ("load index:{} pts:{}", index, getCompletePtsString (pts)));
     return pts;
-
-  // then preload after pts
-  for (int i = 1; i <= 50; i++) {
-    int64_t loadPts = pts + (i * mPtsDuration);
-    if (!found (loadPts))
-      return loadPts;
     }
 
-  // then preload before pts
-  for (int i = 50; i <= 1; i--) {
-    int64_t loadPts = pts - (i * mPtsDuration);
-    if (!found (loadPts))
+  // preload after pts
+  for (index = 1; index <= (int)mPreLoadFrames; index++) {
+    int64_t loadPts = pts + (index * mPtsDuration);
+    if (!found (loadPts)) {
+      if (kLoadDebug)
+        cLog::log (LOGINFO, fmt::format ("load index:{} pts:{}", index, getCompletePtsString (loadPts)));
       return loadPts;
+      }
     }
 
+  // preload before pts in forward order to help decoder
+  for (index = -(int)mPreLoadFrames; index <= -1; index++) {
+    int64_t loadPts = pts + (index * mPtsDuration);
+    if (!found (loadPts)) {
+      if (kLoadDebug)
+        cLog::log (LOGINFO, fmt::format ("load index:{} pts:{}", index, getCompletePtsString (loadPts)));
+      return loadPts;
+      }
+    }
+
+  // nothing to load
   return -1;
   }
 //}}}
@@ -161,16 +181,6 @@ bool cRender::found (int64_t pts) {
   // locked
   unique_lock<shared_mutex> lock (mSharedMutex);
   return mFramesMap.find (pts / mPtsDuration) != mFramesMap.end();
-  }
-//}}}
-//{{{
-bool cRender::after (int64_t pts) {
-// return true if pts is after last mFramesMap frame
-
-  // locked
-  unique_lock<shared_mutex> lock (mSharedMutex);
-  auto it = mFramesMap.rbegin();
-  return pts >= it->second->getPtsEnd();
   }
 //}}}
 //{{{
@@ -194,16 +204,14 @@ bool cRender::throttle (int64_t pts) {
   }
 //}}}
 //{{{
-void cRender::decodePes (uint8_t* pes, uint32_t pesSize, int64_t pts, int64_t dts) {
-
-  // if pts after mFramesMap, reuse from front
-  bool allocFront = mFramesMap.empty() || after (pts);
+void cRender::decodePes (uint8_t* pes, uint32_t pesSize, int64_t pts, int64_t dts, bool allocFront) {
 
   if (isQueued())
-    mDecodeQueue.enqueue (new cDecodeQueueItem (mDecoder, pes, pesSize, pts, dts, allocFront,
-                                                mAllocFrameCallback, mAddFrameCallback));
+    mDecodeQueue.enqueue (new cDecodeQueueItem (mDecoder, pes, pesSize, pts, dts, 
+                                                allocFront, mAllocFrameCallback, mAddFrameCallback));
   else
-    mDecoder->decode (pes, pesSize, pts, dts, allocFront, mAllocFrameCallback, mAddFrameCallback);
+    mDecoder->decode (pes, pesSize, pts, dts, 
+                      allocFront, mAllocFrameCallback, mAddFrameCallback);
   }
 //}}}
 

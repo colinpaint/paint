@@ -23,7 +23,7 @@ class cRender {
 public:
   cRender (bool queued, const std::string& threadName,
            uint8_t streamType, uint16_t pid,
-           int64_t ptsDuration, size_t maxFrames,
+           int64_t ptsDuration, size_t maxFrames, size_t preLoadFrames,
            std::function <cFrame* (int64_t pts, bool front)> allocFrameCallback,
            std::function <void (cFrame* frame)> addFrameCallback);
   virtual ~cRender();
@@ -48,11 +48,10 @@ public:
   cFrame* removeFrame (int64_t pts, bool front);
   void clearFrames();
 
-  int64_t load (int64_t pts);
+  int64_t load (int64_t pts, int& index);
   bool found (int64_t pts);
-  bool after (int64_t pts);
   bool throttle (int64_t pts);
-  void decodePes (uint8_t* pes, uint32_t pesSize, int64_t pts, int64_t dts);
+  void decodePes (uint8_t* pes, uint32_t pesSize, int64_t pts, int64_t dts, bool allocFront);
 
   virtual std::string getInfoString() const;
   virtual bool throttle() { return false; }
@@ -84,6 +83,7 @@ private:
   const uint8_t mStreamType;
   const uint16_t mPid;
   const size_t mMaxFrames;
+  const size_t mPreLoadFrames;
   const std::function <cFrame* (int64_t pts, bool front)> mAllocFrameCallback;
   const std::function <void (cFrame* frame)> mAddFrameCallback;
 
