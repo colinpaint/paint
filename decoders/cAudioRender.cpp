@@ -1,6 +1,5 @@
 // cAudioRender.cpp
-constexpr bool kAllocFrameDebug = false;
-constexpr bool kAddFrameDebug = false;
+constexpr bool kAllocFrameDebug = true;
 //{{{  includes
 #ifdef _WIN32
   #define _CRT_SECURE_NO_WARNINGS
@@ -49,9 +48,10 @@ cAudioRender::cAudioRender (bool queue, size_t maxFrames, size_t preLoadFrames,
       // allocFrame lambda
       [&](int64_t pts, bool front) noexcept {
         if (kAllocFrameDebug)
-          cLog::log (LOGINFO, fmt::format ("cAudioRender::allocFrame {} {}", 
-                                           front, getCompletePtsString(pts)));
-        return hasMaxFrames() ? removeFrame (pts, front) : new cAudioFrame();
+          cLog::log (LOGINFO, fmt::format ("cAudioRender::allocFrame {} from {}",
+                                           getCompletePtsString(pts), front?"front":"back"));
+
+        return hasMaxFrames() ? allocFrame (pts, front) : new cAudioFrame();
         },
 
       // addFrame lambda
@@ -62,10 +62,6 @@ cAudioRender::cAudioRender (bool queue, size_t maxFrames, size_t preLoadFrames,
                                             mSampleRate, audioFrame->getSampleRate()));
           mSampleRate = audioFrame->getSampleRate();
           }
-
-        if (kAddFrameDebug)
-          cLog::log (LOGINFO, fmt::format ("cAudioRender::addFrame {}",
-                                           getCompletePtsString (frame->getPts())));
 
         setPts (frame->getPts(), frame->getPtsDuration());
         mSamplesPerFrame = audioFrame->getSamplesPerFrame();

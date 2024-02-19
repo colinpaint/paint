@@ -16,8 +16,7 @@ using namespace std;
 using namespace utils;
 //}}}
 constexpr bool kLoadDebug = true;
-constexpr bool kAddFrameDebug = false;
-constexpr bool kRemoveFrameDebug = true;
+constexpr bool kAddAllocFrameDebug = true;
 
 //{{{
 cRender::cRender (bool queued, const string& threadName,
@@ -89,41 +88,41 @@ void cRender::setPts (int64_t pts, int64_t ptsDuration) {
 //}}}
 
 //{{{
-void cRender::addFrame (cFrame* frame) {
-
-  if (kAddFrameDebug)
-    cLog::log (LOGINFO, fmt::format ("addFrame {} {}",
-                                     getFullPtsString (frame->getPts()),
-                                     getFullPtsString ((frame->getPts() / frame->getPtsDuration()) * frame->getPtsDuration())));
-  unique_lock<shared_mutex> lock (mSharedMutex);
-  mFramesMap.emplace (frame->getPts() / frame->getPtsDuration(), frame);
-  }
-//}}}
-//{{{
-cFrame* cRender::removeFrame (int64_t pts, bool front) {
+cFrame* cRender::allocFrame (int64_t pts, bool front) {
 
   cFrame* frame = nullptr;
 
-  // if frame find, return it, else reuse front/back
-  //auto it = mFramesMap.find (pts / mPtsDuration);
-  //if (it == mFramesMap.end())
-  //  it = front ? mFramesMap.begin() : --mFramesMap.end();
-
   { // locked
   unique_lock<shared_mutex> lock (mSharedMutex);
+
+  // don't remove and alloc same frame again
+  if (mFramesMap.find (pts / mPtsDuration) != mFramesMap.end())
+    return nullptr;
+
   auto it = front ? mFramesMap.begin() : --mFramesMap.end();
   frame = it->second;
   mFramesMap.erase (it);
   }
 
-  if (kRemoveFrameDebug)
-    cLog::log (LOGINFO, fmt::format ("cRender::removeFrame pts:{} frame:{} {}",
-                                     getCompletePtsString (pts),
-                                     getCompletePtsString (frame->getPts()),
-                                     front ?"front":"back"));
+  if (kAddAllocFrameDebug)
+    cLog::log (LOGINFO, fmt::format ("- remFrame {} from {}",
+                                     getCompletePtsString (frame->getPts()), front ?"front":"back"));
 
   frame->releaseResources();
   return frame;
+  }
+//}}}
+//{{{
+void cRender::addFrame (cFrame* frame) {
+
+  if (kAddAllocFrameDebug)
+    cLog::log (LOGINFO, fmt::format ("- addFrame {}", getCompletePtsString (frame->getPts())));
+
+  unique_lock<shared_mutex> lock (mSharedMutex);
+  if (mFramesMap.find (frame->getPts() / frame->getPtsDuration()) != mFramesMap.end())
+    cLog::log (LOGERROR, fmt::format ("addFrame duplicate"));
+
+  mFramesMap.emplace (frame->getPts() / frame->getPtsDuration(), frame);
   }
 //}}}
 //{{{
@@ -140,10 +139,13 @@ void cRender::clearFrames() {
 
 // process
 //{{{
-int64_t cRender::load (int64_t pts, int& index) {
+int64_t cRender::load (int64_t pts, bool& allocFront) {
+// return first unloaded frame in preLoad order
+// - 0, 1..maxPreLoadFrames, -maxPreLoadFrames..-1
 
   // load pts
-  index = 0;
+  allocFront = true;
+  int index = 0;
   if (!found (pts)) {
     if (kLoadDebug)
       cLog::log (LOGINFO, fmt::format ("load index:{} pts:{}", index, getCompletePtsString (pts)));
@@ -164,6 +166,7 @@ int64_t cRender::load (int64_t pts, int& index) {
   for (index = -(int)mPreLoadFrames; index <= -1; index++) {
     int64_t loadPts = pts + (index * mPtsDuration);
     if (!found (loadPts)) {
+      allocFront = false;
       if (kLoadDebug)
         cLog::log (LOGINFO, fmt::format ("load index:{} pts:{}", index, getCompletePtsString (loadPts)));
       return loadPts;
@@ -207,10 +210,10 @@ bool cRender::throttle (int64_t pts) {
 void cRender::decodePes (uint8_t* pes, uint32_t pesSize, int64_t pts, int64_t dts, bool allocFront) {
 
   if (isQueued())
-    mDecodeQueue.enqueue (new cDecodeQueueItem (mDecoder, pes, pesSize, pts, dts, 
+    mDecodeQueue.enqueue (new cDecodeQueueItem (mDecoder, pes, pesSize, pts, dts,
                                                 allocFront, mAllocFrameCallback, mAddFrameCallback));
   else
-    mDecoder->decode (pes, pesSize, pts, dts, 
+    mDecoder->decode (pes, pesSize, pts, dts,
                       allocFront, mAllocFrameCallback, mAddFrameCallback);
   }
 //}}}

@@ -105,7 +105,7 @@ public:
 
           if (avFrame->nb_samples > 0) {
             // alloc audioFrame
-            cAudioFrame* audioFrame =
+            cAudioFrame* audioFrame = 
               dynamic_cast<cAudioFrame*>(allocFrameCallback (interpolatedPts, allocFront));
             if (audioFrame) {
               // set info

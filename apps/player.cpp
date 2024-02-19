@@ -305,7 +305,7 @@ namespace {
           this_thread::sleep_for (1ms);
           }
         //}}}
-        mAudioRender = new cAudioRender (false, 56, 3, true,
+        mAudioRender = new cAudioRender (false, 57, 3, true,
                                          mService->getAudioStreamTypeId(), mService->getAudioPid());
 
         // load first audioPes, creates audioPlayer
@@ -319,8 +319,8 @@ namespace {
 
         while (true) {
           int64_t playPts = getAudioPlayerPts();
-          int loadIndex;
-          int64_t loadPts = mAudioRender->load (playPts, loadIndex);
+          bool allocFront;
+          int64_t loadPts = mAudioRender->load (playPts, allocFront);
           if (loadPts == -1) {
             // all loaded
             this_thread::sleep_for (10ms);
@@ -331,7 +331,7 @@ namespace {
           unique_lock<shared_mutex> lock (mAudioMutex);
           auto it = mAudioPesMap.upper_bound (loadPts);
           if (it == mAudioPesMap.begin()) {
-            this_thread::sleep_for (1ms);
+            this_thread::sleep_for (10ms);
             continue;
             }
           --it;
@@ -339,11 +339,9 @@ namespace {
           }
 
           if (kAudioLoadDebug)
-            cLog::log (LOGINFO, fmt::format ("- {} low:{} p:{}",
-                                             getCompletePtsString (loadPts),
-                                             getCompletePtsString (pes.mPts),
-                                             getCompletePtsString (playPts)));
-          mAudioRender->decodePes (pes.mData, pes.mSize, pes.mPts, pes.mDts, loadIndex >= 0);
+            cLog::log (LOGINFO, fmt::format ("- load:{} chunk:{}",
+                                             getCompletePtsString (loadPts), getCompletePtsString (pes.mPts)));
+          mAudioRender->decodePes (pes.mData, pes.mSize, pes.mPts, pes.mDts, allocFront);
           }
 
         cLog::log (LOGERROR, "exit");

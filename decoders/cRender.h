@@ -44,11 +44,11 @@ public:
   cFrame* getFrameAtPts (int64_t pts);
   cFrame* getFrameAtOrAfterPts (int64_t pts);
 
+  cFrame* allocFrame (int64_t pts, bool front);
   void addFrame (cFrame* frame);
-  cFrame* removeFrame (int64_t pts, bool front);
   void clearFrames();
 
-  int64_t load (int64_t pts, int& index);
+  int64_t load (int64_t pts, bool& allocFront);
   bool found (int64_t pts);
   bool throttle (int64_t pts);
   void decodePes (uint8_t* pes, uint32_t pesSize, int64_t pts, int64_t dts, bool allocFront);
