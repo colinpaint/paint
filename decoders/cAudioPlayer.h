@@ -22,6 +22,7 @@ public:
 
   void startPts (int64_t pts) { mPts = pts; mPlaying = true; }
   void skipPts (int64_t pts) { mPts += pts; mSkip = true; }
+  void skipToPts (int64_t pts) { mPts = pts; mSkip = true; }
   void togglePlay() { mPlaying = !mPlaying; }
 
 private:

@@ -15,8 +15,8 @@
 using namespace std;
 using namespace utils;
 //}}}
-constexpr bool kLoadDebug = true;
-constexpr bool kAddAllocFrameDebug = true;
+constexpr bool kLoadDebug = false;
+constexpr bool kAllocAddFrameDebug = false;
 
 //{{{
 cRender::cRender (bool queued, const string& threadName,
@@ -92,21 +92,24 @@ cFrame* cRender::allocFrame (int64_t pts, bool front) {
 
   cFrame* frame = nullptr;
 
-  { // locked
+  { // lock
   unique_lock<shared_mutex> lock (mSharedMutex);
 
-  // don't remove and alloc same frame again
-  if (mFramesMap.find (pts / mPtsDuration) != mFramesMap.end())
+  if (findLocked (pts)) {
+    // don't alloc
+    if (kAllocAddFrameDebug)
+      cLog::log (LOGINFO, fmt::format ("- allocFrame {} already decoded", getFullPtsString (pts)));
     return nullptr;
+    }
 
   auto it = front ? mFramesMap.begin() : --mFramesMap.end();
   frame = it->second;
   mFramesMap.erase (it);
   }
 
-  if (kAddAllocFrameDebug)
-    cLog::log (LOGINFO, fmt::format ("- remFrame {} from {}",
-                                     getCompletePtsString (frame->getPts()), front ?"front":"back"));
+  if (kAllocAddFrameDebug)
+    cLog::log (LOGINFO, fmt::format ("- allocFrame {} from {}",
+                                     getFullPtsString (frame->getPts()), front?"front":"back"));
 
   frame->releaseResources();
   return frame;
@@ -115,14 +118,14 @@ cFrame* cRender::allocFrame (int64_t pts, bool front) {
 //{{{
 void cRender::addFrame (cFrame* frame) {
 
-  if (kAddAllocFrameDebug)
-    cLog::log (LOGINFO, fmt::format ("- addFrame {}", getCompletePtsString (frame->getPts())));
+  if (kAllocAddFrameDebug)
+    cLog::log (LOGINFO, fmt::format ("- addFrame {}", getFullPtsString (frame->getPts())));
 
   unique_lock<shared_mutex> lock (mSharedMutex);
   if (mFramesMap.find (frame->getPts() / frame->getPtsDuration()) != mFramesMap.end())
     cLog::log (LOGERROR, fmt::format ("addFrame duplicate"));
-
-  mFramesMap.emplace (frame->getPts() / frame->getPtsDuration(), frame);
+  else
+    mFramesMap.emplace (frame->getPts() / frame->getPtsDuration(), frame);
   }
 //}}}
 //{{{
@@ -146,18 +149,18 @@ int64_t cRender::load (int64_t pts, bool& allocFront) {
   // load pts
   allocFront = true;
   int index = 0;
-  if (!found (pts)) {
+  if (!find (pts)) {
     if (kLoadDebug)
-      cLog::log (LOGINFO, fmt::format ("load index:{} pts:{}", index, getCompletePtsString (pts)));
+      cLog::log (LOGINFO, fmt::format ("load index:{} pts:{}", index, getFullPtsString (pts)));
     return pts;
     }
 
   // preload after pts
   for (index = 1; index <= (int)mPreLoadFrames; index++) {
     int64_t loadPts = pts + (index * mPtsDuration);
-    if (!found (loadPts)) {
+    if (!find (loadPts)) {
       if (kLoadDebug)
-        cLog::log (LOGINFO, fmt::format ("load index:{} pts:{}", index, getCompletePtsString (loadPts)));
+        cLog::log (LOGINFO, fmt::format ("load index:{} pts:{}", index, getFullPtsString (loadPts)));
       return loadPts;
       }
     }
@@ -165,10 +168,10 @@ int64_t cRender::load (int64_t pts, bool& allocFront) {
   // preload before pts in forward order to help decoder
   for (index = -(int)mPreLoadFrames; index <= -1; index++) {
     int64_t loadPts = pts + (index * mPtsDuration);
-    if (!found (loadPts)) {
+    if (!find (loadPts)) {
       allocFront = false;
       if (kLoadDebug)
-        cLog::log (LOGINFO, fmt::format ("load index:{} pts:{}", index, getCompletePtsString (loadPts)));
+        cLog::log (LOGINFO, fmt::format ("load index:{} pts:{}", index, getFullPtsString (loadPts)));
       return loadPts;
       }
     }
@@ -178,18 +181,9 @@ int64_t cRender::load (int64_t pts, bool& allocFront) {
   }
 //}}}
 //{{{
-bool cRender::found (int64_t pts) {
-// return true if pts in mFramesMap
-
-  // locked
-  unique_lock<shared_mutex> lock (mSharedMutex);
-  return mFramesMap.find (pts / mPtsDuration) != mFramesMap.end();
-  }
-//}}}
-//{{{
 bool cRender::throttle (int64_t pts) {
 
-  // locked
+  // lock
   unique_lock<shared_mutex> lock (mSharedMutex);
 
   if (mFramesMap.size() < mMaxFrames)
@@ -238,6 +232,27 @@ float cRender::getQueueFrac() const {
 //}}}
 
 // private:
+//{{{
+bool cRender::find (int64_t pts) {
+// return true if pts in mFramesMap
+
+  // lock
+  unique_lock<shared_mutex> lock (mSharedMutex);
+  return findLocked (pts);
+  }
+//}}}
+//{{{
+bool cRender::findLocked (int64_t pts) {
+// return true if pts in mFramesMap
+
+  for (auto it = mFramesMap.begin(); it != mFramesMap.end(); ++it)
+    if (it->second->contains (pts))
+      return true;
+
+  return false;
+  }
+//}}}
+
 //{{{
 void cRender::startQueueThread (const string& name) {
 

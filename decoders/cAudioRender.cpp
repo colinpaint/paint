@@ -1,5 +1,5 @@
 // cAudioRender.cpp
-constexpr bool kAllocFrameDebug = true;
+constexpr bool kAllocFrameDebug = false;
 //{{{  includes
 #ifdef _WIN32
   #define _CRT_SECURE_NO_WARNINGS
@@ -49,7 +49,7 @@ cAudioRender::cAudioRender (bool queue, size_t maxFrames, size_t preLoadFrames,
       [&](int64_t pts, bool front) noexcept {
         if (kAllocFrameDebug)
           cLog::log (LOGINFO, fmt::format ("cAudioRender::allocFrame {} from {}",
-                                           getCompletePtsString(pts), front?"front":"back"));
+                                           getFullPtsString(pts), front?"front":"back"));
 
         return hasMaxFrames() ? allocFrame (pts, front) : new cAudioFrame();
         },

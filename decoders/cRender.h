@@ -49,7 +49,6 @@ public:
   void clearFrames();
 
   int64_t load (int64_t pts, bool& allocFront);
-  bool found (int64_t pts);
   bool throttle (int64_t pts);
   void decodePes (uint8_t* pes, uint32_t pesSize, int64_t pts, int64_t dts, bool allocFront);
 
@@ -58,6 +57,9 @@ public:
   virtual void togglePlay() {}
 
 protected:
+  bool find (int64_t pts);
+  bool findLocked (int64_t pts);
+
   size_t getQueueSize() const;
   float getQueueFrac() const;
 
