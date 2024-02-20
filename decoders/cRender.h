@@ -32,8 +32,10 @@ public:
   uint16_t getPid() const { return mPid; }
 
   int64_t getPts() const { return mPts; }
-  int64_t getPtsFromStart() const { return mPts - mFirstPts; }
   int64_t getPtsDuration() const { return mPtsDuration; }
+  int64_t getPtsEnd() const { return mPts; }
+  int64_t getFirstPts() const { return mFirstPts; }
+  int64_t getLastPts() const { return mLastPts; }
 
   std::shared_mutex& getSharedMutex() { return mSharedMutex; }
   std::map<int64_t,cFrame*> getFramesMap() { return mFramesMap; }
@@ -90,8 +92,9 @@ private:
   const std::function <cFrame* (int64_t pts)> mAllocFrameCallback;
   const std::function <void (cFrame* frame)> mAddFrameCallback;
 
-  int64_t mPts = 0;
+  int64_t mPts = -1;
   int64_t mPtsDuration = 0;
+  int64_t mPtsEnd = -1;
   int64_t mFirstPts = -1;
   int64_t mLastPts = -1;
   };

@@ -1,5 +1,4 @@
 // cFFmpegVideoDecoder.h
-constexpr bool kMotionVectors = true;
 //{{{  includes
 #pragma once
 #include <cstdint>
@@ -30,7 +29,7 @@ extern "C" {
 
 #include "../dvb/cDvbUtils.h"
 //}}}
-
+constexpr bool kMotionVectors = true;
 namespace {
   //{{{
   void logCallback (void* ptr, int level, const char* fmt, va_list vargs) {
@@ -47,8 +46,7 @@ class cFFmpegVideoDecoder : public cDecoder {
 public:
   //{{{
   cFFmpegVideoDecoder (bool h264) :
-       cDecoder(), mH264(h264),
-       mStreamName(h264 ? "h264" : "mpeg2"),
+       cDecoder(), mH264(h264), mStreamName(h264 ? "h264" : "mpeg2"),
        mAvCodec(avcodec_find_decoder (h264 ? AV_CODEC_ID_H264 : AV_CODEC_ID_MPEG2VIDEO)) {
 
     av_log_set_level (AV_LOG_ERROR);
@@ -83,10 +81,10 @@ public:
   virtual int64_t decode (uint8_t* pes, uint32_t pesSize, int64_t pts, int64_t dts,
                           std::function<cFrame*(int64_t pts)> allocFrameCallback,
                           std::function<void (cFrame* frame)> addFrameCallback) final {
-    (void)pts;
-
+    (void)dts;
     AVFrame* avFrame = av_frame_alloc();
     AVPacket* avPacket = av_packet_alloc();
+
     uint8_t* frame = pes;
     uint32_t frameSize = pesSize;
     while (frameSize) {
@@ -102,29 +100,35 @@ public:
 
           char frameType = cDvbUtils::getFrameType (frame, frameSize, mH264);
           if (frameType == 'I') {
-            mInterpolatedPts = pts;
+            // pes come in dts order with repeated dts, pts jumps around
+            // - ffmpeg decodes in pts order, some pes produce no frames, some produce more than one
+            mSeqPts = pts;
             mGotIframe = true;
             }
 
-          // alloc videoFrame
-          cFFmpegVideoFrame* ffmpegVideoFrame =
-            dynamic_cast<cFFmpegVideoFrame*>(allocFrameCallback (mInterpolatedPts));
-          if (ffmpegVideoFrame) {
-            // set info
-            ffmpegVideoFrame->addTime (std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::system_clock::now() - now).count());
-            ffmpegVideoFrame->set (mGotIframe ? mInterpolatedPts : dts,
-                                   (kPtsPerSecond * mAvContext->framerate.den) / mAvContext->framerate.num,
-                                   frameSize);
-            ffmpegVideoFrame->mFrameType = frameType;
-            ffmpegVideoFrame->setAVFrame (avFrame, kMotionVectors);
+          if (mGotIframe) {
+            // alloc videoFrame
+            cFFmpegVideoFrame* ffmpegVideoFrame = dynamic_cast<cFFmpegVideoFrame*>(allocFrameCallback (mSeqPts));
+            if (ffmpegVideoFrame) {
+              ffmpegVideoFrame->addTime (std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::system_clock::now() - now).count());
+              ffmpegVideoFrame->set (mSeqPts,
+                                     (kPtsPerSecond * mAvContext->framerate.den) / mAvContext->framerate.num,
+                                     frameSize);
+              ffmpegVideoFrame->mFrameType = frameType;
+              ffmpegVideoFrame->setAVFrame (avFrame, kMotionVectors);
 
-            // addFrame
-            addFrameCallback (ffmpegVideoFrame);
-            avFrame = av_frame_alloc();
-            mInterpolatedPts += ffmpegVideoFrame->getPtsDuration();
+              // addFrame
+              addFrameCallback (ffmpegVideoFrame);
+
+              avFrame = av_frame_alloc();
+              mSeqPts += ffmpegVideoFrame->getPtsDuration();
+              }
+            else
+              mSeqPts += 3600;
             }
-          else
-            mInterpolatedPts += 3600;
+          else {
+            // should we free pes here ???
+            }
           }
         }
       frame += bytesUsed;
@@ -135,7 +139,7 @@ public:
     av_frame_free (&avFrame);
 
     av_packet_free (&avPacket);
-    return mInterpolatedPts;
+    return mSeqPts;
     }
   //}}}
 
@@ -148,5 +152,5 @@ private:
   AVCodecContext* mAvContext = nullptr;
 
   bool mGotIframe = false;
-  int64_t mInterpolatedPts = -1;
+  int64_t mSeqPts = -1;
   };

@@ -437,7 +437,7 @@ int64_t cTransportStream::cService::getPtsFromStart() {
 
   cRenderStream& audioStream = getStream (cRenderStream::eAudio);
   if (audioStream.isEnabled())
-    return audioStream.getRender().getPtsFromStart();
+    return audioStream.getRender().getPts();
 
   return 0;
   }

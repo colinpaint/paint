@@ -77,11 +77,11 @@ void cRender::setPts (int64_t pts, int64_t ptsDuration) {
 
   mPts = pts;
   mPtsDuration = ptsDuration;
+  mPtsEnd = pts + ptsDuration;
 
   if (pts != -1) {
     if (mFirstPts == -1)
       mFirstPts = pts;
-
     if (pts > mLastPts)
       mLastPts = pts;
     }

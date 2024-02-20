@@ -349,87 +349,97 @@ namespace {
       }
     //}}}
     //{{{
-    //void videoLoaderThread() {
-    //// launch videoLoader thread
-
-      //thread ([=]() {
-        //cLog::setThreadName ("vidL");
-
-        //{{{  wait for first video pes
-        //while ((mGopMap.begin() == mGopMap.end()) || !mAudioRender || ! getAudioPlayer()) {
-          //if (kVideoLoadDebug)
-            //cLog::log (LOGINFO, fmt::format ("videoLoader start wait"));
-          //this_thread::sleep_for (100ms);
-          //}
-        //}}}
-        //mVideoRender = new cVideoRender (false, 100, 24,
-                                         //mService->getVideoStreamTypeId(), mService->getVideoPid());
-        //while (true) {
-          //int64_t loadPts = getAudioPlayerPts();
-          //if (mVideoRender->getFrameAtPts (loadPts))
-            //this_thread::sleep_for (10ms);
-          //else {
-            //// load gop
-            //auto gopIt = mGopMap.upper_bound (loadPts);
-            //if (gopIt != mGopMap.begin())
-              //--gopIt;
-            //cLog::log (LOGINFO, fmt::format ("load {} gop:{} {}",
-                                             //getPtsString (loadPts),
-                                             //gopIt->second.mPesVector.size(),
-                                             //getPtsString (gopIt->first)));
-
-            //int i = 0;
-            //for (auto it = gopIt->second.mPesVector.begin(); it != gopIt->second.mPesVector.end(); ++it, i++) {
-              //cLog::log (LOGINFO, fmt::format ("- pes:{} {}", i, getPtsString (it->mPts) ));
-              //mVideoRender->decodePes (it->mData, it->mSize, it->mPts, it->mDts);
-              //}
-            //}
-          //}
-
-        //cLog::log (LOGERROR, "exit");
-        //}).detach();
-      //}
-    //}}}
-    //{{{
     void videoLoaderThread() {
     // launch videoLoader thread
 
       thread ([=]() {
         cLog::setThreadName ("vidL");
 
+        //{{{  wait for first video pes
         while ((mGopMap.begin() == mGopMap.end()) || !mAudioRender || ! getAudioPlayer()) {
-          // wait for analyse to see some videoPes
           if (kVideoLoadDebug)
             cLog::log (LOGINFO, fmt::format ("videoLoader start wait"));
           this_thread::sleep_for (100ms);
           }
-
-        mVideoRender = new cVideoRender (false, 50, 56,
+        //}}}
+        mVideoRender = new cVideoRender (false, 100, 24,
                                          mService->getVideoStreamTypeId(), mService->getVideoPid());
+        while (true) {
+          int64_t loadPts = getAudioPlayerPts();
+          if (mVideoRender->getFrameAtPts (loadPts))
+            this_thread::sleep_for (10ms);
+          else {
+            // load gop
+            auto gopIt = mGopMap.upper_bound (loadPts);
+            if (gopIt != mGopMap.begin())
+              --gopIt;
+            cLog::log (LOGINFO, fmt::format ("load1 {} gop:{} first:{}",
+                                             getPtsString (loadPts),
+                                             gopIt->second.mPesVector.size(),
+                                             getPtsString (gopIt->first)));
+            for (size_t i = 0; i < gopIt->second.mPesVector.size(); i++) {
+              sPes& pes = gopIt->second.mPesVector[i];
+              cLog::log (LOGINFO, fmt::format ("- pes:{} {}", i, getPtsString (pes.mPts)));
+              mVideoRender->decodePes (pes.mData, pes.mSize, pes.mPts, pes.mDts);
+              }
 
-        auto gopIt = mGopMap.begin();
-        while (gopIt != mGopMap.end()) {
-          if (kVideoLoadDebug)
-            cLog::log (LOGINFO, fmt::format ("V gop {}", getFullPtsString (gopIt->first)));
-
-          auto& pesVector = gopIt->second.mPesVector;
-          auto pesIt = pesVector.begin();
-          while (pesIt != pesVector.end()) {
-            if (kVideoLoadDebug)
-              cLog::log (LOGINFO, fmt::format ("- V pes {}", getFullPtsString (pesIt->mPts)));
-            mVideoRender->decodePes (pesIt->mData, pesIt->mSize, pesIt->mPts, pesIt->mDts);
-            ++pesIt;
-
-            while (mVideoRender->throttle (getAudioPlayer()->getPts()))
-              this_thread::sleep_for (1ms);
+            ++gopIt;
+            cLog::log (LOGINFO, fmt::format ("load2 {} gop:{} first:{}",
+                                             getPtsString (loadPts),
+                                             gopIt->second.mPesVector.size(),
+                                             getPtsString (gopIt->first)));
+            for (size_t i = 0; i < gopIt->second.mPesVector.size(); i++) {
+              sPes& pes = gopIt->second.mPesVector[i];
+              cLog::log (LOGINFO, fmt::format ("- pes:{} {}", i, getPtsString (pes.mPts)));
+              mVideoRender->decodePes (pes.mData, pes.mSize, pes.mPts, pes.mDts);
+              }
             }
-
-          ++gopIt;
           }
 
         cLog::log (LOGERROR, "exit");
         }).detach();
       }
+    //}}}
+    //{{{
+    //void videoLoaderThread() {
+    //// launch videoLoader thread
+
+      //thread ([=]() {
+        //cLog::setThreadName ("vidL");
+
+        //while ((mGopMap.begin() == mGopMap.end()) || !mAudioRender || ! getAudioPlayer()) {
+          //// wait for analyse to see some videoPes
+          //if (kVideoLoadDebug)
+            //cLog::log (LOGINFO, fmt::format ("videoLoader start wait"));
+          //this_thread::sleep_for (100ms);
+          //}
+
+        //mVideoRender = new cVideoRender (false, 50, 56,
+                                         //mService->getVideoStreamTypeId(), mService->getVideoPid());
+
+        //auto gopIt = mGopMap.begin();
+        //while (gopIt != mGopMap.end()) {
+          //if (kVideoLoadDebug)
+            //cLog::log (LOGINFO, fmt::format ("V gop {}", getFullPtsString (gopIt->first)));
+
+          //auto& pesVector = gopIt->second.mPesVector;
+          //auto pesIt = pesVector.begin();
+          //while (pesIt != pesVector.end()) {
+            //if (kVideoLoadDebug)
+              //cLog::log (LOGINFO, fmt::format ("- V pes {}", getFullPtsString (pesIt->mPts)));
+            //mVideoRender->decodePes (pesIt->mData, pesIt->mSize, pesIt->mPts, pesIt->mDts);
+            //++pesIt;
+
+            //while (mVideoRender->throttle (getAudioPlayer()->getPts()))
+              //this_thread::sleep_for (1ms);
+            //}
+
+          //++gopIt;
+          //}
+
+        //cLog::log (LOGERROR, "exit");
+        //}).detach();
+      //}
     //}}}
     //{{{
     void subtitleLoaderThread() {
@@ -1133,88 +1143,6 @@ namespace {
     //}}}
 
     //{{{
-    void hitControlLeft (cPlayerApp& playerApp) {
-    // frame
-      playerApp.skipPlay (-90000 / 25);
-      }
-    //}}}
-    //{{{
-    void hitShiftLeft (cPlayerApp& playerApp) {
-    // 10 frames
-      playerApp.skipPlay (-(90000 * 10) / 25);
-      }
-    //}}}
-    //{{{
-    void hitLeft (cPlayerApp& playerApp) {
-    // second
-      playerApp.skipPlay (-90000);
-      }
-    //}}}
-
-    //{{{
-    void hitControlRight (cPlayerApp& playerApp) {
-    // frame
-      playerApp.skipPlay (90000 / 25);
-      }
-    //}}}
-    //{{{
-    void hitShiftRight (cPlayerApp& playerApp) {
-    // 10 frames
-      playerApp.skipPlay ((90000 * 10) / 25);
-      }
-    //}}}
-    //{{{
-    void hitRight (cPlayerApp& playerApp) {
-    // second
-      playerApp.skipPlay (90000);
-      }
-    //}}}
-
-    //{{{
-    void hitUp (cPlayerApp& playerApp) {
-    // 10 seconds
-      playerApp.skipPlay (-90000 * 10);
-      }
-    //}}}
-    //{{{
-    void hitControlUp (cPlayerApp& playerApp) {
-    // minute
-      playerApp.skipPlay (-90000 * 60);
-      }
-    //}}}
-    //{{{
-    void hitShiftUp (cPlayerApp& playerApp) {
-    // 5 minutes
-      playerApp.skipPlay (-90000 * 60 * 5);
-      }
-    //}}}
-
-    //{{{
-    void hitDown (cPlayerApp& playerApp) {
-    // 10 seconds
-      playerApp.skipPlay (90000 * 10);
-      }
-    //}}}
-    //{{{
-    void hitControlDown (cPlayerApp& playerApp) {
-    // minute
-      playerApp.skipPlay (90000 * 60);
-      }
-    //}}}
-    //{{{
-    void hitShiftDown (cPlayerApp& playerApp) {
-    // 5 minutes
-      playerApp.skipPlay (90000 * 60 * 5);
-      }
-    //}}}
-
-    //{{{
-    void hitSpace (cPlayerApp& playerApp) {
-      playerApp.togglePlay();
-      }
-    //}}}
-
-    //{{{
     void keyboard (cPlayerApp& playerApp) {
 
       //{{{
@@ -1228,23 +1156,23 @@ namespace {
       //}}}
       const vector<sActionKey> kActionKeys = {
       //  alt    control shift  ImGuiKey             function
-        { false, false,  false, ImGuiKey_LeftArrow,  [this,&playerApp]{ hitLeft (playerApp); }},
-        { false, false,  true,  ImGuiKey_LeftArrow,  [this,&playerApp]{ hitShiftLeft (playerApp); }},
-        { false, true,   false, ImGuiKey_LeftArrow,  [this,&playerApp]{ hitControlLeft (playerApp); }},
+        { false, false,  false, ImGuiKey_LeftArrow,  [this,&playerApp]{ playerApp.skipPlay (-90000/25); }},
+        { false, false,  true,  ImGuiKey_LeftArrow,  [this,&playerApp]{ playerApp.skipPlay (-90000/5); }},
+        { false, true,   false, ImGuiKey_LeftArrow,  [this,&playerApp]{ playerApp.skipPlay (-90000*10/25); }},
 
-        { false, false,  false, ImGuiKey_RightArrow, [this,&playerApp]{ hitRight (playerApp); }},
-        { false, true,   false, ImGuiKey_RightArrow, [this,&playerApp]{ hitControlRight (playerApp); }},
-        { false, false,  true,  ImGuiKey_RightArrow, [this,&playerApp]{ hitShiftRight (playerApp); }},
+        { false, false,  false, ImGuiKey_RightArrow, [this,&playerApp]{ playerApp.skipPlay (90000/25); }},
+        { false, true,   false, ImGuiKey_RightArrow, [this,&playerApp]{ playerApp.skipPlay (90000/5); }},
+        { false, false,  true,  ImGuiKey_RightArrow, [this,&playerApp]{ playerApp.skipPlay (90000*10/25); }},
 
-        { false, false,  false, ImGuiKey_UpArrow,    [this,&playerApp]{ hitUp (playerApp); }},
-        { false, false,  true,  ImGuiKey_UpArrow,    [this,&playerApp]{ hitShiftUp (playerApp); }},
-        { false, true,   false, ImGuiKey_UpArrow,    [this,&playerApp]{ hitControlUp (playerApp); }},
+        { false, false,  false, ImGuiKey_UpArrow,    [this,&playerApp]{ playerApp.skipPlay (-90000); }},
+        { false, false,  true,  ImGuiKey_UpArrow,    [this,&playerApp]{ playerApp.skipPlay (-90000*10); }},
+        { false, true,   false, ImGuiKey_UpArrow,    [this,&playerApp]{ playerApp.skipPlay (-90000*60); }},
 
-        { false, false,  false, ImGuiKey_DownArrow,  [this,&playerApp]{ hitDown (playerApp); }},
-        { false, false,  true,  ImGuiKey_DownArrow,  [this,&playerApp]{ hitShiftDown (playerApp); }},
-        { false, true,   false, ImGuiKey_DownArrow,  [this,&playerApp]{ hitControlDown (playerApp); }},
+        { false, false,  false, ImGuiKey_DownArrow,  [this,&playerApp]{ playerApp.skipPlay (90000); }},
+        { false, false,  true,  ImGuiKey_DownArrow,  [this,&playerApp]{ playerApp.skipPlay (90000*10); }},
+        { false, true,   false, ImGuiKey_DownArrow,  [this,&playerApp]{ playerApp.skipPlay (90000*60); }},
 
-        { false, false,  false, ImGuiKey_Space,      [this,&playerApp]{ hitSpace (playerApp); }},
+        { false, false,  false, ImGuiKey_Space,      [this,&playerApp]{ playerApp.togglePlay(); }},
         { false, false,  false, ImGuiKey_Enter,      [this,&playerApp]{ mMultiView.hitEnter(); }},
 
         { false, false,  false, ImGuiKey_F,          [this,&playerApp]{ playerApp.getPlatform().toggleFullScreen(); }},
