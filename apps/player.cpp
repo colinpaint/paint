@@ -146,6 +146,20 @@ namespace {
         mPesVector.push_back (pes);
         }
 
+      void load (cVideoRender* videoRender, int64_t loadPts, int64_t gopPts, const string& title) {
+        cLog::log (LOGINFO, fmt::format ("{} {} {} gopFirst:{}",
+                                         title,
+                                         mPesVector.size(),
+                                         getPtsString (loadPts),
+                                         getPtsString (gopPts)
+                                         ));
+
+        for (auto& pes : mPesVector) {
+          //cLog::log (LOGINFO, fmt::format ("- pes:{} {}", i, getPtsString (pes.mPts)));
+          videoRender->decodePes (pes.mData, pes.mSize, pes.mPts, pes.mDts);
+          }
+        }
+
       vector <sPes> mPesVector;
       };
     //}}}
@@ -366,34 +380,25 @@ namespace {
                                          mService->getVideoStreamTypeId(), mService->getVideoPid());
         while (true) {
           int64_t loadPts = getAudioPlayerPts();
-          if (mVideoRender->getFrameAtPts (loadPts))
-            this_thread::sleep_for (10ms);
-          else {
-            // load gop
-            auto gopIt = mGopMap.upper_bound (loadPts);
-            if (gopIt != mGopMap.begin())
-              --gopIt;
-            cLog::log (LOGINFO, fmt::format ("load1 {} gop:{} first:{}",
-                                             getPtsString (loadPts),
-                                             gopIt->second.mPesVector.size(),
-                                             getPtsString (gopIt->first)));
-            for (size_t i = 0; i < gopIt->second.mPesVector.size(); i++) {
-              sPes& pes = gopIt->second.mPesVector[i];
-              cLog::log (LOGINFO, fmt::format ("- pes:{} {}", i, getPtsString (pes.mPts)));
-              mVideoRender->decodePes (pes.mData, pes.mSize, pes.mPts, pes.mDts);
-              }
+          auto nextGopIt = mGopMap.upper_bound (loadPts);
 
-            ++gopIt;
-            cLog::log (LOGINFO, fmt::format ("load2 {} gop:{} first:{}",
-                                             getPtsString (loadPts),
-                                             gopIt->second.mPesVector.size(),
-                                             getPtsString (gopIt->first)));
-            for (size_t i = 0; i < gopIt->second.mPesVector.size(); i++) {
-              sPes& pes = gopIt->second.mPesVector[i];
-              cLog::log (LOGINFO, fmt::format ("- pes:{} {}", i, getPtsString (pes.mPts)));
-              mVideoRender->decodePes (pes.mData, pes.mSize, pes.mPts, pes.mDts);
+          auto gopIt = nextGopIt;
+          if (gopIt != mGopMap.begin())
+            --gopIt;
+
+          if (!mVideoRender->getFrameAtPts (loadPts)) {
+            gopIt->second.load (mVideoRender, loadPts, gopIt->first, "this");
+            continue;
+            }
+
+          if ((nextGopIt->first - loadPts) <= (3 * 3600)) {
+            if (!mVideoRender->getFrameAtPts (nextGopIt->first)) {
+              nextGopIt->second.load (mVideoRender, loadPts, nextGopIt->first, "next");
+              continue;
               }
             }
+
+          this_thread::sleep_for (1ms);
           }
 
         cLog::log (LOGERROR, "exit");
@@ -629,6 +634,23 @@ namespace {
       void draw (cAudioRender* audioRender, cVideoRender* videoRender, int64_t playerPts, ImVec2 pos) {
 
         float ptsScale = 6.f / (videoRender ? videoRender->getPtsDuration() : 90000/25);
+        if (audioRender) {
+          // lock audio during iterate
+          shared_lock<shared_mutex> lock (audioRender->getSharedMutex());
+          for (auto& frame : audioRender->getFramesMap()) {
+            //{{{  draw audio frames
+            float posL = pos.x + (frame.second->getPts() - playerPts) * ptsScale;
+            float posR = pos.x + ((frame.second->getPts() - playerPts + frame.second->getPtsDuration()) * ptsScale) - 1.f;
+
+            cAudioFrame* audioFrame = dynamic_cast<cAudioFrame*>(frame.second);
+            ImGui::GetWindowDrawList()->AddRectFilled (
+              {posL, pos.y - addValue (audioFrame->getSimplePower(), mMaxPower, 2.f * ImGui::GetTextLineHeight())},
+              {posR, pos.y },
+              0x8000ff00);
+            }
+            //}}}
+          }
+
         if (videoRender) {
           // lock video during iterate
           shared_lock<shared_mutex> lock (videoRender->getSharedMutex());
@@ -646,23 +668,6 @@ namespace {
                 0xffffffff : (videoFrame->mFrameType == 'P') ?   // P - purple
                   0xffFF40ff : (videoFrame->mFrameType == 'B') ? // B - blue
                     0xffFF4040 : 0xff40FFFF);                    // ? = yellow
-            }
-            //}}}
-          }
-
-        if (audioRender) {
-          // lock audio during iterate
-          shared_lock<shared_mutex> lock (audioRender->getSharedMutex());
-          for (auto& frame : audioRender->getFramesMap()) {
-            //{{{  draw audio frames
-            float posL = pos.x + (frame.second->getPts() - playerPts) * ptsScale;
-            float posR = pos.x + ((frame.second->getPts() - playerPts + frame.second->getPtsDuration()) * ptsScale) - 1.f;
-
-            cAudioFrame* audioFrame = dynamic_cast<cAudioFrame*>(frame.second);
-            ImGui::GetWindowDrawList()->AddRectFilled (
-              {posL, pos.y - addValue (audioFrame->getSimplePower(), mMaxPower, 2.f * ImGui::GetTextLineHeight())},
-              {posR, pos.y },
-              0x8000ff00);
             }
             //}}}
           }
