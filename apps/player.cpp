@@ -378,6 +378,9 @@ namespace {
         //}}}
         mVideoRender = new cVideoRender (false, 100, 24,
                                          mService->getVideoStreamTypeId(), mService->getVideoPid());
+
+        mGopMap.begin()->second.load (mVideoRender, getAudioPlayerPts(), mGopMap.begin()->first, "first");
+
         while (true) {
           int64_t loadPts = getAudioPlayerPts();
           auto nextGopIt = mGopMap.upper_bound (loadPts);
@@ -404,47 +407,6 @@ namespace {
         cLog::log (LOGERROR, "exit");
         }).detach();
       }
-    //}}}
-    //{{{
-    //void videoLoaderThread() {
-    //// launch videoLoader thread
-
-      //thread ([=]() {
-        //cLog::setThreadName ("vidL");
-
-        //while ((mGopMap.begin() == mGopMap.end()) || !mAudioRender || ! getAudioPlayer()) {
-          //// wait for analyse to see some videoPes
-          //if (kVideoLoadDebug)
-            //cLog::log (LOGINFO, fmt::format ("videoLoader start wait"));
-          //this_thread::sleep_for (100ms);
-          //}
-
-        //mVideoRender = new cVideoRender (false, 50, 56,
-                                         //mService->getVideoStreamTypeId(), mService->getVideoPid());
-
-        //auto gopIt = mGopMap.begin();
-        //while (gopIt != mGopMap.end()) {
-          //if (kVideoLoadDebug)
-            //cLog::log (LOGINFO, fmt::format ("V gop {}", getFullPtsString (gopIt->first)));
-
-          //auto& pesVector = gopIt->second.mPesVector;
-          //auto pesIt = pesVector.begin();
-          //while (pesIt != pesVector.end()) {
-            //if (kVideoLoadDebug)
-              //cLog::log (LOGINFO, fmt::format ("- V pes {}", getFullPtsString (pesIt->mPts)));
-            //mVideoRender->decodePes (pesIt->mData, pesIt->mSize, pesIt->mPts, pesIt->mDts);
-            //++pesIt;
-
-            //while (mVideoRender->throttle (getAudioPlayer()->getPts()))
-              //this_thread::sleep_for (1ms);
-            //}
-
-          //++gopIt;
-          //}
-
-        //cLog::log (LOGERROR, "exit");
-        //}).detach();
-      //}
     //}}}
     //{{{
     void subtitleLoaderThread() {
