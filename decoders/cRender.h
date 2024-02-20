@@ -46,7 +46,6 @@ public:
 
   cFrame* allocFrame (int64_t pts);
   void addFrame (cFrame* frame);
-  void clearFrames();
 
   int64_t load (int64_t pts);
   bool throttle (int64_t pts);
@@ -57,11 +56,13 @@ public:
   virtual void togglePlay() {}
 
 protected:
-  bool find (int64_t pts);
-  bool findLocked (int64_t pts);
-
   size_t getQueueSize() const;
   float getQueueFrac() const;
+
+  void clearFrames();
+
+  bool findLocked (int64_t pts);
+  bool find (int64_t pts);
 
   // vars
   std::shared_mutex mSharedMutex;

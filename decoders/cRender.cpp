@@ -1,4 +1,4 @@
-// cRender.cpp - dvb stream render base class - mFrameMap indexed by pts/ptsDuration
+ // cRender.cpp - dvb stream render base class - mFrameMap indexed by pts/ptsDuration
 //{{{  includes
 #include "cRender.h"
 
@@ -98,8 +98,7 @@ cFrame* cRender::allocFrame (int64_t pts) {
 
   if (findLocked (pts)) {
     // don't alloc
-    if (kAllocAddFrameDebug)
-      cLog::log (LOGINFO, fmt::format ("- allocFrame {} already decoded", getFullPtsString (pts)));
+    cLog::log (LOGINFO, fmt::format ("- allocFrame {} already decoded", getFullPtsString (pts)));
     return nullptr;
     }
 
@@ -125,20 +124,9 @@ void cRender::addFrame (cFrame* frame) {
 
   unique_lock<shared_mutex> lock (mSharedMutex);
   if (mFramesMap.find (frame->getPts() / frame->getPtsDuration()) != mFramesMap.end())
-    cLog::log (LOGERROR, fmt::format ("addFrame duplicate"));
+    cLog::log (LOGERROR, fmt::format ("- addFrame - duplicate"));
   else
     mFramesMap.emplace (frame->getPts() / frame->getPtsDuration(), frame);
-  }
-//}}}
-//{{{
-void cRender::clearFrames() {
-
-  unique_lock<shared_mutex> lock (mSharedMutex);
-
-  for (auto& frame : mFramesMap)
-    delete (frame.second);
-
-  mFramesMap.clear();
   }
 //}}}
 
@@ -232,14 +220,17 @@ float cRender::getQueueFrac() const {
 
 // private:
 //{{{
-bool cRender::find (int64_t pts) {
-// return true if pts in mFramesMap
+void cRender::clearFrames() {
 
-  // lock
   unique_lock<shared_mutex> lock (mSharedMutex);
-  return findLocked (pts);
+
+  for (auto& frame : mFramesMap)
+    delete (frame.second);
+
+  mFramesMap.clear();
   }
 //}}}
+
 //{{{
 bool cRender::findLocked (int64_t pts) {
 // return true if pts in mFramesMap
@@ -249,6 +240,15 @@ bool cRender::findLocked (int64_t pts) {
       return true;
 
   return false;
+  }
+//}}}
+//{{{
+bool cRender::find (int64_t pts) {
+// return true if pts in mFramesMap
+
+  // lock
+  unique_lock<shared_mutex> lock (mSharedMutex);
+  return findLocked (pts);
   }
 //}}}
 

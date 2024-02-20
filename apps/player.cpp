@@ -308,7 +308,7 @@ namespace {
           this_thread::sleep_for (1ms);
           }
         //}}}
-        mAudioRender = new cAudioRender (false, 55, 2, true,
+        mAudioRender = new cAudioRender (false, 59, 4, true,
                                          mService->getAudioStreamTypeId(), mService->getAudioPid());
 
         // load first audioPes, creates audioPlayer
