@@ -349,6 +349,48 @@ namespace {
       }
     //}}}
     //{{{
+    //void videoLoaderThread() {
+    //// launch videoLoader thread
+
+      //thread ([=]() {
+        //cLog::setThreadName ("vidL");
+
+        //{{{  wait for first video pes
+        //while ((mGopMap.begin() == mGopMap.end()) || !mAudioRender || ! getAudioPlayer()) {
+          //if (kVideoLoadDebug)
+            //cLog::log (LOGINFO, fmt::format ("videoLoader start wait"));
+          //this_thread::sleep_for (100ms);
+          //}
+        //}}}
+        //mVideoRender = new cVideoRender (false, 100, 24,
+                                         //mService->getVideoStreamTypeId(), mService->getVideoPid());
+        //while (true) {
+          //int64_t loadPts = getAudioPlayerPts();
+          //if (mVideoRender->getFrameAtPts (loadPts))
+            //this_thread::sleep_for (10ms);
+          //else {
+            //// load gop
+            //auto gopIt = mGopMap.upper_bound (loadPts);
+            //if (gopIt != mGopMap.begin())
+              //--gopIt;
+            //cLog::log (LOGINFO, fmt::format ("load {} gop:{} {}",
+                                             //getPtsString (loadPts),
+                                             //gopIt->second.mPesVector.size(),
+                                             //getPtsString (gopIt->first)));
+
+            //int i = 0;
+            //for (auto it = gopIt->second.mPesVector.begin(); it != gopIt->second.mPesVector.end(); ++it, i++) {
+              //cLog::log (LOGINFO, fmt::format ("- pes:{} {}", i, getPtsString (it->mPts) ));
+              //mVideoRender->decodePes (it->mData, it->mSize, it->mPts, it->mDts);
+              //}
+            //}
+          //}
+
+        //cLog::log (LOGERROR, "exit");
+        //}).detach();
+      //}
+    //}}}
+    //{{{
     void videoLoaderThread() {
     // launch videoLoader thread
 
