@@ -102,7 +102,7 @@ public:
 
           char frameType = cDvbUtils::getFrameType (frame, frameSize, mH264);
           if (frameType == 'I') {
-            mInterpolatedPts = dts;
+            mInterpolatedPts = pts;
             mGotIframe = true;
             }
 
