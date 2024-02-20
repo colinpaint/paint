@@ -32,12 +32,12 @@ constexpr bool kAddFrameDebug = false;
 // public:
 //{{{
 cSubtitleRender::cSubtitleRender (bool queue, size_t maxFrames, size_t preLoadFrames,
-                                  uint8_t streamType, uint16_t pid) : 
+                                  uint8_t streamType, uint16_t pid) :
     cRender(queue, "sub", streamType, pid, kPtsPer25HzFrame, maxFrames, preLoadFrames,
       // allocFrame lambda
       [&](int64_t pts) noexcept {
         if (kAllocFrameDebug)
-          cLog::log (LOGINFO, fmt::format ("cSubtitleRender::allocFrame {} {}", getFullPtsString(pts)));
+          cLog::log (LOGINFO, fmt::format ("cSubtitleRender::allocFrame {} {}", getPtsString(pts)));
         return hasMaxFrames() ? new cSubtitleFrame() : new cSubtitleFrame();
         },
 

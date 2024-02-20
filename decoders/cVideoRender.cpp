@@ -62,8 +62,8 @@ cVideoRender::cVideoRender (bool queue, size_t maxFrames, size_t preLoadFrames,
       // addFrame lambda
       [&](cFrame* frame) noexcept {
         if (kAddFrameDebug)
-          cLog::log (LOGINFO, fmt::format ("cVideoRender::addFrame {}", 
-                                           getFullPtsString (frame->getPts())));
+          cLog::log (LOGINFO, fmt::format ("cVideoRender::addFrame {}",
+                                           getPtsString (frame->getPts())));
 
         setPts (frame->getPts(), frame->getPtsDuration());
         cVideoFrame* videoFrame = dynamic_cast<cVideoFrame*>(frame);

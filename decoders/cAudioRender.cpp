@@ -48,7 +48,7 @@ cAudioRender::cAudioRender (bool queue, size_t maxFrames, size_t preLoadFrames,
       // allocFrame lambda
       [&](int64_t pts) noexcept {
         if (kAllocFrameDebug)
-          cLog::log (LOGINFO, fmt::format ("cAudioRender::allocFrame {}", getFullPtsString(pts)));
+          cLog::log (LOGINFO, fmt::format ("cAudioRender::allocFrame {}", getPtsString(pts)));
 
         return hasMaxFrames() ? allocFrame (pts) : new cAudioFrame();
         },

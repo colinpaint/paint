@@ -98,7 +98,7 @@ cFrame* cRender::allocFrame (int64_t pts) {
 
   if (findLocked (pts)) {
     // don't alloc
-    cLog::log (LOGINFO, fmt::format ("- allocFrame {} already decoded", getFullPtsString (pts)));
+    cLog::log (LOGINFO, fmt::format ("- allocFrame {} already decoded", getPtsString (pts)));
     return nullptr;
     }
 
@@ -110,7 +110,7 @@ cFrame* cRender::allocFrame (int64_t pts) {
   }
 
   if (kAllocAddFrameDebug)
-    cLog::log (LOGINFO, fmt::format ("- allocFrame {}", getFullPtsString (frame->getPts())));
+    cLog::log (LOGINFO, fmt::format ("- allocFrame {}", getPtsString (frame->getPts())));
 
   frame->releaseResources();
   return frame;
@@ -120,7 +120,7 @@ cFrame* cRender::allocFrame (int64_t pts) {
 void cRender::addFrame (cFrame* frame) {
 
   if (kAllocAddFrameDebug)
-    cLog::log (LOGINFO, fmt::format ("- addFrame {}", getFullPtsString (frame->getPts())));
+    cLog::log (LOGINFO, fmt::format ("- addFrame {}", getPtsString (frame->getPts())));
 
   unique_lock<shared_mutex> lock (mSharedMutex);
   if (mFramesMap.find (frame->getPts() / frame->getPtsDuration()) != mFramesMap.end())
@@ -140,7 +140,7 @@ int64_t cRender::load (int64_t pts) {
   int index = 0;
   if (!find (pts)) {
     if (kLoadDebug)
-      cLog::log (LOGINFO, fmt::format ("load index:{} pts:{}", index, getFullPtsString (pts)));
+      cLog::log (LOGINFO, fmt::format ("load index:{} pts:{}", index, getPtsString (pts)));
     return pts;
     }
 
@@ -149,7 +149,7 @@ int64_t cRender::load (int64_t pts) {
     int64_t loadPts = pts + (index * mPtsDuration);
     if (!find (loadPts)) {
       if (kLoadDebug)
-        cLog::log (LOGINFO, fmt::format ("load index:{} pts:{}", index, getFullPtsString (loadPts)));
+        cLog::log (LOGINFO, fmt::format ("load index:{} pts:{}", index, getPtsString (loadPts)));
       return loadPts;
       }
     }
@@ -159,7 +159,7 @@ int64_t cRender::load (int64_t pts) {
     int64_t loadPts = pts + (index * mPtsDuration);
     if (!find (loadPts)) {
       if (kLoadDebug)
-        cLog::log (LOGINFO, fmt::format ("load index:{} pts:{}", index, getFullPtsString (loadPts)));
+        cLog::log (LOGINFO, fmt::format ("load index:{} pts:{}", index, getPtsString (loadPts)));
       return loadPts;
       }
     }
@@ -202,7 +202,7 @@ void cRender::decodePes (uint8_t* pes, uint32_t pesSize, int64_t pts, int64_t dt
 //{{{
 string cRender::getInfoString() const {
   return fmt::format ("frames:{:2d}:{:d} pts:{} dur:{}",
-                      mFramesMap.size(), getQueueSize(), getFullPtsString (mPts), mPtsDuration);
+                      mFramesMap.size(), getQueueSize(), getPtsString (mPts), mPtsDuration);
   }
 //}}}
 
