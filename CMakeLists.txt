@@ -76,6 +76,18 @@ project (edit VERSION 1.0.0)
     target_link_libraries (${PROJECT_NAME} PRIVATE app stdc++fs)
   endif()
 
+# test
+project (test VERSION 1.0.0)
+  add_executable (${PROJECT_NAME} apps/test.cpp)
+
+  target_compile_definitions (${PROJECT_NAME} PRIVATE BUILD_IMPLOT)
+  target_include_directories (${PROJECT_NAME} PRIVATE stb)
+  if (CMAKE_HOST_WIN32)
+    target_link_libraries (${PROJECT_NAME} PRIVATE app dvb decoders)
+  else()
+    target_link_libraries (${PROJECT_NAME} PRIVATE app dvb decoders stdc++fs pthread)
+  endif()
+
 # player
 project (player VERSION 1.0.0)
   add_executable (${PROJECT_NAME} apps/player.cpp)

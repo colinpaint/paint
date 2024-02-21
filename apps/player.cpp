@@ -463,7 +463,6 @@ namespace {
     // pes
     shared_mutex mAudioMutex;
     map <int64_t,sPes> mAudioPesMap;
-    int64_t mLastLoadedAudioPts = -1;
 
     int64_t mNumVideoPes = 0;
     map <int64_t,cGop> mGopMap;
