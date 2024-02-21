@@ -43,13 +43,13 @@ public:
 
   void setPts (int64_t pts, int64_t ptsDuration);
 
+  // finds
+  bool isFrameAtPts (int64_t pts);
   cFrame* getFrameAtPts (int64_t pts);
   cFrame* getFrameAtOrAfterPts (int64_t pts);
-
   cFrame* allocFrame (int64_t pts);
   void addFrame (cFrame* frame);
 
-  int64_t load (int64_t pts);
   bool throttle (int64_t pts);
   void decodePes (uint8_t* pes, uint32_t pesSize, int64_t pts, int64_t dts);
 
@@ -63,8 +63,7 @@ protected:
 
   void clearFrames();
 
-  bool findLocked (int64_t pts);
-  bool find (int64_t pts);
+  bool isFrameAtPtsAlreadyLocked (int64_t pts);
 
   // vars
   std::shared_mutex mSharedMutex;

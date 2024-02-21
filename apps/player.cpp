@@ -62,7 +62,7 @@ extern "C" {
 using namespace std;
 using namespace utils;
 //}}}
-constexpr bool kPlayVideo = true;
+constexpr bool kPlayVideo = false;
 constexpr bool kAudioLoadDebug = false;
 constexpr bool kVideoLoadDebug = false;
 constexpr bool kSubtitleLoadDebug = false;
@@ -325,9 +325,10 @@ namespace {
         mAudioRender = new cAudioRender (false, 59, 4, true,
                                          mService->getAudioStreamTypeId(), mService->getAudioPid());
 
-        // load first audioPes, creates audioPlayer
-        sPes pes = mAudioPesMap.begin()->second;
-        cLog::log (LOGINFO, fmt::format ("first load:{}", getFullPtsString (pes.mPts)));
+        // load first audioPes to create audioPlayer
+        auto it = mAudioPesMap.begin();
+        sPes pes = it->second;
+        cLog::log (LOGINFO, fmt::format ("load first {}", getFullPtsString (pes.mPts)));
         mAudioRender->decodePes (pes.mData, pes.mSize, pes.mPts, pes.mDts);
         //{{{  audioPlayer ok?
         if (!getAudioPlayer())
@@ -335,27 +336,49 @@ namespace {
         //}}}
 
         while (true) {
-          int64_t loadPts = mAudioRender->load (getAudioPlayerPts());
-          if (loadPts == -1) {
-            // all loaded
-            this_thread::sleep_for (1ms);
-            continue;
-            }
+          int64_t loadPts = getAudioPlayerPts();
+          auto nextIt = mAudioPesMap.upper_bound (loadPts);
+          it = nextIt;
+          if (it != mAudioPesMap.begin())
+            --it;
 
-          { // lock
-          unique_lock<shared_mutex> lock (mAudioMutex);
-          auto it = mAudioPesMap.upper_bound (loadPts);
-          if (it == mAudioPesMap.begin()) {
-            this_thread::sleep_for (1ms);
+          pes = it->second;
+          if (!mAudioRender->isFrameAtPts (loadPts)) {
+            //{{{  load this
+            cLog::log (LOGINFO, fmt::format ("load {} {}", getPtsString (loadPts), getPtsString (it->first)));
+            mAudioRender->decodePes (pes.mData, pes.mSize, pes.mPts, pes.mDts);
             continue;
             }
-          --it;
-          pes = it->second;
-          }
-          if (kAudioLoadDebug)
-            cLog::log (LOGINFO, fmt::format ("- loader chunk:{}:{}",
-                                             getFullPtsString (pes.mPts), getFullPtsString (loadPts)));
-          mAudioRender->decodePes (pes.mData, pes.mSize, pes.mPts, pes.mDts);
+            //}}}
+
+          // near back, ensure next loaded
+          pes = nextIt->second;
+          if (nextIt != mAudioPesMap.end())
+            if (((nextIt->first - loadPts) <= (2 * 1920)) &&
+                !mAudioRender->isFrameAtPts (nextIt->first)) {
+              //{{{  load next
+              cLog::log (LOGINFO, fmt::format ("next {} {}", getPtsString (loadPts), getPtsString (nextIt->first)));
+              mAudioRender->decodePes (pes.mData, pes.mSize, pes.mPts, pes.mDts);
+              continue;
+              }
+              //}}}
+
+          // near front, ensure prev loaded
+          if ((loadPts - it->first) <= (2 * 1920))
+            if (it != mAudioPesMap.begin()) {
+              --it;
+              pes = it->second;
+              if (!mAudioRender->isFrameAtPts (it->first)) {
+                //{{{  load prev
+                cLog::log (LOGINFO, fmt::format ("prev {} {}", getPtsString (loadPts), getPtsString (it->first)));
+                mAudioRender->decodePes (pes.mData, pes.mSize, pes.mPts, pes.mDts);
+                continue;
+                }
+                //}}}
+              }
+
+          // wait for change
+          this_thread::sleep_for (1ms);
           }
 
         cLog::log (LOGERROR, "exit");
@@ -376,7 +399,7 @@ namespace {
           this_thread::sleep_for (100ms);
           }
         //}}}
-        mVideoRender = new cVideoRender (false, 100, 24,
+        mVideoRender = new cVideoRender (false, 100, 0,
                                          mService->getVideoStreamTypeId(), mService->getVideoPid());
 
         mGopMap.begin()->second.load (mVideoRender, getAudioPlayerPts(), mGopMap.begin()->first, "first");
@@ -389,13 +412,13 @@ namespace {
           if (gopIt != mGopMap.begin())
             --gopIt;
 
-          if (!mVideoRender->getFrameAtPts (loadPts)) {
+          if (!mVideoRender->isFrameAtPts (loadPts)) {
             gopIt->second.load (mVideoRender, loadPts, gopIt->first, "this");
             continue;
             }
 
           if ((nextGopIt->first - loadPts) <= (3 * 3600)) {
-            if (!mVideoRender->getFrameAtPts (nextGopIt->first)) {
+            if (!mVideoRender->isFrameAtPts (nextGopIt->first)) {
               nextGopIt->second.load (mVideoRender, loadPts, nextGopIt->first, "next");
               continue;
               }

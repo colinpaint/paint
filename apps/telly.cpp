@@ -59,8 +59,9 @@ extern "C" {
 #include "../app/myImgui.h"
 
 using namespace std;
+using namespace utils;
 //}}}
-
+constexpr bool kPesDebug = false;
 namespace {
   //{{{  const string kRootDir
     #ifdef _WIN32
@@ -205,99 +206,11 @@ namespace {
     //{{{
     void liveDvbSourceThread (const cDvbMultiplex& multiplex, cTellyOptions* options) {
 
-      cLog::log (LOGINFO, fmt::format ("thread - multiplex:{} {:4.1f} record:{}",
-                                       multiplex.mName, multiplex.mFrequency/1000.f, options->mRecordRoot));
-
-      mFileSource = false;
-      mMultiplex = multiplex;
-      mRecordRoot = options->mRecordRoot;
-      if (multiplex.mFrequency)
-        mDvbSource = new cDvbSource (multiplex.mFrequency, 0);
-
-      mTransportStream = new cTransportStream (multiplex, options,
-        // newService lambda
-        [&](cTransportStream::cService& service) noexcept {
-          if (options->mShowAllServices)
-            if (service.getStream (cRenderStream::eVideo).isDefined()) {
-              service.enableStream (cRenderStream::eVideo);
-              service.enableStream (cRenderStream::eAudio);
-              service.enableStream (cRenderStream::eSubtitle);
-              }
-          },
-        // addPes lambda
-        [&](cTransportStream::cService& service, cTransportStream::cPidInfo& pidInfo) noexcept {
-          cRenderStream* stream = service.getStreamByPid (pidInfo.getPid());
-          if (stream && stream->isEnabled()) {
-            uint8_t* buffer = (uint8_t*)malloc (pidInfo.getBufSize());
-            memcpy (buffer, pidInfo.mBuffer, pidInfo.getBufSize());
-            stream->getRender().decodePes (buffer, pidInfo.getBufSize(), pidInfo.getPts(), pidInfo.getDts());
-            }
-          });
-
-      if (!mTransportStream) {
-        //{{{  error, return
-        cLog::log (LOGERROR, "cTellyApp::setLiveDvbSource - failed to create liveDvbSource");
-        return;
-        }
-        //}}}
-
-      FILE* mFile = options->mRecordAllServices ?
-        fopen ((mRecordRoot + mMultiplex.mName + ".ts").c_str(), "wb") : nullptr;
-
-      mLiveThread = thread ([=]() {
+      thread ([=]() {
         cLog::setThreadName ("dvb ");
-
-        #ifdef _WIN32
-          //{{{  windows
-          SetThreadPriority (GetCurrentThread(), THREAD_PRIORITY_TIME_CRITICAL);
-          mDvbSource->run();
-
-          int blockSize = 0;
-
-          while (true) {
-            auto ptr = mDvbSource->getBlockBDA (blockSize);
-            if (blockSize) {
-              //  read and demux block
-              mTransportStream->demux (ptr, blockSize);
-              if (options->mRecordAllServices && mFile)
-                fwrite (ptr, 1, blockSize, mFile);
-              mDvbSource->releaseBlock (blockSize);
-              }
-            else
-              this_thread::sleep_for (1ms);
-            }
-          //}}}
-        #else
-          //{{{  linux
-          sched_param sch_params;
-          sch_params.sched_priority = sched_get_priority_max (SCHED_RR);
-          pthread_setschedparam (mLiveThread.native_handle(), SCHED_RR, &sch_params);
-
-          constexpr int kDvrReadChunkSize = 188 * 64;
-          uint8_t* chunk = new uint8_t[kDvrReadChunkSize];
-
-          while (true) {
-            int bytesRead = mDvbSource->getBlock (chunk, kDvrReadChunkSize);
-            if (bytesRead) {
-              mTransportStream->demux (chunk, bytesRead);
-              if (options->mRecordAllServices && mFile)
-                fwrite (chunk, 1, bytesRead, mFile);
-              }
-            else
-              cLog::log (LOGINFO, fmt::format ("liveDvbSource - no bytes"));
-            }
-
-          delete[] chunk;
-          //}}}
-        #endif
-
-        if (mFile)
-          fclose (mFile);
-
+        liveDvbSource (multiplex, options);
         cLog::log (LOGINFO, "exit");
-        });
-
-      mLiveThread.detach();
+        }).detach();
       }
     //}}}
     //{{{
@@ -319,6 +232,15 @@ namespace {
           if (stream && stream->isEnabled()) {
             uint8_t* buffer = (uint8_t*)malloc (pidInfo.getBufSize());
             memcpy (buffer, pidInfo.mBuffer, pidInfo.getBufSize());
+            if (kPesDebug) {
+              if  (stream->getLabel() == "vid:") {
+                char frameType = cDvbUtils::getFrameType (buffer, pidInfo.getBufSize(), true);
+                cLog::log (LOGINFO, fmt::format ("{}{} {:6d} pts:{} dts:{}",
+                                                 stream->getLabel(), frameType, pidInfo.getBufSize(),
+                                                 getPtsString (pidInfo.getPts()),
+                                                 getPtsString (pidInfo.getDts()) ));
+                }
+              }
             stream->getRender().decodePes (buffer, pidInfo.getBufSize(), pidInfo.getPts(), pidInfo.getDts());
             }
           }
@@ -379,7 +301,6 @@ namespace {
     cTransportStream* mTransportStream = nullptr;
 
     // liveDvbSource
-    thread mLiveThread;
     cDvbSource* mDvbSource = nullptr;
     cDvbMultiplex mMultiplex;
     string mRecordRoot;
@@ -809,7 +730,7 @@ namespace {
         //}}}
         if (mSelect == eSelectedFull) {
           //{{{  draw ptsFromStart bottomRight
-          string ptsFromStartString = utils::getPtsString (mService.getPtsFromStart());
+          string ptsFromStartString = getPtsString (mService.getPtsFromStart());
           pos = ImVec2 (mSize - ImVec2(ImGui::GetTextLineHeight() * 7.f, ImGui::GetTextLineHeight()));
           ImGui::SetCursorPos (pos);
           ImGui::TextColored ({0.f,0.f,0.f,1.f}, ptsFromStartString.c_str());
@@ -1146,8 +1067,8 @@ namespace {
         // draw pid label
         ImGui::TextUnformatted (fmt::format ("{:{}d} {:{}d} {:4d} {} {} {}",
                                 pidInfo.mPackets, mPacketChars, pidInfo.mErrors, errorChars, pidInfo.getPid(),
-                                utils::getFullPtsString (pidInfo.getPts()),
-                                utils::getFullPtsString (pidInfo.getDts()),
+                                getFullPtsString (pidInfo.getPts()),
+                                getFullPtsString (pidInfo.getDts()),
                                 pidInfo.getPidName()).c_str());
 
         // draw stream bar

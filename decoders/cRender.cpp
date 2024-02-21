@@ -45,28 +45,38 @@ cRender::~cRender() {
 //}}}
 
 //{{{
+bool cRender::isFrameAtPts (int64_t pts) {
+// return true if pts in mFramesMap
+
+  // lock
+  unique_lock<shared_mutex> lock (mSharedMutex);
+  return isFrameAtPtsAlreadyLocked (pts);
+  }
+//}}}
+//{{{
 cFrame* cRender::getFrameAtPts (int64_t pts) {
-// find pts frame
+// find frame containing pts
+// - !!! could speed up with map.upper_bound !!!
 
   unique_lock<shared_mutex> lock (mSharedMutex);
 
-  auto it = mFramesMap.find (pts / mPtsDuration);
-  return (it == mFramesMap.end()) ? nullptr : it->second;
+  for (auto it = mFramesMap.begin(); it != mFramesMap.end(); ++it)
+    if (it->second->contains (pts))
+      return it->second;
+
+  return nullptr;
   }
 //}}}
 //{{{
 cFrame* cRender::getFrameAtOrAfterPts (int64_t pts) {
-// search for first frame, on or after pts
+// return frame at or firstFrame after pts
+// - useful for skipping gaps
 
   unique_lock<shared_mutex> lock (mSharedMutex);
 
-  auto it = mFramesMap.begin();
-  while (it != mFramesMap.end()) {
-    int64_t diff = it->first - (pts / mPtsDuration);
-    if (diff >= 0)
+  for (auto it = mFramesMap.begin(); it != mFramesMap.end(); ++it)
+    if (it->first >= pts)
       return it->second;
-    ++it;
-    }
 
   return nullptr;
   }
@@ -96,12 +106,13 @@ cFrame* cRender::allocFrame (int64_t pts) {
   { // lock
   unique_lock<shared_mutex> lock (mSharedMutex);
 
-  if (findLocked (pts)) {
+  if (isFrameAtPtsAlreadyLocked (pts)) {
     // don't alloc
     cLog::log (LOGINFO, fmt::format ("- allocFrame {} already decoded", getPtsString (pts)));
     return nullptr;
     }
 
+  // if pts is farther from front than back of mFramesMap, alloc front
   int64_t frontDist = pts - mFramesMap.begin()->second->getPts();
   int64_t backDist = mFramesMap.rbegin()->second->getPts() - pts;
   auto it = frontDist > backDist ? mFramesMap.begin() : --mFramesMap.end();
@@ -123,51 +134,14 @@ void cRender::addFrame (cFrame* frame) {
     cLog::log (LOGINFO, fmt::format ("- addFrame {}", getPtsString (frame->getPts())));
 
   unique_lock<shared_mutex> lock (mSharedMutex);
-  if (mFramesMap.find (frame->getPts() / frame->getPtsDuration()) != mFramesMap.end())
-    cLog::log (LOGERROR, fmt::format ("- addFrame - duplicate"));
+  if (mFramesMap.find (frame->getPts()) != mFramesMap.end())
+    cLog::log (LOGERROR, fmt::format ("- addFrame - trying to add duplicate pts:{}", frame->getPts()));
   else
-    mFramesMap.emplace (frame->getPts() / frame->getPtsDuration(), frame);
+    mFramesMap.emplace (frame->getPts(), frame);
   }
 //}}}
 
 // process
-//{{{
-int64_t cRender::load (int64_t pts) {
-// return first unloaded frame in preLoad order
-// - 0, 1..maxPreLoadFrames, -maxPreLoadFrames..-1
-
-  // load pts
-  int index = 0;
-  if (!find (pts)) {
-    if (kLoadDebug)
-      cLog::log (LOGINFO, fmt::format ("load index:{} pts:{}", index, getPtsString (pts)));
-    return pts;
-    }
-
-  // preload after pts
-  for (index = 1; index <= (int)mPreLoadFrames; index++) {
-    int64_t loadPts = pts + (index * mPtsDuration);
-    if (!find (loadPts)) {
-      if (kLoadDebug)
-        cLog::log (LOGINFO, fmt::format ("load index:{} pts:{}", index, getPtsString (loadPts)));
-      return loadPts;
-      }
-    }
-
-  // preload before pts in forward order to help decoder
-  for (index = -(int)mPreLoadFrames; index <= -1; index++) {
-    int64_t loadPts = pts + (index * mPtsDuration);
-    if (!find (loadPts)) {
-      if (kLoadDebug)
-        cLog::log (LOGINFO, fmt::format ("load index:{} pts:{}", index, getPtsString (loadPts)));
-      return loadPts;
-      }
-    }
-
-  // nothing to load
-  return -1;
-  }
-//}}}
 //{{{
 bool cRender::throttle (int64_t pts) {
 
@@ -232,7 +206,7 @@ void cRender::clearFrames() {
 //}}}
 
 //{{{
-bool cRender::findLocked (int64_t pts) {
+bool cRender::isFrameAtPtsAlreadyLocked (int64_t pts) {
 // return true if pts in mFramesMap
 
   for (auto it = mFramesMap.begin(); it != mFramesMap.end(); ++it)
@@ -240,15 +214,6 @@ bool cRender::findLocked (int64_t pts) {
       return true;
 
   return false;
-  }
-//}}}
-//{{{
-bool cRender::find (int64_t pts) {
-// return true if pts in mFramesMap
-
-  // lock
-  unique_lock<shared_mutex> lock (mSharedMutex);
-  return findLocked (pts);
   }
 //}}}
 
