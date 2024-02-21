@@ -73,8 +73,11 @@ public:
   cVideoRender* getVideoRender() { return mVideoRender; }
   int64_t getPlayPts() const { return mPlayPts; }
 
+  void togglePlay() { mPlaying = !mPlaying; }
+  void skipPlay (int64_t skipPts) { mPlayPts += skipPts; }
+
   //{{{
-  void start() {
+  void read() {
 
     FILE* file = fopen (mFileName.c_str(), "rb");
     if (!file) {
@@ -97,30 +100,25 @@ public:
 
     thread ([=]() {
       cLog::setThreadName ("anal");
-
-
       mTransportStream = new cTransportStream (
         {"anal", 0, {}, {}}, nullptr,
         // newService lambda, !!! hardly used !!!
         [&](cTransportStream::cService& service) noexcept {
           mService = &service;
-          mVideoRender = new cVideoRender (false, 500, 0,
-                                           mService->getVideoStreamTypeId(), mService->getVideoPid());
+          mVideoRender = new cVideoRender (false, 100, mService->getVideoStreamTypeId(), mService->getVideoPid());
           },
-        //{{{  pes lambda
+         // pes lambda
         [&](cTransportStream::cService& service, cTransportStream::cPidInfo& pidInfo) noexcept {
           if (pidInfo.getPid() == service.getVideoPid()) {
-            // add video pes, take copy of pes
             uint8_t* buffer = (uint8_t*)malloc (pidInfo.getBufSize());
             memcpy (buffer, pidInfo.mBuffer, pidInfo.getBufSize());
-
             char frameType = cDvbUtils::getFrameType (buffer, pidInfo.getBufSize(), true);
             sPes pes (buffer, pidInfo.getBufSize(), pidInfo.getPts(), pidInfo.getDts(), frameType);
-            if (frameType == 'I') // ad gop
+            if (frameType == 'I') // add gop
               mGopMap.emplace (pidInfo.getPts(), cGop(pes));
             else if (!mGopMap.empty()) // add pes to last gop
               mGopMap.rbegin()->second.addPes (pes);
-
+            //{{{  debug
             cLog::log (LOGINFO, fmt::format ("V {}:{:2d} dts:{} pts:{} size:{}",
                                              frameType,
                                              mGopMap.empty() ? 0 : mGopMap.rbegin()->second.getSize(),
@@ -128,24 +126,32 @@ public:
                                              getFullPtsString (pidInfo.getPts()),
                                              pidInfo.getBufSize()
                                              ));
-            if (!mGopMap.empty())
-              if (mVideoRender) {
-                mVideoRender->decodePes (buffer, pidInfo.getBufSize(), pidInfo.getPts(), pidInfo.getDts());
-                mPlayPts = pidInfo.getPts();
-                this_thread::sleep_for (100ms);
-                }
+            //}}}
+            if (!mGopMap.empty() && mVideoRender) {
+              //{{{  decode
+              mVideoRender->decodePes (buffer, pidInfo.getBufSize(), pidInfo.getPts(), pidInfo.getDts());
+              mPlayPts = pidInfo.getPts();
+              this_thread::sleep_for (40ms);
+              }
+              //}}}
+            while (!mPlaying)
+              this_thread::sleep_for (40ms);
             }
-
           else if (pidInfo.getPid() == service.getAudioPid()) {
-            cLog::log (LOGINFO, fmt::format ("A pts:{} size:{}",
+            //{{{  audio
+            cLog::log (LOGINFO, fmt::format ("- A pts:{} size:{}",
                                              getFullPtsString (pidInfo.getPts()), pidInfo.getBufSize()));
             }
+            //}}}
           else if (pidInfo.getPid() == service.getSubtitlePid()) {
+            //{{{  subtitle
+            cLog::log (LOGINFO, fmt::format ("  - S pts:{} size:{}",
+                                             getFullPtsString (pidInfo.getPts()), pidInfo.getBufSize()));
             }
+            //}}}
           else
             cLog::log (LOGERROR, fmt::format ("cFilePlayer analyse addPes - unknown pid:{}", pidInfo.getPid()));
           }
-        //}}}
         );
 
       size_t chunkSize = 188 * 256;
@@ -251,6 +257,7 @@ private:
   // render
   cVideoRender* mVideoRender = nullptr;
   int64_t mPlayPts = -1;
+  bool mPlaying = true;
   };
 //}}}
 //{{{
@@ -261,7 +268,7 @@ public:
 
   void addFile (const string& fileName, cApp::cOptions* options) {
     mFilePlayer = new cFilePlayer (fileName);
-    mFilePlayer->start();
+    mFilePlayer->read();
     }
 
   cApp::cOptions* getOptions() { return mOptions; }
@@ -295,46 +302,54 @@ public:
                        ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse |
                        ImGuiWindowFlags_NoBackground);
 
-    // get videoFrame
-    cVideoRender* videoRender = testApp.getFilePlayer()->getVideoRender();
-    if (videoRender) {
-      cVideoFrame* videoFrame = videoRender->getVideoFrameAtOrAfterPts (testApp.getFilePlayer()->getPlayPts());
-      if (videoFrame) {
-        //{{{  draw video
-        cMat4x4 model = cMat4x4();
-        model.setTranslate ({(layoutPos.x - (0.5f * layoutScale)) * viewportWidth,
-                             ((1.f-layoutPos.y) - (0.5f * layoutScale)) * viewportHeight});
-        model.size ({layoutScale * viewportWidth / videoFrame->getWidth(),
-                     layoutScale * viewportHeight / videoFrame->getHeight()});
-        cMat4x4 projection (0.f,viewportWidth, 0.f,viewportHeight, -1.f,1.f);
-        videoShader->use();
-        videoShader->setModelProjection (model, projection);
+    if (testApp.getFilePlayer()) {
+      cVideoRender* videoRender = testApp.getFilePlayer()->getVideoRender();
+      if (videoRender) {
+        cVideoFrame* videoFrame = videoRender->getVideoFrameAtOrAfterPts (testApp.getFilePlayer()->getPlayPts());
+        if (videoFrame) {
+          //{{{  draw video
+          cMat4x4 model = cMat4x4();
+          model.setTranslate ({(layoutPos.x - (0.5f * layoutScale)) * viewportWidth,
+                               ((1.f-layoutPos.y) - (0.5f * layoutScale)) * viewportHeight});
+          model.size ({layoutScale * viewportWidth / videoFrame->getWidth(),
+                       layoutScale * viewportHeight / videoFrame->getHeight()});
+          cMat4x4 projection (0.f,viewportWidth, 0.f,viewportHeight, -1.f,1.f);
+          videoShader->use();
+          videoShader->setModelProjection (model, projection);
 
-        // texture
-        cTexture& texture = videoFrame->getTexture (testApp.getGraphics());
-        texture.setSource();
+          // texture
+          cTexture& texture = videoFrame->getTexture (testApp.getGraphics());
+          texture.setSource();
 
-        // ensure quad is created
-        if (!mVideoQuad)
-          mVideoQuad = testApp.getGraphics().createQuad (videoFrame->getSize());
+          // ensure quad is created
+          if (!mVideoQuad)
+            mVideoQuad = testApp.getGraphics().createQuad (videoFrame->getSize());
 
-        // draw quad
-        mVideoQuad->draw();
+          // draw quad
+          mVideoQuad->draw();
+          }
+          //}}}
         }
-        //}}}
+      //{{{  title, playPts
+      ImGui::PushFont (testApp.getLargeFont());
+
+      string title = testApp.getFilePlayer()->getFileName();
+      ImVec2 pos = {ImGui::GetTextLineHeight() * 0.25f, 0.f};
+      ImGui::SetCursorPos (pos);
+      ImGui::TextColored ({0.f,0.f,0.f,1.f}, title.c_str());
+      ImGui::SetCursorPos (pos - ImVec2(2.f,2.f));
+      ImGui::TextColored ({1.f, 1.f,1.f,1.f}, title.c_str());
+
+      string ptsString = getPtsString (testApp.getFilePlayer()->getPlayPts());
+      pos = ImVec2 (mSize - ImVec2(ImGui::GetTextLineHeight() * 7.f, ImGui::GetTextLineHeight()));
+      ImGui::SetCursorPos (pos);
+      ImGui::TextColored ({0.f,0.f,0.f,1.f}, ptsString.c_str());
+      ImGui::SetCursorPos (pos - ImVec2(2.f,2.f));
+      ImGui::TextColored ({1.f,1.f,1.f,1.f}, ptsString.c_str());
+
+      ImGui::PopFont();
+      //}}}
       }
-
-    ImGui::PushFont (testApp.getLargeFont());
-
-    string title = testApp.getFilePlayer()->getFileName();
-    ImVec2 pos = {ImGui::GetTextLineHeight() * 0.25f, 0.f};
-    ImGui::SetCursorPos (pos);
-    ImGui::TextColored ({0.f,0.f,0.f,1.f}, title.c_str());
-    ImGui::SetCursorPos (pos - ImVec2(2.f,2.f));
-    ImGui::TextColored ({1.f, 1.f,1.f,1.f}, title.c_str());
-
-    ImGui::PopFont();
-
     ImGui::EndChild();
     }
 
@@ -460,6 +475,7 @@ public:
   virtual ~cTestUI() = default;
 
   void draw (cApp& app) {
+    ImGui::SetKeyboardFocusHere();
     app.getGraphics().clear ({(int32_t)ImGui::GetIO().DisplaySize.x,
                               (int32_t)ImGui::GetIO().DisplaySize.y});
 
@@ -493,13 +509,6 @@ public:
       if (toggleButton ("full", testApp.getPlatform().getFullScreen()))
         testApp.getPlatform().toggleFullScreen();
       //}}}
-      if (testApp.getPlatform().hasVsync()) {
-        //{{{  draw vsync button
-        ImGui::SameLine();
-        if (toggleButton ("vsync", testApp.getPlatform().getVsync()))
-          testApp.getPlatform().toggleVsync();
-        }
-        //}}}
       //{{{  draw frameRate info
       ImGui::SameLine();
       ImGui::TextUnformatted (fmt::format("{}:fps", static_cast<uint32_t>(ImGui::GetIO().Framerate)).c_str());
@@ -507,12 +516,52 @@ public:
       ImGui::EndChild();
       }
     ImGui::End();
+    keyboard (testApp);
     }
 
 private:
   // vars
   cView* mView;
   cTextureShader* mVideoShader = nullptr;
+
+  //{{{
+  void keyboard (cTestApp& testApp) {
+
+    //{{{
+    struct sActionKey {
+      bool mAlt;
+      bool mControl;
+      bool mShift;
+      ImGuiKey mGuiKey;
+      function <void()> mActionFunc;
+      };
+    //}}}
+    const vector<sActionKey> kActionKeys = {
+    //  alt    control shift  ImGuiKey             function
+      { false, false,  false, ImGuiKey_Space,      [this,&testApp]{ testApp.getFilePlayer()->togglePlay(); }},
+      { false, false,  false, ImGuiKey_LeftArrow,  [this,&testApp]{ testApp.getFilePlayer()->skipPlay (-90000/25); }},
+      { false, false,  false, ImGuiKey_RightArrow, [this,&testApp]{ testApp.getFilePlayer()->skipPlay (90000/25); }},
+    };
+
+    ImGui::GetIO().WantTextInput = true;
+    ImGui::GetIO().WantCaptureKeyboard = true;
+
+    // action keys
+    bool altKey = ImGui::GetIO().KeyAlt;
+    bool controlKey = ImGui::GetIO().KeyCtrl;
+    bool shiftKey = ImGui::GetIO().KeyShift;
+    for (auto& actionKey : kActionKeys)
+      if (ImGui::IsKeyPressed (actionKey.mGuiKey) &&
+          (actionKey.mAlt == altKey) &&
+          (actionKey.mControl == controlKey) &&
+          (actionKey.mShift == shiftKey)) {
+        actionKey.mActionFunc();
+        break;
+        }
+
+    ImGui::GetIO().InputQueueCharacters.resize (0);
+    }
+  //}}}
   };
 //}}}
 

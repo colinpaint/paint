@@ -11,7 +11,7 @@ class cSubtitleImage;
 
 class cSubtitleRender : public cRender {
 public:
-  cSubtitleRender (bool queue, size_t maxFrames, size_t preLoadFrames, uint8_t streamType, uint16_t pid);
+  cSubtitleRender (bool queue, size_t maxFrames, uint8_t streamType, uint16_t pid);
   virtual ~cSubtitleRender() = default;
 
   size_t getNumLines() const;

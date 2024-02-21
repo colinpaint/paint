@@ -319,7 +319,7 @@ namespace {
           this_thread::sleep_for (1ms);
           }
         //}}}
-        mAudioRender = new cAudioRender (false, 59, 4, true,
+        mAudioRender = new cAudioRender (false, 62, true,
                                          mService->getAudioStreamTypeId(), mService->getAudioPid());
 
         // load first audioPes to create audioPlayer
@@ -392,8 +392,7 @@ namespace {
           this_thread::sleep_for (100ms);
           }
         //}}}
-        mVideoRender = new cVideoRender (false, 100, 0,
-                                         mService->getVideoStreamTypeId(), mService->getVideoPid());
+        mVideoRender = new cVideoRender (false, 100, mService->getVideoStreamTypeId(), mService->getVideoPid());
 
         mGopMap.begin()->second.load (mVideoRender, getAudioPlayerPts(), mGopMap.begin()->first, "first");
 
@@ -447,8 +446,7 @@ namespace {
           this_thread::sleep_for (100ms);
           }
 
-        mSubtitleRender = new cSubtitleRender (
-          false, 0, 0, mService->getSubtitleStreamTypeId(), mService->getSubtitlePid());
+        mSubtitleRender = new cSubtitleRender (false, 3, mService->getSubtitleStreamTypeId(), mService->getSubtitlePid());
 
         cLog::log (LOGERROR, "exit");
         }).detach();

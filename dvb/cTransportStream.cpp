@@ -462,19 +462,19 @@ void cTransportStream::cService::enableStream (cRenderStream::eType streamType) 
   switch (streamType) {
     case cRenderStream::eVideo: {
       cRenderStream& stream = getStream (cRenderStream::eVideo);
-      stream.setRender (new cVideoRender (true, 56, 3, stream.getTypeId(), stream.getPid()));
+      stream.setRender (new cVideoRender (true, 56, stream.getTypeId(), stream.getPid()));
       break;
       }
 
     case cRenderStream::eAudio: {
       cRenderStream& stream = getStream (cRenderStream::eAudio);
-      stream.setRender (new cAudioRender (true, 48, 3, true, stream.getTypeId(), stream.getPid()));
+      stream.setRender (new cAudioRender (true, 48, true, stream.getTypeId(), stream.getPid()));
       break;
       }
 
     case cRenderStream::eSubtitle: {
       cRenderStream& stream = getStream (cRenderStream::eSubtitle);
-      stream.setRender (new cSubtitleRender (true, 1, 0, stream.getTypeId(), stream.getPid()));
+      stream.setRender (new cSubtitleRender (true, 1, stream.getTypeId(), stream.getPid()));
       break;
       }
 
@@ -505,8 +505,8 @@ void cTransportStream::cService::start (chrono::system_clock::time_point tdt,
   // do we want to record ?
   if (getStream(cRenderStream::eAudio).isDefined() &&
       getStream (cRenderStream::eVideo).isDefined() &&
-      (selected || 
-       getRecord() || 
+      (selected ||
+       getRecord() ||
        (mOptions && ((dynamic_cast<cOptions*>(mOptions))->mRecordAllServices)))) {
     string filePath = (dynamic_cast<cOptions*>(mOptions))->mRecordRoot +
                       getRecordName() + date::format ("%d %b %y %a %H.%M.%S ",

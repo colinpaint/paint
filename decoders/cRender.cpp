@@ -22,12 +22,12 @@ constexpr bool kAllocAddFrameDebug = false;
 //{{{
 cRender::cRender (bool queued, const string& threadName,
                   uint8_t streamType, uint16_t pid,
-                  int64_t ptsDuration, size_t maxFrames, size_t preLoadFrames,
+                  int64_t ptsDuration, size_t maxFrames,
                   function <cFrame* (int64_t pts)> allocFrameCallback,
                   function <void (cFrame* frame)> addFrameCallback) :
     mQueued(queued), mThreadName(threadName),
     mStreamType(streamType), mPid(pid),
-    mMaxFrames(maxFrames), mPreLoadFrames(preLoadFrames),
+    mMaxFrames(maxFrames),
     mAllocFrameCallback(allocFrameCallback),
     mAddFrameCallback(addFrameCallback),
     mPtsDuration(ptsDuration) {
@@ -135,7 +135,7 @@ void cRender::addFrame (cFrame* frame) {
 
   unique_lock<shared_mutex> lock (mSharedMutex);
   if (mFramesMap.find (frame->getPts()) != mFramesMap.end())
-    cLog::log (LOGERROR, fmt::format ("- addFrame - trying to add duplicate pts:{}", 
+    cLog::log (LOGERROR, fmt::format ("- addFrame - trying to add duplicate pts:{}",
                                       getPtsString(frame->getPts()) ));
   else
     mFramesMap.emplace (frame->getPts(), frame);

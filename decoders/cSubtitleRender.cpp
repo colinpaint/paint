@@ -31,9 +31,8 @@ constexpr bool kAddFrameDebug = false;
 
 // public:
 //{{{
-cSubtitleRender::cSubtitleRender (bool queue, size_t maxFrames, size_t preLoadFrames,
-                                  uint8_t streamType, uint16_t pid) :
-    cRender(queue, "sub", streamType, pid, kPtsPer25HzFrame, maxFrames, preLoadFrames,
+cSubtitleRender::cSubtitleRender (bool queue, size_t maxFrames, uint8_t streamType, uint16_t pid) :
+    cRender(queue, "sub", streamType, pid, kPtsPer25HzFrame, maxFrames,
       // allocFrame lambda
       [&](int64_t pts) noexcept {
         if (kAllocFrameDebug)

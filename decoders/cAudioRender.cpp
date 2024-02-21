@@ -42,9 +42,8 @@ using namespace utils;
 //}}}
 
 //{{{
-cAudioRender::cAudioRender (bool queue, size_t maxFrames, size_t preLoadFrames,
-                            bool hasAudio, uint8_t streamType, uint16_t pid) :
-    cRender(queue, "aud", streamType, pid, 1920, maxFrames, preLoadFrames,
+cAudioRender::cAudioRender (bool queue, size_t maxFrames, bool hasAudio, uint8_t streamType, uint16_t pid) :
+    cRender(queue, "aud", streamType, pid, 1920, maxFrames, 
       // allocFrame lambda
       [&](int64_t pts) noexcept {
         if (kAllocFrameDebug)

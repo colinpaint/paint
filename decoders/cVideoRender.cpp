@@ -51,9 +51,8 @@ using namespace utils;
 
 // cVideoRender
 //{{{
-cVideoRender::cVideoRender (bool queue, size_t maxFrames, size_t preLoadFrames,
-                            uint8_t streamType, uint16_t pid) :
-    cRender(queue, "vid", streamType, pid, kPtsPer25HzFrame, maxFrames, preLoadFrames,
+cVideoRender::cVideoRender (bool queue, size_t maxFrames, uint8_t streamType, uint16_t pid) :
+    cRender(queue, "vid", streamType, pid, kPtsPer25HzFrame, maxFrames,
       // allocFrame lambda
       [&](int64_t pts) noexcept {
         return hasMaxFrames() ? allocFrame (pts) : new cFFmpegVideoFrame();
