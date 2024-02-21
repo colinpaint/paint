@@ -71,10 +71,122 @@ public:
   string getFileName() const { return mFileName; }
   cTransportStream::cService* getService() { return mService; }
   cVideoRender* getVideoRender() { return mVideoRender; }
+  int64_t getPlayPts() const { return mPlayPts; }
 
   //{{{
   void start() {
-    analyseThread();
+
+    FILE* file = fopen (mFileName.c_str(), "rb");
+    if (!file) {
+      //{{{  error, return
+      cLog::log (LOGERROR, fmt::format ("cFilePlayer::analyse to open {}", mFileName));
+      return;
+      }
+      //}}}
+    //{{{  get fileSize
+    #ifdef _WIN32
+      struct _stati64 st;
+      if (_stat64 (mFileName.c_str(), &st) != -1)
+        mFileSize = st.st_size;
+    #else
+      struct stat st;
+      if (stat (mFileName.c_str(), &st) != -1)
+        mFileSize = st.st_size;
+    #endif
+    //}}}
+
+    thread ([=]() {
+      cLog::setThreadName ("anal");
+
+
+      mTransportStream = new cTransportStream (
+        {"anal", 0, {}, {}}, nullptr,
+        // newService lambda, !!! hardly used !!!
+        [&](cTransportStream::cService& service) noexcept {
+          mService = &service;
+          mVideoRender = new cVideoRender (false, 500, 0,
+                                           mService->getVideoStreamTypeId(), mService->getVideoPid());
+          },
+        //{{{  pes lambda
+        [&](cTransportStream::cService& service, cTransportStream::cPidInfo& pidInfo) noexcept {
+          if (pidInfo.getPid() == service.getVideoPid()) {
+            // add video pes, take copy of pes
+            uint8_t* buffer = (uint8_t*)malloc (pidInfo.getBufSize());
+            memcpy (buffer, pidInfo.mBuffer, pidInfo.getBufSize());
+
+            char frameType = cDvbUtils::getFrameType (buffer, pidInfo.getBufSize(), true);
+            sPes pes (buffer, pidInfo.getBufSize(), pidInfo.getPts(), pidInfo.getDts(), frameType);
+            if (frameType == 'I') // ad gop
+              mGopMap.emplace (pidInfo.getPts(), cGop(pes));
+            else if (!mGopMap.empty()) // add pes to last gop
+              mGopMap.rbegin()->second.addPes (pes);
+
+            cLog::log (LOGINFO, fmt::format ("V {}:{:2d} dts:{} pts:{} size:{}",
+                                             frameType,
+                                             mGopMap.empty() ? 0 : mGopMap.rbegin()->second.getSize(),
+                                             getFullPtsString (pidInfo.getDts()),
+                                             getFullPtsString (pidInfo.getPts()),
+                                             pidInfo.getBufSize()
+                                             ));
+            if (!mGopMap.empty())
+              if (mVideoRender) {
+                mVideoRender->decodePes (buffer, pidInfo.getBufSize(), pidInfo.getPts(), pidInfo.getDts());
+                mPlayPts = pidInfo.getPts();
+                this_thread::sleep_for (100ms);
+                }
+            }
+
+          else if (pidInfo.getPid() == service.getAudioPid()) {
+            cLog::log (LOGINFO, fmt::format ("A pts:{} size:{}",
+                                             getFullPtsString (pidInfo.getPts()), pidInfo.getBufSize()));
+            }
+          else if (pidInfo.getPid() == service.getSubtitlePid()) {
+            }
+          else
+            cLog::log (LOGERROR, fmt::format ("cFilePlayer analyse addPes - unknown pid:{}", pidInfo.getPid()));
+          }
+        //}}}
+        );
+
+      size_t chunkSize = 188 * 256;
+      uint8_t* chunk = new uint8_t[chunkSize];
+      auto now = chrono::system_clock::now();
+      while (true) {
+        size_t bytesRead = fread (chunk, 1, chunkSize, file);
+        if (bytesRead > 0)
+          mTransportStream->demux (chunk, bytesRead);
+        else
+          break;
+        }
+      //{{{  report totals
+      cLog::log (LOGINFO, fmt::format ("{}m took {}ms",
+        mFileSize/1000000,
+        chrono::duration_cast<chrono::milliseconds>(chrono::system_clock::now() - now).count()));
+
+      size_t numVidPes = 0;
+      size_t longestGop = 0;
+      for (auto& gop : mGopMap) {
+        longestGop = max (longestGop, gop.second.getSize());
+        numVidPes += gop.second.getSize();
+        }
+
+      cLog::log (LOGINFO, fmt::format ("- vid:{:6d} {} to {} gop:{} longest:{}",
+                                       numVidPes,
+                                       getFullPtsString (mGopMap.begin()->second.getFirstPts()),
+                                       getFullPtsString (mGopMap.rbegin()->second.getLastPts()),
+                                       mGopMap.size(), longestGop));
+
+      cLog::log (LOGINFO, fmt::format ("- aud:{:6d} {} to {}",
+                                       mAudioPesMap.size(),
+                                       getFullPtsString (mAudioPesMap.begin()->first),
+                                       getFullPtsString (mAudioPesMap.rbegin()->first)));
+      //}}}
+
+      delete[] chunk;
+      fclose (file);
+
+      cLog::log (LOGERROR, "exit");
+      }).detach();
     }
   //}}}
 
@@ -123,190 +235,6 @@ private:
     };
   //}}}
 
-  //{{{
-  bool analyseThread() {
-  // launch analyser thread
-
-    FILE* file = fopen (mFileName.c_str(), "rb");
-    if (!file) {
-      //{{{  error, return
-      cLog::log (LOGERROR, fmt::format ("cFilePlayer::analyse to open {}", mFileName));
-      return false;
-      }
-      //}}}
-    //{{{  get fileSize
-    #ifdef _WIN32
-      struct _stati64 st;
-      if (_stat64 (mFileName.c_str(), &st) != -1)
-        mFileSize = st.st_size;
-    #else
-      struct stat st;
-      if (stat (mFileName.c_str(), &st) != -1)
-        mFileSize = st.st_size;
-    #endif
-    //}}}
-
-    thread ([=]() {
-      cLog::setThreadName ("anal");
-
-
-      mTransportStream = new cTransportStream (
-        {"anal", 0, {}, {}}, nullptr,
-        // newService lambda, !!! hardly used !!!
-        [&](cTransportStream::cService& service) noexcept { 
-          mService = &service; 
-          mVideoRender = new cVideoRender (false, 100, 0,
-                                           mService->getVideoStreamTypeId(), mService->getVideoPid());
-          },
-        //{{{  pes lambda
-        [&](cTransportStream::cService& service, cTransportStream::cPidInfo& pidInfo) noexcept {
-          if (pidInfo.getPid() == service.getVideoPid()) {
-            // add video pes, take copy of pes
-            uint8_t* buffer = (uint8_t*)malloc (pidInfo.getBufSize());
-            memcpy (buffer, pidInfo.mBuffer, pidInfo.getBufSize());
-
-            char frameType = cDvbUtils::getFrameType (buffer, pidInfo.getBufSize(), true);
-            if ((frameType == 'I') || mGopMap.empty())
-              mGopMap.emplace (pidInfo.getPts(), cGop(sPes(buffer, pidInfo.getBufSize(),
-                                                           pidInfo.getPts(), pidInfo.getDts(), frameType)));
-            else
-              mGopMap.rbegin()->second.addPes (sPes(buffer, pidInfo.getBufSize(),
-                                                    pidInfo.getPts(), pidInfo.getDts(), frameType));
-            cLog::log (LOGINFO, fmt::format ("V {}:{:2d} dts:{} pts:{} size:{}",
-                                             frameType,
-                                             mGopMap.empty() ? 0 : mGopMap.rbegin()->second.getSize(),
-                                             getFullPtsString (pidInfo.getDts()),
-                                             getFullPtsString (pidInfo.getPts()),
-                                             pidInfo.getBufSize()
-                                             ));
-
-            if (mVideoRender)
-              mVideoRender->decodePes (buffer, pidInfo.getBufSize(), pidInfo.getPts(), pidInfo.getDts());
-            }
-
-          else if (pidInfo.getPid() == service.getAudioPid()) {
-            // add audio pes, take copy of pes
-            uint8_t* buffer = (uint8_t*)malloc (pidInfo.getBufSize());
-            memcpy (buffer, pidInfo.mBuffer, pidInfo.getBufSize());
-            cLog::log (LOGINFO, fmt::format ("A pts:{} size:{}",
-                                             getFullPtsString (pidInfo.getPts()), pidInfo.getBufSize()));
-
-            unique_lock<shared_mutex> lock (mAudioMutex);
-            mAudioPesMap.emplace (pidInfo.getPts(),
-                                  sPes(buffer, pidInfo.getBufSize(), pidInfo.getPts(), pidInfo.getDts()));
-            }
-          else if (pidInfo.getPid() == service.getSubtitlePid()) {
-            }
-          else
-            cLog::log (LOGERROR, fmt::format ("cFilePlayer analyse addPes - unknown pid:{}", pidInfo.getPid()));
-          }
-        //}}}
-        );
-
-
-      size_t chunkSize = 188 * 256;
-      uint8_t* chunk = new uint8_t[chunkSize];
-
-      auto now = chrono::system_clock::now();
-      while (true) {
-        size_t bytesRead = fread (chunk, 1, chunkSize, file);
-        if (bytesRead > 0)
-          mTransportStream->demux (chunk, bytesRead);
-        else
-          break;
-        }
-
-      //{{{  report totals
-      cLog::log (LOGINFO, fmt::format ("{}m took {}ms",
-        mFileSize/1000000,
-        chrono::duration_cast<chrono::milliseconds>(chrono::system_clock::now() - now).count()));
-
-      size_t numVidPes = 0;
-      size_t longestGop = 0;
-      for (auto& gop : mGopMap) {
-        longestGop = max (longestGop, gop.second.getSize());
-        numVidPes += gop.second.getSize();
-        }
-
-      cLog::log (LOGINFO, fmt::format ("- vid:{:6d} {} to {} gop:{} longest:{}",
-                                       numVidPes,
-                                       getFullPtsString (mGopMap.begin()->second.getFirstPts()),
-                                       getFullPtsString (mGopMap.rbegin()->second.getLastPts()),
-                                       mGopMap.size(), longestGop));
-
-      cLog::log (LOGINFO, fmt::format ("- aud:{:6d} {} to {}",
-                                       mAudioPesMap.size(),
-                                       getFullPtsString (mAudioPesMap.begin()->first),
-                                       getFullPtsString (mAudioPesMap.rbegin()->first)));
-      //}}}
-
-      while (true)
-        this_thread::sleep_for (1s);
-
-      delete[] chunk;
-      fclose (file);
-
-      cLog::log (LOGERROR, "exit");
-      }).detach();
-
-    return true;
-    }
-  //}}}
-  //{{{
-  void videoLoaderThread() {
-  // launch videoLoader thread
-
-    thread ([=]() {
-      cLog::setThreadName ("vidL");
-
-      //{{{  wait for first video pes
-      while (mGopMap.begin() == mGopMap.end()) {
-        cLog::log (LOGINFO, fmt::format ("videoLoader start wait"));
-        this_thread::sleep_for (100ms);
-        }
-      //}}}
-      mVideoRender = new cVideoRender (false, 100, 0,
-                                       mService->getVideoStreamTypeId(), mService->getVideoPid());
-      int64_t playPts = 0;
-      mGopMap.begin()->second.load (mVideoRender, playPts, mGopMap.begin()->first, "first");
-
-      while (true) {
-        int64_t loadPts = playPts;
-        auto nextIt = mGopMap.upper_bound (loadPts);
-        auto it = nextIt;
-        if (it != mGopMap.begin())
-          --it;
-
-        if (!mVideoRender->isFrameAtPts (loadPts)) {
-          it->second.load (mVideoRender, loadPts, it->first, "load");
-          continue;
-          }
-
-        // ensure next loaded
-        if (nextIt != mGopMap.end()) {
-          if (!mVideoRender->isFrameAtPts (nextIt->first)) {
-            nextIt->second.load (mVideoRender, loadPts, nextIt->first, "next");
-            continue;
-            }
-          }
-
-        // ensure prev loaded
-        //if (--it != mGopMap.begin()) {
-        //  if (!mVideoRender->isFrameAtPts (it->first)) {
-        //    it->second.load (mVideoRender, loadPts, it->first, "prev");
-        //    continue;
-        //    }
-        //  }
-
-        // wait for change
-        this_thread::sleep_for (1ms);
-        }
-
-      cLog::log (LOGERROR, "exit");
-      }).detach();
-    }
-  //}}}
-
   string mFileName;
   size_t mFileSize = 0;
 
@@ -322,6 +250,7 @@ private:
 
   // render
   cVideoRender* mVideoRender = nullptr;
+  int64_t mPlayPts = -1;
   };
 //}}}
 //{{{
@@ -367,30 +296,33 @@ public:
                        ImGuiWindowFlags_NoBackground);
 
     // get videoFrame
-    //cVideoFrame* videoFrame = videoRender->getVideoFrameAtOrAfterPts (playPts);
-    //if (videoFrame) {
-      //{{{  draw video
-      //cMat4x4 model = cMat4x4();
-      //model.setTranslate ({(layoutPos.x - (0.5f * layoutScale)) * viewportWidth,
-                           //((1.f-layoutPos.y) - (0.5f * layoutScale)) * viewportHeight});
-      //model.size ({layoutScale * viewportWidth / videoFrame->getWidth(),
-                   //layoutScale * viewportHeight / videoFrame->getHeight()});
-      //cMat4x4 projection (0.f,viewportWidth, 0.f,viewportHeight, -1.f,1.f);
-      //videoShader->use();
-      //videoShader->setModelProjection (model, projection);
+    cVideoRender* videoRender = testApp.getFilePlayer()->getVideoRender();
+    if (videoRender) {
+      cVideoFrame* videoFrame = videoRender->getVideoFrameAtOrAfterPts (testApp.getFilePlayer()->getPlayPts());
+      if (videoFrame) {
+        //{{{  draw video
+        cMat4x4 model = cMat4x4();
+        model.setTranslate ({(layoutPos.x - (0.5f * layoutScale)) * viewportWidth,
+                             ((1.f-layoutPos.y) - (0.5f * layoutScale)) * viewportHeight});
+        model.size ({layoutScale * viewportWidth / videoFrame->getWidth(),
+                     layoutScale * viewportHeight / videoFrame->getHeight()});
+        cMat4x4 projection (0.f,viewportWidth, 0.f,viewportHeight, -1.f,1.f);
+        videoShader->use();
+        videoShader->setModelProjection (model, projection);
 
-      //// texture
-      //cTexture& texture = videoFrame->getTexture (testApp.getGraphics());
-      //texture.setSource();
+        // texture
+        cTexture& texture = videoFrame->getTexture (testApp.getGraphics());
+        texture.setSource();
 
-      //// ensure quad is created
-      //if (!mVideoQuad)
-        //mVideoQuad = testApp.getGraphics().createQuad (videoFrame->getSize());
+        // ensure quad is created
+        if (!mVideoQuad)
+          mVideoQuad = testApp.getGraphics().createQuad (videoFrame->getSize());
 
-      //// draw quad
-      //mVideoQuad->draw();
-
-      //}}}
+        // draw quad
+        mVideoQuad->draw();
+        }
+        //}}}
+      }
 
     ImGui::PushFont (testApp.getLargeFont());
 
