@@ -100,6 +100,7 @@ public:
 
     thread ([=]() {
       cLog::setThreadName ("anal");
+
       mTransportStream = new cTransportStream (
         {"anal", 0, {}, {}}, nullptr,
         // newService lambda, !!! hardly used !!!
@@ -107,6 +108,7 @@ public:
           mService = &service;
           mVideoRender = new cVideoRender (false, 100, mService->getVideoStreamTypeId(), mService->getVideoPid());
           },
+
          // pes lambda
         [&](cTransportStream::cService& service, cTransportStream::cPidInfo& pidInfo) noexcept {
           if (pidInfo.getPid() == service.getVideoPid()) {
@@ -119,12 +121,12 @@ public:
             else if (!mGopMap.empty()) // add pes to last gop
               mGopMap.rbegin()->second.addPes (pes);
             //{{{  debug
-            cLog::log (LOGINFO, fmt::format ("V {}:{:2d} dts:{} pts:{} size:{}",
+            cLog::log (LOGINFO, fmt::format ("{}:{:2d} {:6d} dts:{} pts:{}",
                                              frameType,
                                              mGopMap.empty() ? 0 : mGopMap.rbegin()->second.getSize(),
+                                             pidInfo.getBufSize(),
                                              getFullPtsString (pidInfo.getDts()),
-                                             getFullPtsString (pidInfo.getPts()),
-                                             pidInfo.getBufSize()
+                                             getFullPtsString (pidInfo.getPts())
                                              ));
             //}}}
             if (!mGopMap.empty() && mVideoRender) {
@@ -137,23 +139,18 @@ public:
             while (!mPlaying)
               this_thread::sleep_for (40ms);
             }
-          else if (pidInfo.getPid() == service.getAudioPid()) {
-            //{{{  audio
-            cLog::log (LOGINFO, fmt::format ("- A pts:{} size:{}",
-                                             getFullPtsString (pidInfo.getPts()), pidInfo.getBufSize()));
-            }
-            //}}}
-          else if (pidInfo.getPid() == service.getSubtitlePid()) {
-            //{{{  subtitle
-            cLog::log (LOGINFO, fmt::format ("  - S pts:{} size:{}",
-                                             getFullPtsString (pidInfo.getPts()), pidInfo.getBufSize()));
-            }
-            //}}}
-          else
-            cLog::log (LOGERROR, fmt::format ("cFilePlayer analyse addPes - unknown pid:{}", pidInfo.getPid()));
+          //{{{  pes unused
+          //else if (pidInfo.getPid() == service.getAudioPid())
+          //  cLog::log (LOGINFO, fmt::format ("- A pts:{} size:{}", getPtsString (pidInfo.getPts()), pidInfo.getBufSize()));
+          //else if (pidInfo.getPid() == service.getSubtitlePid())
+          //  cLog::log (LOGINFO, fmt::format ("  - S pts:{} size:{}", getPtsString (pidInfo.getPts()), pidInfo.getBufSize()));
+          //else
+          // cLog::log (LOGERROR, fmt::format ("cFilePlayer analyse addPes - unknown pid:{}", pidInfo.getPid()));
+          //}}}
           }
         );
 
+      // file read
       size_t chunkSize = 188 * 256;
       uint8_t* chunk = new uint8_t[chunkSize];
       auto now = chrono::system_clock::now();
