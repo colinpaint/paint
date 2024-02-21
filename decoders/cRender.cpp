@@ -135,7 +135,8 @@ void cRender::addFrame (cFrame* frame) {
 
   unique_lock<shared_mutex> lock (mSharedMutex);
   if (mFramesMap.find (frame->getPts()) != mFramesMap.end())
-    cLog::log (LOGERROR, fmt::format ("- addFrame - trying to add duplicate pts:{}", frame->getPts()));
+    cLog::log (LOGERROR, fmt::format ("- addFrame - trying to add duplicate pts:{}", 
+                                      getPtsString(frame->getPts()) ));
   else
     mFramesMap.emplace (frame->getPts(), frame);
   }

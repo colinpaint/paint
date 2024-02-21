@@ -62,12 +62,11 @@ extern "C" {
 using namespace std;
 using namespace utils;
 //}}}
-constexpr bool kPlayVideo = false;
+constexpr bool kPlayVideo = true;
 constexpr bool kAudioLoadDebug = false;
 constexpr bool kVideoLoadDebug = false;
 constexpr bool kSubtitleLoadDebug = false;
 constexpr bool kAnalDebug = false;
-constexpr bool kAnalTotals = true;
 
 namespace {
   //{{{
@@ -142,24 +141,24 @@ namespace {
         mPesVector.clear();
         }
 
+      size_t getSize() const { return mPesVector.size(); }
+      int64_t getFirstPts() const { return mPesVector.front().mPts; }
+      int64_t getLastPts() const { return mPesVector.back().mPts; }
+
       void addPes (sPes pes) {
         mPesVector.push_back (pes);
         }
 
-      void load (cVideoRender* videoRender, int64_t loadPts, int64_t gopPts, const string& title) {
-        cLog::log (LOGINFO, fmt::format ("{} {} {} gopFirst:{}",
-                                         title,
-                                         mPesVector.size(),
-                                         getPtsString (loadPts),
-                                         getPtsString (gopPts)
-                                         ));
+      void load (cVideoRender* videoRender, int64_t loadPts, int64_t pts, const string& title) {
+        if (kVideoLoadDebug)
+          cLog::log (LOGINFO, fmt::format ("{} {} {} gopFirst:{}",
+                                           title, mPesVector.size(), getPtsString (loadPts), getPtsString (pts) ));
 
-        for (auto& pes : mPesVector) {
-          //cLog::log (LOGINFO, fmt::format ("- pes:{} {}", i, getPtsString (pes.mPts)));
-          videoRender->decodePes (pes.mData, pes.mSize, pes.mPts, pes.mDts);
-          }
+        for (auto& it = mPesVector.begin(); it != mPesVector.end(); ++it)
+          videoRender->decodePes (it->mData, it->mSize, it->mPts, it->mDts);
         }
 
+    private:
       vector <sPes> mPesVector;
       };
     //}}}
@@ -212,7 +211,7 @@ namespace {
                 //{{{  debug
                 cLog::log (LOGINFO, fmt::format ("V {}:{:2d} dts:{} pts:{} size:{}",
                                                  frameType,
-                                                 mGopMap.empty() ? 0 : mGopMap.rbegin()->second.mPesVector.size(),
+                                                 mGopMap.empty() ? 0 : mGopMap.rbegin()->second.getSize(),
                                                  getFullPtsString (pidInfo.getDts()),
                                                  getFullPtsString (pidInfo.getPts()),
                                                  pidInfo.getBufSize()
@@ -265,36 +264,34 @@ namespace {
             break;
           }
 
-        if (kAnalTotals) {
-          //{{{  report totals
-          cLog::log (LOGINFO, fmt::format ("{}m took {}ms",
-            mFileSize/1000000,
-            chrono::duration_cast<chrono::milliseconds>(chrono::system_clock::now() - now).count()));
+        //{{{  report totals
+        cLog::log (LOGINFO, fmt::format ("{}m took {}ms",
+          mFileSize/1000000,
+          chrono::duration_cast<chrono::milliseconds>(chrono::system_clock::now() - now).count()));
 
-          size_t numVidPes = 0;
-          size_t longestGop = 0;
-          for (auto& gop : mGopMap) {
-            longestGop = max (longestGop, gop.second.mPesVector.size());
-            numVidPes += gop.second.mPesVector.size();
-            }
-
-          cLog::log (LOGINFO, fmt::format ("- vid:{:6d} {} to {} gop:{} longest:{}",
-                                           numVidPes,
-                                           getFullPtsString (mGopMap.begin()->second.mPesVector.front().mPts),
-                                           getFullPtsString (mGopMap.rbegin()->second.mPesVector.front().mPts),
-                                           mGopMap.size(), longestGop));
-
-          cLog::log (LOGINFO, fmt::format ("- aud:{:6d} {} to {}",
-                                           mAudioPesMap.size(),
-                                           getFullPtsString (mAudioPesMap.begin()->first),
-                                           getFullPtsString (mAudioPesMap.rbegin()->first)));
-
-          cLog::log (LOGINFO, fmt::format ("- sub:{:6d} {} to {}",
-                                           mSubtitlePesMap.size(),
-                                           getFullPtsString (mSubtitlePesMap.begin()->first),
-                                           getFullPtsString (mSubtitlePesMap.rbegin()->first)));
+        size_t numVidPes = 0;
+        size_t longestGop = 0;
+        for (auto& gop : mGopMap) {
+          longestGop = max (longestGop, gop.second.getSize());
+          numVidPes += gop.second.getSize();
           }
-          //}}}
+
+        cLog::log (LOGINFO, fmt::format ("- vid:{:6d} {} to {} gop:{} longest:{}",
+                                         numVidPes,
+                                         getFullPtsString (mGopMap.begin()->second.getFirstPts()),
+                                         getFullPtsString (mGopMap.rbegin()->second.getLastPts()),
+                                         mGopMap.size(), longestGop));
+
+        cLog::log (LOGINFO, fmt::format ("- aud:{:6d} {} to {}",
+                                         mAudioPesMap.size(),
+                                         getFullPtsString (mAudioPesMap.begin()->first),
+                                         getFullPtsString (mAudioPesMap.rbegin()->first)));
+
+        cLog::log (LOGINFO, fmt::format ("- sub:{:6d} {} to {}",
+                                         mSubtitlePesMap.size(),
+                                         getFullPtsString (mSubtitlePesMap.begin()->first),
+                                         getFullPtsString (mSubtitlePesMap.rbegin()->first)));
+        //}}}
 
         while (true)
           this_thread::sleep_for (1s);
@@ -344,38 +341,34 @@ namespace {
 
           pes = it->second;
           if (!mAudioRender->isFrameAtPts (loadPts)) {
-            //{{{  load this
-            cLog::log (LOGINFO, fmt::format ("load {} {}", getPtsString (loadPts), getPtsString (it->first)));
+            if (kAudioLoadDebug)
+              cLog::log (LOGINFO, fmt::format ("load {} {}", getPtsString (loadPts), getPtsString (it->first)));
             mAudioRender->decodePes (pes.mData, pes.mSize, pes.mPts, pes.mDts);
             continue;
             }
-            //}}}
 
-          // near back, ensure next loaded
-          pes = nextIt->second;
-          if (nextIt != mAudioPesMap.end())
-            if (((nextIt->first - loadPts) <= (2 * 1920)) &&
-                !mAudioRender->isFrameAtPts (nextIt->first)) {
-              //{{{  load next
-              cLog::log (LOGINFO, fmt::format ("next {} {}", getPtsString (loadPts), getPtsString (nextIt->first)));
+          // ensure next loaded
+          if (nextIt != mAudioPesMap.end()) {
+            pes = nextIt->second;
+            if (!mAudioRender->isFrameAtPts (nextIt->first)) {
+              if (kAudioLoadDebug)
+                cLog::log (LOGINFO, fmt::format ("next {} {}", getPtsString (loadPts), getPtsString (nextIt->first)));
               mAudioRender->decodePes (pes.mData, pes.mSize, pes.mPts, pes.mDts);
               continue;
               }
-              //}}}
+            }
 
-          // near front, ensure prev loaded
-          if ((loadPts - it->first) <= (2 * 1920))
-            if (it != mAudioPesMap.begin()) {
-              --it;
-              pes = it->second;
-              if (!mAudioRender->isFrameAtPts (it->first)) {
-                //{{{  load prev
+          // ensure prev loaded
+          if (it != mAudioPesMap.begin() &&
+              --it != mAudioPesMap.begin()) {
+            pes = it->second;
+            if (!mAudioRender->isFrameAtPts (it->first)) {
+              if (kAudioLoadDebug)
                 cLog::log (LOGINFO, fmt::format ("prev {} {}", getPtsString (loadPts), getPtsString (it->first)));
-                mAudioRender->decodePes (pes.mData, pes.mSize, pes.mPts, pes.mDts);
-                continue;
-                }
-                //}}}
+              mAudioRender->decodePes (pes.mData, pes.mSize, pes.mPts, pes.mDts);
+              continue;
               }
+            }
 
           // wait for change
           this_thread::sleep_for (1ms);
@@ -406,24 +399,33 @@ namespace {
 
         while (true) {
           int64_t loadPts = getAudioPlayerPts();
-          auto nextGopIt = mGopMap.upper_bound (loadPts);
-
-          auto gopIt = nextGopIt;
-          if (gopIt != mGopMap.begin())
-            --gopIt;
+          auto nextIt = mGopMap.upper_bound (loadPts);
+          auto it = nextIt;
+          if (it != mGopMap.begin())
+            --it;
 
           if (!mVideoRender->isFrameAtPts (loadPts)) {
-            gopIt->second.load (mVideoRender, loadPts, gopIt->first, "this");
+            it->second.load (mVideoRender, loadPts, it->first, "load");
             continue;
             }
 
-          if ((nextGopIt->first - loadPts) <= (3 * 3600)) {
-            if (!mVideoRender->isFrameAtPts (nextGopIt->first)) {
-              nextGopIt->second.load (mVideoRender, loadPts, nextGopIt->first, "next");
+          // ensure next loaded
+          if (nextIt != mGopMap.end()) {
+            if (!mVideoRender->isFrameAtPts (nextIt->first)) {
+              nextIt->second.load (mVideoRender, loadPts, nextIt->first, "next");
               continue;
               }
             }
 
+          // ensure prev loaded
+          //if (--it != mGopMap.begin()) {
+          //  if (!mVideoRender->isFrameAtPts (it->first)) {
+          //    it->second.load (mVideoRender, loadPts, it->first, "prev");
+          //    continue;
+          //    }
+          //  }
+
+          // wait for change
           this_thread::sleep_for (1ms);
           }
 

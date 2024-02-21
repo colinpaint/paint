@@ -83,13 +83,13 @@ cAudioPlayer::cAudioPlayer (cAudioRender& audioRender, uint32_t sampleRate, uint
           audioFrame = mAudioRender.getAudioFrameAtOrAfterPts (mPts);
           if (audioFrame) {// found it, adjust pts
             mPts = audioFrame->getPts();
-            //cLog::log (LOGINFO, fmt::format ("skipped {}", utils::getFullPtsString (mPts)));
+            cLog::log (LOGINFO1, fmt::format ("player skipped {}", utils::getPtsString (mPts)));
             }
           if (!audioFrame && mSynced)
-            cLog::log (LOGINFO, fmt::format ("play missed:{}", utils::getFullPtsString (mPts)));
+            cLog::log (LOGERROR, fmt::format ("player missed:{}", utils::getPtsString (mPts)));
           }
         else
-          cLog::log (LOGINFO, fmt::format ("skip missed:{}", utils::getFullPtsString (mPts)));
+          cLog::log (LOGINFO, fmt::format ("player skip missed:{}", utils::getPtsString (mPts)));
 
         if (audioFrame) {
           if (!mMute) {
