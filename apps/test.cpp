@@ -149,10 +149,15 @@ private:
     thread ([=]() {
       cLog::setThreadName ("anal");
 
+
       mTransportStream = new cTransportStream (
         {"anal", 0, {}, {}}, nullptr,
         // newService lambda, !!! hardly used !!!
-        [&](cTransportStream::cService& service) noexcept { mService = &service; },
+        [&](cTransportStream::cService& service) noexcept { 
+          mService = &service; 
+          mVideoRender = new cVideoRender (false, 100, 0,
+                                           mService->getVideoStreamTypeId(), mService->getVideoPid());
+          },
         //{{{  pes lambda
         [&](cTransportStream::cService& service, cTransportStream::cPidInfo& pidInfo) noexcept {
           if (pidInfo.getPid() == service.getVideoPid()) {
@@ -175,6 +180,8 @@ private:
                                              pidInfo.getBufSize()
                                              ));
 
+            if (mVideoRender)
+              mVideoRender->decodePes (buffer, pidInfo.getBufSize(), pidInfo.getPts(), pidInfo.getDts());
             }
 
           else if (pidInfo.getPid() == service.getAudioPid()) {
@@ -195,6 +202,7 @@ private:
           }
         //}}}
         );
+
 
       size_t chunkSize = 188 * 256;
       uint8_t* chunk = new uint8_t[chunkSize];
@@ -341,19 +349,11 @@ private:
 class cView {
 public:
   cView (cTransportStream::cService* service) : mService(service) {}
-  //{{{
-  ~cView() {
-    delete mVideoQuad;
+  ~cView() = default;
 
-    }
-  //}}}
-
-  //{{{
-  void draw (cTestApp& testApp, bool selectFull, size_t viewIndex, size_t numViews,
-             cTextureShader* videoShader, cTextureShader* subtitleShader) {
-
+  void draw (cTestApp& testApp, cTextureShader* videoShader) {
     float layoutScale;
-    cVec2 layoutPos = getLayout (viewIndex, numViews, layoutScale);
+    cVec2 layoutPos = getLayout (0, 1, layoutScale);
     float viewportWidth = ImGui::GetWindowWidth();
     float viewportHeight = ImGui::GetWindowHeight();
     mSize = {layoutScale * viewportWidth, layoutScale * viewportHeight};
@@ -393,20 +393,20 @@ public:
       //}}}
 
     ImGui::PushFont (testApp.getLargeFont());
+
     string title = testApp.getFilePlayer()->getFileName();
     ImVec2 pos = {ImGui::GetTextLineHeight() * 0.25f, 0.f};
     ImGui::SetCursorPos (pos);
     ImGui::TextColored ({0.f,0.f,0.f,1.f}, title.c_str());
     ImGui::SetCursorPos (pos - ImVec2(2.f,2.f));
     ImGui::TextColored ({1.f, 1.f,1.f,1.f}, title.c_str());
+
     ImGui::PopFont();
 
     ImGui::EndChild();
     }
-  //}}}
 
 private:
-  enum eSelect { eUnselected, eSelected, eSelectedFull };
   //{{{
   cVec2 getLayout (size_t index, size_t numViews, float& scale) {
   // return layout scale, and position as fraction of viewPort
@@ -514,7 +514,6 @@ private:
 
   // vars
   cTransportStream::cService* mService;
-  eSelect mSelect = eUnselected;
 
   // video
   ImVec2 mSize;
@@ -528,9 +527,7 @@ class cTestUI : public cApp::iUI {
 public:
   virtual ~cTestUI() = default;
 
-  //{{{
   void draw (cApp& app) {
-
     app.getGraphics().clear ({(int32_t)ImGui::GetIO().DisplaySize.x,
                               (int32_t)ImGui::GetIO().DisplaySize.y});
 
@@ -543,7 +540,6 @@ public:
                                    ImGuiWindowFlags_NoBackground);
 
     cTestApp& testApp = (cTestApp&)app;
-
     if (!mVideoShader)
       mVideoShader = testApp.getGraphics().createTextureShader (cTexture::eYuv420);
 
@@ -551,7 +547,7 @@ public:
     if (filePlayer && filePlayer->getService()) {
       if (!mView)
         mView = new cView (filePlayer->getService());
-      mView->draw (testApp, true, 0, true, mVideoShader, nullptr);
+      mView->draw (testApp, mVideoShader);
 
       // draw menu
       ImGui::SetCursorPos ({0.f, ImGui::GetIO().DisplaySize.y - ImGui::GetTextLineHeight() * 1.5f});
@@ -576,16 +572,12 @@ public:
       ImGui::SameLine();
       ImGui::TextUnformatted (fmt::format("{}:fps", static_cast<uint32_t>(ImGui::GetIO().Framerate)).c_str());
       //}}}
-
       ImGui::EndChild();
       }
-
     ImGui::End();
     }
-  //}}}
 
 private:
-
   // vars
   cView* mView;
   cTextureShader* mVideoShader = nullptr;
