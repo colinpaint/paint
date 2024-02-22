@@ -71,13 +71,15 @@ public:
   string getFileName() const { return mFileName; }
   cTransportStream::cService* getService() { return mService; }
   cVideoRender* getVideoRender() { return mVideoRender; }
+  cVideoFrame* getVideoFrame() { return mVideoFrame; }
   int64_t getPlayPts() const { return mPlayPts; }
 
   void togglePlay() { mPlaying = !mPlaying; }
-  void skipPlay (int64_t skipPts) { mPlayPts += skipPts; }
+  void skipPlay (int64_t skipPts) { 
+    mPlayPts += skipPts; 
+    }
   //{{{
   void skipIframe (int64_t inc) {
-
     auto it = mGopMap.upper_bound (mPlayPts);
     if (it == mGopMap.end()) {
       cLog::log (LOGERROR, fmt::format ("at end"));
@@ -93,7 +95,18 @@ public:
         --it;
     mPlayPts = it->first;
 
-    cLog::log (LOGINFO, fmt::format ("skipI {} {} {}", inc, getPtsString (upperPts), getPtsString (it->first)));
+    sPes pes = it->second.mPesVector.front();
+    cLog::log (LOGINFO, fmt::format ("skip {} {} {} {}",
+                                     inc, pes.mFrameType, getPtsString (upperPts), getPtsString (it->first)));
+    if (mDecoder)
+      mDecoder->decode (pes.mData, pes.mSize, pes.mPts, pes.mFrameType,
+        [&](int64_t pts) noexcept { return new cFFmpegVideoFrame(); },
+        [&](cFrame* frame) noexcept {
+          cLog::log (LOGINFO, fmt::format ("addFrame {}", getPtsString (frame->getPts())));
+          cVideoFrame* videoFrame = dynamic_cast<cVideoFrame*>(frame);
+          videoFrame->mTextureDirty = true;
+          mVideoFrame = videoFrame;
+          });
     }
   //}}}
 
@@ -124,10 +137,10 @@ public:
 
       mTransportStream = new cTransportStream (
         {"anal", 0, {}, {}}, nullptr,
-        // newService lambda, !!! hardly used !!!
         [&](cTransportStream::cService& service) noexcept {
           mService = &service;
-          mVideoRender = new cVideoRender (false, 1000, mService->getVideoStreamTypeId(), mService->getVideoPid());
+          mDecoder = new cFFmpegVideoDecoder (true);
+          //mVideoRender = new cVideoRender (false, 1000, mService->getVideoStreamTypeId(), mService->getVideoPid());
           },
 
          // pes lambda
@@ -135,9 +148,9 @@ public:
           if (pidInfo.getPid() == service.getVideoPid()) {
             uint8_t* buffer = (uint8_t*)malloc (pidInfo.getBufSize());
             memcpy (buffer, pidInfo.mBuffer, pidInfo.getBufSize());
-
             char frameType = cDvbUtils::getFrameType (buffer, pidInfo.getBufSize(),
                                                       service.getVideoStreamTypeId() == 27);
+
             sPes pes (buffer, pidInfo.getBufSize(), pidInfo.getPts(), frameType);
             if (frameType == 'I') // add gop
               mGopMap.emplace (pidInfo.getPts(), cGop(pes));
@@ -149,14 +162,20 @@ public:
                                              mGopMap.empty() ? 0 : mGopMap.rbegin()->second.getSize(),
                                              pidInfo.getBufSize(), getFullPtsString (pidInfo.getPts()) ));
             //}}}
-            //if (frameType == 'I')
-              if (!mGopMap.empty() && mVideoRender) {
-                //{{{  decode
-                mVideoRender->decodePes (buffer, pidInfo.getBufSize(), pidInfo.getPts(), frameType);
-                mPlayPts = pidInfo.getPts();
-                //this_thread::sleep_for (40ms);
-                }
-                //}}}
+            if (!mGopMap.empty()) {
+              // if (mVideoRender)
+              //  mVideoRender->decodePes (pes.mData, pes.mSize, pes.mPts, pes.mFrameType);
+              mPlayPts = pes.mPts;
+              if (mDecoder)
+                mDecoder->decode (pes.mData, pes.mSize, pes.mPts, pes.mFrameType,
+                  [&](int64_t pts) noexcept { return new cFFmpegVideoFrame(); },
+                  [&](cFrame* frame) noexcept {
+                    cLog::log (LOGINFO, fmt::format ("addFrame {}", getPtsString (frame->getPts())));
+                    cVideoFrame* videoFrame = dynamic_cast<cVideoFrame*>(frame);
+                    videoFrame->mTextureDirty = true;
+                    mVideoFrame = videoFrame;
+                    });
+              }
 
             while (!mPlaying)
               this_thread::sleep_for (40ms);
@@ -254,7 +273,6 @@ private:
         videoRender->decodePes (it->mData, it->mSize, it->mPts, it->mFrameType);
       }
 
-  private:
     vector <sPes> mPesVector;
     };
   //}}}
@@ -276,6 +294,9 @@ private:
   cVideoRender* mVideoRender = nullptr;
   int64_t mPlayPts = -1;
   bool mPlaying = true;
+
+  cVideoFrame* mVideoFrame = nullptr;
+  cDecoder* mDecoder = nullptr;
   };
 //}}}
 //{{{
@@ -325,54 +346,55 @@ public:
                        ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse |
                        ImGuiWindowFlags_NoBackground);
 
+    //if (testApp.getFilePlayer()) {
+    //  cVideoRender* videoRender = testApp.getFilePlayer()->getVideoRender();
+    //  if (videoRender) {
+    // /   cVideoFrame* videoFrame = videoRender->getVideoFrameAtOrAfterPts (testApp.getFilePlayer()->getPlayPts());
     if (testApp.getFilePlayer()) {
-      cVideoRender* videoRender = testApp.getFilePlayer()->getVideoRender();
-      if (videoRender) {
-        cVideoFrame* videoFrame = videoRender->getVideoFrameAtOrAfterPts (testApp.getFilePlayer()->getPlayPts());
-        if (videoFrame) {
-          //{{{  draw video
-          cMat4x4 model = cMat4x4();
-          model.setTranslate ({(layoutPos.x - (0.5f * layoutScale)) * viewportWidth,
-                               ((1.f-layoutPos.y) - (0.5f * layoutScale)) * viewportHeight});
-          model.size ({layoutScale * viewportWidth / videoFrame->getWidth(),
-                       layoutScale * viewportHeight / videoFrame->getHeight()});
-          cMat4x4 projection (0.f,viewportWidth, 0.f,viewportHeight, -1.f,1.f);
-          videoShader->use();
-          videoShader->setModelProjection (model, projection);
+      cVideoFrame* videoFrame = testApp.getFilePlayer()->getVideoFrame();
+      if (videoFrame) {
+        //{{{  draw video
+        cMat4x4 model = cMat4x4();
+        model.setTranslate ({(layoutPos.x - (0.5f * layoutScale)) * viewportWidth,
+                             ((1.f-layoutPos.y) - (0.5f * layoutScale)) * viewportHeight});
+        model.size ({layoutScale * viewportWidth / videoFrame->getWidth(),
+                     layoutScale * viewportHeight / videoFrame->getHeight()});
+        cMat4x4 projection (0.f,viewportWidth, 0.f,viewportHeight, -1.f,1.f);
+        videoShader->use();
+        videoShader->setModelProjection (model, projection);
 
-          // texture
-          cTexture& texture = videoFrame->getTexture (testApp.getGraphics());
-          texture.setSource();
+        // texture
+        cTexture& texture = videoFrame->getTexture (testApp.getGraphics());
+        texture.setSource();
 
-          // ensure quad is created
-          if (!mVideoQuad)
-            mVideoQuad = testApp.getGraphics().createQuad (videoFrame->getSize());
+        // ensure quad is created
+        if (!mVideoQuad)
+          mVideoQuad = testApp.getGraphics().createQuad (videoFrame->getSize());
 
-          // draw quad
-          mVideoQuad->draw();
-          }
-          //}}}
+        // draw quad
+        mVideoQuad->draw();
         }
-      //{{{  title, playPts
-      ImGui::PushFont (testApp.getLargeFont());
-
-      string title = testApp.getFilePlayer()->getFileName();
-      ImVec2 pos = {ImGui::GetTextLineHeight() * 0.25f, 0.f};
-      ImGui::SetCursorPos (pos);
-      ImGui::TextColored ({0.f,0.f,0.f,1.f}, title.c_str());
-      ImGui::SetCursorPos (pos - ImVec2(2.f,2.f));
-      ImGui::TextColored ({1.f, 1.f,1.f,1.f}, title.c_str());
-
-      string ptsString = getPtsString (testApp.getFilePlayer()->getPlayPts());
-      pos = ImVec2 (mSize - ImVec2(ImGui::GetTextLineHeight() * 7.f, ImGui::GetTextLineHeight()));
-      ImGui::SetCursorPos (pos);
-      ImGui::TextColored ({0.f,0.f,0.f,1.f}, ptsString.c_str());
-      ImGui::SetCursorPos (pos - ImVec2(2.f,2.f));
-      ImGui::TextColored ({1.f,1.f,1.f,1.f}, ptsString.c_str());
-
-      ImGui::PopFont();
-      //}}}
+        //}}}
       }
+    //{{{  title, playPts
+    ImGui::PushFont (testApp.getLargeFont());
+
+    string title = testApp.getFilePlayer()->getFileName();
+    ImVec2 pos = {ImGui::GetTextLineHeight() * 0.25f, 0.f};
+    ImGui::SetCursorPos (pos);
+    ImGui::TextColored ({0.f,0.f,0.f,1.f}, title.c_str());
+    ImGui::SetCursorPos (pos - ImVec2(2.f,2.f));
+    ImGui::TextColored ({1.f, 1.f,1.f,1.f}, title.c_str());
+
+    string ptsString = getPtsString (testApp.getFilePlayer()->getPlayPts());
+    pos = ImVec2 (mSize - ImVec2(ImGui::GetTextLineHeight() * 7.f, ImGui::GetTextLineHeight()));
+    ImGui::SetCursorPos (pos);
+    ImGui::TextColored ({0.f,0.f,0.f,1.f}, ptsString.c_str());
+    ImGui::SetCursorPos (pos - ImVec2(2.f,2.f));
+    ImGui::TextColored ({1.f,1.f,1.f,1.f}, ptsString.c_str());
+
+    ImGui::PopFont();
+    //}}}
     ImGui::EndChild();
     }
 
