@@ -45,8 +45,8 @@ extern "C" {
 #endif
 //}}}
 #include "../decoders/cVideoFrame.h"
-#include "../decoders/cVideoRender.h"
 #include "../decoders/cFFmpegVideoDecoder.h"
+#include "../decoders/cVideoRender.h"
 
 // app
 #include "../app/cApp.h"
@@ -75,7 +75,22 @@ public:
 
   void togglePlay() { mPlaying = !mPlaying; }
   void skipPlay (int64_t skipPts) { mPlayPts += skipPts; }
-  void skipIframe (int64_t skipPts) { mPlayPts += skipPts; }
+  //{{{
+  void skipIframe (int64_t inc) {
+
+    auto it = mGopMap.upper_bound (mPlayPts);
+    int64_t upperPts = it->first;
+
+    if (inc <= 0)
+      --it;
+    if (inc < 0)
+      --it;
+    mPlayPts = it->first;
+
+    cLog::log (LOGINFO, fmt::format ("skipI {} {} {}",
+                                     inc, getPtsString (upperPts), getPtsString (it->first)));
+    }
+  //}}}
 
   //{{{
   void read() {
@@ -107,7 +122,7 @@ public:
         // newService lambda, !!! hardly used !!!
         [&](cTransportStream::cService& service) noexcept {
           mService = &service;
-          mVideoRender = new cVideoRender (false, 100, mService->getVideoStreamTypeId(), mService->getVideoPid());
+          mVideoRender = new cVideoRender (false, 1000, mService->getVideoStreamTypeId(), mService->getVideoPid());
           },
 
          // pes lambda
@@ -115,6 +130,7 @@ public:
           if (pidInfo.getPid() == service.getVideoPid()) {
             uint8_t* buffer = (uint8_t*)malloc (pidInfo.getBufSize());
             memcpy (buffer, pidInfo.mBuffer, pidInfo.getBufSize());
+
             char frameType = cDvbUtils::getFrameType (buffer, pidInfo.getBufSize(), true);
             sPes pes (buffer, pidInfo.getBufSize(), pidInfo.getPts(), frameType);
             if (frameType == 'I') // add gop
@@ -122,21 +138,20 @@ public:
             else if (!mGopMap.empty()) // add pes to last gop
               mGopMap.rbegin()->second.addPes (pes);
             //{{{  debug
-            cLog::log (LOGINFO, fmt::format ("{}:{:2d} {:6d} dts:{} pts:{}",
+            cLog::log (LOGINFO, fmt::format ("{}:{:2d} {:6d} pts:{}",
                                              frameType,
                                              mGopMap.empty() ? 0 : mGopMap.rbegin()->second.getSize(),
-                                             pidInfo.getBufSize(),
-                                             getFullPtsString (pidInfo.getDts()),
-                                             getFullPtsString (pidInfo.getPts())
-                                             ));
+                                             pidInfo.getBufSize(), getFullPtsString (pidInfo.getPts()) ));
             //}}}
-            if (!mGopMap.empty() && mVideoRender) {
-              //{{{  decode
-              mVideoRender->decodePes (buffer, pidInfo.getBufSize(), pidInfo.getPts(), frameType);
-              mPlayPts = pidInfo.getPts();
-              this_thread::sleep_for (40ms);
-              }
-              //}}}
+            //if (frameType == 'I')
+              if (!mGopMap.empty() && mVideoRender) {
+                //{{{  decode
+                mVideoRender->decodePes (buffer, pidInfo.getBufSize(), pidInfo.getPts(), frameType);
+                mPlayPts = pidInfo.getPts();
+                //this_thread::sleep_for (40ms);
+                }
+                //}}}
+
             while (!mPlaying)
               this_thread::sleep_for (40ms);
             }
@@ -537,10 +552,14 @@ private:
     const vector<sActionKey> kActionKeys = {
     //  alt    control shift  ImGuiKey             function
       { false, false,  false, ImGuiKey_Space,      [this,&testApp]{ testApp.getFilePlayer()->togglePlay(); }},
+
       { false, false,  false, ImGuiKey_LeftArrow,  [this,&testApp]{ testApp.getFilePlayer()->skipPlay (-90000/25); }},
       { false, false,  false, ImGuiKey_RightArrow, [this,&testApp]{ testApp.getFilePlayer()->skipPlay (90000/25); }},
+      { false, true,   false, ImGuiKey_LeftArrow,  [this,&testApp]{ testApp.getFilePlayer()->skipPlay (-90000); }},
+      { false, true,   false, ImGuiKey_RightArrow, [this,&testApp]{ testApp.getFilePlayer()->skipPlay (90000); }},
+
       { false, false,  false, ImGuiKey_UpArrow,    [this,&testApp]{ testApp.getFilePlayer()->skipIframe (-1); }},
-      { false, false,  false, ImGuiKey_DownArrow,  [this,&testApp]{ testApp.getFilePlayer()->skipPlay (1); }},
+      { false, false,  false, ImGuiKey_DownArrow,  [this,&testApp]{ testApp.getFilePlayer()->skipIframe (1); }},
     };
 
     ImGui::GetIO().WantTextInput = true;

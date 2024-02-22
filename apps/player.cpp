@@ -45,14 +45,15 @@ extern "C" {
 #endif
 //}}}
 #include "../decoders/cAudioFrame.h"
+#include "../decoders/cAudioRender.h"
+#include "../decoders/cAudioPlayer.h"
+
 #include "../decoders/cVideoFrame.h"
+#include "../decoders/cVideoRender.h"
+
 #include "../decoders/cSubtitleFrame.h"
 #include "../decoders/cSubtitleImage.h"
-#include "../decoders/cVideoRender.h"
-#include "../decoders/cAudioRender.h"
 #include "../decoders/cSubtitleRender.h"
-#include "../decoders/cFFmpegVideoDecoder.h"
-#include "../decoders/cAudioPlayer.h"
 
 // app
 #include "../app/cApp.h"
