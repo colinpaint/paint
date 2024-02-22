@@ -164,13 +164,13 @@ bool cRender::throttle (int64_t pts) {
   }
 //}}}
 //{{{
-void cRender::decodePes (uint8_t* pes, uint32_t pesSize, int64_t pts, int64_t dts) {
+void cRender::decodePes (uint8_t* pes, uint32_t pesSize, int64_t pts, char frameType) {
 
   if (isQueued())
-    mDecodeQueue.enqueue (new cDecodeQueueItem (mDecoder, pes, pesSize, pts, dts,
+    mDecodeQueue.enqueue (new cDecodeQueueItem (mDecoder, pes, pesSize, pts, frameType,
                                                 mAllocFrameCallback, mAddFrameCallback));
   else
-    mDecoder->decode (pes, pesSize, pts, dts, mAllocFrameCallback, mAddFrameCallback);
+    mDecoder->decode (pes, pesSize, pts, frameType, mAllocFrameCallback, mAddFrameCallback);
   }
 //}}}
 
@@ -229,7 +229,7 @@ void cRender::startQueueThread (const string& name) {
     cDecodeQueueItem* queueItem;
     if (mDecodeQueue.wait_dequeue_timed (queueItem, 40000)) {
       queueItem->mDecoder->decode (queueItem->mPes, queueItem->mPesSize,
-                                   queueItem->mPts, queueItem->mDts,
+                                   queueItem->mPts, queueItem->mFrameType,
                                    queueItem->mAllocFrameCallback, queueItem->mAddFrameCallback);
       delete queueItem;
       }

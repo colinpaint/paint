@@ -121,14 +121,13 @@ namespace {
     //{{{
     struct sPes {
     public:
-      sPes (uint8_t* data, uint32_t size, int64_t pts, int64_t dts, char type = '?') :
-        mData(data), mSize(size), mPts(pts), mDts(dts), mType(type) {}
+      sPes (uint8_t* data, uint32_t size, int64_t pts, char frameType) :
+        mData(data), mSize(size), mPts(pts), mFrameType(frameType) {}
 
       uint8_t* mData;
       uint32_t mSize;
       int64_t mPts;
-      int64_t mDts;
-      char mType;
+      char mFrameType;
       };
     //}}}
     //{{{
@@ -154,8 +153,8 @@ namespace {
           cLog::log (LOGINFO, fmt::format ("{} {} {} gopFirst:{}",
                                            title, mPesVector.size(), getPtsString (loadPts), getPtsString (pts) ));
 
-        for (auto& it = mPesVector.begin(); it != mPesVector.end(); ++it)
-          videoRender->decodePes (it->mData, it->mSize, it->mPts, it->mDts);
+        for (auto it = mPesVector.begin(); it != mPesVector.end(); ++it)
+          videoRender->decodePes (it->mData, it->mSize, it->mPts, it->mFrameType);
         }
 
     private:
@@ -203,16 +202,15 @@ namespace {
               char frameType = cDvbUtils::getFrameType (buffer, pidInfo.getBufSize(), true);
               if ((frameType == 'I') || mGopMap.empty())
                 mGopMap.emplace (pidInfo.getPts(), cGop(sPes(buffer, pidInfo.getBufSize(),
-                                                             pidInfo.getPts(), pidInfo.getDts(), frameType)));
+                                                             pidInfo.getPts(), frameType)));
               else
                 mGopMap.rbegin()->second.addPes (sPes(buffer, pidInfo.getBufSize(),
-                                                      pidInfo.getPts(), pidInfo.getDts(), frameType));
+                                                      pidInfo.getPts(), frameType));
               if (kAnalDebug)
                 //{{{  debug
-                cLog::log (LOGINFO, fmt::format ("V {}:{:2d} dts:{} pts:{} size:{}",
+                cLog::log (LOGINFO, fmt::format ("V {}:{:2d} pts:{} size:{}",
                                                  frameType,
                                                  mGopMap.empty() ? 0 : mGopMap.rbegin()->second.getSize(),
-                                                 getFullPtsString (pidInfo.getDts()),
                                                  getFullPtsString (pidInfo.getPts()),
                                                  pidInfo.getBufSize()
                                                  ));
@@ -230,7 +228,7 @@ namespace {
 
               unique_lock<shared_mutex> lock (mAudioMutex);
               mAudioPesMap.emplace (pidInfo.getPts(),
-                                    sPes(buffer, pidInfo.getBufSize(), pidInfo.getPts(), pidInfo.getDts()));
+                                    sPes(buffer, pidInfo.getBufSize(), pidInfo.getPts(), '.'));
               }
             else if (pidInfo.getPid() == service.getSubtitlePid()) {
               if (pidInfo.getBufSize()) {
@@ -242,7 +240,7 @@ namespace {
                                                  getFullPtsString (pidInfo.getPts()), pidInfo.getBufSize()));
 
                 mSubtitlePesMap.emplace (pidInfo.getPts(),
-                                         sPes(buffer, pidInfo.getBufSize(), pidInfo.getPts(), pidInfo.getDts()));
+                                         sPes(buffer, pidInfo.getBufSize(), pidInfo.getPts(), '.'));
                 }
               }
 
@@ -326,7 +324,7 @@ namespace {
         auto it = mAudioPesMap.begin();
         sPes pes = it->second;
         cLog::log (LOGINFO, fmt::format ("load first {}", getFullPtsString (pes.mPts)));
-        mAudioRender->decodePes (pes.mData, pes.mSize, pes.mPts, pes.mDts);
+        mAudioRender->decodePes (pes.mData, pes.mSize, pes.mPts, pes.mFrameType);
         //{{{  audioPlayer ok?
         if (!getAudioPlayer())
           cLog::log (LOGERROR, fmt::format ("audioLoader wait player"));
@@ -343,7 +341,7 @@ namespace {
           if (!mAudioRender->isFrameAtPts (loadPts)) {
             if (kAudioLoadDebug)
               cLog::log (LOGINFO, fmt::format ("load {} {}", getPtsString (loadPts), getPtsString (it->first)));
-            mAudioRender->decodePes (pes.mData, pes.mSize, pes.mPts, pes.mDts);
+            mAudioRender->decodePes (pes.mData, pes.mSize, pes.mPts, pes.mFrameType);
             continue;
             }
 
@@ -353,7 +351,7 @@ namespace {
             if (!mAudioRender->isFrameAtPts (nextIt->first)) {
               if (kAudioLoadDebug)
                 cLog::log (LOGINFO, fmt::format ("next {} {}", getPtsString (loadPts), getPtsString (nextIt->first)));
-              mAudioRender->decodePes (pes.mData, pes.mSize, pes.mPts, pes.mDts);
+              mAudioRender->decodePes (pes.mData, pes.mSize, pes.mPts, pes.mFrameType);
               continue;
               }
             }
@@ -365,7 +363,7 @@ namespace {
             if (!mAudioRender->isFrameAtPts (it->first)) {
               if (kAudioLoadDebug)
                 cLog::log (LOGINFO, fmt::format ("prev {} {}", getPtsString (loadPts), getPtsString (it->first)));
-              mAudioRender->decodePes (pes.mData, pes.mSize, pes.mPts, pes.mDts);
+              mAudioRender->decodePes (pes.mData, pes.mSize, pes.mPts, pes.mFrameType);
               continue;
               }
             }
@@ -497,7 +495,7 @@ namespace {
     //}}}
 
     //{{{
-    void addFile (const string& fileName, cPlayerOptions* options) {
+    void addFile (const string& fileName) {
 
       cFilePlayer* filePlayer = new cFilePlayer (fileName);
       mFilePlayers.emplace_back (filePlayer);
@@ -530,10 +528,8 @@ namespace {
     void drop (const vector<string>& dropItems) {
     // drop fileNames
 
-      for (auto& item : dropItems) {
-        cLog::log (LOGINFO, fmt::format ("cPlayerApp::drop {}", item));
-        addFile (item, mOptions);
-        }
+      for (auto& item : dropItems)
+        addFile (item);
       }
     //}}}
 
@@ -745,6 +741,7 @@ namespace {
                  cTextureShader* videoShader, cTextureShader* subtitleShader) {
       // return true if hit
 
+        (void)selectFull;
         bool result = false;
 
         float layoutScale;
@@ -1217,7 +1214,7 @@ int main (int numArgs, char* args[]) {
 
   // launch
   cPlayerApp playerApp (options, new cPlayerUI());
-  playerApp.addFile (options->mFileName, options);
+  playerApp.addFile (options->mFileName);
   playerApp.mainUILoop();
 
   return EXIT_SUCCESS;

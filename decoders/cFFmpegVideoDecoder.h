@@ -78,10 +78,9 @@ public:
 
   virtual std::string getInfoString() const final { return mH264 ? "ffmpeg h264" : "ffmpeg mpeg"; }
   //{{{
-  virtual int64_t decode (uint8_t* pes, uint32_t pesSize, int64_t pts, int64_t dts,
+  virtual int64_t decode (uint8_t* pes, uint32_t pesSize, int64_t pts, char frameType,
                           std::function<cFrame*(int64_t pts)> allocFrameCallback,
                           std::function<void (cFrame* frame)> addFrameCallback) final {
-    (void)dts;
     AVFrame* avFrame = av_frame_alloc();
     AVPacket* avPacket = av_packet_alloc();
 
@@ -98,7 +97,6 @@ public:
           if ((ret == AVERROR(EAGAIN)) || (ret == AVERROR_EOF) || (ret < 0))
             break;
 
-          char frameType = cDvbUtils::getFrameType (frame, frameSize, mH264);
           if (frameType == 'I') {
             // pes come in dts order with repeated dts, pts jumps around
             // - ffmpeg decodes in pts order, some pes produce no frames, some produce more than one

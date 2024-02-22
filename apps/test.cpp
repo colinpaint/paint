@@ -75,6 +75,7 @@ public:
 
   void togglePlay() { mPlaying = !mPlaying; }
   void skipPlay (int64_t skipPts) { mPlayPts += skipPts; }
+  void skipIframe (int64_t skipPts) { mPlayPts += skipPts; }
 
   //{{{
   void read() {
@@ -115,7 +116,7 @@ public:
             uint8_t* buffer = (uint8_t*)malloc (pidInfo.getBufSize());
             memcpy (buffer, pidInfo.mBuffer, pidInfo.getBufSize());
             char frameType = cDvbUtils::getFrameType (buffer, pidInfo.getBufSize(), true);
-            sPes pes (buffer, pidInfo.getBufSize(), pidInfo.getPts(), pidInfo.getDts(), frameType);
+            sPes pes (buffer, pidInfo.getBufSize(), pidInfo.getPts(), frameType);
             if (frameType == 'I') // add gop
               mGopMap.emplace (pidInfo.getPts(), cGop(pes));
             else if (!mGopMap.empty()) // add pes to last gop
@@ -131,7 +132,7 @@ public:
             //}}}
             if (!mGopMap.empty() && mVideoRender) {
               //{{{  decode
-              mVideoRender->decodePes (buffer, pidInfo.getBufSize(), pidInfo.getPts(), pidInfo.getDts());
+              mVideoRender->decodePes (buffer, pidInfo.getBufSize(), pidInfo.getPts(), frameType);
               mPlayPts = pidInfo.getPts();
               this_thread::sleep_for (40ms);
               }
@@ -197,14 +198,13 @@ private:
   //{{{
   struct sPes {
   public:
-    sPes (uint8_t* data, uint32_t size, int64_t pts, int64_t dts, char type = '?') :
-      mData(data), mSize(size), mPts(pts), mDts(dts), mType(type) {}
+    sPes (uint8_t* data, uint32_t size, int64_t pts, char frameType) :
+      mData(data), mSize(size), mPts(pts), mFrameType(frameType) {}
 
     uint8_t* mData;
     uint32_t mSize;
     int64_t mPts;
-    int64_t mDts;
-    char mType;
+    char mFrameType;
     };
   //}}}
   //{{{
@@ -229,8 +229,8 @@ private:
       cLog::log (LOGINFO, fmt::format ("{} {} {} gopFirst:{}",
                                        title, mPesVector.size(), getPtsString (loadPts), getPtsString (pts) ));
 
-      for (auto& it = mPesVector.begin(); it != mPesVector.end(); ++it)
-        videoRender->decodePes (it->mData, it->mSize, it->mPts, it->mDts);
+      for (auto it = mPesVector.begin(); it != mPesVector.end(); ++it)
+        videoRender->decodePes (it->mData, it->mSize, it->mPts, it->mFrameType);
       }
 
   private:
@@ -271,7 +271,12 @@ public:
   cApp::cOptions* getOptions() { return mOptions; }
   cFilePlayer* getFilePlayer() { return mFilePlayer; }
 
-  void drop (const vector<string>& dropItems) {}
+  void drop (const vector<string>& dropItems) {
+    for (auto& item : dropItems) {
+      cLog::log (LOGINFO, fmt::format ("cPlayerApp::drop {}", item));
+      addFile (item, mOptions);
+      }
+    }
 
 private:
   cApp::cOptions* mOptions;
@@ -517,10 +522,6 @@ public:
     }
 
 private:
-  // vars
-  cView* mView;
-  cTextureShader* mVideoShader = nullptr;
-
   //{{{
   void keyboard (cTestApp& testApp) {
 
@@ -538,6 +539,8 @@ private:
       { false, false,  false, ImGuiKey_Space,      [this,&testApp]{ testApp.getFilePlayer()->togglePlay(); }},
       { false, false,  false, ImGuiKey_LeftArrow,  [this,&testApp]{ testApp.getFilePlayer()->skipPlay (-90000/25); }},
       { false, false,  false, ImGuiKey_RightArrow, [this,&testApp]{ testApp.getFilePlayer()->skipPlay (90000/25); }},
+      { false, false,  false, ImGuiKey_UpArrow,    [this,&testApp]{ testApp.getFilePlayer()->skipIframe (-1); }},
+      { false, false,  false, ImGuiKey_DownArrow,  [this,&testApp]{ testApp.getFilePlayer()->skipPlay (1); }},
     };
 
     ImGui::GetIO().WantTextInput = true;
@@ -559,6 +562,10 @@ private:
     ImGui::GetIO().InputQueueCharacters.resize (0);
     }
   //}}}
+
+  // vars
+  cView* mView;
+  cTextureShader* mVideoShader = nullptr;
   };
 //}}}
 
