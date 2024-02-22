@@ -146,7 +146,11 @@ namespace {
           if (stream && stream->isEnabled()) {
             uint8_t* buffer = (uint8_t*)malloc (pidInfo.getBufSize());
             memcpy (buffer, pidInfo.mBuffer, pidInfo.getBufSize());
-            stream->getRender().decodePes (buffer, pidInfo.getBufSize(), pidInfo.getPts(), '.');
+
+            char frameType = '.';
+            if (pidInfo.getPid() == service.getVideoPid())
+              frameType = cDvbUtils::getFrameType (buffer, pidInfo.getBufSize(), service.getVideoStreamTypeId() == 27);
+            stream->getRender().decodePes (buffer, pidInfo.getBufSize(), pidInfo.getPts(), frameType);
             }
           });
 
@@ -233,7 +237,7 @@ namespace {
             uint8_t* buffer = (uint8_t*)malloc (pidInfo.getBufSize());
             memcpy (buffer, pidInfo.mBuffer, pidInfo.getBufSize());
             if (kPesDebug) {
-              if  (stream->getLabel() == "vid:") {
+              if (pidInfo.getPid() == service.getVideoPid()) {
                 char frameType = cDvbUtils::getFrameType (buffer, pidInfo.getBufSize(), true);
                 cLog::log (LOGINFO, fmt::format ("{}{} {:6d} pts:{} dts:{}",
                                                  stream->getLabel(), frameType, pidInfo.getBufSize(),

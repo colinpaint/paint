@@ -131,7 +131,8 @@ public:
             uint8_t* buffer = (uint8_t*)malloc (pidInfo.getBufSize());
             memcpy (buffer, pidInfo.mBuffer, pidInfo.getBufSize());
 
-            char frameType = cDvbUtils::getFrameType (buffer, pidInfo.getBufSize(), true);
+            char frameType = cDvbUtils::getFrameType (buffer, pidInfo.getBufSize(),
+                                                      service.getVideoStreamTypeId() == 27);
             sPes pes (buffer, pidInfo.getBufSize(), pidInfo.getPts(), frameType);
             if (frameType == 'I') // add gop
               mGopMap.emplace (pidInfo.getPts(), cGop(pes));
@@ -278,7 +279,7 @@ public:
   cTestApp (cApp::cOptions* options, iUI* ui) : cApp ("Test", options, ui), mOptions(options) {}
   virtual ~cTestApp() {}
 
-  void addFile (const string& fileName, cApp::cOptions* options) {
+  void addFile (const string& fileName) {
     mFilePlayer = new cFilePlayer (fileName);
     mFilePlayer->read();
     }
@@ -289,7 +290,7 @@ public:
   void drop (const vector<string>& dropItems) {
     for (auto& item : dropItems) {
       cLog::log (LOGINFO, fmt::format ("cPlayerApp::drop {}", item));
-      addFile (item, mOptions);
+      addFile (item);
       }
     }
 
@@ -607,7 +608,7 @@ int main (int numArgs, char* args[]) {
 
   // launch
   cTestApp testApp (options, new cTestUI());
-  testApp.addFile (fileName, options);
+  testApp.addFile (fileName);
   testApp.mainUILoop();
 
   return EXIT_SUCCESS;
