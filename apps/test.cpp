@@ -352,8 +352,23 @@ public:
 
         // draw quad
         mVideoQuad->draw();
-        }
         //}}}
+        //{{{  draw frame info
+        string title = fmt::format ("{} {} {} {}",
+                                    videoFrame->getFrameType(),
+                                    getPtsString(videoFrame->getPts()),
+                                    videoFrame->getPtsDuration(),
+                                    videoFrame->getPesSize()
+                                    );
+
+        ImVec2 pos = {ImGui::GetTextLineHeight() * 0.25f, 0.f};
+        pos = { ImGui::GetTextLineHeight(), mSize.y - 3 * ImGui::GetTextLineHeight()};
+        ImGui::SetCursorPos (pos);
+        ImGui::TextColored ({0.f,0.f,0.f,1.f}, title.c_str());
+        ImGui::SetCursorPos (pos - ImVec2(2.f,2.f));
+        ImGui::TextColored ({1.f, 1.f,1.f,1.f}, title.c_str());
+        //}}}
+        }
       }
     //{{{  title, playPts
     ImGui::PushFont (testApp.getLargeFont());

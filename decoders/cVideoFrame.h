@@ -31,6 +31,7 @@ public:
   uint16_t getWidth() const { return mWidth; }
   uint16_t getHeight() const { return mHeight; }
   cPoint getSize() const { return { mWidth, mHeight }; }
+  char getFrameType() { return mFrameType; }
   //{{{
   std::string getInfoString() {
 
