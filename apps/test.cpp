@@ -46,7 +46,6 @@ extern "C" {
 //}}}
 #include "../decoders/cVideoFrame.h"
 #include "../decoders/cFFmpegVideoDecoder.h"
-#include "../decoders/cVideoRender.h"
 
 // app
 #include "../app/cApp.h"
@@ -63,20 +62,18 @@ public:
   cFilePlayer (string fileName) : mFileName(cFileUtils::resolve (fileName)) {}
   //{{{
   virtual ~cFilePlayer() {
-    mAudioPesMap.clear();
     mGopMap.clear();
     }
   //}}}
 
   string getFileName() const { return mFileName; }
   cTransportStream::cService* getService() { return mService; }
-  cVideoRender* getVideoRender() { return mVideoRender; }
   cVideoFrame* getVideoFrame() { return mVideoFrame; }
   int64_t getPlayPts() const { return mPlayPts; }
 
   void togglePlay() { mPlaying = !mPlaying; }
-  void skipPlay (int64_t skipPts) { 
-    mPlayPts += skipPts; 
+  void skipPlay (int64_t skipPts) {
+    mPlayPts += skipPts;
     }
   //{{{
   void skipIframe (int64_t inc) {
@@ -95,18 +92,10 @@ public:
         --it;
     mPlayPts = it->first;
 
-    sPes pes = it->second.mPesVector.front();
+    cPes pes = it->second.mPesVector.front();
     cLog::log (LOGINFO, fmt::format ("skip {} {} {} {}",
                                      inc, pes.mFrameType, getPtsString (upperPts), getPtsString (it->first)));
-    if (mDecoder)
-      mDecoder->decode (pes.mData, pes.mSize, pes.mPts, pes.mFrameType,
-        [&](int64_t pts) noexcept { return new cFFmpegVideoFrame(); },
-        [&](cFrame* frame) noexcept {
-          cLog::log (LOGINFO, fmt::format ("addFrame {}", getPtsString (frame->getPts())));
-          cVideoFrame* videoFrame = dynamic_cast<cVideoFrame*>(frame);
-          videoFrame->mTextureDirty = true;
-          mVideoFrame = videoFrame;
-          });
+    loadPes (pes);
     }
   //}}}
 
@@ -139,8 +128,7 @@ public:
         {"anal", 0, {}, {}}, nullptr,
         [&](cTransportStream::cService& service) noexcept {
           mService = &service;
-          mDecoder = new cFFmpegVideoDecoder (true);
-          //mVideoRender = new cVideoRender (false, 1000, mService->getVideoStreamTypeId(), mService->getVideoPid());
+          createDecoder();
           },
 
          // pes lambda
@@ -150,44 +138,25 @@ public:
             memcpy (buffer, pidInfo.mBuffer, pidInfo.getBufSize());
             char frameType = cDvbUtils::getFrameType (buffer, pidInfo.getBufSize(),
                                                       service.getVideoStreamTypeId() == 27);
+            cPes pes (buffer, pidInfo.getBufSize(), pidInfo.getPts(), frameType);
 
-            sPes pes (buffer, pidInfo.getBufSize(), pidInfo.getPts(), frameType);
             if (frameType == 'I') // add gop
               mGopMap.emplace (pidInfo.getPts(), cGop(pes));
             else if (!mGopMap.empty()) // add pes to last gop
               mGopMap.rbegin()->second.addPes (pes);
+
             //{{{  debug
             cLog::log (LOGINFO, fmt::format ("{}:{:2d} {:6d} pts:{}",
                                              frameType,
                                              mGopMap.empty() ? 0 : mGopMap.rbegin()->second.getSize(),
                                              pidInfo.getBufSize(), getFullPtsString (pidInfo.getPts()) ));
             //}}}
-            if (!mGopMap.empty()) {
-              // if (mVideoRender)
-              //  mVideoRender->decodePes (pes.mData, pes.mSize, pes.mPts, pes.mFrameType);
-              mPlayPts = pes.mPts;
-              if (mDecoder)
-                mDecoder->decode (pes.mData, pes.mSize, pes.mPts, pes.mFrameType,
-                  [&](int64_t pts) noexcept { return new cFFmpegVideoFrame(); },
-                  [&](cFrame* frame) noexcept {
-                    cLog::log (LOGINFO, fmt::format ("addFrame {}", getPtsString (frame->getPts())));
-                    cVideoFrame* videoFrame = dynamic_cast<cVideoFrame*>(frame);
-                    videoFrame->mTextureDirty = true;
-                    mVideoFrame = videoFrame;
-                    });
-              }
+            mPlayPts = pes.mPts;
+            loadPes (pes);
 
             while (!mPlaying)
               this_thread::sleep_for (40ms);
             }
-          //{{{  pes unused
-          //else if (pidInfo.getPid() == service.getAudioPid())
-          //  cLog::log (LOGINFO, fmt::format ("- A pts:{} size:{}", getPtsString (pidInfo.getPts()), pidInfo.getBufSize()));
-          //else if (pidInfo.getPid() == service.getSubtitlePid())
-          //  cLog::log (LOGINFO, fmt::format ("  - S pts:{} size:{}", getPtsString (pidInfo.getPts()), pidInfo.getBufSize()));
-          //else
-          // cLog::log (LOGERROR, fmt::format ("cFilePlayer analyse addPes - unknown pid:{}", pidInfo.getPid()));
-          //}}}
           }
         );
 
@@ -219,11 +188,6 @@ public:
                                        getFullPtsString (mGopMap.begin()->second.getFirstPts()),
                                        getFullPtsString (mGopMap.rbegin()->second.getLastPts()),
                                        mGopMap.size(), longestGop));
-
-      cLog::log (LOGINFO, fmt::format ("- aud:{:6d} {} to {}",
-                                       mAudioPesMap.size(),
-                                       getFullPtsString (mAudioPesMap.begin()->first),
-                                       getFullPtsString (mAudioPesMap.rbegin()->first)));
       //}}}
 
       delete[] chunk;
@@ -235,10 +199,11 @@ public:
   //}}}
 
 private:
+  static inline const size_t kVideoFrames = 8;
   //{{{
-  struct sPes {
+  class cPes {
   public:
-    sPes (uint8_t* data, uint32_t size, int64_t pts, char frameType) :
+    cPes (uint8_t* data, uint32_t size, int64_t pts, char frameType) :
       mData(data), mSize(size), mPts(pts), mFrameType(frameType) {}
 
     uint8_t* mData;
@@ -250,7 +215,7 @@ private:
   //{{{
   class cGop {
   public:
-    cGop (sPes pes) {
+    cGop (cPes pes) {
       mPesVector.push_back (pes);
       }
     virtual ~cGop() {
@@ -261,20 +226,40 @@ private:
     int64_t getFirstPts() const { return mPesVector.front().mPts; }
     int64_t getLastPts() const { return mPesVector.back().mPts; }
 
-    void addPes (sPes pes) {
+    void addPes (cPes pes) {
       mPesVector.push_back (pes);
       }
 
-    void load (cVideoRender* videoRender, int64_t loadPts, int64_t pts, const string& title) {
-      cLog::log (LOGINFO, fmt::format ("{} {} {} gopFirst:{}",
-                                       title, mPesVector.size(), getPtsString (loadPts), getPtsString (pts) ));
-
-      for (auto it = mPesVector.begin(); it != mPesVector.end(); ++it)
-        videoRender->decodePes (it->mData, it->mSize, it->mPts, it->mFrameType);
-      }
-
-    vector <sPes> mPesVector;
+    vector <cPes> mPesVector;
     };
+  //}}}
+
+  //{{{
+  void createDecoder() {
+
+    mDecoder = new cFFmpegVideoDecoder (true);
+
+    for (int i = 0; i < kVideoFrames;  i++)
+      mVideoFrames[i] = new cFFmpegVideoFrame();
+    }
+  //}}}
+  //{{{
+  void loadPes (cPes pes) {
+
+    if (mDecoder)
+      mDecoder->decode (pes.mData, pes.mSize, pes.mPts, pes.mFrameType,
+        [&](int64_t pts) noexcept {
+          mVideoFrameIndex = (mVideoFrameIndex + 1) % kVideoFrames;
+          mVideoFrames[mVideoFrameIndex]->releaseResources();
+          return mVideoFrames[mVideoFrameIndex];
+          },
+        [&](cFrame* frame) noexcept {
+          cLog::log (LOGINFO, fmt::format ("addFrame {}", getPtsString (frame->getPts())));
+          cVideoFrame* videoFrame = dynamic_cast<cVideoFrame*>(frame);
+          videoFrame->mTextureDirty = true;
+          mVideoFrame = videoFrame;
+          });
+    }
   //}}}
 
   string mFileName;
@@ -283,18 +268,16 @@ private:
   cTransportStream* mTransportStream = nullptr;
   cTransportStream::cService* mService = nullptr;
 
-  // pes
-  shared_mutex mAudioMutex;
-  map <int64_t,sPes> mAudioPesMap;
-
   int64_t mNumVideoPes = 0;
   map <int64_t,cGop> mGopMap;
 
-  // render
-  cVideoRender* mVideoRender = nullptr;
+  // playing
   int64_t mPlayPts = -1;
   bool mPlaying = true;
 
+  // videoDecoder
+  int mVideoFrameIndex = -1;
+  array <cVideoFrame*,8> mVideoFrames = { nullptr };
   cVideoFrame* mVideoFrame = nullptr;
   cDecoder* mDecoder = nullptr;
   };
@@ -346,10 +329,6 @@ public:
                        ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse |
                        ImGuiWindowFlags_NoBackground);
 
-    //if (testApp.getFilePlayer()) {
-    //  cVideoRender* videoRender = testApp.getFilePlayer()->getVideoRender();
-    //  if (videoRender) {
-    // /   cVideoFrame* videoFrame = videoRender->getVideoFrameAtOrAfterPts (testApp.getFilePlayer()->getPlayPts());
     if (testApp.getFilePlayer()) {
       cVideoFrame* videoFrame = testApp.getFilePlayer()->getVideoFrame();
       if (videoFrame) {
