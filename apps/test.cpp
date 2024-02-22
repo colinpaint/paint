@@ -79,16 +79,21 @@ public:
   void skipIframe (int64_t inc) {
 
     auto it = mGopMap.upper_bound (mPlayPts);
-    int64_t upperPts = it->first;
+    if (it == mGopMap.end()) {
+      cLog::log (LOGERROR, fmt::format ("at end"));
+      --it;
+      }
 
+    int64_t upperPts = it->first;
     if (inc <= 0)
-      --it;
+      if (it != mGopMap.begin())
+        --it;
     if (inc < 0)
-      --it;
+      if (it != mGopMap.begin())
+        --it;
     mPlayPts = it->first;
 
-    cLog::log (LOGINFO, fmt::format ("skipI {} {} {}",
-                                     inc, getPtsString (upperPts), getPtsString (it->first)));
+    cLog::log (LOGINFO, fmt::format ("skipI {} {} {}", inc, getPtsString (upperPts), getPtsString (it->first)));
     }
   //}}}
 
