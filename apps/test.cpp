@@ -45,7 +45,8 @@ extern "C" {
 #endif
 //}}}
 #include "../decoders/cVideoFrame.h"
-#include "../decoders/cFFmpegVideoDecoder.h"
+#include "../decoders/cFFmpegVideoFrame.h"
+#include "../decoders/cDecoder.h"
 
 // app
 #include "../app/cApp.h"
@@ -55,47 +56,188 @@ extern "C" {
 using namespace std;
 using namespace utils;
 //}}}
+constexpr bool kMotionVectors = true;
+namespace {
+  //{{{
+  void logCallback (void* ptr, int level, const char* fmt, va_list vargs) {
+    (void)level;
+    (void)ptr;
+    (void)fmt;
+    (void)vargs;
+    //vprintf (fmt, vargs);
+    }
+  //}}}
+  }
+//{{{
+class cVideoDecoder : public cDecoder {
+public:
+  //{{{
+  cVideoDecoder (bool h264) :
+     cDecoder(), mH264(h264), mStreamName(h264 ? "h264" : "mpeg2"),
+     mAvCodec(avcodec_find_decoder (h264 ? AV_CODEC_ID_H264 : AV_CODEC_ID_MPEG2VIDEO)) {
 
+    av_log_set_level (AV_LOG_ERROR);
+    av_log_set_callback (logCallback);
+
+    cLog::log (LOGINFO, fmt::format ("cVideoDecoder ffmpeg - {}", mStreamName));
+
+    mAvParser = av_parser_init (mH264 ? AV_CODEC_ID_H264 : AV_CODEC_ID_MPEG2VIDEO);
+    mAvContext = avcodec_alloc_context3 (mAvCodec);
+    mAvContext->flags2 |= AV_CODEC_FLAG2_FAST;
+
+    if (kMotionVectors) {
+      AVDictionary* opts = nullptr;
+      av_dict_set (&opts, "flags2", "+export_mvs", 0);
+      avcodec_open2 (mAvContext, mAvCodec, &opts);
+      av_dict_free (&opts);
+      }
+    else
+      avcodec_open2 (mAvContext, mAvCodec, nullptr);
+    }
+  //}}}
+  //{{{
+  virtual ~cVideoDecoder() {
+
+    if (mAvParser)
+      av_parser_close (mAvParser);
+    }
+  //}}}
+
+  virtual string getInfoString() const final { return mH264 ? "ffmpeg h264" : "ffmpeg mpeg"; }
+  virtual void flush() final { avcodec_flush_buffers (mAvContext); }
+  //{{{
+  virtual int64_t decode (uint8_t* pes, uint32_t pesSize, int64_t pts, char frameType,
+                          function<cFrame*(int64_t pts)> allocFrameCallback,
+                          function<void (cFrame* frame)> addFrameCallback) final {
+    AVFrame* avFrame = av_frame_alloc();
+    AVPacket* avPacket = av_packet_alloc();
+
+    uint8_t* frame = pes;
+    uint32_t frameSize = pesSize;
+    while (frameSize) {
+      auto now = chrono::system_clock::now();
+      int bytesUsed = av_parser_parse2 (mAvParser, mAvContext, &avPacket->data, &avPacket->size,
+                                        frame, (int)frameSize, pts, AV_NOPTS_VALUE, 0);
+      if (avPacket->size) {
+        int ret = avcodec_send_packet (mAvContext, avPacket);
+        while (ret >= 0) {
+          ret = avcodec_receive_frame (mAvContext, avFrame);
+          if ((ret == AVERROR(EAGAIN)) || (ret == AVERROR_EOF) || (ret < 0))
+            break;
+
+          if (frameType == 'I')
+            mSeqPts = pts;
+
+          int64_t duration = (kPtsPerSecond * mAvContext->framerate.den) / mAvContext->framerate.num;
+
+          // alloc videoFrame
+          cFFmpegVideoFrame* frame = dynamic_cast<cFFmpegVideoFrame*>(allocFrameCallback (mSeqPts));
+          if (frame) {
+            frame->set (mSeqPts, duration, frameSize);
+            frame->mFrameType = frameType;
+            frame->setAVFrame (avFrame, kMotionVectors);
+            frame->addTime (chrono::duration_cast<chrono::microseconds>(chrono::system_clock::now() - now).count());
+
+            // addFrame
+            addFrameCallback (frame);
+
+            avFrame = av_frame_alloc();
+            }
+          mSeqPts += duration;
+          }
+        }
+      frame += bytesUsed;
+      frameSize -= bytesUsed;
+      }
+
+    av_frame_unref (avFrame);
+    av_frame_free (&avFrame);
+
+    av_packet_free (&avPacket);
+    return mSeqPts;
+    }
+  //}}}
+
+private:
+  const bool mH264 = false;
+  const string mStreamName;
+  const AVCodec* mAvCodec = nullptr;
+
+  AVCodecParserContext* mAvParser = nullptr;
+  AVCodecContext* mAvContext = nullptr;
+
+  bool mGotIframe = false;
+  int64_t mSeqPts = -1;
+  };
+//}}}
 //{{{
 class cFilePlayer {
 public:
   cFilePlayer (string fileName) : mFileName(cFileUtils::resolve (fileName)) {}
   //{{{
   virtual ~cFilePlayer() {
-    mGopMap.clear();
+    mPes.clear();
     }
   //}}}
 
   string getFileName() const { return mFileName; }
   cTransportStream::cService* getService() { return mService; }
-  cVideoFrame* getVideoFrame() { return mVideoFrame; }
   int64_t getPlayPts() const { return mPlayPts; }
+  cVideoFrame* getVideoFrame() { return mVideoFrame; }
 
   void togglePlay() { mPlaying = !mPlaying; }
-  void skipPlay (int64_t skipPts) {
-    mPlayPts += skipPts;
-    }
   //{{{
-  void skipIframe (int64_t inc) {
-    auto it = mGopMap.upper_bound (mPlayPts);
-    if (it == mGopMap.end()) {
-      cLog::log (LOGERROR, fmt::format ("at end"));
-      --it;
+  void skipPlay (int64_t skipPts) {
+
+    int64_t fromPts = mPlayPts;
+    mPlayPts += skipPts;
+
+    auto it = mPes.begin();
+    while (it != mPes.end()) {
+      if (mPlayPts == it->mPts)
+        break;
+      ++it;
       }
 
-    int64_t upperPts = it->first;
-    if (inc <= 0)
-      if (it != mGopMap.begin())
-        --it;
-    if (inc < 0)
-      if (it != mGopMap.begin())
-        --it;
-    mPlayPts = it->first;
+    if (it != mPes.end()) {
+      cLog::log (LOGINFO, fmt::format ("skipPlay from:{} to:{} skip:{}",
+                                       getPtsString (fromPts), getPtsString (mPlayPts), skipPts));
+      decodePes (*it);
+      }
+    }
+  //}}}
+  //{{{
+  void skipIframe (int64_t inc) {
 
-    cPes pes = it->second.mPesVector.front();
-    cLog::log (LOGINFO, fmt::format ("skip {} {} {} {}",
-                                     inc, pes.mFrameType, getPtsString (upperPts), getPtsString (it->first)));
-    loadPes (pes);
+    auto it = mPes.begin();
+    while (it != mPes.end()) {
+      if (mPlayPts >= it->mPts)
+        break;
+      ++it;
+      }
+
+    if (it != mPes.end()) {
+      if (inc > 0) {
+        while (it != mPes.end()) {
+          if (it->mFrameType == 'I')
+            break;
+          else
+            ++it;
+          }
+        }
+
+      else if (inc < 0) {
+        while (it != mPes.begin()) {
+          --it;
+          if (it->mFrameType == 'I')
+            break;
+          }
+        }
+
+      cLog::log (LOGINFO, fmt::format ("skip Iframe {}", inc));
+      mPlayPts = it->mPts;
+      decodePes (*it);
+      }
     }
   //}}}
 
@@ -126,6 +268,7 @@ public:
 
       mTransportStream = new cTransportStream (
         {"anal", 0, {}, {}}, nullptr,
+        // addService lambda
         [&](cTransportStream::cService& service) noexcept {
           mService = &service;
           createDecoder();
@@ -134,31 +277,14 @@ public:
          // pes lambda
         [&](cTransportStream::cService& service, cTransportStream::cPidInfo& pidInfo) noexcept {
           if (pidInfo.getPid() == service.getVideoPid()) {
+            char frameType = cDvbUtils::getFrameType (
+              pidInfo.mBuffer, pidInfo.getBufSize(), service.getVideoStreamTypeId() == 27);
             uint8_t* buffer = (uint8_t*)malloc (pidInfo.getBufSize());
             memcpy (buffer, pidInfo.mBuffer, pidInfo.getBufSize());
-            char frameType = cDvbUtils::getFrameType (buffer, pidInfo.getBufSize(),
-                                                      service.getVideoStreamTypeId() == 27);
-            cPes pes (buffer, pidInfo.getBufSize(), pidInfo.getPts(), frameType);
-
-            if (frameType == 'I') // add gop
-              mGopMap.emplace (pidInfo.getPts(), cGop(pes));
-            else if (!mGopMap.empty()) // add pes to last gop
-              mGopMap.rbegin()->second.addPes (pes);
-
-            //{{{  debug
-            cLog::log (LOGINFO, fmt::format ("{}:{:2d} {:6d} pts:{}",
-                                             frameType,
-                                             mGopMap.empty() ? 0 : mGopMap.rbegin()->second.getSize(),
-                                             pidInfo.getBufSize(), getFullPtsString (pidInfo.getPts()) ));
-            //}}}
-            mPlayPts = pes.mPts;
-            loadPes (pes);
-
-            while (!mPlaying)
-              this_thread::sleep_for (40ms);
+            cPes pes(buffer, pidInfo.getBufSize(), pidInfo.getPts(), frameType);
+            mPes.push_back (pes);
             }
-          }
-        );
+          });
 
       // file read
       size_t chunkSize = 188 * 256;
@@ -172,23 +298,26 @@ public:
           break;
         }
       //{{{  report totals
-      cLog::log (LOGINFO, fmt::format ("{}m took {}ms",
-        mFileSize/1000000,
-        chrono::duration_cast<chrono::milliseconds>(chrono::system_clock::now() - now).count()));
+      cLog::log (LOGINFO, fmt::format ("{:4.1f}m took {:3.2f}s",
+        mFileSize/1000000.f,
+        chrono::duration_cast<chrono::milliseconds>(chrono::system_clock::now() - now).count() / 1000.f));
 
-      size_t numVidPes = 0;
-      size_t longestGop = 0;
-      for (auto& gop : mGopMap) {
-        longestGop = max (longestGop, gop.second.getSize());
-        numVidPes += gop.second.getSize();
+      cLog::log (LOGINFO, fmt::format ("- vid:{:6d} {} to {}",
+                                       mPes.size(),
+                                       getFullPtsString (mPes.front().mPts),
+                                       getFullPtsString (mPes.back().mPts)
+                                       ));
+                                       //}}}
+      cLog::log (LOGINFO, "---------------------------------------------------");
+
+      mDecoder->flush();
+      for (auto it = mPes.begin(); it != mPes.end(); ++it) {
+        if (it->mFrameType == 'I')
+          decodePes (*it);
+
+        while (!mPlaying)
+          this_thread::sleep_for (10ms);
         }
-
-      cLog::log (LOGINFO, fmt::format ("- vid:{:6d} {} to {} gop:{} longest:{}",
-                                       numVidPes,
-                                       getFullPtsString (mGopMap.begin()->second.getFirstPts()),
-                                       getFullPtsString (mGopMap.rbegin()->second.getLastPts()),
-                                       mGopMap.size(), longestGop));
-      //}}}
 
       delete[] chunk;
       fclose (file);
@@ -212,53 +341,38 @@ private:
     char mFrameType;
     };
   //}}}
-  //{{{
-  class cGop {
-  public:
-    cGop (cPes pes) {
-      mPesVector.push_back (pes);
-      }
-    virtual ~cGop() {
-      mPesVector.clear();
-      }
-
-    size_t getSize() const { return mPesVector.size(); }
-    int64_t getFirstPts() const { return mPesVector.front().mPts; }
-    int64_t getLastPts() const { return mPesVector.back().mPts; }
-
-    void addPes (cPes pes) {
-      mPesVector.push_back (pes);
-      }
-
-    vector <cPes> mPesVector;
-    };
-  //}}}
 
   //{{{
   void createDecoder() {
 
-    mDecoder = new cFFmpegVideoDecoder (true);
+    mDecoder = new cVideoDecoder (true);
 
     for (int i = 0; i < kVideoFrames;  i++)
       mVideoFrames[i] = new cFFmpegVideoFrame();
     }
   //}}}
   //{{{
-  void loadPes (cPes pes) {
+  void decodePes (cPes pes) {
 
-    if (mDecoder)
+    if (mDecoder) {
+      cLog::log (LOGINFO, fmt::format ("decode {} {}", pes.mFrameType, getPtsString (pes.mPts)));
+
       mDecoder->decode (pes.mData, pes.mSize, pes.mPts, pes.mFrameType,
+        // allocFrame lambda
         [&](int64_t pts) noexcept {
           mVideoFrameIndex = (mVideoFrameIndex + 1) % kVideoFrames;
           mVideoFrames[mVideoFrameIndex]->releaseResources();
           return mVideoFrames[mVideoFrameIndex];
           },
+
+        // addFrame lambda
         [&](cFrame* frame) noexcept {
-          cLog::log (LOGINFO, fmt::format ("addFrame {}", getPtsString (frame->getPts())));
+          cLog::log (LOGINFO, fmt::format ("- addFrame {}", getPtsString (frame->getPts())));
           cVideoFrame* videoFrame = dynamic_cast<cVideoFrame*>(frame);
           videoFrame->mTextureDirty = true;
           mVideoFrame = videoFrame;
           });
+      }
     }
   //}}}
 
@@ -268,8 +382,8 @@ private:
   cTransportStream* mTransportStream = nullptr;
   cTransportStream::cService* mService = nullptr;
 
-  int64_t mNumVideoPes = 0;
-  map <int64_t,cGop> mGopMap;
+  bool mGotIframe = false;
+  vector <cPes> mPes;
 
   // playing
   int64_t mPlayPts = -1;
