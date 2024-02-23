@@ -60,11 +60,457 @@ constexpr bool kMotionVectors = true;
 namespace {
   //{{{
   void logCallback (void* ptr, int level, const char* fmt, va_list vargs) {
+    char buffer[256];
     (void)level;
     (void)ptr;
     (void)fmt;
     (void)vargs;
-    //vprintf (fmt, vargs);
+
+    vsprintf (buffer, fmt, vargs);
+    for (int i = 0; i < 256; i++)
+      if (buffer[i] == 0xa)
+        buffer[i] = 0;
+
+    cLog::log (LOGINFO, fmt::format ("ffmpeg:{}", buffer));
+    }
+  //}}}
+  //{{{
+  char getFrameType (uint8_t* pes, int64_t pesSize, bool h264) {
+  // return frameType of video pes
+
+    //{{{
+    class cBitstream {
+    // used to parse H264 stream to find I frames
+    public:
+      cBitstream (const uint8_t* buffer, uint32_t bit_len) :
+        mDecBuffer(buffer), mDecBufferSize(bit_len), mNumOfBitsInBuffer(0), mBookmarkOn(false) {}
+
+      //{{{
+      void check_0s (int count) {
+
+        uint32_t val = getBits (count);
+        if (val != 0)
+          cLog::log (LOGERROR, "field error - %d bits should be 0 is %x", count, val);
+        }
+      //}}}
+      //{{{
+      uint32_t getBits (uint32_t numBits) {
+
+        //{{{
+        static const uint32_t msk[33] = {
+          0x00000000, 0x00000001, 0x00000003, 0x00000007,
+          0x0000000f, 0x0000001f, 0x0000003f, 0x0000007f,
+          0x000000ff, 0x000001ff, 0x000003ff, 0x000007ff,
+          0x00000fff, 0x00001fff, 0x00003fff, 0x00007fff,
+          0x0000ffff, 0x0001ffff, 0x0003ffff, 0x0007ffff,
+          0x000fffff, 0x001fffff, 0x003fffff, 0x007fffff,
+          0x00ffffff, 0x01ffffff, 0x03ffffff, 0x07ffffff,
+          0x0fffffff, 0x1fffffff, 0x3fffffff, 0x7fffffff,
+          0xffffffff
+          };
+        //}}}
+
+        if (numBits == 0)
+          return 0;
+
+        uint32_t retData;
+        if (mNumOfBitsInBuffer >= numBits) {  // don't need to read from FILE
+          mNumOfBitsInBuffer -= numBits;
+          retData = mDecData >> mNumOfBitsInBuffer;
+          // wmay - this gets done below...retData &= msk[numBits];
+          }
+        else {
+          uint32_t nbits;
+          nbits = numBits - mNumOfBitsInBuffer;
+          if (nbits == 32)
+            retData = 0;
+          else
+            retData = mDecData << nbits;
+
+          switch ((nbits - 1) / 8) {
+            case 3:
+              nbits -= 8;
+              if (mDecBufferSize < 8)
+                return 0;
+              retData |= *mDecBuffer++ << nbits;
+              mDecBufferSize -= 8;
+              // fall through
+            case 2:
+              nbits -= 8;
+              if (mDecBufferSize < 8)
+                return 0;
+              retData |= *mDecBuffer++ << nbits;
+              mDecBufferSize -= 8;
+              // fall through
+             case 1:
+              nbits -= 8;
+              if (mDecBufferSize < 8)
+                return 0;
+              retData |= *mDecBuffer++ << nbits;
+              mDecBufferSize -= 8;
+              // fall through
+            case 0:
+              break;
+            }
+          if (mDecBufferSize < nbits)
+            return 0;
+
+          mDecData = *mDecBuffer++;
+          mNumOfBitsInBuffer = min(8u, mDecBufferSize) - nbits;
+          mDecBufferSize -= min(8u, mDecBufferSize);
+          retData |= (mDecData >> mNumOfBitsInBuffer) & msk[nbits];
+          }
+
+        return (retData & msk[numBits]);
+        };
+      //}}}
+      //{{{
+      uint32_t getUe() {
+
+        uint32_t bits;
+        uint32_t read = 0;
+        int bits_left;
+        bool done = false;
+        bits = 0;
+
+        // we want to read 8 bits at a time - if we don't have 8 bits,
+        // read what's left, and shift.  The exp_golomb_bits calc remains the same.
+        while (!done) {
+          bits_left = bits_remain();
+          if (bits_left < 8) {
+            read = peekBits (bits_left) << (8 - bits_left);
+            done = true;
+            }
+          else {
+            read = peekBits (8);
+            if (read == 0) {
+              getBits (8);
+              bits += 8;
+              }
+            else
+             done = true;
+            }
+          }
+
+        uint8_t coded = exp_golomb_bits[read];
+        getBits (coded);
+        bits += coded;
+
+        return getBits (bits + 1) - 1;
+        }
+      //}}}
+      //{{{
+      int32_t getSe() {
+
+        uint32_t ret;
+        ret = getUe();
+        if ((ret & 0x1) == 0) {
+          ret >>= 1;
+          int32_t temp = 0 - ret;
+          return temp;
+          }
+
+        return (ret + 1) >> 1;
+        }
+      //}}}
+
+    private:
+      //{{{
+      uint32_t peekBits (uint32_t bits) {
+
+        bookmark (true);
+        uint32_t ret = getBits (bits);
+        bookmark (false);
+        return ret;
+        }
+      //}}}
+      //{{{
+      const uint8_t exp_golomb_bits[256] = {
+        8, 7, 6, 6, 5, 5, 5, 5, 4, 4, 4, 4, 4, 4, 4, 4, 3,
+        3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 2, 2,
+        2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2,
+        2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 1, 1, 1, 1,
+        1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+        1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+        1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+        1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0,
+        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+        0,
+        };
+      //}}}
+      //{{{
+      void bookmark (bool on) {
+
+        if (on) {
+          mNumOfBitsInBuffer_bookmark = mNumOfBitsInBuffer;
+          mDecBuffer_bookmark = mDecBuffer;
+          mDecBufferSize_bookmark = mDecBufferSize;
+          mBookmarkOn = 1;
+          mDecData_bookmark = mDecData;
+          }
+
+        else {
+          mNumOfBitsInBuffer = mNumOfBitsInBuffer_bookmark;
+          mDecBuffer = mDecBuffer_bookmark;
+          mDecBufferSize = mDecBufferSize_bookmark;
+          mDecData = mDecData_bookmark;
+          mBookmarkOn = 0;
+          }
+
+        };
+      //}}}
+
+      //{{{
+      int bits_remain() {
+        return mDecBufferSize + mNumOfBitsInBuffer;
+        };
+      //}}}
+      //{{{
+      int byte_align() {
+
+        int temp = 0;
+        if (mNumOfBitsInBuffer != 0)
+          temp = getBits (mNumOfBitsInBuffer);
+        else {
+          // if we are byte aligned, check for 0x7f value - this will indicate
+          // we need to skip those bits
+          uint8_t readval = static_cast<uint8_t>(peekBits (8));
+          if (readval == 0x7f)
+            readval = static_cast<uint8_t>(getBits (8));
+          }
+
+        return temp;
+        };
+      //}}}
+
+      const uint8_t* mDecBuffer;
+      uint32_t mDecBufferSize;
+      uint32_t mNumOfBitsInBuffer;
+      bool mBookmarkOn;
+
+      uint8_t mDecData_bookmark = 0;
+      uint8_t mDecData = 0;
+
+      uint32_t mNumOfBitsInBuffer_bookmark = 0;
+      const uint8_t* mDecBuffer_bookmark = 0;
+      uint32_t mDecBufferSize_bookmark = 0;
+      };
+    //}}}
+
+    const bool kDebug = false;
+
+    uint8_t* pesEnd = pes + pesSize;
+
+    if (h264) {
+      while (pes < pesEnd) {
+        //{{{  skip past startcode, find next startcode
+        uint8_t* buf = pes;
+        int64_t bufSize = pesSize;
+
+        uint32_t startOffset = 0;
+        if (!buf[0] && !buf[1]) {
+          if (!buf[2] && buf[3] == 1) {
+            buf += 4;
+            startOffset = 4;
+            }
+          else if (buf[2] == 1) {
+            buf += 3;
+            startOffset = 3;
+            }
+          }
+
+        // find next startCode
+        uint32_t offset = startOffset;
+        uint32_t nalSize = offset;
+        uint32_t val = 0xffffffff;
+        while (offset++ < bufSize - 3) {
+          val = (val << 8) | *buf++;
+          if (val == 0x0000001) {
+            nalSize = offset - 4;
+            break;
+            }
+          if ((val & 0x00ffffff) == 0x0000001) {
+            nalSize = offset - 3;
+            break;
+            }
+
+          nalSize = (uint32_t)bufSize;
+          }
+        //}}}
+        if (nalSize > 3) {
+          // parse NAL bitStream
+          cBitstream bitstream (buf, (nalSize - startOffset) * 8);
+          bitstream.check_0s (1);
+          bitstream.getBits (2);
+
+          int nalType = bitstream.getBits (5);
+          switch (nalType) {
+            //{{{
+            case 1: { // nonIdr
+              bitstream.getUe();
+              int nalSubtype = bitstream.getUe();
+
+              if (kDebug)
+                cLog::log (LOGINFO, fmt::format ("nal:nonIdr:{}", nalSubtype));
+
+              switch (nalSubtype) {
+                case 0:  return 'P';
+                case 1:  return 'B';
+                case 2:  return 'I';
+                //default: return '?';
+                }
+
+              break;
+              }
+            //}}}
+            //{{{
+            case 2:   // parta
+              if (kDebug)
+                cLog::log (LOGINFO, "nal partA");
+              break;
+            //}}}
+            //{{{
+            case 3:   // partb
+              if (kDebug)
+                cLog::log (LOGINFO, "nal partB");
+              break;
+            //}}}
+            //{{{
+            case 4:   // partc
+              if (kDebug)
+                cLog::log (LOGINFO, "nal partC");
+              break;
+            //}}}
+            //{{{
+            case 5: { // idr
+              bitstream.getUe();
+              int nalSubtype = bitstream.getUe();
+
+              if (kDebug)
+                cLog::log (LOGINFO, fmt::format ("nal:IDR:{}", nalSubtype));
+
+              switch (nalSubtype) {
+                case 2:  return 'B';
+                case 5:  return 'P';
+                case 6:  return 'B';
+                case 7:  return 'I';
+                default: return '?';
+                }
+
+              break;
+              }
+            //}}}
+            //{{{
+            case 6:   // sei
+              if (kDebug)
+                cLog::log (LOGINFO, "nal SEI");
+              break;
+            //}}}
+            //{{{
+            case 7:   // sps
+              if (kDebug)
+                cLog::log (LOGINFO, "nal SPS");
+              break;
+            //}}}
+            //{{{
+            case 8:   // pps
+              if (kDebug)
+                cLog::log (LOGINFO, "nal PPS");
+              break;
+            //}}}
+            //{{{
+            case 9:   // avd
+              if (kDebug)
+                cLog::log (LOGINFO,  "nal AUD");
+              break;
+            //}}}
+            //{{{
+            case 10:  // eoSeq
+              if (kDebug)
+                cLog::log (LOGINFO,  "nal EOseq");
+              break;
+            //}}}
+            //{{{
+            case 11:  // eoStream
+              if (kDebug)
+                cLog::log (LOGINFO,  "nal EOstream");
+              break;
+            //}}}
+            //{{{
+            case 12:  // filler
+              if (kDebug)
+                cLog::log (LOGINFO,  "nal filler");
+              break;
+            //}}}
+            //{{{
+            case 13:  // seqext
+              if (kDebug)
+                cLog::log (LOGINFO,  "nal seqExt");
+              break;
+            //}}}
+            //{{{
+            case 14:  // prefix
+              if (kDebug)
+                cLog::log (LOGINFO, "nal prefix");
+              break;
+            //}}}
+            //{{{
+            case 15:  // subsetSps
+              if (kDebug)
+                cLog::log (LOGINFO, "nal subsetSPS");
+              break;
+            //}}}
+            //{{{
+            case 19:  // aux
+              if (kDebug)
+                cLog::log (LOGINFO, "nal aux");
+              break;
+            //}}}
+            //{{{
+            case 20:  // sliceExt
+              if (kDebug)
+                cLog::log (LOGINFO, "nal sliceExt");
+              break;
+            //}}}
+            //{{{
+            case 21:  // sliceExtDepth
+              if (kDebug)
+                cLog::log (LOGINFO, "nal sliceExtDepth");
+              break;
+            //}}}
+            //{{{
+            default:
+              cLog::log (LOGINFO, fmt::format ("getFrameType - unknown nalType:{} size:{}", nalType, nalSize));
+            //}}}
+            }
+          }
+        pes += nalSize;
+        }
+      }
+    else {
+      //{{{  mpeg2
+      while (pes + 6 < pesEnd) {
+        // look for pictureHeader 00000100
+        if (!pes[0] && !pes[1] && (pes[2] == 0x01) && !pes[3])
+          // extract frameType I,B,P
+          switch ((pes[5] >> 3) & 0x03) {
+            case 1: return 'I';
+            case 2: return 'P';
+            case 3: return 'B';
+            default: return '?';
+            }
+        pes++;
+        }
+      }
+      //}}}
+
+    return '?';
     }
   //}}}
   }
@@ -117,8 +563,7 @@ public:
     uint32_t frameSize = pesSize;
     while (frameSize) {
       int bytesUsed = av_parser_parse2 (mAvParser, mAvContext,
-                                        &avPacket->data, &avPacket->size,
-                                        frameData, (int)frameSize,
+                                        &avPacket->data, &avPacket->size, frameData, (int)frameSize,
                                         pts, AV_NOPTS_VALUE, 0);
       if (avPacket->size) {
         int ret = avcodec_send_packet (mAvContext, avPacket);
@@ -277,7 +722,7 @@ public:
          // pes lambda
         [&](cTransportStream::cService& service, cTransportStream::cPidInfo& pidInfo) noexcept {
           if (pidInfo.getPid() == service.getVideoPid()) {
-            char frameType = cDvbUtils::getFrameType (
+            char frameType = getFrameType (
               pidInfo.mBuffer, pidInfo.getBufSize(), service.getVideoStreamTypeId() == 27);
             uint8_t* buffer = (uint8_t*)malloc (pidInfo.getBufSize());
             memcpy (buffer, pidInfo.mBuffer, pidInfo.getBufSize());
@@ -310,8 +755,18 @@ public:
       cLog::log (LOGINFO, "---------------------------------------------------");
 
       mDecoder->flush();
-      for (auto it = mPes.begin(); it != mPes.end(); ++it) {
+      auto it = mPes.begin();
+      while (it != mPes.end())
+        if (it->mFrameType == 'I')
+          break;
+        else {
+          ++it;
+          cLog::log (LOGINFO, fmt::format ("skip pesPts:{} {}", getPtsString (it->mPts), it->mFrameType));
+          }
+
+      while (it != mPes.end()) {
         decode (*it);
+        ++it;
         while (!mPlaying)
           this_thread::sleep_for (10ms);
         }
@@ -339,6 +794,7 @@ private:
     char mFrameType;
     };
   //}}}
+
   //{{{
   void createDecoder (cTransportStream::cService& service) {
 
@@ -350,9 +806,6 @@ private:
   //}}}
   //{{{
   void decode (cPes pes) {
-
-    if (pes.mFrameType != 'I')
-      return;
 
     if (mDecoder) {
       cLog::log (LOGINFO, fmt::format ("{} decode pesPts:{} {}",
@@ -372,10 +825,11 @@ private:
           cVideoFrame* videoFrame = dynamic_cast<cVideoFrame*>(frame);
           videoFrame->mTextureDirty = true;
           mVideoFrame = videoFrame;
-          cLog::log (LOGINFO, fmt::format ("{} -----> seqPts:{} {}",
+          cLog::log (LOGINFO, fmt::format ("{} -----> seqPts:{} {} {}",
                                            videoFrame->getFrameType() =='I'?"  ":"",
                                            getPtsString (frame->getPts()),
-                                           videoFrame->getFrameType()
+                                           videoFrame->getFrameType(),
+                                           mSeqNum++
                                            ));
           });
       }
@@ -404,6 +858,8 @@ private:
   array <cVideoFrame*,kVideoFrames> mVideoFrames = { nullptr };
   cVideoFrame* mVideoFrame = nullptr;
   cDecoder* mDecoder = nullptr;
+
+  size_t mSeqNum = 0;
   };
 //}}}
 //{{{
