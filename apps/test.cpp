@@ -71,7 +71,7 @@ namespace {
       if (buffer[i] == 0xa)
         buffer[i] = 0;
 
-    cLog::log (LOGINFO, fmt::format ("ffmpeg:{}", buffer));
+    cLog::log (LOGINFO1, fmt::format ("ffmpeg:{}: {}", level, buffer));
     }
   //}}}
   //{{{
@@ -522,7 +522,9 @@ public:
      cDecoder(), mH264(h264), mStreamName(h264 ? "h264" : "mpeg2"),
      mAvCodec(avcodec_find_decoder (h264 ? AV_CODEC_ID_H264 : AV_CODEC_ID_MPEG2VIDEO)) {
 
-    av_log_set_level (AV_LOG_ERROR);
+    //av_log_set_level (AV_LOG_ERROR);
+    av_log_set_level (AV_LOG_VERBOSE);
+    //av_log_set_level (AV_LOG_INFO);
     av_log_set_callback (logCallback);
 
     cLog::log (LOGINFO, fmt::format ("cVideoDecoder ffmpeg - {}", mStreamName));
@@ -1205,7 +1207,7 @@ int main (int numArgs, char* args[]) {
     }
 
   // log
-  cLog::init (options->mLogLevel);
+  cLog::init (LOGINFO1);
 
   // launch
   cTestApp testApp (options, new cTestUI());
