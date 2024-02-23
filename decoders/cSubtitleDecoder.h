@@ -47,7 +47,7 @@ public:
   cSubtitleImage& getImage (size_t line) { return mPage.mImages[line]; }
 
   //{{{
-  virtual int64_t decode (uint8_t* pes, uint32_t pesSize, int64_t pts, char frameType,
+  virtual void decode (uint8_t* pes, uint32_t pesSize, int64_t pts, char frameType,
                           std::function<cFrame* (int64_t pts)> allocFrameCallback,
                           std::function<void (cFrame* frame)> addFrameCallback) final {
     (void)frameType;
@@ -55,7 +55,7 @@ public:
     mPage.mPesSize = pesSize;
     if (pesSize < 8) {
       //{{{  strange empty pes, common on itv multiplex
-      return false;
+      return;
       }
       //}}}
 
@@ -71,7 +71,7 @@ public:
       uint8_t syncByte = *pesPtr++;
       if (syncByte != 0x0f) {
         //{{{  syncByte error, return, common on bbc mulitplex
-        return false;
+        return;
         }
         //}}}
 
@@ -85,7 +85,7 @@ public:
       if (segLength > pesEnd - pesPtr) {
         //{{{  segLength error, return
         cLog::log (LOGERROR, "cSubtitle decode incomplete or broken packet");
-        return false;
+        return;
         }
         //}}}
 
@@ -93,31 +93,31 @@ public:
         //{{{
         case 0x10: // page composition segment
           if (!parsePage (pesPtr, segLength))
-            return false;
+            return;
           break;
         //}}}
         //{{{
         case 0x11: // region composition segment
           if (!parseRegion (pesPtr, segLength))
-            return false;
+            return;
           break;
         //}}}
         //{{{
         case 0x12: // CLUT definition segment
           if (!parseColorLut (pesPtr, segLength))
-            return false;
+            return;
           break;
         //}}}
         //{{{
         case 0x13: // object data segment
           if (!parseObject (pesPtr, segLength))
-            return false;
+            return;
           break;
         //}}}
         //{{{
         case 0x14: // display definition segment
           if (!parseDisplayDefinition (pesPtr, segLength))
-            return false;
+            return;
           break;
         //}}}
         //{{{
@@ -154,8 +154,6 @@ public:
 
       pesPtr += segLength;
       }
-
-    return pts;
     }
   //}}}
 

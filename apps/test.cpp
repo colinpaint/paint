@@ -106,18 +106,20 @@ public:
   virtual string getInfoString() const final { return mH264 ? "ffmpeg h264" : "ffmpeg mpeg"; }
   virtual void flush() final { avcodec_flush_buffers (mAvContext); }
   //{{{
-  virtual int64_t decode (uint8_t* pes, uint32_t pesSize, int64_t pts, char frameType,
+  virtual void decode (uint8_t* pes, uint32_t pesSize, int64_t pts, char frameType,
                           function<cFrame*(int64_t pts)> allocFrameCallback,
                           function<void (cFrame* frame)> addFrameCallback) final {
+
     AVFrame* avFrame = av_frame_alloc();
     AVPacket* avPacket = av_packet_alloc();
 
-    uint8_t* frame = pes;
+    uint8_t* frameData = pes;
     uint32_t frameSize = pesSize;
     while (frameSize) {
-      auto now = chrono::system_clock::now();
-      int bytesUsed = av_parser_parse2 (mAvParser, mAvContext, &avPacket->data, &avPacket->size,
-                                        frame, (int)frameSize, pts, AV_NOPTS_VALUE, 0);
+      int bytesUsed = av_parser_parse2 (mAvParser, mAvContext,
+                                        &avPacket->data, &avPacket->size,
+                                        frameData, (int)frameSize,
+                                        pts, AV_NOPTS_VALUE, 0);
       if (avPacket->size) {
         int ret = avcodec_send_packet (mAvContext, avPacket);
         while (ret >= 0) {
@@ -125,28 +127,27 @@ public:
           if ((ret == AVERROR(EAGAIN)) || (ret == AVERROR_EOF) || (ret < 0))
             break;
 
+          // try to manage pts
           if (frameType == 'I')
-            mSeqPts = pts;
-
+            mSequentialPts = pts;
           int64_t duration = (kPtsPerSecond * mAvContext->framerate.den) / mAvContext->framerate.num;
 
           // alloc videoFrame
-          cFFmpegVideoFrame* frame = dynamic_cast<cFFmpegVideoFrame*>(allocFrameCallback (mSeqPts));
+          cFFmpegVideoFrame* frame = dynamic_cast<cFFmpegVideoFrame*>(allocFrameCallback (mSequentialPts));
           if (frame) {
-            frame->set (mSeqPts, duration, frameSize);
-            frame->mFrameType = frameType;
+            frame->set (mSequentialPts, duration, frameSize);
             frame->setAVFrame (avFrame, kMotionVectors);
-            frame->addTime (chrono::duration_cast<chrono::microseconds>(chrono::system_clock::now() - now).count());
+            frame->mFrameType = frameType;
 
             // addFrame
             addFrameCallback (frame);
 
             avFrame = av_frame_alloc();
             }
-          mSeqPts += duration;
+          mSequentialPts += duration;
           }
         }
-      frame += bytesUsed;
+      frameData += bytesUsed;
       frameSize -= bytesUsed;
       }
 
@@ -154,7 +155,6 @@ public:
     av_frame_free (&avFrame);
 
     av_packet_free (&avPacket);
-    return mSeqPts;
     }
   //}}}
 
@@ -167,7 +167,7 @@ private:
   AVCodecContext* mAvContext = nullptr;
 
   bool mGotIframe = false;
-  int64_t mSeqPts = -1;
+  int64_t mSequentialPts = -1;
   };
 //}}}
 //{{{
@@ -202,7 +202,7 @@ public:
     if (it != mPes.end()) {
       cLog::log (LOGINFO, fmt::format ("skipPlay from:{} to:{} skip:{}",
                                        getPtsString (fromPts), getPtsString (mPlayPts), skipPts));
-      decodePes (*it);
+      decode (*it);
       }
     }
   //}}}
@@ -236,7 +236,7 @@ public:
 
       cLog::log (LOGINFO, fmt::format ("skip Iframe {}", inc));
       mPlayPts = it->mPts;
-      decodePes (*it);
+      decode (*it);
       }
     }
   //}}}
@@ -271,7 +271,7 @@ public:
         // addService lambda
         [&](cTransportStream::cService& service) noexcept {
           mService = &service;
-          createDecoder();
+          createDecoder (service);
           },
 
          // pes lambda
@@ -281,8 +281,7 @@ public:
               pidInfo.mBuffer, pidInfo.getBufSize(), service.getVideoStreamTypeId() == 27);
             uint8_t* buffer = (uint8_t*)malloc (pidInfo.getBufSize());
             memcpy (buffer, pidInfo.mBuffer, pidInfo.getBufSize());
-            cPes pes(buffer, pidInfo.getBufSize(), pidInfo.getPts(), frameType);
-            mPes.push_back (pes);
+            mPes.emplace_back (cPes (buffer, pidInfo.getBufSize(), pidInfo.getPts(), frameType));
             }
           });
 
@@ -312,9 +311,7 @@ public:
 
       mDecoder->flush();
       for (auto it = mPes.begin(); it != mPes.end(); ++it) {
-        if (it->mFrameType == 'I')
-          decodePes (*it);
-
+        decode (*it);
         while (!mPlaying)
           this_thread::sleep_for (10ms);
         }
@@ -328,12 +325,13 @@ public:
   //}}}
 
 private:
-  static inline const size_t kVideoFrames = 8;
+  static inline const size_t kVideoFrames = 50;
   //{{{
   class cPes {
   public:
     cPes (uint8_t* data, uint32_t size, int64_t pts, char frameType) :
       mData(data), mSize(size), mPts(pts), mFrameType(frameType) {}
+
 
     uint8_t* mData;
     uint32_t mSize;
@@ -341,21 +339,25 @@ private:
     char mFrameType;
     };
   //}}}
-
   //{{{
-  void createDecoder() {
+  void createDecoder (cTransportStream::cService& service) {
 
-    mDecoder = new cVideoDecoder (true);
+    mDecoder = new cVideoDecoder (service.getVideoStreamTypeId() == 27);
 
-    for (int i = 0; i < kVideoFrames;  i++)
+    for (size_t i = 0; i < kVideoFrames;  i++)
       mVideoFrames[i] = new cFFmpegVideoFrame();
     }
   //}}}
   //{{{
-  void decodePes (cPes pes) {
+  void decode (cPes pes) {
+
+    if (pes.mFrameType != 'I')
+      return;
 
     if (mDecoder) {
-      cLog::log (LOGINFO, fmt::format ("decode {} {}", pes.mFrameType, getPtsString (pes.mPts)));
+      cLog::log (LOGINFO, fmt::format ("{} decode pesPts:{} {}",
+                                      pes.mFrameType =='I'?"--":"",
+                                      getPtsString (pes.mPts),  pes.mFrameType));
 
       mDecoder->decode (pes.mData, pes.mSize, pes.mPts, pes.mFrameType,
         // allocFrame lambda
@@ -367,12 +369,20 @@ private:
 
         // addFrame lambda
         [&](cFrame* frame) noexcept {
-          cLog::log (LOGINFO, fmt::format ("- addFrame {}", getPtsString (frame->getPts())));
           cVideoFrame* videoFrame = dynamic_cast<cVideoFrame*>(frame);
           videoFrame->mTextureDirty = true;
           mVideoFrame = videoFrame;
+          cLog::log (LOGINFO, fmt::format ("{} -----> seqPts:{} {}",
+                                           videoFrame->getFrameType() =='I'?"  ":"",
+                                           getPtsString (frame->getPts()),
+                                           videoFrame->getFrameType()
+                                           ));
           });
       }
+    else
+      cLog::log (LOGERROR, fmt::format ("no decoder"));
+
+    this_thread::sleep_for (40ms);
     }
   //}}}
 
@@ -391,7 +401,7 @@ private:
 
   // videoDecoder
   int mVideoFrameIndex = -1;
-  array <cVideoFrame*,8> mVideoFrames = { nullptr };
+  array <cVideoFrame*,kVideoFrames> mVideoFrames = { nullptr };
   cVideoFrame* mVideoFrame = nullptr;
   cDecoder* mDecoder = nullptr;
   };
@@ -468,15 +478,14 @@ public:
         mVideoQuad->draw();
         //}}}
         //{{{  draw frame info
-        string title = fmt::format ("{} {} {} {}",
-                                    videoFrame->getFrameType(),
-                                    getPtsString(videoFrame->getPts()),
+        string title = fmt::format ("seqPts:{} {:4d} {:6d} {}",
+                                    getPtsString (videoFrame->getPts()),
                                     videoFrame->getPtsDuration(),
-                                    videoFrame->getPesSize()
+                                    videoFrame->getPesSize(),
+                                    videoFrame->getFrameType()
                                     );
 
-        ImVec2 pos = {ImGui::GetTextLineHeight() * 0.25f, 0.f};
-        pos = { ImGui::GetTextLineHeight(), mSize.y - 3 * ImGui::GetTextLineHeight()};
+        ImVec2 pos = { ImGui::GetTextLineHeight(), mSize.y - 3 * ImGui::GetTextLineHeight()};
         ImGui::SetCursorPos (pos);
         ImGui::TextColored ({0.f,0.f,0.f,1.f}, title.c_str());
         ImGui::SetCursorPos (pos - ImVec2(2.f,2.f));
@@ -484,25 +493,26 @@ public:
         //}}}
         }
       }
-    //{{{  title, playPts
-    ImGui::PushFont (testApp.getLargeFont());
 
+    ImGui::PushFont (testApp.getLargeFont());
+    //{{{  title
     string title = testApp.getFilePlayer()->getFileName();
     ImVec2 pos = {ImGui::GetTextLineHeight() * 0.25f, 0.f};
     ImGui::SetCursorPos (pos);
     ImGui::TextColored ({0.f,0.f,0.f,1.f}, title.c_str());
     ImGui::SetCursorPos (pos - ImVec2(2.f,2.f));
     ImGui::TextColored ({1.f, 1.f,1.f,1.f}, title.c_str());
-
+    //}}}
+    //{{{  playPts
     string ptsString = getPtsString (testApp.getFilePlayer()->getPlayPts());
     pos = ImVec2 (mSize - ImVec2(ImGui::GetTextLineHeight() * 7.f, ImGui::GetTextLineHeight()));
     ImGui::SetCursorPos (pos);
     ImGui::TextColored ({0.f,0.f,0.f,1.f}, ptsString.c_str());
     ImGui::SetCursorPos (pos - ImVec2(2.f,2.f));
     ImGui::TextColored ({1.f,1.f,1.f,1.f}, ptsString.c_str());
-
-    ImGui::PopFont();
     //}}}
+    ImGui::PopFont();
+
     ImGui::EndChild();
     }
 
