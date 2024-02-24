@@ -631,162 +631,104 @@ public:
   cVideoFrame* getVideoFrame() { return mVideoFrame; }
 
   void togglePlay() { mPlaying = !mPlaying; }
+  void skipPlay (int64_t skipPts) {}
   //{{{
-  void skipPlay (int64_t skipPts) {
+  void read() {
 
-    int64_t fromPts = mPlayPts;
-    mPlayPts += skipPts;
-
-    auto it = mPes.begin();
-    while (it != mPes.end()) {
-      if (mPlayPts == it->mPts)
-        break;
-      ++it;
+    FILE* file = fopen (mFileName.c_str(), "rb");
+    if (!file) {
+      //{{{  error, return
+      cLog::log (LOGERROR, fmt::format ("cFilePlayer::analyse to open {}", mFileName));
+      return;
       }
+      //}}}
+    //{{{  get fileSize
+    #ifdef _WIN32
+      struct _stati64 st;
+      if (_stat64 (mFileName.c_str(), &st) != -1)
+        mFileSize = st.st_size;
+    #else
+      struct stat st;
+      if (stat (mFileName.c_str(), &st) != -1)
+        mFileSize = st.st_size;
+    #endif
+    //}}}
 
-    if (it != mPes.end()) {
-      cLog::log (LOGINFO, fmt::format ("skipPlay from:{} to:{} skip:{}",
-                                       getPtsString (fromPts), getPtsString (mPlayPts), skipPts));
-      decode (*it);
-      }
-    }
-  //}}}
-  //{{{
-  void skipIframe (int64_t inc) {
+    thread ([=]() {
+      cLog::setThreadName ("anal");
 
-    auto it = mPes.begin();
-    while (it != mPes.end()) {
-      if (mPlayPts >= it->mPts)
-        break;
-      ++it;
-      }
-
-    if (it != mPes.end()) {
-      if (inc > 0) {
-        while (it != mPes.end()) {
-          if (it->mFrameInfo.front() == 'I')
-            break;
-          else
-            ++it;
+      mTransportStream = new cTransportStream ({"anal", 0, {}, {}}, nullptr,
+        //{{{  addService lambda
+        [&](cTransportStream::cService& service) noexcept {
+          mService = &service;
+          createDecoder (service);
+          },
+        //}}}
+        //{{{  pes lambda
+        [&](cTransportStream::cService& service, cTransportStream::cPidInfo& pidInfo) noexcept {
+          if (pidInfo.getPid() == service.getVideoPid()) {
+            string info = getFrameInfo (pidInfo.mBuffer, pidInfo.getBufSize(),
+                                        service.getVideoStreamTypeId() == 27);
+            uint8_t* buffer = (uint8_t*)malloc (pidInfo.getBufSize());
+            memcpy (buffer, pidInfo.mBuffer, pidInfo.getBufSize());
+            mPes.emplace_back (cPes (buffer, pidInfo.getBufSize(), pidInfo.getPts(), info));
+            }
           }
+        //}}}
+        );
+      //{{{  read file
+      size_t chunkSize = 188 * 256;
+      uint8_t* chunk = new uint8_t[chunkSize];
+      auto now = chrono::system_clock::now();
+      while (true) {
+        size_t bytesRead = fread (chunk, 1, chunkSize, file);
+        if (bytesRead > 0)
+          mTransportStream->demux (chunk, bytesRead);
+        else
+          break;
+        }
+      //}}}
+      //{{{  report totals
+      cLog::log (LOGINFO, fmt::format ("{:4.1f}m took {:3.2f}s",
+        mFileSize/1000000.f,
+        chrono::duration_cast<chrono::milliseconds>(chrono::system_clock::now() - now).count() / 1000.f));
+
+      cLog::log (LOGINFO, "---------------------------------------------------");
+      cLog::log (LOGINFO, fmt::format ("- vid:{:5d} {} to {}",
+                                       mPes.size(),
+                                       getFullPtsString (mPes.front().mPts),
+                                       getFullPtsString (mPes.back().mPts)
+                                       ));
+      cLog::log (LOGINFO, "---------------------------------------------------");
+      //}}}
+      delete[] chunk;
+      fclose (file);
+
+      mDecoder->flush();
+      size_t i = skipToI (0);
+      i = skipToI (i);
+      i = skipToI (i);
+      i = skipToI (i);
+      while (i < mPes.size()) {
+        // decode first frame of gop
+        decode (i, mPes[i++]);
+        //{{{  decode rest of gop
+        //while (mPes[i].mFrameInfo.front() != 'I')
+          //decode (i, mPes[i++]);
+        //}}}
+
+        // skip 8 gop
+        for (int j = 0; j < 4; j++)
+          i = skipToI (++i);
+
+        while (!mPlaying)
+          this_thread::sleep_for (1ms);
         }
 
-      else if (inc < 0) {
-        while (it != mPes.begin()) {
-          --it;
-          if (it->mFrameInfo.front() == 'I')
-            break;
-          }
-        }
-
-      cLog::log (LOGINFO, fmt::format ("skip Iframe {}", inc));
-      mPlayPts = it->mPts;
-      decode (*it);
-      }
+      cLog::log (LOGERROR, "exit");
+      }).detach();
     }
   //}}}
-
-   //{{{
-   void read() {
-
-     FILE* file = fopen (mFileName.c_str(), "rb");
-     if (!file) {
-       //{{{  error, return
-       cLog::log (LOGERROR, fmt::format ("cFilePlayer::analyse to open {}", mFileName));
-       return;
-       }
-       //}}}
-     //{{{  get fileSize
-     #ifdef _WIN32
-       struct _stati64 st;
-       if (_stat64 (mFileName.c_str(), &st) != -1)
-         mFileSize = st.st_size;
-     #else
-       struct stat st;
-       if (stat (mFileName.c_str(), &st) != -1)
-         mFileSize = st.st_size;
-     #endif
-     //}}}
-
-     thread ([=]() {
-       cLog::setThreadName ("anal");
-
-       mTransportStream = new cTransportStream (
-         {"anal", 0, {}, {}}, nullptr,
-         // addService lambda
-         [&](cTransportStream::cService& service) noexcept {
-           mService = &service;
-           createDecoder (service);
-           },
-
-          // pes lambda
-         [&](cTransportStream::cService& service, cTransportStream::cPidInfo& pidInfo) noexcept {
-           if (pidInfo.getPid() == service.getVideoPid()) {
-             string info = getFrameInfo (pidInfo.mBuffer, pidInfo.getBufSize(),
-                                         service.getVideoStreamTypeId() == 27);
-             uint8_t* buffer = (uint8_t*)malloc (pidInfo.getBufSize());
-             memcpy (buffer, pidInfo.mBuffer, pidInfo.getBufSize());
-             mPes.emplace_back (cPes (buffer, pidInfo.getBufSize(), pidInfo.getPts(), info));
-
-             cLog::log (LOGINFO, fmt::format ("pes:{} {:5d} {}",
-                                              getPtsString (pidInfo.getPts()),
-                                              pidInfo.getBufSize(),
-                                              info));
-             while (!mPlaying)
-               this_thread::sleep_for (10ms);
-             }
-           });
-
-       // file read
-       size_t chunkSize = 188 * 256;
-       uint8_t* chunk = new uint8_t[chunkSize];
-       auto now = chrono::system_clock::now();
-       while (true) {
-         size_t bytesRead = fread (chunk, 1, chunkSize, file);
-         if (bytesRead > 0)
-           mTransportStream->demux (chunk, bytesRead);
-         else
-           break;
-         }
-       //{{{  report totals
-       cLog::log (LOGINFO, fmt::format ("{:4.1f}m took {:3.2f}s",
-         mFileSize/1000000.f,
-         chrono::duration_cast<chrono::milliseconds>(chrono::system_clock::now() - now).count() / 1000.f));
-
-       cLog::log (LOGINFO, fmt::format ("- vid:{:5d} {} to {}",
-                                        mPes.size(),
-                                        getFullPtsString (mPes.front().mPts),
-                                        getFullPtsString (mPes.back().mPts)
-                                        ));
-                                        //}}}
-
-       cLog::log (LOGINFO, "---------------------------------------------------");
-       mDecoder->flush();
-       //{{{  skip till first I frame
-       //auto it = mPes.begin();
-       //while (it != mPes.end())
-         //if (it->mFrameType == 'I')
-           //break;
-         //else {
-           //++it;
-           //cLog::log (LOGINFO, fmt::format ("skip pesPts:{} {}", getPtsString (it->mPts), it->mFrameType));
-           //}
-       //}}}
-       auto it = mPes.begin();
-       while (it != mPes.end()) {
-         decode (*it);
-         ++it;
-         while (!mPlaying)
-           this_thread::sleep_for (10ms);
-         }
-
-       delete[] chunk;
-       fclose (file);
-
-       cLog::log (LOGERROR, "exit");
-       }).detach();
-     }
-   //}}}
 
 private:
   static inline const size_t kVideoFrames = 50;
@@ -804,6 +746,15 @@ private:
   //}}}
 
   //{{{
+  size_t skipToI (size_t i) {
+
+    while (i < mPes.size() && (mPes[i].mFrameInfo.front() != 'I'))
+      i++;
+    return i;
+    }
+  //}}}
+
+  //{{{
   void createDecoder (cTransportStream::cService& service) {
 
     mDecoder = new cVideoDecoder (service.getVideoStreamTypeId() == 27);
@@ -813,12 +764,15 @@ private:
     }
   //}}}
   //{{{
-  void decode (cPes pes) {
+  void decode (size_t pesIndex, cPes pes) {
 
     if (mDecoder) {
-      cLog::log (LOGINFO, fmt::format ("{} decode pesPts:{} {}",
+      cLog::log (LOGINFO, fmt::format ("{:5d} {:5d} decode pesPts:{} {}",
                                        mDecodeSeqNum++,
-                                       getPtsString (pes.mPts),  pes.mFrameInfo));
+                                       pesIndex,
+                                       getPtsString (pes.mPts),
+                                       pes.mFrameInfo));
+
       mDecoder->decode (pes.mData, pes.mSize, pes.mPts, pes.mFrameInfo,
         // allocFrame lambda
         [&](int64_t pts) noexcept {
@@ -832,7 +786,7 @@ private:
           cVideoFrame* videoFrame = dynamic_cast<cVideoFrame*>(frame);
           videoFrame->mTextureDirty = true;
           mVideoFrame = videoFrame;
-          cLog::log (LOGINFO, fmt::format ("{} -----> seqPts:{} {}", mAddSeqNum++,
+          cLog::log (LOGINFO, fmt::format ("{:5d}      -----> seqPts:{} {}", mAddSeqNum++,
                                            getPtsString (frame->getPts()), videoFrame->getFrameInfo()));
           });
       }
@@ -1163,8 +1117,8 @@ private:
       { false, true,   false, ImGuiKey_LeftArrow,  [this,&testApp]{ testApp.getFilePlayer()->skipPlay (-90000); }},
       { false, true,   false, ImGuiKey_RightArrow, [this,&testApp]{ testApp.getFilePlayer()->skipPlay (90000); }},
 
-      { false, false,  false, ImGuiKey_UpArrow,    [this,&testApp]{ testApp.getFilePlayer()->skipIframe (-1); }},
-      { false, false,  false, ImGuiKey_DownArrow,  [this,&testApp]{ testApp.getFilePlayer()->skipIframe (1); }},
+      //{ false, false,  false, ImGuiKey_UpArrow,    [this,&testApp]{ testApp.getFilePlayer()->skipIframe (-1); }},
+      //{ false, false,  false, ImGuiKey_DownArrow,  [this,&testApp]{ testApp.getFilePlayer()->skipIframe (1); }},
     };
 
     ImGui::GetIO().WantTextInput = true;
@@ -1208,7 +1162,7 @@ int main (int numArgs, char* args[]) {
     }
 
   // log
-  cLog::init (LOGINFO1);
+  cLog::init (LOGINFO);
 
   // launch
   cTestApp testApp (options, new cTestUI());
