@@ -56,6 +56,7 @@ extern "C" {
 using namespace std;
 using namespace utils;
 //}}}
+constexpr bool kDebug = true;
 constexpr bool kMotionVectors = true;
 namespace {
   //{{{
@@ -75,8 +76,7 @@ namespace {
     }
   //}}}
   //{{{
-  char getFrameType (uint8_t* pes, int64_t pesSize, bool h264) {
-  // return frameType of video pes
+  string getFrameInfo (uint8_t* pes, int64_t pesSize, bool h264) {
 
     //{{{
     class cBitstream {
@@ -85,14 +85,6 @@ namespace {
       cBitstream (const uint8_t* buffer, uint32_t bit_len) :
         mDecBuffer(buffer), mDecBufferSize(bit_len), mNumOfBitsInBuffer(0), mBookmarkOn(false) {}
 
-      //{{{
-      void check_0s (int count) {
-
-        uint32_t val = getBits (count);
-        if (val != 0)
-          cLog::log (LOGERROR, "field error - %d bits should be 0 is %x", count, val);
-        }
-      //}}}
       //{{{
       uint32_t getBits (uint32_t numBits) {
 
@@ -303,8 +295,8 @@ namespace {
       };
     //}}}
 
-    const bool kDebug = false;
-
+    string s;
+    char frameType = '?';
     uint8_t* pesEnd = pes + pesSize;
 
     if (h264) {
@@ -344,9 +336,11 @@ namespace {
           }
         //}}}
         if (nalSize > 3) {
-          // parse NAL bitStream
+          // parse bitStream for NALs
           cBitstream bitstream (buf, (nalSize - startOffset) * 8);
-          bitstream.check_0s (1);
+
+          if (bitstream.getBits(1) != 0)
+            s += '*';
           bitstream.getBits (2);
 
           int nalType = bitstream.getBits (5);
@@ -356,14 +350,25 @@ namespace {
               bitstream.getUe();
               int nalSubtype = bitstream.getUe();
 
-              if (kDebug)
-                cLog::log (LOGINFO, fmt::format ("nal:nonIdr:{}", nalSubtype));
-
               switch (nalSubtype) {
-                case 0:  return 'P';
-                case 1:  return 'B';
-                case 2:  return 'I';
-                //default: return '?';
+                case 0:
+                  frameType = 'P';
+                  s += fmt::format ("NonIdr:{}:{} ", nalSubtype, frameType);
+                  break;
+
+                case 1:
+                  frameType = 'B';
+                  s += fmt::format ("NonIdr:{}:{} ", nalSubtype, frameType);
+                  break;
+
+                case 2:
+                  frameType = 'I';
+                  s += fmt::format ("NonIdr:{}:{} ", nalSubtype, frameType);
+                  break;
+
+                default:
+                  s += fmt::format ("NonIdr:unknown:{} ", nalSubtype);
+                  break;
                 }
 
               break;
@@ -371,20 +376,17 @@ namespace {
             //}}}
             //{{{
             case 2:   // parta
-              if (kDebug)
-                cLog::log (LOGINFO, "nal partA");
+              s += "partA ";
               break;
             //}}}
             //{{{
             case 3:   // partb
-              if (kDebug)
-                cLog::log (LOGINFO, "nal partB");
+              s += "partB ";
               break;
             //}}}
             //{{{
             case 4:   // partc
-              if (kDebug)
-                cLog::log (LOGINFO, "nal partC");
+              s += "partC ";
               break;
             //}}}
             //{{{
@@ -392,15 +394,28 @@ namespace {
               bitstream.getUe();
               int nalSubtype = bitstream.getUe();
 
-              if (kDebug)
-                cLog::log (LOGINFO, fmt::format ("nal:IDR:{}", nalSubtype));
-
               switch (nalSubtype) {
-                case 2:  return 'B';
-                case 5:  return 'P';
-                case 6:  return 'B';
-                case 7:  return 'I';
-                default: return '?';
+                case 1:
+                case 5:
+                  frameType = 'P';
+                  s += fmt::format ("IDR:{}:{} ", nalSubtype, frameType);
+                  break;
+
+                case 2:
+                case 6:
+                  frameType =  'B';
+                  s += fmt::format ("IDR:{}:{} ", nalSubtype, frameType);
+                  break;
+
+                case 3:
+                case 7:
+                  frameType =  'I';
+                  s += fmt::format ("IDR:{}:{} ", nalSubtype, frameType);
+                  break;
+
+                default:
+                  s += fmt::format ("IDR:unknown:{} ", nalSubtype);
+                  break;
                 }
 
               break;
@@ -408,90 +423,79 @@ namespace {
             //}}}
             //{{{
             case 6:   // sei
-              if (kDebug)
-                cLog::log (LOGINFO, "nal SEI");
+              s += "SEI ";
               break;
             //}}}
             //{{{
             case 7:   // sps
-              if (kDebug)
-                cLog::log (LOGINFO, "nal SPS");
+              s += "SPS ";
               break;
             //}}}
             //{{{
             case 8:   // pps
-              if (kDebug)
-                cLog::log (LOGINFO, "nal PPS");
+              s += "PPS ";
               break;
             //}}}
             //{{{
             case 9:   // avd
-              if (kDebug)
-                cLog::log (LOGINFO,  "nal AUD");
+              s += "AVD ";
               break;
             //}}}
             //{{{
             case 10:  // eoSeq
-              if (kDebug)
-                cLog::log (LOGINFO,  "nal EOseq");
+              s += "EOseq";
               break;
             //}}}
             //{{{
             case 11:  // eoStream
-              if (kDebug)
-                cLog::log (LOGINFO,  "nal EOstream");
+              s += "EOstream ";
               break;
             //}}}
             //{{{
             case 12:  // filler
-              if (kDebug)
-                cLog::log (LOGINFO,  "nal filler");
+              s += "Fill ";
               break;
             //}}}
             //{{{
             case 13:  // seqext
-              if (kDebug)
-                cLog::log (LOGINFO,  "nal seqExt");
+              s += "SeqExt ";
               break;
             //}}}
             //{{{
             case 14:  // prefix
-              if (kDebug)
-                cLog::log (LOGINFO, "nal prefix");
+              s += "PFX ";
               break;
             //}}}
             //{{{
             case 15:  // subsetSps
-              if (kDebug)
-                cLog::log (LOGINFO, "nal subsetSPS");
+              s += "SubSPS ";
               break;
             //}}}
             //{{{
             case 19:  // aux
-              if (kDebug)
-                cLog::log (LOGINFO, "nal aux");
+              s += "AUX ";
               break;
             //}}}
             //{{{
             case 20:  // sliceExt
-              if (kDebug)
-                cLog::log (LOGINFO, "nal sliceExt");
+              s += "SliceExt ";
               break;
             //}}}
             //{{{
             case 21:  // sliceExtDepth
-              if (kDebug)
-                cLog::log (LOGINFO, "nal sliceExtDepth");
+              s += "SliceExtDepth ";
               break;
             //}}}
             //{{{
             default:
-              cLog::log (LOGINFO, fmt::format ("getFrameType - unknown nalType:{} size:{}", nalType, nalSize));
+              s += fmt::format ("nal:{}:size:{} ", nalType, nalSize);
+              break;
             //}}}
             }
           }
         pes += nalSize;
         }
+      return fmt::format ("{} {}", frameType, s);
       }
     else {
       //{{{  mpeg2
@@ -500,17 +504,21 @@ namespace {
         if (!pes[0] && !pes[1] && (pes[2] == 0x01) && !pes[3])
           // extract frameType I,B,P
           switch ((pes[5] >> 3) & 0x03) {
-            case 1: return 'I';
-            case 2: return 'P';
-            case 3: return 'B';
-            default: return '?';
-            }
+            case 1:
+              return "I";
+            case 2:
+              return "P";
+            case 3:
+              return "B";
+            default:
+              return "?";
+          }
         pes++;
         }
+
+      return "?";
       }
       //}}}
-
-    return '?';
     }
   //}}}
   }
@@ -688,98 +696,103 @@ public:
     }
   //}}}
 
-  //{{{
-  void read() {
+   //{{{
+   void read() {
 
-    FILE* file = fopen (mFileName.c_str(), "rb");
-    if (!file) {
-      //{{{  error, return
-      cLog::log (LOGERROR, fmt::format ("cFilePlayer::analyse to open {}", mFileName));
-      return;
-      }
-      //}}}
-    //{{{  get fileSize
-    #ifdef _WIN32
-      struct _stati64 st;
-      if (_stat64 (mFileName.c_str(), &st) != -1)
-        mFileSize = st.st_size;
-    #else
-      struct stat st;
-      if (stat (mFileName.c_str(), &st) != -1)
-        mFileSize = st.st_size;
-    #endif
-    //}}}
+     FILE* file = fopen (mFileName.c_str(), "rb");
+     if (!file) {
+       //{{{  error, return
+       cLog::log (LOGERROR, fmt::format ("cFilePlayer::analyse to open {}", mFileName));
+       return;
+       }
+       //}}}
+     //{{{  get fileSize
+     #ifdef _WIN32
+       struct _stati64 st;
+       if (_stat64 (mFileName.c_str(), &st) != -1)
+         mFileSize = st.st_size;
+     #else
+       struct stat st;
+       if (stat (mFileName.c_str(), &st) != -1)
+         mFileSize = st.st_size;
+     #endif
+     //}}}
 
-    thread ([=]() {
-      cLog::setThreadName ("anal");
+     thread ([=]() {
+       cLog::setThreadName ("anal");
 
-      mTransportStream = new cTransportStream (
-        {"anal", 0, {}, {}}, nullptr,
-        // addService lambda
-        [&](cTransportStream::cService& service) noexcept {
-          mService = &service;
-          createDecoder (service);
-          },
+       mTransportStream = new cTransportStream (
+         {"anal", 0, {}, {}}, nullptr,
+         // addService lambda
+         [&](cTransportStream::cService& service) noexcept {
+           mService = &service;
+           createDecoder (service);
+           },
 
-         // pes lambda
-        [&](cTransportStream::cService& service, cTransportStream::cPidInfo& pidInfo) noexcept {
-          if (pidInfo.getPid() == service.getVideoPid()) {
-            char frameType = getFrameType (
-              pidInfo.mBuffer, pidInfo.getBufSize(), service.getVideoStreamTypeId() == 27);
-            uint8_t* buffer = (uint8_t*)malloc (pidInfo.getBufSize());
-            memcpy (buffer, pidInfo.mBuffer, pidInfo.getBufSize());
-            mPes.emplace_back (cPes (buffer, pidInfo.getBufSize(), pidInfo.getPts(), frameType));
-            }
-          });
+          // pes lambda
+         [&](cTransportStream::cService& service, cTransportStream::cPidInfo& pidInfo) noexcept {
+           if (pidInfo.getPid() == service.getVideoPid()) {
+             string info = getFrameInfo (pidInfo.mBuffer, pidInfo.getBufSize(),
+                                         service.getVideoStreamTypeId() == 27);
+             uint8_t* buffer = (uint8_t*)malloc (pidInfo.getBufSize());
+             memcpy (buffer, pidInfo.mBuffer, pidInfo.getBufSize());
+             mPes.emplace_back (cPes (buffer, pidInfo.getBufSize(), pidInfo.getPts(), info.front()));
 
-      // file read
-      size_t chunkSize = 188 * 256;
-      uint8_t* chunk = new uint8_t[chunkSize];
-      auto now = chrono::system_clock::now();
-      while (true) {
-        size_t bytesRead = fread (chunk, 1, chunkSize, file);
-        if (bytesRead > 0)
-          mTransportStream->demux (chunk, bytesRead);
-        else
-          break;
-        }
-      //{{{  report totals
-      cLog::log (LOGINFO, fmt::format ("{:4.1f}m took {:3.2f}s",
-        mFileSize/1000000.f,
-        chrono::duration_cast<chrono::milliseconds>(chrono::system_clock::now() - now).count() / 1000.f));
+             cLog::log (LOGINFO, fmt::format ("pes:{} {}", getPtsString (pidInfo.getPts()), info));
 
-      cLog::log (LOGINFO, fmt::format ("- vid:{:6d} {} to {}",
-                                       mPes.size(),
-                                       getFullPtsString (mPes.front().mPts),
-                                       getFullPtsString (mPes.back().mPts)
-                                       ));
-                                       //}}}
-      cLog::log (LOGINFO, "---------------------------------------------------");
+             while (!mPlaying)
+               this_thread::sleep_for (10ms);
+             }
+           });
 
-      mDecoder->flush();
-      auto it = mPes.begin();
-      while (it != mPes.end())
-        if (it->mFrameType == 'I')
-          break;
-        else {
-          ++it;
-          cLog::log (LOGINFO, fmt::format ("skip pesPts:{} {}", getPtsString (it->mPts), it->mFrameType));
-          }
+       // file read
+       size_t chunkSize = 188 * 256;
+       uint8_t* chunk = new uint8_t[chunkSize];
+       auto now = chrono::system_clock::now();
+       while (true) {
+         size_t bytesRead = fread (chunk, 1, chunkSize, file);
+         if (bytesRead > 0)
+           mTransportStream->demux (chunk, bytesRead);
+         else
+           break;
+         }
+       //{{{  report totals
+       cLog::log (LOGINFO, fmt::format ("{:4.1f}m took {:3.2f}s",
+         mFileSize/1000000.f,
+         chrono::duration_cast<chrono::milliseconds>(chrono::system_clock::now() - now).count() / 1000.f));
 
-      while (it != mPes.end()) {
-        decode (*it);
-        ++it;
-        while (!mPlaying)
-          this_thread::sleep_for (10ms);
-        }
+       cLog::log (LOGINFO, fmt::format ("- vid:{:6d} {} to {}",
+                                        mPes.size(),
+                                        getFullPtsString (mPes.front().mPts),
+                                        getFullPtsString (mPes.back().mPts)
+                                        ));
+                                        //}}}
+       cLog::log (LOGINFO, "---------------------------------------------------");
 
-      delete[] chunk;
-      fclose (file);
+       mDecoder->flush();
+       auto it = mPes.begin();
+       while (it != mPes.end())
+         if (it->mFrameType == 'I')
+           break;
+         else {
+           ++it;
+           cLog::log (LOGINFO, fmt::format ("skip pesPts:{} {}", getPtsString (it->mPts), it->mFrameType));
+           }
 
-      cLog::log (LOGERROR, "exit");
-      }).detach();
-    }
-  //}}}
+       while (it != mPes.end()) {
+         decode (*it);
+         ++it;
+         while (!mPlaying)
+           this_thread::sleep_for (10ms);
+         }
+
+       delete[] chunk;
+       fclose (file);
+
+       cLog::log (LOGERROR, "exit");
+       }).detach();
+     }
+   //}}}
 
 private:
   static inline const size_t kVideoFrames = 50;
