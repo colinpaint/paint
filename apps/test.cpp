@@ -735,8 +735,10 @@ public:
              memcpy (buffer, pidInfo.mBuffer, pidInfo.getBufSize());
              mPes.emplace_back (cPes (buffer, pidInfo.getBufSize(), pidInfo.getPts(), info));
 
-             cLog::log (LOGINFO, fmt::format ("pes:{} {}", getPtsString (pidInfo.getPts()), info));
-
+             cLog::log (LOGINFO, fmt::format ("pes:{} {:5d} {}",
+                                              getPtsString (pidInfo.getPts()),
+                                              pidInfo.getBufSize(),
+                                              info));
              while (!mPlaying)
                this_thread::sleep_for (10ms);
              }
@@ -758,7 +760,7 @@ public:
          mFileSize/1000000.f,
          chrono::duration_cast<chrono::milliseconds>(chrono::system_clock::now() - now).count() / 1000.f));
 
-       cLog::log (LOGINFO, fmt::format ("- vid:{:6d} {} to {}",
+       cLog::log (LOGINFO, fmt::format ("- vid:{:5d} {} to {}",
                                         mPes.size(),
                                         getFullPtsString (mPes.front().mPts),
                                         getFullPtsString (mPes.back().mPts)
@@ -946,7 +948,7 @@ public:
         mVideoQuad->draw();
         //}}}
         //{{{  draw frameInfo
-        string title = fmt::format ("seqPts:{} {:4d} {:6d} {}",
+        string title = fmt::format ("seqPts:{} {:4d} {:5d} {}",
                                     getPtsString (videoFrame->getPts()),
                                     videoFrame->getPtsDuration(),
                                     videoFrame->getPesSize(),
