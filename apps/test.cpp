@@ -766,18 +766,20 @@ public:
                                         getFullPtsString (mPes.back().mPts)
                                         ));
                                         //}}}
+
        cLog::log (LOGINFO, "---------------------------------------------------");
-
        mDecoder->flush();
+       //{{{  skip till first I frame
+       //auto it = mPes.begin();
+       //while (it != mPes.end())
+         //if (it->mFrameType == 'I')
+           //break;
+         //else {
+           //++it;
+           //cLog::log (LOGINFO, fmt::format ("skip pesPts:{} {}", getPtsString (it->mPts), it->mFrameType));
+           //}
+       //}}}
        auto it = mPes.begin();
-       while (it != mPes.end())
-         if (it->mFrameType == 'I')
-           break;
-         else {
-           ++it;
-           cLog::log (LOGINFO, fmt::format ("skip pesPts:{} {}", getPtsString (it->mPts), it->mFrameType));
-           }
-
        while (it != mPes.end()) {
          decode (*it);
          ++it;
