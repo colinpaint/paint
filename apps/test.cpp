@@ -60,7 +60,7 @@ constexpr bool kDebug = true;
 constexpr bool kMotionVectors = true;
 namespace {
   //{{{
-  void logCallback (void* ptr, int level, const char* fmt, va_list vargs) {
+  void ffmpegLogCallback (void* ptr, int level, const char* fmt, va_list vargs) {
     char buffer[256];
     (void)level;
     (void)ptr;
@@ -339,35 +339,35 @@ namespace {
           // parse bitStream for NALs
           cBitstream bitstream (buf, (nalSize - startOffset) * 8);
 
-          if (bitstream.getBits(1) != 0)
+          uint32_t forbidddenZeroBit = bitstream.getBits(1);
+          if (forbidddenZeroBit != 0)
             s += '*';
-          bitstream.getBits (2);
+          uint32_t nalRefIdc = bitstream.getBits (2);
+          uint32_t nalUnitType = bitstream.getBits (5);
 
-          int nalType = bitstream.getBits (5);
-          switch (nalType) {
+          switch (nalUnitType) {
             //{{{
             case 1: { // nonIdr
               bitstream.getUe();
               int nalSubtype = bitstream.getUe();
-
               switch (nalSubtype) {
                 case 0:
                   frameType = 'P';
-                  s += fmt::format ("NONIDR:{}:{} ", nalSubtype, frameType);
+                  s += fmt::format ("nonIDR:{}:{}:{} ", nalRefIdc, nalSubtype, frameType);
                   break;
 
                 case 1:
                   frameType = 'B';
-                  s += fmt::format ("NONIDR:{}:{} ", nalSubtype, frameType);
+                  s += fmt::format ("nonIDR:{}:{}:{} ", nalRefIdc, nalSubtype, frameType);
                   break;
 
                 case 2:
                   frameType = 'I';
-                  s += fmt::format ("NONIDR:{}:{} ", nalSubtype, frameType);
+                  s += fmt::format ("nonIDR:{}:{}:{} ", nalRefIdc, nalSubtype, frameType);
                   break;
 
                 default:
-                  s += fmt::format ("NONIDR:unknown:{} ", nalSubtype);
+                  s += fmt::format ("nonIDR:{}:unknownSubType:{}:{} ", nalRefIdc, nalSubtype, frameType);
                   break;
                 }
 
@@ -376,17 +376,17 @@ namespace {
             //}}}
             //{{{
             case 2:   // parta
-              s += "PARTA ";
+              s += "PartA ";
               break;
             //}}}
             //{{{
             case 3:   // partb
-              s += "partB ";
+              s += "PartB ";
               break;
             //}}}
             //{{{
             case 4:   // partc
-              s += "partC ";
+              s += "PartC ";
               break;
             //}}}
             //{{{
@@ -398,23 +398,23 @@ namespace {
                 case 1:
                 case 5:
                   frameType = 'P';
-                  s += fmt::format ("IDR:{}:{} ", nalSubtype, frameType);
+                  s += fmt::format ("IDR:{}:{}:{} ", nalRefIdc, nalSubtype, frameType);
                   break;
 
                 case 2:
                 case 6:
                   frameType =  'B';
-                  s += fmt::format ("IDR:{}:{} ", nalSubtype, frameType);
+                  s += fmt::format ("IDR:{}:{}:{} ", nalRefIdc, nalSubtype, frameType);
                   break;
 
                 case 3:
                 case 7:
                   frameType =  'I';
-                  s += fmt::format ("IDR:{}:{} ", nalSubtype, frameType);
+                  s += fmt::format ("IDR:{}:{}:{} ", nalRefIdc, nalSubtype, frameType);
                   break;
 
                 default:
-                  s += fmt::format ("IDR:unknown:{} ", nalSubtype);
+                  s += fmt::format ("IDR:{}:unknownSubType:{} ", nalRefIdc, nalSubtype);
                   break;
                 }
 
@@ -428,12 +428,12 @@ namespace {
             //}}}
             //{{{
             case 7:   // sps
-              s += "SPS ";
+              s += fmt::format ("SPS:{} ", nalRefIdc);
               break;
             //}}}
             //{{{
             case 8:   // pps
-              s += "PPS ";
+              s += fmt::format ("PPS:{} ", nalRefIdc);
               break;
             //}}}
             //{{{
@@ -488,7 +488,7 @@ namespace {
             //}}}
             //{{{
             default:
-              s += fmt::format ("nal:{}:size:{} ", nalType, nalSize);
+              s += fmt::format ("nal:{}:{} ", nalUnitType, nalSize);
               break;
             //}}}
             }
@@ -532,8 +532,7 @@ public:
 
     //av_log_set_level (AV_LOG_ERROR);
     av_log_set_level (AV_LOG_VERBOSE);
-    //av_log_set_level (AV_LOG_INFO);
-    av_log_set_callback (logCallback);
+    av_log_set_callback (ffmpegLogCallback);
 
     cLog::log (LOGINFO, fmt::format ("cVideoDecoder ffmpeg - {}", mStreamName));
 
