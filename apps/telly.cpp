@@ -147,10 +147,10 @@ namespace {
             uint8_t* buffer = (uint8_t*)malloc (pidInfo.getBufSize());
             memcpy (buffer, pidInfo.mBuffer, pidInfo.getBufSize());
 
-            char frameType = '.';
+            string frameInfo = ".";
             if (pidInfo.getPid() == service.getVideoPid())
-              frameType = cDvbUtils::getFrameType (buffer, pidInfo.getBufSize(), service.getVideoStreamTypeId() == 27);
-            stream->getRender().decodePes (buffer, pidInfo.getBufSize(), pidInfo.getPts(), frameType);
+              frameInfo = cDvbUtils::getFrameInfo (buffer, pidInfo.getBufSize(), service.getVideoStreamTypeId() == 27);
+            stream->getRender().decodePes (buffer, pidInfo.getBufSize(), pidInfo.getPts(), frameInfo);
             }
           });
 
@@ -238,14 +238,14 @@ namespace {
             memcpy (buffer, pidInfo.mBuffer, pidInfo.getBufSize());
             if (kPesDebug) {
               if (pidInfo.getPid() == service.getVideoPid()) {
-                char frameType = cDvbUtils::getFrameType (buffer, pidInfo.getBufSize(), true);
+                string frameInfo = cDvbUtils::getFrameInfo (buffer, pidInfo.getBufSize(), true);
                 cLog::log (LOGINFO, fmt::format ("{}{} {:6d} pts:{} dts:{}",
-                                                 stream->getLabel(), frameType, pidInfo.getBufSize(),
+                                                 stream->getLabel(), frameInfo.front(), pidInfo.getBufSize(),
                                                  getPtsString (pidInfo.getPts()),
                                                  getPtsString (pidInfo.getDts()) ));
                 }
               }
-            stream->getRender().decodePes (buffer, pidInfo.getBufSize(), pidInfo.getPts(), '.');
+            stream->getRender().decodePes (buffer, pidInfo.getBufSize(), pidInfo.getPts(), ".");
             }
           }
         );

@@ -51,7 +51,7 @@ public:
   void addFrame (cFrame* frame);
 
   bool throttle (int64_t pts);
-  void decodePes (uint8_t* pes, uint32_t pesSize, int64_t pts, char frameType);
+  void decodePes (uint8_t* pes, uint32_t pesSize, int64_t pts, const std::string& frameInfo);
 
   virtual std::string getInfoString() const;
   virtual bool throttle() { return false; }

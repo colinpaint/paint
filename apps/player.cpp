@@ -122,13 +122,13 @@ namespace {
     //{{{
     struct sPes {
     public:
-      sPes (uint8_t* data, uint32_t size, int64_t pts, char frameType) :
-        mData(data), mSize(size), mPts(pts), mFrameType(frameType) {}
+      sPes (uint8_t* data, uint32_t size, int64_t pts, const string& frameInfo) :
+        mData(data), mSize(size), mPts(pts), mFrameInfo(frameInfo) {}
 
       uint8_t* mData;
       uint32_t mSize;
       int64_t mPts;
-      char mFrameType;
+      string mFrameInfo;
       };
     //}}}
     //{{{
@@ -155,7 +155,7 @@ namespace {
                                            title, mPesVector.size(), getPtsString (loadPts), getPtsString (pts) ));
 
         for (auto it = mPesVector.begin(); it != mPesVector.end(); ++it)
-          videoRender->decodePes (it->mData, it->mSize, it->mPts, it->mFrameType);
+          videoRender->decodePes (it->mData, it->mSize, it->mPts, it->mFrameInfo);
         }
 
     private:
@@ -200,17 +200,17 @@ namespace {
               uint8_t* buffer = (uint8_t*)malloc (pidInfo.getBufSize());
               memcpy (buffer, pidInfo.mBuffer, pidInfo.getBufSize());
 
-              char frameType = cDvbUtils::getFrameType (buffer, pidInfo.getBufSize(), true);
-              if ((frameType == 'I') || mGopMap.empty())
+              string frameInfo = cDvbUtils::getFrameInfo (buffer, pidInfo.getBufSize(), true);
+              if ((frameInfo.front() == 'I') || mGopMap.empty())
                 mGopMap.emplace (pidInfo.getPts(), cGop(sPes(buffer, pidInfo.getBufSize(),
-                                                             pidInfo.getPts(), frameType)));
+                                                             pidInfo.getPts(), frameInfo)));
               else
                 mGopMap.rbegin()->second.addPes (sPes(buffer, pidInfo.getBufSize(),
-                                                      pidInfo.getPts(), frameType));
+                                                      pidInfo.getPts(), frameInfo));
               if (kAnalDebug)
                 //{{{  debug
                 cLog::log (LOGINFO, fmt::format ("V {}:{:2d} pts:{} size:{}",
-                                                 frameType,
+                                                 frameInfo.front(),
                                                  mGopMap.empty() ? 0 : mGopMap.rbegin()->second.getSize(),
                                                  getFullPtsString (pidInfo.getPts()),
                                                  pidInfo.getBufSize()
@@ -229,7 +229,7 @@ namespace {
 
               unique_lock<shared_mutex> lock (mAudioMutex);
               mAudioPesMap.emplace (pidInfo.getPts(),
-                                    sPes(buffer, pidInfo.getBufSize(), pidInfo.getPts(), '.'));
+                                    sPes(buffer, pidInfo.getBufSize(), pidInfo.getPts(), "."));
               }
             else if (pidInfo.getPid() == service.getSubtitlePid()) {
               if (pidInfo.getBufSize()) {
@@ -241,7 +241,7 @@ namespace {
                                                  getFullPtsString (pidInfo.getPts()), pidInfo.getBufSize()));
 
                 mSubtitlePesMap.emplace (pidInfo.getPts(),
-                                         sPes(buffer, pidInfo.getBufSize(), pidInfo.getPts(), '.'));
+                                         sPes(buffer, pidInfo.getBufSize(), pidInfo.getPts(), "."));
                 }
               }
 
@@ -325,7 +325,7 @@ namespace {
         auto it = mAudioPesMap.begin();
         sPes pes = it->second;
         cLog::log (LOGINFO, fmt::format ("load first {}", getFullPtsString (pes.mPts)));
-        mAudioRender->decodePes (pes.mData, pes.mSize, pes.mPts, pes.mFrameType);
+        mAudioRender->decodePes (pes.mData, pes.mSize, pes.mPts, pes.mFrameInfo);
         //{{{  audioPlayer ok?
         if (!getAudioPlayer())
           cLog::log (LOGERROR, fmt::format ("audioLoader wait player"));
@@ -342,7 +342,7 @@ namespace {
           if (!mAudioRender->isFrameAtPts (loadPts)) {
             if (kAudioLoadDebug)
               cLog::log (LOGINFO, fmt::format ("load {} {}", getPtsString (loadPts), getPtsString (it->first)));
-            mAudioRender->decodePes (pes.mData, pes.mSize, pes.mPts, pes.mFrameType);
+            mAudioRender->decodePes (pes.mData, pes.mSize, pes.mPts, pes.mFrameInfo);
             continue;
             }
 
@@ -352,7 +352,7 @@ namespace {
             if (!mAudioRender->isFrameAtPts (nextIt->first)) {
               if (kAudioLoadDebug)
                 cLog::log (LOGINFO, fmt::format ("next {} {}", getPtsString (loadPts), getPtsString (nextIt->first)));
-              mAudioRender->decodePes (pes.mData, pes.mSize, pes.mPts, pes.mFrameType);
+              mAudioRender->decodePes (pes.mData, pes.mSize, pes.mPts, pes.mFrameInfo);
               continue;
               }
             }
@@ -364,7 +364,7 @@ namespace {
             if (!mAudioRender->isFrameAtPts (it->first)) {
               if (kAudioLoadDebug)
                 cLog::log (LOGINFO, fmt::format ("prev {} {}", getPtsString (loadPts), getPtsString (it->first)));
-              mAudioRender->decodePes (pes.mData, pes.mSize, pes.mPts, pes.mFrameType);
+              mAudioRender->decodePes (pes.mData, pes.mSize, pes.mPts, pes.mFrameInfo);
               continue;
               }
             }

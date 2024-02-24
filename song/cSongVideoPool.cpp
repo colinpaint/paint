@@ -1648,12 +1648,12 @@ public:
     chrono::system_clock::time_point timePoint = chrono::system_clock::now();
 
     // ffmpeg doesn't maintain correct avFrame.pts, decode frames in presentation order and pts correct on I frames
-    char frameType = cDvbUtils::getFrameType (pes, pesSize, true);
-    if (frameType == 'I') {
+    string frameInfo = cDvbUtils::getFrameInfo (pes, pesSize, true);
+    if (frameInfo.front() == 'I') {
       if ((mGuessPts >= 0) && (mGuessPts != dts))
         //{{{  debug
         cLog::log (LOGERROR, fmt::format ("lost:{} to:{} type:{} {}",
-          getFramesPtsString (mGuessPts, 1800), getFramesPtsString (dts, 1800),frameType,pesSize));
+          getFramesPtsString (mGuessPts, 1800), getFramesPtsString (dts, 1800), frameInfo.front(),pesSize));
         //}}}
       mGuessPts = dts;
       mSeenIFrame = true;
@@ -1661,14 +1661,14 @@ public:
     if (!mSeenIFrame) {
       //{{{  debug
       cLog::log (LOGINFO, fmt::format("waiting for Iframe {} to:{} type:{} size:{}",
-                                      getFramesPtsString (mGuessPts, 1800), getFramesPtsString (dts, 1800),frameType,pesSize));
+                                      getFramesPtsString (mGuessPts, 1800), getFramesPtsString (dts, 1800), frameInfo.front(),pesSize));
       //}}}
       return;
       }
 
     cLog::log (LOGINFO1, fmt::format("ffmpeg decode guessPts:{}.{} pts:{}.{} dts:{}.{} - {} size:{}",
                          mGuessPts/1800, mGuessPts%1800, pts/1800, pts%1800, dts/1800, dts%1800,
-                         frameType, pesSize));
+                         frameInfo, pesSize));
 
     AVPacket* avPacket = av_packet_alloc();
     AVFrame* avFrame = av_frame_alloc();
@@ -1697,7 +1697,7 @@ public:
             // blocks on waiting for freeFrame most of the time
             auto frame = getFreeFrame (reuseFromFront, mGuessPts);
 
-            frame->set (mGuessPts, pesSize, mWidth, mHeight, frameType);
+            frame->set (mGuessPts, pesSize, mWidth, mHeight, frameInfo.front());
             timePoint = chrono::system_clock::now();
             if (!mSwsContext)
               mSwsContext = sws_getContext (mWidth, mHeight, AV_PIX_FMT_YUV420P,

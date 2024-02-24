@@ -562,7 +562,7 @@ public:
   virtual string getInfoString() const final { return mH264 ? "ffmpeg h264" : "ffmpeg mpeg"; }
   virtual void flush() final { avcodec_flush_buffers (mAvContext); }
   //{{{
-  virtual void decode (uint8_t* pes, uint32_t pesSize, int64_t pts, char frameType, const string& frameInfo,
+  virtual void decode (uint8_t* pes, uint32_t pesSize, int64_t pts, const string& frameInfo,
                           function<cFrame*(int64_t pts)> allocFrameCallback,
                           function<void (cFrame* frame)> addFrameCallback) final {
 
@@ -583,7 +583,7 @@ public:
             break;
 
           // try to manage pts
-          if (frameType == 'I')
+          if (frameInfo.front() == 'I')
             mSequentialPts = pts;
           int64_t duration = (kPtsPerSecond * mAvContext->framerate.den) / mAvContext->framerate.num;
 
@@ -592,7 +592,6 @@ public:
           if (frame) {
             frame->set (mSequentialPts, duration, frameSize);
             frame->setAVFrame (avFrame, kMotionVectors);
-            frame->setFrameType (frameType);
             frame->setFrameInfo (frameInfo);
 
             addFrameCallback (frame);
@@ -673,7 +672,7 @@ public:
     if (it != mPes.end()) {
       if (inc > 0) {
         while (it != mPes.end()) {
-          if (it->mFrameType == 'I')
+          if (it->mFrameInfo.front() == 'I')
             break;
           else
             ++it;
@@ -683,7 +682,7 @@ public:
       else if (inc < 0) {
         while (it != mPes.begin()) {
           --it;
-          if (it->mFrameType == 'I')
+          if (it->mFrameInfo.front() == 'I')
             break;
           }
         }
@@ -735,7 +734,7 @@ public:
                                          service.getVideoStreamTypeId() == 27);
              uint8_t* buffer = (uint8_t*)malloc (pidInfo.getBufSize());
              memcpy (buffer, pidInfo.mBuffer, pidInfo.getBufSize());
-             mPes.emplace_back (cPes (buffer, pidInfo.getBufSize(), pidInfo.getPts(), info.front(), info));
+             mPes.emplace_back (cPes (buffer, pidInfo.getBufSize(), pidInfo.getPts(), info));
 
              cLog::log (LOGINFO, fmt::format ("pes:{} {}", getPtsString (pidInfo.getPts()), info));
 
@@ -800,13 +799,12 @@ private:
   //{{{
   class cPes {
   public:
-    cPes (uint8_t* data, uint32_t size, int64_t pts, char frameType, const string& frameInfo) :
-      mData(data), mSize(size), mPts(pts), mFrameType(frameType), mFrameInfo(frameInfo) {}
+    cPes (uint8_t* data, uint32_t size, int64_t pts, const string& frameInfo) :
+      mData(data), mSize(size), mPts(pts), mFrameInfo(frameInfo) {}
 
     uint8_t* mData;
     uint32_t mSize;
     int64_t mPts;
-    char mFrameType;
     string mFrameInfo;
     };
   //}}}
@@ -825,10 +823,10 @@ private:
 
     if (mDecoder) {
       cLog::log (LOGINFO, fmt::format ("{} decode pesPts:{} {}",
-                                      pes.mFrameType =='I'?"--":"",
-                                      getPtsString (pes.mPts),  pes.mFrameType));
+                                      pes.mFrameInfo.front() =='I'?"--":"",
+                                      getPtsString (pes.mPts),  pes.mFrameInfo.front()));
 
-      mDecoder->decode (pes.mData, pes.mSize, pes.mPts, pes.mFrameType, pes.mFrameInfo,
+      mDecoder->decode (pes.mData, pes.mSize, pes.mPts, pes.mFrameInfo,
         // allocFrame lambda
         [&](int64_t pts) noexcept {
           mVideoFrameIndex = (mVideoFrameIndex + 1) % kVideoFrames;
@@ -842,9 +840,9 @@ private:
           videoFrame->mTextureDirty = true;
           mVideoFrame = videoFrame;
           cLog::log (LOGINFO, fmt::format ("{} -----> seqPts:{} {} {}",
-                                           videoFrame->getFrameType() =='I'?"  ":"",
+                                           videoFrame->getFrameInfo().front() == 'I' ? "  " : "",
                                            getPtsString (frame->getPts()),
-                                           videoFrame->getFrameType(),
+                                           videoFrame->getFrameInfo().front(),
                                            mSeqNum++
                                            ));
           });

@@ -16,8 +16,7 @@ public:
 
   virtual void flush() {}
 
-  virtual void decode (uint8_t* pes, uint32_t pesSize, int64_t pts,
-                       char frameType, const std::string& frameInfo,
+  virtual void decode (uint8_t* pes, uint32_t pesSize, int64_t pts, const std::string& frameInfo,
                        std::function<cFrame* (int64_t pts)> allocFrameCallback,
                        std::function<void (cFrame* frame)> addFrameCallback) = 0;
   };

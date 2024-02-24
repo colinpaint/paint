@@ -78,8 +78,7 @@ public:
 
   virtual std::string getInfoString() const final { return mH264 ? "ffmpeg h264" : "ffmpeg mpeg"; }
   //{{{
-  virtual void decode (uint8_t* pes, uint32_t pesSize, int64_t pts,
-                       char frameType, const std::string& frameInfo,
+  virtual void decode (uint8_t* pes, uint32_t pesSize, int64_t pts, const std::string& frameInfo,
                        std::function<cFrame*(int64_t pts)> allocFrameCallback,
                        std::function<void (cFrame* frame)> addFrameCallback) final {
     AVFrame* avFrame = av_frame_alloc();
@@ -98,7 +97,7 @@ public:
           if ((ret == AVERROR(EAGAIN)) || (ret == AVERROR_EOF) || (ret < 0))
             break;
 
-          if (frameType == 'I') {
+          if (frameInfo.front() == 'I') {
             // pes come in dts order with repeated dts, pts jumps around
             // - ffmpeg decodes in pts order, some pes produce no frames, some produce more than one
             mSeqPts = pts;
@@ -113,7 +112,7 @@ public:
               ffmpegVideoFrame->set (mSeqPts,
                                      (kPtsPerSecond * mAvContext->framerate.den) / mAvContext->framerate.num,
                                      frameSize);
-              ffmpegVideoFrame->mFrameType = frameType;
+              ffmpegVideoFrame->mFrameType = frameInfo.front();
               ffmpegVideoFrame->setAVFrame (avFrame, kMotionVectors);
 
               // addFrame

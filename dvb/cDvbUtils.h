@@ -16,7 +16,7 @@ public:
   static int64_t getPts (const uint8_t* buf);
 
   static std::string getStreamTypeName (uint16_t streamType);
-  static char getFrameType (uint8_t* pes, int64_t pesSize, bool h264);
+  static std::string getFrameInfo (uint8_t* pes, int64_t pesSize, bool h264);
 
   static std::string getDvbString (uint8_t* buf);
   };

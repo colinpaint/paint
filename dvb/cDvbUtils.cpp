@@ -12,7 +12,6 @@
 
 using namespace std;
 //}}}
-constexpr bool kDebug = false;
 namespace {
   //{{{
   // CRC32 lookup table for polynomial 0x04c11db7
@@ -130,8 +129,7 @@ std::string cDvbUtils::getStreamTypeName (uint16_t streamType) {
 //}}}
 
 //{{{
-char cDvbUtils::getFrameType (uint8_t* pes, int64_t pesSize, bool h264) {
-// return frameType of video pes
+std::string cDvbUtils::getFrameInfo (uint8_t* pes, int64_t pesSize, bool h264) {
 
   //{{{
   class cBitstream {
@@ -140,15 +138,6 @@ char cDvbUtils::getFrameType (uint8_t* pes, int64_t pesSize, bool h264) {
     cBitstream (const uint8_t* buffer, uint32_t bit_len) :
       mDecBuffer(buffer), mDecBufferSize(bit_len), mNumOfBitsInBuffer(0), mBookmarkOn(false) {}
 
-    //{{{
-    uint32_t peekBits (uint32_t bits) {
-
-      bookmark (true);
-      uint32_t ret = getBits (bits);
-      bookmark (false);
-      return ret;
-      }
-    //}}}
     //{{{
     uint32_t getBits (uint32_t numBits) {
 
@@ -220,7 +209,6 @@ char cDvbUtils::getFrameType (uint8_t* pes, int64_t pesSize, bool h264) {
       return (retData & msk[numBits]);
       };
     //}}}
-
     //{{{
     uint32_t getUe() {
 
@@ -271,14 +259,58 @@ char cDvbUtils::getFrameType (uint8_t* pes, int64_t pesSize, bool h264) {
       }
     //}}}
 
+  private:
     //{{{
-    void check_0s (int count) {
+    uint32_t peekBits (uint32_t bits) {
 
-      uint32_t val = getBits (count);
-      if (val != 0)
-        cLog::log (LOGERROR, "field error - %d bits should be 0 is %x", count, val);
+      bookmark (true);
+      uint32_t ret = getBits (bits);
+      bookmark (false);
+      return ret;
       }
     //}}}
+    //{{{
+    const uint8_t exp_golomb_bits[256] = {
+      8, 7, 6, 6, 5, 5, 5, 5, 4, 4, 4, 4, 4, 4, 4, 4, 3,
+      3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 2, 2,
+      2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2,
+      2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 1, 1, 1, 1,
+      1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+      1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+      1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+      1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0,
+      0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+      0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+      0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+      0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+      0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+      0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+      0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+      0,
+      };
+    //}}}
+    //{{{
+    void bookmark (bool on) {
+
+      if (on) {
+        mNumOfBitsInBuffer_bookmark = mNumOfBitsInBuffer;
+        mDecBuffer_bookmark = mDecBuffer;
+        mDecBufferSize_bookmark = mDecBufferSize;
+        mBookmarkOn = 1;
+        mDecData_bookmark = mDecData;
+        }
+
+      else {
+        mNumOfBitsInBuffer = mNumOfBitsInBuffer_bookmark;
+        mDecBuffer = mDecBuffer_bookmark;
+        mDecBufferSize = mDecBufferSize_bookmark;
+        mDecData = mDecData_bookmark;
+        mBookmarkOn = 0;
+        }
+
+      };
+    //}}}
+
     //{{{
     int bits_remain() {
       return mDecBufferSize + mNumOfBitsInBuffer;
@@ -302,50 +334,6 @@ char cDvbUtils::getFrameType (uint8_t* pes, int64_t pesSize, bool h264) {
       };
     //}}}
 
-  private:
-    //{{{
-    const uint8_t exp_golomb_bits[256] = {
-      8, 7, 6, 6, 5, 5, 5, 5, 4, 4, 4, 4, 4, 4, 4, 4, 3,
-      3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 2, 2,
-      2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2,
-      2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 1, 1, 1, 1,
-      1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
-      1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
-      1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
-      1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0,
-      0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-      0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-      0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-      0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-      0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-      0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-      0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-      0,
-      };
-    //}}}
-
-    //{{{
-    void bookmark (bool on) {
-
-      if (on) {
-        mNumOfBitsInBuffer_bookmark = mNumOfBitsInBuffer;
-        mDecBuffer_bookmark = mDecBuffer;
-        mDecBufferSize_bookmark = mDecBufferSize;
-        mBookmarkOn = 1;
-        mDecData_bookmark = mDecData;
-        }
-
-      else {
-        mNumOfBitsInBuffer = mNumOfBitsInBuffer_bookmark;
-        mDecBuffer = mDecBuffer_bookmark;
-        mDecBufferSize = mDecBufferSize_bookmark;
-        mDecData = mDecData_bookmark;
-        mBookmarkOn = 0;
-        }
-
-      };
-    //}}}
-
     const uint8_t* mDecBuffer;
     uint32_t mDecBufferSize;
     uint32_t mNumOfBitsInBuffer;
@@ -360,10 +348,11 @@ char cDvbUtils::getFrameType (uint8_t* pes, int64_t pesSize, bool h264) {
     };
   //}}}
 
-  char frameType = '?';
   uint8_t* pesEnd = pes + pesSize;
+
   if (h264) {
-    // h264 minimal parser
+    string s;
+    char frameType = '?';
     while (pes < pesEnd) {
       //{{{  skip past startcode, find next startcode
       uint8_t* buf = pes;
@@ -400,9 +389,11 @@ char cDvbUtils::getFrameType (uint8_t* pes, int64_t pesSize, bool h264) {
         }
       //}}}
       if (nalSize > 3) {
-        // parse NAL bitStream
+        // parse bitStream for NALs
         cBitstream bitstream (buf, (nalSize - startOffset) * 8);
-        bitstream.check_0s (1);
+
+        if (bitstream.getBits(1) != 0)
+          s += '*';
         bitstream.getBits (2);
 
         int nalType = bitstream.getBits (5);
@@ -411,14 +402,26 @@ char cDvbUtils::getFrameType (uint8_t* pes, int64_t pesSize, bool h264) {
           case 1: { // nonIdr
             bitstream.getUe();
             int nalSubtype = bitstream.getUe();
-            if (kDebug)
-              cLog::log (LOGINFO, fmt::format ("nal:nonIdr:{}", nalSubtype));
 
             switch (nalSubtype) {
-              case 0:  return 'P';
-              case 1:  return 'B';
-              case 2:  return 'I';
-              //default: return '?';
+              case 0:
+                frameType = 'P';
+                s += fmt::format ("NONIDR:{}:{} ", nalSubtype, frameType);
+                break;
+
+              case 1:
+                frameType = 'B';
+                s += fmt::format ("NONIDR:{}:{} ", nalSubtype, frameType);
+                break;
+
+              case 2:
+                frameType = 'I';
+                s += fmt::format ("NONIDR:{}:{} ", nalSubtype, frameType);
+                break;
+
+              default:
+                s += fmt::format ("NONIDR:unknown:{} ", nalSubtype);
+                break;
               }
 
             break;
@@ -426,20 +429,17 @@ char cDvbUtils::getFrameType (uint8_t* pes, int64_t pesSize, bool h264) {
           //}}}
           //{{{
           case 2:   // parta
-            if (kDebug)
-              cLog::log (LOGINFO, "nal partA");
+            s += "PARTA ";
             break;
           //}}}
           //{{{
           case 3:   // partb
-            if (kDebug)
-              cLog::log (LOGINFO, "nal partB");
+            s += "partB ";
             break;
           //}}}
           //{{{
           case 4:   // partc
-            if (kDebug)
-              cLog::log (LOGINFO, "nal partC");
+            s += "partC ";
             break;
           //}}}
           //{{{
@@ -447,14 +447,28 @@ char cDvbUtils::getFrameType (uint8_t* pes, int64_t pesSize, bool h264) {
             bitstream.getUe();
             int nalSubtype = bitstream.getUe();
 
-            if (kDebug)
-              cLog::log (LOGINFO, fmt::format ("nal:IDR:{}", nalSubtype));
             switch (nalSubtype) {
-              case 2:  return 'B';
-              case 5:  return 'P';
-              case 6:  return 'B';
-              case 7:  return 'I';
-              default: return '?';
+              case 1:
+              case 5:
+                frameType = 'P';
+                s += fmt::format ("IDR:{}:{} ", nalSubtype, frameType);
+                break;
+
+              case 2:
+              case 6:
+                frameType =  'B';
+                s += fmt::format ("IDR:{}:{} ", nalSubtype, frameType);
+                break;
+
+              case 3:
+              case 7:
+                frameType =  'I';
+                s += fmt::format ("IDR:{}:{} ", nalSubtype, frameType);
+                break;
+
+              default:
+                s += fmt::format ("IDR:unknown:{} ", nalSubtype);
+                break;
               }
 
             break;
@@ -462,107 +476,101 @@ char cDvbUtils::getFrameType (uint8_t* pes, int64_t pesSize, bool h264) {
           //}}}
           //{{{
           case 6:   // sei
-            if (kDebug)
-              cLog::log (LOGINFO, "nal SEI");
+            s += "SEI ";
             break;
           //}}}
           //{{{
           case 7:   // sps
-            if (kDebug)
-              cLog::log (LOGINFO, "nal SPS");
+            s += "SPS ";
             break;
           //}}}
           //{{{
           case 8:   // pps
-            if (kDebug)
-              cLog::log (LOGINFO, "nal PPS");
+            s += "PPS ";
             break;
           //}}}
           //{{{
           case 9:   // avd
-            if (kDebug)
-              cLog::log (LOGINFO,  "nal AUD");
+            s += "AVD ";
             break;
           //}}}
           //{{{
           case 10:  // eoSeq
-            if (kDebug)
-              cLog::log (LOGINFO,  "nal EOseq");
+            s += "EOseq";
             break;
           //}}}
           //{{{
           case 11:  // eoStream
-            if (kDebug)
-              cLog::log (LOGINFO,  "nal EOstream");
+            s += "EOstream ";
             break;
           //}}}
           //{{{
           case 12:  // filler
-            if (kDebug)
-              cLog::log (LOGINFO,  "nal filler");
+            s += "Fill ";
             break;
           //}}}
           //{{{
           case 13:  // seqext
-            if (kDebug)
-              cLog::log (LOGINFO,  "nal seqExt");
+            s += "SeqExt ";
             break;
           //}}}
           //{{{
           case 14:  // prefix
-            if (kDebug)
-              cLog::log (LOGINFO, "nal prefix");
+            s += "PFX ";
             break;
           //}}}
           //{{{
           case 15:  // subsetSps
-            if (kDebug)
-              cLog::log (LOGINFO, "nal subsetSPS");
+            s += "SubSPS ";
             break;
           //}}}
           //{{{
           case 19:  // aux
-            if (kDebug)
-              cLog::log (LOGINFO, "nal aux");
+            s += "AUX ";
             break;
           //}}}
           //{{{
           case 20:  // sliceExt
-            if (kDebug)
-              cLog::log (LOGINFO, "nal sliceExt");
+            s += "SliceExt ";
             break;
           //}}}
           //{{{
           case 21:  // sliceExtDepth
-            if (kDebug)
-              cLog::log (LOGINFO, "nal sliceExtDepth");
+            s += "SliceExtDepth ";
             break;
           //}}}
           //{{{
           default:
-            cLog::log (LOGINFO, fmt::format ("DvbUtils::getFrameType - unknown nalType:{} size:{}", nalType, nalSize));
+            s += fmt::format ("nal:{}:size:{} ", nalType, nalSize);
+            break;
           //}}}
           }
         }
       pes += nalSize;
       }
+    return fmt::format ("{} {}", frameType, s);
     }
   else {
-    // mpeg2 minimal parser
+    //{{{  mpeg2
     while (pes + 6 < pesEnd) {
       // look for pictureHeader 00000100
       if (!pes[0] && !pes[1] && (pes[2] == 0x01) && !pes[3])
         // extract frameType I,B,P
         switch ((pes[5] >> 3) & 0x03) {
-          case 1: return 'I';
-          case 2: return 'P';
-          case 3: return 'B';
-          default: return '?';
-          }
+          case 1:
+            return "I";
+          case 2:
+            return "P";
+          case 3:
+            return "B";
+          default:
+            return "?";
+        }
       pes++;
       }
-    }
 
-  return frameType;
+    return "?";
+    }
+    //}}}
   }
 //}}}
