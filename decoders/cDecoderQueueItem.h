@@ -13,7 +13,8 @@ class cDecodeQueueItem {
 public:
   // we gain ownership of malloc'd pes buffer
   cDecodeQueueItem (cDecoder* decoder,
-                    uint8_t* pes, int pesSize, int64_t pts, char frameType,
+                    uint8_t* pes, int pesSize, int64_t pts, 
+                    char frameType, const std::string frameInfo,
                     std::function<cFrame* (int64_t pts)> allocFrameCallback,
                     std::function<void (cFrame* frame)> addFrameCallback)
       : mDecoder(decoder),

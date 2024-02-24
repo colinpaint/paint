@@ -295,11 +295,11 @@ namespace {
       };
     //}}}
 
-    string s;
-    char frameType = '?';
     uint8_t* pesEnd = pes + pesSize;
 
     if (h264) {
+      string s;
+      char frameType = '?';
       while (pes < pesEnd) {
         //{{{  skip past startcode, find next startcode
         uint8_t* buf = pes;
@@ -353,21 +353,21 @@ namespace {
               switch (nalSubtype) {
                 case 0:
                   frameType = 'P';
-                  s += fmt::format ("NonIdr:{}:{} ", nalSubtype, frameType);
+                  s += fmt::format ("NONIDR:{}:{} ", nalSubtype, frameType);
                   break;
 
                 case 1:
                   frameType = 'B';
-                  s += fmt::format ("NonIdr:{}:{} ", nalSubtype, frameType);
+                  s += fmt::format ("NONIDR:{}:{} ", nalSubtype, frameType);
                   break;
 
                 case 2:
                   frameType = 'I';
-                  s += fmt::format ("NonIdr:{}:{} ", nalSubtype, frameType);
+                  s += fmt::format ("NONIDR:{}:{} ", nalSubtype, frameType);
                   break;
 
                 default:
-                  s += fmt::format ("NonIdr:unknown:{} ", nalSubtype);
+                  s += fmt::format ("NONIDR:unknown:{} ", nalSubtype);
                   break;
                 }
 
@@ -376,7 +376,7 @@ namespace {
             //}}}
             //{{{
             case 2:   // parta
-              s += "partA ";
+              s += "PARTA ";
               break;
             //}}}
             //{{{
@@ -562,7 +562,7 @@ public:
   virtual string getInfoString() const final { return mH264 ? "ffmpeg h264" : "ffmpeg mpeg"; }
   virtual void flush() final { avcodec_flush_buffers (mAvContext); }
   //{{{
-  virtual void decode (uint8_t* pes, uint32_t pesSize, int64_t pts, char frameType,
+  virtual void decode (uint8_t* pes, uint32_t pesSize, int64_t pts, char frameType, const string& frameInfo,
                           function<cFrame*(int64_t pts)> allocFrameCallback,
                           function<void (cFrame* frame)> addFrameCallback) final {
 
@@ -592,9 +592,9 @@ public:
           if (frame) {
             frame->set (mSequentialPts, duration, frameSize);
             frame->setAVFrame (avFrame, kMotionVectors);
-            frame->mFrameType = frameType;
+            frame->setFrameType (frameType);
+            frame->setFrameInfo (frameInfo);
 
-            // addFrame
             addFrameCallback (frame);
 
             avFrame = av_frame_alloc();
@@ -621,7 +621,6 @@ private:
   AVCodecParserContext* mAvParser = nullptr;
   AVCodecContext* mAvContext = nullptr;
 
-  bool mGotIframe = false;
   int64_t mSequentialPts = -1;
   };
 //}}}
@@ -736,7 +735,7 @@ public:
                                          service.getVideoStreamTypeId() == 27);
              uint8_t* buffer = (uint8_t*)malloc (pidInfo.getBufSize());
              memcpy (buffer, pidInfo.mBuffer, pidInfo.getBufSize());
-             mPes.emplace_back (cPes (buffer, pidInfo.getBufSize(), pidInfo.getPts(), info.front()));
+             mPes.emplace_back (cPes (buffer, pidInfo.getBufSize(), pidInfo.getPts(), info.front(), info));
 
              cLog::log (LOGINFO, fmt::format ("pes:{} {}", getPtsString (pidInfo.getPts()), info));
 
@@ -799,14 +798,14 @@ private:
   //{{{
   class cPes {
   public:
-    cPes (uint8_t* data, uint32_t size, int64_t pts, char frameType) :
-      mData(data), mSize(size), mPts(pts), mFrameType(frameType) {}
-
+    cPes (uint8_t* data, uint32_t size, int64_t pts, char frameType, const string& frameInfo) :
+      mData(data), mSize(size), mPts(pts), mFrameType(frameType), mFrameInfo(frameInfo) {}
 
     uint8_t* mData;
     uint32_t mSize;
     int64_t mPts;
     char mFrameType;
+    string mFrameInfo;
     };
   //}}}
 
@@ -827,7 +826,7 @@ private:
                                       pes.mFrameType =='I'?"--":"",
                                       getPtsString (pes.mPts),  pes.mFrameType));
 
-      mDecoder->decode (pes.mData, pes.mSize, pes.mPts, pes.mFrameType,
+      mDecoder->decode (pes.mData, pes.mSize, pes.mPts, pes.mFrameType, pes.mFrameInfo,
         // allocFrame lambda
         [&](int64_t pts) noexcept {
           mVideoFrameIndex = (mVideoFrameIndex + 1) % kVideoFrames;
@@ -861,7 +860,6 @@ private:
   cTransportStream* mTransportStream = nullptr;
   cTransportStream::cService* mService = nullptr;
 
-  bool mGotIframe = false;
   vector <cPes> mPes;
 
   // playing
@@ -948,12 +946,12 @@ public:
         // draw quad
         mVideoQuad->draw();
         //}}}
-        //{{{  draw frame info
+        //{{{  draw frameInfo
         string title = fmt::format ("seqPts:{} {:4d} {:6d} {}",
                                     getPtsString (videoFrame->getPts()),
                                     videoFrame->getPtsDuration(),
                                     videoFrame->getPesSize(),
-                                    videoFrame->getFrameType()
+                                    videoFrame->getFrameInfo()
                                     );
 
         ImVec2 pos = { ImGui::GetTextLineHeight(), mSize.y - 3 * ImGui::GetTextLineHeight()};

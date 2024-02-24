@@ -48,11 +48,15 @@ public:
   return info;
   }
   //}}}
+  std::string getFrameInfo() const { return mFrameInfo; }
 
   virtual void* getMotionVectors (size_t& numMotionVectors) = 0;
 
   void setWidth (uint16_t width) { mWidth = width; }
   void setHeight (uint16_t height) { mHeight = height; }
+  void setFrameType (char frameType) { mFrameType = frameType; }
+  void setFrameInfo (const std::string& frameInfo) { mFrameInfo = frameInfo; }
+
   //{{{
   virtual void releaseResources() final {
 
@@ -112,8 +116,11 @@ protected:
   virtual int* getStrides() = 0;
   virtual void releasePixels() {}
 
+  // vars
   uint16_t mWidth = 0;
   uint16_t mHeight = 0;
+
+  std::string mFrameInfo;
 
   cTexture* mTexture = nullptr;
   };
