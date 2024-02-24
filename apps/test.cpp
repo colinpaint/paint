@@ -72,7 +72,7 @@ namespace {
       if (buffer[i] == 0xa)
         buffer[i] = 0;
 
-    cLog::log (LOGINFO1, fmt::format ("ffmpeg:{}: {}", level, buffer));
+    cLog::log (LOGINFO1, fmt::format ("ffmpeg {}", buffer));
     }
   //}}}
   //{{{
@@ -560,14 +560,13 @@ public:
 
   virtual string getInfoString() const final { return mH264 ? "ffmpeg h264" : "ffmpeg mpeg"; }
   virtual void flush() final { avcodec_flush_buffers (mAvContext); }
-  //{{{
+
   virtual void decode (uint8_t* pes, uint32_t pesSize, int64_t pts, const string& frameInfo,
                           function<cFrame*(int64_t pts)> allocFrameCallback,
                           function<void (cFrame* frame)> addFrameCallback) final {
 
     AVFrame* avFrame = av_frame_alloc();
     AVPacket* avPacket = av_packet_alloc();
-
     uint8_t* frameData = pes;
     uint32_t frameSize = pesSize;
     while (frameSize) {
@@ -581,7 +580,6 @@ public:
           if ((ret == AVERROR(EAGAIN)) || (ret == AVERROR_EOF) || (ret < 0))
             break;
 
-          // try to manage pts
           if (frameInfo.front() == 'I')
             mSequentialPts = pts;
           int64_t duration = (kPtsPerSecond * mAvContext->framerate.den) / mAvContext->framerate.num;
@@ -592,9 +590,7 @@ public:
             frame->set (mSequentialPts, duration, frameSize);
             frame->setAVFrame (avFrame, kMotionVectors);
             frame->setFrameInfo (frameInfo);
-
             addFrameCallback (frame);
-
             avFrame = av_frame_alloc();
             }
           mSequentialPts += duration;
@@ -603,13 +599,10 @@ public:
       frameData += bytesUsed;
       frameSize -= bytesUsed;
       }
-
     av_frame_unref (avFrame);
     av_frame_free (&avFrame);
-
     av_packet_free (&avPacket);
     }
-  //}}}
 
 private:
   const bool mH264 = false;
@@ -824,9 +817,8 @@ private:
 
     if (mDecoder) {
       cLog::log (LOGINFO, fmt::format ("{} decode pesPts:{} {}",
-                                      pes.mFrameInfo.front() =='I'?"--":"",
-                                      getPtsString (pes.mPts),  pes.mFrameInfo.front()));
-
+                                       mDecodeSeqNum++,
+                                       getPtsString (pes.mPts),  pes.mFrameInfo));
       mDecoder->decode (pes.mData, pes.mSize, pes.mPts, pes.mFrameInfo,
         // allocFrame lambda
         [&](int64_t pts) noexcept {
@@ -840,12 +832,8 @@ private:
           cVideoFrame* videoFrame = dynamic_cast<cVideoFrame*>(frame);
           videoFrame->mTextureDirty = true;
           mVideoFrame = videoFrame;
-          cLog::log (LOGINFO, fmt::format ("{} -----> seqPts:{} {} {}",
-                                           videoFrame->getFrameInfo().front() == 'I' ? "  " : "",
-                                           getPtsString (frame->getPts()),
-                                           videoFrame->getFrameInfo().front(),
-                                           mSeqNum++
-                                           ));
+          cLog::log (LOGINFO, fmt::format ("{} -----> seqPts:{} {}", mAddSeqNum++,
+                                           getPtsString (frame->getPts()), videoFrame->getFrameInfo()));
           });
       }
     else
@@ -873,7 +861,8 @@ private:
   cVideoFrame* mVideoFrame = nullptr;
   cDecoder* mDecoder = nullptr;
 
-  size_t mSeqNum = 0;
+  size_t mDecodeSeqNum = 0;
+  size_t mAddSeqNum = 0;
   };
 //}}}
 //{{{
