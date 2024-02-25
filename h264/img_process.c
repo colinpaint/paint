@@ -1,3 +1,4 @@
+//{{{
 /*!
 *************************************************************************************
 * \file img_process.c
@@ -11,13 +12,14 @@
 *
 *************************************************************************************
 */
-
+//}}}
 #include "global.h"
 #include "img_process.h"
 #include "io_image.h"
 #include "memalloc.h"
 #include "fast_memory.h"
 
+//{{{
 static inline void CPImage(ImageData *imgOut, ImageData *imgIn)
 {
   memcpy(imgOut->frm_data[0][0], imgIn->frm_data[0][0], imgIn->format.height[0] * imgIn->format.width[0] * sizeof (imgpel));
@@ -28,7 +30,8 @@ static inline void CPImage(ImageData *imgOut, ImageData *imgIn)
     memcpy(imgOut->frm_data[2][0], imgIn->frm_data[2][0], imgIn->format.height[2] * imgIn->format.width[2] * sizeof (imgpel));
   }
 }
-
+//}}}
+//{{{
 // to be modified
 static inline void FilterImage(ImageData *imgOut, ImageData *imgIn)
 {
@@ -40,7 +43,8 @@ static inline void FilterImage(ImageData *imgOut, ImageData *imgIn)
     memcpy(imgOut->frm_data[2][0], imgIn->frm_data[2][0], imgIn->format.height[2] * imgIn->format.width[2] * sizeof (imgpel));
   }
 }
-
+//}}}
+//{{{
 // Line interleaving for 3:2 pulldown
 static inline void BlendImageLines(ImageData *imgIn0, ImageData *imgIn1)
 {
@@ -60,7 +64,8 @@ static inline void BlendImageLines(ImageData *imgIn0, ImageData *imgIn1)
     }
   }
 }
-
+//}}}
+//{{{
 // to be modified
 static inline void FilterImageSep(ImageData *imgOut, ImageData *imgIn)
 {
@@ -79,7 +84,7 @@ static inline void FilterImageSep(ImageData *imgOut, ImageData *imgIn)
     frm_data = imgIn->frm_data[0][j];
     for (i = 0; i < imgOut->format.width[0]; i++)
     {
-      temp_data[j][i] = 
+      temp_data[j][i] =
         SepFilter[0] * frm_data[iClip3(0, max_width, i - 2)] +
         SepFilter[1] * frm_data[iClip3(0, max_width, i - 1)] +
         SepFilter[2] * frm_data[iClip3(0, max_width, i    )] +
@@ -119,7 +124,7 @@ static inline void FilterImageSep(ImageData *imgOut, ImageData *imgIn)
         frm_data = imgIn->frm_data[k][j];
         for (i = 0; i < imgOut->format.width[k]; i++)
         {
-          temp_data[j][i] = 
+          temp_data[j][i] =
             SepFilter[0] * frm_data[iClip3(0, max_width, i - 2)] +
             SepFilter[1] * frm_data[iClip3(0, max_width, i - 1)] +
             SepFilter[2] * frm_data[iClip3(0, max_width, i    )] +
@@ -148,8 +153,8 @@ static inline void FilterImageSep(ImageData *imgOut, ImageData *imgIn)
 
   free_mem2Dint(temp_data);
 }
-
-
+//}}}
+//{{{
 // to be modified
 static inline void MuxImages(ImageData *imgOut, ImageData *imgIn0, ImageData *imgIn1, ImageData *Map)
 {
@@ -161,7 +166,7 @@ static inline void MuxImages(ImageData *imgOut, ImageData *imgIn0, ImageData *im
       imgOut->frm_data[0][j][i] = (imgpel) rshift_rnd_sf(imgIn0->frm_data[0][j][i] * (Map->format.max_value[0] - Map->frm_data[0][j][i]) + imgIn1->frm_data[0][j][i] * Map->frm_data[0][j][i], Map->format.bit_depth[0]);
     }
   }
-  
+
   if (imgOut->format.yuv_format != YUV400)
   {
     int k;
@@ -177,7 +182,8 @@ static inline void MuxImages(ImageData *imgOut, ImageData *imgIn0, ImageData *im
     }
   }
 }
-
+//}}}
+//{{{
 static inline void YV12toYUV(ImageData *imgOut, ImageData *imgIn)
 {
   memcpy(imgOut->frm_data[0][0], imgIn->frm_data[0][0], imgIn->format.height[0] * imgIn->format.width[0] * sizeof (imgpel));
@@ -188,7 +194,9 @@ static inline void YV12toYUV(ImageData *imgOut, ImageData *imgIn)
     memcpy(imgOut->frm_data[2][0], imgIn->frm_data[1][0], imgIn->format.height[2] * imgIn->format.width[2] * sizeof (imgpel));
   }
 }
+//}}}
 
+//{{{
 void process_image( VideoParameters *p_Vid, InputParameters *p_Inp )
 {
   switch( p_Inp->ProcessInput )
@@ -199,6 +207,7 @@ void process_image( VideoParameters *p_Vid, InputParameters *p_Inp )
     if (p_Inp->enable_32_pulldown)
       BlendImageLines(&p_Vid->imgData, &p_Vid->imgData4);
     break;
+
   case 1:
     FilterImage(&p_Vid->imgData, &p_Vid->imgData0);
     if (p_Inp->enable_32_pulldown)
@@ -207,6 +216,7 @@ void process_image( VideoParameters *p_Vid, InputParameters *p_Inp )
       BlendImageLines(&p_Vid->imgData, &p_Vid->imgData32);
     }
     break;
+
   case 2:
     YV12toYUV(&p_Vid->imgData, &p_Vid->imgData0);
     if (p_Inp->enable_32_pulldown)
@@ -215,6 +225,7 @@ void process_image( VideoParameters *p_Vid, InputParameters *p_Inp )
       BlendImageLines(&p_Vid->imgData, &p_Vid->imgData32);
     }
     break;
+
   case 3:
     MuxImages(&p_Vid->imgData, &p_Vid->imgData0, &p_Vid->imgData1, &p_Vid->imgData2);
     if (p_Inp->enable_32_pulldown)
@@ -224,6 +235,7 @@ void process_image( VideoParameters *p_Vid, InputParameters *p_Inp )
     }
 
     break;
+
   case 4:
     FilterImageSep(&p_Vid->imgData, &p_Vid->imgData0);
     if (p_Inp->enable_32_pulldown)
@@ -235,6 +247,4 @@ void process_image( VideoParameters *p_Vid, InputParameters *p_Inp )
     break;
   }
 }
-
-
-
+//}}}
