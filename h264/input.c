@@ -836,12 +836,12 @@ int read_one_frame (VideoParameters *p_Vid, VideoDataFile *input_file, int Frame
     }
     else
     {
-      file_read = ReadFrameSeparate (p_Inp, input_file, FrameNoInFile, HeaderSize, source, p_Vid->buf);
+      //file_read = ReadFrameSeparate (p_Inp, input_file, FrameNoInFile, HeaderSize, source, p_Vid->buf);
     }
   }
   else
   {
-    file_read = ReadFrameConcatenated (p_Inp, input_file, FrameNoInFile, HeaderSize, source, p_Vid->buf);
+    //file_read = ReadFrameConcatenated (p_Inp, input_file, FrameNoInFile, HeaderSize, source, p_Vid->buf);
   }
 
   if ( !file_read )

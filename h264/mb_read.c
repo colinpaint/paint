@@ -41,7 +41,6 @@
 #include "mv_prediction.h"
 #include "mb_prediction.h"
 #include "fast_memory.h"
-#include "filehandle.h"
 
 #if TRACE
 #define TRACE_STRING(s) strncpy(currSE.tracestring, s, TRACESTRING_SIZE)

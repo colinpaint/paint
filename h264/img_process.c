@@ -13,11 +13,13 @@
 *************************************************************************************
 */
 //}}}
+//{{{  includes
 #include "global.h"
 #include "img_process.h"
 #include "io_image.h"
 #include "memalloc.h"
 #include "fast_memory.h"
+//}}}
 
 //{{{
 static inline void CPImage(ImageData *imgOut, ImageData *imgIn)

@@ -1,3 +1,4 @@
+//{{{
 
 /*!
  *************************************************************************************
@@ -13,13 +14,15 @@
  *
  *************************************************************************************
  */
-
-
+//}}}
+//{{{
 #include "global.h"
 #include "memalloc.h"
 #include "erc_api.h"
 #include "fast_memory.h"
+//}}}
 
+//{{{
 /*!
  ************************************************************************
  * \brief
@@ -38,7 +41,9 @@ void ercInit(VideoParameters *p_Vid, int pic_sizex, int pic_sizey, int flag)
   // set error concealment ON
   ercSetErrorConcealment(p_Vid->erc_errorVar, flag);
 }
+//}}}
 
+//{{{
 /*!
  ************************************************************************
  * \brief
@@ -66,7 +71,9 @@ ercVariables_t *ercOpen( void )
 
   return errorVar;
 }
+//}}}
 
+//{{{
 /*!
  ************************************************************************
  * \brief
@@ -159,7 +166,8 @@ void ercReset( ercVariables_t *errorVar, int nOfMBs, int numOfSegments, int picS
     errorVar->nOfCorruptedSegments = 0;
   }
 }
-
+//}}}
+//{{{
 /*!
  ************************************************************************
  * \brief
@@ -193,7 +201,8 @@ void ercClose(VideoParameters *p_Vid,  ercVariables_t *errorVar )
     p_Vid->erc_object_list=NULL;
   }
 }
-
+//}}}
+//{{{
 /*!
  ************************************************************************
  * \brief
@@ -209,7 +218,9 @@ void ercSetErrorConcealment( ercVariables_t *errorVar, int value )
   if ( errorVar != NULL )
     errorVar->concealment = value;
 }
+//}}}
 
+//{{{
 /*!
  ************************************************************************
  * \brief
@@ -238,7 +249,8 @@ void ercStartSegment( int currMBNum, int segment, unsigned int bitPos, ercVariab
 
   }
 }
-
+//}}}
+//{{{
 /*!
  ************************************************************************
  * \brief
@@ -262,7 +274,9 @@ void ercStopSegment( int currMBNum, int segment, unsigned int bitPos, ercVariabl
     errorVar->currSegment++;
   }
 }
+//}}}
 
+//{{{
 /*!
  ************************************************************************
  * \brief
@@ -300,7 +314,8 @@ void ercMarkCurrSegmentLost(int picSizeX, ercVariables_t *errorVar )
     errorVar->segments[current_segment].fCorrupted = 1;
   }
 }
-
+//}}}
+//{{{
 /*!
  ************************************************************************
  * \brief
@@ -333,7 +348,8 @@ void ercMarkCurrSegmentOK(int picSizeX, ercVariables_t *errorVar )
     errorVar->segments[current_segment].fCorrupted = 0;
   }
 }
-
+//}}}
+//{{{
 /*!
  ************************************************************************
  * \brief
@@ -378,3 +394,4 @@ void ercMarkCurrMBConcealed( int currMBNum, int comp, int picSizeX, ercVariables
     }
   }
 }
+//}}}

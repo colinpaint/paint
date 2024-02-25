@@ -20,12 +20,13 @@
 //}}}
 #pragma once
 #ifdef TRACE
-#undef TRACE
+  #undef TRACE
 #endif
+
 #if defined _DEBUG
-# define TRACE           0     //!< 0:Trace off 1:Trace on 2:detailed CABAC context information
+  #define TRACE           0     //!< 0:Trace off 1:Trace on 2:detailed CABAC context information
 #else
-# define TRACE           0     //!< 0:Trace off 1:Trace on 2:detailed CABAC context information
+  #define TRACE           0     //!< 0:Trace off 1:Trace on 2:detailed CABAC context information
 #endif
 
 #define JM                  "19 (FRExt)"
@@ -47,7 +48,6 @@
 
 #define MVC_EXTENSION_ENABLE      1    //!< enable support for the Multiview High Profile
 #define ENABLE_DEC_STATS          0    //!< enable decoder statistics collection
-
 #define MVC_INIT_VIEW_ID          -1
 #define MAX_VIEW_NUM              1024
 #define BASE_VIEW_IDX             0
@@ -87,9 +87,9 @@ typedef enum {
 #define INPUT_TEXT_SIZE 1024
 
 #if (ENABLE_HIGH444_CTX == 1)
-# define NUM_BLOCK_TYPES 22
+  #define NUM_BLOCK_TYPES 22
 #else
-# define NUM_BLOCK_TYPES 10
+  #define NUM_BLOCK_TYPES 10
 #endif
 
 

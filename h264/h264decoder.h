@@ -8,11 +8,10 @@
  *  \author
  *     Copyright (C) 2009 Dolby
  *  Yuwen He (yhe@dolby.com)
- *  
+ *
  ************************************************************************
  */
-#ifndef _H264DECODER_H_
-#define _H264DECODER_H_
+#pragma once
 
 #include "global.h"
 
@@ -20,7 +19,7 @@ typedef enum
 {
   DEC_GEN_NOERR = 0,
   DEC_OPEN_NOERR = 0,
-  DEC_CLOSE_NOERR = 0,  
+  DEC_CLOSE_NOERR = 0,
   DEC_SUCCEED = 0,
   DEC_EOS =1,
   DEC_NEED_DATA = 2,
@@ -50,5 +49,4 @@ int SetOptsDecoder(DecSet_t *pDecOpts);
 
 #ifdef __cplusplus
 }
-#endif
 #endif

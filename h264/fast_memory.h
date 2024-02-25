@@ -11,9 +11,7 @@
  *
  **************************************************************************
  */
-
-#ifndef _FAST_MEMORY_H_
-#define _FAST_MEMORY_H_
+#pragma once
 
 #include "typedefs.h"
 
@@ -32,6 +30,3 @@ static inline void fast_memset_zero(void *dst, int width)
 {
   memset(dst,0,width);
 }
-
-#endif 
-

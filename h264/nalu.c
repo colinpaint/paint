@@ -16,11 +16,67 @@
 #include "global.h"
 #include "annexb.h"
 #include "nalu.h"
+#include "nalucommon.h"
 #include "memalloc.h"
-//include "rtp.h"
+
 #if (MVC_EXTENSION_ENABLE)
-#include "vlc.h"
+  #include "vlc.h"
 #endif
+//}}}
+
+//{{{
+/*!
+ *************************************************************************************
+ * \brief
+ *    Allocates memory for a NALU
+ *
+ * \param buffersize
+ *     size of NALU buffer
+ *
+ * \return
+ *    pointer to a NALU
+ *************************************************************************************
+ */
+NALU_t *AllocNALU(int buffersize)
+{
+  NALU_t *n;
+
+  if ((n = (NALU_t*)calloc (1, sizeof (NALU_t))) == NULL)
+    no_mem_exit ("AllocNALU: n");
+
+  n->max_size=buffersize;
+  if ((n->buf = (byte*)calloc (buffersize, sizeof (byte))) == NULL)
+  {
+    free (n);
+    no_mem_exit ("AllocNALU: n->buf");
+  }
+
+  return n;
+}
+//}}}
+//{{{
+/*!
+ *************************************************************************************
+ * \brief
+ *    Frees a NALU
+ *
+ * \param n
+ *    NALU to be freed
+ *
+ *************************************************************************************
+ */
+void FreeNALU(NALU_t *n)
+{
+  if (n != NULL)
+  {
+    if (n->buf != NULL)
+    {
+      free(n->buf);
+      n->buf=NULL;
+    }
+    free (n);
+  }
+}
 //}}}
 
 //{{{
@@ -46,7 +102,6 @@ static int NALUtoRBSP (NALU_t *nalu)
   return nalu->len ;
 }
 //}}}
-
 //{{{
 /*!
 ************************************************************************
@@ -129,7 +184,6 @@ void CheckZeroByteNonVCL(VideoParameters *p_Vid, NALU_t *nalu)
   }
 }
 //}}}
-
 //{{{
 void CheckZeroByteVCL(VideoParameters *p_Vid, NALU_t *nalu)
 {

@@ -1,4 +1,4 @@
-
+//{{{
 /*!
  **************************************************************************************
  * \file
@@ -12,10 +12,14 @@
  *
  **************************************************************************************
  */
-
+//}}}
+//{{{
 #include "global.h"
 #include "parsetcommon.h"
 #include "memalloc.h"
+//}}}
+
+//{{{
 /*!
  *************************************************************************************
  * \brief
@@ -35,8 +39,8 @@ pic_parameter_set_rbsp_t *AllocPPS ()
    p->slice_group_id = NULL;
    return p;
  }
-
-
+//}}}
+//{{{
 /*!
  *************************************************************************************
  * \brief
@@ -55,8 +59,9 @@ seq_parameter_set_rbsp_t *AllocSPS ()
      no_mem_exit ("AllocSPS: SPS");
    return p;
  }
+//}}}
 
-
+//{{{
 /*!
  *************************************************************************************
  * \brief
@@ -70,29 +75,30 @@ seq_parameter_set_rbsp_t *AllocSPS ()
  void FreePPS (pic_parameter_set_rbsp_t *pps)
  {
    assert (pps != NULL);
-   if (pps->slice_group_id != NULL) 
+   if (pps->slice_group_id != NULL)
      free (pps->slice_group_id);
    free (pps);
  }
+//}}}
+//{{{
+/*!
+*************************************************************************************
+* \brief
+*    Frees a sps
+*
+* \param sps
+*   Sequence parameter set to be freed
+*************************************************************************************
+*/
 
+void FreeSPS (seq_parameter_set_rbsp_t *sps)
+{
+  assert (sps != NULL);
+  free (sps);
+}
+//}}}
 
- /*!
- *************************************************************************************
- * \brief
- *    Frees a sps
- *
- * \param sps
- *   Sequence parameter set to be freed
- *************************************************************************************
- */
-
- void FreeSPS (seq_parameter_set_rbsp_t *sps)
- {
-   assert (sps != NULL);
-   free (sps);
- }
-
-
+//{{{
 int sps_is_equal(seq_parameter_set_rbsp_t *sps1, seq_parameter_set_rbsp_t *sps2)
 {
   unsigned i;
@@ -153,7 +159,8 @@ int sps_is_equal(seq_parameter_set_rbsp_t *sps1, seq_parameter_set_rbsp_t *sps2)
 
   return equal;
 }
-
+//}}}
+//{{{
 int pps_is_equal(pic_parameter_set_rbsp_t *pps1, pic_parameter_set_rbsp_t *pps2)
 {
   unsigned i, j;
@@ -242,3 +249,4 @@ int pps_is_equal(pic_parameter_set_rbsp_t *pps1, pic_parameter_set_rbsp_t *pps2)
 
   return equal;
 }
+//}}}
