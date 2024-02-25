@@ -14,6 +14,8 @@
 #ifndef _WIN32_H_
 #define _WIN32_H_
 
+#define _CRT_SECURE_NO_WARNINGS
+
 # include <fcntl.h>
 # include <stdlib.h>
 # include <stdio.h>
