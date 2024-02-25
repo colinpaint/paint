@@ -65,7 +65,7 @@ static int WriteOneFrame (DecodedPicList *pDecPic, int hFileOutput0, int hFileOu
   int iOutputFrame=0;
   DecodedPicList *pPic = pDecPic;
 
-  if (pPic && (((pPic->iYUVStorageFormat==2) && pPic->bValid==3) || 
+  if (pPic && (((pPic->iYUVStorageFormat==2) && pPic->bValid==3) ||
                ((pPic->iYUVStorageFormat!=2) && pPic->bValid==1)) ) {
     int i, iWidth, iHeight, iStride, iWidthUV, iHeightUV, iStrideUV;
     byte *pbBuf;
@@ -204,8 +204,8 @@ int main (int argc, char **argv) {
     else
       //error handling;
       fprintf (stderr, "Error in decoding process: 0x%x\n", iRet);
-  } while ((iRet == DEC_SUCCEED) && 
-           ((p_Dec->p_Inp->iDecFrmNum==0) || 
+  } while ((iRet == DEC_SUCCEED) &&
+           ((p_Dec->p_Inp->iDecFrmNum==0) ||
             (iFramesDecoded<p_Dec->p_Inp->iDecFrmNum)));
 
   iRet = FinitDecoder (&pDecPicList);
