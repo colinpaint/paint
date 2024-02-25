@@ -56,7 +56,6 @@ extern "C" {
 using namespace std;
 using namespace utils;
 //}}}
-constexpr bool kDebug = true;
 constexpr bool kMotionVectors = true;
 namespace {
   //{{{
@@ -653,6 +652,7 @@ public:
         mFileSize = st.st_size;
     #endif
     //}}}
+    FILE* h264File = fopen ("c:/tv/test.264", "wb");
 
     thread ([=]() {
       cLog::setThreadName ("anal");
@@ -672,10 +672,12 @@ public:
             uint8_t* buffer = (uint8_t*)malloc (pidInfo.getBufSize());
             memcpy (buffer, pidInfo.mBuffer, pidInfo.getBufSize());
             mPes.emplace_back (cPes (buffer, pidInfo.getBufSize(), pidInfo.getPts(), info));
+            fwrite (buffer, 1, pidInfo.getBufSize(), h264File);
             }
           }
         //}}}
         );
+
       //{{{  read file
       size_t chunkSize = 188 * 256;
       uint8_t* chunk = new uint8_t[chunkSize];
@@ -703,6 +705,7 @@ public:
       //}}}
       delete[] chunk;
       fclose (file);
+      fclose (h264File);
 
       mDecoder->flush();
       size_t i = skipToI (0);
@@ -712,11 +715,11 @@ public:
       while (i < mPes.size()) {
         // decode first frame of gop
         decode (i, mPes[i++]);
-        //{{{  decode rest of gop
-        //while (mPes[i].mFrameInfo.front() != 'I')
-          //decode (i, mPes[i++]);
-        //}}}
+        this_thread::sleep_for (40ms);
 
+        // decode rest of gop
+        while (mPes[i].mFrameInfo.front() != 'I')
+          decode (i, mPes[i++]);
         // skip 8 gop
         for (int j = 0; j < 4; j++)
           i = skipToI (++i);
@@ -792,8 +795,6 @@ private:
       }
     else
       cLog::log (LOGERROR, fmt::format ("no decoder"));
-
-    this_thread::sleep_for (40ms);
     }
   //}}}
 
