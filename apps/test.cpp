@@ -659,8 +659,6 @@ public:
       FILE* h264File = fopen ("/home/pi/tv/test.264", "wb");
     #endif
 
-    FILE* h264File = fopen ("c:/tv/test.264", "wb");
-
     thread ([=]() {
       cLog::setThreadName ("anal");
 

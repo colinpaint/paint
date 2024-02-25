@@ -46,13 +46,19 @@ add_subdirectory (dvb)
 add_subdirectory (decoders)
 add_subdirectory (audio)
 add_subdirectory (song)
+add_subdirectory (h264)
 
 # windows audio capture
 if (CMAKE_HOST_WIN32)
   project (capture VERSION 1.0.0)
     add_executable (${PROJECT_NAME} apps/capture.cpp)
     target_link_libraries (${PROJECT_NAME} PRIVATE decoders audio winmm avrt)
-endif()
+  endif()
+
+# h264 software decoder
+  project (h264Decode VERSION 1.0.0)
+    add_executable (${PROJECT_NAME} apps/h264.c)
+    target_link_libraries (${PROJECT_NAME} PRIVATE h264)
 
 # imguiApp
 project (imguiTest VERSION 1.0.0)
