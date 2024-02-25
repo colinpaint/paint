@@ -1,4 +1,4 @@
-
+//{{{
 /*!
  ************************************************************************
  * \file  nalu.c
@@ -11,7 +11,8 @@
  *    - Stephan Wenger   <stewe@cs.tu-berlin.de>
  ************************************************************************
  */
-
+//}}}
+//{{{
 #include "global.h"
 #include "annexb.h"
 #include "nalu.h"
@@ -20,7 +21,9 @@
 #if (MVC_EXTENSION_ENABLE)
 #include "vlc.h"
 #endif
+//}}}
 
+//{{{
 /*!
  *************************************************************************************
  * \brief
@@ -42,7 +45,9 @@ static int NALUtoRBSP (NALU_t *nalu)
 
   return nalu->len ;
 }
+//}}}
 
+//{{{
 /*!
 ************************************************************************
 * \brief
@@ -117,13 +122,15 @@ void CheckZeroByteNonVCL(VideoParameters *p_Vid, NALU_t *nalu)
   //for the first NAL unit in an access unit, zero_byte shall exists
   if(p_Vid->NALUCount==1)
     CheckZeroByte=1;
-  if(CheckZeroByte && nalu->startcodeprefix_len==3)   
+  if(CheckZeroByte && nalu->startcodeprefix_len==3)
   {
     printf("Warning: zero_byte shall exist\n");
     //because it is not a very serious problem, we do not exit here
   }
 }
+//}}}
 
+//{{{
 void CheckZeroByteVCL(VideoParameters *p_Vid, NALU_t *nalu)
 {
   int CheckZeroByte=0;
@@ -148,11 +155,13 @@ void CheckZeroByteVCL(VideoParameters *p_Vid, NALU_t *nalu)
     //because it is not a very serious problem, we do not exit here
   }
 }
+//}}}
 
 #if (MVC_EXTENSION_ENABLE)
+//{{{
 void nal_unit_header_mvc_extension(NALUnitHeaderMVCExt_t *NaluHeaderMVCExt, Bitstream *s)
-{  
-  //to be implemented;  
+{
+  //to be implemented;
   NaluHeaderMVCExt->non_idr_flag     = read_u_v (1, "non_idr_flag",     s, &p_Dec->UsedBits);
   NaluHeaderMVCExt->priority_id      = read_u_v (6, "priority_id",      s, &p_Dec->UsedBits);
   NaluHeaderMVCExt->view_id          = read_u_v (10, "view_id",         s, &p_Dec->UsedBits);
@@ -165,15 +174,17 @@ void nal_unit_header_mvc_extension(NALUnitHeaderMVCExt_t *NaluHeaderMVCExt, Bits
     printf("Nalu Header MVC Extension: reserved_one_bit is not 1!\n");
   }
 }
-
+//}}}
+//{{{
 void nal_unit_header_svc_extension( void )
 {
   //to be implemented for Annex G;
 }
-
+//}}}
+//{{{
 void prefix_nal_unit_svc( void )
 {
   //to be implemented for Annex G;
 }
-
+//}}}
 #endif

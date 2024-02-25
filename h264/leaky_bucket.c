@@ -12,7 +12,6 @@
  ************************************************************************
  */
 
-#include "contributors.h"
 #include "global.h"
 
 #ifdef _LEAKYBUCKET_

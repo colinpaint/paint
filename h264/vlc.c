@@ -12,8 +12,6 @@
  *    - Gabi Blaettermann
  ************************************************************************
  */
-#include "contributors.h"
-
 #include "global.h"
 #include "vlc.h"
 #include "elements.h"

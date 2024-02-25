@@ -1,3 +1,4 @@
+# h264 JM software reference decoder library
 project (h264 VERSION 1.0.0)
   file (GLOB HEADER_FILES *.h)
   file (GLOB SOURCE_FILES *.c)

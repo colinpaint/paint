@@ -44,8 +44,6 @@
  */
 //}}}
 //{{{
-#include "contributors.h"
-
 //#include <sys/stat.h>
 
 #include "global.h"

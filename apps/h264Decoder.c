@@ -1,17 +1,5 @@
-//{{{
-/*!
- ***********************************************************************
- *  \file
- *     decoder_test.c
- *  \brief
- *     H.264/AVC decoder test
- *  \author
- *     Main contributors (see contributors.h for copyright, address and affiliation details)
- *     - Yuwen He       <yhe@dolby.com>
- ***********************************************************************
- */
-//}}}
-//{{{
+// h264Decoder test
+//{{{  includes, defines
 #include <sys/stat.h>
 
 //#include "global.h"
@@ -31,10 +19,9 @@
 //}}}
 
 //{{{
-static void Configure(InputParameters *p_Inp, int ac, char *av[])
+static void Configure (InputParameters *p_Inp, int ac, char *av[])
 {
-  //char *config_filename=NULL;
-  //char errortext[ET_SIZE];
+
   memset(p_Inp, 0, sizeof(InputParameters));
   strcpy(p_Inp->infile, BITSTREAM_FILENAME); //! set default bitstream name
   strcpy(p_Inp->outfile, DECRECON_FILENAME); //! set default output file name
@@ -71,17 +58,15 @@ static void Configure(InputParameters *p_Inp, int ac, char *av[])
 
 //}}}
 //{{{
-/*********************************************************
-if bOutputAllFrames is 1, then output all valid frames to file onetime;
-else output the first valid frame and move the buffer to the end of list;
-*********************************************************/
-static int WriteOneFrame(DecodedPicList *pDecPic, int hFileOutput0, int hFileOutput1, int bOutputAllFrames)
-{
+static int WriteOneFrame (DecodedPicList *pDecPic, int hFileOutput0, int hFileOutput1, int bOutputAllFrames) {
+// if bOutputAllFrames is 1, then output all valid frames to file onetime;
+// else output the first valid frame and move the buffer to the end of list;
+
   int iOutputFrame=0;
   DecodedPicList *pPic = pDecPic;
 
-  if(pPic && (((pPic->iYUVStorageFormat==2) && pPic->bValid==3) || ((pPic->iYUVStorageFormat!=2) && pPic->bValid==1)) )
-  {
+  if (pPic && (((pPic->iYUVStorageFormat==2) && pPic->bValid==3) || 
+               ((pPic->iYUVStorageFormat!=2) && pPic->bValid==1)) ) {
     int i, iWidth, iHeight, iStride, iWidthUV, iHeightUV, iStrideUV;
     byte *pbBuf;
     int hFileOutput;
@@ -101,91 +86,67 @@ static int WriteOneFrame(DecodedPicList *pDecPic, int hFileOutput0, int hFileOut
     iWidthUV *= ((pPic->iBitDepth+7)>>3);
     iStrideUV = pPic->iUVBufStride;
 
-    do
-    {
+    do {
       if(pPic->iYUVStorageFormat==2)
         hFileOutput = (pPic->iViewId&0xffff)? hFileOutput1 : hFileOutput0;
       else
         hFileOutput = hFileOutput0;
-      if(hFileOutput >=0)
-      {
+      if(hFileOutput >=0) {
         //Y;
         pbBuf = pPic->pY;
-        for(i=0; i<iHeight; i++)
-        {
+        for(i=0; i<iHeight; i++) {
           res = write(hFileOutput, pbBuf+i*iStride, iWidth);
           if (-1==res)
-          {
             error ("error writing to output file.", 600);
-          }
         }
 
-        if(pPic->iYUVFormat != YUV400)
-        {
+        if(pPic->iYUVFormat != YUV400) {
          //U;
          pbBuf = pPic->pU;
-         for(i=0; i<iHeightUV; i++)
-         {
+         for(i=0; i<iHeightUV; i++) {
            res = write(hFileOutput, pbBuf+i*iStrideUV, iWidthUV);
            if (-1==res)
-           {
              error ("error writing to output file.", 600);
-           }
 }
          //V;
          pbBuf = pPic->pV;
-         for(i=0; i<iHeightUV; i++)
-         {
+         for(i=0; i<iHeightUV; i++) {
            res = write(hFileOutput, pbBuf+i*iStrideUV, iWidthUV);
            if (-1==res)
-           {
              error ("error writing to output file.", 600);
-           }
          }
         }
 
         iOutputFrame++;
       }
 
-      if (pPic->iYUVStorageFormat == 2)
-      {
+      if (pPic->iYUVStorageFormat == 2) {
         hFileOutput = ((pPic->iViewId>>16)&0xffff)? hFileOutput1 : hFileOutput0;
-        if(hFileOutput>=0)
-        {
+        if(hFileOutput>=0) {
           int iPicSize =iHeight*iStride;
           //Y;
           pbBuf = pPic->pY+iPicSize;
-          for(i=0; i<iHeight; i++)
-          {
+          for(i=0; i<iHeight; i++) {
             res = write(hFileOutput, pbBuf+i*iStride, iWidth);
             if (-1==res)
-            {
               error ("error writing to output file.", 600);
-            }
           }
 
-          if(pPic->iYUVFormat != YUV400)
-          {
+          if(pPic->iYUVFormat != YUV400) {
            iPicSize = iHeightUV*iStrideUV;
            //U;
            pbBuf = pPic->pU+iPicSize;
-           for(i=0; i<iHeightUV; i++)
-           {
+           for(i=0; i<iHeightUV; i++) {
              res = write(hFileOutput, pbBuf+i*iStrideUV, iWidthUV);
              if (-1==res)
-             {
                error ("error writing to output file.", 600);
-             }
            }
            //V;
            pbBuf = pPic->pV+iPicSize;
-           for(i=0; i<iHeightUV; i++)
-           {
+           for(i=0; i<iHeightUV; i++) {
              res = write(hFileOutput, pbBuf+i*iStrideUV, iWidthUV);
              if (-1==res)
-             {
                error ("error writing to output file.", 600);
-             }
            }
           }
 
@@ -193,31 +154,21 @@ static int WriteOneFrame(DecodedPicList *pDecPic, int hFileOutput0, int hFileOut
         }
       }
 
-#if PRINT_OUTPUT_POC
       fprintf(stdout, "\nOutput frame: %d/%d\n", pPic->iPOC, pPic->iViewId);
-#endif
       pPic->bValid = 0;
       pPic = pPic->pNext;
     }while(pPic != NULL && pPic->bValid && bOutputAllFrames);
   }
-#if PRINT_OUTPUT_POC
   else
     fprintf(stdout, "\nNone frame output\n");
-#endif
 
   return iOutputFrame;
-}
+  }
 //}}}
 
 //{{{
-/*!
- ***********************************************************************
- * \brief
- *    main function for JM decoder
- ***********************************************************************
- */
-int main(int argc, char **argv)
-{
+int main (int argc, char **argv) {
+
   int iRet;
   DecodedPicList *pDecPicList;
   int hFileDecOutput0=-1, hFileDecOutput1=-1;
@@ -225,56 +176,49 @@ int main(int argc, char **argv)
   InputParameters InputParams;
 
 #if DECOUTPUT_TEST
-  hFileDecOutput0 = open(DECOUTPUT_VIEW0_FILENAME, OPENFLAGS_WRITE, OPEN_PERMISSIONS);
+  hFileDecOutput0 = open (DECOUTPUT_VIEW0_FILENAME, OPENFLAGS_WRITE, OPEN_PERMISSIONS);
   fprintf(stdout, "Decoder output view0: %s\n", DECOUTPUT_VIEW0_FILENAME);
-  hFileDecOutput1 = open(DECOUTPUT_VIEW1_FILENAME, OPENFLAGS_WRITE, OPEN_PERMISSIONS);
+  hFileDecOutput1 = open (DECOUTPUT_VIEW1_FILENAME, OPENFLAGS_WRITE, OPEN_PERMISSIONS);
   fprintf(stdout, "Decoder output view1: %s\n", DECOUTPUT_VIEW1_FILENAME);
 #endif
 
   init_time();
 
   //get input parameters;
-  Configure(&InputParams, argc, argv);
+  Configure (&InputParams, argc, argv);
   //open decoder;
-  iRet = OpenDecoder(&InputParams);
-  if(iRet != DEC_OPEN_NOERR)
-  {
+  iRet = OpenDecoder (&InputParams);
+  if (iRet != DEC_OPEN_NOERR) {
     fprintf(stderr, "Open encoder failed: 0x%x!\n", iRet);
     return -1; //failed;
   }
 
   //decoding;
-  do
-  {
+  do {
     iRet = DecodeOneFrame(&pDecPicList);
-    if(iRet==DEC_EOS || iRet==DEC_SUCCEED)
-    {
+    if (iRet==DEC_EOS || iRet==DEC_SUCCEED) {
       //process the decoded picture, output or display;
       iFramesOutput += WriteOneFrame(pDecPicList, hFileDecOutput0, hFileDecOutput1, 0);
       iFramesDecoded++;
-    }
+      }
     else
-    {
       //error handling;
-      fprintf(stderr, "Error in decoding process: 0x%x\n", iRet);
-    }
-  }while((iRet == DEC_SUCCEED) && ((p_Dec->p_Inp->iDecFrmNum==0) || (iFramesDecoded<p_Dec->p_Inp->iDecFrmNum)));
+      fprintf (stderr, "Error in decoding process: 0x%x\n", iRet);
+  } while ((iRet == DEC_SUCCEED) && 
+           ((p_Dec->p_Inp->iDecFrmNum==0) || 
+            (iFramesDecoded<p_Dec->p_Inp->iDecFrmNum)));
 
-  iRet = FinitDecoder(&pDecPicList);
-  iFramesOutput += WriteOneFrame(pDecPicList, hFileDecOutput0, hFileDecOutput1 , 1);
+  iRet = FinitDecoder (&pDecPicList);
+  iFramesOutput += WriteOneFrame (pDecPicList, hFileDecOutput0, hFileDecOutput1 , 1);
   iRet = CloseDecoder();
 
   //quit;
-  if(hFileDecOutput0>=0)
-  {
-    close(hFileDecOutput0);
-  }
-  if(hFileDecOutput1>=0)
-  {
-    close(hFileDecOutput1);
-  }
+  if (hFileDecOutput0 >= 0)
+    close (hFileDecOutput0);
+  if (hFileDecOutput1 >= 0)
+    close( hFileDecOutput1);
 
   printf("%d frames are decoded.\n", iFramesDecoded);
   return 0;
-}
+  }
 //}}}

@@ -1,3 +1,4 @@
+//{{{
 
 /*!
  ************************************************************************
@@ -13,10 +14,12 @@
  *    - Tobias Oelbaum <oelbaum@drehvial.de>
 ************************************************************************
  */
-
-#include "contributors.h"
+//}}}
+//{{{
 #include "global.h"
+//}}}
 
+//{{{
  /*!
  ************************************************************************
  * \brief
@@ -31,7 +34,7 @@
  *
 ************************************************************************/
 
-int RBSPtoSODB(byte *streamBuffer, int last_byte_pos)
+int RBSPtoSODB (byte *streamBuffer, int last_byte_pos)
 {
   int ctr_bit, bitoffset;
 
@@ -39,11 +42,9 @@ int RBSPtoSODB(byte *streamBuffer, int last_byte_pos)
   //find trailing 1
   ctr_bit = (streamBuffer[last_byte_pos-1] & (0x01<<bitoffset));   // set up control bit
 
-  while (ctr_bit==0)
-  {                 // find trailing 1 bit
+  while (ctr_bit==0) {                 // find trailing 1 bit
     ++bitoffset;
-    if(bitoffset == 8)
-    {
+    if(bitoffset == 8) {
       if(last_byte_pos == 0)
         printf(" Panic: All zero data sequence in RBSP \n");
       assert(last_byte_pos != 0);
@@ -66,8 +67,8 @@ int RBSPtoSODB(byte *streamBuffer, int last_byte_pos)
   return(last_byte_pos);
 
 }
-
-
+//}}}
+//{{{
 /*!
 ************************************************************************
 * \brief
@@ -79,9 +80,7 @@ int RBSPtoSODB(byte *streamBuffer, int last_byte_pos)
 * \param begin_bytepos
 *    Position after beginning
 ************************************************************************/
-
-
-int EBSPtoRBSP(byte *streamBuffer, int end_bytepos, int begin_bytepos)
+int EBSPtoRBSP (byte *streamBuffer, int end_bytepos, int begin_bytepos)
 {
   int i, j, count;
   count = 0;
@@ -91,13 +90,12 @@ int EBSPtoRBSP(byte *streamBuffer, int end_bytepos, int begin_bytepos)
 
   j = begin_bytepos;
 
-  for(i = begin_bytepos; i < end_bytepos; ++i)
-  { //starting from begin_bytepos to avoid header information
+  for(i = begin_bytepos; i < end_bytepos; ++i) { 
+    //starting from begin_bytepos to avoid header information
     //in NAL unit, 0x000000, 0x000001 or 0x000002 shall not occur at any byte-aligned position
-    if(count == ZEROBYTES_SHORTSTARTCODE && streamBuffer[i] < 0x03) 
+    if(count == ZEROBYTES_SHORTSTARTCODE && streamBuffer[i] < 0x03)
       return -1;
-    if(count == ZEROBYTES_SHORTSTARTCODE && streamBuffer[i] == 0x03)
-    {
+    if(count == ZEROBYTES_SHORTSTARTCODE && streamBuffer[i] == 0x03) {
       //check the 4th byte after 0x000003, except when cabac_zero_word is used, in which case the last three bytes of this NAL unit must be 0x000003
       if((i < end_bytepos-1) && (streamBuffer[i+1] > 0x03))
         return -1;
@@ -107,14 +105,16 @@ int EBSPtoRBSP(byte *streamBuffer, int end_bytepos, int begin_bytepos)
 
       ++i;
       count = 0;
-    }
+      }
+
     streamBuffer[j] = streamBuffer[i];
     if(streamBuffer[i] == 0x00)
       ++count;
     else
       count = 0;
     ++j;
-  }
+    }
 
   return j;
-}
+  }
+//}}}
