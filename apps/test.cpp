@@ -652,6 +652,13 @@ public:
         mFileSize = st.st_size;
     #endif
     //}}}
+
+    #ifdef _WIN32
+      FILE* h264File = fopen ("c:/tv/test.264", "wb");
+    #else
+      FILE* h264File = fopen ("/home/pi/tv/test.264", "wb");
+    #endif
+
     FILE* h264File = fopen ("c:/tv/test.264", "wb");
 
     thread ([=]() {
