@@ -1,3 +1,4 @@
+//{{{
 /*!
  ************************************************************************
  * \file  sei.c
@@ -11,7 +12,8 @@
  *    - Karsten Suehring
  ************************************************************************
  */
-
+//}}}
+//{{{
 #include <math.h>
 #include "global.h"
 #include "memalloc.h"
@@ -26,6 +28,7 @@
 #pragma GCC diagnostic ignored "-Wunused-but-set-variable"
 #endif
 #endif
+//}}}
 
 // #define PRINT_BUFFERING_PERIOD_INFO    // uncomment to print buffering period SEI info
 // #define PRINT_PICTURE_TIMING_INFO      // uncomment to print picture timing SEI info
@@ -55,6 +58,7 @@
 // #define PRINT_FRAME_PACKING_ARRANGEMENT_INFO       // uncomment to print frame packing arrangement SEI info
 // #define PRINT_GREEN_METADATA_INFO      // uncomment to print Green Metadata SEI info
 
+//{{{
 /*!
  ************************************************************************
  *  \brief
@@ -74,7 +78,7 @@ void InterpretSEIMessage(byte* msg, int size, VideoParameters *p_Vid, Slice *pSl
   int payload_size = 0;
   int offset = 1;
   byte tmp_byte;
-  
+
   do
   {
     // sei_message();
@@ -177,7 +181,7 @@ void InterpretSEIMessage(byte* msg, int size, VideoParameters *p_Vid, Slice *pSl
       break;
     default:
       interpret_reserved_info( msg+offset, payload_size, p_Vid );
-      break;    
+      break;
     }
     offset += payload_size;
 
@@ -186,8 +190,8 @@ void InterpretSEIMessage(byte* msg, int size, VideoParameters *p_Vid, Slice *pSl
   assert(msg[offset] == 0x80);      // this is the trailing bits
   assert( offset+1 == size );
 }
-
-
+//}}}
+//{{{
 /*!
 ************************************************************************
 *  \brief
@@ -304,9 +308,9 @@ void interpret_spare_pic( byte* payload, int size, VideoParameters *p_Vid )
           {
             no_bit0 = read_ue_v("SEI: zero_run_length", buf, &p_Dec->UsedBits);
           }
-          if (no_bit0>0) 
+          if (no_bit0>0)
             map[i][y][x] = (byte) bit0;
-          else 
+          else
             map[i][y][x] = (byte) bit1;
           no_bit0--;
 
@@ -441,8 +445,8 @@ void interpret_spare_pic( byte* payload, int size, VideoParameters *p_Vid )
 
   free(buf);
 }
-
-
+//}}}
+//{{{
 /*!
  ************************************************************************
  *  \brief
@@ -499,7 +503,8 @@ void interpret_subsequence_info( byte* payload, int size, VideoParameters *p_Vid
 #undef PRINT_SUBSEQUENCE_INFO
 #endif
 }
-
+//}}}
+//{{{
 /*!
  ************************************************************************
  *  \brief
@@ -547,8 +552,8 @@ void interpret_subsequence_layer_characteristics_info( byte* payload, int size, 
   }
   free (buf);
 }
-
-
+//}}}
+//{{{
 /*!
  ************************************************************************
  *  \brief
@@ -639,8 +644,8 @@ void interpret_subsequence_characteristics_info( byte* payload, int size, VideoP
 #undef PRINT_SUBSEQUENCE_CHAR
 #endif
 }
-
-
+//}}}
+//{{{
 /*!
  ************************************************************************
  *  \brief
@@ -687,8 +692,8 @@ void interpret_scene_information( byte* payload, int size, VideoParameters *p_Vi
 #undef PRINT_SCENE_INFORMATION
 #endif
 }
-
-
+//}}}
+//{{{
 /*!
  ************************************************************************
  *  \brief
@@ -731,8 +736,8 @@ void interpret_filler_payload_info( byte* payload, int size, VideoParameters *p_
 #undef PRINT_FILLER_PAYLOAD_INFO
 #endif
 }
-
-
+//}}}
+//{{{
 /*!
  ************************************************************************
  *  \brief
@@ -780,8 +785,8 @@ void interpret_user_data_unregistered_info( byte* payload, int size, VideoParame
 #undef PRINT_USER_DATA_UNREGISTERED_INFO
 #endif
 }
-
-
+//}}}
+//{{{
 /*!
  ************************************************************************
  *  \brief
@@ -827,7 +832,8 @@ void interpret_user_data_registered_itu_t_t35_info( byte* payload, int size, Vid
 #endif
 }
 
-
+//}}}
+//{{{
 /*!
  ************************************************************************
  *  \brief
@@ -861,10 +867,10 @@ void interpret_pan_scan_rect_info( byte* payload, int size, VideoParameters *p_V
   pan_scan_rect_id = read_ue_v("SEI: pan_scan_rect_id", buf, &p_Dec->UsedBits);
 
   pan_scan_rect_cancel_flag = read_u_1("SEI: pan_scan_rect_cancel_flag", buf, &p_Dec->UsedBits);
-  if (!pan_scan_rect_cancel_flag) 
+  if (!pan_scan_rect_cancel_flag)
   {
     pan_scan_cnt_minus1 = read_ue_v("SEI: pan_scan_cnt_minus1", buf, &p_Dec->UsedBits);
-    for (i = 0; i <= pan_scan_cnt_minus1; i++) 
+    for (i = 0; i <= pan_scan_cnt_minus1; i++)
     {
       pan_scan_rect_left_offset   = read_se_v("SEI: pan_scan_rect_left_offset"  , buf, &p_Dec->UsedBits);
       pan_scan_rect_right_offset  = read_se_v("SEI: pan_scan_rect_right_offset" , buf, &p_Dec->UsedBits);
@@ -937,8 +943,8 @@ void interpret_recovery_point_info( byte* payload, int size, VideoParameters *p_
 #undef PRINT_RECOVERY_POINT
 #endif
 }
-
-
+//}}}
+//{{{
 /*!
  ************************************************************************
  *  \brief
@@ -1071,7 +1077,8 @@ void interpret_dec_ref_pic_marking_repetition_info( byte* payload, int size, Vid
 #undef PRINT_DEC_REF_PIC_MARKING
 #endif
 }
-
+//}}}
+//{{{
 /*!
  ************************************************************************
  *  \brief
@@ -1106,8 +1113,8 @@ void interpret_full_frame_freeze_info( byte* payload, int size, VideoParameters 
 #undef PRINT_FULL_FRAME_FREEZE_INFO
 #endif
 }
-
-
+//}}}
+//{{{
 /*!
  ************************************************************************
  *  \brief
@@ -1135,7 +1142,8 @@ void interpret_full_frame_freeze_release_info( byte* payload, int size, VideoPar
 #undef PRINT_FULL_FRAME_FREEZE_RELEASE_INFO
 #endif
 }
-
+//}}}
+//{{{
 /*!
  ************************************************************************
  *  \brief
@@ -1173,7 +1181,8 @@ void interpret_full_frame_snapshot_info( byte* payload, int size, VideoParameter
 #undef PRINT_FULL_FRAME_SNAPSHOT_INFO
 #endif
 }
-
+//}}}
+//{{{
 /*!
  ************************************************************************
  *  \brief
@@ -1213,8 +1222,8 @@ void interpret_progressive_refinement_start_info( byte* payload, int size, Video
 #undef PRINT_PROGRESSIVE_REFINEMENT_START_INFO
 #endif
 }
-
-
+//}}}
+//{{{
 /*!
  ************************************************************************
  *  \brief
@@ -1252,8 +1261,8 @@ void interpret_progressive_refinement_end_info( byte* payload, int size, VideoPa
 #undef PRINT_PROGRESSIVE_REFINEMENT_END_INFO
 #endif
 }
-
-
+//}}}
+//{{{
 /*!
  ************************************************************************
  *  \brief
@@ -1319,7 +1328,8 @@ void interpret_motion_constrained_slice_group_set_info( byte* payload, int size,
 #undef PRINT_MOTION_CONST_SLICE_GROUP_SET_INFO
 #endif
 }
-
+//}}}
+//{{{
 /*!
  ************************************************************************
  *  \brief
@@ -1433,7 +1443,8 @@ void interpret_film_grain_characteristics_info( byte* payload, int size, VideoPa
 #undef PRINT_FILM_GRAIN_CHARACTERISTICS_INFO
 #endif
 }
-
+//}}}
+//{{{
 /*!
  ************************************************************************
  *  \brief
@@ -1480,7 +1491,8 @@ void interpret_deblocking_filter_display_preference_info( byte* payload, int siz
 #undef PRINT_DEBLOCKING_FILTER_DISPLAY_PREFERENCE_INFO
 #endif
 }
-
+//}}}
+//{{{
 /*!
  ************************************************************************
  *  \brief
@@ -1541,7 +1553,8 @@ void interpret_stereo_video_info_info( byte* payload, int size, VideoParameters 
 #undef PRINT_STEREO_VIDEO_INFO_INFO
 #endif
 }
-
+//}}}
+//{{{
 /*!
  ************************************************************************
  *  \brief
@@ -1576,8 +1589,8 @@ void interpret_reserved_info( byte* payload, int size, VideoParameters *p_Vid )
 #undef PRINT_RESERVED_INFO
 #endif
 }
-
-
+//}}}
+//{{{
 /*!
  ************************************************************************
  *  \brief
@@ -1655,8 +1668,8 @@ void interpret_buffering_period_info( byte* payload, int size, VideoParameters *
 #undef PRINT_BUFFERING_PERIOD_INFO
 #endif
 }
-
-
+//}}}
+//{{{
 /*!
  ************************************************************************
  *  \brief
@@ -1866,7 +1879,8 @@ void interpret_picture_timing_info( byte* payload, int size, VideoParameters *p_
 #undef PRINT_PICTURE_TIMING_INFO
 #endif
 }
-
+//}}}
+//{{{
 /*!
  ************************************************************************
  *  \brief
@@ -1953,7 +1967,9 @@ void interpret_frame_packing_arrangement_info( byte* payload, int size, VideoPar
 #undef PRINT_FRAME_PACKING_ARRANGEMENT_INFO
 #endif
 }
+//}}}
 
+//{{{
 /*!
  ************************************************************************
  *  \brief
@@ -1988,7 +2004,8 @@ typedef struct
   int coded_pivot_value[MAX_NUM_PIVOTS];
   int sei_pivot_value[MAX_NUM_PIVOTS];
 } tone_mapping_struct_tmp;
-
+//}}}
+//{{{
 void interpret_tone_mapping( byte* payload, int size, VideoParameters *p_Vid )
 {
   tone_mapping_struct_tmp seiToneMappingTmp;
@@ -2014,7 +2031,7 @@ void interpret_tone_mapping( byte* payload, int size, VideoParameters *p_Vid )
   printf("tone_map_cancel_flag = %d\n", seiToneMappingTmp.tone_map_cancel_flag);
 #endif
 
-  if (!seiToneMappingTmp.tone_map_cancel_flag) 
+  if (!seiToneMappingTmp.tone_map_cancel_flag)
   {
     seiToneMappingTmp.tone_map_repetition_period  = read_ue_v(  "SEI: tone_map_repetition_period", buf, &p_Dec->UsedBits);
     seiToneMappingTmp.coded_data_bit_depth        = (unsigned char)read_u_v (8,"SEI: coded_data_bit_depth"      , buf, &p_Dec->UsedBits);
@@ -2031,7 +2048,7 @@ void interpret_tone_mapping( byte* payload, int size, VideoParameters *p_Vid )
     max_coded_num  = 1<<seiToneMappingTmp.coded_data_bit_depth;
     max_output_num = 1<<seiToneMappingTmp.sei_bit_depth;
 
-    if (seiToneMappingTmp.model_id == 0) 
+    if (seiToneMappingTmp.model_id == 0)
     { // linear mapping with clipping
       seiToneMappingTmp.min_value   = read_u_v (32,"SEI: min_value", buf, &p_Dec->UsedBits);
       seiToneMappingTmp.max_value   = read_u_v (32,"SEI: min_value", buf, &p_Dec->UsedBits);
@@ -2039,7 +2056,7 @@ void interpret_tone_mapping( byte* payload, int size, VideoParameters *p_Vid )
       printf("min_value = %d, max_value = %d\n", seiToneMappingTmp.min_value, seiToneMappingTmp.max_value);
 #endif
     }
-    else if (seiToneMappingTmp.model_id == 1) 
+    else if (seiToneMappingTmp.model_id == 1)
     { // sigmoidal mapping
       seiToneMappingTmp.sigmoid_midpoint = read_u_v (32,"SEI: sigmoid_midpoint", buf, &p_Dec->UsedBits);
       seiToneMappingTmp.sigmoid_width    = read_u_v (32,"SEI: sigmoid_width", buf, &p_Dec->UsedBits);
@@ -2047,9 +2064,9 @@ void interpret_tone_mapping( byte* payload, int size, VideoParameters *p_Vid )
       printf("sigmoid_midpoint = %d, sigmoid_width = %d\n", seiToneMappingTmp.sigmoid_midpoint, seiToneMappingTmp.sigmoid_width);
 #endif
     }
-    else if (seiToneMappingTmp.model_id == 2) 
+    else if (seiToneMappingTmp.model_id == 2)
     { // user defined table mapping
-      for (i=0; i<max_output_num; i++) 
+      for (i=0; i<max_output_num; i++)
       {
         seiToneMappingTmp.start_of_coded_interval[i] = read_u_v((((seiToneMappingTmp.coded_data_bit_depth+7)>>3)<<3), "SEI: start_of_coded_interval"  , buf, &p_Dec->UsedBits);
 #ifdef PRINT_TONE_MAPPING // too long to print
@@ -2057,7 +2074,7 @@ void interpret_tone_mapping( byte* payload, int size, VideoParameters *p_Vid )
 #endif
       }
     }
-    else if (seiToneMappingTmp.model_id == 3) 
+    else if (seiToneMappingTmp.model_id == 3)
     {  // piece-wise linear mapping
       seiToneMappingTmp.num_pivots = read_u_v (16,"SEI: num_pivots", buf, &p_Dec->UsedBits);
 #ifdef PRINT_TONE_MAPPING
@@ -2068,7 +2085,7 @@ void interpret_tone_mapping( byte* payload, int size, VideoParameters *p_Vid )
       seiToneMappingTmp.coded_pivot_value[seiToneMappingTmp.num_pivots+1] = max_coded_num-1;
       seiToneMappingTmp.sei_pivot_value[seiToneMappingTmp.num_pivots+1] = max_output_num-1;
 
-      for (i=1; i < seiToneMappingTmp.num_pivots+1; i++) 
+      for (i=1; i < seiToneMappingTmp.num_pivots+1; i++)
       {
         seiToneMappingTmp.coded_pivot_value[i] = read_u_v( (((seiToneMappingTmp.coded_data_bit_depth+7)>>3)<<3), "SEI: coded_pivot_value", buf, &p_Dec->UsedBits);
         seiToneMappingTmp.sei_pivot_value[i] = read_u_v( (((seiToneMappingTmp.sei_bit_depth+7)>>3)<<3), "SEI: sei_pivot_value", buf, &p_Dec->UsedBits);
@@ -2080,7 +2097,7 @@ void interpret_tone_mapping( byte* payload, int size, VideoParameters *p_Vid )
 
 #if (ENABLE_OUTPUT_TONEMAPPING)
     // Currently, only when the map_id == 0, the tone-mapping is actually applied.
-    if (seiToneMappingTmp.tone_map_id== 0) 
+    if (seiToneMappingTmp.tone_map_id== 0)
     {
       int j;
       p_Vid->seiToneMapping->seiHasTone_mapping = TRUE;
@@ -2105,7 +2122,7 @@ void interpret_tone_mapping( byte* payload, int size, VideoParameters *p_Vid )
         break;
       case 1: // sigmoid mapping
 
-        for (i=0; i < max_coded_num; i++) 
+        for (i=0; i < max_coded_num; i++)
         {
           double tmp = 1.0 + exp( -6*(double)(i-seiToneMappingTmp.sigmoid_midpoint)/seiToneMappingTmp.sigmoid_width);
           p_Vid->seiToneMapping->lut[i] = (imgpel)( (double)(max_output_num-1)/ tmp + 0.5);
@@ -2114,9 +2131,9 @@ void interpret_tone_mapping( byte* payload, int size, VideoParameters *p_Vid )
       case 2: // user defined table
         if (0 < max_output_num-1)
         {
-          for (j=0; j<max_output_num-1; j++) 
+          for (j=0; j<max_output_num-1; j++)
           {
-            for (i=seiToneMappingTmp.start_of_coded_interval[j]; i<seiToneMappingTmp.start_of_coded_interval[j+1]; i++) 
+            for (i=seiToneMappingTmp.start_of_coded_interval[j]; i<seiToneMappingTmp.start_of_coded_interval[j+1]; i++)
             {
               p_Vid->seiToneMapping->lut[i] = (imgpel) j;
             }
@@ -2125,10 +2142,10 @@ void interpret_tone_mapping( byte* payload, int size, VideoParameters *p_Vid )
         }
         break;
       case 3: // piecewise linear mapping
-        for (j=0; j<seiToneMappingTmp.num_pivots+1; j++) 
+        for (j=0; j<seiToneMappingTmp.num_pivots+1; j++)
         {
           double slope = (double)(seiToneMappingTmp.sei_pivot_value[j+1] - seiToneMappingTmp.sei_pivot_value[j])/(seiToneMappingTmp.coded_pivot_value[j+1]-seiToneMappingTmp.coded_pivot_value[j]);
-          for (i=seiToneMappingTmp.coded_pivot_value[j]; i <= seiToneMappingTmp.coded_pivot_value[j+1]; i++) 
+          for (i=seiToneMappingTmp.coded_pivot_value[j]; i <= seiToneMappingTmp.coded_pivot_value[j+1]; i++)
           {
             p_Vid->seiToneMapping->lut[i] = (imgpel) (seiToneMappingTmp.sei_pivot_value[j] + (int)(( (i - seiToneMappingTmp.coded_pivot_value[j]) * slope)));
           }
@@ -2143,8 +2160,10 @@ void interpret_tone_mapping( byte* payload, int size, VideoParameters *p_Vid )
   } // end !tone_map_cancel_flag
   free (buf);
 }
+//}}}
 
 #if (ENABLE_OUTPUT_TONEMAPPING)
+//{{{
 // tone map using the look-up-table generated according to SEI tone mapping message
 void tone_map (imgpel** imgX, imgpel* lut, int size_x, int size_y)
 {
@@ -2158,14 +2177,16 @@ void tone_map (imgpel** imgX, imgpel* lut, int size_x, int size_y)
     }
   }
 }
-
-void init_tone_mapping_sei(ToneMappingSEI *seiToneMapping) 
+//}}}
+//{{{
+void init_tone_mapping_sei(ToneMappingSEI *seiToneMapping)
 {
   seiToneMapping->seiHasTone_mapping = FALSE;
   seiToneMapping->count = 0;
 }
-
-void update_tone_mapping_sei(ToneMappingSEI *seiToneMapping) 
+//}}}
+//{{{
+void update_tone_mapping_sei(ToneMappingSEI *seiToneMapping)
 {
 
   if(seiToneMapping->tone_map_repetition_period == 0)
@@ -2176,15 +2197,17 @@ void update_tone_mapping_sei(ToneMappingSEI *seiToneMapping)
   else if (seiToneMapping->tone_map_repetition_period>1)
   {
     seiToneMapping->count++;
-    if (seiToneMapping->count>=seiToneMapping->tone_map_repetition_period) 
+    if (seiToneMapping->count>=seiToneMapping->tone_map_repetition_period)
     {
       seiToneMapping->seiHasTone_mapping = FALSE;
       seiToneMapping->count = 0;
     }
   }
 }
+//}}}
 #endif
 
+//{{{
 /*!
  ************************************************************************
  *  \brief
@@ -2195,7 +2218,7 @@ void update_tone_mapping_sei(ToneMappingSEI *seiToneMapping)
  *     the size of the sei message
  *  \param p_Vid
  *     the image pointer
- *    
+ *
  ************************************************************************
  */
 void interpret_post_filter_hints_info( byte* payload, int size, VideoParameters *p_Vid )
@@ -2242,8 +2265,8 @@ void interpret_post_filter_hints_info( byte* payload, int size, VideoParameters 
   free_mem3Dint (filter_hint);
   free( buf );
 }
-
-
+//}}}
+//{{{
 void interpret_green_metadata_info(byte* payload, int size, VideoParameters *p_Vid )
 {
   Green_metadata_information_struct seiGreenMetadataInfo;
@@ -2315,3 +2338,4 @@ void interpret_green_metadata_info(byte* payload, int size, VideoParameters *p_V
 
   free (buf);
 }
+//}}}

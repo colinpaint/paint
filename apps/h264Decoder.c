@@ -1,8 +1,5 @@
 // h264Decoder test
-//{{{  includes, defines
 #include <sys/stat.h>
-
-//#include "global.h"
 #include "../h264/win32.h"
 #include "../h264/h264decoder.h"
 #include "../h264/configfile.h"
@@ -16,7 +13,6 @@
 #define FCFR_DEBUG_FILENAME "fcfr_dec_rpu_stats.txt"
 #define DECOUTPUT_VIEW0_FILENAME  "H264_Decoder_Output_View0.yuv"
 #define DECOUTPUT_VIEW1_FILENAME  "H264_Decoder_Output_View1.yuv"
-//}}}
 
 //{{{
 static void Configure (InputParameters *p_Inp, int ac, char *av[])
@@ -35,6 +31,7 @@ static void Configure (InputParameters *p_Inp, int ac, char *av[])
 
   fprintf(stdout,"----------------------------- JM %s %s -----------------------------\n", VERSION, EXT_VERSION);
   //fprintf(stdout," Decoder config file                    : %s \n",config_filename);
+
   if(!p_Inp->bDisplayDecParams)
   {
     fprintf(stdout,"--------------------------------------------------------------------------\n");
@@ -44,6 +41,7 @@ static void Configure (InputParameters *p_Inp, int ac, char *av[])
     fprintf(stdout," Input reference file                   : %s \n",p_Inp->reffile);
 
     fprintf(stdout,"--------------------------------------------------------------------------\n");
+
   #ifdef _LEAKYBUCKET_
     fprintf(stdout," Rate_decoder        : %8ld \n",p_Inp->R_decoder);
     fprintf(stdout," B_decoder           : %8ld \n",p_Inp->B_decoder);
@@ -191,24 +189,24 @@ int main (int argc, char **argv) {
   //open decoder;
   iRet = OpenDecoder (&InputParams);
   if (iRet != DEC_OPEN_NOERR) {
-    fprintf(stderr, "Open encoder failed: 0x%x!\n", iRet);
+    fprintf (stderr, "Open encoder failed: 0x%x!\n", iRet);
     return -1; //failed;
   }
 
   //decoding;
   do {
-    iRet = DecodeOneFrame(&pDecPicList);
+    iRet = DecodeOneFrame (&pDecPicList);
     if (iRet==DEC_EOS || iRet==DEC_SUCCEED) {
       //process the decoded picture, output or display;
-      iFramesOutput += WriteOneFrame(pDecPicList, hFileDecOutput0, hFileDecOutput1, 0);
+      iFramesOutput += WriteOneFrame (pDecPicList, hFileDecOutput0, hFileDecOutput1, 0);
       iFramesDecoded++;
       }
     else
       //error handling;
       fprintf (stderr, "Error in decoding process: 0x%x\n", iRet);
-  } while ((iRet == DEC_SUCCEED) &&
-           ((p_Dec->p_Inp->iDecFrmNum==0) ||
-            (iFramesDecoded<p_Dec->p_Inp->iDecFrmNum)));
+    } while ((iRet == DEC_SUCCEED) &&
+             ((p_Dec->p_Inp->iDecFrmNum == 0) ||
+              (iFramesDecoded<p_Dec->p_Inp->iDecFrmNum)));
 
   iRet = FinitDecoder (&pDecPicList);
   iFramesOutput += WriteOneFrame (pDecPicList, hFileDecOutput0, hFileDecOutput1 , 1);

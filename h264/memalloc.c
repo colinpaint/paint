@@ -545,7 +545,7 @@ int get_mem3D_spp(StorablePicturePtr ****array3D, int dim0, int dim1, int dim2)
   return mem_size;
 }
 //}}}
-
+//{{{
 /*!
  ************************************************************************
  * \brief
@@ -568,7 +568,8 @@ int get_mem2Dmv(MotionVector ***array2D, int dim0, int dim1)
 
   return dim0 * (sizeof(MotionVector*) + dim1 * sizeof(MotionVector));
 }
-
+//}}}
+//{{{
 /*!
  ************************************************************************
  * \brief
@@ -592,7 +593,8 @@ int get_mem3Dmv(MotionVector ****array3D, int dim0, int dim1, int dim2)
 
   return mem_size;
 }
-
+//}}}
+//{{{
 /*!
  ************************************************************************
  * \brief
@@ -616,7 +618,8 @@ int get_mem4Dmv(MotionVector *****array4D, int dim0, int dim1, int dim2, int dim
 
   return mem_size;
 }
-
+//}}}
+//{{{
 /*!
  ************************************************************************
  * \brief
@@ -640,7 +643,8 @@ int get_mem5Dmv(MotionVector ******array5D, int dim0, int dim1, int dim2, int di
 
   return mem_size;
 }
-
+//}}}
+//{{{
 /*!
  ************************************************************************
  * \brief
@@ -664,7 +668,8 @@ int get_mem6Dmv(MotionVector *******array6D, int dim0, int dim1, int dim2, int d
 
   return mem_size;
 }
-
+//}}}
+//{{{
 /*!
  ************************************************************************
  * \brief
@@ -689,7 +694,8 @@ int get_mem7Dmv(MotionVector ********array7D, int dim0, int dim1, int dim2, int 
   return mem_size;
 }
 
-
+//}}}
+//{{{
 /*!
  ************************************************************************
  * \brief
@@ -714,7 +720,8 @@ void free_mem2D_spp(StorablePicturePtr **array2D)
   }
 }
 
-
+//}}}
+//{{{
 /*!
  ************************************************************************
  * \brief
@@ -734,8 +741,8 @@ void free_mem3D_spp(StorablePicturePtr ***array3D)
     error ("free_mem3D_spp: trying to free unused memory",100);
   }
 }
-
-
+//}}}
+//{{{
 /*!
  ************************************************************************
  * \brief
@@ -759,8 +766,8 @@ void free_mem2Dmv(MotionVector **array2D)
     error ("free_mem2Dmv: trying to free unused memory",100);
   }
 }
-
-
+//}}}
+//{{{
 /*!
  ************************************************************************
  * \brief
@@ -780,7 +787,8 @@ void free_mem3Dmv(MotionVector ***array3D)
     error ("free_mem3Dmv: trying to free unused memory",100);
   }
 }
-
+//}}}
+//{{{
 /*!
  ************************************************************************
  * \brief
@@ -800,7 +808,8 @@ void free_mem4Dmv(MotionVector ****array4D)
     error ("free_mem4Dmv: trying to free unused memory",100);
   }
 }
-
+//}}}
+//{{{
 /*!
  ************************************************************************
  * \brief
@@ -820,7 +829,8 @@ void free_mem5Dmv(MotionVector *****array5D)
     error ("free_mem5Dmv: trying to free unused memory",100);
   }
 }
-
+//}}}
+//{{{
 /*!
  ************************************************************************
  * \brief
@@ -840,6 +850,7 @@ void free_mem6Dmv(MotionVector ******array6D)
     error ("free_mem6Dmv: trying to free unused memory",100);
   }
 }
+//}}}
 
 /*!
  ************************************************************************

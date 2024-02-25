@@ -273,7 +273,7 @@ static void img2buf_endian (imgpel** imgX, unsigned char* buf, int size_x, int s
    *    Output file
    ************************************************************************
    */
-  void flush_pending_output(VideoParameters *p_Vid, int p_out)
+  void flush_pending_output (VideoParameters *p_Vid, int p_out)
   {
     if (p_Vid->pending_output_state != FRAME)
     {
@@ -307,7 +307,7 @@ static void img2buf_endian (imgpel** imgX, unsigned char* buf, int size_x, int s
    *    Output file
    ************************************************************************
    */
-  void write_picture(VideoParameters *p_Vid, StorablePicture *p, int p_out, int real_structure)
+  void write_picture (VideoParameters *p_Vid, StorablePicture *p, int p_out, int real_structure)
   {
      int i, add;
 
@@ -428,7 +428,7 @@ static void img2buf_endian (imgpel** imgX, unsigned char* buf, int size_x, int s
    *    real picture structure
    ************************************************************************
    */
-  void write_picture(VideoParameters *p_Vid, StorablePicture *p, int p_out, int real_structure)
+  void write_picture (VideoParameters *p_Vid, StorablePicture *p, int p_out, int real_structure)
   {
     write_out_picture(p_Vid, p, p_out);
   }
@@ -437,7 +437,7 @@ static void img2buf_endian (imgpel** imgX, unsigned char* buf, int size_x, int s
 #endif
 
 //{{{
-static void allocate_p_dec_pic(VideoParameters *p_Vid, DecodedPicList *pDecPic, StorablePicture *p, int iLumaSize, int iFrameSize, int iLumaSizeX, int iLumaSizeY, int iChromaSizeX, int iChromaSizeY)
+static void allocate_p_dec_pic (VideoParameters *p_Vid, DecodedPicList *pDecPic, StorablePicture *p, int iLumaSize, int iFrameSize, int iLumaSizeX, int iLumaSizeY, int iChromaSizeX, int iChromaSizeY)
 {
   int symbol_size_in_bytes = ((p_Vid->pic_unit_bitsize_on_disk+7) >> 3);
 
@@ -471,7 +471,7 @@ static void allocate_p_dec_pic(VideoParameters *p_Vid, DecodedPicList *pDecPic, 
 *    Output file
 ************************************************************************
 */
-static void write_out_picture(VideoParameters *p_Vid, StorablePicture *p, int p_out)
+static void write_out_picture (VideoParameters *p_Vid, StorablePicture *p, int p_out)
 {
   InputParameters *p_Inp = p_Vid->p_Inp;
   DecodedPicList *pDecPic;
@@ -530,8 +530,6 @@ static void write_out_picture(VideoParameters *p_Vid, StorablePicture *p, int p_
   if (p_out == -1)
     return;
 
-
-
   // KS: this buffer should actually be allocated only once, but this is still much faster than the previous version
   pDecPic = get_one_avail_dec_pic_from_list(p_Vid->pDecOuputPic, 0, 0);
   if( (pDecPic->pY == NULL)
@@ -553,7 +551,6 @@ static void write_out_picture(VideoParameters *p_Vid, StorablePicture *p, int p_
   {
     no_mem_exit("write_out_picture: buf");
   }
-
 
   if(rgb_output)
   {
@@ -684,7 +681,7 @@ static void write_out_picture(VideoParameters *p_Vid, StorablePicture *p, int p_
  *    Initialize output buffer for direct output
  ************************************************************************
  */
-void init_out_buffer(VideoParameters *p_Vid)
+void init_out_buffer (VideoParameters *p_Vid)
 {
   p_Vid->out_buffer = alloc_frame_store();
 
@@ -703,10 +700,11 @@ void init_out_buffer(VideoParameters *p_Vid)
  *    Uninitialize output buffer for direct output
  ************************************************************************
  */
-void uninit_out_buffer(VideoParameters *p_Vid)
+void uninit_out_buffer (VideoParameters *p_Vid)
 {
   free_frame_store(p_Vid->out_buffer);
   p_Vid->out_buffer=NULL;
+
 #if (PAIR_FIELDS_IN_OUTPUT)
   flush_pending_output(p_Vid, p_Vid->p_out);
   free (p_Vid->pending_output);
@@ -721,7 +719,7 @@ void uninit_out_buffer(VideoParameters *p_Vid)
  *    Initialize picture memory with (Y:0,U:128,V:128)
  ************************************************************************
  */
-void clear_picture(VideoParameters *p_Vid, StorablePicture *p)
+void clear_picture (VideoParameters *p_Vid, StorablePicture *p)
 {
   int i,j;
 
@@ -757,7 +755,7 @@ void clear_picture(VideoParameters *p_Vid, StorablePicture *p)
  *    Output file
  ************************************************************************
  */
-void write_unpaired_field(VideoParameters *p_Vid, FrameStore* fs, int p_out)
+void write_unpaired_field (VideoParameters *p_Vid, FrameStore* fs, int p_out)
 {
   StorablePicture *p;
   assert (fs->is_used<3);
@@ -815,7 +813,7 @@ void write_unpaired_field(VideoParameters *p_Vid, FrameStore* fs, int p_out)
  *    Output file
  ************************************************************************
  */
-void flush_direct_output(VideoParameters *p_Vid, int p_out)
+void flush_direct_output (VideoParameters *p_Vid, int p_out)
 {
   write_unpaired_field(p_Vid, p_Vid->out_buffer, p_out);
 
@@ -842,7 +840,7 @@ void flush_direct_output(VideoParameters *p_Vid, int p_out)
  *    Output file
  ************************************************************************
  */
-void write_stored_frame( VideoParameters *p_Vid, FrameStore *fs, int p_out)
+void write_stored_frame (VideoParameters *p_Vid, FrameStore *fs, int p_out)
 {
   // make sure no direct output field is pending
   flush_direct_output(p_Vid, p_out);
@@ -877,7 +875,7 @@ void write_stored_frame( VideoParameters *p_Vid, FrameStore *fs, int p_out)
  *    Output file
  ************************************************************************
  */
-void direct_output(VideoParameters *p_Vid, StorablePicture *p, int p_out)
+void direct_output (VideoParameters *p_Vid, StorablePicture *p, int p_out)
 {
   InputParameters *p_Inp = p_Vid->p_Inp;
   if (p->structure==FRAME)
