@@ -17,7 +17,6 @@
 
 #include "io_video.h"
 #include "io_raw.h"
-#include "io_tiff.h"
 
 extern int ParseSizeFromString           (VideoDataFile *input_file, int *xlen, int *ylen, double *fps);
 extern void ParseFrameNoFormatFromString (VideoDataFile *input_file);

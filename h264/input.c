@@ -833,7 +833,6 @@ int read_one_frame (VideoParameters *p_Vid, VideoDataFile *input_file, int Frame
   {
     if (input_file->vdtype == VIDEO_TIFF)
     {
-      file_read = ReadTIFFImage     (p_Inp, input_file, FrameNoInFile, source, p_Vid->buf);
     }
     else
     {

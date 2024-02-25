@@ -1,4 +1,4 @@
-
+//{{{
 /*!
  ************************************************************************
  * \file image.h
@@ -8,6 +8,7 @@
  *
  ************************************************************************
  */
+//}}}
 
 #ifndef _IMAGE_H_
 #define _IMAGE_H_
@@ -41,4 +42,3 @@ extern void init_slice(VideoParameters *p_Vid, Slice *currSlice);
 extern void decode_slice(Slice *currSlice, int current_header);
 
 #endif
-
