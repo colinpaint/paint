@@ -1,4 +1,4 @@
-
+//{{{
 /*!
  *****************************************************************************
  *
@@ -13,13 +13,16 @@
  *    - Karsten Suehring
  ******************************************************************************
  */
+//}}}
 
+//{{{
 #include "global.h"
 #include "elements.h"
 #include "defines.h"
 #include "header.h"
 #include "fmo.h"
 #include "fast_memory.h"
+//}}}
 
 //#define PRINT_FMO_MAPS
 
@@ -31,7 +34,7 @@ static void FmoGenerateType4MapUnitMap (VideoParameters *p_Vid, unsigned PicSize
 static void FmoGenerateType5MapUnitMap (VideoParameters *p_Vid, unsigned PicSizeInMapUnits, Slice *currSlice );
 static void FmoGenerateType6MapUnitMap (VideoParameters *p_Vid, unsigned PicSizeInMapUnits );
 
-
+//{{{
 /*!
  ************************************************************************
  * \brief
@@ -104,8 +107,8 @@ static int FmoGenerateMapUnitToSliceGroupMap (VideoParameters *p_Vid, Slice *cur
   }
   return 0;
 }
-
-
+//}}}
+//{{{
 /*!
  ************************************************************************
  * \brief
@@ -159,8 +162,9 @@ static int FmoGenerateMbToSliceGroupMap (VideoParameters *p_Vid, Slice *pSlice)
     }
   return 0;
 }
+//}}}
 
-
+//{{{
 /*!
  ************************************************************************
  * \brief
@@ -212,8 +216,8 @@ int fmo_init(VideoParameters *p_Vid, Slice *pSlice)
 
   return 0;
 }
-
-
+//}}}
+//{{{
 /*!
  ************************************************************************
  * \brief
@@ -234,8 +238,8 @@ int FmoFinit(VideoParameters *p_Vid)
   }
   return 0;
 }
-
-
+//}}}
+//{{{
 /*!
  ************************************************************************
  * \brief
@@ -249,8 +253,8 @@ int FmoGetNumberOfSliceGroup(VideoParameters *p_Vid)
 {
   return p_Vid->NumberOfSliceGroups;
 }
-
-
+//}}}
+//{{{
 /*!
  ************************************************************************
  * \brief
@@ -267,8 +271,8 @@ int FmoGetLastMBOfPicture(VideoParameters *p_Vid)
 {
   return FmoGetLastMBInSliceGroup (p_Vid, FmoGetNumberOfSliceGroup(p_Vid)-1);
 }
-
-
+//}}}
+//{{{
 /*!
  ************************************************************************
  * \brief
@@ -289,8 +293,8 @@ int FmoGetLastMBInSliceGroup (VideoParameters *p_Vid, int SliceGroup)
   return -1;
 
 }
-
-
+//}}}
+//{{{
 /*!
  ************************************************************************
  * \brief
@@ -308,8 +312,8 @@ int FmoGetSliceGroupId (VideoParameters *p_Vid, int mb)
   assert (p_Vid->MbToSliceGroupMap != NULL);
   return p_Vid->MbToSliceGroupMap[mb];
 }
-
-
+//}}}
+//{{{
 /*!
  ************************************************************************
  * \brief
@@ -334,8 +338,9 @@ int FmoGetNextMBNr (VideoParameters *p_Vid, int CurrentMbNr)
   else
     return CurrentMbNr;
 }
+//}}}
 
-
+//{{{
 /*!
  ************************************************************************
  * \brief
@@ -360,8 +365,8 @@ static void FmoGenerateType0MapUnitMap (VideoParameters *p_Vid, unsigned PicSize
   }
   while( i < PicSizeInMapUnits );
 }
-
-
+//}}}
+//{{{
 /*!
  ************************************************************************
  * \brief
@@ -379,7 +384,8 @@ static void FmoGenerateType1MapUnitMap (VideoParameters *p_Vid, unsigned PicSize
                                 %(pps->num_slice_groups_minus1+1);
   }
 }
-
+//}}}
+//{{{
 /*!
  ************************************************************************
  * \brief
@@ -408,8 +414,8 @@ static void FmoGenerateType2MapUnitMap (VideoParameters *p_Vid, unsigned PicSize
         p_Vid->MapUnitToSliceGroupMap[ y * p_Vid->PicWidthInMbs + x ] = iGroup;
  }
 }
-
-
+//}}}
+//{{{
 /*!
  ************************************************************************
  * \brief
@@ -486,7 +492,8 @@ static void FmoGenerateType3MapUnitMap (VideoParameters *p_Vid, unsigned PicSize
   }
 
 }
-
+//}}}
+//{{{
 /*!
  ************************************************************************
  * \brief
@@ -510,7 +517,8 @@ static void FmoGenerateType4MapUnitMap (VideoParameters *p_Vid, unsigned PicSize
         p_Vid->MapUnitToSliceGroupMap[ i ] = 1 - pps->slice_group_change_direction_flag;
 
 }
-
+//}}}
+//{{{
 /*!
  ************************************************************************
  * \brief
@@ -535,7 +543,8 @@ static void FmoGenerateType5MapUnitMap (VideoParameters *p_Vid, unsigned PicSize
             p_Vid->MapUnitToSliceGroupMap[ i * p_Vid->PicWidthInMbs + j ] = 1 - pps->slice_group_change_direction_flag;
 
 }
-
+//}}}
+//{{{
 /*!
  ************************************************************************
  * \brief
@@ -545,11 +554,11 @@ static void FmoGenerateType5MapUnitMap (VideoParameters *p_Vid, unsigned PicSize
  */
 static void FmoGenerateType6MapUnitMap (VideoParameters *p_Vid, unsigned PicSizeInMapUnits )
 {
-  pic_parameter_set_rbsp_t* pps = p_Vid->active_pps; 
+  pic_parameter_set_rbsp_t* pps = p_Vid->active_pps;
   unsigned i;
   for (i=0; i<PicSizeInMapUnits; i++)
   {
     p_Vid->MapUnitToSliceGroupMap[i] = pps->slice_group_id[i];
   }
 }
-
+//}}}

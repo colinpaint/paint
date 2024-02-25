@@ -1,5 +1,4 @@
 //{{{
-
 /*!
  ***********************************************************************
  *  \mainpage
@@ -43,47 +42,41 @@
  ***********************************************************************
  */
 //}}}
-//{{{
-//#include <sys/stat.h>
+ //{{{  includes
+ #include "global.h"
 
-#include "global.h"
-#include "annexb.h"
-#include "image.h"
-#include "memalloc.h"
-#include "mc_prediction.h"
-#include "mbuffer.h"
-#include "leaky_bucket.h"
-#include "fmo.h"
-#include "output.h"
-#include "cabac.h"
-#include "parset.h"
-#include "sei.h"
-#include "erc_api.h"
-#include "quant.h"
-#include "block.h"
-#include "nalu.h"
-#include "img_io.h"
-#include "loopfilter.h"
-//#include "rtp.h"
-#include "input.h"
-#include "output.h"
-#include "h264decoder.h"
-#include "dec_statistics.h"
+ #include "annexb.h"
+ #include "image.h"
+ #include "memalloc.h"
+ #include "mc_prediction.h"
+ #include "mbuffer.h"
+ #include "leaky_bucket.h"
+ #include "fmo.h"
+ #include "output.h"
+ #include "cabac.h"
+ #include "parset.h"
+ #include "sei.h"
+ #include "erc_api.h"
+ #include "quant.h"
+ #include "block.h"
+ #include "nalu.h"
+ #include "img_io.h"
+ #include "loopfilter.h"
+ //#include "rtp.h"
+ #include "input.h"
+ #include "output.h"
+ #include "h264decoder.h"
+ #include "dec_statistics.h"
 
-#define LOGFILE     "log.dec"
-#define DATADECFILE "dataDec.txt"
-#define TRACEFILE   "trace_dec.txt"
-//}}}
+ #define LOGFILE     "log.dec"
+ #define DATADECFILE "dataDec.txt"
+ #define TRACEFILE   "trace_dec.txt"
+ //}}}
 
-// Decoder definition. This should be the only global variable in the entire
-// software. Global variables should be avoided.
 DecoderParams  *p_Dec;
 char errortext[ET_SIZE];
 
-// Prototypes of static functions
-static void Report      (VideoParameters *p_Vid);
-static void init        (VideoParameters *p_Vid);
-static void free_slice  (Slice *currSlice);
+static void free_slice  (Slice* currSlic);
 
 //{{{
 /*!
@@ -112,7 +105,7 @@ void error(char *text, int code)
 }
 //}}}
 //{{{
-static void reset_dpb( VideoParameters *p_Vid, DecodedPictureBuffer *p_Dpb )
+static void reset_dpb (VideoParameters* p_Vid, DecodedPictureBuffer* p_Dpb )
 {
   p_Dpb->p_Vid = p_Vid;
   p_Dpb->init_done = 0;
@@ -128,7 +121,7 @@ static void reset_dpb( VideoParameters *p_Vid, DecodedPictureBuffer *p_Dpb )
  *    Video Parameters VideoParameters *p_Vid
  ***********************************************************************
  */
-static void alloc_video_params( VideoParameters **p_Vid)
+static void alloc_video_params(VideoParameters **p_Vid)
 {
   int i;
   if ((*p_Vid   =  (VideoParameters *) calloc(1, sizeof(VideoParameters)))==NULL)
@@ -183,7 +176,7 @@ static void alloc_video_params( VideoParameters **p_Vid)
  *    Input Parameters InputParameters *p_Vid
  ***********************************************************************
  */
-static void alloc_params( InputParameters **p_Inp )
+static void alloc_params (InputParameters **p_Inp )
 {
   if ((*p_Inp = (InputParameters *) calloc(1, sizeof(InputParameters)))==NULL)
     no_mem_exit("alloc_params: p_Inp");
@@ -198,7 +191,7 @@ static void alloc_params( InputParameters **p_Inp )
  *    Decoder Parameters
  ***********************************************************************
  */
-static int alloc_decoder( DecoderParams **p_Dec)
+static int alloc_decoder (DecoderParams **p_Dec)
 {
   if ((*p_Dec = (DecoderParams *) calloc(1, sizeof(DecoderParams)))==NULL)
   {
@@ -225,7 +218,7 @@ static int alloc_decoder( DecoderParams **p_Dec)
  *    Image Parameters VideoParameters *p_Vid
  ***********************************************************************
  */
-static void free_img( VideoParameters *p_Vid)
+static void free_img (VideoParameters* p_Vid)
 {
   int i;
   if (p_Vid != NULL)
@@ -310,7 +303,7 @@ static void free_img( VideoParameters *p_Vid)
 }
 //}}}
 //{{{
-void FreeDecPicList(DecodedPicList *pDecPicList)
+void FreeDecPicList (DecodedPicList* pDecPicList)
 {
   while(pDecPicList)
   {
@@ -334,7 +327,7 @@ void FreeDecPicList(DecodedPicList *pDecPicList)
  *    Initilize some arrays
  ***********************************************************************
  */
-static void init(VideoParameters *p_Vid)  //!< video parameters
+static void init (VideoParameters* p_Vid)  //!< video parameters
 {
   //int i;
   InputParameters *p_Inp = p_Vid->p_Inp;
@@ -419,7 +412,7 @@ static void init(VideoParameters *p_Vid)  //!< video parameters
  *    Initialize FREXT variables
  ***********************************************************************
  */
-void init_frext(VideoParameters *p_Vid)  //!< video parameters
+void init_frext (VideoParameters* p_Vid)  //!< video parameters
 {
   //pel bitdepth init
   p_Vid->bitdepth_luma_qp_scale   = 6 * (p_Vid->bitdepth_luma - 8);
@@ -495,7 +488,7 @@ void init_frext(VideoParameters *p_Vid)  //!< video parameters
  *    None
  ************************************************************************
  */
-static void Report(VideoParameters *p_Vid)
+static void Report (VideoParameters* p_Vid)
 {
   static const char yuv_formats[4][4]= { {"400"}, {"420"}, {"422"}, {"444"} };
   pic_parameter_set_rbsp_t *active_pps = p_Vid->active_pps;
@@ -665,7 +658,7 @@ static void Report(VideoParameters *p_Vid)
  ************************************************************************
  */
 
-DataPartition *AllocPartition(int n)
+DataPartition *AllocPartition (int n)
 {
   DataPartition *partArr, *dataPart;
   int i;
@@ -712,7 +705,7 @@ DataPartition *AllocPartition(int n)
  *    n must be the same as for the corresponding call of AllocPartition
  ************************************************************************
  */
-void FreePartition (DataPartition *dp, int n)
+void FreePartition (DataPartition* dp, int n)
 {
   int i;
 
@@ -739,7 +732,7 @@ void FreePartition (DataPartition *dp, int n)
  *    Input Parameters InputParameters *p_Inp,  VideoParameters *p_Vid
  ************************************************************************
  */
-Slice *malloc_slice(InputParameters *p_Inp, VideoParameters *p_Vid)
+Slice* malloc_slice (InputParameters* p_Inp, VideoParameters* p_Vid)
 {
   int i, j, memory_size = 0;
   Slice *currSlice;
@@ -809,7 +802,7 @@ Slice *malloc_slice(InputParameters *p_Inp, VideoParameters *p_Vid)
  *    Input Parameters Slice *currSlice
  ************************************************************************
  */
-static void free_slice(Slice *currSlice)
+static void free_slice (Slice *currSlice)
 {
   int i;
 
@@ -870,7 +863,7 @@ static void free_slice(Slice *currSlice)
  *     Number of allocated bytes
  ***********************************************************************
  */
-int init_global_buffers(VideoParameters *p_Vid, int layer_id)
+int init_global_buffers (VideoParameters* p_Vid, int layer_id)
 {
   int memory_size=0;
   int i;
@@ -988,7 +981,7 @@ int init_global_buffers(VideoParameters *p_Vid, int layer_id)
  *
  ************************************************************************
  */
-void free_layer_buffers(VideoParameters *p_Vid, int layer_id)
+void free_layer_buffers (VideoParameters* p_Vid, int layer_id)
 {
   CodingParameters *cps = p_Vid->p_EncodePar[layer_id];
 
@@ -1064,7 +1057,7 @@ void free_layer_buffers(VideoParameters *p_Vid, int layer_id)
 }
 //}}}
 //{{{
-void free_global_buffers(VideoParameters *p_Vid)
+void free_global_buffers (VideoParameters* p_Vid)
 {
   if(p_Vid->dec_picture)
   {
@@ -1087,7 +1080,7 @@ void report_stats_on_error(void)
 //}}}
 
 //{{{
-void ClearDecPicList(VideoParameters *p_Vid)
+void ClearDecPicList (VideoParameters* p_Vid)
 {
   DecodedPicList *pPic = p_Vid->pDecOuputPic, *pPrior = NULL;
   //find the head first;
@@ -1111,7 +1104,7 @@ void ClearDecPicList(VideoParameters *p_Vid)
 }
 //}}}
 //{{{
-DecodedPicList *get_one_avail_dec_pic_from_list(DecodedPicList *pDecPicList, int b3D, int view_id)
+DecodedPicList* get_one_avail_dec_pic_from_list (DecodedPicList* pDecPicList, int b3D, int view_id)
 {
   DecodedPicList *pPic = pDecPicList, *pPrior = NULL;
   if(b3D)
@@ -1148,7 +1141,7 @@ Return:
        0: NOERROR;
        <0: ERROR;
 ************************************/
-int OpenDecoder(InputParameters *p_Inp)
+int OpenDecoder (InputParameters* p_Inp)
 {
   int iRet;
   DecoderParams *pDecoder;
@@ -1266,7 +1259,7 @@ Return:
        1: Finished decoding;
        others: Error Code;
 ************************************/
-int DecodeOneFrame(DecodedPicList **ppDecPicList)
+int DecodeOneFrame (DecodedPicList** ppDecPicList)
 {
   int iRet;
   DecoderParams *pDecoder = p_Dec;
@@ -1291,7 +1284,7 @@ int DecodeOneFrame(DecodedPicList **ppDecPicList)
 }
 //}}}
 //{{{
-int FinitDecoder(DecodedPicList **ppDecPicList)
+int FinitDecoder (DecodedPicList** ppDecPicList)
 {
   DecoderParams *pDecoder = p_Dec;
   if(!pDecoder)
@@ -1393,7 +1386,7 @@ int CloseDecoder()
 
 #if (MVC_EXTENSION_ENABLE)
 //{{{
-void OpenOutputFiles(VideoParameters *p_Vid, int view0_id, int view1_id)
+void OpenOutputFiles (VideoParameters* p_Vid, int view0_id, int view1_id)
 {
   InputParameters *p_Inp = p_Vid->p_Inp;
   char out_ViewFileName[2][FILE_NAME_SIZE+15], chBuf[FILE_NAME_SIZE], *pch;
@@ -1437,7 +1430,7 @@ void OpenOutputFiles(VideoParameters *p_Vid, int view0_id, int view1_id)
 #endif
 
 //{{{
-void set_global_coding_par(VideoParameters *p_Vid, CodingParameters *cps)
+void set_global_coding_par (VideoParameters* p_Vid, CodingParameters* cps)
 {
     p_Vid->bitdepth_chroma = 0;
     p_Vid->width_cr        = 0;

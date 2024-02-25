@@ -56,6 +56,7 @@ extern "C" {
 using namespace std;
 using namespace utils;
 //}}}
+#define kDump264 
 constexpr bool kMotionVectors = true;
 namespace {
   //{{{
@@ -653,10 +654,12 @@ public:
     #endif
     //}}}
 
-    #ifdef _WIN32
-      FILE* h264File = fopen ("c:/tv/test.264", "wb");
-    #else
-      FILE* h264File = fopen ("/home/pi/tv/test.264", "wb");
+    #ifdef kDump264
+      #ifdef _WIN32
+        FILE* h264File = fopen ("c:/tv/test.264", "wb");
+      #else
+        FILE* h264File = fopen ("/home/pi/tv/test.264", "wb");
+      #endif
     #endif
 
     thread ([=]() {
@@ -677,7 +680,10 @@ public:
             uint8_t* buffer = (uint8_t*)malloc (pidInfo.getBufSize());
             memcpy (buffer, pidInfo.mBuffer, pidInfo.getBufSize());
             mPes.emplace_back (cPes (buffer, pidInfo.getBufSize(), pidInfo.getPts(), info));
-            fwrite (buffer, 1, pidInfo.getBufSize(), h264File);
+
+            #ifdef kDump264
+              fwrite (buffer, 1, pidInfo.getBufSize(), h264File);
+            #endif
             }
           }
         //}}}
@@ -710,7 +716,9 @@ public:
       //}}}
       delete[] chunk;
       fclose (file);
-      fclose (h264File);
+      #ifdef kDump264
+        fclose (h264File);
+      #endif
 
       mDecoder->flush();
       size_t i = skipToI (0);

@@ -62,13 +62,13 @@ static int WriteOneFrame (DecodedPicList *pDecPic, int hFileOutput0, int hFileOu
 // if bOutputAllFrames is 1, then output all valid frames to file onetime;
 // else output the first valid frame and move the buffer to the end of list;
 
-  int iOutputFrame=0;
-  DecodedPicList *pPic = pDecPic;
+  int iOutputFrame = 0;
+  DecodedPicList* pPic = pDecPic;
 
   if (pPic && (((pPic->iYUVStorageFormat==2) && pPic->bValid==3) ||
                ((pPic->iYUVStorageFormat!=2) && pPic->bValid==1)) ) {
     int i, iWidth, iHeight, iStride, iWidthUV, iHeightUV, iStrideUV;
-    byte *pbBuf;
+    byte* pbBuf;
     int hFileOutput;
     size_t res;
 
@@ -92,75 +92,77 @@ static int WriteOneFrame (DecodedPicList *pDecPic, int hFileOutput0, int hFileOu
       else
         hFileOutput = hFileOutput0;
       if(hFileOutput >=0) {
-        //Y;
+        //{{{  Y;
         pbBuf = pPic->pY;
         for(i=0; i<iHeight; i++) {
           res = write(hFileOutput, pbBuf+i*iStride, iWidth);
           if (-1==res)
             error ("error writing to output file.", 600);
         }
-
-        if(pPic->iYUVFormat != YUV400) {
-         //U;
-         pbBuf = pPic->pU;
-         for(i=0; i<iHeightUV; i++) {
-           res = write(hFileOutput, pbBuf+i*iStrideUV, iWidthUV);
-           if (-1==res)
-             error ("error writing to output file.", 600);
-}
-         //V;
-         pbBuf = pPic->pV;
-         for(i=0; i<iHeightUV; i++) {
-           res = write(hFileOutput, pbBuf+i*iStrideUV, iWidthUV);
-           if (-1==res)
-             error ("error writing to output file.", 600);
-         }
-        }
+        //}}}
+        if (pPic->iYUVFormat != YUV400) {
+          //{{{  U;
+          pbBuf = pPic->pU;
+          for(i=0; i<iHeightUV; i++) {
+            res = write(hFileOutput, pbBuf+i*iStrideUV, iWidthUV);
+            if (-1==res)
+              error ("error writing to output file.", 600);
+            }
+          //}}}
+          //{{{  V;
+          pbBuf = pPic->pV;
+          for(i=0; i<iHeightUV; i++) {
+            res = write(hFileOutput, pbBuf+i*iStrideUV, iWidthUV);
+            if (-1==res)
+              error ("error writing to output file.", 600);
+            }
+          //}}}
+          }
 
         iOutputFrame++;
-      }
+        }
 
       if (pPic->iYUVStorageFormat == 2) {
         hFileOutput = ((pPic->iViewId>>16)&0xffff)? hFileOutput1 : hFileOutput0;
         if(hFileOutput>=0) {
           int iPicSize =iHeight*iStride;
-          //Y;
+          //{{{  Y;
           pbBuf = pPic->pY+iPicSize;
           for(i=0; i<iHeight; i++) {
             res = write(hFileOutput, pbBuf+i*iStride, iWidth);
             if (-1==res)
               error ("error writing to output file.", 600);
           }
-
+          //}}}
           if(pPic->iYUVFormat != YUV400) {
-           iPicSize = iHeightUV*iStrideUV;
-           //U;
-           pbBuf = pPic->pU+iPicSize;
-           for(i=0; i<iHeightUV; i++) {
-             res = write(hFileOutput, pbBuf+i*iStrideUV, iWidthUV);
-             if (-1==res)
-               error ("error writing to output file.", 600);
-           }
-           //V;
-           pbBuf = pPic->pV+iPicSize;
-           for(i=0; i<iHeightUV; i++) {
-             res = write(hFileOutput, pbBuf+i*iStrideUV, iWidthUV);
-             if (-1==res)
-               error ("error writing to output file.", 600);
-           }
-          }
+            iPicSize = iHeightUV*iStrideUV;
+            //{{{  U;
+            pbBuf = pPic->pU+iPicSize;
+            for(i=0; i<iHeightUV; i++) {
+              res = write(hFileOutput, pbBuf+i*iStrideUV, iWidthUV);
+              if (-1==res)
+                error ("error writing to output file.", 600);
+            }
+            //}}}
+            //{{{  V;
+            pbBuf = pPic->pV+iPicSize;
+            for(i=0; i<iHeightUV; i++) {
+              res = write(hFileOutput, pbBuf+i*iStrideUV, iWidthUV);
+              if (-1==res)
+                error ("error writing to output file.", 600);
+            }
+            //}}}
+            }
 
           iOutputFrame++;
+          }
         }
-      }
 
       fprintf(stdout, "\nOutput frame: %d/%d\n", pPic->iPOC, pPic->iViewId);
       pPic->bValid = 0;
       pPic = pPic->pNext;
-    }while(pPic != NULL && pPic->bValid && bOutputAllFrames);
-  }
-  else
-    fprintf(stdout, "\nNone frame output\n");
+      }while(pPic != NULL && pPic->bValid && bOutputAllFrames);
+    }
 
   return iOutputFrame;
   }

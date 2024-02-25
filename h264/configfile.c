@@ -1,3 +1,4 @@
+//{{{
 
 /*!
  ***********************************************************************
@@ -55,11 +56,10 @@
  * and their respective parameters
  ***********************************************************************
  */
-
+//}}}
 #define INCLUDED_BY_CONFIGFILE_C
 
 #include <sys/stat.h>
-
 #include "global.h"
 #include "memalloc.h"
 #include "config_common.h"
@@ -70,6 +70,7 @@ InputParameters cfgparams;
 
 static void PatchInp                (InputParameters *p_Inp);
 
+//{{{
 /*!
  ***********************************************************************
  * \brief
@@ -100,8 +101,8 @@ void JMDecHelpExit (void)
 
   exit(-1);
 }
-
-
+//}}}
+//{{{
 /*!
 ************************************************************************
 * \brief
@@ -115,7 +116,9 @@ static inline void conf_read_check (int val, int expected)
     error ("init_conf: error reading from config file", 500);
   }
 }
+//}}}
 
+//{{{
 /*!
  ***********************************************************************
  * \brief
@@ -205,25 +208,25 @@ void ParseCommand(InputParameters *p_Inp, int ac, char *av[])
       printf ("\n");
       free (content);
       CLcount += 2;
-    } 
+    }
     else if (0 == strncmp (av[CLcount], "-i", 2) || 0 == strncmp (av[CLcount], "-I", 2))  // A file parameter?
     {
       strncpy(p_Inp->infile, av[CLcount+1], FILE_NAME_SIZE-1);
       p_Inp->infile[FILE_NAME_SIZE-1] = 0;
       CLcount += 2;
-    } 
+    }
     else if (0 == strncmp (av[CLcount], "-r", 2) || 0 == strncmp (av[CLcount], "-R", 2))  // A file parameter?
     {
       strncpy(p_Inp->reffile, av[CLcount+1], FILE_NAME_SIZE-1);
       p_Inp->reffile[FILE_NAME_SIZE-1] = 0;
       CLcount += 2;
-    } 
+    }
     else if (0 == strncmp (av[CLcount], "-o", 2) || 0 == strncmp (av[CLcount], "-O", 2))  // A file parameter?
     {
       strncpy(p_Inp->outfile, av[CLcount+1], FILE_NAME_SIZE-1);
       p_Inp->outfile[FILE_NAME_SIZE-1] = 0;
       CLcount += 2;
-    } 
+    }
     else if (0 == strncmp (av[CLcount], "-s", 2) || 0 == strncmp (av[CLcount], "-S", 2))  // A file parameter?
     {
       p_Inp->silent = 1;
@@ -239,7 +242,7 @@ void ParseCommand(InputParameters *p_Inp, int ac, char *av[])
     {
       conf_read_check (sscanf(av[CLcount+1],"%d", &p_Inp->DecodeAllLayers), 1);
       CLcount += 2;
-    } 
+    }
 #endif
     else if (0 == strncmp (av[CLcount], "-p", 2) || 0 == strncmp (av[CLcount], "-P", 2))  // A config change?
     {
@@ -271,7 +274,7 @@ void ParseCommand(InputParameters *p_Inp, int ac, char *av[])
           if (*source == '=')  // The Parser expects whitespace before and after '='
           {
             *destin++=' '; *destin++='='; *destin++=' ';  // Hence make sure we add it
-          } 
+          }
           else
             *destin++=*source;
           source++;
@@ -298,8 +301,8 @@ void ParseCommand(InputParameters *p_Inp, int ac, char *av[])
   if (p_Inp->bDisplayDecParams)
     DisplayParams(Map, "Decoder Parameters");
 }
-
-
+//}}}
+//{{{
 /*!
  ***********************************************************************
  * \brief
@@ -315,3 +318,4 @@ static void PatchInp (InputParameters *p_Inp)
     p_Inp->dpb_plus[1] = imax(1, p_Inp->dpb_plus[1]);
 }
 
+//}}}

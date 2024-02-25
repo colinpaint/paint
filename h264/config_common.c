@@ -1,3 +1,4 @@
+//{{{
 /*!
  ***********************************************************************
  * \file
@@ -54,18 +55,19 @@
  * and their respective parameters
  ***********************************************************************
  */
-
+//}}}
+//{{{
 #include <sys/stat.h>
 
 #include "global.h"
 #include "configfile.h"
 #include "memalloc.h"
+//}}}
 
 static int  ParameterNameToMapIndex (Mapping *Map, char *s);
-
-
 #define MAX_ITEMS_TO_PARSE  10000
 
+//{{{
 /*!
  ***********************************************************************
  * \brief
@@ -122,8 +124,8 @@ char *GetConfigFileContent (char *Filename)
   fclose (f);
   return buf;
 }
-
-
+//}}}
+//{{{
 /*!
  ***********************************************************************
  * \brief
@@ -260,7 +262,9 @@ void ParseContent (InputParameters *p_Inp, Mapping *Map, char *buf, int bufsize)
   }
   *p_Inp = cfgparams;
 }
+//}}}
 
+//{{{
 /*!
  ***********************************************************************
  * \brief
@@ -285,7 +289,9 @@ static int ParameterNameToMapIndex (Mapping *Map, char *s)
       i++;
   return -1;
 }
+//}}}
 
+//{{{
 /*!
  ***********************************************************************
  * \brief
@@ -308,7 +314,8 @@ int InitParams(Mapping *Map)
   }
   return -1;
 }
-
+//}}}
+//{{{
 /*!
  ***********************************************************************
  * \brief
@@ -364,13 +371,13 @@ int TestParams(Mapping *Map, int bitdepth_qp_scale[3])
     }
     else if (Map[i].param_limits == 3) // Only used for QPs
     {
-      
+
       if (Map[i].Type == 0)
       {
         int cur_qp = * (int *) (Map[i].Place);
         int min_qp = (int) (Map[i].min_limit - (bitdepth_qp_scale? bitdepth_qp_scale[0]: 0));
         int max_qp = (int) Map[i].max_limit;
-        
+
         if (( cur_qp < min_qp ) || ( cur_qp > max_qp ))
         {
           snprintf(errortext, ET_SIZE, "Error in input parameter %s. Check configuration file. Value should be in [%d, %d] range.", Map[i].TokenName, min_qp, max_qp );
@@ -383,9 +390,8 @@ int TestParams(Mapping *Map, int bitdepth_qp_scale[3])
   }
   return -1;
 }
-
-
-
+//}}}
+//{{{
 /*!
  ***********************************************************************
  * \brief
@@ -421,3 +427,4 @@ int DisplayParams(Mapping *Map, char *message)
   return i;
 }
 
+//}}}
