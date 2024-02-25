@@ -18,9 +18,7 @@
  **************************************************************************
  */
 //}}}
-
-#ifndef _DEFINES_H_
-#define _DEFINES_H_
+#pragma once
 #ifdef TRACE
 #undef TRACE
 #endif
@@ -270,6 +268,3 @@ typedef enum {
 #define ZEROBYTES_SHORTSTARTCODE 2 //indicates the number of zero bytes in the short start-code prefix
 
 #define MAX_PLANE       3
-
-#endif
-

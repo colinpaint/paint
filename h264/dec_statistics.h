@@ -11,9 +11,7 @@
  *
  **************************************************************************
  */
-
-#ifndef _DEC_STATISTICS_H_
-#define _DEC_STATISTICS_H_
+#pragma once
 #include "global.h"
 
 typedef struct dec_stat_parameters
@@ -28,6 +26,3 @@ typedef struct dec_stat_parameters
 
 extern void init_dec_stats  (DecStatParameters *stats);
 extern void delete_dec_stats(DecStatParameters *stats);
-
-
-#endif

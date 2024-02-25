@@ -17,8 +17,7 @@
  **************************************************************************
  */
 
-#ifndef _BIARIDECOD_H_
-#define _BIARIDECOD_H_
+#pragma once
 
 
 /************************************************************************
@@ -96,7 +95,7 @@ static const byte rLPS_table_64x4[64][4]=
 };
 
 
-static const byte AC_next_state_MPS_64[64] =    
+static const byte AC_next_state_MPS_64[64] =
 {
   1,2,3,4,5,6,7,8,9,10,
   11,12,13,14,15,16,17,18,19,20,
@@ -108,7 +107,7 @@ static const byte AC_next_state_MPS_64[64] =
 };
 
 
-static const byte AC_next_state_LPS_64[64] =    
+static const byte AC_next_state_LPS_64[64] =
 {
   0, 0, 1, 2, 2, 4, 4, 5, 6, 7,
   8, 9, 9,11,11,12,13,13,15,15,
@@ -129,5 +128,3 @@ extern void biari_init_context (int qp, BiContextTypePtr ctx, const char* ini);
 extern unsigned int biari_decode_symbol(DecodingEnvironment *dep, BiContextType *bi_ct );
 extern unsigned int biari_decode_symbol_eq_prob(DecodingEnvironmentPtr dep);
 extern unsigned int biari_decode_final(DecodingEnvironmentPtr dep);
-#endif  // BIARIDECOD_H_
-

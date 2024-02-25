@@ -12,8 +12,7 @@
  *
  ************************************************************************
  */
-#ifndef _CONFIG_COMMON_H_
-#define _CONFIG_COMMON_H_
+#pragma once
 
 //! Maps parameter name to its address, type etc.
 typedef struct {
@@ -32,5 +31,3 @@ extern int  InitParams            (Mapping *Map);
 extern int TestParams(Mapping *Map, int bitdepth_qp_scale[3]);
 extern int DisplayParams(Mapping *Map, char *message);
 extern void ParseContent          (InputParameters *p_Inp, Mapping *Map, char *buf, int bufsize);
-#endif
-

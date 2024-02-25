@@ -13,8 +13,7 @@
  ************************************************************************
  */
 //}}}
-#ifndef _TYPES_H_
-#define _TYPES_H_
+#pragma once
 
 typedef enum
 {
@@ -196,5 +195,3 @@ typedef enum {
   WP_MCPREC_MINUS_PLUS0 = 8,
   WP_REGULAR =            9
 } weighted_prediction_types;
-
-#endif

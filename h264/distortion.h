@@ -1,21 +1,19 @@
 /*!
  **************************************************************************
  *  \file distortion.h
- *  \brief  
+ *  \brief
  *     Distortion data header file
  *  \date 2.23.2009,
  *
- *  \author 
+ *  \author
  *   Alexis Michael Tourapis        <alexismt@ieee.org>
  *
  **************************************************************************
  */
-
-#ifndef _DISTORTION_H_
-#define _DISTORTION_H_
+#pragma once
 
 // Distortion data structure. Could be extended in the future to support
-// other data 
+// other data
 typedef struct distortion_data
 {
   int      i4x4rd[4][4];         //! i4x4 rd cost
@@ -26,6 +24,3 @@ typedef struct distortion_data
   int      i16x16rd;
   double   rd_cost;
 } DistortionData;
-
-#endif
-

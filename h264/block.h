@@ -14,9 +14,7 @@
  *
  ************************************************************************
  */
-
-#ifndef _BLOCK_H_
-#define _BLOCK_H_
+#pragma once
 
 #include "global.h"
 #include "transform8x8.h"
@@ -41,9 +39,9 @@ static const unsigned char subblk_offset_x[3][8][4] =
     {0, 0, 0, 0},
     {0, 0, 0, 0},
     {0, 0, 0, 0},
-    {0, 0, 0, 0}, 
+    {0, 0, 0, 0},
   },
-  { 
+  {
     {0, 4, 0, 4},
     {0, 4, 0, 4},
     {0, 4, 0, 4},
@@ -51,7 +49,7 @@ static const unsigned char subblk_offset_x[3][8][4] =
     {0, 0, 0, 0},
     {0, 0, 0, 0},
     {0, 0, 0, 0},
-    {0, 0, 0, 0}, 
+    {0, 0, 0, 0},
   },
   {
     {0, 4, 0, 4},
@@ -61,7 +59,7 @@ static const unsigned char subblk_offset_x[3][8][4] =
     {0, 4, 0, 4},
     {8,12, 8,12},
     {0, 4, 0, 4},
-    {8,12, 8,12}  
+    {8,12, 8,12}
   }
 };
 
@@ -78,7 +76,7 @@ static const unsigned char subblk_offset_y[3][8][4] =
     {0, 0, 0, 0},
     {0, 0, 0, 0}
   },
-  { 
+  {
     {0, 0, 4, 4},
     {8, 8,12,12},
     {0, 0, 4, 4},
@@ -88,7 +86,7 @@ static const unsigned char subblk_offset_y[3][8][4] =
     {0, 0, 0, 0},
     {0, 0, 0, 0}
   },
-  { 
+  {
     {0, 0, 4, 4},
     {0, 0, 4, 4},
     {8, 8,12,12},
@@ -123,5 +121,3 @@ extern void copy_image_data_16x16 (imgpel  **imgBuf1, imgpel  **imgBuf2, int off
 extern void copy_image_data_8x8   (imgpel  **imgBuf1, imgpel  **imgBuf2, int off1, int off2);
 extern void copy_image_data_4x4   (imgpel  **imgBuf1, imgpel  **imgBuf2, int off1, int off2);
 extern int CheckVertMV(Macroblock *currMB, int vec1_y, int block_size_y);
-#endif
-

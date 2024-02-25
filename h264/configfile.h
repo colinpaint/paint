@@ -7,9 +7,7 @@
  *     Prototypes for configfile.c and definitions of used structures.
  ***********************************************************************
  */
-
-#ifndef _CONFIGFILE_H_
-#define _CONFIGFILE_H_
+#pragma once
 
 #define DEFAULTCONFIGFILENAME "decoder.cfg"
 
@@ -61,6 +59,3 @@ extern Mapping Map[];
 #endif
 extern void JMDecHelpExit ();
 extern void ParseCommand(InputParameters *p_Inp, int ac, char *av[]);
-
-#endif
-

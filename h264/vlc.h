@@ -11,9 +11,7 @@
  *
  ************************************************************************
  */
-
-#ifndef _VLC_H_
-#define _VLC_H_
+#pragma once
 
 //! gives CBP value from codeword number, both for intra and inter
 static const byte NCBP[2][48][2]=
@@ -106,7 +104,3 @@ extern int GetBits  (byte buffer[],int totbitoffset,int *info, int bitcount, int
 extern int ShowBits (byte buffer[],int totbitoffset,int bitcount, int numbits);
 
 extern int more_rbsp_data (byte buffer[],int totbitoffset,int bytecount);
-
-
-#endif
-

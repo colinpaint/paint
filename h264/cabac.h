@@ -15,9 +15,7 @@
  *    21. Oct 2000 (Changes by Tobias Oelbaum 28.08.2001)
  ***************************************************************************
  */
-
-#ifndef _CABAC_H_
-#define _CABAC_H_
+#pragma once
 
 #include "global.h"
 
@@ -58,6 +56,3 @@ extern int check_next_mb_and_get_field_mode_CABAC_b_slice( Slice *currSlice, Syn
 extern void CheckAvailabilityOfNeighborsCABAC(Macroblock *currMB);
 
 extern void set_read_and_store_CBP(Macroblock **currMB, int chroma_format_idc);
-
-#endif  // _CABAC_H_
-
