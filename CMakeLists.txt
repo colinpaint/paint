@@ -61,8 +61,8 @@ if (CMAKE_HOST_WIN32)
     target_link_libraries (${PROJECT_NAME} PRIVATE h264)
 
 # imguiApp
-project (imguiTest VERSION 1.0.0)
-  add_executable (${PROJECT_NAME} apps/imguiTest.cpp)
+project (imguiApp VERSION 1.0.0)
+  add_executable (${PROJECT_NAME} apps/imguiApp.cpp)
 
   target_include_directories (${PROJECT_NAME} PRIVATE stb)
   if (CMAKE_HOST_WIN32)

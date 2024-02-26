@@ -123,7 +123,6 @@ namespace {
 
       cLog::log (LOGINFO, fmt::format ("multiplex:{} {:4.1f} record:{}",
                                        multiplex.mName, multiplex.mFrequency/1000.f, options->mRecordRoot));
-
       mFileSource = false;
       mMultiplex = multiplex;
       mRecordRoot = options->mRecordRoot;
@@ -161,7 +160,7 @@ namespace {
         }
         //}}}
 
-      FILE* mFile = options->mRecordAllServices ?
+      FILE* file = options->mRecordAllServices ?
         fopen ((mRecordRoot + mMultiplex.mName + ".ts").c_str(), "wb") : nullptr;
 
       #ifdef _WIN32
@@ -175,8 +174,8 @@ namespace {
           if (blockSize) {
             //  read and demux block
             mTransportStream->demux (ptr, blockSize);
-            if (options->mRecordAllServices && mFile)
-              fwrite (ptr, 1, blockSize, mFile);
+            if (options->mRecordAllServices && file)
+              fwrite (ptr, 1, blockSize, file);
             mDvbSource->releaseBlock (blockSize);
             }
           else
@@ -192,8 +191,8 @@ namespace {
           int bytesRead = mDvbSource->getBlock (chunk, kDvrReadChunkSize);
           if (bytesRead) {
             mTransportStream->demux (chunk, bytesRead);
-            if (options->mRecordAllServices && mFile)
-              fwrite (chunk, 1, bytesRead, mFile);
+            if (options->mRecordAllServices && file)
+              fwrite (chunk, 1, bytesRead, file);
             }
           else
             cLog::log (LOGINFO, fmt::format ("liveDvbSource - no bytes"));
@@ -203,8 +202,8 @@ namespace {
         //}}}
       #endif
 
-      if (mFile)
-        fclose (mFile);
+      if (file)
+        fclose (file);
       }
     //}}}
     //{{{
@@ -236,16 +235,17 @@ namespace {
           if (stream && stream->isEnabled()) {
             uint8_t* buffer = (uint8_t*)malloc (pidInfo.getBufSize());
             memcpy (buffer, pidInfo.mBuffer, pidInfo.getBufSize());
+            string frameInfo = ".";
             if (kPesDebug) {
               if (pidInfo.getPid() == service.getVideoPid()) {
-                string frameInfo = cDvbUtils::getFrameInfo (buffer, pidInfo.getBufSize(), true);
+                frameInfo = cDvbUtils::getFrameInfo (buffer, pidInfo.getBufSize(), true);
                 cLog::log (LOGINFO, fmt::format ("{}{} {:6d} pts:{} dts:{}",
-                                                 stream->getLabel(), frameInfo.front(), pidInfo.getBufSize(),
+                                                 stream->getLabel(), frameInfo, pidInfo.getBufSize(),
                                                  getPtsString (pidInfo.getPts()),
                                                  getPtsString (pidInfo.getDts()) ));
                 }
               }
-            stream->getRender().decodePes (buffer, pidInfo.getBufSize(), pidInfo.getPts(), ".");
+            stream->getRender().decodePes (buffer, pidInfo.getBufSize(), pidInfo.getPts(), frameInfo);
             }
           }
         );
@@ -309,7 +309,6 @@ namespace {
     cDvbMultiplex mMultiplex;
     string mRecordRoot;
 
-    FILE* mFile = nullptr;
     bool mFileSource = false;
     };
   //}}}
