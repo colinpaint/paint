@@ -1,4 +1,4 @@
-
+//{{{
 /*!
  ***********************************************************************
  *  \file
@@ -18,7 +18,8 @@
  *      - Yuwen He                        <yhe@dolby.com>
  ***********************************************************************
  */
-
+//}}}
+//{{{
 #include <limits.h>
 
 #include "global.h"
@@ -32,13 +33,13 @@
 #include "mbuffer_mvc.h"
 #include "fast_memory.h"
 #include "input.h"
-
+//}}}
 static void insert_picture_in_dpb    (VideoParameters *p_Vid, FrameStore* fs, StorablePicture* p);
 static int output_one_frame_from_dpb (DecodedPictureBuffer *p_Dpb);
 static void gen_field_ref_ids        (VideoParameters *p_Vid, StorablePicture *p);
-
 #define MAX_LIST_SIZE 33
 
+//{{{
 /*!
  ************************************************************************
  * \brief
@@ -79,14 +80,15 @@ void dump_dpb(DecodedPictureBuffer *p_Dpb)
       if (p_Dpb->fs[i]->frame->non_existing) printf ("ne  ");
     }
 #if (MVC_EXTENSION_ENABLE)
-    if (p_Dpb->fs[i]->is_reference) 
+    if (p_Dpb->fs[i]->is_reference)
       printf ("view_id (%d) ", p_Dpb->fs[i]->view_id);
 #endif
     printf ("\n");
   }
 #endif
 }
-
+//}}}
+//{{{
 /*!
  ************************************************************************
  * \brief
@@ -197,12 +199,13 @@ int getDpbSize(VideoParameters *p_Vid, seq_parameter_set_rbsp_t *active_sps)
       printf("Warning: max_dec_frame_buffering(%d) is less than DPB size(%d) calculated from Profile/Level.\n", size_vui, size);
     }
 #endif
-    size = size_vui;    
+    size = size_vui;
   }
 
   return size;
 }
-
+//}}}
+//{{{
 /*!
  ************************************************************************
  * \brief
@@ -218,8 +221,8 @@ void check_num_ref(DecodedPictureBuffer *p_Dpb)
     error ("Max. number of reference frames exceeded. Invalid stream.", 500);
   }
 }
-
-
+//}}}
+//{{{
 /*!
  ************************************************************************
  * \brief
@@ -229,7 +232,7 @@ void check_num_ref(DecodedPictureBuffer *p_Dpb)
  */
 void init_dpb(VideoParameters *p_Vid, DecodedPictureBuffer *p_Dpb, int type)
 {
-  unsigned i; 
+  unsigned i;
   seq_parameter_set_rbsp_t *active_sps = p_Vid->active_sps;
 
   p_Dpb->p_Vid = p_Vid;
@@ -239,7 +242,7 @@ void init_dpb(VideoParameters *p_Vid, DecodedPictureBuffer *p_Dpb, int type)
   }
 
   p_Dpb->size = getDpbSize(p_Vid, active_sps) + p_Vid->p_Inp->dpb_plus[type==2? 1: 0];
-  p_Dpb->num_ref_frames = active_sps->num_ref_frames; 
+  p_Dpb->num_ref_frames = active_sps->num_ref_frames;
 
 #if (MVC_EXTENSION_ENABLE)
   if ((unsigned int)active_sps->max_dec_frame_buffering < active_sps->num_ref_frames)
@@ -294,7 +297,7 @@ void init_dpb(VideoParameters *p_Vid, DecodedPictureBuffer *p_Dpb, int type)
     p_Dpb->fs_ilref[0]->view_id = MVC_INIT_VIEW_ID;
     p_Dpb->fs_ilref[0]->inter_view_flag[0] = p_Dpb->fs_ilref[0]->inter_view_flag[1] = 0;
     p_Dpb->fs_ilref[0]->anchor_pic_flag[0] = p_Dpb->fs_ilref[0]->anchor_pic_flag[1] = 0;
-    // given that this is in a different buffer, do we even need proc_flag anymore?    
+    // given that this is in a different buffer, do we even need proc_flag anymore?
   }
   else
     p_Dpb->fs_ilref[0] = NULL;
@@ -334,7 +337,7 @@ void init_dpb(VideoParameters *p_Vid, DecodedPictureBuffer *p_Dpb, int type)
 
 void re_init_dpb(VideoParameters *p_Vid, DecodedPictureBuffer *p_Dpb, int type)
 {
-  int i; 
+  int i;
   seq_parameter_set_rbsp_t *active_sps = p_Vid->active_sps;
   int iDpbSize;
 
@@ -392,7 +395,7 @@ void re_init_dpb(VideoParameters *p_Vid, DecodedPictureBuffer *p_Dpb, int type)
     p_Dpb->fs_ilref[0]->view_id = MVC_INIT_VIEW_ID;
     p_Dpb->fs_ilref[0]->inter_view_flag[0] = p_Dpb->fs_ilref[0]->inter_view_flag[1] = 0;
     p_Dpb->fs_ilref[0]->anchor_pic_flag[0] = p_Dpb->fs_ilref[0]->anchor_pic_flag[1] = 0;
-    // given that this is in a different buffer, do we even need proc_flag anymore?    
+    // given that this is in a different buffer, do we even need proc_flag anymore?
   }
   else
     p_Dpb->fs_ilref[0] = NULL;
@@ -407,7 +410,8 @@ void re_init_dpb(VideoParameters *p_Vid, DecodedPictureBuffer *p_Dpb, int type)
 
   }
 }
-
+//}}}
+//{{{
 /*!
  ************************************************************************
  * \brief
@@ -465,8 +469,9 @@ void free_dpb(DecodedPictureBuffer *p_Dpb)
     p_Vid->no_reference_picture = NULL;
   }
 }
+//}}}
 
-
+//{{{
 /*!
  ************************************************************************
  * \brief
@@ -497,14 +502,16 @@ FrameStore* alloc_frame_store(void)
 
   return f;
 }
-
+//}}}
+//{{{
 void alloc_pic_motion(PicMotionParamsOld *motion, int size_y, int size_x)
 {
   motion->mb_field = calloc (size_y * size_x, sizeof(byte));
   if (motion->mb_field == NULL)
     no_mem_exit("alloc_storable_picture: motion->mb_field");
 }
-
+//}}}
+//{{{
 /*!
  ************************************************************************
  * \brief
@@ -529,7 +536,7 @@ void alloc_pic_motion(PicMotionParamsOld *motion, int size_y, int size_x)
  */
 StorablePicture* alloc_storable_picture(VideoParameters *p_Vid, PictureStructure structure, int size_x, int size_y, int size_x_cr, int size_y_cr, int is_output)
 {
-  seq_parameter_set_rbsp_t *active_sps = p_Vid->active_sps;  
+  seq_parameter_set_rbsp_t *active_sps = p_Vid->active_sps;
 
   StorablePicture *s;
   int   nplane;
@@ -631,7 +638,8 @@ StorablePicture* alloc_storable_picture(VideoParameters *p_Vid, PictureStructure
 
   return s;
 }
-
+//}}}
+//{{{
 /*!
  ************************************************************************
  * \brief
@@ -666,7 +674,8 @@ void free_frame_store(FrameStore* f)
     free(f);
   }
 }
-
+//}}}
+//{{{
 void free_pic_motion(PicMotionParamsOld *motion)
 {
   if (motion->mb_field)
@@ -675,8 +684,8 @@ void free_pic_motion(PicMotionParamsOld *motion)
     motion->mb_field = NULL;
   }
 }
-
-
+//}}}
+//{{{
 /*!
  ************************************************************************
  * \brief
@@ -746,7 +755,8 @@ void free_storable_picture(StorablePicture* p)
     p = NULL;
   }
 }
-
+//}}}
+//{{{
 /*!
  ************************************************************************
  * \brief
@@ -797,8 +807,8 @@ void unmark_for_reference(FrameStore* fs)
     free_pic_motion(&fs->bottom_field->motion);
   }
 }
-
-
+//}}}
+//{{{
 /*!
  ************************************************************************
  * \brief
@@ -840,9 +850,8 @@ void unmark_for_long_term_reference(FrameStore* fs)
   fs->is_reference = 0;
   fs->is_long_term = 0;
 }
-
-
-
+//}}}
+//{{{
 void update_pic_num(Slice *currSlice)
 {
   unsigned int i;
@@ -934,6 +943,8 @@ void update_pic_num(Slice *currSlice)
     }
   }
 }
+//}}}
+//{{{
 /*!
  ************************************************************************
  * \brief
@@ -952,7 +963,8 @@ void init_lists_i_slice(Slice *currSlice)
   currSlice->listXsize[0] = 0;
   currSlice->listXsize[1] = 0;
 }
-
+//}}}
+//{{{
 /*!
  ************************************************************************
  * \brief
@@ -1083,8 +1095,8 @@ void init_lists_p_slice(Slice *currSlice)
 #endif
 #endif
 }
-
-
+//}}}
+//{{{
 /*!
  ************************************************************************
  * \brief
@@ -1318,7 +1330,8 @@ void init_lists_b_slice(Slice *currSlice)
 #endif
 #endif
 }
-
+//}}}
+//{{{
 /*!
  ************************************************************************
  * \brief
@@ -1362,7 +1375,8 @@ void init_mbaff_lists(VideoParameters *p_Vid, Slice *currSlice)
   }
   currSlice->listXsize[3] = currSlice->listXsize[5] = currSlice->listXsize[1] * 2;
 }
-
+//}}}
+//{{{
  /*!
  ************************************************************************
  * \brief
@@ -1395,10 +1409,9 @@ StorablePicture*  get_short_term_pic(Slice *currSlice, DecodedPictureBuffer *p_D
 
   return currSlice->p_Vid->no_reference_picture;
 }
-
-
-
+//}}}
 #if (!MVC_EXTENSION_ENABLE)
+//{{{
 /*!
  ************************************************************************
  * \brief
@@ -1408,7 +1421,7 @@ StorablePicture*  get_short_term_pic(Slice *currSlice, DecodedPictureBuffer *p_D
  */
 static void reorder_short_term(Slice *currSlice, int cur_list, int num_ref_idx_lX_active_minus1, int picNumLX, int *refIdxLX)
 {
-  StorablePicture **RefPicListX = currSlice->listX[cur_list]; 
+  StorablePicture **RefPicListX = currSlice->listX[cur_list];
   int cIdx, nIdx;
 
   StorablePicture *picLX;
@@ -1429,8 +1442,8 @@ static void reorder_short_term(Slice *currSlice, int cur_list, int num_ref_idx_l
         RefPicListX[ nIdx++ ] = RefPicListX[ cIdx ];
   }
 }
-
-
+//}}}
+//{{{
 /*!
  ************************************************************************
  * \brief
@@ -1462,8 +1475,10 @@ static void reorder_long_term(Slice *currSlice, StorablePicture **RefPicListX, i
     }
   }
 }
+//}}}
 #endif
 
+//{{{
 /*!
  ************************************************************************
  * \brief
@@ -1544,10 +1559,8 @@ void reorder_ref_pic_list(Slice *currSlice, int cur_list)
   // that's a definition
   currSlice->listXsize[cur_list] = (char) (num_ref_idx_lX_active_minus1 + 1);
 }
-
-
-
-
+//}}}
+//{{{
 /*!
  ************************************************************************
  * \brief
@@ -1605,7 +1618,8 @@ void idr_memory_management(DecodedPictureBuffer *p_Dpb, StorablePicture* p)
 #endif
 
 }
-
+//}}}
+//{{{
 /*!
  ************************************************************************
  * \brief
@@ -1635,8 +1649,8 @@ static void sliding_window_memory_management(DecodedPictureBuffer *p_Dpb, Storab
 
   p->is_long_term = 0;
 }
-
-
+//}}}
+//{{{
 /*!
  ************************************************************************
  * \brief
@@ -1743,8 +1757,8 @@ static void adaptive_memory_management(DecodedPictureBuffer *p_Dpb, StorablePict
 #endif
   }
 }
-
-
+//}}}
+//{{{
 /*!
  ************************************************************************
  * \brief
@@ -1767,7 +1781,7 @@ void store_picture_in_dpb(DecodedPictureBuffer *p_Dpb, StorablePicture* p)
   unsigned i;
   int poc, pos;
   // picture error concealment
-  
+
   // diagnostics
   //printf ("Storing (%s) non-ref pic with frame_num #%d\n", (p->type == FRAME)?"FRAME":(p->type == TOP_FIELD)?"TOP_FIELD":"BOTTOM_FIELD", p->pic_num);
   // if frame, check for new store,
@@ -1841,7 +1855,7 @@ void store_picture_in_dpb(DecodedPictureBuffer *p_Dpb, StorablePicture* p)
     if(p_Vid->conceal_mode != 0)
       sliding_window_poc_management(p_Dpb, p);
   }
-  
+
   // then output frames until one can be removed
   while (p_Dpb->used_size == p_Dpb->size)
   {
@@ -1852,7 +1866,7 @@ void store_picture_in_dpb(DecodedPictureBuffer *p_Dpb, StorablePicture* p)
       if ((-1==pos) || (p->poc < poc))
       {
 #if (_DEBUG && MVC_EXTENSION_ENABLE)
-        if((p_Vid->profile_idc >= MVC_HIGH))  
+        if((p_Vid->profile_idc >= MVC_HIGH))
           printf("Display order might not be correct, %d, %d\n", p->view_id, p->poc);
 #endif
 #if (MVC_EXTENSION_ENABLE)
@@ -1908,8 +1922,8 @@ void store_picture_in_dpb(DecodedPictureBuffer *p_Dpb, StorablePicture* p)
 
   dump_dpb(p_Dpb);
 }
-
-
+//}}}
+//{{{
 /*!
  ************************************************************************
  * \brief
@@ -2028,8 +2042,8 @@ static void insert_picture_in_dpb(VideoParameters *p_Vid, FrameStore* fs, Storab
       find_snr(p_Vid, fs->frame, &p_Vid->p_ref);
   }
 }
-
-
+//}}}
+//{{{
 /*!
  ************************************************************************
  * \brief
@@ -2081,10 +2095,8 @@ void remove_frame_from_dpb(DecodedPictureBuffer *p_Dpb, int pos)
   p_Dpb->fs[p_Dpb->used_size-1] = tmp;
   p_Dpb->used_size--;
 }
-
-
-
-
+//}}}
+//{{{
 /*!
  ************************************************************************
  * \brief
@@ -2152,9 +2164,8 @@ static int output_one_frame_from_dpb(DecodedPictureBuffer *p_Dpb)
   }
   return 1;
 }
-
-
-
+//}}}
+//{{{
 /*!
  ************************************************************************
  * \brief
@@ -2190,8 +2201,10 @@ void flush_dpb(DecodedPictureBuffer *p_Dpb)
 
   p_Dpb->last_output_poc = INT_MIN;
 }
+//}}}
 
 #if (MVC_EXTENSION_ENABLE)
+//{{{
 void flush_dpbs(DecodedPictureBuffer **p_Dpb_layers, int nLayers)
 {
   VideoParameters *p_Vid = p_Dpb_layers[0]->p_Vid;
@@ -2236,7 +2249,7 @@ void flush_dpbs(DecodedPictureBuffer **p_Dpb_layers, int nLayers)
         used_size = (int)p_Dpb->used_size;
       }
     }
-  }  
+  }
   while (used_size)
   {
     for(j=0; j<nLayers; j++)
@@ -2251,10 +2264,12 @@ void flush_dpbs(DecodedPictureBuffer **p_Dpb_layers, int nLayers)
   {
     p_Dpb = p_Dpb_layers[j];
     p_Dpb->last_output_poc = INT_MIN;
-  }  
+  }
 }
+//}}}
 #endif
 
+//{{{
 static void gen_field_ref_ids(VideoParameters *p_Vid, StorablePicture *p)
 {
   int i,j;
@@ -2277,7 +2292,8 @@ static void gen_field_ref_ids(VideoParameters *p_Vid, StorablePicture *p)
     }
   }
 }
-
+//}}}
+//{{{
 /*!
  ************************************************************************
  * \brief
@@ -2290,7 +2306,7 @@ void dpb_split_field(VideoParameters *p_Vid, FrameStore *fs)
   int idiv,jdiv;
   int currentmb;
   int twosz16 = 2 * (fs->frame->size_x >> 4);
-  StorablePicture *fs_top = NULL, *fs_btm = NULL; 
+  StorablePicture *fs_top = NULL, *fs_btm = NULL;
   StorablePicture *frame = fs->frame;
 
   fs->poc = frame->poc;
@@ -2411,7 +2427,7 @@ void dpb_split_field(VideoParameters *p_Vid, FrameStore *fs)
               fs_btm->mv_info[j][i].ref_pic[LIST_1] = p_Vid->ppSliceList[frame->mv_info[jj4][i].slice_no]->listX[5][(short) fs_btm->mv_info[j][i].ref_idx[LIST_1]];
             else
               fs_btm->mv_info[j][i].ref_pic[LIST_1] = NULL;
-          
+
             fs_top->mv_info[j][i].mv[LIST_0] = frame->mv_info[jj][i].mv[LIST_0];
             fs_top->mv_info[j][i].mv[LIST_1] = frame->mv_info[jj][i].mv[LIST_1];
             fs_top->mv_info[j][i].ref_idx[LIST_0] = frame->mv_info[jj][i].ref_idx[LIST_0];
@@ -2428,7 +2444,7 @@ void dpb_split_field(VideoParameters *p_Vid, FrameStore *fs)
         }
       }
     }
-  
+
       //! Generate field MVs from Frame MVs
     for (j=0 ; j < (frame->size_y >> 3) ; j++)
     {
@@ -2473,8 +2489,8 @@ void dpb_split_field(VideoParameters *p_Vid, FrameStore *fs)
     }
   }
 }
-
-
+//}}}
+//{{{
 /*!
  ************************************************************************
  * \brief
@@ -2545,8 +2561,8 @@ void dpb_combine_field_yuv(VideoParameters *p_Vid, FrameStore *fs)
   }
 
 }
-
-
+//}}}
+//{{{
 /*!
  ************************************************************************
  * \brief
@@ -2582,7 +2598,7 @@ void dpb_combine_field(VideoParameters *p_Vid, FrameStore *fs)
       /* bug: top field list doesnot exist.*/
       l = fs->top_field->mv_info[j][i].slice_no;
       k = fs->top_field->mv_info[j][i].ref_idx[LIST_0];
-      fs->frame->mv_info[jj][i].ref_pic[LIST_0] = k>=0? fs->top_field->listX[l][LIST_0][k]: NULL;  
+      fs->frame->mv_info[jj][i].ref_pic[LIST_0] = k>=0? fs->top_field->listX[l][LIST_0][k]: NULL;
       k = fs->top_field->mv_info[j][i].ref_idx[LIST_1];
       fs->frame->mv_info[jj][i].ref_pic[LIST_1] = k>=0? fs->top_field->listX[l][LIST_1][k]: NULL;
 
@@ -2601,8 +2617,8 @@ void dpb_combine_field(VideoParameters *p_Vid, FrameStore *fs)
     }
   }
 }
-
-
+//}}}
+//{{{
 /*!
  ************************************************************************
  * \brief
@@ -2614,14 +2630,14 @@ void alloc_ref_pic_list_reordering_buffer(Slice *currSlice)
   if (currSlice->slice_type != I_SLICE && currSlice->slice_type != SI_SLICE)
   {
     int size = currSlice->num_ref_idx_active[LIST_0] + 1;
-    if ((currSlice->modification_of_pic_nums_idc[LIST_0] = calloc(size ,sizeof(int)))==NULL) 
+    if ((currSlice->modification_of_pic_nums_idc[LIST_0] = calloc(size ,sizeof(int)))==NULL)
        no_mem_exit("alloc_ref_pic_list_reordering_buffer: modification_of_pic_nums_idc_l0");
-    if ((currSlice->abs_diff_pic_num_minus1[LIST_0] = calloc(size,sizeof(int)))==NULL) 
+    if ((currSlice->abs_diff_pic_num_minus1[LIST_0] = calloc(size,sizeof(int)))==NULL)
        no_mem_exit("alloc_ref_pic_list_reordering_buffer: abs_diff_pic_num_minus1_l0");
-    if ((currSlice->long_term_pic_idx[LIST_0] = calloc(size,sizeof(int)))==NULL) 
+    if ((currSlice->long_term_pic_idx[LIST_0] = calloc(size,sizeof(int)))==NULL)
        no_mem_exit("alloc_ref_pic_list_reordering_buffer: long_term_pic_idx_l0");
 #if (MVC_EXTENSION_ENABLE)
-    if ((currSlice->abs_diff_view_idx_minus1[LIST_0] = calloc(size,sizeof(int)))==NULL) 
+    if ((currSlice->abs_diff_view_idx_minus1[LIST_0] = calloc(size,sizeof(int)))==NULL)
        no_mem_exit("alloc_ref_pic_list_reordering_buffer: abs_diff_view_idx_minus1_l0");
 #endif
   }
@@ -2638,14 +2654,14 @@ void alloc_ref_pic_list_reordering_buffer(Slice *currSlice)
   if (currSlice->slice_type == B_SLICE)
   {
     int size = currSlice->num_ref_idx_active[LIST_1] + 1;
-    if ((currSlice->modification_of_pic_nums_idc[LIST_1] = calloc(size,sizeof(int)))==NULL) 
+    if ((currSlice->modification_of_pic_nums_idc[LIST_1] = calloc(size,sizeof(int)))==NULL)
       no_mem_exit("alloc_ref_pic_list_reordering_buffer: modification_of_pic_nums_idc_l1");
-    if ((currSlice->abs_diff_pic_num_minus1[LIST_1] = calloc(size,sizeof(int)))==NULL) 
+    if ((currSlice->abs_diff_pic_num_minus1[LIST_1] = calloc(size,sizeof(int)))==NULL)
       no_mem_exit("alloc_ref_pic_list_reordering_buffer: abs_diff_pic_num_minus1_l1");
-    if ((currSlice->long_term_pic_idx[LIST_1] = calloc(size,sizeof(int)))==NULL) 
+    if ((currSlice->long_term_pic_idx[LIST_1] = calloc(size,sizeof(int)))==NULL)
       no_mem_exit("alloc_ref_pic_list_reordering_buffer: long_term_pic_idx_l1");
 #if (MVC_EXTENSION_ENABLE)
-    if ((currSlice->abs_diff_view_idx_minus1[LIST_1] = calloc(size,sizeof(int)))==NULL) 
+    if ((currSlice->abs_diff_view_idx_minus1[LIST_1] = calloc(size,sizeof(int)))==NULL)
       no_mem_exit("alloc_ref_pic_list_reordering_buffer: abs_diff_view_idx_minus1_l1");
 #endif
   }
@@ -2659,8 +2675,8 @@ void alloc_ref_pic_list_reordering_buffer(Slice *currSlice)
 #endif
   }
 }
-
-
+//}}}
+//{{{
 /*!
  ************************************************************************
  * \brief
@@ -2700,7 +2716,8 @@ void free_ref_pic_list_reordering_buffer(Slice *currSlice)
   currSlice->abs_diff_view_idx_minus1[LIST_1] = NULL;
 #endif
 }
-
+//}}}
+//{{{
 /*!
  ************************************************************************
  * \brief
@@ -2716,7 +2733,7 @@ void free_ref_pic_list_reordering_buffer(Slice *currSlice)
 void fill_frame_num_gap(VideoParameters *p_Vid, Slice *currSlice)
 {
   seq_parameter_set_rbsp_t *active_sps = p_Vid->active_sps;
-  
+
   int CurrFrameNum;
   int UnusedShortTermFrameNum;
   StorablePicture *picture = NULL;
@@ -2763,8 +2780,8 @@ void fill_frame_num_gap(VideoParameters *p_Vid, Slice *currSlice)
   currSlice->delta_pic_order_cnt[1] = tmp2;
   currSlice->frame_num = CurrFrameNum;
 }
-
-
+//}}}
+//{{{
 /*!
  ************************************************************************
  * \brief
@@ -2814,9 +2831,9 @@ void compute_colocated (Slice *currSlice, StorablePicture **listX[6])
     }
   }
 }
-
-
+//}}}
 #if (MVC_EXTENSION_ENABLE)
+//{{{
 int GetMaxDecFrameBuffering(VideoParameters *p_Vid)
 {
   int i, j, iMax, iMax_1 = 0, iMax_2 = 0;
@@ -2843,7 +2860,7 @@ int GetMaxDecFrameBuffering(VideoParameters *p_Vid)
       if(j > iMax_2)
         iMax_2 = j;
     }
-    
+
     if(curr_sps->Valid)
     {
       j = curr_sps->max_dec_frame_buffering;
@@ -2862,15 +2879,16 @@ int GetMaxDecFrameBuffering(VideoParameters *p_Vid)
     }
     curr_subset_sps++;
     curr_sps++;
-  }  
-      
+  }
+
   if (iMax_1 > 0 && iMax_2 > 0)
     iMax = iMax_1 + iMax_2;
   else
     iMax = (iMax_1 >0? iMax_1*2 : iMax_2*2);
   return iMax;
 }
-
+//}}}
+//{{{
 static int is_view_id_in_ref_view_list(int view_id, int *ref_view_id, int num_ref_views)
 {
    int i;
@@ -2882,14 +2900,15 @@ static int is_view_id_in_ref_view_list(int view_id, int *ref_view_id, int num_re
 
    return (num_ref_views && (i<num_ref_views));
 }
-
-void append_interview_list(DecodedPictureBuffer *p_Dpb, 
+//}}}
+//{{{
+void append_interview_list(DecodedPictureBuffer *p_Dpb,
                            PictureStructure currPicStructure, //0: frame; 1:top field; 2: bottom field;
-                           int list_idx, 
+                           int list_idx,
                            FrameStore **list,
-                           int *listXsize, 
-                           int currPOC, 
-                           int curr_view_id, 
+                           int *listXsize,
+                           int currPOC,
+                           int curr_view_id,
                            int anchor_pic_flag)
 {
   VideoParameters *p_Vid = p_Dpb->p_Vid;
@@ -2951,16 +2970,17 @@ void append_interview_list(DecodedPictureBuffer *p_Dpb,
       if(is_view_id_in_ref_view_list(fs->view_id, ref_view_id, num_ref_views))
       {
         //add one inter-view reference;
-        list[*listXsize] = fs; 
+        list[*listXsize] = fs;
         //next;
         (*listXsize)++;
       }
     }
   }
 }
-
+//}}}
 #endif
 
+//{{{
 void process_picture_in_dpb_s(VideoParameters *p_Vid, StorablePicture *p_pic)
 {
   //InputParameters *p_Inp = p_Vid->p_Inp;
@@ -3003,13 +3023,13 @@ int init_img_data(VideoParameters *p_Vid, ImageData *p_ImgData, seq_parameter_se
   InputParameters *p_Inp = p_Vid->p_Inp;
   int memory_size = 0;
   int nplane;
-  
+
   // allocate memory for reference frame buffers: p_ImgData->frm_data
   p_ImgData->format           = p_Inp->output;
-  p_ImgData->format.width[0]  = p_Vid->width;    
+  p_ImgData->format.width[0]  = p_Vid->width;
   p_ImgData->format.width[1]  = p_Vid->width_cr;
   p_ImgData->format.width[2]  = p_Vid->width_cr;
-  p_ImgData->format.height[0] = p_Vid->height;  
+  p_ImgData->format.height[0] = p_Vid->height;
   p_ImgData->format.height[1] = p_Vid->height_cr;
   p_ImgData->format.height[2] = p_Vid->height_cr;
   p_ImgData->format.yuv_format          = (ColorFormat) sps->chroma_format_idc;
@@ -3078,7 +3098,8 @@ int init_img_data(VideoParameters *p_Vid, ImageData *p_ImgData, seq_parameter_se
 
   return memory_size;
 }
-
+//}}}
+//{{{
 void free_img_data(VideoParameters *p_Vid, ImageData *p_ImgData)
 {
   if ( p_Vid->separate_colour_plane_flag )
@@ -3101,7 +3122,7 @@ void free_img_data(VideoParameters *p_Vid, ImageData *p_ImgData)
       free_mem2Dpel(p_ImgData->frm_data[0]);      // free ref frame buffers
       p_ImgData->frm_data[0] = NULL;
     }
-    
+
     if (p_ImgData->format.yuv_format != YUV400)
     {
       if (p_ImgData->frm_data[1])
@@ -3116,7 +3137,7 @@ void free_img_data(VideoParameters *p_Vid, ImageData *p_ImgData)
       }
     }
   }
-  
+
   if (!p_Vid->active_sps->frame_mbs_only_flag)
   {
     free_top_bot_planes(p_ImgData->top_data[0], p_ImgData->bot_data[0]);
@@ -3139,21 +3160,27 @@ static inline void copy_img_data(imgpel *out_img, imgpel *in_img, int ostride, i
     in_img += istride;
   }
 }
+//}}}
 
+#if !MVC_EXTENSION_ENABLE
+//{{{
 /*!
  ************************************************************************
  * \brief
  *    Remove a picture from DPB which is no longer needed.
  ************************************************************************
  */
-#if !MVC_EXTENSION_ENABLE
+int remove_unused_proc_pic_from_dpb(DecodedPictureBuffer *p_Dpb)
 int remove_unused_proc_pic_from_dpb(DecodedPictureBuffer *p_Dpb)
 {
   assert(!"The function is not available\n");
   return 0;
 }
+//}}}
 #endif
 
+#if (MVC_EXTENSION_ENABLE)
+//{{{
 /*!
  ************************************************************************
  * \brief
@@ -3170,7 +3197,6 @@ int remove_unused_proc_pic_from_dpb(DecodedPictureBuffer *p_Dpb)
  *
  ************************************************************************
  */
-#if (MVC_EXTENSION_ENABLE)
 void store_proc_picture_in_dpb(DecodedPictureBuffer *p_Dpb, StorablePicture* p)
 {
   VideoParameters *p_Vid = p_Dpb->p_Vid;
@@ -3203,9 +3229,9 @@ void store_proc_picture_in_dpb(DecodedPictureBuffer *p_Dpb, StorablePicture* p)
     }
     fs->is_used = 0;
     fs->is_reference = 0;
-    p_Dpb->used_size_il--;   
+    p_Dpb->used_size_il--;
   }
-#ifdef _DEBUG  
+#ifdef _DEBUG
   if(fs->is_used>0)
   {
     //checking;
@@ -3220,9 +3246,10 @@ void store_proc_picture_in_dpb(DecodedPictureBuffer *p_Dpb, StorablePicture* p)
 
   insert_picture_in_dpb(p_Vid, fs, p);
   if((p->structure==FRAME && fs->is_used == 3) || (p->structure!=FRAME && fs->is_used && fs->is_used <3))
-   p_Dpb->used_size_il++;  
+   p_Dpb->used_size_il++;
 }
-
+//}}}
+//{{{
 /*!
  ************************************************************************
  * \brief
@@ -3256,7 +3283,7 @@ StorablePicture * clone_storable_picture( VideoParameters *p_Vid, StorablePictur
   p_stored_pic->size_y_m1 = p_pic->size_y - 1;
   p_stored_pic->size_x_cr_m1 = p_pic->size_x_cr - 1;
   p_stored_pic->size_y_cr_m1 = p_pic->size_y_cr - 1;
-  
+
   p_stored_pic->mb_aff_frame_flag = p_pic->mb_aff_frame_flag;
   p_stored_pic->seiHasTone_mapping = p_pic->seiHasTone_mapping;
   p_stored_pic->poc         = p_pic->poc;
@@ -3290,7 +3317,7 @@ StorablePicture * clone_storable_picture( VideoParameters *p_Vid, StorablePictur
     p_stored_pic->frame_crop_top_offset    = p_pic->frame_crop_top_offset;
     p_stored_pic->frame_crop_bottom_offset = p_pic->frame_crop_bottom_offset;
   }
-  
+
   // store BL reconstruction
   //memcpy((void *)p_stored_pic->imgY[0], (void *)p_Vid->tempData3.frm_data[0][0], p_pic->size_x * p_pic->size_y * sizeof(imgpel));
 
@@ -3312,12 +3339,12 @@ StorablePicture * clone_storable_picture( VideoParameters *p_Vid, StorablePictur
     img_in  = p_Vid->tempData3.bot_data;
   }
 
-  copy_img_data(&p_stored_pic->imgY[0][0], &img_in[0][0][0], ostride[0], istride[0], p_pic->size_y, p_pic->size_x * sizeof(imgpel)); 
+  copy_img_data(&p_stored_pic->imgY[0][0], &img_in[0][0][0], ostride[0], istride[0], p_pic->size_y, p_pic->size_x * sizeof(imgpel));
 
   pad_buf(*p_stored_pic->imgY, p_stored_pic->size_x, p_stored_pic->size_y, p_stored_pic->iLumaStride, p_Vid->iLumaPadX, p_Vid->iLumaPadY);
 
   if (p_Vid->active_sps->chroma_format_idc != YUV400)
-  {    
+  {
     //memcpy((void *)p_stored_pic->imgUV[0][0], (void *)p_Vid->tempData3.frm_data[1][0], p_pic->size_x_cr * p_pic->size_y_cr * sizeof(imgpel));
     //memcpy((void *)p_stored_pic->imgUV[1][0], (void *)p_Vid->tempData3.frm_data[2][0], p_pic->size_x_cr * p_pic->size_y_cr * sizeof(imgpel));
     copy_img_data(&p_stored_pic->imgUV[0][0][0], &img_in[1][0][0], ostride[1], istride[1], p_pic->size_y_cr, p_pic->size_x_cr*sizeof(imgpel));
@@ -3331,7 +3358,7 @@ StorablePicture * clone_storable_picture( VideoParameters *p_Vid, StorablePictur
     //PicMotionParams *mv_info = p_stored_pic->mv_info[j];
     char *ref_idx = p_stored_pic->mv_info[j][0].ref_idx;
     for (i = 0; i < (p_pic->size_x >> BLOCK_SHIFT); i++)
-    {          
+    {
       //*((short *)&((mv_info++)->ref_idx[LIST_0])) = -1;
       *((short *) ref_idx) = -1;
       ref_idx += sizeof(PicMotionParams);
@@ -3363,6 +3390,5 @@ StorablePicture * clone_storable_picture( VideoParameters *p_Vid, StorablePictur
 
   return p_stored_pic;
 }
+//}}}
 #endif
-
-

@@ -1,4 +1,4 @@
-
+//{{{
 /*!
  *************************************************************************************
  * \file mb_access.c
@@ -11,11 +11,14 @@
  *      - Karsten Suehring
  *************************************************************************************
  */
-
+//}}}
+//{{{
 #include "global.h"
 #include "mbuffer.h"
 #include "mb_access.h"
+//}}}
 
+//{{{
 /*!
  ************************************************************************
  * \brief
@@ -37,8 +40,9 @@ Boolean mb_is_available(int mbAddr, Macroblock *currMB)
 
   return TRUE;
 }
+//}}}
 
-
+//{{{
 /*!
  ************************************************************************
  * \brief
@@ -78,13 +82,14 @@ void CheckAvailabilityOfNeighbors(Macroblock *currMB)
     currMB->mbAvailA = (Boolean) (mb_is_available(currMB->mbAddrA, currMB) && ((p_pic_pos->x)!=0));
     currMB->mbAvailD = (Boolean) (mb_is_available(currMB->mbAddrD, currMB) && ((p_pic_pos->x)!=0));
     currMB->mbAvailC = (Boolean) (mb_is_available(currMB->mbAddrC, currMB) && (((p_pic_pos + 1)->x)!=0));
-    currMB->mbAvailB = (Boolean) (mb_is_available(currMB->mbAddrB, currMB));        
+    currMB->mbAvailB = (Boolean) (mb_is_available(currMB->mbAddrB, currMB));
   }
 
   currMB->mb_left = (currMB->mbAvailA) ? &(currSlice->mb_data[currMB->mbAddrA]) : NULL;
   currMB->mb_up   = (currMB->mbAvailB) ? &(currSlice->mb_data[currMB->mbAddrB]) : NULL;
 }
-
+//}}}
+//{{{
 /*!
  ************************************************************************
  * \brief
@@ -109,13 +114,14 @@ void CheckAvailabilityOfNeighborsNormal(Macroblock *currMB)
   currMB->mbAvailA = (Boolean) (mb_is_available(currMB->mbAddrA, currMB) && ((p_pic_pos->x)!=0));
   currMB->mbAvailD = (Boolean) (mb_is_available(currMB->mbAddrD, currMB) && ((p_pic_pos->x)!=0));
   currMB->mbAvailC = (Boolean) (mb_is_available(currMB->mbAddrC, currMB) && (((p_pic_pos + 1)->x)!=0));
-  currMB->mbAvailB = (Boolean) (mb_is_available(currMB->mbAddrB, currMB));        
+  currMB->mbAvailB = (Boolean) (mb_is_available(currMB->mbAddrB, currMB));
 
 
   currMB->mb_left = (currMB->mbAvailA) ? &(currSlice->mb_data[currMB->mbAddrA]) : NULL;
   currMB->mb_up   = (currMB->mbAvailB) ? &(currSlice->mb_data[currMB->mbAddrB]) : NULL;
 }
-
+//}}}
+//{{{
 /*!
  ************************************************************************
  * \brief
@@ -144,8 +150,9 @@ void CheckAvailabilityOfNeighborsMBAFF(Macroblock *currMB)
   currMB->mb_left = (currMB->mbAvailA) ? &(currSlice->mb_data[currMB->mbAddrA]) : NULL;
   currMB->mb_up   = (currMB->mbAvailB) ? &(currSlice->mb_data[currMB->mbAddrB]) : NULL;
 }
+//}}}
 
-
+//{{{
 /*!
  ************************************************************************
  * \brief
@@ -158,7 +165,8 @@ void get_mb_block_pos_normal (BlockPos *PicPos, int mb_addr, short *x, short *y)
   *x = (short) pPos->x;
   *y = (short) pPos->y;
 }
-
+//}}}
+//{{{
 /*!
  ************************************************************************
  * \brief
@@ -172,7 +180,8 @@ void get_mb_block_pos_mbaff (BlockPos *PicPos, int mb_addr, short *x, short *y)
   *x = (short)  pPos->x;
   *y = (short) ((pPos->y << 1) + (mb_addr & 0x01));
 }
-
+//}}}
+//{{{
 /*!
  ************************************************************************
  * \brief
@@ -186,8 +195,9 @@ void get_mb_pos (VideoParameters *p_Vid, int mb_addr, int mb_size[2], short *x, 
   (*x) = (short) ((*x) * mb_size[0]);
   (*y) = (short) ((*y) * mb_size[1]);
 }
+//}}}
 
-
+//{{{
 /*!
  ************************************************************************
  * \brief
@@ -256,12 +266,13 @@ void getNonAffNeighbour(Macroblock *currMB, int xN, int yN, int mb_size[2], Pixe
   {
     BlockPos *CurPos = &(currMB->p_Vid->PicPos[ pix->mb_addr ]);
     pix->x     = (short) (xN & (maxW - 1));
-    pix->y     = (short) (yN & (maxH - 1));    
+    pix->y     = (short) (yN & (maxH - 1));
     pix->pos_x = (short) (pix->x + CurPos->x * maxW);
     pix->pos_y = (short) (pix->y + CurPos->y * maxH);
   }
 }
-
+//}}}
+//{{{
 /*!
  ************************************************************************
  * \brief
@@ -607,8 +618,9 @@ void getAffNeighbour(Macroblock *currMB, int xN, int yN, int mb_size[2], PixelPo
     pix->pos_y = pix->pos_y + pix->y;
   }
 }
+//}}}
 
-
+//{{{
 /*!
  ************************************************************************
  * \brief
@@ -637,7 +649,8 @@ void get4x4Neighbour (Macroblock *currMB, int block_x, int block_y, int mb_size[
     pix->pos_y >>= 2;
   }
 }
-
+//}}}
+//{{{
 /*!
  ************************************************************************
  * \brief
@@ -664,3 +677,4 @@ void get4x4NeighbourBase (Macroblock *currMB, int block_x, int block_y, int mb_s
     pix->y >>= 2;
   }
 }
+//}}}

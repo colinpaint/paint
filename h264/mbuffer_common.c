@@ -1,4 +1,4 @@
-
+//{{{
 /*!
  ***********************************************************************
  *  \file
@@ -14,7 +14,8 @@
  *      - Yuwen He                        <yhe@dolby.com>
  ***********************************************************************
  */
-
+//}}}
+//{{{
 #include <limits.h>
 
 #include "global.h"
@@ -26,8 +27,10 @@
 #include "output.h"
 #include "fast_memory.h"
 #include "input.h"
+//}}}
 
 static void unmark_long_term_field_for_reference_by_frame_idx(DecodedPictureBuffer *p_Dpb, PictureStructure structure, int long_term_frame_idx, int mark_current, unsigned curr_frame_num, int curr_pic_num);
+//{{{
 /*!
  ************************************************************************
  * \brief
@@ -68,8 +71,8 @@ static int is_short_term_reference(FrameStore* fs)
   }
   return 0;
 }
-
-
+//}}}
+//{{{
 /*!
  ************************************************************************
  * \brief
@@ -110,7 +113,9 @@ static int is_long_term_reference(FrameStore* fs)
   }
   return 0;
 }
+//}}}
 
+//{{{
 /*!
  ************************************************************************
  * \brief
@@ -195,7 +200,8 @@ void gen_pic_list_from_frame_list(PictureStructure currStructure, FrameStore **f
     }
   }
 }
-
+//}}}
+//{{{
 /*!
  ************************************************************************
  * \brief
@@ -227,7 +233,9 @@ StorablePicture*  get_long_term_pic(Slice *currSlice, DecodedPictureBuffer *p_Dp
   }
   return NULL;
 }
+//}}}
 
+//{{{
 /*!
  ************************************************************************
  * \brief
@@ -253,9 +261,8 @@ void update_ref_list(DecodedPictureBuffer *p_Dpb)
     p_Dpb->fs_ref[j++]=NULL;
   }
 }
-
-
-
+//}}}
+//{{{
 /*!
  ************************************************************************
  * \brief
@@ -282,7 +289,9 @@ void update_ltref_list(DecodedPictureBuffer *p_Dpb)
     p_Dpb->fs_ltref[j++]=NULL;
   }
 }
+//}}}
 
+//{{{
 /*!
  ************************************************************************
  * \brief
@@ -300,7 +309,8 @@ static int get_pic_num_x (StorablePicture *p, int difference_of_pic_nums_minus1)
 
   return currPicNum - (difference_of_pic_nums_minus1 + 1);
 }
-
+//}}}
+//{{{
 /*!
  ************************************************************************
  * \brief
@@ -359,8 +369,8 @@ void mm_unmark_short_term_for_reference(DecodedPictureBuffer *p_Dpb, StorablePic
     }
   }
 }
-
-
+//}}}
+//{{{
 /*!
  ************************************************************************
  * \brief
@@ -419,8 +429,9 @@ void mm_unmark_long_term_for_reference(DecodedPictureBuffer *p_Dpb, StorablePict
     }
   }
 }
+//}}}
 
-
+//{{{
 /*!
  ************************************************************************
  * \brief
@@ -436,9 +447,8 @@ static void unmark_long_term_frame_for_reference_by_frame_idx(DecodedPictureBuff
       unmark_for_long_term_reference(p_Dpb->fs_ltref[i]);
   }
 }
-
-
-
+//}}}
+//{{{
 /*!
  ************************************************************************
  * \brief
@@ -543,8 +553,8 @@ static void mark_pic_long_term(DecodedPictureBuffer *p_Dpb, StorablePicture* p, 
     printf ("Warning: reference field for long term marking not found\n");
   }
 }
-
-
+//}}}
+//{{{
 /*!
  ************************************************************************
  * \brief
@@ -594,7 +604,8 @@ void mm_assign_long_term_frame_idx(DecodedPictureBuffer *p_Dpb, StorablePicture*
 
   mark_pic_long_term(p_Dpb, p, long_term_frame_idx, picNumX);
 }
-
+//}}}
+//{{{
 /*!
  ************************************************************************
  * \brief
@@ -616,8 +627,8 @@ void mm_update_max_long_term_frame_idx(DecodedPictureBuffer *p_Dpb, int max_long
     }
   }
 }
-
-
+//}}}
+//{{{
 /*!
  ************************************************************************
  * \brief
@@ -628,7 +639,8 @@ void mm_unmark_all_long_term_for_reference (DecodedPictureBuffer *p_Dpb)
 {
   mm_update_max_long_term_frame_idx(p_Dpb, 0);
 }
-
+//}}}
+//{{{
 /*!
  ************************************************************************
  * \brief
@@ -644,8 +656,8 @@ void mm_unmark_all_short_term_for_reference (DecodedPictureBuffer *p_Dpb)
   }
   update_ref_list(p_Dpb);
 }
-
-
+//}}}
+//{{{
 /*!
  ************************************************************************
  * \brief
@@ -667,8 +679,9 @@ void mm_mark_current_picture_long_term(DecodedPictureBuffer *p_Dpb, StorablePict
   p->is_long_term = 1;
   p->long_term_frame_idx = long_term_frame_idx;
 }
+//}}}
 
-
+//{{{
 /*!
  ************************************************************************
  * \brief
@@ -713,7 +726,8 @@ int is_used_for_reference(FrameStore* fs)
   }
   return 0;
 }
-
+//}}}
+//{{{
 /*!
  ************************************************************************
  * \brief
@@ -740,7 +754,8 @@ void get_smallest_poc(DecodedPictureBuffer *p_Dpb, int *poc,int * pos)
     }
   }
 }
-
+//}}}
+//{{{
 /*!
  ************************************************************************
  * \brief
@@ -762,7 +777,9 @@ int remove_unused_frame_from_dpb(DecodedPictureBuffer *p_Dpb)
   }
   return 0;
 }
+//}}}
 
+//{{{
 /*!
  ************************************************************************
  * \brief
@@ -858,6 +875,4 @@ static void unmark_long_term_field_for_reference_by_frame_idx(DecodedPictureBuff
     }
   }
 }
-
-
-
+//}}}
