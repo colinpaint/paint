@@ -1,3 +1,4 @@
+//{{{
 /*!
  ************************************************************************
  * \file  memalloc.h
@@ -8,14 +9,13 @@
  * \author
  *    Main contributors (see contributors.h for copyright, address and affiliation details)
  *     - Karsten Suehring
- *     - Alexis Michael Tourapis         <alexismt@ieee.org> 
+ *     - Alexis Michael Tourapis         <alexismt@ieee.org>
  *     - Yuwen He                        <yhe@dolby.com>
  *
  ************************************************************************
  */
-
-#ifndef _MEMALLOC_H_
-#define _MEMALLOC_H_
+//}}}
+#pragma once
 
 #include "global.h"
 #include "mbuffer.h"
@@ -183,7 +183,7 @@ extern int  malloc_mem3Dpel_2SLayers(imgpel ****buf0, int imgtype0, imgpel ****b
 extern void free_mem2Dpel_2SLayers(imgpel ***buf0, imgpel ***buf1);
 extern void free_mem3Dpel_2SLayers(imgpel ****buf0, imgpel ****buf1);
 
-
+//{{{
 static inline void* mem_malloc(size_t nitems)
 {
   void *d;
@@ -194,7 +194,8 @@ static inline void* mem_malloc(size_t nitems)
   }
   return d;
 }
-
+//}}}
+//{{{
 /*!
  ************************************************************************
  * \brief
@@ -203,16 +204,15 @@ static inline void* mem_malloc(size_t nitems)
  ************************************************************************/
 static inline void* mem_calloc(size_t nitems, size_t size)
 {
-  size_t padded_size = nitems * size; 
+  size_t padded_size = nitems * size;
   void *d = mem_malloc(padded_size);
   memset(d, 0, (int)padded_size);
   return d;
 }
-
+//}}}
+//{{{
 static inline void mem_free(void *a)
 {
   free_pointer(a);
 }
-
-#endif
-
+//}}}

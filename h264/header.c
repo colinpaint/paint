@@ -1,4 +1,4 @@
-
+//{{{
 /*!
  *************************************************************************************
  * \file header.c
@@ -8,7 +8,8 @@
  *
  *************************************************************************************
  */
-
+//}}}
+//{{{
 #include "global.h"
 #include "elements.h"
 #include "defines.h"
@@ -18,28 +19,28 @@
 #include "header.h"
 
 #include "ctx_tables.h"
-
+//}}}
 
 #if TRACE
-#define SYMTRACESTRING(s) strncpy(sym.tracestring,s,TRACESTRING_SIZE)
+  #define SYMTRACESTRING(s) strncpy(sym.tracestring,s,TRACESTRING_SIZE)
 #else
-#define SYMTRACESTRING(s) // do nothing
+  #define SYMTRACESTRING(s) // do nothing
 #endif
 
 static void ref_pic_list_reordering(Slice *currSlice);
 static void pred_weight_table(Slice *currSlice);
 #if (MVC_EXTENSION_ENABLE)
-static void ref_pic_list_mvc_modification(Slice *currSlice);
+  static void ref_pic_list_mvc_modification(Slice *currSlice);
 #endif
 
-
+//{{{
 /*!
  ************************************************************************
  * \brief
  *    calculate Ceil(Log2(uiVal))
  ************************************************************************
  */
-unsigned CeilLog2( unsigned uiVal)
+unsigned CeilLog2 (unsigned uiVal)
 {
   unsigned uiTmp = uiVal-1;
   unsigned uiRet = 0;
@@ -51,8 +52,9 @@ unsigned CeilLog2( unsigned uiVal)
   }
   return uiRet;
 }
-
-unsigned CeilLog2_sf( unsigned uiVal)
+//}}}
+//{{{
+unsigned CeilLog2_sf (unsigned uiVal)
 {
   unsigned uiTmp = uiVal-1;
   unsigned uiRet = 0;
@@ -64,7 +66,9 @@ unsigned CeilLog2_sf( unsigned uiVal)
   }
   return uiRet;
 }
+//}}}
 
+//{{{
 /*!
  ************************************************************************
  * \brief
@@ -73,7 +77,7 @@ unsigned CeilLog2_sf( unsigned uiVal)
  *    Length of the first part of the slice header (in bits)
  ************************************************************************
  */
-int FirstPartOfSliceHeader(Slice *currSlice)
+int FirstPartOfSliceHeader (Slice *currSlice)
 {
   VideoParameters *p_Vid = currSlice->p_Vid;
   byte dP_nr = assignSE2partition[currSlice->dp_mode][SE_HEADER];
@@ -101,7 +105,8 @@ int FirstPartOfSliceHeader(Slice *currSlice)
 
   return p_Dec->UsedBits;
 }
-
+//}}}
+//{{{
 /*!
  ************************************************************************
  * \brief
@@ -110,7 +115,7 @@ int FirstPartOfSliceHeader(Slice *currSlice)
  *    Length of the second part of the Slice header in bits
  ************************************************************************
  */
-int RestOfSliceHeader(Slice *currSlice)
+int RestOfSliceHeader (Slice *currSlice)
 {
   VideoParameters *p_Vid = currSlice->p_Vid;
   InputParameters *p_Inp = currSlice->p_Inp;
@@ -160,11 +165,11 @@ int RestOfSliceHeader(Slice *currSlice)
   currSlice->mb_aff_frame_flag = (active_sps->mb_adaptive_frame_field_flag && (currSlice->field_pic_flag==0));
   //currSlice->mb_aff_frame_flag = p_Vid->mb_aff_frame_flag;
 
-  if (currSlice->structure == FRAME       ) 
+  if (currSlice->structure == FRAME       )
     assert (currSlice->field_pic_flag == 0);
-  if (currSlice->structure == TOP_FIELD   ) 
+  if (currSlice->structure == TOP_FIELD   )
     assert (currSlice->field_pic_flag == 1 && (currSlice->bottom_field_flag == FALSE));
-  if (currSlice->structure == BOTTOM_FIELD) 
+  if (currSlice->structure == BOTTOM_FIELD)
     assert (currSlice->field_pic_flag == 1 && (currSlice->bottom_field_flag == TRUE ));
 
   if (currSlice->idr_flag)
@@ -244,8 +249,8 @@ int RestOfSliceHeader(Slice *currSlice)
   ref_pic_list_reordering(currSlice);
 #endif
 
-  currSlice->weighted_pred_flag = (unsigned short) ((currSlice->slice_type == P_SLICE || currSlice->slice_type == SP_SLICE) 
-    ? p_Vid->active_pps->weighted_pred_flag 
+  currSlice->weighted_pred_flag = (unsigned short) ((currSlice->slice_type == P_SLICE || currSlice->slice_type == SP_SLICE)
+    ? p_Vid->active_pps->weighted_pred_flag
     : (currSlice->slice_type == B_SLICE && p_Vid->active_pps->weighted_bipred_idc == 1));
   currSlice->weighted_bipred_idc = (unsigned short) (currSlice->slice_type == B_SLICE && p_Vid->active_pps->weighted_bipred_idc > 0);
 
@@ -281,7 +286,7 @@ int RestOfSliceHeader(Slice *currSlice)
       currSlice->sp_switch = read_u_1 ("SH: sp_for_switch_flag", currStream, &p_Dec->UsedBits);
     }
     currSlice->slice_qs_delta = val = read_se_v("SH: slice_qs_delta", currStream, &p_Dec->UsedBits);
-    currSlice->qs = 26 + p_Vid->active_pps->pic_init_qs_minus26 + val;    
+    currSlice->qs = 26 + p_Vid->active_pps->pic_init_qs_minus26 + val;
     if ((currSlice->qs < 0) || (currSlice->qs > 51))
       error ("slice_qs_delta makes slice_qs_y out of range", 500);
   }
@@ -339,15 +344,16 @@ int RestOfSliceHeader(Slice *currSlice)
 
   return p_Dec->UsedBits;
 }
+//}}}
 
-
+//{{{
 /*!
  ************************************************************************
  * \brief
  *    read the reference picture reordering information
  ************************************************************************
  */
-static void ref_pic_list_reordering(Slice *currSlice)
+static void ref_pic_list_reordering (Slice *currSlice)
 {
   //VideoParameters *p_Vid = currSlice->p_Vid;
   byte dP_nr = assignSE2partition[currSlice->dp_mode][SE_HEADER];
@@ -417,15 +423,16 @@ static void ref_pic_list_reordering(Slice *currSlice)
     currSlice->redundant_slice_ref_idx = currSlice->abs_diff_pic_num_minus1[LIST_0][0] + 1;
   }
 }
-
+//}}}
+#if (MVC_EXTENSION_ENABLE)
+//{{{
 /*!
  ************************************************************************
  * \brief
  *    read the MVC reference picture reordering information
  ************************************************************************
  */
-#if (MVC_EXTENSION_ENABLE)
-static void ref_pic_list_mvc_modification(Slice *currSlice)
+static void ref_pic_list_mvc_modification (Slice *currSlice)
 {
   //VideoParameters *p_Vid = currSlice->p_Vid;
   byte dP_nr = assignSE2partition[currSlice->dp_mode][SE_HEADER];
@@ -503,9 +510,11 @@ static void ref_pic_list_mvc_modification(Slice *currSlice)
     currSlice->redundant_slice_ref_idx = currSlice->abs_diff_pic_num_minus1[LIST_0][0] + 1;
   }
 }
+//}}}
 #endif
 
-static void reset_wp_params(Slice *currSlice)
+//{{{
+static void reset_wp_params (Slice *currSlice)
 {
   int i,comp;
   int log_weight_denom;
@@ -520,14 +529,15 @@ static void reset_wp_params(Slice *currSlice)
     }
   }
 }
-
+//}}}
+//{{{
 /*!
  ************************************************************************
  * \brief
  *    read the weighted prediction tables
  ************************************************************************
  */
-static void pred_weight_table(Slice *currSlice)
+static void pred_weight_table (Slice *currSlice)
 {
   VideoParameters *p_Vid = currSlice->p_Vid;
   seq_parameter_set_rbsp_t *active_sps = p_Vid->active_sps;
@@ -624,15 +634,16 @@ static void pred_weight_table(Slice *currSlice)
     }
   }
 }
+//}}}
 
-
+//{{{
 /*!
  ************************************************************************
  * \brief
  *    read the memory control operations
  ************************************************************************
  */
-void dec_ref_pic_marking(VideoParameters *p_Vid, Bitstream *currStream, Slice *pSlice)
+void dec_ref_pic_marking (VideoParameters *p_Vid, Bitstream *currStream, Slice *pSlice)
 {
   int val;
 
@@ -705,7 +716,8 @@ void dec_ref_pic_marking(VideoParameters *p_Vid, Bitstream *currStream, Slice *p
     }
   }
 }
-
+//}}}
+//{{{
 /*!
  ************************************************************************
  * \brief
@@ -717,7 +729,7 @@ void dec_ref_pic_marking(VideoParameters *p_Vid, Bitstream *currStream, Slice *p
  *    none
  ************************************************************************
  */
-void decode_poc(VideoParameters *p_Vid, Slice *pSlice)
+void decode_poc (VideoParameters *p_Vid, Slice *pSlice)
 {
   seq_parameter_set_rbsp_t *active_sps = p_Vid->active_sps;
   int i;
@@ -897,7 +909,7 @@ void decode_poc(VideoParameters *p_Vid, Slice *pSlice)
         pSlice->toppoc = pSlice->bottompoc = pSlice->framepoc = pSlice->ThisPOC;
       else if (pSlice->bottom_field_flag == FALSE)
          pSlice->toppoc = pSlice->framepoc = pSlice->ThisPOC;
-      else 
+      else
         pSlice->bottompoc = pSlice->framepoc = pSlice->ThisPOC;
     }
 
@@ -912,7 +924,8 @@ void decode_poc(VideoParameters *p_Vid, Slice *pSlice)
     break;
   }
 }
-
+//}}}
+//{{{
 /*!
  ************************************************************************
  * \brief
@@ -921,7 +934,7 @@ void decode_poc(VideoParameters *p_Vid, Slice *pSlice)
  *    none
  ************************************************************************
  */
-int dumppoc(VideoParameters *p_Vid) 
+int dumppoc (VideoParameters *p_Vid)
 {
   seq_parameter_set_rbsp_t *active_sps = p_Vid->active_sps;
 
@@ -950,7 +963,8 @@ int dumppoc(VideoParameters *p_Vid)
 
   return 0;
 }
-
+//}}}
+//{{{
 /*!
  ************************************************************************
  * \brief
@@ -958,7 +972,7 @@ int dumppoc(VideoParameters *p_Vid)
  *  POC200301
  ************************************************************************
  */
-int picture_order( Slice *pSlice )
+int picture_order (Slice *pSlice )
 {
   if (pSlice->field_pic_flag==0) // is a frame
     return pSlice->framepoc;
@@ -968,3 +982,4 @@ int picture_order( Slice *pSlice )
     return pSlice->bottompoc;
 }
 
+//}}}

@@ -1,4 +1,4 @@
-
+//{{{
 /*!
  ***********************************************************************
  * \file errorconcealment.c
@@ -28,12 +28,11 @@
  *    - Sebastian Purreiter   <sebastian.purreiter@mch.siemens.de>
  ***********************************************************************
  */
-
+//}}}
 #include "global.h"
 #include "elements.h"
 
-
-
+//{{{
 /*!
  ***********************************************************************
  * \brief
@@ -120,7 +119,8 @@ int set_ec_flag(VideoParameters *p_Vid, int se)
   }
   return EC_REQ;
 }
-
+//}}}
+//{{{
 /*!
  ***********************************************************************
  * \brief
@@ -134,8 +134,9 @@ void reset_ec_flags(VideoParameters *p_Vid)
   for (i=0; i<SE_MAX_ELEMENTS; i++)
     p_Vid->ec_flag[i] = NO_EC;
 }
+//}}}
 
-
+//{{{
 /*!
  ***********************************************************************
  * \brief
@@ -216,4 +217,4 @@ int get_concealed_element(VideoParameters *p_Vid, SyntaxElement *sym)
 
   return EC_REQ;
 }
-
+//}}}

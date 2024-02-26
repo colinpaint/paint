@@ -406,21 +406,25 @@ std::string cDvbUtils::getFrameInfo (uint8_t* pes, int64_t pesSize, bool h264) {
             switch (nalSubtype) {
               case 0:
                 frameType = 'P';
-                s += fmt::format ("NONIDR:{}:{} ", nalSubtype, frameType);
+                s += fmt::format ("NonIDR:{}:{} ", nalSubtype, frameType);
+                return fmt::format ("{} {}", frameType, s);
                 break;
 
               case 1:
                 frameType = 'B';
-                s += fmt::format ("NONIDR:{}:{} ", nalSubtype, frameType);
+                s += fmt::format ("NonIDR:{}:{} ", nalSubtype, frameType);
+                return fmt::format ("{} {}", frameType, s);
                 break;
 
               case 2:
                 frameType = 'I';
-                s += fmt::format ("NONIDR:{}:{} ", nalSubtype, frameType);
+                s += fmt::format ("NonIDR:{}:{} ", nalSubtype, frameType);
+                return fmt::format ("{} {}", frameType, s);
                 break;
 
               default:
-                s += fmt::format ("NONIDR:unknown:{} ", nalSubtype);
+                s += fmt::format ("NonIDR:unknown:{} ", nalSubtype);
+                return fmt::format ("{} {}", frameType, s);
                 break;
               }
 
@@ -452,18 +456,21 @@ std::string cDvbUtils::getFrameInfo (uint8_t* pes, int64_t pesSize, bool h264) {
               case 5:
                 frameType = 'P';
                 s += fmt::format ("IDR:{}:{} ", nalSubtype, frameType);
+                return fmt::format ("{} {}", frameType, s);
                 break;
 
               case 2:
               case 6:
                 frameType =  'B';
                 s += fmt::format ("IDR:{}:{} ", nalSubtype, frameType);
+                return fmt::format ("{} {}", frameType, s);
                 break;
 
               case 3:
               case 7:
                 frameType =  'I';
                 s += fmt::format ("IDR:{}:{} ", nalSubtype, frameType);
+                return fmt::format ("{} {}", frameType, s);
                 break;
 
               default:

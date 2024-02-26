@@ -42,7 +42,7 @@ void fillPlane        ( imgpel** imgX, int nVal, int size_x, int size_y);
  *      1, big-endian (e.g. SPARC, MIPS, PowerPC)
  ************************************************************************
  */
-void initInput(VideoParameters *p_Vid, FrameFormat *source, FrameFormat *output)
+void initInput (VideoParameters *p_Vid, FrameFormat *source, FrameFormat *output)
 {
   if (source->bit_depth[0] == output->bit_depth[0] && source->bit_depth[1] == output->bit_depth[1])
   {
@@ -65,7 +65,7 @@ void initInput(VideoParameters *p_Vid, FrameFormat *source, FrameFormat *output)
  *      1, big-endian (e.g. SPARC, MIPS, PowerPC)
  ************************************************************************
  */
-int testEndian(void)
+int testEndian (void)
 {
   short s;
   byte *p;
@@ -134,7 +134,7 @@ void fillPlane ( imgpel** imgX,                 //!< Pointer to image plane
 //}}}
 
 //{{{
-static void deinterleave_yuv420( unsigned char** input,       //!< input buffer
+static void deinterleave_yuv420 (unsigned char** input,       //!< input buffer
   unsigned char** output,      //!< output buffer
   FrameFormat *source,         //!< format of source buffer
   int symbol_size_in_bytes     //!< number of bytes per symbol
@@ -172,7 +172,7 @@ static void deinterleave_yuv420( unsigned char** input,       //!< input buffer
 }
 //}}}
 //{{{
-static void deinterleave_yuv444( unsigned char** input,       //!< input buffer
+static void deinterleave_yuv444 (unsigned char** input,       //!< input buffer
   unsigned char** output,      //!< output buffer
   FrameFormat *source,         //!< format of source buffer
   int symbol_size_in_bytes     //!< number of bytes per symbol
@@ -246,7 +246,7 @@ static void deinterleave_yuyv ( unsigned char** input,       //!< input buffer
 }
 //}}}
 //{{{
-static void deinterleave_yvyu ( unsigned char** input,       //!< input buffer
+static void deinterleave_yvyu (unsigned char** input,       //!< input buffer
   unsigned char** output,      //!< output buffer
   FrameFormat *source,         //!< format of source buffer
   int symbol_size_in_bytes     //!< number of bytes per symbol
@@ -287,7 +287,7 @@ static void deinterleave_yvyu ( unsigned char** input,       //!< input buffer
 }
 //}}}
 //{{{
-static void deinterleave_uyvy ( unsigned char** input,       //!< input buffer
+static void deinterleave_uyvy (unsigned char** input,       //!< input buffer
   unsigned char** output,      //!< output buffer
   FrameFormat *source,         //!< format of source buffer
   int symbol_size_in_bytes     //!< number of bytes per symbol
@@ -328,7 +328,7 @@ static void deinterleave_uyvy ( unsigned char** input,       //!< input buffer
 }
 //}}}
 //{{{
-static void deinterleave_v210 ( unsigned char** input,       //!< input buffer
+static void deinterleave_v210 (unsigned char** input,       //!< input buffer
   unsigned char** output,      //!< output buffer
   FrameFormat *source,         //!< format of source buffer
   int symbol_size_in_bytes     //!< number of bytes per symbol
@@ -392,7 +392,7 @@ static void deinterleave_v210 ( unsigned char** input,       //!< input buffer
  *    Deinterleave file read buffer to source picture structure
  ************************************************************************
  */
-static void deinterleave ( unsigned char** input,       //!< input buffer
+static void deinterleave (unsigned char** input,       //!< input buffer
                            unsigned char** output,      //!< output buffer
                            FrameFormat *source,         //!< format of source buffer
                            int symbol_size_in_bytes     //!< number of bytes per symbol
@@ -437,7 +437,7 @@ static void deinterleave ( unsigned char** input,       //!< input buffer
  *    Convert file read buffer to source picture structure
  ************************************************************************
  */
-void buf2img_bitshift ( imgpel** imgX,            //!< Pointer to image plane
+void buf2img_bitshift (imgpel** imgX,            //!< Pointer to image plane
                         unsigned char* buf,       //!< Buffer for file output
                         int size_x,               //!< horizontal size of picture
                         int size_y,               //!< vertical size of picture
@@ -797,6 +797,7 @@ void DeleteFrameMemory (VideoParameters *p_Vid)
     free (p_Vid->ibuf);
 }
 //}}}
+
 //{{{
 /*!
  ************************************************************************

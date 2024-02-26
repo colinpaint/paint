@@ -1,4 +1,4 @@
-
+//{{{
 /*!
  ************************************************************************
  * \file  leaky_bucket.c
@@ -11,10 +11,11 @@
  *    - Shankar Regunathan                   <shanre@microsoft.com>
  ************************************************************************
  */
-
+//}}}
 #include "global.h"
 
 #ifdef _LEAKYBUCKET_
+//{{{
 /*!
  ***********************************************************************
  * \brief
@@ -43,7 +44,8 @@ unsigned long GetBigDoubleWord(FILE *fp)
   dw = ((unsigned long) (fgetc(fp) & 0xFF)) | (dw << 0x08);
   return(dw);
 }
-
+//}}}
+//{{{
 /*!
  ***********************************************************************
  * \brief
@@ -106,9 +108,9 @@ void calc_buffer(InputParameters *p_Inp)
   }
 
   printf("\n");
-  if(iBucket > 0 ) 
+  if(iBucket > 0 )
   {
-    if(iBucket < NumberLeakyBuckets) 
+    if(iBucket < NumberLeakyBuckets)
     {
       dnr = (float) (Rmin[iBucket] - Rmin[iBucket-1]);
       frac1 = (float) (R_decoder - Rmin[iBucket-1]);
@@ -135,4 +137,5 @@ void calc_buffer(InputParameters *p_Inp)
   free(Fmin);
   return;
 }
+//}}}
 #endif
