@@ -1,3 +1,4 @@
+//{{{
 /*!
  ************************************************************************
  * \file frame.h
@@ -9,6 +10,7 @@
  *
  ************************************************************************
  */
+//}}}
 #pragma once
 
 typedef enum {
@@ -16,7 +18,7 @@ typedef enum {
   CM_YUV     =  0,
   CM_RGB     =  1,
   CM_XYZ     =  2
-} ColorModel;
+  } ColorModel;
 
 typedef enum {
   CF_UNKNOWN = -1,     //!< Unknown color format
@@ -24,7 +26,7 @@ typedef enum {
   YUV420     =  1,     //!< 4:2:0
   YUV422     =  2,     //!< 4:2:2
   YUV444     =  3      //!< 4:4:4
-} ColorFormat;
+  } ColorFormat;
 
 typedef enum {
   PF_UNKNOWN = -1,     //!< Unknown color ordering
@@ -34,9 +36,9 @@ typedef enum {
   YVYU       =  2,     //!< YVYU
   BGR        =  3,     //!< BGR
   V210       =  4      //!< Video Clarity 422 format (10 bits)
-} PixelFormat;
+  } PixelFormat;
 
-
+//{{{
 typedef struct frame_format
 {
   ColorFormat yuv_format;                    //!< YUV format (0=4:0:0, 1=4:2:0, 2=4:2:2, 3=4:4:4)
@@ -61,3 +63,4 @@ typedef struct frame_format
   int         pic_unit_size_on_disk;         //!< picture sample unit size on storage medium
   int         pic_unit_size_shift3;          //!< pic_unit_size_on_disk >> 3
 } FrameFormat;
+//}}}

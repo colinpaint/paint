@@ -12,7 +12,7 @@
  ***********************************************************************
  */
 //}}}
-//{{{
+//{{{  includes
 #include "global.h"
 #include "image.h"
 #include "parsetcommon.h"
@@ -31,8 +31,7 @@
 #define SYMTRACESTRING(s) // do nothing
 #endif
 //}}}
-
-extern void init_frext(VideoParameters *p_Vid);
+extern void init_frext (VideoParameters *p_Vid);
 
 //{{{
 // syntax for scaling list matrix values

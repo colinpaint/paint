@@ -1,3 +1,4 @@
+//{{{
 
 /*!
  *************************************************************************************
@@ -19,10 +20,10 @@
  *     D-81617 Munich, Germany                                       \n
  *************************************************************************************
  */
+//}}}
+#pragma once
 
-#ifndef _ELEMENTS_H_
-#define _ELEMENTS_H_
-
+//{{{
 /*!
  *  definition of H.264 syntax elements
  *  order of elements follow dependencies for picture reconstruction
@@ -66,18 +67,15 @@
 #define SE_BFRAME           18
 #define SE_EOS              19
 #define SE_MAX_ELEMENTS     20
-
-
+//}}}
 #define NO_EC               0   //!< no error concealment necessary
 #define EC_REQ              1   //!< error concealment required
 #define EC_SYNC             2   //!< search and sync on next header element
-
 #define MAXPARTITIONMODES   2
 //!< maximum possible partition modes as defined in assignSE2partition[][]
 
 /*!
  *  \brief  lookup-table to assign different elements to partition
- *
  *  \note   here we defined up to 6 different partitions similar to
  *          document Q15-k-18 described in the PROGFRAMEMODE.
  *          The Sliceheader contains the PSYNC information. \par
@@ -99,15 +97,8 @@
  *          Furthermore partitions must follow syntax dependencies as
  *          outlined in document Q15-J-23.
  */
-
-
-static const byte assignSE2partition[][SE_MAX_ELEMENTS] =
-{
+static const byte assignSE2partition[][SE_MAX_ELEMENTS] = {
   // 0  1  2  3  4  5  6  7  8  9 10 11 12 13 14 15 16 17 18 19  // element number (do not uncomment)
   {  0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 },   //!< all elements in one partition no data partitioning
   {  0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 0, 2, 2, 2, 2, 0, 0, 0, 0 }    //!< three partitions per slice
-};
-
-
-#endif
-
+  };
