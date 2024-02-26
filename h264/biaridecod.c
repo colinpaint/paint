@@ -1,3 +1,4 @@
+//{{{
 /*!
  *************************************************************************************
  * \file biaridecod.c
@@ -17,17 +18,17 @@
  *    - Gunnar Marten
  *************************************************************************************
  */
-#define _CRT_SECURE_NO_WARNINGS
-
+//}}}
+//{{{  includes
 #include "global.h"
 #include "memalloc.h"
 #include "biaridecod.h"
-
-
+//}}}
 #define B_BITS    10      // Number of bits to represent the whole coding interval
 #define HALF      0x01FE  //(1 << (B_BITS-1)) - 2
 #define QUARTER   0x0100  //(1 << (B_BITS-2))
 
+//{{{
 /*!
  ************************************************************************
  * \brief
@@ -44,8 +45,9 @@ DecodingEnvironmentPtr arideco_create_decoding_environment()
     no_mem_exit("arideco_create_decoding_environment: dep");
   return dep;
 }
+//}}}
 
-
+//{{{
 /*!
  ***********************************************************************
  * \brief
@@ -62,7 +64,8 @@ void arideco_delete_decoding_environment(DecodingEnvironmentPtr dep)
   else
     free(dep);
 }
-
+//}}}
+//{{{
 /*!
  ************************************************************************
  * \brief
@@ -76,7 +79,9 @@ void arideco_done_decoding(DecodingEnvironmentPtr dep)
   fprintf(p_trace, "done_decoding: %d\n", *dep->Dcodestrm_len);
 #endif
 }
+//}}}
 
+//{{{
 /*!
  ************************************************************************
  * \brief
@@ -90,7 +95,8 @@ static inline unsigned int getbyte(DecodingEnvironmentPtr dep)
 #endif
   return dep->Dcodestrm[(*dep->Dcodestrm_len)++];
 }
-
+//}}}
+//{{{
 /*!
  ************************************************************************
  * \brief
@@ -108,6 +114,8 @@ static inline unsigned int getword(DecodingEnvironmentPtr dep)
   *len += 2;
   return ((*p_code_strm<<8) | *(p_code_strm + 1));
 }
+//}}}
+//{{{
 /*!
  ************************************************************************
  * \brief
@@ -132,8 +140,8 @@ void arideco_start_decoding(DecodingEnvironmentPtr dep, unsigned char *code_buff
   fprintf(p_trace, "value: %d firstbyte: %d code_len: %d\n", dep->Dvalue >> dep->DbitsLeft, firstbyte, *code_len);
 #endif
 }
-
-
+//}}}
+//{{{
 /*!
  ************************************************************************
  * \brief
@@ -150,8 +158,9 @@ int arideco_bits_read(DecodingEnvironmentPtr dep)
  return (((*dep->Dcodestrm_len) << 3) - dep->DbitsLeft);
 #endif
 }
+//}}}
 
-
+//{{{
 /*!
 ************************************************************************
 * \brief
@@ -213,8 +222,8 @@ unsigned int biari_decode_symbol(DecodingEnvironment *dep, BiContextType *bi_ct 
     return (bit);
   }
 }
-
-
+//}}}
+//{{{
 /*!
  ************************************************************************
  * \brief
@@ -247,7 +256,8 @@ unsigned int biari_decode_symbol_eq_prob(DecodingEnvironmentPtr dep)
     return 1;
   }
 }
-
+//}}}
+//{{{
 /*!
  ************************************************************************
  * \brief
@@ -288,7 +298,9 @@ unsigned int biari_decode_final(DecodingEnvironmentPtr dep)
     return 1;
   }
 }
+//}}}
 
+//{{{
 /*!
  ************************************************************************
  * \brief
@@ -312,4 +324,4 @@ void biari_init_context (int qp, BiContextTypePtr ctx, const char* ini)
     ctx->MPS   = 0;
   }
 }
-
+//}}}

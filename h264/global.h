@@ -25,7 +25,9 @@
  */
 //}}}
 #pragma once
-//{{{
+//{{{  includes
+#define _CRT_SECURE_NO_WARNINGS
+
 #include <stdlib.h>
 #include <stdarg.h>
 #include <string.h>
@@ -45,35 +47,27 @@
 //}}}
 
 typedef struct bit_stream_dec Bitstream;
-
 #define ET_SIZE 300      //!< size of error text buffer
 extern char errortext[ET_SIZE]; //!< buffer for error message for exit with error()
 
 struct pic_motion_params_old;
 struct pic_motion_params;
-
-/***********************************************************************
- * T y p e    d e f i n i t i o n s    f o r    J M
- ***********************************************************************
- */
+//{{{
 typedef enum
 {
    DEC_OPENED = 0,
    DEC_STOPPED,
 }DecoderStatus_e;
-
+//}}}
+//{{{
 typedef enum
 {
   LumaComp = 0,
   CrComp = 1,
   CbComp = 2
 } Color_Component;
-
-/***********************************************************************
- * D a t a    t y p e s   f o r  C A B A C
- ***********************************************************************
- */
-
+//}}}
+//{{{
 typedef struct pix_pos
 {
   int   available;
@@ -83,8 +77,10 @@ typedef struct pix_pos
   short pos_x;
   short pos_y;
 } PixelPos;
+//}}}
 
 //! struct to characterize the state of the arithmetic coding engine
+//{{{
 typedef struct
 {
   unsigned int    Drange;
@@ -93,40 +89,38 @@ typedef struct
   byte            *Dcodestrm;
   int             *Dcodestrm_len;
 } DecodingEnvironment;
-
+//}}}
 typedef DecodingEnvironment *DecodingEnvironmentPtr;
 
 // Motion Vector structure
+//{{{
 typedef struct
 {
   short mv_x;
   short mv_y;
 } MotionVector;
-
+//}}}
 static const MotionVector zero_mv = {0, 0};
 
+//{{{
 typedef struct
 {
   short x;
   short y;
 } BlockPos;
-
+//}}}
 //! struct for context management
+//{{{
 typedef struct
 {
   uint16 state;         // index into state-table CP
   unsigned char  MPS;           // Least Probable Symbol 0/1 CP
   unsigned char dummy;          // for alignment
 } BiContextType;
-
+//}}}
 typedef BiContextType *BiContextTypePtr;
 
-
-/**********************************************************************
- * C O N T E X T S   F O R   T M L   S Y N T A X   E L E M E N T S
- **********************************************************************
- */
-
+//{{{  defines
 #define NUM_MB_TYPE_CTX  11
 #define NUM_B8_TYPE_CTX  9
 #define NUM_MV_RES_CTX   10
@@ -134,12 +128,12 @@ typedef BiContextType *BiContextTypePtr;
 #define NUM_DELTA_QP_CTX 4
 #define NUM_MB_AFF_CTX 4
 #define NUM_TRANSFORM_SIZE_CTX 3
-
+//}}}
 // structures that will be declared somewhere else
 struct storable_picture;
 struct datapartition_dec;
 struct syntaxelement_dec;
-
+//{{{
 typedef struct
 {
   BiContextType mb_type_contexts [3][NUM_MB_TYPE_CTX];
@@ -149,7 +143,8 @@ typedef struct
   BiContextType delta_qp_contexts[NUM_DELTA_QP_CTX];
   BiContextType mb_aff_contexts  [NUM_MB_AFF_CTX];
 } MotionInfoContexts;
-
+//}}}
+//{{{  defines
 #define NUM_IPR_CTX    2
 #define NUM_CIPR_CTX   4
 #define NUM_CBP_CTX    4
@@ -158,7 +153,8 @@ typedef struct
 #define NUM_LAST_CTX  15
 #define NUM_ONE_CTX    5
 #define NUM_ABS_CTX    5
-
+//}}}
+//{{{
 typedef struct
 {
   BiContextType  transform_size_contexts [NUM_TRANSFORM_SIZE_CTX];
@@ -171,15 +167,8 @@ typedef struct
   BiContextType  one_contexts [NUM_BLOCK_TYPES][NUM_ONE_CTX];
   BiContextType  abs_contexts [NUM_BLOCK_TYPES][NUM_ABS_CTX];
 } TextureInfoContexts;
-
-
-//*********************** end of data type definition for CABAC *******************
-
-/***********************************************************************
- * N e w   D a t a    t y p e s   f o r    T M L
- ***********************************************************************
- */
-
+//}}}
+//{{{
 /*! Buffer structure for decoded referenc picture marking commands */
 typedef struct DecRefPicMarking_s
 {
@@ -190,7 +179,8 @@ typedef struct DecRefPicMarking_s
   int max_long_term_frame_idx_plus1;
   struct DecRefPicMarking_s *Next;
 } DecRefPicMarking_t;
-
+//}}}
+//{{{
 //! cbp structure
 typedef struct cbp_s
 {
@@ -198,7 +188,8 @@ typedef struct cbp_s
   int64         bits    ;
   int64         bits_8x8;
 } CBPStructure;
-
+//}}}
+//{{{
 //! Macroblock
 typedef struct macroblock_dec
 {
@@ -284,7 +275,8 @@ typedef struct macroblock_dec
   void (*read_comp_coeff_4x4_CAVLC)     (struct macroblock_dec *currMB, ColorPlane pl, int (*InvLevelScale4x4)[4], int qp_per, int cbp, byte **nzcoeff);
   void (*read_comp_coeff_8x8_CAVLC)     (struct macroblock_dec *currMB, ColorPlane pl, int (*InvLevelScale8x8)[8], int qp_per, int cbp, byte **nzcoeff);
 } Macroblock;
-
+//}}}
+//{{{
 //! Syntaxelement
 typedef struct syntaxelement_dec
 {
@@ -307,8 +299,8 @@ typedef struct syntaxelement_dec
   //! used for CABAC: refers to actual coding method of each individual syntax element type
   void  (*reading)(struct macroblock_dec *currMB, struct syntaxelement_dec *, DecodingEnvironmentPtr);
 } SyntaxElement;
-
-
+//}}}
+//{{{
 //! Bitstream
 struct bit_stream_dec
 {
@@ -322,7 +314,8 @@ struct bit_stream_dec
   byte          *streamBuffer;      //!< actual codebuffer for read bytes
   int           ei_flag;            //!< error indication, 0: no error, else unspecified error
 };
-
+//}}}
+//{{{
 //! DataPartition
 typedef struct datapartition_dec
 {
@@ -335,14 +328,17 @@ typedef struct datapartition_dec
                actual method depends on chosen data partition and
                entropy coding method  */
 } DataPartition;
-
+//}}}
+//{{{
 typedef struct wp_params
 {
   short weight[3];
   short offset[3];
 } WPParams;
+//}}}
 
 #if (MVC_EXTENSION_ENABLE)
+//{{{
 typedef struct nalunitheadermvcext_tag
 {
    unsigned int non_idr_flag;
@@ -354,9 +350,11 @@ typedef struct nalunitheadermvcext_tag
    unsigned int reserved_one_bit;
    unsigned int iPrefixNALU;
 } NALUnitHeaderMVCExt_t;
+//}}}
 #endif
 
 //! Slice
+//{{{
 typedef struct slice
 {
   struct video_par    *p_Vid;
@@ -570,7 +568,8 @@ typedef struct slice
   void (*read_coeff_4x4_CAVLC     )    (Macroblock *currMB, int block_type, int i, int j, int levarr[16], int runarr[16], int *number_coefficients);
 
 } Slice;
-
+//}}}
+//{{{
 typedef struct decodedpic_t
 {
   int bValid;                 //0: invalid, 1: valid, 3: valid for 3D output;
@@ -590,8 +589,8 @@ typedef struct decodedpic_t
   int iBufSize;
   struct decodedpic_t *pNext;
 } DecodedPicList;
-
-//****************************** ~DM ***********************************
+//}}}
+//{{{
 typedef struct coding_par
 {
   int layer_id;
@@ -663,7 +662,8 @@ typedef struct coding_par
   int *qp_per_matrix;
   int *qp_rem_matrix;
 }CodingParameters;
-
+//}}}
+//{{{
 typedef struct layer_par
 {
   int layer_id;
@@ -672,8 +672,8 @@ typedef struct layer_par
   seq_parameter_set_rbsp_t *p_SPS;
   struct decoded_picture_buffer *p_Dpb;
 }LayerParameters;
-
-// video parameters
+//}}}
+//{{{
 typedef struct video_par
 {
   struct inp_par      *p_Inp;
@@ -953,9 +953,8 @@ typedef struct video_par
 
   struct dec_stat_parameters *dec_stats;
 } VideoParameters;
-
-
-// signal to noise ratio parameters
+//}}}
+//{{{
 typedef struct snr_par
 {
   int   frame_ctr;
@@ -965,8 +964,8 @@ typedef struct snr_par
   float sse[3];                                //!< component SSE
   float msse[3];                                //!< Average component SSE
 } SNRParameters;
-
-// input parameters from configuration file
+//}}}
+//{{{
 typedef struct inp_par
 {
   char infile[FILE_NAME_SIZE];                       //!< H.264 inputfile
@@ -1019,7 +1018,8 @@ typedef struct inp_par
   int bDisplayDecParams;
   int dpb_plus[2];
 } InputParameters;
-
+//}}}
+//{{{
 typedef struct old_slice_par
 {
   unsigned field_pic_flag;
@@ -1039,7 +1039,8 @@ typedef struct old_slice_par
 #endif
   int      layer_id;
 } OldSliceParams;
-
+//}}}
+//{{{
 typedef struct decoder_params
 {
   InputParameters   *p_Inp;          //!< Input Parameters
@@ -1049,87 +1050,87 @@ typedef struct decoder_params
   FILE              *p_trace;        //!< Trace file
   int                bitcounter;
 } DecoderParams;
+//}}}
 
 //{{{
 #ifdef __cplusplus
   extern "C" {
 #endif
 //}}}
-extern DecoderParams  *p_Dec;
+  extern DecoderParams  *p_Dec;
 
-// prototypes
-extern void error(char *text, int code);
+  // prototypes
+  extern void error(char *text, int code);
 
-// dynamic mem allocation
-extern int  init_global_buffers( VideoParameters *p_Vid, int layer_id );
-extern void free_global_buffers( VideoParameters *p_Vid);
-extern void free_layer_buffers( VideoParameters *p_Vid, int layer_id );
+  // dynamic mem allocation
+  extern int  init_global_buffers( VideoParameters *p_Vid, int layer_id );
+  extern void free_global_buffers( VideoParameters *p_Vid);
+  extern void free_layer_buffers( VideoParameters *p_Vid, int layer_id );
 
-extern int RBSPtoSODB(byte *streamBuffer, int last_byte_pos);
-extern int EBSPtoRBSP(byte *streamBuffer, int end_bytepos, int begin_bytepos);
+  extern int RBSPtoSODB(byte *streamBuffer, int last_byte_pos);
+  extern int EBSPtoRBSP(byte *streamBuffer, int end_bytepos, int begin_bytepos);
 
-extern void FreePartition (DataPartition *dp, int n);
-extern DataPartition *AllocPartition(int n);
+  extern void FreePartition (DataPartition *dp, int n);
+  extern DataPartition *AllocPartition(int n);
 
-extern void tracebits (const char *trace_str, int len, int info, int value1);
-extern void tracebits2(const char *trace_str, int len, int info);
+  extern void tracebits (const char *trace_str, int len, int info, int value1);
+  extern void tracebits2(const char *trace_str, int len, int info);
 
-extern unsigned CeilLog2   ( unsigned uiVal);
-extern unsigned CeilLog2_sf( unsigned uiVal);
+  extern unsigned CeilLog2   ( unsigned uiVal);
+  extern unsigned CeilLog2_sf( unsigned uiVal);
 
-// For 4:4:4 independent mode
-extern void change_plane_JV      ( VideoParameters *p_Vid, int nplane, Slice *pSlice);
-extern void make_frame_picture_JV( VideoParameters *p_Vid );
+  // For 4:4:4 independent mode
+  extern void change_plane_JV      ( VideoParameters *p_Vid, int nplane, Slice *pSlice);
+  extern void make_frame_picture_JV( VideoParameters *p_Vid );
 
-#if (MVC_EXTENSION_ENABLE)
-  extern void nal_unit_header_mvc_extension(NALUnitHeaderMVCExt_t *NaluHeaderMVCExt, struct bit_stream_dec *bitstream);
-#endif
+  #if (MVC_EXTENSION_ENABLE)
+    extern void nal_unit_header_mvc_extension(NALUnitHeaderMVCExt_t *NaluHeaderMVCExt, struct bit_stream_dec *bitstream);
+  #endif
 
-extern void FreeDecPicList ( DecodedPicList *pDecPicList );
-extern void ClearDecPicList( VideoParameters *p_Vid );
-extern DecodedPicList *get_one_avail_dec_pic_from_list(DecodedPicList *pDecPicList, int b3D, int view_id);
-extern Slice *malloc_slice( InputParameters *p_Inp, VideoParameters *p_Vid );
-extern void copy_slice_info ( Slice *currSlice, OldSliceParams *p_old_slice );
-extern void OpenOutputFiles(VideoParameters *p_Vid, int view0_id, int view1_id);
-extern void set_global_coding_par(VideoParameters *p_Vid, CodingParameters *cps);
+  extern void FreeDecPicList ( DecodedPicList *pDecPicList );
+  extern void ClearDecPicList( VideoParameters *p_Vid );
+  extern DecodedPicList *get_one_avail_dec_pic_from_list(DecodedPicList *pDecPicList, int b3D, int view_id);
+  extern Slice *malloc_slice( InputParameters *p_Inp, VideoParameters *p_Vid );
+  extern void copy_slice_info ( Slice *currSlice, OldSliceParams *p_old_slice );
+  extern void OpenOutputFiles(VideoParameters *p_Vid, int view0_id, int view1_id);
+  extern void set_global_coding_par(VideoParameters *p_Vid, CodingParameters *cps);
 
-//{{{
-static inline int is_FREXT_profile(unsigned int profile_idc)
-{
-  // we allow all FRExt tools, when no profile is active
-  return ( profile_idc==NO_PROFILE || profile_idc==FREXT_HP || profile_idc==FREXT_Hi10P || profile_idc==FREXT_Hi422 || profile_idc==FREXT_Hi444 || profile_idc == FREXT_CAVLC444 );
-}
-//}}}
-//{{{
-static inline int is_HI_intra_only_profile(unsigned int profile_idc, Boolean constrained_set3_flag)
-{
-  return ( ( ( (profile_idc == FREXT_Hi10P)||(profile_idc == FREXT_Hi422)|| (profile_idc == FREXT_Hi444)) && constrained_set3_flag) || (profile_idc == FREXT_CAVLC444) );
-}
-//}}}
-//{{{
-static inline int is_BL_profile(unsigned int profile_idc)
-{
-  return ( profile_idc == FREXT_CAVLC444 || profile_idc == BASELINE || profile_idc == MAIN || profile_idc == EXTENDED ||
-           profile_idc == FREXT_HP || profile_idc == FREXT_Hi10P || profile_idc == FREXT_Hi422 || profile_idc == FREXT_Hi444);
-}
-//}}}
-//{{{
-static inline int is_EL_profile(unsigned int profile_idc)
-{
-  return ( (profile_idc == MVC_HIGH) || (profile_idc == STEREO_HIGH) );
-}
-//}}}
-//{{{
-static inline int is_MVC_profile(unsigned int profile_idc)
-{
-  return ( (0)
-#if (MVC_EXTENSION_ENABLE)
-  || (profile_idc == MVC_HIGH) || (profile_idc == STEREO_HIGH)
-#endif
-  );
-}
-//}}}
-
+  //{{{
+  static inline int is_FREXT_profile(unsigned int profile_idc)
+  {
+    // we allow all FRExt tools, when no profile is active
+    return ( profile_idc==NO_PROFILE || profile_idc==FREXT_HP || profile_idc==FREXT_Hi10P || profile_idc==FREXT_Hi422 || profile_idc==FREXT_Hi444 || profile_idc == FREXT_CAVLC444 );
+  }
+  //}}}
+  //{{{
+  static inline int is_HI_intra_only_profile(unsigned int profile_idc, Boolean constrained_set3_flag)
+  {
+    return ( ( ( (profile_idc == FREXT_Hi10P)||(profile_idc == FREXT_Hi422)|| (profile_idc == FREXT_Hi444)) && constrained_set3_flag) || (profile_idc == FREXT_CAVLC444) );
+  }
+  //}}}
+  //{{{
+  static inline int is_BL_profile(unsigned int profile_idc)
+  {
+    return ( profile_idc == FREXT_CAVLC444 || profile_idc == BASELINE || profile_idc == MAIN || profile_idc == EXTENDED ||
+             profile_idc == FREXT_HP || profile_idc == FREXT_Hi10P || profile_idc == FREXT_Hi422 || profile_idc == FREXT_Hi444);
+  }
+  //}}}
+  //{{{
+  static inline int is_EL_profile(unsigned int profile_idc)
+  {
+    return ( (profile_idc == MVC_HIGH) || (profile_idc == STEREO_HIGH) );
+  }
+  //}}}
+  //{{{
+  static inline int is_MVC_profile(unsigned int profile_idc)
+  {
+    return ( (0)
+  #if (MVC_EXTENSION_ENABLE)
+    || (profile_idc == MVC_HIGH) || (profile_idc == STEREO_HIGH)
+  #endif
+    );
+  }
+  //}}}
 //{{{
 #ifdef __cplusplus
 }

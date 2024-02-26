@@ -76,7 +76,7 @@
 DecoderParams  *p_Dec;
 char errortext[ET_SIZE];
 
-static void free_slice  (Slice* currSlic);
+static void free_slice (Slice* currSlic);
 
 //{{{
 /*!
@@ -90,7 +90,7 @@ static void free_slice  (Slice* currSlic);
  *    Exit code
  ************************************************************************
  */
-void error(char *text, int code)
+void error (char* text, int code)
 {
   fprintf(stderr, "%s\n", text);
   if (p_Dec)
@@ -1072,7 +1072,7 @@ void free_global_buffers (VideoParameters* p_Vid)
 //}}}
 
 //{{{
-void report_stats_on_error(void)
+void report_stats_on_error()
 {
   //free_encoder_memory(p_Vid);
   exit (-1);
@@ -1150,8 +1150,7 @@ int OpenDecoder (InputParameters* p_Inp) {
   pDecoder->p_Vid->ref_poc_gap = p_Inp->ref_poc_gap;
   pDecoder->p_Vid->poc_gap = p_Inp->poc_gap;
 
-  pDecoder->p_Vid->p_out = open (p_Inp->outfile, OPENFLAGS_WRITE, OPEN_PERMISSIONS);
-  //  pDecoder->p_Vid->p_out = -1;
+  pDecoder->p_Vid->p_out = -1;
   pDecoder->p_Vid->p_ref = -1;
 
   malloc_annex_b (pDecoder->p_Vid, &pDecoder->p_Vid->annex_b);

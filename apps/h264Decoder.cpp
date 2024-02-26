@@ -19,16 +19,16 @@ namespace {
     int iOutputFrame = 0;
     DecodedPicList* pPic = pDecPic;
 
-    cLog::log (LOGINFO, fmt::format ("WriteOneFrame {}x{}:{} format:{} stride:{}:{} yuv:{:x}:{:x}:{:x}",
+    cLog::log (LOGINFO, fmt::format ("WriteOneFrame {}x{}:{} format:{}:{} stride:{}x{} yuv:{:x}:{:x}:{:x}",
                                      pPic->iWidth * ((pPic->iBitDepth+7)>>3),
                                      pPic->iHeight,
                                      pPic->iBitDepth,
-                                     pPic->iYUVStorageFormat,
+                                     pPic->iYUVStorageFormat, pPic->bValid,
                                      pPic->iYBufStride,
                                      pPic->iUVBufStride,
-                                     (int)pPic->pY,
-                                     (int)pPic->pU,
-                                     (int)pPic->pV
+                                     (uint64_t)pPic->pY,
+                                     (uint64_t)pPic->pU,
+                                     (uint64_t)pPic->pV
                                      ));
 
     if (pPic && (((pPic->iYUVStorageFormat == 2) && pPic->bValid == 3) ||
@@ -96,7 +96,7 @@ int main (int numArgs, char* args[]) {
   // input params
   memset (&InputParams, 0, sizeof(InputParameters));
   strcpy (InputParams.infile, fileName.c_str());
-  strcpy (InputParams.outfile, "test_dec.yuv"); //! set default output file name
+  strcpy (InputParams.outfile, "test.yuv"); //! set default output file name
   InputParams.FileFormat = PAR_OF_ANNEXB;
   InputParams.poc_scale = 2;
   InputParams.intra_profile_deblocking = 1;
