@@ -57,7 +57,7 @@ if (CMAKE_HOST_WIN32)
 
 # h264 software decoder
   project (h264DecoderApp VERSION 1.0.0)
-    add_executable (${PROJECT_NAME} apps/h264Decoder.c)
+    add_executable (${PROJECT_NAME} apps/h264Decoder.cpp)
     target_link_libraries (${PROJECT_NAME} PRIVATE h264)
 
 # imguiApp

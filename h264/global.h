@@ -1,4 +1,4 @@
-
+//{{{
 /*!
  ************************************************************************
  *  \file
@@ -23,7 +23,9 @@
  *
  ************************************************************************
  */
+//}}}
 #pragma once
+//{{{
 #include <stdlib.h>
 #include <stdarg.h>
 #include <string.h>
@@ -40,6 +42,7 @@
 #include "frame.h"
 #include "distortion.h"
 #include "io_video.h"
+//}}}
 
 typedef struct bit_stream_dec Bitstream;
 
@@ -1047,6 +1050,11 @@ typedef struct decoder_params
   int                bitcounter;
 } DecoderParams;
 
+//{{{
+#ifdef __cplusplus
+  extern "C" {
+#endif
+//}}}
 extern DecoderParams  *p_Dec;
 
 // prototypes
@@ -1074,7 +1082,7 @@ extern void change_plane_JV      ( VideoParameters *p_Vid, int nplane, Slice *pS
 extern void make_frame_picture_JV( VideoParameters *p_Vid );
 
 #if (MVC_EXTENSION_ENABLE)
-extern void nal_unit_header_mvc_extension(NALUnitHeaderMVCExt_t *NaluHeaderMVCExt, struct bit_stream_dec *bitstream);
+  extern void nal_unit_header_mvc_extension(NALUnitHeaderMVCExt_t *NaluHeaderMVCExt, struct bit_stream_dec *bitstream);
 #endif
 
 extern void FreeDecPicList ( DecodedPicList *pDecPicList );
@@ -1085,26 +1093,33 @@ extern void copy_slice_info ( Slice *currSlice, OldSliceParams *p_old_slice );
 extern void OpenOutputFiles(VideoParameters *p_Vid, int view0_id, int view1_id);
 extern void set_global_coding_par(VideoParameters *p_Vid, CodingParameters *cps);
 
+//{{{
 static inline int is_FREXT_profile(unsigned int profile_idc)
 {
   // we allow all FRExt tools, when no profile is active
   return ( profile_idc==NO_PROFILE || profile_idc==FREXT_HP || profile_idc==FREXT_Hi10P || profile_idc==FREXT_Hi422 || profile_idc==FREXT_Hi444 || profile_idc == FREXT_CAVLC444 );
 }
-
+//}}}
+//{{{
 static inline int is_HI_intra_only_profile(unsigned int profile_idc, Boolean constrained_set3_flag)
 {
   return ( ( ( (profile_idc == FREXT_Hi10P)||(profile_idc == FREXT_Hi422)|| (profile_idc == FREXT_Hi444)) && constrained_set3_flag) || (profile_idc == FREXT_CAVLC444) );
 }
+//}}}
+//{{{
 static inline int is_BL_profile(unsigned int profile_idc)
 {
   return ( profile_idc == FREXT_CAVLC444 || profile_idc == BASELINE || profile_idc == MAIN || profile_idc == EXTENDED ||
            profile_idc == FREXT_HP || profile_idc == FREXT_Hi10P || profile_idc == FREXT_Hi422 || profile_idc == FREXT_Hi444);
 }
+//}}}
+//{{{
 static inline int is_EL_profile(unsigned int profile_idc)
 {
   return ( (profile_idc == MVC_HIGH) || (profile_idc == STEREO_HIGH) );
 }
-
+//}}}
+//{{{
 static inline int is_MVC_profile(unsigned int profile_idc)
 {
   return ( (0)
@@ -1113,3 +1128,10 @@ static inline int is_MVC_profile(unsigned int profile_idc)
 #endif
   );
 }
+//}}}
+
+//{{{
+#ifdef __cplusplus
+}
+#endif
+//}}}

@@ -57,6 +57,8 @@
  */
 //}}}
 //{{{
+#define _CRT_SECURE_NO_WARNINGS
+
 #include <sys/stat.h>
 
 #include "global.h"

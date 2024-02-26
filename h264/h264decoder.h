@@ -37,16 +37,18 @@ typedef struct dec_set_t
   int bDecCompAdapt;
 } DecSet_t;
 
+//{{{
 #ifdef __cplusplus
-extern "C" {
+  extern "C" {
 #endif
-
-int OpenDecoder(InputParameters *p_Inp);
-int DecodeOneFrame(DecodedPicList **ppDecPic);
-int FinitDecoder(DecodedPicList **ppDecPicList);
-int CloseDecoder();
-int SetOptsDecoder(DecSet_t *pDecOpts);
-
+//}}}
+  int OpenDecoder(InputParameters *p_Inp);
+  int DecodeOneFrame(DecodedPicList **ppDecPic);
+  int FinitDecoder(DecodedPicList **ppDecPicList);
+  int CloseDecoder();
+  int SetOptsDecoder(DecSet_t *pDecOpts);
+//{{{
 #ifdef __cplusplus
-}
+  }
 #endif
+//}}}

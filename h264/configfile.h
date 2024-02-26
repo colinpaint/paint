@@ -1,4 +1,4 @@
-
+//{{{
 /*!
  ***********************************************************************
  *  \file
@@ -7,18 +7,17 @@
  *     Prototypes for configfile.c and definitions of used structures.
  ***********************************************************************
  */
+//}}}
 #pragma once
-
 #define DEFAULTCONFIGFILENAME "decoder.cfg"
-
 #include "config_common.h"
 //#define PROFILE_IDC     88
 //#define LEVEL_IDC       21
 
-
 extern InputParameters cfgparams;
 
 #ifdef INCLUDED_BY_CONFIGFILE_C
+//{{{
 // Mapping_Map Syntax:
 // {NAMEinConfigFile,  &cfgparams.VariableName, Type, InitialValue, LimitType, MinLimit, MaxLimit, CharSize}
 // Types : {0:int, 1:text, 2: double}
@@ -52,10 +51,22 @@ Mapping Map[] = {
     {"DPBPLUS1",                 &cfgparams.dpb_plus[1],                  0,   0.0,                       1,  -16.0,            16.0,                             },
     {NULL,                       NULL,                                   -1,   0.0,                       0,  0.0,              0.0,                             },
 };
+//}}}
 #endif
 
 #ifndef INCLUDED_BY_CONFIGFILE_C
-extern Mapping Map[];
+  extern Mapping Map[];
 #endif
-extern void JMDecHelpExit ();
-extern void ParseCommand(InputParameters *p_Inp, int ac, char *av[]);
+
+//{{{
+#ifdef __cplusplus
+  extern "C" {
+#endif
+//}}}
+  extern void JMDecHelpExit ();
+  extern void ParseCommand(InputParameters *p_Inp, int ac, char *av[]);
+//{{{
+#ifdef __cplusplus
+  }
+#endif
+//}}}

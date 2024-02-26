@@ -57,6 +57,7 @@
  ***********************************************************************
  */
 //}}}
+#define _CRT_SECURE_NO_WARNINGS
 #define INCLUDED_BY_CONFIGFILE_C
 
 #include <sys/stat.h>

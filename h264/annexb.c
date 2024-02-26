@@ -14,6 +14,8 @@
  */
 //}}}
 //{{{
+#define _CRT_SECURE_NO_WARNINGS
+
 #include "global.h"
 #include "annexb.h"
 #include "memalloc.h"

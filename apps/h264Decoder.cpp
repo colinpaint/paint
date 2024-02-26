@@ -156,7 +156,7 @@ static int WriteOneFrame (DecodedPicList *pDecPic, int hFileOutput0, int hFileOu
           }
         }
 
-      fprintf(stdout, "\nOutput frame: %d/%d\n", pPic->iPOC, pPic->iViewId);
+      fprintf (stdout, "\nOutput frame: %d/%d\n", pPic->iPOC, pPic->iViewId);
       pPic->bValid = 0;
       pPic = pPic->pNext;
       }while(pPic != NULL && pPic->bValid && bOutputAllFrames);
@@ -171,8 +171,10 @@ int main (int argc, char **argv) {
 
   int iRet;
   DecodedPicList *pDecPicList;
-  int hFileDecOutput0=-1, hFileDecOutput1=-1;
-  int iFramesOutput=0, iFramesDecoded=0;
+  int hFileDecOutput0 = -1;
+  int hFileDecOutput1 = -1;
+  int iFramesOutput=0;
+  int iFramesDecoded=0;
   InputParameters InputParams;
 
 #if DECOUTPUT_TEST
@@ -184,25 +186,25 @@ int main (int argc, char **argv) {
 
   init_time();
 
-  //get input parameters;
+  // get input parameters;
   Configure (&InputParams, argc, argv);
-  //open decoder;
+
   iRet = OpenDecoder (&InputParams);
   if (iRet != DEC_OPEN_NOERR) {
     fprintf (stderr, "Open encoder failed: 0x%x!\n", iRet);
     return -1; //failed;
-  }
+    }
 
-  //decoding;
+  // decoding;
   do {
     iRet = DecodeOneFrame (&pDecPicList);
-    if (iRet==DEC_EOS || iRet==DEC_SUCCEED) {
-      //process the decoded picture, output or display;
+    if (iRet == DEC_EOS || iRet==DEC_SUCCEED) {
+      // process the decoded picture, output or display;
       iFramesOutput += WriteOneFrame (pDecPicList, hFileDecOutput0, hFileDecOutput1, 0);
       iFramesDecoded++;
       }
     else
-      //error handling;
+      // error handling;
       fprintf (stderr, "Error in decoding process: 0x%x\n", iRet);
     } while ((iRet == DEC_SUCCEED) &&
              ((p_Dec->p_Inp->iDecFrmNum == 0) ||
@@ -212,7 +214,7 @@ int main (int argc, char **argv) {
   iFramesOutput += WriteOneFrame (pDecPicList, hFileDecOutput0, hFileDecOutput1 , 1);
   iRet = CloseDecoder();
 
-  //quit;
+  // quit;
   if (hFileDecOutput0 >= 0)
     close (hFileDecOutput0);
   if (hFileDecOutput1 >= 0)
