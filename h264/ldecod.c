@@ -1135,113 +1135,33 @@ DecodedPicList* get_one_avail_dec_pic_from_list (DecodedPicList* pDecPicList, in
 //}}}
 
 //{{{
-/************************************
-Interface: OpenDecoder
-Return:
-       0: NOERROR;
-       <0: ERROR;
-************************************/
-int OpenDecoder (InputParameters* p_Inp)
-{
-  int iRet;
-  DecoderParams *pDecoder;
+int OpenDecoder (InputParameters* p_Inp) {
 
-  iRet = alloc_decoder(&p_Dec);
-  if(iRet)
-  {
+  DecoderParams *pDecoder;
+  int iRet = alloc_decoder(&p_Dec);
+  if (iRet)
     return (iRet|DEC_ERRMASK);
-  }
+
   init_time();
 
   pDecoder = p_Dec;
-  //Configure (pDecoder->p_Vid, pDecoder->p_Inp, argc, argv);
-  memcpy(pDecoder->p_Inp, p_Inp, sizeof(InputParameters));
+  memcpy (pDecoder->p_Inp, p_Inp, sizeof(InputParameters));
   pDecoder->p_Vid->conceal_mode = p_Inp->conceal_mode;
   pDecoder->p_Vid->ref_poc_gap = p_Inp->ref_poc_gap;
   pDecoder->p_Vid->poc_gap = p_Inp->poc_gap;
 
-#if TRACE
-  if ((pDecoder->p_trace = fopen(TRACEFILE,"w"))==0)             // append new statistic at the end
-  {
-    snprintf(errortext, ET_SIZE, "Error open file %s!",TRACEFILE);
-    //error(errortext,500);
-    return -1;
-  }
-#endif
+  pDecoder->p_Vid->p_out = open (p_Inp->outfile, OPENFLAGS_WRITE, OPEN_PERMISSIONS);
+  //  pDecoder->p_Vid->p_out = -1;
+  pDecoder->p_Vid->p_ref = -1;
 
-#if (!MVC_EXTENSION_ENABLE)
-  if((strcasecmp(p_Inp->outfile, "\"\"")!=0) && (strlen(p_Inp->outfile)>0))
-  {
-    if ((pDecoder->p_Vid->p_out = open(p_Inp->outfile, OPENFLAGS_WRITE, OPEN_PERMISSIONS))==-1)
-    {
-      snprintf(errortext, ET_SIZE, "Error open file %s ",p_Inp->outfile);
-      error(errortext,500);
-    }
-  }
-  else
-    pDecoder->p_Vid->p_out = -1;
-#else
-  {
-    int i;
-    VideoParameters *p_Vid = pDecoder->p_Vid;
-    // Set defaults
-    p_Vid->p_out = -1;
-    for(i = 0; i < MAX_VIEW_NUM; i++)
-    {
-      p_Vid->p_out_mvc[i] = -1;
-    }
-
-    if (p_Inp->DecodeAllLayers == 1)
-    {
-      OpenOutputFiles(p_Vid, 0, 1);
-    }
-    else
-    { //Normal AVC
-      if((strcasecmp(p_Inp->outfile, "\"\"")!=0) && (strlen(p_Inp->outfile)>0))
-      {
-        if( (strcasecmp(p_Inp->outfile, "\"\"")!=0) && ((p_Vid->p_out_mvc[0]=open(p_Inp->outfile, OPENFLAGS_WRITE, OPEN_PERMISSIONS))==-1) )
-        {
-          snprintf(errortext, ET_SIZE, "Error open file %s ",p_Inp->outfile);
-          error(errortext,500);
-        }
-      }
-      p_Vid->p_out = p_Vid->p_out_mvc[0];
-    }
-  }
-#endif
-
-
-  if(strlen(pDecoder->p_Inp->reffile)>0 && strcmp(pDecoder->p_Inp->reffile, "\"\""))
-  {
-   if ((pDecoder->p_Vid->p_ref = open(pDecoder->p_Inp->reffile, OPENFLAGS_READ))==-1)
-   {
-    fprintf(stdout," Input reference file                   : %s does not exist \n",pDecoder->p_Inp->reffile);
-    fprintf(stdout,"                                          SNR values are not available\n");
-   }
-  }
-  else
-    pDecoder->p_Vid->p_ref = -1;
-
-  switch( pDecoder->p_Inp->FileFormat )
-  {
-  default:
-  case PAR_OF_ANNEXB:
-    malloc_annex_b(pDecoder->p_Vid, &pDecoder->p_Vid->annex_b);
-    open_annex_b(pDecoder->p_Inp->infile, pDecoder->p_Vid->annex_b);
-    break;
-  }
+  malloc_annex_b (pDecoder->p_Vid, &pDecoder->p_Vid->annex_b);
+  open_annex_b (pDecoder->p_Inp->infile, pDecoder->p_Vid->annex_b);
 
   // Allocate Slice data struct
   //pDecoder->p_Vid->currentSlice = NULL; //malloc_slice(pDecoder->p_Inp, pDecoder->p_Vid);
-  init_old_slice(pDecoder->p_Vid->old_slice);
-  init(pDecoder->p_Vid);
-  init_out_buffer(pDecoder->p_Vid);
-
-#if (MVC_EXTENSION_ENABLE)
-  pDecoder->p_Vid->active_sps = NULL;
-  pDecoder->p_Vid->active_subset_sps = NULL;
-  init_subset_sps_list(pDecoder->p_Vid->SubsetSeqParSet, MAXSPS);
-#endif
+  init_old_slice (pDecoder->p_Vid->old_slice);
+  init (pDecoder->p_Vid);
+  init_out_buffer (pDecoder->p_Vid);
 
 #if _FLTDBG_
   pDecoder->p_Vid->fpDbg = fopen("c:/fltdbg.txt", "a");
@@ -1252,136 +1172,92 @@ int OpenDecoder (InputParameters* p_Inp)
 }
 //}}}
 //{{{
-/************************************
-Interface: DecodeOneFrame
-Return:
-       0: NOERROR;
-       1: Finished decoding;
-       others: Error Code;
-************************************/
-int DecodeOneFrame (DecodedPicList** ppDecPicList)
-{
-  int iRet;
-  DecoderParams *pDecoder = p_Dec;
-  ClearDecPicList(pDecoder->p_Vid);
+int DecodeOneFrame (DecodedPicList** ppDecPicList) {
 
-  iRet = decode_one_frame(pDecoder);
-  if(iRet == SOP)
-  {
+  DecoderParams* pDecoder = p_Dec;
+  ClearDecPicList (pDecoder->p_Vid);
+
+  int iRet = decode_one_frame (pDecoder);
+  if (iRet == SOP)
     iRet = DEC_SUCCEED;
-  }
-  else if(iRet == EOS)
-  {
+  else if (iRet == EOS)
     iRet = DEC_EOS;
-  }
   else
-  {
     iRet |= DEC_ERRMASK;
-  }
 
   *ppDecPicList = pDecoder->p_Vid->pDecOuputPic;
   return iRet;
-}
+  }
 //}}}
 //{{{
-int FinitDecoder (DecodedPicList** ppDecPicList)
-{
-  DecoderParams *pDecoder = p_Dec;
-  if(!pDecoder)
+int FinitDecoder (DecodedPicList** ppDecPicList) {
+
+  DecoderParams* pDecoder = p_Dec;
+  if (!pDecoder)
     return DEC_GEN_NOERR;
-  ClearDecPicList(pDecoder->p_Vid);
-#if (MVC_EXTENSION_ENABLE)
-  flush_dpb(pDecoder->p_Vid->p_Dpb_layer[0]);
-  flush_dpb(pDecoder->p_Vid->p_Dpb_layer[1]);
-#else
-  flush_dpb(pDecoder->p_Vid->p_Dpb_layer[0]);
-#endif
-#if (PAIR_FIELDS_IN_OUTPUT)
-  flush_pending_output(pDecoder->p_Vid, pDecoder->p_Vid->p_out);
-#endif
+  ClearDecPicList (pDecoder->p_Vid);
+  flush_dpb (pDecoder->p_Vid->p_Dpb_layer[0]);
+
+  #if (PAIR_FIELDS_IN_OUTPUT)
+    flush_pending_output (pDecoder->p_Vid, pDecoder->p_Vid->p_out);
+  #endif
+
   if (pDecoder->p_Inp->FileFormat == PAR_OF_ANNEXB)
-  {
     reset_annex_b(pDecoder->p_Vid->annex_b);
-  }
+
   pDecoder->p_Vid->newframe = 0;
   pDecoder->p_Vid->previous_frame_num = 0;
   *ppDecPicList = pDecoder->p_Vid->pDecOuputPic;
+
   return DEC_GEN_NOERR;
-}
+  }
 //}}}
 //{{{
-int CloseDecoder()
-{
-  int i;
+int CloseDecoder() {
 
+  int i;
   DecoderParams *pDecoder = p_Dec;
-  if(!pDecoder)
+  if( !pDecoder)
     return DEC_CLOSE_NOERR;
 
-  Report  (pDecoder->p_Vid);
+  Report (pDecoder->p_Vid);
   FmoFinit(pDecoder->p_Vid);
-  free_layer_buffers(pDecoder->p_Vid, 0);
-  free_layer_buffers(pDecoder->p_Vid, 1);
-  free_global_buffers(pDecoder->p_Vid);
-  switch( pDecoder->p_Inp->FileFormat )
-  {
-  default:
-  case PAR_OF_ANNEXB:
-    close_annex_b(pDecoder->p_Vid->annex_b);
-    break;
-  }
+  free_layer_buffers (pDecoder->p_Vid, 0);
+  free_layer_buffers (pDecoder->p_Vid, 1);
+  free_global_buffers (pDecoder->p_Vid);
+  close_annex_b (pDecoder->p_Vid->annex_b);
 
-#if (MVC_EXTENSION_ENABLE)
-  for(i=0;i<MAX_VIEW_NUM;i++)
-  {
-    if (pDecoder->p_Vid->p_out_mvc[i] != -1)
-    {
-      close(pDecoder->p_Vid->p_out_mvc[i]);
-    }
-  }
-#else
   if(pDecoder->p_Vid->p_out >=0)
-    close(pDecoder->p_Vid->p_out);
-#endif
+    close (pDecoder->p_Vid->p_out);
 
   if (pDecoder->p_Vid->p_ref != -1)
-    close(pDecoder->p_Vid->p_ref);
+    close (pDecoder->p_Vid->p_ref);
 
-#if TRACE
-  fclose(pDecoder->p_trace);
-#endif
+  ercClose (pDecoder->p_Vid, pDecoder->p_Vid->erc_errorVar);
 
-  ercClose(pDecoder->p_Vid, pDecoder->p_Vid->erc_errorVar);
+  CleanUpPPS (pDecoder->p_Vid);
 
-  CleanUpPPS(pDecoder->p_Vid);
-#if (MVC_EXTENSION_ENABLE)
-  for(i=0; i<MAXSPS; i++)
-  {
-    reset_subset_sps(pDecoder->p_Vid->SubsetSeqParSet+i);
-  }
-#endif
-
-  for(i=0; i<MAX_NUM_DPB_LAYERS; i++)
-   free_dpb(pDecoder->p_Vid->p_Dpb_layer[i]);
+  for (i = 0; i < MAX_NUM_DPB_LAYERS; i++)
+    free_dpb (pDecoder->p_Vid->p_Dpb_layer[i]);
 
 
-  uninit_out_buffer(pDecoder->p_Vid);
-#if _FLTDBG_
-  if(pDecoder->p_Vid->fpDbg)
-  {
-    fprintf(pDecoder->p_Vid->fpDbg, "decoder is closed.\n");
-    fclose(pDecoder->p_Vid->fpDbg);
-    pDecoder->p_Vid->fpDbg = NULL;
-  }
-#endif
+  uninit_out_buffer (pDecoder->p_Vid);
+
+  #if _FLTDBG_
+    if(pDecoder->p_Vid->fpDbg) {
+      fprintf (pDecoder->p_Vid->fpDbg, "decoder is closed.\n");
+      fclose (pDecoder->p_Vid->fpDbg);
+      pDecoder->p_Vid->fpDbg = NULL;
+    }
+  #endif
 
   free_img (pDecoder->p_Vid);
   free (pDecoder->p_Inp);
-  free(pDecoder);
+  free (pDecoder);
 
   p_Dec = NULL;
   return DEC_CLOSE_NOERR;
-}
+  }
 //}}}
 
 #if (MVC_EXTENSION_ENABLE)

@@ -471,7 +471,7 @@ static void allocate_p_dec_pic (VideoParameters *p_Vid, DecodedPicList *pDecPic,
 *    Output file
 ************************************************************************
 */
-static void write_out_picture (VideoParameters *p_Vid, StorablePicture *p, int p_out)
+static void write_out_picture (VideoParameters* p_Vid, StorablePicture* p, int p_out)
 {
   InputParameters *p_Inp = p_Vid->p_Inp;
   DecodedPicList *pDecPic;
@@ -667,11 +667,11 @@ static void write_out_picture (VideoParameters *p_Vid, StorablePicture *p, int p
   }
 
   //free(buf);
- if(p_out >=0)
-   pDecPic->bValid = 0;
+  if(p_out >=0)
+    pDecPic->bValid = 0;
 
   //  fsync(p_out);
-}
+  }
 //}}}
 
 //{{{
