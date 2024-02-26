@@ -2,59 +2,17 @@
 #include <sys/stat.h>
 #include "../h264/win32.h"
 #include "../h264/h264decoder.h"
-#include "../h264/configfile.h"
+#include <string>
+
+using namespace std;
 
 #define DECOUTPUT_TEST      0
 
 #define PRINT_OUTPUT_POC    0
-#define BITSTREAM_FILENAME  "test.264"
-#define DECRECON_FILENAME   "test_dec.yuv"
-#define ENCRECON_FILENAME   "test_rec.yuv"
 #define FCFR_DEBUG_FILENAME "fcfr_dec_rpu_stats.txt"
 #define DECOUTPUT_VIEW0_FILENAME  "H264_Decoder_Output_View0.yuv"
 #define DECOUTPUT_VIEW1_FILENAME  "H264_Decoder_Output_View1.yuv"
 
-//{{{
-static void Configure (InputParameters *p_Inp, int ac, char *av[])
-{
-
-  memset(p_Inp, 0, sizeof(InputParameters));
-  strcpy(p_Inp->infile, BITSTREAM_FILENAME); //! set default bitstream name
-  strcpy(p_Inp->outfile, DECRECON_FILENAME); //! set default output file name
-  strcpy(p_Inp->reffile, ENCRECON_FILENAME); //! set default reference file name
-
-#ifdef _LEAKYBUCKET_
-  strcpy(p_Inp->LeakyBucketParamFile,"leakybucketparam.cfg");    // file where Leaky Bucket parameters (computed by encoder) are stored
-#endif
-
-  ParseCommand(p_Inp, ac, av);
-
-  fprintf(stdout,"----------------------------- JM %s %s -----------------------------\n", VERSION, EXT_VERSION);
-  //fprintf(stdout," Decoder config file                    : %s \n",config_filename);
-
-  if(!p_Inp->bDisplayDecParams)
-  {
-    fprintf(stdout,"--------------------------------------------------------------------------\n");
-    fprintf(stdout," Input H.264 bitstream                  : %s \n",p_Inp->infile);
-    fprintf(stdout," Output decoded YUV                     : %s \n",p_Inp->outfile);
-    //fprintf(stdout," Output status file                     : %s \n",LOGFILE);
-    fprintf(stdout," Input reference file                   : %s \n",p_Inp->reffile);
-
-    fprintf(stdout,"--------------------------------------------------------------------------\n");
-
-  #ifdef _LEAKYBUCKET_
-    fprintf(stdout," Rate_decoder        : %8ld \n",p_Inp->R_decoder);
-    fprintf(stdout," B_decoder           : %8ld \n",p_Inp->B_decoder);
-    fprintf(stdout," F_decoder           : %8ld \n",p_Inp->F_decoder);
-    fprintf(stdout," LeakyBucketParamFile: %s \n",p_Inp->LeakyBucketParamFile); // Leaky Bucket Param file
-    calc_buffer(p_Inp);
-    fprintf(stdout,"--------------------------------------------------------------------------\n");
-  #endif
-  }
-
-}
-
-//}}}
 //{{{
 static int WriteOneFrame (DecodedPicList *pDecPic, int hFileOutput0, int hFileOutput1, int bOutputAllFrames) {
 // if bOutputAllFrames is 1, then output all valid frames to file onetime;
@@ -66,7 +24,7 @@ static int WriteOneFrame (DecodedPicList *pDecPic, int hFileOutput0, int hFileOu
   if (pPic && (((pPic->iYUVStorageFormat==2) && pPic->bValid==3) ||
                ((pPic->iYUVStorageFormat!=2) && pPic->bValid==1)) ) {
     int i, iWidth, iHeight, iStride, iWidthUV, iHeightUV, iStrideUV;
-    byte* pbBuf;
+    uint8_t* pbBuf;
     int hFileOutput;
     size_t res;
 
@@ -167,7 +125,7 @@ static int WriteOneFrame (DecodedPicList *pDecPic, int hFileOutput0, int hFileOu
 //}}}
 
 //{{{
-int main (int argc, char **argv) {
+int main (int numArgs, char* args[]) {
 
   int iRet;
   DecodedPicList *pDecPicList;
@@ -177,17 +135,45 @@ int main (int argc, char **argv) {
   int iFramesDecoded=0;
   InputParameters InputParams;
 
-#if DECOUTPUT_TEST
-  hFileDecOutput0 = open (DECOUTPUT_VIEW0_FILENAME, OPENFLAGS_WRITE, OPEN_PERMISSIONS);
-  fprintf(stdout, "Decoder output view0: %s\n", DECOUTPUT_VIEW0_FILENAME);
-  hFileDecOutput1 = open (DECOUTPUT_VIEW1_FILENAME, OPENFLAGS_WRITE, OPEN_PERMISSIONS);
-  fprintf(stdout, "Decoder output view1: %s\n", DECOUTPUT_VIEW1_FILENAME);
-#endif
+  string fileName;
+  for (int i = 1; i < numArgs; i++) {
+    string param = args[i];
+    fileName = param;
+    }
 
   init_time();
 
   // get input parameters;
-  Configure (&InputParams, argc, argv);
+  memset (&InputParams, 0, sizeof(InputParameters));
+  strcpy (InputParams.infile, fileName.c_str());
+  strcpy (InputParams.outfile, "test_dec.yuv"); //! set default output file name
+
+  //infile[FILE_NAME_SIZE];                       //!< H.264 inputfile
+  //outfile[FILE_NAME_SIZE];                      //!< Decoded YUV 4:2:0 output
+  //reffile[FILE_NAME_SIZE];                      //!< Optional YUV 4:2:0 reference file for SNR measurement
+  InputParams.FileFormat = PAR_OF_ANNEXB;
+  //InputParams.ref_offset;
+  //InputParams.poc_scale;
+  //InputParams.write_uv;
+  //InputParams.silent;
+  //InputParams.intra_profile_deblocking;               //!< Loop filter usage determined by flags and parameters in bitstream
+  //InputParams.source;                   //!< source related information
+  //InputParams.output;                   //!< output related information
+  //InputParams.ProcessInput;
+  //InputParams.enable_32_pulldown;
+  //InputParams.input_file1;          //!< Input video file1
+  //InputParams.input_file2;          //!< Input video file2
+  //InputParams.input_file3;          //!< Input video file3
+  //InputParams.conceal_mode;
+  //InputParams.ref_poc_gap;
+  //InputParams.poc_gap;
+  //InputParams.start_frame;
+  //InputParams.stdRange;                         //!< 1 - standard range, 0 - full range
+  //InputParams.videoCode;                        //!< 1 - 709, 3 - 601:  See VideoCode in io_tiff.
+  //InputParams.export_views;
+  //InputParams.iDecFrmNum;
+  InputParams.bDisplayDecParams = 1;
+  //InputParams.dpb_plus[2];
 
   iRet = OpenDecoder (&InputParams);
   if (iRet != DEC_OPEN_NOERR) {
@@ -213,12 +199,6 @@ int main (int argc, char **argv) {
   iRet = FinitDecoder (&pDecPicList);
   iFramesOutput += WriteOneFrame (pDecPicList, hFileDecOutput0, hFileDecOutput1 , 1);
   iRet = CloseDecoder();
-
-  // quit;
-  if (hFileDecOutput0 >= 0)
-    close (hFileDecOutput0);
-  if (hFileDecOutput1 >= 0)
-    close( hFileDecOutput1);
 
   printf("%d frames are decoded.\n", iFramesDecoded);
   return 0;
