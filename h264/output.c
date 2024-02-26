@@ -178,8 +178,8 @@ void init_output (CodingParameters *p_cps, int symbol_size_in_bytes) {
 //{{{
 static void allocate_p_dec_pic (VideoParameters* p_Vid, DecodedPicList* pDecPic, StorablePicture* p,
                                 int iLumaSize, int iFrameSize, int iLumaSizeX, int iLumaSizeY,
-                                int iChromaSizeX, int iChromaSizeY)
-{
+                                int iChromaSizeX, int iChromaSizeY) {
+
   int symbol_size_in_bytes = ((p_Vid->pic_unit_bitsize_on_disk+7) >> 3);
 
   if (pDecPic->pY)
@@ -278,12 +278,12 @@ static void write_out_picture (VideoParameters* p_Vid, StorablePicture* p, int p
 //}}}
 
 #if (PAIR_FIELDS_IN_OUTPUT)
-  void clear_picture(VideoParameters *p_Vid, StorablePicture *p);
+  void clear_picture (VideoParameters *p_Vid, StorablePicture *p);
   //{{{
-  void flush_pending_output (VideoParameters *p_Vid, int p_out) {
+  void flush_pending_output (VideoParameters* p_Vid, int p_out) {
 
     if (p_Vid->pending_output_state != FRAME)
-      write_out_picture(p_Vid, p_Vid->pending_output, p_out);
+      write_out_picture (p_Vid, p_Vid->pending_output, p_out);
 
     if (p_Vid->pending_output->imgY) {
       free_mem2Dpel (p_Vid->pending_output->imgY);
@@ -342,11 +342,11 @@ static void write_out_picture (VideoParameters* p_Vid, StorablePicture* p, int p
       else
         add = 1;
 
-      for (i=0; i<p_Vid->pending_output->size_y; i+=2)
-        memcpy(p_Vid->pending_output->imgY[(i+add)], p->imgY[(i+add)], p->size_x * sizeof(imgpel));
-      for (i=0; i<p_Vid->pending_output->size_y_cr; i+=2) {
-        memcpy(p_Vid->pending_output->imgUV[0][(i+add)], p->imgUV[0][(i+add)], p->size_x_cr * sizeof(imgpel));
-        memcpy(p_Vid->pending_output->imgUV[1][(i+add)], p->imgUV[1][(i+add)], p->size_x_cr * sizeof(imgpel));
+      for (i = 0; i < p_Vid->pending_output->size_y; i += 2)
+        memcpy (p_Vid->pending_output->imgY[(i+add)], p->imgY[(i+add)], p->size_x * sizeof(imgpel));
+      for (i = 0; i < p_Vid->pending_output->size_y_cr; i += 2) {
+        memcpy (p_Vid->pending_output->imgUV[0][(i+add)], p->imgUV[0][(i+add)], p->size_x_cr * sizeof(imgpel));
+        memcpy (p_Vid->pending_output->imgUV[1][(i+add)], p->imgUV[1][(i+add)], p->size_x_cr * sizeof(imgpel));
         }
       p_Vid->pending_output_state = real_structure;
       }

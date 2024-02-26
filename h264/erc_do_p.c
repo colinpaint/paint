@@ -1,4 +1,4 @@
-
+//{{{
 /*!
  *************************************************************************************
  * \file
@@ -17,7 +17,8 @@
  *
  *************************************************************************************
  */
-
+//}}}
+//{{{
 #include "global.h"
 #include "mbuffer.h"
 #include "memalloc.h"
@@ -25,7 +26,7 @@
 #include "image.h"
 #include "mc_prediction.h"
 #include "macroblock.h"
-
+//}}}
 
 // static function declarations
 static int concealByCopy(frame *recfr, int currMBNum, objectBuffer_t *object_list, int picSizeX);
@@ -40,16 +41,16 @@ static void buildPredRegionYUV(VideoParameters *p_Vid, int *mv, int x, int y, im
 // picture error concealment
 static void buildPredblockRegionYUV(VideoParameters *p_Vid, int *mv,
                                     int x, int y, imgpel *predMB, int list, int mb);
-static void CopyImgData(imgpel **inputY, imgpel ***inputUV, imgpel **outputY, imgpel ***outputUV, 
+static void CopyImgData(imgpel **inputY, imgpel ***inputUV, imgpel **outputY, imgpel ***outputUV,
                         int img_width, int img_height, int img_width_cr, int img_height_cr);
 
-static void copyPredMB (int currYBlockNum, imgpel *predMB, frame *recfr,
-                        int picSizeX, int regionSize);
+static void copyPredMB (int currYBlockNum, imgpel *predMB, frame *recfr, int picSizeX, int regionSize);
 static void add_node   ( VideoParameters *p_Vid, struct concealment_node *ptr );
 static void delete_node( VideoParameters *p_Vid, struct concealment_node *ptr );
 
 static const int uv_div[2][4] = {{0, 1, 1, 0}, {0, 1, 0, 0}}; //[x/y][yuv_format]
 
+//{{{
 /*!
  ************************************************************************
  * \brief
@@ -217,7 +218,8 @@ int ercConcealInterFrame(frame *recfr, objectBuffer_t *object_list,
   else
     return 0;
 }
-
+//}}}
+//{{{
 /*!
  ************************************************************************
  * \brief
@@ -251,7 +253,8 @@ static int concealByCopy(frame *recfr, int currMBNum,
 
   return 0;
 }
-
+//}}}
+//{{{
 /*!
  ************************************************************************
  * \brief
@@ -298,7 +301,8 @@ static void copyBetweenFrames (frame *recfr, int currYBlockNum, int picSizeX, in
         recfr->vptr[location] = refPic->imgUV[1][j][k];
       }
 }
-
+//}}}
+//{{{
 /*!
  ************************************************************************
  * \brief
@@ -521,7 +525,8 @@ static int concealByTrial(frame *recfr, imgpel *predMB,
 
     return 0;
 }
-
+//}}}
+//{{{
 /*!
 ************************************************************************
 * \brief
@@ -563,12 +568,12 @@ static void buildPredRegionYUV(VideoParameters *p_Vid, int *mv, int x, int y, im
   int ref_frame = imax (mv[2], 0); // !!KS: quick fix, we sometimes seem to get negative ref_pic here, so restrict to zero and above
   int mb_nr = y/16*(p_Vid->width/16)+x/16; ///currSlice->current_mb_nr;
   int **tmp_res = NULL;
-  
-  Macroblock *currMB = &p_Vid->mb_data[mb_nr];   // intialization code deleted, see below, StW  
+
+  Macroblock *currMB = &p_Vid->mb_data[mb_nr];   // intialization code deleted, see below, StW
   currSlice = currMB->p_Slice;
   tmp_res = currSlice->tmp_res;
 
-  // This should be allocated only once. 
+  // This should be allocated only once.
   get_mem2Dpel(&tmp_block, MB_BLOCK_SIZE, MB_BLOCK_SIZE);
 
   /* Update coordinates of the current concealed macroblock */
@@ -657,7 +662,7 @@ static void buildPredRegionYUV(VideoParameters *p_Vid, int *mv, int x, int y, im
               if0=f1_x-if1;
               jf0=f1_y-jf1;
 
-              currSlice->mb_pred[uv + 1][jj+joff][ii+ioff] = (imgpel) 
+              currSlice->mb_pred[uv + 1][jj+joff][ii+ioff] = (imgpel)
                 ((if0*jf0*currSlice->listX[0][ref_frame]->imgUV[uv][jj0][ii0]+
                 if1*jf0*currSlice->listX[0][ref_frame]->imgUV[uv][jj0][ii1]+
                 if0*jf1*currSlice->listX[0][ref_frame]->imgUV[uv][jj1][ii0]+
@@ -679,8 +684,10 @@ static void buildPredRegionYUV(VideoParameters *p_Vid, int *mv, int x, int y, im
     }
   }
   // We should allocate this memory only once.
-  free_mem2Dpel(tmp_block); 
+  free_mem2Dpel(tmp_block);
 }
+//}}}
+//{{{
 /*!
  ************************************************************************
  * \brief
@@ -740,7 +747,8 @@ static void copyPredMB (int currYBlockNum, imgpel *predMB, frame *recfr,
     }
   }
 }
-
+//}}}
+//{{{
 /*!
  ************************************************************************
  * \brief
@@ -839,9 +847,10 @@ static int edgeDistortion (int predBlocks[], int currYBlockNum, imgpel *predMB,
   }
   return (distortion/numOfPredBlocks);
 }
+//}}}
 
 // picture error concealment below
-
+//{{{
 /*!
 ************************************************************************
 * \brief
@@ -872,8 +881,8 @@ static void buildPredblockRegionYUV(VideoParameters *p_Vid, int *mv,
 
   int ref_frame = mv[2];
   int mb_nr = current_mb_nr;
-  
-  Macroblock *currMB = &p_Vid->mb_data[mb_nr];   // intialization code deleted, see below, StW  
+
+  Macroblock *currMB = &p_Vid->mb_data[mb_nr];   // intialization code deleted, see below, StW
   Slice *currSlice = currMB->p_Slice;
 
   get_mem2Dpel(&tmp_block, MB_BLOCK_SIZE, MB_BLOCK_SIZE);
@@ -967,7 +976,8 @@ static void buildPredblockRegionYUV(VideoParameters *p_Vid, int *mv,
   }
   free_mem2Dpel(tmp_block);
 }
-
+//}}}
+//{{{
 /*!
 ************************************************************************
 * \brief
@@ -987,7 +997,8 @@ static inline int compare_pic_by_pic_num_desc( const void *arg1, const void *arg
   else
     return 0;
 }
-
+//}}}
+//{{{
 /*!
 ************************************************************************
 * \brief
@@ -1007,7 +1018,8 @@ static inline int compare_pic_by_lt_pic_num_asc( const void *arg1, const void *a
   else
     return 0;
 }
-
+//}}}
+//{{{
 /*!
 ************************************************************************
 * \brief
@@ -1021,14 +1033,14 @@ static inline int compare_pic_by_poc_asc( const void *arg1, const void *arg2 )
   int poc2 = (*(StorablePicture**)arg2)->poc;
 
   if ( poc1 < poc2)
-    return -1;  
+    return -1;
   if ( poc1 > poc2)
     return 1;
   else
     return 0;
 }
-
-
+//}}}
+//{{{
 /*!
 ************************************************************************
 * \brief
@@ -1048,7 +1060,9 @@ static inline int compare_pic_by_poc_desc( const void *arg1, const void *arg2 )
   else
     return 0;
 }
+//}}}
 
+//{{{
 /*!
 ************************************************************************
 * \brief
@@ -1056,7 +1070,7 @@ static inline int compare_pic_by_poc_desc( const void *arg1, const void *arg2 )
 ************************************************************************
 */
 
-static void CopyImgData(imgpel **inputY, imgpel ***inputUV, imgpel **outputY, imgpel ***outputUV, 
+static void CopyImgData(imgpel **inputY, imgpel ***inputUV, imgpel **outputY, imgpel ***outputUV,
                         int img_width, int img_height, int img_width_cr, int img_height_cr)
 {
   int x, y;
@@ -1072,7 +1086,8 @@ static void CopyImgData(imgpel **inputY, imgpel ***inputUV, imgpel **outputY, im
       outputUV[1][y][x] = inputUV[1][y][x];
     }
 }
-
+//}}}
+//{{{
 /*!
 ************************************************************************
 * \brief
@@ -1100,7 +1115,8 @@ static StorablePicture* get_last_ref_pic_from_dpb(DecodedPictureBuffer *p_Dpb)
 
   return NULL;
 }
-
+//}}}
+//{{{
 /*!
 ************************************************************************
 * \brief
@@ -1247,7 +1263,8 @@ static void copy_to_conceal(StorablePicture *src, StorablePicture *dst, VideoPar
     free(storeYUV);
   }
 }
-
+//}}}
+//{{{
 /*!
 ************************************************************************
 * \brief
@@ -1256,8 +1273,7 @@ static void copy_to_conceal(StorablePicture *src, StorablePicture *dst, VideoPar
 ************************************************************************
 */
 
-static void
-copy_prev_pic_to_concealed_pic(StorablePicture *picture, DecodedPictureBuffer *p_Dpb)
+static void copy_prev_pic_to_concealed_pic(StorablePicture *picture, DecodedPictureBuffer *p_Dpb)
 {
   VideoParameters *p_Vid = p_Dpb->p_Vid;
   /* get the last ref pic in dpb */
@@ -1269,8 +1285,9 @@ copy_prev_pic_to_concealed_pic(StorablePicture *picture, DecodedPictureBuffer *p
   p_Vid->conceal_slice_type = P_SLICE;
   copy_to_conceal(ref_pic, picture, p_Vid);
 }
+//}}}
 
-
+//{{{
 /*!
 ************************************************************************
 * \brief
@@ -1363,7 +1380,8 @@ void conceal_lost_frames(DecodedPictureBuffer *p_Dpb, Slice *pSlice)
   pSlice->delta_pic_order_cnt[1] = tmp2;
   pSlice->frame_num = CurrFrameNum;
 }
-
+//}}}
+//{{{
 /*!
 ************************************************************************
 * \brief
@@ -1388,7 +1406,9 @@ void update_ref_list_for_concealment(DecodedPictureBuffer *p_Dpb)
 
   p_Dpb->ref_frames_in_buffer = p_Vid->active_pps->num_ref_idx_l0_default_active_minus1;
 }
+//}}}
 
+//{{{
 /*!
 ************************************************************************
 * \brief
@@ -1525,7 +1545,8 @@ void init_lists_for_non_reference_loss(DecodedPictureBuffer *p_Dpb, int currSlic
   }
 }
 
-
+//}}}
+//{{{
 /*!
 ************************************************************************
 * \brief
@@ -1558,7 +1579,8 @@ StorablePicture *get_pic_from_dpb(DecodedPictureBuffer *p_Dpb, int missingpoc, u
 
   return NULL;
 }
-
+//}}}
+//{{{
 /*!
 ************************************************************************
 * \brief
@@ -1572,7 +1594,8 @@ int comp(const void *i, const void *j)
 {
   return *(int *)i - *(int *)j;
 }
-
+//}}}
+//{{{
 /*!
 ************************************************************************
 * \brief
@@ -1597,7 +1620,9 @@ struct concealment_node * init_node( StorablePicture* picture, int missingpoc )
     return ptr;
   }
 }
+//}}}
 
+//{{{
 /*!
 ************************************************************************
 * \brief
@@ -1610,8 +1635,8 @@ void print_node( struct concealment_node *ptr )
 {
   printf("Missing POC=%d\n", ptr->missingpocs );
 }
-
-
+//}}}
+//{{{
 /*!
 ************************************************************************
 * \brief
@@ -1628,7 +1653,9 @@ void print_list( struct concealment_node *ptr )
     ptr = ptr->next;
   }
 }
+//}}}
 
+//{{{
 /*!
 ************************************************************************
 * \brief
@@ -1648,8 +1675,8 @@ static void add_node( VideoParameters *p_Vid, struct concealment_node *concealme
   p_Vid->concealment_end->next = concealment_new;
   p_Vid->concealment_end = concealment_new;
 }
-
-
+//}}}
+//{{{
 /*!
 ************************************************************************
 * \brief
@@ -1662,7 +1689,7 @@ static void add_node( VideoParameters *p_Vid, struct concealment_node *concealme
 static void delete_node( VideoParameters *p_Vid, struct concealment_node *ptr )
 {
   // We only need to delete the first node in the linked list
-  if( ptr == p_Vid->concealment_head ) 
+  if( ptr == p_Vid->concealment_head )
   {
     p_Vid->concealment_head = p_Vid->concealment_head->next;
     if( p_Vid->concealment_end == ptr )
@@ -1670,7 +1697,8 @@ static void delete_node( VideoParameters *p_Vid, struct concealment_node *ptr )
     free(ptr);
   }
 }
-
+//}}}
+//{{{
 /*!
 ************************************************************************
 * \brief
@@ -1685,7 +1713,7 @@ void delete_list( VideoParameters *p_Vid, struct concealment_node *ptr )
 
   if( p_Vid->concealment_head == NULL ) return;
 
-  if( ptr == p_Vid->concealment_head ) 
+  if( ptr == p_Vid->concealment_head )
   {
     p_Vid->concealment_head = NULL;
     p_Vid->concealment_end = NULL;
@@ -1699,14 +1727,16 @@ void delete_list( VideoParameters *p_Vid, struct concealment_node *ptr )
     p_Vid->concealment_end = temp;
   }
 
-  while( ptr != NULL ) 
+  while( ptr != NULL )
   {
     temp = ptr->next;
     free( ptr );
     ptr = temp;
   }
 }
+//}}}
 
+//{{{
 /*!
 ************************************************************************
 * \brief
@@ -1774,7 +1804,8 @@ void conceal_non_ref_pics(DecodedPictureBuffer *p_Dpb, int diff)
   //p_Dpb->used_size = p_Dpb->size;
   p_Dpb->used_size = temp_used_size;
 }
-
+//}}}
+//{{{
 /*!
 ************************************************************************
 * \brief
@@ -1785,7 +1816,7 @@ void conceal_non_ref_pics(DecodedPictureBuffer *p_Dpb, int diff)
 */
 
 void sliding_window_poc_management(DecodedPictureBuffer *p_Dpb, StorablePicture *p)
-{    
+{
   if (p_Dpb->used_size == p_Dpb->size)
   {
     VideoParameters *p_Vid = p_Dpb->p_Vid;
@@ -1796,7 +1827,8 @@ void sliding_window_poc_management(DecodedPictureBuffer *p_Dpb, StorablePicture 
   }
 }
 
-
+//}}}
+//{{{
 /*!
 ************************************************************************
 * \brief
@@ -1827,7 +1859,8 @@ void write_lost_non_ref_pic(DecodedPictureBuffer *p_Dpb, int poc, int p_out)
     }
   }
 }
-
+//}}}
+//{{{
 /*!
 ************************************************************************
 * \brief
@@ -1836,27 +1869,24 @@ void write_lost_non_ref_pic(DecodedPictureBuffer *p_Dpb, int poc, int p_out)
 *
 ************************************************************************
 */
+void write_lost_ref_after_idr(DecodedPictureBuffer *p_Dpb, int pos) {
 
-void write_lost_ref_after_idr(DecodedPictureBuffer *p_Dpb, int pos)
-{
   VideoParameters *p_Vid = p_Dpb->p_Vid;
 
   int temp = 1;
 
-  if(p_Vid->last_out_fs->frame == NULL)
-  {
+  if (p_Vid->last_out_fs->frame == NULL) {
     p_Vid->last_out_fs->frame = alloc_storable_picture (p_Vid, FRAME, p_Vid->width, p_Vid->height,
       p_Vid->width_cr, p_Vid->height_cr, 1);
     p_Vid->last_out_fs->is_used = 3;
-  }
+    }
 
-  if(p_Vid->conceal_mode == 2)
-  {
+  if (p_Vid->conceal_mode == 2) {
     temp = 2;
     p_Vid->conceal_mode = 1;
-  }
-  copy_to_conceal(p_Dpb->fs[pos]->frame, p_Vid->last_out_fs->frame, p_Vid);
+    }
+  copy_to_conceal (p_Dpb->fs[pos]->frame, p_Vid->last_out_fs->frame, p_Vid);
 
   p_Vid->conceal_mode = temp;
-}
-
+  }
+//}}}

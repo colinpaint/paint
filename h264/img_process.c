@@ -22,7 +22,7 @@
 //}}}
 
 //{{{
-static inline void CPImage(ImageData *imgOut, ImageData *imgIn)
+static inline void CPImage (ImageData *imgOut, ImageData *imgIn)
 {
   memcpy(imgOut->frm_data[0][0], imgIn->frm_data[0][0], imgIn->format.height[0] * imgIn->format.width[0] * sizeof (imgpel));
 
@@ -35,7 +35,7 @@ static inline void CPImage(ImageData *imgOut, ImageData *imgIn)
 //}}}
 //{{{
 // to be modified
-static inline void FilterImage(ImageData *imgOut, ImageData *imgIn)
+static inline void FilterImage (ImageData *imgOut, ImageData *imgIn)
 {
   memcpy(imgOut->frm_data[0][0], imgIn->frm_data[0][0], imgIn->format.height[0] * imgIn->format.width[0] * sizeof (imgpel));
 
@@ -48,7 +48,7 @@ static inline void FilterImage(ImageData *imgOut, ImageData *imgIn)
 //}}}
 //{{{
 // Line interleaving for 3:2 pulldown
-static inline void BlendImageLines(ImageData *imgIn0, ImageData *imgIn1)
+static inline void BlendImageLines (ImageData *imgIn0, ImageData *imgIn1)
 {
   int j;
   for (j = 1; j < imgIn1->format.height[0]; j += 2)
@@ -69,7 +69,7 @@ static inline void BlendImageLines(ImageData *imgIn0, ImageData *imgIn1)
 //}}}
 //{{{
 // to be modified
-static inline void FilterImageSep(ImageData *imgOut, ImageData *imgIn)
+static inline void FilterImageSep (ImageData *imgOut, ImageData *imgIn)
 {
   int i, j;
   static const int SepFilter[6] = {1, -5, 20, 20, -5, 1};
@@ -158,7 +158,7 @@ static inline void FilterImageSep(ImageData *imgOut, ImageData *imgIn)
 //}}}
 //{{{
 // to be modified
-static inline void MuxImages(ImageData *imgOut, ImageData *imgIn0, ImageData *imgIn1, ImageData *Map)
+static inline void MuxImages (ImageData *imgOut, ImageData *imgIn0, ImageData *imgIn1, ImageData *Map)
 {
   int i, j;
   for (j = 0; j < imgOut->format.height[0]; j++)
@@ -186,7 +186,7 @@ static inline void MuxImages(ImageData *imgOut, ImageData *imgIn0, ImageData *im
 }
 //}}}
 //{{{
-static inline void YV12toYUV(ImageData *imgOut, ImageData *imgIn)
+static inline void YV12toYUV (ImageData *imgOut, ImageData *imgIn)
 {
   memcpy(imgOut->frm_data[0][0], imgIn->frm_data[0][0], imgIn->format.height[0] * imgIn->format.width[0] * sizeof (imgpel));
 
@@ -199,10 +199,9 @@ static inline void YV12toYUV(ImageData *imgOut, ImageData *imgIn)
 //}}}
 
 //{{{
-void process_image( VideoParameters *p_Vid, InputParameters *p_Inp )
+void process_image (VideoParameters *p_Vid, InputParameters *p_Inp )
 {
-  switch( p_Inp->ProcessInput )
-  {
+  switch( p_Inp->ProcessInput ) {
   default:
   case 0:
     CPImage(&p_Vid->imgData, &p_Vid->imgData0);

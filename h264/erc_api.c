@@ -89,7 +89,7 @@ ercVariables_t *ercOpen( void )
  *      Width of the frame in pixels.
  ************************************************************************
  */
-void ercReset( ercVariables_t *errorVar, int nOfMBs, int numOfSegments, int picSizeX )
+void ercReset (ercVariables_t *errorVar, int nOfMBs, int numOfSegments, int picSizeX )
 {
   char *tmp = NULL;
   int i = 0;
@@ -179,7 +179,7 @@ void ercReset( ercVariables_t *errorVar, int nOfMBs, int numOfSegments, int picS
  *      Variables for error concealment
  ************************************************************************
  */
-void ercClose(VideoParameters *p_Vid,  ercVariables_t *errorVar )
+void ercClose (VideoParameters *p_Vid,  ercVariables_t *errorVar )
 {
   if ( errorVar != NULL )
   {
@@ -213,7 +213,7 @@ void ercClose(VideoParameters *p_Vid,  ercVariables_t *errorVar )
  *      New value
  ************************************************************************
  */
-void ercSetErrorConcealment( ercVariables_t *errorVar, int value )
+void ercSetErrorConcealment (ercVariables_t *errorVar, int value )
 {
   if ( errorVar != NULL )
     errorVar->concealment = value;
@@ -238,7 +238,7 @@ void ercSetErrorConcealment( ercVariables_t *errorVar, int value )
  *      Variables for error detector
  ************************************************************************
  */
-void ercStartSegment( int currMBNum, int segment, unsigned int bitPos, ercVariables_t *errorVar )
+void ercStartSegment (int currMBNum, int segment, unsigned int bitPos, ercVariables_t *errorVar )
 {
   if ( errorVar && errorVar->concealment )
   {
@@ -266,7 +266,7 @@ void ercStartSegment( int currMBNum, int segment, unsigned int bitPos, ercVariab
  *      Variables for error detector
  ************************************************************************
  */
-void ercStopSegment( int currMBNum, int segment, unsigned int bitPos, ercVariables_t *errorVar )
+void ercStopSegment (int currMBNum, int segment, unsigned int bitPos, ercVariables_t *errorVar )
 {
   if ( errorVar && errorVar->concealment )
   {
@@ -288,7 +288,7 @@ void ercStopSegment( int currMBNum, int segment, unsigned int bitPos, ercVariabl
  *      Variables for error detector
  ************************************************************************
  */
-void ercMarkCurrSegmentLost(int picSizeX, ercVariables_t *errorVar )
+void ercMarkCurrSegmentLost (int picSizeX, ercVariables_t *errorVar )
 {
   int j = 0;
   int current_segment;
@@ -327,7 +327,7 @@ void ercMarkCurrSegmentLost(int picSizeX, ercVariables_t *errorVar )
  *      Variables for error detector
  ************************************************************************
  */
-void ercMarkCurrSegmentOK(int picSizeX, ercVariables_t *errorVar )
+void ercMarkCurrSegmentOK (int picSizeX, ercVariables_t *errorVar )
 {
   int j = 0;
   int current_segment;
@@ -364,7 +364,7 @@ void ercMarkCurrSegmentOK(int picSizeX, ercVariables_t *errorVar )
  *      Variables for error detector
  ************************************************************************
  */
-void ercMarkCurrMBConcealed( int currMBNum, int comp, int picSizeX, ercVariables_t *errorVar )
+void ercMarkCurrMBConcealed (int currMBNum, int comp, int picSizeX, ercVariables_t *errorVar )
 {
   int setAll = 0;
 
