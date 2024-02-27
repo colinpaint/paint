@@ -4,7 +4,7 @@ typedef struct level_quant_params {
   int   OffsetComp;
   int    ScaleComp;
   int InvScaleComp;
-} LevelQuantParams;
+  } LevelQuantParams;
 
 typedef struct quant_params {
   int AdaptRndWeight;
@@ -20,7 +20,7 @@ typedef struct quant_params {
   short **OffsetList8x8input;
   short ***OffsetList4x4;
   short ***OffsetList8x8;
-} QuantParameters;
+  } QuantParameters;
 
 typedef struct quant_methods {
   int   block_y;
@@ -34,4 +34,4 @@ typedef struct quant_methods {
   const byte (*pos_scan)[2];
   const byte *c_cost;
   char type;
-} QuantMethods;
+  } QuantMethods;

@@ -47,5 +47,6 @@ struct stat_parameters {
   int64  bit_ctr_filler_data_v[2];
   int64  bit_ctr_filler_data_n_v[2];
 #endif
-};
+  };
+
 typedef struct stat_parameters StatParameters;

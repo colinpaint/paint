@@ -9,4 +9,4 @@ typedef struct distortion_data {
   int      i16x16;
   int      i16x16rd;
   double   rd_cost;
-} DistortionData;
+  } DistortionData;
