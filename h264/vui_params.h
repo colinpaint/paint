@@ -54,4 +54,4 @@ typedef struct vui_parameters {
   int log2_max_mv_length_horizontal;
   int num_reorder_frames;
   int max_dec_frame_buffering;
-} VUIParameters;
+  } VUIParameters;

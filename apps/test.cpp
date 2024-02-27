@@ -65,12 +65,12 @@ constexpr bool kMotionVectors = true;
 namespace {
   //{{{
   void ffmpegLogCallback (void* ptr, int level, const char* fmt, va_list vargs) {
-    char buffer[256];
     (void)level;
     (void)ptr;
     (void)fmt;
     (void)vargs;
 
+    char buffer[256];
     vsprintf (buffer, fmt, vargs);
     for (int i = 0; i < 256; i++)
       if (buffer[i] == 0xa)
@@ -1248,20 +1248,20 @@ void h264Decode (const string& fileName) {
     return;
     }
 
-  int iRet = 0;
+  int ret = 0;
   do {
     DecodedPicList* pDecPicList;
-    iRet = DecodeOneFrame (&pDecPicList);
-    if (iRet == DEC_EOS || iRet == DEC_SUCCEED)
+    ret = DecodeOneFrame (&pDecPicList);
+    if (ret == DEC_EOS || ret == DEC_SUCCEED)
       outputPicList (pDecPicList, 0);
     else
       cLog::log (LOGERROR, "decoding process failed");
-    } while (iRet == DEC_SUCCEED);
+    } while (ret == DEC_SUCCEED);
 
   DecodedPicList* pDecPicList;
-  iRet = FinitDecoder (&pDecPicList);
+  ret = FinitDecoder (&pDecPicList);
   outputPicList (pDecPicList, 1);
-  iRet = CloseDecoder();
+  ret = CloseDecoder();
   }
 //}}}
 

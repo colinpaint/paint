@@ -65,22 +65,20 @@ extern int read_u_v (int LenInBits, char *tracestring, Bitstream *bitstream, int
 extern int read_i_v (int LenInBits, char *tracestring, Bitstream *bitstream, int *used_bits);
 
 // CAVLC mapping
-extern void linfo_ue(int len, int info, int *value1, int *dummy);
-extern void linfo_se(int len, int info, int *value1, int *dummy);
+extern void linfo_ue (int len, int info, int *value1, int *dummy);
+extern void linfo_se (int len, int info, int *value1, int *dummy);
+extern void linfo_cbp_intra_normal (int len,int info,int *cbp, int *dummy);
+extern void linfo_cbp_inter_normal (int len,int info,int *cbp, int *dummy);
+extern void linfo_cbp_intra_other (int len,int info,int *cbp, int *dummy);
+extern void linfo_cbp_inter_other (int len,int info,int *cbp, int *dummy);
+extern void linfo_levrun_inter (int len,int info,int *level,int *irun);
+extern void linfo_levrun_c2x2 (int len,int info,int *level,int *irun);
 
-extern void linfo_cbp_intra_normal(int len,int info,int *cbp, int *dummy);
-extern void linfo_cbp_inter_normal(int len,int info,int *cbp, int *dummy);
-extern void linfo_cbp_intra_other(int len,int info,int *cbp, int *dummy);
-extern void linfo_cbp_inter_other(int len,int info,int *cbp, int *dummy);
-
-extern void linfo_levrun_inter(int len,int info,int *level,int *irun);
-extern void linfo_levrun_c2x2(int len,int info,int *level,int *irun);
-
-extern int  uvlc_startcode_follows(Slice *currSlice, int dummy);
+extern int  uvlc_startcode_follows (Slice *currSlice, int dummy);
 
 extern int  readSyntaxElement_VLC (SyntaxElement *sym, Bitstream *currStream);
-extern int  readSyntaxElement_UVLC(Macroblock *currMB, SyntaxElement *sym, struct datapartition_dec *dp);
-extern int  readSyntaxElement_Intra4x4PredictionMode(SyntaxElement *sym, Bitstream   *currStream);
+extern int  readSyntaxElement_UVLC (Macroblock *currMB, SyntaxElement *sym, struct datapartition_dec *dp);
+extern int  readSyntaxElement_Intra4x4PredictionMode (SyntaxElement *sym, Bitstream   *currStream);
 
 extern int  GetVLCSymbol (byte buffer[],int totbitoffset,int *info, int bytecount);
 extern int  GetVLCSymbol_IntraMode (byte buffer[],int totbitoffset,int *info, int bytecount);
