@@ -86,6 +86,7 @@ static Macroblock* get_non_aff_neighbor_chroma(Macroblock *mb, int xN, int yN, i
 #define get_pos_y_luma(mb,y) (mb->pix_y + (y & 15))
 #define get_pos_x_chroma(mb,x,max) (mb->pix_c_x + (x & max))
 #define get_pos_y_chroma(mb,y,max) (mb->pix_c_y + (y & max))
+
 //{{{
   /*!
  *********************************************************************************************
@@ -353,6 +354,7 @@ static void get_strength_hor(Macroblock *MbQ, int edge, int mvlimit, StorablePic
   }
 }
 //}}}
+
 //{{{
 /*!
  *****************************************************************************************
@@ -504,6 +506,7 @@ static void luma_ver_deblock_normal(imgpel **cur_img, int pos_x1, int Alpha, int
   }
 }
 //}}}
+
 //{{{
 /*!
  *****************************************************************************************
@@ -710,6 +713,7 @@ static void luma_hor_deblock_normal(imgpel *imgP, imgpel *imgQ, int width, int A
   }
 }
 //}}}
+
 //{{{
 /*!
  *****************************************************************************************
@@ -944,6 +948,7 @@ static void edge_loop_chroma_hor(imgpel** Img, byte *Strength, Macroblock *MbQ, 
 }
 
 //}}}
+
 //{{{
 static void perform_db_dep_normal(Macroblock   *MbQ, StorablePicture *p)
 {

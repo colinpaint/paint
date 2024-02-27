@@ -57,8 +57,8 @@
 #define TRACE_STRING_P(s)
 #endif
 
-extern void set_read_comp_coeff_cabac     (Macroblock *currMB);
-extern void set_read_comp_coeff_cavlc     (Macroblock *currMB);
+extern void set_read_comp_coeff_cabac (Macroblock *currMB);
+extern void set_read_comp_coeff_cavlc (Macroblock *currMB);
 
 //{{{
 /*!
@@ -68,7 +68,7 @@ extern void set_read_comp_coeff_cavlc     (Macroblock *currMB);
  *
  ************************************************************************
  */
-static void read_ipred_8x8_modes_mbaff(Macroblock *currMB)
+static void read_ipred_8x8_modes_mbaff (Macroblock *currMB)
 {
   int b8, bi, bj, bx, by, dec;
   SyntaxElement currSE;
@@ -142,7 +142,7 @@ static void read_ipred_8x8_modes_mbaff(Macroblock *currMB)
  *
  ************************************************************************
  */
-static void read_ipred_8x8_modes(Macroblock *currMB)
+static void read_ipred_8x8_modes (Macroblock *currMB)
 {
   int b8, bi, bj, bx, by, dec;
   SyntaxElement currSE;
@@ -223,7 +223,7 @@ static void read_ipred_8x8_modes(Macroblock *currMB)
  *
  ************************************************************************
  */
-static void read_ipred_4x4_modes_mbaff(Macroblock *currMB)
+static void read_ipred_4x4_modes_mbaff (Macroblock *currMB)
 {
   int b8,i,j,bi,bj,bx,by;
   SyntaxElement currSE;
@@ -311,7 +311,7 @@ static void read_ipred_4x4_modes_mbaff(Macroblock *currMB)
  *
  ************************************************************************
  */
-static void read_ipred_4x4_modes(Macroblock *currMB)
+static void read_ipred_4x4_modes (Macroblock *currMB)
 {
   int b8,i,j,bi,bj,bx,by;
   SyntaxElement currSE;
@@ -403,7 +403,7 @@ static void read_ipred_4x4_modes(Macroblock *currMB)
  *
  ************************************************************************
  */
-static void read_ipred_modes(Macroblock *currMB)
+static void read_ipred_modes (Macroblock *currMB)
 {
   Slice *currSlice = currMB->p_Slice;
   StorablePicture *dec_picture = currSlice->dec_picture;
@@ -451,7 +451,7 @@ static void read_ipred_modes(Macroblock *currMB)
 //}}}
 
 //{{{
-static inline void reset_mv_info(PicMotionParams *mv_info, int slice_no)
+static inline void reset_mv_info (PicMotionParams *mv_info, int slice_no)
 {
   mv_info->ref_pic[LIST_0] = NULL;
   mv_info->ref_pic[LIST_1] = NULL;
@@ -463,7 +463,7 @@ static inline void reset_mv_info(PicMotionParams *mv_info, int slice_no)
 }
 //}}}
 //{{{
-static inline void reset_mv_info_list(PicMotionParams *mv_info, int list, int slice_no)
+static inline void reset_mv_info_list (PicMotionParams *mv_info, int list, int slice_no)
 {
   mv_info->ref_pic[list] = NULL;
   mv_info->mv[list] = zero_mv;
@@ -479,7 +479,7 @@ static inline void reset_mv_info_list(PicMotionParams *mv_info, int list, int sl
  *    init macroblock for skip mode. Only L1 info needs to be reset
  ************************************************************************
  */
-static void init_macroblock_basic(Macroblock *currMB)
+static void init_macroblock_basic (Macroblock *currMB)
 {
   int j, i;
   PicMotionParams **mv_info = &currMB->p_Slice->dec_picture->mv_info[currMB->block_y]; //&p_Vid->dec_picture->mv_info[currMB->block_y];
@@ -502,7 +502,7 @@ static void init_macroblock_basic(Macroblock *currMB)
  *    init macroblock (direct)
  ************************************************************************
  */
-static void init_macroblock_direct(Macroblock *currMB)
+static void init_macroblock_direct (Macroblock *currMB)
 {
   int slice_no = currMB->p_Slice->current_slice_nr;
   PicMotionParams **mv_info = &currMB->p_Slice->dec_picture->mv_info[currMB->block_y];
@@ -527,7 +527,7 @@ static void init_macroblock_direct(Macroblock *currMB)
  *    init macroblock
  ************************************************************************
  */
-static void init_macroblock(Macroblock *currMB)
+static void init_macroblock (Macroblock *currMB)
 {
   int j, i;
   Slice *currSlice = currMB->p_Slice;
@@ -549,7 +549,7 @@ static void init_macroblock(Macroblock *currMB)
 }
 //}}}
 //{{{
-static void concealIPCMcoeffs(Macroblock *currMB)
+static void concealIPCMcoeffs (Macroblock *currMB)
 {
   Slice *currSlice = currMB->p_Slice;
   VideoParameters *p_Vid = currMB->p_Vid;
@@ -592,7 +592,7 @@ static void concealIPCMcoeffs(Macroblock *currMB)
  *    Dong Wang <Dong.Wang@bristol.ac.uk>
  ************************************************************************
  */
-static void init_decoding_engine_IPCM(Slice *currSlice)
+static void init_decoding_engine_IPCM (Slice *currSlice)
 {
   Bitstream *currStream;
   int ByteStartPosition;
@@ -629,7 +629,7 @@ static void init_decoding_engine_IPCM(Slice *currSlice)
  *    Dong Wang <Dong.Wang@bristol.ac.uk>
  ************************************************************************
  */
-static void read_IPCM_coeffs_from_NAL(Slice *currSlice, struct datapartition_dec *dP)
+static void read_IPCM_coeffs_from_NAL (Slice *currSlice, struct datapartition_dec *dP)
 {
   VideoParameters *p_Vid = currSlice->p_Vid;
 
@@ -723,7 +723,7 @@ static inline void SetB8Mode (Macroblock* currMB, int value, int i)
 }
 //}}}
 //{{{
-static inline void reset_coeffs(Macroblock *currMB)
+static inline void reset_coeffs (Macroblock *currMB)
 {
   VideoParameters *p_Vid = currMB->p_Vid;
 
@@ -733,7 +733,7 @@ static inline void reset_coeffs(Macroblock *currMB)
 }
 //}}}
 //{{{
-static inline void field_flag_inference(Macroblock *currMB)
+static inline void field_flag_inference (Macroblock *currMB)
 {
   VideoParameters *p_Vid = currMB->p_Vid;
   if (currMB->mbAvailA)
@@ -749,7 +749,7 @@ static inline void field_flag_inference(Macroblock *currMB)
 //}}}
 
 //{{{
-void skip_macroblock(Macroblock *currMB)
+void skip_macroblock (Macroblock *currMB)
 {
   MotionVector pred_mv;
   int zeroMotionAbove;
@@ -876,7 +876,7 @@ void skip_macroblock(Macroblock *currMB)
  *   read and set skip macroblock information
  ************************************************************************
  */
-static void read_skip_macroblock(Macroblock *currMB)
+static void read_skip_macroblock (Macroblock *currMB)
 {
   currMB->luma_transform_size_8x8_flag = FALSE;
 
@@ -899,7 +899,7 @@ static void read_skip_macroblock(Macroblock *currMB)
  *   read and set intra (other than 4x4/8x8) mode macroblock information
  ************************************************************************
  */
-static void read_intra_macroblock(Macroblock *currMB)
+static void read_intra_macroblock (Macroblock *currMB)
 {
   //init NoMbPartLessThan8x8Flag
   currMB->NoMbPartLessThan8x8Flag = TRUE;
@@ -926,7 +926,7 @@ static void read_intra_macroblock(Macroblock *currMB)
  *   read and set intra (4x4/8x8) mode macroblock information (CAVLC)
  ************************************************************************
  */
-static void read_intra4x4_macroblock_cavlc(Macroblock *currMB, const byte *partMap)
+static void read_intra4x4_macroblock_cavlc (Macroblock *currMB, const byte *partMap)
 {
   Slice *currSlice = currMB->p_Slice;
   //============= Transform Size Flag for INTRA MBs =============
@@ -974,7 +974,7 @@ static void read_intra4x4_macroblock_cavlc(Macroblock *currMB, const byte *partM
  *   read and set intra (4x4/8x8) mode macroblock information (CAVLC)
  ************************************************************************
  */
-static void read_intra4x4_macroblock_cabac(Macroblock *currMB, const byte *partMap)
+static void read_intra4x4_macroblock_cabac (Macroblock *currMB, const byte *partMap)
 {
   Slice *currSlice = currMB->p_Slice;
   //============= Transform Size Flag for INTRA MBs =============
@@ -1031,7 +1031,7 @@ static void read_intra4x4_macroblock_cabac(Macroblock *currMB, const byte *partM
  *   mode macroblock information
  ************************************************************************
  */
-static void read_inter_macroblock(Macroblock *currMB)
+static void read_inter_macroblock (Macroblock *currMB)
 {
   Slice *currSlice = currMB->p_Slice;
   //init NoMbPartLessThan8x8Flag
@@ -1060,7 +1060,7 @@ static void read_inter_macroblock(Macroblock *currMB)
  *   read and set I_PCM mode macroblock information
  ************************************************************************
  */
-static void read_i_pcm_macroblock(Macroblock *currMB, const byte *partMap)
+static void read_i_pcm_macroblock (Macroblock *currMB, const byte *partMap)
 {
   Slice *currSlice = currMB->p_Slice;
   currMB->NoMbPartLessThan8x8Flag = TRUE;
@@ -1091,7 +1091,7 @@ static void read_i_pcm_macroblock(Macroblock *currMB, const byte *partMap)
  *   read and set P8x8 mode macroblock information
  ************************************************************************
  */
-static void read_P8x8_macroblock(Macroblock *currMB, DataPartition *dP, SyntaxElement *currSE)
+static void read_P8x8_macroblock (Macroblock *currMB, DataPartition *dP, SyntaxElement *currSE)
 {
   int i;
   Slice *currSlice = currMB->p_Slice;
@@ -1124,6 +1124,7 @@ static void read_P8x8_macroblock(Macroblock *currMB, DataPartition *dP, SyntaxEl
   currSlice->read_CBP_and_coeffs_from_NAL (currMB);
 }
 //}}}
+
 //{{{
 /*!
  ************************************************************************
@@ -1131,7 +1132,7 @@ static void read_P8x8_macroblock(Macroblock *currMB, DataPartition *dP, SyntaxEl
  *    Get the syntax elements from the NAL
  ************************************************************************
  */
-static void read_one_macroblock_i_slice_cavlc(Macroblock *currMB)
+static void read_one_macroblock_i_slice_cavlc (Macroblock *currMB)
 {
   Slice *currSlice = currMB->p_Slice;
 
@@ -1203,7 +1204,7 @@ static void read_one_macroblock_i_slice_cavlc(Macroblock *currMB)
  *    Get the syntax elements from the NAL
  ************************************************************************
  */
-static void read_one_macroblock_i_slice_cabac(Macroblock *currMB)
+static void read_one_macroblock_i_slice_cabac (Macroblock *currMB)
 {
   Slice *currSlice = currMB->p_Slice;
 
@@ -1329,7 +1330,7 @@ static void read_one_macroblock_i_slice_cabac(Macroblock *currMB)
  *    Get the syntax elements from the NAL
  ************************************************************************
  */
-static void read_one_macroblock_p_slice_cavlc(Macroblock *currMB)
+static void read_one_macroblock_p_slice_cavlc (Macroblock *currMB)
 {
   Slice *currSlice = currMB->p_Slice;
   SyntaxElement currSE;
@@ -1543,7 +1544,7 @@ static void read_one_macroblock_p_slice_cavlc(Macroblock *currMB)
  *    Get the syntax elements from the NAL
  ************************************************************************
  */
-static void read_one_macroblock_p_slice_cabac(Macroblock *currMB)
+static void read_one_macroblock_p_slice_cabac (Macroblock *currMB)
 {
   Slice *currSlice = currMB->p_Slice;
   VideoParameters *p_Vid = currMB->p_Vid;
@@ -1736,7 +1737,7 @@ static void read_one_macroblock_p_slice_cabac(Macroblock *currMB)
  *    Get the syntax elements from the NAL
  ************************************************************************
  */
-static void read_one_macroblock_b_slice_cavlc(Macroblock *currMB)
+static void read_one_macroblock_b_slice_cavlc (Macroblock *currMB)
 {
   VideoParameters *p_Vid = currMB->p_Vid;
   Slice *currSlice = currMB->p_Slice;
@@ -1963,7 +1964,7 @@ static void read_one_macroblock_b_slice_cavlc(Macroblock *currMB)
  *    Get the syntax elements from the NAL
  ************************************************************************
  */
-static void read_one_macroblock_b_slice_cabac(Macroblock *currMB)
+static void read_one_macroblock_b_slice_cabac (Macroblock *currMB)
 {
   Slice *currSlice = currMB->p_Slice;
   VideoParameters *p_Vid = currMB->p_Vid;
@@ -2186,7 +2187,7 @@ static void read_one_macroblock_b_slice_cabac(Macroblock *currMB)
 //}}}
 
 //{{{
-void setup_read_macroblock(Slice *currSlice)
+void setup_read_macroblock (Slice *currSlice)
 {
   if (currSlice->p_Vid->active_pps->entropy_coding_mode_flag == (Boolean) CABAC)
   {

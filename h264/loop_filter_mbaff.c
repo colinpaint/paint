@@ -28,15 +28,15 @@
 #include "loop_filter.h"
 //}}}
 
-//static void get_strength_ver_MBAff     (Macroblock *MbQ, int edge, int mvlimit, StorablePicture *p);
-//static void get_strength_hor_MBAff     (Macroblock *MbQ, int edge, int mvlimit, StorablePicture *p);
-static void edge_loop_luma_ver_MBAff   (ColorPlane pl, imgpel** Img, byte *Strength, Macroblock *MbQ, int edge);
-static void edge_loop_luma_hor_MBAff   (ColorPlane pl, imgpel** Img, byte *Strength, Macroblock *MbQ, int edge, StorablePicture *p);
+//static void get_strength_ver_MBAff (Macroblock *MbQ, int edge, int mvlimit, StorablePicture *p);
+//static void get_strength_hor_MBAff (Macroblock *MbQ, int edge, int mvlimit, StorablePicture *p);
+static void edge_loop_luma_ver_MBAff (ColorPlane pl, imgpel** Img, byte *Strength, Macroblock *MbQ, int edge);
+static void edge_loop_luma_hor_MBAff (ColorPlane pl, imgpel** Img, byte *Strength, Macroblock *MbQ, int edge, StorablePicture *p);
 static void edge_loop_chroma_ver_MBAff (imgpel** Img, byte *Strength, Macroblock *MbQ, int edge, int uv, StorablePicture *p);
 static void edge_loop_chroma_hor_MBAff (imgpel** Img, byte *Strength, Macroblock *MbQ, int edge, int uv, StorablePicture *p);
 
 //{{{
-void set_loop_filter_functions_mbaff(VideoParameters *p_Vid)
+void set_loop_filter_functions_mbaff (VideoParameters *p_Vid)
 {
   //p_Vid->GetStrengthVer    = get_strength_ver_MBAff;
   //p_Vid->GetStrengthHor    = get_strength_hor_MBAff;
@@ -48,7 +48,7 @@ void set_loop_filter_functions_mbaff(VideoParameters *p_Vid)
 //}}}
 
 //{{{
-Macroblock* get_non_aff_neighbor_luma(Macroblock *mb, int xN, int yN)
+Macroblock* get_non_aff_neighbor_luma (Macroblock *mb, int xN, int yN)
 {
   if (xN < 0)
     return(mb->mbleft);
@@ -59,7 +59,7 @@ Macroblock* get_non_aff_neighbor_luma(Macroblock *mb, int xN, int yN)
 }
 //}}}
 //{{{
-Macroblock* get_non_aff_neighbor_chroma(Macroblock *mb, int xN, int yN, int block_width,int block_height)
+Macroblock* get_non_aff_neighbor_chroma (Macroblock *mb, int xN, int yN, int block_width,int block_height)
 {
   if (xN < 0)
   {
@@ -89,7 +89,7 @@ Macroblock* get_non_aff_neighbor_chroma(Macroblock *mb, int xN, int yN, int bloc
  *    returns a buffer of 16 Strength values for one stripe in a mb (for MBAFF)
  *********************************************************************************************
  */
-void get_strength_ver_MBAff(byte *Strength, Macroblock *MbQ, int edge, int mvlimit, StorablePicture *p)
+void get_strength_ver_MBAff (byte *Strength, Macroblock *MbQ, int edge, int mvlimit, StorablePicture *p)
 {
   //byte *Strength = MbQ->strength_ver[edge];
   short  blkP, blkQ, idx;
@@ -300,7 +300,7 @@ void get_strength_ver_MBAff(byte *Strength, Macroblock *MbQ, int edge, int mvlim
  *    returns a buffer of 16 Strength values for one stripe in a mb (for MBAFF)
  *********************************************************************************************
  */
-void get_strength_hor_MBAff(byte *Strength, Macroblock *MbQ, int edge, int mvlimit, StorablePicture *p)
+void get_strength_hor_MBAff (byte *Strength, Macroblock *MbQ, int edge, int mvlimit, StorablePicture *p)
 {
   short  blkP, blkQ, idx;
   short  blk_x, blk_x2, blk_y, blk_y2 ;
@@ -442,7 +442,7 @@ void get_strength_hor_MBAff(byte *Strength, Macroblock *MbQ, int edge, int mvlim
  *    Filters 16 pel block edge of Super MB Frame coded MBs
  *****************************************************************************************
  */
-static void edge_loop_luma_ver_MBAff(ColorPlane pl, imgpel** Img, byte *Strength, Macroblock *MbQ, int edge)
+static void edge_loop_luma_ver_MBAff (ColorPlane pl, imgpel** Img, byte *Strength, Macroblock *MbQ, int edge)
 {
   int      pel, Strng ;
   imgpel   L2 = 0, L1, L0, R0, R1, R2 = 0;
@@ -568,7 +568,7 @@ static void edge_loop_luma_ver_MBAff(ColorPlane pl, imgpel** Img, byte *Strength
  *    Filters 16 pel block edge of Super MB Frame coded MBs
  *****************************************************************************************
  */
-static void edge_loop_luma_hor_MBAff(ColorPlane pl, imgpel** Img, byte *Strength, Macroblock *MbQ,
+static void edge_loop_luma_hor_MBAff (ColorPlane pl, imgpel** Img, byte *Strength, Macroblock *MbQ,
               int edge, StorablePicture *p)
 {
   int      width = p->iLumaStride; //p->size_x;
@@ -698,7 +698,7 @@ static void edge_loop_luma_hor_MBAff(ColorPlane pl, imgpel** Img, byte *Strength
 *    Filters chroma block edge for MBAFF types
 *****************************************************************************************
  */
-static void edge_loop_chroma_ver_MBAff(imgpel** Img, byte *Strength, Macroblock *MbQ, int edge, int uv, StorablePicture *p)
+static void edge_loop_chroma_ver_MBAff (imgpel** Img, byte *Strength, Macroblock *MbQ, int edge, int uv, StorablePicture *p)
 {
   int      pel, Strng ;
 
@@ -786,7 +786,7 @@ static void edge_loop_chroma_ver_MBAff(imgpel** Img, byte *Strength, Macroblock 
 *    Filters chroma block edge for MBAFF types
 *****************************************************************************************
  */
-static void edge_loop_chroma_hor_MBAff(imgpel** Img, byte *Strength, Macroblock *MbQ, int edge, int uv, StorablePicture *p)
+static void edge_loop_chroma_hor_MBAff (imgpel** Img, byte *Strength, Macroblock *MbQ, int edge, int uv, StorablePicture *p)
 {
   VideoParameters *p_Vid = MbQ->p_Vid;
   int      PelNum = pelnum_cr[1][p->chroma_format_idc];
@@ -876,7 +876,7 @@ static void edge_loop_chroma_hor_MBAff(imgpel** Img, byte *Strength, Macroblock 
  *    Get Deblocking filter strength for one macroblock.
  *****************************************************************************************
  */
-void get_db_strength_mbaff(VideoParameters *p_Vid, StorablePicture *p, int MbQAddr)
+void get_db_strength_mbaff (VideoParameters *p_Vid, StorablePicture *p, int MbQAddr)
 {
   Macroblock   *MbQ = &(p_Vid->mb_data[MbQAddr]) ; // current Mb
 
@@ -983,7 +983,7 @@ void get_db_strength_mbaff(VideoParameters *p_Vid, StorablePicture *p, int MbQAd
  *    Performing Deblocking for one macroblock.
  *****************************************************************************************
  */
-void perform_db_mbaff(VideoParameters *p_Vid, StorablePicture *p, int MbQAddr)
+void perform_db_mbaff (VideoParameters *p_Vid, StorablePicture *p, int MbQAddr)
 {
   Macroblock   *MbQ = &(p_Vid->mb_data[MbQAddr]) ; // current Mb
 

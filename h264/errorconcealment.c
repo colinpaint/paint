@@ -49,7 +49,7 @@
  *    EX_SYNC   sync on next header
  ***********************************************************************
  */
-int set_ec_flag(VideoParameters *p_Vid, int se)
+int set_ec_flag (VideoParameters *p_Vid, int se)
 {
 
   /*
@@ -130,7 +130,7 @@ int set_ec_flag(VideoParameters *p_Vid, int se)
  *
  ***********************************************************************
  */
-void reset_ec_flags(VideoParameters *p_Vid)
+void reset_ec_flags (VideoParameters *p_Vid)
 {
   int i;
   for (i=0; i<SE_MAX_ELEMENTS; i++)
@@ -150,7 +150,7 @@ void reset_ec_flags(VideoParameters *p_Vid)
  *    EC_REQ if element requires error concealment
  ***********************************************************************
  */
-int get_concealed_element(VideoParameters *p_Vid, SyntaxElement *sym)
+int get_concealed_element (VideoParameters *p_Vid, SyntaxElement *sym)
 {
   if (p_Vid->ec_flag[sym->type] == NO_EC)
     return NO_EC;

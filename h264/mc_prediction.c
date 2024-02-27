@@ -27,7 +27,7 @@
 //}}}
 
 //{{{
-int allocate_pred_mem(Slice *currSlice)
+int allocate_pred_mem (Slice *currSlice)
 {
   int alloc_size = 0;
   alloc_size += get_mem2Dpel(&currSlice->tmp_block_l0, MB_BLOCK_SIZE, MB_BLOCK_SIZE);
@@ -39,7 +39,7 @@ int allocate_pred_mem(Slice *currSlice)
 }
 //}}}
 //{{{
-void free_pred_mem(Slice *currSlice)
+void free_pred_mem (Slice *currSlice)
 {
   free_mem2Dint(currSlice->tmp_res);
   free_mem2Dpel(currSlice->tmp_block_l0);
@@ -56,7 +56,7 @@ void free_pred_mem(Slice *currSlice)
  *    block single list prediction
  ************************************************************************
  */
-static void mc_prediction(imgpel **mb_pred, imgpel **block, int block_size_y, int block_size_x, int ioff)
+static void mc_prediction (imgpel **mb_pred, imgpel **block, int block_size_y, int block_size_x, int ioff)
 {
 
   int j;
@@ -74,7 +74,7 @@ static void mc_prediction(imgpel **mb_pred, imgpel **block, int block_size_y, in
  *    block single list weighted prediction
  ************************************************************************
  */
-static void weighted_mc_prediction(imgpel **mb_pred,
+static void weighted_mc_prediction (imgpel **mb_pred,
                                    imgpel **block,
                                    int block_size_y,
                                    int block_size_x,
@@ -104,7 +104,7 @@ static void weighted_mc_prediction(imgpel **mb_pred,
  *    block bi-prediction
  ************************************************************************
  */
-static void bi_prediction(imgpel **mb_pred,
+static void bi_prediction (imgpel **mb_pred,
                           imgpel **block_l0,
                           imgpel **block_l1,
                           int block_size_y,
@@ -137,7 +137,7 @@ static void bi_prediction(imgpel **mb_pred,
  *    block weighted biprediction
  ************************************************************************
  */
-static void weighted_bi_prediction(imgpel *mb_pred,
+static void weighted_bi_prediction (imgpel *mb_pred,
                                    imgpel *block_l0,
                                    imgpel *block_l1,
                                    int block_size_y,
@@ -172,7 +172,7 @@ static void weighted_bi_prediction(imgpel *mb_pred,
  *    Integer positions
  ************************************************************************
  */
-static void get_block_00(imgpel *block, imgpel *cur_img, int span, int block_size_y)
+static void get_block_00 (imgpel *block, imgpel *cur_img, int span, int block_size_y)
 {
   // fastest to just move an entire block, since block is a temp block is a 256 byte block (16x16)
   // writes 2 lines of 16 imgpel 1 to 8 times depending in block_size_y
@@ -197,7 +197,7 @@ static void get_block_00(imgpel *block, imgpel *cur_img, int span, int block_siz
  *    Qpel (1,0) horizontal
  ************************************************************************
  */
-static void get_luma_10(imgpel **block, imgpel **cur_imgY, int block_size_y, int block_size_x, int x_pos , int max_imgpel_value)
+static void get_luma_10 (imgpel **block, imgpel **cur_imgY, int block_size_y, int block_size_x, int x_pos , int max_imgpel_value)
 {
   imgpel *p0, *p1, *p2, *p3, *p4, *p5;
   imgpel *orig_line, *cur_line;
@@ -233,7 +233,7 @@ static void get_luma_10(imgpel **block, imgpel **cur_imgY, int block_size_y, int
  *    Half horizontal
  ************************************************************************
  */
-static void get_luma_20(imgpel **block, imgpel **cur_imgY, int block_size_y, int block_size_x, int x_pos , int max_imgpel_value)
+static void get_luma_20 (imgpel **block, imgpel **cur_imgY, int block_size_y, int block_size_x, int x_pos , int max_imgpel_value)
 {
   imgpel *p0, *p1, *p2, *p3, *p4, *p5;
   imgpel *orig_line;
@@ -265,7 +265,7 @@ static void get_luma_20(imgpel **block, imgpel **cur_imgY, int block_size_y, int
  *    Qpel (3,0) horizontal
  ************************************************************************
  */
-static void get_luma_30(imgpel **block, imgpel **cur_imgY, int block_size_y, int block_size_x, int x_pos , int max_imgpel_value)
+static void get_luma_30 (imgpel **block, imgpel **cur_imgY, int block_size_y, int block_size_x, int x_pos , int max_imgpel_value)
 {
   imgpel *p0, *p1, *p2, *p3, *p4, *p5;
   imgpel *orig_line, *cur_line;
@@ -301,7 +301,7 @@ static void get_luma_30(imgpel **block, imgpel **cur_imgY, int block_size_y, int
  *    Qpel vertical (0, 1)
  ************************************************************************
  */
-static void get_luma_01(imgpel **block, imgpel **cur_imgY, int block_size_y, int block_size_x, int x_pos, int shift_x, int max_imgpel_value)
+static void get_luma_01 (imgpel **block, imgpel **cur_imgY, int block_size_y, int block_size_x, int x_pos, int shift_x, int max_imgpel_value)
 {
   imgpel *p0, *p1, *p2, *p3, *p4, *p5;
   imgpel *orig_line, *cur_line;
@@ -339,7 +339,7 @@ static void get_luma_01(imgpel **block, imgpel **cur_imgY, int block_size_y, int
  *    Half vertical
  ************************************************************************
  */
-static void get_luma_02(imgpel **block, imgpel **cur_imgY, int block_size_y, int block_size_x, int x_pos, int shift_x, int max_imgpel_value)
+static void get_luma_02 (imgpel **block, imgpel **cur_imgY, int block_size_y, int block_size_x, int x_pos, int shift_x, int max_imgpel_value)
 {
   imgpel *p0, *p1, *p2, *p3, *p4, *p5;
   imgpel *orig_line;
@@ -372,7 +372,7 @@ static void get_luma_02(imgpel **block, imgpel **cur_imgY, int block_size_y, int
  *    Qpel vertical (0, 3)
  ************************************************************************
  */
-static void get_luma_03(imgpel **block, imgpel **cur_imgY, int block_size_y, int block_size_x, int x_pos, int shift_x, int max_imgpel_value)
+static void get_luma_03 (imgpel **block, imgpel **cur_imgY, int block_size_y, int block_size_x, int x_pos, int shift_x, int max_imgpel_value)
 {
   imgpel *p0, *p1, *p2, *p3, *p4, *p5;
   imgpel *orig_line, *cur_line;
@@ -410,7 +410,7 @@ static void get_luma_03(imgpel **block, imgpel **cur_imgY, int block_size_y, int
  *    Hpel horizontal, Qpel vertical (2, 1)
  ************************************************************************
  */
-static void get_luma_21(imgpel **block, imgpel **cur_imgY, int **tmp_res, int block_size_y, int block_size_x, int x_pos, int max_imgpel_value)
+static void get_luma_21 (imgpel **block, imgpel **cur_imgY, int **tmp_res, int block_size_y, int block_size_x, int x_pos, int max_imgpel_value)
 {
   int i, j;
   /* Vertical & horizontal interpolation */
@@ -468,7 +468,7 @@ static void get_luma_21(imgpel **block, imgpel **cur_imgY, int **tmp_res, int bl
  *    Hpel horizontal, Hpel vertical (2, 2)
  ************************************************************************
  */
-static void get_luma_22(imgpel **block, imgpel **cur_imgY, int **tmp_res, int block_size_y, int block_size_x, int x_pos, int max_imgpel_value)
+static void get_luma_22 (imgpel **block, imgpel **cur_imgY, int **tmp_res, int block_size_y, int block_size_x, int x_pos, int max_imgpel_value)
 {
   int i, j;
   /* Vertical & horizontal interpolation */
@@ -522,7 +522,7 @@ static void get_luma_22(imgpel **block, imgpel **cur_imgY, int **tmp_res, int bl
  *    Hpel horizontal, Qpel vertical (2, 3)
  ************************************************************************
  */
-static void get_luma_23(imgpel **block, imgpel **cur_imgY, int **tmp_res, int block_size_y, int block_size_x, int x_pos, int max_imgpel_value)
+static void get_luma_23 (imgpel **block, imgpel **cur_imgY, int **tmp_res, int block_size_y, int block_size_x, int x_pos, int max_imgpel_value)
 {
   int i, j;
   /* Vertical & horizontal interpolation */
@@ -580,7 +580,7 @@ static void get_luma_23(imgpel **block, imgpel **cur_imgY, int **tmp_res, int bl
  *    Qpel horizontal, Hpel vertical (1, 2)
  ************************************************************************
  */
-static void get_luma_12(imgpel **block, imgpel **cur_imgY, int **tmp_res, int block_size_y, int block_size_x, int x_pos, int shift_x, int max_imgpel_value)
+static void get_luma_12 (imgpel **block, imgpel **cur_imgY, int **tmp_res, int block_size_y, int block_size_x, int x_pos, int shift_x, int max_imgpel_value)
 {
   int i, j;
   int *tmp_line;
@@ -635,7 +635,7 @@ static void get_luma_12(imgpel **block, imgpel **cur_imgY, int **tmp_res, int bl
  *    Qpel horizontal, Hpel vertical (3, 2)
  ************************************************************************
  */
-static void get_luma_32(imgpel **block, imgpel **cur_imgY, int **tmp_res, int block_size_y, int block_size_x, int x_pos, int shift_x, int max_imgpel_value)
+static void get_luma_32 (imgpel **block, imgpel **cur_imgY, int **tmp_res, int block_size_y, int block_size_x, int x_pos, int shift_x, int max_imgpel_value)
 {
   int i, j;
   int *tmp_line;
@@ -690,7 +690,7 @@ static void get_luma_32(imgpel **block, imgpel **cur_imgY, int **tmp_res, int bl
  *    Qpel horizontal, Qpel vertical (3, 3)
  ************************************************************************
  */
-static void get_luma_33(imgpel **block, imgpel **cur_imgY, int block_size_y, int block_size_x, int x_pos, int shift_x, int max_imgpel_value)
+static void get_luma_33 (imgpel **block, imgpel **cur_imgY, int block_size_y, int block_size_x, int x_pos, int shift_x, int max_imgpel_value)
 {
   int i, j;
   imgpel *p0, *p1, *p2, *p3, *p4, *p5;
@@ -746,7 +746,7 @@ static void get_luma_33(imgpel **block, imgpel **cur_imgY, int block_size_y, int
  *    Qpel horizontal, Qpel vertical (1, 1)
  ************************************************************************
  */
-static void get_luma_11(imgpel **block, imgpel **cur_imgY, int block_size_y, int block_size_x, int x_pos, int shift_x, int max_imgpel_value)
+static void get_luma_11 (imgpel **block, imgpel **cur_imgY, int block_size_y, int block_size_x, int x_pos, int shift_x, int max_imgpel_value)
 {
   int i, j;
   imgpel *p0, *p1, *p2, *p3, *p4, *p5;
@@ -802,7 +802,7 @@ static void get_luma_11(imgpel **block, imgpel **cur_imgY, int block_size_y, int
  *    Qpel horizontal, Qpel vertical (1, 3)
  ************************************************************************
  */
-static void get_luma_13(imgpel **block, imgpel **cur_imgY, int block_size_y, int block_size_x, int x_pos, int shift_x, int max_imgpel_value)
+static void get_luma_13 (imgpel **block, imgpel **cur_imgY, int block_size_y, int block_size_x, int x_pos, int shift_x, int max_imgpel_value)
 {
   /* Diagonal interpolation */
   int i, j;
@@ -859,7 +859,7 @@ static void get_luma_13(imgpel **block, imgpel **cur_imgY, int block_size_y, int
  *    Qpel horizontal, Qpel vertical (3, 1)
  ************************************************************************
  */
-static void get_luma_31(imgpel **block, imgpel **cur_imgY, int block_size_y, int block_size_x, int x_pos, int shift_x, int max_imgpel_value)
+static void get_luma_31 (imgpel **block, imgpel **cur_imgY, int block_size_y, int block_size_x, int x_pos, int shift_x, int max_imgpel_value)
 {
   /* Diagonal interpolation */
   int i, j;
@@ -916,7 +916,7 @@ static void get_luma_31(imgpel **block, imgpel **cur_imgY, int block_size_y, int
  *    Interpolation of 1/4 subpixel
  ************************************************************************
  */
-void get_block_luma(StorablePicture *curr_ref, int x_pos, int y_pos, int block_size_x, int block_size_y, imgpel **block,
+void get_block_luma (StorablePicture *curr_ref, int x_pos, int y_pos, int block_size_x, int block_size_y, imgpel **block,
                     int shift_x, int maxold_x, int maxold_y, int **tmp_res, int max_imgpel_value, imgpel no_ref_value, Macroblock *currMB)
 {
   if (curr_ref->no_ref) {
@@ -1000,7 +1000,7 @@ void get_block_luma(StorablePicture *curr_ref, int x_pos, int y_pos, int block_s
  *    Chroma (0,X)
  ************************************************************************
  */
-static void get_chroma_0X(imgpel *block, imgpel *cur_img, int span, int block_size_y, int block_size_x, int w00, int w01, int total_scale)
+static void get_chroma_0X (imgpel *block, imgpel *cur_img, int span, int block_size_y, int block_size_x, int w00, int w01, int total_scale)
 {
   imgpel *cur_row = cur_img;
   imgpel *nxt_row = cur_img + span;
@@ -1033,7 +1033,7 @@ static void get_chroma_0X(imgpel *block, imgpel *cur_img, int span, int block_si
  *    Chroma (X,0)
  ************************************************************************
  */
-static void get_chroma_X0(imgpel *block, imgpel *cur_img, int span, int block_size_y, int block_size_x, int w00, int w10, int total_scale)
+static void get_chroma_X0 (imgpel *block, imgpel *cur_img, int span, int block_size_y, int block_size_x, int w00, int w10, int total_scale)
 {
   imgpel *cur_row = cur_img;
 
@@ -1065,7 +1065,7 @@ static void get_chroma_X0(imgpel *block, imgpel *cur_img, int span, int block_si
  *    Chroma (X,X)
  ************************************************************************
  */
-static void get_chroma_XY(imgpel *block, imgpel *cur_img, int span, int block_size_y, int block_size_x, int w00, int w01, int w10, int w11, int total_scale)
+static void get_chroma_XY (imgpel *block, imgpel *cur_img, int span, int block_size_y, int block_size_x, int w00, int w01, int w10, int w11, int total_scale)
 {
   imgpel *cur_row = cur_img;
   imgpel *nxt_row = cur_img + span;
@@ -1095,7 +1095,7 @@ static void get_chroma_XY(imgpel *block, imgpel *cur_img, int span, int block_si
 }
 //}}}
 //{{{
-static void get_block_chroma(StorablePicture *curr_ref, int x_pos, int y_pos, int subpel_x, int subpel_y, int maxold_x, int maxold_y,
+static void get_block_chroma (StorablePicture *curr_ref, int x_pos, int y_pos, int subpel_x, int subpel_y, int maxold_x, int maxold_y,
                              int block_size_x, int vert_block_size, int shiftpel_x, int shiftpel_y,
                              imgpel *block1, imgpel *block2, int total_scale, imgpel no_ref_value, VideoParameters *p_Vid)
 {
@@ -1155,7 +1155,7 @@ static void get_block_chroma(StorablePicture *curr_ref, int x_pos, int y_pos, in
 }
 //}}}
 //{{{
-void intra_cr_decoding(Macroblock *currMB, int yuv)
+void intra_cr_decoding (Macroblock *currMB, int yuv)
 {
   VideoParameters *p_Vid = currMB->p_Vid;
   Slice *currSlice = currMB->p_Slice;
@@ -1235,7 +1235,7 @@ void intra_cr_decoding(Macroblock *currMB, int yuv)
 //}}}
 
 //{{{
-static inline void set_direct_references(const PixelPos *mb, char *l0_rFrame, char *l1_rFrame, PicMotionParams **mv_info)
+static inline void set_direct_references (const PixelPos *mb, char *l0_rFrame, char *l1_rFrame, PicMotionParams **mv_info)
 {
   if (mb->available)
   {
@@ -1251,7 +1251,7 @@ static inline void set_direct_references(const PixelPos *mb, char *l0_rFrame, ch
 }
 //}}}
 //{{{
-static void set_direct_references_mb_field(const PixelPos *mb, char *l0_rFrame, char *l1_rFrame, PicMotionParams **mv_info, Macroblock *mb_data)
+static void set_direct_references_mb_field (const PixelPos *mb, char *l0_rFrame, char *l1_rFrame, PicMotionParams **mv_info, Macroblock *mb_data)
 {
   if (mb->available)
   {
@@ -1275,7 +1275,7 @@ static void set_direct_references_mb_field(const PixelPos *mb, char *l0_rFrame, 
 }
 //}}}
 //{{{
-static void set_direct_references_mb_frame(const PixelPos *mb, char *l0_rFrame, char *l1_rFrame, PicMotionParams **mv_info, Macroblock *mb_data)
+static void set_direct_references_mb_frame (const PixelPos *mb, char *l0_rFrame, char *l1_rFrame, PicMotionParams **mv_info, Macroblock *mb_data)
 {
   if (mb->available)
   {
@@ -1299,7 +1299,7 @@ static void set_direct_references_mb_frame(const PixelPos *mb, char *l0_rFrame, 
 }
 //}}}
 //{{{
-void prepare_direct_params(Macroblock *currMB, StorablePicture *dec_picture, MotionVector *pmvl0, MotionVector *pmvl1, char *l0_rFrame, char *l1_rFrame)
+void prepare_direct_params (Macroblock *currMB, StorablePicture *dec_picture, MotionVector *pmvl0, MotionVector *pmvl1, char *l0_rFrame, char *l1_rFrame)
 {
   Slice *currSlice = currMB->p_Slice;
   char l0_refA, l0_refB, l0_refC;
@@ -1345,7 +1345,7 @@ void prepare_direct_params(Macroblock *currMB, StorablePicture *dec_picture, Mot
 //}}}
 
 //{{{
-static void check_motion_vector_range(const MotionVector *mv, Slice *pSlice)
+static void check_motion_vector_range (const MotionVector *mv, Slice *pSlice)
 {
   if (mv->mv_x > 8191 || mv->mv_x < -8192)
   {
@@ -1361,7 +1361,7 @@ static void check_motion_vector_range(const MotionVector *mv, Slice *pSlice)
 }
 //}}}
 //{{{
-static inline int check_vert_mv(int llimit, int vec1_y,int rlimit)
+static inline int check_vert_mv (int llimit, int vec1_y,int rlimit)
 {
   int y_pos = vec1_y >> 2;
   if(y_pos < llimit || y_pos > rlimit)
@@ -1371,7 +1371,7 @@ static inline int check_vert_mv(int llimit, int vec1_y,int rlimit)
 }
 //}}}
 //{{{
-static void perform_mc_single_wp(Macroblock *currMB, ColorPlane pl, StorablePicture *dec_picture, int pred_dir, int i, int j, int block_size_x, int block_size_y)
+static void perform_mc_single_wp (Macroblock *currMB, ColorPlane pl, StorablePicture *dec_picture, int pred_dir, int i, int j, int block_size_x, int block_size_y)
 {
   VideoParameters *p_Vid = currMB->p_Vid;
   Slice *currSlice = currMB->p_Slice;
@@ -1469,7 +1469,7 @@ static void perform_mc_single_wp(Macroblock *currMB, ColorPlane pl, StorablePict
 }
 //}}}
 //{{{
-static void perform_mc_single(Macroblock *currMB, ColorPlane pl, StorablePicture *dec_picture, int pred_dir, int i, int j, int block_size_x, int block_size_y)
+static void perform_mc_single (Macroblock *currMB, ColorPlane pl, StorablePicture *dec_picture, int pred_dir, int i, int j, int block_size_x, int block_size_y)
 {
   VideoParameters *p_Vid = currMB->p_Vid;
   Slice *currSlice = currMB->p_Slice;
@@ -1554,7 +1554,7 @@ static void perform_mc_single(Macroblock *currMB, ColorPlane pl, StorablePicture
 }
 //}}}
 //{{{
-static void perform_mc_bi_wp(Macroblock *currMB, ColorPlane pl, StorablePicture *dec_picture, int i, int j, int block_size_x, int block_size_y)
+static void perform_mc_bi_wp (Macroblock *currMB, ColorPlane pl, StorablePicture *dec_picture, int i, int j, int block_size_x, int block_size_y)
 {
   static const int mv_mul = 16;
   int  vec1_x, vec1_y, vec2_x, vec2_y;
@@ -1691,7 +1691,7 @@ static void perform_mc_bi_wp(Macroblock *currMB, ColorPlane pl, StorablePicture 
 }
 //}}}
 //{{{
-static void perform_mc_bi(Macroblock *currMB, ColorPlane pl, StorablePicture *dec_picture, int i, int j, int block_size_x, int block_size_y)
+static void perform_mc_bi (Macroblock *currMB, ColorPlane pl, StorablePicture *dec_picture, int i, int j, int block_size_x, int block_size_y)
 {
   static const int mv_mul = 16;
   int vec1_x=0, vec1_y=0, vec2_x=0, vec2_y=0;
@@ -1804,7 +1804,7 @@ static void perform_mc_bi(Macroblock *currMB, ColorPlane pl, StorablePicture *de
 }
 //}}}
 //{{{
-void perform_mc(Macroblock *currMB, ColorPlane pl, StorablePicture *dec_picture, int pred_dir, int i, int j, int block_size_x, int block_size_y)
+void perform_mc (Macroblock *currMB, ColorPlane pl, StorablePicture *dec_picture, int pred_dir, int i, int j, int block_size_x, int block_size_y)
 {
   Slice *currSlice = currMB->p_Slice;
   assert (pred_dir<=2);

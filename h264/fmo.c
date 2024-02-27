@@ -172,7 +172,7 @@ static int FmoGenerateMbToSliceGroupMap (VideoParameters *p_Vid, Slice *pSlice)
  *      video encoding parameters for current picture
  ************************************************************************
  */
-int fmo_init(VideoParameters *p_Vid, Slice *pSlice)
+int fmo_init (VideoParameters *p_Vid, Slice *pSlice)
 {
   pic_parameter_set_rbsp_t* pps = p_Vid->active_pps;
 
@@ -222,7 +222,7 @@ int fmo_init(VideoParameters *p_Vid, Slice *pSlice)
  *    Free memory allocated by FMO functions
  ************************************************************************
  */
-int FmoFinit(VideoParameters *p_Vid)
+int FmoFinit (VideoParameters *p_Vid)
 {
   if (p_Vid->MbToSliceGroupMap)
   {
@@ -247,7 +247,7 @@ int FmoFinit(VideoParameters *p_Vid)
  *    VideoParameters
  ************************************************************************
  */
-int FmoGetNumberOfSliceGroup(VideoParameters *p_Vid)
+int FmoGetNumberOfSliceGroup (VideoParameters *p_Vid)
 {
   return p_Vid->NumberOfSliceGroups;
 }
@@ -265,7 +265,7 @@ int FmoGetNumberOfSliceGroup(VideoParameters *p_Vid)
  *    None
  ************************************************************************
  */
-int FmoGetLastMBOfPicture(VideoParameters *p_Vid)
+int FmoGetLastMBOfPicture (VideoParameters *p_Vid)
 {
   return FmoGetLastMBInSliceGroup (p_Vid, FmoGetNumberOfSliceGroup(p_Vid)-1);
 }

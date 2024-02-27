@@ -61,11 +61,11 @@
 
 #include "mc_prediction.h"
 //}}}
-extern int testEndian(void);
-void reorder_lists(Slice *currSlice);
+extern int testEndian();
+void reorder_lists (Slice *currSlice);
 
 //{{{
-static inline void reset_mbs(Macroblock *currMB)
+static inline void reset_mbs (Macroblock *currMB)
 {
   currMB->slice_nr = -1;
   currMB->ei_flag  =  1;
@@ -73,7 +73,7 @@ static inline void reset_mbs(Macroblock *currMB)
 }
 //}}}
 //{{{
-static void setup_buffers(VideoParameters *p_Vid, int layer_id)
+static void setup_buffers (VideoParameters *p_Vid, int layer_id)
 {
   CodingParameters *cps = p_Vid->p_EncodePar[layer_id];
   int i;
@@ -115,63 +115,63 @@ static void setup_buffers(VideoParameters *p_Vid, int layer_id)
 //}}}
 
 #if MVC_EXTENSION_ENABLE
-//{{{
-static void init_mvc_picture(Slice *currSlice)
-{
-  int i;
-  VideoParameters *p_Vid = currSlice->p_Vid;
-  DecodedPictureBuffer *p_Dpb = p_Vid->p_Dpb_layer[0];
+  //{{{
+  static void init_mvc_picture (Slice *currSlice)
+  {
+    int i;
+    VideoParameters *p_Vid = currSlice->p_Vid;
+    DecodedPictureBuffer *p_Dpb = p_Vid->p_Dpb_layer[0];
 
-  StorablePicture *p_pic = NULL;
+    StorablePicture *p_pic = NULL;
 
-  // find BL reconstructed picture
-  if (currSlice->structure  == FRAME)
-  {
-    for (i = 0; i < (int)p_Dpb->used_size/*size*/; i++)
+    // find BL reconstructed picture
+    if (currSlice->structure  == FRAME)
     {
-      FrameStore *fs = p_Dpb->fs[i];
-      if ((fs->frame->view_id == 0) && (fs->frame->frame_poc == currSlice->framepoc))
+      for (i = 0; i < (int)p_Dpb->used_size/*size*/; i++)
       {
-        p_pic = fs->frame;
-        break;
+        FrameStore *fs = p_Dpb->fs[i];
+        if ((fs->frame->view_id == 0) && (fs->frame->frame_poc == currSlice->framepoc))
+        {
+          p_pic = fs->frame;
+          break;
+        }
       }
     }
-  }
-  else if (currSlice->structure  == TOP_FIELD)
-  {
-    for (i = 0; i < (int)p_Dpb->used_size/*size*/; i++)
+    else if (currSlice->structure  == TOP_FIELD)
     {
-      FrameStore *fs = p_Dpb->fs[i];
-      if ((fs->top_field->view_id == 0) && (fs->top_field->top_poc == currSlice->toppoc))
+      for (i = 0; i < (int)p_Dpb->used_size/*size*/; i++)
       {
-        p_pic = fs->top_field;
-        break;
+        FrameStore *fs = p_Dpb->fs[i];
+        if ((fs->top_field->view_id == 0) && (fs->top_field->top_poc == currSlice->toppoc))
+        {
+          p_pic = fs->top_field;
+          break;
+        }
       }
     }
-  }
-  else
-  {
-    for (i = 0; i < (int)p_Dpb->used_size/*size*/; i++)
+    else
     {
-      FrameStore *fs = p_Dpb->fs[i];
-      if ((fs->bottom_field->view_id == 0) && (fs->bottom_field->bottom_poc == currSlice->bottompoc))
+      for (i = 0; i < (int)p_Dpb->used_size/*size*/; i++)
       {
-        p_pic = fs->bottom_field;
-        break;
+        FrameStore *fs = p_Dpb->fs[i];
+        if ((fs->bottom_field->view_id == 0) && (fs->bottom_field->bottom_poc == currSlice->bottompoc))
+        {
+          p_pic = fs->bottom_field;
+          break;
+        }
       }
     }
+    if(!p_pic)
+    {
+      p_Vid->bFrameInit = 0;
+    }
+    else
+    {
+      process_picture_in_dpb_s(p_Vid, p_pic);
+      store_proc_picture_in_dpb (currSlice->p_Dpb, clone_storable_picture(p_Vid, p_pic));
+    }
   }
-  if(!p_pic)
-  {
-    p_Vid->bFrameInit = 0;
-  }
-  else
-  {
-    process_picture_in_dpb_s(p_Vid, p_pic);
-    store_proc_picture_in_dpb (currSlice->p_Dpb, clone_storable_picture(p_Vid, p_pic));
-  }
-}
-//}}}
+  //}}}
 #endif
 
 //{{{
@@ -181,7 +181,7 @@ static void init_mvc_picture(Slice *currSlice)
  *    Initializes the parameters for a new picture
  ************************************************************************
  */
-static void init_picture(VideoParameters *p_Vid, Slice *currSlice, InputParameters *p_Inp)
+static void init_picture (VideoParameters *p_Vid, Slice *currSlice, InputParameters *p_Inp)
 {
   int i;
   int nplane;
@@ -446,7 +446,7 @@ static void init_picture(VideoParameters *p_Vid, Slice *currSlice, InputParamete
 }
 //}}}
 //{{{
-static void update_mbaff_macroblock_data(imgpel **cur_img, imgpel (*temp)[16], int x0, int width, int height)
+static void update_mbaff_macroblock_data (imgpel **cur_img, imgpel (*temp)[16], int x0, int width, int height)
 {
   imgpel (*temp_evn)[16] = temp;
   imgpel (*temp_odd)[16] = temp + height;
@@ -464,7 +464,7 @@ static void update_mbaff_macroblock_data(imgpel **cur_img, imgpel (*temp)[16], i
 }
 //}}}
 //{{{
-static void MbAffPostProc(VideoParameters *p_Vid)
+static void MbAffPostProc (VideoParameters *p_Vid)
 {
 
   imgpel temp_buffer[32][16];
@@ -495,7 +495,7 @@ static void MbAffPostProc(VideoParameters *p_Vid)
 }
 //}}}
 //{{{
-static void fill_wp_params(Slice *currSlice)
+static void fill_wp_params (Slice *currSlice)
 {
   if (currSlice->slice_type == B_SLICE)
   {
@@ -624,7 +624,7 @@ static void fill_wp_params(Slice *currSlice)
 }
 //}}}
 //{{{
-static void init_picture_decoding(VideoParameters *p_Vid)
+static void init_picture_decoding (VideoParameters *p_Vid)
 {
   Slice *pSlice = p_Vid->ppSliceList[0];
   int j, iDeblockMode=1;
@@ -681,7 +681,7 @@ static void init_picture_decoding(VideoParameters *p_Vid)
 //}}}
 
 //{{{
-void init_slice(VideoParameters *p_Vid, Slice *currSlice)
+void init_slice (VideoParameters *p_Vid, Slice *currSlice)
 {
   int i;
 
@@ -740,7 +740,7 @@ void init_slice(VideoParameters *p_Vid, Slice *currSlice)
 }
 //}}}
 //{{{
-void decode_slice(Slice *currSlice, int current_header)
+void decode_slice (Slice *currSlice, int current_header)
 {
   if (currSlice->active_pps->entropy_coding_mode_flag)
   {
@@ -772,7 +772,7 @@ void decode_slice(Slice *currSlice, int current_header)
  *                    current frame is lost, current frame is incorrect.
  ************************************************************************
  */
-static void Error_tracking(VideoParameters *p_Vid, Slice *currSlice)
+static void Error_tracking (VideoParameters *p_Vid, Slice *currSlice)
 {
   int i;
 
@@ -801,7 +801,7 @@ static void Error_tracking(VideoParameters *p_Vid, Slice *currSlice)
 }
 //}}}
 //{{{
-static void CopyPOC(Slice *pSlice0, Slice *currSlice)
+static void CopyPOC (Slice *pSlice0, Slice *currSlice)
 {
   currSlice->framepoc  = pSlice0->framepoc;
   currSlice->toppoc    = pSlice0->toppoc;
@@ -818,7 +818,7 @@ static void CopyPOC(Slice *pSlice0, Slice *currSlice)
  *
  ***********************************************************************
  */
-int decode_one_frame(DecoderParams *pDecoder)
+int decode_one_frame (DecoderParams *pDecoder)
 {
   VideoParameters *p_Vid = pDecoder->p_Vid;
   InputParameters *p_Inp = p_Vid->p_Inp;
@@ -973,6 +973,7 @@ int decode_one_frame(DecoderParams *pDecoder)
   return (iRet);
 }
 //}}}
+
 //{{{
 /*!
  ************************************************************************
@@ -1091,7 +1092,7 @@ void buffer2img (imgpel** imgX, unsigned char* buf, int size_x, int size_y, int 
  *    compute generic SSE
  ***********************************************************************
  */
-int64 compute_SSE(imgpel **imgRef, imgpel **imgSrc, int xRef, int xSrc, int ySize, int xSize)
+int64 compute_SSE (imgpel **imgRef, imgpel **imgSrc, int xRef, int xSrc, int ySize, int xSize)
 {
   int i, j;
   imgpel *lineRef, *lineSrc;
@@ -1115,7 +1116,7 @@ int64 compute_SSE(imgpel **imgRef, imgpel **imgSrc, int xRef, int xSrc, int ySiz
  *    Calculate the value of frame_no
  ************************************************************************
 */
-void calculate_frame_no(VideoParameters *p_Vid, StorablePicture *p)
+void calculate_frame_no (VideoParameters *p_Vid, StorablePicture *p)
 {
   InputParameters *p_Inp = p_Vid->p_Inp;
   // calculate frame number
@@ -1145,7 +1146,7 @@ void calculate_frame_no(VideoParameters *p_Vid, StorablePicture *p)
 *      file pointer piont to reference YUV reference file
 ************************************************************************
 */
-void find_snr(VideoParameters *p_Vid,
+void find_snr (VideoParameters *p_Vid,
               StorablePicture *p,
               int *p_ref)
 {
@@ -1255,7 +1256,7 @@ void find_snr(VideoParameters *p_Vid,
 }
 //}}}
 //{{{
-void reorder_lists(Slice *currSlice)
+void reorder_lists (Slice *currSlice)
 {
   VideoParameters *p_Vid = currSlice->p_Vid;
 
@@ -1356,7 +1357,7 @@ void reorder_lists(Slice *currSlice)
  *    Reads new slice from bit_stream_dec
  ************************************************************************
  */
-int read_new_slice(Slice *currSlice)
+int read_new_slice (Slice *currSlice)
 {
   VideoParameters *p_Vid = currSlice->p_Vid;
   InputParameters *p_Inp = currSlice->p_Inp;
@@ -1805,8 +1806,9 @@ process_nalu:
   }
 }
 //}}}
+
 //{{{
-void pad_buf(imgpel *pImgBuf, int iWidth, int iHeight, int iStride, int iPadX, int iPadY)
+void pad_buf (imgpel *pImgBuf, int iWidth, int iHeight, int iStride, int iPadX, int iPadY)
 {
   int j;
   imgpel *pLine0 = pImgBuf - iPadX, *pLine;
@@ -1861,6 +1863,8 @@ void pad_buf(imgpel *pImgBuf, int iWidth, int iHeight, int iStride, int iPadX, i
 #endif
 }
 
+//}}}
+//{{{
 void pad_dec_picture(VideoParameters *p_Vid, StorablePicture *dec_picture)
 {
   int iPadX = p_Vid->iLumaPadX;
@@ -1891,7 +1895,7 @@ void pad_dec_picture(VideoParameters *p_Vid, StorablePicture *dec_picture)
  *    into the DPB
  ************************************************************************
  */
-void exit_picture(VideoParameters *p_Vid, StorablePicture **dec_picture)
+void exit_picture (VideoParameters *p_Vid, StorablePicture **dec_picture)
 {
   InputParameters *p_Inp = p_Vid->p_Inp;
   SNRParameters   *snr   = p_Vid->snr;
@@ -2128,6 +2132,7 @@ void exit_picture(VideoParameters *p_Vid, StorablePicture **dec_picture)
   //p_Vid->currentSlice->current_slice_nr = 0;
 }
 //}}}
+
 //{{{
 /*!
  ************************************************************************
@@ -2136,7 +2141,7 @@ void exit_picture(VideoParameters *p_Vid, StorablePicture **dec_picture)
  *    MB to the buffer of the error concealment module.
  ************************************************************************
  */
-void ercWriteMBMODEandMV(Macroblock *currMB)
+void ercWriteMBMODEandMV (Macroblock *currMB)
 {
   VideoParameters *p_Vid = currMB->p_Vid;
   int i, ii, jj, currMBNum = currMB->mbAddrX; //p_Vid->currentSlice->current_mb_nr;
@@ -2238,7 +2243,7 @@ void ercWriteMBMODEandMV(Macroblock *currMB)
  *    NAL unit of a picture"
  ************************************************************************
  */
-void init_old_slice(OldSliceParams *p_old_slice)
+void init_old_slice (OldSliceParams *p_old_slice)
 {
   p_old_slice->field_pic_flag = 0;
   p_old_slice->pps_id         = INT_MAX;
@@ -2254,7 +2259,7 @@ void init_old_slice(OldSliceParams *p_old_slice)
 }
 //}}}
 //{{{
-void copy_slice_info(Slice *currSlice, OldSliceParams *p_old_slice)
+void copy_slice_info (Slice *currSlice, OldSliceParams *p_old_slice)
 {
   VideoParameters *p_Vid = currSlice->p_Vid;
 
@@ -2301,7 +2306,7 @@ void copy_slice_info(Slice *currSlice, OldSliceParams *p_old_slice)
  *    detect if current slice is "first VCL NAL unit of a picture"
  ************************************************************************
  */
-int is_new_picture(StorablePicture *dec_picture, Slice *currSlice, OldSliceParams *p_old_slice)
+int is_new_picture (StorablePicture *dec_picture, Slice *currSlice, OldSliceParams *p_old_slice)
 {
   VideoParameters *p_Vid = currSlice->p_Vid;
 
@@ -2366,7 +2371,7 @@ int is_new_picture(StorablePicture *dec_picture, Slice *currSlice, OldSliceParam
  *    Prepare field and frame buffer after frame decoding
  ************************************************************************
  */
-void frame_postprocessing(VideoParameters *p_Vid)
+void frame_postprocessing (VideoParameters *p_Vid)
 {
 }
 //}}}
@@ -2377,7 +2382,7 @@ void frame_postprocessing(VideoParameters *p_Vid)
  *    Prepare field and frame buffer after field decoding
  ************************************************************************
  */
-void field_postprocessing(VideoParameters *p_Vid)
+void field_postprocessing (VideoParameters *p_Vid)
 {
   p_Vid->number /= 2;
 }
@@ -2390,7 +2395,7 @@ void field_postprocessing(VideoParameters *p_Vid)
  *    for 4:4:4 Independent mode
  ************************************************************************
  */
-void copy_dec_picture_JV( VideoParameters *p_Vid, StorablePicture *dst, StorablePicture *src )
+void copy_dec_picture_JV (VideoParameters *p_Vid, StorablePicture *dst, StorablePicture *src )
 {
   dst->top_poc              = src->top_poc;
   dst->bottom_poc           = src->bottom_poc;
@@ -2451,7 +2456,7 @@ void copy_dec_picture_JV( VideoParameters *p_Vid, StorablePicture *dst, Storable
 //{{{
 // this is intended to make get_block_luma faster by doing this at a more appropriate level
 // i.e. per slice rather than per MB
-static void init_cur_imgy(Slice *currSlice, VideoParameters *p_Vid)
+static void init_cur_imgy (Slice *currSlice, VideoParameters *p_Vid)
 {
   int i,j;
   if ((p_Vid->separate_colour_plane_flag != 0))
@@ -2510,7 +2515,7 @@ static void init_cur_imgy(Slice *currSlice, VideoParameters *p_Vid)
  *    decodes one slice
  ************************************************************************
  */
-void decode_one_slice(Slice *currSlice)
+void decode_one_slice (Slice *currSlice)
 {
   VideoParameters *p_Vid = currSlice->p_Vid;
   Boolean end_of_slice = FALSE;
@@ -2570,85 +2575,85 @@ void decode_one_slice(Slice *currSlice)
 //}}}
 
 #if (MVC_EXTENSION_ENABLE)
-//{{{
-int GetVOIdx(VideoParameters *p_Vid, int iViewId)
-{
-  int iVOIdx = -1;
-  int *piViewIdMap;
-  if(p_Vid->active_subset_sps)
+  //{{{
+  int GetVOIdx (VideoParameters *p_Vid, int iViewId)
   {
-    piViewIdMap = p_Vid->active_subset_sps->view_id;
-    for(iVOIdx = p_Vid->active_subset_sps->num_views_minus1; iVOIdx>=0; iVOIdx--)
-      if(piViewIdMap[iVOIdx] == iViewId)
-        break;
-  }
-  else
-  {
-    subset_seq_parameter_set_rbsp_t *curr_subset_sps;
-    int i;
-
-    curr_subset_sps = p_Vid->SubsetSeqParSet;
-    for(i=0; i<MAXSPS; i++)
+    int iVOIdx = -1;
+    int *piViewIdMap;
+    if(p_Vid->active_subset_sps)
     {
-      if(curr_subset_sps->num_views_minus1>=0 && curr_subset_sps->sps.Valid)
-      {
-        break;
-      }
-      curr_subset_sps++;
-    }
-
-    if( i < MAXSPS )
-    {
-      p_Vid->active_subset_sps = curr_subset_sps;
-
       piViewIdMap = p_Vid->active_subset_sps->view_id;
       for(iVOIdx = p_Vid->active_subset_sps->num_views_minus1; iVOIdx>=0; iVOIdx--)
         if(piViewIdMap[iVOIdx] == iViewId)
           break;
-
-      return iVOIdx;
     }
     else
     {
-      iVOIdx = 0;
+      subset_seq_parameter_set_rbsp_t *curr_subset_sps;
+      int i;
+
+      curr_subset_sps = p_Vid->SubsetSeqParSet;
+      for(i=0; i<MAXSPS; i++)
+      {
+        if(curr_subset_sps->num_views_minus1>=0 && curr_subset_sps->sps.Valid)
+        {
+          break;
+        }
+        curr_subset_sps++;
+      }
+
+      if( i < MAXSPS )
+      {
+        p_Vid->active_subset_sps = curr_subset_sps;
+
+        piViewIdMap = p_Vid->active_subset_sps->view_id;
+        for(iVOIdx = p_Vid->active_subset_sps->num_views_minus1; iVOIdx>=0; iVOIdx--)
+          if(piViewIdMap[iVOIdx] == iViewId)
+            break;
+
+        return iVOIdx;
+      }
+      else
+      {
+        iVOIdx = 0;
+      }
     }
+
+    return iVOIdx;
   }
-
-  return iVOIdx;
-}
-//}}}
-//{{{
-int GetViewIdx(VideoParameters *p_Vid, int iVOIdx)
-{
-  int iViewIdx = -1;
-  int *piViewIdMap;
-
-  if( p_Vid->active_subset_sps )
+  //}}}
+  //{{{
+  int GetViewIdx (VideoParameters *p_Vid, int iVOIdx)
   {
-    assert( p_Vid->active_subset_sps->num_views_minus1 >= iVOIdx && iVOIdx >= 0 );
-    piViewIdMap = p_Vid->active_subset_sps->view_id;
-    iViewIdx = piViewIdMap[iVOIdx];
+    int iViewIdx = -1;
+    int *piViewIdMap;
+
+    if( p_Vid->active_subset_sps )
+    {
+      assert( p_Vid->active_subset_sps->num_views_minus1 >= iVOIdx && iVOIdx >= 0 );
+      piViewIdMap = p_Vid->active_subset_sps->view_id;
+      iViewIdx = piViewIdMap[iVOIdx];
+    }
+
+    return iViewIdx;
   }
-
-  return iViewIdx;
-}
-//}}}
-//{{{
-int get_maxViewIdx (VideoParameters *p_Vid, int view_id, int anchor_pic_flag, int listidx)
-{
-  int VOIdx;
-  int maxViewIdx = 0;
-
-  VOIdx = view_id;
-  if(VOIdx >= 0)
+  //}}}
+  //{{{
+  int get_maxViewIdx (VideoParameters *p_Vid, int view_id, int anchor_pic_flag, int listidx)
   {
-    if(anchor_pic_flag)
-      maxViewIdx = listidx? p_Vid->active_subset_sps->num_anchor_refs_l1[VOIdx] : p_Vid->active_subset_sps->num_anchor_refs_l0[VOIdx];
-    else
-      maxViewIdx = listidx? p_Vid->active_subset_sps->num_non_anchor_refs_l1[VOIdx] : p_Vid->active_subset_sps->num_non_anchor_refs_l0[VOIdx];
-  }
+    int VOIdx;
+    int maxViewIdx = 0;
 
-  return maxViewIdx;
-}
-//}}}
+    VOIdx = view_id;
+    if(VOIdx >= 0)
+    {
+      if(anchor_pic_flag)
+        maxViewIdx = listidx? p_Vid->active_subset_sps->num_anchor_refs_l1[VOIdx] : p_Vid->active_subset_sps->num_anchor_refs_l0[VOIdx];
+      else
+        maxViewIdx = listidx? p_Vid->active_subset_sps->num_non_anchor_refs_l1[VOIdx] : p_Vid->active_subset_sps->num_non_anchor_refs_l0[VOIdx];
+    }
+
+    return maxViewIdx;
+  }
+  //}}}
 #endif

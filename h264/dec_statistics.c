@@ -27,7 +27,7 @@
  * \return
  ***********************************************************************
  */
-void init_dec_stats(DecStatParameters *stats)
+void init_dec_stats (DecStatParameters *stats)
 {
   int i, j;
   int64 *hist;
@@ -59,7 +59,7 @@ void init_dec_stats(DecStatParameters *stats)
 }
 //}}}
 //{{{
-void delete_dec_stats(DecStatParameters *stats)
+void delete_dec_stats (DecStatParameters *stats)
 {
   int i, j;
 

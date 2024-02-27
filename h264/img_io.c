@@ -226,7 +226,7 @@ void ParseFrameNoFormatFromString (VideoDataFile *input_file)
  *    Open file containing a single frame
  ************************************************************************
  */
-void OpenFrameFile( VideoDataFile *input_file, int FrameNumberInFile)
+void OpenFrameFile (VideoDataFile *input_file, int FrameNumberInFile)
 {
   char infile [FILE_NAME_SIZE], in_number[16];
   infile[FILE_NAME_SIZE-1]='\0';
@@ -254,7 +254,7 @@ void OpenFrameFile( VideoDataFile *input_file, int FrameNumberInFile)
  *    Open file(s) containing the entire frame sequence
  ************************************************************************
  */
-void OpenFiles( VideoDataFile *input_file)
+void OpenFiles (VideoDataFile *input_file)
 {
   if (input_file->is_concatenated == 1)
   {
@@ -279,7 +279,7 @@ void OpenFiles( VideoDataFile *input_file)
  *    Close input file
  ************************************************************************
  */
-void CloseFiles(VideoDataFile *input_file)
+void CloseFiles (VideoDataFile *input_file)
 {
   if (input_file->f_num != -1)
     close(input_file->f_num);

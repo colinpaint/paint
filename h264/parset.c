@@ -527,12 +527,12 @@ void SPSConsistencyCheck (seq_parameter_set_rbsp_t *sps)
 //}}}
 
 #if (MVC_EXTENSION_ENABLE)
-//{{{
-void SubsetSPSConsistencyCheck (subset_seq_parameter_set_rbsp_t *subset_sps)
-{
-  printf ("Consistency checking a subset sequence parset, to be implemented\n");
-}
-//}}}
+  //{{{
+  void SubsetSPSConsistencyCheck (subset_seq_parameter_set_rbsp_t *subset_sps)
+  {
+    printf ("Consistency checking a subset sequence parset, to be implemented\n");
+  }
+  //}}}
 #endif
 
 //{{{
@@ -634,52 +634,52 @@ void ProcessSPS (VideoParameters *p_Vid, NALU_t *nalu)
 //}}}
 
 #if (MVC_EXTENSION_ENABLE)
-//{{{
-void ProcessSubsetSPS (VideoParameters *p_Vid, NALU_t *nalu)
-{
-  DataPartition *dp = AllocPartition(1);
-  subset_seq_parameter_set_rbsp_t *subset_sps;
-  int curr_seq_set_id;
-
-  memcpy (dp->bitstream->streamBuffer, &nalu->buf[1], nalu->len-1);
-  dp->bitstream->code_len = dp->bitstream->bitstream_length = RBSPtoSODB (dp->bitstream->streamBuffer, nalu->len-1);
-  dp->bitstream->ei_flag = 0;
-  dp->bitstream->read_len = dp->bitstream->frame_bitoffset = 0;
-  InterpretSubsetSPS (p_Vid, dp, &curr_seq_set_id);
-
-  subset_sps = p_Vid->SubsetSeqParSet + curr_seq_set_id;
-  get_max_dec_frame_buf_size(&(subset_sps->sps));
-  //check capability;
-  if(subset_sps->num_views_minus1>1)
+  //{{{
+  void ProcessSubsetSPS (VideoParameters *p_Vid, NALU_t *nalu)
   {
-    printf("Warning: num_views:%d is greater than 2, only decode baselayer!\n", subset_sps->num_views_minus1+1);
-    subset_sps->Valid = 0;
-    subset_sps->sps.Valid = 0;
-    p_Vid->p_Inp->DecodeAllLayers = 0;
-  }
-  else if(subset_sps->num_views_minus1==1 && (subset_sps->view_id[0]!=0 || subset_sps->view_id[1]!=1))
-  {
-    OpenOutputFiles(p_Vid, subset_sps->view_id[0], subset_sps->view_id[1]);
-  }
+    DataPartition *dp = AllocPartition(1);
+    subset_seq_parameter_set_rbsp_t *subset_sps;
+    int curr_seq_set_id;
 
-  if (subset_sps->Valid)
-  {
-    // SubsetSPSConsistencyCheck (subset_sps);
-    p_Vid->profile_idc = subset_sps->sps.profile_idc;
-    p_Vid->separate_colour_plane_flag = subset_sps->sps.separate_colour_plane_flag;
-    if( p_Vid->separate_colour_plane_flag )
+    memcpy (dp->bitstream->streamBuffer, &nalu->buf[1], nalu->len-1);
+    dp->bitstream->code_len = dp->bitstream->bitstream_length = RBSPtoSODB (dp->bitstream->streamBuffer, nalu->len-1);
+    dp->bitstream->ei_flag = 0;
+    dp->bitstream->read_len = dp->bitstream->frame_bitoffset = 0;
+    InterpretSubsetSPS (p_Vid, dp, &curr_seq_set_id);
+
+    subset_sps = p_Vid->SubsetSeqParSet + curr_seq_set_id;
+    get_max_dec_frame_buf_size(&(subset_sps->sps));
+    //check capability;
+    if(subset_sps->num_views_minus1>1)
     {
-      p_Vid->ChromaArrayType = 0;
+      printf("Warning: num_views:%d is greater than 2, only decode baselayer!\n", subset_sps->num_views_minus1+1);
+      subset_sps->Valid = 0;
+      subset_sps->sps.Valid = 0;
+      p_Vid->p_Inp->DecodeAllLayers = 0;
     }
-    else
+    else if(subset_sps->num_views_minus1==1 && (subset_sps->view_id[0]!=0 || subset_sps->view_id[1]!=1))
     {
-      p_Vid->ChromaArrayType = subset_sps->sps.chroma_format_idc;
+      OpenOutputFiles(p_Vid, subset_sps->view_id[0], subset_sps->view_id[1]);
     }
-  }
 
-  FreePartition (dp, 1);
-}
-//}}}
+    if (subset_sps->Valid)
+    {
+      // SubsetSPSConsistencyCheck (subset_sps);
+      p_Vid->profile_idc = subset_sps->sps.profile_idc;
+      p_Vid->separate_colour_plane_flag = subset_sps->sps.separate_colour_plane_flag;
+      if( p_Vid->separate_colour_plane_flag )
+      {
+        p_Vid->ChromaArrayType = 0;
+      }
+      else
+      {
+        p_Vid->ChromaArrayType = subset_sps->sps.chroma_format_idc;
+      }
+    }
+
+    FreePartition (dp, 1);
+  }
+  //}}}
 #endif
 
 //{{{
@@ -1219,406 +1219,406 @@ void UseParameterSet (Slice *currSlice)
 //}}}
 
 #if (MVC_EXTENSION_ENABLE)
-//{{{
-void seq_parameter_set_mvc_extension(subset_seq_parameter_set_rbsp_t *subset_sps, Bitstream *s)
-{
-  int i, j, num_views;
+  //{{{
+  void seq_parameter_set_mvc_extension(subset_seq_parameter_set_rbsp_t *subset_sps, Bitstream *s)
+  {
+    int i, j, num_views;
 
-  subset_sps->num_views_minus1 = read_ue_v("num_views_minus1", s, &p_Dec->UsedBits);
-  num_views = 1+subset_sps->num_views_minus1;
-  if( num_views >0)
-  {
-    if ((subset_sps->view_id = (int*) calloc(num_views, sizeof(int))) == NULL)
-      no_mem_exit("init_subset_seq_parameter_set: subset_sps->view_id");
-    if ((subset_sps->num_anchor_refs_l0 = (int*) calloc(num_views, sizeof(int))) == NULL)
-      no_mem_exit("init_subset_seq_parameter_set: subset_sps->num_anchor_refs_l0");
-    if ((subset_sps->num_anchor_refs_l1 = (int*) calloc(num_views, sizeof(int))) == NULL)
-      no_mem_exit("init_subset_seq_parameter_set: subset_sps->num_anchor_refs_l1");
-    if ((subset_sps->anchor_ref_l0 = (int**) calloc(num_views, sizeof(int*))) == NULL)
-      no_mem_exit("init_subset_seq_parameter_set: subset_sps->anchor_ref_l0");
-    if ((subset_sps->anchor_ref_l1 = (int**) calloc(num_views, sizeof(int*))) == NULL)
-      no_mem_exit("init_subset_seq_parameter_set: subset_sps->anchor_ref_l1");
-    if ((subset_sps->num_non_anchor_refs_l0 = (int*) calloc(num_views, sizeof(int))) == NULL)
-      no_mem_exit("init_subset_seq_parameter_set: subset_sps->num_non_anchor_refs_l0");
-    if ((subset_sps->num_non_anchor_refs_l1 = (int*) calloc(num_views, sizeof(int))) == NULL)
-      no_mem_exit("init_subset_seq_parameter_set: subset_sps->num_non_anchor_refs_l1");
-    if ((subset_sps->non_anchor_ref_l0 = (int**) calloc(num_views, sizeof(int*))) == NULL)
-      no_mem_exit("init_subset_seq_parameter_set: subset_sps->non_anchor_ref_l0");
-    if ((subset_sps->non_anchor_ref_l1 = (int**) calloc(num_views, sizeof(int*))) == NULL)
-      no_mem_exit("init_subset_seq_parameter_set: subset_sps->non_anchor_ref_l1");
-  }
-  for(i=0; i<num_views; i++)
-  {
-    subset_sps->view_id[i] = read_ue_v("view_id", s, &p_Dec->UsedBits);
-  }
-  for(i=1; i<num_views; i++)
-  {
-    subset_sps->num_anchor_refs_l0[i] = read_ue_v("num_anchor_refs_l0", s, &p_Dec->UsedBits);
-    if(subset_sps->num_anchor_refs_l0[i]>0)
+    subset_sps->num_views_minus1 = read_ue_v("num_views_minus1", s, &p_Dec->UsedBits);
+    num_views = 1+subset_sps->num_views_minus1;
+    if( num_views >0)
     {
-      if ((subset_sps->anchor_ref_l0[i] = (int*) calloc(subset_sps->num_anchor_refs_l0[i], sizeof(int))) == NULL)
-        no_mem_exit("init_subset_seq_parameter_set: subset_sps->anchor_ref_l0[i]");
-      for(j=0; j<subset_sps->num_anchor_refs_l0[i]; j++)
-        subset_sps->anchor_ref_l0[i][j] = read_ue_v("anchor_ref_l0", s, &p_Dec->UsedBits);
+      if ((subset_sps->view_id = (int*) calloc(num_views, sizeof(int))) == NULL)
+        no_mem_exit("init_subset_seq_parameter_set: subset_sps->view_id");
+      if ((subset_sps->num_anchor_refs_l0 = (int*) calloc(num_views, sizeof(int))) == NULL)
+        no_mem_exit("init_subset_seq_parameter_set: subset_sps->num_anchor_refs_l0");
+      if ((subset_sps->num_anchor_refs_l1 = (int*) calloc(num_views, sizeof(int))) == NULL)
+        no_mem_exit("init_subset_seq_parameter_set: subset_sps->num_anchor_refs_l1");
+      if ((subset_sps->anchor_ref_l0 = (int**) calloc(num_views, sizeof(int*))) == NULL)
+        no_mem_exit("init_subset_seq_parameter_set: subset_sps->anchor_ref_l0");
+      if ((subset_sps->anchor_ref_l1 = (int**) calloc(num_views, sizeof(int*))) == NULL)
+        no_mem_exit("init_subset_seq_parameter_set: subset_sps->anchor_ref_l1");
+      if ((subset_sps->num_non_anchor_refs_l0 = (int*) calloc(num_views, sizeof(int))) == NULL)
+        no_mem_exit("init_subset_seq_parameter_set: subset_sps->num_non_anchor_refs_l0");
+      if ((subset_sps->num_non_anchor_refs_l1 = (int*) calloc(num_views, sizeof(int))) == NULL)
+        no_mem_exit("init_subset_seq_parameter_set: subset_sps->num_non_anchor_refs_l1");
+      if ((subset_sps->non_anchor_ref_l0 = (int**) calloc(num_views, sizeof(int*))) == NULL)
+        no_mem_exit("init_subset_seq_parameter_set: subset_sps->non_anchor_ref_l0");
+      if ((subset_sps->non_anchor_ref_l1 = (int**) calloc(num_views, sizeof(int*))) == NULL)
+        no_mem_exit("init_subset_seq_parameter_set: subset_sps->non_anchor_ref_l1");
     }
-
-    subset_sps->num_anchor_refs_l1[i] = read_ue_v("num_anchor_refs_l1", s, &p_Dec->UsedBits);
-    if(subset_sps->num_anchor_refs_l1[i]>0)
+    for(i=0; i<num_views; i++)
     {
-      if ((subset_sps->anchor_ref_l1[i] = (int*) calloc(subset_sps->num_anchor_refs_l1[i], sizeof(int))) == NULL)
-        no_mem_exit("init_subset_seq_parameter_set: subset_sps->anchor_ref_l1[i]");
-      for(j=0; j<subset_sps->num_anchor_refs_l1[i]; j++)
-        subset_sps->anchor_ref_l1[i][j] = read_ue_v("anchor_ref_l1", s, &p_Dec->UsedBits);
+      subset_sps->view_id[i] = read_ue_v("view_id", s, &p_Dec->UsedBits);
     }
-  }
-  for(i=1; i<num_views; i++)
-  {
-    subset_sps->num_non_anchor_refs_l0[i] = read_ue_v("num_non_anchor_refs_l0", s, &p_Dec->UsedBits);
-    if(subset_sps->num_non_anchor_refs_l0[i]>0)
+    for(i=1; i<num_views; i++)
     {
-      if ((subset_sps->non_anchor_ref_l0[i] = (int*) calloc(subset_sps->num_non_anchor_refs_l0[i], sizeof(int))) == NULL)
-        no_mem_exit("init_subset_seq_parameter_set: subset_sps->non_anchor_ref_l0[i]");
-      for(j=0; j<subset_sps->num_non_anchor_refs_l0[i]; j++)
-        subset_sps->non_anchor_ref_l0[i][j] = read_ue_v("non_anchor_ref_l0", s, &p_Dec->UsedBits);
-    }
-    subset_sps->num_non_anchor_refs_l1[i] = read_ue_v("num_non_anchor_refs_l1", s, &p_Dec->UsedBits);
-    if(subset_sps->num_non_anchor_refs_l1[i]>0)
-    {
-      if ((subset_sps->non_anchor_ref_l1[i] = (int*) calloc(subset_sps->num_non_anchor_refs_l1[i], sizeof(int))) == NULL)
-        no_mem_exit("init_subset_seq_parameter_set: subset_sps->non_anchor_ref_l1[i]");
-      for(j=0; j<subset_sps->num_non_anchor_refs_l1[i]; j++)
-        subset_sps->non_anchor_ref_l1[i][j] = read_ue_v("non_anchor_ref_l1", s, &p_Dec->UsedBits);
-    }
-  }
-  subset_sps->num_level_values_signalled_minus1 = read_ue_v("num_level_values_signalled_minus1", s, &p_Dec->UsedBits);
-  if(subset_sps->num_level_values_signalled_minus1 >=0)
-  {
-    i = 1+ subset_sps->num_level_values_signalled_minus1;
-    if ((subset_sps->level_idc = (int*) calloc(i, sizeof(int))) == NULL)
-      no_mem_exit("init_subset_seq_parameter_set: subset_sps->level_idc");
-    if ((subset_sps->num_applicable_ops_minus1 = (int*) calloc(i, sizeof(int))) == NULL)
-      no_mem_exit("init_subset_seq_parameter_set: subset_sps->num_applicable_ops_minus1");
-    if ((subset_sps->applicable_op_temporal_id = (int**) calloc(i, sizeof(int*))) == NULL)
-      no_mem_exit("init_subset_seq_parameter_set: subset_sps->applicable_op_temporal_id");
-    if ((subset_sps->applicable_op_num_target_views_minus1 = (int**) calloc(i, sizeof(int*))) == NULL)
-      no_mem_exit("init_subset_seq_parameter_set: subset_sps->applicable_op_num_target_views_minus1");
-    if ((subset_sps->applicable_op_target_view_id = (int***) calloc(i, sizeof(int**))) == NULL)
-      no_mem_exit("init_subset_seq_parameter_set: subset_sps->applicable_op_target_view_id");
-    if ((subset_sps->applicable_op_num_views_minus1 = (int**) calloc(i, sizeof(int*))) == NULL)
-      no_mem_exit("init_subset_seq_parameter_set: subset_sps->applicable_op_num_views_minus1");
-  }
-  for(i=0; i<=subset_sps->num_level_values_signalled_minus1; i++)
-  {
-    subset_sps->level_idc[i] = read_u_v(8, "level_idc", s, &p_Dec->UsedBits);
-    subset_sps->num_applicable_ops_minus1[i] = read_ue_v("num_applicable_ops_minus1", s, &p_Dec->UsedBits);
-    if(subset_sps->num_applicable_ops_minus1[i]>=0)
-    {
-      if ((subset_sps->applicable_op_temporal_id[i] = (int*) calloc(1+subset_sps->num_applicable_ops_minus1[i], sizeof(int))) == NULL)
-        no_mem_exit("init_subset_seq_parameter_set: subset_sps->applicable_op_temporal_id[i]");
-      if ((subset_sps->applicable_op_num_target_views_minus1[i] = (int*) calloc(1+subset_sps->num_applicable_ops_minus1[i], sizeof(int))) == NULL)
-        no_mem_exit("init_subset_seq_parameter_set: subset_sps->applicable_op_num_target_views_minus1[i]");
-      if ((subset_sps->applicable_op_target_view_id[i] = (int**) calloc(1+subset_sps->num_applicable_ops_minus1[i], sizeof(int *))) == NULL)
-        no_mem_exit("init_subset_seq_parameter_set: subset_sps->applicable_op_target_view_id[i]");
-      if ((subset_sps->applicable_op_num_views_minus1[i] = (int*) calloc(1+subset_sps->num_applicable_ops_minus1[i], sizeof(int))) == NULL)
-        no_mem_exit("init_subset_seq_parameter_set: subset_sps->applicable_op_num_views_minus1[i]");
-
-      for(j=0; j<=subset_sps->num_applicable_ops_minus1[i]; j++)
+      subset_sps->num_anchor_refs_l0[i] = read_ue_v("num_anchor_refs_l0", s, &p_Dec->UsedBits);
+      if(subset_sps->num_anchor_refs_l0[i]>0)
       {
-        int k;
-        subset_sps->applicable_op_temporal_id[i][j] = read_u_v(3, "applicable_op_temporal_id", s, &p_Dec->UsedBits);
-        subset_sps->applicable_op_num_target_views_minus1[i][j] = read_ue_v("applicable_op_num_target_views_minus1", s, &p_Dec->UsedBits);
-        if(subset_sps->applicable_op_num_target_views_minus1[i][j]>=0)
-        {
-          if ((subset_sps->applicable_op_target_view_id[i][j] = (int*) calloc(1+subset_sps->applicable_op_num_target_views_minus1[i][j], sizeof(int))) == NULL)
-            no_mem_exit("init_subset_seq_parameter_set: subset_sps->applicable_op_target_view_id[i][j]");
-          for(k = 0; k <= subset_sps->applicable_op_num_target_views_minus1[i][j]; k++)
-            subset_sps->applicable_op_target_view_id[i][j][k] = read_ue_v("applicable_op_target_view_id", s, &p_Dec->UsedBits);
-        }
-        subset_sps->applicable_op_num_views_minus1[i][j] = read_ue_v("applicable_op_num_views_minus1", s, &p_Dec->UsedBits);
+        if ((subset_sps->anchor_ref_l0[i] = (int*) calloc(subset_sps->num_anchor_refs_l0[i], sizeof(int))) == NULL)
+          no_mem_exit("init_subset_seq_parameter_set: subset_sps->anchor_ref_l0[i]");
+        for(j=0; j<subset_sps->num_anchor_refs_l0[i]; j++)
+          subset_sps->anchor_ref_l0[i][j] = read_ue_v("anchor_ref_l0", s, &p_Dec->UsedBits);
+      }
+
+      subset_sps->num_anchor_refs_l1[i] = read_ue_v("num_anchor_refs_l1", s, &p_Dec->UsedBits);
+      if(subset_sps->num_anchor_refs_l1[i]>0)
+      {
+        if ((subset_sps->anchor_ref_l1[i] = (int*) calloc(subset_sps->num_anchor_refs_l1[i], sizeof(int))) == NULL)
+          no_mem_exit("init_subset_seq_parameter_set: subset_sps->anchor_ref_l1[i]");
+        for(j=0; j<subset_sps->num_anchor_refs_l1[i]; j++)
+          subset_sps->anchor_ref_l1[i][j] = read_ue_v("anchor_ref_l1", s, &p_Dec->UsedBits);
       }
     }
-  }
-}
-//}}}
-//{{{
-int MemAlloc1D(void** ppBuf, int iEleSize, int iNum)
-{
-  if(iEleSize*iNum <=0)
-    return 1;
-
-  *ppBuf = calloc(iNum, iEleSize);
-  return (*ppBuf == NULL);
-}
-//}}}
-//{{{
-void hrd_parameters(MVCVUI_t *pMVCVUI, Bitstream *s)
-{
-  int i;
-
-  pMVCVUI->cpb_cnt_minus1 = (char) read_ue_v("cpb_cnt_minus1", s, &p_Dec->UsedBits);
-  assert(pMVCVUI->cpb_cnt_minus1<=31);
-  pMVCVUI->bit_rate_scale = (char) read_u_v(4, "bit_rate_scale", s, &p_Dec->UsedBits);
-  pMVCVUI->cpb_size_scale = (char) read_u_v(4, "cpb_size_scale", s, &p_Dec->UsedBits);
-  for(i=0; i<=pMVCVUI->cpb_cnt_minus1; i++)
-  {
-    pMVCVUI->bit_rate_value_minus1[i] = read_ue_v("bit_rate_value_minus1"                    , s, &p_Dec->UsedBits);
-    pMVCVUI->cpb_size_value_minus1[i] = read_ue_v("cpb_size_value_minus1"                    , s, &p_Dec->UsedBits);
-    pMVCVUI->cbr_flag[i]              = (char) read_u_1 ("cbr_flag"                          , s, &p_Dec->UsedBits);
-  }
-  pMVCVUI->initial_cpb_removal_delay_length_minus1 = (char) read_u_v(5, "initial_cpb_removal_delay_length_minus1", s, &p_Dec->UsedBits);
-  pMVCVUI->cpb_removal_delay_length_minus1         = (char) read_u_v(5, "cpb_removal_delay_length_minus1",         s, &p_Dec->UsedBits);
-  pMVCVUI->dpb_output_delay_length_minus1          = (char) read_u_v(5, "dpb_output_delay_length_minus1",          s, &p_Dec->UsedBits);
-  pMVCVUI->time_offset_length                      = (char) read_u_v(5, "time_offset_length",                      s, &p_Dec->UsedBits);
-
-}
-//}}}
-//{{{
-void mvc_vui_parameters_extension(MVCVUI_t *pMVCVUI, Bitstream *s)
-{
-  int i, j, iNumOps;
-
-  pMVCVUI->num_ops_minus1 = read_ue_v("vui_mvc_num_ops_minus1", s, &p_Dec->UsedBits);
-  iNumOps = 1+ pMVCVUI->num_ops_minus1;
-  if(iNumOps > 0)
-  {
-    MemAlloc1D((void **)&(pMVCVUI->temporal_id), sizeof(pMVCVUI->temporal_id[0]), iNumOps);
-    MemAlloc1D((void **)&(pMVCVUI->num_target_output_views_minus1), sizeof(pMVCVUI->num_target_output_views_minus1[0]), iNumOps);
-    if ((pMVCVUI->view_id = (int**) calloc(iNumOps, sizeof(int*))) == NULL)
-      no_mem_exit("mvc_vui_parameters_extension: pMVCVUI->view_id");
-    MemAlloc1D((void **)&(pMVCVUI->timing_info_present_flag), sizeof(pMVCVUI->timing_info_present_flag[0]), iNumOps);
-    MemAlloc1D((void **)&(pMVCVUI->num_units_in_tick), sizeof(pMVCVUI->num_units_in_tick[0]), iNumOps);
-    MemAlloc1D((void **)&(pMVCVUI->time_scale), sizeof(pMVCVUI->time_scale[0]), iNumOps);
-    MemAlloc1D((void **)&(pMVCVUI->fixed_frame_rate_flag), sizeof(pMVCVUI->fixed_frame_rate_flag[0]), iNumOps);
-    MemAlloc1D((void **)&(pMVCVUI->nal_hrd_parameters_present_flag), sizeof(pMVCVUI->nal_hrd_parameters_present_flag[0]), iNumOps);
-    MemAlloc1D((void **)&(pMVCVUI->vcl_hrd_parameters_present_flag), sizeof(pMVCVUI->vcl_hrd_parameters_present_flag[0]), iNumOps);
-    MemAlloc1D((void **)&(pMVCVUI->low_delay_hrd_flag), sizeof(pMVCVUI->low_delay_hrd_flag[0]), iNumOps);
-    MemAlloc1D((void **)&(pMVCVUI->pic_struct_present_flag), sizeof(pMVCVUI->pic_struct_present_flag[0]), iNumOps);
-
-    for(i=0; i<iNumOps; i++)
+    for(i=1; i<num_views; i++)
     {
-      pMVCVUI->temporal_id[i] = (char) read_u_v(3, "vui_mvc_temporal_id", s, &p_Dec->UsedBits);
-      pMVCVUI->num_target_output_views_minus1[i] = read_ue_v("vui_mvc_num_target_output_views_minus1", s, &p_Dec->UsedBits);
-      if(pMVCVUI->num_target_output_views_minus1[i] >= 0)
-        MemAlloc1D((void **)&(pMVCVUI->view_id[i]), sizeof(pMVCVUI->view_id[0][0]), pMVCVUI->num_target_output_views_minus1[i]+1);
-      for(j=0; j<=pMVCVUI->num_target_output_views_minus1[i]; j++)
-        pMVCVUI->view_id[i][j] = read_ue_v("vui_mvc_view_id", s, &p_Dec->UsedBits);
-      pMVCVUI->timing_info_present_flag[i] = (char) read_u_1("vui_mvc_timing_info_present_flag", s, &p_Dec->UsedBits);
-      if(pMVCVUI->timing_info_present_flag[i])
+      subset_sps->num_non_anchor_refs_l0[i] = read_ue_v("num_non_anchor_refs_l0", s, &p_Dec->UsedBits);
+      if(subset_sps->num_non_anchor_refs_l0[i]>0)
       {
-        pMVCVUI->num_units_in_tick[i]     = read_u_v(32, "vui_mvc_num_units_in_tick", s, &p_Dec->UsedBits);
-        pMVCVUI->time_scale[i]            = read_u_v(32, "vui_mvc_time_scale"          , s, &p_Dec->UsedBits);
-        pMVCVUI->fixed_frame_rate_flag[i] = (char) read_u_1("vui_mvc_fixed_frame_rate_flag", s, &p_Dec->UsedBits);
+        if ((subset_sps->non_anchor_ref_l0[i] = (int*) calloc(subset_sps->num_non_anchor_refs_l0[i], sizeof(int))) == NULL)
+          no_mem_exit("init_subset_seq_parameter_set: subset_sps->non_anchor_ref_l0[i]");
+        for(j=0; j<subset_sps->num_non_anchor_refs_l0[i]; j++)
+          subset_sps->non_anchor_ref_l0[i][j] = read_ue_v("non_anchor_ref_l0", s, &p_Dec->UsedBits);
       }
-      pMVCVUI->nal_hrd_parameters_present_flag[i] = (char) read_u_1("vui_mvc_nal_hrd_parameters_present_flag", s, &p_Dec->UsedBits);
-      if(pMVCVUI->nal_hrd_parameters_present_flag[i])
-        hrd_parameters(pMVCVUI, s);
-      pMVCVUI->vcl_hrd_parameters_present_flag[i] = (char) read_u_1("vcl_hrd_parameters_present_flag", s, &p_Dec->UsedBits);
-      if(pMVCVUI->vcl_hrd_parameters_present_flag[i])
-        hrd_parameters(pMVCVUI, s);
-      if(pMVCVUI->nal_hrd_parameters_present_flag[i]||pMVCVUI->vcl_hrd_parameters_present_flag[i])
-        pMVCVUI->low_delay_hrd_flag[i]    = (char) read_u_1("vui_mvc_low_delay_hrd_flag", s, &p_Dec->UsedBits);
-      pMVCVUI->pic_struct_present_flag[i] = (char) read_u_1("vui_mvc_pic_struct_present_flag", s, &p_Dec->UsedBits);
-    }
-  }
-}
-//}}}
-//{{{
-void init_subset_sps_list(subset_seq_parameter_set_rbsp_t *subset_sps_list, int iSize)
-{
-  int i;
-  memset(subset_sps_list, 0, iSize*sizeof(subset_sps_list[0]));
-  for(i=0; i<iSize; i++)
-  {
-    subset_sps_list[i].sps.seq_parameter_set_id = (unsigned int) -1;
-    subset_sps_list[i].num_views_minus1 = -1;
-    subset_sps_list[i].num_level_values_signalled_minus1 = -1;
-    subset_sps_list[i].MVCVUIParams.num_ops_minus1 = -1;
-  }
-}
-//}}}
-//{{{
-void reset_subset_sps(subset_seq_parameter_set_rbsp_t *subset_sps)
-{
-  int i, j;
-
-  if(subset_sps && subset_sps->num_views_minus1>=0)
-  {
-    subset_sps->sps.seq_parameter_set_id = (unsigned int) -1;
-
-    free_pointer(subset_sps->view_id);
-    for(i=0; i<=subset_sps->num_views_minus1; i++)
-    {
-      free_pointer(subset_sps->anchor_ref_l0[i]);
-      free_pointer(subset_sps->anchor_ref_l1[i]);
-    }
-    free_pointer(subset_sps->anchor_ref_l0);
-    free_pointer(subset_sps->anchor_ref_l1);
-    free_pointer(subset_sps->num_anchor_refs_l0);
-    free_pointer(subset_sps->num_anchor_refs_l1);
-
-    for(i=0; i<=subset_sps->num_views_minus1; i++)
-    {
-      free_pointer(subset_sps->non_anchor_ref_l0[i]);
-      free_pointer(subset_sps->non_anchor_ref_l1[i]);
-    }
-    free_pointer(subset_sps->non_anchor_ref_l0);
-    free_pointer(subset_sps->non_anchor_ref_l1);
-    free_pointer(subset_sps->num_non_anchor_refs_l0);
-    free_pointer(subset_sps->num_non_anchor_refs_l1);
-
-    if(subset_sps->num_level_values_signalled_minus1 >= 0)
-    {
-      free_pointer(subset_sps->level_idc);
-      for(i=0; i<=subset_sps->num_level_values_signalled_minus1; i++)
+      subset_sps->num_non_anchor_refs_l1[i] = read_ue_v("num_non_anchor_refs_l1", s, &p_Dec->UsedBits);
+      if(subset_sps->num_non_anchor_refs_l1[i]>0)
       {
+        if ((subset_sps->non_anchor_ref_l1[i] = (int*) calloc(subset_sps->num_non_anchor_refs_l1[i], sizeof(int))) == NULL)
+          no_mem_exit("init_subset_seq_parameter_set: subset_sps->non_anchor_ref_l1[i]");
+        for(j=0; j<subset_sps->num_non_anchor_refs_l1[i]; j++)
+          subset_sps->non_anchor_ref_l1[i][j] = read_ue_v("non_anchor_ref_l1", s, &p_Dec->UsedBits);
+      }
+    }
+    subset_sps->num_level_values_signalled_minus1 = read_ue_v("num_level_values_signalled_minus1", s, &p_Dec->UsedBits);
+    if(subset_sps->num_level_values_signalled_minus1 >=0)
+    {
+      i = 1+ subset_sps->num_level_values_signalled_minus1;
+      if ((subset_sps->level_idc = (int*) calloc(i, sizeof(int))) == NULL)
+        no_mem_exit("init_subset_seq_parameter_set: subset_sps->level_idc");
+      if ((subset_sps->num_applicable_ops_minus1 = (int*) calloc(i, sizeof(int))) == NULL)
+        no_mem_exit("init_subset_seq_parameter_set: subset_sps->num_applicable_ops_minus1");
+      if ((subset_sps->applicable_op_temporal_id = (int**) calloc(i, sizeof(int*))) == NULL)
+        no_mem_exit("init_subset_seq_parameter_set: subset_sps->applicable_op_temporal_id");
+      if ((subset_sps->applicable_op_num_target_views_minus1 = (int**) calloc(i, sizeof(int*))) == NULL)
+        no_mem_exit("init_subset_seq_parameter_set: subset_sps->applicable_op_num_target_views_minus1");
+      if ((subset_sps->applicable_op_target_view_id = (int***) calloc(i, sizeof(int**))) == NULL)
+        no_mem_exit("init_subset_seq_parameter_set: subset_sps->applicable_op_target_view_id");
+      if ((subset_sps->applicable_op_num_views_minus1 = (int**) calloc(i, sizeof(int*))) == NULL)
+        no_mem_exit("init_subset_seq_parameter_set: subset_sps->applicable_op_num_views_minus1");
+    }
+    for(i=0; i<=subset_sps->num_level_values_signalled_minus1; i++)
+    {
+      subset_sps->level_idc[i] = read_u_v(8, "level_idc", s, &p_Dec->UsedBits);
+      subset_sps->num_applicable_ops_minus1[i] = read_ue_v("num_applicable_ops_minus1", s, &p_Dec->UsedBits);
+      if(subset_sps->num_applicable_ops_minus1[i]>=0)
+      {
+        if ((subset_sps->applicable_op_temporal_id[i] = (int*) calloc(1+subset_sps->num_applicable_ops_minus1[i], sizeof(int))) == NULL)
+          no_mem_exit("init_subset_seq_parameter_set: subset_sps->applicable_op_temporal_id[i]");
+        if ((subset_sps->applicable_op_num_target_views_minus1[i] = (int*) calloc(1+subset_sps->num_applicable_ops_minus1[i], sizeof(int))) == NULL)
+          no_mem_exit("init_subset_seq_parameter_set: subset_sps->applicable_op_num_target_views_minus1[i]");
+        if ((subset_sps->applicable_op_target_view_id[i] = (int**) calloc(1+subset_sps->num_applicable_ops_minus1[i], sizeof(int *))) == NULL)
+          no_mem_exit("init_subset_seq_parameter_set: subset_sps->applicable_op_target_view_id[i]");
+        if ((subset_sps->applicable_op_num_views_minus1[i] = (int*) calloc(1+subset_sps->num_applicable_ops_minus1[i], sizeof(int))) == NULL)
+          no_mem_exit("init_subset_seq_parameter_set: subset_sps->applicable_op_num_views_minus1[i]");
+
         for(j=0; j<=subset_sps->num_applicable_ops_minus1[i]; j++)
         {
-          free_pointer(subset_sps->applicable_op_target_view_id[i][j]);
+          int k;
+          subset_sps->applicable_op_temporal_id[i][j] = read_u_v(3, "applicable_op_temporal_id", s, &p_Dec->UsedBits);
+          subset_sps->applicable_op_num_target_views_minus1[i][j] = read_ue_v("applicable_op_num_target_views_minus1", s, &p_Dec->UsedBits);
+          if(subset_sps->applicable_op_num_target_views_minus1[i][j]>=0)
+          {
+            if ((subset_sps->applicable_op_target_view_id[i][j] = (int*) calloc(1+subset_sps->applicable_op_num_target_views_minus1[i][j], sizeof(int))) == NULL)
+              no_mem_exit("init_subset_seq_parameter_set: subset_sps->applicable_op_target_view_id[i][j]");
+            for(k = 0; k <= subset_sps->applicable_op_num_target_views_minus1[i][j]; k++)
+              subset_sps->applicable_op_target_view_id[i][j][k] = read_ue_v("applicable_op_target_view_id", s, &p_Dec->UsedBits);
+          }
+          subset_sps->applicable_op_num_views_minus1[i][j] = read_ue_v("applicable_op_num_views_minus1", s, &p_Dec->UsedBits);
         }
-        free_pointer(subset_sps->applicable_op_target_view_id[i]);
-        free_pointer(subset_sps->applicable_op_temporal_id[i]);
-        free_pointer(subset_sps->applicable_op_num_target_views_minus1[i]);
-        free_pointer(subset_sps->applicable_op_num_views_minus1[i]);
       }
-      free_pointer(subset_sps->applicable_op_target_view_id);
-      free_pointer(subset_sps->applicable_op_temporal_id);
-      free_pointer(subset_sps->applicable_op_num_target_views_minus1);
-      free_pointer(subset_sps->applicable_op_num_views_minus1);
-      free_pointer(subset_sps->num_applicable_ops_minus1);
+    }
+  }
+  //}}}
+  //{{{
+  int MemAlloc1D(void** ppBuf, int iEleSize, int iNum)
+  {
+    if(iEleSize*iNum <=0)
+      return 1;
 
-      subset_sps->num_level_values_signalled_minus1 = -1;
+    *ppBuf = calloc(iNum, iEleSize);
+    return (*ppBuf == NULL);
+  }
+  //}}}
+  //{{{
+  void hrd_parameters(MVCVUI_t *pMVCVUI, Bitstream *s)
+  {
+    int i;
+
+    pMVCVUI->cpb_cnt_minus1 = (char) read_ue_v("cpb_cnt_minus1", s, &p_Dec->UsedBits);
+    assert(pMVCVUI->cpb_cnt_minus1<=31);
+    pMVCVUI->bit_rate_scale = (char) read_u_v(4, "bit_rate_scale", s, &p_Dec->UsedBits);
+    pMVCVUI->cpb_size_scale = (char) read_u_v(4, "cpb_size_scale", s, &p_Dec->UsedBits);
+    for(i=0; i<=pMVCVUI->cpb_cnt_minus1; i++)
+    {
+      pMVCVUI->bit_rate_value_minus1[i] = read_ue_v("bit_rate_value_minus1"                    , s, &p_Dec->UsedBits);
+      pMVCVUI->cpb_size_value_minus1[i] = read_ue_v("cpb_size_value_minus1"                    , s, &p_Dec->UsedBits);
+      pMVCVUI->cbr_flag[i]              = (char) read_u_1 ("cbr_flag"                          , s, &p_Dec->UsedBits);
+    }
+    pMVCVUI->initial_cpb_removal_delay_length_minus1 = (char) read_u_v(5, "initial_cpb_removal_delay_length_minus1", s, &p_Dec->UsedBits);
+    pMVCVUI->cpb_removal_delay_length_minus1         = (char) read_u_v(5, "cpb_removal_delay_length_minus1",         s, &p_Dec->UsedBits);
+    pMVCVUI->dpb_output_delay_length_minus1          = (char) read_u_v(5, "dpb_output_delay_length_minus1",          s, &p_Dec->UsedBits);
+    pMVCVUI->time_offset_length                      = (char) read_u_v(5, "time_offset_length",                      s, &p_Dec->UsedBits);
+
+  }
+  //}}}
+  //{{{
+  void mvc_vui_parameters_extension(MVCVUI_t *pMVCVUI, Bitstream *s)
+  {
+    int i, j, iNumOps;
+
+    pMVCVUI->num_ops_minus1 = read_ue_v("vui_mvc_num_ops_minus1", s, &p_Dec->UsedBits);
+    iNumOps = 1+ pMVCVUI->num_ops_minus1;
+    if(iNumOps > 0)
+    {
+      MemAlloc1D((void **)&(pMVCVUI->temporal_id), sizeof(pMVCVUI->temporal_id[0]), iNumOps);
+      MemAlloc1D((void **)&(pMVCVUI->num_target_output_views_minus1), sizeof(pMVCVUI->num_target_output_views_minus1[0]), iNumOps);
+      if ((pMVCVUI->view_id = (int**) calloc(iNumOps, sizeof(int*))) == NULL)
+        no_mem_exit("mvc_vui_parameters_extension: pMVCVUI->view_id");
+      MemAlloc1D((void **)&(pMVCVUI->timing_info_present_flag), sizeof(pMVCVUI->timing_info_present_flag[0]), iNumOps);
+      MemAlloc1D((void **)&(pMVCVUI->num_units_in_tick), sizeof(pMVCVUI->num_units_in_tick[0]), iNumOps);
+      MemAlloc1D((void **)&(pMVCVUI->time_scale), sizeof(pMVCVUI->time_scale[0]), iNumOps);
+      MemAlloc1D((void **)&(pMVCVUI->fixed_frame_rate_flag), sizeof(pMVCVUI->fixed_frame_rate_flag[0]), iNumOps);
+      MemAlloc1D((void **)&(pMVCVUI->nal_hrd_parameters_present_flag), sizeof(pMVCVUI->nal_hrd_parameters_present_flag[0]), iNumOps);
+      MemAlloc1D((void **)&(pMVCVUI->vcl_hrd_parameters_present_flag), sizeof(pMVCVUI->vcl_hrd_parameters_present_flag[0]), iNumOps);
+      MemAlloc1D((void **)&(pMVCVUI->low_delay_hrd_flag), sizeof(pMVCVUI->low_delay_hrd_flag[0]), iNumOps);
+      MemAlloc1D((void **)&(pMVCVUI->pic_struct_present_flag), sizeof(pMVCVUI->pic_struct_present_flag[0]), iNumOps);
+
+      for(i=0; i<iNumOps; i++)
+      {
+        pMVCVUI->temporal_id[i] = (char) read_u_v(3, "vui_mvc_temporal_id", s, &p_Dec->UsedBits);
+        pMVCVUI->num_target_output_views_minus1[i] = read_ue_v("vui_mvc_num_target_output_views_minus1", s, &p_Dec->UsedBits);
+        if(pMVCVUI->num_target_output_views_minus1[i] >= 0)
+          MemAlloc1D((void **)&(pMVCVUI->view_id[i]), sizeof(pMVCVUI->view_id[0][0]), pMVCVUI->num_target_output_views_minus1[i]+1);
+        for(j=0; j<=pMVCVUI->num_target_output_views_minus1[i]; j++)
+          pMVCVUI->view_id[i][j] = read_ue_v("vui_mvc_view_id", s, &p_Dec->UsedBits);
+        pMVCVUI->timing_info_present_flag[i] = (char) read_u_1("vui_mvc_timing_info_present_flag", s, &p_Dec->UsedBits);
+        if(pMVCVUI->timing_info_present_flag[i])
+        {
+          pMVCVUI->num_units_in_tick[i]     = read_u_v(32, "vui_mvc_num_units_in_tick", s, &p_Dec->UsedBits);
+          pMVCVUI->time_scale[i]            = read_u_v(32, "vui_mvc_time_scale"          , s, &p_Dec->UsedBits);
+          pMVCVUI->fixed_frame_rate_flag[i] = (char) read_u_1("vui_mvc_fixed_frame_rate_flag", s, &p_Dec->UsedBits);
+        }
+        pMVCVUI->nal_hrd_parameters_present_flag[i] = (char) read_u_1("vui_mvc_nal_hrd_parameters_present_flag", s, &p_Dec->UsedBits);
+        if(pMVCVUI->nal_hrd_parameters_present_flag[i])
+          hrd_parameters(pMVCVUI, s);
+        pMVCVUI->vcl_hrd_parameters_present_flag[i] = (char) read_u_1("vcl_hrd_parameters_present_flag", s, &p_Dec->UsedBits);
+        if(pMVCVUI->vcl_hrd_parameters_present_flag[i])
+          hrd_parameters(pMVCVUI, s);
+        if(pMVCVUI->nal_hrd_parameters_present_flag[i]||pMVCVUI->vcl_hrd_parameters_present_flag[i])
+          pMVCVUI->low_delay_hrd_flag[i]    = (char) read_u_1("vui_mvc_low_delay_hrd_flag", s, &p_Dec->UsedBits);
+        pMVCVUI->pic_struct_present_flag[i] = (char) read_u_1("vui_mvc_pic_struct_present_flag", s, &p_Dec->UsedBits);
+      }
+    }
+  }
+  //}}}
+  //{{{
+  void init_subset_sps_list(subset_seq_parameter_set_rbsp_t *subset_sps_list, int iSize)
+  {
+    int i;
+    memset(subset_sps_list, 0, iSize*sizeof(subset_sps_list[0]));
+    for(i=0; i<iSize; i++)
+    {
+      subset_sps_list[i].sps.seq_parameter_set_id = (unsigned int) -1;
+      subset_sps_list[i].num_views_minus1 = -1;
+      subset_sps_list[i].num_level_values_signalled_minus1 = -1;
+      subset_sps_list[i].MVCVUIParams.num_ops_minus1 = -1;
+    }
+  }
+  //}}}
+  //{{{
+  void reset_subset_sps(subset_seq_parameter_set_rbsp_t *subset_sps)
+  {
+    int i, j;
+
+    if(subset_sps && subset_sps->num_views_minus1>=0)
+    {
+      subset_sps->sps.seq_parameter_set_id = (unsigned int) -1;
+
+      free_pointer(subset_sps->view_id);
+      for(i=0; i<=subset_sps->num_views_minus1; i++)
+      {
+        free_pointer(subset_sps->anchor_ref_l0[i]);
+        free_pointer(subset_sps->anchor_ref_l1[i]);
+      }
+      free_pointer(subset_sps->anchor_ref_l0);
+      free_pointer(subset_sps->anchor_ref_l1);
+      free_pointer(subset_sps->num_anchor_refs_l0);
+      free_pointer(subset_sps->num_anchor_refs_l1);
+
+      for(i=0; i<=subset_sps->num_views_minus1; i++)
+      {
+        free_pointer(subset_sps->non_anchor_ref_l0[i]);
+        free_pointer(subset_sps->non_anchor_ref_l1[i]);
+      }
+      free_pointer(subset_sps->non_anchor_ref_l0);
+      free_pointer(subset_sps->non_anchor_ref_l1);
+      free_pointer(subset_sps->num_non_anchor_refs_l0);
+      free_pointer(subset_sps->num_non_anchor_refs_l1);
+
+      if(subset_sps->num_level_values_signalled_minus1 >= 0)
+      {
+        free_pointer(subset_sps->level_idc);
+        for(i=0; i<=subset_sps->num_level_values_signalled_minus1; i++)
+        {
+          for(j=0; j<=subset_sps->num_applicable_ops_minus1[i]; j++)
+          {
+            free_pointer(subset_sps->applicable_op_target_view_id[i][j]);
+          }
+          free_pointer(subset_sps->applicable_op_target_view_id[i]);
+          free_pointer(subset_sps->applicable_op_temporal_id[i]);
+          free_pointer(subset_sps->applicable_op_num_target_views_minus1[i]);
+          free_pointer(subset_sps->applicable_op_num_views_minus1[i]);
+        }
+        free_pointer(subset_sps->applicable_op_target_view_id);
+        free_pointer(subset_sps->applicable_op_temporal_id);
+        free_pointer(subset_sps->applicable_op_num_target_views_minus1);
+        free_pointer(subset_sps->applicable_op_num_views_minus1);
+        free_pointer(subset_sps->num_applicable_ops_minus1);
+
+        subset_sps->num_level_values_signalled_minus1 = -1;
+      }
+
+      //end;
+      subset_sps->num_views_minus1 = -1;
     }
 
-    //end;
-    subset_sps->num_views_minus1 = -1;
-  }
-
-  if(subset_sps && subset_sps->mvc_vui_parameters_present_flag)
-  {
-    MVCVUI_t *pMVCVUI = &(subset_sps->MVCVUIParams);
-    if(pMVCVUI->num_ops_minus1 >=0)
+    if(subset_sps && subset_sps->mvc_vui_parameters_present_flag)
     {
-      free_pointer(pMVCVUI->temporal_id);
-      free_pointer(pMVCVUI->num_target_output_views_minus1);
-      for(i=0; i<=pMVCVUI->num_ops_minus1; i++)
-        free_pointer(pMVCVUI->view_id[i]);
-      free_pointer(pMVCVUI->view_id);
-      free_pointer(pMVCVUI->timing_info_present_flag);
-      free_pointer(pMVCVUI->num_units_in_tick);
-      free_pointer(pMVCVUI->time_scale);
-      free_pointer(pMVCVUI->fixed_frame_rate_flag);
-      free_pointer(pMVCVUI->nal_hrd_parameters_present_flag);
-      free_pointer(pMVCVUI->vcl_hrd_parameters_present_flag);
-      free_pointer(pMVCVUI->low_delay_hrd_flag);
-      free_pointer(pMVCVUI->pic_struct_present_flag);
+      MVCVUI_t *pMVCVUI = &(subset_sps->MVCVUIParams);
+      if(pMVCVUI->num_ops_minus1 >=0)
+      {
+        free_pointer(pMVCVUI->temporal_id);
+        free_pointer(pMVCVUI->num_target_output_views_minus1);
+        for(i=0; i<=pMVCVUI->num_ops_minus1; i++)
+          free_pointer(pMVCVUI->view_id[i]);
+        free_pointer(pMVCVUI->view_id);
+        free_pointer(pMVCVUI->timing_info_present_flag);
+        free_pointer(pMVCVUI->num_units_in_tick);
+        free_pointer(pMVCVUI->time_scale);
+        free_pointer(pMVCVUI->fixed_frame_rate_flag);
+        free_pointer(pMVCVUI->nal_hrd_parameters_present_flag);
+        free_pointer(pMVCVUI->vcl_hrd_parameters_present_flag);
+        free_pointer(pMVCVUI->low_delay_hrd_flag);
+        free_pointer(pMVCVUI->pic_struct_present_flag);
 
-      pMVCVUI->num_ops_minus1 = -1;
+        pMVCVUI->num_ops_minus1 = -1;
+      }
+      subset_sps->mvc_vui_parameters_present_flag = 0;
     }
-    subset_sps->mvc_vui_parameters_present_flag = 0;
   }
-}
-//}}}
-//{{{
-int GetBaseViewId(VideoParameters *p_Vid, subset_seq_parameter_set_rbsp_t **subset_sps)
-{
-  subset_seq_parameter_set_rbsp_t *curr_subset_sps;
-  int i, iBaseViewId=0; //-1;
-
-  *subset_sps = NULL;
-  curr_subset_sps = p_Vid->SubsetSeqParSet;
-  for(i=0; i<MAXSPS; i++)
+  //}}}
+  //{{{
+  int GetBaseViewId(VideoParameters *p_Vid, subset_seq_parameter_set_rbsp_t **subset_sps)
   {
-    if(curr_subset_sps->num_views_minus1>=0 && curr_subset_sps->sps.Valid) // && curr_subset_sps->sps.seq_parameter_set_id < MAXSPS)
+    subset_seq_parameter_set_rbsp_t *curr_subset_sps;
+    int i, iBaseViewId=0; //-1;
+
+    *subset_sps = NULL;
+    curr_subset_sps = p_Vid->SubsetSeqParSet;
+    for(i=0; i<MAXSPS; i++)
     {
-      iBaseViewId = curr_subset_sps->view_id[BASE_VIEW_IDX];
+      if(curr_subset_sps->num_views_minus1>=0 && curr_subset_sps->sps.Valid) // && curr_subset_sps->sps.seq_parameter_set_id < MAXSPS)
+      {
+        iBaseViewId = curr_subset_sps->view_id[BASE_VIEW_IDX];
+        break;
+      }
+      curr_subset_sps++;
+    }
+
+    if(i<MAXSPS)
+      *subset_sps = curr_subset_sps;
+    return iBaseViewId;
+  }
+
+  void get_max_dec_frame_buf_size(seq_parameter_set_rbsp_t *sps)
+  {
+    int pic_size_mb = (sps->pic_width_in_mbs_minus1 + 1) * (sps->pic_height_in_map_units_minus1 + 1) * (sps->frame_mbs_only_flag?1:2);
+
+    int size = 0;
+
+    switch (sps->level_idc)
+    {
+    case 0:
+      // if there is no level defined, we expect experimental usage and return a DPB size of 16
+      size = 16 * pic_size_mb;
+    case 9:
+      size = 396;
+      break;
+    case 10:
+      size = 396;
+      break;
+    case 11:
+      if (!is_FREXT_profile(sps->profile_idc) && (sps->constrained_set3_flag == 1))
+        size = 396;
+      else
+        size = 900;
+      break;
+    case 12:
+      size = 2376;
+      break;
+    case 13:
+      size = 2376;
+      break;
+    case 20:
+      size = 2376;
+      break;
+    case 21:
+      size = 4752;
+      break;
+    case 22:
+      size = 8100;
+      break;
+    case 30:
+      size = 8100;
+      break;
+    case 31:
+      size = 18000;
+      break;
+    case 32:
+      size = 20480;
+      break;
+    case 40:
+      size = 32768;
+      break;
+    case 41:
+      size = 32768;
+      break;
+    case 42:
+      size = 34816;
+      break;
+    case 50:
+      size = 110400;
+      break;
+    case 51:
+      size = 184320;
+      break;
+    case 52:
+      size = 184320;
+      break;
+    case 60:
+    case 61:
+    case 62:
+      size = 696320;
+      break;
+    default:
+      error ("undefined level", 500);
       break;
     }
-    curr_subset_sps++;
+
+    size /= pic_size_mb;
+    size = imin( size, 16);
+    sps->max_dec_frame_buffering = size;
   }
-
-  if(i<MAXSPS)
-    *subset_sps = curr_subset_sps;
-  return iBaseViewId;
-}
-
-void get_max_dec_frame_buf_size(seq_parameter_set_rbsp_t *sps)
-{
-  int pic_size_mb = (sps->pic_width_in_mbs_minus1 + 1) * (sps->pic_height_in_map_units_minus1 + 1) * (sps->frame_mbs_only_flag?1:2);
-
-  int size = 0;
-
-  switch (sps->level_idc)
-  {
-  case 0:
-    // if there is no level defined, we expect experimental usage and return a DPB size of 16
-    size = 16 * pic_size_mb;
-  case 9:
-    size = 396;
-    break;
-  case 10:
-    size = 396;
-    break;
-  case 11:
-    if (!is_FREXT_profile(sps->profile_idc) && (sps->constrained_set3_flag == 1))
-      size = 396;
-    else
-      size = 900;
-    break;
-  case 12:
-    size = 2376;
-    break;
-  case 13:
-    size = 2376;
-    break;
-  case 20:
-    size = 2376;
-    break;
-  case 21:
-    size = 4752;
-    break;
-  case 22:
-    size = 8100;
-    break;
-  case 30:
-    size = 8100;
-    break;
-  case 31:
-    size = 18000;
-    break;
-  case 32:
-    size = 20480;
-    break;
-  case 40:
-    size = 32768;
-    break;
-  case 41:
-    size = 32768;
-    break;
-  case 42:
-    size = 34816;
-    break;
-  case 50:
-    size = 110400;
-    break;
-  case 51:
-    size = 184320;
-    break;
-  case 52:
-    size = 184320;
-    break;
-  case 60:
-  case 61:
-  case 62:
-    size = 696320;
-    break;
-  default:
-    error ("undefined level", 500);
-    break;
-  }
-
-  size /= pic_size_mb;
-  size = imin( size, 16);
-  sps->max_dec_frame_buffering = size;
-}
-//}}}
+  //}}}
 #endif

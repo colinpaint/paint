@@ -32,7 +32,7 @@
  *
  ***********************************************************************
  */
-static int intra16x16_dc_pred(Macroblock *currMB, ColorPlane pl)
+static int intra16x16_dc_pred (Macroblock *currMB, ColorPlane pl)
 {
   Slice *currSlice = currMB->p_Slice;
   VideoParameters *p_Vid = currMB->p_Vid;
@@ -122,7 +122,7 @@ static int intra16x16_dc_pred(Macroblock *currMB, ColorPlane pl)
  *
  ***********************************************************************
  */
-static int intra16x16_vert_pred(Macroblock *currMB, ColorPlane pl)
+static int intra16x16_vert_pred (Macroblock *currMB, ColorPlane pl)
 {
   Slice *currSlice = currMB->p_Slice;
   VideoParameters *p_Vid = currMB->p_Vid;
@@ -175,7 +175,7 @@ static int intra16x16_vert_pred(Macroblock *currMB, ColorPlane pl)
  *
  ***********************************************************************
  */
-static int intra16x16_hor_pred(Macroblock *currMB, ColorPlane pl)
+static int intra16x16_hor_pred (Macroblock *currMB, ColorPlane pl)
 {
   Slice *currSlice = currMB->p_Slice;
   VideoParameters *p_Vid = currMB->p_Vid;
@@ -243,7 +243,7 @@ static int intra16x16_hor_pred(Macroblock *currMB, ColorPlane pl)
  *
  ***********************************************************************
  */
-static int intra16x16_plane_pred(Macroblock *currMB, ColorPlane pl)
+static int intra16x16_plane_pred (Macroblock *currMB, ColorPlane pl)
 {
   Slice *currSlice = currMB->p_Slice;
   VideoParameters *p_Vid = currMB->p_Vid;
@@ -327,7 +327,7 @@ static int intra16x16_plane_pred(Macroblock *currMB, ColorPlane pl)
  *    SEARCH_SYNC   search next sync element as errors while decoding occured
  ***********************************************************************
  */
-int intra_pred_16x16_normal(Macroblock *currMB,  //!< Current Macroblock
+int intra_pred_16x16_normal (Macroblock *currMB,  //!< Current Macroblock
                            ColorPlane pl,       //!< Current colorplane (for 4:4:4)
                            int predmode)        //!< prediction mode
 {

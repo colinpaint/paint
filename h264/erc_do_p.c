@@ -29,24 +29,24 @@
 //}}}
 
 // static function declarations
-static int concealByCopy(frame *recfr, int currMBNum, objectBuffer_t *object_list, int picSizeX);
-static int concealByTrial(frame *recfr, imgpel *predMB,
-                          int currMBNum, objectBuffer_t *object_list, int predBlocks[],
-                          int picSizeX, int picSizeY, char *yCondition);
+static int concealByCopy (frame *recfr, int currMBNum, objectBuffer_t *object_list, int picSizeX);
+static int concealByTrial (frame *recfr, imgpel *predMB,
+                           int currMBNum, objectBuffer_t *object_list, int predBlocks[],
+                           int picSizeX, int picSizeY, char *yCondition);
 static int edgeDistortion (int predBlocks[], int currYBlockNum, imgpel *predMB,
                            imgpel *recY, int picSizeX, int regionSize);
 static void copyBetweenFrames (frame *recfr, int currYBlockNum, int picSizeX, int regionSize);
-static void buildPredRegionYUV(VideoParameters *p_Vid, int *mv, int x, int y, imgpel *predMB);
+static void buildPredRegionYUV (VideoParameters *p_Vid, int *mv, int x, int y, imgpel *predMB);
 
 // picture error concealment
-static void buildPredblockRegionYUV(VideoParameters *p_Vid, int *mv,
-                                    int x, int y, imgpel *predMB, int list, int mb);
-static void CopyImgData(imgpel **inputY, imgpel ***inputUV, imgpel **outputY, imgpel ***outputUV,
-                        int img_width, int img_height, int img_width_cr, int img_height_cr);
+static void buildPredblockRegionYUV (VideoParameters *p_Vid, int *mv,
+                                     int x, int y, imgpel *predMB, int list, int mb);
+static void CopyImgData (imgpel **inputY, imgpel ***inputUV, imgpel **outputY, imgpel ***outputUV,
+                         int img_width, int img_height, int img_width_cr, int img_height_cr);
 
 static void copyPredMB (int currYBlockNum, imgpel *predMB, frame *recfr, int picSizeX, int regionSize);
-static void add_node   ( VideoParameters *p_Vid, struct concealment_node *ptr );
-static void delete_node( VideoParameters *p_Vid, struct concealment_node *ptr );
+static void add_node (VideoParameters *p_Vid, struct concealment_node *ptr );
+static void delete_node (VideoParameters *p_Vid, struct concealment_node *ptr );
 
 static const int uv_div[2][4] = {{0, 1, 1, 0}, {0, 1, 0, 0}}; //[x/y][yuv_format]
 
@@ -72,7 +72,7 @@ static const int uv_div[2][4] = {{0, 1, 1, 0}, {0, 1, 0, 0}}; //[x/y][yuv_format
  *      Chroma format IDC
  ************************************************************************
  */
-int ercConcealInterFrame(frame *recfr, objectBuffer_t *object_list,
+int ercConcealInterFrame (frame *recfr, objectBuffer_t *object_list,
                          int picSizeX, int picSizeY, ercVariables_t *errorVar, int chroma_format_idc )
 {
   VideoParameters *p_Vid = recfr->p_Vid;
@@ -238,7 +238,7 @@ int ercConcealInterFrame(frame *recfr, objectBuffer_t *object_list,
  *      Width of the frame in pixels
  ************************************************************************
  */
-static int concealByCopy(frame *recfr, int currMBNum,
+static int concealByCopy (frame *recfr, int currMBNum,
                          objectBuffer_t *object_list, int picSizeX)
 {
   objectBuffer_t *currRegion;
@@ -330,7 +330,7 @@ static void copyBetweenFrames (frame *recfr, int currYBlockNum, int picSizeX, in
  *      array for conditions of Y blocks from ercVariables_t
  ************************************************************************
  */
-static int concealByTrial(frame *recfr, imgpel *predMB,
+static int concealByTrial (frame *recfr, imgpel *predMB,
                           int currMBNum, objectBuffer_t *object_list, int predBlocks[],
                           int picSizeX, int picSizeY, char *yCondition)
 {
@@ -547,7 +547,7 @@ static int concealByTrial(frame *recfr, imgpel *predMB,
 *      the Y,U,V planes are concatenated y = predMB, u = predMB+256, v = predMB+320
 ************************************************************************
 */
-static void buildPredRegionYUV(VideoParameters *p_Vid, int *mv, int x, int y, imgpel *predMB)
+static void buildPredRegionYUV (VideoParameters *p_Vid, int *mv, int x, int y, imgpel *predMB)
 {
   imgpel **tmp_block;
   int i=0, j=0, ii=0, jj=0,i1=0,j1=0,j4=0,i4=0;
@@ -985,7 +985,7 @@ static void buildPredblockRegionYUV(VideoParameters *p_Vid, int *mv,
 *
 ************************************************************************
 */
-static inline int compare_pic_by_pic_num_desc( const void *arg1, const void *arg2 )
+static inline int compare_pic_by_pic_num_desc (const void *arg1, const void *arg2 )
 {
   int pic_num1 = (*(StorablePicture**)arg1)->pic_num;
   int pic_num2 = (*(StorablePicture**)arg2)->pic_num;
@@ -1006,7 +1006,7 @@ static inline int compare_pic_by_pic_num_desc( const void *arg1, const void *arg
 *
 ************************************************************************
 */
-static inline int compare_pic_by_lt_pic_num_asc( const void *arg1, const void *arg2 )
+static inline int compare_pic_by_lt_pic_num_asc (const void *arg1, const void *arg2 )
 {
   int long_term_pic_num1 = (*(StorablePicture**)arg1)->long_term_pic_num;
   int long_term_pic_num2 = (*(StorablePicture**)arg2)->long_term_pic_num;
@@ -1027,7 +1027,7 @@ static inline int compare_pic_by_lt_pic_num_asc( const void *arg1, const void *a
 *
 ************************************************************************
 */
-static inline int compare_pic_by_poc_asc( const void *arg1, const void *arg2 )
+static inline int compare_pic_by_poc_asc (const void *arg1, const void *arg2 )
 {
   int poc1 = (*(StorablePicture**)arg1)->poc;
   int poc2 = (*(StorablePicture**)arg2)->poc;
@@ -1048,7 +1048,7 @@ static inline int compare_pic_by_poc_asc( const void *arg1, const void *arg2 )
 *
 ************************************************************************
 */
-static inline int compare_pic_by_poc_desc( const void *arg1, const void *arg2 )
+static inline int compare_pic_by_poc_desc (const void *arg1, const void *arg2 )
 {
   int poc1 = (*(StorablePicture**)arg1)->poc;
   int poc2 = (*(StorablePicture**)arg2)->poc;
@@ -1070,7 +1070,7 @@ static inline int compare_pic_by_poc_desc( const void *arg1, const void *arg2 )
 ************************************************************************
 */
 
-static void CopyImgData(imgpel **inputY, imgpel ***inputUV, imgpel **outputY, imgpel ***outputUV,
+static void CopyImgData (imgpel **inputY, imgpel ***inputUV, imgpel **outputY, imgpel ***outputUV,
                         int img_width, int img_height, int img_width_cr, int img_height_cr)
 {
   int x, y;
@@ -1095,7 +1095,7 @@ static void CopyImgData(imgpel **inputY, imgpel ***inputUV, imgpel **outputY, im
 ************************************************************************
 */
 
-static StorablePicture* get_last_ref_pic_from_dpb(DecodedPictureBuffer *p_Dpb)
+static StorablePicture* get_last_ref_pic_from_dpb (DecodedPictureBuffer *p_Dpb)
 {
   int used_size = p_Dpb->used_size - 1;
   int i;
@@ -1126,7 +1126,7 @@ static StorablePicture* get_last_ref_pic_from_dpb(DecodedPictureBuffer *p_Dpb)
 ************************************************************************
 */
 
-static void copy_to_conceal(StorablePicture *src, StorablePicture *dst, VideoParameters *p_Vid)
+static void copy_to_conceal (StorablePicture *src, StorablePicture *dst, VideoParameters *p_Vid)
 {
   int i=0;
   int mv[3];
@@ -1273,7 +1273,7 @@ static void copy_to_conceal(StorablePicture *src, StorablePicture *dst, VideoPar
 ************************************************************************
 */
 
-static void copy_prev_pic_to_concealed_pic(StorablePicture *picture, DecodedPictureBuffer *p_Dpb)
+static void copy_prev_pic_to_concealed_pic (StorablePicture *picture, DecodedPictureBuffer *p_Dpb)
 {
   VideoParameters *p_Vid = p_Dpb->p_Vid;
   /* get the last ref pic in dpb */
@@ -1298,7 +1298,7 @@ static void copy_prev_pic_to_concealed_pic(StorablePicture *picture, DecodedPict
 ************************************************************************
 */
 
-void conceal_lost_frames(DecodedPictureBuffer *p_Dpb, Slice *pSlice)
+void conceal_lost_frames (DecodedPictureBuffer *p_Dpb, Slice *pSlice)
 {
   VideoParameters *p_Vid = p_Dpb->p_Vid;
   int CurrFrameNum;
@@ -1391,7 +1391,7 @@ void conceal_lost_frames(DecodedPictureBuffer *p_Dpb, Slice *pSlice)
 ************************************************************************
 */
 
-void update_ref_list_for_concealment(DecodedPictureBuffer *p_Dpb)
+void update_ref_list_for_concealment (DecodedPictureBuffer *p_Dpb)
 {
   VideoParameters *p_Vid = p_Dpb->p_Vid;
   unsigned i, j= 0;
@@ -1418,7 +1418,7 @@ void update_ref_list_for_concealment(DecodedPictureBuffer *p_Dpb)
 *
 ************************************************************************
 */
-void init_lists_for_non_reference_loss(DecodedPictureBuffer *p_Dpb, int currSliceType, PictureStructure currPicStructure)
+void init_lists_for_non_reference_loss (DecodedPictureBuffer *p_Dpb, int currSliceType, PictureStructure currPicStructure)
 {
   VideoParameters *p_Vid = p_Dpb->p_Vid;
   seq_parameter_set_rbsp_t *active_sps = p_Vid->active_sps;
@@ -1557,7 +1557,7 @@ void init_lists_for_non_reference_loss(DecodedPictureBuffer *p_Dpb, int currSlic
 ************************************************************************
 */
 
-StorablePicture *get_pic_from_dpb(DecodedPictureBuffer *p_Dpb, int missingpoc, unsigned int *pos)
+StorablePicture *get_pic_from_dpb (DecodedPictureBuffer *p_Dpb, int missingpoc, unsigned int *pos)
 {
   VideoParameters *p_Vid = p_Dpb->p_Vid;
   int used_size = p_Dpb->used_size - 1;
@@ -1590,7 +1590,7 @@ StorablePicture *get_pic_from_dpb(DecodedPictureBuffer *p_Dpb, int missingpoc, u
 ************************************************************************
 */
 
-int comp(const void *i, const void *j)
+int comp (const void *i, const void *j)
 {
   return *(int *)i - *(int *)j;
 }
@@ -1605,7 +1605,7 @@ int comp(const void *i, const void *j)
 ************************************************************************
 */
 
-struct concealment_node * init_node( StorablePicture* picture, int missingpoc )
+struct concealment_node * init_node (StorablePicture* picture, int missingpoc )
 {
   struct concealment_node *ptr;
 
@@ -1631,7 +1631,7 @@ struct concealment_node * init_node( StorablePicture* picture, int missingpoc )
 ************************************************************************
 */
 
-void print_node( struct concealment_node *ptr )
+void print_node (struct concealment_node *ptr )
 {
   printf("Missing POC=%d\n", ptr->missingpocs );
 }
@@ -1645,7 +1645,7 @@ void print_node( struct concealment_node *ptr )
 ************************************************************************
 */
 
-void print_list( struct concealment_node *ptr )
+void print_list (struct concealment_node *ptr )
 {
   while( ptr != NULL )
   {
@@ -1665,7 +1665,7 @@ void print_list( struct concealment_node *ptr )
 */
 
 
-static void add_node( VideoParameters *p_Vid, struct concealment_node *concealment_new )
+static void add_node (VideoParameters *p_Vid, struct concealment_node *concealment_new )
 {
   if( p_Vid->concealment_head == NULL )
   {
@@ -1686,7 +1686,7 @@ static void add_node( VideoParameters *p_Vid, struct concealment_node *concealme
 */
 
 
-static void delete_node( VideoParameters *p_Vid, struct concealment_node *ptr )
+static void delete_node (VideoParameters *p_Vid, struct concealment_node *ptr )
 {
   // We only need to delete the first node in the linked list
   if( ptr == p_Vid->concealment_head )
@@ -1707,7 +1707,7 @@ static void delete_node( VideoParameters *p_Vid, struct concealment_node *ptr )
 ************************************************************************
 */
 
-void delete_list( VideoParameters *p_Vid, struct concealment_node *ptr )
+void delete_list (VideoParameters *p_Vid, struct concealment_node *ptr )
 {
   struct concealment_node *temp;
 
@@ -1748,7 +1748,7 @@ void delete_list( VideoParameters *p_Vid, struct concealment_node *ptr )
 ************************************************************************
 */
 
-void conceal_non_ref_pics(DecodedPictureBuffer *p_Dpb, int diff)
+void conceal_non_ref_pics (DecodedPictureBuffer *p_Dpb, int diff)
 {
   VideoParameters *p_Vid = p_Dpb->p_Vid;
   int missingpoc = 0;
@@ -1815,7 +1815,7 @@ void conceal_non_ref_pics(DecodedPictureBuffer *p_Dpb, int diff)
 ************************************************************************
 */
 
-void sliding_window_poc_management(DecodedPictureBuffer *p_Dpb, StorablePicture *p)
+void sliding_window_poc_management (DecodedPictureBuffer *p_Dpb, StorablePicture *p)
 {
   if (p_Dpb->used_size == p_Dpb->size)
   {
@@ -1840,7 +1840,7 @@ void sliding_window_poc_management(DecodedPictureBuffer *p_Dpb, StorablePicture 
 ************************************************************************
 */
 
-void write_lost_non_ref_pic(DecodedPictureBuffer *p_Dpb, int poc, int p_out)
+void write_lost_non_ref_pic (DecodedPictureBuffer *p_Dpb, int poc, int p_out)
 {
   VideoParameters *p_Vid = p_Dpb->p_Vid;
   FrameStore concealment_fs;
@@ -1869,7 +1869,7 @@ void write_lost_non_ref_pic(DecodedPictureBuffer *p_Dpb, int poc, int p_out)
 *
 ************************************************************************
 */
-void write_lost_ref_after_idr(DecodedPictureBuffer *p_Dpb, int pos) {
+void write_lost_ref_after_idr (DecodedPictureBuffer *p_Dpb, int pos) {
 
   VideoParameters *p_Vid = p_Dpb->p_Vid;
 

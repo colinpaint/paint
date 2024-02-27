@@ -25,7 +25,7 @@
  *    returns 1 if the macroblock at the given address is available
  ************************************************************************
  */
-Boolean mb_is_available(int mbAddr, Macroblock *currMB)
+Boolean mb_is_available (int mbAddr, Macroblock *currMB)
 {
   Slice *currSlice = currMB->p_Slice;
   if ((mbAddr < 0) || (mbAddr > ((int)currSlice->dec_picture->PicSizeInMbs - 1)))
@@ -50,7 +50,7 @@ Boolean mb_is_available(int mbAddr, Macroblock *currMB)
  *    the current macroblock for prediction and context determination;
  ************************************************************************
  */
-void CheckAvailabilityOfNeighbors(Macroblock *currMB)
+void CheckAvailabilityOfNeighbors (Macroblock *currMB)
 {
   Slice *currSlice = currMB->p_Slice;
   StorablePicture *dec_picture = currSlice->dec_picture; //p_Vid->dec_picture;
@@ -97,7 +97,7 @@ void CheckAvailabilityOfNeighbors(Macroblock *currMB)
  *    the current macroblock for prediction and context determination;
  ************************************************************************
  */
-void CheckAvailabilityOfNeighborsNormal(Macroblock *currMB)
+void CheckAvailabilityOfNeighborsNormal (Macroblock *currMB)
 {
   Slice *currSlice = currMB->p_Slice;
   StorablePicture *dec_picture = currSlice->dec_picture; //p_Vid->dec_picture;
@@ -129,7 +129,7 @@ void CheckAvailabilityOfNeighborsNormal(Macroblock *currMB)
  *    the current macroblock for prediction and context determination;
  ************************************************************************
  */
-void CheckAvailabilityOfNeighborsMBAFF(Macroblock *currMB)
+void CheckAvailabilityOfNeighborsMBAFF (Macroblock *currMB)
 {
   Slice *currSlice = currMB->p_Slice;
   StorablePicture *dec_picture = currSlice->dec_picture; //p_Vid->dec_picture;
@@ -214,7 +214,7 @@ void get_mb_pos (VideoParameters *p_Vid, int mb_addr, int mb_size[2], short *x, 
  *    returns position informations
  ************************************************************************
  */
-void getNonAffNeighbour(Macroblock *currMB, int xN, int yN, int mb_size[2], PixelPos *pix)
+void getNonAffNeighbour (Macroblock *currMB, int xN, int yN, int mb_size[2], PixelPos *pix)
 {
   int maxW = mb_size[0], maxH = mb_size[1];
 
@@ -289,7 +289,7 @@ void getNonAffNeighbour(Macroblock *currMB, int xN, int yN, int mb_size[2], Pixe
  *    returns position informations
  ************************************************************************
  */
-void getAffNeighbour(Macroblock *currMB, int xN, int yN, int mb_size[2], PixelPos *pix)
+void getAffNeighbour (Macroblock *currMB, int xN, int yN, int mb_size[2], PixelPos *pix)
 {
   VideoParameters *p_Vid = currMB->p_Vid;
   int maxW, maxH;

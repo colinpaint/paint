@@ -26,7 +26,7 @@
 //}}}
 
 //{{{
-static void update_direct_mv_info_temporal(Macroblock *currMB)
+static void update_direct_mv_info_temporal (Macroblock *currMB)
 {
   VideoParameters *p_Vid = currMB->p_Vid;
   Slice *currSlice = currMB->p_Slice;
@@ -274,7 +274,7 @@ static void update_direct_mv_info_temporal(Macroblock *currMB)
 }
 //}}}
 //{{{
-static inline void update_neighbor_mvs(PicMotionParams **motion, const PicMotionParams *mv_info, int i4)
+static inline void update_neighbor_mvs (PicMotionParams **motion, const PicMotionParams *mv_info, int i4)
 {
   (*motion++)[i4 + 1] = *mv_info;
   (*motion  )[i4    ] = *mv_info;
@@ -289,7 +289,7 @@ static inline void update_neighbor_mvs(PicMotionParams **motion, const PicMotion
 *    Colocated info <= direct_inference is disabled.
 *************************************************************************************
 */
-int get_colocated_info_4x4(Macroblock *currMB, StorablePicture *list1, int i, int j)
+int get_colocated_info_4x4 (Macroblock *currMB, StorablePicture *list1, int i, int j)
 {
   if (list1->is_long_term)
     return 1;
@@ -318,7 +318,7 @@ int get_colocated_info_4x4(Macroblock *currMB, StorablePicture *list1, int i, in
 *    function that will access directly motion information
 *************************************************************************************
 */
-int get_colocated_info_8x8(Macroblock *currMB, StorablePicture *list1, int i, int j)
+int get_colocated_info_8x8 (Macroblock *currMB, StorablePicture *list1, int i, int j)
 {
   if (list1->is_long_term)
     return 1;
@@ -387,7 +387,7 @@ int get_colocated_info_8x8(Macroblock *currMB, StorablePicture *list1, int i, in
 //}}}
 
 //{{{
-static void update_direct_mv_info_spatial_8x8(Macroblock *currMB)
+static void update_direct_mv_info_spatial_8x8 (Macroblock *currMB)
 {
   Boolean has_direct = (currMB->b8mode[0] == 0) | (currMB->b8mode[1] == 0) | (currMB->b8mode[2] == 0) | (currMB->b8mode[3] == 0);
 
@@ -546,7 +546,7 @@ static void update_direct_mv_info_spatial_8x8(Macroblock *currMB)
 }
 //}}}
 //{{{
-static void update_direct_mv_info_spatial_4x4(Macroblock *currMB)
+static void update_direct_mv_info_spatial_4x4 (Macroblock *currMB)
 {
   Boolean has_direct = (currMB->b8mode[0] == 0) | (currMB->b8mode[1] == 0) | (currMB->b8mode[2] == 0) | (currMB->b8mode[3] == 0);
 
@@ -706,7 +706,7 @@ static void update_direct_mv_info_spatial_4x4(Macroblock *currMB)
 //}}}
 
 //{{{
-void update_direct_types(Slice *currSlice)
+void update_direct_types (Slice *currSlice)
 {
   if (currSlice->active_sps->direct_8x8_inference_flag)
     currSlice->update_direct_mv_info     = currSlice->direct_spatial_mv_pred_flag ? update_direct_mv_info_spatial_8x8 : update_direct_mv_info_temporal;

@@ -35,7 +35,7 @@
  ***********************************************************************
  */
 /* gets unsigned double stored in Big Endian Order */
-unsigned long GetBigDoubleWord(FILE *fp)
+unsigned long GetBigDoubleWord (FILE *fp)
 {
   unsigned long dw;
   dw =  (unsigned long) (fgetc(fp) & 0xFF);
@@ -67,7 +67,7 @@ unsigned long GetBigDoubleWord(FILE *fp)
  */
 
 /* Main Routine to verify HRD compliance */
-void calc_buffer(InputParameters *p_Inp)
+void calc_buffer (InputParameters *p_Inp)
 {
   unsigned long NumberLeakyBuckets, *Rmin, *Bmin, *Fmin;
   float B_interp,  F_interp;

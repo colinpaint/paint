@@ -26,7 +26,7 @@ extern void intra_pred_chroma      (Macroblock *currMB);
 extern void intra_pred_chroma_mbaff(Macroblock *currMB);
 
 //{{{
-void set_intra_prediction_modes(Slice *currSlice)
+void set_intra_prediction_modes (Slice *currSlice)
 {
   if (currSlice->mb_aff_frame_flag)
   {

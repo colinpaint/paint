@@ -30,34 +30,35 @@
 #endif
 //}}}
 
-// #define PRINT_BUFFERING_PERIOD_INFO    // uncomment to print buffering period SEI info
-// #define PRINT_PICTURE_TIMING_INFO      // uncomment to print picture timing SEI info
-// #define WRITE_MAP_IMAGE                // uncomment to write spare picture map
-// #define PRINT_SUBSEQUENCE_INFO         // uncomment to print sub-sequence SEI info
-// #define PRINT_SUBSEQUENCE_LAYER_CHAR   // uncomment to print sub-sequence layer characteristics SEI info
-// #define PRINT_SUBSEQUENCE_CHAR         // uncomment to print sub-sequence characteristics SEI info
-// #define PRINT_SCENE_INFORMATION        // uncomment to print scene information SEI info
-// #define PRINT_PAN_SCAN_RECT            // uncomment to print pan-scan rectangle SEI info
-// #define PRINT_RECOVERY_POINT           // uncomment to print random access point SEI info
-// #define PRINT_FILLER_PAYLOAD_INFO      // uncomment to print filler payload SEI info
-// #define PRINT_DEC_REF_PIC_MARKING      // uncomment to print decoded picture buffer management repetition SEI info
-// #define PRINT_RESERVED_INFO            // uncomment to print reserved SEI info
-// #define PRINT_USER_DATA_UNREGISTERED_INFO          // uncomment to print unregistered user data SEI info
-// #define PRINT_USER_DATA_REGISTERED_ITU_T_T35_INFO  // uncomment to print ITU-T T.35 user data SEI info
-// #define PRINT_FULL_FRAME_FREEZE_INFO               // uncomment to print full-frame freeze SEI info
-// #define PRINT_FULL_FRAME_FREEZE_RELEASE_INFO       // uncomment to print full-frame freeze release SEI info
-// #define PRINT_FULL_FRAME_SNAPSHOT_INFO             // uncomment to print full-frame snapshot SEI info
-// #define PRINT_PROGRESSIVE_REFINEMENT_END_INFO      // uncomment to print Progressive refinement segment start SEI info
-// #define PRINT_PROGRESSIVE_REFINEMENT_END_INFO      // uncomment to print Progressive refinement segment end SEI info
-// #define PRINT_MOTION_CONST_SLICE_GROUP_SET_INFO    // uncomment to print Motion-constrained slice group set SEI info
-// #define PRINT_FILM_GRAIN_CHARACTERISTICS_INFO      // uncomment to print Film grain characteristics SEI info
-// #define PRINT_DEBLOCKING_FILTER_DISPLAY_PREFERENCE_INFO // uncomment to print deblocking filter display preference SEI info
-// #define PRINT_STEREO_VIDEO_INFO_INFO               // uncomment to print stereo video SEI info
-// #define PRINT_TONE_MAPPING                         // uncomment to print tone-mapping SEI info
-// #define PRINT_POST_FILTER_HINT_INFO                // uncomment to print post-filter hint SEI info
-// #define PRINT_FRAME_PACKING_ARRANGEMENT_INFO       // uncomment to print frame packing arrangement SEI info
-// #define PRINT_GREEN_METADATA_INFO      // uncomment to print Green Metadata SEI info
-
+//{{{  optional defines
+//#define PRINT_BUFFERING_PERIOD_INFO    // uncomment to print buffering period SEI info
+//#define PRINT_PICTURE_TIMING_INFO      // uncomment to print picture timing SEI info
+//#define WRITE_MAP_IMAGE                // uncomment to write spare picture map
+//#define PRINT_SUBSEQUENCE_INFO         // uncomment to print sub-sequence SEI info
+//#define PRINT_SUBSEQUENCE_LAYER_CHAR   // uncomment to print sub-sequence layer characteristics SEI info
+//#define PRINT_SUBSEQUENCE_CHAR         // uncomment to print sub-sequence characteristics SEI info
+//#define PRINT_SCENE_INFORMATION        // uncomment to print scene information SEI info
+//#define PRINT_PAN_SCAN_RECT            // uncomment to print pan-scan rectangle SEI info
+//#define PRINT_RECOVERY_POINT           // uncomment to print random access point SEI info
+//#define PRINT_FILLER_PAYLOAD_INFO      // uncomment to print filler payload SEI info
+//#define PRINT_DEC_REF_PIC_MARKING      // uncomment to print decoded picture buffer management repetition SEI info
+//#define PRINT_RESERVED_INFO            // uncomment to print reserved SEI info
+//#define PRINT_USER_DATA_UNREGISTERED_INFO          // uncomment to print unregistered user data SEI info
+//#define PRINT_USER_DATA_REGISTERED_ITU_T_T35_INFO  // uncomment to print ITU-T T.35 user data SEI info
+//#define PRINT_FULL_FRAME_FREEZE_INFO               // uncomment to print full-frame freeze SEI info
+//#define PRINT_FULL_FRAME_FREEZE_RELEASE_INFO       // uncomment to print full-frame freeze release SEI info
+//#define PRINT_FULL_FRAME_SNAPSHOT_INFO             // uncomment to print full-frame snapshot SEI info
+//#define PRINT_PROGRESSIVE_REFINEMENT_END_INFO      // uncomment to print Progressive refinement segment start SEI info
+//#define PRINT_PROGRESSIVE_REFINEMENT_END_INFO      // uncomment to print Progressive refinement segment end SEI info
+//#define PRINT_MOTION_CONST_SLICE_GROUP_SET_INFO    // uncomment to print Motion-constrained slice group set SEI info
+//#define PRINT_FILM_GRAIN_CHARACTERISTICS_INFO      // uncomment to print Film grain characteristics SEI info
+//#define PRINT_DEBLOCKING_FILTER_DISPLAY_PREFERENCE_INFO // uncomment to print deblocking filter display preference SEI info
+//#define PRINT_STEREO_VIDEO_INFO_INFO               // uncomment to print stereo video SEI info
+//#define PRINT_TONE_MAPPING                         // uncomment to print tone-mapping SEI info
+//#define PRINT_POST_FILTER_HINT_INFO                // uncomment to print post-filter hint SEI info
+//#define PRINT_FRAME_PACKING_ARRANGEMENT_INFO       // uncomment to print frame packing arrangement SEI info
+//#define PRINT_GREEN_METADATA_INFO      // uncomment to print Green Metadata SEI info
+//}}}
 //{{{
 /*!
  ************************************************************************
@@ -72,7 +73,7 @@
  *
  ************************************************************************
  */
-void InterpretSEIMessage(byte* msg, int size, VideoParameters *p_Vid, Slice *pSlice)
+void InterpretSEIMessage (byte* msg, int size, VideoParameters *p_Vid, Slice *pSlice)
 {
   int payload_type = 0;
   int payload_size = 0;
@@ -205,7 +206,7 @@ void InterpretSEIMessage(byte* msg, int size, VideoParameters *p_Vid, Slice *pSl
 *
 ************************************************************************
 */
-void interpret_spare_pic( byte* payload, int size, VideoParameters *p_Vid )
+void interpret_spare_pic (byte* payload, int size, VideoParameters *p_Vid )
 {
   int i,x,y;
   Bitstream* buf;
@@ -446,6 +447,7 @@ void interpret_spare_pic( byte* payload, int size, VideoParameters *p_Vid )
   free(buf);
 }
 //}}}
+
 //{{{
 /*!
  ************************************************************************
@@ -460,7 +462,7 @@ void interpret_spare_pic( byte* payload, int size, VideoParameters *p_Vid )
  *
  ************************************************************************
  */
-void interpret_subsequence_info( byte* payload, int size, VideoParameters *p_Vid )
+void interpret_subsequence_info (byte* payload, int size, VideoParameters *p_Vid )
 {
   Bitstream* buf;
   int sub_seq_layer_num, sub_seq_id, first_ref_pic_flag, leading_non_ref_pic_flag, last_pic_flag,
@@ -518,7 +520,7 @@ void interpret_subsequence_info( byte* payload, int size, VideoParameters *p_Vid
  *
  ************************************************************************
  */
-void interpret_subsequence_layer_characteristics_info( byte* payload, int size, VideoParameters *p_Vid )
+void interpret_subsequence_layer_characteristics_info (byte* payload, int size, VideoParameters *p_Vid )
 {
   Bitstream* buf;
   long num_sub_layers, accurate_statistics_flag, average_bit_rate, average_frame_rate;
@@ -567,7 +569,7 @@ void interpret_subsequence_layer_characteristics_info( byte* payload, int size, 
  *
  ************************************************************************
  */
-void interpret_subsequence_characteristics_info( byte* payload, int size, VideoParameters *p_Vid )
+void interpret_subsequence_characteristics_info (byte* payload, int size, VideoParameters *p_Vid )
 {
   Bitstream* buf;
   int i;
@@ -659,7 +661,7 @@ void interpret_subsequence_characteristics_info( byte* payload, int size, VideoP
  *
  ************************************************************************
  */
-void interpret_scene_information( byte* payload, int size, VideoParameters *p_Vid )
+void interpret_scene_information (byte* payload, int size, VideoParameters *p_Vid )
 {
   Bitstream* buf;
   int scene_id, scene_transition_type, second_scene_id;
@@ -707,7 +709,7 @@ void interpret_scene_information( byte* payload, int size, VideoParameters *p_Vi
  *
  ************************************************************************
  */
-void interpret_filler_payload_info( byte* payload, int size, VideoParameters *p_Vid )
+void interpret_filler_payload_info (byte* payload, int size, VideoParameters *p_Vid )
 {
   int payload_cnt = 0;
 
@@ -737,6 +739,7 @@ void interpret_filler_payload_info( byte* payload, int size, VideoParameters *p_
 #endif
 }
 //}}}
+
 //{{{
 /*!
  ************************************************************************
@@ -751,7 +754,7 @@ void interpret_filler_payload_info( byte* payload, int size, VideoParameters *p_
  *
  ************************************************************************
  */
-void interpret_user_data_unregistered_info( byte* payload, int size, VideoParameters *p_Vid )
+void interpret_user_data_unregistered_info (byte* payload, int size, VideoParameters *p_Vid )
 {
   int offset = 0;
   byte payload_byte;
@@ -800,7 +803,7 @@ void interpret_user_data_unregistered_info( byte* payload, int size, VideoParame
  *
  ************************************************************************
  */
-void interpret_user_data_registered_itu_t_t35_info( byte* payload, int size, VideoParameters *p_Vid )
+void interpret_user_data_registered_itu_t_t35_info (byte* payload, int size, VideoParameters *p_Vid )
 {
   int offset = 0;
   byte itu_t_t35_country_code, itu_t_t35_country_code_extension_byte, payload_byte;
@@ -833,6 +836,7 @@ void interpret_user_data_registered_itu_t_t35_info( byte* payload, int size, Vid
 }
 
 //}}}
+
 //{{{
 /*!
  ************************************************************************
@@ -847,7 +851,7 @@ void interpret_user_data_registered_itu_t_t35_info( byte* payload, int size, Vid
  *
  ************************************************************************
  */
-void interpret_pan_scan_rect_info( byte* payload, int size, VideoParameters *p_Vid )
+void interpret_pan_scan_rect_info (byte* payload, int size, VideoParameters *p_Vid )
 {
   int pan_scan_rect_cancel_flag;
   int pan_scan_cnt_minus1, i;
@@ -958,7 +962,7 @@ void interpret_recovery_point_info( byte* payload, int size, VideoParameters *p_
  *
  ************************************************************************
  */
-void interpret_dec_ref_pic_marking_repetition_info( byte* payload, int size, VideoParameters *p_Vid, Slice *pSlice )
+void interpret_dec_ref_pic_marking_repetition_info (byte* payload, int size, VideoParameters *p_Vid, Slice *pSlice )
 {
   int original_idr_flag, original_frame_num;
   int original_field_pic_flag, original_bottom_field_flag;
@@ -1078,6 +1082,7 @@ void interpret_dec_ref_pic_marking_repetition_info( byte* payload, int size, Vid
 #endif
 }
 //}}}
+
 //{{{
 /*!
  ************************************************************************
@@ -1092,7 +1097,7 @@ void interpret_dec_ref_pic_marking_repetition_info( byte* payload, int size, Vid
  *
  ************************************************************************
  */
-void interpret_full_frame_freeze_info( byte* payload, int size, VideoParameters *p_Vid )
+void interpret_full_frame_freeze_info (byte* payload, int size, VideoParameters *p_Vid )
 {
   int full_frame_freeze_repetition_period;
   Bitstream* buf;
@@ -1128,7 +1133,7 @@ void interpret_full_frame_freeze_info( byte* payload, int size, VideoParameters 
  *
  ************************************************************************
  */
-void interpret_full_frame_freeze_release_info( byte* payload, int size, VideoParameters *p_Vid )
+void interpret_full_frame_freeze_release_info (byte* payload, int size, VideoParameters *p_Vid )
 {
 #ifdef PRINT_FULL_FRAME_FREEZE_RELEASE_INFO
   printf("Full-frame freeze release SEI message\n");
@@ -1157,7 +1162,7 @@ void interpret_full_frame_freeze_release_info( byte* payload, int size, VideoPar
  *
  ************************************************************************
  */
-void interpret_full_frame_snapshot_info( byte* payload, int size, VideoParameters *p_Vid )
+void interpret_full_frame_snapshot_info (byte* payload, int size, VideoParameters *p_Vid )
 {
   int snapshot_id;
 
@@ -1182,6 +1187,7 @@ void interpret_full_frame_snapshot_info( byte* payload, int size, VideoParameter
 #endif
 }
 //}}}
+
 //{{{
 /*!
  ************************************************************************
@@ -1196,7 +1202,7 @@ void interpret_full_frame_snapshot_info( byte* payload, int size, VideoParameter
  *
  ************************************************************************
  */
-void interpret_progressive_refinement_start_info( byte* payload, int size, VideoParameters *p_Vid )
+void interpret_progressive_refinement_start_info (byte* payload, int size, VideoParameters *p_Vid )
 {
   int progressive_refinement_id, num_refinement_steps_minus1;
 
@@ -1237,7 +1243,7 @@ void interpret_progressive_refinement_start_info( byte* payload, int size, Video
  *
  ************************************************************************
  */
-void interpret_progressive_refinement_end_info( byte* payload, int size, VideoParameters *p_Vid )
+void interpret_progressive_refinement_end_info (byte* payload, int size, VideoParameters *p_Vid )
 {
   int progressive_refinement_id;
 
@@ -1262,6 +1268,7 @@ void interpret_progressive_refinement_end_info( byte* payload, int size, VideoPa
 #endif
 }
 //}}}
+
 //{{{
 /*!
  ************************************************************************
@@ -1276,7 +1283,7 @@ void interpret_progressive_refinement_end_info( byte* payload, int size, VideoPa
  *
  ************************************************************************
  */
-void interpret_motion_constrained_slice_group_set_info( byte* payload, int size, VideoParameters *p_Vid )
+void interpret_motion_constrained_slice_group_set_info (byte* payload, int size, VideoParameters *p_Vid )
 {
   int num_slice_groups_minus1, slice_group_id, exact_match_flag, pan_scan_rect_flag, pan_scan_rect_id;
   int i;
@@ -1343,7 +1350,7 @@ void interpret_motion_constrained_slice_group_set_info( byte* payload, int size,
  *
  ************************************************************************
  */
-void interpret_film_grain_characteristics_info( byte* payload, int size, VideoParameters *p_Vid )
+void interpret_film_grain_characteristics_info (byte* payload, int size, VideoParameters *p_Vid )
 {
   int film_grain_characteristics_cancel_flag;
   int model_id, separate_colour_description_present_flag;
@@ -1458,7 +1465,7 @@ void interpret_film_grain_characteristics_info( byte* payload, int size, VideoPa
  *
  ************************************************************************
  */
-void interpret_deblocking_filter_display_preference_info( byte* payload, int size, VideoParameters *p_Vid )
+void interpret_deblocking_filter_display_preference_info (byte* payload, int size, VideoParameters *p_Vid )
 {
   int deblocking_display_preference_cancel_flag;
   int display_prior_to_deblocking_preferred_flag, dec_frame_buffering_constraint_flag, deblocking_display_preference_repetition_period;
@@ -1506,7 +1513,7 @@ void interpret_deblocking_filter_display_preference_info( byte* payload, int siz
  *
  ************************************************************************
  */
-void interpret_stereo_video_info_info( byte* payload, int size, VideoParameters *p_Vid )
+void interpret_stereo_video_info_info (byte* payload, int size, VideoParameters *p_Vid )
 {
   int field_views_flags;
   int top_field_is_left_view_flag, current_frame_is_left_view_flag, next_frame_is_second_view_flag;
@@ -1568,7 +1575,7 @@ void interpret_stereo_video_info_info( byte* payload, int size, VideoParameters 
  *
  ************************************************************************
  */
-void interpret_reserved_info( byte* payload, int size, VideoParameters *p_Vid )
+void interpret_reserved_info (byte* payload, int size, VideoParameters *p_Vid )
 {
   int offset = 0;
   byte payload_byte;
@@ -1604,7 +1611,7 @@ void interpret_reserved_info( byte* payload, int size, VideoParameters *p_Vid )
  *
  ************************************************************************
  */
-void interpret_buffering_period_info( byte* payload, int size, VideoParameters *p_Vid )
+void interpret_buffering_period_info (byte* payload, int size, VideoParameters *p_Vid )
 {
   int seq_parameter_set_id, initial_cpb_removal_delay, initial_cpb_removal_delay_offset;
   unsigned int k;
@@ -1683,7 +1690,7 @@ void interpret_buffering_period_info( byte* payload, int size, VideoParameters *
  *
  ************************************************************************
  */
-void interpret_picture_timing_info( byte* payload, int size, VideoParameters *p_Vid )
+void interpret_picture_timing_info (byte* payload, int size, VideoParameters *p_Vid )
 {
   seq_parameter_set_rbsp_t *active_sps = p_Vid->active_sps;
 
@@ -1893,7 +1900,7 @@ void interpret_picture_timing_info( byte* payload, int size, VideoParameters *p_
  *     the image pointer
  ************************************************************************
  */
-void interpret_frame_packing_arrangement_info( byte* payload, int size, VideoParameters *p_Vid )
+void interpret_frame_packing_arrangement_info (byte* payload, int size, VideoParameters *p_Vid )
 {
   frame_packing_arrangement_information_struct seiFramePackingArrangement;
   Bitstream* buf;
@@ -2006,7 +2013,7 @@ typedef struct
 } tone_mapping_struct_tmp;
 //}}}
 //{{{
-void interpret_tone_mapping( byte* payload, int size, VideoParameters *p_Vid )
+void interpret_tone_mapping (byte* payload, int size, VideoParameters *p_Vid )
 {
   tone_mapping_struct_tmp seiToneMappingTmp;
   Bitstream* buf;
@@ -2179,14 +2186,14 @@ void tone_map (imgpel** imgX, imgpel* lut, int size_x, int size_y)
 }
 //}}}
 //{{{
-void init_tone_mapping_sei(ToneMappingSEI *seiToneMapping)
+void init_tone_mapping_sei (ToneMappingSEI *seiToneMapping)
 {
   seiToneMapping->seiHasTone_mapping = FALSE;
   seiToneMapping->count = 0;
 }
 //}}}
 //{{{
-void update_tone_mapping_sei(ToneMappingSEI *seiToneMapping)
+void update_tone_mapping_sei (ToneMappingSEI *seiToneMapping)
 {
 
   if(seiToneMapping->tone_map_repetition_period == 0)
@@ -2221,7 +2228,7 @@ void update_tone_mapping_sei(ToneMappingSEI *seiToneMapping)
  *
  ************************************************************************
  */
-void interpret_post_filter_hints_info( byte* payload, int size, VideoParameters *p_Vid )
+void interpret_post_filter_hints_info (byte* payload, int size, VideoParameters *p_Vid )
 {
   Bitstream* buf;
   unsigned int filter_hint_size_y, filter_hint_size_x, filter_hint_type, color_component, cx, cy, additional_extension_flag;
@@ -2267,7 +2274,7 @@ void interpret_post_filter_hints_info( byte* payload, int size, VideoParameters 
 }
 //}}}
 //{{{
-void interpret_green_metadata_info(byte* payload, int size, VideoParameters *p_Vid )
+void interpret_green_metadata_info (byte* payload, int size, VideoParameters *p_Vid )
 {
   Green_metadata_information_struct seiGreenMetadataInfo;
 

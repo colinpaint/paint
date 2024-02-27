@@ -22,7 +22,7 @@
 //}}}
 
 //{{{
-static void intra_chroma_DC_single_mbaff(imgpel **curr_img, int up_avail, int left_avail, PixelPos up, PixelPos left[17], int blk_x, int blk_y, int *pred, int direction )
+static void intra_chroma_DC_single_mbaff (imgpel **curr_img, int up_avail, int left_avail, PixelPos up, PixelPos left[17], int blk_x, int blk_y, int *pred, int direction )
 {
   int i;
   int s0 = 0;
@@ -42,7 +42,7 @@ static void intra_chroma_DC_single_mbaff(imgpel **curr_img, int up_avail, int le
 }
 //}}}
 //{{{
-void intrapred_chroma_ver_mbaff(Macroblock *currMB)
+void intrapred_chroma_ver_mbaff (Macroblock *currMB)
 {
   Slice *currSlice = currMB->p_Slice;
   VideoParameters *p_Vid = currMB->p_Vid;
@@ -80,7 +80,7 @@ void intrapred_chroma_ver_mbaff(Macroblock *currMB)
 //}}}
 
 //{{{
-static void intra_chroma_DC_all_mbaff(imgpel **curr_img, int up_avail, int left_avail, PixelPos up, PixelPos left[17], int blk_x, int blk_y, int *pred )
+static void intra_chroma_DC_all_mbaff (imgpel **curr_img, int up_avail, int left_avail, PixelPos up, PixelPos left[17], int blk_x, int blk_y, int *pred )
 {
   int i;
   int s0 = 0, s1 = 0;
@@ -109,7 +109,7 @@ static void intra_chroma_DC_all_mbaff(imgpel **curr_img, int up_avail, int left_
  *    outside since they are repeated for both components for no reason.
  ************************************************************************
  */
-void intra_pred_chroma_mbaff(Macroblock *currMB)
+void intra_pred_chroma_mbaff (Macroblock *currMB)
 {
   Slice *currSlice = currMB->p_Slice;
   VideoParameters *p_Vid = currMB->p_Vid;

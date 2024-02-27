@@ -22,7 +22,7 @@
 //}}}
 
 //{{{
-static void intra_chroma_DC_single(imgpel **curr_img, int up_avail, int left_avail, PixelPos up, PixelPos left, int blk_x, int blk_y, int *pred, int direction )
+static void intra_chroma_DC_single (imgpel **curr_img, int up_avail, int left_avail, PixelPos up, PixelPos left, int blk_x, int blk_y, int *pred, int direction )
 {
   int i;
   int s0 = 0;
@@ -45,7 +45,7 @@ static void intra_chroma_DC_single(imgpel **curr_img, int up_avail, int left_ava
 }
 //}}}
 //{{{
-static void intra_chroma_DC_all(imgpel **curr_img, int up_avail, int left_avail, PixelPos up, PixelPos left, int blk_x, int blk_y, int *pred )
+static void intra_chroma_DC_all (imgpel **curr_img, int up_avail, int left_avail, PixelPos up, PixelPos left, int blk_x, int blk_y, int *pred )
 {
   int i;
   int s0 = 0, s1 = 0;
@@ -75,7 +75,7 @@ static void intra_chroma_DC_all(imgpel **curr_img, int up_avail, int left_avail,
 //}}}
 
 //{{{
-static void intrapred_chroma_dc(Macroblock *currMB)
+static void intrapred_chroma_dc (Macroblock *currMB)
 {
   Slice *currSlice = currMB->p_Slice;
   VideoParameters *p_Vid = currMB->p_Vid;
@@ -173,7 +173,7 @@ static void intrapred_chroma_dc(Macroblock *currMB)
 }
 //}}}
 //{{{
-static void intrapred_chroma_hor(Macroblock *currMB)
+static void intrapred_chroma_hor (Macroblock *currMB)
 {
   VideoParameters *p_Vid = currMB->p_Vid;
   PixelPos a;  //!< pixel positions p(-1, -1..16)
@@ -226,7 +226,7 @@ static void intrapred_chroma_hor(Macroblock *currMB)
 }
 //}}}
 //{{{
-static void intrapred_chroma_ver(Macroblock *currMB)
+static void intrapred_chroma_ver (Macroblock *currMB)
 {
   Slice *currSlice = currMB->p_Slice;
   VideoParameters *p_Vid = currMB->p_Vid;
@@ -262,7 +262,7 @@ static void intrapred_chroma_ver(Macroblock *currMB)
 }
 //}}}
 //{{{
-static void intrapred_chroma_plane(Macroblock *currMB)
+static void intrapred_chroma_plane (Macroblock *currMB)
 {
   Slice *currSlice = currMB->p_Slice;
   VideoParameters *p_Vid = currMB->p_Vid;
@@ -350,7 +350,7 @@ static void intrapred_chroma_plane(Macroblock *currMB)
  *    outside since they are repeated for both components for no reason.
  ************************************************************************
  */
-void intra_pred_chroma(Macroblock *currMB)
+void intra_pred_chroma (Macroblock *currMB)
 {
   switch (currMB->c_ipred_mode)
   {
