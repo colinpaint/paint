@@ -145,10 +145,10 @@ namespace {
           if (stream && stream->isEnabled()) {
             uint8_t* buffer = (uint8_t*)malloc (pidInfo.getBufSize());
             memcpy (buffer, pidInfo.mBuffer, pidInfo.getBufSize());
-
             string frameInfo = ".";
             if (pidInfo.getPid() == service.getVideoPid())
-              frameInfo = cDvbUtils::getFrameInfo (buffer, pidInfo.getBufSize(), service.getVideoStreamTypeId() == 27);
+              frameInfo = cDvbUtils::getFrameInfo (buffer, pidInfo.getBufSize(), 
+                                                   service.getVideoStreamTypeId() == 27);
             stream->getRender().decodePes (buffer, pidInfo.getBufSize(), pidInfo.getPts(), frameInfo);
             }
           });
@@ -236,14 +236,13 @@ namespace {
             uint8_t* buffer = (uint8_t*)malloc (pidInfo.getBufSize());
             memcpy (buffer, pidInfo.mBuffer, pidInfo.getBufSize());
             string frameInfo = ".";
-            if (kPesDebug) {
-              if (pidInfo.getPid() == service.getVideoPid()) {
-                frameInfo = cDvbUtils::getFrameInfo (buffer, pidInfo.getBufSize(), true);
+            if (pidInfo.getPid() == service.getVideoPid()) {
+              frameInfo = cDvbUtils::getFrameInfo (buffer, pidInfo.getBufSize(), true);
+              if (kPesDebug) 
                 cLog::log (LOGINFO, fmt::format ("{}{} {:6d} pts:{} dts:{}",
                                                  stream->getLabel(), frameInfo, pidInfo.getBufSize(),
                                                  getPtsString (pidInfo.getPts()),
                                                  getPtsString (pidInfo.getDts()) ));
-                }
               }
             stream->getRender().decodePes (buffer, pidInfo.getBufSize(), pidInfo.getPts(), frameInfo);
             }
@@ -280,7 +279,6 @@ namespace {
             mTransportStream->demux (chunk, bytesRead);
           else
             break;
-
           while (mTransportStream->throttle())
             this_thread::sleep_for (1ms);
           }

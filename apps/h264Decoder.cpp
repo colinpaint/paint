@@ -1,83 +1,84 @@
 // h264Decoder test
 //{{{  includes
 #define _CRT_SECURE_NO_WARNINGS
-#include <sys/stat.h>
 #include <cstdint>
 #include <string>
+#include <sys/stat.h>
+
+// common
 #include "../date/include/date/date.h"
 #include "../common/basicTypes.h"
 #include "../common/fileUtils.h"
 #include "../common/cLog.h"
 
+// h264
 #include "../h264/win32.h"
 #include "../h264/h264decoder.h"
 
 using namespace std;
 //}}}
 
-namespace {
-  //{{{
-  int WriteOneFrame (DecodedPicList* pDecPic, int bOutputAllFrames) {
-  // if bOutputAllFrames is 1, then output all valid frames to file onetime;
-  // else output the first valid frame and move the buffer to the end of list;
+//{{{
+int WriteOneFrame (DecodedPicList* pDecPic, int bOutputAllFrames) {
+// if bOutputAllFrames is 1, then output all valid frames to file onetime;
+// else output the first valid frame and move the buffer to the end of list;
 
-    int iOutputFrame = 0;
-    DecodedPicList* pPic = pDecPic;
+  int iOutputFrame = 0;
+  DecodedPicList* pPic = pDecPic;
 
-    cLog::log (LOGINFO, fmt::format ("WriteOneFrame {}x{}:{} format:{}:{} stride:{}x{} yuv:{:x}:{:x}:{:x}",
-                                     pPic->iWidth * ((pPic->iBitDepth+7)>>3),
-                                     pPic->iHeight,
-                                     pPic->iBitDepth,
-                                     pPic->iYUVStorageFormat, pPic->bValid,
-                                     pPic->iYBufStride,
-                                     pPic->iUVBufStride,
-                                     (uint64_t)pPic->pY,
-                                     (uint64_t)pPic->pU,
-                                     (uint64_t)pPic->pV
-                                     ));
+  cLog::log (LOGINFO, fmt::format ("WriteOneFrame {}x{}:{} format:{}:{} stride:{}x{} yuv:{:x}:{:x}:{:x}",
+                                   pPic->iWidth * ((pPic->iBitDepth+7)>>3),
+                                   pPic->iHeight,
+                                   pPic->iBitDepth,
+                                   pPic->iYUVStorageFormat, pPic->bValid,
+                                   pPic->iYBufStride,
+                                   pPic->iUVBufStride,
+                                   (uint64_t)pPic->pY,
+                                   (uint64_t)pPic->pU,
+                                   (uint64_t)pPic->pV
+                                   ));
 
-    if (pPic && (((pPic->iYUVStorageFormat == 2) && pPic->bValid == 3) ||
-                 ((pPic->iYUVStorageFormat != 2) && pPic->bValid == 1)) ) {
-      int iWidth = pPic->iWidth * ((pPic->iBitDepth+7)>>3);
-      int iHeight = pPic->iHeight;
-      int iStride = pPic->iYBufStride;
+  if (pPic && (((pPic->iYUVStorageFormat == 2) && pPic->bValid == 3) ||
+               ((pPic->iYUVStorageFormat != 2) && pPic->bValid == 1)) ) {
+    int iWidth = pPic->iWidth * ((pPic->iBitDepth+7)>>3);
+    int iHeight = pPic->iHeight;
+    int iStride = pPic->iYBufStride;
 
-      int iWidthUV;
-      int iHeightUV;
-      if (pPic->iYUVFormat != YUV444)
-        iWidthUV = pPic->iWidth>>1;
-      else
-        iWidthUV = pPic->iWidth;
-      if (pPic->iYUVFormat == YUV420)
-        iHeightUV = pPic->iHeight >> 1;
-      else
-        iHeightUV = pPic->iHeight;
-      iWidthUV *= ((pPic->iBitDepth + 7) >> 3);
-      int iStrideUV = pPic->iUVBufStride;
+    int iWidthUV;
+    int iHeightUV;
+    if (pPic->iYUVFormat != YUV444)
+      iWidthUV = pPic->iWidth>>1;
+    else
+      iWidthUV = pPic->iWidth;
+    if (pPic->iYUVFormat == YUV420)
+      iHeightUV = pPic->iHeight >> 1;
+    else
+      iHeightUV = pPic->iHeight;
+    iWidthUV *= ((pPic->iBitDepth + 7) >> 3);
+    int iStrideUV = pPic->iUVBufStride;
 
-      do {
-        uint8_t* pbBuf;
-        pbBuf = pPic->pY;
-        //for (i = 0; i < iHeight; i++)
-        //  write (hFileOutput, pbBuf+i*iStride, iWidth);
+    do {
+      uint8_t* pbBuf;
+      pbBuf = pPic->pY;
+      //for (i = 0; i < iHeight; i++)
+      //  write (hFileOutput, pbBuf+i*iStride, iWidth);
 
-        pbBuf = pPic->pU;
-        //for(i=0; i < iHeightUV; i++) {
-        //  write( hFileOutput, pbBuf+i*iStrideUV, iWidthUV);
+      pbBuf = pPic->pU;
+      //for(i=0; i < iHeightUV; i++) {
+      //  write( hFileOutput, pbBuf+i*iStrideUV, iWidthUV);
 
-        pbBuf = pPic->pV;
-        //for (i = 0; i < iHeightUV; i++) {
-        //  write(hFileOutput, pbBuf+i*iStrideUV, iWidthUV);
+      pbBuf = pPic->pV;
+      //for (i = 0; i < iHeightUV; i++) {
+      //  write(hFileOutput, pbBuf+i*iStrideUV, iWidthUV);
 
-        pPic->bValid = 0;
-        pPic = pPic->pNext;
-        } while (pPic != NULL && pPic->bValid && bOutputAllFrames);
-      }
-
-    return iOutputFrame;
+      pPic->bValid = 0;
+      pPic = pPic->pNext;
+      } while (pPic != NULL && pPic->bValid && bOutputAllFrames);
     }
-  //}}}
+
+  return iOutputFrame;
   }
+//}}}
 
 //{{{
 int main (int numArgs, char* args[]) {
@@ -93,10 +94,9 @@ int main (int numArgs, char* args[]) {
     string param = args[i];
     fileName = param;
     }
+
   cLog::init (LOGINFO);
   cLog::log (LOGNOTICE, fmt::format ("h264DecoderApp"));
-
-  init_time();
 
   // input params
   memset (&InputParams, 0, sizeof(InputParameters));

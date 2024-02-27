@@ -56,7 +56,7 @@ extern "C" {
 using namespace std;
 using namespace utils;
 //}}}
-#define kDump264 
+#define kDump264
 constexpr bool kMotionVectors = true;
 namespace {
   //{{{
@@ -354,17 +354,17 @@ namespace {
                 case 0:
                   frameType = 'P';
                   s += fmt::format ("nonIDR:{}:{}:{} ", nalRefIdc, nalSubtype, frameType);
-                  break;
+                  return fmt::format ("{} {}", frameType, s);
 
                 case 1:
                   frameType = 'B';
                   s += fmt::format ("nonIDR:{}:{}:{} ", nalRefIdc, nalSubtype, frameType);
-                  break;
+                  return fmt::format ("{} {}", frameType, s);
 
                 case 2:
                   frameType = 'I';
                   s += fmt::format ("nonIDR:{}:{}:{} ", nalRefIdc, nalSubtype, frameType);
-                  break;
+                  return fmt::format ("{} {}", frameType, s);
 
                 default:
                   s += fmt::format ("nonIDR:{}:unknownSubType:{}:{} ", nalRefIdc, nalSubtype, frameType);
@@ -399,19 +399,19 @@ namespace {
                 case 5:
                   frameType = 'P';
                   s += fmt::format ("IDR:{}:{}:{} ", nalRefIdc, nalSubtype, frameType);
-                  break;
+                  return fmt::format ("{} {}", frameType, s);
 
                 case 2:
                 case 6:
                   frameType =  'B';
                   s += fmt::format ("IDR:{}:{}:{} ", nalRefIdc, nalSubtype, frameType);
-                  break;
+                  return fmt::format ("{} {}", frameType, s);
 
                 case 3:
                 case 7:
                   frameType =  'I';
                   s += fmt::format ("IDR:{}:{}:{} ", nalRefIdc, nalSubtype, frameType);
-                  break;
+                  return fmt::format ("{} {}", frameType, s);
 
                 default:
                   s += fmt::format ("IDR:{}:unknownSubType:{} ", nalRefIdc, nalSubtype);
@@ -631,7 +631,7 @@ public:
   cVideoFrame* getVideoFrame() { return mVideoFrame; }
 
   void togglePlay() { mPlaying = !mPlaying; }
-  void skipPlay (int64_t skipPts) {}
+  void skipPlay (int64_t skipPts) { (void)skipPts; }
   //{{{
   void read() {
 
@@ -727,12 +727,15 @@ public:
       i = skipToI (i);
       while (i < mPes.size()) {
         // decode first frame of gop
-        decode (i, mPes[i++]);
+        decode (i, mPes[i]);
+        i++;
         this_thread::sleep_for (40ms);
 
         // decode rest of gop
-        while (mPes[i].mFrameInfo.front() != 'I')
-          decode (i, mPes[i++]);
+        while (mPes[i].mFrameInfo.front() != 'I') {
+          decode (i, mPes[i]);
+          i++;
+          }
         // skip 8 gop
         for (int j = 0; j < 4; j++)
           i = skipToI (++i);
@@ -792,6 +795,7 @@ private:
       mDecoder->decode (pes.mData, pes.mSize, pes.mPts, pes.mFrameInfo,
         // allocFrame lambda
         [&](int64_t pts) noexcept {
+          (void)pts;
           mVideoFrameIndex = (mVideoFrameIndex + 1) % kVideoFrames;
           mVideoFrames[mVideoFrameIndex]->releaseResources();
           return mVideoFrames[mVideoFrameIndex];
