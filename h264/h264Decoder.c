@@ -75,8 +75,8 @@
 
 DecoderParams* p_Dec;
 char errortext[ET_SIZE];
-static void free_slice (Slice* currSlic);
 
+static void free_slice (Slice* currSlic);
 //{{{
 /*!
  ************************************************************************
