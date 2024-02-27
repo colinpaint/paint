@@ -1155,7 +1155,7 @@ int FinitDecoder (DecodedPicList** ppDecPicList) {
   #endif
 
   if (pDecoder->p_Inp->FileFormat == PAR_OF_ANNEXB)
-    reset_annex_b(pDecoder->p_Vid->annex_b);
+    reset_annex_b (pDecoder->p_Vid->annex_b);
 
   pDecoder->p_Vid->newframe = 0;
   pDecoder->p_Vid->previous_frame_num = 0;

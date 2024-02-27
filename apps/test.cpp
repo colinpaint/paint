@@ -48,6 +48,10 @@ extern "C" {
 #include "../decoders/cFFmpegVideoFrame.h"
 #include "../decoders/cDecoder.h"
 
+// h264
+#include "../h264/win32.h"
+#include "../h264/h264decoder.h"
+
 // app
 #include "../app/cApp.h"
 #include "../app/cPlatform.h"

@@ -19,14 +19,11 @@ using namespace std;
 //}}}
 
 //{{{
-int WriteOneFrame (DecodedPicList* pDecPic, int bOutputAllFrames) {
-// if bOutputAllFrames is 1, then output all valid frames to file onetime;
-// else output the first valid frame and move the buffer to the end of list;
+void outputPicList (DecodedPicList* pDecPic, int bOutputAllFrames) {
 
-  int iOutputFrame = 0;
   DecodedPicList* pPic = pDecPic;
 
-  cLog::log (LOGINFO, fmt::format ("WriteOneFrame {}x{}:{} format:{}:{} stride:{}x{} yuv:{:x}:{:x}:{:x}",
+  cLog::log (LOGINFO, fmt::format ("outputPicList {}x{}:{} format:{}:{} stride:{}x{} yuv:{:x}:{:x}:{:x}",
                                    pPic->iWidth * ((pPic->iBitDepth+7)>>3),
                                    pPic->iHeight,
                                    pPic->iBitDepth,
@@ -43,31 +40,21 @@ int WriteOneFrame (DecodedPicList* pDecPic, int bOutputAllFrames) {
     int iWidth = pPic->iWidth * ((pPic->iBitDepth+7)>>3);
     int iHeight = pPic->iHeight;
     int iStride = pPic->iYBufStride;
-
-    int iWidthUV;
-    int iHeightUV;
-    if (pPic->iYUVFormat != YUV444)
-      iWidthUV = pPic->iWidth>>1;
-    else
-      iWidthUV = pPic->iWidth;
-    if (pPic->iYUVFormat == YUV420)
-      iHeightUV = pPic->iHeight >> 1;
-    else
-      iHeightUV = pPic->iHeight;
+    int iWidthUV = (pPic->iYUVFormat != YUV444) ? pPic->iWidth>>1 : pPic->iWidth;
+    int iHeightUV = (pPic->iYUVFormat == YUV420) ? pPic->iHeight >> 1 : pPic->iHeight;
     iWidthUV *= ((pPic->iBitDepth + 7) >> 3);
     int iStrideUV = pPic->iUVBufStride;
 
     do {
-      uint8_t* pbBuf;
-      pbBuf = pPic->pY;
+      //uint8_t* pbBuf = pPic->pY;
       //for (i = 0; i < iHeight; i++)
       //  write (hFileOutput, pbBuf+i*iStride, iWidth);
 
-      pbBuf = pPic->pU;
+      //pbBuf = pPic->pU;
       //for(i=0; i < iHeightUV; i++) {
       //  write( hFileOutput, pbBuf+i*iStrideUV, iWidthUV);
 
-      pbBuf = pPic->pV;
+      //pbBuf = pPic->pV;
       //for (i = 0; i < iHeightUV; i++) {
       //  write(hFileOutput, pbBuf+i*iStrideUV, iWidthUV);
 
@@ -75,8 +62,6 @@ int WriteOneFrame (DecodedPicList* pDecPic, int bOutputAllFrames) {
       pPic = pPic->pNext;
       } while (pPic != NULL && pPic->bValid && bOutputAllFrames);
     }
-
-  return iOutputFrame;
   }
 //}}}
 
@@ -109,7 +94,7 @@ int main (int numArgs, char* args[]) {
   InputParams.ref_poc_gap = 2;
   InputParams.bDisplayDecParams = 1;
   InputParams.dpb_plus[0] = 1;
-  //{{{  more input params
+  //{{{  optional input params
   //InputParams.ref_offset;
   //InputParams.write_uv;
   //InputParams.silent;
@@ -130,29 +115,24 @@ int main (int numArgs, char* args[]) {
 
   iRet = OpenDecoder (&InputParams);
   if (iRet != DEC_OPEN_NOERR) {
-    fprintf (stderr, "Open encoder failed: 0x%x!\n", iRet);
+    cLog::log (LOGERROR, "ppen encoder failed");
     return -1;
     }
 
-  // decoding;
   do {
     iRet = DecodeOneFrame (&pDecPicList);
-    if (iRet == DEC_EOS || iRet==DEC_SUCCEED) {
-      // process the decoded picture, output or display;
-      iFramesOutput += WriteOneFrame (pDecPicList, 0);
-      iFramesDecoded++;
-      }
-    else // error handling;
-      fprintf (stderr, "Error in decoding process: 0x%x\n", iRet);
+    if (iRet == DEC_EOS || iRet==DEC_SUCCEED)
+      outputPicList (pDecPicList, 0);
+    else
+      cLog::log (LOGERROR, "decoding process failed");
     } while ((iRet == DEC_SUCCEED) &&
              ((p_Dec->p_Inp->iDecFrmNum == 0) ||
               (iFramesDecoded < p_Dec->p_Inp->iDecFrmNum)));
 
   iRet = FinitDecoder (&pDecPicList);
-  iFramesOutput += WriteOneFrame (pDecPicList, 1);
+  outputPicList (pDecPicList, 1);
   iRet = CloseDecoder();
 
-  printf ("%d frames are decoded.\n", iFramesDecoded);
   return 0;
   }
 //}}}

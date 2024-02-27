@@ -63,7 +63,6 @@ if (CMAKE_HOST_WIN32)
 # imguiApp
 project (imguiApp VERSION 1.0.0)
   add_executable (${PROJECT_NAME} apps/imguiApp.cpp)
-
   target_include_directories (${PROJECT_NAME} PRIVATE stb)
   if (CMAKE_HOST_WIN32)
     target_link_libraries (${PROJECT_NAME} PRIVATE app opengl32)
@@ -74,7 +73,6 @@ project (imguiApp VERSION 1.0.0)
 # edit
 project (edit VERSION 1.0.0)
   add_executable (${PROJECT_NAME} apps/edit.cpp)
-
   target_include_directories (${PROJECT_NAME} PRIVATE stb)
   if (CMAKE_HOST_WIN32)
     target_link_libraries (${PROJECT_NAME} PRIVATE app ws2_32)
@@ -85,19 +83,17 @@ project (edit VERSION 1.0.0)
 # test
 project (test VERSION 1.0.0)
   add_executable (${PROJECT_NAME} apps/test.cpp)
-
   target_compile_definitions (${PROJECT_NAME} PRIVATE BUILD_IMPLOT)
   target_include_directories (${PROJECT_NAME} PRIVATE stb)
   if (CMAKE_HOST_WIN32)
-    target_link_libraries (${PROJECT_NAME} PRIVATE app dvb decoders)
+    target_link_libraries (${PROJECT_NAME} PRIVATE app h264 dvb decoders)
   else()
-    target_link_libraries (${PROJECT_NAME} PRIVATE app dvb decoders stdc++fs pthread)
+    target_link_libraries (${PROJECT_NAME} PRIVATE app h264 dvb decoders stdc++fs pthread)
   endif()
 
 # player
 project (player VERSION 1.0.0)
   add_executable (${PROJECT_NAME} apps/player.cpp)
-
   target_compile_definitions (${PROJECT_NAME} PRIVATE BUILD_IMPLOT)
   target_include_directories (${PROJECT_NAME} PRIVATE stb)
   if (CMAKE_HOST_WIN32)
@@ -109,7 +105,6 @@ project (player VERSION 1.0.0)
 # telly
 project (telly VERSION 1.0.0)
   add_executable (${PROJECT_NAME} apps/telly.cpp)
-
   target_compile_definitions (${PROJECT_NAME} PRIVATE BUILD_IMPLOT)
   target_include_directories (${PROJECT_NAME} PRIVATE stb)
   if (CMAKE_HOST_WIN32)
