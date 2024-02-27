@@ -55,11 +55,6 @@ if (CMAKE_HOST_WIN32)
     target_link_libraries (${PROJECT_NAME} PRIVATE decoders audio winmm avrt)
   endif()
 
-# h264 software decoder
-  project (h264DecoderApp VERSION 1.0.0)
-    add_executable (${PROJECT_NAME} apps/h264Decoder.cpp)
-    target_link_libraries (${PROJECT_NAME} PRIVATE h264 common)
-
 # imguiApp
 project (imguiApp VERSION 1.0.0)
   add_executable (${PROJECT_NAME} apps/imguiApp.cpp)

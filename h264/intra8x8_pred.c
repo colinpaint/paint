@@ -1,3 +1,4 @@
+//{{{
 /*!
  *************************************************************************************
  * \file intra8x8_pred.c
@@ -6,7 +7,7 @@
  *    Functions for intra 8x8 prediction
  *
  * \author
- *      Main contributors (see contributors.h for copyright, 
+ *      Main contributors (see contributors.h for copyright,
  *                         address and affiliation details)
  *      - Yuri Vatis
  *      - Jan Muenster
@@ -14,11 +15,15 @@
  *
  *************************************************************************************
  */
+//}}}
+//{{{
 #include "global.h"
 #include "intra8x8_pred.h"
 #include "mb_access.h"
 #include "image.h"
+//}}}
 
+//{{{
 // Notation for comments regarding prediction and predictors.
 // The pels of the 8x8 block are labeled a..p. The predictor pels above
 // are labeled A..H, from the left I..P, and from above left X, as follows:
@@ -60,7 +65,8 @@
 #define P_V (PredPel[22])
 #define P_W (PredPel[23])
 #define P_X (PredPel[24])
-
+//}}}
+//{{{
 /*!
  *************************************************************************************
  * \brief
@@ -88,9 +94,9 @@ static inline void LowPassForIntra8x8Pred(imgpel *PredPel, int block_up_left, in
         LoopArray[0] = (imgpel) ((P_Z + (P_Z<<1) + P_Q + 2)>>2);
     }
   }
-  
+
   if(block_up)
-  {    
+  {
     if(block_up_left)
     {
       LoopArray[1] = (imgpel) ((PredPel[0] + (PredPel[1]<<1) + PredPel[2] + 2)>>2);
@@ -122,7 +128,8 @@ static inline void LowPassForIntra8x8Pred(imgpel *PredPel, int block_up_left, in
 
   memcpy(&PredPel[0], &LoopArray[0], 25 * sizeof(imgpel));
 }
-
+//}}}
+//{{{
 /*!
  *************************************************************************************
  * \brief
@@ -150,9 +157,9 @@ static inline void LowPassForIntra8x8PredHor(imgpel *PredPel, int block_up_left,
         LoopArray[0] = (imgpel) ((P_Z + (P_Z<<1) + P_Q + 2)>>2);
     }
   }
-  
+
   if(block_up)
-  {    
+  {
     if(block_up_left)
     {
       LoopArray[1] = (imgpel) ((PredPel[0] + (PredPel[1]<<1) + PredPel[2] + 2)>>2);
@@ -171,7 +178,8 @@ static inline void LowPassForIntra8x8PredHor(imgpel *PredPel, int block_up_left,
 
   memcpy(&PredPel[0], &LoopArray[0], 17 * sizeof(imgpel));
 }
-
+//}}}
+//{{{
 /*!
  *************************************************************************************
  * \brief
@@ -180,7 +188,7 @@ static inline void LowPassForIntra8x8PredHor(imgpel *PredPel, int block_up_left,
  */
 static inline void LowPassForIntra8x8PredVer(imgpel *PredPel, int block_up_left, int block_up, int block_left)
 {
-  // These functions need some cleanup and can be further optimized. 
+  // These functions need some cleanup and can be further optimized.
   // For convenience, let us copy all data for now. It is obvious that the filtering makes things a bit more "complex"
   int i;
   imgpel LoopArray[25];
@@ -201,7 +209,7 @@ static inline void LowPassForIntra8x8PredVer(imgpel *PredPel, int block_up_left,
         LoopArray[0] = (imgpel) ((P_Z + (P_Z<<1) + P_Q + 2)>>2);
     }
   }
-  
+
   if(block_left)
   {
     if(block_up_left)
@@ -219,7 +227,8 @@ static inline void LowPassForIntra8x8PredVer(imgpel *PredPel, int block_up_left,
   memcpy(&PredPel[0], &LoopArray[0], 25 * sizeof(imgpel));
 }
 
-
+//}}}
+//{{{
 /*!
  ***********************************************************************
  * \brief
@@ -251,7 +260,7 @@ static inline int intra8x8_dc_pred(Macroblock *currMB,    //!< current macrobloc
   int block_available_left;
   int block_available_up_left;
   int block_available_up_right;
-  
+
   imgpel **mpr = currSlice->mb_pred[pl];
   int *mb_size = p_Vid->mb_size[IS_LUMA];
 
@@ -334,7 +343,7 @@ static inline int intra8x8_dc_pred(Macroblock *currMB,    //!< current macrobloc
   }
 
   LowPassForIntra8x8Pred(PredPel, block_available_up_left, block_available_up, block_available_left);
-  
+
   if (block_available_up && block_available_left)
   {
     // no edge
@@ -364,7 +373,8 @@ static inline int intra8x8_dc_pred(Macroblock *currMB,    //!< current macrobloc
 
   return DECODING_OK;
 }
-
+//}}}
+//{{{
 /*!
  ***********************************************************************
  * \brief
@@ -382,9 +392,9 @@ static inline int intra8x8_vert_pred(Macroblock *currMB,    //!< current macrobl
 {
   Slice *currSlice = currMB->p_Slice;
   VideoParameters *p_Vid = currMB->p_Vid;
-  
+
   int i;
-  imgpel PredPel[25];  // array of predictor pels  
+  imgpel PredPel[25];  // array of predictor pels
   imgpel **imgY = (pl) ? currSlice->dec_picture->imgUV[pl - 1] : currSlice->dec_picture->imgY; // For MB level frame/field coding tools -- set default to imgY
 
   PixelPos pix_a;
@@ -395,10 +405,10 @@ static inline int intra8x8_vert_pred(Macroblock *currMB,    //!< current macrobl
   int block_available_up_left;
   int block_available_up_right;
 
-  
+
   imgpel **mpr = currSlice->mb_pred[pl];
   int *mb_size = p_Vid->mb_size[IS_LUMA];
-  
+
   for (int i=0; i<25;i++) PredPel[i]=0;
 
   getNonAffNeighbour(currMB, ioff - 1, joff    , mb_size, &pix_a);
@@ -463,7 +473,7 @@ static inline int intra8x8_vert_pred(Macroblock *currMB,    //!< current macrobl
   }
 
   LowPassForIntra8x8PredHor(&(P_Z), block_available_up_left, block_available_up, block_available_left);
-  
+
   for (i=joff; i < joff + BLOCK_SIZE_8x8; i++)
   {
     memcpy(&mpr[i][ioff], &PredPel[1], BLOCK_SIZE_8x8 * sizeof(imgpel));
@@ -471,7 +481,8 @@ static inline int intra8x8_vert_pred(Macroblock *currMB,    //!< current macrobl
 
   return DECODING_OK;
 }
-
+//}}}
+//{{{
 /*!
  ***********************************************************************
  * \brief
@@ -489,7 +500,7 @@ static inline int intra8x8_hor_pred(Macroblock *currMB,    //!< current macroblo
 {
   Slice *currSlice = currMB->p_Slice;
   VideoParameters *p_Vid = currMB->p_Vid;
-  
+
 
   int j;
   imgpel PredPel[25];  // array of predictor pels
@@ -508,7 +519,7 @@ static inline int intra8x8_hor_pred(Macroblock *currMB,    //!< current macroblo
   int ipos0 = ioff    , ipos1 = ioff + 1, ipos2 = ioff + 2, ipos3 = ioff + 3;
   int ipos4 = ioff + 4, ipos5 = ioff + 5, ipos6 = ioff + 6, ipos7 = ioff + 7;
 #endif
-  int jpos;  
+  int jpos;
   imgpel **mpr = currSlice->mb_pred[pl];
   int *mb_size = p_Vid->mb_size[IS_LUMA];
 
@@ -578,10 +589,11 @@ static inline int intra8x8_hor_pred(Macroblock *currMB,    //!< current macroblo
       mpr[jpos][ipos7]  = (imgpel) (&P_Q)[j];
 #endif
   }
- 
+
   return DECODING_OK;
 }
-
+//}}}
+//{{{
 /*!
  ***********************************************************************
  * \brief
@@ -599,7 +611,7 @@ static inline int intra8x8_diag_down_right_pred(Macroblock *currMB,    //!< curr
 {
   Slice *currSlice = currMB->p_Slice;
   VideoParameters *p_Vid = currMB->p_Vid;
-  
+
   imgpel PredPel[25];    // array of predictor pels
   imgpel PredArray[16];  // array of final prediction values
   imgpel **imgY = (pl) ? currSlice->dec_picture->imgUV[pl - 1] : currSlice->dec_picture->imgY; // For MB level frame/field coding tools -- set default to imgY
@@ -726,10 +738,11 @@ static inline int intra8x8_diag_down_right_pred(Macroblock *currMB,    //!< curr
   memcpy((*mb_pred++) + ioff, pred_pels--, 8 * sizeof(imgpel));
   memcpy((*mb_pred++) + ioff, pred_pels--, 8 * sizeof(imgpel));
   memcpy((*mb_pred  ) + ioff, pred_pels  , 8 * sizeof(imgpel));
- 
+
   return DECODING_OK;
 }
-
+//}}}
+//{{{
 /*!
  ***********************************************************************
  * \brief
@@ -747,7 +760,7 @@ static inline int intra8x8_diag_down_left_pred(Macroblock *currMB,    //!< curre
 {
   Slice *currSlice = currMB->p_Slice;
   VideoParameters *p_Vid = currMB->p_Vid;
-  
+
   imgpel PredPel[25];    // array of predictor pels
   imgpel PredArray[16];  // array of final prediction values
   imgpel *Pred = &PredArray[0];
@@ -760,7 +773,7 @@ static inline int intra8x8_diag_down_left_pred(Macroblock *currMB,    //!< curre
   int block_available_left;
   int block_available_up_left;
   int block_available_up_right;
-  
+
   for (int i=0; i<25;i++) PredPel[i]=0;
 
   imgpel **mb_pred = &currSlice->mb_pred[pl][joff];
@@ -877,7 +890,8 @@ static inline int intra8x8_diag_down_left_pred(Macroblock *currMB,    //!< curre
 
   return DECODING_OK;
 }
-
+//}}}
+//{{{
 /*!
  ***********************************************************************
  * \brief
@@ -895,7 +909,7 @@ static inline int intra8x8_vert_right_pred(Macroblock *currMB,    //!< current m
 {
   Slice *currSlice = currMB->p_Slice;
   VideoParameters *p_Vid = currMB->p_Vid;
-  
+
   imgpel PredPel[25];  // array of predictor pels
   imgpel PredArray[22];  // array of final prediction values
   imgpel **imgY = (pl) ? currSlice->dec_picture->imgUV[pl - 1] : currSlice->dec_picture->imgY; // For MB level frame/field coding tools -- set default to imgY
@@ -1031,8 +1045,8 @@ static inline int intra8x8_vert_right_pred(Macroblock *currMB,    //!< current m
 
   return DECODING_OK;
 }
-
-
+//}}}
+//{{{
 /*!
  ***********************************************************************
  * \brief
@@ -1050,8 +1064,8 @@ static inline int intra8x8_vert_left_pred(Macroblock *currMB,    //!< current ma
 {
   Slice *currSlice = currMB->p_Slice;
   VideoParameters *p_Vid = currMB->p_Vid;
-  
-  imgpel PredPel[25];  // array of predictor pels  
+
+  imgpel PredPel[25];  // array of predictor pels
   imgpel PredArray[22];  // array of final prediction values
   imgpel *pred_pel = &PredArray[0];
   imgpel **imgY = (pl) ? currSlice->dec_picture->imgUV[pl - 1] : currSlice->dec_picture->imgY; // For MB level frame/field coding tools -- set default to imgY
@@ -1184,7 +1198,8 @@ static inline int intra8x8_vert_left_pred(Macroblock *currMB,    //!< current ma
 
   return DECODING_OK;
 }
-
+//}}}
+//{{{
 /*!
  ***********************************************************************
  * \brief
@@ -1226,7 +1241,7 @@ static inline int intra8x8_hor_up_pred(Macroblock *currMB,    //!< current macro
   getNonAffNeighbour(currMB, ioff    , joff - 1, mb_size, &pix_b);
   getNonAffNeighbour(currMB, ioff + 8, joff - 1, mb_size, &pix_c);
   getNonAffNeighbour(currMB, ioff - 1, joff - 1, mb_size, &pix_d);
-  
+
   pix_c.available = pix_c.available &&!(ioff == 8 && joff == 8);
 
   if (p_Vid->active_pps->constrained_intra_pred_flag)
@@ -1337,7 +1352,8 @@ static inline int intra8x8_hor_up_pred(Macroblock *currMB,    //!< current macro
 
   return DECODING_OK;
 }
-
+//}}}
+//{{{
 /*!
  ***********************************************************************
  * \brief
@@ -1367,7 +1383,7 @@ static inline int intra8x8_hor_down_pred(Macroblock *currMB,    //!< current mac
   int block_available_left;
   int block_available_up_left;
   int block_available_up_right;
-  
+
   imgpel *pred_pels;
   imgpel **mb_pred = &currSlice->mb_pred[pl][joff];
   int *mb_size = p_Vid->mb_size[IS_LUMA];
@@ -1496,10 +1512,12 @@ static inline int intra8x8_hor_down_pred(Macroblock *currMB,    //!< current mac
   memcpy((*mb_pred++) + ioff, pred_pels, 8 * sizeof(imgpel));
   pred_pels -= 2;
   memcpy((*mb_pred  ) + ioff, pred_pels, 8 * sizeof(imgpel));
-  
+
   return DECODING_OK;
 }
+//}}}
 
+//{{{
 /*!
  ************************************************************************
  * \brief
@@ -1519,7 +1537,7 @@ int intra_pred_8x8_normal(Macroblock *currMB,    //!< Current Macroblock
                         int ioff,              //!< ioff
                         int joff)              //!< joff
 
-{  
+{
   int block_x = (currMB->block_x) + (ioff >> 2);
   int block_y = (currMB->block_y) + (joff >> 2);
   byte predmode = currMB->p_Slice->ipredmode[block_y][block_x];
@@ -1552,7 +1570,7 @@ int intra_pred_8x8_normal(Macroblock *currMB,    //!< Current Macroblock
   case HOR_UP_PRED:
     return (intra8x8_hor_up_pred(currMB, pl, ioff, joff));
     break;
-  case HOR_DOWN_PRED:  
+  case HOR_DOWN_PRED:
     return (intra8x8_hor_down_pred(currMB, pl, ioff, joff));
   default:
     printf("Error: illegal intra_8x8 prediction mode: %d\n", (int) predmode);
@@ -1560,5 +1578,4 @@ int intra_pred_8x8_normal(Macroblock *currMB,    //!< Current Macroblock
     break;
   }
 }
-
-
+//}}}

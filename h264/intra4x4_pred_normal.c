@@ -1,3 +1,4 @@
+//{{{
 /*!
  *************************************************************************************
  * \file intra4x4_pred_normal.c
@@ -6,17 +7,21 @@
  *    Functions for intra 4x4 prediction
  *
  * \author
- *      Main contributors (see contributors.h for copyright, 
+ *      Main contributors (see contributors.h for copyright,
  *                         address and affiliation details)
  *      - Alexis Michael Tourapis  <alexismt@ieee.org>
  *
  *************************************************************************************
  */
+//}}}
+//{{{
 #include "global.h"
 #include "intra4x4_pred.h"
 #include "mb_access.h"
 #include "image.h"
+//}}}
 
+//{{{
 // Notation for comments regarding prediction and predictors.
 // The pels of the 4x4 block are labelled a..p. The predictor pels above
 // are labelled A..H, from the left I..L, and from above left X, as follows:
@@ -27,7 +32,8 @@
 //  K i j k l
 //  L m n o p
 //
-
+//}}}
+//{{{
 /*!
  ***********************************************************************
  * \brief
@@ -46,25 +52,25 @@
  *
  ***********************************************************************
  */
-static int intra4x4_dc_pred(Macroblock *currMB, 
-                            ColorPlane pl,               
+static int intra4x4_dc_pred(Macroblock *currMB,
+                            ColorPlane pl,
                             int ioff,
                             int joff)
 {
   Slice *currSlice = currMB->p_Slice;
-  VideoParameters *p_Vid = currMB->p_Vid;  
+  VideoParameters *p_Vid = currMB->p_Vid;
 
   int j;
-  int s0 = 0;  
+  int s0 = 0;
   imgpel **imgY = (pl) ? currSlice->dec_picture->imgUV[pl - 1] : currSlice->dec_picture->imgY;
   imgpel *curpel = NULL;
 
-  PixelPos pix_a, pix_b; 
+  PixelPos pix_a, pix_b;
 
   int block_available_up;
-  int block_available_left;  
+  int block_available_left;
 
-  imgpel **mb_pred = currSlice->mb_pred[pl];    
+  imgpel **mb_pred = currSlice->mb_pred[pl];
 
   getNonAffNeighbour(currMB, ioff - 1, joff   , p_Vid->mb_size[IS_LUMA], &pix_a);
   getNonAffNeighbour(currMB, ioff    , joff -1, p_Vid->mb_size[IS_LUMA], &pix_b);
@@ -131,7 +137,8 @@ static int intra4x4_dc_pred(Macroblock *currMB,
   }
   return DECODING_OK;
 }
-
+//}}}
+//{{{
 /*!
  ***********************************************************************
  * \brief
@@ -149,7 +156,7 @@ static int intra4x4_vert_pred(Macroblock *currMB,    //!< current macroblock
 {
   Slice *currSlice = currMB->p_Slice;
   VideoParameters *p_Vid = currMB->p_Vid;
-   
+
   int block_available_up;
   PixelPos pix_b;
 
@@ -179,7 +186,8 @@ static int intra4x4_vert_pred(Macroblock *currMB,    //!< current macroblock
   }
   return DECODING_OK;
 }
-
+//}}}
+//{{{
 /*!
  ***********************************************************************
  * \brief
@@ -199,8 +207,8 @@ static int intra4x4_vert_pred(Macroblock *currMB,    //!< current macroblock
  *
  ***********************************************************************
  */
-static int intra4x4_hor_pred(Macroblock *currMB, 
-                                    ColorPlane pl,               
+static int intra4x4_hor_pred(Macroblock *currMB,
+                                    ColorPlane pl,
                                     int ioff,
                                     int joff)
 {
@@ -229,7 +237,7 @@ static int intra4x4_hor_pred(Macroblock *currMB,
   {
     imgpel **imgY = (pl) ? currSlice->dec_picture->imgUV[pl - 1] : currSlice->dec_picture->imgY;
     imgpel **mb_pred  =  &currSlice->mb_pred[pl][joff];
-    imgpel **img_pred =  &imgY[pix_a.pos_y];    
+    imgpel **img_pred =  &imgY[pix_a.pos_y];
     int pos_x = pix_a.pos_x;
 
     memset((*(mb_pred++) + ioff), *(*(img_pred++) + pos_x), BLOCK_SIZE * sizeof (imgpel));
@@ -251,17 +259,18 @@ static int intra4x4_hor_pred(Macroblock *currMB,
       predrow = mb_pred[j];
       prediction = imgY[pos_y++][pos_x];
       /* store predicted 4x4 block */
-      predrow[ioff    ]= prediction; 
-      predrow[ioff + 1]= prediction; 
-      predrow[ioff + 2]= prediction; 
-      predrow[ioff + 3]= prediction; 
+      predrow[ioff    ]= prediction;
+      predrow[ioff + 1]= prediction;
+      predrow[ioff + 2]= prediction;
+      predrow[ioff + 3]= prediction;
     }
   }
 #endif
 
   return DECODING_OK;
 }
-
+//}}}
+//{{{
 /*!
  ***********************************************************************
  * \brief
@@ -279,7 +288,7 @@ static int intra4x4_diag_down_right_pred(Macroblock *currMB,    //!< current mac
 {
   Slice *currSlice = currMB->p_Slice;
   VideoParameters *p_Vid = currMB->p_Vid;
-  
+
   imgpel **imgY = (pl) ? currSlice->dec_picture->imgUV[pl - 1] : currSlice->dec_picture->imgY;
 
   PixelPos pix_a;
@@ -289,7 +298,7 @@ static int intra4x4_diag_down_right_pred(Macroblock *currMB,    //!< current mac
   int block_available_left;
   int block_available_up_left;
 
-  imgpel **mb_pred = currSlice->mb_pred[pl];    
+  imgpel **mb_pred = currSlice->mb_pred[pl];
 
   getNonAffNeighbour(currMB, ioff -1 , joff    , p_Vid->mb_size[IS_LUMA], &pix_a);
   getNonAffNeighbour(currMB, ioff    , joff -1 , p_Vid->mb_size[IS_LUMA], &pix_b);
@@ -328,7 +337,7 @@ static int intra4x4_diag_down_right_pred(Macroblock *currMB,    //!< current mac
     imgpel p_l = *(*(img_pred  ) + pix_x);
 
     imgpel p_x = imgY[pix_d.pos_y][pix_d.pos_x];
-    
+
     PredPixel[0] = (imgpel) ((p_l + 2*p_k + p_j + 2) >> 2);
     PredPixel[1] = (imgpel) ((p_k + 2*p_j + p_i + 2) >> 2);
     PredPixel[2] = (imgpel) ((p_j + 2*p_i + p_x + 2) >> 2);
@@ -345,7 +354,8 @@ static int intra4x4_diag_down_right_pred(Macroblock *currMB,    //!< current mac
 
   return DECODING_OK;
 }
-
+//}}}
+//{{{
 /*!
  ***********************************************************************
  * \brief
@@ -363,7 +373,7 @@ static int intra4x4_diag_down_left_pred(Macroblock *currMB,    //!< current macr
 {
   Slice *currSlice = currMB->p_Slice;
   VideoParameters *p_Vid = currMB->p_Vid;
-  
+
   PixelPos pix_b, pix_c;
 
   int block_available_up;
@@ -390,7 +400,7 @@ static int intra4x4_diag_down_left_pred(Macroblock *currMB,    //!< current macr
   else
   {
     imgpel **imgY = (pl) ? currSlice->dec_picture->imgUV[pl - 1] : currSlice->dec_picture->imgY;
-    imgpel **mb_pred = currSlice->mb_pred[pl];    
+    imgpel **mb_pred = currSlice->mb_pred[pl];
 
     imgpel p_e, p_f, p_g, p_h;
     imgpel PredPixel[8];
@@ -431,7 +441,8 @@ static int intra4x4_diag_down_left_pred(Macroblock *currMB,    //!< current macr
 
   return DECODING_OK;
 }
-
+//}}}
+//{{{
 /*!
  ***********************************************************************
  * \brief
@@ -449,7 +460,7 @@ static int intra4x4_vert_right_pred(Macroblock *currMB,    //!< current macroblo
 {
   Slice *currSlice = currMB->p_Slice;
   VideoParameters *p_Vid = currMB->p_Vid;
-  
+
   PixelPos pix_a, pix_b, pix_d;
 
   int block_available_up;
@@ -477,7 +488,7 @@ static int intra4x4_vert_right_pred(Macroblock *currMB,    //!< current macroblo
     printf ("warning: Intra_4x4_Vertical_Right prediction mode not allowed at mb %d\n", (int) currSlice->current_mb_nr);
   {
     imgpel **imgY = (pl) ? currSlice->dec_picture->imgUV[pl - 1] : currSlice->dec_picture->imgY;
-    imgpel **mb_pred = currSlice->mb_pred[pl];    
+    imgpel **mb_pred = currSlice->mb_pred[pl];
     imgpel PredPixel[10];
 
     imgpel **img_pred = &imgY[pix_a.pos_y];
@@ -494,7 +505,7 @@ static int intra4x4_vert_right_pred(Macroblock *currMB,    //!< current macroblo
     imgpel p_k = *(*(img_pred++) + pix_x);
 
     imgpel p_x = imgY[pix_d.pos_y][pix_d.pos_x];
-    
+
     PredPixel[0] = (imgpel) ((p_x + 2*p_i + p_j + 2) >> 2);
     PredPixel[1] = (imgpel) ((p_x + p_a + 1) >> 1);
     PredPixel[2] = (imgpel) ((p_a + p_b + 1) >> 1);
@@ -509,14 +520,14 @@ static int intra4x4_vert_right_pred(Macroblock *currMB,    //!< current macroblo
     memcpy(&mb_pred[joff++][ioff], &PredPixel[1], 4 * sizeof(imgpel));
     memcpy(&mb_pred[joff++][ioff], &PredPixel[6], 4 * sizeof(imgpel));
     memcpy(&mb_pred[joff++][ioff], &PredPixel[0], 4 * sizeof(imgpel));
-    memcpy(&mb_pred[joff  ][ioff], &PredPixel[5], 4 * sizeof(imgpel));    
-    
+    memcpy(&mb_pred[joff  ][ioff], &PredPixel[5], 4 * sizeof(imgpel));
+
   }
 
   return DECODING_OK;
 }
-
-
+//}}}
+//{{{
 /*!
  ***********************************************************************
  * \brief
@@ -534,7 +545,7 @@ static int intra4x4_vert_left_pred(Macroblock *currMB,    //!< current macrobloc
 {
   Slice *currSlice = currMB->p_Slice;
   VideoParameters *p_Vid = currMB->p_Vid;
-  
+
   PixelPos pix_b, pix_c;
 
   int block_available_up;
@@ -544,7 +555,7 @@ static int intra4x4_vert_left_pred(Macroblock *currMB,    //!< current macrobloc
   p_Vid->getNeighbour(currMB, ioff +4 , joff -1 , p_Vid->mb_size[IS_LUMA], &pix_c);
 
   pix_c.available = pix_c.available && !((ioff==4) && ((joff==4)||(joff==12)));
-  
+
   if (p_Vid->active_pps->constrained_intra_pred_flag)
   {
     block_available_up       = pix_b.available ? currSlice->intra_block [pix_b.mb_addr] : 0;
@@ -562,7 +573,7 @@ static int intra4x4_vert_left_pred(Macroblock *currMB,    //!< current macrobloc
   {
     imgpel PredPixel[10];
     imgpel **imgY = (pl) ? currSlice->dec_picture->imgUV[pl - 1] : currSlice->dec_picture->imgY;
-    imgpel **mb_pred = currSlice->mb_pred[pl];    
+    imgpel **mb_pred = currSlice->mb_pred[pl];
     imgpel *pred_pel = &imgY[pix_b.pos_y][pix_b.pos_x];
 
     // form predictor pels
@@ -602,7 +613,8 @@ static int intra4x4_vert_left_pred(Macroblock *currMB,    //!< current macrobloc
   }
   return DECODING_OK;
 }
-
+//}}}
+//{{{
 /*!
  ***********************************************************************
  * \brief
@@ -620,7 +632,7 @@ static int intra4x4_hor_up_pred(Macroblock *currMB,    //!< current macroblock
 {
   Slice *currSlice = currMB->p_Slice;
   VideoParameters *p_Vid = currMB->p_Vid;
-  
+
   PixelPos pix_a;
 
   int block_available_left;
@@ -642,7 +654,7 @@ static int intra4x4_hor_up_pred(Macroblock *currMB,    //!< current macroblock
   {
     imgpel PredPixel[10];
     imgpel **imgY = (pl) ? currSlice->dec_picture->imgUV[pl - 1] : currSlice->dec_picture->imgY;
-    imgpel **mb_pred = currSlice->mb_pred[pl];    
+    imgpel **mb_pred = currSlice->mb_pred[pl];
 
     imgpel **img_pred = &imgY[pix_a.pos_y];
     int pix_x = pix_a.pos_x;
@@ -672,7 +684,8 @@ static int intra4x4_hor_up_pred(Macroblock *currMB,    //!< current macroblock
 
   return DECODING_OK;
 }
-
+//}}}
+//{{{
 /*!
  ***********************************************************************
  * \brief
@@ -690,7 +703,7 @@ static int intra4x4_hor_down_pred(Macroblock *currMB,    //!< current macroblock
 {
   Slice *currSlice = currMB->p_Slice;
   VideoParameters *p_Vid = currMB->p_Vid;
-  
+
   PixelPos pix_a, pix_b, pix_d;
 
   int block_available_up;
@@ -720,7 +733,7 @@ static int intra4x4_hor_down_pred(Macroblock *currMB,    //!< current macroblock
   {
     imgpel PredPixel[10];
     imgpel **imgY = (pl) ? currSlice->dec_picture->imgUV[pl - 1] : currSlice->dec_picture->imgY;
-    imgpel **mb_pred = currSlice->mb_pred[pl];    
+    imgpel **mb_pred = currSlice->mb_pred[pl];
 
     imgpel **img_pred = &imgY[pix_a.pos_y];
     int pix_x = pix_a.pos_x;
@@ -757,12 +770,13 @@ static int intra4x4_hor_down_pred(Macroblock *currMB,    //!< current macroblock
 
   return DECODING_OK;
 }
+//}}}
 
-
+//{{{
 /*!
  ***********************************************************************
  * \brief
- *    makes and returns 4x4 intra prediction blocks 
+ *    makes and returns 4x4 intra prediction blocks
  *
  * \return
  *    DECODING_OK   decoding of intra prediction mode was successful            \n
@@ -806,7 +820,7 @@ int intra4x4_pred_normal(Macroblock *currMB,    //!< current macroblock
   case HOR_UP_PRED:
     return (intra4x4_hor_up_pred(currMB, pl, ioff, joff));
     break;
-  case HOR_DOWN_PRED:  
+  case HOR_DOWN_PRED:
     return (intra4x4_hor_down_pred(currMB, pl, ioff, joff));
   default:
     printf("Error: illegal intra_4x4 prediction mode: %d\n", (int) predmode);
@@ -814,3 +828,4 @@ int intra4x4_pred_normal(Macroblock *currMB,    //!< current macroblock
     break;
   }
 }
+//}}}

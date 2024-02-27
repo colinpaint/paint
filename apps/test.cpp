@@ -1169,27 +1169,136 @@ private:
   };
 //}}}
 
+//{{{
+void outputPicList (DecodedPicList* pDecPic, int bOutputAllFrames) {
+
+  DecodedPicList* pPic = pDecPic;
+
+  cLog::log (LOGINFO, fmt::format ("outputPicList {}x{}:{} format:{}:{} stride:{}x{} yuv:{:x}:{:x}:{:x}",
+                                   pPic->iWidth * ((pPic->iBitDepth+7)>>3),
+                                   pPic->iHeight,
+                                   pPic->iBitDepth,
+                                   pPic->iYUVStorageFormat, pPic->bValid,
+                                   pPic->iYBufStride,
+                                   pPic->iUVBufStride,
+                                   (uint64_t)pPic->pY,
+                                   (uint64_t)pPic->pU,
+                                   (uint64_t)pPic->pV
+                                   ));
+
+  if (pPic && (((pPic->iYUVStorageFormat == 2) && pPic->bValid == 3) ||
+               ((pPic->iYUVStorageFormat != 2) && pPic->bValid == 1)) ) {
+    int iWidth = pPic->iWidth * ((pPic->iBitDepth+7)>>3);
+    int iHeight = pPic->iHeight;
+    int iStride = pPic->iYBufStride;
+    int iWidthUV = (pPic->iYUVFormat != YUV444) ? pPic->iWidth>>1 : pPic->iWidth;
+    int iHeightUV = (pPic->iYUVFormat == YUV420) ? pPic->iHeight >> 1 : pPic->iHeight;
+    iWidthUV *= ((pPic->iBitDepth + 7) >> 3);
+    int iStrideUV = pPic->iUVBufStride;
+
+    do {
+      //uint8_t* pbBuf = pPic->pY;
+      //for (i = 0; i < iHeight; i++)
+      //  write (hFileOutput, pbBuf+i*iStride, iWidth);
+
+      //pbBuf = pPic->pU;
+      //for(i=0; i < iHeightUV; i++) {
+      //  write( hFileOutput, pbBuf+i*iStrideUV, iWidthUV);
+
+      //pbBuf = pPic->pV;
+      //for (i = 0; i < iHeightUV; i++) {
+      //  write(hFileOutput, pbBuf+i*iStrideUV, iWidthUV);
+
+      pPic->bValid = 0;
+      pPic = pPic->pNext;
+      } while (pPic != NULL && pPic->bValid && bOutputAllFrames);
+    }
+  }
+//}}}
+//{{{
+void h264Decode (const string& fileName) {
+
+  // input params
+  InputParameters InputParams;
+  memset (&InputParams, 0, sizeof(InputParameters));
+  strcpy (InputParams.infile, fileName.c_str());
+  InputParams.FileFormat = PAR_OF_ANNEXB;
+  InputParams.poc_scale = 2;
+  InputParams.intra_profile_deblocking = 1;
+  InputParams.poc_gap = 2;
+  InputParams.ref_poc_gap = 2;
+  InputParams.bDisplayDecParams = 1;
+  InputParams.dpb_plus[0] = 1;
+  //{{{  optional input params
+  //InputParams.ref_offset;
+  //InputParams.write_uv;
+  //InputParams.silent;
+  //InputParams.source;                   //!< source related information
+  //InputParams.output;                   //!< output related information
+  //InputParams.ProcessInput;
+  //InputParams.enable_32_pulldown;
+  //InputParams.input_file1;          //!< Input video file1
+  //InputParams.input_file2;          //!< Input video file2
+  //InputParams.input_file3;          //!< Input video file3
+  //InputParams.conceal_mode;
+  //InputParams.start_frame;
+  //InputParams.stdRange;                         //!< 1 - standard range, 0 - full range
+  //InputParams.videoCode;                        //!< 1 - 709, 3 - 601:  See VideoCode in io_tiff.
+  //InputParams.export_views;
+  //InputParams.iDecFrmNum;
+  //}}}
+
+  if (OpenDecoder (&InputParams) != DEC_OPEN_NOERR) {
+    cLog::log (LOGERROR, "ppen encoder failed");
+    return;
+    }
+
+  int iRet = 0;
+  do {
+    DecodedPicList* pDecPicList;
+    iRet = DecodeOneFrame (&pDecPicList);
+    if (iRet == DEC_EOS || iRet == DEC_SUCCEED)
+      outputPicList (pDecPicList, 0);
+    else
+      cLog::log (LOGERROR, "decoding process failed");
+    } while (iRet == DEC_SUCCEED);
+
+  DecodedPicList* pDecPicList;
+  iRet = FinitDecoder (&pDecPicList);
+  outputPicList (pDecPicList, 1);
+  iRet = CloseDecoder();
+  }
+//}}}
+
 // main
 int main (int numArgs, char* args[]) {
 
-  // options
+  bool softH264 = false;
   string fileName;
+  //{{{  options
   cApp::cOptions* options = new cApp::cOptions();
   for (int i = 1; i < numArgs; i++) {
     string param = args[i];
     if (options->parse (param)) // found cApp option
       ;
+    else if (param == "h264")
+      softH264 = true;
     else
       fileName = param;
     }
+  //}}}
 
   // log
   cLog::init (LOGINFO);
+  cLog::log (LOGNOTICE, fmt::format ("test {} {}", softH264, fileName));
 
-  // launch
-  cTestApp testApp (options, new cTestUI());
-  testApp.addFile (fileName);
-  testApp.mainUILoop();
+  if (softH264)
+    h264Decode (fileName);
+  else {
+    cTestApp testApp (options, new cTestUI());
+    testApp.addFile (fileName);
+    testApp.mainUILoop();
+    }
 
   return EXIT_SUCCESS;
   }

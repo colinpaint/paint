@@ -15,7 +15,7 @@
  *************************************************************************************
  */
 //}}}
-//{{{
+//{{{  includes
 #include <math.h>
 #include <time.h>
 
@@ -27,10 +27,10 @@
 #include "fast_memory.h"
 //}}}
 
-void buf2img_basic    ( imgpel** imgX, unsigned char* buf, int size_x, int size_y, int o_size_x, int o_size_y, int symbol_size_in_bytes, int bitshift);
-void buf2img_endian   ( imgpel** imgX, unsigned char* buf, int size_x, int size_y, int o_size_x, int o_size_y, int symbol_size_in_bytes, int bitshift);
-void buf2img_bitshift ( imgpel** imgX, unsigned char* buf, int size_x, int size_y, int o_size_x, int o_size_y, int symbol_size_in_bytes, int bitshift);
-void fillPlane        ( imgpel** imgX, int nVal, int size_x, int size_y);
+void buf2img_basic (imgpel** imgX, unsigned char* buf, int size_x, int size_y, int o_size_x, int o_size_y, int symbol_size_in_bytes, int bitshift);
+void buf2img_endian (imgpel** imgX, unsigned char* buf, int size_x, int size_y, int o_size_x, int o_size_y, int symbol_size_in_bytes, int bitshift);
+void buf2img_bitshift (imgpel** imgX, unsigned char* buf, int size_x, int size_y, int o_size_x, int o_size_y, int symbol_size_in_bytes, int bitshift);
+void fillPlane (imgpel** imgX, int nVal, int size_x, int size_y);
 
 //{{{
 /*!
@@ -108,7 +108,7 @@ static void MaskMSBs (imgpel** imgX, int mask, int width, int height)
  *    Fill plane with constant value
  ************************************************************************
  */
-void fillPlane ( imgpel** imgX,                 //!< Pointer to image plane
+void fillPlane (imgpel** imgX,                 //!< Pointer to image plane
                  int nVal,                      //!< Fill value (currently 0 <= nVal < 256)
                  int size_x,                    //!< horizontal size of picture
                  int size_y                     //!< vertical size of picture

@@ -1,4 +1,4 @@
-
+//{{{
 /*!
  ***********************************************************************
  *  \file
@@ -12,7 +12,8 @@
  *
  ***********************************************************************
  */
-
+//}}}
+//{{{
 #include "global.h"
 #include "memalloc.h"
 #include "block.h"
@@ -20,21 +21,25 @@
 #include "mb_access.h"
 #include "transform.h"
 #include "quant.h"
+//}}}
 
+//{{{
 int quant_intra_default[16] = {
    6,13,20,28,
   13,20,28,32,
   20,28,32,37,
   28,32,37,42
 };
-
+//}}}
+//{{{
 int quant_inter_default[16] = {
   10,14,20,24,
   14,20,24,27,
   20,24,27,30,
   24,27,30,34
 };
-
+//}}}
+//{{{
 int quant8_intra_default[64] = {
  6,10,13,16,18,23,25,27,
 10,11,16,18,23,25,27,29,
@@ -45,7 +50,8 @@ int quant8_intra_default[64] = {
 25,27,29,31,33,36,38,40,
 27,29,31,33,36,38,40,42
 };
-
+//}}}
+//{{{
 int quant8_inter_default[64] = {
  9,13,15,17,19,21,22,24,
 13,13,17,19,21,22,24,25,
@@ -56,14 +62,16 @@ int quant8_inter_default[64] = {
 22,24,25,27,28,30,32,33,
 24,25,27,28,30,32,33,35
 };
-
+//}}}
+//{{{
 int quant_org[16] = { //to be use if no q matrix is chosen
 16,16,16,16,
 16,16,16,16,
 16,16,16,16,
 16,16,16,16
 };
-
+//}}}
+//{{{
 int quant8_org[64] = { //to be use if no q matrix is chosen
 16,16,16,16,16,16,16,16,
 16,16,16,16,16,16,16,16,
@@ -74,7 +82,9 @@ int quant8_org[64] = { //to be use if no q matrix is chosen
 16,16,16,16,16,16,16,16,
 16,16,16,16,16,16,16,16
 };
+//}}}
 
+//{{{
 /*!
  ***********************************************************************
  * \brief
@@ -86,7 +96,7 @@ void init_qp_process(CodingParameters *cps)
   int bitdepth_qp_scale = imax(cps->bitdepth_luma_qp_scale, cps->bitdepth_chroma_qp_scale);
   int i;
 
-  // We should allocate memory outside of this process since maybe we will have a change of SPS 
+  // We should allocate memory outside of this process since maybe we will have a change of SPS
   // and we may need to recreate these. Currently should only support same bitdepth
   if (cps->qp_per_matrix == NULL)
     if ((cps->qp_per_matrix = (int*)malloc((MAX_QP + 1 +  bitdepth_qp_scale)*sizeof(int))) == NULL)
@@ -102,7 +112,8 @@ void init_qp_process(CodingParameters *cps)
     cps->qp_rem_matrix[i] = i % 6;
   }
 }
-
+//}}}
+//{{{
 void free_qp_matrices(CodingParameters *cps)
 {
   if (cps->qp_per_matrix != NULL)
@@ -117,7 +128,9 @@ void free_qp_matrices(CodingParameters *cps)
     cps->qp_rem_matrix = NULL;
   }
 }
+//}}}
 
+//{{{
 /*!
  ************************************************************************
  * \brief
@@ -235,7 +248,7 @@ void assign_quant_params(Slice *currSlice)
               if(!sps->seq_scaling_matrix_present_flag)
                 currSlice->qmatrix[i] = quant8_inter_default;
             }
-            else  
+            else
               currSlice->qmatrix[i] = currSlice->qmatrix[i-2];
           }
           else
@@ -254,7 +267,9 @@ void assign_quant_params(Slice *currSlice)
   if(pps->transform_8x8_mode_flag)
     CalculateQuant8x8Param(currSlice);
 }
+//}}}
 
+//{{{
 static void set_dequant4x4(int (*InvLevelScale4x4)[4],  const int (*dequant)[4], int *qmatrix)
 {
   int j;
@@ -266,7 +281,8 @@ static void set_dequant4x4(int (*InvLevelScale4x4)[4],  const int (*dequant)[4],
     *(*InvLevelScale4x4++ + 3) = *(*dequant++ + 3) * *qmatrix++;
   }
 }
-
+//}}}
+//{{{
 static void set_dequant8x8(int (*InvLevelScale8x8)[8],  const int (*dequant)[8], int *qmatrix)
 {
   int j;
@@ -282,7 +298,9 @@ static void set_dequant8x8(int (*InvLevelScale8x8)[8],  const int (*dequant)[8],
     *(*InvLevelScale8x8++ + 7) = *(*dequant++ + 7) * *qmatrix++;
   }
 }
+//}}}
 
+//{{{
 /*!
  ************************************************************************
  * \brief
@@ -312,7 +330,8 @@ void CalculateQuant4x4Param(Slice *currSlice)
     set_dequant4x4(*InvLevelScale4x4_Inter_2++, *p_dequant_coef++, currSlice->qmatrix[5]);
   }
 }
-
+//}}}
+//{{{
 /*!
  ************************************************************************
  * \brief
@@ -349,3 +368,4 @@ void CalculateQuant8x8Param(Slice *currSlice)
     }
   }
 }
+//}}}

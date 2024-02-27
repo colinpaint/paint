@@ -13,11 +13,13 @@
  **************************************************************************************
  */
 //}}}
+//{{{  includes
 #define CONTEXT_INI_C
 #include "defines.h"
 #include "global.h"
 #include "biaridecod.h"
 #include "ctx_tables.h"
+//}}}
 
 //{{{
 #define IBIARI_CTX_INIT2(ii,jj,ctx,tab,num, qp) \

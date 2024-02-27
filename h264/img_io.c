@@ -12,9 +12,7 @@
  *************************************************************************************
  */
 //}}}
-//{{{
-#define _CRT_SECURE_NO_WARNINGS
-
+//{{{  includes
 #include "global.h"
 #include "img_io.h"
 #include "report.h"

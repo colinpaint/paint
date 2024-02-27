@@ -24,6 +24,7 @@
 #include "memalloc.h"
 #include "biaridecod.h"
 //}}}
+
 #define B_BITS    10      // Number of bits to represent the whole coding interval
 #define HALF      0x01FE  //(1 << (B_BITS-1)) - 2
 #define QUARTER   0x0100  //(1 << (B_BITS-2))

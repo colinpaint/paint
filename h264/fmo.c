@@ -22,6 +22,7 @@
 #include "fmo.h"
 #include "fast_memory.h"
 //}}}
+
 //#define PRINT_FMO_MAPS
 static void FmoGenerateType0MapUnitMap (VideoParameters *p_Vid, unsigned PicSizeInMapUnits );
 static void FmoGenerateType1MapUnitMap (VideoParameters *p_Vid, unsigned PicSizeInMapUnits );

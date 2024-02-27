@@ -26,13 +26,12 @@
  ***********************************************************************
  */
 //}}}
-//{{{
-#define _CRT_SECURE_NO_WARNINGS
+//{{{  includes
+#include "global.h"
 
 #include <math.h>
 #include <limits.h>
 
-#include "global.h"
 #include "image.h"
 #include "fmo.h"
 #include "annexb.h"

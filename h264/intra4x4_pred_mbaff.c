@@ -1,3 +1,4 @@
+//{{{
 /*!
  *************************************************************************************
  * \file intra4x4_pred_mbaff.c
@@ -6,17 +7,21 @@
  *    Functions for intra 4x4 prediction
  *
  * \author
- *      Main contributors (see contributors.h for copyright, 
+ *      Main contributors (see contributors.h for copyright,
  *                         address and affiliation details)
  *      - Alexis Michael Tourapis  <alexismt@ieee.org>
  *
  *************************************************************************************
  */
+//}}}
+//{{{
 #include "global.h"
 #include "intra4x4_pred.h"
 #include "mb_access.h"
 #include "image.h"
+//}}}
 
+//{{{
 // Notation for comments regarding prediction and predictors.
 // The pels of the 4x4 block are labelled a..p. The predictor pels above
 // are labelled A..H, from the left I..L, and from above left X, as follows:
@@ -42,7 +47,9 @@
 #define P_J (PredPel[10])
 #define P_K (PredPel[11])
 #define P_L (PredPel[12])
+//}}}
 
+//{{{
 /*!
  ***********************************************************************
  * \brief
@@ -61,24 +68,24 @@
  *
  ***********************************************************************
  */
-static int intra4x4_dc_pred_mbaff(Macroblock *currMB, 
-                                   ColorPlane pl,               
+static int intra4x4_dc_pred_mbaff(Macroblock *currMB,
+                                   ColorPlane pl,
                                    int ioff,
                                    int joff)
 {
   Slice *currSlice = currMB->p_Slice;
-  VideoParameters *p_Vid = currMB->p_Vid;  
+  VideoParameters *p_Vid = currMB->p_Vid;
 
   int i,j;
-  int s0 = 0;  
+  int s0 = 0;
   imgpel **imgY = (pl) ? currSlice->dec_picture->imgUV[pl - 1] : currSlice->dec_picture->imgY;
 
   PixelPos pix_a[4], pix_b;
 
   int block_available_up;
-  int block_available_left;  
+  int block_available_left;
 
-  imgpel **mb_pred = currSlice->mb_pred[pl];    
+  imgpel **mb_pred = currSlice->mb_pred[pl];
 
   for (i=0;i<4;++i)
   {
@@ -146,7 +153,8 @@ static int intra4x4_dc_pred_mbaff(Macroblock *currMB,
   }
   return DECODING_OK;
 }
-
+//}}}
+//{{{
 /*!
  ***********************************************************************
  * \brief
@@ -164,7 +172,7 @@ static int intra4x4_vert_pred_mbaff(Macroblock *currMB,    //!< current macroblo
 {
   Slice *currSlice = currMB->p_Slice;
   VideoParameters *p_Vid = currMB->p_Vid;
-   
+
   int block_available_up;
   PixelPos pix_b;
 
@@ -194,7 +202,8 @@ static int intra4x4_vert_pred_mbaff(Macroblock *currMB,    //!< current macroblo
   }
   return DECODING_OK;
 }
-
+//}}}
+//{{{
 /*!
  ***********************************************************************
  * \brief
@@ -214,8 +223,8 @@ static int intra4x4_vert_pred_mbaff(Macroblock *currMB,    //!< current macroblo
  *
  ***********************************************************************
  */
-static int intra4x4_hor_pred_mbaff(Macroblock *currMB, 
-                                    ColorPlane pl,               
+static int intra4x4_hor_pred_mbaff(Macroblock *currMB,
+                                    ColorPlane pl,
                                     int ioff,
                                     int joff)
 {
@@ -229,7 +238,7 @@ static int intra4x4_hor_pred_mbaff(Macroblock *currMB,
 
   int block_available_left;
 
-  imgpel *predrow, prediction, **mb_pred = currSlice->mb_pred[pl];    
+  imgpel *predrow, prediction, **mb_pred = currSlice->mb_pred[pl];
 
   for (i=0;i<4;++i)
   {
@@ -259,7 +268,8 @@ static int intra4x4_hor_pred_mbaff(Macroblock *currMB,
 
   return DECODING_OK;
 }
-
+//}}}
+//{{{
 /*!
  ***********************************************************************
  * \brief
@@ -277,7 +287,7 @@ static int intra4x4_diag_down_right_pred_mbaff(Macroblock *currMB,    //!< curre
 {
   Slice *currSlice = currMB->p_Slice;
   VideoParameters *p_Vid = currMB->p_Vid;
-  
+
   int i;
   imgpel **imgY = (pl) ? currSlice->dec_picture->imgUV[pl - 1] : currSlice->dec_picture->imgY;
 
@@ -288,7 +298,7 @@ static int intra4x4_diag_down_right_pred_mbaff(Macroblock *currMB,    //!< curre
   int block_available_left;
   int block_available_up_left;
 
-  imgpel **mb_pred = currSlice->mb_pred[pl];    
+  imgpel **mb_pred = currSlice->mb_pred[pl];
 
   for (i=0;i<4;++i)
   {
@@ -330,7 +340,7 @@ static int intra4x4_diag_down_right_pred_mbaff(Macroblock *currMB,    //!< curre
     P_L = imgY[pix_a[3].pos_y][pix_a[3].pos_x];
 
     P_X = imgY[pix_d.pos_y][pix_d.pos_x];
-    
+
     PredPixel[0] = (imgpel) ((P_L + (P_K << 1) + P_J + 2) >> 2);
     PredPixel[1] = (imgpel) ((P_K + (P_J << 1) + P_I + 2) >> 2);
     PredPixel[2] = (imgpel) ((P_J + (P_I << 1) + P_X + 2) >> 2);
@@ -347,7 +357,8 @@ static int intra4x4_diag_down_right_pred_mbaff(Macroblock *currMB,    //!< curre
 
   return DECODING_OK;
 }
-
+//}}}
+//{{{
 /*!
  ***********************************************************************
  * \brief
@@ -365,7 +376,7 @@ static int intra4x4_diag_down_left_pred_mbaff(Macroblock *currMB,    //!< curren
 {
   Slice *currSlice = currMB->p_Slice;
   VideoParameters *p_Vid = currMB->p_Vid;
-  
+
   PixelPos pix_b, pix_c;
 
   int block_available_up;
@@ -392,7 +403,7 @@ static int intra4x4_diag_down_left_pred_mbaff(Macroblock *currMB,    //!< curren
   else
   {
     imgpel **imgY = (pl) ? currSlice->dec_picture->imgUV[pl - 1] : currSlice->dec_picture->imgY;
-    imgpel **mb_pred = currSlice->mb_pred[pl];    
+    imgpel **mb_pred = currSlice->mb_pred[pl];
 
     imgpel PredPixel[8];
     imgpel PredPel[25];
@@ -428,7 +439,8 @@ static int intra4x4_diag_down_left_pred_mbaff(Macroblock *currMB,    //!< curren
 
   return DECODING_OK;
 }
-
+//}}}
+//{{{
 /*!
  ***********************************************************************
  * \brief
@@ -446,7 +458,7 @@ static int intra4x4_vert_right_pred_mbaff(Macroblock *currMB,    //!< current ma
 {
   Slice *currSlice = currMB->p_Slice;
   VideoParameters *p_Vid = currMB->p_Vid;
-  
+
   int i;
   imgpel **imgY = (pl) ? currSlice->dec_picture->imgUV[pl - 1] : currSlice->dec_picture->imgY;
 
@@ -457,7 +469,7 @@ static int intra4x4_vert_right_pred_mbaff(Macroblock *currMB,    //!< current ma
   int block_available_left;
   int block_available_up_left;
 
-  imgpel **mb_pred = currSlice->mb_pred[pl];    
+  imgpel **mb_pred = currSlice->mb_pred[pl];
 
   for (i=0;i<4;++i)
   {
@@ -497,7 +509,7 @@ static int intra4x4_vert_right_pred_mbaff(Macroblock *currMB,    //!< current ma
     P_K = imgY[pix_a[2].pos_y][pix_a[2].pos_x];
 
     P_X = imgY[pix_d.pos_y][pix_d.pos_x];
-    
+
     PredPixel[0] = (imgpel) ((P_X + (P_I << 1) + P_J + 2) >> 2);
     PredPixel[1] = (imgpel) ((P_X + P_A + 1) >> 1);
     PredPixel[2] = (imgpel) ((P_A + P_B + 1) >> 1);
@@ -512,14 +524,14 @@ static int intra4x4_vert_right_pred_mbaff(Macroblock *currMB,    //!< current ma
     memcpy(&mb_pred[joff++][ioff], &PredPixel[1], 4 * sizeof(imgpel));
     memcpy(&mb_pred[joff++][ioff], &PredPixel[6], 4 * sizeof(imgpel));
     memcpy(&mb_pred[joff++][ioff], &PredPixel[0], 4 * sizeof(imgpel));
-    memcpy(&mb_pred[joff  ][ioff], &PredPixel[5], 4 * sizeof(imgpel));    
-    
+    memcpy(&mb_pred[joff  ][ioff], &PredPixel[5], 4 * sizeof(imgpel));
+
   }
 
   return DECODING_OK;
 }
-
-
+//}}}
+//{{{
 /*!
  ***********************************************************************
  * \brief
@@ -537,7 +549,7 @@ static int intra4x4_vert_left_pred_mbaff(Macroblock *currMB,    //!< current mac
 {
   Slice *currSlice = currMB->p_Slice;
   VideoParameters *p_Vid = currMB->p_Vid;
-  
+
   PixelPos pix_b, pix_c;
 
   int block_available_up;
@@ -547,7 +559,7 @@ static int intra4x4_vert_left_pred_mbaff(Macroblock *currMB,    //!< current mac
   getAffNeighbour(currMB, ioff +4 , joff -1 , p_Vid->mb_size[IS_LUMA], &pix_c);
 
   pix_c.available = pix_c.available && !((ioff==4) && ((joff==4)||(joff==12)));
-  
+
   if (p_Vid->active_pps->constrained_intra_pred_flag)
   {
     block_available_up       = pix_b.available ? currSlice->intra_block [pix_b.mb_addr] : 0;
@@ -566,7 +578,7 @@ static int intra4x4_vert_left_pred_mbaff(Macroblock *currMB,    //!< current mac
     imgpel PredPixel[10];
     imgpel PredPel[13];
     imgpel **imgY = (pl) ? currSlice->dec_picture->imgUV[pl - 1] : currSlice->dec_picture->imgY;
-    imgpel **mb_pred = currSlice->mb_pred[pl];    
+    imgpel **mb_pred = currSlice->mb_pred[pl];
     imgpel *pred_pel = &imgY[pix_b.pos_y][pix_b.pos_x];
 
     // form predictor pels
@@ -601,7 +613,8 @@ static int intra4x4_vert_left_pred_mbaff(Macroblock *currMB,    //!< current mac
   }
   return DECODING_OK;
 }
-
+//}}}
+//{{{
 /*!
  ***********************************************************************
  * \brief
@@ -619,7 +632,7 @@ static int intra4x4_hor_up_pred_mbaff(Macroblock *currMB,    //!< current macrob
 {
   Slice *currSlice = currMB->p_Slice;
   VideoParameters *p_Vid = currMB->p_Vid;
-  
+
   int i;
   imgpel **imgY = (pl) ? currSlice->dec_picture->imgUV[pl - 1] : currSlice->dec_picture->imgY;
 
@@ -627,7 +640,7 @@ static int intra4x4_hor_up_pred_mbaff(Macroblock *currMB,    //!< current macrob
 
   int block_available_left;
 
-  imgpel **mb_pred = currSlice->mb_pred[pl];    
+  imgpel **mb_pred = currSlice->mb_pred[pl];
 
   for (i=0;i<4;++i)
   {
@@ -676,7 +689,8 @@ static int intra4x4_hor_up_pred_mbaff(Macroblock *currMB,    //!< current macrob
 
   return DECODING_OK;
 }
-
+//}}}
+//{{{
 /*!
  ***********************************************************************
  * \brief
@@ -694,8 +708,8 @@ static int intra4x4_hor_down_pred_mbaff(Macroblock *currMB,    //!< current macr
 {
   Slice *currSlice = currMB->p_Slice;
   VideoParameters *p_Vid = currMB->p_Vid;
-  
-  int i; 
+
+  int i;
   imgpel **imgY = (pl) ? currSlice->dec_picture->imgUV[pl - 1] : currSlice->dec_picture->imgY;
 
   PixelPos pix_a[4];
@@ -705,8 +719,8 @@ static int intra4x4_hor_down_pred_mbaff(Macroblock *currMB,    //!< current macr
   int block_available_left;
   int block_available_up_left;
 
-  imgpel **mb_pred = currSlice->mb_pred[pl];    
-  
+  imgpel **mb_pred = currSlice->mb_pred[pl];
+
   for (i=0;i<4;++i)
   {
     getAffNeighbour(currMB, ioff -1 , joff +i , p_Vid->mb_size[IS_LUMA], &pix_a[i]);
@@ -767,12 +781,13 @@ static int intra4x4_hor_down_pred_mbaff(Macroblock *currMB,    //!< current macr
 
   return DECODING_OK;
 }
+//}}}
 
-
+//{{{
 /*!
  ***********************************************************************
  * \brief
- *    makes and returns 4x4 intra prediction blocks 
+ *    makes and returns 4x4 intra prediction blocks
  *
  * \return
  *    DECODING_OK   decoding of intra prediction mode was successful            \n
@@ -816,7 +831,7 @@ int intra_pred_4x4_mbaff(Macroblock *currMB,    //!< current macroblock
   case HOR_UP_PRED:
     return (intra4x4_hor_up_pred_mbaff(currMB, pl, ioff, joff));
     break;
-  case HOR_DOWN_PRED:  
+  case HOR_DOWN_PRED:
     return (intra4x4_hor_down_pred_mbaff(currMB, pl, ioff, joff));
   default:
     printf("Error: illegal intra_4x4 prediction mode: %d\n", (int) predmode);
@@ -824,3 +839,4 @@ int intra_pred_4x4_mbaff(Macroblock *currMB,    //!< current macroblock
     break;
   }
 }
+//}}}

@@ -19,6 +19,7 @@
 #include "global.h"
 #include "erc_do.h"
 //}}}
+
 static void concealBlocks          ( VideoParameters *p_Vid, int lastColumn, int lastRow, int comp, frame *recfr, int picSizeX, char *condition );
 static void pixMeanInterpolateBlock( VideoParameters *p_Vid, imgpel *src[], imgpel *block, int blockSize, int frameWidth );
 //{{{
