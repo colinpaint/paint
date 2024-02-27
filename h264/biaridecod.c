@@ -54,7 +54,7 @@ DecodingEnvironmentPtr arideco_create_decoding_environment()
  *    Frees memory of the DecodingEnvironment struct
  ***********************************************************************
  */
-void arideco_delete_decoding_environment(DecodingEnvironmentPtr dep)
+void arideco_delete_decoding_environment (DecodingEnvironmentPtr dep)
 {
   if (dep == NULL)
   {
@@ -72,7 +72,7 @@ void arideco_delete_decoding_environment(DecodingEnvironmentPtr dep)
  *    finalize arithetic decoding():
  ************************************************************************
  */
-void arideco_done_decoding(DecodingEnvironmentPtr dep)
+void arideco_done_decoding (DecodingEnvironmentPtr dep)
 {
   (*dep->Dcodestrm_len)++;
 #if(TRACE==2)
@@ -88,7 +88,7 @@ void arideco_done_decoding(DecodingEnvironmentPtr dep)
  *    read one byte from the bitstream
  ************************************************************************
  */
-static inline unsigned int getbyte(DecodingEnvironmentPtr dep)
+static inline unsigned int getbyte (DecodingEnvironmentPtr dep)
 {
 #if(TRACE==2)
   fprintf(p_trace, "get_byte: %d\n", (*dep->Dcodestrm_len));
@@ -103,7 +103,7 @@ static inline unsigned int getbyte(DecodingEnvironmentPtr dep)
  *    read two bytes from the bitstream
  ************************************************************************
  */
-static inline unsigned int getword(DecodingEnvironmentPtr dep)
+static inline unsigned int getword (DecodingEnvironmentPtr dep)
 {
   int *len = dep->Dcodestrm_len;
   byte *p_code_strm = &dep->Dcodestrm[*len];
@@ -122,7 +122,7 @@ static inline unsigned int getword(DecodingEnvironmentPtr dep)
  *    Initializes the DecodingEnvironment for the arithmetic coder
  ************************************************************************
  */
-void arideco_start_decoding(DecodingEnvironmentPtr dep, unsigned char *code_buffer,
+void arideco_start_decoding (DecodingEnvironmentPtr dep, unsigned char *code_buffer,
                             int firstbyte, int *code_len)
 {
 
@@ -148,7 +148,7 @@ void arideco_start_decoding(DecodingEnvironmentPtr dep, unsigned char *code_buff
  *    arideco_bits_read
  ************************************************************************
  */
-int arideco_bits_read(DecodingEnvironmentPtr dep)
+int arideco_bits_read (DecodingEnvironmentPtr dep)
 {
 #if (2==TRACE)
   int tmp = ((*dep->Dcodestrm_len) << 3) - dep->DbitsLeft;
@@ -169,7 +169,7 @@ int arideco_bits_read(DecodingEnvironmentPtr dep)
 *    the decoded symbol
 ************************************************************************
 */
-unsigned int biari_decode_symbol(DecodingEnvironment *dep, BiContextType *bi_ct )
+unsigned int biari_decode_symbol (DecodingEnvironment *dep, BiContextType *bi_ct )
 {
   unsigned int bit    = bi_ct->MPS;
   unsigned int *value = &dep->Dvalue;
@@ -232,7 +232,7 @@ unsigned int biari_decode_symbol(DecodingEnvironment *dep, BiContextType *bi_ct 
  *    the decoded symbol
  ************************************************************************
  */
-unsigned int biari_decode_symbol_eq_prob(DecodingEnvironmentPtr dep)
+unsigned int biari_decode_symbol_eq_prob (DecodingEnvironmentPtr dep)
 {
    int tmp_value;
    unsigned int *value = &dep->Dvalue;
@@ -266,7 +266,7 @@ unsigned int biari_decode_symbol_eq_prob(DecodingEnvironmentPtr dep)
  *    the decoded symbol
  ************************************************************************
  */
-unsigned int biari_decode_final(DecodingEnvironmentPtr dep)
+unsigned int biari_decode_final (DecodingEnvironmentPtr dep)
 {
   unsigned int range  = dep->Drange - 2;
   int value  = dep->Dvalue;

@@ -5,4 +5,13 @@ project (h264 VERSION 1.0.0)
 
   add_library (${PROJECT_NAME} ${SOURCE_FILES} ${HEADER_FILES})
 
+  if (CMAKE_HOST_WIN32)
+  else()
+    target_compile_options (${PROJECT_NAME} PUBLIC -Wno-unused-variable
+                                                   -Wno-unused-parameter
+                                                   -Wno-implicit-fallthrough
+                                                   -Wno-sign-compare
+                                                   )
+  endif()
+
   target_link_libraries (${PROJECT_NAME} PRIVATE common)

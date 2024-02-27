@@ -25,22 +25,20 @@
 static const int IOBUFFERSIZE = 512*1024; //65536;
 
 //{{{
-void malloc_annex_b (VideoParameters *p_Vid, ANNEXB_t **p_annex_b)
-{
-  if ( ((*p_annex_b) = (ANNEXB_t *) calloc(1, sizeof(ANNEXB_t))) == NULL)
-  {
+void malloc_annex_b (VideoParameters *p_Vid, ANNEXB_t **p_annex_b) {
+
+  if ( ((*p_annex_b) = (ANNEXB_t *) calloc(1, sizeof(ANNEXB_t))) == NULL) {
     snprintf(errortext, ET_SIZE, "Memory allocation for Annex_B file failed");
     error(errortext,100);
-  }
+    }
+
   if (((*p_annex_b)->Buf = (byte*) malloc(p_Vid->nalu->max_size)) == NULL)
-  {
     error("malloc_annex_b: Buf", 101);
   }
-}
 //}}}
 //{{{
-void init_annex_b (ANNEXB_t *annex_b)
-{
+void init_annex_b (ANNEXB_t *annex_b) {
+
   annex_b->BitStreamFile = -1;
   annex_b->iobuffer = NULL;
   annex_b->iobufferread = NULL;
@@ -48,16 +46,16 @@ void init_annex_b (ANNEXB_t *annex_b)
   annex_b->is_eof = FALSE;
   annex_b->IsFirstByteStreamNALU = 1;
   annex_b->nextstartcodebytes = 0;
-}
+  }
 //}}}
 //{{{
-void free_annex_b (ANNEXB_t **p_annex_b)
-{
+void free_annex_b (ANNEXB_t **p_annex_b) {
+
   free((*p_annex_b)->Buf);
   (*p_annex_b)->Buf = NULL;
   free(*p_annex_b);
   *p_annex_b = NULL;
-}
+  }
 //}}}
 
 //{{{
@@ -67,19 +65,18 @@ void free_annex_b (ANNEXB_t **p_annex_b)
 *    fill IO buffer
 ************************************************************************
 */
-static inline size_t getChunk (ANNEXB_t *annex_b)
-{
+static inline size_t getChunk (ANNEXB_t *annex_b) {
+
   size_t readbytes = read (annex_b->BitStreamFile, annex_b->iobuffer, annex_b->iIOBufferSize);
-  if (0==readbytes)
-  {
+  if (0==readbytes) {
     annex_b->is_eof = TRUE;
     return 0;
-  }
+    }
 
   annex_b->bytesinbuffer = readbytes;
   annex_b->iobufferread = annex_b->iobuffer;
   return readbytes;
-}
+  }
 //}}}
 //{{{
 /*!
@@ -88,16 +85,16 @@ static inline size_t getChunk (ANNEXB_t *annex_b)
 *    returns a byte from IO buffer
 ************************************************************************
 */
-static inline byte getfbyte (ANNEXB_t *annex_b)
-{
-  if (0 == annex_b->bytesinbuffer)
-  {
+static inline byte getfbyte (ANNEXB_t *annex_b) {
+
+  if (0 == annex_b->bytesinbuffer) {
     if (0 == getChunk(annex_b))
       return 0;
-  }
+    }
+
   annex_b->bytesinbuffer--;
   return (*annex_b->iobufferread++);
-}
+  }
 //}}}
 //{{{
 /*!
@@ -116,23 +113,18 @@ static inline byte getfbyte (ANNEXB_t *annex_b)
  *     indicates number of 0x00 bytes in start-code.
  ************************************************************************
  */
-static inline int FindStartCode (unsigned char *Buf, int zeros_in_startcode)
-{
-  int i;
+static inline int FindStartCode (unsigned char *Buf, int zeros_in_startcode) {
 
+  int i;
   for (i = 0; i < zeros_in_startcode; i++)
-  {
     if(*(Buf++) != 0)
-    {
       return 0;
-    }
-  }
 
   if(*Buf != 1)
     return 0;
 
   return 1;
-}
+  }
 //}}}
 
 //{{{
@@ -169,7 +161,7 @@ int get_annex_b_NALU (VideoParameters* p_Vid, NALU_t* nalu, ANNEXB_t* annex_b) {
       }
     (*pBuf++) = 1;
     pos++;
-     }
+    }
   else {
     while (!annex_b->is_eof) {
       pos++;
@@ -283,59 +275,41 @@ int get_annex_b_NALU (VideoParameters* p_Vid, NALU_t* nalu, ANNEXB_t* annex_b) {
 //}}}
 
 //{{{
-/*!
- ************************************************************************
- * \brief
- *    Opens the bit stream file named fn
- * \return
- *    none
- ************************************************************************
- */
-void open_annex_b (char *fn, ANNEXB_t *annex_b)
-{
+void open_annex_b (char *fn, ANNEXB_t *annex_b) {
+
   if (NULL != annex_b->iobuffer)
-  {
     error ("open_annex_b: tried to open Annex B file twice",500);
-  }
-  if ((annex_b->BitStreamFile = open(fn, OPENFLAGS_READ)) == -1)
-  {
+  if ((annex_b->BitStreamFile = open(fn, OPENFLAGS_READ)) == -1) {
     snprintf (errortext, ET_SIZE, "Cannot open Annex B ByteStream file '%s'", fn);
     error(errortext,500);
-  }
+    }
 
   annex_b->iIOBufferSize = IOBUFFERSIZE * sizeof (byte);
   annex_b->iobuffer = malloc (annex_b->iIOBufferSize);
   if (NULL == annex_b->iobuffer)
-  {
     error ("open_annex_b: cannot allocate IO buffer",500);
-  }
+
   annex_b->is_eof = FALSE;
   getChunk(annex_b);
-}
+  }
 //}}}
 //{{{
-/*!
- ************************************************************************
- * \brief
- *    Closes the bit stream file
- ************************************************************************
- */
-void close_annex_b (ANNEXB_t *annex_b)
-{
-  if (annex_b->BitStreamFile != -1)
-  {
+void close_annex_b (ANNEXB_t *annex_b) {
+
+  if (annex_b->BitStreamFile != -1) {
     close(annex_b->BitStreamFile);
     annex_b->BitStreamFile = - 1;
-  }
+    }
+
   free (annex_b->iobuffer);
   annex_b->iobuffer = NULL;
-}
+  }
 //}}}
 //{{{
-void reset_annex_b (ANNEXB_t *annex_b)
-{
+void reset_annex_b (ANNEXB_t *annex_b) {
+
   annex_b->is_eof = FALSE;
   annex_b->bytesinbuffer = 0;
   annex_b->iobufferread = annex_b->iobuffer;
-}
+  }
 //}}}
