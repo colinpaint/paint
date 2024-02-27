@@ -20,7 +20,6 @@
 #include "mb_access.h"
 #include "image.h"
 //}}}
-
 //{{{
 // Notation for comments regarding prediction and predictors.
 // The pels of the 4x4 block are labelled a..p. The predictor pels above
@@ -269,6 +268,7 @@ static int intra4x4_hor_pred_mbaff(Macroblock *currMB,
   return DECODING_OK;
 }
 //}}}
+
 //{{{
 /*!
  ***********************************************************************
@@ -440,6 +440,7 @@ static int intra4x4_diag_down_left_pred_mbaff(Macroblock *currMB,    //!< curren
   return DECODING_OK;
 }
 //}}}
+
 //{{{
 /*!
  ***********************************************************************
@@ -614,6 +615,7 @@ static int intra4x4_vert_left_pred_mbaff(Macroblock *currMB,    //!< current mac
   return DECODING_OK;
 }
 //}}}
+
 //{{{
 /*!
  ***********************************************************************

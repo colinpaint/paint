@@ -1,20 +1,7 @@
-
-/*!
- ************************************************************************
- * \file quant.h
- *
- * \brief
- *    definitions for quantization functions
- *
- * \author
- *
- ************************************************************************
- */
-
-#ifndef _QUANT_H_
-#define _QUANT_H_
+#pragma once
 
 // exported variables
+//{{{
 static const int dequant_coef8[6][8][8] =
 {
   {
@@ -78,8 +65,8 @@ static const int dequant_coef8[6][8][8] =
     {34,  32, 43, 32, 34, 32, 43, 32}
   }
 };
-
-
+//}}}
+//{{{
 //! Dequantization coefficients
 static const int dequant_coef[6][4][4] = {
   {
@@ -113,7 +100,8 @@ static const int dequant_coef[6][4][4] = {
     { 18, 23, 18, 23},
     { 23, 29, 23, 29}}
 };
-
+//}}}
+//{{{
 static const int quant_coef[6][4][4] = {
   {
     { 13107,  8066, 13107,  8066},
@@ -146,14 +134,17 @@ static const int quant_coef[6][4][4] = {
     {  7282,  4559,  7282,  4559},
     {  4559,  2893,  4559,  2893}}
 };
+//}}}
 
 // SP decoding parameter (EQ. 8-425)
+//{{{
 static const int A[4][4] = {
   { 16, 20, 16, 20},
   { 20, 25, 20, 25},
   { 16, 20, 16, 20},
   { 20, 25, 20, 25}
 };
+//}}}
 
 // exported functions
 // quantization initialization
@@ -164,6 +155,3 @@ extern void free_qp_matrices(CodingParameters *cps);
 extern void assign_quant_params   (Slice *currslice);
 extern void CalculateQuant4x4Param(Slice *currslice);
 extern void CalculateQuant8x8Param(Slice *currslice);
-
-#endif
-

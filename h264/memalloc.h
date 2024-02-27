@@ -1,20 +1,3 @@
-//{{{
-/*!
- ************************************************************************
- * \file  memalloc.h
- *
- * \brief
- *    Memory allocation and free helper funtions
- *
- * \author
- *    Main contributors (see contributors.h for copyright, address and affiliation details)
- *     - Karsten Suehring
- *     - Alexis Michael Tourapis         <alexismt@ieee.org>
- *     - Yuwen He                        <yhe@dolby.com>
- *
- ************************************************************************
- */
-//}}}
 #pragma once
 
 #include "global.h"

@@ -1,19 +1,3 @@
-
-/*!
- ************************************************************************
- * \file
- *    blk_prediction.h
- *
- * \brief
- *    block prediction header
- *
- * \author
- *      Main contributors (see contributors.h for copyright,
- *                         address and affiliation details)
- *      - Alexis Michael Tourapis  <alexismt@ieee.org>
- *
- *************************************************************************************
- */
 #pragma once
 #include "mbuffer.h"
 

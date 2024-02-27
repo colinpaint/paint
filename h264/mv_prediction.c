@@ -310,7 +310,7 @@ static void GetMotionVectorPredictorNormal (Macroblock *currMB,
 //}}}
 
 //{{{
-void init_motion_vector_prediction(Macroblock *currMB, int mb_aff_frame_flag)
+void init_motion_vector_prediction (Macroblock *currMB, int mb_aff_frame_flag)
 {
   if (mb_aff_frame_flag)
     currMB->GetMVPredictor = GetMotionVectorPredictorMBAFF;

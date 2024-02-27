@@ -22,7 +22,6 @@
 #include "mb_access.h"
 #include "image.h"
 //}}}
-
 //{{{
 // Notation for comments regarding prediction and predictors.
 // The pels of the 8x8 block are labeled a..p. The predictor pels above
@@ -66,6 +65,7 @@
 #define P_W (PredPel[23])
 #define P_X (PredPel[24])
 //}}}
+
 //{{{
 /*!
  *************************************************************************************
@@ -228,6 +228,7 @@ static inline void LowPassForIntra8x8PredVer(imgpel *PredPel, int block_up_left,
 }
 
 //}}}
+
 //{{{
 /*!
  ***********************************************************************
@@ -593,6 +594,7 @@ static inline int intra8x8_hor_pred(Macroblock *currMB,    //!< current macroblo
   return DECODING_OK;
 }
 //}}}
+
 //{{{
 /*!
  ***********************************************************************
@@ -891,6 +893,7 @@ static inline int intra8x8_diag_down_left_pred(Macroblock *currMB,    //!< curre
   return DECODING_OK;
 }
 //}}}
+
 //{{{
 /*!
  ***********************************************************************
@@ -1199,6 +1202,7 @@ static inline int intra8x8_vert_left_pred(Macroblock *currMB,    //!< current ma
   return DECODING_OK;
 }
 //}}}
+
 //{{{
 /*!
  ***********************************************************************

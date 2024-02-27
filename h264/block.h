@@ -1,24 +1,8 @@
-
-/*!
- ************************************************************************
- * \file block.h
- *
- * \brief
- *    definitions for block decoding functions
- *
- * \author
- *  Inge Lille-Langoy               <inge.lille-langoy@telenor.com>    \n
- *  Telenor Satellite Services                                         \n
- *  P.O.Box 6914 St.Olavs plass                                        \n
- *  N-0130 Oslo, Norway
- *
- ************************************************************************
- */
 #pragma once
-
 #include "global.h"
 #include "transform8x8.h"
 
+//{{{
 static const byte QP_SCALE_CR[52]=
 {
     0, 1, 2, 3, 4, 5, 6, 7, 8, 9,10,11,
@@ -27,7 +11,8 @@ static const byte QP_SCALE_CR[52]=
    37,38,38,38,39,39,39,39
 
 };
-
+//}}}
+//{{{
 //! look up tables for FRExt_chroma support
 static const unsigned char subblk_offset_x[3][8][4] =
 {
@@ -62,8 +47,8 @@ static const unsigned char subblk_offset_x[3][8][4] =
     {8,12, 8,12}
   }
 };
-
-
+//}}}
+//{{{
 static const unsigned char subblk_offset_y[3][8][4] =
 {
   {
@@ -97,6 +82,7 @@ static const unsigned char subblk_offset_y[3][8][4] =
     {8, 8,12,12}
   }
 };
+//}}}
 
 static const byte decode_block_scan[16] = {0, 1, 4, 5, 2, 3, 6, 7, 8, 9, 12, 13, 10, 11, 14, 15};
 

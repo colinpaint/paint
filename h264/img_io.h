@@ -1,19 +1,5 @@
-/*!
- *************************************************************************************
- * \file img_io.h
- *
- * \brief
- *    image I/O related functions
- *
- * \author
- *    Main contributors (see contributors.h for copyright, address and affiliation details)
- *     - Alexis Michael Tourapis         <alexismt@ieee.org>
- *************************************************************************************
- */
+#pragma once
 #include "global.h"
-
-#ifndef _IMG_IO_H_
-#define _IMG_IO_H_
 
 #include "io_video.h"
 
@@ -23,6 +9,3 @@ extern void OpenFrameFile                (VideoDataFile *input_file, int FrameNu
 extern void OpenFiles                    (VideoDataFile *input_file);
 extern void CloseFiles                   (VideoDataFile *input_file);
 extern VideoFileType ParseVideoType      (VideoDataFile *input_file);
-
-#endif
-

@@ -1,18 +1,3 @@
-//{{{
-/*!
- **************************************************************************
- *  \file dec_statistics.h
- *
- *  \brief
- *     Various decoding statistics
- *
- *  \author
- *      Main contributors (see contributors.h for copyright, address and affiliation details)
- *      - Alexis Tourapis                 <alexismt@ieee.org>
- *
- **************************************************************************
- */
-//}}}
 #pragma once
 #include "global.h"
 

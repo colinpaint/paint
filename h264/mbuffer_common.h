@@ -1,21 +1,6 @@
-/*!
-***********************************************************************
-*  \file
-*      mbuffer_common.h
-*
-*  \brief
-*      Frame buffer functions
-*
-*  \author
-*      Main contributors (see contributors.h for copyright, address and affiliation details)
-*      - Karsten Suehring
-*      - Alexis Michael Tourapis  <alexismt@ieee.org>
-*      - Yuwen He                 <yhe@dolby.com>
-***********************************************************************
-*/
-#ifndef _MBUFFER_COMMON_H_
-#define _MBUFFER_COMMON_H_
+#pragma once
 
+//{{{
 /*!
  ************************************************************************
  * \brief
@@ -35,7 +20,8 @@ static inline int compare_pic_by_pic_num_desc( const void *arg1, const void *arg
   else
     return 0;
 }
-
+//}}}
+//{{{
 /*!
  ************************************************************************
  * \brief
@@ -55,7 +41,8 @@ static inline int compare_pic_by_lt_pic_num_asc( const void *arg1, const void *a
   else
     return 0;
 }
-
+//}}}
+//{{{
 /*!
  ************************************************************************
  * \brief
@@ -74,8 +61,8 @@ static inline int compare_fs_by_frame_num_desc( const void *arg1, const void *ar
   else
     return 0;
 }
-
-
+//}}}
+//{{{
 /*!
  ************************************************************************
  * \brief
@@ -95,8 +82,8 @@ static inline int compare_fs_by_lt_pic_idx_asc( const void *arg1, const void *ar
   else
     return 0;
 }
-
-
+//}}}
+//{{{
 /*!
  ************************************************************************
  * \brief
@@ -110,14 +97,14 @@ static inline int compare_pic_by_poc_asc( const void *arg1, const void *arg2 )
   int poc2 = (*(StorablePicture**)arg2)->poc;
 
   if ( poc1 < poc2)
-    return -1;  
+    return -1;
   else if ( poc1 > poc2)
     return 1;
   else
     return 0;
 }
-
-
+//}}}
+//{{{
 /*!
  ************************************************************************
  * \brief
@@ -137,8 +124,8 @@ static inline int compare_pic_by_poc_desc( const void *arg1, const void *arg2 )
   else
     return 0;
 }
-
-
+//}}}
+//{{{
 /*!
  ************************************************************************
  * \brief
@@ -158,8 +145,8 @@ static inline int compare_fs_by_poc_asc( const void *arg1, const void *arg2 )
   else
     return 0;
 }
-
-
+//}}}
+//{{{
 /*!
  ************************************************************************
  * \brief
@@ -179,7 +166,8 @@ static inline int compare_fs_by_poc_desc( const void *arg1, const void *arg2 )
   else
     return 0;
 }
-
+//}}}
+//{{{
 /*!
  ************************************************************************
  * \brief
@@ -191,8 +179,8 @@ static inline int is_short_ref(StorablePicture *s)
 {
   return ((s->used_for_reference) && (!(s->is_long_term)));
 }
-
-
+//}}}
+//{{{
 /*!
  ************************************************************************
  * \brief
@@ -204,7 +192,7 @@ static inline int is_long_ref(StorablePicture *s)
 {
   return ((s->used_for_reference) && (s->is_long_term));
 }
-
+//}}}
 
 extern void gen_pic_list_from_frame_list(PictureStructure currStructure, FrameStore **fs_list, int list_idx, StorablePicture **list, char *list_size, int long_term);
 extern StorablePicture*  get_long_term_pic(Slice *currSlice, DecodedPictureBuffer *p_Dpb, int LongtermPicNum);
@@ -220,6 +208,3 @@ extern void mm_unmark_all_long_term_for_reference  (DecodedPictureBuffer *p_Dpb)
 extern int  is_used_for_reference        (FrameStore* fs);
 extern void get_smallest_poc(DecodedPictureBuffer *p_Dpb, int *poc,int * pos);
 extern int remove_unused_frame_from_dpb(DecodedPictureBuffer *p_Dpb);
-
-#endif
-

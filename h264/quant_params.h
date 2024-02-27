@@ -1,18 +1,4 @@
-/*!
- ***************************************************************************
- * \file
- *    quant_params.h
- *
- * \author
- *    Alexis Michael Tourapis
- *
- * \brief
- *    Headerfile for Quantization parameters
- **************************************************************************
- */
-
-#ifndef _QUANT_PARAMS_H_
-#define _QUANT_PARAMS_H_
+#pragma once
 
 typedef struct level_quant_params {
   int   OffsetComp;
@@ -37,18 +23,15 @@ typedef struct quant_params {
 } QuantParameters;
 
 typedef struct quant_methods {
-  int   block_y; 
+  int   block_y;
   int   block_x;
-  int   qp; 
+  int   qp;
   int*  ACLevel;
   int*  ACRun;
-  int **fadjust; 
+  int **fadjust;
   LevelQuantParams **q_params;
   int *coeff_cost;
   const byte (*pos_scan)[2];
   const byte *c_cost;
   char type;
 } QuantMethods;
-
-#endif
-

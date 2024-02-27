@@ -1,25 +1,10 @@
-
-/*!
- **************************************************************************************
- * \file
- *    nalucommon.h
- * \brief
- *    NALU handling common to encoder and decoder
- * \author
- *    Main contributors (see contributors.h for copyright, address and affiliation details)
- *      - Stephan Wenger        <stewe@cs.tu-berlin.de>
- *      - Karsten Suehring
- ***************************************************************************************
- */
-
-#ifndef _NALUCOMMON_H_
-#define _NALUCOMMON_H_
-
+#pragma once
 #include "defines.h"
 
 #define MAXRBSPSIZE 64000
 #define MAXNALUSIZE 64000
 
+//{{{
 //! values for nal_unit_type
 typedef enum {
  NALU_TYPE_SLICE    = 1,
@@ -41,7 +26,8 @@ typedef enum {
  NALU_TYPE_VDRD     = 24  // View and Dependency Representation Delimiter NAL Unit
 #endif
 } NaluType;
-
+//}}}
+//{{{
 //! values for nal_ref_idc
 typedef enum {
  NALU_PRIORITY_HIGHEST     = 3,
@@ -49,7 +35,8 @@ typedef enum {
  NALU_PRIORITY_LOW         = 1,
  NALU_PRIORITY_DISPOSABLE  = 0
 } NalRefIdc;
-
+//}}}
+//{{{
 //! NAL unit structure
 typedef struct nalu_t
 {
@@ -58,7 +45,7 @@ typedef struct nalu_t
   unsigned  max_size;              //!< NAL Unit Buffer size
   int       forbidden_bit;         //!< should be always FALSE
   NaluType  nal_unit_type;         //!< NALU_TYPE_xxxx
-  NalRefIdc nal_reference_idc;     //!< NALU_PRIORITY_xxxx  
+  NalRefIdc nal_reference_idc;     //!< NALU_PRIORITY_xxxx
   byte     *buf;                   //!< contains the first byte followed by the EBSP
   uint16    lost_packets;          //!< true, if packet loss is detected
 #if (MVC_EXTENSION_ENABLE)
@@ -72,6 +59,7 @@ typedef struct nalu_t
   int       reserved_one_bit;      //!< shall be equal to 1
 #endif
 } NALU_t;
+//}}}
 
 //! allocate one NAL Unit
 extern NALU_t *AllocNALU(int);
@@ -80,8 +68,6 @@ extern NALU_t *AllocNALU(int);
 extern void FreeNALU(NALU_t *n);
 
 #if (MVC_EXTENSION_ENABLE)
-extern void nal_unit_header_svc_extension();
-extern void prefix_nal_unit_svc();
-#endif
-
+  extern void nal_unit_header_svc_extension();
+  extern void prefix_nal_unit_svc();
 #endif

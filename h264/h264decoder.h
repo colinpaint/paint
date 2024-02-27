@@ -1,17 +1,3 @@
-//{{{
-/*!
- ************************************************************************
- *  \file
- *     h264decoder.h
- *  \brief
- *     interface for H.264 decoder.
- *  \author
- *     Copyright (C) 2009 Dolby
- *  Yuwen He (yhe@dolby.com)
- *
- ************************************************************************
- */
-//}}}
 #pragma once
 #include "global.h"
 

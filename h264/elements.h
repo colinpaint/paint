@@ -1,26 +1,3 @@
-//{{{
-
-/*!
- *************************************************************************************
- * \file elements.h
- *
- * \brief
- *    Header file for elements in H.264 streams
- *
- * \date
- *    6.10.2000
- *
- * \version
- *    1.0
- *
- *  \author
- *     Sebastian Purreiter     <sebastian.purreiter@mch.siemens.de>  \n
- *     Siemens AG, Information and Communication Mobile              \n
- *     P.O.Box 80 17 07                                              \n
- *     D-81617 Munich, Germany                                       \n
- *************************************************************************************
- */
-//}}}
 #pragma once
 
 //{{{

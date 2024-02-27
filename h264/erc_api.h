@@ -1,31 +1,5 @@
-
-/*!
- ************************************************************************
- * \file  erc_api.h
- *
- * \brief
- *      External (still inside video decoder) interface for error concealment module
- *
- * \author
- *      - Ari Hourunranta                <ari.hourunranta@nokia.com>
- *      - Ye-Kui Wang                    <wyk@ieee.org>
- *      - Jill Boyce                     <jill.boyce@thomson.net>
- *      - Saurav K Bandyopadhyay         <saurav@ieee.org>
- *      - Zhenyu Wu                      <Zhenyu.Wu@thomson.net
- *      - Purvin Pandit                  <Purvin.Pandit@thomson.net>
- *
- * ************************************************************************
- */
-
-
-#ifndef _ERC_API_H_
-#define _ERC_API_H_
-
+#pragma once
 #include "erc_globals.h"
-
-/*
-* Defines
-*/
 
 /* If the average motion vector of the correctly received macroblocks is less than the
 threshold, concealByCopy is used, otherwise concealByTrial is used. */
@@ -39,11 +13,7 @@ threshold, concealByCopy is used, otherwise concealByTrial is used. */
 #define ERC_BLOCK_CORRUPTED         1
 #define ERC_BLOCK_EMPTY             0
 
-
-/*
-* Functions to convert MBNum representation to blockNum
-*/
-
+// Functions to convert MBNum representation to blockNum
 #define xPosYBlock(currYBlockNum,picSizeX) \
 ((currYBlockNum)%((picSizeX)>>3))
 
@@ -62,11 +32,7 @@ threshold, concealByCopy is used, otherwise concealByTrial is used. */
 #define MBNum2YBlock(currMBNum,comp,picSizeX) \
 MBxy2YBlock(xPosMB((currMBNum),(picSizeX)),yPosMB((currMBNum),(picSizeX)),(comp),(picSizeX))
 
-
-/*
-* typedefs
-*/
-
+//{{{
 /* segment data structure */
 typedef struct ercSegment_s
 {
@@ -74,7 +40,8 @@ typedef struct ercSegment_s
   short     endMBPos;
   char      fCorrupted;
 } ercSegment_t;
-
+//}}}
+//{{{
 /* Error detector & concealment instance data structure */
 typedef struct ercVariables_s
 {
@@ -106,10 +73,7 @@ typedef struct ercVariables_s
   int   concealment;
 
 } ercVariables_t;
-
-/*
-* External function interface
-*/
+//}}}
 
 void ercInit (VideoParameters *p_Vid, int pic_sizex, int pic_sizey, int flag);
 ercVariables_t *ercOpen( void );
@@ -127,18 +91,17 @@ int ercConcealIntraFrame( VideoParameters *p_Vid, frame *recfr, int picSizeX, in
 int ercConcealInterFrame( frame *recfr, objectBuffer_t *object_list,
                           int picSizeX, int picSizeY, ercVariables_t *errorVar, int chroma_format_idc );
 
-
 /* Thomson APIs for concealing entire frame loss */
-
 #include "mbuffer.h"
 #include "output.h"
 
+//{{{
 struct concealment_node {
     StorablePicture* picture;
     int  missingpocs;
     struct concealment_node *next;
 };
-
+//}}}
 extern struct concealment_node * init_node(StorablePicture* , int );
 extern void print_node( struct concealment_node * );
 extern void print_list( struct concealment_node * );
@@ -152,7 +115,3 @@ extern void write_lost_non_ref_pic       (DecodedPictureBuffer *p_Dpb, int poc, 
 extern void write_lost_ref_after_idr     (DecodedPictureBuffer *p_Dpb, int pos);
 
 extern int comp(const void *, const void *);
-
-
-#endif
-

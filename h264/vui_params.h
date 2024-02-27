@@ -1,19 +1,7 @@
-/*!
- ************************************************************************
- * \file vui_params.h
- *
- * \brief
- *    Input parameters related definitions
- *
- * \author
- *
- ************************************************************************
- */
 #pragma once
 
 // VUI Parameters
-typedef struct vui_parameters
-{
+typedef struct vui_parameters {
   int aspect_ratio_info_present_flag;
   int aspect_ratio_idc;
   int sar_width;

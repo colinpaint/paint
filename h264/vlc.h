@@ -1,18 +1,6 @@
-
-/*!
- ************************************************************************
- * \file vlc.h
- *
- * \brief
- *    header for (CA)VLC coding functions
- *
- * \author
- *    Karsten Suehring
- *
- ************************************************************************
- */
 #pragma once
 
+//{{{
 //! gives CBP value from codeword number, both for intra and inter
 static const byte NCBP[2][48][2]=
 {
@@ -29,7 +17,8 @@ static const byte NCBP[2][48][2]=
     {24,19},{ 6,21},{ 9,26},{22,28},{25,23},{32,27},{33,29},{34,30},{36,22},{40,25},{38,38},{41,41}
   }
 };
-
+//}}}
+//{{{
 //! for the linfo_levrun_inter routine
 static const byte NTAB1[4][8][2] =
 {
@@ -38,13 +27,14 @@ static const byte NTAB1[4][8][2] =
   {{2,0},{1,3},{1,4},{1,5},{0,0},{0,0},{0,0},{0,0}},
   {{3,0},{2,1},{2,2},{1,6},{1,7},{1,8},{1,9},{4,0}},
 };
-
+//}}}
+//{{{
 static const byte LEVRUN1[16]=
 {
   4,2,2,1,1,1,1,1,1,1,0,0,0,0,0,0,
 };
-
-
+//}}}
+//{{{
 static const byte NTAB2[4][8][2] =
 {
   {{1,0},{0,0},{0,0},{0,0},{0,0},{0,0},{0,0},{0,0}},
@@ -52,18 +42,21 @@ static const byte NTAB2[4][8][2] =
   {{1,2},{3,0},{4,0},{5,0},{0,0},{0,0},{0,0},{0,0}},
   {{1,3},{1,4},{2,1},{3,1},{6,0},{7,0},{8,0},{9,0}},
 };
-
+//}}}
+//{{{
 //! for the linfo_levrun__c2x2 routine
 static const byte LEVRUN3[4] =
 {
   2,1,0,0
 };
-
+//}}}
+//{{{
 static const byte NTAB3[2][2][2] =
 {
   {{1,0},{0,0}},
   {{2,0},{1,1}},
 };
+//}}}
 
 extern int read_se_v (char *tracestring, Bitstream *bitstream, int *used_bits);
 extern int read_ue_v (char *tracestring, Bitstream *bitstream, int *used_bits);

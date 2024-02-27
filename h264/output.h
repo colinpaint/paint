@@ -1,16 +1,3 @@
-//{{{
-/*!
- **************************************************************************************
- * \file
- *    output.h
- * \brief
- *    Picture writing routine headers
- * \author
- *    Main contributors (see contributors.h for copyright, address and affiliation details)
- *      - Karsten Suehring
- ***************************************************************************************
- */
-//}}}
 #pragma once
 
 extern void write_stored_frame (VideoParameters *p_Vid, FrameStore *fs, int p_out);

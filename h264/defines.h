@@ -1,23 +1,3 @@
-//{{{
-/*!
- **************************************************************************
- * \file defines.h
- *
- * \brief
- *    Header file containing some useful global definitions
- *
- * \author
- *    Main contributors (see contributors.h for copyright, address and affiliation details)
- *     - Detlev Marpe
- *     - Karsten Suehring
- *     - Alexis Michael Tourapis         <alexismt@ieee.org>
- *
- *
- * \date
- *    21. March 2001
- **************************************************************************
- */
-//}}}
 #pragma once
 #ifdef TRACE
   #undef TRACE

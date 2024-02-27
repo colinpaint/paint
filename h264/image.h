@@ -1,18 +1,4 @@
-//{{{
-/*!
- ************************************************************************
- * \file image.h
- *
- * \brief
- *    prototypes for image.c
- *
- ************************************************************************
- */
-//}}}
-
-#ifndef _IMAGE_H_
-#define _IMAGE_H_
-
+#pragma once
 #include "mbuffer.h"
 
 extern void calculate_frame_no(VideoParameters *p_Vid, StorablePicture *p);
@@ -33,12 +19,10 @@ extern void frame_postprocessing(VideoParameters *p_Vid);
 extern void field_postprocessing(VideoParameters *p_Vid);
 
 #if (MVC_EXTENSION_ENABLE)
-extern int GetViewIdx(VideoParameters *p_Vid, int iVOIdx);
-extern int GetVOIdx(VideoParameters *p_Vid, int iViewId);
-extern int get_maxViewIdx(VideoParameters *p_Vid, int view_id, int anchor_pic_flag, int listidx);
+  extern int GetViewIdx(VideoParameters *p_Vid, int iVOIdx);
+  extern int GetVOIdx(VideoParameters *p_Vid, int iViewId);
+  extern int get_maxViewIdx(VideoParameters *p_Vid, int view_id, int anchor_pic_flag, int listidx);
 #endif
 
 extern void init_slice(VideoParameters *p_Vid, Slice *currSlice);
 extern void decode_slice(Slice *currSlice, int current_header);
-
-#endif

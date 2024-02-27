@@ -1,22 +1,6 @@
-//{{{
-/*!
- ************************************************************************
- *  \file
- *     types.h
- *
- *  \brief
- *     type definitions.
- *
- *  \author
- *    Main contributors (see contributors.h for copyright, address and affiliation details)
- *
- ************************************************************************
- */
-//}}}
 #pragma once
 
-typedef enum
-{
+typedef enum {
   // YUV
   PLANE_Y = 0,  // PLANE_Y
   PLANE_U = 1,  // PLANE_Cb
@@ -55,23 +39,20 @@ typedef enum {
 
 
 //! Data Partitioning Modes
-typedef enum
-{
+typedef enum {
   PAR_DP_1,   //!< no data partitioning is supported
   PAR_DP_3    //!< data partitioning with 3 partitions
 } PAR_DP_TYPE;
 
 
 //! Output File Types
-typedef enum
-{
+typedef enum {
   PAR_OF_ANNEXB,    //!< Annex B byte stream format
   PAR_OF_RTP       //!< RTP packets in outfile
 } PAR_OF_TYPE;
 
 //! Field Coding Types
-typedef enum
-{
+typedef enum {
   FRAME_CODING         = 0,
   FIELD_CODING         = 1,
   ADAPTIVE_CODING      = 2,
@@ -80,8 +61,7 @@ typedef enum
 
 
 //! definition of H.264 syntax elements
-typedef enum
-{
+typedef enum {
   SE_HEADER,
   SE_PTYPE,
   SE_MBTYPE,
@@ -104,8 +84,7 @@ typedef enum
 } SE_type;             // substituting the definitions in elements.h
 
 
-typedef enum
-{
+typedef enum {
   NO_SLICES,
   FIXED_MB,
   FIXED_RATE,
@@ -113,14 +92,12 @@ typedef enum
 } SliceMode;
 
 
-typedef enum
-{
+typedef enum {
   CAVLC,
   CABAC
 } SymbolMode;
 
-typedef enum
-{
+typedef enum {
   FULL_SEARCH      = -1,
   FAST_FULL_SEARCH =  0,
   UM_HEX           =  1,
@@ -129,15 +106,13 @@ typedef enum
 } SearchType;
 
 
-typedef enum
-{
+typedef enum {
   FRAME,
   TOP_FIELD,
   BOTTOM_FIELD
 } PictureStructure;           //!< New enum for field processing
 
-typedef enum
-{
+typedef enum {
   P_SLICE = 0,
   B_SLICE = 1,
   I_SLICE = 2,
@@ -147,27 +122,23 @@ typedef enum
 } SliceType;
 
 //Motion Estimation levels
-typedef enum
-{
+typedef enum {
   F_PEL,   //!< Full Pel refinement
   H_PEL,   //!< Half Pel refinement
   Q_PEL    //!< Quarter Pel refinement
 } MELevel;
 
-typedef enum
-{
+typedef enum {
   FAST_ACCESS = 0,    //!< Fast/safe reference access
   UMV_ACCESS = 1      //!< unconstrained reference access
 } REF_ACCESS_TYPE;
 
-typedef enum
-{
+typedef enum {
   IS_LUMA = 0,
   IS_CHROMA = 1
 } Component_Type;
 
-typedef enum
-{
+typedef enum {
   RC_MODE_0 = 0,
   RC_MODE_1 = 1,
   RC_MODE_2 = 2,

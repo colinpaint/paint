@@ -1,24 +1,7 @@
-
-/*!
- ************************************************************************
- * \file erc_globals.h
- *
- * \brief
- *      global header file for error concealment module
- *
- * \author
- *      - Viktor Varsa                     <viktor.varsa@nokia.com>
- *      - Ye-Kui Wang                   <wyk@ieee.org>
- ************************************************************************
- */
-
-#ifndef _ERC_GLOBALS_H_
-#define _ERC_GLOBALS_H_
-
+#pragma once
 #include "defines.h"
 
 /* "block" means an 8x8 pixel area */
-
 /* Region modes */
 #define REGMODE_INTER_COPY       0  //!< Copy region
 #define REGMODE_INTER_PRED       1  //!< Inter region with motion vectors
@@ -30,23 +13,18 @@
 #define REGMODE_INTRA_8x8        6
 
 //! YUV pixel domain image arrays for a video frame
-typedef struct frame_s
-{
+typedef struct frame_s {
   VideoParameters *p_Vid;
   imgpel *yptr;
   imgpel *uptr;
   imgpel *vptr;
-} frame;
+  } frame;
 
 //! region structure stores information about a region that is needed for concealment
-typedef struct object_buffer
-{
+typedef struct object_buffer {
   byte regionMode;  //!< region mode as above
   int xMin;         //!< X coordinate of the pixel position of the top-left corner of the region
   int yMin;         //!< Y coordinate of the pixel position of the top-left corner of the region
   int mv[3];        //!< motion vectors in 1/4 pixel units: mvx = mv[0], mvy = mv[1],
                     //!< and ref_frame = mv[2]
-} objectBuffer_t;
-
-#endif
-
+  } objectBuffer_t;

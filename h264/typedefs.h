@@ -1,6 +1,4 @@
-// file typedefs.h
 #pragma once
-
 #include "win32.h"
 
 typedef unsigned char  byte;     //!< byte type definition

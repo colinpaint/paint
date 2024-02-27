@@ -81,7 +81,7 @@ namespace {
   //}}}
   //{{{
   string getFrameInfo (uint8_t* pes, int64_t pesSize, bool h264) {
-
+  // crude mpeg2/h264 NAL parser
     //{{{
     class cBitstream {
     // used to parse H264 stream to find I frames
@@ -1174,16 +1174,11 @@ void outputPicList (DecodedPicList* pDecPic, int bOutputAllFrames) {
 
   DecodedPicList* pPic = pDecPic;
 
-  cLog::log (LOGINFO, fmt::format ("outputPicList {}x{}:{} format:{}:{} stride:{}x{} yuv:{:x}:{:x}:{:x}",
-                                   pPic->iWidth * ((pPic->iBitDepth+7)>>3),
-                                   pPic->iHeight,
+  cLog::log (LOGINFO, fmt::format ("outputPicList {}x{}:{} format:{}:{} stride:{}x{}",
+                                   pPic->iWidth * ((pPic->iBitDepth+7)>>3), pPic->iHeight,
                                    pPic->iBitDepth,
                                    pPic->iYUVStorageFormat, pPic->bValid,
-                                   pPic->iYBufStride,
-                                   pPic->iUVBufStride,
-                                   (uint64_t)pPic->pY,
-                                   (uint64_t)pPic->pU,
-                                   (uint64_t)pPic->pV
+                                   pPic->iYBufStride, pPic->iUVBufStride
                                    ));
 
   if (pPic && (((pPic->iYUVStorageFormat == 2) && pPic->bValid == 3) ||

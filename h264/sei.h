@@ -1,16 +1,6 @@
+#pragma once
 
-/*!
- *************************************************************************************
- * \file sei.h
- *
- * \brief
- *    Prototypes for sei.c
- *************************************************************************************
- */
-
-#ifndef SEI_H
-#define SEI_H
-
+//{{{
 typedef enum {
   SEI_BUFFERING_PERIOD = 0,
   SEI_PIC_TIMING,
@@ -61,7 +51,8 @@ typedef enum {
   SEI_GREEN_METADATA=56,
 
   SEI_MAX_ELEMENTS  //!< number of maximum syntax elements
-} SEI_type;
+  } SEI_type;
+//}}}
 
 #define MAX_FN 256
 // tone mapping information
@@ -70,6 +61,7 @@ typedef enum {
 #define MAX_NUM_PIVOTS     (1<<MAX_CODED_BIT_DEPTH)
 
 #if (ENABLE_OUTPUT_TONEMAPPING)
+//{{{
 typedef struct tone_mapping_struct_s
 {
   Boolean seiHasTone_mapping;
@@ -78,14 +70,16 @@ typedef struct tone_mapping_struct_s
   unsigned char sei_bit_depth;
   unsigned int  model_id;
   unsigned int count;
-  
+
   imgpel lut[1<<MAX_CODED_BIT_DEPTH];                 //<! look up table for mapping the coded data value to output data value
 
   Bitstream *data;
   int payloadSize;
 } ToneMappingSEI;
+//}}}
 #endif
 
+//{{{
 //! Frame packing arrangement Information
 typedef struct
 {
@@ -108,8 +102,8 @@ typedef struct
   unsigned int  frame_packing_arrangement_repetition_period;
   Boolean       frame_packing_arrangement_extension_flag;
 } frame_packing_arrangement_information_struct;
-
-
+//}}}
+//{{{
 //! Green metada Information
 typedef struct
 {
@@ -124,7 +118,7 @@ typedef struct
   unsigned char xsd_metric_type;
   unsigned short xsd_metric_value;
 } Green_metadata_information_struct;
-
+//}}}
 
 void InterpretSEIMessage                                ( byte* payload, int size, VideoParameters *p_Vid, Slice *pSlice );
 void interpret_spare_pic                                ( byte* payload, int size, VideoParameters *p_Vid );
@@ -156,8 +150,7 @@ void interpret_frame_packing_arrangement_info           ( byte* payload, int siz
 void interpret_green_metadata_info                       (byte* payload, int size, VideoParameters *p_Vid );
 
 #if (ENABLE_OUTPUT_TONEMAPPING)
-void tone_map               (imgpel** imgX, imgpel* lut, int size_x, int size_y);
-void init_tone_mapping_sei  (ToneMappingSEI *seiToneMapping);
-void update_tone_mapping_sei(ToneMappingSEI *seiToneMapping);
-#endif
+  void tone_map               (imgpel** imgX, imgpel* lut, int size_x, int size_y);
+  void init_tone_mapping_sei  (ToneMappingSEI *seiToneMapping);
+  void update_tone_mapping_sei(ToneMappingSEI *seiToneMapping);
 #endif

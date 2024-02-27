@@ -1,30 +1,6 @@
-
-/*!
- ***************************************************************************
- * \file
- *    biaridecod.h
- *
- * \brief
- *    Headerfile for binary arithmetic decoder routines
- *
- * \author
- *    Detlev Marpe,
- *    Gabi Blättermann
- *    Copyright (C) 2000 HEINRICH HERTZ INSTITUTE All Rights Reserved.
- *
- * \date
- *    21. Oct 2000
- **************************************************************************
- */
-
 #pragma once
 
-
-/************************************************************************
- * D e f i n i t i o n s
- ***********************************************************************
- */
-
+//{{{
 /* Range table for  LPS */
 static const byte rLPS_table_64x4[64][4]=
 {
@@ -94,7 +70,8 @@ static const byte rLPS_table_64x4[64][4]=
   {   2,   2,   2,   2}
 };
 
-
+//}}}
+//{{{
 static const byte AC_next_state_MPS_64[64] =
 {
   1,2,3,4,5,6,7,8,9,10,
@@ -105,8 +82,8 @@ static const byte AC_next_state_MPS_64[64] =
   51,52,53,54,55,56,57,58,59,60,
   61,62,62,63
 };
-
-
+//}}}
+//{{{
 static const byte AC_next_state_LPS_64[64] =
 {
   0, 0, 1, 2, 2, 4, 4, 5, 6, 7,
@@ -117,9 +94,8 @@ static const byte AC_next_state_LPS_64[64] =
   34,34,35,35,35,36,36,36,37,37,
   37,38,38,63
 };
-
+//}}}
 static const byte renorm_table_32[32]={6,5,4,4,3,3,3,3,2,2,2,2,2,2,2,2,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1};
-
 
 extern void arideco_start_decoding(DecodingEnvironmentPtr eep, unsigned char *code_buffer, int firstbyte, int *code_len);
 extern int  arideco_bits_read(DecodingEnvironmentPtr dep);

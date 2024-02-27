@@ -69,10 +69,10 @@ extern void read_coeff_4x4_CAVLC_444           (Macroblock *currMB, int block_ty
 static void read_motion_info_from_NAL_p_slice  (Macroblock *currMB);
 static void read_motion_info_from_NAL_b_slice  (Macroblock *currMB);
 
-static int  decode_one_component_i_slice       (Macroblock *currMB, ColorPlane curr_plane, imgpel **currImg, StorablePicture *dec_picture);
-static int  decode_one_component_p_slice       (Macroblock *currMB, ColorPlane curr_plane, imgpel **currImg, StorablePicture *dec_picture);
-static int  decode_one_component_b_slice       (Macroblock *currMB, ColorPlane curr_plane, imgpel **currImg, StorablePicture *dec_picture);
-static int  decode_one_component_sp_slice      (Macroblock *currMB, ColorPlane curr_plane, imgpel **currImg, StorablePicture *dec_picture);
+static int decode_one_component_i_slice       (Macroblock *currMB, ColorPlane curr_plane, imgpel **currImg, StorablePicture *dec_picture);
+static int decode_one_component_p_slice       (Macroblock *currMB, ColorPlane curr_plane, imgpel **currImg, StorablePicture *dec_picture);
+static int decode_one_component_b_slice       (Macroblock *currMB, ColorPlane curr_plane, imgpel **currImg, StorablePicture *dec_picture);
+static int decode_one_component_sp_slice      (Macroblock *currMB, ColorPlane curr_plane, imgpel **currImg, StorablePicture *dec_picture);
 extern void update_direct_types                (Slice *currSlice);
 extern void set_intra_prediction_modes         (Slice *currSlice);
 extern void set_read_comp_coeff_cavlc          (Macroblock *currMB);

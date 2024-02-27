@@ -1,19 +1,7 @@
-//{{{
-/*!
- *************************************************************************************
- * \file annexb.h
- *
- * \brief
- *    Annex B byte stream buffer handling.
- *
- *************************************************************************************
- */
-//}}}
 #pragma once
-
 #include "nalucommon.h"
 
-typedef struct annex_b_struct { 
+typedef struct annex_b_struct {
   int  BitStreamFile;                //!< the bit stream file
   byte *iobuffer;
   byte *iobufferread;

@@ -1,22 +1,4 @@
-//{{{
-/*!
- ************************************************************************
- *  \file
- *     ifunctions.h
- *
- *  \brief
- *     define some inline functions that are used within the encoder.
- *
- *  \author
- *      Main contributors (see contributors.h for copyright, address and affiliation details)
- *      - Karsten Suehring
- *      - Alexis Tourapis                 <alexismt@ieee.org>
- *
- ************************************************************************
- */
-//}}}
-#ifndef _IFUNCTIONS_H_
-#define _IFUNCTIONS_H_
+#pragma once
 
 # if !(defined(WIN32) || defined(WIN64)) && (__STDC_VERSION__ < 199901L)
   #define static
@@ -473,5 +455,4 @@ static inline int is_intra_mb(short mb_type)
 # if !(defined(WIN32) || defined(WIN64)) && (__STDC_VERSION__ < 199901L)
   #undef static
   #undef inline
-#endif
 #endif

@@ -68,11 +68,8 @@ void initInput (VideoParameters *p_Vid, FrameFormat *source, FrameFormat *output
 int testEndian (void)
 {
   short s;
-  byte *p;
-
-  p=(byte*)&s;
-
-  s=1;
+  byte* p = (byte*)&s;
+  s = 1;
 
   return (*p==0);
 }

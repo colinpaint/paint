@@ -1,26 +1,11 @@
-/*!
- ************************************************************************
- * \file io_video.h
- *
- * \brief
- *    Video I/O 
- *
- * \author
- *     - Alexis Michael Tourapis         <alexismt@ieee.org>
- *
- ************************************************************************
- */
-
-#ifndef _IO_VIDEO_H_
-#define _IO_VIDEO_H_
-
+#pragma once
 #include "frame.h"
 
 typedef struct video_size {
   char* name;
   int x_size;
   int y_size;
-} VIDEO_SIZE;
+  } VIDEO_SIZE;
 
 typedef enum {
   VIDEO_UNKNOWN = -1,
@@ -29,15 +14,14 @@ typedef enum {
   VIDEO_XYZ     =  2,
   VIDEO_TIFF    =  3,
   VIDEO_AVI     =  4
-} VideoFileType;
+  } VideoFileType;
 
-typedef struct video_data_file
-{
+typedef struct video_data_file {
   //char*         fname;          //!< video file name
   char          fname[FILE_NAME_SIZE]; //!< video file name
   char          fhead[FILE_NAME_SIZE]; //!< header of video file
   char          ftail[FILE_NAME_SIZE]; //!< tail of video file
-  int           f_num;                 //!< video file number     
+  int           f_num;                 //!< video file number
   VideoFileType vdtype;                //!< File format
   FrameFormat   format;                //!< video format information
   int           is_concatenated;       //!< Single or multifile input?
@@ -56,8 +40,5 @@ typedef struct video_data_file
   int* avi;
   //avi_t* avi;
   //int    header;
-  //char   compressor[8];    
-} VideoDataFile;
-
-#endif
-
+  //char   compressor[8];
+  } VideoDataFile;

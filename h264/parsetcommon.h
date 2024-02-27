@@ -1,31 +1,4 @@
-
-/*!
- **************************************************************************************
- * \file
- *    parsetcommon.h
- * \brief
- *    Picture and Sequence Parameter Sets, structures common to encoder and decoder
- *
- * \date 25 November 2002
- * \author
- *    Main contributors (see contributors.h for copyright, address and affiliation details)
- *      - Stephan Wenger        <stewe@cs.tu-berlin.de>
- ***************************************************************************************
- */
-
-
-
-// In the MPEG-4 AVC/H.264 syntax, frequently flags are used that indicate the presence of
-// certain pieces of information in the NALU.  Here, these flags are also
-// present.  In the encoder, those bits indicate that the values signaled to
-// be present are meaningful and that this part of the syntax should be
-// written to the NALU.  In the decoder, the flag indicates that information
-// was received from the decoded NALU and should be used henceforth.
-// The structure names were chosen as indicated in the MPEG-4 AVC/H.264 syntax
-
-#ifndef _PARSETCOMMON_H_
-#define _PARSETCOMMON_H_
-
+#pragma once
 #include "defines.h"
 
 #define MAXIMUMPARSETRBSPSIZE   1500
@@ -35,6 +8,7 @@
 #define MAXPPS  256
 
 #define MAXIMUMVALUEOFcpb_cnt   32
+//{{{
 typedef struct
 {
   unsigned int cpb_cnt_minus1;                                   // ue(v)
@@ -48,8 +22,8 @@ typedef struct
   unsigned int dpb_output_delay_length_minus1;                   // u(5)
   unsigned int time_offset_length;                               // u(5)
 } hrd_parameters_t;
-
-
+//}}}
+//{{{
 typedef struct
 {
   Boolean      aspect_ratio_info_present_flag;                   // u(1)
@@ -88,9 +62,10 @@ typedef struct
   unsigned int num_reorder_frames;                               // ue(v)
   unsigned int max_dec_frame_buffering;                          // ue(v)
 } vui_seq_parameters_t;
-
+//}}}
 
 #define MAXnum_slice_groups_minus1  8
+//{{{
 typedef struct
 {
   Boolean   Valid;                  // indicates the parameter set is valid
@@ -139,9 +114,10 @@ typedef struct
   Boolean   redundant_pic_cnt_present_flag;                   // u(1)
   Boolean   vui_pic_parameters_flag;                          // u(1)
 } pic_parameter_set_rbsp_t;
-
+//}}}
 
 #define MAXnum_ref_frames_in_pic_order_cnt_cycle  256
+//{{{
 typedef struct
 {
   Boolean   Valid;                  // indicates the parameter set is valid
@@ -200,66 +176,69 @@ typedef struct
 #endif
   int lossless_qpprime_flag;
 } seq_parameter_set_rbsp_t;
+//}}}
 
 #if (MVC_EXTENSION_ENABLE)
-typedef struct mvcvui_tag
-{
-  int num_ops_minus1;
-  char *temporal_id;
-  int *num_target_output_views_minus1;
-  int **view_id;
-  char *timing_info_present_flag;
-  int *num_units_in_tick;
-  int *time_scale;
-  char *fixed_frame_rate_flag;
-  char *nal_hrd_parameters_present_flag;
-  char *vcl_hrd_parameters_present_flag;
-  char *low_delay_hrd_flag;
-  char *pic_struct_present_flag;
+  //{{{
+  typedef struct mvcvui_tag
+  {
+    int num_ops_minus1;
+    char *temporal_id;
+    int *num_target_output_views_minus1;
+    int **view_id;
+    char *timing_info_present_flag;
+    int *num_units_in_tick;
+    int *time_scale;
+    char *fixed_frame_rate_flag;
+    char *nal_hrd_parameters_present_flag;
+    char *vcl_hrd_parameters_present_flag;
+    char *low_delay_hrd_flag;
+    char *pic_struct_present_flag;
 
-  //hrd parameters;
-  char cpb_cnt_minus1;
-  char bit_rate_scale;
-  char cpb_size_scale;
-  int bit_rate_value_minus1[32];
-  int cpb_size_value_minus1[32];
-  char cbr_flag[32];
-  char initial_cpb_removal_delay_length_minus1;
-  char cpb_removal_delay_length_minus1;
-  char dpb_output_delay_length_minus1;
-  char time_offset_length;
-}MVCVUI_t;
+    //hrd parameters;
+    char cpb_cnt_minus1;
+    char bit_rate_scale;
+    char cpb_size_scale;
+    int bit_rate_value_minus1[32];
+    int cpb_size_value_minus1[32];
+    char cbr_flag[32];
+    char initial_cpb_removal_delay_length_minus1;
+    char cpb_removal_delay_length_minus1;
+    char dpb_output_delay_length_minus1;
+    char time_offset_length;
+  }MVCVUI_t;
+  //}}}
+  //{{{
+  typedef struct
+  {
+    seq_parameter_set_rbsp_t sps;
 
-typedef struct
-{
-  seq_parameter_set_rbsp_t sps;
+    unsigned int bit_equal_to_one;
+    int num_views_minus1;
+    int *view_id;
+    int *num_anchor_refs_l0;
+    int **anchor_ref_l0;
+    int *num_anchor_refs_l1;
+    int **anchor_ref_l1;
 
-  unsigned int bit_equal_to_one;
-  int num_views_minus1;
-  int *view_id;
-  int *num_anchor_refs_l0;
-  int **anchor_ref_l0;
-  int *num_anchor_refs_l1;
-  int **anchor_ref_l1;
+    int *num_non_anchor_refs_l0;
+    int **non_anchor_ref_l0;
+    int *num_non_anchor_refs_l1;
+    int **non_anchor_ref_l1;
 
-  int *num_non_anchor_refs_l0;
-  int **non_anchor_ref_l0;
-  int *num_non_anchor_refs_l1;
-  int **non_anchor_ref_l1;
-   
-  int num_level_values_signalled_minus1;
-  int *level_idc;
-  int *num_applicable_ops_minus1;
-  int **applicable_op_temporal_id;
-  int **applicable_op_num_target_views_minus1;
-  int ***applicable_op_target_view_id;
-  int **applicable_op_num_views_minus1;
+    int num_level_values_signalled_minus1;
+    int *level_idc;
+    int *num_applicable_ops_minus1;
+    int **applicable_op_temporal_id;
+    int **applicable_op_num_target_views_minus1;
+    int ***applicable_op_target_view_id;
+    int **applicable_op_num_views_minus1;
 
-  unsigned int mvc_vui_parameters_present_flag;
-  Boolean   Valid;                  // indicates the parameter set is valid
-  MVCVUI_t  MVCVUIParams;
-} subset_seq_parameter_set_rbsp_t;
-
+    unsigned int mvc_vui_parameters_present_flag;
+    Boolean   Valid;                  // indicates the parameter set is valid
+    MVCVUI_t  MVCVUIParams;
+  } subset_seq_parameter_set_rbsp_t;
+  //}}}
 #endif
 
 pic_parameter_set_rbsp_t *AllocPPS (void);
@@ -268,7 +247,5 @@ seq_parameter_set_rbsp_t *AllocSPS (void);
 void FreePPS (pic_parameter_set_rbsp_t *pps);
 void FreeSPS (seq_parameter_set_rbsp_t *sps);
 
-int sps_is_equal(seq_parameter_set_rbsp_t *sps1, seq_parameter_set_rbsp_t *sps2);
-int pps_is_equal(pic_parameter_set_rbsp_t *pps1, pic_parameter_set_rbsp_t *pps2);
-
-#endif
+int sps_is_equal (seq_parameter_set_rbsp_t *sps1, seq_parameter_set_rbsp_t *sps2);
+int pps_is_equal (pic_parameter_set_rbsp_t *pps1, pic_parameter_set_rbsp_t *pps2);
