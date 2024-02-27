@@ -1146,10 +1146,8 @@ void calculate_frame_no (VideoParameters *p_Vid, StorablePicture *p)
 *      file pointer piont to reference YUV reference file
 ************************************************************************
 */
-void find_snr (VideoParameters *p_Vid,
-              StorablePicture *p,
-              int *p_ref)
-{
+void find_snr (VideoParameters *p_Vid, StorablePicture *p, int *p_ref) {
+
   InputParameters *p_Inp = p_Vid->p_Inp;
   SNRParameters   *snr   = p_Vid->snr;
 

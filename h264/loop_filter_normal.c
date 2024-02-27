@@ -35,7 +35,7 @@ static void edge_loop_luma_hor       (ColorPlane pl, imgpel** Img, byte *Strengt
 static void edge_loop_chroma_ver     (imgpel** Img, byte *Strength, Macroblock *MbQ, int edge, int uv, StorablePicture *p);
 static void edge_loop_chroma_hor     (imgpel** Img, byte *Strength, Macroblock *MbQ, int edge, int uv, StorablePicture *p);
 //{{{
-void set_loop_filter_functions_normal(VideoParameters *p_Vid)
+void set_loop_filter_functions_normal (VideoParameters *p_Vid)
 {
   p_Vid->GetStrengthVer    = get_strength_ver;
   p_Vid->GetStrengthHor    = get_strength_hor;
@@ -46,7 +46,7 @@ void set_loop_filter_functions_normal(VideoParameters *p_Vid)
 }
 //}}}
 //{{{
-static Macroblock* get_non_aff_neighbor_luma(Macroblock *mb, int xN, int yN)
+static Macroblock* get_non_aff_neighbor_luma (Macroblock *mb, int xN, int yN)
 {
   if (xN < 0)
     return(mb->mbleft);
@@ -57,7 +57,7 @@ static Macroblock* get_non_aff_neighbor_luma(Macroblock *mb, int xN, int yN)
 }
 //}}}
 //{{{
-static Macroblock* get_non_aff_neighbor_chroma(Macroblock *mb, int xN, int yN, int block_width,int block_height)
+static Macroblock* get_non_aff_neighbor_chroma (Macroblock *mb, int xN, int yN, int block_width,int block_height)
 {
   if (xN < 0)
   {
@@ -94,7 +94,7 @@ static Macroblock* get_non_aff_neighbor_chroma(Macroblock *mb, int xN, int yN, i
  *    returns a buffer of 16 Strength values for one stripe in a mb (for different Frame or Field types)
  *********************************************************************************************
  */
-static void get_strength_ver(Macroblock *MbQ, int edge, int mvlimit, StorablePicture *p)
+static void get_strength_ver (Macroblock *MbQ, int edge, int mvlimit, StorablePicture *p)
 {
   byte *Strength = MbQ->strength_ver[edge];
   Slice *currSlice = MbQ->p_Slice;
@@ -225,7 +225,7 @@ static void get_strength_ver(Macroblock *MbQ, int edge, int mvlimit, StorablePic
  *    returns a buffer of 16 Strength values for one stripe in a mb (for different Frame or Field types)
  *********************************************************************************************
  */
-static void get_strength_hor(Macroblock *MbQ, int edge, int mvlimit, StorablePicture *p)
+static void get_strength_hor (Macroblock *MbQ, int edge, int mvlimit, StorablePicture *p)
 {
   byte  *Strength = MbQ->strength_hor[edge];
   int    StrValue, i;
@@ -362,7 +362,7 @@ static void get_strength_hor(Macroblock *MbQ, int edge, int mvlimit, StorablePic
  *    Vertical Deblocking with Strength = 4
  *****************************************************************************************
  */
-static void luma_ver_deblock_strong(imgpel **cur_img, int pos_x1, int Alpha, int Beta)
+static void luma_ver_deblock_strong (imgpel **cur_img, int pos_x1, int Alpha, int Beta)
 {
   int i;
   for( i = 0 ; i < BLOCK_SIZE ; ++i )
@@ -425,7 +425,7 @@ static void luma_ver_deblock_strong(imgpel **cur_img, int pos_x1, int Alpha, int
  *    Vertical Deblocking with Normal Strength
  *****************************************************************************************
  */
-static void luma_ver_deblock_normal(imgpel **cur_img, int pos_x1, int Alpha, int Beta, int C0, int max_imgpel_value)
+static void luma_ver_deblock_normal (imgpel **cur_img, int pos_x1, int Alpha, int Beta, int C0, int max_imgpel_value)
 {
   int i;
   imgpel *SrcPtrP, *SrcPtrQ;
@@ -514,7 +514,7 @@ static void luma_ver_deblock_normal(imgpel **cur_img, int pos_x1, int Alpha, int
  *    Filters 16 pel block edge of Frame or Field coded MBs
  *****************************************************************************************
  */
-static void edge_loop_luma_ver(ColorPlane pl, imgpel** Img, byte *Strength, Macroblock *MbQ, int edge)
+static void edge_loop_luma_ver (ColorPlane pl, imgpel** Img, byte *Strength, Macroblock *MbQ, int edge)
 {
   VideoParameters *p_Vid = MbQ->p_Vid;
 
@@ -566,7 +566,7 @@ static void edge_loop_luma_ver(ColorPlane pl, imgpel** Img, byte *Strength, Macr
  *    Horizontal Deblocking with Strength = 4
  *****************************************************************************************
  */
-static void luma_hor_deblock_strong(imgpel *imgP, imgpel *imgQ, int width, int Alpha, int Beta)
+static void luma_hor_deblock_strong (imgpel *imgP, imgpel *imgQ, int width, int Alpha, int Beta)
 {
   int pixel;
   int inc_dim2 = width * 2;
@@ -632,7 +632,7 @@ static void luma_hor_deblock_strong(imgpel *imgP, imgpel *imgQ, int width, int A
  *    Horizontal Deblocking with Strength = 4
  *****************************************************************************************
  */
-static void luma_hor_deblock_normal(imgpel *imgP, imgpel *imgQ, int width, int Alpha, int Beta, int C0, int max_imgpel_value)
+static void luma_hor_deblock_normal (imgpel *imgP, imgpel *imgQ, int width, int Alpha, int Beta, int C0, int max_imgpel_value)
 {
   int i;
   int edge_diff;
@@ -721,7 +721,7 @@ static void luma_hor_deblock_normal(imgpel *imgP, imgpel *imgQ, int width, int A
  *    Filters 16 pel block edge of Frame or Field coded MBs
  *****************************************************************************************
  */
-static void edge_loop_luma_hor(ColorPlane pl, imgpel** Img, byte *Strength, Macroblock *MbQ, int edge, StorablePicture *p)
+static void edge_loop_luma_hor (ColorPlane pl, imgpel** Img, byte *Strength, Macroblock *MbQ, int edge, StorablePicture *p)
 {
   VideoParameters *p_Vid = MbQ->p_Vid;
 
@@ -776,7 +776,7 @@ static void edge_loop_luma_hor(ColorPlane pl, imgpel** Img, byte *Strength, Macr
  *    Filters chroma block edge for Frame or Field coded pictures
  *****************************************************************************************
  */
-static void edge_loop_chroma_ver(imgpel** Img, byte *Strength, Macroblock *MbQ, int edge, int uv, StorablePicture *p)
+static void edge_loop_chroma_ver (imgpel** Img, byte *Strength, Macroblock *MbQ, int edge, int uv, StorablePicture *p)
 {
   VideoParameters *p_Vid = MbQ->p_Vid;
 
@@ -864,7 +864,7 @@ static void edge_loop_chroma_ver(imgpel** Img, byte *Strength, Macroblock *MbQ, 
  *    Filters chroma block edge for Frame or Field coded pictures
  *****************************************************************************************
  */
-static void edge_loop_chroma_hor(imgpel** Img, byte *Strength, Macroblock *MbQ, int edge, int uv, StorablePicture *p)
+static void edge_loop_chroma_hor (imgpel** Img, byte *Strength, Macroblock *MbQ, int edge, int uv, StorablePicture *p)
 {
   VideoParameters *p_Vid = MbQ->p_Vid;
   int block_width = p_Vid->mb_cr_size_x;
@@ -950,7 +950,7 @@ static void edge_loop_chroma_hor(imgpel** Img, byte *Strength, Macroblock *MbQ, 
 //}}}
 
 //{{{
-static void perform_db_dep_normal(Macroblock   *MbQ, StorablePicture *p)
+static void perform_db_dep_normal (Macroblock *MbQ, StorablePicture *p)
 {
   VideoParameters *p_Vid = MbQ->p_Vid;
   Slice  *currSlice = MbQ->p_Slice;
@@ -1096,7 +1096,7 @@ static void perform_db_dep_normal(Macroblock   *MbQ, StorablePicture *p)
 }
 //}}}
 //{{{
-static void perform_db_ind_normal(Macroblock *MbQ, StorablePicture *p)
+static void perform_db_ind_normal (Macroblock *MbQ, StorablePicture *p)
 {
   VideoParameters *p_Vid = MbQ->p_Vid;
   Slice  *currSlice = MbQ->p_Slice;
@@ -1427,7 +1427,7 @@ static void perform_db_ind_normal(Macroblock *MbQ, StorablePicture *p)
  *    Deblocking filter for one macroblock.
  *****************************************************************************************
  */
-static void perform_db_normal(VideoParameters *p_Vid, StorablePicture *p, int MbQAddr)
+static void perform_db_normal (VideoParameters *p_Vid, StorablePicture *p, int MbQAddr)
 {
   Macroblock   *MbQ = &(p_Vid->mb_data[MbQAddr]) ; // current Mb
 
@@ -1453,7 +1453,7 @@ static void perform_db_normal(VideoParameters *p_Vid, StorablePicture *p, int Mb
  *    Get deblocking filter strength parameters.
  *****************************************************************************************
  */
-static void get_db_strength_normal(VideoParameters *p_Vid, StorablePicture *p, int MbQAddr, int *piCnt)
+static void get_db_strength_normal (VideoParameters *p_Vid, StorablePicture *p, int MbQAddr, int *piCnt)
 {
   Macroblock   *MbQ = &(p_Vid->mb_data[MbQAddr]) ; // current Mb
 
@@ -1582,7 +1582,7 @@ static void get_db_strength_normal(VideoParameters *p_Vid, StorablePicture *p, i
 //}}}
 
 //{{{
-void deblock_normal(VideoParameters *p_Vid, StorablePicture *p)
+void deblock_normal (VideoParameters *p_Vid, StorablePicture *p)
 {
   unsigned int i;
   int j=-1;
