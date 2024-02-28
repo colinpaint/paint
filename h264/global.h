@@ -627,9 +627,6 @@ typedef struct coding_par {
 
   //padding info;
   int rgb_output;
-
-  imgpel **imgY_ref;                              //!< reference frame find snr
-  imgpel ***imgUV_ref;
   Macroblock *mb_data;               //!< array containing all MBs of a whole frame
   Macroblock *mb_data_JV[MAX_PLANE]; //!< mb_data to be used for 4:4:4 independent mode
   char  *intra_block;

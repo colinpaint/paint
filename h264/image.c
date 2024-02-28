@@ -78,8 +78,6 @@ static void setup_buffers (VideoParameters *p_Vid, int layer_id)
 
   if(p_Vid->last_dec_layer_id != layer_id)
   {
-    p_Vid->imgY_ref = cps->imgY_ref;
-    p_Vid->imgUV_ref = cps->imgUV_ref;
     if(cps->separate_colour_plane_flag)
     {
      for( i=0; i<MAX_PLANE; i++ )
