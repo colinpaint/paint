@@ -597,7 +597,6 @@ typedef struct coding_par {
   unsigned int oldFrameSizeInMbs;
 
   //padding info;
-  void (*img2buf)          (imgpel** imgX, unsigned char* buf, int size_x, int size_y, int symbol_size_in_bytes, int crop_left, int crop_right, int crop_top, int crop_bottom, int iOutStride);
   int rgb_output;
 
   imgpel **imgY_ref;                              //!< reference frame find snr
@@ -831,7 +830,6 @@ typedef struct video_par {
   void (*EdgeLoopLumaHor)  (ColorPlane pl, imgpel** Img, byte *Strength, Macroblock *MbQ, int edge, struct storable_picture *p);
   void (*EdgeLoopChromaVer)(imgpel** Img, byte *Strength, Macroblock *MbQ, int edge, int uv, struct storable_picture *p);
   void (*EdgeLoopChromaHor)(imgpel** Img, byte *Strength, Macroblock *MbQ, int edge, int uv, struct storable_picture *p);
-  void (*img2buf)          (imgpel** imgX, unsigned char* buf, int size_x, int size_y, int symbol_size_in_bytes, int crop_left, int crop_right, int crop_top, int crop_bottom, int iOutStride);
 
   ImageData tempData3;
   DecodedPicList *pDecOuputPic;

@@ -24,67 +24,22 @@
 //}}}
 
 //{{{
-static void img2buf_normal (imgpel** imgX, unsigned char* buf, 
+static void img2buf (imgpel** imgX, unsigned char* buf,
                             int size_x, int size_y, int symbol_size_in_bytes,
-                            int crop_left, int crop_right, int crop_top, int crop_bottom, int iOutStride)
-{
-  int i,j;
+                            int crop_left, int crop_right, int crop_top, int crop_bottom, int iOutStride) {
 
-  int twidth  = size_x - crop_left - crop_right;
-  int theight = size_y - crop_top - crop_bottom;
-
-  int size = 0;
-
-  // sizeof (imgpel) > sizeof(char)
-  // little endian
-  if (sizeof (imgpel) < symbol_size_in_bytes) {
-    // this should not happen. we should not have smaller imgpel than our source material.
-    size = sizeof (imgpel);
-    // clear buffer
-    for(j = 0; j < theight; j++)
-      memset (buf+j*iOutStride, 0, (twidth * symbol_size_in_bytes));
+  if (crop_top || crop_bottom || crop_left || crop_right) {
+    for (int i = crop_top; i < size_y - crop_bottom; i++) {
+      int ipos = (i - crop_top) * iOutStride;
+      for(int j = crop_left; j < size_x-crop_right; j++)
+        memcpy (buf + (ipos + (j - crop_left) * symbol_size_in_bytes), &(imgX[i][j]), size_x);
+      }
     }
   else
-    size = symbol_size_in_bytes;
-
-  if ((crop_top || crop_bottom || crop_left || crop_right) || (size != 1)) {
-    for (i = crop_top; i<size_y-crop_bottom; i++) {
-      int ipos = (i - crop_top) * iOutStride;
-      for(j = crop_left; j<size_x-crop_right; j++)
-        memcpy(buf+(ipos+(j-crop_left)*symbol_size_in_bytes),&(imgX[i][j]), size);
-      }
-    }
-  else {
-#if (IMGTYPE == 0) 
-     {
-    //if (sizeof(imgpel) == sizeof(char))
-      //memcpy(buf, &(imgX[0][0]), size_y * size_x * sizeof(imgpel));
-      for(j=0; j<size_y; j++)
-        memcpy(buf+j*iOutStride, imgX[j], size_x*sizeof(imgpel));
-      }
-    //else
-#else
-    {
-      imgpel *cur_pixel;
-      unsigned char *pDst;
-      for(j = 0; j < size_y; j++) {
-        cur_pixel = imgX[j];
-        pDst = buf +j*iOutStride;
-        for(i=0; i < size_x; i++)
-          *(pDst++)=(unsigned char)*(cur_pixel++);
-      }
-    }
-#endif
-  }
-}
-//}}}
-//{{{
-void init_output (CodingParameters *p_cps, int symbol_size_in_bytes) {
-
-  p_cps->img2buf = img2buf_normal;
+    for (int j = 0; j < size_y; j++)
+      memcpy (buf + j*iOutStride, imgX[j], size_x * sizeof(imgpel));
   }
 //}}}
-
 //{{{
 static void allocate_p_dec_pic (VideoParameters* p_Vid, DecodedPicList* pDecPic, StorablePicture* p,
                                 int iLumaSize, int iFrameSize, int iLumaSizeX, int iLumaSizeY,
@@ -163,8 +118,8 @@ static void write_out_picture (VideoParameters* p_Vid, StorablePicture* p, int p
 
   buf = (pDecPic->bValid == 1) ? pDecPic->pY :
                                  pDecPic->pY + iLumaSizeX * symbol_size_in_bytes;
-  p_Vid->img2buf (p->imgY, buf, p->size_x, p->size_y, symbol_size_in_bytes,
-                  crop_left, crop_right, crop_top, crop_bottom, pDecPic->iYBufStride);
+  img2buf (p->imgY, buf, p->size_x, p->size_y, symbol_size_in_bytes,
+           crop_left, crop_right, crop_top, crop_bottom, pDecPic->iYBufStride);
 
   crop_left   = p->frame_crop_left_offset;
   crop_right  = p->frame_crop_right_offset;
@@ -173,13 +128,13 @@ static void write_out_picture (VideoParameters* p_Vid, StorablePicture* p, int p
 
   buf = (pDecPic->bValid == 1) ? pDecPic->pU :
                                  pDecPic->pU + iChromaSizeX*symbol_size_in_bytes;
-  p_Vid->img2buf (p->imgUV[0], buf, p->size_x_cr, p->size_y_cr, symbol_size_in_bytes,
-                  crop_left, crop_right, crop_top, crop_bottom, pDecPic->iUVBufStride);
+  img2buf (p->imgUV[0], buf, p->size_x_cr, p->size_y_cr, symbol_size_in_bytes,
+           crop_left, crop_right, crop_top, crop_bottom, pDecPic->iUVBufStride);
 
   buf = (pDecPic->bValid == 1) ? pDecPic->pV :
                                  pDecPic->pV + iChromaSizeX*symbol_size_in_bytes;
-  p_Vid->img2buf (p->imgUV[1], buf, p->size_x_cr, p->size_y_cr, symbol_size_in_bytes,
-                  crop_left, crop_right, crop_top, crop_bottom, pDecPic->iUVBufStride);
+  img2buf (p->imgUV[1], buf, p->size_x_cr, p->size_y_cr, symbol_size_in_bytes,
+           crop_left, crop_right, crop_top, crop_bottom, pDecPic->iUVBufStride);
   }
 //}}}
 

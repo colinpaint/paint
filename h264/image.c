@@ -107,7 +107,6 @@ static void setup_buffers (VideoParameters *p_Vid, int layer_id)
     p_Vid->qp_per_matrix = cps->qp_per_matrix;
     p_Vid->qp_rem_matrix = cps->qp_rem_matrix;
     p_Vid->oldFrameSizeInMbs = cps->oldFrameSizeInMbs;
-    p_Vid->img2buf = cps->img2buf;
     p_Vid->last_dec_layer_id = layer_id;
   }
 }
