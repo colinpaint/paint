@@ -63,7 +63,6 @@
 #include "img_io.h"
 #include "loopfilter.h"
 //#include "rtp.h"
-#include "input.h"
 #include "output.h"
 #include "h264decoder.h"
 

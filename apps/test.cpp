@@ -982,9 +982,8 @@ private:
 
     DecodedPicList* pPic = pDecPic;
 
-    //if (pPic && (((pPic->iYUVStorageFormat == 2) && pPic->bValid == 3) ||
-    //             ((pPic->iYUVStorageFormat != 2) && pPic->bValid == 1)) ) {
-    while (pPic && pPic->iWidth) {
+    while (pPic && (((pPic->iYUVStorageFormat == 2) && pPic->bValid == 3) ||
+                    ((pPic->iYUVStorageFormat != 2) && pPic->bValid == 1)) ) {
       int iWidth = pPic->iWidth * ((pPic->iBitDepth+7)>>3);
       int iHeight = pPic->iHeight;
       int iStride = pPic->iYBufStride;
@@ -994,8 +993,7 @@ private:
       int iStrideUV = pPic->iUVBufStride;
 
       cLog::log (LOGINFO, fmt::format ("display {}:{}:{} {}x{}:{}:{}",
-                                       mVideoFrameIndex, 
-                                       pPic->iYUVStorageFormat, pPic->bValid,
+                                       mVideoFrameIndex, pPic->iYUVStorageFormat, pPic->bValid,
                                        iWidth, iHeight, iStride, iStrideUV));
 
       mVideoFrameIndex = (mVideoFrameIndex + 1) % kVideoFrames;

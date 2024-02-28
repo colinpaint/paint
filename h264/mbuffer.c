@@ -32,7 +32,6 @@
 #include "output.h"
 #include "mbuffer_mvc.h"
 #include "fast_memory.h"
-#include "input.h"
 //}}}
 static void insert_picture_in_dpb    (VideoParameters *p_Vid, FrameStore* fs, StorablePicture* p);
 static int output_one_frame_from_dpb (DecodedPictureBuffer *p_Dpb);
@@ -2038,8 +2037,6 @@ static void insert_picture_in_dpb (VideoParameters *p_Vid, FrameStore* fs, Stora
   if (fs->is_used==3)
   {
     calculate_frame_no(p_Vid, p);
-    if (-1 != p_Vid->p_ref && !p_Inp->silent)
-      find_snr(p_Vid, fs->frame, &p_Vid->p_ref);
   }
 }
 //}}}

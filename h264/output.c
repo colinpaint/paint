@@ -20,12 +20,13 @@
 #include "memalloc.h"
 #include "sei.h"
 
-#include "input.h"
 #include "fast_memory.h"
 //}}}
 
 //{{{
-static void img2buf_normal (imgpel** imgX, unsigned char* buf, int size_x, int size_y, int symbol_size_in_bytes, int crop_left, int crop_right, int crop_top, int crop_bottom, int iOutStride)
+static void img2buf_normal (imgpel** imgX, unsigned char* buf, 
+                            int size_x, int size_y, int symbol_size_in_bytes,
+                            int crop_left, int crop_right, int crop_top, int crop_bottom, int iOutStride)
 {
   int i,j;
 
@@ -36,44 +37,37 @@ static void img2buf_normal (imgpel** imgX, unsigned char* buf, int size_x, int s
 
   // sizeof (imgpel) > sizeof(char)
   // little endian
-  if (sizeof (imgpel) < symbol_size_in_bytes)
-  {
+  if (sizeof (imgpel) < symbol_size_in_bytes) {
     // this should not happen. we should not have smaller imgpel than our source material.
     size = sizeof (imgpel);
     // clear buffer
-    for(j=0; j<theight; j++)
+    for(j = 0; j < theight; j++)
       memset (buf+j*iOutStride, 0, (twidth * symbol_size_in_bytes));
-  }
+    }
   else
     size = symbol_size_in_bytes;
 
-  if ((crop_top || crop_bottom || crop_left || crop_right) || (size != 1))
-  {
-    for(i=crop_top; i<size_y-crop_bottom; i++)
-    {
+  if ((crop_top || crop_bottom || crop_left || crop_right) || (size != 1)) {
+    for (i = crop_top; i<size_y-crop_bottom; i++) {
       int ipos = (i - crop_top) * iOutStride;
-      for(j=crop_left; j<size_x-crop_right; j++)
-      {
+      for(j = crop_left; j<size_x-crop_right; j++)
         memcpy(buf+(ipos+(j-crop_left)*symbol_size_in_bytes),&(imgX[i][j]), size);
       }
     }
-  }
-  else
-  {
-#if (IMGTYPE == 0)
+  else {
+#if (IMGTYPE == 0) 
+     {
     //if (sizeof(imgpel) == sizeof(char))
-    {
       //memcpy(buf, &(imgX[0][0]), size_y * size_x * sizeof(imgpel));
       for(j=0; j<size_y; j++)
         memcpy(buf+j*iOutStride, imgX[j], size_x*sizeof(imgpel));
-    }
+      }
     //else
 #else
     {
       imgpel *cur_pixel;
       unsigned char *pDst;
-      for(j = 0; j < size_y; j++)
-      {
+      for(j = 0; j < size_y; j++) {
         cur_pixel = imgX[j];
         pDst = buf +j*iOutStride;
         for(i=0; i < size_x; i++)
@@ -85,93 +79,9 @@ static void img2buf_normal (imgpel** imgX, unsigned char* buf, int size_x, int s
 }
 //}}}
 //{{{
-static void img2buf_byte (imgpel** imgX, unsigned char* buf, int size_x, int size_y, int symbol_size_in_bytes, int crop_left, int crop_right, int crop_top, int crop_bottom, int iOutStride)
-{
-  int twidth  = size_x - crop_left - crop_right;
-  int theight = size_y - crop_top - crop_bottom;
-
-  imgpel **img = &imgX[crop_top];
-  int i;
-  for(i = 0; i < theight; i++) {
-    memcpy(buf, *img++ + crop_left, twidth);
-    buf += iOutStride;
-  }
-}
-//}}}
-//{{{
-static void img2buf_endian (imgpel** imgX, unsigned char* buf, int size_x, int size_y, int symbol_size_in_bytes, int crop_left, int crop_right, int crop_top, int crop_bottom, int iOutStride)
-{
-  int i,j;
-  unsigned char  ui8;
-  uint16 tmp16, ui16;
-  unsigned long  tmp32, ui32;
-
-  //int twidth  = size_x - crop_left - crop_right;
-
-  // big endian
-  switch (symbol_size_in_bytes)
-  {
-  case 1:
-    {
-      for(i=crop_top;i<size_y-crop_bottom;i++)
-      {
-        for(j=crop_left;j<size_x-crop_right;j++)
-        {
-          ui8 = (unsigned char) (imgX[i][j]);
-          buf[(j-crop_left+((i-crop_top)*iOutStride))] = ui8;
-        }
-      }
-      break;
-    }
-  case 2:
-    {
-      for(i=crop_top;i<size_y-crop_bottom;i++)
-      {
-        for(j=crop_left;j<size_x-crop_right;j++)
-        {
-          tmp16 = (uint16) (imgX[i][j]);
-          ui16  = (uint16) ((tmp16 >> 8) | ((tmp16&0xFF)<<8));
-          memcpy(buf+((j-crop_left+((i-crop_top)*iOutStride))*2),&(ui16), 2);
-        }
-      }
-      break;
-    }
-  case 4:
-    {
-      for(i=crop_top;i<size_y-crop_bottom;i++)
-      {
-        for(j=crop_left;j<size_x-crop_right;j++)
-        {
-          tmp32 = (unsigned long) (imgX[i][j]);
-          ui32  = (unsigned long) (((tmp32&0xFF00)<<8) | ((tmp32&0xFF)<<24) | ((tmp32&0xFF0000)>>8) | ((tmp32&0xFF000000)>>24));
-          memcpy(buf+((j-crop_left+((i-crop_top)*iOutStride))*4),&(ui32), 4);
-        }
-      }
-      break;
-    }
-  default:
-    {
-      error ("writing only to formats of 8, 16 or 32 bit allowed on big endian architecture", 500);
-      break;
-    }
-  }
-}
-//}}}
-//{{{
 void init_output (CodingParameters *p_cps, int symbol_size_in_bytes) {
 
-  if (( sizeof(char) == sizeof (imgpel))) {
-    if (sizeof(char) == symbol_size_in_bytes)
-      p_cps->img2buf = img2buf_byte;
-    else
-      p_cps->img2buf = img2buf_normal;
-    }
-  else {
-    if (testEndian())
-      p_cps->img2buf = img2buf_endian;
-    else
-      p_cps->img2buf = img2buf_normal;
-    }
+  p_cps->img2buf = img2buf_normal;
   }
 //}}}
 
@@ -203,7 +113,7 @@ static void allocate_p_dec_pic (VideoParameters* p_Vid, DecodedPicList* pDecPic,
 //{{{
 static void write_out_picture (VideoParameters* p_Vid, StorablePicture* p, int p_out) {
 
-  InputParameters *p_Inp = p_Vid->p_Inp;
+  InputParameters* p_Inp = p_Vid->p_Inp;
   DecodedPicList* pDecPic;
 
   static const int SubWidthC  [4]= { 1, 2, 2, 1};
@@ -249,7 +159,7 @@ static void write_out_picture (VideoParameters* p_Vid, StorablePicture* p, int p
   pDecPic->iPOC = p->frame_poc;
 
   if (NULL == pDecPic->pY)
-    no_mem_exit("write_out_picture: buf");
+    no_mem_exit ("write_out_picture: buf");
 
   buf = (pDecPic->bValid == 1) ? pDecPic->pY :
                                  pDecPic->pY + iLumaSizeX * symbol_size_in_bytes;
@@ -270,10 +180,6 @@ static void write_out_picture (VideoParameters* p_Vid, StorablePicture* p, int p
                                  pDecPic->pV + iChromaSizeX*symbol_size_in_bytes;
   p_Vid->img2buf (p->imgUV[1], buf, p->size_x_cr, p->size_y_cr, symbol_size_in_bytes,
                   crop_left, crop_right, crop_top, crop_bottom, pDecPic->iUVBufStride);
-
-  //free(buf);
-  if (p_out >= 0)
-    pDecPic->bValid = 0;
   }
 //}}}
 
@@ -518,8 +424,6 @@ void direct_output (VideoParameters* p_Vid, StorablePicture* p, int p_out) {
     flush_direct_output(p_Vid, p_out);
     write_picture (p_Vid, p, p_out, FRAME);
     calculate_frame_no(p_Vid, p);
-    if (-1 != p_Vid->p_ref && !p_Inp->silent)
-      find_snr(p_Vid, p, &p_Vid->p_ref);
     free_storable_picture(p);
     return;
     }
@@ -544,8 +448,6 @@ void direct_output (VideoParameters* p_Vid, StorablePicture* p, int p_out) {
     write_picture (p_Vid, p_Vid->out_buffer->frame, p_out, FRAME);
 
     calculate_frame_no(p_Vid, p);
-    if (-1 != p_Vid->p_ref && !p_Inp->silent)
-      find_snr(p_Vid, p_Vid->out_buffer->frame, &p_Vid->p_ref);
     free_storable_picture(p_Vid->out_buffer->frame);
 
     p_Vid->out_buffer->frame = NULL;
