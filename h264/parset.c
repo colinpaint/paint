@@ -659,7 +659,7 @@ void ProcessSPS (VideoParameters *p_Vid, NALU_t *nalu)
     }
     else if(subset_sps->num_views_minus1==1 && (subset_sps->view_id[0]!=0 || subset_sps->view_id[1]!=1))
     {
-      OpenOutputFiles(p_Vid, subset_sps->view_id[0], subset_sps->view_id[1]);
+      //OpenOutputFiles(p_Vid, subset_sps->view_id[0], subset_sps->view_id[1]);
     }
 
     if (subset_sps->Valid)

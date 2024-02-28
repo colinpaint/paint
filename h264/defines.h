@@ -27,7 +27,6 @@
 #define SIMULCAST_ENABLE          0    //!< to test the decoder
 
 #define MVC_EXTENSION_ENABLE      1    //!< enable support for the Multiview High Profile
-#define ENABLE_DEC_STATS          0    //!< enable decoder statistics collection
 #define MVC_INIT_VIEW_ID          -1
 #define MAX_VIEW_NUM              1024
 #define BASE_VIEW_IDX             0
