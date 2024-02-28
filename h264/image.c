@@ -784,15 +784,15 @@ void init_slice (VideoParameters *p_Vid, Slice *currSlice)
 }
 //}}}
 //{{{
-void decode_slice (Slice *currSlice, int current_header)
-{
-  if (currSlice->active_pps->entropy_coding_mode_flag)
-  {
+void decode_slice (Slice *currSlice, int current_header) {
+
+  if (currSlice->active_pps->entropy_coding_mode_flag) {
     init_contexts  (currSlice);
     cabac_new_slice(currSlice);
   }
 
-  if ( (currSlice->active_pps->weighted_bipred_idc > 0  && (currSlice->slice_type == B_SLICE)) || (currSlice->active_pps->weighted_pred_flag && currSlice->slice_type !=I_SLICE))
+  if ((currSlice->active_pps->weighted_bipred_idc > 0  && (currSlice->slice_type == B_SLICE)) || 
+      (currSlice->active_pps->weighted_pred_flag && currSlice->slice_type !=I_SLICE))
     fill_wp_params(currSlice);
 
   //printf("frame picture %d %d %d\n",currSlice->structure,currSlice->ThisPOC,currSlice->direct_spatial_mv_pred_flag);
@@ -805,7 +805,7 @@ void decode_slice (Slice *currSlice, int current_header)
   // if(currSlice->ei_flag)
   //   p_Vid->current_mb_nr = currSlice->last_mb_nr + 1;
 
-}
+  }
 //}}}
 //{{{
 int decode_one_frame (DecoderParams *pDecoder)
@@ -980,132 +980,59 @@ int64 compute_SSE (imgpel **imgRef, imgpel **imgSrc, int xRef, int xSrc, int ySi
 }
 //}}}
 //{{{
-/*!
- ************************************************************************
- * \brief
- *    Calculate the value of frame_no
- ************************************************************************
-*/
-void calculate_frame_no (VideoParameters *p_Vid, StorablePicture *p)
-{
-  InputParameters *p_Inp = p_Vid->p_Inp;
+void calculate_frame_no (VideoParameters *p_Vid, StorablePicture *p) {
+
+  InputParameters* p_Inp = p_Vid->p_Inp;
+
   // calculate frame number
   int  psnrPOC = p_Vid->active_sps->mb_adaptive_frame_field_flag ? p->poc /(p_Inp->poc_scale) : p->poc/(p_Inp->poc_scale);
-
-  if (psnrPOC==0)// && p_Vid->psnr_number)
-  {
+  if (psnrPOC == 0)// && p_Vid->psnr_number)
     p_Vid->idr_psnr_number = p_Vid->g_nFrame * p_Vid->ref_poc_gap/(p_Inp->poc_scale);
-  }
   p_Vid->psnr_number = imax(p_Vid->psnr_number, p_Vid->idr_psnr_number+psnrPOC);
 
   p_Vid->frame_no = p_Vid->idr_psnr_number + psnrPOC;
-}
+  }
 //}}}
 
 //{{{
-void reorder_lists (Slice *currSlice)
-{
+void reorder_lists (Slice *currSlice) {
+
   VideoParameters *p_Vid = currSlice->p_Vid;
 
-  if ((currSlice->slice_type != I_SLICE)&&(currSlice->slice_type != SI_SLICE))
-  {
+  if ((currSlice->slice_type != I_SLICE)&&(currSlice->slice_type != SI_SLICE)) {
     if (currSlice->ref_pic_list_reordering_flag[LIST_0])
-    {
       reorder_ref_pic_list(currSlice, LIST_0);
-    }
-    if (p_Vid->no_reference_picture == currSlice->listX[0][currSlice->num_ref_idx_active[LIST_0] - 1])
-    {
+    if (p_Vid->no_reference_picture == currSlice->listX[0][currSlice->num_ref_idx_active[LIST_0] - 1]) {
       if (p_Vid->non_conforming_stream)
         printf("RefPicList0[ %d ] is equal to 'no reference picture'\n", currSlice->num_ref_idx_active[LIST_0] - 1);
       else
         error("RefPicList0[ num_ref_idx_l0_active_minus1 ] is equal to 'no reference picture', invalid bitstream",500);
-    }
+      }
+
     // that's a definition
     currSlice->listXsize[0] = (char) currSlice->num_ref_idx_active[LIST_0];
-  }
-
-  if (currSlice->slice_type == B_SLICE)
-  {
-    if (currSlice->ref_pic_list_reordering_flag[LIST_1])
-    {
-      reorder_ref_pic_list(currSlice, LIST_1);
     }
-    if (p_Vid->no_reference_picture == currSlice->listX[1][currSlice->num_ref_idx_active[LIST_1]-1])
-    {
+
+  if (currSlice->slice_type == B_SLICE) {
+    if (currSlice->ref_pic_list_reordering_flag[LIST_1])
+      reorder_ref_pic_list(currSlice, LIST_1);
+    if (p_Vid->no_reference_picture == currSlice->listX[1][currSlice->num_ref_idx_active[LIST_1]-1]) {
       if (p_Vid->non_conforming_stream)
         printf("RefPicList1[ %d ] is equal to 'no reference picture'\n", currSlice->num_ref_idx_active[LIST_1] - 1);
       else
         error("RefPicList1[ num_ref_idx_l1_active_minus1 ] is equal to 'no reference picture', invalid bitstream",500);
-    }
+      }
+
     // that's a definition
     currSlice->listXsize[1] = (char) currSlice->num_ref_idx_active[LIST_1];
-  }
+    }
 
   free_ref_pic_list_reordering_buffer(currSlice);
-
-  if ( currSlice->slice_type == P_SLICE )
-  {
-#if PRINTREFLIST
-    unsigned int i;
-#if (MVC_EXTENSION_ENABLE)
-    // print out for debug purpose
-    if((p_Vid->profile_idc == MVC_HIGH || p_Vid->profile_idc == STEREO_HIGH) && currSlice->current_slice_nr==0)
-    {
-      if(currSlice->listXsize[0]>0)
-      {
-        printf("\n");
-        printf(" ** (FinalViewID:%d) %s Ref Pic List 0 ****\n", currSlice->view_id, currSlice->structure==FRAME ? "FRM":(currSlice->structure==TOP_FIELD ? "TOP":"BOT"));
-        for(i=0; i<(unsigned int)(currSlice->listXsize[0]); i++)  //ref list 0
-        {
-          printf("   %2d -> POC: %4d PicNum: %4d ViewID: %d\n", i, currSlice->listX[0][i]->poc, currSlice->listX[0][i]->pic_num, currSlice->listX[0][i]->view_id);
-        }
-      }
-    }
-#endif
-#endif
   }
-  else if ( currSlice->slice_type == B_SLICE )
-  {
-#if PRINTREFLIST
-    unsigned int i;
-#if (MVC_EXTENSION_ENABLE)
-    // print out for debug purpose
-    if((p_Vid->profile_idc == MVC_HIGH || p_Vid->profile_idc == STEREO_HIGH) && currSlice->current_slice_nr==0)
-    {
-      if((currSlice->listXsize[0]>0) || (currSlice->listXsize[1]>0))
-        printf("\n");
-      if(currSlice->listXsize[0]>0)
-      {
-        printf(" ** (FinalViewID:%d) %s Ref Pic List 0 ****\n", currSlice->view_id, currSlice->structure==FRAME ? "FRM":(currSlice->structure==TOP_FIELD ? "TOP":"BOT"));
-        for(i=0; i<(unsigned int)(currSlice->listXsize[0]); i++)  //ref list 0
-        {
-          printf("   %2d -> POC: %4d PicNum: %4d ViewID: %d\n", i, currSlice->listX[0][i]->poc, currSlice->listX[0][i]->pic_num, currSlice->listX[0][i]->view_id);
-        }
-      }
-      if(currSlice->listXsize[1]>0)
-      {
-        printf(" ** (FinalViewID:%d) %s Ref Pic List 1 ****\n", currSlice->view_id, currSlice->structure==FRAME ? "FRM":(currSlice->structure==TOP_FIELD ? "TOP":"BOT"));
-        for(i=0; i<(unsigned int)(currSlice->listXsize[1]); i++)  //ref list 1
-        {
-          printf("   %2d -> POC: %4d PicNum: %4d ViewID: %d\n", i, currSlice->listX[1][i]->poc, currSlice->listX[1][i]->pic_num, currSlice->listX[1][i]->view_id);
-        }
-      }
-    }
-#endif
-
-#endif
-  }
-}
 //}}}
 //{{{
-/*!
- ************************************************************************
- * \brief
- *    Reads new slice from bit_stream_dec
- ************************************************************************
- */
-int read_new_slice (Slice *currSlice)
-{
+int read_new_slice (Slice *currSlice) {
+
   VideoParameters *p_Vid = currSlice->p_Vid;
   InputParameters *p_Inp = currSlice->p_Inp;
 
@@ -1123,16 +1050,14 @@ int read_new_slice (Slice *currSlice)
 #if (MVC_EXTENSION_ENABLE)
     currSlice->svc_extension_flag = -1;
 #endif
-    if (!pending_nalu)
-    {
+    if (!pending_nalu) {
       if (0 == read_next_nalu(p_Vid, nalu))
         return EOS;
-    }
-    else
-    {
+      }
+    else {
       nalu = pending_nalu;
       pending_nalu = NULL;
-    }
+      }
 
 #if (MVC_EXTENSION_ENABLE)
     if(p_Inp->DecodeAllLayers == 1 && (nalu->nal_unit_type == NALU_TYPE_PREFIX || nalu->nal_unit_type == NALU_TYPE_SLC_EXT))
