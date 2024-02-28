@@ -10,17 +10,10 @@ typedef          char  int8;
 typedef          short int16;
 typedef          int   int32;
 
-#if IMGTYPE == 0
 typedef byte   imgpel;           //!< pixel type
 typedef uint16 distpel;          //!< distortion type (for pixels)
 typedef int32  distblk;          //!< distortion type (for Macroblock)
 typedef int32  transpel;         //!< transformed coefficient type
-#else
-typedef uint16 imgpel;
-typedef uint32 distpel;
-typedef int64  distblk;
-typedef int32  transpel;
-#endif
 
 //! Boolean Type
 #ifdef FALSE

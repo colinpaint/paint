@@ -25,19 +25,19 @@
 
 //{{{
 static void img2buf (imgpel** imgX, unsigned char* buf,
-                            int size_x, int size_y, int symbol_size_in_bytes,
-                            int crop_left, int crop_right, int crop_top, int crop_bottom, int iOutStride) {
+                     int size_x, int size_y, int symbol_size_in_bytes,
+                     int crop_left, int crop_right, int crop_top, int crop_bottom, int iOutStride) {
 
   if (crop_top || crop_bottom || crop_left || crop_right) {
     for (int i = crop_top; i < size_y - crop_bottom; i++) {
-      int ipos = (i - crop_top) * iOutStride;
-      for(int j = crop_left; j < size_x-crop_right; j++)
-        memcpy (buf + (ipos + (j - crop_left) * symbol_size_in_bytes), &(imgX[i][j]), size_x);
+      // is this right, why is it cropped ???
+      int ipos = ((i - crop_top) * iOutStride) + crop_left;
+      memcpy (buf + ipos, imgX[i], size_x - crop_right - crop_left);
       }
     }
   else
-    for (int j = 0; j < size_y; j++)
-      memcpy (buf + j*iOutStride, imgX[j], size_x * sizeof(imgpel));
+    for (int i = 0; i < size_y; i++)
+      memcpy (buf + i*iOutStride, imgX[i], size_x * sizeof(imgpel));
   }
 //}}}
 //{{{

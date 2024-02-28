@@ -1060,7 +1060,7 @@ int read_new_slice (Slice *currSlice) {
 
   #if (MVC_EXTENSION_ENABLE)
     //{{{  mvc_extension
-    if (p_Inp->DecodeAllLayers == 1 && 
+    if (p_Inp->DecodeAllLayers == 1 &&
         (nalu->nal_unit_type == NALU_TYPE_PREFIX || nalu->nal_unit_type == NALU_TYPE_SLC_EXT)) {
       currStream = currSlice->partArr[0].bitstream;
       currStream->ei_flag = 0;
@@ -1374,7 +1374,7 @@ int read_new_slice (Slice *currSlice) {
         }
 
         // check if we read anything else than the expected partitions
-        if ((nalu->nal_unit_type != NALU_TYPE_DPB) && 
+        if ((nalu->nal_unit_type != NALU_TYPE_DPB) &&
             (nalu->nal_unit_type != NALU_TYPE_DPC) && (!currSlice->dpC_NotPresent)) {
           // we have a NALI that we can't process here, so restart processing
           goto process_nalu;
@@ -1492,7 +1492,6 @@ void pad_buf (imgpel *pImgBuf, int iWidth, int iHeight, int iStride, int iPadX, 
   int j;
   imgpel *pLine0 = pImgBuf - iPadX, *pLine;
 
-#if (IMGTYPE==0)
   int pad_width = iPadX + iWidth;
   fast_memset(pImgBuf - iPadX, *pImgBuf, iPadX * sizeof(imgpel));
   fast_memset(pImgBuf + iWidth, *(pImgBuf + iWidth - 1), iPadX * sizeof(imgpel));
@@ -1519,28 +1518,6 @@ void pad_buf (imgpel *pImgBuf, int iWidth, int iHeight, int iStride, int iPadX, 
     fast_memcpy(pLine0,  pLine, iStride * sizeof(imgpel));
     pLine0 += iStride;
   }
-#else
-  int i;
-  for(i=-iPadX; i<0; i++)
-    pImgBuf[i] = *pImgBuf;
-  for(i=0; i<iPadX; i++)
-    pImgBuf[i+iWidth] = *(pImgBuf+iWidth-1);
-
-  for(j=-iPadY; j<0; j++)
-    memcpy(pLine0+j*iStride, pLine0, iStride*sizeof(imgpel));
-  for(j=1; j<iHeight; j++)
-  {
-    pLine = pLine0 + j*iStride;
-    for(i=0; i<iPadX; i++)
-      pLine[i] = pLine[iPadX];
-    pLine += iPadX+iWidth-1;
-    for(i=1; i<iPadX+1; i++)
-      pLine[i] = *pLine;
-  }
-  pLine = pLine0 + (iHeight-1)*iStride;
-  for(j=iHeight; j<iHeight+iPadY; j++)
-    memcpy(pLine0+j*iStride,  pLine, iStride*sizeof(imgpel));
-#endif
 }
 
 //}}}
