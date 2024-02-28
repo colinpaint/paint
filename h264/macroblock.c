@@ -44,39 +44,160 @@
 #include "mb_prediction.h"
 #include "fast_memory.h"
 //}}}
-
-#if TRACE
-#define TRACE_STRING(s) strncpy(currSE.tracestring, s, TRACESTRING_SIZE)
-#define TRACE_DECBITS(i) dectracebitcnt(1)
-#define TRACE_PRINTF(s) sprintf(type, "%s", s);
-#define TRACE_STRING_P(s) strncpy(currSE->tracestring, s, TRACESTRING_SIZE)
-#else
-#define TRACE_STRING(s)
-#define TRACE_DECBITS(i)
-#define TRACE_PRINTF(s)
-#define TRACE_STRING_P(s)
-#endif
-
-//! look up tables for FRExt_chroma support
-void dectracebitcnt(int count);
-
-extern void setup_read_macroblock              (Slice *currSlice);
-extern void set_read_CBP_and_coeffs_cabac      (Slice *currSlice);
-extern void set_read_CBP_and_coeffs_cavlc      (Slice *currSlice);
-extern void read_coeff_4x4_CAVLC               (Macroblock *currMB, int block_type, int i, int j, int levarr[16], int runarr[16], int *number_coefficients);
-extern void read_coeff_4x4_CAVLC_444           (Macroblock *currMB, int block_type, int i, int j, int levarr[16], int runarr[16], int *number_coefficients);
-
+extern void setup_read_macroblock (Slice *currSlice);
+extern void set_read_CBP_and_coeffs_cabac (Slice *currSlice);
+extern void set_read_CBP_and_coeffs_cavlc (Slice *currSlice);
+extern void read_coeff_4x4_CAVLC (Macroblock *currMB, int block_type, int i, int j, int levarr[16], int runarr[16], int *number_coefficients);
+extern void read_coeff_4x4_CAVLC_444 (Macroblock *currMB, int block_type, int i, int j, int levarr[16], int runarr[16], int *number_coefficients);
 static void read_motion_info_from_NAL_p_slice  (Macroblock *currMB);
 static void read_motion_info_from_NAL_b_slice  (Macroblock *currMB);
+extern void update_direct_types (Slice *currSlice);
+extern void set_intra_prediction_modes (Slice *currSlice);
+extern void set_read_comp_coeff_cavlc (Macroblock *currMB);
+extern void set_read_comp_coeff_cabac (Macroblock *currMB);
 
-static int decode_one_component_i_slice       (Macroblock *currMB, ColorPlane curr_plane, imgpel **currImg, StorablePicture *dec_picture);
-static int decode_one_component_p_slice       (Macroblock *currMB, ColorPlane curr_plane, imgpel **currImg, StorablePicture *dec_picture);
-static int decode_one_component_b_slice       (Macroblock *currMB, ColorPlane curr_plane, imgpel **currImg, StorablePicture *dec_picture);
-static int decode_one_component_sp_slice      (Macroblock *currMB, ColorPlane curr_plane, imgpel **currImg, StorablePicture *dec_picture);
-extern void update_direct_types                (Slice *currSlice);
-extern void set_intra_prediction_modes         (Slice *currSlice);
-extern void set_read_comp_coeff_cavlc          (Macroblock *currMB);
-extern void set_read_comp_coeff_cabac          (Macroblock *currMB);
+//{{{
+/*!
+ ************************************************************************
+ * \brief
+ *    decode one color component in an I slice
+ ************************************************************************
+ */
+
+static int decode_one_component_i_slice (Macroblock *currMB, ColorPlane curr_plane, imgpel **currImg, StorablePicture *dec_picture)
+{
+  //For residual DPCM
+  currMB->ipmode_DPCM = NO_INTRA_PMODE;
+  if(currMB->mb_type == IPCM)
+    mb_pred_ipcm(currMB);
+  else if (currMB->mb_type==I16MB)
+    mb_pred_intra16x16(currMB, curr_plane, dec_picture);
+  else if (currMB->mb_type == I4MB)
+    mb_pred_intra4x4(currMB, curr_plane, currImg, dec_picture);
+  else if (currMB->mb_type == I8MB)
+    mb_pred_intra8x8(currMB, curr_plane, currImg, dec_picture);
+
+  return 1;
+}
+//}}}
+//{{{
+/*!
+ ************************************************************************
+ * \brief
+ *    decode one color component for a p slice
+ ************************************************************************
+ */
+static int decode_one_component_p_slice (Macroblock *currMB, ColorPlane curr_plane, imgpel **currImg, StorablePicture *dec_picture)
+{
+  //For residual DPCM
+  currMB->ipmode_DPCM = NO_INTRA_PMODE;
+  if(currMB->mb_type == IPCM)
+    mb_pred_ipcm(currMB);
+  else if (currMB->mb_type==I16MB)
+    mb_pred_intra16x16(currMB, curr_plane, dec_picture);
+  else if (currMB->mb_type == I4MB)
+    mb_pred_intra4x4(currMB, curr_plane, currImg, dec_picture);
+  else if (currMB->mb_type == I8MB)
+    mb_pred_intra8x8(currMB, curr_plane, currImg, dec_picture);
+  else if (currMB->mb_type == PSKIP)
+    mb_pred_skip(currMB, curr_plane, currImg, dec_picture);
+  else if (currMB->mb_type == P16x16)
+    mb_pred_p_inter16x16(currMB, curr_plane, dec_picture);
+  else if (currMB->mb_type == P16x8)
+    mb_pred_p_inter16x8(currMB, curr_plane, dec_picture);
+  else if (currMB->mb_type == P8x16)
+    mb_pred_p_inter8x16(currMB, curr_plane, dec_picture);
+  else
+    mb_pred_p_inter8x8(currMB, curr_plane, dec_picture);
+
+  return 1;
+}
+//}}}
+//{{{
+/*!
+ ************************************************************************
+ * \brief
+ *    decode one color component for a sp slice
+ ************************************************************************
+ */
+static int decode_one_component_sp_slice (Macroblock *currMB, ColorPlane curr_plane, imgpel **currImg, StorablePicture *dec_picture)
+{
+  //For residual DPCM
+  currMB->ipmode_DPCM = NO_INTRA_PMODE;
+
+  if (currMB->mb_type == IPCM)
+    mb_pred_ipcm(currMB);
+  else if (currMB->mb_type==I16MB)
+    mb_pred_intra16x16(currMB, curr_plane, dec_picture);
+  else if (currMB->mb_type == I4MB)
+    mb_pred_intra4x4(currMB, curr_plane, currImg, dec_picture);
+  else if (currMB->mb_type == I8MB)
+    mb_pred_intra8x8(currMB, curr_plane, currImg, dec_picture);
+  else if (currMB->mb_type == PSKIP)
+    mb_pred_sp_skip(currMB, curr_plane, dec_picture);
+  else if (currMB->mb_type == P16x16)
+    mb_pred_p_inter16x16(currMB, curr_plane, dec_picture);
+  else if (currMB->mb_type == P16x8)
+    mb_pred_p_inter16x8(currMB, curr_plane, dec_picture);
+  else if (currMB->mb_type == P8x16)
+    mb_pred_p_inter8x16(currMB, curr_plane, dec_picture);
+  else
+    mb_pred_p_inter8x8(currMB, curr_plane, dec_picture);
+
+  return 1;
+}
+//}}}
+//{{{
+/*!
+ ************************************************************************
+ * \brief
+ *    decode one color component for a b slice
+ ************************************************************************
+ */
+
+static int decode_one_component_b_slice (Macroblock *currMB, ColorPlane curr_plane, imgpel **currImg, StorablePicture *dec_picture)
+{
+  //For residual DPCM
+  currMB->ipmode_DPCM = NO_INTRA_PMODE;
+
+  if(currMB->mb_type == IPCM)
+    mb_pred_ipcm(currMB);
+  else if (currMB->mb_type==I16MB)
+    mb_pred_intra16x16(currMB, curr_plane, dec_picture);
+  else if (currMB->mb_type == I4MB)
+    mb_pred_intra4x4(currMB, curr_plane, currImg, dec_picture);
+  else if (currMB->mb_type == I8MB)
+    mb_pred_intra8x8(currMB, curr_plane, currImg, dec_picture);
+  else if (currMB->mb_type == P16x16)
+    mb_pred_p_inter16x16(currMB, curr_plane, dec_picture);
+  else if (currMB->mb_type == P16x8)
+    mb_pred_p_inter16x8(currMB, curr_plane, dec_picture);
+  else if (currMB->mb_type == P8x16)
+    mb_pred_p_inter8x16(currMB, curr_plane, dec_picture);
+  else if (currMB->mb_type == BSKIP_DIRECT)
+  {
+    Slice *currSlice = currMB->p_Slice;
+    if (currSlice->direct_spatial_mv_pred_flag == 0)
+    {
+      if (currSlice->active_sps->direct_8x8_inference_flag)
+        mb_pred_b_d8x8temporal (currMB, curr_plane, currImg, dec_picture);
+      else
+        mb_pred_b_d4x4temporal (currMB, curr_plane, currImg, dec_picture);
+    }
+    else
+    {
+      if (currSlice->active_sps->direct_8x8_inference_flag)
+        mb_pred_b_d8x8spatial (currMB, curr_plane, currImg, dec_picture);
+      else
+        mb_pred_b_d4x4spatial (currMB, curr_plane, currImg, dec_picture);
+    }
+  }
+  else
+    mb_pred_b_inter8x8 (currMB, curr_plane, dec_picture);
+
+ return 1;
+}
+//}}}
 
 //{{{
 /*!
@@ -97,11 +218,8 @@ static inline int BType2CtxRef (int btype)
  *    Function for reading the reference picture indices using VLC
  ************************************************************************
  */
-static char readRefPictureIdx_VLC(Macroblock *currMB, SyntaxElement *currSE, DataPartition *dP, char b8mode, int list)
+static char readRefPictureIdx_VLC (Macroblock *currMB, SyntaxElement *currSE, DataPartition *dP, char b8mode, int list)
 {
-#if TRACE
-  trace_info(currSE, "ref_idx_l", list);
-#endif
   currSE->context = BType2CtxRef (b8mode);
   currSE->value2 = list;
   dP->readSyntaxElement (currMB, currSE, dP);
@@ -115,12 +233,8 @@ static char readRefPictureIdx_VLC(Macroblock *currMB, SyntaxElement *currSE, Dat
  *    Function for reading the reference picture indices using FLC
  ************************************************************************
  */
-static char readRefPictureIdx_FLC(Macroblock *currMB, SyntaxElement *currSE, DataPartition *dP, char b8mode, int list)
+static char readRefPictureIdx_FLC (Macroblock *currMB, SyntaxElement *currSE, DataPartition *dP, char b8mode, int list)
 {
-#if TRACE
-  trace_info(currSE, "ref_idx_l", list);
-#endif
-
   currSE->context = BType2CtxRef (b8mode);
   currSE->len = 1;
   readSyntaxElement_FLC(currSE, dP->bitstream);
@@ -136,7 +250,7 @@ static char readRefPictureIdx_FLC(Macroblock *currMB, SyntaxElement *currSE, Dat
  *    Dummy Function for reading the reference picture indices
  ************************************************************************
  */
-static char readRefPictureIdx_Null(Macroblock *currMB, SyntaxElement *currSE, DataPartition *dP, char b8mode, int list)
+static char readRefPictureIdx_Null (Macroblock *currMB, SyntaxElement *currSE, DataPartition *dP, char b8mode, int list)
 {
   return 0;
 }
@@ -148,7 +262,7 @@ static char readRefPictureIdx_Null(Macroblock *currMB, SyntaxElement *currSE, Da
  *    Function to prepare reference picture indice function pointer
  ************************************************************************
  */
-static void prepareListforRefIdx ( Macroblock *currMB, SyntaxElement *currSE, DataPartition *dP, int num_ref_idx_active, int refidx_present)
+static void prepareListforRefIdx (Macroblock *currMB, SyntaxElement *currSE, DataPartition *dP, int num_ref_idx_active, int refidx_present)
 {
   if(num_ref_idx_active > 1)
   {
@@ -172,7 +286,7 @@ static void prepareListforRefIdx ( Macroblock *currMB, SyntaxElement *currSE, Da
 //}}}
 
 //{{{
-void set_chroma_qp(Macroblock* currMB)
+void set_chroma_qp (Macroblock* currMB)
 {
   VideoParameters *p_Vid = currMB->p_Vid;
   StorablePicture *dec_picture = currMB->p_Slice->dec_picture;
@@ -193,7 +307,7 @@ void set_chroma_qp(Macroblock* currMB)
 *    updates chroma QP according to luma QP and bit depth
 ************************************************************************
 */
-void update_qp(Macroblock *currMB, int qp)
+void update_qp (Macroblock *currMB, int qp)
 {
   VideoParameters *p_Vid = currMB->p_Vid;
   currMB->qp = qp;
@@ -205,7 +319,7 @@ void update_qp(Macroblock *currMB, int qp)
 }
 //}}}
 //{{{
-void read_delta_quant(SyntaxElement *currSE, DataPartition *dP, Macroblock *currMB, const byte *partMap, int type)
+void read_delta_quant (SyntaxElement *currSE, DataPartition *dP, Macroblock *currMB, const byte *partMap, int type)
 {
   Slice *currSlice = currMB->p_Slice;
   VideoParameters *p_Vid = currMB->p_Vid;
@@ -220,8 +334,6 @@ void read_delta_quant(SyntaxElement *currSE, DataPartition *dP, Macroblock *curr
   }
   else
     currSE->reading= read_dQuant_CABAC;
-
-  TRACE_STRING_P("mb_qp_delta");
 
   dP->readSyntaxElement(currMB, currSE, dP);
   currMB->delta_quant = (short) currSE->value1;
@@ -393,17 +505,11 @@ static void readMBMotionVectors (SyntaxElement *currSE, DataPartition *dP, Macro
       currMB->GetMVPredictor (currMB, block, &pred_mv, mv_info[j4][i4].ref_idx[list], mv_info, list, 0, 0, step_h0 << 2, step_v0 << 2);
 
       // X component
-#if TRACE
-      trace_info(currSE, "mvd0_l", list);
-#endif
       currSE->value2 = list; // identifies the component; only used for context determination
       dP->readSyntaxElement(currMB, currSE, dP);
       curr_mvd[0] = (short) currSE->value1;
 
       // Y component
-#if TRACE
-      trace_info(currSE, "mvd1_l", list);
-#endif
       currSE->value2 += 2; // identifies the component; only used for context determination
       dP->readSyntaxElement(currMB, currSE, dP);
       curr_mvd[1] = (short) currSE->value1;
@@ -479,9 +585,6 @@ static void readMBMotionVectors (SyntaxElement *currSE, DataPartition *dP, Macro
 
               for (k=0; k < 2; ++k)
               {
-#if TRACE
-                trace_info(currSE, "mvd_l", list);
-#endif
                 currSE->value2   = (k << 1) + list; // identifies the component; only used for context determination
                 dP->readSyntaxElement(currMB, currSE, dP);
                 curr_mvd[k] = (short) currSE->value1;
@@ -521,7 +624,7 @@ static void readMBMotionVectors (SyntaxElement *currSE, DataPartition *dP, Macro
 }
 //}}}
 //{{{
-void invScaleCoeff(Macroblock *currMB, int level, int run, int qp_per, int i, int j, int i0, int j0, int coef_ctr, const byte (*pos_scan4x4)[2], int (*InvLevelScale4x4)[4])
+void invScaleCoeff (Macroblock *currMB, int level, int run, int qp_per, int i, int j, int i0, int j0, int coef_ctr, const byte (*pos_scan4x4)[2], int (*InvLevelScale4x4)[4])
 {
   if (level != 0)    /* leave if level == 0 */
   {
@@ -536,7 +639,7 @@ void invScaleCoeff(Macroblock *currMB, int level, int run, int qp_per, int i, in
 }
 //}}}
 //{{{
-static inline void setup_mb_pos_info(Macroblock *currMB)
+static inline void setup_mb_pos_info (Macroblock *currMB)
 {
   int mb_x = currMB->mb.x;
   int mb_y = currMB->mb.y;
@@ -557,7 +660,7 @@ static inline void setup_mb_pos_info(Macroblock *currMB)
  *    initializes the current macroblock
  ************************************************************************
  */
-void start_macroblock(Slice *currSlice, Macroblock **currMB)
+void start_macroblock (Slice *currSlice, Macroblock **currMB)
 {
   VideoParameters *p_Vid = currSlice->p_Vid;
   int mb_nr = currSlice->current_mb_nr;
@@ -660,7 +763,7 @@ void start_macroblock(Slice *currSlice, Macroblock **currMB)
  *    check end_of_slice condition
  ************************************************************************
  */
-Boolean exit_macroblock(Slice *currSlice, int eos_bit)
+Boolean exit_macroblock (Slice *currSlice, int eos_bit)
 {
   VideoParameters *p_Vid = currSlice->p_Vid;
 
@@ -707,7 +810,7 @@ Boolean exit_macroblock(Slice *currSlice, int eos_bit)
  *    Interpret the mb mode for P-Frames
  ************************************************************************
  */
-static void interpret_mb_mode_P(Macroblock *currMB)
+static void interpret_mb_mode_P (Macroblock *currMB)
 {
   static const short ICBPTAB[6] = {0,16,32,15,31,47};
   short  mbmode = currMB->mb_type;
@@ -758,7 +861,7 @@ static void interpret_mb_mode_P(Macroblock *currMB)
  *    Interpret the mb mode for I-Frames
  ************************************************************************
  */
-static void interpret_mb_mode_I(Macroblock *currMB)
+static void interpret_mb_mode_I (Macroblock *currMB)
 {
   static const short ICBPTAB[6] = {0,16,32,15,31,47};
   short mbmode   = currMB->mb_type;
@@ -798,7 +901,7 @@ static void interpret_mb_mode_I(Macroblock *currMB)
  *    Interpret the mb mode for B-Frames
  ************************************************************************
  */
-static void interpret_mb_mode_B(Macroblock *currMB)
+static void interpret_mb_mode_B (Macroblock *currMB)
 {
   static const char offset2pdir16x16[12]   = {0, 0, 1, 2, 0,0,0,0,0,0,0,0};
   static const char offset2pdir16x8[22][2] = {{0,0},{0,0},{0,0},{0,0},{0,0},{0,0},{1,1},{0,0},{0,1},{0,0},{1,0},
@@ -883,7 +986,7 @@ static void interpret_mb_mode_B(Macroblock *currMB)
  *    Interpret the mb mode for SI-Frames
  ************************************************************************
  */
-static void interpret_mb_mode_SI(Macroblock *currMB)
+static void interpret_mb_mode_SI (Macroblock *currMB)
 {
   //VideoParameters *p_Vid = currMB->p_Vid;
   const int ICBPTAB[6] = {0,16,32,15,31,47};
@@ -932,7 +1035,7 @@ static void interpret_mb_mode_SI(Macroblock *currMB)
  *    Set mode interpretation based on slice type
  ************************************************************************
  */
-void setup_slice_methods(Slice *currSlice)
+void setup_slice_methods (Slice *currSlice)
 {
   setup_read_macroblock (currSlice);
   switch (currSlice->slice_type)
@@ -1026,7 +1129,7 @@ void setup_slice_methods(Slice *currSlice)
  *    Get current block spatial neighbors
  ************************************************************************
  */
-void get_neighbors(Macroblock *currMB,       // <--  current Macroblock
+void get_neighbors (Macroblock *currMB,       // <--  current Macroblock
                    PixelPos   *block,     // <--> neighbor blocks
                    int         mb_x,         // <--  block x position
                    int         mb_y,         // <--  block y position
@@ -1230,152 +1333,10 @@ void check_dp_neighbors (Macroblock *currMB)
 //}}}
 
 //{{{
-/*!
- ************************************************************************
- * \brief
- *    decode one color component in an I slice
- ************************************************************************
- */
-
-static int decode_one_component_i_slice(Macroblock *currMB, ColorPlane curr_plane, imgpel **currImg, StorablePicture *dec_picture)
-{
-  //For residual DPCM
-  currMB->ipmode_DPCM = NO_INTRA_PMODE;
-  if(currMB->mb_type == IPCM)
-    mb_pred_ipcm(currMB);
-  else if (currMB->mb_type==I16MB)
-    mb_pred_intra16x16(currMB, curr_plane, dec_picture);
-  else if (currMB->mb_type == I4MB)
-    mb_pred_intra4x4(currMB, curr_plane, currImg, dec_picture);
-  else if (currMB->mb_type == I8MB)
-    mb_pred_intra8x8(currMB, curr_plane, currImg, dec_picture);
-
-  return 1;
-}
-//}}}
-//{{{
-/*!
- ************************************************************************
- * \brief
- *    decode one color component for a p slice
- ************************************************************************
- */
-static int decode_one_component_p_slice(Macroblock *currMB, ColorPlane curr_plane, imgpel **currImg, StorablePicture *dec_picture)
-{
-  //For residual DPCM
-  currMB->ipmode_DPCM = NO_INTRA_PMODE;
-  if(currMB->mb_type == IPCM)
-    mb_pred_ipcm(currMB);
-  else if (currMB->mb_type==I16MB)
-    mb_pred_intra16x16(currMB, curr_plane, dec_picture);
-  else if (currMB->mb_type == I4MB)
-    mb_pred_intra4x4(currMB, curr_plane, currImg, dec_picture);
-  else if (currMB->mb_type == I8MB)
-    mb_pred_intra8x8(currMB, curr_plane, currImg, dec_picture);
-  else if (currMB->mb_type == PSKIP)
-    mb_pred_skip(currMB, curr_plane, currImg, dec_picture);
-  else if (currMB->mb_type == P16x16)
-    mb_pred_p_inter16x16(currMB, curr_plane, dec_picture);
-  else if (currMB->mb_type == P16x8)
-    mb_pred_p_inter16x8(currMB, curr_plane, dec_picture);
-  else if (currMB->mb_type == P8x16)
-    mb_pred_p_inter8x16(currMB, curr_plane, dec_picture);
-  else
-    mb_pred_p_inter8x8(currMB, curr_plane, dec_picture);
-
-  return 1;
-}
-//}}}
-//{{{
-/*!
- ************************************************************************
- * \brief
- *    decode one color component for a sp slice
- ************************************************************************
- */
-static int decode_one_component_sp_slice(Macroblock *currMB, ColorPlane curr_plane, imgpel **currImg, StorablePicture *dec_picture)
-{
-  //For residual DPCM
-  currMB->ipmode_DPCM = NO_INTRA_PMODE;
-
-  if (currMB->mb_type == IPCM)
-    mb_pred_ipcm(currMB);
-  else if (currMB->mb_type==I16MB)
-    mb_pred_intra16x16(currMB, curr_plane, dec_picture);
-  else if (currMB->mb_type == I4MB)
-    mb_pred_intra4x4(currMB, curr_plane, currImg, dec_picture);
-  else if (currMB->mb_type == I8MB)
-    mb_pred_intra8x8(currMB, curr_plane, currImg, dec_picture);
-  else if (currMB->mb_type == PSKIP)
-    mb_pred_sp_skip(currMB, curr_plane, dec_picture);
-  else if (currMB->mb_type == P16x16)
-    mb_pred_p_inter16x16(currMB, curr_plane, dec_picture);
-  else if (currMB->mb_type == P16x8)
-    mb_pred_p_inter16x8(currMB, curr_plane, dec_picture);
-  else if (currMB->mb_type == P8x16)
-    mb_pred_p_inter8x16(currMB, curr_plane, dec_picture);
-  else
-    mb_pred_p_inter8x8(currMB, curr_plane, dec_picture);
-
-  return 1;
-}
-//}}}
-//{{{
-/*!
- ************************************************************************
- * \brief
- *    decode one color component for a b slice
- ************************************************************************
- */
-
-static int decode_one_component_b_slice(Macroblock *currMB, ColorPlane curr_plane, imgpel **currImg, StorablePicture *dec_picture)
-{
-  //For residual DPCM
-  currMB->ipmode_DPCM = NO_INTRA_PMODE;
-
-  if(currMB->mb_type == IPCM)
-    mb_pred_ipcm(currMB);
-  else if (currMB->mb_type==I16MB)
-    mb_pred_intra16x16(currMB, curr_plane, dec_picture);
-  else if (currMB->mb_type == I4MB)
-    mb_pred_intra4x4(currMB, curr_plane, currImg, dec_picture);
-  else if (currMB->mb_type == I8MB)
-    mb_pred_intra8x8(currMB, curr_plane, currImg, dec_picture);
-  else if (currMB->mb_type == P16x16)
-    mb_pred_p_inter16x16(currMB, curr_plane, dec_picture);
-  else if (currMB->mb_type == P16x8)
-    mb_pred_p_inter16x8(currMB, curr_plane, dec_picture);
-  else if (currMB->mb_type == P8x16)
-    mb_pred_p_inter8x16(currMB, curr_plane, dec_picture);
-  else if (currMB->mb_type == BSKIP_DIRECT)
-  {
-    Slice *currSlice = currMB->p_Slice;
-    if (currSlice->direct_spatial_mv_pred_flag == 0)
-    {
-      if (currSlice->active_sps->direct_8x8_inference_flag)
-        mb_pred_b_d8x8temporal (currMB, curr_plane, currImg, dec_picture);
-      else
-        mb_pred_b_d4x4temporal (currMB, curr_plane, currImg, dec_picture);
-    }
-    else
-    {
-      if (currSlice->active_sps->direct_8x8_inference_flag)
-        mb_pred_b_d8x8spatial (currMB, curr_plane, currImg, dec_picture);
-      else
-        mb_pred_b_d4x4spatial (currMB, curr_plane, currImg, dec_picture);
-    }
-  }
-  else
-    mb_pred_b_inter8x8 (currMB, curr_plane, dec_picture);
-
- return 1;
-}
-//}}}
-//{{{
 // probably a better way (or place) to do this, but I'm not sure what (where) it is [CJV]
 // this is intended to make get_block_luma faster, but I'm still performing
 // this at the MB level, and it really should be done at the slice level
-static void init_cur_imgy(VideoParameters *p_Vid,Slice *currSlice,int pl)
+static void init_cur_imgy (VideoParameters *p_Vid,Slice *currSlice,int pl)
 {
   int i,j;
   if (p_Vid->separate_colour_plane_flag == 0)
@@ -1424,7 +1385,7 @@ static void init_cur_imgy(VideoParameters *p_Vid,Slice *currSlice,int pl)
  ************************************************************************
  */
 
-int decode_one_macroblock(Macroblock *currMB, StorablePicture *dec_picture)
+int decode_one_macroblock (Macroblock *currMB, StorablePicture *dec_picture)
 {
   Slice *currSlice = currMB->p_Slice;
   VideoParameters *p_Vid = currMB->p_Vid;
@@ -1466,7 +1427,7 @@ int decode_one_macroblock(Macroblock *currMB, StorablePicture *dec_picture)
  *    for 4:4:4 Independent mode
  ************************************************************************
  */
-void change_plane_JV( VideoParameters *p_Vid, int nplane, Slice *pSlice)
+void change_plane_JV (VideoParameters *p_Vid, int nplane, Slice *pSlice)
 {
   //Slice *currSlice = p_Vid->currentSlice;
   //p_Vid->colour_plane_id = nplane;
@@ -1493,7 +1454,7 @@ void change_plane_JV( VideoParameters *p_Vid, int nplane, Slice *pSlice)
  *    for 4:4:4 Independent mode
  ************************************************************************
  */
-void make_frame_picture_JV(VideoParameters *p_Vid)
+void make_frame_picture_JV (VideoParameters *p_Vid)
 {
   int uv, line;
   int nsize;

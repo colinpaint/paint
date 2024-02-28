@@ -154,19 +154,6 @@ typedef enum {
   RC_MODE_3 = 3
 } RCModeType;
 //}}}
-//{{{  distortionTypes
-typedef enum {
-  SSE              = 0,
-  SSE_RGB          = 1,
-  PSNR             = 2,
-  PSNR_RGB         = 3,
-  SSIM             = 4,
-  SSIM_RGB         = 5,
-  MS_SSIM          = 6,
-  MS_SSIM_RGB      = 7,
-  TOTAL_DIST_TYPES = 8
-} distortion_types;
-//}}}
 //{{{  weightedPredictionTypes
 typedef enum {
   WP_MCPREC_PLUS0 =       4,

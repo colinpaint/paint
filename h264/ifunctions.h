@@ -273,19 +273,6 @@ static inline double dClip3(double low, double high, double x)
 //}}}
 
 //{{{
-static inline distblk weighted_cost(int factor, int bits)
-{
-#if JCOST_CALC_SCALEUP
-  return (((distblk)(factor))*((distblk)(bits)));
-#else
-#if (USE_RND_COST)
-  return (rshift_rnd_sf((lambda) * (bits), LAMBDA_ACCURACY_BITS));
-#else
-  return (((factor)*(bits))>>LAMBDA_ACCURACY_BITS);
-#endif
-#endif
-}
-//}}}
 //{{{
 static inline int RSD(int x)
 {
@@ -334,22 +321,6 @@ static inline int get_bit(int64 x,int n)
 }
 //}}}
 
-#if ZEROSNR
-//{{{
-static inline float psnr(int max_sample_sq, int samples, float sse_distortion )
-{
-  return (float) (10.0 * log10(max_sample_sq * (double) ((double) samples / (sse_distortion < 1.0 ? 1.0 : sse_distortion))));
-}
-//}}}
-#else
-//{{{
-static inline float psnr(int max_sample_sq, int samples, float sse_distortion )
-{
-  return (float) (sse_distortion == 0.0 ? 0.0 : (10.0 * log10(max_sample_sq * (double) ((double) samples / sse_distortion))));
-}
-//}}}
-#endif
-
 //{{{
 static inline int CheckCost_Shift(int64 mcost, int64 min_mcost)
 {
@@ -357,48 +328,6 @@ static inline int CheckCost_Shift(int64 mcost, int64 min_mcost)
     return 1;
   else
     return 0;
-}
-//}}}
-//{{{
-static inline int CheckCost(int64 mcost, int64 min_mcost)
-{
-  return ((mcost) >= (min_mcost));
-}
-//}}}
-//{{{
-static inline void down_scale(distblk *pblkdistCost)
-{
-#if JCOST_CALC_SCALEUP
-  *pblkdistCost = (*pblkdistCost)>>LAMBDA_ACCURACY_BITS;
-#endif
-}
-//}}}
-//{{{
-static inline void up_scale(distblk *pblkdistCost)
-{
-#if JCOST_CALC_SCALEUP
-  *pblkdistCost = (*pblkdistCost)<<LAMBDA_ACCURACY_BITS;
-#endif
-}
-//}}}
-//{{{
-static inline distblk dist_scale(distblk blkdistCost)
-{
-#if JCOST_CALC_SCALEUP
-  return ((blkdistCost)<<LAMBDA_ACCURACY_BITS);
-#else
-  return (blkdistCost);
-#endif
-}
-//}}}
-//{{{
-static inline int dist_down(distblk blkdistCost)
-{
-#if JCOST_CALC_SCALEUP
-  return ((int)((blkdistCost)>>LAMBDA_ACCURACY_BITS));
-#else
-  return ((int)blkdistCost);
-#endif
 }
 //}}}
 //{{{

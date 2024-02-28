@@ -50,7 +50,6 @@
 #include "memalloc.h"
 #include "mc_prediction.h"
 #include "mbuffer.h"
-#include "leaky_bucket.h"
 #include "fmo.h"
 #include "output.h"
 #include "cabac.h"
@@ -1030,11 +1029,6 @@ int OpenDecoder (InputParameters* p_Inp) {
   init (pDecoder->p_Vid);
   init_out_buffer (pDecoder->p_Vid);
 
-#if _FLTDBG_
-  pDecoder->p_Vid->fpDbg = fopen("c:/fltdbg.txt", "a");
-  fprintf(pDecoder->p_Vid->fpDbg, "\ndecoder is opened.\n");
-#endif
-
   return DEC_OPEN_NOERR;
   }
 //}}}
@@ -1110,14 +1104,6 @@ int CloseDecoder() {
 
 
   uninit_out_buffer (pDecoder->p_Vid);
-
-  #if _FLTDBG_
-    if(pDecoder->p_Vid->fpDbg) {
-      fprintf (pDecoder->p_Vid->fpDbg, "decoder is closed.\n");
-      fclose (pDecoder->p_Vid->fpDbg);
-      pDecoder->p_Vid->fpDbg = NULL;
-    }
-  #endif
 
   free_img (pDecoder->p_Vid);
   free (pDecoder->p_Inp);

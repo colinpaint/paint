@@ -13,11 +13,9 @@
 #define PAIR_FIELDS_IN_OUTPUT     1    // Pair field pictures for output purposes
 #define MVC_EXTENSION_ENABLE      1    // enable support for the Multiview High Profile
 
-#define PRINTREFLIST              0    // Print ref list info for debug purposes
 #define IMGTYPE                   0    // Define imgpel size type. 0 implies byte (cannot handle >8 bit depths) and 1 implies unsigned short
 #define ENABLE_FIELD_CTX          1    // Enables Field mode related context types for CABAC
 #define ENABLE_HIGH444_CTX        1    // Enables High 444 profile context types for CABAC.
-#define ZEROSNR                   0    // PSNR computation method
 #define JCOST_CALC_SCALEUP        1    // 1: J = (D<<LAMBDA_ACCURACY_BITS)+Lambda*R; 0: J = D + ((Lambda*R+Rounding)>>LAMBDA_ACCURACY_BITS)
 #define SIMULCAST_ENABLE          0    // to test the decoder
 
@@ -209,7 +207,7 @@ typedef enum {
   PLANE_8       =  3
 } I8x8PredModes;
 //}}}
-//{{{
+//{{{  StartEnd
 typedef enum {
   EOS = 1,    //!< End Of Sequence
   SOP = 2,    //!< Start Of Picture
@@ -217,7 +215,6 @@ typedef enum {
   SOS_CONT = 4
 } StartEnd;
 //}}}
-
 //{{{  MV Prediction types
 typedef enum {
   MVPRED_MEDIAN   = 0,
@@ -226,7 +223,7 @@ typedef enum {
   MVPRED_UR       = 3
 } MVPredTypes;
 //}}}
-//{{{
+//{{{  DecRet
 typedef enum {
   DECODING_OK     = 0,
   SEARCH_SYNC     = 1,
@@ -234,9 +231,8 @@ typedef enum {
 } DecRet;
 //}}}
 
-#define  LAMBDA_ACCURACY_BITS         16
+#define LAMBDA_ACCURACY_BITS         16
 #define INVALIDINDEX  (-135792468)
-
 #define RC_MAX_TEMPORAL_LEVELS   5
 
 //Start code and Emulation Prevention need this to be defined in identical manner at encoder and decoder

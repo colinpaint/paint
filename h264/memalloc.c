@@ -70,30 +70,6 @@ void free_top_bot_planes (imgpel **imgTopField, imgpel **imgBotField)
 /*!
  ************************************************************************
  * \brief
- *    Allocate 2D memory array -> DistortionData array2D[dim0][dim1]
- *
- * \par Output:
- *    memory size in bytes
- ************************************************************************/
-int get_mem2Ddist (DistortionData ***array2D, int dim0, int dim1)
-{
-  int i;
-
-  if((*array2D    = (DistortionData**)mem_malloc(dim0 *      sizeof(DistortionData*))) == NULL)
-    no_mem_exit("get_mem2Ddist: array2D");
-  if((*(*array2D) = (DistortionData* )mem_calloc(dim0 * dim1,sizeof(DistortionData ))) == NULL)
-    no_mem_exit("get_mem2Ddist: array2D");
-
-  for(i = 1 ; i < dim0; i++)
-    (*array2D)[i] =  (*array2D)[i-1] + dim1;
-
-  return dim0 * (sizeof(DistortionData*) + dim1 * sizeof(DistortionData));
-}
-//}}}
-//{{{
-/*!
- ************************************************************************
- * \brief
  *    Allocate 2D memory array -> LambdaParams array2D[dim0][dim1]
  *
  * \par Output:
@@ -112,31 +88,6 @@ int get_mem2Dlm (LambdaParams ***array2D, int dim0, int dim1)
     (*array2D)[i] =  (*array2D)[i-1] + dim1;
 
   return dim0 * (sizeof(LambdaParams*) + dim1 * sizeof(LambdaParams));
-}
-//}}}
-//{{{
-/*!
- ************************************************************************
- * \brief
- *    free 2D memory array
- *    which was allocated with get_mem2Ddist()
- ************************************************************************
- */
-void free_mem2Ddist (DistortionData **array2D)
-{
-  if (array2D)
-  {
-    if (*array2D)
-      mem_free (*array2D);
-    else
-      error ("free_mem2Ddist: trying to free unused memory",100);
-
-    mem_free (array2D);
-  }
-  else
-  {
-    error ("free_mem2Ddist: trying to free unused memory",100);
-  }
 }
 //}}}
 //{{{

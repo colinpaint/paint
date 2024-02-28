@@ -3,5 +3,4 @@
 #include "mbuffer.h"
 
 extern void DeblockPicture(VideoParameters *p_Vid, StorablePicture *p) ;
-
-void  init_Deblock(VideoParameters *p_Vid, int mb_aff_frame_flag);
+extern void init_Deblock(VideoParameters *p_Vid, int mb_aff_frame_flag);

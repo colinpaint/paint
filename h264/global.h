@@ -16,7 +16,6 @@
 #include "types.h"
 #include "io_image.h"
 #include "frame.h"
-#include "distortion.h"
 //}}}
 
 typedef struct bit_stream_dec Bitstream;
@@ -838,9 +837,6 @@ typedef struct video_par {
   int bDeblockEnable;
   int iPostProcess;
   int bFrameInit;
-#if _FLTDBG_
-  FILE *fpDbg;
-#endif
   pic_parameter_set_rbsp_t *pNextPPS;
   int last_dec_poc;
   int last_dec_view_id;
