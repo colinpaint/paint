@@ -14,7 +14,6 @@
 #include "ifunctions.h"
 #include "parsetcommon.h"
 #include "types.h"
-#include "io_image.h"
 #include "frame.h"
 //}}}
 
@@ -324,7 +323,23 @@ typedef struct nalunitheadermvcext_tag
 //}}}
 #endif
 
-//! Slice
+//{{{
+typedef struct image_data {
+  FrameFormat format;                  // image format
+
+  imgpel** frm_data[MAX_PLANE];        // Frame Data
+  imgpel** top_data[MAX_PLANE];        // pointers to top field data
+  imgpel** bot_data[MAX_PLANE];        // pointers to bottom field data
+
+  imgpel** frm_data_buf[2][MAX_PLANE]; // Frame Data
+  imgpel** top_data_buf[2][MAX_PLANE]; // pointers to top field data
+  imgpel** bot_data_buf[2][MAX_PLANE]; // pointers to bottom field data
+
+  int frm_stride[MAX_PLANE];
+  int top_stride[MAX_PLANE];
+  int bot_stride[MAX_PLANE];
+  } ImageData;
+//}}}
 //{{{
 typedef struct slice {
   struct video_par    *p_Vid;
