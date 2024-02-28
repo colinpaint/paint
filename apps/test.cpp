@@ -987,14 +987,16 @@ private:
       int iWidth = pPic->iWidth * ((pPic->iBitDepth+7)>>3);
       int iHeight = pPic->iHeight;
       int iStride = pPic->iYBufStride;
+
       int iWidthUV = (pPic->iYUVFormat != YUV444) ? pPic->iWidth>>1 : pPic->iWidth;
-      int iHeightUV = (pPic->iYUVFormat == YUV420) ? pPic->iHeight >> 1 : pPic->iHeight;
       iWidthUV *= ((pPic->iBitDepth + 7) >> 3);
+      int iHeightUV = (pPic->iYUVFormat == YUV420) ? pPic->iHeight >> 1 : pPic->iHeight;
       int iStrideUV = pPic->iUVBufStride;
 
-      cLog::log (LOGINFO, fmt::format ("display {}:{}:{} {}x{}:{}:{}",
-                                       mVideoFrameIndex, pPic->iYUVStorageFormat, pPic->bValid,
-                                       iWidth, iHeight, iStride, iStrideUV));
+      cLog::log (LOGINFO, fmt::format ("outputPicList {}:{} {}x{}:{}:{}",
+                                       pPic->iYUVStorageFormat, pPic->bValid,
+                                       iWidth, iHeight, 
+                                       iStride, iStrideUV));
 
       mVideoFrameIndex = (mVideoFrameIndex + 1) % kVideoFrames;
       mVideoFrames[mVideoFrameIndex]->releaseResources();

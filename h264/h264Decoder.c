@@ -60,7 +60,6 @@
 #include "quant.h"
 #include "block.h"
 #include "nalu.h"
-#include "img_io.h"
 #include "loopfilter.h"
 //#include "rtp.h"
 #include "output.h"
@@ -130,23 +129,8 @@ static void Report (VideoParameters* p_Vid) {
   // normalize time
   p_Vid->tot_time  = timenorm(p_Vid->tot_time);
 
-  if (p_Inp->silent == FALSE) {
-    fprintf(stdout,"-------------------- Average SNR all frames ------------------------------\n");
-    fprintf(stdout," SNR Y(dB)           : %5.2f\n",snr->snra[0]);
-    fprintf(stdout," SNR U(dB)           : %5.2f\n",snr->snra[1]);
-    fprintf(stdout," SNR V(dB)           : %5.2f\n",snr->snra[2]);
-    fprintf(stdout," Total decoding time : %.3f sec (%.3f fps)[%d frm/%" FORMAT_OFF_T " ms]\n",p_Vid->tot_time*0.001,(snr->frame_ctr ) * 1000.0 / p_Vid->tot_time, snr->frame_ctr, p_Vid->tot_time);
-    fprintf(stdout,"--------------------------------------------------------------------------\n");
-    fprintf(stdout," Exit JM %s decoder, ver %s ",JM, VERSION);
-    fprintf(stdout,"\n");
-  }
-  else {
     fprintf(stdout,"\n----------------------- Decoding Completed -------------------------------\n");
     fprintf(stdout," Total decoding time : %.3f sec (%.3f fps)[%d frm/%" FORMAT_OFF_T "  ms]\n",p_Vid->tot_time*0.001, (snr->frame_ctr) * 1000.0 / p_Vid->tot_time, snr->frame_ctr, p_Vid->tot_time);
-    fprintf(stdout,"--------------------------------------------------------------------------\n");
-    fprintf(stdout," Exit JM %s decoder, ver %s ",JM, VERSION);
-    fprintf(stdout,"\n");
-  }
 
   // write to log file
   fprintf (stdout," Output status file                     : %s \n",LOGFILE);
@@ -169,8 +153,6 @@ static void Report (VideoParameters* p_Vid) {
     fclose (p_log);
     p_log = fopen (string,"a");
     }
-
-  fprintf (p_log,"|%s/%-4s", VERSION, EXT_VERSION);
 
 #ifdef WIN32
   _strdate( timebuf );

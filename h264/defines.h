@@ -9,10 +9,6 @@
   #define TRACE           0     //!< 0:Trace off 1:Trace on 2:detailed CABAC context information
 #endif
 
-#define JM                  "19 (FRExt)"
-#define VERSION             "19.1"
-#define EXT_VERSION         "(FRExt)"
-
 #define DUMP_DPB                  0    //!< Dump DPB info for debug purposes
 #define PRINTREFLIST              0    //!< Print ref list info for debug purposes
 #define PAIR_FIELDS_IN_OUTPUT     0    //!< Pair field pictures for output purposes

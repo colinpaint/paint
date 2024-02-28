@@ -17,7 +17,6 @@
 #include "io_image.h"
 #include "frame.h"
 #include "distortion.h"
-#include "io_video.h"
 //}}}
 
 typedef struct bit_stream_dec Bitstream;
@@ -932,9 +931,6 @@ typedef struct inp_par {
 
   int  ProcessInput;
   int  enable_32_pulldown;
-  VideoDataFile input_file1;          //!< Input video file1
-  VideoDataFile input_file2;          //!< Input video file2
-  VideoDataFile input_file3;          //!< Input video file3
 #if (MVC_EXTENSION_ENABLE)
   int  DecodeAllLayers;
 #endif

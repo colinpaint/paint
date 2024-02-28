@@ -515,13 +515,13 @@ int InterpretSPS (VideoParameters *p_Vid, DataPartition *p, seq_parameter_set_rb
 #endif
 
 //{{{
-void InitVUI(seq_parameter_set_rbsp_t *sps)
+void InitVUI (seq_parameter_set_rbsp_t *sps)
 {
   sps->vui_seq_parameters.matrix_coefficients = 2;
 }
 //}}}
 //{{{
-int ReadVUI(DataPartition *p, seq_parameter_set_rbsp_t *sps)
+int ReadVUI (DataPartition *p, seq_parameter_set_rbsp_t *sps)
 {
   Bitstream *s = p->bitstream;
   if (sps->vui_parameters_present_flag)
@@ -601,7 +601,7 @@ int ReadVUI(DataPartition *p, seq_parameter_set_rbsp_t *sps)
 }
 //}}}
 //{{{
-int ReadHRDParameters(DataPartition *p, hrd_parameters_t *hrd)
+int ReadHRDParameters (DataPartition *p, hrd_parameters_t *hrd)
 {
   Bitstream *s = p->bitstream;
   unsigned int SchedSelIdx;
@@ -958,7 +958,7 @@ void ProcessPPS (VideoParameters *p_Vid, NALU_t *nalu)
  *
  ************************************************************************
  */
-static void updateMaxValue(FrameFormat *format)
+static void updateMaxValue (FrameFormat *format)
 {
   format->max_value[0] = (1 << format->bit_depth[0]) - 1;
   format->max_value_sq[0] = format->max_value[0] * format->max_value[0];
@@ -969,13 +969,6 @@ static void updateMaxValue(FrameFormat *format)
 }
 //}}}
 //{{{
-/*!
- ************************************************************************
- * \brief
- *    Reset format information
- *
- ************************************************************************
- */
 void reset_format_info(seq_parameter_set_rbsp_t *sps, VideoParameters *p_Vid, FrameFormat *source, FrameFormat *output)
 {
   InputParameters *p_Inp = p_Vid->p_Inp;
@@ -986,43 +979,35 @@ void reset_format_info(seq_parameter_set_rbsp_t *sps, VideoParameters *p_Vid, Fr
   int crop_top, crop_bottom;
 
   // cropping for luma
-  if (sps->frame_cropping_flag)
-  {
+  if (sps->frame_cropping_flag) {
     crop_left   = SubWidthC [sps->chroma_format_idc] * sps->frame_crop_left_offset;
     crop_right  = SubWidthC [sps->chroma_format_idc] * sps->frame_crop_right_offset;
     crop_top    = SubHeightC[sps->chroma_format_idc] * ( 2 - sps->frame_mbs_only_flag ) *  sps->frame_crop_top_offset;
     crop_bottom = SubHeightC[sps->chroma_format_idc] * ( 2 - sps->frame_mbs_only_flag ) *  sps->frame_crop_bottom_offset;
   }
   else
-  {
     crop_left = crop_right = crop_top = crop_bottom = 0;
-  }
 
   source->width[0] = p_Vid->width - crop_left - crop_right;
   source->height[0] = p_Vid->height - crop_top - crop_bottom;
 
   // cropping for chroma
-  if (sps->frame_cropping_flag)
-  {
+  if (sps->frame_cropping_flag) {
     crop_left   = sps->frame_crop_left_offset;
     crop_right  = sps->frame_crop_right_offset;
     crop_top    = ( 2 - sps->frame_mbs_only_flag ) *  sps->frame_crop_top_offset;
     crop_bottom = ( 2 - sps->frame_mbs_only_flag ) *  sps->frame_crop_bottom_offset;
   }
   else
-  {
     crop_left = crop_right = crop_top = crop_bottom = 0;
-  }
 
-  if ((sps->chroma_format_idc==YUV400) && p_Inp->write_uv)
-  {
+  if ((sps->chroma_format_idc==YUV400) && p_Inp->write_uv) {
     source->width[1]  = (source->width[0] >> 1);
     source->width[2]  = source->width[1];
     source->height[1] = (source->height[0] >> 1);
     source->height[2] = source->height[1];
   }
-  else
-  {
+  else {
     source->width[1]  = p_Vid->width_cr - crop_left - crop_right;
     source->width[2]  = source->width[1];
     source->height[1] = p_Vid->height_cr - crop_top - crop_bottom;
@@ -1051,7 +1036,6 @@ void reset_format_info(seq_parameter_set_rbsp_t *sps, VideoParameters *p_Vid, Fr
   output->mb_width    = output->width[0]  / MB_BLOCK_SIZE;
   output->mb_height   = output->height[0] / MB_BLOCK_SIZE;
 
-
   output->bit_depth[0] = source->bit_depth[0] = p_Vid->bitdepth_luma;
   output->bit_depth[1] = source->bit_depth[1] = p_Vid->bitdepth_chroma;
   output->bit_depth[2] = source->bit_depth[2] = p_Vid->bitdepth_chroma;
@@ -1072,38 +1056,28 @@ void reset_format_info(seq_parameter_set_rbsp_t *sps, VideoParameters *p_Vid, Fr
   source->auto_crop_bottom_cr = output->auto_crop_bottom_cr;
   source->auto_crop_right_cr  = output->auto_crop_right_cr;
 
-  updateMaxValue(source);
-  updateMaxValue(output);
+  updateMaxValue (source);
+  updateMaxValue (output);
 
   if (p_Vid->first_sps == TRUE) {
     p_Vid->first_sps = FALSE;
-    if(!p_Inp->bDisplayDecParams) {
-      fprintf(stdout,"Profile IDC  : %d\n", sps->profile_idc);
-      fprintf(stdout,"Image Format : %dx%d (%dx%d)\n", source->width[0], source->height[0], p_Vid->width, p_Vid->height);
-      if (p_Vid->yuv_format == YUV400)
-        fprintf(stdout,"Color Format : 4:0:0 ");
-      else if (p_Vid->yuv_format == YUV420)
-        fprintf(stdout,"Color Format : 4:2:0 ");
-      else if (p_Vid->yuv_format == YUV422)
-        fprintf(stdout,"Color Format : 4:2:2 ");
-      else
-        fprintf(stdout,"Color Format : 4:4:4 ");
-
-      fprintf(stdout,"(%d:%d:%d)\n", source->bit_depth[0], source->bit_depth[1], source->bit_depth[2]);
-      fprintf(stdout,"--------------------------------------------------------------------------\n");
-    }
-    if (!p_Inp->silent)
-    {
-      fprintf(stdout,"POC must = frame# or field# for SNRs to be correct\n");
-      fprintf(stdout,"--------------------------------------------------------------------------\n");
-      fprintf(stdout,"  Frame          POC  Pic#   QP    SnrY     SnrU     SnrV   Y:U:V Time(ms)\n");
-      fprintf(stdout,"--------------------------------------------------------------------------\n");
-    }
+    printf ("Profile IDC: %d %dx%d(%dx%d) ",
+            sps->profile_idc, source->width[0], source->height[0], p_Vid->width, p_Vid->height);
+    if (p_Vid->yuv_format == YUV400)
+      printf ("4:0:0");
+    else if (p_Vid->yuv_format == YUV420)
+      printf ("4:2:0");
+    else if (p_Vid->yuv_format == YUV422)
+      printf ("4:2:2");
+    else
+      printf ("4:4:4");
+    printf ("%d:%d:%d\n", source->bit_depth[0], source->bit_depth[1], source->bit_depth[2]);
+    printf ("  Frame          POC  Pic#   QP    SnrY     SnrU     SnrV   Y:U:V Time(ms)\n");
   }
 }
 //}}}
 //{{{
-static void setup_layer_info(VideoParameters *p_Vid, seq_parameter_set_rbsp_t *sps, LayerParameters *p_Lps)
+static void setup_layer_info (VideoParameters *p_Vid, seq_parameter_set_rbsp_t *sps, LayerParameters *p_Lps)
 {
   int layer_id = p_Lps->layer_id;
   p_Lps->p_Vid = p_Vid;
@@ -1113,7 +1087,7 @@ static void setup_layer_info(VideoParameters *p_Vid, seq_parameter_set_rbsp_t *s
 }
 //}}}
 //{{{
-static void set_coding_par(seq_parameter_set_rbsp_t *sps, CodingParameters *cps)
+static void set_coding_par (seq_parameter_set_rbsp_t *sps, CodingParameters *cps)
 {
   // maximum vertical motion vector range in luma quarter pixel units
   cps->profile_idc = sps->profile_idc;
@@ -1359,7 +1333,7 @@ void activate_sps (VideoParameters *p_Vid, seq_parameter_set_rbsp_t *sps)
 }
 //}}}
 //{{{
-void activate_pps(VideoParameters *p_Vid, pic_parameter_set_rbsp_t *pps)
+void activate_pps (VideoParameters *p_Vid, pic_parameter_set_rbsp_t *pps)
 {
   if (p_Vid->active_pps != pps)
   {
