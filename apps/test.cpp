@@ -526,6 +526,52 @@ namespace {
     }
   //}}}
   }
+
+//{{{
+class cSoftVideoFrame : public cVideoFrame {
+public:
+  cSoftVideoFrame() : cVideoFrame(cTexture::eYuv420) {}
+  virtual ~cSoftVideoFrame() {}
+
+  virtual void* getMotionVectors (size_t& numMotionVectors) final { return nullptr; }
+
+  void setPixels (uint8_t* y, uint8_t* u, uint8_t* v, int yStride, int uvStride, int height) {
+
+    mStrides[0] = yStride;
+    mPixels[0] = (uint8_t*)malloc (yStride * height);
+    memcpy (mPixels[0], y, yStride * height);
+
+    mStrides[1] = uvStride;
+    mPixels[1] = (uint8_t*)malloc (uvStride * height/2);
+    memcpy (mPixels[1], u, uvStride * height/2);
+
+    mStrides[2] = uvStride;
+    mPixels[2] = (uint8_t*)malloc (uvStride * height/2);
+    memcpy (mPixels[2], v, uvStride * height/2);
+    }
+
+protected:
+  virtual uint8_t** getPixels() final { return &mPixels[0]; }
+  virtual int* getStrides() final { return &mStrides[0]; }
+
+  virtual void releasePixels() final {
+    if (kFrameDebug)
+      cLog::log (LOGINFO, fmt::format ("cFFmpegVideoFrame::~releasePixels"));
+
+    free (mPixels[0]);
+    mPixels[0] = nullptr;
+
+    free (mPixels[1]);
+    mPixels[1] = nullptr;
+
+    free (mPixels[2]);
+    mPixels[2] = nullptr;
+    }
+
+  uint8_t* mPixels[3] = { nullptr };
+  int mStrides[3] = { 0 };
+  };
+//}}}
 //{{{
 class cVideoDecoder : public cDecoder {
 public:
@@ -847,30 +893,143 @@ public:
   cTestApp (cApp::cOptions* options, iUI* ui) : cApp ("Test", options, ui), mOptions(options) {}
   virtual ~cTestApp() {}
 
+  cApp::cOptions* getOptions() { return mOptions; }
+  cFilePlayer* getFilePlayer() { return mFilePlayer; }
+  cVideoFrame* getVideoFrame() { return mFilePlayer ? mFilePlayer->getVideoFrame() : mVideoFrame; }
+
+  //{{{
+  void addH264File (const string& fileName) {
+
+    for (size_t i = 0; i < kVideoFrames;  i++)
+      mVideoFrames[i] = new cSoftVideoFrame();
+
+    thread ([=]() {
+      cLog::setThreadName ("h264");
+
+      // input params
+      InputParameters InputParams;
+      memset (&InputParams, 0, sizeof(InputParameters));
+      strcpy (InputParams.infile, fileName.c_str());
+      InputParams.FileFormat = PAR_OF_ANNEXB;
+      InputParams.poc_scale = 2;
+      InputParams.intra_profile_deblocking = 1;
+      InputParams.poc_gap = 2;
+      InputParams.ref_poc_gap = 2;
+      InputParams.bDisplayDecParams = 1;
+      InputParams.dpb_plus[0] = 1;
+      //{{{  optional input params
+      //InputParams.ref_offset;
+      //InputParams.write_uv;
+      //InputParams.silent;
+      //InputParams.source;                   //!< source related information
+      //InputParams.output;                   //!< output related information
+      //InputParams.ProcessInput;
+      //InputParams.enable_32_pulldown;
+      //InputParams.input_file1;          //!< Input video file1
+      //InputParams.input_file2;          //!< Input video file2
+      //InputParams.input_file3;          //!< Input video file3
+      //InputParams.conceal_mode;
+      //InputParams.start_frame;
+      //InputParams.stdRange;                         //!< 1 - standard range, 0 - full range
+      //InputParams.videoCode;                        //!< 1 - 709, 3 - 601:  See VideoCode in io_tiff.
+      //InputParams.export_views;
+      //InputParams.iDecFrmNum;
+      //}}}
+
+      if (OpenDecoder (&InputParams) != DEC_OPEN_NOERR) {
+        cLog::log (LOGERROR, "ppen encoder failed");
+        return;
+        }
+
+      int ret = 0;
+      do {
+        DecodedPicList* pDecPicList;
+        ret = DecodeOneFrame (&pDecPicList);
+        if (ret == DEC_EOS || ret == DEC_SUCCEED)
+          outputPicList (pDecPicList, 0);
+        else
+          cLog::log (LOGERROR, "decoding process failed");
+        } while (ret == DEC_SUCCEED);
+
+      DecodedPicList* pDecPicList;
+      ret = FinitDecoder (&pDecPicList);
+      outputPicList (pDecPicList, 1);
+      ret = CloseDecoder();
+
+      cLog::log (LOGERROR, "exit");
+      }).detach();
+    }
+  //}}}
+  //{{{
   void addFile (const string& fileName) {
     mFilePlayer = new cFilePlayer (fileName);
     mFilePlayer->read();
     }
-
-  cApp::cOptions* getOptions() { return mOptions; }
-  cFilePlayer* getFilePlayer() { return mFilePlayer; }
-
+  //}}}
+  //{{{
   void drop (const vector<string>& dropItems) {
     for (auto& item : dropItems) {
       cLog::log (LOGINFO, fmt::format ("cPlayerApp::drop {}", item));
       addFile (item);
       }
     }
+  //}}}
 
 private:
+  static inline const size_t kVideoFrames = 50;
+  //{{{
+  void outputPicList (DecodedPicList* pDecPic, int bOutputAllFrames) {
+
+    DecodedPicList* pPic = pDecPic;
+
+    //if (pPic && (((pPic->iYUVStorageFormat == 2) && pPic->bValid == 3) ||
+    //             ((pPic->iYUVStorageFormat != 2) && pPic->bValid == 1)) ) {
+    while (pPic && pPic->iWidth) {
+      int iWidth = pPic->iWidth * ((pPic->iBitDepth+7)>>3);
+      int iHeight = pPic->iHeight;
+      int iStride = pPic->iYBufStride;
+      int iWidthUV = (pPic->iYUVFormat != YUV444) ? pPic->iWidth>>1 : pPic->iWidth;
+      int iHeightUV = (pPic->iYUVFormat == YUV420) ? pPic->iHeight >> 1 : pPic->iHeight;
+      iWidthUV *= ((pPic->iBitDepth + 7) >> 3);
+      int iStrideUV = pPic->iUVBufStride;
+
+      cLog::log (LOGINFO, fmt::format ("display {}:{}:{} {}x{}:{}:{}",
+                                       mVideoFrameIndex, 
+                                       pPic->iYUVStorageFormat, pPic->bValid,
+                                       iWidth, iHeight, iStride, iStrideUV));
+
+      mVideoFrameIndex = (mVideoFrameIndex + 1) % kVideoFrames;
+      mVideoFrames[mVideoFrameIndex]->releaseResources();
+      cSoftVideoFrame* videoFrame = mVideoFrames[mVideoFrameIndex];
+
+      videoFrame->setWidth (iWidth);
+      videoFrame->setHeight (iHeight);
+      videoFrame->mStrideY = iStride;
+      videoFrame->mStrideUV = iStrideUV;
+      videoFrame->mInterlaced = 0;
+      videoFrame->mTopFieldFirst = 0;
+      videoFrame->setPixels (pPic->pY, pPic->pU, pPic->pV, iStride, iStrideUV, iHeight);
+      videoFrame->mTextureDirty = true;
+      mVideoFrame = videoFrame;
+
+      pPic->bValid = 0;
+      pPic = pPic->pNext;
+      }
+    }
+  //}}}
+
   cApp::cOptions* mOptions;
   cFilePlayer* mFilePlayer = nullptr;
+
+  cVideoFrame* mVideoFrame = nullptr;
+  int mVideoFrameIndex = -1;
+  array <cSoftVideoFrame*,kVideoFrames> mVideoFrames = { nullptr };
   };
 //}}}
 //{{{
 class cView {
 public:
-  cView (cTransportStream::cService* service) : mService(service) {}
+  cView() {}
   ~cView() = default;
 
   void draw (cTestApp& testApp, cTextureShader* videoShader) {
@@ -883,70 +1042,70 @@ public:
     mBR = {(layoutPos.x * viewportWidth) + mSize.x*0.5f, (layoutPos.y * viewportHeight) + mSize.y*0.5f};
 
     ImGui::SetCursorPos (mTL);
-    ImGui::BeginChild (fmt::format ("view##{}", mService->getSid()).c_str(), mSize,
+    ImGui::BeginChild ("view", mSize,
                        ImGuiChildFlags_None,
                        ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse |
                        ImGuiWindowFlags_NoBackground);
 
-    if (testApp.getFilePlayer()) {
-      cVideoFrame* videoFrame = testApp.getFilePlayer()->getVideoFrame();
-      if (videoFrame) {
-        //{{{  draw video
-        cMat4x4 model = cMat4x4();
-        model.setTranslate ({(layoutPos.x - (0.5f * layoutScale)) * viewportWidth,
-                             ((1.f-layoutPos.y) - (0.5f * layoutScale)) * viewportHeight});
-        model.size ({layoutScale * viewportWidth / videoFrame->getWidth(),
-                     layoutScale * viewportHeight / videoFrame->getHeight()});
-        cMat4x4 projection (0.f,viewportWidth, 0.f,viewportHeight, -1.f,1.f);
-        videoShader->use();
-        videoShader->setModelProjection (model, projection);
+    cVideoFrame* videoFrame = testApp.getVideoFrame();
+    if (videoFrame) {
+      //{{{  draw video
+      cMat4x4 model = cMat4x4();
+      model.setTranslate ({(layoutPos.x - (0.5f * layoutScale)) * viewportWidth,
+                           ((1.f-layoutPos.y) - (0.5f * layoutScale)) * viewportHeight});
+      model.size ({layoutScale * viewportWidth / videoFrame->getWidth(),
+                   layoutScale * viewportHeight / videoFrame->getHeight()});
+      cMat4x4 projection (0.f,viewportWidth, 0.f,viewportHeight, -1.f,1.f);
+      videoShader->use();
+      videoShader->setModelProjection (model, projection);
 
-        // texture
-        cTexture& texture = videoFrame->getTexture (testApp.getGraphics());
-        texture.setSource();
+      // texture
+      cTexture& texture = videoFrame->getTexture (testApp.getGraphics());
+      texture.setSource();
 
-        // ensure quad is created
-        if (!mVideoQuad)
-          mVideoQuad = testApp.getGraphics().createQuad (videoFrame->getSize());
+      // ensure quad is created
+      if (!mVideoQuad)
+        mVideoQuad = testApp.getGraphics().createQuad (videoFrame->getSize());
 
-        // draw quad
-        mVideoQuad->draw();
-        //}}}
-        //{{{  draw frameInfo
-        string title = fmt::format ("seqPts:{} {:4d} {:5d} {}",
-                                    getPtsString (videoFrame->getPts()),
-                                    videoFrame->getPtsDuration(),
-                                    videoFrame->getPesSize(),
-                                    videoFrame->getFrameInfo()
-                                    );
+      // draw quad
+      mVideoQuad->draw();
+      //}}}
+      //{{{  draw frameInfo
+      string title = fmt::format ("seqPts:{} {:4d} {:5d} {}",
+                                  getPtsString (videoFrame->getPts()),
+                                  videoFrame->getPtsDuration(),
+                                  videoFrame->getPesSize(),
+                                  videoFrame->getFrameInfo()
+                                  );
 
-        ImVec2 pos = { ImGui::GetTextLineHeight(), mSize.y - 3 * ImGui::GetTextLineHeight()};
-        ImGui::SetCursorPos (pos);
-        ImGui::TextColored ({0.f,0.f,0.f,1.f}, title.c_str());
-        ImGui::SetCursorPos (pos - ImVec2(2.f,2.f));
-        ImGui::TextColored ({1.f, 1.f,1.f,1.f}, title.c_str());
-        //}}}
-        }
+      ImVec2 pos = { ImGui::GetTextLineHeight(), mSize.y - 3 * ImGui::GetTextLineHeight()};
+      ImGui::SetCursorPos (pos);
+      ImGui::TextColored ({0.f,0.f,0.f,1.f}, title.c_str());
+      ImGui::SetCursorPos (pos - ImVec2(2.f,2.f));
+      ImGui::TextColored ({1.f, 1.f,1.f,1.f}, title.c_str());
+      //}}}
       }
 
-    ImGui::PushFont (testApp.getLargeFont());
-    //{{{  title
-    string title = testApp.getFilePlayer()->getFileName();
-    ImVec2 pos = {ImGui::GetTextLineHeight() * 0.25f, 0.f};
-    ImGui::SetCursorPos (pos);
-    ImGui::TextColored ({0.f,0.f,0.f,1.f}, title.c_str());
-    ImGui::SetCursorPos (pos - ImVec2(2.f,2.f));
-    ImGui::TextColored ({1.f, 1.f,1.f,1.f}, title.c_str());
-    //}}}
-    //{{{  playPts
-    string ptsString = getPtsString (testApp.getFilePlayer()->getPlayPts());
-    pos = ImVec2 (mSize - ImVec2(ImGui::GetTextLineHeight() * 7.f, ImGui::GetTextLineHeight()));
-    ImGui::SetCursorPos (pos);
-    ImGui::TextColored ({0.f,0.f,0.f,1.f}, ptsString.c_str());
-    ImGui::SetCursorPos (pos - ImVec2(2.f,2.f));
-    ImGui::TextColored ({1.f,1.f,1.f,1.f}, ptsString.c_str());
-    //}}}
-    ImGui::PopFont();
+    if (testApp.getFilePlayer()) {
+      ImGui::PushFont (testApp.getLargeFont());
+      //{{{  title
+      string title = testApp.getFilePlayer()->getFileName();
+      ImVec2 pos = {ImGui::GetTextLineHeight() * 0.25f, 0.f};
+      ImGui::SetCursorPos (pos);
+      ImGui::TextColored ({0.f,0.f,0.f,1.f}, title.c_str());
+      ImGui::SetCursorPos (pos - ImVec2(2.f,2.f));
+      ImGui::TextColored ({1.f, 1.f,1.f,1.f}, title.c_str());
+      //}}}
+      //{{{  playPts
+      string ptsString = getPtsString (testApp.getFilePlayer()->getPlayPts());
+      pos = ImVec2 (mSize - ImVec2(ImGui::GetTextLineHeight() * 7.f, ImGui::GetTextLineHeight()));
+      ImGui::SetCursorPos (pos);
+      ImGui::TextColored ({0.f,0.f,0.f,1.f}, ptsString.c_str());
+      ImGui::SetCursorPos (pos - ImVec2(2.f,2.f));
+      ImGui::TextColored ({1.f,1.f,1.f,1.f}, ptsString.c_str());
+      //}}}
+      ImGui::PopFont();
+      }
 
     ImGui::EndChild();
     }
@@ -1057,9 +1216,6 @@ private:
     }
   //}}}
 
-  // vars
-  cTransportStream::cService* mService;
-
   // video
   ImVec2 mSize;
   ImVec2 mTL;
@@ -1089,30 +1245,27 @@ public:
     if (!mVideoShader)
       mVideoShader = testApp.getGraphics().createTextureShader (cTexture::eYuv420);
 
-    cFilePlayer* filePlayer = testApp.getFilePlayer();
-    if (filePlayer && filePlayer->getService()) {
-      if (!mView)
-        mView = new cView (filePlayer->getService());
-      mView->draw (testApp, mVideoShader);
+    if (!mView)
+      mView = new cView();
+    mView->draw (testApp, mVideoShader);
 
-      // draw menu
-      ImGui::SetCursorPos ({0.f, ImGui::GetIO().DisplaySize.y - ImGui::GetTextLineHeight() * 1.5f});
-      ImGui::BeginChild ("menu", {0.f, ImGui::GetTextLineHeight() * 1.5f},
-                         ImGuiChildFlags_None,
-                         ImGuiWindowFlags_NoBackground);
+    // draw menu
+    ImGui::SetCursorPos ({0.f, ImGui::GetIO().DisplaySize.y - ImGui::GetTextLineHeight() * 1.5f});
+    ImGui::BeginChild ("menu", {0.f, ImGui::GetTextLineHeight() * 1.5f},
+                       ImGuiChildFlags_None,
+                       ImGuiWindowFlags_NoBackground);
 
-      ImGui::SetCursorPos ({0.f,0.f});
-      //{{{  draw fullScreen button
-      ImGui::SameLine();
-      if (toggleButton ("full", testApp.getPlatform().getFullScreen()))
-        testApp.getPlatform().toggleFullScreen();
-      //}}}
-      //{{{  draw frameRate info
-      ImGui::SameLine();
-      ImGui::TextUnformatted (fmt::format("{}:fps", static_cast<uint32_t>(ImGui::GetIO().Framerate)).c_str());
-      //}}}
-      ImGui::EndChild();
-      }
+    ImGui::SetCursorPos ({0.f,0.f});
+    //{{{  draw fullScreen button
+    ImGui::SameLine();
+    if (toggleButton ("full", testApp.getPlatform().getFullScreen()))
+      testApp.getPlatform().toggleFullScreen();
+    //}}}
+    //{{{  draw frameRate info
+    ImGui::SameLine();
+    ImGui::TextUnformatted (fmt::format("{}:fps", static_cast<uint32_t>(ImGui::GetIO().Framerate)).c_str());
+    //}}}
+    ImGui::EndChild();
     ImGui::End();
     keyboard (testApp);
     }
@@ -1169,106 +1322,9 @@ private:
   };
 //}}}
 
-//{{{
-void outputPicList (DecodedPicList* pDecPic, int bOutputAllFrames) {
-
-  DecodedPicList* pPic = pDecPic;
-
-  cLog::log (LOGINFO, fmt::format ("outputPicList {}x{}:{} format:{}:{} stride:{}x{}",
-                                   pPic->iWidth * ((pPic->iBitDepth+7)>>3), pPic->iHeight,
-                                   pPic->iBitDepth,
-                                   pPic->iYUVStorageFormat, pPic->bValid,
-                                   pPic->iYBufStride, pPic->iUVBufStride
-                                   ));
-
-  if (pPic && (((pPic->iYUVStorageFormat == 2) && pPic->bValid == 3) ||
-               ((pPic->iYUVStorageFormat != 2) && pPic->bValid == 1)) ) {
-    int iWidth = pPic->iWidth * ((pPic->iBitDepth+7)>>3);
-    int iHeight = pPic->iHeight;
-    int iStride = pPic->iYBufStride;
-    int iWidthUV = (pPic->iYUVFormat != YUV444) ? pPic->iWidth>>1 : pPic->iWidth;
-    int iHeightUV = (pPic->iYUVFormat == YUV420) ? pPic->iHeight >> 1 : pPic->iHeight;
-    iWidthUV *= ((pPic->iBitDepth + 7) >> 3);
-    int iStrideUV = pPic->iUVBufStride;
-
-    do {
-      //uint8_t* pbBuf = pPic->pY;
-      //for (i = 0; i < iHeight; i++)
-      //  write (hFileOutput, pbBuf+i*iStride, iWidth);
-
-      //pbBuf = pPic->pU;
-      //for(i=0; i < iHeightUV; i++) {
-      //  write( hFileOutput, pbBuf+i*iStrideUV, iWidthUV);
-
-      //pbBuf = pPic->pV;
-      //for (i = 0; i < iHeightUV; i++) {
-      //  write(hFileOutput, pbBuf+i*iStrideUV, iWidthUV);
-
-      pPic->bValid = 0;
-      pPic = pPic->pNext;
-      } while (pPic != NULL && pPic->bValid && bOutputAllFrames);
-    }
-  }
-//}}}
-//{{{
-void h264Decode (const string& fileName) {
-
-  // input params
-  InputParameters InputParams;
-  memset (&InputParams, 0, sizeof(InputParameters));
-  strcpy (InputParams.infile, fileName.c_str());
-  InputParams.FileFormat = PAR_OF_ANNEXB;
-  InputParams.poc_scale = 2;
-  InputParams.intra_profile_deblocking = 1;
-  InputParams.poc_gap = 2;
-  InputParams.ref_poc_gap = 2;
-  InputParams.bDisplayDecParams = 1;
-  InputParams.dpb_plus[0] = 1;
-  //{{{  optional input params
-  //InputParams.ref_offset;
-  //InputParams.write_uv;
-  //InputParams.silent;
-  //InputParams.source;                   //!< source related information
-  //InputParams.output;                   //!< output related information
-  //InputParams.ProcessInput;
-  //InputParams.enable_32_pulldown;
-  //InputParams.input_file1;          //!< Input video file1
-  //InputParams.input_file2;          //!< Input video file2
-  //InputParams.input_file3;          //!< Input video file3
-  //InputParams.conceal_mode;
-  //InputParams.start_frame;
-  //InputParams.stdRange;                         //!< 1 - standard range, 0 - full range
-  //InputParams.videoCode;                        //!< 1 - 709, 3 - 601:  See VideoCode in io_tiff.
-  //InputParams.export_views;
-  //InputParams.iDecFrmNum;
-  //}}}
-
-  if (OpenDecoder (&InputParams) != DEC_OPEN_NOERR) {
-    cLog::log (LOGERROR, "ppen encoder failed");
-    return;
-    }
-
-  int ret = 0;
-  do {
-    DecodedPicList* pDecPicList;
-    ret = DecodeOneFrame (&pDecPicList);
-    if (ret == DEC_EOS || ret == DEC_SUCCEED)
-      outputPicList (pDecPicList, 0);
-    else
-      cLog::log (LOGERROR, "decoding process failed");
-    } while (ret == DEC_SUCCEED);
-
-  DecodedPicList* pDecPicList;
-  ret = FinitDecoder (&pDecPicList);
-  outputPicList (pDecPicList, 1);
-  ret = CloseDecoder();
-  }
-//}}}
-
 // main
 int main (int numArgs, char* args[]) {
 
-  bool softH264 = false;
   string fileName;
   //{{{  options
   cApp::cOptions* options = new cApp::cOptions();
@@ -1276,8 +1332,6 @@ int main (int numArgs, char* args[]) {
     string param = args[i];
     if (options->parse (param)) // found cApp option
       ;
-    else if (param == "h264")
-      softH264 = true;
     else
       fileName = param;
     }
@@ -1285,15 +1339,15 @@ int main (int numArgs, char* args[]) {
 
   // log
   cLog::init (LOGINFO);
-  cLog::log (LOGNOTICE, fmt::format ("test {} {}", softH264, fileName));
+  cLog::log (LOGNOTICE, fmt::format ("test {}", fileName));
 
-  if (softH264)
-    h264Decode (fileName);
-  else {
-    cTestApp testApp (options, new cTestUI());
+  cTestApp testApp (options, new cTestUI());
+  if ((fileName.size() > 4) &&
+      fileName.substr (fileName.size() - 4, 4) == ".264")
+    testApp.addH264File (fileName);
+  else
     testApp.addFile (fileName);
-    testApp.mainUILoop();
-    }
+  testApp.mainUILoop();
 
   return EXIT_SUCCESS;
   }
