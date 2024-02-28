@@ -173,12 +173,6 @@ static void setup_buffers (VideoParameters *p_Vid, int layer_id)
 #endif
 
 //{{{
-/*!
- ************************************************************************
- * \brief
- *    Initializes the parameters for a new picture
- ************************************************************************
- */
 static void init_picture (VideoParameters *p_Vid, Slice *currSlice, InputParameters *p_Inp)
 {
   int i;
@@ -193,10 +187,9 @@ static void init_picture (VideoParameters *p_Vid, Slice *currSlice, InputParamet
 
   p_Vid->bFrameInit = 1;
   if (p_Vid->dec_picture) // && p_Vid->num_dec_mb == p_Vid->PicSizeInMbs)
-  {
     // this may only happen on slice loss
     exit_picture(p_Vid, &p_Vid->dec_picture);
-  }
+
   p_Vid->dpb_layer_id = currSlice->layer_id;
   //set buffers;
   setup_buffers(p_Vid, currSlice->layer_id);
@@ -237,18 +230,15 @@ static void init_picture (VideoParameters *p_Vid, Slice *currSlice, InputParamet
         }
       }
       else
-      {   /* Advanced Error Concealment would be called here to combat unintentional loss of pictures. */
+      /* Advanced Error Concealment would be called here to combat unintentional loss of pictures. */
         error("An unintentional loss of pictures occurs! Exit\n", 100);
-      }
     }
     if(p_Vid->conceal_mode == 0)
       fill_frame_num_gap(p_Vid, currSlice);
   }
 
   if(currSlice->nal_reference_idc)
-  {
     p_Vid->pre_frame_num = currSlice->frame_num;
-  }
 
   //p_Vid->num_dec_mb = 0;
 
@@ -264,9 +254,7 @@ static void init_picture (VideoParameters *p_Vid, Slice *currSlice, InputParamet
   //  dumppoc (p_Vid);
 
   if (currSlice->structure==FRAME ||currSlice->structure==TOP_FIELD)
-  {
     gettime (&(p_Vid->start_time));             // start time
-  }
 
   dec_picture = p_Vid->dec_picture = alloc_storable_picture (p_Vid, currSlice->structure, p_Vid->width, p_Vid->height, p_Vid->width_cr, p_Vid->height_cr, 1);
   dec_picture->top_poc=currSlice->toppoc;
@@ -297,8 +285,7 @@ static void init_picture (VideoParameters *p_Vid, Slice *currSlice, InputParamet
 #endif
   p_Vid->erc_mvperMB = 0;
 
-  switch (currSlice->structure )
-  {
+  switch (currSlice->structure ) {
   case TOP_FIELD:
     {
       dec_picture->poc = currSlice->toppoc;
@@ -454,8 +441,7 @@ static void update_mbaff_macroblock_data (imgpel **cur_img, imgpel (*temp)[16], 
   for (y = 0; y < 2 * height; ++y)
     memcpy(*temp++, (*temp_img++ + x0), width * sizeof(imgpel));
 
-  for (y = 0; y < height; ++y)
-  {
+  for (y = 0; y < height; ++y) {
     memcpy((*cur_img++ + x0), *temp_evn++, width * sizeof(imgpel));
     memcpy((*cur_img++ + x0), *temp_odd++, width * sizeof(imgpel));
   }
@@ -628,9 +614,7 @@ static void init_picture_decoding (VideoParameters *p_Vid)
   int j, iDeblockMode=1;
 
   if(p_Vid->iSliceNumOfCurrPic >= MAX_NUM_SLICES)
-  {
     error ("Maximum number of supported slices exceeded. \nPlease recompile with increased value for MAX_NUM_SLICES", 200);
-  }
 
   if(p_Vid->pNextPPS->Valid && (int) p_Vid->pNextPPS->pic_parameter_set_id == pSlice->pic_parameter_set_id)
   {
@@ -655,15 +639,14 @@ static void init_picture_decoding (VideoParameters *p_Vid)
 
 #if (MVC_EXTENSION_ENABLE)
   if((pSlice->layer_id>0) && (pSlice->svc_extension_flag == 0 && pSlice->NaluHeaderMVCExt.non_idr_flag == 0))
-  {
    idr_memory_management(p_Vid->p_Dpb_layer[pSlice->layer_id], p_Vid->dec_picture);
-  }
   update_ref_list(p_Vid->p_Dpb_layer[pSlice->view_id]);
   update_ltref_list(p_Vid->p_Dpb_layer[pSlice->view_id]);
   update_pic_num(pSlice);
 #else
   update_pic_num(pSlice);
 #endif
+
   init_Deblock(p_Vid, pSlice->mb_aff_frame_flag);
   //init mb_data;
   for(j=0; j<p_Vid->iSliceNumOfCurrPic; j++)
@@ -690,26 +673,20 @@ static void Error_tracking (VideoParameters *p_Vid, Slice *currSlice)
   int i;
 
   if(currSlice->redundant_pic_cnt == 0)
-  {
     p_Vid->Is_primary_correct = p_Vid->Is_redundant_correct = 1;
-  }
 
   if(currSlice->redundant_pic_cnt == 0 && p_Vid->type != I_SLICE)
   {
     for(i=0;i<currSlice->num_ref_idx_active[LIST_0];++i)
     {
       if(currSlice->ref_flag[i] == 0)  // any reference of primary slice is incorrect
-      {
         p_Vid->Is_primary_correct = 0; // primary slice is incorrect
-      }
     }
   }
   else if(currSlice->redundant_pic_cnt != 0 && p_Vid->type != I_SLICE)
   {
     if(currSlice->ref_flag[currSlice->redundant_slice_ref_idx] == 0)  // reference of redundant slice is incorrect
-    {
       p_Vid->Is_redundant_correct = 0;  // redundant slice is incorrect
-    }
   }
 }
 //}}}
@@ -1522,7 +1499,7 @@ void pad_buf (imgpel *pImgBuf, int iWidth, int iHeight, int iStride, int iPadX, 
 
 //}}}
 //{{{
-void pad_dec_picture(VideoParameters *p_Vid, StorablePicture *dec_picture)
+void pad_dec_picture (VideoParameters *p_Vid, StorablePicture *dec_picture)
 {
   int iPadX = p_Vid->iLumaPadX;
   int iPadY = p_Vid->iLumaPadY;
@@ -1866,13 +1843,6 @@ void ercWriteMBMODEandMV (Macroblock *currMB)
 }
 //}}}
 //{{{
-/*!
- ************************************************************************
- * \brief
- *    set defaults for old_slice
- *    NAL unit of a picture"
- ************************************************************************
- */
 void init_old_slice (OldSliceParams *p_old_slice)
 {
   p_old_slice->field_pic_flag = 0;
@@ -2174,10 +2144,10 @@ void decode_one_slice (Slice *currSlice) {
       }
 
 #if (DISABLE_ERC == 0)
-    ercWriteMBMODEandMV(currMB);
+    ercWriteMBMODEandMV (currMB);
 #endif
 
-    end_of_slice = exit_macroblock(currSlice, (!currSlice->mb_aff_frame_flag|| currSlice->current_mb_nr%2));
+    end_of_slice = exit_macroblock (currSlice, (!currSlice->mb_aff_frame_flag|| currSlice->current_mb_nr%2));
     }
 
   //reset_ec_flags(p_Vid);
