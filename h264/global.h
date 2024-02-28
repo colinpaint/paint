@@ -17,22 +17,6 @@
 #include "frame.h"
 //}}}
 
-//{{{
-static inline void fast_memcpy (void *dst,void *src,int width) {
-  memcpy (dst,src,width);
-  }
-//}}}
-//{{{
-static inline void fast_memset (void *dst,int value,int width) {
-  memset (dst,value,width);
-  }
-//}}}
-//{{{
-static inline void fast_memset_zero (void *dst, int width) {
-  memset (dst,0,width);
-  }
-//}}}
-
 typedef struct bit_stream_dec Bitstream;
 #define ET_SIZE 300      //!< size of error text buffer
 extern char errortext[ET_SIZE]; //!< buffer for error message for exit with error()
@@ -72,8 +56,8 @@ typedef struct {
   byte            *Dcodestrm;
   int             *Dcodestrm_len;
   } DecodingEnvironment;
-//}}}
 typedef DecodingEnvironment *DecodingEnvironmentPtr;
+//}}}
 
 // Motion Vector structure
 //{{{
@@ -83,22 +67,21 @@ typedef struct {
   } MotionVector;
 //}}}
 static const MotionVector zero_mv = {0, 0};
-
 //{{{
 typedef struct {
   short x;
   short y;
   } BlockPos;
 //}}}
-//! struct for context management
 //{{{
+//! struct for context management
 typedef struct {
   uint16 state;         // index into state-table CP
   unsigned char  MPS;           // Least Probable Symbol 0/1 CP
   unsigned char dummy;          // for alignment
   } BiContextType;
-//}}}
 typedef BiContextType *BiContextTypePtr;
+//}}}
 
 //{{{  defines
 #define NUM_MB_TYPE_CTX  11
@@ -280,9 +263,11 @@ struct bit_stream_dec {
   // CABAC Decoding
   int           read_len;           //!< actual position in the codebuffer, CABAC only
   int           code_len;           //!< overall codebuffer length, CABAC only
+
   // CAVLC Decoding
   int           frame_bitoffset;    //!< actual position in the codebuffer, bit-oriented, CAVLC only
   int           bitstream_length;   //!< over codebuffer lnegth, byte oriented, CAVLC only
+
   // ErrorConcealment
   byte          *streamBuffer;      //!< actual codebuffer for read bytes
   int           ei_flag;            //!< error indication, 0: no error, else unspecified error
@@ -934,9 +919,7 @@ typedef struct snr_par {
 //}}}
 //{{{
 typedef struct inp_par {
-  char infile[FILE_NAME_SIZE];                       //!< H.264 inputfile
-  char outfile[FILE_NAME_SIZE];                      //!< Decoded YUV 4:2:0 output
-  char reffile[FILE_NAME_SIZE];                      //!< Optional YUV 4:2:0 reference file for SNR measurement
+  char infile[FILE_NAME_SIZE];
 
   int FileFormat;                         //!< File format of the Input file, PAR_OF_ANNEXB or PAR_OF_RTP
   int ref_offset;
@@ -949,34 +932,18 @@ typedef struct inp_par {
   FrameFormat source;                   //!< source related information
   FrameFormat output;                   //!< output related information
 
-  int  ProcessInput;
-  int  enable_32_pulldown;
-#if (MVC_EXTENSION_ENABLE)
-  int  DecodeAllLayers;
-#endif
-
-#ifdef _LEAKYBUCKET_
-  unsigned long R_decoder;                //!< Decoder Rate in HRD Model
-  unsigned long B_decoder;                //!< Decoder Buffer size in HRD model
-  unsigned long F_decoder;                //!< Decoder Initial buffer fullness in HRD model
-  char LeakyBucketParamFile[FILE_NAME_SIZE];         //!< LeakyBucketParamFile
-#endif
+  int ProcessInput;
+  int enable_32_pulldown;
 
   // picture error concealment
   int conceal_mode;
   int ref_poc_gap;
   int poc_gap;
 
-
-  // dummy for encoder
-  int start_frame;
-
   // Needed to allow compilation for decoder. May be used later for distortion computation operations
   int stdRange;                         //!< 1 - standard range, 0 - full range
   int videoCode;                        //!< 1 - 709, 3 - 601:  See VideoCode in io_tiff.
   int export_views;
-
-  int iDecFrmNum;
 
   int bDisplayDecParams;
   int dpb_plus[2];
@@ -1011,6 +978,58 @@ typedef struct decoder_params {
   FILE              *p_trace;        //!< Trace file
   int                bitcounter;
   } DecoderParams;
+//}}}
+
+//{{{
+static inline void fast_memcpy (void *dst,void *src,int width) {
+  memcpy (dst,src,width);
+  }
+//}}}
+//{{{
+static inline void fast_memset (void *dst,int value,int width) {
+  memset (dst,value,width);
+  }
+//}}}
+//{{{
+static inline void fast_memset_zero (void *dst, int width) {
+  memset (dst,0,width);
+  }
+//}}}
+//{{{
+static inline int is_FREXT_profile (unsigned int profile_idc)
+{
+  // we allow all FRExt tools, when no profile is active
+  return ( profile_idc==NO_PROFILE || profile_idc==FREXT_HP || profile_idc==FREXT_Hi10P || profile_idc==FREXT_Hi422 || profile_idc==FREXT_Hi444 || profile_idc == FREXT_CAVLC444 );
+}
+//}}}
+//{{{
+static inline int is_HI_intra_only_profile (unsigned int profile_idc, Boolean constrained_set3_flag)
+{
+  return ( ( ( (profile_idc == FREXT_Hi10P)||(profile_idc == FREXT_Hi422)|| (profile_idc == FREXT_Hi444)) && constrained_set3_flag) || (profile_idc == FREXT_CAVLC444) );
+}
+//}}}
+//{{{
+static inline int is_BL_profile (unsigned int profile_idc)
+{
+  return ( profile_idc == FREXT_CAVLC444 || profile_idc == BASELINE || profile_idc == MAIN || profile_idc == EXTENDED ||
+           profile_idc == FREXT_HP || profile_idc == FREXT_Hi10P || profile_idc == FREXT_Hi422 || profile_idc == FREXT_Hi444);
+}
+//}}}
+//{{{
+static inline int is_EL_profile (unsigned int profile_idc)
+{
+  return ( (profile_idc == MVC_HIGH) || (profile_idc == STEREO_HIGH) );
+}
+//}}}
+//{{{
+static inline int is_MVC_profile (unsigned int profile_idc)
+{
+  return ( (0)
+#if (MVC_EXTENSION_ENABLE)
+  || (profile_idc == MVC_HIGH) || (profile_idc == STEREO_HIGH)
+#endif
+  );
+}
 //}}}
 
 //{{{
@@ -1055,43 +1074,6 @@ typedef struct decoder_params {
   extern void copy_slice_info (Slice *currSlice, OldSliceParams *p_old_slice );
   extern void OpenOutputFiles (VideoParameters *p_Vid, int view0_id, int view1_id);
   extern void set_global_coding_par (VideoParameters *p_Vid, CodingParameters *cps);
-
-  //{{{
-  static inline int is_FREXT_profile (unsigned int profile_idc)
-  {
-    // we allow all FRExt tools, when no profile is active
-    return ( profile_idc==NO_PROFILE || profile_idc==FREXT_HP || profile_idc==FREXT_Hi10P || profile_idc==FREXT_Hi422 || profile_idc==FREXT_Hi444 || profile_idc == FREXT_CAVLC444 );
-  }
-  //}}}
-  //{{{
-  static inline int is_HI_intra_only_profile (unsigned int profile_idc, Boolean constrained_set3_flag)
-  {
-    return ( ( ( (profile_idc == FREXT_Hi10P)||(profile_idc == FREXT_Hi422)|| (profile_idc == FREXT_Hi444)) && constrained_set3_flag) || (profile_idc == FREXT_CAVLC444) );
-  }
-  //}}}
-  //{{{
-  static inline int is_BL_profile (unsigned int profile_idc)
-  {
-    return ( profile_idc == FREXT_CAVLC444 || profile_idc == BASELINE || profile_idc == MAIN || profile_idc == EXTENDED ||
-             profile_idc == FREXT_HP || profile_idc == FREXT_Hi10P || profile_idc == FREXT_Hi422 || profile_idc == FREXT_Hi444);
-  }
-  //}}}
-  //{{{
-  static inline int is_EL_profile (unsigned int profile_idc)
-  {
-    return ( (profile_idc == MVC_HIGH) || (profile_idc == STEREO_HIGH) );
-  }
-  //}}}
-  //{{{
-  static inline int is_MVC_profile (unsigned int profile_idc)
-  {
-    return ( (0)
-  #if (MVC_EXTENSION_ENABLE)
-    || (profile_idc == MVC_HIGH) || (profile_idc == STEREO_HIGH)
-  #endif
-    );
-  }
-  //}}}
 //{{{
 #ifdef __cplusplus
 }

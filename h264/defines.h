@@ -63,7 +63,6 @@ typedef enum {
   #define NUM_BLOCK_TYPES 10
 #endif
 
-//#define _LEAKYBUCKET_
 #define BLOCK_SHIFT            2
 #define BLOCK_SIZE             4
 #define BLOCK_SIZE_8x8         8
