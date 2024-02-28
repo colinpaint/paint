@@ -679,6 +679,51 @@ static void init_picture_decoding (VideoParameters *p_Vid)
   p_Vid->iDeblockMode = iDeblockMode;
 }
 //}}}
+//{{{
+/*!
+ ************************************************************************
+ * \brief
+ *    Error tracking: if current frame is lost or any reference frame of
+ *                    current frame is lost, current frame is incorrect.
+ ************************************************************************
+ */
+static void Error_tracking (VideoParameters *p_Vid, Slice *currSlice)
+{
+  int i;
+
+  if(currSlice->redundant_pic_cnt == 0)
+  {
+    p_Vid->Is_primary_correct = p_Vid->Is_redundant_correct = 1;
+  }
+
+  if(currSlice->redundant_pic_cnt == 0 && p_Vid->type != I_SLICE)
+  {
+    for(i=0;i<currSlice->num_ref_idx_active[LIST_0];++i)
+    {
+      if(currSlice->ref_flag[i] == 0)  // any reference of primary slice is incorrect
+      {
+        p_Vid->Is_primary_correct = 0; // primary slice is incorrect
+      }
+    }
+  }
+  else if(currSlice->redundant_pic_cnt != 0 && p_Vid->type != I_SLICE)
+  {
+    if(currSlice->ref_flag[currSlice->redundant_slice_ref_idx] == 0)  // reference of redundant slice is incorrect
+    {
+      p_Vid->Is_redundant_correct = 0;  // redundant slice is incorrect
+    }
+  }
+}
+//}}}
+//{{{
+static void CopyPOC (Slice *pSlice0, Slice *currSlice)
+{
+  currSlice->framepoc  = pSlice0->framepoc;
+  currSlice->toppoc    = pSlice0->toppoc;
+  currSlice->bottompoc = pSlice0->bottompoc;
+  currSlice->ThisPOC   = pSlice0->ThisPOC;
+}
+//}}}
 
 //{{{
 void init_slice (VideoParameters *p_Vid, Slice *currSlice)
@@ -763,61 +808,7 @@ void decode_slice (Slice *currSlice, int current_header)
 
 }
 //}}}
-
 //{{{
-/*!
- ************************************************************************
- * \brief
- *    Error tracking: if current frame is lost or any reference frame of
- *                    current frame is lost, current frame is incorrect.
- ************************************************************************
- */
-static void Error_tracking (VideoParameters *p_Vid, Slice *currSlice)
-{
-  int i;
-
-  if(currSlice->redundant_pic_cnt == 0)
-  {
-    p_Vid->Is_primary_correct = p_Vid->Is_redundant_correct = 1;
-  }
-
-  if(currSlice->redundant_pic_cnt == 0 && p_Vid->type != I_SLICE)
-  {
-    for(i=0;i<currSlice->num_ref_idx_active[LIST_0];++i)
-    {
-      if(currSlice->ref_flag[i] == 0)  // any reference of primary slice is incorrect
-      {
-        p_Vid->Is_primary_correct = 0; // primary slice is incorrect
-      }
-    }
-  }
-  else if(currSlice->redundant_pic_cnt != 0 && p_Vid->type != I_SLICE)
-  {
-    if(currSlice->ref_flag[currSlice->redundant_slice_ref_idx] == 0)  // reference of redundant slice is incorrect
-    {
-      p_Vid->Is_redundant_correct = 0;  // redundant slice is incorrect
-    }
-  }
-}
-//}}}
-//{{{
-static void CopyPOC (Slice *pSlice0, Slice *currSlice)
-{
-  currSlice->framepoc  = pSlice0->framepoc;
-  currSlice->toppoc    = pSlice0->toppoc;
-  currSlice->bottompoc = pSlice0->bottompoc;
-  currSlice->ThisPOC   = pSlice0->ThisPOC;
-}
-//}}}
-
-//{{{
-/*!
- ***********************************************************************
- * \brief
- *    decodes one I- or P-frame
- *
- ***********************************************************************
- */
 int decode_one_frame (DecoderParams *pDecoder)
 {
   VideoParameters *p_Vid = pDecoder->p_Vid;
@@ -827,19 +818,17 @@ int decode_one_frame (DecoderParams *pDecoder)
   Slice **ppSliceList = p_Vid->ppSliceList;
   int iSliceNo;
 
-  //read one picture first;
+  // read one picture first;
   p_Vid->iSliceNumOfCurrPic=0;
   current_header=0;
   p_Vid->iNumOfSlicesDecoded=0;
   p_Vid->num_dec_mb = 0;
-  if(p_Vid->newframe)
-  {
-    if(p_Vid->pNextPPS->Valid)
-    {
+  if(p_Vid->newframe) {
+    if(p_Vid->pNextPPS->Valid) {
       //assert((int) p_Vid->pNextPPS->pic_parameter_set_id == p_Vid->pNextSlice->pic_parameter_set_id);
       MakePPSavailable (p_Vid, p_Vid->pNextPPS->pic_parameter_set_id, p_Vid->pNextPPS);
       p_Vid->pNextPPS->Valid=0;
-    }
+      }
 
     //get the first slice from currentslice;
     assert(ppSliceList[p_Vid->iSliceNumOfCurrPic]);
@@ -851,20 +840,16 @@ int decode_one_frame (DecoderParams *pDecoder)
     currSlice = ppSliceList[p_Vid->iSliceNumOfCurrPic];
 
     UseParameterSet (currSlice);
-
     init_picture(p_Vid, currSlice, p_Inp);
-
     p_Vid->iSliceNumOfCurrPic++;
     current_header = SOS;
-  }
-  while(current_header != SOP && current_header !=EOS)
-  {
+    }
+
+  while(current_header != SOP && current_header !=EOS) {
     //no pending slices;
     assert(p_Vid->iSliceNumOfCurrPic < p_Vid->iNumOfSlicesAllocated);
     if(!ppSliceList[p_Vid->iSliceNumOfCurrPic])
-    {
       ppSliceList[p_Vid->iSliceNumOfCurrPic] = malloc_slice(p_Inp, p_Vid);
-    }
     currSlice = ppSliceList[p_Vid->iSliceNumOfCurrPic];
 
     //p_Vid->currentSlice = currSlice;
@@ -886,46 +871,40 @@ int decode_one_frame (DecoderParams *pDecoder)
     Error_tracking(p_Vid, currSlice);
     // If primary and redundant are received and primary is correct, discard the redundant
     // else, primary slice will be replaced with redundant slice.
-    if(currSlice->frame_num == p_Vid->previous_frame_num && currSlice->redundant_pic_cnt !=0
-      && p_Vid->Is_primary_correct !=0 && current_header != EOS)
-    {
+    if (currSlice->frame_num == p_Vid->previous_frame_num && currSlice->redundant_pic_cnt !=0
+        && p_Vid->Is_primary_correct !=0 && current_header != EOS)
       continue;
-    }
 
-    if((current_header != SOP && current_header !=EOS) || (p_Vid->iSliceNumOfCurrPic==0 && current_header == SOP))
-    {
+    if ((current_header != SOP && current_header !=EOS) || 
+        (p_Vid->iSliceNumOfCurrPic==0 && current_header == SOP)) {
        currSlice->current_slice_nr = (short) p_Vid->iSliceNumOfCurrPic;
        p_Vid->dec_picture->max_slice_id = (short) imax(currSlice->current_slice_nr, p_Vid->dec_picture->max_slice_id);
-       if(p_Vid->iSliceNumOfCurrPic >0)
-       {
+       if (p_Vid->iSliceNumOfCurrPic >0) {
          CopyPOC(*ppSliceList, currSlice);
          ppSliceList[p_Vid->iSliceNumOfCurrPic-1]->end_mb_nr_plus1 = currSlice->start_mb_nr;
-       }
+         }
+
        p_Vid->iSliceNumOfCurrPic++;
-       if(p_Vid->iSliceNumOfCurrPic >= p_Vid->iNumOfSlicesAllocated)
-       {
+       if (p_Vid->iSliceNumOfCurrPic >= p_Vid->iNumOfSlicesAllocated) {
          Slice **tmpSliceList = (Slice **)realloc(p_Vid->ppSliceList, (p_Vid->iNumOfSlicesAllocated+MAX_NUM_DECSLICES)*sizeof(Slice*));
-         if(!tmpSliceList)
-         {
+         if (!tmpSliceList) {
            tmpSliceList = calloc((p_Vid->iNumOfSlicesAllocated+MAX_NUM_DECSLICES), sizeof(Slice*));
            memcpy(tmpSliceList, p_Vid->ppSliceList, p_Vid->iSliceNumOfCurrPic*sizeof(Slice*));
            //free;
            free(p_Vid->ppSliceList);
            ppSliceList = p_Vid->ppSliceList = tmpSliceList;
-         }
-         else
-         {
+           }
+         else {
            //assert(tmpSliceList == p_Vid->ppSliceList);
            ppSliceList = p_Vid->ppSliceList = tmpSliceList;
            memset(p_Vid->ppSliceList+p_Vid->iSliceNumOfCurrPic, 0, sizeof(Slice*)*MAX_NUM_DECSLICES);
-         }
+           }
          p_Vid->iNumOfSlicesAllocated += MAX_NUM_DECSLICES;
-       }
-       current_header = SOS;
-    }
-    else
-    {
-      if(ppSliceList[p_Vid->iSliceNumOfCurrPic-1]->mb_aff_frame_flag)
+        }
+      current_header = SOS;
+      }
+    else {
+      if (ppSliceList[p_Vid->iSliceNumOfCurrPic-1]->mb_aff_frame_flag)
         ppSliceList[p_Vid->iSliceNumOfCurrPic-1]->end_mb_nr_plus1 = p_Vid->FrameSizeInMbs/2;
       else
         ppSliceList[p_Vid->iSliceNumOfCurrPic-1]->end_mb_nr_plus1 = p_Vid->FrameSizeInMbs/(1+ppSliceList[p_Vid->iSliceNumOfCurrPic-1]->field_pic_flag);
@@ -934,16 +913,16 @@ int decode_one_frame (DecoderParams *pDecoder)
       //keep it in currentslice;
       ppSliceList[p_Vid->iSliceNumOfCurrPic] = p_Vid->pNextSlice;
       p_Vid->pNextSlice = currSlice;
-    }
+      }
 
     copy_slice_info(currSlice, p_Vid->old_slice);
-  }
+    }
+
   iRet = current_header;
   init_picture_decoding(p_Vid);
 
   {
-    for(iSliceNo=0; iSliceNo<p_Vid->iSliceNumOfCurrPic; iSliceNo++)
-    {
+    for(iSliceNo=0; iSliceNo<p_Vid->iSliceNumOfCurrPic; iSliceNo++) {
       currSlice = ppSliceList[iSliceNo];
       current_header = currSlice->current_header;
       //p_Vid->currentSlice = currSlice;
@@ -959,9 +938,11 @@ int decode_one_frame (DecoderParams *pDecoder)
       p_Vid->erc_mvperMB += currSlice->erc_mvperMB;
     }
   }
+
 #if MVC_EXTENSION_ENABLE
   p_Vid->last_dec_view_id = p_Vid->dec_picture->view_id;
 #endif
+
   if(p_Vid->dec_picture->structure == FRAME)
     p_Vid->last_dec_poc = p_Vid->dec_picture->frame_poc;
   else if(p_Vid->dec_picture->structure == TOP_FIELD)
@@ -969,9 +950,10 @@ int decode_one_frame (DecoderParams *pDecoder)
   else if(p_Vid->dec_picture->structure == BOTTOM_FIELD)
     p_Vid->last_dec_poc = p_Vid->dec_picture->bottom_poc;
   exit_picture(p_Vid, &p_Vid->dec_picture);
+
   p_Vid->previous_frame_num = ppSliceList[0]->frame_num;
   return (iRet);
-}
+  }
 //}}}
 
 //{{{
