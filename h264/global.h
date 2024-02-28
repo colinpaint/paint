@@ -816,10 +816,6 @@ typedef struct video_par {
   int *MapUnitToSliceGroupMap;
   int  NumberOfSliceGroups;    // the number of slice groups -1 (0 == scan order, 7 == maximum)
 
-#if (ENABLE_OUTPUT_TONEMAPPING)
-  struct tone_mapping_struct_s *seiToneMapping;
-#endif
-
   void (*buf2img)          (imgpel** imgX, unsigned char* buf, int size_x, int size_y, int o_size_x, int o_size_y, int symbol_size_in_bytes, int bitshift);
   void (*getNeighbour)     (Macroblock *currMB, int xN, int yN, int mb_size[2], PixelPos *pix);
   void (*get_mb_block_pos) (BlockPos *PicPos, int mb_addr, short *x, short *y);

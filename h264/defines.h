@@ -9,20 +9,18 @@
   #define TRACE           0     //!< 0:Trace off 1:Trace on 2:detailed CABAC context information
 #endif
 
-#define DUMP_DPB                  0    //!< Dump DPB info for debug purposes
-#define PRINTREFLIST              0    //!< Print ref list info for debug purposes
-#define PAIR_FIELDS_IN_OUTPUT     0    //!< Pair field pictures for output purposes
-#define IMGTYPE                   0    //!< Define imgpel size type. 0 implies byte (cannot handle >8 bit depths) and 1 implies unsigned short
-#define ENABLE_FIELD_CTX          1    //!< Enables Field mode related context types for CABAC
-#define ENABLE_HIGH444_CTX        1    //!< Enables High 444 profile context types for CABAC.
-#define ZEROSNR                   0    //!< PSNR computation method
-#define ENABLE_OUTPUT_TONEMAPPING 1    //!< enable tone map the output if tone mapping SEI present
-#define JCOST_CALC_SCALEUP        1    //!< 1: J = (D<<LAMBDA_ACCURACY_BITS)+Lambda*R; 0: J = D + ((Lambda*R+Rounding)>>LAMBDA_ACCURACY_BITS)
-#define DISABLE_ERC               0    //!< Disable any error concealment processes
-#define JM_PARALLEL_DEBLOCK       0    //!< Enables Parallel Deblocking
-#define SIMULCAST_ENABLE          0    //!< to test the decoder
+#define DISABLE_ERC               0    // Disable any error concealment processes
+#define PAIR_FIELDS_IN_OUTPUT     1    // Pair field pictures for output purposes
+#define MVC_EXTENSION_ENABLE      1    // enable support for the Multiview High Profile
 
-#define MVC_EXTENSION_ENABLE      1    //!< enable support for the Multiview High Profile
+#define PRINTREFLIST              0    // Print ref list info for debug purposes
+#define IMGTYPE                   0    // Define imgpel size type. 0 implies byte (cannot handle >8 bit depths) and 1 implies unsigned short
+#define ENABLE_FIELD_CTX          1    // Enables Field mode related context types for CABAC
+#define ENABLE_HIGH444_CTX        1    // Enables High 444 profile context types for CABAC.
+#define ZEROSNR                   0    // PSNR computation method
+#define JCOST_CALC_SCALEUP        1    // 1: J = (D<<LAMBDA_ACCURACY_BITS)+Lambda*R; 0: J = D + ((Lambda*R+Rounding)>>LAMBDA_ACCURACY_BITS)
+#define SIMULCAST_ENABLE          0    // to test the decoder
+
 #define MVC_INIT_VIEW_ID          -1
 #define MAX_VIEW_NUM              1024
 #define BASE_VIEW_IDX             0
@@ -31,12 +29,11 @@
 
 #define SSE_MEMORY_ALIGNMENT      16
 
-//#define MAX_NUM_SLICES 150
 #define MAX_NUM_SLICES     50
-#define MAX_REFERENCE_PICTURES 32               //!< H.264 allows 32 fields
-#define MAX_CODED_FRAME_SIZE 8000000         //!< bytes for one frame
+#define MAX_REFERENCE_PICTURES 32            // H.264 allows 32 fields
+#define MAX_CODED_FRAME_SIZE 8000000         // bytes for one frame
 #define MAX_NUM_DECSLICES  16
-#define MAX_DEC_THREADS    16                  //16 core deocoding;
+#define MAX_DEC_THREADS    16                //16 core deocoding;
 #define MCBUF_LUMA_PAD_X        32
 #define MCBUF_LUMA_PAD_Y        12
 #define MCBUF_CHROMA_PAD_X      16

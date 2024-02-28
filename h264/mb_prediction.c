@@ -35,8 +35,8 @@
 #include "mv_prediction.h"
 #include "mb_prediction.h"
 //}}}
-extern int  get_colocated_info_8x8 (Macroblock *currMB, StorablePicture *list1, int i, int j);
-extern int  get_colocated_info_4x4 (Macroblock *currMB, StorablePicture *list1, int i, int j);
+extern int get_colocated_info_8x8 (Macroblock *currMB, StorablePicture *list1, int i, int j);
+extern int get_colocated_info_4x4 (Macroblock *currMB, StorablePicture *list1, int i, int j);
 
 //{{{
 int mb_pred_intra4x4 (Macroblock *currMB, ColorPlane curr_plane, imgpel **currImg, StorablePicture *dec_picture)

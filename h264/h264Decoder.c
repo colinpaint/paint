@@ -264,11 +264,6 @@ static void alloc_video_params (VideoParameters** p_Vid) {
     }
   (*p_Vid)->global_init_done[0] = (*p_Vid)->global_init_done[1] = 0;
 
-#if (ENABLE_OUTPUT_TONEMAPPING)
-  if (((*p_Vid)->seiToneMapping =  (ToneMappingSEI*)calloc(1, sizeof(ToneMappingSEI)))==NULL)
-    no_mem_exit ("alloc_video_params: (*p_Vid)->seiToneMapping");
-#endif
-
   if (((*p_Vid)->ppSliceList = (Slice **) calloc(MAX_NUM_DECSLICES, sizeof(Slice *))) == NULL)
     no_mem_exit ("alloc_video_params: p_Vid->ppSliceList");
   (*p_Vid)->iNumOfSlicesAllocated = MAX_NUM_DECSLICES;
@@ -336,13 +331,6 @@ static void free_img (VideoParameters* p_Vid) {
   if (p_Vid != NULL) {
     if ( p_Vid->p_Inp->FileFormat == PAR_OF_ANNEXB )
       free_annex_b (&p_Vid->annex_b);
-
-#if (ENABLE_OUTPUT_TONEMAPPING)
-    if (p_Vid->seiToneMapping != NULL) {
-      free (p_Vid->seiToneMapping);
-      p_Vid->seiToneMapping = NULL;
-      }
-#endif
 
     // Free new dpb layers
     for (i = 0; i < MAX_NUM_DPB_LAYERS; i++) {
@@ -465,11 +453,6 @@ static void init (VideoParameters* p_Vid) {
   p_Vid->pending_output = NULL;
   p_Vid->pending_output_state = FRAME;
   p_Vid->recovery_flag = 0;
-
-
-#if (ENABLE_OUTPUT_TONEMAPPING)
-  init_tone_mapping_sei(p_Vid->seiToneMapping);
-#endif
 
 #if (MVC_EXTENSION_ENABLE)
   p_Vid->last_pic_width_in_mbs_minus1 = 0;

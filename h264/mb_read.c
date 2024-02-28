@@ -749,8 +749,8 @@ static inline void field_flag_inference (Macroblock *currMB)
 //}}}
 
 //{{{
-void skip_macroblock (Macroblock *currMB)
-{
+void skip_macroblock (Macroblock *currMB) {
+
   MotionVector pred_mv;
   int zeroMotionAbove;
   int zeroMotionLeft;
@@ -870,12 +870,6 @@ void skip_macroblock (Macroblock *currMB)
 //}}}
 
 //{{{
-/*!
- ************************************************************************
- * \brief
- *   read and set skip macroblock information
- ************************************************************************
- */
 static void read_skip_macroblock (Macroblock *currMB)
 {
   currMB->luma_transform_size_8x8_flag = FALSE;
@@ -893,12 +887,6 @@ static void read_skip_macroblock (Macroblock *currMB)
 }
 //}}}
 //{{{
-/*!
- ************************************************************************
- * \brief
- *   read and set intra (other than 4x4/8x8) mode macroblock information
- ************************************************************************
- */
 static void read_intra_macroblock (Macroblock *currMB)
 {
   //init NoMbPartLessThan8x8Flag
@@ -920,12 +908,6 @@ static void read_intra_macroblock (Macroblock *currMB)
 }
 //}}}
 //{{{
-/*!
- ************************************************************************
- * \brief
- *   read and set intra (4x4/8x8) mode macroblock information (CAVLC)
- ************************************************************************
- */
 static void read_intra4x4_macroblock_cavlc (Macroblock *currMB, const byte *partMap)
 {
   Slice *currSlice = currMB->p_Slice;
@@ -968,12 +950,6 @@ static void read_intra4x4_macroblock_cavlc (Macroblock *currMB, const byte *part
 }
 //}}}
 //{{{
-/*!
- ************************************************************************
- * \brief
- *   read and set intra (4x4/8x8) mode macroblock information (CAVLC)
- ************************************************************************
- */
 static void read_intra4x4_macroblock_cabac (Macroblock *currMB, const byte *partMap)
 {
   Slice *currSlice = currMB->p_Slice;
@@ -1024,13 +1000,6 @@ static void read_intra4x4_macroblock_cabac (Macroblock *currMB, const byte *part
 }
 //}}}
 //{{{
-/*!
- ************************************************************************
- * \brief
- *   read and set generic (non skip/direct and P8x8) inter
- *   mode macroblock information
- ************************************************************************
- */
 static void read_inter_macroblock (Macroblock *currMB)
 {
   Slice *currSlice = currMB->p_Slice;
@@ -1054,12 +1023,6 @@ static void read_inter_macroblock (Macroblock *currMB)
 }
 //}}}
 //{{{
-/*!
- ************************************************************************
- * \brief
- *   read and set I_PCM mode macroblock information
- ************************************************************************
- */
 static void read_i_pcm_macroblock (Macroblock *currMB, const byte *partMap)
 {
   Slice *currSlice = currMB->p_Slice;
@@ -1085,12 +1048,6 @@ static void read_i_pcm_macroblock (Macroblock *currMB, const byte *partMap)
 }
 //}}}
 //{{{
-/*!
- ************************************************************************
- * \brief
- *   read and set P8x8 mode macroblock information
- ************************************************************************
- */
 static void read_P8x8_macroblock (Macroblock *currMB, DataPartition *dP, SyntaxElement *currSE)
 {
   int i;
@@ -1126,12 +1083,6 @@ static void read_P8x8_macroblock (Macroblock *currMB, DataPartition *dP, SyntaxE
 //}}}
 
 //{{{
-/*!
- ************************************************************************
- * \brief
- *    Get the syntax elements from the NAL
- ************************************************************************
- */
 static void read_one_macroblock_i_slice_cavlc (Macroblock *currMB)
 {
   Slice *currSlice = currMB->p_Slice;
@@ -1198,12 +1149,6 @@ static void read_one_macroblock_i_slice_cavlc (Macroblock *currMB)
 }
 //}}}
 //{{{
-/*!
- ************************************************************************
- * \brief
- *    Get the syntax elements from the NAL
- ************************************************************************
- */
 static void read_one_macroblock_i_slice_cabac (Macroblock *currMB)
 {
   Slice *currSlice = currMB->p_Slice;
@@ -1324,12 +1269,6 @@ static void read_one_macroblock_i_slice_cabac (Macroblock *currMB)
 }
 //}}}
 //{{{
-/*!
- ************************************************************************
- * \brief
- *    Get the syntax elements from the NAL
- ************************************************************************
- */
 static void read_one_macroblock_p_slice_cavlc (Macroblock *currMB)
 {
   Slice *currSlice = currMB->p_Slice;
@@ -1538,12 +1477,6 @@ static void read_one_macroblock_p_slice_cavlc (Macroblock *currMB)
 }
 //}}}
 //{{{
-/*!
- ************************************************************************
- * \brief
- *    Get the syntax elements from the NAL
- ************************************************************************
- */
 static void read_one_macroblock_p_slice_cabac (Macroblock *currMB)
 {
   Slice *currSlice = currMB->p_Slice;
@@ -1731,12 +1664,6 @@ static void read_one_macroblock_p_slice_cabac (Macroblock *currMB)
 }
 //}}}
 //{{{
-/*!
- ************************************************************************
- * \brief
- *    Get the syntax elements from the NAL
- ************************************************************************
- */
 static void read_one_macroblock_b_slice_cavlc (Macroblock *currMB)
 {
   VideoParameters *p_Vid = currMB->p_Vid;
@@ -1958,12 +1885,6 @@ static void read_one_macroblock_b_slice_cavlc (Macroblock *currMB)
 }
 //}}}
 //{{{
-/*!
- ************************************************************************
- * \brief
- *    Get the syntax elements from the NAL
- ************************************************************************
- */
 static void read_one_macroblock_b_slice_cabac (Macroblock *currMB)
 {
   Slice *currSlice = currMB->p_Slice;
@@ -2187,47 +2108,44 @@ static void read_one_macroblock_b_slice_cabac (Macroblock *currMB)
 //}}}
 
 //{{{
-void setup_read_macroblock (Slice *currSlice)
-{
-  if (currSlice->p_Vid->active_pps->entropy_coding_mode_flag == (Boolean) CABAC)
-  {
-    switch (currSlice->slice_type)
-    {
-    case P_SLICE:
-    case SP_SLICE:
-      currSlice->read_one_macroblock = read_one_macroblock_p_slice_cabac;
-      break;
-    case B_SLICE:
-      currSlice->read_one_macroblock = read_one_macroblock_b_slice_cabac;
-      break;
-    case I_SLICE:
-    case SI_SLICE:
-      currSlice->read_one_macroblock = read_one_macroblock_i_slice_cabac;
-      break;
-    default:
-      printf("Unsupported slice type\n");
-      break;
+void setup_read_macroblock (Slice *currSlice) {
+
+  if (currSlice->p_Vid->active_pps->entropy_coding_mode_flag == (Boolean) CABAC) {
+    switch (currSlice->slice_type) {
+      case P_SLICE:
+      case SP_SLICE:
+        currSlice->read_one_macroblock = read_one_macroblock_p_slice_cabac;
+        break;
+      case B_SLICE:
+        currSlice->read_one_macroblock = read_one_macroblock_b_slice_cabac;
+        break;
+      case I_SLICE:
+      case SI_SLICE:
+        currSlice->read_one_macroblock = read_one_macroblock_i_slice_cabac;
+        break;
+      default:
+        printf("Unsupported slice type\n");
+        break;
+      }
+    }
+
+  else {
+    switch (currSlice->slice_type) {
+      case P_SLICE:
+      case SP_SLICE:
+        currSlice->read_one_macroblock = read_one_macroblock_p_slice_cavlc;
+        break;
+      case B_SLICE:
+        currSlice->read_one_macroblock = read_one_macroblock_b_slice_cavlc;
+        break;
+      case I_SLICE:
+      case SI_SLICE:
+        currSlice->read_one_macroblock = read_one_macroblock_i_slice_cavlc;
+        break;
+      default:
+        printf("Unsupported slice type\n");
+        break;
+      }
     }
   }
-  else
-  {
-    switch (currSlice->slice_type)
-    {
-    case P_SLICE:
-    case SP_SLICE:
-      currSlice->read_one_macroblock = read_one_macroblock_p_slice_cavlc;
-      break;
-    case B_SLICE:
-      currSlice->read_one_macroblock = read_one_macroblock_b_slice_cavlc;
-      break;
-    case I_SLICE:
-    case SI_SLICE:
-      currSlice->read_one_macroblock = read_one_macroblock_i_slice_cavlc;
-      break;
-    default:
-      printf("Unsupported slice type\n");
-      break;
-    }
-  }
-}
 //}}}

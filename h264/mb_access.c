@@ -19,12 +19,6 @@
 //}}}
 
 //{{{
-/*!
- ************************************************************************
- * \brief
- *    returns 1 if the macroblock at the given address is available
- ************************************************************************
- */
 Boolean mb_is_available (int mbAddr, Macroblock *currMB)
 {
   Slice *currSlice = currMB->p_Slice;
@@ -43,13 +37,6 @@ Boolean mb_is_available (int mbAddr, Macroblock *currMB)
 //}}}
 
 //{{{
-/*!
- ************************************************************************
- * \brief
- *    Checks the availability of neighboring macroblocks of
- *    the current macroblock for prediction and context determination;
- ************************************************************************
- */
 void CheckAvailabilityOfNeighbors (Macroblock *currMB)
 {
   Slice *currSlice = currMB->p_Slice;
@@ -90,13 +77,6 @@ void CheckAvailabilityOfNeighbors (Macroblock *currMB)
 }
 //}}}
 //{{{
-/*!
- ************************************************************************
- * \brief
- *    Checks the availability of neighboring macroblocks of
- *    the current macroblock for prediction and context determination;
- ************************************************************************
- */
 void CheckAvailabilityOfNeighborsNormal (Macroblock *currMB)
 {
   Slice *currSlice = currMB->p_Slice;
@@ -122,13 +102,6 @@ void CheckAvailabilityOfNeighborsNormal (Macroblock *currMB)
 }
 //}}}
 //{{{
-/*!
- ************************************************************************
- * \brief
- *    Checks the availability of neighboring macroblocks of
- *    the current macroblock for prediction and context determination;
- ************************************************************************
- */
 void CheckAvailabilityOfNeighborsMBAFF (Macroblock *currMB)
 {
   Slice *currSlice = currMB->p_Slice;
@@ -153,12 +126,6 @@ void CheckAvailabilityOfNeighborsMBAFF (Macroblock *currMB)
 //}}}
 
 //{{{
-/*!
- ************************************************************************
- * \brief
- *    returns the x and y macroblock coordinates for a given MbAddress
- ************************************************************************
- */
 void get_mb_block_pos_normal (BlockPos *PicPos, int mb_addr, short *x, short *y)
 {
   BlockPos *pPos = &PicPos[ mb_addr ];
@@ -167,13 +134,6 @@ void get_mb_block_pos_normal (BlockPos *PicPos, int mb_addr, short *x, short *y)
 }
 //}}}
 //{{{
-/*!
- ************************************************************************
- * \brief
- *    returns the x and y macroblock coordinates for a given MbAddress
- *    for mbaff type slices
- ************************************************************************
- */
 void get_mb_block_pos_mbaff (BlockPos *PicPos, int mb_addr, short *x, short *y)
 {
   BlockPos *pPos = &PicPos[ mb_addr >> 1 ];
@@ -182,12 +142,6 @@ void get_mb_block_pos_mbaff (BlockPos *PicPos, int mb_addr, short *x, short *y)
 }
 //}}}
 //{{{
-/*!
- ************************************************************************
- * \brief
- *    returns the x and y sample coordinates for a given MbAddress
- ************************************************************************
- */
 void get_mb_pos (VideoParameters *p_Vid, int mb_addr, int mb_size[2], short *x, short *y)
 {
   p_Vid->get_mb_block_pos(p_Vid->PicPos, mb_addr, x, y);
@@ -198,22 +152,6 @@ void get_mb_pos (VideoParameters *p_Vid, int mb_addr, int mb_size[2], short *x, 
 //}}}
 
 //{{{
-/*!
- ************************************************************************
- * \brief
- *    get neighbouring positions for non-aff coding
- * \param currMB
- *   current macroblock
- * \param xN
- *    input x position
- * \param yN
- *    input y position
- * \param mb_size
- *    Macroblock size in pixel (according to luma or chroma MB access)
- * \param pix
- *    returns position informations
- ************************************************************************
- */
 void getNonAffNeighbour (Macroblock *currMB, int xN, int yN, int mb_size[2], PixelPos *pix)
 {
   int maxW = mb_size[0], maxH = mb_size[1];
@@ -273,22 +211,6 @@ void getNonAffNeighbour (Macroblock *currMB, int xN, int yN, int mb_size[2], Pix
 }
 //}}}
 //{{{
-/*!
- ************************************************************************
- * \brief
- *    get neighboring positions for aff coding
- * \param currMB
- *   current macroblock
- * \param xN
- *    input x position
- * \param yN
- *    input y position
- * \param mb_size
- *    Macroblock size in pixel (according to luma or chroma MB access)
- * \param pix
- *    returns position informations
- ************************************************************************
- */
 void getAffNeighbour (Macroblock *currMB, int xN, int yN, int mb_size[2], PixelPos *pix)
 {
   VideoParameters *p_Vid = currMB->p_Vid;
@@ -621,22 +543,6 @@ void getAffNeighbour (Macroblock *currMB, int xN, int yN, int mb_size[2], PixelP
 //}}}
 
 //{{{
-/*!
- ************************************************************************
- * \brief
- *    get neighboring 4x4 block
- * \param currMB
- *   current macroblock
- * \param block_x
- *    input x block position
- * \param block_y
- *    input y block position
- * \param mb_size
- *    Macroblock size in pixel (according to luma or chroma MB access)
- * \param pix
- *    returns position informations
- ************************************************************************
- */
 void get4x4Neighbour (Macroblock *currMB, int block_x, int block_y, int mb_size[2], PixelPos *pix)
 {
   currMB->p_Vid->getNeighbour(currMB, block_x, block_y, mb_size, pix);
@@ -651,22 +557,6 @@ void get4x4Neighbour (Macroblock *currMB, int block_x, int block_y, int mb_size[
 }
 //}}}
 //{{{
-/*!
- ************************************************************************
- * \brief
- *    get neighboring 4x4 block
- * \param currMB
- *   current macroblock
- * \param block_x
- *    input x block position
- * \param block_y
- *    input y block position
- * \param mb_size
- *    Macroblock size in pixel (according to luma or chroma MB access)
- * \param pix
- *    returns position informations
- ************************************************************************
- */
 void get4x4NeighbourBase (Macroblock *currMB, int block_x, int block_y, int mb_size[2], PixelPos *pix)
 {
   currMB->p_Vid->getNeighbour(currMB, block_x, block_y, mb_size, pix);

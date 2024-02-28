@@ -400,26 +400,6 @@ static void init_picture (VideoParameters *p_Vid, Slice *currSlice, InputParamet
     dec_picture->frame_crop_bottom_offset = active_sps->frame_crop_bottom_offset;
   }
 
-#if (ENABLE_OUTPUT_TONEMAPPING)
-  // store the necessary tone mapping sei into StorablePicture structure
-  if (p_Vid->seiToneMapping->seiHasTone_mapping)
-  {
-    int coded_data_bit_max = (1 << p_Vid->seiToneMapping->coded_data_bit_depth);
-    dec_picture->seiHasTone_mapping    = 1;
-    dec_picture->tone_mapping_model_id = p_Vid->seiToneMapping->model_id;
-    dec_picture->tonemapped_bit_depth  = p_Vid->seiToneMapping->sei_bit_depth;
-    dec_picture->tone_mapping_lut      = malloc(coded_data_bit_max * sizeof(int));
-    if (NULL == dec_picture->tone_mapping_lut)
-    {
-      no_mem_exit("init_picture: tone_mapping_lut");
-    }
-    memcpy(dec_picture->tone_mapping_lut, p_Vid->seiToneMapping->lut, sizeof(imgpel) * coded_data_bit_max);
-    update_tone_mapping_sei(p_Vid->seiToneMapping);
-  }
-  else
-    dec_picture->seiHasTone_mapping = 0;
-#endif
-
   if( (p_Vid->separate_colour_plane_flag != 0) )
   {
     p_Vid->dec_picture_JV[0] = p_Vid->dec_picture;
@@ -1527,28 +1507,31 @@ void exit_picture (VideoParameters *p_Vid, StorablePicture **dec_picture)
   InputParameters *p_Inp = p_Vid->p_Inp;
   SNRParameters   *snr   = p_Vid->snr;
   char yuv_types[4][6]= {"4:0:0","4:2:0","4:2:2","4:4:4"};
+
 #if (DISABLE_ERC == 0)
+  //{{{  allow erc
   //int ercStartMB;
   int ercSegment;
   frame recfr;
+  //}}}
 #endif
-  int structure, frame_poc, slice_type, refpic, qp, pic_num, chroma_format_idc, is_idr;
 
+  int structure, frame_poc, slice_type, refpic, qp, pic_num, chroma_format_idc, is_idr;
   int64 tmp_time;                   // time used by decoding the last frame
-  char   yuvFormat[10];
+  char yuvFormat[10];
 
   // return if the last picture has already been finished
   if (*dec_picture==NULL || (p_Vid->num_dec_mb != p_Vid->PicSizeInMbs && (p_Vid->yuv_format != YUV444 || !p_Vid->separate_colour_plane_flag)))
     return;
 
 #if (DISABLE_ERC == 0)
+  //{{{  allow erc
   recfr.p_Vid = p_Vid;
   recfr.yptr = &(*dec_picture)->imgY[0][0];
-  if ((*dec_picture)->chroma_format_idc != YUV400)
-  {
+  if ((*dec_picture)->chroma_format_idc != YUV400) {
     recfr.uptr = &(*dec_picture)->imgUV[0][0][0];
     recfr.vptr = &(*dec_picture)->imgUV[1][0][0];
-  }
+    }
 
   //! this is always true at the beginning of a picture
   //ercStartMB = 0;
@@ -1589,10 +1572,11 @@ void exit_picture (VideoParameters *p_Vid, StorablePicture **dec_picture)
     else
       ercConcealInterFrame(&recfr, p_Vid->erc_object_list, (*dec_picture)->size_x, (*dec_picture)->size_y, p_Vid->erc_errorVar, (*dec_picture)->chroma_format_idc);
   }
+  //}}}
 #endif
 
-  if(!p_Vid->iDeblockMode && (p_Vid->bDeblockEnable & (1<<(*dec_picture)->used_for_reference))) {
-    //deblocking for frame or field
+  if (!p_Vid->iDeblockMode && (p_Vid->bDeblockEnable & (1<<(*dec_picture)->used_for_reference))) {
+    // deblocking for frame or field
     if( (p_Vid->separate_colour_plane_flag != 0) ) {
       int nplane;
       int colour_plane_id = p_Vid->ppSliceList[0]->colour_plane_id;
@@ -1600,25 +1584,25 @@ void exit_picture (VideoParameters *p_Vid, StorablePicture **dec_picture)
         p_Vid->ppSliceList[0]->colour_plane_id = nplane;
         change_plane_JV( p_Vid, nplane, NULL );
         DeblockPicture( p_Vid, *dec_picture );
-      }
+        }
       p_Vid->ppSliceList[0]->colour_plane_id = colour_plane_id;
       make_frame_picture_JV(p_Vid);
-    }
+      }
     else
-      DeblockPicture( p_Vid, *dec_picture );
-  }
+      DeblockPicture (p_Vid, *dec_picture);
+    }
   else {
     if ((p_Vid->separate_colour_plane_flag != 0) )
-      make_frame_picture_JV(p_Vid);
+      make_frame_picture_JV (p_Vid);
     }
 
   if ((*dec_picture)->mb_aff_frame_flag)
-    MbAffPostProc(p_Vid);
+    MbAffPostProc (p_Vid);
 
   if (p_Vid->structure == FRAME)         // buffer mgt. for frame mode
-    frame_postprocessing(p_Vid);
+    frame_postprocessing (p_Vid);
   else
-    field_postprocessing(p_Vid);   // reset all interlaced variables
+    field_postprocessing (p_Vid);   // reset all interlaced variables
 
 #if (MVC_EXTENSION_ENABLE)
   if((*dec_picture)->used_for_reference || ((*dec_picture)->inter_view_flag == 1))
@@ -1635,7 +1619,6 @@ void exit_picture (VideoParameters *p_Vid, StorablePicture **dec_picture)
   qp         = (*dec_picture)->qp;
   pic_num    = (*dec_picture)->pic_num;
   is_idr     = (*dec_picture)->idr_flag;
-
   chroma_format_idc = (*dec_picture)->chroma_format_idc;
 
 #if MVC_EXTENSION_ENABLE
@@ -1653,70 +1636,59 @@ void exit_picture (VideoParameters *p_Vid, StorablePicture **dec_picture)
 #pragma GCC diagnostic ignored "-Wstringop-truncation"
 #endif
 
-  if (p_Inp->silent == FALSE) {
-    if (structure==TOP_FIELD || structure==FRAME) {
-      if(slice_type == I_SLICE && is_idr) // IDR picture
-        strcpy(p_Vid->cslice_type,"IDR");
-      else if(slice_type == I_SLICE) // I picture
-        strcpy(p_Vid->cslice_type," I ");
-      else if(slice_type == P_SLICE) // P pictures
-        strcpy(p_Vid->cslice_type," P ");
-      else if(slice_type == SP_SLICE) // SP pictures
-        strcpy(p_Vid->cslice_type,"SP ");
-      else if (slice_type == SI_SLICE)
-        strcpy(p_Vid->cslice_type,"SI ");
-      else if(refpic) // stored B pictures
-        strcpy(p_Vid->cslice_type," B ");
-      else // B pictures
-        strcpy(p_Vid->cslice_type," b ");
-
-      if (structure==FRAME)
-        strncat(p_Vid->cslice_type,")       ",8-strlen(p_Vid->cslice_type));
-      }
-    else if (structure==BOTTOM_FIELD) {
-      if(slice_type == I_SLICE && is_idr) // IDR picture
-        strncat(p_Vid->cslice_type,"|IDR)",8-strlen(p_Vid->cslice_type));
-      else if(slice_type == I_SLICE) // I picture
-        strncat(p_Vid->cslice_type,"| I )",8-strlen(p_Vid->cslice_type));
-      else if(slice_type == P_SLICE) // P pictures
-        strncat(p_Vid->cslice_type,"| P )",8-strlen(p_Vid->cslice_type));
-      else if(slice_type == SP_SLICE) // SP pictures
-        strncat(p_Vid->cslice_type,"|SP )",8-strlen(p_Vid->cslice_type));
-      else if (slice_type == SI_SLICE)
-        strncat(p_Vid->cslice_type,"|SI )",8-strlen(p_Vid->cslice_type));
-      else if(refpic) // stored B pictures
-        strncat(p_Vid->cslice_type,"| B )",8-strlen(p_Vid->cslice_type));
-      else // B pictures
-        strncat(p_Vid->cslice_type,"| b )",8-strlen(p_Vid->cslice_type));
+  if (structure == TOP_FIELD || structure == FRAME) {
+    //{{{  frame type string
+    if(slice_type == I_SLICE && is_idr) // IDR picture
+      strcpy (p_Vid->cslice_type,"IDR");
+    else if (slice_type == I_SLICE) // I picture
+      strcpy (p_Vid->cslice_type," I ");
+    else if (slice_type == P_SLICE) // P pictures
+      strcpy (p_Vid->cslice_type," P ");
+    else if (slice_type == SP_SLICE) // SP pictures
+      strcpy (p_Vid->cslice_type,"SP ");
+    else if  (slice_type == SI_SLICE)
+      strcpy (p_Vid->cslice_type,"SI ");
+    else if (refpic) // stored B pictures
+      strcpy (p_Vid->cslice_type," B ");
+    else // B pictures
+      strcpy (p_Vid->cslice_type," b ");
+    if (structure == FRAME)
+      strncat (p_Vid->cslice_type,")       ",8-strlen(p_Vid->cslice_type));
     }
-  }
+    //}}}
+  else if (structure == BOTTOM_FIELD) {
+    //{{{  frame type string
+    if(slice_type == I_SLICE && is_idr) // IDR picture
+      strncat (p_Vid->cslice_type,"|IDR",8-strlen(p_Vid->cslice_type));
+    else if (slice_type == I_SLICE) // I picture
+      strncat (p_Vid->cslice_type,"| I ",8-strlen(p_Vid->cslice_type));
+    else if (slice_type == P_SLICE) // P pictures
+      strncat (p_Vid->cslice_type,"| P ",8-strlen(p_Vid->cslice_type));
+    else if (slice_type == SP_SLICE) // SP pictures
+      strncat (p_Vid->cslice_type,"|SP ",8-strlen(p_Vid->cslice_type));
+    else if  (slice_type == SI_SLICE)
+      strncat (p_Vid->cslice_type,"|SI ",8-strlen(p_Vid->cslice_type));
+    else if (refpic) // stored B pictures
+      strncat (p_Vid->cslice_type,"| B ",8-strlen(p_Vid->cslice_type));
+    else // B pictures
+      strncat (p_Vid->cslice_type,"| b ",8-strlen(p_Vid->cslice_type));
+    }
+    //}}}
   p_Vid->cslice_type[8] = 0;
 
 #if (defined __GNUC__) && (!defined __clang__)
 #pragma GCC diagnostic pop
 #endif
 
-  if ((structure==FRAME)||structure==BOTTOM_FIELD) {
-    gettime (&(p_Vid->end_time));              // end time
+  if ((structure == FRAME) || structure == BOTTOM_FIELD) {
+    gettime (&(p_Vid->end_time));
 
-    tmp_time  = timediff(&(p_Vid->start_time), &(p_Vid->end_time));
+    tmp_time = timediff(&(p_Vid->start_time), &(p_Vid->end_time));
     p_Vid->tot_time += tmp_time;
     tmp_time  = timenorm(tmp_time);
-    sprintf(yuvFormat,"%s", yuv_types[chroma_format_idc]);
-
-    if (p_Inp->silent == FALSE) {
-      SNRParameters   *snr = p_Vid->snr;
-      if (p_Vid->p_ref != -1)
-        fprintf(stdout,"%05d(%s%5d %5d %5d %8.4f %8.4f %8.4f  %s %7d\n",
-        p_Vid->frame_no, p_Vid->cslice_type, frame_poc, pic_num, qp, snr->snr[0], snr->snr[1], snr->snr[2], yuvFormat, (int) tmp_time);
-      else
-        fprintf(stdout,"%05d(%s%5d %5d %5d                             %s %7d\n",
-        p_Vid->frame_no, p_Vid->cslice_type, frame_poc, pic_num, qp, yuvFormat, (int)tmp_time);
-      }
-    else
-      fprintf(stdout,"Completed Decoding frame %05d.\r",snr->frame_ctr);
-
-    fflush(stdout);
+    sprintf (yuvFormat,"%s", yuv_types[chroma_format_idc]);
+    printf ("%5d %s poc:%4d pic:%4d qp:%3d %s took:%d\n",
+            p_Vid->frame_no, p_Vid->cslice_type, frame_poc, pic_num, qp, yuvFormat, (int)tmp_time);
 
     if (slice_type == I_SLICE || slice_type == SI_SLICE || slice_type == P_SLICE || refpic) {
       // I or P pictures
@@ -1733,11 +1705,8 @@ void exit_picture (VideoParameters *p_Vid, StorablePicture **dec_picture)
     if ((p_Vid->ppSliceList[0])->view_id != 0)
   #endif
       ++(p_Vid->g_nFrame);
+    }
   }
-
-  //p_Vid->currentSlice->current_mb_nr = -4712;   // impossible value for debugging, StW
-  //p_Vid->currentSlice->current_slice_nr = 0;
-}
 //}}}
 
 //{{{
@@ -2024,24 +1993,6 @@ void copy_dec_picture_JV (VideoParameters *p_Vid, StorablePicture *dst, Storable
   dst->frame_crop_top_offset    = src->frame_crop_top_offset;
   dst->frame_crop_bottom_offset = src->frame_crop_bottom_offset;
 
-#if (ENABLE_OUTPUT_TONEMAPPING)
-  // store the necessary tone mapping sei into StorablePicture structure
-  dst->seiHasTone_mapping = src->seiHasTone_mapping;
-
-  dst->seiHasTone_mapping    = src->seiHasTone_mapping;
-  dst->tone_mapping_model_id = src->tone_mapping_model_id;
-  dst->tonemapped_bit_depth  = src->tonemapped_bit_depth;
-  if( src->tone_mapping_lut )
-  {
-    int coded_data_bit_max = (1 << p_Vid->seiToneMapping->coded_data_bit_depth);
-    dst->tone_mapping_lut      = malloc(sizeof(int) * coded_data_bit_max);
-    if (NULL == dst->tone_mapping_lut)
-    {
-      no_mem_exit("copy_dec_picture_JV: tone_mapping_lut");
-    }
-    memcpy(dst->tone_mapping_lut, src->tone_mapping_lut, sizeof(imgpel) * coded_data_bit_max);
-  }
-#endif
 }
 //}}}
 //{{{

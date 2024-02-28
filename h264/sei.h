@@ -60,25 +60,6 @@ typedef enum {
 #define MAX_SEI_BIT_DEPTH    12
 #define MAX_NUM_PIVOTS     (1<<MAX_CODED_BIT_DEPTH)
 
-#if (ENABLE_OUTPUT_TONEMAPPING)
-//{{{
-typedef struct tone_mapping_struct_s
-{
-  Boolean seiHasTone_mapping;
-  unsigned int  tone_map_repetition_period;
-  unsigned char coded_data_bit_depth;
-  unsigned char sei_bit_depth;
-  unsigned int  model_id;
-  unsigned int count;
-
-  imgpel lut[1<<MAX_CODED_BIT_DEPTH];                 //<! look up table for mapping the coded data value to output data value
-
-  Bitstream *data;
-  int payloadSize;
-} ToneMappingSEI;
-//}}}
-#endif
-
 //{{{
 //! Frame packing arrangement Information
 typedef struct
@@ -148,9 +129,3 @@ void interpret_post_filter_hints_info                   ( byte* payload, int siz
 void interpret_tone_mapping                             ( byte* payload, int size, VideoParameters *p_Vid );
 void interpret_frame_packing_arrangement_info           ( byte* payload, int size, VideoParameters *p_Vid );
 void interpret_green_metadata_info                       (byte* payload, int size, VideoParameters *p_Vid );
-
-#if (ENABLE_OUTPUT_TONEMAPPING)
-  void tone_map               (imgpel** imgX, imgpel* lut, int size_x, int size_y);
-  void init_tone_mapping_sei  (ToneMappingSEI *seiToneMapping);
-  void update_tone_mapping_sei(ToneMappingSEI *seiToneMapping);
-#endif
