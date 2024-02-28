@@ -19,7 +19,6 @@
 #include "global.h"
 #include "memalloc.h"
 #include "erc_api.h"
-#include "fast_memory.h"
 //}}}
 
 //{{{

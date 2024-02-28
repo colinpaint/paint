@@ -20,7 +20,6 @@
 #include "defines.h"
 #include "header.h"
 #include "fmo.h"
-#include "fast_memory.h"
 //}}}
 
 //#define PRINT_FMO_MAPS

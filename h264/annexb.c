@@ -19,7 +19,6 @@
 #include "global.h"
 #include "annexb.h"
 #include "memalloc.h"
-#include "fast_memory.h"
 //}}}
 
 static const int IOBUFFERSIZE = 512*1024; //65536;

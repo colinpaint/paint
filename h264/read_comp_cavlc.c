@@ -17,7 +17,6 @@
 #include "elements.h"
 #include "macroblock.h"
 #include "vlc.h"
-#include "fast_memory.h"
 #include "transform.h"
 #include "mb_access.h"
 //}}}

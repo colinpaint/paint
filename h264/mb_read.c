@@ -42,7 +42,6 @@
 #include "quant.h"
 #include "mv_prediction.h"
 #include "mb_prediction.h"
-#include "fast_memory.h"
 //}}}
 
 #if TRACE

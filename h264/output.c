@@ -19,8 +19,6 @@
 #include "image.h"
 #include "memalloc.h"
 #include "sei.h"
-
-#include "fast_memory.h"
 //}}}
 
 //{{{

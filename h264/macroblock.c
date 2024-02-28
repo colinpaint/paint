@@ -42,7 +42,6 @@
 #include "quant.h"
 #include "mv_prediction.h"
 #include "mb_prediction.h"
-#include "fast_memory.h"
 //}}}
 extern void setup_read_macroblock (Slice *currSlice);
 extern void set_read_CBP_and_coeffs_cabac (Slice *currSlice);

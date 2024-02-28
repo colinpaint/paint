@@ -31,7 +31,6 @@
 #include "memalloc.h"
 #include "output.h"
 #include "mbuffer_mvc.h"
-#include "fast_memory.h"
 //}}}
 #define DUMP_DPB  0    //!< Dump DPB info for debug purposes
 #define MAX_LIST_SIZE 33
