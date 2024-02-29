@@ -229,18 +229,18 @@ static int output_one_frame_from_dpb (DecodedPictureBuffer *p_Dpb) {
     if (p_Dpb->last_output_poc == 0)
       write_lost_ref_after_idr(p_Dpb, pos);
 #if (MVC_EXTENSION_ENABLE)
-    write_lost_non_ref_pic(p_Dpb, poc, p_Vid->p_out_mvc[p_Dpb->layer_id]);
+    write_lost_non_ref_pic(p_Dpb, poc);
 #else
-    write_lost_non_ref_pic(p_Dpb, poc, p_Vid->p_out);
+    write_lost_non_ref_pic(p_Dpb, poc);
 #endif
   }
 
 // JVT-P072 ends
 
 #if (MVC_EXTENSION_ENABLE)
-  write_stored_frame(p_Vid, p_Dpb->fs[pos], p_Vid->p_out_mvc[p_Dpb->layer_id]);
+  write_stored_frame(p_Vid, p_Dpb->fs[pos]);
 #else
-  write_stored_frame(p_Vid, p_Dpb->fs[pos], p_Vid->p_out);
+  write_stored_frame(p_Vid, p_Dpb->fs[pos]);
 #endif
 
   // picture error concealment
@@ -2359,9 +2359,9 @@ void store_picture_in_dpb (DecodedPictureBuffer *p_Dpb, StorablePicture* p)
           printf("Display order might not be correct, %d, %d\n", p->view_id, p->poc);
 #endif
 #if (MVC_EXTENSION_ENABLE)
-        direct_output(p_Vid, p, p_Vid->p_out_mvc[p_Dpb->layer_id]);
+        direct_output(p_Vid, p);
 #else
-        direct_output(p_Vid, p, p_Vid->p_out);
+        direct_output(p_Vid, p);
 #endif
         return;
         }

@@ -107,119 +107,6 @@ static void reset_dpb (VideoParameters* p_Vid, DecodedPictureBuffer* p_Dpb )
 }
 //}}}
 //{{{
-static void Report (VideoParameters* p_Vid) {
-
-  static const char yuv_formats[4][4]= { {"400"}, {"420"}, {"422"}, {"444"} };
-  pic_parameter_set_rbsp_t *active_pps = p_Vid->active_pps;
-  InputParameters *p_Inp = p_Vid->p_Inp;
-  SNRParameters   *snr   = p_Vid->snr;
-
-  #define OUTSTRING_SIZE 255
-  char string[OUTSTRING_SIZE];
-  FILE *p_log;
-
-#ifndef WIN32
-  time_t  now;
-  struct tm *l_time;
-#else
-  char timebuf[128];
-#endif
-
-  // normalize time
-  p_Vid->tot_time  = timenorm(p_Vid->tot_time);
-
-    fprintf(stdout,"\n----------------------- Decoding Completed -------------------------------\n");
-    fprintf(stdout," Total decoding time : %.3f sec (%.3f fps)[%d frm/%" FORMAT_OFF_T "  ms]\n",p_Vid->tot_time*0.001, (snr->frame_ctr) * 1000.0 / p_Vid->tot_time, snr->frame_ctr, p_Vid->tot_time);
-
-  // write to log file
-  fprintf (stdout," Output status file                     : %s \n",LOGFILE);
-  snprintf (string, OUTSTRING_SIZE, "%s", LOGFILE);
-
-  if ((p_log = fopen (string,"r"))==0) {                 // check if file exist
-    if ((p_log = fopen (string,"a"))==0) {
-      snprintf (errortext, ET_SIZE, "Error open file %s for appending",string);
-      error (errortext, 500);
-    }
-    else {                                             // Create header to new file
-      fprintf(p_log," -------------------------------------------------------------------------------------------------------------------\n");
-      fprintf(p_log,"|  Decoder statistics. This file is made first time, later runs are appended               |\n");
-      fprintf(p_log," ------------------------------------------------------------------------------------------------------------------- \n");
-      fprintf(p_log,"|   ver  | Date  | Time  |    Sequence        |#Img| Format  | YUV |Coding|SNRY 1|SNRU 1|SNRV 1|SNRY N|SNRU N|SNRV N|\n");
-      fprintf(p_log," -------------------------------------------------------------------------------------------------------------------\n");
-      }
-    }
-  else {
-    fclose (p_log);
-    p_log = fopen (string,"a");
-    }
-
-#ifdef WIN32
-  _strdate( timebuf );
-  fprintf(p_log,"| %1.5s |",timebuf );
-
-  _strtime( timebuf);
-  fprintf(p_log," % 1.5s |",timebuf);
-#else
-  now = time ((time_t *) NULL); // Get the system time and put it into 'now' as 'calender time'
-  time (&now);
-  l_time = localtime (&now);
-  strftime (string, sizeof string, "%d-%b-%Y", l_time);
-  fprintf(p_log,"| %1.5s |",string );
-
-  strftime (string, sizeof string, "%H:%M:%S", l_time);
-  fprintf(p_log,"| %1.5s |",string );
-#endif
-
-  fprintf(p_log,"%20.20s|",p_Inp->infile);
-
-  fprintf(p_log,"%3d |",p_Vid->number);
-  fprintf(p_log,"%4dx%-4d|", p_Vid->width, p_Vid->height);
-  fprintf(p_log," %s |", &(yuv_formats[p_Vid->yuv_format][0]));
-
-  if (active_pps) {
-    if (active_pps->entropy_coding_mode_flag == (Boolean) CAVLC)
-      fprintf(p_log," CAVLC|");
-    else
-      fprintf(p_log," CABAC|");
-    }
-
-  fprintf(p_log,"%6.3f|",snr->snr1[0]);
-  fprintf(p_log,"%6.3f|",snr->snr1[1]);
-  fprintf(p_log,"%6.3f|",snr->snr1[2]);
-  fprintf(p_log,"%6.3f|",snr->snra[0]);
-  fprintf(p_log,"%6.3f|",snr->snra[1]);
-  fprintf(p_log,"%6.3f|",snr->snra[2]);
-  fprintf(p_log,"\n");
-  fclose(p_log);
-
-  snprintf (string, OUTSTRING_SIZE,"%s", DATADECFILE);
-  p_log = fopen(string,"a");
-
-  if (p_Vid->Bframe_ctr != 0) { // B picture used
-    fprintf(p_log, "%3d %2d %2d %2.2f %2.2f %2.2f %5d "
-      "%2.2f %2.2f %2.2f %5d "
-      "%2.2f %2.2f %2.2f %5d %.3f\n",
-      p_Vid->number, 0, p_Vid->ppSliceList[0]->qp,
-      snr->snr1[0], snr->snr1[1], snr->snr1[2],
-      0, 0.0, 0.0, 0.0, 0,
-      snr->snra[0], snr->snra[1], snr->snra[2],
-      0, (double)0.001*p_Vid->tot_time/(p_Vid->number + p_Vid->Bframe_ctr - 1));
-  }
-  else {
-    fprintf(p_log, "%3d %2d %2d %2.2f %2.2f %2.2f %5d "
-      "%2.2f %2.2f %2.2f %5d "
-      "%2.2f %2.2f %2.2f %5d %.3f\n",
-      p_Vid->number, 0, p_Vid->ppSliceList[0]? p_Vid->ppSliceList[0]->qp: 0,
-      snr->snr1[0], snr->snr1[1],
-      snr->snr1[2], 0,
-      0.0, 0.0, 0.0, 0,
-      snr->snra[0], snr->snra[1], snr->snra[2], 0,
-      p_Vid->number ? ((double)0.001*p_Vid->tot_time/p_Vid->number) : 0.0);
-  }
-  fclose(p_log);
-}
-//}}}
-//{{{
 void report_stats_on_error() {
 
   //free_encoder_memory(p_Vid);
@@ -244,9 +131,6 @@ static void alloc_video_params (VideoParameters** p_Vid) {
 
   if (((*p_Vid)->old_slice = (OldSliceParams *) calloc(1, sizeof(OldSliceParams)))==NULL)
     no_mem_exit ("alloc_video_params: p_Vid->old_slice");
-
-  if (((*p_Vid)->snr =  (SNRParameters *)calloc(1, sizeof(SNRParameters)))==NULL)
-    no_mem_exit ("alloc_video_params: p_Vid->snr");
 
   // Allocate new dpb buffer
   for (i = 0; i < MAX_NUM_DPB_LAYERS; i++) {
@@ -346,10 +230,6 @@ static void free_img (VideoParameters* p_Vid) {
         p_Vid->p_LayerPar[i] = NULL;
         }
       }
-    if (p_Vid->snr != NULL) {
-      free (p_Vid->snr);
-      p_Vid->snr = NULL;
-      }
     if (p_Vid->old_slice != NULL) {
       free (p_Vid->old_slice);
       p_Vid->old_slice = NULL;
@@ -400,20 +280,11 @@ void FreeDecPicList (DecodedPicList* pDecPicList) {
   }
 //}}}
 //{{{
-/*!
- ***********************************************************************
- * \brief
- *    Initilize some arrays
- ***********************************************************************
- */
 static void init (VideoParameters* p_Vid) {
 
   //int i;
   InputParameters *p_Inp = p_Vid->p_Inp;
   p_Vid->oldFrameSizeInMbs = (unsigned int) -1;
-
-  p_Vid->imgY_ref  = NULL;
-  p_Vid->imgUV_ref = NULL;
 
   p_Vid->recovery_point = 0;
   p_Vid->recovery_point_found = 0;
@@ -425,28 +296,17 @@ static void init (VideoParameters* p_Vid) {
   p_Vid->number = 0;
   p_Vid->type = I_SLICE;
 
-  //p_Vid->dec_ref_pic_marking_buffer = NULL;
-
   p_Vid->g_nFrame = 0;
-  // B pictures
-  p_Vid->Bframe_ctr = p_Vid->snr->frame_ctr = 0;
 
   // time for total decoding session
   p_Vid->tot_time = 0;
 
   p_Vid->dec_picture = NULL;
-  /*// reference flag initialization
-  for(i=0;i<17;++i)
-  {
-  p_Vid->ref_flag[i] = 1;
-  }*/
-
   p_Vid->MbToSliceGroupMap = NULL;
   p_Vid->MapUnitToSliceGroupMap = NULL;
 
   p_Vid->LastAccessUnitExists  = 0;
   p_Vid->NALUCount = 0;
-
 
   p_Vid->out_buffer = NULL;
   p_Vid->pending_output = NULL;
@@ -471,7 +331,6 @@ static void init (VideoParameters* p_Vid) {
   p_Vid->bDeblockEnable = 0x3;
   p_Vid->last_dec_view_id = -1;
   p_Vid->last_dec_layer_id = -1;
-
   }
 //}}}
 //{{{
@@ -998,9 +857,6 @@ int OpenDecoder (InputParameters* p_Inp) {
   pDecoder->p_Vid->ref_poc_gap = p_Inp->ref_poc_gap;
   pDecoder->p_Vid->poc_gap = p_Inp->poc_gap;
 
-  pDecoder->p_Vid->p_out = -1;
-  pDecoder->p_Vid->p_ref = -1;
-
   malloc_annex_b (pDecoder->p_Vid, &pDecoder->p_Vid->annex_b);
   open_annex_b (pDecoder->p_Inp->infile, pDecoder->p_Vid->annex_b);
 
@@ -1042,7 +898,7 @@ int FinitDecoder (DecodedPicList** ppDecPicList) {
   flush_dpb (pDecoder->p_Vid->p_Dpb_layer[0]);
 
   #if (PAIR_FIELDS_IN_OUTPUT)
-    flush_pending_output (pDecoder->p_Vid, pDecoder->p_Vid->p_out);
+    flush_pending_output (pDecoder->p_Vid);
   #endif
 
   if (pDecoder->p_Inp->FileFormat == PAR_OF_ANNEXB)
@@ -1063,18 +919,11 @@ int CloseDecoder() {
   if( !pDecoder)
     return DEC_CLOSE_NOERR;
 
-  Report (pDecoder->p_Vid);
   FmoFinit(pDecoder->p_Vid);
   free_layer_buffers (pDecoder->p_Vid, 0);
   free_layer_buffers (pDecoder->p_Vid, 1);
   free_global_buffers (pDecoder->p_Vid);
   close_annex_b (pDecoder->p_Vid->annex_b);
-
-  if(pDecoder->p_Vid->p_out >=0)
-    close (pDecoder->p_Vid->p_out);
-
-  if (pDecoder->p_Vid->p_ref != -1)
-    close (pDecoder->p_Vid->p_ref);
 
   ercClose (pDecoder->p_Vid, pDecoder->p_Vid->erc_errorVar);
 

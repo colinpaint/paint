@@ -1756,25 +1756,23 @@ void sliding_window_poc_management (DecodedPictureBuffer *p_Dpb, StorablePicture
 ************************************************************************
 */
 
-void write_lost_non_ref_pic (DecodedPictureBuffer *p_Dpb, int poc, int p_out)
-{
+void write_lost_non_ref_pic (DecodedPictureBuffer *p_Dpb, int poc) {
+
   VideoParameters *p_Vid = p_Dpb->p_Vid;
   FrameStore concealment_fs;
-  if(poc > 0)
-  {
-    if((poc - p_Dpb->last_output_poc) > p_Vid->poc_gap)
-    {
+  if (poc > 0) {
+    if ((poc - p_Dpb->last_output_poc) > p_Vid->poc_gap) {
 
       concealment_fs.frame = p_Vid->concealment_head->picture;
       concealment_fs.is_output = 0;
       concealment_fs.is_reference = 0;
       concealment_fs.is_used = 3;
 
-      write_stored_frame(p_Vid, &concealment_fs, p_out);
-      delete_node(p_Vid, p_Vid->concealment_head);
+      write_stored_frame (p_Vid, &concealment_fs);
+      delete_node (p_Vid, p_Vid->concealment_head);
+      }
     }
   }
-}
 //}}}
 //{{{
 /*!

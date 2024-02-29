@@ -110,8 +110,8 @@ extern void init_lists_for_non_reference_loss(DecodedPictureBuffer *p_Dpb, int ,
 extern void conceal_non_ref_pics(DecodedPictureBuffer *p_Dpb, int diff);
 extern void conceal_lost_frames (DecodedPictureBuffer *p_Dpb, Slice *pSlice);
 
-extern void sliding_window_poc_management(DecodedPictureBuffer *p_Dpb, StorablePicture *p);
-extern void write_lost_non_ref_pic       (DecodedPictureBuffer *p_Dpb, int poc, int p_out);
-extern void write_lost_ref_after_idr     (DecodedPictureBuffer *p_Dpb, int pos);
+extern void sliding_window_poc_management (DecodedPictureBuffer *p_Dpb, StorablePicture *p);
+extern void write_lost_non_ref_pic (DecodedPictureBuffer *p_Dpb, int poc);
+extern void write_lost_ref_after_idr (DecodedPictureBuffer *p_Dpb, int pos);
 
 extern int comp(const void *, const void *);

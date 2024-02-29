@@ -637,18 +637,20 @@ typedef struct layer_par {
 //}}}
 //{{{
 typedef struct video_par {
-  struct inp_par      *p_Inp;
-  pic_parameter_set_rbsp_t *active_pps;
-  seq_parameter_set_rbsp_t *active_sps;
+  struct inp_par* p_Inp;
+
+  pic_parameter_set_rbsp_t* active_pps;
+  seq_parameter_set_rbsp_t* active_sps;
+
   seq_parameter_set_rbsp_t SeqParSet[MAXSPS];
   pic_parameter_set_rbsp_t PicParSet[MAXPPS];
-  struct decoded_picture_buffer *p_Dpb_layer[MAX_NUM_DPB_LAYERS];
-  CodingParameters *p_EncodePar[MAX_NUM_DPB_LAYERS];
-  LayerParameters *p_LayerPar[MAX_NUM_DPB_LAYERS];
+
+  struct decoded_picture_buffer* p_Dpb_layer[MAX_NUM_DPB_LAYERS];
+  CodingParameters* p_EncodePar[MAX_NUM_DPB_LAYERS];
+  LayerParameters* p_LayerPar[MAX_NUM_DPB_LAYERS];
 
 #if (MVC_EXTENSION_ENABLE)
   subset_seq_parameter_set_rbsp_t *active_subset_sps;
-  //int svc_extension_flag;
   subset_seq_parameter_set_rbsp_t SubsetSeqParSet[MAXSPS];
   int last_pic_width_in_mbs_minus1;
   int last_pic_height_in_map_units_minus1;
@@ -656,54 +658,47 @@ typedef struct video_par {
   int last_profile_idc;
 #endif
 
-  struct sei_params        *p_SEI;
+  struct sei_params* p_SEI;
+  struct old_slice_par* old_slice;
+  int number;                       //!frame number
 
-  struct old_slice_par *old_slice;
-  struct snr_par       *snr;
-  int number;                                 //!< frame number
-
-  //current picture property;
+  // current picture property;
   unsigned int num_dec_mb;
   int iSliceNumOfCurrPic;
   int iNumOfSlicesAllocated;
   int iNumOfSlicesDecoded;
-  Slice **ppSliceList;
-  char  *intra_block;
-  char  *intra_block_JV[MAX_PLANE];
-  //int qp;                                     //!< quant for the current frame
+  Slice** ppSliceList;
+  char* intra_block;
+  char* intra_block_JV[MAX_PLANE];
 
-  //int sp_switch;                              //!< 1 for switching sp, 0 for normal sp
-  int type;                                   //!< image type INTER/INTRA
+  int type;                          // image type INTER/INTRA
 
-  byte **ipredmode;                  //!< prediction type [90][74]
-  byte **ipredmode_JV[MAX_PLANE];
-  byte ****nz_coeff;
-  int **siblock;
-  int **siblock_JV[MAX_PLANE];
-  BlockPos *PicPos;
+  byte** ipredmode;                  // prediction type [90][74]
+  byte** ipredmode_JV[MAX_PLANE];
+  byte**** nz_coeff;
+  int** siblock;
+  int** siblock_JV[MAX_PLANE];
+  BlockPos* PicPos;
 
   int newframe;
-  int structure;                     //!< Identify picture structure type
+  int structure;                     // Identify picture structure type
 
-  //Slice      *currentSlice;          //!< pointer to current Slice data struct
-  Slice      *pNextSlice;             //!< pointer to first Slice of next picture;
-  Macroblock *mb_data;               //!< array containing all MBs of a whole frame
-  Macroblock *mb_data_JV[MAX_PLANE]; //!< mb_data to be used for 4:4:4 independent mode
-  //int colour_plane_id;               //!< colour_plane_id of the current coded slice
+  Slice* pNextSlice;                 // pointer to first Slice of next picture;
+  Macroblock* mb_data;               // array containing all MBs of a whole frame
+  Macroblock* mb_data_JV[MAX_PLANE]; // mb_data to be used for 4:4:4 independent mode
   int ChromaArrayType;
 
   // picture error concealment
   // concealment_head points to first node in list, concealment_end points to
   // last node in list. Initialize both to NULL, meaning no nodes in list yet
-  struct concealment_node *concealment_head;
-  struct concealment_node *concealment_end;
+  struct concealment_node* concealment_head;
+  struct concealment_node* concealment_end;
 
-  unsigned int pre_frame_num;           //!< store the frame_num in the last decoded slice. For detecting gap in frame_num.
+  unsigned int pre_frame_num;           // store the frame_num in the last decoded slice. For detecting gap in frame_num.
   int non_conforming_stream;
 
-  // ////////////////////////
   // for POC mode 0:
-  signed   int PrevPicOrderCntMsb;
+  signed int PrevPicOrderCntMsb;
   unsigned int PrevPicOrderCntLsb;
 
   // for POC mode 1:
@@ -712,7 +707,6 @@ typedef struct video_par {
   int ExpectedDeltaPerPicOrderCntCycle;
   int ThisPOC;
   int PreviousFrameNumOffset;
-  // /////////////////////////
 
   unsigned int PicHeightInMbs;
   unsigned int PicSizeInMbs;
@@ -728,6 +722,7 @@ typedef struct video_par {
   // Timing related variables
   TIME_T start_time;
   TIME_T end_time;
+  int64 tot_time;
 
   // picture error concealment
   int last_ref_pic_poc;
@@ -740,45 +735,22 @@ typedef struct video_par {
   int conceal_slice_type;
 
   Boolean first_sps;
-  // random access point decoding
   int recovery_point;
   int recovery_point_found;
   int recovery_frame_cnt;
   int recovery_frame_num;
   int recovery_poc;
 
-  byte *buf;
-  byte *ibuf;
-
-  ImageData imgData;           //!< Image data to be encoded (dummy variable for now)
-  ImageData imgData0;          //!< base layer input
-  ImageData imgData1;          //!< temp buffer for left de-muxed view
-  ImageData imgData2;          //!< temp buffer for right de-muxed view
-
-  // Data needed for 3:2 pulldown or temporal interleaving
-  ImageData imgData32;           //!< Image data to be encoded
-  ImageData imgData4;
-  ImageData imgData5;
-  ImageData imgData6;
-
+  byte* buf;
+  byte* ibuf;
 
   // Redundant slices. Should be moved to another structure and allocated only if extended profile
-  unsigned int previous_frame_num; //!< frame number of previous slice
-  //!< non-zero: i-th previous frame is correct
-  int Is_primary_correct;          //!< if primary frame is correct, 0: incorrect
-  int Is_redundant_correct;        //!< if redundant frame is correct, 0:incorrect
+  unsigned int previous_frame_num; // frame number of previous slice
 
-  // Time
-  int64 tot_time;
+  // non-zero: i-th previous frame is correct
+  int Is_primary_correct;          // if primary frame is correct, 0: incorrect
+  int Is_redundant_correct;        // if redundant frame is correct, 0:incorrect
 
-  // files
-  int p_out;                       //!< file descriptor to output YUV file
-#if (MVC_EXTENSION_ENABLE)
-  int p_out_mvc[MAX_VIEW_NUM];     //!< file descriptor to output YUV file for MVC
-#endif
-  int p_ref;                       //!< pointer to input original reference YUV file file
-
-  //FILE *p_log;                     //!< SNR file
   int LastAccessUnitExists;
   int NALUCount;
 
@@ -789,46 +761,39 @@ typedef struct video_par {
   int  g_nFrame;
   Boolean global_init_done[2];
 
-  // global picture format dependent buffers, memory allocation in decod.c
-  imgpel **imgY_ref;                              //!< reference frame find snr
-  imgpel ***imgUV_ref;
+  int* qp_per_matrix;
+  int* qp_rem_matrix;
 
-  int *qp_per_matrix;
-  int *qp_rem_matrix;
-
-  struct frame_store *last_out_fs;
+  struct frame_store* last_out_fs;
   int pocs_in_dpb[100];
 
-  struct storable_picture *dec_picture;
-  struct storable_picture *dec_picture_JV[MAX_PLANE];  //!< dec_picture to be used during 4:4:4 independent mode decoding
-  struct storable_picture *no_reference_picture; //!< dummy storable picture for recovery point
+  struct storable_picture* dec_picture;
+  struct storable_picture* dec_picture_JV[MAX_PLANE];  //!< dec_picture to be used during 4:4:4 independent mode decoding
+  struct storable_picture* no_reference_picture; //!< dummy storable picture for recovery point
 
   // Error parameters
-  struct object_buffer  *erc_object_list;
-  struct ercVariables_s *erc_errorVar;
-
+  struct object_buffer* erc_object_list;
+  struct ercVariables_s* erc_errorVar;
   int erc_mvperMB;
-  struct video_par *erc_img;
+  struct video_par* erc_img;
   int ec_flag[SE_MAX_ELEMENTS];        //!< array to set errorconcealment
 
-  struct annex_b_struct *annex_b;
+  struct annex_b_struct* annex_b;
 
-  struct frame_store *out_buffer;
+  struct frame_store* out_buffer;
 
-  struct storable_picture *pending_output;
+  struct storable_picture* pending_output;
   int    pending_output_state;
   int    recovery_flag;
 
-  int BitStreamFile;
-
   // report
   char cslice_type[9];
+
   // FMO
-  int *MbToSliceGroupMap;
-  int *MapUnitToSliceGroupMap;
+  int* MbToSliceGroupMap;
+  int* MapUnitToSliceGroupMap;
   int  NumberOfSliceGroups;    // the number of slice groups -1 (0 == scan order, 7 == maximum)
 
-  void (*buf2img)          (imgpel** imgX, unsigned char* buf, int size_x, int size_y, int o_size_x, int o_size_y, int symbol_size_in_bytes, int bitshift);
   void (*getNeighbour)     (Macroblock *currMB, int xN, int yN, int mb_size[2], PixelPos *pix);
   void (*get_mb_block_pos) (BlockPos *PicPos, int mb_addr, short *x, short *y);
   void (*GetStrengthVer)   (Macroblock *MbQ, int edge, int mvlimit, struct storable_picture *p);
@@ -839,14 +804,16 @@ typedef struct video_par {
   void (*EdgeLoopChromaHor)(imgpel** Img, byte *Strength, Macroblock *MbQ, int edge, int uv, struct storable_picture *p);
 
   ImageData tempData3;
-  DecodedPicList *pDecOuputPic;
+  DecodedPicList* pDecOuputPic;
   int iDeblockMode;  //0: deblock in picture, 1: deblock in slice;
-  struct nalu_t *nalu;
+
+  struct nalu_t* nalu;
   int iLumaPadX;
   int iLumaPadY;
   int iChromaPadX;
   int iChromaPadY;
-  //control;
+
+  // control;
   int bDeblockEnable;
   int iPostProcess;
   int bFrameInit;
@@ -856,11 +823,11 @@ typedef struct video_par {
   int last_dec_layer_id;
   int dpb_layer_id;
 
-/******************* deprecative variables; ***************************************/
   int width;
   int height;
-  int width_cr;                               //!< width chroma
-  int height_cr;                              //!< height chroma
+  int width_cr;
+  int height_cr;
+
   // Fidelity Range Extensions Stuff
   int pic_unit_bitsize_on_disk;
   short bitdepth_luma;
@@ -901,21 +868,7 @@ typedef struct video_par {
   unsigned int FrameSizeInMbs;
   unsigned int oldFrameSizeInMbs;
   int max_vmv_r;                             //!< maximum vertical motion vector range in luma quarter frame pixel units for the current level_idc
-  //int max_mb_vmv_r;                        //!< maximum vertical motion vector range in luma quarter pixel units for the current level_idc
-/******************* end deprecative variables; ***************************************/
-
-  struct dec_stat_parameters *dec_stats;
   } VideoParameters;
-//}}}
-//{{{
-typedef struct snr_par {
-  int   frame_ctr;
-  float snr[3];                                //!< current SNR (component)
-  float snr1[3];                               //!< SNR (dB) first frame (component)
-  float snra[3];                               //!< Average component SNR (dB) remaining frames
-  float sse[3];                                //!< component SSE
-  float msse[3];                                //!< Average component SSE
-  } SNRParameters;
 //}}}
 //{{{
 typedef struct inp_par {

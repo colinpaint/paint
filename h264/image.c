@@ -1408,7 +1408,6 @@ void pad_dec_picture (VideoParameters *p_Vid, StorablePicture *dec_picture)
 void exit_picture (VideoParameters *p_Vid, StorablePicture **dec_picture)
 {
   InputParameters *p_Inp = p_Vid->p_Inp;
-  SNRParameters   *snr   = p_Vid->snr;
   char yuv_types[4][6]= {"4:0:0","4:2:0","4:2:2","4:4:4"};
 
 #if (DISABLE_ERC == 0)
@@ -1602,7 +1601,6 @@ void exit_picture (VideoParameters *p_Vid, StorablePicture **dec_picture)
       }
     else
       ++(p_Vid->Bframe_ctr);    // B pictures
-    ++(snr->frame_ctr);
 
   #if (MVC_EXTENSION_ENABLE)
     if ((p_Vid->ppSliceList[0])->view_id != 0)
