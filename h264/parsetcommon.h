@@ -241,11 +241,5 @@ typedef struct
   //}}}
 #endif
 
-pic_parameter_set_rbsp_t *AllocPPS (void);
-seq_parameter_set_rbsp_t *AllocSPS (void);
-
-void FreePPS (pic_parameter_set_rbsp_t *pps);
-void FreeSPS (seq_parameter_set_rbsp_t *sps);
-
-int sps_is_equal (seq_parameter_set_rbsp_t *sps1, seq_parameter_set_rbsp_t *sps2);
-int pps_is_equal (pic_parameter_set_rbsp_t *pps1, pic_parameter_set_rbsp_t *pps2);
+pic_parameter_set_rbsp_t* AllocPPS();
+void FreePPS (pic_parameter_set_rbsp_t* pps);
