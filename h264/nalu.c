@@ -16,7 +16,6 @@
 #include "global.h"
 #include "annexb.h"
 #include "nalu.h"
-#include "nalucommon.h"
 #include "memalloc.h"
 
 #if (MVC_EXTENSION_ENABLE)

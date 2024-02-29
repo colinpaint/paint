@@ -1,6 +1,6 @@
 #pragma once
 #include "parsetcommon.h"
-#include "nalucommon.h"
+#include "nalu.h"
 
 //{{{
 static const byte ZZ_SCAN[16]  =

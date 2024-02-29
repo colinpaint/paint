@@ -1,5 +1,5 @@
 #pragma once
-#include "nalucommon.h"
+#include "nalu.h"
 
 typedef struct annex_b_struct {
   int  BitStreamFile;
