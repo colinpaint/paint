@@ -32,6 +32,19 @@
 #endif
 //}}}
 extern void init_frext (VideoParameters *p_Vid);
+//{{{
+static const byte ZZ_SCAN[16]  =
+{  0,  1,  4,  8,  5,  2,  3,  6,  9, 12, 13, 10,  7, 11, 14, 15
+};
+//}}}
+//{{{
+static const byte ZZ_SCAN8[64] =
+{  0,  1,  8, 16,  9,  2,  3, 10, 17, 24, 32, 25, 18, 11,  4,  5,
+   12, 19, 26, 33, 40, 48, 41, 34, 27, 20, 13,  6,  7, 14, 21, 28,
+   35, 42, 49, 56, 57, 50, 43, 36, 29, 22, 15, 23, 30, 37, 44, 51,
+   58, 59, 52, 45, 38, 31, 39, 46, 53, 60, 61, 54, 47, 55, 62, 63
+};
+//}}}
 
 //{{{
 /*!
@@ -181,7 +194,7 @@ static void set_coding_par (seq_parameter_set_rbsp_t *sps, CodingParameters *cps
   }
 //}}}
 //{{{
-static void reset_format_info (seq_parameter_set_rbsp_t *sps, VideoParameters *p_Vid, 
+static void reset_format_info (seq_parameter_set_rbsp_t *sps, VideoParameters *p_Vid,
                                FrameFormat *source, FrameFormat *output) {
 
   static const int SubWidthC  [4]= { 1, 2, 2, 1};
@@ -324,7 +337,7 @@ static int sps_is_equal(seq_parameter_set_rbsp_t *sps1, seq_parameter_set_rbsp_t
   equal &= (sps1->seq_parameter_set_id == sps2->seq_parameter_set_id);
   equal &= (sps1->log2_max_frame_num_minus4 == sps2->log2_max_frame_num_minus4);
   equal &= (sps1->pic_order_cnt_type == sps2->pic_order_cnt_type);
-  if (!equal) 
+  if (!equal)
     return equal;
 
   if( sps1->pic_order_cnt_type == 0 )
@@ -334,7 +347,7 @@ static int sps_is_equal(seq_parameter_set_rbsp_t *sps1, seq_parameter_set_rbsp_t
     equal &= (sps1->offset_for_non_ref_pic == sps2->offset_for_non_ref_pic);
     equal &= (sps1->offset_for_top_to_bottom_field == sps2->offset_for_top_to_bottom_field);
     equal &= (sps1->num_ref_frames_in_pic_order_cnt_cycle == sps2->num_ref_frames_in_pic_order_cnt_cycle);
-    if (!equal) 
+    if (!equal)
       return equal;
     for ( i = 0 ; i< sps1->num_ref_frames_in_pic_order_cnt_cycle ;i ++)
       equal &= (sps1->offset_for_ref_frame[i] == sps2->offset_for_ref_frame[i]);
@@ -346,14 +359,14 @@ static int sps_is_equal(seq_parameter_set_rbsp_t *sps1, seq_parameter_set_rbsp_t
   equal &= (sps1->pic_height_in_map_units_minus1 == sps2->pic_height_in_map_units_minus1);
   equal &= (sps1->frame_mbs_only_flag == sps2->frame_mbs_only_flag);
 
-  if (!equal) return 
+  if (!equal) return
     equal;
   if (!sps1->frame_mbs_only_flag )
     equal &= (sps1->mb_adaptive_frame_field_flag == sps2->mb_adaptive_frame_field_flag);
 
   equal &= (sps1->direct_8x8_inference_flag == sps2->direct_8x8_inference_flag);
   equal &= (sps1->frame_cropping_flag == sps2->frame_cropping_flag);
-  if (!equal) 
+  if (!equal)
     return equal;
   if (sps1->frame_cropping_flag) {
     equal &= (sps1->frame_crop_left_offset == sps2->frame_crop_left_offset);
@@ -560,7 +573,7 @@ static int InterpretSPS (VideoParameters *p_Vid, DataPartition *p, seq_parameter
 #endif
      ) {
     sps->chroma_format_idc = read_ue_v ("SPS: chroma_format_idc", s, &p_Dec->UsedBits);
-    if (sps->chroma_format_idc == YUV444) 
+    if (sps->chroma_format_idc == YUV444)
       sps->separate_colour_plane_flag = read_u_1  ("SPS: separate_colour_plane_flag", s, &p_Dec->UsedBits);
 
     sps->bit_depth_luma_minus8 = read_ue_v ("SPS: bit_depth_luma_minus8", s, &p_Dec->UsedBits);
