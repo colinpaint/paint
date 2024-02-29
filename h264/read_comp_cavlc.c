@@ -20,32 +20,10 @@
 #include "transform.h"
 #include "mb_access.h"
 //}}}
-
-#if TRACE
-#define TRACE_STRING(s) strncpy(currSE.tracestring, s, TRACESTRING_SIZE)
-#define TRACE_DECBITS(i) dectracebitcnt(1)
-#define TRACE_PRINTF(s) sprintf(type, "%s", s);
-#define TRACE_STRING_P(s) strncpy(currSE->tracestring, s, TRACESTRING_SIZE)
-#else
-#define TRACE_STRING(s)
-#define TRACE_DECBITS(i)
-#define TRACE_PRINTF(s)
-#define TRACE_STRING_P(s)
-#endif
-
 extern void  check_dp_neighbors (Macroblock *currMB);
 extern void  read_delta_quant   (SyntaxElement *currSE, DataPartition *dP, Macroblock *currMB, const byte *partMap, int type);
 
 //{{{
-/*!
- ************************************************************************
- * \brief
- *    Get the Prediction from the Neighboring Blocks for Number of
- *    Nonzero Coefficients
- *
- *    Luma Blocks
- ************************************************************************
- */
 static int predict_nnz(Macroblock *currMB, int block_type, int i,int j)
 {
   VideoParameters *p_Vid = currMB->p_Vid;
@@ -130,15 +108,6 @@ static int predict_nnz(Macroblock *currMB, int block_type, int i,int j)
 }
 //}}}
 //{{{
-/*!
- ************************************************************************
- * \brief
- *    Get the Prediction from the Neighboring Blocks for Number of
- *    Nonzero Coefficients
- *
- *    Chroma Blocks
- ************************************************************************
- */
 static int predict_nnz_chroma(Macroblock *currMB, int i,int j)
 {
   StorablePicture *dec_picture = currMB->p_Slice->dec_picture;
@@ -197,16 +166,6 @@ static int predict_nnz_chroma(Macroblock *currMB, int i,int j)
 //}}}
 
 //{{{
-/*!
- ************************************************************************
- * \brief
- *    Reads coeff of an 4x4 block (CAVLC)
- *
- * \author
- *    Karl Lillevold <karll@real.com>
- *    contributions by James Au <james@ubvideo.com>
- ************************************************************************
- */
 void read_coeff_4x4_CAVLC (Macroblock *currMB,
                            int block_type,
                            int i, int j, int levarr[16], int runarr[16],
@@ -233,33 +192,28 @@ void read_coeff_4x4_CAVLC (Macroblock *currMB,
   {
   case LUMA:
     max_coeff_num = 16;
-    TRACE_PRINTF("Luma");
     dptype = (currMB->is_intra_block == TRUE) ? SE_LUM_AC_INTRA : SE_LUM_AC_INTER;
     p_Vid->nz_coeff[mb_nr][0][j][i] = 0;
     break;
   case LUMA_INTRA16x16DC:
     max_coeff_num = 16;
-    TRACE_PRINTF("Lum16DC");
     dptype = SE_LUM_DC_INTRA;
     p_Vid->nz_coeff[mb_nr][0][j][i] = 0;
     break;
   case LUMA_INTRA16x16AC:
     max_coeff_num = 15;
-    TRACE_PRINTF("Lum16AC");
     dptype = SE_LUM_AC_INTRA;
     p_Vid->nz_coeff[mb_nr][0][j][i] = 0;
     break;
   case CHROMA_DC:
     max_coeff_num = p_Vid->num_cdc_coeff;
     cdc = 1;
-    TRACE_PRINTF("ChrDC");
     dptype = (currMB->is_intra_block == TRUE) ? SE_CHR_DC_INTRA : SE_CHR_DC_INTER;
     p_Vid->nz_coeff[mb_nr][0][j][i] = 0;
     break;
   case CHROMA_AC:
     max_coeff_num = 15;
     cac = 1;
-    TRACE_PRINTF("ChrAC");
     dptype = (currMB->is_intra_block == TRUE) ? SE_CHR_AC_INTRA : SE_CHR_AC_INTER;
     p_Vid->nz_coeff[mb_nr][0][j][i] = 0;
     break;
@@ -307,12 +261,6 @@ void read_coeff_4x4_CAVLC (Macroblock *currMB,
     if (numtrailingones)
     {
       currSE.len = numtrailingones;
-
-#if TRACE
-      snprintf(currSE.tracestring,
-        TRACESTRING_SIZE, "%s trailing ones sign (%d,%d)", type, i, j);
-#endif
-
       readSyntaxElement_FLC (&currSE, currStream);
 
       code = currSE.inf;
@@ -330,11 +278,6 @@ void read_coeff_4x4_CAVLC (Macroblock *currMB,
 
     for (k = numcoeff - 1 - numtrailingones; k >= 0; k--)
     {
-
-#if TRACE
-      snprintf(currSE.tracestring,
-        TRACESTRING_SIZE, "%s lev (%d,%d) k=%d vlc=%d ", type, i, j, k, vlcnum);
-#endif
 
       if (vlcnum == 0)
         readSyntaxElement_Level_VLC0(&currSE, currStream);
@@ -366,10 +309,6 @@ void read_coeff_4x4_CAVLC (Macroblock *currMB,
       vlcnum = numcoeff - 1;
       currSE.value1 = vlcnum;
 
-#if TRACE
-      snprintf(currSE.tracestring,
-        TRACESTRING_SIZE, "%s totalrun (%d,%d) vlc=%d ", type, i,j, vlcnum);
-#endif
       if (cdc)
         readSyntaxElement_TotalZerosChromaDC(p_Vid, &currSE, currStream);
       else
@@ -394,12 +333,6 @@ void read_coeff_4x4_CAVLC (Macroblock *currMB,
         vlcnum = imin(zerosleft - 1, RUNBEFORE_NUM_M1);
 
         currSE.value1 = vlcnum;
-#if TRACE
-        snprintf(currSE.tracestring,
-          TRACESTRING_SIZE, "%s run (%d,%d) k=%d vlc=%d ",
-          type, i, j, i, vlcnum);
-#endif
-
         readSyntaxElement_Run(&currSE, currStream);
         runarr[i] = currSE.value1;
 
@@ -412,16 +345,6 @@ void read_coeff_4x4_CAVLC (Macroblock *currMB,
 }
 //}}}
 //{{{
-/*!
- ************************************************************************
- * \brief
- *    Reads coeff of an 4x4 block (CAVLC)
- *
- * \author
- *    Karl Lillevold <karll@real.com>
- *    contributions by James Au <james@ubvideo.com>
- ************************************************************************
- */
 void read_coeff_4x4_CAVLC_444 (Macroblock *currMB,
                                int block_type,
                                int i, int j, int levarr[16], int runarr[16],
@@ -448,69 +371,58 @@ void read_coeff_4x4_CAVLC_444 (Macroblock *currMB,
   {
   case LUMA:
     max_coeff_num = 16;
-    TRACE_PRINTF("Luma");
     dptype = (currMB->is_intra_block == TRUE) ? SE_LUM_AC_INTRA : SE_LUM_AC_INTER;
     p_Vid->nz_coeff[mb_nr][0][j][i] = 0;
     break;
   case LUMA_INTRA16x16DC:
     max_coeff_num = 16;
-    TRACE_PRINTF("Lum16DC");
     dptype = SE_LUM_DC_INTRA;
     p_Vid->nz_coeff[mb_nr][0][j][i] = 0;
     break;
   case LUMA_INTRA16x16AC:
     max_coeff_num = 15;
-    TRACE_PRINTF("Lum16AC");
     dptype = SE_LUM_AC_INTRA;
     p_Vid->nz_coeff[mb_nr][0][j][i] = 0;
     break;
   case CB:
     max_coeff_num = 16;
-    TRACE_PRINTF("Luma_add1");
     dptype = ((currMB->is_intra_block == TRUE)) ? SE_LUM_AC_INTRA : SE_LUM_AC_INTER;
     p_Vid->nz_coeff[mb_nr][1][j][i] = 0;
     break;
   case CB_INTRA16x16DC:
     max_coeff_num = 16;
-    TRACE_PRINTF("Luma_add1_16DC");
     dptype = SE_LUM_DC_INTRA;
     p_Vid->nz_coeff[mb_nr][1][j][i] = 0;
     break;
   case CB_INTRA16x16AC:
     max_coeff_num = 15;
-    TRACE_PRINTF("Luma_add1_16AC");
     dptype = SE_LUM_AC_INTRA;
     p_Vid->nz_coeff[mb_nr][1][j][i] = 0;
     break;
   case CR:
     max_coeff_num = 16;
-    TRACE_PRINTF("Luma_add2");
     dptype = ((currMB->is_intra_block == TRUE)) ? SE_LUM_AC_INTRA : SE_LUM_AC_INTER;
     p_Vid->nz_coeff[mb_nr][2][j][i] = 0;
     break;
   case CR_INTRA16x16DC:
     max_coeff_num = 16;
-    TRACE_PRINTF("Luma_add2_16DC");
     dptype = SE_LUM_DC_INTRA;
     p_Vid->nz_coeff[mb_nr][2][j][i] = 0;
     break;
   case CR_INTRA16x16AC:
     max_coeff_num = 15;
-    TRACE_PRINTF("Luma_add1_16AC");
     dptype = SE_LUM_AC_INTRA;
     p_Vid->nz_coeff[mb_nr][2][j][i] = 0;
     break;
   case CHROMA_DC:
     max_coeff_num = p_Vid->num_cdc_coeff;
     cdc = 1;
-    TRACE_PRINTF("ChrDC");
     dptype = (currMB->is_intra_block == TRUE) ? SE_CHR_DC_INTRA : SE_CHR_DC_INTER;
     p_Vid->nz_coeff[mb_nr][0][j][i] = 0;
     break;
   case CHROMA_AC:
     max_coeff_num = 15;
     cac = 1;
-    TRACE_PRINTF("ChrAC");
     dptype = (currMB->is_intra_block == TRUE) ? SE_CHR_AC_INTRA : SE_CHR_AC_INTER;
     p_Vid->nz_coeff[mb_nr][0][j][i] = 0;
     break;
@@ -574,12 +486,6 @@ void read_coeff_4x4_CAVLC_444 (Macroblock *currMB,
     if (numtrailingones)
     {
       currSE.len = numtrailingones;
-
-#if TRACE
-      snprintf(currSE.tracestring,
-        TRACESTRING_SIZE, "%s trailing ones sign (%d,%d)", type, i, j);
-#endif
-
       readSyntaxElement_FLC (&currSE, currStream);
 
       code = currSE.inf;
@@ -597,12 +503,6 @@ void read_coeff_4x4_CAVLC_444 (Macroblock *currMB,
 
     for (k = numcoeff - 1 - numtrailingones; k >= 0; k--)
     {
-
-#if TRACE
-      snprintf(currSE.tracestring,
-        TRACESTRING_SIZE, "%s lev (%d,%d) k=%d vlc=%d ", type, i, j, k, vlcnum);
-#endif
-
       if (vlcnum == 0)
         readSyntaxElement_Level_VLC0(&currSE, currStream);
       else
@@ -633,10 +533,6 @@ void read_coeff_4x4_CAVLC_444 (Macroblock *currMB,
       vlcnum = numcoeff - 1;
       currSE.value1 = vlcnum;
 
-#if TRACE
-      snprintf(currSE.tracestring,
-        TRACESTRING_SIZE, "%s totalrun (%d,%d) vlc=%d ", type, i,j, vlcnum);
-#endif
       if (cdc)
         readSyntaxElement_TotalZerosChromaDC(p_Vid, &currSE, currStream);
       else
@@ -661,12 +557,6 @@ void read_coeff_4x4_CAVLC_444 (Macroblock *currMB,
         vlcnum = imin(zerosleft - 1, RUNBEFORE_NUM_M1);
 
         currSE.value1 = vlcnum;
-#if TRACE
-        snprintf(currSE.tracestring,
-          TRACESTRING_SIZE, "%s run (%d,%d) k=%d vlc=%d ",
-          type, i, j, i, vlcnum);
-#endif
-
         readSyntaxElement_Run(&currSE, currStream);
         runarr[i] = currSE.value1;
 
@@ -680,13 +570,6 @@ void read_coeff_4x4_CAVLC_444 (Macroblock *currMB,
 //}}}
 
 //{{{
-/*!
-************************************************************************
-* \brief
-*    Get coefficients (run/level) of 4x4 blocks in a MB
-*    from the NAL (CABAC Mode)
-************************************************************************
-*/
 static void read_comp_coeff_4x4_CAVLC (Macroblock *currMB, ColorPlane pl, int (*InvLevelScale4x4)[4], int qp_per, int cbp, byte **nzcoeff)
 {
   int block_y, block_x, b8;
@@ -770,13 +653,6 @@ static void read_comp_coeff_4x4_CAVLC (Macroblock *currMB, ColorPlane pl, int (*
 }
 //}}}
 //{{{
-/*!
-************************************************************************
-* \brief
-*    Get coefficients (run/level) of 4x4 blocks in a MB
-*    from the NAL (CAVLC Lossless Mode)
-************************************************************************
-*/
 static void read_comp_coeff_4x4_CAVLC_ls (Macroblock *currMB, ColorPlane pl, int (*InvLevelScale4x4)[4], int qp_per, int cbp, byte **nzcoeff)
 {
   int block_y, block_x, b8;
@@ -854,13 +730,6 @@ static void read_comp_coeff_4x4_CAVLC_ls (Macroblock *currMB, ColorPlane pl, int
 }
 //}}}
 //{{{
-/*!
-************************************************************************
-* \brief
-*    Get coefficients (run/level) of 4x4 blocks in a MB
-*    from the NAL (CABAC Mode)
-************************************************************************
-*/
 static void read_comp_coeff_8x8_CAVLC (Macroblock *currMB, ColorPlane pl, int (*InvLevelScale8x8)[8], int qp_per, int cbp, byte **nzcoeff)
 {
   int block_y, block_x, b4, b8;
@@ -946,13 +815,6 @@ static void read_comp_coeff_8x8_CAVLC (Macroblock *currMB, ColorPlane pl, int (*
 }
 //}}}
 //{{{
-/*!
-************************************************************************
-* \brief
-*    Get coefficients (run/level) of 8x8 blocks in a MB
-*    from the NAL (CAVLC Lossless Mode)
-************************************************************************
-*/
 static void read_comp_coeff_8x8_CAVLC_ls (Macroblock *currMB, ColorPlane pl, int (*InvLevelScale8x8)[8], int qp_per, int cbp, byte **nzcoeff)
 {
   int block_y, block_x, b4, b8;
@@ -1037,13 +899,6 @@ static void read_comp_coeff_8x8_CAVLC_ls (Macroblock *currMB, ColorPlane pl, int
 //}}}
 
 //{{{
-/*!
- ************************************************************************
- * \brief
- *    Get coded block pattern and coefficients (run/level)
- *    from the NAL
- ************************************************************************
- */
 static void read_CBP_and_coeffs_from_NAL_CAVLC_400(Macroblock *currMB)
 {
   int k;
@@ -1086,7 +941,6 @@ static void read_CBP_and_coeffs_from_NAL_CAVLC_400(Macroblock *currMB)
       ? currSlice->linfo_cbp_intra
       : currSlice->linfo_cbp_inter;
 
-    TRACE_STRING("coded_block_pattern");
     dP->readSyntaxElement(currMB, &currSE, dP);
     currMB->cbp = cbp = currSE.value1;
 
@@ -1104,7 +958,6 @@ static void read_CBP_and_coeffs_from_NAL_CAVLC_400(Macroblock *currMB)
     {
       currSE.type   =  SE_HEADER;
       dP = &(currSlice->partArr[partMap[SE_HEADER]]);
-      TRACE_STRING("transform_size_8x8_flag");
 
       // read CAVLC transform_size_8x8_flag
       currSE.len = 1;
@@ -1214,13 +1067,6 @@ static void read_CBP_and_coeffs_from_NAL_CAVLC_400(Macroblock *currMB)
 }
 //}}}
 //{{{
-/*!
- ************************************************************************
- * \brief
- *    Get coded block pattern and coefficients (run/level)
- *    from the NAL
- ************************************************************************
- */
 static void read_CBP_and_coeffs_from_NAL_CAVLC_422(Macroblock *currMB)
 {
   int i,j,k;
@@ -1271,7 +1117,6 @@ static void read_CBP_and_coeffs_from_NAL_CAVLC_422(Macroblock *currMB)
       ? currSlice->linfo_cbp_intra
       : currSlice->linfo_cbp_inter;
 
-    TRACE_STRING("coded_block_pattern");
     dP->readSyntaxElement(currMB, &currSE, dP);
     currMB->cbp = cbp = currSE.value1;
 
@@ -1289,7 +1134,6 @@ static void read_CBP_and_coeffs_from_NAL_CAVLC_422(Macroblock *currMB)
     {
       currSE.type   =  SE_HEADER;
       dP = &(currSlice->partArr[partMap[SE_HEADER]]);
-      TRACE_STRING("transform_size_8x8_flag");
 
       // read CAVLC transform_size_8x8_flag
       currSE.len = 1;
@@ -1564,13 +1408,6 @@ static void read_CBP_and_coeffs_from_NAL_CAVLC_422(Macroblock *currMB)
 }
 //}}}
 //{{{
-/*!
- ************************************************************************
- * \brief
- *    Get coded block pattern and coefficients (run/level)
- *    from the NAL
- ************************************************************************
- */
 static void read_CBP_and_coeffs_from_NAL_CAVLC_444(Macroblock *currMB)
 {
   int i,k;
@@ -1615,7 +1452,6 @@ static void read_CBP_and_coeffs_from_NAL_CAVLC_444(Macroblock *currMB)
       ? currSlice->linfo_cbp_intra
       : currSlice->linfo_cbp_inter;
 
-    TRACE_STRING("coded_block_pattern");
     dP->readSyntaxElement(currMB, &currSE, dP);
     currMB->cbp = cbp = currSE.value1;
 
@@ -1633,7 +1469,6 @@ static void read_CBP_and_coeffs_from_NAL_CAVLC_444(Macroblock *currMB)
     {
       currSE.type   =  SE_HEADER;
       dP = &(currSlice->partArr[partMap[SE_HEADER]]);
-      TRACE_STRING("transform_size_8x8_flag");
 
       // read CAVLC transform_size_8x8_flag
       currSE.len = 1;
@@ -1800,13 +1635,6 @@ static void read_CBP_and_coeffs_from_NAL_CAVLC_444(Macroblock *currMB)
 }
 //}}}
 //{{{
-/*!
- ************************************************************************
- * \brief
- *    Get coded block pattern and coefficients (run/level)
- *    from the NAL
- ************************************************************************
- */
 static void read_CBP_and_coeffs_from_NAL_CAVLC_420(Macroblock *currMB)
 {
   int i,j,k;
@@ -1857,7 +1685,6 @@ static void read_CBP_and_coeffs_from_NAL_CAVLC_420(Macroblock *currMB)
       ? currSlice->linfo_cbp_intra
       : currSlice->linfo_cbp_inter;
 
-    TRACE_STRING("coded_block_pattern");
     dP->readSyntaxElement(currMB, &currSE, dP);
     currMB->cbp = cbp = currSE.value1;
 
@@ -1874,7 +1701,6 @@ static void read_CBP_and_coeffs_from_NAL_CAVLC_420(Macroblock *currMB)
     {
       currSE.type   =  SE_HEADER;
       dP = &(currSlice->partArr[partMap[SE_HEADER]]);
-      TRACE_STRING("transform_size_8x8_flag");
 
       // read CAVLC transform_size_8x8_flag
       currSE.len = 1;
@@ -2119,13 +1945,6 @@ static void read_CBP_and_coeffs_from_NAL_CAVLC_420(Macroblock *currMB)
 //}}}
 
 //{{{
-/*!
-************************************************************************
-* \brief
-*    setup coefficient reading functions for CAVLC
-*
-************************************************************************
-*/
 void set_read_comp_coeff_cavlc(Macroblock *currMB)
 {
   if (currMB->is_lossless == FALSE)
@@ -2140,35 +1959,33 @@ void set_read_comp_coeff_cavlc(Macroblock *currMB)
   }
 }
 //}}}
-
 //{{{
-void set_read_CBP_and_coeffs_cavlc(Slice *currSlice)
-{
-  switch (currSlice->p_Vid->active_sps->chroma_format_idc)
-  {
-  case YUV444:
-    if (currSlice->p_Vid->separate_colour_plane_flag == 0)
-    {
-      currSlice->read_CBP_and_coeffs_from_NAL = read_CBP_and_coeffs_from_NAL_CAVLC_444;
-    }
-    else
-    {
+void set_read_CBP_and_coeffs_cavlc(Slice *currSlice) {
+
+  switch (currSlice->p_Vid->active_sps->chroma_format_idc) {
+    case YUV444:
+      if (currSlice->p_Vid->separate_colour_plane_flag == 0)
+        currSlice->read_CBP_and_coeffs_from_NAL = read_CBP_and_coeffs_from_NAL_CAVLC_444;
+      else
+        currSlice->read_CBP_and_coeffs_from_NAL = read_CBP_and_coeffs_from_NAL_CAVLC_400;
+      break;
+
+    case YUV422:
+      currSlice->read_CBP_and_coeffs_from_NAL = read_CBP_and_coeffs_from_NAL_CAVLC_422;
+      break;
+
+    case YUV420:
+      currSlice->read_CBP_and_coeffs_from_NAL = read_CBP_and_coeffs_from_NAL_CAVLC_420;
+      break;
+
+    case YUV400:
       currSlice->read_CBP_and_coeffs_from_NAL = read_CBP_and_coeffs_from_NAL_CAVLC_400;
+      break;
+
+    default:
+      assert (1);
+      currSlice->read_CBP_and_coeffs_from_NAL = NULL;
+      break;
     }
-    break;
-  case YUV422:
-    currSlice->read_CBP_and_coeffs_from_NAL = read_CBP_and_coeffs_from_NAL_CAVLC_422;
-    break;
-  case YUV420:
-    currSlice->read_CBP_and_coeffs_from_NAL = read_CBP_and_coeffs_from_NAL_CAVLC_420;
-    break;
-  case YUV400:
-    currSlice->read_CBP_and_coeffs_from_NAL = read_CBP_and_coeffs_from_NAL_CAVLC_400;
-    break;
-  default:
-    assert (1);
-    currSlice->read_CBP_and_coeffs_from_NAL = NULL;
-    break;
   }
-}
 //}}}

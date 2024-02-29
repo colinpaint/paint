@@ -20,30 +20,10 @@
 #include "vlc.h"
 #include "transform.h"
 //}}}
-
-#if TRACE
-#define TRACE_STRING(s) strncpy(currSE.tracestring, s, TRACESTRING_SIZE)
-#define TRACE_DECBITS(i) dectracebitcnt(1)
-#define TRACE_PRINTF(s) sprintf(type, "%s", s);
-#define TRACE_STRING_P(s) strncpy(currSE->tracestring, s, TRACESTRING_SIZE)
-#else
-#define TRACE_STRING(s)
-#define TRACE_DECBITS(i)
-#define TRACE_PRINTF(s)
-#define TRACE_STRING_P(s)
-#endif
-
 extern void  check_dp_neighbors (Macroblock *currMB);
 extern void  read_delta_quant   (SyntaxElement *currSE, DataPartition *dP, Macroblock *currMB, const byte *partMap, int type);
 
 //{{{
-/*!
-************************************************************************
-* \brief
-*    Get coefficients (run/level) of 4x4 blocks in a SMB
-*    from the NAL (CABAC Mode)
-************************************************************************
-*/
 static void read_comp_coeff_4x4_smb_CABAC (Macroblock *currMB, SyntaxElement *currSE, ColorPlane pl, int block_y, int block_x, int start_scan, int64 *cbp_blk)
 {
   int i,j,k;
@@ -81,15 +61,6 @@ static void read_comp_coeff_4x4_smb_CABAC (Macroblock *currMB, SyntaxElement *cu
         else
           currSE->reading = readRunLevel_CABAC;
 
-#if TRACE
-        if (pl == PLANE_Y)
-          sprintf(currSE->tracestring, "Luma sng ");
-        else if (pl == PLANE_U)
-          sprintf(currSE->tracestring, "Cb   sng ");
-        else
-          sprintf(currSE->tracestring, "Cr   sng ");
-#endif
-
         dP->readSyntaxElement(currMB, currSE, dP);
         level = currSE->value1;
 
@@ -120,15 +91,6 @@ static void read_comp_coeff_4x4_smb_CABAC (Macroblock *currMB, SyntaxElement *cu
 
         for(k = 1; (k < 17) && (level != 0); ++k)
         {
-#if TRACE
-          if (pl == PLANE_Y)
-            sprintf(currSE->tracestring, "Luma sng ");
-          else if (pl == PLANE_U)
-            sprintf(currSE->tracestring, "Cb   sng ");
-          else
-            sprintf(currSE->tracestring, "Cr   sng ");
-#endif
-
           dP->readSyntaxElement(currMB, currSE, dP);
           level = currSE->value1;
 
@@ -149,13 +111,6 @@ static void read_comp_coeff_4x4_smb_CABAC (Macroblock *currMB, SyntaxElement *cu
 }
 //}}}
 //{{{
-/*!
-************************************************************************
-* \brief
-*    Get coefficients (run/level) of all 4x4 blocks in a MB
-*    from the NAL (CABAC Mode)
-************************************************************************
-*/
 static void read_comp_coeff_4x4_CABAC (Macroblock *currMB, SyntaxElement *currSE, ColorPlane pl, int (*InvLevelScale4x4)[4], int qp_per, int cbp)
 {
   Slice *currSlice = currMB->p_Slice;
@@ -233,13 +188,6 @@ static void read_comp_coeff_4x4_CABAC (Macroblock *currMB, SyntaxElement *currSE
 }
 //}}}
 //{{{
-/*!
-************************************************************************
-* \brief
-*    Get coefficients (run/level) of all 4x4 blocks in a MB
-*    from the NAL (CABAC Mode)
-************************************************************************
-*/
 static void read_comp_coeff_4x4_CABAC_ls (Macroblock *currMB, SyntaxElement *currSE, ColorPlane pl, int (*InvLevelScale4x4)[4], int qp_per, int cbp)
 {
   VideoParameters *p_Vid = currMB->p_Vid;
@@ -255,26 +203,13 @@ static void read_comp_coeff_4x4_CABAC_ls (Macroblock *currMB, SyntaxElement *cur
     currSE->context = (IS_I16MB(currMB) ? CR_16AC: CR_4x4);
 
   for (block_y = 0; block_y < MB_BLOCK_SIZE; block_y += BLOCK_SIZE_8x8) /* all modes */
-  {
     for (block_x = 0; block_x < MB_BLOCK_SIZE; block_x += BLOCK_SIZE_8x8)
-    {
       if (cbp & (1 << ((block_y >> 2) + (block_x >> 3))))  // are there any coeff in current block at all
-      {
         read_comp_coeff_4x4_smb_CABAC (currMB, currSE, pl, block_y, block_x, start_scan, cbp_blk);
-      }
-    }
   }
-}
 //}}}
 
 //{{{
-/*!
-************************************************************************
-* \brief
-*    Get coefficients (run/level) of one 8x8 block
-*    from the NAL (CABAC Mode)
-************************************************************************
-*/
 static void readCompCoeff8x8_CABAC (Macroblock *currMB, SyntaxElement *currSE, ColorPlane pl, int b8)
 {
   if (currMB->cbp & (1<<b8))  // are there any coefficients in the current block
@@ -322,16 +257,6 @@ static void readCompCoeff8x8_CABAC (Macroblock *currMB, SyntaxElement *currSE, C
     // Read DC
     currSE->type = ((currMB->is_intra_block == 1) ? SE_LUM_DC_INTRA : SE_LUM_DC_INTER ); // Intra or Inter?
     dP = &(currSlice->partArr[partMap[currSE->type]]);
-
-#if TRACE
-    if (pl==PLANE_Y)
-      sprintf(currSE->tracestring, "Luma8x8 DC sng ");
-    else if (pl==PLANE_U)
-      sprintf(currSE->tracestring, "Cb  8x8 DC sng ");
-    else
-      sprintf(currSE->tracestring, "Cr  8x8 DC sng ");
-#endif
-
     dP->readSyntaxElement(currMB, currSE, dP);
     level = currSE->value1;
 
@@ -354,15 +279,6 @@ static void readCompCoeff8x8_CABAC (Macroblock *currMB, SyntaxElement *currSE, C
 
       for(k = 1;(k < 65) && (level != 0);++k)
       {
-#if TRACE
-        if (pl==PLANE_Y)
-          sprintf(currSE->tracestring, "Luma8x8 sng ");
-        else if (pl==PLANE_U)
-          sprintf(currSE->tracestring, "Cb  8x8 sng ");
-        else
-          sprintf(currSE->tracestring, "Cr  8x8 sng ");
-#endif
-
         dP->readSyntaxElement(currMB, currSE, dP);
         level = currSE->value1;
 
@@ -393,13 +309,6 @@ static void readCompCoeff8x8_CABAC (Macroblock *currMB, SyntaxElement *currSE, C
 }
 //}}}
 //{{{
-/*!
-************************************************************************
-* \brief
-*    Get coefficients (run/level) of one 8x8 block
-*    from the NAL (CABAC Mode - lossless)
-************************************************************************
-*/
 static void readCompCoeff8x8_CABAC_lossless (Macroblock *currMB, SyntaxElement *currSE, ColorPlane pl, int b8)
 {
   if (currMB->cbp & (1<<b8))  // are there any coefficients in the current block
@@ -450,15 +359,6 @@ static void readCompCoeff8x8_CABAC_lossless (Macroblock *currMB, SyntaxElement *
         ? (k==0 ? SE_LUM_DC_INTRA : SE_LUM_AC_INTRA)
         : (k==0 ? SE_LUM_DC_INTER : SE_LUM_AC_INTER));
 
-#if TRACE
-      if (pl==PLANE_Y)
-        sprintf(currSE->tracestring, "Luma8x8 sng ");
-      else if (pl==PLANE_U)
-        sprintf(currSE->tracestring, "Cb  8x8 sng ");
-      else
-        sprintf(currSE->tracestring, "Cr  8x8 sng ");
-#endif
-
       dP = &(currSlice->partArr[partMap[currSE->type]]);
       currSE->reading = readRunLevel_CABAC;
 
@@ -483,13 +383,6 @@ static void readCompCoeff8x8_CABAC_lossless (Macroblock *currMB, SyntaxElement *
 //}}}
 
 //{{{
-/*!
-************************************************************************
-* \brief
-*    Get coefficients (run/level) of 8x8 blocks in a MB
-*    from the NAL (CABAC Mode)
-************************************************************************
-*/
 static void read_comp_coeff_8x8_MB_CABAC (Macroblock *currMB, SyntaxElement *currSE, ColorPlane pl)
 {
   //======= 8x8 transform size & CABAC ========
@@ -500,13 +393,6 @@ static void read_comp_coeff_8x8_MB_CABAC (Macroblock *currMB, SyntaxElement *cur
 }
 //}}}
 //{{{
-/*!
-************************************************************************
-* \brief
-*    Get coefficients (run/level) of 8x8 blocks in a MB
-*    from the NAL (CABAC Mode)
-************************************************************************
-*/
 static void read_comp_coeff_8x8_MB_CABAC_ls (Macroblock *currMB, SyntaxElement *currSE, ColorPlane pl)
 {
   //======= 8x8 transform size & CABAC ========
@@ -518,14 +404,7 @@ static void read_comp_coeff_8x8_MB_CABAC_ls (Macroblock *currMB, SyntaxElement *
 //}}}
 
 //{{{
-/*!
- ************************************************************************
- * \brief
- *    Get coded block pattern and coefficients (run/level)
- *    from the NAL
- ************************************************************************
- */
-static void read_CBP_and_coeffs_from_NAL_CABAC_420(Macroblock *currMB)
+static void read_CBP_and_coeffs_from_NAL_CABAC_420 (Macroblock *currMB)
 {
   int i,j;
   int level;
@@ -576,7 +455,6 @@ static void read_CBP_and_coeffs_from_NAL_CABAC_420(Macroblock *currMB)
       currSE.reading = read_CBP_CABAC;
     }
 
-    TRACE_STRING("coded_block_pattern");
     dP->readSyntaxElement(currMB, &currSE, dP);
     currMB->cbp = cbp = currSE.value1;
 
@@ -594,7 +472,6 @@ static void read_CBP_and_coeffs_from_NAL_CABAC_420(Macroblock *currMB)
       currSE.type   =  SE_HEADER;
       dP = &(currSlice->partArr[partMap[SE_HEADER]]);
       currSE.reading = readMB_transform_size_flag_CABAC;
-      TRACE_STRING("transform_size_8x8_flag");
 
       // read CAVLC transform_size_8x8_flag
       if (dP->bitstream->ei_flag)
@@ -682,9 +559,6 @@ static void read_CBP_and_coeffs_from_NAL_CABAC_420(Macroblock *currMB)
 
       for(k = 0; (k < 17) && (level != 0); ++k)
       {
-#if TRACE
-        snprintf(currSE.tracestring, TRACESTRING_SIZE, "DC luma 16x16 ");
-#endif
         dP->readSyntaxElement(currMB, &currSE, dP);
         level = currSE.value1;
 
@@ -766,10 +640,6 @@ static void read_CBP_and_coeffs_from_NAL_CABAC_420(Macroblock *currMB)
 
       for(k = 0; (k < (p_Vid->num_cdc_coeff + 1))&&(level!=0);++k)
       {
-#if TRACE
-        snprintf(currSE.tracestring, TRACESTRING_SIZE, "2x2 DC Chroma ");
-#endif
-
         dP->readSyntaxElement(currMB, &currSE, dP);
         level = currSE.value1;
 
@@ -863,10 +733,6 @@ static void read_CBP_and_coeffs_from_NAL_CABAC_420(Macroblock *currMB)
 
           for(k = 0; (k < 16) && (level != 0);++k)
           {
-#if TRACE
-            snprintf(currSE.tracestring, TRACESTRING_SIZE, "AC Chroma ");
-#endif
-
             dP->readSyntaxElement(currMB, &currSE, dP);
             level = currSE.value1;
 
@@ -907,9 +773,6 @@ static void read_CBP_and_coeffs_from_NAL_CABAC_420(Macroblock *currMB)
 
           for(k=0;(k<16)&&(level!=0);++k)
           {
-#if TRACE
-            snprintf(currSE.tracestring, TRACESTRING_SIZE, "AC Chroma ");
-#endif
             dP->readSyntaxElement(currMB, &currSE, dP);
             level = currSE.value1;
 
@@ -932,14 +795,7 @@ static void read_CBP_and_coeffs_from_NAL_CABAC_420(Macroblock *currMB)
 }
 //}}}
 //{{{
-/*!
- ************************************************************************
- * \brief
- *    Get coded block pattern and coefficients (run/level)
- *    from the NAL
- ************************************************************************
- */
-static void read_CBP_and_coeffs_from_NAL_CABAC_400(Macroblock *currMB)
+static void read_CBP_and_coeffs_from_NAL_CABAC_400 (Macroblock *currMB)
 {
   int k;
   int level;
@@ -985,7 +841,6 @@ static void read_CBP_and_coeffs_from_NAL_CABAC_400(Macroblock *currMB)
       currSE.reading = read_CBP_CABAC;
     }
 
-    TRACE_STRING("coded_block_pattern");
     dP->readSyntaxElement(currMB, &currSE, dP);
     currMB->cbp = cbp = currSE.value1;
 
@@ -1004,7 +859,6 @@ static void read_CBP_and_coeffs_from_NAL_CABAC_400(Macroblock *currMB)
       currSE.type   =  SE_HEADER;
       dP = &(currSlice->partArr[partMap[SE_HEADER]]);
       currSE.reading = readMB_transform_size_flag_CABAC;
-      TRACE_STRING("transform_size_8x8_flag");
 
       // read CAVLC transform_size_8x8_flag
       if (dP->bitstream->ei_flag)
@@ -1090,9 +944,6 @@ static void read_CBP_and_coeffs_from_NAL_CABAC_400(Macroblock *currMB)
 
         for(k = 0; (k < 17) && (level != 0); ++k)
         {
-#if TRACE
-          snprintf(currSE.tracestring, TRACESTRING_SIZE, "DC luma 16x16 ");
-#endif
           dP->readSyntaxElement(currMB, &currSE, dP);
           level = currSE.value1;
 
@@ -1137,14 +988,7 @@ static void read_CBP_and_coeffs_from_NAL_CABAC_400(Macroblock *currMB)
 }
 //}}}
 //{{{
-/*!
- ************************************************************************
- * \brief
- *    Get coded block pattern and coefficients (run/level)
- *    from the NAL
- ************************************************************************
- */
-static void read_CBP_and_coeffs_from_NAL_CABAC_444(Macroblock *currMB)
+static void read_CBP_and_coeffs_from_NAL_CABAC_444 (Macroblock *currMB)
 {
   int i, k;
   int level;
@@ -1203,7 +1047,6 @@ static void read_CBP_and_coeffs_from_NAL_CABAC_444(Macroblock *currMB)
       currSE.reading = read_CBP_CABAC;
     }
 
-    TRACE_STRING("coded_block_pattern");
     dP->readSyntaxElement(currMB, &currSE, dP);
     currMB->cbp = cbp = currSE.value1;
 
@@ -1222,7 +1065,6 @@ static void read_CBP_and_coeffs_from_NAL_CABAC_444(Macroblock *currMB)
       currSE.type   =  SE_HEADER;
       dP = &(currSlice->partArr[partMap[SE_HEADER]]);
       currSE.reading = readMB_transform_size_flag_CABAC;
-      TRACE_STRING("transform_size_8x8_flag");
 
       // read CAVLC transform_size_8x8_flag
       if (dP->bitstream->ei_flag)
@@ -1309,9 +1151,6 @@ static void read_CBP_and_coeffs_from_NAL_CABAC_444(Macroblock *currMB)
 
         for(k = 0; (k < 17) && (level != 0); ++k)
         {
-#if TRACE
-          snprintf(currSE.tracestring, TRACESTRING_SIZE, "DC luma 16x16 ");
-#endif
           dP->readSyntaxElement(currMB, &currSE, dP);
           level = currSE.value1;
 
@@ -1394,13 +1233,6 @@ static void read_CBP_and_coeffs_from_NAL_CABAC_444(Macroblock *currMB)
 
         for(k=0;(k<17) && (level!=0);++k)
         {
-#if TRACE
-          if (uv == 0)
-            snprintf(currSE.tracestring, TRACESTRING_SIZE, "DC Cb   16x16 ");
-          else
-            snprintf(currSE.tracestring, TRACESTRING_SIZE, "DC Cr   16x16 ");
-#endif
-
           dP->readSyntaxElement(currMB, &currSE, dP);
           level = currSE.value1;
 
@@ -1451,14 +1283,7 @@ static void read_CBP_and_coeffs_from_NAL_CABAC_444(Macroblock *currMB)
 }
 //}}}
 //{{{
-/*!
- ************************************************************************
- * \brief
- *    Get coded block pattern and coefficients (run/level)
- *    from the NAL
- ************************************************************************
- */
-static void read_CBP_and_coeffs_from_NAL_CABAC_422(Macroblock *currMB)
+static void read_CBP_and_coeffs_from_NAL_CABAC_422 (Macroblock *currMB)
 {
   int i,j,k;
   int level;
@@ -1521,7 +1346,6 @@ static void read_CBP_and_coeffs_from_NAL_CABAC_422(Macroblock *currMB)
       currSE.reading = read_CBP_CABAC;
     }
 
-    TRACE_STRING("coded_block_pattern");
     dP->readSyntaxElement(currMB, &currSE, dP);
     currMB->cbp = cbp = currSE.value1;
 
@@ -1540,7 +1364,6 @@ static void read_CBP_and_coeffs_from_NAL_CABAC_422(Macroblock *currMB)
       currSE.type   =  SE_HEADER;
       dP = &(currSlice->partArr[partMap[SE_HEADER]]);
       currSE.reading = readMB_transform_size_flag_CABAC;
-      TRACE_STRING("transform_size_8x8_flag");
 
       // read CAVLC transform_size_8x8_flag
       if (dP->bitstream->ei_flag)
@@ -1627,9 +1450,6 @@ static void read_CBP_and_coeffs_from_NAL_CABAC_422(Macroblock *currMB)
 
         for(k = 0; (k < 17) && (level != 0); ++k)
         {
-#if TRACE
-          snprintf(currSE.tracestring, TRACESTRING_SIZE, "DC luma 16x16 ");
-#endif
           dP->readSyntaxElement(currMB, &currSE, dP);
           level = currSE.value1;
 
@@ -1715,9 +1535,6 @@ static void read_CBP_and_coeffs_from_NAL_CABAC_422(Macroblock *currMB)
             currSE.type         = ((currMB->is_intra_block == TRUE) ? SE_CHR_DC_INTRA : SE_CHR_DC_INTER);
             currMB->is_v_block     = ll;
 
-#if TRACE
-            snprintf(currSE.tracestring, TRACESTRING_SIZE, "2x4 DC Chroma ");
-#endif
             dP = &(currSlice->partArr[partMap[currSE.type]]);
 
             if (dP->bitstream->ei_flag)
@@ -1832,10 +1649,6 @@ static void read_CBP_and_coeffs_from_NAL_CABAC_422(Macroblock *currMB)
 
             for(k = 0; (k < 16) && (level != 0);++k)
             {
-#if TRACE
-              snprintf(currSE.tracestring, TRACESTRING_SIZE, "AC Chroma ");
-#endif
-
               dP->readSyntaxElement(currMB, &currSE, dP);
               level = currSE.value1;
 
@@ -1874,9 +1687,6 @@ static void read_CBP_and_coeffs_from_NAL_CABAC_422(Macroblock *currMB)
 
             for(k=0;(k<16)&&(level!=0);++k)
             {
-#if TRACE
-              snprintf(currSE.tracestring, TRACESTRING_SIZE, "AC Chroma ");
-#endif
               dP->readSyntaxElement(currMB, &currSE, dP);
               level = currSE.value1;
 
@@ -1931,14 +1741,7 @@ void set_read_CBP_and_coeffs_cabac(Slice *currSlice)
 //}}}
 
 //{{{
-/*!
-************************************************************************
-* \brief
-*    setup coefficient reading functions for CABAC
-*
-************************************************************************
-*/
-void set_read_comp_coeff_cabac(Macroblock *currMB)
+void set_read_comp_coeff_cabac (Macroblock *currMB)
 {
   if (currMB->is_lossless == FALSE)
   {

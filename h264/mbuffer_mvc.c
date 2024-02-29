@@ -30,14 +30,8 @@
 
 #if (MVC_EXTENSION_ENABLE)
   //{{{
-  /*!
-   ************************************************************************
-   * \brief
-   *    Reordering process for short-term reference pictures
-   *
-   ************************************************************************
-   */
-  void reorder_short_term(Slice *currSlice, int cur_list, int num_ref_idx_lX_active_minus1, int picNumLX, int *refIdxLX, int currViewID)
+  void reorder_short_term (Slice *currSlice, int cur_list, int num_ref_idx_lX_active_minus1, 
+                           int picNumLX, int *refIdxLX, int currViewID)
   {
     StorablePicture **RefPicListX = currSlice->listX[cur_list];
     int cIdx, nIdx;
@@ -64,14 +58,8 @@
   }
   //}}}
   //{{{
-  /*!
-   ************************************************************************
-   * \brief
-   *    Reordering process for long-term reference pictures
-   *
-   ************************************************************************
-   */
-  void reorder_long_term(Slice *currSlice, StorablePicture **RefPicListX, int num_ref_idx_lX_active_minus1, int LongTermPicNum, int *refIdxLX, int currViewID)
+  void reorder_long_term (Slice *currSlice, StorablePicture **RefPicListX, 
+                          int num_ref_idx_lX_active_minus1, int LongTermPicNum, int *refIdxLX, int currViewID)
   {
     int cIdx, nIdx;
 
@@ -100,14 +88,8 @@
   //}}}
 
   //{{{
-  /*!
-   ************************************************************************
-   * \brief
-   *    Returns inter-view prediction pic with given targetViewID
-   *
-   ************************************************************************
-   */
-  static StorablePicture*  get_inter_view_pic(VideoParameters *p_Vid, Slice *currSlice, int targetViewID, int currPOC, int listidx)
+  static StorablePicture* get_inter_view_pic (VideoParameters *p_Vid, Slice *currSlice, 
+                                              int targetViewID, int currPOC, int listidx)
   {
     unsigned i;
     unsigned int listinterview_size;
@@ -148,13 +130,26 @@
   //}}}
   //{{{
   /*!
-   ************************************************************************
-   * \brief
-   *    Generates a alternating field list from a given FrameStore inter-view list
-   *
-   ************************************************************************
-   */
-  static void gen_pic_list_from_frame_interview_list(PictureStructure currStructure, FrameStore **fs_list, int list_idx, StorablePicture **list, char *list_size)
+  ************************************************************************
+  * \brief
+  *    Initialize reference lists depending on current slice type
+  *
+  ************************************************************************
+  */
+  void init_lists_i_slice_mvc (Slice *currSlice)
+  {
+    //VideoParameters *p_Vid = currSlice->p_Vid;
+
+    currSlice->listinterviewidx0 = 0;
+    currSlice->listinterviewidx1 = 0;
+
+    currSlice->listXsize[0] = 0;
+    currSlice->listXsize[1] = 0;
+  }
+  //}}}
+  //{{{
+  static void gen_pic_list_from_frame_interview_list (PictureStructure currStructure, FrameStore **fs_list,
+                                                      int list_idx, StorablePicture **list, char *list_size)
   {
     int i;
 
@@ -177,33 +172,9 @@
   }
 
 
-  /*!
-  ************************************************************************
-  * \brief
-  *    Initialize reference lists depending on current slice type
-  *
-  ************************************************************************
-  */
-  void init_lists_i_slice_mvc(Slice *currSlice)
-  {
-    //VideoParameters *p_Vid = currSlice->p_Vid;
-
-    currSlice->listinterviewidx0 = 0;
-    currSlice->listinterviewidx1 = 0;
-
-    currSlice->listXsize[0] = 0;
-    currSlice->listXsize[1] = 0;
-  }
   //}}}
   //{{{
-  /*!
-  ************************************************************************
-  * \brief
-  *    Initialize reference lists for a P Slice
-  *
-  ************************************************************************
-  */
-  void init_lists_p_slice_mvc(Slice *currSlice)
+  void init_lists_p_slice_mvc (Slice *currSlice)
   {
     VideoParameters *p_Vid = currSlice->p_Vid;
     DecodedPictureBuffer *p_Dpb = currSlice->p_Dpb;
@@ -335,14 +306,7 @@
   }
   //}}}
   //{{{
-  /*!
-   ************************************************************************
-   * \brief
-   *    Initialize reference lists for a B Slice
-   *
-   ************************************************************************
-   */
-  void init_lists_b_slice_mvc(Slice *currSlice)
+  void init_lists_b_slice_mvc (Slice *currSlice)
   {
     VideoParameters *p_Vid = currSlice->p_Vid;
     DecodedPictureBuffer *p_Dpb = currSlice->p_Dpb;
@@ -584,19 +548,13 @@
     {
       currSlice->listX[1][i] = p_Vid->no_reference_picture;
     }
-  #endif
   }
   //}}}
 
   //{{{
-  /*!
-   ************************************************************************
-   * \brief
-   *    Reordering process for inter-view reference pictures
-   *
-   ************************************************************************
-   */
-  static void reorder_interview(VideoParameters *p_Vid, Slice *currSlice, StorablePicture **RefPicListX, int num_ref_idx_lX_active_minus1, int *refIdxLX, int targetViewID, int currPOC, int listidx)
+  static void reorder_interview (VideoParameters *p_Vid, Slice *currSlice, StorablePicture **RefPicListX,
+                                 int num_ref_idx_lX_active_minus1, int *refIdxLX, 
+                                 int targetViewID, int currPOC, int listidx)
   {
     int cIdx, nIdx;
     StorablePicture *picLX;
@@ -621,14 +579,8 @@
   }
   //}}}
   //{{{
-  /*!
-   ************************************************************************
-   * \brief
-   *    Reordering process for MVC reference picture lists
-   *
-   ************************************************************************
-   */
-  void reorder_ref_pic_list_mvc(Slice *currSlice, int cur_list, int **anchor_ref, int **non_anchor_ref, int view_id, int anchor_pic_flag, int currPOC, int listidx)
+  void reorder_ref_pic_list_mvc (Slice *currSlice, int cur_list, int **anchor_ref, int **non_anchor_ref,
+                                 int view_id, int anchor_pic_flag, int currPOC, int listidx)
   {
     VideoParameters *p_Vid = currSlice->p_Vid;
     int *modification_of_pic_nums_idc = currSlice->modification_of_pic_nums_idc[cur_list];
@@ -729,7 +681,7 @@
   }
   //}}}
   //{{{
-  void reorder_lists_mvc(Slice * currSlice, int currPOC)
+  void reorder_lists_mvc (Slice * currSlice, int currPOC)
   {
     VideoParameters *p_Vid = currSlice->p_Vid;
 
@@ -782,3 +734,4 @@
     }
   }
   //}}}
+#endif
