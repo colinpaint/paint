@@ -1599,8 +1599,6 @@ void exit_picture (VideoParameters *p_Vid, StorablePicture **dec_picture)
     #endif
         ++(p_Vid->number);
       }
-    else
-      ++(p_Vid->Bframe_ctr);    // B pictures
 
   #if (MVC_EXTENSION_ENABLE)
     if ((p_Vid->ppSliceList[0])->view_id != 0)

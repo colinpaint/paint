@@ -347,48 +347,30 @@ typedef struct slice {
   int bottompoc;   //poc of bottom field of frame
   int framepoc;    //poc of this frame
 
-  //the following is for slice header syntax elements of poc
   // for poc mode 0.
   unsigned int pic_order_cnt_lsb;
   int delta_pic_order_cnt_bottom;
+
   // for poc mode 1.
   int delta_pic_order_cnt[2];
 
-  // ////////////////////////
   // for POC mode 0:
   signed   int PicOrderCntMsb;
-
-  //signed   int PrevPicOrderCntMsb;
-  //unsigned int PrevPicOrderCntLsb;
 
   // for POC mode 1:
   unsigned int AbsFrameNum;
   int ThisPOC;
-  //signed int ExpectedPicOrderCnt, PicOrderCntCycleCnt, FrameNumInPicOrderCntCycle;
-  //unsigned int PreviousFrameNum, FrameNumOffset;
-  //int ExpectedDeltaPerPicOrderCntCycle;
-  //int PreviousFrameNumOffset;
-  // /////////////////////////
 
   //information need to move to slice;
   unsigned int current_mb_nr; // bitstream order
   unsigned int num_dec_mb;
   short        current_slice_nr;
-  //int mb_x;
-  //int mb_y;
-  //int block_x;
-  //int block_y;
-  //int pix_c_x;
-  //int pix_c_y;
   int cod_counter;                   //!< Current count of number of skipped macroblocks in a row
   int allrefzero;
-  //end;
 
   int                 mb_aff_frame_flag;
   int                 direct_spatial_mv_pred_flag;       //!< Indicator for direct mode type (1 for Spatial, 0 for Temporal)
   int                 num_ref_idx_active[2];             //!< number of available list references
-  //int                 num_ref_idx_l0_active;             //!< number of available list 0 references
-  //int                 num_ref_idx_l1_active;             //!< number of available list 1 references
 
   int                 ei_flag;       //!< 0 if the partArr[0] contains valid information
   int                 qp;
@@ -423,7 +405,6 @@ typedef struct slice {
   char listXsize[6];
   struct storable_picture **listX[6];
 
-  //  int                 last_mb_nr;    //!< only valid when entropy coding == CABAC
   DataPartition       *partArr;      //!< array of partitions
   MotionInfoContexts  *mot_ctx;      //!< pointer to struct of context models for use in CABAC
   TextureInfoContexts *tex_ctx;      //!< pointer to struct of context models for use in CABAC
@@ -437,20 +418,17 @@ typedef struct slice {
 
 #if (MVC_EXTENSION_ENABLE)
   int                 *abs_diff_view_idx_minus1[2];
-
   int                 view_id;
   int                 inter_view_flag;
   int                 anchor_pic_flag;
-
   NALUnitHeaderMVCExt_t NaluHeaderMVCExt;
 #endif
+
   int                 layer_id;
   short               DFDisableIdc;     //!< Disable deblocking filter on slice
   short               DFAlphaC0Offset;  //!< Alpha and C0 offset for filtering slice
   short               DFBetaOffset;     //!< Beta offset for filtering slice
-
   int                 pic_parameter_set_id;   //!<the ID of the picture parameter set the slice is reffering to
-
   int                 dpB_NotPresent;    //!< non-zero, if data partition B is lost
   int                 dpC_NotPresent;    //!< non-zero, if data partition C is lost
 
@@ -461,7 +439,6 @@ typedef struct slice {
   int     ***mb_rres;
   int     ***cof;
   int     ***fcf;
-
   int cofu[16];
 
   imgpel **tmp_block_l0;
@@ -482,7 +459,6 @@ typedef struct slice {
   int  coeff[64]; // one more for EOB
   int  coeff_ctr;
   int  pos;
-
 
   //weighted prediction
   unsigned short weighted_pred_flag;
@@ -507,7 +483,6 @@ typedef struct slice {
 #endif
 
   // for signalling to the neighbour logic that this is a deblocker call
-  //byte mixedModeEdgeFlag;
   int max_mb_vmv_r;                          //!< maximum vertical motion vector range in luma quarter pixel units for the current level_idc
   int ref_flag[17];                //!< 0: i-th previous frame is incorrect
 
@@ -540,21 +515,25 @@ typedef struct slice {
 //}}}
 //{{{
 typedef struct decodedpic_t {
-  int bValid;                 //0: invalid, 1: valid, 3: valid for 3D output;
-  int iViewId;                //-1: single view, >=0 multiview[VIEW1|VIEW0];
+  int bValid;                 // 0: invalid, 1: valid, 3: valid for 3D output;
+  int iViewId;                // -1: single view, >=0 multiview[VIEW1|VIEW0];
   int iPOC;
-  int iYUVFormat;             //0: 4:0:0, 1: 4:2:0, 2: 4:2:2, 3: 4:4:4
-  int iYUVStorageFormat;      //0: YUV seperate; 1: YUV interleaved; 2: 3D output;
+
+  int iYUVFormat;             // 0: 4:0:0, 1: 4:2:0, 2: 4:2:2, 3: 4:4:4
+  int iYUVStorageFormat;      // 0: YUV seperate; 1: YUV interleaved; 2: 3D output;
   int iBitDepth;
-  byte *pY;                   //if iPictureFormat is 1, [0]: top; [1] bottom;
-  byte *pU;
-  byte *pV;
-  int iWidth;                 //frame width;
-  int iHeight;                //frame height;
-  int iYBufStride;            //stride of pY[0/1] buffer in bytes;
-  int iUVBufStride;           //stride of pU[0/1] and pV[0/1] buffer in bytes;
+
+  byte* pY;                   // if iPictureFormat is 1, [0]: top; [1] bottom;
+  byte* pU;
+  byte* pV;
+
+  int iWidth;                 // frame width;
+  int iHeight;                // frame height;
+  int iYBufStride;            // stride of pY[0/1] buffer in bytes;
+  int iUVBufStride;           // stride of pU[0/1] and pV[0/1] buffer in bytes;
   int iSkipPicNum;
   int iBufSize;
+
   struct decodedpic_t *pNext;
   } DecodedPicList;
 //}}}
@@ -629,10 +608,10 @@ typedef struct coding_par {
 //{{{
 typedef struct layer_par {
   int layer_id;
-  struct video_par *p_Vid;
-  CodingParameters *p_Cps;
-  seq_parameter_set_rbsp_t *p_SPS;
-  struct decoded_picture_buffer *p_Dpb;
+  struct video_par* p_Vid;
+  CodingParameters* p_Cps;
+  seq_parameter_set_rbsp_t* p_SPS;
+  struct decoded_picture_buffer* p_Dpb;
   } LayerParameters;
 //}}}
 //{{{
@@ -751,14 +730,12 @@ typedef struct video_par {
   int Is_primary_correct;          // if primary frame is correct, 0: incorrect
   int Is_redundant_correct;        // if redundant frame is correct, 0:incorrect
 
+  struct annex_b_struct* annex_b;
   int LastAccessUnitExists;
   int NALUCount;
 
-  // B pictures
-  int  Bframe_ctr;
-  int  frame_no;
-
-  int  g_nFrame;
+  int frame_no;
+  int g_nFrame;
   Boolean global_init_done[2];
 
   int* qp_per_matrix;
@@ -778,8 +755,6 @@ typedef struct video_par {
   struct video_par* erc_img;
   int ec_flag[SE_MAX_ELEMENTS];        //!< array to set errorconcealment
 
-  struct annex_b_struct* annex_b;
-
   struct frame_store* out_buffer;
 
   struct storable_picture* pending_output;
@@ -792,7 +767,7 @@ typedef struct video_par {
   // FMO
   int* MbToSliceGroupMap;
   int* MapUnitToSliceGroupMap;
-  int  NumberOfSliceGroups;    // the number of slice groups -1 (0 == scan order, 7 == maximum)
+  int NumberOfSliceGroups;    // the number of slice groups -1 (0 == scan order, 7 == maximum)
 
   void (*getNeighbour)     (Macroblock *currMB, int xN, int yN, int mb_size[2], PixelPos *pix);
   void (*get_mb_block_pos) (BlockPos *PicPos, int mb_addr, short *x, short *y);
@@ -835,8 +810,8 @@ typedef struct video_par {
   int bitdepth_scale[2];
   int bitdepth_luma_qp_scale;
   int bitdepth_chroma_qp_scale;
-  unsigned int dc_pred_value_comp[MAX_PLANE]; //!< component value for DC prediction (depends on component pel bit depth)
-  int max_pel_value_comp[MAX_PLANE];       //!< max value that one picture element (pixel) can take (depends on pic_unit_bitdepth)
+  unsigned int dc_pred_value_comp[MAX_PLANE]; // component value for DC prediction (depends on component pel bit depth)
+  int max_pel_value_comp[MAX_PLANE];          // max value that one picture element (pixel) can take (depends on pic_unit_bitdepth)
 
   int separate_colour_plane_flag;
   int pic_unit_size_on_disk;
@@ -852,8 +827,8 @@ typedef struct video_par {
   int mb_cr_size_x_blk;
   int mb_cr_size_y_blk;
   int mb_cr_size;
-  int mb_size[3][2];                         //!< component macroblock dimensions
-  int mb_size_blk[3][2];                     //!< component macroblock dimensions
+  int mb_size[3][2];                          // component macroblock dimensions
+  int mb_size_blk[3][2];                      // component macroblock dimensions
   int mb_size_shift[3][2];
   int subpel_x;
   int subpel_y;
@@ -867,23 +842,22 @@ typedef struct video_par {
   unsigned int FrameHeightInMbs;
   unsigned int FrameSizeInMbs;
   unsigned int oldFrameSizeInMbs;
-  int max_vmv_r;                             //!< maximum vertical motion vector range in luma quarter frame pixel units for the current level_idc
+  int max_vmv_r;                              // maximum vertical motion vector range in luma quarter frame pixel units for the current level_idc
   } VideoParameters;
 //}}}
 //{{{
 typedef struct inp_par {
   char infile[FILE_NAME_SIZE];
-
-  int FileFormat;                         //!< File format of the Input file, PAR_OF_ANNEXB or PAR_OF_RTP
+  int FileFormat;                         // File format of the Input file, PAR_OF_ANNEXB or PAR_OF_RTP
   int ref_offset;
   int poc_scale;
   int write_uv;
   int silent;
-  int intra_profile_deblocking;               //!< Loop filter usage determined by flags and parameters in bitstream
+  int intra_profile_deblocking;           // Loop filter usage determined by flags and parameters in bitstream
 
   // Input/output sequence format related variables
-  FrameFormat source;                   //!< source related information
-  FrameFormat output;                   //!< output related information
+  FrameFormat source;                   // source related information
+  FrameFormat output;                   // output related information
 
   int ProcessInput;
   int enable_32_pulldown;
