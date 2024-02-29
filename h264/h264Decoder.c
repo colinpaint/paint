@@ -60,13 +60,8 @@
 #include "block.h"
 #include "nalu.h"
 #include "loopfilter.h"
-//#include "rtp.h"
 #include "output.h"
 #include "h264decoder.h"
-
-#define LOGFILE     "log.dec"
-#define DATADECFILE "dataDec.txt"
-#define TRACEFILE   "trace_dec.txt"
 //}}}
 
 DecoderParams* p_Dec;
@@ -74,18 +69,17 @@ char errortext[ET_SIZE];
 
 static void free_slice (Slice* currSlic);
 //{{{
-void error (char* text, int code)
-{
-  fprintf(stderr, "%s\n", text);
-  if (p_Dec)
-  {
-    flush_dpb(p_Dec->p_Vid->p_Dpb_layer[0]);
-#if (MVC_EXTENSION_ENABLE)
-    flush_dpb(p_Dec->p_Vid->p_Dpb_layer[1]);
-#endif
-  }
+void error (char* text, int code) {
 
-  exit(code);
+  fprintf (stderr, "%s\n", text);
+  if (p_Dec) {
+    flush_dpb (p_Dec->p_Vid->p_Dpb_layer[0]);
+#if (MVC_EXTENSION_ENABLE)
+    flush_dpb (p_Dec->p_Vid->p_Dpb_layer[1]);
+#endif
+    }
+
+  exit (code);
 }
 //}}}
 //{{{
