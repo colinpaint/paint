@@ -74,17 +74,6 @@ char errortext[ET_SIZE];
 
 static void free_slice (Slice* currSlic);
 //{{{
-/*!
- ************************************************************************
- * \brief
- *    Error handling procedure. Print error message to stderr and exit
- *    with supplied code.
- * \param text
- *    Error message
- * \param code
- *    Exit code
- ************************************************************************
- */
 void error (char* text, int code)
 {
   fprintf(stderr, "%s\n", text);
@@ -115,14 +104,6 @@ void report_stats_on_error() {
 //}}}
 
 //{{{
-/*!
- ***********************************************************************
- * \brief
- *    Allocate the Video Parameters structure
- * \par  Output:
- *    Video Parameters VideoParameters *p_Vid
- ***********************************************************************
- */
 static void alloc_video_params (VideoParameters** p_Vid) {
 
   int i;
@@ -159,31 +140,15 @@ static void alloc_video_params (VideoParameters** p_Vid) {
 }
 //}}}
 //{{{
-/*!
- ***********************************************************************
- * \brief
- *    Allocate the Input structure
- * \par  Output:
- *    Input Parameters InputParameters *p_Vid
- ***********************************************************************
- */
 static void alloc_params (InputParameters **p_Inp ) {
   if ((*p_Inp = (InputParameters*) calloc(1, sizeof(InputParameters)))==NULL)
     no_mem_exit ("alloc_params: p_Inp");
   }
 //}}}
 //{{{
-  /*!
- ***********************************************************************
- * \brief
- *    Allocate the Decoder Structure
- * \par  Output:
- *    Decoder Parameters
- ***********************************************************************
- */
-static int alloc_decoder (DecoderParams **p_Dec) {
+static int alloc_decoder (DecoderParams** p_Dec) {
 
-  if ((*p_Dec = (DecoderParams *) calloc(1, sizeof(DecoderParams)))==NULL) {
+  if ((*p_Dec = (DecoderParams*)calloc(1, sizeof(DecoderParams)))==NULL) {
     fprintf (stderr, "alloc_decoder: p_Dec\n");
     return -1;
     }
@@ -191,7 +156,6 @@ static int alloc_decoder (DecoderParams **p_Dec) {
   alloc_video_params (&((*p_Dec)->p_Vid));
   alloc_params (&((*p_Dec)->p_Inp));
   (*p_Dec)->p_Vid->p_Inp = (*p_Dec)->p_Inp;
-  (*p_Dec)->p_trace = NULL;
   (*p_Dec)->bufferSize = 0;
   (*p_Dec)->bitcounter = 0;
 
@@ -200,14 +164,6 @@ static int alloc_decoder (DecoderParams **p_Dec) {
 //}}}
 
 //{{{
-/*!
- ***********************************************************************
- * \brief
- *    Free the Image structure
- * \par  Input:
- *    Image Parameters VideoParameters *p_Vid
- ***********************************************************************
- */
 static void free_img (VideoParameters* p_Vid) {
 
   int i;

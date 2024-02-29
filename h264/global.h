@@ -309,6 +309,37 @@ typedef struct nalunitheadermvcext_tag
 #endif
 
 //{{{
+typedef struct inp_par {
+  char infile[FILE_NAME_SIZE];
+  int FileFormat;                         // File format of the Input file, PAR_OF_ANNEXB or PAR_OF_RTP
+  int ref_offset;
+  int poc_scale;
+  int write_uv;
+  int silent;
+  int intra_profile_deblocking;           // Loop filter usage determined by flags and parameters in bitstream
+
+  // Input/output sequence format related variables
+  FrameFormat source;                   // source related information
+  FrameFormat output;                   // output related information
+
+  int ProcessInput;
+  int enable_32_pulldown;
+
+  // picture error concealment
+  int conceal_mode;
+  int ref_poc_gap;
+  int poc_gap;
+
+  // Needed to allow compilation for decoder. May be used later for distortion computation operations
+  int stdRange;                         //!< 1 - standard range, 0 - full range
+  int videoCode;                        //!< 1 - 709, 3 - 601:  See VideoCode in io_tiff.
+  int export_views;
+
+  int bDisplayDecParams;
+  int dpb_plus[2];
+  } InputParameters;
+//}}}
+//{{{
 typedef struct image_data {
   FrameFormat format;                  // image format
 
@@ -324,6 +355,26 @@ typedef struct image_data {
   int top_stride[MAX_PLANE];
   int bot_stride[MAX_PLANE];
   } ImageData;
+//}}}
+//{{{
+typedef struct old_slice_par {
+  unsigned field_pic_flag;
+  unsigned frame_num;
+  int      nal_ref_idc;
+  unsigned pic_oder_cnt_lsb;
+  int      delta_pic_oder_cnt_bottom;
+  int      delta_pic_order_cnt[2];
+  byte     bottom_field_flag;
+  byte     idr_flag;
+  int      idr_pic_id;
+  int      pps_id;
+#if (MVC_EXTENSION_ENABLE)
+  int      view_id;
+  int      inter_view_flag;
+  int      anchor_pic_flag;
+#endif
+  int      layer_id;
+  } OldSliceParams;
 //}}}
 //{{{
 typedef struct slice {
@@ -846,64 +897,12 @@ typedef struct video_par {
   } VideoParameters;
 //}}}
 //{{{
-typedef struct inp_par {
-  char infile[FILE_NAME_SIZE];
-  int FileFormat;                         // File format of the Input file, PAR_OF_ANNEXB or PAR_OF_RTP
-  int ref_offset;
-  int poc_scale;
-  int write_uv;
-  int silent;
-  int intra_profile_deblocking;           // Loop filter usage determined by flags and parameters in bitstream
-
-  // Input/output sequence format related variables
-  FrameFormat source;                   // source related information
-  FrameFormat output;                   // output related information
-
-  int ProcessInput;
-  int enable_32_pulldown;
-
-  // picture error concealment
-  int conceal_mode;
-  int ref_poc_gap;
-  int poc_gap;
-
-  // Needed to allow compilation for decoder. May be used later for distortion computation operations
-  int stdRange;                         //!< 1 - standard range, 0 - full range
-  int videoCode;                        //!< 1 - 709, 3 - 601:  See VideoCode in io_tiff.
-  int export_views;
-
-  int bDisplayDecParams;
-  int dpb_plus[2];
-  } InputParameters;
-//}}}
-//{{{
-typedef struct old_slice_par {
-  unsigned field_pic_flag;
-  unsigned frame_num;
-  int      nal_ref_idc;
-  unsigned pic_oder_cnt_lsb;
-  int      delta_pic_oder_cnt_bottom;
-  int      delta_pic_order_cnt[2];
-  byte     bottom_field_flag;
-  byte     idr_flag;
-  int      idr_pic_id;
-  int      pps_id;
-#if (MVC_EXTENSION_ENABLE)
-  int      view_id;
-  int      inter_view_flag;
-  int      anchor_pic_flag;
-#endif
-  int      layer_id;
-  } OldSliceParams;
-//}}}
-//{{{
 typedef struct decoder_params {
-  InputParameters   *p_Inp;          //!< Input Parameters
-  VideoParameters   *p_Vid;          //!< Image Parameters
-  int64              bufferSize;     //!< buffersize for tiff reads (not currently supported)
-  int                UsedBits;      // for internal statistics, is adjusted by read_se_v, read_ue_v, read_u_1
-  FILE              *p_trace;        //!< Trace file
-  int                bitcounter;
+  InputParameters* p_Inp;          //!< Input Parameters
+  VideoParameters* p_Vid;          //!< Image Parameters
+  int64            bufferSize;     //!< buffersize for tiff reads (not currently supported)
+  int              UsedBits;      // for internal statistics, is adjusted by read_se_v, read_ue_v, read_u_1
+  int              bitcounter;
   } DecoderParams;
 //}}}
 
@@ -967,21 +966,17 @@ static inline int is_MVC_profile (unsigned int profile_idc)
   extern DecoderParams  *p_Dec;
 
   // prototypes
-  extern void error (char *text, int code);
+  extern void error (char* text, int code);
 
   // dynamic mem allocation
   extern int init_global_buffers (VideoParameters *p_Vid, int layer_id );
   extern void free_global_buffers (VideoParameters *p_Vid);
   extern void free_layer_buffers (VideoParameters *p_Vid, int layer_id );
 
-  extern int RBSPtoSODB (byte *streamBuffer, int last_byte_pos);
-  extern int EBSPtoRBSP (byte *streamBuffer, int end_bytepos, int begin_bytepos);
+  extern int RBSPtoSODB (byte* streamBuffer, int last_byte_pos);
 
-  extern void FreePartition (DataPartition *dp, int n);
-  extern DataPartition *AllocPartition (int n);
-
-  extern void tracebits (const char *trace_str, int len, int info, int value1);
-  extern void tracebits2 (const char *trace_str, int len, int info);
+  extern void FreePartition (DataPartition* dp, int n);
+  extern DataPartition* AllocPartition (int n);
 
   extern unsigned CeilLog2 (unsigned uiVal);
   extern unsigned CeilLog2_sf (unsigned uiVal);
@@ -996,9 +991,11 @@ static inline int is_MVC_profile (unsigned int profile_idc)
 
   extern void FreeDecPicList (DecodedPicList *pDecPicList );
   extern void ClearDecPicList (VideoParameters *p_Vid );
-  extern DecodedPicList *get_one_avail_dec_pic_from_list (DecodedPicList *pDecPicList, int b3D, int view_id);
-  extern Slice *malloc_slice (InputParameters *p_Inp, VideoParameters *p_Vid );
+  extern DecodedPicList* get_one_avail_dec_pic_from_list (DecodedPicList *pDecPicList, int b3D, int view_id);
+
+  extern Slice* malloc_slice (InputParameters *p_Inp, VideoParameters *p_Vid );
   extern void copy_slice_info (Slice *currSlice, OldSliceParams *p_old_slice );
+
   extern void OpenOutputFiles (VideoParameters *p_Vid, int view0_id, int view1_id);
   extern void set_global_coding_par (VideoParameters *p_Vid, CodingParameters *cps);
 //{{{
