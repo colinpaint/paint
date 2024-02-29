@@ -285,7 +285,6 @@ static int intra4x4_hor_pred (Macroblock *currMB,
   return DECODING_OK;
 }
 //}}}
-
 //{{{
 /*!
  ***********************************************************************
@@ -457,7 +456,6 @@ static int intra4x4_diag_down_left_pred (Macroblock *currMB,    //!< current mac
   return DECODING_OK;
 }
 //}}}
-
 //{{{
 /*!
  ***********************************************************************
@@ -632,7 +630,6 @@ static int intra4x4_vert_left_pred (Macroblock *currMB,    //!< current macroblo
   return DECODING_OK;
 }
 //}}}
-
 //{{{
 /*!
  ***********************************************************************
@@ -792,7 +789,6 @@ static int intra4x4_hor_down_pred (Macroblock *currMB,    //!< current macrobloc
   return DECODING_OK;
 }
 //}}}
-
 //{{{
 /*!
  ***********************************************************************
@@ -1071,7 +1067,6 @@ static int intra4x4_hor_pred_mbaff (Macroblock *currMB,
   return DECODING_OK;
 }
 //}}}
-
 //{{{
 /*!
  ***********************************************************************
@@ -1243,7 +1238,6 @@ static int intra4x4_diag_down_left_pred_mbaff (Macroblock *currMB,    //!< curre
   return DECODING_OK;
 }
 //}}}
-
 //{{{
 /*!
  ***********************************************************************
@@ -1418,7 +1412,6 @@ static int intra4x4_vert_left_pred_mbaff (Macroblock *currMB,    //!< current ma
   return DECODING_OK;
 }
 //}}}
-
 //{{{
 /*!
  ***********************************************************************
@@ -1587,7 +1580,6 @@ static int intra4x4_hor_down_pred_mbaff (Macroblock *currMB,    //!< current mac
   return DECODING_OK;
 }
 //}}}
-
 //{{{
 /*!
  ***********************************************************************

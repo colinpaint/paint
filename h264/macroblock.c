@@ -43,15 +43,16 @@
 #include "mv_prediction.h"
 #include "mb_prediction.h"
 //}}}
+extern void set_intra_prediction_modes (Slice* currSlice);
+
 extern void setup_read_macroblock (Slice *currSlice);
 extern void set_read_CBP_and_coeffs_cabac (Slice *currSlice);
 extern void set_read_CBP_and_coeffs_cavlc (Slice *currSlice);
 extern void read_coeff_4x4_CAVLC (Macroblock *currMB, int block_type, int i, int j, int levarr[16], int runarr[16], int *number_coefficients);
 extern void read_coeff_4x4_CAVLC_444 (Macroblock *currMB, int block_type, int i, int j, int levarr[16], int runarr[16], int *number_coefficients);
-static void read_motion_info_from_NAL_p_slice  (Macroblock *currMB);
-static void read_motion_info_from_NAL_b_slice  (Macroblock *currMB);
+static void read_motion_info_from_NAL_p_slice (Macroblock *currMB);
+static void read_motion_info_from_NAL_b_slice (Macroblock *currMB);
 extern void update_direct_types (Slice *currSlice);
-extern void set_intra_prediction_modes (Slice *currSlice);
 extern void set_read_comp_coeff_cavlc (Macroblock *currMB);
 extern void set_read_comp_coeff_cabac (Macroblock *currMB);
 

@@ -1,16 +1,14 @@
 //{{{
 /*!
  *************************************************************************************
- * \file intra8x8_pred.c
+ * \file intra_pred_common.c
  *
  * \brief
- *    Functions for intra 8x8 prediction
+ *    functions for setting up intra prediction modes
  *
  * \author
  *      Main contributors (see contributors.h for copyright,
  *                         address and affiliation details)
- *      - Yuri Vatis
- *      - Jan Muenster
  *      - Alexis Michael Tourapis  <alexismt@ieee.org>
  *
  *************************************************************************************
@@ -18,10 +16,12 @@
 //}}}
 //{{{
 #include "global.h"
-#include "intra8x8_pred.h"
+#include "block.h"
+#include "intra4x4_pred.h"
 #include "mb_access.h"
 #include "image.h"
 //}}}
+
 //{{{
 // Notation for comments regarding prediction and predictors.
 // The pels of the 8x8 block are labeled a..p. The predictor pels above
@@ -65,7 +65,6 @@
 #define P_W (PredPel[23])
 #define P_X (PredPel[24])
 //}}}
-
 //{{{
 /*!
  *************************************************************************************
@@ -228,7 +227,6 @@ static inline void LowPassForIntra8x8PredVer (imgpel *PredPel, int block_up_left
 }
 
 //}}}
-
 //{{{
 /*!
  ***********************************************************************
@@ -240,7 +238,7 @@ static inline void LowPassForIntra8x8PredVer (imgpel *PredPel, int block_up_left
  *
  ***********************************************************************
  */
-static inline int intra8x8_dc_pred (Macroblock *currMB,    //!< current macroblock
+static inline int intra8x8_dc_pred (Macroblock *currMB,    
                                    ColorPlane pl,         //!< current image plane
                                    int ioff,              //!< pixel offset X within MB
                                    int joff)              //!< pixel offset Y within MB
@@ -386,7 +384,7 @@ static inline int intra8x8_dc_pred (Macroblock *currMB,    //!< current macroblo
  *
  ***********************************************************************
  */
-static inline int intra8x8_vert_pred (Macroblock *currMB,    //!< current macroblock
+static inline int intra8x8_vert_pred (Macroblock *currMB,  
                                      ColorPlane pl,         //!< current image plane
                                      int ioff,              //!< pixel offset X within MB
                                      int joff)              //!< pixel offset Y within MB
@@ -494,7 +492,7 @@ static inline int intra8x8_vert_pred (Macroblock *currMB,    //!< current macrob
  *
  ***********************************************************************
  */
-static inline int intra8x8_hor_pred (Macroblock *currMB,    //!< current macroblock
+static inline int intra8x8_hor_pred (Macroblock *currMB,   
                                     ColorPlane pl,         //!< current image plane
                                     int ioff,              //!< pixel offset X within MB
                                     int joff)              //!< pixel offset Y within MB
@@ -594,7 +592,6 @@ static inline int intra8x8_hor_pred (Macroblock *currMB,    //!< current macrobl
   return DECODING_OK;
 }
 //}}}
-
 //{{{
 /*!
  ***********************************************************************
@@ -606,7 +603,7 @@ static inline int intra8x8_hor_pred (Macroblock *currMB,    //!< current macrobl
  *
  ***********************************************************************
  */
-static inline int intra8x8_diag_down_right_pred (Macroblock *currMB,    //!< current macroblock
+static inline int intra8x8_diag_down_right_pred (Macroblock *currMB,   
                                                 ColorPlane pl,         //!< current image plane
                                                 int ioff,              //!< pixel offset X within MB
                                                 int joff)              //!< pixel offset Y within MB
@@ -755,7 +752,7 @@ static inline int intra8x8_diag_down_right_pred (Macroblock *currMB,    //!< cur
  *
  ***********************************************************************
  */
-static inline int intra8x8_diag_down_left_pred (Macroblock *currMB,    //!< current macroblock
+static inline int intra8x8_diag_down_left_pred (Macroblock *currMB,   
                                                ColorPlane pl,         //!< current image plane
                                                int ioff,              //!< pixel offset X within MB
                                                int joff)              //!< pixel offset Y within MB
@@ -893,7 +890,6 @@ static inline int intra8x8_diag_down_left_pred (Macroblock *currMB,    //!< curr
   return DECODING_OK;
 }
 //}}}
-
 //{{{
 /*!
  ***********************************************************************
@@ -905,7 +901,7 @@ static inline int intra8x8_diag_down_left_pred (Macroblock *currMB,    //!< curr
  *
  ***********************************************************************
  */
-static inline int intra8x8_vert_right_pred (Macroblock *currMB,    //!< current macroblock
+static inline int intra8x8_vert_right_pred (Macroblock *currMB,    
                                            ColorPlane pl,         //!< current image plane
                                            int ioff,              //!< pixel offset X within MB
                                            int joff)              //!< pixel offset Y within MB
@@ -1060,7 +1056,7 @@ static inline int intra8x8_vert_right_pred (Macroblock *currMB,    //!< current 
  *
  ***********************************************************************
  */
-static inline int intra8x8_vert_left_pred (Macroblock *currMB,    //!< current macroblock
+static inline int intra8x8_vert_left_pred (Macroblock *currMB,   
                                           ColorPlane pl,         //!< current image plane
                                           int ioff,              //!< pixel offset X within MB
                                           int joff)              //!< pixel offset Y within MB
@@ -1202,7 +1198,6 @@ static inline int intra8x8_vert_left_pred (Macroblock *currMB,    //!< current m
   return DECODING_OK;
 }
 //}}}
-
 //{{{
 /*!
  ***********************************************************************
@@ -1214,7 +1209,7 @@ static inline int intra8x8_vert_left_pred (Macroblock *currMB,    //!< current m
  *
  ***********************************************************************
  */
-static inline int intra8x8_hor_up_pred (Macroblock *currMB,    //!< current macroblock
+static inline int intra8x8_hor_up_pred (Macroblock *currMB,    
                                        ColorPlane pl,         //!< current image plane
                                        int ioff,              //!< pixel offset X within MB
                                        int joff)              //!< pixel offset Y within MB
@@ -1368,7 +1363,7 @@ static inline int intra8x8_hor_up_pred (Macroblock *currMB,    //!< current macr
  *
  ***********************************************************************
  */
-static inline int intra8x8_hor_down_pred (Macroblock *currMB,    //!< current macroblock
+static inline int intra8x8_hor_down_pred (Macroblock *currMB,    
                                          ColorPlane pl,         //!< current image plane
                                          int ioff,              //!< pixel offset X within MB
                                          int joff)              //!< pixel offset Y within MB
@@ -1520,7 +1515,6 @@ static inline int intra8x8_hor_down_pred (Macroblock *currMB,    //!< current ma
   return DECODING_OK;
 }
 //}}}
-
 //{{{
 /*!
  ************************************************************************
@@ -1536,7 +1530,7 @@ static inline int intra8x8_hor_down_pred (Macroblock *currMB,    //!< current ma
  *
  ************************************************************************
  */
-int intra_pred_8x8_normal (Macroblock *currMB,    //!< Current Macroblock
+static int intra_pred_8x8_normal (Macroblock *currMB,   
                         ColorPlane pl,         //!< Current color plane
                         int ioff,              //!< ioff
                         int joff)              //!< joff
@@ -1595,7 +1589,7 @@ int intra_pred_8x8_normal (Macroblock *currMB,    //!< Current Macroblock
  *
  ***********************************************************************
  */
-static inline int intra8x8_dc_pred_mbaff (Macroblock *currMB,    //!< current macroblock
+static inline int intra8x8_dc_pred_mbaff (Macroblock *currMB,    
                                    ColorPlane pl,         //!< current image plane
                                    int ioff,              //!< pixel offset X within MB
                                    int joff)              //!< pixel offset Y within MB
@@ -1742,7 +1736,7 @@ static inline int intra8x8_dc_pred_mbaff (Macroblock *currMB,    //!< current ma
  *
  ***********************************************************************
  */
-static inline int intra8x8_vert_pred_mbaff (Macroblock *currMB,    //!< current macroblock
+static inline int intra8x8_vert_pred_mbaff (Macroblock *currMB,   
                                      ColorPlane pl,         //!< current image plane
                                      int ioff,              //!< pixel offset X within MB
                                      int joff)              //!< pixel offset Y within MB
@@ -1854,7 +1848,7 @@ static inline int intra8x8_vert_pred_mbaff (Macroblock *currMB,    //!< current 
  *
  ***********************************************************************
  */
-static inline int intra8x8_hor_pred_mbaff (Macroblock *currMB,    //!< current macroblock
+static inline int intra8x8_hor_pred_mbaff (Macroblock *currMB,    
                                     ColorPlane pl,         //!< current image plane
                                     int ioff,              //!< pixel offset X within MB
                                     int joff)              //!< pixel offset Y within MB
@@ -1960,7 +1954,6 @@ static inline int intra8x8_hor_pred_mbaff (Macroblock *currMB,    //!< current m
   return DECODING_OK;
 }
 //}}}
-
 //{{{
                                     /*!
  ***********************************************************************
@@ -1972,7 +1965,7 @@ static inline int intra8x8_hor_pred_mbaff (Macroblock *currMB,    //!< current m
  *
  ***********************************************************************
  */
-static inline int intra8x8_diag_down_right_pred_mbaff (Macroblock *currMB,    //!< current macroblock
+static inline int intra8x8_diag_down_right_pred_mbaff (Macroblock *currMB,   
                                                 ColorPlane pl,         //!< current image plane
                                                 int ioff,              //!< pixel offset X within MB
                                                 int joff)              //!< pixel offset Y within MB
@@ -2123,7 +2116,7 @@ static inline int intra8x8_diag_down_right_pred_mbaff (Macroblock *currMB,    //
  *
  ***********************************************************************
  */
-static inline int intra8x8_diag_down_left_pred_mbaff (Macroblock *currMB,    //!< current macroblock
+static inline int intra8x8_diag_down_left_pred_mbaff (Macroblock *currMB,  
                                                ColorPlane pl,         //!< current image plane
                                                int ioff,              //!< pixel offset X within MB
                                                int joff)              //!< pixel offset Y within MB
@@ -2265,7 +2258,6 @@ static inline int intra8x8_diag_down_left_pred_mbaff (Macroblock *currMB,    //!
   return DECODING_OK;
 }
 //}}}
-
 //{{{
 /*!
  ***********************************************************************
@@ -2277,7 +2269,7 @@ static inline int intra8x8_diag_down_left_pred_mbaff (Macroblock *currMB,    //!
  *
  ***********************************************************************
  */
-static inline int intra8x8_vert_right_pred_mbaff (Macroblock *currMB,    //!< current macroblock
+static inline int intra8x8_vert_right_pred_mbaff (Macroblock *currMB,   
                                            ColorPlane pl,         //!< current image plane
                                            int ioff,              //!< pixel offset X within MB
                                            int joff)              //!< pixel offset Y within MB
@@ -2434,7 +2426,7 @@ static inline int intra8x8_vert_right_pred_mbaff (Macroblock *currMB,    //!< cu
  *
  ***********************************************************************
  */
-static inline int intra8x8_vert_left_pred_mbaff (Macroblock *currMB,    //!< current macroblock
+static inline int intra8x8_vert_left_pred_mbaff (Macroblock *currMB,    
                                           ColorPlane pl,         //!< current image plane
                                           int ioff,              //!< pixel offset X within MB
                                           int joff)              //!< pixel offset Y within MB
@@ -2580,7 +2572,6 @@ static inline int intra8x8_vert_left_pred_mbaff (Macroblock *currMB,    //!< cur
   return DECODING_OK;
 }
 //}}}
-
 //{{{
 /*!
  ***********************************************************************
@@ -2592,7 +2583,7 @@ static inline int intra8x8_vert_left_pred_mbaff (Macroblock *currMB,    //!< cur
  *
  ***********************************************************************
  */
-static inline int intra8x8_hor_up_pred_mbaff (Macroblock *currMB,    //!< current macroblock
+static inline int intra8x8_hor_up_pred_mbaff (Macroblock *currMB,   
                                        ColorPlane pl,         //!< current image plane
                                        int ioff,              //!< pixel offset X within MB
                                        int joff)              //!< pixel offset Y within MB
@@ -2750,7 +2741,7 @@ static inline int intra8x8_hor_up_pred_mbaff (Macroblock *currMB,    //!< curren
  *
  ***********************************************************************
  */
-static inline int intra8x8_hor_down_pred_mbaff (Macroblock *currMB,    //!< current macroblock
+static inline int intra8x8_hor_down_pred_mbaff (Macroblock *currMB,   
                                          ColorPlane pl,         //!< current image plane
                                          int ioff,              //!< pixel offset X within MB
                                          int joff)              //!< pixel offset Y within MB
@@ -2897,7 +2888,6 @@ static inline int intra8x8_hor_down_pred_mbaff (Macroblock *currMB,    //!< curr
   return DECODING_OK;
 }
 //}}}
-
 //{{{
 /*!
  ************************************************************************
@@ -2913,7 +2903,7 @@ static inline int intra8x8_hor_down_pred_mbaff (Macroblock *currMB,    //!< curr
  *
  ************************************************************************
  */
-int intra_pred_8x8_mbaff (Macroblock *currMB,    //!< Current Macroblock
+static int intra_pred_8x8_mbaff (Macroblock *currMB,    
                    ColorPlane pl,         //!< Current color plane
                    int ioff,              //!< ioff
                    int joff)              //!< joff
@@ -2959,4 +2949,1359 @@ int intra_pred_8x8_mbaff (Macroblock *currMB,    //!< Current Macroblock
     break;
   }
 }
+//}}}
+
+//{{{
+/*!
+ ***********************************************************************
+ * \brief
+ *    makes and returns 16x16 DC prediction mode
+ *
+ * \return
+ *    DECODING_OK   decoding of intra_prediction mode was successful            \n
+ *
+ ***********************************************************************
+ */
+static int intra16x16_dc_pred (Macroblock *currMB, ColorPlane pl)
+{
+  Slice *currSlice = currMB->p_Slice;
+  VideoParameters *p_Vid = currMB->p_Vid;
+
+  int s0 = 0, s1 = 0, s2 = 0;
+
+  int i,j;
+
+  imgpel **imgY = (pl) ? currSlice->dec_picture->imgUV[pl - 1] : currSlice->dec_picture->imgY;
+  imgpel **mb_pred = &(currSlice->mb_pred[pl][0]);
+
+  PixelPos a, b;
+
+  int up_avail, left_avail;
+
+  getNonAffNeighbour(currMB,   -1,   0, p_Vid->mb_size[IS_LUMA], &a);
+  getNonAffNeighbour(currMB,    0,  -1, p_Vid->mb_size[IS_LUMA], &b);
+
+  if (!p_Vid->active_pps->constrained_intra_pred_flag)
+  {
+    up_avail      = b.available;
+    left_avail    = a.available;
+  }
+  else
+  {
+    up_avail      = b.available ? currSlice->intra_block[b.mb_addr] : 0;
+    left_avail    = a.available ? currSlice->intra_block[a.mb_addr]: 0;
+  }
+
+  // Sum top predictors
+  if (up_avail)
+  {
+    imgpel *pel = &imgY[b.pos_y][b.pos_x];
+    for (i = 0; i < MB_BLOCK_SIZE; ++i)
+    {
+      s1 += *pel++;
+    }
+  }
+
+  // Sum left predictors
+  if (left_avail)
+  {
+    int pos_y = a.pos_y;
+    int pos_x = a.pos_x;
+    for (i = 0; i < MB_BLOCK_SIZE; ++i)
+    {
+      s2 += imgY[pos_y++][pos_x];
+    }
+  }
+
+  if (up_avail && left_avail)
+    s0 = (s1 + s2 + 16)>>5;       // no edge
+  else if (!up_avail && left_avail)
+    s0 = (s2 + 8)>>4;              // upper edge
+  else if (up_avail && !left_avail)
+    s0 = (s1 + 8)>>4;              // left edge
+  else
+    s0 = p_Vid->dc_pred_value_comp[pl];                            // top left corner, nothing to predict from
+
+  for(j = 0; j < MB_BLOCK_SIZE; ++j)
+  {
+#if (IMGTYPE == 0)
+    memset(mb_pred[j], s0, MB_BLOCK_SIZE * sizeof(imgpel));
+#else
+    for(i = 0; i < MB_BLOCK_SIZE; i += 4)
+    {
+      mb_pred[j][i    ]=(imgpel) s0;
+      mb_pred[j][i + 1]=(imgpel) s0;
+      mb_pred[j][i + 2]=(imgpel) s0;
+      mb_pred[j][i + 3]=(imgpel) s0;
+    }
+#endif
+  }
+
+  return DECODING_OK;
+
+}
+//}}}
+//{{{
+/*!
+ ***********************************************************************
+ * \brief
+ *    makes and returns 16x16 vertical prediction mode
+ *
+ * \return
+ *    DECODING_OK   decoding of intra prediction mode was successful            \n
+ *
+ ***********************************************************************
+ */
+static int intra16x16_vert_pred (Macroblock *currMB, ColorPlane pl)
+{
+  Slice *currSlice = currMB->p_Slice;
+  VideoParameters *p_Vid = currMB->p_Vid;
+
+  int j;
+
+  imgpel **imgY = (pl) ? currSlice->dec_picture->imgUV[pl - 1] : currSlice->dec_picture->imgY;
+
+  PixelPos b;          //!< pixel position p(0,-1)
+
+  int up_avail;
+
+  getNonAffNeighbour(currMB,    0,   -1, p_Vid->mb_size[IS_LUMA], &b);
+
+  if (!p_Vid->active_pps->constrained_intra_pred_flag)
+  {
+    up_avail = b.available;
+  }
+  else
+  {
+    up_avail = b.available ? currSlice->intra_block[b.mb_addr] : 0;
+  }
+
+  if (!up_avail)
+    error ("invalid 16x16 intra pred Mode VERT_PRED_16",500);
+  {
+    imgpel **prd = &currSlice->mb_pred[pl][0];
+    imgpel *src = &(imgY[b.pos_y][b.pos_x]);
+
+    for(j=0;j<MB_BLOCK_SIZE; j+= 4)
+    {
+      memcpy(*prd++, src, MB_BLOCK_SIZE * sizeof(imgpel));
+      memcpy(*prd++, src, MB_BLOCK_SIZE * sizeof(imgpel));
+      memcpy(*prd++, src, MB_BLOCK_SIZE * sizeof(imgpel));
+      memcpy(*prd++, src, MB_BLOCK_SIZE * sizeof(imgpel));
+    }
+  }
+
+  return DECODING_OK;
+}
+//}}}
+//{{{
+/*!
+ ***********************************************************************
+ * \brief
+ *    makes and returns 16x16 horizontal prediction mode
+ *
+ * \return
+ *    DECODING_OK   decoding of intra prediction mode was successful            \n
+ *
+ ***********************************************************************
+ */
+static int intra16x16_hor_pred (Macroblock *currMB, ColorPlane pl)
+{
+  Slice *currSlice = currMB->p_Slice;
+  VideoParameters *p_Vid = currMB->p_Vid;
+  int j;
+
+  imgpel **imgY = (pl) ? currSlice->dec_picture->imgUV[pl - 1] : currSlice->dec_picture->imgY;
+  imgpel **mb_pred = &(currSlice->mb_pred[pl][0]);
+  imgpel prediction;
+  int pos_y, pos_x;
+
+  PixelPos a;
+
+  int left_avail;
+
+  getNonAffNeighbour(currMB, -1,  0, p_Vid->mb_size[IS_LUMA], &a);
+
+  if (!p_Vid->active_pps->constrained_intra_pred_flag)
+  {
+    left_avail    = a.available;
+  }
+  else
+  {
+    left_avail  = a.available ? currSlice->intra_block[a.mb_addr]: 0;
+  }
+
+  if (!left_avail)
+    error ("invalid 16x16 intra pred Mode HOR_PRED_16",500);
+
+  pos_y = a.pos_y;
+  pos_x = a.pos_x;
+
+  for(j = 0; j < MB_BLOCK_SIZE; ++j)
+  {
+#if (IMGTYPE == 0)
+    imgpel *prd = mb_pred[j];
+    prediction = imgY[pos_y++][pos_x];
+
+    memset(prd, prediction, MB_BLOCK_SIZE * sizeof(imgpel));
+#else
+    int i;
+    imgpel *prd = mb_pred[j];
+    prediction = imgY[pos_y++][pos_x];
+
+    for(i = 0; i < MB_BLOCK_SIZE; i += 4)
+    {
+      *prd++= prediction; // store predicted 16x16 block
+      *prd++= prediction; // store predicted 16x16 block
+      *prd++= prediction; // store predicted 16x16 block
+      *prd++= prediction; // store predicted 16x16 block
+    }
+#endif
+  }
+
+  return DECODING_OK;
+}
+//}}}
+//{{{
+/*!
+ ***********************************************************************
+ * \brief
+ *    makes and returns 16x16 horizontal prediction mode
+ *
+ * \return
+ *    DECODING_OK   decoding of intra prediction mode was successful            \n
+ *
+ ***********************************************************************
+ */
+static int intra16x16_plane_pred (Macroblock *currMB, ColorPlane pl)
+{
+  Slice *currSlice = currMB->p_Slice;
+  VideoParameters *p_Vid = currMB->p_Vid;
+
+  int i,j;
+
+  int ih = 0, iv = 0;
+  int ib,ic,iaa;
+
+  imgpel **imgY = (pl) ? currSlice->dec_picture->imgUV[pl - 1] : currSlice->dec_picture->imgY;
+  imgpel **mb_pred = &(currSlice->mb_pred[pl][0]);
+  imgpel *mpr_line;
+  int max_imgpel_value = p_Vid->max_pel_value_comp[pl];
+  int pos_y, pos_x;
+
+  PixelPos a, b, d;
+
+  int up_avail, left_avail, left_up_avail;
+
+  getNonAffNeighbour(currMB, -1,  -1, p_Vid->mb_size[IS_LUMA], &d);
+  getNonAffNeighbour(currMB, -1,   0, p_Vid->mb_size[IS_LUMA], &a);
+  getNonAffNeighbour(currMB,  0,  -1, p_Vid->mb_size[IS_LUMA], &b);
+
+  if (!p_Vid->active_pps->constrained_intra_pred_flag)
+  {
+    up_avail      = b.available;
+    left_avail    = a.available;
+    left_up_avail = d.available;
+  }
+  else
+  {
+    up_avail      = b.available ? currSlice->intra_block[b.mb_addr] : 0;
+    left_avail    = a.available ? currSlice->intra_block[a.mb_addr] : 0;
+    left_up_avail = d.available ? currSlice->intra_block[d.mb_addr] : 0;
+  }
+
+  if (!up_avail || !left_up_avail  || !left_avail)
+    error ("invalid 16x16 intra pred Mode PLANE_16",500);
+
+  mpr_line = &imgY[b.pos_y][b.pos_x+7];
+  pos_y = a.pos_y + 7;
+  pos_x = a.pos_x;
+  for (i = 1; i < 8; ++i)
+  {
+    ih += i*(mpr_line[i] - mpr_line[-i]);
+    iv += i*(imgY[pos_y + i][pos_x] - imgY[pos_y - i][pos_x]);
+  }
+
+  ih += 8*(mpr_line[8] - imgY[d.pos_y][d.pos_x]);
+  iv += 8*(imgY[pos_y + 8][pos_x] - imgY[d.pos_y][d.pos_x]);
+
+  ib=(5 * ih + 32)>>6;
+  ic=(5 * iv + 32)>>6;
+
+  iaa=16 * (mpr_line[8] + imgY[pos_y + 8][pos_x]);
+  for (j = 0;j < MB_BLOCK_SIZE; ++j)
+  {
+    int ibb = iaa + (j - 7) * ic + 16;
+    imgpel *prd = mb_pred[j];
+    for (i = 0;i < MB_BLOCK_SIZE; i += 4)
+    {
+      *prd++ = (imgpel) iClip1(max_imgpel_value, ((ibb + (i - 7) * ib) >> 5));
+      *prd++ = (imgpel) iClip1(max_imgpel_value, ((ibb + (i - 6) * ib) >> 5));
+      *prd++ = (imgpel) iClip1(max_imgpel_value, ((ibb + (i - 5) * ib) >> 5));
+      *prd++ = (imgpel) iClip1(max_imgpel_value, ((ibb + (i - 4) * ib) >> 5));
+    }
+  }// store plane prediction
+
+  return DECODING_OK;
+}
+//}}}
+//{{{
+/*!
+ ***********************************************************************
+ * \brief
+ *    makes and returns 16x16 intra prediction blocks
+ *
+ * \return
+ *    DECODING_OK   decoding of intra prediction mode was successful            \n
+ *    SEARCH_SYNC   search next sync element as errors while decoding occured
+ ***********************************************************************
+ */
+static int intra_pred_16x16_normal (Macroblock *currMB,  
+                           ColorPlane pl,       //!< Current colorplane (for 4:4:4)
+                           int predmode)        //!< prediction mode
+{
+  switch (predmode)
+  {
+  case VERT_PRED_16:                       // vertical prediction from block above
+    return (intra16x16_vert_pred(currMB, pl));
+    break;
+  case HOR_PRED_16:                        // horizontal prediction from left block
+    return (intra16x16_hor_pred(currMB, pl));
+    break;
+  case DC_PRED_16:                         // DC prediction
+    return (intra16x16_dc_pred(currMB, pl));
+    break;
+  case PLANE_16:// 16 bit integer plan pred
+    return (intra16x16_plane_pred(currMB, pl));
+    break;
+  default:
+    {                                    // indication of fault in bitstream,exit
+      printf("illegal 16x16 intra prediction mode input: %d\n",predmode);
+      return SEARCH_SYNC;
+    }
+  }
+}
+
+//}}}
+
+//{{{
+/*!
+ ***********************************************************************
+ * \brief
+ *    makes and returns 16x16 DC prediction mode
+ *
+ * \return
+ *    DECODING_OK   decoding of intra prediction mode was successful            \n
+ *
+ ***********************************************************************
+ */
+static int intra16x16_dc_pred_mbaff (Macroblock *currMB, ColorPlane pl)
+{
+  Slice *currSlice = currMB->p_Slice;
+  VideoParameters *p_Vid = currMB->p_Vid;
+
+  int s0 = 0, s1 = 0, s2 = 0;
+
+  int i,j;
+
+  imgpel **imgY = (pl) ? currSlice->dec_picture->imgUV[pl - 1] : currSlice->dec_picture->imgY;
+  imgpel **mb_pred = &(currSlice->mb_pred[pl][0]);
+
+  PixelPos b;          //!< pixel position p(0,-1)
+  PixelPos left[17];    //!< pixel positions p(-1, -1..15)
+
+  int up_avail, left_avail;
+
+  s1=s2=0;
+
+  for (i=0;i<17;++i)
+  {
+    getAffNeighbour(currMB, -1,  i-1, p_Vid->mb_size[IS_LUMA], &left[i]);
+  }
+  getAffNeighbour(currMB,    0,   -1, p_Vid->mb_size[IS_LUMA], &b);
+
+  if (!p_Vid->active_pps->constrained_intra_pred_flag)
+  {
+    up_avail      = b.available;
+    left_avail    = left[1].available;
+  }
+  else
+  {
+    up_avail      = b.available ? currSlice->intra_block[b.mb_addr] : 0;
+    for (i = 1, left_avail = 1; i < 17; ++i)
+      left_avail  &= left[i].available ? currSlice->intra_block[left[i].mb_addr]: 0;
+  }
+
+  for (i = 0; i < MB_BLOCK_SIZE; ++i)
+  {
+    if (up_avail)
+      s1 += imgY[b.pos_y][b.pos_x+i];    // sum hor pix
+    if (left_avail)
+      s2 += imgY[left[i + 1].pos_y][left[i + 1].pos_x];    // sum vert pix
+  }
+  if (up_avail && left_avail)
+    s0 = (s1 + s2 + 16)>>5;       // no edge
+  else if (!up_avail && left_avail)
+    s0 = (s2 + 8)>>4;              // upper edge
+  else if (up_avail && !left_avail)
+    s0 = (s1 + 8)>>4;              // left edge
+  else
+    s0 = p_Vid->dc_pred_value_comp[pl];                            // top left corner, nothing to predict from
+
+  for(j = 0; j < MB_BLOCK_SIZE; ++j)
+  {
+#if (IMGTYPE == 0)
+    memset(mb_pred[j], s0, MB_BLOCK_SIZE * sizeof(imgpel));
+#else
+    for(i = 0; i < MB_BLOCK_SIZE; ++i)
+    {
+      mb_pred[j][i]=(imgpel) s0;
+    }
+#endif
+  }
+
+  return DECODING_OK;
+}
+//}}}
+//{{{
+/*!
+ ***********************************************************************
+ * \brief
+ *    makes and returns 16x16 vertical prediction mode
+ *
+ * \return
+ *    DECODING_OK   decoding of intra prediction mode was successful            \n
+ *
+ ***********************************************************************
+ */
+static int intra16x16_vert_pred_mbaff (Macroblock *currMB, ColorPlane pl)
+{
+  Slice *currSlice = currMB->p_Slice;
+  VideoParameters *p_Vid = currMB->p_Vid;
+
+  int j;
+
+  imgpel **imgY = (pl) ? currSlice->dec_picture->imgUV[pl - 1] : currSlice->dec_picture->imgY;
+
+  PixelPos b;          //!< pixel position p(0,-1)
+
+  int up_avail;
+
+  getAffNeighbour(currMB,    0,   -1, p_Vid->mb_size[IS_LUMA], &b);
+
+  if (!p_Vid->active_pps->constrained_intra_pred_flag)
+  {
+    up_avail = b.available;
+  }
+  else
+  {
+    up_avail = b.available ? currSlice->intra_block[b.mb_addr] : 0;
+  }
+
+  if (!up_avail)
+    error ("invalid 16x16 intra pred Mode VERT_PRED_16",500);
+  {
+    imgpel **prd = &currSlice->mb_pred[pl][0];
+    imgpel *src = &(imgY[b.pos_y][b.pos_x]);
+
+    for(j=0;j<MB_BLOCK_SIZE; j+= 4)
+    {
+      memcpy(*prd++, src, MB_BLOCK_SIZE * sizeof(imgpel));
+      memcpy(*prd++, src, MB_BLOCK_SIZE * sizeof(imgpel));
+      memcpy(*prd++, src, MB_BLOCK_SIZE * sizeof(imgpel));
+      memcpy(*prd++, src, MB_BLOCK_SIZE * sizeof(imgpel));
+    }
+  }
+
+  return DECODING_OK;
+}
+//}}}
+//{{{
+/*!
+ ***********************************************************************
+ * \brief
+ *    makes and returns 16x16 horizontal prediction mode
+ *
+ * \return
+ *    DECODING_OK   decoding of intra prediction mode was successful            \n
+ *
+ ***********************************************************************
+ */
+static int intra16x16_hor_pred_mbaff (Macroblock *currMB, ColorPlane pl)
+{
+  Slice *currSlice = currMB->p_Slice;
+  VideoParameters *p_Vid = currMB->p_Vid;
+  int i,j;
+
+  imgpel **imgY = (pl) ? currSlice->dec_picture->imgUV[pl - 1] : currSlice->dec_picture->imgY;
+  imgpel **mb_pred = &(currSlice->mb_pred[pl][0]);
+  imgpel prediction;
+
+  PixelPos left[17];    //!< pixel positions p(-1, -1..15)
+
+  int left_avail;
+
+  for (i=0;i<17;++i)
+  {
+    getAffNeighbour(currMB, -1,  i-1, p_Vid->mb_size[IS_LUMA], &left[i]);
+  }
+
+  if (!p_Vid->active_pps->constrained_intra_pred_flag)
+  {
+    left_avail    = left[1].available;
+  }
+  else
+  {
+    for (i = 1, left_avail = 1; i < 17; ++i)
+      left_avail  &= left[i].available ? currSlice->intra_block[left[i].mb_addr]: 0;
+  }
+
+  if (!left_avail)
+    error ("invalid 16x16 intra pred Mode HOR_PRED_16",500);
+
+  for(j = 0; j < MB_BLOCK_SIZE; ++j)
+  {
+    prediction = imgY[left[j+1].pos_y][left[j+1].pos_x];
+    for(i = 0; i < MB_BLOCK_SIZE; ++i)
+      mb_pred[j][i]= prediction; // store predicted 16x16 block
+  }
+
+  return DECODING_OK;
+}
+//}}}
+//{{{
+/*!
+ ***********************************************************************
+ * \brief
+ *    makes and returns 16x16 horizontal prediction mode
+ *
+ * \return
+ *    DECODING_OK   decoding of intra prediction mode was successful            \n
+ *
+ ***********************************************************************
+ */
+static int intra16x16_plane_pred_mbaff (Macroblock *currMB, ColorPlane pl)
+{
+  Slice *currSlice = currMB->p_Slice;
+  VideoParameters *p_Vid = currMB->p_Vid;
+
+  int i,j;
+
+  int ih = 0, iv = 0;
+  int ib,ic,iaa;
+
+  imgpel **imgY = (pl) ? currSlice->dec_picture->imgUV[pl - 1] : currSlice->dec_picture->imgY;
+  imgpel **mb_pred = &(currSlice->mb_pred[pl][0]);
+  imgpel *mpr_line;
+  int max_imgpel_value = p_Vid->max_pel_value_comp[pl];
+
+  PixelPos b;          //!< pixel position p(0,-1)
+  PixelPos left[17];    //!< pixel positions p(-1, -1..15)
+
+  int up_avail, left_avail, left_up_avail;
+
+  for (i=0;i<17; ++i)
+  {
+    getAffNeighbour(currMB, -1,  i-1, p_Vid->mb_size[IS_LUMA], &left[i]);
+  }
+  getAffNeighbour(currMB,    0,   -1, p_Vid->mb_size[IS_LUMA], &b);
+
+  if (!p_Vid->active_pps->constrained_intra_pred_flag)
+  {
+    up_avail      = b.available;
+    left_avail    = left[1].available;
+    left_up_avail = left[0].available;
+  }
+  else
+  {
+    up_avail      = b.available ? currSlice->intra_block[b.mb_addr] : 0;
+    for (i = 1, left_avail = 1; i < 17; ++i)
+      left_avail  &= left[i].available ? currSlice->intra_block[left[i].mb_addr]: 0;
+    left_up_avail = left[0].available ? currSlice->intra_block[left[0].mb_addr]: 0;
+  }
+
+  if (!up_avail || !left_up_avail  || !left_avail)
+    error ("invalid 16x16 intra pred Mode PLANE_16",500);
+
+  mpr_line = &imgY[b.pos_y][b.pos_x+7];
+  for (i = 1; i < 8; ++i)
+  {
+    ih += i*(mpr_line[i] - mpr_line[-i]);
+    iv += i*(imgY[left[8+i].pos_y][left[8+i].pos_x] - imgY[left[8-i].pos_y][left[8-i].pos_x]);
+  }
+
+  ih += 8*(mpr_line[8] - imgY[left[0].pos_y][left[0].pos_x]);
+  iv += 8*(imgY[left[16].pos_y][left[16].pos_x] - imgY[left[0].pos_y][left[0].pos_x]);
+
+  ib=(5 * ih + 32)>>6;
+  ic=(5 * iv + 32)>>6;
+
+  iaa=16 * (mpr_line[8] + imgY[left[16].pos_y][left[16].pos_x]);
+  for (j = 0;j < MB_BLOCK_SIZE; ++j)
+  {
+    for (i = 0;i < MB_BLOCK_SIZE; ++i)
+    {
+      mb_pred[j][i] = (imgpel) iClip1(max_imgpel_value, ((iaa + (i - 7) * ib + (j - 7) * ic + 16) >> 5));
+    }
+  }// store plane prediction
+
+  return DECODING_OK;
+}
+//}}}
+//{{{
+/*!
+ ***********************************************************************
+ * \brief
+ *    makes and returns 16x16 intra prediction blocks
+ *
+ * \return
+ *    DECODING_OK   decoding of intra prediction mode was successful            \n
+ *    SEARCH_SYNC   search next sync element as errors while decoding occured
+ ***********************************************************************
+ */
+static int intra_pred_16x16_mbaff (Macroblock *currMB, 
+                          ColorPlane pl,       //!< Current colorplane (for 4:4:4)
+                          int predmode)        //!< prediction mode
+{
+  switch (predmode)
+  {
+  case VERT_PRED_16:                       // vertical prediction from block above
+    return (intra16x16_vert_pred_mbaff(currMB, pl));
+    break;
+  case HOR_PRED_16:                        // horizontal prediction from left block
+    return (intra16x16_hor_pred_mbaff(currMB, pl));
+    break;
+  case DC_PRED_16:                         // DC prediction
+    return (intra16x16_dc_pred_mbaff(currMB, pl));
+    break;
+  case PLANE_16:// 16 bit integer plan pred
+    return (intra16x16_plane_pred_mbaff(currMB, pl));
+    break;
+  default:
+    {                                    // indication of fault in bitstream,exit
+      printf("illegal 16x16 intra prediction mode input: %d\n",predmode);
+      return SEARCH_SYNC;
+    }
+  }
+}
+//}}}
+
+//{{{
+static void intra_chroma_DC_single (imgpel **curr_img, int up_avail, int left_avail, PixelPos up, PixelPos left, int blk_x, int blk_y, int *pred, int direction )
+{
+  int i;
+  int s0 = 0;
+
+  if ((direction && up_avail) || (!left_avail && up_avail))
+  {
+    imgpel *cur_pel = &curr_img[up.pos_y][up.pos_x + blk_x];
+    for (i = 0; i < 4;++i)
+      s0 += *(cur_pel++);
+    *pred = (s0 + 2) >> 2;
+  }
+  else if (left_avail)
+  {
+    imgpel **cur_pel = &(curr_img[left.pos_y + blk_y - 1]);
+    int pos_x = left.pos_x;
+    for (i = 0; i < 4;++i)
+      s0 += *((*cur_pel++) + pos_x);
+    *pred = (s0 + 2) >> 2;
+  }
+}
+//}}}
+//{{{
+static void intra_chroma_DC_all (imgpel **curr_img, int up_avail, int left_avail, PixelPos up, PixelPos left, int blk_x, int blk_y, int *pred )
+{
+  int i;
+  int s0 = 0, s1 = 0;
+
+  if (up_avail)
+  {
+    imgpel *cur_pel = &curr_img[up.pos_y][up.pos_x + blk_x];
+    for (i = 0; i < 4;++i)
+      s0 += *(cur_pel++);
+  }
+
+  if (left_avail)
+  {
+    imgpel **cur_pel = &(curr_img[left.pos_y + blk_y - 1]);
+    int pos_x = left.pos_x;
+    for (i = 0; i < 4;++i)
+      s1 += *((*cur_pel++) + pos_x);
+  }
+
+  if (up_avail && left_avail)
+    *pred = (s0 + s1 + 4) >> 3;
+  else if (up_avail)
+    *pred = (s0 + 2) >> 2;
+  else if (left_avail)
+    *pred = (s1 + 2) >> 2;
+}
+//}}}
+//{{{
+static void intrapred_chroma_dc (Macroblock *currMB)
+{
+  Slice *currSlice = currMB->p_Slice;
+  VideoParameters *p_Vid = currMB->p_Vid;
+  StorablePicture *dec_picture = currSlice->dec_picture;
+  int        b8, b4;
+  int        yuv = dec_picture->chroma_format_idc - 1;
+  int        blk_x, blk_y;
+  int        pred, pred1;
+  static const int block_pos[3][4][4]= //[yuv][b8][b4]
+  {
+    { {0, 1, 2, 3},{0, 0, 0, 0},{0, 0, 0, 0},{0, 0, 0, 0}},
+    { {0, 1, 2, 3},{2, 3, 2, 3},{0, 0, 0, 0},{0, 0, 0, 0}},
+    { {0, 1, 2, 3},{1, 1, 3, 3},{2, 3, 2, 3},{3, 3, 3, 3}}
+  };
+
+  PixelPos up;        //!< pixel position  p(0,-1)
+  PixelPos left;      //!< pixel positions p(-1, -1..16)
+  int up_avail, left_avail;
+  imgpel **imgUV0 = dec_picture->imgUV[0];
+  imgpel **imgUV1 = dec_picture->imgUV[1];
+  imgpel **mb_pred0 = currSlice->mb_pred[0 + 1];
+  imgpel **mb_pred1 = currSlice->mb_pred[1 + 1];
+
+
+  getNonAffNeighbour(currMB, -1,  0, p_Vid->mb_size[IS_CHROMA], &left);
+  getNonAffNeighbour(currMB,  0, -1, p_Vid->mb_size[IS_CHROMA], &up);
+
+  if (!p_Vid->active_pps->constrained_intra_pred_flag)
+  {
+    up_avail      = up.available;
+    left_avail    = left.available;
+  }
+  else
+  {
+    up_avail = up.available ? currSlice->intra_block[up.mb_addr] : 0;
+    left_avail = left.available ? currSlice->intra_block[left.mb_addr]: 0;
+  }
+
+  // DC prediction
+  // Note that unlike what is stated in many presentations and papers, this mode does not operate
+  // the same way as I_16x16 DC prediction.
+  for(b8 = 0; b8 < (p_Vid->num_uv_blocks) ;++b8)
+  {
+    for (b4 = 0; b4 < 4; ++b4)
+    {
+      blk_y = subblk_offset_y[yuv][b8][b4];
+      blk_x = subblk_offset_x[yuv][b8][b4];
+      pred  = p_Vid->dc_pred_value_comp[1];
+      pred1 = p_Vid->dc_pred_value_comp[2];
+      //===== get prediction value =====
+      switch (block_pos[yuv][b8][b4])
+      {
+      case 0:  //===== TOP LEFT =====
+        intra_chroma_DC_all   (imgUV0, up_avail, left_avail, up, left, blk_x, blk_y + 1, &pred);
+        intra_chroma_DC_all   (imgUV1, up_avail, left_avail, up, left, blk_x, blk_y + 1, &pred1);
+        break;
+      case 1: //===== TOP RIGHT =====
+        intra_chroma_DC_single(imgUV0, up_avail, left_avail, up, left, blk_x, blk_y + 1, &pred, 1);
+        intra_chroma_DC_single(imgUV1, up_avail, left_avail, up, left, blk_x, blk_y + 1, &pred1, 1);
+        break;
+      case 2: //===== BOTTOM LEFT =====
+        intra_chroma_DC_single(imgUV0, up_avail, left_avail, up, left, blk_x, blk_y + 1, &pred, 0);
+        intra_chroma_DC_single(imgUV1, up_avail, left_avail, up, left, blk_x, blk_y + 1, &pred1, 0);
+        break;
+      case 3: //===== BOTTOM RIGHT =====
+        intra_chroma_DC_all   (imgUV0, up_avail, left_avail, up, left, blk_x, blk_y + 1, &pred);
+        intra_chroma_DC_all   (imgUV1, up_avail, left_avail, up, left, blk_x, blk_y + 1, &pred1);
+        break;
+      }
+
+#if (IMGTYPE == 0)
+      {
+        int jj;
+        for (jj = blk_y; jj < blk_y + BLOCK_SIZE; ++jj)
+        {
+          memset(&mb_pred0[jj][blk_x],  pred, BLOCK_SIZE * sizeof(imgpel));
+          memset(&mb_pred1[jj][blk_x], pred1, BLOCK_SIZE * sizeof(imgpel));
+        }
+      }
+#else
+      {
+        int jj, ii;
+        for (jj = blk_y; jj < blk_y + BLOCK_SIZE; ++jj)
+        {
+          for (ii = blk_x; ii < blk_x + BLOCK_SIZE; ++ii)
+          {
+            mb_pred0[jj][ii]=(imgpel) pred;
+            mb_pred1[jj][ii]=(imgpel) pred1;
+          }
+        }
+      }
+#endif
+    }
+  }
+}
+//}}}
+//{{{
+static void intrapred_chroma_hor (Macroblock *currMB)
+{
+  VideoParameters *p_Vid = currMB->p_Vid;
+  PixelPos a;  //!< pixel positions p(-1, -1..16)
+  int left_avail;
+
+  getNonAffNeighbour(currMB, -1, 0, p_Vid->mb_size[IS_CHROMA], &a);
+
+  if (!p_Vid->active_pps->constrained_intra_pred_flag)
+    left_avail = a.available;
+  else
+    left_avail = a.available ? currMB->p_Slice->intra_block[a.mb_addr]: 0;
+  // Horizontal Prediction
+  if (!left_avail )
+    error("unexpected HOR_PRED_8 chroma intra prediction mode",-1);
+  else
+  {
+    Slice *currSlice = currMB->p_Slice;
+    int cr_MB_x = p_Vid->mb_cr_size_x;
+    int cr_MB_y = p_Vid->mb_cr_size_y;
+
+    int j;
+    StorablePicture *dec_picture = currSlice->dec_picture;
+#if (IMGTYPE != 0)
+    int i, pred, pred1;
+#endif
+    int pos_y = a.pos_y;
+    int pos_x = a.pos_x;
+    imgpel **mb_pred0 = currSlice->mb_pred[0 + 1];
+    imgpel **mb_pred1 = currSlice->mb_pred[1 + 1];
+    imgpel **i0 = &dec_picture->imgUV[0][pos_y];
+    imgpel **i1 = &dec_picture->imgUV[1][pos_y];
+
+    for (j = 0; j < cr_MB_y; ++j)
+    {
+#if (IMGTYPE == 0)
+      memset(mb_pred0[j], (*i0++)[pos_x], cr_MB_x * sizeof(imgpel));
+      memset(mb_pred1[j], (*i1++)[pos_x], cr_MB_x * sizeof(imgpel));
+#else
+      pred  = (*i0++)[pos_x];
+      pred1 = (*i1++)[pos_x];
+      for (i = 0; i < cr_MB_x; ++i)
+      {
+        mb_pred0[j][i]=(imgpel) pred;
+        mb_pred1[j][i]=(imgpel) pred1;
+      }
+#endif
+
+    }
+  }
+}
+//}}}
+//{{{
+static void intrapred_chroma_ver (Macroblock *currMB)
+{
+  Slice *currSlice = currMB->p_Slice;
+  VideoParameters *p_Vid = currMB->p_Vid;
+  int j;
+  StorablePicture *dec_picture = currSlice->dec_picture;
+
+  PixelPos up;        //!< pixel position  p(0,-1)
+  int up_avail;
+  int cr_MB_x = p_Vid->mb_cr_size_x;
+  int cr_MB_y = p_Vid->mb_cr_size_y;
+  getNonAffNeighbour(currMB, 0, -1, p_Vid->mb_size[IS_CHROMA], &up);
+
+  if (!p_Vid->active_pps->constrained_intra_pred_flag)
+    up_avail      = up.available;
+  else
+    up_avail = up.available ? currSlice->intra_block[up.mb_addr] : 0;
+  // Vertical Prediction
+  if (!up_avail)
+    error("unexpected VERT_PRED_8 chroma intra prediction mode",-1);
+  else
+  {
+    imgpel **mb_pred0 = currSlice->mb_pred[1];
+    imgpel **mb_pred1 = currSlice->mb_pred[2];
+    imgpel *i0 = &(dec_picture->imgUV[0][up.pos_y][up.pos_x]);
+    imgpel *i1 = &(dec_picture->imgUV[1][up.pos_y][up.pos_x]);
+
+    for (j = 0; j < cr_MB_y; ++j)
+    {
+      memcpy(mb_pred0[j], i0, cr_MB_x * sizeof(imgpel));
+      memcpy(mb_pred1[j], i1, cr_MB_x * sizeof(imgpel));
+    }
+  }
+}
+//}}}
+//{{{
+static void intrapred_chroma_plane (Macroblock *currMB)
+{
+  Slice *currSlice = currMB->p_Slice;
+  VideoParameters *p_Vid = currMB->p_Vid;
+  StorablePicture *dec_picture = currSlice->dec_picture;
+
+  PixelPos up;        //!< pixel position  p(0,-1)
+  PixelPos up_left;
+  PixelPos left;  //!< pixel positions p(-1, -1..16)
+  int up_avail, left_avail, left_up_avail;
+
+  getNonAffNeighbour(currMB, -1, -1, p_Vid->mb_size[IS_CHROMA], &up_left);
+  getNonAffNeighbour(currMB, -1,  0, p_Vid->mb_size[IS_CHROMA], &left);
+  getNonAffNeighbour(currMB,  0, -1, p_Vid->mb_size[IS_CHROMA], &up);
+
+  if (!p_Vid->active_pps->constrained_intra_pred_flag)
+  {
+    up_avail      = up.available;
+    left_avail    = left.available;
+    left_up_avail = up_left.available;
+  }
+  else
+  {
+    up_avail      = up.available ? currSlice->intra_block[up.mb_addr] : 0;
+    left_avail    = left.available ? currSlice->intra_block[left.mb_addr]: 0;
+    left_up_avail = up_left.available ? currSlice->intra_block[up_left.mb_addr]: 0;
+  }
+  // plane prediction
+  if (!left_up_avail || !left_avail || !up_avail)
+    error("unexpected PLANE_8 chroma intra prediction mode",-1);
+  else
+  {
+    int cr_MB_x = p_Vid->mb_cr_size_x;
+    int cr_MB_y = p_Vid->mb_cr_size_y;
+    int cr_MB_y2 = (cr_MB_y >> 1);
+    int cr_MB_x2 = (cr_MB_x >> 1);
+
+    int i,j;
+    int ih, iv, ib, ic, iaa;
+    int uv;
+    for (uv = 0; uv < 2; uv++)
+    {
+      imgpel **imgUV = dec_picture->imgUV[uv];
+      imgpel **mb_pred = currSlice->mb_pred[uv + 1];
+      int max_imgpel_value = p_Vid->max_pel_value_comp[uv + 1];
+      imgpel *upPred = &imgUV[up.pos_y][up.pos_x];
+      int pos_x  = up_left.pos_x;
+      int pos_y1 = left.pos_y + cr_MB_y2;
+      int pos_y2 = pos_y1 - 2;
+      //imgpel **predU1 = &imgUV[pos_y1];
+      imgpel **predU2 = &imgUV[pos_y2];
+      ih = cr_MB_x2 * (upPred[cr_MB_x - 1] - imgUV[up_left.pos_y][pos_x]);
+
+      for (i = 0; i < cr_MB_x2 - 1; ++i)
+        ih += (i + 1) * (upPred[cr_MB_x2 + i] - upPred[cr_MB_x2 - 2 - i]);
+
+      iv = cr_MB_y2 * (imgUV[left.pos_y + cr_MB_y - 1][pos_x] - imgUV[up_left.pos_y][pos_x]);
+
+      for (i = 0; i < cr_MB_y2 - 1; ++i)
+      {
+        iv += (i + 1)*(*(imgUV[pos_y1++] + pos_x) - *((*predU2--) + pos_x));
+      }
+
+      ib= ((cr_MB_x == 8 ? 17 : 5) * ih + 2 * cr_MB_x)>>(cr_MB_x == 8 ? 5 : 6);
+      ic= ((cr_MB_y == 8 ? 17 : 5) * iv + 2 * cr_MB_y)>>(cr_MB_y == 8 ? 5 : 6);
+
+      iaa = ((imgUV[pos_y1][pos_x] + upPred[cr_MB_x-1]) << 4);
+
+      for (j = 0; j < cr_MB_y; ++j)
+      {
+        int plane = iaa + (j - cr_MB_y2 + 1) * ic + 16 - (cr_MB_x2 - 1) * ib;
+
+        for (i = 0; i < cr_MB_x; ++i)
+          mb_pred[j][i]=(imgpel) iClip1(max_imgpel_value, ((i * ib + plane) >> 5));
+      }
+    }
+  }
+}
+//}}}
+//{{{
+static void intra_chroma_DC_single_mbaff (imgpel **curr_img, int up_avail, int left_avail, PixelPos up, PixelPos left[17], int blk_x, int blk_y, int *pred, int direction )
+{
+  int i;
+  int s0 = 0;
+
+  if ((direction && up_avail) || (!left_avail && up_avail))
+  {
+    for (i = blk_x; i < (blk_x + 4);++i)
+      s0 += curr_img[up.pos_y][up.pos_x + i];
+    *pred = (s0 + 2) >> 2;
+  }
+  else if (left_avail)
+  {
+    for (i = blk_y; i < (blk_y + 4);++i)
+      s0 += curr_img[left[i].pos_y][left[i].pos_x];
+    *pred = (s0 + 2) >> 2;
+  }
+}
+//}}}
+//{{{
+static void intra_chroma_DC_all_mbaff (imgpel **curr_img, int up_avail, int left_avail, PixelPos up, PixelPos left[17], int blk_x, int blk_y, int *pred )
+{
+  int i;
+  int s0 = 0, s1 = 0;
+
+  if (up_avail)
+    for (i = blk_x; i < (blk_x + 4);++i)
+      s0 += curr_img[up.pos_y][up.pos_x + i];
+
+  if (left_avail)
+    for (i = blk_y; i < (blk_y + 4);++i)
+      s1 += curr_img[left[i].pos_y][left[i].pos_x];
+
+  if (up_avail && left_avail)
+    *pred = (s0 + s1 + 4) >> 3;
+  else if (up_avail)
+    *pred = (s0 + 2) >> 2;
+  else if (left_avail)
+    *pred = (s1 + 2) >> 2;
+}
+//}}}
+//{{{
+static void intrapred_chroma_ver_mbaff (Macroblock *currMB)
+{
+  Slice *currSlice = currMB->p_Slice;
+  VideoParameters *p_Vid = currMB->p_Vid;
+  int j;
+  StorablePicture *dec_picture = currSlice->dec_picture;
+
+  PixelPos up;        //!< pixel position  p(0,-1)
+  int up_avail;
+  int cr_MB_x = p_Vid->mb_cr_size_x;
+  int cr_MB_y = p_Vid->mb_cr_size_y;
+
+  getAffNeighbour(currMB, 0, -1, p_Vid->mb_size[IS_CHROMA], &up);
+
+  if (!p_Vid->active_pps->constrained_intra_pred_flag)
+    up_avail      = up.available;
+  else
+    up_avail = up.available ? currSlice->intra_block[up.mb_addr] : 0;
+  // Vertical Prediction
+  if (!up_avail)
+    error("unexpected VERT_PRED_8 chroma intra prediction mode",-1);
+  else
+  {
+    imgpel **mb_pred0 = currSlice->mb_pred[1];
+    imgpel **mb_pred1 = currSlice->mb_pred[2];
+    imgpel *i0 = &(dec_picture->imgUV[0][up.pos_y][up.pos_x]);
+    imgpel *i1 = &(dec_picture->imgUV[1][up.pos_y][up.pos_x]);
+
+    for (j = 0; j < cr_MB_y; ++j)
+    {
+      memcpy(&(mb_pred0[j][0]),i0, cr_MB_x * sizeof(imgpel));
+      memcpy(&(mb_pred1[j][0]),i1, cr_MB_x * sizeof(imgpel));
+    }
+  }
+}
+//}}}
+//{{{
+/*!
+ ************************************************************************
+ * \brief
+ *    Chroma Intra prediction. Note that many operations can be moved
+ *    outside since they are repeated for both components for no reason.
+ ************************************************************************
+ */
+static void intra_pred_chroma_mbaff (Macroblock *currMB)
+{
+  Slice *currSlice = currMB->p_Slice;
+  VideoParameters *p_Vid = currMB->p_Vid;
+  int i,j, ii, jj;
+  StorablePicture *dec_picture = currSlice->dec_picture;
+
+  int ih, iv, ib, ic, iaa;
+
+  int        b8, b4;
+  int        yuv = dec_picture->chroma_format_idc - 1;
+  int        blk_x, blk_y;
+  int        pred;
+  static const int block_pos[3][4][4]= //[yuv][b8][b4]
+  {
+    { {0, 1, 4, 5},{0, 0, 0, 0},{0, 0, 0, 0},{0, 0, 0, 0}},
+    { {0, 1, 2, 3},{4, 5, 4, 5},{0, 0, 0, 0},{0, 0, 0, 0}},
+    { {0, 1, 2, 3},{1, 1, 3, 3},{4, 5, 4, 5},{5, 5, 5, 5}}
+  };
+
+  switch (currMB->c_ipred_mode)
+  {
+  case DC_PRED_8:
+    {
+      PixelPos up;        //!< pixel position  p(0,-1)
+      PixelPos left[17];  //!< pixel positions p(-1, -1..16)
+
+      int up_avail, left_avail[2];
+
+      int cr_MB_y = p_Vid->mb_cr_size_y;
+      int cr_MB_y2 = (cr_MB_y >> 1);
+
+      for (i=0; i < cr_MB_y + 1 ; ++i)
+        getAffNeighbour(currMB, -1, i-1, p_Vid->mb_size[IS_CHROMA], &left[i]);
+      getAffNeighbour(currMB, 0, -1, p_Vid->mb_size[IS_CHROMA], &up);
+
+      if (!p_Vid->active_pps->constrained_intra_pred_flag)
+      {
+        up_avail      = up.available;
+        left_avail[0] = left_avail[1] = left[1].available;
+      }
+      else
+      {
+        up_avail = up.available ? currSlice->intra_block[up.mb_addr] : 0;
+        for (i=0, left_avail[0] = 1; i < cr_MB_y2;++i)
+          left_avail[0]  &= left[i + 1].available ? currSlice->intra_block[left[i + 1].mb_addr]: 0;
+
+        for (i = cr_MB_y2, left_avail[1] = 1; i<cr_MB_y;++i)
+          left_avail[1]  &= left[i + 1].available ? currSlice->intra_block[left[i + 1].mb_addr]: 0;
+
+      }
+      // DC prediction
+      // Note that unlike what is stated in many presentations and papers, this mode does not operate
+      // the same way as I_16x16 DC prediction.
+      {
+        int pred1;
+        imgpel **imgUV0 = dec_picture->imgUV[0];
+        imgpel **imgUV1 = dec_picture->imgUV[1];
+        imgpel **mb_pred0 = currSlice->mb_pred[0 + 1];
+        imgpel **mb_pred1 = currSlice->mb_pred[1 + 1];
+        for(b8 = 0; b8 < (p_Vid->num_uv_blocks) ;++b8)
+        {
+          for (b4 = 0; b4 < 4; ++b4)
+          {
+            blk_y = subblk_offset_y[yuv][b8][b4];
+            blk_x = subblk_offset_x[yuv][b8][b4];
+
+            pred = p_Vid->dc_pred_value_comp[1];
+            pred1 = p_Vid->dc_pred_value_comp[2];
+            //===== get prediction value =====
+            switch (block_pos[yuv][b8][b4])
+            {
+            case 0:  //===== TOP TOP-LEFT =====
+              intra_chroma_DC_all_mbaff    (imgUV0, up_avail, left_avail[0], up, left, blk_x, blk_y + 1, &pred);
+              intra_chroma_DC_all_mbaff    (imgUV1, up_avail, left_avail[0], up, left, blk_x, blk_y + 1, &pred1);
+              break;
+            case 1: //===== TOP TOP-RIGHT =====
+              intra_chroma_DC_single_mbaff (imgUV0, up_avail, left_avail[0], up, left, blk_x, blk_y + 1, &pred, 1);
+              intra_chroma_DC_single_mbaff (imgUV1, up_avail, left_avail[0], up, left, blk_x, blk_y + 1, &pred1, 1);
+              break;
+            case 2:  //===== TOP BOTTOM-LEFT =====
+              intra_chroma_DC_single_mbaff (imgUV0, up_avail, left_avail[0], up, left, blk_x, blk_y + 1, &pred, 0);
+              intra_chroma_DC_single_mbaff (imgUV1, up_avail, left_avail[0], up, left, blk_x, blk_y + 1, &pred1, 0);
+              break;
+            case 3: //===== TOP BOTTOM-RIGHT =====
+              intra_chroma_DC_all_mbaff    (imgUV0, up_avail, left_avail[0], up, left, blk_x, blk_y + 1, &pred);
+              intra_chroma_DC_all_mbaff    (imgUV1, up_avail, left_avail[0], up, left, blk_x, blk_y + 1, &pred1);
+              break;
+
+            case 4: //===== BOTTOM LEFT =====
+              intra_chroma_DC_single_mbaff (imgUV0, up_avail, left_avail[1], up, left, blk_x, blk_y + 1, &pred, 0);
+              intra_chroma_DC_single_mbaff (imgUV1, up_avail, left_avail[1], up, left, blk_x, blk_y + 1, &pred1, 0);
+              break;
+            case 5: //===== BOTTOM RIGHT =====
+              intra_chroma_DC_all_mbaff   (imgUV0, up_avail, left_avail[1], up, left, blk_x, blk_y + 1, &pred);
+              intra_chroma_DC_all_mbaff   (imgUV1, up_avail, left_avail[1], up, left, blk_x, blk_y + 1, &pred1);
+              break;
+            }
+
+            for (jj = blk_y; jj < blk_y + BLOCK_SIZE; ++jj)
+            {
+              for (ii = blk_x; ii < blk_x + BLOCK_SIZE; ++ii)
+              {
+                mb_pred0[jj][ii]=(imgpel) pred;
+                mb_pred1[jj][ii]=(imgpel) pred1;
+              }
+            }
+          }
+        }
+      }
+    }
+    break;
+  case HOR_PRED_8:
+    {
+      PixelPos left[17];  //!< pixel positions p(-1, -1..16)
+
+      int left_avail[2];
+
+      int cr_MB_x = p_Vid->mb_cr_size_x;
+      int cr_MB_y = p_Vid->mb_cr_size_y;
+      int cr_MB_y2 = (cr_MB_y >> 1);
+
+      for (i=0; i < cr_MB_y + 1 ; ++i)
+        getAffNeighbour(currMB, -1, i-1, p_Vid->mb_size[IS_CHROMA], &left[i]);
+
+      if (!p_Vid->active_pps->constrained_intra_pred_flag)
+      {
+        left_avail[0] = left_avail[1] = left[1].available;
+      }
+      else
+      {
+        for (i=0, left_avail[0] = 1; i < cr_MB_y2;++i)
+          left_avail[0]  &= left[i + 1].available ? currSlice->intra_block[left[i + 1].mb_addr]: 0;
+
+        for (i = cr_MB_y2, left_avail[1] = 1; i<cr_MB_y;++i)
+          left_avail[1]  &= left[i + 1].available ? currSlice->intra_block[left[i + 1].mb_addr]: 0;
+      }
+      // Horizontal Prediction
+      if (!left_avail[0] || !left_avail[1])
+        error("unexpected HOR_PRED_8 chroma intra prediction mode",-1);
+      else
+      {
+        int pred1;
+        imgpel **mb_pred0 = currSlice->mb_pred[0 + 1];
+        imgpel **mb_pred1 = currSlice->mb_pred[1 + 1];
+        imgpel **i0 = dec_picture->imgUV[0];
+        imgpel **i1 = dec_picture->imgUV[1];
+        for (j = 0; j < cr_MB_y; ++j)
+        {
+          pred = i0[left[1 + j].pos_y][left[1 + j].pos_x];
+          pred1 = i1[left[1 + j].pos_y][left[1 + j].pos_x];
+          for (i = 0; i < cr_MB_x; ++i)
+          {
+            mb_pred0[j][i]=(imgpel) pred;
+            mb_pred1[j][i]=(imgpel) pred1;
+          }
+        }
+      }
+    }
+    break;
+  case VERT_PRED_8:
+    {
+      PixelPos up;        //!< pixel position  p(0,-1)
+
+      int up_avail;
+
+      int cr_MB_x = p_Vid->mb_cr_size_x;
+      int cr_MB_y = p_Vid->mb_cr_size_y;
+
+      getAffNeighbour(currMB, 0, -1, p_Vid->mb_size[IS_CHROMA], &up);
+
+      if (!p_Vid->active_pps->constrained_intra_pred_flag)
+        up_avail      = up.available;
+      else
+        up_avail = up.available ? currSlice->intra_block[up.mb_addr] : 0;
+      // Vertical Prediction
+      if (!up_avail)
+        error("unexpected VERT_PRED_8 chroma intra prediction mode",-1);
+      else
+      {
+        imgpel **mb_pred0 = currSlice->mb_pred[0 + 1];
+        imgpel **mb_pred1 = currSlice->mb_pred[1 + 1];
+        imgpel *i0 = &(dec_picture->imgUV[0][up.pos_y][up.pos_x]);
+        imgpel *i1 = &(dec_picture->imgUV[1][up.pos_y][up.pos_x]);
+        for (j = 0; j < cr_MB_y; ++j)
+        {
+          memcpy(&(mb_pred0[j][0]),i0, cr_MB_x * sizeof(imgpel));
+          memcpy(&(mb_pred1[j][0]),i1, cr_MB_x * sizeof(imgpel));
+        }
+      }
+    }
+    break;
+  case PLANE_8:
+    {
+      PixelPos up;        //!< pixel position  p(0,-1)
+      PixelPos left[17];  //!< pixel positions p(-1, -1..16)
+
+      int up_avail, left_avail[2], left_up_avail;
+
+      int cr_MB_x = p_Vid->mb_cr_size_x;
+      int cr_MB_y = p_Vid->mb_cr_size_y;
+      int cr_MB_y2 = (cr_MB_y >> 1);
+      int cr_MB_x2 = (cr_MB_x >> 1);
+
+      for (i=0; i < cr_MB_y + 1 ; ++i)
+        getAffNeighbour(currMB, -1, i-1, p_Vid->mb_size[IS_CHROMA], &left[i]);
+      getAffNeighbour(currMB, 0, -1, p_Vid->mb_size[IS_CHROMA], &up);
+
+      if (!p_Vid->active_pps->constrained_intra_pred_flag)
+      {
+        up_avail      = up.available;
+        left_avail[0] = left_avail[1] = left[1].available;
+        left_up_avail = left[0].available;
+      }
+      else
+      {
+        up_avail = up.available ? currSlice->intra_block[up.mb_addr] : 0;
+        for (i=0, left_avail[0] = 1; i < cr_MB_y2;++i)
+          left_avail[0]  &= left[i + 1].available ? currSlice->intra_block[left[i + 1].mb_addr]: 0;
+
+        for (i = cr_MB_y2, left_avail[1] = 1; i<cr_MB_y;++i)
+          left_avail[1]  &= left[i + 1].available ? currSlice->intra_block[left[i + 1].mb_addr]: 0;
+
+        left_up_avail = left[0].available ? currSlice->intra_block[left[0].mb_addr]: 0;
+      }
+      // plane prediction
+      if (!left_up_avail || !left_avail[0] || !left_avail[1] || !up_avail)
+        error("unexpected PLANE_8 chroma intra prediction mode",-1);
+      else
+      {
+        int uv;
+        for (uv = 0; uv < 2; uv++)
+        {
+          imgpel **imgUV = dec_picture->imgUV[uv];
+          imgpel **mb_pred = currSlice->mb_pred[uv + 1];
+          int max_imgpel_value = p_Vid->max_pel_value_comp[uv + 1];
+          imgpel *upPred = &imgUV[up.pos_y][up.pos_x];
+
+          ih = cr_MB_x2 * (upPred[cr_MB_x - 1] - imgUV[left[0].pos_y][left[0].pos_x]);
+          for (i = 0; i < cr_MB_x2 - 1; ++i)
+            ih += (i + 1) * (upPred[cr_MB_x2 + i] - upPred[cr_MB_x2 - 2 - i]);
+
+          iv = cr_MB_y2 * (imgUV[left[cr_MB_y].pos_y][left[cr_MB_y].pos_x] - imgUV[left[0].pos_y][left[0].pos_x]);
+          for (i = 0; i < cr_MB_y2 - 1; ++i)
+            iv += (i + 1)*(imgUV[left[cr_MB_y2 + 1 + i].pos_y][left[cr_MB_y2 + 1 + i].pos_x] -
+            imgUV[left[cr_MB_y2 - 1 - i].pos_y][left[cr_MB_y2 - 1 - i].pos_x]);
+
+          ib= ((cr_MB_x == 8 ? 17 : 5) * ih + 2 * cr_MB_x)>>(cr_MB_x == 8 ? 5 : 6);
+          ic= ((cr_MB_y == 8 ? 17 : 5) * iv + 2 * cr_MB_y)>>(cr_MB_y == 8 ? 5 : 6);
+
+          iaa=16*(imgUV[left[cr_MB_y].pos_y][left[cr_MB_y].pos_x] + upPred[cr_MB_x-1]);
+
+          for (j = 0; j < cr_MB_y; ++j)
+            for (i = 0; i < cr_MB_x; ++i)
+              mb_pred[j][i]=(imgpel) iClip1(max_imgpel_value, ((iaa + (i - cr_MB_x2 + 1) * ib + (j - cr_MB_y2 + 1) * ic + 16) >> 5));
+        }
+      }
+    }
+    break;
+  default:
+    error("illegal chroma intra prediction mode", 600);
+    break;
+  }
+}
+//}}}
+//{{{
+/*!
+ ************************************************************************
+ * \brief
+ *    Chroma Intra prediction. Note that many operations can be moved
+ *    outside since they are repeated for both components for no reason.
+ ************************************************************************
+ */
+static void intra_pred_chroma (Macroblock *currMB)
+{
+  switch (currMB->c_ipred_mode)
+  {
+  case DC_PRED_8:
+    intrapred_chroma_dc(currMB);
+    break;
+  case HOR_PRED_8:
+    intrapred_chroma_hor(currMB);
+    break;
+  case VERT_PRED_8:
+    intrapred_chroma_ver(currMB);
+    break;
+  case PLANE_8:
+    intrapred_chroma_plane(currMB);
+    break;
+  default:
+    error("illegal chroma intra prediction mode", 600);
+    break;
+  }
+}
+//}}}
+
+//{{{
+void set_intra_prediction_modes (Slice *currSlice) {
+
+  if (currSlice->mb_aff_frame_flag) {
+    currSlice->intra_pred_4x4 = intra_pred_4x4_mbaff;
+    currSlice->intra_pred_8x8 = intra_pred_8x8_mbaff;
+    currSlice->intra_pred_16x16 = intra_pred_16x16_mbaff;
+    currSlice->intra_pred_chroma = intra_pred_chroma_mbaff;
+    }
+  else {
+    currSlice->intra_pred_4x4 = intra_pred_4x4_normal;
+    currSlice->intra_pred_8x8 = intra_pred_8x8_normal;
+    currSlice->intra_pred_16x16 = intra_pred_16x16_normal;
+    currSlice->intra_pred_chroma = intra_pred_chroma;
+    }
+  }
 //}}}

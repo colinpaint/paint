@@ -29,9 +29,6 @@
 #include "transform.h"
 #include "mc_prediction.h"
 #include "quant.h"
-#include "intra4x4_pred.h"
-#include "intra8x8_pred.h"
-#include "intra16x16_pred.h"
 #include "mv_prediction.h"
 #include "mb_prediction.h"
 //}}}
