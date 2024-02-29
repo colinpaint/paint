@@ -11,17 +11,16 @@ extern int decode_one_frame (DecoderParams *pDecoder);
 
 extern int is_new_picture (StorablePicture *dec_picture, Slice *currSlice, OldSliceParams *p_old_slice);
 extern void init_old_slice (OldSliceParams *p_old_slice);
-// For 4:4:4 independent mode
 extern void copy_dec_picture_JV (VideoParameters *p_Vid, StorablePicture *dst, StorablePicture *src );
 
 extern void frame_postprocessing (VideoParameters *p_Vid);
 extern void field_postprocessing (VideoParameters *p_Vid);
+
+extern void init_slice (VideoParameters *p_Vid, Slice *currSlice);
+extern void decode_slice (Slice *currSlice, int current_header);
 
 #if (MVC_EXTENSION_ENABLE)
   extern int GetViewIdx (VideoParameters *p_Vid, int iVOIdx);
   extern int GetVOIdx (VideoParameters *p_Vid, int iViewId);
   extern int get_maxViewIdx (VideoParameters *p_Vid, int view_id, int anchor_pic_flag, int listidx);
 #endif
-
-extern void init_slice (VideoParameters *p_Vid, Slice *currSlice);
-extern void decode_slice (Slice *currSlice, int current_header);

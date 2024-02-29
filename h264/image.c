@@ -55,7 +55,7 @@
 
 #include "errorconcealment.h"
 #include "erc_api.h"
-#include "mbuffer_common.h"
+#include "mbuffer.h"
 #include "mbuffer_mvc.h"
 
 #include "mc_prediction.h"

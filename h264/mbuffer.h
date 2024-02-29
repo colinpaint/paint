@@ -2,28 +2,26 @@
 #include "global.h"
 
 #define MAX_LIST_SIZE 33
+
 //{{{
 //! definition of pic motion parameters
-typedef struct pic_motion_params_old
-{
+typedef struct pic_motion_params_old {
   byte *      mb_field;      //!< field macroblock indicator
-} PicMotionParamsOld;
+  } PicMotionParamsOld;
 //}}}
 //{{{
 //! definition of pic motion parameters
-typedef struct pic_motion_params
-{
+typedef struct pic_motion_params {
   struct storable_picture *ref_pic[2];  //!< referrence picture pointer
   MotionVector             mv[2];       //!< motion vector
   char                     ref_idx[2];  //!< reference picture   [list][subblock_y][subblock_x]
   //byte                   mb_field;    //!< field macroblock indicator
   byte                     slice_no;
-} PicMotionParams;
+  } PicMotionParams;
 //}}}
 //{{{
 //! definition a picture (field or frame)
-typedef struct storable_picture
-{
+typedef struct storable_picture {
   PictureStructure structure;
 
   int         poc;
@@ -53,7 +51,6 @@ typedef struct storable_picture
   unsigned    PicSizeInMbs;
   int         iLumaPadY, iLumaPadX;
   int         iChromaPadY, iChromaPadX;
-
 
   imgpel **     imgY;         //!< Y picture component
   imgpel ***    imgUV;        //!< U and V picture components
@@ -112,13 +109,12 @@ typedef struct storable_picture
   char listXsize[MAX_NUM_SLICES][2];
   struct storable_picture **listX[MAX_NUM_SLICES][2];
   int         layer_id;
-} StorablePicture;
+  } StorablePicture;
 //}}}
-typedef StorablePicture *StorablePicturePtr;
+typedef StorablePicture* StorablePicturePtr;
 //{{{
 //! Frame Stores for Decoded Picture Buffer
-typedef struct frame_store
-{
+typedef struct frame_store {
   int       is_used;                //!< 0=empty; 1=top; 2=bottom; 3=both fields (or frame)
   int       is_reference;           //!< 0=not used for ref; 1=top used; 2=bottom used; 3=both fields (or frame) used
   int       is_long_term;           //!< 0=not used for ref; 1=top used; 2=bottom used; 3=both fields (or frame) used
@@ -147,89 +143,240 @@ typedef struct frame_store
   int       anchor_pic_flag[2];
 #endif
   int       layer_id;
-} FrameStore;
+  } FrameStore;
 //}}}
 //{{{
 //! Decoded Picture Buffer
-typedef struct decoded_picture_buffer
-{
-  VideoParameters *p_Vid;
-  InputParameters *p_Inp;
-  FrameStore  **fs;
-  FrameStore  **fs_ref;
-  FrameStore  **fs_ltref;
-  FrameStore  **fs_ilref; // inter-layer reference (for multi-layered codecs)
-  unsigned      size;
-  unsigned      used_size;
-  unsigned      ref_frames_in_buffer;
-  unsigned      ltref_frames_in_buffer;
-  int           last_output_poc;
+typedef struct decoded_picture_buffer {
+  VideoParameters* p_Vid;
+  InputParameters* p_Inp;
+
+  FrameStore** fs;
+  FrameStore** fs_ref;
+  FrameStore** fs_ltref;
+  FrameStore** fs_ilref; // inter-layer reference (for multi-layered codecs)
+
+  unsigned size;
+  unsigned used_size;
+  unsigned ref_frames_in_buffer;
+  unsigned ltref_frames_in_buffer;
+  int last_output_poc;
+
 #if (MVC_EXTENSION_ENABLE)
-  int           last_output_view_id;
+  int last_output_view_id;
 #endif
-  int           max_long_term_pic_idx;
 
+  int max_long_term_pic_idx;
+  int init_done;
+  int num_ref_frames;
 
-  int           init_done;
-  int           num_ref_frames;
-
-  FrameStore   *last_picture;
-  unsigned     used_size_il;
-  int          layer_id;
-
-  //DPB related function;
-
-} DecodedPictureBuffer;
+  FrameStore* last_picture;
+  unsigned used_size_il;
+  int layer_id;
+  } DecodedPictureBuffer;
 //}}}
 
-extern void              init_dpb(VideoParameters *p_Vid, DecodedPictureBuffer *p_Dpb, int type);
-extern void              re_init_dpb(VideoParameters *p_Vid, DecodedPictureBuffer *p_Dpb, int type);
-extern void              free_dpb(DecodedPictureBuffer *p_Dpb);
-extern FrameStore*       alloc_frame_store(void);
-extern void              free_frame_store (FrameStore* f);
-extern StorablePicture*  alloc_storable_picture(VideoParameters *p_Vid, PictureStructure type, int size_x, int size_y, int size_x_cr, int size_y_cr, int is_output);
-extern void              free_storable_picture (StorablePicture* p);
-extern void              store_picture_in_dpb(DecodedPictureBuffer *p_Dpb, StorablePicture* p);
+//{{{
+// compares two stored pictures by picture number for qsort in descending order
+static inline int compare_pic_by_pic_num_desc( const void *arg1, const void *arg2 )
+{
+  int pic_num1 = (*(StorablePicture**)arg1)->pic_num;
+  int pic_num2 = (*(StorablePicture**)arg2)->pic_num;
+
+  if (pic_num1 < pic_num2)
+    return 1;
+  if (pic_num1 > pic_num2)
+    return -1;
+  else
+    return 0;
+}
+//}}}
+//{{{
+// compares two stored pictures by picture number for qsort in descending order
+static inline int compare_pic_by_lt_pic_num_asc( const void *arg1, const void *arg2 )
+{
+  int long_term_pic_num1 = (*(StorablePicture**)arg1)->long_term_pic_num;
+  int long_term_pic_num2 = (*(StorablePicture**)arg2)->long_term_pic_num;
+
+  if ( long_term_pic_num1 < long_term_pic_num2)
+    return -1;
+  if ( long_term_pic_num1 > long_term_pic_num2)
+    return 1;
+  else
+    return 0;
+}
+//}}}
+//{{{
+// compares two frame stores by pic_num for qsort in descending order
+static inline int compare_fs_by_frame_num_desc( const void *arg1, const void *arg2 )
+{
+  int frame_num_wrap1 = (*(FrameStore**)arg1)->frame_num_wrap;
+  int frame_num_wrap2 = (*(FrameStore**)arg2)->frame_num_wrap;
+  if ( frame_num_wrap1 < frame_num_wrap2)
+    return 1;
+  if ( frame_num_wrap1 > frame_num_wrap2)
+    return -1;
+  else
+    return 0;
+}
+//}}}
+//{{{
+// compares two frame stores by lt_pic_num for qsort in descending order
+static inline int compare_fs_by_lt_pic_idx_asc( const void *arg1, const void *arg2 )
+{
+  int long_term_frame_idx1 = (*(FrameStore**)arg1)->long_term_frame_idx;
+  int long_term_frame_idx2 = (*(FrameStore**)arg2)->long_term_frame_idx;
+
+  if ( long_term_frame_idx1 < long_term_frame_idx2)
+    return -1;
+  else if ( long_term_frame_idx1 > long_term_frame_idx2)
+    return 1;
+  else
+    return 0;
+}
+//}}}
+//{{{
+// compares two stored pictures by poc for qsort in ascending order
+static inline int compare_pic_by_poc_asc( const void *arg1, const void *arg2 )
+{
+  int poc1 = (*(StorablePicture**)arg1)->poc;
+  int poc2 = (*(StorablePicture**)arg2)->poc;
+
+  if ( poc1 < poc2)
+    return -1;
+  else if ( poc1 > poc2)
+    return 1;
+  else
+    return 0;
+}
+//}}}
+//{{{
+// compares two stored pictures by poc for qsort in descending order
+static inline int compare_pic_by_poc_desc( const void *arg1, const void *arg2 )
+{
+  int poc1 = (*(StorablePicture**)arg1)->poc;
+  int poc2 = (*(StorablePicture**)arg2)->poc;
+
+  if (poc1 < poc2)
+    return 1;
+  else if (poc1 > poc2)
+    return -1;
+  else
+    return 0;
+}
+//}}}
+//{{{
+// compares two frame stores by poc for qsort in ascending order
+static inline int compare_fs_by_poc_asc( const void *arg1, const void *arg2 )
+{
+  int poc1 = (*(FrameStore**)arg1)->poc;
+  int poc2 = (*(FrameStore**)arg2)->poc;
+
+  if (poc1 < poc2)
+    return -1;
+  else if (poc1 > poc2)
+    return 1;
+  else
+    return 0;
+}
+//}}}
+//{{{
+// compares two frame stores by poc for qsort in descending order
+static inline int compare_fs_by_poc_desc( const void *arg1, const void *arg2 )
+{
+  int poc1 = (*(FrameStore**)arg1)->poc;
+  int poc2 = (*(FrameStore**)arg2)->poc;
+
+  if (poc1 < poc2)
+    return 1;
+  else if (poc1 > poc2)
+    return -1;
+  else
+    return 0;
+}
+//}}}
+//{{{
+// returns true, if picture is short term reference picture
+static inline int is_short_ref(StorablePicture *s)
+{
+  return ((s->used_for_reference) && (!(s->is_long_term)));
+}
+//}}}
+//{{{
+// returns true, if picture is long term reference picture
+static inline int is_long_ref(StorablePicture *s)
+{
+  return ((s->used_for_reference) && (s->is_long_term));
+}
+//}}}
+
+extern void gen_pic_list_from_frame_list (PictureStructure currStructure, FrameStore **fs_list, int list_idx, StorablePicture **list, char *list_size, int long_term);
+extern StorablePicture* get_long_term_pic (Slice *currSlice, DecodedPictureBuffer *p_Dpb, int LongtermPicNum);
+
+extern void update_ref_list (DecodedPictureBuffer *p_Dpb);
+extern void update_ltref_list (DecodedPictureBuffer *p_Dpb);
+
+extern void mm_mark_current_picture_long_term (DecodedPictureBuffer *p_Dpb, StorablePicture *p, int long_term_frame_idx);
+extern void mm_unmark_short_term_for_reference (DecodedPictureBuffer *p_Dpb, StorablePicture *p, int difference_of_pic_nums_minus1);
+extern void mm_unmark_long_term_for_reference (DecodedPictureBuffer *p_Dpb, StorablePicture *p, int long_term_pic_num);
+extern void mm_assign_long_term_frame_idx (DecodedPictureBuffer *p_Dpb, StorablePicture* p, int difference_of_pic_nums_minus1, int long_term_frame_idx);
+extern void mm_update_max_long_term_frame_idx (DecodedPictureBuffer *p_Dpb, int max_long_term_frame_idx_plus1);
+extern void mm_unmark_all_short_term_for_reference (DecodedPictureBuffer *p_Dpb);
+extern void mm_unmark_all_long_term_for_reference (DecodedPictureBuffer *p_Dpb);
+
+extern int  is_used_for_reference (FrameStore* fs);
+extern void get_smallest_poc (DecodedPictureBuffer *p_Dpb, int *poc,int * pos);
+extern int remove_unused_frame_from_dpb (DecodedPictureBuffer *p_Dpb);
+extern void init_dpb (VideoParameters *p_Vid, DecodedPictureBuffer *p_Dpb, int type);
+extern void re_init_dpb (VideoParameters *p_Vid, DecodedPictureBuffer *p_Dpb, int type);
+extern void free_dpb (DecodedPictureBuffer *p_Dpb);
+extern FrameStore* alloc_frame_store();
+extern void free_frame_store (FrameStore* f);
+extern StorablePicture*  alloc_storable_picture (VideoParameters *p_Vid, PictureStructure type, int size_x, int size_y, int size_x_cr, int size_y_cr, int is_output);
+extern void free_storable_picture (StorablePicture* p);
+extern void store_picture_in_dpb (DecodedPictureBuffer *p_Dpb, StorablePicture* p);
 extern StorablePicture*  get_short_term_pic (Slice *currSlice, DecodedPictureBuffer *p_Dpb, int picNum);
 
 #if (MVC_EXTENSION_ENABLE)
-  extern void             idr_memory_management(DecodedPictureBuffer *p_Dpb, StorablePicture* p);
-  extern void             flush_dpbs(DecodedPictureBuffer **p_Dpb, int nLayers);
-  extern int              GetMaxDecFrameBuffering(VideoParameters *p_Vid);
-  extern void             append_interview_list(DecodedPictureBuffer *p_Dpb,
-                                                PictureStructure currPicStructure, int list_idx,
-                                                FrameStore **list, int *listXsize, int currPOC,
-                                                int curr_view_id, int anchor_pic_flag);
+  extern void idr_memory_management (DecodedPictureBuffer *p_Dpb, StorablePicture* p);
+  extern void flush_dpbs (DecodedPictureBuffer **p_Dpb, int nLayers);
+  extern int  GetMaxDecFrameBuffering (VideoParameters *p_Vid);
+  extern void append_interview_list (DecodedPictureBuffer *p_Dpb,
+                                     PictureStructure currPicStructure, int list_idx,
+                                     FrameStore **list, int *listXsize, int currPOC,
+                                     int curr_view_id, int anchor_pic_flag);
 #endif
 
-extern void unmark_for_reference(FrameStore* fs);
-extern void unmark_for_long_term_reference(FrameStore* fs);
-extern void remove_frame_from_dpb(DecodedPictureBuffer *p_Dpb, int pos);
+extern void unmark_for_reference( FrameStore* fs);
+extern void unmark_for_long_term_reference (FrameStore* fs);
+extern void remove_frame_from_dpb (DecodedPictureBuffer *p_Dpb, int pos);
 
-extern void             flush_dpb(DecodedPictureBuffer *p_Dpb);
-extern void             init_lists_p_slice (Slice *currSlice);
-extern void             init_lists_b_slice (Slice *currSlice);
-extern void             init_lists_i_slice (Slice *currSlice);
-extern void             update_pic_num     (Slice *currSlice);
+extern void flush_dpb(DecodedPictureBuffer *p_Dpb);
+extern void init_lists_p_slice (Slice *currSlice);
+extern void init_lists_b_slice (Slice *currSlice);
+extern void init_lists_i_slice (Slice *currSlice);
+extern void update_pic_num (Slice *currSlice);
 
-extern void             dpb_split_field      (VideoParameters *p_Vid, FrameStore *fs);
-extern void             dpb_combine_field    (VideoParameters *p_Vid, FrameStore *fs);
-extern void             dpb_combine_field_yuv(VideoParameters *p_Vid, FrameStore *fs);
+extern void dpb_split_field (VideoParameters *p_Vid, FrameStore *fs);
+extern void dpb_combine_field (VideoParameters *p_Vid, FrameStore *fs);
+extern void dpb_combine_field_yuv (VideoParameters *p_Vid, FrameStore *fs);
 
-extern void             reorder_ref_pic_list(Slice *currSlice, int cur_list);
+extern void reorder_ref_pic_list (Slice *currSlice, int cur_list);
 
-extern void             init_mbaff_lists     (VideoParameters *p_Vid, Slice *currSlice);
-extern void             alloc_ref_pic_list_reordering_buffer(Slice *currSlice);
-extern void             free_ref_pic_list_reordering_buffer(Slice *currSlice);
+extern void init_mbaff_lists (VideoParameters *p_Vid, Slice *currSlice);
+extern void alloc_ref_pic_list_reordering_buffer (Slice *currSlice);
+extern void free_ref_pic_list_reordering_buffer (Slice *currSlice);
 
-extern void             fill_frame_num_gap(VideoParameters *p_Vid, Slice *pSlice);
+extern void fill_frame_num_gap (VideoParameters *p_Vid, Slice *pSlice);
 
 extern void compute_colocated (Slice *currSlice, StorablePicture **listX[6]);
 
-extern int init_img_data(VideoParameters *p_Vid, ImageData *p_ImgData, seq_parameter_set_rbsp_t *sps);
-extern void free_img_data(VideoParameters *p_Vid, ImageData *p_ImgData);
-extern void pad_dec_picture(VideoParameters *p_Vid, StorablePicture *dec_picture);
-extern void pad_buf(imgpel *pImgBuf, int iWidth, int iHeight, int iStride, int iPadX, int iPadY);
-extern void process_picture_in_dpb_s(VideoParameters *p_Vid, StorablePicture *p_pic);
-extern StorablePicture * clone_storable_picture( VideoParameters *p_Vid, StorablePicture *p_pic );
-extern void store_proc_picture_in_dpb(DecodedPictureBuffer *p_Dpb, StorablePicture* p);
+extern int init_img_data (VideoParameters *p_Vid, ImageData *p_ImgData, seq_parameter_set_rbsp_t *sps);
+extern void free_img_data (VideoParameters *p_Vid, ImageData *p_ImgData);
+
+extern void pad_dec_picture (VideoParameters *p_Vid, StorablePicture *dec_picture);
+extern void pad_buf (imgpel *pImgBuf, int iWidth, int iHeight, int iStride, int iPadX, int iPadY);
+
+extern void process_picture_in_dpb_s (VideoParameters *p_Vid, StorablePicture *p_pic);
+extern StorablePicture * clone_storable_picture (VideoParameters *p_Vid, StorablePicture *p_pic );
+extern void store_proc_picture_in_dpb (DecodedPictureBuffer *p_Dpb, StorablePicture* p);
