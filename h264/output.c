@@ -17,6 +17,7 @@
 #include "image.h"
 #include "memalloc.h"
 //}}}
+#define PAIR_FIELDS_IN_OUTPUT 1 // Pair field pictures output
 
 //{{{
 static void img2buf (imgpel** imgX, unsigned char* buf,
@@ -62,23 +63,21 @@ static void allocate_p_dec_pic (VideoParameters* p_Vid, DecodedPicList* pDecPic,
 //}}}
 
 //{{{
-static void clear_picture (VideoParameters* p_Vid, StorablePicture* p) {
+static void clearPicture (VideoParameters* p_Vid, StorablePicture* p) {
 
-  int i,j;
-  for (i = 0; i < p->size_y; i++) {
-    for (j = 0; j < p->size_x; j++)
-      p->imgY[i][j] = (imgpel) p_Vid->dc_pred_value_comp[0];
-    }
+  printf ("-------------------- clearPicture -----------------\n");
 
-  for (i = 0; i < p->size_y_cr;i++) {
-    for (j = 0; j < p->size_x_cr; j++)
-      p->imgUV[0][i][j] = (imgpel) p_Vid->dc_pred_value_comp[1];
-    }
+  for (int i = 0; i < p->size_y; i++)
+    for (int j = 0; j < p->size_x; j++)
+      p->imgY[i][j] = (imgpel)p_Vid->dc_pred_value_comp[0];
 
-  for (i=0; i < p->size_y_cr;i++) {
-    for (j = 0; j < p->size_x_cr; j++)
-      p->imgUV[1][i][j] = (imgpel) p_Vid->dc_pred_value_comp[2];
-    }
+  for (int i = 0; i < p->size_y_cr;i++)
+    for (int j = 0; j < p->size_x_cr; j++)
+      p->imgUV[0][i][j] = (imgpel)p_Vid->dc_pred_value_comp[1];
+
+  for (int i = 0; i < p->size_y_cr;i++)
+    for (int j = 0; j < p->size_x_cr; j++)
+      p->imgUV[1][i][j] = (imgpel)p_Vid->dc_pred_value_comp[2];
   }
 //}}}
 //{{{
@@ -94,6 +93,7 @@ static void writeOutPicture (VideoParameters* p_Vid, StorablePicture* p) {
   int symbol_size_in_bytes = ((p_Vid->pic_unit_bitsize_on_disk+7) >> 3);
   int rgb_output =  p_Vid->p_EncodePar[p->layer_id]->rgb_output;
   //(p_Vid->active_sps->vui_seq_parameters.matrix_coefficients==0);
+
   unsigned char *buf;
   //int iPicSizeTab[4] = {2, 3, 4, 6};
   int iLumaSize, iFrameSize;
@@ -150,8 +150,8 @@ static void writeOutPicture (VideoParameters* p_Vid, StorablePicture* p) {
            crop_left, crop_right, crop_top, crop_bottom, pDecPic->iUVBufStride);
   }
 //}}}
+
 #if (PAIR_FIELDS_IN_OUTPUT)
-  void clear_picture (VideoParameters *p_Vid, StorablePicture *p);
   //{{{
   void flush_pending_output (VideoParameters* p_Vid) {
 
@@ -206,7 +206,7 @@ static void writeOutPicture (VideoParameters* p_Vid, StorablePicture* p) {
       get_mem2Dpel (&(p_Vid->pending_output->imgY), p_Vid->pending_output->size_y, p_Vid->pending_output->size_x);
       get_mem3Dpel (&(p_Vid->pending_output->imgUV), 2, p_Vid->pending_output->size_y_cr, p_Vid->pending_output->size_x_cr);
 
-      clear_picture(p_Vid, p_Vid->pending_output);
+      clearPicture (p_Vid, p_Vid->pending_output);
 
       // copy first field
       int add = (real_structure == TOP_FIELD) ? 0 : 1;
@@ -268,7 +268,7 @@ static void write_unpaired_field (VideoParameters* p_Vid, FrameStore* fs) {
     p = fs->top_field;
     fs->bottom_field = alloc_storable_picture (p_Vid, BOTTOM_FIELD, p->size_x, 2*p->size_y, p->size_x_cr, 2*p->size_y_cr, 1);
     fs->bottom_field->chroma_format_idc = p->chroma_format_idc;
-    clear_picture (p_Vid, fs->bottom_field);
+    clearPicture (p_Vid, fs->bottom_field);
     dpb_combine_field_yuv (p_Vid, fs);
     writePicture (p_Vid, fs->frame, TOP_FIELD);
     }
@@ -278,7 +278,7 @@ static void write_unpaired_field (VideoParameters* p_Vid, FrameStore* fs) {
     p = fs->bottom_field;
     fs->top_field = alloc_storable_picture (p_Vid, TOP_FIELD, p->size_x, 2*p->size_y, p->size_x_cr, 2*p->size_y_cr, 1);
     fs->top_field->chroma_format_idc = p->chroma_format_idc;
-    clear_picture(p_Vid, fs->top_field);
+    clearPicture(p_Vid, fs->top_field);
     fs ->top_field->frame_cropping_flag = fs->bottom_field->frame_cropping_flag;
     if(fs ->top_field->frame_cropping_flag) {
       fs ->top_field->frame_crop_top_offset = fs->bottom_field->frame_crop_top_offset;
@@ -291,6 +291,22 @@ static void write_unpaired_field (VideoParameters* p_Vid, FrameStore* fs) {
     }
 
   fs->is_used = 3;
+  }
+//}}}
+//{{{
+static void flush_direct_output (VideoParameters* p_Vid) {
+
+  write_unpaired_field (p_Vid, p_Vid->out_buffer);
+  free_storable_picture (p_Vid->out_buffer->frame);
+
+  p_Vid->out_buffer->frame = NULL;
+  free_storable_picture (p_Vid->out_buffer->top_field);
+
+  p_Vid->out_buffer->top_field = NULL;
+  free_storable_picture (p_Vid->out_buffer->bottom_field);
+
+  p_Vid->out_buffer->bottom_field = NULL;
+  p_Vid->out_buffer->is_used = 0;
   }
 //}}}
 
@@ -322,22 +338,6 @@ void uninit_out_buffer (VideoParameters* p_Vid) {
 //}}}
 
 //{{{
-void flush_direct_output (VideoParameters* p_Vid) {
-
-  write_unpaired_field (p_Vid, p_Vid->out_buffer);
-  free_storable_picture (p_Vid->out_buffer->frame);
-
-  p_Vid->out_buffer->frame = NULL;
-  free_storable_picture (p_Vid->out_buffer->top_field);
-
-  p_Vid->out_buffer->top_field = NULL;
-  free_storable_picture (p_Vid->out_buffer->bottom_field);
-
-  p_Vid->out_buffer->bottom_field = NULL;
-  p_Vid->out_buffer->is_used = 0;
-  }
-//}}}
-//{{{
 void write_stored_frame (VideoParameters* p_Vid, FrameStore* fs) {
 
   // make sure no direct output field is pending
@@ -361,22 +361,22 @@ void direct_output (VideoParameters* p_Vid, StorablePicture* p) {
   InputParameters* p_Inp = p_Vid->p_Inp;
   if (p->structure == FRAME) {
     // we have a frame (or complementary field pair), so output it directly
-    flush_direct_output(p_Vid);
+    flush_direct_output (p_Vid);
     writePicture (p_Vid, p, FRAME);
-    calculate_frame_no(p_Vid, p);
-    free_storable_picture(p);
+    calculate_frame_no (p_Vid, p);
+    free_storable_picture (p);
     return;
     }
 
   if (p->structure == TOP_FIELD) {
-    if (p_Vid->out_buffer->is_used &1)
-      flush_direct_output(p_Vid);
+    if (p_Vid->out_buffer->is_used & 1)
+      flush_direct_output (p_Vid);
     p_Vid->out_buffer->top_field = p;
     p_Vid->out_buffer->is_used |= 1;
     }
 
   if (p->structure == BOTTOM_FIELD) {
-    if (p_Vid->out_buffer->is_used &2)
+    if (p_Vid->out_buffer->is_used & 2)
       flush_direct_output (p_Vid);
     p_Vid->out_buffer->bottom_field = p;
     p_Vid->out_buffer->is_used |= 2;
@@ -387,14 +387,14 @@ void direct_output (VideoParameters* p_Vid, StorablePicture* p) {
     dpb_combine_field_yuv (p_Vid, p_Vid->out_buffer);
     writePicture (p_Vid, p_Vid->out_buffer->frame, FRAME);
 
-    calculate_frame_no(p_Vid, p);
-    free_storable_picture(p_Vid->out_buffer->frame);
+    calculate_frame_no (p_Vid, p);
+    free_storable_picture (p_Vid->out_buffer->frame);
 
     p_Vid->out_buffer->frame = NULL;
-    free_storable_picture(p_Vid->out_buffer->top_field);
+    free_storable_picture (p_Vid->out_buffer->top_field);
 
     p_Vid->out_buffer->top_field = NULL;
-    free_storable_picture(p_Vid->out_buffer->bottom_field);
+    free_storable_picture (p_Vid->out_buffer->bottom_field);
 
     p_Vid->out_buffer->bottom_field = NULL;
     p_Vid->out_buffer->is_used = 0;

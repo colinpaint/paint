@@ -10,7 +10,6 @@
 #endif
 
 #define DISABLE_ERC               0    // Disable any error concealment processes
-#define PAIR_FIELDS_IN_OUTPUT     1    // Pair field pictures for output purposes
 #define MVC_EXTENSION_ENABLE      1    // enable support for the Multiview High Profile
 
 #define IMGTYPE                   0    // Define imgpel size type. 0 implies byte (cannot handle >8 bit depths) and 1 implies unsigned short
