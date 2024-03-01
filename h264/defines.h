@@ -9,7 +9,6 @@
   #define TRACE           0     //!< 0:Trace off 1:Trace on 2:detailed CABAC context information
 #endif
 
-#define DISABLE_ERC               0    // Disable any error concealment processes
 #define MVC_EXTENSION_ENABLE      1    // enable support for the Multiview High Profile
 
 #define IMGTYPE                   0    // Define imgpel size type. 0 implies byte (cannot handle >8 bit depths) and 1 implies unsigned short

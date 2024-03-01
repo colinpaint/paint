@@ -386,12 +386,11 @@ static void scaling_List(int *scalingList, int sizeOfScalingList, Boolean *UseDe
   int j, scanj;
   int delta_scale, lastScale, nextScale;
 
-  lastScale      = 8;
-  nextScale      = 8;
+  lastScale = 8;
+  nextScale = 8;
 
   for (j = 0; j < sizeOfScalingList; j++) {
     scanj = (sizeOfScalingList==16) ? ZZ_SCAN[j]:ZZ_SCAN8[j];
-
     if (nextScale != 0) {
       delta_scale = read_se_v (   "   : delta_sl   "                           , s, &p_Dec->UsedBits);
       nextScale = (lastScale + delta_scale + 256) % 256;
@@ -412,97 +411,129 @@ static void initVUI (seq_parameter_set_rbsp_t *sps) {
 static int readHRDParameters (DataPartition *p, hrd_parameters_t *hrd) {
 
   Bitstream *s = p->bitstream;
+  hrd->cpb_cnt_minus1 = read_ue_v ("VUI: cpb_cnt_minus1", s, &p_Dec->UsedBits);
+  hrd->bit_rate_scale = read_u_v (4, "VUI: bit_rate_scale", s, &p_Dec->UsedBits);
+  hrd->cpb_size_scale = read_u_v (4, "VUI: cpb_size_scale", s, &p_Dec->UsedBits);
+
   unsigned int SchedSelIdx;
-
-  hrd->cpb_cnt_minus1                                      = read_ue_v (   "VUI: cpb_cnt_minus1"                       , s, &p_Dec->UsedBits);
-  hrd->bit_rate_scale                                      = read_u_v  ( 4,"VUI: bit_rate_scale"                       , s, &p_Dec->UsedBits);
-  hrd->cpb_size_scale                                      = read_u_v  ( 4,"VUI: cpb_size_scale"                       , s, &p_Dec->UsedBits);
-
   for (SchedSelIdx = 0; SchedSelIdx <= hrd->cpb_cnt_minus1; SchedSelIdx++ ) {
-    hrd->bit_rate_value_minus1[ SchedSelIdx ]             = read_ue_v  ( "VUI: bit_rate_value_minus1"                  , s, &p_Dec->UsedBits);
-    hrd->cpb_size_value_minus1[ SchedSelIdx ]             = read_ue_v  ( "VUI: cpb_size_value_minus1"                  , s, &p_Dec->UsedBits);
-    hrd->cbr_flag[ SchedSelIdx ]                          = read_u_1   ( "VUI: cbr_flag"                               , s, &p_Dec->UsedBits);
+    hrd->bit_rate_value_minus1[ SchedSelIdx] = read_ue_v ("VUI: bit_rate_value_minus1", s, &p_Dec->UsedBits);
+    hrd->cpb_size_value_minus1[ SchedSelIdx] = read_ue_v ("VUI: cpb_size_value_minus1", s, &p_Dec->UsedBits);
+    hrd->cbr_flag[ SchedSelIdx ] = read_u_1  ("VUI: cbr_flag", s, &p_Dec->UsedBits);
     }
 
-  hrd->initial_cpb_removal_delay_length_minus1            = read_u_v  ( 5,"VUI: initial_cpb_removal_delay_length_minus1" , s, &p_Dec->UsedBits);
-  hrd->cpb_removal_delay_length_minus1                    = read_u_v  ( 5,"VUI: cpb_removal_delay_length_minus1"         , s, &p_Dec->UsedBits);
-  hrd->dpb_output_delay_length_minus1                     = read_u_v  ( 5,"VUI: dpb_output_delay_length_minus1"          , s, &p_Dec->UsedBits);
-  hrd->time_offset_length                                 = read_u_v  ( 5,"VUI: time_offset_length"          , s, &p_Dec->UsedBits);
+  hrd->initial_cpb_removal_delay_length_minus1 =
+    read_u_v (5, "VUI: initial_cpb_removal_delay_length_minus1", s, &p_Dec->UsedBits);
+  hrd->cpb_removal_delay_length_minus1 =
+    read_u_v (5, "VUI: cpb_removal_delay_length_minus1", s, &p_Dec->UsedBits);
+  hrd->dpb_output_delay_length_minus1 = 
+    read_u_v (5, "VUI: dpb_output_delay_length_minus1", s, &p_Dec->UsedBits);
+  hrd->time_offset_length = read_u_v (5, "VUI: time_offset_length", s, &p_Dec->UsedBits);
 
   return 0;
   }
 //}}}
 //{{{
-static int readVUI (DataPartition *p, seq_parameter_set_rbsp_t *sps)
-{
-  Bitstream *s = p->bitstream;
-  if (sps->vui_parameters_present_flag)
-  {
-    sps->vui_seq_parameters.aspect_ratio_info_present_flag = read_u_1  ("VUI: aspect_ratio_info_present_flag"   , s, &p_Dec->UsedBits);
-    if (sps->vui_seq_parameters.aspect_ratio_info_present_flag)
-    {
-      sps->vui_seq_parameters.aspect_ratio_idc             = read_u_v  ( 8, "VUI: aspect_ratio_idc"              , s, &p_Dec->UsedBits);
-      if (255==sps->vui_seq_parameters.aspect_ratio_idc)
-      {
-        sps->vui_seq_parameters.sar_width                  = (unsigned short) read_u_v  (16, "VUI: sar_width"                     , s, &p_Dec->UsedBits);
-        sps->vui_seq_parameters.sar_height                 = (unsigned short) read_u_v  (16, "VUI: sar_height"                    , s, &p_Dec->UsedBits);
-      }
-    }
+static int readVUI (DataPartition* p, seq_parameter_set_rbsp_t* sps) {
 
-    sps->vui_seq_parameters.overscan_info_present_flag     = read_u_1  ("VUI: overscan_info_present_flag"        , s, &p_Dec->UsedBits);
+  Bitstream* s = p->bitstream;
+  if (sps->vui_parameters_present_flag) {
+    sps->vui_seq_parameters.aspect_ratio_info_present_flag =
+      read_u_1 ("VUI: aspect_ratio_info_present_flag", s, &p_Dec->UsedBits);
+    if (sps->vui_seq_parameters.aspect_ratio_info_present_flag) {
+      sps->vui_seq_parameters.aspect_ratio_idc =
+        read_u_v ( 8, "VUI: aspect_ratio_idc", s, &p_Dec->UsedBits);
+      if (255 == sps->vui_seq_parameters.aspect_ratio_idc) {
+        sps->vui_seq_parameters.sar_width =
+         (unsigned short) read_u_v (16, "VUI: sar_width", s, &p_Dec->UsedBits);
+        sps->vui_seq_parameters.sar_height =
+         (unsigned short) read_u_v (16, "VUI: sar_height", s, &p_Dec->UsedBits);
+        }
+      }
+
+    sps->vui_seq_parameters.overscan_info_present_flag =
+      read_u_1 ("VUI: overscan_info_present_flag", s, &p_Dec->UsedBits);
     if (sps->vui_seq_parameters.overscan_info_present_flag)
-      sps->vui_seq_parameters.overscan_appropriate_flag    = read_u_1  ("VUI: overscan_appropriate_flag"         , s, &p_Dec->UsedBits);
+      sps->vui_seq_parameters.overscan_appropriate_flag =
+        read_u_1 ("VUI: overscan_appropriate_flag", s, &p_Dec->UsedBits);
 
-    sps->vui_seq_parameters.video_signal_type_present_flag = read_u_1  ("VUI: video_signal_type_present_flag"    , s, &p_Dec->UsedBits);
-    if (sps->vui_seq_parameters.video_signal_type_present_flag)
-    {
-      sps->vui_seq_parameters.video_format                    = read_u_v  ( 3,"VUI: video_format"                      , s, &p_Dec->UsedBits);
-      sps->vui_seq_parameters.video_full_range_flag           = read_u_1  (   "VUI: video_full_range_flag"             , s, &p_Dec->UsedBits);
-      sps->vui_seq_parameters.colour_description_present_flag = read_u_1  (   "VUI: color_description_present_flag"    , s, &p_Dec->UsedBits);
-      if(sps->vui_seq_parameters.colour_description_present_flag)
-      {
-        sps->vui_seq_parameters.colour_primaries              = read_u_v  ( 8,"VUI: colour_primaries"                  , s, &p_Dec->UsedBits);
-        sps->vui_seq_parameters.transfer_characteristics      = read_u_v  ( 8,"VUI: transfer_characteristics"          , s, &p_Dec->UsedBits);
-        sps->vui_seq_parameters.matrix_coefficients           = read_u_v  ( 8,"VUI: matrix_coefficients"               , s, &p_Dec->UsedBits);
+    sps->vui_seq_parameters.video_signal_type_present_flag =
+      read_u_1 ("VUI: video_signal_type_present_flag", s, &p_Dec->UsedBits);
+    if (sps->vui_seq_parameters.video_signal_type_present_flag) {
+      sps->vui_seq_parameters.video_format =
+        read_u_v (3, "VUI: video_format", s, &p_Dec->UsedBits);
+      sps->vui_seq_parameters.video_full_range_flag =
+        read_u_1 ("VUI: video_full_range_flag", s, &p_Dec->UsedBits);
+      sps->vui_seq_parameters.colour_description_present_flag =
+       read_u_1 ("VUI: color_description_present_flag", s, &p_Dec->UsedBits);
+      if (sps->vui_seq_parameters.colour_description_present_flag) {
+        sps->vui_seq_parameters.colour_primaries =
+         read_u_v (8, "VUI: colour_primaries", s, &p_Dec->UsedBits);
+        sps->vui_seq_parameters.transfer_characteristics =
+          read_u_v (8, "VUI: transfer_characteristics", s, &p_Dec->UsedBits);
+        sps->vui_seq_parameters.matrix_coefficients =
+          read_u_v (8, "VUI: matrix_coefficients", s, &p_Dec->UsedBits);
+        }
       }
-    }
-    sps->vui_seq_parameters.chroma_location_info_present_flag = read_u_1  (   "VUI: chroma_loc_info_present_flag"      , s, &p_Dec->UsedBits);
-    if(sps->vui_seq_parameters.chroma_location_info_present_flag)
-    {
-      sps->vui_seq_parameters.chroma_sample_loc_type_top_field     = read_ue_v  ( "VUI: chroma_sample_loc_type_top_field"    , s, &p_Dec->UsedBits);
-      sps->vui_seq_parameters.chroma_sample_loc_type_bottom_field  = read_ue_v  ( "VUI: chroma_sample_loc_type_bottom_field" , s, &p_Dec->UsedBits);
-    }
-    sps->vui_seq_parameters.timing_info_present_flag          = read_u_1  ("VUI: timing_info_present_flag"           , s, &p_Dec->UsedBits);
-    if (sps->vui_seq_parameters.timing_info_present_flag)
-    {
-      sps->vui_seq_parameters.num_units_in_tick               = read_u_v  (32,"VUI: num_units_in_tick"               , s, &p_Dec->UsedBits);
-      sps->vui_seq_parameters.time_scale                      = read_u_v  (32,"VUI: time_scale"                      , s, &p_Dec->UsedBits);
-      sps->vui_seq_parameters.fixed_frame_rate_flag           = read_u_1  (   "VUI: fixed_frame_rate_flag"           , s, &p_Dec->UsedBits);
-    }
-    sps->vui_seq_parameters.nal_hrd_parameters_present_flag   = read_u_1  ("VUI: nal_hrd_parameters_present_flag"    , s, &p_Dec->UsedBits);
+
+    sps->vui_seq_parameters.chroma_location_info_present_flag =
+      read_u_1 ("VUI: chroma_loc_info_present_flag", s, &p_Dec->UsedBits);
+    if (sps->vui_seq_parameters.chroma_location_info_present_flag) {
+      sps->vui_seq_parameters.chroma_sample_loc_type_top_field =
+        read_ue_v ("VUI: chroma_sample_loc_type_top_field", s, &p_Dec->UsedBits);
+      sps->vui_seq_parameters.chroma_sample_loc_type_bottom_field  =
+        read_ue_v ("VUI: chroma_sample_loc_type_bottom_field", s, &p_Dec->UsedBits);
+      }
+
+    sps->vui_seq_parameters.timing_info_present_flag =
+      read_u_1 ("VUI: timing_info_present_flag", s, &p_Dec->UsedBits);
+    if (sps->vui_seq_parameters.timing_info_present_flag) {
+      sps->vui_seq_parameters.num_units_in_tick =
+        read_u_v (32, "VUI: num_units_in_tick", s, &p_Dec->UsedBits);
+      sps->vui_seq_parameters.time_scale = read_u_v (32,"VUI: time_scale", s, &p_Dec->UsedBits);
+      sps->vui_seq_parameters.fixed_frame_rate_flag =
+        read_u_1 ("VUI: fixed_frame_rate_flag", s, &p_Dec->UsedBits);
+      }
+
+    sps->vui_seq_parameters.nal_hrd_parameters_present_flag   = read_u_1 ("VUI: nal_hrd_parameters_present_flag", s, &p_Dec->UsedBits);
     if (sps->vui_seq_parameters.nal_hrd_parameters_present_flag)
-      readHRDParameters(p, &(sps->vui_seq_parameters.nal_hrd_parameters));
-    sps->vui_seq_parameters.vcl_hrd_parameters_present_flag   = read_u_1  ("VUI: vcl_hrd_parameters_present_flag"    , s, &p_Dec->UsedBits);
+      readHRDParameters (p, &(sps->vui_seq_parameters.nal_hrd_parameters));
+
+    sps->vui_seq_parameters.vcl_hrd_parameters_present_flag =
+      read_u_1 ("VUI: vcl_hrd_parameters_present_flag", s, &p_Dec->UsedBits);
+
     if (sps->vui_seq_parameters.vcl_hrd_parameters_present_flag)
       readHRDParameters(p, &(sps->vui_seq_parameters.vcl_hrd_parameters));
-    if (sps->vui_seq_parameters.nal_hrd_parameters_present_flag || sps->vui_seq_parameters.vcl_hrd_parameters_present_flag)
-      sps->vui_seq_parameters.low_delay_hrd_flag             =  read_u_1  ("VUI: low_delay_hrd_flag"                 , s, &p_Dec->UsedBits);
-    sps->vui_seq_parameters.pic_struct_present_flag          =  read_u_1  ("VUI: pic_struct_present_flag   "         , s, &p_Dec->UsedBits);
-    sps->vui_seq_parameters.bitstream_restriction_flag       =  read_u_1  ("VUI: bitstream_restriction_flag"         , s, &p_Dec->UsedBits);
-    if (sps->vui_seq_parameters.bitstream_restriction_flag)
-    {
-      sps->vui_seq_parameters.motion_vectors_over_pic_boundaries_flag =  read_u_1  ("VUI: motion_vectors_over_pic_boundaries_flag", s, &p_Dec->UsedBits);
-      sps->vui_seq_parameters.max_bytes_per_pic_denom                 =  read_ue_v ("VUI: max_bytes_per_pic_denom"                , s, &p_Dec->UsedBits);
-      sps->vui_seq_parameters.max_bits_per_mb_denom                   =  read_ue_v ("VUI: max_bits_per_mb_denom"                  , s, &p_Dec->UsedBits);
-      sps->vui_seq_parameters.log2_max_mv_length_horizontal           =  read_ue_v ("VUI: log2_max_mv_length_horizontal"          , s, &p_Dec->UsedBits);
-      sps->vui_seq_parameters.log2_max_mv_length_vertical             =  read_ue_v ("VUI: log2_max_mv_length_vertical"            , s, &p_Dec->UsedBits);
-      sps->vui_seq_parameters.num_reorder_frames                      =  read_ue_v ("VUI: num_reorder_frames"                     , s, &p_Dec->UsedBits);
-      sps->vui_seq_parameters.max_dec_frame_buffering                 =  read_ue_v ("VUI: max_dec_frame_buffering"                , s, &p_Dec->UsedBits);
+
+    if (sps->vui_seq_parameters.nal_hrd_parameters_present_flag ||
+        sps->vui_seq_parameters.vcl_hrd_parameters_present_flag)
+      sps->vui_seq_parameters.low_delay_hrd_flag = read_u_1 ("VUI: low_delay_hrd_flag", s, &p_Dec->UsedBits);
+
+    sps->vui_seq_parameters.pic_struct_present_flag =
+      read_u_1 ("VUI: pic_struct_present_flag   ", s, &p_Dec->UsedBits);
+    sps->vui_seq_parameters.bitstream_restriction_flag =
+      read_u_1 ("VUI: bitstream_restriction_flag", s, &p_Dec->UsedBits);
+
+    if (sps->vui_seq_parameters.bitstream_restriction_flag) {
+      sps->vui_seq_parameters.motion_vectors_over_pic_boundaries_flag =
+        read_u_1 ("VUI: motion_vectors_over_pic_boundaries_flag", s, &p_Dec->UsedBits);
+      sps->vui_seq_parameters.max_bytes_per_pic_denom =
+        read_ue_v ("VUI: max_bytes_per_pic_denom", s, &p_Dec->UsedBits);
+      sps->vui_seq_parameters.max_bits_per_mb_denom =
+        read_ue_v ("VUI: max_bits_per_mb_denom", s, &p_Dec->UsedBits);
+      sps->vui_seq_parameters.log2_max_mv_length_horizontal =
+        read_ue_v ("VUI: log2_max_mv_length_horizontal", s, &p_Dec->UsedBits);
+      sps->vui_seq_parameters.log2_max_mv_length_vertical =
+        read_ue_v ("VUI: log2_max_mv_length_vertical", s, &p_Dec->UsedBits);
+      sps->vui_seq_parameters.num_reorder_frames =
+        read_ue_v ("VUI: num_reorder_frames", s, &p_Dec->UsedBits);
+      sps->vui_seq_parameters.max_dec_frame_buffering =
+        read_ue_v ("VUI: max_dec_frame_buffering", s, &p_Dec->UsedBits);
+      }
     }
-  }
 
   return 0;
-}
+  }
 //}}}
 //{{{
 static int interpretSPS (VideoParameters *p_Vid, DataPartition *p, seq_parameter_set_rbsp_t *sps) {
@@ -779,33 +810,27 @@ void SPSConsistencyCheck (seq_parameter_set_rbsp_t* sps)
 }
 //}}}
 //{{{
-void activateSps (VideoParameters* p_Vid, seq_parameter_set_rbsp_t* sps)
-{
+void activateSps (VideoParameters* p_Vid, seq_parameter_set_rbsp_t* sps) {
+
   InputParameters *p_Inp = p_Vid->p_Inp;
 
-  if (p_Vid->active_sps != sps)
-  {
+  if (p_Vid->active_sps != sps) {
     if (p_Vid->dec_picture)
-    {
       // this may only happen on slice loss
       exit_picture(p_Vid, &p_Vid->dec_picture);
-    }
     p_Vid->active_sps = sps;
 
-    if(p_Vid->dpb_layer_id==0 && is_BL_profile(sps->profile_idc) && !p_Vid->p_Dpb_layer[0]->init_done)
-    {
+    if(p_Vid->dpb_layer_id==0 && is_BL_profile(sps->profile_idc) && !p_Vid->p_Dpb_layer[0]->init_done) {
       set_coding_par(sps, p_Vid->p_EncodePar[0]);
       setup_layer_info( p_Vid, sps, p_Vid->p_LayerPar[0]);
-    }
-    else if(p_Vid->dpb_layer_id==1 && is_EL_profile(sps->profile_idc) && !p_Vid->p_Dpb_layer[1]->init_done)
-    {
+      }
+    else if(p_Vid->dpb_layer_id==1 && is_EL_profile(sps->profile_idc) && !p_Vid->p_Dpb_layer[1]->init_done) {
       set_coding_par(sps, p_Vid->p_EncodePar[1]);
       setup_layer_info(p_Vid, sps, p_Vid->p_LayerPar[1]);
-    }
+      }
 
-//to be removed in future;
+    //to be removed in future;
     set_global_coding_par(p_Vid, p_Vid->p_EncodePar[p_Vid->dpb_layer_id]);
-//end;
 
 #if (MVC_EXTENSION_ENABLE)
     //init_frext(p_Vid);
@@ -817,33 +842,33 @@ void activateSps (VideoParameters* p_Vid, seq_parameter_set_rbsp_t* sps)
       //init_frext(p_Vid);
       init_global_buffers(p_Vid, 0);
 
-      if (!p_Vid->no_output_of_prior_pics_flag)
-      {
+      if (!p_Vid->no_output_of_prior_pics_flag) {
         flush_dpb(p_Vid->p_Dpb_layer[0]);
         flush_dpb(p_Vid->p_Dpb_layer[1]);
-      }
+        }
       init_dpb(p_Vid, p_Vid->p_Dpb_layer[0], 1);
-    }
-    else if(p_Vid->last_profile_idc != p_Vid->active_sps->profile_idc && (
-            is_MVC_profile(p_Vid->last_profile_idc) || is_MVC_profile(p_Vid->active_sps->profile_idc)
-            )&& (!p_Vid->p_Dpb_layer[1]->init_done))
-    {
+      }
+    else if (p_Vid->last_profile_idc != p_Vid->active_sps->profile_idc && (
+             is_MVC_profile(p_Vid->last_profile_idc) || is_MVC_profile(p_Vid->active_sps->profile_idc)
+             )&& (!p_Vid->p_Dpb_layer[1]->init_done)) {
       assert(p_Vid->p_Dpb_layer[0]->init_done);
       //init_frext(p_Vid);
-      if(p_Vid->p_Dpb_layer[0]->init_done)
-      {
-        free_dpb(p_Vid->p_Dpb_layer[0]);
-        init_dpb(p_Vid, p_Vid->p_Dpb_layer[0], 1);
-      }
-      init_global_buffers(p_Vid, 1);
+      if (p_Vid->p_Dpb_layer[0]->init_done) {
+        free_dpb (p_Vid->p_Dpb_layer[0]);
+        init_dpb (p_Vid, p_Vid->p_Dpb_layer[0], 1);
+        }
+
+      init_global_buffers (p_Vid, 1);
+
       // for now lets re_init both buffers. Later, we should only re_init appropriate one
       // Note that we seem to be doing this for every frame which seems not good.
       //re_init_dpb(p_Vid, p_Vid->p_Dpb_layer[1], 2);
 #if MVC_EXTENSION_ENABLE
-      init_dpb(p_Vid, p_Vid->p_Dpb_layer[1], 2);
+      init_dpb (p_Vid, p_Vid->p_Dpb_layer[1], 2);
 #endif
       //p_Vid->last_profile_idc = p_Vid->active_sps->profile_idc;
-    }
+      }
+
     //p_Vid->p_Dpb_layer[0]->num_ref_frames = p_Vid->active_sps->num_ref_frames;
     //p_Vid->p_Dpb_layer[1]->num_ref_frames = p_Vid->active_sps->num_ref_frames;
     p_Vid->last_pic_width_in_mbs_minus1 = p_Vid->active_sps->pic_width_in_mbs_minus1;
@@ -853,31 +878,26 @@ void activateSps (VideoParameters* p_Vid, seq_parameter_set_rbsp_t* sps)
 
 #else
     //init_frext(p_Vid);
-    init_global_buffers(p_Vid, 0);
-
+    init_global_buffers (p_Vid, 0);
     if (!p_Vid->no_output_of_prior_pics_flag)
-    {
       flush_dpb(p_Vid->p_Dpb_layer[0]);
-    }
-    init_dpb(p_Vid, p_Vid->p_Dpb_layer[0], 0);
+    init_dpb (p_Vid, p_Vid->p_Dpb_layer[0], 0);
     // for now lets init both buffers. Later, we should only re_init appropriate one
     //init_dpb(p_Vid, p_Vid->p_Dpb_layer[0], 1);
     // obviously this is not needed her but just adding it for completeness
     //init_dpb(p_Vid, p_Vid->p_Dpb_layer[1], 2);
 #endif
 
-#if (DISABLE_ERC == 0)
-    ercInit(p_Vid, p_Vid->width, p_Vid->height, 1);
-    if(p_Vid->dec_picture)
-    {
-      ercReset(p_Vid->erc_errorVar, p_Vid->PicSizeInMbs, p_Vid->PicSizeInMbs, p_Vid->dec_picture->size_x);
+    // enable error concealment
+    ercInit (p_Vid, p_Vid->width, p_Vid->height, 1);
+    if (p_Vid->dec_picture) {
+      ercReset (p_Vid->erc_errorVar, p_Vid->PicSizeInMbs, p_Vid->PicSizeInMbs, p_Vid->dec_picture->size_x);
       p_Vid->erc_mvperMB = 0;
+      }
     }
-#endif
-  }
 
-  reset_format_info(sps, p_Vid, &p_Inp->source, &p_Inp->output);
-}
+  reset_format_info (sps, p_Vid, &p_Inp->source, &p_Inp->output);
+  }
 //}}}
 //{{{
 int GetBaseViewId (VideoParameters* p_Vid, subset_seq_parameter_set_rbsp_t** subset_sps) {
@@ -1112,48 +1132,28 @@ static void activatePps (VideoParameters* p_Vid, pic_parameter_set_rbsp_t *pps) 
 //}}}
 
 //{{{
-/*!
- *************************************************************************************
- * \brief
- *    Allocates memory for a picture paramater set
- *
- * \return
- *    pointer to a pps
- *************************************************************************************
- */
+pic_parameter_set_rbsp_t* AllocPPS() {
 
-pic_parameter_set_rbsp_t* AllocPPS ()
- {
-   pic_parameter_set_rbsp_t *p;
+  pic_parameter_set_rbsp_t *p;
 
-   if ((p=calloc (1, sizeof (pic_parameter_set_rbsp_t))) == NULL)
-     no_mem_exit ("AllocPPS: PPS");
-   p->slice_group_id = NULL;
-   return p;
- }
+  if ((p = calloc (1, sizeof (pic_parameter_set_rbsp_t))) == NULL)
+    no_mem_exit ("AllocPPS: PPS");
+  p->slice_group_id = NULL;
+  return p;
+  }
 //}}}
 //{{{
-/*!
- *************************************************************************************
- * \brief
- *    Frees a picture parameter set
- *
- * \param pps to be freed
- *   Picture parameter set to be freed
- *************************************************************************************
- */
+ void FreePPS (pic_parameter_set_rbsp_t* pps) {
 
- void FreePPS (pic_parameter_set_rbsp_t* pps)
- {
    assert (pps != NULL);
    if (pps->slice_group_id != NULL)
      free (pps->slice_group_id);
    free (pps);
- }
+   }
 //}}}
 //{{{
-void MakePPSavailable (VideoParameters* p_Vid, int id, pic_parameter_set_rbsp_t *pps)
-{
+void MakePPSavailable (VideoParameters* p_Vid, int id, pic_parameter_set_rbsp_t *pps) {
+
   assert (pps->Valid == TRUE);
 
   if (p_Vid->PicParSet[id].Valid == TRUE && p_Vid->PicParSet[id].slice_group_id != NULL)
@@ -1165,7 +1165,7 @@ void MakePPSavailable (VideoParameters* p_Vid, int id, pic_parameter_set_rbsp_t 
   // call and will not try to free if pps->slice_group_id == NULL
   p_Vid->PicParSet[id].slice_group_id = pps->slice_group_id;
   pps->slice_group_id          = NULL;
-}
+  }
 //}}}
 //{{{
 void CleanUpPPS (VideoParameters* p_Vid) {
