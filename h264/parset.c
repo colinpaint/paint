@@ -426,7 +426,7 @@ static int readHRDParameters (DataPartition *p, hrd_parameters_t *hrd) {
     read_u_v (5, "VUI: initial_cpb_removal_delay_length_minus1", s, &p_Dec->UsedBits);
   hrd->cpb_removal_delay_length_minus1 =
     read_u_v (5, "VUI: cpb_removal_delay_length_minus1", s, &p_Dec->UsedBits);
-  hrd->dpb_output_delay_length_minus1 = 
+  hrd->dpb_output_delay_length_minus1 =
     read_u_v (5, "VUI: dpb_output_delay_length_minus1", s, &p_Dec->UsedBits);
   hrd->time_offset_length = read_u_v (5, "VUI: time_offset_length", s, &p_Dec->UsedBits);
 
@@ -670,8 +670,9 @@ static int interpretSPS (VideoParameters *p_Vid, DataPartition *p, seq_parameter
   return p_Dec->UsedBits;
   }
 //}}}
+
 //{{{
-static void get_max_dec_frame_buf_size (seq_parameter_set_rbsp_t* sps) {
+void get_max_dec_frame_buf_size (seq_parameter_set_rbsp_t* sps) {
 
   int pic_size_mb = (sps->pic_width_in_mbs_minus1 + 1) * (sps->pic_height_in_map_units_minus1 + 1) * (sps->frame_mbs_only_flag?1:2);
   int size = 0;
@@ -749,7 +750,6 @@ static void get_max_dec_frame_buf_size (seq_parameter_set_rbsp_t* sps) {
   sps->max_dec_frame_buffering = size;
   }
 //}}}
-
 //{{{
 void MakeSPSavailable (VideoParameters* p_Vid, int id, seq_parameter_set_rbsp_t* sps)
 {
@@ -810,7 +810,7 @@ void SPSConsistencyCheck (seq_parameter_set_rbsp_t* sps)
 }
 //}}}
 //{{{
-void activateSps (VideoParameters* p_Vid, seq_parameter_set_rbsp_t* sps) {
+void activateSPS (VideoParameters* p_Vid, seq_parameter_set_rbsp_t* sps) {
 
   InputParameters *p_Inp = p_Vid->p_Inp;
 
@@ -939,23 +939,27 @@ static int ppsIsEqual (pic_parameter_set_rbsp_t* pps1, pic_parameter_set_rbsp_t*
   if (!equal)
     return equal;
 
-  if (pps1->num_slice_groups_minus1>0) {
+  if (pps1->num_slice_groups_minus1 > 0) {
     equal &= (pps1->slice_group_map_type == pps2->slice_group_map_type);
-    if (!equal) return equal; if (pps1->slice_group_map_type == 0) {
+    if (!equal)
+      return equal;
+    if (pps1->slice_group_map_type == 0) {
       for (i = 0; i <= pps1->num_slice_groups_minus1; i++)
         equal &= (pps1->run_length_minus1[i] == pps2->run_length_minus1[i]);
       }
-    else if (pps1->slice_group_map_type == 2 ) {
+    else if (pps1->slice_group_map_type == 2) {
       for (i = 0; i < pps1->num_slice_groups_minus1; i++) {
         equal &= (pps1->top_left[i] == pps2->top_left[i]);
         equal &= (pps1->bottom_right[i] == pps2->bottom_right[i]);
         }
       }
-    else if (pps1->slice_group_map_type == 3 || pps1->slice_group_map_type==4 || pps1->slice_group_map_type==5 ) {
+    else if (pps1->slice_group_map_type == 3 ||
+             pps1->slice_group_map_type == 4 ||
+             pps1->slice_group_map_type == 5) {
       equal &= (pps1->slice_group_change_direction_flag == pps2->slice_group_change_direction_flag);
       equal &= (pps1->slice_group_change_rate_minus1 == pps2->slice_group_change_rate_minus1);
       }
-    else if (pps1->slice_group_map_type == 6 ) {
+    else if (pps1->slice_group_map_type == 6) {
       equal &= (pps1->pic_size_in_map_units_minus1 == pps2->pic_size_in_map_units_minus1);
       if (!equal)
         return equal;
@@ -977,7 +981,7 @@ static int ppsIsEqual (pic_parameter_set_rbsp_t* pps1, pic_parameter_set_rbsp_t*
   if (!equal)
     return equal;
 
-  //Fidelity Range Extensions Stuff, initialized to zero, so should be ok to check all the time.
+  // Fidelity Range Extensions Stuff, initialized to zero, so should be ok to check all the time.
   equal &= (pps1->transform_8x8_mode_flag == pps2->transform_8x8_mode_flag);
   equal &= (pps1->pic_scaling_matrix_present_flag == pps2->pic_scaling_matrix_present_flag);
   if (pps1->pic_scaling_matrix_present_flag) {
@@ -1120,7 +1124,7 @@ static int interpretPPS (VideoParameters* p_Vid, DataPartition* p, pic_parameter
   }
 //}}}
 //{{{
-static void activatePps (VideoParameters* p_Vid, pic_parameter_set_rbsp_t *pps) {
+static void activatePPS (VideoParameters* p_Vid, pic_parameter_set_rbsp_t *pps) {
 
   if (p_Vid->active_pps != pps) {
     if (p_Vid->dec_picture) // && p_Vid->num_dec_mb == p_Vid->pi)
@@ -1255,8 +1259,8 @@ void UseParameterSet (Slice* currSlice) {
       error ("num_ref_frames_in_pic_order_cnt_cycle too large",-1011);
 
   p_Vid->dpb_layer_id = currSlice->layer_id;
-  activateSps (p_Vid, sps);
-  activatePps (p_Vid, pps);
+  activateSPS (p_Vid, sps);
+  activatePPS (p_Vid, pps);
 
   // currSlice->dp_mode is set by read_new_slice (NALU first byte available there)
   if (pps->entropy_coding_mode_flag == (Boolean)CAVLC) {
