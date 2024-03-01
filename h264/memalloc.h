@@ -2,15 +2,9 @@
 
 #include "global.h"
 #include "mbuffer.h"
-#include "quant_params.h"
 
 extern int  get_mem2Dmp  (PicMotionParams ***array2D, int dim0, int dim1);
 extern int  get_mem3Dmp  (PicMotionParams ****array3D, int dim0, int dim1, int dim2);
-
-extern int  get_mem2Dquant(LevelQuantParams ***array2D, int dim0, int dim1);
-extern int  get_mem3Dquant(LevelQuantParams ****array3D, int dim0, int dim1, int dim2);
-extern int  get_mem4Dquant(LevelQuantParams *****array4D, int dim0, int dim1, int dim2, int dim3);
-extern int  get_mem5Dquant(LevelQuantParams ******array5D, int dim0, int dim1, int dim2, int dim3, int dim4);
 
 extern int  get_mem2Dmv  (MotionVector ***array2D, int dim0, int dim1);
 extern int  get_mem3Dmv  (MotionVector ****array3D, int dim0, int dim1, int dim2);
@@ -76,11 +70,6 @@ extern void free_offset_mem2Dshort(short **array2D, int columns, int offset_x, i
 
 extern void free_mem2Dmp   (PicMotionParams    **array2D);
 extern void free_mem3Dmp   (PicMotionParams   ***array2D);
-
-extern void free_mem2Dquant(LevelQuantParams    **array2D);
-extern void free_mem3Dquant(LevelQuantParams   ***array2D);
-extern void free_mem4Dquant(LevelQuantParams  ****array2D);
-extern void free_mem5Dquant(LevelQuantParams *****array2D);
 
 extern void free_mem2Dmv   (MotionVector     **array2D);
 extern void free_mem3Dmv   (MotionVector    ***array2D);

@@ -23,7 +23,7 @@
 #include <limits.h>
 
 #include "global.h"
-#include "erc_api.h"
+#include "erc.h"
 #include "header.h"
 #include "image.h"
 #include "mbuffer.h"

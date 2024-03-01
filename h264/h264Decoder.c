@@ -55,7 +55,7 @@
 #include "cabac.h"
 #include "parset.h"
 #include "sei.h"
-#include "erc_api.h"
+#include "erc.h"
 #include "quant.h"
 #include "block.h"
 #include "nalu.h"

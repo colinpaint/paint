@@ -23,7 +23,7 @@
 #include "cabac.h"
 #include "vlc.h"
 #include "mbuffer.h"
-#include "erc_api.h"
+#include "erc.h"
 
 #if TRACE
 #define SYMTRACESTRING(s) strncpy(sym->tracestring,s,TRACESTRING_SIZE)

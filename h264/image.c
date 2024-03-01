@@ -54,7 +54,7 @@
 #include "quant.h"
 
 #include "errorconcealment.h"
-#include "erc_api.h"
+#include "erc.h"
 #include "mbuffer.h"
 #include "mbuffer_mvc.h"
 

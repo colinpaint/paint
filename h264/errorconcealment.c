@@ -37,8 +37,6 @@
 //{{{
 int set_ec_flag (VideoParameters *p_Vid, int se) {
 
-  //if (p_Vid->ec_flag[se] == NO_EC)
-  //  printf("Error concealment on element %s\n",SEtypes[se]);
   switch (se) {
     case SE_HEADER :
       p_Vid->ec_flag[SE_HEADER] = EC_REQ;
@@ -131,9 +129,7 @@ int get_concealed_element (VideoParameters *p_Vid, SyntaxElement *sym) {
 
   if (p_Vid->ec_flag[sym->type] == NO_EC)
     return NO_EC;
-//#if TRACE
-//  printf("TRACE: get concealed element for %s!!!\n", SEtypes[sym->type]);
-//#endif
+
   switch (sym->type) {
     //{{{
     case SE_HEADER :
