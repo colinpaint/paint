@@ -1627,14 +1627,12 @@ void interpret_buffering_period_info (byte* payload, int size, VideoParameters *
   p_Dec->UsedBits = 0;
 
   seq_parameter_set_id   = read_ue_v("SEI: seq_parameter_set_id"  , buf, &p_Dec->UsedBits);
-
   sps = &p_Vid->SeqParSet[seq_parameter_set_id];
-
-  activate_sps(p_Vid, sps);
+  activateSps (p_Vid, sps);
 
 #ifdef PRINT_BUFFERING_PERIOD_INFO
-  printf("Buffering period SEI message\n");
-  printf("seq_parameter_set_id   = %d\n", seq_parameter_set_id);
+  printf ("Buffering period SEI message\n");
+  printf ("seq_parameter_set_id   = %d\n", seq_parameter_set_id);
 #endif
 
   // Note: NalHrdBpPresentFlag and CpbDpbDelaysPresentFlag can also be set "by some means not specified in this Recommendation | International Standard"

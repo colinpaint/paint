@@ -68,9 +68,4 @@ extern void FreeNALU (NALU_t* n);
 extern void CheckZeroByteVCL (VideoParameters* p_Vid, NALU_t* nalu);
 extern void CheckZeroByteNonVCL (VideoParameters* p_Vid, NALU_t* nalu);
 
-extern int read_next_nalu(VideoParameters* p_Vid, NALU_t* nalu);
-
-#if (MVC_EXTENSION_ENABLE)
-  extern void prefix_nal_unit_svc();
-  extern void nal_unit_header_svc_extension();
-#endif
+extern int read_next_nalu (VideoParameters* p_Vid, NALU_t* nalu);

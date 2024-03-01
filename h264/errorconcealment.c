@@ -35,7 +35,7 @@
 //}}}
 
 //{{{
-int set_ec_flag (VideoParameters *p_Vid, int se) {
+int set_ec_flag (VideoParameters* p_Vid, int se) {
 
   switch (se) {
     case SE_HEADER :
@@ -117,7 +117,7 @@ int set_ec_flag (VideoParameters *p_Vid, int se) {
   }
 //}}}
 //{{{
-void reset_ec_flags (VideoParameters *p_Vid) {
+void reset_ec_flags (VideoParameters* p_Vid) {
 
   for (int i = 0; i < SE_MAX_ELEMENTS; i++)
     p_Vid->ec_flag[i] = NO_EC;
@@ -125,7 +125,7 @@ void reset_ec_flags (VideoParameters *p_Vid) {
 //}}}
 
 //{{{
-int get_concealed_element (VideoParameters *p_Vid, SyntaxElement *sym) {
+int get_concealed_element (VideoParameters* p_Vid, SyntaxElement* sym) {
 
   if (p_Vid->ec_flag[sym->type] == NO_EC)
     return NO_EC;
