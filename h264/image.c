@@ -1192,7 +1192,7 @@ static int readNewSlice (Slice* currSlice) {
 
         assign_quant_params (currSlice);
         if (isNewPicture (p_Vid->dec_picture, currSlice, p_Vid->old_slice)) {
-          if (p_Vid->iSliceNumOfCurrPic==0)
+          if (p_Vid->iSliceNumOfCurrPic == 0)
             initPicture (p_Vid, currSlice, p_Inp);
           current_header = SOP;
           CheckZeroByteVCL (p_Vid, nalu);
@@ -1208,8 +1208,8 @@ static int readNewSlice (Slice* currSlice) {
         else
           currSlice->current_mb_nr = currSlice->start_mb_nr;
 
-        // Now I need to read the slice ID, which depends on the value of redundant_pic_cnt_present_flag
-        slice_id_a  = read_ue_v ("NALU: DP_A slice_id", currStream, &p_Dec->UsedBits);
+        // need to read the slice ID, which depends on the value of redundant_pic_cnt_present_flag
+        slice_id_a = read_ue_v ("NALU: DP_A slice_id", currStream, &p_Dec->UsedBits);
 
         if (p_Vid->active_pps->entropy_coding_mode_flag)
           error ("received data partition with CABAC, this is not allowed", 500);
@@ -1218,14 +1218,16 @@ static int readNewSlice (Slice* currSlice) {
         if (!read_next_nalu (p_Vid, nalu))
           return current_header;
         if (NALU_TYPE_DPB == nalu->nal_unit_type) {
-          //{{{  we got a nalu DPB
+          //{{{  got nalu DPB
           currStream = currSlice->partArr[1].bitstream;
           currStream->ei_flag = 0;
           currStream->frame_bitoffset = currStream->read_len = 0;
           memcpy (currStream->streamBuffer, &nalu->buf[1], nalu->len-1);
+
           currStream->code_len = currStream->bitstream_length = RBSPtoSODB(currStream->streamBuffer, nalu->len-1);
-          slice_id_b  = read_ue_v("NALU: DP_B slice_id", currStream, &p_Dec->UsedBits);
+          slice_id_b  = read_ue_v ("NALU: DP_B slice_id", currStream, &p_Dec->UsedBits);
           currSlice->dpB_NotPresent = 0;
+
           if ((slice_id_b != slice_id_a) || (nalu->lost_packets)) {
             printf ("Waning: got a data partition B which does not match DP_A (DP loss!)\n");
             currSlice->dpB_NotPresent =1;
@@ -1233,7 +1235,7 @@ static int readNewSlice (Slice* currSlice) {
             }
           else {
             if (p_Vid->active_pps->redundant_pic_cnt_present_flag)
-              read_ue_v("NALU: DP_B redundant_pic_cnt", currStream, &p_Dec->UsedBits);
+              read_ue_v ("NALU: DP_B redundant_pic_cnt", currStream, &p_Dec->UsedBits);
 
             // we're finished with DP_B, so let's continue with next DP
             if (!read_next_nalu (p_Vid, nalu))
@@ -1245,7 +1247,7 @@ static int readNewSlice (Slice* currSlice) {
           currSlice->dpB_NotPresent =1;
 
         if (NALU_TYPE_DPC == nalu->nal_unit_type) {
-          //{{{  nalu DPC
+          //{{{  got nalu DPC
           currStream = currSlice->partArr[2].bitstream;
           currStream->ei_flag = 0;
           currStream->frame_bitoffset = currStream->read_len = 0;
@@ -1257,12 +1259,11 @@ static int readNewSlice (Slice* currSlice) {
           slice_id_c  = read_ue_v("NALU: DP_C slice_id", currStream, &p_Dec->UsedBits);
           if ((slice_id_c != slice_id_a)|| (nalu->lost_packets)) {
             printf ("Warning: got a data partition C which does not match DP_A(DP loss!)\n");
-            //currSlice->dpB_NotPresent =1;
             currSlice->dpC_NotPresent =1;
             }
 
           if (p_Vid->active_pps->redundant_pic_cnt_present_flag)
-            read_ue_v("NALU:SLICE_C redudand_pic_cnt", currStream, &p_Dec->UsedBits);
+            read_ue_v ("NALU:SLICE_C redudand_pic_cnt", currStream, &p_Dec->UsedBits);
           }
           //}}}
         else {
@@ -1272,12 +1273,8 @@ static int readNewSlice (Slice* currSlice) {
 
         // check if we read anything else than the expected partitions
         if ((nalu->nal_unit_type != NALU_TYPE_DPB) &&
-            (nalu->nal_unit_type != NALU_TYPE_DPC) && (!currSlice->dpC_NotPresent)) {
-          // we have a NALI that we can't process here, so restart processing
+            (nalu->nal_unit_type != NALU_TYPE_DPC) && (!currSlice->dpC_NotPresent))
           goto process_nalu;
-          // yes, "goto" should not be used, but it's really the best way here before we restructure the decoding loop
-          // (which should be taken care of anyway)
-          }
 
         return current_header;
         break;
@@ -1392,7 +1389,7 @@ void calculate_frame_no (VideoParameters *p_Vid, StorablePicture *p) {
   InputParameters* p_Inp = p_Vid->p_Inp;
 
   // calculate frame number
-  int psnrPOC = p_Vid->active_sps->mb_adaptive_frame_field_flag ? p->poc / (p_Inp->poc_scale) : 
+  int psnrPOC = p_Vid->active_sps->mb_adaptive_frame_field_flag ? p->poc / (p_Inp->poc_scale) :
                                                                   p->poc / (p_Inp->poc_scale);
   if (psnrPOC == 0)
     p_Vid->idr_psnr_number = p_Vid->g_nFrame * p_Vid->ref_poc_gap/(p_Inp->poc_scale);
