@@ -199,7 +199,7 @@ int RBSPtoSODB (byte* streamBuffer, int last_byte_pos) {
 
   // find trailing 1
   int bitoffset = 0;
-  int ctr_bit = (streamBuffer[last_byte_pos-1] & (0x01 << bitoffset));   
+  int ctr_bit = (streamBuffer[last_byte_pos-1] & (0x01 << bitoffset));
   while (ctr_bit == 0) {
     // find trailing 1 bit
     ++bitoffset;

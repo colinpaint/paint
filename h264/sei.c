@@ -23,129 +23,126 @@
 #include "mbuffer.h"
 #include "parset.h"
 //}}}
+static const int kDebug = 0;
 
 //{{{
-void InterpretSEIMessage (byte* msg, int size, VideoParameters *p_Vid, Slice *pSlice)
-{
-  int payload_type = 0;
-  int payload_size = 0;
-  int offset = 1;
-  byte tmp_byte;
+typedef enum {
+  SEI_BUFFERING_PERIOD = 0,
+  SEI_PIC_TIMING,
+  SEI_PAN_SCAN_RECT,
+  SEI_FILLER_PAYLOAD,
+  SEI_USER_DATA_REGISTERED_ITU_T_T35,
+  SEI_USER_DATA_UNREGISTERED,
+  SEI_RECOVERY_POINT,
+  SEI_DEC_REF_PIC_MARKING_REPETITION,
+  SEI_SPARE_PIC,
+  SEI_SCENE_INFO,
+  SEI_SUB_SEQ_INFO,
+  SEI_SUB_SEQ_LAYER_CHARACTERISTICS,
+  SEI_SUB_SEQ_CHARACTERISTICS,
+  SEI_FULL_FRAME_FREEZE,
+  SEI_FULL_FRAME_FREEZE_RELEASE,
+  SEI_FULL_FRAME_SNAPSHOT,
+  SEI_PROGRESSIVE_REFINEMENT_SEGMENT_START,
+  SEI_PROGRESSIVE_REFINEMENT_SEGMENT_END,
+  SEI_MOTION_CONSTRAINED_SLICE_GROUP_SET,
+  SEI_FILM_GRAIN_CHARACTERISTICS,
+  SEI_DEBLOCKING_FILTER_DISPLAY_PREFERENCE,
+  SEI_STEREO_VIDEO_INFO,
+  SEI_POST_FILTER_HINTS,
+  SEI_TONE_MAPPING,
+  SEI_SCALABILITY_INFO,
+  SEI_SUB_PIC_SCALABLE_LAYER,
+  SEI_NON_REQUIRED_LAYER_REP,
+  SEI_PRIORITY_LAYER_INFO,
+  SEI_LAYERS_NOT_PRESENT,
+  SEI_LAYER_DEPENDENCY_CHANGE,
+  SEI_SCALABLE_NESTING,
+  SEI_BASE_LAYER_TEMPORAL_HRD,
+  SEI_QUALITY_LAYER_INTEGRITY_CHECK,
+  SEI_REDUNDANT_PIC_PROPERTY,
+  SEI_TL0_DEP_REP_INDEX,
+  SEI_TL_SWITCHING_POINT,
+  SEI_PARALLEL_DECODING_INFO,
+  SEI_MVC_SCALABLE_NESTING,
+  SEI_VIEW_SCALABILITY_INFO,
+  SEI_MULTIVIEW_SCENE_INFO,
+  SEI_MULTIVIEW_ACQUISITION_INFO,
+  SEI_NON_REQUIRED_VIEW_COMPONENT,
+  SEI_VIEW_DEPENDENCY_CHANGE,
+  SEI_OPERATION_POINTS_NOT_PRESENT,
+  SEI_BASE_VIEW_TEMPORAL_HRD,
+  SEI_FRAME_PACKING_ARRANGEMENT,
+  SEI_GREEN_METADATA=56,
 
-  do
-  {
-    // sei_message();
-    payload_type = 0;
-    tmp_byte = msg[offset++];
-    while (tmp_byte == 0xFF)
-    {
-      payload_type += 255;
-      tmp_byte = msg[offset++];
-    }
-    payload_type += tmp_byte;   // this is the last byte
-
-    payload_size = 0;
-    tmp_byte = msg[offset++];
-    while (tmp_byte == 0xFF)
-    {
-      payload_size += 255;
-      tmp_byte = msg[offset++];
-    }
-    payload_size += tmp_byte;   // this is the last byte
-
-    switch ( payload_type )     // sei_payload( type, size );
-    {
-    case  SEI_BUFFERING_PERIOD:
-      interpret_buffering_period_info( msg+offset, payload_size, p_Vid );
-      break;
-    case  SEI_PIC_TIMING:
-      interpret_picture_timing_info( msg+offset, payload_size, p_Vid );
-      break;
-    case  SEI_PAN_SCAN_RECT:
-      interpret_pan_scan_rect_info( msg+offset, payload_size, p_Vid );
-      break;
-    case  SEI_FILLER_PAYLOAD:
-      interpret_filler_payload_info( msg+offset, payload_size, p_Vid );
-      break;
-    case  SEI_USER_DATA_REGISTERED_ITU_T_T35:
-      interpret_user_data_registered_itu_t_t35_info( msg+offset, payload_size, p_Vid );
-      break;
-    case  SEI_USER_DATA_UNREGISTERED:
-      interpret_user_data_unregistered_info( msg+offset, payload_size, p_Vid );
-      break;
-    case  SEI_RECOVERY_POINT:
-      interpret_recovery_point_info( msg+offset, payload_size, p_Vid );
-      break;
-    case  SEI_DEC_REF_PIC_MARKING_REPETITION:
-      interpret_dec_ref_pic_marking_repetition_info( msg+offset, payload_size, p_Vid, pSlice );
-      break;
-    case  SEI_SPARE_PIC:
-      interpret_spare_pic( msg+offset, payload_size, p_Vid );
-      break;
-    case  SEI_SCENE_INFO:
-      interpret_scene_information( msg+offset, payload_size, p_Vid );
-      break;
-    case  SEI_SUB_SEQ_INFO:
-      interpret_subsequence_info( msg+offset, payload_size, p_Vid );
-      break;
-    case  SEI_SUB_SEQ_LAYER_CHARACTERISTICS:
-      interpret_subsequence_layer_characteristics_info( msg+offset, payload_size, p_Vid );
-      break;
-    case  SEI_SUB_SEQ_CHARACTERISTICS:
-      interpret_subsequence_characteristics_info( msg+offset, payload_size, p_Vid );
-      break;
-    case  SEI_FULL_FRAME_FREEZE:
-      interpret_full_frame_freeze_info( msg+offset, payload_size, p_Vid );
-      break;
-    case  SEI_FULL_FRAME_FREEZE_RELEASE:
-      interpret_full_frame_freeze_release_info( msg+offset, payload_size, p_Vid );
-      break;
-    case  SEI_FULL_FRAME_SNAPSHOT:
-      interpret_full_frame_snapshot_info( msg+offset, payload_size, p_Vid );
-      break;
-    case  SEI_PROGRESSIVE_REFINEMENT_SEGMENT_START:
-      interpret_progressive_refinement_start_info( msg+offset, payload_size, p_Vid );
-      break;
-    case  SEI_PROGRESSIVE_REFINEMENT_SEGMENT_END:
-      interpret_progressive_refinement_end_info( msg+offset, payload_size, p_Vid );
-      break;
-    case  SEI_MOTION_CONSTRAINED_SLICE_GROUP_SET:
-      interpret_motion_constrained_slice_group_set_info( msg+offset, payload_size, p_Vid );
-    case  SEI_FILM_GRAIN_CHARACTERISTICS:
-      interpret_film_grain_characteristics_info ( msg+offset, payload_size, p_Vid );
-      break;
-    case  SEI_DEBLOCKING_FILTER_DISPLAY_PREFERENCE:
-      interpret_deblocking_filter_display_preference_info ( msg+offset, payload_size, p_Vid );
-      break;
-    case  SEI_STEREO_VIDEO_INFO:
-      interpret_stereo_video_info_info ( msg+offset, payload_size, p_Vid );
-      break;
-    case  SEI_TONE_MAPPING:
-      interpret_tone_mapping( msg+offset, payload_size, p_Vid );
-      break;
-    case  SEI_POST_FILTER_HINTS:
-      interpret_post_filter_hints_info ( msg+offset, payload_size, p_Vid );
-      break;
-    case  SEI_FRAME_PACKING_ARRANGEMENT:
-      interpret_frame_packing_arrangement_info( msg+offset, payload_size, p_Vid );
-      break;
-    case  SEI_GREEN_METADATA:
-      interpret_green_metadata_info( msg+offset, payload_size, p_Vid );
-      break;
-    default:
-      interpret_reserved_info( msg+offset, payload_size, p_Vid );
-      break;
-    }
-    offset += payload_size;
-
-  } while( msg[offset] != 0x80 );    // more_rbsp_data()  msg[offset] != 0x80
-  // ignore the trailing bits rbsp_trailing_bits();
-  assert(msg[offset] == 0x80);      // this is the trailing bits
-  assert( offset+1 == size );
-}
+  SEI_MAX_ELEMENTS  //!< number of maximum syntax elements
+  } SEI_type;
 //}}}
+#define MAX_FN 256
+#define MAX_CODED_BIT_DEPTH  12
+#define MAX_SEI_BIT_DEPTH    12
+#define MAX_NUM_PIVOTS     (1<<MAX_CODED_BIT_DEPTH)
+//{{{  frame_packing_arrangement_information_struct
+typedef struct {
+  unsigned int  frame_packing_arrangement_id;
+  Boolean       frame_packing_arrangement_cancel_flag;
+  unsigned char frame_packing_arrangement_type;
+  Boolean       quincunx_sampling_flag;
+  unsigned char content_interpretation_type;
+  Boolean       spatial_flipping_flag;
+  Boolean       frame0_flipped_flag;
+  Boolean       field_views_flag;
+  Boolean       current_frame_is_frame0_flag;
+  Boolean       frame0_self_contained_flag;
+  Boolean       frame1_self_contained_flag;
+  unsigned char frame0_grid_position_x;
+  unsigned char frame0_grid_position_y;
+  unsigned char frame1_grid_position_x;
+  unsigned char frame1_grid_position_y;
+  unsigned char frame_packing_arrangement_reserved_byte;
+  unsigned int  frame_packing_arrangement_repetition_period;
+  Boolean       frame_packing_arrangement_extension_flag;
+  } frame_packing_arrangement_information_struct;
+//}}}
+//{{{  Green_metadata_information_struct
+typedef struct {
+  unsigned char  green_metadata_type;
+  unsigned char  period_type;
+  unsigned short num_seconds;
+  unsigned short num_pictures;
+  unsigned char percent_non_zero_macroblocks;
+  unsigned char percent_intra_coded_macroblocks;
+  unsigned char percent_six_tap_filtering;
+  unsigned char percent_alpha_point_deblocking_instance;
+  unsigned char xsd_metric_type;
+  unsigned short xsd_metric_value;
+  } Green_metadata_information_struct;
+//}}}
+//{{{  struct tone_mapping_struct_tmp
+typedef struct {
+  unsigned int  tone_map_id;
+  unsigned char tone_map_cancel_flag;
+  unsigned int  tone_map_repetition_period;
+  unsigned char coded_data_bit_depth;
+  unsigned char sei_bit_depth;
+  unsigned int  model_id;
+  // variables for model 0
+  int  min_value;
+  int  max_value;
+  // variables for model 1
+  int  sigmoid_midpoint;
+  int  sigmoid_width;
+  // variables for model 2
+  int start_of_coded_interval[1<<MAX_SEI_BIT_DEPTH];
+  // variables for model 3
+  int num_pivots;
+  int coded_pivot_value[MAX_NUM_PIVOTS];
+  int sei_pivot_value[MAX_NUM_PIVOTS];
+  } tone_mapping_struct_tmp;
+//}}}
+
 //{{{
-void interpret_spare_pic (byte* payload, int size, VideoParameters *p_Vid )
+static void interpret_spare_pic (byte* payload, int size, VideoParameters *p_Vid )
 {
   int i,x,y;
   Bitstream* buf;
@@ -331,7 +328,7 @@ void interpret_spare_pic (byte* payload, int size, VideoParameters *p_Vid )
 //}}}
 
 //{{{
-void interpret_subsequence_info (byte* payload, int size, VideoParameters *p_Vid )
+static void interpret_subsequence_info (byte* payload, int size, VideoParameters *p_Vid )
 {
   Bitstream* buf;
   int sub_seq_layer_num, sub_seq_id, first_ref_pic_flag, leading_non_ref_pic_flag, last_pic_flag,
@@ -367,7 +364,7 @@ void interpret_subsequence_info (byte* payload, int size, VideoParameters *p_Vid
 }
 //}}}
 //{{{
-void interpret_subsequence_layer_characteristics_info (byte* payload, int size, VideoParameters *p_Vid )
+static void interpret_subsequence_layer_characteristics_info (byte* payload, int size, VideoParameters *p_Vid )
 {
   Bitstream* buf;
   long num_sub_layers, accurate_statistics_flag, average_bit_rate, average_frame_rate;
@@ -394,7 +391,7 @@ void interpret_subsequence_layer_characteristics_info (byte* payload, int size, 
 }
 //}}}
 //{{{
-void interpret_subsequence_characteristics_info (byte* payload, int size, VideoParameters *p_Vid )
+static void interpret_subsequence_characteristics_info (byte* payload, int size, VideoParameters *p_Vid )
 {
   Bitstream* buf;
   int i;
@@ -458,7 +455,7 @@ void interpret_subsequence_characteristics_info (byte* payload, int size, VideoP
 }
 //}}}
 //{{{
-void interpret_scene_information (byte* payload, int size, VideoParameters *p_Vid )
+static void interpret_scene_information (byte* payload, int size, VideoParameters *p_Vid )
 {
   Bitstream* buf;
   int scene_id, scene_transition_type, second_scene_id;
@@ -484,7 +481,7 @@ void interpret_scene_information (byte* payload, int size, VideoParameters *p_Vi
 }
 //}}}
 //{{{
-void interpret_filler_payload_info (byte* payload, int size, VideoParameters *p_Vid )
+static void interpret_filler_payload_info (byte* payload, int size, VideoParameters *p_Vid )
 {
   int payload_cnt = 0;
 
@@ -501,7 +498,7 @@ void interpret_filler_payload_info (byte* payload, int size, VideoParameters *p_
 //}}}
 
 //{{{
-void interpret_user_data_unregistered_info (byte* payload, int size, VideoParameters *p_Vid )
+static void interpret_user_data_unregistered_info (byte* payload, int size, VideoParameters *p_Vid )
 {
   int offset = 0;
   byte payload_byte;
@@ -523,7 +520,7 @@ void interpret_user_data_unregistered_info (byte* payload, int size, VideoParame
 }
 //}}}
 //{{{
-void interpret_user_data_registered_itu_t_t35_info (byte* payload, int size, VideoParameters *p_Vid ) {
+static void interpret_user_data_registered_itu_t_t35_info (byte* payload, int size, VideoParameters *p_Vid ) {
 
   int offset = 0;
   byte itu_t_t35_country_code, itu_t_t35_country_code_extension_byte, payload_byte;
@@ -531,25 +528,27 @@ void interpret_user_data_registered_itu_t_t35_info (byte* payload, int size, Vid
   itu_t_t35_country_code = payload[offset];
   offset++;
 
-  printf ("SEI User data ITU-T T.35\n");
-  //printf (" itu_t_t35_country_code = %d \n", itu_t_t35_country_code);
+  if (kDebug)
+    printf ("SEI User data ITU-T T.35 country_code %d\n", itu_t_t35_country_code);
 
   if (itu_t_t35_country_code == 0xFF) {
     itu_t_t35_country_code_extension_byte = payload[offset];
     offset++;
-    //printf (" ITU_T_T35_COUNTRY_CODE_EXTENSION_BYTE %d \n", itu_t_t35_country_code_extension_byte);
+    if (kDebug)
+      printf (" ITU_T_T35_COUNTRY_CODE_EXTENSION_BYTE %d\n", itu_t_t35_country_code_extension_byte);
     }
 
   while (offset < size) {
     payload_byte = payload[offset];
     offset ++;
-    //printf ("itu_t_t35 payload_byte = %d\n", payload_byte);
+    if (kDebug)
+      printf ("itu_t_t35 payload_byte %d\n", payload_byte);
     }
  }
 
 //}}}
 //{{{
-void interpret_reserved_info (byte* payload, int size, VideoParameters *p_Vid )
+static void interpret_reserved_info (byte* payload, int size, VideoParameters *p_Vid )
 {
   int offset = 0;
   byte payload_byte;
@@ -566,7 +565,174 @@ void interpret_reserved_info (byte* payload, int size, VideoParameters *p_Vid )
 //}}}
 
 //{{{
-void interpret_pan_scan_rect_info (byte* payload, int size, VideoParameters *p_Vid ) {
+static void interpret_picture_timing_info (byte* payload, int size, VideoParameters *p_Vid ) {
+
+  seq_parameter_set_rbsp_t *active_sps = p_Vid->active_sps;
+
+  int cpb_removal_len = 24;
+  int dpb_output_len  = 24;
+
+  Boolean CpbDpbDelaysPresentFlag;
+
+
+  if (NULL == active_sps) {
+    fprintf (stderr, "Warning: no active SPS, timing SEI cannot be parsed\n");
+    return;
+    }
+
+  Bitstream* buf = malloc(sizeof(Bitstream));
+  buf->bitstream_length = size;
+  buf->streamBuffer = payload;
+  buf->frame_bitoffset = 0;
+  p_Dec->UsedBits = 0;
+
+  if (kDebug)
+    printf ("SEI Picture timing\n");
+
+  // CpbDpbDelaysPresentFlag can also be set "by some means not specified in this Recommendation | International Standard"
+  CpbDpbDelaysPresentFlag = (Boolean)(active_sps->vui_parameters_present_flag
+                              && (   (active_sps->vui_seq_parameters.nal_hrd_parameters_present_flag != 0)
+                                   ||(active_sps->vui_seq_parameters.vcl_hrd_parameters_present_flag != 0)));
+
+  if (CpbDpbDelaysPresentFlag ) {
+    if (active_sps->vui_parameters_present_flag) {
+      if (active_sps->vui_seq_parameters.nal_hrd_parameters_present_flag) {
+        cpb_removal_len = active_sps->vui_seq_parameters.nal_hrd_parameters.cpb_removal_delay_length_minus1 + 1;
+        dpb_output_len  = active_sps->vui_seq_parameters.nal_hrd_parameters.dpb_output_delay_length_minus1  + 1;
+        }
+      else if (active_sps->vui_seq_parameters.vcl_hrd_parameters_present_flag) {
+        cpb_removal_len = active_sps->vui_seq_parameters.vcl_hrd_parameters.cpb_removal_delay_length_minus1 + 1;
+        dpb_output_len = active_sps->vui_seq_parameters.vcl_hrd_parameters.dpb_output_delay_length_minus1  + 1;
+        }
+      }
+
+    if ((active_sps->vui_seq_parameters.nal_hrd_parameters_present_flag)||
+        (active_sps->vui_seq_parameters.vcl_hrd_parameters_present_flag)) {
+      int cpb_removal_delay, dpb_output_delay;
+      cpb_removal_delay = read_u_v(cpb_removal_len, "SEI: cpb_removal_delay" , buf, &p_Dec->UsedBits);
+      dpb_output_delay = read_u_v(dpb_output_len,  "SEI: dpb_output_delay"  , buf, &p_Dec->UsedBits);
+      if (kDebug) {
+        printf ("cpb_removal_delay = %d\n",cpb_removal_delay);
+        printf ("dpb_output_delay  = %d\n",dpb_output_delay);
+        }
+      }
+    }
+
+  int pic_struct_present_flag, pic_struct;
+  if (!active_sps->vui_parameters_present_flag)
+    pic_struct_present_flag = 0;
+  else
+    pic_struct_present_flag = active_sps->vui_seq_parameters.pic_struct_present_flag;
+
+  int NumClockTs = 0;
+  if (pic_struct_present_flag) {
+    pic_struct = read_u_v (4, "SEI: pic_struct" , buf, &p_Dec->UsedBits);
+    //printf ("pic_struct = %d\n",pic_struct);
+    switch (pic_struct) {
+      case 0:
+      case 1:
+      //{{{
+      case 2:
+        NumClockTs = 1;
+        break;
+      //}}}
+      case 3:
+      case 4:
+      //{{{
+      case 7:
+        NumClockTs = 2;
+        break;
+      //}}}
+      case 5:
+      case 6:
+      //{{{
+      case 8:
+        NumClockTs = 3;
+        break;
+      //}}}
+      //{{{
+      default:
+        error ("reserved pic_struct used (can't determine NumClockTs)", 500);
+      //}}}
+      }
+    if (kDebug)
+      for (int i = 0; i < NumClockTs; i++) {
+        //{{{  print
+        int clock_timestamp_flag;
+        int ct_type, nuit_field_based_flag, counting_type, full_timestamp_flag, discontinuity_flag, cnt_dropped_flag, nframes;
+        int seconds_value, minutes_value, hours_value, seconds_flag, minutes_flag, hours_flag, time_offset;
+
+        clock_timestamp_flag = read_u_1("SEI: clock_timestamp_flag"  , buf, &p_Dec->UsedBits);
+        printf ("clock_timestamp_flag = %d\n",clock_timestamp_flag);
+        if (clock_timestamp_flag) {
+          ct_type               = read_u_v(2, "SEI: ct_type"               , buf, &p_Dec->UsedBits);
+          nuit_field_based_flag = read_u_1(   "SEI: nuit_field_based_flag" , buf, &p_Dec->UsedBits);
+          counting_type         = read_u_v(5, "SEI: counting_type"         , buf, &p_Dec->UsedBits);
+          full_timestamp_flag   = read_u_1(   "SEI: full_timestamp_flag"   , buf, &p_Dec->UsedBits);
+          discontinuity_flag    = read_u_1(   "SEI: discontinuity_flag"    , buf, &p_Dec->UsedBits);
+          cnt_dropped_flag      = read_u_1(   "SEI: cnt_dropped_flag"      , buf, &p_Dec->UsedBits);
+          nframes               = read_u_v(8, "SEI: nframes"               , buf, &p_Dec->UsedBits);
+
+          printf("ct_type               = %d\n",ct_type);
+          printf("nuit_field_based_flag = %d\n",nuit_field_based_flag);
+          printf("full_timestamp_flag   = %d\n",full_timestamp_flag);
+          printf("discontinuity_flag    = %d\n",discontinuity_flag);
+          printf("cnt_dropped_flag      = %d\n",cnt_dropped_flag);
+          printf("nframes               = %d\n",nframes);
+
+          if (full_timestamp_flag) {
+            seconds_value         = read_u_v(6, "SEI: seconds_value"   , buf, &p_Dec->UsedBits);
+            minutes_value         = read_u_v(6, "SEI: minutes_value"   , buf, &p_Dec->UsedBits);
+            hours_value           = read_u_v(5, "SEI: hours_value"     , buf, &p_Dec->UsedBits);
+            printf("seconds_value = %d\n",seconds_value);
+            printf("minutes_value = %d\n",minutes_value);
+            printf("hours_value   = %d\n",hours_value);
+            }
+          else {
+            seconds_flag          = read_u_1(   "SEI: seconds_flag" , buf, &p_Dec->UsedBits);
+            printf ("seconds_flag = %d\n",seconds_flag);
+            if (seconds_flag) {
+              seconds_value         = read_u_v(6, "SEI: seconds_value"   , buf, &p_Dec->UsedBits);
+              minutes_flag          = read_u_1(   "SEI: minutes_flag" , buf, &p_Dec->UsedBits);
+              printf("seconds_value = %d\n",seconds_value);
+              printf("minutes_flag  = %d\n",minutes_flag);
+              if(minutes_flag) {
+                minutes_value         = read_u_v(6, "SEI: minutes_value"   , buf, &p_Dec->UsedBits);
+                hours_flag            = read_u_1(   "SEI: hours_flag" , buf, &p_Dec->UsedBits);
+                printf("minutes_value = %d\n",minutes_value);
+                printf("hours_flag    = %d\n",hours_flag);
+                if(hours_flag) {
+                  hours_value           = read_u_v(5, "SEI: hours_value"     , buf, &p_Dec->UsedBits);
+                  printf("hours_value   = %d\n",hours_value);
+                  }
+                }
+              }
+            }
+
+            {
+              int time_offset_length;
+              if (active_sps->vui_seq_parameters.vcl_hrd_parameters_present_flag)
+                time_offset_length = active_sps->vui_seq_parameters.vcl_hrd_parameters.time_offset_length;
+              else if (active_sps->vui_seq_parameters.nal_hrd_parameters_present_flag)
+                time_offset_length = active_sps->vui_seq_parameters.nal_hrd_parameters.time_offset_length;
+              else
+                time_offset_length = 24;
+              if (time_offset_length)
+                time_offset = read_i_v(time_offset_length, "SEI: time_offset"   , buf, &p_Dec->UsedBits);
+              else
+                time_offset = 0;
+              printf("time_offset   = %d\n",time_offset);
+            }
+          }
+        }
+        //}}}
+    }
+
+  free (buf);
+  }
+//}}}
+//{{{
+static void interpret_pan_scan_rect_info (byte* payload, int size, VideoParameters *p_Vid ) {
 
   Bitstream* buf;
   buf = malloc (sizeof(Bitstream));
@@ -585,20 +751,20 @@ void interpret_pan_scan_rect_info (byte* payload, int size, VideoParameters *p_V
       int pan_scan_rect_right_offset = read_se_v ("SEI: pan_scan_rect_right_offset", buf, &p_Dec->UsedBits);
       int pan_scan_rect_top_offset = read_se_v ("SEI: pan_scan_rect_top_offset", buf, &p_Dec->UsedBits);
       int pan_scan_rect_bottom_offset = read_se_v ("SEI: pan_scan_rect_bottom_offset", buf, &p_Dec->UsedBits);
-      printf ("SEI Pan scan %d/%d id %d left_offset %d right_offset %d top_offset %d bottom_offset %d\n",
-              i, pan_scan_cnt_minus1, pan_scan_rect_id,
-              pan_scan_rect_left_offset, pan_scan_rect_right_offset,
-              pan_scan_rect_top_offset, pan_scan_rect_bottom_offset);
+      if (kDebug)
+        printf ("SEI Pan scan %d/%d id %d left_offset %d right_offset %d top_offset %d bottom_offset %d\n",
+                i, pan_scan_cnt_minus1, pan_scan_rect_id,
+                pan_scan_rect_left_offset, pan_scan_rect_right_offset,
+                pan_scan_rect_top_offset, pan_scan_rect_bottom_offset);
       }
     int pan_scan_rect_repetition_period = read_ue_v ("SEI: pan_scan_rect_repetition_period", buf, &p_Dec->UsedBits);
     }
 
   free (buf);
   }
-
 //}}}
 //{{{
-void interpret_recovery_point_info (byte* payload, int size, VideoParameters *p_Vid ) {
+static void interpret_recovery_point_info (byte* payload, int size, VideoParameters *p_Vid ) {
 
   Bitstream* buf;
   buf = malloc(sizeof(Bitstream));
@@ -608,21 +774,22 @@ void interpret_recovery_point_info (byte* payload, int size, VideoParameters *p_
 
   p_Dec->UsedBits = 0;
 
-  int recovery_frame_cnt = read_ue_v(    "SEI: recovery_frame_cnt", buf, &p_Dec->UsedBits);
-  int exact_match_flag = read_u_1 (    "SEI: exact_match_flag", buf, &p_Dec->UsedBits);
-  int broken_link_flag = read_u_1 (    "SEI: broken_link_flag", buf, &p_Dec->UsedBits);
-  int changing_slice_group_idc = read_u_v ( 2, "SEI: changing_slice_group_idc", buf, &p_Dec->UsedBits);
+  int recovery_frame_cnt = read_ue_v ("SEI: recovery_frame_cnt", buf, &p_Dec->UsedBits);
+  int exact_match_flag = read_u_1 ("SEI: exact_match_flag", buf, &p_Dec->UsedBits);
+  int broken_link_flag = read_u_1 ("SEI: broken_link_flag", buf, &p_Dec->UsedBits);
+  int changing_slice_group_idc = read_u_v (2, "SEI: changing_slice_group_idc", buf, &p_Dec->UsedBits);
 
   p_Vid->recovery_point = 1;
   p_Vid->recovery_frame_cnt = recovery_frame_cnt;
-  printf ("SEI Recovery point recovery_frame_cnt %d exact_match %d broken_link %d changing_slice_group_idc %d\n",
-          recovery_frame_cnt, exact_match_flag, broken_link_flag, changing_slice_group_idc);
+  if (kDebug)
+    printf ("SEI Recovery point recovery_frame_cnt %d exact_match %d broken_link %d changing_slice_group_idc %d\n",
+            recovery_frame_cnt, exact_match_flag, broken_link_flag, changing_slice_group_idc);
 
   free (buf);
   }
 //}}}
 //{{{
-void interpret_dec_ref_pic_marking_repetition_info (byte* payload, int size, VideoParameters *p_Vid, Slice *pSlice )
+static void interpret_dec_ref_pic_marking_repetition_info (byte* payload, int size, VideoParameters *p_Vid, Slice *pSlice )
 {
   int original_idr_flag, original_frame_num;
   int original_field_pic_flag, original_bottom_field_flag;
@@ -643,14 +810,11 @@ void interpret_dec_ref_pic_marking_repetition_info (byte* payload, int size, Vid
   original_idr_flag     = read_u_1 (    "SEI: original_idr_flag"    , buf, &p_Dec->UsedBits);
   original_frame_num    = read_ue_v(    "SEI: original_frame_num"   , buf, &p_Dec->UsedBits);
 
-  if ( !p_Vid->active_sps->frame_mbs_only_flag )
-  {
+  if (!p_Vid->active_sps->frame_mbs_only_flag ) {
     original_field_pic_flag = read_u_1 ( "SEI: original_field_pic_flag", buf, &p_Dec->UsedBits);
     if ( original_field_pic_flag )
-    {
       original_bottom_field_flag = read_u_1 ( "SEI: original_bottom_field_flag", buf, &p_Dec->UsedBits);
     }
-  }
 
   printf("SEI Decoded Picture Buffer Management Repetition\n");
   printf("original_idr_flag       = %d\n", original_idr_flag);
@@ -678,9 +842,7 @@ void interpret_dec_ref_pic_marking_repetition_info (byte* payload, int size, Vid
   //p_Vid->idr_flag = original_idr_flag;
   pSlice->idr_flag = original_idr_flag;
   pSlice->dec_ref_pic_marking_buffer = NULL;
-
-  dec_ref_pic_marking(p_Vid, buf, pSlice);
-
+  dec_ref_pic_marking (p_Vid, buf, pSlice);
   //{{{  print out decoded values
   //if (p_Vid->idr_flag)
   //{
@@ -719,13 +881,11 @@ void interpret_dec_ref_pic_marking_repetition_info (byte* payload, int size, Vid
   //}
   //}}}
 
-  while (pSlice->dec_ref_pic_marking_buffer)
-  {
-    tmp_drpm=pSlice->dec_ref_pic_marking_buffer;
-
-    pSlice->dec_ref_pic_marking_buffer=tmp_drpm->Next;
+  while (pSlice->dec_ref_pic_marking_buffer) {
+    tmp_drpm = pSlice->dec_ref_pic_marking_buffer;
+    pSlice->dec_ref_pic_marking_buffer = tmp_drpm->Next;
     free (tmp_drpm);
-  }
+    }
 
   // restore old values in p_Vid
   pSlice->dec_ref_pic_marking_buffer = old_drpm;
@@ -736,12 +896,12 @@ void interpret_dec_ref_pic_marking_repetition_info (byte* payload, int size, Vid
   pSlice->adaptive_ref_pic_buffering_flag = old_adaptive_ref_pic_buffering_flag;
 
   free (buf);
-}
+  }
 //}}}
 
 //{{{
-void interpret_full_frame_freeze_info (byte* payload, int size, VideoParameters *p_Vid )
-{
+static void interpret_full_frame_freeze_info (byte* payload, int size, VideoParameters *p_Vid ) {
+
   int full_frame_freeze_repetition_period;
   Bitstream* buf;
 
@@ -750,51 +910,45 @@ void interpret_full_frame_freeze_info (byte* payload, int size, VideoParameters 
   buf->streamBuffer = payload;
   buf->frame_bitoffset = 0;
 
-  full_frame_freeze_repetition_period  = read_ue_v(    "SEI: full_frame_freeze_repetition_period"   , buf, &p_Dec->UsedBits);
+  full_frame_freeze_repetition_period = read_ue_v ("SEI: full_frame_freeze_repetition_period", buf, &p_Dec->UsedBits);
 
-  printf("full_frame_freeze_repetition_period = %d\n", full_frame_freeze_repetition_period);
+  printf ("full_frame_freeze_repetition_period = %d\n", full_frame_freeze_repetition_period);
 
   free (buf);
 }
 //}}}
 //{{{
-void interpret_full_frame_freeze_release_info (byte* payload, int size, VideoParameters *p_Vid )
-{
-  printf("SEI Full-frame freeze release SEI\n");
+static void interpret_full_frame_freeze_release_info (byte* payload, int size, VideoParameters *p_Vid ) {
+
+  printf ("SEI Full-frame freeze release SEI\n");
   if (size)
-    printf("payload size of this message should be zero, but is %d bytes.\n", size);
-}
+    printf ("payload size of this message should be zero, but is %d bytes.\n", size);
+  }
 //}}}
 //{{{
-void interpret_full_frame_snapshot_info (byte* payload, int size, VideoParameters *p_Vid )
-{
-  int snapshot_id;
+static void interpret_full_frame_snapshot_info (byte* payload, int size, VideoParameters *p_Vid ) {
 
-  Bitstream* buf;
 
-  buf = malloc(sizeof(Bitstream));
+  Bitstream* buf = malloc(sizeof(Bitstream));
   buf->bitstream_length = size;
   buf->streamBuffer = payload;
   buf->frame_bitoffset = 0;
-
   p_Dec->UsedBits = 0;
 
-  snapshot_id = read_ue_v("SEI: snapshot_id", buf, &p_Dec->UsedBits);
+  int snapshot_id = read_ue_v("SEI: snapshot_id", buf, &p_Dec->UsedBits);
 
-  printf("SEI Full-frame snapshot\n");
-  printf("snapshot_id = %d\n", snapshot_id);
+  printf ("SEI Full-frame snapshot\n");
+  printf ("snapshot_id = %d\n", snapshot_id);
   free (buf);
-}
+  }
 //}}}
 
 //{{{
-void interpret_progressive_refinement_start_info (byte* payload, int size, VideoParameters *p_Vid )
+static void interpret_progressive_refinement_start_info (byte* payload, int size, VideoParameters *p_Vid )
 {
   int progressive_refinement_id, num_refinement_steps_minus1;
 
-  Bitstream* buf;
-
-  buf = malloc(sizeof(Bitstream));
+  Bitstream* buf = malloc(sizeof(Bitstream));
   buf->bitstream_length = size;
   buf->streamBuffer = payload;
   buf->frame_bitoffset = 0;
@@ -811,17 +965,14 @@ void interpret_progressive_refinement_start_info (byte* payload, int size, Video
 }
 //}}}
 //{{{
-void interpret_progressive_refinement_end_info (byte* payload, int size, VideoParameters *p_Vid )
+static void interpret_progressive_refinement_end_info (byte* payload, int size, VideoParameters *p_Vid )
 {
   int progressive_refinement_id;
 
-  Bitstream* buf;
-
-  buf = malloc(sizeof(Bitstream));
+  Bitstream* buf = malloc(sizeof(Bitstream));
   buf->bitstream_length = size;
   buf->streamBuffer = payload;
   buf->frame_bitoffset = 0;
-
   p_Dec->UsedBits = 0;
 
   progressive_refinement_id   = read_ue_v("SEI: progressive_refinement_id"  , buf, &p_Dec->UsedBits);
@@ -833,7 +984,7 @@ void interpret_progressive_refinement_end_info (byte* payload, int size, VideoPa
 //}}}
 
 //{{{
-void interpret_motion_constrained_slice_group_set_info (byte* payload, int size, VideoParameters *p_Vid )
+static void interpret_motion_constrained_slice_group_set_info (byte* payload, int size, VideoParameters *p_Vid )
 {
   int num_slice_groups_minus1, slice_group_id, exact_match_flag, pan_scan_rect_flag, pan_scan_rect_id;
   int i;
@@ -876,7 +1027,7 @@ void interpret_motion_constrained_slice_group_set_info (byte* payload, int size,
 }
 //}}}
 //{{{
-void interpret_film_grain_characteristics_info (byte* payload, int size, VideoParameters *p_Vid )
+static void interpret_film_grain_characteristics_info (byte* payload, int size, VideoParameters *p_Vid )
 {
   int film_grain_characteristics_cancel_flag;
   int model_id, separate_colour_description_present_flag;
@@ -957,14 +1108,12 @@ void interpret_film_grain_characteristics_info (byte* payload, int size, VideoPa
 }
 //}}}
 //{{{
-void interpret_deblocking_filter_display_preference_info (byte* payload, int size, VideoParameters *p_Vid )
+static void interpret_deblocking_filter_display_preference_info (byte* payload, int size, VideoParameters *p_Vid )
 {
   int deblocking_display_preference_cancel_flag;
   int display_prior_to_deblocking_preferred_flag, dec_frame_buffering_constraint_flag, deblocking_display_preference_repetition_period;
 
-  Bitstream* buf;
-
-  buf = malloc(sizeof(Bitstream));
+  Bitstream* buf = malloc(sizeof(Bitstream));
   buf->bitstream_length = size;
   buf->streamBuffer = payload;
   buf->frame_bitoffset = 0;
@@ -984,275 +1133,93 @@ void interpret_deblocking_filter_display_preference_info (byte* payload, int siz
 }
 //}}}
 //{{{
-void interpret_stereo_video_info_info (byte* payload, int size, VideoParameters *p_Vid )
+static void interpret_stereo_video_info_info (byte* payload, int size, VideoParameters *p_Vid )
 {
   int field_views_flags;
-  int top_field_is_left_view_flag, current_frame_is_left_view_flag, next_frame_is_second_view_flag;
+  int top_field_is_left_view_flag;
+  int current_frame_is_left_view_flag;
+  int next_frame_is_second_view_flag;
   int left_view_self_contained_flag;
   int right_view_self_contained_flag;
 
-  Bitstream* buf;
-
-  buf = malloc(sizeof(Bitstream));
+  Bitstream* buf = malloc (sizeof(Bitstream));
   buf->bitstream_length = size;
   buf->streamBuffer = payload;
   buf->frame_bitoffset = 0;
 
-  field_views_flags = read_u_1("SEI: field_views_flags", buf, &p_Dec->UsedBits);
+  field_views_flags = read_u_1 ("SEI: field_views_flags", buf, &p_Dec->UsedBits);
   printf("field_views_flags = %d\n", field_views_flags);
-  if (field_views_flags)
-  {
-    top_field_is_left_view_flag         = read_u_1("SEI: top_field_is_left_view_flag", buf, &p_Dec->UsedBits);
+  if (field_views_flags) {
+    top_field_is_left_view_flag = read_u_1 ("SEI: top_field_is_left_view_flag", buf, &p_Dec->UsedBits);
     printf("top_field_is_left_view_flag = %d\n", top_field_is_left_view_flag);
-  }
-  else
-  {
-    current_frame_is_left_view_flag     = read_u_1("SEI: current_frame_is_left_view_flag", buf, &p_Dec->UsedBits);
-    next_frame_is_second_view_flag      = read_u_1("SEI: next_frame_is_second_view_flag", buf, &p_Dec->UsedBits);
-    printf("current_frame_is_left_view_flag = %d\n", current_frame_is_left_view_flag);
-    printf("next_frame_is_second_view_flag = %d\n", next_frame_is_second_view_flag);
-  }
+    }
+  else {
+    current_frame_is_left_view_flag = read_u_1 ("SEI: current_frame_is_left_view_flag", buf, &p_Dec->UsedBits);
+    next_frame_is_second_view_flag = read_u_1 ("SEI: next_frame_is_second_view_flag", buf, &p_Dec->UsedBits);
+    printf ("current_frame_is_left_view_flag = %d\n", current_frame_is_left_view_flag);
+    printf ("next_frame_is_second_view_flag = %d\n", next_frame_is_second_view_flag);
+    }
 
-  left_view_self_contained_flag         = read_u_1("SEI: left_view_self_contained_flag", buf, &p_Dec->UsedBits);
-  right_view_self_contained_flag        = read_u_1("SEI: right_view_self_contained_flag", buf, &p_Dec->UsedBits);
-  printf("left_view_self_contained_flag = %d\n", left_view_self_contained_flag);
-  printf("right_view_self_contained_flag = %d\n", right_view_self_contained_flag);
+  left_view_self_contained_flag = read_u_1 ("SEI: left_view_self_contained_flag", buf, &p_Dec->UsedBits);
+  right_view_self_contained_flag = read_u_1 ("SEI: right_view_self_contained_flag", buf, &p_Dec->UsedBits);
+  printf ("left_view_self_contained_flag = %d\n", left_view_self_contained_flag);
+  printf ("right_view_self_contained_flag = %d\n", right_view_self_contained_flag);
 
   free (buf);
-}
+  }
 //}}}
 //{{{
-void interpret_buffering_period_info (byte* payload, int size, VideoParameters *p_Vid )
-{
-  int seq_parameter_set_id, initial_cpb_removal_delay, initial_cpb_removal_delay_offset;
-  unsigned int k;
+static void interpret_buffering_period_info (byte* payload, int size, VideoParameters *p_Vid ) {
 
-  Bitstream* buf;
-  seq_parameter_set_rbsp_t *sps;
-
-  buf = malloc(sizeof(Bitstream));
+  Bitstream* buf = malloc(sizeof(Bitstream));
   buf->bitstream_length = size;
   buf->streamBuffer = payload;
   buf->frame_bitoffset = 0;
-
   p_Dec->UsedBits = 0;
 
-  seq_parameter_set_id   = read_ue_v("SEI: seq_parameter_set_id"  , buf, &p_Dec->UsedBits);
-  sps = &p_Vid->SeqParSet[seq_parameter_set_id];
+  int seq_parameter_set_id = read_ue_v("SEI: seq_parameter_set_id"  , buf, &p_Dec->UsedBits);
+  seq_parameter_set_rbsp_t* sps = &p_Vid->SeqParSet[seq_parameter_set_id];
   activateSPS (p_Vid, sps);
 
   printf ("Buffering period SEI message\n");
   printf ("seq_parameter_set_id   = %d\n", seq_parameter_set_id);
 
   // Note: NalHrdBpPresentFlag and CpbDpbDelaysPresentFlag can also be set "by some means not specified in this Recommendation | International Standard"
-  if (sps->vui_parameters_present_flag)
-  {
-
-    if (sps->vui_seq_parameters.nal_hrd_parameters_present_flag)
-    {
-      for (k=0; k<sps->vui_seq_parameters.nal_hrd_parameters.cpb_cnt_minus1+1; k++)
-      {
-        initial_cpb_removal_delay        = read_u_v(sps->vui_seq_parameters.nal_hrd_parameters.initial_cpb_removal_delay_length_minus1+1, "SEI: initial_cpb_removal_delay"        , buf, &p_Dec->UsedBits);
+  if (sps->vui_parameters_present_flag) {
+    int initial_cpb_removal_delay;
+    int initial_cpb_removal_delay_offset;
+    if (sps->vui_seq_parameters.nal_hrd_parameters_present_flag) {
+      for (unsigned k = 0; k < sps->vui_seq_parameters.nal_hrd_parameters.cpb_cnt_minus1+1; k++) {
+        initial_cpb_removal_delay = read_u_v(sps->vui_seq_parameters.nal_hrd_parameters.initial_cpb_removal_delay_length_minus1+1, "SEI: initial_cpb_removal_delay"        , buf, &p_Dec->UsedBits);
         initial_cpb_removal_delay_offset = read_u_v(sps->vui_seq_parameters.nal_hrd_parameters.initial_cpb_removal_delay_length_minus1+1, "SEI: initial_cpb_removal_delay_offset" , buf, &p_Dec->UsedBits);
 
-        printf("nal initial_cpb_removal_delay[%d]        = %d\n", k, initial_cpb_removal_delay);
-        printf("nal initial_cpb_removal_delay_offset[%d] = %d\n", k, initial_cpb_removal_delay_offset);
+        printf ("nal initial_cpb_removal_delay[%d] = %d\n", k, initial_cpb_removal_delay);
+        printf ("nal initial_cpb_removal_delay_offset[%d] = %d\n", k, initial_cpb_removal_delay_offset);
+        }
       }
-    }
 
-    if (sps->vui_seq_parameters.vcl_hrd_parameters_present_flag)
-    {
-      for (k=0; k<sps->vui_seq_parameters.vcl_hrd_parameters.cpb_cnt_minus1+1; k++)
-      {
-        initial_cpb_removal_delay        = read_u_v(sps->vui_seq_parameters.vcl_hrd_parameters.initial_cpb_removal_delay_length_minus1+1, "SEI: initial_cpb_removal_delay"        , buf, &p_Dec->UsedBits);
+    if (sps->vui_seq_parameters.vcl_hrd_parameters_present_flag) {
+      for (unsigned k = 0; k < sps->vui_seq_parameters.vcl_hrd_parameters.cpb_cnt_minus1+1; k++) {
+        initial_cpb_removal_delay = read_u_v(sps->vui_seq_parameters.vcl_hrd_parameters.initial_cpb_removal_delay_length_minus1+1, "SEI: initial_cpb_removal_delay"        , buf, &p_Dec->UsedBits);
         initial_cpb_removal_delay_offset = read_u_v(sps->vui_seq_parameters.vcl_hrd_parameters.initial_cpb_removal_delay_length_minus1+1, "SEI: initial_cpb_removal_delay_offset" , buf, &p_Dec->UsedBits);
 
-        printf("vcl initial_cpb_removal_delay[%d]        = %d\n", k, initial_cpb_removal_delay);
-        printf("vcl initial_cpb_removal_delay_offset[%d] = %d\n", k, initial_cpb_removal_delay_offset);
-      }
-    }
-  }
-
-  free (buf);
-}
-//}}}
-//{{{
-void interpret_picture_timing_info (byte* payload, int size, VideoParameters *p_Vid )
-{
-  seq_parameter_set_rbsp_t *active_sps = p_Vid->active_sps;
-
-  int cpb_removal_len = 24;
-  int dpb_output_len  = 24;
-
-  Boolean CpbDpbDelaysPresentFlag;
-
-  Bitstream* buf;
-
-  if (NULL == active_sps) {
-    fprintf (stderr, "Warning: no active SPS, timing SEI cannot be parsed\n");
-    return;
-  }
-
-  buf = malloc(sizeof(Bitstream));
-  buf->bitstream_length = size;
-  buf->streamBuffer = payload;
-  buf->frame_bitoffset = 0;
-
-  p_Dec->UsedBits = 0;
-
-  printf ("SEI Picture timing\n");
-  // CpbDpbDelaysPresentFlag can also be set "by some means not specified in this Recommendation | International Standard"
-  CpbDpbDelaysPresentFlag = (Boolean)(active_sps->vui_parameters_present_flag
-                              && (   (active_sps->vui_seq_parameters.nal_hrd_parameters_present_flag != 0)
-                                   ||(active_sps->vui_seq_parameters.vcl_hrd_parameters_present_flag != 0)));
-
-  if (CpbDpbDelaysPresentFlag ) {
-    if (active_sps->vui_parameters_present_flag) {
-      if (active_sps->vui_seq_parameters.nal_hrd_parameters_present_flag) {
-        cpb_removal_len = active_sps->vui_seq_parameters.nal_hrd_parameters.cpb_removal_delay_length_minus1 + 1;
-        dpb_output_len  = active_sps->vui_seq_parameters.nal_hrd_parameters.dpb_output_delay_length_minus1  + 1;
-        }
-      else if (active_sps->vui_seq_parameters.vcl_hrd_parameters_present_flag) {
-        cpb_removal_len = active_sps->vui_seq_parameters.vcl_hrd_parameters.cpb_removal_delay_length_minus1 + 1;
-        dpb_output_len = active_sps->vui_seq_parameters.vcl_hrd_parameters.dpb_output_delay_length_minus1  + 1;
+        printf ("vcl initial_cpb_removal_delay[%d] = %d\n", k, initial_cpb_removal_delay);
+        printf ("vcl initial_cpb_removal_delay_offset[%d] = %d\n", k, initial_cpb_removal_delay_offset);
         }
       }
-
-    if ((active_sps->vui_seq_parameters.nal_hrd_parameters_present_flag)||
-        (active_sps->vui_seq_parameters.vcl_hrd_parameters_present_flag)) {
-      int cpb_removal_delay, dpb_output_delay;
-      cpb_removal_delay = read_u_v(cpb_removal_len, "SEI: cpb_removal_delay" , buf, &p_Dec->UsedBits);
-      dpb_output_delay = read_u_v(dpb_output_len,  "SEI: dpb_output_delay"  , buf, &p_Dec->UsedBits);
-      //printf ("cpb_removal_delay = %d\n",cpb_removal_delay);
-      //printf ("dpb_output_delay  = %d\n",dpb_output_delay);
-      }
-    }
-
-  int pic_struct_present_flag, pic_struct;
-  if (!active_sps->vui_parameters_present_flag)
-    pic_struct_present_flag = 0;
-  else
-    pic_struct_present_flag = active_sps->vui_seq_parameters.pic_struct_present_flag;
-
-  int NumClockTs = 0;
-  if (pic_struct_present_flag) {
-    pic_struct = read_u_v (4, "SEI: pic_struct" , buf, &p_Dec->UsedBits);
-    //printf ("pic_struct = %d\n",pic_struct);
-    switch (pic_struct) {
-      case 0:
-      case 1:
-      //{{{
-      case 2:
-        NumClockTs = 1;
-        break;
-      //}}}
-      case 3:
-      case 4:
-      //{{{
-      case 7:
-        NumClockTs = 2;
-        break;
-      //}}}
-      case 5:
-      case 6:
-      //{{{
-      case 8:
-        NumClockTs = 3;
-        break;
-      //}}}
-      //{{{
-      default:
-        error ("reserved pic_struct used (can't determine NumClockTs)", 500);
-      //}}}
-      }
-
-    //for (i = 0; i < NumClockTs; i++) {
-      //{{{  print
-      //int clock_timestamp_flag;
-      //int ct_type, nuit_field_based_flag, counting_type, full_timestamp_flag, discontinuity_flag, cnt_dropped_flag, nframes;
-      //int seconds_value, minutes_value, hours_value, seconds_flag, minutes_flag, hours_flag, time_offset;
-      //int i;
-
-      //clock_timestamp_flag = read_u_1("SEI: clock_timestamp_flag"  , buf, &p_Dec->UsedBits);
-      //printf ("clock_timestamp_flag = %d\n",clock_timestamp_flag);
-      //if (clock_timestamp_flag) {
-        //ct_type               = read_u_v(2, "SEI: ct_type"               , buf, &p_Dec->UsedBits);
-        //nuit_field_based_flag = read_u_1(   "SEI: nuit_field_based_flag" , buf, &p_Dec->UsedBits);
-        //counting_type         = read_u_v(5, "SEI: counting_type"         , buf, &p_Dec->UsedBits);
-        //full_timestamp_flag   = read_u_1(   "SEI: full_timestamp_flag"   , buf, &p_Dec->UsedBits);
-        //discontinuity_flag    = read_u_1(   "SEI: discontinuity_flag"    , buf, &p_Dec->UsedBits);
-        //cnt_dropped_flag      = read_u_1(   "SEI: cnt_dropped_flag"      , buf, &p_Dec->UsedBits);
-        //nframes               = read_u_v(8, "SEI: nframes"               , buf, &p_Dec->UsedBits);
-
-        //printf("ct_type               = %d\n",ct_type);
-        //printf("nuit_field_based_flag = %d\n",nuit_field_based_flag);
-        //printf("full_timestamp_flag   = %d\n",full_timestamp_flag);
-        //printf("discontinuity_flag    = %d\n",discontinuity_flag);
-        //printf("cnt_dropped_flag      = %d\n",cnt_dropped_flag);
-        //printf("nframes               = %d\n",nframes);
-
-        //if (full_timestamp_flag) {
-          //seconds_value         = read_u_v(6, "SEI: seconds_value"   , buf, &p_Dec->UsedBits);
-          //minutes_value         = read_u_v(6, "SEI: minutes_value"   , buf, &p_Dec->UsedBits);
-          //hours_value           = read_u_v(5, "SEI: hours_value"     , buf, &p_Dec->UsedBits);
-          //printf("seconds_value = %d\n",seconds_value);
-          //printf("minutes_value = %d\n",minutes_value);
-          //printf("hours_value   = %d\n",hours_value);
-          //}
-        //else {
-          //seconds_flag          = read_u_1(   "SEI: seconds_flag" , buf, &p_Dec->UsedBits);
-          //printf ("seconds_flag = %d\n",seconds_flag);
-          //if (seconds_flag) {
-            //seconds_value         = read_u_v(6, "SEI: seconds_value"   , buf, &p_Dec->UsedBits);
-            //minutes_flag          = read_u_1(   "SEI: minutes_flag" , buf, &p_Dec->UsedBits);
-            //printf("seconds_value = %d\n",seconds_value);
-            //printf("minutes_flag  = %d\n",minutes_flag);
-            //if(minutes_flag) {
-              //minutes_value         = read_u_v(6, "SEI: minutes_value"   , buf, &p_Dec->UsedBits);
-              //hours_flag            = read_u_1(   "SEI: hours_flag" , buf, &p_Dec->UsedBits);
-              //printf("minutes_value = %d\n",minutes_value);
-              //printf("hours_flag    = %d\n",hours_flag);
-              //if(hours_flag) {
-                //hours_value           = read_u_v(5, "SEI: hours_value"     , buf, &p_Dec->UsedBits);
-                //printf("hours_value   = %d\n",hours_value);
-                //}
-              //}
-            //}
-          //}
-
-          //{
-            //int time_offset_length;
-            //if (active_sps->vui_seq_parameters.vcl_hrd_parameters_present_flag)
-              //time_offset_length = active_sps->vui_seq_parameters.vcl_hrd_parameters.time_offset_length;
-            //else if (active_sps->vui_seq_parameters.nal_hrd_parameters_present_flag)
-              //time_offset_length = active_sps->vui_seq_parameters.nal_hrd_parameters.time_offset_length;
-            //else
-              //time_offset_length = 24;
-            //if (time_offset_length)
-              //time_offset = read_i_v(time_offset_length, "SEI: time_offset"   , buf, &p_Dec->UsedBits);
-            //else
-              //time_offset = 0;
-            //printf("time_offset   = %d\n",time_offset);
-          //}
-        //}
-      //}
-      //}}}
     }
 
   free (buf);
   }
 //}}}
 //{{{
-void interpret_frame_packing_arrangement_info (byte* payload, int size, VideoParameters *p_Vid )
+static void interpret_frame_packing_arrangement_info (byte* payload, int size, VideoParameters *p_Vid )
 {
   frame_packing_arrangement_information_struct seiFramePackingArrangement;
-  Bitstream* buf;
-
-  buf = malloc(sizeof(Bitstream));
+  Bitstream* buf = malloc(sizeof(Bitstream));
   buf->bitstream_length = size;
   buf->streamBuffer = payload;
   buf->frame_bitoffset = 0;
-
   p_Dec->UsedBits = 0;
 
   printf("Frame packing arrangement SEI message\n");
@@ -1304,39 +1271,15 @@ void interpret_frame_packing_arrangement_info (byte* payload, int size, VideoPar
 }
 //}}}
 
-//{{{  tone_mapping_struct_tmp
-typedef struct
-{
-  unsigned int  tone_map_id;
-  unsigned char tone_map_cancel_flag;
-  unsigned int  tone_map_repetition_period;
-  unsigned char coded_data_bit_depth;
-  unsigned char sei_bit_depth;
-  unsigned int  model_id;
-  // variables for model 0
-  int  min_value;
-  int  max_value;
-  // variables for model 1
-  int  sigmoid_midpoint;
-  int  sigmoid_width;
-  // variables for model 2
-  int start_of_coded_interval[1<<MAX_SEI_BIT_DEPTH];
-  // variables for model 3
-  int num_pivots;
-  int coded_pivot_value[MAX_NUM_PIVOTS];
-  int sei_pivot_value[MAX_NUM_PIVOTS];
-} tone_mapping_struct_tmp;
-//}}}
 //{{{
-void interpret_tone_mapping (byte* payload, int size, VideoParameters *p_Vid )
+static void interpret_tone_mapping (byte* payload, int size, VideoParameters *p_Vid )
 {
   tone_mapping_struct_tmp seiToneMappingTmp;
-  Bitstream* buf;
   int i = 0, max_coded_num, max_output_num;
 
   memset (&seiToneMappingTmp, 0, sizeof (tone_mapping_struct_tmp));
 
-  buf = malloc(sizeof(Bitstream));
+  Bitstream* buf = malloc(sizeof(Bitstream));
   buf->bitstream_length = size;
   buf->streamBuffer = payload;
   buf->frame_bitoffset = 0;
@@ -1409,13 +1352,12 @@ void interpret_tone_mapping (byte* payload, int size, VideoParameters *p_Vid )
 //}}}
 
 //{{{
-void interpret_post_filter_hints_info (byte* payload, int size, VideoParameters *p_Vid )
+static void interpret_post_filter_hints_info (byte* payload, int size, VideoParameters *p_Vid )
 {
-  Bitstream* buf;
   unsigned int filter_hint_size_y, filter_hint_size_x, filter_hint_type, color_component, cx, cy, additional_extension_flag;
   int ***filter_hint;
 
-  buf = malloc(sizeof(Bitstream));
+  Bitstream* buf = malloc(sizeof(Bitstream));
   buf->bitstream_length = size;
   buf->streamBuffer = payload;
   buf->frame_bitoffset = 0;
@@ -1451,39 +1393,32 @@ void interpret_post_filter_hints_info (byte* payload, int size, VideoParameters 
 }
 //}}}
 //{{{
-void interpret_green_metadata_info (byte* payload, int size, VideoParameters *p_Vid )
+static void interpret_green_metadata_info (byte* payload, int size, VideoParameters *p_Vid )
 {
   Green_metadata_information_struct seiGreenMetadataInfo;
 
-  Bitstream* buf;
-
-  buf = malloc(sizeof(Bitstream));
-
+  Bitstream* buf = malloc(sizeof(Bitstream));
   buf->bitstream_length = size;
   buf->streamBuffer = payload;
   buf->frame_bitoffset = 0;
-
   p_Dec->UsedBits = 0;
 
-  printf("Green Metadata Info SEI message\n");
+  printf ("Green Metadata Info SEI message\n");
 
   seiGreenMetadataInfo.green_metadata_type=(unsigned char)read_u_v(8, "SEI: green_metadata_type", buf, &p_Dec->UsedBits );
   printf("green_metadata_type                 = %d\n", seiGreenMetadataInfo.green_metadata_type);
-  if ( seiGreenMetadataInfo.green_metadata_type == 0)
-  {
+  if (seiGreenMetadataInfo.green_metadata_type == 0) {
       seiGreenMetadataInfo.period_type=(unsigned char)read_u_v(8, "SEI: green_metadata_period_type", buf, &p_Dec->UsedBits );
     printf("green_metadata_period_type     = %d\n", seiGreenMetadataInfo.period_type);
 
-    if ( seiGreenMetadataInfo.period_type == 2)
-    {
+    if (seiGreenMetadataInfo.period_type == 2) {
       seiGreenMetadataInfo.num_seconds = (unsigned short)read_u_v(16, "SEI: green_metadata_num_seconds", buf, &p_Dec->UsedBits );
       printf("green_metadata_num_seconds      = %d\n", seiGreenMetadataInfo.num_seconds);
-    }
-    else if ( seiGreenMetadataInfo.period_type == 3)
-    {
+      }
+    else if (seiGreenMetadataInfo.period_type == 3) {
       seiGreenMetadataInfo.num_pictures = (unsigned short)read_u_v(16, "SEI: green_metadata_num_pictures", buf, &p_Dec->UsedBits );
       printf("green_metadata_num_pictures      = %d\n", seiGreenMetadataInfo.num_pictures);
-    }
+      }
 
     seiGreenMetadataInfo.percent_non_zero_macroblocks=(unsigned char)read_u_v(8, "SEI: percent_non_zero_macroblocks", buf, &p_Dec->UsedBits );
     seiGreenMetadataInfo.percent_intra_coded_macroblocks=(unsigned char)read_u_v(8, "SEI: percent_intra_coded_macroblocks", buf, &p_Dec->UsedBits );
@@ -1494,17 +1429,101 @@ void interpret_green_metadata_info (byte* payload, int size, VideoParameters *p_
     printf("percent_intra_coded_macroblocks      = %f\n", (float)seiGreenMetadataInfo.percent_intra_coded_macroblocks/255);
     printf("percent_six_tap_filtering      = %f\n", (float)seiGreenMetadataInfo.percent_six_tap_filtering/255);
     printf("percent_alpha_point_deblocking_instance      = %f\n", (float)seiGreenMetadataInfo.percent_alpha_point_deblocking_instance/255);
-
-  }
-  else if( seiGreenMetadataInfo.green_metadata_type == 1)
-  {
+    }
+  else if( seiGreenMetadataInfo.green_metadata_type == 1) {
     seiGreenMetadataInfo.xsd_metric_type=(unsigned char)read_u_v(8, "SEI: xsd_metric_type", buf, &p_Dec->UsedBits );
     seiGreenMetadataInfo.xsd_metric_value=(unsigned short)read_u_v(16, "SEI: xsd_metric_value", buf, &p_Dec->UsedBits );
     printf("xsd_metric_type      = %d\n", seiGreenMetadataInfo.xsd_metric_type);
     if ( seiGreenMetadataInfo.xsd_metric_type == 0)
-        printf("xsd_metric_value      = %f\n", (float)seiGreenMetadataInfo.xsd_metric_value/100);
-  }
+      printf("xsd_metric_value      = %f\n", (float)seiGreenMetadataInfo.xsd_metric_value/100);
+    }
 
   free (buf);
-}
+  }
+//}}}
+
+//{{{
+void InterpretSEIMessage (byte* msg, int size, VideoParameters *p_Vid, Slice *pSlice) {
+
+  int offset = 1;
+  do {
+    int payload_type = 0;
+    byte tmp_byte = msg[offset++];
+    while (tmp_byte == 0xFF) {
+      payload_type += 255;
+      tmp_byte = msg[offset++];
+      }
+    payload_type += tmp_byte;   // this is the last byte
+
+    int payload_size = 0;
+    tmp_byte = msg[offset++];
+    while (tmp_byte == 0xFF) {
+      payload_size += 255;
+      tmp_byte = msg[offset++];
+      }
+    payload_size += tmp_byte;   // this is the last byte
+
+    switch (payload_type) {
+      case  SEI_BUFFERING_PERIOD:
+        interpret_buffering_period_info (msg+offset, payload_size, p_Vid ); break;
+      case  SEI_PIC_TIMING:
+        interpret_picture_timing_info (msg+offset, payload_size, p_Vid ); break;
+      case  SEI_PAN_SCAN_RECT:
+        interpret_pan_scan_rect_info (msg+offset, payload_size, p_Vid ); break;
+      case  SEI_FILLER_PAYLOAD:
+        interpret_filler_payload_info (msg+offset, payload_size, p_Vid ); break;
+      case  SEI_USER_DATA_REGISTERED_ITU_T_T35:
+        interpret_user_data_registered_itu_t_t35_info (msg+offset, payload_size, p_Vid ); break;
+      case  SEI_USER_DATA_UNREGISTERED:
+        interpret_user_data_unregistered_info (msg+offset, payload_size, p_Vid ); break;
+      case  SEI_RECOVERY_POINT:
+        interpret_recovery_point_info (msg+offset, payload_size, p_Vid ); break;
+      case  SEI_DEC_REF_PIC_MARKING_REPETITION:
+        interpret_dec_ref_pic_marking_repetition_info (msg+offset, payload_size, p_Vid, pSlice ); break;
+      case  SEI_SPARE_PIC:
+        interpret_spare_pic (msg+offset, payload_size, p_Vid ); break;
+      case  SEI_SCENE_INFO:
+        interpret_scene_information (msg+offset, payload_size, p_Vid ); break;
+      case  SEI_SUB_SEQ_INFO:
+        interpret_subsequence_info (msg+offset, payload_size, p_Vid ); break;
+      case  SEI_SUB_SEQ_LAYER_CHARACTERISTICS:
+        interpret_subsequence_layer_characteristics_info (msg+offset, payload_size, p_Vid ); break;
+      case  SEI_SUB_SEQ_CHARACTERISTICS:
+        interpret_subsequence_characteristics_info (msg+offset, payload_size, p_Vid ); break;
+      case  SEI_FULL_FRAME_FREEZE:
+        interpret_full_frame_freeze_info (msg+offset, payload_size, p_Vid ); break;
+      case  SEI_FULL_FRAME_FREEZE_RELEASE:
+        interpret_full_frame_freeze_release_info (msg+offset, payload_size, p_Vid ); break;
+      case  SEI_FULL_FRAME_SNAPSHOT:
+        interpret_full_frame_snapshot_info (msg+offset, payload_size, p_Vid ); break;
+      case  SEI_PROGRESSIVE_REFINEMENT_SEGMENT_START:
+        interpret_progressive_refinement_start_info (msg+offset, payload_size, p_Vid ); break;
+      case  SEI_PROGRESSIVE_REFINEMENT_SEGMENT_END:
+        interpret_progressive_refinement_end_info (msg+offset, payload_size, p_Vid ); break;
+      case  SEI_MOTION_CONSTRAINED_SLICE_GROUP_SET:
+        interpret_motion_constrained_slice_group_set_info (msg+offset, payload_size, p_Vid ); break;
+      case  SEI_FILM_GRAIN_CHARACTERISTICS:
+        interpret_film_grain_characteristics_info (msg+offset, payload_size, p_Vid ); break;
+      case  SEI_DEBLOCKING_FILTER_DISPLAY_PREFERENCE:
+        interpret_deblocking_filter_display_preference_info (msg+offset, payload_size, p_Vid ); break;
+      case  SEI_STEREO_VIDEO_INFO:
+        interpret_stereo_video_info_info  (msg+offset, payload_size, p_Vid ); break;
+      case  SEI_TONE_MAPPING:
+        interpret_tone_mapping (msg+offset, payload_size, p_Vid ); break;
+      case  SEI_POST_FILTER_HINTS:
+        interpret_post_filter_hints_info (msg+offset, payload_size, p_Vid ); break;
+      case  SEI_FRAME_PACKING_ARRANGEMENT:
+        interpret_frame_packing_arrangement_info (msg+offset, payload_size, p_Vid ); break;
+      case  SEI_GREEN_METADATA:
+        interpret_green_metadata_info (msg+offset, payload_size, p_Vid ); break;
+      default:
+        interpret_reserved_info (msg+offset, payload_size, p_Vid ); break;
+      }
+    offset += payload_size;
+    } while (msg[offset] != 0x80);    // more_rbsp_data()  msg[offset] != 0x80
+
+  // ignore the trailing bits rbsp_trailing_bits();
+  assert(msg[offset] == 0x80);      // this is the trailing bits
+  assert (offset+1 == size );
+  }
 //}}}

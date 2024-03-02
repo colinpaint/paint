@@ -20,7 +20,7 @@
 #include "annexb.h"
 #include "memalloc.h"
 //}}}
-const int kDebug = 1;
+static const int kDebug = 0;
 
 static const int IOBUFFERSIZE = 0x10000;  // 64k
 //{{{
@@ -176,15 +176,15 @@ int get_annex_b_NALU (VideoParameters* p_Vid, NALU_t* nalu, ANNEXB_t* annex_b) {
     }
     //}}}
 
-  int LeadingZero8BitsCount = 0;
+  int leadingZero8BitsCount = 0;
   if (pos == 3)
     nalu->startcodeprefix_len = 3;
   else {
-    LeadingZero8BitsCount = pos - 4;
+    leadingZero8BitsCount = pos - 4;
     nalu->startcodeprefix_len = 4;
     }
   //{{{  only 1st byte stream NAL unit can have leading_zero_8bits
-  if (!annex_b->IsFirstByteStreamNALU && LeadingZero8BitsCount > 0) {
+  if (!annex_b->IsFirstByteStreamNALU && leadingZero8BitsCount > 0) {
     printf ("get_annex_b_NALU: leading_zero_8bits syntax only present first byte stream NAL unit\n");
     return -1;
     }
@@ -192,7 +192,7 @@ int get_annex_b_NALU (VideoParameters* p_Vid, NALU_t* nalu, ANNEXB_t* annex_b) {
 
   int info2 = 0;
   int info3 = 0;
-  LeadingZero8BitsCount = pos;
+  leadingZero8BitsCount = pos;
   annex_b->IsFirstByteStreamNALU = 0;
   int startCodeFound = 0;
   while (!startCodeFound) {
@@ -202,8 +202,8 @@ int get_annex_b_NALU (VideoParameters* p_Vid, NALU_t* nalu, ANNEXB_t* annex_b) {
       while(*(pBuf--)==0)
         pos--;
 
-      nalu->len = (pos - 1) - LeadingZero8BitsCount;
-      memcpy (nalu->buf, annex_b->Buf + LeadingZero8BitsCount, nalu->len);
+      nalu->len = (pos - 1) - leadingZero8BitsCount;
+      memcpy (nalu->buf, annex_b->Buf + leadingZero8BitsCount, nalu->len);
 
       nalu->forbidden_bit  = (*(nalu->buf) >> 7) & 1;
       nalu->nal_reference_idc = (NalRefIdc) ((*(nalu->buf) >> 5) & 3);
@@ -211,11 +211,13 @@ int get_annex_b_NALU (VideoParameters* p_Vid, NALU_t* nalu, ANNEXB_t* annex_b) {
       annex_b->nextStartCodeBytes = 0;
 
       if (kDebug)
-        printf ("Last NALU %sstartCode len:%5d, fbn:%d, refIdc:%d, unitType:%d\n",
-                nalu->startcodeprefix_len == 4 ? "long":"short",
-                nalu->len, nalu->forbidden_bit,
+        printf ("last %sNALU %d::%d:%d len:%d, \n",
+                nalu->startcodeprefix_len == 4 ? "l":"s",
+                nalu->forbidden_bit,
                 nalu->nal_reference_idc,
-                nalu->nal_unit_type);
+                nalu->nal_unit_type,
+                nalu->len
+                );
       return (pos - 1);
       }
       //}}}
@@ -253,8 +255,8 @@ int get_annex_b_NALU (VideoParameters* p_Vid, NALU_t* nalu, ANNEXB_t* annex_b) {
   // - size of Buf is pos - rewind,
   // - pos is the number of bytes excluding the next start code,
   // - pos - LeadingZero8BitsCount is the size of the NALU.
-  nalu->len = pos - LeadingZero8BitsCount;
-  fast_memcpy (nalu->buf, annex_b->Buf + LeadingZero8BitsCount, nalu->len);
+  nalu->len = pos - leadingZero8BitsCount;
+  fast_memcpy (nalu->buf, annex_b->Buf + leadingZero8BitsCount, nalu->len);
 
   nalu->forbidden_bit = (*(nalu->buf) >> 7) & 1;
   nalu->nal_reference_idc = (NalRefIdc) ((*(nalu->buf) >> 5) & 3);

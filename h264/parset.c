@@ -286,7 +286,7 @@ static void reset_format_info (seq_parameter_set_rbsp_t *sps, VideoParameters *p
 
   if (p_Vid->first_sps == TRUE) {
     p_Vid->first_sps = FALSE;
-    printf ("Profile IDC: %d %dx%d(%dx%d) ",
+    printf ("Profile IDC: %d %dx%d %dx%d ",
             sps->profile_idc, source->width[0], source->height[0], p_Vid->width, p_Vid->height);
     if (p_Vid->yuv_format == YUV400)
       printf ("4:0:0");
@@ -296,8 +296,7 @@ static void reset_format_info (seq_parameter_set_rbsp_t *sps, VideoParameters *p
       printf ("4:2:2");
     else
       printf ("4:4:4");
-    printf ("%d:%d:%d\n", source->bit_depth[0], source->bit_depth[1], source->bit_depth[2]);
-    printf ("  Frame          POC  Pic#   QP    Y:U:V Time(ms)\n");
+    printf (" %d:%d:%d\n", source->bit_depth[0], source->bit_depth[1], source->bit_depth[2]);
     }
   }
 //}}}
