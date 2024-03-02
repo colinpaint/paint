@@ -47,8 +47,6 @@ extern void set_read_CBP_and_coeffs_cabac (Slice *currSlice);
 extern void set_read_CBP_and_coeffs_cavlc (Slice *currSlice);
 extern void read_coeff_4x4_CAVLC (Macroblock *currMB, int block_type, int i, int j, int levarr[16], int runarr[16], int *number_coefficients);
 extern void read_coeff_4x4_CAVLC_444 (Macroblock *currMB, int block_type, int i, int j, int levarr[16], int runarr[16], int *number_coefficients);
-static void read_motion_info_from_NAL_p_slice (Macroblock *currMB);
-static void read_motion_info_from_NAL_b_slice (Macroblock *currMB);
 extern void update_direct_types (Slice *currSlice);
 extern void set_read_comp_coeff_cavlc (Macroblock *currMB);
 extern void set_read_comp_coeff_cabac (Macroblock *currMB);
@@ -411,7 +409,7 @@ static int decode_one_component_b_slice (Macroblock *currMB, ColorPlane curr_pla
 //}}}
 
 //{{{
-static inline int BType2CtxRef (int btype)
+static int BType2CtxRef (int btype)
 {
   return (btype >= 4);
 }
@@ -800,7 +798,7 @@ void invScaleCoeff (Macroblock *currMB, int level, int run, int qp_per, int i, i
 }
 //}}}
 //{{{
-static inline void setup_mb_pos_info (Macroblock *currMB)
+static void setup_mb_pos_info (Macroblock *currMB)
 {
   int mb_x = currMB->mb.x;
   int mb_y = currMB->mb.y;
@@ -1151,6 +1149,126 @@ static void interpret_mb_mode_SI (Macroblock *currMB)
 }
 //}}}
 //{{{
+static void read_motion_info_from_NAL_p_slice (Macroblock *currMB)
+{
+  VideoParameters *p_Vid = currMB->p_Vid;
+  Slice *currSlice = currMB->p_Slice;
+
+  SyntaxElement currSE;
+  DataPartition *dP = NULL;
+  const byte *partMap       = assignSE2partition[currSlice->dp_mode];
+  short partmode        = ((currMB->mb_type == P8x8) ? 4 : currMB->mb_type);
+  int step_h0         = BLOCK_STEP [partmode][0];
+  int step_v0         = BLOCK_STEP [partmode][1];
+
+  int j4;
+  StorablePicture *dec_picture = currSlice->dec_picture;
+  PicMotionParams *mv_info = NULL;
+
+  int list_offset = currMB->list_offset;
+  StorablePicture **list0 = currSlice->listX[LIST_0 + list_offset];
+  PicMotionParams **p_mv_info = &dec_picture->mv_info[currMB->block_y];
+
+  //=====  READ REFERENCE PICTURE INDICES =====
+  currSE.type = SE_REFFRAME;
+  dP = &(currSlice->partArr[partMap[SE_REFFRAME]]);
+
+  //  For LIST_0, if multiple ref. pictures, read LIST_0 reference picture indices for the MB ***********
+  prepareListforRefIdx (currMB, &currSE, dP, currSlice->num_ref_idx_active[LIST_0], (currMB->mb_type != P8x8) || (!currSlice->allrefzero));
+  readMBRefPictureIdx  (&currSE, dP, currMB, p_mv_info, LIST_0, step_v0, step_h0);
+
+  //=====  READ MOTION VECTORS =====
+  currSE.type = SE_MVD;
+  dP = &(currSlice->partArr[partMap[SE_MVD]]);
+
+  if (p_Vid->active_pps->entropy_coding_mode_flag == (Boolean) CAVLC || dP->bitstream->ei_flag)
+    currSE.mapping = linfo_se;
+  else
+    currSE.reading = currSlice->mb_aff_frame_flag ? read_mvd_CABAC_mbaff : read_MVD_CABAC;
+
+  // LIST_0 Motion vectors
+  readMBMotionVectors (&currSE, dP, currMB, LIST_0, step_h0, step_v0);
+
+  // record reference picture Ids for deblocking decisions
+  for(j4 = 0; j4 < 4;++j4)
+  {
+    mv_info = &p_mv_info[j4][currMB->block_x];
+    mv_info->ref_pic[LIST_0] = list0[(short) mv_info->ref_idx[LIST_0]];
+    mv_info++;
+    mv_info->ref_pic[LIST_0] = list0[(short) mv_info->ref_idx[LIST_0]];
+    mv_info++;
+    mv_info->ref_pic[LIST_0] = list0[(short) mv_info->ref_idx[LIST_0]];
+    mv_info++;
+    mv_info->ref_pic[LIST_0] = list0[(short) mv_info->ref_idx[LIST_0]];
+  }
+}
+//}}}
+//{{{
+static void read_motion_info_from_NAL_b_slice (Macroblock *currMB) {
+
+  Slice *currSlice = currMB->p_Slice;
+  VideoParameters *p_Vid = currMB->p_Vid;
+  StorablePicture *dec_picture = currSlice->dec_picture;
+  SyntaxElement currSE;
+  DataPartition *dP = NULL;
+  const byte *partMap = assignSE2partition[currSlice->dp_mode];
+  int partmode        = ((currMB->mb_type == P8x8) ? 4 : currMB->mb_type);
+  int step_h0         = BLOCK_STEP [partmode][0];
+  int step_v0         = BLOCK_STEP [partmode][1];
+
+  int j4, i4;
+
+  int list_offset = currMB->list_offset;
+  StorablePicture **list0 = currSlice->listX[LIST_0 + list_offset];
+  StorablePicture **list1 = currSlice->listX[LIST_1 + list_offset];
+  PicMotionParams **p_mv_info = &dec_picture->mv_info[currMB->block_y];
+
+  if (currMB->mb_type == P8x8)
+    currSlice->update_direct_mv_info(currMB);
+
+  //=====  READ REFERENCE PICTURE INDICES =====
+  currSE.type = SE_REFFRAME;
+  dP = &(currSlice->partArr[partMap[SE_REFFRAME]]);
+
+  //  For LIST_0, if multiple ref. pictures, read LIST_0 reference picture indices for the MB ***********
+  prepareListforRefIdx (currMB, &currSE, dP, currSlice->num_ref_idx_active[LIST_0], TRUE);
+  readMBRefPictureIdx (&currSE, dP, currMB, p_mv_info, LIST_0, step_v0, step_h0);
+
+  //  For LIST_1, if multiple ref. pictures, read LIST_1 reference picture indices for the MB ***********
+  prepareListforRefIdx (currMB, &currSE, dP, currSlice->num_ref_idx_active[LIST_1], TRUE);
+  readMBRefPictureIdx (&currSE, dP, currMB, p_mv_info, LIST_1, step_v0, step_h0);
+
+  //=====  READ MOTION VECTORS =====
+  currSE.type = SE_MVD;
+  dP = &(currSlice->partArr[partMap[SE_MVD]]);
+
+  if (p_Vid->active_pps->entropy_coding_mode_flag == (Boolean) CAVLC || dP->bitstream->ei_flag)
+    currSE.mapping = linfo_se;
+  else
+    currSE.reading = currSlice->mb_aff_frame_flag ? read_mvd_CABAC_mbaff : read_MVD_CABAC;
+
+  // LIST_0 Motion vectors
+  readMBMotionVectors (&currSE, dP, currMB, LIST_0, step_h0, step_v0);
+  // LIST_1 Motion vectors
+  readMBMotionVectors (&currSE, dP, currMB, LIST_1, step_h0, step_v0);
+
+  // record reference picture Ids for deblocking decisions
+
+  for(j4 = 0; j4 < 4; ++j4)
+  {
+    for(i4 = currMB->block_x; i4 < (currMB->block_x + 4); ++i4)
+    {
+      PicMotionParams *mv_info = &p_mv_info[j4][i4];
+      short ref_idx = mv_info->ref_idx[LIST_0];
+
+      mv_info->ref_pic[LIST_0] = (ref_idx >= 0) ? list0[ref_idx] : NULL;
+      ref_idx = mv_info->ref_idx[LIST_1];
+      mv_info->ref_pic[LIST_1] = (ref_idx >= 0) ? list1[ref_idx] : NULL;
+    }
+  }
+}
+//}}}
+//{{{
 void setup_slice_methods (Slice *currSlice)
 {
   setup_read_macroblock (currSlice);
@@ -1273,126 +1391,6 @@ void get_neighbors (Macroblock *currMB,       // <--  current Macroblock
   }
 //}}}
 //{{{
-static void read_motion_info_from_NAL_p_slice (Macroblock *currMB)
-{
-  VideoParameters *p_Vid = currMB->p_Vid;
-  Slice *currSlice = currMB->p_Slice;
-
-  SyntaxElement currSE;
-  DataPartition *dP = NULL;
-  const byte *partMap       = assignSE2partition[currSlice->dp_mode];
-  short partmode        = ((currMB->mb_type == P8x8) ? 4 : currMB->mb_type);
-  int step_h0         = BLOCK_STEP [partmode][0];
-  int step_v0         = BLOCK_STEP [partmode][1];
-
-  int j4;
-  StorablePicture *dec_picture = currSlice->dec_picture;
-  PicMotionParams *mv_info = NULL;
-
-  int list_offset = currMB->list_offset;
-  StorablePicture **list0 = currSlice->listX[LIST_0 + list_offset];
-  PicMotionParams **p_mv_info = &dec_picture->mv_info[currMB->block_y];
-
-  //=====  READ REFERENCE PICTURE INDICES =====
-  currSE.type = SE_REFFRAME;
-  dP = &(currSlice->partArr[partMap[SE_REFFRAME]]);
-
-  //  For LIST_0, if multiple ref. pictures, read LIST_0 reference picture indices for the MB ***********
-  prepareListforRefIdx (currMB, &currSE, dP, currSlice->num_ref_idx_active[LIST_0], (currMB->mb_type != P8x8) || (!currSlice->allrefzero));
-  readMBRefPictureIdx  (&currSE, dP, currMB, p_mv_info, LIST_0, step_v0, step_h0);
-
-  //=====  READ MOTION VECTORS =====
-  currSE.type = SE_MVD;
-  dP = &(currSlice->partArr[partMap[SE_MVD]]);
-
-  if (p_Vid->active_pps->entropy_coding_mode_flag == (Boolean) CAVLC || dP->bitstream->ei_flag)
-    currSE.mapping = linfo_se;
-  else
-    currSE.reading = currSlice->mb_aff_frame_flag ? read_mvd_CABAC_mbaff : read_MVD_CABAC;
-
-  // LIST_0 Motion vectors
-  readMBMotionVectors (&currSE, dP, currMB, LIST_0, step_h0, step_v0);
-
-  // record reference picture Ids for deblocking decisions
-  for(j4 = 0; j4 < 4;++j4)
-  {
-    mv_info = &p_mv_info[j4][currMB->block_x];
-    mv_info->ref_pic[LIST_0] = list0[(short) mv_info->ref_idx[LIST_0]];
-    mv_info++;
-    mv_info->ref_pic[LIST_0] = list0[(short) mv_info->ref_idx[LIST_0]];
-    mv_info++;
-    mv_info->ref_pic[LIST_0] = list0[(short) mv_info->ref_idx[LIST_0]];
-    mv_info++;
-    mv_info->ref_pic[LIST_0] = list0[(short) mv_info->ref_idx[LIST_0]];
-  }
-}
-//}}}
-//{{{
-static void read_motion_info_from_NAL_b_slice (Macroblock *currMB) {
-
-  Slice *currSlice = currMB->p_Slice;
-  VideoParameters *p_Vid = currMB->p_Vid;
-  StorablePicture *dec_picture = currSlice->dec_picture;
-  SyntaxElement currSE;
-  DataPartition *dP = NULL;
-  const byte *partMap = assignSE2partition[currSlice->dp_mode];
-  int partmode        = ((currMB->mb_type == P8x8) ? 4 : currMB->mb_type);
-  int step_h0         = BLOCK_STEP [partmode][0];
-  int step_v0         = BLOCK_STEP [partmode][1];
-
-  int j4, i4;
-
-  int list_offset = currMB->list_offset;
-  StorablePicture **list0 = currSlice->listX[LIST_0 + list_offset];
-  StorablePicture **list1 = currSlice->listX[LIST_1 + list_offset];
-  PicMotionParams **p_mv_info = &dec_picture->mv_info[currMB->block_y];
-
-  if (currMB->mb_type == P8x8)
-    currSlice->update_direct_mv_info(currMB);
-
-  //=====  READ REFERENCE PICTURE INDICES =====
-  currSE.type = SE_REFFRAME;
-  dP = &(currSlice->partArr[partMap[SE_REFFRAME]]);
-
-  //  For LIST_0, if multiple ref. pictures, read LIST_0 reference picture indices for the MB ***********
-  prepareListforRefIdx (currMB, &currSE, dP, currSlice->num_ref_idx_active[LIST_0], TRUE);
-  readMBRefPictureIdx (&currSE, dP, currMB, p_mv_info, LIST_0, step_v0, step_h0);
-
-  //  For LIST_1, if multiple ref. pictures, read LIST_1 reference picture indices for the MB ***********
-  prepareListforRefIdx (currMB, &currSE, dP, currSlice->num_ref_idx_active[LIST_1], TRUE);
-  readMBRefPictureIdx (&currSE, dP, currMB, p_mv_info, LIST_1, step_v0, step_h0);
-
-  //=====  READ MOTION VECTORS =====
-  currSE.type = SE_MVD;
-  dP = &(currSlice->partArr[partMap[SE_MVD]]);
-
-  if (p_Vid->active_pps->entropy_coding_mode_flag == (Boolean) CAVLC || dP->bitstream->ei_flag)
-    currSE.mapping = linfo_se;
-  else
-    currSE.reading = currSlice->mb_aff_frame_flag ? read_mvd_CABAC_mbaff : read_MVD_CABAC;
-
-  // LIST_0 Motion vectors
-  readMBMotionVectors (&currSE, dP, currMB, LIST_0, step_h0, step_v0);
-  // LIST_1 Motion vectors
-  readMBMotionVectors (&currSE, dP, currMB, LIST_1, step_h0, step_v0);
-
-  // record reference picture Ids for deblocking decisions
-
-  for(j4 = 0; j4 < 4; ++j4)
-  {
-    for(i4 = currMB->block_x; i4 < (currMB->block_x + 4); ++i4)
-    {
-      PicMotionParams *mv_info = &p_mv_info[j4][i4];
-      short ref_idx = mv_info->ref_idx[LIST_0];
-
-      mv_info->ref_pic[LIST_0] = (ref_idx >= 0) ? list0[ref_idx] : NULL;
-      ref_idx = mv_info->ref_idx[LIST_1];
-      mv_info->ref_pic[LIST_1] = (ref_idx >= 0) ? list1[ref_idx] : NULL;
-    }
-  }
-}
-//}}}
-//{{{
 void check_dp_neighbors (Macroblock *currMB) {
 
   VideoParameters *p_Vid = currMB->p_Vid;
@@ -1454,36 +1452,6 @@ static void init_cur_imgy (VideoParameters *p_Vid,Slice *currSlice,int pl)
   }
 }
 //}}}
-
-//{{{
-int decode_one_macroblock (Macroblock *currMB, StorablePicture *dec_picture)
-{
-  Slice *currSlice = currMB->p_Slice;
-  VideoParameters *p_Vid = currMB->p_Vid;
-
-  if (currSlice->chroma444_not_separate) {
-    if (!currMB->is_intra_block) {
-      init_cur_imgy (p_Vid, currSlice, PLANE_Y);
-      currSlice->decode_one_component (currMB, PLANE_Y, dec_picture->imgY, dec_picture);
-      init_cur_imgy (p_Vid, currSlice, PLANE_U);
-      currSlice->decode_one_component (currMB, PLANE_U, dec_picture->imgUV[0], dec_picture);
-      init_cur_imgy (p_Vid, currSlice, PLANE_V);
-      currSlice->decode_one_component (currMB, PLANE_V, dec_picture->imgUV[1], dec_picture);
-      }
-    else {
-      currSlice->decode_one_component (currMB, PLANE_Y, dec_picture->imgY, dec_picture);
-      currSlice->decode_one_component (currMB, PLANE_U, dec_picture->imgUV[0], dec_picture);
-      currSlice->decode_one_component (currMB, PLANE_V, dec_picture->imgUV[1], dec_picture);
-      }
-    currSlice->is_reset_coeff = FALSE;
-    currSlice->is_reset_coeff_cr = FALSE;
-    }
-  else
-    currSlice->decode_one_component(currMB, PLANE_Y, dec_picture->imgY, dec_picture);
-
-  return 0;
-  }
-//}}}
 //{{{
 void change_plane_JV (VideoParameters *p_Vid, int nplane, Slice *pSlice)
 {
@@ -1525,5 +1493,35 @@ void make_frame_picture_JV (VideoParameters *p_Vid) {
       }
     free_storable_picture (p_Vid->dec_picture_JV[uv+1]);
     }
+  }
+//}}}
+
+//{{{
+int decode_one_macroblock (Macroblock *currMB, StorablePicture *dec_picture)
+{
+  Slice *currSlice = currMB->p_Slice;
+  VideoParameters *p_Vid = currMB->p_Vid;
+
+  if (currSlice->chroma444_not_separate) {
+    if (!currMB->is_intra_block) {
+      init_cur_imgy (p_Vid, currSlice, PLANE_Y);
+      currSlice->decode_one_component (currMB, PLANE_Y, dec_picture->imgY, dec_picture);
+      init_cur_imgy (p_Vid, currSlice, PLANE_U);
+      currSlice->decode_one_component (currMB, PLANE_U, dec_picture->imgUV[0], dec_picture);
+      init_cur_imgy (p_Vid, currSlice, PLANE_V);
+      currSlice->decode_one_component (currMB, PLANE_V, dec_picture->imgUV[1], dec_picture);
+      }
+    else {
+      currSlice->decode_one_component (currMB, PLANE_Y, dec_picture->imgY, dec_picture);
+      currSlice->decode_one_component (currMB, PLANE_U, dec_picture->imgUV[0], dec_picture);
+      currSlice->decode_one_component (currMB, PLANE_V, dec_picture->imgUV[1], dec_picture);
+      }
+    currSlice->is_reset_coeff = FALSE;
+    currSlice->is_reset_coeff_cr = FALSE;
+    }
+  else
+    currSlice->decode_one_component(currMB, PLANE_Y, dec_picture->imgY, dec_picture);
+
+  return 0;
   }
 //}}}
