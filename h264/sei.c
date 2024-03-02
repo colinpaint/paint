@@ -531,7 +531,7 @@ void interpret_user_data_registered_itu_t_t35_info (byte* payload, int size, Vid
   itu_t_t35_country_code = payload[offset];
   offset++;
 
-  printf ("SEI User data registered by ITU-T T.35\n");
+  printf ("SEI User data ITU-T T.35\n");
   //printf (" itu_t_t35_country_code = %d \n", itu_t_t35_country_code);
 
   if (itu_t_t35_country_code == 0xFF) {
@@ -615,7 +615,7 @@ void interpret_recovery_point_info (byte* payload, int size, VideoParameters *p_
 
   p_Vid->recovery_point = 1;
   p_Vid->recovery_frame_cnt = recovery_frame_cnt;
-  printf ("SEI Recovery point recovery_frame_cnt %d exact_match_flag %d changing_slice_group_idc %d\n",
+  printf ("SEI Recovery point recovery_frame_cnt %d exact_match %d broken_link %d changing_slice_group_idc %d\n",
           recovery_frame_cnt, exact_match_flag, broken_link_flag, changing_slice_group_idc);
 
   free (buf);
@@ -1100,9 +1100,9 @@ void interpret_picture_timing_info (byte* payload, int size, VideoParameters *p_
 
   p_Dec->UsedBits = 0;
 
-  printf ("Picture timing SEI message\n");
+  printf ("SEI Picture timing\n");
   // CpbDpbDelaysPresentFlag can also be set "by some means not specified in this Recommendation | International Standard"
-  CpbDpbDelaysPresentFlag =  (Boolean) (active_sps->vui_parameters_present_flag
+  CpbDpbDelaysPresentFlag = (Boolean)(active_sps->vui_parameters_present_flag
                               && (   (active_sps->vui_seq_parameters.nal_hrd_parameters_present_flag != 0)
                                    ||(active_sps->vui_seq_parameters.vcl_hrd_parameters_present_flag != 0)));
 
