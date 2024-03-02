@@ -15,14 +15,45 @@
  */
 //}}}
 //{{{
+#include <stdlib.h>
+#include <assert.h>
+#include <limits.h>
+#include <math.h>
+
 #include "global.h"
 #include "block.h"
-#include "blk_prediction.h"
 #include "image.h"
 #include "mb_access.h"
 #include "transform.h"
 #include "quant.h"
 #include "memalloc.h"
+//}}}
+
+//{{{
+static void compute_residue (imgpel **curImg, imgpel **mpr, int **mb_rres, int mb_x,
+                      int opix_x, int width, int height) {
+
+  for (int j = 0; j < height; j++) {
+    imgpel* imgOrg = &curImg[j][opix_x];
+    imgpel* imgPred = &mpr[j][mb_x];
+    int* m7 = &mb_rres[j][mb_x];
+    for (int i = 0; i < width; i++)
+      *m7++ = *imgOrg++ - *imgPred++;
+    }
+  }
+//}}}
+//{{{
+static void sample_reconstruct (imgpel **curImg, imgpel **mpr, int **mb_rres, int mb_x,
+                         int opix_x, int width, int height, int max_imgpel_value, int dq_bits) {
+
+  for (int j = 0; j < height; j++) {
+    imgpel* imgOrg = &curImg[j][opix_x];
+    imgpel* imgPred = &mpr[j][mb_x];
+    int* m7 = &mb_rres[j][mb_x];
+    for (int i = 0; i < width; i++)
+      *imgOrg++ = (imgpel) iClip1 (max_imgpel_value, rshift_rnd_sf(*m7++, dq_bits) + *imgPred++);
+    }
+  }
 //}}}
 
 //{{{
@@ -32,7 +63,7 @@
  *    Inverse 4x4 transformation, transforms cof to mb_rres
  ***********************************************************************
  */
-void itrans4x4(Macroblock *currMB,   //!< current macroblock
+void itrans4x4 (Macroblock *currMB,   
                ColorPlane pl,        //!< used color plane
                int ioff,             //!< index to 4x4 block
                int joff)             //!< index to 4x4 block
@@ -52,7 +83,7 @@ void itrans4x4(Macroblock *currMB,   //!< current macroblock
  *    Inverse 4x4 lossless_qpprime transformation, transforms cof to mb_rres
  ****************************************************************************
  */
-void itrans4x4_ls(Macroblock *currMB,   //!< current macroblock
+void itrans4x4_ls (Macroblock *currMB,   
                   ColorPlane pl,        //!< Color plane (for 4:4:4)
                   int ioff,             //!< index to 4x4 block
                   int joff)             //!< index to 4x4 block
@@ -78,14 +109,7 @@ void itrans4x4_ls(Macroblock *currMB,   //!< current macroblock
 //}}}
 
 //{{{
-/*!
-************************************************************************
-* \brief
-*    Inverse residual DPCM for Intra lossless coding
-*
-************************************************************************
-*/
-void Inv_Residual_trans_4x4(Macroblock *currMB,   //!< current macroblock
+void Inv_Residual_trans_4x4 (Macroblock *currMB,   
                             ColorPlane pl,        //!< used color plane
                             int ioff,             //!< index to 4x4 block
                             int joff)             //!< index to 4x4 block
@@ -151,17 +175,7 @@ void Inv_Residual_trans_4x4(Macroblock *currMB,   //!< current macroblock
 }
 //}}}
 //{{{
-/*!
-************************************************************************
-* \brief
-*    Inverse residual DPCM for Intra lossless coding
-*
-* \par Input:
-*    ioff_x,joff_y: Block position inside a macro block (0,8).
-************************************************************************
-*/
-//For residual DPCM
-void Inv_Residual_trans_8x8(Macroblock *currMB, ColorPlane pl, int ioff,int joff)
+void Inv_Residual_trans_8x8 (Macroblock *currMB, ColorPlane pl, int ioff,int joff)
 {
   Slice *currSlice = currMB->p_Slice;
   int i, j;
@@ -231,14 +245,7 @@ void Inv_Residual_trans_8x8(Macroblock *currMB, ColorPlane pl, int ioff,int joff
 }
 //}}}
 //{{{
-/*!
-************************************************************************
-* \brief
-*    Inverse residual DPCM for Intra lossless coding
-*
-************************************************************************
-*/
-void Inv_Residual_trans_16x16(Macroblock *currMB,   //!< current macroblock
+void Inv_Residual_trans_16x16 (Macroblock *currMB,   
                               ColorPlane pl)        //!< used color plane
 {
   int i,j;
@@ -296,112 +303,83 @@ void Inv_Residual_trans_16x16(Macroblock *currMB,   //!< current macroblock
 }
 //}}}
 //{{{
-/*!
-************************************************************************
-* \brief
-*    Inverse residual DPCM for Intra lossless coding
-*
-************************************************************************
-*/
-void Inv_Residual_trans_Chroma(Macroblock *currMB, int uv)
-{
-  int i, j;
+void Inv_Residual_trans_Chroma (Macroblock *currMB, int uv) {
+
+  Slice* currSlice = currMB->p_Slice;
+  int** mb_rres = currSlice->mb_rres[uv+1];
+  int** cof = currSlice->cof[uv+1];
+
+  int width = currMB->p_Vid->mb_cr_size_x;
+  int height = currMB->p_Vid->mb_cr_size_y;
+
   int temp[16][16];
-  Slice *currSlice = currMB->p_Slice;
-  //imgpel **mb_pred = currSlice->mb_pred[uv+1];
-  //imgpel **mb_rec  = currSlice->mb_rec[uv+1];
-  int    **mb_rres = currSlice->mb_rres[uv+1];
-  int    **cof     = currSlice->cof[uv+1];
-  int width, height;
-
-  width = currMB->p_Vid->mb_cr_size_x;
-  height = currMB->p_Vid->mb_cr_size_y;
-
-  if(currMB->c_ipred_mode == VERT_PRED_8)
-  {
-    for(i=0; i<width; i++)
-    {
+  if (currMB->c_ipred_mode == VERT_PRED_8) {
+    for (int i = 0; i < width; i++) {
       temp[0][i] = cof[0][i];
-      for(j = 1; j < height; j++)
+      for (int j = 1; j < height; j++)
         temp[j][i] = temp[j-1][i] + cof[j][i];
-    }
-    for(i=0; i<width; i++)
-    {
-      for(j = 0; j < height; j++)
+      }
+
+    for (int i = 0; i < width; i++) 
+      for (int j = 0; j < height; j++)
         mb_rres[j][i] = temp[j][i];
     }
-  }
-  else //HOR_PRED_8
-  {
-    for(i=0; i<height; i++)
-    {
+  else {
+    //HOR_PRED_8
+    for (int i = 0; i < height; i++) {
       temp[i][0] = cof[i][0];
-      for(j = 1; j < width; j++)
+      for(int j = 1; j < width; j++)
         temp[i][j] = temp[i][j-1] + cof[i][j];
-    }
-    for(i=0; i<height; i++)
-    {
-      for(j = 0; j < width; j++)
+      }
+
+    for (int i = 0; i < height; i++)
+      for (int j = 0; j < width; j++)
         mb_rres[i][j] = temp[i][j];
     }
   }
-}
 //}}}
 
 //{{{
-/*!
- ***********************************************************************
- * \brief
- *    Luma DC inverse transform
- ***********************************************************************
- */
-void itrans_2(Macroblock *currMB,    //!< current macroblock
-              ColorPlane pl)         //!< used color plane
-{
+void itrans_2 (Macroblock *currMB, ColorPlane pl) {
+
   Slice *currSlice = currMB->p_Slice;
   VideoParameters *p_Vid = currMB->p_Vid;
-  int j;
 
   int transform_pl = (p_Vid->separate_colour_plane_flag != 0) ? PLANE_Y : pl;
-  int **cof = currSlice->cof[transform_pl];
+  int** cof = currSlice->cof[transform_pl];
   int qp_scaled = currMB->qp_scaled[transform_pl];
 
   int qp_per = p_Vid->qp_per_matrix[ qp_scaled ];
   int qp_rem = p_Vid->qp_rem_matrix[ qp_scaled ];
 
   int invLevelScale = currSlice->InvLevelScale4x4_Intra[pl][qp_rem][0][0];
-  int **M4;
-  get_mem2Dint(&M4, BLOCK_SIZE, BLOCK_SIZE);
 
   // horizontal
-  for (j=0; j < 4;++j)
-  {
-    M4[j][0]=cof[j<<2][0];
-    M4[j][1]=cof[j<<2][4];
-    M4[j][2]=cof[j<<2][8];
-    M4[j][3]=cof[j<<2][12];
-  }
+  int** M4;
+  get_mem2Dint (&M4, BLOCK_SIZE, BLOCK_SIZE);
 
-  ihadamard4x4(M4, M4);
+  for (int j = 0; j < 4;++j) {
+    M4[j][0] = cof[j<<2][0];
+    M4[j][1] = cof[j<<2][4];
+    M4[j][2] = cof[j<<2][8];
+    M4[j][3] = cof[j<<2][12];
+    }
 
   // vertical
-  for (j=0; j < 4;++j)
-  {
+  ihadamard4x4(M4, M4);
+  for (int j = 0; j < 4;++j) {
     cof[j<<2][0]  = rshift_rnd((( M4[j][0] * invLevelScale) << qp_per), 6);
     cof[j<<2][4]  = rshift_rnd((( M4[j][1] * invLevelScale) << qp_per), 6);
     cof[j<<2][8]  = rshift_rnd((( M4[j][2] * invLevelScale) << qp_per), 6);
     cof[j<<2][12] = rshift_rnd((( M4[j][3] * invLevelScale) << qp_per), 6);
-  }
+    }
 
   free_mem2Dint(M4);
-}
+  }
 //}}}
 //{{{
-void itrans_sp(Macroblock *currMB,   //!< current macroblock
-               ColorPlane pl,        //!< used color plane
-               int ioff,             //!< index to 4x4 block
-               int joff)             //!< index to 4x4 block
-{
+void itrans_sp (Macroblock *currMB, ColorPlane pl, int ioff, int joff) {
+
   VideoParameters *p_Vid = currMB->p_Vid;
   Slice *currSlice = currMB->p_Slice;
   int i,j;
@@ -486,8 +464,8 @@ void itrans_sp(Macroblock *currMB,   //!< current macroblock
 
 //}}}
 //{{{
-void itrans_sp_cr(Macroblock *currMB, int uv)
-{
+void itrans_sp_cr (Macroblock *currMB, int uv) {
+
   Slice *currSlice = currMB->p_Slice;
   VideoParameters *p_Vid = currMB->p_Vid;
   int i,j,ilev, icof, n2,n1;
@@ -617,7 +595,7 @@ void itrans_sp_cr(Macroblock *currMB, int uv)
 //}}}
 
 //{{{
-void iMBtrans4x4(Macroblock *currMB, ColorPlane pl, int smb)
+void iMBtrans4x4 (Macroblock *currMB, ColorPlane pl, int smb)
 {
   Slice *currSlice = currMB->p_Slice;
   //VideoParameters *p_Vid = currMB->p_Vid;
@@ -703,7 +681,7 @@ void iMBtrans4x4(Macroblock *currMB, ColorPlane pl, int smb)
 }
 //}}}
 //{{{
-void iMBtrans8x8(Macroblock *currMB, ColorPlane pl)
+void iMBtrans8x8 (Macroblock *currMB, ColorPlane pl)
 {
   //VideoParameters *p_Vid = currMB->p_Vid;
   StorablePicture *dec_picture = currMB->p_Slice->dec_picture;
@@ -732,8 +710,9 @@ void iMBtrans8x8(Macroblock *currMB, ColorPlane pl)
 
   copy_image_data_16x16(&curr_img[currMB->pix_y], currMB->p_Slice->mb_rec[pl], currMB->pix_x, 0);
 }
-
-void iTransform(Macroblock *currMB, ColorPlane pl, int smb)
+//}}}
+//{{{
+void iTransform (Macroblock *currMB, ColorPlane pl, int smb)
 {
   Slice *currSlice = currMB->p_Slice;
   VideoParameters *p_Vid = currMB->p_Vid;
@@ -846,86 +825,55 @@ void iTransform(Macroblock *currMB, ColorPlane pl, int smb)
 //}}}
 
 //{{{
-/*!
- *************************************************************************************
- * \brief
- *    Copy ImgPel Data from one structure to another (16x16)
- *************************************************************************************
- */
-void copy_image_data_16x16(imgpel  **imgBuf1, imgpel  **imgBuf2, int off1, int off2)
-{
-  int j;
-  for(j = 0; j < MB_BLOCK_SIZE; j += 4)
-  {
-    memcpy((*imgBuf1++ + off1), (*imgBuf2++ + off2), MB_BLOCK_SIZE * sizeof (imgpel));
-    memcpy((*imgBuf1++ + off1), (*imgBuf2++ + off2), MB_BLOCK_SIZE * sizeof (imgpel));
-    memcpy((*imgBuf1++ + off1), (*imgBuf2++ + off2), MB_BLOCK_SIZE * sizeof (imgpel));
-    memcpy((*imgBuf1++ + off1), (*imgBuf2++ + off2), MB_BLOCK_SIZE * sizeof (imgpel));
+void copy_image_data_16x16 (imgpel  **imgBuf1, imgpel  **imgBuf2, int off1, int off2) {
+
+  for (int j = 0; j < MB_BLOCK_SIZE; j += 4) {
+    memcpy ((*imgBuf1++ + off1), (*imgBuf2++ + off2), MB_BLOCK_SIZE * sizeof (imgpel));
+    memcpy ((*imgBuf1++ + off1), (*imgBuf2++ + off2), MB_BLOCK_SIZE * sizeof (imgpel));
+    memcpy ((*imgBuf1++ + off1), (*imgBuf2++ + off2), MB_BLOCK_SIZE * sizeof (imgpel));
+    memcpy ((*imgBuf1++ + off1), (*imgBuf2++ + off2), MB_BLOCK_SIZE * sizeof (imgpel));
+    }
   }
-}
 //}}}
 //{{{
-/*!
- *************************************************************************************
- * \brief
- *    Copy ImgPel Data from one structure to another (8x8)
- *************************************************************************************
- */
-void copy_image_data_8x8(imgpel  **imgBuf1, imgpel  **imgBuf2, int off1, int off2)
-{
-  int j;
-  for(j = 0; j < BLOCK_SIZE_8x8; j+=4)
-  {
-    memcpy((*imgBuf1++ + off1), (*imgBuf2++ + off2), BLOCK_SIZE_8x8 * sizeof (imgpel));
-    memcpy((*imgBuf1++ + off1), (*imgBuf2++ + off2), BLOCK_SIZE_8x8 * sizeof (imgpel));
-    memcpy((*imgBuf1++ + off1), (*imgBuf2++ + off2), BLOCK_SIZE_8x8 * sizeof (imgpel));
-    memcpy((*imgBuf1++ + off1), (*imgBuf2++ + off2), BLOCK_SIZE_8x8 * sizeof (imgpel));
+void copy_image_data_8x8 (imgpel  **imgBuf1, imgpel  **imgBuf2, int off1, int off2) {
+
+  for (int j = 0; j < BLOCK_SIZE_8x8; j+=4) {
+    memcpy ((*imgBuf1++ + off1), (*imgBuf2++ + off2), BLOCK_SIZE_8x8 * sizeof (imgpel));
+    memcpy ((*imgBuf1++ + off1), (*imgBuf2++ + off2), BLOCK_SIZE_8x8 * sizeof (imgpel));
+    memcpy ((*imgBuf1++ + off1), (*imgBuf2++ + off2), BLOCK_SIZE_8x8 * sizeof (imgpel));
+    memcpy ((*imgBuf1++ + off1), (*imgBuf2++ + off2), BLOCK_SIZE_8x8 * sizeof (imgpel));
+    }
   }
-}
 //}}}
 //{{{
-/*!
- *************************************************************************************
- * \brief
- *    Copy ImgPel Data from one structure to another (4x4)
- *************************************************************************************
- */
-void copy_image_data_4x4(imgpel  **imgBuf1, imgpel  **imgBuf2, int off1, int off2)
-{
-  memcpy((*imgBuf1++ + off1), (*imgBuf2++ + off2), BLOCK_SIZE * sizeof (imgpel));
-  memcpy((*imgBuf1++ + off1), (*imgBuf2++ + off2), BLOCK_SIZE * sizeof (imgpel));
-  memcpy((*imgBuf1++ + off1), (*imgBuf2++ + off2), BLOCK_SIZE * sizeof (imgpel));
-  memcpy((*imgBuf1   + off1), (*imgBuf2   + off2), BLOCK_SIZE * sizeof (imgpel));
-}
+void copy_image_data_4x4 (imgpel  **imgBuf1, imgpel  **imgBuf2, int off1, int off2) {
+
+  memcpy ((*imgBuf1++ + off1), (*imgBuf2++ + off2), BLOCK_SIZE * sizeof (imgpel));
+  memcpy ((*imgBuf1++ + off1), (*imgBuf2++ + off2), BLOCK_SIZE * sizeof (imgpel));
+  memcpy ((*imgBuf1++ + off1), (*imgBuf2++ + off2), BLOCK_SIZE * sizeof (imgpel));
+  memcpy ((*imgBuf1   + off1), (*imgBuf2   + off2), BLOCK_SIZE * sizeof (imgpel));
+  }
 //}}}
 
 //{{{
-int CheckVertMV(Macroblock *currMB, int vec1_y, int block_size_y)
-{
+int CheckVertMV (Macroblock *currMB, int vec1_y, int block_size_y) {
+
   VideoParameters *p_Vid = currMB->p_Vid;
   StorablePicture *dec_picture = currMB->p_Slice->dec_picture;
+
   int y_pos = vec1_y>>2;
   int maxold_y = (currMB->mb_field) ? (dec_picture->size_y >> 1) - 1 : dec_picture->size_y_m1;
 
-  if(y_pos < (-p_Vid->iLumaPadY + 2) || y_pos > (maxold_y + p_Vid->iLumaPadY - block_size_y - 2))
+  if (y_pos < (-p_Vid->iLumaPadY + 2) || y_pos > (maxold_y + p_Vid->iLumaPadY - block_size_y - 2))
     return 1;
   else
     return 0;
-}
+  }
 //}}}
 //{{{
-/*!
- *************************************************************************************
- * \brief
- *    Copy ImgPel Data from one structure to another (8x8)
- *************************************************************************************
- */
-void copy_image_data(imgpel  **imgBuf1, imgpel  **imgBuf2, int off1, int off2, int width, int height)
-{
-  int j;
-  for(j = 0; j < height; ++j)
-  {
+void copy_image_data (imgpel  **imgBuf1, imgpel  **imgBuf2, int off1, int off2, int width, int height) {
+  for (int j = 0; j < height; ++j)
     memcpy((*imgBuf1++ + off1), (*imgBuf2++ + off2), width * sizeof (imgpel));
   }
-}
 //}}}
