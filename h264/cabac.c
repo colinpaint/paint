@@ -23,10 +23,7 @@
 #include "vlc.h"
 //}}}
 
-#if TRACE
-int symbolCount = 0;
-#endif
-
+//{{{  static const tables
 static const short maxpos       [] = {15, 14, 63, 31, 31, 15,  3, 14,  7, 15, 15, 14, 63, 31, 31, 15, 15, 14, 63, 31, 31, 15};
 static const short c1isdc       [] = { 1,  0,  1,  1,  1,  1,  1,  0,  1,  1,  1,  0,  1,  1,  1,  1,  1,  0,  1,  1,  1,  1};
 static const short type2ctx_bcbp[] = { 0,  1,  2,  3,  3,  4,  5,  6,  5,  5, 10, 11, 12, 13, 13, 14, 16, 17, 18, 19, 19, 20};
@@ -36,13 +33,294 @@ static const short type2ctx_one [] = { 0,  1,  2,  3,  3,  4,  5,  6,  5,  5, 10
 static const short type2ctx_abs [] = { 0,  1,  2,  3,  3,  4,  5,  6,  5,  5, 10, 11, 12, 13, 13, 14, 16, 17, 18, 19, 19, 20}; // 7
 static const short max_c2       [] = { 4,  4,  4,  4,  4,  4,  3,  4,  3,  3,  4,  4,  4,  4,  4,  4,  4,  4,  4,  4,  4,  4}; // 9
 
-static unsigned int unary_bin_decode             ( DecodingEnvironmentPtr dep_dp, BiContextTypePtr ctx, int ctx_offset);
-static unsigned int unary_bin_max_decode         ( DecodingEnvironmentPtr dep_dp, BiContextTypePtr ctx, int ctx_offset, unsigned int max_symbol);
-static unsigned int unary_exp_golomb_level_decode( DecodingEnvironmentPtr dep_dp, BiContextTypePtr ctx);
-static unsigned int unary_exp_golomb_mv_decode   ( DecodingEnvironmentPtr dep_dp, BiContextTypePtr ctx, unsigned int max_bin);
+//===== position -> ctx for MAP =====
+//{{{
+//--- zig-zag scan ----
+static const byte  pos2ctx_map8x8 [] = { 0,  1,  2,  3,  4,  5,  5,  4,  4,  3,  3,  4,  4,  4,  5,  5,
+                                         4,  4,  4,  4,  3,  3,  6,  7,  7,  7,  8,  9, 10,  9,  8,  7,
+                                         7,  6, 11, 12, 13, 11,  6,  7,  8,  9, 14, 10,  9,  8,  6, 11,
+                                        12, 13, 11,  6,  9, 14, 10,  9, 11, 12, 13, 11 ,14, 10, 12, 14}; // 15 CTX
+//}}}
+//{{{
+static const byte  pos2ctx_map8x4 [] = { 0,  1,  2,  3,  4,  5,  7,  8,  9, 10, 11,  9,  8,  6,  7,  8,
+                                         9, 10, 11,  9,  8,  6, 12,  8,  9, 10, 11,  9, 13, 13, 14, 14}; // 15 CTX
+//}}}
+static const byte  pos2ctx_map4x4 [] = { 0,  1,  2,  3,  4,  5,  6,  7,  8,  9, 10, 11, 12, 13, 14, 14}; // 15 CTX
+static const byte  pos2ctx_map2x4c[] = { 0,  0,  1,  1,  2,  2,  2,  2,  2,  2,  2,  2,  2,  2,  2,  2}; // 15 CTX
+static const byte  pos2ctx_map4x4c[] = { 0,  0,  0,  0,  1,  1,  1,  1,  2,  2,  2,  2,  2,  2,  2,  2}; // 15 CTX
+//{{{
+static const byte* pos2ctx_map    [] = {pos2ctx_map4x4, pos2ctx_map4x4, pos2ctx_map8x8, pos2ctx_map8x4,
+                                        pos2ctx_map8x4, pos2ctx_map4x4, pos2ctx_map4x4, pos2ctx_map4x4,
+                                        pos2ctx_map2x4c, pos2ctx_map4x4c,
+                                        pos2ctx_map4x4, pos2ctx_map4x4, pos2ctx_map8x8,pos2ctx_map8x4,
+                                        pos2ctx_map8x4, pos2ctx_map4x4,
+                                        pos2ctx_map4x4, pos2ctx_map4x4, pos2ctx_map8x8,pos2ctx_map8x4,
+                                        pos2ctx_map8x4,pos2ctx_map4x4};
+//}}}
+
+//--- interlace scan ----
+//taken from ABT
+//{{{
+static const byte  pos2ctx_map8x8i[] = { 0,  1,  1,  2,  2,  3,  3,  4,  5,  6,  7,  7,  7,  8,  4,  5,
+                                         6,  9, 10, 10,  8, 11, 12, 11,  9,  9, 10, 10,  8, 11, 12, 11,
+                                         9,  9, 10, 10,  8, 11, 12, 11,  9,  9, 10, 10,  8, 13, 13,  9,
+                                         9, 10, 10,  8, 13, 13,  9,  9, 10, 10, 14, 14, 14, 14, 14, 14}; // 15 CTX
+//}}}
+//{{{
+static const byte  pos2ctx_map8x4i[] = { 0,  1,  2,  3,  4,  5,  6,  3,  4,  5,  6,  3,  4,  7,  6,  8,
+                                         9,  7,  6,  8,  9, 10, 11, 12, 12, 10, 11, 13, 13, 14, 14, 14}; // 15 CTX
+//}}}
+//{{{
+static const byte  pos2ctx_map4x8i[] = { 0,  1,  1,  1,  2,  3,  3,  4,  4,  4,  5,  6,  2,  7,  7,  8,
+                                         8,  8,  5,  6,  9, 10, 10, 11, 11, 11, 12, 13, 13, 14, 14, 14}; // 15 CTX
+//}}}
+//{{{
+static const byte* pos2ctx_map_int[] = {pos2ctx_map4x4, pos2ctx_map4x4, pos2ctx_map8x8i,pos2ctx_map8x4i,
+                                        pos2ctx_map4x8i,pos2ctx_map4x4, pos2ctx_map4x4, pos2ctx_map4x4,
+                                        pos2ctx_map2x4c, pos2ctx_map4x4c,
+                                        pos2ctx_map4x4, pos2ctx_map4x4, pos2ctx_map8x8i,pos2ctx_map8x4i,
+                                        pos2ctx_map8x4i,pos2ctx_map4x4,
+                                        pos2ctx_map4x4, pos2ctx_map4x4, pos2ctx_map8x8i,pos2ctx_map8x4i,
+                                        pos2ctx_map8x4i,pos2ctx_map4x4};
+//}}}
+
+//===== position -> ctx for LAST =====
+//{{{
+static const byte  pos2ctx_last8x8 [] = { 0,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,
+                                          2,  2,  2,  2,  2,  2,  2,  2,  2,  2,  2,  2,  2,  2,  2,  2,
+                                          3,  3,  3,  3,  3,  3,  3,  3,  4,  4,  4,  4,  4,  4,  4,  4,
+                                          5,  5,  5,  5,  6,  6,  6,  6,  7,  7,  7,  7,  8,  8,  8,  8}; //  9 CTX
+//}}}
+//{{{
+static const byte  pos2ctx_last8x4 [] = { 0,  1,  1,  1,  1,  1,  1,  1,  2,  2,  2,  2,  2,  2,  2,  2,
+                                          3,  3,  3,  3,  4,  4,  4,  4,  5,  5,  6,  6,  7,  7,  8,  8}; //  9 CTX
+//}}}
+
+static const byte  pos2ctx_last4x4 [] = { 0,  1,  2,  3,  4,  5,  6,  7,  8,  9, 10, 11, 12, 13, 14, 15}; // 15 CTX
+static const byte  pos2ctx_last2x4c[] = { 0,  0,  1,  1,  2,  2,  2,  2,  2,  2,  2,  2,  2,  2,  2,  2}; // 15 CTX
+static const byte  pos2ctx_last4x4c[] = { 0,  0,  0,  0,  1,  1,  1,  1,  2,  2,  2,  2,  2,  2,  2,  2}; // 15 CTX
+//{{{
+static const byte* pos2ctx_last    [] = {pos2ctx_last4x4, pos2ctx_last4x4, pos2ctx_last8x8, pos2ctx_last8x4,
+                                         pos2ctx_last8x4, pos2ctx_last4x4, pos2ctx_last4x4, pos2ctx_last4x4,
+                                         pos2ctx_last2x4c, pos2ctx_last4x4c,
+                                         pos2ctx_last4x4, pos2ctx_last4x4, pos2ctx_last8x8,pos2ctx_last8x4,
+                                         pos2ctx_last8x4, pos2ctx_last4x4,
+                                         pos2ctx_last4x4, pos2ctx_last4x4, pos2ctx_last8x8,pos2ctx_last8x4,
+                                         pos2ctx_last8x4, pos2ctx_last4x4};
+//}}}
+//}}}
 
 //{{{
-void CheckAvailabilityOfNeighborsCABAC(Macroblock *currMB)
+/*!
+ ************************************************************************
+ * \brief
+ *    decoding of unary binarization using one or 2 distinct
+ *    models for the first and all remaining bins; no terminating
+ *    "0" for max_symbol
+ ***********************************************************************
+ */
+static unsigned int unary_bin_max_decode (DecodingEnvironmentPtr dep_dp,
+                                  BiContextTypePtr ctx,
+                                  int ctx_offset,
+                                  unsigned int max_symbol)
+{
+  unsigned int symbol =  biari_decode_symbol(dep_dp, ctx );
+
+  if (symbol == 0 || (max_symbol == 0))
+    return symbol;
+  else
+  {
+    unsigned int l;
+    ctx += ctx_offset;
+    symbol = 0;
+    do
+    {
+      l = biari_decode_symbol(dep_dp, ctx);
+      ++symbol;
+    }
+    while( (l != 0) && (symbol < max_symbol) );
+
+    if ((l != 0) && (symbol == max_symbol))
+      ++symbol;
+    return symbol;
+  }
+}
+//}}}
+//{{{
+/*!
+ ************************************************************************
+ * \brief
+ *    decoding of unary binarization using one or 2 distinct
+ *    models for the first and all remaining bins
+ ***********************************************************************
+ */
+static unsigned int unary_bin_decode (DecodingEnvironmentPtr dep_dp,
+                                     BiContextTypePtr ctx,
+                                     int ctx_offset)
+{
+  unsigned int symbol = biari_decode_symbol(dep_dp, ctx );
+
+  if (symbol == 0)
+    return 0;
+  else
+  {
+    unsigned int l;
+    ctx += ctx_offset;;
+    symbol = 0;
+    do
+    {
+      l = biari_decode_symbol(dep_dp, ctx);
+      ++symbol;
+    }
+    while( l != 0 );
+    return symbol;
+  }
+}
+//}}}
+//{{{
+/*!
+ ************************************************************************
+ * \brief
+ *    Exp Golomb binarization and decoding of a symbol
+ *    with prob. of 0.5
+ ************************************************************************
+ */
+static unsigned int exp_golomb_decode_eq_prob (DecodingEnvironmentPtr dep_dp,
+                                              int k)
+{
+  unsigned int l;
+  int symbol = 0;
+  int binary_symbol = 0;
+
+  do
+  {
+    l = biari_decode_symbol_eq_prob(dep_dp);
+    if (l == 1)
+    {
+      symbol += (1<<k);
+      ++k;
+    }
+  }
+  while (l!=0);
+
+  while (k--)                             //next binary part
+    if (biari_decode_symbol_eq_prob(dep_dp)==1)
+      binary_symbol |= (1<<k);
+
+  return (unsigned int) (symbol + binary_symbol);
+}
+//}}}
+//{{{
+/*!
+ ************************************************************************
+ * \brief
+ *    Exp-Golomb decoding for LEVELS
+ ***********************************************************************
+ */
+static unsigned int unary_exp_golomb_level_decode (DecodingEnvironmentPtr dep_dp,
+                                                  BiContextTypePtr ctx)
+{
+  unsigned int symbol = biari_decode_symbol(dep_dp, ctx );
+
+  if (symbol==0)
+    return 0;
+  else
+  {
+    unsigned int l, k = 1;
+    unsigned int exp_start = 13;
+
+    symbol = 0;
+
+    do
+    {
+      l=biari_decode_symbol(dep_dp, ctx);
+      ++symbol;
+      ++k;
+    }
+    while((l != 0) && (k != exp_start));
+    if (l!=0)
+      symbol += exp_golomb_decode_eq_prob(dep_dp,0)+1;
+    return symbol;
+  }
+}
+
+//}}}
+//{{{
+/*!
+ ************************************************************************
+ * \brief
+ *    Exp-Golomb decoding for Motion Vectors
+ ***********************************************************************
+ */
+static unsigned int unary_exp_golomb_mv_decode (DecodingEnvironmentPtr dep_dp,
+                                               BiContextTypePtr ctx,
+                                               unsigned int max_bin)
+{
+  unsigned int symbol = biari_decode_symbol(dep_dp, ctx );
+
+  if (symbol == 0)
+    return 0;
+  else
+  {
+    unsigned int exp_start = 8;
+    unsigned int l,k = 1;
+    unsigned int bin = 1;
+
+    symbol=0;
+
+    ++ctx;
+    do
+    {
+      l=biari_decode_symbol(dep_dp, ctx);
+      if ((++bin)==2) ctx++;
+      if (bin==max_bin)
+        ++ctx;
+      ++symbol;
+      ++k;
+    }
+    while((l!=0) && (k!=exp_start));
+    if (l!=0)
+      symbol += exp_golomb_decode_eq_prob(dep_dp,3) + 1;
+    return symbol;
+  }
+}
+//}}}
+
+//{{{
+/*!
+ ************************************************************************
+ * \brief
+ *    finding end of a slice in case this is not the end of a frame
+ *
+ * Unsure whether the "correction" below actually solves an off-by-one
+ * problem or whether it introduces one in some cases :-(  Anyway,
+ * with this change the bit stream format works with CABAC again.
+ * StW, 8.7.02
+ ************************************************************************
+ */
+int cabac_startcode_follows (Slice *currSlice, int eos_bit)
+{
+  unsigned int  bit;
+
+  if( eos_bit )
+  {
+    const byte   *partMap    = assignSE2partition[currSlice->dp_mode];
+    DataPartition *dP = &(currSlice->partArr[partMap[SE_MBTYPE]]);
+    DecodingEnvironmentPtr dep_dp = &(dP->de_cabac);
+
+    bit = biari_decode_final (dep_dp); //GB
+  }
+  else
+  {
+    bit = 0;
+  }
+
+  return (bit == 1 ? 1 : 0);
+}
+//}}}
+
+//{{{
+void CheckAvailabilityOfNeighborsCABAC (Macroblock *currMB)
 {
   VideoParameters *p_Vid = currMB->p_Vid;
   PixelPos up, left;
@@ -63,7 +341,7 @@ void CheckAvailabilityOfNeighborsCABAC(Macroblock *currMB)
 }
 //}}}
 //{{{
-void cabac_new_slice(Slice *currSlice)
+void cabac_new_slice (Slice *currSlice)
 {
   currSlice->last_dquant = 0;
 }
@@ -78,7 +356,7 @@ void cabac_new_slice(Slice *currSlice)
  *
  ************************************************************************
  */
-MotionInfoContexts* create_contexts_MotionInfo(void)
+MotionInfoContexts* create_contexts_MotionInfo()
 {
   MotionInfoContexts *deco_ctx;
 
@@ -97,7 +375,7 @@ MotionInfoContexts* create_contexts_MotionInfo(void)
  *    used for arithmetic decoding
  ************************************************************************
  */
-TextureInfoContexts* create_contexts_TextureInfo(void)
+TextureInfoContexts* create_contexts_TextureInfo()
 {
   TextureInfoContexts *deco_ctx;
 
@@ -116,7 +394,7 @@ TextureInfoContexts* create_contexts_TextureInfo(void)
  *    used for arithmetic decoding of the motion info.
  ************************************************************************
  */
-void delete_contexts_MotionInfo(MotionInfoContexts *deco_ctx)
+void delete_contexts_MotionInfo (MotionInfoContexts *deco_ctx)
 {
   if( deco_ctx == NULL )
     return;
@@ -132,7 +410,7 @@ void delete_contexts_MotionInfo(MotionInfoContexts *deco_ctx)
  *    used for arithmetic decoding of the texture info.
  ************************************************************************
  */
-void delete_contexts_TextureInfo(TextureInfoContexts *deco_ctx)
+void delete_contexts_TextureInfo (TextureInfoContexts *deco_ctx)
 {
   if( deco_ctx == NULL )
     return;
@@ -142,7 +420,7 @@ void delete_contexts_TextureInfo(TextureInfoContexts *deco_ctx)
 //}}}
 
 //{{{
-void readFieldModeInfo_CABAC(Macroblock *currMB,
+void readFieldModeInfo_CABAC (Macroblock *currMB,
                              SyntaxElement *se,
                              DecodingEnvironmentPtr dep_dp)
 {
@@ -154,16 +432,11 @@ void readFieldModeInfo_CABAC(Macroblock *currMB,
   int act_ctx = a + b;
 
   se->value1 = biari_decode_symbol (dep_dp, &ctx->mb_aff_contexts[act_ctx]);
-
-#if TRACE
-  fprintf(p_Dec->p_trace, "@%-6d %-63s (%3d)\n",symbolCount++, se->tracestring, se->value1);
-  fflush(p_Dec->p_trace);
-#endif
 }
 //}}}
 
 //{{{
-int check_next_mb_and_get_field_mode_CABAC_p_slice( Slice *currSlice,
+int check_next_mb_and_get_field_mode_CABAC_p_slice (Slice *currSlice,
                                            SyntaxElement *se,
                                            DataPartition  *act_dp)
 {
@@ -249,7 +522,7 @@ int check_next_mb_and_get_field_mode_CABAC_p_slice( Slice *currSlice,
 }
 //}}}
 //{{{
-int check_next_mb_and_get_field_mode_CABAC_b_slice( Slice *currSlice,
+int check_next_mb_and_get_field_mode_CABAC_b_slice (Slice *currSlice,
                                            SyntaxElement *se,
                                            DataPartition  *act_dp)
 {
@@ -346,7 +619,7 @@ int check_next_mb_and_get_field_mode_CABAC_b_slice( Slice *currSlice,
  *    vector data of a B-frame MB.
  ************************************************************************
  */
-void read_MVD_CABAC( Macroblock *currMB,
+void read_MVD_CABAC (Macroblock *currMB,
                     SyntaxElement *se,
                     DecodingEnvironmentPtr dep_dp)
 {
@@ -396,11 +669,6 @@ void read_MVD_CABAC( Macroblock *currMB,
       act_sym = -act_sym;
   }
   se->value1 = act_sym;
-
-#if TRACE
-  fprintf(p_Dec->p_trace, "@%-6d %-63s (%3d)\n",symbolCount++, se->tracestring, se->value1);
-  fflush(p_Dec->p_trace);
-#endif
 }
 //}}}
 //{{{
@@ -411,7 +679,7 @@ void read_MVD_CABAC( Macroblock *currMB,
  *    vector data of a B-frame MB.
  ************************************************************************
  */
-void read_mvd_CABAC_mbaff( Macroblock *currMB,
+void read_mvd_CABAC_mbaff (Macroblock *currMB,
                     SyntaxElement *se,
                     DecodingEnvironmentPtr dep_dp)
 {
@@ -475,11 +743,6 @@ void read_mvd_CABAC_mbaff( Macroblock *currMB,
       act_sym = -act_sym;
   }
   se->value1 = act_sym;
-
-#if TRACE
-  fprintf(p_Dec->p_trace, "@%-6d %-63s (%3d)\n",symbolCount++, se->tracestring, se->value1);
-  fflush(p_Dec->p_trace);
-#endif
 }
 //}}}
 //{{{
@@ -514,11 +777,6 @@ void readB8_typeInfo_CABAC_p_slice (Macroblock *currMB,
   }
 
   se->value1 = act_sym;
-
-#if TRACE
-  fprintf(p_Dec->p_trace, "@%-6d %-63s (%3d)\n",symbolCount++, se->tracestring, se->value1);
-  fflush(p_Dec->p_trace);
-#endif
 }
 //}}}
 //{{{
@@ -580,11 +838,6 @@ void readB8_typeInfo_CABAC_b_slice (Macroblock *currMB,
   }
 
   se->value1 = act_sym;
-
-#if TRACE
-  fprintf(p_Dec->p_trace, "@%-6d %-63s (%3d)\n",symbolCount++, se->tracestring, se->value1);
-  fflush(p_Dec->p_trace);
-#endif
 }
 //}}}
 //{{{
@@ -595,7 +848,7 @@ void readB8_typeInfo_CABAC_b_slice (Macroblock *currMB,
  *    type info of a given MB.
  ************************************************************************
  */
-void read_skip_flag_CABAC_p_slice( Macroblock *currMB,
+void read_skip_flag_CABAC_p_slice (Macroblock *currMB,
                                   SyntaxElement *se,
                                   DecodingEnvironmentPtr dep_dp)
 {
@@ -605,10 +858,6 @@ void read_skip_flag_CABAC_p_slice( Macroblock *currMB,
 
   se->value1 = (biari_decode_symbol(dep_dp, mb_type_contexts) != 1);
 
-#if TRACE
-  fprintf(p_Dec->p_trace, "@%-6d %-63s (%3d)\n",symbolCount++, se->tracestring, se->value1);
-  fflush(p_Dec->p_trace);
-#endif
   if (!se->value1)
   {
     currMB->p_Slice->last_dquant = 0;
@@ -623,7 +872,7 @@ void read_skip_flag_CABAC_p_slice( Macroblock *currMB,
  *    type info of a given MB.
  ************************************************************************
  */
-void read_skip_flag_CABAC_b_slice( Macroblock *currMB,
+void read_skip_flag_CABAC_b_slice (Macroblock *currMB,
                                   SyntaxElement *se,
                                   DecodingEnvironmentPtr dep_dp)
 {
@@ -633,10 +882,6 @@ void read_skip_flag_CABAC_b_slice( Macroblock *currMB,
 
   se->value1 = se->value2 = (biari_decode_symbol (dep_dp, mb_type_contexts) != 1);
 
-#if TRACE
-  fprintf(p_Dec->p_trace, "@%-6d %-63s (%3d)\n", symbolCount++, se->tracestring, se->value1);
-  fflush(p_Dec->p_trace);
-#endif
   if (!se->value1)
   {
     currMB->p_Slice->last_dquant = 0;
@@ -653,7 +898,7 @@ void read_skip_flag_CABAC_b_slice( Macroblock *currMB,
 ***************************************************************************
 */
 
-void readMB_transform_size_flag_CABAC( Macroblock *currMB,
+void readMB_transform_size_flag_CABAC (Macroblock *currMB,
                                       SyntaxElement *se,
                                       DecodingEnvironmentPtr dep_dp)
 {
@@ -667,11 +912,6 @@ void readMB_transform_size_flag_CABAC( Macroblock *currMB,
 
   se->value1 = act_sym;
 
-#if TRACE
-  fprintf(p_Dec->p_trace, "@%-6d %-63s (%3d)\n",symbolCount++, se->tracestring, se->value1);
-  fflush(p_Dec->p_trace);
-#endif
-
 }
 //}}}
 //{{{
@@ -682,7 +922,7 @@ void readMB_transform_size_flag_CABAC( Macroblock *currMB,
  *    type info of a given MB.
  ************************************************************************
  */
-void readMB_typeInfo_CABAC_i_slice(Macroblock *currMB,
+void readMB_typeInfo_CABAC_i_slice (Macroblock *currMB,
                            SyntaxElement *se,
                            DecodingEnvironmentPtr dep_dp)
 {
@@ -817,11 +1057,6 @@ void readMB_typeInfo_CABAC_i_slice(Macroblock *currMB,
   }
 
   se->value1 = curr_mb_type;
-
-#if TRACE
-  fprintf(p_Dec->p_trace, "@%-6d %-63s (%3d)\n",symbolCount++, se->tracestring, se->value1);
-  fflush(p_Dec->p_trace);
-#endif
 }
 //}}}
 //{{{
@@ -832,7 +1067,7 @@ void readMB_typeInfo_CABAC_i_slice(Macroblock *currMB,
  *    type info of a given MB.
  ************************************************************************
  */
-void readMB_typeInfo_CABAC_p_slice(Macroblock *currMB,
+void readMB_typeInfo_CABAC_p_slice (Macroblock *currMB,
                            SyntaxElement *se,
                            DecodingEnvironmentPtr dep_dp)
 {
@@ -909,11 +1144,6 @@ void readMB_typeInfo_CABAC_p_slice(Macroblock *currMB,
   }
 
   se->value1 = curr_mb_type;
-
-#if TRACE
-  fprintf(p_Dec->p_trace, "@%-6d %-63s (%3d)\n",symbolCount++, se->tracestring, se->value1);
-  fflush(p_Dec->p_trace);
-#endif
 }
 //}}}
 //{{{
@@ -924,7 +1154,7 @@ void readMB_typeInfo_CABAC_p_slice(Macroblock *currMB,
  *    type info of a given MB.
  ************************************************************************
  */
-void readMB_typeInfo_CABAC_b_slice(Macroblock *currMB,
+void readMB_typeInfo_CABAC_b_slice (Macroblock *currMB,
                            SyntaxElement *se,
                            DecodingEnvironmentPtr dep_dp)
 {
@@ -1037,11 +1267,6 @@ void readMB_typeInfo_CABAC_b_slice(Macroblock *currMB,
   }
 
   se->value1 = curr_mb_type;
-
-#if TRACE
-  fprintf(p_Dec->p_trace, "@%-6d %-63s (%3d)\n",symbolCount++, se->tracestring, se->value1);
-  fflush(p_Dec->p_trace);
-#endif
 }
 //}}}
 
@@ -1053,7 +1278,7 @@ void readMB_typeInfo_CABAC_b_slice(Macroblock *currMB,
  *    intra prediction modes of a given MB.
  ************************************************************************
  */
-void readIntraPredMode_CABAC( Macroblock *currMB,
+void readIntraPredMode_CABAC (Macroblock *currMB,
                               SyntaxElement *se,
                               DecodingEnvironmentPtr dep_dp)
 {
@@ -1071,11 +1296,6 @@ void readIntraPredMode_CABAC( Macroblock *currMB,
     se->value1 |= (biari_decode_symbol(dep_dp, ctx->ipr_contexts + 1) << 1);
     se->value1 |= (biari_decode_symbol(dep_dp, ctx->ipr_contexts + 1) << 2);
   }
-
-#if TRACE
-  fprintf(p_Dec->p_trace, "@%-6d %-63s (%3d)\n",symbolCount++, se->tracestring, se->value1);
-  fflush(p_Dec->p_trace);
-#endif
 }
 //}}}
 //{{{
@@ -1086,7 +1306,7 @@ void readIntraPredMode_CABAC( Macroblock *currMB,
  *    parameter of a given MB.
  ************************************************************************
  */
-void readRefFrame_CABAC(Macroblock *currMB,
+void readRefFrame_CABAC (Macroblock *currMB,
                         SyntaxElement *se,
                         DecodingEnvironmentPtr dep_dp)
 {
@@ -1145,12 +1365,6 @@ void readRefFrame_CABAC(Macroblock *currMB,
     ++act_sym;
   }
   se->value1 = act_sym;
-
-#if TRACE
-  fprintf(p_Dec->p_trace, "@%-6d %-63s (%3d)\n",symbolCount++, se->tracestring, se->value1);
-//  fprintf(p_Dec->p_trace," c: %d :%d \n",ctx->ref_no_contexts[addctx][act_ctx].cum_freq[0],ctx->ref_no_contexts[addctx][act_ctx].cum_freq[1]);
-  fflush(p_Dec->p_trace);
-#endif
 }
 //}}}
 //{{{
@@ -1161,7 +1375,7 @@ void readRefFrame_CABAC(Macroblock *currMB,
  *     of a given MB.
  ************************************************************************
  */
-void read_dQuant_CABAC( Macroblock *currMB,
+void read_dQuant_CABAC (Macroblock *currMB,
                        SyntaxElement *se,
                        DecodingEnvironmentPtr dep_dp)
 {
@@ -1184,11 +1398,6 @@ void read_dQuant_CABAC( Macroblock *currMB,
     *dquant = 0;
 
   currSlice->last_dquant = *dquant;
-
-#if TRACE
-  fprintf(p_Dec->p_trace, "@%-6d %-63s (%3d)\n",symbolCount++, se->tracestring, se->value1);
-  fflush(p_Dec->p_trace);
-#endif
 }
 //}}}
 //{{{
@@ -1199,7 +1408,7 @@ void read_dQuant_CABAC( Macroblock *currMB,
  *    block pattern of a given MB.
  ************************************************************************
  */
-void read_CBP_CABAC(Macroblock *currMB,
+void read_CBP_CABAC (Macroblock *currMB,
                     SyntaxElement *se,
                     DecodingEnvironmentPtr dep_dp)
 {
@@ -1319,11 +1528,6 @@ void read_CBP_CABAC(Macroblock *currMB,
   {
     currSlice->last_dquant = 0;
   }
-
-#if TRACE
-  fprintf(p_Dec->p_trace, "@%-6d %-63s (%3d)\n",symbolCount++, se->tracestring, se->value1);
-  fflush(p_Dec->p_trace);
-#endif
 }
 //}}}
 //{{{
@@ -1334,7 +1538,7 @@ void read_CBP_CABAC(Macroblock *currMB,
  *    intra prediction mode of a given MB.
  ************************************************************************
  */
-void readCIPredMode_CABAC(Macroblock *currMB,
+void readCIPredMode_CABAC (Macroblock *currMB,
                           SyntaxElement *se,
                           DecodingEnvironmentPtr dep_dp)
 {
@@ -1353,12 +1557,6 @@ void readCIPredMode_CABAC(Macroblock *currMB,
 
   if (*act_sym != 0)
     *act_sym = unary_bin_max_decode(dep_dp, ctx->cipr_contexts + 3, 0, 1) + 1;
-
-#if TRACE
-  fprintf(p_Dec->p_trace, "@%-6d %-63s (%3d)\n",symbolCount++, se->tracestring, se->value1);
-  fflush(p_Dec->p_trace);
-#endif
-
 }
 //}}}
 
@@ -1369,7 +1567,7 @@ void readCIPredMode_CABAC(Macroblock *currMB,
  *    Read CBP4-BIT
  ************************************************************************
 */
-static int read_and_store_CBP_block_bit_444 (Macroblock              *currMB,
+static int read_and_store_CBP_block_bit_444 (Macroblock *currMB,
                                              DecodingEnvironmentPtr  dep_dp,
                                              int                     type)
 {
@@ -1639,7 +1837,7 @@ static inline int set_cbp_bit_ac(Macroblock *neighbor_mb, PixelPos *block)
  *    Read CBP4-BIT
  ************************************************************************
  */
-static int read_and_store_CBP_block_bit_normal (Macroblock              *currMB,
+static int read_and_store_CBP_block_bit_normal (Macroblock *currMB,
                                                 DecodingEnvironmentPtr  dep_dp,
                                                 int                     type)
 {
@@ -1939,89 +2137,13 @@ static int read_and_store_CBP_block_bit_normal (Macroblock              *currMB,
 }
 //}}}
 //{{{
-void set_read_and_store_CBP(Macroblock **currMB, int chroma_format_idc)
+void set_read_and_store_CBP (Macroblock **currMB, int chroma_format_idc)
 {
   if (chroma_format_idc == YUV444)
     (*currMB)->read_and_store_CBP_block_bit = read_and_store_CBP_block_bit_444;
   else
     (*currMB)->read_and_store_CBP_block_bit = read_and_store_CBP_block_bit_normal;
 }
-//}}}
-
-//===== position -> ctx for MAP =====
-//{{{
-//--- zig-zag scan ----
-static const byte  pos2ctx_map8x8 [] = { 0,  1,  2,  3,  4,  5,  5,  4,  4,  3,  3,  4,  4,  4,  5,  5,
-                                         4,  4,  4,  4,  3,  3,  6,  7,  7,  7,  8,  9, 10,  9,  8,  7,
-                                         7,  6, 11, 12, 13, 11,  6,  7,  8,  9, 14, 10,  9,  8,  6, 11,
-                                        12, 13, 11,  6,  9, 14, 10,  9, 11, 12, 13, 11 ,14, 10, 12, 14}; // 15 CTX
-//}}}
-//{{{
-static const byte  pos2ctx_map8x4 [] = { 0,  1,  2,  3,  4,  5,  7,  8,  9, 10, 11,  9,  8,  6,  7,  8,
-                                         9, 10, 11,  9,  8,  6, 12,  8,  9, 10, 11,  9, 13, 13, 14, 14}; // 15 CTX
-//}}}
-static const byte  pos2ctx_map4x4 [] = { 0,  1,  2,  3,  4,  5,  6,  7,  8,  9, 10, 11, 12, 13, 14, 14}; // 15 CTX
-static const byte  pos2ctx_map2x4c[] = { 0,  0,  1,  1,  2,  2,  2,  2,  2,  2,  2,  2,  2,  2,  2,  2}; // 15 CTX
-static const byte  pos2ctx_map4x4c[] = { 0,  0,  0,  0,  1,  1,  1,  1,  2,  2,  2,  2,  2,  2,  2,  2}; // 15 CTX
-//{{{
-static const byte* pos2ctx_map    [] = {pos2ctx_map4x4, pos2ctx_map4x4, pos2ctx_map8x8, pos2ctx_map8x4,
-                                        pos2ctx_map8x4, pos2ctx_map4x4, pos2ctx_map4x4, pos2ctx_map4x4,
-                                        pos2ctx_map2x4c, pos2ctx_map4x4c,
-                                        pos2ctx_map4x4, pos2ctx_map4x4, pos2ctx_map8x8,pos2ctx_map8x4,
-                                        pos2ctx_map8x4, pos2ctx_map4x4,
-                                        pos2ctx_map4x4, pos2ctx_map4x4, pos2ctx_map8x8,pos2ctx_map8x4,
-                                        pos2ctx_map8x4,pos2ctx_map4x4};
-//}}}
-
-//--- interlace scan ----
-//taken from ABT
-//{{{
-static const byte  pos2ctx_map8x8i[] = { 0,  1,  1,  2,  2,  3,  3,  4,  5,  6,  7,  7,  7,  8,  4,  5,
-                                         6,  9, 10, 10,  8, 11, 12, 11,  9,  9, 10, 10,  8, 11, 12, 11,
-                                         9,  9, 10, 10,  8, 11, 12, 11,  9,  9, 10, 10,  8, 13, 13,  9,
-                                         9, 10, 10,  8, 13, 13,  9,  9, 10, 10, 14, 14, 14, 14, 14, 14}; // 15 CTX
-//}}}
-//{{{
-static const byte  pos2ctx_map8x4i[] = { 0,  1,  2,  3,  4,  5,  6,  3,  4,  5,  6,  3,  4,  7,  6,  8,
-                                         9,  7,  6,  8,  9, 10, 11, 12, 12, 10, 11, 13, 13, 14, 14, 14}; // 15 CTX
-//}}}
-//{{{
-static const byte  pos2ctx_map4x8i[] = { 0,  1,  1,  1,  2,  3,  3,  4,  4,  4,  5,  6,  2,  7,  7,  8,
-                                         8,  8,  5,  6,  9, 10, 10, 11, 11, 11, 12, 13, 13, 14, 14, 14}; // 15 CTX
-//}}}
-//{{{
-static const byte* pos2ctx_map_int[] = {pos2ctx_map4x4, pos2ctx_map4x4, pos2ctx_map8x8i,pos2ctx_map8x4i,
-                                        pos2ctx_map4x8i,pos2ctx_map4x4, pos2ctx_map4x4, pos2ctx_map4x4,
-                                        pos2ctx_map2x4c, pos2ctx_map4x4c,
-                                        pos2ctx_map4x4, pos2ctx_map4x4, pos2ctx_map8x8i,pos2ctx_map8x4i,
-                                        pos2ctx_map8x4i,pos2ctx_map4x4,
-                                        pos2ctx_map4x4, pos2ctx_map4x4, pos2ctx_map8x8i,pos2ctx_map8x4i,
-                                        pos2ctx_map8x4i,pos2ctx_map4x4};
-//}}}
-
-//===== position -> ctx for LAST =====
-//{{{
-static const byte  pos2ctx_last8x8 [] = { 0,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,
-                                          2,  2,  2,  2,  2,  2,  2,  2,  2,  2,  2,  2,  2,  2,  2,  2,
-                                          3,  3,  3,  3,  3,  3,  3,  3,  4,  4,  4,  4,  4,  4,  4,  4,
-                                          5,  5,  5,  5,  6,  6,  6,  6,  7,  7,  7,  7,  8,  8,  8,  8}; //  9 CTX
-//}}}
-//{{{
-static const byte  pos2ctx_last8x4 [] = { 0,  1,  1,  1,  1,  1,  1,  1,  2,  2,  2,  2,  2,  2,  2,  2,
-                                          3,  3,  3,  3,  4,  4,  4,  4,  5,  5,  6,  6,  7,  7,  8,  8}; //  9 CTX
-//}}}
-
-static const byte  pos2ctx_last4x4 [] = { 0,  1,  2,  3,  4,  5,  6,  7,  8,  9, 10, 11, 12, 13, 14, 15}; // 15 CTX
-static const byte  pos2ctx_last2x4c[] = { 0,  0,  1,  1,  2,  2,  2,  2,  2,  2,  2,  2,  2,  2,  2,  2}; // 15 CTX
-static const byte  pos2ctx_last4x4c[] = { 0,  0,  0,  0,  1,  1,  1,  1,  2,  2,  2,  2,  2,  2,  2,  2}; // 15 CTX
-//{{{
-static const byte* pos2ctx_last    [] = {pos2ctx_last4x4, pos2ctx_last4x4, pos2ctx_last8x8, pos2ctx_last8x4,
-                                         pos2ctx_last8x4, pos2ctx_last4x4, pos2ctx_last4x4, pos2ctx_last4x4,
-                                         pos2ctx_last2x4c, pos2ctx_last4x4c,
-                                         pos2ctx_last4x4, pos2ctx_last4x4, pos2ctx_last8x8,pos2ctx_last8x4,
-                                         pos2ctx_last8x4, pos2ctx_last4x4,
-                                         pos2ctx_last4x4, pos2ctx_last4x4, pos2ctx_last8x8,pos2ctx_last8x4,
-                                         pos2ctx_last8x4, pos2ctx_last4x4};
 //}}}
 
 //{{{
@@ -2031,7 +2153,7 @@ static const byte* pos2ctx_last    [] = {pos2ctx_last4x4, pos2ctx_last4x4, pos2c
  *    Read Significance MAP
  ************************************************************************
  */
-static int read_significance_map (Macroblock              *currMB,
+static int read_significance_map (Macroblock *currMB,
                                   DecodingEnvironmentPtr  dep_dp,
                                   int                     type,
                                   int                     coeff[])
@@ -2175,11 +2297,6 @@ void readRunLevel_CABAC (Macroblock *currMB,
   //--- decrement coefficient counter and re-set position ---
   if ((*coeff_ctr)-- == 0)
     currSlice->pos = 0;
-
-#if TRACE
-  fprintf(p_Dec->p_trace, "@%-6d %-53s %3d  %3d\n",symbolCount++, se->tracestring, se->value1,se->value2);
-  fflush(p_Dec->p_trace);
-#endif
 }
 //}}}
 //{{{
@@ -2189,7 +2306,7 @@ void readRunLevel_CABAC (Macroblock *currMB,
  *    arithmetic decoding
  ************************************************************************
  */
-int readSyntaxElement_CABAC(Macroblock *currMB, SyntaxElement *se, DataPartition *this_dataPart)
+int readSyntaxElement_CABAC (Macroblock *currMB, SyntaxElement *se, DataPartition *this_dataPart)
 {
   DecodingEnvironmentPtr dep_dp = &(this_dataPart->de_cabac);
   int curr_len = arideco_bits_read(dep_dp);
@@ -2212,223 +2329,10 @@ int readSyntaxElement_CABAC(Macroblock *currMB, SyntaxElement *se, DataPartition
 /*!
  ************************************************************************
  * \brief
- *    decoding of unary binarization using one or 2 distinct
- *    models for the first and all remaining bins; no terminating
- *    "0" for max_symbol
- ***********************************************************************
- */
-static unsigned int unary_bin_max_decode(DecodingEnvironmentPtr dep_dp,
-                                  BiContextTypePtr ctx,
-                                  int ctx_offset,
-                                  unsigned int max_symbol)
-{
-  unsigned int symbol =  biari_decode_symbol(dep_dp, ctx );
-
-  if (symbol == 0 || (max_symbol == 0))
-    return symbol;
-  else
-  {
-    unsigned int l;
-    ctx += ctx_offset;
-    symbol = 0;
-    do
-    {
-      l = biari_decode_symbol(dep_dp, ctx);
-      ++symbol;
-    }
-    while( (l != 0) && (symbol < max_symbol) );
-
-    if ((l != 0) && (symbol == max_symbol))
-      ++symbol;
-    return symbol;
-  }
-}
-//}}}
-//{{{
-/*!
- ************************************************************************
- * \brief
- *    decoding of unary binarization using one or 2 distinct
- *    models for the first and all remaining bins
- ***********************************************************************
- */
-static unsigned int unary_bin_decode(DecodingEnvironmentPtr dep_dp,
-                                     BiContextTypePtr ctx,
-                                     int ctx_offset)
-{
-  unsigned int symbol = biari_decode_symbol(dep_dp, ctx );
-
-  if (symbol == 0)
-    return 0;
-  else
-  {
-    unsigned int l;
-    ctx += ctx_offset;;
-    symbol = 0;
-    do
-    {
-      l = biari_decode_symbol(dep_dp, ctx);
-      ++symbol;
-    }
-    while( l != 0 );
-    return symbol;
-  }
-}
-//}}}
-//{{{
-/*!
- ************************************************************************
- * \brief
- *    finding end of a slice in case this is not the end of a frame
- *
- * Unsure whether the "correction" below actually solves an off-by-one
- * problem or whether it introduces one in some cases :-(  Anyway,
- * with this change the bit stream format works with CABAC again.
- * StW, 8.7.02
- ************************************************************************
- */
-int cabac_startcode_follows(Slice *currSlice, int eos_bit)
-{
-  unsigned int  bit;
-
-  if( eos_bit )
-  {
-    const byte   *partMap    = assignSE2partition[currSlice->dp_mode];
-    DataPartition *dP = &(currSlice->partArr[partMap[SE_MBTYPE]]);
-    DecodingEnvironmentPtr dep_dp = &(dP->de_cabac);
-
-    bit = biari_decode_final (dep_dp); //GB
-
-#if TRACE
-    fprintf(p_Dec->p_trace, "@%-6d %-63s (%3d)\n",symbolCount++, "end_of_slice_flag", bit);
-    fflush(p_Dec->p_trace);
-#endif
-  }
-  else
-  {
-    bit = 0;
-  }
-
-  return (bit == 1 ? 1 : 0);
-}
-//}}}
-
-//{{{
-/*!
- ************************************************************************
- * \brief
- *    Exp Golomb binarization and decoding of a symbol
- *    with prob. of 0.5
- ************************************************************************
- */
-static unsigned int exp_golomb_decode_eq_prob( DecodingEnvironmentPtr dep_dp,
-                                              int k)
-{
-  unsigned int l;
-  int symbol = 0;
-  int binary_symbol = 0;
-
-  do
-  {
-    l = biari_decode_symbol_eq_prob(dep_dp);
-    if (l == 1)
-    {
-      symbol += (1<<k);
-      ++k;
-    }
-  }
-  while (l!=0);
-
-  while (k--)                             //next binary part
-    if (biari_decode_symbol_eq_prob(dep_dp)==1)
-      binary_symbol |= (1<<k);
-
-  return (unsigned int) (symbol + binary_symbol);
-}
-//}}}
-//{{{
-/*!
- ************************************************************************
- * \brief
- *    Exp-Golomb decoding for LEVELS
- ***********************************************************************
- */
-static unsigned int unary_exp_golomb_level_decode( DecodingEnvironmentPtr dep_dp,
-                                                  BiContextTypePtr ctx)
-{
-  unsigned int symbol = biari_decode_symbol(dep_dp, ctx );
-
-  if (symbol==0)
-    return 0;
-  else
-  {
-    unsigned int l, k = 1;
-    unsigned int exp_start = 13;
-
-    symbol = 0;
-
-    do
-    {
-      l=biari_decode_symbol(dep_dp, ctx);
-      ++symbol;
-      ++k;
-    }
-    while((l != 0) && (k != exp_start));
-    if (l!=0)
-      symbol += exp_golomb_decode_eq_prob(dep_dp,0)+1;
-    return symbol;
-  }
-}
-
-//}}}
-//{{{
-/*!
- ************************************************************************
- * \brief
- *    Exp-Golomb decoding for Motion Vectors
- ***********************************************************************
- */
-static unsigned int unary_exp_golomb_mv_decode(DecodingEnvironmentPtr dep_dp,
-                                               BiContextTypePtr ctx,
-                                               unsigned int max_bin)
-{
-  unsigned int symbol = biari_decode_symbol(dep_dp, ctx );
-
-  if (symbol == 0)
-    return 0;
-  else
-  {
-    unsigned int exp_start = 8;
-    unsigned int l,k = 1;
-    unsigned int bin = 1;
-
-    symbol=0;
-
-    ++ctx;
-    do
-    {
-      l=biari_decode_symbol(dep_dp, ctx);
-      if ((++bin)==2) ctx++;
-      if (bin==max_bin)
-        ++ctx;
-      ++symbol;
-      ++k;
-    }
-    while((l!=0) && (k!=exp_start));
-    if (l!=0)
-      symbol += exp_golomb_decode_eq_prob(dep_dp,3) + 1;
-    return symbol;
-  }
-}
-//}}}
-//{{{
-/*!
- ************************************************************************
- * \brief
  *    Read I_PCM macroblock
  ************************************************************************
 */
-void readIPCM_CABAC(Slice *currSlice, struct datapartition_dec *dP)
+void readIPCM_CABAC (Slice *currSlice, struct datapartition_dec *dP)
 {
   VideoParameters *p_Vid = currSlice->p_Vid;
   StorablePicture *dec_picture = currSlice->dec_picture;
