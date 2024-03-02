@@ -291,7 +291,7 @@ int mb_pred_p_inter8x8 (Macroblock *currMB, ColorPlane curr_plane, StorablePictu
     }
   }
 
-  iTransform(currMB, curr_plane, smb);
+  iTransform (currMB, curr_plane, smb);
 
   if (currMB->cbp != 0)
     currSlice->is_reset_coeff = FALSE;
@@ -305,8 +305,8 @@ int mb_pred_p_inter16x16 (Macroblock *currMB, ColorPlane curr_plane, StorablePic
   int smb = (currSlice->slice_type == SP_SLICE);
 
   set_chroma_vector(currMB);
-  perform_mc(currMB, curr_plane, dec_picture, currMB->b8pdir[0], 0, 0, MB_BLOCK_SIZE, MB_BLOCK_SIZE);
-  iTransform(currMB, curr_plane, smb);
+  perform_mc (currMB, curr_plane, dec_picture, currMB->b8pdir[0], 0, 0, MB_BLOCK_SIZE, MB_BLOCK_SIZE);
+  iTransform (currMB, curr_plane, smb);
 
   if (currMB->cbp != 0)
     currSlice->is_reset_coeff = FALSE;
@@ -385,7 +385,6 @@ int mb_pred_b_d8x8temporal (Macroblock *currMB, ColorPlane curr_plane, imgpel **
 
     for (k = k_start; k < k_start + BLOCK_MULTIPLE; k ++)
     {
-
       i =  (decode_block_scan[k] & 3);
       j = ((decode_block_scan[k] >> 2) & 3);
       i4   = currMB->block_x + i;

@@ -348,7 +348,7 @@ void itrans_sp (Macroblock* currMB, ColorPlane pl, int ioff, int joff) {
 
   forward4x4 (PBlock, PBlock, 0, 0);
 
-  if (currSlice->sp_switch || currSlice->slice_type==SI_SLICE) {
+  if (currSlice->sp_switch || currSlice->slice_type == SI_SLICE) {
     for (int j = 0; j < BLOCK_SIZE;++j)
       for (int i = 0; i < BLOCK_SIZE;++i) {
         // recovering coefficient since they are already dequantized earlier
@@ -359,8 +359,8 @@ void itrans_sp (Macroblock* currMB, ColorPlane pl, int ioff, int joff) {
         }
     }
   else
-    for (int j = 0; j < BLOCK_SIZE;++j)
-      for (int i = 0; i < BLOCK_SIZE;++i) {
+    for (int j = 0; j < BLOCK_SIZE; ++j)
+      for (int i = 0; i < BLOCK_SIZE; ++i) {
         // recovering coefficient since they are already dequantized earlier
         int icof = (cof[joff + j][ioff + i] >> qp_per) / InvLevelScale4x4[j][i];
         int ilev = PBlock[j][i] + ((icof * InvLevelScale4x4[j][i] * A[j][i] <<  qp_per) >> 6);
@@ -370,14 +370,14 @@ void itrans_sp (Macroblock* currMB, ColorPlane pl, int ioff, int joff) {
 
   inverse4x4 (cof, mb_rres, joff, ioff);
 
-  for (int j = joff; j < joff +BLOCK_SIZE;++j) {
+  for (int j = joff; j < joff +BLOCK_SIZE; ++j) {
     mb_rec[j][ioff   ] = (imgpel) iClip1(max_imgpel_value,rshift_rnd_sf(mb_rres[j][ioff   ], DQ_BITS));
     mb_rec[j][ioff+ 1] = (imgpel) iClip1(max_imgpel_value,rshift_rnd_sf(mb_rres[j][ioff+ 1], DQ_BITS));
     mb_rec[j][ioff+ 2] = (imgpel) iClip1(max_imgpel_value,rshift_rnd_sf(mb_rres[j][ioff+ 2], DQ_BITS));
     mb_rec[j][ioff+ 3] = (imgpel) iClip1(max_imgpel_value,rshift_rnd_sf(mb_rres[j][ioff+ 3], DQ_BITS));
     }
 
-  free_mem2Dint(PBlock);
+  free_mem2Dint (PBlock);
   }
 //}}}
 //{{{
@@ -473,7 +473,6 @@ void itrans_sp_cr (Macroblock* currMB, int uv) {
   free_mem2Dint(PBlock);
   }
 //}}}
-
 //{{{
 void iMBtrans4x4 (Macroblock* currMB, ColorPlane pl, int smb) {
 
@@ -700,6 +699,6 @@ int CheckVertMV (Macroblock* currMB, int vec1_y, int block_size_y) {
 void copy_image_data (imgpel** imgBuf1, imgpel** imgBuf2, int off1, int off2, int width, int height) {
 
   for (int j = 0; j < height; ++j)
-    memcpy((*imgBuf1++ + off1), (*imgBuf2++ + off2), width * sizeof (imgpel));
+    memcpy ((*imgBuf1++ + off1), (*imgBuf2++ + off2), width * sizeof (imgpel));
   }
 //}}}

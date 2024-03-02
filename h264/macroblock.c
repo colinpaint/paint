@@ -57,13 +57,6 @@ extern void set_read_comp_coeff_cavlc (Macroblock *currMB);
 extern void set_read_comp_coeff_cabac (Macroblock *currMB);
 
 //{{{
-/*!
- ************************************************************************
- * \brief
- *    decode one color component in an I slice
- ************************************************************************
- */
-
 static int decode_one_component_i_slice (Macroblock *currMB, ColorPlane curr_plane, imgpel **currImg, StorablePicture *dec_picture)
 {
   //For residual DPCM
@@ -81,12 +74,6 @@ static int decode_one_component_i_slice (Macroblock *currMB, ColorPlane curr_pla
 }
 //}}}
 //{{{
-/*!
- ************************************************************************
- * \brief
- *    decode one color component for a p slice
- ************************************************************************
- */
 static int decode_one_component_p_slice (Macroblock *currMB, ColorPlane curr_plane, imgpel **currImg, StorablePicture *dec_picture)
 {
   //For residual DPCM
@@ -114,12 +101,6 @@ static int decode_one_component_p_slice (Macroblock *currMB, ColorPlane curr_pla
 }
 //}}}
 //{{{
-/*!
- ************************************************************************
- * \brief
- *    decode one color component for a sp slice
- ************************************************************************
- */
 static int decode_one_component_sp_slice (Macroblock *currMB, ColorPlane curr_plane, imgpel **currImg, StorablePicture *dec_picture)
 {
   //For residual DPCM
@@ -148,13 +129,6 @@ static int decode_one_component_sp_slice (Macroblock *currMB, ColorPlane curr_pl
 }
 //}}}
 //{{{
-/*!
- ************************************************************************
- * \brief
- *    decode one color component for a b slice
- ************************************************************************
- */
-
 static int decode_one_component_b_slice (Macroblock *currMB, ColorPlane curr_plane, imgpel **currImg, StorablePicture *dec_picture)
 {
   //For residual DPCM
@@ -200,24 +174,12 @@ static int decode_one_component_b_slice (Macroblock *currMB, ColorPlane curr_pla
 //}}}
 
 //{{{
-/*!
- ************************************************************************
- * \brief
- *    Set context for reference frames
- ************************************************************************
- */
 static inline int BType2CtxRef (int btype)
 {
   return (btype >= 4);
 }
 //}}}
 //{{{
-/*!
- ************************************************************************
- * \brief
- *    Function for reading the reference picture indices using VLC
- ************************************************************************
- */
 static char readRefPictureIdx_VLC (Macroblock *currMB, SyntaxElement *currSE, DataPartition *dP, char b8mode, int list)
 {
   currSE->context = BType2CtxRef (b8mode);
@@ -227,12 +189,6 @@ static char readRefPictureIdx_VLC (Macroblock *currMB, SyntaxElement *currSE, Da
 }
 //}}}
 //{{{
-/*!
- ************************************************************************
- * \brief
- *    Function for reading the reference picture indices using FLC
- ************************************************************************
- */
 static char readRefPictureIdx_FLC (Macroblock *currMB, SyntaxElement *currSE, DataPartition *dP, char b8mode, int list)
 {
   currSE->context = BType2CtxRef (b8mode);
@@ -244,24 +200,12 @@ static char readRefPictureIdx_FLC (Macroblock *currMB, SyntaxElement *currSE, Da
 }
 //}}}
 //{{{
-/*!
- ************************************************************************
- * \brief
- *    Dummy Function for reading the reference picture indices
- ************************************************************************
- */
 static char readRefPictureIdx_Null (Macroblock *currMB, SyntaxElement *currSE, DataPartition *dP, char b8mode, int list)
 {
   return 0;
 }
 //}}}
 //{{{
-/*!
- ************************************************************************
- * \brief
- *    Function to prepare reference picture indice function pointer
- ************************************************************************
- */
 static void prepareListforRefIdx (Macroblock *currMB, SyntaxElement *currSE, DataPartition *dP, int num_ref_idx_active, int refidx_present)
 {
   if(num_ref_idx_active > 1)
@@ -301,12 +245,6 @@ void set_chroma_qp (Macroblock* currMB)
 }
 //}}}
 //{{{
-/*!
-************************************************************************
-* \brief
-*    updates chroma QP according to luma QP and bit depth
-************************************************************************
-*/
 void update_qp (Macroblock *currMB, int qp)
 {
   VideoParameters *p_Vid = currMB->p_Vid;
@@ -329,9 +267,7 @@ void read_delta_quant (SyntaxElement *currSE, DataPartition *dP, Macroblock *cur
   dP = &(currSlice->partArr[partMap[currSE->type]]);
 
   if (p_Vid->active_pps->entropy_coding_mode_flag == (Boolean) CAVLC || dP->bitstream->ei_flag)
-  {
     currSE->mapping = linfo_se;
-  }
   else
     currSE->reading= read_dQuant_CABAC;
 
@@ -351,12 +287,6 @@ void read_delta_quant (SyntaxElement *currSE, DataPartition *dP, Macroblock *cur
 //}}}
 
 //{{{
-/*!
- ************************************************************************
- * \brief
- *    Function to read reference picture indice values
- ************************************************************************
- */
 static void readMBRefPictureIdx (SyntaxElement *currSE, DataPartition *dP, Macroblock *currMB, PicMotionParams **mv_info, int list, int step_v0, int step_h0)
 {
   if (currMB->mb_type == 1)
@@ -473,12 +403,6 @@ static void readMBRefPictureIdx (SyntaxElement *currSE, DataPartition *dP, Macro
 }
 //}}}
 //{{{
-/*!
- ************************************************************************
- * \brief
- *    Function to read reference picture indice values
- ************************************************************************
- */
 static void readMBMotionVectors (SyntaxElement *currSE, DataPartition *dP, Macroblock *currMB, int list, int step_h0, int step_v0)
 {
   if (currMB->mb_type == 1)
@@ -654,12 +578,6 @@ static inline void setup_mb_pos_info (Macroblock *currMB)
 //}}}
 
 //{{{
-/*!
- ************************************************************************
- * \brief
- *    initializes the current macroblock
- ************************************************************************
- */
 void start_macroblock (Slice *currSlice, Macroblock **currMB)
 {
   VideoParameters *p_Vid = currSlice->p_Vid;
@@ -756,13 +674,6 @@ void start_macroblock (Slice *currSlice, Macroblock **currMB)
 }
 //}}}
 //{{{
-/*!
- ************************************************************************
- * \brief
- *    set coordinates of the next macroblock
- *    check end_of_slice condition
- ************************************************************************
- */
 Boolean exit_macroblock (Slice *currSlice, int eos_bit)
 {
   VideoParameters *p_Vid = currSlice->p_Vid;
@@ -776,9 +687,7 @@ Boolean exit_macroblock (Slice *currSlice, int eos_bit)
   ++(currSlice->num_dec_mb);
 
   if(currSlice->current_mb_nr == p_Vid->PicSizeInMbs - 1) //if (p_Vid->num_dec_mb == p_Vid->PicSizeInMbs)
-  {
     return TRUE;
-  }
   // ask for last mb in the slice  CAVLC
   else
   {
@@ -804,12 +713,6 @@ Boolean exit_macroblock (Slice *currSlice, int eos_bit)
 //}}}
 
 //{{{
-/*!
- ************************************************************************
- * \brief
- *    Interpret the mb mode for P-Frames
- ************************************************************************
- */
 static void interpret_mb_mode_P (Macroblock *currMB)
 {
   static const short ICBPTAB[6] = {0,16,32,15,31,47};
@@ -855,12 +758,6 @@ static void interpret_mb_mode_P (Macroblock *currMB)
 }
 //}}}
 //{{{
-/*!
- ************************************************************************
- * \brief
- *    Interpret the mb mode for I-Frames
- ************************************************************************
- */
 static void interpret_mb_mode_I (Macroblock *currMB)
 {
   static const short ICBPTAB[6] = {0,16,32,15,31,47};
@@ -895,12 +792,6 @@ static void interpret_mb_mode_I (Macroblock *currMB)
 }
 //}}}
 //{{{
-/*!
- ************************************************************************
- * \brief
- *    Interpret the mb mode for B-Frames
- ************************************************************************
- */
 static void interpret_mb_mode_B (Macroblock *currMB)
 {
   static const char offset2pdir16x16[12]   = {0, 0, 1, 2, 0,0,0,0,0,0,0,0};
@@ -980,12 +871,6 @@ static void interpret_mb_mode_B (Macroblock *currMB)
 }
 //}}}
 //{{{
-/*!
- ************************************************************************
- * \brief
- *    Interpret the mb mode for SI-Frames
- ************************************************************************
- */
 static void interpret_mb_mode_SI (Macroblock *currMB)
 {
   //VideoParameters *p_Vid = currMB->p_Vid;
@@ -1029,12 +914,6 @@ static void interpret_mb_mode_SI (Macroblock *currMB)
 }
 //}}}
 //{{{
-/*!
- ************************************************************************
- * \brief
- *    Set mode interpretation based on slice type
- ************************************************************************
- */
 void setup_slice_methods (Slice *currSlice)
 {
   setup_read_macroblock (currSlice);
@@ -1123,12 +1002,6 @@ void setup_slice_methods (Slice *currSlice)
 //}}}
 
 //{{{
-/*!
- ************************************************************************
- * \brief
- *    Get current block spatial neighbors
- ************************************************************************
- */
 void get_neighbors (Macroblock *currMB,       // <--  current Macroblock
                    PixelPos   *block,     // <--> neighbor blocks
                    int         mb_x,         // <--  block x position
@@ -1136,46 +1009,33 @@ void get_neighbors (Macroblock *currMB,       // <--  current Macroblock
                    int         blockshape_x  // <--  block width
                    )
 {
-  int *mb_size = currMB->p_Vid->mb_size[IS_LUMA];
+  int* mb_size = currMB->p_Vid->mb_size[IS_LUMA];
 
-  get4x4Neighbour(currMB, mb_x - 1,            mb_y    , mb_size, block    );
-  get4x4Neighbour(currMB, mb_x,                mb_y - 1, mb_size, block + 1);
-  get4x4Neighbour(currMB, mb_x + blockshape_x, mb_y - 1, mb_size, block + 2);
+  get4x4Neighbour (currMB, mb_x - 1,            mb_y    , mb_size, block    );
+  get4x4Neighbour (currMB, mb_x,                mb_y - 1, mb_size, block + 1);
+  get4x4Neighbour (currMB, mb_x + blockshape_x, mb_y - 1, mb_size, block + 2);
 
-  if (mb_y > 0)
-  {
-    if (mb_x < 8)  // first column of 8x8 blocks
-    {
-      if (mb_y == 8 )
-      {
+  if (mb_y > 0) {
+    if (mb_x < 8) {
+      // first column of 8x8 blocks
+      if (mb_y == 8 ) {
         if (blockshape_x == MB_BLOCK_SIZE)
           block[2].available  = 0;
-      }
+        }
       else if (mb_x + blockshape_x == 8)
-      {
         block[2].available = 0;
       }
-    }
     else if (mb_x + blockshape_x == MB_BLOCK_SIZE)
-    {
       block[2].available = 0;
     }
-  }
 
-  if (!block[2].available)
-  {
+  if (!block[2].available) {
     get4x4Neighbour(currMB, mb_x - 1, mb_y - 1, mb_size, block + 3);
     block[2] = block[3];
+    }
   }
-}
 //}}}
 //{{{
-/*!
- ************************************************************************
- * \brief
- *    Read motion info
- ************************************************************************
- */
 static void read_motion_info_from_NAL_p_slice (Macroblock *currMB)
 {
   VideoParameters *p_Vid = currMB->p_Vid;
@@ -1231,14 +1091,8 @@ static void read_motion_info_from_NAL_p_slice (Macroblock *currMB)
 }
 //}}}
 //{{{
-/*!
-************************************************************************
-* \brief
-*    Read motion info
-************************************************************************
-*/
-static void read_motion_info_from_NAL_b_slice (Macroblock *currMB)
-{
+static void read_motion_info_from_NAL_b_slice (Macroblock *currMB) {
+
   Slice *currSlice = currMB->p_Slice;
   VideoParameters *p_Vid = currMB->p_Vid;
   StorablePicture *dec_picture = currSlice->dec_picture;
@@ -1265,11 +1119,11 @@ static void read_motion_info_from_NAL_b_slice (Macroblock *currMB)
 
   //  For LIST_0, if multiple ref. pictures, read LIST_0 reference picture indices for the MB ***********
   prepareListforRefIdx (currMB, &currSE, dP, currSlice->num_ref_idx_active[LIST_0], TRUE);
-  readMBRefPictureIdx  (&currSE, dP, currMB, p_mv_info, LIST_0, step_v0, step_h0);
+  readMBRefPictureIdx (&currSE, dP, currMB, p_mv_info, LIST_0, step_v0, step_h0);
 
   //  For LIST_1, if multiple ref. pictures, read LIST_1 reference picture indices for the MB ***********
   prepareListforRefIdx (currMB, &currSE, dP, currSlice->num_ref_idx_active[LIST_1], TRUE);
-  readMBRefPictureIdx  (&currSE, dP, currMB, p_mv_info, LIST_1, step_v0, step_h0);
+  readMBRefPictureIdx (&currSE, dP, currMB, p_mv_info, LIST_1, step_v0, step_h0);
 
   //=====  READ MOTION VECTORS =====
   currSE.type = SE_MVD;
@@ -1302,34 +1156,21 @@ static void read_motion_info_from_NAL_b_slice (Macroblock *currMB)
 }
 //}}}
 //{{{
-/*!
- ************************************************************************
- * \brief
- *    Data partitioning: Check if neighboring macroblock is needed for
- *    CAVLC context decoding, and disable current MB if data partition
- *    is missing.
- ************************************************************************
- */
-void check_dp_neighbors (Macroblock *currMB)
-{
+void check_dp_neighbors (Macroblock *currMB) {
+
   VideoParameters *p_Vid = currMB->p_Vid;
   PixelPos up, left;
 
-  p_Vid->getNeighbour(currMB, -1,  0, p_Vid->mb_size[1], &left);
-  p_Vid->getNeighbour(currMB,  0, -1, p_Vid->mb_size[1], &up);
+  p_Vid->getNeighbour (currMB, -1,  0, p_Vid->mb_size[1], &left);
+  p_Vid->getNeighbour (currMB,  0, -1, p_Vid->mb_size[1], &up);
 
-  if ((currMB->is_intra_block == FALSE) || (!(p_Vid->active_pps->constrained_intra_pred_flag)) )
-  {
+  if ((currMB->is_intra_block == FALSE) || (!(p_Vid->active_pps->constrained_intra_pred_flag)) ) {
     if (left.available)
-    {
       currMB->dpl_flag |= p_Vid->mb_data[left.mb_addr].dpl_flag;
-    }
     if (up.available)
-    {
       currMB->dpl_flag |= p_Vid->mb_data[up.mb_addr].dpl_flag;
     }
   }
-}
 //}}}
 
 //{{{
@@ -1378,55 +1219,35 @@ static void init_cur_imgy (VideoParameters *p_Vid,Slice *currSlice,int pl)
 //}}}
 
 //{{{
-/*!
- ************************************************************************
- * \brief
- *    decode one macroblock
- ************************************************************************
- */
-
 int decode_one_macroblock (Macroblock *currMB, StorablePicture *dec_picture)
 {
   Slice *currSlice = currMB->p_Slice;
   VideoParameters *p_Vid = currMB->p_Vid;
 
-  // macroblock decoding **************************************************
-  if (currSlice->chroma444_not_separate)
-  {
-    if (!currMB->is_intra_block)
-    {
-      init_cur_imgy(p_Vid, currSlice, PLANE_Y);
-      currSlice->decode_one_component(currMB, PLANE_Y, dec_picture->imgY, dec_picture);
-      init_cur_imgy(p_Vid, currSlice, PLANE_U);
-      currSlice->decode_one_component(currMB, PLANE_U, dec_picture->imgUV[0], dec_picture);
-      init_cur_imgy(p_Vid, currSlice, PLANE_V);
-      currSlice->decode_one_component(currMB, PLANE_V, dec_picture->imgUV[1], dec_picture);
-    }
-    else
-    {
-      currSlice->decode_one_component(currMB, PLANE_Y, dec_picture->imgY, dec_picture);
-      currSlice->decode_one_component(currMB, PLANE_U, dec_picture->imgUV[0], dec_picture);
-      currSlice->decode_one_component(currMB, PLANE_V, dec_picture->imgUV[1], dec_picture);
-    }
+  if (currSlice->chroma444_not_separate) {
+    if (!currMB->is_intra_block) {
+      init_cur_imgy (p_Vid, currSlice, PLANE_Y);
+      currSlice->decode_one_component (currMB, PLANE_Y, dec_picture->imgY, dec_picture);
+      init_cur_imgy (p_Vid, currSlice, PLANE_U);
+      currSlice->decode_one_component (currMB, PLANE_U, dec_picture->imgUV[0], dec_picture);
+      init_cur_imgy (p_Vid, currSlice, PLANE_V);
+      currSlice->decode_one_component (currMB, PLANE_V, dec_picture->imgUV[1], dec_picture);
+      }
+    else {
+      currSlice->decode_one_component (currMB, PLANE_Y, dec_picture->imgY, dec_picture);
+      currSlice->decode_one_component (currMB, PLANE_U, dec_picture->imgUV[0], dec_picture);
+      currSlice->decode_one_component (currMB, PLANE_V, dec_picture->imgUV[1], dec_picture);
+      }
     currSlice->is_reset_coeff = FALSE;
     currSlice->is_reset_coeff_cr = FALSE;
-  }
+    }
   else
-  {
     currSlice->decode_one_component(currMB, PLANE_Y, dec_picture->imgY, dec_picture);
-  }
 
   return 0;
-}
+  }
 //}}}
 //{{{
-/*!
- ************************************************************************
- * \brief
- *    change target plane
- *    for 4:4:4 Independent mode
- ************************************************************************
- */
 void change_plane_JV (VideoParameters *p_Vid, int nplane, Slice *pSlice)
 {
   //Slice *currSlice = p_Vid->currentSlice;
@@ -1436,47 +1257,36 @@ void change_plane_JV (VideoParameters *p_Vid, int nplane, Slice *pSlice)
   p_Vid->siblock = p_Vid->siblock_JV[nplane];
   p_Vid->ipredmode = p_Vid->ipredmode_JV[nplane];
   p_Vid->intra_block = p_Vid->intra_block_JV[nplane];
-  if(pSlice)
-  {
+
+  if (pSlice) {
     pSlice->mb_data = p_Vid->mb_data_JV[nplane];
     pSlice->dec_picture  = p_Vid->dec_picture_JV[nplane];
     pSlice->siblock = p_Vid->siblock_JV[nplane];
     pSlice->ipredmode = p_Vid->ipredmode_JV[nplane];
     pSlice->intra_block = p_Vid->intra_block_JV[nplane];
+    }
   }
-}
 //}}}
 //{{{
-/*!
- ************************************************************************
- * \brief
- *    make frame picture from each plane data
- *    for 4:4:4 Independent mode
- ************************************************************************
- */
-void make_frame_picture_JV (VideoParameters *p_Vid)
-{
-  int uv, line;
-  int nsize;
+void make_frame_picture_JV (VideoParameters *p_Vid) {
+
   p_Vid->dec_picture = p_Vid->dec_picture_JV[0];
-  //copy;
-  if(p_Vid->dec_picture->used_for_reference)
-  {
-    nsize = (p_Vid->dec_picture->size_y/BLOCK_SIZE)*(p_Vid->dec_picture->size_x/BLOCK_SIZE)*sizeof(PicMotionParams);
-    memcpy( &(p_Vid->dec_picture->JVmv_info[PLANE_Y][0][0]), &(p_Vid->dec_picture_JV[PLANE_Y]->mv_info[0][0]), nsize);
-    memcpy( &(p_Vid->dec_picture->JVmv_info[PLANE_U][0][0]), &(p_Vid->dec_picture_JV[PLANE_U]->mv_info[0][0]), nsize);
-    memcpy( &(p_Vid->dec_picture->JVmv_info[PLANE_V][0][0]), &(p_Vid->dec_picture_JV[PLANE_V]->mv_info[0][0]), nsize);
-  }
+
+  // copy;
+  if (p_Vid->dec_picture->used_for_reference) {
+    int nsize = (p_Vid->dec_picture->size_y/BLOCK_SIZE)*(p_Vid->dec_picture->size_x/BLOCK_SIZE)*sizeof(PicMotionParams);
+    memcpy (&(p_Vid->dec_picture->JVmv_info[PLANE_Y][0][0]), &(p_Vid->dec_picture_JV[PLANE_Y]->mv_info[0][0]), nsize);
+    memcpy (&(p_Vid->dec_picture->JVmv_info[PLANE_U][0][0]), &(p_Vid->dec_picture_JV[PLANE_U]->mv_info[0][0]), nsize);
+    memcpy (&(p_Vid->dec_picture->JVmv_info[PLANE_V][0][0]), &(p_Vid->dec_picture_JV[PLANE_V]->mv_info[0][0]), nsize);
+    }
 
   // This could be done with pointers and seems not necessary
-  for( uv=0; uv<2; uv++ )
-  {
-    for( line=0; line<p_Vid->height; line++ )
-    {
-      nsize = sizeof(imgpel) * p_Vid->width;
-      memcpy( p_Vid->dec_picture->imgUV[uv][line], p_Vid->dec_picture_JV[uv+1]->imgY[line], nsize );
+  for (int uv = 0; uv < 2; uv++) {
+    for (int line = 0; line < p_Vid->height; line++) {
+      int nsize = sizeof(imgpel) * p_Vid->width;
+      memcpy (p_Vid->dec_picture->imgUV[uv][line], p_Vid->dec_picture_JV[uv+1]->imgY[line], nsize );
+      }
+    free_storable_picture (p_Vid->dec_picture_JV[uv+1]);
     }
-    free_storable_picture(p_Vid->dec_picture_JV[uv+1]);
   }
-}
 //}}}
