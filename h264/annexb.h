@@ -8,9 +8,10 @@ typedef struct annex_b_struct {
   size_t bytesinbuffer;
   int is_eof;
 
-  int iIOBufferSize;
   int IsFirstByteStreamNALU;
-  int nextstartcodebytes;
+  int nextStartCodeBytes;
+
+  int iIOBufferSize;
   byte* Buf;
   } ANNEXB_t;
 

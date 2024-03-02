@@ -330,7 +330,6 @@ typedef struct inp_par {
   int videoCode;                        // 1 - 709, 3 - 601:  See VideoCode in io_tiff.
   int export_views;
 
-  int bDisplayDecParams;
   int dpb_plus[2];
   } InputParameters;
 //}}}

@@ -914,25 +914,7 @@ public:
       InputParams.intra_profile_deblocking = 1;
       InputParams.poc_gap = 2;
       InputParams.ref_poc_gap = 2;
-      InputParams.bDisplayDecParams = 1;
       InputParams.dpb_plus[0] = 1;
-      //{{{  optional input params
-      //InputParams.ref_offset;
-      //InputParams.write_uv;
-      //InputParams.silent;
-      //InputParams.source;                   //!< source related information
-      //InputParams.output;                   //!< output related information
-      //InputParams.ProcessInput;
-      //InputParams.input_file1;          //!< Input video file1
-      //InputParams.input_file2;          //!< Input video file2
-      //InputParams.input_file3;          //!< Input video file3
-      //InputParams.conceal_mode;
-      //InputParams.start_frame;
-      //InputParams.stdRange;                         //!< 1 - standard range, 0 - full range
-      //InputParams.videoCode;                        //!< 1 - 709, 3 - 601:  See VideoCode in io_tiff.
-      //InputParams.export_views;
-      //InputParams.iDecFrmNum;
-      //}}}
 
       if (OpenDecoder (&InputParams) != DEC_OPEN_NOERR) {
         cLog::log (LOGERROR, "ppen encoder failed");
@@ -993,7 +975,7 @@ private:
 
       cLog::log (LOGINFO, fmt::format ("outputPicList {}:{} {}x{}:{}:{}",
                                        pPic->iYUVStorageFormat, pPic->bValid,
-                                       iWidth, iHeight, 
+                                       iWidth, iHeight,
                                        iStride, iStrideUV));
 
       mVideoFrameIndex = (mVideoFrameIndex + 1) % kVideoFrames;

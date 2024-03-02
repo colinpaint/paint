@@ -72,9 +72,9 @@ static void reset_mbs (Macroblock *currMB) {
 //{{{
 static void setup_buffers (VideoParameters* p_Vid, int layer_id) {
 
-  CodingParameters* cps = p_Vid->p_EncodePar[layer_id];
 
   if (p_Vid->last_dec_layer_id != layer_id) {
+    CodingParameters* cps = p_Vid->p_EncodePar[layer_id];
     if (cps->separate_colour_plane_flag) {
       for (int i = 0; i < MAX_PLANE; i++ ) {
         p_Vid->mb_data_JV[i] = cps->mb_data_JV[i];
@@ -987,8 +987,8 @@ static void decodeSlice (Slice *currSlice, int current_header) {
 static int readNewSlice (Slice* currSlice) {
 
   InputParameters* p_Inp = currSlice->p_Inp;
-
   VideoParameters* p_Vid = currSlice->p_Vid;
+
   NALU_t* nalu = p_Vid->nalu;
 
   int current_header = 0;
@@ -1004,7 +1004,7 @@ static int readNewSlice (Slice* currSlice) {
     #endif
 
     if (!pending_nalu) {
-      if (0 == read_next_nalu (p_Vid, nalu))
+      if (!read_next_nalu (p_Vid, nalu))
         return EOS;
       }
     else {
@@ -1022,13 +1022,12 @@ static int readNewSlice (Slice* currSlice) {
             if (nalu->nal_unit_type != NALU_TYPE_IDR) {
               printf ("Warning: Decoding does not start with an IDR picture.\n");
               p_Vid->non_conforming_stream = 1;
-            }
+              }
             else
               p_Vid->non_conforming_stream = 0;
             }
           p_Vid->recovery_point_found = 1;
           }
-
         if (p_Vid->recovery_point_found == 0)
           break;
 
@@ -1060,10 +1059,10 @@ static int readNewSlice (Slice* currSlice) {
           currSlice->anchor_pic_flag = currSlice->NaluHeaderMVCExt.anchor_pic_flag;
           }
         else if(currSlice->svc_extension_flag == -1) {
-          // SVC and the normal AVC;
+          //{{{  SVC and the normal AVC
           if(p_Vid->active_subset_sps == NULL) {
             currSlice->view_id = GetBaseViewId(p_Vid, &p_Vid->active_subset_sps);
-            if(currSlice->NaluHeaderMVCExt.iPrefixNALU >0) {
+            if (currSlice->NaluHeaderMVCExt.iPrefixNALU >0) {
               assert(currSlice->view_id == currSlice->NaluHeaderMVCExt.view_id);
               currSlice->inter_view_flag = currSlice->NaluHeaderMVCExt.inter_view_flag;
               currSlice->anchor_pic_flag = currSlice->NaluHeaderMVCExt.anchor_pic_flag;
@@ -1089,6 +1088,7 @@ static int readNewSlice (Slice* currSlice) {
               }
             }
           }
+          //}}}
         currSlice->layer_id = currSlice->view_id = GetVOIdx( p_Vid, currSlice->view_id );
       #endif
 
@@ -1096,13 +1096,12 @@ static int readNewSlice (Slice* currSlice) {
         // the parameter set ID of the SLice header.  Hence, read the pic_parameter_set_id
         // of the slice header first, then setup the active parameter sets, and then read
         // the rest of the slice header
-        BitsUsedByHeader = FirstPartOfSliceHeader(currSlice);
+        BitsUsedByHeader = FirstPartOfSliceHeader (currSlice);
         UseParameterSet (currSlice);
         currSlice->active_sps = p_Vid->active_sps;
         currSlice->active_pps = p_Vid->active_pps;
         currSlice->Transform8x8Mode = p_Vid->active_pps->transform_8x8_mode_flag;
         currSlice->chroma444_not_separate = (p_Vid->active_sps->chroma_format_idc==YUV444)&&((p_Vid->separate_colour_plane_flag == 0));
-
         BitsUsedByHeader += RestOfSliceHeader (currSlice);
 
       #if (MVC_EXTENSION_ENABLE)
@@ -1113,11 +1112,13 @@ static int readNewSlice (Slice* currSlice) {
         assign_quant_params (currSlice);
 
         // if primary slice is replaced with redundant slice, set the correct image type
-        if (currSlice->redundant_pic_cnt && p_Vid->Is_primary_correct==0 && p_Vid->Is_redundant_correct)
+        if (currSlice->redundant_pic_cnt &&
+            p_Vid->Is_primary_correct == 0 &&
+            p_Vid->Is_redundant_correct)
           p_Vid->dec_picture->slice_type = p_Vid->type;
 
         if (isNewPicture (p_Vid->dec_picture, currSlice, p_Vid->old_slice)) {
-          if (p_Vid->iSliceNumOfCurrPic==0)
+          if (p_Vid->iSliceNumOfCurrPic == 0)
             initPicture (p_Vid, currSlice, p_Inp);
           current_header = SOP;
           // check zero_byte if it is also the first NAL unit in the access unit
@@ -1147,27 +1148,28 @@ static int readNewSlice (Slice* currSlice) {
       //}}}
       //{{{
       case NALU_TYPE_DPA:
-
         if (p_Vid->recovery_point_found == 0)
           break;
 
         // read DP_A
-        currSlice->dpB_NotPresent =1;
-        currSlice->dpC_NotPresent =1;
-
+        currSlice->dpB_NotPresent = 1;
+        currSlice->dpC_NotPresent = 1;
         currSlice->idr_flag = FALSE;
         currSlice->nal_reference_idc = nalu->nal_reference_idc;
         currSlice->dp_mode = PAR_DP_3;
         currSlice->max_part_nr = 3;
         currSlice->ei_flag = 0;
+
       #if MVC_EXTENSION_ENABLE
         currSlice->p_Dpb = p_Vid->p_Dpb_layer[0];
       #endif
+
         currStream = currSlice->partArr[0].bitstream;
         currStream->ei_flag = 0;
         currStream->frame_bitoffset = currStream->read_len = 0;
         memcpy (currStream->streamBuffer, &nalu->buf[1], nalu->len-1);
         currStream->code_len = currStream->bitstream_length = RBSPtoSODB(currStream->streamBuffer, nalu->len-1);
+
       #if MVC_EXTENSION_ENABLE
         currSlice->view_id = GetBaseViewId(p_Vid, &p_Vid->active_subset_sps);
         currSlice->inter_view_flag = 1;
@@ -1180,9 +1182,10 @@ static int readNewSlice (Slice* currSlice) {
         currSlice->active_sps = p_Vid->active_sps;
         currSlice->active_pps = p_Vid->active_pps;
         currSlice->Transform8x8Mode = p_Vid->active_pps->transform_8x8_mode_flag;
-        currSlice->chroma444_not_separate = (p_Vid->active_sps->chroma_format_idc==YUV444)&&((p_Vid->separate_colour_plane_flag == 0));
-
+        currSlice->chroma444_not_separate = (p_Vid->active_sps->chroma_format_idc == YUV444) &&
+                                            (p_Vid->separate_colour_plane_flag == 0);
         BitsUsedByHeader += RestOfSliceHeader (currSlice);
+
       #if MVC_EXTENSION_ENABLE
         currSlice->p_Dpb = p_Vid->p_Dpb_layer[currSlice->view_id];
       #endif
@@ -1191,9 +1194,7 @@ static int readNewSlice (Slice* currSlice) {
         if (isNewPicture (p_Vid->dec_picture, currSlice, p_Vid->old_slice)) {
           if (p_Vid->iSliceNumOfCurrPic==0)
             initPicture (p_Vid, currSlice, p_Inp);
-
           current_header = SOP;
-          //check zero_byte if it is also the first NAL unit in the access unit
           CheckZeroByteVCL (p_Vid, nalu);
           }
         else
@@ -1207,19 +1208,17 @@ static int readNewSlice (Slice* currSlice) {
         else
           currSlice->current_mb_nr = currSlice->start_mb_nr;
 
-        // Now I need to read the slice ID, which depends on the value of
-        // redundant_pic_cnt_present_flag
-        slice_id_a  = read_ue_v("NALU: DP_A slice_id", currStream, &p_Dec->UsedBits);
+        // Now I need to read the slice ID, which depends on the value of redundant_pic_cnt_present_flag
+        slice_id_a  = read_ue_v ("NALU: DP_A slice_id", currStream, &p_Dec->UsedBits);
 
         if (p_Vid->active_pps->entropy_coding_mode_flag)
           error ("received data partition with CABAC, this is not allowed", 500);
 
-        // continue with reading next DP
-        if (0 == read_next_nalu(p_Vid, nalu))
+        // reading next DP
+        if (!read_next_nalu (p_Vid, nalu))
           return current_header;
-
         if (NALU_TYPE_DPB == nalu->nal_unit_type) {
-          // we got a DPB
+          //{{{  we got a nalu DPB
           currStream = currSlice->partArr[1].bitstream;
           currStream->ei_flag = 0;
           currStream->frame_bitoffset = currStream->read_len = 0;
@@ -1237,17 +1236,18 @@ static int readNewSlice (Slice* currSlice) {
               read_ue_v("NALU: DP_B redundant_pic_cnt", currStream, &p_Dec->UsedBits);
 
             // we're finished with DP_B, so let's continue with next DP
-            if (0 == read_next_nalu(p_Vid, nalu))
+            if (!read_next_nalu (p_Vid, nalu))
               return current_header;
             }
           }
+          //}}}
         else
           currSlice->dpB_NotPresent =1;
 
-        // check if we got DP_C
         if (NALU_TYPE_DPC == nalu->nal_unit_type) {
-          currStream             = currSlice->partArr[2].bitstream;
-          currStream->ei_flag    = 0;
+          //{{{  nalu DPC
+          currStream = currSlice->partArr[2].bitstream;
+          currStream->ei_flag = 0;
           currStream->frame_bitoffset = currStream->read_len = 0;
 
           memcpy (currStream->streamBuffer, &nalu->buf[1], nalu->len-1);
@@ -1264,8 +1264,9 @@ static int readNewSlice (Slice* currSlice) {
           if (p_Vid->active_pps->redundant_pic_cnt_present_flag)
             read_ue_v("NALU:SLICE_C redudand_pic_cnt", currStream, &p_Dec->UsedBits);
           }
+          //}}}
         else {
-          currSlice->dpC_NotPresent =1;
+          currSlice->dpC_NotPresent = 1;
           pending_nalu = nalu;
           }
 
@@ -1278,18 +1279,17 @@ static int readNewSlice (Slice* currSlice) {
           // (which should be taken care of anyway)
           }
 
-        //FreeNALU(nalu);
         return current_header;
         break;
       //}}}
       //{{{
       case NALU_TYPE_DPB:
-        printf ("found data partition B without matching DP A, discarding\n");
+        printf ("found data partition B without matching DP A\n");
         break;
       //}}}
       //{{{
       case NALU_TYPE_DPC:
-        printf ("found data partition C without matching DP A, discarding\n");
+        printf ("found data partition C without matching DP A\n");
         break;
       //}}}
       //{{{
@@ -1307,22 +1307,10 @@ static int readNewSlice (Slice* currSlice) {
         ProcessSPS (p_Vid, nalu);
         break;
       //}}}
-      //{{{
-      case NALU_TYPE_AUD:
-        break;
-      //}}}
-      //{{{
-      case NALU_TYPE_EOSEQ:
-        break;
-      //}}}
-      //{{{
-      case NALU_TYPE_EOSTREAM:
-        break;
-      //}}}
-      //{{{
-      case NALU_TYPE_FILL:
-        break;
-      //}}}
+      case NALU_TYPE_AUD: break;
+      case NALU_TYPE_EOSEQ: break;
+      case NALU_TYPE_EOSTREAM: break;
+      case NALU_TYPE_FILL: break;
       //{{{
       default:
         printf ("unknown NALU type %d, len %d\n", (int) nalu->nal_unit_type, (int) nalu->len);
@@ -1334,29 +1322,27 @@ static int readNewSlice (Slice* currSlice) {
 //}}}
 
 //{{{
-void pad_buf (imgpel* pImgBuf, int iWidth, int iHeight, int iStride, int iPadX, int iPadY)
-{
-  int j;
-  imgpel *pLine0 = pImgBuf - iPadX, *pLine;
+void pad_buf (imgpel* pImgBuf, int iWidth, int iHeight, int iStride, int iPadX, int iPadY) {
 
   int pad_width = iPadX + iWidth;
   fast_memset (pImgBuf - iPadX, *pImgBuf, iPadX * sizeof(imgpel));
   fast_memset (pImgBuf + iWidth, *(pImgBuf + iWidth - 1), iPadX * sizeof(imgpel));
 
-  pLine = pLine0 - iPadY * iStride;
-  for(j = -iPadY; j < 0; j++) {
+  imgpel* pLine0 = pImgBuf - iPadX;
+  imgpel* pLine = pLine0 - iPadY * iStride;
+  for (int j = -iPadY; j < 0; j++) {
     fast_memcpy (pLine, pLine0, iStride * sizeof(imgpel));
     pLine += iStride;
     }
 
-  for(j = 1; j < iHeight; j++) {
+  for (int j = 1; j < iHeight; j++) {
     pLine += iStride;
     fast_memset (pLine, *(pLine + iPadX), iPadX * sizeof(imgpel));
     fast_memset (pLine + pad_width, *(pLine + pad_width - 1), iPadX * sizeof(imgpel));
     }
 
   pLine0 = pLine + iStride;
-  for(j = iHeight; j < iHeight + iPadY; j++) {
+  for (int j = iHeight; j < iHeight + iPadY; j++) {
     fast_memcpy (pLine0,  pLine, iStride * sizeof(imgpel));
     pLine0 += iStride;
     }
@@ -1379,26 +1365,26 @@ void pad_dec_picture (VideoParameters* p_Vid, StorablePicture* dec_picture)
     iWidth = dec_picture->size_x_cr;
     iHeight = dec_picture->size_y_cr;
     iStride = dec_picture->iChromaStride;
-    pad_buf(*dec_picture->imgUV[0], iWidth, iHeight, iStride, iPadX, iPadY);
-    pad_buf(*dec_picture->imgUV[1], iWidth, iHeight, iStride, iPadX, iPadY);
+    pad_buf (*dec_picture->imgUV[0], iWidth, iHeight, iStride, iPadX, iPadY);
+    pad_buf (*dec_picture->imgUV[1], iWidth, iHeight, iStride, iPadX, iPadY);
     }
   }
 //}}}
 //{{{
-void init_old_slice (OldSliceParams* p_old_slice)
-{
-  p_old_slice->field_pic_flag = 0;
-  p_old_slice->pps_id         = INT_MAX;
-  p_old_slice->frame_num      = INT_MAX;
-  p_old_slice->nal_ref_idc    = INT_MAX;
-  p_old_slice->idr_flag       = FALSE;
+void init_old_slice (OldSliceParams* p_old_slice) {
 
-  p_old_slice->pic_oder_cnt_lsb          = UINT_MAX;
+  p_old_slice->field_pic_flag = 0;
+  p_old_slice->pps_id = INT_MAX;
+  p_old_slice->frame_num = INT_MAX;
+  p_old_slice->nal_ref_idc = INT_MAX;
+  p_old_slice->idr_flag = FALSE;
+
+  p_old_slice->pic_oder_cnt_lsb = UINT_MAX;
   p_old_slice->delta_pic_oder_cnt_bottom = INT_MAX;
 
   p_old_slice->delta_pic_order_cnt[0] = INT_MAX;
   p_old_slice->delta_pic_order_cnt[1] = INT_MAX;
-}
+  }
 //}}}
 //{{{
 void calculate_frame_no (VideoParameters *p_Vid, StorablePicture *p) {
@@ -1406,8 +1392,9 @@ void calculate_frame_no (VideoParameters *p_Vid, StorablePicture *p) {
   InputParameters* p_Inp = p_Vid->p_Inp;
 
   // calculate frame number
-  int psnrPOC = p_Vid->active_sps->mb_adaptive_frame_field_flag ? p->poc /(p_Inp->poc_scale) : p->poc/(p_Inp->poc_scale);
-  if (psnrPOC == 0)// && p_Vid->psnr_number)
+  int psnrPOC = p_Vid->active_sps->mb_adaptive_frame_field_flag ? p->poc / (p_Inp->poc_scale) : 
+                                                                  p->poc / (p_Inp->poc_scale);
+  if (psnrPOC == 0)
     p_Vid->idr_psnr_number = p_Vid->g_nFrame * p_Vid->ref_poc_gap/(p_Inp->poc_scale);
   p_Vid->psnr_number = imax(p_Vid->psnr_number, p_Vid->idr_psnr_number+psnrPOC);
 
@@ -1421,12 +1408,13 @@ void exit_picture (VideoParameters* p_Vid, StorablePicture** dec_picture) {
   char yuv_types[4][6]= {"4:0:0","4:2:0","4:2:2","4:4:4"};
   int ercSegment;
   frame recfr;
-  int structure, frame_poc, slice_type, refpic, qp, pic_num, chroma_format_idc, is_idr;
   int64 tmp_time;
   char yuvFormat[10];
 
   // return if the last picture has already been finished
-  if (*dec_picture==NULL || (p_Vid->num_dec_mb != p_Vid->PicSizeInMbs && (p_Vid->yuv_format != YUV444 || !p_Vid->separate_colour_plane_flag)))
+  if (*dec_picture == NULL ||
+      (p_Vid->num_dec_mb != p_Vid->PicSizeInMbs &&
+       (p_Vid->yuv_format != YUV444 || !p_Vid->separate_colour_plane_flag)))
     return;
 
   //{{{  error concealment
@@ -1478,7 +1466,8 @@ void exit_picture (VideoParameters* p_Vid, StorablePicture** dec_picture) {
       ercConcealInterFrame (&recfr, p_Vid->erc_object_list, (*dec_picture)->size_x, (*dec_picture)->size_y, p_Vid->erc_errorVar, (*dec_picture)->chroma_format_idc);
     }
   //}}}
-  if (!p_Vid->iDeblockMode && (p_Vid->bDeblockEnable & (1<<(*dec_picture)->used_for_reference))) {
+  if (!p_Vid->iDeblockMode &&
+      (p_Vid->bDeblockEnable & (1<<(*dec_picture)->used_for_reference))) {
     //{{{  deblocking for frame or field
     if( (p_Vid->separate_colour_plane_flag != 0) ) {
       int nplane;
@@ -1495,18 +1484,16 @@ void exit_picture (VideoParameters* p_Vid, StorablePicture** dec_picture) {
       DeblockPicture (p_Vid, *dec_picture);
     }
     //}}}
-  else {
-    if ((p_Vid->separate_colour_plane_flag != 0) )
-      make_frame_picture_JV (p_Vid);
-    }
+  else if ((p_Vid->separate_colour_plane_flag != 0))
+    make_frame_picture_JV (p_Vid);
 
   if ((*dec_picture)->mb_aff_frame_flag)
     mbAffPostProc (p_Vid);
 
-  if (p_Vid->structure == FRAME)         // buffer mgt. for frame mode
+  if (p_Vid->structure == FRAME)
     framePostProcessing (p_Vid);
   else
-    fieldPostProcessing (p_Vid);   // reset all interlaced variables
+    fieldPostProcessing (p_Vid);
 
 #if (MVC_EXTENSION_ENABLE)
   if ((*dec_picture)->used_for_reference || ((*dec_picture)->inter_view_flag == 1))
@@ -1516,14 +1503,14 @@ void exit_picture (VideoParameters* p_Vid, StorablePicture** dec_picture) {
     pad_dec_picture (p_Vid, *dec_picture);
 #endif
 
-  structure = (*dec_picture)->structure;
-  slice_type = (*dec_picture)->slice_type;
-  frame_poc = (*dec_picture)->frame_poc;
-  refpic = (*dec_picture)->used_for_reference;
-  qp = (*dec_picture)->qp;
-  pic_num = (*dec_picture)->pic_num;
-  is_idr = (*dec_picture)->idr_flag;
-  chroma_format_idc = (*dec_picture)->chroma_format_idc;
+  int structure = (*dec_picture)->structure;
+  int slice_type = (*dec_picture)->slice_type;
+  int frame_poc = (*dec_picture)->frame_poc;
+  int refpic = (*dec_picture)->used_for_reference;
+  int qp = (*dec_picture)->qp;
+  int pic_num = (*dec_picture)->pic_num;
+  int is_idr = (*dec_picture)->idr_flag;
+  int chroma_format_idc = (*dec_picture)->chroma_format_idc;
 
 #if MVC_EXTENSION_ENABLE
   store_picture_in_dpb (p_Vid->p_Dpb_layer[(*dec_picture)->view_id], *dec_picture);
@@ -1608,7 +1595,7 @@ int decode_one_frame (DecoderParams* pDecoder) {
   InputParameters* p_Inp = p_Vid->p_Inp;
 
   int iRet;
-  Slice* currSlice; // = p_Vid->currentSlice;
+  Slice* currSlice;
   Slice** ppSliceList = p_Vid->ppSliceList;
   int iSliceNo;
 
@@ -1642,7 +1629,7 @@ int decode_one_frame (DecoderParams* pDecoder) {
     // no pending slices;
     assert (p_Vid->iSliceNumOfCurrPic < p_Vid->iNumOfSlicesAllocated);
     if (!ppSliceList[p_Vid->iSliceNumOfCurrPic])
-      ppSliceList[p_Vid->iSliceNumOfCurrPic] = malloc_slice(p_Inp, p_Vid);
+      ppSliceList[p_Vid->iSliceNumOfCurrPic] = malloc_slice (p_Inp, p_Vid);
     currSlice = ppSliceList[p_Vid->iSliceNumOfCurrPic];
 
     currSlice->p_Vid = p_Vid;
@@ -1654,6 +1641,7 @@ int decode_one_frame (DecoderParams* pDecoder) {
     currSlice->pos = 0;
     currSlice->is_reset_coeff = FALSE;
     currSlice->is_reset_coeff_cr = FALSE;
+
     current_header = readNewSlice (currSlice);
     currSlice->current_header = current_header;
 
@@ -1675,16 +1663,17 @@ int decode_one_frame (DecoderParams* pDecoder) {
        currSlice->current_slice_nr = (short)p_Vid->iSliceNumOfCurrPic;
        p_Vid->dec_picture->max_slice_id =
          (short)imax (currSlice->current_slice_nr, p_Vid->dec_picture->max_slice_id);
-       if (p_Vid->iSliceNumOfCurrPic >0) {
+       if (p_Vid->iSliceNumOfCurrPic > 0) {
          copyPOC (*ppSliceList, currSlice);
          ppSliceList[p_Vid->iSliceNumOfCurrPic-1]->end_mb_nr_plus1 = currSlice->start_mb_nr;
          }
 
        p_Vid->iSliceNumOfCurrPic++;
        if (p_Vid->iSliceNumOfCurrPic >= p_Vid->iNumOfSlicesAllocated) {
-         Slice** tmpSliceList = (Slice**)realloc (p_Vid->ppSliceList, (p_Vid->iNumOfSlicesAllocated+MAX_NUM_DECSLICES)*sizeof(Slice*));
+         Slice** tmpSliceList = (Slice**)realloc (
+           p_Vid->ppSliceList, (p_Vid->iNumOfSlicesAllocated+MAX_NUM_DECSLICES)*sizeof(Slice*));
          if (!tmpSliceList) {
-           tmpSliceList = calloc ((p_Vid->iNumOfSlicesAllocated+MAX_NUM_DECSLICES), sizeof(Slice*));
+           tmpSliceList = calloc ((p_Vid->iNumOfSlicesAllocated + MAX_NUM_DECSLICES), sizeof(Slice*));
            memcpy (tmpSliceList, p_Vid->ppSliceList, p_Vid->iSliceNumOfCurrPic*sizeof(Slice*));
            free (p_Vid->ppSliceList);
            ppSliceList = p_Vid->ppSliceList = tmpSliceList;
@@ -1714,12 +1703,12 @@ int decode_one_frame (DecoderParams* pDecoder) {
 
   iRet = current_header;
   initPictureDecoding (p_Vid);
-
   for (iSliceNo = 0; iSliceNo < p_Vid->iSliceNumOfCurrPic; iSliceNo++) {
     currSlice = ppSliceList[iSliceNo];
     current_header = currSlice->current_header;
     assert (current_header != EOS);
     assert (currSlice->current_slice_nr == iSliceNo);
+
     initSlice (p_Vid, currSlice);
     decodeSlice (currSlice, current_header);
     p_Vid->iNumOfSlicesDecoded++;
