@@ -910,7 +910,6 @@ public:
       InputParameters InputParams;
       memset (&InputParams, 0, sizeof(InputParameters));
       strcpy (InputParams.infile, fileName.c_str());
-      InputParams.FileFormat = PAR_OF_ANNEXB;
       InputParams.poc_scale = 2;
       InputParams.intra_profile_deblocking = 1;
       InputParams.poc_gap = 2;
@@ -924,7 +923,6 @@ public:
       //InputParams.source;                   //!< source related information
       //InputParams.output;                   //!< output related information
       //InputParams.ProcessInput;
-      //InputParams.enable_32_pulldown;
       //InputParams.input_file1;          //!< Input video file1
       //InputParams.input_file2;          //!< Input video file2
       //InputParams.input_file3;          //!< Input video file3

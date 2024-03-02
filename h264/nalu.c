@@ -72,152 +72,135 @@ static int NALUtoRBSP (NALU_t *nalu)
 //}}}
 
 //{{{
-int RBSPtoSODB (byte *streamBuffer, int last_byte_pos)
-{
-  int ctr_bit, bitoffset;
+int RBSPtoSODB (byte* streamBuffer, int last_byte_pos) {
 
-  bitoffset = 0;
-  //find trailing 1
-  ctr_bit = (streamBuffer[last_byte_pos-1] & (0x01<<bitoffset));   // set up control bit
 
-  while (ctr_bit==0) {                 // find trailing 1 bit
+  int bitoffset = 0;
+
+  // find trailing 1
+  int ctr_bit = (streamBuffer[last_byte_pos-1] & (0x01 << bitoffset));   // set up control bit
+
+  while (ctr_bit == 0) { 
+    // find trailing 1 bit
     ++bitoffset;
-    if(bitoffset == 8) {
-      if(last_byte_pos == 0)
-        printf(" Panic: All zero data sequence in RBSP \n");
-      assert(last_byte_pos != 0);
+    if (bitoffset == 8) {
+      if (last_byte_pos == 0)
+        printf (" Panic: All zero data sequence in RBSP \n");
+      assert (last_byte_pos != 0);
       --last_byte_pos;
       bitoffset = 0;
-    }
+      }
     ctr_bit= streamBuffer[last_byte_pos - 1] & (0x01<<(bitoffset));
-  }
+    }
 
   // We keep the stop bit for now
-/*  if (remove_stop)
-  {
-    streamBuffer[last_byte_pos-1] -= (0x01<<(bitoffset));
-    if(bitoffset == 7)
-      return(last_byte_pos-1);
-    else
-      return(last_byte_pos);
-  }
-*/
+  /*  if (remove_stop)
+    {
+      streamBuffer[last_byte_pos-1] -= (0x01<<(bitoffset));
+      if(bitoffset == 7)
+        return(last_byte_pos-1);
+      else
+        return(last_byte_pos);
+    }
+  */
   return(last_byte_pos);
-
-}
+  }
 //}}}
 
 //{{{
-/*!
- *************************************************************************************
- * \brief
- *    Allocates memory for a NALU
- *
- * \param buffersize
- *     size of NALU buffer
- *
- * \return
- *    pointer to a NALU
- *************************************************************************************
- */
-NALU_t* AllocNALU (int buffersize)
-{
-  NALU_t *n;
+NALU_t* AllocNALU (int buffersize) {
 
-  if ((n = (NALU_t*)calloc (1, sizeof (NALU_t))) == NULL)
+  NALU_t* n;
+  if ((n = (NALU_t*)calloc(1, sizeof(NALU_t))) == NULL)
     no_mem_exit ("AllocNALU: n");
 
-  n->max_size=buffersize;
-  if ((n->buf = (byte*)calloc (buffersize, sizeof (byte))) == NULL)
-  {
+  n->max_size = buffersize; 
+  if ((n->buf = (byte*)calloc (buffersize, sizeof (byte))) == NULL) {
     free (n);
     no_mem_exit ("AllocNALU: n->buf");
-  }
+    }
 
   return n;
-}
-//}}}
-//{{{
-/*!
- *************************************************************************************
- * \brief
- *    Frees a NALU
- *
- * \param n
- *    NALU to be freed
- *
- *************************************************************************************
- */
-void FreeNALU (NALU_t* n)
-{
-  if (n != NULL)
-  {
-    if (n->buf != NULL)
-    {
-      free(n->buf);
-      n->buf=NULL;
-    }
-    free (n);
   }
-}
 //}}}
 //{{{
-void CheckZeroByteVCL (VideoParameters* p_Vid, NALU_t* nalu)
-{
-  int CheckZeroByte=0;
+void FreeNALU (NALU_t* n) {
+
+  if (n != NULL) {
+    if (n->buf != NULL) {
+      free (n->buf);
+      n->buf = NULL;
+      }
+    free (n);
+    }
+  }
+//}}}
+
+//{{{
+void CheckZeroByteVCL (VideoParameters* p_Vid, NALU_t* nalu) {
+
+  int CheckZeroByte = 0;
 
   // This function deals only with VCL NAL units
-  if (!(nalu->nal_unit_type >= NALU_TYPE_SLICE && nalu->nal_unit_type <= NALU_TYPE_IDR))
+  if (!(nalu->nal_unit_type >= NALU_TYPE_SLICE && 
+        nalu->nal_unit_type <= NALU_TYPE_IDR))
     return;
 
   if (p_Vid->LastAccessUnitExists)
-    p_Vid->NALUCount=0;
+    p_Vid->NALUCount = 0;
   p_Vid->NALUCount++;
 
   // the first VCL NAL unit that is the first NAL unit after last VCL NAL unit indicates
-  // the start of a new access unit and hence the first NAL unit of the new access unit.           (sounds like a tongue twister :-)
+  // the start of a new access unit and hence the first NAL unit of the new access unit. 
+  // (sounds like a tongue twister :-)
   if (p_Vid->NALUCount == 1)
     CheckZeroByte = 1;
   p_Vid->LastAccessUnitExists = 1;
 
-  if (CheckZeroByte && nalu->startcodeprefix_len==3)
+  // because it is not a very serious problem, we do not exit here
+  if (CheckZeroByte && nalu->startcodeprefix_len == 3)
     printf ("warning: zero_byte shall exist\n");
-    // because it is not a very serious problem, we do not exit here
    }
 //}}}
 //{{{
-void CheckZeroByteNonVCL(VideoParameters *p_Vid, NALU_t *nalu)
-{
-  int CheckZeroByte=0;
+void CheckZeroByteNonVCL (VideoParameters* p_Vid, NALU_t* nalu) {
+
+  int CheckZeroByte = 0;
 
   // This function deals only with non-VCL NAL units
-  if (nalu->nal_unit_type>=1&&nalu->nal_unit_type<=5)
+  if (nalu->nal_unit_type >= 1 && 
+      nalu->nal_unit_type <= 5)
     return;
 
   // for SPS and PPS, zero_byte shall exist
-  if (nalu->nal_unit_type==NALU_TYPE_SPS || nalu->nal_unit_type==NALU_TYPE_PPS)
-    CheckZeroByte=1;
+  if (nalu->nal_unit_type == NALU_TYPE_SPS || 
+      nalu->nal_unit_type == NALU_TYPE_PPS)
+    CheckZeroByte = 1;
 
   // check the possibility of the current NALU to be the start of a new access unit, according to 7.4.1.2.3
-  if (nalu->nal_unit_type==NALU_TYPE_AUD  || nalu->nal_unit_type==NALU_TYPE_SPS ||
-      nalu->nal_unit_type==NALU_TYPE_PPS || nalu->nal_unit_type==NALU_TYPE_SEI ||
-      (nalu->nal_unit_type>=13 && nalu->nal_unit_type<=18)) {
+  if (nalu->nal_unit_type == NALU_TYPE_AUD ||
+      nalu->nal_unit_type == NALU_TYPE_SPS ||
+      nalu->nal_unit_type == NALU_TYPE_PPS || 
+      nalu->nal_unit_type == NALU_TYPE_SEI ||
+      (nalu->nal_unit_type >= 13 && nalu->nal_unit_type <= 18)) {
     if (p_Vid->LastAccessUnitExists) {
-      p_Vid->LastAccessUnitExists=0;    //deliver the last access unit to decoder
-      p_Vid->NALUCount=0;
+      // deliver the last access unit to decoder
+      p_Vid->LastAccessUnitExists = 0;    
+      p_Vid->NALUCount = 0;
       }
     }
   p_Vid->NALUCount++;
 
   // for the first NAL unit in an access unit, zero_byte shall exists
-  if (p_Vid->NALUCount==1)
-    CheckZeroByte=1;
+  if (p_Vid->NALUCount == 1)
+    CheckZeroByte = 1;
 
-  if (CheckZeroByte && nalu->startcodeprefix_len==3)
+  if (CheckZeroByte && nalu->startcodeprefix_len == 3)
     printf ("Warning: zero_byte shall exist\n");
     //because it is not a very serious problem, we do not exit here
   }
 //}}}
+
 //{{{
 int read_next_nalu (VideoParameters* p_Vid, NALU_t* nalu) {
 
@@ -225,7 +208,7 @@ int read_next_nalu (VideoParameters* p_Vid, NALU_t* nalu) {
 
   int ret = get_annex_b_NALU (p_Vid, nalu, p_Vid->annex_b);
   if (ret < 0) {
-    snprintf (errortext, ET_SIZE, "Error while getting the NALU in file format %s, exit\n", p_Inp->FileFormat==PAR_OF_ANNEXB?"Annex B":"RTP");
+    snprintf (errortext, ET_SIZE, "Error while getting the NALU in file format exit\n");
     error (errortext, 601);
     }
   if (ret == 0) {
@@ -233,8 +216,9 @@ int read_next_nalu (VideoParameters* p_Vid, NALU_t* nalu) {
     return 0;
     }
 
-  //In some cases, zero_byte shall be present. If current NALU is a VCL NALU, we can't tell
-  //whether it is the first VCL NALU at this point, so only non-VCL NAL unit is checked here.
+  // In some cases, zero_byte shall be present.
+  // If current NALU is a VCL NALU, we can't tell whether it is the first VCL NALU at this point,
+  // so only non-VCL NAL unit is checked here.
   CheckZeroByteNonVCL (p_Vid, nalu);
   ret = NALUtoRBSP (nalu);
   if (ret < 0)
@@ -246,5 +230,4 @@ int read_next_nalu (VideoParameters* p_Vid, NALU_t* nalu) {
 
   return nalu->len;
   }
-
 //}}}

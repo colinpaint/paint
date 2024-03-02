@@ -264,11 +264,13 @@ int get_annex_b_NALU (VideoParameters* p_Vid, NALU_t* nalu, ANNEXB_t* annex_b) {
   nalu->lost_packets = 0;
 
   if (kDebug)
-    printf ("NALU %sStartCode len:%5d, fbn:%d, refIdc:%d, unitType:%d\n",
-            nalu->startcodeprefix_len == 4?"long":"short",
-            nalu->len, nalu->forbidden_bit,
+    printf ("NALU%s %d::%d:%d len:%d, \n",
+            nalu->startcodeprefix_len == 4 ? "l":"s",
+            nalu->forbidden_bit,
             nalu->nal_reference_idc,
-            nalu->nal_unit_type);
+            nalu->nal_unit_type,
+            nalu->len
+            );
 
   return (pos);
   }

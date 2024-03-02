@@ -162,8 +162,7 @@ static void free_img (VideoParameters* p_Vid) {
 
   int i;
   if (p_Vid != NULL) {
-    if ( p_Vid->p_Inp->FileFormat == PAR_OF_ANNEXB )
-      free_annex_b (&p_Vid->annex_b);
+    free_annex_b (&p_Vid->annex_b);
 
     // Free new dpb layers
     for (i = 0; i < MAX_NUM_DPB_LAYERS; i++) {
@@ -435,7 +434,7 @@ Slice* malloc_slice (InputParameters* p_Inp, VideoParameters* p_Vid) {
 
   currSlice = (Slice *) calloc(1, sizeof(Slice));
   if ( currSlice  == NULL) {
-    snprintf(errortext, ET_SIZE, "Memory allocation for Slice datastruct in NAL-mode %d failed", p_Inp->FileFormat);
+    snprintf(errortext, ET_SIZE, "Memory allocation for Slice datastruct in NAL-mode failed");
     error(errortext,100);
     }
 
@@ -851,8 +850,7 @@ int FinitDecoder (DecodedPicList** ppDecPicList) {
     flush_pending_output (pDecoder->p_Vid);
   #endif
 
-  if (pDecoder->p_Inp->FileFormat == PAR_OF_ANNEXB)
-    reset_annex_b (pDecoder->p_Vid->annex_b);
+  reset_annex_b (pDecoder->p_Vid->annex_b);
 
   pDecoder->p_Vid->newframe = 0;
   pDecoder->p_Vid->previous_frame_num = 0;

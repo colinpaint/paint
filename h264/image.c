@@ -632,7 +632,7 @@ static void initPicture (VideoParameters *p_Vid, Slice *currSlice, InputParamete
     p_Vid->pre_frame_num = currSlice->frame_num;
 
   // calculate POC
-  decode_poc (p_Vid, currSlice);
+  decodePOC (p_Vid, currSlice);
 
   if (p_Vid->recovery_frame_num == (int) currSlice->frame_num && p_Vid->recovery_poc == 0x7fffffff)
     p_Vid->recovery_poc = currSlice->framepoc;
@@ -1284,14 +1284,12 @@ static int readNewSlice (Slice* currSlice) {
       //}}}
       //{{{
       case NALU_TYPE_DPB:
-        if (p_Inp->silent == FALSE)
-          printf ("found data partition B without matching DP A, discarding\n");
+        printf ("found data partition B without matching DP A, discarding\n");
         break;
       //}}}
       //{{{
       case NALU_TYPE_DPC:
-        if (p_Inp->silent == FALSE)
-          printf ("found data partition C without matching DP A, discarding\n");
+        printf ("found data partition C without matching DP A, discarding\n");
         break;
       //}}}
       //{{{

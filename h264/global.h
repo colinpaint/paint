@@ -311,28 +311,23 @@ typedef struct nalunitheadermvcext_tag
 //{{{
 typedef struct inp_par {
   char infile[FILE_NAME_SIZE];
-  int FileFormat;                         // File format of the Input file, PAR_OF_ANNEXB or PAR_OF_RTP
   int ref_offset;
   int poc_scale;
   int write_uv;
-  int silent;
-  int intra_profile_deblocking;           // Loop filter usage determined by flags and parameters in bitstream
+  int intra_profile_deblocking;         // Loop filter usage determined by flags and parameters in bitstream
 
   // Input/output sequence format related variables
   FrameFormat source;                   // source related information
   FrameFormat output;                   // output related information
 
-  int ProcessInput;
-  int enable_32_pulldown;
-
-  // picture error concealment
+  // error concealment
   int conceal_mode;
   int ref_poc_gap;
   int poc_gap;
 
   // Needed to allow compilation for decoder. May be used later for distortion computation operations
-  int stdRange;                         //!< 1 - standard range, 0 - full range
-  int videoCode;                        //!< 1 - 709, 3 - 601:  See VideoCode in io_tiff.
+  int stdRange;                         // 1 - standard range, 0 - full range
+  int videoCode;                        // 1 - 709, 3 - 601:  See VideoCode in io_tiff.
   int export_views;
 
   int bDisplayDecParams;

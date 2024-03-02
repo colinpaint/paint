@@ -3024,13 +3024,13 @@ void fill_frame_num_gap (VideoParameters *p_Vid, Slice *currSlice) {
 
     currSlice->frame_num = UnusedShortTermFrameNum;
     if (active_sps->pic_order_cnt_type!=0)
-      decode_poc(p_Vid, p_Vid->ppSliceList[0]);
+      decodePOC (p_Vid, p_Vid->ppSliceList[0]);
     picture->top_poc    = currSlice->toppoc;
     picture->bottom_poc = currSlice->bottompoc;
     picture->frame_poc  = currSlice->framepoc;
     picture->poc        = currSlice->framepoc;
 
-    store_picture_in_dpb(currSlice->p_Dpb, picture);
+    store_picture_in_dpb (currSlice->p_Dpb, picture);
 
     picture=NULL;
     p_Vid->pre_frame_num = UnusedShortTermFrameNum;
