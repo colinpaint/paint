@@ -905,6 +905,27 @@ public:
 
     thread ([=]() {
       cLog::setThreadName ("h264");
+      //{{{  get fileSize
+      size_t fileSize;
+      #ifdef _WIN32
+        struct _stati64 st;
+        if (_stat64 (fileName.c_str(), &st) != -1)
+          fileSize = st.st_size;
+      #else
+        struct stat st;
+        if (stat (mFileName.c_str(), &st) != -1)
+          fileSize = st.st_size;
+      #endif
+
+      //}}}
+      //{{{  load file to chunk
+      FILE* file = fopen (fileName.c_str(), "rb");
+      uint8_t* chunk = new uint8_t[fileSize];
+      size_t bytesRead = fread (chunk, 1, fileSize, file);
+      fclose (file);
+
+      cLog::log (LOGINFO, fmt::format ("file read {} {}", fileSize, bytesRead));
+      //}}}
 
       // input params
       InputParameters InputParams;
@@ -916,7 +937,7 @@ public:
       InputParams.ref_poc_gap = 2;
       InputParams.dpb_plus[0] = 1;
 
-      if (OpenDecoder (&InputParams) != DEC_OPEN_NOERR) {
+      if (OpenDecoder (&InputParams, chunk, fileSize) != DEC_OPEN_NOERR) {
         cLog::log (LOGERROR, "ppen encoder failed");
         return;
         }
@@ -935,6 +956,8 @@ public:
       ret = FinitDecoder (&pDecPicList);
       outputPicList (pDecPicList, 1);
       ret = CloseDecoder();
+
+      delete[] chunk;
 
       cLog::log (LOGERROR, "exit");
       }).detach();

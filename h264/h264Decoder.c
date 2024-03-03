@@ -257,7 +257,7 @@ static void free_slice (Slice *currSlice) {
 static void free_img (VideoParameters* p_Vid) {
 
   if (p_Vid != NULL) {
-    free_annex_b (&p_Vid->annex_b);
+    freeAnnexB (&p_Vid->annex_b);
 
     // Free new dpb layers
     for (int i = 0; i < MAX_NUM_DPB_LAYERS; i++) {
@@ -730,7 +730,7 @@ void set_global_coding_par (VideoParameters* p_Vid, CodingParameters* cps) {
 //}}}
 
 //{{{
-int OpenDecoder (InputParameters* p_Inp) {
+int OpenDecoder (InputParameters* p_Inp, byte* chunk, size_t chunkSize) {
 
   DecoderParams* pDecoder;
   int iRet = alloc_decoder (&p_Dec);
@@ -745,10 +745,9 @@ int OpenDecoder (InputParameters* p_Inp) {
   pDecoder->p_Vid->ref_poc_gap = p_Inp->ref_poc_gap;
   pDecoder->p_Vid->poc_gap = p_Inp->poc_gap;
 
-  malloc_annex_b (pDecoder->p_Vid, &pDecoder->p_Vid->annex_b);
-  open_annex_b (pDecoder->p_Inp->infile, pDecoder->p_Vid->annex_b);
+  pDecoder->p_Vid->annex_b = allocAnnexB (pDecoder->p_Vid);
+  openAnnexB (pDecoder->p_Vid->annex_b, chunk, chunkSize);
 
-  // Allocate Slice data struct
   init_old_slice (pDecoder->p_Vid->old_slice);
   init (pDecoder->p_Vid);
   init_out_buffer (pDecoder->p_Vid);
@@ -788,7 +787,7 @@ int FinitDecoder (DecodedPicList** ppDecPicList) {
     flush_pending_output (pDecoder->p_Vid);
   #endif
 
-  reset_annex_b (pDecoder->p_Vid->annex_b);
+  resetAnnexB (pDecoder->p_Vid->annex_b);
 
   pDecoder->p_Vid->newframe = 0;
   pDecoder->p_Vid->previous_frame_num = 0;
@@ -808,8 +807,6 @@ int CloseDecoder() {
   free_layer_buffers (pDecoder->p_Vid, 0);
   free_layer_buffers (pDecoder->p_Vid, 1);
   free_global_buffers (pDecoder->p_Vid);
-
-  close_annex_b (pDecoder->p_Vid->annex_b);
 
   ercClose (pDecoder->p_Vid, pDecoder->p_Vid->erc_errorVar);
 

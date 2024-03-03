@@ -22,40 +22,25 @@
 //}}}
 static const int kDebug = 0;
 
-static const int IOBUFFERSIZE = 0x10000;  // 64k
 //{{{
-static inline size_t getChunk (ANNEXB_t* annex_b) {
+static inline byte getfbyte (ANNEXB_t* annexB) {
 
-  size_t readbytes = read (annex_b->BitStreamFile, annex_b->iobuffer, annex_b->iIOBufferSize);
-  if (0 == readbytes) {
-    annex_b->is_eof = TRUE;
-    return 0;
+  if (annexB->bytesInBuffer) {
+    annexB->bytesInBuffer--;
+    return *annexB->bufferPtr++;
     }
 
-  annex_b->bytesinbuffer = readbytes;
-  annex_b->iobufferread = annex_b->iobuffer;
-  return readbytes;
+  return 0;
   }
 //}}}
 //{{{
-static inline byte getfbyte (ANNEXB_t* annex_b) {
+static inline int findStartCode (unsigned char* buf, int zerosInStartcode) {
 
-  if (!annex_b->bytesinbuffer)
-    if (!getChunk (annex_b))
+  for (int i = 0; i < zerosInStartcode; i++)
+    if (*(buf++) != 0)
       return 0;
 
-  annex_b->bytesinbuffer--;
-  return (*annex_b->iobufferread++);
-  }
-//}}}
-//{{{
-static inline int findStartCode (unsigned char* Buf, int zeros_in_startcode) {
-
-  for (int i = 0; i < zeros_in_startcode; i++)
-    if (*(Buf++) != 0)
-      return 0;
-
-  if (*Buf != 1)
+  if (*buf != 1)
     return 0;
 
   return 1;
@@ -63,152 +48,112 @@ static inline int findStartCode (unsigned char* Buf, int zeros_in_startcode) {
 //}}}
 
 //{{{
-void malloc_annex_b (VideoParameters* p_Vid, ANNEXB_t** p_annex_b) {
+ANNEXB_t* allocAnnexB (VideoParameters* p_Vid) {
 
-  if (((*p_annex_b) = (ANNEXB_t*)calloc(1, sizeof(ANNEXB_t))) == NULL) {
-    snprintf (errortext, ET_SIZE, "Memory allocation for Annex_B file failed");
-    error (errortext,100);
-    }
-
-  if (((*p_annex_b)->Buf = (byte*)malloc(p_Vid->nalu->max_size)) == NULL)
-    error ("malloc_annex_b: Buf", 101);
+  ANNEXB_t* annexB = (ANNEXB_t*)calloc (1, sizeof(ANNEXB_t));
+  annexB->naluBuf = (byte*)malloc (p_Vid->nalu->max_size);
+  return annexB;
   }
 //}}}
 //{{{
-void open_annex_b (char* fn, ANNEXB_t* annex_b) {
+void openAnnexB (ANNEXB_t* annexB, byte* chunk, size_t chunkSize) {
 
-  if (NULL != annex_b->iobuffer)
-    error ("open_annex_b: tried to open Annex B file twice",500);
+  annexB->buffer = chunk;
+  annexB->bufferSize = chunkSize;
 
-  if ((annex_b->BitStreamFile = open (fn, OPENFLAGS_READ)) == -1) {
-    snprintf (errortext, ET_SIZE, "Cannot open Annex B ByteStream file '%s'", fn);
-    error (errortext,500);
-    }
-
-  annex_b->iIOBufferSize = IOBUFFERSIZE * sizeof (byte);
-  annex_b->iobuffer = malloc (annex_b->iIOBufferSize);
-  if (NULL == annex_b->iobuffer)
-    error ("open_annex_b: cannot allocate IO buffer",500);
-
-  annex_b->is_eof = FALSE;
-  getChunk (annex_b);
+  annexB->bufferPtr = chunk;
+  annexB->bytesInBuffer = chunkSize;
   }
 //}}}
 //{{{
-void init_annex_b (ANNEXB_t* annex_b) {
+void resetAnnexB (ANNEXB_t* annexB) {
 
-  annex_b->BitStreamFile = -1;
-  annex_b->iobuffer = NULL;
-  annex_b->iobufferread = NULL;
-  annex_b->bytesinbuffer = 0;
-  annex_b->is_eof = FALSE;
-  annex_b->IsFirstByteStreamNALU = 1;
-  annex_b->nextStartCodeBytes = 0;
+  annexB->bytesInBuffer = annexB->bufferSize;
+  annexB->bufferPtr = annexB->buffer;
   }
 //}}}
 //{{{
-void reset_annex_b (ANNEXB_t* annex_b) {
+void freeAnnexB (ANNEXB_t** p_annexB) {
 
-  annex_b->is_eof = FALSE;
-  annex_b->bytesinbuffer = 0;
-  annex_b->iobufferread = annex_b->iobuffer;
-  }
-//}}}
-//{{{
-void free_annex_b (ANNEXB_t** p_annex_b) {
+  free ((*p_annexB)->naluBuf);
+  (*p_annexB)->naluBuf = NULL;
 
-  free ((*p_annex_b)->Buf);
-  (*p_annex_b)->Buf = NULL;
-
-  free (*p_annex_b);
-  *p_annex_b = NULL;
-  }
-//}}}
-//{{{
-void close_annex_b (ANNEXB_t* annex_b) {
-
-  if (annex_b->BitStreamFile != -1) {
-    close (annex_b->BitStreamFile);
-    annex_b->BitStreamFile = - 1;
-    }
-
-  free (annex_b->iobuffer);
-  annex_b->iobuffer = NULL;
+  free (*p_annexB);
+  *p_annexB = NULL;
   }
 //}}}
 
 //{{{
-int get_annex_b_NALU (VideoParameters* p_Vid, NALU_t* nalu, ANNEXB_t* annex_b) {
+int getNALU (ANNEXB_t* annexB, VideoParameters* p_Vid, NALU_t* nalu) {
 
-  int pos = 0;
-  byte* pBuf = annex_b->Buf;
-  if (annex_b->nextStartCodeBytes != 0) {
-    for (int i = 0; i < annex_b->nextStartCodeBytes-1; i++) {
-      (*pBuf++) = 0;
-      pos++;
+  int naluBufPos = 0;
+  byte* naluBufPtr = annexB->naluBuf;
+  if (annexB->nextStartCodeBytes != 0) {
+    for (int i = 0; i < annexB->nextStartCodeBytes-1; i++) {
+      *naluBufPtr++ = 0;
+      naluBufPos++;
       }
-    (*pBuf++) = 1;
-    pos++;
+    *naluBufPtr++ = 1;
+    naluBufPos++;
     }
-  else {
-    while (!annex_b->is_eof) {
-      pos++;
-      if ((*(pBuf++) = getfbyte(annex_b)) != 0)
+  else
+    while (annexB->bytesInBuffer) {
+      naluBufPos++;
+      if ((*(naluBufPtr++) = getfbyte (annexB)) != 0)
         break;
       }
-    }
 
-  if (annex_b->is_eof == TRUE) {
-    if (pos == 0)
+  if (!annexB->bytesInBuffer) {
+    if (naluBufPos == 0)
       return 0;
     else {
       //{{{  error, return
-      printf ("get_annex_b_NALU can't read start code\n");
+      printf ("get_annexB_NALU can't read start code\n");
       return -1;
       }
       //}}}
     }
 
-  if (*(pBuf - 1) != 1 || pos < 3) {
+  if (*(naluBufPtr - 1) != 1 || naluBufPos < 3) {
     //{{{  error, retuirn
-    printf ("get_annex_b_NALU: no Start Code at the beginning of the NALU, return -1\n");
+    printf ("get_annexB_NALU: no Start Code at the beginning of the NALU, return -1\n");
     return -1;
     }
     //}}}
 
   int leadingZero8BitsCount = 0;
-  if (pos == 3)
+  if (naluBufPos == 3)
     nalu->startcodeprefix_len = 3;
   else {
-    leadingZero8BitsCount = pos - 4;
+    leadingZero8BitsCount = naluBufPos - 4;
     nalu->startcodeprefix_len = 4;
     }
   //{{{  only 1st byte stream NAL unit can have leading_zero_8bits
-  if (!annex_b->IsFirstByteStreamNALU && leadingZero8BitsCount > 0) {
-    printf ("get_annex_b_NALU: leading_zero_8bits syntax only present first byte stream NAL unit\n");
+  if (!annexB->isFirstByteStreamNALU && leadingZero8BitsCount > 0) {
+    printf ("get_annexB_NALU: leading_zero_8bits syntax only present first byte stream NAL unit\n");
     return -1;
     }
   //}}}
 
   int info2 = 0;
   int info3 = 0;
-  leadingZero8BitsCount = pos;
-  annex_b->IsFirstByteStreamNALU = 0;
+  leadingZero8BitsCount = naluBufPos;
+  annexB->isFirstByteStreamNALU = 0;
   int startCodeFound = 0;
   while (!startCodeFound) {
-    if (annex_b->is_eof == TRUE) {
-      //{{{  eof
-      pBuf -= 2;
-      while(*(pBuf--)==0)
-        pos--;
+    if (!annexB->bytesInBuffer) {
+      //{{{  eof, last NALU
+      naluBufPtr -= 2;
+      while (*(naluBufPtr--)==0)
+        naluBufPos--;
 
-      nalu->len = (pos - 1) - leadingZero8BitsCount;
-      memcpy (nalu->buf, annex_b->Buf + leadingZero8BitsCount, nalu->len);
+      nalu->len = (naluBufPos - 1) - leadingZero8BitsCount;
+      memcpy (nalu->buf, annexB->naluBuf + leadingZero8BitsCount, nalu->len);
 
-      nalu->forbidden_bit  = (*(nalu->buf) >> 7) & 1;
-      nalu->nal_reference_idc = (NalRefIdc) ((*(nalu->buf) >> 5) & 3);
-      nalu->nal_unit_type = (NaluType) ((*(nalu->buf)) & 0x1f);
-      annex_b->nextStartCodeBytes = 0;
+      nalu->forbidden_bit = (*(nalu->buf) >> 7) & 1;
+      nalu->nal_reference_idc = (NalRefIdc)((*(nalu->buf) >> 5) & 3);
+      nalu->nal_unit_type = (NaluType)((*(nalu->buf)) & 0x1f);
+      annexB->nextStartCodeBytes = 0;
 
       if (kDebug)
         printf ("last %sNALU %d::%d:%d len:%d, \n",
@@ -218,14 +163,15 @@ int get_annex_b_NALU (VideoParameters* p_Vid, NALU_t* nalu, ANNEXB_t* annex_b) {
                 nalu->nal_unit_type,
                 nalu->len
                 );
-      return (pos - 1);
+
+      return (naluBufPos - 1);
       }
       //}}}
-    pos++;
-    *(pBuf++)  = getfbyte (annex_b);
-    info3 = findStartCode (pBuf - 4, 3);
+    naluBufPos++;
+    *(naluBufPtr++) = getfbyte (annexB);
+    info3 = findStartCode (naluBufPtr - 4, 3);
     if (info3 != 1) {
-      info2 = findStartCode (pBuf - 3, 2);
+      info2 = findStartCode (naluBufPtr - 3, 2);
       startCodeFound = info2 & 0x01;
       }
     else
@@ -235,13 +181,13 @@ int get_annex_b_NALU (VideoParameters* p_Vid, NALU_t* nalu, ANNEXB_t* annex_b) {
   // found another start code (and read length of startcode bytes more than we should have, go back in file
   if (info3 == 1) {
     // if the detected start code is 00 00 01, trailing_zero_8bits is sure not to be present
-    pBuf -= 5;
-    while (*(pBuf--) == 0)
-      pos--;
-    annex_b->nextStartCodeBytes = 4;
+    naluBufPtr -= 5;
+    while (*(naluBufPtr--) == 0)
+      naluBufPos--;
+    annexB->nextStartCodeBytes = 4;
     }
   else if (info2 == 1)
-    annex_b->nextStartCodeBytes = 3;
+    annexB->nextStartCodeBytes = 3;
   else {
     //{{{  error, return
     printf (" Panic: Error in next start code search \n");
@@ -249,14 +195,14 @@ int get_annex_b_NALU (VideoParameters* p_Vid, NALU_t* nalu, ANNEXB_t* annex_b) {
     }
     //}}}
 
-  pos -= annex_b->nextStartCodeBytes;
+  naluBufPos -= annexB->nextStartCodeBytes;
 
   // leading zeros, Start code, complete NALU, trailing zeros(if any), next start code in buf
-  // - size of Buf is pos - rewind,
-  // - pos is the number of bytes excluding the next start code,
-  // - pos - LeadingZero8BitsCount is the size of the NALU.
-  nalu->len = pos - leadingZero8BitsCount;
-  fast_memcpy (nalu->buf, annex_b->Buf + leadingZero8BitsCount, nalu->len);
+  // - size of Buf is naluBufPos - rewind,
+  // - naluBufPos is the number of bytes excluding the next start code,
+  // - naluBufPos - LeadingZero8BitsCount is the size of the NALU.
+  nalu->len = naluBufPos - leadingZero8BitsCount;
+  fast_memcpy (nalu->buf, annexB->naluBuf + leadingZero8BitsCount, nalu->len);
 
   nalu->forbidden_bit = (*(nalu->buf) >> 7) & 1;
   nalu->nal_reference_idc = (NalRefIdc) ((*(nalu->buf) >> 5) & 3);
@@ -272,6 +218,6 @@ int get_annex_b_NALU (VideoParameters* p_Vid, NALU_t* nalu, ANNEXB_t* annex_b) {
             nalu->len
             );
 
-  return (pos);
+  return naluBufPos;
   }
 //}}}

@@ -1,25 +1,24 @@
 #pragma once
 #include "nalu.h"
 
-typedef struct annex_b_struct {
-  int  BitStreamFile;
-  byte* iobuffer;
-  byte* iobufferread;
-  size_t bytesinbuffer;
-  int is_eof;
+typedef struct annexBstruct {
+  // buffer
+  byte* buffer;
+  size_t bufferSize;
 
-  int IsFirstByteStreamNALU;
+  // curBuffer position
+  byte* bufferPtr;
+  size_t bytesInBuffer;
+
+  // NALU buffer
+  int isFirstByteStreamNALU;
   int nextStartCodeBytes;
-
-  int iIOBufferSize;
-  byte* Buf;
+  byte* naluBuf;
   } ANNEXB_t;
 
-extern void malloc_annex_b (VideoParameters* p_Vid, ANNEXB_t** p_annex_b);
-extern void open_annex_b (char* fn, ANNEXB_t* annex_b);
-extern void init_annex_b (ANNEXB_t* annex_b);
-extern void reset_annex_b (ANNEXB_t* annex_b);
-extern void free_annex_b (ANNEXB_t** p_annex_b);
-extern void close_annex_b (ANNEXB_t* annex_b);
+extern ANNEXB_t* allocAnnexB (VideoParameters* p_Vid);
+extern void openAnnexB (ANNEXB_t* annexB, byte* chunk, size_t chunkSize);
+extern void resetAnnexB (ANNEXB_t* annexB);
+extern void freeAnnexB (ANNEXB_t** p_annexB);
 
-extern int get_annex_b_NALU (VideoParameters* p_Vid, NALU_t* nalu, ANNEXB_t* annex_b);
+extern int getNALU (ANNEXB_t* annexB, VideoParameters* p_Vid, NALU_t* nalu);

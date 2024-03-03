@@ -27,7 +27,7 @@ typedef struct dec_set_t {
 #endif
 //}}}
   int SetOptsDecoder(DecSet_t *pDecOpts);
-  int OpenDecoder (InputParameters *p_Inp);
+  int OpenDecoder (InputParameters* p_Inp, byte* chunk, size_t chunkSize);
   int DecodeOneFrame (DecodedPicList **ppDecPic);
   int FinitDecoder (DecodedPicList **ppDecPicList);
   int CloseDecoder();

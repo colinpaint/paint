@@ -775,7 +775,7 @@ typedef struct video_par {
   int Is_primary_correct;          // if primary frame is correct, 0: incorrect
   int Is_redundant_correct;        // if redundant frame is correct, 0:incorrect
 
-  struct annex_b_struct* annex_b;
+  struct annexBstruct* annex_b;
   int LastAccessUnitExists;
   int NALUCount;
 
