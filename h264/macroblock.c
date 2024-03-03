@@ -41,15 +41,15 @@
 #include "quant.h"
 #include "mb_prediction.h"
 //}}}
+extern void read_coeff_4x4_CAVLC (Macroblock *currMB, int block_type, int i, int j, int levarr[16], int runarr[16], int *number_coefficients);
+extern void read_coeff_4x4_CAVLC_444 (Macroblock *currMB, int block_type, int i, int j, int levarr[16], int runarr[16], int *number_coefficients);
 extern void set_intra_prediction_modes (Slice* currSlice);
 extern void setup_read_macroblock (Slice *currSlice);
 extern void set_read_CBP_and_coeffs_cabac (Slice *currSlice);
 extern void set_read_CBP_and_coeffs_cavlc (Slice *currSlice);
-extern void read_coeff_4x4_CAVLC (Macroblock *currMB, int block_type, int i, int j, int levarr[16], int runarr[16], int *number_coefficients);
-extern void read_coeff_4x4_CAVLC_444 (Macroblock *currMB, int block_type, int i, int j, int levarr[16], int runarr[16], int *number_coefficients);
-extern void update_direct_types (Slice *currSlice);
 extern void set_read_comp_coeff_cavlc (Macroblock *currMB);
 extern void set_read_comp_coeff_cabac (Macroblock *currMB);
+extern void update_direct_types (Slice *currSlice);
 
 //{{{
 static void GetMotionVectorPredictorMBAFF (Macroblock *currMB, PixelPos *block,
@@ -1210,18 +1210,17 @@ static void read_motion_info_from_NAL_b_slice (Macroblock *currMB) {
   VideoParameters *p_Vid = currMB->p_Vid;
   StorablePicture *dec_picture = currSlice->dec_picture;
   SyntaxElement currSE;
-  DataPartition *dP = NULL;
-  const byte *partMap = assignSE2partition[currSlice->dp_mode];
-  int partmode        = ((currMB->mb_type == P8x8) ? 4 : currMB->mb_type);
-  int step_h0         = BLOCK_STEP [partmode][0];
-  int step_v0         = BLOCK_STEP [partmode][1];
-
+  DataPartition* dP = NULL;
+  const byte* partMap = assignSE2partition[currSlice->dp_mode];
+  int partmode = ((currMB->mb_type == P8x8) ? 4 : currMB->mb_type);
+  int step_h0 = BLOCK_STEP [partmode][0];
+  int step_v0 = BLOCK_STEP [partmode][1];
   int j4, i4;
 
   int list_offset = currMB->list_offset;
-  StorablePicture **list0 = currSlice->listX[LIST_0 + list_offset];
-  StorablePicture **list1 = currSlice->listX[LIST_1 + list_offset];
-  PicMotionParams **p_mv_info = &dec_picture->mv_info[currMB->block_y];
+  StorablePicture** list0 = currSlice->listX[LIST_0 + list_offset];
+  StorablePicture** list1 = currSlice->listX[LIST_1 + list_offset];
+  PicMotionParams** p_mv_info = &dec_picture->mv_info[currMB->block_y];
 
   if (currMB->mb_type == P8x8)
     currSlice->update_direct_mv_info(currMB);
@@ -1249,111 +1248,119 @@ static void read_motion_info_from_NAL_b_slice (Macroblock *currMB) {
 
   // LIST_0 Motion vectors
   readMBMotionVectors (&currSE, dP, currMB, LIST_0, step_h0, step_v0);
+
   // LIST_1 Motion vectors
   readMBMotionVectors (&currSE, dP, currMB, LIST_1, step_h0, step_v0);
 
   // record reference picture Ids for deblocking decisions
-
-  for(j4 = 0; j4 < 4; ++j4)
-  {
-    for(i4 = currMB->block_x; i4 < (currMB->block_x + 4); ++i4)
-    {
+  for (j4 = 0; j4 < 4; ++j4) {
+    for (i4 = currMB->block_x; i4 < (currMB->block_x + 4); ++i4) {
       PicMotionParams *mv_info = &p_mv_info[j4][i4];
       short ref_idx = mv_info->ref_idx[LIST_0];
 
       mv_info->ref_pic[LIST_0] = (ref_idx >= 0) ? list0[ref_idx] : NULL;
       ref_idx = mv_info->ref_idx[LIST_1];
       mv_info->ref_pic[LIST_1] = (ref_idx >= 0) ? list1[ref_idx] : NULL;
+      }
     }
   }
-}
 //}}}
 //{{{
-void setup_slice_methods (Slice *currSlice)
-{
+void setup_slice_methods (Slice *currSlice) {
+
   setup_read_macroblock (currSlice);
-  switch (currSlice->slice_type)
-  {
-  case P_SLICE:
-    currSlice->interpret_mb_mode         = interpret_mb_mode_P;
-    currSlice->read_motion_info_from_NAL = read_motion_info_from_NAL_p_slice;
-    currSlice->decode_one_component      = decode_one_component_p_slice;
-    currSlice->update_direct_mv_info     = NULL;
-#if (MVC_EXTENSION_ENABLE)
-    currSlice->init_lists                = currSlice->view_id ? init_lists_p_slice_mvc : init_lists_p_slice;
-#else
-    currSlice->init_lists                = init_lists_p_slice;
-#endif
-    break;
-  case SP_SLICE:
-    currSlice->interpret_mb_mode         = interpret_mb_mode_P;
-    currSlice->read_motion_info_from_NAL = read_motion_info_from_NAL_p_slice;
-    currSlice->decode_one_component      = decode_one_component_sp_slice;
-    currSlice->update_direct_mv_info     = NULL;
-#if (MVC_EXTENSION_ENABLE)
-    currSlice->init_lists                = currSlice->view_id ? init_lists_p_slice_mvc : init_lists_p_slice;
-#else
-    currSlice->init_lists                = init_lists_p_slice;
-#endif
-    break;
-  case B_SLICE:
-    currSlice->interpret_mb_mode         = interpret_mb_mode_B;
-    currSlice->read_motion_info_from_NAL = read_motion_info_from_NAL_b_slice;
-    currSlice->decode_one_component      = decode_one_component_b_slice;
-    update_direct_types(currSlice);
-#if (MVC_EXTENSION_ENABLE)
-    currSlice->init_lists                = currSlice->view_id ? init_lists_b_slice_mvc : init_lists_b_slice;
-#else
-    currSlice->init_lists                = init_lists_b_slice;
-#endif
-    break;
-  case I_SLICE:
-    currSlice->interpret_mb_mode         = interpret_mb_mode_I;
-    currSlice->read_motion_info_from_NAL = NULL;
-    currSlice->decode_one_component      = decode_one_component_i_slice;
-    currSlice->update_direct_mv_info     = NULL;
-#if (MVC_EXTENSION_ENABLE)
-    currSlice->init_lists                = currSlice->view_id ? init_lists_i_slice_mvc : init_lists_i_slice;
-#else
-    currSlice->init_lists                = init_lists_i_slice;
-#endif
-    break;
-  case SI_SLICE:
-    currSlice->interpret_mb_mode         = interpret_mb_mode_SI;
-    currSlice->read_motion_info_from_NAL = NULL;
-    currSlice->decode_one_component      = decode_one_component_i_slice;
-    currSlice->update_direct_mv_info     = NULL;
-#if (MVC_EXTENSION_ENABLE)
-    currSlice->init_lists                = currSlice->view_id ? init_lists_i_slice_mvc : init_lists_i_slice;
-#else
-    currSlice->init_lists                = init_lists_i_slice;
-#endif
-    break;
-  default:
-    printf("Unsupported slice type\n");
-    break;
-  }
 
-  set_intra_prediction_modes(currSlice);
+  switch (currSlice->slice_type) {
+    //{{{
+    case P_SLICE:
+      currSlice->interpret_mb_mode         = interpret_mb_mode_P;
+      currSlice->read_motion_info_from_NAL = read_motion_info_from_NAL_p_slice;
+      currSlice->decode_one_component      = decode_one_component_p_slice;
+      currSlice->update_direct_mv_info     = NULL;
+    #if (MVC_EXTENSION_ENABLE)
+      currSlice->init_lists                = currSlice->view_id ? init_lists_p_slice_mvc : init_lists_p_slice;
+    #else
+      currSlice->init_lists                = init_lists_p_slice;
+    #endif
+      break;
+    //}}}
+    //{{{
+    case SP_SLICE:
+      currSlice->interpret_mb_mode         = interpret_mb_mode_P;
+      currSlice->read_motion_info_from_NAL = read_motion_info_from_NAL_p_slice;
+      currSlice->decode_one_component      = decode_one_component_sp_slice;
+      currSlice->update_direct_mv_info     = NULL;
+    #if (MVC_EXTENSION_ENABLE)
+      currSlice->init_lists                = currSlice->view_id ? init_lists_p_slice_mvc : init_lists_p_slice;
+    #else
+      currSlice->init_lists                = init_lists_p_slice;
+    #endif
+      break;
+    //}}}
+    //{{{
+    case B_SLICE:
+      currSlice->interpret_mb_mode         = interpret_mb_mode_B;
+      currSlice->read_motion_info_from_NAL = read_motion_info_from_NAL_b_slice;
+      currSlice->decode_one_component      = decode_one_component_b_slice;
+      update_direct_types(currSlice);
+    #if (MVC_EXTENSION_ENABLE)
+      currSlice->init_lists                = currSlice->view_id ? init_lists_b_slice_mvc : init_lists_b_slice;
+    #else
+       currSlice->init_lists                = init_lists_b_slice;
+    #endif
+      break;
+    //}}}
+    //{{{
+    case I_SLICE:
+      currSlice->interpret_mb_mode         = interpret_mb_mode_I;
+      currSlice->read_motion_info_from_NAL = NULL;
+      currSlice->decode_one_component      = decode_one_component_i_slice;
+      currSlice->update_direct_mv_info     = NULL;
+    #if (MVC_EXTENSION_ENABLE)
+      currSlice->init_lists                = currSlice->view_id ? init_lists_i_slice_mvc : init_lists_i_slice;
+    #else
+      currSlice->init_lists                = init_lists_i_slice;
+    #endif
+      break;
+    //}}}
+    //{{{
+    case SI_SLICE:
+      currSlice->interpret_mb_mode         = interpret_mb_mode_SI;
+      currSlice->read_motion_info_from_NAL = NULL;
+      currSlice->decode_one_component      = decode_one_component_i_slice;
+      currSlice->update_direct_mv_info     = NULL;
+    #if (MVC_EXTENSION_ENABLE)
+      currSlice->init_lists                = currSlice->view_id ? init_lists_i_slice_mvc : init_lists_i_slice;
+    #else
+      currSlice->init_lists                = init_lists_i_slice;
+    #endif
+      break;
+    //}}}
+    //{{{
+    default:
+      printf("Unsupported slice type\n");
+      break;
+    //}}}
+    }
 
-  if ( currSlice->p_Vid->active_sps->chroma_format_idc==YUV444 && (currSlice->p_Vid->separate_colour_plane_flag == 0) )
+  set_intra_prediction_modes (currSlice);
+
+  if (currSlice->p_Vid->active_sps->chroma_format_idc==YUV444 && (currSlice->p_Vid->separate_colour_plane_flag == 0) )
     currSlice->read_coeff_4x4_CAVLC = read_coeff_4x4_CAVLC_444;
   else
     currSlice->read_coeff_4x4_CAVLC = read_coeff_4x4_CAVLC;
-
-  switch(currSlice->p_Vid->active_pps->entropy_coding_mode_flag)
-  {
-  case CABAC:
-    set_read_CBP_and_coeffs_cabac(currSlice);
-    break;
-  case CAVLC:
-    set_read_CBP_and_coeffs_cavlc(currSlice);
-    break;
-  default:
-    printf("Unsupported entropy coding mode\n");
-    break;
+  switch (currSlice->p_Vid->active_pps->entropy_coding_mode_flag) {
+    case CABAC:
+      set_read_CBP_and_coeffs_cabac(currSlice);
+      break;
+    case CAVLC:
+      set_read_CBP_and_coeffs_cavlc(currSlice);
+      break;
+    default:
+      printf("Unsupported entropy coding mode\n");
+      break;
+    }
   }
-}
 //}}}
 
 //{{{
@@ -1412,51 +1419,40 @@ void check_dp_neighbors (Macroblock *currMB) {
 // probably a better way (or place) to do this, but I'm not sure what (where) it is [CJV]
 // this is intended to make get_block_luma faster, but I'm still performing
 // this at the MB level, and it really should be done at the slice level
-static void init_cur_imgy (VideoParameters *p_Vid,Slice *currSlice,int pl)
-{
-  int i,j;
-  if (p_Vid->separate_colour_plane_flag == 0)
-  {
-    StorablePicture *vidref = p_Vid->no_reference_picture;
+static void init_cur_imgy (VideoParameters *p_Vid,Slice *currSlice,int pl) {
+
+  if (p_Vid->separate_colour_plane_flag == 0) {
+    StorablePicture* vidref = p_Vid->no_reference_picture;
     int noref = (currSlice->framepoc < p_Vid->recovery_poc);
-    if (pl==PLANE_Y)
-    {
-      for (j = 0; j < 6; j++)    // for (j = 0; j < (currSlice->slice_type==B_SLICE?2:1); j++)
-      {
-        for (i = 0; i < currSlice->listXsize[j] ; i++)
-        {
+
+    if (pl == PLANE_Y) {
+      for (int j = 0; j < 6; j++) {  
+        for (int i = 0; i < currSlice->listXsize[j] ; i++) {
           StorablePicture *curr_ref = currSlice->listX[j][i];
-          if (curr_ref)
-          {
+          if (curr_ref) {
             curr_ref->no_ref = noref && (curr_ref == vidref);
             curr_ref->cur_imgY = curr_ref->imgY;
+            }
           }
         }
       }
-    }
-    else
-    {
-      for (j = 0; j < 6; j++)  //for (j = 0; j < (currSlice->slice_type==B_SLICE?2:1); j++)
-      {
-        for (i = 0; i < currSlice->listXsize[j]; i++)
-        {
+    else {
+      for (int j = 0; j < 6; j++) { 
+        for (int i = 0; i < currSlice->listXsize[j]; i++) {
           StorablePicture *curr_ref = currSlice->listX[j][i];
-          if (curr_ref)
-          {
+          if (curr_ref) {
             curr_ref->no_ref = noref && (curr_ref == vidref);
             curr_ref->cur_imgY = curr_ref->imgUV[pl-1];
+            }
           }
         }
       }
     }
   }
-}
 //}}}
 //{{{
 void change_plane_JV (VideoParameters *p_Vid, int nplane, Slice *pSlice)
 {
-  //Slice *currSlice = p_Vid->currentSlice;
-  //p_Vid->colour_plane_id = nplane;
   p_Vid->mb_data = p_Vid->mb_data_JV[nplane];
   p_Vid->dec_picture  = p_Vid->dec_picture_JV[nplane];
   p_Vid->siblock = p_Vid->siblock_JV[nplane];

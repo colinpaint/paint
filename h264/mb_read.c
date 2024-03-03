@@ -40,7 +40,6 @@
 #include "transform.h"
 #include "mc_prediction.h"
 #include "quant.h"
-#include "mv_prediction.h"
 #include "mb_prediction.h"
 //}}}
 extern void set_read_comp_coeff_cabac (Macroblock *currMB);

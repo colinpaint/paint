@@ -144,7 +144,7 @@ typedef struct {
 //{{{
 static void interpret_spare_pic (byte* payload, int size, VideoParameters *p_Vid )
 {
-  int i,x,y;
+  int x,y;
   Bitstream* buf;
   int bit0, bit1, bitc, no_bit0;
   int target_frame_num = 0;
@@ -155,176 +155,160 @@ static void interpret_spare_pic (byte* payload, int size, VideoParameters *p_Vid
   int m, n, left, right, top, bottom,directx, directy;
   byte ***map;
 
-  printf ("Spare picture SEI message\n");
-
-  p_Dec->UsedBits = 0;
-
-  assert( payload!=NULL);
-  assert( p_Vid!=NULL);
-
-  buf = malloc(sizeof(Bitstream));
+  buf = malloc (sizeof(Bitstream));
   buf->bitstream_length = size;
   buf->streamBuffer = payload;
   buf->frame_bitoffset = 0;
+  p_Dec->UsedBits = 0;
 
-  target_frame_num = read_ue_v("SEI: target_frame_num", buf, &p_Dec->UsedBits);
+  target_frame_num = read_ue_v ("SEI: target_frame_num", buf, &p_Dec->UsedBits);
+  num_spare_pics = 1 + read_ue_v ("SEI: num_spare_pics_minus1", buf, &p_Dec->UsedBits);
+  printf ("SEQ spare picture target_frame_num:%d num_spare_pics:%d\n",
+          target_frame_num, num_spare_pics);
 
-  printf( "target_frame_num is %d\n", target_frame_num );
-
-  num_spare_pics = 1 + read_ue_v("SEI: num_spare_pics_minus1", buf, &p_Dec->UsedBits);
-
-  printf( "num_spare_pics is %d\n", num_spare_pics );
-
-  get_mem3D(&map, num_spare_pics, p_Vid->height >> 4, p_Vid->width >> 4);
-
-  for (i=0; i<num_spare_pics; i++)
-  {
-    if (i==0)
-    {
+  get_mem3D (&map, num_spare_pics, p_Vid->height >> 4, p_Vid->width >> 4);
+  for (int i = 0; i < num_spare_pics; i++) {
+    if (i == 0) { 
       CandidateSpareFrameNum = target_frame_num - 1;
-      if ( CandidateSpareFrameNum < 0 ) CandidateSpareFrameNum = MAX_FN - 1;
-    }
+      if (CandidateSpareFrameNum < 0)
+        CandidateSpareFrameNum = MAX_FN - 1;
+      }
     else
       CandidateSpareFrameNum = SpareFrameNum;
 
-    delta_spare_frame_num = read_ue_v("SEI: delta_spare_frame_num", buf, &p_Dec->UsedBits);
-
+    delta_spare_frame_num = read_ue_v ("SEI: delta_spare_frame_num", buf, &p_Dec->UsedBits);
     SpareFrameNum = CandidateSpareFrameNum - delta_spare_frame_num;
-    if( SpareFrameNum < 0 )
+    if (SpareFrameNum < 0 )
       SpareFrameNum = MAX_FN + SpareFrameNum;
 
-    ref_area_indicator = read_ue_v("SEI: ref_area_indicator", buf, &p_Dec->UsedBits);
+    ref_area_indicator = read_ue_v ("SEI: ref_area_indicator", buf, &p_Dec->UsedBits);
+    switch (ref_area_indicator) {
+      //{{{
+      case 0: // The whole frame can serve as spare picture
+        for (y=0; y<p_Vid->height >> 4; y++)
+          for (x=0; x<p_Vid->width >> 4; x++)
+            map[i][y][x] = 0;
+        break;
+      //}}}
+      //{{{
+      case 1: // The map is not compressed
+        for (y=0; y<p_Vid->height >> 4; y++)
+          for (x=0; x<p_Vid->width >> 4; x++)
+            map[i][y][x] = (byte) read_u_1("SEI: ref_mb_indicator", buf, &p_Dec->UsedBits);
+        break;
+      //}}}
+      //{{{
+      case 2: // The map is compressed
+        bit0 = 0;
+        bit1 = 1;
+        bitc = bit0;
+        no_bit0 = -1;
 
-    switch ( ref_area_indicator )
-    {
-    case 0:   // The whole frame can serve as spare picture
-      for (y=0; y<p_Vid->height >> 4; y++)
-        for (x=0; x<p_Vid->width >> 4; x++)
-          map[i][y][x] = 0;
-      break;
-    case 1:   // The map is not compressed
-      for (y=0; y<p_Vid->height >> 4; y++)
-        for (x=0; x<p_Vid->width >> 4; x++)
-        {
-          map[i][y][x] = (byte) read_u_1("SEI: ref_mb_indicator", buf, &p_Dec->UsedBits);
-        }
-      break;
-    case 2:   // The map is compressed
-              //!KS: could not check this function, description is unclear (as stated in Ed. Note)
-      bit0 = 0;
-      bit1 = 1;
-      bitc = bit0;
-      no_bit0 = -1;
+        x = ((p_Vid->width >> 4) - 1 ) / 2;
+        y = ((p_Vid->height >> 4) - 1 ) / 2;
+        left = right = x;
+        top = bottom = y;
+        directx = 0;
+        directy = 1;
 
-      x = ( (p_Vid->width >> 4) - 1 ) / 2;
-      y = ( (p_Vid->height >> 4) - 1 ) / 2;
-      left = right = x;
-      top = bottom = y;
-      directx = 0;
-      directy = 1;
+        for (m = 0; m < p_Vid->height >> 4; m++)
+          for (n = 0; n < p_Vid->width >> 4; n++) {
+            if (no_bit0 < 0)
+              no_bit0 = read_ue_v ("SEI: zero_run_length", buf, &p_Dec->UsedBits);
+            if (no_bit0>0)
+              map[i][y][x] = (byte) bit0;
+            else
+              map[i][y][x] = (byte) bit1;
+            no_bit0--;
 
-      for (m=0; m<p_Vid->height >> 4; m++)
-        for (n=0; n<p_Vid->width >> 4; n++)
-        {
-
-          if (no_bit0<0)
-          {
-            no_bit0 = read_ue_v("SEI: zero_run_length", buf, &p_Dec->UsedBits);
-          }
-          if (no_bit0>0)
-            map[i][y][x] = (byte) bit0;
-          else
-            map[i][y][x] = (byte) bit1;
-          no_bit0--;
-
-          // go to the next mb:
-          if ( directx == -1 && directy == 0 )
-          {
-            if (x > left) x--;
-            else if (x == 0)
-            {
-              y = bottom + 1;
-              bottom++;
-              directx = 1;
-              directy = 0;
+            // go to the next mb:
+            if ( directx == -1 && directy == 0 ) {
+              //{{{
+              if (x > left) 
+                x--;
+              else if (x == 0) {
+                y = bottom + 1;
+                bottom++;
+                directx = 1;
+                directy = 0;
+                }
+              else if (x == left) {
+                x--;
+                left--;
+                directx = 0;
+                directy = 1;
+                }
+              }
+              //}}}
+            else if ( directx == 1 && directy == 0 ) {
+              //{{{
+              if (x < right) 
+                x++;
+              else if (x == (p_Vid->width >> 4) - 1) {
+                y = top - 1;
+                top--;
+                directx = -1;
+                directy = 0;
+                }
+              else if (x == right) {
+                x++;
+                right++;
+                directx = 0;
+                directy = -1;
+                }
+              }
+              //}}}
+            else if ( directx == 0 && directy == -1 ) {
+              //{{{
+              if ( y > top) 
+                y--;
+              else if (y == 0) {
+                x = left - 1;
+                left--;
+                directx = 0;
+                directy = 1;
+                }
+              else if (y == top) {
+                y--;
+                top--;
+                directx = -1;
+                directy = 0;
+                }
+              }
+              //}}}
+            else if ( directx == 0 && directy == 1 ) {
+              //{{{
+              if (y < bottom) 
+                y++;
+              else if (y == (p_Vid->height >> 4) - 1) {
+                x = right+1;
+                right++;
+                directx = 0;
+                directy = -1;
+                }
+              else if (y == bottom) {
+                y++;
+                bottom++;
+                directx = 1;
+                directy = 0;
+                }
+              }
+              //}}}
             }
-            else if (x == left)
-            {
-              x--;
-              left--;
-              directx = 0;
-              directy = 1;
-            }
-          }
-          else if ( directx == 1 && directy == 0 )
-          {
-            if (x < right) x++;
-            else if (x == (p_Vid->width >> 4) - 1)
-            {
-              y = top - 1;
-              top--;
-              directx = -1;
-              directy = 0;
-            }
-            else if (x == right)
-            {
-              x++;
-              right++;
-              directx = 0;
-              directy = -1;
-            }
-          }
-          else if ( directx == 0 && directy == -1 )
-          {
-            if ( y > top) y--;
-            else if (y == 0)
-            {
-              x = left - 1;
-              left--;
-              directx = 0;
-              directy = 1;
-            }
-            else if (y == top)
-            {
-              y--;
-              top--;
-              directx = -1;
-              directy = 0;
-            }
-          }
-          else if ( directx == 0 && directy == 1 )
-          {
-            if (y < bottom) y++;
-            else if (y == (p_Vid->height >> 4) - 1)
-            {
-              x = right+1;
-              right++;
-              directx = 0;
-              directy = -1;
-            }
-            else if (y == bottom)
-            {
-              y++;
-              bottom++;
-              directx = 1;
-              directy = 0;
-            }
-          }
+        break;
+      //}}}
+      //{{{
+      default:
+        printf ("Wrong ref_area_indicator %d!\n", ref_area_indicator );
+        exit(0);
+        break;
+      //}}}
+      }
+    } 
 
-
-        }
-      break;
-    default:
-      printf( "Wrong ref_area_indicator %d!\n", ref_area_indicator );
-      exit(0);
-      break;
-    }
-
-  } // end of num_spare_pics
-
-  free_mem3D( map );
-  free(buf);
-}
+  free_mem3D (map);
+  free (buf);
+  }
 //}}}
 
 //{{{

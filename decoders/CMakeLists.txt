@@ -16,7 +16,6 @@ project (decoders VERSION 1.0.0)
     target_link_directories (${PROJECT_NAME} PUBLIC ../lib)
     target_link_libraries (${PROJECT_NAME} PUBLIC
                            avdevice avfilter avformat avcodec avutil swresample swscale)
-
   else()
     # linux
     find_package (PkgConfig REQUIRED)
@@ -25,8 +24,7 @@ project (decoders VERSION 1.0.0)
     target_include_directories (${PROJECT_NAME} PUBLIC PkgConfig::FFMPEG)
     #
     # add drm lib for now, ffmpeg screwup
-    target_link_libraries (${PROJECT_NAME} PUBLIC PkgConfig::FFMPEG drm)
-
+    target_link_libraries (${PROJECT_NAME} PUBLIC PkgConfig::FFMPEG drm lzma z)
   endif()
 
   target_link_libraries (${PROJECT_NAME} PUBLIC common audio)

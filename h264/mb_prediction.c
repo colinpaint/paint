@@ -29,7 +29,6 @@
 #include "transform.h"
 #include "mc_prediction.h"
 #include "quant.h"
-#include "mv_prediction.h"
 #include "mb_prediction.h"
 //}}}
 extern int get_colocated_info_8x8 (Macroblock *currMB, StorablePicture *list1, int i, int j);
