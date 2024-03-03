@@ -1176,7 +1176,7 @@ static int readNewSlice (Slice* currSlice) {
           currSlice->current_mb_nr = currSlice->start_mb_nr;
 
         // need to read the slice ID, which depends on the value of redundant_pic_cnt_present_flag
-        slice_id_a = read_ue_v ("NALU: DP_A slice_id", currStream, &p_Dec->UsedBits);
+        slice_id_a = read_ue_v ("NALU: DP_A slice_id", currStream, &gDecoder->UsedBits);
 
         if (p_Vid->active_pps->entropy_coding_mode_flag)
           error ("data partition with CABAC not allowed", 500);
@@ -1192,7 +1192,7 @@ static int readNewSlice (Slice* currSlice) {
           memcpy (currStream->streamBuffer, &nalu->buf[1], nalu->len-1);
 
           currStream->code_len = currStream->bitstream_length = RBSPtoSODB (currStream->streamBuffer, nalu->len-1);
-          slice_id_b = read_ue_v ("NALU: DP_B slice_id", currStream, &p_Dec->UsedBits);
+          slice_id_b = read_ue_v ("NALU: DP_B slice_id", currStream, &gDecoder->UsedBits);
           currSlice->dpB_NotPresent = 0;
 
           if ((slice_id_b != slice_id_a) || (nalu->lost_packets)) {
@@ -1202,7 +1202,7 @@ static int readNewSlice (Slice* currSlice) {
             }
           else {
             if (p_Vid->active_pps->redundant_pic_cnt_present_flag)
-              read_ue_v ("NALU: DP_B redundant_pic_cnt", currStream, &p_Dec->UsedBits);
+              read_ue_v ("NALU: DP_B redundant_pic_cnt", currStream, &gDecoder->UsedBits);
 
             // we're finished with DP_B, so let's continue with next DP
             if (!read_next_nalu (p_Vid, nalu))
@@ -1223,14 +1223,14 @@ static int readNewSlice (Slice* currSlice) {
           currStream->code_len = currStream->bitstream_length = RBSPtoSODB (currStream->streamBuffer, nalu->len-1);
           currSlice->dpC_NotPresent = 0;
 
-          slice_id_c = read_ue_v ("NALU: DP_C slice_id", currStream, &p_Dec->UsedBits);
+          slice_id_c = read_ue_v ("NALU: DP_C slice_id", currStream, &gDecoder->UsedBits);
           if ((slice_id_c != slice_id_a)|| (nalu->lost_packets)) {
             printf ("Warning: got a data partition C which does not match DP_A(DP loss!)\n");
             currSlice->dpC_NotPresent =1;
             }
 
           if (p_Vid->active_pps->redundant_pic_cnt_present_flag)
-            read_ue_v ("NALU:SLICE_C redudand_pic_cnt", currStream, &p_Dec->UsedBits);
+            read_ue_v ("NALU:SLICE_C redudand_pic_cnt", currStream, &gDecoder->UsedBits);
           }
           //}}}
         else {

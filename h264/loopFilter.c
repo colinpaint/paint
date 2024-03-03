@@ -3175,18 +3175,18 @@ void init_Deblock (VideoParameters *p_Vid, int mb_aff_frame_flag) {
 
   if (p_Vid->yuv_format == YUV444 && p_Vid->separate_colour_plane_flag) {
     change_plane_JV (p_Vid, PLANE_Y, NULL);
-    init_neighbors (p_Dec->p_Vid);
+    init_neighbors (gDecoder->p_Vid);
 
     change_plane_JV (p_Vid, PLANE_U, NULL);
-    init_neighbors (p_Dec->p_Vid);
+    init_neighbors (gDecoder->p_Vid);
 
     change_plane_JV (p_Vid, PLANE_V, NULL);
-    init_neighbors (p_Dec->p_Vid);
+    init_neighbors (gDecoder->p_Vid);
 
     change_plane_JV (p_Vid, PLANE_Y, NULL);
     }
   else
-    init_neighbors (p_Dec->p_Vid);
+    init_neighbors (gDecoder->p_Vid);
 
   if (mb_aff_frame_flag == 1)
     set_loop_filter_functions_mbaff (p_Vid);

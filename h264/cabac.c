@@ -2312,11 +2312,6 @@ int readSyntaxElement_CABAC (Macroblock *currMB, SyntaxElement *se, DataPartitio
   //read again and minus curr_len = arideco_bits_read(dep_dp); from above
   se->len = (arideco_bits_read(dep_dp) - curr_len);
 
-#if (TRACE==2)
-  fprintf(p_Dec->p_trace, "curr_len: %d\n",curr_len);
-  fprintf(p_Dec->p_trace, "se_len: %d\n",se->len);
-#endif
-
   return (se->len);
 }
 //}}}

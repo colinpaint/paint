@@ -957,7 +957,7 @@ static inline int is_MVC_profile (unsigned int profile_idc)
   extern "C" {
 #endif
 //}}}
-  extern DecoderParams  *p_Dec;
+  extern DecoderParams  *gDecoder;
 
   // prototypes
   extern void error (char* text, int code);

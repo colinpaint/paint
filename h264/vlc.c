@@ -33,7 +33,7 @@
  *************************************************************************************
  * \brief
  *    read_ue_v, reads an ue(v) syntax element, the length in bits is stored in
- *    the global p_Dec->UsedBits variable
+ *    the global gDecoder->UsedBits variable
  *
  * \param tracestring
  *    the string for the trace file
@@ -64,7 +64,7 @@ int read_ue_v (char *tracestring, Bitstream *bitstream, int *used_bits)
  *************************************************************************************
  * \brief
  *    read_ue_v, reads an se(v) syntax element, the length in bits is stored in
- *    the global p_Dec->UsedBits variable
+ *    the global gDecoder->UsedBits variable
  *
  * \param tracestring
  *    the string for the trace file
@@ -95,7 +95,7 @@ int read_se_v (char *tracestring, Bitstream *bitstream, int *used_bits)
  *************************************************************************************
  * \brief
  *    read_ue_v, reads an u(v) syntax element, the length in bits is stored in
- *    the global p_Dec->UsedBits variable
+ *    the global gDecoder->UsedBits variable
  *
  * \param LenInBits
  *    length of the syntax element
@@ -132,7 +132,7 @@ int read_u_v (int LenInBits, char*tracestring, Bitstream *bitstream, int *used_b
  *************************************************************************************
  * \brief
  *    read_i_v, reads an i(v) syntax element, the length in bits is stored in
- *    the global p_Dec->UsedBits variable
+ *    the global gDecoder->UsedBits variable
  *
  * \param LenInBits
  *    length of the syntax element
@@ -172,7 +172,7 @@ int read_i_v (int LenInBits, char*tracestring, Bitstream *bitstream, int *used_b
  *************************************************************************************
  * \brief
  *    read_ue_v, reads an u(1) syntax element, the length in bits is stored in
- *    the global p_Dec->UsedBits variable
+ *    the global gDecoder->UsedBits variable
  *
  * \param tracestring
  *    the string for the trace file
