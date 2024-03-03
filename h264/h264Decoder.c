@@ -732,25 +732,22 @@ void set_global_coding_par (VideoParameters* p_Vid, CodingParameters* cps) {
 //{{{
 int OpenDecoder (InputParameters* p_Inp, byte* chunk, size_t chunkSize) {
 
-  DecoderParams* pDecoder;
   int iRet = alloc_decoder (&p_Dec);
   if (iRet)
     return (iRet|DEC_ERRMASK);
 
   init_time();
 
-  pDecoder = p_Dec;
-  memcpy (pDecoder->p_Inp, p_Inp, sizeof(InputParameters));
-  pDecoder->p_Vid->conceal_mode = p_Inp->conceal_mode;
-  pDecoder->p_Vid->ref_poc_gap = p_Inp->ref_poc_gap;
-  pDecoder->p_Vid->poc_gap = p_Inp->poc_gap;
+  memcpy (p_Dec->p_Inp, p_Inp, sizeof(InputParameters));
+  p_Dec->p_Vid->conceal_mode = p_Inp->conceal_mode;
+  p_Dec->p_Vid->ref_poc_gap = p_Inp->ref_poc_gap;
+  p_Dec->p_Vid->poc_gap = p_Inp->poc_gap;
+  p_Dec->p_Vid->annex_b = allocAnnexB (p_Dec->p_Vid);
+  openAnnexB (p_Dec->p_Vid->annex_b, chunk, chunkSize);
 
-  pDecoder->p_Vid->annex_b = allocAnnexB (pDecoder->p_Vid);
-  openAnnexB (pDecoder->p_Vid->annex_b, chunk, chunkSize);
-
-  init_old_slice (pDecoder->p_Vid->old_slice);
-  init (pDecoder->p_Vid);
-  init_out_buffer (pDecoder->p_Vid);
+  init_old_slice (p_Dec->p_Vid->old_slice);
+  init (p_Dec->p_Vid);
+  init_out_buffer (p_Dec->p_Vid);
 
   return DEC_OPEN_NOERR;
   }
@@ -759,9 +756,9 @@ int OpenDecoder (InputParameters* p_Inp, byte* chunk, size_t chunkSize) {
 int DecodeOneFrame (DecodedPicList** ppDecPicList) {
 
   DecoderParams* pDecoder = p_Dec;
-  ClearDecPicList (pDecoder->p_Vid);
+  ClearDecPicList (p_Dec->p_Vid);
 
-  int iRet = decode_one_frame (pDecoder);
+  int iRet = decode_one_frame (p_Dec);
   if (iRet == SOP)
     iRet = DEC_SUCCEED;
   else if (iRet == EOS)
@@ -769,29 +766,25 @@ int DecodeOneFrame (DecodedPicList** ppDecPicList) {
   else
     iRet |= DEC_ERRMASK;
 
-  *ppDecPicList = pDecoder->p_Vid->pDecOuputPic;
+  *ppDecPicList = v->p_Vid->pDecOuputPic;
   return iRet;
   }
 //}}}
 //{{{
 int FinitDecoder (DecodedPicList** ppDecPicList) {
 
-  DecoderParams* pDecoder = p_Dec;
-  if (!pDecoder)
-    return DEC_GEN_NOERR;
-
-  ClearDecPicList (pDecoder->p_Vid);
-  flush_dpb (pDecoder->p_Vid->p_Dpb_layer[0]);
+  ClearDecPicList (p_Dec->p_Vid);
+  flush_dpb (p_Dec->p_Vid->p_Dpb_layer[0]);
 
   #if (PAIR_FIELDS_IN_OUTPUT)
-    flush_pending_output (pDecoder->p_Vid);
+    flush_pending_output (p_Dec->p_Vid);
   #endif
 
-  resetAnnexB (pDecoder->p_Vid->annex_b);
+  resetAnnexB (p_Dec->p_Vid->annex_b);
 
-  pDecoder->p_Vid->newframe = 0;
-  pDecoder->p_Vid->previous_frame_num = 0;
-  *ppDecPicList = pDecoder->p_Vid->pDecOuputPic;
+  p_Dec->p_Vid->newframe = 0;
+  p_Dec->p_Vid->previous_frame_num = 0;
+  *ppDecPicList = p_Dec->p_Vid->pDecOuputPic;
 
   return DEC_GEN_NOERR;
   }
@@ -799,25 +792,21 @@ int FinitDecoder (DecodedPicList** ppDecPicList) {
 //{{{
 int CloseDecoder() {
 
-  DecoderParams* pDecoder = p_Dec;
-  if (!pDecoder)
-    return DEC_CLOSE_NOERR;
+  FmoFinit (p_Dec->p_Vid);
+  free_layer_buffers (p_Dec->p_Vid, 0);
+  free_layer_buffers (p_Dec->p_Vid, 1);
+  free_global_buffers (p_Dec->p_Vid);
 
-  FmoFinit (pDecoder->p_Vid);
-  free_layer_buffers (pDecoder->p_Vid, 0);
-  free_layer_buffers (pDecoder->p_Vid, 1);
-  free_global_buffers (pDecoder->p_Vid);
+  ercClose (p_Dec->p_Vid, p_Dec->p_Vid->erc_errorVar);
 
-  ercClose (pDecoder->p_Vid, pDecoder->p_Vid->erc_errorVar);
-
-  CleanUpPPS (pDecoder->p_Vid);
+  CleanUpPPS (p_Dec->p_Vid);
 
   for (unsigned i = 0; i < MAX_NUM_DPB_LAYERS; i++)
-    free_dpb (pDecoder->p_Vid->p_Dpb_layer[i]);
-  uninit_out_buffer (pDecoder->p_Vid);
-  free_img (pDecoder->p_Vid);
-  free (pDecoder->p_Inp);
-  free (pDecoder);
+    free_dpb (p_Dec->p_Vid->p_Dpb_layer[i]);
+  uninit_out_buffer (p_Dec->p_Vid);
+  free_img (p_Dec->p_Vid);
+  free (p_Dec->p_Inp);
+  free (p_Dec);
 
   p_Dec = NULL;
   return DEC_CLOSE_NOERR;
