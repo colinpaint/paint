@@ -1372,7 +1372,6 @@ void exit_picture (VideoParameters* p_Vid, StorablePicture** dec_picture) {
   char yuv_types[4][6] = {"4:0:0","4:2:0","4:2:2","4:4:4"};
   int ercSegment;
   frame recfr;
-  char yuvFormat[10];
 
   // return if the last picture has already been finished
   if (*dec_picture == NULL ||
@@ -1530,11 +1529,9 @@ void exit_picture (VideoParameters* p_Vid, StorablePicture** dec_picture) {
     gettime (&(p_Vid->end_time));
     int64 tmp_time = timediff(&(p_Vid->start_time), &(p_Vid->end_time));
     p_Vid->tot_time += tmp_time;
-    tmp_time  = timenorm (tmp_time);
-
-    sprintf (yuvFormat,"%s", yuv_types[chroma_format_idc]);
-    printf ("%5d %s poc:%4d pic:%4d qp:%3d %s took:%d\n",
-            p_Vid->frame_no, p_Vid->cslice_type, frame_poc, pic_num, qp, yuvFormat, (int)tmp_time);
+    tmp_time = timenorm (tmp_time);
+    printf ("%5d %s poc:%4d pic:%3d qp:%2d %dms\n",
+            p_Vid->frame_no, p_Vid->cslice_type, frame_poc, pic_num, qp, (int)tmp_time);
 
     if (slice_type == I_SLICE || slice_type == SI_SLICE || slice_type == P_SLICE || refpic) {
       // I or P pictures
