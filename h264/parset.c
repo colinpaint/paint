@@ -816,12 +816,9 @@ void activateSPS (VideoParameters* p_Vid, seq_parameter_set_rbsp_t* sps) {
 
 #if (MVC_EXTENSION_ENABLE)
     //init_frext(p_Vid);
-    if (/*p_Vid->last_pic_width_in_mbs_minus1 != p_Vid->active_sps->pic_width_in_mbs_minus1
-        || p_Vid->last_pic_height_in_map_units_minus1 != p_Vid->active_sps->pic_height_in_map_units_minus1
-        || p_Vid->last_max_dec_frame_buffering != GetMaxDecFrameBuffering(p_Vid)
-        || */(p_Vid->last_profile_idc != p_Vid->active_sps->profile_idc && is_BL_profile(p_Vid->active_sps->profile_idc) && !p_Vid->p_Dpb_layer[0]->init_done /*&& is_BL_profile(p_Vid->last_profile_idc)*/))
-    {
-      //init_frext(p_Vid);
+    if ((p_Vid->last_profile_idc != p_Vid->active_sps->profile_idc && 
+         is_BL_profile(p_Vid->active_sps->profile_idc) && 
+         !p_Vid->p_Dpb_layer[0]->init_done)) {
       init_global_buffers(p_Vid, 0);
 
       if (!p_Vid->no_output_of_prior_pics_flag) {
@@ -833,7 +830,7 @@ void activateSPS (VideoParameters* p_Vid, seq_parameter_set_rbsp_t* sps) {
     else if (p_Vid->last_profile_idc != p_Vid->active_sps->profile_idc && (
              is_MVC_profile(p_Vid->last_profile_idc) || is_MVC_profile(p_Vid->active_sps->profile_idc)
              )&& (!p_Vid->p_Dpb_layer[1]->init_done)) {
-      assert(p_Vid->p_Dpb_layer[0]->init_done);
+      assert (p_Vid->p_Dpb_layer[0]->init_done);
       //init_frext(p_Vid);
       if (p_Vid->p_Dpb_layer[0]->init_done) {
         free_dpb (p_Vid->p_Dpb_layer[0]);
@@ -852,7 +849,6 @@ void activateSPS (VideoParameters* p_Vid, seq_parameter_set_rbsp_t* sps) {
 
     p_Vid->last_pic_width_in_mbs_minus1 = p_Vid->active_sps->pic_width_in_mbs_minus1;
     p_Vid->last_pic_height_in_map_units_minus1 = p_Vid->active_sps->pic_height_in_map_units_minus1;
-    p_Vid->last_max_dec_frame_buffering = GetMaxDecFrameBuffering(p_Vid);
     p_Vid->last_profile_idc = p_Vid->active_sps->profile_idc;
 
 #else

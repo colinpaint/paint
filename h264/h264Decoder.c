@@ -347,7 +347,6 @@ static void init (VideoParameters* p_Vid) {
 #if (MVC_EXTENSION_ENABLE)
   p_Vid->last_pic_width_in_mbs_minus1 = 0;
   p_Vid->last_pic_height_in_map_units_minus1 = 0;
-  p_Vid->last_max_dec_frame_buffering = 0;
 #endif
 
   p_Vid->newframe = 0;

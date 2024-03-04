@@ -55,7 +55,6 @@
 #include "errorconcealment.h"
 #include "erc.h"
 #include "mbuffer.h"
-#include "mbuffer_mvc.h"
 
 #include "mc_prediction.h"
 //}}}
@@ -724,25 +723,12 @@ static void initPictureDecoding (VideoParameters *p_Vid) {
   p_Vid->structure = slice->structure;
   fmo_init (p_Vid, slice);
 
-#if (MVC_EXTENSION_ENABLE)
-  if ((slice->layer_id > 0) &&
-      (slice->svc_extension_flag == 0 &&
-       slice->NaluHeaderMVCExt.non_idr_flag == 0))
-   idr_memory_management (p_Vid->p_Dpb_layer[slice->layer_id], p_Vid->dec_picture);
-  update_ref_list (p_Vid->p_Dpb_layer[slice->view_id]);
-  update_ltref_list (p_Vid->p_Dpb_layer[slice->view_id]);
   update_pic_num (slice);
-#else
-  update_pic_num (slice);
-#endif
 
   init_Deblock (p_Vid, slice->mb_aff_frame_flag);
   for (int j = 0; j < p_Vid->iSliceNumOfCurrPic; j++) {
     if (p_Vid->ppSliceList[j]->DFDisableIdc != 1)
       iDeblockMode = 0;
-#if (MVC_EXTENSION_ENABLE)
-    assert (p_Vid->ppSliceList[j]->view_id == slice->view_id);
-#endif
     }
 
   p_Vid->iDeblockMode = iDeblockMode;

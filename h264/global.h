@@ -678,7 +678,6 @@ typedef struct video_par {
   subset_seq_parameter_set_rbsp_t SubsetSeqParSet[MAXSPS];
   int last_pic_width_in_mbs_minus1;
   int last_pic_height_in_map_units_minus1;
-  int last_max_dec_frame_buffering;
   int last_profile_idc;
 #endif
 

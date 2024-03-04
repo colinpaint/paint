@@ -52,12 +52,12 @@ typedef struct storable_picture {
   int         iLumaPadY, iLumaPadX;
   int         iChromaPadY, iChromaPadX;
 
-  imgpel** imgY;         
-  imgpel*** imgUV;       
+  imgpel** imgY;
+  imgpel*** imgUV;
 
-  struct pic_motion_params** mv_info;                
-  struct pic_motion_params** JVmv_info[MAX_PLANE];   
-  struct pic_motion_params_old  motion;              
+  struct pic_motion_params** mv_info;
+  struct pic_motion_params** JVmv_info[MAX_PLANE];
+  struct pic_motion_params_old  motion;
   struct pic_motion_params_old  JVmotion[MAX_PLANE]; // Motion info for 4:4:4 independent mode decoding
 
   struct storable_picture* top_field;     // for mb aff, if frame for referencing the top field
@@ -83,7 +83,7 @@ typedef struct storable_picture {
   DecRefPicMarking_t *dec_ref_pic_marking_buffer;  // stores the memory management control operations
 
   // picture error concealment
-  int         concealed_pic; 
+  int         concealed_pic;
   int         proc_flag;
   int         iLumaStride;
   int         iChromaStride;
@@ -92,7 +92,7 @@ typedef struct storable_picture {
   imgpel**    cur_imgY;               // for more efficient get_block_luma
   int no_ref;
   int iCodingType;
-  
+
   char listXsize[MAX_NUM_SLICES][2];
   struct storable_picture** listX[MAX_NUM_SLICES][2];
   int         layer_id;
@@ -317,16 +317,6 @@ extern StorablePicture*  alloc_storable_picture (VideoParameters *p_Vid, Picture
 extern void free_storable_picture (StorablePicture* p);
 extern void store_picture_in_dpb (DecodedPictureBuffer *p_Dpb, StorablePicture* p);
 extern StorablePicture*  get_short_term_pic (Slice *currSlice, DecodedPictureBuffer *p_Dpb, int picNum);
-
-#if (MVC_EXTENSION_ENABLE)
-  extern void idr_memory_management (DecodedPictureBuffer *p_Dpb, StorablePicture* p);
-  extern void flush_dpbs (DecodedPictureBuffer **p_Dpb, int nLayers);
-  extern int  GetMaxDecFrameBuffering (VideoParameters *p_Vid);
-  extern void append_interview_list (DecodedPictureBuffer *p_Dpb,
-                                     PictureStructure currPicStructure, int list_idx,
-                                     FrameStore **list, int *listXsize, int currPOC,
-                                     int curr_view_id, int anchor_pic_flag);
-#endif
 
 extern void unmark_for_reference( FrameStore* fs);
 extern void unmark_for_long_term_reference (FrameStore* fs);
