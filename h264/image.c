@@ -424,7 +424,7 @@ static void init_cur_imgy (Slice* currSlice, VideoParameters* p_Vid) {
   }
 //}}}
 
-//{{{
+//{{{  
 static int isNewPicture (StorablePicture* dec_picture, Slice* currSlice, OldSliceParams* p_old_slice) {
 
   int result = (NULL == dec_picture);
@@ -1260,7 +1260,7 @@ void exit_picture (VideoParameters* p_Vid, StorablePicture** dec_picture) {
       DeblockPicture (p_Vid, *dec_picture);
     }
     //}}}
-  else if ((p_Vid->separate_colour_plane_flag != 0))
+  else if (p_Vid->separate_colour_plane_flag != 0)
     make_frame_picture_JV (p_Vid);
 
   if ((*dec_picture)->mb_aff_frame_flag)
@@ -1337,7 +1337,7 @@ void exit_picture (VideoParameters* p_Vid, StorablePicture** dec_picture) {
     printf ("%5d %s poc:%4d pic:%3d qp:%2d %dms\n",
             p_Vid->frame_no, p_Vid->cslice_type, frame_poc, pic_num, qp, (int)timenorm(tmp_time));
 
-    if (slice_type == I_SLICE || slice_type == SI_SLICE || 
+    if (slice_type == I_SLICE || slice_type == SI_SLICE ||
         slice_type == P_SLICE || refpic) // I or P pictures
       ++(p_Vid->number);
 

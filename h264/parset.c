@@ -33,7 +33,7 @@
 //}}}
 extern void init_frext (VideoParameters *p_Vid);
 //{{{
-static const byte ZZ_SCAN[16] = {  
+static const byte ZZ_SCAN[16] = {
   0,  1,  4,  8,  5,  2,  3,  6,  9, 12, 13, 10,  7, 11, 14, 15
   };
 //}}}
@@ -373,7 +373,7 @@ static int spsIsEqual (seq_parameter_set_rbsp_t *sps1, seq_parameter_set_rbsp_t 
 //}}}
 //{{{
 // syntax for scaling list matrix values
-static void scaling_List(int *scalingList, int sizeOfScalingList, Boolean *UseDefaultScalingMatrix, Bitstream *s)
+static void scaling_List (int *scalingList, int sizeOfScalingList, Boolean *UseDefaultScalingMatrix, Bitstream *s)
 {
   int j, scanj;
   int delta_scale, lastScale, nextScale;
@@ -788,7 +788,7 @@ void activateSPS (VideoParameters* p_Vid, seq_parameter_set_rbsp_t* sps) {
     init_global_buffers (p_Vid, 0);
     if (!p_Vid->no_output_of_prior_pics_flag)
       flush_dpb (p_Vid->p_Dpb_layer[0]);
-    
+
     init_dpb (p_Vid, p_Vid->p_Dpb_layer[0], 0);
 
     // enable error concealment

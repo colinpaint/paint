@@ -95,7 +95,6 @@ static void writeOutPicture (VideoParameters* p_Vid, StorablePicture* p) {
   //(p_Vid->active_sps->vui_seq_parameters.matrix_coefficients==0);
 
   unsigned char *buf;
-  //int iPicSizeTab[4] = {2, 3, 4, 6};
   int iLumaSize, iFrameSize;
   int iLumaSizeX, iLumaSizeY;
   int iChromaSizeX, iChromaSizeY;
@@ -278,7 +277,7 @@ static void write_unpaired_field (VideoParameters* p_Vid, FrameStore* fs) {
     p = fs->bottom_field;
     fs->top_field = alloc_storable_picture (p_Vid, TOP_FIELD, p->size_x, 2*p->size_y, p->size_x_cr, 2*p->size_y_cr, 1);
     fs->top_field->chroma_format_idc = p->chroma_format_idc;
-    clearPicture(p_Vid, fs->top_field);
+    clearPicture (p_Vid, fs->top_field);
     fs ->top_field->frame_cropping_flag = fs->bottom_field->frame_cropping_flag;
     if(fs ->top_field->frame_cropping_flag) {
       fs ->top_field->frame_crop_top_offset = fs->bottom_field->frame_crop_top_offset;
@@ -343,7 +342,7 @@ void write_stored_frame (VideoParameters* p_Vid, FrameStore* fs) {
   // make sure no direct output field is pending
   flush_direct_output (p_Vid);
 
-  if (fs->is_used<3)
+  if (fs->is_used < 3)
     write_unpaired_field (p_Vid, fs);
   else {
     if (fs->recovery_frame)
