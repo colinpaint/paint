@@ -34,7 +34,6 @@
 
 #include "image.h"
 #include "fmo.h"
-#include "annexb.h"
 #include "nalu.h"
 #include "parset.h"
 #include "header.h"

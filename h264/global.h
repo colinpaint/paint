@@ -952,8 +952,6 @@ static inline int is_MVC_profile (unsigned int profile_idc)
   extern void free_global_buffers (VideoParameters *p_Vid);
   extern void free_layer_buffers (VideoParameters *p_Vid, int layer_id );
 
-  extern int RBSPtoSODB (byte* streamBuffer, int last_byte_pos);
-
   extern void FreePartition (DataPartition* dp, int n);
   extern DataPartition* AllocPartition (int n);
 

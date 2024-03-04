@@ -45,7 +45,6 @@
 //{{{  includes
 #include "global.h"
 
-#include "annexb.h"
 #include "image.h"
 #include "memalloc.h"
 #include "mc_prediction.h"

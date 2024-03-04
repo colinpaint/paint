@@ -4,8 +4,7 @@
 #define MAXRBSPSIZE 64000
 #define MAXNALUSIZE 64000
 
-//{{{
-//! values for nal_unit_type
+//{{{  values for nal_unit_type
 typedef enum {
   NALU_TYPE_SLICE    = 1,
   NALU_TYPE_DPA      = 2,
@@ -15,20 +14,18 @@ typedef enum {
   NALU_TYPE_SEI      = 6,
   NALU_TYPE_SPS      = 7,
   NALU_TYPE_PPS      = 8,
+
   NALU_TYPE_AUD      = 9,
   NALU_TYPE_EOSEQ    = 10,
   NALU_TYPE_EOSTREAM = 11,
   NALU_TYPE_FILL     = 12,
-#if (MVC_EXTENSION_ENABLE)
   NALU_TYPE_PREFIX   = 14,
   NALU_TYPE_SUB_SPS  = 15,
   NALU_TYPE_SLC_EXT  = 20,
   NALU_TYPE_VDRD     = 24  // View and Dependency Representation Delimiter NAL Unit
-#endif
   } NaluType;
 //}}}
-//{{{
-//! values for nal_ref_idc
+//{{{  values for nal_ref_idc
 typedef enum {
   NALU_PRIORITY_HIGHEST     = 3,
   NALU_PRIORITY_HIGH        = 2,
@@ -62,6 +59,27 @@ typedef struct nalu_t {
   } NALU_t;
 //}}}
 
+//{{{
+typedef struct annexBstruct {
+  // buffer
+  byte* buffer;
+  size_t bufferSize;
+
+  // curBuffer position
+  byte* bufferPtr;
+  size_t bytesInBuffer;
+
+  // NALU buffer
+  int isFirstByteStreamNALU;
+  int nextStartCodeBytes;
+  byte* naluBuf;
+  } ANNEXB_t;
+//}}}
+extern ANNEXB_t* allocAnnexB (VideoParameters* p_Vid);
+extern void openAnnexB (ANNEXB_t* annexB, byte* chunk, size_t chunkSize);
+extern void resetAnnexB (ANNEXB_t* annexB);
+extern void freeAnnexB (ANNEXB_t** p_annexB);
+
 extern NALU_t* allocNALU (int);
 extern void freeNALU (NALU_t* n);
 
@@ -69,3 +87,4 @@ extern void checkZeroByteVCL (VideoParameters* p_Vid, NALU_t* nalu);
 extern void checkZeroByteNonVCL (VideoParameters* p_Vid, NALU_t* nalu);
 
 extern int readNextNalu (VideoParameters* p_Vid, NALU_t* nalu);
+extern int RBSPtoSODB (byte* streamBuffer, int last_byte_pos);
