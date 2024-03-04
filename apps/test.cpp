@@ -61,6 +61,9 @@ using namespace std;
 using namespace utils;
 //}}}
 constexpr bool kMotionVectors = true;
+constexpr size_t kVideoFrames = 50;
+constexpr size_t kIDR = 1;
+
 namespace {
   //{{{
   void ffmpegLogCallback (void* ptr, int level, const char* fmt, va_list vargs) {
@@ -659,11 +662,11 @@ private:
   };
 //}}}
 //{{{
-class cFilePlayer {
+class cFilePlayer1 {
 public:
-  cFilePlayer (string fileName) : mFileName(cFileUtils::resolve (fileName)) {}
+  cFilePlayer1 (string fileName) : mFileName(cFileUtils::resolve (fileName)) {}
   //{{{
-  virtual ~cFilePlayer() {
+  virtual ~cFilePlayer1() {
     mPes.clear();
     }
   //}}}
@@ -706,7 +709,8 @@ public:
     thread ([=]() {
       cLog::setThreadName ("anal");
 
-      bool gotNaluIDR = false;
+      bool gotIDR = false;
+      int skippedToIDR = 0;
 
       mTransportStream = new cTransportStream ({"anal", 0, {}, {}}, nullptr,
         //{{{  addService lambda
@@ -721,12 +725,16 @@ public:
             string info = getFrameInfo (pidInfo.mBuffer, pidInfo.getBufSize(), service.getVideoStreamTypeId() == 27);
 
             // look for first IDR NALU
-            if (!gotNaluIDR && info.find ("IDR") != string::npos) {
-              gotNaluIDR = true;
-              cLog::log (LOGINFO, ("foundIDR"));
+            if (!gotIDR) {
+              if (info.find ("IDR") != string::npos) {
+                gotIDR = true;
+                cLog::log (LOGINFO, fmt::format ("foundIDR - skipped {}", skippedToIDR));
+                }
+              else
+                skippedToIDR++;
               }
 
-            if (gotNaluIDR) {
+            if (gotIDR) {
               uint8_t* buffer = (uint8_t*)malloc (pidInfo.getBufSize());
               memcpy (buffer, pidInfo.mBuffer, pidInfo.getBufSize());
               mPes.emplace_back (cPes (buffer, pidInfo.getBufSize(), pidInfo.getPts(), info));
@@ -787,7 +795,6 @@ public:
   //}}}
 
 private:
-  static inline const size_t kVideoFrames = 50;
   //{{{
   class cPes {
   public:
@@ -859,6 +866,167 @@ private:
 
   size_t mDecodeSeqNum = 0;
   size_t mAddSeqNum = 0;
+  };
+//}}}
+//{{{
+class cFilePlayer {
+public:
+  cFilePlayer (string fileName) : mFileName(cFileUtils::resolve (fileName)) {}
+
+  string getFileName() const { return mFileName; }
+  cTransportStream::cService* getService() { return mService; }
+  int64_t getPlayPts() const { return mPlayPts; }
+  cVideoFrame* getVideoFrame() { return mVideoFrame; }
+
+  void togglePlay() { mPlaying = !mPlaying; }
+  void skipPlay (int64_t skipPts) { (void)skipPts; }
+  //{{{
+  void read() {
+
+    for (size_t i = 0; i < kVideoFrames;  i++)
+      mVideoFrames[i] = new cSoftVideoFrame();
+
+    FILE* file = fopen (mFileName.c_str(), "rb");
+    if (!file) {
+      //{{{  error, return
+      cLog::log (LOGERROR, fmt::format ("cFilePlayer::analyse to open {}", mFileName));
+      return;
+      }
+      //}}}
+    //{{{  get fileSize
+    #ifdef _WIN32
+      struct _stati64 st;
+      if (_stat64 (mFileName.c_str(), &st) != -1)
+        mFileSize = st.st_size;
+    #else
+      struct stat st;
+      if (stat (mFileName.c_str(), &st) != -1)
+        mFileSize = st.st_size;
+    #endif
+    //}}}
+
+    thread ([=]() {
+      cLog::setThreadName ("anal");
+
+      // 20Mb
+      uint8_t* h264Chunk = new uint8_t[200000000];
+      uint8_t* h264ChunkPtr = h264Chunk;
+      size_t h264ChunkSize = 0;
+      int gotIDR = 0;
+
+      mTransportStream = new cTransportStream ({"anal", 0, {}, {}}, nullptr,
+        [&](cTransportStream::cService& service) noexcept { mService = &service; },
+        [&](cTransportStream::cService& service, cTransportStream::cPidInfo& pidInfo) noexcept {
+          if (pidInfo.getPid() != service.getVideoPid())
+            return;
+          string info = getFrameInfo (pidInfo.mBuffer, pidInfo.getBufSize(), service.getVideoStreamTypeId() == 27);
+          if (info.find ("IDR") != string::npos)
+            gotIDR++;
+          if (gotIDR) {
+            memcpy (h264ChunkPtr, pidInfo.mBuffer, pidInfo.getBufSize());
+            h264ChunkPtr += pidInfo.getBufSize();
+            h264ChunkSize += pidInfo.getBufSize();
+            }
+          }
+        );
+
+      //{{{  read kIDR from file
+      size_t fileChunkSize = 188;
+      uint8_t* fileChunk = new uint8_t[fileChunkSize];
+      while (gotIDR <= kIDR) {
+        size_t bytesRead = fread (fileChunk, 1, fileChunkSize, file);
+        if (bytesRead > 0)
+          mTransportStream->demux (fileChunk, bytesRead);
+        else
+          break;
+        }
+      delete[] fileChunk;
+      fclose (file);
+      //}}}
+      cLog::log (LOGINFO, fmt::format ("read:{} size:{} idr:{}", mFileName, h264ChunkSize, gotIDR));
+
+      // input params
+      InputParameters InputParams;
+      memset (&InputParams, 0, sizeof(InputParameters));
+      InputParams.poc_scale = 2;
+      InputParams.poc_gap = 2;
+      InputParams.ref_poc_gap = 2;
+      InputParams.dpb_plus[0] = 1;
+      InputParams.intra_profile_deblocking = 1;
+      OpenDecoder (&InputParams, h264Chunk, h264ChunkSize);
+
+      int ret = 0;
+      do {
+        DecodedPicList* pDecPicList;
+        ret = DecodeOneFrame (&pDecPicList);
+        if (ret == DEC_EOS || ret == DEC_SUCCEED)
+          outputPicList (pDecPicList, 0);
+        else
+          cLog::log (LOGERROR, "decoding  failed");
+        } while (ret == DEC_SUCCEED);
+
+      DecodedPicList* pDecPicList;
+      FinitDecoder (&pDecPicList);
+      outputPicList (pDecPicList, 1);
+      CloseDecoder();
+
+      delete[] h264Chunk;
+
+      cLog::log (LOGERROR, "exit");
+      }).detach();
+    }
+  //}}}
+
+private:
+  //{{{
+  void outputPicList (DecodedPicList* pDecPic, int bOutputAllFrames) {
+
+    DecodedPicList* pPic = pDecPic;
+    while (pPic && pPic->bValid == 1) {
+      int iWidth = pPic->iWidth * ((pPic->iBitDepth+7)>>3);
+      int iHeight = pPic->iHeight;
+      int iStride = pPic->iYBufStride;
+
+      int iWidthUV = pPic->iWidth >> 1;
+      iWidthUV *= ((pPic->iBitDepth + 7) >> 3);
+      int iHeightUV = pPic->iHeight >> 1;
+      int iStrideUV = pPic->iUVBufStride;
+
+      cLog::log (LOGINFO, fmt::format ("outputPicList {} {}x{} {}:{}",
+                                       mOutputFrame, iWidth, iHeight, iStride, iStrideUV));
+
+      mVideoFrames[mOutputFrame % kVideoFrames]->releaseResources();
+      cSoftVideoFrame* videoFrame = mVideoFrames[mOutputFrame % kVideoFrames];
+      videoFrame->setWidth (iWidth);
+      videoFrame->setHeight (iHeight);
+      videoFrame->mStrideY = iStride;
+      videoFrame->mStrideUV = iStrideUV;
+      videoFrame->mInterlaced = 0;
+      videoFrame->mTopFieldFirst = 0;
+      videoFrame->setPixels (pPic->pY, pPic->pU, pPic->pV, iStride, iStrideUV, iHeight);
+      videoFrame->mTextureDirty = true;
+      mVideoFrame = videoFrame;
+
+      mOutputFrame++;
+      pPic->bValid = 0;
+      pPic = pPic->pNext;
+      }
+    }
+  //}}}
+
+  string mFileName;
+  size_t mFileSize = 0;
+
+  cTransportStream* mTransportStream = nullptr;
+  cTransportStream::cService* mService = nullptr;
+
+  // playing
+  int64_t mPlayPts = -1;
+  bool mPlaying = true;
+
+  size_t mOutputFrame = 0;
+  array <cSoftVideoFrame*,kVideoFrames> mVideoFrames = { nullptr };
+  cVideoFrame* mVideoFrame = nullptr;
   };
 //}}}
 //{{{
@@ -953,32 +1121,25 @@ public:
   //}}}
 
 private:
-  static inline const size_t kVideoFrames = 50;
   //{{{
   void outputPicList (DecodedPicList* pDecPic, int bOutputAllFrames) {
 
     DecodedPicList* pPic = pDecPic;
-
-    while (pPic && (((pPic->iYUVStorageFormat == 2) && pPic->bValid == 3) ||
-                    ((pPic->iYUVStorageFormat != 2) && pPic->bValid == 1)) ) {
+    while (pPic && pPic->bValid == 1) {
       int iWidth = pPic->iWidth * ((pPic->iBitDepth+7)>>3);
       int iHeight = pPic->iHeight;
       int iStride = pPic->iYBufStride;
 
-      int iWidthUV = (pPic->iYUVFormat != YUV444) ? pPic->iWidth>>1 : pPic->iWidth;
+      int iWidthUV = pPic->iWidth >> 1;
       iWidthUV *= ((pPic->iBitDepth + 7) >> 3);
-      int iHeightUV = (pPic->iYUVFormat == YUV420) ? pPic->iHeight >> 1 : pPic->iHeight;
+      int iHeightUV = pPic->iHeight >> 1;
       int iStrideUV = pPic->iUVBufStride;
 
-      cLog::log (LOGINFO, fmt::format ("outputPicList {}:{} {}x{}:{}:{}",
-                                       pPic->iYUVStorageFormat, pPic->bValid,
-                                       iWidth, iHeight,
-                                       iStride, iStrideUV));
+      cLog::log (LOGINFO, fmt::format ("outputPicList {} {}x{} {}:{}",
+                                       mOutputFrame, iWidth, iHeight, iStride, iStrideUV));
 
-      mVideoFrameIndex = (mVideoFrameIndex + 1) % kVideoFrames;
-      mVideoFrames[mVideoFrameIndex]->releaseResources();
-      cSoftVideoFrame* videoFrame = mVideoFrames[mVideoFrameIndex];
-
+      mVideoFrames[mOutputFrame % kVideoFrames]->releaseResources();
+      cSoftVideoFrame* videoFrame = mVideoFrames[mOutputFrame % kVideoFrames];
       videoFrame->setWidth (iWidth);
       videoFrame->setHeight (iHeight);
       videoFrame->mStrideY = iStride;
@@ -989,6 +1150,7 @@ private:
       videoFrame->mTextureDirty = true;
       mVideoFrame = videoFrame;
 
+      mOutputFrame++;
       pPic->bValid = 0;
       pPic = pPic->pNext;
       }
@@ -998,9 +1160,9 @@ private:
   cApp::cOptions* mOptions;
   cFilePlayer* mFilePlayer = nullptr;
 
-  cVideoFrame* mVideoFrame = nullptr;
-  int mVideoFrameIndex = -1;
+  size_t mOutputFrame = 0;
   array <cSoftVideoFrame*,kVideoFrames> mVideoFrames = { nullptr };
+  cVideoFrame* mVideoFrame = nullptr;
   };
 //}}}
 //{{{

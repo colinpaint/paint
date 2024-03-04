@@ -1523,9 +1523,8 @@ void exit_picture (VideoParameters* p_Vid, StorablePicture** dec_picture) {
     gettime (&(p_Vid->end_time));
     int64 tmp_time = timediff(&(p_Vid->start_time), &(p_Vid->end_time));
     p_Vid->tot_time += tmp_time;
-    tmp_time = timenorm (tmp_time);
     printf ("%5d %s poc:%4d pic:%3d qp:%2d %dms\n",
-            p_Vid->frame_no, p_Vid->cslice_type, frame_poc, pic_num, qp, (int)tmp_time);
+            p_Vid->frame_no, p_Vid->cslice_type, frame_poc, pic_num, qp, (int)timenorm(tmp_time));
 
     if (slice_type == I_SLICE || slice_type == SI_SLICE || slice_type == P_SLICE || refpic) {
       // I or P pictures
