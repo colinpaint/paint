@@ -762,12 +762,10 @@ void ProcessSPS (VideoParameters* p_Vid, NALU_t* nalu) {
 
   DataPartition* dp = AllocPartition(1);
   seq_parameter_set_rbsp_t* sps = AllocSPS();
-
-  memcpy (dp->bitstream->streamBuffer, &nalu->buf[1], nalu->len-1);
-  dp->bitstream->code_len = dp->bitstream->bitstream_length = RBSPtoSODB (dp->bitstream->streamBuffer, nalu->len-1);
   dp->bitstream->ei_flag = 0;
   dp->bitstream->read_len = dp->bitstream->frame_bitoffset = 0;
-
+  memcpy (dp->bitstream->streamBuffer, &nalu->buf[1], nalu->len-1);
+  dp->bitstream->code_len = dp->bitstream->bitstream_length = RBSPtoSODB (dp->bitstream->streamBuffer, nalu->len-1);
   interpretSPS (p_Vid, dp, sps);
   get_max_dec_frame_buf_size (sps);
 
@@ -1183,14 +1181,12 @@ void CleanUpPPS (VideoParameters* p_Vid) {
 //{{{
 void ProcessPPS (VideoParameters* p_Vid, NALU_t *nalu) {
 
-  DataPartition* dp = AllocPartition(1);
+  DataPartition* dp = AllocPartition (1);
   pic_parameter_set_rbsp_t* pps = AllocPPS();
-
-  memcpy (dp->bitstream->streamBuffer, &nalu->buf[1], nalu->len-1);
-  dp->bitstream->code_len = dp->bitstream->bitstream_length = RBSPtoSODB (dp->bitstream->streamBuffer, nalu->len-1);
   dp->bitstream->ei_flag = 0;
   dp->bitstream->read_len = dp->bitstream->frame_bitoffset = 0;
-
+  memcpy (dp->bitstream->streamBuffer, &nalu->buf[1], nalu->len-1);
+  dp->bitstream->code_len = dp->bitstream->bitstream_length = RBSPtoSODB (dp->bitstream->streamBuffer, nalu->len-1);
   interpretPPS (p_Vid, dp, pps);
 
   if (p_Vid->active_pps) {

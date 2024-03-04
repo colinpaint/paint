@@ -60,7 +60,6 @@ extern "C" {
 using namespace std;
 using namespace utils;
 //}}}
-#define kDump264
 constexpr bool kMotionVectors = true;
 namespace {
   //{{{
@@ -300,10 +299,8 @@ namespace {
     //}}}
 
     uint8_t* pesEnd = pes + pesSize;
-
     if (h264) {
       string s;
-      char frameType = '?';
       while (pes < pesEnd) {
         //{{{  skip past startcode, find next startcode
         uint8_t* buf = pes;
@@ -340,44 +337,86 @@ namespace {
           }
         //}}}
         if (nalSize > 3) {
-          // parse bitStream for NALs
-          cBitstream bitstream (buf, (nalSize - startOffset) * 8);
-
-          uint32_t forbidddenZeroBit = bitstream.getBits(1);
-          if (forbidddenZeroBit != 0)
-            s += '*';
-          uint32_t nalRefIdc = bitstream.getBits (2);
-          uint32_t nalUnitType = bitstream.getBits (5);
-
+          uint32_t nalRefIdc = ((*buf) & 0x060) >> 5;
+          uint32_t nalUnitType = (*buf) & 0x1F;
           switch (nalUnitType) {
             //{{{
-            case 1: { // nonIdr
-              bitstream.getUe();
+            case 1: { // slice
+              cBitstream bitstream (buf+1, (nalSize - startOffset) * 8);
               int nalSubtype = bitstream.getUe();
               switch (nalSubtype) {
                 case 0:
-                  frameType = 'P';
-                  s += fmt::format ("nonIDR:{}:{}:{} ", nalRefIdc, nalSubtype, frameType);
-                  return fmt::format ("{} {}", frameType, s);
+                  s += fmt::format ("SLC:{}:{} ", nalRefIdc, nalSubtype);
+                  return fmt::format ("P {}", s);
 
                 case 1:
-                  frameType = 'B';
-                  s += fmt::format ("nonIDR:{}:{}:{} ", nalRefIdc, nalSubtype, frameType);
-                  return fmt::format ("{} {}", frameType, s);
+                  s += fmt::format ("SLC:{}:{} ", nalRefIdc, nalSubtype);
+                  return fmt::format ("B {} ", s);
 
                 case 2:
-                  frameType = 'I';
-                  s += fmt::format ("nonIDR:{}:{}:{} ", nalRefIdc, nalSubtype, frameType);
-                  return fmt::format ("{} {}", frameType, s);
+                  s += fmt::format ("SLC:{}:{}:{} ", nalRefIdc, nalSubtype);
+                  return fmt::format ("I {}", s);
 
                 default:
-                  s += fmt::format ("nonIDR:{}:unknownSubType:{}:{} ", nalRefIdc, nalSubtype, frameType);
+                  s += fmt::format ("SLC:ref:{}:sub:{} ", nalRefIdc, nalSubtype);
                   break;
                 }
 
               break;
               }
             //}}}
+            //{{{
+            case 5: { // idr
+              s += fmt::format ("IDR refIdc:{}", nalRefIdc);
+              return fmt::format ("IDR {}", s);
+
+              //{{{  subtype decode
+              ////cBitstream bitstream (buf+1, (nalSize - startOffset) * 8);
+              ////int nalSubtype = bitstream.getUe();
+              ////switch (nalSubtype) {
+                ////case 1:
+                ////case 5:
+                  ////frameType = 'P';
+                  ////s += fmt::format ("IDR:{}:{}:{} ", nalRefIdc, nalSubtype, frameType);
+                  ////return fmt::format ("{} {}", frameType, s);
+
+                ////case 2:
+                ////case 6:
+                  ////frameType =  'B';
+                  ////s += fmt::format ("IDR:{}:{}:{} ", nalRefIdc, nalSubtype, frameType);
+                  ////return fmt::format ("{} {}", frameType, s);
+
+                ////case 3:
+                ////case 7:
+                  ////frameType =  'I';
+                  ////s += fmt::format ("IDR:{}:{}:{} ", nalRefIdc, nalSubtype, frameType);
+                  ////return fmt::format ("{} {}", frameType, s);
+
+                ////default:
+                  ////frameType = '?';
+                  ////s += fmt::format ("IDR:{}:sub:{} ", nalRefIdc, nalSubtype);
+                  ////break;
+                ////}
+              //}}}
+              break;
+              }
+            //}}}
+            //{{{
+            case 6:   // sei
+              s += "SEI ";
+              break;
+            //}}}
+            //{{{
+            case 7:   // sps
+              s += fmt::format ("SPS ");
+              break;
+            //}}}
+            //{{{
+            case 8:   // pps
+              s += fmt::format ("PPS ");
+              break;
+            //}}}
+
             //{{{
             case 2:   // parta
               s += "PartA ";
@@ -391,53 +430,6 @@ namespace {
             //{{{
             case 4:   // partc
               s += "PartC ";
-              break;
-            //}}}
-            //{{{
-            case 5: { // idr
-              bitstream.getUe();
-              int nalSubtype = bitstream.getUe();
-
-              switch (nalSubtype) {
-                case 1:
-                case 5:
-                  frameType = 'P';
-                  s += fmt::format ("IDR:{}:{}:{} ", nalRefIdc, nalSubtype, frameType);
-                  return fmt::format ("{} {}", frameType, s);
-
-                case 2:
-                case 6:
-                  frameType =  'B';
-                  s += fmt::format ("IDR:{}:{}:{} ", nalRefIdc, nalSubtype, frameType);
-                  return fmt::format ("{} {}", frameType, s);
-
-                case 3:
-                case 7:
-                  frameType =  'I';
-                  s += fmt::format ("IDR:{}:{}:{} ", nalRefIdc, nalSubtype, frameType);
-                  return fmt::format ("{} {}", frameType, s);
-
-                default:
-                  s += fmt::format ("IDR:{}:unknownSubType:{} ", nalRefIdc, nalSubtype);
-                  break;
-                }
-
-              break;
-              }
-            //}}}
-            //{{{
-            case 6:   // sei
-              s += "SEI ";
-              break;
-            //}}}
-            //{{{
-            case 7:   // sps
-              s += fmt::format ("SPS:{} ", nalRefIdc);
-              break;
-            //}}}
-            //{{{
-            case 8:   // pps
-              s += fmt::format ("PPS:{} ", nalRefIdc);
               break;
             //}}}
             //{{{
@@ -460,6 +452,7 @@ namespace {
               s += "Fill ";
               break;
             //}}}
+
             //{{{
             case 13:  // seqext
               s += "SeqExt ";
@@ -499,7 +492,7 @@ namespace {
           }
         pes += nalSize;
         }
-      return fmt::format ("{} {}", frameType, s);
+      return fmt::format ("??? {}", s);
       }
     else {
       //{{{  mpeg2
@@ -612,8 +605,8 @@ public:
   virtual void flush() final { avcodec_flush_buffers (mAvContext); }
 
   virtual void decode (uint8_t* pes, uint32_t pesSize, int64_t pts, const string& frameInfo,
-                          function<cFrame*(int64_t pts)> allocFrameCallback,
-                          function<void (cFrame* frame)> addFrameCallback) final {
+                       function<cFrame*(int64_t pts)> allocFrameCallback,
+                       function<void (cFrame* frame)> addFrameCallback) final {
 
     AVFrame* avFrame = av_frame_alloc();
     AVPacket* avPacket = av_packet_alloc();
@@ -630,7 +623,7 @@ public:
           if ((ret == AVERROR(EAGAIN)) || (ret == AVERROR_EOF) || (ret < 0))
             break;
 
-          if (frameInfo.front() == 'I')
+          if (frameInfo.find ("IDR") != string::npos)
             mSequentialPts = pts;
           int64_t duration = (kPtsPerSecond * mAvContext->framerate.den) / mAvContext->framerate.num;
 
@@ -704,16 +697,16 @@ public:
     #endif
     //}}}
 
-    #ifdef kDump264
-      #ifdef _WIN32
-        FILE* h264File = fopen ("c:/tv/test.264", "wb");
-      #else
-        FILE* h264File = fopen ("/home/pi/tv/test.264", "wb");
-      #endif
+    #ifdef _WIN32
+      FILE* h264File = fopen ("c:/tv/test.264", "wb");
+    #else
+      FILE* h264File = fopen ("/home/pi/tv/test.264", "wb");
     #endif
 
     thread ([=]() {
       cLog::setThreadName ("anal");
+
+      bool gotNaluIDR = false;
 
       mTransportStream = new cTransportStream ({"anal", 0, {}, {}}, nullptr,
         //{{{  addService lambda
@@ -725,15 +718,21 @@ public:
         //{{{  pes lambda
         [&](cTransportStream::cService& service, cTransportStream::cPidInfo& pidInfo) noexcept {
           if (pidInfo.getPid() == service.getVideoPid()) {
-            string info = getFrameInfo (pidInfo.mBuffer, pidInfo.getBufSize(),
-                                        service.getVideoStreamTypeId() == 27);
-            uint8_t* buffer = (uint8_t*)malloc (pidInfo.getBufSize());
-            memcpy (buffer, pidInfo.mBuffer, pidInfo.getBufSize());
-            mPes.emplace_back (cPes (buffer, pidInfo.getBufSize(), pidInfo.getPts(), info));
+            string info = getFrameInfo (pidInfo.mBuffer, pidInfo.getBufSize(), service.getVideoStreamTypeId() == 27);
 
-            #ifdef kDump264
+            // look for first IDR NALU
+            if (!gotNaluIDR && info.find ("IDR") != string::npos) {
+              gotNaluIDR = true;
+              cLog::log (LOGINFO, ("foundIDR"));
+              }
+
+            if (gotNaluIDR) {
+              uint8_t* buffer = (uint8_t*)malloc (pidInfo.getBufSize());
+              memcpy (buffer, pidInfo.mBuffer, pidInfo.getBufSize());
+              mPes.emplace_back (cPes (buffer, pidInfo.getBufSize(), pidInfo.getPts(), info));
+
               fwrite (buffer, 1, pidInfo.getBufSize(), h264File);
-            #endif
+              }
             }
           }
         //}}}
@@ -771,26 +770,12 @@ public:
       #endif
 
       mDecoder->flush();
-      size_t i = skipToI (0);
-      i = skipToI (i);
-      i = skipToI (i);
-      i = skipToI (i);
-      while (i < mPes.size()) {
-        // decode first frame of gop
-        decode (i, mPes[i]);
-        i++;
+
+      int pesIndex = 0;
+      while (pesIndex < mPes.size()) {
+        decode (pesIndex, mPes[pesIndex]);
+        pesIndex++;
         this_thread::sleep_for (40ms);
-
-        // decode rest of gop
-        while (mPes[i].mFrameInfo.front() != 'I') {
-          decode (i, mPes[i]);
-          i++;
-          }
-        // skip 8 gop
-        for (int j = 0; j < 4; j++)
-          i = skipToI (++i);
-
-        while (!mPlaying)
           this_thread::sleep_for (1ms);
         }
 
@@ -836,11 +821,7 @@ private:
   void decode (size_t pesIndex, cPes pes) {
 
     if (mDecoder) {
-      cLog::log (LOGINFO, fmt::format ("{:5d} {:5d} decode pesPts:{} {}",
-                                       mDecodeSeqNum++,
-                                       pesIndex,
-                                       getPtsString (pes.mPts),
-                                       pes.mFrameInfo));
+      cLog::log (LOGINFO, fmt::format ("decode pesPts:{} {}", getPtsString (pes.mPts), pes.mFrameInfo));
 
       mDecoder->decode (pes.mData, pes.mSize, pes.mPts, pes.mFrameInfo,
         // allocFrame lambda
@@ -856,7 +837,7 @@ private:
           cVideoFrame* videoFrame = dynamic_cast<cVideoFrame*>(frame);
           videoFrame->mTextureDirty = true;
           mVideoFrame = videoFrame;
-          cLog::log (LOGINFO, fmt::format ("{:5d}      -----> seqPts:{} {}", mAddSeqNum++,
+          cLog::log (LOGINFO, fmt::format ("-----> seqPts:{} {}",
                                            getPtsString (frame->getPts()), videoFrame->getFrameInfo()));
           });
       }

@@ -60,7 +60,7 @@ void resetAnnexB (ANNEXB_t* annexB) {
 //}}}
 
 //{{{
-static inline byte getfbyte (ANNEXB_t* annexB) {
+static inline byte getByte (ANNEXB_t* annexB) {
 
   if (annexB->bytesInBuffer) {
     annexB->bytesInBuffer--;
@@ -86,25 +86,25 @@ static inline int findStartCode (unsigned char* buf, int zerosInStartcode) {
 //{{{
 int getNALU (ANNEXB_t* annexB, VideoParameters* p_Vid, NALU_t* nalu) {
 
-  int naluBufPos = 0;
+  int naluBufCount = 0;
   byte* naluBufPtr = annexB->naluBuf;
   if (annexB->nextStartCodeBytes != 0) {
-    for (int i = 0; i < annexB->nextStartCodeBytes-1; i++) {
+    for (int i = 0; i < annexB->nextStartCodeBytes - 1; i++) {
       *naluBufPtr++ = 0;
-      naluBufPos++;
+      naluBufCount++;
       }
     *naluBufPtr++ = 1;
-    naluBufPos++;
+    naluBufCount++;
     }
   else
     while (annexB->bytesInBuffer) {
-      naluBufPos++;
-      if ((*(naluBufPtr++) = getfbyte (annexB)) != 0)
+      naluBufCount++;
+      if ((*(naluBufPtr++) = getByte (annexB)) != 0)
         break;
       }
 
   if (!annexB->bytesInBuffer) {
-    if (naluBufPos == 0)
+    if (naluBufCount == 0)
       return 0;
     else {
       //{{{  error, return
@@ -114,7 +114,7 @@ int getNALU (ANNEXB_t* annexB, VideoParameters* p_Vid, NALU_t* nalu) {
       //}}}
     }
 
-  if (*(naluBufPtr - 1) != 1 || naluBufPos < 3) {
+  if (*(naluBufPtr - 1) != 1 || naluBufCount < 3) {
     //{{{  error, retuirn
     printf ("get_annexB_NALU: no Start Code at the beginning of the NALU, return -1\n");
     return -1;
@@ -122,10 +122,10 @@ int getNALU (ANNEXB_t* annexB, VideoParameters* p_Vid, NALU_t* nalu) {
     //}}}
 
   int leadingZero8BitsCount = 0;
-  if (naluBufPos == 3)
+  if (naluBufCount == 3)
     nalu->startcodeprefix_len = 3;
   else {
-    leadingZero8BitsCount = naluBufPos - 4;
+    leadingZero8BitsCount = naluBufCount - 4;
     nalu->startcodeprefix_len = 4;
     }
   //{{{  only 1st byte stream NAL unit can have leading_zero_8bits
@@ -137,7 +137,7 @@ int getNALU (ANNEXB_t* annexB, VideoParameters* p_Vid, NALU_t* nalu) {
 
   int info2 = 0;
   int info3 = 0;
-  leadingZero8BitsCount = naluBufPos;
+  leadingZero8BitsCount = naluBufCount;
   annexB->isFirstByteStreamNALU = 0;
   int startCodeFound = 0;
   while (!startCodeFound) {
@@ -145,9 +145,9 @@ int getNALU (ANNEXB_t* annexB, VideoParameters* p_Vid, NALU_t* nalu) {
       //{{{  eof, last NALU
       naluBufPtr -= 2;
       while (*(naluBufPtr--)==0)
-        naluBufPos--;
+        naluBufCount--;
 
-      nalu->len = (naluBufPos - 1) - leadingZero8BitsCount;
+      nalu->len = (naluBufCount - 1) - leadingZero8BitsCount;
       memcpy (nalu->buf, annexB->naluBuf + leadingZero8BitsCount, nalu->len);
       nalu->forbidden_bit = (*(nalu->buf) >> 7) & 1;
       nalu->nal_reference_idc = (NalRefIdc)((*(nalu->buf) >> 5) & 3);
@@ -163,11 +163,11 @@ int getNALU (ANNEXB_t* annexB, VideoParameters* p_Vid, NALU_t* nalu) {
                 nalu->len
                 );
 
-      return (naluBufPos - 1);
+      return (naluBufCount - 1);
       }
       //}}}
-    naluBufPos++;
-    *(naluBufPtr++) = getfbyte (annexB);
+    naluBufCount++;
+    *(naluBufPtr++) = getByte (annexB);
     info3 = findStartCode (naluBufPtr - 4, 3);
     if (info3 != 1) {
       info2 = findStartCode (naluBufPtr - 3, 2);
@@ -177,12 +177,11 @@ int getNALU (ANNEXB_t* annexB, VideoParameters* p_Vid, NALU_t* nalu) {
       startCodeFound = 1;
     }
 
-  // found another start code (and read length of startcode bytes more than we should have, go back in file
+  // found next startCode, long(4 bytes) or short(3bytes)
   if (info3 == 1) {
-    // if the detected start code is 00 00 01, trailing_zero_8bits is sure not to be present
     naluBufPtr -= 5;
     while (*(naluBufPtr--) == 0)
-      naluBufPos--;
+      naluBufCount--;
     annexB->nextStartCodeBytes = 4;
     }
   else if (info2 == 1)
@@ -194,13 +193,14 @@ int getNALU (ANNEXB_t* annexB, VideoParameters* p_Vid, NALU_t* nalu) {
     }
     //}}}
 
-  naluBufPos -= annexB->nextStartCodeBytes;
+  // backup read ptr to trailing startCode
+  naluBufCount -= annexB->nextStartCodeBytes;
 
   // leading zeros, Start code, complete NALU, trailing zeros(if any), next start code in buf
-  // - size of Buf is naluBufPos - rewind,
-  // - naluBufPos is the number of bytes excluding the next start code,
-  // - naluBufPos - LeadingZero8BitsCount is the size of the NALU.
-  nalu->len = naluBufPos - leadingZero8BitsCount;
+  // - size of Buf is naluBufCount - rewind,
+  // - naluBufCount is the number of bytes excluding the next start code,
+  // - naluBufCount - LeadingZero8BitsCount is the size of the NALU.
+  nalu->len = naluBufCount - leadingZero8BitsCount;
   memcpy (nalu->buf, annexB->naluBuf + leadingZero8BitsCount, nalu->len);
   nalu->forbidden_bit = (*(nalu->buf) >> 7) & 1;
   nalu->nal_reference_idc = (NalRefIdc) ((*(nalu->buf) >> 5) & 3);
@@ -216,6 +216,6 @@ int getNALU (ANNEXB_t* annexB, VideoParameters* p_Vid, NALU_t* nalu) {
             nalu->len
             );
 
-  return naluBufPos;
+  return naluBufCount;
   }
 //}}}

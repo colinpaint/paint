@@ -952,30 +952,26 @@ static void decodeSlice (Slice *currSlice, int current_header) {
 //{{{
 static int readNewSlice (Slice* currSlice) {
 
+  static NALU_t* pendingNalu = NULL;
+
   InputParameters* p_Inp = currSlice->p_Inp;
   VideoParameters* p_Vid = currSlice->p_Vid;
 
-  NALU_t* nalu = p_Vid->nalu;
-
   int current_header = 0;
-  int BitsUsedByHeader;
   Bitstream* currStream = NULL;
-
-  static NALU_t* pending_nalu = NULL;
-  int slice_id_a, slice_id_b, slice_id_c;
-
   for (;;) {
     #if (MVC_EXTENSION_ENABLE)
       currSlice->svc_extension_flag = -1;
     #endif
 
-    if (!pending_nalu) {
-      if (!read_next_nalu (p_Vid, nalu))
+    NALU_t* nalu = p_Vid->nalu;
+    if (!pendingNalu) {
+      if (!readNextNalu (p_Vid, nalu))
         return EOS;
       }
     else {
-      nalu = pending_nalu;
-      pending_nalu = NULL;
+      nalu = pendingNalu;
+      pendingNalu = NULL;
       }
 
   process_nalu:
@@ -1025,7 +1021,7 @@ static int readNewSlice (Slice* currSlice) {
           currSlice->inter_view_flag = currSlice->NaluHeaderMVCExt.inter_view_flag;
           currSlice->anchor_pic_flag = currSlice->NaluHeaderMVCExt.anchor_pic_flag;
           }
-        else if(currSlice->svc_extension_flag == -1) {
+        else if (currSlice->svc_extension_flag == -1) {
           //{{{  SVC and the normal AVC
           if(p_Vid->active_subset_sps == NULL) {
             currSlice->view_id = GetBaseViewId(p_Vid, &p_Vid->active_subset_sps);
@@ -1059,17 +1055,19 @@ static int readNewSlice (Slice* currSlice) {
         currSlice->layer_id = currSlice->view_id = GetVOIdx( p_Vid, currSlice->view_id );
       #endif
 
-        // Some syntax of the Slice Header depends on the parameter set, which depends on
-        // the parameter set ID of the SLice header.  Hence, read the pic_parameter_set_id
-        // of the slice header first, then setup the active parameter sets, and then read
-        // the rest of the slice header
-        BitsUsedByHeader = FirstPartOfSliceHeader (currSlice);
+        // Some syntax of the sliceHeader depends on parameter set
+        // which depends on the parameter set ID of the slice header.
+        // - read the pic_parameter_set_id of the slice header first,
+        // - then setup the active parameter sets
+        // -  read // the rest of the slice header
+        FirstPartOfSliceHeader (currSlice);
         UseParameterSet (currSlice);
         currSlice->active_sps = p_Vid->active_sps;
         currSlice->active_pps = p_Vid->active_pps;
         currSlice->Transform8x8Mode = p_Vid->active_pps->transform_8x8_mode_flag;
-        currSlice->chroma444_not_separate = (p_Vid->active_sps->chroma_format_idc==YUV444)&&((p_Vid->separate_colour_plane_flag == 0));
-        BitsUsedByHeader += RestOfSliceHeader (currSlice);
+        currSlice->chroma444_not_separate = (p_Vid->active_sps->chroma_format_idc == YUV444) &&
+                                            (p_Vid->separate_colour_plane_flag == 0);
+        RestOfSliceHeader (currSlice);
 
       #if (MVC_EXTENSION_ENABLE)
         if (currSlice->view_id >=0)
@@ -1096,17 +1094,18 @@ static int readNewSlice (Slice* currSlice) {
 
         setup_slice_methods (currSlice);
 
-        // From here on, p_Vid->active_sps, p_Vid->active_pps and the slice header are valid
+        // Vid->active_sps, p_Vid->active_pps, sliceHeader valid
         if (currSlice->mb_aff_frame_flag)
           currSlice->current_mb_nr = currSlice->start_mb_nr << 1;
         else
           currSlice->current_mb_nr = currSlice->start_mb_nr;
 
         if (p_Vid->active_pps->entropy_coding_mode_flag) {
-          int ByteStartPosition = currStream->frame_bitoffset/8;
+          int ByteStartPosition = currStream->frame_bitoffset / 8;
           if (currStream->frame_bitoffset%8 != 0)
             ++ByteStartPosition;
-          arideco_start_decoding (&currSlice->partArr[0].de_cabac, currStream->streamBuffer, ByteStartPosition, &currStream->read_len);
+          arideco_start_decoding (&currSlice->partArr[0].de_cabac, currStream->streamBuffer,
+                                  ByteStartPosition, &currStream->read_len);
           }
 
         p_Vid->recovery_point = 0;
@@ -1144,14 +1143,14 @@ static int readNewSlice (Slice* currSlice) {
         currSlice->anchor_pic_flag = currSlice->idr_flag;
       #endif
 
-        BitsUsedByHeader = FirstPartOfSliceHeader (currSlice);
+        FirstPartOfSliceHeader (currSlice);
         UseParameterSet (currSlice);
         currSlice->active_sps = p_Vid->active_sps;
         currSlice->active_pps = p_Vid->active_pps;
         currSlice->Transform8x8Mode = p_Vid->active_pps->transform_8x8_mode_flag;
         currSlice->chroma444_not_separate = (p_Vid->active_sps->chroma_format_idc == YUV444) &&
                                             (p_Vid->separate_colour_plane_flag == 0);
-        BitsUsedByHeader += RestOfSliceHeader (currSlice);
+        RestOfSliceHeader (currSlice);
 
       #if MVC_EXTENSION_ENABLE
         currSlice->p_Dpb = p_Vid->p_Dpb_layer[currSlice->view_id];
@@ -1176,13 +1175,14 @@ static int readNewSlice (Slice* currSlice) {
           currSlice->current_mb_nr = currSlice->start_mb_nr;
 
         // need to read the slice ID, which depends on the value of redundant_pic_cnt_present_flag
-        slice_id_a = read_ue_v ("NALU: DP_A slice_id", currStream, &gDecoder->UsedBits);
+
+        int slice_id_a = read_ue_v ("NALU: DP_A slice_id", currStream, &gDecoder->UsedBits);
 
         if (p_Vid->active_pps->entropy_coding_mode_flag)
           error ("data partition with CABAC not allowed", 500);
 
         // reading next DP
-        if (!read_next_nalu (p_Vid, nalu))
+        if (!readNextNalu (p_Vid, nalu))
           return current_header;
         if (NALU_TYPE_DPB == nalu->nal_unit_type) {
           //{{{  got nalu DPB
@@ -1190,9 +1190,8 @@ static int readNewSlice (Slice* currSlice) {
           currStream->ei_flag = 0;
           currStream->frame_bitoffset = currStream->read_len = 0;
           memcpy (currStream->streamBuffer, &nalu->buf[1], nalu->len-1);
-
           currStream->code_len = currStream->bitstream_length = RBSPtoSODB (currStream->streamBuffer, nalu->len-1);
-          slice_id_b = read_ue_v ("NALU: DP_B slice_id", currStream, &gDecoder->UsedBits);
+          int slice_id_b = read_ue_v ("NALU: DP_B slice_id", currStream, &gDecoder->UsedBits);
           currSlice->dpB_NotPresent = 0;
 
           if ((slice_id_b != slice_id_a) || (nalu->lost_packets)) {
@@ -1205,7 +1204,7 @@ static int readNewSlice (Slice* currSlice) {
               read_ue_v ("NALU: DP_B redundant_pic_cnt", currStream, &gDecoder->UsedBits);
 
             // we're finished with DP_B, so let's continue with next DP
-            if (!read_next_nalu (p_Vid, nalu))
+            if (!readNextNalu (p_Vid, nalu))
               return current_header;
             }
           }
@@ -1218,12 +1217,11 @@ static int readNewSlice (Slice* currSlice) {
           currStream = currSlice->partArr[2].bitstream;
           currStream->ei_flag = 0;
           currStream->frame_bitoffset = currStream->read_len = 0;
-
           memcpy (currStream->streamBuffer, &nalu->buf[1], nalu->len-1);
           currStream->code_len = currStream->bitstream_length = RBSPtoSODB (currStream->streamBuffer, nalu->len-1);
+          
           currSlice->dpC_NotPresent = 0;
-
-          slice_id_c = read_ue_v ("NALU: DP_C slice_id", currStream, &gDecoder->UsedBits);
+          int slice_id_c = read_ue_v ("NALU: DP_C slice_id", currStream, &gDecoder->UsedBits);
           if ((slice_id_c != slice_id_a)|| (nalu->lost_packets)) {
             printf ("Warning: got a data partition C which does not match DP_A(DP loss!)\n");
             currSlice->dpC_NotPresent =1;
@@ -1235,7 +1233,7 @@ static int readNewSlice (Slice* currSlice) {
           //}}}
         else {
           currSlice->dpC_NotPresent = 1;
-          pending_nalu = nalu;
+          pendingNalu = nalu;
           }
 
         // check if we read anything else than the expected partitions
@@ -1589,7 +1587,6 @@ int decode_one_frame (DecoderParams* pDecoder) {
     if (!ppSliceList[p_Vid->iSliceNumOfCurrPic])
       ppSliceList[p_Vid->iSliceNumOfCurrPic] = malloc_slice (p_Inp, p_Vid);
     currSlice = ppSliceList[p_Vid->iSliceNumOfCurrPic];
-
     currSlice->p_Vid = p_Vid;
     currSlice->p_Inp = p_Inp;
     currSlice->p_Dpb = p_Vid->p_Dpb_layer[0]; //set default value;
@@ -1599,7 +1596,6 @@ int decode_one_frame (DecoderParams* pDecoder) {
     currSlice->pos = 0;
     currSlice->is_reset_coeff = FALSE;
     currSlice->is_reset_coeff_cr = FALSE;
-
     current_header = readNewSlice (currSlice);
     currSlice->current_header = current_header;
 

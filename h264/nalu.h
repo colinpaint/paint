@@ -68,4 +68,4 @@ extern void FreeNALU (NALU_t* n);
 extern void CheckZeroByteVCL (VideoParameters* p_Vid, NALU_t* nalu);
 extern void CheckZeroByteNonVCL (VideoParameters* p_Vid, NALU_t* nalu);
 
-extern int read_next_nalu (VideoParameters* p_Vid, NALU_t* nalu);
+extern int readNextNalu (VideoParameters* p_Vid, NALU_t* nalu);

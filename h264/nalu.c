@@ -165,7 +165,7 @@ void CheckZeroByteNonVCL (VideoParameters* p_Vid, NALU_t* nalu) {
 //}}}
 
 //{{{
-int read_next_nalu (VideoParameters* p_Vid, NALU_t* nalu) {
+int readNextNalu (VideoParameters* p_Vid, NALU_t* nalu) {
 
   InputParameters* p_Inp = p_Vid->p_Inp;
 
@@ -174,7 +174,7 @@ int read_next_nalu (VideoParameters* p_Vid, NALU_t* nalu) {
     snprintf (errortext, ET_SIZE, "Error while getting the NALU in file format exit\n");
     error (errortext, 601);
     }
-  if (ret == 0) 
+  if (ret == 0)
     return 0;
 
   // In some cases, zero_byte shall be present.
