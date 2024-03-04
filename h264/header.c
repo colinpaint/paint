@@ -1257,9 +1257,9 @@ static void reset_wp_params (Slice* currSlice) {
                                            currSlice->chroma_log2_weight_denom;
       currSlice->wp_weight[0][i][comp] = 1 << log_weight_denom;
       currSlice->wp_weight[1][i][comp] = 1 << log_weight_denom;
+      }
     }
   }
-}
 //}}}
 //{{{
 static void pred_weight_table (Slice* currSlice) {
@@ -1389,222 +1389,6 @@ unsigned CeilLog2_sf (unsigned uiVal) {
 //}}}
 
 //{{{
-int FirstPartOfSliceHeader (Slice* currSlice) {
-
-  VideoParameters* p_Vid = currSlice->p_Vid;
-  byte dP_nr = assignSE2partition[currSlice->dp_mode][SE_HEADER];
-  DataPartition *partition = &(currSlice->partArr[dP_nr]);
-  Bitstream *currStream = partition->bitstream;
-  int tmp;
-
-  gDecoder->UsedBits = partition->bitstream->frame_bitoffset; // was hardcoded to 31 for previous start-code. This is better.
-
-  // Get first_mb_in_slice
-  currSlice->start_mb_nr = read_ue_v ("SH: first_mb_in_slice", currStream, &gDecoder->UsedBits);
-
-  tmp = read_ue_v ("SH: slice_type", currStream, &gDecoder->UsedBits);
-
-  if (tmp > 4)
-    tmp -= 5;
-
-  p_Vid->type = currSlice->slice_type = (SliceType)tmp;
-
-  currSlice->pic_parameter_set_id = read_ue_v ("SH: pic_parameter_set_id", currStream, &gDecoder->UsedBits);
-
-  if( p_Vid->separate_colour_plane_flag )
-    currSlice->colour_plane_id = read_u_v (2, "SH: colour_plane_id", currStream, &gDecoder->UsedBits);
-  else
-    currSlice->colour_plane_id = PLANE_Y;
-
-  return gDecoder->UsedBits;
-  }
-//}}}
-//{{{
-int RestOfSliceHeader (Slice* currSlice) {
-
-  VideoParameters* p_Vid = currSlice->p_Vid;
-  InputParameters* p_Inp = currSlice->p_Inp;
-  seq_parameter_set_rbsp_t* active_sps = p_Vid->active_sps;
-
-  byte dP_nr = assignSE2partition[currSlice->dp_mode][SE_HEADER];
-  DataPartition* partition = &(currSlice->partArr[dP_nr]);
-  Bitstream* currStream = partition->bitstream;
-
-  int val, len;
-  currSlice->frame_num = read_u_v (active_sps->log2_max_frame_num_minus4 + 4, "SH: frame_num", currStream, &gDecoder->UsedBits);
-
-  // Tian Dong: frame_num gap processing, if found
-  if (currSlice->idr_flag) {
-    p_Vid->pre_frame_num = currSlice->frame_num;
-    // picture error concealment
-    p_Vid->last_ref_pic_poc = 0;
-    assert(currSlice->frame_num == 0);
-    }
-
-  if (active_sps->frame_mbs_only_flag) {
-    p_Vid->structure = FRAME;
-    currSlice->field_pic_flag=0;
-    }
-  else {
-    // field_pic_flag   u(1)
-    currSlice->field_pic_flag = read_u_1("SH: field_pic_flag", currStream, &gDecoder->UsedBits);
-    if (currSlice->field_pic_flag) {
-      // bottom_field_flag  u(1)
-      currSlice->bottom_field_flag = (byte) read_u_1("SH: bottom_field_flag", currStream, &gDecoder->UsedBits);
-      p_Vid->structure = currSlice->bottom_field_flag ? BOTTOM_FIELD : TOP_FIELD;
-      }
-    else {
-      p_Vid->structure = FRAME;
-      currSlice->bottom_field_flag = FALSE;
-      }
-    }
-
-  currSlice->structure = (PictureStructure) p_Vid->structure;
-  currSlice->mb_aff_frame_flag = (active_sps->mb_adaptive_frame_field_flag && (currSlice->field_pic_flag==0));
-  //currSlice->mb_aff_frame_flag = p_Vid->mb_aff_frame_flag;
-
-  if (currSlice->structure == FRAME       )
-    assert (currSlice->field_pic_flag == 0);
-  if (currSlice->structure == TOP_FIELD   )
-    assert (currSlice->field_pic_flag == 1 && (currSlice->bottom_field_flag == FALSE));
-  if (currSlice->structure == BOTTOM_FIELD)
-    assert (currSlice->field_pic_flag == 1 && (currSlice->bottom_field_flag == TRUE ));
-
-  if (currSlice->idr_flag)
-    currSlice->idr_pic_id = read_ue_v ("SH: idr_pic_id", currStream, &gDecoder->UsedBits);
-
-  if (active_sps->pic_order_cnt_type == 0) {
-    currSlice->pic_order_cnt_lsb = read_u_v (active_sps->log2_max_pic_order_cnt_lsb_minus4 + 4, "SH: pic_order_cnt_lsb", currStream, &gDecoder->UsedBits);
-    if( p_Vid->active_pps->bottom_field_pic_order_in_frame_present_flag  ==  1 &&  !currSlice->field_pic_flag )
-      currSlice->delta_pic_order_cnt_bottom = read_se_v ("SH: delta_pic_order_cnt_bottom", currStream, &gDecoder->UsedBits);
-    else
-      currSlice->delta_pic_order_cnt_bottom = 0;
-    }
-
-  if (active_sps->pic_order_cnt_type == 1 ) {
-    if (!active_sps->delta_pic_order_always_zero_flag ) {
-      currSlice->delta_pic_order_cnt[ 0 ] = read_se_v ("SH: delta_pic_order_cnt[0]", currStream, &gDecoder->UsedBits);
-      if (p_Vid->active_pps->bottom_field_pic_order_in_frame_present_flag  ==  1  &&  !currSlice->field_pic_flag )
-        currSlice->delta_pic_order_cnt[ 1 ] = read_se_v ("SH: delta_pic_order_cnt[1]", currStream, &gDecoder->UsedBits);
-      else
-        currSlice->delta_pic_order_cnt[ 1 ] = 0;  // set to zero if not in stream
-      }
-    else {
-      currSlice->delta_pic_order_cnt[ 0 ] = 0;
-      currSlice->delta_pic_order_cnt[ 1 ] = 0;
-      }
-    }
-
-  // redundant_pic_cnt is missing here
-  if (p_Vid->active_pps->redundant_pic_cnt_present_flag)
-    currSlice->redundant_pic_cnt = read_ue_v ("SH: redundant_pic_cnt", currStream, &gDecoder->UsedBits);
-
-  if (currSlice->slice_type == B_SLICE)
-    currSlice->direct_spatial_mv_pred_flag = read_u_1 ("SH: direct_spatial_mv_pred_flag", currStream, &gDecoder->UsedBits);
-
-  currSlice->num_ref_idx_active[LIST_0] = p_Vid->active_pps->num_ref_idx_l0_default_active_minus1 + 1;
-  currSlice->num_ref_idx_active[LIST_1] = p_Vid->active_pps->num_ref_idx_l1_default_active_minus1 + 1;
-
-  if (currSlice->slice_type == P_SLICE ||
-      currSlice->slice_type == SP_SLICE ||
-      currSlice->slice_type == B_SLICE) {
-    val = read_u_1 ("SH: num_ref_idx_override_flag", currStream, &gDecoder->UsedBits);
-    if (val) {
-      currSlice->num_ref_idx_active[LIST_0] = 1 + read_ue_v ("SH: num_ref_idx_l0_active_minus1", currStream, &gDecoder->UsedBits);
-
-      if(currSlice->slice_type == B_SLICE)
-        currSlice->num_ref_idx_active[LIST_1] = 1 + read_ue_v ("SH: num_ref_idx_l1_active_minus1", currStream, &gDecoder->UsedBits);
-      }
-    }
-
-  if (currSlice->slice_type != B_SLICE)
-    currSlice->num_ref_idx_active[LIST_1] = 0;
-
-  ref_pic_list_reordering(currSlice);
-
-  currSlice->weighted_pred_flag = (unsigned short)((currSlice->slice_type == P_SLICE || currSlice->slice_type == SP_SLICE)
-    ? p_Vid->active_pps->weighted_pred_flag
-    : (currSlice->slice_type == B_SLICE && p_Vid->active_pps->weighted_bipred_idc == 1));
-  currSlice->weighted_bipred_idc = (unsigned short) (currSlice->slice_type == B_SLICE && p_Vid->active_pps->weighted_bipred_idc > 0);
-
-  if ((p_Vid->active_pps->weighted_pred_flag&&(currSlice->slice_type == P_SLICE|| currSlice->slice_type == SP_SLICE))||
-      (p_Vid->active_pps->weighted_bipred_idc==1 && (currSlice->slice_type == B_SLICE)))
-    pred_weight_table (currSlice);
-
-  if (currSlice->nal_reference_idc)
-    dec_ref_pic_marking (p_Vid, currStream, currSlice);
-
-  if (p_Vid->active_pps->entropy_coding_mode_flag && currSlice->slice_type != I_SLICE && currSlice->slice_type != SI_SLICE)
-    currSlice->model_number = read_ue_v ("SH: cabac_init_idc", currStream, &gDecoder->UsedBits);
-  else
-    currSlice->model_number = 0;
-
-  currSlice->slice_qp_delta = val = read_se_v ("SH: slice_qp_delta", currStream, &gDecoder->UsedBits);
-  //currSlice->qp = p_Vid->qp = 26 + p_Vid->active_pps->pic_init_qp_minus26 + val;
-  currSlice->qp = 26 + p_Vid->active_pps->pic_init_qp_minus26 + val;
-
-  if ((currSlice->qp < -p_Vid->bitdepth_luma_qp_scale) || (currSlice->qp > 51))
-    error ("slice_qp_delta makes slice_qp_y out of range", 500);
-
-  if (currSlice->slice_type == SP_SLICE || currSlice->slice_type == SI_SLICE) {
-    if (currSlice->slice_type==SP_SLICE)
-      currSlice->sp_switch = read_u_1 ("SH: sp_for_switch_flag", currStream, &gDecoder->UsedBits);
-    currSlice->slice_qs_delta = val = read_se_v("SH: slice_qs_delta", currStream, &gDecoder->UsedBits);
-    currSlice->qs = 26 + p_Vid->active_pps->pic_init_qs_minus26 + val;
-    if ((currSlice->qs < 0) || (currSlice->qs > 51))
-      error ("slice_qs_delta makes slice_qs_y out of range", 500);
-  }
-
-#if DPF_PARAM_DISP
-  printf("deblocking_filter_control_present_flag:%d\n", p_Vid->active_pps->deblocking_filter_control_present_flag);
-#endif
-  if (p_Vid->active_pps->deblocking_filter_control_present_flag) {
-    currSlice->DFDisableIdc = (short) read_ue_v ("SH: disable_deblocking_filter_idc", currStream, &gDecoder->UsedBits);
-    if (currSlice->DFDisableIdc != 1) {
-      currSlice->DFAlphaC0Offset = (short) (2 * read_se_v("SH: slice_alpha_c0_offset_div2", currStream, &gDecoder->UsedBits));
-      currSlice->DFBetaOffset = (short) (2 * read_se_v("SH: slice_beta_offset_div2", currStream, &gDecoder->UsedBits));
-      }
-    else
-      currSlice->DFAlphaC0Offset = currSlice->DFBetaOffset = 0;
-    }
-  else
-    currSlice->DFDisableIdc = currSlice->DFAlphaC0Offset = currSlice->DFBetaOffset = 0;
-
-#if DPF_PARAM_DISP
-  printf("Slice:%d, DFParameters:(%d,%d,%d)\n\n", currSlice->current_slice_nr, currSlice->DFDisableIdc, currSlice->DFAlphaC0Offset, currSlice->DFBetaOffset);
-#endif
-
-  // The conformance point for intra profiles is without deblocking, but decoders are still recommended to filter the output.
-  // We allow in the decoder config to skip the loop filtering. This is achieved by modifying the parameters here.
-  if (is_HI_intra_only_profile (active_sps->profile_idc, active_sps->constrained_set3_flag) &&
-      (p_Inp->intra_profile_deblocking == 0)) {
-    currSlice->DFDisableIdc =1;
-    currSlice->DFAlphaC0Offset = currSlice->DFBetaOffset = 0;
-    }
-
-
-  if (p_Vid->active_pps->num_slice_groups_minus1>0 && p_Vid->active_pps->slice_group_map_type>=3 &&
-      p_Vid->active_pps->slice_group_map_type<=5) {
-    len = (active_sps->pic_height_in_map_units_minus1+1)*(active_sps->pic_width_in_mbs_minus1+1)/
-          (p_Vid->active_pps->slice_group_change_rate_minus1+1);
-    if (((active_sps->pic_height_in_map_units_minus1+1)*(active_sps->pic_width_in_mbs_minus1+1))%
-          (p_Vid->active_pps->slice_group_change_rate_minus1+1))
-          len +=1;
-
-    len = CeilLog2(len+1);
-
-    currSlice->slice_group_change_cycle = read_u_v (len, "SH: slice_group_change_cycle", currStream, &gDecoder->UsedBits);
-    }
-
-  p_Vid->PicHeightInMbs = p_Vid->FrameHeightInMbs / ( 1 + currSlice->field_pic_flag );
-  p_Vid->PicSizeInMbs   = p_Vid->PicWidthInMbs * p_Vid->PicHeightInMbs;
-  p_Vid->FrameSizeInMbs = p_Vid->PicWidthInMbs * p_Vid->FrameHeightInMbs;
-
-  return gDecoder->UsedBits;
-  }
-//}}}
-
-//{{{
 void init_contexts (Slice* currSlice) {
 
   MotionInfoContexts*  mc = currSlice->mot_ctx;
@@ -1614,11 +1398,8 @@ void init_contexts (Slice* currSlice) {
   int qp = imax(0, currSlice->qp); //p_Vid->qp);
   int model_number = currSlice->model_number;
 
-  //printf("%d -", p_Vid->currentSlice->model_number);
-
   //--- motion coding contexts ---
-  if ((currSlice->slice_type == I_SLICE)||(currSlice->slice_type == SI_SLICE))
-  {
+  if ((currSlice->slice_type == I_SLICE)||(currSlice->slice_type == SI_SLICE)) {
     IBIARI_CTX_INIT2 (3, NUM_MB_TYPE_CTX,   mc->mb_type_contexts,     INIT_MB_TYPE,    model_number, qp);
     IBIARI_CTX_INIT2 (2, NUM_B8_TYPE_CTX,   mc->b8_type_contexts,     INIT_B8_TYPE,    model_number, qp);
     IBIARI_CTX_INIT2 (2, NUM_MV_RES_CTX,    mc->mv_res_contexts,      INIT_MV_RES,     model_number, qp);
@@ -1633,16 +1414,15 @@ void init_contexts (Slice* currSlice) {
     IBIARI_CTX_INIT2 (3,               NUM_CBP_CTX,  tc->cbp_contexts,     INIT_CBP,       model_number, qp);
     IBIARI_CTX_INIT2 (NUM_BLOCK_TYPES, NUM_BCBP_CTX, tc->bcbp_contexts,    INIT_BCBP,      model_number, qp);
     IBIARI_CTX_INIT2 (NUM_BLOCK_TYPES, NUM_MAP_CTX,  tc->map_contexts[0],  INIT_MAP,       model_number, qp);
-#if ENABLE_FIELD_CTX
+  #if ENABLE_FIELD_CTX
     IBIARI_CTX_INIT2 (NUM_BLOCK_TYPES, NUM_MAP_CTX,  tc->map_contexts[1],  INIT_FLD_MAP,   model_number, qp);
     IBIARI_CTX_INIT2 (NUM_BLOCK_TYPES, NUM_LAST_CTX, tc->last_contexts[1], INIT_FLD_LAST,  model_number, qp);
-#endif
+  #endif
     IBIARI_CTX_INIT2 (NUM_BLOCK_TYPES, NUM_LAST_CTX, tc->last_contexts[0], INIT_LAST,      model_number, qp);
     IBIARI_CTX_INIT2 (NUM_BLOCK_TYPES, NUM_ONE_CTX,  tc->one_contexts,     INIT_ONE,       model_number, qp);
     IBIARI_CTX_INIT2 (NUM_BLOCK_TYPES, NUM_ABS_CTX,  tc->abs_contexts,     INIT_ABS,       model_number, qp);
-  }
-  else
-  {
+    }
+  else {
     PBIARI_CTX_INIT2 (3, NUM_MB_TYPE_CTX,   mc->mb_type_contexts,     INIT_MB_TYPE,    model_number, qp);
     PBIARI_CTX_INIT2 (2, NUM_B8_TYPE_CTX,   mc->b8_type_contexts,     INIT_B8_TYPE,    model_number, qp);
     PBIARI_CTX_INIT2 (2, NUM_MV_RES_CTX,    mc->mv_res_contexts,      INIT_MV_RES,     model_number, qp);
@@ -1657,15 +1437,15 @@ void init_contexts (Slice* currSlice) {
     PBIARI_CTX_INIT2 (3,               NUM_CBP_CTX,  tc->cbp_contexts,     INIT_CBP,       model_number, qp);
     PBIARI_CTX_INIT2 (NUM_BLOCK_TYPES, NUM_BCBP_CTX, tc->bcbp_contexts,    INIT_BCBP,      model_number, qp);
     PBIARI_CTX_INIT2 (NUM_BLOCK_TYPES, NUM_MAP_CTX,  tc->map_contexts[0],  INIT_MAP,       model_number, qp);
-#if ENABLE_FIELD_CTX
+  #if ENABLE_FIELD_CTX
     PBIARI_CTX_INIT2 (NUM_BLOCK_TYPES, NUM_MAP_CTX,  tc->map_contexts[1],  INIT_FLD_MAP,   model_number, qp);
     PBIARI_CTX_INIT2 (NUM_BLOCK_TYPES, NUM_LAST_CTX, tc->last_contexts[1], INIT_FLD_LAST,  model_number, qp);
-#endif
+  #endif
     PBIARI_CTX_INIT2 (NUM_BLOCK_TYPES, NUM_LAST_CTX, tc->last_contexts[0], INIT_LAST,      model_number, qp);
     PBIARI_CTX_INIT2 (NUM_BLOCK_TYPES, NUM_ONE_CTX,  tc->one_contexts,     INIT_ONE,       model_number, qp);
     PBIARI_CTX_INIT2 (NUM_BLOCK_TYPES, NUM_ABS_CTX,  tc->abs_contexts,     INIT_ABS,       model_number, qp);
+    }
   }
-}
 //}}}
 //{{{
 void dec_ref_pic_marking (VideoParameters* p_Vid, Bitstream* currStream, Slice* pSlice) {
@@ -1678,14 +1458,14 @@ void dec_ref_pic_marking (VideoParameters* p_Vid, Bitstream* currStream, Slice* 
     }
 
   if (pSlice->idr_flag) {
-    pSlice->no_output_of_prior_pics_flag = 
+    pSlice->no_output_of_prior_pics_flag =
       read_u_1 ("SH: no_output_of_prior_pics_flag", currStream, &gDecoder->UsedBits);
     p_Vid->no_output_of_prior_pics_flag = pSlice->no_output_of_prior_pics_flag;
-    pSlice->long_term_reference_flag = 
+    pSlice->long_term_reference_flag =
       read_u_1 ("SH: long_term_reference_flag", currStream, &gDecoder->UsedBits);
     }
   else {
-    pSlice->adaptive_ref_pic_buffering_flag = 
+    pSlice->adaptive_ref_pic_buffering_flag =
       read_u_1 ("SH: adaptive_ref_pic_buffering_flag", currStream, &gDecoder->UsedBits);
     if (pSlice->adaptive_ref_pic_buffering_flag) {
       // read Memory Management Control Operation
@@ -1696,17 +1476,17 @@ void dec_ref_pic_marking (VideoParameters* p_Vid, Bitstream* currStream, Slice* 
         val = tmp_drpm->memory_management_control_operation =
           read_ue_v ("SH: memory_management_control_operation", currStream, &gDecoder->UsedBits);
         if ((val == 1) || (val == 3))
-          tmp_drpm->difference_of_pic_nums_minus1 = 
+          tmp_drpm->difference_of_pic_nums_minus1 =
             read_ue_v ("SH: difference_of_pic_nums_minus1", currStream, &gDecoder->UsedBits);
         if (val==2)
-          tmp_drpm->long_term_pic_num = 
+          tmp_drpm->long_term_pic_num =
             read_ue_v ("SH: long_term_pic_num", currStream, &gDecoder->UsedBits);
 
-        if ((val ==3 ) || (val == 6))
-          tmp_drpm->long_term_frame_idx = 
+        if ((val == 3 ) || (val == 6))
+          tmp_drpm->long_term_frame_idx =
             read_ue_v ("SH: long_term_frame_idx", currStream, &gDecoder->UsedBits);
         if (val == 4)
-          tmp_drpm->max_long_term_frame_idx_plus1 = 
+          tmp_drpm->max_long_term_frame_idx_plus1 =
             read_ue_v ("SH: max_long_term_pic_idx_plus1", currStream, &gDecoder->UsedBits);
 
         // add command
@@ -1714,7 +1494,7 @@ void dec_ref_pic_marking (VideoParameters* p_Vid, Bitstream* currStream, Slice* 
           pSlice->dec_ref_pic_marking_buffer = tmp_drpm;
         else {
           DecRefPicMarking_t* tmp_drpm2 = pSlice->dec_ref_pic_marking_buffer;
-          while (tmp_drpm2->Next!=NULL) tmp_drpm2 = tmp_drpm2->Next;
+          while (tmp_drpm2->Next != NULL) tmp_drpm2 = tmp_drpm2->Next;
           tmp_drpm2->Next = tmp_drpm;
           }
         } while (val != 0);
@@ -1928,5 +1708,216 @@ void decodePOC (VideoParameters* p_Vid, Slice* pSlice) {
       break;
     //}}}
     }
+  }
+//}}}
+
+//{{{
+int FirstPartOfSliceHeader (Slice* currSlice) {
+
+  VideoParameters* p_Vid = currSlice->p_Vid;
+  byte dP_nr = assignSE2partition[currSlice->dp_mode][SE_HEADER];
+  DataPartition* partition = &(currSlice->partArr[dP_nr]);
+  Bitstream* currStream = partition->bitstream;
+
+  gDecoder->UsedBits = partition->bitstream->frame_bitoffset;
+
+  // Get first_mb_in_slice
+  currSlice->start_mb_nr = read_ue_v ("SH: first_mb_in_slice", currStream, &gDecoder->UsedBits);
+
+  int tmp = read_ue_v ("SH: slice_type", currStream, &gDecoder->UsedBits);
+  if (tmp > 4)
+    tmp -= 5;
+  p_Vid->type = currSlice->slice_type = (SliceType)tmp;
+
+  currSlice->pic_parameter_set_id = read_ue_v ("SH: pic_parameter_set_id", currStream, &gDecoder->UsedBits);
+
+  if (p_Vid->separate_colour_plane_flag)
+    currSlice->colour_plane_id = read_u_v (2, "SH: colour_plane_id", currStream, &gDecoder->UsedBits);
+  else
+    currSlice->colour_plane_id = PLANE_Y;
+
+  return gDecoder->UsedBits;
+  }
+//}}}
+//{{{
+int RestOfSliceHeader (Slice* currSlice) {
+
+  VideoParameters* p_Vid = currSlice->p_Vid;
+  InputParameters* p_Inp = currSlice->p_Inp;
+  seq_parameter_set_rbsp_t* active_sps = p_Vid->active_sps;
+
+  byte dP_nr = assignSE2partition[currSlice->dp_mode][SE_HEADER];
+  DataPartition* partition = &(currSlice->partArr[dP_nr]);
+  Bitstream* currStream = partition->bitstream;
+
+  int val, len;
+  currSlice->frame_num = read_u_v (active_sps->log2_max_frame_num_minus4 + 4, "SH: frame_num", currStream, &gDecoder->UsedBits);
+
+  // Tian Dong: frame_num gap processing, if found
+  if (currSlice->idr_flag) {
+    p_Vid->pre_frame_num = currSlice->frame_num;
+    // picture error concealment
+    p_Vid->last_ref_pic_poc = 0;
+    assert(currSlice->frame_num == 0);
+    }
+
+  if (active_sps->frame_mbs_only_flag) {
+    p_Vid->structure = FRAME;
+    currSlice->field_pic_flag=0;
+    }
+  else {
+    // field_pic_flag   u(1)
+    currSlice->field_pic_flag = read_u_1 ("SH: field_pic_flag", currStream, &gDecoder->UsedBits);
+    if (currSlice->field_pic_flag) {
+      // bottom_field_flag  u(1)
+      currSlice->bottom_field_flag = (byte) read_u_1 ("SH: bottom_field_flag", currStream, &gDecoder->UsedBits);
+      p_Vid->structure = currSlice->bottom_field_flag ? BOTTOM_FIELD : TOP_FIELD;
+      }
+    else {
+      p_Vid->structure = FRAME;
+      currSlice->bottom_field_flag = FALSE;
+      }
+    }
+
+  currSlice->structure = (PictureStructure) p_Vid->structure;
+  currSlice->mb_aff_frame_flag = (active_sps->mb_adaptive_frame_field_flag && (currSlice->field_pic_flag==0));
+  //currSlice->mb_aff_frame_flag = p_Vid->mb_aff_frame_flag;
+
+  if (currSlice->structure == FRAME       )
+    assert (currSlice->field_pic_flag == 0);
+  if (currSlice->structure == TOP_FIELD   )
+    assert (currSlice->field_pic_flag == 1 && (currSlice->bottom_field_flag == FALSE));
+  if (currSlice->structure == BOTTOM_FIELD)
+    assert (currSlice->field_pic_flag == 1 && (currSlice->bottom_field_flag == TRUE ));
+
+  if (currSlice->idr_flag)
+    currSlice->idr_pic_id = read_ue_v ("SH: idr_pic_id", currStream, &gDecoder->UsedBits);
+
+  if (active_sps->pic_order_cnt_type == 0) {
+    currSlice->pic_order_cnt_lsb = read_u_v (active_sps->log2_max_pic_order_cnt_lsb_minus4 + 4, "SH: pic_order_cnt_lsb", currStream, &gDecoder->UsedBits);
+    if( p_Vid->active_pps->bottom_field_pic_order_in_frame_present_flag  ==  1 &&  !currSlice->field_pic_flag )
+      currSlice->delta_pic_order_cnt_bottom = read_se_v ("SH: delta_pic_order_cnt_bottom", currStream, &gDecoder->UsedBits);
+    else
+      currSlice->delta_pic_order_cnt_bottom = 0;
+    }
+
+  if (active_sps->pic_order_cnt_type == 1 ) {
+    if (!active_sps->delta_pic_order_always_zero_flag ) {
+      currSlice->delta_pic_order_cnt[ 0 ] = read_se_v ("SH: delta_pic_order_cnt[0]", currStream, &gDecoder->UsedBits);
+      if (p_Vid->active_pps->bottom_field_pic_order_in_frame_present_flag  ==  1  &&  !currSlice->field_pic_flag )
+        currSlice->delta_pic_order_cnt[ 1 ] = read_se_v ("SH: delta_pic_order_cnt[1]", currStream, &gDecoder->UsedBits);
+      else
+        currSlice->delta_pic_order_cnt[ 1 ] = 0;  // set to zero if not in stream
+      }
+    else {
+      currSlice->delta_pic_order_cnt[ 0 ] = 0;
+      currSlice->delta_pic_order_cnt[ 1 ] = 0;
+      }
+    }
+
+  // redundant_pic_cnt is missing here
+  if (p_Vid->active_pps->redundant_pic_cnt_present_flag)
+    currSlice->redundant_pic_cnt = read_ue_v ("SH: redundant_pic_cnt", currStream, &gDecoder->UsedBits);
+
+  if (currSlice->slice_type == B_SLICE)
+    currSlice->direct_spatial_mv_pred_flag = read_u_1 ("SH: direct_spatial_mv_pred_flag", currStream, &gDecoder->UsedBits);
+
+  currSlice->num_ref_idx_active[LIST_0] = p_Vid->active_pps->num_ref_idx_l0_default_active_minus1 + 1;
+  currSlice->num_ref_idx_active[LIST_1] = p_Vid->active_pps->num_ref_idx_l1_default_active_minus1 + 1;
+
+  if (currSlice->slice_type == P_SLICE ||
+      currSlice->slice_type == SP_SLICE ||
+      currSlice->slice_type == B_SLICE) {
+    val = read_u_1 ("SH: num_ref_idx_override_flag", currStream, &gDecoder->UsedBits);
+    if (val) {
+      currSlice->num_ref_idx_active[LIST_0] = 1 + read_ue_v ("SH: num_ref_idx_l0_active_minus1", currStream, &gDecoder->UsedBits);
+
+      if (currSlice->slice_type == B_SLICE)
+        currSlice->num_ref_idx_active[LIST_1] = 1 + read_ue_v ("SH: num_ref_idx_l1_active_minus1", currStream, &gDecoder->UsedBits);
+      }
+    }
+
+  if (currSlice->slice_type != B_SLICE)
+    currSlice->num_ref_idx_active[LIST_1] = 0;
+
+  ref_pic_list_reordering (currSlice);
+
+  currSlice->weighted_pred_flag = (unsigned short)((currSlice->slice_type == P_SLICE || currSlice->slice_type == SP_SLICE)
+    ? p_Vid->active_pps->weighted_pred_flag
+    : (currSlice->slice_type == B_SLICE && p_Vid->active_pps->weighted_bipred_idc == 1));
+  currSlice->weighted_bipred_idc = (unsigned short)(currSlice->slice_type == B_SLICE && p_Vid->active_pps->weighted_bipred_idc > 0);
+
+  if ((p_Vid->active_pps->weighted_pred_flag &&
+      (currSlice->slice_type == P_SLICE || currSlice->slice_type == SP_SLICE)) ||
+      (p_Vid->active_pps->weighted_bipred_idc == 1 && (currSlice->slice_type == B_SLICE)))
+    pred_weight_table (currSlice);
+
+  if (currSlice->nal_reference_idc)
+    dec_ref_pic_marking (p_Vid, currStream, currSlice);
+
+  if (p_Vid->active_pps->entropy_coding_mode_flag && currSlice->slice_type != I_SLICE && currSlice->slice_type != SI_SLICE)
+    currSlice->model_number = read_ue_v ("SH: cabac_init_idc", currStream, &gDecoder->UsedBits);
+  else
+    currSlice->model_number = 0;
+
+  currSlice->slice_qp_delta = val = read_se_v ("SH: slice_qp_delta", currStream, &gDecoder->UsedBits);
+  currSlice->qp = 26 + p_Vid->active_pps->pic_init_qp_minus26 + val;
+
+  if ((currSlice->qp < -p_Vid->bitdepth_luma_qp_scale) || (currSlice->qp > 51))
+    error ("slice_qp_delta makes slice_qp_y out of range", 500);
+
+  if (currSlice->slice_type == SP_SLICE || currSlice->slice_type == SI_SLICE) {
+    if (currSlice->slice_type==SP_SLICE)
+      currSlice->sp_switch = read_u_1 ("SH: sp_for_switch_flag", currStream, &gDecoder->UsedBits);
+    currSlice->slice_qs_delta = val = read_se_v("SH: slice_qs_delta", currStream, &gDecoder->UsedBits);
+    currSlice->qs = 26 + p_Vid->active_pps->pic_init_qs_minus26 + val;
+    if ((currSlice->qs < 0) || (currSlice->qs > 51))
+      error ("slice_qs_delta makes slice_qs_y out of range", 500);
+    }
+
+#if DPF_PARAM_DISP
+  printf("deblocking_filter_control_present_flag:%d\n", p_Vid->active_pps->deblocking_filter_control_present_flag);
+#endif
+  if (p_Vid->active_pps->deblocking_filter_control_present_flag) {
+    currSlice->DFDisableIdc = (short) read_ue_v ("SH: disable_deblocking_filter_idc", currStream, &gDecoder->UsedBits);
+    if (currSlice->DFDisableIdc != 1) {
+      currSlice->DFAlphaC0Offset = (short) (2 * read_se_v("SH: slice_alpha_c0_offset_div2", currStream, &gDecoder->UsedBits));
+      currSlice->DFBetaOffset = (short) (2 * read_se_v("SH: slice_beta_offset_div2", currStream, &gDecoder->UsedBits));
+      }
+    else
+      currSlice->DFAlphaC0Offset = currSlice->DFBetaOffset = 0;
+    }
+  else
+    currSlice->DFDisableIdc = currSlice->DFAlphaC0Offset = currSlice->DFBetaOffset = 0;
+
+#if DPF_PARAM_DISP
+  printf("Slice:%d, DFParameters:(%d,%d,%d)\n\n", currSlice->current_slice_nr, currSlice->DFDisableIdc, currSlice->DFAlphaC0Offset, currSlice->DFBetaOffset);
+#endif
+
+  // The conformance point for intra profiles is without deblocking, but decoders are still recommended to filter the output.
+  // We allow in the decoder config to skip the loop filtering. This is achieved by modifying the parameters here.
+  if (is_HI_intra_only_profile (active_sps->profile_idc, active_sps->constrained_set3_flag) &&
+      (p_Inp->intra_profile_deblocking == 0)) {
+    currSlice->DFDisableIdc =1;
+    currSlice->DFAlphaC0Offset = currSlice->DFBetaOffset = 0;
+    }
+
+  if (p_Vid->active_pps->num_slice_groups_minus1>0 && p_Vid->active_pps->slice_group_map_type>=3 &&
+      p_Vid->active_pps->slice_group_map_type <= 5) {
+    len = (active_sps->pic_height_in_map_units_minus1+1) * (active_sps->pic_width_in_mbs_minus1+1)/
+          (p_Vid->active_pps->slice_group_change_rate_minus1 + 1);
+    if (((active_sps->pic_height_in_map_units_minus1+1) * (active_sps->pic_width_in_mbs_minus1+1))%
+          (p_Vid->active_pps->slice_group_change_rate_minus1 + 1))
+      len += 1;
+
+    len = CeilLog2 (len+1);
+    currSlice->slice_group_change_cycle = read_u_v (len, "SH: slice_group_change_cycle", currStream, &gDecoder->UsedBits);
+    }
+
+  p_Vid->PicHeightInMbs = p_Vid->FrameHeightInMbs / ( 1 + currSlice->field_pic_flag );
+  p_Vid->PicSizeInMbs   = p_Vid->PicWidthInMbs * p_Vid->PicHeightInMbs;
+  p_Vid->FrameSizeInMbs = p_Vid->PicWidthInMbs * p_Vid->FrameHeightInMbs;
+
+  return gDecoder->UsedBits;
   }
 //}}}
