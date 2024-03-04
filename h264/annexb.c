@@ -46,43 +46,6 @@ static inline int findStartCode (unsigned char* buf, int zerosInStartcode) {
   return 1;
   }
 //}}}
-
-//{{{
-ANNEXB_t* allocAnnexB (VideoParameters* p_Vid) {
-
-  ANNEXB_t* annexB = (ANNEXB_t*)calloc (1, sizeof(ANNEXB_t));
-  annexB->naluBuf = (byte*)malloc (p_Vid->nalu->max_size);
-  return annexB;
-  }
-//}}}
-//{{{
-void openAnnexB (ANNEXB_t* annexB, byte* chunk, size_t chunkSize) {
-
-  annexB->buffer = chunk;
-  annexB->bufferSize = chunkSize;
-
-  annexB->bufferPtr = chunk;
-  annexB->bytesInBuffer = chunkSize;
-  }
-//}}}
-//{{{
-void resetAnnexB (ANNEXB_t* annexB) {
-
-  annexB->bytesInBuffer = annexB->bufferSize;
-  annexB->bufferPtr = annexB->buffer;
-  }
-//}}}
-//{{{
-void freeAnnexB (ANNEXB_t** p_annexB) {
-
-  free ((*p_annexB)->naluBuf);
-  (*p_annexB)->naluBuf = NULL;
-
-  free (*p_annexB);
-  *p_annexB = NULL;
-  }
-//}}}
-
 //{{{
 int getNALU (ANNEXB_t* annexB, VideoParameters* p_Vid, NALU_t* nalu) {
 
@@ -219,5 +182,42 @@ int getNALU (ANNEXB_t* annexB, VideoParameters* p_Vid, NALU_t* nalu) {
             );
 
   return naluBufPos;
+  }
+//}}}
+
+//{{{
+ANNEXB_t* allocAnnexB (VideoParameters* p_Vid) {
+
+  ANNEXB_t* annexB = (ANNEXB_t*)calloc (1, sizeof(ANNEXB_t));
+  annexB->naluBuf = (byte*)malloc (p_Vid->nalu->max_size);
+  return annexB;
+  }
+//}}}
+//{{{
+void freeAnnexB (ANNEXB_t** p_annexB) {
+
+  free ((*p_annexB)->naluBuf);
+  (*p_annexB)->naluBuf = NULL;
+
+  free (*p_annexB);
+  *p_annexB = NULL;
+  }
+//}}}
+
+//{{{
+void openAnnexB (ANNEXB_t* annexB, byte* chunk, size_t chunkSize) {
+
+  annexB->buffer = chunk;
+  annexB->bufferSize = chunkSize;
+
+  annexB->bufferPtr = chunk;
+  annexB->bytesInBuffer = chunkSize;
+  }
+//}}}
+//{{{
+void resetAnnexB (ANNEXB_t* annexB) {
+
+  annexB->bytesInBuffer = annexB->bufferSize;
+  annexB->bufferPtr = annexB->buffer;
   }
 //}}}

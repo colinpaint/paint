@@ -905,8 +905,9 @@ public:
 
     thread ([=]() {
       cLog::setThreadName ("h264");
-      //{{{  get fileSize
+      //{{{  load file to chunk
       size_t fileSize;
+      //{{{  get fileSize
       #ifdef _WIN32
         struct _stati64 st;
         if (_stat64 (fileName.c_str(), &st) != -1)
@@ -916,9 +917,8 @@ public:
         if (stat (mFileName.c_str(), &st) != -1)
           fileSize = st.st_size;
       #endif
-
       //}}}
-      //{{{  load file to chunk
+
       FILE* file = fopen (fileName.c_str(), "rb");
       uint8_t* chunk = new uint8_t[fileSize];
       size_t bytesRead = fread (chunk, 1, fileSize, file);
@@ -932,13 +932,13 @@ public:
       memset (&InputParams, 0, sizeof(InputParameters));
       strcpy (InputParams.infile, fileName.c_str());
       InputParams.poc_scale = 2;
-      InputParams.intra_profile_deblocking = 1;
       InputParams.poc_gap = 2;
       InputParams.ref_poc_gap = 2;
       InputParams.dpb_plus[0] = 1;
+      InputParams.intra_profile_deblocking = 1;
 
       if (OpenDecoder (&InputParams, chunk, fileSize) != DEC_OPEN_NOERR) {
-        cLog::log (LOGERROR, "ppen encoder failed");
+        cLog::log (LOGERROR, "openDecoder failed");
         return;
         }
 
@@ -949,7 +949,7 @@ public:
         if (ret == DEC_EOS || ret == DEC_SUCCEED)
           outputPicList (pDecPicList, 0);
         else
-          cLog::log (LOGERROR, "decoding process failed");
+          cLog::log (LOGERROR, "decoding  failed");
         } while (ret == DEC_SUCCEED);
 
       DecodedPicList* pDecPicList;
