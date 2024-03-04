@@ -484,7 +484,7 @@ typedef struct slice {
   int  InvLevelScale8x8_Intra[3][6][8][8];
   int  InvLevelScale8x8_Inter[3][6][8][8];
 
-  int  *qmatrix[12];
+  int* qmatrix[12];
 
   // Cabac
   int  coeff[64]; // one more for EOB
@@ -498,20 +498,12 @@ typedef struct slice {
   unsigned short luma_log2_weight_denom;
   unsigned short chroma_log2_weight_denom;
 
-  WPParams **wp_params; // wp parameters in [list][index]
-
-  int ***wp_weight;  // weight in [list][index][component] order
-  int ***wp_offset;  // offset in [list][index][component] order
-  int ****wbp_weight; //weight in [list][fw_index][bw_index][component] order
+  WPParams** wp_params; // wp parameters in [list][index]
+  int*** wp_weight;  // weight in [list][index][component] order
+  int*** wp_offset;  // offset in [list][index][component] order
+  int**** wbp_weight; //weight in [list][fw_index][bw_index][component] order
   short wp_round_luma;
   short wp_round_chroma;
-
-#if (MVC_EXTENSION_ENABLE)
-  int listinterviewidx0;
-  int listinterviewidx1;
-  struct frame_store **fs_listinterview0;
-  struct frame_store **fs_listinterview1;
-#endif
 
   // for signalling to the neighbour logic that this is a deblocker call
   int max_mb_vmv_r;                          //!< maximum vertical motion vector range in luma quarter pixel units for the current level_idc

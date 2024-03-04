@@ -1661,12 +1661,6 @@ void update_pic_num (Slice *currSlice) {
 //{{{
 void init_lists_i_slice (Slice *currSlice) {
 
-
-#if (MVC_EXTENSION_ENABLE)
-  currSlice->listinterviewidx0 = 0;
-  currSlice->listinterviewidx1 = 0;
-#endif
-
   currSlice->listXsize[0] = 0;
   currSlice->listXsize[1] = 0;
   }
@@ -1684,11 +1678,6 @@ void init_lists_p_slice (Slice *currSlice) {
 
   FrameStore **fs_list0;
   FrameStore **fs_listlt;
-
-#if (MVC_EXTENSION_ENABLE)
-  currSlice->listinterviewidx0 = 0;
-  currSlice->listinterviewidx1 = 0;
-#endif
 
   if (currSlice->structure == FRAME) {
     for (i=0; i<p_Dpb->ref_frames_in_buffer; i++) {
@@ -1771,11 +1760,6 @@ void init_lists_b_slice (Slice *currSlice) {
   FrameStore **fs_list0;
   FrameStore **fs_list1;
   FrameStore **fs_listlt;
-
-#if (MVC_EXTENSION_ENABLE)
-  currSlice->listinterviewidx0 = 0;
-  currSlice->listinterviewidx1 = 0;
-#endif
 
   {
     // B-Slice
