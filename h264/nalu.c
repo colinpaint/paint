@@ -16,10 +16,6 @@
 #include "global.h"
 #include "nalu.h"
 #include "memalloc.h"
-
-#if (MVC_EXTENSION_ENABLE)
-  #include "vlc.h"
-#endif
 //}}}
 static const int kDebug = 0;
 

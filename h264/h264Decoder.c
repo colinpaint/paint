@@ -72,9 +72,6 @@ void error (char* text, int code) {
   fprintf (stderr, "%s\n", text);
   if (gDecoder) {
     flush_dpb (gDecoder->p_Vid->p_Dpb_layer[0]);
-#if (MVC_EXTENSION_ENABLE)
-    flush_dpb (gDecoder->p_Vid->p_Dpb_layer[1]);
-#endif
     }
 
   exit (code);

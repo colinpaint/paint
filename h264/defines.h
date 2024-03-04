@@ -9,27 +9,24 @@
   #define TRACE           0     //!< 0:Trace off 1:Trace on 2:detailed CABAC context information
 #endif
 
-#define MVC_EXTENSION_ENABLE      1    // enable support for the Multiview High Profile
+#define IMGTYPE                 0  // Define imgpel size type. 0 implies byte (cannot handle >8 bit depths) and 1 implies unsigned short
+#define ENABLE_FIELD_CTX        1  // Enables Field mode related context types for CABAC
+#define ENABLE_HIGH444_CTX      1  // Enables High 444 profile context types for CABAC.
+#define JCOST_CALC_SCALEUP      1  // 1: J = (D<<LAMBDA_ACCURACY_BITS)+Lambda*R; 0: J = D + ((Lambda*R+Rounding)>>LAMBDA_ACCURACY_BITS)
+#define SIMULCAST_ENABLE        0  // to test the decoder
 
-#define IMGTYPE                   0    // Define imgpel size type. 0 implies byte (cannot handle >8 bit depths) and 1 implies unsigned short
-#define ENABLE_FIELD_CTX          1    // Enables Field mode related context types for CABAC
-#define ENABLE_HIGH444_CTX        1    // Enables High 444 profile context types for CABAC.
-#define JCOST_CALC_SCALEUP        1    // 1: J = (D<<LAMBDA_ACCURACY_BITS)+Lambda*R; 0: J = D + ((Lambda*R+Rounding)>>LAMBDA_ACCURACY_BITS)
-#define SIMULCAST_ENABLE          0    // to test the decoder
-
-#define MVC_INIT_VIEW_ID          -1
-#define MAX_VIEW_NUM              1024
-#define BASE_VIEW_IDX             0
+#define MVC_INIT_VIEW_ID        -1
+#define MAX_VIEW_NUM            1024
+#define BASE_VIEW_IDX           0
 
 #include "typedefs.h"
 
-#define SSE_MEMORY_ALIGNMENT      16
+#define SSE_MEMORY_ALIGNMENT    16
 
-#define MAX_NUM_SLICES     50
-#define MAX_REFERENCE_PICTURES 32            // H.264 allows 32 fields
-#define MAX_CODED_FRAME_SIZE 8000000         // bytes for one frame
-#define MAX_NUM_DECSLICES  16
-#define MAX_DEC_THREADS    16                //16 core deocoding;
+#define MAX_NUM_SLICES          50
+#define MAX_REFERENCE_PICTURES  32       // H.264 allows 32 fields
+#define MAX_CODED_FRAME_SIZE    8000000  // bytes for one frame
+#define MAX_NUM_DECSLICES       16
 #define MCBUF_LUMA_PAD_X        32
 #define MCBUF_LUMA_PAD_Y        12
 #define MCBUF_CHROMA_PAD_X      16
@@ -38,18 +35,18 @@
 
 //{{{  AVC Profile IDC definitions
 typedef enum {
-  NO_PROFILE     =  0,       //!< disable profile checking for experimental coding (enables FRExt, but disables MV)
-  FREXT_CAVLC444 = 44,       //!< YUV 4:4:4/14 "CAVLC 4:4:4"
-  BASELINE       = 66,       //!< YUV 4:2:0/8  "Baseline"
-  MAIN           = 77,       //!< YUV 4:2:0/8  "Main"
-  EXTENDED       = 88,       //!< YUV 4:2:0/8  "Extended"
-  FREXT_HP       = 100,      //!< YUV 4:2:0/8  "High"
-  FREXT_Hi10P    = 110,      //!< YUV 4:2:0/10 "High 10"
-  FREXT_Hi422    = 122,      //!< YUV 4:2:2/10 "High 4:2:2"
-  FREXT_Hi444    = 244,      //!< YUV 4:4:4/14 "High 4:4:4"
-  MVC_HIGH       = 118,      //!< YUV 4:2:0/8  "Multiview High"
-  STEREO_HIGH    = 128       //!< YUV 4:2:0/8  "Stereo High"
-} ProfileIDC;
+  NO_PROFILE     =  0,       // disable profile checking for experimental coding (enables FRExt, but disables MV)
+  FREXT_CAVLC444 = 44,       // YUV 4:4:4/14 "CAVLC 4:4:4"
+  BASELINE       = 66,       // YUV 4:2:0/8  "Baseline"
+  MAIN           = 77,       // YUV 4:2:0/8  "Main"
+  EXTENDED       = 88,       // YUV 4:2:0/8  "Extended"
+  FREXT_HP       = 100,      // YUV 4:2:0/8  "High"
+  FREXT_Hi10P    = 110,      // YUV 4:2:0/10 "High 10"
+  FREXT_Hi422    = 122,      // YUV 4:2:2/10 "High 4:2:2"
+  FREXT_Hi444    = 244,      // YUV 4:4:4/14 "High 4:4:4"
+  MVC_HIGH       = 118,      // YUV 4:2:0/8  "Multiview High"
+  STEREO_HIGH    = 128       // YUV 4:2:0/8  "Stereo High"
+  } ProfileIDC;
 //}}}
 
 #define FILE_NAME_SIZE  255
@@ -67,16 +64,16 @@ typedef enum {
 #define SMB_BLOCK_SIZE         8
 #define BLOCK_PIXELS          16
 #define MB_BLOCK_SIZE         16
-#define MB_PIXELS            256 // MB_BLOCK_SIZE * MB_BLOCK_SIZE
-#define MB_PIXELS_SHIFT        8 // log2(MB_BLOCK_SIZE * MB_BLOCK_SIZE)
+#define MB_PIXELS            256  // MB_BLOCK_SIZE * MB_BLOCK_SIZE
+#define MB_PIXELS_SHIFT        8  // log2(MB_BLOCK_SIZE * MB_BLOCK_SIZE)
 #define MB_BLOCK_SHIFT         4
-#define BLOCK_MULTIPLE         4 // (MB_BLOCK_SIZE/BLOCK_SIZE)
-#define MB_BLOCK_PARTITIONS   16 // (BLOCK_MULTIPLE * BLOCK_MULTIPLE)
-#define BLOCK_CONTEXT         64 // (4 * MB_BLOCK_PARTITIONS)
+#define BLOCK_MULTIPLE         4  // (MB_BLOCK_SIZE/BLOCK_SIZE)
+#define MB_BLOCK_PARTITIONS   16  // (BLOCK_MULTIPLE * BLOCK_MULTIPLE)
+#define BLOCK_CONTEXT         64  // (4 * MB_BLOCK_PARTITIONS)
 
 // These variables relate to the subpel accuracy supported by the software (1/4)
-#define BLOCK_SIZE_SP      16  // BLOCK_SIZE << 2
-#define BLOCK_SIZE_8x8_SP  32  // BLOCK_SIZE8x8 << 2
+#define BLOCK_SIZE_SP         16  // BLOCK_SIZE << 2
+#define BLOCK_SIZE_8x8_SP     32  // BLOCK_SIZE8x8 << 2
 
 //{{{  Available MB modes
 typedef enum {
@@ -97,16 +94,16 @@ typedef enum {
   I8MB         = 13,
   IPCM         = 14,
   MAXMODE      = 15
-} MBModeTypes;
+  } MBModeTypes;
 //}}}
 
 // number of intra prediction modes
-#define NO_INTRA_PMODE  9
+#define NO_INTRA_PMODE   9
 //{{{  Direct Mode types
 typedef enum {
   DIR_TEMPORAL = 0, //!< Temporal Direct Mode
   DIR_SPATIAL  = 1 //!< Spatial Direct Mode
-} DirectModes;
+  } DirectModes;
 //}}}
 //{{{  CAVLC block types
 typedef enum {
@@ -119,7 +116,7 @@ typedef enum {
   CR                =  8,
   CR_INTRA16x16DC   =  9,
   CR_INTRA16x16AC   = 10
-} CAVLCBlockTypes;
+  } CAVLCBlockTypes;
 //}}}
 //{{{  CABAC block types
 typedef enum {
@@ -145,7 +142,7 @@ typedef enum {
   CR_8x4        =  19,
   CR_4x8        =  20,
   CR_4x4        =  21
-} CABACBlockTypes;
+  } CABACBlockTypes;
 //}}}
 //{{{  Color components
 typedef enum {
@@ -156,25 +153,25 @@ typedef enum {
   G_COMP = 4,    // G Component
   B_COMP = 5,    // B Component
   T_COMP = 6
-} ColorComponent;
+  } ColorComponent;
 //}}}
 
 // Macro defines
-#define Q_BITS          15
+#define Q_BITS           15
 #define DQ_BITS          6
-#define Q_BITS_8        16
+#define Q_BITS_8         16
 #define DQ_BITS_8        6
 
-#define IS_I16MB(MB)    ((MB)->mb_type==I16MB  || (MB)->mb_type==IPCM)
-#define IS_DIRECT(MB)   ((MB)->mb_type==0     && (currSlice->slice_type == B_SLICE ))
+#define IS_I16MB(MB)     ((MB)->mb_type == I16MB || (MB)->mb_type == IPCM)
+#define IS_DIRECT(MB)    ((MB)->mb_type == 0 && (currSlice->slice_type == B_SLICE ))
 
 #define TOTRUN_NUM       15
-#define RUNBEFORE_NUM     7
-#define RUNBEFORE_NUM_M1  6
+#define RUNBEFORE_NUM    7
+#define RUNBEFORE_NUM_M1 6
 
 // Quantization parameter range
-#define MIN_QP          0
-#define MAX_QP          51
+#define MIN_QP           0
+#define MAX_QP           51
 //{{{  4x4 intra prediction modes
 typedef enum {
   VERT_PRED            = 0,
@@ -186,7 +183,7 @@ typedef enum {
   HOR_DOWN_PRED        = 6,
   VERT_LEFT_PRED       = 7,
   HOR_UP_PRED          = 8
-} I4x4PredModes;
+  } I4x4PredModes;
 //}}}
 //{{{  16x16 intra prediction modes
 typedef enum {
@@ -194,7 +191,7 @@ typedef enum {
   HOR_PRED_16    = 1,
   DC_PRED_16     = 2,
   PLANE_16       = 3
-} I16x16PredModes;
+  } I16x16PredModes;
 //}}}
 //{{{  8x8 chroma intra prediction modes
 typedef enum {
@@ -202,7 +199,7 @@ typedef enum {
   HOR_PRED_8    =  1,
   VERT_PRED_8   =  2,
   PLANE_8       =  3
-} I8x8PredModes;
+  } I8x8PredModes;
 //}}}
 //{{{  StartEnd
 typedef enum {
@@ -210,7 +207,7 @@ typedef enum {
   SOP = 2,    //!< Start Of Picture
   SOS = 3,     //!< Start Of Slice
   SOS_CONT = 4
-} StartEnd;
+  } StartEnd;
 //}}}
 //{{{  MV Prediction types
 typedef enum {
@@ -218,21 +215,21 @@ typedef enum {
   MVPRED_L        = 1,
   MVPRED_U        = 2,
   MVPRED_UR       = 3
-} MVPredTypes;
+  } MVPredTypes;
 //}}}
 //{{{  DecRet
 typedef enum {
   DECODING_OK     = 0,
   SEARCH_SYNC     = 1,
   PICTURE_DECODED = 2
-} DecRet;
+  } DecRet;
 //}}}
 
-#define LAMBDA_ACCURACY_BITS         16
-#define INVALIDINDEX  (-135792468)
-#define RC_MAX_TEMPORAL_LEVELS   5
+
+#define MAX_PLANE                 3
+#define LAMBDA_ACCURACY_BITS      16
+#define INVALIDINDEX              (-135792468)
+#define RC_MAX_TEMPORAL_LEVELS    5
 
 //Start code and Emulation Prevention need this to be defined in identical manner at encoder and decoder
-#define ZEROBYTES_SHORTSTARTCODE 2 //indicates the number of zero bytes in the short start-code prefix
-
-#define MAX_PLANE       3
+#define ZEROBYTES_SHORTSTARTCODE  2 //indicates the number of zero bytes in the short start-code prefix

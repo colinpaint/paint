@@ -68,10 +68,6 @@ static void dump_dpb (DecodedPictureBuffer* p_Dpb) {
       if (p_Dpb->fs[i]->frame->non_existing)
         printf ("ne  ");
 
-#if (MVC_EXTENSION_ENABLE)
-    if (p_Dpb->fs[i]->is_reference)
-      printf ("view_id (%d) ", p_Dpb->fs[i]->view_id);
-#endif
     printf ("\n");
     }
 #endif
@@ -205,20 +201,12 @@ static int output_one_frame_from_dpb (DecodedPictureBuffer *p_Dpb) {
   if (p_Vid->conceal_mode != 0) {
     if (p_Dpb->last_output_poc == 0)
       write_lost_ref_after_idr(p_Dpb, pos);
-#if (MVC_EXTENSION_ENABLE)
     write_lost_non_ref_pic(p_Dpb, poc);
-#else
-    write_lost_non_ref_pic(p_Dpb, poc);
-#endif
   }
 
 // JVT-P072 ends
 
-#if (MVC_EXTENSION_ENABLE)
   write_stored_frame(p_Vid, p_Dpb->fs[pos]);
-#else
-  write_stored_frame(p_Vid, p_Dpb->fs[pos]);
-#endif
 
   // picture error concealment
   if(p_Vid->conceal_mode == 0)
@@ -1159,25 +1147,12 @@ void init_dpb (VideoParameters *p_Vid, DecodedPictureBuffer *p_Dpb, int type) {
   if (NULL==p_Dpb->fs_ltref)
     no_mem_exit("init_dpb: p_Dpb->fs_ltref");
 
-#if (MVC_EXTENSION_ENABLE)
-  p_Dpb->fs_ilref = calloc(1, sizeof (FrameStore*));
-  if (NULL==p_Dpb->fs_ilref)
-    no_mem_exit("init_dpb: p_Dpb->fs_ilref");
-#endif
-
   for (i = 0; i < p_Dpb->size; i++) {
     p_Dpb->fs[i]       = alloc_frame_store();
     p_Dpb->fs_ref[i]   = NULL;
     p_Dpb->fs_ltref[i] = NULL;
     p_Dpb->fs[i]->layer_id = MVC_INIT_VIEW_ID;
     }
-#if (MVC_EXTENSION_ENABLE)
-  if (type == 2) {
-    p_Dpb->fs_ilref[0] = alloc_frame_store();
-    }
-  else
-    p_Dpb->fs_ilref[0] = NULL;
-#endif
 
   /*
   for (i = 0; i < 6; i++)
@@ -1231,27 +1206,11 @@ void re_init_dpb (VideoParameters *p_Vid, DecodedPictureBuffer *p_Dpb, int type)
     if (NULL==p_Dpb->fs_ltref)
       no_mem_exit("re_init_dpb: p_Dpb->fs_ltref");
 
-#if (MVC_EXTENSION_ENABLE)
-    if(!p_Dpb->fs_ilref) {
-      p_Dpb->fs_ilref = calloc(1, sizeof (FrameStore*));
-      if (NULL==p_Dpb->fs_ilref)
-        no_mem_exit("init_dpb: p_Dpb->fs_ilref");
-    }
-#endif
-
     for (i = p_Dpb->size; i < iDpbSize; i++) {
       p_Dpb->fs[i]       = alloc_frame_store();
       p_Dpb->fs_ref[i]   = NULL;
       p_Dpb->fs_ltref[i] = NULL;
     }
-
-#if (MVC_EXTENSION_ENABLE)
-  if (type == 2 && !p_Dpb->fs_ilref[0]) {
-    p_Dpb->fs_ilref[0] = alloc_frame_store();
-  }
-  else
-    p_Dpb->fs_ilref[0] = NULL;
-#endif
 
     p_Dpb->size = iDpbSize;
     p_Dpb->last_output_poc = INT_MIN;
@@ -2227,15 +2186,7 @@ void store_picture_in_dpb (DecodedPictureBuffer *p_Dpb, StorablePicture* p) {
     if (!p->used_for_reference) {
       get_smallest_poc(p_Dpb, &poc, &pos);
       if ((-1==pos) || (p->poc < poc)) {
-#if (_DEBUG && MVC_EXTENSION_ENABLE)
-        if((p_Vid->profile_idc >= MVC_HIGH))
-          printf("Display order might not be correct, %d, %d\n", p->view_id, p->poc);
-#endif
-#if (MVC_EXTENSION_ENABLE)
         direct_output (p_Vid, p);
-#else
-        direct_output (p_Vid, p);
-#endif
         return;
         }
       }
@@ -2335,12 +2286,9 @@ void flush_dpb (DecodedPictureBuffer *p_Dpb)
     conceal_non_ref_pics(p_Dpb, 0);
 
   // mark all frames unused
-  for (i=0; i<p_Dpb->used_size; i++) {
-#if MVC_EXTENSION_ENABLE
-    assert( p_Dpb->fs[i]->view_id == p_Dpb->layer_id);
-#endif
+  for (i=0; i<p_Dpb->used_size; i++) 
     unmark_for_reference (p_Dpb->fs[i]);
-    }
+    
 
   while (remove_unused_frame_from_dpb(p_Dpb));
 

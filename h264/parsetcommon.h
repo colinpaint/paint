@@ -166,68 +166,6 @@ typedef struct {
   } seq_parameter_set_rbsp_t;
 //}}}
 
-#if (MVC_EXTENSION_ENABLE)
-  //{{{
-  typedef struct mvcvui_tag
-  {
-    int num_ops_minus1;
-    char *temporal_id;
-    int *num_target_output_views_minus1;
-    int **view_id;
-    char *timing_info_present_flag;
-    int *num_units_in_tick;
-    int *time_scale;
-    char *fixed_frame_rate_flag;
-    char *nal_hrd_parameters_present_flag;
-    char *vcl_hrd_parameters_present_flag;
-    char *low_delay_hrd_flag;
-    char *pic_struct_present_flag;
-
-    //hrd parameters;
-    char cpb_cnt_minus1;
-    char bit_rate_scale;
-    char cpb_size_scale;
-    int bit_rate_value_minus1[32];
-    int cpb_size_value_minus1[32];
-    char cbr_flag[32];
-    char initial_cpb_removal_delay_length_minus1;
-    char cpb_removal_delay_length_minus1;
-    char dpb_output_delay_length_minus1;
-    char time_offset_length;
-  }MVCVUI_t;
-  //}}}
-  //{{{
-  typedef struct
-  {
-    seq_parameter_set_rbsp_t sps;
-
-    unsigned int bit_equal_to_one;
-    int num_views_minus1;
-    int *view_id;
-    int *num_anchor_refs_l0;
-    int **anchor_ref_l0;
-    int *num_anchor_refs_l1;
-    int **anchor_ref_l1;
-
-    int *num_non_anchor_refs_l0;
-    int **non_anchor_ref_l0;
-    int *num_non_anchor_refs_l1;
-    int **non_anchor_ref_l1;
-
-    int num_level_values_signalled_minus1;
-    int *level_idc;
-    int *num_applicable_ops_minus1;
-    int **applicable_op_temporal_id;
-    int **applicable_op_num_target_views_minus1;
-    int ***applicable_op_target_view_id;
-    int **applicable_op_num_views_minus1;
-
-    unsigned int mvc_vui_parameters_present_flag;
-    Boolean   Valid;                  // indicates the parameter set is valid
-    MVCVUI_t  MVCVUIParams;
-  } subset_seq_parameter_set_rbsp_t;
-  //}}}
-#endif
 
 pic_parameter_set_rbsp_t* AllocPPS();
 void FreePPS (pic_parameter_set_rbsp_t* pps);

@@ -549,12 +549,7 @@ static int interpretSPS (VideoParameters *p_Vid, DataPartition *p, seq_parameter
       (sps->profile_idc!=FREXT_Hi10P) &&
       (sps->profile_idc!=FREXT_Hi422) &&
       (sps->profile_idc!=FREXT_Hi444) &&
-      (sps->profile_idc!=FREXT_CAVLC444)
-#if (MVC_EXTENSION_ENABLE)
-      && (sps->profile_idc!=MVC_HIGH)
-      && (sps->profile_idc!=STEREO_HIGH)
-#endif
-      ) {
+      (sps->profile_idc!=FREXT_CAVLC444)) {
     printf ("Invalid Profile IDC (%d) encountered. \n", sps->profile_idc);
     return gDecoder->UsedBits;
     }
@@ -579,16 +574,11 @@ static int interpretSPS (VideoParameters *p_Vid, DataPartition *p, seq_parameter
   sps->lossless_qpprime_flag   = 0;
   sps->separate_colour_plane_flag = 0;
 
-  if((sps->profile_idc==FREXT_HP   ) ||
-     (sps->profile_idc==FREXT_Hi10P) ||
-     (sps->profile_idc==FREXT_Hi422) ||
-     (sps->profile_idc==FREXT_Hi444) ||
-     (sps->profile_idc==FREXT_CAVLC444)
-#if (MVC_EXTENSION_ENABLE)
-     || (sps->profile_idc==MVC_HIGH)
-     || (sps->profile_idc==STEREO_HIGH)
-#endif
-     ) {
+  if ((sps->profile_idc==FREXT_HP   ) ||
+      (sps->profile_idc==FREXT_Hi10P) ||
+      (sps->profile_idc==FREXT_Hi422) ||
+      (sps->profile_idc==FREXT_Hi444) ||
+      (sps->profile_idc==FREXT_CAVLC444)) {
     sps->chroma_format_idc = read_ue_v ("SPS: chroma_format_idc", s, &gDecoder->UsedBits);
     if (sps->chroma_format_idc == YUV444)
       sps->separate_colour_plane_flag = read_u_1  ("SPS: separate_colour_plane_flag", s, &gDecoder->UsedBits);
@@ -767,12 +757,7 @@ void ProcessSPS (VideoParameters* p_Vid, NALU_t* nalu) {
       }
 
     MakeSPSavailable (p_Vid, sps->seq_parameter_set_id, sps);
-#if (MVC_EXTENSION_ENABLE)
-    if (p_Vid->profile_idc < (int) sps->profile_idc)
-      p_Vid->profile_idc = sps->profile_idc;
-#else
     p_Vid->profile_idc = sps->profile_idc;
-#endif
     p_Vid->separate_colour_plane_flag = sps->separate_colour_plane_flag;
     if( p_Vid->separate_colour_plane_flag )
       p_Vid->ChromaArrayType = 0;
