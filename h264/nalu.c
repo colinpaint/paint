@@ -180,7 +180,7 @@ static inline int findStartCode (unsigned char* buf, int zerosInStartcode) {
   }
 //}}}
 //{{{
-static  getNALU (ANNEXB_t* annexB, VideoParameters* p_Vid, NALU_t* nalu) {
+static int getNALU (ANNEXB_t* annexB, VideoParameters* p_Vid, NALU_t* nalu) {
 
   int naluBufCount = 0;
   byte* naluBufPtr = annexB->naluBuf;
@@ -384,6 +384,7 @@ int readNextNalu (VideoParameters* p_Vid, NALU_t* nalu) {
   // If current NALU is a VCL NALU, we can't tell whether it is the first VCL NALU at this point,
   // so only non-VCL NAL unit is checked here.
   checkZeroByteNonVCL (p_Vid, nalu);
+
   ret = NALUtoRBSP (nalu);
   if (ret < 0)
     error ("Invalid startcode emulation prevention found.", 602);

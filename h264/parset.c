@@ -33,27 +33,20 @@
 //}}}
 extern void init_frext (VideoParameters *p_Vid);
 //{{{
-static const byte ZZ_SCAN[16]  =
-{  0,  1,  4,  8,  5,  2,  3,  6,  9, 12, 13, 10,  7, 11, 14, 15
-};
+static const byte ZZ_SCAN[16] = {  
+  0,  1,  4,  8,  5,  2,  3,  6,  9, 12, 13, 10,  7, 11, 14, 15
+  };
 //}}}
 //{{{
-static const byte ZZ_SCAN8[64] =
-{  0,  1,  8, 16,  9,  2,  3, 10, 17, 24, 32, 25, 18, 11,  4,  5,
-   12, 19, 26, 33, 40, 48, 41, 34, 27, 20, 13,  6,  7, 14, 21, 28,
-   35, 42, 49, 56, 57, 50, 43, 36, 29, 22, 15, 23, 30, 37, 44, 51,
-   58, 59, 52, 45, 38, 31, 39, 46, 53, 60, 61, 54, 47, 55, 62, 63
-};
+static const byte ZZ_SCAN8[64] = {
+  0,  1,  8, 16,  9,  2,  3, 10, 17, 24, 32, 25, 18, 11,  4,  5,
+  12, 19, 26, 33, 40, 48, 41, 34, 27, 20, 13,  6,  7, 14, 21, 28,
+  35, 42, 49, 56, 57, 50, 43, 36, 29, 22, 15, 23, 30, 37, 44, 51,
+  58, 59, 52, 45, 38, 31, 39, 46, 53, 60, 61, 54, 47, 55, 62, 63
+  };
 //}}}
 
 //{{{
-/*!
- ************************************************************************
- * \brief
- *    Updates images max values
- *
- ************************************************************************
- */
 static void updateMaxValue (FrameFormat *format)
 {
   format->max_value[0] = (1 << format->bit_depth[0]) - 1;
@@ -305,8 +298,8 @@ static void reset_format_info (seq_parameter_set_rbsp_t *sps, VideoParameters *p
 //{{{
 static seq_parameter_set_rbsp_t* AllocSPS() {
 
-   seq_parameter_set_rbsp_t* p;
-   if ((p = calloc (1, sizeof (seq_parameter_set_rbsp_t))) == NULL)
+   seq_parameter_set_rbsp_t* p = calloc (1, sizeof (seq_parameter_set_rbsp_t));
+   if (p == NULL)
      no_mem_exit ("AllocSPS: SPS");
 
    return p;
@@ -760,7 +753,7 @@ void MakeSPSavailable (VideoParameters* p_Vid, int id, seq_parameter_set_rbsp_t*
 //{{{
 void ProcessSPS (VideoParameters* p_Vid, NALU_t* nalu) {
 
-  DataPartition* dp = AllocPartition(1);
+  DataPartition* dp = AllocPartition (1);
   seq_parameter_set_rbsp_t* sps = AllocSPS();
   dp->bitstream->ei_flag = 0;
   dp->bitstream->read_len = dp->bitstream->frame_bitoffset = 0;
@@ -773,15 +766,13 @@ void ProcessSPS (VideoParameters* p_Vid, NALU_t* nalu) {
     if (p_Vid->active_sps) {
       if (sps->seq_parameter_set_id == p_Vid->active_sps->seq_parameter_set_id) {
         if (!spsIsEqual (sps, p_Vid->active_sps))   {
-          if (p_Vid->dec_picture) // && p_Vid->num_dec_mb == p_Vid->PicSizeInMbs) //?
-            // this may only happen on slice loss
+          if (p_Vid->dec_picture)
             exit_picture (p_Vid, &p_Vid->dec_picture);
           p_Vid->active_sps=NULL;
           }
         }
       }
 
-    // SPSConsistencyCheck (pps);
     MakeSPSavailable (p_Vid, sps->seq_parameter_set_id, sps);
 #if (MVC_EXTENSION_ENABLE)
     if (p_Vid->profile_idc < (int) sps->profile_idc)
@@ -799,12 +790,6 @@ void ProcessSPS (VideoParameters* p_Vid, NALU_t* nalu) {
   FreePartition (dp, 1);
   freeSPS (sps);
   }
-//}}}
-//{{{
-void SPSConsistencyCheck (seq_parameter_set_rbsp_t* sps)
-{
-  printf ("Consistency checking a sequence parset, to be implemented\n");
-}
 //}}}
 //{{{
 void activateSPS (VideoParameters* p_Vid, seq_parameter_set_rbsp_t* sps) {
@@ -863,11 +848,8 @@ void activateSPS (VideoParameters* p_Vid, seq_parameter_set_rbsp_t* sps) {
 #if MVC_EXTENSION_ENABLE
       init_dpb (p_Vid, p_Vid->p_Dpb_layer[1], 2);
 #endif
-      //p_Vid->last_profile_idc = p_Vid->active_sps->profile_idc;
       }
 
-    //p_Vid->p_Dpb_layer[0]->num_ref_frames = p_Vid->active_sps->num_ref_frames;
-    //p_Vid->p_Dpb_layer[1]->num_ref_frames = p_Vid->active_sps->num_ref_frames;
     p_Vid->last_pic_width_in_mbs_minus1 = p_Vid->active_sps->pic_width_in_mbs_minus1;
     p_Vid->last_pic_height_in_map_units_minus1 = p_Vid->active_sps->pic_height_in_map_units_minus1;
     p_Vid->last_max_dec_frame_buffering = GetMaxDecFrameBuffering(p_Vid);
@@ -899,13 +881,13 @@ void activateSPS (VideoParameters* p_Vid, seq_parameter_set_rbsp_t* sps) {
 //{{{
 int GetBaseViewId (VideoParameters* p_Vid, subset_seq_parameter_set_rbsp_t** subset_sps) {
 
-  subset_seq_parameter_set_rbsp_t *curr_subset_sps;
+  subset_seq_parameter_set_rbsp_t* curr_subset_sps;
   int i, iBaseViewId=0; //-1;
 
   *subset_sps = NULL;
   curr_subset_sps = p_Vid->SubsetSeqParSet;
   for (i = 0; i < MAXSPS; i++) {
-    if(curr_subset_sps->num_views_minus1>=0 && curr_subset_sps->sps.Valid) { // && curr_subset_sps->sps.seq_parameter_set_id < MAXSPS)
+    if (curr_subset_sps->num_views_minus1>=0 && curr_subset_sps->sps.Valid) { 
       iBaseViewId = curr_subset_sps->view_id[BASE_VIEW_IDX];
       break;
       }
@@ -1195,7 +1177,6 @@ void ProcessPPS (VideoParameters* p_Vid, NALU_t *nalu) {
         // copy to next PPS;
         memcpy (p_Vid->pNextPPS, p_Vid->active_pps, sizeof (pic_parameter_set_rbsp_t));
         if (p_Vid->dec_picture)
-          // && p_Vid->num_dec_mb == p_Vid->PicSizeInMbs) this may only happen on slice loss
           exit_picture(p_Vid, &p_Vid->dec_picture);
         p_Vid->active_pps = NULL;
         }

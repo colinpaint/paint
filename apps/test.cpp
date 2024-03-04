@@ -888,7 +888,7 @@ public:
           fileSize = st.st_size;
       #else
         struct stat st;
-        if (stat (mFileName.c_str(), &st) != -1)
+        if (stat (fileName.c_str(), &st) != -1)
           fileSize = st.st_size;
       #endif
       //}}}
