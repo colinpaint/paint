@@ -62,10 +62,10 @@ typedef struct nalu_t {
   } NALU_t;
 //}}}
 
-extern NALU_t* AllocNALU (int);
-extern void FreeNALU (NALU_t* n);
+extern NALU_t* allocNALU (int);
+extern void freeNALU (NALU_t* n);
 
-extern void CheckZeroByteVCL (VideoParameters* p_Vid, NALU_t* nalu);
-extern void CheckZeroByteNonVCL (VideoParameters* p_Vid, NALU_t* nalu);
+extern void checkZeroByteVCL (VideoParameters* p_Vid, NALU_t* nalu);
+extern void checkZeroByteNonVCL (VideoParameters* p_Vid, NALU_t* nalu);
 
 extern int readNextNalu (VideoParameters* p_Vid, NALU_t* nalu);

@@ -128,7 +128,7 @@ static void alloc_video_params (VideoParameters** p_Vid) {
 
   (*p_Vid)->iNumOfSlicesAllocated = MAX_NUM_DECSLICES;
   (*p_Vid)->pNextSlice = NULL;
-  (*p_Vid)->nalu = AllocNALU(MAX_CODED_FRAME_SIZE);
+  (*p_Vid)->nalu = allocNALU (MAX_CODED_FRAME_SIZE);
   (*p_Vid)->pDecOuputPic = (DecodedPicList*)calloc(1, sizeof(DecodedPicList));
   (*p_Vid)->pNextPPS = AllocPPS();
   (*p_Vid)->first_sps = TRUE;
@@ -295,7 +295,7 @@ static void free_img (VideoParameters* p_Vid) {
       }
 
     if (p_Vid->nalu) {
-      FreeNALU (p_Vid->nalu);
+      freeNALU (p_Vid->nalu);
       p_Vid->nalu=NULL;
       }
 

@@ -1087,7 +1087,7 @@ static int readNewSlice (Slice* currSlice) {
             initPicture (p_Vid, currSlice, p_Inp);
           current_header = SOP;
           // check zero_byte if it is also the first NAL unit in the access unit
-          CheckZeroByteVCL (p_Vid, nalu);
+          checkZeroByteVCL (p_Vid, nalu);
           }
         else
           current_header = SOS;
@@ -1161,7 +1161,7 @@ static int readNewSlice (Slice* currSlice) {
           if (p_Vid->iSliceNumOfCurrPic == 0)
             initPicture (p_Vid, currSlice, p_Inp);
           current_header = SOP;
-          CheckZeroByteVCL (p_Vid, nalu);
+          checkZeroByteVCL (p_Vid, nalu);
           }
         else
           current_header = SOS;

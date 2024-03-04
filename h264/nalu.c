@@ -24,7 +24,7 @@
 //}}}
 
 //{{{
-NALU_t* AllocNALU (int buffersize) {
+NALU_t* allocNALU (int buffersize) {
 
   NALU_t* nalu = (NALU_t*)calloc (1, sizeof(NALU_t));
   if (nalu == NULL)
@@ -41,7 +41,7 @@ NALU_t* AllocNALU (int buffersize) {
   }
 //}}}
 //{{{
-void FreeNALU (NALU_t* n) {
+void freeNALU (NALU_t* n) {
 
   if (n != NULL) {
     if (n->buf != NULL) {
@@ -54,7 +54,7 @@ void FreeNALU (NALU_t* n) {
 //}}}
 
 //{{{
-void CheckZeroByteVCL (VideoParameters* p_Vid, NALU_t* nalu) {
+void checkZeroByteVCL (VideoParameters* p_Vid, NALU_t* nalu) {
 
   int CheckZeroByte = 0;
 
@@ -80,7 +80,7 @@ void CheckZeroByteVCL (VideoParameters* p_Vid, NALU_t* nalu) {
    }
 //}}}
 //{{{
-void CheckZeroByteNonVCL (VideoParameters* p_Vid, NALU_t* nalu) {
+void checkZeroByteNonVCL (VideoParameters* p_Vid, NALU_t* nalu) {
 
   int CheckZeroByte = 0;
 
@@ -186,7 +186,7 @@ int readNextNalu (VideoParameters* p_Vid, NALU_t* nalu) {
   // In some cases, zero_byte shall be present.
   // If current NALU is a VCL NALU, we can't tell whether it is the first VCL NALU at this point,
   // so only non-VCL NAL unit is checked here.
-  CheckZeroByteNonVCL (p_Vid, nalu);
+  checkZeroByteNonVCL (p_Vid, nalu);
   ret = NALUtoRBSP (nalu);
   if (ret < 0)
     error ("Invalid startcode emulation prevention found.", 602);
