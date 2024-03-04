@@ -697,7 +697,7 @@ static void initPicture (VideoParameters *p_Vid, Slice *currSlice, InputParamete
       char* intra_block = p_Vid->intra_block_JV[nplane];
       for (int i = 0; i < (int)p_Vid->PicSizeInMbs; ++i)
         reset_mbs (currMB++);
-      fast_memset (p_Vid->ipredmode_JV[nplane][0], DC_PRED, 16 * p_Vid->FrameHeightInMbs * p_Vid->PicWidthInMbs * sizeof(char));
+      memset (p_Vid->ipredmode_JV[nplane][0], DC_PRED, 16 * p_Vid->FrameHeightInMbs * p_Vid->PicWidthInMbs * sizeof(char));
       if (p_Vid->active_pps->constrained_intra_pred_flag)
         for (int i = 0; i < (int)p_Vid->PicSizeInMbs; ++i)
           intra_block[i] = 1;
@@ -710,7 +710,7 @@ static void initPicture (VideoParameters *p_Vid, Slice *currSlice, InputParamete
     if (p_Vid->active_pps->constrained_intra_pred_flag)
       for (int i = 0; i < (int)p_Vid->PicSizeInMbs; ++i)
         p_Vid->intra_block[i] = 1;
-    fast_memset (p_Vid->ipredmode[0], DC_PRED, 16 * p_Vid->FrameHeightInMbs * p_Vid->PicWidthInMbs * sizeof(char));
+    memset (p_Vid->ipredmode[0], DC_PRED, 16 * p_Vid->FrameHeightInMbs * p_Vid->PicWidthInMbs * sizeof(char));
     }
 
   dec_picture->slice_type = p_Vid->type;
@@ -1008,7 +1008,7 @@ static int readNewSlice (Slice* currSlice) {
           currStream = currSlice->partArr[0].bitstream;
           currStream->ei_flag = 0;
           currStream->frame_bitoffset = currStream->read_len = 0;
-          fast_memcpy (currStream->streamBuffer, &nalu->buf[1], nalu->len-1);
+          memcpy (currStream->streamBuffer, &nalu->buf[1], nalu->len-1);
           currStream->code_len = currStream->bitstream_length = RBSPtoSODB (currStream->streamBuffer, nalu->len-1);
           }
       #else
@@ -1289,25 +1289,25 @@ static int readNewSlice (Slice* currSlice) {
 void pad_buf (imgpel* pImgBuf, int iWidth, int iHeight, int iStride, int iPadX, int iPadY) {
 
   int pad_width = iPadX + iWidth;
-  fast_memset (pImgBuf - iPadX, *pImgBuf, iPadX * sizeof(imgpel));
-  fast_memset (pImgBuf + iWidth, *(pImgBuf + iWidth - 1), iPadX * sizeof(imgpel));
+  memset (pImgBuf - iPadX, *pImgBuf, iPadX * sizeof(imgpel));
+  memset (pImgBuf + iWidth, *(pImgBuf + iWidth - 1), iPadX * sizeof(imgpel));
 
   imgpel* pLine0 = pImgBuf - iPadX;
   imgpel* pLine = pLine0 - iPadY * iStride;
   for (int j = -iPadY; j < 0; j++) {
-    fast_memcpy (pLine, pLine0, iStride * sizeof(imgpel));
+    memcpy (pLine, pLine0, iStride * sizeof(imgpel));
     pLine += iStride;
     }
 
   for (int j = 1; j < iHeight; j++) {
     pLine += iStride;
-    fast_memset (pLine, *(pLine + iPadX), iPadX * sizeof(imgpel));
-    fast_memset (pLine + pad_width, *(pLine + pad_width - 1), iPadX * sizeof(imgpel));
+    memset (pLine, *(pLine + iPadX), iPadX * sizeof(imgpel));
+    memset (pLine + pad_width, *(pLine + pad_width - 1), iPadX * sizeof(imgpel));
     }
 
   pLine0 = pLine + iStride;
   for (int j = iHeight; j < iHeight + iPadY; j++) {
-    fast_memcpy (pLine0,  pLine, iStride * sizeof(imgpel));
+    memcpy (pLine0,  pLine, iStride * sizeof(imgpel));
     pLine0 += iStride;
     }
   }

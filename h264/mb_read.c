@@ -591,7 +591,7 @@ static void reset_coeffs (Macroblock* currMB)
 
   // CAVLC
   if (p_Vid->active_pps->entropy_coding_mode_flag == (Boolean) CAVLC)
-    fast_memset(p_Vid->nz_coeff[currMB->mbAddrX][0][0], 0, 3 * BLOCK_PIXELS * sizeof(byte));
+    memset (p_Vid->nz_coeff[currMB->mbAddrX][0][0], 0, 3 * BLOCK_PIXELS * sizeof(byte));
 }
 //}}}
 //{{{

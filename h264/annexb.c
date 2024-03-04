@@ -23,6 +23,43 @@
 static const int kDebug = 0;
 
 //{{{
+ANNEXB_t* allocAnnexB (VideoParameters* p_Vid) {
+
+  ANNEXB_t* annexB = (ANNEXB_t*)calloc (1, sizeof(ANNEXB_t));
+  annexB->naluBuf = (byte*)malloc (p_Vid->nalu->max_size);
+  return annexB;
+  }
+//}}}
+//{{{
+void freeAnnexB (ANNEXB_t** p_annexB) {
+
+  free ((*p_annexB)->naluBuf);
+  (*p_annexB)->naluBuf = NULL;
+
+  free (*p_annexB);
+  *p_annexB = NULL;
+  }
+//}}}
+
+//{{{
+void openAnnexB (ANNEXB_t* annexB, byte* chunk, size_t chunkSize) {
+
+  annexB->buffer = chunk;
+  annexB->bufferSize = chunkSize;
+
+  annexB->bufferPtr = chunk;
+  annexB->bytesInBuffer = chunkSize;
+  }
+//}}}
+//{{{
+void resetAnnexB (ANNEXB_t* annexB) {
+
+  annexB->bytesInBuffer = annexB->bufferSize;
+  annexB->bufferPtr = annexB->buffer;
+  }
+//}}}
+
+//{{{
 static inline byte getfbyte (ANNEXB_t* annexB) {
 
   if (annexB->bytesInBuffer) {
@@ -165,7 +202,7 @@ int getNALU (ANNEXB_t* annexB, VideoParameters* p_Vid, NALU_t* nalu) {
   // - naluBufPos is the number of bytes excluding the next start code,
   // - naluBufPos - LeadingZero8BitsCount is the size of the NALU.
   nalu->len = naluBufPos - leadingZero8BitsCount;
-  fast_memcpy (nalu->buf, annexB->naluBuf + leadingZero8BitsCount, nalu->len);
+  memcpy (nalu->buf, annexB->naluBuf + leadingZero8BitsCount, nalu->len);
 
   nalu->forbidden_bit = (*(nalu->buf) >> 7) & 1;
   nalu->nal_reference_idc = (NalRefIdc) ((*(nalu->buf) >> 5) & 3);
@@ -182,42 +219,5 @@ int getNALU (ANNEXB_t* annexB, VideoParameters* p_Vid, NALU_t* nalu) {
             );
 
   return naluBufPos;
-  }
-//}}}
-
-//{{{
-ANNEXB_t* allocAnnexB (VideoParameters* p_Vid) {
-
-  ANNEXB_t* annexB = (ANNEXB_t*)calloc (1, sizeof(ANNEXB_t));
-  annexB->naluBuf = (byte*)malloc (p_Vid->nalu->max_size);
-  return annexB;
-  }
-//}}}
-//{{{
-void freeAnnexB (ANNEXB_t** p_annexB) {
-
-  free ((*p_annexB)->naluBuf);
-  (*p_annexB)->naluBuf = NULL;
-
-  free (*p_annexB);
-  *p_annexB = NULL;
-  }
-//}}}
-
-//{{{
-void openAnnexB (ANNEXB_t* annexB, byte* chunk, size_t chunkSize) {
-
-  annexB->buffer = chunk;
-  annexB->bufferSize = chunkSize;
-
-  annexB->bufferPtr = chunk;
-  annexB->bytesInBuffer = chunkSize;
-  }
-//}}}
-//{{{
-void resetAnnexB (ANNEXB_t* annexB) {
-
-  annexB->bytesInBuffer = annexB->bufferSize;
-  annexB->bufferPtr = annexB->buffer;
   }
 //}}}

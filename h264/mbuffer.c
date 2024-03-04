@@ -3228,7 +3228,7 @@ static inline void copy_img_data (imgpel *out_img, imgpel *in_img, int ostride, 
 {
   unsigned int i;
   for (i = 0; i < size_y; i++) {
-    fast_memcpy (out_img, in_img, size_x);
+    memcpy (out_img, in_img, size_x);
     out_img += ostride;
     in_img += istride;
     }
@@ -3272,7 +3272,7 @@ int init_img_data (VideoParameters *p_Vid, ImageData *p_ImgData, seq_parameter_s
       memory_size += get_mem2Dpel(&(p_ImgData->frm_data[2]), p_Vid->height_cr, p_Vid->width_cr);
       if (sizeof(imgpel) == sizeof(unsigned char)) {
         for (k = 1; k < 3; k++)
-          fast_memset(p_ImgData->frm_data[k][0], 128, p_Vid->height_cr * p_Vid->width_cr * sizeof(imgpel));
+          memset (p_ImgData->frm_data[k][0], 128, p_Vid->height_cr * p_Vid->width_cr * sizeof(imgpel));
         }
       else {
         imgpel mean_val;
