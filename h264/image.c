@@ -642,7 +642,6 @@ static void initPicture (VideoParameters *p_Vid, Slice *currSlice, InputParamete
 #if (MVC_EXTENSION_ENABLE)
   dec_picture->view_id = currSlice->view_id;
   dec_picture->inter_view_flag = currSlice->inter_view_flag;
-  dec_picture->anchor_pic_flag = currSlice->anchor_pic_flag;
   if (dec_picture->view_id == 1)
     if ((p_Vid->profile_idc == MVC_HIGH) || (p_Vid->profile_idc == STEREO_HIGH))
       initMvcPicture (currSlice);

@@ -126,7 +126,6 @@ static void insert_picture_in_dpb (VideoParameters *p_Vid, FrameStore* fs, Stora
     #if (MVC_EXTENSION_ENABLE)
       fs->view_id = p->view_id;
       fs->inter_view_flag[0] = fs->inter_view_flag[1] = p->inter_view_flag;
-      fs->anchor_pic_flag[0] = fs->anchor_pic_flag[1] = p->anchor_pic_flag;
     #endif
 
       // generate field views
@@ -142,7 +141,6 @@ static void insert_picture_in_dpb (VideoParameters *p_Vid, FrameStore* fs, Stora
     #if (MVC_EXTENSION_ENABLE)
       fs->view_id = p->view_id;
       fs->inter_view_flag[0] = p->inter_view_flag;
-      fs->anchor_pic_flag[0] = p->anchor_pic_flag;
     #endif
 
       if (p->used_for_reference) {
@@ -171,7 +169,6 @@ static void insert_picture_in_dpb (VideoParameters *p_Vid, FrameStore* fs, Stora
     #if (MVC_EXTENSION_ENABLE)
       fs->view_id = p->view_id;
       fs->inter_view_flag[1] = p->inter_view_flag;
-      fs->anchor_pic_flag[1] = p->anchor_pic_flag;
     #endif
 
       if (p->used_for_reference) {
@@ -3580,7 +3577,6 @@ void process_picture_in_dpb_s (VideoParameters *p_Vid, StorablePicture *p_pic)
 
     // MVC-related parameters
     p_stored_pic->inter_view_flag = p_pic->inter_view_flag;
-    p_stored_pic->anchor_pic_flag = 0;
     p_stored_pic->view_id = 0;
     p_stored_pic->proc_flag = 1;
     p_stored_pic->is_output = 1;

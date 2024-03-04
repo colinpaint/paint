@@ -28,8 +28,8 @@ typedef struct storable_picture {
   int         top_poc;
   int         bottom_poc;
   int         frame_poc;
-  unsigned int  frame_num;
-  unsigned int  recovery_frame;
+  unsigned int frame_num;
+  unsigned int recovery_frame;
 
   int         pic_num;
   int         long_term_pic_num;
@@ -52,18 +52,17 @@ typedef struct storable_picture {
   int         iLumaPadY, iLumaPadX;
   int         iChromaPadY, iChromaPadX;
 
-  imgpel **     imgY;         //!< Y picture component
-  imgpel ***    imgUV;        //!< U and V picture components
+  imgpel** imgY;         
+  imgpel*** imgUV;       
 
-  struct pic_motion_params **mv_info;          //!< Motion info
-  struct pic_motion_params **JVmv_info[MAX_PLANE];          //!< Motion info
+  struct pic_motion_params** mv_info;                
+  struct pic_motion_params** JVmv_info[MAX_PLANE];   
+  struct pic_motion_params_old  motion;              
+  struct pic_motion_params_old  JVmotion[MAX_PLANE]; // Motion info for 4:4:4 independent mode decoding
 
-  struct pic_motion_params_old  motion;              //!< Motion info
-  struct pic_motion_params_old  JVmotion[MAX_PLANE]; //!< Motion info for 4:4:4 independent mode decoding
-
-  struct storable_picture *top_field;     // for mb aff, if frame for referencing the top field
-  struct storable_picture *bottom_field;  // for mb aff, if frame for referencing the bottom field
-  struct storable_picture *frame;         // for mb aff, if field for referencing the combined frame
+  struct storable_picture* top_field;     // for mb aff, if frame for referencing the top field
+  struct storable_picture* bottom_field;  // for mb aff, if frame for referencing the bottom field
+  struct storable_picture* frame;         // for mb aff, if field for referencing the combined frame
 
   int         slice_type;
   int         idr_flag;
@@ -81,32 +80,25 @@ typedef struct storable_picture {
   int         qp;
   int         chroma_qp_offset[2];
   int         slice_qp_delta;
-  DecRefPicMarking_t *dec_ref_pic_marking_buffer;                    //!< stores the memory management control operations
+  DecRefPicMarking_t *dec_ref_pic_marking_buffer;  // stores the memory management control operations
 
   // picture error concealment
-  int         concealed_pic; //indicates if this is a concealed picture
-
-  // variables for tone mapping
-  int         tone_mapping_model_id;
-  int         tonemapped_bit_depth;
-  imgpel*     tone_mapping_lut;                //!< tone mapping look up table
-
+  int         concealed_pic; 
   int         proc_flag;
 #if (MVC_EXTENSION_ENABLE)
   int         view_id;
   int         inter_view_flag;
-  int         anchor_pic_flag;
 #endif
   int         iLumaStride;
   int         iChromaStride;
   int         iLumaExpandedHeight;
   int         iChromaExpandedHeight;
-  imgpel **cur_imgY; // for more efficient get_block_luma
+  imgpel**    cur_imgY;               // for more efficient get_block_luma
   int no_ref;
   int iCodingType;
-  //
+  
   char listXsize[MAX_NUM_SLICES][2];
-  struct storable_picture **listX[MAX_NUM_SLICES][2];
+  struct storable_picture** listX[MAX_NUM_SLICES][2];
   int         layer_id;
   } StorablePicture;
 //}}}
