@@ -118,28 +118,6 @@ typedef struct {
   unsigned short xsd_metric_value;
   } Green_metadata_information_struct;
 //}}}
-//{{{  struct tone_mapping_struct_tmp
-typedef struct {
-  unsigned int  tone_map_id;
-  unsigned char tone_map_cancel_flag;
-  unsigned int  tone_map_repetition_period;
-  unsigned char coded_data_bit_depth;
-  unsigned char sei_bit_depth;
-  unsigned int  model_id;
-  // variables for model 0
-  int  min_value;
-  int  max_value;
-  // variables for model 1
-  int  sigmoid_midpoint;
-  int  sigmoid_width;
-  // variables for model 2
-  int start_of_coded_interval[1<<MAX_SEI_BIT_DEPTH];
-  // variables for model 3
-  int num_pivots;
-  int coded_pivot_value[MAX_NUM_PIVOTS];
-  int sei_pivot_value[MAX_NUM_PIVOTS];
-  } tone_mapping_struct_tmp;
-//}}}
 
 //{{{
 static void interpret_spare_pic (byte* payload, int size, VideoParameters *p_Vid )
@@ -1255,85 +1233,6 @@ static void interpret_frame_packing_arrangement_info (byte* payload, int size, V
 }
 //}}}
 
-//{{{
-static void interpret_tone_mapping (byte* payload, int size, VideoParameters *p_Vid )
-{
-  tone_mapping_struct_tmp seiToneMappingTmp;
-  int i = 0, max_coded_num, max_output_num;
-
-  memset (&seiToneMappingTmp, 0, sizeof (tone_mapping_struct_tmp));
-
-  Bitstream* buf = malloc(sizeof(Bitstream));
-  buf->bitstream_length = size;
-  buf->streamBuffer = payload;
-  buf->frame_bitoffset = 0;
-
-  seiToneMappingTmp.tone_map_id = read_ue_v("SEI: tone_map_id", buf, &gDecoder->UsedBits);
-  seiToneMappingTmp.tone_map_cancel_flag = (unsigned char) read_u_1("SEI: tone_map_cancel_flag", buf, &gDecoder->UsedBits);
-
-  printf("Tone-mapping SEI message\n");
-  printf("tone_map_id = %d\n", seiToneMappingTmp.tone_map_id);
-
-  if (seiToneMappingTmp.tone_map_id != 0)
-    printf("WARNING! Tone_map_id != 0, print the SEI message info only. The tone mapping is actually applied only when Tone_map_id==0\n\n");
-  printf("tone_map_cancel_flag = %d\n", seiToneMappingTmp.tone_map_cancel_flag);
-
-  if (!seiToneMappingTmp.tone_map_cancel_flag)
-  {
-    seiToneMappingTmp.tone_map_repetition_period  = read_ue_v(  "SEI: tone_map_repetition_period", buf, &gDecoder->UsedBits);
-    seiToneMappingTmp.coded_data_bit_depth        = (unsigned char)read_u_v (8,"SEI: coded_data_bit_depth"      , buf, &gDecoder->UsedBits);
-    seiToneMappingTmp.sei_bit_depth               = (unsigned char)read_u_v (8,"SEI: sei_bit_depth"             , buf, &gDecoder->UsedBits);
-    seiToneMappingTmp.model_id                    = read_ue_v(  "SEI: model_id"                  , buf, &gDecoder->UsedBits);
-
-    printf("tone_map_repetition_period = %d\n", seiToneMappingTmp.tone_map_repetition_period);
-    printf("coded_data_bit_depth = %d\n", seiToneMappingTmp.coded_data_bit_depth);
-    printf("sei_bit_depth = %d\n", seiToneMappingTmp.sei_bit_depth);
-    printf("model_id = %d\n", seiToneMappingTmp.model_id);
-
-    max_coded_num  = 1<<seiToneMappingTmp.coded_data_bit_depth;
-    max_output_num = 1<<seiToneMappingTmp.sei_bit_depth;
-
-    if (seiToneMappingTmp.model_id == 0)
-    { // linear mapping with clipping
-      seiToneMappingTmp.min_value   = read_u_v (32,"SEI: min_value", buf, &gDecoder->UsedBits);
-      seiToneMappingTmp.max_value   = read_u_v (32,"SEI: min_value", buf, &gDecoder->UsedBits);
-      printf("min_value = %d, max_value = %d\n", seiToneMappingTmp.min_value, seiToneMappingTmp.max_value);
-    }
-    else if (seiToneMappingTmp.model_id == 1)
-    { // sigmoidal mapping
-      seiToneMappingTmp.sigmoid_midpoint = read_u_v (32,"SEI: sigmoid_midpoint", buf, &gDecoder->UsedBits);
-      seiToneMappingTmp.sigmoid_width    = read_u_v (32,"SEI: sigmoid_width", buf, &gDecoder->UsedBits);
-      printf("sigmoid_midpoint = %d, sigmoid_width = %d\n", seiToneMappingTmp.sigmoid_midpoint, seiToneMappingTmp.sigmoid_width);
-    }
-    else if (seiToneMappingTmp.model_id == 2)
-    { // user defined table mapping
-      for (i=0; i<max_output_num; i++)
-      {
-        seiToneMappingTmp.start_of_coded_interval[i] = read_u_v((((seiToneMappingTmp.coded_data_bit_depth+7)>>3)<<3), "SEI: start_of_coded_interval"  , buf, &gDecoder->UsedBits);
-        //printf("start_of_coded_interval[%d] = %d\n", i, seiToneMappingTmp.start_of_coded_interval[i]);
-      }
-    }
-    else if (seiToneMappingTmp.model_id == 3)
-    {  // piece-wise linear mapping
-      seiToneMappingTmp.num_pivots = read_u_v (16,"SEI: num_pivots", buf, &gDecoder->UsedBits);
-      printf("num_pivots = %d\n", seiToneMappingTmp.num_pivots);
-      seiToneMappingTmp.coded_pivot_value[0] = 0;
-      seiToneMappingTmp.sei_pivot_value[0] = 0;
-      seiToneMappingTmp.coded_pivot_value[seiToneMappingTmp.num_pivots+1] = max_coded_num-1;
-      seiToneMappingTmp.sei_pivot_value[seiToneMappingTmp.num_pivots+1] = max_output_num-1;
-
-      for (i=1; i < seiToneMappingTmp.num_pivots+1; i++)
-      {
-        seiToneMappingTmp.coded_pivot_value[i] = read_u_v( (((seiToneMappingTmp.coded_data_bit_depth+7)>>3)<<3), "SEI: coded_pivot_value", buf, &gDecoder->UsedBits);
-        seiToneMappingTmp.sei_pivot_value[i] = read_u_v( (((seiToneMappingTmp.sei_bit_depth+7)>>3)<<3), "SEI: sei_pivot_value", buf, &gDecoder->UsedBits);
-        printf("coded_pivot_value[%d] = %d, sei_pivot_value[%d] = %d\n", i, seiToneMappingTmp.coded_pivot_value[i], i, seiToneMappingTmp.sei_pivot_value[i]);
-      }
-    }
-
-  } // end !tone_map_cancel_flag
-  free (buf);
-}
-//}}}
 
 //{{{
 static void interpret_post_filter_hints_info (byte* payload, int size, VideoParameters *p_Vid )
@@ -1492,8 +1391,6 @@ void InterpretSEIMessage (byte* msg, int size, VideoParameters *p_Vid, Slice *pS
         interpret_deblocking_filter_display_preference_info (msg+offset, payload_size, p_Vid ); break;
       case  SEI_STEREO_VIDEO_INFO:
         interpret_stereo_video_info_info  (msg+offset, payload_size, p_Vid ); break;
-      case  SEI_TONE_MAPPING:
-        interpret_tone_mapping (msg+offset, payload_size, p_Vid ); break;
       case  SEI_POST_FILTER_HINTS:
         interpret_post_filter_hints_info (msg+offset, payload_size, p_Vid ); break;
       case  SEI_FRAME_PACKING_ARRANGEMENT:
