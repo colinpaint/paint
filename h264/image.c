@@ -920,12 +920,6 @@ static int readNewSlice (Slice* currSlice) {
         currSlice->chroma444_not_separate = (p_Vid->active_sps->chroma_format_idc == YUV444) &&
                                             (p_Vid->separate_colour_plane_flag == 0);
         RestOfSliceHeader (currSlice);
-
-      #if (MVC_EXTENSION_ENABLE)
-        if (currSlice->view_id >=0)
-          currSlice->p_Dpb = p_Vid->p_Dpb_layer[currSlice->view_id];
-      #endif
-
         assign_quant_params (currSlice);
 
         // if primary slice is replaced with redundant slice, set the correct image type
@@ -976,18 +970,11 @@ static int readNewSlice (Slice* currSlice) {
         currSlice->nal_reference_idc = nalu->nal_reference_idc;
         currSlice->dp_mode = PAR_DP_3;
         currSlice->max_part_nr = 3;
-        currSlice->ei_flag = 0;
-
-      #if MVC_EXTENSION_ENABLE
-        currSlice->p_Dpb = p_Vid->p_Dpb_layer[0];
-      #endif
-
         currStream = currSlice->partArr[0].bitstream;
         currStream->ei_flag = 0;
         currStream->frame_bitoffset = currStream->read_len = 0;
         memcpy (currStream->streamBuffer, &nalu->buf[1], nalu->len-1);
         currStream->code_len = currStream->bitstream_length = RBSPtoSODB(currStream->streamBuffer, nalu->len-1);
-
 
         FirstPartOfSliceHeader (currSlice);
         UseParameterSet (currSlice);
@@ -997,12 +984,8 @@ static int readNewSlice (Slice* currSlice) {
         currSlice->chroma444_not_separate = (p_Vid->active_sps->chroma_format_idc == YUV444) &&
                                             (p_Vid->separate_colour_plane_flag == 0);
         RestOfSliceHeader (currSlice);
-
-      #if MVC_EXTENSION_ENABLE
-        currSlice->p_Dpb = p_Vid->p_Dpb_layer[currSlice->view_id];
-      #endif
-
         assign_quant_params (currSlice);
+
         if (isNewPicture (p_Vid->dec_picture, currSlice, p_Vid->old_slice)) {
           if (p_Vid->iSliceNumOfCurrPic == 0)
             initPicture (p_Vid, currSlice, p_Inp);
