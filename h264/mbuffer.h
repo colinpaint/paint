@@ -85,9 +85,6 @@ typedef struct storable_picture {
   // picture error concealment
   int         concealed_pic; 
   int         proc_flag;
-#if (MVC_EXTENSION_ENABLE)
-  //int         view_id;
-#endif
   int         iLumaStride;
   int         iChromaStride;
   int         iLumaExpandedHeight;
@@ -126,12 +123,6 @@ typedef struct frame_store {
   StorablePicture *frame;
   StorablePicture *top_field;
   StorablePicture *bottom_field;
-
-#if (MVC_EXTENSION_ENABLE)
-  int       view_id;
-  int       inter_view_flag[2];
-  int       anchor_pic_flag[2];
-#endif
   int       layer_id;
   } FrameStore;
 //}}}

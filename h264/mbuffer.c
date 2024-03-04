@@ -1182,20 +1182,10 @@ void init_dpb (VideoParameters *p_Vid, DecodedPictureBuffer *p_Dpb, int type) {
     p_Dpb->fs_ref[i]   = NULL;
     p_Dpb->fs_ltref[i] = NULL;
     p_Dpb->fs[i]->layer_id = MVC_INIT_VIEW_ID;
-#if (MVC_EXTENSION_ENABLE)
-    p_Dpb->fs[i]->view_id = MVC_INIT_VIEW_ID;
-    p_Dpb->fs[i]->inter_view_flag[0] = p_Dpb->fs[i]->inter_view_flag[1] = 0;
-    p_Dpb->fs[i]->anchor_pic_flag[0] = p_Dpb->fs[i]->anchor_pic_flag[1] = 0;
-#endif
     }
 #if (MVC_EXTENSION_ENABLE)
   if (type == 2) {
     p_Dpb->fs_ilref[0] = alloc_frame_store();
-    // These may need some cleanups
-    p_Dpb->fs_ilref[0]->view_id = MVC_INIT_VIEW_ID;
-    p_Dpb->fs_ilref[0]->inter_view_flag[0] = p_Dpb->fs_ilref[0]->inter_view_flag[1] = 0;
-    p_Dpb->fs_ilref[0]->anchor_pic_flag[0] = p_Dpb->fs_ilref[0]->anchor_pic_flag[1] = 0;
-    // given that this is in a different buffer, do we even need proc_flag anymore?
     }
   else
     p_Dpb->fs_ilref[0] = NULL;
@@ -1274,21 +1264,11 @@ void re_init_dpb (VideoParameters *p_Vid, DecodedPictureBuffer *p_Dpb, int type)
       p_Dpb->fs[i]       = alloc_frame_store();
       p_Dpb->fs_ref[i]   = NULL;
       p_Dpb->fs_ltref[i] = NULL;
-#if (MVC_EXTENSION_ENABLE)
-      p_Dpb->fs[i]->view_id = MVC_INIT_VIEW_ID;
-      p_Dpb->fs[i]->inter_view_flag[0] = p_Dpb->fs[i]->inter_view_flag[1] = 0;
-      p_Dpb->fs[i]->anchor_pic_flag[0] = p_Dpb->fs[i]->anchor_pic_flag[1] = 0;
-#endif
     }
 
 #if (MVC_EXTENSION_ENABLE)
   if (type == 2 && !p_Dpb->fs_ilref[0]) {
     p_Dpb->fs_ilref[0] = alloc_frame_store();
-    // These may need some cleanups
-    p_Dpb->fs_ilref[0]->view_id = MVC_INIT_VIEW_ID;
-    p_Dpb->fs_ilref[0]->inter_view_flag[0] = p_Dpb->fs_ilref[0]->inter_view_flag[1] = 0;
-    p_Dpb->fs_ilref[0]->anchor_pic_flag[0] = p_Dpb->fs_ilref[0]->anchor_pic_flag[1] = 0;
-    // given that this is in a different buffer, do we even need proc_flag anymore?
   }
   else
     p_Dpb->fs_ilref[0] = NULL;
@@ -2000,73 +1980,56 @@ StorablePicture* get_short_term_pic (Slice *currSlice, DecodedPictureBuffer *p_D
   }
 //}}}
 
-#if (!MVC_EXTENSION_ENABLE)
-  //{{{
-  /*!
-   ************************************************************************
-   * \brief
-   *    Reordering process for short-term reference pictures
-   *
-   ************************************************************************
-   */
-  static void reorder_short_term (Slice *currSlice, int cur_list, int num_ref_idx_lX_active_minus1, int picNumLX, int *refIdxLX)
+//{{{
+static void reorder_short_term (Slice *currSlice, int cur_list, int num_ref_idx_lX_active_minus1, int picNumLX, int *refIdxLX) {
+  StorablePicture **RefPicListX = currSlice->listX[cur_list];
+  int cIdx, nIdx;
+
+  StorablePicture *picLX;
+
+  picLX = get_short_term_pic(currSlice, currSlice->p_Dpb, picNumLX);
+
+  for( cIdx = num_ref_idx_lX_active_minus1+1; cIdx > *refIdxLX; cIdx-- )
+    RefPicListX[ cIdx ] = RefPicListX[ cIdx - 1];
+
+  RefPicListX[ (*refIdxLX)++ ] = picLX;
+
+  nIdx = *refIdxLX;
+
+  for( cIdx = *refIdxLX; cIdx <= num_ref_idx_lX_active_minus1+1; cIdx++ )
   {
-    StorablePicture **RefPicListX = currSlice->listX[cur_list];
-    int cIdx, nIdx;
+    if (RefPicListX[ cIdx ])
+      if( (RefPicListX[ cIdx ]->is_long_term ) ||  (RefPicListX[ cIdx ]->pic_num != picNumLX ))
+        RefPicListX[ nIdx++ ] = RefPicListX[ cIdx ];
+  }
+}
+//}}}
+//{{{
+static void reorder_long_term (Slice *currSlice, StorablePicture **RefPicListX, int num_ref_idx_lX_active_minus1, int LongTermPicNum, int *refIdxLX)
+{
+  int cIdx, nIdx;
 
-    StorablePicture *picLX;
+  StorablePicture *picLX;
 
-    picLX = get_short_term_pic(currSlice, currSlice->p_Dpb, picNumLX);
+  picLX = get_long_term_pic(currSlice, currSlice->p_Dpb, LongTermPicNum);
 
-    for( cIdx = num_ref_idx_lX_active_minus1+1; cIdx > *refIdxLX; cIdx-- )
-      RefPicListX[ cIdx ] = RefPicListX[ cIdx - 1];
+  for( cIdx = num_ref_idx_lX_active_minus1+1; cIdx > *refIdxLX; cIdx-- )
+    RefPicListX[ cIdx ] = RefPicListX[ cIdx - 1];
 
-    RefPicListX[ (*refIdxLX)++ ] = picLX;
+  RefPicListX[ (*refIdxLX)++ ] = picLX;
 
-    nIdx = *refIdxLX;
+  nIdx = *refIdxLX;
 
-    for( cIdx = *refIdxLX; cIdx <= num_ref_idx_lX_active_minus1+1; cIdx++ )
+  for( cIdx = *refIdxLX; cIdx <= num_ref_idx_lX_active_minus1+1; cIdx++ )
+  {
+    if (RefPicListX[ cIdx ])
     {
-      if (RefPicListX[ cIdx ])
-        if( (RefPicListX[ cIdx ]->is_long_term ) ||  (RefPicListX[ cIdx ]->pic_num != picNumLX ))
-          RefPicListX[ nIdx++ ] = RefPicListX[ cIdx ];
+      if( (!RefPicListX[ cIdx ]->is_long_term ) ||  (RefPicListX[ cIdx ]->long_term_pic_num != LongTermPicNum ))
+        RefPicListX[ nIdx++ ] = RefPicListX[ cIdx ];
     }
   }
-  //}}}
-  //{{{
-  /*!
-   ************************************************************************
-   * \brief
-   *    Reordering process for long-term reference pictures
-   *
-   ************************************************************************
-   */
-  static void reorder_long_term (Slice *currSlice, StorablePicture **RefPicListX, int num_ref_idx_lX_active_minus1, int LongTermPicNum, int *refIdxLX)
-  {
-    int cIdx, nIdx;
-
-    StorablePicture *picLX;
-
-    picLX = get_long_term_pic(currSlice, currSlice->p_Dpb, LongTermPicNum);
-
-    for( cIdx = num_ref_idx_lX_active_minus1+1; cIdx > *refIdxLX; cIdx-- )
-      RefPicListX[ cIdx ] = RefPicListX[ cIdx - 1];
-
-    RefPicListX[ (*refIdxLX)++ ] = picLX;
-
-    nIdx = *refIdxLX;
-
-    for( cIdx = *refIdxLX; cIdx <= num_ref_idx_lX_active_minus1+1; cIdx++ )
-    {
-      if (RefPicListX[ cIdx ])
-      {
-        if( (!RefPicListX[ cIdx ]->is_long_term ) ||  (RefPicListX[ cIdx ]->long_term_pic_num != LongTermPicNum ))
-          RefPicListX[ nIdx++ ] = RefPicListX[ cIdx ];
-      }
-    }
-  }
-  //}}}
-#endif
+}
+//}}}
 
 //{{{
 static void sliding_window_memory_management (DecodedPictureBuffer *p_Dpb, StorablePicture* p) {
@@ -2491,21 +2454,10 @@ void reorder_ref_pic_list (Slice *currSlice, int cur_list) {
       else
         picNumLX = picNumLXNoWrap;
 
-#if (MVC_EXTENSION_ENABLE)
-      reorder_short_term(currSlice, cur_list, num_ref_idx_lX_active_minus1, picNumLX, &refIdxLX, -1);
-#else
       reorder_short_term(currSlice, cur_list, num_ref_idx_lX_active_minus1, picNumLX, &refIdxLX);
-#endif
-    }
+      }
     else //(modification_of_pic_nums_idc[i] == 2)
-    {
-#if (MVC_EXTENSION_ENABLE)
-      reorder_long_term(currSlice, currSlice->listX[cur_list], num_ref_idx_lX_active_minus1, long_term_pic_idx[i], &refIdxLX, -1);
-#else
       reorder_long_term(currSlice, currSlice->listX[cur_list], num_ref_idx_lX_active_minus1, long_term_pic_idx[i], &refIdxLX);
-#endif
-    }
-
     }
 
   // that's a definition
@@ -2966,7 +2918,7 @@ void fill_frame_num_gap (VideoParameters *p_Vid, Slice *currSlice) {
     picture->is_output = 1;
     picture->used_for_reference = 1;
     picture->adaptive_ref_pic_buffering_flag = 0;
-    
+
     currSlice->frame_num = UnusedShortTermFrameNum;
     if (active_sps->pic_order_cnt_type!=0)
       decodePOC (p_Vid, p_Vid->ppSliceList[0]);
@@ -3096,19 +3048,6 @@ void compute_colocated (Slice *currSlice, StorablePicture **listX[6]) {
     else
       pic_avail =0;
 
-    if(pic_avail && fs->inter_view_flag[fld_idx])
-    {
-      if(poc == currPOC)
-      {
-        if(is_view_id_in_ref_view_list(fs->view_id, ref_view_id, num_ref_views))
-        {
-          //add one inter-view reference;
-          list[*listXsize] = fs;
-          //next;
-          (*listXsize)++;
-        }
-      }
-    }
   }
   //}}}
   //{{{
