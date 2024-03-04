@@ -187,11 +187,6 @@ Slice* malloc_slice (InputParameters* p_Inp, VideoParameters* p_Vid) {
   //  memory_size += get_mem3Dint(&(currSlice->fcf    ), MAX_PLANE, MB_BLOCK_SIZE, MB_BLOCK_SIZE);
   allocate_pred_mem(currSlice);
 
-#if (MVC_EXTENSION_ENABLE)
-  currSlice->view_id = MVC_INIT_VIEW_ID;
-  currSlice->inter_view_flag = 0;
-  currSlice->anchor_pic_flag = 0;
-#endif
   // reference flag initialization
   for (i = 0; i < 17;++i)
     currSlice->ref_flag[i] = 1;

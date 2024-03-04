@@ -362,54 +362,49 @@ typedef struct old_slice_par {
   byte     idr_flag;
   int      idr_pic_id;
   int      pps_id;
-#if (MVC_EXTENSION_ENABLE)
-  int      view_id;
-  int      inter_view_flag;
-  int      anchor_pic_flag;
-#endif
   int      layer_id;
   } OldSliceParams;
 //}}}
 //{{{
 typedef struct slice {
-  struct video_par    *p_Vid;
-  struct inp_par      *p_Inp;
-  pic_parameter_set_rbsp_t *active_pps;
-  seq_parameter_set_rbsp_t *active_sps;
+  struct video_par* p_Vid;
+  struct inp_par* p_Inp;
+  pic_parameter_set_rbsp_t* active_pps;
+  seq_parameter_set_rbsp_t* active_sps;
 
   // dpb pointer
-  struct decoded_picture_buffer *p_Dpb;
+  struct decoded_picture_buffer* p_Dpb;
 
-  //slice property;
+  // slice property;
   int idr_flag;
   int idr_pic_id;
-  int nal_reference_idc;                       //!< nal_reference_idc from NAL unit
+  int nal_reference_idc;                       // nal_reference_idc from NAL unit
   int Transform8x8Mode;
-  Boolean chroma444_not_separate;              //!< indicates chroma 4:4:4 coding with separate_colour_plane_flag equal to zero
+  Boolean chroma444_not_separate;              // indicates chroma 4:4:4 coding with separate_colour_plane_flag equal to zero
 
-  int toppoc;      //poc for this top field
-  int bottompoc;   //poc of bottom field of frame
-  int framepoc;    //poc of this frame
+  int toppoc;      // poc for this top field
+  int bottompoc;   // poc of bottom field of frame
+  int framepoc;    // poc of this frame
 
-  // for poc mode 0.
+  // poc mode 0.
   unsigned int pic_order_cnt_lsb;
   int delta_pic_order_cnt_bottom;
 
-  // for poc mode 1.
+  // poc mode 1.
   int delta_pic_order_cnt[2];
 
-  // for POC mode 0:
-  signed   int PicOrderCntMsb;
+  // POC mode 0:
+  signed int PicOrderCntMsb;
 
-  // for POC mode 1:
+  // POC mode 1:
   unsigned int AbsFrameNum;
   int ThisPOC;
 
-  //information need to move to slice;
+  // information need to move to slice;
   unsigned int current_mb_nr; // bitstream order
   unsigned int num_dec_mb;
-  short        current_slice_nr;
-  int cod_counter;                   //!< Current count of number of skipped macroblocks in a row
+  short current_slice_nr;
+  int cod_counter;                   // Current count of number of skipped macroblocks in a row
   int allrefzero;
 
   int                 mb_aff_frame_flag;
@@ -435,7 +430,7 @@ typedef struct slice {
   int                 next_header;
   int                 last_dquant;
 
-  //slice header information;
+  // slice header information;
   int colour_plane_id;               //!< colour_plane_id of the current coded slice
   int redundant_pic_cnt;
   int sp_switch;                              //!< 1 for switching sp, 0 for normal sp
@@ -459,14 +454,6 @@ typedef struct slice {
   int                 *modification_of_pic_nums_idc[2];
   int                 *abs_diff_pic_num_minus1[2];
   int                 *long_term_pic_idx[2];
-
-#if (MVC_EXTENSION_ENABLE)
-  int                 *abs_diff_view_idx_minus1[2];
-  int                 view_id;
-  int                 inter_view_flag;
-  int                 anchor_pic_flag;
-  NALUnitHeaderMVCExt_t NaluHeaderMVCExt;
-#endif
 
   int                 layer_id;
   short               DFDisableIdc;     //!< Disable deblocking filter on slice

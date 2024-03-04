@@ -2750,19 +2750,12 @@ void alloc_ref_pic_list_reordering_buffer (Slice *currSlice)
        no_mem_exit("alloc_ref_pic_list_reordering_buffer: abs_diff_pic_num_minus1_l0");
     if ((currSlice->long_term_pic_idx[LIST_0] = calloc(size,sizeof(int)))==NULL)
        no_mem_exit("alloc_ref_pic_list_reordering_buffer: long_term_pic_idx_l0");
-#if (MVC_EXTENSION_ENABLE)
-    if ((currSlice->abs_diff_view_idx_minus1[LIST_0] = calloc(size,sizeof(int)))==NULL)
-       no_mem_exit("alloc_ref_pic_list_reordering_buffer: abs_diff_view_idx_minus1_l0");
-#endif
   }
   else
   {
     currSlice->modification_of_pic_nums_idc[LIST_0] = NULL;
     currSlice->abs_diff_pic_num_minus1[LIST_0] = NULL;
     currSlice->long_term_pic_idx[LIST_0] = NULL;
-#if (MVC_EXTENSION_ENABLE)
-    currSlice->abs_diff_view_idx_minus1[LIST_0] = NULL;
-#endif
   }
 
   if (currSlice->slice_type == B_SLICE)
@@ -2774,19 +2767,12 @@ void alloc_ref_pic_list_reordering_buffer (Slice *currSlice)
       no_mem_exit("alloc_ref_pic_list_reordering_buffer: abs_diff_pic_num_minus1_l1");
     if ((currSlice->long_term_pic_idx[LIST_1] = calloc(size,sizeof(int)))==NULL)
       no_mem_exit("alloc_ref_pic_list_reordering_buffer: long_term_pic_idx_l1");
-#if (MVC_EXTENSION_ENABLE)
-    if ((currSlice->abs_diff_view_idx_minus1[LIST_1] = calloc(size,sizeof(int)))==NULL)
-      no_mem_exit("alloc_ref_pic_list_reordering_buffer: abs_diff_view_idx_minus1_l1");
-#endif
   }
   else
   {
     currSlice->modification_of_pic_nums_idc[LIST_1] = NULL;
     currSlice->abs_diff_pic_num_minus1[LIST_1] = NULL;
     currSlice->long_term_pic_idx[LIST_1] = NULL;
-#if (MVC_EXTENSION_ENABLE)
-    currSlice->abs_diff_view_idx_minus1[LIST_1] = NULL;
-#endif
   }
 }
 //}}}
@@ -2814,15 +2800,6 @@ void free_ref_pic_list_reordering_buffer (Slice *currSlice)
   currSlice->modification_of_pic_nums_idc[LIST_1] = NULL;
   currSlice->abs_diff_pic_num_minus1[LIST_1] = NULL;
   currSlice->long_term_pic_idx[LIST_1] = NULL;
-
-#if (MVC_EXTENSION_ENABLE)
-  if (currSlice->abs_diff_view_idx_minus1[LIST_0])
-    free(currSlice->abs_diff_view_idx_minus1[LIST_0]);
-  currSlice->abs_diff_view_idx_minus1[LIST_0] = NULL;
-  if (currSlice->abs_diff_view_idx_minus1[LIST_1])
-    free(currSlice->abs_diff_view_idx_minus1[LIST_1]);
-  currSlice->abs_diff_view_idx_minus1[LIST_1] = NULL;
-#endif
 }
 //}}}
 //{{{

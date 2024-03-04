@@ -1387,8 +1387,7 @@ static int picture_order (Slice* pSlice ) {
               currSlice->long_term_pic_idx[LIST_0][i] =
                 read_ue_v ("SH: long_term_pic_idx_l0", currStream, &gDecoder->UsedBits);
             else if (val==4 || val==5)
-              currSlice->abs_diff_view_idx_minus1[LIST_0][i] =
-                read_ue_v ("SH: abs_diff_view_idx_minus1_l0", currStream, &gDecoder->UsedBits);
+              read_ue_v ("SH: abs_diff_view_idx_minus1_l0", currStream, &gDecoder->UsedBits);
             }
           i++;
           } while (val != 3);
@@ -1412,8 +1411,7 @@ static int picture_order (Slice* pSlice ) {
               currSlice->long_term_pic_idx[LIST_1][i] =
                 read_ue_v ("SH: long_term_pic_idx_l1", currStream, &gDecoder->UsedBits);
             else if (val == 4 || val == 5)
-              currSlice->abs_diff_view_idx_minus1[LIST_1][i] =
-                read_ue_v ("SH: abs_diff_view_idx_minus1_l1", currStream, &gDecoder->UsedBits);
+              read_ue_v ("SH: abs_diff_view_idx_minus1_l1", currStream, &gDecoder->UsedBits);
             }
           i++;
           } while (val != 3);
