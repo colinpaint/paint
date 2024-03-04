@@ -901,21 +901,11 @@ static int readNewSlice (Slice* currSlice) {
         currSlice->dp_mode = PAR_DP_1;
         currSlice->max_part_nr = 1;
 
-      #if (MVC_EXTENSION_ENABLE)
-        if (currSlice->svc_extension_flag != 0) {
-          currStream = currSlice->partArr[0].bitstream;
-          currStream->ei_flag = 0;
-          currStream->frame_bitoffset = currStream->read_len = 0;
-          memcpy (currStream->streamBuffer, &nalu->buf[1], nalu->len-1);
-          currStream->code_len = currStream->bitstream_length = RBSPtoSODB (currStream->streamBuffer, nalu->len-1);
-          }
-      #else
         currStream = currSlice->partArr[0].bitstream;
         currStream->ei_flag = 0;
         currStream->frame_bitoffset = currStream->read_len = 0;
         memcpy (currStream->streamBuffer, &nalu->buf[1], nalu->len-1);
         currStream->code_len = currStream->bitstream_length = RBSPtoSODB (currStream->streamBuffer, nalu->len-1);
-      #endif
 
         // Some syntax of the sliceHeader depends on parameter set
         // which depends on the parameter set ID of the slice header.
@@ -1374,18 +1364,11 @@ void exit_picture (VideoParameters* p_Vid, StorablePicture** dec_picture) {
     printf ("%5d %s poc:%4d pic:%3d qp:%2d %dms\n",
             p_Vid->frame_no, p_Vid->cslice_type, frame_poc, pic_num, qp, (int)timenorm(tmp_time));
 
-    if (slice_type == I_SLICE || slice_type == SI_SLICE || slice_type == P_SLICE || refpic) {
-      // I or P pictures
-    #if (MVC_EXTENSION_ENABLE)
-      if ((p_Vid->ppSliceList[0])->view_id != 0)
-    #endif
-        ++(p_Vid->number);
-      }
+    if (slice_type == I_SLICE || slice_type == SI_SLICE || 
+        slice_type == P_SLICE || refpic) // I or P pictures
+      ++(p_Vid->number);
 
-  #if (MVC_EXTENSION_ENABLE)
-    if ((p_Vid->ppSliceList[0])->view_id != 0)
-  #endif
-      ++(p_Vid->g_nFrame);
+    ++(p_Vid->g_nFrame);
     }
   }
 //}}}
