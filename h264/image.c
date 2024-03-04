@@ -1218,7 +1218,7 @@ static int readNewSlice (Slice* currSlice) {
           currStream->frame_bitoffset = currStream->read_len = 0;
           memcpy (currStream->streamBuffer, &nalu->buf[1], nalu->len-1);
           currStream->code_len = currStream->bitstream_length = RBSPtoSODB (currStream->streamBuffer, nalu->len-1);
-          
+
           currSlice->dpC_NotPresent = 0;
           int slice_id_c = read_ue_v ("NALU: DP_C slice_id", currStream, &gDecoder->UsedBits);
           if ((slice_id_c != slice_id_a)|| (nalu->lost_packets)) {
@@ -1555,18 +1555,20 @@ int decode_one_frame (DecoderParams* pDecoder) {
 
   // read one picture first;
   p_Vid->iSliceNumOfCurrPic = 0;
-  int current_header = 0;
   p_Vid->iNumOfSlicesDecoded = 0;
   p_Vid->num_dec_mb = 0;
 
+  int current_header = 0;
   if (p_Vid->newframe) {
     if (p_Vid->pNextPPS->Valid) {
+      //{{{  use next PPS
       MakePPSavailable (p_Vid, p_Vid->pNextPPS->pic_parameter_set_id, p_Vid->pNextPPS);
       p_Vid->pNextPPS->Valid = 0;
       }
-
-    // get the first slice from currentslice;
+      //}}}
+    //{{{  get firstSlice from currentSlice;
     assert (ppSliceList[p_Vid->iSliceNumOfCurrPic]);
+
     currSlice = ppSliceList[p_Vid->iSliceNumOfCurrPic];
     ppSliceList[p_Vid->iSliceNumOfCurrPic] = p_Vid->pNextSlice;
     p_Vid->pNextSlice = currSlice;
@@ -1576,14 +1578,18 @@ int decode_one_frame (DecoderParams* pDecoder) {
     UseParameterSet (currSlice);
     initPicture (p_Vid, currSlice, p_Inp);
     p_Vid->iSliceNumOfCurrPic++;
+
     current_header = SOS;
+    //}}}
     }
 
   while (current_header != SOP && current_header != EOS) {
-    // no pending slices
+    //{{{  no pending slices
     assert (p_Vid->iSliceNumOfCurrPic < p_Vid->iNumOfSlicesAllocated);
+
     if (!ppSliceList[p_Vid->iSliceNumOfCurrPic])
       ppSliceList[p_Vid->iSliceNumOfCurrPic] = malloc_slice (p_Inp, p_Vid);
+
     currSlice = ppSliceList[p_Vid->iSliceNumOfCurrPic];
     currSlice->p_Vid = p_Vid;
     currSlice->p_Inp = p_Inp;
@@ -1599,7 +1605,7 @@ int decode_one_frame (DecoderParams* pDecoder) {
 
     // error tracking of primary and redundant slices.
     errorTracking (p_Vid, currSlice);
-
+    //{{{  manage primary and redundant slices
     // If primary and redundant are received and primary is correct
     //   discard the redundant
     // else,
@@ -1650,9 +1656,13 @@ int decode_one_frame (DecoderParams* pDecoder) {
       ppSliceList[p_Vid->iSliceNumOfCurrPic] = p_Vid->pNextSlice;
       p_Vid->pNextSlice = currSlice;
       }
+    //}}}
+
     copySliceInfo (currSlice, p_Vid->old_slice);
     }
+    //}}}
 
+  // decode slices
   iRet = current_header;
   initPictureDecoding (p_Vid);
   for (iSliceNo = 0; iSliceNo < p_Vid->iSliceNumOfCurrPic; iSliceNo++) {
@@ -1664,6 +1674,7 @@ int decode_one_frame (DecoderParams* pDecoder) {
     initSlice (p_Vid, currSlice);
     decodeSlice (currSlice, current_header);
     p_Vid->iNumOfSlicesDecoded++;
+
     p_Vid->num_dec_mb += currSlice->num_dec_mb;
     p_Vid->erc_mvperMB += currSlice->erc_mvperMB;
     }
