@@ -102,8 +102,8 @@ static void gen_field_ref_ids (VideoParameters *p_Vid, StorablePicture *p) {
 static void insert_picture_in_dpb (VideoParameters *p_Vid, FrameStore* fs, StorablePicture* p) {
 
   InputParameters* p_Inp = p_Vid->p_Inp;
-  //  printf ("insert (%s) pic with frame_num #%d, poc %d\n", 
-  //          (p->structure == FRAME)?"FRAME":(p->structure == TOP_FIELD)?"TOP_FIELD":"BOTTOM_FIELD", 
+  //  printf ("insert (%s) pic with frame_num #%d, poc %d\n",
+  //          (p->structure == FRAME)?"FRAME":(p->structure == TOP_FIELD)?"TOP_FIELD":"BOTTOM_FIELD",
   //          p->pic_num, p->poc);
   assert (p != NULL);
   assert (fs != NULL);
@@ -123,11 +123,6 @@ static void insert_picture_in_dpb (VideoParameters *p_Vid, FrameStore* fs, Stora
         }
 
       fs->layer_id = p->layer_id;
-    #if (MVC_EXTENSION_ENABLE)
-      fs->view_id = p->view_id;
-      fs->inter_view_flag[0] = fs->inter_view_flag[1] = p->inter_view_flag;
-    #endif
-
       // generate field views
       dpb_split_field(p_Vid, fs);
       break;
@@ -137,11 +132,6 @@ static void insert_picture_in_dpb (VideoParameters *p_Vid, FrameStore* fs, Stora
       fs->top_field = p;
       fs->is_used |= 1;
       fs->layer_id = p->layer_id;
-
-    #if (MVC_EXTENSION_ENABLE)
-      fs->view_id = p->view_id;
-      fs->inter_view_flag[0] = p->inter_view_flag;
-    #endif
 
       if (p->used_for_reference) {
         fs->is_reference |= 1;
@@ -165,11 +155,6 @@ static void insert_picture_in_dpb (VideoParameters *p_Vid, FrameStore* fs, Stora
       fs->bottom_field = p;
       fs->is_used |= 2;
       fs->layer_id = p->layer_id;
-
-    #if (MVC_EXTENSION_ENABLE)
-      fs->view_id = p->view_id;
-      fs->inter_view_flag[1] = p->inter_view_flag;
-    #endif
 
       if (p->used_for_reference) {
         fs->is_reference |= 2;
@@ -1441,9 +1426,6 @@ StorablePicture* alloc_storable_picture (VideoParameters *p_Vid, PictureStructur
   s->non_existing        = 0;
   s->is_output           = 0;
   s->max_slice_id        = 0;
-#if (MVC_EXTENSION_ENABLE)
-  s->view_id = -1;
-#endif
 
   s->structure=structure;
 
@@ -2211,19 +2193,9 @@ static void adaptive_memory_management (DecodedPictureBuffer *p_Dpb, StorablePic
       //}}}
       }
 
-    //currSlice->ThisPOC = p->poc;
-#if (MVC_EXTENSION_ENABLE)
-    if(p->view_id == 0) {
-      flush_dpb(p_Vid->p_Dpb_layer[0]);
-      flush_dpb(p_Vid->p_Dpb_layer[1]);
+    flush_dpb(p_Vid->p_Dpb_layer[0]);
     }
-    else
-      flush_dpb(p_Dpb);
-#else
-    flush_dpb(p_Dpb);
-#endif
   }
-}
 //}}}
 //{{{
 void idr_memory_management (DecodedPictureBuffer *p_Dpb, StorablePicture* p) {
@@ -2276,7 +2248,7 @@ void store_picture_in_dpb (DecodedPictureBuffer *p_Dpb, StorablePicture* p) {
   // picture error concealment
 
   // diagnostics
-  //printf ("Storing (%s) non-ref pic with frame_num #%d\n", 
+  //printf ("Storing (%s) non-ref pic with frame_num #%d\n",
   //        (p->type == FRAME)?"FRAME":(p->type == TOP_FIELD)?"TOP_FIELD":"BOTTOM_FIELD", p->pic_num);
   // if frame, check for new store,
   assert (p!=NULL);
@@ -2316,8 +2288,8 @@ void store_picture_in_dpb (DecodedPictureBuffer *p_Dpb, StorablePicture* p) {
     }
 
   // this is a frame or a field which has no stored complementary field sliding window, if necessary
-  if ((!p->idr_flag) && 
-      (p->used_for_reference && 
+  if ((!p->idr_flag) &&
+      (p->used_for_reference &&
       (!p->adaptive_ref_pic_buffering_flag)))
     sliding_window_memory_management (p_Dpb, p);
 
@@ -2636,14 +2608,7 @@ void dpb_split_field (VideoParameters *p_Vid, FrameStore *fs)
 
     fs_top->poc = frame->top_poc;
     fs_btm->poc = frame->bottom_poc;
-
-#if (MVC_EXTENSION_ENABLE)
-    fs_top->view_id = frame->view_id;
-    fs_btm->view_id = frame->view_id;
-#endif
-
     fs_top->frame_poc =  frame->frame_poc;
-
     fs_top->bottom_poc = fs_btm->bottom_poc =  frame->bottom_poc;
     fs_top->top_poc    = fs_btm->top_poc    =  frame->top_poc;
     fs_btm->frame_poc  = frame->frame_poc;
@@ -2669,12 +2634,6 @@ void dpb_split_field (VideoParameters *p_Vid, FrameStore *fs)
     fs_btm->top_field = fs_top;
     fs_btm->frame     = frame;
     fs_btm->bottom_field = fs_btm;
-
-#if (MVC_EXTENSION_ENABLE)
-    fs_top->view_id = fs_btm->view_id = fs->view_id;
-    fs_top->inter_view_flag = fs->inter_view_flag[0];
-    fs_btm->inter_view_flag = fs->inter_view_flag[1];
-#endif
 
     fs_top->chroma_format_idc = fs_btm->chroma_format_idc = frame->chroma_format_idc;
     fs_top->iCodingType = fs_btm->iCodingType = frame->iCodingType;
@@ -2853,9 +2812,6 @@ void dpb_combine_field (VideoParameters *p_Vid, FrameStore *fs)
 
   dpb_combine_field_yuv(p_Vid, fs);
 
-#if (MVC_EXTENSION_ENABLE)
-  fs->frame->view_id = fs->view_id;
-#endif
   fs->frame->iCodingType = fs->top_field->iCodingType; //FIELD_CODING;
    //! Use inference flag to remap mvs/references
 
@@ -3010,10 +2966,7 @@ void fill_frame_num_gap (VideoParameters *p_Vid, Slice *currSlice) {
     picture->is_output = 1;
     picture->used_for_reference = 1;
     picture->adaptive_ref_pic_buffering_flag = 0;
-#if (MVC_EXTENSION_ENABLE)
-    picture->view_id = currSlice->view_id;
-#endif
-
+    
     currSlice->frame_num = UnusedShortTermFrameNum;
     if (active_sps->pic_order_cnt_type!=0)
       decodePOC (p_Vid, p_Vid->ppSliceList[0]);
@@ -3576,8 +3529,6 @@ void process_picture_in_dpb_s (VideoParameters *p_Vid, StorablePicture *p_pic)
     }
 
     // MVC-related parameters
-    p_stored_pic->inter_view_flag = p_pic->inter_view_flag;
-    p_stored_pic->view_id = 0;
     p_stored_pic->proc_flag = 1;
     p_stored_pic->is_output = 1;
     p_stored_pic->used_for_reference = 1;

@@ -86,8 +86,7 @@ typedef struct storable_picture {
   int         concealed_pic; 
   int         proc_flag;
 #if (MVC_EXTENSION_ENABLE)
-  int         view_id;
-  int         inter_view_flag;
+  //int         view_id;
 #endif
   int         iLumaStride;
   int         iChromaStride;

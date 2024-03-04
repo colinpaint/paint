@@ -515,52 +515,6 @@ static void copyDecPicture_JV (VideoParameters* p_Vid, StorablePicture* dst, Sto
   }
 //}}}
 //{{{
-static void initMvcPicture (Slice *currSlice) {
-
-  VideoParameters* p_Vid = currSlice->p_Vid;
-  DecodedPictureBuffer* p_Dpb = p_Vid->p_Dpb_layer[0];
-
-  // find BL reconstructed picture
-  StorablePicture* p_pic = NULL;
-  if (currSlice->structure  == FRAME) {
-    for (int i = 0; i < (int)p_Dpb->used_size/*size*/; i++) {
-      FrameStore* fs = p_Dpb->fs[i];
-      if ((fs->frame->view_id == 0) && (fs->frame->frame_poc == currSlice->framepoc)) {
-        p_pic = fs->frame;
-        break;
-        }
-      }
-    }
-
-  else if (currSlice->structure  == TOP_FIELD) {
-    for (int i = 0; i < (int)p_Dpb->used_size/*size*/; i++) {
-      FrameStore* fs = p_Dpb->fs[i];
-      if ((fs->top_field->view_id == 0) && (fs->top_field->top_poc == currSlice->toppoc)) {
-        p_pic = fs->top_field;
-        break;
-        }
-      }
-    }
-
-  else {
-    for (int i = 0; i < (int)p_Dpb->used_size/*size*/; i++) {
-      FrameStore* fs = p_Dpb->fs[i];
-      if ((fs->bottom_field->view_id == 0) && (fs->bottom_field->bottom_poc == currSlice->bottompoc)) {
-        p_pic = fs->bottom_field;
-        break;
-        }
-      }
-    }
-
-  if (!p_pic)
-    p_Vid->bFrameInit = 0;
-  else {
-    process_picture_in_dpb_s (p_Vid, p_pic);
-    store_proc_picture_in_dpb (currSlice->p_Dpb, clone_storable_picture(p_Vid, p_pic));
-    }
-  }
-//}}}
-//{{{
 static void initPicture (VideoParameters *p_Vid, Slice *currSlice, InputParameters *p_Inp) {
 
   StorablePicture *dec_picture = NULL;
@@ -638,14 +592,6 @@ static void initPicture (VideoParameters *p_Vid, Slice *currSlice, InputParamete
   dec_picture->chroma_qp_offset[1] = p_Vid->active_pps->second_chroma_qp_index_offset;
   dec_picture->iCodingType = currSlice->structure==FRAME? (currSlice->mb_aff_frame_flag? FRAME_MB_PAIR_CODING:FRAME_CODING): FIELD_CODING; //currSlice->slice_type;
   dec_picture->layer_id = currSlice->layer_id;
-
-#if (MVC_EXTENSION_ENABLE)
-  dec_picture->view_id = currSlice->view_id;
-  dec_picture->inter_view_flag = currSlice->inter_view_flag;
-  if (dec_picture->view_id == 1)
-    if ((p_Vid->profile_idc == MVC_HIGH) || (p_Vid->profile_idc == STEREO_HIGH))
-      initMvcPicture (currSlice);
-#endif
 
   // reset all variables of the error concealment instance before decoding of every frame.
   // here the third parameter should, if perfectly, be equal to the number of slices per frame.
@@ -851,10 +797,7 @@ static void initSlice (VideoParameters *p_Vid, Slice *currSlice) {
   currSlice->init_lists (currSlice);
 
 #if (MVC_EXTENSION_ENABLE)
-  if (currSlice->svc_extension_flag == 0 || currSlice->svc_extension_flag == 1)
-    reorder_lists_mvc (currSlice, currSlice->ThisPOC);
-  else
-    reorderLists (currSlice);
+  reorderLists (currSlice);
 
   if (currSlice->fs_listinterview0) {
     free(currSlice->fs_listinterview0);
@@ -1451,7 +1394,7 @@ void exit_picture (VideoParameters* p_Vid, StorablePicture** dec_picture) {
     fieldPostProcessing (p_Vid);
 
 #if (MVC_EXTENSION_ENABLE)
-  if ((*dec_picture)->used_for_reference || ((*dec_picture)->inter_view_flag == 1))
+  if ((*dec_picture)->used_for_reference)
     pad_dec_picture (p_Vid, *dec_picture);
 #else
   if ((*dec_picture)->used_for_reference)
@@ -1467,11 +1410,7 @@ void exit_picture (VideoParameters* p_Vid, StorablePicture** dec_picture) {
   int is_idr = (*dec_picture)->idr_flag;
   int chroma_format_idc = (*dec_picture)->chroma_format_idc;
 
-#if MVC_EXTENSION_ENABLE
-  store_picture_in_dpb (p_Vid->p_Dpb_layer[(*dec_picture)->view_id], *dec_picture);
-#else
   store_picture_in_dpb (p_Vid->p_Dpb_layer[0], *dec_picture);
-#endif
 
   *dec_picture = NULL;
   if (p_Vid->last_has_mmco_5)
@@ -1677,10 +1616,6 @@ int decode_one_frame (DecoderParams* pDecoder) {
     p_Vid->num_dec_mb += currSlice->num_dec_mb;
     p_Vid->erc_mvperMB += currSlice->erc_mvperMB;
     }
-
-#if MVC_EXTENSION_ENABLE
-  p_Vid->last_dec_view_id = p_Vid->dec_picture->view_id;
-#endif
 
   if (p_Vid->dec_picture->structure == FRAME)
     p_Vid->last_dec_poc = p_Vid->dec_picture->frame_poc;

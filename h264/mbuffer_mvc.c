@@ -30,7 +30,7 @@
 
 #if (MVC_EXTENSION_ENABLE)
   //{{{
-  void reorder_short_term (Slice *currSlice, int cur_list, int num_ref_idx_lX_active_minus1, 
+  void reorder_short_term (Slice *currSlice, int cur_list, int num_ref_idx_lX_active_minus1,
                            int picNumLX, int *refIdxLX, int currViewID)
   {
     StorablePicture **RefPicListX = currSlice->listX[cur_list];
@@ -58,7 +58,7 @@
   }
   //}}}
   //{{{
-  void reorder_long_term (Slice *currSlice, StorablePicture **RefPicListX, 
+  void reorder_long_term (Slice *currSlice, StorablePicture **RefPicListX,
                           int num_ref_idx_lX_active_minus1, int LongTermPicNum, int *refIdxLX, int currViewID)
   {
     int cIdx, nIdx;
@@ -88,7 +88,7 @@
   //}}}
 
   //{{{
-  static StorablePicture* get_inter_view_pic (VideoParameters *p_Vid, Slice *currSlice, 
+  static StorablePicture* get_inter_view_pic (VideoParameters *p_Vid, Slice *currSlice,
                                               int targetViewID, int currPOC, int listidx)
   {
     unsigned i;
@@ -552,33 +552,6 @@
   //}}}
 
   //{{{
-  static void reorder_interview (VideoParameters *p_Vid, Slice *currSlice, StorablePicture **RefPicListX,
-                                 int num_ref_idx_lX_active_minus1, int *refIdxLX, 
-                                 int targetViewID, int currPOC, int listidx)
-  {
-    int cIdx, nIdx;
-    StorablePicture *picLX;
-
-    picLX = get_inter_view_pic(p_Vid, currSlice, targetViewID, currPOC, listidx);
-
-    if (picLX)
-    {
-      for( cIdx = num_ref_idx_lX_active_minus1+1; cIdx > *refIdxLX; cIdx-- )
-        RefPicListX[ cIdx ] = RefPicListX[ cIdx - 1];
-
-      RefPicListX[ (*refIdxLX)++ ] = picLX;
-
-      nIdx = *refIdxLX;
-
-      for( cIdx = *refIdxLX; cIdx <= num_ref_idx_lX_active_minus1+1; cIdx++ )
-      {
-        if((GetViewIdx( p_Vid, RefPicListX[cIdx]->view_id ) != targetViewID) || (RefPicListX[cIdx]->poc != currPOC))
-          RefPicListX[ nIdx++ ] = RefPicListX[ cIdx ];
-      }
-    }
-  }
-  //}}}
-  //{{{
   void reorder_ref_pic_list_mvc (Slice *currSlice, int cur_list, int **anchor_ref, int **non_anchor_ref,
                                  int view_id, int anchor_pic_flag, int currPOC, int listidx)
   {
@@ -673,65 +646,10 @@
         else
           targetViewID = non_anchor_ref[curr_VOIdx][picViewIdxLX];
 
-        reorder_interview(p_Vid, currSlice, currSlice->listX[cur_list], num_ref_idx_lX_active_minus1, &refIdxLX, targetViewID, currPOC, listidx);
       }
     }
     // that's a definition
     currSlice->listXsize[cur_list] = (char) (num_ref_idx_lX_active_minus1 + 1);
-  }
-  //}}}
-  //{{{
-  void reorder_lists_mvc (Slice * currSlice, int currPOC)
-  {
-    VideoParameters *p_Vid = currSlice->p_Vid;
-
-    if ((currSlice->slice_type != I_SLICE)&&(currSlice->slice_type != SI_SLICE))
-    {
-      if (currSlice->ref_pic_list_reordering_flag[LIST_0])
-      {
-        reorder_ref_pic_list_mvc(currSlice, LIST_0,
-          p_Vid->active_subset_sps->anchor_ref_l0,
-          p_Vid->active_subset_sps->non_anchor_ref_l0,
-          currSlice->view_id, currSlice->anchor_pic_flag, currPOC, 0);
-      }
-      if (p_Vid->no_reference_picture == currSlice->listX[0][currSlice->num_ref_idx_active[LIST_0]-1])
-      {
-        if (p_Vid->non_conforming_stream)
-          printf("RefPicList0[ %d ] is equal to 'no reference picture'\n", currSlice->num_ref_idx_active[LIST_0] - 1);
-        else
-          error("RefPicList0[ num_ref_idx_l0_active_minus1 ] in MVC layer is equal to 'no reference picture', invalid bitstream",500);
-      }
-      // that's a definition
-      currSlice->listXsize[0] = (char)currSlice->num_ref_idx_active[LIST_0];
-    }
-    if (currSlice->slice_type == B_SLICE)
-    {
-      if (currSlice->ref_pic_list_reordering_flag[LIST_1])
-      {
-        reorder_ref_pic_list_mvc(currSlice, LIST_1,
-          p_Vid->active_subset_sps->anchor_ref_l1,
-          p_Vid->active_subset_sps->non_anchor_ref_l1,
-          currSlice->view_id, currSlice->anchor_pic_flag, currPOC, 1);
-      }
-      if (p_Vid->no_reference_picture == currSlice->listX[1][currSlice->num_ref_idx_active[LIST_1]-1])
-      {
-        if (p_Vid->non_conforming_stream)
-          printf("RefPicList1[ %d ] is equal to 'no reference picture'\n", currSlice->num_ref_idx_active[LIST_1] - 1);
-        else
-          error("RefPicList1[ num_ref_idx_l1_active_minus1 ] is equal to 'no reference picture', invalid bitstream",500);
-      }
-      // that's a definition
-      currSlice->listXsize[1] = (char)currSlice->num_ref_idx_active[LIST_1];
-    }
-
-    free_ref_pic_list_reordering_buffer(currSlice);
-
-    if ( currSlice->slice_type == P_SLICE )
-    {
-     }
-    else if ( currSlice->slice_type == B_SLICE )
-    {
-    }
   }
   //}}}
 #endif
