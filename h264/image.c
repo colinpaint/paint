@@ -463,12 +463,6 @@ static int isNewPicture (StorablePicture* dec_picture, Slice* currSlice, OldSlic
       }
     }
 
-#if (MVC_EXTENSION_ENABLE)
-  result |= (currSlice->view_id != p_old_slice->view_id);
-  result |= (currSlice->inter_view_flag != p_old_slice->inter_view_flag);
-  result |= (currSlice->anchor_pic_flag != p_old_slice->anchor_pic_flag);
-#endif
-
   result |= (currSlice->layer_id != p_old_slice->layer_id);
   return result;
   }
@@ -764,12 +758,6 @@ static void copySliceInfo (Slice* currSlice, OldSliceParams* p_old_slice) {
     p_old_slice->delta_pic_order_cnt[0] = currSlice->delta_pic_order_cnt[0];
     p_old_slice->delta_pic_order_cnt[1] = currSlice->delta_pic_order_cnt[1];
     }
-
-#if (MVC_EXTENSION_ENABLE)
-  p_old_slice->view_id = currSlice->view_id;
-  p_old_slice->inter_view_flag = currSlice->inter_view_flag;
-  p_old_slice->anchor_pic_flag = currSlice->anchor_pic_flag;
-#endif
 
   p_old_slice->layer_id = currSlice->layer_id;
   }
@@ -1333,13 +1321,8 @@ void exit_picture (VideoParameters* p_Vid, StorablePicture** dec_picture) {
   else
     fieldPostProcessing (p_Vid);
 
-#if (MVC_EXTENSION_ENABLE)
   if ((*dec_picture)->used_for_reference)
     pad_dec_picture (p_Vid, *dec_picture);
-#else
-  if ((*dec_picture)->used_for_reference)
-    pad_dec_picture (p_Vid, *dec_picture);
-#endif
 
   int structure = (*dec_picture)->structure;
   int slice_type = (*dec_picture)->slice_type;
