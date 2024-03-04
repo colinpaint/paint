@@ -99,13 +99,13 @@ typedef enum {
 
 // number of intra prediction modes
 #define NO_INTRA_PMODE   9
-//{{{  Direct Mode types
+//{{{  enum DirectModes
 typedef enum {
   DIR_TEMPORAL = 0, //!< Temporal Direct Mode
   DIR_SPATIAL  = 1 //!< Spatial Direct Mode
   } DirectModes;
 //}}}
-//{{{  CAVLC block types
+//{{{  enum CAVLCBlockTypes
 typedef enum {
   LUMA              =  0,
   LUMA_INTRA16x16DC =  1,
@@ -118,7 +118,7 @@ typedef enum {
   CR_INTRA16x16AC   = 10
   } CAVLCBlockTypes;
 //}}}
-//{{{  CABAC block types
+//{{{  enum CABACBlockTypes
 typedef enum {
   LUMA_16DC     =   0,
   LUMA_16AC     =   1,
@@ -144,7 +144,7 @@ typedef enum {
   CR_4x4        =  21
   } CABACBlockTypes;
 //}}}
-//{{{  Color components
+//{{{  enum ColorComponent
 typedef enum {
   Y_COMP = 0,    // Y Component
   U_COMP = 1,    // U Component
@@ -172,7 +172,7 @@ typedef enum {
 // Quantization parameter range
 #define MIN_QP           0
 #define MAX_QP           51
-//{{{  4x4 intra prediction modes
+//{{{  enum 4x4 intra prediction modes
 typedef enum {
   VERT_PRED            = 0,
   HOR_PRED             = 1,
@@ -185,7 +185,7 @@ typedef enum {
   HOR_UP_PRED          = 8
   } I4x4PredModes;
 //}}}
-//{{{  16x16 intra prediction modes
+//{{{  enum 16x16 intra prediction modes
 typedef enum {
   VERT_PRED_16   = 0,
   HOR_PRED_16    = 1,
@@ -193,7 +193,7 @@ typedef enum {
   PLANE_16       = 3
   } I16x16PredModes;
 //}}}
-//{{{  8x8 chroma intra prediction modes
+//{{{  enum 8x8 chroma intra prediction modes
 typedef enum {
   DC_PRED_8     =  0,
   HOR_PRED_8    =  1,
@@ -201,7 +201,7 @@ typedef enum {
   PLANE_8       =  3
   } I8x8PredModes;
 //}}}
-//{{{  StartEnd
+//{{{  enum StartEnd
 typedef enum {
   EOS = 1,    //!< End Of Sequence
   SOP = 2,    //!< Start Of Picture
@@ -209,7 +209,7 @@ typedef enum {
   SOS_CONT = 4
   } StartEnd;
 //}}}
-//{{{  MV Prediction types
+//{{{  enum MV Prediction types
 typedef enum {
   MVPRED_MEDIAN   = 0,
   MVPRED_L        = 1,
@@ -217,7 +217,7 @@ typedef enum {
   MVPRED_UR       = 3
   } MVPredTypes;
 //}}}
-//{{{  DecRet
+//{{{  enum DecRet
 typedef enum {
   DECODING_OK     = 0,
   SEARCH_SYNC     = 1,
@@ -225,11 +225,10 @@ typedef enum {
   } DecRet;
 //}}}
 
-
 #define MAX_PLANE                 3
 #define LAMBDA_ACCURACY_BITS      16
 #define INVALIDINDEX              (-135792468)
 #define RC_MAX_TEMPORAL_LEVELS    5
 
-//Start code and Emulation Prevention need this to be defined in identical manner at encoder and decoder
+// Start code and Emulation Prevention need this to be defined in identical manner at encoder and decoder
 #define ZEROBYTES_SHORTSTARTCODE  2 //indicates the number of zero bytes in the short start-code prefix
