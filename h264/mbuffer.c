@@ -1469,7 +1469,6 @@ StorablePicture* alloc_storable_picture (VideoParameters *p_Vid, PictureStructur
   s->mb_aff_frame_flag  = 0;
 
   s->top_poc = s->bottom_poc = s->poc = 0;
-  s->seiHasTone_mapping = 0;
 
   if(!p_Vid->active_sps->frame_mbs_only_flag && structure != FRAME)
   {
@@ -1518,10 +1517,6 @@ void free_storable_picture (StorablePicture* p) {
       free_mem3Dpel_pad(p->imgUV, 2, p->iChromaPadY, p->iChromaPadX);
       p->imgUV=NULL;
     }
-
-
-    if (p->seiHasTone_mapping)
-      free(p->tone_mapping_lut);
 
     {
       int i, j;
@@ -3489,7 +3484,6 @@ void process_picture_in_dpb_s (VideoParameters *p_Vid, StorablePicture *p_pic)
     p_stored_pic->size_y_cr_m1 = p_pic->size_y_cr - 1;
 
     p_stored_pic->mb_aff_frame_flag = p_pic->mb_aff_frame_flag;
-    p_stored_pic->seiHasTone_mapping = p_pic->seiHasTone_mapping;
     p_stored_pic->poc         = p_pic->poc;
     p_stored_pic->top_poc     = p_pic->top_poc;
     p_stored_pic->bottom_poc  = p_pic->bottom_poc;

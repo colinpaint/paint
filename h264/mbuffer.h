@@ -87,7 +87,6 @@ typedef struct storable_picture {
   int         concealed_pic; //indicates if this is a concealed picture
 
   // variables for tone mapping
-  int         seiHasTone_mapping;
   int         tone_mapping_model_id;
   int         tonemapped_bit_depth;
   imgpel*     tone_mapping_lut;                //!< tone mapping look up table
