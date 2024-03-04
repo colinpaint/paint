@@ -770,20 +770,7 @@ static void initSlice (VideoParameters *p_Vid, Slice *currSlice) {
 
   currSlice->init_lists (currSlice);
 
-#if (MVC_EXTENSION_ENABLE)
   reorderLists (currSlice);
-
-  if (currSlice->fs_listinterview0) {
-    free(currSlice->fs_listinterview0);
-    currSlice->fs_listinterview0 = NULL;
-    }
-  if (currSlice->fs_listinterview1) {
-    free(currSlice->fs_listinterview1);
-    currSlice->fs_listinterview1 = NULL;
-     }
-#else
-  reorderLists (currSlice);
-#endif
 
   if (currSlice->structure == FRAME)
     init_mbaff_lists (p_Vid, currSlice);
