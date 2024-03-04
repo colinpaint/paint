@@ -24,66 +24,20 @@
 //}}}
 
 //{{{
-static int EBSPtoRBSP (byte *streamBuffer, int end_bytepos, int begin_bytepos) {
-
-  if (end_bytepos < begin_bytepos)
-    return end_bytepos;
-
-  int count = 0;
-  int j = begin_bytepos;
-  for (int i = begin_bytepos; i < end_bytepos; ++i) {
-    //starting from begin_bytepos to avoid header information
-    //in NAL unit, 0x000000, 0x000001 or 0x000002 shall not occur at any byte-aligned position
-    if (count == ZEROBYTES_SHORTSTARTCODE && streamBuffer[i] < 0x03)
-      return -1;
-
-    if (count == ZEROBYTES_SHORTSTARTCODE && streamBuffer[i] == 0x03) {
-      //check the 4th byte after 0x000003, except when cabac_zero_word is used, in which case the last three bytes of this NAL unit must be 0x000003
-      if ((i < end_bytepos-1) && (streamBuffer[i+1] > 0x03))
-        return -1;
-
-      //if cabac_zero_word is used, the final byte of this NAL unit(0x03) is discarded, and the last two bytes of RBSP must be 0x0000
-      if (i == end_bytepos-1)
-        return j;
-
-      ++i;
-      count = 0;
-      }
-
-    streamBuffer[j] = streamBuffer[i];
-    if(streamBuffer[i] == 0x00)
-      ++count;
-    else
-      count = 0;
-    ++j;
-    }
-
-  return j;
-  }
-//}}}
-//{{{
-static int NALUtoRBSP (NALU_t* nalu) {
-
-  assert (nalu != NULL);
-  nalu->len = EBSPtoRBSP (nalu->buf, nalu->len, 1) ;
-  return nalu->len ;
-  }
-//}}}
-
-//{{{
 NALU_t* AllocNALU (int buffersize) {
 
-  NALU_t* n;
-  if ((n = (NALU_t*)calloc(1, sizeof(NALU_t))) == NULL)
-    no_mem_exit ("AllocNALU: n");
+  NALU_t* nalu = (NALU_t*)calloc (1, sizeof(NALU_t));
+  if (nalu == NULL)
+    no_mem_exit ("AllocNALU");
 
-  n->max_size = buffersize;
-  if ((n->buf = (byte*)calloc (buffersize, sizeof (byte))) == NULL) {
-    free (n);
-    no_mem_exit ("AllocNALU: n->buf");
+  nalu->buf = (byte*)calloc (buffersize, sizeof (byte));
+  if (nalu->buf == NULL) {
+    free (nalu);
+    no_mem_exit ("AllocNALU buffer");
     }
+  nalu->max_size = buffersize;
 
-  return n;
+  return nalu;
   }
 //}}}
 //{{{
@@ -159,11 +113,63 @@ void CheckZeroByteNonVCL (VideoParameters* p_Vid, NALU_t* nalu) {
     CheckZeroByte = 1;
 
   if (CheckZeroByte && nalu->startcodeprefix_len == 3)
-    printf ("Warning: zero_byte shall exist\n");
+    printf ("Warning: zero_byte should exist\n");
     //because it is not a very serious problem, we do not exit here
   }
 //}}}
 
+//{{{
+static int NALUtoRBSP (NALU_t* nalu) {
+// networkAbstractionLayerUnit to rawByteSequencePayload
+
+  byte* streamBuffer = nalu->buf;
+  int end_bytepos = nalu->len;
+  if (end_bytepos < 1) {
+    nalu->len = end_bytepos;
+    return nalu->len;
+    }
+
+  int count = 0;
+  int j = 1;
+  for (int i = 1; i < end_bytepos; ++i) {
+    // in NAL unit, 0x000000, 0x000001 or 0x000002 shall not occur at any byte-aligned position
+    if (count == ZEROBYTES_SHORTSTARTCODE && streamBuffer[i] < 0x03) {
+      nalu->len = -1;
+      return nalu->len;
+      }
+
+    if (count == ZEROBYTES_SHORTSTARTCODE && streamBuffer[i] == 0x03) {
+      // check the 4th byte after 0x000003,
+      // except when cabac_zero_word is used
+      // , in which case the last three bytes of this NAL unit must be 0x000003
+      if ((i < end_bytepos-1) && (streamBuffer[i+1] > 0x03)) {
+        nalu->len = -1;
+        return nalu->len;
+        }
+
+      // if cabac_zero_word, final byte of NALunit(0x03) is discarded
+      // and the last two bytes of RBSP must be 0x0000
+      if (i == end_bytepos-1) {
+        nalu->len = j;
+        return nalu->len;
+        }
+
+      ++i;
+      count = 0;
+      }
+
+    streamBuffer[j] = streamBuffer[i];
+    if (streamBuffer[i] == 0x00)
+      ++count;
+    else
+      count = 0;
+    ++j;
+    }
+
+  nalu->len = j;
+  return nalu->len;
+  }
+//}}}
 //{{{
 int readNextNalu (VideoParameters* p_Vid, NALU_t* nalu) {
 
@@ -194,6 +200,7 @@ int readNextNalu (VideoParameters* p_Vid, NALU_t* nalu) {
 //}}}
 //{{{
 int RBSPtoSODB (byte* streamBuffer, int last_byte_pos) {
+// rawByteSequencePayload to stringOfDataBits
 
   // find trailing 1
   int bitoffset = 0;
@@ -211,6 +218,6 @@ int RBSPtoSODB (byte* streamBuffer, int last_byte_pos) {
     ctr_bit = streamBuffer[last_byte_pos - 1] & (0x01<<(bitoffset));
     }
 
-  return(last_byte_pos);
+  return last_byte_pos;
   }
 //}}}

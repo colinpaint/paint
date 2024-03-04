@@ -775,7 +775,9 @@ public:
       while (pesIndex < mPes.size()) {
         decode (pesIndex, mPes[pesIndex]);
         pesIndex++;
-        this_thread::sleep_for (40ms);
+        this_thread::sleep_for (20ms);
+
+        while (!mPlaying)
           this_thread::sleep_for (1ms);
         }
 
@@ -797,15 +799,6 @@ private:
     int64_t mPts;
     string mFrameInfo;
     };
-  //}}}
-
-  //{{{
-  size_t skipToI (size_t i) {
-
-    while (i < mPes.size() && (mPes[i].mFrameInfo.front() != 'I'))
-      i++;
-    return i;
-    }
   //}}}
 
   //{{{
