@@ -8,9 +8,3 @@ extern int read_new_slice (Slice* currSlice);
 extern void exit_picture (VideoParameters* p_Vid, StorablePicture** dec_picture);
 
 extern int decode_one_frame (DecoderParams* pDecoder);
-
-#if (MVC_EXTENSION_ENABLE)
-  extern int GetViewIdx (VideoParameters* p_Vid, int iVOIdx);
-  extern int GetVOIdx (VideoParameters* p_Vid, int iViewId);
-  extern int get_maxViewIdx (VideoParameters* p_Vid, int view_id, int anchor_pic_flag, int listidx);
-#endif

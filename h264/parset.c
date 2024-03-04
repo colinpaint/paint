@@ -564,13 +564,7 @@ static int interpretSPS (VideoParameters *p_Vid, DataPartition *p, seq_parameter
   sps->constrained_set2_flag = read_u_1 ("SPS: constrained_set2_flag", s, &gDecoder->UsedBits);
   sps->constrained_set3_flag = read_u_1 ("SPS: constrained_set3_flag", s, &gDecoder->UsedBits);
 
-#if (MVC_EXTENSION_ENABLE)
-  sps->constrained_set4_flag = read_u_1 ("SPS: constrained_set4_flag", s, &gDecoder->UsedBits);
-  sps->constrained_set5_flag = read_u_1 ("SPS: constrained_set5_flag", s, &gDecoder->UsedBits);
-  reserved_zero = read_u_v (2, "SPS: reserved_zero_2bits", s, &gDecoder->UsedBits);
-#else
   reserved_zero = read_u_v (4, "SPS: reserved_zero_4bits", s, &gDecoder->UsedBits);
-#endif
 
   if (reserved_zero != 0)
     printf ("Warning, reserved_zero flag not equal to 0. Possibly new constrained_setX flag introduced.\n");
@@ -739,7 +733,6 @@ void get_max_dec_frame_buf_size (seq_parameter_set_rbsp_t* sps) {
 
   size /= pic_size_mb;
   size = imin(size, 16);
-  sps->max_dec_frame_buffering = size;
   }
 //}}}
 //{{{

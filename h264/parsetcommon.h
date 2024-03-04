@@ -118,8 +118,7 @@ typedef struct
 
 #define MAXnum_ref_frames_in_pic_order_cnt_cycle  256
 //{{{
-typedef struct
-{
+typedef struct {
   Boolean   Valid;                  // indicates the parameter set is valid
 
   unsigned int profile_idc;                                       // u(8)
@@ -127,10 +126,6 @@ typedef struct
   Boolean   constrained_set1_flag;                                // u(1)
   Boolean   constrained_set2_flag;                                // u(1)
   Boolean   constrained_set3_flag;                                // u(1)
-#if (MVC_EXTENSION_ENABLE)
-  Boolean   constrained_set4_flag;                                // u(1)
-  Boolean   constrained_set5_flag;                                // u(2)
-#endif
   unsigned  int level_idc;                                        // u(8)
   unsigned  int seq_parameter_set_id;                             // ue(v)
   unsigned  int chroma_format_idc;                                // ue(v)
@@ -146,21 +141,17 @@ typedef struct
   unsigned int bit_depth_chroma_minus8;                          // ue(v)
   unsigned int log2_max_frame_num_minus4;                        // ue(v)
   unsigned int pic_order_cnt_type;
-  // if( pic_order_cnt_type == 0 )
   unsigned int log2_max_pic_order_cnt_lsb_minus4;                 // ue(v)
-  // else if( pic_order_cnt_type == 1 )
   Boolean delta_pic_order_always_zero_flag;               // u(1)
   int     offset_for_non_ref_pic;                         // se(v)
   int     offset_for_top_to_bottom_field;                 // se(v)
   unsigned int num_ref_frames_in_pic_order_cnt_cycle;          // ue(v)
-  // for( i = 0; i < num_ref_frames_in_pic_order_cnt_cycle; i++ )
   int   offset_for_ref_frame[MAXnum_ref_frames_in_pic_order_cnt_cycle];   // se(v)
   unsigned int num_ref_frames;                                   // ue(v)
   Boolean   gaps_in_frame_num_value_allowed_flag;             // u(1)
   unsigned int pic_width_in_mbs_minus1;                          // ue(v)
   unsigned int pic_height_in_map_units_minus1;                   // ue(v)
   Boolean   frame_mbs_only_flag;                              // u(1)
-  // if( !frame_mbs_only_flag )
   Boolean   mb_adaptive_frame_field_flag;                   // u(1)
   Boolean   direct_8x8_inference_flag;                        // u(1)
   Boolean   frame_cropping_flag;                              // u(1)
@@ -171,11 +162,8 @@ typedef struct
   Boolean   vui_parameters_present_flag;                      // u(1)
   vui_seq_parameters_t vui_seq_parameters;                  // vui_seq_parameters_t
   unsigned  separate_colour_plane_flag;                       // u(1)
-#if (MVC_EXTENSION_ENABLE)
-  int max_dec_frame_buffering;
-#endif
   int lossless_qpprime_flag;
-} seq_parameter_set_rbsp_t;
+  } seq_parameter_set_rbsp_t;
 //}}}
 
 #if (MVC_EXTENSION_ENABLE)

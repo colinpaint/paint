@@ -1138,11 +1138,7 @@ void init_dpb (VideoParameters *p_Vid, DecodedPictureBuffer *p_Dpb, int type) {
   p_Dpb->size = getDpbSize(p_Vid, active_sps) + p_Vid->p_Inp->dpb_plus[type==2? 1: 0];
   p_Dpb->num_ref_frames = active_sps->num_ref_frames;
 
-#if (MVC_EXTENSION_ENABLE)
-  if ((unsigned int)active_sps->max_dec_frame_buffering < active_sps->num_ref_frames)
-#else
   if (p_Dpb->size < active_sps->num_ref_frames)
-#endif
     error ("DPB size at specified level is smaller than the specified number of reference frames. This is not allowed.\n", 1000);
 
   p_Dpb->used_size = 0;
@@ -1220,11 +1216,7 @@ void re_init_dpb (VideoParameters *p_Vid, DecodedPictureBuffer *p_Dpb, int type)
   p_Dpb->num_ref_frames = active_sps->num_ref_frames;
 
   if( iDpbSize > (int)p_Dpb->size) {
-#if (MVC_EXTENSION_ENABLE)
-    if ((unsigned int)active_sps->max_dec_frame_buffering < active_sps->num_ref_frames)
-#else
     if (p_Dpb->size < active_sps->num_ref_frames)
-#endif
       error ("DPB size at specified level is smaller than the specified number of reference frames. This is not allowed.\n", 1000);
 
     p_Dpb->fs = realloc(p_Dpb->fs, iDpbSize * sizeof (FrameStore*));
