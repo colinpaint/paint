@@ -1,5 +1,7 @@
 #pragma once
 
+extern void init_contexts  (Slice *currslice);
+
 extern int FirstPartOfSliceHeader (Slice *currSlice);
 extern int RestOfSliceHeader (Slice *currSlice);
 

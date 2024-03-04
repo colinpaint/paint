@@ -44,18 +44,6 @@ typedef struct nalu_t {
   NalRefIdc nal_reference_idc;     // NALU_PRIORITY_xxxx
   byte*     buf;                   // contains the first byte followed by the EBSP
   uint16    lost_packets;          // true, if packet loss is detected
-
-#if (MVC_EXTENSION_ENABLE)
-  int       svc_extension_flag;    // should be always 0, for MVC
-  int       non_idr_flag;          // 0 = current is IDR
-  int       priority_id;           // a lower value of priority_id specifies a higher priority
-  int       view_id;               // view identifier for the NAL unit
-  int       temporal_id;           // temporal identifier for the NAL unit
-  int       anchor_pic_flag;       // anchor access unit
-  int       inter_view_flag;       // inter-view prediction enable
-  int       reserved_one_bit;      // shall be equal to 1
-#endif
-
   } NALU_t;
 //}}}
 
