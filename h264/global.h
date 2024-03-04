@@ -376,7 +376,6 @@ typedef struct slice {
   struct inp_par      *p_Inp;
   pic_parameter_set_rbsp_t *active_pps;
   seq_parameter_set_rbsp_t *active_sps;
-  int svc_extension_flag;
 
   // dpb pointer
   struct decoded_picture_buffer *p_Dpb;

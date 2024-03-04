@@ -862,10 +862,6 @@ static int readNewSlice (Slice* currSlice) {
   int current_header = 0;
   Bitstream* currStream = NULL;
   for (;;) {
-    #if (MVC_EXTENSION_ENABLE)
-      currSlice->svc_extension_flag = -1;
-    #endif
-
     NALU_t* nalu = p_Vid->nalu;
     if (!pendingNalu) {
       if (!readNextNalu (p_Vid, nalu))

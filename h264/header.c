@@ -1539,25 +1539,21 @@ int RestOfSliceHeader (Slice* currSlice) {
     assert (currSlice->field_pic_flag == 1 && (currSlice->bottom_field_flag == TRUE ));
 
   if (currSlice->idr_flag)
-    currSlice->idr_pic_id = read_ue_v("SH: idr_pic_id", currStream, &gDecoder->UsedBits);
-#if (MVC_EXTENSION_ENABLE)
-  else if ( currSlice->svc_extension_flag == 0 && currSlice->NaluHeaderMVCExt.non_idr_flag == 0 )
-    currSlice->idr_pic_id = read_ue_v("SH: idr_pic_id", currStream, &gDecoder->UsedBits);
-#endif
+    currSlice->idr_pic_id = read_ue_v ("SH: idr_pic_id", currStream, &gDecoder->UsedBits);
 
   if (active_sps->pic_order_cnt_type == 0) {
-    currSlice->pic_order_cnt_lsb = read_u_v(active_sps->log2_max_pic_order_cnt_lsb_minus4 + 4, "SH: pic_order_cnt_lsb", currStream, &gDecoder->UsedBits);
+    currSlice->pic_order_cnt_lsb = read_u_v (active_sps->log2_max_pic_order_cnt_lsb_minus4 + 4, "SH: pic_order_cnt_lsb", currStream, &gDecoder->UsedBits);
     if( p_Vid->active_pps->bottom_field_pic_order_in_frame_present_flag  ==  1 &&  !currSlice->field_pic_flag )
-      currSlice->delta_pic_order_cnt_bottom = read_se_v("SH: delta_pic_order_cnt_bottom", currStream, &gDecoder->UsedBits);
+      currSlice->delta_pic_order_cnt_bottom = read_se_v ("SH: delta_pic_order_cnt_bottom", currStream, &gDecoder->UsedBits);
     else
       currSlice->delta_pic_order_cnt_bottom = 0;
     }
 
   if (active_sps->pic_order_cnt_type == 1 ) {
     if (!active_sps->delta_pic_order_always_zero_flag ) {
-      currSlice->delta_pic_order_cnt[ 0 ] = read_se_v("SH: delta_pic_order_cnt[0]", currStream, &gDecoder->UsedBits);
+      currSlice->delta_pic_order_cnt[ 0 ] = read_se_v ("SH: delta_pic_order_cnt[0]", currStream, &gDecoder->UsedBits);
       if (p_Vid->active_pps->bottom_field_pic_order_in_frame_present_flag  ==  1  &&  !currSlice->field_pic_flag )
-        currSlice->delta_pic_order_cnt[ 1 ] = read_se_v("SH: delta_pic_order_cnt[1]", currStream, &gDecoder->UsedBits);
+        currSlice->delta_pic_order_cnt[ 1 ] = read_se_v ("SH: delta_pic_order_cnt[1]", currStream, &gDecoder->UsedBits);
       else
         currSlice->delta_pic_order_cnt[ 1 ] = 0;  // set to zero if not in stream
       }
@@ -1592,14 +1588,7 @@ int RestOfSliceHeader (Slice* currSlice) {
   if (currSlice->slice_type != B_SLICE)
     currSlice->num_ref_idx_active[LIST_1] = 0;
 
-#if (MVC_EXTENSION_ENABLE)
-  if (currSlice->svc_extension_flag == 0 || currSlice->svc_extension_flag == 1)
-    ref_pic_list_mvc_modification(currSlice);
-  else
-    ref_pic_list_reordering(currSlice);
-#else
   ref_pic_list_reordering(currSlice);
-#endif
 
   currSlice->weighted_pred_flag = (unsigned short)((currSlice->slice_type == P_SLICE || currSlice->slice_type == SP_SLICE)
     ? p_Vid->active_pps->weighted_pred_flag
@@ -1756,11 +1745,7 @@ void dec_ref_pic_marking (VideoParameters* p_Vid, Bitstream* currStream, Slice* 
     free (tmp_drpm);
     }
 
-#if (MVC_EXTENSION_ENABLE)
-  if ( pSlice->idr_flag || (pSlice->svc_extension_flag == 0 && pSlice->NaluHeaderMVCExt.non_idr_flag == 0) ) {
-#else
   if (pSlice->idr_flag) {
-#endif
     pSlice->no_output_of_prior_pics_flag = 
       read_u_1 ("SH: no_output_of_prior_pics_flag", currStream, &gDecoder->UsedBits);
     p_Vid->no_output_of_prior_pics_flag = pSlice->no_output_of_prior_pics_flag;
