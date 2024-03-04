@@ -246,11 +246,6 @@ typedef struct syntaxelement_dec {
   int           context;               //!< CABAC context
   int           k;                     //!< CABAC context for coeff_count,uv
 
-#if TRACE
-  #define       TRACESTRING_SIZE 100           //!< size of trace string
-  char          tracestring[TRACESTRING_SIZE]; //!< trace string
-#endif
-
   //! for mapping of CAVLC to syntaxElement
   void  (*mapping)(int len, int info, int *value1, int *value2);
   //! used for CABAC: refers to actual coding method of each individual syntax element type
@@ -291,23 +286,6 @@ typedef struct wp_params {
   short offset[3];
   } WPParams;
 //}}}
-
-#if (MVC_EXTENSION_ENABLE)
-//{{{
-typedef struct nalunitheadermvcext_tag
-{
-   unsigned int non_idr_flag;
-   unsigned int priority_id;
-   unsigned int view_id;
-   unsigned int temporal_id;
-   unsigned int anchor_pic_flag;
-   unsigned int inter_view_flag;
-   unsigned int reserved_one_bit;
-   unsigned int iPrefixNALU;
-} NALUnitHeaderMVCExt_t;
-//}}}
-#endif
-
 //{{{
 typedef struct inp_par {
   char infile[FILE_NAME_SIZE];
@@ -650,7 +628,7 @@ typedef struct video_par {
   struct decoded_picture_buffer* p_Dpb_layer[MAX_NUM_DPB_LAYERS];
   CodingParameters* p_EncodePar[MAX_NUM_DPB_LAYERS];
   LayerParameters* p_LayerPar[MAX_NUM_DPB_LAYERS];
-  
+
   struct sei_params* p_SEI;
   struct old_slice_par* old_slice;
   int number;                       //frame number
@@ -872,23 +850,23 @@ typedef struct decoder_params {
 //{{{
 static inline int is_FREXT_profile (unsigned int profile_idc) {
   // we allow all FRExt tools, when no profile is active
-  return profile_idc==NO_PROFILE || profile_idc==FREXT_HP || 
-         profile_idc==FREXT_Hi10P || profile_idc==FREXT_Hi422 || 
+  return profile_idc==NO_PROFILE || profile_idc==FREXT_HP ||
+         profile_idc==FREXT_Hi10P || profile_idc==FREXT_Hi422 ||
          profile_idc==FREXT_Hi444 || profile_idc == FREXT_CAVLC444;
 }
 //}}}
 //{{{
 static inline int is_HI_intra_only_profile (unsigned int profile_idc, Boolean constrained_set3_flag) {
-  return (((profile_idc == FREXT_Hi10P)||(profile_idc == FREXT_Hi422) || 
-           (profile_idc == FREXT_Hi444)) && constrained_set3_flag) || 
+  return (((profile_idc == FREXT_Hi10P)||(profile_idc == FREXT_Hi422) ||
+           (profile_idc == FREXT_Hi444)) && constrained_set3_flag) ||
          (profile_idc == FREXT_CAVLC444);
 }
 //}}}
 //{{{
 static inline int is_BL_profile (unsigned int profile_idc) {
-  return profile_idc == FREXT_CAVLC444 || profile_idc == BASELINE || 
+  return profile_idc == FREXT_CAVLC444 || profile_idc == BASELINE ||
          profile_idc == MAIN || profile_idc == EXTENDED ||
-         profile_idc == FREXT_HP || profile_idc == FREXT_Hi10P || 
+         profile_idc == FREXT_HP || profile_idc == FREXT_Hi10P ||
          profile_idc == FREXT_Hi422 || profile_idc == FREXT_Hi444;
 }
 //}}}
@@ -917,10 +895,6 @@ static inline int is_BL_profile (unsigned int profile_idc) {
   // For 4:4:4 independent mode
   extern void change_plane_JV (VideoParameters *p_Vid, int nplane, Slice *pSlice);
   extern void make_frame_picture_JV (VideoParameters *p_Vid );
-
-  #if (MVC_EXTENSION_ENABLE)
-    extern void nal_unit_header_mvc_extension (NALUnitHeaderMVCExt_t *NaluHeaderMVCExt, struct bit_stream_dec *bitstream);
-  #endif
 
   extern void FreeDecPicList (DecodedPicList *pDecPicList );
   extern void ClearDecPicList (VideoParameters *p_Vid );

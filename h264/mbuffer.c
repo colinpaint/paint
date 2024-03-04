@@ -1199,11 +1199,6 @@ void init_dpb (VideoParameters *p_Vid, DecodedPictureBuffer *p_Dpb, int type) {
     p_Vid->no_reference_picture->frame        = p_Vid->no_reference_picture;
     }
   p_Dpb->last_output_poc = INT_MIN;
-
-#if (MVC_EXTENSION_ENABLE)
-  p_Dpb->last_output_view_id = -1;
-#endif
-
   p_Vid->last_has_mmco_5 = 0;
   p_Dpb->init_done = 1;
 
@@ -1268,9 +1263,6 @@ void re_init_dpb (VideoParameters *p_Vid, DecodedPictureBuffer *p_Dpb, int type)
 
     p_Dpb->size = iDpbSize;
     p_Dpb->last_output_poc = INT_MIN;
-#if (MVC_EXTENSION_ENABLE)
-    p_Dpb->last_output_view_id = -1;
-#endif
     p_Dpb->init_done = 1;
     }
   }
@@ -1292,16 +1284,6 @@ void free_dpb (DecodedPictureBuffer *p_Dpb) {
   if (p_Dpb->fs_ltref)
     free (p_Dpb->fs_ltref);
 
-#if (MVC_EXTENSION_ENABLE)
-  if (p_Dpb->fs_ilref) {
-    for (i = 0; i < 1; i++)
-      free_frame_store (p_Dpb->fs_ilref[i]);
-    free (p_Dpb->fs_ilref);
-    p_Dpb->fs_ilref = NULL;
-    }
-
-  p_Dpb->last_output_view_id = -1;
-#endif
 
   p_Dpb->last_output_poc = INT_MIN;
 
@@ -2173,9 +2155,6 @@ void idr_memory_management (DecodedPictureBuffer *p_Dpb, StorablePicture* p) {
     p->is_long_term           = 0;
     }
 
-#if (MVC_EXTENSION_ENABLE)
-  p_Dpb->last_output_view_id = -1;
-#endif
   }
 //}}}
 

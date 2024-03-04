@@ -143,10 +143,6 @@ typedef struct decoded_picture_buffer {
   unsigned ltref_frames_in_buffer;
   int last_output_poc;
 
-#if (MVC_EXTENSION_ENABLE)
-  int last_output_view_id;
-#endif
-
   int max_long_term_pic_idx;
   int init_done;
   int num_ref_frames;
