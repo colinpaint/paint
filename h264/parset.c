@@ -794,74 +794,24 @@ void ProcessSPS (VideoParameters* p_Vid, NALU_t* nalu) {
 //{{{
 void activateSPS (VideoParameters* p_Vid, seq_parameter_set_rbsp_t* sps) {
 
-  InputParameters *p_Inp = p_Vid->p_Inp;
+  InputParameters* p_Inp = p_Vid->p_Inp;
 
   if (p_Vid->active_sps != sps) {
-    if (p_Vid->dec_picture)
-      // this may only happen on slice loss
-      exit_picture(p_Vid, &p_Vid->dec_picture);
+    if (p_Vid->dec_picture) // this may only happen on slice loss
+      exit_picture (p_Vid, &p_Vid->dec_picture);
     p_Vid->active_sps = sps;
 
-    if(p_Vid->dpb_layer_id==0 && is_BL_profile(sps->profile_idc) && !p_Vid->p_Dpb_layer[0]->init_done) {
-      set_coding_par(sps, p_Vid->p_EncodePar[0]);
-      setup_layer_info( p_Vid, sps, p_Vid->p_LayerPar[0]);
+    if (p_Vid->dpb_layer_id==0 && is_BL_profile(sps->profile_idc) && !p_Vid->p_Dpb_layer[0]->init_done) {
+      set_coding_par (sps, p_Vid->p_EncodePar[0]);
+      setup_layer_info ( p_Vid, sps, p_Vid->p_LayerPar[0]);
       }
-    else if(p_Vid->dpb_layer_id==1 && is_EL_profile(sps->profile_idc) && !p_Vid->p_Dpb_layer[1]->init_done) {
-      set_coding_par(sps, p_Vid->p_EncodePar[1]);
-      setup_layer_info(p_Vid, sps, p_Vid->p_LayerPar[1]);
-      }
-
-    //to be removed in future;
     set_global_coding_par(p_Vid, p_Vid->p_EncodePar[p_Vid->dpb_layer_id]);
 
-#if (MVC_EXTENSION_ENABLE)
-    //init_frext(p_Vid);
-    if ((p_Vid->last_profile_idc != p_Vid->active_sps->profile_idc && 
-         is_BL_profile(p_Vid->active_sps->profile_idc) && 
-         !p_Vid->p_Dpb_layer[0]->init_done)) {
-      init_global_buffers(p_Vid, 0);
-
-      if (!p_Vid->no_output_of_prior_pics_flag) {
-        flush_dpb(p_Vid->p_Dpb_layer[0]);
-        flush_dpb(p_Vid->p_Dpb_layer[1]);
-        }
-      init_dpb(p_Vid, p_Vid->p_Dpb_layer[0], 1);
-      }
-    else if (p_Vid->last_profile_idc != p_Vid->active_sps->profile_idc && (
-             is_MVC_profile(p_Vid->last_profile_idc) || is_MVC_profile(p_Vid->active_sps->profile_idc)
-             )&& (!p_Vid->p_Dpb_layer[1]->init_done)) {
-      assert (p_Vid->p_Dpb_layer[0]->init_done);
-      //init_frext(p_Vid);
-      if (p_Vid->p_Dpb_layer[0]->init_done) {
-        free_dpb (p_Vid->p_Dpb_layer[0]);
-        init_dpb (p_Vid, p_Vid->p_Dpb_layer[0], 1);
-        }
-
-      init_global_buffers (p_Vid, 1);
-
-      // for now lets re_init both buffers. Later, we should only re_init appropriate one
-      // Note that we seem to be doing this for every frame which seems not good.
-      //re_init_dpb(p_Vid, p_Vid->p_Dpb_layer[1], 2);
-#if MVC_EXTENSION_ENABLE
-      init_dpb (p_Vid, p_Vid->p_Dpb_layer[1], 2);
-#endif
-      }
-
-    p_Vid->last_pic_width_in_mbs_minus1 = p_Vid->active_sps->pic_width_in_mbs_minus1;
-    p_Vid->last_pic_height_in_map_units_minus1 = p_Vid->active_sps->pic_height_in_map_units_minus1;
-    p_Vid->last_profile_idc = p_Vid->active_sps->profile_idc;
-
-#else
-    //init_frext(p_Vid);
     init_global_buffers (p_Vid, 0);
     if (!p_Vid->no_output_of_prior_pics_flag)
-      flush_dpb(p_Vid->p_Dpb_layer[0]);
+      flush_dpb (p_Vid->p_Dpb_layer[0]);
+    
     init_dpb (p_Vid, p_Vid->p_Dpb_layer[0], 0);
-    // for now lets init both buffers. Later, we should only re_init appropriate one
-    //init_dpb(p_Vid, p_Vid->p_Dpb_layer[0], 1);
-    // obviously this is not needed her but just adding it for completeness
-    //init_dpb(p_Vid, p_Vid->p_Dpb_layer[1], 2);
-#endif
 
     // enable error concealment
     ercInit (p_Vid, p_Vid->width, p_Vid->height, 1);
@@ -872,27 +822,6 @@ void activateSPS (VideoParameters* p_Vid, seq_parameter_set_rbsp_t* sps) {
     }
 
   reset_format_info (sps, p_Vid, &p_Inp->source, &p_Inp->output);
-  }
-//}}}
-//{{{
-int GetBaseViewId (VideoParameters* p_Vid, subset_seq_parameter_set_rbsp_t** subset_sps) {
-
-  subset_seq_parameter_set_rbsp_t* curr_subset_sps;
-  int i, iBaseViewId=0; //-1;
-
-  *subset_sps = NULL;
-  curr_subset_sps = p_Vid->SubsetSeqParSet;
-  for (i = 0; i < MAXSPS; i++) {
-    if (curr_subset_sps->num_views_minus1>=0 && curr_subset_sps->sps.Valid) { 
-      iBaseViewId = curr_subset_sps->view_id[BASE_VIEW_IDX];
-      break;
-      }
-    curr_subset_sps++;
-    }
-
-  if (i < MAXSPS)
-    *subset_sps = curr_subset_sps;
-  return iBaseViewId;
   }
 //}}}
 
@@ -1196,25 +1125,9 @@ void UseParameterSet (Slice* currSlice) {
   if (pps->Valid != TRUE)
     printf ("Trying to use an invalid (uninitialized) Picture Parameter Set with ID %d, expect the unexpected...\n", PicParsetId);
 
-#if (MVC_EXTENSION_ENABLE)
-  if (currSlice->svc_extension_flag == -1) {
-    if (sps->Valid != TRUE)
-      printf ("PicParset %d references an invalid (uninitialized) Sequence Parameter Set with ID %d, expect the unexpected...\n",
-              PicParsetId, (int) pps->seq_parameter_set_id);
-    }
-  else {
-    // Set SPS to the subset SPS parameters
-    p_Vid->active_subset_sps = p_Vid->SubsetSeqParSet + pps->seq_parameter_set_id;
-    sps = &(p_Vid->active_subset_sps->sps);
-    if (p_Vid->SubsetSeqParSet[pps->seq_parameter_set_id].Valid != TRUE)
-      printf ("PicParset %d references an invalid (uninitialized) Subset Sequence Parameter Set with ID %d, expect the unexpected...\n",
-              PicParsetId, (int) pps->seq_parameter_set_id);
-    }
-#else
   if (sps->Valid != TRUE)
     printf ("PicParset %d references an invalid (uninitialized) Sequence Parameter Set with ID %d, expect the unexpected...\n",
             PicParsetId, (int) pps->seq_parameter_set_id);
-#endif
 
   // In theory, and with a well-designed software, the lines above are everything necessary.
   // In practice, we need to patch many values

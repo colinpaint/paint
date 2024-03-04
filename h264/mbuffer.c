@@ -1100,13 +1100,6 @@ int getDpbSize (VideoParameters *p_Vid, seq_parameter_set_rbsp_t *active_sps) {
     }
 
   size /= pic_size_mb;
-#if MVC_EXTENSION_ENABLE
-  if (p_Vid->profile_idc == MVC_HIGH || p_Vid->profile_idc == STEREO_HIGH) {
-    int num_views = p_Vid->active_subset_sps->num_views_minus1+1;
-    size = imin(2*size, imax(1, RoundLog2(num_views))*16)/num_views;
-    }
-  else
-#endif
     size = imin( size, 16);
 
   if (active_sps->vui_parameters_present_flag && active_sps->vui_seq_parameters.bitstream_restriction_flag) {

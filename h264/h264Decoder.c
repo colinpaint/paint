@@ -344,11 +344,6 @@ static void init (VideoParameters* p_Vid) {
   p_Vid->pending_output_state = FRAME;
   p_Vid->recovery_flag = 0;
 
-#if (MVC_EXTENSION_ENABLE)
-  p_Vid->last_pic_width_in_mbs_minus1 = 0;
-  p_Vid->last_pic_height_in_map_units_minus1 = 0;
-#endif
-
   p_Vid->newframe = 0;
   p_Vid->previous_frame_num = 0;
 
@@ -595,15 +590,6 @@ void free_global_buffers (VideoParameters* p_Vid) {
     free_storable_picture (p_Vid->dec_picture);
     p_Vid->dec_picture = NULL;
     }
-
-#if MVC_EXTENSION_ENABLE
-  if (p_Vid->active_subset_sps &&
-      p_Vid->active_subset_sps->sps.Valid &&
-      (p_Vid->active_subset_sps->sps.profile_idc == MVC_HIGH ||
-       p_Vid->active_subset_sps->sps.profile_idc == STEREO_HIGH))
-    free_img_data (p_Vid, &(p_Vid->tempData3) );
-#endif
-
   }
 //}}}
 

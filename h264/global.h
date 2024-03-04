@@ -672,18 +672,10 @@ typedef struct video_par {
   struct decoded_picture_buffer* p_Dpb_layer[MAX_NUM_DPB_LAYERS];
   CodingParameters* p_EncodePar[MAX_NUM_DPB_LAYERS];
   LayerParameters* p_LayerPar[MAX_NUM_DPB_LAYERS];
-
-#if (MVC_EXTENSION_ENABLE)
-  subset_seq_parameter_set_rbsp_t *active_subset_sps;
-  subset_seq_parameter_set_rbsp_t SubsetSeqParSet[MAXSPS];
-  int last_pic_width_in_mbs_minus1;
-  int last_pic_height_in_map_units_minus1;
-  int last_profile_idc;
-#endif
-
+  
   struct sei_params* p_SEI;
   struct old_slice_par* old_slice;
-  int number;                       //!frame number
+  int number;                       //frame number
 
   // current picture property;
   unsigned int num_dec_mb;
@@ -900,39 +892,26 @@ typedef struct decoder_params {
 //}}}
 
 //{{{
-static inline int is_FREXT_profile (unsigned int profile_idc)
-{
+static inline int is_FREXT_profile (unsigned int profile_idc) {
   // we allow all FRExt tools, when no profile is active
-  return ( profile_idc==NO_PROFILE || profile_idc==FREXT_HP || profile_idc==FREXT_Hi10P || profile_idc==FREXT_Hi422 || profile_idc==FREXT_Hi444 || profile_idc == FREXT_CAVLC444 );
+  return profile_idc==NO_PROFILE || profile_idc==FREXT_HP || 
+         profile_idc==FREXT_Hi10P || profile_idc==FREXT_Hi422 || 
+         profile_idc==FREXT_Hi444 || profile_idc == FREXT_CAVLC444;
 }
 //}}}
 //{{{
-static inline int is_HI_intra_only_profile (unsigned int profile_idc, Boolean constrained_set3_flag)
-{
-  return ( ( ( (profile_idc == FREXT_Hi10P)||(profile_idc == FREXT_Hi422)|| (profile_idc == FREXT_Hi444)) && constrained_set3_flag) || (profile_idc == FREXT_CAVLC444) );
+static inline int is_HI_intra_only_profile (unsigned int profile_idc, Boolean constrained_set3_flag) {
+  return (((profile_idc == FREXT_Hi10P)||(profile_idc == FREXT_Hi422) || 
+           (profile_idc == FREXT_Hi444)) && constrained_set3_flag) || 
+         (profile_idc == FREXT_CAVLC444);
 }
 //}}}
 //{{{
-static inline int is_BL_profile (unsigned int profile_idc)
-{
-  return ( profile_idc == FREXT_CAVLC444 || profile_idc == BASELINE || profile_idc == MAIN || profile_idc == EXTENDED ||
-           profile_idc == FREXT_HP || profile_idc == FREXT_Hi10P || profile_idc == FREXT_Hi422 || profile_idc == FREXT_Hi444);
-}
-//}}}
-//{{{
-static inline int is_EL_profile (unsigned int profile_idc)
-{
-  return ( (profile_idc == MVC_HIGH) || (profile_idc == STEREO_HIGH) );
-}
-//}}}
-//{{{
-static inline int is_MVC_profile (unsigned int profile_idc)
-{
-  return ( (0)
-#if (MVC_EXTENSION_ENABLE)
-  || (profile_idc == MVC_HIGH) || (profile_idc == STEREO_HIGH)
-#endif
-  );
+static inline int is_BL_profile (unsigned int profile_idc) {
+  return profile_idc == FREXT_CAVLC444 || profile_idc == BASELINE || 
+         profile_idc == MAIN || profile_idc == EXTENDED ||
+         profile_idc == FREXT_HP || profile_idc == FREXT_Hi10P || 
+         profile_idc == FREXT_Hi422 || profile_idc == FREXT_Hi444;
 }
 //}}}
 
