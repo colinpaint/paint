@@ -149,7 +149,6 @@ int getNALU (ANNEXB_t* annexB, VideoParameters* p_Vid, NALU_t* nalu) {
 
       nalu->len = (naluBufPos - 1) - leadingZero8BitsCount;
       memcpy (nalu->buf, annexB->naluBuf + leadingZero8BitsCount, nalu->len);
-
       nalu->forbidden_bit = (*(nalu->buf) >> 7) & 1;
       nalu->nal_reference_idc = (NalRefIdc)((*(nalu->buf) >> 5) & 3);
       nalu->nal_unit_type = (NaluType)((*(nalu->buf)) & 0x1f);
@@ -203,7 +202,6 @@ int getNALU (ANNEXB_t* annexB, VideoParameters* p_Vid, NALU_t* nalu) {
   // - naluBufPos - LeadingZero8BitsCount is the size of the NALU.
   nalu->len = naluBufPos - leadingZero8BitsCount;
   memcpy (nalu->buf, annexB->naluBuf + leadingZero8BitsCount, nalu->len);
-
   nalu->forbidden_bit = (*(nalu->buf) >> 7) & 1;
   nalu->nal_reference_idc = (NalRefIdc) ((*(nalu->buf) >> 5) & 3);
   nalu->nal_unit_type = (NaluType) ((*(nalu->buf)) & 0x1f);

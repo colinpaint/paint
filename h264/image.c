@@ -1369,9 +1369,6 @@ void calculate_frame_no (VideoParameters *p_Vid, StorablePicture *p) {
 void exit_picture (VideoParameters* p_Vid, StorablePicture** dec_picture) {
 
   InputParameters* p_Inp = p_Vid->p_Inp;
-  char yuv_types[4][6] = {"4:0:0","4:2:0","4:2:2","4:4:4"};
-  int ercSegment;
-  frame recfr;
 
   // return if the last picture has already been finished
   if (*dec_picture == NULL ||
@@ -1380,6 +1377,7 @@ void exit_picture (VideoParameters* p_Vid, StorablePicture** dec_picture) {
     return;
 
   //{{{  error concealment
+  frame recfr;
   recfr.p_Vid = p_Vid;
   recfr.yptr = &(*dec_picture)->imgY[0][0];
   if ((*dec_picture)->chroma_format_idc != YUV400) {
@@ -1388,8 +1386,7 @@ void exit_picture (VideoParameters* p_Vid, StorablePicture** dec_picture) {
     }
 
   // this is always true at the beginning of a picture
-  //ercStartMB = 0;
-  ercSegment = 0;
+  int ercSegment = 0;
 
   // mark the start of the first segment
   if (!(*dec_picture)->mb_aff_frame_flag) {
