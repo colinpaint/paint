@@ -1,5 +1,5 @@
 #pragma once
-//{{{  ColorPlane
+//{{{  enum ColorPlane
 typedef enum {
   // YUV
   PLANE_Y = 0,  // PLANE_Y
@@ -11,7 +11,7 @@ typedef enum {
   PLANE_R = 2
 } ColorPlane;
 //}}}
-//{{{  PredList
+//{{{  enum PredList
 typedef enum {
   LIST_0 = 0,
   LIST_1 = 1,
@@ -20,7 +20,7 @@ typedef enum {
   BI_PRED_L1 = 4
 } PredList;
 //}}}
-//{{{  ErrorMetric
+//{{{  enum ErrorMetric
 typedef enum {
   ERROR_SAD = 0,
   ERROR_SSE = 1,
@@ -28,32 +28,32 @@ typedef enum {
   ERROR_PSATD = 3
 } ErrorMetric;
 //}}}
-//{{{  YuvFormat
+//{{{  enum YuvFormat
 typedef enum {
   ME_Y_ONLY = 0,
   ME_YUV_FP = 1,
   ME_YUV_FP_SP = 2
 } YuvFormat;
 //}}}
-//{{{  DistortionMetric
+//{{{  enum DistortionMetric
 typedef enum {
   DISTORTION_MSE = 0
 } Distortionmetric;
 //}}}
 
-//{{{  Data Partitioning Modes
+//{{{  enum Data Partitioning Modes
 typedef enum {
   PAR_DP_1,   //!< no data partitioning is supported
   PAR_DP_3    //!< data partitioning with 3 partitions
 } PAR_DP_TYPE;
 //}}}
-//{{{  Output File Types
+//{{{  enum Output File Types
 typedef enum {
   PAR_OF_ANNEXB,    //!< Annex B byte stream format
   PAR_OF_RTP       //!< RTP packets in outfile
 } PAR_OF_TYPE;
 //}}}
-//{{{  Field Coding Types
+//{{{  enum Field Coding Types
 typedef enum {
   FRAME_CODING         = 0,
   FIELD_CODING         = 1,
@@ -61,7 +61,7 @@ typedef enum {
   FRAME_MB_PAIR_CODING = 3
 } CodingType;
 //}}}
-//{{{  definition of H.264 syntax elements
+//{{{  enum definition of H.264 syntax elements
 typedef enum {
   SE_HEADER,
   SE_PTYPE,
@@ -85,7 +85,7 @@ typedef enum {
 } SE_type;             // substituting the definitions in elements.h
 //}}}
 
-//{{{  SliceMode
+//{{{  enum SliceMode
 typedef enum {
   NO_SLICES,
   FIXED_MB,
@@ -93,13 +93,13 @@ typedef enum {
   CALL_BACK
 } SliceMode;
 //}}}
-//{{{  symbolMode
+//{{{  enum symbolMode
 typedef enum {
   CAVLC,
   CABAC
 } SymbolMode;
 //}}}
-//{{{  searchType
+//{{{  enum searchType
 typedef enum {
   FULL_SEARCH      = -1,
   FAST_FULL_SEARCH =  0,
@@ -108,7 +108,7 @@ typedef enum {
   EPZS             =  3
 } SearchType;
 //}}}
-//{{{  pictureStructure
+//{{{  enum pictureStructure
 typedef enum {
   FRAME,
   TOP_FIELD,
@@ -116,7 +116,7 @@ typedef enum {
 } PictureStructure;           //!< New enum for field processing
 //}}}
 
-//{{{  SliceType
+//{{{  enum SliceType
 typedef enum {
   P_SLICE = 0,
   B_SLICE = 1,
@@ -124,37 +124,36 @@ typedef enum {
   SP_SLICE = 3,
   SI_SLICE = 4,
   NUM_SLICE_TYPES = 5
-} SliceType;
-
+  } SliceType;
 //}}}
-//{{{  Motion Estimation levels
+//{{{  enum Motion Estimation levels
 typedef enum {
   F_PEL,   //!< Full Pel refinement
   H_PEL,   //!< Half Pel refinement
   Q_PEL    //!< Quarter Pel refinement
-} MELevel;
+  } MELevel;
 //}}}
-//{{{  refAccess
+//{{{  enum refAccess
 typedef enum {
   FAST_ACCESS = 0,    //!< Fast/safe reference access
   UMV_ACCESS = 1      //!< unconstrained reference access
-} REF_ACCESS_TYPE;
+  } REF_ACCESS_TYPE;
 //}}}
-//{{{  componentType
+//{{{  enum componentType
 typedef enum {
   IS_LUMA = 0,
   IS_CHROMA = 1
-} Component_Type;
+  } Component_Type;
 //}}}
-//{{{  RCModeType
+//{{{  enum RCModeType
 typedef enum {
   RC_MODE_0 = 0,
   RC_MODE_1 = 1,
   RC_MODE_2 = 2,
   RC_MODE_3 = 3
-} RCModeType;
+  } RCModeType;
 //}}}
-//{{{  weightedPredictionTypes
+//{{{  enum weightedPredictionTypes
 typedef enum {
   WP_MCPREC_PLUS0 =       4,
   WP_MCPREC_PLUS1 =       5,
@@ -162,5 +161,5 @@ typedef enum {
   WP_MCPREC_MINUS1 =      7,
   WP_MCPREC_MINUS_PLUS0 = 8,
   WP_REGULAR =            9
-} weighted_prediction_types;
+  } weighted_prediction_types;
 //}}}

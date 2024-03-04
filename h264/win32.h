@@ -42,6 +42,15 @@
   //#define  inline   _inline
   #define forceinline __forceinline
   //}}}
+  //{{{  windows 64bit
+  typedef __int64 int64;
+  typedef unsigned __int64   uint64;
+  #define FORMAT_OFF_T "I64d"
+
+  #ifndef INT64_MIN
+    #define INT64_MIN (-9223372036854775807i64 - 1i64)
+  #endif
+  //}}}
 #else
   //{{{  linux
   #include <unistd.h>
@@ -69,19 +78,6 @@
 
   #define forceinline inline
   //}}}
-#endif
-
-#if (defined(WIN32) || defined(WIN64)) && !defined(__GNUC__)
-  //{{{  windows 64bit
-  typedef __int64 int64;
-  typedef unsigned __int64   uint64;
-  #define FORMAT_OFF_T "I64d"
-
-  #ifndef INT64_MIN
-    #define INT64_MIN (-9223372036854775807i64 - 1i64)
-  #endif
-  //}}}
-#else
   //{{{  linux 64bit
   typedef long long int64;
   typedef unsigned long long  uint64;
