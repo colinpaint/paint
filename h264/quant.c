@@ -77,7 +77,7 @@ int quant8_org[64] = { //to be use if no q matrix is chosen
  *    Initiate quantization process arrays
 ** *********************************************************************
  */
-void init_qp_process (sCodingParams *cps)
+void init_qp_process (sCodingParams* cps)
 {
   int bitdepth_qp_scale = imax(cps->bitdepth_luma_qp_scale, cps->bitdepth_chroma_qp_scale);
   int i;
@@ -100,7 +100,7 @@ void init_qp_process (sCodingParams *cps)
 }
 //}}}
 //{{{
-void free_qp_matrices (sCodingParams *cps)
+void free_qp_matrices (sCodingParams* cps)
 {
   if (cps->qp_per_matrix != NULL)
   {
@@ -256,7 +256,7 @@ void assign_quant_params (sSlice* currSlice)
 //}}}
 
 //{{{
-static void set_dequant4x4 (int (*InvLevelScale4x4)[4],  const int (*dequant)[4], int *qmatrix)
+static void set_dequant4x4 (int (*InvLevelScale4x4)[4], const int (*dequant)[4], int* qmatrix)
 {
   int j;
   for(j=0; j<4; j++)
@@ -269,7 +269,7 @@ static void set_dequant4x4 (int (*InvLevelScale4x4)[4],  const int (*dequant)[4]
 }
 //}}}
 //{{{
-static void set_dequant8x8 (int (*InvLevelScale8x8)[8],  const int (*dequant)[8], int *qmatrix)
+static void set_dequant8x8 (int (*InvLevelScale8x8)[8], const int (*dequant)[8], int* qmatrix)
 {
   int j;
   for(j = 0; j < 8; j++)

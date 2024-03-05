@@ -306,7 +306,7 @@ int cabac_startcode_follows (sSlice* currSlice, int eos_bit)
 void CheckAvailabilityOfNeighborsCABAC (sMacroblock* currMB)
 {
   sVidParam* vidParam = currMB->vidParam;
-  PixelPos up, left;
+  sPixelPos up, left;
   int *mb_size = vidParam->mb_size[IS_LUMA];
 
   vidParam->getNeighbour(currMB, -1,  0, mb_size, &left);
@@ -617,7 +617,7 @@ void read_MVD_CABAC (sMacroblock* currMB,
   int list_idx = se->value2 & 0x01;
   int k = (se->value2 >> 1); // MVD component
 
-  PixelPos block_a, block_b;
+  sPixelPos block_a, block_b;
 
   get4x4NeighbourBase(currMB, i - 1, j    , mb_size, &block_a);
   get4x4NeighbourBase(currMB, i    , j - 1, mb_size, &block_b);
@@ -677,7 +677,7 @@ void read_mvd_CABAC_mbaff (sMacroblock* currMB,
   int list_idx = se->value2 & 0x01;
   int k = (se->value2 >> 1); // MVD component
 
-  PixelPos block_a, block_b;
+  sPixelPos block_a, block_b;
 
   get4x4NeighbourBase(currMB, i - 1, j    , vidParam->mb_size[IS_LUMA], &block_a);
   if (block_a.available)
@@ -1305,7 +1305,7 @@ void readRefFrame_CABAC (sMacroblock* currMB,
   int   act_sym;
   int   list = se->value2;
 
-  PixelPos block_a, block_b;
+  sPixelPos block_a, block_b;
 
   get4x4Neighbour(currMB, currMB->subblock_x - 1, currMB->subblock_y    , vidParam->mb_size[IS_LUMA], &block_a);
   get4x4Neighbour(currMB, currMB->subblock_x,     currMB->subblock_y - 1, vidParam->mb_size[IS_LUMA], &block_b);
@@ -1407,7 +1407,7 @@ void read_CBP_CABAC (sMacroblock* currMB,
   int cbp = 0;
   int cbp_bit;
   int mask;
-  PixelPos block_a;
+  sPixelPos block_a;
 
   //  coding of luma part (bit by bit)
   for (mb_y=0; mb_y < 4; mb_y += 2)
@@ -1579,7 +1579,7 @@ static int read_and_store_CBP_block_bit_444 (sMacroblock* currMB,
   int bit_pos_a   = 0;
   int bit_pos_b   = 0;
 
-  PixelPos block_a, block_b;
+  sPixelPos block_a, block_b;
   if (y_ac)
   {
     get4x4Neighbour(currMB, i - 1, j    , vidParam->mb_size[IS_LUMA], &block_a);
@@ -1802,7 +1802,7 @@ static inline int set_cbp_bit(sMacroblock *neighbor_mb)
     return (int) (neighbor_mb->s_cbp[0].bits & 0x01);
 }
 
-static inline int set_cbp_bit_ac(sMacroblock *neighbor_mb, PixelPos *block)
+static inline int set_cbp_bit_ac(sMacroblock *neighbor_mb, sPixelPos *block)
 {
   if (neighbor_mb->mb_type == IPCM)
     return 1;
@@ -1836,7 +1836,7 @@ static int read_and_store_CBP_block_bit_normal (sMacroblock* currMB,
     int left_bit    = 1;
     int ctx;
 
-    PixelPos block_a, block_b;
+    sPixelPos block_a, block_b;
 
     get4x4NeighbourBase(currMB, -1,  0, vidParam->mb_size[IS_LUMA], &block_a);
     get4x4NeighbourBase(currMB,  0, -1, vidParam->mb_size[IS_LUMA], &block_b);
@@ -1873,7 +1873,7 @@ static int read_and_store_CBP_block_bit_normal (sMacroblock* currMB,
     int left_bit    = default_bit;
     int ctx;
 
-    PixelPos block_a, block_b;
+    sPixelPos block_a, block_b;
 
     get4x4NeighbourBase(currMB, i - 1, j    , vidParam->mb_size[IS_LUMA], &block_a);
     get4x4NeighbourBase(currMB, i    , j - 1, vidParam->mb_size[IS_LUMA], &block_b);
@@ -1910,7 +1910,7 @@ static int read_and_store_CBP_block_bit_normal (sMacroblock* currMB,
     int left_bit    = default_bit;
     int ctx;
 
-    PixelPos block_a, block_b;
+    sPixelPos block_a, block_b;
 
     get4x4NeighbourBase(currMB, i - 1, j    , vidParam->mb_size[IS_LUMA], &block_a);
     get4x4NeighbourBase(currMB, i    , j - 1, vidParam->mb_size[IS_LUMA], &block_b);
@@ -1947,7 +1947,7 @@ static int read_and_store_CBP_block_bit_normal (sMacroblock* currMB,
     int left_bit    = default_bit;
     int ctx;
 
-    PixelPos block_a, block_b;
+    sPixelPos block_a, block_b;
 
     get4x4NeighbourBase(currMB, i - 1, j    , vidParam->mb_size[IS_LUMA], &block_a);
     get4x4NeighbourBase(currMB, i    , j - 1, vidParam->mb_size[IS_LUMA], &block_b);
@@ -1985,7 +1985,7 @@ static int read_and_store_CBP_block_bit_normal (sMacroblock* currMB,
     int left_bit    = default_bit;
     int ctx;
 
-    PixelPos block_a, block_b;
+    sPixelPos block_a, block_b;
 
     get4x4NeighbourBase(currMB, i - 1, j    , vidParam->mb_size[IS_LUMA], &block_a);
     get4x4NeighbourBase(currMB, i    , j - 1, vidParam->mb_size[IS_LUMA], &block_b);
@@ -2033,7 +2033,7 @@ static int read_and_store_CBP_block_bit_normal (sMacroblock* currMB,
     int left_bit    = default_bit;
     int ctx;
 
-    PixelPos block_a, block_b;
+    sPixelPos block_a, block_b;
 
     get4x4NeighbourBase(currMB, i - 1, j    , vidParam->mb_size[IS_CHROMA], &block_a);
     get4x4NeighbourBase(currMB, i    , j - 1, vidParam->mb_size[IS_CHROMA], &block_b);
@@ -2077,7 +2077,7 @@ static int read_and_store_CBP_block_bit_normal (sMacroblock* currMB,
     int left_bit    = default_bit;
     int ctx;
 
-    PixelPos block_a, block_b;
+    sPixelPos block_a, block_b;
 
     get4x4NeighbourBase(currMB, i - 1, j    , vidParam->mb_size[IS_CHROMA], &block_a);
     get4x4NeighbourBase(currMB, i    , j - 1, vidParam->mb_size[IS_CHROMA], &block_b);

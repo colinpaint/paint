@@ -134,7 +134,7 @@ void get_mb_pos (sVidParam* vidParam, int mb_addr, int mb_size[2], short *x, sho
 //}}}
 
 //{{{
-void getNonAffNeighbour (sMacroblock* currMB, int xN, int yN, int mb_size[2], PixelPos *pix) {
+void getNonAffNeighbour (sMacroblock* currMB, int xN, int yN, int mb_size[2], sPixelPos *pix) {
 
   int maxW = mb_size[0], maxH = mb_size[1];
 
@@ -179,7 +179,7 @@ void getNonAffNeighbour (sMacroblock* currMB, int xN, int yN, int mb_size[2], Pi
   }
 //}}}
 //{{{
-void getAffNeighbour (sMacroblock* currMB, int xN, int yN, int mb_size[2], PixelPos *pix) {
+void getAffNeighbour (sMacroblock* currMB, int xN, int yN, int mb_size[2], sPixelPos *pix) {
 
   sVidParam* vidParam = currMB->vidParam;
   int maxW, maxH;
@@ -454,7 +454,7 @@ void getAffNeighbour (sMacroblock* currMB, int xN, int yN, int mb_size[2], Pixel
 //}}}
 
 //{{{
-void get4x4Neighbour (sMacroblock* currMB, int block_x, int block_y, int mb_size[2], PixelPos *pix) {
+void get4x4Neighbour (sMacroblock* currMB, int block_x, int block_y, int mb_size[2], sPixelPos *pix) {
 
   currMB->vidParam->getNeighbour (currMB, block_x, block_y, mb_size, pix);
 
@@ -467,7 +467,7 @@ void get4x4Neighbour (sMacroblock* currMB, int block_x, int block_y, int mb_size
   }
 //}}}
 //{{{
-void get4x4NeighbourBase (sMacroblock* currMB, int block_x, int block_y, int mb_size[2], PixelPos *pix) {
+void get4x4NeighbourBase (sMacroblock* currMB, int block_x, int block_y, int mb_size[2], sPixelPos *pix) {
 
   currMB->vidParam->getNeighbour (currMB, block_x, block_y, mb_size, pix);
 

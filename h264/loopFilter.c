@@ -90,7 +90,7 @@ static const int pelnum_cr[2][4] =  {
 //}}}
 
 //{{{
-static inline int compare_mvs (const MotionVector *mv0, const MotionVector *mv1, int mvlimit) {
+static inline int compare_mvs (const sMotionVector *mv0, const sMotionVector *mv1, int mvlimit) {
 
   return ((iabs( mv0->mv_x - mv1->mv_x) >= 4) | (iabs( mv0->mv_y - mv1->mv_y) >= mvlimit));
   }
@@ -146,7 +146,7 @@ static void edge_loop_luma_ver_MBAff (sColorPlane pl, sPixel** Img, byte *Streng
 
   int      QP;
 
-  PixelPos pixP, pixQ;
+  sPixelPos pixP, pixQ;
 
   sVidParam* vidParam = MbQ->vidParam;
   int      bitdepth_scale = pl? vidParam->bitdepth_scale[IS_CHROMA] : vidParam->bitdepth_scale[IS_LUMA];
@@ -271,7 +271,7 @@ static void edge_loop_luma_hor_MBAff (sColorPlane pl, sPixel** Img, byte *Streng
 
   int      yQ = (edge < MB_BLOCK_SIZE ? edge : 1);
 
-  PixelPos pixP, pixQ;
+  sPixelPos pixP, pixQ;
 
   sVidParam* vidParam = MbQ->vidParam;
   int      bitdepth_scale = pl? vidParam->bitdepth_scale[IS_CHROMA] : vidParam->bitdepth_scale[IS_LUMA];
@@ -405,7 +405,7 @@ static void edge_loop_chroma_ver_MBAff (sPixel** Img, byte *Strength, sMacrobloc
   int      StrengthIdx;
   int      QP;
   int      xQ = edge, yQ;
-  PixelPos pixP, pixQ;
+  sPixelPos pixP, pixQ;
   int      bitdepth_scale = vidParam->bitdepth_scale[IS_CHROMA];
   int      max_imgpel_value = vidParam->max_pel_value_comp[uv + 1];
 
@@ -485,7 +485,7 @@ static void edge_loop_chroma_hor_MBAff (sPixel** Img, byte *Strength, sMacrobloc
   sVidParam* vidParam = MbQ->vidParam;
   int      PelNum = pelnum_cr[1][p->chroma_format_idc];
   int      yQ = (edge < MB_BLOCK_SIZE? edge : 1);
-  PixelPos pixP, pixQ;
+  sPixelPos pixP, pixQ;
   int      bitdepth_scale = vidParam->bitdepth_scale[IS_CHROMA];
   int      max_imgpel_value = vidParam->max_pel_value_comp[uv + 1];
 
@@ -580,7 +580,7 @@ static void get_strength_ver_MBAff (byte *Strength, sMacroblock *MbQ, int edge, 
 
   sMacroblock *MbP;
 
-  PixelPos pixP;
+  sPixelPos pixP;
   sVidParam* vidParam = MbQ->vidParam;
   sBlockPos *PicPos = vidParam->PicPos;
 
@@ -791,7 +791,7 @@ static void get_strength_hor_MBAff (byte *Strength, sMacroblock *MbQ, int edge, 
 
   sMacroblock *MbP;
 
-  PixelPos pixP;
+  sPixelPos pixP;
   sVidParam* vidParam = MbQ->vidParam;
   sBlockPos *PicPos = vidParam->PicPos;
 

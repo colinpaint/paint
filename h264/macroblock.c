@@ -29,8 +29,8 @@ extern void set_read_comp_coeff_cabac (sMacroblock* currMB);
 extern void update_direct_types (sSlice* currSlice);
 
 //{{{
-static void GetMotionVectorPredictorMBAFF (sMacroblock* currMB, PixelPos *block,
-                                    MotionVector *pmv, short  ref_frame, sPicMotionParams** mv_info,
+static void GetMotionVectorPredictorMBAFF (sMacroblock* currMB, sPixelPos *block,
+                                    sMotionVector *pmv, short  ref_frame, sPicMotionParams** mv_info,
                                     int list, int mb_x, int mb_y, int blockshape_x, int blockshape_y) {
 
   int mv_a, mv_b, mv_c, pred_vec=0;
@@ -163,8 +163,8 @@ static void GetMotionVectorPredictorMBAFF (sMacroblock* currMB, PixelPos *block,
   }
 //}}}
 //{{{
-static void GetMotionVectorPredictorNormal (sMacroblock* currMB, PixelPos *block,
-                                            MotionVector *pmv, short  ref_frame, sPicMotionParams** mv_info,
+static void GetMotionVectorPredictorNormal (sMacroblock* currMB, sPixelPos *block,
+                                            sMotionVector *pmv, short  ref_frame, sPicMotionParams** mv_info,
                                             int list, int mb_x, int mb_y, int blockshape_x, int blockshape_y) {
   int mvPredType = MVPRED_MEDIAN;
 
@@ -214,9 +214,9 @@ static void GetMotionVectorPredictorNormal (sMacroblock* currMB, PixelPos *block
       }
       else
       {
-        MotionVector *mv_a = block[0].available ? &mv_info[block[0].pos_y][block[0].pos_x].mv[list] : (MotionVector *) &zero_mv;
-        MotionVector *mv_b = block[1].available ? &mv_info[block[1].pos_y][block[1].pos_x].mv[list] : (MotionVector *) &zero_mv;
-        MotionVector *mv_c = block[2].available ? &mv_info[block[2].pos_y][block[2].pos_x].mv[list] : (MotionVector *) &zero_mv;
+        sMotionVector *mv_a = block[0].available ? &mv_info[block[0].pos_y][block[0].pos_x].mv[list] : (sMotionVector *) &zero_mv;
+        sMotionVector *mv_b = block[1].available ? &mv_info[block[1].pos_y][block[1].pos_x].mv[list] : (sMotionVector *) &zero_mv;
+        sMotionVector *mv_c = block[2].available ? &mv_info[block[2].pos_y][block[2].pos_x].mv[list] : (sMotionVector *) &zero_mv;
 
         pmv->mv_x = (short) imedian(mv_a->mv_x, mv_b->mv_x, mv_c->mv_x);
         pmv->mv_y = (short) imedian(mv_a->mv_y, mv_b->mv_y, mv_c->mv_y);
@@ -623,11 +623,11 @@ static void readMBMotionVectors (SyntaxElement* currSE, sDataPartition *dP, sMac
     {
       int i4, j4, ii, jj;
       short curr_mvd[2];
-      MotionVector pred_mv, curr_mv;
+      sMotionVector pred_mv, curr_mv;
       short (*mvd)[4][2];
       //sVidParam* vidParam = currMB->vidParam;
       sPicMotionParams** mv_info = currMB->p_Slice->picture->mv_info;
-      PixelPos block[4]; // neighbor blocks
+      sPixelPos block[4]; // neighbor blocks
 
       currMB->subblock_x = 0; // position used for context determination
       currMB->subblock_y = 0; // position used for context determination
@@ -681,11 +681,11 @@ static void readMBMotionVectors (SyntaxElement* currSE, sDataPartition *dP, sMac
   {
     int i4, j4, ii, jj;
     short curr_mvd[2];
-    MotionVector pred_mv, curr_mv;
+    sMotionVector pred_mv, curr_mv;
     short (*mvd)[4][2];
     //sVidParam* vidParam = currMB->vidParam;
     sPicMotionParams** mv_info = currMB->p_Slice->picture->mv_info;
-    PixelPos block[4]; // neighbor blocks
+    sPixelPos block[4]; // neighbor blocks
 
     int i, j, i0, j0, kk, k;
     for (j0=0; j0<4; j0+=step_v0)
@@ -1314,7 +1314,7 @@ void setup_slice_methods (sSlice* currSlice) {
 
 //{{{
 void get_neighbors (sMacroblock* currMB,       // <--  current sMacroblock
-                   PixelPos   *block,     // <--> neighbor blocks
+                   sPixelPos   *block,     // <--> neighbor blocks
                    int         mb_x,         // <--  block x position
                    int         mb_y,         // <--  block y position
                    int         blockshape_x  // <--  block width
@@ -1350,7 +1350,7 @@ void get_neighbors (sMacroblock* currMB,       // <--  current sMacroblock
 void check_dp_neighbors (sMacroblock* currMB) {
 
   sVidParam* vidParam = currMB->vidParam;
-  PixelPos up, left;
+  sPixelPos up, left;
 
   vidParam->getNeighbour (currMB, -1,  0, vidParam->mb_size[1], &left);
   vidParam->getNeighbour (currMB,  0, -1, vidParam->mb_size[1], &up);

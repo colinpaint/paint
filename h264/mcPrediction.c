@@ -1219,7 +1219,7 @@ void intra_cr_decoding (sMacroblock* currMB, int yuv)
 //}}}
 
 //{{{
-static inline void set_direct_references (const PixelPos *mb, char *l0_rFrame, char *l1_rFrame, sPicMotionParams** mv_info)
+static inline void set_direct_references (const sPixelPos *mb, char *l0_rFrame, char *l1_rFrame, sPicMotionParams** mv_info)
 {
   if (mb->available)
   {
@@ -1235,7 +1235,7 @@ static inline void set_direct_references (const PixelPos *mb, char *l0_rFrame, c
 }
 //}}}
 //{{{
-static void set_direct_references_mb_field (const PixelPos *mb, char *l0_rFrame, char *l1_rFrame, sPicMotionParams** mv_info, sMacroblock *mb_data)
+static void set_direct_references_mb_field (const sPixelPos *mb, char *l0_rFrame, char *l1_rFrame, sPicMotionParams** mv_info, sMacroblock *mb_data)
 {
   if (mb->available)
   {
@@ -1259,7 +1259,7 @@ static void set_direct_references_mb_field (const PixelPos *mb, char *l0_rFrame,
 }
 //}}}
 //{{{
-static void set_direct_references_mb_frame (const PixelPos *mb, char *l0_rFrame, char *l1_rFrame, sPicMotionParams** mv_info, sMacroblock *mb_data)
+static void set_direct_references_mb_frame (const sPixelPos *mb, char *l0_rFrame, char *l1_rFrame, sPicMotionParams** mv_info, sMacroblock *mb_data)
 {
   if (mb->available)
   {
@@ -1283,14 +1283,14 @@ static void set_direct_references_mb_frame (const PixelPos *mb, char *l0_rFrame,
 }
 //}}}
 //{{{
-void prepare_direct_params (sMacroblock* currMB, sPicture* picture, MotionVector *pmvl0, MotionVector *pmvl1, char *l0_rFrame, char *l1_rFrame)
+void prepare_direct_params (sMacroblock* currMB, sPicture* picture, sMotionVector *pmvl0, sMotionVector *pmvl1, char *l0_rFrame, char *l1_rFrame)
 {
   sSlice* currSlice = currMB->p_Slice;
   char l0_refA, l0_refB, l0_refC;
   char l1_refA, l1_refB, l1_refC;
   sPicMotionParams** mv_info = picture->mv_info;
 
-  PixelPos mb[4];
+  sPixelPos mb[4];
 
   get_neighbors(currMB, mb, 0, 0, 16);
 
@@ -1329,7 +1329,7 @@ void prepare_direct_params (sMacroblock* currMB, sPicture* picture, MotionVector
 //}}}
 
 //{{{
-static void check_motion_vector_range (const MotionVector *mv, sSlice *pSlice)
+static void check_motion_vector_range (const sMotionVector *mv, sSlice *pSlice)
 {
   if (mv->mv_x > 8191 || mv->mv_x < -8192)
   {
@@ -1373,7 +1373,7 @@ static void perform_mc_single_wp (sMacroblock* currMB, sColorPlane pl, sPicture*
   sPicMotionParams *mv_info = &picture->mv_info[j4][i4];
   short       ref_idx = mv_info->ref_idx[pred_dir];
   short       ref_idx_wp = ref_idx;
-  MotionVector *mv_array = &mv_info->mv[pred_dir];
+  sMotionVector *mv_array = &mv_info->mv[pred_dir];
   int list_offset = currMB->list_offset;
   sPicture *list = currSlice->listX[list_offset + pred_dir][ref_idx];
   int vec1_x, vec1_y;
@@ -1463,7 +1463,7 @@ static void perform_mc_single (sMacroblock* currMB, sColorPlane pl, sPicture* pi
   int ioff = (i << 2);
   int joff = (j << 2);
   sPicMotionParams *mv_info = &picture->mv_info[j4][i4];
-  MotionVector *mv_array = &mv_info->mv[pred_dir];
+  sMotionVector *mv_array = &mv_info->mv[pred_dir];
   short          ref_idx =  mv_info->ref_idx[pred_dir];
   int list_offset = currMB->list_offset;
   sPicture *list = currSlice->listX[list_offset + pred_dir][ref_idx];
@@ -1545,8 +1545,8 @@ static void perform_mc_bi_wp (sMacroblock* currMB, sColorPlane pl, sPicture* pic
   int chroma_format_idc = picture->chroma_format_idc;
   int list_offset = currMB->list_offset;
   sPicMotionParams *mv_info = &picture->mv_info[j4][i4];
-  MotionVector *l0_mv_array = &mv_info->mv[LIST_0];
-  MotionVector *l1_mv_array = &mv_info->mv[LIST_1];
+  sMotionVector *l0_mv_array = &mv_info->mv[LIST_0];
+  sMotionVector *l1_mv_array = &mv_info->mv[LIST_1];
   short l0_refframe = mv_info->ref_idx[LIST_0];
   short l1_refframe = mv_info->ref_idx[LIST_1];
   int l0_ref_idx  = (currMB->mb_field && weighted_bipred_idc == 1) ? l0_refframe >> 1: l0_refframe;
@@ -1680,8 +1680,8 @@ static void perform_mc_bi (sMacroblock* currMB, sColorPlane pl, sPicture* pictur
   int joff = (j << 2);
   int chroma_format_idc = picture->chroma_format_idc;
   sPicMotionParams *mv_info = &picture->mv_info[j4][i4];
-  MotionVector *l0_mv_array = &mv_info->mv[LIST_0];
-  MotionVector *l1_mv_array = &mv_info->mv[LIST_1];
+  sMotionVector *l0_mv_array = &mv_info->mv[LIST_0];
+  sMotionVector *l1_mv_array = &mv_info->mv[LIST_1];
   short l0_refframe = mv_info->ref_idx[LIST_0];
   short l1_refframe = mv_info->ref_idx[LIST_1];
   int list_offset = currMB->list_offset;

@@ -301,7 +301,7 @@ static void freeSPS (sSPSrbsp *sps) {
   }
 //}}}
 //{{{
-static int spsIsEqual (sSPSrbsp *sps1, sSPSrbsp *sps2) {
+static int spsIsEqual (sSPSrbsp* sps1, sSPSrbsp* sps2) {
 
   unsigned i;
   int equal = 1;
@@ -361,20 +361,17 @@ static int spsIsEqual (sSPSrbsp *sps1, sSPSrbsp *sps2) {
 //}}}
 //{{{
 // syntax for scaling list matrix values
-static void scaling_List (int *scalingList, int sizeOfScalingList, Boolean *UseDefaultScalingMatrix, Bitstream *s)
-{
-  int j, scanj;
-  int delta_scale, lastScale, nextScale;
+static void scalingList (int *scalingList, int sizeOfScalingList,
+                         Boolean* useDefaultScalingMatrix, Bitstream* s) {
 
-  lastScale = 8;
-  nextScale = 8;
-
-  for (j = 0; j < sizeOfScalingList; j++) {
-    scanj = (sizeOfScalingList==16) ? ZZ_SCAN[j]:ZZ_SCAN8[j];
+  int lastScale = 8;
+  int nextScale = 8;
+  for (int j = 0; j < sizeOfScalingList; j++) {
+    int scanj = (sizeOfScalingList == 16) ? ZZ_SCAN[j]:ZZ_SCAN8[j];
     if (nextScale != 0) {
-      delta_scale = read_se_v (   "   : delta_sl   "                           , s, &gDecoder->UsedBits);
+      int delta_scale = read_se_v ("   : delta_sl   ", s, &gDecoder->UsedBits);
       nextScale = (lastScale + delta_scale + 256) % 256;
-      *UseDefaultScalingMatrix = (Boolean) (scanj==0 && nextScale==0);
+      *useDefaultScalingMatrix = (Boolean)(scanj == 0 && nextScale == 0);
       }
 
     scalingList[scanj] = (nextScale==0) ? lastScale:nextScale;
@@ -585,9 +582,9 @@ static int interpretSPS (sVidParam* vidParam, sDataPartition *p, sSPSrbsp *sps) 
         sps->seq_scaling_list_present_flag[i]   = read_u_1 ("SPS: seq_scaling_list_present_flag", s, &gDecoder->UsedBits);
         if (sps->seq_scaling_list_present_flag[i]) {
           if (i < 6)
-            scaling_List (sps->ScalingList4x4[i], 16, &sps->UseDefaultScalingMatrix4x4Flag[i], s);
+            scalingList (sps->ScalingList4x4[i], 16, &sps->UseDefaultScalingMatrix4x4Flag[i], s);
           else
-            scaling_List (sps->ScalingList8x8[i-6], 64, &sps->UseDefaultScalingMatrix8x8Flag[i-6], s);
+            scalingList (sps->ScalingList8x8[i-6], 64, &sps->UseDefaultScalingMatrix8x8Flag[i-6], s);
           }
         }
       }
@@ -1004,7 +1001,7 @@ static int interpretPPS (sVidParam* vidParam, sDataPartition* p, sPPSrbsp* pps) 
 
   if (more_rbsp_data (s->streamBuffer, s->frame_bitoffset,s->bitstream_length)) {
     //{{{  more_data_in_rbsp
-    //Fidelity Range Extensions Stuff
+    // Fidelity Range Extensions Stuff
     pps->transform_8x8_mode_flag = read_u_1 ("PPS: transform_8x8_mode_flag", s, &gDecoder->UsedBits);
     pps->pic_scaling_matrix_present_flag =
       read_u_1  ("PPS: pic_scaling_matrix_present_flag", s, &gDecoder->UsedBits);
@@ -1012,15 +1009,14 @@ static int interpretPPS (sVidParam* vidParam, sDataPartition* p, sPPSrbsp* pps) 
     if (pps->pic_scaling_matrix_present_flag) {
       chroma_format_idc = vidParam->SeqParSet[pps->seq_parameter_set_id].chroma_format_idc;
       n_ScalingList = 6 + ((chroma_format_idc != YUV444) ? 2 : 6) * pps->transform_8x8_mode_flag;
-      for(i=0; i<n_ScalingList; i++) {
+      for (i = 0; i < n_ScalingList; i++) {
         pps->pic_scaling_list_present_flag[i]=
           read_u_1 ("PPS: pic_scaling_list_present_flag", s, &gDecoder->UsedBits);
-
-        if(pps->pic_scaling_list_present_flag[i]) {
-          if(i<6)
-            scaling_List (pps->ScalingList4x4[i], 16, &pps->UseDefaultScalingMatrix4x4Flag[i], s);
+        if (pps->pic_scaling_list_present_flag[i]) {
+          if (i < 6)
+            scalingList (pps->ScalingList4x4[i], 16, &pps->UseDefaultScalingMatrix4x4Flag[i], s);
           else
-            scaling_List (pps->ScalingList8x8[i-6], 64, &pps->UseDefaultScalingMatrix8x8Flag[i-6], s);
+            scalingList (pps->ScalingList8x8[i-6], 64, &pps->UseDefaultScalingMatrix8x8Flag[i-6], s);
           }
         }
       }

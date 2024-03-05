@@ -13,7 +13,7 @@ typedef struct pic_motion_params_old {
 //! definition of pic motion parameters
 typedef struct pic_motion_params {
   struct storablePicture *ref_pic[2];  //!< referrence picture pointer
-  MotionVector             mv[2];       //!< motion vector
+  sMotionVector             mv[2];       //!< motion vector
   char                     ref_idx[2];  //!< reference picture   [list][subblock_y][subblock_x]
   //byte                   mb_field;    //!< field macroblock indicator
   byte                     slice_no;

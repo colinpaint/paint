@@ -65,7 +65,7 @@ static int intra4x4_dc_pred (sMacroblock *currMB,
   sPixel** imgY = (pl) ? currSlice->picture->imgUV[pl - 1] : currSlice->picture->imgY;
   sPixel *curpel = NULL;
 
-  PixelPos pix_a, pix_b;
+  sPixelPos pix_a, pix_b;
 
   int block_available_up;
   int block_available_left;
@@ -158,7 +158,7 @@ static int intra4x4_vert_pred (sMacroblock *currMB,    //!< current macroblock
   sVidParam* vidParam = currMB->vidParam;
 
   int block_available_up;
-  PixelPos pix_b;
+  sPixelPos pix_b;
 
   getNonAffNeighbour(currMB, ioff, joff - 1 , vidParam->mb_size[IS_LUMA], &pix_b);
 
@@ -215,7 +215,7 @@ static int intra4x4_hor_pred (sMacroblock *currMB,
   sVidParam* vidParam = currMB->vidParam;
   sSlice *currSlice = currMB->p_Slice;
 
-  PixelPos pix_a;
+  sPixelPos pix_a;
 
   int block_available_left;
 
@@ -291,8 +291,8 @@ static int intra4x4_diag_down_right_pred (sMacroblock *currMB,    //!< current m
 
   sPixel** imgY = (pl) ? currSlice->picture->imgUV[pl - 1] : currSlice->picture->imgY;
 
-  PixelPos pix_a;
-  PixelPos pix_b, pix_d;
+  sPixelPos pix_a;
+  sPixelPos pix_b, pix_d;
 
   int block_available_up;
   int block_available_left;
@@ -373,7 +373,7 @@ static int intra4x4_diag_down_left_pred (sMacroblock *currMB,    //!< current ma
   sSlice *currSlice = currMB->p_Slice;
   sVidParam* vidParam = currMB->vidParam;
 
-  PixelPos pix_b, pix_c;
+  sPixelPos pix_b, pix_c;
 
   int block_available_up;
   int block_available_up_right;
@@ -460,7 +460,7 @@ static int intra4x4_vert_right_pred (sMacroblock *currMB,    //!< current macrob
   sSlice *currSlice = currMB->p_Slice;
   sVidParam* vidParam = currMB->vidParam;
 
-  PixelPos pix_a, pix_b, pix_d;
+  sPixelPos pix_a, pix_b, pix_d;
 
   int block_available_up;
   int block_available_left;
@@ -545,7 +545,7 @@ static int intra4x4_vert_left_pred (sMacroblock *currMB,    //!< current macrobl
   sSlice *currSlice = currMB->p_Slice;
   sVidParam* vidParam = currMB->vidParam;
 
-  PixelPos pix_b, pix_c;
+  sPixelPos pix_b, pix_c;
 
   int block_available_up;
   int block_available_up_right;
@@ -634,7 +634,7 @@ static int intra4x4_hor_up_pred (sMacroblock *currMB,    //!< current macroblock
   sSlice *currSlice = currMB->p_Slice;
   sVidParam* vidParam = currMB->vidParam;
 
-  PixelPos pix_a;
+  sPixelPos pix_a;
 
   int block_available_left;
 
@@ -706,7 +706,7 @@ static int intra4x4_hor_down_pred (sMacroblock *currMB,    //!< current macroblo
   sSlice *currSlice = currMB->p_Slice;
   sVidParam* vidParam = currMB->vidParam;
 
-  PixelPos pix_a, pix_b, pix_d;
+  sPixelPos pix_a, pix_b, pix_d;
 
   int block_available_up;
   int block_available_left;
@@ -863,7 +863,7 @@ static int intra4x4_dc_pred_mbaff (sMacroblock *currMB,
   int s0 = 0;
   sPixel** imgY = (pl) ? currSlice->picture->imgUV[pl - 1] : currSlice->picture->imgY;
 
-  PixelPos pix_a[4], pix_b;
+  sPixelPos pix_a[4], pix_b;
 
   int block_available_up;
   int block_available_left;
@@ -957,7 +957,7 @@ static int intra4x4_vert_pred_mbaff (sMacroblock *currMB,    //!< current macrob
   sVidParam* vidParam = currMB->vidParam;
 
   int block_available_up;
-  PixelPos pix_b;
+  sPixelPos pix_b;
 
   getAffNeighbour(currMB, ioff, joff - 1 , vidParam->mb_size[IS_LUMA], &pix_b);
 
@@ -1017,7 +1017,7 @@ static int intra4x4_hor_pred_mbaff (sMacroblock *currMB,
   int i,j;
   sPixel** imgY = (pl) ? currSlice->picture->imgUV[pl - 1] : currSlice->picture->imgY;
 
-  PixelPos pix_a[4];
+  sPixelPos pix_a[4];
 
   int block_available_left;
 
@@ -1074,8 +1074,8 @@ static int intra4x4_diag_down_right_pred_mbaff (sMacroblock *currMB,    //!< cur
   int i;
   sPixel** imgY = (pl) ? currSlice->picture->imgUV[pl - 1] : currSlice->picture->imgY;
 
-  PixelPos pix_a[4];
-  PixelPos pix_b, pix_d;
+  sPixelPos pix_a[4];
+  sPixelPos pix_b, pix_d;
 
   int block_available_up;
   int block_available_left;
@@ -1160,7 +1160,7 @@ static int intra4x4_diag_down_left_pred_mbaff (sMacroblock *currMB,    //!< curr
   sSlice *currSlice = currMB->p_Slice;
   sVidParam* vidParam = currMB->vidParam;
 
-  PixelPos pix_b, pix_c;
+  sPixelPos pix_b, pix_c;
 
   int block_available_up;
   int block_available_up_right;
@@ -1245,8 +1245,8 @@ static int intra4x4_vert_right_pred_mbaff (sMacroblock *currMB,    //!< current 
   int i;
   sPixel** imgY = (pl) ? currSlice->picture->imgUV[pl - 1] : currSlice->picture->imgY;
 
-  PixelPos pix_a[4];
-  PixelPos pix_b, pix_d;
+  sPixelPos pix_a[4];
+  sPixelPos pix_b, pix_d;
 
   int block_available_up;
   int block_available_left;
@@ -1333,7 +1333,7 @@ static int intra4x4_vert_left_pred_mbaff (sMacroblock *currMB,    //!< current m
   sSlice *currSlice = currMB->p_Slice;
   sVidParam* vidParam = currMB->vidParam;
 
-  PixelPos pix_b, pix_c;
+  sPixelPos pix_b, pix_c;
 
   int block_available_up;
   int block_available_up_right;
@@ -1419,7 +1419,7 @@ static int intra4x4_hor_up_pred_mbaff (sMacroblock *currMB,    //!< current macr
   int i;
   sPixel** imgY = (pl) ? currSlice->picture->imgUV[pl - 1] : currSlice->picture->imgY;
 
-  PixelPos pix_a[4];
+  sPixelPos pix_a[4];
 
   int block_available_left;
 
@@ -1495,8 +1495,8 @@ static int intra4x4_hor_down_pred_mbaff (sMacroblock *currMB,    //!< current ma
   int i;
   sPixel** imgY = (pl) ? currSlice->picture->imgUV[pl - 1] : currSlice->picture->imgY;
 
-  PixelPos pix_a[4];
-  PixelPos pix_b, pix_d;
+  sPixelPos pix_a[4];
+  sPixelPos pix_b, pix_d;
 
   int block_available_up;
   int block_available_left;

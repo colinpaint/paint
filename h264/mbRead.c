@@ -33,7 +33,7 @@ static void read_ipred_8x8_modes_mbaff (sMacroblock* currMB) {
   int upIntraPredMode;
   int leftIntraPredMode;
 
-  PixelPos left_block, top_block;
+  sPixelPos left_block, top_block;
   currSE.type = SE_INTRAPREDMODE;
   dP = &(currSlice->partArr[partMap[SE_INTRAPREDMODE]]);
 
@@ -94,8 +94,8 @@ static void read_ipred_8x8_modes (sMacroblock* currMB)
   int upIntraPredMode;
   int leftIntraPredMode;
 
-  PixelPos left_mb, top_mb;
-  PixelPos left_block, top_block;
+  sPixelPos left_mb, top_mb;
+  sPixelPos left_block, top_block;
 
   currSE.type = SE_INTRAPREDMODE;
 
@@ -167,7 +167,7 @@ static void read_ipred_4x4_modes_mbaff (sMacroblock* currMB)
   int upIntraPredMode;
   int leftIntraPredMode;
 
-  PixelPos left_block, top_block;
+  sPixelPos left_block, top_block;
 
   currSE.type = SE_INTRAPREDMODE;
 
@@ -245,8 +245,8 @@ static void read_ipred_4x4_modes (sMacroblock* currMB) {
   int upIntraPredMode;
   int leftIntraPredMode;
 
-  PixelPos left_mb, top_mb;
-  PixelPos left_block, top_block;
+  sPixelPos left_mb, top_mb;
+  sPixelPos left_block, top_block;
 
   currSE.type = SE_INTRAPREDMODE;
   dP = &(currSlice->partArr[partMap[SE_INTRAPREDMODE]]);
@@ -585,10 +585,10 @@ static void field_flag_inference (sMacroblock* currMB)
 //{{{
 void skip_macroblock (sMacroblock* currMB) {
 
-  MotionVector pred_mv;
+  sMotionVector pred_mv;
   int zeroMotionAbove;
   int zeroMotionLeft;
-  PixelPos mb[4];    // neighbor blocks
+  sPixelPos mb[4];    // neighbor blocks
   int   i, j;
   int   a_mv_y = 0;
   int   a_ref_idx = 0;
@@ -599,8 +599,8 @@ void skip_macroblock (sMacroblock* currMB) {
   sSlice* currSlice = currMB->p_Slice;
   int   list_offset = LIST_0 + currMB->list_offset;
   sPicture* picture = currSlice->picture;
-  MotionVector *a_mv = NULL;
-  MotionVector *b_mv = NULL;
+  sMotionVector *a_mv = NULL;
+  sMotionVector *b_mv = NULL;
 
   get_neighbors(currMB, mb, 0, 0, MB_BLOCK_SIZE);
   if (currSlice->mb_aff_frame_flag == 0)

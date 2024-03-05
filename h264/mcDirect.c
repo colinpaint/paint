@@ -350,7 +350,7 @@ static void update_direct_mv_info_spatial_8x8 (sMacroblock* currMB)
     sPicture** list1 = currSlice->listX[LIST_1 + list_offset];
 
     char  l0_rFrame, l1_rFrame;
-    MotionVector pmvl0, pmvl1;
+    sMotionVector pmvl0, pmvl1;
     int is_not_moving;
     sPicMotionParams *mv_info = NULL;
 
@@ -509,7 +509,7 @@ static void update_direct_mv_info_spatial_4x4 (sMacroblock* currMB)
     sPicture** list1 = currSlice->listX[LIST_1 + list_offset];
 
     char  l0_rFrame, l1_rFrame;
-    MotionVector pmvl0, pmvl1;
+    sMotionVector pmvl0, pmvl1;
 
     prepare_direct_params(currMB, picture, &pmvl0, &pmvl1, &l0_rFrame, &l1_rFrame);
     for (k = 0; k < 4; ++k)

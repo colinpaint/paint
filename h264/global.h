@@ -44,7 +44,7 @@ typedef struct pix_pos {
   short y;
   short pos_x;
   short pos_y;
-  } PixelPos;
+  } sPixelPos;
 //}}}
 
 //! struct to characterize the state of the arithmetic coding engine
@@ -64,9 +64,9 @@ typedef DecodingEnvironment *DecodingEnvironmentPtr;
 typedef struct {
   short mv_x;
   short mv_y;
-  } MotionVector;
+  } sMotionVector;
 //}}}
-static const MotionVector zero_mv = {0, 0};
+static const sMotionVector zero_mv = {0, 0};
 //{{{
 typedef struct {
   short x;
@@ -230,8 +230,8 @@ typedef struct macroblock_dec {
   void (*itrans_4x4)(struct macroblock_dec *currMB, sColorPlane pl, int ioff, int joff);
   void (*itrans_8x8)(struct macroblock_dec *currMB, sColorPlane pl, int ioff, int joff);
 
-  void (*GetMVPredictor) (struct macroblock_dec *currMB, PixelPos *block,
-    MotionVector *pmv, short ref_frame, struct pic_motion_params** mv_info, int list, int mb_x, int mb_y, int blockshape_x, int blockshape_y);
+  void (*GetMVPredictor) (struct macroblock_dec *currMB, sPixelPos *block,
+    sMotionVector *pmv, short ref_frame, struct pic_motion_params** mv_info, int list, int mb_x, int mb_y, int blockshape_x, int blockshape_y);
 
   int  (*read_and_store_CBP_block_bit)  (struct macroblock_dec *currMB, DecodingEnvironmentPtr  dep_dp, int type);
   char (*readRefPictureIdx)             (struct macroblock_dec *currMB, struct syntaxelement_dec *currSE, struct datapartition_dec *dP, char b8mode, int list);
@@ -770,7 +770,7 @@ typedef struct video_par {
   int* MapUnitToSliceGroupMap;
   int NumberOfSliceGroups;    // the number of slice groups -1 (0 == scan order, 7 == maximum)
 
-  void (*getNeighbour)     (sMacroblock *currMB, int xN, int yN, int mb_size[2], PixelPos *pix);
+  void (*getNeighbour)     (sMacroblock *currMB, int xN, int yN, int mb_size[2], sPixelPos *pix);
   void (*get_mb_block_pos) (sBlockPos *PicPos, int mb_addr, short *x, short *y);
   void (*GetStrengthVer)   (sMacroblock *MbQ, int edge, int mvlimit, struct storablePicture *p);
   void (*GetStrengthHor)   (sMacroblock *MbQ, int edge, int mvlimit, struct storablePicture *p);

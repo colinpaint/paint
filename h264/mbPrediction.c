@@ -685,7 +685,7 @@ int mb_pred_b_d4x4temporal (sMacroblock* currMB, sColorPlane curPlane, sPixel** 
 int mb_pred_b_d8x8spatial (sMacroblock* currMB, sColorPlane curPlane, sPixel** curPixel, sPicture* picture)
 {
   char l0_rFrame = -1, l1_rFrame = -1;
-  MotionVector pmvl0 = zero_mv, pmvl1 = zero_mv;
+  sMotionVector pmvl0 = zero_mv, pmvl1 = zero_mv;
   int i4, j4;
   int block8x8;
   sSlice* currSlice = currMB->p_Slice;
@@ -910,7 +910,7 @@ int mb_pred_b_d8x8spatial (sMacroblock* currMB, sColorPlane curPlane, sPixel** c
 int mb_pred_b_d4x4spatial (sMacroblock* currMB, sColorPlane curPlane, sPixel** curPixel, sPicture* picture)
 {
   char l0_rFrame = -1, l1_rFrame = -1;
-  MotionVector pmvl0 = zero_mv, pmvl1 = zero_mv;
+  sMotionVector pmvl0 = zero_mv, pmvl1 = zero_mv;
   int k;
   int block8x8;
   sSlice* currSlice = currMB->p_Slice;
@@ -1098,7 +1098,7 @@ int mb_pred_b_d4x4spatial (sMacroblock* currMB, sColorPlane curPlane, sPixel** c
 int mb_pred_b_inter8x8 (sMacroblock* currMB, sColorPlane curPlane, sPicture* picture)
 {
   char l0_rFrame = -1, l1_rFrame = -1;
-  MotionVector pmvl0 = zero_mv, pmvl1 = zero_mv;
+  sMotionVector pmvl0 = zero_mv, pmvl1 = zero_mv;
   int block_size_x, block_size_y;
   int k;
   int block8x8;   // needed for ABT

@@ -138,7 +138,7 @@ extern void set_read_comp_coeff_cavlc (sMacroblock* currMB);
 extern void setup_slice_methods (sSlice* currSlice);
 extern void setup_slice_methods_mbaff (sSlice* currSlice);
 
-extern void get_neighbors (sMacroblock* currMB, PixelPos *block, int mb_x, int mb_y, int blockshape_x);
+extern void get_neighbors (sMacroblock* currMB, sPixelPos *block, int mb_x, int mb_y, int blockshape_x);
 
 extern void start_macroblock (sSlice* currSlice, sMacroblock** currMB);
 extern int  decode_one_macroblock (sMacroblock* currMB, sPicture* picture);

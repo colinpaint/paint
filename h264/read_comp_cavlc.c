@@ -16,7 +16,7 @@ static int predict_nnz (sMacroblock* currMB, int block_type, int i,int j)
   sVidParam* vidParam = currMB->vidParam;
   sSlice* currSlice = currMB->p_Slice;
 
-  PixelPos pix;
+  sPixelPos pix;
 
   int pred_nnz = 0;
   int cnt      = 0;
@@ -103,7 +103,7 @@ static int predict_nnz_chroma (sMacroblock* currMB, int i,int j)
   {
     sVidParam* vidParam = currMB->vidParam;
     sSlice* currSlice = currMB->p_Slice;
-    PixelPos pix;
+    sPixelPos pix;
     int pred_nnz = 0;
     int cnt      = 0;
 

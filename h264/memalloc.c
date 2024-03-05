@@ -247,41 +247,41 @@ int get_mem3D_spp (StorablePicturePtr** **array3D, int dim0, int dim1, int dim2)
 /*!
 ** **********************************************************************
  * \brief
- *    Allocate 2D memory array -> MotionVector array2D[dim0][dim1]
+ *    Allocate 2D memory array -> sMotionVector array2D[dim0][dim1]
  *
  * \par Output:
  *    memory size in bytes
 ** **********************************************************************/
-int get_mem2Dmv (MotionVector** *array2D, int dim0, int dim1)
+int get_mem2Dmv (sMotionVector** *array2D, int dim0, int dim1)
 {
   int i;
 
-  if((*array2D    = (MotionVector**)mem_malloc(dim0 *      sizeof(MotionVector*))) == NULL)
+  if((*array2D    = (sMotionVector**)mem_malloc(dim0 *      sizeof(sMotionVector*))) == NULL)
     no_mem_exit("get_mem2Dmv: array2D");
-  if((*(*array2D) = (MotionVector* )mem_calloc(dim0 * dim1,sizeof(MotionVector ))) == NULL)
+  if((*(*array2D) = (sMotionVector* )mem_calloc(dim0 * dim1,sizeof(sMotionVector ))) == NULL)
     no_mem_exit("get_mem2Dmv: array2D");
 
   for(i = 1 ; i < dim0; i++)
     (*array2D)[i] =  (*array2D)[i-1] + dim1;
 
-  return dim0 * (sizeof(MotionVector*) + dim1 * sizeof(MotionVector));
+  return dim0 * (sizeof(sMotionVector*) + dim1 * sizeof(sMotionVector));
 }
 //}}}
 //{{{
 /*!
 ** **********************************************************************
  * \brief
- *    Allocate 3D memory array -> MotionVector array3D[dim0][dim1][dim2]
+ *    Allocate 3D memory array -> sMotionVector array3D[dim0][dim1][dim2]
  *
  * \par Output:
  *    memory size in bytes
 ** **********************************************************************
  */
-int get_mem3Dmv (MotionVector** **array3D, int dim0, int dim1, int dim2)
+int get_mem3Dmv (sMotionVector** **array3D, int dim0, int dim1, int dim2)
 {
-  int i, mem_size = dim0 * sizeof(MotionVector**);
+  int i, mem_size = dim0 * sizeof(sMotionVector**);
 
-  if(((*array3D) = (MotionVector***)mem_malloc(dim0 * sizeof(MotionVector**))) == NULL)
+  if(((*array3D) = (sMotionVector***)mem_malloc(dim0 * sizeof(sMotionVector**))) == NULL)
     no_mem_exit("get_mem3Dmv: array3D");
 
   mem_size += get_mem2Dmv(*array3D, dim0 * dim1, dim2);
@@ -296,17 +296,17 @@ int get_mem3Dmv (MotionVector** **array3D, int dim0, int dim1, int dim2)
 /*!
 ** **********************************************************************
  * \brief
- *    Allocate 4D memory array -> MotionVector array3D[dim0][dim1][dim2][dim3]
+ *    Allocate 4D memory array -> sMotionVector array3D[dim0][dim1][dim2][dim3]
  *
  * \par Output:
  *    memory size in bytes
 ** **********************************************************************
  */
-int get_mem4Dmv (MotionVector** ***array4D, int dim0, int dim1, int dim2, int dim3)
+int get_mem4Dmv (sMotionVector** ***array4D, int dim0, int dim1, int dim2, int dim3)
 {
-  int i, mem_size = dim0 * sizeof(MotionVector***);
+  int i, mem_size = dim0 * sizeof(sMotionVector***);
 
-  if(((*array4D) = (MotionVector****)mem_malloc(dim0 * sizeof(MotionVector***))) == NULL)
+  if(((*array4D) = (sMotionVector****)mem_malloc(dim0 * sizeof(sMotionVector***))) == NULL)
     no_mem_exit("get_mem4Dpel: array4D");
 
   mem_size += get_mem3Dmv(*array4D, dim0 * dim1, dim2, dim3);
@@ -321,17 +321,17 @@ int get_mem4Dmv (MotionVector** ***array4D, int dim0, int dim1, int dim2, int di
 /*!
 ** **********************************************************************
  * \brief
- *    Allocate 5D memory array -> MotionVector array3D[dim0][dim1][dim2][dim3][dim4]
+ *    Allocate 5D memory array -> sMotionVector array3D[dim0][dim1][dim2][dim3][dim4]
  *
  * \par Output:
  *    memory size in bytes
 ** **********************************************************************
  */
-int get_mem5Dmv (MotionVector** ****array5D, int dim0, int dim1, int dim2, int dim3, int dim4)
+int get_mem5Dmv (sMotionVector** ****array5D, int dim0, int dim1, int dim2, int dim3, int dim4)
 {
-  int i, mem_size = dim0 * sizeof(MotionVector***);
+  int i, mem_size = dim0 * sizeof(sMotionVector***);
 
-  if(((*array5D) = (MotionVector*****)mem_malloc(dim0 * sizeof(MotionVector****))) == NULL)
+  if(((*array5D) = (sMotionVector*****)mem_malloc(dim0 * sizeof(sMotionVector****))) == NULL)
     no_mem_exit("get_mem5Dmv: array5D");
 
   mem_size += get_mem4Dmv(*array5D, dim0 * dim1, dim2, dim3, dim4);
@@ -346,17 +346,17 @@ int get_mem5Dmv (MotionVector** ****array5D, int dim0, int dim1, int dim2, int d
 /*!
 ** **********************************************************************
  * \brief
- *    Allocate 6D memory array -> MotionVector array6D[dim0][dim1][dim2][dim3][dim4][dim5]
+ *    Allocate 6D memory array -> sMotionVector array6D[dim0][dim1][dim2][dim3][dim4][dim5]
  *
  * \par Output:
  *    memory size in bytes
 ** **********************************************************************
  */
-int get_mem6Dmv (MotionVector** *****array6D, int dim0, int dim1, int dim2, int dim3, int dim4, int dim5)
+int get_mem6Dmv (sMotionVector** *****array6D, int dim0, int dim1, int dim2, int dim3, int dim4, int dim5)
 {
-  int i, mem_size = dim0 * sizeof(MotionVector*****);
+  int i, mem_size = dim0 * sizeof(sMotionVector*****);
 
-  if(((*array6D) = (MotionVector******)mem_malloc(dim0 * sizeof(MotionVector*****))) == NULL)
+  if(((*array6D) = (sMotionVector******)mem_malloc(dim0 * sizeof(sMotionVector*****))) == NULL)
     no_mem_exit("get_mem6Dmv: array6D");
 
   mem_size += get_mem5Dmv(*array6D, dim0 * dim1, dim2, dim3, dim4, dim5);
@@ -371,17 +371,17 @@ int get_mem6Dmv (MotionVector** *****array6D, int dim0, int dim1, int dim2, int 
 /*!
 ** **********************************************************************
  * \brief
- *    Allocate 7D memory array -> MotionVector array6D[dim0][dim1][dim2][dim3][dim4][dim5][dim6]
+ *    Allocate 7D memory array -> sMotionVector array6D[dim0][dim1][dim2][dim3][dim4][dim5][dim6]
  *
  * \par Output:
  *    memory size in bytes
 ** **********************************************************************
  */
-int get_mem7Dmv (MotionVector** ******array7D, int dim0, int dim1, int dim2, int dim3, int dim4, int dim5, int dim6)
+int get_mem7Dmv (sMotionVector** ******array7D, int dim0, int dim1, int dim2, int dim3, int dim4, int dim5, int dim6)
 {
-  int i, mem_size = dim0 * sizeof(MotionVector*****);
+  int i, mem_size = dim0 * sizeof(sMotionVector*****);
 
-  if(((*array7D) = (MotionVector*******)mem_malloc(dim0 * sizeof(MotionVector******))) == NULL)
+  if(((*array7D) = (sMotionVector*******)mem_malloc(dim0 * sizeof(sMotionVector******))) == NULL)
     no_mem_exit("get_mem7Dmv: array7D");
 
   mem_size += get_mem6Dmv(*array7D, dim0 * dim1, dim2, dim3, dim4, dim5, dim6);
@@ -449,7 +449,7 @@ void free_mem3D_spp (StorablePicturePtr** *array3D)
  *    which was allocated with get_mem2Dmv()
 ** **********************************************************************
  */
-void free_mem2Dmv (MotionVector** array2D)
+void free_mem2Dmv (sMotionVector** array2D)
 {
   if (array2D)
   {
@@ -474,7 +474,7 @@ void free_mem2Dmv (MotionVector** array2D)
  *    which was allocated with get_mem3Dmv()
 ** **********************************************************************
  */
-void free_mem3Dmv (MotionVector** *array3D)
+void free_mem3Dmv (sMotionVector** *array3D)
 {
   if (array3D)
   {
@@ -495,7 +495,7 @@ void free_mem3Dmv (MotionVector** *array3D)
  *    which was allocated with get_mem4Dmv()
 ** **********************************************************************
  */
-void free_mem4Dmv (MotionVector** **array4D)
+void free_mem4Dmv (sMotionVector** **array4D)
 {
   if (array4D)
   {
@@ -516,7 +516,7 @@ void free_mem4Dmv (MotionVector** **array4D)
  *    which was allocated with get_mem5Dmv()
 ** **********************************************************************
  */
-void free_mem5Dmv (MotionVector** ***array5D)
+void free_mem5Dmv (sMotionVector** ***array5D)
 {
   if (array5D)
   {
@@ -537,7 +537,7 @@ void free_mem5Dmv (MotionVector** ***array5D)
  *    which was allocated with get_mem6Dmv()
 ** **********************************************************************
  */
-void free_mem6Dmv (MotionVector** ****array6D)
+void free_mem6Dmv (sMotionVector** ****array6D)
 {
   if (array6D)
   {
@@ -558,7 +558,7 @@ void free_mem6Dmv (MotionVector** ****array6D)
  *    which was allocated with get_mem7Dmv()
 ** **********************************************************************
  */
-void free_mem7Dmv (MotionVector** *****array7D)
+void free_mem7Dmv (sMotionVector** *****array7D)
 {
   if (array7D)
   {
