@@ -167,5 +167,5 @@ typedef struct {
 //}}}
 
 
-sPPSrbsp* AllocPPS();
-void FreePPS (sPPSrbsp* pps);
+sPPSrbsp* allocPPS();
+void freePPS (sPPSrbsp* pps);

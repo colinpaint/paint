@@ -82,7 +82,7 @@ static void alloc_video_params (sVidParam** vidParam) {
   (*vidParam)->pNextSlice = NULL;
   (*vidParam)->nalu = allocNALU (MAX_CODED_FRAME_SIZE);
   (*vidParam)->pDecOuputPic = (sDecodedPicList*)calloc(1, sizeof(sDecodedPicList));
-  (*vidParam)->pNextPPS = AllocPPS();
+  (*vidParam)->nextPPS = allocPPS();
   (*vidParam)->first_sps = TRUE;
 }
 //}}}
@@ -127,7 +127,7 @@ sSlice* malloc_slice (InputParameters* p_Inp, sVidParam* vidParam) {
   currSlice->tex_ctx = create_contexts_TextureInfo();
 
   currSlice->max_part_nr = 3;  //! assume data partitioning (worst case) for the following mallocs()
-  currSlice->partArr = AllocPartition (currSlice->max_part_nr);
+  currSlice->partArr = allocPartition (currSlice->max_part_nr);
 
   memory_size += get_mem2Dwp (&(currSlice->wp_params), 2, MAX_REFERENCE_PICTURES);
   memory_size += get_mem3Dint(&(currSlice->wp_weight), 2, MAX_REFERENCE_PICTURES, 3);
@@ -176,7 +176,7 @@ static void free_slice (sSlice *currSlice) {
   free_mem3Dint (currSlice->wp_offset);
   free_mem4Dint (currSlice->wbp_weight);
 
-  FreePartition (currSlice->partArr, 3);
+  freePartition (currSlice->partArr, 3);
 
   // delete all context models
   delete_contexts_MotionInfo (currSlice->mot_ctx);
@@ -247,10 +247,10 @@ static void free_img (sVidParam* vidParam) {
       }
 
     //free memory;
-    FreeDecPicList (vidParam->pDecOuputPic);
-    if (vidParam->pNextPPS) {
-      FreePPS (vidParam->pNextPPS);
-      vidParam->pNextPPS = NULL;
+    freeDecPicList (vidParam->pDecOuputPic);
+    if (vidParam->nextPPS) {
+      freePPS (vidParam->nextPPS);
+      vidParam->nextPPS = NULL;
       }
 
     free (vidParam);
@@ -360,18 +360,18 @@ void init_frext (sVidParam* vidParam) {
   vidParam->mb_size_blk[1][0] = vidParam->mb_size_blk[2][0] = vidParam->mb_size[1][0] >> 2;
   vidParam->mb_size_blk[1][1] = vidParam->mb_size_blk[2][1] = vidParam->mb_size[1][1] >> 2;
 
-  vidParam->mb_size_shift[0][0] = vidParam->mb_size_shift[0][1] = CeilLog2_sf (vidParam->mb_size[0][0]);
-  vidParam->mb_size_shift[1][0] = vidParam->mb_size_shift[2][0] = CeilLog2_sf (vidParam->mb_size[1][0]);
-  vidParam->mb_size_shift[1][1] = vidParam->mb_size_shift[2][1] = CeilLog2_sf (vidParam->mb_size[1][1]);
+  vidParam->mb_size_shift[0][0] = vidParam->mb_size_shift[0][1] = ceilLog2_sf (vidParam->mb_size[0][0]);
+  vidParam->mb_size_shift[1][0] = vidParam->mb_size_shift[2][0] = ceilLog2_sf (vidParam->mb_size[1][0]);
+  vidParam->mb_size_shift[1][1] = vidParam->mb_size_shift[2][1] = ceilLog2_sf (vidParam->mb_size[1][1]);
   }
 //}}}
 
 //{{{
-sDataPartition* AllocPartition (int n) {
+sDataPartition* allocPartition (int n) {
 
   sDataPartition* partArr = (sDataPartition*)calloc (n, sizeof(sDataPartition));
   if (partArr == NULL) {
-    snprintf (errortext, ET_SIZE, "AllocPartition: Memory allocation for Data Partition failed");
+    snprintf (errortext, ET_SIZE, "allocPartition: Memory allocation for Data Partition failed");
     error (errortext, 100);
     }
 
@@ -379,13 +379,13 @@ sDataPartition* AllocPartition (int n) {
     sDataPartition* dataPart = &(partArr[i]);
     dataPart->bitstream = (Bitstream *) calloc(1, sizeof(Bitstream));
     if (dataPart->bitstream == NULL) {
-      snprintf (errortext, ET_SIZE, "AllocPartition: Memory allocation for Bitstream failed");
+      snprintf (errortext, ET_SIZE, "allocPartition: Memory allocation for Bitstream failed");
       error (errortext, 100);
       }
 
     dataPart->bitstream->streamBuffer = (byte *) calloc(MAX_CODED_FRAME_SIZE, sizeof(byte));
     if (dataPart->bitstream->streamBuffer == NULL) {
-      snprintf (errortext, ET_SIZE, "AllocPartition: Memory allocation for streamBuffer failed");
+      snprintf (errortext, ET_SIZE, "allocPartition: Memory allocation for streamBuffer failed");
       error (errortext, 100);
       }
     }
@@ -394,7 +394,7 @@ sDataPartition* AllocPartition (int n) {
   }
 //}}}
 //{{{
-void FreePartition (sDataPartition* dp, int n) {
+void freePartition (sDataPartition* dp, int n) {
 
   assert (dp != NULL);
   assert (dp->bitstream != NULL);
@@ -591,7 +591,7 @@ void ClearDecPicList (sVidParam* vidParam) {
   }
 //}}}
 //{{{
-void FreeDecPicList (sDecodedPicList* pDecPicList) {
+void freeDecPicList (sDecodedPicList* pDecPicList) {
 
   while (pDecPicList) {
     sDecodedPicList* pPicNext = pDecPicList->pNext;
@@ -731,7 +731,7 @@ int CloseDecoder() {
 
   ercClose (gDecoder->vidParam, gDecoder->vidParam->erc_errorVar);
 
-  CleanUpPPS (gDecoder->vidParam);
+  cleanUpPPS (gDecoder->vidParam);
 
   for (unsigned i = 0; i < MAX_NUM_DPB_LAYERS; i++)
     free_dpb (gDecoder->vidParam->p_Dpb_layer[i]);

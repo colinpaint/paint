@@ -121,9 +121,9 @@ static void writeOutPicture (sVidParam* vidParam, sPicture* p) {
   img2buf (p->imgY, buf, p->size_x, p->size_y, symbol_size_in_bytes,
            crop_left, crop_right, crop_top, crop_bottom, pDecPic->iYBufStride);
 
-  crop_left   = p->frame_crop_left_offset;
-  crop_right  = p->frame_crop_right_offset;
-  crop_top    = (2 - p->frame_mbs_only_flag) * p->frame_crop_top_offset;
+  crop_left = p->frame_crop_left_offset;
+  crop_right = p->frame_crop_right_offset;
+  crop_top = (2 - p->frame_mbs_only_flag) * p->frame_crop_top_offset;
   crop_bottom = (2 - p->frame_mbs_only_flag) * p->frame_crop_bottom_offset;
 
   buf = (pDecPic->bValid == 1) ? pDecPic->pU : pDecPic->pU + iChromaSizeX*symbol_size_in_bytes;
@@ -224,10 +224,11 @@ static void writePicture (sVidParam* vidParam, sPicture* p, int real_structure) 
     // copy second field
     int add = (real_structure == TOP_FIELD) ? 0 : 1;
     for (int i = 0; i < vidParam->pending_output->size_y; i+=2)
-      memcpy(vidParam->pending_output->imgY[(i+add)], p->imgY[(i+add)], p->size_x * sizeof(sPixel));
+      memcpy (vidParam->pending_output->imgY[(i+add)], p->imgY[(i+add)], p->size_x * sizeof(sPixel));
+
     for (int i = 0; i < vidParam->pending_output->size_y_cr; i+=2) {
-      memcpy(vidParam->pending_output->imgUV[0][(i+add)], p->imgUV[0][(i+add)], p->size_x_cr * sizeof(sPixel));
-      memcpy(vidParam->pending_output->imgUV[1][(i+add)], p->imgUV[1][(i+add)], p->size_x_cr * sizeof(sPixel));
+      memcpy (vidParam->pending_output->imgUV[0][(i+add)], p->imgUV[0][(i+add)], p->size_x_cr * sizeof(sPixel));
+      memcpy (vidParam->pending_output->imgUV[1][(i+add)], p->imgUV[1][(i+add)], p->size_x_cr * sizeof(sPixel));
       }
 
     flush_pending_output (vidParam);
@@ -239,23 +240,25 @@ static void write_unpaired_field (sVidParam* vidParam, sFrameStore* fs) {
 
   assert (fs->is_used < 3);
 
-  sPicture* p;
   if (fs->is_used & 0x01) {
     // we have a top field, construct an empty bottom field
-    p = fs->top_field;
+    sPicture* p = fs->top_field;
     fs->bottom_field = alloc_storable_picture (vidParam, BOTTOM_FIELD, p->size_x, 2*p->size_y, p->size_x_cr, 2*p->size_y_cr, 1);
     fs->bottom_field->chroma_format_idc = p->chroma_format_idc;
+
     clearPicture (vidParam, fs->bottom_field);
     dpb_combine_field_yuv (vidParam, fs);
+
     writePicture (vidParam, fs->frame, TOP_FIELD);
     }
 
   if (fs->is_used & 0x02) {
     // we have a bottom field, construct an empty top field
-    p = fs->bottom_field;
+    sPicture* p = fs->bottom_field;
     fs->top_field = alloc_storable_picture (vidParam, TOP_FIELD, p->size_x, 2*p->size_y, p->size_x_cr, 2*p->size_y_cr, 1);
     fs->top_field->chroma_format_idc = p->chroma_format_idc;
     clearPicture (vidParam, fs->top_field);
+
     fs ->top_field->frame_cropping_flag = fs->bottom_field->frame_cropping_flag;
     if(fs ->top_field->frame_cropping_flag) {
       fs ->top_field->frame_crop_top_offset = fs->bottom_field->frame_crop_top_offset;
@@ -264,6 +267,7 @@ static void write_unpaired_field (sVidParam* vidParam, sFrameStore* fs) {
       fs ->top_field->frame_crop_right_offset = fs->bottom_field->frame_crop_right_offset;
       }
     dpb_combine_field_yuv (vidParam, fs);
+
     writePicture (vidParam, fs->frame, BOTTOM_FIELD);
     }
 
@@ -331,7 +335,6 @@ void write_stored_frame (sVidParam* vidParam, sFrameStore* fs) {
 //{{{
 void direct_output (sVidParam* vidParam, sPicture* p) {
 
-  InputParameters* p_Inp = vidParam->p_Inp;
   if (p->structure == FRAME) {
     // we have a frame (or complementary field pair), so output it directly
     flush_direct_output (vidParam);

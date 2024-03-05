@@ -1191,20 +1191,20 @@ static void ref_pic_list_reordering (sSlice* currSlice) {
   if (currSlice->slice_type != I_SLICE &&
       currSlice->slice_type != SI_SLICE) {
     int val = currSlice->ref_pic_list_reordering_flag[LIST_0] =
-      read_u_1 ("SH: ref_pic_list_reordering_flag_l0", currStream, &gDecoder->UsedBits);
+      read_u_1 ("SH: ref_pic_list_reordering_flag_l0", currStream);
 
     if (val) {
       int i = 0;
       do {
         val = currSlice->modification_of_pic_nums_idc[LIST_0][i] =
-          read_ue_v("SH: modification_of_pic_nums_idc_l0", currStream, &gDecoder->UsedBits);
+          read_ue_v("SH: modification_of_pic_nums_idc_l0", currStream);
         if (val==0 || val==1)
           currSlice->abs_diff_pic_num_minus1[LIST_0][i] =
-            read_ue_v ("SH: abs_diff_pic_num_minus1_l0", currStream, &gDecoder->UsedBits);
+            read_ue_v ("SH: abs_diff_pic_num_minus1_l0", currStream);
         else {
           if (val == 2)
             currSlice->long_term_pic_idx[LIST_0][i] =
-              read_ue_v ("SH: long_term_pic_idx_l0", currStream, &gDecoder->UsedBits);
+              read_ue_v ("SH: long_term_pic_idx_l0", currStream);
           }
         i++;
         } while (val != 3);
@@ -1213,19 +1213,19 @@ static void ref_pic_list_reordering (sSlice* currSlice) {
 
   if (currSlice->slice_type == B_SLICE) {
     int val = currSlice->ref_pic_list_reordering_flag[LIST_1] =
-      read_u_1 ("SH: ref_pic_list_reordering_flag_l1", currStream, &gDecoder->UsedBits);
+      read_u_1 ("SH: ref_pic_list_reordering_flag_l1", currStream);
     if (val) {
       int i = 0;
       do {
         val = currSlice->modification_of_pic_nums_idc[LIST_1][i] =
-          read_ue_v ("SH: modification_of_pic_nums_idc_l1", currStream, &gDecoder->UsedBits);
+          read_ue_v ("SH: modification_of_pic_nums_idc_l1", currStream);
         if (val == 0 || val == 1)
           currSlice->abs_diff_pic_num_minus1[LIST_1][i] =
-            read_ue_v ("SH: abs_diff_pic_num_minus1_l1", currStream, &gDecoder->UsedBits);
+            read_ue_v ("SH: abs_diff_pic_num_minus1_l1", currStream);
         else {
           if (val == 2)
             currSlice->long_term_pic_idx[LIST_1][i] =
-              read_ue_v ("SH: long_term_pic_idx_l1", currStream, &gDecoder->UsedBits);
+              read_ue_v ("SH: long_term_pic_idx_l1", currStream);
           }
         i++;
         } while (val != 3);
@@ -1263,13 +1263,13 @@ static void pred_weight_table (sSlice* currSlice) {
   int luma_weight_flag_l0, luma_weight_flag_l1, chroma_weight_flag_l0, chroma_weight_flag_l1;
 
   currSlice->luma_log2_weight_denom =
-    (unsigned short) read_ue_v ("SH: luma_log2_weight_denom", currStream, &gDecoder->UsedBits);
+    (unsigned short) read_ue_v ("SH: luma_log2_weight_denom", currStream);
   currSlice->wp_round_luma =
     currSlice->luma_log2_weight_denom ? 1<<(currSlice->luma_log2_weight_denom - 1) : 0;
 
   if (0 != active_sps->chroma_format_idc) {
     currSlice->chroma_log2_weight_denom =
-      (unsigned short) read_ue_v ("SH: chroma_log2_weight_denom", currStream, &gDecoder->UsedBits);
+      (unsigned short) read_ue_v ("SH: chroma_log2_weight_denom", currStream);
     currSlice->wp_round_chroma =
       currSlice->chroma_log2_weight_denom ? 1<<(currSlice->chroma_log2_weight_denom - 1) : 0;
     }
@@ -1277,10 +1277,10 @@ static void pred_weight_table (sSlice* currSlice) {
   reset_wp_params (currSlice);
 
   for (int i = 0; i < currSlice->num_ref_idx_active[LIST_0]; i++) {
-    luma_weight_flag_l0 = read_u_1 ("SH: luma_weight_flag_l0", currStream, &gDecoder->UsedBits);
+    luma_weight_flag_l0 = read_u_1 ("SH: luma_weight_flag_l0", currStream);
     if (luma_weight_flag_l0) {
-      currSlice->wp_weight[LIST_0][i][0] = read_se_v ("SH: luma_weight_l0", currStream, &gDecoder->UsedBits);
-      currSlice->wp_offset[LIST_0][i][0] = read_se_v ("SH: luma_offset_l0", currStream, &gDecoder->UsedBits);
+      currSlice->wp_weight[LIST_0][i][0] = read_se_v ("SH: luma_weight_l0", currStream);
+      currSlice->wp_offset[LIST_0][i][0] = read_se_v ("SH: luma_offset_l0", currStream);
       currSlice->wp_offset[LIST_0][i][0] = currSlice->wp_offset[LIST_0][i][0]<<(vidParam->bitdepth_luma - 8);
       }
     else {
@@ -1289,11 +1289,11 @@ static void pred_weight_table (sSlice* currSlice) {
       }
 
     if (active_sps->chroma_format_idc != 0) {
-      chroma_weight_flag_l0 = read_u_1 ("SH: chroma_weight_flag_l0", currStream, &gDecoder->UsedBits);
+      chroma_weight_flag_l0 = read_u_1 ("SH: chroma_weight_flag_l0", currStream);
       for (int j = 1; j<3; j++) {
         if (chroma_weight_flag_l0) {
-          currSlice->wp_weight[LIST_0][i][j] = read_se_v("SH: chroma_weight_l0", currStream, &gDecoder->UsedBits);
-          currSlice->wp_offset[LIST_0][i][j] = read_se_v("SH: chroma_offset_l0", currStream, &gDecoder->UsedBits);
+          currSlice->wp_weight[LIST_0][i][j] = read_se_v("SH: chroma_weight_l0", currStream);
+          currSlice->wp_offset[LIST_0][i][j] = read_se_v("SH: chroma_offset_l0", currStream);
           currSlice->wp_offset[LIST_0][i][j] = currSlice->wp_offset[LIST_0][i][j]<<(vidParam->bitdepth_chroma-8);
           }
         else {
@@ -1307,10 +1307,10 @@ static void pred_weight_table (sSlice* currSlice) {
   if ((currSlice->slice_type == B_SLICE) &&
       vidParam->active_pps->weighted_bipred_idc == 1) {
     for (int i = 0; i < currSlice->num_ref_idx_active[LIST_1]; i++) {
-      luma_weight_flag_l1 = read_u_1("SH: luma_weight_flag_l1", currStream, &gDecoder->UsedBits);
+      luma_weight_flag_l1 = read_u_1("SH: luma_weight_flag_l1", currStream);
       if (luma_weight_flag_l1) {
-        currSlice->wp_weight[LIST_1][i][0] = read_se_v ("SH: luma_weight_l1", currStream, &gDecoder->UsedBits);
-        currSlice->wp_offset[LIST_1][i][0] = read_se_v ("SH: luma_offset_l1", currStream, &gDecoder->UsedBits);
+        currSlice->wp_weight[LIST_1][i][0] = read_se_v ("SH: luma_weight_l1", currStream);
+        currSlice->wp_offset[LIST_1][i][0] = read_se_v ("SH: luma_offset_l1", currStream);
         currSlice->wp_offset[LIST_1][i][0] = currSlice->wp_offset[LIST_1][i][0]<<(vidParam->bitdepth_luma-8);
         }
       else {
@@ -1319,11 +1319,11 @@ static void pred_weight_table (sSlice* currSlice) {
         }
 
       if (active_sps->chroma_format_idc != 0) {
-        chroma_weight_flag_l1 = read_u_1 ("SH: chroma_weight_flag_l1", currStream, &gDecoder->UsedBits);
+        chroma_weight_flag_l1 = read_u_1 ("SH: chroma_weight_flag_l1", currStream);
         for (int j = 1; j < 3; j++) {
           if (chroma_weight_flag_l1) {
-            currSlice->wp_weight[LIST_1][i][j] = read_se_v("SH: chroma_weight_l1", currStream, &gDecoder->UsedBits);
-            currSlice->wp_offset[LIST_1][i][j] = read_se_v("SH: chroma_offset_l1", currStream, &gDecoder->UsedBits);
+            currSlice->wp_weight[LIST_1][i][j] = read_se_v("SH: chroma_weight_l1", currStream);
+            currSlice->wp_offset[LIST_1][i][j] = read_se_v("SH: chroma_offset_l1", currStream);
             currSlice->wp_offset[LIST_1][i][j] = currSlice->wp_offset[LIST_1][i][j]<<(vidParam->bitdepth_chroma-8);
             }
           else {
@@ -1349,7 +1349,7 @@ static int picture_order (sSlice* pSlice ) {
 //}}}
 
 //{{{
-unsigned CeilLog2 (unsigned uiVal) {
+unsigned ceilLog2 (unsigned uiVal) {
 
   unsigned uiRet = 0;
 
@@ -1363,7 +1363,7 @@ unsigned CeilLog2 (unsigned uiVal) {
   }
 //}}}
 //{{{
-unsigned CeilLog2_sf (unsigned uiVal) {
+unsigned ceilLog2_sf (unsigned uiVal) {
 
   unsigned uiRet = 0;
 
@@ -1448,14 +1448,14 @@ void dec_ref_pic_marking (sVidParam* vidParam, Bitstream* currStream, sSlice* pS
 
   if (pSlice->idr_flag) {
     pSlice->no_output_of_prior_pics_flag =
-      read_u_1 ("SH: no_output_of_prior_pics_flag", currStream, &gDecoder->UsedBits);
+      read_u_1 ("SH: no_output_of_prior_pics_flag", currStream);
     vidParam->no_output_of_prior_pics_flag = pSlice->no_output_of_prior_pics_flag;
     pSlice->long_term_reference_flag =
-      read_u_1 ("SH: long_term_reference_flag", currStream, &gDecoder->UsedBits);
+      read_u_1 ("SH: long_term_reference_flag", currStream);
     }
   else {
     pSlice->adaptive_ref_pic_buffering_flag =
-      read_u_1 ("SH: adaptive_ref_pic_buffering_flag", currStream, &gDecoder->UsedBits);
+      read_u_1 ("SH: adaptive_ref_pic_buffering_flag", currStream);
     if (pSlice->adaptive_ref_pic_buffering_flag) {
       // read Memory Management Control Operation
       int val;
@@ -1463,20 +1463,20 @@ void dec_ref_pic_marking (sVidParam* vidParam, Bitstream* currStream, sSlice* pS
         DecRefPicMarking_t* tmp_drpm = (DecRefPicMarking_t*)calloc (1,sizeof (DecRefPicMarking_t));
         tmp_drpm->Next = NULL;
         val = tmp_drpm->memory_management_control_operation =
-          read_ue_v ("SH: memory_management_control_operation", currStream, &gDecoder->UsedBits);
+          read_ue_v ("SH: memory_management_control_operation", currStream);
         if ((val == 1) || (val == 3))
           tmp_drpm->difference_of_pic_nums_minus1 =
-            read_ue_v ("SH: difference_of_pic_nums_minus1", currStream, &gDecoder->UsedBits);
+            read_ue_v ("SH: difference_of_pic_nums_minus1", currStream);
         if (val==2)
           tmp_drpm->long_term_pic_num =
-            read_ue_v ("SH: long_term_pic_num", currStream, &gDecoder->UsedBits);
+            read_ue_v ("SH: long_term_pic_num", currStream);
 
         if ((val == 3 ) || (val == 6))
           tmp_drpm->long_term_frame_idx =
-            read_ue_v ("SH: long_term_frame_idx", currStream, &gDecoder->UsedBits);
+            read_ue_v ("SH: long_term_frame_idx", currStream);
         if (val == 4)
           tmp_drpm->max_long_term_frame_idx_plus1 =
-            read_ue_v ("SH: max_long_term_pic_idx_plus1", currStream, &gDecoder->UsedBits);
+            read_ue_v ("SH: max_long_term_pic_idx_plus1", currStream);
 
         // add command
         if (pSlice->dec_ref_pic_marking_buffer == NULL)
@@ -1703,35 +1703,31 @@ void decodePOC (sVidParam* vidParam, sSlice* pSlice) {
 //}}}
 
 //{{{
-int FirstPartOfSliceHeader (sSlice* currSlice) {
+void firstPartOfSliceHeader (sSlice* currSlice) {
 
   sVidParam* vidParam = currSlice->vidParam;
   byte dP_nr = assignSE2partition[currSlice->dp_mode][SE_HEADER];
   sDataPartition* partition = &(currSlice->partArr[dP_nr]);
   Bitstream* currStream = partition->bitstream;
 
-  gDecoder->UsedBits = partition->bitstream->frame_bitoffset;
-
   // Get first_mb_in_slice
-  currSlice->start_mb_nr = read_ue_v ("SH: first_mb_in_slice", currStream, &gDecoder->UsedBits);
+  currSlice->start_mb_nr = read_ue_v ("SH: first_mb_in_slice", currStream);
 
-  int tmp = read_ue_v ("SH: slice_type", currStream, &gDecoder->UsedBits);
+  int tmp = read_ue_v ("SH: slice_type", currStream);
   if (tmp > 4)
     tmp -= 5;
   vidParam->type = currSlice->slice_type = (SliceType)tmp;
 
-  currSlice->pic_parameter_set_id = read_ue_v ("SH: pic_parameter_set_id", currStream, &gDecoder->UsedBits);
+  currSlice->pic_parameter_set_id = read_ue_v ("SH: pic_parameter_set_id", currStream);
 
   if (vidParam->separate_colour_plane_flag)
-    currSlice->colour_plane_id = read_u_v (2, "SH: colour_plane_id", currStream, &gDecoder->UsedBits);
+    currSlice->colour_plane_id = read_u_v (2, "SH: colour_plane_id", currStream);
   else
     currSlice->colour_plane_id = PLANE_Y;
-
-  return gDecoder->UsedBits;
   }
 //}}}
 //{{{
-int RestOfSliceHeader (sSlice* currSlice) {
+void restOfSliceHeader (sSlice* currSlice) {
 
   sVidParam* vidParam = currSlice->vidParam;
   InputParameters* p_Inp = currSlice->p_Inp;
@@ -1743,7 +1739,7 @@ int RestOfSliceHeader (sSlice* currSlice) {
 
   int val, len;
   currSlice->frame_num = 
-    read_u_v (active_sps->log2_max_frame_num_minus4 + 4, "SH: frame_num", currStream, &gDecoder->UsedBits);
+    read_u_v (active_sps->log2_max_frame_num_minus4 + 4, "SH: frame_num", currStream);
 
   // Tian Dong: frame_num gap processing, if found
   if (currSlice->idr_flag) {
@@ -1759,11 +1755,11 @@ int RestOfSliceHeader (sSlice* currSlice) {
     }
   else {
     // field_pic_flag   u(1)
-    currSlice->field_pic_flag = read_u_1 ("SH: field_pic_flag", currStream, &gDecoder->UsedBits);
+    currSlice->field_pic_flag = read_u_1 ("SH: field_pic_flag", currStream);
     if (currSlice->field_pic_flag) {
       // bottom_field_flag  u(1)
       currSlice->bottom_field_flag = 
-        (byte) read_u_1 ("SH: bottom_field_flag", currStream, &gDecoder->UsedBits);
+        (byte) read_u_1 ("SH: bottom_field_flag", currStream);
       vidParam->structure = currSlice->bottom_field_flag ? BOTTOM_FIELD : TOP_FIELD;
       }
     else {
@@ -1784,15 +1780,15 @@ int RestOfSliceHeader (sSlice* currSlice) {
     assert (currSlice->field_pic_flag == 1 && (currSlice->bottom_field_flag == TRUE ));
 
   if (currSlice->idr_flag)
-    currSlice->idr_pic_id = read_ue_v ("SH: idr_pic_id", currStream, &gDecoder->UsedBits);
+    currSlice->idr_pic_id = read_ue_v ("SH: idr_pic_id", currStream);
 
   if (active_sps->pic_order_cnt_type == 0) {
     currSlice->pic_order_cnt_lsb = 
-      read_u_v (active_sps->log2_max_pic_order_cnt_lsb_minus4 + 4, "SH: pic_order_cnt_lsb", currStream, &gDecoder->UsedBits);
+      read_u_v (active_sps->log2_max_pic_order_cnt_lsb_minus4 + 4, "SH: pic_order_cnt_lsb", currStream);
     if( vidParam->active_pps->bottom_field_pic_order_in_frame_present_flag  ==  
       1 &&  !currSlice->field_pic_flag )
       currSlice->delta_pic_order_cnt_bottom = 
-        read_se_v ("SH: delta_pic_order_cnt_bottom", currStream, &gDecoder->UsedBits);
+        read_se_v ("SH: delta_pic_order_cnt_bottom", currStream);
     else
       currSlice->delta_pic_order_cnt_bottom = 0;
     }
@@ -1800,11 +1796,11 @@ int RestOfSliceHeader (sSlice* currSlice) {
   if (active_sps->pic_order_cnt_type == 1 ) {
     if (!active_sps->delta_pic_order_always_zero_flag ) {
       currSlice->delta_pic_order_cnt[ 0 ] = 
-        read_se_v ("SH: delta_pic_order_cnt[0]", currStream, &gDecoder->UsedBits);
+        read_se_v ("SH: delta_pic_order_cnt[0]", currStream);
       if (vidParam->active_pps->bottom_field_pic_order_in_frame_present_flag  ==  1 &&
           !currSlice->field_pic_flag )
         currSlice->delta_pic_order_cnt[ 1 ] = 
-          read_se_v ("SH: delta_pic_order_cnt[1]", currStream, &gDecoder->UsedBits);
+          read_se_v ("SH: delta_pic_order_cnt[1]", currStream);
       else
         currSlice->delta_pic_order_cnt[ 1 ] = 0;  // set to zero if not in stream
       }
@@ -1816,11 +1812,11 @@ int RestOfSliceHeader (sSlice* currSlice) {
 
   // redundant_pic_cnt is missing here
   if (vidParam->active_pps->redundant_pic_cnt_present_flag)
-    currSlice->redundant_pic_cnt = read_ue_v ("SH: redundant_pic_cnt", currStream, &gDecoder->UsedBits);
+    currSlice->redundant_pic_cnt = read_ue_v ("SH: redundant_pic_cnt", currStream);
 
   if (currSlice->slice_type == B_SLICE)
     currSlice->direct_spatial_mv_pred_flag = 
-      read_u_1 ("SH: direct_spatial_mv_pred_flag", currStream, &gDecoder->UsedBits);
+      read_u_1 ("SH: direct_spatial_mv_pred_flag", currStream);
 
   currSlice->num_ref_idx_active[LIST_0] = vidParam->active_pps->num_ref_idx_l0_default_active_minus1 + 1;
   currSlice->num_ref_idx_active[LIST_1] = vidParam->active_pps->num_ref_idx_l1_default_active_minus1 + 1;
@@ -1828,14 +1824,14 @@ int RestOfSliceHeader (sSlice* currSlice) {
   if (currSlice->slice_type == P_SLICE ||
       currSlice->slice_type == SP_SLICE ||
       currSlice->slice_type == B_SLICE) {
-    val = read_u_1 ("SH: num_ref_idx_override_flag", currStream, &gDecoder->UsedBits);
+    val = read_u_1 ("SH: num_ref_idx_override_flag", currStream);
     if (val) {
       currSlice->num_ref_idx_active[LIST_0] = 
-        1 + read_ue_v ("SH: num_ref_idx_l0_active_minus1", currStream, &gDecoder->UsedBits);
+        1 + read_ue_v ("SH: num_ref_idx_l0_active_minus1", currStream);
 
       if (currSlice->slice_type == B_SLICE)
         currSlice->num_ref_idx_active[LIST_1] = 
-          1 + read_ue_v ("SH: num_ref_idx_l1_active_minus1", currStream, &gDecoder->UsedBits);
+          1 + read_ue_v ("SH: num_ref_idx_l1_active_minus1", currStream);
       }
     }
 
@@ -1862,11 +1858,11 @@ int RestOfSliceHeader (sSlice* currSlice) {
   if (vidParam->active_pps->entropy_coding_mode_flag && 
       currSlice->slice_type != I_SLICE && 
       currSlice->slice_type != SI_SLICE)
-    currSlice->model_number = read_ue_v ("SH: cabac_init_idc", currStream, &gDecoder->UsedBits);
+    currSlice->model_number = read_ue_v ("SH: cabac_init_idc", currStream);
   else
     currSlice->model_number = 0;
 
-  currSlice->slice_qp_delta = val = read_se_v ("SH: slice_qp_delta", currStream, &gDecoder->UsedBits);
+  currSlice->slice_qp_delta = val = read_se_v ("SH: slice_qp_delta", currStream);
   currSlice->qp = 26 + vidParam->active_pps->pic_init_qp_minus26 + val;
 
   if ((currSlice->qp < -vidParam->bitdepth_luma_qp_scale) || (currSlice->qp > 51))
@@ -1874,8 +1870,8 @@ int RestOfSliceHeader (sSlice* currSlice) {
 
   if (currSlice->slice_type == SP_SLICE || currSlice->slice_type == SI_SLICE) {
     if (currSlice->slice_type==SP_SLICE)
-      currSlice->sp_switch = read_u_1 ("SH: sp_for_switch_flag", currStream, &gDecoder->UsedBits);
-    currSlice->slice_qs_delta = val = read_se_v("SH: slice_qs_delta", currStream, &gDecoder->UsedBits);
+      currSlice->sp_switch = read_u_1 ("SH: sp_for_switch_flag", currStream);
+    currSlice->slice_qs_delta = val = read_se_v("SH: slice_qs_delta", currStream);
     currSlice->qs = 26 + vidParam->active_pps->pic_init_qs_minus26 + val;
     if ((currSlice->qs < 0) || (currSlice->qs > 51))
       error ("slice_qs_delta makes slice_qs_y out of range", 500);
@@ -1885,12 +1881,12 @@ int RestOfSliceHeader (sSlice* currSlice) {
   //        vidParam->active_pps->deblocking_filter_control_present_flag);
   if (vidParam->active_pps->deblocking_filter_control_present_flag) {
     currSlice->DFDisableIdc = 
-      (short) read_ue_v ("SH: disable_deblocking_filter_idc", currStream, &gDecoder->UsedBits);
+      (short) read_ue_v ("SH: disable_deblocking_filter_idc", currStream);
     if (currSlice->DFDisableIdc != 1) {
       currSlice->DFAlphaC0Offset = 
-        (short)(2 * read_se_v("SH: slice_alpha_c0_offset_div2", currStream, &gDecoder->UsedBits));
+        (short)(2 * read_se_v("SH: slice_alpha_c0_offset_div2", currStream));
       currSlice->DFBetaOffset = 
-        (short)(2 * read_se_v("SH: slice_beta_offset_div2", currStream, &gDecoder->UsedBits));
+        (short)(2 * read_se_v("SH: slice_beta_offset_div2", currStream));
       }
     else
       currSlice->DFAlphaC0Offset = currSlice->DFBetaOffset = 0;
@@ -1917,15 +1913,13 @@ int RestOfSliceHeader (sSlice* currSlice) {
           (vidParam->active_pps->slice_group_change_rate_minus1 + 1))
       len += 1;
 
-    len = CeilLog2 (len+1);
+    len = ceilLog2 (len+1);
     currSlice->slice_group_change_cycle = 
-      read_u_v (len, "SH: slice_group_change_cycle", currStream, &gDecoder->UsedBits);
+      read_u_v (len, "SH: slice_group_change_cycle", currStream);
     }
 
   vidParam->PicHeightInMbs = vidParam->FrameHeightInMbs / ( 1 + currSlice->field_pic_flag );
   vidParam->PicSizeInMbs   = vidParam->PicWidthInMbs * vidParam->PicHeightInMbs;
   vidParam->FrameSizeInMbs = vidParam->PicWidthInMbs * vidParam->FrameHeightInMbs;
-
-  return gDecoder->UsedBits;
   }
 //}}}

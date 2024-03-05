@@ -742,19 +742,18 @@ typedef struct video_par {
   int* qp_per_matrix;
   int* qp_rem_matrix;
 
-  struct frameStore* last_out_fs;
   int pocs_in_dpb[100];
-
+  struct frameStore* last_out_fs;
   struct storablePicture* picture;
-  struct storablePicture* dec_picture_JV[MAX_PLANE];  //!< picture to be used during 4:4:4 independent mode decoding
-  struct storablePicture* no_reference_picture; //!< dummy storable picture for recovery point
+  struct storablePicture* dec_picture_JV[MAX_PLANE];  // picture to be used during 4:4:4 independent mode decoding
+  struct storablePicture* no_reference_picture;       // dummy storable picture for recovery point
 
   // Error parameters
   struct object_buffer* erc_object_list;
   struct ercVariables_s* erc_errorVar;
   int erc_mvperMB;
   struct video_par* erc_img;
-  int ec_flag[SE_MAX_ELEMENTS];        //!< array to set errorconcealment
+  int ec_flag[SE_MAX_ELEMENTS];  // array to set errorconcealment
 
   struct frameStore* out_buffer;
 
@@ -768,7 +767,7 @@ typedef struct video_par {
   // FMO
   int* MbToSliceGroupMap;
   int* MapUnitToSliceGroupMap;
-  int NumberOfSliceGroups;    // the number of slice groups -1 (0 == scan order, 7 == maximum)
+  int NumberOfSliceGroups;  // the number of slice groups -1 (0 == scan order, 7 == maximum)
 
   void (*getNeighbour)     (sMacroblock *currMB, int xN, int yN, int mb_size[2], sPixelPos *pix);
   void (*get_mb_block_pos) (sBlockPos *PicPos, int mb_addr, short *x, short *y);
@@ -793,7 +792,7 @@ typedef struct video_par {
   int bDeblockEnable;
   int iPostProcess;
   int bFrameInit;
-  sPPSrbsp *pNextPPS;
+  sPPSrbsp *nextPPS;
   int last_dec_poc;
   int last_dec_view_id;
   int last_dec_layer_id;
@@ -828,8 +827,8 @@ typedef struct video_par {
   int mb_cr_size_x_blk;
   int mb_cr_size_y_blk;
   int mb_cr_size;
-  int mb_size[3][2];                          // component macroblock dimensions
-  int mb_size_blk[3][2];                      // component macroblock dimensions
+  int mb_size[3][2];       // component macroblock dimensions
+  int mb_size_blk[3][2];   // component macroblock dimensions
   int mb_size_shift[3][2];
   int subpel_x;
   int subpel_y;
@@ -843,25 +842,24 @@ typedef struct video_par {
   unsigned int FrameHeightInMbs;
   unsigned int FrameSizeInMbs;
   unsigned int oldFrameSizeInMbs;
-  int max_vmv_r;                              // maximum vertical motion vector range in luma quarter frame pixel units for the current level_idc
+  int max_vmv_r;  // maximum vertical motion vector range in luma quarter frame pixel units for the current level_idc
   } sVidParam;
 //}}}
 //{{{
 typedef struct decoder_params {
-  InputParameters* p_Inp;          //!< Input Parameters
-  sVidParam* vidParam;          //!< Image Parameters
-  int64            bufferSize;     //!< buffersize for tiff reads (not currently supported)
-  int              UsedBits;      // for internal statistics, is adjusted by read_se_v, read_ue_v, read_u_1
-  int              bitcounter;
+  InputParameters* p_Inp; // Input Parameters
+  sVidParam* vidParam;    // Image Parameters
+  int64      bufferSize;  // buffersize for tiff reads (not currently supported)
+  int        bitcounter;
   } sDecoderParams;
 //}}}
 
 //{{{
 static inline int is_FREXT_profile (unsigned int profile_idc) {
   // we allow all FRExt tools, when no profile is active
-  return profile_idc==NO_PROFILE || profile_idc==FREXT_HP ||
-         profile_idc==FREXT_Hi10P || profile_idc==FREXT_Hi422 ||
-         profile_idc==FREXT_Hi444 || profile_idc == FREXT_CAVLC444;
+  return profile_idc == NO_PROFILE || profile_idc == FREXT_HP ||
+         profile_idc == FREXT_Hi10P || profile_idc == FREXT_Hi422 ||
+         profile_idc == FREXT_Hi444 || profile_idc == FREXT_CAVLC444;
 }
 //}}}
 //{{{
@@ -893,18 +891,18 @@ static inline int is_BL_profile (unsigned int profile_idc) {
   extern void free_global_buffers (sVidParam *vidParam);
   extern void free_layer_buffers (sVidParam *vidParam, int layer_id );
 
-  extern void FreePartition (sDataPartition* dp, int n);
-  extern sDataPartition* AllocPartition (int n);
+  extern void freePartition (sDataPartition* dp, int n);
+  extern sDataPartition* allocPartition (int n);
 
-  extern unsigned CeilLog2 (unsigned uiVal);
-  extern unsigned CeilLog2_sf (unsigned uiVal);
+  extern unsigned ceilLog2 (unsigned uiVal);
+  extern unsigned ceilLog2_sf (unsigned uiVal);
 
   // For 4:4:4 independent mode
   extern void change_plane_JV (sVidParam *vidParam, int nplane, sSlice *pSlice);
   extern void make_frame_picture_JV (sVidParam *vidParam );
 
-  extern void FreeDecPicList (sDecodedPicList *pDecPicList );
-  extern void ClearDecPicList (sVidParam *vidParam );
+  extern void freeDecPicList (sDecodedPicList *pDecPicList );
+  extern void clearDecPicList (sVidParam *vidParam );
   extern sDecodedPicList* get_one_avail_dec_pic_from_list (sDecodedPicList *pDecPicList, int b3D, int view_id);
 
   extern sSlice* malloc_slice (InputParameters *p_Inp, sVidParam *vidParam );

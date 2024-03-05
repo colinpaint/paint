@@ -6,7 +6,7 @@
 //}}}
 
 //{{{
-int read_ue_v (char *tracestring, Bitstream *bitstream, int *used_bits) {
+int read_ue_v (char *tracestring, Bitstream *bitstream) {
 
   SyntaxElement symbol = {.value1=0 };
 
@@ -14,26 +14,24 @@ int read_ue_v (char *tracestring, Bitstream *bitstream, int *used_bits) {
   symbol.mapping = linfo_ue;   // Mapping rule
 
   readSyntaxElement_VLC (&symbol, bitstream);
-  *used_bits += symbol.len;
 
   return symbol.value1;
   }
 //}}}
 //{{{
-int read_se_v (char *tracestring, Bitstream *bitstream, int *used_bits) {
+int read_se_v (char *tracestring, Bitstream *bitstream) {
 
   SyntaxElement symbol = {.value1 = 0 };
 
   symbol.type = SE_HEADER;
   symbol.mapping = linfo_se;   // Mapping rule: signed integer
   readSyntaxElement_VLC (&symbol, bitstream);
-  *used_bits += symbol.len;
 
   return symbol.value1;
   }
 //}}}
 //{{{
-int read_u_v (int LenInBits, char*tracestring, Bitstream *bitstream, int *used_bits) {
+int read_u_v (int LenInBits, char*tracestring, Bitstream *bitstream) {
 
   SyntaxElement symbol = {.value1=0 };
   symbol.inf = 0;
@@ -42,13 +40,12 @@ int read_u_v (int LenInBits, char*tracestring, Bitstream *bitstream, int *used_b
   symbol.mapping = linfo_ue;   // Mapping rule
   symbol.len = LenInBits;
   readSyntaxElement_FLC (&symbol, bitstream);
-  *used_bits+=symbol.len;
 
   return symbol.inf;
   }
 //}}}
 //{{{
-int read_i_v (int LenInBits, char*tracestring, Bitstream *bitstream, int *used_bits) {
+int read_i_v (int LenInBits, char*tracestring, Bitstream *bitstream) {
 
   SyntaxElement symbol = {.value1=0 };
   symbol.inf = 0;
@@ -57,7 +54,6 @@ int read_i_v (int LenInBits, char*tracestring, Bitstream *bitstream, int *used_b
   symbol.len = LenInBits;
 
   readSyntaxElement_FLC (&symbol, bitstream);
-  *used_bits += symbol.len;
 
   // can be negative
   symbol.inf = -( symbol.inf & (1 << (LenInBits - 1)) ) | symbol.inf;
@@ -66,9 +62,9 @@ int read_i_v (int LenInBits, char*tracestring, Bitstream *bitstream, int *used_b
   }
 //}}}
 //{{{
-Boolean read_u_1 (char *tracestring, Bitstream *bitstream, int *used_bits) {
+Boolean read_u_1 (char *tracestring, Bitstream *bitstream) {
 
-  return (Boolean) read_u_v (1, tracestring, bitstream, used_bits);
+  return (Boolean) read_u_v (1, tracestring, bitstream);
   }
 //}}}
 
@@ -336,11 +332,11 @@ static int code_from_bitstream_2d (SyntaxElement *sym, Bitstream *currStream,
 
   // Apply bitoffset to three bytes (maximum that may be traversed by ShowBitsThres)
   // Even at the end of a stream we will still be pulling out of allocated memory as alloc is done by MAX_CODED_FRAME_SIZE
-  unsigned int inf = ((*buf) << 16) + (*(buf + 1) << 8) + *(buf + 2); 
+  unsigned int inf = ((*buf) << 16) + (*(buf + 1) << 8) + *(buf + 2);
   // Offset is constant so apply before extracting different numbers of bits
-  inf <<= (*frame_bitoffset & 0x07);                                  
+  inf <<= (*frame_bitoffset & 0x07);
   // Arithmetic shift so wipe any sign which may be extended inside ShowBitsThres
-  inf  &= 0xFFFFFF;                                                   
+  inf  &= 0xFFFFFF;
 
   // this VLC decoding method is not optimized for speed
   for (int j = 0; j < tabheight; j++) {
@@ -349,7 +345,7 @@ static int code_from_bitstream_2d (SyntaxElement *sym, Bitstream *currStream,
         ++len;
         ++cod;
         }
-      else { 
+      else {
         sym->len = *len;
         *frame_bitoffset += *len; // move bitstream pointer
         *code = *cod;
@@ -862,7 +858,7 @@ int ShowBits (byte buffer[],int totbitoffset,int bitcount, int numbits) {
     inf <<=1;
     inf |= ((*curbyte)>> (bitoffset--)) & 0x01;
 
-    if (bitoffset == -1 ) { 
+    if (bitoffset == -1 ) {
       // Move onto next byte to get all of numbits
       curbyte++;
       bitoffset = 7;
