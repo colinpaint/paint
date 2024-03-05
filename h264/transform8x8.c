@@ -10,7 +10,7 @@
 //}}}
 
 //{{{
-static void recon8x8 (int **m7, sPixel **mb_rec, sPixel **mpr, int max_imgpel_value, int ioff)
+static void recon8x8 (int** m7, sPixel** mb_rec, sPixel** mpr, int max_imgpel_value, int ioff)
 {
   int j;
   int    *m_tr  = NULL;
@@ -35,7 +35,7 @@ static void recon8x8 (int **m7, sPixel **mb_rec, sPixel **mpr, int max_imgpel_va
 }
 //}}}
 //{{{
-static void copy8x8 (sPixel **mb_rec, sPixel **mpr, int ioff)
+static void copy8x8 (sPixel** mb_rec, sPixel** mpr, int ioff)
 {
   int j;
 
@@ -46,7 +46,7 @@ static void copy8x8 (sPixel **mb_rec, sPixel **mpr, int ioff)
 }
 //}}}
 //{{{
-static void recon8x8_lossless (int **m7, sPixel **mb_rec, sPixel **mpr, int max_imgpel_value, int ioff)
+static void recon8x8_lossless (int** m7, sPixel** mb_rec, sPixel** mpr, int max_imgpel_value, int ioff)
 {
   int i, j;
   for( j = 0; j < 8; j++)
@@ -62,19 +62,19 @@ static void recon8x8_lossless (int **m7, sPixel **mb_rec, sPixel **mpr, int max_
 
 //{{{
 /*!
- ***********************************************************************
+** *********************************************************************
  * \brief
  *    Inverse 8x8 transformation
- ***********************************************************************
+** *********************************************************************
  */
 void itrans8x8 (sMacroblock *currMB,   //!< current macroblock
                sColorPlane pl,        //!< used color plane
                int ioff,             //!< index to 4x4 block
                int joff)             //!< index to 4x4 block
 {
-  mSlice *currSlice = currMB->p_Slice;
+  sSlice *currSlice = currMB->p_Slice;
 
-  int    **m7     = currSlice->mb_rres[pl];
+  int   ** m7     = currSlice->mb_rres[pl];
 
   if (currMB->is_lossless == TRUE)
   {
@@ -89,17 +89,17 @@ void itrans8x8 (sMacroblock *currMB,   //!< current macroblock
 //}}}
 //{{{
 /*!
- ***********************************************************************
+** *********************************************************************
  * \brief
  *    Inverse 8x8 transformation
- ***********************************************************************
+** *********************************************************************
  */
 void icopy8x8 (sMacroblock *currMB,   //!< current macroblock
                sColorPlane pl,        //!< used color plane
                int ioff,             //!< index to 4x4 block
                int joff)             //!< index to 4x4 block
 {
-  mSlice *currSlice = currMB->p_Slice;
+  sSlice *currSlice = currMB->p_Slice;
 
   copy8x8  (&currSlice->mb_rec[pl][joff], &currSlice->mb_pred[pl][joff], ioff);
 }

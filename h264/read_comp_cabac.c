@@ -18,12 +18,12 @@ static void read_comp_coeff_4x4_smb_CABAC (sMacroblock* currMB, SyntaxElement* c
   int level = 1;
   sDataPartition *dP;
   //sVidParam* vidParam = currMB->vidParam;
-  mSlice* currSlice = currMB->p_Slice;
+  sSlice* currSlice = currMB->p_Slice;
   const byte *partMap = assignSE2partition[currSlice->dp_mode];
 
   const byte (*pos_scan4x4)[2] = ((currSlice->structure == FRAME) && (!currMB->mb_field)) ? SNGL_SCAN : FIELD_SCAN;
   const byte *pos_scan_4x4 = pos_scan4x4[0];
-  int **cof = currSlice->cof[pl];
+  int** cof = currSlice->cof[pl];
 
   for (j = block_y; j < block_y + BLOCK_SIZE_8x8; j += 4)
   {
@@ -100,7 +100,7 @@ static void read_comp_coeff_4x4_smb_CABAC (sMacroblock* currMB, SyntaxElement* c
 //{{{
 static void read_comp_coeff_4x4_CABAC (sMacroblock* currMB, SyntaxElement* currSE, sColorPlane pl, int (*InvLevelScale4x4)[4], int qp_per, int cbp)
 {
-  mSlice* currSlice = currMB->p_Slice;
+  sSlice* currSlice = currMB->p_Slice;
   sVidParam* vidParam = currMB->vidParam;
   int start_scan = IS_I16MB (currMB)? 1 : 0;
   int block_y, block_x;
@@ -116,7 +116,7 @@ static void read_comp_coeff_4x4_CABAC (sMacroblock* currMB, SyntaxElement* currS
 
   for (block_y = 0; block_y < MB_BLOCK_SIZE; block_y += BLOCK_SIZE_8x8) /* all modes */
   {
-    int **cof = &currSlice->cof[pl][block_y];
+    int** cof = &currSlice->cof[pl][block_y];
     for (block_x = 0; block_x < MB_BLOCK_SIZE; block_x += BLOCK_SIZE_8x8)
     {
       if (cbp & (1 << ((block_y >> 2) + (block_x >> 3))))  // are there any coeff in current block at all
@@ -204,12 +204,12 @@ static void readCompCoeff8x8_CABAC (sMacroblock* currMB, SyntaxElement* currSE, 
     sVidParam* vidParam = currMB->vidParam;
     int transform_pl = (vidParam->separate_colour_plane_flag != 0) ? currMB->p_Slice->colour_plane_id : pl;
 
-    int **tcoeffs;
+    int** tcoeffs;
     int i,j,k;
     int level = 1;
 
     sDataPartition *dP;
-    mSlice* currSlice = currMB->p_Slice;
+    sSlice* currSlice = currMB->p_Slice;
     const byte *partMap = assignSE2partition[currSlice->dp_mode];
     int boff_x, boff_y;
 
@@ -302,12 +302,12 @@ static void readCompCoeff8x8_CABAC_lossless (sMacroblock* currMB, SyntaxElement*
   {
     sVidParam* vidParam = currMB->vidParam;
 
-    int **tcoeffs;
+    int** tcoeffs;
     int i,j,k;
     int level = 1;
 
     sDataPartition *dP;
-    mSlice* currSlice = currMB->p_Slice;
+    sSlice* currSlice = currMB->p_Slice;
     const byte *partMap = assignSE2partition[currSlice->dp_mode];
     int boff_x, boff_y;
 
@@ -398,7 +398,7 @@ static void read_CBP_and_coeffs_from_NAL_CABAC_420 (sMacroblock* currMB)
   int cbp;
   SyntaxElement currSE;
   sDataPartition *dP = NULL;
-  mSlice* currSlice = currMB->p_Slice;
+  sSlice* currSlice = currMB->p_Slice;
   const byte *partMap = assignSE2partition[currSlice->dp_mode];
   int i0, j0;
 
@@ -523,7 +523,7 @@ static void read_CBP_and_coeffs_from_NAL_CABAC_420 (sMacroblock* currMB)
 
     if (!currMB->dpl_flag)
     {
-      int **cof = currSlice->cof[0];
+      int** cof = currSlice->cof[0];
       int k;
       pos_scan_4x4 = pos_scan4x4[0];
 
@@ -664,7 +664,7 @@ static void read_CBP_and_coeffs_from_NAL_CABAC_420 (sMacroblock* currMB)
       {
         int temp[4];
         int scale_dc = InvLevelScale4x4[0][0];
-        int **cof = currSlice->cof[uv + 1];
+        int** cof = currSlice->cof[uv + 1];
 
         ihadamard2x2(currSlice->cofu, temp);
 
@@ -699,7 +699,7 @@ static void read_CBP_and_coeffs_from_NAL_CABAC_420 (sMacroblock* currMB)
     if(currMB->is_lossless == FALSE)
     {
       int b4, b8, uv, k;
-      int **cof;
+      int** cof;
       CBPStructure  *s_cbp = &currMB->s_cbp[0];
       for (b8=0; b8 < vidParam->num_blk8x8_uv; ++b8)
       {
@@ -789,7 +789,7 @@ static void read_CBP_and_coeffs_from_NAL_CABAC_400 (sMacroblock* currMB)
   int cbp;
   SyntaxElement currSE;
   sDataPartition *dP = NULL;
-  mSlice* currSlice = currMB->p_Slice;
+  sSlice* currSlice = currMB->p_Slice;
   const byte *partMap = assignSE2partition[currSlice->dp_mode];
   int i0, j0;
 
@@ -982,7 +982,7 @@ static void read_CBP_and_coeffs_from_NAL_CABAC_444 (sMacroblock* currMB)
   int cbp;
   SyntaxElement currSE;
   sDataPartition *dP = NULL;
-  mSlice* currSlice = currMB->p_Slice;
+  sSlice* currSlice = currMB->p_Slice;
   const byte *partMap = assignSE2partition[currSlice->dp_mode];
   int coef_ctr, i0, j0;
 
@@ -1277,7 +1277,7 @@ static void read_CBP_and_coeffs_from_NAL_CABAC_422 (sMacroblock* currMB)
   int cbp;
   SyntaxElement currSE;
   sDataPartition *dP = NULL;
-  mSlice* currSlice = currMB->p_Slice;
+  sSlice* currSlice = currMB->p_Slice;
   const byte *partMap = assignSE2partition[currSlice->dp_mode];
   int coef_ctr, i0, j0, b8;
   int ll;
@@ -1500,7 +1500,7 @@ static void read_CBP_and_coeffs_from_NAL_CABAC_422 (sMacroblock* currMB)
       int (*InvLevelScale4x4)[4] = NULL;
       uv = ll>>1;
       {
-        int **imgcof = currSlice->cof[uv + 1];
+        int** imgcof = currSlice->cof[uv + 1];
         int m3[2][4] = {{0,0,0,0},{0,0,0,0}};
         int m4[2][4] = {{0,0,0,0},{0,0,0,0}};
         int qp_per_uv_dc = vidParam->qp_per_matrix[ (currMB->qpc[uv] + 3 + vidParam->bitdepth_chroma_qp_scale) ];       //for YUV422 only
@@ -1696,7 +1696,7 @@ static void read_CBP_and_coeffs_from_NAL_CABAC_422 (sMacroblock* currMB)
   } //if (picture->chroma_format_idc != YUV400)
 }
 
-void set_read_CBP_and_coeffs_cabac(mSlice* currSlice)
+void set_read_CBP_and_coeffs_cabac(sSlice* currSlice)
 {
   switch (currSlice->vidParam->active_sps->chroma_format_idc)
   {

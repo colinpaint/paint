@@ -22,9 +22,9 @@ extern int get_colocated_info_8x8 (sMacroblock* currMB, sPicture *list1, int i, 
 extern int get_colocated_info_4x4 (sMacroblock* currMB, sPicture *list1, int i, int j);
 
 //{{{
-int mb_pred_intra4x4 (sMacroblock* currMB, sColorPlane curPlane, sPixel **currImg, sPicture* picture)
+int mb_pred_intra4x4 (sMacroblock* currMB, sColorPlane curPlane, sPixel** curPixel, sPicture* picture)
 {
-  mSlice* currSlice = currMB->p_Slice;
+  sSlice* currSlice = currMB->p_Slice;
   int yuv = picture->chroma_format_idc - 1;
   int i=0, j=0,k, j4=0,i4=0;
   int j_pos, i_pos;
@@ -54,11 +54,11 @@ int mb_pred_intra4x4 (sMacroblock* currMB, sColorPlane curPlane, sPixel **currIm
       // -------------------------------------------
       currMB->itrans_4x4  (currMB, curPlane, ioff, joff);
 
-      copy_image_data_4x4(&currImg[j_pos], &currSlice->mb_rec[curPlane][joff], i_pos, ioff);
+      copy_image_data_4x4(&curPixel[j_pos], &currSlice->mb_rec[curPlane][joff], i_pos, ioff);
     }
   }
 
-  // chroma decoding *******************************************************
+  // chroma decoding** *****************************************************
   if ((picture->chroma_format_idc != YUV400) && (picture->chroma_format_idc != YUV444))
   {
     intra_cr_decoding(currMB, yuv);
@@ -80,7 +80,7 @@ int mb_pred_intra16x16 (sMacroblock* currMB, sColorPlane curPlane, sPicture* pic
   // -------------------------------------------
   iMBtrans4x4(currMB, curPlane, 0);
 
-  // chroma decoding *******************************************************
+  // chroma decoding** *****************************************************
   if ((picture->chroma_format_idc != YUV400) && (picture->chroma_format_idc != YUV444))
   {
     intra_cr_decoding(currMB, yuv);
@@ -91,9 +91,9 @@ int mb_pred_intra16x16 (sMacroblock* currMB, sColorPlane curPlane, sPicture* pic
 }
 //}}}
 //{{{
-int mb_pred_intra8x8 (sMacroblock* currMB, sColorPlane curPlane, sPixel **currImg, sPicture* picture)
+int mb_pred_intra8x8 (sMacroblock* currMB, sColorPlane curPlane, sPixel** curPixel, sPicture* picture)
 {
-  mSlice* currSlice = currMB->p_Slice;
+  sSlice* currSlice = currMB->p_Slice;
   int yuv = picture->chroma_format_idc - 1;
 
   int block8x8;   // needed for ABT
@@ -112,9 +112,9 @@ int mb_pred_intra8x8 (sMacroblock* currMB, sColorPlane curPlane, sPixel **currIm
     else
       icopy8x8(currMB, curPlane, ioff,joff);
 
-    copy_image_data_8x8(&currImg[currMB->pix_y + joff], &currSlice->mb_rec[curPlane][joff], currMB->pix_x + ioff, ioff);
+    copy_image_data_8x8(&curPixel[currMB->pix_y + joff], &currSlice->mb_rec[curPlane][joff], currMB->pix_x + ioff, ioff);
   }
-  // chroma decoding *******************************************************
+  // chroma decoding** *****************************************************
   if ((picture->chroma_format_idc != YUV400) && (picture->chroma_format_idc != YUV444))
   {
     intra_cr_decoding(currMB, yuv);
@@ -129,7 +129,7 @@ int mb_pred_intra8x8 (sMacroblock* currMB, sColorPlane curPlane, sPixel **currIm
 //{{{
 static void set_chroma_vector (sMacroblock* currMB)
 {
-  mSlice* currSlice = currMB->p_Slice;
+  sSlice* currSlice = currMB->p_Slice;
   sVidParam* vidParam = currMB->vidParam;
 
   if (!currSlice->mb_aff_frame_flag)
@@ -215,16 +215,16 @@ static void set_chroma_vector (sMacroblock* currMB)
 //}}}
 
 //{{{
-int mb_pred_skip (sMacroblock* currMB, sColorPlane curPlane, sPixel **currImg, sPicture* picture)
+int mb_pred_skip (sMacroblock* currMB, sColorPlane curPlane, sPixel** curPixel, sPicture* picture)
 {
-  mSlice* currSlice = currMB->p_Slice;
+  sSlice* currSlice = currMB->p_Slice;
   sVidParam* vidParam = currMB->vidParam;
 
   set_chroma_vector(currMB);
 
   perform_mc(currMB, curPlane, picture, LIST_0, 0, 0, MB_BLOCK_SIZE, MB_BLOCK_SIZE);
 
-  copy_image_data_16x16(&currImg[currMB->pix_y], currSlice->mb_pred[curPlane], currMB->pix_x, 0);
+  copy_image_data_16x16(&curPixel[currMB->pix_y], currSlice->mb_pred[curPlane], currMB->pix_x, 0);
 
   if ((picture->chroma_format_idc != YUV400) && (picture->chroma_format_idc != YUV444))
   {
@@ -252,7 +252,7 @@ int mb_pred_p_inter8x8 (sMacroblock* currMB, sColorPlane curPlane, sPicture* pic
   int block8x8;   // needed for ABT
   int i=0, j=0,k;
 
-  mSlice* currSlice = currMB->p_Slice;
+  sSlice* currSlice = currMB->p_Slice;
   int smb = currSlice->slice_type == SP_SLICE && (currMB->is_intra_block == FALSE);
 
   set_chroma_vector(currMB);
@@ -287,7 +287,7 @@ int mb_pred_p_inter8x8 (sMacroblock* currMB, sColorPlane curPlane, sPicture* pic
 //{{{
 int mb_pred_p_inter16x16 (sMacroblock* currMB, sColorPlane curPlane, sPicture* picture)
 {
-  mSlice* currSlice = currMB->p_Slice;
+  sSlice* currSlice = currMB->p_Slice;
   int smb = (currSlice->slice_type == SP_SLICE);
 
   set_chroma_vector(currMB);
@@ -302,7 +302,7 @@ int mb_pred_p_inter16x16 (sMacroblock* currMB, sColorPlane curPlane, sPicture* p
 //{{{
 int mb_pred_p_inter16x8 (sMacroblock* currMB, sColorPlane curPlane, sPicture* picture)
 {
-  mSlice* currSlice = currMB->p_Slice;
+  sSlice* currSlice = currMB->p_Slice;
   int smb = (currSlice->slice_type == SP_SLICE);
 
   set_chroma_vector(currMB);
@@ -319,7 +319,7 @@ int mb_pred_p_inter16x8 (sMacroblock* currMB, sColorPlane curPlane, sPicture* pi
 //{{{
 int mb_pred_p_inter8x16 (sMacroblock* currMB, sColorPlane curPlane, sPicture* picture)
 {
-  mSlice* currSlice = currMB->p_Slice;
+  sSlice* currSlice = currMB->p_Slice;
   int smb = (currSlice->slice_type == SP_SLICE);
 
   set_chroma_vector(currMB);
@@ -335,7 +335,7 @@ int mb_pred_p_inter8x16 (sMacroblock* currMB, sColorPlane curPlane, sPicture* pi
 //}}}
 
 //{{{
-static inline void update_neighbor_mvs (sPicMotionParams **motion, const sPicMotionParams *mv_info, int i4)
+static inline void update_neighbor_mvs (sPicMotionParams** motion, const sPicMotionParams *mv_info, int i4)
 {
   (*motion++)[i4 + 1] = *mv_info;
   (*motion  )[i4    ] = *mv_info;
@@ -344,20 +344,20 @@ static inline void update_neighbor_mvs (sPicMotionParams **motion, const sPicMot
 //}}}
 
 //{{{
-int mb_pred_b_d8x8temporal (sMacroblock* currMB, sColorPlane curPlane, sPixel **currImg, sPicture* picture)
+int mb_pred_b_d8x8temporal (sMacroblock* currMB, sColorPlane curPlane, sPixel** curPixel, sPicture* picture)
 {
   short ref_idx;
   int refList;
 
   int k, i, j, i4, j4, j6;
   int block8x8;   // needed for ABT
-  mSlice* currSlice = currMB->p_Slice;
+  sSlice* currSlice = currMB->p_Slice;
   sVidParam* vidParam = currMB->vidParam;
   sPicMotionParams *mv_info = NULL, *colocated = NULL;
 
   int list_offset = currMB->list_offset;
-  sPicture **list0 = currSlice->listX[LIST_0 + list_offset];
-  sPicture **list1 = currSlice->listX[LIST_1 + list_offset];
+  sPicture** list0 = currSlice->listX[LIST_0 + list_offset];
+  sPicture** list1 = currSlice->listX[LIST_1 + list_offset];
 
   set_chroma_vector(currMB);
 
@@ -538,7 +538,7 @@ int mb_pred_b_d8x8temporal (sMacroblock* currMB, sColorPlane curPlane, sPixel **
 
   if (currMB->cbp == 0)
   {
-    copy_image_data_16x16(&currImg[currMB->pix_y], currSlice->mb_pred[curPlane], currMB->pix_x, 0);
+    copy_image_data_16x16(&curPixel[currMB->pix_y], currSlice->mb_pred[curPlane], currMB->pix_x, 0);
 
     if ((picture->chroma_format_idc != YUV400) && (picture->chroma_format_idc != YUV444))
     {
@@ -555,19 +555,19 @@ int mb_pred_b_d8x8temporal (sMacroblock* currMB, sColorPlane curPlane, sPixel **
 }
 //}}}
 //{{{
-int mb_pred_b_d4x4temporal (sMacroblock* currMB, sColorPlane curPlane, sPixel **currImg, sPicture* picture)
+int mb_pred_b_d4x4temporal (sMacroblock* currMB, sColorPlane curPlane, sPixel** curPixel, sPicture* picture)
 {
   short ref_idx;
   int refList;
 
   int k;
   int block8x8;   // needed for ABT
-  mSlice* currSlice = currMB->p_Slice;
+  sSlice* currSlice = currMB->p_Slice;
   sVidParam* vidParam = currMB->vidParam;
 
   int list_offset = currMB->list_offset;
-  sPicture **list0 = currSlice->listX[LIST_0 + list_offset];
-  sPicture **list1 = currSlice->listX[LIST_1 + list_offset];
+  sPicture** list0 = currSlice->listX[LIST_0 + list_offset];
+  sPicture** list1 = currSlice->listX[LIST_1 + list_offset];
 
   set_chroma_vector(currMB);
 
@@ -663,7 +663,7 @@ int mb_pred_b_d4x4temporal (sMacroblock* currMB, sColorPlane curPlane, sPixel **
 
   if (currMB->cbp == 0)
   {
-    copy_image_data_16x16(&currImg[currMB->pix_y], currSlice->mb_pred[curPlane], currMB->pix_x, 0);
+    copy_image_data_16x16(&curPixel[currMB->pix_y], currSlice->mb_pred[curPlane], currMB->pix_x, 0);
 
     if ((picture->chroma_format_idc != YUV400) && (picture->chroma_format_idc != YUV444))
     {
@@ -682,19 +682,19 @@ int mb_pred_b_d4x4temporal (sMacroblock* currMB, sColorPlane curPlane, sPixel **
 //}}}
 
 //{{{
-int mb_pred_b_d8x8spatial (sMacroblock* currMB, sColorPlane curPlane, sPixel **currImg, sPicture* picture)
+int mb_pred_b_d8x8spatial (sMacroblock* currMB, sColorPlane curPlane, sPixel** curPixel, sPicture* picture)
 {
   char l0_rFrame = -1, l1_rFrame = -1;
   MotionVector pmvl0 = zero_mv, pmvl1 = zero_mv;
   int i4, j4;
   int block8x8;
-  mSlice* currSlice = currMB->p_Slice;
+  sSlice* currSlice = currMB->p_Slice;
   sVidParam* vidParam = currMB->vidParam;
 
   sPicMotionParams *mv_info;
   int list_offset = currMB->list_offset;
-  sPicture **list0 = currSlice->listX[LIST_0 + list_offset];
-  sPicture **list1 = currSlice->listX[LIST_1 + list_offset];
+  sPicture** list0 = currSlice->listX[LIST_0 + list_offset];
+  sPicture** list1 = currSlice->listX[LIST_1 + list_offset];
 
   int pred_dir = 0;
 
@@ -889,7 +889,7 @@ int mb_pred_b_d8x8spatial (sMacroblock* currMB, sColorPlane curPlane, sPixel **c
 
   if (currMB->cbp == 0)
   {
-    copy_image_data_16x16(&currImg[currMB->pix_y], currSlice->mb_pred[curPlane], currMB->pix_x, 0);
+    copy_image_data_16x16(&curPixel[currMB->pix_y], currSlice->mb_pred[curPlane], currMB->pix_x, 0);
 
     if ((picture->chroma_format_idc != YUV400) && (picture->chroma_format_idc != YUV444))
      {
@@ -907,19 +907,19 @@ int mb_pred_b_d8x8spatial (sMacroblock* currMB, sColorPlane curPlane, sPixel **c
 }
 //}}}
 //{{{
-int mb_pred_b_d4x4spatial (sMacroblock* currMB, sColorPlane curPlane, sPixel **currImg, sPicture* picture)
+int mb_pred_b_d4x4spatial (sMacroblock* currMB, sColorPlane curPlane, sPixel** curPixel, sPicture* picture)
 {
   char l0_rFrame = -1, l1_rFrame = -1;
   MotionVector pmvl0 = zero_mv, pmvl1 = zero_mv;
   int k;
   int block8x8;
-  mSlice* currSlice = currMB->p_Slice;
+  sSlice* currSlice = currMB->p_Slice;
   sVidParam* vidParam = currMB->vidParam;
 
   sPicMotionParams *mv_info;
   int list_offset = currMB->list_offset;
-  sPicture **list0 = currSlice->listX[LIST_0 + list_offset];
-  sPicture **list1 = currSlice->listX[LIST_1 + list_offset];
+  sPicture** list0 = currSlice->listX[LIST_0 + list_offset];
+  sPicture** list1 = currSlice->listX[LIST_1 + list_offset];
 
   int pred_dir = 0;
 
@@ -1077,7 +1077,7 @@ int mb_pred_b_d4x4spatial (sMacroblock* currMB, sColorPlane curPlane, sPixel **c
 
   if (currMB->cbp == 0)
   {
-    copy_image_data_16x16(&currImg[currMB->pix_y], currSlice->mb_pred[curPlane], currMB->pix_x, 0);
+    copy_image_data_16x16(&curPixel[currMB->pix_y], currSlice->mb_pred[curPlane], currMB->pix_x, 0);
 
     if ((picture->chroma_format_idc != YUV400) && (picture->chroma_format_idc != YUV444))
     {
@@ -1102,12 +1102,12 @@ int mb_pred_b_inter8x8 (sMacroblock* currMB, sColorPlane curPlane, sPicture* pic
   int block_size_x, block_size_y;
   int k;
   int block8x8;   // needed for ABT
-  mSlice* currSlice = currMB->p_Slice;
+  sSlice* currSlice = currMB->p_Slice;
   sVidParam* vidParam = currMB->vidParam;
 
   int list_offset = currMB->list_offset;
-  sPicture **list0 = currSlice->listX[LIST_0 + list_offset];
-  sPicture **list1 = currSlice->listX[LIST_1 + list_offset];
+  sPicture** list0 = currSlice->listX[LIST_0 + list_offset];
+  sPicture** list1 = currSlice->listX[LIST_1 + list_offset];
 
   set_chroma_vector(currMB);
 
@@ -1220,20 +1220,20 @@ int mb_pred_b_inter8x8 (sMacroblock* currMB, sColorPlane curPlane, sPicture* pic
 
 //{{{
 /*!
- ************************************************************************
+** **********************************************************************
  * \brief
  *    Copy IPCM coefficients to decoded picture buffer and set parameters for this MB
  *    (for IPCM CABAC and IPCM CAVLC  28/11/2003)
  *
  * \author
  *    Dong Wang <Dong.Wang@bristol.ac.uk>
- ************************************************************************
+** **********************************************************************
  */
 
 int mb_pred_ipcm (sMacroblock* currMB)
 {
   int i, j, k;
-  mSlice* currSlice = currMB->p_Slice;
+  sSlice* currSlice = currMB->p_Slice;
   sVidParam* vidParam = currMB->vidParam;
   sPicture* picture = currSlice->picture;
 

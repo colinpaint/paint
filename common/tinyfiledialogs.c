@@ -1219,7 +1219,7 @@ static char const * saveFileDialogWinGui8(
 	char * lTmpChar;
 	int i ;
 
-	lFilterPatterns = (wchar_t **) malloc(aNumOfFilterPatterns*sizeof(wchar_t *));
+	lFilterPatterns = (wchar_t** ) malloc(aNumOfFilterPatterns*sizeof(wchar_t *));
 	for (i = 0; i < aNumOfFilterPatterns; i++)
 	{
 		lFilterPatterns[i]  = utf8to16(aFilterPatterns[i]);

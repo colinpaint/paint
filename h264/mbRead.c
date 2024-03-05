@@ -25,7 +25,7 @@ static void read_ipred_8x8_modes_mbaff (sMacroblock* currMB) {
   int bi, bj, bx, by, dec;
   SyntaxElement currSE;
   sDataPartition* dP;
-  mSlice* currSlice = currMB->p_Slice;
+  sSlice* currSlice = currMB->p_Slice;
   const byte* partMap = assignSE2partition[currSlice->dp_mode];
   sVidParam* vidParam = currMB->vidParam;
 
@@ -86,7 +86,7 @@ static void read_ipred_8x8_modes (sMacroblock* currMB)
   int b8, bi, bj, bx, by, dec;
   SyntaxElement currSE;
   sDataPartition *dP;
-  mSlice* currSlice = currMB->p_Slice;
+  sSlice* currSlice = currMB->p_Slice;
   const byte *partMap = assignSE2partition[currSlice->dp_mode];
   sVidParam *vidParam = currMB->vidParam;
 
@@ -157,7 +157,7 @@ static void read_ipred_4x4_modes_mbaff (sMacroblock* currMB)
   int b8,i,j,bi,bj,bx,by;
   SyntaxElement currSE;
   sDataPartition *dP;
-  mSlice* currSlice = currMB->p_Slice;
+  sSlice* currSlice = currMB->p_Slice;
   const byte *partMap = assignSE2partition[currSlice->dp_mode];
   sVidParam *vidParam = currMB->vidParam;
   sBlockPos *PicPos = vidParam->PicPos;
@@ -236,7 +236,7 @@ static void read_ipred_4x4_modes (sMacroblock* currMB) {
 
   SyntaxElement currSE;
   sDataPartition* dP;
-  mSlice* currSlice = currMB->p_Slice;
+  sSlice* currSlice = currMB->p_Slice;
   const byte* partMap = assignSE2partition[currSlice->dp_mode];
   sVidParam* vidParam = currMB->vidParam;
   sBlockPos* PicPos = vidParam->PicPos;
@@ -309,7 +309,7 @@ static void read_ipred_4x4_modes (sMacroblock* currMB) {
 //{{{
 static void read_ipred_modes (sMacroblock* currMB)
 {
-  mSlice* currSlice = currMB->p_Slice;
+  sSlice* currSlice = currMB->p_Slice;
   sPicture* picture = currSlice->picture;
 
   if (currSlice->mb_aff_frame_flag)
@@ -393,7 +393,7 @@ static void init_macroblock_basic (sMacroblock* currMB) {
 static void init_macroblock_direct (sMacroblock* currMB) {
 
   int slice_no = currMB->p_Slice->current_slice_nr;
-  sPicMotionParams **mv_info = &currMB->p_Slice->picture->mv_info[currMB->block_y];
+  sPicMotionParams** mv_info = &currMB->p_Slice->picture->mv_info[currMB->block_y];
 
   set_read_comp_coeff_cabac(currMB);
   set_read_comp_coeff_cavlc(currMB);
@@ -411,8 +411,8 @@ static void init_macroblock_direct (sMacroblock* currMB) {
 static void init_macroblock (sMacroblock* currMB)
 {
   int j, i;
-  mSlice* currSlice = currMB->p_Slice;
-  sPicMotionParams **mv_info = &currSlice->picture->mv_info[currMB->block_y];
+  sSlice* currSlice = currMB->p_Slice;
+  sPicMotionParams** mv_info = &currSlice->picture->mv_info[currMB->block_y];
   int slice_no = currSlice->current_slice_nr;
   // reset vectors and pred. modes
 
@@ -432,7 +432,7 @@ static void init_macroblock (sMacroblock* currMB)
 //{{{
 static void concealIPCMcoeffs (sMacroblock* currMB)
 {
-  mSlice* currSlice = currMB->p_Slice;
+  sSlice* currSlice = currMB->p_Slice;
   sVidParam *vidParam = currMB->vidParam;
   sPicture* picture = currSlice->picture;
   int i, j, k;
@@ -451,7 +451,7 @@ static void concealIPCMcoeffs (sMacroblock* currMB)
 }
 //}}}
 //{{{
-static void init_decoding_engine_IPCM (mSlice* currSlice)
+static void init_decoding_engine_IPCM (sSlice* currSlice)
 {
   Bitstream* currStream;
   int ByteStartPosition;
@@ -478,7 +478,7 @@ static void init_decoding_engine_IPCM (mSlice* currSlice)
 }
 //}}}
 //{{{
-static void read_IPCM_coeffs_from_NAL (mSlice* currSlice, struct datapartition_dec *dP)
+static void read_IPCM_coeffs_from_NAL (sSlice* currSlice, struct datapartition_dec *dP)
 {
   sVidParam *vidParam = currSlice->vidParam;
 
@@ -543,7 +543,7 @@ static void read_IPCM_coeffs_from_NAL (mSlice* currSlice, struct datapartition_d
 //{{{
 static void SetB8Mode (sMacroblock* currMB, int value, int i)
 {
-  mSlice* currSlice = currMB->p_Slice;
+  sSlice* currSlice = currMB->p_Slice;
   static const char p_v2b8 [ 5] = {4, 5, 6, 7, IBLOCK};
   static const char p_v2pd [ 5] = {0, 0, 0, 0, -1};
   static const char b_v2b8 [14] = {0, 4, 4, 4, 5, 6, 5, 6, 5, 6, 7, 7, 7, IBLOCK};
@@ -596,7 +596,7 @@ void skip_macroblock (sMacroblock* currMB) {
   int   b_ref_idx = 0;
   int   img_block_y   = currMB->block_y;
   sVidParam *vidParam = currMB->vidParam;
-  mSlice* currSlice = currMB->p_Slice;
+  sSlice* currSlice = currMB->p_Slice;
   int   list_offset = LIST_0 + currMB->list_offset;
   sPicture* picture = currSlice->picture;
   MotionVector *a_mv = NULL;
@@ -666,7 +666,7 @@ void skip_macroblock (sMacroblock* currMB) {
 
   if (zeroMotionAbove || zeroMotionLeft)
   {
-    sPicMotionParams **dec_mv_info = &picture->mv_info[img_block_y];
+    sPicMotionParams** dec_mv_info = &picture->mv_info[img_block_y];
     sPicture *cur_pic = currSlice->listX[list_offset][0];
     sPicMotionParams *mv_info = NULL;
 
@@ -683,7 +683,7 @@ void skip_macroblock (sMacroblock* currMB) {
   }
   else
   {
-    sPicMotionParams **dec_mv_info = &picture->mv_info[img_block_y];
+    sPicMotionParams** dec_mv_info = &picture->mv_info[img_block_y];
     sPicMotionParams *mv_info = NULL;
     sPicture *cur_pic = currSlice->listX[list_offset][0];
     currMB->GetMVPredictor (currMB, mb, &pred_mv, 0, picture->mv_info, LIST_0, 0, 0, MB_BLOCK_SIZE, MB_BLOCK_SIZE);
@@ -732,17 +732,17 @@ static void read_intra_macroblock (sMacroblock* currMB)
   //--- init macroblock data ---
   init_macroblock(currMB);
 
-  // intra prediction modes for a macroblock 4x4 **********************************************
+  // intra prediction modes for a macroblock 4x4** ********************************************
   read_ipred_modes(currMB);
 
-  // read CBP and Coeffs  ***************************************************************
+  // read CBP and Coeffs ** *************************************************************
   currMB->p_Slice->read_CBP_and_coeffs_from_NAL (currMB);
 }
 //}}}
 //{{{
 static void read_intra4x4_macroblock_cavlc (sMacroblock* currMB, const byte *partMap)
 {
-  mSlice* currSlice = currMB->p_Slice;
+  sSlice* currSlice = currMB->p_Slice;
   //transform size flag for INTRA_4x4 and INTRA_8x8 modes
   if (currSlice->Transform8x8Mode)
   {
@@ -771,17 +771,17 @@ static void read_intra4x4_macroblock_cavlc (sMacroblock* currMB, const byte *par
   //--- init macroblock data ---
   init_macroblock(currMB);
 
-  // intra prediction modes for a macroblock 4x4 **********************************************
+  // intra prediction modes for a macroblock 4x4** ********************************************
   read_ipred_modes(currMB);
 
-  // read CBP and Coeffs  ***************************************************************
+  // read CBP and Coeffs ** *************************************************************
   currSlice->read_CBP_and_coeffs_from_NAL (currMB);
 }
 //}}}
 //{{{
 static void read_intra4x4_macroblock_cabac (sMacroblock* currMB, const byte *partMap)
 {
-  mSlice* currSlice = currMB->p_Slice;
+  sSlice* currSlice = currMB->p_Slice;
 
   //transform size flag for INTRA_4x4 and INTRA_8x8 modes
   if (currSlice->Transform8x8Mode)
@@ -819,17 +819,17 @@ static void read_intra4x4_macroblock_cabac (sMacroblock* currMB, const byte *par
   //--- init macroblock data ---
   init_macroblock(currMB);
 
-  // intra prediction modes for a macroblock 4x4 **********************************************
+  // intra prediction modes for a macroblock 4x4** ********************************************
   read_ipred_modes(currMB);
 
-  // read CBP and Coeffs  ***************************************************************
+  // read CBP and Coeffs ** *************************************************************
   currSlice->read_CBP_and_coeffs_from_NAL (currMB);
 }
 //}}}
 //{{{
 static void read_inter_macroblock (sMacroblock* currMB)
 {
-  mSlice* currSlice = currMB->p_Slice;
+  sSlice* currSlice = currMB->p_Slice;
 
   //init NoMbPartLessThan8x8Flag
   currMB->NoMbPartLessThan8x8Flag = TRUE;
@@ -844,16 +844,16 @@ static void read_inter_macroblock (sMacroblock* currMB)
   //--- init macroblock data ---
   init_macroblock(currMB);
 
-  // read inter frame vector data *********************************************************
+  // read inter frame vector data** *******************************************************
   currSlice->read_motion_info_from_NAL (currMB);
-  // read CBP and Coeffs  ***************************************************************
+  // read CBP and Coeffs ** *************************************************************
   currSlice->read_CBP_and_coeffs_from_NAL (currMB);
 }
 //}}}
 //{{{
 static void read_i_pcm_macroblock (sMacroblock* currMB, const byte *partMap)
 {
-  mSlice* currSlice = currMB->p_Slice;
+  sSlice* currSlice = currMB->p_Slice;
   currMB->NoMbPartLessThan8x8Flag = TRUE;
   currMB->luma_transform_size_8x8_flag = FALSE;
 
@@ -877,7 +877,7 @@ static void read_i_pcm_macroblock (sMacroblock* currMB, const byte *partMap)
 static void read_P8x8_macroblock (sMacroblock* currMB, sDataPartition *dP, SyntaxElement* currSE)
 {
   int i;
-  mSlice* currSlice = currMB->p_Slice;
+  sSlice* currSlice = currMB->p_Slice;
   //====== READ 8x8 SUB-PARTITION MODES (modes of 8x8 blocks) and Intra VBST block modes ======
   currMB->NoMbPartLessThan8x8Flag = TRUE;
   currMB->luma_transform_size_8x8_flag = FALSE;
@@ -902,14 +902,14 @@ static void read_P8x8_macroblock (sMacroblock* currMB, sDataPartition *dP, Synta
     currSlice->intra_block[mb_nr] = 0;
   }
 
-  // read CBP and Coeffs  ***************************************************************
+  // read CBP and Coeffs ** *************************************************************
   currSlice->read_CBP_and_coeffs_from_NAL (currMB);
 }
 //}}}
 //{{{
 static void read_one_macroblock_i_slice_cavlc (sMacroblock* currMB)
 {
-  mSlice* currSlice = currMB->p_Slice;
+  sSlice* currSlice = currMB->p_Slice;
 
   SyntaxElement currSE;
   int mb_nr = currMB->mbAddrX;
@@ -924,7 +924,7 @@ static void read_one_macroblock_i_slice_cavlc (sMacroblock* currMB)
   update_qp(currMB, currSlice->qp);
   currSE.type = SE_MBTYPE;
 
-  //  read MB mode *****************************************************************
+  //  read MB mode** ***************************************************************
   dP = &(currSlice->partArr[partMap[SE_MBTYPE]]);
 
   currSE.mapping = linfo_ue;
@@ -963,7 +963,7 @@ static void read_one_macroblock_i_slice_cavlc (sMacroblock* currMB)
 //{{{
 static void read_one_macroblock_i_slice_cabac (sMacroblock* currMB)
 {
-  mSlice* currSlice = currMB->p_Slice;
+  sSlice* currSlice = currMB->p_Slice;
 
   SyntaxElement currSE;
   int mb_nr = currMB->mbAddrX;
@@ -978,7 +978,7 @@ static void read_one_macroblock_i_slice_cabac (sMacroblock* currMB)
   update_qp(currMB, currSlice->qp);
   currSE.type = SE_MBTYPE;
 
-  //  read MB mode *****************************************************************
+  //  read MB mode** ***************************************************************
   dP = &(currSlice->partArr[partMap[SE_MBTYPE]]);
 
   if (dP->bitstream->ei_flag)
@@ -1052,10 +1052,10 @@ static void read_one_macroblock_i_slice_cabac (sMacroblock* currMB)
     //--- init macroblock data ---
     init_macroblock(currMB);
 
-    // intra prediction modes for a macroblock 4x4 **********************************************
+    // intra prediction modes for a macroblock 4x4** ********************************************
     read_ipred_modes(currMB);
 
-    // read CBP and Coeffs  ***************************************************************
+    // read CBP and Coeffs ** *************************************************************
     currSlice->read_CBP_and_coeffs_from_NAL (currMB);
   }
   else // all other modes
@@ -1066,7 +1066,7 @@ static void read_one_macroblock_i_slice_cabac (sMacroblock* currMB)
 //{{{
 static void read_one_macroblock_p_slice_cavlc (sMacroblock* currMB)
 {
-  mSlice* currSlice = currMB->p_Slice;
+  sSlice* currSlice = currMB->p_Slice;
   SyntaxElement currSE;
   int mb_nr = currMB->mbAddrX;
 
@@ -1083,7 +1083,7 @@ static void read_one_macroblock_p_slice_cavlc (sMacroblock* currMB)
     update_qp(currMB, currSlice->qp);
     currSE.type = SE_MBTYPE;
 
-    //  read MB mode *****************************************************************
+    //  read MB mode** ***************************************************************
     dP = &(currSlice->partArr[partMap[SE_MBTYPE]]);
     currSE.mapping = linfo_ue;
 
@@ -1140,7 +1140,7 @@ static void read_one_macroblock_p_slice_cavlc (sMacroblock* currMB)
     update_qp(currMB, currSlice->qp);
     currSE.type = SE_MBTYPE;
 
-    //  read MB mode *****************************************************************
+    //  read MB mode** ***************************************************************
     dP = &(currSlice->partArr[partMap[SE_MBTYPE]]);
 
     currSE.mapping = linfo_ue;
@@ -1261,7 +1261,7 @@ static void read_one_macroblock_p_slice_cavlc (sMacroblock* currMB)
 //{{{
 static void read_one_macroblock_p_slice_cabac (sMacroblock* currMB)
 {
-  mSlice* currSlice = currMB->p_Slice;
+  sSlice* currSlice = currMB->p_Slice;
   sVidParam *vidParam = currMB->vidParam;
   int mb_nr = currMB->mbAddrX;
   SyntaxElement currSE;
@@ -1278,7 +1278,7 @@ static void read_one_macroblock_p_slice_cabac (sMacroblock* currMB)
     update_qp(currMB, currSlice->qp);
     currSE.type = SE_MBTYPE;
 
-    //  read MB mode *****************************************************************
+    //  read MB mode** ***************************************************************
     dP = &(currSlice->partArr[partMap[SE_MBTYPE]]);
 
     if (dP->bitstream->ei_flag)
@@ -1328,7 +1328,7 @@ static void read_one_macroblock_p_slice_cabac (sMacroblock* currMB)
     update_qp(currMB, currSlice->qp);
     currSE.type = SE_MBTYPE;
 
-    //  read MB mode *****************************************************************
+    //  read MB mode** ***************************************************************
     dP = &(currSlice->partArr[partMap[SE_MBTYPE]]);
 
     if (dP->bitstream->ei_flag)
@@ -1427,7 +1427,7 @@ static void read_one_macroblock_p_slice_cabac (sMacroblock* currMB)
 static void read_one_macroblock_b_slice_cavlc (sMacroblock* currMB) {
 
   sVidParam *vidParam = currMB->vidParam;
-  mSlice* currSlice = currMB->p_Slice;
+  sSlice* currSlice = currMB->p_Slice;
   int mb_nr = currMB->mbAddrX;
   sDataPartition *dP;
   SyntaxElement currSE;
@@ -1441,7 +1441,7 @@ static void read_one_macroblock_b_slice_cavlc (sMacroblock* currMB) {
     update_qp(currMB, currSlice->qp);
     currSE.type = SE_MBTYPE;
 
-    //  read MB mode *****************************************************************
+    //  read MB mode** ***************************************************************
     dP = &(currSlice->partArr[partMap[SE_MBTYPE]]);
     currSE.mapping = linfo_ue;
 
@@ -1490,7 +1490,7 @@ static void read_one_macroblock_b_slice_cavlc (sMacroblock* currMB) {
     update_qp(currMB, currSlice->qp);
     currSE.type = SE_MBTYPE;
 
-    //  read MB mode *****************************************************************
+    //  read MB mode** ***************************************************************
     dP = &(currSlice->partArr[partMap[SE_MBTYPE]]);
     currSE.mapping = linfo_ue;
     if(currSlice->cod_counter == -1) {
@@ -1579,7 +1579,7 @@ static void read_one_macroblock_b_slice_cavlc (sMacroblock* currMB) {
       reset_coeffs(currMB);
       }
     else
-      // read CBP and Coeffs  ***************************************************************
+      // read CBP and Coeffs ** *************************************************************
       currSlice->read_CBP_and_coeffs_from_NAL (currMB);
     }
   else if (currMB->is_intra_block == TRUE) // all other intra modes
@@ -1593,7 +1593,7 @@ static void read_one_macroblock_b_slice_cavlc (sMacroblock* currMB) {
 //{{{
 static void read_one_macroblock_b_slice_cabac (sMacroblock* currMB)
 {
-  mSlice* currSlice = currMB->p_Slice;
+  sSlice* currSlice = currMB->p_Slice;
   sVidParam *vidParam = currMB->vidParam;
   int mb_nr = currMB->mbAddrX;
   SyntaxElement currSE;
@@ -1611,7 +1611,7 @@ static void read_one_macroblock_b_slice_cabac (sMacroblock* currMB)
     update_qp(currMB, currSlice->qp);
     currSE.type = SE_MBTYPE;
 
-    //  read MB mode *****************************************************************
+    //  read MB mode** ***************************************************************
     dP = &(currSlice->partArr[partMap[SE_MBTYPE]]);
 
     if (dP->bitstream->ei_flag)
@@ -1668,7 +1668,7 @@ static void read_one_macroblock_b_slice_cabac (sMacroblock* currMB)
     update_qp(currMB, currSlice->qp);
     currSE.type = SE_MBTYPE;
 
-    //  read MB mode *****************************************************************
+    //  read MB mode** ***************************************************************
     dP = &(currSlice->partArr[partMap[SE_MBTYPE]]);
 
     if (dP->bitstream->ei_flag)
@@ -1791,7 +1791,7 @@ static void read_one_macroblock_b_slice_cabac (sMacroblock* currMB)
     }
     else
     {
-      // read CBP and Coeffs  ***************************************************************
+      // read CBP and Coeffs ** *************************************************************
       currSlice->read_CBP_and_coeffs_from_NAL (currMB);
     }
   }
@@ -1808,7 +1808,7 @@ static void read_one_macroblock_b_slice_cabac (sMacroblock* currMB)
 }
 //}}}
 //{{{
-void setup_read_macroblock (mSlice* currSlice) {
+void setup_read_macroblock (sSlice* currSlice) {
 
   if (currSlice->vidParam->active_pps->entropy_coding_mode_flag == (Boolean) CABAC) {
     switch (currSlice->slice_type) {

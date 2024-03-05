@@ -1,6 +1,6 @@
 //{{{
 /*!
- ************************************************************************
+** **********************************************************************
  *  \file
  *     parset.c
  *  \brief
@@ -9,7 +9,7 @@
  *     Main contributors (see contributors.h for copyright, address and affiliation details)
  *     - Stephan Wenger          <stewe@cs.tu-berlin.de>
  *
- ***********************************************************************
+** *********************************************************************
  */
 //}}}
 //{{{  includes
@@ -1135,7 +1135,7 @@ void ProcessPPS (sVidParam* vidParam, NALU_t *nalu) {
   }
 //}}}
 //{{{
-void UseParameterSet (mSlice* currSlice) {
+void UseParameterSet (sSlice* currSlice) {
 
   sVidParam* vidParam = currSlice->vidParam;
   int PicParsetId = currSlice->pic_parameter_set_id;

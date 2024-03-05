@@ -151,6 +151,6 @@ extern void init_qp_process (sCodingParams *cps);
 extern void free_qp_matrices (sCodingParams *cps);
 
 // For Q-matrix
-extern void assign_quant_params (mSlice* currslice);
-extern void CalculateQuant4x4Param (mSlice* currslice);
-extern void CalculateQuant8x8Param (mSlice* currslice);
+extern void assign_quant_params (sSlice* currslice);
+extern void CalculateQuant4x4Param (sSlice* currslice);
+extern void CalculateQuant8x8Param (sSlice* currslice);

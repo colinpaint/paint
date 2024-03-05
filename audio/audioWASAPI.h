@@ -647,7 +647,7 @@ private:
     //}}}
 
     //{{{
-    HRESULT STDMETHODCALLTYPE QueryInterface (REFIID riid, VOID **requested_interface) {
+    HRESULT STDMETHODCALLTYPE QueryInterface (REFIID riid, VOID** requested_interface) {
 
       if (IID_IUnknown == riid)
         *requested_interface = (IUnknown*)this;

@@ -75,7 +75,7 @@ static void alloc_video_params (sVidParam** vidParam) {
 
   (*vidParam)->global_init_done[0] = (*vidParam)->global_init_done[1] = 0;
 
-  if (((*vidParam)->ppSliceList = (mSlice**)calloc(MAX_NUM_DECSLICES, sizeof(mSlice *))) == NULL)
+  if (((*vidParam)->ppSliceList = (sSlice**)calloc(MAX_NUM_DECSLICES, sizeof(sSlice *))) == NULL)
     no_mem_exit ("alloc_video_params: vidParam->ppSliceList");
 
   (*vidParam)->iNumOfSlicesAllocated = MAX_NUM_DECSLICES;
@@ -87,7 +87,7 @@ static void alloc_video_params (sVidParam** vidParam) {
 }
 //}}}
 //{{{
-static void alloc_params (InputParameters **p_Inp ) {
+static void alloc_params (InputParameters** p_Inp ) {
   if ((*p_Inp = (InputParameters*) calloc(1, sizeof(InputParameters)))==NULL)
     no_mem_exit ("alloc_params: p_Inp");
   }
@@ -111,14 +111,14 @@ static int alloc_decoder (sDecoderParams** decoder) {
 //}}}
 
 //{{{
-mSlice* malloc_slice (InputParameters* p_Inp, sVidParam* vidParam) {
+sSlice* malloc_slice (InputParameters* p_Inp, sVidParam* vidParam) {
 
   int i, j, memory_size = 0;
-  mSlice *currSlice;
+  sSlice *currSlice;
 
-  currSlice = (mSlice *) calloc(1, sizeof(mSlice));
+  currSlice = (sSlice *) calloc(1, sizeof(sSlice));
   if ( currSlice  == NULL) {
-    snprintf(errortext, ET_SIZE, "Memory allocation for mSlice datastruct in NAL-mode failed");
+    snprintf(errortext, ET_SIZE, "Memory allocation for sSlice datastruct in NAL-mode failed");
     error(errortext,100);
     }
 
@@ -160,7 +160,7 @@ mSlice* malloc_slice (InputParameters* p_Inp, sVidParam* vidParam) {
   }
 //}}}
 //{{{
-static void free_slice (mSlice *currSlice) {
+static void free_slice (sSlice *currSlice) {
 
   if (currSlice->slice_type != I_SLICE && currSlice->slice_type != SI_SLICE)
     free_ref_pic_list_reordering_buffer (currSlice);

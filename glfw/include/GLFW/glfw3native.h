@@ -24,7 +24,7 @@
  * 3. This notice may not be removed or altered from any source
  *    distribution.
  *
- *************************************************************************/
+** ***********************************************************************/
 
 #ifndef _glfw3_native_h_
 #define _glfw3_native_h_
@@ -36,7 +36,7 @@ extern "C" {
 
 /*************************************************************************
  * Doxygen documentation
- *************************************************************************/
+** ***********************************************************************/
 
 /*! @file glfw3native.h
  *  @brief The header of the native access functions.
@@ -47,7 +47,7 @@ extern "C" {
 /*! @defgroup native Native access
  *  @brief Functions related to accessing native handles.
  *
- *  **By using the native access functions you assert that you know what you're
+ * ** By using the native access functions you assert that you know what you're
  *  doing and how to fix problems caused by using them.  If you don't, you
  *  shouldn't be using them.**
  *
@@ -89,7 +89,7 @@ extern "C" {
 
 /*************************************************************************
  * System headers and types
- *************************************************************************/
+** ***********************************************************************/
 
 #if !defined(GLFW_NATIVE_INCLUDE_NONE)
 
@@ -160,7 +160,7 @@ extern "C" {
 
 /*************************************************************************
  * Functions
- *************************************************************************/
+** ***********************************************************************/
 
 #if defined(GLFW_EXPOSE_NATIVE_WIN32)
 /*! @brief Returns the adapter device name of the specified monitor.

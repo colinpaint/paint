@@ -15,7 +15,7 @@
 // Note that all NA values are filled with 0
 //{{{
 /*!
- *************************************************************************************
+** ***********************************************************************************
  * \brief
  *    read_ue_v, reads an ue(v) syntax element, the length in bits is stored in
  *    the global gDecoder->UsedBits variable
@@ -29,7 +29,7 @@
  * \return
  *    the value of the coded syntax element
  *
- *************************************************************************************
+** ***********************************************************************************
  */
 int read_ue_v (char *tracestring, Bitstream *bitstream, int *used_bits)
 {
@@ -46,7 +46,7 @@ int read_ue_v (char *tracestring, Bitstream *bitstream, int *used_bits)
 //}}}
 //{{{
 /*!
- *************************************************************************************
+** ***********************************************************************************
  * \brief
  *    read_ue_v, reads an se(v) syntax element, the length in bits is stored in
  *    the global gDecoder->UsedBits variable
@@ -60,7 +60,7 @@ int read_ue_v (char *tracestring, Bitstream *bitstream, int *used_bits)
  * \return
  *    the value of the coded syntax element
  *
- *************************************************************************************
+** ***********************************************************************************
  */
 int read_se_v (char *tracestring, Bitstream *bitstream, int *used_bits)
 {
@@ -77,7 +77,7 @@ int read_se_v (char *tracestring, Bitstream *bitstream, int *used_bits)
 //}}}
 //{{{
 /*!
- *************************************************************************************
+** ***********************************************************************************
  * \brief
  *    read_ue_v, reads an u(v) syntax element, the length in bits is stored in
  *    the global gDecoder->UsedBits variable
@@ -94,7 +94,7 @@ int read_se_v (char *tracestring, Bitstream *bitstream, int *used_bits)
  * \return
  *    the value of the coded syntax element
  *
- *************************************************************************************
+** ***********************************************************************************
  */
 int read_u_v (int LenInBits, char*tracestring, Bitstream *bitstream, int *used_bits)
 {
@@ -114,7 +114,7 @@ int read_u_v (int LenInBits, char*tracestring, Bitstream *bitstream, int *used_b
 //}}}
 //{{{
 /*!
- *************************************************************************************
+** ***********************************************************************************
  * \brief
  *    read_i_v, reads an i(v) syntax element, the length in bits is stored in
  *    the global gDecoder->UsedBits variable
@@ -131,7 +131,7 @@ int read_u_v (int LenInBits, char*tracestring, Bitstream *bitstream, int *used_b
  * \return
  *    the value of the coded syntax element
  *
- *************************************************************************************
+** ***********************************************************************************
  */
 int read_i_v (int LenInBits, char*tracestring, Bitstream *bitstream, int *used_bits)
 {
@@ -154,7 +154,7 @@ int read_i_v (int LenInBits, char*tracestring, Bitstream *bitstream, int *used_b
 //}}}
 //{{{
 /*!
- *************************************************************************************
+** ***********************************************************************************
  * \brief
  *    read_ue_v, reads an u(1) syntax element, the length in bits is stored in
  *    the global gDecoder->UsedBits variable
@@ -168,7 +168,7 @@ int read_i_v (int LenInBits, char*tracestring, Bitstream *bitstream, int *used_b
  * \return
  *    the value of the coded syntax element
  *
- *************************************************************************************
+** ***********************************************************************************
  */
 Boolean read_u_1 (char *tracestring, Bitstream *bitstream, int *used_bits)
 {
@@ -178,14 +178,14 @@ Boolean read_u_1 (char *tracestring, Bitstream *bitstream, int *used_bits)
 
 //{{{
 /*!
- ************************************************************************
+** **********************************************************************
  * \brief
  *    mapping rule for ue(v) syntax elements
  * \par Input:
  *    lenght and info
  * \par Output:
  *    number in the code table
- ************************************************************************
+** **********************************************************************
  */
 void linfo_ue (int len, int info, int *value1, int *dummy)
 {
@@ -195,14 +195,14 @@ void linfo_ue (int len, int info, int *value1, int *dummy)
 //}}}
 //{{{
 /*!
- ************************************************************************
+** **********************************************************************
  * \brief
  *    mapping rule for se(v) syntax elements
  * \par Input:
  *    lenght and info
  * \par Output:
  *    signed mvd
- ************************************************************************
+** **********************************************************************
  */
 void linfo_se (int len,  int info, int *value1, int *dummy)
 {
@@ -215,12 +215,12 @@ void linfo_se (int len,  int info, int *value1, int *dummy)
 //}}}
 //{{{
 /*!
- ************************************************************************
+** **********************************************************************
  * \par Input:
  *    length and info
  * \par Output:
  *    cbp (intra)
- ************************************************************************
+** **********************************************************************
  */
 void linfo_cbp_intra_normal (int len,int info,int *cbp, int *dummy)
 {
@@ -232,12 +232,12 @@ void linfo_cbp_intra_normal (int len,int info,int *cbp, int *dummy)
 //}}}
 //{{{
 /*!
- ************************************************************************
+** **********************************************************************
  * \par Input:
  *    length and info
  * \par Output:
  *    cbp (intra)
- ************************************************************************
+** **********************************************************************
  */
 void linfo_cbp_intra_other (int len,int info,int *cbp, int *dummy)
 {
@@ -249,12 +249,12 @@ void linfo_cbp_intra_other (int len,int info,int *cbp, int *dummy)
 //}}}
 //{{{
 /*!
- ************************************************************************
+** **********************************************************************
  * \par Input:
  *    length and info
  * \par Output:
  *    cbp (inter)
- ************************************************************************
+** **********************************************************************
  */
 void linfo_cbp_inter_normal (int len,int info,int *cbp, int *dummy)
 {
@@ -266,12 +266,12 @@ void linfo_cbp_inter_normal (int len,int info,int *cbp, int *dummy)
 //}}}
 //{{{
 /*!
- ************************************************************************
+** **********************************************************************
  * \par Input:
  *    length and info
  * \par Output:
  *    cbp (inter)
- ************************************************************************
+** **********************************************************************
  */
 void linfo_cbp_inter_other (int len,int info,int *cbp, int *dummy)
 {
@@ -283,12 +283,12 @@ void linfo_cbp_inter_other (int len,int info,int *cbp, int *dummy)
 //}}}
 //{{{
 /*!
- ************************************************************************
+** **********************************************************************
  * \par Input:
  *    length and info
  * \par Output:
  *    level, run
- ************************************************************************
+** **********************************************************************
  */
 void linfo_levrun_inter (int len, int info, int *level, int *irun)
 {
@@ -318,12 +318,12 @@ void linfo_levrun_inter (int len, int info, int *level, int *irun)
 //}}}
 //{{{
 /*!
- ************************************************************************
+** **********************************************************************
  * \par Input:
  *    length and info
  * \par Output:
  *    level, run
- ************************************************************************
+** **********************************************************************
  */
 void linfo_levrun_c2x2 (int len, int info, int *level, int *irun)
 {
@@ -351,11 +351,11 @@ void linfo_levrun_c2x2 (int len, int info, int *level, int *irun)
 
 //{{{
 /*!
- ************************************************************************
+** **********************************************************************
  * \brief
  *    read next UVLC codeword from UVLC-partition and
  *    map it to the corresponding syntax element
- ************************************************************************
+** **********************************************************************
  */
 int readSyntaxElement_VLC (SyntaxElement *sym, Bitstream *currStream)
 {
@@ -376,11 +376,11 @@ int readSyntaxElement_VLC (SyntaxElement *sym, Bitstream *currStream)
 //}}}
 //{{{
 /*!
- ************************************************************************
+** **********************************************************************
  * \brief
  *    read next UVLC codeword from UVLC-partition and
  *    map it to the corresponding syntax element
- ************************************************************************
+** **********************************************************************
  */
 int readSyntaxElement_UVLC (sMacroblock *currMB, SyntaxElement *sym, struct datapartition_dec *dP)
 {
@@ -389,11 +389,11 @@ int readSyntaxElement_UVLC (sMacroblock *currMB, SyntaxElement *sym, struct data
 //}}}
 //{{{
 /*!
- ************************************************************************
+** **********************************************************************
  * \brief
  *    read next VLC codeword for 4x4 Intra Prediction Mode and
  *    map it to the corresponding Intra Prediction Direction
- ************************************************************************
+** **********************************************************************
  */
 int readSyntaxElement_Intra4x4PredictionMode (SyntaxElement *sym, Bitstream   *currStream)
 {
@@ -445,7 +445,7 @@ int GetVLCSymbol_IntraMode (byte buffer[],int totbitoffset,int *info, int byteco
 //}}}
 //{{{
 /*!
- ************************************************************************
+** **********************************************************************
  * \brief
  *    test if bit buffer contains only stop bit
  *
@@ -457,7 +457,7 @@ int GetVLCSymbol_IntraMode (byte buffer[],int totbitoffset,int *info, int byteco
  *    buffer length
  * \return
  *    true if more bits available
- ************************************************************************
+** **********************************************************************
  */
 int more_rbsp_data (byte buffer[],int totbitoffset,int bytecount)
 {
@@ -493,12 +493,12 @@ int more_rbsp_data (byte buffer[],int totbitoffset,int bytecount)
 //}}}
 //{{{
 /*!
- ************************************************************************
+** **********************************************************************
  * \brief
  *    Check if there are symbols for the next MB
- ************************************************************************
+** **********************************************************************
  */
-int uvlc_startcode_follows(mSlice *currSlice, int dummy)
+int uvlc_startcode_follows(sSlice *currSlice, int dummy)
 {
   byte            dp_Nr = assignSE2partition[currSlice->dp_mode][SE_MBTYPE];
   sDataPartition     *dP = &(currSlice->partArr[dp_Nr]);
@@ -510,7 +510,7 @@ int uvlc_startcode_follows(mSlice *currSlice, int dummy)
 //}}}
 //{{{
 /*!
- ************************************************************************
+** **********************************************************************
  * \brief
  *  read one exp-golomb VLC symbol
  *
@@ -524,7 +524,7 @@ int uvlc_startcode_follows(mSlice *currSlice, int dummy)
  *    buffer length
  * \return
  *    bits read
- ************************************************************************
+** **********************************************************************
  */
 int GetVLCSymbol (byte buffer[],int totbitoffset,int *info, int bytecount)
 {
@@ -571,7 +571,7 @@ int GetVLCSymbol (byte buffer[],int totbitoffset,int *info, int bytecount)
 
 //{{{
 /*!
- ************************************************************************
+** **********************************************************************
  * \brief
  *  Reads bits from the bitstream buffer (Threshold based)
  *
@@ -580,7 +580,7 @@ int GetVLCSymbol (byte buffer[],int totbitoffset,int *info, int bytecount)
  * \param numbits
  *    number of bits to read
  *
- ************************************************************************
+** **********************************************************************
  */
 
 //static inline int ShowBitsThres (int inf, int bitcount, int numbits)
@@ -605,10 +605,10 @@ static inline int ShowBitsThres (int inf, int numbits)
 //}}}
 //{{{
 /*!
- ************************************************************************
+** **********************************************************************
  * \brief
  *    code from bitstream (2d tables)
- ************************************************************************
+** **********************************************************************
  */
 
 static int code_from_bitstream_2d (SyntaxElement *sym,
@@ -657,10 +657,10 @@ static int code_from_bitstream_2d (SyntaxElement *sym,
 
 //{{{
 /*!
- ************************************************************************
+** **********************************************************************
  * \brief
  *    read FLC codeword from UVLC-partition
- ************************************************************************
+** **********************************************************************
  */
 int readSyntaxElement_FLC (SyntaxElement *sym, Bitstream *currStream)
 {
@@ -681,10 +681,10 @@ int readSyntaxElement_FLC (SyntaxElement *sym, Bitstream *currStream)
 //}}}
 //{{{
 /*!
- ************************************************************************
+** **********************************************************************
  * \brief
  *    read NumCoeff/TrailingOnes codeword from UVLC-partition
- ************************************************************************
+** **********************************************************************
  */
 
 int readSyntaxElement_NumCoeffTrailingOnes (SyntaxElement *sym,
@@ -786,10 +786,10 @@ int readSyntaxElement_NumCoeffTrailingOnes (SyntaxElement *sym,
 //}}}
 //{{{
 /*!
- ************************************************************************
+** **********************************************************************
  * \brief
  *    read NumCoeff/TrailingOnes codeword from UVLC-partition ChromaDC
- ************************************************************************
+** **********************************************************************
  */
 int readSyntaxElement_NumCoeffTrailingOnesChromaDC (sVidParam* vidParam, SyntaxElement *sym,  Bitstream *currStream)
 {
@@ -854,10 +854,10 @@ int readSyntaxElement_NumCoeffTrailingOnesChromaDC (sVidParam* vidParam, SyntaxE
 //}}}
 //{{{
 /*!
- ************************************************************************
+** **********************************************************************
  * \brief
  *    read Level VLC0 codeword from UVLC-partition
- ************************************************************************
+** **********************************************************************
  */
 int readSyntaxElement_Level_VLC0 (SyntaxElement *sym, Bitstream *currStream)
 {
@@ -913,10 +913,10 @@ int readSyntaxElement_Level_VLC0 (SyntaxElement *sym, Bitstream *currStream)
 //}}}
 //{{{
 /*!
- ************************************************************************
+** **********************************************************************
  * \brief
  *    read Level VLC codeword from UVLC-partition
- ************************************************************************
+** **********************************************************************
  */
 int readSyntaxElement_Level_VLCN (SyntaxElement *sym, int vlc, Bitstream *currStream)
 {
@@ -988,10 +988,10 @@ int readSyntaxElement_Level_VLCN (SyntaxElement *sym, int vlc, Bitstream *currSt
 //}}}
 //{{{
 /*!
- ************************************************************************
+** **********************************************************************
  * \brief
  *    read Total Zeros codeword from UVLC-partition
- ************************************************************************
+** **********************************************************************
  */
 int readSyntaxElement_TotalZeros (SyntaxElement *sym,  Bitstream *currStream)
 {
@@ -1053,10 +1053,10 @@ int readSyntaxElement_TotalZeros (SyntaxElement *sym,  Bitstream *currStream)
 //}}}
 //{{{
 /*!
- ************************************************************************
+** **********************************************************************
  * \brief
  *    read Total Zeros Chroma DC codeword from UVLC-partition
- ************************************************************************
+** **********************************************************************
  */
 int readSyntaxElement_TotalZerosChromaDC (sVidParam* vidParam, SyntaxElement *sym,  Bitstream *currStream)
 {
@@ -1144,10 +1144,10 @@ int readSyntaxElement_TotalZerosChromaDC (sVidParam* vidParam, SyntaxElement *sy
 //}}}
 //{{{
 /*!
- ************************************************************************
+** **********************************************************************
  * \brief
  *    read  Run codeword from UVLC-partition
- ************************************************************************
+** **********************************************************************
  */
 int readSyntaxElement_Run (SyntaxElement *sym, Bitstream *currStream)
 {
@@ -1192,7 +1192,7 @@ int readSyntaxElement_Run (SyntaxElement *sym, Bitstream *currStream)
 
 //{{{
 /*!
- ************************************************************************
+** **********************************************************************
  * \brief
  *  Reads bits from the bitstream buffer
  *
@@ -1207,7 +1207,7 @@ int readSyntaxElement_Run (SyntaxElement *sym, Bitstream *currStream)
  * \param numbits
  *    number of bits to read
  *
- ************************************************************************
+** **********************************************************************
  */
 int GetBits (byte buffer[],int totbitoffset,int *info, int bitcount,
              int numbits)
@@ -1245,7 +1245,7 @@ int GetBits (byte buffer[],int totbitoffset,int *info, int bitcount,
 //}}}
 //{{{
 /*!
- ************************************************************************
+** **********************************************************************
  * \brief
  *  Reads bits from the bitstream buffer
  *
@@ -1258,7 +1258,7 @@ int GetBits (byte buffer[],int totbitoffset,int *info, int bitcount,
  * \param numbits
  *    number of bits to read
  *
- ************************************************************************
+** **********************************************************************
  */
 
 int ShowBits (byte buffer[],int totbitoffset,int bitcount, int numbits)

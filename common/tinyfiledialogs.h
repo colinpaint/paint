@@ -185,7 +185,7 @@ char const * tinyfd_colorChooser(
 		/* returns NULL on cancel */
 
 
-/************ NOT CROSS PLATFORM SECTION STARTS HERE ************************/
+/************ NOT CROSS PLATFORM SECTION STARTS HERE** **********************/
 #ifdef _WIN32
 #ifndef TINYFD_NOLIB
 

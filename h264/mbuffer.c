@@ -309,8 +309,8 @@ static int is_long_term_reference (sFrameStore* fs) {
 //}}}
 
 //{{{
-void gen_pic_list_from_frame_list (sPictureStructure currStructure, sFrameStore **fs_list,
-                                   int list_idx, sPicture **list, char *list_size, int long_term) {
+void gen_pic_list_from_frame_list (sPictureStructure currStructure, sFrameStore** fs_list,
+                                   int list_idx, sPicture** list, char *list_size, int long_term) {
 
   int top_idx = 0;
   int bot_idx = 0;
@@ -376,7 +376,7 @@ void gen_pic_list_from_frame_list (sPictureStructure currStructure, sFrameStore 
 //}}}
 //{{{
 
-sPicture*  get_long_term_pic (mSlice* currSlice, sDPB* dpb, int LongtermPicNum) {
+sPicture*  get_long_term_pic (sSlice* currSlice, sDPB* dpb, int LongtermPicNum) {
 
   for (uint32 i = 0; i < dpb->ltref_frames_in_buffer; i++) {
     if (currSlice->structure==FRAME) {
@@ -431,10 +431,10 @@ void update_ltref_list (sDPB* dpb)
 
 //{{{
 /*!
- ************************************************************************
+** **********************************************************************
  * \brief
  *    Calculate picNumX
- ************************************************************************
+** **********************************************************************
  */
 static int get_pic_num_x (sPicture *p, int difference_of_pic_nums_minus1)
 {
@@ -450,10 +450,10 @@ static int get_pic_num_x (sPicture *p, int difference_of_pic_nums_minus1)
 //}}}
 //{{{
 /*!
- ************************************************************************
+** **********************************************************************
  * \brief
  *    Adaptive Memory Management: Mark short term picture unused
- ************************************************************************
+** **********************************************************************
  */
 void mm_unmark_short_term_for_reference (sDPB* dpb, sPicture *p, int difference_of_pic_nums_minus1)
 {
@@ -510,10 +510,10 @@ void mm_unmark_short_term_for_reference (sDPB* dpb, sPicture *p, int difference_
 //}}}
 //{{{
 /*!
- ************************************************************************
+** **********************************************************************
  * \brief
  *    Adaptive Memory Management: Mark long term picture unused
- ************************************************************************
+** **********************************************************************
  */
 void mm_unmark_long_term_for_reference (sDPB* dpb, sPicture *p, int long_term_pic_num)
 {
@@ -1343,7 +1343,7 @@ void unmark_for_long_term_reference (sFrameStore* fs) {
 //}}}
 
 //{{{
-void update_pic_num (mSlice* currSlice) {
+void update_pic_num (sSlice* currSlice) {
 
   unsigned int i;
   sVidParam* vidParam = currSlice->vidParam;
@@ -1408,14 +1408,14 @@ void update_pic_num (mSlice* currSlice) {
   }
 //}}}
 //{{{
-void init_lists_i_slice (mSlice* currSlice) {
+void init_lists_i_slice (sSlice* currSlice) {
 
   currSlice->listXsize[0] = 0;
   currSlice->listXsize[1] = 0;
   }
 //}}}
 //{{{
-void init_lists_p_slice (mSlice* currSlice) {
+void init_lists_p_slice (sSlice* currSlice) {
 
   sVidParam* vidParam = currSlice->vidParam;
   sDPB* dpb = currSlice->dpb;
@@ -1425,8 +1425,8 @@ void init_lists_p_slice (mSlice* currSlice) {
   int list0idx = 0;
   int listltidx = 0;
 
-  sFrameStore **fs_list0;
-  sFrameStore **fs_listlt;
+  sFrameStore** fs_list0;
+  sFrameStore** fs_listlt;
 
   if (currSlice->structure == FRAME) {
     for (i=0; i<dpb->ref_frames_in_buffer; i++) {
@@ -1494,7 +1494,7 @@ void init_lists_p_slice (mSlice* currSlice) {
   }
 //}}}
 //{{{
-void init_lists_b_slice (mSlice* currSlice) {
+void init_lists_b_slice (sSlice* currSlice) {
 
   sVidParam* vidParam = currSlice->vidParam;
   sDPB* dpb = currSlice->dpb;
@@ -1506,12 +1506,12 @@ void init_lists_b_slice (mSlice* currSlice) {
   int list0idx_1 = 0;
   int listltidx = 0;
 
-  sFrameStore **fs_list0;
-  sFrameStore **fs_list1;
-  sFrameStore **fs_listlt;
+  sFrameStore** fs_list0;
+  sFrameStore** fs_list1;
+  sFrameStore** fs_listlt;
 
   {
-    // B-mSlice
+    // B-sSlice
     if (currSlice->structure == FRAME) {
       for (i = 0; i < dpb->ref_frames_in_buffer; i++)
         if (dpb->fs_ref[i]->is_used==3)
@@ -1642,7 +1642,7 @@ void init_lists_b_slice (mSlice* currSlice) {
 //}}}
 //{{{
 /*!
- ************************************************************************
+** **********************************************************************
  * \brief
  *    Initialize listX[2..5] from lists 0 and 1
  *    listX[2]: list0 for current_field==top
@@ -1650,9 +1650,9 @@ void init_lists_b_slice (mSlice* currSlice) {
  *    listX[4]: list0 for current_field==bottom
  *    listX[5]: list1 for current_field==bottom
  *
- ************************************************************************
+** **********************************************************************
  */
-void init_mbaff_lists (sVidParam* vidParam, mSlice* currSlice)
+void init_mbaff_lists (sVidParam* vidParam, sSlice* currSlice)
 {
   unsigned j;
   int i;
@@ -1681,7 +1681,7 @@ void init_mbaff_lists (sVidParam* vidParam, mSlice* currSlice)
   }
 //}}}
 //{{{
-sPicture* get_short_term_pic (mSlice* currSlice, sDPB* dpb, int picNum) {
+sPicture* get_short_term_pic (sSlice* currSlice, sDPB* dpb, int picNum) {
 
   unsigned i;
 
@@ -1706,8 +1706,8 @@ sPicture* get_short_term_pic (mSlice* currSlice, sDPB* dpb, int picNum) {
 //}}}
 
 //{{{
-static void reorder_short_term (mSlice* currSlice, int cur_list, int num_ref_idx_lX_active_minus1, int picNumLX, int *refIdxLX) {
-  sPicture **RefPicListX = currSlice->listX[cur_list];
+static void reorder_short_term (sSlice* currSlice, int cur_list, int num_ref_idx_lX_active_minus1, int picNumLX, int *refIdxLX) {
+  sPicture** RefPicListX = currSlice->listX[cur_list];
   int cIdx, nIdx;
 
   sPicture *picLX;
@@ -1730,7 +1730,7 @@ static void reorder_short_term (mSlice* currSlice, int cur_list, int num_ref_idx
 }
 //}}}
 //{{{
-static void reorder_long_term (mSlice* currSlice, sPicture **RefPicListX, int num_ref_idx_lX_active_minus1, int LongTermPicNum, int *refIdxLX)
+static void reorder_long_term (sSlice* currSlice, sPicture** RefPicListX, int num_ref_idx_lX_active_minus1, int LongTermPicNum, int *refIdxLX)
 {
   int cIdx, nIdx;
 
@@ -2116,7 +2116,7 @@ void flush_dpb (sDPB* dpb)
 //}}}
 
 //{{{
-void reorder_ref_pic_list (mSlice* currSlice, int cur_list) {
+void reorder_ref_pic_list (sSlice* currSlice, int cur_list) {
 
   int *modification_of_pic_nums_idc = currSlice->modification_of_pic_nums_idc[cur_list];
   int *abs_diff_pic_num_minus1 = currSlice->abs_diff_pic_num_minus1[cur_list];
@@ -2440,7 +2440,7 @@ void dpb_combine_field (sVidParam* vidParam, sFrameStore *fs)
 }
 //}}}
 //{{{
-void alloc_ref_pic_list_reordering_buffer (mSlice* currSlice)
+void alloc_ref_pic_list_reordering_buffer (sSlice* currSlice)
 {
   if (currSlice->slice_type != I_SLICE && currSlice->slice_type != SI_SLICE) {
     int size = currSlice->num_ref_idx_active[LIST_0] + 1;
@@ -2474,7 +2474,7 @@ void alloc_ref_pic_list_reordering_buffer (mSlice* currSlice)
 }
 //}}}
 //{{{
-void free_ref_pic_list_reordering_buffer (mSlice* currSlice)
+void free_ref_pic_list_reordering_buffer (sSlice* currSlice)
 {
   if (currSlice->modification_of_pic_nums_idc[LIST_0])
     free(currSlice->modification_of_pic_nums_idc[LIST_0]);
@@ -2500,7 +2500,7 @@ void free_ref_pic_list_reordering_buffer (mSlice* currSlice)
 }
 //}}}
 //{{{
-void fill_frame_num_gap (sVidParam* vidParam, mSlice* currSlice) {
+void fill_frame_num_gap (sVidParam* vidParam, sSlice* currSlice) {
 
   sSPSrbsp *active_sps = vidParam->active_sps;
 
@@ -2548,7 +2548,7 @@ void fill_frame_num_gap (sVidParam* vidParam, mSlice* currSlice) {
   }
 //}}}
 //{{{
-void compute_colocated (mSlice* currSlice, sPicture **listX[6]) {
+void compute_colocated (sSlice* currSlice, sPicture** listX[6]) {
 
   int i, j;
 

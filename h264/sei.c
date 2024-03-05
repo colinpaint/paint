@@ -118,7 +118,7 @@ static void interpret_spare_pic (byte* payload, int size, sVidParam* vidParam )
   int ref_area_indicator;
 
   int m, n, left, right, top, bottom,directx, directy;
-  byte ***map;
+  byte** *map;
 
   buf = malloc (sizeof(Bitstream));
   buf->bitstream_length = size;
@@ -738,7 +738,7 @@ static void interpret_recovery_point_info (byte* payload, int size, sVidParam* v
   }
 //}}}
 //{{{
-static void interpret_dec_ref_pic_marking_repetition_info (byte* payload, int size, sVidParam* vidParam, mSlice *pSlice )
+static void interpret_dec_ref_pic_marking_repetition_info (byte* payload, int size, sVidParam* vidParam, sSlice *pSlice )
 {
   int original_idr_flag, original_frame_num;
   int original_field_pic_flag, original_bottom_field_flag;
@@ -1225,7 +1225,7 @@ static void interpret_frame_packing_arrangement_info (byte* payload, int size, s
 static void interpret_post_filter_hints_info (byte* payload, int size, sVidParam* vidParam )
 {
   unsigned int filter_hint_size_y, filter_hint_size_x, filter_hint_type, color_component, cx, cy, additional_extension_flag;
-  int ***filter_hint;
+  int** *filter_hint;
 
   Bitstream* buf = malloc(sizeof(Bitstream));
   buf->bitstream_length = size;
@@ -1313,7 +1313,7 @@ static void interpret_green_metadata_info (byte* payload, int size, sVidParam* v
 //}}}
 
 //{{{
-void InterpretSEIMessage (byte* msg, int size, sVidParam* vidParam, mSlice *pSlice) {
+void InterpretSEIMessage (byte* msg, int size, sVidParam* vidParam, sSlice *pSlice) {
 
   int offset = 1;
   do {

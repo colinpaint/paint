@@ -95,12 +95,12 @@ static const byte* pos2ctx_last    [] = {pos2ctx_last4x4, pos2ctx_last4x4, pos2c
 
 //{{{
 /*!
- ************************************************************************
+** **********************************************************************
  * \brief
  *    decoding of unary binarization using one or 2 distinct
  *    models for the first and all remaining bins; no terminating
  *    "0" for max_symbol
- ***********************************************************************
+** *********************************************************************
  */
 static unsigned int unary_bin_max_decode (DecodingEnvironmentPtr dep_dp,
                                   BiContextTypePtr ctx,
@@ -131,11 +131,11 @@ static unsigned int unary_bin_max_decode (DecodingEnvironmentPtr dep_dp,
 //}}}
 //{{{
 /*!
- ************************************************************************
+** **********************************************************************
  * \brief
  *    decoding of unary binarization using one or 2 distinct
  *    models for the first and all remaining bins
- ***********************************************************************
+** *********************************************************************
  */
 static unsigned int unary_bin_decode (DecodingEnvironmentPtr dep_dp,
                                      BiContextTypePtr ctx,
@@ -162,11 +162,11 @@ static unsigned int unary_bin_decode (DecodingEnvironmentPtr dep_dp,
 //}}}
 //{{{
 /*!
- ************************************************************************
+** **********************************************************************
  * \brief
  *    Exp Golomb binarization and decoding of a symbol
  *    with prob. of 0.5
- ************************************************************************
+** **********************************************************************
  */
 static unsigned int exp_golomb_decode_eq_prob (DecodingEnvironmentPtr dep_dp,
                                               int k)
@@ -195,10 +195,10 @@ static unsigned int exp_golomb_decode_eq_prob (DecodingEnvironmentPtr dep_dp,
 //}}}
 //{{{
 /*!
- ************************************************************************
+** **********************************************************************
  * \brief
  *    Exp-Golomb decoding for LEVELS
- ***********************************************************************
+** *********************************************************************
  */
 static unsigned int unary_exp_golomb_level_decode (DecodingEnvironmentPtr dep_dp,
                                                   BiContextTypePtr ctx)
@@ -230,10 +230,10 @@ static unsigned int unary_exp_golomb_level_decode (DecodingEnvironmentPtr dep_dp
 //}}}
 //{{{
 /*!
- ************************************************************************
+** **********************************************************************
  * \brief
  *    Exp-Golomb decoding for Motion Vectors
- ***********************************************************************
+** *********************************************************************
  */
 static unsigned int unary_exp_golomb_mv_decode (DecodingEnvironmentPtr dep_dp,
                                                BiContextTypePtr ctx,
@@ -271,7 +271,7 @@ static unsigned int unary_exp_golomb_mv_decode (DecodingEnvironmentPtr dep_dp,
 
 //{{{
 /*!
- ************************************************************************
+** **********************************************************************
  * \brief
  *    finding end of a slice in case this is not the end of a frame
  *
@@ -279,9 +279,9 @@ static unsigned int unary_exp_golomb_mv_decode (DecodingEnvironmentPtr dep_dp,
  * problem or whether it introduces one in some cases :-(  Anyway,
  * with this change the bit stream format works with CABAC again.
  * StW, 8.7.02
- ************************************************************************
+** **********************************************************************
  */
-int cabac_startcode_follows (mSlice* currSlice, int eos_bit)
+int cabac_startcode_follows (sSlice* currSlice, int eos_bit)
 {
   unsigned int  bit;
 
@@ -324,7 +324,7 @@ void CheckAvailabilityOfNeighborsCABAC (sMacroblock* currMB)
 }
 //}}}
 //{{{
-void cabac_new_slice (mSlice* currSlice)
+void cabac_new_slice (sSlice* currSlice)
 {
   currSlice->last_dquant = 0;
 }
@@ -332,12 +332,12 @@ void cabac_new_slice (mSlice* currSlice)
 
 //{{{
 /*!
- ************************************************************************
+** **********************************************************************
  * \brief
  *    Allocation of contexts models for the motion info
  *    used for arithmetic decoding
  *
- ************************************************************************
+** **********************************************************************
  */
 MotionInfoContexts* create_contexts_MotionInfo()
 {
@@ -352,11 +352,11 @@ MotionInfoContexts* create_contexts_MotionInfo()
 //}}}
 //{{{
 /*!
- ************************************************************************
+** **********************************************************************
  * \brief
  *    Allocates of contexts models for the texture info
  *    used for arithmetic decoding
- ************************************************************************
+** **********************************************************************
  */
 TextureInfoContexts* create_contexts_TextureInfo()
 {
@@ -371,11 +371,11 @@ TextureInfoContexts* create_contexts_TextureInfo()
 //}}}
 //{{{
 /*!
- ************************************************************************
+** **********************************************************************
  * \brief
  *    Frees the memory of the contexts models
  *    used for arithmetic decoding of the motion info.
- ************************************************************************
+** **********************************************************************
  */
 void delete_contexts_MotionInfo (MotionInfoContexts *deco_ctx)
 {
@@ -387,11 +387,11 @@ void delete_contexts_MotionInfo (MotionInfoContexts *deco_ctx)
 //}}}
 //{{{
 /*!
- ************************************************************************
+** **********************************************************************
  * \brief
  *    Frees the memory of the contexts models
  *    used for arithmetic decoding of the texture info.
- ************************************************************************
+** **********************************************************************
  */
 void delete_contexts_TextureInfo (TextureInfoContexts *deco_ctx)
 {
@@ -407,7 +407,7 @@ void readFieldModeInfo_CABAC (sMacroblock* currMB,
                              SyntaxElement *se,
                              DecodingEnvironmentPtr dep_dp)
 {
-  mSlice* currSlice = currMB->p_Slice;
+  sSlice* currSlice = currMB->p_Slice;
   //sVidParam* vidParam = currMB->vidParam;
   MotionInfoContexts *ctx  = currSlice->mot_ctx;
   int a = currMB->mbAvailA ? currSlice->mb_data[currMB->mbAddrA].mb_field : 0;
@@ -419,7 +419,7 @@ void readFieldModeInfo_CABAC (sMacroblock* currMB,
 //}}}
 
 //{{{
-int check_next_mb_and_get_field_mode_CABAC_p_slice (mSlice* currSlice,
+int check_next_mb_and_get_field_mode_CABAC_p_slice (sSlice* currSlice,
                                            SyntaxElement *se,
                                            sDataPartition  *act_dp)
 {
@@ -505,7 +505,7 @@ int check_next_mb_and_get_field_mode_CABAC_p_slice (mSlice* currSlice,
 }
 //}}}
 //{{{
-int check_next_mb_and_get_field_mode_CABAC_b_slice (mSlice* currSlice,
+int check_next_mb_and_get_field_mode_CABAC_b_slice (sSlice* currSlice,
                                            SyntaxElement *se,
                                            sDataPartition  *act_dp)
 {
@@ -596,18 +596,18 @@ int check_next_mb_and_get_field_mode_CABAC_b_slice (mSlice* currSlice,
 
 //{{{
 /*!
- ************************************************************************
+** **********************************************************************
  * \brief
  *    This function is used to arithmetically decode the motion
  *    vector data of a B-frame MB.
- ************************************************************************
+** **********************************************************************
  */
 void read_MVD_CABAC (sMacroblock* currMB,
                     SyntaxElement *se,
                     DecodingEnvironmentPtr dep_dp)
 {
   int *mb_size = currMB->vidParam->mb_size[IS_LUMA];
-  mSlice* currSlice = currMB->p_Slice;
+  sSlice* currSlice = currMB->p_Slice;
   MotionInfoContexts *ctx = currSlice->mot_ctx;
   int i = currMB->subblock_x;
   int j = currMB->subblock_y;
@@ -656,18 +656,18 @@ void read_MVD_CABAC (sMacroblock* currMB,
 //}}}
 //{{{
 /*!
- ************************************************************************
+** **********************************************************************
  * \brief
  *    This function is used to arithmetically decode the motion
  *    vector data of a B-frame MB.
- ************************************************************************
+** **********************************************************************
  */
 void read_mvd_CABAC_mbaff (sMacroblock* currMB,
                     SyntaxElement *se,
                     DecodingEnvironmentPtr dep_dp)
 {
   sVidParam* vidParam = currMB->vidParam;
-  mSlice* currSlice = currMB->p_Slice;
+  sSlice* currSlice = currMB->p_Slice;
   MotionInfoContexts *ctx = currSlice->mot_ctx;
   int i = currMB->subblock_x;
   int j = currMB->subblock_y;
@@ -730,16 +730,16 @@ void read_mvd_CABAC_mbaff (sMacroblock* currMB,
 //}}}
 //{{{
 /*!
- ************************************************************************
+** **********************************************************************
  * \brief
  *    This function is used to arithmetically decode the 8x8 block type.
- ************************************************************************
+** **********************************************************************
  */
 void readB8_typeInfo_CABAC_p_slice (sMacroblock* currMB,
                                     SyntaxElement *se,
                                     DecodingEnvironmentPtr dep_dp)
 {
-  mSlice* currSlice = currMB->p_Slice;
+  sSlice* currSlice = currMB->p_Slice;
   int act_sym = 0;
 
   MotionInfoContexts *ctx = currSlice->mot_ctx;
@@ -764,16 +764,16 @@ void readB8_typeInfo_CABAC_p_slice (sMacroblock* currMB,
 //}}}
 //{{{
 /*!
- ************************************************************************
+** **********************************************************************
  * \brief
  *    This function is used to arithmetically decode the 8x8 block type.
- ************************************************************************
+** **********************************************************************
  */
 void readB8_typeInfo_CABAC_b_slice (sMacroblock* currMB,
                                     SyntaxElement *se,
                                     DecodingEnvironmentPtr dep_dp)
 {
-  mSlice* currSlice = currMB->p_Slice;
+  sSlice* currSlice = currMB->p_Slice;
   int act_sym = 0;
 
   MotionInfoContexts *ctx = currSlice->mot_ctx;
@@ -825,11 +825,11 @@ void readB8_typeInfo_CABAC_b_slice (sMacroblock* currMB,
 //}}}
 //{{{
 /*!
- ************************************************************************
+** **********************************************************************
  * \brief
  *    This function is used to arithmetically decode the macroblock
  *    type info of a given MB.
- ************************************************************************
+** **********************************************************************
  */
 void read_skip_flag_CABAC_p_slice (sMacroblock* currMB,
                                   SyntaxElement *se,
@@ -849,11 +849,11 @@ void read_skip_flag_CABAC_p_slice (sMacroblock* currMB,
 //}}}
 //{{{
 /*!
- ************************************************************************
+** **********************************************************************
  * \brief
  *    This function is used to arithmetically decode the macroblock
  *    type info of a given MB.
- ************************************************************************
+** **********************************************************************
  */
 void read_skip_flag_CABAC_b_slice (sMacroblock* currMB,
                                   SyntaxElement *se,
@@ -885,7 +885,7 @@ void readMB_transform_size_flag_CABAC (sMacroblock* currMB,
                                       SyntaxElement *se,
                                       DecodingEnvironmentPtr dep_dp)
 {
-  mSlice* currSlice = currMB->p_Slice;
+  sSlice* currSlice = currMB->p_Slice;
   TextureInfoContexts*ctx = currSlice->tex_ctx;
 
   int b = (currMB->mb_up   == NULL) ? 0 : currMB->mb_up->luma_transform_size_8x8_flag;
@@ -899,17 +899,17 @@ void readMB_transform_size_flag_CABAC (sMacroblock* currMB,
 //}}}
 //{{{
 /*!
- ************************************************************************
+** **********************************************************************
  * \brief
  *    This function is used to arithmetically decode the macroblock
  *    type info of a given MB.
- ************************************************************************
+** **********************************************************************
  */
 void readMB_typeInfo_CABAC_i_slice (sMacroblock* currMB,
                            SyntaxElement *se,
                            DecodingEnvironmentPtr dep_dp)
 {
-  mSlice* currSlice = currMB->p_Slice;
+  sSlice* currSlice = currMB->p_Slice;
   MotionInfoContexts *ctx = currSlice->mot_ctx;
 
   int a = 0, b = 0;
@@ -1044,17 +1044,17 @@ void readMB_typeInfo_CABAC_i_slice (sMacroblock* currMB,
 //}}}
 //{{{
 /*!
- ************************************************************************
+** **********************************************************************
  * \brief
  *    This function is used to arithmetically decode the macroblock
  *    type info of a given MB.
- ************************************************************************
+** **********************************************************************
  */
 void readMB_typeInfo_CABAC_p_slice (sMacroblock* currMB,
                            SyntaxElement *se,
                            DecodingEnvironmentPtr dep_dp)
 {
-  mSlice* currSlice = currMB->p_Slice;
+  sSlice* currSlice = currMB->p_Slice;
   MotionInfoContexts *ctx = currSlice->mot_ctx;
 
   int act_ctx;
@@ -1131,17 +1131,17 @@ void readMB_typeInfo_CABAC_p_slice (sMacroblock* currMB,
 //}}}
 //{{{
 /*!
- ************************************************************************
+** **********************************************************************
  * \brief
  *    This function is used to arithmetically decode the macroblock
  *    type info of a given MB.
- ************************************************************************
+** **********************************************************************
  */
 void readMB_typeInfo_CABAC_b_slice (sMacroblock* currMB,
                            SyntaxElement *se,
                            DecodingEnvironmentPtr dep_dp)
 {
-  mSlice* currSlice = currMB->p_Slice;
+  sSlice* currSlice = currMB->p_Slice;
   MotionInfoContexts *ctx = currSlice->mot_ctx;
 
   int a = 0, b = 0;
@@ -1255,17 +1255,17 @@ void readMB_typeInfo_CABAC_b_slice (sMacroblock* currMB,
 
 //{{{
 /*!
- ************************************************************************
+** **********************************************************************
  * \brief
  *    This function is used to arithmetically decode a pair of
  *    intra prediction modes of a given MB.
- ************************************************************************
+** **********************************************************************
  */
 void readIntraPredMode_CABAC (sMacroblock* currMB,
                               SyntaxElement *se,
                               DecodingEnvironmentPtr dep_dp)
 {
-  mSlice* currSlice = currMB->p_Slice;
+  sSlice* currSlice = currMB->p_Slice;
   TextureInfoContexts *ctx     = currSlice->tex_ctx;
   // use_most_probable_mode
   int act_sym = biari_decode_symbol(dep_dp, ctx->ipr_contexts);
@@ -1283,17 +1283,17 @@ void readIntraPredMode_CABAC (sMacroblock* currMB,
 //}}}
 //{{{
 /*!
- ************************************************************************
+** **********************************************************************
  * \brief
  *    This function is used to arithmetically decode the reference
  *    parameter of a given MB.
- ************************************************************************
+** **********************************************************************
  */
 void readRefFrame_CABAC (sMacroblock* currMB,
                         SyntaxElement *se,
                         DecodingEnvironmentPtr dep_dp)
 {
-  mSlice* currSlice = currMB->p_Slice;
+  sSlice* currSlice = currMB->p_Slice;
   sVidParam* vidParam = currMB->vidParam;
   sPicture* picture = currSlice->picture;
   MotionInfoContexts *ctx = currSlice->mot_ctx;
@@ -1352,17 +1352,17 @@ void readRefFrame_CABAC (sMacroblock* currMB,
 //}}}
 //{{{
 /*!
- ************************************************************************
+** **********************************************************************
  * \brief
  *    This function is used to arithmetically decode the delta qp
  *     of a given MB.
- ************************************************************************
+** **********************************************************************
  */
 void read_dQuant_CABAC (sMacroblock* currMB,
                        SyntaxElement *se,
                        DecodingEnvironmentPtr dep_dp)
 {
-  mSlice* currSlice = currMB->p_Slice;
+  sSlice* currSlice = currMB->p_Slice;
   MotionInfoContexts *ctx = currSlice->mot_ctx;
   int *dquant = &se->value1;
   int act_ctx = ((currSlice->last_dquant != 0) ? 1 : 0);
@@ -1385,11 +1385,11 @@ void read_dQuant_CABAC (sMacroblock* currMB,
 //}}}
 //{{{
 /*!
- ************************************************************************
+** **********************************************************************
  * \brief
  *    This function is used to arithmetically decode the coded
  *    block pattern of a given MB.
- ************************************************************************
+** **********************************************************************
  */
 void read_CBP_CABAC (sMacroblock* currMB,
                     SyntaxElement *se,
@@ -1397,7 +1397,7 @@ void read_CBP_CABAC (sMacroblock* currMB,
 {
   sVidParam* vidParam = currMB->vidParam;
   sPicture* picture = currMB->p_Slice->picture;
-  mSlice* currSlice = currMB->p_Slice;
+  sSlice* currSlice = currMB->p_Slice;
   TextureInfoContexts *ctx = currSlice->tex_ctx;
   sMacroblock *neighborMB = NULL;
 
@@ -1515,17 +1515,17 @@ void read_CBP_CABAC (sMacroblock* currMB,
 //}}}
 //{{{
 /*!
- ************************************************************************
+** **********************************************************************
  * \brief
  *    This function is used to arithmetically decode the chroma
  *    intra prediction mode of a given MB.
- ************************************************************************
+** **********************************************************************
  */
 void readCIPredMode_CABAC (sMacroblock* currMB,
                           SyntaxElement *se,
                           DecodingEnvironmentPtr dep_dp)
 {
-  mSlice* currSlice = currMB->p_Slice;
+  sSlice* currSlice = currMB->p_Slice;
   TextureInfoContexts *ctx = currSlice->tex_ctx;
   int                 *act_sym  = &se->value1;
 
@@ -1545,16 +1545,16 @@ void readCIPredMode_CABAC (sMacroblock* currMB,
 
 //{{{
 /*!
- ************************************************************************
+** **********************************************************************
  * \brief
  *    Read CBP4-BIT
- ************************************************************************
+** **********************************************************************
 */
 static int read_and_store_CBP_block_bit_444 (sMacroblock* currMB,
                                              DecodingEnvironmentPtr  dep_dp,
                                              int                     type)
 {
-  mSlice* currSlice = currMB->p_Slice;
+  sSlice* currSlice = currMB->p_Slice;
   sVidParam* vidParam = currMB->vidParam;
   sPicture* picture = currSlice->picture;
   TextureInfoContexts *tex_ctx = currSlice->tex_ctx;
@@ -1815,16 +1815,16 @@ static inline int set_cbp_bit_ac(sMacroblock *neighbor_mb, PixelPos *block)
 //}}}
 //{{{
 /*!
- ************************************************************************
+** **********************************************************************
  * \brief
  *    Read CBP4-BIT
- ************************************************************************
+** **********************************************************************
  */
 static int read_and_store_CBP_block_bit_normal (sMacroblock* currMB,
                                                 DecodingEnvironmentPtr  dep_dp,
                                                 int                     type)
 {
-  mSlice* currSlice = currMB->p_Slice;
+  sSlice* currSlice = currMB->p_Slice;
   sVidParam* vidParam = currMB->vidParam;
   TextureInfoContexts *tex_ctx = currSlice->tex_ctx;
   int cbp_bit     = 1;  // always one for 8x8 mode
@@ -2120,7 +2120,7 @@ static int read_and_store_CBP_block_bit_normal (sMacroblock* currMB,
 }
 //}}}
 //{{{
-void set_read_and_store_CBP (sMacroblock **currMB, int chroma_format_idc)
+void set_read_and_store_CBP (sMacroblock** currMB, int chroma_format_idc)
 {
   if (chroma_format_idc == YUV444)
     (*currMB)->read_and_store_CBP_block_bit = read_and_store_CBP_block_bit_444;
@@ -2131,17 +2131,17 @@ void set_read_and_store_CBP (sMacroblock **currMB, int chroma_format_idc)
 
 //{{{
 /*!
- ************************************************************************
+** **********************************************************************
  * \brief
  *    Read Significance MAP
- ************************************************************************
+** **********************************************************************
  */
 static int read_significance_map (sMacroblock* currMB,
                                   DecodingEnvironmentPtr  dep_dp,
                                   int                     type,
                                   int                     coeff[])
 {
-  mSlice* currSlice = currMB->p_Slice;
+  sSlice* currSlice = currMB->p_Slice;
   int               fld    = ( currSlice->structure!=FRAME || currMB->mb_field );
   const byte *pos2ctx_Map = (fld) ? pos2ctx_map_int[type] : pos2ctx_map[type];
   const byte *pos2ctx_Last = pos2ctx_last[type];
@@ -2192,10 +2192,10 @@ static int read_significance_map (sMacroblock* currMB,
 //}}}
 //{{{
 /*!
- ************************************************************************
+** **********************************************************************
  * \brief
  *    Read Levels
- ************************************************************************
+** **********************************************************************
  */
 static void read_significant_coefficients (DecodingEnvironmentPtr  dep_dp,
                                            TextureInfoContexts    *tex_ctx,
@@ -2238,16 +2238,16 @@ static void read_significant_coefficients (DecodingEnvironmentPtr  dep_dp,
 //}}}
 //{{{
 /*!
- ************************************************************************
+** **********************************************************************
  * \brief
  *    Read Block-Transform Coefficients
- ************************************************************************
+** **********************************************************************
  */
 void readRunLevel_CABAC (sMacroblock* currMB,
                          SyntaxElement  *se,
                          DecodingEnvironmentPtr dep_dp)
 {
-  mSlice* currSlice = currMB->p_Slice;
+  sSlice* currSlice = currMB->p_Slice;
   int  *coeff_ctr = &currSlice->coeff_ctr;
   int  *coeff = currSlice->coeff;
 
@@ -2284,10 +2284,10 @@ void readRunLevel_CABAC (sMacroblock* currMB,
 //}}}
 //{{{
 /*!
- ************************************************************************
+** **********************************************************************
  * \brief
  *    arithmetic decoding
- ************************************************************************
+** **********************************************************************
  */
 int readSyntaxElement_CABAC (sMacroblock* currMB, SyntaxElement *se, sDataPartition *this_dataPart)
 {
@@ -2305,12 +2305,12 @@ int readSyntaxElement_CABAC (sMacroblock* currMB, SyntaxElement *se, sDataPartit
 
 //{{{
 /*!
- ************************************************************************
+** **********************************************************************
  * \brief
  *    Read I_PCM macroblock
- ************************************************************************
+** **********************************************************************
 */
-void readIPCM_CABAC (mSlice* currSlice, struct datapartition_dec *dP)
+void readIPCM_CABAC (sSlice* currSlice, struct datapartition_dec *dP)
 {
   sVidParam* vidParam = currSlice->vidParam;
   sPicture* picture = currSlice->picture;

@@ -52,10 +52,10 @@
 //}}}
 //{{{
 /*!
- *************************************************************************************
+** ***********************************************************************************
  * \brief
  *    Prefiltering for Intra8x8 prediction
- *************************************************************************************
+** ***********************************************************************************
  */
 static void LowPassForIntra8x8Pred (sPixel *PredPel, int block_up_left, int block_up, int block_left)
 {
@@ -115,10 +115,10 @@ static void LowPassForIntra8x8Pred (sPixel *PredPel, int block_up_left, int bloc
 //}}}
 //{{{
 /*!
- *************************************************************************************
+** ***********************************************************************************
  * \brief
  *    Prefiltering for Intra8x8 prediction (Horizontal)
- *************************************************************************************
+** ***********************************************************************************
  */
 static void LowPassForIntra8x8PredHor (sPixel *PredPel, int block_up_left, int block_up, int block_left)
 {
@@ -165,10 +165,10 @@ static void LowPassForIntra8x8PredHor (sPixel *PredPel, int block_up_left, int b
 //}}}
 //{{{
 /*!
- *************************************************************************************
+** ***********************************************************************************
  * \brief
  *    Prefiltering for Intra8x8 prediction (Vertical)
- *************************************************************************************
+** ***********************************************************************************
  */
 static void LowPassForIntra8x8PredVer (sPixel *PredPel, int block_up_left, int block_up, int block_left)
 {
@@ -214,14 +214,14 @@ static void LowPassForIntra8x8PredVer (sPixel *PredPel, int block_up_left, int b
 //}}}
 //{{{
 /*!
- ***********************************************************************
+** *********************************************************************
  * \brief
  *    makes and returns 8x8 DC prediction mode
  *
  * \return
  *    DECODING_OK   decoding of intra prediction mode was successful            \n
  *
- ***********************************************************************
+** *********************************************************************
  */
 static int intra8x8_dc_pred (sMacroblock *currMB,
                                    sColorPlane pl,         //!< current image plane
@@ -231,11 +231,11 @@ static int intra8x8_dc_pred (sMacroblock *currMB,
   int i,j;
   int s0 = 0;
   sPixel PredPel[25];  // array of predictor pels
-  mSlice *currSlice = currMB->p_Slice;
+  sSlice *currSlice = currMB->p_Slice;
   sVidParam* vidParam = currMB->vidParam;
 
   sPicture* picture = currSlice->picture;
-  sPixel **imgY = (pl) ? picture->imgUV[pl - 1] : picture->imgY; // For MB level frame/field coding tools -- set default to imgY
+  sPixel** imgY = (pl) ? picture->imgUV[pl - 1] : picture->imgY; // For MB level frame/field coding tools -- set default to imgY
 
   PixelPos pix_a;
   PixelPos pix_b, pix_c, pix_d;
@@ -245,7 +245,7 @@ static int intra8x8_dc_pred (sMacroblock *currMB,
   int block_available_up_left;
   int block_available_up_right;
 
-  sPixel **mpr = currSlice->mb_pred[pl];
+  sPixel** mpr = currSlice->mb_pred[pl];
   int *mb_size = vidParam->mb_size[IS_LUMA];
 
   for (int i=0; i<25;i++) PredPel[i]=0;
@@ -301,7 +301,7 @@ static int intra8x8_dc_pred (sMacroblock *currMB,
 
   if (block_available_left)
   {
-    sPixel **img_pred = &imgY[pix_a.pos_y];
+    sPixel** img_pred = &imgY[pix_a.pos_y];
     int pos_x = pix_a.pos_x;
     P_Q = *(*(img_pred ++) + pos_x);
     P_R = *(*(img_pred ++) + pos_x);
@@ -360,26 +360,26 @@ static int intra8x8_dc_pred (sMacroblock *currMB,
 //}}}
 //{{{
 /*!
- ***********************************************************************
+** *********************************************************************
  * \brief
  *    makes and returns 8x8 vertical prediction mode
  *
  * \return
  *    DECODING_OK   decoding of intra prediction mode was successful            \n
  *
- ***********************************************************************
+** *********************************************************************
  */
 static int intra8x8_vert_pred (sMacroblock *currMB,
                                      sColorPlane pl,         //!< current image plane
                                      int ioff,              //!< pixel offset X within MB
                                      int joff)              //!< pixel offset Y within MB
 {
-  mSlice *currSlice = currMB->p_Slice;
+  sSlice *currSlice = currMB->p_Slice;
   sVidParam* vidParam = currMB->vidParam;
 
   int i;
   sPixel PredPel[25];  // array of predictor pels
-  sPixel **imgY = (pl) ? currSlice->picture->imgUV[pl - 1] : currSlice->picture->imgY; // For MB level frame/field coding tools -- set default to imgY
+  sPixel** imgY = (pl) ? currSlice->picture->imgUV[pl - 1] : currSlice->picture->imgY; // For MB level frame/field coding tools -- set default to imgY
 
   PixelPos pix_a;
   PixelPos pix_b, pix_c, pix_d;
@@ -390,7 +390,7 @@ static int intra8x8_vert_pred (sMacroblock *currMB,
   int block_available_up_right;
 
 
-  sPixel **mpr = currSlice->mb_pred[pl];
+  sPixel** mpr = currSlice->mb_pred[pl];
   int *mb_size = vidParam->mb_size[IS_LUMA];
 
   for (int i=0; i<25;i++) PredPel[i]=0;
@@ -468,27 +468,27 @@ static int intra8x8_vert_pred (sMacroblock *currMB,
 //}}}
 //{{{
 /*!
- ***********************************************************************
+** *********************************************************************
  * \brief
  *    makes and returns 8x8 horizontal prediction mode
  *
  * \return
  *    DECODING_OK   decoding of intra prediction mode was successful            \n
  *
- ***********************************************************************
+** *********************************************************************
  */
 static int intra8x8_hor_pred (sMacroblock *currMB,
                                     sColorPlane pl,         //!< current image plane
                                     int ioff,              //!< pixel offset X within MB
                                     int joff)              //!< pixel offset Y within MB
 {
-  mSlice *currSlice = currMB->p_Slice;
+  sSlice *currSlice = currMB->p_Slice;
   sVidParam* vidParam = currMB->vidParam;
 
 
   int j;
   sPixel PredPel[25];  // array of predictor pels
-  sPixel **imgY = (pl) ? currSlice->picture->imgUV[pl - 1] : currSlice->picture->imgY; // For MB level frame/field coding tools -- set default to imgY
+  sPixel** imgY = (pl) ? currSlice->picture->imgUV[pl - 1] : currSlice->picture->imgY; // For MB level frame/field coding tools -- set default to imgY
 
   PixelPos pix_a;
   PixelPos pix_b, pix_d;
@@ -504,7 +504,7 @@ static int intra8x8_hor_pred (sMacroblock *currMB,
   int ipos4 = ioff + 4, ipos5 = ioff + 5, ipos6 = ioff + 6, ipos7 = ioff + 7;
 #endif
   int jpos;
-  sPixel **mpr = currSlice->mb_pred[pl];
+  sPixel** mpr = currSlice->mb_pred[pl];
   int *mb_size = vidParam->mb_size[IS_LUMA];
 
   getNonAffNeighbour(currMB, ioff - 1, joff    , mb_size, &pix_a);
@@ -530,7 +530,7 @@ static int intra8x8_hor_pred (sMacroblock *currMB,
   // form predictor pels
   if (block_available_left)
   {
-    sPixel **img_pred = &imgY[pix_a.pos_y];
+    sPixel** img_pred = &imgY[pix_a.pos_y];
     int pos_x = pix_a.pos_x;
     P_Q = *(*(img_pred ++) + pos_x);
     P_R = *(*(img_pred ++) + pos_x);
@@ -579,26 +579,26 @@ static int intra8x8_hor_pred (sMacroblock *currMB,
 //}}}
 //{{{
 /*!
- ***********************************************************************
+** *********************************************************************
  * \brief
  *    makes and returns 8x8 diagonal down right prediction mode
  *
  * \return
  *    DECODING_OK   decoding of intra prediction mode was successful            \n
  *
- ***********************************************************************
+** *********************************************************************
  */
 static int intra8x8_diag_down_right_pred (sMacroblock *currMB,
                                                 sColorPlane pl,         //!< current image plane
                                                 int ioff,              //!< pixel offset X within MB
                                                 int joff)              //!< pixel offset Y within MB
 {
-  mSlice *currSlice = currMB->p_Slice;
+  sSlice *currSlice = currMB->p_Slice;
   sVidParam* vidParam = currMB->vidParam;
 
   sPixel PredPel[25];    // array of predictor pels
   sPixel PredArray[16];  // array of final prediction values
-  sPixel **imgY = (pl) ? currSlice->picture->imgUV[pl - 1] : currSlice->picture->imgY; // For MB level frame/field coding tools -- set default to imgY
+  sPixel** imgY = (pl) ? currSlice->picture->imgUV[pl - 1] : currSlice->picture->imgY; // For MB level frame/field coding tools -- set default to imgY
 
   PixelPos pix_a;
   PixelPos pix_b, pix_c, pix_d;
@@ -609,7 +609,7 @@ static int intra8x8_diag_down_right_pred (sMacroblock *currMB,
   int block_available_up_right;
 
   sPixel *pred_pels;
-  sPixel **mb_pred = &currSlice->mb_pred[pl][joff];
+  sPixel** mb_pred = &currSlice->mb_pred[pl][joff];
   int *mb_size = vidParam->mb_size[IS_LUMA];
 
   for (int i=0; i<25;i++) PredPel[i]=0;
@@ -668,7 +668,7 @@ static int intra8x8_diag_down_right_pred (sMacroblock *currMB,
 
   if (block_available_left)
   {
-    sPixel **img_pred = &imgY[pix_a.pos_y];
+    sPixel** img_pred = &imgY[pix_a.pos_y];
     int pos_x = pix_a.pos_x;
     P_Q = *(*(img_pred ++) + pos_x);
     P_R = *(*(img_pred ++) + pos_x);
@@ -728,27 +728,27 @@ static int intra8x8_diag_down_right_pred (sMacroblock *currMB,
 //}}}
 //{{{
 /*!
- ***********************************************************************
+** *********************************************************************
  * \brief
  *    makes and returns 8x8 diagonal down left prediction mode
  *
  * \return
  *    DECODING_OK   decoding of intra prediction mode was successful            \n
  *
- ***********************************************************************
+** *********************************************************************
  */
 static int intra8x8_diag_down_left_pred (sMacroblock *currMB,
                                                sColorPlane pl,         //!< current image plane
                                                int ioff,              //!< pixel offset X within MB
                                                int joff)              //!< pixel offset Y within MB
 {
-  mSlice *currSlice = currMB->p_Slice;
+  sSlice *currSlice = currMB->p_Slice;
   sVidParam* vidParam = currMB->vidParam;
 
   sPixel PredPel[25];    // array of predictor pels
   sPixel PredArray[16];  // array of final prediction values
   sPixel *Pred = &PredArray[0];
-  sPixel **imgY = (pl) ? currSlice->picture->imgUV[pl - 1] : currSlice->picture->imgY; // For MB level frame/field coding tools -- set default to imgY
+  sPixel** imgY = (pl) ? currSlice->picture->imgUV[pl - 1] : currSlice->picture->imgY; // For MB level frame/field coding tools -- set default to imgY
 
   PixelPos pix_a;
   PixelPos pix_b, pix_c, pix_d;
@@ -760,7 +760,7 @@ static int intra8x8_diag_down_left_pred (sMacroblock *currMB,
 
   for (int i=0; i<25;i++) PredPel[i]=0;
 
-  sPixel **mb_pred = &currSlice->mb_pred[pl][joff];
+  sPixel** mb_pred = &currSlice->mb_pred[pl][joff];
   int *mb_size = vidParam->mb_size[IS_LUMA];
 
   getNonAffNeighbour(currMB, ioff - 1, joff    , mb_size, &pix_a);
@@ -817,7 +817,7 @@ static int intra8x8_diag_down_left_pred (sMacroblock *currMB,
 
   if (block_available_left)
   {
-    sPixel **img_pred = &imgY[pix_a.pos_y];
+    sPixel** img_pred = &imgY[pix_a.pos_y];
     int pos_x = pix_a.pos_x;
     P_Q = *(*(img_pred ++) + pos_x);
     P_R = *(*(img_pred ++) + pos_x);
@@ -877,26 +877,26 @@ static int intra8x8_diag_down_left_pred (sMacroblock *currMB,
 //}}}
 //{{{
 /*!
- ***********************************************************************
+** *********************************************************************
  * \brief
  *    makes and returns 8x8 vertical right prediction mode
  *
  * \return
  *    DECODING_OK   decoding of intra prediction mode was successful            \n
  *
- ***********************************************************************
+** *********************************************************************
  */
 static int intra8x8_vert_right_pred (sMacroblock *currMB,
                                            sColorPlane pl,         //!< current image plane
                                            int ioff,              //!< pixel offset X within MB
                                            int joff)              //!< pixel offset Y within MB
 {
-  mSlice *currSlice = currMB->p_Slice;
+  sSlice *currSlice = currMB->p_Slice;
   sVidParam* vidParam = currMB->vidParam;
 
   sPixel PredPel[25];  // array of predictor pels
   sPixel PredArray[22];  // array of final prediction values
-  sPixel **imgY = (pl) ? currSlice->picture->imgUV[pl - 1] : currSlice->picture->imgY; // For MB level frame/field coding tools -- set default to imgY
+  sPixel** imgY = (pl) ? currSlice->picture->imgUV[pl - 1] : currSlice->picture->imgY; // For MB level frame/field coding tools -- set default to imgY
 
   PixelPos pix_a;
   PixelPos pix_b, pix_c, pix_d;
@@ -909,7 +909,7 @@ static int intra8x8_vert_right_pred (sMacroblock *currMB,
   for (int i=0; i<25;i++) PredPel[i]=0;
 
   sPixel *pred_pels;
-  sPixel **mb_pred = &currSlice->mb_pred[pl][joff];
+  sPixel** mb_pred = &currSlice->mb_pred[pl][joff];
   int *mb_size = vidParam->mb_size[IS_LUMA];
 
   getNonAffNeighbour(currMB, ioff - 1, joff    , mb_size, &pix_a);
@@ -966,7 +966,7 @@ static int intra8x8_vert_right_pred (sMacroblock *currMB,
 
   if (block_available_left)
   {
-    sPixel **img_pred = &imgY[pix_a.pos_y];
+    sPixel** img_pred = &imgY[pix_a.pos_y];
     int pos_x = pix_a.pos_x;
     P_Q = *(*(img_pred ++) + pos_x);
     P_R = *(*(img_pred ++) + pos_x);
@@ -1032,27 +1032,27 @@ static int intra8x8_vert_right_pred (sMacroblock *currMB,
 //}}}
 //{{{
 /*!
- ***********************************************************************
+** *********************************************************************
  * \brief
  *    makes and returns 8x8 vertical left prediction mode
  *
  * \return
  *    DECODING_OK   decoding of intra prediction mode was successful            \n
  *
- ***********************************************************************
+** *********************************************************************
  */
 static int intra8x8_vert_left_pred (sMacroblock *currMB,
                                           sColorPlane pl,         //!< current image plane
                                           int ioff,              //!< pixel offset X within MB
                                           int joff)              //!< pixel offset Y within MB
 {
-  mSlice *currSlice = currMB->p_Slice;
+  sSlice *currSlice = currMB->p_Slice;
   sVidParam* vidParam = currMB->vidParam;
 
   sPixel PredPel[25];  // array of predictor pels
   sPixel PredArray[22];  // array of final prediction values
   sPixel *pred_pel = &PredArray[0];
-  sPixel **imgY = (pl) ? currSlice->picture->imgUV[pl - 1] : currSlice->picture->imgY; // For MB level frame/field coding tools -- set default to imgY
+  sPixel** imgY = (pl) ? currSlice->picture->imgUV[pl - 1] : currSlice->picture->imgY; // For MB level frame/field coding tools -- set default to imgY
 
   PixelPos pix_a;
   PixelPos pix_b, pix_c, pix_d;
@@ -1062,7 +1062,7 @@ static int intra8x8_vert_left_pred (sMacroblock *currMB,
   int block_available_up_left;
   int block_available_up_right;
 
-  sPixel **mb_pred = &currSlice->mb_pred[pl][joff];
+  sPixel** mb_pred = &currSlice->mb_pred[pl][joff];
   int *mb_size = vidParam->mb_size[IS_LUMA];
 
   for (int i=0; i<25;i++) PredPel[i]=0;
@@ -1121,7 +1121,7 @@ static int intra8x8_vert_left_pred (sMacroblock *currMB,
 
   if (block_available_left)
   {
-    sPixel **img_pred = &imgY[pix_a.pos_y];
+    sPixel** img_pred = &imgY[pix_a.pos_y];
     int pos_x = pix_a.pos_x;
     P_Q = *(*(img_pred ++) + pos_x);
     P_R = *(*(img_pred ++) + pos_x);
@@ -1185,26 +1185,26 @@ static int intra8x8_vert_left_pred (sMacroblock *currMB,
 //}}}
 //{{{
 /*!
- ***********************************************************************
+** *********************************************************************
  * \brief
  *    makes and returns 8x8 horizontal up prediction mode
  *
  * \return
  *    DECODING_OK   decoding of intra prediction mode was successful            \n
  *
- ***********************************************************************
+** *********************************************************************
  */
 static int intra8x8_hor_up_pred (sMacroblock *currMB,
                                        sColorPlane pl,         //!< current image plane
                                        int ioff,              //!< pixel offset X within MB
                                        int joff)              //!< pixel offset Y within MB
 {
-  mSlice *currSlice = currMB->p_Slice;
+  sSlice *currSlice = currMB->p_Slice;
   sVidParam* vidParam = currMB->vidParam;
 
   sPixel PredPel[25];     // array of predictor pels
   sPixel PredArray[22];   // array of final prediction values
-  sPixel **imgY = (pl) ? currSlice->picture->imgUV[pl - 1] : currSlice->picture->imgY; // For MB level frame/field coding tools -- set default to imgY
+  sPixel** imgY = (pl) ? currSlice->picture->imgUV[pl - 1] : currSlice->picture->imgY; // For MB level frame/field coding tools -- set default to imgY
 
   PixelPos pix_a;
   PixelPos pix_b, pix_c, pix_d;
@@ -1218,7 +1218,7 @@ static int intra8x8_hor_up_pred (sMacroblock *currMB,
 
   for (int i=0; i<25;i++) PredPel[i]=0;
 
-  sPixel **mpr = currSlice->mb_pred[pl];
+  sPixel** mpr = currSlice->mb_pred[pl];
   int *mb_size = vidParam->mb_size[IS_LUMA];
 
   getNonAffNeighbour(currMB, ioff - 1, joff    , mb_size, &pix_a);
@@ -1275,7 +1275,7 @@ static int intra8x8_hor_up_pred (sMacroblock *currMB,
 
   if (block_available_left)
   {
-    sPixel **img_pred = &imgY[pix_a.pos_y];
+    sPixel** img_pred = &imgY[pix_a.pos_y];
     int pos_x = pix_a.pos_x;
     P_Q = *(*(img_pred ++) + pos_x);
     P_R = *(*(img_pred ++) + pos_x);
@@ -1339,26 +1339,26 @@ static int intra8x8_hor_up_pred (sMacroblock *currMB,
 //}}}
 //{{{
 /*!
- ***********************************************************************
+** *********************************************************************
  * \brief
  *    makes and returns 8x8 horizontal down prediction mode
  *
  * \return
  *    DECODING_OK   decoding of intra prediction mode was successful            \n
  *
- ***********************************************************************
+** *********************************************************************
  */
 static int intra8x8_hor_down_pred (sMacroblock *currMB,
                                          sColorPlane pl,         //!< current image plane
                                          int ioff,              //!< pixel offset X within MB
                                          int joff)              //!< pixel offset Y within MB
 {
-  mSlice *currSlice = currMB->p_Slice;
+  sSlice *currSlice = currMB->p_Slice;
   sVidParam* vidParam = currMB->vidParam;
 
   sPixel PredPel[25];  // array of predictor pels
   sPixel PredArray[22];   // array of final prediction values
-  sPixel **imgY = (pl) ? currSlice->picture->imgUV[pl - 1] : currSlice->picture->imgY; // For MB level frame/field coding tools -- set default to imgY
+  sPixel** imgY = (pl) ? currSlice->picture->imgUV[pl - 1] : currSlice->picture->imgY; // For MB level frame/field coding tools -- set default to imgY
 
   PixelPos pix_a;
   PixelPos pix_b, pix_c, pix_d;
@@ -1369,7 +1369,7 @@ static int intra8x8_hor_down_pred (sMacroblock *currMB,
   int block_available_up_right;
 
   sPixel *pred_pels;
-  sPixel **mb_pred = &currSlice->mb_pred[pl][joff];
+  sPixel** mb_pred = &currSlice->mb_pred[pl][joff];
   int *mb_size = vidParam->mb_size[IS_LUMA];
 
   for (int i=0; i<25;i++) PredPel[i]=0;
@@ -1428,7 +1428,7 @@ static int intra8x8_hor_down_pred (sMacroblock *currMB,
 
   if (block_available_left)
   {
-    sPixel **img_pred = &imgY[pix_a.pos_y];
+    sPixel** img_pred = &imgY[pix_a.pos_y];
     int pos_x = pix_a.pos_x;
     P_Q = *(*(img_pred ++) + pos_x);
     P_R = *(*(img_pred ++) + pos_x);
@@ -1502,7 +1502,7 @@ static int intra8x8_hor_down_pred (sMacroblock *currMB,
 //}}}
 //{{{
 /*!
- ************************************************************************
+** **********************************************************************
  * \brief
  *    Make intra 8x8 prediction according to all 9 prediction modes.
  *    The routine uses left and upper neighbouring points from
@@ -1513,7 +1513,7 @@ static int intra8x8_hor_down_pred (sMacroblock *currMB,
  *  \par Input:
  *     Starting point of current 8x8 block image position
  *
- ************************************************************************
+** **********************************************************************
  */
 static int intra_pred_8x8_normal (sMacroblock *currMB,
                         sColorPlane pl,         //!< Current color plane
@@ -1565,14 +1565,14 @@ static int intra_pred_8x8_normal (sMacroblock *currMB,
 
 //{{{
 /*!
- ***********************************************************************
+** *********************************************************************
  * \brief
  *    makes and returns 8x8 DC prediction mode
  *
  * \return
  *    DECODING_OK   decoding of intra_prediction mode was successful            \n
  *
- ***********************************************************************
+** *********************************************************************
  */
 static int intra8x8_dc_pred_mbaff (sMacroblock *currMB,
                                    sColorPlane pl,         //!< current image plane
@@ -1582,11 +1582,11 @@ static int intra8x8_dc_pred_mbaff (sMacroblock *currMB,
   int i,j;
   int s0 = 0;
   sPixel PredPel[25];  // array of predictor pels
-  mSlice *currSlice = currMB->p_Slice;
+  sSlice *currSlice = currMB->p_Slice;
   sVidParam* vidParam = currMB->vidParam;
 
   sPicture* picture = currSlice->picture;
-  sPixel **imgY = (pl) ? picture->imgUV[pl - 1] : picture->imgY; // For MB level frame/field coding tools -- set default to imgY
+  sPixel** imgY = (pl) ? picture->imgUV[pl - 1] : picture->imgY; // For MB level frame/field coding tools -- set default to imgY
 
   PixelPos pix_a[8];
   PixelPos pix_b, pix_c, pix_d;
@@ -1598,7 +1598,7 @@ static int intra8x8_dc_pred_mbaff (sMacroblock *currMB,
 
   for (int i=0; i<25;i++) PredPel[i]=0;
 
-  sPixel **mpr = currSlice->mb_pred[pl];
+  sPixel** mpr = currSlice->mb_pred[pl];
   int *mb_size = vidParam->mb_size[IS_LUMA];
 
   for (i=0;i<8;i++)
@@ -1712,26 +1712,26 @@ static int intra8x8_dc_pred_mbaff (sMacroblock *currMB,
 //}}}
 //{{{
 /*!
- ***********************************************************************
+** *********************************************************************
  * \brief
  *    makes and returns 8x8 vertical prediction mode
  *
  * \return
  *    DECODING_OK   decoding of intra_prediction mode was successful            \n
  *
- ***********************************************************************
+** *********************************************************************
  */
 static int intra8x8_vert_pred_mbaff (sMacroblock *currMB,
                                      sColorPlane pl,         //!< current image plane
                                      int ioff,              //!< pixel offset X within MB
                                      int joff)              //!< pixel offset Y within MB
 {
-  mSlice *currSlice = currMB->p_Slice;
+  sSlice *currSlice = currMB->p_Slice;
   sVidParam* vidParam = currMB->vidParam;
 
   int i;
   sPixel PredPel[25];  // array of predictor pels
-  sPixel **imgY = (pl) ? currSlice->picture->imgUV[pl - 1] : currSlice->picture->imgY; // For MB level frame/field coding tools -- set default to imgY
+  sPixel** imgY = (pl) ? currSlice->picture->imgUV[pl - 1] : currSlice->picture->imgY; // For MB level frame/field coding tools -- set default to imgY
 
   PixelPos pix_a[8];
   PixelPos pix_b, pix_c, pix_d;
@@ -1743,7 +1743,7 @@ static int intra8x8_vert_pred_mbaff (sMacroblock *currMB,
 
   for (int i=0; i<25;i++) PredPel[i]=0;
 
-  sPixel **mpr = currSlice->mb_pred[pl];
+  sPixel** mpr = currSlice->mb_pred[pl];
   int *mb_size = vidParam->mb_size[IS_LUMA];
 
   for (i=0;i<8;i++)
@@ -1824,27 +1824,27 @@ static int intra8x8_vert_pred_mbaff (sMacroblock *currMB,
 //}}}
 //{{{
 /*!
- ***********************************************************************
+** *********************************************************************
  * \brief
  *    makes and returns 8x8 horizontal prediction mode
  *
  * \return
  *    DECODING_OK   decoding of intra_prediction mode was successful            \n
  *
- ***********************************************************************
+** *********************************************************************
  */
 static int intra8x8_hor_pred_mbaff (sMacroblock *currMB,
                                     sColorPlane pl,         //!< current image plane
                                     int ioff,              //!< pixel offset X within MB
                                     int joff)              //!< pixel offset Y within MB
 {
-  mSlice *currSlice = currMB->p_Slice;
+  sSlice *currSlice = currMB->p_Slice;
   sVidParam* vidParam = currMB->vidParam;
 
 
   int i,j;
   sPixel PredPel[25];  // array of predictor pels
-  sPixel **imgY = (pl) ? currSlice->picture->imgUV[pl - 1] : currSlice->picture->imgY; // For MB level frame/field coding tools -- set default to imgY
+  sPixel** imgY = (pl) ? currSlice->picture->imgUV[pl - 1] : currSlice->picture->imgY; // For MB level frame/field coding tools -- set default to imgY
 
   PixelPos pix_a[8];
   PixelPos pix_b, pix_c, pix_d;
@@ -1860,7 +1860,7 @@ static int intra8x8_hor_pred_mbaff (sMacroblock *currMB,
   int ipos4 = ioff + 4, ipos5 = ioff + 5, ipos6 = ioff + 6, ipos7 = ioff + 7;
 #endif
   int jpos;
-  sPixel **mpr = currSlice->mb_pred[pl];
+  sPixel** mpr = currSlice->mb_pred[pl];
   int *mb_size = vidParam->mb_size[IS_LUMA];
 
   for (i=0;i<8;i++)
@@ -1941,28 +1941,28 @@ static int intra8x8_hor_pred_mbaff (sMacroblock *currMB,
 //}}}
 //{{{
                                     /*!
- ***********************************************************************
+** *********************************************************************
  * \brief
  *    makes and returns 8x8 diagonal down right prediction mode
  *
  * \return
  *    DECODING_OK   decoding of intra prediction mode was successful            \n
  *
- ***********************************************************************
+** *********************************************************************
  */
 static int intra8x8_diag_down_right_pred_mbaff (sMacroblock *currMB,
                                                 sColorPlane pl,         //!< current image plane
                                                 int ioff,              //!< pixel offset X within MB
                                                 int joff)              //!< pixel offset Y within MB
 {
-  mSlice *currSlice = currMB->p_Slice;
+  sSlice *currSlice = currMB->p_Slice;
   sVidParam* vidParam = currMB->vidParam;
 
 
   int i;
   sPixel PredPel[25];  // array of predictor pels
   sPixel PredArray[16];  // array of final prediction values
-  sPixel **imgY = (pl) ? currSlice->picture->imgUV[pl - 1] : currSlice->picture->imgY; // For MB level frame/field coding tools -- set default to imgY
+  sPixel** imgY = (pl) ? currSlice->picture->imgUV[pl - 1] : currSlice->picture->imgY; // For MB level frame/field coding tools -- set default to imgY
 
   PixelPos pix_a[8];
   PixelPos pix_b, pix_c, pix_d;
@@ -1972,7 +1972,7 @@ static int intra8x8_diag_down_right_pred_mbaff (sMacroblock *currMB,
   int block_available_up_left;
   int block_available_up_right;
 
-  sPixel **mpr = currSlice->mb_pred[pl];
+  sPixel** mpr = currSlice->mb_pred[pl];
   int *mb_size = vidParam->mb_size[IS_LUMA];
 
   for (int i=0; i<25;i++) PredPel[i]=0;
@@ -2092,28 +2092,28 @@ static int intra8x8_diag_down_right_pred_mbaff (sMacroblock *currMB,
 //}}}
 //{{{
 /*!
- ***********************************************************************
+** *********************************************************************
  * \brief
  *    makes and returns 8x8 diagonal down left prediction mode
  *
  * \return
  *    DECODING_OK   decoding of intra prediction mode was successful            \n
  *
- ***********************************************************************
+** *********************************************************************
  */
 static int intra8x8_diag_down_left_pred_mbaff (sMacroblock *currMB,
                                                sColorPlane pl,         //!< current image plane
                                                int ioff,              //!< pixel offset X within MB
                                                int joff)              //!< pixel offset Y within MB
 {
-  mSlice *currSlice = currMB->p_Slice;
+  sSlice *currSlice = currMB->p_Slice;
   sVidParam* vidParam = currMB->vidParam;
 
   int i;
   sPixel PredPel[25];  // array of predictor pels
   sPixel PredArray[16];  // array of final prediction values
   sPixel *Pred = &PredArray[0];
-  sPixel **imgY = (pl) ? currSlice->picture->imgUV[pl - 1] : currSlice->picture->imgY; // For MB level frame/field coding tools -- set default to imgY
+  sPixel** imgY = (pl) ? currSlice->picture->imgUV[pl - 1] : currSlice->picture->imgY; // For MB level frame/field coding tools -- set default to imgY
 
   PixelPos pix_a[8];
   PixelPos pix_b, pix_c, pix_d;
@@ -2123,7 +2123,7 @@ static int intra8x8_diag_down_left_pred_mbaff (sMacroblock *currMB,
   int block_available_up_left;
   int block_available_up_right;
 
-  sPixel **mpr = currSlice->mb_pred[pl];
+  sPixel** mpr = currSlice->mb_pred[pl];
   int *mb_size = vidParam->mb_size[IS_LUMA];
 
   for (int i=0; i<25;i++) PredPel[i]=0;
@@ -2245,27 +2245,27 @@ static int intra8x8_diag_down_left_pred_mbaff (sMacroblock *currMB,
 //}}}
 //{{{
 /*!
- ***********************************************************************
+** *********************************************************************
  * \brief
  *    makes and returns 8x8 vertical right prediction mode
  *
  * \return
  *    DECODING_OK   decoding of intra prediction mode was successful            \n
  *
- ***********************************************************************
+** *********************************************************************
  */
 static int intra8x8_vert_right_pred_mbaff (sMacroblock *currMB,
                                            sColorPlane pl,         //!< current image plane
                                            int ioff,              //!< pixel offset X within MB
                                            int joff)              //!< pixel offset Y within MB
 {
-  mSlice *currSlice = currMB->p_Slice;
+  sSlice *currSlice = currMB->p_Slice;
   sVidParam* vidParam = currMB->vidParam;
 
   int i;
   sPixel PredPel[25];  // array of predictor pels
   sPixel PredArray[22];  // array of final prediction values
-  sPixel **imgY = (pl) ? currSlice->picture->imgUV[pl - 1] : currSlice->picture->imgY; // For MB level frame/field coding tools -- set default to imgY
+  sPixel** imgY = (pl) ? currSlice->picture->imgUV[pl - 1] : currSlice->picture->imgY; // For MB level frame/field coding tools -- set default to imgY
 
   PixelPos pix_a[8];
   PixelPos pix_b, pix_c, pix_d;
@@ -2275,7 +2275,7 @@ static int intra8x8_vert_right_pred_mbaff (sMacroblock *currMB,
   int block_available_up_left;
   int block_available_up_right;
 
-  sPixel **mpr = currSlice->mb_pred[pl];
+  sPixel** mpr = currSlice->mb_pred[pl];
   int *mb_size = vidParam->mb_size[IS_LUMA];
 
   for (int i=0; i<25;i++) PredPel[i]=0;
@@ -2402,28 +2402,28 @@ static int intra8x8_vert_right_pred_mbaff (sMacroblock *currMB,
 //}}}
 //{{{
 /*!
- ***********************************************************************
+** *********************************************************************
  * \brief
  *    makes and returns 8x8 vertical left prediction mode
  *
  * \return
  *    DECODING_OK   decoding of intra prediction mode was successful            \n
  *
- ***********************************************************************
+** *********************************************************************
  */
 static int intra8x8_vert_left_pred_mbaff (sMacroblock *currMB,
                                           sColorPlane pl,         //!< current image plane
                                           int ioff,              //!< pixel offset X within MB
                                           int joff)              //!< pixel offset Y within MB
 {
-  mSlice *currSlice = currMB->p_Slice;
+  sSlice *currSlice = currMB->p_Slice;
   sVidParam* vidParam = currMB->vidParam;
 
   int i;
   sPixel PredPel[25];  // array of predictor pels
   sPixel PredArray[22];  // array of final prediction values
   sPixel *pred_pel = &PredArray[0];
-  sPixel **imgY = (pl) ? currSlice->picture->imgUV[pl - 1] : currSlice->picture->imgY; // For MB level frame/field coding tools -- set default to imgY
+  sPixel** imgY = (pl) ? currSlice->picture->imgUV[pl - 1] : currSlice->picture->imgY; // For MB level frame/field coding tools -- set default to imgY
 
   PixelPos pix_a[8];
   PixelPos pix_b, pix_c, pix_d;
@@ -2433,7 +2433,7 @@ static int intra8x8_vert_left_pred_mbaff (sMacroblock *currMB,
   int block_available_up_left;
   int block_available_up_right;
 
-  sPixel **mpr = currSlice->mb_pred[pl];
+  sPixel** mpr = currSlice->mb_pred[pl];
   int *mb_size = vidParam->mb_size[IS_LUMA];
 
   for (int i=0; i<25;i++) PredPel[i]=0;
@@ -2559,27 +2559,27 @@ static int intra8x8_vert_left_pred_mbaff (sMacroblock *currMB,
 //}}}
 //{{{
 /*!
- ***********************************************************************
+** *********************************************************************
  * \brief
  *    makes and returns 8x8 horizontal up prediction mode
  *
  * \return
  *    DECODING_OK   decoding of intra prediction mode was successful            \n
  *
- ***********************************************************************
+** *********************************************************************
  */
 static int intra8x8_hor_up_pred_mbaff (sMacroblock *currMB,
                                        sColorPlane pl,         //!< current image plane
                                        int ioff,              //!< pixel offset X within MB
                                        int joff)              //!< pixel offset Y within MB
 {
-  mSlice *currSlice = currMB->p_Slice;
+  sSlice *currSlice = currMB->p_Slice;
   sVidParam* vidParam = currMB->vidParam;
 
   int i;
   sPixel PredPel[25];  // array of predictor pels
   sPixel PredArray[22];   // array of final prediction values
-  sPixel **imgY = (pl) ? currSlice->picture->imgUV[pl - 1] : currSlice->picture->imgY; // For MB level frame/field coding tools -- set default to imgY
+  sPixel** imgY = (pl) ? currSlice->picture->imgUV[pl - 1] : currSlice->picture->imgY; // For MB level frame/field coding tools -- set default to imgY
 
   PixelPos pix_a[8];
   PixelPos pix_b, pix_c, pix_d;
@@ -2591,7 +2591,7 @@ static int intra8x8_hor_up_pred_mbaff (sMacroblock *currMB,
   int jpos0 = joff    , jpos1 = joff + 1, jpos2 = joff + 2, jpos3 = joff + 3;
   int jpos4 = joff + 4, jpos5 = joff + 5, jpos6 = joff + 6, jpos7 = joff + 7;
 
-  sPixel **mpr = currSlice->mb_pred[pl];
+  sPixel** mpr = currSlice->mb_pred[pl];
   int *mb_size = vidParam->mb_size[IS_LUMA];
 
   for (int i=0; i<25;i++) PredPel[i]=0;
@@ -2717,27 +2717,27 @@ static int intra8x8_hor_up_pred_mbaff (sMacroblock *currMB,
 //}}}
 //{{{
 /*!
- ***********************************************************************
+** *********************************************************************
  * \brief
  *    makes and returns 8x8 horizontal down prediction mode
  *
  * \return
  *    DECODING_OK   decoding of intra prediction mode was successful            \n
  *
- ***********************************************************************
+** *********************************************************************
  */
 static int intra8x8_hor_down_pred_mbaff (sMacroblock *currMB,
                                          sColorPlane pl,         //!< current image plane
                                          int ioff,              //!< pixel offset X within MB
                                          int joff)              //!< pixel offset Y within MB
 {
-  mSlice *currSlice = currMB->p_Slice;
+  sSlice *currSlice = currMB->p_Slice;
   sVidParam* vidParam = currMB->vidParam;
 
   int i;
   sPixel PredPel[25];  // array of predictor pels
   sPixel PredArray[22];   // array of final prediction values
-  sPixel **imgY = (pl) ? currSlice->picture->imgUV[pl - 1] : currSlice->picture->imgY; // For MB level frame/field coding tools -- set default to imgY
+  sPixel** imgY = (pl) ? currSlice->picture->imgUV[pl - 1] : currSlice->picture->imgY; // For MB level frame/field coding tools -- set default to imgY
 
   PixelPos pix_a[8];
   PixelPos pix_b, pix_c, pix_d;
@@ -2749,7 +2749,7 @@ static int intra8x8_hor_down_pred_mbaff (sMacroblock *currMB,
   int jpos0 = joff    , jpos1 = joff + 1, jpos2 = joff + 2, jpos3 = joff + 3;
   int jpos4 = joff + 4, jpos5 = joff + 5, jpos6 = joff + 6, jpos7 = joff + 7;
 
-  sPixel **mpr = currSlice->mb_pred[pl];
+  sPixel** mpr = currSlice->mb_pred[pl];
   int *mb_size = vidParam->mb_size[IS_LUMA];
 
   for (int i=0; i<25;i++) PredPel[i]=0;
@@ -2875,7 +2875,7 @@ static int intra8x8_hor_down_pred_mbaff (sMacroblock *currMB,
 //}}}
 //{{{
 /*!
- ************************************************************************
+** **********************************************************************
  * \brief
  *    Make intra 8x8 prediction according to all 9 prediction modes.
  *    The routine uses left and upper neighbouring points from
@@ -2886,7 +2886,7 @@ static int intra8x8_hor_down_pred_mbaff (sMacroblock *currMB,
  *  \par Input:
  *     Starting point of current 8x8 block image position
  *
- ************************************************************************
+** **********************************************************************
  */
 static int intra_pred_8x8_mbaff (sMacroblock *currMB,
                    sColorPlane pl,         //!< Current color plane
@@ -2938,26 +2938,26 @@ static int intra_pred_8x8_mbaff (sMacroblock *currMB,
 
 //{{{
 /*!
- ***********************************************************************
+** *********************************************************************
  * \brief
  *    makes and returns 16x16 DC prediction mode
  *
  * \return
  *    DECODING_OK   decoding of intra_prediction mode was successful            \n
  *
- ***********************************************************************
+** *********************************************************************
  */
 static int intra16x16_dc_pred (sMacroblock *currMB, sColorPlane pl)
 {
-  mSlice *currSlice = currMB->p_Slice;
+  sSlice *currSlice = currMB->p_Slice;
   sVidParam* vidParam = currMB->vidParam;
 
   int s0 = 0, s1 = 0, s2 = 0;
 
   int i,j;
 
-  sPixel **imgY = (pl) ? currSlice->picture->imgUV[pl - 1] : currSlice->picture->imgY;
-  sPixel **mb_pred = &(currSlice->mb_pred[pl][0]);
+  sPixel** imgY = (pl) ? currSlice->picture->imgUV[pl - 1] : currSlice->picture->imgY;
+  sPixel** mb_pred = &(currSlice->mb_pred[pl][0]);
 
   PixelPos a, b;
 
@@ -3028,23 +3028,23 @@ static int intra16x16_dc_pred (sMacroblock *currMB, sColorPlane pl)
 //}}}
 //{{{
 /*!
- ***********************************************************************
+** *********************************************************************
  * \brief
  *    makes and returns 16x16 vertical prediction mode
  *
  * \return
  *    DECODING_OK   decoding of intra prediction mode was successful            \n
  *
- ***********************************************************************
+** *********************************************************************
  */
 static int intra16x16_vert_pred (sMacroblock *currMB, sColorPlane pl)
 {
-  mSlice *currSlice = currMB->p_Slice;
+  sSlice *currSlice = currMB->p_Slice;
   sVidParam* vidParam = currMB->vidParam;
 
   int j;
 
-  sPixel **imgY = (pl) ? currSlice->picture->imgUV[pl - 1] : currSlice->picture->imgY;
+  sPixel** imgY = (pl) ? currSlice->picture->imgUV[pl - 1] : currSlice->picture->imgY;
 
   PixelPos b;          //!< pixel position p(0,-1)
 
@@ -3064,7 +3064,7 @@ static int intra16x16_vert_pred (sMacroblock *currMB, sColorPlane pl)
   if (!up_avail)
     error ("invalid 16x16 intra pred Mode VERT_PRED_16",500);
   {
-    sPixel **prd = &currSlice->mb_pred[pl][0];
+    sPixel** prd = &currSlice->mb_pred[pl][0];
     sPixel *src = &(imgY[b.pos_y][b.pos_x]);
 
     for(j=0;j<MB_BLOCK_SIZE; j+= 4)
@@ -3081,23 +3081,23 @@ static int intra16x16_vert_pred (sMacroblock *currMB, sColorPlane pl)
 //}}}
 //{{{
 /*!
- ***********************************************************************
+** *********************************************************************
  * \brief
  *    makes and returns 16x16 horizontal prediction mode
  *
  * \return
  *    DECODING_OK   decoding of intra prediction mode was successful            \n
  *
- ***********************************************************************
+** *********************************************************************
  */
 static int intra16x16_hor_pred (sMacroblock *currMB, sColorPlane pl)
 {
-  mSlice *currSlice = currMB->p_Slice;
+  sSlice *currSlice = currMB->p_Slice;
   sVidParam* vidParam = currMB->vidParam;
   int j;
 
-  sPixel **imgY = (pl) ? currSlice->picture->imgUV[pl - 1] : currSlice->picture->imgY;
-  sPixel **mb_pred = &(currSlice->mb_pred[pl][0]);
+  sPixel** imgY = (pl) ? currSlice->picture->imgUV[pl - 1] : currSlice->picture->imgY;
+  sPixel** mb_pred = &(currSlice->mb_pred[pl][0]);
   sPixel prediction;
   int pos_y, pos_x;
 
@@ -3149,18 +3149,18 @@ static int intra16x16_hor_pred (sMacroblock *currMB, sColorPlane pl)
 //}}}
 //{{{
 /*!
- ***********************************************************************
+** *********************************************************************
  * \brief
  *    makes and returns 16x16 horizontal prediction mode
  *
  * \return
  *    DECODING_OK   decoding of intra prediction mode was successful            \n
  *
- ***********************************************************************
+** *********************************************************************
  */
 static int intra16x16_plane_pred (sMacroblock *currMB, sColorPlane pl)
 {
-  mSlice *currSlice = currMB->p_Slice;
+  sSlice *currSlice = currMB->p_Slice;
   sVidParam* vidParam = currMB->vidParam;
 
   int i,j;
@@ -3168,8 +3168,8 @@ static int intra16x16_plane_pred (sMacroblock *currMB, sColorPlane pl)
   int ih = 0, iv = 0;
   int ib,ic,iaa;
 
-  sPixel **imgY = (pl) ? currSlice->picture->imgUV[pl - 1] : currSlice->picture->imgY;
-  sPixel **mb_pred = &(currSlice->mb_pred[pl][0]);
+  sPixel** imgY = (pl) ? currSlice->picture->imgUV[pl - 1] : currSlice->picture->imgY;
+  sPixel** mb_pred = &(currSlice->mb_pred[pl][0]);
   sPixel *mpr_line;
   int max_imgpel_value = vidParam->max_pel_value_comp[pl];
   int pos_y, pos_x;
@@ -3232,14 +3232,14 @@ static int intra16x16_plane_pred (sMacroblock *currMB, sColorPlane pl)
 //}}}
 //{{{
 /*!
- ***********************************************************************
+** *********************************************************************
  * \brief
  *    makes and returns 16x16 intra prediction blocks
  *
  * \return
  *    DECODING_OK   decoding of intra prediction mode was successful            \n
  *    SEARCH_SYNC   search next sync element as errors while decoding occured
- ***********************************************************************
+** *********************************************************************
  */
 static int intra_pred_16x16_normal (sMacroblock *currMB,
                            sColorPlane pl,       //!< Current colorplane (for 4:4:4)
@@ -3271,26 +3271,26 @@ static int intra_pred_16x16_normal (sMacroblock *currMB,
 
 //{{{
 /*!
- ***********************************************************************
+** *********************************************************************
  * \brief
  *    makes and returns 16x16 DC prediction mode
  *
  * \return
  *    DECODING_OK   decoding of intra prediction mode was successful            \n
  *
- ***********************************************************************
+** *********************************************************************
  */
 static int intra16x16_dc_pred_mbaff (sMacroblock *currMB, sColorPlane pl)
 {
-  mSlice *currSlice = currMB->p_Slice;
+  sSlice *currSlice = currMB->p_Slice;
   sVidParam* vidParam = currMB->vidParam;
 
   int s0 = 0, s1 = 0, s2 = 0;
 
   int i,j;
 
-  sPixel **imgY = (pl) ? currSlice->picture->imgUV[pl - 1] : currSlice->picture->imgY;
-  sPixel **mb_pred = &(currSlice->mb_pred[pl][0]);
+  sPixel** imgY = (pl) ? currSlice->picture->imgUV[pl - 1] : currSlice->picture->imgY;
+  sPixel** mb_pred = &(currSlice->mb_pred[pl][0]);
 
   PixelPos b;          //!< pixel position p(0,-1)
   PixelPos left[17];    //!< pixel positions p(-1, -1..15)
@@ -3350,23 +3350,23 @@ static int intra16x16_dc_pred_mbaff (sMacroblock *currMB, sColorPlane pl)
 //}}}
 //{{{
 /*!
- ***********************************************************************
+** *********************************************************************
  * \brief
  *    makes and returns 16x16 vertical prediction mode
  *
  * \return
  *    DECODING_OK   decoding of intra prediction mode was successful            \n
  *
- ***********************************************************************
+** *********************************************************************
  */
 static int intra16x16_vert_pred_mbaff (sMacroblock *currMB, sColorPlane pl)
 {
-  mSlice *currSlice = currMB->p_Slice;
+  sSlice *currSlice = currMB->p_Slice;
   sVidParam* vidParam = currMB->vidParam;
 
   int j;
 
-  sPixel **imgY = (pl) ? currSlice->picture->imgUV[pl - 1] : currSlice->picture->imgY;
+  sPixel** imgY = (pl) ? currSlice->picture->imgUV[pl - 1] : currSlice->picture->imgY;
 
   PixelPos b;          //!< pixel position p(0,-1)
 
@@ -3386,7 +3386,7 @@ static int intra16x16_vert_pred_mbaff (sMacroblock *currMB, sColorPlane pl)
   if (!up_avail)
     error ("invalid 16x16 intra pred Mode VERT_PRED_16",500);
   {
-    sPixel **prd = &currSlice->mb_pred[pl][0];
+    sPixel** prd = &currSlice->mb_pred[pl][0];
     sPixel *src = &(imgY[b.pos_y][b.pos_x]);
 
     for(j=0;j<MB_BLOCK_SIZE; j+= 4)
@@ -3403,23 +3403,23 @@ static int intra16x16_vert_pred_mbaff (sMacroblock *currMB, sColorPlane pl)
 //}}}
 //{{{
 /*!
- ***********************************************************************
+** *********************************************************************
  * \brief
  *    makes and returns 16x16 horizontal prediction mode
  *
  * \return
  *    DECODING_OK   decoding of intra prediction mode was successful            \n
  *
- ***********************************************************************
+** *********************************************************************
  */
 static int intra16x16_hor_pred_mbaff (sMacroblock *currMB, sColorPlane pl)
 {
-  mSlice *currSlice = currMB->p_Slice;
+  sSlice *currSlice = currMB->p_Slice;
   sVidParam* vidParam = currMB->vidParam;
   int i,j;
 
-  sPixel **imgY = (pl) ? currSlice->picture->imgUV[pl - 1] : currSlice->picture->imgY;
-  sPixel **mb_pred = &(currSlice->mb_pred[pl][0]);
+  sPixel** imgY = (pl) ? currSlice->picture->imgUV[pl - 1] : currSlice->picture->imgY;
+  sPixel** mb_pred = &(currSlice->mb_pred[pl][0]);
   sPixel prediction;
 
   PixelPos left[17];    //!< pixel positions p(-1, -1..15)
@@ -3456,18 +3456,18 @@ static int intra16x16_hor_pred_mbaff (sMacroblock *currMB, sColorPlane pl)
 //}}}
 //{{{
 /*!
- ***********************************************************************
+** *********************************************************************
  * \brief
  *    makes and returns 16x16 horizontal prediction mode
  *
  * \return
  *    DECODING_OK   decoding of intra prediction mode was successful            \n
  *
- ***********************************************************************
+** *********************************************************************
  */
 static int intra16x16_plane_pred_mbaff (sMacroblock *currMB, sColorPlane pl)
 {
-  mSlice *currSlice = currMB->p_Slice;
+  sSlice *currSlice = currMB->p_Slice;
   sVidParam* vidParam = currMB->vidParam;
 
   int i,j;
@@ -3475,8 +3475,8 @@ static int intra16x16_plane_pred_mbaff (sMacroblock *currMB, sColorPlane pl)
   int ih = 0, iv = 0;
   int ib,ic,iaa;
 
-  sPixel **imgY = (pl) ? currSlice->picture->imgUV[pl - 1] : currSlice->picture->imgY;
-  sPixel **mb_pred = &(currSlice->mb_pred[pl][0]);
+  sPixel** imgY = (pl) ? currSlice->picture->imgUV[pl - 1] : currSlice->picture->imgY;
+  sPixel** mb_pred = &(currSlice->mb_pred[pl][0]);
   sPixel *mpr_line;
   int max_imgpel_value = vidParam->max_pel_value_comp[pl];
 
@@ -3535,14 +3535,14 @@ static int intra16x16_plane_pred_mbaff (sMacroblock *currMB, sColorPlane pl)
 //}}}
 //{{{
 /*!
- ***********************************************************************
+** *********************************************************************
  * \brief
  *    makes and returns 16x16 intra prediction blocks
  *
  * \return
  *    DECODING_OK   decoding of intra prediction mode was successful            \n
  *    SEARCH_SYNC   search next sync element as errors while decoding occured
- ***********************************************************************
+** *********************************************************************
  */
 static int intra_pred_16x16_mbaff (sMacroblock *currMB,
                           sColorPlane pl,       //!< Current colorplane (for 4:4:4)
@@ -3572,7 +3572,7 @@ static int intra_pred_16x16_mbaff (sMacroblock *currMB,
 //}}}
 
 //{{{
-static void intra_chroma_DC_single (sPixel **curr_img, int up_avail, int left_avail, PixelPos up, PixelPos left, int blk_x, int blk_y, int *pred, int direction )
+static void intra_chroma_DC_single (sPixel** curr_img, int up_avail, int left_avail, PixelPos up, PixelPos left, int blk_x, int blk_y, int *pred, int direction )
 {
   int i;
   int s0 = 0;
@@ -3586,7 +3586,7 @@ static void intra_chroma_DC_single (sPixel **curr_img, int up_avail, int left_av
   }
   else if (left_avail)
   {
-    sPixel **cur_pel = &(curr_img[left.pos_y + blk_y - 1]);
+    sPixel** cur_pel = &(curr_img[left.pos_y + blk_y - 1]);
     int pos_x = left.pos_x;
     for (i = 0; i < 4;++i)
       s0 += *((*cur_pel++) + pos_x);
@@ -3595,7 +3595,7 @@ static void intra_chroma_DC_single (sPixel **curr_img, int up_avail, int left_av
 }
 //}}}
 //{{{
-static void intra_chroma_DC_all (sPixel **curr_img, int up_avail, int left_avail, PixelPos up, PixelPos left, int blk_x, int blk_y, int *pred )
+static void intra_chroma_DC_all (sPixel** curr_img, int up_avail, int left_avail, PixelPos up, PixelPos left, int blk_x, int blk_y, int *pred )
 {
   int i;
   int s0 = 0, s1 = 0;
@@ -3609,7 +3609,7 @@ static void intra_chroma_DC_all (sPixel **curr_img, int up_avail, int left_avail
 
   if (left_avail)
   {
-    sPixel **cur_pel = &(curr_img[left.pos_y + blk_y - 1]);
+    sPixel** cur_pel = &(curr_img[left.pos_y + blk_y - 1]);
     int pos_x = left.pos_x;
     for (i = 0; i < 4;++i)
       s1 += *((*cur_pel++) + pos_x);
@@ -3626,7 +3626,7 @@ static void intra_chroma_DC_all (sPixel **curr_img, int up_avail, int left_avail
 //{{{
 static void intrapred_chroma_dc (sMacroblock *currMB)
 {
-  mSlice *currSlice = currMB->p_Slice;
+  sSlice *currSlice = currMB->p_Slice;
   sVidParam* vidParam = currMB->vidParam;
   sPicture* picture = currSlice->picture;
   int        b8, b4;
@@ -3643,10 +3643,10 @@ static void intrapred_chroma_dc (sMacroblock *currMB)
   PixelPos up;        //!< pixel position  p(0,-1)
   PixelPos left;      //!< pixel positions p(-1, -1..16)
   int up_avail, left_avail;
-  sPixel **imgUV0 = picture->imgUV[0];
-  sPixel **imgUV1 = picture->imgUV[1];
-  sPixel **mb_pred0 = currSlice->mb_pred[0 + 1];
-  sPixel **mb_pred1 = currSlice->mb_pred[1 + 1];
+  sPixel** imgUV0 = picture->imgUV[0];
+  sPixel** imgUV1 = picture->imgUV[1];
+  sPixel** mb_pred0 = currSlice->mb_pred[0 + 1];
+  sPixel** mb_pred1 = currSlice->mb_pred[1 + 1];
 
 
   getNonAffNeighbour(currMB, -1,  0, vidParam->mb_size[IS_CHROMA], &left);
@@ -3739,7 +3739,7 @@ static void intrapred_chroma_hor (sMacroblock *currMB)
     error("unexpected HOR_PRED_8 chroma intra prediction mode",-1);
   else
   {
-    mSlice *currSlice = currMB->p_Slice;
+    sSlice *currSlice = currMB->p_Slice;
     int cr_MB_x = vidParam->mb_cr_size_x;
     int cr_MB_y = vidParam->mb_cr_size_y;
 
@@ -3750,10 +3750,10 @@ static void intrapred_chroma_hor (sMacroblock *currMB)
 #endif
     int pos_y = a.pos_y;
     int pos_x = a.pos_x;
-    sPixel **mb_pred0 = currSlice->mb_pred[0 + 1];
-    sPixel **mb_pred1 = currSlice->mb_pred[1 + 1];
-    sPixel **i0 = &picture->imgUV[0][pos_y];
-    sPixel **i1 = &picture->imgUV[1][pos_y];
+    sPixel** mb_pred0 = currSlice->mb_pred[0 + 1];
+    sPixel** mb_pred1 = currSlice->mb_pred[1 + 1];
+    sPixel** i0 = &picture->imgUV[0][pos_y];
+    sPixel** i1 = &picture->imgUV[1][pos_y];
 
     for (j = 0; j < cr_MB_y; ++j)
     {
@@ -3777,7 +3777,7 @@ static void intrapred_chroma_hor (sMacroblock *currMB)
 //{{{
 static void intrapred_chroma_ver (sMacroblock *currMB)
 {
-  mSlice *currSlice = currMB->p_Slice;
+  sSlice *currSlice = currMB->p_Slice;
   sVidParam* vidParam = currMB->vidParam;
   int j;
   sPicture* picture = currSlice->picture;
@@ -3797,8 +3797,8 @@ static void intrapred_chroma_ver (sMacroblock *currMB)
     error("unexpected VERT_PRED_8 chroma intra prediction mode",-1);
   else
   {
-    sPixel **mb_pred0 = currSlice->mb_pred[1];
-    sPixel **mb_pred1 = currSlice->mb_pred[2];
+    sPixel** mb_pred0 = currSlice->mb_pred[1];
+    sPixel** mb_pred1 = currSlice->mb_pred[2];
     sPixel *i0 = &(picture->imgUV[0][up.pos_y][up.pos_x]);
     sPixel *i1 = &(picture->imgUV[1][up.pos_y][up.pos_x]);
 
@@ -3813,7 +3813,7 @@ static void intrapred_chroma_ver (sMacroblock *currMB)
 //{{{
 static void intrapred_chroma_plane (sMacroblock *currMB)
 {
-  mSlice *currSlice = currMB->p_Slice;
+  sSlice *currSlice = currMB->p_Slice;
   sVidParam* vidParam = currMB->vidParam;
   sPicture* picture = currSlice->picture;
 
@@ -3853,15 +3853,15 @@ static void intrapred_chroma_plane (sMacroblock *currMB)
     int uv;
     for (uv = 0; uv < 2; uv++)
     {
-      sPixel **imgUV = picture->imgUV[uv];
-      sPixel **mb_pred = currSlice->mb_pred[uv + 1];
+      sPixel** imgUV = picture->imgUV[uv];
+      sPixel** mb_pred = currSlice->mb_pred[uv + 1];
       int max_imgpel_value = vidParam->max_pel_value_comp[uv + 1];
       sPixel *upPred = &imgUV[up.pos_y][up.pos_x];
       int pos_x  = up_left.pos_x;
       int pos_y1 = left.pos_y + cr_MB_y2;
       int pos_y2 = pos_y1 - 2;
-      //sPixel **predU1 = &imgUV[pos_y1];
-      sPixel **predU2 = &imgUV[pos_y2];
+      //sPixel** predU1 = &imgUV[pos_y1];
+      sPixel** predU2 = &imgUV[pos_y2];
       ih = cr_MB_x2 * (upPred[cr_MB_x - 1] - imgUV[up_left.pos_y][pos_x]);
 
       for (i = 0; i < cr_MB_x2 - 1; ++i)
@@ -3891,7 +3891,7 @@ static void intrapred_chroma_plane (sMacroblock *currMB)
 }
 //}}}
 //{{{
-static void intra_chroma_DC_single_mbaff (sPixel **curr_img, int up_avail, int left_avail, PixelPos up, PixelPos left[17], int blk_x, int blk_y, int *pred, int direction )
+static void intra_chroma_DC_single_mbaff (sPixel** curr_img, int up_avail, int left_avail, PixelPos up, PixelPos left[17], int blk_x, int blk_y, int *pred, int direction )
 {
   int i;
   int s0 = 0;
@@ -3911,7 +3911,7 @@ static void intra_chroma_DC_single_mbaff (sPixel **curr_img, int up_avail, int l
 }
 //}}}
 //{{{
-static void intra_chroma_DC_all_mbaff (sPixel **curr_img, int up_avail, int left_avail, PixelPos up, PixelPos left[17], int blk_x, int blk_y, int *pred )
+static void intra_chroma_DC_all_mbaff (sPixel** curr_img, int up_avail, int left_avail, PixelPos up, PixelPos left[17], int blk_x, int blk_y, int *pred )
 {
   int i;
   int s0 = 0, s1 = 0;
@@ -3935,7 +3935,7 @@ static void intra_chroma_DC_all_mbaff (sPixel **curr_img, int up_avail, int left
 //{{{
 static void intrapred_chroma_ver_mbaff (sMacroblock *currMB)
 {
-  mSlice *currSlice = currMB->p_Slice;
+  sSlice *currSlice = currMB->p_Slice;
   sVidParam* vidParam = currMB->vidParam;
   int j;
   sPicture* picture = currSlice->picture;
@@ -3956,8 +3956,8 @@ static void intrapred_chroma_ver_mbaff (sMacroblock *currMB)
     error("unexpected VERT_PRED_8 chroma intra prediction mode",-1);
   else
   {
-    sPixel **mb_pred0 = currSlice->mb_pred[1];
-    sPixel **mb_pred1 = currSlice->mb_pred[2];
+    sPixel** mb_pred0 = currSlice->mb_pred[1];
+    sPixel** mb_pred1 = currSlice->mb_pred[2];
     sPixel *i0 = &(picture->imgUV[0][up.pos_y][up.pos_x]);
     sPixel *i1 = &(picture->imgUV[1][up.pos_y][up.pos_x]);
 
@@ -3971,15 +3971,15 @@ static void intrapred_chroma_ver_mbaff (sMacroblock *currMB)
 //}}}
 //{{{
 /*!
- ************************************************************************
+** **********************************************************************
  * \brief
  *    Chroma Intra prediction. Note that many operations can be moved
  *    outside since they are repeated for both components for no reason.
- ************************************************************************
+** **********************************************************************
  */
 static void intra_pred_chroma_mbaff (sMacroblock *currMB)
 {
-  mSlice *currSlice = currMB->p_Slice;
+  sSlice *currSlice = currMB->p_Slice;
   sVidParam* vidParam = currMB->vidParam;
   int i,j, ii, jj;
   sPicture* picture = currSlice->picture;
@@ -4033,10 +4033,10 @@ static void intra_pred_chroma_mbaff (sMacroblock *currMB)
       // the same way as I_16x16 DC prediction.
       {
         int pred1;
-        sPixel **imgUV0 = picture->imgUV[0];
-        sPixel **imgUV1 = picture->imgUV[1];
-        sPixel **mb_pred0 = currSlice->mb_pred[0 + 1];
-        sPixel **mb_pred1 = currSlice->mb_pred[1 + 1];
+        sPixel** imgUV0 = picture->imgUV[0];
+        sPixel** imgUV1 = picture->imgUV[1];
+        sPixel** mb_pred0 = currSlice->mb_pred[0 + 1];
+        sPixel** mb_pred1 = currSlice->mb_pred[1 + 1];
         for(b8 = 0; b8 < (vidParam->num_uv_blocks) ;++b8)
         {
           for (b4 = 0; b4 < 4; ++b4)
@@ -4120,10 +4120,10 @@ static void intra_pred_chroma_mbaff (sMacroblock *currMB)
       else
       {
         int pred1;
-        sPixel **mb_pred0 = currSlice->mb_pred[0 + 1];
-        sPixel **mb_pred1 = currSlice->mb_pred[1 + 1];
-        sPixel **i0 = picture->imgUV[0];
-        sPixel **i1 = picture->imgUV[1];
+        sPixel** mb_pred0 = currSlice->mb_pred[0 + 1];
+        sPixel** mb_pred1 = currSlice->mb_pred[1 + 1];
+        sPixel** i0 = picture->imgUV[0];
+        sPixel** i1 = picture->imgUV[1];
         for (j = 0; j < cr_MB_y; ++j)
         {
           pred = i0[left[1 + j].pos_y][left[1 + j].pos_x];
@@ -4157,8 +4157,8 @@ static void intra_pred_chroma_mbaff (sMacroblock *currMB)
         error("unexpected VERT_PRED_8 chroma intra prediction mode",-1);
       else
       {
-        sPixel **mb_pred0 = currSlice->mb_pred[0 + 1];
-        sPixel **mb_pred1 = currSlice->mb_pred[1 + 1];
+        sPixel** mb_pred0 = currSlice->mb_pred[0 + 1];
+        sPixel** mb_pred1 = currSlice->mb_pred[1 + 1];
         sPixel *i0 = &(picture->imgUV[0][up.pos_y][up.pos_x]);
         sPixel *i1 = &(picture->imgUV[1][up.pos_y][up.pos_x]);
         for (j = 0; j < cr_MB_y; ++j)
@@ -4210,8 +4210,8 @@ static void intra_pred_chroma_mbaff (sMacroblock *currMB)
         int uv;
         for (uv = 0; uv < 2; uv++)
         {
-          sPixel **imgUV = picture->imgUV[uv];
-          sPixel **mb_pred = currSlice->mb_pred[uv + 1];
+          sPixel** imgUV = picture->imgUV[uv];
+          sPixel** mb_pred = currSlice->mb_pred[uv + 1];
           int max_imgpel_value = vidParam->max_pel_value_comp[uv + 1];
           sPixel *upPred = &imgUV[up.pos_y][up.pos_x];
 
@@ -4244,11 +4244,11 @@ static void intra_pred_chroma_mbaff (sMacroblock *currMB)
 //}}}
 //{{{
 /*!
- ************************************************************************
+** **********************************************************************
  * \brief
  *    Chroma Intra prediction. Note that many operations can be moved
  *    outside since they are repeated for both components for no reason.
- ************************************************************************
+** **********************************************************************
  */
 static void intra_pred_chroma (sMacroblock *currMB)
 {
@@ -4274,7 +4274,7 @@ static void intra_pred_chroma (sMacroblock *currMB)
 //}}}
 
 //{{{
-void set_intra_prediction_modes (mSlice *currSlice) {
+void set_intra_prediction_modes (sSlice *currSlice) {
 
   if (currSlice->mb_aff_frame_flag) {
     currSlice->intra_pred_4x4 = intra_pred_4x4_mbaff;

@@ -341,14 +341,14 @@ static int stbrp__skyline_find_min_y(stbrp_context *c, stbrp_node *first, int x0
 typedef struct
 {
    int x,y;
-   stbrp_node **prev_link;
+   stbrp_node** prev_link;
 } stbrp__findresult;
 
 static stbrp__findresult stbrp__skyline_find_best_pos(stbrp_context *c, int width, int height)
 {
    int best_waste = (1<<30), best_x, best_y = (1 << 30);
    stbrp__findresult fr;
-   stbrp_node **prev, *node, *tail, **best = NULL;
+   stbrp_node** prev, *node, *tail,** best = NULL;
 
    // align to multiple of c->align
    width = (width + c->align - 1);

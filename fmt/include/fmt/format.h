@@ -848,7 +848,7 @@ enum { inline_buffer_size = 500 };
 
   You can use the ``memory_buffer`` type alias for ``char`` instead.
 
-  **Example**::
+ ** Example**::
 
      auto out = fmt::memory_buffer();
      format_to(std::back_inserter(out), "The answer is {}.", 42);
@@ -1789,7 +1789,7 @@ inline auto find_escape(const char* begin, const char* end)
   \rst
   Constructs a compile-time format string from a string literal *s*.
 
-  **Example**::
+ ** Example**::
 
     // A compile-time error because 'd' is an invalid specifier for strings.
     std::string s = fmt::format(FMT_STRING("{:d}"), "foo");
@@ -3693,7 +3693,7 @@ FMT_API auto vsystem_error(int error_code, string_view format_str,
  ``fmt::format(fmt, args...)``.
   *error_code* is a system error code as given by ``errno``.
 
- **Example**::
+** Example**::
 
    // This throws std::system_error with the description
    //   cannot open file 'madeup': No such file or directory
@@ -3834,7 +3834,7 @@ struct formatter<Char[N], Char> : formatter<basic_string_view<Char>, Char> {
   \rst
   Converts ``p`` to ``const void*`` for pointer formatting.
 
-  **Example**::
+ ** Example**::
 
     auto s = fmt::format("{}", fmt::ptr(p));
   \endrst
@@ -3855,7 +3855,7 @@ template <typename T> auto ptr(const std::shared_ptr<T>& p) -> const void* {
   \rst
   Converts ``e`` to the underlying type.
 
-  **Example**::
+ ** Example**::
 
     enum class color { red, green, blue };
     auto s = fmt::format("{}", fmt::underlying(color::red));
@@ -3913,7 +3913,7 @@ template <typename T> struct group_digits_view { T value; };
   Returns a view that formats an integer value using ',' as a locale-independent
   thousands separator.
 
-  **Example**::
+ ** Example**::
 
     fmt::print("{}", fmt::group_digits(12345));
     // Output: "12,345"
@@ -4027,7 +4027,7 @@ auto join(It begin, Sentinel end, string_view sep) -> join_view<It, Sentinel> {
   \rst
   Returns a view that formats `range` with elements separated by `sep`.
 
-  **Example**::
+ ** Example**::
 
     std::vector<int> v = {1, 2, 3};
     fmt::print("{}", fmt::join(v, ", "));
@@ -4049,7 +4049,7 @@ auto join(Range&& range, string_view sep)
   \rst
   Converts *value* to ``std::string`` using the default format for type *T*.
 
-  **Example**::
+ ** Example**::
 
     #include <fmt/format.h>
 
@@ -4186,7 +4186,7 @@ inline namespace literals {
   \rst
   User-defined literal equivalent of :func:`fmt::arg`.
 
-  **Example**::
+ ** Example**::
 
     using namespace fmt::literals;
     fmt::print("Elapsed time: {s:.2f} seconds", "s"_a=1.23);

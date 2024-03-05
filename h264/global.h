@@ -201,7 +201,7 @@ typedef struct macroblock_dec {
   // some storage of macroblock syntax elements for global access
   short         mb_type;
   short         mvd[2][BLOCK_MULTIPLE][BLOCK_MULTIPLE][2];      //!< indices correspond to [forw,backw][block_y][block_x][x,y]
-  //short         ****mvd;      //!< indices correspond to [forw,backw][block_y][block_x][x,y]
+  //short        ** **mvd;      //!< indices correspond to [forw,backw][block_y][block_x][x,y]
   int           cbp;
   CBPStructure  s_cbp[3];
 
@@ -231,7 +231,7 @@ typedef struct macroblock_dec {
   void (*itrans_8x8)(struct macroblock_dec *currMB, sColorPlane pl, int ioff, int joff);
 
   void (*GetMVPredictor) (struct macroblock_dec *currMB, PixelPos *block,
-    MotionVector *pmv, short ref_frame, struct pic_motion_params **mv_info, int list, int mb_x, int mb_y, int blockshape_x, int blockshape_y);
+    MotionVector *pmv, short ref_frame, struct pic_motion_params** mv_info, int list, int mb_x, int mb_y, int blockshape_x, int blockshape_y);
 
   int  (*read_and_store_CBP_block_bit)  (struct macroblock_dec *currMB, DecodingEnvironmentPtr  dep_dp, int type);
   char (*readRefPictureIdx)             (struct macroblock_dec *currMB, struct syntaxelement_dec *currSE, struct datapartition_dec *dP, char b8mode, int list);
@@ -239,8 +239,8 @@ typedef struct macroblock_dec {
   void (*read_comp_coeff_4x4_CABAC)     (struct macroblock_dec *currMB, struct syntaxelement_dec *currSE, sColorPlane pl, int (*InvLevelScale4x4)[4], int qp_per, int cbp);
   void (*read_comp_coeff_8x8_CABAC)     (struct macroblock_dec *currMB, struct syntaxelement_dec *currSE, sColorPlane pl);
 
-  void (*read_comp_coeff_4x4_CAVLC)     (struct macroblock_dec *currMB, sColorPlane pl, int (*InvLevelScale4x4)[4], int qp_per, int cbp, byte **nzcoeff);
-  void (*read_comp_coeff_8x8_CAVLC)     (struct macroblock_dec *currMB, sColorPlane pl, int (*InvLevelScale8x8)[8], int qp_per, int cbp, byte **nzcoeff);
+  void (*read_comp_coeff_4x4_CAVLC)     (struct macroblock_dec *currMB, sColorPlane pl, int (*InvLevelScale4x4)[4], int qp_per, int cbp, byte** nzcoeff);
+  void (*read_comp_coeff_8x8_CAVLC)     (struct macroblock_dec *currMB, sColorPlane pl, int (*InvLevelScale8x8)[8], int qp_per, int cbp, byte** nzcoeff);
   } sMacroblock;
 //}}}
 //{{{
@@ -429,7 +429,7 @@ typedef struct slice {
   DecRefPicMarking_t *dec_ref_pic_marking_buffer;                    //!< stores the memory management control operations
 
   char listXsize[6];
-  struct storable_picture **listX[6];
+  struct storable_picture** listX[6];
 
   sDataPartition       *partArr;      //!< array of partitions
   MotionInfoContexts  *mot_ctx;      //!< pointer to struct of context models for use in CABAC
@@ -452,18 +452,18 @@ typedef struct slice {
 
   Boolean is_reset_coeff;
   Boolean is_reset_coeff_cr;
-  sPixel  ***mb_pred;
-  sPixel  ***mb_rec;
-  int     ***mb_rres;
-  int     ***cof;
-  int     ***fcf;
+  sPixel ** *mb_pred;
+  sPixel ** *mb_rec;
+  int    ** *mb_rres;
+  int    ** *cof;
+  int    ** *fcf;
   int cofu[16];
 
-  sPixel **tmp_block_l0;
-  sPixel **tmp_block_l1;
-  int    **tmp_res;
-  sPixel **tmp_block_l2;
-  sPixel **tmp_block_l3;
+  sPixel** tmp_block_l0;
+  sPixel** tmp_block_l1;
+  int   ** tmp_res;
+  sPixel** tmp_block_l2;
+  sPixel** tmp_block_l3;
 
   // Scaling matrix info
   int  InvLevelScale4x4_Intra[3][6][4][4];
@@ -499,12 +499,12 @@ typedef struct slice {
   int erc_mvperMB;
   sMacroblock *mb_data;
   struct storable_picture* picture;
-  int **siblock;
-  byte **ipredmode;
+  int** siblock;
+  byte** ipredmode;
   char  *intra_block;
   char  chroma_vector_adjustment[6][32];
   void (*read_CBP_and_coeffs_from_NAL) (sMacroblock *currMB);
-  int  (*decode_one_component     )    (sMacroblock *currMB, sColorPlane curPlane, sPixel **currImg, struct storable_picture* picture);
+  int  (*decode_one_component     )    (sMacroblock *currMB, sColorPlane curPlane, sPixel** curPixel, struct storable_picture* picture);
   int  (*readSlice                )    (struct video_par *, struct inp_par *);
   int  (*nal_startcode_follows    )    (struct slice*, int );
   void (*read_motion_info_from_NAL)    (sMacroblock *currMB);
@@ -521,7 +521,7 @@ typedef struct slice {
   void (*linfo_cbp_inter          )    (int len, int info, int *cbp, int *dummy);
   void (*update_direct_mv_info    )    (sMacroblock *currMB);
   void (*read_coeff_4x4_CAVLC     )    (sMacroblock *currMB, int block_type, int i, int j, int levarr[16], int runarr[16], int *number_coefficients);
-  } mSlice;
+  } sSlice;
 //}}}
 //{{{
 typedef struct decodedpic_t {
@@ -606,11 +606,11 @@ typedef struct coding_par {
   char  *intra_block;
   char  *intra_block_JV[MAX_PLANE];
   sBlockPos *PicPos;
-  byte **ipredmode;                  //!< prediction type [90][74]
-  byte **ipredmode_JV[MAX_PLANE];
-  byte ****nz_coeff;
-  int **siblock;
-  int **siblock_JV[MAX_PLANE];
+  byte** ipredmode;                  //!< prediction type [90][74]
+  byte** ipredmode_JV[MAX_PLANE];
+  byte** **nz_coeff;
+  int** siblock;
+  int** siblock_JV[MAX_PLANE];
   int *qp_per_matrix;
   int *qp_rem_matrix;
   } sCodingParams;
@@ -647,7 +647,7 @@ typedef struct video_par {
   int iSliceNumOfCurrPic;
   int iNumOfSlicesAllocated;
   int iNumOfSlicesDecoded;
-  mSlice** ppSliceList;
+  sSlice** ppSliceList;
   char* intra_block;
   char* intra_block_JV[MAX_PLANE];
 
@@ -663,7 +663,7 @@ typedef struct video_par {
   int newframe;
   int structure;                     // Identify picture structure type
 
-  mSlice* pNextSlice;                 // pointer to first mSlice of next picture;
+  sSlice* pNextSlice;                 // pointer to first sSlice of next picture;
   sMacroblock* mb_data;               // array containing all MBs of a whole frame
   sMacroblock* mb_data_JV[MAX_PLANE]; // mb_data to be used for 4:4:4 independent mode
   int ChromaArrayType;
@@ -900,15 +900,15 @@ static inline int is_BL_profile (unsigned int profile_idc) {
   extern unsigned CeilLog2_sf (unsigned uiVal);
 
   // For 4:4:4 independent mode
-  extern void change_plane_JV (sVidParam *vidParam, int nplane, mSlice *pSlice);
+  extern void change_plane_JV (sVidParam *vidParam, int nplane, sSlice *pSlice);
   extern void make_frame_picture_JV (sVidParam *vidParam );
 
   extern void FreeDecPicList (sDecodedPicList *pDecPicList );
   extern void ClearDecPicList (sVidParam *vidParam );
   extern sDecodedPicList* get_one_avail_dec_pic_from_list (sDecodedPicList *pDecPicList, int b3D, int view_id);
 
-  extern mSlice* malloc_slice (InputParameters *p_Inp, sVidParam *vidParam );
-  extern void copy_slice_info (mSlice* currSlice, OldSliceParams *p_old_slice );
+  extern sSlice* malloc_slice (InputParameters *p_Inp, sVidParam *vidParam );
+  extern void copy_slice_info (sSlice* currSlice, OldSliceParams *p_old_slice );
 
   extern void OpenOutputFiles (sVidParam *vidParam, int view0_id, int view1_id);
   extern void set_global_coding_par (sVidParam *vidParam, sCodingParams *cps);

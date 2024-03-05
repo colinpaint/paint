@@ -72,10 +72,10 @@ int quant8_org[64] = { //to be use if no q matrix is chosen
 
 //{{{
 /*!
- ***********************************************************************
+** *********************************************************************
  * \brief
  *    Initiate quantization process arrays
- ***********************************************************************
+** *********************************************************************
  */
 void init_qp_process (sCodingParams *cps)
 {
@@ -118,20 +118,20 @@ void free_qp_matrices (sCodingParams *cps)
 
 //{{{
 /*!
- ************************************************************************
+** **********************************************************************
  * \brief
  *    For mapping the q-matrix to the active id and calculate quantisation values
  *
  * \param currSlice
- *    mSlice pointer
+ *    sSlice pointer
  * \param pps
  *    Picture parameter set
  * \param sps
  *    Sequence parameter set
  *
- ************************************************************************
+** **********************************************************************
  */
-void assign_quant_params (mSlice* currSlice)
+void assign_quant_params (sSlice* currSlice)
 {
   sSPSrbsp* sps = currSlice->active_sps;
   sPPSrbsp* pps = currSlice->active_pps;
@@ -288,13 +288,13 @@ static void set_dequant8x8 (int (*InvLevelScale8x8)[8],  const int (*dequant)[8]
 
 //{{{
 /*!
- ************************************************************************
+** **********************************************************************
  * \brief
  *    For calculating the quantisation values at frame level
  *
- ************************************************************************
+** **********************************************************************
  */
-void CalculateQuant4x4Param (mSlice* currSlice)
+void CalculateQuant4x4Param (sSlice* currSlice)
 {
   int k;
   const int (*p_dequant_coef)[4][4] = dequant_coef;
@@ -319,13 +319,13 @@ void CalculateQuant4x4Param (mSlice* currSlice)
 //}}}
 //{{{
 /*!
- ************************************************************************
+** **********************************************************************
  * \brief
  *    Calculate the quantisation and inverse quantisation parameters
  *
- ************************************************************************
+** **********************************************************************
  */
-void CalculateQuant8x8Param (mSlice* currSlice)
+void CalculateQuant8x8Param (sSlice* currSlice)
 {
   int k;
   const int (*p_dequant_coef)[8][8] = dequant_coef8;

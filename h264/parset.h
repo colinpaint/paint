@@ -13,4 +13,4 @@ extern void MakePPSavailable (sVidParam* vidParam, int id, sPPSrbsp *pps);
 extern void ProcessPPS (sVidParam* vidParam, NALU_t *nalu);
 extern void CleanUpPPS (sVidParam* vidParam);
 
-extern void UseParameterSet (mSlice* currSlice);
+extern void UseParameterSet (sSlice* currSlice);

@@ -1817,7 +1817,7 @@ GLAPI PFNGLUNMAPBUFFERPROC glad_glUnmapBuffer;
 typedef void (APIENTRYP PFNGLGETBUFFERPARAMETERIVPROC)(GLenum target, GLenum pname, GLint *params);
 GLAPI PFNGLGETBUFFERPARAMETERIVPROC glad_glGetBufferParameteriv;
 #define glGetBufferParameteriv glad_glGetBufferParameteriv
-typedef void (APIENTRYP PFNGLGETBUFFERPOINTERVPROC)(GLenum target, GLenum pname, void **params);
+typedef void (APIENTRYP PFNGLGETBUFFERPOINTERVPROC)(GLenum target, GLenum pname, void** params);
 GLAPI PFNGLGETBUFFERPOINTERVPROC glad_glGetBufferPointerv;
 #define glGetBufferPointerv glad_glGetBufferPointerv
 #endif
@@ -1914,7 +1914,7 @@ GLAPI PFNGLGETVERTEXATTRIBFVPROC glad_glGetVertexAttribfv;
 typedef void (APIENTRYP PFNGLGETVERTEXATTRIBIVPROC)(GLuint index, GLenum pname, GLint *params);
 GLAPI PFNGLGETVERTEXATTRIBIVPROC glad_glGetVertexAttribiv;
 #define glGetVertexAttribiv glad_glGetVertexAttribiv
-typedef void (APIENTRYP PFNGLGETVERTEXATTRIBPOINTERVPROC)(GLuint index, GLenum pname, void **pointer);
+typedef void (APIENTRYP PFNGLGETVERTEXATTRIBPOINTERVPROC)(GLuint index, GLenum pname, void** pointer);
 GLAPI PFNGLGETVERTEXATTRIBPOINTERVPROC glad_glGetVertexAttribPointerv;
 #define glGetVertexAttribPointerv glad_glGetVertexAttribPointerv
 typedef GLboolean (APIENTRYP PFNGLISPROGRAMPROC)(GLuint program);
@@ -3243,7 +3243,7 @@ GLAPI PFNGLOBJECTPTRLABELPROC glad_glObjectPtrLabel;
 typedef void (APIENTRYP PFNGLGETOBJECTPTRLABELPROC)(const void *ptr, GLsizei bufSize, GLsizei *length, GLchar *label);
 GLAPI PFNGLGETOBJECTPTRLABELPROC glad_glGetObjectPtrLabel;
 #define glGetObjectPtrLabel glad_glGetObjectPtrLabel
-typedef void (APIENTRYP PFNGLGETPOINTERVPROC)(GLenum pname, void **params);
+typedef void (APIENTRYP PFNGLGETPOINTERVPROC)(GLenum pname, void** params);
 GLAPI PFNGLGETPOINTERVPROC glad_glGetPointerv;
 #define glGetPointerv glad_glGetPointerv
 #endif
@@ -3341,7 +3341,7 @@ GLAPI PFNGLGETNAMEDBUFFERPARAMETERIVPROC glad_glGetNamedBufferParameteriv;
 typedef void (APIENTRYP PFNGLGETNAMEDBUFFERPARAMETERI64VPROC)(GLuint buffer, GLenum pname, GLint64 *params);
 GLAPI PFNGLGETNAMEDBUFFERPARAMETERI64VPROC glad_glGetNamedBufferParameteri64v;
 #define glGetNamedBufferParameteri64v glad_glGetNamedBufferParameteri64v
-typedef void (APIENTRYP PFNGLGETNAMEDBUFFERPOINTERVPROC)(GLuint buffer, GLenum pname, void **params);
+typedef void (APIENTRYP PFNGLGETNAMEDBUFFERPOINTERVPROC)(GLuint buffer, GLenum pname, void** params);
 GLAPI PFNGLGETNAMEDBUFFERPOINTERVPROC glad_glGetNamedBufferPointerv;
 #define glGetNamedBufferPointerv glad_glGetNamedBufferPointerv
 typedef void (APIENTRYP PFNGLGETNAMEDBUFFERSUBDATAPROC)(GLuint buffer, GLintptr offset, GLsizeiptr size, void *data);

@@ -14,7 +14,7 @@ extern void  read_delta_quant (SyntaxElement* currSE, sDataPartition *dP, sMacro
 static int predict_nnz (sMacroblock* currMB, int block_type, int i,int j)
 {
   sVidParam* vidParam = currMB->vidParam;
-  mSlice* currSlice = currMB->p_Slice;
+  sSlice* currSlice = currMB->p_Slice;
 
   PixelPos pix;
 
@@ -102,7 +102,7 @@ static int predict_nnz_chroma (sMacroblock* currMB, int i,int j)
   if (picture->chroma_format_idc != YUV444)
   {
     sVidParam* vidParam = currMB->vidParam;
-    mSlice* currSlice = currMB->p_Slice;
+    sSlice* currSlice = currMB->p_Slice;
     PixelPos pix;
     int pred_nnz = 0;
     int cnt      = 0;
@@ -158,7 +158,7 @@ void read_coeff_4x4_CAVLC (sMacroblock* currMB,
                            int i, int j, int levarr[16], int runarr[16],
                            int *number_coefficients)
 {
-  mSlice* currSlice = currMB->p_Slice;
+  sSlice* currSlice = currMB->p_Slice;
   sVidParam* vidParam = currMB->vidParam;
   int mb_nr = currMB->mbAddrX;
   SyntaxElement currSE;
@@ -337,7 +337,7 @@ void read_coeff_4x4_CAVLC_444 (sMacroblock* currMB,
                                int i, int j, int levarr[16], int runarr[16],
                                int *number_coefficients)
 {
-  mSlice* currSlice = currMB->p_Slice;
+  sSlice* currSlice = currMB->p_Slice;
   sVidParam* vidParam = currMB->vidParam;
   int mb_nr = currMB->mbAddrX;
   SyntaxElement currSE;
@@ -557,13 +557,13 @@ void read_coeff_4x4_CAVLC_444 (sMacroblock* currMB,
 //}}}
 
 //{{{
-static void read_comp_coeff_4x4_CAVLC (sMacroblock* currMB, sColorPlane pl, int (*InvLevelScale4x4)[4], int qp_per, int cbp, byte **nzcoeff)
+static void read_comp_coeff_4x4_CAVLC (sMacroblock* currMB, sColorPlane pl, int (*InvLevelScale4x4)[4], int qp_per, int cbp, byte** nzcoeff)
 {
   int block_y, block_x, b8;
   int i, j, k;
   int i0, j0;
   int levarr[16] = {0}, runarr[16] = {0}, numcoeff;
-  mSlice* currSlice = currMB->p_Slice;
+  sSlice* currSlice = currMB->p_Slice;
   sVidParam* vidParam = currMB->vidParam;
   const byte (*pos_scan4x4)[2] = ((vidParam->structure == FRAME) && (!currMB->mb_field)) ? SNGL_SCAN : FIELD_SCAN;
   const byte *pos_scan_4x4 = pos_scan4x4[0];
@@ -640,13 +640,13 @@ static void read_comp_coeff_4x4_CAVLC (sMacroblock* currMB, sColorPlane pl, int 
 }
 //}}}
 //{{{
-static void read_comp_coeff_4x4_CAVLC_ls (sMacroblock* currMB, sColorPlane pl, int (*InvLevelScale4x4)[4], int qp_per, int cbp, byte **nzcoeff)
+static void read_comp_coeff_4x4_CAVLC_ls (sMacroblock* currMB, sColorPlane pl, int (*InvLevelScale4x4)[4], int qp_per, int cbp, byte** nzcoeff)
 {
   int block_y, block_x, b8;
   int i, j, k;
   int i0, j0;
   int levarr[16] = {0}, runarr[16] = {0}, numcoeff;
-  mSlice* currSlice = currMB->p_Slice;
+  sSlice* currSlice = currMB->p_Slice;
   sVidParam* vidParam = currMB->vidParam;
   const byte (*pos_scan4x4)[2] = ((vidParam->structure == FRAME) && (!currMB->mb_field)) ? SNGL_SCAN : FIELD_SCAN;
   int start_scan = IS_I16MB(currMB) ? 1 : 0;
@@ -717,14 +717,14 @@ static void read_comp_coeff_4x4_CAVLC_ls (sMacroblock* currMB, sColorPlane pl, i
 }
 //}}}
 //{{{
-static void read_comp_coeff_8x8_CAVLC (sMacroblock* currMB, sColorPlane pl, int (*InvLevelScale8x8)[8], int qp_per, int cbp, byte **nzcoeff)
+static void read_comp_coeff_8x8_CAVLC (sMacroblock* currMB, sColorPlane pl, int (*InvLevelScale8x8)[8], int qp_per, int cbp, byte** nzcoeff)
 {
   int block_y, block_x, b4, b8;
   int block_y4, block_x4;
   int i, j, k;
   int i0, j0;
   int levarr[16] = {0}, runarr[16] = {0}, numcoeff;
-  mSlice* currSlice = currMB->p_Slice;
+  sSlice* currSlice = currMB->p_Slice;
   sVidParam* vidParam = currMB->vidParam;
   const byte (*pos_scan8x8)[2] = ((vidParam->structure == FRAME) && (!currMB->mb_field)) ? SNGL_SCAN8x8 : FIELD_SCAN8x8;
   int start_scan = IS_I16MB(currMB) ? 1 : 0;
@@ -802,12 +802,12 @@ static void read_comp_coeff_8x8_CAVLC (sMacroblock* currMB, sColorPlane pl, int 
 }
 //}}}
 //{{{
-static void read_comp_coeff_8x8_CAVLC_ls (sMacroblock* currMB, sColorPlane pl, int (*InvLevelScale8x8)[8], int qp_per, int cbp, byte **nzcoeff)
+static void read_comp_coeff_8x8_CAVLC_ls (sMacroblock* currMB, sColorPlane pl, int (*InvLevelScale8x8)[8], int qp_per, int cbp, byte** nzcoeff)
 {
   int block_y, block_x, b4, b8;
   int i, j, k;
   int levarr[16] = {0}, runarr[16] = {0}, numcoeff;
-  mSlice* currSlice = currMB->p_Slice;
+  sSlice* currSlice = currMB->p_Slice;
   sVidParam* vidParam = currMB->vidParam;
   const byte (*pos_scan8x8)[2] = ((vidParam->structure == FRAME) && (!currMB->mb_field)) ? SNGL_SCAN8x8 : FIELD_SCAN8x8;
   int start_scan = IS_I16MB(currMB) ? 1 : 0;
@@ -893,7 +893,7 @@ static void read_CBP_and_coeffs_from_NAL_CAVLC_400 (sMacroblock* currMB)
   int cbp;
   SyntaxElement currSE;
   sDataPartition *dP = NULL;
-  mSlice* currSlice = currMB->p_Slice;
+  sSlice* currSlice = currMB->p_Slice;
   const byte *partMap = assignSE2partition[currSlice->dp_mode];
   int i0, j0;
 
@@ -1061,7 +1061,7 @@ static void read_CBP_and_coeffs_from_NAL_CAVLC_422 (sMacroblock* currMB)
   int cbp;
   SyntaxElement currSE;
   sDataPartition *dP = NULL;
-  mSlice* currSlice = currMB->p_Slice;
+  sSlice* currSlice = currMB->p_Slice;
   const byte *partMap = assignSE2partition[currSlice->dp_mode];
   int coef_ctr, i0, j0, b8;
   int ll;
@@ -1245,7 +1245,7 @@ static void read_CBP_and_coeffs_from_NAL_CAVLC_422 (sMacroblock* currMB)
       int (*InvLevelScale4x4)[4] = NULL;
       uv = ll>>1;
       {
-        int **imgcof = currSlice->cof[PLANE_U + uv];
+        int** imgcof = currSlice->cof[PLANE_U + uv];
         int m3[2][4] = {{0,0,0,0},{0,0,0,0}};
         int m4[2][4] = {{0,0,0,0},{0,0,0,0}};
         int qp_per_uv_dc = vidParam->qp_per_matrix[ (currMB->qpc[uv] + 3 + vidParam->bitdepth_chroma_qp_scale) ];       //for YUV422 only
@@ -1402,7 +1402,7 @@ static void read_CBP_and_coeffs_from_NAL_CAVLC_444 (sMacroblock* currMB)
   int cbp;
   SyntaxElement currSE;
   sDataPartition *dP = NULL;
-  mSlice* currSlice = currMB->p_Slice;
+  sSlice* currSlice = currMB->p_Slice;
   const byte *partMap = assignSE2partition[currSlice->dp_mode];
   int coef_ctr, i0, j0;
   int levarr[16], runarr[16], numcoeff;
@@ -1629,7 +1629,7 @@ static void read_CBP_and_coeffs_from_NAL_CAVLC_420 (sMacroblock* currMB)
   int cbp;
   SyntaxElement currSE;
   sDataPartition *dP = NULL;
-  mSlice* currSlice = currMB->p_Slice;
+  sSlice* currSlice = currMB->p_Slice;
   const byte *partMap = assignSE2partition[currSlice->dp_mode];
   int coef_ctr, i0, j0, b8;
   int ll;
@@ -1947,7 +1947,7 @@ void set_read_comp_coeff_cavlc (sMacroblock* currMB)
 }
 //}}}
 //{{{
-void set_read_CBP_and_coeffs_cavlc (mSlice* currSlice) {
+void set_read_CBP_and_coeffs_cavlc (sSlice* currSlice) {
 
   switch (currSlice->vidParam->active_sps->chroma_format_idc) {
     case YUV444:

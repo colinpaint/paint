@@ -69,7 +69,7 @@ static void setup_buffers (sVidParam* vidParam, int layer_id) {
 //}}}
 
 //{{{
-static void update_mbaff_macroblock_data (sPixel **cur_img, sPixel (*temp)[16], int x0, int width, int height) {
+static void update_mbaff_macroblock_data (sPixel** cur_img, sPixel (*temp)[16], int x0, int width, int height) {
 
   sPixel (*temp_evn)[16] = temp;
   sPixel (*temp_odd)[16] = temp + height;
@@ -111,7 +111,7 @@ static void mbAffPostProc (sVidParam* vidParam) {
   }
 //}}}
 //{{{
-static void fill_wp_params (mSlice *currSlice) {
+static void fill_wp_params (sSlice *currSlice) {
 
   if (currSlice->slice_type == B_SLICE) {
     int comp;
@@ -210,7 +210,7 @@ static void fill_wp_params (mSlice *currSlice) {
   }
 //}}}
 //{{{
-static void errorTracking (sVidParam* vidParam, mSlice *currSlice) {
+static void errorTracking (sVidParam* vidParam, sSlice *currSlice) {
 
   if (currSlice->redundant_pic_cnt == 0)
     vidParam->Is_primary_correct = vidParam->Is_redundant_correct = 1;
@@ -228,7 +228,7 @@ static void errorTracking (sVidParam* vidParam, mSlice *currSlice) {
   }
 //}}}
 //{{{
-static void copyPOC (mSlice *pSlice0, mSlice *currSlice) {
+static void copyPOC (sSlice *pSlice0, sSlice *currSlice) {
 
   currSlice->framepoc  = pSlice0->framepoc;
   currSlice->toppoc    = pSlice0->toppoc;
@@ -237,7 +237,7 @@ static void copyPOC (mSlice *pSlice0, mSlice *currSlice) {
   }
 //}}}
 //{{{
-static void reorderLists (mSlice* currSlice) {
+static void reorderLists (sSlice* currSlice) {
 
   sVidParam* vidParam = currSlice->vidParam;
 
@@ -354,7 +354,7 @@ static void ercWriteMBMODEandMV (sMacroblock* currMB) {
   }
 //}}}
 //{{{
-static void init_cur_imgy (mSlice* currSlice, sVidParam* vidParam) {
+static void init_cur_imgy (sSlice* currSlice, sVidParam* vidParam) {
 
   if ((vidParam->separate_colour_plane_flag != 0)) {
     sPicture* vidref = vidParam->no_reference_picture;
@@ -397,7 +397,7 @@ static void init_cur_imgy (mSlice* currSlice, sVidParam* vidParam) {
 //}}}
 
 //{{{
-static int isNewPicture (sPicture* picture, mSlice* currSlice, OldSliceParams* p_old_slice) {
+static int isNewPicture (sPicture* picture, sSlice* currSlice, OldSliceParams* p_old_slice) {
 
   int result = (NULL == picture);
 
@@ -474,7 +474,7 @@ static void copyDecPicture_JV (sVidParam* vidParam, sPicture* dst, sPicture* src
   }
 //}}}
 //{{{
-static void initPicture (sVidParam* vidParam, mSlice *currSlice, InputParameters *p_Inp) {
+static void initPicture (sVidParam* vidParam, sSlice *currSlice, InputParameters *p_Inp) {
 
   sPicture* picture = NULL;
   sSPSrbsp* active_sps = vidParam->active_sps;
@@ -662,7 +662,7 @@ static void initPictureDecoding (sVidParam* vidParam) {
   if (vidParam->iSliceNumOfCurrPic >= MAX_NUM_SLICES)
     error ("Maximum number of supported slices exceeded, increase MAX_NUM_SLICES", 200);
 
-  mSlice* slice = vidParam->ppSliceList[0];
+  sSlice* slice = vidParam->ppSliceList[0];
   if (vidParam->pNextPPS->Valid &&
       (int)vidParam->pNextPPS->pic_parameter_set_id == slice->pic_parameter_set_id) {
     sPPSrbsp tmpPPS;
@@ -698,7 +698,7 @@ static void framePostProcessing (sVidParam* vidParam) {}
 static void fieldPostProcessing (sVidParam* vidParam) { vidParam->number /= 2; }
 
 //{{{
-static void copySliceInfo (mSlice* currSlice, OldSliceParams* p_old_slice) {
+static void copySliceInfo (sSlice* currSlice, OldSliceParams* p_old_slice) {
 
   sVidParam* vidParam = currSlice->vidParam;
 
@@ -729,7 +729,7 @@ static void copySliceInfo (mSlice* currSlice, OldSliceParams* p_old_slice) {
   }
 //}}}
 //{{{
-static void initSlice (sVidParam* vidParam, mSlice *currSlice) {
+static void initSlice (sVidParam* vidParam, sSlice *currSlice) {
 
   vidParam->active_sps = currSlice->active_sps;
   vidParam->active_pps = currSlice->active_pps;
@@ -760,7 +760,7 @@ static void initSlice (sVidParam* vidParam, mSlice *currSlice) {
   }
 //}}}
 //{{{
-static void decodeOneSlice (mSlice* currSlice) {
+static void decodeOneSlice (sSlice* currSlice) {
 
   Boolean end_of_slice = FALSE;
   currSlice->cod_counter=-1;
@@ -801,7 +801,7 @@ static void decodeOneSlice (mSlice* currSlice) {
   }
 //}}}
 //{{{
-static void decodeSlice (mSlice *currSlice, int current_header) {
+static void decodeSlice (sSlice *currSlice, int current_header) {
 
   if (currSlice->active_pps->entropy_coding_mode_flag) {
     init_contexts (currSlice);
@@ -818,7 +818,7 @@ static void decodeSlice (mSlice *currSlice, int current_header) {
   }
 //}}}
 //{{{
-static int readNewSlice (mSlice* currSlice) {
+static int readNewSlice (sSlice* currSlice) {
 
   static NALU_t* pendingNalu = NULL;
 
@@ -1327,8 +1327,8 @@ int decode_one_frame (sDecoderParams* pDecoder) {
   InputParameters* p_Inp = vidParam->p_Inp;
 
   int iSliceNo = 0;
-  mSlice* currSlice = NULL;
-  mSlice** ppSliceList = vidParam->ppSliceList;
+  sSlice* currSlice = NULL;
+  sSlice** ppSliceList = vidParam->ppSliceList;
 
   // read one picture first
   vidParam->iSliceNumOfCurrPic = 0;
@@ -1405,17 +1405,17 @@ int decode_one_frame (sDecoderParams* pDecoder) {
 
        vidParam->iSliceNumOfCurrPic++;
        if (vidParam->iSliceNumOfCurrPic >= vidParam->iNumOfSlicesAllocated) {
-         mSlice** tmpSliceList = (mSlice**)realloc (
-           vidParam->ppSliceList, (vidParam->iNumOfSlicesAllocated+MAX_NUM_DECSLICES)*sizeof(mSlice*));
+         sSlice** tmpSliceList = (sSlice**)realloc (
+           vidParam->ppSliceList, (vidParam->iNumOfSlicesAllocated+MAX_NUM_DECSLICES)*sizeof(sSlice*));
          if (!tmpSliceList) {
-           tmpSliceList = calloc ((vidParam->iNumOfSlicesAllocated + MAX_NUM_DECSLICES), sizeof(mSlice*));
-           memcpy (tmpSliceList, vidParam->ppSliceList, vidParam->iSliceNumOfCurrPic*sizeof(mSlice*));
+           tmpSliceList = calloc ((vidParam->iNumOfSlicesAllocated + MAX_NUM_DECSLICES), sizeof(sSlice*));
+           memcpy (tmpSliceList, vidParam->ppSliceList, vidParam->iSliceNumOfCurrPic*sizeof(sSlice*));
            free (vidParam->ppSliceList);
            ppSliceList = vidParam->ppSliceList = tmpSliceList;
            }
          else {
            ppSliceList = vidParam->ppSliceList = tmpSliceList;
-           memset (vidParam->ppSliceList + vidParam->iSliceNumOfCurrPic, 0, sizeof(mSlice*)*MAX_NUM_DECSLICES);
+           memset (vidParam->ppSliceList + vidParam->iSliceNumOfCurrPic, 0, sizeof(sSlice*)*MAX_NUM_DECSLICES);
            }
          vidParam->iNumOfSlicesAllocated += MAX_NUM_DECSLICES;
         }

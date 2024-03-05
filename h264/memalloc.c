@@ -5,15 +5,15 @@
 
 //{{{
 /*!
- ************************************************************************
+** **********************************************************************
  * \brief
  *    Initialize 2-dimensional top and bottom field to point to the proper
  *    lines in frame
  *
  * \par Output:
  *    memory size in bytes
- ************************************************************************/
-int init_top_bot_planes (sPixel **imgFrame, int dim0, sPixel ***imgTopField, sPixel ***imgBotField)
+** **********************************************************************/
+int init_top_bot_planes (sPixel** imgFrame, int dim0, sPixel** *imgTopField, sPixel** *imgBotField)
 {
   int i;
 
@@ -34,14 +34,14 @@ int init_top_bot_planes (sPixel **imgFrame, int dim0, sPixel ***imgTopField, sPi
 //}}}
 //{{{
  /*!
- ************************************************************************
+** **********************************************************************
  * \brief
  *    free 2-dimensional top and bottom fields without freeing target memory
  *
  * \par Output:
  *    memory size in bytes
- ************************************************************************/
-void free_top_bot_planes (sPixel **imgTopField, sPixel **imgBotField)
+** **********************************************************************/
+void free_top_bot_planes (sPixel** imgTopField, sPixel** imgBotField)
 {
   mem_free (imgTopField);
   mem_free (imgBotField);
@@ -50,14 +50,14 @@ void free_top_bot_planes (sPixel **imgTopField, sPixel **imgBotField)
 
 //{{{
 /*!
- ************************************************************************
+** **********************************************************************
  * \brief
  *    Allocate 2D memory array -> sPicMotionParams array2D[dim0][dim1]
  *
  * \par Output:
  *    memory size in bytes
- ************************************************************************/
-int get_mem2Dmp (sPicMotionParams ***array2D, int dim0, int dim1)
+** **********************************************************************/
+int get_mem2Dmp (sPicMotionParams** *array2D, int dim0, int dim1)
 {
   int i;
 
@@ -74,15 +74,15 @@ int get_mem2Dmp (sPicMotionParams ***array2D, int dim0, int dim1)
 //}}}
 //{{{
 /*!
- ************************************************************************
+** **********************************************************************
  * \brief
  *    Allocate 3D memory array -> sPicMotionParams array3D[frames][dim0][dim1]
  *
  * \par Output:
  *    memory size in bytes
- ************************************************************************
+** **********************************************************************
  */
-int get_mem3Dmp (sPicMotionParams ****array3D, int dim0, int dim1, int dim2)
+int get_mem3Dmp (sPicMotionParams** **array3D, int dim0, int dim1, int dim2)
 {
   int i, mem_size = dim0 * sizeof(sPicMotionParams**);
 
@@ -99,13 +99,13 @@ int get_mem3Dmp (sPicMotionParams ****array3D, int dim0, int dim1, int dim2)
 //}}}
 //{{{
 /*!
- ************************************************************************
+** **********************************************************************
  * \brief
  *    free 2D memory array
  *    which was allocated with get_mem2Dmp()
- ************************************************************************
+** **********************************************************************
  */
-void free_mem2Dmp (sPicMotionParams **array2D)
+void free_mem2Dmp (sPicMotionParams** array2D)
 {
   if (array2D)
   {
@@ -124,13 +124,13 @@ void free_mem2Dmp (sPicMotionParams **array2D)
 //}}}
 //{{{
 /*!
- ************************************************************************
+** **********************************************************************
  * \brief
  *    free 3D memory array
  *    which was allocated with get_mem3Dmp()
- ************************************************************************
+** **********************************************************************
  */
-void free_mem3Dmp (sPicMotionParams ***array3D)
+void free_mem3Dmp (sPicMotionParams** *array3D)
 {
   if (array3D)
   {
@@ -146,14 +146,14 @@ void free_mem3Dmp (sPicMotionParams ***array3D)
 
 //{{{
 /*!
- ************************************************************************
+** **********************************************************************
  * \brief
  *    Allocate 2D memory array -> WPParams array2D[dim0][dim1]
  *
  * \par Output:
  *    memory size in bytes
- ************************************************************************/
-int get_mem2Dwp (WPParams ***array2D, int dim0, int dim1)
+** **********************************************************************/
+int get_mem2Dwp (WPParams** *array2D, int dim0, int dim1)
 {
   int i;
 
@@ -170,13 +170,13 @@ int get_mem2Dwp (WPParams ***array2D, int dim0, int dim1)
 //}}}
 //{{{
 /*!
- ************************************************************************
+** **********************************************************************
  * \brief
  *    free 2D memory array
  *    which was allocated with get_mem2Dwp()
- ************************************************************************
+** **********************************************************************
  */
-void free_mem2Dwp (WPParams **array2D)
+void free_mem2Dwp (WPParams** array2D)
 {
   if (array2D)
   {
@@ -196,14 +196,14 @@ void free_mem2Dwp (WPParams **array2D)
 
 //{{{
 /*!
- ************************************************************************
+** **********************************************************************
  * \brief
  *    Allocate 2D memory array -> StorablePicturePtr array2D[dim0][dim1]
  *
  * \par Output:
  *    memory size in bytes
- ************************************************************************/
-int get_mem2D_spp (StorablePicturePtr ***array2D, int dim0, int dim1)
+** **********************************************************************/
+int get_mem2D_spp (StorablePicturePtr** *array2D, int dim0, int dim1)
 {
   int i;
 
@@ -220,15 +220,15 @@ int get_mem2D_spp (StorablePicturePtr ***array2D, int dim0, int dim1)
 //}}}
 //{{{
 /*!
- ************************************************************************
+** **********************************************************************
  * \brief
  *    Allocate 3D memory array -> StorablePicturePtr array3D[dim0][dim1][dim2]
  *
  * \par Output:
  *    memory size in bytes
- ************************************************************************
+** **********************************************************************
  */
-int get_mem3D_spp (StorablePicturePtr ****array3D, int dim0, int dim1, int dim2)
+int get_mem3D_spp (StorablePicturePtr** **array3D, int dim0, int dim1, int dim2)
 {
   int i, mem_size = dim0 * sizeof(StorablePicturePtr**);
 
@@ -245,14 +245,14 @@ int get_mem3D_spp (StorablePicturePtr ****array3D, int dim0, int dim1, int dim2)
 //}}}
 //{{{
 /*!
- ************************************************************************
+** **********************************************************************
  * \brief
  *    Allocate 2D memory array -> MotionVector array2D[dim0][dim1]
  *
  * \par Output:
  *    memory size in bytes
- ************************************************************************/
-int get_mem2Dmv (MotionVector ***array2D, int dim0, int dim1)
+** **********************************************************************/
+int get_mem2Dmv (MotionVector** *array2D, int dim0, int dim1)
 {
   int i;
 
@@ -269,15 +269,15 @@ int get_mem2Dmv (MotionVector ***array2D, int dim0, int dim1)
 //}}}
 //{{{
 /*!
- ************************************************************************
+** **********************************************************************
  * \brief
  *    Allocate 3D memory array -> MotionVector array3D[dim0][dim1][dim2]
  *
  * \par Output:
  *    memory size in bytes
- ************************************************************************
+** **********************************************************************
  */
-int get_mem3Dmv (MotionVector ****array3D, int dim0, int dim1, int dim2)
+int get_mem3Dmv (MotionVector** **array3D, int dim0, int dim1, int dim2)
 {
   int i, mem_size = dim0 * sizeof(MotionVector**);
 
@@ -294,15 +294,15 @@ int get_mem3Dmv (MotionVector ****array3D, int dim0, int dim1, int dim2)
 //}}}
 //{{{
 /*!
- ************************************************************************
+** **********************************************************************
  * \brief
  *    Allocate 4D memory array -> MotionVector array3D[dim0][dim1][dim2][dim3]
  *
  * \par Output:
  *    memory size in bytes
- ************************************************************************
+** **********************************************************************
  */
-int get_mem4Dmv (MotionVector *****array4D, int dim0, int dim1, int dim2, int dim3)
+int get_mem4Dmv (MotionVector** ***array4D, int dim0, int dim1, int dim2, int dim3)
 {
   int i, mem_size = dim0 * sizeof(MotionVector***);
 
@@ -319,15 +319,15 @@ int get_mem4Dmv (MotionVector *****array4D, int dim0, int dim1, int dim2, int di
 //}}}
 //{{{
 /*!
- ************************************************************************
+** **********************************************************************
  * \brief
  *    Allocate 5D memory array -> MotionVector array3D[dim0][dim1][dim2][dim3][dim4]
  *
  * \par Output:
  *    memory size in bytes
- ************************************************************************
+** **********************************************************************
  */
-int get_mem5Dmv (MotionVector ******array5D, int dim0, int dim1, int dim2, int dim3, int dim4)
+int get_mem5Dmv (MotionVector** ****array5D, int dim0, int dim1, int dim2, int dim3, int dim4)
 {
   int i, mem_size = dim0 * sizeof(MotionVector***);
 
@@ -344,15 +344,15 @@ int get_mem5Dmv (MotionVector ******array5D, int dim0, int dim1, int dim2, int d
 //}}}
 //{{{
 /*!
- ************************************************************************
+** **********************************************************************
  * \brief
  *    Allocate 6D memory array -> MotionVector array6D[dim0][dim1][dim2][dim3][dim4][dim5]
  *
  * \par Output:
  *    memory size in bytes
- ************************************************************************
+** **********************************************************************
  */
-int get_mem6Dmv (MotionVector *******array6D, int dim0, int dim1, int dim2, int dim3, int dim4, int dim5)
+int get_mem6Dmv (MotionVector** *****array6D, int dim0, int dim1, int dim2, int dim3, int dim4, int dim5)
 {
   int i, mem_size = dim0 * sizeof(MotionVector*****);
 
@@ -369,15 +369,15 @@ int get_mem6Dmv (MotionVector *******array6D, int dim0, int dim1, int dim2, int 
 //}}}
 //{{{
 /*!
- ************************************************************************
+** **********************************************************************
  * \brief
  *    Allocate 7D memory array -> MotionVector array6D[dim0][dim1][dim2][dim3][dim4][dim5][dim6]
  *
  * \par Output:
  *    memory size in bytes
- ************************************************************************
+** **********************************************************************
  */
-int get_mem7Dmv (MotionVector ********array7D, int dim0, int dim1, int dim2, int dim3, int dim4, int dim5, int dim6)
+int get_mem7Dmv (MotionVector** ******array7D, int dim0, int dim1, int dim2, int dim3, int dim4, int dim5, int dim6)
 {
   int i, mem_size = dim0 * sizeof(MotionVector*****);
 
@@ -396,13 +396,13 @@ int get_mem7Dmv (MotionVector ********array7D, int dim0, int dim1, int dim2, int
 
 //{{{
 /*!
- ************************************************************************
+** **********************************************************************
  * \brief
  *    free 2D memory array
  *    which was allocated with get_mem2D_spp()
- ************************************************************************
+** **********************************************************************
  */
-void free_mem2D_spp (StorablePicturePtr **array2D)
+void free_mem2D_spp (StorablePicturePtr** array2D)
 {
   if (array2D)
   {
@@ -422,13 +422,13 @@ void free_mem2D_spp (StorablePicturePtr **array2D)
 //}}}
 //{{{
 /*!
- ************************************************************************
+** **********************************************************************
  * \brief
  *    free 3D memory array
  *    which was allocated with get_mem3D_spp()
- ************************************************************************
+** **********************************************************************
  */
-void free_mem3D_spp (StorablePicturePtr ***array3D)
+void free_mem3D_spp (StorablePicturePtr** *array3D)
 {
   if (array3D)
   {
@@ -443,13 +443,13 @@ void free_mem3D_spp (StorablePicturePtr ***array3D)
 //}}}
 //{{{
 /*!
- ************************************************************************
+** **********************************************************************
  * \brief
  *    free 2D memory array
  *    which was allocated with get_mem2Dmv()
- ************************************************************************
+** **********************************************************************
  */
-void free_mem2Dmv (MotionVector **array2D)
+void free_mem2Dmv (MotionVector** array2D)
 {
   if (array2D)
   {
@@ -468,13 +468,13 @@ void free_mem2Dmv (MotionVector **array2D)
 //}}}
 //{{{
 /*!
- ************************************************************************
+** **********************************************************************
  * \brief
  *    free 3D memory array
  *    which was allocated with get_mem3Dmv()
- ************************************************************************
+** **********************************************************************
  */
-void free_mem3Dmv (MotionVector ***array3D)
+void free_mem3Dmv (MotionVector** *array3D)
 {
   if (array3D)
   {
@@ -489,13 +489,13 @@ void free_mem3Dmv (MotionVector ***array3D)
 //}}}
 //{{{
 /*!
- ************************************************************************
+** **********************************************************************
  * \brief
  *    free 4D memory array
  *    which was allocated with get_mem4Dmv()
- ************************************************************************
+** **********************************************************************
  */
-void free_mem4Dmv (MotionVector ****array4D)
+void free_mem4Dmv (MotionVector** **array4D)
 {
   if (array4D)
   {
@@ -510,13 +510,13 @@ void free_mem4Dmv (MotionVector ****array4D)
 //}}}
 //{{{
 /*!
- ************************************************************************
+** **********************************************************************
  * \brief
  *    free 5D memory array
  *    which was allocated with get_mem5Dmv()
- ************************************************************************
+** **********************************************************************
  */
-void free_mem5Dmv (MotionVector *****array5D)
+void free_mem5Dmv (MotionVector** ***array5D)
 {
   if (array5D)
   {
@@ -531,13 +531,13 @@ void free_mem5Dmv (MotionVector *****array5D)
 //}}}
 //{{{
 /*!
- ************************************************************************
+** **********************************************************************
  * \brief
  *    free 6D memory array
  *    which was allocated with get_mem6Dmv()
- ************************************************************************
+** **********************************************************************
  */
-void free_mem6Dmv (MotionVector ******array6D)
+void free_mem6Dmv (MotionVector** ****array6D)
 {
   if (array6D)
   {
@@ -552,13 +552,13 @@ void free_mem6Dmv (MotionVector ******array6D)
 //}}}
 //{{{
 /*!
- ************************************************************************
+** **********************************************************************
  * \brief
  *    free 7D memory array
  *    which was allocated with get_mem7Dmv()
- ************************************************************************
+** **********************************************************************
  */
-void free_mem7Dmv (MotionVector *******array7D)
+void free_mem7Dmv (MotionVector** *****array7D)
 {
   if (array7D)
   {
@@ -574,14 +574,14 @@ void free_mem7Dmv (MotionVector *******array7D)
 
 //{{{
 /*!
- ************************************************************************
+** **********************************************************************
  * \brief
  *    Allocate 1D memory array -> sPixel array1D[dim0
  *
  * \par Output:
  *    memory size in bytes
- ************************************************************************/
-int get_mem1Dpel (sPixel **array1D, int dim0)
+** **********************************************************************/
+int get_mem1Dpel (sPixel** array1D, int dim0)
 {
   if((*array1D    = (sPixel*)mem_calloc(dim0,       sizeof(sPixel))) == NULL)
     no_mem_exit("get_mem1Dpel: array1D");
@@ -591,14 +591,14 @@ int get_mem1Dpel (sPixel **array1D, int dim0)
 //}}}
 //{{{
 /*!
- ************************************************************************
+** **********************************************************************
  * \brief
  *    Allocate 2D memory array -> sPixel array2D[dim0][dim1]
  *
  * \par Output:
  *    memory size in bytes
- ************************************************************************/
-int get_mem2Dpel (sPixel ***array2D, int dim0, int dim1)
+** **********************************************************************/
+int get_mem2Dpel (sPixel** *array2D, int dim0, int dim1)
 {
   int i;
 
@@ -616,7 +616,7 @@ int get_mem2Dpel (sPixel ***array2D, int dim0, int dim1)
 }
 //}}}
 //{{{
-int get_mem2Dpel_pad (sPixel ***array2D, int dim0, int dim1, int iPadY, int iPadX)
+int get_mem2Dpel_pad (sPixel** *array2D, int dim0, int dim1, int iPadY, int iPadX)
 {
   int i;
   sPixel *curr = NULL;
@@ -643,15 +643,15 @@ int get_mem2Dpel_pad (sPixel ***array2D, int dim0, int dim1, int iPadY, int iPad
 //}}}
 //{{{
 /*!
- ************************************************************************
+** **********************************************************************
  * \brief
  *    Allocate 3D memory array -> sPixel array3D[dim0][dim1][dim2]
  *
  * \par Output:
  *    memory size in bytes
- ************************************************************************
+** **********************************************************************
  */
-int get_mem3Dpel (sPixel ****array3D, int dim0, int dim1, int dim2)
+int get_mem3Dpel (sPixel** **array3D, int dim0, int dim1, int dim2)
 {
   int i, mem_size = dim0 * sizeof(sPixel**);
 
@@ -666,7 +666,7 @@ int get_mem3Dpel (sPixel ****array3D, int dim0, int dim1, int dim2)
   return mem_size;
 }
 
-int get_mem3Dpel_pad(sPixel ****array3D, int dim0, int dim1, int dim2, int iPadY, int iPadX)
+int get_mem3Dpel_pad(sPixel** **array3D, int dim0, int dim1, int dim2, int iPadY, int iPadX)
 {
   int i, mem_size = dim0 * sizeof(sPixel**);
 
@@ -681,15 +681,15 @@ int get_mem3Dpel_pad(sPixel ****array3D, int dim0, int dim1, int dim2, int iPadY
 //}}}
 //{{{
 /*!
- ************************************************************************
+** **********************************************************************
  * \brief
  *    Allocate 4D memory array -> sPixel array4D[dim0][dim1][dim2][dim3]
  *
  * \par Output:
  *    memory size in bytes
- ************************************************************************
+** **********************************************************************
  */
-int get_mem4Dpel (sPixel *****array4D, int dim0, int dim1, int dim2, int dim3)
+int get_mem4Dpel (sPixel** ***array4D, int dim0, int dim1, int dim2, int dim3)
 {
   int  i, mem_size = dim0 * sizeof(sPixel***);
 
@@ -705,7 +705,7 @@ int get_mem4Dpel (sPixel *****array4D, int dim0, int dim1, int dim2, int dim3)
 }
 //}}}
 //{{{
-int get_mem4Dpel_pad (sPixel *****array4D, int dim0, int dim1, int dim2, int dim3, int iPadY, int iPadX)
+int get_mem4Dpel_pad (sPixel** ***array4D, int dim0, int dim1, int dim2, int dim3, int iPadY, int iPadX)
 {
   int  i, mem_size = dim0 * sizeof(sPixel***);
 
@@ -722,15 +722,15 @@ int get_mem4Dpel_pad (sPixel *****array4D, int dim0, int dim1, int dim2, int dim
 //}}}
 //{{{
 /*!
- ************************************************************************
+** **********************************************************************
  * \brief
  *    Allocate 5D memory array -> sPixel array5D[dim0][dim1][dim2][dim3][dim4]
  *
  * \par Output:
  *    memory size in bytes
- ************************************************************************
+** **********************************************************************
  */
-int get_mem5Dpel (sPixel ******array5D, int dim0, int dim1, int dim2, int dim3, int dim4)
+int get_mem5Dpel (sPixel** ****array5D, int dim0, int dim1, int dim2, int dim3, int dim4)
 {
   int  i, mem_size = dim0 * sizeof(sPixel****);
 
@@ -746,7 +746,7 @@ int get_mem5Dpel (sPixel ******array5D, int dim0, int dim1, int dim2, int dim3, 
 }
 //}}}
 //{{{
-int get_mem5Dpel_pad (sPixel ******array5D, int dim0, int dim1, int dim2, int dim3, int dim4, int iPadY, int iPadX)
+int get_mem5Dpel_pad (sPixel** ****array5D, int dim0, int dim1, int dim2, int dim3, int dim4, int iPadY, int iPadX)
 {
   int  i, mem_size = dim0 * sizeof(sPixel****);
 
@@ -764,11 +764,11 @@ int get_mem5Dpel_pad (sPixel ******array5D, int dim0, int dim1, int dim2, int di
 
 //{{{
 /*!
- ************************************************************************
+** **********************************************************************
  * \brief
  *    free 1D memory array
  *    which was allocated with get_mem1Dpel()
- ************************************************************************
+** **********************************************************************
  */
 void free_mem1Dpel (sPixel *array1D)
 {
@@ -784,13 +784,13 @@ void free_mem1Dpel (sPixel *array1D)
 //}}}
 //{{{
 /*!
- ************************************************************************
+** **********************************************************************
  * \brief
  *    free 2D memory array
  *    which was allocated with get_mem2Dpel()
- ************************************************************************
+** **********************************************************************
  */
-void free_mem2Dpel (sPixel **array2D)
+void free_mem2Dpel (sPixel** array2D)
 {
   if (array2D)
   {
@@ -808,7 +808,7 @@ void free_mem2Dpel (sPixel **array2D)
 }
 //}}}
 //{{{
-void free_mem2Dpel_pad (sPixel **array2D, int iPadY, int iPadX)
+void free_mem2Dpel_pad (sPixel** array2D, int iPadY, int iPadX)
 {
   if (array2D)
   {
@@ -829,13 +829,13 @@ void free_mem2Dpel_pad (sPixel **array2D, int iPadY, int iPadX)
 //}}}
 //{{{
 /*!
- ************************************************************************
+** **********************************************************************
  * \brief
  *    free 3D memory array
  *    which was allocated with get_mem3Dpel()
- ************************************************************************
+** **********************************************************************
  */
-void free_mem3Dpel (sPixel ***array3D)
+void free_mem3Dpel (sPixel** *array3D)
 {
   if (array3D)
   {
@@ -849,7 +849,7 @@ void free_mem3Dpel (sPixel ***array3D)
 }
 //}}}
 //{{{
-void free_mem3Dpel_pad (sPixel ***array3D, int iDim12, int iPadY, int iPadX)
+void free_mem3Dpel_pad (sPixel** *array3D, int iDim12, int iPadY, int iPadX)
 {
   if (array3D)
   {
@@ -871,13 +871,13 @@ void free_mem3Dpel_pad (sPixel ***array3D, int iDim12, int iPadY, int iPadX)
 //}}}
 //{{{
 /*!
- ************************************************************************
+** **********************************************************************
  * \brief
  *    free 4D memory array
  *    which was allocated with get_mem4Dpel()
- ************************************************************************
+** **********************************************************************
  */
-void free_mem4Dpel (sPixel ****array4D)
+void free_mem4Dpel (sPixel** **array4D)
 {
   if (array4D)
   {
@@ -891,7 +891,7 @@ void free_mem4Dpel (sPixel ****array4D)
 }
 //}}}
 //{{{
-void free_mem4Dpel_pad (sPixel  ****array4D, int iFrames, int iPadY, int iPadX)
+void free_mem4Dpel_pad (sPixel ** **array4D, int iFrames, int iPadY, int iPadX)
 {
   if (array4D)
   {
@@ -906,13 +906,13 @@ void free_mem4Dpel_pad (sPixel  ****array4D, int iFrames, int iPadY, int iPadX)
 //}}}
 //{{{
 /*!
- ************************************************************************
+** **********************************************************************
  * \brief
  *    free 5D memory array
  *    which was allocated with get_mem5Dpel()
- ************************************************************************
+** **********************************************************************
  */
-void free_mem5Dpel (sPixel *****array5D)
+void free_mem5Dpel (sPixel** ***array5D)
 {
   if (array5D)
   {
@@ -926,7 +926,7 @@ void free_mem5Dpel (sPixel *****array5D)
 }
 //}}}
 //{{{
-void free_mem5Dpel_pad (sPixel *****array5D, int iFrames, int iPadY, int iPadX)
+void free_mem5Dpel_pad (sPixel** ***array5D, int iFrames, int iPadY, int iPadX)
 {
   if (array5D)
   {
@@ -942,18 +942,18 @@ void free_mem5Dpel_pad (sPixel *****array5D, int iFrames, int iPadY, int iPadX)
 
 //{{{
 /*!
- ************************************************************************
+** **********************************************************************
  * \brief
  *    Create 2D memory array -> byte array2D[dim0][dim1]
  *
  * \par Output:
  *    byte type array of size dim0 * dim1
- ************************************************************************
+** **********************************************************************
  */
 byte** new_mem2D (int dim0, int dim1)
 {
   int i;
-  byte **array2D;
+  byte** array2D;
 
   if((  array2D  = (byte**)mem_malloc(dim0 *      sizeof(byte*))) == NULL)
     no_mem_exit("get_mem2D: array2D");
@@ -968,14 +968,14 @@ byte** new_mem2D (int dim0, int dim1)
 //}}}
 //{{{
 /*!
- ************************************************************************
+** **********************************************************************
  * \brief
  *    Allocate 2D memory array -> unsigned char array2D[dim0][dim1]
  *
  * \par Output:
  *    memory size in bytes
- ************************************************************************/
-int get_mem2D (byte ***array2D, int dim0, int dim1)
+** **********************************************************************/
+int get_mem2D (byte** *array2D, int dim0, int dim1)
 {
   int i;
 
@@ -992,18 +992,18 @@ int get_mem2D (byte ***array2D, int dim0, int dim1)
 //}}}
 //{{{
 /*!
- ************************************************************************
+** **********************************************************************
  * \brief
  *    Create 2D memory array -> int array2D[dim0][dim1]
  *
  * \par Output:
  *    int type array of size dim0 * dim1
- ************************************************************************
+** **********************************************************************
  */
 int** new_mem2Dint (int dim0, int dim1)
 {
   int i;
-  int **array2D;
+  int** array2D;
 
   if((array2D    = (int**)mem_malloc(dim0 *       sizeof(int*))) == NULL)
     no_mem_exit("get_mem2Dint: array2D");
@@ -1018,15 +1018,15 @@ int** new_mem2Dint (int dim0, int dim1)
 //}}}
 //{{{
 /*!
- ************************************************************************
+** **********************************************************************
  * \brief
  *    Allocate 2D memory array -> int array2D[dim0][dim1]
  *
  * \par Output:
  *    memory size in bytes
- ************************************************************************
+** **********************************************************************
  */
-int get_mem2Dint (int ***array2D, int dim0, int dim1)
+int get_mem2Dint (int** *array2D, int dim0, int dim1)
 {
   int i;
 
@@ -1042,7 +1042,7 @@ int get_mem2Dint (int ***array2D, int dim0, int dim1)
 }
 //}}}
 //{{{
-int get_mem2Dint_pad (int ***array2D, int dim0, int dim1, int iPadY, int iPadX)
+int get_mem2Dint_pad (int** *array2D, int dim0, int dim1, int iPadY, int iPadX)
 {
   int i;
   int *curr = NULL;
@@ -1069,15 +1069,15 @@ int get_mem2Dint_pad (int ***array2D, int dim0, int dim1, int iPadY, int iPadX)
 //}}}
 //{{{
 /*!
- ************************************************************************
+** **********************************************************************
  * \brief
  *    Allocate 2D memory array -> int64 array2D[dim0][dim1]
  *
  * \par Output:
  *    memory size in bytes
- ************************************************************************
+** **********************************************************************
  */
-int get_mem2Dint64 (int64 ***array2D, int dim0, int dim1)
+int get_mem2Dint64 (int64** *array2D, int dim0, int dim1)
 {
   int i;
 
@@ -1094,15 +1094,15 @@ int get_mem2Dint64 (int64 ***array2D, int dim0, int dim1)
 //}}}
 //{{{
 /*!
- ************************************************************************
+** **********************************************************************
  * \brief
  *    Allocate 3D memory array -> unsigned char array3D[dim0][dim1][dim2]
  *
  * \par Output:
  *    memory size in bytes
- ************************************************************************
+** **********************************************************************
  */
-int get_mem3D (byte ****array3D, int dim0, int dim1, int dim2)
+int get_mem3D (byte** **array3D, int dim0, int dim1, int dim2)
 {
   int  i, mem_size = dim0 * sizeof(byte**);
 
@@ -1119,15 +1119,15 @@ int get_mem3D (byte ****array3D, int dim0, int dim1, int dim2)
 //}}}
 //{{{
 /*!
- ************************************************************************
+** **********************************************************************
  * \brief
  *    Allocate 4D memory array -> unsigned char array4D[dim0][dim1][dim2][dim3]
  *
  * \par Output:
  *    memory size in bytes
- ************************************************************************
+** **********************************************************************
  */
-int get_mem4D (byte *****array4D, int dim0, int dim1, int dim2, int dim3)
+int get_mem4D (byte** ***array4D, int dim0, int dim1, int dim2, int dim3)
 {
   int  i, mem_size = dim0 * sizeof(byte***);
 
@@ -1144,15 +1144,15 @@ int get_mem4D (byte *****array4D, int dim0, int dim1, int dim2, int dim3)
 //}}}
 //{{{
 /*!
- ************************************************************************
+** **********************************************************************
  * \brief
  *    Allocate 3D memory array -> int array3D[dim0][dim1][dim2]
  *
  * \par Output:
  *    memory size in bytes
- ************************************************************************
+** **********************************************************************
  */
-int get_mem3Dint (int ****array3D, int dim0, int dim1, int dim2)
+int get_mem3Dint (int** **array3D, int dim0, int dim1, int dim2)
 {
   int  i, mem_size = dim0 * sizeof(int**);
 
@@ -1169,15 +1169,15 @@ int get_mem3Dint (int ****array3D, int dim0, int dim1, int dim2)
 //}}}
 //{{{
 /*!
- ************************************************************************
+** **********************************************************************
  * \brief
  *    Allocate 3D memory array -> int64 array3D[dim0][dim1][dim2]
  *
  * \par Output:
  *    memory size in bytes
- ************************************************************************
+** **********************************************************************
  */
-int get_mem3Dint64 (int64 ****array3D, int dim0, int dim1, int dim2)
+int get_mem3Dint64 (int64** **array3D, int dim0, int dim1, int dim2)
 {
   int  i, mem_size = dim0 * sizeof(int64**);
 
@@ -1193,7 +1193,7 @@ int get_mem3Dint64 (int64 ****array3D, int dim0, int dim1, int dim2)
 }
 //}}}
 //{{{
-int get_mem2Ddistblk (distblk ***array2D, int dim0, int dim1)
+int get_mem2Ddistblk (distblk** *array2D, int dim0, int dim1)
 {
   int i;
 
@@ -1209,7 +1209,7 @@ int get_mem2Ddistblk (distblk ***array2D, int dim0, int dim1)
 }
 //}}}
 //{{{
-int get_mem3Ddistblk (distblk ****array3D, int dim0, int dim1, int dim2)
+int get_mem3Ddistblk (distblk** **array3D, int dim0, int dim1, int dim2)
 {
   int  i, mem_size = dim0 * sizeof(distblk**);
 
@@ -1225,7 +1225,7 @@ int get_mem3Ddistblk (distblk ****array3D, int dim0, int dim1, int dim2)
 }
 //}}}
 //{{{
-int get_mem4Ddistblk (distblk *****array4D, int dim0, int dim1, int dim2, int dim3)
+int get_mem4Ddistblk (distblk** ***array4D, int dim0, int dim1, int dim2, int dim3)
 {
   int  i, mem_size = dim0 * sizeof(distblk***);
 
@@ -1242,15 +1242,15 @@ int get_mem4Ddistblk (distblk *****array4D, int dim0, int dim1, int dim2, int di
 //}}}
 //{{{
 /*!
- ************************************************************************
+** **********************************************************************
  * \brief
  *    Allocate 4D memory array -> int array4D[dim0][dim1][dim2][dim3]
  *
  * \par Output:
  *    memory size in bytes
- ************************************************************************
+** **********************************************************************
  */
-int get_mem4Dint (int *****array4D, int dim0, int dim1, int dim2, int dim3)
+int get_mem4Dint (int** ***array4D, int dim0, int dim1, int dim2, int dim3)
 {
   int  i, mem_size = dim0 * sizeof(int***);
 
@@ -1266,7 +1266,7 @@ int get_mem4Dint (int *****array4D, int dim0, int dim1, int dim2, int dim3)
 }
 //}}}
 //{{{
-int get_mem4Dint64 (int64 *****array4D, int dim0, int dim1, int dim2, int dim3)
+int get_mem4Dint64 (int64** ***array4D, int dim0, int dim1, int dim2, int dim3)
 {
   int  i, mem_size = dim0 * sizeof(int64***);
 
@@ -1283,15 +1283,15 @@ int get_mem4Dint64 (int64 *****array4D, int dim0, int dim1, int dim2, int dim3)
 //}}}
 //{{{
 /*!
- ************************************************************************
+** **********************************************************************
  * \brief
  *    Allocate 5D memory array -> int array5D[dim0][dim1][dim2][dim3][dim4]
  *
  * \par Output:
  *    memory size in bytes
- ************************************************************************
+** **********************************************************************
  */
-int get_mem5Dint (int ******array5D, int dim0, int dim1, int dim2, int dim3, int dim4)
+int get_mem5Dint (int** ****array5D, int dim0, int dim1, int dim2, int dim3, int dim4)
 {
   int  i, mem_size = dim0 * sizeof(int****);
 
@@ -1310,13 +1310,13 @@ int get_mem5Dint (int ******array5D, int dim0, int dim1, int dim2, int dim3, int
 
 //{{{
 /*!
- ************************************************************************
+** **********************************************************************
  * \brief
  *    free 2D memory array
  *    which was allocated with get_mem2D()
- ************************************************************************
+** **********************************************************************
  */
-void free_mem2D (byte **array2D)
+void free_mem2D (byte** array2D)
 {
   if (array2D)
   {
@@ -1335,13 +1335,13 @@ void free_mem2D (byte **array2D)
 //}}}
 //{{{
 /*!
- ************************************************************************
+** **********************************************************************
  * \brief
  *    free 2D memory array
  *    which was allocated with get_mem2Dint()
- ************************************************************************
+** **********************************************************************
  */
-void free_mem2Dint (int **array2D)
+void free_mem2Dint (int** array2D)
 {
   if (array2D)
   {
@@ -1359,7 +1359,7 @@ void free_mem2Dint (int **array2D)
 }
 //}}}
 //{{{
-void free_mem2Dint_pad (int **array2D, int iPadY, int iPadX)
+void free_mem2Dint_pad (int** array2D, int iPadY, int iPadX)
 {
   if (array2D)
   {
@@ -1378,13 +1378,13 @@ void free_mem2Dint_pad (int **array2D, int iPadY, int iPadX)
 //}}}
 //{{{
 /*!
- ************************************************************************
+** **********************************************************************
  * \brief
  *    free 2D memory array
  *    which was allocated with get_mem2Dint64()
- ************************************************************************
+** **********************************************************************
  */
-void free_mem2Dint64 (int64 **array2D)
+void free_mem2Dint64 (int64** array2D)
 {
   if (array2D)
   {
@@ -1402,13 +1402,13 @@ void free_mem2Dint64 (int64 **array2D)
 //}}}
 //{{{
 /*!
- ************************************************************************
+** **********************************************************************
  * \brief
  *    free 3D memory array
  *    which was allocated with get_mem3D()
- ************************************************************************
+** **********************************************************************
  */
-void free_mem3D (byte ***array3D)
+void free_mem3D (byte** *array3D)
 {
   if (array3D)
   {
@@ -1423,13 +1423,13 @@ void free_mem3D (byte ***array3D)
 //}}}
 //{{{
 /*!
- ************************************************************************
+** **********************************************************************
  * \brief
  *    free 4D memory array
  *    which was allocated with get_mem3D()
- ************************************************************************
+** **********************************************************************
  */
-void free_mem4D (byte ****array4D)
+void free_mem4D (byte** **array4D)
 {
   if (array4D)
   {
@@ -1444,13 +1444,13 @@ void free_mem4D (byte ****array4D)
 //}}}
 //{{{
 /*!
- ************************************************************************
+** **********************************************************************
  * \brief
  *    free 3D memory array
  *    which was allocated with get_mem3Dint()
- ************************************************************************
+** **********************************************************************
  */
-void free_mem3Dint (int ***array3D)
+void free_mem3Dint (int** *array3D)
 {
   if (array3D)
   {
@@ -1465,13 +1465,13 @@ void free_mem3Dint (int ***array3D)
 //}}}
 //{{{
 /*!
- ************************************************************************
+** **********************************************************************
  * \brief
  *    free 3D memory array
  *    which was allocated with get_mem3Dint64()
- ************************************************************************
+** **********************************************************************
  */
-void free_mem3Dint64 (int64 ***array3D)
+void free_mem3Dint64 (int64** *array3D)
 {
   if (array3D)
   {
@@ -1485,7 +1485,7 @@ void free_mem3Dint64 (int64 ***array3D)
 }
 //}}}
 //{{{
-void free_mem3Ddistblk (distblk ***array3D)
+void free_mem3Ddistblk (distblk** *array3D)
 {
   if (array3D)
   {
@@ -1500,13 +1500,13 @@ void free_mem3Ddistblk (distblk ***array3D)
 //}}}
 //{{{
 /*!
- ************************************************************************
+** **********************************************************************
  * \brief
  *    free 4D memory array
  *    which was allocated with get_mem4Dint()
- ************************************************************************
+** **********************************************************************
  */
-void free_mem4Dint (int ****array4D)
+void free_mem4Dint (int** **array4D)
 {
   if (array4D)
   {
@@ -1519,7 +1519,7 @@ void free_mem4Dint (int ****array4D)
 }
 //}}}
 //{{{
-void free_mem4Dint64 (int64 ****array4D)
+void free_mem4Dint64 (int64** **array4D)
 {
   if (array4D)
   {
@@ -1532,7 +1532,7 @@ void free_mem4Dint64 (int64 ****array4D)
 }
 //}}}
 //{{{
-void free_mem4Ddistblk (distblk ****array4D)
+void free_mem4Ddistblk (distblk** **array4D)
 {
   if (array4D)
   {
@@ -1546,13 +1546,13 @@ void free_mem4Ddistblk (distblk ****array4D)
 //}}}
 //{{{
 /*!
- ************************************************************************
+** **********************************************************************
  * \brief
  *    free 5D int memory array
  *    which was allocated with get_mem5Dint()
- ************************************************************************
+** **********************************************************************
  */
-void free_mem5Dint (int *****array5D)
+void free_mem5Dint (int** ***array5D)
 {
   if (array5D)
   {
@@ -1567,12 +1567,12 @@ void free_mem5Dint (int *****array5D)
 
 //{{{
 /*!
- ************************************************************************
+** **********************************************************************
  * \brief
  *    Exit program if memory allocation failed (using error())
  * \param where
  *    string indicating which memory allocation failed
- ************************************************************************
+** **********************************************************************
  */
 void no_mem_exit (char *where)
 {
@@ -1582,18 +1582,18 @@ void no_mem_exit (char *where)
 //}}}
 //{{{
 /*!
- ************************************************************************
+** **********************************************************************
  * \brief
  *    Create 2D memory array -> uint16 array2D[dim0][dim1]
  *
  * \par Output:
  *    uint16 type array of size dim0 * dim1
- ************************************************************************
+** **********************************************************************
  */
 uint16** new_mem2Duint16 (int dim0, int dim1)
 {
   int i;
-  uint16 **array2D;
+  uint16** array2D;
 
   if(( array2D = (uint16**)mem_malloc(dim0 *      sizeof(uint16*))) == NULL)
     no_mem_exit("get_mem2Duint16: array2D");
@@ -1609,15 +1609,15 @@ uint16** new_mem2Duint16 (int dim0, int dim1)
 
 //{{{
 /*!
- ************************************************************************
+** **********************************************************************
  * \brief
  *    Allocate 2D uint16 memory array -> uint16 array2D[dim0][dim1]
  *
  * \par Output:
  *    memory size in bytes
- ************************************************************************
+** **********************************************************************
  */
-int get_mem2Duint16 (uint16 ***array2D, int dim0, int dim1)
+int get_mem2Duint16 (uint16** *array2D, int dim0, int dim1)
 {
   int i;
 
@@ -1635,15 +1635,15 @@ int get_mem2Duint16 (uint16 ***array2D, int dim0, int dim1)
 //}}}
 //{{{
 /*!
- ************************************************************************
+** **********************************************************************
  * \brief
  *    Allocate 3D memory uint16 array -> uint16 array3D[dim0][dim1][dim2]
  *
  * \par Output:
  *    memory size in bytes
- ************************************************************************
+** **********************************************************************
  */
-int get_mem3Duint16 (uint16 ****array3D,int dim0, int dim1, int dim2)
+int get_mem3Duint16 (uint16** **array3D,int dim0, int dim1, int dim2)
 {
   int  i, mem_size = dim0 * sizeof(uint16**);
 
@@ -1660,15 +1660,15 @@ int get_mem3Duint16 (uint16 ****array3D,int dim0, int dim1, int dim2)
 //}}}
 //{{{
 /*!
- ************************************************************************
+** **********************************************************************
  * \brief
  *    Allocate 4D memory uint16 array -> uint16 array3D[dim0][dim1][dim2][dim3]
  *
  * \par Output:
  *    memory size in bytes
- ************************************************************************
+** **********************************************************************
  */
-int get_mem4Duint16 (uint16 *****array4D, int dim0, int dim1, int dim2, int dim3)
+int get_mem4Duint16 (uint16** ***array4D, int dim0, int dim1, int dim2, int dim3)
 {
   int  i, mem_size = dim0 * sizeof(uint16***);
 
@@ -1686,15 +1686,15 @@ int get_mem4Duint16 (uint16 *****array4D, int dim0, int dim1, int dim2, int dim3
 //}}}
 //{{{
 /*!
- ************************************************************************
+** **********************************************************************
  * \brief
  *    Allocate 2D short memory array -> short array2D[dim0][dim1]
  *
  * \par Output:
  *    memory size in bytes
- ************************************************************************
+** **********************************************************************
  */
-int get_mem2Dshort (short ***array2D, int dim0, int dim1)
+int get_mem2Dshort (short** *array2D, int dim0, int dim1)
 {
   int i;
   short *curr = NULL;
@@ -1716,18 +1716,18 @@ int get_mem2Dshort (short ***array2D, int dim0, int dim1)
 //}}}
 //{{{
 /*!
- ************************************************************************
+** **********************************************************************
  * \brief
  *    Allocate 3D memory short array -> short array3D[dim0][dim1][dim2]
  *
  * \par Output:
  *    memory size in bytes
- ************************************************************************
+** **********************************************************************
  */
-int get_mem3Dshort (short ****array3D,int dim0, int dim1, int dim2)
+int get_mem3Dshort (short** **array3D,int dim0, int dim1, int dim2)
 {
   int  i, mem_size = dim0 * sizeof(short**);
-  short **curr = NULL;
+  short** curr = NULL;
 
   if(((*array3D) = (short***)mem_malloc(dim0 * sizeof(short**))) == NULL)
     no_mem_exit("get_mem3Dshort: array3D");
@@ -1746,15 +1746,15 @@ int get_mem3Dshort (short ****array3D,int dim0, int dim1, int dim2)
 //}}}
 //{{{
 /*!
- ************************************************************************
+** **********************************************************************
  * \brief
  *    Allocate 4D memory short array -> short array3D[dim0][dim1][dim2][dim3]
  *
  * \par Output:
  *    memory size in bytes
- ************************************************************************
+** **********************************************************************
  */
-int get_mem4Dshort (short *****array4D, int dim0, int dim1, int dim2, int dim3)
+int get_mem4Dshort (short** ***array4D, int dim0, int dim1, int dim2, int dim3)
 {
   int  i, mem_size = dim0 * sizeof(short***);
 
@@ -1771,15 +1771,15 @@ int get_mem4Dshort (short *****array4D, int dim0, int dim1, int dim2, int dim3)
 //}}}
 //{{{
 /*!
- ************************************************************************
+** **********************************************************************
  * \brief
  *    Allocate 5D memory array -> short array5D[dim0][dim1][dim2][dim3][dim4]
  *
  * \par Output:
  *    memory size in bytes
- ************************************************************************
+** **********************************************************************
  */
-int get_mem5Dshort (short ******array5D, int dim0, int dim1, int dim2, int dim3, int dim4)
+int get_mem5Dshort (short** ****array5D, int dim0, int dim1, int dim2, int dim3, int dim4)
 {
   int  i, mem_size = dim0 * sizeof(short****);
 
@@ -1796,15 +1796,15 @@ int get_mem5Dshort (short ******array5D, int dim0, int dim1, int dim2, int dim3,
 //}}}
 //{{{
 /*!
- ************************************************************************
+** **********************************************************************
  * \brief
  *    Allocate 6D memory array -> short array6D[dim0][dim1][dim2][dim3][dim4][dim5]
  *
  * \par Output:
  *    memory size in bytes
- ************************************************************************
+** **********************************************************************
  */
-int get_mem6Dshort (short *******array6D, int dim0, int dim1, int dim2, int dim3, int dim4, int dim5)
+int get_mem6Dshort (short** *****array6D, int dim0, int dim1, int dim2, int dim3, int dim4, int dim5)
 {
   int  i, mem_size = dim0 * sizeof(short*****);
 
@@ -1821,15 +1821,15 @@ int get_mem6Dshort (short *******array6D, int dim0, int dim1, int dim2, int dim3
 //}}}
 //{{{
 /*!
- ************************************************************************
+** **********************************************************************
  * \brief
  *    Allocate 7D memory array -> short array7D[dim0][dim1][dim2][dim3][dim4][dim5][dim6]
  *
  * \par Output:
  *    memory size in bytes
- ************************************************************************
+** **********************************************************************
  */
-int get_mem7Dshort (short ********array7D, int dim0, int dim1, int dim2, int dim3, int dim4, int dim5, int dim6)
+int get_mem7Dshort (short** ******array7D, int dim0, int dim1, int dim2, int dim3, int dim4, int dim5, int dim6)
 {
   int  i, mem_size = dim0 * sizeof(short******);
 
@@ -1847,13 +1847,13 @@ int get_mem7Dshort (short ********array7D, int dim0, int dim1, int dim2, int dim
 
 //{{{
 /*!
- ************************************************************************
+** **********************************************************************
  * \brief
  *    free 2D uint16 memory array
  *    which was allocated with get_mem2Duint16()
- ************************************************************************
+** **********************************************************************
  */
-void free_mem2Duint16 (uint16 **array2D)
+void free_mem2Duint16 (uint16** array2D)
 {
   if (array2D)
   {
@@ -1871,13 +1871,13 @@ void free_mem2Duint16 (uint16 **array2D)
 //}}}
 //{{{
 /*!
- ************************************************************************
+** **********************************************************************
  * \brief
  *    free 3D uint16 memory array
  *    which was allocated with get_mem3Duint16()
- ************************************************************************
+** **********************************************************************
  */
-void free_mem3Duint16 (uint16 ***array3D)
+void free_mem3Duint16 (uint16** *array3D)
 {
   if (array3D)
   {
@@ -1892,13 +1892,13 @@ void free_mem3Duint16 (uint16 ***array3D)
 //}}}
 //{{{
 /*!
- ************************************************************************
+** **********************************************************************
  * \brief
  *    free 4D uint16 memory array
  *    which was allocated with get_mem4Duint16()
- ************************************************************************
+** **********************************************************************
  */
-void free_mem4Duint16 (uint16 ****array4D)
+void free_mem4Duint16 (uint16** **array4D)
 {
   if (array4D)
   {
@@ -1913,13 +1913,13 @@ void free_mem4Duint16 (uint16 ****array4D)
 //}}}
 //{{{
 /*!
- ************************************************************************
+** **********************************************************************
  * \brief
  *    free 2D short memory array
  *    which was allocated with get_mem2Dshort()
- ************************************************************************
+** **********************************************************************
  */
-void free_mem2Dshort (short **array2D)
+void free_mem2Dshort (short** array2D)
 {
   if (array2D)
   {
@@ -1937,13 +1937,13 @@ void free_mem2Dshort (short **array2D)
 //}}}
 //{{{
 /*!
- ************************************************************************
+** **********************************************************************
  * \brief
  *    free 3D short memory array
  *    which was allocated with get_mem3Dshort()
- ************************************************************************
+** **********************************************************************
  */
-void free_mem3Dshort (short ***array3D)
+void free_mem3Dshort (short** *array3D)
 {
   if (array3D)
   {
@@ -1958,13 +1958,13 @@ void free_mem3Dshort (short ***array3D)
 //}}}
 //{{{
 /*!
- ************************************************************************
+** **********************************************************************
  * \brief
  *    free 4D short memory array
  *    which was allocated with get_mem4Dshort()
- ************************************************************************
+** **********************************************************************
  */
-void free_mem4Dshort (short ****array4D)
+void free_mem4Dshort (short** **array4D)
 {
   if (array4D)
   {
@@ -1979,13 +1979,13 @@ void free_mem4Dshort (short ****array4D)
 //}}}
 //{{{
 /*!
- ************************************************************************
+** **********************************************************************
  * \brief
  *    free 5D short memory array
  *    which was allocated with get_mem5Dshort()
- ************************************************************************
+** **********************************************************************
  */
-void free_mem5Dshort (short *****array5D)
+void free_mem5Dshort (short** ***array5D)
 {
   if (array5D)
   {
@@ -2000,13 +2000,13 @@ void free_mem5Dshort (short *****array5D)
 //}}}
 //{{{
 /*!
- ************************************************************************
+** **********************************************************************
  * \brief
  *    free 6D short memory array
  *    which was allocated with get_mem6Dshort()
- ************************************************************************
+** **********************************************************************
  */
-void free_mem6Dshort (short ******array6D)
+void free_mem6Dshort (short** ****array6D)
 {
   if (array6D)
   {
@@ -2021,13 +2021,13 @@ void free_mem6Dshort (short ******array6D)
 //}}}
 //{{{
 /*!
- ************************************************************************
+** **********************************************************************
  * \brief
  *    free 7D short memory array
  *    which was allocated with get_mem7Dshort()
- ************************************************************************
+** **********************************************************************
  */
-void free_mem7Dshort (short *******array7D)
+void free_mem7Dshort (short** *****array7D)
 {
   if (array7D)
   {
@@ -2043,15 +2043,15 @@ void free_mem7Dshort (short *******array7D)
 
 //{{{
 /*!
- ************************************************************************
+** **********************************************************************
  * \brief
  *    Allocate 2D memory array -> double array2D[dim0][dim1]
  *
  * \par Output:
  *    memory size in bytes
- ************************************************************************
+** **********************************************************************
  */
-int get_mem2Ddouble (double ***array2D, int dim0, int dim1)
+int get_mem2Ddouble (double** *array2D, int dim0, int dim1)
 {
   int i;
 
@@ -2069,16 +2069,16 @@ int get_mem2Ddouble (double ***array2D, int dim0, int dim1)
 //}}}
 //{{{
 /*!
- ************************************************************************
+** **********************************************************************
  * \brief
  *    Allocate 1D memory array -> double array1D[dim0]
  *    Note that array is shifted towards offset allowing negative values
  *
  * \par Output:
  *    memory size in bytes
- ************************************************************************
+** **********************************************************************
  */
-int get_mem1Dodouble (double **array1D, int dim0, int offset)
+int get_mem1Dodouble (double** array1D, int dim0, int offset)
 {
   if((*array1D      = (double*)mem_calloc(dim0, sizeof(double))) == NULL)
     no_mem_exit("get_mem1Dodouble: array2D");
@@ -2090,16 +2090,16 @@ int get_mem1Dodouble (double **array1D, int dim0, int offset)
 //}}}
 //{{{
 /*!
- ************************************************************************
+** **********************************************************************
  * \brief
  *    Allocate 2D memory array -> double array2D[dim0][dim1]
  *    Note that array is shifted towards offset allowing negative values
  *
  * \par Output:
  *    memory size in bytes
- ************************************************************************
+** **********************************************************************
  */
-int get_mem2Dodouble (double ***array2D, int dim0, int dim1, int offset)
+int get_mem2Dodouble (double** *array2D, int dim0, int dim1, int offset)
 {
   int i;
 
@@ -2118,15 +2118,15 @@ int get_mem2Dodouble (double ***array2D, int dim0, int dim1, int offset)
 //}}}
 //{{{
 /*!
- ************************************************************************
+** **********************************************************************
  * \brief
  *    Allocate 3D memory double array -> double array3D[dim0][dim1][dim2]
  *
  * \par Output:
  *    memory size in bytes
- ************************************************************************
+** **********************************************************************
  */
-int get_mem3Dodouble (double ****array3D, int dim0, int dim1, int dim2, int offset)
+int get_mem3Dodouble (double** **array3D, int dim0, int dim1, int dim2, int offset)
 {
   int  i,j;
 
@@ -2151,16 +2151,16 @@ int get_mem3Dodouble (double ****array3D, int dim0, int dim1, int dim2, int offs
 //}}}
 //{{{
 /*!
- ************************************************************************
+** **********************************************************************
  * \brief
  *    Allocate 2D memory array -> int array2D[dim0][dim1]
  *    Note that array is shifted towards offset allowing negative values
  *
  * \par Output:
  *    memory size in bytes
- ************************************************************************
+** **********************************************************************
  */
-int get_offset_mem2Dshort (short ***array2D, int dim0, int dim1, int offset_y, int offset_x)
+int get_offset_mem2Dshort (short** *array2D, int dim0, int dim1, int offset_y, int offset_x)
 {
   int i;
 
@@ -2184,15 +2184,15 @@ int get_offset_mem2Dshort (short ***array2D, int dim0, int dim1, int offset_y, i
 //}}}
 //{{{
 /*!
- ************************************************************************
+** **********************************************************************
  * \brief
  *    Allocate 3D memory int array -> int array3D[dim0][dim1][dim2]
  *
  * \par Output:
  *    memory size in bytes
- ************************************************************************
+** **********************************************************************
  */
-int get_mem3Doint (int ****array3D, int dim0, int dim1, int dim2, int offset)
+int get_mem3Doint (int** **array3D, int dim0, int dim1, int dim2, int offset)
 {
   int  i,j;
 
@@ -2217,16 +2217,16 @@ int get_mem3Doint (int ****array3D, int dim0, int dim1, int dim2, int offset)
 //}}}
 //{{{
 /*!
- ************************************************************************
+** **********************************************************************
  * \brief
  *    Allocate 2D memory array -> int array2D[dim0][dim1]
  *    Note that array is shifted towards offset allowing negative values
  *
  * \par Output:
  *    memory size in bytes
- ************************************************************************
+** **********************************************************************
  */
-int get_mem2Doint (int ***array2D, int dim0, int dim1, int offset)
+int get_mem2Doint (int** *array2D, int dim0, int dim1, int offset)
 {
   int i;
 
@@ -2246,13 +2246,13 @@ int get_mem2Doint (int ***array2D, int dim0, int dim1, int offset)
 
 //{{{
 /*!
- ************************************************************************
+** **********************************************************************
  * \brief
  *    free 2D double memory array
  *    which was allocated with get_mem2Ddouble()
- ************************************************************************
+** **********************************************************************
  */
-void free_mem2Ddouble (double **array2D)
+void free_mem2Ddouble (double** array2D)
 {
   if (array2D)
   {
@@ -2299,7 +2299,7 @@ void free_mem1Dodouble (double *array1D, int offset)
 *    which was allocated with get_mem2Ddouble()
 ************************************************************************
 */
-void free_mem2Dodouble (double **array2D, int offset)
+void free_mem2Dodouble (double** array2D, int offset)
 {
   if (array2D)
   {
@@ -2318,12 +2318,12 @@ void free_mem2Dodouble (double **array2D, int offset)
 //}}}
 //{{{
 /*!
- ************************************************************************
+** **********************************************************************
  * \brief
  *    free 3D memory array with offset
- ************************************************************************
+** **********************************************************************
  */
-void free_mem3Dodouble (double ***array3D, int dim0, int dim1, int offset)
+void free_mem3Dodouble (double** *array3D, int dim0, int dim1, int offset)
 {
   int i, j;
 
@@ -2354,12 +2354,12 @@ void free_mem3Dodouble (double ***array3D, int dim0, int dim1, int offset)
 //}}}
 //{{{
 /*!
- ************************************************************************
+** **********************************************************************
  * \brief
  *    free 3D memory array with offset
- ************************************************************************
+** **********************************************************************
  */
-void free_mem3Doint (int ***array3D, int dim0, int dim1, int offset)
+void free_mem3Doint (int** *array3D, int dim0, int dim1, int offset)
 {
   int i, j;
 
@@ -2396,7 +2396,7 @@ void free_mem3Doint (int ***array3D, int dim0, int dim1, int offset)
 *    which was allocated with get_mem2Ddouble()
 ************************************************************************
 */
-void free_mem2Doint (int **array2D, int offset)
+void free_mem2Doint (int** array2D, int offset)
 {
   if (array2D)
   {
@@ -2424,7 +2424,7 @@ void free_mem2Doint (int **array2D, int offset)
 *    which was allocated with get_mem2Ddouble()
 ************************************************************************
 */
-void free_offset_mem2Dshort (short **array2D, int dim1, int offset_y, int offset_x)
+void free_offset_mem2Dshort (short** array2D, int dim1, int offset_y, int offset_x)
 {
   if (array2D)
   {
@@ -2445,13 +2445,13 @@ void free_offset_mem2Dshort (short **array2D, int dim1, int offset_y, int offset
 //}}}
 //{{{
 /*!
- ************************************************************************
+** **********************************************************************
  * \brief
  *    free 3D memory array
  *    which was alocated with get_mem3Dint()
- ************************************************************************
+** **********************************************************************
  */
-void free_mem3Ddouble (double ***array3D)
+void free_mem3Ddouble (double** *array3D)
 {
   if (array3D)
   {
@@ -2465,7 +2465,7 @@ void free_mem3Ddouble (double ***array3D)
 }
 //}}}
 //{{{
-void free_mem2Ddistblk (distblk **array2D)
+void free_mem2Ddistblk (distblk** array2D)
 {
   if (array2D)
   {

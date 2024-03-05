@@ -167,7 +167,7 @@ static int max_loaded_minor;
 
 static const char *exts = NULL;
 static int num_exts_i = 0;
-static char **exts_i = NULL;
+static char** exts_i = NULL;
 
 static int get_exts(void) {
 #ifdef _GLAD_IS_SOME_NEW_VERSION
@@ -181,7 +181,7 @@ static int get_exts(void) {
         num_exts_i = 0;
         glGetIntegerv(GL_NUM_EXTENSIONS, &num_exts_i);
         if (num_exts_i > 0) {
-            exts_i = (char **)malloc((size_t)num_exts_i * (sizeof *exts_i));
+            exts_i = (char** )malloc((size_t)num_exts_i * (sizeof *exts_i));
         }
 
         if (exts_i == NULL) {

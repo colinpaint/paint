@@ -65,7 +65,7 @@ static void FmoGenerateType2MapUnitMap (sVidParam* vidParam, unsigned PicSizeInM
 //}}}
 //{{{
 // Generate box-out slice group map type MapUnit map (type 3)
-static void FmoGenerateType3MapUnitMap (sVidParam* vidParam, unsigned PicSizeInMapUnits, mSlice* currSlice )
+static void FmoGenerateType3MapUnitMap (sVidParam* vidParam, unsigned PicSizeInMapUnits, sSlice* currSlice )
 {
   sPPSrbsp* pps = vidParam->active_pps;
   unsigned i, k;
@@ -130,7 +130,7 @@ static void FmoGenerateType3MapUnitMap (sVidParam* vidParam, unsigned PicSizeInM
 }
 //}}}
 //{{{
-static void FmoGenerateType4MapUnitMap (sVidParam* vidParam, unsigned PicSizeInMapUnits, mSlice* currSlice) {
+static void FmoGenerateType4MapUnitMap (sVidParam* vidParam, unsigned PicSizeInMapUnits, sSlice* currSlice) {
 // Generate raster scan slice group map type MapUnit map (type 4)
 
   sPPSrbsp* pps = vidParam->active_pps;
@@ -150,7 +150,7 @@ static void FmoGenerateType4MapUnitMap (sVidParam* vidParam, unsigned PicSizeInM
 //}}}
 //{{{
 // Generate wipe slice group map type MapUnit map (type 5) *
-static void FmoGenerateType5MapUnitMap (sVidParam* vidParam, unsigned PicSizeInMapUnits, mSlice* currSlice )
+static void FmoGenerateType5MapUnitMap (sVidParam* vidParam, unsigned PicSizeInMapUnits, sSlice* currSlice )
 {
   sPPSrbsp* pps = vidParam->active_pps;
 
@@ -179,7 +179,7 @@ static void FmoGenerateType6MapUnitMap (sVidParam* vidParam, unsigned PicSizeInM
   }
 //}}}
 //{{{
-static int FmoGenerateMapUnitToSliceGroupMap (sVidParam* vidParam, mSlice* currSlice) {
+static int FmoGenerateMapUnitToSliceGroupMap (sVidParam* vidParam, sSlice* currSlice) {
 // Generates vidParam->MapUnitToSliceGroupMap
 // Has to be called every time a new Picture Parameter Set is used
 
@@ -240,7 +240,7 @@ static int FmoGenerateMapUnitToSliceGroupMap (sVidParam* vidParam, mSlice* currS
 //}}}
 //{{{
 // Generates vidParam->MbToSliceGroupMap from vidParam->MapUnitToSliceGroupMap
-static int FmoGenerateMbToSliceGroupMap (sVidParam* vidParam, mSlice *pSlice) {
+static int FmoGenerateMbToSliceGroupMap (sVidParam* vidParam, sSlice *pSlice) {
 
   // allocate memory for vidParam->MbToSliceGroupMap
   if (vidParam->MbToSliceGroupMap)
@@ -275,15 +275,15 @@ static int FmoGenerateMbToSliceGroupMap (sVidParam* vidParam, mSlice *pSlice) {
 
 //{{{
 /*!
- ************************************************************************
+** **********************************************************************
  * \brief
  *    FMO initialization: Generates vidParam->MapUnitToSliceGroupMap and vidParam->MbToSliceGroupMap.
  *
  * \param vidParam
  *      video encoding parameters for current picture
- ************************************************************************
+** **********************************************************************
  */
-int fmo_init (sVidParam* vidParam, mSlice *pSlice)
+int fmo_init (sVidParam* vidParam, sSlice *pSlice)
 {
   sPPSrbsp* pps = vidParam->active_pps;
 
@@ -328,10 +328,10 @@ int fmo_init (sVidParam* vidParam, mSlice *pSlice)
 //}}}
 //{{{
 /*!
- ************************************************************************
+** **********************************************************************
  * \brief
  *    Free memory allocated by FMO functions
- ************************************************************************
+** **********************************************************************
  */
 int FmoFinit (sVidParam* vidParam)
 {
@@ -350,13 +350,13 @@ int FmoFinit (sVidParam* vidParam)
 //}}}
 //{{{
 /*!
- ************************************************************************
+** **********************************************************************
  * \brief
  *    FmoGetNumberOfSliceGroup(vidParam)
  *
  * \par vidParam:
  *    sVidParam
- ************************************************************************
+** **********************************************************************
  */
 int FmoGetNumberOfSliceGroup (sVidParam* vidParam)
 {
@@ -365,7 +365,7 @@ int FmoGetNumberOfSliceGroup (sVidParam* vidParam)
 //}}}
 //{{{
 /*!
- ************************************************************************
+** **********************************************************************
  * \brief
  *    FmoGetLastMBOfPicture(vidParam)
  *    returns the macroblock number of the last MB in a picture.  This
@@ -374,7 +374,7 @@ int FmoGetNumberOfSliceGroup (sVidParam* vidParam)
  *
  * \par Input:
  *    None
- ************************************************************************
+** **********************************************************************
  */
 int FmoGetLastMBOfPicture (sVidParam* vidParam)
 {
@@ -383,13 +383,13 @@ int FmoGetLastMBOfPicture (sVidParam* vidParam)
 //}}}
 //{{{
 /*!
- ************************************************************************
+** **********************************************************************
  * \brief
  *    FmoGetLastMBInSliceGroup: Returns MB number of last MB in SG
  *
  * \par Input:
  *    SliceGroupID (0 to 7)
- ************************************************************************
+** **********************************************************************
  */
 
 int FmoGetLastMBInSliceGroup (sVidParam* vidParam, int SliceGroup)
@@ -405,7 +405,7 @@ int FmoGetLastMBInSliceGroup (sVidParam* vidParam, int SliceGroup)
 //}}}
 //{{{
 /*!
- ************************************************************************
+** **********************************************************************
  * \brief
  *    Returns SliceGroupID for a given MB
  *
@@ -413,7 +413,7 @@ int FmoGetLastMBInSliceGroup (sVidParam* vidParam, int SliceGroup)
  *      video encoding parameters for current picture
  * \param mb
  *    sMacroblock number (in scan order)
- ************************************************************************
+** **********************************************************************
  */
 int FmoGetSliceGroupId (sVidParam* vidParam, int mb)
 {
@@ -424,16 +424,16 @@ int FmoGetSliceGroupId (sVidParam* vidParam, int mb)
 //}}}
 //{{{
 /*!
- ************************************************************************
+** **********************************************************************
  * \brief
  *    FmoGetNextMBBr: Returns the MB-Nr (in scan order) of the next
- *    MB in the (scattered) mSlice, -1 if the slice is finished
+ *    MB in the (scattered) sSlice, -1 if the slice is finished
  * \param vidParam
  *      video encoding parameters for current picture
  *
  * \param CurrentMbNr
  *    number of the current macroblock
- ************************************************************************
+** **********************************************************************
  */
 int FmoGetNextMBNr (sVidParam* vidParam, int CurrentMbNr)
 {

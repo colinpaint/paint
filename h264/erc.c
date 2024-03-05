@@ -74,7 +74,7 @@ static void print_list (struct concealment_node *ptr )
 // intraFrame
 //{{{
 /*!
- ************************************************************************
+** **********************************************************************
  * \brief
  *      collects prediction blocks only from the current column
  * \return
@@ -94,7 +94,7 @@ static void print_list (struct concealment_node *ptr )
  * \param step
  *      Number of blocks belonging to a MB, when counting
  *      in vertical/horizontal direction. (Y:2 U,V:1)
- ************************************************************************
+** **********************************************************************
  */
 static int ercCollectColumnBlocks (int predBlocks[], int currRow, int currColumn, char *condition, int maxRow, int maxColumn, int step )
 {
@@ -119,7 +119,7 @@ static int ercCollectColumnBlocks (int predBlocks[], int currRow, int currColumn
 //}}}
 //{{{
 /*!
- ************************************************************************
+** **********************************************************************
  * \brief
  *      Does the actual pixel based interpolation for block[]
  *      using weighted average
@@ -133,7 +133,7 @@ static int ercCollectColumnBlocks (int predBlocks[], int currRow, int currColumn
  *      16 for Y, 8 for U/V components
  * \param frameWidth
  *      Width of the frame in pixels
- ************************************************************************
+** **********************************************************************
  */
 static void pixMeanInterpolateBlock (sVidParam* vidParam, sPixel *src[], sPixel *block, int blockSize, int frameWidth )
 {
@@ -186,7 +186,7 @@ static void pixMeanInterpolateBlock (sVidParam* vidParam, sPixel *src[], sPixel 
 //}}}
 //{{{
 /*!
- ************************************************************************
+** **********************************************************************
  * \brief
  *      Conceals the MB at position (row, column) using pixels from predBlocks[]
  *      using pixMeanInterpolateBlock()
@@ -204,7 +204,7 @@ static void pixMeanInterpolateBlock (sVidParam* vidParam, sPixel *src[], sPixel 
  *      width of frame in pixels
  * \param mbWidthInBlocks
  *      2 for Y, 1 for U/V components
- ************************************************************************
+** **********************************************************************
  */
 static void ercPixConcealIMB (sVidParam* vidParam, sPixel* currFrame, int row, int column, int predBlocks[], int frameWidth, int mbWidthInBlocks)
 {
@@ -235,7 +235,7 @@ static void ercPixConcealIMB (sVidParam* vidParam, sPixel* currFrame, int row, i
 //}}}
 //{{{
 /*!
- ************************************************************************
+** **********************************************************************
  * \brief
  *      This function checks the neighbors of a sMacroblock for usability in
  *      concealment. First the OK macroblocks are marked, and if there is not
@@ -265,7 +265,7 @@ static void ercPixConcealIMB (sVidParam* vidParam, sPixel* currFrame, int row, i
  *      in vertical/horizontal direction. (Y:2 U,V:1)
  * \param fNoCornerNeigh
  *      No corner neighbors are considered
- ************************************************************************
+** **********************************************************************
  */
 static int ercCollect8PredBlocks (int predBlocks[], int currRow, int currColumn, char *condition,
                            int maxRow, int maxColumn, int step, byte fNoCornerNeigh )
@@ -355,7 +355,7 @@ static int ercCollect8PredBlocks (int predBlocks[], int currRow, int currColumn,
 //}}}
 //{{{
 /*!
- ************************************************************************
+** **********************************************************************
  * \brief
  *      Core for the Intra blocks concealment.
  *      It is called for each color component (Y,U,V) separately
@@ -377,7 +377,7 @@ static int ercCollect8PredBlocks (int predBlocks[], int currRow, int currColumn,
  *      Width of the frame in pixels
  * \param condition
  *      The block condition (ok, lost) table
- ************************************************************************
+** **********************************************************************
  */
 static void concealBlocks (sVidParam* vidParam, int lastColumn, int lastRow, int comp, frame *recfr, int picSizeX, char *condition )
 {
@@ -589,7 +589,7 @@ int ercConcealIntraFrame (sVidParam* vidParam, frame *recfr,
 // interFrame
 //{{{
 /*!
- ************************************************************************
+** **********************************************************************
  * \brief
  *      Copies pixel values between a YUV frame and the temporary pixel value storage place. This is
  *      used to save some pixel values temporarily before overwriting it, or to copy back to a given
@@ -605,7 +605,7 @@ int ercConcealIntraFrame (sVidParam* vidParam, frame *recfr,
  *      picture width in pixels
  * \param regionSize
  *      can be 16 or 8 to tell the dimension of the region to copy
- ************************************************************************
+** **********************************************************************
  */
 static void copyPredMB (int currYBlockNum, sPixel *predMB, frame *recfr,
                         int picSizeX, int regionSize)
@@ -650,7 +650,7 @@ static void copyPredMB (int currYBlockNum, sPixel *predMB, frame *recfr,
 //}}}
 //{{{
 /*!
- ************************************************************************
+** **********************************************************************
  * \brief
  *      Calculates a weighted pixel difference between edge Y pixels of the macroblock stored in predMB
  *      and the pixels in the given Y plane of a frame (recY) that would become neighbor pixels if
@@ -674,7 +674,7 @@ static void copyPredMB (int currYBlockNum, sPixel *predMB, frame *recfr,
  *      picture width in pixels
  * \param regionSize
  *      can be 16 or 8 to tell the dimension of the region to copy
- ************************************************************************
+** **********************************************************************
  */
 static int edgeDistortion (int predBlocks[], int currYBlockNum, sPixel *predMB,
                            sPixel *recY, int picSizeX, int regionSize)
@@ -771,13 +771,13 @@ static int edgeDistortion (int predBlocks[], int currYBlockNum, sPixel *predMB,
 */
 static void buildPredRegionYUV (sVidParam* vidParam, int *mv, int x, int y, sPixel *predMB)
 {
-  sPixel **tmp_block;
+  sPixel** tmp_block;
   int i=0, j=0, ii=0, jj=0,i1=0,j1=0,j4=0,i4=0;
   int uv;
   int vec1_x=0,vec1_y=0;
   int ioff,joff;
   sPixel *pMB = predMB;
-  mSlice* currSlice;// = vidParam->currentSlice;
+  sSlice* currSlice;// = vidParam->currentSlice;
   sPicture* picture = vidParam->picture;
   int ii0,jj0,ii1,jj1,if1,jf1,if0,jf0;
   int mv_mul;
@@ -789,7 +789,7 @@ static void buildPredRegionYUV (sVidParam* vidParam, int *mv, int x, int y, sPix
 
   int ref_frame = imax (mv[2], 0); // !!KS: quick fix, we sometimes seem to get negative ref_pic here, so restrict to zero and above
   int mb_nr = y/16*(vidParam->width/16)+x/16; ///currSlice->current_mb_nr;
-  int **tmp_res = NULL;
+  int** tmp_res = NULL;
 
   sMacroblock* currMB = &vidParam->mb_data[mb_nr];   // intialization code deleted, see below, StW
   currSlice = currMB->p_Slice;
@@ -808,7 +808,7 @@ static void buildPredRegionYUV (sVidParam* vidParam, int *mv, int x, int y, sPix
 
   mv_mul=4;
 
-  // luma *******************************************************
+  // luma** *****************************************************
 
   for(j=0;j<MB_BLOCK_SIZE/BLOCK_SIZE;j++)
   {
@@ -846,7 +846,7 @@ static void buildPredRegionYUV (sVidParam* vidParam, int *mv, int x, int y, sPix
 
   if (picture->chroma_format_idc != YUV400)
   {
-    // chroma *******************************************************
+    // chroma** *****************************************************
     f1_x = 64/vidParam->mb_cr_size_x;
     f2_x=f1_x-1;
 
@@ -911,7 +911,7 @@ static void buildPredRegionYUV (sVidParam* vidParam, int *mv, int x, int y, sPix
 //}}}
 //{{{
 /*!
- ************************************************************************
+** **********************************************************************
  * \brief
  *      Copies the co-located pixel values from the reference to the current frame.
  *      Used by concealByCopy
@@ -923,7 +923,7 @@ static void buildPredRegionYUV (sVidParam* vidParam, int *mv, int x, int y, sPix
  *      Width of the frame in pixels
  * \param regionSize
  *      can be 16 or 8 to tell the dimension of the region to copy
- ************************************************************************
+** **********************************************************************
  */
 static void copyBetweenFrames (frame *recfr, int currYBlockNum, int picSizeX, int regionSize)
 {
@@ -959,7 +959,7 @@ static void copyBetweenFrames (frame *recfr, int currYBlockNum, int picSizeX, in
 //}}}
 //{{{
 /*!
- ************************************************************************
+** **********************************************************************
  * \brief
  *      It conceals a given MB by simply copying the pixel area from the reference image
  *      that is at the same location as the macroblock in the current image. This correcponds
@@ -974,7 +974,7 @@ static void copyBetweenFrames (frame *recfr, int currYBlockNum, int picSizeX, in
  *      Motion info for all MBs in the frame
  * \param picSizeX
  *      Width of the frame in pixels
- ************************************************************************
+** **********************************************************************
  */
 static int concealByCopy (frame *recfr, int currMBNum,
                          objectBuffer_t *object_list, int picSizeX)
@@ -994,7 +994,7 @@ static int concealByCopy (frame *recfr, int currMBNum,
 //}}}
 //{{{
 /*!
- ************************************************************************
+** **********************************************************************
  * \brief
  *      It conceals a given MB by using the motion vectors of one reliable neighbor. That MV of a
  *      neighbor is selected wich gives the lowest pixel difference at the edges of the MB
@@ -1018,7 +1018,7 @@ static int concealByCopy (frame *recfr, int currMBNum,
  *      Height of the frame in pixels
  * \param yCondition
  *      array for conditions of Y blocks from ercVariables_t
- ************************************************************************
+** **********************************************************************
  */
 static int concealByTrial (frame *recfr, sPixel *predMB,
                           int currMBNum, objectBuffer_t *object_list, int predBlocks[],
@@ -1367,7 +1367,7 @@ int ercConcealInterFrame (frame *recfr, objectBuffer_t *object_list,
 static void buildPredblockRegionYUV (sVidParam* vidParam, int *mv,
                                     int x, int y, sPixel *predMB, int list, int current_mb_nr)
 {
-  sPixel **tmp_block;
+  sPixel** tmp_block;
   int i=0,j=0,ii=0,jj=0,i1=0,j1=0,j4=0,i4=0;
   int uv;
   int vec1_x=0,vec1_y=0;
@@ -1387,7 +1387,7 @@ static void buildPredblockRegionYUV (sVidParam* vidParam, int *mv,
   int mb_nr = current_mb_nr;
 
   sMacroblock* currMB = &vidParam->mb_data[mb_nr];   // intialization code deleted, see below, StW
-  mSlice* currSlice = currMB->p_Slice;
+  sSlice* currSlice = currMB->p_Slice;
 
   get_mem2Dpel(&tmp_block, MB_BLOCK_SIZE, MB_BLOCK_SIZE);
 
@@ -1402,7 +1402,7 @@ static void buildPredblockRegionYUV (sVidParam* vidParam, int *mv,
 
   mv_mul=4;
 
-  // luma *******************************************************
+  // luma** *****************************************************
 
   vec1_x = x*mv_mul + mv[0];
   vec1_y = y*mv_mul + mv[1];
@@ -1426,7 +1426,7 @@ static void buildPredblockRegionYUV (sVidParam* vidParam, int *mv,
 
   if (picture->chroma_format_idc != YUV400)
   {
-    // chroma *******************************************************
+    // chroma** *****************************************************
     f1_x = 64/(vidParam->mb_cr_size_x);
     f2_x=f1_x-1;
 
@@ -1489,7 +1489,7 @@ static void buildPredblockRegionYUV (sVidParam* vidParam, int *mv,
 ************************************************************************
 */
 
-static void CopyImgData (sPixel **inputY, sPixel ***inputUV, sPixel **outputY, sPixel ***outputUV,
+static void CopyImgData (sPixel** inputY, sPixel** *inputUV, sPixel** outputY, sPixel** *outputUV,
                         int img_width, int img_height, int img_width_cr, int img_height_cr)
 {
   int x, y;
@@ -1921,7 +1921,7 @@ void init_lists_for_non_reference_loss (sDPB* dpb, int currSliceType, sPictureSt
 * based on the sudden decrease in frame number.
 ************************************************************************
 */
-void conceal_lost_frames (sDPB* dpb, mSlice *pSlice)
+void conceal_lost_frames (sDPB* dpb, sSlice *pSlice)
 {
   sVidParam* vidParam = dpb->vidParam;
   int CurrFrameNum;
@@ -2308,7 +2308,7 @@ void ercSetErrorConcealment (ercVariables_t *errorVar, int value ) {
 
 //{{{
 /*!
- ************************************************************************
+** **********************************************************************
  * \brief
  *      Creates a new segment in the segment-list, and marks the start MB and bit position.
  *      If the end of the previous segment was not explicitly marked by "ercStopSegment",
@@ -2317,12 +2317,12 @@ void ercSetErrorConcealment (ercVariables_t *errorVar, int value ) {
  * \param currMBNum
  *      The MB number where the new slice/segment starts
  * \param segment
- *      Segment/mSlice No. counted by the caller
+ *      Segment/sSlice No. counted by the caller
  * \param bitPos
  *      Bitstream pointer: number of bits read from the buffer.
  * \param errorVar
  *      Variables for error detector
- ************************************************************************
+** **********************************************************************
  */
 void ercStartSegment (int currMBNum, int segment, unsigned int bitPos, ercVariables_t *errorVar ) {
 
@@ -2335,19 +2335,19 @@ void ercStartSegment (int currMBNum, int segment, unsigned int bitPos, ercVariab
 //}}}
 //{{{
 /*!
- ************************************************************************
+** **********************************************************************
  * \brief
  *      Marks the end position of a segment.
  * \param currMBNum
  *      The last MB number of the previous segment
  * \param segment
- *      Segment/mSlice No. counted by the caller
+ *      Segment/sSlice No. counted by the caller
  *      If (segment<0) the internal segment counter is used.
  * \param bitPos
  *      Bitstream pointer: number of bits read from the buffer.
  * \param errorVar
  *      Variables for error detector
- ************************************************************************
+** **********************************************************************
  */
 void ercStopSegment (int currMBNum, int segment, unsigned int bitPos, ercVariables_t *errorVar ) {
 
@@ -2359,7 +2359,7 @@ void ercStopSegment (int currMBNum, int segment, unsigned int bitPos, ercVariabl
 //}}}
 //{{{
 /*!
- ************************************************************************
+** **********************************************************************
  * \brief
  *      Marks the current segment (the one which has the "currMBNum" MB in it)
  *      as lost: all the blocks of the MBs in the segment as corrupted.
@@ -2367,7 +2367,7 @@ void ercStopSegment (int currMBNum, int segment, unsigned int bitPos, ercVariabl
  *      Width of the frame in pixels.
  * \param errorVar
  *      Variables for error detector
- ************************************************************************
+** **********************************************************************
  */
 void ercMarkCurrSegmentLost (int picSizeX, ercVariables_t *errorVar )
 {
@@ -2396,7 +2396,7 @@ void ercMarkCurrSegmentLost (int picSizeX, ercVariables_t *errorVar )
 //}}}
 //{{{
 /*!
- ************************************************************************
+** **********************************************************************
  * \brief
  *      Marks the current segment (the one which has the "currMBNum" MB in it)
  *      as OK: all the blocks of the MBs in the segment as OK.
@@ -2404,7 +2404,7 @@ void ercMarkCurrSegmentLost (int picSizeX, ercVariables_t *errorVar )
  *      Width of the frame in pixels.
  * \param errorVar
  *      Variables for error detector
- ************************************************************************
+** **********************************************************************
  */
 void ercMarkCurrSegmentOK (int picSizeX, ercVariables_t *errorVar ) {
 
@@ -2429,7 +2429,7 @@ void ercMarkCurrSegmentOK (int picSizeX, ercVariables_t *errorVar ) {
 //}}}
 //{{{
 /*!
- ************************************************************************
+** **********************************************************************
  * \brief
  *      Marks the Blocks of the given component (YUV) of the current MB as concealed.
  * \param currMBNum
@@ -2440,7 +2440,7 @@ void ercMarkCurrSegmentOK (int picSizeX, ercVariables_t *errorVar ) {
  *      Width of the frame in pixels.
  * \param errorVar
  *      Variables for error detector
- ************************************************************************
+** **********************************************************************
  */
 void ercMarkCurrMBConcealed (int currMBNum, int comp, int picSizeX, ercVariables_t *errorVar ) {
 
