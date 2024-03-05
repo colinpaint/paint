@@ -290,7 +290,7 @@ static sSPSrbsp* allocSPS() {
 
    sSPSrbsp* p = calloc (1, sizeof (sSPSrbsp));
    if (p == NULL)
-     no_mem_exit ("allocSPS: SPS");
+     no_mem_exit ("allocSPS");
 
    return p;
    }
@@ -390,24 +390,24 @@ static void initVUI (sSPSrbsp* sps) {
 static int readHRDParameters (sDataPartition* p, sHRDparams* hrd) {
 
   Bitstream *s = p->bitstream;
-  hrd->cpb_cnt_minus1 = read_ue_v ("VUI: cpb_cnt_minus1", s);
-  hrd->bit_rate_scale = read_u_v (4, "VUI: bit_rate_scale", s);
-  hrd->cpb_size_scale = read_u_v (4, "VUI: cpb_size_scale", s);
+  hrd->cpb_cnt_minus1 = read_ue_v ("VUI cpb_cnt_minus1", s);
+  hrd->bit_rate_scale = read_u_v (4, "VUI bit_rate_scale", s);
+  hrd->cpb_size_scale = read_u_v (4, "VUI cpb_size_scale", s);
 
   unsigned int SchedSelIdx;
   for (SchedSelIdx = 0; SchedSelIdx <= hrd->cpb_cnt_minus1; SchedSelIdx++ ) {
-    hrd->bit_rate_value_minus1[ SchedSelIdx] = read_ue_v ("VUI: bit_rate_value_minus1", s);
-    hrd->cpb_size_value_minus1[ SchedSelIdx] = read_ue_v ("VUI: cpb_size_value_minus1", s);
-    hrd->cbr_flag[ SchedSelIdx ] = read_u_1  ("VUI: cbr_flag", s);
+    hrd->bit_rate_value_minus1[ SchedSelIdx] = read_ue_v ("VUI bit_rate_value_minus1", s);
+    hrd->cpb_size_value_minus1[ SchedSelIdx] = read_ue_v ("VUI cpb_size_value_minus1", s);
+    hrd->cbr_flag[ SchedSelIdx ] = read_u_1 ("VUI cbr_flag", s);
     }
 
   hrd->initial_cpb_removal_delay_length_minus1 =
-    read_u_v (5, "VUI: initial_cpb_removal_delay_length_minus1", s);
+    read_u_v (5, "VUI initial_cpb_removal_delay_length_minus1", s);
   hrd->cpb_removal_delay_length_minus1 =
-    read_u_v (5, "VUI: cpb_removal_delay_length_minus1", s);
+    read_u_v (5, "VUI cpb_removal_delay_length_minus1", s);
   hrd->dpb_output_delay_length_minus1 =
-    read_u_v (5, "VUI: dpb_output_delay_length_minus1", s);
-  hrd->time_offset_length = read_u_v (5, "VUI: time_offset_length", s);
+    read_u_v (5, "VUI dpb_output_delay_length_minus1", s);
+  hrd->time_offset_length = read_u_v (5, "VUI time_offset_length", s);
 
   return 0;
   }
@@ -418,96 +418,96 @@ static int readVUI (sDataPartition* p, sSPSrbsp* sps) {
   Bitstream* s = p->bitstream;
   if (sps->vui_parameters_present_flag) {
     sps->vui_seq_parameters.aspect_ratio_info_present_flag =
-      read_u_1 ("VUI: aspect_ratio_info_present_flag", s);
+      read_u_1 ("VUI aspect_ratio_info_present_flag", s);
     if (sps->vui_seq_parameters.aspect_ratio_info_present_flag) {
       sps->vui_seq_parameters.aspect_ratio_idc =
-        read_u_v ( 8, "VUI: aspect_ratio_idc", s);
+        read_u_v ( 8, "VUI aspect_ratio_idc", s);
       if (255 == sps->vui_seq_parameters.aspect_ratio_idc) {
         sps->vui_seq_parameters.sar_width =
-         (unsigned short) read_u_v (16, "VUI: sar_width", s);
+         (unsigned short) read_u_v (16, "VUI sar_width", s);
         sps->vui_seq_parameters.sar_height =
-         (unsigned short) read_u_v (16, "VUI: sar_height", s);
+         (unsigned short) read_u_v (16, "VUI sar_height", s);
         }
       }
 
     sps->vui_seq_parameters.overscan_info_present_flag =
-      read_u_1 ("VUI: overscan_info_present_flag", s);
+      read_u_1 ("VUI overscan_info_present_flag", s);
     if (sps->vui_seq_parameters.overscan_info_present_flag)
       sps->vui_seq_parameters.overscan_appropriate_flag =
-        read_u_1 ("VUI: overscan_appropriate_flag", s);
+        read_u_1 ("VUI overscan_appropriate_flag", s);
 
     sps->vui_seq_parameters.video_signal_type_present_flag =
-      read_u_1 ("VUI: video_signal_type_present_flag", s);
+      read_u_1 ("VUI video_signal_type_present_flag", s);
     if (sps->vui_seq_parameters.video_signal_type_present_flag) {
       sps->vui_seq_parameters.video_format =
-        read_u_v (3, "VUI: video_format", s);
+        read_u_v (3, "VUI video_format", s);
       sps->vui_seq_parameters.video_full_range_flag =
-        read_u_1 ("VUI: video_full_range_flag", s);
+        read_u_1 ("VUI video_full_range_flag", s);
       sps->vui_seq_parameters.colour_description_present_flag =
-       read_u_1 ("VUI: color_description_present_flag", s);
+       read_u_1 ("VUI color_description_present_flag", s);
       if (sps->vui_seq_parameters.colour_description_present_flag) {
         sps->vui_seq_parameters.colour_primaries =
-         read_u_v (8, "VUI: colour_primaries", s);
+         read_u_v (8, "VUI colour_primaries", s);
         sps->vui_seq_parameters.transfer_characteristics =
-          read_u_v (8, "VUI: transfer_characteristics", s);
+          read_u_v (8, "VUI transfer_characteristics", s);
         sps->vui_seq_parameters.matrix_coefficients =
-          read_u_v (8, "VUI: matrix_coefficients", s);
+          read_u_v (8, "VUI matrix_coefficients", s);
         }
       }
 
     sps->vui_seq_parameters.chroma_location_info_present_flag =
-      read_u_1 ("VUI: chroma_loc_info_present_flag", s);
+      read_u_1 ("VUI chroma_loc_info_present_flag", s);
     if (sps->vui_seq_parameters.chroma_location_info_present_flag) {
       sps->vui_seq_parameters.chroma_sample_loc_type_top_field =
-        read_ue_v ("VUI: chroma_sample_loc_type_top_field", s);
+        read_ue_v ("VUI chroma_sample_loc_type_top_field", s);
       sps->vui_seq_parameters.chroma_sample_loc_type_bottom_field  =
-        read_ue_v ("VUI: chroma_sample_loc_type_bottom_field", s);
+        read_ue_v ("VUI chroma_sample_loc_type_bottom_field", s);
       }
 
     sps->vui_seq_parameters.timing_info_present_flag =
-      read_u_1 ("VUI: timing_info_present_flag", s);
+      read_u_1 ("VUI timing_info_present_flag", s);
     if (sps->vui_seq_parameters.timing_info_present_flag) {
       sps->vui_seq_parameters.num_units_in_tick =
-        read_u_v (32, "VUI: num_units_in_tick", s);
-      sps->vui_seq_parameters.time_scale = read_u_v (32,"VUI: time_scale", s);
+        read_u_v (32, "VUI num_units_in_tick", s);
+      sps->vui_seq_parameters.time_scale = read_u_v (32,"VUI time_scale", s);
       sps->vui_seq_parameters.fixed_frame_rate_flag =
-        read_u_1 ("VUI: fixed_frame_rate_flag", s);
+        read_u_1 ("VUI fixed_frame_rate_flag", s);
       }
 
-    sps->vui_seq_parameters.nal_hrd_parameters_present_flag   = read_u_1 ("VUI: nal_hrd_parameters_present_flag", s);
+    sps->vui_seq_parameters.nal_hrd_parameters_present_flag   = read_u_1 ("VUI nal_hrd_parameters_present_flag", s);
     if (sps->vui_seq_parameters.nal_hrd_parameters_present_flag)
       readHRDParameters (p, &(sps->vui_seq_parameters.nal_hrd_parameters));
 
     sps->vui_seq_parameters.vcl_hrd_parameters_present_flag =
-      read_u_1 ("VUI: vcl_hrd_parameters_present_flag", s);
+      read_u_1 ("VUI vcl_hrd_parameters_present_flag", s);
 
     if (sps->vui_seq_parameters.vcl_hrd_parameters_present_flag)
       readHRDParameters(p, &(sps->vui_seq_parameters.vcl_hrd_parameters));
 
     if (sps->vui_seq_parameters.nal_hrd_parameters_present_flag ||
         sps->vui_seq_parameters.vcl_hrd_parameters_present_flag)
-      sps->vui_seq_parameters.low_delay_hrd_flag = read_u_1 ("VUI: low_delay_hrd_flag", s);
+      sps->vui_seq_parameters.low_delay_hrd_flag = read_u_1 ("VUI low_delay_hrd_flag", s);
 
     sps->vui_seq_parameters.pic_struct_present_flag =
-      read_u_1 ("VUI: pic_struct_present_flag   ", s);
+      read_u_1 ("VUI pic_struct_present_flag   ", s);
     sps->vui_seq_parameters.bitstream_restriction_flag =
-      read_u_1 ("VUI: bitstream_restriction_flag", s);
+      read_u_1 ("VUI bitstream_restriction_flag", s);
 
     if (sps->vui_seq_parameters.bitstream_restriction_flag) {
       sps->vui_seq_parameters.motion_vectors_over_pic_boundaries_flag =
-        read_u_1 ("VUI: motion_vectors_over_pic_boundaries_flag", s);
+        read_u_1 ("VUI motion_vectors_over_pic_boundaries_flag", s);
       sps->vui_seq_parameters.max_bytes_per_pic_denom =
-        read_ue_v ("VUI: max_bytes_per_pic_denom", s);
+        read_ue_v ("VUI max_bytes_per_pic_denom", s);
       sps->vui_seq_parameters.max_bits_per_mb_denom =
-        read_ue_v ("VUI: max_bits_per_mb_denom", s);
+        read_ue_v ("VUI max_bits_per_mb_denom", s);
       sps->vui_seq_parameters.log2_max_mv_length_horizontal =
-        read_ue_v ("VUI: log2_max_mv_length_horizontal", s);
+        read_ue_v ("VUI log2_max_mv_length_horizontal", s);
       sps->vui_seq_parameters.log2_max_mv_length_vertical =
-        read_ue_v ("VUI: log2_max_mv_length_vertical", s);
+        read_ue_v ("VUI log2_max_mv_length_vertical", s);
       sps->vui_seq_parameters.num_reorder_frames =
-        read_ue_v ("VUI: num_reorder_frames", s);
+        read_ue_v ("VUI num_reorder_frames", s);
       sps->vui_seq_parameters.max_dec_frame_buffering =
-        read_ue_v ("VUI: max_dec_frame_buffering", s);
+        read_ue_v ("VUI max_dec_frame_buffering", s);
       }
     }
 
@@ -527,30 +527,30 @@ static void interpretSPS (sVidParam* vidParam, sDataPartition* p, sSPSrbsp* sps)
   assert (p->bitstream->streamBuffer != 0);
   assert (sps != NULL);
 
-  sps->profile_idc = read_u_v  (8, "SPS: profile_idc", s);
-  if ((sps->profile_idc!=BASELINE) &&
-      (sps->profile_idc!=MAIN) &&
-      (sps->profile_idc!=EXTENDED) &&
-      (sps->profile_idc!=FREXT_HP) &&
-      (sps->profile_idc!=FREXT_Hi10P) &&
-      (sps->profile_idc!=FREXT_Hi422) &&
-      (sps->profile_idc!=FREXT_Hi444) &&
-      (sps->profile_idc!=FREXT_CAVLC444)) {
+  sps->profile_idc = read_u_v (8, "SPS profile_idc", s);
+  if ((sps->profile_idc != BASELINE) &&
+      (sps->profile_idc != MAIN) &&
+      (sps->profile_idc != EXTENDED) &&
+      (sps->profile_idc != FREXT_HP) &&
+      (sps->profile_idc != FREXT_Hi10P) &&
+      (sps->profile_idc != FREXT_Hi422) &&
+      (sps->profile_idc != FREXT_Hi444) &&
+      (sps->profile_idc != FREXT_CAVLC444)) {
     printf ("Invalid Profile IDC (%d) encountered. \n", sps->profile_idc);
     }
 
-  sps->constrained_set0_flag = read_u_1 ("SPS: constrained_set0_flag", s);
-  sps->constrained_set1_flag = read_u_1 ("SPS: constrained_set1_flag", s);
-  sps->constrained_set2_flag = read_u_1 ("SPS: constrained_set2_flag", s);
-  sps->constrained_set3_flag = read_u_1 ("SPS: constrained_set3_flag", s);
+  sps->constrained_set0_flag = read_u_1 ("SPS constrained_set0_flag", s);
+  sps->constrained_set1_flag = read_u_1 ("SPS constrained_set1_flag", s);
+  sps->constrained_set2_flag = read_u_1 ("SPS constrained_set2_flag", s);
+  sps->constrained_set3_flag = read_u_1 ("SPS constrained_set3_flag", s);
 
-  reserved_zero = read_u_v (4, "SPS: reserved_zero_4bits", s);
+  reserved_zero = read_u_v (4, "SPS reserved_zero_4bits", s);
 
   if (reserved_zero != 0)
     printf ("Warning, reserved_zero flag not equal to 0. Possibly new constrained_setX flag introduced.\n");
 
-  sps->level_idc = read_u_v (8, "SPS: level_idc", s);
-  sps->seq_parameter_set_id = read_ue_v ("SPS: seq_parameter_set_id", s);
+  sps->level_idc = read_u_v (8, "SPS level_idc", s);
+  sps->seq_parameter_set_id = read_ue_v ("SPS seq_parameter_set_id", s);
 
   // Fidelity Range Extensions stuff
   sps->chroma_format_idc = 1;
@@ -564,22 +564,23 @@ static void interpretSPS (sVidParam* vidParam, sDataPartition* p, sSPSrbsp* sps)
       (sps->profile_idc==FREXT_Hi422) ||
       (sps->profile_idc==FREXT_Hi444) ||
       (sps->profile_idc==FREXT_CAVLC444)) {
-    sps->chroma_format_idc = read_ue_v ("SPS: chroma_format_idc", s);
+    sps->chroma_format_idc = read_ue_v ("SPS chroma_format_idc", s);
     if (sps->chroma_format_idc == YUV444)
-      sps->separate_colour_plane_flag = read_u_1  ("SPS: separate_colour_plane_flag", s);
+      sps->separate_colour_plane_flag = read_u_1 ("SPS separate_colour_plane_flag", s);
 
-    sps->bit_depth_luma_minus8 = read_ue_v ("SPS: bit_depth_luma_minus8", s);
-    sps->bit_depth_chroma_minus8 = read_ue_v ("SPS: bit_depth_chroma_minus8", s);
-    if ((sps->bit_depth_luma_minus8+8 > sizeof(sPixel)*8) || (sps->bit_depth_chroma_minus8+8> sizeof(sPixel)*8))
-      error ("Source picture has higher bit depth than sPixel data type. \nPlease recompile with larger data type for sPixel.", 500);
+    sps->bit_depth_luma_minus8 = read_ue_v ("SPS bit_depth_luma_minus8", s);
+    sps->bit_depth_chroma_minus8 = read_ue_v ("SPS bit_depth_chroma_minus8", s);
+    if ((sps->bit_depth_luma_minus8+8 > sizeof(sPixel)*8) ||
+        (sps->bit_depth_chroma_minus8+8> sizeof(sPixel)*8))
+      error ("Source picture has higher bit depth than sPixel data type", 500);
 
-    sps->lossless_qpprime_flag = read_u_1 ("SPS: lossless_qpprime_y_zero_flag", s);
+    sps->lossless_qpprime_flag = read_u_1 ("SPS lossless_qpprime_y_zero_flag", s);
 
-    sps->seq_scaling_matrix_present_flag = read_u_1 ("SPS: seq_scaling_matrix_present_flag", s);
+    sps->seq_scaling_matrix_present_flag = read_u_1 ("SPS seq_scaling_matrix_present_flag", s);
     if (sps->seq_scaling_matrix_present_flag) {
       n_ScalingList = (sps->chroma_format_idc != YUV444) ? 8 : 12;
       for (i = 0; i < n_ScalingList; i++) {
-        sps->seq_scaling_list_present_flag[i]   = read_u_1 ("SPS: seq_scaling_list_present_flag", s);
+        sps->seq_scaling_list_present_flag[i] = read_u_1 ("SPS seq_scaling_list_present_flag", s);
         if (sps->seq_scaling_list_present_flag[i]) {
           if (i < 6)
             scalingList (sps->ScalingList4x4[i], 16, &sps->UseDefaultScalingMatrix4x4Flag[i], s);
@@ -590,39 +591,39 @@ static void interpretSPS (sVidParam* vidParam, sDataPartition* p, sSPSrbsp* sps)
       }
     }
 
-  sps->log2_max_frame_num_minus4 = read_ue_v ("SPS: log2_max_frame_num_minus4", s);
-  sps->pic_order_cnt_type = read_ue_v ("SPS: pic_order_cnt_type", s);
+  sps->log2_max_frame_num_minus4 = read_ue_v ("SPS log2_max_frame_num_minus4", s);
+  sps->pic_order_cnt_type = read_ue_v ("SPS pic_order_cnt_type", s);
 
   if (sps->pic_order_cnt_type == 0)
-    sps->log2_max_pic_order_cnt_lsb_minus4 = read_ue_v ("SPS: log2_max_pic_order_cnt_lsb_minus4", s);
+    sps->log2_max_pic_order_cnt_lsb_minus4 = read_ue_v ("SPS log2_max_pic_order_cnt_lsb_minus4", s);
   else if (sps->pic_order_cnt_type == 1) {
-    sps->delta_pic_order_always_zero_flag = read_u_1 ("SPS: delta_pic_order_always_zero_flag", s);
-    sps->offset_for_non_ref_pic = read_se_v ("SPS: offset_for_non_ref_pic", s);
-    sps->offset_for_top_to_bottom_field = read_se_v ("SPS: offset_for_top_to_bottom_field", s);
-    sps->num_ref_frames_in_pic_order_cnt_cycle = read_ue_v ("SPS: num_ref_frames_in_pic_order_cnt_cycle", s);
+    sps->delta_pic_order_always_zero_flag = read_u_1 ("SPS delta_pic_order_always_zero_flag", s);
+    sps->offset_for_non_ref_pic = read_se_v ("SPS offset_for_non_ref_pic", s);
+    sps->offset_for_top_to_bottom_field = read_se_v ("SPS offset_for_top_to_bottom_field", s);
+    sps->num_ref_frames_in_pic_order_cnt_cycle = read_ue_v ("SPS num_ref_frames_in_pic_order_cnt_cycle", s);
     for (i = 0; i < sps->num_ref_frames_in_pic_order_cnt_cycle; i++)
-      sps->offset_for_ref_frame[i] = read_se_v ("SPS: offset_for_ref_frame[i]", s);
+      sps->offset_for_ref_frame[i] = read_se_v ("SPS offset_for_ref_frame[i]", s);
     }
 
-  sps->num_ref_frames = read_ue_v ("SPS: num_ref_frames", s);
-  sps->gaps_in_frame_num_value_allowed_flag = read_u_1  ("SPS: gaps_in_frame_num_value_allowed_flag", s);
-  sps->pic_width_in_mbs_minus1 = read_ue_v ("SPS: pic_width_in_mbs_minus1", s);
-  sps->pic_height_in_map_units_minus1 = read_ue_v ("SPS: pic_height_in_map_units_minus1", s);
-  sps->frame_mbs_only_flag = read_u_1 ("SPS: frame_mbs_only_flag", s);
+  sps->num_ref_frames = read_ue_v ("SPS num_ref_frames", s);
+  sps->gaps_in_frame_num_value_allowed_flag = read_u_1 ("SPS gaps_in_frame_num_value_allowed_flag", s);
+  sps->pic_width_in_mbs_minus1 = read_ue_v ("SPS pic_width_in_mbs_minus1", s);
+  sps->pic_height_in_map_units_minus1 = read_ue_v ("SPS pic_height_in_map_units_minus1", s);
+  sps->frame_mbs_only_flag = read_u_1 ("SPS frame_mbs_only_flag", s);
   if (!sps->frame_mbs_only_flag)
-    sps->mb_adaptive_frame_field_flag = read_u_1  ("SPS: mb_adaptive_frame_field_flag", s);
+    sps->mb_adaptive_frame_field_flag = read_u_1 ("SPS mb_adaptive_frame_field_flag", s);
   //printf("interlace flags %d %d\n", sps->frame_mbs_only_flag, sps->mb_adaptive_frame_field_flag);
 
-  sps->direct_8x8_inference_flag = read_u_1  ("SPS: direct_8x8_inference_flag", s);
+  sps->direct_8x8_inference_flag = read_u_1 ("SPS direct_8x8_inference_flag", s);
 
-  sps->frame_cropping_flag = read_u_1  ("SPS: frame_cropping_flag", s);
+  sps->frame_cropping_flag = read_u_1 ("SPS frame_cropping_flag", s);
   if (sps->frame_cropping_flag) {
-    sps->frame_crop_left_offset = read_ue_v ("SPS: frame_crop_left_offset", s);
-    sps->frame_crop_right_offset = read_ue_v ("SPS: frame_crop_right_offset", s);
-    sps->frame_crop_top_offset = read_ue_v ("SPS: frame_crop_top_offset", s);
-    sps->frame_crop_bottom_offset = read_ue_v ("SPS: frame_crop_bottom_offset", s);
+    sps->frame_crop_left_offset = read_ue_v ("SPS frame_crop_left_offset", s);
+    sps->frame_crop_right_offset = read_ue_v ("SPS frame_crop_right_offset", s);
+    sps->frame_crop_top_offset = read_ue_v ("SPS frame_crop_top_offset", s);
+    sps->frame_crop_bottom_offset = read_ue_v ("SPS frame_crop_bottom_offset", s);
     }
-  sps->vui_parameters_present_flag = (Boolean) read_u_1 ("SPS: vui_parameters_present_flag", s);
+  sps->vui_parameters_present_flag = (Boolean) read_u_1 ("SPS vui_parameters_present_flag", s);
 
   initVUI (sps);
   readVUI (p, sps);
@@ -926,9 +927,9 @@ static void interpretPPS (sVidParam* vidParam, sDataPartition* p, sPPSrbsp* pps)
   assert (p->bitstream->streamBuffer != 0);
   assert (pps != NULL);
 
-  pps->pic_parameter_set_id = read_ue_v ("PPS: pic_parameter_set_id", s);
-  pps->seq_parameter_set_id = read_ue_v ("PPS: seq_parameter_set_id", s);
-  pps->entropy_coding_mode_flag = read_u_1  ("PPS: entropy_coding_mode_flag", s);
+  pps->pic_parameter_set_id = read_ue_v ("PPS pic_parameter_set_id", s);
+  pps->seq_parameter_set_id = read_ue_v ("PPS seq_parameter_set_id", s);
+  pps->entropy_coding_mode_flag = read_u_1 ("PPS entropy_coding_mode_flag", s);
 
   //! Note: as per JVT-F078 the following bit is unconditional.  If F078 is not accepted, then
   //! one has to fetch the correct SPS to check whether the bit is present (hopefully there is
@@ -936,30 +937,30 @@ static void interpretPPS (sVidParam* vidParam, sDataPartition* p, sPPSrbsp* pps)
   //! The current encoder code handles this in the same way.  When you change this, don't forget
   //! the encoder!  StW, 12/8/02
   pps->bottom_field_pic_order_in_frame_present_flag =
-    read_u_1  ("PPS: bottom_field_pic_order_in_frame_present_flag", s);
-  pps->num_slice_groups_minus1 = read_ue_v ("PPS: num_slice_groups_minus1", s);
+    read_u_1 ("PPS bottom_field_pic_order_in_frame_present_flag", s);
+  pps->num_slice_groups_minus1 = read_ue_v ("PPS num_slice_groups_minus1", s);
 
   if (pps->num_slice_groups_minus1 > 0) {
     //{{{  FMO
-    pps->slice_group_map_type = read_ue_v ("PPS: slice_group_map_type", s);
+    pps->slice_group_map_type = read_ue_v ("PPS slice_group_map_type", s);
     if (pps->slice_group_map_type == 0) {
       for (i = 0; i <= pps->num_slice_groups_minus1; i++)
-        pps->run_length_minus1 [i] = read_ue_v ("PPS: run_length_minus1 [i]", s);
+        pps->run_length_minus1 [i] = read_ue_v ("PPS run_length_minus1 [i]", s);
       }
     else if (pps->slice_group_map_type == 2) {
       for (i = 0; i < pps->num_slice_groups_minus1; i++) {
         //! JVT-F078: avoid reference of SPS by using ue(v) instead of u(v)
-        pps->top_left [i] = read_ue_v ("PPS: top_left [i]", s);
-        pps->bottom_right [i] = read_ue_v ("PPS: bottom_right [i]", s);
+        pps->top_left [i] = read_ue_v ("PPS top_left [i]", s);
+        pps->bottom_right [i] = read_ue_v ("PPS bottom_right [i]", s);
         }
       }
     else if (pps->slice_group_map_type == 3 ||
              pps->slice_group_map_type == 4 ||
              pps->slice_group_map_type == 5) {
       pps->slice_group_change_direction_flag =
-        read_u_1  ("PPS: slice_group_change_direction_flag", s);
+        read_u_1 ("PPS slice_group_change_direction_flag", s);
       pps->slice_group_change_rate_minus1 =
-        read_ue_v ("PPS: slice_group_change_rate_minus1", s);
+        read_ue_v ("PPS slice_group_change_rate_minus1", s);
       }
     else if (pps->slice_group_map_type == 6) {
       if (pps->num_slice_groups_minus1+1 >4)
@@ -968,9 +969,9 @@ static void interpretPPS (sVidParam* vidParam, sDataPartition* p, sPPSrbsp* pps)
         NumberBitsPerSliceGroupId = 2;
       else
         NumberBitsPerSliceGroupId = 1;
-      pps->pic_size_in_map_units_minus1      = read_ue_v ("PPS: pic_size_in_map_units_minus1"               , s);
+      pps->pic_size_in_map_units_minus1      = read_ue_v ("PPS pic_size_in_map_units_minus1"               , s);
       if ((pps->slice_group_id = calloc (pps->pic_size_in_map_units_minus1+1, 1)) == NULL)
-        no_mem_exit ("InterpretPPS: slice_group_id");
+        no_mem_exit ("InterpretPPS slice_group_id");
       for (i = 0; i <= pps->pic_size_in_map_units_minus1; i++)
         pps->slice_group_id[i] =
           (byte)read_u_v (NumberBitsPerSliceGroupId, "slice_group_id[i]", s);
@@ -979,37 +980,37 @@ static void interpretPPS (sVidParam* vidParam, sDataPartition* p, sPPSrbsp* pps)
     //}}}
 
   pps->num_ref_idx_l0_default_active_minus1 =
-    read_ue_v ("PPS: num_ref_idx_l0_default_active_minus1", s);
+    read_ue_v ("PPS num_ref_idx_l0_default_active_minus1", s);
   pps->num_ref_idx_l1_default_active_minus1 =
-    read_ue_v ("PPS: num_ref_idx_l1_default_active_minus1", s);
+    read_ue_v ("PPS num_ref_idx_l1_default_active_minus1", s);
 
-  pps->weighted_pred_flag = read_u_1  ("PPS: weighted_pred_flag", s);
-  pps->weighted_bipred_idc = read_u_v  ( 2, "PPS: weighted_bipred_idc", s);
+  pps->weighted_pred_flag = read_u_1 ("PPS weighted_pred_flag", s);
+  pps->weighted_bipred_idc = read_u_v ( 2, "PPS weighted_bipred_idc", s);
 
-  pps->pic_init_qp_minus26 = read_se_v ("PPS: pic_init_qp_minus26", s);
-  pps->pic_init_qs_minus26 = read_se_v ("PPS: pic_init_qs_minus26", s);
+  pps->pic_init_qp_minus26 = read_se_v ("PPS pic_init_qp_minus26", s);
+  pps->pic_init_qs_minus26 = read_se_v ("PPS pic_init_qs_minus26", s);
 
-  pps->chroma_qp_index_offset = read_se_v ("PPS: chroma_qp_index_offset"   , s);
+  pps->chroma_qp_index_offset = read_se_v ("PPS chroma_qp_index_offset"   , s);
   pps->deblocking_filter_control_present_flag =
-    read_u_1 ("PPS: deblocking_filter_control_present_flag" , s);
+    read_u_1 ("PPS deblocking_filter_control_present_flag" , s);
 
-  pps->constrained_intra_pred_flag = read_u_1  ("PPS: constrained_intra_pred_flag", s);
+  pps->constrained_intra_pred_flag = read_u_1 ("PPS constrained_intra_pred_flag", s);
   pps->redundant_pic_cnt_present_flag =
-    read_u_1  ("PPS: redundant_pic_cnt_present_flag", s);
+    read_u_1 ("PPS redundant_pic_cnt_present_flag", s);
 
   if (more_rbsp_data (s->streamBuffer, s->frame_bitoffset,s->bitstream_length)) {
     //{{{  more_data_in_rbsp
     // Fidelity Range Extensions Stuff
-    pps->transform_8x8_mode_flag = read_u_1 ("PPS: transform_8x8_mode_flag", s);
+    pps->transform_8x8_mode_flag = read_u_1 ("PPS transform_8x8_mode_flag", s);
     pps->pic_scaling_matrix_present_flag =
-      read_u_1  ("PPS: pic_scaling_matrix_present_flag", s);
+      read_u_1 ("PPS pic_scaling_matrix_present_flag", s);
 
     if (pps->pic_scaling_matrix_present_flag) {
       chroma_format_idc = vidParam->SeqParSet[pps->seq_parameter_set_id].chroma_format_idc;
       n_ScalingList = 6 + ((chroma_format_idc != YUV444) ? 2 : 6) * pps->transform_8x8_mode_flag;
       for (i = 0; i < n_ScalingList; i++) {
         pps->pic_scaling_list_present_flag[i]=
-          read_u_1 ("PPS: pic_scaling_list_present_flag", s);
+          read_u_1 ("PPS pic_scaling_list_present_flag", s);
         if (pps->pic_scaling_list_present_flag[i]) {
           if (i < 6)
             scalingList (pps->ScalingList4x4[i], 16, &pps->UseDefaultScalingMatrix4x4Flag[i], s);
@@ -1019,7 +1020,7 @@ static void interpretPPS (sVidParam* vidParam, sDataPartition* p, sPPSrbsp* pps)
         }
       }
     pps->second_chroma_qp_index_offset =
-      read_se_v ("PPS: second_chroma_qp_index_offset", s);
+      read_se_v ("PPS second_chroma_qp_index_offset", s);
     }
     //}}}
   else
@@ -1046,7 +1047,7 @@ sPPSrbsp* allocPPS() {
   sPPSrbsp *p;
 
   if ((p = calloc (1, sizeof (sPPSrbsp))) == NULL)
-    no_mem_exit ("allocPPS: PPS");
+    no_mem_exit ("allocPPS");
   p->slice_group_id = NULL;
   return p;
   }

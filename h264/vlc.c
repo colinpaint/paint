@@ -4,124 +4,127 @@
 
 #include "vlc.h"
 //}}}
+static const int kDebug = 0;
 
 //{{{
-int read_ue_v (char *tracestring, Bitstream *bitstream) {
+int read_ue_v (char* tracestring, Bitstream* bitstream) {
 
   SyntaxElement symbol = {.value1=0 };
-
   symbol.type = SE_HEADER;
   symbol.mapping = linfo_ue;   // Mapping rule
-
   readSyntaxElement_VLC (&symbol, bitstream);
+
+  if (kDebug)
+    printf ("read %s %d\n", tracestring, symbol.value1);
 
   return symbol.value1;
   }
 //}}}
 //{{{
-int read_se_v (char *tracestring, Bitstream *bitstream) {
+int read_se_v (char* tracestring, Bitstream* bitstream) {
 
   SyntaxElement symbol = {.value1 = 0 };
-
   symbol.type = SE_HEADER;
   symbol.mapping = linfo_se;   // Mapping rule: signed integer
   readSyntaxElement_VLC (&symbol, bitstream);
 
+  if (kDebug)
+    printf ("read %s %d\n", tracestring, symbol.value1);
+
   return symbol.value1;
   }
 //}}}
 //{{{
-int read_u_v (int LenInBits, char*tracestring, Bitstream *bitstream) {
+int read_u_v (int LenInBits, char* tracestring, Bitstream* bitstream) {
 
   SyntaxElement symbol = {.value1=0 };
   symbol.inf = 0;
-
   symbol.type = SE_HEADER;
   symbol.mapping = linfo_ue;   // Mapping rule
   symbol.len = LenInBits;
   readSyntaxElement_FLC (&symbol, bitstream);
 
+  if (kDebug)
+    printf ("read %s %d\n", tracestring, symbol.inf);
+
   return symbol.inf;
   }
 //}}}
 //{{{
-int read_i_v (int LenInBits, char*tracestring, Bitstream *bitstream) {
+int read_i_v (int LenInBits, char* tracestring, Bitstream* bitstream) {
 
   SyntaxElement symbol = {.value1=0 };
   symbol.inf = 0;
   symbol.type = SE_HEADER;
   symbol.mapping = linfo_ue;   // Mapping rule
   symbol.len = LenInBits;
-
   readSyntaxElement_FLC (&symbol, bitstream);
 
   // can be negative
   symbol.inf = -( symbol.inf & (1 << (LenInBits - 1)) ) | symbol.inf;
 
+  if (kDebug)
+    printf ("read %s %d\n", tracestring, symbol.inf);
+
   return symbol.inf;
   }
 //}}}
 //{{{
-Boolean read_u_1 (char *tracestring, Bitstream *bitstream) {
-
+Boolean read_u_1 (char* tracestring, Bitstream* bitstream) {
   return (Boolean) read_u_v (1, tracestring, bitstream);
   }
 //}}}
 
 //{{{
-void linfo_ue (int len, int info, int *value1, int *dummy) {
+void linfo_ue (int len, int info, int* value1, int* dummy) {
   *value1 = (int) (((unsigned int) 1 << (len >> 1)) + (unsigned int) (info) - 1);
   }
 //}}}
 //{{{
-void linfo_se (int len,  int info, int *value1, int *dummy)
-{
-  //assert ((len >> 1) < 32);
+void linfo_se (int len,  int info, int* value1, int* dummy) {
+
   unsigned int n = ((unsigned int) 1 << (len >> 1)) + (unsigned int) info - 1;
-
   *value1 = (n + 1) >> 1;
-  if ((n & 0x01) == 0)                           // lsb is signed bit
+
+  // lsb is signed bit
+  if ((n & 0x01) == 0)
     *value1 = -*value1;
-}
+  }
 //}}}
 //{{{
-void linfo_cbp_intra_normal (int len,int info,int *cbp, int *dummy)
-{
-  int cbp_idx;
+void linfo_cbp_intra_normal (int len, int info,int* cbp, int* dummy) {
 
-  linfo_ue(len, info, &cbp_idx, dummy);
+  int cbp_idx;
+  linfo_ue (len, info, &cbp_idx, dummy);
   *cbp = NCBP[1][cbp_idx][0];
-}
+  }
 //}}}
 //{{{
-void linfo_cbp_intra_other (int len,int info,int *cbp, int *dummy)
-{
-  int cbp_idx;
+void linfo_cbp_intra_other (int len, int info,int* cbp, int* dummy) {
 
+  int cbp_idx;
   linfo_ue(len, info, &cbp_idx, dummy);
   *cbp = NCBP[0][cbp_idx][0];
-}
+  }
 //}}}
 //{{{
-void linfo_cbp_inter_normal (int len,int info,int *cbp, int *dummy)
-{
-  int cbp_idx;
+void linfo_cbp_inter_normal (int len, int info, int* cbp, int* dummy) {
 
+  int cbp_idx;
   linfo_ue (len, info, &cbp_idx, dummy);
   *cbp = NCBP[1][cbp_idx][1];
-}
+  }
 //}}}
 //{{{
-void linfo_cbp_inter_other (int len,int info,int *cbp, int *dummy)
-{
+void linfo_cbp_inter_other (int len, int info, int* cbp, int *dummy) {
+
   int cbp_idx;
   linfo_ue (len, info, &cbp_idx, dummy);
   *cbp = NCBP[0][cbp_idx][1];
-}
+  }
 //}}}
 //{{{
-void linfo_levrun_inter (int len, int info, int *level, int *irun) {
-
+void linfo_levrun_inter (int len, int info, int* level, int* irun) {
 
   if (len <= 9) {
     int l2 = imax(0,(len >> 1)-1);
@@ -144,7 +147,7 @@ void linfo_levrun_inter (int len, int info, int *level, int *irun) {
   }
 //}}}
 //{{{
-void linfo_levrun_c2x2 (int len, int info, int *level, int *irun) {
+void linfo_levrun_c2x2 (int len, int info, int* level, int* irun) {
 
   if (len <= 5) {
     int l2 = imax(0, (len >> 1) - 1);
@@ -168,30 +171,28 @@ void linfo_levrun_c2x2 (int len, int info, int *level, int *irun) {
 //}}}
 
 //{{{
-int readSyntaxElement_VLC (SyntaxElement *sym, Bitstream *currStream)
-{
+int readSyntaxElement_VLC (SyntaxElement* sym, Bitstream* currStream) {
 
-  sym->len =  GetVLCSymbol (currStream->streamBuffer, currStream->frame_bitoffset, &(sym->inf), currStream->bitstream_length);
+  sym->len =  GetVLCSymbol (currStream->streamBuffer, currStream->frame_bitoffset,
+                            &(sym->inf), currStream->bitstream_length);
   if (sym->len == -1)
     return -1;
 
   currStream->frame_bitoffset += sym->len;
-  sym->mapping(sym->len, sym->inf, &(sym->value1), &(sym->value2));
+  sym->mapping (sym->len, sym->inf, &(sym->value1), &(sym->value2));
 
   return 1;
 }
 //}}}
 //{{{
-int readSyntaxElement_UVLC (sMacroblock *currMB, SyntaxElement *sym, struct datapartition_dec *dP)
-{
+int readSyntaxElement_UVLC (sMacroblock* currMB, SyntaxElement* sym, struct datapartition_dec* dP) {
   return (readSyntaxElement_VLC(sym, dP->bitstream));
-}
+  }
 //}}}
 //{{{
-int readSyntaxElement_Intra4x4PredictionMode (SyntaxElement *sym, Bitstream   *currStream)
-{
-  sym->len = GetVLCSymbol_IntraMode (currStream->streamBuffer, currStream->frame_bitoffset, &(sym->inf), currStream->bitstream_length);
+int readSyntaxElement_Intra4x4PredictionMode (SyntaxElement* sym, Bitstream* currStream) {
 
+  sym->len = GetVLCSymbol_IntraMode (currStream->streamBuffer, currStream->frame_bitoffset, &(sym->inf), currStream->bitstream_length);
   if (sym->len == -1)
     return -1;
 
@@ -199,74 +200,62 @@ int readSyntaxElement_Intra4x4PredictionMode (SyntaxElement *sym, Bitstream   *c
   sym->value1       = (sym->len == 1) ? -1 : sym->inf;
 
   return 1;
-}
+  }
 //}}}
 //{{{
-int GetVLCSymbol_IntraMode (byte buffer[],int totbitoffset,int *info, int bytecount)
-{
+int GetVLCSymbol_IntraMode (byte buffer[],int totbitoffset,int* info, int bytecount) {
+
   int byteoffset = (totbitoffset >> 3);        // byte from start of buffer
   int bitoffset   = (7 - (totbitoffset & 0x07)); // bit from start of byte
   byte *cur_byte  = &(buffer[byteoffset]);
   int ctr_bit     = (*cur_byte & (0x01 << bitoffset));      // control bit for current bit posision
 
   //First bit
-  if (ctr_bit)
-  {
+  if (ctr_bit) {
     *info = 0;
     return 1;
-  }
+    }
 
   if (byteoffset >= bytecount)
-  {
     return -1;
-  }
-  else
-  {
+  else {
     int inf = (*(cur_byte) << 8) + *(cur_byte + 1);
     inf <<= (sizeof(byte) * 8) - bitoffset;
     inf = inf & 0xFFFF;
     inf >>= (sizeof(byte) * 8) * 2 - 3;
-
     *info = inf;
+
     return 4;           // return absolute offset in bit from start of frame
+    }
   }
-}
 //}}}
 //{{{
-int more_rbsp_data (byte buffer[],int totbitoffset,int bytecount)
-{
-  long byteoffset = (totbitoffset >> 3);      // byte from start of buffer
+int more_rbsp_data (byte buffer[], int totbitoffset,int bytecount) {
+
   // there is more until we're in the last byte
+  long byteoffset = (totbitoffset >> 3);      // byte from start of buffer
   if (byteoffset < (bytecount - 1))
     return TRUE;
-  else
-  {
+  else {
     int bitoffset   = (7 - (totbitoffset & 0x07));      // bit from start of byte
     byte *cur_byte  = &(buffer[byteoffset]);
     // read one bit
     int ctr_bit     = ctr_bit = ((*cur_byte)>> (bitoffset--)) & 0x01;      // control bit for current bit posision
 
-    //assert (byteoffset<bytecount);
-
     // a stop bit has to be one
     if (ctr_bit==0)
       return TRUE;
-    else
-    {
+    else {
       int cnt = 0;
-
       while (bitoffset>=0 && !cnt)
-      {
         cnt |= ((*cur_byte)>> (bitoffset--)) & 0x01;   // set up control bit
-      }
-
       return (cnt);
+      }
     }
   }
-}
 //}}}
 //{{{
-int uvlc_startcode_follows(sSlice *currSlice, int dummy) {
+int uvlc_startcode_follows(sSlice* currSlice, int dummy) {
 
   byte dp_Nr = assignSE2partition[currSlice->dp_mode][SE_MBTYPE];
   sDataPartition* dP = &(currSlice->partArr[dp_Nr]);
@@ -277,14 +266,14 @@ int uvlc_startcode_follows(sSlice *currSlice, int dummy) {
   }
 //}}}
 //{{{
-int GetVLCSymbol (byte buffer[],int totbitoffset,int *info, int bytecount) {
+int GetVLCSymbol (byte buffer[], int totbitoffset, int* info, int bytecount) {
 
   long byteoffset = (totbitoffset >> 3);         // byte from start of buffer
-  int  bitoffset  = (7 - (totbitoffset & 0x07)); // bit from start of byte
-  int  bitcounter = 1;
-  int  len        = 0;
-  byte *cur_byte  = &(buffer[byteoffset]);
-  int  ctr_bit    = ((*cur_byte) >> (bitoffset)) & 0x01;  // control bit for current bit posision
+  int bitoffset  = (7 - (totbitoffset & 0x07)); // bit from start of byte
+  int bitcounter = 1;
+  int len        = 0;
+  byte* cur_byte  = &(buffer[byteoffset]);
+  int ctr_bit    = ((*cur_byte) >> (bitoffset)) & 0x01;  // control bit for current bit posision
 
   while (ctr_bit == 0) {
     // find leading 1 bit
@@ -321,7 +310,7 @@ static inline int ShowBitsThres (int inf, int numbits) {
   }
 //}}}
 //{{{
-static int code_from_bitstream_2d (SyntaxElement *sym, Bitstream *currStream,
+static int code_from_bitstream_2d (SyntaxElement* sym, Bitstream* currStream,
                                    const byte *lentab, const byte *codtab,
                                    int tabwidth, int tabheight, int *code) {
 
@@ -361,7 +350,7 @@ static int code_from_bitstream_2d (SyntaxElement *sym, Bitstream *currStream,
 //}}}
 
 //{{{
-int readSyntaxElement_FLC (SyntaxElement *sym, Bitstream *currStream)
+int readSyntaxElement_FLC (SyntaxElement* sym, Bitstream* currStream)
 {
   int BitstreamLengthInBits  = (currStream->bitstream_length << 3) + 7;
 
@@ -375,7 +364,7 @@ int readSyntaxElement_FLC (SyntaxElement *sym, Bitstream *currStream)
 }
 //}}}
 //{{{
-int readSyntaxElement_NumCoeffTrailingOnes (SyntaxElement *sym,
+int readSyntaxElement_NumCoeffTrailingOnes (SyntaxElement* sym,
                                            Bitstream *currStream,
                                            char *type)
 {
@@ -467,7 +456,7 @@ int readSyntaxElement_NumCoeffTrailingOnes (SyntaxElement *sym,
 }
 //}}}
 //{{{
-int readSyntaxElement_NumCoeffTrailingOnesChromaDC (sVidParam* vidParam, SyntaxElement *sym,  Bitstream *currStream)
+int readSyntaxElement_NumCoeffTrailingOnesChromaDC (sVidParam* vidParam, SyntaxElement* sym, Bitstream* currStream)
 {
   static const byte lentab[3][4][17] =
   {
@@ -522,7 +511,7 @@ int readSyntaxElement_NumCoeffTrailingOnesChromaDC (sVidParam* vidParam, SyntaxE
 }
 //}}}
 //{{{
-int readSyntaxElement_Level_VLC0 (SyntaxElement *sym, Bitstream *currStream)
+int readSyntaxElement_Level_VLC0 (SyntaxElement* sym, Bitstream* currStream)
 {
   int frame_bitoffset        = currStream->frame_bitoffset;
   int BitstreamLengthInBytes = currStream->bitstream_length;
@@ -571,7 +560,7 @@ int readSyntaxElement_Level_VLC0 (SyntaxElement *sym, Bitstream *currStream)
 }
 //}}}
 //{{{
-int readSyntaxElement_Level_VLCN (SyntaxElement *sym, int vlc, Bitstream *currStream)
+int readSyntaxElement_Level_VLCN (SyntaxElement* sym, int vlc, Bitstream* currStream)
 {
   int frame_bitoffset        = currStream->frame_bitoffset;
   int BitstreamLengthInBytes = currStream->bitstream_length;
@@ -634,7 +623,7 @@ int readSyntaxElement_Level_VLCN (SyntaxElement *sym, int vlc, Bitstream *currSt
 }
 //}}}
 //{{{
-int readSyntaxElement_TotalZeros (SyntaxElement *sym,  Bitstream *currStream) {
+int readSyntaxElement_TotalZeros (SyntaxElement* sym,  Bitstream *currStream) {
 
   //{{{
   static const byte lentab[TOTRUN_NUM][16] =
@@ -691,7 +680,7 @@ int readSyntaxElement_TotalZeros (SyntaxElement *sym,  Bitstream *currStream) {
   }
 //}}}
 //{{{
-int readSyntaxElement_TotalZerosChromaDC (sVidParam* vidParam, SyntaxElement *sym,  Bitstream *currStream) {
+int readSyntaxElement_TotalZerosChromaDC (sVidParam* vidParam, SyntaxElement* sym, Bitstream* currStream) {
 
   //{{{
   static const byte lentab[3][TOTRUN_NUM][16] =
@@ -774,7 +763,7 @@ int readSyntaxElement_TotalZerosChromaDC (sVidParam* vidParam, SyntaxElement *sy
   }
 //}}}
 //{{{
-int readSyntaxElement_Run (SyntaxElement *sym, Bitstream *currStream)
+int readSyntaxElement_Run (SyntaxElement* sym, Bitstream* currStream)
 {
   //{{{
   static const byte lentab[TOTRUN_NUM][16] =
@@ -814,7 +803,7 @@ int readSyntaxElement_Run (SyntaxElement *sym, Bitstream *currStream)
 //}}}
 
 //{{{
-int GetBits (byte buffer[],int totbitoffset,int *info, int bitcount, int numbits) {
+int GetBits (byte buffer[],int totbitoffset, int*info, int bitcount, int numbits) {
 
   if ((totbitoffset + numbits ) > bitcount)
     return -1;
@@ -844,7 +833,7 @@ int GetBits (byte buffer[],int totbitoffset,int *info, int bitcount, int numbits
   }
 //}}}
 //{{{
-int ShowBits (byte buffer[],int totbitoffset,int bitcount, int numbits) {
+int ShowBits (byte buffer[],int totbitoffset, int bitcount, int numbits) {
 
   if ((totbitoffset + numbits )  > bitcount)
     return -1;

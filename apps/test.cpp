@@ -62,7 +62,7 @@ using namespace utils;
 //}}}
 constexpr bool kMotionVectors = true;
 constexpr size_t kVideoFrames = 50;
-constexpr size_t kIDR = 1;
+constexpr size_t kIDR = 2;
 
 namespace {
   //{{{
