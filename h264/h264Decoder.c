@@ -1,47 +1,3 @@
-//{{{
-/*!
- ***********************************************************************
- *  \mainpage
- *     This is the H.264/AVC decoder reference software. For detailed documentation
- *     see the comments in each file.
- *
- *     The JM software web site is located at:
- *     http://iphome.hhi.de/suehring/tml
- *
- *     For bug reporting and known issues see:
- *     https://ipbt.hhi.fraunhofer.de
- *
- *  \author
- *     The main contributors are listed in contributors.h
- *
- *  \version
- *     JM 18.4 (FRExt)
- *
- *  \note
- *     tags are used for document system "doxygen"
- *     available at http://www.doxygen.org
- */
-/*!
- *  \file
- *     ldecod.c
- *  \brief
- *     H.264/AVC reference decoder project main()
- *  \author
- *     Main contributors (see contributors.h for copyright, address and affiliation details)
- *     - Inge Lille-Langøy       <inge.lille-langoy@telenor.com>
- *     - Rickard Sjoberg         <rickard.sjoberg@era.ericsson.se>
- *     - Stephan Wenger          <stewe@cs.tu-berlin.de>
- *     - Jani Lainema            <jani.lainema@nokia.com>
- *     - Sebastian Purreiter     <sebastian.purreiter@mch.siemens.de>
- *     - Byeong-Moon Jeon        <jeonbm@lge.com>
- *     - Gabi Blaettermann
- *     - Ye-Kui Wang             <wyk@ieee.org>
- *     - Valeri George
- *     - Karsten Suehring
- *
- ***********************************************************************
- */
-//}}}
 //{{{  includes
 #include "global.h"
 #include "memalloc.h"
@@ -108,7 +64,7 @@ static void alloc_video_params (sVidParam** vidParam) {
 
     (*vidParam)->p_Dpb_layer[i]->layer_id = i;
     reset_dpb(*vidParam, (*vidParam)->p_Dpb_layer[i]);
-    if(((*vidParam)->p_EncodePar[i] = (CodingParameters*)calloc(1, sizeof(CodingParameters))) == NULL)
+    if(((*vidParam)->p_EncodePar[i] = (sCodingParams*)calloc(1, sizeof(sCodingParams))) == NULL)
       no_mem_exit ("alloc_video_params:vidParam->p_EncodePar[i]");
 
     ((*vidParam)->p_EncodePar[i])->layer_id = i;
@@ -456,7 +412,7 @@ void FreePartition (sDataPartition* dp, int n) {
 //{{{
 void free_layer_buffers (sVidParam* vidParam, int layer_id) {
 
-  CodingParameters *cps = vidParam->p_EncodePar[layer_id];
+  sCodingParams *cps = vidParam->p_EncodePar[layer_id];
 
   if (!vidParam->global_init_done[layer_id])
     return;
@@ -513,7 +469,7 @@ void free_layer_buffers (sVidParam* vidParam, int layer_id) {
 int init_global_buffers (sVidParam* vidParam, int layer_id) {
 
   int memory_size = 0;
-  CodingParameters *cps = vidParam->p_EncodePar[layer_id];
+  sCodingParams *cps = vidParam->p_EncodePar[layer_id];
   BlockPos* PicPos;
 
   if (vidParam->global_init_done[layer_id])
@@ -653,7 +609,7 @@ void FreeDecPicList (sDecodedPicList* pDecPicList) {
 //}}}
 
 //{{{
-void set_global_coding_par (sVidParam* vidParam, CodingParameters* cps) {
+void set_global_coding_par (sVidParam* vidParam, sCodingParams* cps) {
 
   vidParam->bitdepth_chroma = 0;
   vidParam->width_cr = 0;

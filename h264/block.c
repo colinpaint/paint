@@ -1,20 +1,4 @@
-//{{{
-/*!
- ***********************************************************************
- *  \file
- *      block.c
- *
- *  \brief
- *      Block functions
- *
- *  \author
- *      Main contributors (see contributors.h for copyright, address and affiliation details)
- *      - Inge Lille-Langoy          <inge.lille-langoy@telenor.com>
- *      - Rickard Sjoberg            <rickard.sjoberg@era.ericsson.se>
- ***********************************************************************
- */
-//}}}
-//{{{
+//{{{  includes
 #include <stdlib.h>
 #include <assert.h>
 #include <limits.h>

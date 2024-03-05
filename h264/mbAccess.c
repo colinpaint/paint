@@ -1,18 +1,4 @@
-//{{{
-/*!
- *************************************************************************************
- * \file mb_access.c
- *
- * \brief
- *    Functions for macroblock neighborhoods
- *
- *  \author
- *      Main contributors (see contributors.h for copyright, address and affiliation details)
- *      - Karsten Suehring
- *************************************************************************************
- */
-//}}}
-//{{{
+//{{{  includes
 #include "global.h"
 
 #include "mbuffer.h"

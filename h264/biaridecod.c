@@ -1,24 +1,3 @@
-//{{{
-/*!
- *************************************************************************************
- * \file biaridecod.c
- *
- * \brief
- *   Binary arithmetic decoder routines.
- *
- *   This modified implementation of the M Coder is based on JVT-U084
- *   with the choice of M_BITS = 16.
- *
- * \date
- *    21. Oct 2000
- * \author
- *    Main contributors (see contributors.h for copyright, address and affiliation details)
- *    - Detlev Marpe
- *    - Gabi Blaettermann
- *    - Gunnar Marten
- *************************************************************************************
- */
-//}}}
 //{{{  includes
 #include "global.h"
 #include "memalloc.h"

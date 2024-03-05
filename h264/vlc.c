@@ -1,20 +1,4 @@
-//{{{
-/*!
- ************************************************************************
- * \file vlc.c
- *
- * \brief
- *    VLC support functions
- *
- * \author
- *    Main contributors (see contributors.h for copyright, address and affiliation details)
- *    - Inge Lille-Langøy               <inge.lille-langoy@telenor.com>
- *    - Detlev Marpe
- *    - Gabi Blaettermann
- ************************************************************************
- */
-//}}}
-//{{{
+//{{{  includes
 #include "global.h"
 #include "elements.h"
 

@@ -69,7 +69,7 @@ static void setup_layer_info (sVidParam* vidParam, sSPSrbsp *sps, LayerParameter
 }
 //}}}
 //{{{
-static void set_coding_par (sSPSrbsp *sps, CodingParameters *cps) {
+static void set_coding_par (sSPSrbsp *sps, sCodingParams *cps) {
 
   // maximum vertical motion vector range in luma quarter pixel units
   cps->profile_idc = sps->profile_idc;
@@ -651,75 +651,117 @@ static int interpretSPS (sVidParam* vidParam, sDataPartition *p, sSPSrbsp *sps) 
 //{{{
 void get_max_dec_frame_buf_size (sSPSrbsp* sps) {
 
-  int pic_size_mb = (sps->pic_width_in_mbs_minus1 + 1) * (sps->pic_height_in_map_units_minus1 + 1) * (sps->frame_mbs_only_flag?1:2);
+  int pic_size_mb = (sps->pic_width_in_mbs_minus1 + 1) * 
+                    (sps->pic_height_in_map_units_minus1 + 1) * 
+                    (sps->frame_mbs_only_flag?1:2);
   int size = 0;
 
   switch (sps->level_idc) {
+    //{{{
     case 0:
       // if there is no level defined, we expect experimental usage and return a DPB size of 16
       size = 16 * pic_size_mb;
+    //}}}
+    //{{{
     case 9:
       size = 396;
       break;
+    //}}}
+    //{{{
     case 10:
       size = 396;
       break;
+    //}}}
+    //{{{
     case 11:
       if (!is_FREXT_profile(sps->profile_idc) && (sps->constrained_set3_flag == 1))
         size = 396;
       else
         size = 900;
       break;
+    //}}}
+    //{{{
     case 12:
       size = 2376;
       break;
+    //}}}
+    //{{{
     case 13:
       size = 2376;
       break;
+    //}}}
+    //{{{
     case 20:
       size = 2376;
       break;
+    //}}}
+    //{{{
     case 21:
       size = 4752;
       break;
+    //}}}
+    //{{{
     case 22:
       size = 8100;
       break;
+    //}}}
+    //{{{
     case 30:
       size = 8100;
       break;
+    //}}}
+    //{{{
     case 31:
       size = 18000;
       break;
+    //}}}
+    //{{{
     case 32:
       size = 20480;
       break;
+    //}}}
+    //{{{
     case 40:
       size = 32768;
       break;
+    //}}}
+    //{{{
     case 41:
       size = 32768;
       break;
+    //}}}
+    //{{{
     case 42:
       size = 34816;
       break;
+    //}}}
+    //{{{
     case 50:
       size = 110400;
       break;
+    //}}}
+    //{{{
     case 51:
       size = 184320;
       break;
+    //}}}
+    //{{{
     case 52:
       size = 184320;
       break;
+    //}}}
     case 60:
     case 61:
+    //{{{
     case 62:
       size = 696320;
       break;
+    //}}}
+    //{{{
     default:
       error ("undefined level", 500);
       break;
+    //}}}
     }
 
   size /= pic_size_mb;
@@ -727,11 +769,11 @@ void get_max_dec_frame_buf_size (sSPSrbsp* sps) {
   }
 //}}}
 //{{{
-void MakeSPSavailable (sVidParam* vidParam, int id, sSPSrbsp* sps)
-{
+void MakeSPSavailable (sVidParam* vidParam, int id, sSPSrbsp* sps) {
+
   assert (sps->Valid == TRUE);
   memcpy (&vidParam->SeqParSet[id], sps, sizeof (sSPSrbsp));
-}
+  }
 
 //}}}
 //{{{

@@ -1,18 +1,4 @@
-//{{{
-/*!
- *************************************************************************************
- * \file cabac.c
- *
- * \brief
- *    CABAC entropy coding routines
- *
- * \author
- *    Main contributors (see contributors.h for copyright, address and affiliation details)
- *    - Detlev Marpe
- **************************************************************************************
- */
-//}}}
-//{{{
+//{{{  includes
 #include "global.h"
 #include "memalloc.h"
 

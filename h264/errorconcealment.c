@@ -1,36 +1,7 @@
-//{{{
-/*!
- ***********************************************************************
- * \file errorconcealment.c
- *
- * \brief
- *    Implements error concealment scheme for H.264 decoder
- *
- * \date
- *    6.10.2000
- *
- * \version
- *    1.0
- *
- * \note
- *    This simple error concealment implemented in this decoder uses
- *    the existing dependencies of syntax elements.
- *    In case that an element is detected as false this elements and all
- *    dependend elements are marked as elements to conceal in the vidParam->ec_flag[]
- *    array. If the decoder requests a new element by the function
- *    readSyntaxElement_xxxx() this array is checked first if an error concealment has
- *    to be applied on this element.
- *    In case that an error occured a concealed element is given to the
- *    decoding function in macroblock().
- *
- * \author
- *    Main contributors (see contributors.h for copyright, address and affiliation details)
- *    - Sebastian Purreiter   <sebastian.purreiter@mch.siemens.de>
- ***********************************************************************
- */
-//}}}
+//{{{  includes
 #include "global.h"
 #include "elements.h"
+//}}}
 
 //{{{
 int set_ec_flag (sVidParam* vidParam, int se) {

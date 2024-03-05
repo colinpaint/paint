@@ -1,20 +1,4 @@
-//{{{
-/*!
- *************************************************************************************
- * \file intra4x4_pred.c
- *
- * \brief
- *    Functions for intra 4x4 prediction
- *
- * \author
- *      Main contributors (see contributors.h for copyright,
- *                         address and affiliation details)
- *      - Alexis Michael Tourapis  <alexismt@ieee.org>
- *
- *************************************************************************************
- */
-//}}}
-//{{{
+//{{{  includes
 #include "global.h"
 
 #include "intra4x4Pred.h"

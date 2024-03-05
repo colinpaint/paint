@@ -1,20 +1,4 @@
-//{{{
-/*!
- *****************************************************************************
- *
- * \file fmo.c
- *
- * \brief
- *    Support for Flexible Macroblock Ordering (FMO)
- *
- * \author
- *    Main contributors (see contributors.h for copyright, address and affiliation details)
- *    - Stephan Wenger      stewe@cs.tu-berlin.de
- *    - Karsten Suehring
- ******************************************************************************
- */
-//}}}
-//{{{
+//{{{  includes
 #include "global.h"
 #include "elements.h"
 #include "defines.h"

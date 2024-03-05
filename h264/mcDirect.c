@@ -1,21 +1,4 @@
-//{{{
-/*!
- *************************************************************************************
- * \file mc_direct.c
- *
- * \brief
- *    Direct Prediction functions
- *
- * \author
- *      Main contributors (see contributors.h for copyright,
- *                         address and affiliation details)
- *      - Alexis Michael Tourapis  <alexismt@ieee.org>
- *      - Yuwen He                 <yhe@dolby.com>
- *
- *************************************************************************************
- */
-//}}}
-//{{{
+//{{{  includes
 #include "global.h"
 #include "memalloc.h"
 

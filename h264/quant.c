@@ -1,19 +1,4 @@
-//{{{
-/*!
- ***********************************************************************
- *  \file
- *      quant.c
- *
- *  \brief
- *      Quantization functions
- *
- *  \author
- *      Main contributors (see contributors.h for copyright, address and affiliation details)
- *
- ***********************************************************************
- */
-//}}}
-//{{{
+//{{{  includes
 #include "global.h"
 #include "memalloc.h"
 
@@ -92,7 +77,7 @@ int quant8_org[64] = { //to be use if no q matrix is chosen
  *    Initiate quantization process arrays
  ***********************************************************************
  */
-void init_qp_process(CodingParameters *cps)
+void init_qp_process (sCodingParams *cps)
 {
   int bitdepth_qp_scale = imax(cps->bitdepth_luma_qp_scale, cps->bitdepth_chroma_qp_scale);
   int i;
@@ -115,7 +100,7 @@ void init_qp_process(CodingParameters *cps)
 }
 //}}}
 //{{{
-void free_qp_matrices(CodingParameters *cps)
+void free_qp_matrices (sCodingParams *cps)
 {
   if (cps->qp_per_matrix != NULL)
   {
@@ -146,7 +131,7 @@ void free_qp_matrices(CodingParameters *cps)
  *
  ************************************************************************
  */
-void assign_quant_params(Slice* currSlice)
+void assign_quant_params (Slice* currSlice)
 {
   sSPSrbsp* sps = currSlice->active_sps;
   sPPSrbsp* pps = currSlice->active_pps;
@@ -271,7 +256,7 @@ void assign_quant_params(Slice* currSlice)
 //}}}
 
 //{{{
-static void set_dequant4x4(int (*InvLevelScale4x4)[4],  const int (*dequant)[4], int *qmatrix)
+static void set_dequant4x4 (int (*InvLevelScale4x4)[4],  const int (*dequant)[4], int *qmatrix)
 {
   int j;
   for(j=0; j<4; j++)
@@ -284,7 +269,7 @@ static void set_dequant4x4(int (*InvLevelScale4x4)[4],  const int (*dequant)[4],
 }
 //}}}
 //{{{
-static void set_dequant8x8(int (*InvLevelScale8x8)[8],  const int (*dequant)[8], int *qmatrix)
+static void set_dequant8x8 (int (*InvLevelScale8x8)[8],  const int (*dequant)[8], int *qmatrix)
 {
   int j;
   for(j = 0; j < 8; j++)
@@ -309,7 +294,7 @@ static void set_dequant8x8(int (*InvLevelScale8x8)[8],  const int (*dequant)[8],
  *
  ************************************************************************
  */
-void CalculateQuant4x4Param(Slice* currSlice)
+void CalculateQuant4x4Param (Slice* currSlice)
 {
   int k;
   const int (*p_dequant_coef)[4][4] = dequant_coef;
@@ -340,7 +325,7 @@ void CalculateQuant4x4Param(Slice* currSlice)
  *
  ************************************************************************
  */
-void CalculateQuant8x8Param(Slice* currSlice)
+void CalculateQuant8x8Para m(Slice* currSlice)
 {
   int k;
   const int (*p_dequant_coef)[8][8] = dequant_coef8;

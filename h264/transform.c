@@ -1,21 +1,7 @@
-//{{{
-/*!
- ***************************************************************************
- * \file transform.c
- *
- * \brief
- *    Transform functions
- *
- * \author
- *    Main contributors (see contributors.h for copyright, address and affiliation details)
- *    - Alexis Michael Tourapis
- * \date
- *    01. July 2007
- **************************************************************************
- */
-//}}}
+//{{{  includes
 #include "global.h"
 #include "transform.h"
+//}}}
 
 //{{{
 void forward4x4 (int **block, int **tblock, int pos_y, int pos_x)

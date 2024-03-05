@@ -6,4 +6,4 @@ extern void uninit_out_buffer (sVidParam* vidParam);
 
 extern void write_stored_frame (sVidParam* vidParam, sFrameStore* fs);
 extern void direct_output (sVidParam* vidParam, sPicture* p);
-extern void init_output (CodingParameters* p_CodingParams, int symbol_size_in_bytes);
+extern void init_output (sCodingParams* p_CodingParams, int symbol_size_in_bytes);

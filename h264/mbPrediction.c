@@ -1,18 +1,4 @@
-//{{{
-/*!
- *************************************************************************************
- * \file mb_prediction.c
- *
- * \brief
- *    Macroblock prediction functions
- *
- * \author
- *    Main contributors (see contributors.h for copyright, address and affiliation details)
- *    - Alexis Michael Tourapis         <alexismt@ieee.org>
- *************************************************************************************
- */
-//}}}
-//{{{
+//{{{  includes
 #include "global.h"
 #include "elements.h"
 

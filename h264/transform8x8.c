@@ -1,23 +1,4 @@
-//{{{
-
-/*!
- ***************************************************************************
- * \file transform8x8.c
- *
- * \brief
- *    8x8 transform functions
- *
- * \author
- *    Main contributors (see contributors.h for copyright, address and affiliation details)
- *    - Yuri Vatis
- *    - Jan Muenster
- *
- * \date
- *    12. October 2003
- **************************************************************************
- */
-//}}}
-//{{{
+//{{{  includes
 #include "global.h"
 
 #include "image.h"

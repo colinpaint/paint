@@ -1,31 +1,3 @@
-//{{{
-/*!
- ***********************************************************************
- * \file image.c
- *
- * \brief
- *    Decode a Slice
- *
- * \author
- *    Main contributors (see contributors.h for copyright, address and affiliation details)
- *    - Inge Lille-Langoy               <inge.lille-langoy@telenor.com>
- *    - Rickard Sjoberg                 <rickard.sjoberg@era.ericsson.se>
- *    - Jani Lainema                    <jani.lainema@nokia.com>
- *    - Sebastian Purreiter             <sebastian.purreiter@mch.siemens.de>
- *    - Byeong-Moon Jeon                <jeonbm@lge.com>
- *    - Thomas Wedi                     <wedi@tnt.uni-hannover.de>
- *    - Gabi Blaettermann
- *    - Ye-Kui Wang                     <wyk@ieee.org>
- *    - Antti Hallapuro                 <antti.hallapuro@nokia.com>
- *    - Alexis Tourapis                 <alexismt@ieee.org>
- *    - Jill Boyce                      <jill.boyce@thomson.net>
- *    - Saurav K Bandyopadhyay          <saurav@ieee.org>
- *    - Zhenyu Wu                       <Zhenyu.Wu@thomson.net
- *    - Purvin Pandit                   <Purvin.Pandit@thomson.net>
- *
- ***********************************************************************
- */
-//}}}
 //{{{  includes
 #include "global.h"
 #include "memalloc.h"
@@ -66,7 +38,7 @@ static void setup_buffers (sVidParam* vidParam, int layer_id) {
 
 
   if (vidParam->last_dec_layer_id != layer_id) {
-    CodingParameters* cps = vidParam->p_EncodePar[layer_id];
+    sCodingParams* cps = vidParam->p_EncodePar[layer_id];
     if (cps->separate_colour_plane_flag) {
       for (int i = 0; i < MAX_PLANE; i++ ) {
         vidParam->mb_data_JV[i] = cps->mb_data_JV[i];

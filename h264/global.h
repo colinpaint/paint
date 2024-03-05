@@ -613,13 +613,13 @@ typedef struct coding_par {
   int **siblock_JV[MAX_PLANE];
   int *qp_per_matrix;
   int *qp_rem_matrix;
-  } CodingParameters;
+  } sCodingParams;
 //}}}
 //{{{
 typedef struct layer_par {
   int layer_id;
   struct video_par* vidParam;
-  CodingParameters* p_Cps;
+  sCodingParams* p_Cps;
   sSPSrbsp* p_SPS;
   struct decoded_picture_buffer* dpb;
   } LayerParameters;
@@ -635,7 +635,7 @@ typedef struct video_par {
   sPPSrbsp PicParSet[MAXPPS];
 
   struct decoded_picture_buffer* p_Dpb_layer[MAX_NUM_DPB_LAYERS];
-  CodingParameters* p_EncodePar[MAX_NUM_DPB_LAYERS];
+  sCodingParams* p_EncodePar[MAX_NUM_DPB_LAYERS];
   LayerParameters* p_LayerPar[MAX_NUM_DPB_LAYERS];
 
   struct sei_params* p_SEI;
@@ -911,7 +911,7 @@ static inline int is_BL_profile (unsigned int profile_idc) {
   extern void copy_slice_info (Slice* currSlice, OldSliceParams *p_old_slice );
 
   extern void OpenOutputFiles (sVidParam *vidParam, int view0_id, int view1_id);
-  extern void set_global_coding_par (sVidParam *vidParam, CodingParameters *cps);
+  extern void set_global_coding_par (sVidParam *vidParam, sCodingParams *cps);
 //{{{
 #ifdef __cplusplus
 }

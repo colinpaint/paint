@@ -1,18 +1,6 @@
-//{{{
-/*!
- *************************************************************************************
- * \file win32.c
- *
- * \brief
- *    Platform dependent code
- *
- * \author
- *    Main contributors (see contributors.h for copyright, address and affiliation details)
- *      - Karsten Suehring
- *************************************************************************************
- */
-//}}}
+//{{{  includes
 #include "global.h"
+//}}}
 
 #ifdef _WIN32
 static LARGE_INTEGER freq;

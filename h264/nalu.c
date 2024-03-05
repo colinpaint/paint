@@ -1,18 +1,4 @@
-//{{{
-/*!
- ************************************************************************
- * \file  nalu.c
- *
- * \brief
- *    Decoder NALU support functions
- *
- * \author
- *    Main contributors (see contributors.h for copyright, address and affiliation details)
- *    - Stephan Wenger   <stewe@cs.tu-berlin.de>
- ************************************************************************
- */
-//}}}
-//{{{
+//{{{  includes
 #include "global.h"
 #include "memalloc.h"
 
