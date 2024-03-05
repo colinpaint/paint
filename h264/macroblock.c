@@ -1,26 +1,3 @@
-//{{{
-/*!
-** *********************************************************************
- * \file macroblock.c
- *
- * \brief
- *     Decode a sMacroblock
- *
- * \author
- *    Main contributors (see contributors.h for copyright, address and affiliation details)
- *    - Inge Lille-Langøy               <inge.lille-langoy@telenor.com>
- *    - Rickard Sjoberg                 <rickard.sjoberg@era.ericsson.se>
- *    - Jani Lainema                    <jani.lainema@nokia.com>
- *    - Sebastian Purreiter             <sebastian.purreiter@mch.siemens.de>
- *    - Thomas Wedi                     <wedi@tnt.uni-hannover.de>
- *    - Detlev Marpe
- *    - Gabi Blaettermann
- *    - Ye-Kui Wang                     <wyk@ieee.org>
- *    - Lowell Winger                   <lwinger@lsil.com>
- *    - Alexis Michael Tourapis         <alexismt@ieee.org>
-** *********************************************************************
-*/
-//}}}
 //{{{  includes
 #include <math.h>
 

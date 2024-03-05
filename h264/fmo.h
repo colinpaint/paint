@@ -1,6 +1,6 @@
 #pragma once
 
-extern int fmo_init (sVidParam* vidParam, sSlice *pSlice);
+extern int fmo_init (sVidParam* vidParam, sSlice* pSlice);
 extern int FmoFinit (sVidParam* vidParam);
 
 extern int FmoGetNumberOfSliceGroup (sVidParam* vidParam);

@@ -1,17 +1,3 @@
-//{{{
-/*!
-** **********************************************************************
- *  \file
- *     parset.c
- *  \brief
- *     Parameter Sets
- *  \author
- *     Main contributors (see contributors.h for copyright, address and affiliation details)
- *     - Stephan Wenger          <stewe@cs.tu-berlin.de>
- *
-** *********************************************************************
- */
-//}}}
 //{{{  includes
 #include "global.h"
 #include "memalloc.h"
@@ -33,6 +19,7 @@
 #endif
 //}}}
 extern void init_frext (sVidParam* vidParam);
+
 //{{{
 static const byte ZZ_SCAN[16] = {
   0,  1,  4,  8,  5,  2,  3,  6,  9, 12, 13, 10,  7, 11, 14, 15
@@ -651,8 +638,8 @@ static int interpretSPS (sVidParam* vidParam, sDataPartition *p, sSPSrbsp *sps) 
 //{{{
 void get_max_dec_frame_buf_size (sSPSrbsp* sps) {
 
-  int pic_size_mb = (sps->pic_width_in_mbs_minus1 + 1) * 
-                    (sps->pic_height_in_map_units_minus1 + 1) * 
+  int pic_size_mb = (sps->pic_width_in_mbs_minus1 + 1) *
+                    (sps->pic_height_in_map_units_minus1 + 1) *
                     (sps->frame_mbs_only_flag?1:2);
   int size = 0;
 

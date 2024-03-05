@@ -6,7 +6,6 @@
 #include "sliceHeader.h"
 #include "fmo.h"
 //}}}
-
 //#define PRINT_FMO_MAPS
 
 //{{{
@@ -274,124 +273,71 @@ static int FmoGenerateMbToSliceGroupMap (sVidParam* vidParam, sSlice *pSlice) {
 //}}}
 
 //{{{
-/*!
-** **********************************************************************
- * \brief
- *    FMO initialization: Generates vidParam->MapUnitToSliceGroupMap and vidParam->MbToSliceGroupMap.
- *
- * \param vidParam
- *      video encoding parameters for current picture
-** **********************************************************************
- */
-int fmo_init (sVidParam* vidParam, sSlice *pSlice)
-{
+int fmo_init (sVidParam* vidParam, sSlice* pSlice) {
+
   sPPSrbsp* pps = vidParam->active_pps;
 
-#ifdef PRINT_FMO_MAPS
-  unsigned i,j;
-#endif
-
-  FmoGenerateMapUnitToSliceGroupMap(vidParam, pSlice);
-  FmoGenerateMbToSliceGroupMap(vidParam, pSlice);
-
+  FmoGenerateMapUnitToSliceGroupMap (vidParam, pSlice);
+  FmoGenerateMbToSliceGroupMap (vidParam, pSlice);
   vidParam->NumberOfSliceGroups = pps->num_slice_groups_minus1 + 1;
 
 #ifdef PRINT_FMO_MAPS
-  printf("\n");
-  printf("FMO Map (Units):\n");
+  printf ("\n");
+  printf ("FMO Map (Units):\n");
 
-  for (j=0; j<vidParam->PicHeightInMapUnits; j++)
-  {
-    for (i=0; i<vidParam->PicWidthInMbs; i++)
-    {
+  for (int j = 0; j<vidParam->PicHeightInMapUnits; j++) {
+    for (int i = 0; i<vidParam->PicWidthInMbs; i++) {
       printf("%c",48+vidParam->MapUnitToSliceGroupMap[i+j*vidParam->PicWidthInMbs]);
-    }
+      }
     printf("\n");
-  }
+    }
+
   printf("\n");
   printf("FMO Map (Mb):\n");
 
-  for (j=0; j<vidParam->PicHeightInMbs; j++)
-  {
-    for (i=0; i<vidParam->PicWidthInMbs; i++)
-    {
-      printf("%c",48 + vidParam->MbToSliceGroupMap[i + j * vidParam->PicWidthInMbs]);
+  for (int j = 0; j < vidParam->PicHeightInMbs; j++) {
+    for (int i = 0; i < vidParam->PicWidthInMbs; i++) {
+      printf ("%c", 48 + vidParam->MbToSliceGroupMap[i + j * vidParam->PicWidthInMbs]);
+      }
+    printf ("\n");
     }
-    printf("\n");
-  }
-  printf("\n");
+  printf ("\n");
 
 #endif
 
   return 0;
-}
+  }
 //}}}
+
 //{{{
-/*!
-** **********************************************************************
- * \brief
- *    Free memory allocated by FMO functions
-** **********************************************************************
- */
-int FmoFinit (sVidParam* vidParam)
-{
-  if (vidParam->MbToSliceGroupMap)
-  {
+int FmoFinit (sVidParam* vidParam) {
+
+  if (vidParam->MbToSliceGroupMap) {
     free (vidParam->MbToSliceGroupMap);
     vidParam->MbToSliceGroupMap = NULL;
-  }
-  if (vidParam->MapUnitToSliceGroupMap)
-  {
+    }
+
+  if (vidParam->MapUnitToSliceGroupMap) { 
     free (vidParam->MapUnitToSliceGroupMap);
     vidParam->MapUnitToSliceGroupMap = NULL;
-  }
+    }
+
   return 0;
-}
+  }
 //}}}
 //{{{
-/*!
-** **********************************************************************
- * \brief
- *    FmoGetNumberOfSliceGroup(vidParam)
- *
- * \par vidParam:
- *    sVidParam
-** **********************************************************************
- */
 int FmoGetNumberOfSliceGroup (sVidParam* vidParam)
 {
   return vidParam->NumberOfSliceGroups;
 }
 //}}}
 //{{{
-/*!
-** **********************************************************************
- * \brief
- *    FmoGetLastMBOfPicture(vidParam)
- *    returns the macroblock number of the last MB in a picture.  This
- *    mb happens to be the last macroblock of the picture if there is only
- *    one slice group
- *
- * \par Input:
- *    None
-** **********************************************************************
- */
 int FmoGetLastMBOfPicture (sVidParam* vidParam)
 {
   return FmoGetLastMBInSliceGroup (vidParam, FmoGetNumberOfSliceGroup(vidParam)-1);
 }
 //}}}
 //{{{
-/*!
-** **********************************************************************
- * \brief
- *    FmoGetLastMBInSliceGroup: Returns MB number of last MB in SG
- *
- * \par Input:
- *    SliceGroupID (0 to 7)
-** **********************************************************************
- */
-
 int FmoGetLastMBInSliceGroup (sVidParam* vidParam, int SliceGroup)
 {
   int i;
@@ -404,17 +350,6 @@ int FmoGetLastMBInSliceGroup (sVidParam* vidParam, int SliceGroup)
 }
 //}}}
 //{{{
-/*!
-** **********************************************************************
- * \brief
- *    Returns SliceGroupID for a given MB
- *
- * \param vidParam
- *      video encoding parameters for current picture
- * \param mb
- *    sMacroblock number (in scan order)
-** **********************************************************************
- */
 int FmoGetSliceGroupId (sVidParam* vidParam, int mb)
 {
   assert (mb < (int) vidParam->PicSizeInMbs);
@@ -423,18 +358,6 @@ int FmoGetSliceGroupId (sVidParam* vidParam, int mb)
 }
 //}}}
 //{{{
-/*!
-** **********************************************************************
- * \brief
- *    FmoGetNextMBBr: Returns the MB-Nr (in scan order) of the next
- *    MB in the (scattered) sSlice, -1 if the slice is finished
- * \param vidParam
- *      video encoding parameters for current picture
- *
- * \param CurrentMbNr
- *    number of the current macroblock
-** **********************************************************************
- */
 int FmoGetNextMBNr (sVidParam* vidParam, int CurrentMbNr)
 {
   int SliceGroup = FmoGetSliceGroupId (vidParam, CurrentMbNr);
