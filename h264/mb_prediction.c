@@ -31,13 +31,13 @@
 #include "quant.h"
 #include "mb_prediction.h"
 //}}}
-extern int get_colocated_info_8x8 (Macroblock *currMB, StorablePicture *list1, int i, int j);
-extern int get_colocated_info_4x4 (Macroblock *currMB, StorablePicture *list1, int i, int j);
+extern int get_colocated_info_8x8 (Macroblock* currMB, StorablePicture *list1, int i, int j);
+extern int get_colocated_info_4x4 (Macroblock* currMB, StorablePicture *list1, int i, int j);
 
 //{{{
-int mb_pred_intra4x4 (Macroblock *currMB, ColorPlane curr_plane, imgpel **currImg, StorablePicture *dec_picture)
+int mb_pred_intra4x4 (Macroblock* currMB, ColorPlane curr_plane, imgpel **currImg, StorablePicture *dec_picture)
 {
-  Slice *currSlice = currMB->p_Slice;
+  Slice* currSlice = currMB->p_Slice;
   int yuv = dec_picture->chroma_format_idc - 1;
   int i=0, j=0,k, j4=0,i4=0;
   int j_pos, i_pos;
@@ -83,7 +83,7 @@ int mb_pred_intra4x4 (Macroblock *currMB, ColorPlane curr_plane, imgpel **currIm
 }
 //}}}
 //{{{
-int mb_pred_intra16x16 (Macroblock *currMB, ColorPlane curr_plane, StorablePicture *dec_picture)
+int mb_pred_intra16x16 (Macroblock* currMB, ColorPlane curr_plane, StorablePicture *dec_picture)
 {
   int yuv = dec_picture->chroma_format_idc - 1;
 
@@ -104,9 +104,9 @@ int mb_pred_intra16x16 (Macroblock *currMB, ColorPlane curr_plane, StorablePictu
 }
 //}}}
 //{{{
-int mb_pred_intra8x8 (Macroblock *currMB, ColorPlane curr_plane, imgpel **currImg, StorablePicture *dec_picture)
+int mb_pred_intra8x8 (Macroblock* currMB, ColorPlane curr_plane, imgpel **currImg, StorablePicture *dec_picture)
 {
-  Slice *currSlice = currMB->p_Slice;
+  Slice* currSlice = currMB->p_Slice;
   int yuv = dec_picture->chroma_format_idc - 1;
 
   int block8x8;   // needed for ABT
@@ -140,9 +140,9 @@ int mb_pred_intra8x8 (Macroblock *currMB, ColorPlane curr_plane, imgpel **currIm
 //}}}
 
 //{{{
-static void set_chroma_vector (Macroblock *currMB)
+static void set_chroma_vector (Macroblock* currMB)
 {
-  Slice *currSlice = currMB->p_Slice;
+  Slice* currSlice = currMB->p_Slice;
   VideoParameters *p_Vid = currMB->p_Vid;
 
   if (!currSlice->mb_aff_frame_flag)
@@ -228,9 +228,9 @@ static void set_chroma_vector (Macroblock *currMB)
 //}}}
 
 //{{{
-int mb_pred_skip (Macroblock *currMB, ColorPlane curr_plane, imgpel **currImg, StorablePicture *dec_picture)
+int mb_pred_skip (Macroblock* currMB, ColorPlane curr_plane, imgpel **currImg, StorablePicture *dec_picture)
 {
-  Slice *currSlice = currMB->p_Slice;
+  Slice* currSlice = currMB->p_Slice;
   VideoParameters *p_Vid = currMB->p_Vid;
 
   set_chroma_vector(currMB);
@@ -249,7 +249,7 @@ int mb_pred_skip (Macroblock *currMB, ColorPlane curr_plane, imgpel **currImg, S
 }
 //}}}
 //{{{
-int mb_pred_sp_skip (Macroblock *currMB, ColorPlane curr_plane, StorablePicture *dec_picture)
+int mb_pred_sp_skip (Macroblock* currMB, ColorPlane curr_plane, StorablePicture *dec_picture)
 {
   set_chroma_vector(currMB);
 
@@ -260,12 +260,12 @@ int mb_pred_sp_skip (Macroblock *currMB, ColorPlane curr_plane, StorablePicture 
 //}}}
 
 //{{{
-int mb_pred_p_inter8x8 (Macroblock *currMB, ColorPlane curr_plane, StorablePicture *dec_picture)
+int mb_pred_p_inter8x8 (Macroblock* currMB, ColorPlane curr_plane, StorablePicture *dec_picture)
 {
   int block8x8;   // needed for ABT
   int i=0, j=0,k;
 
-  Slice *currSlice = currMB->p_Slice;
+  Slice* currSlice = currMB->p_Slice;
   int smb = currSlice->slice_type == SP_SLICE && (currMB->is_intra_block == FALSE);
 
   set_chroma_vector(currMB);
@@ -298,9 +298,9 @@ int mb_pred_p_inter8x8 (Macroblock *currMB, ColorPlane curr_plane, StorablePictu
 }
 //}}}
 //{{{
-int mb_pred_p_inter16x16 (Macroblock *currMB, ColorPlane curr_plane, StorablePicture *dec_picture)
+int mb_pred_p_inter16x16 (Macroblock* currMB, ColorPlane curr_plane, StorablePicture *dec_picture)
 {
-  Slice *currSlice = currMB->p_Slice;
+  Slice* currSlice = currMB->p_Slice;
   int smb = (currSlice->slice_type == SP_SLICE);
 
   set_chroma_vector(currMB);
@@ -313,9 +313,9 @@ int mb_pred_p_inter16x16 (Macroblock *currMB, ColorPlane curr_plane, StorablePic
 }
 //}}}
 //{{{
-int mb_pred_p_inter16x8 (Macroblock *currMB, ColorPlane curr_plane, StorablePicture *dec_picture)
+int mb_pred_p_inter16x8 (Macroblock* currMB, ColorPlane curr_plane, StorablePicture *dec_picture)
 {
-  Slice *currSlice = currMB->p_Slice;
+  Slice* currSlice = currMB->p_Slice;
   int smb = (currSlice->slice_type == SP_SLICE);
 
   set_chroma_vector(currMB);
@@ -330,9 +330,9 @@ int mb_pred_p_inter16x8 (Macroblock *currMB, ColorPlane curr_plane, StorablePict
 }
 //}}}
 //{{{
-int mb_pred_p_inter8x16 (Macroblock *currMB, ColorPlane curr_plane, StorablePicture *dec_picture)
+int mb_pred_p_inter8x16 (Macroblock* currMB, ColorPlane curr_plane, StorablePicture *dec_picture)
 {
-  Slice *currSlice = currMB->p_Slice;
+  Slice* currSlice = currMB->p_Slice;
   int smb = (currSlice->slice_type == SP_SLICE);
 
   set_chroma_vector(currMB);
@@ -357,14 +357,14 @@ static inline void update_neighbor_mvs (PicMotionParams **motion, const PicMotio
 //}}}
 
 //{{{
-int mb_pred_b_d8x8temporal (Macroblock *currMB, ColorPlane curr_plane, imgpel **currImg, StorablePicture *dec_picture)
+int mb_pred_b_d8x8temporal (Macroblock* currMB, ColorPlane curr_plane, imgpel **currImg, StorablePicture *dec_picture)
 {
   short ref_idx;
   int refList;
 
   int k, i, j, i4, j4, j6;
   int block8x8;   // needed for ABT
-  Slice *currSlice = currMB->p_Slice;
+  Slice* currSlice = currMB->p_Slice;
   VideoParameters *p_Vid = currMB->p_Vid;
   PicMotionParams *mv_info = NULL, *colocated = NULL;
 
@@ -568,14 +568,14 @@ int mb_pred_b_d8x8temporal (Macroblock *currMB, ColorPlane curr_plane, imgpel **
 }
 //}}}
 //{{{
-int mb_pred_b_d4x4temporal (Macroblock *currMB, ColorPlane curr_plane, imgpel **currImg, StorablePicture *dec_picture)
+int mb_pred_b_d4x4temporal (Macroblock* currMB, ColorPlane curr_plane, imgpel **currImg, StorablePicture *dec_picture)
 {
   short ref_idx;
   int refList;
 
   int k;
   int block8x8;   // needed for ABT
-  Slice *currSlice = currMB->p_Slice;
+  Slice* currSlice = currMB->p_Slice;
   VideoParameters *p_Vid = currMB->p_Vid;
 
   int list_offset = currMB->list_offset;
@@ -695,13 +695,13 @@ int mb_pred_b_d4x4temporal (Macroblock *currMB, ColorPlane curr_plane, imgpel **
 //}}}
 
 //{{{
-int mb_pred_b_d8x8spatial (Macroblock *currMB, ColorPlane curr_plane, imgpel **currImg, StorablePicture *dec_picture)
+int mb_pred_b_d8x8spatial (Macroblock* currMB, ColorPlane curr_plane, imgpel **currImg, StorablePicture *dec_picture)
 {
   char l0_rFrame = -1, l1_rFrame = -1;
   MotionVector pmvl0 = zero_mv, pmvl1 = zero_mv;
   int i4, j4;
   int block8x8;
-  Slice *currSlice = currMB->p_Slice;
+  Slice* currSlice = currMB->p_Slice;
   VideoParameters *p_Vid = currMB->p_Vid;
 
   PicMotionParams *mv_info;
@@ -920,13 +920,13 @@ int mb_pred_b_d8x8spatial (Macroblock *currMB, ColorPlane curr_plane, imgpel **c
 }
 //}}}
 //{{{
-int mb_pred_b_d4x4spatial (Macroblock *currMB, ColorPlane curr_plane, imgpel **currImg, StorablePicture *dec_picture)
+int mb_pred_b_d4x4spatial (Macroblock* currMB, ColorPlane curr_plane, imgpel **currImg, StorablePicture *dec_picture)
 {
   char l0_rFrame = -1, l1_rFrame = -1;
   MotionVector pmvl0 = zero_mv, pmvl1 = zero_mv;
   int k;
   int block8x8;
-  Slice *currSlice = currMB->p_Slice;
+  Slice* currSlice = currMB->p_Slice;
   VideoParameters *p_Vid = currMB->p_Vid;
 
   PicMotionParams *mv_info;
@@ -1108,14 +1108,14 @@ int mb_pred_b_d4x4spatial (Macroblock *currMB, ColorPlane curr_plane, imgpel **c
 }
 //}}}
 //{{{
-int mb_pred_b_inter8x8 (Macroblock *currMB, ColorPlane curr_plane, StorablePicture *dec_picture)
+int mb_pred_b_inter8x8 (Macroblock* currMB, ColorPlane curr_plane, StorablePicture *dec_picture)
 {
   char l0_rFrame = -1, l1_rFrame = -1;
   MotionVector pmvl0 = zero_mv, pmvl1 = zero_mv;
   int block_size_x, block_size_y;
   int k;
   int block8x8;   // needed for ABT
-  Slice *currSlice = currMB->p_Slice;
+  Slice* currSlice = currMB->p_Slice;
   VideoParameters *p_Vid = currMB->p_Vid;
 
   int list_offset = currMB->list_offset;
@@ -1243,10 +1243,10 @@ int mb_pred_b_inter8x8 (Macroblock *currMB, ColorPlane curr_plane, StorablePictu
  ************************************************************************
  */
 
-int mb_pred_ipcm (Macroblock *currMB)
+int mb_pred_ipcm (Macroblock* currMB)
 {
   int i, j, k;
-  Slice *currSlice = currMB->p_Slice;
+  Slice* currSlice = currMB->p_Slice;
   VideoParameters *p_Vid = currMB->p_Vid;
   StorablePicture *dec_picture = currSlice->dec_picture;
 

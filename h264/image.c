@@ -36,7 +36,7 @@
 #include "fmo.h"
 #include "nalu.h"
 #include "parset.h"
-#include "header.h"
+#include "sliceHeader.h"
 #include "sei.h"
 #include "output.h"
 #include "mb_access.h"

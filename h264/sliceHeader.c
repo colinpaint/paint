@@ -17,7 +17,7 @@
 #include "vlc.h"
 #include "mbuffer.h"
 #include "biaridecod.h"
-#include "header.h"
+#include "sliceHeader.h"
 //}}}
 
 //{{{  static tables
@@ -1196,7 +1196,7 @@ static void ref_pic_list_reordering (Slice* currSlice) {
 
   byte dP_nr = assignSE2partition[currSlice->dp_mode][SE_HEADER];
   DataPartition* partition = &(currSlice->partArr[dP_nr]);
-  Bitstream *currStream = partition->bitstream;
+  Bitstream* currStream = partition->bitstream;
 
   alloc_ref_pic_list_reordering_buffer (currSlice);
   if (currSlice->slice_type != I_SLICE &&

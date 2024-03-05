@@ -20,18 +20,18 @@
 #include "vlc.h"
 #include "transform.h"
 //}}}
-extern void  check_dp_neighbors (Macroblock *currMB);
-extern void  read_delta_quant   (SyntaxElement *currSE, DataPartition *dP, Macroblock *currMB, const byte *partMap, int type);
+extern void  check_dp_neighbors (Macroblock* currMB);
+extern void  read_delta_quant   (SyntaxElement* currSE, DataPartition *dP, Macroblock* currMB, const byte *partMap, int type);
 
 //{{{
-static void read_comp_coeff_4x4_smb_CABAC (Macroblock *currMB, SyntaxElement *currSE, ColorPlane pl, int block_y, int block_x, int start_scan, int64 *cbp_blk)
+static void read_comp_coeff_4x4_smb_CABAC (Macroblock* currMB, SyntaxElement* currSE, ColorPlane pl, int block_y, int block_x, int start_scan, int64 *cbp_blk)
 {
   int i,j,k;
   int i0, j0;
   int level = 1;
   DataPartition *dP;
   //VideoParameters *p_Vid = currMB->p_Vid;
-  Slice *currSlice = currMB->p_Slice;
+  Slice* currSlice = currMB->p_Slice;
   const byte *partMap = assignSE2partition[currSlice->dp_mode];
 
   const byte (*pos_scan4x4)[2] = ((currSlice->structure == FRAME) && (!currMB->mb_field)) ? SNGL_SCAN : FIELD_SCAN;
@@ -111,9 +111,9 @@ static void read_comp_coeff_4x4_smb_CABAC (Macroblock *currMB, SyntaxElement *cu
 }
 //}}}
 //{{{
-static void read_comp_coeff_4x4_CABAC (Macroblock *currMB, SyntaxElement *currSE, ColorPlane pl, int (*InvLevelScale4x4)[4], int qp_per, int cbp)
+static void read_comp_coeff_4x4_CABAC (Macroblock* currMB, SyntaxElement* currSE, ColorPlane pl, int (*InvLevelScale4x4)[4], int qp_per, int cbp)
 {
-  Slice *currSlice = currMB->p_Slice;
+  Slice* currSlice = currMB->p_Slice;
   VideoParameters *p_Vid = currMB->p_Vid;
   int start_scan = IS_I16MB (currMB)? 1 : 0;
   int block_y, block_x;
@@ -188,7 +188,7 @@ static void read_comp_coeff_4x4_CABAC (Macroblock *currMB, SyntaxElement *currSE
 }
 //}}}
 //{{{
-static void read_comp_coeff_4x4_CABAC_ls (Macroblock *currMB, SyntaxElement *currSE, ColorPlane pl, int (*InvLevelScale4x4)[4], int qp_per, int cbp)
+static void read_comp_coeff_4x4_CABAC_ls (Macroblock* currMB, SyntaxElement* currSE, ColorPlane pl, int (*InvLevelScale4x4)[4], int qp_per, int cbp)
 {
   VideoParameters *p_Vid = currMB->p_Vid;
   int start_scan = IS_I16MB (currMB)? 1 : 0;
@@ -210,7 +210,7 @@ static void read_comp_coeff_4x4_CABAC_ls (Macroblock *currMB, SyntaxElement *cur
 //}}}
 
 //{{{
-static void readCompCoeff8x8_CABAC (Macroblock *currMB, SyntaxElement *currSE, ColorPlane pl, int b8)
+static void readCompCoeff8x8_CABAC (Macroblock* currMB, SyntaxElement* currSE, ColorPlane pl, int b8)
 {
   if (currMB->cbp & (1<<b8))  // are there any coefficients in the current block
   {
@@ -222,7 +222,7 @@ static void readCompCoeff8x8_CABAC (Macroblock *currMB, SyntaxElement *currSE, C
     int level = 1;
 
     DataPartition *dP;
-    Slice *currSlice = currMB->p_Slice;
+    Slice* currSlice = currMB->p_Slice;
     const byte *partMap = assignSE2partition[currSlice->dp_mode];
     int boff_x, boff_y;
 
@@ -309,7 +309,7 @@ static void readCompCoeff8x8_CABAC (Macroblock *currMB, SyntaxElement *currSE, C
 }
 //}}}
 //{{{
-static void readCompCoeff8x8_CABAC_lossless (Macroblock *currMB, SyntaxElement *currSE, ColorPlane pl, int b8)
+static void readCompCoeff8x8_CABAC_lossless (Macroblock* currMB, SyntaxElement* currSE, ColorPlane pl, int b8)
 {
   if (currMB->cbp & (1<<b8))  // are there any coefficients in the current block
   {
@@ -320,7 +320,7 @@ static void readCompCoeff8x8_CABAC_lossless (Macroblock *currMB, SyntaxElement *
     int level = 1;
 
     DataPartition *dP;
-    Slice *currSlice = currMB->p_Slice;
+    Slice* currSlice = currMB->p_Slice;
     const byte *partMap = assignSE2partition[currSlice->dp_mode];
     int boff_x, boff_y;
 
@@ -383,7 +383,7 @@ static void readCompCoeff8x8_CABAC_lossless (Macroblock *currMB, SyntaxElement *
 //}}}
 
 //{{{
-static void read_comp_coeff_8x8_MB_CABAC (Macroblock *currMB, SyntaxElement *currSE, ColorPlane pl)
+static void read_comp_coeff_8x8_MB_CABAC (Macroblock* currMB, SyntaxElement* currSE, ColorPlane pl)
 {
   //======= 8x8 transform size & CABAC ========
   readCompCoeff8x8_CABAC (currMB, currSE, pl, 0);
@@ -393,7 +393,7 @@ static void read_comp_coeff_8x8_MB_CABAC (Macroblock *currMB, SyntaxElement *cur
 }
 //}}}
 //{{{
-static void read_comp_coeff_8x8_MB_CABAC_ls (Macroblock *currMB, SyntaxElement *currSE, ColorPlane pl)
+static void read_comp_coeff_8x8_MB_CABAC_ls (Macroblock* currMB, SyntaxElement* currSE, ColorPlane pl)
 {
   //======= 8x8 transform size & CABAC ========
   readCompCoeff8x8_CABAC_lossless (currMB, currSE, pl, 0);
@@ -404,14 +404,14 @@ static void read_comp_coeff_8x8_MB_CABAC_ls (Macroblock *currMB, SyntaxElement *
 //}}}
 
 //{{{
-static void read_CBP_and_coeffs_from_NAL_CABAC_420 (Macroblock *currMB)
+static void read_CBP_and_coeffs_from_NAL_CABAC_420 (Macroblock* currMB)
 {
   int i,j;
   int level;
   int cbp;
   SyntaxElement currSE;
   DataPartition *dP = NULL;
-  Slice *currSlice = currMB->p_Slice;
+  Slice* currSlice = currMB->p_Slice;
   const byte *partMap = assignSE2partition[currSlice->dp_mode];
   int i0, j0;
 
@@ -795,14 +795,14 @@ static void read_CBP_and_coeffs_from_NAL_CABAC_420 (Macroblock *currMB)
 }
 //}}}
 //{{{
-static void read_CBP_and_coeffs_from_NAL_CABAC_400 (Macroblock *currMB)
+static void read_CBP_and_coeffs_from_NAL_CABAC_400 (Macroblock* currMB)
 {
   int k;
   int level;
   int cbp;
   SyntaxElement currSE;
   DataPartition *dP = NULL;
-  Slice *currSlice = currMB->p_Slice;
+  Slice* currSlice = currMB->p_Slice;
   const byte *partMap = assignSE2partition[currSlice->dp_mode];
   int i0, j0;
 
@@ -988,14 +988,14 @@ static void read_CBP_and_coeffs_from_NAL_CABAC_400 (Macroblock *currMB)
 }
 //}}}
 //{{{
-static void read_CBP_and_coeffs_from_NAL_CABAC_444 (Macroblock *currMB)
+static void read_CBP_and_coeffs_from_NAL_CABAC_444 (Macroblock* currMB)
 {
   int i, k;
   int level;
   int cbp;
   SyntaxElement currSE;
   DataPartition *dP = NULL;
-  Slice *currSlice = currMB->p_Slice;
+  Slice* currSlice = currMB->p_Slice;
   const byte *partMap = assignSE2partition[currSlice->dp_mode];
   int coef_ctr, i0, j0;
 
@@ -1283,14 +1283,14 @@ static void read_CBP_and_coeffs_from_NAL_CABAC_444 (Macroblock *currMB)
 }
 //}}}
 //{{{
-static void read_CBP_and_coeffs_from_NAL_CABAC_422 (Macroblock *currMB)
+static void read_CBP_and_coeffs_from_NAL_CABAC_422 (Macroblock* currMB)
 {
   int i,j,k;
   int level;
   int cbp;
   SyntaxElement currSE;
   DataPartition *dP = NULL;
-  Slice *currSlice = currMB->p_Slice;
+  Slice* currSlice = currMB->p_Slice;
   const byte *partMap = assignSE2partition[currSlice->dp_mode];
   int coef_ctr, i0, j0, b8;
   int ll;
@@ -1709,7 +1709,7 @@ static void read_CBP_and_coeffs_from_NAL_CABAC_422 (Macroblock *currMB)
   } //if (dec_picture->chroma_format_idc != YUV400)
 }
 
-void set_read_CBP_and_coeffs_cabac(Slice *currSlice)
+void set_read_CBP_and_coeffs_cabac(Slice* currSlice)
 {
   switch (currSlice->p_Vid->active_sps->chroma_format_idc)
   {
@@ -1741,7 +1741,7 @@ void set_read_CBP_and_coeffs_cabac(Slice *currSlice)
 //}}}
 
 //{{{
-void set_read_comp_coeff_cabac (Macroblock *currMB)
+void set_read_comp_coeff_cabac (Macroblock* currMB)
 {
   if (currMB->is_lossless == FALSE)
   {

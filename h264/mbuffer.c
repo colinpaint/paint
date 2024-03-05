@@ -24,7 +24,7 @@
 
 #include "global.h"
 #include "erc.h"
-#include "header.h"
+#include "sliceHeader.h"
 #include "image.h"
 #include "mbuffer.h"
 #include "memalloc.h"
@@ -396,7 +396,7 @@ void gen_pic_list_from_frame_list (PictureStructure currStructure, FrameStore **
 //}}}
 //{{{
 
-StorablePicture*  get_long_term_pic (Slice *currSlice, DecodedPictureBuffer *p_Dpb, int LongtermPicNum) {
+StorablePicture*  get_long_term_pic (Slice* currSlice, DecodedPictureBuffer *p_Dpb, int LongtermPicNum) {
 
   for (uint32 i = 0; i < p_Dpb->ltref_frames_in_buffer; i++) {
     if (currSlice->structure==FRAME) {
@@ -1363,7 +1363,7 @@ void unmark_for_long_term_reference (FrameStore* fs) {
 //}}}
 
 //{{{
-void update_pic_num (Slice *currSlice) {
+void update_pic_num (Slice* currSlice) {
 
   unsigned int i;
   VideoParameters *p_Vid = currSlice->p_Vid;
@@ -1428,14 +1428,14 @@ void update_pic_num (Slice *currSlice) {
   }
 //}}}
 //{{{
-void init_lists_i_slice (Slice *currSlice) {
+void init_lists_i_slice (Slice* currSlice) {
 
   currSlice->listXsize[0] = 0;
   currSlice->listXsize[1] = 0;
   }
 //}}}
 //{{{
-void init_lists_p_slice (Slice *currSlice) {
+void init_lists_p_slice (Slice* currSlice) {
 
   VideoParameters *p_Vid = currSlice->p_Vid;
   DecodedPictureBuffer *p_Dpb = currSlice->p_Dpb;
@@ -1514,7 +1514,7 @@ void init_lists_p_slice (Slice *currSlice) {
   }
 //}}}
 //{{{
-void init_lists_b_slice (Slice *currSlice) {
+void init_lists_b_slice (Slice* currSlice) {
 
   VideoParameters *p_Vid = currSlice->p_Vid;
   DecodedPictureBuffer *p_Dpb = currSlice->p_Dpb;
@@ -1672,7 +1672,7 @@ void init_lists_b_slice (Slice *currSlice) {
  *
  ************************************************************************
  */
-void init_mbaff_lists (VideoParameters *p_Vid, Slice *currSlice)
+void init_mbaff_lists (VideoParameters *p_Vid, Slice* currSlice)
 {
   unsigned j;
   int i;
@@ -1701,7 +1701,7 @@ void init_mbaff_lists (VideoParameters *p_Vid, Slice *currSlice)
   }
 //}}}
 //{{{
-StorablePicture* get_short_term_pic (Slice *currSlice, DecodedPictureBuffer *p_Dpb, int picNum) {
+StorablePicture* get_short_term_pic (Slice* currSlice, DecodedPictureBuffer *p_Dpb, int picNum) {
 
   unsigned i;
 
@@ -1726,7 +1726,7 @@ StorablePicture* get_short_term_pic (Slice *currSlice, DecodedPictureBuffer *p_D
 //}}}
 
 //{{{
-static void reorder_short_term (Slice *currSlice, int cur_list, int num_ref_idx_lX_active_minus1, int picNumLX, int *refIdxLX) {
+static void reorder_short_term (Slice* currSlice, int cur_list, int num_ref_idx_lX_active_minus1, int picNumLX, int *refIdxLX) {
   StorablePicture **RefPicListX = currSlice->listX[cur_list];
   int cIdx, nIdx;
 
@@ -1750,7 +1750,7 @@ static void reorder_short_term (Slice *currSlice, int cur_list, int num_ref_idx_
 }
 //}}}
 //{{{
-static void reorder_long_term (Slice *currSlice, StorablePicture **RefPicListX, int num_ref_idx_lX_active_minus1, int LongTermPicNum, int *refIdxLX)
+static void reorder_long_term (Slice* currSlice, StorablePicture **RefPicListX, int num_ref_idx_lX_active_minus1, int LongTermPicNum, int *refIdxLX)
 {
   int cIdx, nIdx;
 
@@ -2136,7 +2136,7 @@ void flush_dpb (DecodedPictureBuffer *p_Dpb)
 //}}}
 
 //{{{
-void reorder_ref_pic_list (Slice *currSlice, int cur_list) {
+void reorder_ref_pic_list (Slice* currSlice, int cur_list) {
 
   int *modification_of_pic_nums_idc = currSlice->modification_of_pic_nums_idc[cur_list];
   int *abs_diff_pic_num_minus1 = currSlice->abs_diff_pic_num_minus1[cur_list];
@@ -2460,7 +2460,7 @@ void dpb_combine_field (VideoParameters *p_Vid, FrameStore *fs)
 }
 //}}}
 //{{{
-void alloc_ref_pic_list_reordering_buffer (Slice *currSlice)
+void alloc_ref_pic_list_reordering_buffer (Slice* currSlice)
 {
   if (currSlice->slice_type != I_SLICE && currSlice->slice_type != SI_SLICE) {
     int size = currSlice->num_ref_idx_active[LIST_0] + 1;
@@ -2494,7 +2494,7 @@ void alloc_ref_pic_list_reordering_buffer (Slice *currSlice)
 }
 //}}}
 //{{{
-void free_ref_pic_list_reordering_buffer (Slice *currSlice)
+void free_ref_pic_list_reordering_buffer (Slice* currSlice)
 {
   if (currSlice->modification_of_pic_nums_idc[LIST_0])
     free(currSlice->modification_of_pic_nums_idc[LIST_0]);
@@ -2520,7 +2520,7 @@ void free_ref_pic_list_reordering_buffer (Slice *currSlice)
 }
 //}}}
 //{{{
-void fill_frame_num_gap (VideoParameters *p_Vid, Slice *currSlice) {
+void fill_frame_num_gap (VideoParameters *p_Vid, Slice* currSlice) {
 
   seq_parameter_set_rbsp_t *active_sps = p_Vid->active_sps;
 
@@ -2568,7 +2568,7 @@ void fill_frame_num_gap (VideoParameters *p_Vid, Slice *currSlice) {
   }
 //}}}
 //{{{
-void compute_colocated (Slice *currSlice, StorablePicture **listX[6]) {
+void compute_colocated (Slice* currSlice, StorablePicture **listX[6]) {
 
   int i, j;
 

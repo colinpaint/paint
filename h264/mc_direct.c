@@ -26,7 +26,7 @@
 //}}}
 
 //{{{
-static void update_direct_mv_info_temporal (Macroblock *currMB) {
+static void update_direct_mv_info_temporal (Macroblock* currMB) {
 
   VideoParameters* p_Vid = currMB->p_Vid;
   Slice* currSlice = currMB->p_Slice;
@@ -261,31 +261,31 @@ static inline void update_neighbor_mvs (PicMotionParams **motion, const PicMotio
 }
 //}}}
 //{{{
-int get_colocated_info_4x4 (Macroblock *currMB, StorablePicture *list1, int i, int j)
+int get_colocated_info_4x4 (Macroblock* currMB, StorablePicture *list1, int i, int j)
 {
   if (list1->is_long_term)
     return 1;
   else {
     PicMotionParams *fs = &list1->mv_info[j][i];
 
-    int moving = !((((fs->ref_idx[LIST_0] == 0) &&   
-                     (iabs(fs->mv[LIST_0].mv_x)>>1 == 0) &&  
-                     (iabs(fs->mv[LIST_0].mv_y)>>1 == 0))) || 
-                   ((fs->ref_idx[LIST_0] == -1) &&  
-                    (fs->ref_idx[LIST_1] == 0) &&  
-                    (iabs(fs->mv[LIST_1].mv_x)>>1 == 0) &&  
+    int moving = !((((fs->ref_idx[LIST_0] == 0) &&
+                     (iabs(fs->mv[LIST_0].mv_x)>>1 == 0) &&
+                     (iabs(fs->mv[LIST_0].mv_y)>>1 == 0))) ||
+                   ((fs->ref_idx[LIST_0] == -1) &&
+                    (fs->ref_idx[LIST_1] == 0) &&
+                    (iabs(fs->mv[LIST_1].mv_x)>>1 == 0) &&
                     (iabs(fs->mv[LIST_1].mv_y)>>1 == 0)));
     return moving;
     }
   }
 //}}}
 //{{{
-int get_colocated_info_8x8 (Macroblock *currMB, StorablePicture *list1, int i, int j)
+int get_colocated_info_8x8 (Macroblock* currMB, StorablePicture *list1, int i, int j)
 {
   if (list1->is_long_term)
     return 1;
-  else { 
-    Slice *currSlice = currMB->p_Slice;
+  else {
+    Slice* currSlice = currMB->p_Slice;
     VideoParameters *p_Vid = currMB->p_Vid;
     if( (currSlice->mb_aff_frame_flag) ||
       (!p_Vid->active_sps->frame_mbs_only_flag && ((!currSlice->structure && list1->iCodingType == FIELD_CODING)||(currSlice->structure!=list1->structure && list1->coded_frame))))
@@ -348,14 +348,14 @@ int get_colocated_info_8x8 (Macroblock *currMB, StorablePicture *list1, int i, i
 //}}}
 
 //{{{
-static void update_direct_mv_info_spatial_8x8 (Macroblock *currMB)
+static void update_direct_mv_info_spatial_8x8 (Macroblock* currMB)
 {
   Boolean has_direct = (currMB->b8mode[0] == 0) | (currMB->b8mode[1] == 0) | (currMB->b8mode[2] == 0) | (currMB->b8mode[3] == 0);
 
   if (has_direct)
   {
     //VideoParameters *p_Vid = currMB->p_Vid;
-    Slice *currSlice = currMB->p_Slice;
+    Slice* currSlice = currMB->p_Slice;
     int i,j,k;
 
     int j4, i4;
@@ -507,14 +507,14 @@ static void update_direct_mv_info_spatial_8x8 (Macroblock *currMB)
 }
 //}}}
 //{{{
-static void update_direct_mv_info_spatial_4x4 (Macroblock *currMB)
+static void update_direct_mv_info_spatial_4x4 (Macroblock* currMB)
 {
   Boolean has_direct = (currMB->b8mode[0] == 0) | (currMB->b8mode[1] == 0) | (currMB->b8mode[2] == 0) | (currMB->b8mode[3] == 0);
 
   if (has_direct)
   {
     VideoParameters *p_Vid = currMB->p_Vid;
-    Slice *currSlice = currMB->p_Slice;
+    Slice* currSlice = currMB->p_Slice;
     int i,j,k;
 
     int j4, i4;
@@ -666,7 +666,7 @@ static void update_direct_mv_info_spatial_4x4 (Macroblock *currMB)
 }
 //}}}
 //{{{
-void update_direct_types (Slice *currSlice)
+void update_direct_types (Slice* currSlice)
 {
   if (currSlice->active_sps->direct_8x8_inference_flag)
     currSlice->update_direct_mv_info =

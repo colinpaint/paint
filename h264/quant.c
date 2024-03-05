@@ -145,7 +145,7 @@ void free_qp_matrices(CodingParameters *cps)
  *
  ************************************************************************
  */
-void assign_quant_params(Slice *currSlice)
+void assign_quant_params(Slice* currSlice)
 {
   seq_parameter_set_rbsp_t* sps = currSlice->active_sps;
   pic_parameter_set_rbsp_t* pps = currSlice->active_pps;
@@ -308,7 +308,7 @@ static void set_dequant8x8(int (*InvLevelScale8x8)[8],  const int (*dequant)[8],
  *
  ************************************************************************
  */
-void CalculateQuant4x4Param(Slice *currSlice)
+void CalculateQuant4x4Param(Slice* currSlice)
 {
   int k;
   const int (*p_dequant_coef)[4][4] = dequant_coef;
@@ -339,7 +339,7 @@ void CalculateQuant4x4Param(Slice *currSlice)
  *
  ************************************************************************
  */
-void CalculateQuant8x8Param(Slice *currSlice)
+void CalculateQuant8x8Param(Slice* currSlice)
 {
   int k;
   const int (*p_dequant_coef)[8][8] = dequant_coef8;

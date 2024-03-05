@@ -19,9 +19,9 @@
 //}}}
 
 //{{{
-Boolean mb_is_available (int mbAddr, Macroblock *currMB) {
+Boolean mb_is_available (int mbAddr, Macroblock* currMB) {
 
-  Slice *currSlice = currMB->p_Slice;
+  Slice* currSlice = currMB->p_Slice;
   if ((mbAddr < 0) || (mbAddr > ((int)currSlice->dec_picture->PicSizeInMbs - 1)))
     return FALSE;
 
@@ -35,9 +35,9 @@ Boolean mb_is_available (int mbAddr, Macroblock *currMB) {
 //}}}
 
 //{{{
-void CheckAvailabilityOfNeighbors (Macroblock *currMB) {
+void CheckAvailabilityOfNeighbors (Macroblock* currMB) {
 
-  Slice *currSlice = currMB->p_Slice;
+  Slice* currSlice = currMB->p_Slice;
   StorablePicture *dec_picture = currSlice->dec_picture; //p_Vid->dec_picture;
   const int mb_nr = currMB->mbAddrX;
   BlockPos *PicPos = currMB->p_Vid->PicPos;
@@ -73,7 +73,7 @@ void CheckAvailabilityOfNeighbors (Macroblock *currMB) {
   }
 //}}}
 //{{{
-void CheckAvailabilityOfNeighborsNormal (Macroblock *currMB) {
+void CheckAvailabilityOfNeighborsNormal (Macroblock* currMB) {
 
   Slice* currSlice = currMB->p_Slice;
   StorablePicture* dec_picture = currSlice->dec_picture; //p_Vid->dec_picture;
@@ -98,7 +98,7 @@ void CheckAvailabilityOfNeighborsNormal (Macroblock *currMB) {
   }
 //}}}
 //{{{
-void CheckAvailabilityOfNeighborsMBAFF (Macroblock *currMB) {
+void CheckAvailabilityOfNeighborsMBAFF (Macroblock* currMB) {
 
   Slice* currSlice = currMB->p_Slice;
   StorablePicture* dec_picture = currSlice->dec_picture; //p_Vid->dec_picture;
@@ -147,7 +147,7 @@ void get_mb_pos (VideoParameters *p_Vid, int mb_addr, int mb_size[2], short *x, 
 //}}}
 
 //{{{
-void getNonAffNeighbour (Macroblock *currMB, int xN, int yN, int mb_size[2], PixelPos *pix) {
+void getNonAffNeighbour (Macroblock* currMB, int xN, int yN, int mb_size[2], PixelPos *pix) {
 
   int maxW = mb_size[0], maxH = mb_size[1];
 
@@ -192,7 +192,7 @@ void getNonAffNeighbour (Macroblock *currMB, int xN, int yN, int mb_size[2], Pix
   }
 //}}}
 //{{{
-void getAffNeighbour (Macroblock *currMB, int xN, int yN, int mb_size[2], PixelPos *pix) {
+void getAffNeighbour (Macroblock* currMB, int xN, int yN, int mb_size[2], PixelPos *pix) {
 
   VideoParameters* p_Vid = currMB->p_Vid;
   int maxW, maxH;
@@ -467,7 +467,7 @@ void getAffNeighbour (Macroblock *currMB, int xN, int yN, int mb_size[2], PixelP
 //}}}
 
 //{{{
-void get4x4Neighbour (Macroblock *currMB, int block_x, int block_y, int mb_size[2], PixelPos *pix) {
+void get4x4Neighbour (Macroblock* currMB, int block_x, int block_y, int mb_size[2], PixelPos *pix) {
 
   currMB->p_Vid->getNeighbour (currMB, block_x, block_y, mb_size, pix);
 
@@ -480,7 +480,7 @@ void get4x4Neighbour (Macroblock *currMB, int block_x, int block_y, int mb_size[
   }
 //}}}
 //{{{
-void get4x4NeighbourBase (Macroblock *currMB, int block_x, int block_y, int mb_size[2], PixelPos *pix) {
+void get4x4NeighbourBase (Macroblock* currMB, int block_x, int block_y, int mb_size[2], PixelPos *pix) {
 
   currMB->p_Vid->getNeighbour (currMB, block_x, block_y, mb_size, pix);
 

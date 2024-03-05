@@ -26,7 +26,7 @@
 //}}}
 
 //{{{
-int allocate_pred_mem (Slice *currSlice)
+int allocate_pred_mem (Slice* currSlice)
 {
   int alloc_size = 0;
   alloc_size += get_mem2Dpel(&currSlice->tmp_block_l0, MB_BLOCK_SIZE, MB_BLOCK_SIZE);
@@ -38,7 +38,7 @@ int allocate_pred_mem (Slice *currSlice)
 }
 //}}}
 //{{{
-void free_pred_mem (Slice *currSlice)
+void free_pred_mem (Slice* currSlice)
 {
   free_mem2Dint(currSlice->tmp_res);
   free_mem2Dpel(currSlice->tmp_block_l0);
@@ -916,8 +916,8 @@ static void get_luma_31 (imgpel **block, imgpel **cur_imgY, int block_size_y, in
  *    Interpolation of 1/4 subpixel
  ************************************************************************
  */
-void get_block_luma (StorablePicture *curr_ref, int x_pos, int y_pos, int block_size_x, int block_size_y, imgpel **block,
-                    int shift_x, int maxold_x, int maxold_y, int **tmp_res, int max_imgpel_value, imgpel no_ref_value, Macroblock *currMB)
+void get_block_luma (StorablePicture* curr_ref, int x_pos, int y_pos, int block_size_x, int block_size_y, imgpel **block,
+                    int shift_x, int maxold_x, int maxold_y, int **tmp_res, int max_imgpel_value, imgpel no_ref_value, Macroblock* currMB)
 {
   if (curr_ref->no_ref) {
     //printf("list[ref_frame] is equal to 'no reference picture' before RAP\n");
@@ -1095,7 +1095,7 @@ static void get_chroma_XY (imgpel *block, imgpel *cur_img, int span, int block_s
 }
 //}}}
 //{{{
-static void get_block_chroma (StorablePicture *curr_ref, int x_pos, int y_pos, int subpel_x, int subpel_y, int maxold_x, int maxold_y,
+static void get_block_chroma (StorablePicture* curr_ref, int x_pos, int y_pos, int subpel_x, int subpel_y, int maxold_x, int maxold_y,
                              int block_size_x, int vert_block_size, int shiftpel_x, int shiftpel_y,
                              imgpel *block1, imgpel *block2, int total_scale, imgpel no_ref_value, VideoParameters *p_Vid)
 {
@@ -1155,10 +1155,10 @@ static void get_block_chroma (StorablePicture *curr_ref, int x_pos, int y_pos, i
 }
 //}}}
 //{{{
-void intra_cr_decoding (Macroblock *currMB, int yuv)
+void intra_cr_decoding (Macroblock* currMB, int yuv)
 {
   VideoParameters *p_Vid = currMB->p_Vid;
-  Slice *currSlice = currMB->p_Slice;
+  Slice* currSlice = currMB->p_Slice;
   StorablePicture *dec_picture = currSlice->dec_picture;
   imgpel **curUV;
   int uv;
@@ -1299,9 +1299,9 @@ static void set_direct_references_mb_frame (const PixelPos *mb, char *l0_rFrame,
 }
 //}}}
 //{{{
-void prepare_direct_params (Macroblock *currMB, StorablePicture *dec_picture, MotionVector *pmvl0, MotionVector *pmvl1, char *l0_rFrame, char *l1_rFrame)
+void prepare_direct_params (Macroblock* currMB, StorablePicture *dec_picture, MotionVector *pmvl0, MotionVector *pmvl1, char *l0_rFrame, char *l1_rFrame)
 {
-  Slice *currSlice = currMB->p_Slice;
+  Slice* currSlice = currMB->p_Slice;
   char l0_refA, l0_refB, l0_refC;
   char l1_refA, l1_refB, l1_refC;
   PicMotionParams **mv_info = dec_picture->mv_info;
@@ -1371,10 +1371,10 @@ static inline int check_vert_mv (int llimit, int vec1_y,int rlimit)
 }
 //}}}
 //{{{
-static void perform_mc_single_wp (Macroblock *currMB, ColorPlane pl, StorablePicture *dec_picture, int pred_dir, int i, int j, int block_size_x, int block_size_y)
+static void perform_mc_single_wp (Macroblock* currMB, ColorPlane pl, StorablePicture *dec_picture, int pred_dir, int i, int j, int block_size_x, int block_size_y)
 {
   VideoParameters *p_Vid = currMB->p_Vid;
-  Slice *currSlice = currMB->p_Slice;
+  Slice* currSlice = currMB->p_Slice;
   seq_parameter_set_rbsp_t *active_sps = currSlice->active_sps;
   imgpel **tmp_block_l0 = currSlice->tmp_block_l0;
   imgpel **tmp_block_l1 = currSlice->tmp_block_l1;
@@ -1464,10 +1464,10 @@ static void perform_mc_single_wp (Macroblock *currMB, ColorPlane pl, StorablePic
 }
 //}}}
 //{{{
-static void perform_mc_single (Macroblock *currMB, ColorPlane pl, StorablePicture *dec_picture, int pred_dir, int i, int j, int block_size_x, int block_size_y)
+static void perform_mc_single (Macroblock* currMB, ColorPlane pl, StorablePicture *dec_picture, int pred_dir, int i, int j, int block_size_x, int block_size_y)
 {
   VideoParameters *p_Vid = currMB->p_Vid;
-  Slice *currSlice = currMB->p_Slice;
+  Slice* currSlice = currMB->p_Slice;
   seq_parameter_set_rbsp_t *active_sps = currSlice->active_sps;
   imgpel **tmp_block_l0 = currSlice->tmp_block_l0;
   imgpel **tmp_block_l1 = currSlice->tmp_block_l1;
@@ -1545,12 +1545,12 @@ static void perform_mc_single (Macroblock *currMB, ColorPlane pl, StorablePictur
 }
 //}}}
 //{{{
-static void perform_mc_bi_wp (Macroblock *currMB, ColorPlane pl, StorablePicture *dec_picture, int i, int j, int block_size_x, int block_size_y)
+static void perform_mc_bi_wp (Macroblock* currMB, ColorPlane pl, StorablePicture *dec_picture, int i, int j, int block_size_x, int block_size_y)
 {
   static const int mv_mul = 16;
   int  vec1_x, vec1_y, vec2_x, vec2_y;
   VideoParameters *p_Vid = currMB->p_Vid;
-  Slice *currSlice = currMB->p_Slice;
+  Slice* currSlice = currMB->p_Slice;
 
   int weighted_bipred_idc = p_Vid->active_pps->weighted_bipred_idc;
   int block_y_aff = currMB->block_y_aff;
@@ -1682,12 +1682,12 @@ static void perform_mc_bi_wp (Macroblock *currMB, ColorPlane pl, StorablePicture
 }
 //}}}
 //{{{
-static void perform_mc_bi (Macroblock *currMB, ColorPlane pl, StorablePicture *dec_picture, int i, int j, int block_size_x, int block_size_y)
+static void perform_mc_bi (Macroblock* currMB, ColorPlane pl, StorablePicture *dec_picture, int i, int j, int block_size_x, int block_size_y)
 {
   static const int mv_mul = 16;
   int vec1_x=0, vec1_y=0, vec2_x=0, vec2_y=0;
   VideoParameters *p_Vid = currMB->p_Vid;
-  Slice *currSlice = currMB->p_Slice;
+  Slice* currSlice = currMB->p_Slice;
 
   int block_y_aff = currMB->block_y_aff;
   int i4 = currMB->block_x + i;
@@ -1795,9 +1795,9 @@ static void perform_mc_bi (Macroblock *currMB, ColorPlane pl, StorablePicture *d
 }
 //}}}
 //{{{
-void perform_mc (Macroblock *currMB, ColorPlane pl, StorablePicture *dec_picture, int pred_dir, int i, int j, int block_size_x, int block_size_y)
+void perform_mc (Macroblock* currMB, ColorPlane pl, StorablePicture *dec_picture, int pred_dir, int i, int j, int block_size_x, int block_size_y)
 {
-  Slice *currSlice = currMB->p_Slice;
+  Slice* currSlice = currMB->p_Slice;
   assert (pred_dir<=2);
   if (pred_dir != 2)
   {
