@@ -325,7 +325,7 @@ void CalculateQuant4x4Param (Slice* currSlice)
  *
  ************************************************************************
  */
-void CalculateQuant8x8Para m(Slice* currSlice)
+void CalculateQuant8x8Param (Slice* currSlice)
 {
   int k;
   const int (*p_dequant_coef)[8][8] = dequant_coef8;

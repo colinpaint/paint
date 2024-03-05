@@ -42,7 +42,7 @@ static void sample_reconstruct (sPixel** curImg, sPixel** mpr, int** mb_rres, in
 //}}}
 
 //{{{
-void itrans4x4 (Macroblock* currMB, ColorPlane pl, int ioff, int joff) {
+void itrans4x4 (sMacroblock* currMB, ColorPlane pl, int ioff, int joff) {
 
   Slice* currSlice = currMB->p_Slice;
   int** mb_rres = currSlice->mb_rres[pl];
@@ -53,7 +53,7 @@ void itrans4x4 (Macroblock* currMB, ColorPlane pl, int ioff, int joff) {
   }
 //}}}
 //{{{
-void itrans4x4_ls (Macroblock* currMB, ColorPlane pl, int ioff, int joff) {
+void itrans4x4_ls (sMacroblock* currMB, ColorPlane pl, int ioff, int joff) {
 
   Slice* currSlice = currMB->p_Slice;
   sVidParam* vidParam = currMB->vidParam;
@@ -70,7 +70,7 @@ void itrans4x4_ls (Macroblock* currMB, ColorPlane pl, int ioff, int joff) {
 //}}}
 
 //{{{
-void Inv_Residual_trans_4x4 (Macroblock* currMB, ColorPlane pl, int ioff, int joff) {
+void Inv_Residual_trans_4x4 (sMacroblock* currMB, ColorPlane pl, int ioff, int joff) {
 
   int temp[4][4];
   Slice* currSlice = currMB->p_Slice;
@@ -122,7 +122,7 @@ void Inv_Residual_trans_4x4 (Macroblock* currMB, ColorPlane pl, int ioff, int jo
   }
 //}}}
 //{{{
-void Inv_Residual_trans_8x8 (Macroblock* currMB, ColorPlane pl, int ioff, int joff) {
+void Inv_Residual_trans_8x8 (sMacroblock* currMB, ColorPlane pl, int ioff, int joff) {
 
   Slice* currSlice = currMB->p_Slice;
   int temp[8][8];
@@ -182,7 +182,7 @@ void Inv_Residual_trans_8x8 (Macroblock* currMB, ColorPlane pl, int ioff, int jo
   }
 //}}}
 //{{{
-void Inv_Residual_trans_16x16 (Macroblock* currMB, ColorPlane pl) {
+void Inv_Residual_trans_16x16 (sMacroblock* currMB, ColorPlane pl) {
 
   int temp[16][16];
   Slice* currSlice = currMB->p_Slice;
@@ -227,7 +227,7 @@ void Inv_Residual_trans_16x16 (Macroblock* currMB, ColorPlane pl) {
   }
 //}}}
 //{{{
-void Inv_Residual_trans_Chroma (Macroblock* currMB, int uv) {
+void Inv_Residual_trans_Chroma (sMacroblock* currMB, int uv) {
 
   Slice* currSlice = currMB->p_Slice;
   int** mb_rres = currSlice->mb_rres[uv+1];
@@ -264,7 +264,7 @@ void Inv_Residual_trans_Chroma (Macroblock* currMB, int uv) {
 //}}}
 
 //{{{
-void itrans_2 (Macroblock* currMB, ColorPlane pl) {
+void itrans_2 (sMacroblock* currMB, ColorPlane pl) {
 
   Slice* currSlice = currMB->p_Slice;
   sVidParam* vidParam = currMB->vidParam;
@@ -301,7 +301,7 @@ void itrans_2 (Macroblock* currMB, ColorPlane pl) {
   }
 //}}}
 //{{{
-void itrans_sp (Macroblock* currMB, ColorPlane pl, int ioff, int joff) {
+void itrans_sp (sMacroblock* currMB, ColorPlane pl, int ioff, int joff) {
 
   sVidParam* vidParam = currMB->vidParam;
   Slice* currSlice = currMB->p_Slice;
@@ -366,7 +366,7 @@ void itrans_sp (Macroblock* currMB, ColorPlane pl, int ioff, int joff) {
   }
 //}}}
 //{{{
-void itrans_sp_cr (Macroblock* currMB, int uv) {
+void itrans_sp_cr (sMacroblock* currMB, int uv) {
 
   Slice* currSlice = currMB->p_Slice;
   sVidParam* vidParam = currMB->vidParam;
@@ -459,7 +459,7 @@ void itrans_sp_cr (Macroblock* currMB, int uv) {
   }
 //}}}
 //{{{
-void iMBtrans4x4 (Macroblock* currMB, ColorPlane pl, int smb) {
+void iMBtrans4x4 (sMacroblock* currMB, ColorPlane pl, int smb) {
 
   Slice* currSlice = currMB->p_Slice;
   sPicture* dec_picture = currMB->p_Slice->dec_picture;
@@ -524,7 +524,7 @@ void iMBtrans4x4 (Macroblock* currMB, ColorPlane pl, int smb) {
   }
 //}}}
 //{{{
-void iMBtrans8x8 (Macroblock* currMB, ColorPlane pl) {
+void iMBtrans8x8 (sMacroblock* currMB, ColorPlane pl) {
 
   //sVidParam* vidParam = currMB->vidParam;
   sPicture *dec_picture = currMB->p_Slice->dec_picture;
@@ -555,7 +555,7 @@ void iMBtrans8x8 (Macroblock* currMB, ColorPlane pl) {
   }
 //}}}
 //{{{
-void iTransform (Macroblock* currMB, ColorPlane pl, int smb) {
+void iTransform (sMacroblock* currMB, ColorPlane pl, int smb) {
 
   Slice* currSlice = currMB->p_Slice;
   sVidParam* vidParam = currMB->vidParam;
@@ -666,7 +666,7 @@ void copy_image_data_16x16 (sPixel** imgBuf1, sPixel** imgBuf2, int off1, int of
 //}}}
 
 //{{{
-int CheckVertMV (Macroblock* currMB, int vec1_y, int block_size_y) {
+int CheckVertMV (sMacroblock* currMB, int vec1_y, int block_size_y) {
 
   sVidParam* vidParam = currMB->vidParam;
   sPicture* dec_picture = currMB->p_Slice->dec_picture;

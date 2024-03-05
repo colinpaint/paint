@@ -85,24 +85,24 @@ static const byte QP_SCALE_CR[52]=
 //}}}
 static const byte decode_block_scan[16] = {0, 1, 4, 5, 2, 3, 6, 7, 8, 9, 12, 13, 10, 11, 14, 15};
 
-extern void iMBtrans4x4 (Macroblock* currMB, ColorPlane pl, int smb);
-extern void iMBtrans8x8 (Macroblock* currMB, ColorPlane pl);
+extern void iMBtrans4x4 (sMacroblock* currMB, ColorPlane pl, int smb);
+extern void iMBtrans8x8 (sMacroblock* currMB, ColorPlane pl);
 
-extern void itrans_sp_cr (Macroblock* currMB, int uv);
+extern void itrans_sp_cr (sMacroblock* currMB, int uv);
 
-extern void Inv_Residual_trans_4x4 (Macroblock* currMB, ColorPlane pl, int ioff, int joff);
-extern void Inv_Residual_trans_8x8 (Macroblock* currMB, ColorPlane pl, int ioff,int joff);
-extern void Inv_Residual_trans_16x16 (Macroblock* currMB, ColorPlane pl);
-extern void Inv_Residual_trans_Chroma (Macroblock* currMB, int uv);
+extern void Inv_Residual_trans_4x4 (sMacroblock* currMB, ColorPlane pl, int ioff, int joff);
+extern void Inv_Residual_trans_8x8 (sMacroblock* currMB, ColorPlane pl, int ioff,int joff);
+extern void Inv_Residual_trans_16x16 (sMacroblock* currMB, ColorPlane pl);
+extern void Inv_Residual_trans_Chroma (sMacroblock* currMB, int uv);
 
-extern void itrans4x4 (Macroblock* currMB, ColorPlane pl, int ioff, int joff);
-extern void itrans4x4_ls(Macroblock* currMB, ColorPlane pl, int ioff, int joff);
-extern void itrans_sp (Macroblock* currMB, ColorPlane pl, int ioff, int joff);
-extern void itrans_2 (Macroblock* currMB, ColorPlane pl);
-extern void iTransform (Macroblock* currMB, ColorPlane pl, int smb);
+extern void itrans4x4 (sMacroblock* currMB, ColorPlane pl, int ioff, int joff);
+extern void itrans4x4_ls(sMacroblock* currMB, ColorPlane pl, int ioff, int joff);
+extern void itrans_sp (sMacroblock* currMB, ColorPlane pl, int ioff, int joff);
+extern void itrans_2 (sMacroblock* currMB, ColorPlane pl);
+extern void iTransform (sMacroblock* currMB, ColorPlane pl, int smb);
 
 extern void copy_image_data (sPixel  **imgBuf1, sPixel  **imgBuf2, int off1, int off2, int width, int height);
 extern void copy_image_data_16x16 (sPixel  **imgBuf1, sPixel  **imgBuf2, int off1, int off2);
 extern void copy_image_data_8x8 (sPixel  **imgBuf1, sPixel  **imgBuf2, int off1, int off2);
 extern void copy_image_data_4x4 (sPixel  **imgBuf1, sPixel  **imgBuf2, int off1, int off2);
-extern int CheckVertMV (Macroblock* currMB, int vec1_y, int block_size_y);
+extern int CheckVertMV (sMacroblock* currMB, int vec1_y, int block_size_y);

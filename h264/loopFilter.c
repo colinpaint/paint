@@ -94,7 +94,7 @@ static inline int compare_mvs (const MotionVector *mv0, const MotionVector *mv1,
 //}}}
 
 //{{{
-static Macroblock* get_non_aff_neighbor_luma (Macroblock *mb, int xN, int yN) {
+static sMacroblock* get_non_aff_neighbor_luma (sMacroblock *mb, int xN, int yN) {
 
   if (xN < 0)
     return(mb->mbleft);
@@ -105,7 +105,7 @@ static Macroblock* get_non_aff_neighbor_luma (Macroblock *mb, int xN, int yN) {
   }
 //}}}
 //{{{
-static Macroblock* get_non_aff_neighbor_chroma (Macroblock *mb, int xN, int yN,
+static sMacroblock* get_non_aff_neighbor_chroma (sMacroblock *mb, int xN, int yN,
                                                 int block_width,int block_height) {
   if (xN < 0) {
     if (yN < block_height)
@@ -134,7 +134,7 @@ static Macroblock* get_non_aff_neighbor_chroma (Macroblock *mb, int xN, int yN,
  *    Filters 16 pel block edge of Super MB Frame coded MBs
  *****************************************************************************************
  */
-static void edge_loop_luma_ver_MBAff (ColorPlane pl, sPixel** Img, byte *Strength, Macroblock *MbQ, int edge)
+static void edge_loop_luma_ver_MBAff (ColorPlane pl, sPixel** Img, byte *Strength, sMacroblock *MbQ, int edge)
 {
   int      pel, Strng ;
   sPixel   L2 = 0, L1, L0, R0, R1, R2 = 0;
@@ -153,7 +153,7 @@ static void edge_loop_luma_ver_MBAff (ColorPlane pl, sPixel** Img, byte *Strengt
   int AlphaC0Offset = MbQ->DFAlphaC0Offset;
   int BetaOffset = MbQ->DFBetaOffset;
 
-  Macroblock *MbP;
+  sMacroblock *MbP;
   sPixel   *SrcPtrP, *SrcPtrQ;
 
   for( pel = 0 ; pel < MB_BLOCK_SIZE ; ++pel )
@@ -260,7 +260,7 @@ static void edge_loop_luma_ver_MBAff (ColorPlane pl, sPixel** Img, byte *Strengt
  *    Filters 16 pel block edge of Super MB Frame coded MBs
  *****************************************************************************************
  */
-static void edge_loop_luma_hor_MBAff (ColorPlane pl, sPixel** Img, byte *Strength, Macroblock *MbQ,
+static void edge_loop_luma_hor_MBAff (ColorPlane pl, sPixel** Img, byte *Strength, sMacroblock *MbQ,
               int edge, sPicture *p)
 {
   int      width = p->iLumaStride; //p->size_x;
@@ -282,7 +282,7 @@ static void edge_loop_luma_hor_MBAff (ColorPlane pl, sPixel** Img, byte *Strengt
     int AlphaC0Offset = MbQ->DFAlphaC0Offset;
     int BetaOffset = MbQ->DFBetaOffset;
 
-    Macroblock *MbP = &(vidParam->mb_data[pixP.mb_addr]);
+    sMacroblock *MbP = &(vidParam->mb_data[pixP.mb_addr]);
 
     int incQ    = ((MbP->mb_field && !MbQ->mb_field) ? 2 * width : width);
     int incP    = ((MbQ->mb_field && !MbP->mb_field) ? 2 * width : width);
@@ -390,7 +390,7 @@ static void edge_loop_luma_hor_MBAff (ColorPlane pl, sPixel** Img, byte *Strengt
 *    Filters chroma block edge for MBAFF types
 *****************************************************************************************
  */
-static void edge_loop_chroma_ver_MBAff (sPixel** Img, byte *Strength, Macroblock *MbQ, int edge, int uv, sPicture *p)
+static void edge_loop_chroma_ver_MBAff (sPixel** Img, byte *Strength, sMacroblock *MbQ, int edge, int uv, sPicture *p)
 {
   int      pel, Strng ;
 
@@ -409,7 +409,7 @@ static void edge_loop_chroma_ver_MBAff (sPixel** Img, byte *Strength, Macroblock
 
   int      AlphaC0Offset = MbQ->DFAlphaC0Offset;
   int      BetaOffset    = MbQ->DFBetaOffset;
-  Macroblock *MbP;
+  sMacroblock *MbP;
   sPixel   *SrcPtrP, *SrcPtrQ;
 
 
@@ -478,7 +478,7 @@ static void edge_loop_chroma_ver_MBAff (sPixel** Img, byte *Strength, Macroblock
 *    Filters chroma block edge for MBAFF types
 *****************************************************************************************
  */
-static void edge_loop_chroma_hor_MBAff (sPixel** Img, byte *Strength, Macroblock *MbQ, int edge, int uv, sPicture *p)
+static void edge_loop_chroma_hor_MBAff (sPixel** Img, byte *Strength, sMacroblock *MbQ, int edge, int uv, sPicture *p)
 {
   sVidParam* vidParam = MbQ->vidParam;
   int      PelNum = pelnum_cr[1][p->chroma_format_idc];
@@ -496,7 +496,7 @@ static void edge_loop_chroma_hor_MBAff (sPixel** Img, byte *Strength, Macroblock
 
   if (pixP.available || (MbQ->DFDisableIdc == 0))
   {
-    Macroblock *MbP = &(vidParam->mb_data[pixP.mb_addr]);
+    sMacroblock *MbP = &(vidParam->mb_data[pixP.mb_addr]);
 
     int incQ = ((MbP->mb_field && !MbQ->mb_field) ? 2 * width : width);
     int incP = ((MbQ->mb_field  && !MbP->mb_field) ? 2 * width : width);
@@ -567,7 +567,7 @@ static void edge_loop_chroma_hor_MBAff (sPixel** Img, byte *Strength, Macroblock
  *    returns a buffer of 16 Strength values for one stripe in a mb (for MBAFF)
  *********************************************************************************************
  */
-static void get_strength_ver_MBAff (byte *Strength, Macroblock *MbQ, int edge, int mvlimit, sPicture *p)
+static void get_strength_ver_MBAff (byte *Strength, sMacroblock *MbQ, int edge, int mvlimit, sPicture *p)
 {
   //byte *Strength = MbQ->strength_ver[edge];
   short  blkP, blkQ, idx;
@@ -576,7 +576,7 @@ static void get_strength_ver_MBAff (byte *Strength, Macroblock *MbQ, int edge, i
   int    StrValue, i;
   short  mb_x, mb_y;
 
-  Macroblock *MbP;
+  sMacroblock *MbP;
 
   PixelPos pixP;
   sVidParam* vidParam = MbQ->vidParam;
@@ -778,7 +778,7 @@ static void get_strength_ver_MBAff (byte *Strength, Macroblock *MbQ, int edge, i
  *    returns a buffer of 16 Strength values for one stripe in a mb (for MBAFF)
  *********************************************************************************************
  */
-static void get_strength_hor_MBAff (byte *Strength, Macroblock *MbQ, int edge, int mvlimit, sPicture *p)
+static void get_strength_hor_MBAff (byte *Strength, sMacroblock *MbQ, int edge, int mvlimit, sPicture *p)
 {
   short  blkP, blkQ, idx;
   short  blk_x, blk_x2, blk_y, blk_y2 ;
@@ -787,7 +787,7 @@ static void get_strength_hor_MBAff (byte *Strength, Macroblock *MbQ, int edge, i
   int    xQ, yQ = (edge < MB_BLOCK_SIZE ? edge : 1);
   short  mb_x, mb_y;
 
-  Macroblock *MbP;
+  sMacroblock *MbP;
 
   PixelPos pixP;
   sVidParam* vidParam = MbQ->vidParam;
@@ -915,7 +915,7 @@ static void get_strength_hor_MBAff (byte *Strength, Macroblock *MbQ, int edge, i
 //{{{
 static void get_db_strength_mbaff (sVidParam* vidParam, sPicture *p, int MbQAddr)
 {
-  Macroblock   *MbQ = &(vidParam->mb_data[MbQAddr]) ; // current Mb
+  sMacroblock   *MbQ = &(vidParam->mb_data[MbQAddr]) ; // current Mb
 
   // return, if filter is disabled
   if (MbQ->DFDisableIdc == 1)
@@ -1004,7 +1004,7 @@ static void get_db_strength_mbaff (sVidParam* vidParam, sPicture *p, int MbQAddr
  */
 static void perform_db_mbaff (sVidParam* vidParam, sPicture *p, int MbQAddr)
 {
-  Macroblock   *MbQ = &(vidParam->mb_data[MbQAddr]) ; // current Mb
+  sMacroblock   *MbQ = &(vidParam->mb_data[MbQAddr]) ; // current Mb
 
   // return, if filter is disabled
   if (MbQ->DFDisableIdc == 1)
@@ -1201,7 +1201,7 @@ static void set_loop_filter_functions_mbaff (sVidParam* vidParam)
  *    returns a buffer of 16 Strength values for one stripe in a mb (for different Frame or Field types)
  *********************************************************************************************
  */
-static void get_strength_ver (Macroblock *MbQ, int edge, int mvlimit, sPicture *p)
+static void get_strength_ver (sMacroblock *MbQ, int edge, int mvlimit, sPicture *p)
 {
   byte *Strength = MbQ->strength_ver[edge];
   Slice* currSlice = MbQ->p_Slice;
@@ -1218,9 +1218,9 @@ static void get_strength_ver (Macroblock *MbQ, int edge, int mvlimit, sPicture *
   {
     if (MbQ->is_intra_block == FALSE)
     {
-      Macroblock *MbP;
+      sMacroblock *MbP;
       int xQ = (edge << 2) - 1;
-      Macroblock *neighbor = get_non_aff_neighbor_luma(MbQ, xQ, 0);
+      sMacroblock *neighbor = get_non_aff_neighbor_luma(MbQ, xQ, 0);
       MbP = (edge) ? MbQ : neighbor;
 
       if (edge || MbP->is_intra_block == FALSE)
@@ -1332,7 +1332,7 @@ static void get_strength_ver (Macroblock *MbQ, int edge, int mvlimit, sPicture *
  *    returns a buffer of 16 Strength values for one stripe in a mb (for different Frame or Field types)
  *********************************************************************************************
  */
-static void get_strength_hor (Macroblock *MbQ, int edge, int mvlimit, sPicture *p)
+static void get_strength_hor (sMacroblock *MbQ, int edge, int mvlimit, sPicture *p)
 {
   byte  *Strength = MbQ->strength_hor[edge];
   int    StrValue, i;
@@ -1349,10 +1349,10 @@ static void get_strength_hor (Macroblock *MbQ, int edge, int mvlimit, sPicture *
   {
     if (MbQ->is_intra_block == FALSE)
     {
-      Macroblock *MbP;
+      sMacroblock *MbP;
       int yQ = (edge < BLOCK_SIZE ? (edge << 2) - 1: 0);
 
-      Macroblock *neighbor = get_non_aff_neighbor_luma(MbQ, 0, yQ);
+      sMacroblock *neighbor = get_non_aff_neighbor_luma(MbQ, 0, yQ);
 
       MbP = (edge) ? MbQ : neighbor;
 
@@ -1464,7 +1464,7 @@ static void get_strength_hor (Macroblock *MbQ, int edge, int mvlimit, sPicture *
 //{{{
 static void get_db_strength_normal (sVidParam* vidParam, sPicture *p, int MbQAddr, int *piCnt)
 {
-  Macroblock   *MbQ = &(vidParam->mb_data[MbQAddr]) ; // current Mb
+  sMacroblock   *MbQ = &(vidParam->mb_data[MbQAddr]) ; // current Mb
 
   // return, if filter is disabled
   if (MbQ->DFDisableIdc == 1)
@@ -1747,11 +1747,11 @@ static void luma_ver_deblock_normal (sPixel **cur_img, int pos_x1, int Alpha, in
  *    Filters 16 pel block edge of Frame or Field coded MBs
  *****************************************************************************************
  */
-static void edge_loop_luma_ver (ColorPlane pl, sPixel** Img, byte *Strength, Macroblock *MbQ, int edge)
+static void edge_loop_luma_ver (ColorPlane pl, sPixel** Img, byte *Strength, sMacroblock *MbQ, int edge)
 {
   sVidParam* vidParam = MbQ->vidParam;
 
-  Macroblock *MbP = get_non_aff_neighbor_luma(MbQ, edge - 1, 0);
+  sMacroblock *MbP = get_non_aff_neighbor_luma(MbQ, edge - 1, 0);
 
   if (MbP || (MbQ->DFDisableIdc== 0))
   {
@@ -1953,12 +1953,12 @@ static void luma_hor_deblock_normal (sPixel *imgP, sPixel *imgQ, int width, int 
  *    Filters 16 pel block edge of Frame or Field coded MBs
  *****************************************************************************************
  */
-static void edge_loop_luma_hor (ColorPlane pl, sPixel** Img, byte *Strength, Macroblock *MbQ, int edge, sPicture *p)
+static void edge_loop_luma_hor (ColorPlane pl, sPixel** Img, byte *Strength, sMacroblock *MbQ, int edge, sPicture *p)
 {
   sVidParam* vidParam = MbQ->vidParam;
 
   int ypos = (edge < MB_BLOCK_SIZE ? edge - 1: 0);
-  Macroblock *MbP = get_non_aff_neighbor_luma(MbQ, 0, ypos);
+  sMacroblock *MbP = get_non_aff_neighbor_luma(MbQ, 0, ypos);
 
   if (MbP || (MbQ->DFDisableIdc== 0))
   {
@@ -2008,7 +2008,7 @@ static void edge_loop_luma_hor (ColorPlane pl, sPixel** Img, byte *Strength, Mac
  *    Filters chroma block edge for Frame or Field coded pictures
  *****************************************************************************************
  */
-static void edge_loop_chroma_ver (sPixel** Img, byte *Strength, Macroblock *MbQ, int edge, int uv, sPicture *p)
+static void edge_loop_chroma_ver (sPixel** Img, byte *Strength, sMacroblock *MbQ, int edge, int uv, sPicture *p)
 {
   sVidParam* vidParam = MbQ->vidParam;
 
@@ -2017,7 +2017,7 @@ static void edge_loop_chroma_ver (sPixel** Img, byte *Strength, Macroblock *MbQ,
   int xQ = edge - 1;
   int yQ = 0;
 
-  Macroblock *MbP = get_non_aff_neighbor_chroma(MbQ,xQ,yQ,block_width,block_height);
+  sMacroblock *MbP = get_non_aff_neighbor_chroma(MbQ,xQ,yQ,block_width,block_height);
 
   if (MbP || (MbQ->DFDisableIdc == 0))
   {
@@ -2096,7 +2096,7 @@ static void edge_loop_chroma_ver (sPixel** Img, byte *Strength, Macroblock *MbQ,
  *    Filters chroma block edge for Frame or Field coded pictures
  *****************************************************************************************
  */
-static void edge_loop_chroma_hor (sPixel** Img, byte *Strength, Macroblock *MbQ, int edge, int uv, sPicture *p)
+static void edge_loop_chroma_hor (sPixel** Img, byte *Strength, sMacroblock *MbQ, int edge, int uv, sPicture *p)
 {
   sVidParam* vidParam = MbQ->vidParam;
   int block_width = vidParam->mb_cr_size_x;
@@ -2104,7 +2104,7 @@ static void edge_loop_chroma_hor (sPixel** Img, byte *Strength, Macroblock *MbQ,
   int xQ = 0;
   int yQ = (edge < 16 ? edge - 1: 0);
 
-  Macroblock *MbP = get_non_aff_neighbor_chroma(MbQ,xQ,yQ,block_width,block_height);
+  sMacroblock *MbP = get_non_aff_neighbor_chroma(MbQ,xQ,yQ,block_width,block_height);
 
   if (MbP || (MbQ->DFDisableIdc == 0))
   {
@@ -2181,7 +2181,7 @@ static void edge_loop_chroma_hor (sPixel** Img, byte *Strength, Macroblock *MbQ,
 
 //}}}
 //{{{
-static void perform_db_dep_normal (Macroblock *MbQ, sPicture *p)
+static void perform_db_dep_normal (sMacroblock *MbQ, sPicture *p)
 {
   sVidParam* vidParam = MbQ->vidParam;
   Slice * currSlice = MbQ->p_Slice;
@@ -2327,7 +2327,7 @@ static void perform_db_dep_normal (Macroblock *MbQ, sPicture *p)
 }
 //}}}
 //{{{
-static void perform_db_ind_normal (Macroblock *MbQ, sPicture *p)
+static void perform_db_ind_normal (sMacroblock *MbQ, sPicture *p)
 {
   sVidParam* vidParam = MbQ->vidParam;
   Slice * currSlice = MbQ->p_Slice;
@@ -2660,7 +2660,7 @@ static void perform_db_ind_normal (Macroblock *MbQ, sPicture *p)
  */
 static void perform_db_normal (sVidParam* vidParam, sPicture *p, int MbQAddr)
 {
-  Macroblock   *MbQ = &(vidParam->mb_data[MbQAddr]) ; // current Mb
+  sMacroblock   *MbQ = &(vidParam->mb_data[MbQAddr]) ; // current Mb
 
   // return, if filter is disabled
   if (MbQ->DFDisableIdc == 1)
@@ -2704,7 +2704,7 @@ static void set_loop_filter_functions_normal (sVidParam* vidParam)
 //{{{
 static void DeblockMb (sVidParam* vidParam, sPicture *p, int MbQAddr) {
 
-  Macroblock* MbQ = &(vidParam->mb_data[MbQAddr]) ; // current Mb
+  sMacroblock* MbQ = &(vidParam->mb_data[MbQAddr]) ; // current Mb
 
   // return, if filter is disabled
   if (MbQ->DFDisableIdc == 1)
@@ -2867,7 +2867,7 @@ static void DeblockMb (sVidParam* vidParam, sPicture *p, int MbQAddr) {
 //{{{
 static void get_db_strength (sVidParam* vidParam, sPicture *p, int MbQAddr) {
 
-  Macroblock   *MbQ = &(vidParam->mb_data[MbQAddr]) ; // current Mb
+  sMacroblock   *MbQ = &(vidParam->mb_data[MbQAddr]) ; // current Mb
 
   // return, if filter is disabled
   if (MbQ->DFDisableIdc == 1)
@@ -2964,7 +2964,7 @@ static void get_db_strength (sVidParam* vidParam, sPicture *p, int MbQAddr) {
 //{{{
 static void perform_db (sVidParam* vidParam, sPicture *p, int MbQAddr) {
 
-  Macroblock* MbQ = &(vidParam->mb_data[MbQAddr]) ; // current Mb
+  sMacroblock* MbQ = &(vidParam->mb_data[MbQAddr]) ; // current Mb
 
   // return, if filter is disabled
   if (MbQ->DFDisableIdc == 1)
@@ -3139,7 +3139,7 @@ static void init_neighbors (sVidParam* vidParam) {
   int width = vidParam->PicWidthInMbs;
   int height = vidParam->PicHeightInMbs;
   int size = vidParam->PicSizeInMbs;
-  Macroblock* currMB = &vidParam->mb_data[0];
+  sMacroblock* currMB = &vidParam->mb_data[0];
 
   // do the top left corner
   currMB->mbup = NULL;

@@ -7,11 +7,11 @@
 #include "transform.h"
 #include "mbAccess.h"
 //}}}
-extern void  check_dp_neighbors (Macroblock* currMB);
-extern void  read_delta_quant   (SyntaxElement* currSE, sDataPartition *dP, Macroblock* currMB, const byte *partMap, int type);
+extern void  check_dp_neighbors (sMacroblock* currMB);
+extern void  read_delta_quant   (SyntaxElement* currSE, sDataPartition *dP, sMacroblock* currMB, const byte *partMap, int type);
 
 //{{{
-static int predict_nnz(Macroblock* currMB, int block_type, int i,int j)
+static int predict_nnz(sMacroblock* currMB, int block_type, int i,int j)
 {
   sVidParam* vidParam = currMB->vidParam;
   Slice* currSlice = currMB->p_Slice;
@@ -95,7 +95,7 @@ static int predict_nnz(Macroblock* currMB, int block_type, int i,int j)
 }
 //}}}
 //{{{
-static int predict_nnz_chroma(Macroblock* currMB, int i,int j)
+static int predict_nnz_chroma(sMacroblock* currMB, int i,int j)
 {
   sPicture *dec_picture = currMB->p_Slice->dec_picture;
 
@@ -153,7 +153,7 @@ static int predict_nnz_chroma(Macroblock* currMB, int i,int j)
 //}}}
 
 //{{{
-void read_coeff_4x4_CAVLC (Macroblock* currMB,
+void read_coeff_4x4_CAVLC (sMacroblock* currMB,
                            int block_type,
                            int i, int j, int levarr[16], int runarr[16],
                            int *number_coefficients)
@@ -332,7 +332,7 @@ void read_coeff_4x4_CAVLC (Macroblock* currMB,
 }
 //}}}
 //{{{
-void read_coeff_4x4_CAVLC_444 (Macroblock* currMB,
+void read_coeff_4x4_CAVLC_444 (sMacroblock* currMB,
                                int block_type,
                                int i, int j, int levarr[16], int runarr[16],
                                int *number_coefficients)
@@ -557,7 +557,7 @@ void read_coeff_4x4_CAVLC_444 (Macroblock* currMB,
 //}}}
 
 //{{{
-static void read_comp_coeff_4x4_CAVLC (Macroblock* currMB, ColorPlane pl, int (*InvLevelScale4x4)[4], int qp_per, int cbp, byte **nzcoeff)
+static void read_comp_coeff_4x4_CAVLC (sMacroblock* currMB, ColorPlane pl, int (*InvLevelScale4x4)[4], int qp_per, int cbp, byte **nzcoeff)
 {
   int block_y, block_x, b8;
   int i, j, k;
@@ -640,7 +640,7 @@ static void read_comp_coeff_4x4_CAVLC (Macroblock* currMB, ColorPlane pl, int (*
 }
 //}}}
 //{{{
-static void read_comp_coeff_4x4_CAVLC_ls (Macroblock* currMB, ColorPlane pl, int (*InvLevelScale4x4)[4], int qp_per, int cbp, byte **nzcoeff)
+static void read_comp_coeff_4x4_CAVLC_ls (sMacroblock* currMB, ColorPlane pl, int (*InvLevelScale4x4)[4], int qp_per, int cbp, byte **nzcoeff)
 {
   int block_y, block_x, b8;
   int i, j, k;
@@ -717,7 +717,7 @@ static void read_comp_coeff_4x4_CAVLC_ls (Macroblock* currMB, ColorPlane pl, int
 }
 //}}}
 //{{{
-static void read_comp_coeff_8x8_CAVLC (Macroblock* currMB, ColorPlane pl, int (*InvLevelScale8x8)[8], int qp_per, int cbp, byte **nzcoeff)
+static void read_comp_coeff_8x8_CAVLC (sMacroblock* currMB, ColorPlane pl, int (*InvLevelScale8x8)[8], int qp_per, int cbp, byte **nzcoeff)
 {
   int block_y, block_x, b4, b8;
   int block_y4, block_x4;
@@ -802,7 +802,7 @@ static void read_comp_coeff_8x8_CAVLC (Macroblock* currMB, ColorPlane pl, int (*
 }
 //}}}
 //{{{
-static void read_comp_coeff_8x8_CAVLC_ls (Macroblock* currMB, ColorPlane pl, int (*InvLevelScale8x8)[8], int qp_per, int cbp, byte **nzcoeff)
+static void read_comp_coeff_8x8_CAVLC_ls (sMacroblock* currMB, ColorPlane pl, int (*InvLevelScale8x8)[8], int qp_per, int cbp, byte **nzcoeff)
 {
   int block_y, block_x, b4, b8;
   int i, j, k;
@@ -886,7 +886,7 @@ static void read_comp_coeff_8x8_CAVLC_ls (Macroblock* currMB, ColorPlane pl, int
 //}}}
 
 //{{{
-static void read_CBP_and_coeffs_from_NAL_CAVLC_400(Macroblock* currMB)
+static void read_CBP_and_coeffs_from_NAL_CAVLC_400(sMacroblock* currMB)
 {
   int k;
   int mb_nr = currMB->mbAddrX;
@@ -1054,7 +1054,7 @@ static void read_CBP_and_coeffs_from_NAL_CAVLC_400(Macroblock* currMB)
 }
 //}}}
 //{{{
-static void read_CBP_and_coeffs_from_NAL_CAVLC_422(Macroblock* currMB)
+static void read_CBP_and_coeffs_from_NAL_CAVLC_422(sMacroblock* currMB)
 {
   int i,j,k;
   int mb_nr = currMB->mbAddrX;
@@ -1395,7 +1395,7 @@ static void read_CBP_and_coeffs_from_NAL_CAVLC_422(Macroblock* currMB)
 }
 //}}}
 //{{{
-static void read_CBP_and_coeffs_from_NAL_CAVLC_444(Macroblock* currMB)
+static void read_CBP_and_coeffs_from_NAL_CAVLC_444(sMacroblock* currMB)
 {
   int i,k;
   int mb_nr = currMB->mbAddrX;
@@ -1622,7 +1622,7 @@ static void read_CBP_and_coeffs_from_NAL_CAVLC_444(Macroblock* currMB)
 }
 //}}}
 //{{{
-static void read_CBP_and_coeffs_from_NAL_CAVLC_420(Macroblock* currMB)
+static void read_CBP_and_coeffs_from_NAL_CAVLC_420(sMacroblock* currMB)
 {
   int i,j,k;
   int mb_nr = currMB->mbAddrX;
@@ -1932,7 +1932,7 @@ static void read_CBP_and_coeffs_from_NAL_CAVLC_420(Macroblock* currMB)
 //}}}
 
 //{{{
-void set_read_comp_coeff_cavlc(Macroblock* currMB)
+void set_read_comp_coeff_cavlc(sMacroblock* currMB)
 {
   if (currMB->is_lossless == FALSE)
   {

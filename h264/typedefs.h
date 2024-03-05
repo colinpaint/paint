@@ -12,7 +12,7 @@ typedef int   int32;
 
 typedef byte   sPixel;    // pixel type
 typedef uint16 distpel;   // distortion type (for pixels)
-typedef int32  distblk;   // distortion type (for Macroblock)
+typedef int32  distblk;   // distortion type (for sMacroblock)
 typedef int32  transpel;  // transformed coefficient type
 
 //! Boolean Type

@@ -7,11 +7,11 @@
 #include "vlc.h"
 #include "transform.h"
 //}}}
-extern void  check_dp_neighbors (Macroblock* currMB);
-extern void  read_delta_quant   (SyntaxElement* currSE, sDataPartition *dP, Macroblock* currMB, const byte *partMap, int type);
+extern void  check_dp_neighbors (sMacroblock* currMB);
+extern void  read_delta_quant   (SyntaxElement* currSE, sDataPartition *dP, sMacroblock* currMB, const byte *partMap, int type);
 
 //{{{
-static void read_comp_coeff_4x4_smb_CABAC (Macroblock* currMB, SyntaxElement* currSE, ColorPlane pl, int block_y, int block_x, int start_scan, int64 *cbp_blk)
+static void read_comp_coeff_4x4_smb_CABAC (sMacroblock* currMB, SyntaxElement* currSE, ColorPlane pl, int block_y, int block_x, int start_scan, int64 *cbp_blk)
 {
   int i,j,k;
   int i0, j0;
@@ -98,7 +98,7 @@ static void read_comp_coeff_4x4_smb_CABAC (Macroblock* currMB, SyntaxElement* cu
 }
 //}}}
 //{{{
-static void read_comp_coeff_4x4_CABAC (Macroblock* currMB, SyntaxElement* currSE, ColorPlane pl, int (*InvLevelScale4x4)[4], int qp_per, int cbp)
+static void read_comp_coeff_4x4_CABAC (sMacroblock* currMB, SyntaxElement* currSE, ColorPlane pl, int (*InvLevelScale4x4)[4], int qp_per, int cbp)
 {
   Slice* currSlice = currMB->p_Slice;
   sVidParam* vidParam = currMB->vidParam;
@@ -175,7 +175,7 @@ static void read_comp_coeff_4x4_CABAC (Macroblock* currMB, SyntaxElement* currSE
 }
 //}}}
 //{{{
-static void read_comp_coeff_4x4_CABAC_ls (Macroblock* currMB, SyntaxElement* currSE, ColorPlane pl, int (*InvLevelScale4x4)[4], int qp_per, int cbp)
+static void read_comp_coeff_4x4_CABAC_ls (sMacroblock* currMB, SyntaxElement* currSE, ColorPlane pl, int (*InvLevelScale4x4)[4], int qp_per, int cbp)
 {
   sVidParam* vidParam = currMB->vidParam;
   int start_scan = IS_I16MB (currMB)? 1 : 0;
@@ -197,7 +197,7 @@ static void read_comp_coeff_4x4_CABAC_ls (Macroblock* currMB, SyntaxElement* cur
 //}}}
 
 //{{{
-static void readCompCoeff8x8_CABAC (Macroblock* currMB, SyntaxElement* currSE, ColorPlane pl, int b8)
+static void readCompCoeff8x8_CABAC (sMacroblock* currMB, SyntaxElement* currSE, ColorPlane pl, int b8)
 {
   if (currMB->cbp & (1<<b8))  // are there any coefficients in the current block
   {
@@ -296,7 +296,7 @@ static void readCompCoeff8x8_CABAC (Macroblock* currMB, SyntaxElement* currSE, C
 }
 //}}}
 //{{{
-static void readCompCoeff8x8_CABAC_lossless (Macroblock* currMB, SyntaxElement* currSE, ColorPlane pl, int b8)
+static void readCompCoeff8x8_CABAC_lossless (sMacroblock* currMB, SyntaxElement* currSE, ColorPlane pl, int b8)
 {
   if (currMB->cbp & (1<<b8))  // are there any coefficients in the current block
   {
@@ -370,7 +370,7 @@ static void readCompCoeff8x8_CABAC_lossless (Macroblock* currMB, SyntaxElement* 
 //}}}
 
 //{{{
-static void read_comp_coeff_8x8_MB_CABAC (Macroblock* currMB, SyntaxElement* currSE, ColorPlane pl)
+static void read_comp_coeff_8x8_MB_CABAC (sMacroblock* currMB, SyntaxElement* currSE, ColorPlane pl)
 {
   //======= 8x8 transform size & CABAC ========
   readCompCoeff8x8_CABAC (currMB, currSE, pl, 0);
@@ -380,7 +380,7 @@ static void read_comp_coeff_8x8_MB_CABAC (Macroblock* currMB, SyntaxElement* cur
 }
 //}}}
 //{{{
-static void read_comp_coeff_8x8_MB_CABAC_ls (Macroblock* currMB, SyntaxElement* currSE, ColorPlane pl)
+static void read_comp_coeff_8x8_MB_CABAC_ls (sMacroblock* currMB, SyntaxElement* currSE, ColorPlane pl)
 {
   //======= 8x8 transform size & CABAC ========
   readCompCoeff8x8_CABAC_lossless (currMB, currSE, pl, 0);
@@ -391,7 +391,7 @@ static void read_comp_coeff_8x8_MB_CABAC_ls (Macroblock* currMB, SyntaxElement* 
 //}}}
 
 //{{{
-static void read_CBP_and_coeffs_from_NAL_CABAC_420 (Macroblock* currMB)
+static void read_CBP_and_coeffs_from_NAL_CABAC_420 (sMacroblock* currMB)
 {
   int i,j;
   int level;
@@ -782,7 +782,7 @@ static void read_CBP_and_coeffs_from_NAL_CABAC_420 (Macroblock* currMB)
 }
 //}}}
 //{{{
-static void read_CBP_and_coeffs_from_NAL_CABAC_400 (Macroblock* currMB)
+static void read_CBP_and_coeffs_from_NAL_CABAC_400 (sMacroblock* currMB)
 {
   int k;
   int level;
@@ -975,7 +975,7 @@ static void read_CBP_and_coeffs_from_NAL_CABAC_400 (Macroblock* currMB)
 }
 //}}}
 //{{{
-static void read_CBP_and_coeffs_from_NAL_CABAC_444 (Macroblock* currMB)
+static void read_CBP_and_coeffs_from_NAL_CABAC_444 (sMacroblock* currMB)
 {
   int i, k;
   int level;
@@ -1270,7 +1270,7 @@ static void read_CBP_and_coeffs_from_NAL_CABAC_444 (Macroblock* currMB)
 }
 //}}}
 //{{{
-static void read_CBP_and_coeffs_from_NAL_CABAC_422 (Macroblock* currMB)
+static void read_CBP_and_coeffs_from_NAL_CABAC_422 (sMacroblock* currMB)
 {
   int i,j,k;
   int level;
@@ -1728,7 +1728,7 @@ void set_read_CBP_and_coeffs_cabac(Slice* currSlice)
 //}}}
 
 //{{{
-void set_read_comp_coeff_cabac (Macroblock* currMB)
+void set_read_comp_coeff_cabac (sMacroblock* currMB)
 {
   if (currMB->is_lossless == FALSE)
   {

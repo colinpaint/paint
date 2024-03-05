@@ -412,7 +412,7 @@ int FmoGetLastMBInSliceGroup (sVidParam* vidParam, int SliceGroup)
  * \param vidParam
  *      video encoding parameters for current picture
  * \param mb
- *    Macroblock number (in scan order)
+ *    sMacroblock number (in scan order)
  ************************************************************************
  */
 int FmoGetSliceGroupId (sVidParam* vidParam, int mb)

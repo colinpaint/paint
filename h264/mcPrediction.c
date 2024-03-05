@@ -901,7 +901,7 @@ static void get_luma_31 (sPixel **block, sPixel **cur_imgY, int block_size_y, in
  ************************************************************************
  */
 void get_block_luma (sPicture* curr_ref, int x_pos, int y_pos, int block_size_x, int block_size_y, sPixel **block,
-                    int shift_x, int maxold_x, int maxold_y, int **tmp_res, int max_imgpel_value, sPixel no_ref_value, Macroblock* currMB)
+                    int shift_x, int maxold_x, int maxold_y, int **tmp_res, int max_imgpel_value, sPixel no_ref_value, sMacroblock* currMB)
 {
   if (curr_ref->no_ref) {
     //printf("list[ref_frame] is equal to 'no reference picture' before RAP\n");
@@ -1139,7 +1139,7 @@ static void get_block_chroma (sPicture* curr_ref, int x_pos, int y_pos, int subp
 }
 //}}}
 //{{{
-void intra_cr_decoding (Macroblock* currMB, int yuv)
+void intra_cr_decoding (sMacroblock* currMB, int yuv)
 {
   sVidParam* vidParam = currMB->vidParam;
   Slice* currSlice = currMB->p_Slice;
@@ -1235,7 +1235,7 @@ static inline void set_direct_references (const PixelPos *mb, char *l0_rFrame, c
 }
 //}}}
 //{{{
-static void set_direct_references_mb_field (const PixelPos *mb, char *l0_rFrame, char *l1_rFrame, PicMotionParams **mv_info, Macroblock *mb_data)
+static void set_direct_references_mb_field (const PixelPos *mb, char *l0_rFrame, char *l1_rFrame, PicMotionParams **mv_info, sMacroblock *mb_data)
 {
   if (mb->available)
   {
@@ -1259,7 +1259,7 @@ static void set_direct_references_mb_field (const PixelPos *mb, char *l0_rFrame,
 }
 //}}}
 //{{{
-static void set_direct_references_mb_frame (const PixelPos *mb, char *l0_rFrame, char *l1_rFrame, PicMotionParams **mv_info, Macroblock *mb_data)
+static void set_direct_references_mb_frame (const PixelPos *mb, char *l0_rFrame, char *l1_rFrame, PicMotionParams **mv_info, sMacroblock *mb_data)
 {
   if (mb->available)
   {
@@ -1283,7 +1283,7 @@ static void set_direct_references_mb_frame (const PixelPos *mb, char *l0_rFrame,
 }
 //}}}
 //{{{
-void prepare_direct_params (Macroblock* currMB, sPicture *dec_picture, MotionVector *pmvl0, MotionVector *pmvl1, char *l0_rFrame, char *l1_rFrame)
+void prepare_direct_params (sMacroblock* currMB, sPicture *dec_picture, MotionVector *pmvl0, MotionVector *pmvl1, char *l0_rFrame, char *l1_rFrame)
 {
   Slice* currSlice = currMB->p_Slice;
   char l0_refA, l0_refB, l0_refC;
@@ -1355,7 +1355,7 @@ static inline int check_vert_mv (int llimit, int vec1_y,int rlimit)
 }
 //}}}
 //{{{
-static void perform_mc_single_wp (Macroblock* currMB, ColorPlane pl, sPicture *dec_picture, int pred_dir, int i, int j, int block_size_x, int block_size_y)
+static void perform_mc_single_wp (sMacroblock* currMB, ColorPlane pl, sPicture *dec_picture, int pred_dir, int i, int j, int block_size_x, int block_size_y)
 {
   sVidParam* vidParam = currMB->vidParam;
   Slice* currSlice = currMB->p_Slice;
@@ -1448,7 +1448,7 @@ static void perform_mc_single_wp (Macroblock* currMB, ColorPlane pl, sPicture *d
 }
 //}}}
 //{{{
-static void perform_mc_single (Macroblock* currMB, ColorPlane pl, sPicture *dec_picture, int pred_dir, int i, int j, int block_size_x, int block_size_y)
+static void perform_mc_single (sMacroblock* currMB, ColorPlane pl, sPicture *dec_picture, int pred_dir, int i, int j, int block_size_x, int block_size_y)
 {
   sVidParam* vidParam = currMB->vidParam;
   Slice* currSlice = currMB->p_Slice;
@@ -1529,7 +1529,7 @@ static void perform_mc_single (Macroblock* currMB, ColorPlane pl, sPicture *dec_
 }
 //}}}
 //{{{
-static void perform_mc_bi_wp (Macroblock* currMB, ColorPlane pl, sPicture *dec_picture, int i, int j, int block_size_x, int block_size_y)
+static void perform_mc_bi_wp (sMacroblock* currMB, ColorPlane pl, sPicture *dec_picture, int i, int j, int block_size_x, int block_size_y)
 {
   static const int mv_mul = 16;
   int  vec1_x, vec1_y, vec2_x, vec2_y;
@@ -1666,7 +1666,7 @@ static void perform_mc_bi_wp (Macroblock* currMB, ColorPlane pl, sPicture *dec_p
 }
 //}}}
 //{{{
-static void perform_mc_bi (Macroblock* currMB, ColorPlane pl, sPicture *dec_picture, int i, int j, int block_size_x, int block_size_y)
+static void perform_mc_bi (sMacroblock* currMB, ColorPlane pl, sPicture *dec_picture, int i, int j, int block_size_x, int block_size_y)
 {
   static const int mv_mul = 16;
   int vec1_x=0, vec1_y=0, vec2_x=0, vec2_y=0;
@@ -1779,7 +1779,7 @@ static void perform_mc_bi (Macroblock* currMB, ColorPlane pl, sPicture *dec_pict
 }
 //}}}
 //{{{
-void perform_mc (Macroblock* currMB, ColorPlane pl, sPicture *dec_picture, int pred_dir, int i, int j, int block_size_x, int block_size_y)
+void perform_mc (sMacroblock* currMB, ColorPlane pl, sPicture *dec_picture, int pred_dir, int i, int j, int block_size_x, int block_size_y)
 {
   Slice* currSlice = currMB->p_Slice;
   assert (pred_dir<=2);

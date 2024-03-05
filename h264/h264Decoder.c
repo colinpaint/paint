@@ -478,11 +478,11 @@ int init_global_buffers (sVidParam* vidParam, int layer_id) {
   // allocate memory in structure vidParam
   if ((cps->separate_colour_plane_flag != 0) ) {
     for (int i = 0; i<MAX_PLANE; ++i )
-      if (((cps->mb_data_JV[i]) = (Macroblock*)calloc(cps->FrameSizeInMbs, sizeof(Macroblock))) == NULL)
+      if (((cps->mb_data_JV[i]) = (sMacroblock*)calloc(cps->FrameSizeInMbs, sizeof(sMacroblock))) == NULL)
         no_mem_exit ("init_global_buffers: cps->mb_data_JV");
     cps->mb_data = NULL;
     }
-  else if (((cps->mb_data) = (Macroblock*)calloc (cps->FrameSizeInMbs, sizeof(Macroblock))) == NULL)
+  else if (((cps->mb_data) = (sMacroblock*)calloc (cps->FrameSizeInMbs, sizeof(sMacroblock))) == NULL)
     no_mem_exit ("init_global_buffers: cps->mb_data");
 
   if ((cps->separate_colour_plane_flag != 0) ) {

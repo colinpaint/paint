@@ -303,7 +303,7 @@ int cabac_startcode_follows (Slice* currSlice, int eos_bit)
 //}}}
 
 //{{{
-void CheckAvailabilityOfNeighborsCABAC (Macroblock* currMB)
+void CheckAvailabilityOfNeighborsCABAC (sMacroblock* currMB)
 {
   sVidParam* vidParam = currMB->vidParam;
   PixelPos up, left;
@@ -403,7 +403,7 @@ void delete_contexts_TextureInfo (TextureInfoContexts *deco_ctx)
 //}}}
 
 //{{{
-void readFieldModeInfo_CABAC (Macroblock* currMB,
+void readFieldModeInfo_CABAC (sMacroblock* currMB,
                              SyntaxElement *se,
                              DecodingEnvironmentPtr dep_dp)
 {
@@ -436,7 +436,7 @@ int check_next_mb_and_get_field_mode_CABAC_p_slice (Slice* currSlice,
   int field  = 0;
   int i;
 
-  Macroblock* currMB;
+  sMacroblock* currMB;
 
   //get next MB
   ++currSlice->current_mb_nr; // ++vidParam->current_mb_nr;
@@ -522,7 +522,7 @@ int check_next_mb_and_get_field_mode_CABAC_b_slice (Slice* currSlice,
   int field  = 0;
   int i;
 
-  Macroblock* currMB;
+  sMacroblock* currMB;
 
   //get next MB
   ++currSlice->current_mb_nr; // ++vidParam->current_mb_nr;
@@ -602,7 +602,7 @@ int check_next_mb_and_get_field_mode_CABAC_b_slice (Slice* currSlice,
  *    vector data of a B-frame MB.
  ************************************************************************
  */
-void read_MVD_CABAC (Macroblock* currMB,
+void read_MVD_CABAC (sMacroblock* currMB,
                     SyntaxElement *se,
                     DecodingEnvironmentPtr dep_dp)
 {
@@ -662,7 +662,7 @@ void read_MVD_CABAC (Macroblock* currMB,
  *    vector data of a B-frame MB.
  ************************************************************************
  */
-void read_mvd_CABAC_mbaff (Macroblock* currMB,
+void read_mvd_CABAC_mbaff (sMacroblock* currMB,
                     SyntaxElement *se,
                     DecodingEnvironmentPtr dep_dp)
 {
@@ -735,7 +735,7 @@ void read_mvd_CABAC_mbaff (Macroblock* currMB,
  *    This function is used to arithmetically decode the 8x8 block type.
  ************************************************************************
  */
-void readB8_typeInfo_CABAC_p_slice (Macroblock* currMB,
+void readB8_typeInfo_CABAC_p_slice (sMacroblock* currMB,
                                     SyntaxElement *se,
                                     DecodingEnvironmentPtr dep_dp)
 {
@@ -769,7 +769,7 @@ void readB8_typeInfo_CABAC_p_slice (Macroblock* currMB,
  *    This function is used to arithmetically decode the 8x8 block type.
  ************************************************************************
  */
-void readB8_typeInfo_CABAC_b_slice (Macroblock* currMB,
+void readB8_typeInfo_CABAC_b_slice (sMacroblock* currMB,
                                     SyntaxElement *se,
                                     DecodingEnvironmentPtr dep_dp)
 {
@@ -831,7 +831,7 @@ void readB8_typeInfo_CABAC_b_slice (Macroblock* currMB,
  *    type info of a given MB.
  ************************************************************************
  */
-void read_skip_flag_CABAC_p_slice (Macroblock* currMB,
+void read_skip_flag_CABAC_p_slice (sMacroblock* currMB,
                                   SyntaxElement *se,
                                   DecodingEnvironmentPtr dep_dp)
 {
@@ -855,7 +855,7 @@ void read_skip_flag_CABAC_p_slice (Macroblock* currMB,
  *    type info of a given MB.
  ************************************************************************
  */
-void read_skip_flag_CABAC_b_slice (Macroblock* currMB,
+void read_skip_flag_CABAC_b_slice (sMacroblock* currMB,
                                   SyntaxElement *se,
                                   DecodingEnvironmentPtr dep_dp)
 {
@@ -881,7 +881,7 @@ void read_skip_flag_CABAC_b_slice (Macroblock* currMB,
 ***************************************************************************
 */
 
-void readMB_transform_size_flag_CABAC (Macroblock* currMB,
+void readMB_transform_size_flag_CABAC (sMacroblock* currMB,
                                       SyntaxElement *se,
                                       DecodingEnvironmentPtr dep_dp)
 {
@@ -905,7 +905,7 @@ void readMB_transform_size_flag_CABAC (Macroblock* currMB,
  *    type info of a given MB.
  ************************************************************************
  */
-void readMB_typeInfo_CABAC_i_slice (Macroblock* currMB,
+void readMB_typeInfo_CABAC_i_slice (sMacroblock* currMB,
                            SyntaxElement *se,
                            DecodingEnvironmentPtr dep_dp)
 {
@@ -1050,7 +1050,7 @@ void readMB_typeInfo_CABAC_i_slice (Macroblock* currMB,
  *    type info of a given MB.
  ************************************************************************
  */
-void readMB_typeInfo_CABAC_p_slice (Macroblock* currMB,
+void readMB_typeInfo_CABAC_p_slice (sMacroblock* currMB,
                            SyntaxElement *se,
                            DecodingEnvironmentPtr dep_dp)
 {
@@ -1137,7 +1137,7 @@ void readMB_typeInfo_CABAC_p_slice (Macroblock* currMB,
  *    type info of a given MB.
  ************************************************************************
  */
-void readMB_typeInfo_CABAC_b_slice (Macroblock* currMB,
+void readMB_typeInfo_CABAC_b_slice (sMacroblock* currMB,
                            SyntaxElement *se,
                            DecodingEnvironmentPtr dep_dp)
 {
@@ -1261,7 +1261,7 @@ void readMB_typeInfo_CABAC_b_slice (Macroblock* currMB,
  *    intra prediction modes of a given MB.
  ************************************************************************
  */
-void readIntraPredMode_CABAC (Macroblock* currMB,
+void readIntraPredMode_CABAC (sMacroblock* currMB,
                               SyntaxElement *se,
                               DecodingEnvironmentPtr dep_dp)
 {
@@ -1289,7 +1289,7 @@ void readIntraPredMode_CABAC (Macroblock* currMB,
  *    parameter of a given MB.
  ************************************************************************
  */
-void readRefFrame_CABAC (Macroblock* currMB,
+void readRefFrame_CABAC (sMacroblock* currMB,
                         SyntaxElement *se,
                         DecodingEnvironmentPtr dep_dp)
 {
@@ -1297,7 +1297,7 @@ void readRefFrame_CABAC (Macroblock* currMB,
   sVidParam* vidParam = currMB->vidParam;
   sPicture *dec_picture = currSlice->dec_picture;
   MotionInfoContexts *ctx = currSlice->mot_ctx;
-  Macroblock *neighborMB = NULL;
+  sMacroblock *neighborMB = NULL;
 
   int   addctx  = 0;
   int   a = 0, b = 0;
@@ -1358,7 +1358,7 @@ void readRefFrame_CABAC (Macroblock* currMB,
  *     of a given MB.
  ************************************************************************
  */
-void read_dQuant_CABAC (Macroblock* currMB,
+void read_dQuant_CABAC (sMacroblock* currMB,
                        SyntaxElement *se,
                        DecodingEnvironmentPtr dep_dp)
 {
@@ -1391,7 +1391,7 @@ void read_dQuant_CABAC (Macroblock* currMB,
  *    block pattern of a given MB.
  ************************************************************************
  */
-void read_CBP_CABAC (Macroblock* currMB,
+void read_CBP_CABAC (sMacroblock* currMB,
                     SyntaxElement *se,
                     DecodingEnvironmentPtr dep_dp)
 {
@@ -1399,7 +1399,7 @@ void read_CBP_CABAC (Macroblock* currMB,
   sPicture *dec_picture = currMB->p_Slice->dec_picture;
   Slice* currSlice = currMB->p_Slice;
   TextureInfoContexts *ctx = currSlice->tex_ctx;
-  Macroblock *neighborMB = NULL;
+  sMacroblock *neighborMB = NULL;
 
   int mb_x, mb_y;
   int a = 0, b = 0;
@@ -1521,7 +1521,7 @@ void read_CBP_CABAC (Macroblock* currMB,
  *    intra prediction mode of a given MB.
  ************************************************************************
  */
-void readCIPredMode_CABAC (Macroblock* currMB,
+void readCIPredMode_CABAC (sMacroblock* currMB,
                           SyntaxElement *se,
                           DecodingEnvironmentPtr dep_dp)
 {
@@ -1529,8 +1529,8 @@ void readCIPredMode_CABAC (Macroblock* currMB,
   TextureInfoContexts *ctx = currSlice->tex_ctx;
   int                 *act_sym  = &se->value1;
 
-  Macroblock          *MbUp   = currMB->mb_up;
-  Macroblock          *MbLeft = currMB->mb_left;
+  sMacroblock          *MbUp   = currMB->mb_up;
+  sMacroblock          *MbLeft = currMB->mb_left;
 
   int b = (MbUp != NULL)   ? (((MbUp->c_ipred_mode   != 0) && (MbUp->mb_type != IPCM)) ? 1 : 0) : 0;
   int a = (MbLeft != NULL) ? (((MbLeft->c_ipred_mode != 0) && (MbLeft->mb_type != IPCM)) ? 1 : 0) : 0;
@@ -1550,7 +1550,7 @@ void readCIPredMode_CABAC (Macroblock* currMB,
  *    Read CBP4-BIT
  ************************************************************************
 */
-static int read_and_store_CBP_block_bit_444 (Macroblock* currMB,
+static int read_and_store_CBP_block_bit_444 (sMacroblock* currMB,
                                              DecodingEnvironmentPtr  dep_dp,
                                              int                     type)
 {
@@ -1558,7 +1558,7 @@ static int read_and_store_CBP_block_bit_444 (Macroblock* currMB,
   sVidParam* vidParam = currMB->vidParam;
   sPicture *dec_picture = currSlice->dec_picture;
   TextureInfoContexts *tex_ctx = currSlice->tex_ctx;
-  Macroblock *mb_data = currSlice->mb_data;
+  sMacroblock *mb_data = currSlice->mb_data;
   int y_ac        = (type==LUMA_16AC || type==LUMA_8x8 || type==LUMA_8x4 || type==LUMA_4x8 || type==LUMA_4x4
                     || type==CB_16AC || type==CB_8x8 || type==CB_8x4 || type==CB_4x8 || type==CB_4x4
                     || type==CR_16AC || type==CR_8x8 || type==CR_8x4 || type==CR_4x8 || type==CR_4x4);
@@ -1794,7 +1794,7 @@ static int read_and_store_CBP_block_bit_444 (Macroblock* currMB,
 }
 
 
-static inline int set_cbp_bit(Macroblock *neighbor_mb)
+static inline int set_cbp_bit(sMacroblock *neighbor_mb)
 {
   if(neighbor_mb->mb_type == IPCM)
     return 1;
@@ -1802,7 +1802,7 @@ static inline int set_cbp_bit(Macroblock *neighbor_mb)
     return (int) (neighbor_mb->s_cbp[0].bits & 0x01);
 }
 
-static inline int set_cbp_bit_ac(Macroblock *neighbor_mb, PixelPos *block)
+static inline int set_cbp_bit_ac(sMacroblock *neighbor_mb, PixelPos *block)
 {
   if (neighbor_mb->mb_type == IPCM)
     return 1;
@@ -1820,7 +1820,7 @@ static inline int set_cbp_bit_ac(Macroblock *neighbor_mb, PixelPos *block)
  *    Read CBP4-BIT
  ************************************************************************
  */
-static int read_and_store_CBP_block_bit_normal (Macroblock* currMB,
+static int read_and_store_CBP_block_bit_normal (sMacroblock* currMB,
                                                 DecodingEnvironmentPtr  dep_dp,
                                                 int                     type)
 {
@@ -1828,7 +1828,7 @@ static int read_and_store_CBP_block_bit_normal (Macroblock* currMB,
   sVidParam* vidParam = currMB->vidParam;
   TextureInfoContexts *tex_ctx = currSlice->tex_ctx;
   int cbp_bit     = 1;  // always one for 8x8 mode
-  Macroblock *mb_data = currSlice->mb_data;
+  sMacroblock *mb_data = currSlice->mb_data;
 
   if (type==LUMA_16DC)
   {
@@ -2120,7 +2120,7 @@ static int read_and_store_CBP_block_bit_normal (Macroblock* currMB,
 }
 //}}}
 //{{{
-void set_read_and_store_CBP (Macroblock **currMB, int chroma_format_idc)
+void set_read_and_store_CBP (sMacroblock **currMB, int chroma_format_idc)
 {
   if (chroma_format_idc == YUV444)
     (*currMB)->read_and_store_CBP_block_bit = read_and_store_CBP_block_bit_444;
@@ -2136,7 +2136,7 @@ void set_read_and_store_CBP (Macroblock **currMB, int chroma_format_idc)
  *    Read Significance MAP
  ************************************************************************
  */
-static int read_significance_map (Macroblock* currMB,
+static int read_significance_map (sMacroblock* currMB,
                                   DecodingEnvironmentPtr  dep_dp,
                                   int                     type,
                                   int                     coeff[])
@@ -2243,7 +2243,7 @@ static void read_significant_coefficients (DecodingEnvironmentPtr  dep_dp,
  *    Read Block-Transform Coefficients
  ************************************************************************
  */
-void readRunLevel_CABAC (Macroblock* currMB,
+void readRunLevel_CABAC (sMacroblock* currMB,
                          SyntaxElement  *se,
                          DecodingEnvironmentPtr dep_dp)
 {
@@ -2289,7 +2289,7 @@ void readRunLevel_CABAC (Macroblock* currMB,
  *    arithmetic decoding
  ************************************************************************
  */
-int readSyntaxElement_CABAC (Macroblock* currMB, SyntaxElement *se, sDataPartition *this_dataPart)
+int readSyntaxElement_CABAC (sMacroblock* currMB, SyntaxElement *se, sDataPartition *this_dataPart)
 {
   DecodingEnvironmentPtr dep_dp = &(this_dataPart->de_cabac);
   int curr_len = arideco_bits_read(dep_dp);

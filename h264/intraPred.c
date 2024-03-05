@@ -223,7 +223,7 @@ static void LowPassForIntra8x8PredVer (sPixel *PredPel, int block_up_left, int b
  *
  ***********************************************************************
  */
-static int intra8x8_dc_pred (Macroblock *currMB,
+static int intra8x8_dc_pred (sMacroblock *currMB,
                                    ColorPlane pl,         //!< current image plane
                                    int ioff,              //!< pixel offset X within MB
                                    int joff)              //!< pixel offset Y within MB
@@ -369,7 +369,7 @@ static int intra8x8_dc_pred (Macroblock *currMB,
  *
  ***********************************************************************
  */
-static int intra8x8_vert_pred (Macroblock *currMB,
+static int intra8x8_vert_pred (sMacroblock *currMB,
                                      ColorPlane pl,         //!< current image plane
                                      int ioff,              //!< pixel offset X within MB
                                      int joff)              //!< pixel offset Y within MB
@@ -477,7 +477,7 @@ static int intra8x8_vert_pred (Macroblock *currMB,
  *
  ***********************************************************************
  */
-static int intra8x8_hor_pred (Macroblock *currMB,
+static int intra8x8_hor_pred (sMacroblock *currMB,
                                     ColorPlane pl,         //!< current image plane
                                     int ioff,              //!< pixel offset X within MB
                                     int joff)              //!< pixel offset Y within MB
@@ -588,7 +588,7 @@ static int intra8x8_hor_pred (Macroblock *currMB,
  *
  ***********************************************************************
  */
-static int intra8x8_diag_down_right_pred (Macroblock *currMB,
+static int intra8x8_diag_down_right_pred (sMacroblock *currMB,
                                                 ColorPlane pl,         //!< current image plane
                                                 int ioff,              //!< pixel offset X within MB
                                                 int joff)              //!< pixel offset Y within MB
@@ -737,7 +737,7 @@ static int intra8x8_diag_down_right_pred (Macroblock *currMB,
  *
  ***********************************************************************
  */
-static int intra8x8_diag_down_left_pred (Macroblock *currMB,
+static int intra8x8_diag_down_left_pred (sMacroblock *currMB,
                                                ColorPlane pl,         //!< current image plane
                                                int ioff,              //!< pixel offset X within MB
                                                int joff)              //!< pixel offset Y within MB
@@ -886,7 +886,7 @@ static int intra8x8_diag_down_left_pred (Macroblock *currMB,
  *
  ***********************************************************************
  */
-static int intra8x8_vert_right_pred (Macroblock *currMB,
+static int intra8x8_vert_right_pred (sMacroblock *currMB,
                                            ColorPlane pl,         //!< current image plane
                                            int ioff,              //!< pixel offset X within MB
                                            int joff)              //!< pixel offset Y within MB
@@ -1041,7 +1041,7 @@ static int intra8x8_vert_right_pred (Macroblock *currMB,
  *
  ***********************************************************************
  */
-static int intra8x8_vert_left_pred (Macroblock *currMB,
+static int intra8x8_vert_left_pred (sMacroblock *currMB,
                                           ColorPlane pl,         //!< current image plane
                                           int ioff,              //!< pixel offset X within MB
                                           int joff)              //!< pixel offset Y within MB
@@ -1194,7 +1194,7 @@ static int intra8x8_vert_left_pred (Macroblock *currMB,
  *
  ***********************************************************************
  */
-static int intra8x8_hor_up_pred (Macroblock *currMB,
+static int intra8x8_hor_up_pred (sMacroblock *currMB,
                                        ColorPlane pl,         //!< current image plane
                                        int ioff,              //!< pixel offset X within MB
                                        int joff)              //!< pixel offset Y within MB
@@ -1348,7 +1348,7 @@ static int intra8x8_hor_up_pred (Macroblock *currMB,
  *
  ***********************************************************************
  */
-static int intra8x8_hor_down_pred (Macroblock *currMB,
+static int intra8x8_hor_down_pred (sMacroblock *currMB,
                                          ColorPlane pl,         //!< current image plane
                                          int ioff,              //!< pixel offset X within MB
                                          int joff)              //!< pixel offset Y within MB
@@ -1515,7 +1515,7 @@ static int intra8x8_hor_down_pred (Macroblock *currMB,
  *
  ************************************************************************
  */
-static int intra_pred_8x8_normal (Macroblock *currMB,
+static int intra_pred_8x8_normal (sMacroblock *currMB,
                         ColorPlane pl,         //!< Current color plane
                         int ioff,              //!< ioff
                         int joff)              //!< joff
@@ -1574,7 +1574,7 @@ static int intra_pred_8x8_normal (Macroblock *currMB,
  *
  ***********************************************************************
  */
-static int intra8x8_dc_pred_mbaff (Macroblock *currMB,
+static int intra8x8_dc_pred_mbaff (sMacroblock *currMB,
                                    ColorPlane pl,         //!< current image plane
                                    int ioff,              //!< pixel offset X within MB
                                    int joff)              //!< pixel offset Y within MB
@@ -1721,7 +1721,7 @@ static int intra8x8_dc_pred_mbaff (Macroblock *currMB,
  *
  ***********************************************************************
  */
-static int intra8x8_vert_pred_mbaff (Macroblock *currMB,
+static int intra8x8_vert_pred_mbaff (sMacroblock *currMB,
                                      ColorPlane pl,         //!< current image plane
                                      int ioff,              //!< pixel offset X within MB
                                      int joff)              //!< pixel offset Y within MB
@@ -1833,7 +1833,7 @@ static int intra8x8_vert_pred_mbaff (Macroblock *currMB,
  *
  ***********************************************************************
  */
-static int intra8x8_hor_pred_mbaff (Macroblock *currMB,
+static int intra8x8_hor_pred_mbaff (sMacroblock *currMB,
                                     ColorPlane pl,         //!< current image plane
                                     int ioff,              //!< pixel offset X within MB
                                     int joff)              //!< pixel offset Y within MB
@@ -1950,7 +1950,7 @@ static int intra8x8_hor_pred_mbaff (Macroblock *currMB,
  *
  ***********************************************************************
  */
-static int intra8x8_diag_down_right_pred_mbaff (Macroblock *currMB,
+static int intra8x8_diag_down_right_pred_mbaff (sMacroblock *currMB,
                                                 ColorPlane pl,         //!< current image plane
                                                 int ioff,              //!< pixel offset X within MB
                                                 int joff)              //!< pixel offset Y within MB
@@ -2101,7 +2101,7 @@ static int intra8x8_diag_down_right_pred_mbaff (Macroblock *currMB,
  *
  ***********************************************************************
  */
-static int intra8x8_diag_down_left_pred_mbaff (Macroblock *currMB,
+static int intra8x8_diag_down_left_pred_mbaff (sMacroblock *currMB,
                                                ColorPlane pl,         //!< current image plane
                                                int ioff,              //!< pixel offset X within MB
                                                int joff)              //!< pixel offset Y within MB
@@ -2254,7 +2254,7 @@ static int intra8x8_diag_down_left_pred_mbaff (Macroblock *currMB,
  *
  ***********************************************************************
  */
-static int intra8x8_vert_right_pred_mbaff (Macroblock *currMB,
+static int intra8x8_vert_right_pred_mbaff (sMacroblock *currMB,
                                            ColorPlane pl,         //!< current image plane
                                            int ioff,              //!< pixel offset X within MB
                                            int joff)              //!< pixel offset Y within MB
@@ -2411,7 +2411,7 @@ static int intra8x8_vert_right_pred_mbaff (Macroblock *currMB,
  *
  ***********************************************************************
  */
-static int intra8x8_vert_left_pred_mbaff (Macroblock *currMB,
+static int intra8x8_vert_left_pred_mbaff (sMacroblock *currMB,
                                           ColorPlane pl,         //!< current image plane
                                           int ioff,              //!< pixel offset X within MB
                                           int joff)              //!< pixel offset Y within MB
@@ -2568,7 +2568,7 @@ static int intra8x8_vert_left_pred_mbaff (Macroblock *currMB,
  *
  ***********************************************************************
  */
-static int intra8x8_hor_up_pred_mbaff (Macroblock *currMB,
+static int intra8x8_hor_up_pred_mbaff (sMacroblock *currMB,
                                        ColorPlane pl,         //!< current image plane
                                        int ioff,              //!< pixel offset X within MB
                                        int joff)              //!< pixel offset Y within MB
@@ -2726,7 +2726,7 @@ static int intra8x8_hor_up_pred_mbaff (Macroblock *currMB,
  *
  ***********************************************************************
  */
-static int intra8x8_hor_down_pred_mbaff (Macroblock *currMB,
+static int intra8x8_hor_down_pred_mbaff (sMacroblock *currMB,
                                          ColorPlane pl,         //!< current image plane
                                          int ioff,              //!< pixel offset X within MB
                                          int joff)              //!< pixel offset Y within MB
@@ -2888,7 +2888,7 @@ static int intra8x8_hor_down_pred_mbaff (Macroblock *currMB,
  *
  ************************************************************************
  */
-static int intra_pred_8x8_mbaff (Macroblock *currMB,
+static int intra_pred_8x8_mbaff (sMacroblock *currMB,
                    ColorPlane pl,         //!< Current color plane
                    int ioff,              //!< ioff
                    int joff)              //!< joff
@@ -2947,7 +2947,7 @@ static int intra_pred_8x8_mbaff (Macroblock *currMB,
  *
  ***********************************************************************
  */
-static int intra16x16_dc_pred (Macroblock *currMB, ColorPlane pl)
+static int intra16x16_dc_pred (sMacroblock *currMB, ColorPlane pl)
 {
   Slice *currSlice = currMB->p_Slice;
   sVidParam* vidParam = currMB->vidParam;
@@ -3037,7 +3037,7 @@ static int intra16x16_dc_pred (Macroblock *currMB, ColorPlane pl)
  *
  ***********************************************************************
  */
-static int intra16x16_vert_pred (Macroblock *currMB, ColorPlane pl)
+static int intra16x16_vert_pred (sMacroblock *currMB, ColorPlane pl)
 {
   Slice *currSlice = currMB->p_Slice;
   sVidParam* vidParam = currMB->vidParam;
@@ -3090,7 +3090,7 @@ static int intra16x16_vert_pred (Macroblock *currMB, ColorPlane pl)
  *
  ***********************************************************************
  */
-static int intra16x16_hor_pred (Macroblock *currMB, ColorPlane pl)
+static int intra16x16_hor_pred (sMacroblock *currMB, ColorPlane pl)
 {
   Slice *currSlice = currMB->p_Slice;
   sVidParam* vidParam = currMB->vidParam;
@@ -3158,7 +3158,7 @@ static int intra16x16_hor_pred (Macroblock *currMB, ColorPlane pl)
  *
  ***********************************************************************
  */
-static int intra16x16_plane_pred (Macroblock *currMB, ColorPlane pl)
+static int intra16x16_plane_pred (sMacroblock *currMB, ColorPlane pl)
 {
   Slice *currSlice = currMB->p_Slice;
   sVidParam* vidParam = currMB->vidParam;
@@ -3241,7 +3241,7 @@ static int intra16x16_plane_pred (Macroblock *currMB, ColorPlane pl)
  *    SEARCH_SYNC   search next sync element as errors while decoding occured
  ***********************************************************************
  */
-static int intra_pred_16x16_normal (Macroblock *currMB,
+static int intra_pred_16x16_normal (sMacroblock *currMB,
                            ColorPlane pl,       //!< Current colorplane (for 4:4:4)
                            int predmode)        //!< prediction mode
 {
@@ -3280,7 +3280,7 @@ static int intra_pred_16x16_normal (Macroblock *currMB,
  *
  ***********************************************************************
  */
-static int intra16x16_dc_pred_mbaff (Macroblock *currMB, ColorPlane pl)
+static int intra16x16_dc_pred_mbaff (sMacroblock *currMB, ColorPlane pl)
 {
   Slice *currSlice = currMB->p_Slice;
   sVidParam* vidParam = currMB->vidParam;
@@ -3359,7 +3359,7 @@ static int intra16x16_dc_pred_mbaff (Macroblock *currMB, ColorPlane pl)
  *
  ***********************************************************************
  */
-static int intra16x16_vert_pred_mbaff (Macroblock *currMB, ColorPlane pl)
+static int intra16x16_vert_pred_mbaff (sMacroblock *currMB, ColorPlane pl)
 {
   Slice *currSlice = currMB->p_Slice;
   sVidParam* vidParam = currMB->vidParam;
@@ -3412,7 +3412,7 @@ static int intra16x16_vert_pred_mbaff (Macroblock *currMB, ColorPlane pl)
  *
  ***********************************************************************
  */
-static int intra16x16_hor_pred_mbaff (Macroblock *currMB, ColorPlane pl)
+static int intra16x16_hor_pred_mbaff (sMacroblock *currMB, ColorPlane pl)
 {
   Slice *currSlice = currMB->p_Slice;
   sVidParam* vidParam = currMB->vidParam;
@@ -3465,7 +3465,7 @@ static int intra16x16_hor_pred_mbaff (Macroblock *currMB, ColorPlane pl)
  *
  ***********************************************************************
  */
-static int intra16x16_plane_pred_mbaff (Macroblock *currMB, ColorPlane pl)
+static int intra16x16_plane_pred_mbaff (sMacroblock *currMB, ColorPlane pl)
 {
   Slice *currSlice = currMB->p_Slice;
   sVidParam* vidParam = currMB->vidParam;
@@ -3544,7 +3544,7 @@ static int intra16x16_plane_pred_mbaff (Macroblock *currMB, ColorPlane pl)
  *    SEARCH_SYNC   search next sync element as errors while decoding occured
  ***********************************************************************
  */
-static int intra_pred_16x16_mbaff (Macroblock *currMB,
+static int intra_pred_16x16_mbaff (sMacroblock *currMB,
                           ColorPlane pl,       //!< Current colorplane (for 4:4:4)
                           int predmode)        //!< prediction mode
 {
@@ -3624,7 +3624,7 @@ static void intra_chroma_DC_all (sPixel **curr_img, int up_avail, int left_avail
 }
 //}}}
 //{{{
-static void intrapred_chroma_dc (Macroblock *currMB)
+static void intrapred_chroma_dc (sMacroblock *currMB)
 {
   Slice *currSlice = currMB->p_Slice;
   sVidParam* vidParam = currMB->vidParam;
@@ -3722,7 +3722,7 @@ static void intrapred_chroma_dc (Macroblock *currMB)
 }
 //}}}
 //{{{
-static void intrapred_chroma_hor (Macroblock *currMB)
+static void intrapred_chroma_hor (sMacroblock *currMB)
 {
   sVidParam* vidParam = currMB->vidParam;
   PixelPos a;  //!< pixel positions p(-1, -1..16)
@@ -3775,7 +3775,7 @@ static void intrapred_chroma_hor (Macroblock *currMB)
 }
 //}}}
 //{{{
-static void intrapred_chroma_ver (Macroblock *currMB)
+static void intrapred_chroma_ver (sMacroblock *currMB)
 {
   Slice *currSlice = currMB->p_Slice;
   sVidParam* vidParam = currMB->vidParam;
@@ -3811,7 +3811,7 @@ static void intrapred_chroma_ver (Macroblock *currMB)
 }
 //}}}
 //{{{
-static void intrapred_chroma_plane (Macroblock *currMB)
+static void intrapred_chroma_plane (sMacroblock *currMB)
 {
   Slice *currSlice = currMB->p_Slice;
   sVidParam* vidParam = currMB->vidParam;
@@ -3933,7 +3933,7 @@ static void intra_chroma_DC_all_mbaff (sPixel **curr_img, int up_avail, int left
 }
 //}}}
 //{{{
-static void intrapred_chroma_ver_mbaff (Macroblock *currMB)
+static void intrapred_chroma_ver_mbaff (sMacroblock *currMB)
 {
   Slice *currSlice = currMB->p_Slice;
   sVidParam* vidParam = currMB->vidParam;
@@ -3977,7 +3977,7 @@ static void intrapred_chroma_ver_mbaff (Macroblock *currMB)
  *    outside since they are repeated for both components for no reason.
  ************************************************************************
  */
-static void intra_pred_chroma_mbaff (Macroblock *currMB)
+static void intra_pred_chroma_mbaff (sMacroblock *currMB)
 {
   Slice *currSlice = currMB->p_Slice;
   sVidParam* vidParam = currMB->vidParam;
@@ -4250,7 +4250,7 @@ static void intra_pred_chroma_mbaff (Macroblock *currMB)
  *    outside since they are repeated for both components for no reason.
  ************************************************************************
  */
-static void intra_pred_chroma (Macroblock *currMB)
+static void intra_pred_chroma (sMacroblock *currMB)
 {
   switch (currMB->c_ipred_mode)
   {

@@ -10,7 +10,7 @@
 //}}}
 
 //{{{
-static void update_direct_mv_info_temporal (Macroblock* currMB) {
+static void update_direct_mv_info_temporal (sMacroblock* currMB) {
 
   sVidParam* vidParam = currMB->vidParam;
   Slice* currSlice = currMB->p_Slice;
@@ -245,7 +245,7 @@ static inline void update_neighbor_mvs (PicMotionParams **motion, const PicMotio
 }
 //}}}
 //{{{
-int get_colocated_info_4x4 (Macroblock* currMB, sPicture *list1, int i, int j)
+int get_colocated_info_4x4 (sMacroblock* currMB, sPicture *list1, int i, int j)
 {
   if (list1->is_long_term)
     return 1;
@@ -264,7 +264,7 @@ int get_colocated_info_4x4 (Macroblock* currMB, sPicture *list1, int i, int j)
   }
 //}}}
 //{{{
-int get_colocated_info_8x8 (Macroblock* currMB, sPicture *list1, int i, int j)
+int get_colocated_info_8x8 (sMacroblock* currMB, sPicture *list1, int i, int j)
 {
   if (list1->is_long_term)
     return 1;
@@ -332,7 +332,7 @@ int get_colocated_info_8x8 (Macroblock* currMB, sPicture *list1, int i, int j)
 //}}}
 
 //{{{
-static void update_direct_mv_info_spatial_8x8 (Macroblock* currMB)
+static void update_direct_mv_info_spatial_8x8 (sMacroblock* currMB)
 {
   Boolean has_direct = (currMB->b8mode[0] == 0) | (currMB->b8mode[1] == 0) | (currMB->b8mode[2] == 0) | (currMB->b8mode[3] == 0);
 
@@ -491,7 +491,7 @@ static void update_direct_mv_info_spatial_8x8 (Macroblock* currMB)
 }
 //}}}
 //{{{
-static void update_direct_mv_info_spatial_4x4 (Macroblock* currMB)
+static void update_direct_mv_info_spatial_4x4 (sMacroblock* currMB)
 {
   Boolean has_direct = (currMB->b8mode[0] == 0) | (currMB->b8mode[1] == 0) | (currMB->b8mode[2] == 0) | (currMB->b8mode[3] == 0);
 

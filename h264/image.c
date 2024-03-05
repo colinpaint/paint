@@ -26,7 +26,7 @@
 //}}}
 
 //{{{
-static void reset_mbs (Macroblock *currMB) {
+static void reset_mbs (sMacroblock *currMB) {
 
   currMB->slice_nr = -1;
   currMB->ei_flag =  1;
@@ -271,7 +271,7 @@ static void reorderLists (Slice* currSlice) {
   }
 //}}}
 //{{{
-static void ercWriteMBMODEandMV (Macroblock* currMB) {
+static void ercWriteMBMODEandMV (sMacroblock* currMB) {
 
   sVidParam* vidParam = currMB->vidParam;
   int currMBNum = currMB->mbAddrX; //vidParam->currentSlice->current_mb_nr;
@@ -593,10 +593,10 @@ static void initPicture (sVidParam* vidParam, Slice *currSlice, InputParameters 
     memset (vidParam->nz_coeff[0][0][0], -1, vidParam->PicSizeInMbs * 48 *sizeof(byte)); // 3 * 4 * 4
 
   // Set the slice_nr member of each MB to -1, to ensure correct when packet loss occurs
-  // TO set Macroblock Map (mark all MBs as 'have to be concealed')
+  // TO set sMacroblock Map (mark all MBs as 'have to be concealed')
   if (vidParam->separate_colour_plane_flag != 0) {
     for (int nplane = 0; nplane < MAX_PLANE; ++nplane ) {
-      Macroblock* currMB = vidParam->mb_data_JV[nplane];
+      sMacroblock* currMB = vidParam->mb_data_JV[nplane];
       char* intra_block = vidParam->intra_block_JV[nplane];
       for (int i = 0; i < (int)vidParam->PicSizeInMbs; ++i)
         reset_mbs (currMB++);
@@ -607,7 +607,7 @@ static void initPicture (sVidParam* vidParam, Slice *currSlice, InputParameters 
       }
     }
   else {
-    Macroblock* currMB = vidParam->mb_data;
+    sMacroblock* currMB = vidParam->mb_data;
     for (int i = 0; i < (int)vidParam->PicSizeInMbs; ++i)
       reset_mbs (currMB++);
     if (vidParam->active_pps->constrained_intra_pred_flag)
@@ -784,7 +784,7 @@ static void decodeOneSlice (Slice* currSlice) {
 
   // loop over macroblocks
   while (end_of_slice == FALSE) {
-    Macroblock* currMB;
+    sMacroblock* currMB;
     start_macroblock (currSlice, &currMB);
     currSlice->read_one_macroblock (currMB);
     decode_one_macroblock (currMB, currSlice->dec_picture);

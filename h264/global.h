@@ -149,7 +149,7 @@ typedef struct cbp_s {
   } CBPStructure;
 //}}}
 //{{{
-//! Macroblock
+//! sMacroblock
 typedef struct macroblock_dec {
   struct slice*     p_Slice;  // pointer to the current slice
   struct video_par* vidParam;    // pointer to sVidParam
@@ -241,7 +241,7 @@ typedef struct macroblock_dec {
 
   void (*read_comp_coeff_4x4_CAVLC)     (struct macroblock_dec *currMB, ColorPlane pl, int (*InvLevelScale4x4)[4], int qp_per, int cbp, byte **nzcoeff);
   void (*read_comp_coeff_8x8_CAVLC)     (struct macroblock_dec *currMB, ColorPlane pl, int (*InvLevelScale8x8)[8], int qp_per, int cbp, byte **nzcoeff);
-  } Macroblock;
+  } sMacroblock;
 //}}}
 //{{{
 //! Syntaxelement
@@ -497,30 +497,30 @@ typedef struct slice {
   int ref_flag[17];                //!< 0: i-th previous frame is incorrect
 
   int erc_mvperMB;
-  Macroblock *mb_data;
+  sMacroblock *mb_data;
   struct storable_picture *dec_picture;
   int **siblock;
   byte **ipredmode;
   char  *intra_block;
   char  chroma_vector_adjustment[6][32];
-  void (*read_CBP_and_coeffs_from_NAL) (Macroblock *currMB);
-  int  (*decode_one_component     )    (Macroblock *currMB, ColorPlane curr_plane, sPixel **currImg, struct storable_picture *dec_picture);
+  void (*read_CBP_and_coeffs_from_NAL) (sMacroblock *currMB);
+  int  (*decode_one_component     )    (sMacroblock *currMB, ColorPlane curr_plane, sPixel **currImg, struct storable_picture *dec_picture);
   int  (*readSlice                )    (struct video_par *, struct inp_par *);
   int  (*nal_startcode_follows    )    (struct slice*, int );
-  void (*read_motion_info_from_NAL)    (Macroblock *currMB);
-  void (*read_one_macroblock      )    (Macroblock *currMB);
-  void (*interpret_mb_mode        )    (Macroblock *currMB);
+  void (*read_motion_info_from_NAL)    (sMacroblock *currMB);
+  void (*read_one_macroblock      )    (sMacroblock *currMB);
+  void (*interpret_mb_mode        )    (sMacroblock *currMB);
   void (*init_lists               )    (struct slice *currSlice);
 
-  void (*intra_pred_chroma        )    (Macroblock *currMB);
-  int  (*intra_pred_4x4)               (Macroblock *currMB, ColorPlane pl, int ioff, int joff,int i4,int j4);
-  int  (*intra_pred_8x8)               (Macroblock *currMB, ColorPlane pl, int ioff, int joff);
-  int  (*intra_pred_16x16)             (Macroblock *currMB, ColorPlane pl, int predmode);
+  void (*intra_pred_chroma        )    (sMacroblock *currMB);
+  int  (*intra_pred_4x4)               (sMacroblock *currMB, ColorPlane pl, int ioff, int joff,int i4,int j4);
+  int  (*intra_pred_8x8)               (sMacroblock *currMB, ColorPlane pl, int ioff, int joff);
+  int  (*intra_pred_16x16)             (sMacroblock *currMB, ColorPlane pl, int predmode);
 
   void (*linfo_cbp_intra          )    (int len, int info, int *cbp, int *dummy);
   void (*linfo_cbp_inter          )    (int len, int info, int *cbp, int *dummy);
-  void (*update_direct_mv_info    )    (Macroblock *currMB);
-  void (*read_coeff_4x4_CAVLC     )    (Macroblock *currMB, int block_type, int i, int j, int levarr[16], int runarr[16], int *number_coefficients);
+  void (*update_direct_mv_info    )    (sMacroblock *currMB);
+  void (*read_coeff_4x4_CAVLC     )    (sMacroblock *currMB, int block_type, int i, int j, int levarr[16], int runarr[16], int *number_coefficients);
   } Slice;
 //}}}
 //{{{
@@ -601,8 +601,8 @@ typedef struct coding_par {
 
   //padding info;
   int rgb_output;
-  Macroblock *mb_data;               //!< array containing all MBs of a whole frame
-  Macroblock *mb_data_JV[MAX_PLANE]; //!< mb_data to be used for 4:4:4 independent mode
+  sMacroblock *mb_data;               //!< array containing all MBs of a whole frame
+  sMacroblock *mb_data_JV[MAX_PLANE]; //!< mb_data to be used for 4:4:4 independent mode
   char  *intra_block;
   char  *intra_block_JV[MAX_PLANE];
   BlockPos *PicPos;
@@ -664,8 +664,8 @@ typedef struct video_par {
   int structure;                     // Identify picture structure type
 
   Slice* pNextSlice;                 // pointer to first Slice of next picture;
-  Macroblock* mb_data;               // array containing all MBs of a whole frame
-  Macroblock* mb_data_JV[MAX_PLANE]; // mb_data to be used for 4:4:4 independent mode
+  sMacroblock* mb_data;               // array containing all MBs of a whole frame
+  sMacroblock* mb_data_JV[MAX_PLANE]; // mb_data to be used for 4:4:4 independent mode
   int ChromaArrayType;
 
   // picture error concealment
@@ -770,14 +770,14 @@ typedef struct video_par {
   int* MapUnitToSliceGroupMap;
   int NumberOfSliceGroups;    // the number of slice groups -1 (0 == scan order, 7 == maximum)
 
-  void (*getNeighbour)     (Macroblock *currMB, int xN, int yN, int mb_size[2], PixelPos *pix);
+  void (*getNeighbour)     (sMacroblock *currMB, int xN, int yN, int mb_size[2], PixelPos *pix);
   void (*get_mb_block_pos) (BlockPos *PicPos, int mb_addr, short *x, short *y);
-  void (*GetStrengthVer)   (Macroblock *MbQ, int edge, int mvlimit, struct storable_picture *p);
-  void (*GetStrengthHor)   (Macroblock *MbQ, int edge, int mvlimit, struct storable_picture *p);
-  void (*EdgeLoopLumaVer)  (ColorPlane pl, sPixel** Img, byte *Strength, Macroblock *MbQ, int edge);
-  void (*EdgeLoopLumaHor)  (ColorPlane pl, sPixel** Img, byte *Strength, Macroblock *MbQ, int edge, struct storable_picture *p);
-  void (*EdgeLoopChromaVer)(sPixel** Img, byte *Strength, Macroblock *MbQ, int edge, int uv, struct storable_picture *p);
-  void (*EdgeLoopChromaHor)(sPixel** Img, byte *Strength, Macroblock *MbQ, int edge, int uv, struct storable_picture *p);
+  void (*GetStrengthVer)   (sMacroblock *MbQ, int edge, int mvlimit, struct storable_picture *p);
+  void (*GetStrengthHor)   (sMacroblock *MbQ, int edge, int mvlimit, struct storable_picture *p);
+  void (*EdgeLoopLumaVer)  (ColorPlane pl, sPixel** Img, byte *Strength, sMacroblock *MbQ, int edge);
+  void (*EdgeLoopLumaHor)  (ColorPlane pl, sPixel** Img, byte *Strength, sMacroblock *MbQ, int edge, struct storable_picture *p);
+  void (*EdgeLoopChromaVer)(sPixel** Img, byte *Strength, sMacroblock *MbQ, int edge, int uv, struct storable_picture *p);
+  void (*EdgeLoopChromaHor)(sPixel** Img, byte *Strength, sMacroblock *MbQ, int edge, int uv, struct storable_picture *p);
 
   ImageData tempData3;
   sDecodedPicList* pDecOuputPic;

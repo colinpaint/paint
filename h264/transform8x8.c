@@ -67,7 +67,7 @@ static void recon8x8_lossless (int **m7, sPixel **mb_rec, sPixel **mpr, int max_
  *    Inverse 8x8 transformation
  ***********************************************************************
  */
-void itrans8x8 (Macroblock *currMB,   //!< current macroblock
+void itrans8x8 (sMacroblock *currMB,   //!< current macroblock
                ColorPlane pl,        //!< used color plane
                int ioff,             //!< index to 4x4 block
                int joff)             //!< index to 4x4 block
@@ -94,7 +94,7 @@ void itrans8x8 (Macroblock *currMB,   //!< current macroblock
  *    Inverse 8x8 transformation
  ***********************************************************************
  */
-void icopy8x8 (Macroblock *currMB,   //!< current macroblock
+void icopy8x8 (sMacroblock *currMB,   //!< current macroblock
                ColorPlane pl,        //!< used color plane
                int ioff,             //!< index to 4x4 block
                int joff)             //!< index to 4x4 block

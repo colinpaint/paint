@@ -18,11 +18,11 @@
 #include "quant.h"
 #include "mbPrediction.h"
 //}}}
-extern int get_colocated_info_8x8 (Macroblock* currMB, sPicture *list1, int i, int j);
-extern int get_colocated_info_4x4 (Macroblock* currMB, sPicture *list1, int i, int j);
+extern int get_colocated_info_8x8 (sMacroblock* currMB, sPicture *list1, int i, int j);
+extern int get_colocated_info_4x4 (sMacroblock* currMB, sPicture *list1, int i, int j);
 
 //{{{
-int mb_pred_intra4x4 (Macroblock* currMB, ColorPlane curr_plane, sPixel **currImg, sPicture *dec_picture)
+int mb_pred_intra4x4 (sMacroblock* currMB, ColorPlane curr_plane, sPixel **currImg, sPicture *dec_picture)
 {
   Slice* currSlice = currMB->p_Slice;
   int yuv = dec_picture->chroma_format_idc - 1;
@@ -70,7 +70,7 @@ int mb_pred_intra4x4 (Macroblock* currMB, ColorPlane curr_plane, sPixel **currIm
 }
 //}}}
 //{{{
-int mb_pred_intra16x16 (Macroblock* currMB, ColorPlane curr_plane, sPicture *dec_picture)
+int mb_pred_intra16x16 (sMacroblock* currMB, ColorPlane curr_plane, sPicture *dec_picture)
 {
   int yuv = dec_picture->chroma_format_idc - 1;
 
@@ -91,7 +91,7 @@ int mb_pred_intra16x16 (Macroblock* currMB, ColorPlane curr_plane, sPicture *dec
 }
 //}}}
 //{{{
-int mb_pred_intra8x8 (Macroblock* currMB, ColorPlane curr_plane, sPixel **currImg, sPicture *dec_picture)
+int mb_pred_intra8x8 (sMacroblock* currMB, ColorPlane curr_plane, sPixel **currImg, sPicture *dec_picture)
 {
   Slice* currSlice = currMB->p_Slice;
   int yuv = dec_picture->chroma_format_idc - 1;
@@ -127,7 +127,7 @@ int mb_pred_intra8x8 (Macroblock* currMB, ColorPlane curr_plane, sPixel **currIm
 //}}}
 
 //{{{
-static void set_chroma_vector (Macroblock* currMB)
+static void set_chroma_vector (sMacroblock* currMB)
 {
   Slice* currSlice = currMB->p_Slice;
   sVidParam* vidParam = currMB->vidParam;
@@ -215,7 +215,7 @@ static void set_chroma_vector (Macroblock* currMB)
 //}}}
 
 //{{{
-int mb_pred_skip (Macroblock* currMB, ColorPlane curr_plane, sPixel **currImg, sPicture *dec_picture)
+int mb_pred_skip (sMacroblock* currMB, ColorPlane curr_plane, sPixel **currImg, sPicture *dec_picture)
 {
   Slice* currSlice = currMB->p_Slice;
   sVidParam* vidParam = currMB->vidParam;
@@ -236,7 +236,7 @@ int mb_pred_skip (Macroblock* currMB, ColorPlane curr_plane, sPixel **currImg, s
 }
 //}}}
 //{{{
-int mb_pred_sp_skip (Macroblock* currMB, ColorPlane curr_plane, sPicture *dec_picture)
+int mb_pred_sp_skip (sMacroblock* currMB, ColorPlane curr_plane, sPicture *dec_picture)
 {
   set_chroma_vector(currMB);
 
@@ -247,7 +247,7 @@ int mb_pred_sp_skip (Macroblock* currMB, ColorPlane curr_plane, sPicture *dec_pi
 //}}}
 
 //{{{
-int mb_pred_p_inter8x8 (Macroblock* currMB, ColorPlane curr_plane, sPicture *dec_picture)
+int mb_pred_p_inter8x8 (sMacroblock* currMB, ColorPlane curr_plane, sPicture *dec_picture)
 {
   int block8x8;   // needed for ABT
   int i=0, j=0,k;
@@ -285,7 +285,7 @@ int mb_pred_p_inter8x8 (Macroblock* currMB, ColorPlane curr_plane, sPicture *dec
 }
 //}}}
 //{{{
-int mb_pred_p_inter16x16 (Macroblock* currMB, ColorPlane curr_plane, sPicture *dec_picture)
+int mb_pred_p_inter16x16 (sMacroblock* currMB, ColorPlane curr_plane, sPicture *dec_picture)
 {
   Slice* currSlice = currMB->p_Slice;
   int smb = (currSlice->slice_type == SP_SLICE);
@@ -300,7 +300,7 @@ int mb_pred_p_inter16x16 (Macroblock* currMB, ColorPlane curr_plane, sPicture *d
 }
 //}}}
 //{{{
-int mb_pred_p_inter16x8 (Macroblock* currMB, ColorPlane curr_plane, sPicture *dec_picture)
+int mb_pred_p_inter16x8 (sMacroblock* currMB, ColorPlane curr_plane, sPicture *dec_picture)
 {
   Slice* currSlice = currMB->p_Slice;
   int smb = (currSlice->slice_type == SP_SLICE);
@@ -317,7 +317,7 @@ int mb_pred_p_inter16x8 (Macroblock* currMB, ColorPlane curr_plane, sPicture *de
 }
 //}}}
 //{{{
-int mb_pred_p_inter8x16 (Macroblock* currMB, ColorPlane curr_plane, sPicture *dec_picture)
+int mb_pred_p_inter8x16 (sMacroblock* currMB, ColorPlane curr_plane, sPicture *dec_picture)
 {
   Slice* currSlice = currMB->p_Slice;
   int smb = (currSlice->slice_type == SP_SLICE);
@@ -344,7 +344,7 @@ static inline void update_neighbor_mvs (PicMotionParams **motion, const PicMotio
 //}}}
 
 //{{{
-int mb_pred_b_d8x8temporal (Macroblock* currMB, ColorPlane curr_plane, sPixel **currImg, sPicture *dec_picture)
+int mb_pred_b_d8x8temporal (sMacroblock* currMB, ColorPlane curr_plane, sPixel **currImg, sPicture *dec_picture)
 {
   short ref_idx;
   int refList;
@@ -555,7 +555,7 @@ int mb_pred_b_d8x8temporal (Macroblock* currMB, ColorPlane curr_plane, sPixel **
 }
 //}}}
 //{{{
-int mb_pred_b_d4x4temporal (Macroblock* currMB, ColorPlane curr_plane, sPixel **currImg, sPicture *dec_picture)
+int mb_pred_b_d4x4temporal (sMacroblock* currMB, ColorPlane curr_plane, sPixel **currImg, sPicture *dec_picture)
 {
   short ref_idx;
   int refList;
@@ -682,7 +682,7 @@ int mb_pred_b_d4x4temporal (Macroblock* currMB, ColorPlane curr_plane, sPixel **
 //}}}
 
 //{{{
-int mb_pred_b_d8x8spatial (Macroblock* currMB, ColorPlane curr_plane, sPixel **currImg, sPicture *dec_picture)
+int mb_pred_b_d8x8spatial (sMacroblock* currMB, ColorPlane curr_plane, sPixel **currImg, sPicture *dec_picture)
 {
   char l0_rFrame = -1, l1_rFrame = -1;
   MotionVector pmvl0 = zero_mv, pmvl1 = zero_mv;
@@ -907,7 +907,7 @@ int mb_pred_b_d8x8spatial (Macroblock* currMB, ColorPlane curr_plane, sPixel **c
 }
 //}}}
 //{{{
-int mb_pred_b_d4x4spatial (Macroblock* currMB, ColorPlane curr_plane, sPixel **currImg, sPicture *dec_picture)
+int mb_pred_b_d4x4spatial (sMacroblock* currMB, ColorPlane curr_plane, sPixel **currImg, sPicture *dec_picture)
 {
   char l0_rFrame = -1, l1_rFrame = -1;
   MotionVector pmvl0 = zero_mv, pmvl1 = zero_mv;
@@ -1095,7 +1095,7 @@ int mb_pred_b_d4x4spatial (Macroblock* currMB, ColorPlane curr_plane, sPixel **c
 }
 //}}}
 //{{{
-int mb_pred_b_inter8x8 (Macroblock* currMB, ColorPlane curr_plane, sPicture *dec_picture)
+int mb_pred_b_inter8x8 (sMacroblock* currMB, ColorPlane curr_plane, sPicture *dec_picture)
 {
   char l0_rFrame = -1, l1_rFrame = -1;
   MotionVector pmvl0 = zero_mv, pmvl1 = zero_mv;
@@ -1230,7 +1230,7 @@ int mb_pred_b_inter8x8 (Macroblock* currMB, ColorPlane curr_plane, sPicture *dec
  ************************************************************************
  */
 
-int mb_pred_ipcm (Macroblock* currMB)
+int mb_pred_ipcm (sMacroblock* currMB)
 {
   int i, j, k;
   Slice* currSlice = currMB->p_Slice;
