@@ -50,7 +50,7 @@ extern "C" {
 
 // h264
 #include "../h264/win32.h"
-#include "../h264/h264decoder.h"
+#include "../h264/h264decode.h"
 
 // app
 #include "../app/cApp.h"

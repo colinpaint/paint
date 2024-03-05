@@ -2,6 +2,33 @@
 #include "global.h"
 #include "mbuffer.h"
 
+extern void no_mem_exit (char *where);
+//{{{
+static inline void* mem_malloc (size_t nitems) {
+
+  void* d;
+  if ((d = malloc(nitems)) == NULL) {
+    no_mem_exit ("malloc failed.\n");
+    return NULL;
+    }
+  return d;
+  }
+//}}}
+//{{{
+static inline void* mem_calloc (size_t nitems, size_t size) {
+
+  size_t padded_size = nitems * size;
+  void* d = mem_malloc (padded_size);
+  memset (d, 0, (int)padded_size);
+  return d;
+  }
+//}}}
+//{{{
+static inline void mem_free (void *a) {
+  free_pointer (a);
+  }
+//}}}
+
 extern int get_mem2Dmp (sPicMotionParams** *array2D, int dim0, int dim1);
 extern int get_mem3Dmp (sPicMotionParams** **array3D, int dim0, int dim1, int dim2);
 
@@ -31,9 +58,9 @@ extern uint16** new_mem2Duint16 (int dim0, int dim1);
 extern int get_mem2Duint16 (uint16** *array2D, int dim0, int dim1);
 extern int get_mem3Duint16 (uint16** **array3D,int dim0, int dim1, int dim2);
 
-extern int  get_mem2Ddistblk (distblk** *array2D, int dim0, int dim1);
-extern int  get_mem3Ddistblk (distblk** **array3D, int dim0, int dim1, int dim2);
-extern int  get_mem4Ddistblk (distblk** ***array4D, int dim0, int dim1, int dim2, int dim3);
+extern int get_mem2Ddistblk (distblk** *array2D, int dim0, int dim1);
+extern int get_mem3Ddistblk (distblk** **array3D, int dim0, int dim1, int dim2);
+extern int get_mem4Ddistblk (distblk** ***array4D, int dim0, int dim1, int dim2, int dim3);
 
 extern int get_mem2Dshort (short** *array2D, int dim0, int dim1);
 extern int get_mem3Dshort (short** **array3D, int dim0, int dim1, int dim2);
@@ -135,43 +162,8 @@ extern void free_top_bot_planes (sPixel** imgTopField, sPixel** imgBotField);
 extern void free_mem2Dwp (WPParams** array2D);
 
 extern void copy2DImage (sPixel** dst_img, sPixel** src_img, int size_x, int size_y);
-extern void no_mem_exit (char *where);
 extern int  malloc_mem2Dpel_2SLayers (sPixel** *buf0, int imgtype0, sPixel** *buf1, int imgtype1, int height, int width);
 extern int  malloc_mem3Dpel_2SLayers (sPixel** **buf0, int imgtype0, sPixel** **buf1, int imgtype1, int frames, int height, int width);
 
 extern void free_mem2Dpel_2SLayers (sPixel** *buf0, sPixel** *buf1);
 extern void free_mem3Dpel_2SLayers (sPixel** **buf0, sPixel** **buf1);
-
-//{{{
-static inline void* mem_malloc(size_t nitems)
-{
-  void *d;
-  if((d = malloc(nitems)) == NULL)
-  {
-    no_mem_exit("malloc failed.\n");
-    return NULL;
-  }
-  return d;
-}
-//}}}
-//{{{
-/*!
-** **********************************************************************
- * \brief
- *    allocate and set memory aligned at SSE_MEMORY_ALIGNMENT
- *
-** **********************************************************************/
-static inline void* mem_calloc(size_t nitems, size_t size)
-{
-  size_t padded_size = nitems * size;
-  void *d = mem_malloc(padded_size);
-  memset(d, 0, (int)padded_size);
-  return d;
-}
-//}}}
-//{{{
-static inline void mem_free(void *a)
-{
-  free_pointer(a);
-}
-//}}}

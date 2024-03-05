@@ -376,7 +376,7 @@ void gen_pic_list_from_frame_list (sPictureStructure currStructure, sFrameStore*
 //}}}
 //{{{
 
-sPicture*  get_long_term_pic (sSlice* currSlice, sDPB* dpb, int LongtermPicNum) {
+sPicture* get_long_term_pic (sSlice* currSlice, sDPB* dpb, int LongtermPicNum) {
 
   for (uint32 i = 0; i < dpb->ltref_frames_in_buffer; i++) {
     if (currSlice->structure==FRAME) {
@@ -1077,7 +1077,7 @@ void free_dpb (sDPB* dpb) {
 //}}}
 
 //{{{
-void alloc_pic_motion (sPicMotionParamsOld *motion, int size_y, int size_x) {
+void alloc_pic_motion (sPicMotionParamsOld* motion, int size_y, int size_x) {
 
   motion->mb_field = calloc (size_y * size_x, sizeof(byte));
   if (motion->mb_field == NULL)
@@ -1085,7 +1085,7 @@ void alloc_pic_motion (sPicMotionParamsOld *motion, int size_y, int size_x) {
   }
 //}}}
 //{{{
-void free_pic_motion (sPicMotionParamsOld *motion) {
+void free_pic_motion (sPicMotionParamsOld* motion) {
 
   if (motion->mb_field) {
     free (motion->mb_field);
@@ -1095,23 +1095,22 @@ void free_pic_motion (sPicMotionParamsOld *motion) {
 //}}}
 
 //{{{
-sPicture* alloc_storable_picture (sVidParam* vidParam, sPictureStructure structure, int size_x, int size_y, int size_x_cr, int size_y_cr, int is_output)
-{
-  sSPSrbsp *active_sps = vidParam->active_sps;
+sPicture* alloc_storable_picture (sVidParam* vidParam, sPictureStructure structure, 
+                                  int size_x, int size_y, int size_x_cr, int size_y_cr, int is_output) {
 
-  sPicture *s;
-  int   nplane;
+  sSPSrbsp* active_sps = vidParam->active_sps;
+  //printf ("Allocating (%s) picture (x=%d, y=%d, x_cr=%d, y_cr=%d)\n", 
+  //        (type == FRAME)?"FRAME":(type == TOP_FIELD)?"TOP_FIELD":"BOTTOM_FIELD",
+  //        size_x, size_y, size_x_cr, size_y_cr);
 
-  //printf ("Allocating (%s) picture (x=%d, y=%d, x_cr=%d, y_cr=%d)\n", (type == FRAME)?"FRAME":(type == TOP_FIELD)?"TOP_FIELD":"BOTTOM_FIELD", size_x, size_y, size_x_cr, size_y_cr);
-
-  s = calloc (1, sizeof(sPicture));
+  sPicture* s = calloc (1, sizeof(sPicture));
   if (NULL==s)
-    no_mem_exit("alloc_storable_picture: s");
+    no_mem_exit ("alloc_storable_picture: s");
 
   if (structure!=FRAME) {
-    size_y    /= 2;
+    size_y /= 2;
     size_y_cr /= 2;
-  }
+    }
 
   s->PicSizeInMbs = (size_x*size_y)/256;
   s->imgUV = NULL;
@@ -1135,8 +1134,8 @@ sPicture* alloc_storable_picture (sVidParam* vidParam, sPictureStructure structu
   get_mem2Dmp (&s->mv_info, (size_y >> BLOCK_SHIFT), (size_x >> BLOCK_SHIFT));
   alloc_pic_motion( &s->motion , (size_y >> BLOCK_SHIFT), (size_x >> BLOCK_SHIFT));
 
-  if ((vidParam->separate_colour_plane_flag != 0) ) {
-    for (nplane=0; nplane<MAX_PLANE; nplane++ ) {
+  if ((vidParam->separate_colour_plane_flag != 0)) {
+    for (int nplane = 0; nplane < MAX_PLANE; nplane++) {
       get_mem2Dmp (&s->JVmv_info[nplane], (size_y >> BLOCK_SHIFT), (size_x >> BLOCK_SHIFT));
       alloc_pic_motion (&s->JVmotion[nplane] , (size_y >> BLOCK_SHIFT), (size_x >> BLOCK_SHIFT));
       }
@@ -1168,16 +1167,13 @@ sPicture* alloc_storable_picture (sVidParam* vidParam, sPictureStructure structu
   s->frame        = vidParam->no_reference_picture;
 
   s->dec_ref_pic_marking_buffer = NULL;
-
   s->coded_frame  = 0;
   s->mb_aff_frame_flag  = 0;
-
   s->top_poc = s->bottom_poc = s->poc = 0;
 
   if (!vidParam->active_sps->frame_mbs_only_flag && structure != FRAME) {
-    int i, j;
-    for (j = 0; j < MAX_NUM_SLICES; j++) {
-      for (i = 0; i < 2; i++) {
+    for (int j = 0; j < MAX_NUM_SLICES; j++) {
+      for (int i = 0; i < 2; i++) {
         s->listX[j][i] = calloc(MAX_LIST_SIZE, sizeof (sPicture*)); // +1 for reordering
         if (NULL==s->listX[j][i])
         no_mem_exit("alloc_storable_picture: s->listX[i]");
@@ -1191,7 +1187,6 @@ sPicture* alloc_storable_picture (sVidParam* vidParam, sPictureStructure structu
 //{{{
 void free_storable_picture (sPicture* p) {
 
-  int nplane;
   if (p) {
     if (p->mv_info) {
       free_mem2Dmp(p->mv_info);
@@ -1199,8 +1194,8 @@ void free_storable_picture (sPicture* p) {
       }
     free_pic_motion(&p->motion);
 
-    if( (p->separate_colour_plane_flag != 0) ) {
-      for (nplane = 0; nplane < MAX_PLANE; nplane++ ) {
+    if ((p->separate_colour_plane_flag != 0) ) {
+      for (int nplane = 0; nplane < MAX_PLANE; nplane++ ) {
         if (p->JVmv_info[nplane]) {
           free_mem2Dmp (p->JVmv_info[nplane]);
           p->JVmv_info[nplane] = NULL;
@@ -1219,17 +1214,12 @@ void free_storable_picture (sPicture* p) {
       p->imgUV = NULL;
       }
 
-    {
-      int i, j;
-      for (j = 0; j < MAX_NUM_SLICES; j++) {
-        for (i=0; i<2; i++) {
-          if (p->listX[j][i]) {
-            free(p->listX[j][i]);
-            p->listX[j][i] = NULL;
-            }
+    for (int j = 0; j < MAX_NUM_SLICES; j++)
+      for (int i = 0; i < 2; i++)
+        if (p->listX[j][i]) {
+          free(p->listX[j][i]);
+          p->listX[j][i] = NULL;
           }
-        }
-      }
 
     free (p);
     p = NULL;
@@ -1242,7 +1232,7 @@ sFrameStore* alloc_frame_store() {
 
   sFrameStore* f = calloc (1, sizeof(sFrameStore));
   if (NULL == f)
-    no_mem_exit("alloc_frame_store: f");
+    no_mem_exit ("alloc_frame_store: f");
 
   f->is_used      = 0;
   f->is_reference = 0;
@@ -1252,6 +1242,7 @@ sFrameStore* alloc_frame_store() {
   f->frame        = NULL;;
   f->top_field    = NULL;
   f->bottom_field = NULL;
+
   return f;
   }
 //}}}
@@ -2736,4 +2727,3 @@ int remove_unused_proc_pic_from_dpb (sDPB* dpb) {
   return 0;
   }
 //}}}
-

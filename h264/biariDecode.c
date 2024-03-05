@@ -2,7 +2,7 @@
 #include "global.h"
 #include "memalloc.h"
 
-#include "biaridecod.h"
+#include "biariDecode.h"
 //}}}
 
 #define B_BITS    10      // Number of bits to represent the whole coding interval

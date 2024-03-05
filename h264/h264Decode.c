@@ -16,7 +16,7 @@
 #include "nalu.h"
 #include "loopfilter.h"
 #include "output.h"
-#include "h264decoder.h"
+#include "h264decode.h"
 //}}}
 
 sDecoderParams* gDecoder;

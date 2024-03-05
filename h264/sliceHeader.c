@@ -6,7 +6,7 @@
 #include "fmo.h"
 #include "vlc.h"
 #include "mbuffer.h"
-#include "biaridecod.h"
+#include "biariDecode.h"
 #include "sliceHeader.h"
 //}}}
 

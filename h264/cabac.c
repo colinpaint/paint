@@ -5,7 +5,7 @@
 #include "cabac.h"
 #include "elements.h"
 #include "image.h"
-#include "biaridecod.h"
+#include "biariDecode.h"
 #include "mbAccess.h"
 #include "vlc.h"
 //}}}

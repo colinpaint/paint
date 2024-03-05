@@ -35,7 +35,7 @@
 #include "vlc.h"
 #include "image.h"
 #include "mbAccess.h"
-#include "biaridecod.h"
+#include "biariDecode.h"
 #include "transform.h"
 #include "mcPrediction.h"
 #include "quant.h"
