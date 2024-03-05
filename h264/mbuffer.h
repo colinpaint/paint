@@ -2,7 +2,6 @@
 #include "global.h"
 
 #define MAX_LIST_SIZE 33
-
 //{{{
 //! definition of pic motion parameters
 typedef struct pic_motion_params_old {
@@ -303,18 +302,22 @@ extern void mm_unmark_all_long_term_for_reference (sDPB* dpb);
 extern int  is_used_for_reference (sFrameStore* fs);
 extern void get_smallest_poc (sDPB* dpb, int *poc,int * pos);
 extern int remove_unused_frame_from_dpb (sDPB* dpb);
+
 extern void init_dpb (sVidParam* vidParam, sDPB* dpb, int type);
 extern void re_init_dpb (sVidParam* vidParam, sDPB* dpb, int type);
 extern void free_dpb (sDPB* dpb);
-extern sFrameStore* alloc_frame_store();
-extern void free_frame_store (sFrameStore* f);
+
 extern sPicture*  alloc_storable_picture (sVidParam* vidParam, sPictureStructure type, int size_x, int size_y, int size_x_cr, int size_y_cr, int is_output);
 extern void free_storable_picture (sPicture* p);
+
 extern void store_picture_in_dpb (sDPB* dpb, sPicture* p);
 extern sPicture*  get_short_term_pic (sSlice* currSlice, sDPB* dpb, int picNum);
 
+extern sFrameStore* alloc_frame_store();
+extern void free_frame_store (sFrameStore* f);
 extern void unmark_for_reference( sFrameStore* fs);
 extern void unmark_for_long_term_reference (sFrameStore* fs);
+
 extern void remove_frame_from_dpb (sDPB* dpb, int pos);
 
 extern void flush_dpb(sDPB* dpb);
@@ -337,12 +340,13 @@ extern void fill_frame_num_gap (sVidParam* vidParam, sSlice *pSlice);
 
 extern void compute_colocated (sSlice* currSlice, sPicture** listX[6]);
 
-extern int init_img_data (sVidParam* vidParam, ImageData *p_ImgData, sSPSrbsp *sps);
-extern void free_img_data (sVidParam* vidParam, ImageData *p_ImgData);
-
 extern void pad_dec_picture (sVidParam* vidParam, sPicture* picture);
 extern void pad_buf (sPixel *pImgBuf, int iWidth, int iHeight, int iStride, int iPadX, int iPadY);
 
-extern void process_picture_in_dpb_s (sVidParam* vidParam, sPicture *p_pic);
 extern sPicture * clone_storable_picture (sVidParam* vidParam, sPicture *p_pic );
+
 extern void store_proc_picture_in_dpb (sDPB* dpb, sPicture* p);
+extern int init_img_data (sVidParam* vidParam, ImageData *p_ImgData, sSPSrbsp *sps);
+extern void free_img_data (sVidParam* vidParam, ImageData *p_ImgData);
+
+extern void process_picture_in_dpb_s (sVidParam* vidParam, sPicture *p_pic);

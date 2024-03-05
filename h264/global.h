@@ -23,20 +23,20 @@ extern char errortext[ET_SIZE]; //!< buffer for error message for exit with erro
 
 struct pic_motion_params_old;
 struct pic_motion_params;
-//{{{
+//{{{  DecoderStatus_e
 typedef enum {
-   DEC_OPENED = 0,
-   DEC_STOPPED,
+  DEC_OPENED = 0,
+  DEC_STOPPED,
   } DecoderStatus_e;
 //}}}
-//{{{
+//{{{  Color_Component
 typedef enum {
   LumaComp = 0,
   CrComp = 1,
   CbComp = 2
   } Color_Component;
 //}}}
-//{{{
+//{{{  sPixelPos
 typedef struct pix_pos {
   int   available;
   int   mb_addr;
@@ -48,7 +48,7 @@ typedef struct pix_pos {
 //}}}
 
 //! struct to characterize the state of the arithmetic coding engine
-//{{{
+//{{{  DecodingEnvironment
 typedef struct {
   unsigned int    Drange;
   unsigned int    Dvalue;
@@ -60,20 +60,20 @@ typedef DecodingEnvironment *DecodingEnvironmentPtr;
 //}}}
 
 // Motion Vector structure
-//{{{
-typedef struct {
-  short mv_x;
-  short mv_y;
-  } sMotionVector;
-//}}}
+ //{{{  sMotionVector
+ typedef struct {
+   short mv_x;
+   short mv_y;
+   } sMotionVector;
+ //}}}
 static const sMotionVector zero_mv = {0, 0};
-//{{{
+//{{{  sBlockPos
 typedef struct {
   short x;
   short y;
   } sBlockPos;
 //}}}
-//{{{
+//{{{  BiContextType
 //! struct for context management
 typedef struct {
   uint16 state;         // index into state-table CP
@@ -96,7 +96,7 @@ typedef BiContextType *BiContextTypePtr;
 struct storablePicture;
 struct datapartition_dec;
 struct syntaxelement_dec;
-//{{{
+//{{{  MotionInfoContexts
 typedef struct {
   BiContextType mb_type_contexts [3][NUM_MB_TYPE_CTX];
   BiContextType b8_type_contexts [2][NUM_B8_TYPE_CTX];
@@ -116,7 +116,7 @@ typedef struct {
 #define NUM_ONE_CTX    5
 #define NUM_ABS_CTX    5
 //}}}
-//{{{
+//{{{  TextureInfoContexts
 typedef struct {
   BiContextType  transform_size_contexts [NUM_TRANSFORM_SIZE_CTX];
   BiContextType  ipr_contexts [NUM_IPR_CTX];
