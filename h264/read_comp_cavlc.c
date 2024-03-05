@@ -8,13 +8,13 @@
 #include "mbAccess.h"
 //}}}
 extern void  check_dp_neighbors (sMacroblock* currMB);
-extern void  read_delta_quant   (SyntaxElement* currSE, sDataPartition *dP, sMacroblock* currMB, const byte *partMap, int type);
+extern void  read_delta_quant (SyntaxElement* currSE, sDataPartition *dP, sMacroblock* currMB, const byte *partMap, int type);
 
 //{{{
-static int predict_nnz(sMacroblock* currMB, int block_type, int i,int j)
+static int predict_nnz (sMacroblock* currMB, int block_type, int i,int j)
 {
   sVidParam* vidParam = currMB->vidParam;
-  Slice* currSlice = currMB->p_Slice;
+  mSlice* currSlice = currMB->p_Slice;
 
   PixelPos pix;
 
@@ -95,14 +95,14 @@ static int predict_nnz(sMacroblock* currMB, int block_type, int i,int j)
 }
 //}}}
 //{{{
-static int predict_nnz_chroma(sMacroblock* currMB, int i,int j)
+static int predict_nnz_chroma (sMacroblock* currMB, int i,int j)
 {
-  sPicture *dec_picture = currMB->p_Slice->dec_picture;
+  sPicture* picture = currMB->p_Slice->picture;
 
-  if (dec_picture->chroma_format_idc != YUV444)
+  if (picture->chroma_format_idc != YUV444)
   {
     sVidParam* vidParam = currMB->vidParam;
-    Slice* currSlice = currMB->p_Slice;
+    mSlice* currSlice = currMB->p_Slice;
     PixelPos pix;
     int pred_nnz = 0;
     int cnt      = 0;
@@ -158,7 +158,7 @@ void read_coeff_4x4_CAVLC (sMacroblock* currMB,
                            int i, int j, int levarr[16], int runarr[16],
                            int *number_coefficients)
 {
-  Slice* currSlice = currMB->p_Slice;
+  mSlice* currSlice = currMB->p_Slice;
   sVidParam* vidParam = currMB->vidParam;
   int mb_nr = currMB->mbAddrX;
   SyntaxElement currSE;
@@ -337,7 +337,7 @@ void read_coeff_4x4_CAVLC_444 (sMacroblock* currMB,
                                int i, int j, int levarr[16], int runarr[16],
                                int *number_coefficients)
 {
-  Slice* currSlice = currMB->p_Slice;
+  mSlice* currSlice = currMB->p_Slice;
   sVidParam* vidParam = currMB->vidParam;
   int mb_nr = currMB->mbAddrX;
   SyntaxElement currSE;
@@ -557,13 +557,13 @@ void read_coeff_4x4_CAVLC_444 (sMacroblock* currMB,
 //}}}
 
 //{{{
-static void read_comp_coeff_4x4_CAVLC (sMacroblock* currMB, ColorPlane pl, int (*InvLevelScale4x4)[4], int qp_per, int cbp, byte **nzcoeff)
+static void read_comp_coeff_4x4_CAVLC (sMacroblock* currMB, sColorPlane pl, int (*InvLevelScale4x4)[4], int qp_per, int cbp, byte **nzcoeff)
 {
   int block_y, block_x, b8;
   int i, j, k;
   int i0, j0;
   int levarr[16] = {0}, runarr[16] = {0}, numcoeff;
-  Slice* currSlice = currMB->p_Slice;
+  mSlice* currSlice = currMB->p_Slice;
   sVidParam* vidParam = currMB->vidParam;
   const byte (*pos_scan4x4)[2] = ((vidParam->structure == FRAME) && (!currMB->mb_field)) ? SNGL_SCAN : FIELD_SCAN;
   const byte *pos_scan_4x4 = pos_scan4x4[0];
@@ -640,13 +640,13 @@ static void read_comp_coeff_4x4_CAVLC (sMacroblock* currMB, ColorPlane pl, int (
 }
 //}}}
 //{{{
-static void read_comp_coeff_4x4_CAVLC_ls (sMacroblock* currMB, ColorPlane pl, int (*InvLevelScale4x4)[4], int qp_per, int cbp, byte **nzcoeff)
+static void read_comp_coeff_4x4_CAVLC_ls (sMacroblock* currMB, sColorPlane pl, int (*InvLevelScale4x4)[4], int qp_per, int cbp, byte **nzcoeff)
 {
   int block_y, block_x, b8;
   int i, j, k;
   int i0, j0;
   int levarr[16] = {0}, runarr[16] = {0}, numcoeff;
-  Slice* currSlice = currMB->p_Slice;
+  mSlice* currSlice = currMB->p_Slice;
   sVidParam* vidParam = currMB->vidParam;
   const byte (*pos_scan4x4)[2] = ((vidParam->structure == FRAME) && (!currMB->mb_field)) ? SNGL_SCAN : FIELD_SCAN;
   int start_scan = IS_I16MB(currMB) ? 1 : 0;
@@ -717,14 +717,14 @@ static void read_comp_coeff_4x4_CAVLC_ls (sMacroblock* currMB, ColorPlane pl, in
 }
 //}}}
 //{{{
-static void read_comp_coeff_8x8_CAVLC (sMacroblock* currMB, ColorPlane pl, int (*InvLevelScale8x8)[8], int qp_per, int cbp, byte **nzcoeff)
+static void read_comp_coeff_8x8_CAVLC (sMacroblock* currMB, sColorPlane pl, int (*InvLevelScale8x8)[8], int qp_per, int cbp, byte **nzcoeff)
 {
   int block_y, block_x, b4, b8;
   int block_y4, block_x4;
   int i, j, k;
   int i0, j0;
   int levarr[16] = {0}, runarr[16] = {0}, numcoeff;
-  Slice* currSlice = currMB->p_Slice;
+  mSlice* currSlice = currMB->p_Slice;
   sVidParam* vidParam = currMB->vidParam;
   const byte (*pos_scan8x8)[2] = ((vidParam->structure == FRAME) && (!currMB->mb_field)) ? SNGL_SCAN8x8 : FIELD_SCAN8x8;
   int start_scan = IS_I16MB(currMB) ? 1 : 0;
@@ -802,12 +802,12 @@ static void read_comp_coeff_8x8_CAVLC (sMacroblock* currMB, ColorPlane pl, int (
 }
 //}}}
 //{{{
-static void read_comp_coeff_8x8_CAVLC_ls (sMacroblock* currMB, ColorPlane pl, int (*InvLevelScale8x8)[8], int qp_per, int cbp, byte **nzcoeff)
+static void read_comp_coeff_8x8_CAVLC_ls (sMacroblock* currMB, sColorPlane pl, int (*InvLevelScale8x8)[8], int qp_per, int cbp, byte **nzcoeff)
 {
   int block_y, block_x, b4, b8;
   int i, j, k;
   int levarr[16] = {0}, runarr[16] = {0}, numcoeff;
-  Slice* currSlice = currMB->p_Slice;
+  mSlice* currSlice = currMB->p_Slice;
   sVidParam* vidParam = currMB->vidParam;
   const byte (*pos_scan8x8)[2] = ((vidParam->structure == FRAME) && (!currMB->mb_field)) ? SNGL_SCAN8x8 : FIELD_SCAN8x8;
   int start_scan = IS_I16MB(currMB) ? 1 : 0;
@@ -886,14 +886,14 @@ static void read_comp_coeff_8x8_CAVLC_ls (sMacroblock* currMB, ColorPlane pl, in
 //}}}
 
 //{{{
-static void read_CBP_and_coeffs_from_NAL_CAVLC_400(sMacroblock* currMB)
+static void read_CBP_and_coeffs_from_NAL_CAVLC_400 (sMacroblock* currMB)
 {
   int k;
   int mb_nr = currMB->mbAddrX;
   int cbp;
   SyntaxElement currSE;
   sDataPartition *dP = NULL;
-  Slice* currSlice = currMB->p_Slice;
+  mSlice* currSlice = currMB->p_Slice;
   const byte *partMap = assignSE2partition[currSlice->dp_mode];
   int i0, j0;
 
@@ -1023,7 +1023,7 @@ static void read_CBP_and_coeffs_from_NAL_CAVLC_400(sMacroblock* currMB)
 
 
       if(currMB->is_lossless == FALSE)
-        itrans_2(currMB, (ColorPlane) currSlice->colour_plane_id);// transform new intra DC
+        itrans_2(currMB, (sColorPlane) currSlice->colour_plane_id);// transform new intra DC
     }
   }
 
@@ -1054,14 +1054,14 @@ static void read_CBP_and_coeffs_from_NAL_CAVLC_400(sMacroblock* currMB)
 }
 //}}}
 //{{{
-static void read_CBP_and_coeffs_from_NAL_CAVLC_422(sMacroblock* currMB)
+static void read_CBP_and_coeffs_from_NAL_CAVLC_422 (sMacroblock* currMB)
 {
   int i,j,k;
   int mb_nr = currMB->mbAddrX;
   int cbp;
   SyntaxElement currSE;
   sDataPartition *dP = NULL;
-  Slice* currSlice = currMB->p_Slice;
+  mSlice* currSlice = currMB->p_Slice;
   const byte *partMap = assignSE2partition[currSlice->dp_mode];
   int coef_ctr, i0, j0, b8;
   int ll;
@@ -1077,7 +1077,7 @@ static void read_CBP_and_coeffs_from_NAL_CAVLC_422(sMacroblock* currMB)
   int intra = (currMB->is_intra_block == TRUE);
 
   int b4;
-  //sPicture *dec_picture = currSlice->dec_picture;
+  //sPicture* picture = currSlice->picture;
   int m6[4];
 
   int need_transform_size_flag;
@@ -1199,7 +1199,7 @@ static void read_CBP_and_coeffs_from_NAL_CAVLC_422(sMacroblock* currMB)
 
 
       if(currMB->is_lossless == FALSE)
-        itrans_2(currMB, (ColorPlane) currSlice->colour_plane_id);// transform new intra DC
+        itrans_2(currMB, (sColorPlane) currSlice->colour_plane_id);// transform new intra DC
     }
   }
 
@@ -1391,18 +1391,18 @@ static void read_CBP_and_coeffs_from_NAL_CAVLC_422(sMacroblock* currMB)
         }
       }
     }
-  } //if (dec_picture->chroma_format_idc != YUV400)
+  } //if (picture->chroma_format_idc != YUV400)
 }
 //}}}
 //{{{
-static void read_CBP_and_coeffs_from_NAL_CAVLC_444(sMacroblock* currMB)
+static void read_CBP_and_coeffs_from_NAL_CAVLC_444 (sMacroblock* currMB)
 {
   int i,k;
   int mb_nr = currMB->mbAddrX;
   int cbp;
   SyntaxElement currSE;
   sDataPartition *dP = NULL;
-  Slice* currSlice = currMB->p_Slice;
+  mSlice* currSlice = currMB->p_Slice;
   const byte *partMap = assignSE2partition[currSlice->dp_mode];
   int coef_ctr, i0, j0;
   int levarr[16], runarr[16], numcoeff;
@@ -1534,7 +1534,7 @@ static void read_CBP_and_coeffs_from_NAL_CAVLC_444(sMacroblock* currMB)
 
 
       if(currMB->is_lossless == FALSE)
-        itrans_2(currMB, (ColorPlane) currSlice->colour_plane_id);// transform new intra DC
+        itrans_2(currMB, (sColorPlane) currSlice->colour_plane_id);// transform new intra DC
     }
   }
 
@@ -1597,7 +1597,7 @@ static void read_CBP_and_coeffs_from_NAL_CAVLC_444(sMacroblock* currMB)
 
       if(currMB->is_lossless == FALSE)
       {
-        itrans_2(currMB, (ColorPlane) (uv)); // transform new intra DC
+        itrans_2(currMB, (sColorPlane) (uv)); // transform new intra DC
       }
     } //IS_I16MB
 
@@ -1612,24 +1612,24 @@ static void read_CBP_and_coeffs_from_NAL_CAVLC_444(sMacroblock* currMB)
 
     if (!currMB->luma_transform_size_8x8_flag) // 4x4 transform
     {
-      currMB->read_comp_coeff_4x4_CAVLC (currMB, (ColorPlane) (uv), InvLevelScale4x4, qp_per_uv[uv], cbp, vidParam->nz_coeff[mb_nr][uv]);
+      currMB->read_comp_coeff_4x4_CAVLC (currMB, (sColorPlane) (uv), InvLevelScale4x4, qp_per_uv[uv], cbp, vidParam->nz_coeff[mb_nr][uv]);
     }
     else // 8x8 transform
     {
-      currMB->read_comp_coeff_8x8_CAVLC (currMB, (ColorPlane) (uv), InvLevelScale8x8, qp_per_uv[uv], cbp, vidParam->nz_coeff[mb_nr][uv]);
+      currMB->read_comp_coeff_8x8_CAVLC (currMB, (sColorPlane) (uv), InvLevelScale8x8, qp_per_uv[uv], cbp, vidParam->nz_coeff[mb_nr][uv]);
     }
   }
 }
 //}}}
 //{{{
-static void read_CBP_and_coeffs_from_NAL_CAVLC_420(sMacroblock* currMB)
+static void read_CBP_and_coeffs_from_NAL_CAVLC_420 (sMacroblock* currMB)
 {
   int i,j,k;
   int mb_nr = currMB->mbAddrX;
   int cbp;
   SyntaxElement currSE;
   sDataPartition *dP = NULL;
-  Slice* currSlice = currMB->p_Slice;
+  mSlice* currSlice = currMB->p_Slice;
   const byte *partMap = assignSE2partition[currSlice->dp_mode];
   int coef_ctr, i0, j0, b8;
   int ll;
@@ -1647,7 +1647,7 @@ static void read_CBP_and_coeffs_from_NAL_CAVLC_420(sMacroblock* currMB)
   int temp[4];
 
   int b4;
-  //sPicture *dec_picture = currSlice->dec_picture;
+  //sPicture* picture = currSlice->picture;
 
   int need_transform_size_flag;
 
@@ -1765,7 +1765,7 @@ static void read_CBP_and_coeffs_from_NAL_CAVLC_420(sMacroblock* currMB)
 
 
       if(currMB->is_lossless == FALSE)
-        itrans_2(currMB, (ColorPlane) currSlice->colour_plane_id);// transform new intra DC
+        itrans_2(currMB, (sColorPlane) currSlice->colour_plane_id);// transform new intra DC
     }
   }
 
@@ -1932,7 +1932,7 @@ static void read_CBP_and_coeffs_from_NAL_CAVLC_420(sMacroblock* currMB)
 //}}}
 
 //{{{
-void set_read_comp_coeff_cavlc(sMacroblock* currMB)
+void set_read_comp_coeff_cavlc (sMacroblock* currMB)
 {
   if (currMB->is_lossless == FALSE)
   {
@@ -1947,7 +1947,7 @@ void set_read_comp_coeff_cavlc(sMacroblock* currMB)
 }
 //}}}
 //{{{
-void set_read_CBP_and_coeffs_cavlc(Slice* currSlice) {
+void set_read_CBP_and_coeffs_cavlc (mSlice* currSlice) {
 
   switch (currSlice->vidParam->active_sps->chroma_format_idc) {
     case YUV444:

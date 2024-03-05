@@ -738,7 +738,7 @@ static void interpret_recovery_point_info (byte* payload, int size, sVidParam* v
   }
 //}}}
 //{{{
-static void interpret_dec_ref_pic_marking_repetition_info (byte* payload, int size, sVidParam* vidParam, Slice *pSlice )
+static void interpret_dec_ref_pic_marking_repetition_info (byte* payload, int size, sVidParam* vidParam, mSlice *pSlice )
 {
   int original_idr_flag, original_frame_num;
   int original_field_pic_flag, original_bottom_field_flag;
@@ -1313,7 +1313,7 @@ static void interpret_green_metadata_info (byte* payload, int size, sVidParam* v
 //}}}
 
 //{{{
-void InterpretSEIMessage (byte* msg, int size, sVidParam* vidParam, Slice *pSlice) {
+void InterpretSEIMessage (byte* msg, int size, sVidParam* vidParam, mSlice *pSlice) {
 
   int offset = 1;
   do {

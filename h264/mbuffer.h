@@ -17,7 +17,7 @@ typedef struct pic_motion_params {
   char                     ref_idx[2];  //!< reference picture   [list][subblock_y][subblock_x]
   //byte                   mb_field;    //!< field macroblock indicator
   byte                     slice_no;
-  } PicMotionParams;
+  } sPicMotionParams;
 //}}}
 //{{{
 //! definition a picture (field or frame)
@@ -288,7 +288,7 @@ static inline int is_long_ref(sPicture *s)
 //}}}
 
 extern void gen_pic_list_from_frame_list (sPictureStructure currStructure, sFrameStore **fs_list, int list_idx, sPicture **list, char *list_size, int long_term);
-extern sPicture* get_long_term_pic (Slice* currSlice, sDPB* dpb, int LongtermPicNum);
+extern sPicture* get_long_term_pic (mSlice* currSlice, sDPB* dpb, int LongtermPicNum);
 
 extern void update_ref_list (sDPB* dpb);
 extern void update_ltref_list (sDPB* dpb);
@@ -312,36 +312,36 @@ extern void free_frame_store (sFrameStore* f);
 extern sPicture*  alloc_storable_picture (sVidParam* vidParam, sPictureStructure type, int size_x, int size_y, int size_x_cr, int size_y_cr, int is_output);
 extern void free_storable_picture (sPicture* p);
 extern void store_picture_in_dpb (sDPB* dpb, sPicture* p);
-extern sPicture*  get_short_term_pic (Slice* currSlice, sDPB* dpb, int picNum);
+extern sPicture*  get_short_term_pic (mSlice* currSlice, sDPB* dpb, int picNum);
 
 extern void unmark_for_reference( sFrameStore* fs);
 extern void unmark_for_long_term_reference (sFrameStore* fs);
 extern void remove_frame_from_dpb (sDPB* dpb, int pos);
 
 extern void flush_dpb(sDPB* dpb);
-extern void init_lists_p_slice (Slice* currSlice);
-extern void init_lists_b_slice (Slice* currSlice);
-extern void init_lists_i_slice (Slice* currSlice);
-extern void update_pic_num (Slice* currSlice);
+extern void init_lists_p_slice (mSlice* currSlice);
+extern void init_lists_b_slice (mSlice* currSlice);
+extern void init_lists_i_slice (mSlice* currSlice);
+extern void update_pic_num (mSlice* currSlice);
 
 extern void dpb_split_field (sVidParam* vidParam, sFrameStore *fs);
 extern void dpb_combine_field (sVidParam* vidParam, sFrameStore *fs);
 extern void dpb_combine_field_yuv (sVidParam* vidParam, sFrameStore *fs);
 
-extern void reorder_ref_pic_list (Slice* currSlice, int cur_list);
+extern void reorder_ref_pic_list (mSlice* currSlice, int cur_list);
 
-extern void init_mbaff_lists (sVidParam* vidParam, Slice* currSlice);
-extern void alloc_ref_pic_list_reordering_buffer (Slice* currSlice);
-extern void free_ref_pic_list_reordering_buffer (Slice* currSlice);
+extern void init_mbaff_lists (sVidParam* vidParam, mSlice* currSlice);
+extern void alloc_ref_pic_list_reordering_buffer (mSlice* currSlice);
+extern void free_ref_pic_list_reordering_buffer (mSlice* currSlice);
 
-extern void fill_frame_num_gap (sVidParam* vidParam, Slice *pSlice);
+extern void fill_frame_num_gap (sVidParam* vidParam, mSlice *pSlice);
 
-extern void compute_colocated (Slice* currSlice, sPicture **listX[6]);
+extern void compute_colocated (mSlice* currSlice, sPicture **listX[6]);
 
 extern int init_img_data (sVidParam* vidParam, ImageData *p_ImgData, sSPSrbsp *sps);
 extern void free_img_data (sVidParam* vidParam, ImageData *p_ImgData);
 
-extern void pad_dec_picture (sVidParam* vidParam, sPicture *dec_picture);
+extern void pad_dec_picture (sVidParam* vidParam, sPicture* picture);
 extern void pad_buf (sPixel *pImgBuf, int iWidth, int iHeight, int iStride, int iPadX, int iPadY);
 
 extern void process_picture_in_dpb_s (sVidParam* vidParam, sPicture *p_pic);

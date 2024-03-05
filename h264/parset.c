@@ -792,8 +792,8 @@ void ProcessSPS (sVidParam* vidParam, NALU_t* nalu) {
     if (vidParam->active_sps) {
       if (sps->seq_parameter_set_id == vidParam->active_sps->seq_parameter_set_id) {
         if (!spsIsEqual (sps, vidParam->active_sps))   {
-          if (vidParam->dec_picture)
-            exit_picture (vidParam, &vidParam->dec_picture);
+          if (vidParam->picture)
+            exit_picture (vidParam, &vidParam->picture);
           vidParam->active_sps=NULL;
           }
         }
@@ -818,8 +818,8 @@ void activateSPS (sVidParam* vidParam, sSPSrbsp* sps) {
   InputParameters* p_Inp = vidParam->p_Inp;
 
   if (vidParam->active_sps != sps) {
-    if (vidParam->dec_picture) // this may only happen on slice loss
-      exit_picture (vidParam, &vidParam->dec_picture);
+    if (vidParam->picture) // this may only happen on slice loss
+      exit_picture (vidParam, &vidParam->picture);
     vidParam->active_sps = sps;
 
     if (vidParam->dpb_layer_id==0 && is_BL_profile(sps->profile_idc) && !vidParam->p_Dpb_layer[0]->init_done) {
@@ -836,8 +836,8 @@ void activateSPS (sVidParam* vidParam, sSPSrbsp* sps) {
 
     // enable error concealment
     ercInit (vidParam, vidParam->width, vidParam->height, 1);
-    if (vidParam->dec_picture) {
-      ercReset (vidParam->erc_errorVar, vidParam->PicSizeInMbs, vidParam->PicSizeInMbs, vidParam->dec_picture->size_x);
+    if (vidParam->picture) {
+      ercReset (vidParam->erc_errorVar, vidParam->PicSizeInMbs, vidParam->PicSizeInMbs, vidParam->picture->size_x);
       vidParam->erc_mvperMB = 0;
       }
     }
@@ -1052,9 +1052,9 @@ static int interpretPPS (sVidParam* vidParam, sDataPartition* p, sPPSrbsp* pps) 
 static void activatePPS (sVidParam* vidParam, sPPSrbsp *pps) {
 
   if (vidParam->active_pps != pps) {
-    if (vidParam->dec_picture) // && vidParam->num_dec_mb == vidParam->pi)
+    if (vidParam->picture) // && vidParam->num_dec_mb == vidParam->pi)
       // this may only happen on slice loss
-      exit_picture (vidParam, &vidParam->dec_picture);
+      exit_picture (vidParam, &vidParam->picture);
     vidParam->active_pps = pps;
     }
   }
@@ -1122,8 +1122,8 @@ void ProcessPPS (sVidParam* vidParam, NALU_t *nalu) {
       if (!ppsIsEqual (pps, vidParam->active_pps)) {
         // copy to next PPS;
         memcpy (vidParam->pNextPPS, vidParam->active_pps, sizeof (sPPSrbsp));
-        if (vidParam->dec_picture)
-          exit_picture(vidParam, &vidParam->dec_picture);
+        if (vidParam->picture)
+          exit_picture(vidParam, &vidParam->picture);
         vidParam->active_pps = NULL;
         }
       }
@@ -1135,7 +1135,7 @@ void ProcessPPS (sVidParam* vidParam, NALU_t *nalu) {
   }
 //}}}
 //{{{
-void UseParameterSet (Slice* currSlice) {
+void UseParameterSet (mSlice* currSlice) {
 
   sVidParam* vidParam = currSlice->vidParam;
   int PicParsetId = currSlice->pic_parameter_set_id;

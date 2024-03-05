@@ -1182,7 +1182,7 @@ static const char INIT_ABS_P[3][22][5][2] =
 //}}}
 
 //{{{
-static void ref_pic_list_reordering (Slice* currSlice) {
+static void ref_pic_list_reordering (mSlice* currSlice) {
 
   byte dP_nr = assignSE2partition[currSlice->dp_mode][SE_HEADER];
   sDataPartition* partition = &(currSlice->partArr[dP_nr]);
@@ -1239,7 +1239,7 @@ static void ref_pic_list_reordering (Slice* currSlice) {
   }
 //}}}
 //{{{
-static void reset_wp_params (Slice* currSlice) {
+static void reset_wp_params (mSlice* currSlice) {
 
   for (int i = 0; i < MAX_REFERENCE_PICTURES; i++) {
     for (int comp = 0; comp < 3; comp++) {
@@ -1252,7 +1252,7 @@ static void reset_wp_params (Slice* currSlice) {
   }
 //}}}
 //{{{
-static void pred_weight_table (Slice* currSlice) {
+static void pred_weight_table (mSlice* currSlice) {
 
   sVidParam* vidParam = currSlice->vidParam;
   sSPSrbsp* active_sps = vidParam->active_sps;
@@ -1338,7 +1338,7 @@ static void pred_weight_table (Slice* currSlice) {
   }
 //}}}
 //{{{
-static int picture_order (Slice* pSlice ) {
+static int picture_order (mSlice* pSlice ) {
 
   if (pSlice->field_pic_flag == 0) // is a frame
     return pSlice->framepoc;
@@ -1379,7 +1379,7 @@ unsigned CeilLog2_sf (unsigned uiVal) {
 //}}}
 
 //{{{
-void init_contexts (Slice* currSlice) {
+void init_contexts (mSlice* currSlice) {
 
   MotionInfoContexts*  mc = currSlice->mot_ctx;
   TextureInfoContexts* tc = currSlice->tex_ctx;
@@ -1438,7 +1438,7 @@ void init_contexts (Slice* currSlice) {
   }
 //}}}
 //{{{
-void dec_ref_pic_marking (sVidParam* vidParam, Bitstream* currStream, Slice* pSlice) {
+void dec_ref_pic_marking (sVidParam* vidParam, Bitstream* currStream, mSlice* pSlice) {
 
   // free old buffer content
   while (pSlice->dec_ref_pic_marking_buffer) {
@@ -1527,7 +1527,7 @@ int dumpPOC (sVidParam* vidParam) {
   }
 //}}}
 //{{{
-void decodePOC (sVidParam* vidParam, Slice* pSlice) {
+void decodePOC (sVidParam* vidParam, mSlice* pSlice) {
 
   int i;
   sSPSrbsp *active_sps = vidParam->active_sps;
@@ -1702,7 +1702,7 @@ void decodePOC (sVidParam* vidParam, Slice* pSlice) {
 //}}}
 
 //{{{
-int FirstPartOfSliceHeader (Slice* currSlice) {
+int FirstPartOfSliceHeader (mSlice* currSlice) {
 
   sVidParam* vidParam = currSlice->vidParam;
   byte dP_nr = assignSE2partition[currSlice->dp_mode][SE_HEADER];
@@ -1730,7 +1730,7 @@ int FirstPartOfSliceHeader (Slice* currSlice) {
   }
 //}}}
 //{{{
-int RestOfSliceHeader (Slice* currSlice) {
+int RestOfSliceHeader (mSlice* currSlice) {
 
   sVidParam* vidParam = currSlice->vidParam;
   InputParameters* p_Inp = currSlice->p_Inp;
@@ -1881,7 +1881,7 @@ int RestOfSliceHeader (Slice* currSlice) {
     currSlice->DFDisableIdc = currSlice->DFAlphaC0Offset = currSlice->DFBetaOffset = 0;
 
 #if DPF_PARAM_DISP
-  printf("Slice:%d, DFParameters:(%d,%d,%d)\n\n", currSlice->current_slice_nr, currSlice->DFDisableIdc, currSlice->DFAlphaC0Offset, currSlice->DFBetaOffset);
+  printf("mSlice:%d, DFParameters:(%d,%d,%d)\n\n", currSlice->current_slice_nr, currSlice->DFDisableIdc, currSlice->DFAlphaC0Offset, currSlice->DFBetaOffset);
 #endif
 
   // The conformance point for intra profiles is without deblocking, but decoders are still recommended to filter the output.

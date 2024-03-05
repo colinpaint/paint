@@ -65,7 +65,7 @@ static void FmoGenerateType2MapUnitMap (sVidParam* vidParam, unsigned PicSizeInM
 //}}}
 //{{{
 // Generate box-out slice group map type MapUnit map (type 3)
-static void FmoGenerateType3MapUnitMap (sVidParam* vidParam, unsigned PicSizeInMapUnits, Slice* currSlice )
+static void FmoGenerateType3MapUnitMap (sVidParam* vidParam, unsigned PicSizeInMapUnits, mSlice* currSlice )
 {
   sPPSrbsp* pps = vidParam->active_pps;
   unsigned i, k;
@@ -130,7 +130,7 @@ static void FmoGenerateType3MapUnitMap (sVidParam* vidParam, unsigned PicSizeInM
 }
 //}}}
 //{{{
-static void FmoGenerateType4MapUnitMap (sVidParam* vidParam, unsigned PicSizeInMapUnits, Slice* currSlice) {
+static void FmoGenerateType4MapUnitMap (sVidParam* vidParam, unsigned PicSizeInMapUnits, mSlice* currSlice) {
 // Generate raster scan slice group map type MapUnit map (type 4)
 
   sPPSrbsp* pps = vidParam->active_pps;
@@ -150,7 +150,7 @@ static void FmoGenerateType4MapUnitMap (sVidParam* vidParam, unsigned PicSizeInM
 //}}}
 //{{{
 // Generate wipe slice group map type MapUnit map (type 5) *
-static void FmoGenerateType5MapUnitMap (sVidParam* vidParam, unsigned PicSizeInMapUnits, Slice* currSlice )
+static void FmoGenerateType5MapUnitMap (sVidParam* vidParam, unsigned PicSizeInMapUnits, mSlice* currSlice )
 {
   sPPSrbsp* pps = vidParam->active_pps;
 
@@ -179,7 +179,7 @@ static void FmoGenerateType6MapUnitMap (sVidParam* vidParam, unsigned PicSizeInM
   }
 //}}}
 //{{{
-static int FmoGenerateMapUnitToSliceGroupMap (sVidParam* vidParam, Slice* currSlice) {
+static int FmoGenerateMapUnitToSliceGroupMap (sVidParam* vidParam, mSlice* currSlice) {
 // Generates vidParam->MapUnitToSliceGroupMap
 // Has to be called every time a new Picture Parameter Set is used
 
@@ -240,7 +240,7 @@ static int FmoGenerateMapUnitToSliceGroupMap (sVidParam* vidParam, Slice* currSl
 //}}}
 //{{{
 // Generates vidParam->MbToSliceGroupMap from vidParam->MapUnitToSliceGroupMap
-static int FmoGenerateMbToSliceGroupMap (sVidParam* vidParam, Slice *pSlice) {
+static int FmoGenerateMbToSliceGroupMap (sVidParam* vidParam, mSlice *pSlice) {
 
   // allocate memory for vidParam->MbToSliceGroupMap
   if (vidParam->MbToSliceGroupMap)
@@ -283,7 +283,7 @@ static int FmoGenerateMbToSliceGroupMap (sVidParam* vidParam, Slice *pSlice) {
  *      video encoding parameters for current picture
  ************************************************************************
  */
-int fmo_init (sVidParam* vidParam, Slice *pSlice)
+int fmo_init (sVidParam* vidParam, mSlice *pSlice)
 {
   sPPSrbsp* pps = vidParam->active_pps;
 
@@ -427,7 +427,7 @@ int FmoGetSliceGroupId (sVidParam* vidParam, int mb)
  ************************************************************************
  * \brief
  *    FmoGetNextMBBr: Returns the MB-Nr (in scan order) of the next
- *    MB in the (scattered) Slice, -1 if the slice is finished
+ *    MB in the (scattered) mSlice, -1 if the slice is finished
  * \param vidParam
  *      video encoding parameters for current picture
  *

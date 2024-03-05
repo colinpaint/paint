@@ -75,7 +75,7 @@ static void alloc_video_params (sVidParam** vidParam) {
 
   (*vidParam)->global_init_done[0] = (*vidParam)->global_init_done[1] = 0;
 
-  if (((*vidParam)->ppSliceList = (Slice**)calloc(MAX_NUM_DECSLICES, sizeof(Slice *))) == NULL)
+  if (((*vidParam)->ppSliceList = (mSlice**)calloc(MAX_NUM_DECSLICES, sizeof(mSlice *))) == NULL)
     no_mem_exit ("alloc_video_params: vidParam->ppSliceList");
 
   (*vidParam)->iNumOfSlicesAllocated = MAX_NUM_DECSLICES;
@@ -111,14 +111,14 @@ static int alloc_decoder (sDecoderParams** decoder) {
 //}}}
 
 //{{{
-Slice* malloc_slice (InputParameters* p_Inp, sVidParam* vidParam) {
+mSlice* malloc_slice (InputParameters* p_Inp, sVidParam* vidParam) {
 
   int i, j, memory_size = 0;
-  Slice *currSlice;
+  mSlice *currSlice;
 
-  currSlice = (Slice *) calloc(1, sizeof(Slice));
+  currSlice = (mSlice *) calloc(1, sizeof(mSlice));
   if ( currSlice  == NULL) {
-    snprintf(errortext, ET_SIZE, "Memory allocation for Slice datastruct in NAL-mode failed");
+    snprintf(errortext, ET_SIZE, "Memory allocation for mSlice datastruct in NAL-mode failed");
     error(errortext,100);
     }
 
@@ -160,7 +160,7 @@ Slice* malloc_slice (InputParameters* p_Inp, sVidParam* vidParam) {
   }
 //}}}
 //{{{
-static void free_slice (Slice *currSlice) {
+static void free_slice (mSlice *currSlice) {
 
   if (currSlice->slice_type != I_SLICE && currSlice->slice_type != SI_SLICE)
     free_ref_pic_list_reordering_buffer (currSlice);
@@ -280,7 +280,7 @@ static void init (sVidParam* vidParam) {
   // time for total decoding session
   vidParam->tot_time = 0;
 
-  vidParam->dec_picture = NULL;
+  vidParam->picture = NULL;
   vidParam->MbToSliceGroupMap = NULL;
   vidParam->MapUnitToSliceGroupMap = NULL;
 
@@ -470,7 +470,7 @@ int init_global_buffers (sVidParam* vidParam, int layer_id) {
 
   int memory_size = 0;
   sCodingParams *cps = vidParam->p_EncodePar[layer_id];
-  BlockPos* PicPos;
+  sBlockPos* PicPos;
 
   if (vidParam->global_init_done[layer_id])
     free_layer_buffers (vidParam, layer_id);
@@ -494,7 +494,7 @@ int init_global_buffers (sVidParam* vidParam, int layer_id) {
   else if (((cps->intra_block) = (char*)calloc (cps->FrameSizeInMbs, sizeof(char))) == NULL)
     no_mem_exit ("init_global_buffers: cps->intra_block");
 
-  if (((cps->PicPos) = (BlockPos*)calloc(cps->FrameSizeInMbs + 1, sizeof(BlockPos))) == NULL)
+  if (((cps->PicPos) = (sBlockPos*)calloc(cps->FrameSizeInMbs + 1, sizeof(sBlockPos))) == NULL)
     no_mem_exit ("init_global_buffers: PicPos");
 
   PicPos = cps->PicPos;
@@ -534,9 +534,9 @@ int init_global_buffers (sVidParam* vidParam, int layer_id) {
 //{{{
 void free_global_buffers (sVidParam* vidParam) {
 
-  if (vidParam->dec_picture) {
-    free_storable_picture (vidParam->dec_picture);
-    vidParam->dec_picture = NULL;
+  if (vidParam->picture) {
+    free_storable_picture (vidParam->picture);
+    vidParam->picture = NULL;
     }
   }
 //}}}

@@ -73,7 +73,7 @@ extern void linfo_cbp_inter_other (int len,int info,int *cbp, int *dummy);
 extern void linfo_levrun_inter (int len,int info,int *level,int *irun);
 extern void linfo_levrun_c2x2 (int len,int info,int *level,int *irun);
 
-extern int  uvlc_startcode_follows (Slice* currSlice, int dummy);
+extern int  uvlc_startcode_follows (mSlice* currSlice, int dummy);
 
 extern int  readSyntaxElement_VLC (SyntaxElement *sym, Bitstream* currStream);
 extern int  readSyntaxElement_UVLC (sMacroblock* currMB, SyntaxElement *sym, struct datapartition_dec *dp);

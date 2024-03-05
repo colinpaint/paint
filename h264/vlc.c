@@ -498,7 +498,7 @@ int more_rbsp_data (byte buffer[],int totbitoffset,int bytecount)
  *    Check if there are symbols for the next MB
  ************************************************************************
  */
-int uvlc_startcode_follows(Slice *currSlice, int dummy)
+int uvlc_startcode_follows(mSlice *currSlice, int dummy)
 {
   byte            dp_Nr = assignSE2partition[currSlice->dp_mode][SE_MBTYPE];
   sDataPartition     *dP = &(currSlice->partArr[dp_Nr]);

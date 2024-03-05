@@ -123,7 +123,7 @@ void free_qp_matrices (sCodingParams *cps)
  *    For mapping the q-matrix to the active id and calculate quantisation values
  *
  * \param currSlice
- *    Slice pointer
+ *    mSlice pointer
  * \param pps
  *    Picture parameter set
  * \param sps
@@ -131,7 +131,7 @@ void free_qp_matrices (sCodingParams *cps)
  *
  ************************************************************************
  */
-void assign_quant_params (Slice* currSlice)
+void assign_quant_params (mSlice* currSlice)
 {
   sSPSrbsp* sps = currSlice->active_sps;
   sPPSrbsp* pps = currSlice->active_pps;
@@ -294,7 +294,7 @@ static void set_dequant8x8 (int (*InvLevelScale8x8)[8],  const int (*dequant)[8]
  *
  ************************************************************************
  */
-void CalculateQuant4x4Param (Slice* currSlice)
+void CalculateQuant4x4Param (mSlice* currSlice)
 {
   int k;
   const int (*p_dequant_coef)[4][4] = dequant_coef;
@@ -325,7 +325,7 @@ void CalculateQuant4x4Param (Slice* currSlice)
  *
  ************************************************************************
  */
-void CalculateQuant8x8Param (Slice* currSlice)
+void CalculateQuant8x8Param (mSlice* currSlice)
 {
   int k;
   const int (*p_dequant_coef)[8][8] = dequant_coef8;

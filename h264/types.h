@@ -1,5 +1,5 @@
 #pragma once
-//{{{  enum ColorPlane
+//{{{  enum sColorPlane
 typedef enum {
   // YUV
   PLANE_Y = 0,  // PLANE_Y
@@ -9,7 +9,7 @@ typedef enum {
   PLANE_G = 0,
   PLANE_B = 1,
   PLANE_R = 2
-} ColorPlane;
+} sColorPlane;
 //}}}
 //{{{  enum PredList
 typedef enum {

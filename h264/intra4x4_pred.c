@@ -53,16 +53,16 @@
  ***********************************************************************
  */
 static int intra4x4_dc_pred (sMacroblock *currMB,
-                            ColorPlane pl,
+                            sColorPlane pl,
                             int ioff,
                             int joff)
 {
-  Slice *currSlice = currMB->p_Slice;
+  mSlice *currSlice = currMB->p_Slice;
   sVidParam* vidParam = currMB->vidParam;
 
   int j;
   int s0 = 0;
-  sPixel **imgY = (pl) ? currSlice->dec_picture->imgUV[pl - 1] : currSlice->dec_picture->imgY;
+  sPixel **imgY = (pl) ? currSlice->picture->imgUV[pl - 1] : currSlice->picture->imgY;
   sPixel *curpel = NULL;
 
   PixelPos pix_a, pix_b;
@@ -150,11 +150,11 @@ static int intra4x4_dc_pred (sMacroblock *currMB,
  ***********************************************************************
  */
 static int intra4x4_vert_pred (sMacroblock *currMB,    //!< current macroblock
-                                     ColorPlane pl,         //!< current image plane
+                                     sColorPlane pl,         //!< current image plane
                                      int ioff,              //!< pixel offset X within MB
                                      int joff)              //!< pixel offset Y within MB
 {
-  Slice *currSlice = currMB->p_Slice;
+  mSlice *currSlice = currMB->p_Slice;
   sVidParam* vidParam = currMB->vidParam;
 
   int block_available_up;
@@ -178,7 +178,7 @@ static int intra4x4_vert_pred (sMacroblock *currMB,    //!< current macroblock
   else
   {
     sPixel **mb_pred = currSlice->mb_pred[pl];
-    sPixel *imgY = (pl) ? &currSlice->dec_picture->imgUV[pl - 1][pix_b.pos_y][pix_b.pos_x] : &currSlice->dec_picture->imgY[pix_b.pos_y][pix_b.pos_x];
+    sPixel *imgY = (pl) ? &currSlice->picture->imgUV[pl - 1][pix_b.pos_y][pix_b.pos_x] : &currSlice->picture->imgY[pix_b.pos_y][pix_b.pos_x];
     memcpy(&(mb_pred[joff++][ioff]), imgY, BLOCK_SIZE * sizeof(sPixel));
     memcpy(&(mb_pred[joff++][ioff]), imgY, BLOCK_SIZE * sizeof(sPixel));
     memcpy(&(mb_pred[joff++][ioff]), imgY, BLOCK_SIZE * sizeof(sPixel));
@@ -208,12 +208,12 @@ static int intra4x4_vert_pred (sMacroblock *currMB,    //!< current macroblock
  ***********************************************************************
  */
 static int intra4x4_hor_pred (sMacroblock *currMB,
-                                    ColorPlane pl,
+                                    sColorPlane pl,
                                     int ioff,
                                     int joff)
 {
   sVidParam* vidParam = currMB->vidParam;
-  Slice *currSlice = currMB->p_Slice;
+  mSlice *currSlice = currMB->p_Slice;
 
   PixelPos pix_a;
 
@@ -235,7 +235,7 @@ static int intra4x4_hor_pred (sMacroblock *currMB,
   else
 #if (IMGTYPE == 0)
   {
-    sPixel **imgY = (pl) ? currSlice->dec_picture->imgUV[pl - 1] : currSlice->dec_picture->imgY;
+    sPixel **imgY = (pl) ? currSlice->picture->imgUV[pl - 1] : currSlice->picture->imgY;
     sPixel **mb_pred  =  &currSlice->mb_pred[pl][joff];
     sPixel **img_pred =  &imgY[pix_a.pos_y];
     int pos_x = pix_a.pos_x;
@@ -252,7 +252,7 @@ static int intra4x4_hor_pred (sMacroblock *currMB,
     int pos_x = pix_a.pos_x;
     sPixel *predrow, prediction;
     sPixel **mb_pred  =  &currSlice->mb_pred[pl][joff];
-    sPixel **imgY = (pl) ? currSlice->dec_picture->imgUV[pl - 1] : currSlice->dec_picture->imgY;
+    sPixel **imgY = (pl) ? currSlice->picture->imgUV[pl - 1] : currSlice->picture->imgY;
 
     for(j=0;j<BLOCK_SIZE;++j)
     {
@@ -282,14 +282,14 @@ static int intra4x4_hor_pred (sMacroblock *currMB,
  ***********************************************************************
  */
 static int intra4x4_diag_down_right_pred (sMacroblock *currMB,    //!< current macroblock
-                                                ColorPlane pl,         //!< current image plane
+                                                sColorPlane pl,         //!< current image plane
                                                 int ioff,              //!< pixel offset X within MB
                                                 int joff)              //!< pixel offset Y within MB
 {
-  Slice *currSlice = currMB->p_Slice;
+  mSlice *currSlice = currMB->p_Slice;
   sVidParam* vidParam = currMB->vidParam;
 
-  sPixel **imgY = (pl) ? currSlice->dec_picture->imgUV[pl - 1] : currSlice->dec_picture->imgY;
+  sPixel **imgY = (pl) ? currSlice->picture->imgUV[pl - 1] : currSlice->picture->imgY;
 
   PixelPos pix_a;
   PixelPos pix_b, pix_d;
@@ -366,11 +366,11 @@ static int intra4x4_diag_down_right_pred (sMacroblock *currMB,    //!< current m
  ***********************************************************************
  */
 static int intra4x4_diag_down_left_pred (sMacroblock *currMB,    //!< current macroblock
-                                        ColorPlane pl,         //!< current image plane
+                                        sColorPlane pl,         //!< current image plane
                                         int ioff,              //!< pixel offset X within MB
                                         int joff)              //!< pixel offset Y within MB
 {
-  Slice *currSlice = currMB->p_Slice;
+  mSlice *currSlice = currMB->p_Slice;
   sVidParam* vidParam = currMB->vidParam;
 
   PixelPos pix_b, pix_c;
@@ -398,7 +398,7 @@ static int intra4x4_diag_down_left_pred (sMacroblock *currMB,    //!< current ma
     printf ("warning: Intra_4x4_Diagonal_Down_Left prediction mode not allowed at mb %d\n", (int) currSlice->current_mb_nr);
   else
   {
-    sPixel **imgY = (pl) ? currSlice->dec_picture->imgUV[pl - 1] : currSlice->dec_picture->imgY;
+    sPixel **imgY = (pl) ? currSlice->picture->imgUV[pl - 1] : currSlice->picture->imgY;
     sPixel **mb_pred = currSlice->mb_pred[pl];
 
     sPixel PredPixel[8];
@@ -453,11 +453,11 @@ static int intra4x4_diag_down_left_pred (sMacroblock *currMB,    //!< current ma
  ***********************************************************************
  */
 static int intra4x4_vert_right_pred (sMacroblock *currMB,    //!< current macroblock
-                                    ColorPlane pl,         //!< current image plane
+                                    sColorPlane pl,         //!< current image plane
                                     int ioff,              //!< pixel offset X within MB
                                     int joff)              //!< pixel offset Y within MB
 {
-  Slice *currSlice = currMB->p_Slice;
+  mSlice *currSlice = currMB->p_Slice;
   sVidParam* vidParam = currMB->vidParam;
 
   PixelPos pix_a, pix_b, pix_d;
@@ -486,7 +486,7 @@ static int intra4x4_vert_right_pred (sMacroblock *currMB,    //!< current macrob
   if ((!block_available_up)||(!block_available_left)||(!block_available_up_left))
     printf ("warning: Intra_4x4_Vertical_Right prediction mode not allowed at mb %d\n", (int) currSlice->current_mb_nr);
   {
-    sPixel **imgY = (pl) ? currSlice->dec_picture->imgUV[pl - 1] : currSlice->dec_picture->imgY;
+    sPixel **imgY = (pl) ? currSlice->picture->imgUV[pl - 1] : currSlice->picture->imgY;
     sPixel **mb_pred = currSlice->mb_pred[pl];
     sPixel PredPixel[10];
     sPixel PredPel[13];
@@ -538,11 +538,11 @@ static int intra4x4_vert_right_pred (sMacroblock *currMB,    //!< current macrob
  ***********************************************************************
  */
 static int intra4x4_vert_left_pred (sMacroblock *currMB,    //!< current macroblock
-                                          ColorPlane pl,         //!< current image plane
+                                          sColorPlane pl,         //!< current image plane
                                           int ioff,              //!< pixel offset X within MB
                                           int joff)              //!< pixel offset Y within MB
 {
-  Slice *currSlice = currMB->p_Slice;
+  mSlice *currSlice = currMB->p_Slice;
   sVidParam* vidParam = currMB->vidParam;
 
   PixelPos pix_b, pix_c;
@@ -573,7 +573,7 @@ static int intra4x4_vert_left_pred (sMacroblock *currMB,    //!< current macrobl
   {
     sPixel PredPixel[10];
     sPixel PredPel[13];
-    sPixel **imgY = (pl) ? currSlice->dec_picture->imgUV[pl - 1] : currSlice->dec_picture->imgY;
+    sPixel **imgY = (pl) ? currSlice->picture->imgUV[pl - 1] : currSlice->picture->imgY;
     sPixel **mb_pred = currSlice->mb_pred[pl];
     sPixel *pred_pel = &imgY[pix_b.pos_y][pix_b.pos_x];
 
@@ -627,11 +627,11 @@ static int intra4x4_vert_left_pred (sMacroblock *currMB,    //!< current macrobl
  ***********************************************************************
  */
 static int intra4x4_hor_up_pred (sMacroblock *currMB,    //!< current macroblock
-                                ColorPlane pl,         //!< current image plane
+                                sColorPlane pl,         //!< current image plane
                                 int ioff,              //!< pixel offset X within MB
                                 int joff)              //!< pixel offset Y within MB
 {
-  Slice *currSlice = currMB->p_Slice;
+  mSlice *currSlice = currMB->p_Slice;
   sVidParam* vidParam = currMB->vidParam;
 
   PixelPos pix_a;
@@ -655,7 +655,7 @@ static int intra4x4_hor_up_pred (sMacroblock *currMB,    //!< current macroblock
   {
     sPixel PredPixel[10];
     sPixel PredPel[13];
-    sPixel **imgY = (pl) ? currSlice->dec_picture->imgUV[pl - 1] : currSlice->dec_picture->imgY;
+    sPixel **imgY = (pl) ? currSlice->picture->imgUV[pl - 1] : currSlice->picture->imgY;
     sPixel **mb_pred = currSlice->mb_pred[pl];
 
     sPixel **img_pred = &imgY[pix_a.pos_y];
@@ -699,11 +699,11 @@ static int intra4x4_hor_up_pred (sMacroblock *currMB,    //!< current macroblock
  ***********************************************************************
  */
 static int intra4x4_hor_down_pred (sMacroblock *currMB,    //!< current macroblock
-                                         ColorPlane pl,         //!< current image plane
+                                         sColorPlane pl,         //!< current image plane
                                          int ioff,              //!< pixel offset X within MB
                                          int joff)              //!< pixel offset Y within MB
 {
-  Slice *currSlice = currMB->p_Slice;
+  mSlice *currSlice = currMB->p_Slice;
   sVidParam* vidParam = currMB->vidParam;
 
   PixelPos pix_a, pix_b, pix_d;
@@ -735,7 +735,7 @@ static int intra4x4_hor_down_pred (sMacroblock *currMB,    //!< current macroblo
   {
     sPixel PredPixel[10];
     sPixel PredPel[13];
-    sPixel **imgY = (pl) ? currSlice->dec_picture->imgUV[pl - 1] : currSlice->dec_picture->imgY;
+    sPixel **imgY = (pl) ? currSlice->picture->imgUV[pl - 1] : currSlice->picture->imgY;
     sPixel **mb_pred = currSlice->mb_pred[pl];
 
     sPixel **img_pred = &imgY[pix_a.pos_y];
@@ -786,7 +786,7 @@ static int intra4x4_hor_down_pred (sMacroblock *currMB,    //!< current macroblo
  ***********************************************************************
  */
 int intra_pred_4x4_normal (sMacroblock *currMB,    //!< current macroblock
-                          ColorPlane pl,         //!< current image plane
+                          sColorPlane pl,         //!< current image plane
                           int ioff,              //!< pixel offset X within MB
                           int joff,              //!< pixel offset Y within MB
                           int img_block_x,       //!< location of block X, multiples of 4
@@ -852,16 +852,16 @@ int intra_pred_4x4_normal (sMacroblock *currMB,    //!< current macroblock
  ***********************************************************************
  */
 static int intra4x4_dc_pred_mbaff (sMacroblock *currMB,
-                                   ColorPlane pl,
+                                   sColorPlane pl,
                                    int ioff,
                                    int joff)
 {
-  Slice *currSlice = currMB->p_Slice;
+  mSlice *currSlice = currMB->p_Slice;
   sVidParam* vidParam = currMB->vidParam;
 
   int i,j;
   int s0 = 0;
-  sPixel **imgY = (pl) ? currSlice->dec_picture->imgUV[pl - 1] : currSlice->dec_picture->imgY;
+  sPixel **imgY = (pl) ? currSlice->picture->imgUV[pl - 1] : currSlice->picture->imgY;
 
   PixelPos pix_a[4], pix_b;
 
@@ -949,11 +949,11 @@ static int intra4x4_dc_pred_mbaff (sMacroblock *currMB,
  ***********************************************************************
  */
 static int intra4x4_vert_pred_mbaff (sMacroblock *currMB,    //!< current macroblock
-                                     ColorPlane pl,         //!< current image plane
+                                     sColorPlane pl,         //!< current image plane
                                      int ioff,              //!< pixel offset X within MB
                                      int joff)              //!< pixel offset Y within MB
 {
-  Slice *currSlice = currMB->p_Slice;
+  mSlice *currSlice = currMB->p_Slice;
   sVidParam* vidParam = currMB->vidParam;
 
   int block_available_up;
@@ -977,7 +977,7 @@ static int intra4x4_vert_pred_mbaff (sMacroblock *currMB,    //!< current macrob
   else
   {
     sPixel **mb_pred = currSlice->mb_pred[pl];
-    sPixel *imgY = (pl) ? &currSlice->dec_picture->imgUV[pl - 1][pix_b.pos_y][pix_b.pos_x] : &currSlice->dec_picture->imgY[pix_b.pos_y][pix_b.pos_x];
+    sPixel *imgY = (pl) ? &currSlice->picture->imgUV[pl - 1][pix_b.pos_y][pix_b.pos_x] : &currSlice->picture->imgY[pix_b.pos_y][pix_b.pos_x];
     memcpy(&(mb_pred[joff++][ioff]), imgY, BLOCK_SIZE * sizeof(sPixel));
     memcpy(&(mb_pred[joff++][ioff]), imgY, BLOCK_SIZE * sizeof(sPixel));
     memcpy(&(mb_pred[joff++][ioff]), imgY, BLOCK_SIZE * sizeof(sPixel));
@@ -1007,15 +1007,15 @@ static int intra4x4_vert_pred_mbaff (sMacroblock *currMB,    //!< current macrob
  ***********************************************************************
  */
 static int intra4x4_hor_pred_mbaff (sMacroblock *currMB,
-                                    ColorPlane pl,
+                                    sColorPlane pl,
                                     int ioff,
                                     int joff)
 {
   sVidParam* vidParam = currMB->vidParam;
-  Slice *currSlice = currMB->p_Slice;
+  mSlice *currSlice = currMB->p_Slice;
 
   int i,j;
-  sPixel **imgY = (pl) ? currSlice->dec_picture->imgUV[pl - 1] : currSlice->dec_picture->imgY;
+  sPixel **imgY = (pl) ? currSlice->picture->imgUV[pl - 1] : currSlice->picture->imgY;
 
   PixelPos pix_a[4];
 
@@ -1064,15 +1064,15 @@ static int intra4x4_hor_pred_mbaff (sMacroblock *currMB,
  ***********************************************************************
  */
 static int intra4x4_diag_down_right_pred_mbaff (sMacroblock *currMB,    //!< current macroblock
-                                                      ColorPlane pl,         //!< current image plane
+                                                      sColorPlane pl,         //!< current image plane
                                                       int ioff,              //!< pixel offset X within MB
                                                       int joff)              //!< pixel offset Y within MB
 {
-  Slice *currSlice = currMB->p_Slice;
+  mSlice *currSlice = currMB->p_Slice;
   sVidParam* vidParam = currMB->vidParam;
 
   int i;
-  sPixel **imgY = (pl) ? currSlice->dec_picture->imgUV[pl - 1] : currSlice->dec_picture->imgY;
+  sPixel **imgY = (pl) ? currSlice->picture->imgUV[pl - 1] : currSlice->picture->imgY;
 
   PixelPos pix_a[4];
   PixelPos pix_b, pix_d;
@@ -1153,11 +1153,11 @@ static int intra4x4_diag_down_right_pred_mbaff (sMacroblock *currMB,    //!< cur
  ***********************************************************************
  */
 static int intra4x4_diag_down_left_pred_mbaff (sMacroblock *currMB,    //!< current macroblock
-                                        ColorPlane pl,         //!< current image plane
+                                        sColorPlane pl,         //!< current image plane
                                         int ioff,              //!< pixel offset X within MB
                                         int joff)              //!< pixel offset Y within MB
 {
-  Slice *currSlice = currMB->p_Slice;
+  mSlice *currSlice = currMB->p_Slice;
   sVidParam* vidParam = currMB->vidParam;
 
   PixelPos pix_b, pix_c;
@@ -1185,7 +1185,7 @@ static int intra4x4_diag_down_left_pred_mbaff (sMacroblock *currMB,    //!< curr
     printf ("warning: Intra_4x4_Diagonal_Down_Left prediction mode not allowed at mb %d\n", (int) currSlice->current_mb_nr);
   else
   {
-    sPixel **imgY = (pl) ? currSlice->dec_picture->imgUV[pl - 1] : currSlice->dec_picture->imgY;
+    sPixel **imgY = (pl) ? currSlice->picture->imgUV[pl - 1] : currSlice->picture->imgY;
     sPixel **mb_pred = currSlice->mb_pred[pl];
 
     sPixel PredPixel[8];
@@ -1235,15 +1235,15 @@ static int intra4x4_diag_down_left_pred_mbaff (sMacroblock *currMB,    //!< curr
  ***********************************************************************
  */
 static int intra4x4_vert_right_pred_mbaff (sMacroblock *currMB,    //!< current macroblock
-                                          ColorPlane pl,         //!< current image plane
+                                          sColorPlane pl,         //!< current image plane
                                           int ioff,              //!< pixel offset X within MB
                                           int joff)              //!< pixel offset Y within MB
 {
-  Slice *currSlice = currMB->p_Slice;
+  mSlice *currSlice = currMB->p_Slice;
   sVidParam* vidParam = currMB->vidParam;
 
   int i;
-  sPixel **imgY = (pl) ? currSlice->dec_picture->imgUV[pl - 1] : currSlice->dec_picture->imgY;
+  sPixel **imgY = (pl) ? currSlice->picture->imgUV[pl - 1] : currSlice->picture->imgY;
 
   PixelPos pix_a[4];
   PixelPos pix_b, pix_d;
@@ -1326,11 +1326,11 @@ static int intra4x4_vert_right_pred_mbaff (sMacroblock *currMB,    //!< current 
  ***********************************************************************
  */
 static int intra4x4_vert_left_pred_mbaff (sMacroblock *currMB,    //!< current macroblock
-                                          ColorPlane pl,         //!< current image plane
+                                          sColorPlane pl,         //!< current image plane
                                           int ioff,              //!< pixel offset X within MB
                                           int joff)              //!< pixel offset Y within MB
 {
-  Slice *currSlice = currMB->p_Slice;
+  mSlice *currSlice = currMB->p_Slice;
   sVidParam* vidParam = currMB->vidParam;
 
   PixelPos pix_b, pix_c;
@@ -1360,7 +1360,7 @@ static int intra4x4_vert_left_pred_mbaff (sMacroblock *currMB,    //!< current m
   {
     sPixel PredPixel[10];
     sPixel PredPel[13];
-    sPixel **imgY = (pl) ? currSlice->dec_picture->imgUV[pl - 1] : currSlice->dec_picture->imgY;
+    sPixel **imgY = (pl) ? currSlice->picture->imgUV[pl - 1] : currSlice->picture->imgY;
     sPixel **mb_pred = currSlice->mb_pred[pl];
     sPixel *pred_pel = &imgY[pix_b.pos_y][pix_b.pos_x];
 
@@ -1409,15 +1409,15 @@ static int intra4x4_vert_left_pred_mbaff (sMacroblock *currMB,    //!< current m
  ***********************************************************************
  */
 static int intra4x4_hor_up_pred_mbaff (sMacroblock *currMB,    //!< current macroblock
-                                      ColorPlane pl,         //!< current image plane
+                                      sColorPlane pl,         //!< current image plane
                                       int ioff,              //!< pixel offset X within MB
                                       int joff)              //!< pixel offset Y within MB
 {
-  Slice *currSlice = currMB->p_Slice;
+  mSlice *currSlice = currMB->p_Slice;
   sVidParam* vidParam = currMB->vidParam;
 
   int i;
-  sPixel **imgY = (pl) ? currSlice->dec_picture->imgUV[pl - 1] : currSlice->dec_picture->imgY;
+  sPixel **imgY = (pl) ? currSlice->picture->imgUV[pl - 1] : currSlice->picture->imgY;
 
   PixelPos pix_a[4];
 
@@ -1485,15 +1485,15 @@ static int intra4x4_hor_up_pred_mbaff (sMacroblock *currMB,    //!< current macr
  ***********************************************************************
  */
 static int intra4x4_hor_down_pred_mbaff (sMacroblock *currMB,    //!< current macroblock
-                                         ColorPlane pl,         //!< current image plane
+                                         sColorPlane pl,         //!< current image plane
                                          int ioff,              //!< pixel offset X within MB
                                          int joff)              //!< pixel offset Y within MB
 {
-  Slice *currSlice = currMB->p_Slice;
+  mSlice *currSlice = currMB->p_Slice;
   sVidParam* vidParam = currMB->vidParam;
 
   int i;
-  sPixel **imgY = (pl) ? currSlice->dec_picture->imgUV[pl - 1] : currSlice->dec_picture->imgY;
+  sPixel **imgY = (pl) ? currSlice->picture->imgUV[pl - 1] : currSlice->picture->imgY;
 
   PixelPos pix_a[4];
   PixelPos pix_b, pix_d;
@@ -1577,7 +1577,7 @@ static int intra4x4_hor_down_pred_mbaff (sMacroblock *currMB,    //!< current ma
  ***********************************************************************
  */
 int intra_pred_4x4_mbaff (sMacroblock *currMB,    //!< current macroblock
-                        ColorPlane pl,         //!< current image plane
+                        sColorPlane pl,         //!< current image plane
                         int ioff,              //!< pixel offset X within MB
                         int joff,              //!< pixel offset Y within MB
                         int img_block_x,       //!< location of block X, multiples of 4

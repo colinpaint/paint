@@ -376,7 +376,7 @@ void gen_pic_list_from_frame_list (sPictureStructure currStructure, sFrameStore 
 //}}}
 //{{{
 
-sPicture*  get_long_term_pic (Slice* currSlice, sDPB* dpb, int LongtermPicNum) {
+sPicture*  get_long_term_pic (mSlice* currSlice, sDPB* dpb, int LongtermPicNum) {
 
   for (uint32 i = 0; i < dpb->ltref_frames_in_buffer; i++) {
     if (currSlice->structure==FRAME) {
@@ -1343,7 +1343,7 @@ void unmark_for_long_term_reference (sFrameStore* fs) {
 //}}}
 
 //{{{
-void update_pic_num (Slice* currSlice) {
+void update_pic_num (mSlice* currSlice) {
 
   unsigned int i;
   sVidParam* vidParam = currSlice->vidParam;
@@ -1408,14 +1408,14 @@ void update_pic_num (Slice* currSlice) {
   }
 //}}}
 //{{{
-void init_lists_i_slice (Slice* currSlice) {
+void init_lists_i_slice (mSlice* currSlice) {
 
   currSlice->listXsize[0] = 0;
   currSlice->listXsize[1] = 0;
   }
 //}}}
 //{{{
-void init_lists_p_slice (Slice* currSlice) {
+void init_lists_p_slice (mSlice* currSlice) {
 
   sVidParam* vidParam = currSlice->vidParam;
   sDPB* dpb = currSlice->dpb;
@@ -1494,7 +1494,7 @@ void init_lists_p_slice (Slice* currSlice) {
   }
 //}}}
 //{{{
-void init_lists_b_slice (Slice* currSlice) {
+void init_lists_b_slice (mSlice* currSlice) {
 
   sVidParam* vidParam = currSlice->vidParam;
   sDPB* dpb = currSlice->dpb;
@@ -1511,7 +1511,7 @@ void init_lists_b_slice (Slice* currSlice) {
   sFrameStore **fs_listlt;
 
   {
-    // B-Slice
+    // B-mSlice
     if (currSlice->structure == FRAME) {
       for (i = 0; i < dpb->ref_frames_in_buffer; i++)
         if (dpb->fs_ref[i]->is_used==3)
@@ -1652,7 +1652,7 @@ void init_lists_b_slice (Slice* currSlice) {
  *
  ************************************************************************
  */
-void init_mbaff_lists (sVidParam* vidParam, Slice* currSlice)
+void init_mbaff_lists (sVidParam* vidParam, mSlice* currSlice)
 {
   unsigned j;
   int i;
@@ -1681,7 +1681,7 @@ void init_mbaff_lists (sVidParam* vidParam, Slice* currSlice)
   }
 //}}}
 //{{{
-sPicture* get_short_term_pic (Slice* currSlice, sDPB* dpb, int picNum) {
+sPicture* get_short_term_pic (mSlice* currSlice, sDPB* dpb, int picNum) {
 
   unsigned i;
 
@@ -1706,7 +1706,7 @@ sPicture* get_short_term_pic (Slice* currSlice, sDPB* dpb, int picNum) {
 //}}}
 
 //{{{
-static void reorder_short_term (Slice* currSlice, int cur_list, int num_ref_idx_lX_active_minus1, int picNumLX, int *refIdxLX) {
+static void reorder_short_term (mSlice* currSlice, int cur_list, int num_ref_idx_lX_active_minus1, int picNumLX, int *refIdxLX) {
   sPicture **RefPicListX = currSlice->listX[cur_list];
   int cIdx, nIdx;
 
@@ -1730,7 +1730,7 @@ static void reorder_short_term (Slice* currSlice, int cur_list, int num_ref_idx_
 }
 //}}}
 //{{{
-static void reorder_long_term (Slice* currSlice, sPicture **RefPicListX, int num_ref_idx_lX_active_minus1, int LongTermPicNum, int *refIdxLX)
+static void reorder_long_term (mSlice* currSlice, sPicture **RefPicListX, int num_ref_idx_lX_active_minus1, int LongTermPicNum, int *refIdxLX)
 {
   int cIdx, nIdx;
 
@@ -2116,7 +2116,7 @@ void flush_dpb (sDPB* dpb)
 //}}}
 
 //{{{
-void reorder_ref_pic_list (Slice* currSlice, int cur_list) {
+void reorder_ref_pic_list (mSlice* currSlice, int cur_list) {
 
   int *modification_of_pic_nums_idc = currSlice->modification_of_pic_nums_idc[cur_list];
   int *abs_diff_pic_num_minus1 = currSlice->abs_diff_pic_num_minus1[cur_list];
@@ -2440,7 +2440,7 @@ void dpb_combine_field (sVidParam* vidParam, sFrameStore *fs)
 }
 //}}}
 //{{{
-void alloc_ref_pic_list_reordering_buffer (Slice* currSlice)
+void alloc_ref_pic_list_reordering_buffer (mSlice* currSlice)
 {
   if (currSlice->slice_type != I_SLICE && currSlice->slice_type != SI_SLICE) {
     int size = currSlice->num_ref_idx_active[LIST_0] + 1;
@@ -2474,7 +2474,7 @@ void alloc_ref_pic_list_reordering_buffer (Slice* currSlice)
 }
 //}}}
 //{{{
-void free_ref_pic_list_reordering_buffer (Slice* currSlice)
+void free_ref_pic_list_reordering_buffer (mSlice* currSlice)
 {
   if (currSlice->modification_of_pic_nums_idc[LIST_0])
     free(currSlice->modification_of_pic_nums_idc[LIST_0]);
@@ -2500,7 +2500,7 @@ void free_ref_pic_list_reordering_buffer (Slice* currSlice)
 }
 //}}}
 //{{{
-void fill_frame_num_gap (sVidParam* vidParam, Slice* currSlice) {
+void fill_frame_num_gap (sVidParam* vidParam, mSlice* currSlice) {
 
   sSPSrbsp *active_sps = vidParam->active_sps;
 
@@ -2548,7 +2548,7 @@ void fill_frame_num_gap (sVidParam* vidParam, Slice* currSlice) {
   }
 //}}}
 //{{{
-void compute_colocated (Slice* currSlice, sPicture **listX[6]) {
+void compute_colocated (mSlice* currSlice, sPicture **listX[6]) {
 
   int i, j;
 
@@ -2560,11 +2560,11 @@ void compute_colocated (Slice* currSlice, sPicture **listX[6]) {
         int prescale, iTRb, iTRp;
 
         if (j == 0)
-          iTRb = iClip3( -128, 127, vidParam->dec_picture->poc - listX[LIST_0 + j][i]->poc );
+          iTRb = iClip3( -128, 127, vidParam->picture->poc - listX[LIST_0 + j][i]->poc );
         else if (j == 2)
-          iTRb = iClip3( -128, 127, vidParam->dec_picture->top_poc - listX[LIST_0 + j][i]->poc );
+          iTRb = iClip3( -128, 127, vidParam->picture->top_poc - listX[LIST_0 + j][i]->poc );
         else
-          iTRb = iClip3( -128, 127, vidParam->dec_picture->bottom_poc - listX[LIST_0 + j][i]->poc );
+          iTRb = iClip3( -128, 127, vidParam->picture->bottom_poc - listX[LIST_0 + j][i]->poc );
 
         iTRp = iClip3( -128, 127,  listX[LIST_1 + j][0]->poc - listX[LIST_0 + j][i]->poc);
 

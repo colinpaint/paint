@@ -134,7 +134,7 @@ static sMacroblock* get_non_aff_neighbor_chroma (sMacroblock *mb, int xN, int yN
  *    Filters 16 pel block edge of Super MB Frame coded MBs
  *****************************************************************************************
  */
-static void edge_loop_luma_ver_MBAff (ColorPlane pl, sPixel** Img, byte *Strength, sMacroblock *MbQ, int edge)
+static void edge_loop_luma_ver_MBAff (sColorPlane pl, sPixel** Img, byte *Strength, sMacroblock *MbQ, int edge)
 {
   int      pel, Strng ;
   sPixel   L2 = 0, L1, L0, R0, R1, R2 = 0;
@@ -260,7 +260,7 @@ static void edge_loop_luma_ver_MBAff (ColorPlane pl, sPixel** Img, byte *Strengt
  *    Filters 16 pel block edge of Super MB Frame coded MBs
  *****************************************************************************************
  */
-static void edge_loop_luma_hor_MBAff (ColorPlane pl, sPixel** Img, byte *Strength, sMacroblock *MbQ,
+static void edge_loop_luma_hor_MBAff (sColorPlane pl, sPixel** Img, byte *Strength, sMacroblock *MbQ,
               int edge, sPicture *p)
 {
   int      width = p->iLumaStride; //p->size_x;
@@ -580,7 +580,7 @@ static void get_strength_ver_MBAff (byte *Strength, sMacroblock *MbQ, int edge, 
 
   PixelPos pixP;
   sVidParam* vidParam = MbQ->vidParam;
-  BlockPos *PicPos = vidParam->PicPos;
+  sBlockPos *PicPos = vidParam->PicPos;
 
   if ((p->slice_type==SP_SLICE)||(p->slice_type==SI_SLICE) )
   {
@@ -631,8 +631,8 @@ static void get_strength_ver_MBAff (byte *Strength, sMacroblock *MbQ, int edge, 
             int blk_y2 = (pixP.pos_y >> 2);
             int blk_x2 = (pixP.pos_x >> 2);
 
-            PicMotionParams *mv_info_p = &p->mv_info[blk_y ][blk_x ];
-            PicMotionParams *mv_info_q = &p->mv_info[blk_y2][blk_x2];
+            sPicMotionParams *mv_info_p = &p->mv_info[blk_y ][blk_x ];
+            sPicMotionParams *mv_info_q = &p->mv_info[blk_y2][blk_x2];
             StorablePicturePtr ref_p0 = mv_info_p->ref_pic[LIST_0];
             StorablePicturePtr ref_q0 = mv_info_q->ref_pic[LIST_0];
             StorablePicturePtr ref_p1 = mv_info_p->ref_pic[LIST_1];
@@ -720,8 +720,8 @@ static void get_strength_ver_MBAff (byte *Strength, sMacroblock *MbQ, int edge, 
                 int blk_y2 = (pixP.pos_y >> 2);
                 int blk_x2 = (pixP.pos_x >> 2);
 
-                PicMotionParams *mv_info_p = &p->mv_info[blk_y ][blk_x ];
-                PicMotionParams *mv_info_q = &p->mv_info[blk_y2][blk_x2];
+                sPicMotionParams *mv_info_p = &p->mv_info[blk_y ][blk_x ];
+                sPicMotionParams *mv_info_q = &p->mv_info[blk_y2][blk_x2];
                 StorablePicturePtr ref_p0 = mv_info_p->ref_pic[LIST_0];
                 StorablePicturePtr ref_q0 = mv_info_q->ref_pic[LIST_0];
                 StorablePicturePtr ref_p1 = mv_info_p->ref_pic[LIST_1];
@@ -791,7 +791,7 @@ static void get_strength_hor_MBAff (byte *Strength, sMacroblock *MbQ, int edge, 
 
   PixelPos pixP;
   sVidParam* vidParam = MbQ->vidParam;
-  BlockPos *PicPos = vidParam->PicPos;
+  sBlockPos *PicPos = vidParam->PicPos;
 
   if ((p->slice_type==SP_SLICE)||(p->slice_type==SI_SLICE) )
   {
@@ -858,8 +858,8 @@ static void get_strength_hor_MBAff (byte *Strength, sMacroblock *MbQ, int edge, 
             blk_x2 = (short) (pixP.pos_x >> 2);
 
             {
-              PicMotionParams *mv_info_p = &p->mv_info[blk_y ][blk_x ];
-              PicMotionParams *mv_info_q = &p->mv_info[blk_y2][blk_x2];
+              sPicMotionParams *mv_info_p = &p->mv_info[blk_y ][blk_x ];
+              sPicMotionParams *mv_info_q = &p->mv_info[blk_y2][blk_x2];
               StorablePicturePtr ref_p0 = mv_info_p->ref_pic[LIST_0];
               StorablePicturePtr ref_q0 = mv_info_q->ref_pic[LIST_0];
               StorablePicturePtr ref_p1 = mv_info_p->ref_pic[LIST_1];
@@ -928,7 +928,7 @@ static void get_db_strength_mbaff (sVidParam* vidParam, sPicture *p, int MbQAddr
     int filterLeftMbEdgeFlag;
     int filterTopMbEdgeFlag;
 
-    Slice* currSlice = MbQ->p_Slice;
+    mSlice* currSlice = MbQ->p_Slice;
     int mvlimit = ((p->structure!=FRAME) || (p->mb_aff_frame_flag && MbQ->mb_field)) ? 2 : 4;
     sSPSrbsp *active_sps = vidParam->active_sps;
 
@@ -1024,7 +1024,7 @@ static void perform_db_mbaff (sVidParam* vidParam, sPicture *p, int MbQAddr)
 
     sPixel     **imgY = p->imgY;
     sPixel   ***imgUV = p->imgUV;
-    Slice * currSlice = MbQ->p_Slice;
+    mSlice * currSlice = MbQ->p_Slice;
     int       mvlimit = ((p->structure!=FRAME) || (p->mb_aff_frame_flag && MbQ->mb_field)) ? 2 : 4;
 
     sSPSrbsp *active_sps = vidParam->active_sps;
@@ -1204,9 +1204,9 @@ static void set_loop_filter_functions_mbaff (sVidParam* vidParam)
 static void get_strength_ver (sMacroblock *MbQ, int edge, int mvlimit, sPicture *p)
 {
   byte *Strength = MbQ->strength_ver[edge];
-  Slice* currSlice = MbQ->p_Slice;
+  mSlice* currSlice = MbQ->p_Slice;
   int     StrValue, i;
-  BlockPos *PicPos = MbQ->vidParam->PicPos;
+  sBlockPos *PicPos = MbQ->vidParam->PicPos;
 
   if ((currSlice->slice_type==SP_SLICE)||(currSlice->slice_type==SI_SLICE) )
   {
@@ -1248,7 +1248,7 @@ static void get_strength_ver (sMacroblock *MbQ, int edge, int mvlimit, sPicture 
         else
         {
           int      blkP, blkQ, idx;
-          BlockPos mb = PicPos[ MbQ->mbAddrX ];
+          sBlockPos mb = PicPos[ MbQ->mbAddrX ];
           mb.x <<= BLOCK_SHIFT;
           mb.y <<= BLOCK_SHIFT;
 
@@ -1264,8 +1264,8 @@ static void get_strength_ver (sMacroblock *MbQ, int edge, int mvlimit, sPicture 
               int blk_x  = mb.x + (blkQ  & 3);
               int blk_y2 = (short)(get_pos_y_luma(neighbor,  0) + idx) >> 2;
               int blk_x2 = (short)(get_pos_x_luma(neighbor, xQ)      ) >> 2;
-              PicMotionParams *mv_info_p = &p->mv_info[blk_y ][blk_x ];
-              PicMotionParams *mv_info_q = &p->mv_info[blk_y2][blk_x2];
+              sPicMotionParams *mv_info_p = &p->mv_info[blk_y ][blk_x ];
+              sPicMotionParams *mv_info_q = &p->mv_info[blk_y2][blk_x2];
               StorablePicturePtr ref_p0 = mv_info_p->ref_pic[LIST_0];
               StorablePicturePtr ref_q0 = mv_info_q->ref_pic[LIST_0];
               StorablePicturePtr ref_p1 = mv_info_p->ref_pic[LIST_1];
@@ -1336,8 +1336,8 @@ static void get_strength_hor (sMacroblock *MbQ, int edge, int mvlimit, sPicture 
 {
   byte  *Strength = MbQ->strength_hor[edge];
   int    StrValue, i;
-  Slice* currSlice = MbQ->p_Slice;
-  BlockPos *PicPos = MbQ->vidParam->PicPos;
+  mSlice* currSlice = MbQ->p_Slice;
+  sBlockPos *PicPos = MbQ->vidParam->PicPos;
 
   if ((currSlice->slice_type==SP_SLICE)||(currSlice->slice_type==SI_SLICE) )
   {
@@ -1382,7 +1382,7 @@ static void get_strength_hor (sMacroblock *MbQ, int edge, int mvlimit, sPicture 
         else
         {
           int      blkP, blkQ, idx;
-          BlockPos mb = PicPos[ MbQ->mbAddrX ];
+          sBlockPos mb = PicPos[ MbQ->mbAddrX ];
           mb.x <<= 2;
           mb.y <<= 2;
 
@@ -1400,8 +1400,8 @@ static void get_strength_hor (sMacroblock *MbQ, int edge, int mvlimit, sPicture 
               int blk_y2 = get_pos_y_luma(neighbor,yQ) >> 2;
               int blk_x2 = ((short)(get_pos_x_luma(neighbor,0)) >> 2) + idx;
 
-              PicMotionParams *mv_info_p = &p->mv_info[blk_y ][blk_x ];
-              PicMotionParams *mv_info_q = &p->mv_info[blk_y2][blk_x2];
+              sPicMotionParams *mv_info_p = &p->mv_info[blk_y ][blk_x ];
+              sPicMotionParams *mv_info_q = &p->mv_info[blk_y2][blk_x2];
 
               StorablePicturePtr ref_p0 = mv_info_p->ref_pic[LIST_0];
               StorablePicturePtr ref_q0 = mv_info_q->ref_pic[LIST_0];
@@ -1507,7 +1507,7 @@ static void get_db_strength_normal (sVidParam* vidParam, sPicture *p, int MbQAdd
       int           filterLeftMbEdgeFlag;
       int           filterTopMbEdgeFlag;
 
-      Slice * currSlice = MbQ->p_Slice;
+      mSlice * currSlice = MbQ->p_Slice;
       int       mvlimit = (p->structure!=FRAME) ? 2 : 4;
 
       MbQ->DeblockCall = 1;
@@ -1747,7 +1747,7 @@ static void luma_ver_deblock_normal (sPixel **cur_img, int pos_x1, int Alpha, in
  *    Filters 16 pel block edge of Frame or Field coded MBs
  *****************************************************************************************
  */
-static void edge_loop_luma_ver (ColorPlane pl, sPixel** Img, byte *Strength, sMacroblock *MbQ, int edge)
+static void edge_loop_luma_ver (sColorPlane pl, sPixel** Img, byte *Strength, sMacroblock *MbQ, int edge)
 {
   sVidParam* vidParam = MbQ->vidParam;
 
@@ -1953,7 +1953,7 @@ static void luma_hor_deblock_normal (sPixel *imgP, sPixel *imgQ, int width, int 
  *    Filters 16 pel block edge of Frame or Field coded MBs
  *****************************************************************************************
  */
-static void edge_loop_luma_hor (ColorPlane pl, sPixel** Img, byte *Strength, sMacroblock *MbQ, int edge, sPicture *p)
+static void edge_loop_luma_hor (sColorPlane pl, sPixel** Img, byte *Strength, sMacroblock *MbQ, int edge, sPicture *p)
 {
   sVidParam* vidParam = MbQ->vidParam;
 
@@ -2184,7 +2184,7 @@ static void edge_loop_chroma_hor (sPixel** Img, byte *Strength, sMacroblock *MbQ
 static void perform_db_dep_normal (sMacroblock *MbQ, sPicture *p)
 {
   sVidParam* vidParam = MbQ->vidParam;
-  Slice * currSlice = MbQ->p_Slice;
+  mSlice * currSlice = MbQ->p_Slice;
   int           edge;
 
   short         mb_x, mb_y;
@@ -2330,7 +2330,7 @@ static void perform_db_dep_normal (sMacroblock *MbQ, sPicture *p)
 static void perform_db_ind_normal (sMacroblock *MbQ, sPicture *p)
 {
   sVidParam* vidParam = MbQ->vidParam;
-  Slice * currSlice = MbQ->p_Slice;
+  mSlice * currSlice = MbQ->p_Slice;
   //short         mb_x, mb_y;
 
   int           filterLeftMbEdgeFlag;
@@ -2721,7 +2721,7 @@ static void DeblockMb (sVidParam* vidParam, sPicture *p, int MbQAddr) {
 
     sPixel     **imgY = p->imgY;
     sPixel   ***imgUV = p->imgUV;
-    Slice * currSlice = MbQ->p_Slice;
+    mSlice * currSlice = MbQ->p_Slice;
     int       mvlimit = ((p->structure!=FRAME) || (p->mb_aff_frame_flag && MbQ->mb_field)) ? 2 : 4;
     sSPSrbsp* active_sps = vidParam->active_sps;
 
@@ -2880,7 +2880,7 @@ static void get_db_strength (sVidParam* vidParam, sPicture *p, int MbQAddr) {
     int           filterLeftMbEdgeFlag;
     int           filterTopMbEdgeFlag;
 
-    Slice * currSlice = MbQ->p_Slice;
+    mSlice * currSlice = MbQ->p_Slice;
     int       mvlimit = ((p->structure!=FRAME) || (p->mb_aff_frame_flag && MbQ->mb_field)) ? 2 : 4;
     sSPSrbsp *active_sps = vidParam->active_sps;
 
@@ -2979,7 +2979,7 @@ static void perform_db (sVidParam* vidParam, sPicture *p, int MbQAddr) {
     int           edge_cr;
     sPixel     **imgY = p->imgY;
     sPixel   ***imgUV = p->imgUV;
-    Slice * currSlice = MbQ->p_Slice;
+    mSlice * currSlice = MbQ->p_Slice;
     int       mvlimit = ((p->structure!=FRAME) || (p->mb_aff_frame_flag && MbQ->mb_field)) ? 2 : 4;
     sSPSrbsp *active_sps = vidParam->active_sps;
 

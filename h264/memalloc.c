@@ -52,41 +52,41 @@ void free_top_bot_planes (sPixel **imgTopField, sPixel **imgBotField)
 /*!
  ************************************************************************
  * \brief
- *    Allocate 2D memory array -> PicMotionParams array2D[dim0][dim1]
+ *    Allocate 2D memory array -> sPicMotionParams array2D[dim0][dim1]
  *
  * \par Output:
  *    memory size in bytes
  ************************************************************************/
-int get_mem2Dmp (PicMotionParams ***array2D, int dim0, int dim1)
+int get_mem2Dmp (sPicMotionParams ***array2D, int dim0, int dim1)
 {
   int i;
 
-  if((*array2D    = (PicMotionParams**)mem_malloc(dim0 *      sizeof(PicMotionParams*))) == NULL)
+  if((*array2D    = (sPicMotionParams**)mem_malloc(dim0 *      sizeof(sPicMotionParams*))) == NULL)
     no_mem_exit("get_mem2Dmp: array2D");
-  if((*(*array2D) = (PicMotionParams* )mem_calloc(dim0 * dim1, sizeof(PicMotionParams ))) == NULL)
+  if((*(*array2D) = (sPicMotionParams* )mem_calloc(dim0 * dim1, sizeof(sPicMotionParams ))) == NULL)
     no_mem_exit("get_mem2Dmp: array2D");
 
   for(i = 1 ; i < dim0; i++)
     (*array2D)[i] =  (*array2D)[i-1] + dim1;
 
-  return dim0 * (sizeof(PicMotionParams*) + dim1 * sizeof(PicMotionParams));
+  return dim0 * (sizeof(sPicMotionParams*) + dim1 * sizeof(sPicMotionParams));
 }
 //}}}
 //{{{
 /*!
  ************************************************************************
  * \brief
- *    Allocate 3D memory array -> PicMotionParams array3D[frames][dim0][dim1]
+ *    Allocate 3D memory array -> sPicMotionParams array3D[frames][dim0][dim1]
  *
  * \par Output:
  *    memory size in bytes
  ************************************************************************
  */
-int get_mem3Dmp (PicMotionParams ****array3D, int dim0, int dim1, int dim2)
+int get_mem3Dmp (sPicMotionParams ****array3D, int dim0, int dim1, int dim2)
 {
-  int i, mem_size = dim0 * sizeof(PicMotionParams**);
+  int i, mem_size = dim0 * sizeof(sPicMotionParams**);
 
-  if(((*array3D) = (PicMotionParams***)mem_malloc(dim0 * sizeof(PicMotionParams**))) == NULL)
+  if(((*array3D) = (sPicMotionParams***)mem_malloc(dim0 * sizeof(sPicMotionParams**))) == NULL)
     no_mem_exit("get_mem3Dmp: array3D");
 
   mem_size += get_mem2Dmp(*array3D, dim0 * dim1, dim2);
@@ -105,7 +105,7 @@ int get_mem3Dmp (PicMotionParams ****array3D, int dim0, int dim1, int dim2)
  *    which was allocated with get_mem2Dmp()
  ************************************************************************
  */
-void free_mem2Dmp (PicMotionParams **array2D)
+void free_mem2Dmp (sPicMotionParams **array2D)
 {
   if (array2D)
   {
@@ -130,7 +130,7 @@ void free_mem2Dmp (PicMotionParams **array2D)
  *    which was allocated with get_mem3Dmp()
  ************************************************************************
  */
-void free_mem3Dmp (PicMotionParams ***array3D)
+void free_mem3Dmp (sPicMotionParams ***array3D)
 {
   if (array3D)
   {

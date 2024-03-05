@@ -68,11 +68,11 @@ static void recon8x8_lossless (int **m7, sPixel **mb_rec, sPixel **mpr, int max_
  ***********************************************************************
  */
 void itrans8x8 (sMacroblock *currMB,   //!< current macroblock
-               ColorPlane pl,        //!< used color plane
+               sColorPlane pl,        //!< used color plane
                int ioff,             //!< index to 4x4 block
                int joff)             //!< index to 4x4 block
 {
-  Slice *currSlice = currMB->p_Slice;
+  mSlice *currSlice = currMB->p_Slice;
 
   int    **m7     = currSlice->mb_rres[pl];
 
@@ -95,11 +95,11 @@ void itrans8x8 (sMacroblock *currMB,   //!< current macroblock
  ***********************************************************************
  */
 void icopy8x8 (sMacroblock *currMB,   //!< current macroblock
-               ColorPlane pl,        //!< used color plane
+               sColorPlane pl,        //!< used color plane
                int ioff,             //!< index to 4x4 block
                int joff)             //!< index to 4x4 block
 {
-  Slice *currSlice = currMB->p_Slice;
+  mSlice *currSlice = currMB->p_Slice;
 
   copy8x8  (&currSlice->mb_rec[pl][joff], &currSlice->mb_pred[pl][joff], ioff);
 }
