@@ -96,9 +96,9 @@ typedef struct storable_picture {
   char listXsize[MAX_NUM_SLICES][2];
   struct storable_picture** listX[MAX_NUM_SLICES][2];
   int         layer_id;
-  } sStorablePicture;
+  } sPicture;
 //}}}
-typedef sStorablePicture* StorablePicturePtr;
+typedef sPicture* StorablePicturePtr;
 //{{{
 //! Frame Stores for Decoded Picture Buffer
 typedef struct frame_store {
@@ -120,9 +120,9 @@ typedef struct frame_store {
   // picture error concealment
   int concealment_reference;
 
-  sStorablePicture *frame;
-  sStorablePicture *top_field;
-  sStorablePicture *bottom_field;
+  sPicture *frame;
+  sPicture *top_field;
+  sPicture *bottom_field;
   int       layer_id;
   } sFrameStore;
 //}}}
@@ -150,15 +150,15 @@ typedef struct decoded_picture_buffer {
   sFrameStore* last_picture;
   unsigned used_size_il;
   int layer_id;
-  } sDecodedPictureBuffer;
+  } sDPB;
 //}}}
 
 //{{{
 // compares two stored pictures by picture number for qsort in descending order
 static inline int compare_pic_by_pic_num_desc( const void *arg1, const void *arg2 )
 {
-  int pic_num1 = (*(sStorablePicture**)arg1)->pic_num;
-  int pic_num2 = (*(sStorablePicture**)arg2)->pic_num;
+  int pic_num1 = (*(sPicture**)arg1)->pic_num;
+  int pic_num2 = (*(sPicture**)arg2)->pic_num;
 
   if (pic_num1 < pic_num2)
     return 1;
@@ -172,8 +172,8 @@ static inline int compare_pic_by_pic_num_desc( const void *arg1, const void *arg
 // compares two stored pictures by picture number for qsort in descending order
 static inline int compare_pic_by_lt_pic_num_asc( const void *arg1, const void *arg2 )
 {
-  int long_term_pic_num1 = (*(sStorablePicture**)arg1)->long_term_pic_num;
-  int long_term_pic_num2 = (*(sStorablePicture**)arg2)->long_term_pic_num;
+  int long_term_pic_num1 = (*(sPicture**)arg1)->long_term_pic_num;
+  int long_term_pic_num2 = (*(sPicture**)arg2)->long_term_pic_num;
 
   if ( long_term_pic_num1 < long_term_pic_num2)
     return -1;
@@ -216,8 +216,8 @@ static inline int compare_fs_by_lt_pic_idx_asc( const void *arg1, const void *ar
 // compares two stored pictures by poc for qsort in ascending order
 static inline int compare_pic_by_poc_asc( const void *arg1, const void *arg2 )
 {
-  int poc1 = (*(sStorablePicture**)arg1)->poc;
-  int poc2 = (*(sStorablePicture**)arg2)->poc;
+  int poc1 = (*(sPicture**)arg1)->poc;
+  int poc2 = (*(sPicture**)arg2)->poc;
 
   if ( poc1 < poc2)
     return -1;
@@ -231,8 +231,8 @@ static inline int compare_pic_by_poc_asc( const void *arg1, const void *arg2 )
 // compares two stored pictures by poc for qsort in descending order
 static inline int compare_pic_by_poc_desc( const void *arg1, const void *arg2 )
 {
-  int poc1 = (*(sStorablePicture**)arg1)->poc;
-  int poc2 = (*(sStorablePicture**)arg2)->poc;
+  int poc1 = (*(sPicture**)arg1)->poc;
+  int poc2 = (*(sPicture**)arg2)->poc;
 
   if (poc1 < poc2)
     return 1;
@@ -274,51 +274,51 @@ static inline int compare_fs_by_poc_desc( const void *arg1, const void *arg2 )
 //}}}
 //{{{
 // returns true, if picture is short term reference picture
-static inline int is_short_ref(sStorablePicture *s)
+static inline int is_short_ref(sPicture *s)
 {
   return ((s->used_for_reference) && (!(s->is_long_term)));
 }
 //}}}
 //{{{
 // returns true, if picture is long term reference picture
-static inline int is_long_ref(sStorablePicture *s)
+static inline int is_long_ref(sPicture *s)
 {
   return ((s->used_for_reference) && (s->is_long_term));
 }
 //}}}
 
-extern void gen_pic_list_from_frame_list (sPictureStructure currStructure, sFrameStore **fs_list, int list_idx, sStorablePicture **list, char *list_size, int long_term);
-extern sStorablePicture* get_long_term_pic (Slice* currSlice, sDecodedPictureBuffer* p_Dpb, int LongtermPicNum);
+extern void gen_pic_list_from_frame_list (sPictureStructure currStructure, sFrameStore **fs_list, int list_idx, sPicture **list, char *list_size, int long_term);
+extern sPicture* get_long_term_pic (Slice* currSlice, sDPB* dpb, int LongtermPicNum);
 
-extern void update_ref_list (sDecodedPictureBuffer* p_Dpb);
-extern void update_ltref_list (sDecodedPictureBuffer* p_Dpb);
+extern void update_ref_list (sDPB* dpb);
+extern void update_ltref_list (sDPB* dpb);
 
-extern void mm_mark_current_picture_long_term (sDecodedPictureBuffer* p_Dpb, sStorablePicture *p, int long_term_frame_idx);
-extern void mm_unmark_short_term_for_reference (sDecodedPictureBuffer* p_Dpb, sStorablePicture *p, int difference_of_pic_nums_minus1);
-extern void mm_unmark_long_term_for_reference (sDecodedPictureBuffer* p_Dpb, sStorablePicture *p, int long_term_pic_num);
-extern void mm_assign_long_term_frame_idx (sDecodedPictureBuffer* p_Dpb, sStorablePicture* p, int difference_of_pic_nums_minus1, int long_term_frame_idx);
-extern void mm_update_max_long_term_frame_idx (sDecodedPictureBuffer* p_Dpb, int max_long_term_frame_idx_plus1);
-extern void mm_unmark_all_short_term_for_reference (sDecodedPictureBuffer* p_Dpb);
-extern void mm_unmark_all_long_term_for_reference (sDecodedPictureBuffer* p_Dpb);
+extern void mm_mark_current_picture_long_term (sDPB* dpb, sPicture *p, int long_term_frame_idx);
+extern void mm_unmark_short_term_for_reference (sDPB* dpb, sPicture *p, int difference_of_pic_nums_minus1);
+extern void mm_unmark_long_term_for_reference (sDPB* dpb, sPicture *p, int long_term_pic_num);
+extern void mm_assign_long_term_frame_idx (sDPB* dpb, sPicture* p, int difference_of_pic_nums_minus1, int long_term_frame_idx);
+extern void mm_update_max_long_term_frame_idx (sDPB* dpb, int max_long_term_frame_idx_plus1);
+extern void mm_unmark_all_short_term_for_reference (sDPB* dpb);
+extern void mm_unmark_all_long_term_for_reference (sDPB* dpb);
 
 extern int  is_used_for_reference (sFrameStore* fs);
-extern void get_smallest_poc (sDecodedPictureBuffer* p_Dpb, int *poc,int * pos);
-extern int remove_unused_frame_from_dpb (sDecodedPictureBuffer* p_Dpb);
-extern void init_dpb (sVidParam* vidParam, sDecodedPictureBuffer* p_Dpb, int type);
-extern void re_init_dpb (sVidParam* vidParam, sDecodedPictureBuffer* p_Dpb, int type);
-extern void free_dpb (sDecodedPictureBuffer* p_Dpb);
+extern void get_smallest_poc (sDPB* dpb, int *poc,int * pos);
+extern int remove_unused_frame_from_dpb (sDPB* dpb);
+extern void init_dpb (sVidParam* vidParam, sDPB* dpb, int type);
+extern void re_init_dpb (sVidParam* vidParam, sDPB* dpb, int type);
+extern void free_dpb (sDPB* dpb);
 extern sFrameStore* alloc_frame_store();
 extern void free_frame_store (sFrameStore* f);
-extern sStorablePicture*  alloc_storable_picture (sVidParam* vidParam, sPictureStructure type, int size_x, int size_y, int size_x_cr, int size_y_cr, int is_output);
-extern void free_storable_picture (sStorablePicture* p);
-extern void store_picture_in_dpb (sDecodedPictureBuffer* p_Dpb, sStorablePicture* p);
-extern sStorablePicture*  get_short_term_pic (Slice* currSlice, sDecodedPictureBuffer* p_Dpb, int picNum);
+extern sPicture*  alloc_storable_picture (sVidParam* vidParam, sPictureStructure type, int size_x, int size_y, int size_x_cr, int size_y_cr, int is_output);
+extern void free_storable_picture (sPicture* p);
+extern void store_picture_in_dpb (sDPB* dpb, sPicture* p);
+extern sPicture*  get_short_term_pic (Slice* currSlice, sDPB* dpb, int picNum);
 
 extern void unmark_for_reference( sFrameStore* fs);
 extern void unmark_for_long_term_reference (sFrameStore* fs);
-extern void remove_frame_from_dpb (sDecodedPictureBuffer* p_Dpb, int pos);
+extern void remove_frame_from_dpb (sDPB* dpb, int pos);
 
-extern void flush_dpb(sDecodedPictureBuffer* p_Dpb);
+extern void flush_dpb(sDPB* dpb);
 extern void init_lists_p_slice (Slice* currSlice);
 extern void init_lists_b_slice (Slice* currSlice);
 extern void init_lists_i_slice (Slice* currSlice);
@@ -336,14 +336,14 @@ extern void free_ref_pic_list_reordering_buffer (Slice* currSlice);
 
 extern void fill_frame_num_gap (sVidParam* vidParam, Slice *pSlice);
 
-extern void compute_colocated (Slice* currSlice, sStorablePicture **listX[6]);
+extern void compute_colocated (Slice* currSlice, sPicture **listX[6]);
 
-extern int init_img_data (sVidParam* vidParam, ImageData *p_ImgData, seq_parameter_set_rbsp_t *sps);
+extern int init_img_data (sVidParam* vidParam, ImageData *p_ImgData, sSPSrbsp *sps);
 extern void free_img_data (sVidParam* vidParam, ImageData *p_ImgData);
 
-extern void pad_dec_picture (sVidParam* vidParam, sStorablePicture *dec_picture);
+extern void pad_dec_picture (sVidParam* vidParam, sPicture *dec_picture);
 extern void pad_buf (sPixel *pImgBuf, int iWidth, int iHeight, int iStride, int iPadX, int iPadY);
 
-extern void process_picture_in_dpb_s (sVidParam* vidParam, sStorablePicture *p_pic);
-extern sStorablePicture * clone_storable_picture (sVidParam* vidParam, sStorablePicture *p_pic );
-extern void store_proc_picture_in_dpb (sDecodedPictureBuffer* p_Dpb, sStorablePicture* p);
+extern void process_picture_in_dpb_s (sVidParam* vidParam, sPicture *p_pic);
+extern sPicture * clone_storable_picture (sVidParam* vidParam, sPicture *p_pic );
+extern void store_proc_picture_in_dpb (sDPB* dpb, sPicture* p);

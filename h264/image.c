@@ -117,7 +117,7 @@ static void mbAffPostProc (sVidParam* vidParam) {
 
   sPixel temp_buffer[32][16];
 
-  sStorablePicture* dec_picture = vidParam->dec_picture;
+  sPicture* dec_picture = vidParam->dec_picture;
   sPixel** imgY = dec_picture->imgY;
   sPixel*** imgUV = dec_picture->imgUV;
 
@@ -303,7 +303,7 @@ static void ercWriteMBMODEandMV (Macroblock* currMB) {
 
   sVidParam* vidParam = currMB->vidParam;
   int currMBNum = currMB->mbAddrX; //vidParam->currentSlice->current_mb_nr;
-  sStorablePicture* dec_picture = vidParam->dec_picture;
+  sPicture* dec_picture = vidParam->dec_picture;
   int mbx = xPosMB(currMBNum, dec_picture->size_x), mby = yPosMB(currMBNum, dec_picture->size_x);
 
   objectBuffer_t* currRegion = vidParam->erc_object_list + (currMBNum<<2);
@@ -385,13 +385,13 @@ static void ercWriteMBMODEandMV (Macroblock* currMB) {
 static void init_cur_imgy (Slice* currSlice, sVidParam* vidParam) {
 
   if ((vidParam->separate_colour_plane_flag != 0)) {
-    sStorablePicture* vidref = vidParam->no_reference_picture;
+    sPicture* vidref = vidParam->no_reference_picture;
     int noref = (currSlice->framepoc < vidParam->recovery_poc);
     switch (currSlice->colour_plane_id) {
       case 0:
         for (int j = 0; j < 6; j++) { //for (j = 0; j < (currSlice->slice_type==B_SLICE?2:1); j++) {
           for (int i = 0; i < MAX_LIST_SIZE; i++) {
-            sStorablePicture* curr_ref = currSlice->listX[j][i];
+            sPicture* curr_ref = currSlice->listX[j][i];
             if (curr_ref) {
               curr_ref->no_ref = noref && (curr_ref == vidref);
               curr_ref->cur_imgY = curr_ref->imgY;
@@ -403,7 +403,7 @@ static void init_cur_imgy (Slice* currSlice, sVidParam* vidParam) {
     }
 
   else {
-    sStorablePicture *vidref = vidParam->no_reference_picture;
+    sPicture *vidref = vidParam->no_reference_picture;
     int noref = (currSlice->framepoc < vidParam->recovery_poc);
     int total_lists = currSlice->mb_aff_frame_flag ? 6 :
                                                     (currSlice->slice_type == B_SLICE ? 2 : 1);
@@ -413,7 +413,7 @@ static void init_cur_imgy (Slice* currSlice, sVidParam* vidParam) {
       // since currently this is done at the slice level, it seems safe to do so.
       // Note for some reason I get now a mismatch between version 12 and this one in cabac. I wonder why.
       for (int i = 0; i < MAX_LIST_SIZE; i++) {
-        sStorablePicture *curr_ref = currSlice->listX[j][i];
+        sPicture *curr_ref = currSlice->listX[j][i];
         if (curr_ref) {
           curr_ref->no_ref = noref && (curr_ref == vidref);
           curr_ref->cur_imgY = curr_ref->imgY;
@@ -425,7 +425,7 @@ static void init_cur_imgy (Slice* currSlice, sVidParam* vidParam) {
 //}}}
 
 //{{{
-static int isNewPicture (sStorablePicture* dec_picture, Slice* currSlice, OldSliceParams* p_old_slice) {
+static int isNewPicture (sPicture* dec_picture, Slice* currSlice, OldSliceParams* p_old_slice) {
 
   int result = (NULL == dec_picture);
 
@@ -462,7 +462,7 @@ static int isNewPicture (sStorablePicture* dec_picture, Slice* currSlice, OldSli
   }
 //}}}
 //{{{
-static void copyDecPicture_JV (sVidParam* vidParam, sStorablePicture* dst, sStorablePicture* src ) {
+static void copyDecPicture_JV (sVidParam* vidParam, sPicture* dst, sPicture* src ) {
 
   dst->top_poc              = src->top_poc;
   dst->bottom_poc           = src->bottom_poc;
@@ -504,9 +504,9 @@ static void copyDecPicture_JV (sVidParam* vidParam, sStorablePicture* dst, sStor
 //{{{
 static void initPicture (sVidParam* vidParam, Slice *currSlice, InputParameters *p_Inp) {
 
-  sStorablePicture *dec_picture = NULL;
-  seq_parameter_set_rbsp_t* active_sps = vidParam->active_sps;
-  sDecodedPictureBuffer* p_Dpb = currSlice->p_Dpb;
+  sPicture *dec_picture = NULL;
+  sSPSrbsp* active_sps = vidParam->active_sps;
+  sDPB* dpb = currSlice->dpb;
 
   vidParam->PicHeightInMbs = vidParam->FrameHeightInMbs / ( 1 + currSlice->field_pic_flag );
   vidParam->PicSizeInMbs = vidParam->PicWidthInMbs * vidParam->PicHeightInMbs;
@@ -535,7 +535,7 @@ static void initPicture (sVidParam* vidParam, Slice *currSlice, InputParameters 
           // Use frame copy for these since lists cannot be formed correctly for motion copy*/
           vidParam->conceal_mode = 1;
           vidParam->IDR_concealment_flag = 1;
-          conceal_lost_frames(p_Dpb, currSlice);
+          conceal_lost_frames(dpb, currSlice);
           // reset to original concealment mode for future drops
           vidParam->conceal_mode = p_Inp->conceal_mode;
           }
@@ -543,7 +543,7 @@ static void initPicture (sVidParam* vidParam, Slice *currSlice, InputParameters 
           // reset to original concealment mode for future drops
           vidParam->conceal_mode = p_Inp->conceal_mode;
           vidParam->IDR_concealment_flag = 0;
-          conceal_lost_frames(p_Dpb, currSlice);
+          conceal_lost_frames(dpb, currSlice);
           }
         }
       else
@@ -693,11 +693,11 @@ static void initPictureDecoding (sVidParam* vidParam) {
   Slice* slice = vidParam->ppSliceList[0];
   if (vidParam->pNextPPS->Valid &&
       (int)vidParam->pNextPPS->pic_parameter_set_id == slice->pic_parameter_set_id) {
-    pic_parameter_set_rbsp_t tmpPPS;
-    memcpy (&tmpPPS, &(vidParam->PicParSet[slice->pic_parameter_set_id]), sizeof (pic_parameter_set_rbsp_t));
+    sPPSrbsp tmpPPS;
+    memcpy (&tmpPPS, &(vidParam->PicParSet[slice->pic_parameter_set_id]), sizeof (sPPSrbsp));
     (vidParam->PicParSet[slice->pic_parameter_set_id]).slice_group_id = NULL;
     MakePPSavailable (vidParam, vidParam->pNextPPS->pic_parameter_set_id, vidParam->pNextPPS);
-    memcpy (vidParam->pNextPPS, &tmpPPS, sizeof (pic_parameter_set_rbsp_t));
+    memcpy (vidParam->pNextPPS, &tmpPPS, sizeof (sPPSrbsp));
     tmpPPS.slice_group_id = NULL;
     }
 
@@ -1130,7 +1130,7 @@ void pad_buf (sPixel* pImgBuf, int iWidth, int iHeight, int iStride, int iPadX, 
   }
 //}}}
 //{{{
-void pad_dec_picture (sVidParam* vidParam, sStorablePicture* dec_picture)
+void pad_dec_picture (sVidParam* vidParam, sPicture* dec_picture)
 {
   int iPadX = vidParam->iLumaPadX;
   int iPadY = vidParam->iLumaPadY;
@@ -1168,7 +1168,7 @@ void init_old_slice (OldSliceParams* p_old_slice) {
   }
 //}}}
 //{{{
-void calculate_frame_no (sVidParam* vidParam, sStorablePicture *p) {
+void calculate_frame_no (sVidParam* vidParam, sPicture *p) {
 
   InputParameters* p_Inp = vidParam->p_Inp;
 
@@ -1183,7 +1183,7 @@ void calculate_frame_no (sVidParam* vidParam, sStorablePicture *p) {
   }
 //}}}
 //{{{
-void exit_picture (sVidParam* vidParam, sStorablePicture** dec_picture) {
+void exit_picture (sVidParam* vidParam, sPicture** dec_picture) {
 
   InputParameters* p_Inp = vidParam->p_Inp;
 
@@ -1398,7 +1398,7 @@ int decode_one_frame (sDecoderParams* pDecoder) {
     currSlice = ppSliceList[vidParam->iSliceNumOfCurrPic];
     currSlice->vidParam = vidParam;
     currSlice->p_Inp = p_Inp;
-    currSlice->p_Dpb = vidParam->p_Dpb_layer[0]; //set default value;
+    currSlice->dpb = vidParam->p_Dpb_layer[0]; //set default value;
     currSlice->next_header = -8888;
     currSlice->num_dec_mb = 0;
     currSlice->coeff_ctr = -1;

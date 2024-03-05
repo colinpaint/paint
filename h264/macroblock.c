@@ -292,7 +292,7 @@ static void init_motion_vector_prediction (Macroblock* currMB, int mb_aff_frame_
 //}}}
 
 //{{{
-static int decode_one_component_i_slice (Macroblock* currMB, ColorPlane curr_plane, sPixel **currImg, sStorablePicture *dec_picture)
+static int decode_one_component_i_slice (Macroblock* currMB, ColorPlane curr_plane, sPixel **currImg, sPicture *dec_picture)
 {
   //For residual DPCM
   currMB->ipmode_DPCM = NO_INTRA_PMODE;
@@ -309,7 +309,7 @@ static int decode_one_component_i_slice (Macroblock* currMB, ColorPlane curr_pla
 }
 //}}}
 //{{{
-static int decode_one_component_p_slice (Macroblock* currMB, ColorPlane curr_plane, sPixel **currImg, sStorablePicture *dec_picture)
+static int decode_one_component_p_slice (Macroblock* currMB, ColorPlane curr_plane, sPixel **currImg, sPicture *dec_picture)
 {
   //For residual DPCM
   currMB->ipmode_DPCM = NO_INTRA_PMODE;
@@ -336,7 +336,7 @@ static int decode_one_component_p_slice (Macroblock* currMB, ColorPlane curr_pla
 }
 //}}}
 //{{{
-static int decode_one_component_sp_slice (Macroblock* currMB, ColorPlane curr_plane, sPixel **currImg, sStorablePicture *dec_picture)
+static int decode_one_component_sp_slice (Macroblock* currMB, ColorPlane curr_plane, sPixel **currImg, sPicture *dec_picture)
 {
   //For residual DPCM
   currMB->ipmode_DPCM = NO_INTRA_PMODE;
@@ -364,7 +364,7 @@ static int decode_one_component_sp_slice (Macroblock* currMB, ColorPlane curr_pl
 }
 //}}}
 //{{{
-static int decode_one_component_b_slice (Macroblock* currMB, ColorPlane curr_plane, sPixel **currImg, sStorablePicture *dec_picture)
+static int decode_one_component_b_slice (Macroblock* currMB, ColorPlane curr_plane, sPixel **currImg, sPicture *dec_picture)
 {
   //For residual DPCM
   currMB->ipmode_DPCM = NO_INTRA_PMODE;
@@ -415,7 +415,7 @@ static int BType2CtxRef (int btype)
 }
 //}}}
 //{{{
-static char readRefPictureIdx_VLC (Macroblock* currMB, SyntaxElement* currSE, DataPartition *dP, char b8mode, int list)
+static char readRefPictureIdx_VLC (Macroblock* currMB, SyntaxElement* currSE, sDataPartition *dP, char b8mode, int list)
 {
   currSE->context = BType2CtxRef (b8mode);
   currSE->value2 = list;
@@ -424,7 +424,7 @@ static char readRefPictureIdx_VLC (Macroblock* currMB, SyntaxElement* currSE, Da
 }
 //}}}
 //{{{
-static char readRefPictureIdx_FLC (Macroblock* currMB, SyntaxElement* currSE, DataPartition *dP, char b8mode, int list)
+static char readRefPictureIdx_FLC (Macroblock* currMB, SyntaxElement* currSE, sDataPartition *dP, char b8mode, int list)
 {
   currSE->context = BType2CtxRef (b8mode);
   currSE->len = 1;
@@ -435,13 +435,13 @@ static char readRefPictureIdx_FLC (Macroblock* currMB, SyntaxElement* currSE, Da
 }
 //}}}
 //{{{
-static char readRefPictureIdx_Null (Macroblock* currMB, SyntaxElement* currSE, DataPartition *dP, char b8mode, int list)
+static char readRefPictureIdx_Null (Macroblock* currMB, SyntaxElement* currSE, sDataPartition *dP, char b8mode, int list)
 {
   return 0;
 }
 //}}}
 //{{{
-static void prepareListforRefIdx (Macroblock* currMB, SyntaxElement* currSE, DataPartition *dP, int num_ref_idx_active, int refidx_present)
+static void prepareListforRefIdx (Macroblock* currMB, SyntaxElement* currSE, sDataPartition *dP, int num_ref_idx_active, int refidx_present)
 {
   if(num_ref_idx_active > 1)
   {
@@ -468,7 +468,7 @@ static void prepareListforRefIdx (Macroblock* currMB, SyntaxElement* currSE, Dat
 void set_chroma_qp (Macroblock* currMB)
 {
   sVidParam* vidParam = currMB->vidParam;
-  sStorablePicture *dec_picture = currMB->p_Slice->dec_picture;
+  sPicture *dec_picture = currMB->p_Slice->dec_picture;
   int i;
 
   for (i=0; i<2; ++i)
@@ -492,7 +492,7 @@ void update_qp (Macroblock* currMB, int qp)
 }
 //}}}
 //{{{
-void read_delta_quant (SyntaxElement* currSE, DataPartition *dP, Macroblock* currMB, const byte *partMap, int type)
+void read_delta_quant (SyntaxElement* currSE, sDataPartition *dP, Macroblock* currMB, const byte *partMap, int type)
 {
   Slice* currSlice = currMB->p_Slice;
   sVidParam* vidParam = currMB->vidParam;
@@ -522,7 +522,7 @@ void read_delta_quant (SyntaxElement* currSE, DataPartition *dP, Macroblock* cur
 //}}}
 
 //{{{
-static void readMBRefPictureIdx (SyntaxElement* currSE, DataPartition *dP, Macroblock* currMB, PicMotionParams **mv_info, int list, int step_v0, int step_h0)
+static void readMBRefPictureIdx (SyntaxElement* currSE, sDataPartition *dP, Macroblock* currMB, PicMotionParams **mv_info, int list, int step_v0, int step_h0)
 {
   if (currMB->mb_type == 1)
   {
@@ -638,7 +638,7 @@ static void readMBRefPictureIdx (SyntaxElement* currSE, DataPartition *dP, Macro
 }
 //}}}
 //{{{
-static void readMBMotionVectors (SyntaxElement* currSE, DataPartition *dP, Macroblock* currMB, int list, int step_h0, int step_v0)
+static void readMBMotionVectors (SyntaxElement* currSE, sDataPartition *dP, Macroblock* currMB, int list, int step_h0, int step_v0)
 {
   if (currMB->mb_type == 1)
   {
@@ -1147,18 +1147,18 @@ static void read_motion_info_from_NAL_p_slice (Macroblock* currMB)
   Slice* currSlice = currMB->p_Slice;
 
   SyntaxElement currSE;
-  DataPartition *dP = NULL;
+  sDataPartition *dP = NULL;
   const byte *partMap       = assignSE2partition[currSlice->dp_mode];
   short partmode        = ((currMB->mb_type == P8x8) ? 4 : currMB->mb_type);
   int step_h0         = BLOCK_STEP [partmode][0];
   int step_v0         = BLOCK_STEP [partmode][1];
 
   int j4;
-  sStorablePicture *dec_picture = currSlice->dec_picture;
+  sPicture *dec_picture = currSlice->dec_picture;
   PicMotionParams *mv_info = NULL;
 
   int list_offset = currMB->list_offset;
-  sStorablePicture **list0 = currSlice->listX[LIST_0 + list_offset];
+  sPicture **list0 = currSlice->listX[LIST_0 + list_offset];
   PicMotionParams **p_mv_info = &dec_picture->mv_info[currMB->block_y];
 
   //=====  READ REFERENCE PICTURE INDICES =====
@@ -1200,9 +1200,9 @@ static void read_motion_info_from_NAL_b_slice (Macroblock* currMB) {
 
   Slice* currSlice = currMB->p_Slice;
   sVidParam* vidParam = currMB->vidParam;
-  sStorablePicture *dec_picture = currSlice->dec_picture;
+  sPicture *dec_picture = currSlice->dec_picture;
   SyntaxElement currSE;
-  DataPartition* dP = NULL;
+  sDataPartition* dP = NULL;
   const byte* partMap = assignSE2partition[currSlice->dp_mode];
   int partmode = ((currMB->mb_type == P8x8) ? 4 : currMB->mb_type);
   int step_h0 = BLOCK_STEP [partmode][0];
@@ -1210,8 +1210,8 @@ static void read_motion_info_from_NAL_b_slice (Macroblock* currMB) {
   int j4, i4;
 
   int list_offset = currMB->list_offset;
-  sStorablePicture** list0 = currSlice->listX[LIST_0 + list_offset];
-  sStorablePicture** list1 = currSlice->listX[LIST_1 + list_offset];
+  sPicture** list0 = currSlice->listX[LIST_0 + list_offset];
+  sPicture** list1 = currSlice->listX[LIST_1 + list_offset];
   PicMotionParams** p_mv_info = &dec_picture->mv_info[currMB->block_y];
 
   if (currMB->mb_type == P8x8)
@@ -1394,13 +1394,13 @@ void check_dp_neighbors (Macroblock* currMB) {
 static void init_cur_imgy (sVidParam* vidParam,Slice* currSlice,int pl) {
 
   if (vidParam->separate_colour_plane_flag == 0) {
-    sStorablePicture* vidref = vidParam->no_reference_picture;
+    sPicture* vidref = vidParam->no_reference_picture;
     int noref = (currSlice->framepoc < vidParam->recovery_poc);
 
     if (pl == PLANE_Y) {
       for (int j = 0; j < 6; j++) {
         for (int i = 0; i < currSlice->listXsize[j] ; i++) {
-          sStorablePicture* curr_ref = currSlice->listX[j][i];
+          sPicture* curr_ref = currSlice->listX[j][i];
           if (curr_ref) {
             curr_ref->no_ref = noref && (curr_ref == vidref);
             curr_ref->cur_imgY = curr_ref->imgY;
@@ -1411,7 +1411,7 @@ static void init_cur_imgy (sVidParam* vidParam,Slice* currSlice,int pl) {
     else {
       for (int j = 0; j < 6; j++) {
         for (int i = 0; i < currSlice->listXsize[j]; i++) {
-          sStorablePicture* curr_ref = currSlice->listX[j][i];
+          sPicture* curr_ref = currSlice->listX[j][i];
           if (curr_ref) {
             curr_ref->no_ref = noref && (curr_ref == vidref);
             curr_ref->cur_imgY = curr_ref->imgUV[pl-1];
@@ -1465,7 +1465,7 @@ void make_frame_picture_JV (sVidParam* vidParam) {
 //}}}
 
 //{{{
-int decode_one_macroblock (Macroblock* currMB, sStorablePicture *dec_picture)
+int decode_one_macroblock (Macroblock* currMB, sPicture *dec_picture)
 {
   Slice* currSlice = currMB->p_Slice;
   sVidParam* vidParam = currMB->vidParam;

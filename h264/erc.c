@@ -631,7 +631,7 @@ static void copyPredMB (int currYBlockNum, sPixel *predMB, frame *recfr,
                         int picSizeX, int regionSize)
 {
   sVidParam* vidParam = recfr->vidParam;
-  sStorablePicture *dec_picture = vidParam->dec_picture;
+  sPicture *dec_picture = vidParam->dec_picture;
   int j, k, xmin, ymin, xmax, ymax;
   int locationTmp;
   int uv_x = uv_div[0][dec_picture->chroma_format_idc];
@@ -798,7 +798,7 @@ static void buildPredRegionYUV (sVidParam* vidParam, int *mv, int x, int y, sPix
   int ioff,joff;
   sPixel *pMB = predMB;
   Slice* currSlice;// = vidParam->currentSlice;
-  sStorablePicture *dec_picture = vidParam->dec_picture;
+  sPicture *dec_picture = vidParam->dec_picture;
   int ii0,jj0,ii1,jj1,if1,jf1,if0,jf0;
   int mv_mul;
 
@@ -948,9 +948,9 @@ static void buildPredRegionYUV (sVidParam* vidParam, int *mv, int x, int y, sPix
 static void copyBetweenFrames (frame *recfr, int currYBlockNum, int picSizeX, int regionSize)
 {
   sVidParam* vidParam = recfr->vidParam;
-  sStorablePicture *dec_picture = vidParam->dec_picture;
+  sPicture *dec_picture = vidParam->dec_picture;
   int j, k, location, xmin, ymin;
-  sStorablePicture* refPic = vidParam->ppSliceList[0]->listX[0][0];
+  sPicture* refPic = vidParam->ppSliceList[0]->listX[0][0];
 
   /* set the position of the region to be copied */
   xmin = (xPosYBlock(currYBlockNum,picSizeX)<<3);
@@ -1393,7 +1393,7 @@ static void buildPredblockRegionYUV (sVidParam* vidParam, int *mv,
   int vec1_x=0,vec1_y=0;
   int ioff,joff;
 
-  sStorablePicture *dec_picture = vidParam->dec_picture;
+  sPicture *dec_picture = vidParam->dec_picture;
   sPixel *pMB = predMB;
 
   int ii0,jj0,ii1,jj1,if1,jf1,if0,jf0;
@@ -1534,20 +1534,20 @@ static void CopyImgData (sPixel **inputY, sPixel ***inputUV, sPixel **outputY, s
 ************************************************************************
 */
 
-static sStorablePicture* get_last_ref_pic_from_dpb (sDecodedPictureBuffer* p_Dpb)
+static sPicture* get_last_ref_pic_from_dpb (sDPB* dpb)
 {
-  int used_size = p_Dpb->used_size - 1;
+  int used_size = dpb->used_size - 1;
   int i;
 
   for(i = used_size; i >= 0; i--)
   {
-    if (p_Dpb->fs[i]->is_used==3)
+    if (dpb->fs[i]->is_used==3)
     {
-      if (((p_Dpb->fs[i]->frame->used_for_reference) &&
-        (!p_Dpb->fs[i]->frame->is_long_term)) /*||  ((p_Dpb->fs[i]->frame->used_for_reference==0)
-                                           && (p_Dpb->fs[i]->frame->slice_type == P_SLICE))*/ )
+      if (((dpb->fs[i]->frame->used_for_reference) &&
+        (!dpb->fs[i]->frame->is_long_term)) /*||  ((dpb->fs[i]->frame->used_for_reference==0)
+                                           && (dpb->fs[i]->frame->slice_type == P_SLICE))*/ )
       {
-        return p_Dpb->fs[i]->frame;
+        return dpb->fs[i]->frame;
       }
     }
   }
@@ -1565,7 +1565,7 @@ static sStorablePicture* get_last_ref_pic_from_dpb (sDecodedPictureBuffer* p_Dpb
 ************************************************************************
 */
 
-static void copy_to_conceal (sStorablePicture *src, sStorablePicture *dst, sVidParam* vidParam)
+static void copy_to_conceal (sPicture *src, sPicture *dst, sVidParam* vidParam)
 {
   int i=0;
   int mv[3];
@@ -1575,7 +1575,7 @@ static void copy_to_conceal (sStorablePicture *src, sStorablePicture *dst, sVidP
   int uv;
   int mm, nn;
   int scale = 1;
-  sStorablePicture *dec_picture = vidParam->dec_picture;
+  sPicture *dec_picture = vidParam->dec_picture;
   // InputParameters *test;
 
   int current_mb_nr = 0;
@@ -1712,11 +1712,11 @@ static void copy_to_conceal (sStorablePicture *src, sStorablePicture *dst, sVidP
 ************************************************************************
 */
 
-static void copy_prev_pic_to_concealed_pic (sStorablePicture *picture, sDecodedPictureBuffer* p_Dpb)
+static void copy_prev_pic_to_concealed_pic (sPicture *picture, sDPB* dpb)
 {
-  sVidParam* vidParam = p_Dpb->vidParam;
+  sVidParam* vidParam = dpb->vidParam;
   /* get the last ref pic in dpb */
-  sStorablePicture *ref_pic = get_last_ref_pic_from_dpb(p_Dpb);
+  sPicture *ref_pic = get_last_ref_pic_from_dpb(dpb);
 
   assert(ref_pic != NULL);
 
@@ -1726,10 +1726,10 @@ static void copy_prev_pic_to_concealed_pic (sStorablePicture *picture, sDecodedP
 }
 //}}}
 //{{{
-static sStorablePicture* get_pic_from_dpb (sDecodedPictureBuffer* p_Dpb, int missingpoc, unsigned int *pos)
+static sPicture* get_pic_from_dpb (sDPB* dpb, int missingpoc, unsigned int *pos)
 {
-  sVidParam* vidParam = p_Dpb->vidParam;
-  int used_size = p_Dpb->used_size - 1;
+  sVidParam* vidParam = dpb->vidParam;
+  int used_size = dpb->used_size - 1;
   int i, concealfrom = 0;
 
   if(vidParam->conceal_mode == 1)
@@ -1739,10 +1739,10 @@ static sStorablePicture* get_pic_from_dpb (sDecodedPictureBuffer* p_Dpb, int mis
 
   for(i = used_size; i >= 0; i--)
   {
-    if(p_Dpb->fs[i]->poc == concealfrom)
+    if(dpb->fs[i]->poc == concealfrom)
     {
       *pos = i;
-      return p_Dpb->fs[i]->frame;
+      return dpb->fs[i]->frame;
     }
   }
 
@@ -1778,16 +1778,16 @@ static void delete_node (sVidParam* vidParam, struct concealment_node *ptr ) {
   }
 //}}}
 //{{{
-static void update_ref_list_for_concealment (sDecodedPictureBuffer* p_Dpb) {
+static void update_ref_list_for_concealment (sDPB* dpb) {
 
-  sVidParam* vidParam = p_Dpb->vidParam;
+  sVidParam* vidParam = dpb->vidParam;
 
   unsigned j = 0;
-  for (unsigned i = 0; i < p_Dpb->used_size; i++)
-    if (p_Dpb->fs[i]->concealment_reference)
-      p_Dpb->fs_ref[j++] = p_Dpb->fs[i];
+  for (unsigned i = 0; i < dpb->used_size; i++)
+    if (dpb->fs[i]->concealment_reference)
+      dpb->fs_ref[j++] = dpb->fs[i];
 
-  p_Dpb->ref_frames_in_buffer = vidParam->active_pps->num_ref_idx_l0_default_active_minus1;
+  dpb->ref_frames_in_buffer = vidParam->active_pps->num_ref_idx_l0_default_active_minus1;
   }
 //}}}
 //{{{
@@ -1818,7 +1818,7 @@ static void delete_list (sVidParam* vidParam, struct concealment_node *ptr ) {
 //}}}
 
 //{{{
-struct concealment_node * init_node (sStorablePicture* picture, int missingpoc ) {
+struct concealment_node * init_node (sPicture* picture, int missingpoc ) {
 
   struct concealment_node* ptr = (struct concealment_node *) calloc( 1, sizeof(struct concealment_node ) );
   if ( ptr == NULL )
@@ -1841,10 +1841,10 @@ struct concealment_node * init_node (sStorablePicture* picture, int missingpoc )
 *
 ************************************************************************
 */
-void init_lists_for_non_reference_loss (sDecodedPictureBuffer* p_Dpb, int currSliceType, sPictureStructure currPicStructure)
+void init_lists_for_non_reference_loss (sDPB* dpb, int currSliceType, sPictureStructure currPicStructure)
 {
-  sVidParam* vidParam = p_Dpb->vidParam;
-  seq_parameter_set_rbsp_t *active_sps = vidParam->active_sps;
+  sVidParam* vidParam = dpb->vidParam;
+  sSPSrbsp *active_sps = vidParam->active_sps;
 
   unsigned i;
   int j;
@@ -1852,16 +1852,16 @@ void init_lists_for_non_reference_loss (sDecodedPictureBuffer* p_Dpb, int currSl
 
   int list0idx = 0;
   int list0idx_1 = 0;
-  sStorablePicture* tmp_s;
+  sPicture* tmp_s;
 
   if (currPicStructure == FRAME) {
-    for (i = 0; i < p_Dpb->ref_frames_in_buffer; i++) {
-      if (p_Dpb->fs[i]->concealment_reference == 1) {
-        if (p_Dpb->fs[i]->frame_num > vidParam->frame_to_conceal)
-          p_Dpb->fs_ref[i]->frame_num_wrap = p_Dpb->fs[i]->frame_num - max_frame_num;
+    for (i = 0; i < dpb->ref_frames_in_buffer; i++) {
+      if (dpb->fs[i]->concealment_reference == 1) {
+        if (dpb->fs[i]->frame_num > vidParam->frame_to_conceal)
+          dpb->fs_ref[i]->frame_num_wrap = dpb->fs[i]->frame_num - max_frame_num;
         else
-          p_Dpb->fs_ref[i]->frame_num_wrap = p_Dpb->fs[i]->frame_num;
-        p_Dpb->fs_ref[i]->frame->pic_num = p_Dpb->fs_ref[i]->frame_num_wrap;
+          dpb->fs_ref[i]->frame_num_wrap = dpb->fs[i]->frame_num;
+        dpb->fs_ref[i]->frame->pic_num = dpb->fs_ref[i]->frame_num_wrap;
         }
       }
     }
@@ -1869,30 +1869,30 @@ void init_lists_for_non_reference_loss (sDecodedPictureBuffer* p_Dpb, int currSl
   if (currSliceType == P_SLICE) {
     // Calculate FrameNumWrap and PicNum
     if (currPicStructure == FRAME) {
-      for (i = 0; i < p_Dpb->used_size; i++)
-        if (p_Dpb->fs[i]->concealment_reference == 1)
-          vidParam->ppSliceList[0]->listX[0][list0idx++] = p_Dpb->fs[i]->frame;
+      for (i = 0; i < dpb->used_size; i++)
+        if (dpb->fs[i]->concealment_reference == 1)
+          vidParam->ppSliceList[0]->listX[0][list0idx++] = dpb->fs[i]->frame;
       // order list 0 by PicNum
-      qsort ((void *)vidParam->ppSliceList[0]->listX[0], list0idx, sizeof(sStorablePicture*), compare_pic_by_pic_num_desc);
+      qsort ((void *)vidParam->ppSliceList[0]->listX[0], list0idx, sizeof(sPicture*), compare_pic_by_pic_num_desc);
       vidParam->ppSliceList[0]->listXsize[0] = (char) list0idx;
       }
     }
 
   if (currSliceType == B_SLICE) {
     if (currPicStructure == FRAME) {
-      for (i = 0; i < p_Dpb->used_size; i++)
-        if (p_Dpb->fs[i]->concealment_reference == 1)
-          if (vidParam->earlier_missing_poc > p_Dpb->fs[i]->frame->poc)
-            vidParam->ppSliceList[0]->listX[0][list0idx++] = p_Dpb->fs[i]->frame;
+      for (i = 0; i < dpb->used_size; i++)
+        if (dpb->fs[i]->concealment_reference == 1)
+          if (vidParam->earlier_missing_poc > dpb->fs[i]->frame->poc)
+            vidParam->ppSliceList[0]->listX[0][list0idx++] = dpb->fs[i]->frame;
 
-      qsort ((void *)vidParam->ppSliceList[0]->listX[0], list0idx, sizeof(sStorablePicture*), compare_pic_by_poc_desc);
+      qsort ((void *)vidParam->ppSliceList[0]->listX[0], list0idx, sizeof(sPicture*), compare_pic_by_poc_desc);
       list0idx_1 = list0idx;
-      for (i = 0; i < p_Dpb->used_size; i++)
-        if (p_Dpb->fs[i]->concealment_reference == 1)
-          if (vidParam->earlier_missing_poc < p_Dpb->fs[i]->frame->poc)
-            vidParam->ppSliceList[0]->listX[0][list0idx++] = p_Dpb->fs[i]->frame;
+      for (i = 0; i < dpb->used_size; i++)
+        if (dpb->fs[i]->concealment_reference == 1)
+          if (vidParam->earlier_missing_poc < dpb->fs[i]->frame->poc)
+            vidParam->ppSliceList[0]->listX[0][list0idx++] = dpb->fs[i]->frame;
 
-      qsort ((void *)&vidParam->ppSliceList[0]->listX[0][list0idx_1], list0idx-list0idx_1, sizeof(sStorablePicture*), compare_pic_by_poc_asc);
+      qsort ((void *)&vidParam->ppSliceList[0]->listX[0][list0idx_1], list0idx-list0idx_1, sizeof(sPicture*), compare_pic_by_poc_asc);
       for (j = 0; j < list0idx_1; j++)
         vidParam->ppSliceList[0]->listX[1][list0idx-list0idx_1+j]=vidParam->ppSliceList[0]->listX[0][j];
       for (j = list0idx_1; j < list0idx; j++)
@@ -1900,8 +1900,8 @@ void init_lists_for_non_reference_loss (sDecodedPictureBuffer* p_Dpb, int currSl
 
       vidParam->ppSliceList[0]->listXsize[0] = vidParam->ppSliceList[0]->listXsize[1] = (char) list0idx;
 
-      qsort ((void*)&vidParam->ppSliceList[0]->listX[0][(short) vidParam->ppSliceList[0]->listXsize[0]], list0idx-vidParam->ppSliceList[0]->listXsize[0], sizeof(sStorablePicture*), compare_pic_by_lt_pic_num_asc);
-      qsort ((void*)&vidParam->ppSliceList[0]->listX[1][(short) vidParam->ppSliceList[0]->listXsize[0]], list0idx-vidParam->ppSliceList[0]->listXsize[0], sizeof(sStorablePicture*), compare_pic_by_lt_pic_num_asc);
+      qsort ((void*)&vidParam->ppSliceList[0]->listX[0][(short) vidParam->ppSliceList[0]->listXsize[0]], list0idx-vidParam->ppSliceList[0]->listXsize[0], sizeof(sPicture*), compare_pic_by_lt_pic_num_asc);
+      qsort ((void*)&vidParam->ppSliceList[0]->listX[1][(short) vidParam->ppSliceList[0]->listXsize[0]], list0idx-vidParam->ppSliceList[0]->listXsize[0], sizeof(sPicture*), compare_pic_by_lt_pic_num_asc);
       vidParam->ppSliceList[0]->listXsize[0] = vidParam->ppSliceList[0]->listXsize[1] = (char) list0idx;
       }
     }
@@ -1941,12 +1941,12 @@ void init_lists_for_non_reference_loss (sDecodedPictureBuffer* p_Dpb, int currSl
 * based on the sudden decrease in frame number.
 ************************************************************************
 */
-void conceal_lost_frames (sDecodedPictureBuffer* p_Dpb, Slice *pSlice)
+void conceal_lost_frames (sDPB* dpb, Slice *pSlice)
 {
-  sVidParam* vidParam = p_Dpb->vidParam;
+  sVidParam* vidParam = dpb->vidParam;
   int CurrFrameNum;
   int UnusedShortTermFrameNum;
-  sStorablePicture *picture = NULL;
+  sPicture *picture = NULL;
   int tmp1 = pSlice->delta_pic_order_cnt[0];
   int tmp2 = pSlice->delta_pic_order_cnt[1];
   int i;
@@ -1990,14 +1990,14 @@ void conceal_lost_frames (sDecodedPictureBuffer* p_Dpb, Slice *pSlice)
     picture->poc = picture->top_poc;
     vidParam->last_ref_pic_poc = picture->poc;
 
-    copy_prev_pic_to_concealed_pic(picture, p_Dpb);
+    copy_prev_pic_to_concealed_pic(picture, dpb);
 
     //if (UnusedShortTermFrameNum == 0)
     if(vidParam->IDR_concealment_flag == 1)
     {
       picture->slice_type = I_SLICE;
       picture->idr_flag = TRUE;
-      flush_dpb(p_Dpb);
+      flush_dpb(dpb);
       picture->top_poc= 0;
       picture->bottom_poc=picture->top_poc;
       picture->frame_poc=picture->top_poc;
@@ -2036,24 +2036,24 @@ void conceal_lost_frames (sDecodedPictureBuffer* p_Dpb, Slice *pSlice)
 ************************************************************************
 */
 
-void conceal_non_ref_pics (sDecodedPictureBuffer* p_Dpb, int diff)
+void conceal_non_ref_pics (sDPB* dpb, int diff)
 {
-  sVidParam* vidParam = p_Dpb->vidParam;
+  sVidParam* vidParam = dpb->vidParam;
   int missingpoc = 0;
   unsigned int i, pos = 0;
-  sStorablePicture *conceal_from_picture = NULL;
-  sStorablePicture *conceal_to_picture = NULL;
+  sPicture *conceal_from_picture = NULL;
+  sPicture *conceal_to_picture = NULL;
   struct concealment_node *concealment_ptr = NULL;
-  int temp_used_size = p_Dpb->used_size;
+  int temp_used_size = dpb->used_size;
 
-  if(p_Dpb->used_size == 0 )
+  if(dpb->used_size == 0 )
     return;
 
-  qsort(vidParam->pocs_in_dpb, p_Dpb->size, sizeof(int), comp);
+  qsort(vidParam->pocs_in_dpb, dpb->size, sizeof(int), comp);
 
-  for(i=0;i<p_Dpb->size-diff;i++)
+  for(i=0;i<dpb->size-diff;i++)
   {
-    p_Dpb->used_size = p_Dpb->size;
+    dpb->used_size = dpb->size;
     if((vidParam->pocs_in_dpb[i+1] - vidParam->pocs_in_dpb[i]) > vidParam->poc_gap)
     {
       conceal_to_picture = alloc_storable_picture (vidParam, FRAME, vidParam->width, vidParam->height, vidParam->width_cr, vidParam->height_cr, 1);
@@ -2069,15 +2069,15 @@ void conceal_non_ref_pics (sDecodedPictureBuffer* p_Dpb, int diff)
         conceal_to_picture->bottom_poc = missingpoc;
         conceal_to_picture->frame_poc = missingpoc;
         conceal_to_picture->poc = missingpoc;
-        conceal_from_picture = get_pic_from_dpb(p_Dpb, missingpoc, &pos);
+        conceal_from_picture = get_pic_from_dpb(dpb, missingpoc, &pos);
 
         assert(conceal_from_picture != NULL);
 
-        p_Dpb->used_size = pos + 1;
+        dpb->used_size = pos + 1;
 
         vidParam->frame_to_conceal = conceal_from_picture->frame_num + 1;
 
-        update_ref_list_for_concealment(p_Dpb);
+        update_ref_list_for_concealment(dpb);
         vidParam->conceal_slice_type = B_SLICE;
         copy_to_conceal(conceal_from_picture, conceal_to_picture, vidParam);
         concealment_ptr = init_node( conceal_to_picture, missingpoc );
@@ -2089,8 +2089,8 @@ void conceal_non_ref_pics (sDecodedPictureBuffer* p_Dpb, int diff)
   }
 
   //restore the original value
-  //p_Dpb->used_size = p_Dpb->size;
-  p_Dpb->used_size = temp_used_size;
+  //dpb->used_size = dpb->size;
+  dpb->used_size = temp_used_size;
 }
 //}}}
 //{{{
@@ -2103,14 +2103,14 @@ void conceal_non_ref_pics (sDecodedPictureBuffer* p_Dpb, int diff)
 ************************************************************************
 */
 
-void sliding_window_poc_management (sDecodedPictureBuffer* p_Dpb, sStorablePicture *p)
+void sliding_window_poc_management (sDPB* dpb, sPicture *p)
 {
-  if (p_Dpb->used_size == p_Dpb->size)
+  if (dpb->used_size == dpb->size)
   {
-    sVidParam* vidParam = p_Dpb->vidParam;
+    sVidParam* vidParam = dpb->vidParam;
     unsigned int i;
 
-    for(i=0;i<p_Dpb->size-1; i++)
+    for(i=0;i<dpb->size-1; i++)
       vidParam->pocs_in_dpb[i] = vidParam->pocs_in_dpb[i+1];
   }
 }
@@ -2122,18 +2122,18 @@ void sliding_window_poc_management (sDecodedPictureBuffer* p_Dpb, sStorablePictu
 * \brief
 * Outputs the non reference frames. The POCs in the concealment buffer are
 * sorted in ascending order and outputted when the lowest POC in the
-* concealment buffer is lower than the lowest in the p_Dpb-> The linked list
+* concealment buffer is lower than the lowest in the dpb-> The linked list
 * entry corresponding to the outputted POC is immediately deleted.
 *
 ************************************************************************
 */
 
-void write_lost_non_ref_pic (sDecodedPictureBuffer* p_Dpb, int poc) {
+void write_lost_non_ref_pic (sDPB* dpb, int poc) {
 
-  sVidParam* vidParam = p_Dpb->vidParam;
+  sVidParam* vidParam = dpb->vidParam;
   sFrameStore concealment_fs;
   if (poc > 0) {
-    if ((poc - p_Dpb->last_output_poc) > vidParam->poc_gap) {
+    if ((poc - dpb->last_output_poc) > vidParam->poc_gap) {
       concealment_fs.frame = vidParam->concealment_head->picture;
       concealment_fs.is_output = 0;
       concealment_fs.is_reference = 0;
@@ -2154,9 +2154,9 @@ void write_lost_non_ref_pic (sDecodedPictureBuffer* p_Dpb, int poc) {
 *
 ************************************************************************
 */
-void write_lost_ref_after_idr (sDecodedPictureBuffer* p_Dpb, int pos) {
+void write_lost_ref_after_idr (sDPB* dpb, int pos) {
 
-  sVidParam* vidParam = p_Dpb->vidParam;
+  sVidParam* vidParam = dpb->vidParam;
   int temp = 1;
   if (vidParam->last_out_fs->frame == NULL) {
     vidParam->last_out_fs->frame = alloc_storable_picture (vidParam, FRAME, vidParam->width, vidParam->height,
@@ -2168,7 +2168,7 @@ void write_lost_ref_after_idr (sDecodedPictureBuffer* p_Dpb, int pos) {
     temp = 2;
     vidParam->conceal_mode = 1;
     }
-  copy_to_conceal (p_Dpb->fs[pos]->frame, vidParam->last_out_fs->frame, vidParam);
+  copy_to_conceal (dpb->fs[pos]->frame, vidParam->last_out_fs->frame, vidParam);
 
   vidParam->conceal_mode = temp;
   }

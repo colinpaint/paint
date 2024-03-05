@@ -141,7 +141,7 @@ extern void setup_slice_methods_mbaff (Slice* currSlice);
 extern void get_neighbors (Macroblock* currMB, PixelPos *block, int mb_x, int mb_y, int blockshape_x);
 
 extern void start_macroblock (Slice* currSlice, Macroblock **currMB);
-extern int  decode_one_macroblock (Macroblock* currMB, sStorablePicture *dec_picture);
+extern int  decode_one_macroblock (Macroblock* currMB, sPicture *dec_picture);
 extern Boolean  exit_macroblock (Slice* currSlice, int eos_bit);
 
 extern void update_qp (Macroblock* currMB, int qp);

@@ -22,7 +22,7 @@
 #include "mbAccess.h"
 //}}}
 extern void  check_dp_neighbors (Macroblock* currMB);
-extern void  read_delta_quant   (SyntaxElement* currSE, DataPartition *dP, Macroblock* currMB, const byte *partMap, int type);
+extern void  read_delta_quant   (SyntaxElement* currSE, sDataPartition *dP, Macroblock* currMB, const byte *partMap, int type);
 
 //{{{
 static int predict_nnz(Macroblock* currMB, int block_type, int i,int j)
@@ -111,7 +111,7 @@ static int predict_nnz(Macroblock* currMB, int block_type, int i,int j)
 //{{{
 static int predict_nnz_chroma(Macroblock* currMB, int i,int j)
 {
-  sStorablePicture *dec_picture = currMB->p_Slice->dec_picture;
+  sPicture *dec_picture = currMB->p_Slice->dec_picture;
 
   if (dec_picture->chroma_format_idc != YUV444)
   {
@@ -176,7 +176,7 @@ void read_coeff_4x4_CAVLC (Macroblock* currMB,
   sVidParam* vidParam = currMB->vidParam;
   int mb_nr = currMB->mbAddrX;
   SyntaxElement currSE;
-  DataPartition *dP;
+  sDataPartition *dP;
   const byte *partMap = assignSE2partition[currSlice->dp_mode];
   Bitstream* currStream;
 
@@ -355,7 +355,7 @@ void read_coeff_4x4_CAVLC_444 (Macroblock* currMB,
   sVidParam* vidParam = currMB->vidParam;
   int mb_nr = currMB->mbAddrX;
   SyntaxElement currSE;
-  DataPartition *dP;
+  sDataPartition *dP;
   const byte *partMap = assignSE2partition[currSlice->dp_mode];
   Bitstream* currStream;
 
@@ -906,7 +906,7 @@ static void read_CBP_and_coeffs_from_NAL_CAVLC_400(Macroblock* currMB)
   int mb_nr = currMB->mbAddrX;
   int cbp;
   SyntaxElement currSE;
-  DataPartition *dP = NULL;
+  sDataPartition *dP = NULL;
   Slice* currSlice = currMB->p_Slice;
   const byte *partMap = assignSE2partition[currSlice->dp_mode];
   int i0, j0;
@@ -1074,7 +1074,7 @@ static void read_CBP_and_coeffs_from_NAL_CAVLC_422(Macroblock* currMB)
   int mb_nr = currMB->mbAddrX;
   int cbp;
   SyntaxElement currSE;
-  DataPartition *dP = NULL;
+  sDataPartition *dP = NULL;
   Slice* currSlice = currMB->p_Slice;
   const byte *partMap = assignSE2partition[currSlice->dp_mode];
   int coef_ctr, i0, j0, b8;
@@ -1091,7 +1091,7 @@ static void read_CBP_and_coeffs_from_NAL_CAVLC_422(Macroblock* currMB)
   int intra = (currMB->is_intra_block == TRUE);
 
   int b4;
-  //sStorablePicture *dec_picture = currSlice->dec_picture;
+  //sPicture *dec_picture = currSlice->dec_picture;
   int m6[4];
 
   int need_transform_size_flag;
@@ -1415,7 +1415,7 @@ static void read_CBP_and_coeffs_from_NAL_CAVLC_444(Macroblock* currMB)
   int mb_nr = currMB->mbAddrX;
   int cbp;
   SyntaxElement currSE;
-  DataPartition *dP = NULL;
+  sDataPartition *dP = NULL;
   Slice* currSlice = currMB->p_Slice;
   const byte *partMap = assignSE2partition[currSlice->dp_mode];
   int coef_ctr, i0, j0;
@@ -1642,7 +1642,7 @@ static void read_CBP_and_coeffs_from_NAL_CAVLC_420(Macroblock* currMB)
   int mb_nr = currMB->mbAddrX;
   int cbp;
   SyntaxElement currSE;
-  DataPartition *dP = NULL;
+  sDataPartition *dP = NULL;
   Slice* currSlice = currMB->p_Slice;
   const byte *partMap = assignSE2partition[currSlice->dp_mode];
   int coef_ctr, i0, j0, b8;
@@ -1661,7 +1661,7 @@ static void read_CBP_and_coeffs_from_NAL_CAVLC_420(Macroblock* currMB)
   int temp[4];
 
   int b4;
-  //sStorablePicture *dec_picture = currSlice->dec_picture;
+  //sPicture *dec_picture = currSlice->dec_picture;
 
   int need_transform_size_flag;
 

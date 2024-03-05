@@ -47,7 +47,7 @@ static void read_ipred_8x8_modes_mbaff (Macroblock* currMB) {
 
   int bi, bj, bx, by, dec;
   SyntaxElement currSE;
-  DataPartition* dP;
+  sDataPartition* dP;
   Slice* currSlice = currMB->p_Slice;
   const byte* partMap = assignSE2partition[currSlice->dp_mode];
   sVidParam* vidParam = currMB->vidParam;
@@ -108,7 +108,7 @@ static void read_ipred_8x8_modes (Macroblock* currMB)
 {
   int b8, bi, bj, bx, by, dec;
   SyntaxElement currSE;
-  DataPartition *dP;
+  sDataPartition *dP;
   Slice* currSlice = currMB->p_Slice;
   const byte *partMap = assignSE2partition[currSlice->dp_mode];
   sVidParam *vidParam = currMB->vidParam;
@@ -179,7 +179,7 @@ static void read_ipred_4x4_modes_mbaff (Macroblock* currMB)
 {
   int b8,i,j,bi,bj,bx,by;
   SyntaxElement currSE;
-  DataPartition *dP;
+  sDataPartition *dP;
   Slice* currSlice = currMB->p_Slice;
   const byte *partMap = assignSE2partition[currSlice->dp_mode];
   sVidParam *vidParam = currMB->vidParam;
@@ -258,7 +258,7 @@ static void read_ipred_4x4_modes_mbaff (Macroblock* currMB)
 static void read_ipred_4x4_modes (Macroblock* currMB) {
 
   SyntaxElement currSE;
-  DataPartition* dP;
+  sDataPartition* dP;
   Slice* currSlice = currMB->p_Slice;
   const byte* partMap = assignSE2partition[currSlice->dp_mode];
   sVidParam* vidParam = currMB->vidParam;
@@ -333,7 +333,7 @@ static void read_ipred_4x4_modes (Macroblock* currMB) {
 static void read_ipred_modes (Macroblock* currMB)
 {
   Slice* currSlice = currMB->p_Slice;
-  sStorablePicture *dec_picture = currSlice->dec_picture;
+  sPicture *dec_picture = currSlice->dec_picture;
 
   if (currSlice->mb_aff_frame_flag)
   {
@@ -353,7 +353,7 @@ static void read_ipred_modes (Macroblock* currMB)
   if ((dec_picture->chroma_format_idc != YUV400) && (dec_picture->chroma_format_idc != YUV444))
   {
     SyntaxElement currSE;
-    DataPartition *dP;
+    sDataPartition *dP;
     const byte *partMap = assignSE2partition[currSlice->dp_mode];
     sVidParam *vidParam = currMB->vidParam;
 
@@ -457,7 +457,7 @@ static void concealIPCMcoeffs (Macroblock* currMB)
 {
   Slice* currSlice = currMB->p_Slice;
   sVidParam *vidParam = currMB->vidParam;
-  sStorablePicture *dec_picture = currSlice->dec_picture;
+  sPicture *dec_picture = currSlice->dec_picture;
   int i, j, k;
 
   for(i=0;i<MB_BLOCK_SIZE;++i)
@@ -505,7 +505,7 @@ static void read_IPCM_coeffs_from_NAL (Slice* currSlice, struct datapartition_de
 {
   sVidParam *vidParam = currSlice->vidParam;
 
-  sStorablePicture *dec_picture = currSlice->dec_picture;
+  sPicture *dec_picture = currSlice->dec_picture;
   SyntaxElement currSE;
   int i,j;
 
@@ -621,7 +621,7 @@ void skip_macroblock (Macroblock* currMB) {
   sVidParam *vidParam = currMB->vidParam;
   Slice* currSlice = currMB->p_Slice;
   int   list_offset = LIST_0 + currMB->list_offset;
-  sStorablePicture *dec_picture = currSlice->dec_picture;
+  sPicture *dec_picture = currSlice->dec_picture;
   MotionVector *a_mv = NULL;
   MotionVector *b_mv = NULL;
 
@@ -690,7 +690,7 @@ void skip_macroblock (Macroblock* currMB) {
   if (zeroMotionAbove || zeroMotionLeft)
   {
     PicMotionParams **dec_mv_info = &dec_picture->mv_info[img_block_y];
-    sStorablePicture *cur_pic = currSlice->listX[list_offset][0];
+    sPicture *cur_pic = currSlice->listX[list_offset][0];
     PicMotionParams *mv_info = NULL;
 
     for(j = 0; j < BLOCK_SIZE; ++j)
@@ -708,7 +708,7 @@ void skip_macroblock (Macroblock* currMB) {
   {
     PicMotionParams **dec_mv_info = &dec_picture->mv_info[img_block_y];
     PicMotionParams *mv_info = NULL;
-    sStorablePicture *cur_pic = currSlice->listX[list_offset][0];
+    sPicture *cur_pic = currSlice->listX[list_offset][0];
     currMB->GetMVPredictor (currMB, mb, &pred_mv, 0, dec_picture->mv_info, LIST_0, 0, 0, MB_BLOCK_SIZE, MB_BLOCK_SIZE);
 
     // Set first block line (position img_block_y)
@@ -770,7 +770,7 @@ static void read_intra4x4_macroblock_cavlc (Macroblock* currMB, const byte *part
   if (currSlice->Transform8x8Mode)
   {
     SyntaxElement currSE;
-    DataPartition *dP = &(currSlice->partArr[partMap[SE_HEADER]]);
+    sDataPartition *dP = &(currSlice->partArr[partMap[SE_HEADER]]);
     currSE.type   =  SE_HEADER;
 
     // read CAVLC transform_size_8x8_flag
@@ -810,7 +810,7 @@ static void read_intra4x4_macroblock_cabac (Macroblock* currMB, const byte *part
   if (currSlice->Transform8x8Mode)
   {
    SyntaxElement currSE;
-    DataPartition *dP = &(currSlice->partArr[partMap[SE_HEADER]]);
+    sDataPartition *dP = &(currSlice->partArr[partMap[SE_HEADER]]);
     currSE.type   =  SE_HEADER;
     currSE.reading = readMB_transform_size_flag_CABAC;
 
@@ -891,13 +891,13 @@ static void read_i_pcm_macroblock (Macroblock* currMB, const byte *partMap)
     concealIPCMcoeffs(currMB);
   else
   {
-    DataPartition *dP = &(currSlice->partArr[partMap[SE_LUM_DC_INTRA]]);
+    sDataPartition *dP = &(currSlice->partArr[partMap[SE_LUM_DC_INTRA]]);
     read_IPCM_coeffs_from_NAL(currSlice, dP);
   }
 }
 //}}}
 //{{{
-static void read_P8x8_macroblock (Macroblock* currMB, DataPartition *dP, SyntaxElement* currSE)
+static void read_P8x8_macroblock (Macroblock* currMB, sDataPartition *dP, SyntaxElement* currSE)
 {
   int i;
   Slice* currSlice = currMB->p_Slice;
@@ -937,9 +937,9 @@ static void read_one_macroblock_i_slice_cavlc (Macroblock* currMB)
   SyntaxElement currSE;
   int mb_nr = currMB->mbAddrX;
 
-  DataPartition *dP;
+  sDataPartition *dP;
   const byte *partMap = assignSE2partition[currSlice->dp_mode];
-  sStorablePicture *dec_picture = currSlice->dec_picture;
+  sPicture *dec_picture = currSlice->dec_picture;
   sPicMotionParamsOld *motion = &dec_picture->motion;
 
   currMB->mb_field = ((mb_nr&0x01) == 0)? FALSE : currSlice->mb_data[mb_nr-1].mb_field;
@@ -991,9 +991,9 @@ static void read_one_macroblock_i_slice_cabac (Macroblock* currMB)
   SyntaxElement currSE;
   int mb_nr = currMB->mbAddrX;
 
-  DataPartition *dP;
+  sDataPartition *dP;
   const byte *partMap = assignSE2partition[currSlice->dp_mode];
-  sStorablePicture *dec_picture = currSlice->dec_picture;
+  sPicture *dec_picture = currSlice->dec_picture;
   sPicMotionParamsOld *motion = &dec_picture->motion;
 
   currMB->mb_field = ((mb_nr&0x01) == 0)? FALSE : currSlice->mb_data[mb_nr-1].mb_field;
@@ -1093,12 +1093,12 @@ static void read_one_macroblock_p_slice_cavlc (Macroblock* currMB)
   SyntaxElement currSE;
   int mb_nr = currMB->mbAddrX;
 
-  DataPartition *dP;
+  sDataPartition *dP;
   const byte *partMap = assignSE2partition[currSlice->dp_mode];
 
   if (currSlice->mb_aff_frame_flag == 0)
   {
-    sStorablePicture *dec_picture = currSlice->dec_picture;
+    sPicture *dec_picture = currSlice->dec_picture;
     sPicMotionParamsOld *motion = &dec_picture->motion;
 
     currMB->mb_field = FALSE;
@@ -1147,7 +1147,7 @@ static void read_one_macroblock_p_slice_cavlc (Macroblock* currMB)
     sVidParam *vidParam = currMB->vidParam;
     Macroblock *topMB = NULL;
     int  prevMbSkipped = 0;
-    sStorablePicture *dec_picture = currSlice->dec_picture;
+    sPicture *dec_picture = currSlice->dec_picture;
     sPicMotionParamsOld *motion = &dec_picture->motion;
 
     if (mb_nr&0x01)
@@ -1288,12 +1288,12 @@ static void read_one_macroblock_p_slice_cabac (Macroblock* currMB)
   sVidParam *vidParam = currMB->vidParam;
   int mb_nr = currMB->mbAddrX;
   SyntaxElement currSE;
-  DataPartition *dP;
+  sDataPartition *dP;
   const byte *partMap = assignSE2partition[currSlice->dp_mode];
 
   if (currSlice->mb_aff_frame_flag == 0)
   {
-    sStorablePicture *dec_picture = currSlice->dec_picture;
+    sPicture *dec_picture = currSlice->dec_picture;
     sPicMotionParamsOld *motion = &dec_picture->motion;
 
     currMB->mb_field = FALSE;
@@ -1336,7 +1336,7 @@ static void read_one_macroblock_p_slice_cabac (Macroblock* currMB)
     Macroblock *topMB = NULL;
     int  prevMbSkipped = 0;
     int  check_bottom, read_bottom, read_top;
-    sStorablePicture *dec_picture = currSlice->dec_picture;
+    sPicture *dec_picture = currSlice->dec_picture;
     sPicMotionParamsOld *motion = &dec_picture->motion;
     if (mb_nr&0x01)
     {
@@ -1452,12 +1452,12 @@ static void read_one_macroblock_b_slice_cavlc (Macroblock* currMB) {
   sVidParam *vidParam = currMB->vidParam;
   Slice* currSlice = currMB->p_Slice;
   int mb_nr = currMB->mbAddrX;
-  DataPartition *dP;
+  sDataPartition *dP;
   SyntaxElement currSE;
   const byte *partMap = assignSE2partition[currSlice->dp_mode];
 
   if (currSlice->mb_aff_frame_flag == 0) {
-    sStorablePicture *dec_picture = currSlice->dec_picture;
+    sPicture *dec_picture = currSlice->dec_picture;
     sPicMotionParamsOld *motion = &dec_picture->motion;
 
     currMB->mb_field = FALSE;
@@ -1498,7 +1498,7 @@ static void read_one_macroblock_b_slice_cavlc (Macroblock* currMB) {
   else {
     Macroblock *topMB = NULL;
     int  prevMbSkipped = 0;
-    sStorablePicture *dec_picture = currSlice->dec_picture;
+    sPicture *dec_picture = currSlice->dec_picture;
     sPicMotionParamsOld *motion = &dec_picture->motion;
 
     if (mb_nr&0x01) {
@@ -1621,12 +1621,12 @@ static void read_one_macroblock_b_slice_cabac (Macroblock* currMB)
   int mb_nr = currMB->mbAddrX;
   SyntaxElement currSE;
 
-  DataPartition *dP;
+  sDataPartition *dP;
   const byte *partMap = assignSE2partition[currSlice->dp_mode];
 
   if (currSlice->mb_aff_frame_flag == 0)
   {
-    sStorablePicture *dec_picture = currSlice->dec_picture;
+    sPicture *dec_picture = currSlice->dec_picture;
     sPicMotionParamsOld *motion = &dec_picture->motion;
 
     currMB->mb_field = FALSE;
@@ -1675,7 +1675,7 @@ static void read_one_macroblock_b_slice_cabac (Macroblock* currMB)
     Macroblock *topMB = NULL;
     int  prevMbSkipped = 0;
     int  check_bottom, read_bottom, read_top;
-    sStorablePicture *dec_picture = currSlice->dec_picture;
+    sPicture *dec_picture = currSlice->dec_picture;
     sPicMotionParamsOld *motion = &dec_picture->motion;
 
     if (mb_nr&0x01)

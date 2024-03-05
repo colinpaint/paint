@@ -278,7 +278,7 @@ struct bit_stream_dec {
   };
 //}}}
 //{{{
-//! DataPartition
+//! sDataPartition
 typedef struct datapartition_dec {
   Bitstream           *bitstream;
   DecodingEnvironment de_cabac;
@@ -287,7 +287,7 @@ typedef struct datapartition_dec {
           /*!< virtual function;
                actual method depends on chosen data partition and
                entropy coding method  */
-  } DataPartition;
+  } sDataPartition;
 //}}}
 //{{{
 typedef struct wp_params {
@@ -304,8 +304,8 @@ typedef struct inp_par {
   int intra_profile_deblocking;         // Loop filter usage determined by flags and parameters in bitstream
 
   // Input/output sequence format related variables
-  FrameFormat source;                   // source related information
-  FrameFormat output;                   // output related information
+  sFrameFormat source;                   // source related information
+  sFrameFormat output;                   // output related information
 
   // error concealment
   int conceal_mode;
@@ -322,7 +322,7 @@ typedef struct inp_par {
 //}}}
 //{{{
 typedef struct image_data {
-  FrameFormat format;                  // image format
+  sFrameFormat format;                  // image format
 
   sPixel** frm_data[MAX_PLANE];        // Frame Data
   sPixel** top_data[MAX_PLANE];        // pointers to top field data
@@ -356,11 +356,11 @@ typedef struct old_slice_par {
 typedef struct slice {
   struct video_par* vidParam;
   struct inp_par* p_Inp;
-  pic_parameter_set_rbsp_t* active_pps;
-  seq_parameter_set_rbsp_t* active_sps;
+  sPPSrbsp* active_pps;
+  sSPSrbsp* active_sps;
 
   // dpb pointer
-  struct decoded_picture_buffer* p_Dpb;
+  struct decoded_picture_buffer* dpb;
 
   // slice property;
   int idr_flag;
@@ -431,7 +431,7 @@ typedef struct slice {
   char listXsize[6];
   struct storable_picture **listX[6];
 
-  DataPartition       *partArr;      //!< array of partitions
+  sDataPartition       *partArr;      //!< array of partitions
   MotionInfoContexts  *mot_ctx;      //!< pointer to struct of context models for use in CABAC
   TextureInfoContexts *tex_ctx;      //!< pointer to struct of context models for use in CABAC
 
@@ -620,19 +620,19 @@ typedef struct layer_par {
   int layer_id;
   struct video_par* vidParam;
   CodingParameters* p_Cps;
-  seq_parameter_set_rbsp_t* p_SPS;
-  struct decoded_picture_buffer* p_Dpb;
+  sSPSrbsp* p_SPS;
+  struct decoded_picture_buffer* dpb;
   } LayerParameters;
 //}}}
 //{{{
 typedef struct video_par {
   struct inp_par* p_Inp;
 
-  pic_parameter_set_rbsp_t* active_pps;
-  seq_parameter_set_rbsp_t* active_sps;
+  sPPSrbsp* active_pps;
+  sSPSrbsp* active_sps;
 
-  seq_parameter_set_rbsp_t SeqParSet[MAXSPS];
-  pic_parameter_set_rbsp_t PicParSet[MAXPPS];
+  sSPSrbsp SeqParSet[MAXSPS];
+  sPPSrbsp PicParSet[MAXPPS];
 
   struct decoded_picture_buffer* p_Dpb_layer[MAX_NUM_DPB_LAYERS];
   CodingParameters* p_EncodePar[MAX_NUM_DPB_LAYERS];
@@ -793,7 +793,7 @@ typedef struct video_par {
   int bDeblockEnable;
   int iPostProcess;
   int bFrameInit;
-  pic_parameter_set_rbsp_t *pNextPPS;
+  sPPSrbsp *pNextPPS;
   int last_dec_poc;
   int last_dec_view_id;
   int last_dec_layer_id;
@@ -893,8 +893,8 @@ static inline int is_BL_profile (unsigned int profile_idc) {
   extern void free_global_buffers (sVidParam *vidParam);
   extern void free_layer_buffers (sVidParam *vidParam, int layer_id );
 
-  extern void FreePartition (DataPartition* dp, int n);
-  extern DataPartition* AllocPartition (int n);
+  extern void FreePartition (sDataPartition* dp, int n);
+  extern sDataPartition* AllocPartition (int n);
 
   extern unsigned CeilLog2 (unsigned uiVal);
   extern unsigned CeilLog2_sf (unsigned uiVal);

@@ -78,10 +78,10 @@ void error (char* text, int code) {
   }
 //}}}
 //{{{
-static void reset_dpb (sVidParam* vidParam, sDecodedPictureBuffer* p_Dpb ) {
+static void reset_dpb (sVidParam* vidParam, sDPB* dpb ) {
 
-  p_Dpb->vidParam = vidParam;
-  p_Dpb->init_done = 0;
+  dpb->vidParam = vidParam;
+  dpb->init_done = 0;
   }
 //}}}
 //{{{
@@ -103,7 +103,7 @@ static void alloc_video_params (sVidParam** vidParam) {
 
   // Allocate new dpb buffer
   for (int i = 0; i < MAX_NUM_DPB_LAYERS; i++) {
-    if (((*vidParam)->p_Dpb_layer[i] = (sDecodedPictureBuffer*)calloc(1, sizeof(sDecodedPictureBuffer)))==NULL)
+    if (((*vidParam)->p_Dpb_layer[i] = (sDPB*)calloc(1, sizeof(sDPB)))==NULL)
       no_mem_exit ("alloc_video_params: vidParam->p_Dpb_layer[i]");
 
     (*vidParam)->p_Dpb_layer[i]->layer_id = i;
@@ -189,7 +189,7 @@ Slice* malloc_slice (InputParameters* p_Inp, sVidParam* vidParam) {
     currSlice->ref_flag[i] = 1;
 
   for (i = 0; i < 6; i++) {
-    currSlice->listX[i] = calloc(MAX_LIST_SIZE, sizeof (sStorablePicture*)); // +1 for reordering
+    currSlice->listX[i] = calloc(MAX_LIST_SIZE, sizeof (sPicture*)); // +1 for reordering
     if (NULL == currSlice->listX[i])
       no_mem_exit("malloc_slice: currSlice->listX[i]");
     }
@@ -411,16 +411,16 @@ void init_frext (sVidParam* vidParam) {
 //}}}
 
 //{{{
-DataPartition* AllocPartition (int n) {
+sDataPartition* AllocPartition (int n) {
 
-  DataPartition* partArr = (DataPartition*)calloc (n, sizeof(DataPartition));
+  sDataPartition* partArr = (sDataPartition*)calloc (n, sizeof(sDataPartition));
   if (partArr == NULL) {
     snprintf (errortext, ET_SIZE, "AllocPartition: Memory allocation for Data Partition failed");
     error (errortext, 100);
     }
 
   for (int i = 0; i < n; ++i) {// loop over all data partitions
-    DataPartition* dataPart = &(partArr[i]);
+    sDataPartition* dataPart = &(partArr[i]);
     dataPart->bitstream = (Bitstream *) calloc(1, sizeof(Bitstream));
     if (dataPart->bitstream == NULL) {
       snprintf (errortext, ET_SIZE, "AllocPartition: Memory allocation for Bitstream failed");
@@ -438,7 +438,7 @@ DataPartition* AllocPartition (int n) {
   }
 //}}}
 //{{{
-void FreePartition (DataPartition* dp, int n) {
+void FreePartition (sDataPartition* dp, int n) {
 
   assert (dp != NULL);
   assert (dp->bitstream != NULL);

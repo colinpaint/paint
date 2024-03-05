@@ -148,8 +148,8 @@ void free_qp_matrices(CodingParameters *cps)
  */
 void assign_quant_params(Slice* currSlice)
 {
-  seq_parameter_set_rbsp_t* sps = currSlice->active_sps;
-  pic_parameter_set_rbsp_t* pps = currSlice->active_pps;
+  sSPSrbsp* sps = currSlice->active_sps;
+  sPPSrbsp* pps = currSlice->active_pps;
   int i;
   int n_ScalingList;
 

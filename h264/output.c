@@ -37,7 +37,7 @@ static void img2buf (sPixel** imgX, unsigned char* buf,
   }
 //}}}
 //{{{
-static void allocate_p_dec_pic (sVidParam* vidParam, sDecodedPicList* pDecPic, sStorablePicture* p,
+static void allocate_p_dec_pic (sVidParam* vidParam, sDecodedPicList* pDecPic, sPicture* p,
                                 int iLumaSize, int iFrameSize, int iLumaSizeX, int iLumaSizeY,
                                 int iChromaSizeX, int iChromaSizeY) {
 
@@ -63,7 +63,7 @@ static void allocate_p_dec_pic (sVidParam* vidParam, sDecodedPicList* pDecPic, s
 //}}}
 
 //{{{
-static void clearPicture (sVidParam* vidParam, sStorablePicture* p) {
+static void clearPicture (sVidParam* vidParam, sPicture* p) {
 
   printf ("-------------------- clearPicture -----------------\n");
 
@@ -81,7 +81,7 @@ static void clearPicture (sVidParam* vidParam, sStorablePicture* p) {
   }
 //}}}
 //{{{
-static void writeOutPicture (sVidParam* vidParam, sStorablePicture* p) {
+static void writeOutPicture (sVidParam* vidParam, sPicture* p) {
 
   InputParameters* p_Inp = vidParam->p_Inp;
   sDecodedPicList* pDecPic;
@@ -170,7 +170,7 @@ void flush_pending_output (sVidParam* vidParam) {
   }
 //}}}
 //{{{
-static void writePicture (sVidParam* vidParam, sStorablePicture* p, int real_structure) {
+static void writePicture (sVidParam* vidParam, sPicture* p, int real_structure) {
 
   if (real_structure == FRAME) {
     flush_pending_output (vidParam);
@@ -253,7 +253,7 @@ static void write_unpaired_field (sVidParam* vidParam, sFrameStore* fs) {
 
   assert (fs->is_used < 3);
 
-  sStorablePicture* p;
+  sPicture* p;
   if (fs->is_used & 0x01) {
     // we have a top field, construct an empty bottom field
     p = fs->top_field;
@@ -306,7 +306,7 @@ void init_out_buffer (sVidParam* vidParam) {
 
   vidParam->out_buffer = alloc_frame_store();
 
-  vidParam->pending_output = calloc (sizeof(sStorablePicture), 1);
+  vidParam->pending_output = calloc (sizeof(sPicture), 1);
   if (NULL==vidParam->pending_output)
     no_mem_exit ("init_out_buffer");
   vidParam->pending_output->imgUV = NULL;
@@ -343,7 +343,7 @@ void write_stored_frame (sVidParam* vidParam, sFrameStore* fs) {
   }
 //}}}
 //{{{
-void direct_output (sVidParam* vidParam, sStorablePicture* p) {
+void direct_output (sVidParam* vidParam, sPicture* p) {
 
   InputParameters* p_Inp = vidParam->p_Inp;
   if (p->structure == FRAME) {

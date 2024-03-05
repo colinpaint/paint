@@ -478,7 +478,7 @@ void itrans_sp_cr (Macroblock* currMB, int uv) {
 void iMBtrans4x4 (Macroblock* currMB, ColorPlane pl, int smb) {
 
   Slice* currSlice = currMB->p_Slice;
-  sStorablePicture* dec_picture = currMB->p_Slice->dec_picture;
+  sPicture* dec_picture = currMB->p_Slice->dec_picture;
   sPixel** curr_img = pl ? dec_picture->imgUV[pl - 1] : dec_picture->imgY;
 
   if (currMB->is_lossless && currMB->mb_type == I16MB)
@@ -543,7 +543,7 @@ void iMBtrans4x4 (Macroblock* currMB, ColorPlane pl, int smb) {
 void iMBtrans8x8 (Macroblock* currMB, ColorPlane pl) {
 
   //sVidParam* vidParam = currMB->vidParam;
-  sStorablePicture *dec_picture = currMB->p_Slice->dec_picture;
+  sPicture *dec_picture = currMB->p_Slice->dec_picture;
   sPixel **curr_img = pl ? dec_picture->imgUV[pl - 1]: dec_picture->imgY;
 
   // Perform 8x8 idct
@@ -575,7 +575,7 @@ void iTransform (Macroblock* currMB, ColorPlane pl, int smb) {
 
   Slice* currSlice = currMB->p_Slice;
   sVidParam* vidParam = currMB->vidParam;
-  sStorablePicture* dec_picture = currSlice->dec_picture;
+  sPicture* dec_picture = currSlice->dec_picture;
   sPixel** curr_img;
   int uv = pl-1;
 
@@ -685,7 +685,7 @@ void copy_image_data_16x16 (sPixel** imgBuf1, sPixel** imgBuf2, int off1, int of
 int CheckVertMV (Macroblock* currMB, int vec1_y, int block_size_y) {
 
   sVidParam* vidParam = currMB->vidParam;
-  sStorablePicture* dec_picture = currMB->p_Slice->dec_picture;
+  sPicture* dec_picture = currMB->p_Slice->dec_picture;
 
   int y_pos = vec1_y>>2;
   int maxold_y = (currMB->mb_field) ? (dec_picture->size_y >> 1) - 1 : dec_picture->size_y_m1;

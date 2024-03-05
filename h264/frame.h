@@ -47,4 +47,4 @@ typedef struct frame_format {
   int         max_value_sq[3];               // component max value squared
   int         pic_unit_size_on_disk;         // picture sample unit size on storage medium
   int         pic_unit_size_shift3;          // pic_unit_size_on_disk >> 3
-  } FrameFormat;
+  } sFrameFormat;

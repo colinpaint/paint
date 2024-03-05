@@ -261,7 +261,7 @@ static void edge_loop_luma_ver_MBAff (ColorPlane pl, sPixel** Img, byte *Strengt
  *****************************************************************************************
  */
 static void edge_loop_luma_hor_MBAff (ColorPlane pl, sPixel** Img, byte *Strength, Macroblock *MbQ,
-              int edge, sStorablePicture *p)
+              int edge, sPicture *p)
 {
   int      width = p->iLumaStride; //p->size_x;
   int      pel, Strng ;
@@ -390,7 +390,7 @@ static void edge_loop_luma_hor_MBAff (ColorPlane pl, sPixel** Img, byte *Strengt
 *    Filters chroma block edge for MBAFF types
 *****************************************************************************************
  */
-static void edge_loop_chroma_ver_MBAff (sPixel** Img, byte *Strength, Macroblock *MbQ, int edge, int uv, sStorablePicture *p)
+static void edge_loop_chroma_ver_MBAff (sPixel** Img, byte *Strength, Macroblock *MbQ, int edge, int uv, sPicture *p)
 {
   int      pel, Strng ;
 
@@ -478,7 +478,7 @@ static void edge_loop_chroma_ver_MBAff (sPixel** Img, byte *Strength, Macroblock
 *    Filters chroma block edge for MBAFF types
 *****************************************************************************************
  */
-static void edge_loop_chroma_hor_MBAff (sPixel** Img, byte *Strength, Macroblock *MbQ, int edge, int uv, sStorablePicture *p)
+static void edge_loop_chroma_hor_MBAff (sPixel** Img, byte *Strength, Macroblock *MbQ, int edge, int uv, sPicture *p)
 {
   sVidParam* vidParam = MbQ->vidParam;
   int      PelNum = pelnum_cr[1][p->chroma_format_idc];
@@ -567,7 +567,7 @@ static void edge_loop_chroma_hor_MBAff (sPixel** Img, byte *Strength, Macroblock
  *    returns a buffer of 16 Strength values for one stripe in a mb (for MBAFF)
  *********************************************************************************************
  */
-static void get_strength_ver_MBAff (byte *Strength, Macroblock *MbQ, int edge, int mvlimit, sStorablePicture *p)
+static void get_strength_ver_MBAff (byte *Strength, Macroblock *MbQ, int edge, int mvlimit, sPicture *p)
 {
   //byte *Strength = MbQ->strength_ver[edge];
   short  blkP, blkQ, idx;
@@ -778,7 +778,7 @@ static void get_strength_ver_MBAff (byte *Strength, Macroblock *MbQ, int edge, i
  *    returns a buffer of 16 Strength values for one stripe in a mb (for MBAFF)
  *********************************************************************************************
  */
-static void get_strength_hor_MBAff (byte *Strength, Macroblock *MbQ, int edge, int mvlimit, sStorablePicture *p)
+static void get_strength_hor_MBAff (byte *Strength, Macroblock *MbQ, int edge, int mvlimit, sPicture *p)
 {
   short  blkP, blkQ, idx;
   short  blk_x, blk_x2, blk_y, blk_y2 ;
@@ -913,7 +913,7 @@ static void get_strength_hor_MBAff (byte *Strength, Macroblock *MbQ, int edge, i
 }
 //}}}
 //{{{
-static void get_db_strength_mbaff (sVidParam* vidParam, sStorablePicture *p, int MbQAddr)
+static void get_db_strength_mbaff (sVidParam* vidParam, sPicture *p, int MbQAddr)
 {
   Macroblock   *MbQ = &(vidParam->mb_data[MbQAddr]) ; // current Mb
 
@@ -930,7 +930,7 @@ static void get_db_strength_mbaff (sVidParam* vidParam, sStorablePicture *p, int
 
     Slice* currSlice = MbQ->p_Slice;
     int mvlimit = ((p->structure!=FRAME) || (p->mb_aff_frame_flag && MbQ->mb_field)) ? 2 : 4;
-    seq_parameter_set_rbsp_t *active_sps = vidParam->active_sps;
+    sSPSrbsp *active_sps = vidParam->active_sps;
 
     MbQ->DeblockCall = 1;
     get_mb_pos (vidParam, MbQAddr, vidParam->mb_size[IS_LUMA], &mb_x, &mb_y);
@@ -1002,7 +1002,7 @@ static void get_db_strength_mbaff (sVidParam* vidParam, sStorablePicture *p, int
  *    Performing Deblocking for one macroblock.
  *****************************************************************************************
  */
-static void perform_db_mbaff (sVidParam* vidParam, sStorablePicture *p, int MbQAddr)
+static void perform_db_mbaff (sVidParam* vidParam, sPicture *p, int MbQAddr)
 {
   Macroblock   *MbQ = &(vidParam->mb_data[MbQAddr]) ; // current Mb
 
@@ -1027,7 +1027,7 @@ static void perform_db_mbaff (sVidParam* vidParam, sStorablePicture *p, int MbQA
     Slice * currSlice = MbQ->p_Slice;
     int       mvlimit = ((p->structure!=FRAME) || (p->mb_aff_frame_flag && MbQ->mb_field)) ? 2 : 4;
 
-    seq_parameter_set_rbsp_t *active_sps = vidParam->active_sps;
+    sSPSrbsp *active_sps = vidParam->active_sps;
 
     MbQ->DeblockCall = 1;
     get_mb_pos (vidParam, MbQAddr, vidParam->mb_size[IS_LUMA], &mb_x, &mb_y);
@@ -1201,7 +1201,7 @@ static void set_loop_filter_functions_mbaff (sVidParam* vidParam)
  *    returns a buffer of 16 Strength values for one stripe in a mb (for different Frame or Field types)
  *********************************************************************************************
  */
-static void get_strength_ver (Macroblock *MbQ, int edge, int mvlimit, sStorablePicture *p)
+static void get_strength_ver (Macroblock *MbQ, int edge, int mvlimit, sPicture *p)
 {
   byte *Strength = MbQ->strength_ver[edge];
   Slice* currSlice = MbQ->p_Slice;
@@ -1332,7 +1332,7 @@ static void get_strength_ver (Macroblock *MbQ, int edge, int mvlimit, sStorableP
  *    returns a buffer of 16 Strength values for one stripe in a mb (for different Frame or Field types)
  *********************************************************************************************
  */
-static void get_strength_hor (Macroblock *MbQ, int edge, int mvlimit, sStorablePicture *p)
+static void get_strength_hor (Macroblock *MbQ, int edge, int mvlimit, sPicture *p)
 {
   byte  *Strength = MbQ->strength_hor[edge];
   int    StrValue, i;
@@ -1462,7 +1462,7 @@ static void get_strength_hor (Macroblock *MbQ, int edge, int mvlimit, sStorableP
 }
 //}}}
 //{{{
-static void get_db_strength_normal (sVidParam* vidParam, sStorablePicture *p, int MbQAddr, int *piCnt)
+static void get_db_strength_normal (sVidParam* vidParam, sPicture *p, int MbQAddr, int *piCnt)
 {
   Macroblock   *MbQ = &(vidParam->mb_data[MbQAddr]) ; // current Mb
 
@@ -1953,7 +1953,7 @@ static void luma_hor_deblock_normal (sPixel *imgP, sPixel *imgQ, int width, int 
  *    Filters 16 pel block edge of Frame or Field coded MBs
  *****************************************************************************************
  */
-static void edge_loop_luma_hor (ColorPlane pl, sPixel** Img, byte *Strength, Macroblock *MbQ, int edge, sStorablePicture *p)
+static void edge_loop_luma_hor (ColorPlane pl, sPixel** Img, byte *Strength, Macroblock *MbQ, int edge, sPicture *p)
 {
   sVidParam* vidParam = MbQ->vidParam;
 
@@ -2008,7 +2008,7 @@ static void edge_loop_luma_hor (ColorPlane pl, sPixel** Img, byte *Strength, Mac
  *    Filters chroma block edge for Frame or Field coded pictures
  *****************************************************************************************
  */
-static void edge_loop_chroma_ver (sPixel** Img, byte *Strength, Macroblock *MbQ, int edge, int uv, sStorablePicture *p)
+static void edge_loop_chroma_ver (sPixel** Img, byte *Strength, Macroblock *MbQ, int edge, int uv, sPicture *p)
 {
   sVidParam* vidParam = MbQ->vidParam;
 
@@ -2096,7 +2096,7 @@ static void edge_loop_chroma_ver (sPixel** Img, byte *Strength, Macroblock *MbQ,
  *    Filters chroma block edge for Frame or Field coded pictures
  *****************************************************************************************
  */
-static void edge_loop_chroma_hor (sPixel** Img, byte *Strength, Macroblock *MbQ, int edge, int uv, sStorablePicture *p)
+static void edge_loop_chroma_hor (sPixel** Img, byte *Strength, Macroblock *MbQ, int edge, int uv, sPicture *p)
 {
   sVidParam* vidParam = MbQ->vidParam;
   int block_width = vidParam->mb_cr_size_x;
@@ -2181,7 +2181,7 @@ static void edge_loop_chroma_hor (sPixel** Img, byte *Strength, Macroblock *MbQ,
 
 //}}}
 //{{{
-static void perform_db_dep_normal (Macroblock *MbQ, sStorablePicture *p)
+static void perform_db_dep_normal (Macroblock *MbQ, sPicture *p)
 {
   sVidParam* vidParam = MbQ->vidParam;
   Slice * currSlice = MbQ->p_Slice;
@@ -2195,7 +2195,7 @@ static void perform_db_dep_normal (Macroblock *MbQ, sStorablePicture *p)
   sPixel     **imgY = p->imgY;
   sPixel   ***imgUV = p->imgUV;
 
-  seq_parameter_set_rbsp_t *active_sps = vidParam->active_sps;
+  sSPSrbsp *active_sps = vidParam->active_sps;
 
   MbQ->DeblockCall = 1;
   get_mb_pos (vidParam, MbQ->mbAddrX, vidParam->mb_size[IS_LUMA], &mb_x, &mb_y);
@@ -2327,7 +2327,7 @@ static void perform_db_dep_normal (Macroblock *MbQ, sStorablePicture *p)
 }
 //}}}
 //{{{
-static void perform_db_ind_normal (Macroblock *MbQ, sStorablePicture *p)
+static void perform_db_ind_normal (Macroblock *MbQ, sPicture *p)
 {
   sVidParam* vidParam = MbQ->vidParam;
   Slice * currSlice = MbQ->p_Slice;
@@ -2339,7 +2339,7 @@ static void perform_db_ind_normal (Macroblock *MbQ, sStorablePicture *p)
   sPixel     **imgY = p->imgY;
   sPixel   ***imgUV = p->imgUV;
 
-  seq_parameter_set_rbsp_t *active_sps = vidParam->active_sps;
+  sSPSrbsp *active_sps = vidParam->active_sps;
 
   MbQ->DeblockCall = 1;
   //get_mb_pos (vidParam, MbQ->mbAddrX, vidParam->mb_size[IS_LUMA], &mb_x, &mb_y);
@@ -2658,7 +2658,7 @@ static void perform_db_ind_normal (Macroblock *MbQ, sStorablePicture *p)
  *    Deblocking filter for one macroblock.
  *****************************************************************************************
  */
-static void perform_db_normal (sVidParam* vidParam, sStorablePicture *p, int MbQAddr)
+static void perform_db_normal (sVidParam* vidParam, sPicture *p, int MbQAddr)
 {
   Macroblock   *MbQ = &(vidParam->mb_data[MbQAddr]) ; // current Mb
 
@@ -2678,7 +2678,7 @@ static void perform_db_normal (sVidParam* vidParam, sStorablePicture *p, int MbQ
 }
 //}}}
 //{{{
-static void deblock_normal (sVidParam* vidParam, sStorablePicture *p) {
+static void deblock_normal (sVidParam* vidParam, sPicture *p) {
 
   unsigned int i;
   int j=-1;
@@ -2702,7 +2702,7 @@ static void set_loop_filter_functions_normal (sVidParam* vidParam)
 
 // loopfilter
 //{{{
-static void DeblockMb (sVidParam* vidParam, sStorablePicture *p, int MbQAddr) {
+static void DeblockMb (sVidParam* vidParam, sPicture *p, int MbQAddr) {
 
   Macroblock* MbQ = &(vidParam->mb_data[MbQAddr]) ; // current Mb
 
@@ -2723,7 +2723,7 @@ static void DeblockMb (sVidParam* vidParam, sStorablePicture *p, int MbQAddr) {
     sPixel   ***imgUV = p->imgUV;
     Slice * currSlice = MbQ->p_Slice;
     int       mvlimit = ((p->structure!=FRAME) || (p->mb_aff_frame_flag && MbQ->mb_field)) ? 2 : 4;
-    seq_parameter_set_rbsp_t* active_sps = vidParam->active_sps;
+    sSPSrbsp* active_sps = vidParam->active_sps;
 
     MbQ->DeblockCall = 1;
     get_mb_pos (vidParam, MbQAddr, vidParam->mb_size[IS_LUMA], &mb_x, &mb_y);
@@ -2865,7 +2865,7 @@ static void DeblockMb (sVidParam* vidParam, sStorablePicture *p, int MbQAddr) {
   }
 //}}}
 //{{{
-static void get_db_strength (sVidParam* vidParam, sStorablePicture *p, int MbQAddr) {
+static void get_db_strength (sVidParam* vidParam, sPicture *p, int MbQAddr) {
 
   Macroblock   *MbQ = &(vidParam->mb_data[MbQAddr]) ; // current Mb
 
@@ -2882,7 +2882,7 @@ static void get_db_strength (sVidParam* vidParam, sStorablePicture *p, int MbQAd
 
     Slice * currSlice = MbQ->p_Slice;
     int       mvlimit = ((p->structure!=FRAME) || (p->mb_aff_frame_flag && MbQ->mb_field)) ? 2 : 4;
-    seq_parameter_set_rbsp_t *active_sps = vidParam->active_sps;
+    sSPSrbsp *active_sps = vidParam->active_sps;
 
     MbQ->DeblockCall = 1;
     get_mb_pos (vidParam, MbQAddr, vidParam->mb_size[IS_LUMA], &mb_x, &mb_y);
@@ -2962,7 +2962,7 @@ static void get_db_strength (sVidParam* vidParam, sStorablePicture *p, int MbQAd
   }
 //}}}
 //{{{
-static void perform_db (sVidParam* vidParam, sStorablePicture *p, int MbQAddr) {
+static void perform_db (sVidParam* vidParam, sPicture *p, int MbQAddr) {
 
   Macroblock* MbQ = &(vidParam->mb_data[MbQAddr]) ; // current Mb
 
@@ -2981,7 +2981,7 @@ static void perform_db (sVidParam* vidParam, sStorablePicture *p, int MbQAddr) {
     sPixel   ***imgUV = p->imgUV;
     Slice * currSlice = MbQ->p_Slice;
     int       mvlimit = ((p->structure!=FRAME) || (p->mb_aff_frame_flag && MbQ->mb_field)) ? 2 : 4;
-    seq_parameter_set_rbsp_t *active_sps = vidParam->active_sps;
+    sSPSrbsp *active_sps = vidParam->active_sps;
 
     MbQ->DeblockCall = 1;
     get_mb_pos (vidParam, MbQAddr, vidParam->mb_size[IS_LUMA], &mb_x, &mb_y);
@@ -3116,7 +3116,7 @@ static void perform_db (sVidParam* vidParam, sStorablePicture *p, int MbQAddr) {
   }
 //}}}
 //{{{
-void DeblockPicture (sVidParam* vidParam, sStorablePicture *p) {
+void DeblockPicture (sVidParam* vidParam, sPicture *p) {
 
   if (p->mb_aff_frame_flag) {
     for (unsigned i = 0; i < p->PicSizeInMbs; ++i)

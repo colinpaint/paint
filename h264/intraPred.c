@@ -250,7 +250,7 @@ static int intra8x8_dc_pred (Macroblock *currMB,
   Slice *currSlice = currMB->p_Slice;
   sVidParam* vidParam = currMB->vidParam;
 
-  sStorablePicture *dec_picture = currSlice->dec_picture;
+  sPicture *dec_picture = currSlice->dec_picture;
   sPixel **imgY = (pl) ? dec_picture->imgUV[pl - 1] : dec_picture->imgY; // For MB level frame/field coding tools -- set default to imgY
 
   PixelPos pix_a;
@@ -1601,7 +1601,7 @@ static int intra8x8_dc_pred_mbaff (Macroblock *currMB,
   Slice *currSlice = currMB->p_Slice;
   sVidParam* vidParam = currMB->vidParam;
 
-  sStorablePicture *dec_picture = currSlice->dec_picture;
+  sPicture *dec_picture = currSlice->dec_picture;
   sPixel **imgY = (pl) ? dec_picture->imgUV[pl - 1] : dec_picture->imgY; // For MB level frame/field coding tools -- set default to imgY
 
   PixelPos pix_a[8];
@@ -3644,7 +3644,7 @@ static void intrapred_chroma_dc (Macroblock *currMB)
 {
   Slice *currSlice = currMB->p_Slice;
   sVidParam* vidParam = currMB->vidParam;
-  sStorablePicture *dec_picture = currSlice->dec_picture;
+  sPicture *dec_picture = currSlice->dec_picture;
   int        b8, b4;
   int        yuv = dec_picture->chroma_format_idc - 1;
   int        blk_x, blk_y;
@@ -3760,7 +3760,7 @@ static void intrapred_chroma_hor (Macroblock *currMB)
     int cr_MB_y = vidParam->mb_cr_size_y;
 
     int j;
-    sStorablePicture *dec_picture = currSlice->dec_picture;
+    sPicture *dec_picture = currSlice->dec_picture;
 #if (IMGTYPE != 0)
     int i, pred, pred1;
 #endif
@@ -3796,7 +3796,7 @@ static void intrapred_chroma_ver (Macroblock *currMB)
   Slice *currSlice = currMB->p_Slice;
   sVidParam* vidParam = currMB->vidParam;
   int j;
-  sStorablePicture *dec_picture = currSlice->dec_picture;
+  sPicture *dec_picture = currSlice->dec_picture;
 
   PixelPos up;        //!< pixel position  p(0,-1)
   int up_avail;
@@ -3831,7 +3831,7 @@ static void intrapred_chroma_plane (Macroblock *currMB)
 {
   Slice *currSlice = currMB->p_Slice;
   sVidParam* vidParam = currMB->vidParam;
-  sStorablePicture *dec_picture = currSlice->dec_picture;
+  sPicture *dec_picture = currSlice->dec_picture;
 
   PixelPos up;        //!< pixel position  p(0,-1)
   PixelPos up_left;
@@ -3954,7 +3954,7 @@ static void intrapred_chroma_ver_mbaff (Macroblock *currMB)
   Slice *currSlice = currMB->p_Slice;
   sVidParam* vidParam = currMB->vidParam;
   int j;
-  sStorablePicture *dec_picture = currSlice->dec_picture;
+  sPicture *dec_picture = currSlice->dec_picture;
 
   PixelPos up;        //!< pixel position  p(0,-1)
   int up_avail;
@@ -3998,7 +3998,7 @@ static void intra_pred_chroma_mbaff (Macroblock *currMB)
   Slice *currSlice = currMB->p_Slice;
   sVidParam* vidParam = currMB->vidParam;
   int i,j, ii, jj;
-  sStorablePicture *dec_picture = currSlice->dec_picture;
+  sPicture *dec_picture = currSlice->dec_picture;
 
   int ih, iv, ib, ic, iaa;
 

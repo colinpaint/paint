@@ -21,7 +21,7 @@ typedef struct
   unsigned int cpb_removal_delay_length_minus1;                  // u(5)
   unsigned int dpb_output_delay_length_minus1;                   // u(5)
   unsigned int time_offset_length;                               // u(5)
-} hrd_parameters_t;
+} sHRDparams;
 //}}}
 //{{{
 typedef struct
@@ -47,9 +47,9 @@ typedef struct
   unsigned int time_scale;                                       // u(32)
   Boolean      fixed_frame_rate_flag;                            // u(1)
   Boolean      nal_hrd_parameters_present_flag;                  // u(1)
-  hrd_parameters_t nal_hrd_parameters;                           // hrd_paramters_t
+  sHRDparams nal_hrd_parameters;                           // hrd_paramters_t
   Boolean      vcl_hrd_parameters_present_flag;                  // u(1)
-  hrd_parameters_t vcl_hrd_parameters;                           // hrd_paramters_t
+  sHRDparams vcl_hrd_parameters;                           // hrd_paramters_t
   // if ((nal_hrd_parameters_present_flag || (vcl_hrd_parameters_present_flag))
   Boolean      low_delay_hrd_flag;                               // u(1)
   Boolean      pic_struct_present_flag;                          // u(1)
@@ -113,7 +113,7 @@ typedef struct
   Boolean   constrained_intra_pred_flag;                      // u(1)
   Boolean   redundant_pic_cnt_present_flag;                   // u(1)
   Boolean   vui_pic_parameters_flag;                          // u(1)
-} pic_parameter_set_rbsp_t;
+} sPPSrbsp;
 //}}}
 
 #define MAXnum_ref_frames_in_pic_order_cnt_cycle  256
@@ -163,9 +163,9 @@ typedef struct {
   vui_seq_parameters_t vui_seq_parameters;                  // vui_seq_parameters_t
   unsigned  separate_colour_plane_flag;                       // u(1)
   int lossless_qpprime_flag;
-  } seq_parameter_set_rbsp_t;
+  } sSPSrbsp;
 //}}}
 
 
-pic_parameter_set_rbsp_t* AllocPPS();
-void FreePPS (pic_parameter_set_rbsp_t* pps);
+sPPSrbsp* AllocPPS();
+void FreePPS (sPPSrbsp* pps);

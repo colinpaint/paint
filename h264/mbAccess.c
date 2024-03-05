@@ -39,7 +39,7 @@ Boolean mb_is_available (int mbAddr, Macroblock* currMB) {
 void CheckAvailabilityOfNeighbors (Macroblock* currMB) {
 
   Slice* currSlice = currMB->p_Slice;
-  sStorablePicture *dec_picture = currSlice->dec_picture; //vidParam->dec_picture;
+  sPicture *dec_picture = currSlice->dec_picture; //vidParam->dec_picture;
   const int mb_nr = currMB->mbAddrX;
   BlockPos *PicPos = currMB->vidParam->PicPos;
 
@@ -77,7 +77,7 @@ void CheckAvailabilityOfNeighbors (Macroblock* currMB) {
 void CheckAvailabilityOfNeighborsNormal (Macroblock* currMB) {
 
   Slice* currSlice = currMB->p_Slice;
-  sStorablePicture* dec_picture = currSlice->dec_picture; //vidParam->dec_picture;
+  sPicture* dec_picture = currSlice->dec_picture; //vidParam->dec_picture;
   const int mb_nr = currMB->mbAddrX;
   BlockPos* PicPos = currMB->vidParam->PicPos;
 
@@ -102,7 +102,7 @@ void CheckAvailabilityOfNeighborsNormal (Macroblock* currMB) {
 void CheckAvailabilityOfNeighborsMBAFF (Macroblock* currMB) {
 
   Slice* currSlice = currMB->p_Slice;
-  sStorablePicture* dec_picture = currSlice->dec_picture; //vidParam->dec_picture;
+  sPicture* dec_picture = currSlice->dec_picture; //vidParam->dec_picture;
   const int mb_nr = currMB->mbAddrX;
   BlockPos* PicPos = currMB->vidParam->PicPos;
 

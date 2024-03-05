@@ -76,7 +76,7 @@ typedef struct ercVariables_s
 //}}}
 //{{{
 struct concealment_node {
-    sStorablePicture* picture;
+    sPicture* picture;
     int  missingpocs;
     struct concealment_node *next;
 };
@@ -89,13 +89,13 @@ int ercConcealIntraFrame (sVidParam* vidParam, frame *recfr,
 int ercConcealInterFrame (frame *recfr, objectBuffer_t *object_list,
                           int picSizeX, int picSizeY, ercVariables_t *errorVar, int chroma_format_idc );
 
-extern struct concealment_node* init_node (sStorablePicture* , int );
-extern void init_lists_for_non_reference_loss (sDecodedPictureBuffer* p_Dpb, int , sPictureStructure );
-extern void conceal_lost_frames (sDecodedPictureBuffer* p_Dpb, Slice *pSlice);
-extern void conceal_non_ref_pics (sDecodedPictureBuffer* p_Dpb, int diff);
-extern void sliding_window_poc_management (sDecodedPictureBuffer* p_Dpb, sStorablePicture *p);
-extern void write_lost_non_ref_pic (sDecodedPictureBuffer* p_Dpb, int poc);
-extern void write_lost_ref_after_idr (sDecodedPictureBuffer* p_Dpb, int pos);
+extern struct concealment_node* init_node (sPicture* , int );
+extern void init_lists_for_non_reference_loss (sDPB* dpb, int , sPictureStructure );
+extern void conceal_lost_frames (sDPB* dpb, Slice *pSlice);
+extern void conceal_non_ref_pics (sDPB* dpb, int diff);
+extern void sliding_window_poc_management (sDPB* dpb, sPicture *p);
+extern void write_lost_non_ref_pic (sDPB* dpb, int poc);
+extern void write_lost_ref_after_idr (sDPB* dpb, int pos);
 
 void ercInit (sVidParam* vidParam, int pic_sizex, int pic_sizey, int flag);
 ercVariables_t* ercOpen();

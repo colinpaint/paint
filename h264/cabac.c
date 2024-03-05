@@ -302,7 +302,7 @@ int cabac_startcode_follows (Slice* currSlice, int eos_bit)
   if( eos_bit )
   {
     const byte   *partMap    = assignSE2partition[currSlice->dp_mode];
-    DataPartition *dP = &(currSlice->partArr[partMap[SE_MBTYPE]]);
+    sDataPartition *dP = &(currSlice->partArr[partMap[SE_MBTYPE]]);
     DecodingEnvironmentPtr dep_dp = &(dP->de_cabac);
 
     bit = biari_decode_final (dep_dp); //GB
@@ -435,7 +435,7 @@ void readFieldModeInfo_CABAC (Macroblock* currMB,
 //{{{
 int check_next_mb_and_get_field_mode_CABAC_p_slice (Slice* currSlice,
                                            SyntaxElement *se,
-                                           DataPartition  *act_dp)
+                                           sDataPartition  *act_dp)
 {
   sVidParam* vidParam = currSlice->vidParam;
   BiContextTypePtr          mb_type_ctx_copy[3];
@@ -521,7 +521,7 @@ int check_next_mb_and_get_field_mode_CABAC_p_slice (Slice* currSlice,
 //{{{
 int check_next_mb_and_get_field_mode_CABAC_b_slice (Slice* currSlice,
                                            SyntaxElement *se,
-                                           DataPartition  *act_dp)
+                                           sDataPartition  *act_dp)
 {
   sVidParam* vidParam = currSlice->vidParam;
   BiContextTypePtr          mb_type_ctx_copy[3];
@@ -1309,7 +1309,7 @@ void readRefFrame_CABAC (Macroblock* currMB,
 {
   Slice* currSlice = currMB->p_Slice;
   sVidParam* vidParam = currMB->vidParam;
-  sStorablePicture *dec_picture = currSlice->dec_picture;
+  sPicture *dec_picture = currSlice->dec_picture;
   MotionInfoContexts *ctx = currSlice->mot_ctx;
   Macroblock *neighborMB = NULL;
 
@@ -1410,7 +1410,7 @@ void read_CBP_CABAC (Macroblock* currMB,
                     DecodingEnvironmentPtr dep_dp)
 {
   sVidParam* vidParam = currMB->vidParam;
-  sStorablePicture *dec_picture = currMB->p_Slice->dec_picture;
+  sPicture *dec_picture = currMB->p_Slice->dec_picture;
   Slice* currSlice = currMB->p_Slice;
   TextureInfoContexts *ctx = currSlice->tex_ctx;
   Macroblock *neighborMB = NULL;
@@ -1570,7 +1570,7 @@ static int read_and_store_CBP_block_bit_444 (Macroblock* currMB,
 {
   Slice* currSlice = currMB->p_Slice;
   sVidParam* vidParam = currMB->vidParam;
-  sStorablePicture *dec_picture = currSlice->dec_picture;
+  sPicture *dec_picture = currSlice->dec_picture;
   TextureInfoContexts *tex_ctx = currSlice->tex_ctx;
   Macroblock *mb_data = currSlice->mb_data;
   int y_ac        = (type==LUMA_16AC || type==LUMA_8x8 || type==LUMA_8x4 || type==LUMA_4x8 || type==LUMA_4x4
@@ -2303,7 +2303,7 @@ void readRunLevel_CABAC (Macroblock* currMB,
  *    arithmetic decoding
  ************************************************************************
  */
-int readSyntaxElement_CABAC (Macroblock* currMB, SyntaxElement *se, DataPartition *this_dataPart)
+int readSyntaxElement_CABAC (Macroblock* currMB, SyntaxElement *se, sDataPartition *this_dataPart)
 {
   DecodingEnvironmentPtr dep_dp = &(this_dataPart->de_cabac);
   int curr_len = arideco_bits_read(dep_dp);
@@ -2327,7 +2327,7 @@ int readSyntaxElement_CABAC (Macroblock* currMB, SyntaxElement *se, DataPartitio
 void readIPCM_CABAC (Slice* currSlice, struct datapartition_dec *dP)
 {
   sVidParam* vidParam = currSlice->vidParam;
-  sStorablePicture *dec_picture = currSlice->dec_picture;
+  sPicture *dec_picture = currSlice->dec_picture;
   Bitstream* currStream = dP->bitstream;
   DecodingEnvironmentPtr dep = &(dP->de_cabac);
   byte *buf = currStream->streamBuffer;

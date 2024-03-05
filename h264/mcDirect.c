@@ -37,10 +37,10 @@ static void update_direct_mv_info_temporal (Macroblock* currMB) {
   int step_v0         = BLOCK_STEP [partmode][1];
   int i0, j0, j6;
   int j4, i4;
-  sStorablePicture* dec_picture = currSlice->dec_picture;
+  sPicture* dec_picture = currSlice->dec_picture;
   int list_offset = currMB->list_offset; // ((currSlice->mb_aff_frame_flag)&&(currMB->mb_field))? (mb_nr&0x01) ? 4 : 2 : 0;
-  sStorablePicture **list0 = currSlice->listX[LIST_0 + list_offset];
-  sStorablePicture **list1 = currSlice->listX[LIST_1 + list_offset];
+  sPicture **list0 = currSlice->listX[LIST_0 + list_offset];
+  sPicture **list1 = currSlice->listX[LIST_1 + list_offset];
 
   Boolean has_direct = (currMB->b8mode[0] == 0) | (currMB->b8mode[1] == 0) |
                        (currMB->b8mode[2] == 0) | (currMB->b8mode[3] == 0);
@@ -262,7 +262,7 @@ static inline void update_neighbor_mvs (PicMotionParams **motion, const PicMotio
 }
 //}}}
 //{{{
-int get_colocated_info_4x4 (Macroblock* currMB, sStorablePicture *list1, int i, int j)
+int get_colocated_info_4x4 (Macroblock* currMB, sPicture *list1, int i, int j)
 {
   if (list1->is_long_term)
     return 1;
@@ -281,7 +281,7 @@ int get_colocated_info_4x4 (Macroblock* currMB, sStorablePicture *list1, int i, 
   }
 //}}}
 //{{{
-int get_colocated_info_8x8 (Macroblock* currMB, sStorablePicture *list1, int i, int j)
+int get_colocated_info_8x8 (Macroblock* currMB, sPicture *list1, int i, int j)
 {
   if (list1->is_long_term)
     return 1;
@@ -360,11 +360,11 @@ static void update_direct_mv_info_spatial_8x8 (Macroblock* currMB)
     int i,j,k;
 
     int j4, i4;
-    sStorablePicture *dec_picture = currSlice->dec_picture;
+    sPicture *dec_picture = currSlice->dec_picture;
 
     int list_offset = currMB->list_offset; // ((currSlice->mb_aff_frame_flag)&&(currMB->mb_field))? (mb_nr&0x01) ? 4 : 2 : 0;
-    sStorablePicture **list0 = currSlice->listX[LIST_0 + list_offset];
-    sStorablePicture **list1 = currSlice->listX[LIST_1 + list_offset];
+    sPicture **list0 = currSlice->listX[LIST_0 + list_offset];
+    sPicture **list1 = currSlice->listX[LIST_1 + list_offset];
 
     char  l0_rFrame, l1_rFrame;
     MotionVector pmvl0, pmvl1;
@@ -519,11 +519,11 @@ static void update_direct_mv_info_spatial_4x4 (Macroblock* currMB)
     int i,j,k;
 
     int j4, i4;
-    sStorablePicture *dec_picture = vidParam->dec_picture;
+    sPicture *dec_picture = vidParam->dec_picture;
 
     int list_offset = currMB->list_offset; // ((currSlice->mb_aff_frame_flag)&&(currMB->mb_field))? (mb_nr&0x01) ? 4 : 2 : 0;
-    sStorablePicture **list0 = currSlice->listX[LIST_0 + list_offset];
-    sStorablePicture **list1 = currSlice->listX[LIST_1 + list_offset];
+    sPicture **list0 = currSlice->listX[LIST_0 + list_offset];
+    sPicture **list1 = currSlice->listX[LIST_1 + list_offset];
 
     char  l0_rFrame, l1_rFrame;
     MotionVector pmvl0, pmvl1;

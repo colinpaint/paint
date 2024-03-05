@@ -1196,7 +1196,7 @@ static const char INIT_ABS_P[3][22][5][2] =
 static void ref_pic_list_reordering (Slice* currSlice) {
 
   byte dP_nr = assignSE2partition[currSlice->dp_mode][SE_HEADER];
-  DataPartition* partition = &(currSlice->partArr[dP_nr]);
+  sDataPartition* partition = &(currSlice->partArr[dP_nr]);
   Bitstream* currStream = partition->bitstream;
 
   alloc_ref_pic_list_reordering_buffer (currSlice);
@@ -1266,10 +1266,10 @@ static void reset_wp_params (Slice* currSlice) {
 static void pred_weight_table (Slice* currSlice) {
 
   sVidParam* vidParam = currSlice->vidParam;
-  seq_parameter_set_rbsp_t* active_sps = vidParam->active_sps;
+  sSPSrbsp* active_sps = vidParam->active_sps;
 
   byte dP_nr = assignSE2partition[currSlice->dp_mode][SE_HEADER];
-  DataPartition* partition = &(currSlice->partArr[dP_nr]);
+  sDataPartition* partition = &(currSlice->partArr[dP_nr]);
   Bitstream* currStream = partition->bitstream;
 
   int luma_weight_flag_l0, luma_weight_flag_l1, chroma_weight_flag_l0, chroma_weight_flag_l1;
@@ -1507,7 +1507,7 @@ void dec_ref_pic_marking (sVidParam* vidParam, Bitstream* currStream, Slice* pSl
 //{{{
 int dumpPOC (sVidParam* vidParam) {
 
-  seq_parameter_set_rbsp_t* active_sps = vidParam->active_sps;
+  sSPSrbsp* active_sps = vidParam->active_sps;
 
   printf ("POC locals...\n");
   printf ("toppoc                                %d\n", (int) vidParam->ppSliceList[0]->toppoc);
@@ -1541,7 +1541,7 @@ int dumpPOC (sVidParam* vidParam) {
 void decodePOC (sVidParam* vidParam, Slice* pSlice) {
 
   int i;
-  seq_parameter_set_rbsp_t *active_sps = vidParam->active_sps;
+  sSPSrbsp *active_sps = vidParam->active_sps;
 
   // for POC mode 0:
   unsigned int MaxPicOrderCntLsb = (1<<(active_sps->log2_max_pic_order_cnt_lsb_minus4+4));
@@ -1717,7 +1717,7 @@ int FirstPartOfSliceHeader (Slice* currSlice) {
 
   sVidParam* vidParam = currSlice->vidParam;
   byte dP_nr = assignSE2partition[currSlice->dp_mode][SE_HEADER];
-  DataPartition* partition = &(currSlice->partArr[dP_nr]);
+  sDataPartition* partition = &(currSlice->partArr[dP_nr]);
   Bitstream* currStream = partition->bitstream;
 
   gDecoder->UsedBits = partition->bitstream->frame_bitoffset;
@@ -1745,10 +1745,10 @@ int RestOfSliceHeader (Slice* currSlice) {
 
   sVidParam* vidParam = currSlice->vidParam;
   InputParameters* p_Inp = currSlice->p_Inp;
-  seq_parameter_set_rbsp_t* active_sps = vidParam->active_sps;
+  sSPSrbsp* active_sps = vidParam->active_sps;
 
   byte dP_nr = assignSE2partition[currSlice->dp_mode][SE_HEADER];
-  DataPartition* partition = &(currSlice->partArr[dP_nr]);
+  sDataPartition* partition = &(currSlice->partArr[dP_nr]);
   Bitstream* currStream = partition->bitstream;
 
   int val, len;

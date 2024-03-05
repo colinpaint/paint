@@ -30,10 +30,10 @@ extern void readIPCM_CABAC (Slice* currSlice, struct datapartition_dec *dP);
 
 extern int  cabac_startcode_follows (Slice* currSlice, int eos_bit);
 
-extern int  readSyntaxElement_CABAC (Macroblock* currMB, SyntaxElement *se, DataPartition *this_dataPart);
+extern int  readSyntaxElement_CABAC (Macroblock* currMB, SyntaxElement *se, sDataPartition *this_dataPart);
 
-extern int check_next_mb_and_get_field_mode_CABAC_p_slice (Slice* currSlice, SyntaxElement *se, DataPartition  *act_dp);
-extern int check_next_mb_and_get_field_mode_CABAC_b_slice (Slice* currSlice, SyntaxElement *se, DataPartition  *act_dp);
+extern int check_next_mb_and_get_field_mode_CABAC_p_slice (Slice* currSlice, SyntaxElement *se, sDataPartition  *act_dp);
+extern int check_next_mb_and_get_field_mode_CABAC_b_slice (Slice* currSlice, SyntaxElement *se, sDataPartition  *act_dp);
 
 extern void CheckAvailabilityOfNeighborsCABAC (Macroblock* currMB);
 
