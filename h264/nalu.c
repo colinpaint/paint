@@ -44,9 +44,9 @@ void resetAnnexB (ANNEXB_t* annexB) {
 //}}}
 
 //{{{
-NALU_t* allocNALU (int buffersize) {
+sNalu* allocNALU (int buffersize) {
 
-  NALU_t* nalu = (NALU_t*)calloc (1, sizeof(NALU_t));
+  sNalu* nalu = (sNalu*)calloc (1, sizeof(sNalu));
   if (nalu == NULL)
     no_mem_exit ("AllocNALU");
 
@@ -61,7 +61,7 @@ NALU_t* allocNALU (int buffersize) {
   }
 //}}}
 //{{{
-void freeNALU (NALU_t* n) {
+void freeNALU (sNalu* n) {
 
   if (n != NULL) {
     if (n->buf != NULL) {
@@ -74,7 +74,7 @@ void freeNALU (NALU_t* n) {
 //}}}
 
 //{{{
-void checkZeroByteVCL (sVidParam* vidParam, NALU_t* nalu) {
+void checkZeroByteVCL (sVidParam* vidParam, sNalu* nalu) {
 
   int CheckZeroByte = 0;
 
@@ -100,7 +100,7 @@ void checkZeroByteVCL (sVidParam* vidParam, NALU_t* nalu) {
    }
 //}}}
 //{{{
-void checkZeroByteNonVCL (sVidParam* vidParam, NALU_t* nalu) {
+void checkZeroByteNonVCL (sVidParam* vidParam, sNalu* nalu) {
 
   int CheckZeroByte = 0;
 
@@ -163,7 +163,7 @@ static inline int findStartCode (unsigned char* buf, int zerosInStartcode) {
   }
 //}}}
 //{{{
-static int getNALU (ANNEXB_t* annexB, sVidParam* vidParam, NALU_t* nalu) {
+static int getNALU (ANNEXB_t* annexB, sVidParam* vidParam, sNalu* nalu) {
 
   int naluBufCount = 0;
   byte* naluBufPtr = annexB->naluBuf;
@@ -299,7 +299,7 @@ static int getNALU (ANNEXB_t* annexB, sVidParam* vidParam, NALU_t* nalu) {
   }
 //}}}
 //{{{
-static int NALUtoRBSP (NALU_t* nalu) {
+static int NALUtoRBSP (sNalu* nalu) {
 // networkAbstractionLayerUnit to rawByteSequencePayload
 
   byte* streamBuffer = nalu->buf;
@@ -351,7 +351,7 @@ static int NALUtoRBSP (NALU_t* nalu) {
   }
 //}}}
 //{{{
-int readNextNalu (sVidParam* vidParam, NALU_t* nalu) {
+int readNextNalu (sVidParam* vidParam, sNalu* nalu) {
 
   InputParameters* p_Inp = vidParam->p_Inp;
 

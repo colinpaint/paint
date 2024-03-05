@@ -16,8 +16,6 @@
 #define SIMULCAST_ENABLE        0  // to test the decoder
 
 #define MVC_INIT_VIEW_ID        -1
-#define MAX_VIEW_NUM            1024
-#define BASE_VIEW_IDX           0
 
 #include "typedefs.h"
 

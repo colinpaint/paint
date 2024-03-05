@@ -777,7 +777,7 @@ void MakeSPSavailable (sVidParam* vidParam, int id, sSPSrbsp* sps) {
 
 //}}}
 //{{{
-void ProcessSPS (sVidParam* vidParam, NALU_t* nalu) {
+void ProcessSPS (sVidParam* vidParam, sNalu* nalu) {
 
   sDataPartition* dp = AllocPartition (1);
   sSPSrbsp* sps = AllocSPS();
@@ -1107,7 +1107,7 @@ void CleanUpPPS (sVidParam* vidParam) {
   }
 //}}}
 //{{{
-void ProcessPPS (sVidParam* vidParam, NALU_t *nalu) {
+void ProcessPPS (sVidParam* vidParam, sNalu *nalu) {
 
   sDataPartition* dp = AllocPartition (1);
   sPPSrbsp* pps = AllocPPS();

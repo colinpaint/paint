@@ -44,7 +44,7 @@ typedef struct nalu_t {
   NalRefIdc nal_reference_idc;     // NALU_PRIORITY_xxxx
   byte*     buf;                   // contains the first byte followed by the EBSP
   uint16    lost_packets;          // true, if packet loss is detected
-  } NALU_t;
+  } sNalu;
 //}}}
 
 //{{{
@@ -68,11 +68,11 @@ extern void openAnnexB (ANNEXB_t* annexB, byte* chunk, size_t chunkSize);
 extern void resetAnnexB (ANNEXB_t* annexB);
 extern void freeAnnexB (ANNEXB_t** p_annexB);
 
-extern NALU_t* allocNALU (int);
-extern void freeNALU (NALU_t* n);
+extern sNalu* allocNALU (int);
+extern void freeNALU (sNalu* n);
 
-extern void checkZeroByteVCL (sVidParam* vidParam, NALU_t* nalu);
-extern void checkZeroByteNonVCL (sVidParam* vidParam, NALU_t* nalu);
+extern void checkZeroByteVCL (sVidParam* vidParam, sNalu* nalu);
+extern void checkZeroByteNonVCL (sVidParam* vidParam, sNalu* nalu);
 
-extern int readNextNalu (sVidParam* vidParam, NALU_t* nalu);
+extern int readNextNalu (sVidParam* vidParam, sNalu* nalu);
 extern int RBSPtoSODB (byte* streamBuffer, int last_byte_pos);
