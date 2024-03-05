@@ -908,8 +908,7 @@ public:
     thread ([=]() {
       cLog::setThreadName ("anal");
 
-      // 20Mb
-      uint8_t* h264Chunk = new uint8_t[200000000];
+      uint8_t* h264Chunk = new uint8_t[2000000000];
       uint8_t* h264ChunkPtr = h264Chunk;
       size_t h264ChunkSize = 0;
       int gotIDR = 0;
