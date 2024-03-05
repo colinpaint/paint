@@ -1,6 +1,6 @@
 //{{{  includes
 #include "global.h"
-#include "memalloc.h"
+#include "memAlloc.h"
 
 #include "image.h"
 #include "parsetcommon.h"
@@ -776,7 +776,7 @@ void processSPS (sVidParam* vidParam, sNalu* nalu) {
       if (sps->seq_parameter_set_id == vidParam->active_sps->seq_parameter_set_id) {
         if (!spsIsEqual (sps, vidParam->active_sps))   {
           if (vidParam->picture)
-            exit_picture (vidParam, &vidParam->picture);
+            exitPicture (vidParam, &vidParam->picture);
           vidParam->active_sps=NULL;
           }
         }
@@ -802,7 +802,7 @@ void activateSPS (sVidParam* vidParam, sSPSrbsp* sps) {
 
   if (vidParam->active_sps != sps) {
     if (vidParam->picture) // this may only happen on slice loss
-      exit_picture (vidParam, &vidParam->picture);
+      exitPicture (vidParam, &vidParam->picture);
     vidParam->active_sps = sps;
 
     if (vidParam->dpb_layer_id==0 && is_BL_profile(sps->profile_idc) && !vidParam->p_Dpb_layer[0]->init_done) {
@@ -1034,7 +1034,7 @@ static void activatePPS (sVidParam* vidParam, sPPSrbsp* pps) {
   if (vidParam->active_pps != pps) {
     if (vidParam->picture) // && vidParam->num_dec_mb == vidParam->pi)
       // this may only happen on slice loss
-      exit_picture (vidParam, &vidParam->picture);
+      exitPicture(vidParam, &vidParam->picture);
     vidParam->active_pps = pps;
     }
   }
@@ -1103,7 +1103,7 @@ void processPPS (sVidParam* vidParam, sNalu* nalu) {
         // copy to next PPS;
         memcpy (vidParam->nextPPS, vidParam->active_pps, sizeof (sPPSrbsp));
         if (vidParam->picture)
-          exit_picture(vidParam, &vidParam->picture);
+          exitPicture (vidParam, &vidParam->picture);
         vidParam->active_pps = NULL;
         }
       }

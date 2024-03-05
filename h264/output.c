@@ -1,6 +1,6 @@
 //{{{  includes
 #include "global.h"
-#include "memalloc.h"
+#include "memAlloc.h"
 
 #include "image.h"
 //}}}
@@ -243,7 +243,7 @@ static void write_unpaired_field (sVidParam* vidParam, sFrameStore* fs) {
   if (fs->is_used & 0x01) {
     // we have a top field, construct an empty bottom field
     sPicture* p = fs->top_field;
-    fs->bottom_field = alloc_storable_picture (vidParam, BOTTOM_FIELD, p->size_x, 2*p->size_y, p->size_x_cr, 2*p->size_y_cr, 1);
+    fs->bottom_field = allocPicture (vidParam, BOTTOM_FIELD, p->size_x, 2*p->size_y, p->size_x_cr, 2*p->size_y_cr, 1);
     fs->bottom_field->chroma_format_idc = p->chroma_format_idc;
 
     clearPicture (vidParam, fs->bottom_field);
@@ -255,7 +255,7 @@ static void write_unpaired_field (sVidParam* vidParam, sFrameStore* fs) {
   if (fs->is_used & 0x02) {
     // we have a bottom field, construct an empty top field
     sPicture* p = fs->bottom_field;
-    fs->top_field = alloc_storable_picture (vidParam, TOP_FIELD, p->size_x, 2*p->size_y, p->size_x_cr, 2*p->size_y_cr, 1);
+    fs->top_field = allocPicture (vidParam, TOP_FIELD, p->size_x, 2*p->size_y, p->size_x_cr, 2*p->size_y_cr, 1);
     fs->top_field->chroma_format_idc = p->chroma_format_idc;
     clearPicture (vidParam, fs->top_field);
 
@@ -278,13 +278,13 @@ static void write_unpaired_field (sVidParam* vidParam, sFrameStore* fs) {
 static void flush_direct_output (sVidParam* vidParam) {
 
   write_unpaired_field (vidParam, vidParam->out_buffer);
-  free_storable_picture (vidParam->out_buffer->frame);
+  freePicture (vidParam->out_buffer->frame);
 
   vidParam->out_buffer->frame = NULL;
-  free_storable_picture (vidParam->out_buffer->top_field);
+  freePicture (vidParam->out_buffer->top_field);
 
   vidParam->out_buffer->top_field = NULL;
-  free_storable_picture (vidParam->out_buffer->bottom_field);
+  freePicture (vidParam->out_buffer->bottom_field);
 
   vidParam->out_buffer->bottom_field = NULL;
   vidParam->out_buffer->is_used = 0;
@@ -339,8 +339,8 @@ void direct_output (sVidParam* vidParam, sPicture* p) {
     // we have a frame (or complementary field pair), so output it directly
     flush_direct_output (vidParam);
     writePicture (vidParam, p, FRAME);
-    calculate_frame_no (vidParam, p);
-    free_storable_picture (p);
+    calcFrameNum (vidParam, p);
+    freePicture (p);
     return;
     }
 
@@ -363,14 +363,14 @@ void direct_output (sVidParam* vidParam, sPicture* p) {
     dpb_combine_field_yuv (vidParam, vidParam->out_buffer);
     writePicture (vidParam, vidParam->out_buffer->frame, FRAME);
 
-    calculate_frame_no (vidParam, p);
-    free_storable_picture (vidParam->out_buffer->frame);
+    calcFrameNum (vidParam, p);
+    freePicture (vidParam->out_buffer->frame);
 
     vidParam->out_buffer->frame = NULL;
-    free_storable_picture (vidParam->out_buffer->top_field);
+    freePicture (vidParam->out_buffer->top_field);
 
     vidParam->out_buffer->top_field = NULL;
-    free_storable_picture (vidParam->out_buffer->bottom_field);
+    freePicture (vidParam->out_buffer->bottom_field);
 
     vidParam->out_buffer->bottom_field = NULL;
     vidParam->out_buffer->is_used = 0;

@@ -1436,7 +1436,7 @@ void make_frame_picture_JV (sVidParam* vidParam) {
       int nsize = sizeof(sPixel) * vidParam->width;
       memcpy (vidParam->picture->imgUV[uv][line], vidParam->dec_picture_JV[uv+1]->imgY[line], nsize );
       }
-    free_storable_picture (vidParam->dec_picture_JV[uv+1]);
+    freePicture (vidParam->dec_picture_JV[uv+1]);
     }
   }
 //}}}

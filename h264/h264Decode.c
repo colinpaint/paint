@@ -1,6 +1,6 @@
 //{{{  includes
 #include "global.h"
-#include "memalloc.h"
+#include "memAlloc.h"
 
 #include "image.h"
 #include "mcPrediction.h"
@@ -535,7 +535,7 @@ int init_global_buffers (sVidParam* vidParam, int layer_id) {
 void free_global_buffers (sVidParam* vidParam) {
 
   if (vidParam->picture) {
-    free_storable_picture (vidParam->picture);
+    freePicture (vidParam->picture);
     vidParam->picture = NULL;
     }
   }

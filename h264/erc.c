@@ -1,6 +1,6 @@
 //{{{  includes
 #include "global.h"
-#include "memalloc.h"
+#include "memAlloc.h"
 
 #include "mbuffer.h"
 #include "image.h"
@@ -1950,7 +1950,7 @@ void conceal_lost_frames (sDPB* dpb, sSlice *pSlice)
 
   while (CurrFrameNum != UnusedShortTermFrameNum)
   {
-    picture = alloc_storable_picture (vidParam, FRAME, vidParam->width, vidParam->height, vidParam->width_cr, vidParam->height_cr, 1);
+    picture = allocPicture (vidParam, FRAME, vidParam->width, vidParam->height, vidParam->width_cr, vidParam->height_cr, 1);
 
     picture->coded_frame = 1;
     picture->pic_num = UnusedShortTermFrameNum;
@@ -1985,7 +1985,7 @@ void conceal_lost_frames (sDPB* dpb, sSlice *pSlice)
       vidParam->last_ref_pic_poc = picture->poc;
     }
 
-    store_picture_in_dpb(vidParam->p_Dpb_layer[0], picture);
+    store_picture_in_dpb (vidParam->p_Dpb_layer[0], picture);
 
     picture=NULL;
 
@@ -2036,7 +2036,7 @@ void conceal_non_ref_pics (sDPB* dpb, int diff)
     dpb->used_size = dpb->size;
     if((vidParam->pocs_in_dpb[i+1] - vidParam->pocs_in_dpb[i]) > vidParam->poc_gap)
     {
-      conceal_to_picture = alloc_storable_picture (vidParam, FRAME, vidParam->width, vidParam->height, vidParam->width_cr, vidParam->height_cr, 1);
+      conceal_to_picture = allocPicture(vidParam, FRAME, vidParam->width, vidParam->height, vidParam->width_cr, vidParam->height_cr, 1);
 
       missingpoc = vidParam->pocs_in_dpb[i] + vidParam->poc_gap;
       // Diagnostics
@@ -2139,8 +2139,8 @@ void write_lost_ref_after_idr (sDPB* dpb, int pos) {
   sVidParam* vidParam = dpb->vidParam;
   int temp = 1;
   if (vidParam->last_out_fs->frame == NULL) {
-    vidParam->last_out_fs->frame = alloc_storable_picture (vidParam, FRAME, vidParam->width, vidParam->height,
-      vidParam->width_cr, vidParam->height_cr, 1);
+    vidParam->last_out_fs->frame = allocPicture (vidParam, FRAME, vidParam->width, vidParam->height,
+                                                 vidParam->width_cr, vidParam->height_cr, 1);
     vidParam->last_out_fs->is_used = 3;
     }
 

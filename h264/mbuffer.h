@@ -307,8 +307,8 @@ extern void init_dpb (sVidParam* vidParam, sDPB* dpb, int type);
 extern void re_init_dpb (sVidParam* vidParam, sDPB* dpb, int type);
 extern void free_dpb (sDPB* dpb);
 
-extern sPicture*  alloc_storable_picture (sVidParam* vidParam, sPictureStructure type, int size_x, int size_y, int size_x_cr, int size_y_cr, int is_output);
-extern void free_storable_picture (sPicture* p);
+extern sPicture*  allocPicture (sVidParam* vidParam, sPictureStructure type, int size_x, int size_y, int size_x_cr, int size_y_cr, int is_output);
+extern void freePicture (sPicture* p);
 
 extern void store_picture_in_dpb (sDPB* dpb, sPicture* p);
 extern sPicture*  get_short_term_pic (sSlice* currSlice, sDPB* dpb, int picNum);

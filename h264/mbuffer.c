@@ -2,7 +2,7 @@
 #include <limits.h>
 
 #include "global.h"
-#include "memalloc.h"
+#include "memAlloc.h"
 
 #include "erc.h"
 #include "sliceHeader.h"
@@ -152,7 +152,7 @@ static void insert_picture_in_dpb (sVidParam* vidParam, sFrameStore* fs, sPictur
   fs->recovery_frame = p->recovery_frame;
   fs->is_output = p->is_output;
   if (fs->is_used == 3)
-    calculate_frame_no (vidParam, p);
+    calcFrameNum (vidParam, p);
 }
 //}}}
 //{{{
@@ -988,7 +988,7 @@ void init_dpb (sVidParam* vidParam, sDPB* dpb, int type) {
 
  /* allocate a dummy storable picture */
   if (!vidParam->no_reference_picture) {
-    vidParam->no_reference_picture = alloc_storable_picture (vidParam, FRAME, vidParam->width, vidParam->height, vidParam->width_cr, vidParam->height_cr, 1);
+    vidParam->no_reference_picture = allocPicture (vidParam, FRAME, vidParam->width, vidParam->height, vidParam->width_cr, vidParam->height_cr, 1);
     vidParam->no_reference_picture->top_field    = vidParam->no_reference_picture;
     vidParam->no_reference_picture->bottom_field = vidParam->no_reference_picture;
     vidParam->no_reference_picture->frame        = vidParam->no_reference_picture;
@@ -1066,7 +1066,7 @@ void free_dpb (sDPB* dpb) {
     free_frame_store (vidParam->last_out_fs);
 
   if (vidParam->no_reference_picture) {
-    free_storable_picture (vidParam->no_reference_picture);
+    freePicture (vidParam->no_reference_picture);
     vidParam->no_reference_picture = NULL;
     }
   }
@@ -1077,7 +1077,7 @@ void alloc_pic_motion (sPicMotionParamsOld* motion, int size_y, int size_x) {
 
   motion->mb_field = calloc (size_y * size_x, sizeof(byte));
   if (motion->mb_field == NULL)
-    no_mem_exit("alloc_storable_picture: motion->mb_field");
+    no_mem_exit ("allocPicture: motion->mb_field");
   }
 //}}}
 //{{{
@@ -1091,8 +1091,8 @@ void free_pic_motion (sPicMotionParamsOld* motion) {
 //}}}
 
 //{{{
-sPicture* alloc_storable_picture (sVidParam* vidParam, sPictureStructure structure, 
-                                  int size_x, int size_y, int size_x_cr, int size_y_cr, int is_output) {
+sPicture* allocPicture (sVidParam* vidParam, sPictureStructure structure,
+                        int size_x, int size_y, int size_x_cr, int size_y_cr, int is_output) {
 
   sSPSrbsp* active_sps = vidParam->active_sps;
   //printf ("Allocating (%s) picture (x=%d, y=%d, x_cr=%d, y_cr=%d)\n", 
@@ -1101,7 +1101,7 @@ sPicture* alloc_storable_picture (sVidParam* vidParam, sPictureStructure structu
 
   sPicture* s = calloc (1, sizeof(sPicture));
   if (NULL==s)
-    no_mem_exit ("alloc_storable_picture: s");
+    no_mem_exit ("allocPicture: s");
 
   if (structure!=FRAME) {
     size_y /= 2;
@@ -1172,7 +1172,7 @@ sPicture* alloc_storable_picture (sVidParam* vidParam, sPictureStructure structu
       for (int i = 0; i < 2; i++) {
         s->listX[j][i] = calloc(MAX_LIST_SIZE, sizeof (sPicture*)); // +1 for reordering
         if (NULL==s->listX[j][i])
-        no_mem_exit("alloc_storable_picture: s->listX[i]");
+        no_mem_exit ("allocPicture: s->listX[i]");
         }
       }
     }
@@ -1181,7 +1181,7 @@ sPicture* alloc_storable_picture (sVidParam* vidParam, sPictureStructure structu
   }
 //}}}
 //{{{
-void free_storable_picture (sPicture* p) {
+void freePicture (sPicture* p) {
 
   if (p) {
     if (p->mv_info) {
@@ -1247,17 +1247,17 @@ void free_frame_store (sFrameStore* f) {
 
   if (f) {
     if (f->frame) {
-      free_storable_picture(f->frame);
+      freePicture (f->frame);
       f->frame=NULL;
       }
 
     if (f->top_field) {
-      free_storable_picture(f->top_field);
+      freePicture (f->top_field);
       f->top_field=NULL;
       }
 
     if (f->bottom_field) {
-      free_storable_picture(f->bottom_field);
+      freePicture (f->bottom_field);
       f->bottom_field=NULL;
       }
 
@@ -1943,10 +1943,10 @@ void store_picture_in_dpb (sDPB* dpb, sPicture* p) {
     // check for frame store with same pic_number
     if (dpb->last_picture) {
       if ((int)dpb->last_picture->frame_num == p->pic_num) {
-        if (((p->structure==TOP_FIELD)&&(dpb->last_picture->is_used==2))||
-            ((p->structure==BOTTOM_FIELD)&&(dpb->last_picture->is_used==1))) {
-          if ((p->used_for_reference && (dpb->last_picture->is_orig_reference!=0)) ||
-              (!p->used_for_reference && (dpb->last_picture->is_orig_reference==0))) {
+        if (((p->structure == TOP_FIELD) && (dpb->last_picture->is_used == 2))||
+            ((p->structure == BOTTOM_FIELD) && (dpb->last_picture->is_used == 1))) {
+          if ((p->used_for_reference && (dpb->last_picture->is_orig_reference != 0)) ||
+              (!p->used_for_reference && (dpb->last_picture->is_orig_reference == 0))) {
             insert_picture_in_dpb (vidParam, dpb->last_picture, p);
             update_ref_list (dpb);
             update_ltref_list (dpb);
@@ -1967,15 +1967,15 @@ void store_picture_in_dpb (sDPB* dpb, sPicture* p) {
 
   // picture error concealment
   if (vidParam->conceal_mode != 0)
-    for (unsigned i = 0; i < dpb->size;i++)
+    for (unsigned i = 0; i < dpb->size; i++)
       if (dpb->fs[i]->is_reference)
         dpb->fs[i]->concealment_reference = 1;
 
   // first try to remove unused frames
-  if (dpb->used_size==dpb->size) {
+  if (dpb->used_size == dpb->size) {
     // picture error concealment
     if (vidParam->conceal_mode != 0)
-      conceal_non_ref_pics(dpb, 2);
+      conceal_non_ref_pics (dpb, 2);
 
     remove_unused_frame_from_dpb (dpb);
 
@@ -1987,8 +1987,8 @@ void store_picture_in_dpb (sDPB* dpb, sPicture* p) {
   while (dpb->used_size == dpb->size) {
     // non-reference frames may be output directly
     if (!p->used_for_reference) {
-      get_smallest_poc(dpb, &poc, &pos);
-      if ((-1==pos) || (p->poc < poc)) {
+      get_smallest_poc (dpb, &poc, &pos);
+      if ((-1 == pos) || (p->poc < poc)) {
         direct_output (vidParam, p);
         return;
         }
@@ -1999,7 +1999,7 @@ void store_picture_in_dpb (sDPB* dpb, sPicture* p) {
     }
 
   // check for duplicate frame number in short term reference buffer
-  if ((p->used_for_reference)&&(!p->is_long_term))
+  if ((p->used_for_reference) && (!p->is_long_term))
     for (unsigned i = 0; i < dpb->ref_frames_in_buffer; i++)
       if (dpb->fs_ref[i]->frame_num == p->frame_num)
         error ("duplicate frame_num in short-term reference picture buffer", 500);
@@ -2034,29 +2034,29 @@ void remove_frame_from_dpb (sDPB* dpb, int pos) {
   sFrameStore* fs = dpb->fs[pos];
   switch (fs->is_used) {
     case 3:
-      free_storable_picture(fs->frame);
-      free_storable_picture(fs->top_field);
-      free_storable_picture(fs->bottom_field);
-      fs->frame=NULL;
-      fs->top_field=NULL;
-      fs->bottom_field=NULL;
+      freePicture (fs->frame);
+      freePicture (fs->top_field);
+      freePicture (fs->bottom_field);
+      fs->frame = NULL;
+      fs->top_field = NULL;
+      fs->bottom_field = NULL;
       break;
 
     case 2:
-      free_storable_picture(fs->bottom_field);
-      fs->bottom_field=NULL;
+      freePicture (fs->bottom_field);
+      fs->bottom_field = NULL;
       break;
 
     case 1:
-      free_storable_picture(fs->top_field);
-      fs->top_field=NULL;
+      freePicture (fs->top_field);
+      fs->top_field = NULL;
       break;
 
     case 0:
       break;
 
     default:
-      error("invalid frame store type",500);
+      error ("invalid frame store type",500);
     }
   fs->is_used = 0;
   fs->is_long_term = 0;
@@ -2176,8 +2176,8 @@ void dpb_split_field (sVidParam* vidParam, sFrameStore *fs)
   fs->poc = frame->poc;
 
   if (!frame->frame_mbs_only_flag) {
-    fs_top = fs->top_field    = alloc_storable_picture(vidParam, TOP_FIELD,    frame->size_x, frame->size_y, frame->size_x_cr, frame->size_y_cr, 1);
-    fs_btm = fs->bottom_field = alloc_storable_picture(vidParam, BOTTOM_FIELD, frame->size_x, frame->size_y, frame->size_x_cr, frame->size_y_cr, 1);
+    fs_top = fs->top_field = allocPicture (vidParam, TOP_FIELD,    frame->size_x, frame->size_y, frame->size_x_cr, frame->size_y_cr, 1);
+    fs_btm = fs->bottom_field = allocPicture (vidParam, BOTTOM_FIELD, frame->size_x, frame->size_y, frame->size_x_cr, frame->size_y_cr, 1);
 
     for (i = 0; i < (frame->size_y >> 1); i++)
       memcpy(fs_top->imgY[i], frame->imgY[i*2], frame->size_x*sizeof(sPixel));
@@ -2332,7 +2332,7 @@ void dpb_combine_field_yuv (sVidParam* vidParam, sFrameStore *fs)
   int i, j;
 
   if (!fs->frame)
-    fs->frame = alloc_storable_picture(vidParam, FRAME, fs->top_field->size_x, fs->top_field->size_y*2, fs->top_field->size_x_cr, fs->top_field->size_y_cr*2, 1);
+    fs->frame = allocPicture (vidParam, FRAME, fs->top_field->size_x, fs->top_field->size_y*2, fs->top_field->size_x_cr, fs->top_field->size_y_cr*2, 1);
 
   for (i=0; i<fs->top_field->size_y; i++) {
     memcpy(fs->frame->imgY[i*2],     fs->top_field->imgY[i]   , fs->top_field->size_x * sizeof(sPixel));     // top field
@@ -2505,7 +2505,7 @@ void fill_frame_num_gap (sVidParam* vidParam, sSlice* currSlice) {
   CurrFrameNum = currSlice->frame_num; //vidParam->frame_num;
 
   while (CurrFrameNum != UnusedShortTermFrameNum) {
-    picture = alloc_storable_picture (vidParam, FRAME, vidParam->width, vidParam->height, vidParam->width_cr, vidParam->height_cr, 1);
+    picture = allocPicture (vidParam, FRAME, vidParam->width, vidParam->height, vidParam->width_cr, vidParam->height_cr, 1);
     picture->coded_frame = 1;
     picture->pic_num = UnusedShortTermFrameNum;
     picture->frame_num = UnusedShortTermFrameNum;
