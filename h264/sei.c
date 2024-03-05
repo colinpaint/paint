@@ -107,18 +107,18 @@ typedef struct {
 //}}}
 
 //{{{
-static void interpret_spare_pic (byte* payload, int size, sVidParam* vidParam )
-{
+static void interpret_spare_pic (byte* payload, int size, sVidParam* vidParam ) {
+
   int x,y;
   Bitstream* buf;
-  int bit0, bit1, bitc, no_bit0;
+  int bit0, bit1, no_bit0;
   int target_frame_num = 0;
   int num_spare_pics;
   int delta_spare_frame_num, CandidateSpareFrameNum, SpareFrameNum = 0;
   int ref_area_indicator;
 
   int m, n, left, right, top, bottom,directx, directy;
-  byte** *map;
+  byte*** map;
 
   buf = malloc (sizeof(Bitstream));
   buf->bitstream_length = size;
@@ -165,7 +165,6 @@ static void interpret_spare_pic (byte* payload, int size, sVidParam* vidParam )
       case 2: // The map is compressed
         bit0 = 0;
         bit1 = 1;
-        bitc = bit0;
         no_bit0 = -1;
 
         x = ((vidParam->width >> 4) - 1 ) / 2;
@@ -502,16 +501,14 @@ static void interpret_picture_timing_info (byte* payload, int size, sVidParam* v
 
   int cpb_removal_len = 24;
   int dpb_output_len  = 24;
-
   Boolean CpbDpbDelaysPresentFlag;
-
 
   if (NULL == active_sps) {
     fprintf (stderr, "Warning: no active SPS, timing SEI cannot be parsed\n");
     return;
     }
 
-  Bitstream* buf = malloc(sizeof(Bitstream));
+  Bitstream* buf = malloc (sizeof(Bitstream));
   buf->bitstream_length = size;
   buf->streamBuffer = payload;
   buf->frame_bitoffset = 0;
@@ -588,71 +585,66 @@ static void interpret_picture_timing_info (byte* payload, int size, sVidParam* v
     if (kDebug)
       for (int i = 0; i < NumClockTs; i++) {
         //{{{  print
-        int clock_timestamp_flag;
-        int ct_type, nuit_field_based_flag, counting_type, full_timestamp_flag, discontinuity_flag, cnt_dropped_flag, nframes;
-        int seconds_value, minutes_value, hours_value, seconds_flag, minutes_flag, hours_flag, time_offset;
-
-        clock_timestamp_flag = read_u_1("SEI: clock_timestamp_flag"  , buf);
-        printf ("clock_timestamp_flag = %d\n",clock_timestamp_flag);
+        int clock_timestamp_flag = read_u_1 ("SEI: clock_timestamp_flag", buf);
+        printf ("clock_timestamp_flag = %d\n", clock_timestamp_flag);
         if (clock_timestamp_flag) {
-          ct_type               = read_u_v(2, "SEI: ct_type"               , buf);
-          nuit_field_based_flag = read_u_1(   "SEI: nuit_field_based_flag" , buf);
-          counting_type         = read_u_v(5, "SEI: counting_type"         , buf);
-          full_timestamp_flag   = read_u_1(   "SEI: full_timestamp_flag"   , buf);
-          discontinuity_flag    = read_u_1(   "SEI: discontinuity_flag"    , buf);
-          cnt_dropped_flag      = read_u_1(   "SEI: cnt_dropped_flag"      , buf);
-          nframes               = read_u_v(8, "SEI: nframes"               , buf);
+          int ct_type = read_u_v (2, "SEI: ct_type", buf);
+          int nuit_field_based_flag = read_u_1 ("SEI: nuit_field_based_flag", buf);
+          int counting_type = read_u_v (5, "SEI: counting_type", buf);
+          int full_timestamp_flag = read_u_1 ("SEI: full_timestamp_flag", buf);
+          int discontinuity_flag = read_u_1 ("SEI: discontinuity_flag", buf);
+          int cnt_dropped_flag = read_u_1 ("SEI: cnt_dropped_flag", buf);
+          int nframes = read_u_v (8, "SEI: nframes", buf);
 
-          printf("ct_type               = %d\n",ct_type);
-          printf("nuit_field_based_flag = %d\n",nuit_field_based_flag);
-          printf("full_timestamp_flag   = %d\n",full_timestamp_flag);
-          printf("discontinuity_flag    = %d\n",discontinuity_flag);
-          printf("cnt_dropped_flag      = %d\n",cnt_dropped_flag);
-          printf("nframes               = %d\n",nframes);
+          printf ("ct_type = %d\n",ct_type);
+          printf ("nuit_field_based_flag = %d\n",nuit_field_based_flag);
+          printf ("full_timestamp_flag = %d\n",full_timestamp_flag);
+          printf ("discontinuity_flag = %d\n",discontinuity_flag);
+          printf ("cnt_dropped_flag = %d\n",cnt_dropped_flag);
+          printf ("nframes = %d\n",nframes);
 
           if (full_timestamp_flag) {
-            seconds_value         = read_u_v(6, "SEI: seconds_value"   , buf);
-            minutes_value         = read_u_v(6, "SEI: minutes_value"   , buf);
-            hours_value           = read_u_v(5, "SEI: hours_value"     , buf);
-            printf("seconds_value = %d\n",seconds_value);
-            printf("minutes_value = %d\n",minutes_value);
-            printf("hours_value   = %d\n",hours_value);
+            int seconds_value = read_u_v (6, "SEI: seconds_value", buf);
+            int minutes_value = read_u_v (6, "SEI: minutes_value", buf);
+            int hours_value = read_u_v (5, "SEI: hours_value", buf);
+            printf ("seconds_value = %d\n", seconds_value);
+            printf ("minutes_value= %d\n", minutes_value);
+            printf ("hours_value = %d\n", hours_value);
             }
           else {
-            seconds_flag          = read_u_1(   "SEI: seconds_flag" , buf);
+            int seconds_flag = read_u_1 ("SEI: seconds_flag", buf);
             printf ("seconds_flag = %d\n",seconds_flag);
             if (seconds_flag) {
-              seconds_value         = read_u_v(6, "SEI: seconds_value"   , buf);
-              minutes_flag          = read_u_1(   "SEI: minutes_flag" , buf);
-              printf("seconds_value = %d\n",seconds_value);
-              printf("minutes_flag  = %d\n",minutes_flag);
+              int seconds_value = read_u_v (6, "SEI: seconds_value", buf);
+              int minutes_flag = read_u_1 ("SEI: minutes_flag", buf);
+              printf ("seconds_value = %d\n",seconds_value);
+              printf ("minutes_flag = %d\n",minutes_flag);
               if(minutes_flag) {
-                minutes_value         = read_u_v(6, "SEI: minutes_value"   , buf);
-                hours_flag            = read_u_1(   "SEI: hours_flag" , buf);
-                printf("minutes_value = %d\n",minutes_value);
-                printf("hours_flag    = %d\n",hours_flag);
-                if(hours_flag) {
-                  hours_value           = read_u_v(5, "SEI: hours_value"     , buf);
-                  printf("hours_value   = %d\n",hours_value);
+                int minutes_value = read_u_v(6, "SEI: minutes_value", buf);
+                int hours_flag = read_u_1 ("SEI: hours_flag", buf);
+                printf ("minutes_value = %d\n",minutes_value);
+                printf ("hours_flag = %d\n",hours_flag);
+                if (hours_flag) {
+                  int hours_value = read_u_v (5, "SEI: hours_value", buf);
+                  printf ("hours_value = %d\n",hours_value);
                   }
                 }
               }
             }
 
-            {
-              int time_offset_length;
-              if (active_sps->vui_seq_parameters.vcl_hrd_parameters_present_flag)
-                time_offset_length = active_sps->vui_seq_parameters.vcl_hrd_parameters.time_offset_length;
-              else if (active_sps->vui_seq_parameters.nal_hrd_parameters_present_flag)
-                time_offset_length = active_sps->vui_seq_parameters.nal_hrd_parameters.time_offset_length;
-              else
-                time_offset_length = 24;
-              if (time_offset_length)
-                time_offset = read_i_v(time_offset_length, "SEI: time_offset"   , buf);
-              else
-                time_offset = 0;
-              printf("time_offset   = %d\n",time_offset);
-            }
+          int time_offset_length;
+          int time_offset;
+          if (active_sps->vui_seq_parameters.vcl_hrd_parameters_present_flag)
+            time_offset_length = active_sps->vui_seq_parameters.vcl_hrd_parameters.time_offset_length;
+          else if (active_sps->vui_seq_parameters.nal_hrd_parameters_present_flag)
+            time_offset_length = active_sps->vui_seq_parameters.nal_hrd_parameters.time_offset_length;
+          else
+            time_offset_length = 24;
+          if (time_offset_length)
+            time_offset = read_i_v (time_offset_length, "SEI: time_offset"   , buf);
+          else
+            time_offset = 0;
+          printf ("time_offset   = %d\n",time_offset);
           }
         }
         //}}}
@@ -718,7 +710,7 @@ static void interpret_recovery_point_info (byte* payload, int size, sVidParam* v
 static void interpret_dec_ref_pic_marking_repetition_info (byte* payload, int size,
                                                            sVidParam* vidParam, sSlice *pSlice) {
   int original_idr_flag, original_frame_num;
-  int original_field_pic_flag, original_bottom_field_flag;
+  int original_field_pic_flag;
 
   DecRefPicMarking_t *tmp_drpm;
   DecRefPicMarking_t *old_drpm;
@@ -729,13 +721,14 @@ static void interpret_dec_ref_pic_marking_repetition_info (byte* payload, int si
   buf->streamBuffer = payload;
   buf->frame_bitoffset = 0;
 
-  original_idr_flag = read_u_1 (    "SEI: original_idr_flag"    , buf);
-  original_frame_num = read_ue_v(    "SEI: original_frame_num"   , buf);
+  original_idr_flag = read_u_1 ("SEI: original_idr_flag", buf);
+  original_frame_num = read_ue_v ("SEI: original_frame_num", buf);
 
-  if (!vidParam->active_sps->frame_mbs_only_flag ) {
-    original_field_pic_flag = read_u_1 ( "SEI: original_field_pic_flag", buf);
-    if (original_field_pic_flag )
-      original_bottom_field_flag = read_u_1 ( "SEI: original_bottom_field_flag", buf);
+  int original_bottom_field_flag = 0;
+  if (!vidParam->active_sps->frame_mbs_only_flag) {
+    original_field_pic_flag = read_u_1 ("SEI: original_field_pic_flag", buf);
+    if (original_field_pic_flag)
+      original_bottom_field_flag = read_u_1 ("SEI: original_bottom_field_flag", buf);
     }
 
   printf ("SEI Decoded Picture Buffer Management Repetition\n");
@@ -744,14 +737,13 @@ static void interpret_dec_ref_pic_marking_repetition_info (byte* payload, int si
 
   // we need to save everything that is probably overwritten in dec_ref_pic_marking()
   old_drpm = pSlice->dec_ref_pic_marking_buffer;
-  old_idr_flag = pSlice->idr_flag; //vidParam->idr_flag;
+  old_idr_flag = pSlice->idr_flag; 
 
   old_no_output_of_prior_pics_flag = pSlice->no_output_of_prior_pics_flag; //vidParam->no_output_of_prior_pics_flag;
   old_long_term_reference_flag = pSlice->long_term_reference_flag;
   old_adaptive_ref_pic_buffering_flag = pSlice->adaptive_ref_pic_buffering_flag;
 
   // set new initial values
-  //vidParam->idr_flag = original_idr_flag;
   pSlice->idr_flag = original_idr_flag;
   pSlice->dec_ref_pic_marking_buffer = NULL;
   dec_ref_pic_marking (vidParam, buf, pSlice);
@@ -982,9 +974,9 @@ static void interpret_film_grain_characteristics_info (byte* payload, int size, 
             }
           }
         }
-    film_grain_characteristics_repetition_period = 
+    film_grain_characteristics_repetition_period =
       read_ue_v("SEI: film_grain_characteristics_repetition_period", buf);
-    printf ("film_grain_characteristics_repetition_period = %d\n", 
+    printf ("film_grain_characteristics_repetition_period = %d\n",
             film_grain_characteristics_repetition_period);
     }
 
@@ -1219,9 +1211,9 @@ static void interpret_green_metadata_info (byte* payload, int size, sVidParam* v
       printf ("green_metadata_num_pictures = %d\n", seiGreenMetadataInfo.num_pictures);
       }
 
-    seiGreenMetadataInfo.percent_non_zero_macroblocks = 
+    seiGreenMetadataInfo.percent_non_zero_macroblocks =
       (unsigned char)read_u_v(8, "SEI: percent_non_zero_macroblocks", buf);
-    seiGreenMetadataInfo.percent_intra_coded_macroblocks = 
+    seiGreenMetadataInfo.percent_intra_coded_macroblocks =
       (unsigned char)read_u_v(8, "SEI: percent_intra_coded_macroblocks", buf);
     seiGreenMetadataInfo.percent_six_tap_filtering =
       (unsigned char)read_u_v(8, "SEI: percent_six_tap_filtering", buf);
