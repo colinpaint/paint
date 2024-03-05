@@ -820,7 +820,7 @@ static void decodeSlice (sSlice *currSlice, int current_header) {
 //{{{
 static int readNewSlice (sSlice* currSlice) {
 
-  static NALU_t* pendingNalu = NULL;
+  static sNalu* pendingNalu = NULL;
 
   InputParameters* p_Inp = currSlice->p_Inp;
   sVidParam* vidParam = currSlice->vidParam;
@@ -828,7 +828,7 @@ static int readNewSlice (sSlice* currSlice) {
   int current_header = 0;
   Bitstream* currStream = NULL;
   for (;;) {
-    NALU_t* nalu = vidParam->nalu;
+    sNalu* nalu = vidParam->nalu;
     if (!pendingNalu) {
       if (!readNextNalu (vidParam, nalu))
         return EOS;
