@@ -21,10 +21,10 @@
 static const int kDebug = 0;
 
 //{{{
-ANNEXB_t* allocAnnexB (VideoParameters* p_Vid) {
+ANNEXB_t* allocAnnexB (VideoParameters* pVid) {
 
   ANNEXB_t* annexB = (ANNEXB_t*)calloc (1, sizeof(ANNEXB_t));
-  annexB->naluBuf = (byte*)malloc (p_Vid->nalu->max_size);
+  annexB->naluBuf = (byte*)malloc (pVid->nalu->max_size);
   return annexB;
   }
 //}}}
@@ -88,7 +88,7 @@ void freeNALU (NALU_t* n) {
 //}}}
 
 //{{{
-void checkZeroByteVCL (VideoParameters* p_Vid, NALU_t* nalu) {
+void checkZeroByteVCL (VideoParameters* pVid, NALU_t* nalu) {
 
   int CheckZeroByte = 0;
 
@@ -97,16 +97,16 @@ void checkZeroByteVCL (VideoParameters* p_Vid, NALU_t* nalu) {
         nalu->nal_unit_type <= NALU_TYPE_IDR))
     return;
 
-  if (p_Vid->LastAccessUnitExists)
-    p_Vid->NALUCount = 0;
-  p_Vid->NALUCount++;
+  if (pVid->LastAccessUnitExists)
+    pVid->NALUCount = 0;
+  pVid->NALUCount++;
 
   // the first VCL NAL unit that is the first NAL unit after last VCL NAL unit indicates
   // the start of a new access unit and hence the first NAL unit of the new access unit.
   // (sounds like a tongue twister :-)
-  if (p_Vid->NALUCount == 1)
+  if (pVid->NALUCount == 1)
     CheckZeroByte = 1;
-  p_Vid->LastAccessUnitExists = 1;
+  pVid->LastAccessUnitExists = 1;
 
   // because it is not a very serious problem, we do not exit here
   if (CheckZeroByte && nalu->startcodeprefix_len == 3)
@@ -114,7 +114,7 @@ void checkZeroByteVCL (VideoParameters* p_Vid, NALU_t* nalu) {
    }
 //}}}
 //{{{
-void checkZeroByteNonVCL (VideoParameters* p_Vid, NALU_t* nalu) {
+void checkZeroByteNonVCL (VideoParameters* pVid, NALU_t* nalu) {
 
   int CheckZeroByte = 0;
 
@@ -134,16 +134,16 @@ void checkZeroByteNonVCL (VideoParameters* p_Vid, NALU_t* nalu) {
       nalu->nal_unit_type == NALU_TYPE_PPS ||
       nalu->nal_unit_type == NALU_TYPE_SEI ||
       (nalu->nal_unit_type >= 13 && nalu->nal_unit_type <= 18)) {
-    if (p_Vid->LastAccessUnitExists) {
+    if (pVid->LastAccessUnitExists) {
       // deliver the last access unit to decoder
-      p_Vid->LastAccessUnitExists = 0;
-      p_Vid->NALUCount = 0;
+      pVid->LastAccessUnitExists = 0;
+      pVid->NALUCount = 0;
       }
     }
-  p_Vid->NALUCount++;
+  pVid->NALUCount++;
 
   // for the first NAL unit in an access unit, zero_byte shall exists
-  if (p_Vid->NALUCount == 1)
+  if (pVid->NALUCount == 1)
     CheckZeroByte = 1;
 
   if (CheckZeroByte && nalu->startcodeprefix_len == 3)
@@ -177,7 +177,7 @@ static inline int findStartCode (unsigned char* buf, int zerosInStartcode) {
   }
 //}}}
 //{{{
-static int getNALU (ANNEXB_t* annexB, VideoParameters* p_Vid, NALU_t* nalu) {
+static int getNALU (ANNEXB_t* annexB, VideoParameters* pVid, NALU_t* nalu) {
 
   int naluBufCount = 0;
   byte* naluBufPtr = annexB->naluBuf;
@@ -365,11 +365,11 @@ static int NALUtoRBSP (NALU_t* nalu) {
   }
 //}}}
 //{{{
-int readNextNalu (VideoParameters* p_Vid, NALU_t* nalu) {
+int readNextNalu (VideoParameters* pVid, NALU_t* nalu) {
 
-  InputParameters* p_Inp = p_Vid->p_Inp;
+  InputParameters* p_Inp = pVid->p_Inp;
 
-  int ret = getNALU (p_Vid->annex_b, p_Vid, nalu);
+  int ret = getNALU (pVid->annex_b, pVid, nalu);
   if (ret < 0) {
     snprintf (errortext, ET_SIZE, "Error while getting the NALU in file format exit\n");
     error (errortext, 601);
@@ -380,7 +380,7 @@ int readNextNalu (VideoParameters* p_Vid, NALU_t* nalu) {
   // In some cases, zero_byte shall be present.
   // If current NALU is a VCL NALU, we can't tell whether it is the first VCL NALU at this point,
   // so only non-VCL NAL unit is checked here.
-  checkZeroByteNonVCL (p_Vid, nalu);
+  checkZeroByteNonVCL (pVid, nalu);
 
   ret = NALUtoRBSP (nalu);
   if (ret < 0)

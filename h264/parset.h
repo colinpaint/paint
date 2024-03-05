@@ -2,15 +2,15 @@
 #include "parsetcommon.h"
 #include "nalu.h"
 
-extern int init_global_buffers (VideoParameters *p_Vid, int layer_id );
-extern void free_global_buffers (VideoParameters *p_Vid);
-extern void free_layer_buffers (VideoParameters *p_Vid, int layer_id );
+extern int init_global_buffers (VideoParameters* pVid, int layer_id );
+extern void free_global_buffers (VideoParameters* pVid);
+extern void free_layer_buffers (VideoParameters* pVid, int layer_id );
 
-extern void ProcessSPS (VideoParameters *p_Vid, NALU_t *nalu);
-extern void activateSPS (VideoParameters *p_Vid, seq_parameter_set_rbsp_t *sps);
+extern void ProcessSPS (VideoParameters* pVid, NALU_t *nalu);
+extern void activateSPS (VideoParameters* pVid, seq_parameter_set_rbsp_t *sps);
 
-extern void MakePPSavailable (VideoParameters *p_Vid, int id, pic_parameter_set_rbsp_t *pps);
-extern void ProcessPPS (VideoParameters *p_Vid, NALU_t *nalu);
-extern void CleanUpPPS (VideoParameters *p_Vid);
+extern void MakePPSavailable (VideoParameters* pVid, int id, pic_parameter_set_rbsp_t *pps);
+extern void ProcessPPS (VideoParameters* pVid, NALU_t *nalu);
+extern void CleanUpPPS (VideoParameters* pVid);
 
 extern void UseParameterSet (Slice* currSlice);

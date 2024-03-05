@@ -807,7 +807,7 @@ int readSyntaxElement_NumCoeffTrailingOnes (SyntaxElement *sym,
  *    read NumCoeff/TrailingOnes codeword from UVLC-partition ChromaDC
  ************************************************************************
  */
-int readSyntaxElement_NumCoeffTrailingOnesChromaDC (VideoParameters *p_Vid, SyntaxElement *sym,  Bitstream *currStream)
+int readSyntaxElement_NumCoeffTrailingOnesChromaDC (VideoParameters* pVid, SyntaxElement *sym,  Bitstream *currStream)
 {
   static const byte lentab[3][4][17] =
   {
@@ -849,7 +849,7 @@ int readSyntaxElement_NumCoeffTrailingOnesChromaDC (VideoParameters *p_Vid, Synt
   };
 
   int code;
-  int yuv = p_Vid->active_sps->chroma_format_idc - 1;
+  int yuv = pVid->active_sps->chroma_format_idc - 1;
   int retval = code_from_bitstream_2d(sym, currStream, &lentab[yuv][0][0], &codtab[yuv][0][0], 17, 4, &code);
 
   if (retval)
@@ -1074,7 +1074,7 @@ int readSyntaxElement_TotalZeros (SyntaxElement *sym,  Bitstream *currStream)
  *    read Total Zeros Chroma DC codeword from UVLC-partition
  ************************************************************************
  */
-int readSyntaxElement_TotalZerosChromaDC (VideoParameters *p_Vid, SyntaxElement *sym,  Bitstream *currStream)
+int readSyntaxElement_TotalZerosChromaDC (VideoParameters* pVid, SyntaxElement *sym,  Bitstream *currStream)
 {
   static const byte lentab[3][TOTRUN_NUM][16] =
   {
@@ -1141,7 +1141,7 @@ int readSyntaxElement_TotalZerosChromaDC (VideoParameters *p_Vid, SyntaxElement 
   };
 
   int code;
-  int yuv = p_Vid->active_sps->chroma_format_idc - 1;
+  int yuv = pVid->active_sps->chroma_format_idc - 1;
   int vlcnum = sym->value1;
   int retval = code_from_bitstream_2d(sym, currStream, &lentab[yuv][vlcnum][0], &codtab[yuv][vlcnum][0], 16, 1, &code);
 

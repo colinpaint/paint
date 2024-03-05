@@ -151,12 +151,21 @@ typedef struct cbp_s {
 //{{{
 //! Macroblock
 typedef struct macroblock_dec {
-  struct slice       *p_Slice;                    //!< pointer to the current slice
-  struct video_par   *p_Vid;                      //!< pointer to VideoParameters
-  struct inp_par     *p_Inp;
-  int                 mbAddrX;                    //!< current MB address
-  int mbAddrA, mbAddrB, mbAddrC, mbAddrD;
-  Boolean mbAvailA, mbAvailB, mbAvailC, mbAvailD;
+  struct slice*     p_Slice;  // pointer to the current slice
+  struct video_par* pVid;    // pointer to VideoParameters
+  struct inp_par*   p_Inp;
+
+  int mbAddrX;                // current MB address
+  int mbAddrA;
+  int mbAddrB;
+  int mbAddrC;
+  int mbAddrD;
+
+  Boolean mbAvailA;
+  Boolean mbAvailB;
+  Boolean mbAvailC;
+  Boolean mbAvailD;
+
   BlockPos mb;
   int block_x;
   int block_y;
@@ -169,25 +178,25 @@ typedef struct macroblock_dec {
   int subblock_x;
   int subblock_y;
 
-  int           qp;                    //!< QP luma
-  int           qpc[2];                //!< QP chroma
-  int           qp_scaled[MAX_PLANE];  //!< QP scaled for all comps.
+  int           qp;                    // QP luma
+  int           qpc[2];                // QP chroma
+  int           qp_scaled[MAX_PLANE];  // QP scaled for all comps.
   Boolean       is_lossless;
   Boolean       is_intra_block;
   Boolean       is_v_block;
   int           DeblockCall;
 
   short         slice_nr;
-  char          ei_flag;             //!< error indicator flag that enables concealment
-  char          dpl_flag;            //!< error indicator flag that signals a missing data partition
-  short         delta_quant;          //!< for rate control
+  char          ei_flag;            // error indicator flag that enables concealment
+  char          dpl_flag;           // error indicator flag that signals a missing data partition
+  short         delta_quant;        // for rate control
   short         list_offset;
 
-  struct macroblock_dec   *mb_up;   //!< pointer to neighboring MB (CABAC)
-  struct macroblock_dec   *mb_left; //!< pointer to neighboring MB (CABAC)
+  struct macroblock_dec   *mb_up;   // pointer to neighboring MB (CABAC)
+  struct macroblock_dec   *mb_left; // pointer to neighboring MB (CABAC)
 
-  struct macroblock_dec   *mbup;   // neighbors for loopfilter
-  struct macroblock_dec   *mbleft; // neighbors for loopfilter
+  struct macroblock_dec   *mbup;    // neighbors for loopfilter
+  struct macroblock_dec   *mbleft;  // neighbors for loopfilter
 
   // some storage of macroblock syntax elements for global access
   short         mb_type;
@@ -345,7 +354,7 @@ typedef struct old_slice_par {
 //}}}
 //{{{
 typedef struct slice {
-  struct video_par* p_Vid;
+  struct video_par* pVid;
   struct inp_par* p_Inp;
   pic_parameter_set_rbsp_t* active_pps;
   seq_parameter_set_rbsp_t* active_sps;
@@ -609,7 +618,7 @@ typedef struct coding_par {
 //{{{
 typedef struct layer_par {
   int layer_id;
-  struct video_par* p_Vid;
+  struct video_par* pVid;
   CodingParameters* p_Cps;
   seq_parameter_set_rbsp_t* p_SPS;
   struct decoded_picture_buffer* p_Dpb;
@@ -840,7 +849,7 @@ typedef struct video_par {
 //{{{
 typedef struct decoder_params {
   InputParameters* p_Inp;          //!< Input Parameters
-  VideoParameters* p_Vid;          //!< Image Parameters
+  VideoParameters* pVid;          //!< Image Parameters
   int64            bufferSize;     //!< buffersize for tiff reads (not currently supported)
   int              UsedBits;      // for internal statistics, is adjusted by read_se_v, read_ue_v, read_u_1
   int              bitcounter;
@@ -880,9 +889,9 @@ static inline int is_BL_profile (unsigned int profile_idc) {
 
   extern void error (char* text, int code);
 
-  extern int init_global_buffers (VideoParameters *p_Vid, int layer_id );
-  extern void free_global_buffers (VideoParameters *p_Vid);
-  extern void free_layer_buffers (VideoParameters *p_Vid, int layer_id );
+  extern int init_global_buffers (VideoParameters *pVid, int layer_id );
+  extern void free_global_buffers (VideoParameters *pVid);
+  extern void free_layer_buffers (VideoParameters *pVid, int layer_id );
 
   extern void FreePartition (DataPartition* dp, int n);
   extern DataPartition* AllocPartition (int n);
@@ -891,18 +900,18 @@ static inline int is_BL_profile (unsigned int profile_idc) {
   extern unsigned CeilLog2_sf (unsigned uiVal);
 
   // For 4:4:4 independent mode
-  extern void change_plane_JV (VideoParameters *p_Vid, int nplane, Slice *pSlice);
-  extern void make_frame_picture_JV (VideoParameters *p_Vid );
+  extern void change_plane_JV (VideoParameters *pVid, int nplane, Slice *pSlice);
+  extern void make_frame_picture_JV (VideoParameters *pVid );
 
   extern void FreeDecPicList (DecodedPicList *pDecPicList );
-  extern void ClearDecPicList (VideoParameters *p_Vid );
+  extern void ClearDecPicList (VideoParameters *pVid );
   extern DecodedPicList* get_one_avail_dec_pic_from_list (DecodedPicList *pDecPicList, int b3D, int view_id);
 
-  extern Slice* malloc_slice (InputParameters *p_Inp, VideoParameters *p_Vid );
+  extern Slice* malloc_slice (InputParameters *p_Inp, VideoParameters *pVid );
   extern void copy_slice_info (Slice* currSlice, OldSliceParams *p_old_slice );
 
-  extern void OpenOutputFiles (VideoParameters *p_Vid, int view0_id, int view1_id);
-  extern void set_global_coding_par (VideoParameters *p_Vid, CodingParameters *cps);
+  extern void OpenOutputFiles (VideoParameters *pVid, int view0_id, int view1_id);
+  extern void set_global_coding_par (VideoParameters *pVid, CodingParameters *cps);
 //{{{
 #ifdef __cplusplus
 }

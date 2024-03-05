@@ -129,7 +129,7 @@ typedef struct frame_store {
 //{{{
 //! Decoded Picture Buffer
 typedef struct decoded_picture_buffer {
-  VideoParameters* p_Vid;
+  VideoParameters* pVid;
   InputParameters* p_Inp;
 
   FrameStore** fs;
@@ -304,12 +304,12 @@ extern void mm_unmark_all_long_term_for_reference (DecodedPictureBuffer *p_Dpb);
 extern int  is_used_for_reference (FrameStore* fs);
 extern void get_smallest_poc (DecodedPictureBuffer *p_Dpb, int *poc,int * pos);
 extern int remove_unused_frame_from_dpb (DecodedPictureBuffer *p_Dpb);
-extern void init_dpb (VideoParameters *p_Vid, DecodedPictureBuffer *p_Dpb, int type);
-extern void re_init_dpb (VideoParameters *p_Vid, DecodedPictureBuffer *p_Dpb, int type);
+extern void init_dpb (VideoParameters* pVid, DecodedPictureBuffer *p_Dpb, int type);
+extern void re_init_dpb (VideoParameters* pVid, DecodedPictureBuffer *p_Dpb, int type);
 extern void free_dpb (DecodedPictureBuffer *p_Dpb);
 extern FrameStore* alloc_frame_store();
 extern void free_frame_store (FrameStore* f);
-extern StorablePicture*  alloc_storable_picture (VideoParameters *p_Vid, PictureStructure type, int size_x, int size_y, int size_x_cr, int size_y_cr, int is_output);
+extern StorablePicture*  alloc_storable_picture (VideoParameters* pVid, PictureStructure type, int size_x, int size_y, int size_x_cr, int size_y_cr, int is_output);
 extern void free_storable_picture (StorablePicture* p);
 extern void store_picture_in_dpb (DecodedPictureBuffer *p_Dpb, StorablePicture* p);
 extern StorablePicture*  get_short_term_pic (Slice* currSlice, DecodedPictureBuffer *p_Dpb, int picNum);
@@ -324,26 +324,26 @@ extern void init_lists_b_slice (Slice* currSlice);
 extern void init_lists_i_slice (Slice* currSlice);
 extern void update_pic_num (Slice* currSlice);
 
-extern void dpb_split_field (VideoParameters *p_Vid, FrameStore *fs);
-extern void dpb_combine_field (VideoParameters *p_Vid, FrameStore *fs);
-extern void dpb_combine_field_yuv (VideoParameters *p_Vid, FrameStore *fs);
+extern void dpb_split_field (VideoParameters* pVid, FrameStore *fs);
+extern void dpb_combine_field (VideoParameters* pVid, FrameStore *fs);
+extern void dpb_combine_field_yuv (VideoParameters* pVid, FrameStore *fs);
 
 extern void reorder_ref_pic_list (Slice* currSlice, int cur_list);
 
-extern void init_mbaff_lists (VideoParameters *p_Vid, Slice* currSlice);
+extern void init_mbaff_lists (VideoParameters* pVid, Slice* currSlice);
 extern void alloc_ref_pic_list_reordering_buffer (Slice* currSlice);
 extern void free_ref_pic_list_reordering_buffer (Slice* currSlice);
 
-extern void fill_frame_num_gap (VideoParameters *p_Vid, Slice *pSlice);
+extern void fill_frame_num_gap (VideoParameters* pVid, Slice *pSlice);
 
 extern void compute_colocated (Slice* currSlice, StorablePicture **listX[6]);
 
-extern int init_img_data (VideoParameters *p_Vid, ImageData *p_ImgData, seq_parameter_set_rbsp_t *sps);
-extern void free_img_data (VideoParameters *p_Vid, ImageData *p_ImgData);
+extern int init_img_data (VideoParameters* pVid, ImageData *p_ImgData, seq_parameter_set_rbsp_t *sps);
+extern void free_img_data (VideoParameters* pVid, ImageData *p_ImgData);
 
-extern void pad_dec_picture (VideoParameters *p_Vid, StorablePicture *dec_picture);
+extern void pad_dec_picture (VideoParameters* pVid, StorablePicture *dec_picture);
 extern void pad_buf (imgpel *pImgBuf, int iWidth, int iHeight, int iStride, int iPadX, int iPadY);
 
-extern void process_picture_in_dpb_s (VideoParameters *p_Vid, StorablePicture *p_pic);
-extern StorablePicture * clone_storable_picture (VideoParameters *p_Vid, StorablePicture *p_pic );
+extern void process_picture_in_dpb_s (VideoParameters* pVid, StorablePicture *p_pic);
+extern StorablePicture * clone_storable_picture (VideoParameters* pVid, StorablePicture *p_pic );
 extern void store_proc_picture_in_dpb (DecodedPictureBuffer *p_Dpb, StorablePicture* p);

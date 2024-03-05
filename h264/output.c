@@ -37,11 +37,11 @@ static void img2buf (imgpel** imgX, unsigned char* buf,
   }
 //}}}
 //{{{
-static void allocate_p_dec_pic (VideoParameters* p_Vid, DecodedPicList* pDecPic, StorablePicture* p,
+static void allocate_p_dec_pic (VideoParameters* pVid, DecodedPicList* pDecPic, StorablePicture* p,
                                 int iLumaSize, int iFrameSize, int iLumaSizeX, int iLumaSizeY,
                                 int iChromaSizeX, int iChromaSizeY) {
 
-  int symbol_size_in_bytes = ((p_Vid->pic_unit_bitsize_on_disk+7) >> 3);
+  int symbol_size_in_bytes = ((pVid->pic_unit_bitsize_on_disk+7) >> 3);
 
   if (pDecPic->pY)
     mem_free (pDecPic->pY);
@@ -54,7 +54,7 @@ static void allocate_p_dec_pic (VideoParameters* p_Vid, DecodedPicList* pDecPic,
   //init;
   pDecPic->iYUVFormat = p->chroma_format_idc;
   pDecPic->iYUVStorageFormat = 0;
-  pDecPic->iBitDepth = p_Vid->pic_unit_bitsize_on_disk;
+  pDecPic->iBitDepth = pVid->pic_unit_bitsize_on_disk;
   pDecPic->iWidth = iLumaSizeX; //p->size_x;
   pDecPic->iHeight = iLumaSizeY; //p->size_y;
   pDecPic->iYBufStride = iLumaSizeX*symbol_size_in_bytes; //p->size_x *symbol_size_in_bytes;
@@ -63,36 +63,36 @@ static void allocate_p_dec_pic (VideoParameters* p_Vid, DecodedPicList* pDecPic,
 //}}}
 
 //{{{
-static void clearPicture (VideoParameters* p_Vid, StorablePicture* p) {
+static void clearPicture (VideoParameters* pVid, StorablePicture* p) {
 
   printf ("-------------------- clearPicture -----------------\n");
 
   for (int i = 0; i < p->size_y; i++)
     for (int j = 0; j < p->size_x; j++)
-      p->imgY[i][j] = (imgpel)p_Vid->dc_pred_value_comp[0];
+      p->imgY[i][j] = (imgpel)pVid->dc_pred_value_comp[0];
 
   for (int i = 0; i < p->size_y_cr;i++)
     for (int j = 0; j < p->size_x_cr; j++)
-      p->imgUV[0][i][j] = (imgpel)p_Vid->dc_pred_value_comp[1];
+      p->imgUV[0][i][j] = (imgpel)pVid->dc_pred_value_comp[1];
 
   for (int i = 0; i < p->size_y_cr;i++)
     for (int j = 0; j < p->size_x_cr; j++)
-      p->imgUV[1][i][j] = (imgpel)p_Vid->dc_pred_value_comp[2];
+      p->imgUV[1][i][j] = (imgpel)pVid->dc_pred_value_comp[2];
   }
 //}}}
 //{{{
-static void writeOutPicture (VideoParameters* p_Vid, StorablePicture* p) {
+static void writeOutPicture (VideoParameters* pVid, StorablePicture* p) {
 
-  InputParameters* p_Inp = p_Vid->p_Inp;
+  InputParameters* p_Inp = pVid->p_Inp;
   DecodedPicList* pDecPic;
 
   static const int SubWidthC  [4]= { 1, 2, 2, 1};
   static const int SubHeightC [4]= { 1, 2, 1, 1};
 
   int crop_left, crop_right, crop_top, crop_bottom;
-  int symbol_size_in_bytes = ((p_Vid->pic_unit_bitsize_on_disk+7) >> 3);
-  int rgb_output =  p_Vid->p_EncodePar[p->layer_id]->rgb_output;
-  //(p_Vid->active_sps->vui_seq_parameters.matrix_coefficients==0);
+  int symbol_size_in_bytes = ((pVid->pic_unit_bitsize_on_disk+7) >> 3);
+  int rgb_output =  pVid->p_EncodePar[p->layer_id]->rgb_output;
+  //(pVid->active_sps->vui_seq_parameters.matrix_coefficients==0);
 
   unsigned char *buf;
   int iLumaSize, iFrameSize;
@@ -121,9 +121,9 @@ static void writeOutPicture (VideoParameters* p_Vid, StorablePicture* p) {
   //printf ("write frame size: %dx%d\n", p->size_x-crop_left-crop_right,p->size_y-crop_top-crop_bottom );
 
   // KS: this buffer should actually be allocated only once, but this is still much faster than the previous version
-  pDecPic = get_one_avail_dec_pic_from_list (p_Vid->pDecOuputPic, 0, 0);
+  pDecPic = get_one_avail_dec_pic_from_list (pVid->pDecOuputPic, 0, 0);
   if ((pDecPic->pY == NULL) || (pDecPic->iBufSize < iFrameSize))
-    allocate_p_dec_pic (p_Vid, pDecPic, p, iLumaSize, iFrameSize, iLumaSizeX, iLumaSizeY, iChromaSizeX, iChromaSizeY);
+    allocate_p_dec_pic (pVid, pDecPic, p, iLumaSize, iFrameSize, iLumaSizeX, iLumaSizeY, iChromaSizeX, iChromaSizeY);
 
   pDecPic->bValid = 1;
   pDecPic->iPOC = p->frame_poc;
@@ -151,105 +151,105 @@ static void writeOutPicture (VideoParameters* p_Vid, StorablePicture* p) {
 //}}}
 
 //{{{
-void flush_pending_output (VideoParameters* p_Vid) {
+void flush_pending_output (VideoParameters* pVid) {
 
-  if (p_Vid->pending_output_state != FRAME)
-    writeOutPicture (p_Vid, p_Vid->pending_output);
+  if (pVid->pending_output_state != FRAME)
+    writeOutPicture (pVid, pVid->pending_output);
 
-  if (p_Vid->pending_output->imgY) {
-    free_mem2Dpel (p_Vid->pending_output->imgY);
-    p_Vid->pending_output->imgY=NULL;
+  if (pVid->pending_output->imgY) {
+    free_mem2Dpel (pVid->pending_output->imgY);
+    pVid->pending_output->imgY=NULL;
     }
 
-  if (p_Vid->pending_output->imgUV) {
-    free_mem3Dpel (p_Vid->pending_output->imgUV);
-    p_Vid->pending_output->imgUV=NULL;
+  if (pVid->pending_output->imgUV) {
+    free_mem3Dpel (pVid->pending_output->imgUV);
+    pVid->pending_output->imgUV=NULL;
     }
 
-  p_Vid->pending_output_state = FRAME;
+  pVid->pending_output_state = FRAME;
   }
 //}}}
 //{{{
-static void writePicture (VideoParameters* p_Vid, StorablePicture* p, int real_structure) {
+static void writePicture (VideoParameters* pVid, StorablePicture* p, int real_structure) {
 
   if (real_structure == FRAME) {
-    flush_pending_output (p_Vid);
-    writeOutPicture (p_Vid, p);
+    flush_pending_output (pVid);
+    writeOutPicture (pVid, p);
     return;
     }
 
-  if (real_structure == p_Vid->pending_output_state) {
-    flush_pending_output (p_Vid);
-    writePicture (p_Vid, p, real_structure);
+  if (real_structure == pVid->pending_output_state) {
+    flush_pending_output (pVid);
+    writePicture (pVid, p, real_structure);
     return;
     }
 
-  if (p_Vid->pending_output_state == FRAME) {
+  if (pVid->pending_output_state == FRAME) {
     //{{{  output frame
-    p_Vid->pending_output->size_x = p->size_x;
-    p_Vid->pending_output->size_y = p->size_y;
-    p_Vid->pending_output->size_x_cr = p->size_x_cr;
-    p_Vid->pending_output->size_y_cr = p->size_y_cr;
-    p_Vid->pending_output->chroma_format_idc = p->chroma_format_idc;
+    pVid->pending_output->size_x = p->size_x;
+    pVid->pending_output->size_y = p->size_y;
+    pVid->pending_output->size_x_cr = p->size_x_cr;
+    pVid->pending_output->size_y_cr = p->size_y_cr;
+    pVid->pending_output->chroma_format_idc = p->chroma_format_idc;
 
-    p_Vid->pending_output->frame_mbs_only_flag = p->frame_mbs_only_flag;
-    p_Vid->pending_output->frame_cropping_flag = p->frame_cropping_flag;
-    if (p_Vid->pending_output->frame_cropping_flag) {
-      p_Vid->pending_output->frame_crop_left_offset = p->frame_crop_left_offset;
-      p_Vid->pending_output->frame_crop_right_offset = p->frame_crop_right_offset;
-      p_Vid->pending_output->frame_crop_top_offset = p->frame_crop_top_offset;
-      p_Vid->pending_output->frame_crop_bottom_offset = p->frame_crop_bottom_offset;
+    pVid->pending_output->frame_mbs_only_flag = p->frame_mbs_only_flag;
+    pVid->pending_output->frame_cropping_flag = p->frame_cropping_flag;
+    if (pVid->pending_output->frame_cropping_flag) {
+      pVid->pending_output->frame_crop_left_offset = p->frame_crop_left_offset;
+      pVid->pending_output->frame_crop_right_offset = p->frame_crop_right_offset;
+      pVid->pending_output->frame_crop_top_offset = p->frame_crop_top_offset;
+      pVid->pending_output->frame_crop_bottom_offset = p->frame_crop_bottom_offset;
       }
 
-    get_mem2Dpel (&(p_Vid->pending_output->imgY), p_Vid->pending_output->size_y, p_Vid->pending_output->size_x);
-    get_mem3Dpel (&(p_Vid->pending_output->imgUV), 2, p_Vid->pending_output->size_y_cr, p_Vid->pending_output->size_x_cr);
+    get_mem2Dpel (&(pVid->pending_output->imgY), pVid->pending_output->size_y, pVid->pending_output->size_x);
+    get_mem3Dpel (&(pVid->pending_output->imgUV), 2, pVid->pending_output->size_y_cr, pVid->pending_output->size_x_cr);
 
-    clearPicture (p_Vid, p_Vid->pending_output);
+    clearPicture (pVid, pVid->pending_output);
 
     // copy first field
     int add = (real_structure == TOP_FIELD) ? 0 : 1;
-    for (int i = 0; i < p_Vid->pending_output->size_y; i += 2)
-      memcpy (p_Vid->pending_output->imgY[(i+add)], p->imgY[(i+add)], p->size_x * sizeof(imgpel));
-    for (int i = 0; i < p_Vid->pending_output->size_y_cr; i += 2) {
-      memcpy (p_Vid->pending_output->imgUV[0][(i+add)], p->imgUV[0][(i+add)], p->size_x_cr * sizeof(imgpel));
-      memcpy (p_Vid->pending_output->imgUV[1][(i+add)], p->imgUV[1][(i+add)], p->size_x_cr * sizeof(imgpel));
+    for (int i = 0; i < pVid->pending_output->size_y; i += 2)
+      memcpy (pVid->pending_output->imgY[(i+add)], p->imgY[(i+add)], p->size_x * sizeof(imgpel));
+    for (int i = 0; i < pVid->pending_output->size_y_cr; i += 2) {
+      memcpy (pVid->pending_output->imgUV[0][(i+add)], p->imgUV[0][(i+add)], p->size_x_cr * sizeof(imgpel));
+      memcpy (pVid->pending_output->imgUV[1][(i+add)], p->imgUV[1][(i+add)], p->size_x_cr * sizeof(imgpel));
       }
 
-    p_Vid->pending_output_state = real_structure;
+    pVid->pending_output_state = real_structure;
     }
     //}}}
   else {
-    if (  (p_Vid->pending_output->size_x!=p->size_x) || (p_Vid->pending_output->size_y!= p->size_y)
-       || (p_Vid->pending_output->frame_mbs_only_flag != p->frame_mbs_only_flag)
-       || (p_Vid->pending_output->frame_cropping_flag != p->frame_cropping_flag)
-       || ( p_Vid->pending_output->frame_cropping_flag &&
-            (  (p_Vid->pending_output->frame_crop_left_offset   != p->frame_crop_left_offset)
-             ||(p_Vid->pending_output->frame_crop_right_offset  != p->frame_crop_right_offset)
-             ||(p_Vid->pending_output->frame_crop_top_offset    != p->frame_crop_top_offset)
-             ||(p_Vid->pending_output->frame_crop_bottom_offset != p->frame_crop_bottom_offset)
+    if (  (pVid->pending_output->size_x!=p->size_x) || (pVid->pending_output->size_y!= p->size_y)
+       || (pVid->pending_output->frame_mbs_only_flag != p->frame_mbs_only_flag)
+       || (pVid->pending_output->frame_cropping_flag != p->frame_cropping_flag)
+       || ( pVid->pending_output->frame_cropping_flag &&
+            (  (pVid->pending_output->frame_crop_left_offset   != p->frame_crop_left_offset)
+             ||(pVid->pending_output->frame_crop_right_offset  != p->frame_crop_right_offset)
+             ||(pVid->pending_output->frame_crop_top_offset    != p->frame_crop_top_offset)
+             ||(pVid->pending_output->frame_crop_bottom_offset != p->frame_crop_bottom_offset)
             )
           )
        ) {
-      flush_pending_output (p_Vid);
-      writePicture (p_Vid, p, real_structure);
+      flush_pending_output (pVid);
+      writePicture (pVid, p, real_structure);
       return;
       }
 
     // copy second field
     int add = (real_structure == TOP_FIELD) ? 0 : 1;
-    for (int i = 0; i < p_Vid->pending_output->size_y; i+=2)
-      memcpy(p_Vid->pending_output->imgY[(i+add)], p->imgY[(i+add)], p->size_x * sizeof(imgpel));
-    for (int i = 0; i < p_Vid->pending_output->size_y_cr; i+=2) {
-      memcpy(p_Vid->pending_output->imgUV[0][(i+add)], p->imgUV[0][(i+add)], p->size_x_cr * sizeof(imgpel));
-      memcpy(p_Vid->pending_output->imgUV[1][(i+add)], p->imgUV[1][(i+add)], p->size_x_cr * sizeof(imgpel));
+    for (int i = 0; i < pVid->pending_output->size_y; i+=2)
+      memcpy(pVid->pending_output->imgY[(i+add)], p->imgY[(i+add)], p->size_x * sizeof(imgpel));
+    for (int i = 0; i < pVid->pending_output->size_y_cr; i+=2) {
+      memcpy(pVid->pending_output->imgUV[0][(i+add)], p->imgUV[0][(i+add)], p->size_x_cr * sizeof(imgpel));
+      memcpy(pVid->pending_output->imgUV[1][(i+add)], p->imgUV[1][(i+add)], p->size_x_cr * sizeof(imgpel));
       }
 
-    flush_pending_output (p_Vid);
+    flush_pending_output (pVid);
     }
   }
 //}}}
 //{{{
-static void write_unpaired_field (VideoParameters* p_Vid, FrameStore* fs) {
+static void write_unpaired_field (VideoParameters* pVid, FrameStore* fs) {
 
   assert (fs->is_used < 3);
 
@@ -257,19 +257,19 @@ static void write_unpaired_field (VideoParameters* p_Vid, FrameStore* fs) {
   if (fs->is_used & 0x01) {
     // we have a top field, construct an empty bottom field
     p = fs->top_field;
-    fs->bottom_field = alloc_storable_picture (p_Vid, BOTTOM_FIELD, p->size_x, 2*p->size_y, p->size_x_cr, 2*p->size_y_cr, 1);
+    fs->bottom_field = alloc_storable_picture (pVid, BOTTOM_FIELD, p->size_x, 2*p->size_y, p->size_x_cr, 2*p->size_y_cr, 1);
     fs->bottom_field->chroma_format_idc = p->chroma_format_idc;
-    clearPicture (p_Vid, fs->bottom_field);
-    dpb_combine_field_yuv (p_Vid, fs);
-    writePicture (p_Vid, fs->frame, TOP_FIELD);
+    clearPicture (pVid, fs->bottom_field);
+    dpb_combine_field_yuv (pVid, fs);
+    writePicture (pVid, fs->frame, TOP_FIELD);
     }
 
   if (fs->is_used & 0x02) {
     // we have a bottom field, construct an empty top field
     p = fs->bottom_field;
-    fs->top_field = alloc_storable_picture (p_Vid, TOP_FIELD, p->size_x, 2*p->size_y, p->size_x_cr, 2*p->size_y_cr, 1);
+    fs->top_field = alloc_storable_picture (pVid, TOP_FIELD, p->size_x, 2*p->size_y, p->size_x_cr, 2*p->size_y_cr, 1);
     fs->top_field->chroma_format_idc = p->chroma_format_idc;
-    clearPicture (p_Vid, fs->top_field);
+    clearPicture (pVid, fs->top_field);
     fs ->top_field->frame_cropping_flag = fs->bottom_field->frame_cropping_flag;
     if(fs ->top_field->frame_cropping_flag) {
       fs ->top_field->frame_crop_top_offset = fs->bottom_field->frame_crop_top_offset;
@@ -277,114 +277,114 @@ static void write_unpaired_field (VideoParameters* p_Vid, FrameStore* fs) {
       fs ->top_field->frame_crop_left_offset = fs->bottom_field->frame_crop_left_offset;
       fs ->top_field->frame_crop_right_offset = fs->bottom_field->frame_crop_right_offset;
       }
-    dpb_combine_field_yuv (p_Vid, fs);
-    writePicture (p_Vid, fs->frame, BOTTOM_FIELD);
+    dpb_combine_field_yuv (pVid, fs);
+    writePicture (pVid, fs->frame, BOTTOM_FIELD);
     }
 
   fs->is_used = 3;
   }
 //}}}
 //{{{
-static void flush_direct_output (VideoParameters* p_Vid) {
+static void flush_direct_output (VideoParameters* pVid) {
 
-  write_unpaired_field (p_Vid, p_Vid->out_buffer);
-  free_storable_picture (p_Vid->out_buffer->frame);
+  write_unpaired_field (pVid, pVid->out_buffer);
+  free_storable_picture (pVid->out_buffer->frame);
 
-  p_Vid->out_buffer->frame = NULL;
-  free_storable_picture (p_Vid->out_buffer->top_field);
+  pVid->out_buffer->frame = NULL;
+  free_storable_picture (pVid->out_buffer->top_field);
 
-  p_Vid->out_buffer->top_field = NULL;
-  free_storable_picture (p_Vid->out_buffer->bottom_field);
+  pVid->out_buffer->top_field = NULL;
+  free_storable_picture (pVid->out_buffer->bottom_field);
 
-  p_Vid->out_buffer->bottom_field = NULL;
-  p_Vid->out_buffer->is_used = 0;
+  pVid->out_buffer->bottom_field = NULL;
+  pVid->out_buffer->is_used = 0;
   }
 //}}}
 
 //{{{
-void init_out_buffer (VideoParameters* p_Vid) {
+void init_out_buffer (VideoParameters* pVid) {
 
-  p_Vid->out_buffer = alloc_frame_store();
+  pVid->out_buffer = alloc_frame_store();
 
-  p_Vid->pending_output = calloc (sizeof(StorablePicture), 1);
-  if (NULL==p_Vid->pending_output)
+  pVid->pending_output = calloc (sizeof(StorablePicture), 1);
+  if (NULL==pVid->pending_output)
     no_mem_exit ("init_out_buffer");
-  p_Vid->pending_output->imgUV = NULL;
-  p_Vid->pending_output->imgY  = NULL;
+  pVid->pending_output->imgUV = NULL;
+  pVid->pending_output->imgY  = NULL;
   }
 //}}}
 //{{{
-void uninit_out_buffer (VideoParameters* p_Vid) {
+void uninit_out_buffer (VideoParameters* pVid) {
 
-  free_frame_store (p_Vid->out_buffer);
-  p_Vid->out_buffer=NULL;
+  free_frame_store (pVid->out_buffer);
+  pVid->out_buffer=NULL;
 
-  flush_pending_output(p_Vid);
-  free (p_Vid->pending_output);
+  flush_pending_output(pVid);
+  free (pVid->pending_output);
   }
 //}}}
 
 //{{{
-void write_stored_frame (VideoParameters* p_Vid, FrameStore* fs) {
+void write_stored_frame (VideoParameters* pVid, FrameStore* fs) {
 
   // make sure no direct output field is pending
-  flush_direct_output (p_Vid);
+  flush_direct_output (pVid);
 
   if (fs->is_used < 3)
-    write_unpaired_field (p_Vid, fs);
+    write_unpaired_field (pVid, fs);
   else {
     if (fs->recovery_frame)
-      p_Vid->recovery_flag = 1;
-    if ((!p_Vid->non_conforming_stream) || p_Vid->recovery_flag)
-      writePicture (p_Vid, fs->frame, FRAME);
+      pVid->recovery_flag = 1;
+    if ((!pVid->non_conforming_stream) || pVid->recovery_flag)
+      writePicture (pVid, fs->frame, FRAME);
     }
 
   fs->is_output = 1;
   }
 //}}}
 //{{{
-void direct_output (VideoParameters* p_Vid, StorablePicture* p) {
+void direct_output (VideoParameters* pVid, StorablePicture* p) {
 
-  InputParameters* p_Inp = p_Vid->p_Inp;
+  InputParameters* p_Inp = pVid->p_Inp;
   if (p->structure == FRAME) {
     // we have a frame (or complementary field pair), so output it directly
-    flush_direct_output (p_Vid);
-    writePicture (p_Vid, p, FRAME);
-    calculate_frame_no (p_Vid, p);
+    flush_direct_output (pVid);
+    writePicture (pVid, p, FRAME);
+    calculate_frame_no (pVid, p);
     free_storable_picture (p);
     return;
     }
 
   if (p->structure == TOP_FIELD) {
-    if (p_Vid->out_buffer->is_used & 1)
-      flush_direct_output (p_Vid);
-    p_Vid->out_buffer->top_field = p;
-    p_Vid->out_buffer->is_used |= 1;
+    if (pVid->out_buffer->is_used & 1)
+      flush_direct_output (pVid);
+    pVid->out_buffer->top_field = p;
+    pVid->out_buffer->is_used |= 1;
     }
 
   if (p->structure == BOTTOM_FIELD) {
-    if (p_Vid->out_buffer->is_used & 2)
-      flush_direct_output (p_Vid);
-    p_Vid->out_buffer->bottom_field = p;
-    p_Vid->out_buffer->is_used |= 2;
+    if (pVid->out_buffer->is_used & 2)
+      flush_direct_output (pVid);
+    pVid->out_buffer->bottom_field = p;
+    pVid->out_buffer->is_used |= 2;
     }
 
-  if (p_Vid->out_buffer->is_used == 3) {
+  if (pVid->out_buffer->is_used == 3) {
     // we have both fields, so output them
-    dpb_combine_field_yuv (p_Vid, p_Vid->out_buffer);
-    writePicture (p_Vid, p_Vid->out_buffer->frame, FRAME);
+    dpb_combine_field_yuv (pVid, pVid->out_buffer);
+    writePicture (pVid, pVid->out_buffer->frame, FRAME);
 
-    calculate_frame_no (p_Vid, p);
-    free_storable_picture (p_Vid->out_buffer->frame);
+    calculate_frame_no (pVid, p);
+    free_storable_picture (pVid->out_buffer->frame);
 
-    p_Vid->out_buffer->frame = NULL;
-    free_storable_picture (p_Vid->out_buffer->top_field);
+    pVid->out_buffer->frame = NULL;
+    free_storable_picture (pVid->out_buffer->top_field);
 
-    p_Vid->out_buffer->top_field = NULL;
-    free_storable_picture (p_Vid->out_buffer->bottom_field);
+    pVid->out_buffer->top_field = NULL;
+    free_storable_picture (pVid->out_buffer->bottom_field);
 
-    p_Vid->out_buffer->bottom_field = NULL;
-    p_Vid->out_buffer->is_used = 0;
+    pVid->out_buffer->bottom_field = NULL;
+    pVid->out_buffer->is_used = 0;
     }
   }
 //}}}

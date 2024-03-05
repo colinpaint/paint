@@ -97,12 +97,12 @@ void itrans8x8 (Macroblock *currMB,   //!< current macroblock
 
   if (currMB->is_lossless == TRUE)
   {
-    recon8x8_lossless(&m7[joff], &currSlice->mb_rec[pl][joff], &currSlice->mb_pred[pl][joff], currMB->p_Vid->max_pel_value_comp[pl], ioff);
+    recon8x8_lossless(&m7[joff], &currSlice->mb_rec[pl][joff], &currSlice->mb_pred[pl][joff], currMB->pVid->max_pel_value_comp[pl], ioff);
   }
   else
   {
     inverse8x8(&m7[joff], &m7[joff], ioff);
-    recon8x8  (&m7[joff], &currSlice->mb_rec[pl][joff], &currSlice->mb_pred[pl][joff], currMB->p_Vid->max_pel_value_comp[pl], ioff);
+    recon8x8  (&m7[joff], &currSlice->mb_rec[pl][joff], &currSlice->mb_pred[pl][joff], currMB->pVid->max_pel_value_comp[pl], ioff);
   }
 }
 //}}}

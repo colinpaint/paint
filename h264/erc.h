@@ -16,7 +16,7 @@
 //{{{
 //! YUV pixel domain image arrays for a video frame
 typedef struct frame_s {
-  VideoParameters *p_Vid;
+  VideoParameters* pVid;
   imgpel *yptr;
   imgpel *uptr;
   imgpel *vptr;
@@ -84,7 +84,7 @@ struct concealment_node {
 #define xPosMB(currMBNum,picSizeX) ((currMBNum)%((picSizeX)>>4))
 #define yPosMB(currMBNum,picSizeX) ((currMBNum)/((picSizeX)>>4))
 
-int ercConcealIntraFrame (VideoParameters *p_Vid, frame *recfr,
+int ercConcealIntraFrame (VideoParameters* pVid, frame *recfr,
                           int picSizeX, int picSizeY, ercVariables_t *errorVar );
 int ercConcealInterFrame (frame *recfr, objectBuffer_t *object_list,
                           int picSizeX, int picSizeY, ercVariables_t *errorVar, int chroma_format_idc );
@@ -97,10 +97,10 @@ extern void sliding_window_poc_management (DecodedPictureBuffer *p_Dpb, Storable
 extern void write_lost_non_ref_pic (DecodedPictureBuffer *p_Dpb, int poc);
 extern void write_lost_ref_after_idr (DecodedPictureBuffer *p_Dpb, int pos);
 
-void ercInit (VideoParameters *p_Vid, int pic_sizex, int pic_sizey, int flag);
+void ercInit (VideoParameters* pVid, int pic_sizex, int pic_sizey, int flag);
 ercVariables_t* ercOpen();
 void ercReset (ercVariables_t *errorVar, int nOfMBs, int numOfSegments, int picSizeX );
-void ercClose (VideoParameters *p_Vid, ercVariables_t *errorVar );
+void ercClose (VideoParameters* pVid, ercVariables_t *errorVar );
 void ercSetErrorConcealment (ercVariables_t *errorVar, int value );
 
 void ercStartSegment (int currMBNum, int segment, unsigned int bitPos, ercVariables_t *errorVar );
