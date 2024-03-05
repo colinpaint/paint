@@ -75,21 +75,21 @@ int arideco_bits_read (DecodingEnvironmentPtr dep) {
 //}}}
 
 //{{{
-unsigned int biari_decode_symbol (DecodingEnvironment *dep, BiContextType *bi_ct ) {
+unsigned int biari_decode_symbol (DecodingEnvironment* dep, BiContextType* bi_ct) {
 
-  unsigned int bit    = bi_ct->MPS;
-  unsigned int *value = &dep->Dvalue;
-  unsigned int *range = &dep->Drange;
-  uint16       *state = &bi_ct->state;
-  unsigned int rLPS   = rLPS_table_64x4[*state][(*range>>6) & 0x03];
-  int *DbitsLeft = &dep->DbitsLeft;
+  unsigned int bit = bi_ct->MPS;
+  unsigned int* value = &dep->Dvalue;
+  unsigned int* range = &dep->Drange;
+
+  uint16* state = &bi_ct->state;
+  unsigned int rLPS = rLPS_table_64x4[*state][(*range>>6) & 0x03];
+  int* DbitsLeft = &dep->DbitsLeft;
 
   *range -= rLPS;
-
   if (*value < (*range << *DbitsLeft)) {
     // MPS
     *state = AC_next_state_MPS_64[*state]; // next state
-    if( *range >= QUARTER )
+    if ( *range >= QUARTER )
       return (bit);
     else {
       *range <<= 1;
@@ -108,7 +108,7 @@ unsigned int biari_decode_symbol (DecodingEnvironment *dep, BiContextType *bi_ct
     *state = AC_next_state_LPS_64[*state]; // next state
     }
 
-  if( *DbitsLeft > 0 )
+  if (*DbitsLeft > 0 )
     return (bit);
   else {
     *value <<= 16;
@@ -123,38 +123,36 @@ unsigned int biari_decode_symbol (DecodingEnvironment *dep, BiContextType *bi_ct
 unsigned int biari_decode_symbol_eq_prob (DecodingEnvironmentPtr dep)
 {
    int tmp_value;
-   unsigned int *value = &dep->Dvalue;
-   int *DbitsLeft = &dep->DbitsLeft;
+   unsigned int* value = &dep->Dvalue;
+   int* DbitsLeft = &dep->DbitsLeft;
 
-  if(--(*DbitsLeft) == 0)
-  {
-    *value = (*value << 16) | getword( dep );  // lookahead of 2 bytes: always make sure that bitstream buffer
-                                             // contains 2 more bytes than actual bitstream
+  if (--(*DbitsLeft) == 0) {
+    // lookahead of 2 bytes: always make sure that bitstream buffer
+    // contains 2 more bytes than actual bitstream
+    *value = (*value << 16) | getword( dep );  
     *DbitsLeft = 16;
-  }
-  tmp_value  = *value - (dep->Drange << *DbitsLeft);
+    }
 
+  tmp_value = *value - (dep->Drange << *DbitsLeft);
   if (tmp_value < 0)
     return 0;
-  else
-  {
+  else {
     *value = tmp_value;
     return 1;
+    }
   }
-}
 //}}}
 //{{{
-unsigned int biari_decode_final (DecodingEnvironmentPtr dep)
-{
-  unsigned int range  = dep->Drange - 2;
-  int value  = dep->Dvalue;
-  value -= (range << dep->DbitsLeft);
+unsigned int biari_decode_final (DecodingEnvironmentPtr dep) {
 
+  unsigned int range  = dep->Drange - 2;
+  int value = dep->Dvalue;
+  value -= (range << dep->DbitsLeft);
   if (value < 0) {
-    if( range >= QUARTER ) {
+    if (range >= QUARTER ) {
       dep->Drange = range;
       return 0;
-    }
+      }
     else {
       dep->Drange = (range << 1);
       if( --(dep->DbitsLeft) > 0 )

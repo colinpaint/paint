@@ -1173,21 +1173,33 @@ static void interpret_frame_packing_arrangement_info (byte* payload, int size, s
 
   printf("Frame packing arrangement SEI message\n");
 
-  seiFramePackingArrangement.frame_packing_arrangement_id = (unsigned int)read_ue_v( "SEI: frame_packing_arrangement_id", buf, &gDecoder->UsedBits );
-  seiFramePackingArrangement.frame_packing_arrangement_cancel_flag = read_u_1( "SEI: frame_packing_arrangement_cancel_flag", buf, &gDecoder->UsedBits );
+  seiFramePackingArrangement.frame_packing_arrangement_id = 
+    (unsigned int)read_ue_v( "SEI: frame_packing_arrangement_id", buf, &gDecoder->UsedBits );
+  seiFramePackingArrangement.frame_packing_arrangement_cancel_flag = 
+    read_u_1( "SEI: frame_packing_arrangement_cancel_flag", buf, &gDecoder->UsedBits );
   printf("frame_packing_arrangement_id                 = %d\n", seiFramePackingArrangement.frame_packing_arrangement_id);
   printf("frame_packing_arrangement_cancel_flag        = %d\n", seiFramePackingArrangement.frame_packing_arrangement_cancel_flag);
   if ( seiFramePackingArrangement.frame_packing_arrangement_cancel_flag == FALSE )
   {
-    seiFramePackingArrangement.frame_packing_arrangement_type = (unsigned char)read_u_v( 7, "SEI: frame_packing_arrangement_type", buf, &gDecoder->UsedBits );
-    seiFramePackingArrangement.quincunx_sampling_flag         = read_u_1( "SEI: quincunx_sampling_flag", buf, &gDecoder->UsedBits );
-    seiFramePackingArrangement.content_interpretation_type    = (unsigned char)read_u_v( 6, "SEI: content_interpretation_type", buf, &gDecoder->UsedBits );
-    seiFramePackingArrangement.spatial_flipping_flag          = read_u_1( "SEI: spatial_flipping_flag", buf, &gDecoder->UsedBits );
-    seiFramePackingArrangement.frame0_flipped_flag            = read_u_1( "SEI: frame0_flipped_flag", buf, &gDecoder->UsedBits );
-    seiFramePackingArrangement.field_views_flag               = read_u_1( "SEI: field_views_flag", buf, &gDecoder->UsedBits );
-    seiFramePackingArrangement.current_frame_is_frame0_flag   = read_u_1( "SEI: current_frame_is_frame0_flag", buf, &gDecoder->UsedBits );
-    seiFramePackingArrangement.frame0_self_contained_flag     = read_u_1( "SEI: frame0_self_contained_flag", buf, &gDecoder->UsedBits );
-    seiFramePackingArrangement.frame1_self_contained_flag     = read_u_1( "SEI: frame1_self_contained_flag", buf, &gDecoder->UsedBits );
+    seiFramePackingArrangement.frame_packing_arrangement_type = 
+      (unsigned char)read_u_v( 7, "SEI: frame_packing_arrangement_type", buf, &gDecoder->UsedBits );
+    seiFramePackingArrangement.quincunx_sampling_flag         = 
+      read_u_1( "SEI: quincunx_sampling_flag", buf, &gDecoder->UsedBits );
+    seiFramePackingArrangement.content_interpretation_type    = 
+      (unsigned char)read_u_v( 6, "SEI: content_interpretation_type", buf, &gDecoder->UsedBits );
+    seiFramePackingArrangement.spatial_flipping_flag          = 
+      read_u_1( "SEI: spatial_flipping_flag", buf, &gDecoder->UsedBits );
+    seiFramePackingArrangement.frame0_flipped_flag            = 
+      read_u_1( "SEI: frame0_flipped_flag", buf, &gDecoder->UsedBits );
+    seiFramePackingArrangement.field_views_flag               = 
+      read_u_1( "SEI: field_views_flag", buf, &gDecoder->UsedBits );
+    seiFramePackingArrangement.current_frame_is_frame0_flag   = 
+      read_u_1( "SEI: current_frame_is_frame0_flag", buf, &gDecoder->UsedBits );
+    seiFramePackingArrangement.frame0_self_contained_flag     = 
+      read_u_1( "SEI: frame0_self_contained_flag", buf, &gDecoder->UsedBits );
+    seiFramePackingArrangement.frame1_self_contained_flag     = 
+      read_u_1( "SEI: frame1_self_contained_flag", buf, &gDecoder->UsedBits );
+
     printf("frame_packing_arrangement_type    = %d\n", seiFramePackingArrangement.frame_packing_arrangement_type);
     printf("quincunx_sampling_flag            = %d\n", seiFramePackingArrangement.quincunx_sampling_flag);
     printf("content_interpretation_type       = %d\n", seiFramePackingArrangement.content_interpretation_type);
@@ -1197,12 +1209,17 @@ static void interpret_frame_packing_arrangement_info (byte* payload, int size, s
     printf("current_frame_is_frame0_flag      = %d\n", seiFramePackingArrangement.current_frame_is_frame0_flag);
     printf("frame0_self_contained_flag        = %d\n", seiFramePackingArrangement.frame0_self_contained_flag);
     printf("frame1_self_contained_flag        = %d\n", seiFramePackingArrangement.frame1_self_contained_flag);
-    if ( seiFramePackingArrangement.quincunx_sampling_flag == FALSE && seiFramePackingArrangement.frame_packing_arrangement_type != 5 )
-    {
-      seiFramePackingArrangement.frame0_grid_position_x = (unsigned char)read_u_v( 4, "SEI: frame0_grid_position_x", buf, &gDecoder->UsedBits );
-      seiFramePackingArrangement.frame0_grid_position_y = (unsigned char)read_u_v( 4, "SEI: frame0_grid_position_y", buf, &gDecoder->UsedBits );
-      seiFramePackingArrangement.frame1_grid_position_x = (unsigned char)read_u_v( 4, "SEI: frame1_grid_position_x", buf, &gDecoder->UsedBits );
-      seiFramePackingArrangement.frame1_grid_position_y = (unsigned char)read_u_v( 4, "SEI: frame1_grid_position_y", buf, &gDecoder->UsedBits );
+    if (seiFramePackingArrangement.quincunx_sampling_flag == FALSE && 
+        seiFramePackingArrangement.frame_packing_arrangement_type != 5 )  {
+      seiFramePackingArrangement.frame0_grid_position_x = 
+        (unsigned char)read_u_v( 4, "SEI: frame0_grid_position_x", buf, &gDecoder->UsedBits );
+      seiFramePackingArrangement.frame0_grid_position_y = 
+        (unsigned char)read_u_v( 4, "SEI: frame0_grid_position_y", buf, &gDecoder->UsedBits );
+      seiFramePackingArrangement.frame1_grid_position_x = 
+        (unsigned char)read_u_v( 4, "SEI: frame1_grid_position_x", buf, &gDecoder->UsedBits );
+      seiFramePackingArrangement.frame1_grid_position_y = 
+        (unsigned char)read_u_v( 4, "SEI: frame1_grid_position_y", buf, &gDecoder->UsedBits );
+
       printf("frame0_grid_position_x      = %d\n", seiFramePackingArrangement.frame0_grid_position_x);
       printf("frame0_grid_position_y      = %d\n", seiFramePackingArrangement.frame0_grid_position_y);
       printf("frame1_grid_position_x      = %d\n", seiFramePackingArrangement.frame1_grid_position_x);
