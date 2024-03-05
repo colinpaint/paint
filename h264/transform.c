@@ -14,10 +14,8 @@
  **************************************************************************
  */
 //}}}
-//{{{
 #include "global.h"
 #include "transform.h"
-//}}}
 
 //{{{
 void forward4x4 (int **block, int **tblock, int pos_y, int pos_x)

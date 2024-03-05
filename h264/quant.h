@@ -1,6 +1,5 @@
 #pragma once
 
-// exported variables
 //{{{
 static const int dequant_coef8[6][8][8] =
 {
@@ -152,6 +151,6 @@ extern void init_qp_process (CodingParameters *cps);
 extern void free_qp_matrices (CodingParameters *cps);
 
 // For Q-matrix
-extern void assign_quant_params (Slice *currslice);
-extern void CalculateQuant4x4Param (Slice *currslice);
-extern void CalculateQuant8x8Param (Slice *currslice);
+extern void assign_quant_params (Slice* currslice);
+extern void CalculateQuant4x4Param (Slice* currslice);
+extern void CalculateQuant8x8Param (Slice* currslice);

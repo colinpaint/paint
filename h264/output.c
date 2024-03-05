@@ -14,8 +14,9 @@
 //}}}
 //{{{  includes
 #include "global.h"
-#include "image.h"
 #include "memalloc.h"
+
+#include "image.h"
 //}}}
 
 //{{{

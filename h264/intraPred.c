@@ -16,9 +16,10 @@
 //}}}
 //{{{
 #include "global.h"
+
 #include "block.h"
-#include "intra4x4_pred.h"
-#include "mb_access.h"
+#include "intra4x4Pred.h"
+#include "mbAccess.h"
 #include "image.h"
 //}}}
 

@@ -24,21 +24,22 @@
 //{{{
 #include <math.h>
 
-#include "block.h"
 #include "global.h"
-#include "mbuffer.h"
 #include "elements.h"
+
+#include "block.h"
+#include "mbuffer.h"
 #include "macroblock.h"
 #include "fmo.h"
 #include "cabac.h"
 #include "vlc.h"
 #include "image.h"
-#include "mb_access.h"
+#include "mbAccess.h"
 #include "biaridecod.h"
 #include "transform.h"
-#include "mc_prediction.h"
+#include "mcPrediction.h"
 #include "quant.h"
-#include "mb_prediction.h"
+#include "mbPrediction.h"
 //}}}
 
 //{{{

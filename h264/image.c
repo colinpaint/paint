@@ -28,9 +28,7 @@
 //}}}
 //{{{  includes
 #include "global.h"
-
-#include <math.h>
-#include <limits.h>
+#include "memalloc.h"
 
 #include "image.h"
 #include "fmo.h"
@@ -39,8 +37,7 @@
 #include "sliceHeader.h"
 #include "sei.h"
 #include "output.h"
-#include "mb_access.h"
-#include "memalloc.h"
+#include "mbAccess.h"
 #include "macroblock.h"
 #include "loopfilter.h"
 #include "biaridecod.h"
@@ -50,7 +47,10 @@
 #include "errorconcealment.h"
 #include "erc.h"
 #include "mbuffer.h"
-#include "mc_prediction.h"
+#include "mcPrediction.h"
+
+#include <math.h>
+#include <limits.h>
 //}}}
 
 //{{{
@@ -424,7 +424,7 @@ static void init_cur_imgy (Slice* currSlice, VideoParameters* p_Vid) {
   }
 //}}}
 
-//{{{  
+//{{{
 static int isNewPicture (StorablePicture* dec_picture, Slice* currSlice, OldSliceParams* p_old_slice) {
 
   int result = (NULL == dec_picture);

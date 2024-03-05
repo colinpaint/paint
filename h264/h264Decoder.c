@@ -44,10 +44,10 @@
 //}}}
 //{{{  includes
 #include "global.h"
+#include "memalloc.h"
 
 #include "image.h"
-#include "memalloc.h"
-#include "mc_prediction.h"
+#include "mcPrediction.h"
 #include "mbuffer.h"
 #include "fmo.h"
 #include "output.h"

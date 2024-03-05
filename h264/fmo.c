@@ -18,6 +18,7 @@
 #include "global.h"
 #include "elements.h"
 #include "defines.h"
+
 #include "sliceHeader.h"
 #include "fmo.h"
 //}}}
@@ -80,7 +81,7 @@ static void FmoGenerateType2MapUnitMap (VideoParameters *p_Vid, unsigned PicSize
 //}}}
 //{{{
 // Generate box-out slice group map type MapUnit map (type 3)
-static void FmoGenerateType3MapUnitMap (VideoParameters *p_Vid, unsigned PicSizeInMapUnits, Slice *currSlice )
+static void FmoGenerateType3MapUnitMap (VideoParameters *p_Vid, unsigned PicSizeInMapUnits, Slice* currSlice )
 {
   pic_parameter_set_rbsp_t* pps = p_Vid->active_pps;
   unsigned i, k;
@@ -145,7 +146,7 @@ static void FmoGenerateType3MapUnitMap (VideoParameters *p_Vid, unsigned PicSize
 }
 //}}}
 //{{{
-static void FmoGenerateType4MapUnitMap (VideoParameters *p_Vid, unsigned PicSizeInMapUnits, Slice *currSlice) {
+static void FmoGenerateType4MapUnitMap (VideoParameters *p_Vid, unsigned PicSizeInMapUnits, Slice* currSlice) {
 // Generate raster scan slice group map type MapUnit map (type 4)
 
   pic_parameter_set_rbsp_t* pps = p_Vid->active_pps;
@@ -165,7 +166,7 @@ static void FmoGenerateType4MapUnitMap (VideoParameters *p_Vid, unsigned PicSize
 //}}}
 //{{{
 // Generate wipe slice group map type MapUnit map (type 5) *
-static void FmoGenerateType5MapUnitMap (VideoParameters *p_Vid, unsigned PicSizeInMapUnits, Slice *currSlice )
+static void FmoGenerateType5MapUnitMap (VideoParameters *p_Vid, unsigned PicSizeInMapUnits, Slice* currSlice )
 {
   pic_parameter_set_rbsp_t* pps = p_Vid->active_pps;
 
@@ -194,7 +195,7 @@ static void FmoGenerateType6MapUnitMap (VideoParameters *p_Vid, unsigned PicSize
   }
 //}}}
 //{{{
-static int FmoGenerateMapUnitToSliceGroupMap (VideoParameters *p_Vid, Slice *currSlice) {
+static int FmoGenerateMapUnitToSliceGroupMap (VideoParameters *p_Vid, Slice* currSlice) {
 // Generates p_Vid->MapUnitToSliceGroupMap
 // Has to be called every time a new Picture Parameter Set is used
 

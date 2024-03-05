@@ -13,4 +13,4 @@ extern void MakePPSavailable (VideoParameters *p_Vid, int id, pic_parameter_set_
 extern void ProcessPPS (VideoParameters *p_Vid, NALU_t *nalu);
 extern void CleanUpPPS (VideoParameters *p_Vid);
 
-extern void UseParameterSet (Slice *currSlice);
+extern void UseParameterSet (Slice* currSlice);

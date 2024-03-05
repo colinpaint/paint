@@ -20,10 +20,11 @@
 //}}}
 //{{{
 #include "global.h"
-#include "mbuffer.h"
 #include "memalloc.h"
+
+#include "mbuffer.h"
 #include "image.h"
-#include "mc_prediction.h"
+#include "mcPrediction.h"
 #include "macroblock.h"
 #include "erc.h"
 //}}}
@@ -225,10 +226,10 @@ static void pixMeanInterpolateBlock (VideoParameters *p_Vid, imgpel *src[], imgp
  *      2 for Y, 1 for U/V components
  ************************************************************************
  */
-static void ercPixConcealIMB (VideoParameters *p_Vid, imgpel *currFrame, int row, int column, int predBlocks[], int frameWidth, int mbWidthInBlocks)
+static void ercPixConcealIMB (VideoParameters *p_Vid, imgpel* currFrame, int row, int column, int predBlocks[], int frameWidth, int mbWidthInBlocks)
 {
    imgpel *src[8]={NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL};
-   imgpel *currBlock = NULL;
+   imgpel* currBlock = NULL;
 
    // collect the reliable neighboring blocks
    if (predBlocks[0])
@@ -699,7 +700,7 @@ static int edgeDistortion (int predBlocks[], int currYBlockNum, imgpel *predMB,
                            imgpel *recY, int picSizeX, int regionSize)
 {
   int i, j, distortion, numOfPredBlocks, threshold = ERC_BLOCK_OK;
-  imgpel *currBlock = NULL, *neighbor = NULL;
+  imgpel* currBlock = NULL, *neighbor = NULL;
   int currBlockOffset = 0;
 
   currBlock = recY + (yPosYBlock(currYBlockNum,picSizeX)<<3)*picSizeX + (xPosYBlock(currYBlockNum,picSizeX)<<3);
@@ -796,7 +797,7 @@ static void buildPredRegionYUV (VideoParameters *p_Vid, int *mv, int x, int y, i
   int vec1_x=0,vec1_y=0;
   int ioff,joff;
   imgpel *pMB = predMB;
-  Slice *currSlice;// = p_Vid->currentSlice;
+  Slice* currSlice;// = p_Vid->currentSlice;
   StorablePicture *dec_picture = p_Vid->dec_picture;
   int ii0,jj0,ii1,jj1,if1,jf1,if0,jf0;
   int mv_mul;
@@ -810,7 +811,7 @@ static void buildPredRegionYUV (VideoParameters *p_Vid, int *mv, int x, int y, i
   int mb_nr = y/16*(p_Vid->width/16)+x/16; ///currSlice->current_mb_nr;
   int **tmp_res = NULL;
 
-  Macroblock *currMB = &p_Vid->mb_data[mb_nr];   // intialization code deleted, see below, StW
+  Macroblock* currMB = &p_Vid->mb_data[mb_nr];   // intialization code deleted, see below, StW
   currSlice = currMB->p_Slice;
   tmp_res = currSlice->tmp_res;
 
@@ -998,7 +999,7 @@ static void copyBetweenFrames (frame *recfr, int currYBlockNum, int picSizeX, in
 static int concealByCopy (frame *recfr, int currMBNum,
                          objectBuffer_t *object_list, int picSizeX)
 {
-  objectBuffer_t *currRegion;
+  objectBuffer_t* currRegion;
 
   currRegion = object_list+(currMBNum<<2);
   currRegion->regionMode = REGMODE_INTER_COPY;
@@ -1052,7 +1053,7 @@ static int concealByTrial (frame *recfr, imgpel *predMB,
       threshold = ERC_BLOCK_OK,
       minDist, currDist, i, k;
   int regionSize;
-  objectBuffer_t *currRegion;
+  objectBuffer_t* currRegion;
   int mvBest[3] = {0, 0, 0}, mvPred[3] = {0, 0, 0}, *mvptr;
 
   numMBPerLine = (int) (picSizeX>>4);
@@ -1405,8 +1406,8 @@ static void buildPredblockRegionYUV (VideoParameters *p_Vid, int *mv,
   int ref_frame = mv[2];
   int mb_nr = current_mb_nr;
 
-  Macroblock *currMB = &p_Vid->mb_data[mb_nr];   // intialization code deleted, see below, StW
-  Slice *currSlice = currMB->p_Slice;
+  Macroblock* currMB = &p_Vid->mb_data[mb_nr];   // intialization code deleted, see below, StW
+  Slice* currSlice = currMB->p_Slice;
 
   get_mem2Dpel(&tmp_block, MB_BLOCK_SIZE, MB_BLOCK_SIZE);
 
@@ -1793,7 +1794,7 @@ static void update_ref_list_for_concealment (DecodedPictureBuffer *p_Dpb) {
 static void delete_list (VideoParameters *p_Vid, struct concealment_node *ptr ) {
 
 
-  if ( p_Vid->concealment_head == NULL ) 
+  if ( p_Vid->concealment_head == NULL )
     return;
 
   struct concealment_node *temp;
@@ -2179,7 +2180,7 @@ void ercInit (VideoParameters *p_Vid, int pic_sizex, int pic_sizey, int flag) {
 
   ercClose(p_Vid, p_Vid->erc_errorVar);
   p_Vid->erc_object_list = (objectBuffer_t*)calloc ((pic_sizex * pic_sizey) >> 6, sizeof(objectBuffer_t));
-  if (p_Vid->erc_object_list == NULL) 
+  if (p_Vid->erc_object_list == NULL)
     no_mem_exit ("ercInit: erc_object_list");
 
   // the error concealment instance is allocated
@@ -2238,7 +2239,7 @@ void ercReset (ercVariables_t *errorVar, int nOfMBs, int numOfSegments, int picS
     if (errorVar->yCondition == NULL) {
       //{{{  allocate conditions, first frame, or frame size is changed)
       errorVar->segments = (ercSegment_t*)malloc (numOfSegments*sizeof(ercSegment_t) );
-      if ( errorVar->segments == NULL) 
+      if ( errorVar->segments == NULL)
         no_mem_exit ("ercReset: errorVar->segments");
       memset (errorVar->segments, 0, numOfSegments*sizeof(ercSegment_t));
       errorVar->nOfSegments = numOfSegments;

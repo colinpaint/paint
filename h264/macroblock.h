@@ -132,16 +132,16 @@ static const unsigned char cofuv_blk_y[3][8][4] =
 };
 //}}}
 
-extern void set_read_comp_coeff_cabac (Macroblock *currMB);
-extern void set_read_comp_coeff_cavlc (Macroblock *currMB);
+extern void set_read_comp_coeff_cabac (Macroblock* currMB);
+extern void set_read_comp_coeff_cavlc (Macroblock* currMB);
 
-extern void setup_slice_methods (Slice *currSlice);
-extern void setup_slice_methods_mbaff(Slice *currSlice);
+extern void setup_slice_methods (Slice* currSlice);
+extern void setup_slice_methods_mbaff (Slice* currSlice);
 
-extern void get_neighbors(Macroblock *currMB, PixelPos *block, int mb_x, int mb_y, int blockshape_x);
+extern void get_neighbors (Macroblock* currMB, PixelPos *block, int mb_x, int mb_y, int blockshape_x);
 
-extern void start_macroblock (Slice *currSlice, Macroblock **currMB);
-extern int  decode_one_macroblock(Macroblock *currMB, StorablePicture *dec_picture);
-extern Boolean  exit_macroblock (Slice *currSlice, int eos_bit);
+extern void start_macroblock (Slice* currSlice, Macroblock **currMB);
+extern int  decode_one_macroblock (Macroblock* currMB, StorablePicture *dec_picture);
+extern Boolean  exit_macroblock (Slice* currSlice, int eos_bit);
 
-extern void update_qp (Macroblock *currMB, int qp);
+extern void update_qp (Macroblock* currMB, int qp);

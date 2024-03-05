@@ -22,6 +22,7 @@
 //{{{  includes
 #include "global.h"
 #include "memalloc.h"
+
 #include "biaridecod.h"
 //}}}
 
@@ -106,7 +107,7 @@ unsigned int biari_decode_symbol (DecodingEnvironment *dep, BiContextType *bi_ct
 
   *range -= rLPS;
 
-  if (*value < (*range << *DbitsLeft)) {  
+  if (*value < (*range << *DbitsLeft)) {
     // MPS
     *state = AC_next_state_MPS_64[*state]; // next state
     if( *range >= QUARTER )

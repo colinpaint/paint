@@ -16,8 +16,9 @@
 //}}}
 //{{{
 #include "global.h"
-#include "vlc.h"
 #include "elements.h"
+
+#include "vlc.h"
 //}}}
 
 // A little trick to avoid those horrible #if TRACE all over the source code

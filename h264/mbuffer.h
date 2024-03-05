@@ -288,7 +288,7 @@ static inline int is_long_ref(StorablePicture *s)
 //}}}
 
 extern void gen_pic_list_from_frame_list (PictureStructure currStructure, FrameStore **fs_list, int list_idx, StorablePicture **list, char *list_size, int long_term);
-extern StorablePicture* get_long_term_pic (Slice *currSlice, DecodedPictureBuffer *p_Dpb, int LongtermPicNum);
+extern StorablePicture* get_long_term_pic (Slice* currSlice, DecodedPictureBuffer *p_Dpb, int LongtermPicNum);
 
 extern void update_ref_list (DecodedPictureBuffer *p_Dpb);
 extern void update_ltref_list (DecodedPictureBuffer *p_Dpb);
@@ -312,31 +312,31 @@ extern void free_frame_store (FrameStore* f);
 extern StorablePicture*  alloc_storable_picture (VideoParameters *p_Vid, PictureStructure type, int size_x, int size_y, int size_x_cr, int size_y_cr, int is_output);
 extern void free_storable_picture (StorablePicture* p);
 extern void store_picture_in_dpb (DecodedPictureBuffer *p_Dpb, StorablePicture* p);
-extern StorablePicture*  get_short_term_pic (Slice *currSlice, DecodedPictureBuffer *p_Dpb, int picNum);
+extern StorablePicture*  get_short_term_pic (Slice* currSlice, DecodedPictureBuffer *p_Dpb, int picNum);
 
 extern void unmark_for_reference( FrameStore* fs);
 extern void unmark_for_long_term_reference (FrameStore* fs);
 extern void remove_frame_from_dpb (DecodedPictureBuffer *p_Dpb, int pos);
 
 extern void flush_dpb(DecodedPictureBuffer *p_Dpb);
-extern void init_lists_p_slice (Slice *currSlice);
-extern void init_lists_b_slice (Slice *currSlice);
-extern void init_lists_i_slice (Slice *currSlice);
-extern void update_pic_num (Slice *currSlice);
+extern void init_lists_p_slice (Slice* currSlice);
+extern void init_lists_b_slice (Slice* currSlice);
+extern void init_lists_i_slice (Slice* currSlice);
+extern void update_pic_num (Slice* currSlice);
 
 extern void dpb_split_field (VideoParameters *p_Vid, FrameStore *fs);
 extern void dpb_combine_field (VideoParameters *p_Vid, FrameStore *fs);
 extern void dpb_combine_field_yuv (VideoParameters *p_Vid, FrameStore *fs);
 
-extern void reorder_ref_pic_list (Slice *currSlice, int cur_list);
+extern void reorder_ref_pic_list (Slice* currSlice, int cur_list);
 
-extern void init_mbaff_lists (VideoParameters *p_Vid, Slice *currSlice);
-extern void alloc_ref_pic_list_reordering_buffer (Slice *currSlice);
-extern void free_ref_pic_list_reordering_buffer (Slice *currSlice);
+extern void init_mbaff_lists (VideoParameters *p_Vid, Slice* currSlice);
+extern void alloc_ref_pic_list_reordering_buffer (Slice* currSlice);
+extern void free_ref_pic_list_reordering_buffer (Slice* currSlice);
 
 extern void fill_frame_num_gap (VideoParameters *p_Vid, Slice *pSlice);
 
-extern void compute_colocated (Slice *currSlice, StorablePicture **listX[6]);
+extern void compute_colocated (Slice* currSlice, StorablePicture **listX[6]);
 
 extern int init_img_data (VideoParameters *p_Vid, ImageData *p_ImgData, seq_parameter_set_rbsp_t *sps);
 extern void free_img_data (VideoParameters *p_Vid, ImageData *p_ImgData);

@@ -1,5 +1,4 @@
 #pragma once
-
 #include "global.h"
 #include "mbuffer.h"
 

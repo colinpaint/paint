@@ -1,10 +1,10 @@
 #pragma once
 #define _CRT_SECURE_NO_WARNINGS
-# include <fcntl.h>
-# include <stdlib.h>
-# include <stdio.h>
-# include <string.h>
-# include <assert.h>
+#include <fcntl.h>
+#include <stdlib.h>
+#include <stdio.h>
+#include <string.h>
+#include <assert.h>
 
 #if defined(WIN32) || defined (WIN64)
   //{{{  windows

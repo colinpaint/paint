@@ -13,23 +13,24 @@
  */
 //}}}
 //{{{
-#include "block.h"
 #include "global.h"
-#include "mbuffer.h"
 #include "elements.h"
+
+#include "block.h"
+#include "mbuffer.h"
 #include "errorconcealment.h"
 #include "macroblock.h"
 #include "fmo.h"
 #include "cabac.h"
 #include "vlc.h"
 #include "image.h"
-#include "mb_access.h"
+#include "mbAccess.h"
 #include "biaridecod.h"
 #include "transform8x8.h"
 #include "transform.h"
-#include "mc_prediction.h"
+#include "mcPrediction.h"
 #include "quant.h"
-#include "mb_prediction.h"
+#include "mbPrediction.h"
 //}}}
 extern int get_colocated_info_8x8 (Macroblock* currMB, StorablePicture *list1, int i, int j);
 extern int get_colocated_info_4x4 (Macroblock* currMB, StorablePicture *list1, int i, int j);

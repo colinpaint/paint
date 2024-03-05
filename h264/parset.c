@@ -14,11 +14,12 @@
 //}}}
 //{{{  includes
 #include "global.h"
+#include "memalloc.h"
+
 #include "image.h"
 #include "parsetcommon.h"
 #include "parset.h"
 #include "nalu.h"
-#include "memalloc.h"
 #include "fmo.h"
 #include "cabac.h"
 #include "vlc.h"

@@ -14,8 +14,9 @@
 //}}}
 //{{{
 #include "global.h"
-#include "nalu.h"
 #include "memalloc.h"
+
+#include "nalu.h"
 //}}}
 static const int kDebug = 0;
 

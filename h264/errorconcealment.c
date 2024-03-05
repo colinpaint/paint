@@ -29,10 +29,8 @@
  ***********************************************************************
  */
 //}}}
-//{{{  includes
 #include "global.h"
 #include "elements.h"
-//}}}
 
 //{{{
 int set_ec_flag (VideoParameters* p_Vid, int se) {

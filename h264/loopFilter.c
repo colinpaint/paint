@@ -22,8 +22,9 @@
 //}}}
 //{{{
 #include "global.h"
+
 #include "image.h"
-#include "mb_access.h"
+#include "mbAccess.h"
 #include "loopfilter.h"
 //}}}
 //{{{  defines
@@ -70,7 +71,7 @@ static const byte CLIP_TAB[52][5]  =
 //}}}
 //{{{
 //[dir][edge][yuv_format]
-static const char chroma_edge[2][4][4] = 
+static const char chroma_edge[2][4][4] =
 { { {-4, 0, 0, 0},
     {-4,-4,-4, 4},
     {-4, 4, 4, 8},
@@ -82,7 +83,7 @@ static const char chroma_edge[2][4][4] =
     {-4,-4, 12, 12}}};
 //}}}
 //{{{
-static const int pelnum_cr[2][4] =  { 
+static const int pelnum_cr[2][4] =  {
   {0,8,16,16}, {0,8, 8,16}};  //[dir:0=vert, 1=hor.][yuv_format]
 //}}}
 //{{{
@@ -1023,7 +1024,7 @@ static void perform_db_mbaff (VideoParameters *p_Vid, StorablePicture *p, int Mb
 
     imgpel     **imgY = p->imgY;
     imgpel   ***imgUV = p->imgUV;
-    Slice  *currSlice = MbQ->p_Slice;
+    Slice * currSlice = MbQ->p_Slice;
     int       mvlimit = ((p->structure!=FRAME) || (p->mb_aff_frame_flag && MbQ->mb_field)) ? 2 : 4;
 
     seq_parameter_set_rbsp_t *active_sps = p_Vid->active_sps;
@@ -1203,7 +1204,7 @@ static void set_loop_filter_functions_mbaff (VideoParameters *p_Vid)
 static void get_strength_ver (Macroblock *MbQ, int edge, int mvlimit, StorablePicture *p)
 {
   byte *Strength = MbQ->strength_ver[edge];
-  Slice *currSlice = MbQ->p_Slice;
+  Slice* currSlice = MbQ->p_Slice;
   int     StrValue, i;
   BlockPos *PicPos = MbQ->p_Vid->PicPos;
 
@@ -1335,7 +1336,7 @@ static void get_strength_hor (Macroblock *MbQ, int edge, int mvlimit, StorablePi
 {
   byte  *Strength = MbQ->strength_hor[edge];
   int    StrValue, i;
-  Slice *currSlice = MbQ->p_Slice;
+  Slice* currSlice = MbQ->p_Slice;
   BlockPos *PicPos = MbQ->p_Vid->PicPos;
 
   if ((currSlice->slice_type==SP_SLICE)||(currSlice->slice_type==SI_SLICE) )
@@ -1506,7 +1507,7 @@ static void get_db_strength_normal (VideoParameters *p_Vid, StorablePicture *p, 
       int           filterLeftMbEdgeFlag;
       int           filterTopMbEdgeFlag;
 
-      Slice  *currSlice = MbQ->p_Slice;
+      Slice * currSlice = MbQ->p_Slice;
       int       mvlimit = (p->structure!=FRAME) ? 2 : 4;
 
       MbQ->DeblockCall = 1;
@@ -2183,7 +2184,7 @@ static void edge_loop_chroma_hor (imgpel** Img, byte *Strength, Macroblock *MbQ,
 static void perform_db_dep_normal (Macroblock *MbQ, StorablePicture *p)
 {
   VideoParameters *p_Vid = MbQ->p_Vid;
-  Slice  *currSlice = MbQ->p_Slice;
+  Slice * currSlice = MbQ->p_Slice;
   int           edge;
 
   short         mb_x, mb_y;
@@ -2329,7 +2330,7 @@ static void perform_db_dep_normal (Macroblock *MbQ, StorablePicture *p)
 static void perform_db_ind_normal (Macroblock *MbQ, StorablePicture *p)
 {
   VideoParameters *p_Vid = MbQ->p_Vid;
-  Slice  *currSlice = MbQ->p_Slice;
+  Slice * currSlice = MbQ->p_Slice;
   //short         mb_x, mb_y;
 
   int           filterLeftMbEdgeFlag;
@@ -2720,7 +2721,7 @@ static void DeblockMb (VideoParameters *p_Vid, StorablePicture *p, int MbQAddr) 
 
     imgpel     **imgY = p->imgY;
     imgpel   ***imgUV = p->imgUV;
-    Slice  *currSlice = MbQ->p_Slice;
+    Slice * currSlice = MbQ->p_Slice;
     int       mvlimit = ((p->structure!=FRAME) || (p->mb_aff_frame_flag && MbQ->mb_field)) ? 2 : 4;
     seq_parameter_set_rbsp_t* active_sps = p_Vid->active_sps;
 
@@ -2879,7 +2880,7 @@ static void get_db_strength (VideoParameters *p_Vid, StorablePicture *p, int MbQ
     int           filterLeftMbEdgeFlag;
     int           filterTopMbEdgeFlag;
 
-    Slice  *currSlice = MbQ->p_Slice;
+    Slice * currSlice = MbQ->p_Slice;
     int       mvlimit = ((p->structure!=FRAME) || (p->mb_aff_frame_flag && MbQ->mb_field)) ? 2 : 4;
     seq_parameter_set_rbsp_t *active_sps = p_Vid->active_sps;
 
@@ -2978,7 +2979,7 @@ static void perform_db (VideoParameters *p_Vid, StorablePicture *p, int MbQAddr)
     int           edge_cr;
     imgpel     **imgY = p->imgY;
     imgpel   ***imgUV = p->imgUV;
-    Slice  *currSlice = MbQ->p_Slice;
+    Slice * currSlice = MbQ->p_Slice;
     int       mvlimit = ((p->structure!=FRAME) || (p->mb_aff_frame_flag && MbQ->mb_field)) ? 2 : 4;
     seq_parameter_set_rbsp_t *active_sps = p_Vid->active_sps;
 
@@ -3138,7 +3139,7 @@ static void init_neighbors (VideoParameters *p_Vid) {
   int width = p_Vid->PicWidthInMbs;
   int height = p_Vid->PicHeightInMbs;
   int size = p_Vid->PicSizeInMbs;
-  Macroblock *currMB = &p_Vid->mb_data[0];
+  Macroblock* currMB = &p_Vid->mb_data[0];
 
   // do the top left corner
   currMB->mbup = NULL;

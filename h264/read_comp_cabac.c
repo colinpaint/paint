@@ -15,6 +15,7 @@
 //{{{
 #include "global.h"
 #include "elements.h"
+
 #include "macroblock.h"
 #include "cabac.h"
 #include "vlc.h"

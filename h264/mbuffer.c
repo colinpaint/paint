@@ -23,11 +23,12 @@
 #include <limits.h>
 
 #include "global.h"
+#include "memalloc.h"
+
 #include "erc.h"
 #include "sliceHeader.h"
 #include "image.h"
 #include "mbuffer.h"
-#include "memalloc.h"
 #include "output.h"
 //}}}
 #define MAX_LIST_SIZE 33

@@ -4,6 +4,7 @@
   #define static
   #define inline
 #endif
+
 #include <math.h>
 #include <limits.h>
 
@@ -385,3 +386,4 @@ static inline int is_intra_mb(short mb_type)
   #undef static
   #undef inline
 #endif
+//}}}

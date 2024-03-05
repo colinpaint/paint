@@ -17,12 +17,13 @@
 //}}}
 //{{{
 #include "global.h"
-#include "block.h"
-#include "mc_prediction.h"
-#include "mbuffer.h"
-#include "mb_access.h"
-#include "macroblock.h"
 #include "memalloc.h"
+
+#include "block.h"
+#include "mcPrediction.h"
+#include "mbuffer.h"
+#include "mbAccess.h"
+#include "macroblock.h"
 //}}}
 
 //{{{

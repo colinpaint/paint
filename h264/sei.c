@@ -15,11 +15,13 @@
 //}}}
 //{{{
 #include <math.h>
+
 #include "global.h"
 #include "memalloc.h"
+
 #include "sei.h"
 #include "vlc.h"
-#include "header.h"
+#include "sliceHeader.h"
 #include "mbuffer.h"
 #include "parset.h"
 //}}}
@@ -146,7 +148,7 @@ static void interpret_spare_pic (byte* payload, int size, VideoParameters *p_Vid
 
   get_mem3D (&map, num_spare_pics, p_Vid->height >> 4, p_Vid->width >> 4);
   for (int i = 0; i < num_spare_pics; i++) {
-    if (i == 0) { 
+    if (i == 0) {
       CandidateSpareFrameNum = target_frame_num - 1;
       if (CandidateSpareFrameNum < 0)
         CandidateSpareFrameNum = MAX_FN - 1;
@@ -202,7 +204,7 @@ static void interpret_spare_pic (byte* payload, int size, VideoParameters *p_Vid
             // go to the next mb:
             if ( directx == -1 && directy == 0 ) {
               //{{{
-              if (x > left) 
+              if (x > left)
                 x--;
               else if (x == 0) {
                 y = bottom + 1;
@@ -220,7 +222,7 @@ static void interpret_spare_pic (byte* payload, int size, VideoParameters *p_Vid
               //}}}
             else if ( directx == 1 && directy == 0 ) {
               //{{{
-              if (x < right) 
+              if (x < right)
                 x++;
               else if (x == (p_Vid->width >> 4) - 1) {
                 y = top - 1;
@@ -238,7 +240,7 @@ static void interpret_spare_pic (byte* payload, int size, VideoParameters *p_Vid
               //}}}
             else if ( directx == 0 && directy == -1 ) {
               //{{{
-              if ( y > top) 
+              if ( y > top)
                 y--;
               else if (y == 0) {
                 x = left - 1;
@@ -256,7 +258,7 @@ static void interpret_spare_pic (byte* payload, int size, VideoParameters *p_Vid
               //}}}
             else if ( directx == 0 && directy == 1 ) {
               //{{{
-              if (y < bottom) 
+              if (y < bottom)
                 y++;
               else if (y == (p_Vid->height >> 4) - 1) {
                 x = right+1;
@@ -282,7 +284,7 @@ static void interpret_spare_pic (byte* payload, int size, VideoParameters *p_Vid
         break;
       //}}}
       }
-    } 
+    }
 
   free_mem3D (map);
   free (buf);

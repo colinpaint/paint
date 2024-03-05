@@ -876,12 +876,10 @@ static inline int is_BL_profile (unsigned int profile_idc) {
   extern "C" {
 #endif
 //}}}
-  extern DecoderParams  *gDecoder;
+  extern DecoderParams* gDecoder;
 
-  // prototypes
   extern void error (char* text, int code);
 
-  // dynamic mem allocation
   extern int init_global_buffers (VideoParameters *p_Vid, int layer_id );
   extern void free_global_buffers (VideoParameters *p_Vid);
   extern void free_layer_buffers (VideoParameters *p_Vid, int layer_id );
@@ -901,7 +899,7 @@ static inline int is_BL_profile (unsigned int profile_idc) {
   extern DecodedPicList* get_one_avail_dec_pic_from_list (DecodedPicList *pDecPicList, int b3D, int view_id);
 
   extern Slice* malloc_slice (InputParameters *p_Inp, VideoParameters *p_Vid );
-  extern void copy_slice_info (Slice *currSlice, OldSliceParams *p_old_slice );
+  extern void copy_slice_info (Slice* currSlice, OldSliceParams *p_old_slice );
 
   extern void OpenOutputFiles (VideoParameters *p_Vid, int view0_id, int view1_id);
   extern void set_global_coding_par (VideoParameters *p_Vid, CodingParameters *cps);

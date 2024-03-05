@@ -21,12 +21,13 @@
 #include <math.h>
 
 #include "global.h"
+#include "memalloc.h"
+
 #include "block.h"
 #include "image.h"
-#include "mb_access.h"
+#include "mbAccess.h"
 #include "transform.h"
 #include "quant.h"
-#include "memalloc.h"
 //}}}
 
 //{{{
@@ -88,7 +89,7 @@ void itrans4x4_ls (Macroblock* currMB, ColorPlane pl, int ioff, int joff) {
 void Inv_Residual_trans_4x4 (Macroblock* currMB, ColorPlane pl, int ioff, int joff) {
 
   int temp[4][4];
-  Slice *currSlice = currMB->p_Slice;
+  Slice* currSlice = currMB->p_Slice;
   imgpel** mb_pred = currSlice->mb_pred[pl];
   imgpel** mb_rec = currSlice->mb_rec[pl];
   int** mb_rres = currSlice->mb_rres[pl];
@@ -139,7 +140,7 @@ void Inv_Residual_trans_4x4 (Macroblock* currMB, ColorPlane pl, int ioff, int jo
 //{{{
 void Inv_Residual_trans_8x8 (Macroblock* currMB, ColorPlane pl, int ioff, int joff) {
 
-  Slice *currSlice = currMB->p_Slice;
+  Slice* currSlice = currMB->p_Slice;
   int temp[8][8];
   imgpel **mb_pred = currSlice->mb_pred[pl];
   imgpel **mb_rec  = currSlice->mb_rec[pl];
@@ -200,7 +201,7 @@ void Inv_Residual_trans_8x8 (Macroblock* currMB, ColorPlane pl, int ioff, int jo
 void Inv_Residual_trans_16x16 (Macroblock* currMB, ColorPlane pl) {
 
   int temp[16][16];
-  Slice *currSlice = currMB->p_Slice;
+  Slice* currSlice = currMB->p_Slice;
   imgpel **mb_pred = currSlice->mb_pred[pl];
   imgpel **mb_rec  = currSlice->mb_rec[pl];
   int    **mb_rres = currSlice->mb_rres[pl];
@@ -281,7 +282,7 @@ void Inv_Residual_trans_Chroma (Macroblock* currMB, int uv) {
 //{{{
 void itrans_2 (Macroblock* currMB, ColorPlane pl) {
 
-  Slice *currSlice = currMB->p_Slice;
+  Slice* currSlice = currMB->p_Slice;
   VideoParameters *p_Vid = currMB->p_Vid;
 
   int transform_pl = (p_Vid->separate_colour_plane_flag != 0) ? PLANE_Y : pl;
@@ -383,7 +384,7 @@ void itrans_sp (Macroblock* currMB, ColorPlane pl, int ioff, int joff) {
 //{{{
 void itrans_sp_cr (Macroblock* currMB, int uv) {
 
-  Slice *currSlice = currMB->p_Slice;
+  Slice* currSlice = currMB->p_Slice;
   VideoParameters *p_Vid = currMB->p_Vid;
   int mp1[BLOCK_SIZE];
   imgpel** mb_pred = currSlice->mb_pred[uv + 1];
