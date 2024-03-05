@@ -9,9 +9,9 @@ static const int kDebug = 0;
 //{{{
 int read_ue_v (char* tracestring, Bitstream* bitstream) {
 
-  SyntaxElement symbol = {.value1=0 };
+  SyntaxElement symbol = {.value1 = 0 };
   symbol.type = SE_HEADER;
-  symbol.mapping = linfo_ue;   // Mapping rule
+  symbol.mapping = linfo_ue;
   readSyntaxElement_VLC (&symbol, bitstream);
 
   if (kDebug)
@@ -25,7 +25,7 @@ int read_se_v (char* tracestring, Bitstream* bitstream) {
 
   SyntaxElement symbol = {.value1 = 0 };
   symbol.type = SE_HEADER;
-  symbol.mapping = linfo_se;   // Mapping rule: signed integer
+  symbol.mapping = linfo_se;
   readSyntaxElement_VLC (&symbol, bitstream);
 
   if (kDebug)
@@ -37,10 +37,10 @@ int read_se_v (char* tracestring, Bitstream* bitstream) {
 //{{{
 int read_u_v (int LenInBits, char* tracestring, Bitstream* bitstream) {
 
-  SyntaxElement symbol = {.value1=0 };
+  SyntaxElement symbol = {.value1 = 0 };
   symbol.inf = 0;
   symbol.type = SE_HEADER;
-  symbol.mapping = linfo_ue;   // Mapping rule
+  symbol.mapping = linfo_ue;
   symbol.len = LenInBits;
   readSyntaxElement_FLC (&symbol, bitstream);
 
@@ -53,10 +53,10 @@ int read_u_v (int LenInBits, char* tracestring, Bitstream* bitstream) {
 //{{{
 int read_i_v (int LenInBits, char* tracestring, Bitstream* bitstream) {
 
-  SyntaxElement symbol = {.value1=0 };
+  SyntaxElement symbol = {.value1 = 0 };
   symbol.inf = 0;
   symbol.type = SE_HEADER;
-  symbol.mapping = linfo_ue;   // Mapping rule
+  symbol.mapping = linfo_ue;
   symbol.len = LenInBits;
   readSyntaxElement_FLC (&symbol, bitstream);
 
@@ -71,7 +71,7 @@ int read_i_v (int LenInBits, char* tracestring, Bitstream* bitstream) {
 //}}}
 //{{{
 Boolean read_u_1 (char* tracestring, Bitstream* bitstream) {
-  return (Boolean) read_u_v (1, tracestring, bitstream);
+  return (Boolean)read_u_v (1, tracestring, bitstream);
   }
 //}}}
 
@@ -203,7 +203,7 @@ int readSyntaxElement_Intra4x4PredictionMode (SyntaxElement* sym, Bitstream* cur
   }
 //}}}
 //{{{
-int GetVLCSymbol_IntraMode (byte buffer[],int totbitoffset,int* info, int bytecount) {
+int GetVLCSymbol_IntraMode (byte buffer[], int totbitoffset,int* info, int bytecount) {
 
   int byteoffset = (totbitoffset >> 3);        // byte from start of buffer
   int bitoffset   = (7 - (totbitoffset & 0x07)); // bit from start of byte
@@ -255,7 +255,7 @@ int more_rbsp_data (byte buffer[], int totbitoffset,int bytecount) {
   }
 //}}}
 //{{{
-int uvlc_startcode_follows(sSlice* currSlice, int dummy) {
+int uvlc_startcode_follows (sSlice* currSlice, int dummy) {
 
   byte dp_Nr = assignSE2partition[currSlice->dp_mode][SE_MBTYPE];
   sDataPartition* dP = &(currSlice->partArr[dp_Nr]);
