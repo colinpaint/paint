@@ -97,7 +97,6 @@ static void insert_picture_in_dpb (sVidParam* vidParam, sFrameStore* fs, sPictur
           }
         }
 
-      fs->layer_id = p->layer_id;
       // generate field views
       dpb_split_field(vidParam, fs);
       break;
@@ -106,7 +105,6 @@ static void insert_picture_in_dpb (sVidParam* vidParam, sFrameStore* fs, sPictur
     case TOP_FIELD:
       fs->top_field = p;
       fs->is_used |= 1;
-      fs->layer_id = p->layer_id;
 
       if (p->used_for_reference) {
         fs->is_reference |= 1;
@@ -129,7 +127,6 @@ static void insert_picture_in_dpb (sVidParam* vidParam, sFrameStore* fs, sPictur
     case BOTTOM_FIELD:
       fs->bottom_field = p;
       fs->is_used |= 2;
-      fs->layer_id = p->layer_id;
 
       if (p->used_for_reference) {
         fs->is_reference |= 2;
@@ -987,7 +984,6 @@ void init_dpb (sVidParam* vidParam, sDPB* dpb, int type) {
     dpb->fs[i]       = alloc_frame_store();
     dpb->fs_ref[i]   = NULL;
     dpb->fs_ltref[i] = NULL;
-    dpb->fs[i]->layer_id = MVC_INIT_VIEW_ID;
     }
 
  /* allocate a dummy storable picture */

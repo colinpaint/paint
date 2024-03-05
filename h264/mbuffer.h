@@ -12,7 +12,7 @@ typedef struct pic_motion_params_old {
 //{{{
 //! definition of pic motion parameters
 typedef struct pic_motion_params {
-  struct storable_picture *ref_pic[2];  //!< referrence picture pointer
+  struct storablePicture *ref_pic[2];  //!< referrence picture pointer
   MotionVector             mv[2];       //!< motion vector
   char                     ref_idx[2];  //!< reference picture   [list][subblock_y][subblock_x]
   //byte                   mb_field;    //!< field macroblock indicator
@@ -21,7 +21,7 @@ typedef struct pic_motion_params {
 //}}}
 //{{{
 //! definition a picture (field or frame)
-typedef struct storable_picture {
+typedef struct storablePicture {
   sPictureStructure structure;
 
   int         poc;
@@ -60,9 +60,9 @@ typedef struct storable_picture {
   struct pic_motion_params_old  motion;
   struct pic_motion_params_old  JVmotion[MAX_PLANE]; // Motion info for 4:4:4 independent mode decoding
 
-  struct storable_picture* top_field;     // for mb aff, if frame for referencing the top field
-  struct storable_picture* bottom_field;  // for mb aff, if frame for referencing the bottom field
-  struct storable_picture* frame;         // for mb aff, if field for referencing the combined frame
+  struct storablePicture* top_field;     // for mb aff, if frame for referencing the top field
+  struct storablePicture* bottom_field;  // for mb aff, if frame for referencing the bottom field
+  struct storablePicture* frame;         // for mb aff, if field for referencing the combined frame
 
   int         slice_type;
   int         idr_flag;
@@ -94,14 +94,14 @@ typedef struct storable_picture {
   int iCodingType;
 
   char listXsize[MAX_NUM_SLICES][2];
-  struct storable_picture** listX[MAX_NUM_SLICES][2];
+  struct storablePicture** listX[MAX_NUM_SLICES][2];
   int         layer_id;
   } sPicture;
 //}}}
 typedef sPicture* StorablePicturePtr;
 //{{{
 //! Frame Stores for Decoded Picture Buffer
-typedef struct frame_store {
+typedef struct frameStore {
   int       is_used;                //!< 0=empty; 1=top; 2=bottom; 3=both fields (or frame)
   int       is_reference;           //!< 0=not used for ref; 1=top used; 2=bottom used; 3=both fields (or frame) used
   int       is_long_term;           //!< 0=not used for ref; 1=top used; 2=bottom used; 3=both fields (or frame) used
@@ -120,10 +120,9 @@ typedef struct frame_store {
   // picture error concealment
   int concealment_reference;
 
-  sPicture *frame;
-  sPicture *top_field;
-  sPicture *bottom_field;
-  int       layer_id;
+  sPicture* frame;
+  sPicture* top_field;
+  sPicture* bottom_field;
   } sFrameStore;
 //}}}
 //{{{

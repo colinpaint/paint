@@ -93,7 +93,7 @@ typedef BiContextType *BiContextTypePtr;
 #define NUM_TRANSFORM_SIZE_CTX 3
 //}}}
 // structures that will be declared somewhere else
-struct storable_picture;
+struct storablePicture;
 struct datapartition_dec;
 struct syntaxelement_dec;
 //{{{
@@ -429,7 +429,7 @@ typedef struct slice {
   DecRefPicMarking_t *dec_ref_pic_marking_buffer;                    //!< stores the memory management control operations
 
   char listXsize[6];
-  struct storable_picture** listX[6];
+  struct storablePicture** listX[6];
 
   sDataPartition       *partArr;      //!< array of partitions
   MotionInfoContexts  *mot_ctx;      //!< pointer to struct of context models for use in CABAC
@@ -498,13 +498,13 @@ typedef struct slice {
 
   int erc_mvperMB;
   sMacroblock *mb_data;
-  struct storable_picture* picture;
+  struct storablePicture* picture;
   int** siblock;
   byte** ipredmode;
   char  *intra_block;
   char  chroma_vector_adjustment[6][32];
   void (*read_CBP_and_coeffs_from_NAL) (sMacroblock *currMB);
-  int  (*decode_one_component     )    (sMacroblock *currMB, sColorPlane curPlane, sPixel** curPixel, struct storable_picture* picture);
+  int  (*decode_one_component     )    (sMacroblock *currMB, sColorPlane curPlane, sPixel** curPixel, struct storablePicture* picture);
   int  (*readSlice                )    (struct video_par *, struct inp_par *);
   int  (*nal_startcode_follows    )    (struct slice*, int );
   void (*read_motion_info_from_NAL)    (sMacroblock *currMB);
@@ -742,12 +742,12 @@ typedef struct video_par {
   int* qp_per_matrix;
   int* qp_rem_matrix;
 
-  struct frame_store* last_out_fs;
+  struct frameStore* last_out_fs;
   int pocs_in_dpb[100];
 
-  struct storable_picture* picture;
-  struct storable_picture* dec_picture_JV[MAX_PLANE];  //!< picture to be used during 4:4:4 independent mode decoding
-  struct storable_picture* no_reference_picture; //!< dummy storable picture for recovery point
+  struct storablePicture* picture;
+  struct storablePicture* dec_picture_JV[MAX_PLANE];  //!< picture to be used during 4:4:4 independent mode decoding
+  struct storablePicture* no_reference_picture; //!< dummy storable picture for recovery point
 
   // Error parameters
   struct object_buffer* erc_object_list;
@@ -756,9 +756,9 @@ typedef struct video_par {
   struct video_par* erc_img;
   int ec_flag[SE_MAX_ELEMENTS];        //!< array to set errorconcealment
 
-  struct frame_store* out_buffer;
+  struct frameStore* out_buffer;
 
-  struct storable_picture* pending_output;
+  struct storablePicture* pending_output;
   int    pending_output_state;
   int    recovery_flag;
 
@@ -772,12 +772,12 @@ typedef struct video_par {
 
   void (*getNeighbour)     (sMacroblock *currMB, int xN, int yN, int mb_size[2], PixelPos *pix);
   void (*get_mb_block_pos) (sBlockPos *PicPos, int mb_addr, short *x, short *y);
-  void (*GetStrengthVer)   (sMacroblock *MbQ, int edge, int mvlimit, struct storable_picture *p);
-  void (*GetStrengthHor)   (sMacroblock *MbQ, int edge, int mvlimit, struct storable_picture *p);
+  void (*GetStrengthVer)   (sMacroblock *MbQ, int edge, int mvlimit, struct storablePicture *p);
+  void (*GetStrengthHor)   (sMacroblock *MbQ, int edge, int mvlimit, struct storablePicture *p);
   void (*EdgeLoopLumaVer)  (sColorPlane pl, sPixel** Img, byte *Strength, sMacroblock *MbQ, int edge);
-  void (*EdgeLoopLumaHor)  (sColorPlane pl, sPixel** Img, byte *Strength, sMacroblock *MbQ, int edge, struct storable_picture *p);
-  void (*EdgeLoopChromaVer)(sPixel** Img, byte *Strength, sMacroblock *MbQ, int edge, int uv, struct storable_picture *p);
-  void (*EdgeLoopChromaHor)(sPixel** Img, byte *Strength, sMacroblock *MbQ, int edge, int uv, struct storable_picture *p);
+  void (*EdgeLoopLumaHor)  (sColorPlane pl, sPixel** Img, byte *Strength, sMacroblock *MbQ, int edge, struct storablePicture *p);
+  void (*EdgeLoopChromaVer)(sPixel** Img, byte *Strength, sMacroblock *MbQ, int edge, int uv, struct storablePicture *p);
+  void (*EdgeLoopChromaHor)(sPixel** Img, byte *Strength, sMacroblock *MbQ, int edge, int uv, struct storablePicture *p);
 
   ImageData tempData3;
   sDecodedPicList* pDecOuputPic;

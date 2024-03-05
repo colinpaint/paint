@@ -34,7 +34,7 @@ typedef enum {
   } NalRefIdc;
 //}}}
 //{{{
-//! NAL unit structure
+// struct sNalu 
 typedef struct nalu_t {
   int       startcodeprefix_len;   // 4 for parameter sets and first slice in picture, 3 for everything else (suggested)
   unsigned  len;                   // Length of the NAL unit (Excluding the start code, which does not belong to the NALU)
