@@ -72,7 +72,7 @@ static const byte CLIP_TAB[52][5]  = {
 //}}}
 //{{{
 //[dir][edge][yuv_format]
-static const char chroma_edge[2][4][4] = { 
+static const char chroma_edge[2][4][4] = {
   { {-4, 0, 0, 0},
     {-4,-4,-4, 4},
     {-4, 4, 4, 8},
@@ -85,7 +85,7 @@ static const char chroma_edge[2][4][4] = {
 //}}}
 //{{{
 static const int pelnum_cr[2][4] =  {
-  {0,8,16,16}, 
+  {0,8,16,16},
   {0,8, 8,16}};  //[dir:0=vert, 1=hor.][yuv_format]
 //}}}
 
@@ -2704,7 +2704,7 @@ static void set_loop_filter_functions_normal (sVidParam* vidParam)
 
 // loopfilter
 //{{{
-static void DeblockMb (sVidParam* vidParam, sPicture *p, int MbQAddr) {
+static void deblockMb (sVidParam* vidParam, sPicture *p, int MbQAddr) {
 
   sMacroblock* MbQ = &(vidParam->mb_data[MbQAddr]) ; // current Mb
 
@@ -3118,11 +3118,11 @@ static void perform_db (sVidParam* vidParam, sPicture *p, int MbQAddr) {
   }
 //}}}
 //{{{
-void DeblockPicture (sVidParam* vidParam, sPicture *p) {
+void deblockPicture (sVidParam* vidParam, sPicture *p) {
 
   if (p->mb_aff_frame_flag) {
     for (unsigned i = 0; i < p->PicSizeInMbs; ++i)
-      DeblockMb (vidParam, p, i ) ;
+      deblockMb (vidParam, p, i ) ;
     }
   else {
     for (unsigned i = 0; i < p->PicSizeInMbs; ++i)
@@ -3174,7 +3174,7 @@ static void init_neighbors (sVidParam* vidParam) {
   }
 //}}}
 //{{{
-void init_Deblock (sVidParam* vidParam, int mb_aff_frame_flag) {
+void initDeblock (sVidParam* vidParam, int mb_aff_frame_flag) {
 
   if (vidParam->yuv_format == YUV444 && vidParam->separate_colour_plane_flag) {
     change_plane_JV (vidParam, PLANE_Y, NULL);

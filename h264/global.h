@@ -50,11 +50,11 @@ typedef struct pix_pos {
 //! struct to characterize the state of the arithmetic coding engine
 //{{{  DecodingEnvironment
 typedef struct {
-  unsigned int    Drange;
-  unsigned int    Dvalue;
-  int             DbitsLeft;
-  byte            *Dcodestrm;
-  int             *Dcodestrm_len;
+  unsigned int Drange;
+  unsigned int Dvalue;
+  int DbitsLeft;
+  byte* Dcodestrm;
+  int* Dcodestrm_len;
   } DecodingEnvironment;
 typedef DecodingEnvironment *DecodingEnvironmentPtr;
 //}}}
@@ -118,15 +118,15 @@ typedef struct {
 //}}}
 //{{{  TextureInfoContexts
 typedef struct {
-  BiContextType  transform_size_contexts [NUM_TRANSFORM_SIZE_CTX];
-  BiContextType  ipr_contexts [NUM_IPR_CTX];
-  BiContextType  cipr_contexts[NUM_CIPR_CTX];
-  BiContextType  cbp_contexts [3][NUM_CBP_CTX];
-  BiContextType  bcbp_contexts[NUM_BLOCK_TYPES][NUM_BCBP_CTX];
-  BiContextType  map_contexts [2][NUM_BLOCK_TYPES][NUM_MAP_CTX];
-  BiContextType  last_contexts[2][NUM_BLOCK_TYPES][NUM_LAST_CTX];
-  BiContextType  one_contexts [NUM_BLOCK_TYPES][NUM_ONE_CTX];
-  BiContextType  abs_contexts [NUM_BLOCK_TYPES][NUM_ABS_CTX];
+  BiContextType transform_size_contexts [NUM_TRANSFORM_SIZE_CTX];
+  BiContextType ipr_contexts [NUM_IPR_CTX];
+  BiContextType cipr_contexts[NUM_CIPR_CTX];
+  BiContextType cbp_contexts [3][NUM_CBP_CTX];
+  BiContextType bcbp_contexts[NUM_BLOCK_TYPES][NUM_BCBP_CTX];
+  BiContextType map_contexts [2][NUM_BLOCK_TYPES][NUM_MAP_CTX];
+  BiContextType last_contexts[2][NUM_BLOCK_TYPES][NUM_LAST_CTX];
+  BiContextType one_contexts [NUM_BLOCK_TYPES][NUM_ONE_CTX];
+  BiContextType abs_contexts [NUM_BLOCK_TYPES][NUM_ABS_CTX];
   } TextureInfoContexts;
 //}}}
 //{{{
@@ -143,9 +143,9 @@ typedef struct DecRefPicMarking_s {
 //{{{
 //! cbp structure
 typedef struct cbp_s {
-  int64         blk     ;
-  int64         bits    ;
-  int64         bits_8x8;
+  int64 blk;
+  int64 bits;
+  int64 bits_8x8;
   } CBPStructure;
 //}}}
 //{{{
@@ -178,19 +178,19 @@ typedef struct macroblock_dec {
   int subblock_x;
   int subblock_y;
 
-  int           qp;                    // QP luma
-  int           qpc[2];                // QP chroma
-  int           qp_scaled[MAX_PLANE];  // QP scaled for all comps.
-  Boolean       is_lossless;
-  Boolean       is_intra_block;
-  Boolean       is_v_block;
-  int           DeblockCall;
+  int     qp;                    // QP luma
+  int     qpc[2];                // QP chroma
+  int     qp_scaled[MAX_PLANE];  // QP scaled for all comps.
+  Boolean is_lossless;
+  Boolean is_intra_block;
+  Boolean is_v_block;
+  int     DeblockCall;
 
-  short         slice_nr;
-  char          ei_flag;            // error indicator flag that enables concealment
-  char          dpl_flag;           // error indicator flag that signals a missing data partition
-  short         delta_quant;        // for rate control
-  short         list_offset;
+  short slice_nr;
+  char  ei_flag;            // error indicator flag that enables concealment
+  char  dpl_flag;           // error indicator flag that signals a missing data partition
+  short delta_quant;        // for rate control
+  short list_offset;
 
   struct macroblock_dec   *mb_up;   // pointer to neighboring MB (CABAC)
   struct macroblock_dec   *mb_left; // pointer to neighboring MB (CABAC)
@@ -201,28 +201,26 @@ typedef struct macroblock_dec {
   // some storage of macroblock syntax elements for global access
   short         mb_type;
   short         mvd[2][BLOCK_MULTIPLE][BLOCK_MULTIPLE][2];      //!< indices correspond to [forw,backw][block_y][block_x][x,y]
-  //short        ** **mvd;      //!< indices correspond to [forw,backw][block_y][block_x][x,y]
   int           cbp;
   CBPStructure  s_cbp[3];
 
-  int           i16mode;
-  char          b8mode[4];
-  char          b8pdir[4];
-  char          ipmode_DPCM;
-  char          c_ipred_mode;       //!< chroma intra prediction mode
-  char          skip_flag;
-  short         DFDisableIdc;
-  short         DFAlphaC0Offset;
-  short         DFBetaOffset;
+  int   i16mode;
+  char  b8mode[4];
+  char  b8pdir[4];
+  char  ipmode_DPCM;
+  char  c_ipred_mode;       //!< chroma intra prediction mode
+  char  skip_flag;
+  short DFDisableIdc;
+  short DFAlphaC0Offset;
+  short DFBetaOffset;
 
-  Boolean       mb_field;
+  Boolean mb_field;
   //Flag for MBAFF deblocking;
-  byte          mixedModeEdgeFlag;
+  byte  mixedModeEdgeFlag;
 
   // deblocking strength indices
   byte strength_ver[4][4];
   byte strength_hor[4][16];
-
 
   Boolean       luma_transform_size_8x8_flag;
   Boolean       NoMbPartLessThan8x8Flag;
@@ -599,20 +597,20 @@ typedef struct coding_par {
   int total_scale;
   unsigned int oldFrameSizeInMbs;
 
-  //padding info;
+  // padding info;
   int rgb_output;
-  sMacroblock *mb_data;               //!< array containing all MBs of a whole frame
-  sMacroblock *mb_data_JV[MAX_PLANE]; //!< mb_data to be used for 4:4:4 independent mode
-  char  *intra_block;
-  char  *intra_block_JV[MAX_PLANE];
+  sMacroblock* mb_data;               //!< array containing all MBs of a whole frame
+  sMacroblock* mb_data_JV[MAX_PLANE]; //!< mb_data to be used for 4:4:4 independent mode
+  char* intra_block;
+  char* intra_block_JV[MAX_PLANE];
   sBlockPos *PicPos;
   byte** ipredmode;                  //!< prediction type [90][74]
   byte** ipredmode_JV[MAX_PLANE];
-  byte** **nz_coeff;
+  byte**** nz_coeff;
   int** siblock;
   int** siblock_JV[MAX_PLANE];
-  int *qp_per_matrix;
-  int *qp_rem_matrix;
+  int* qp_per_matrix;
+  int* qp_rem_matrix;
   } sCodingParams;
 //}}}
 //{{{

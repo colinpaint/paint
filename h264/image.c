@@ -685,7 +685,7 @@ static void initPictureDecoding (sVidParam* vidParam) {
 
   update_pic_num (slice);
 
-  init_Deblock (vidParam, slice->mb_aff_frame_flag);
+  initDeblock (vidParam, slice->mb_aff_frame_flag);
   for (int j = 0; j < vidParam->iSliceNumOfCurrPic; j++) {
     if (vidParam->ppSliceList[j]->DFDisableIdc != 1)
       iDeblockMode = 0;
@@ -1220,14 +1220,14 @@ void exit_picture (sVidParam* vidParam, sPicture** picture) {
       int colour_plane_id = vidParam->ppSliceList[0]->colour_plane_id;
       for( nplane=0; nplane<MAX_PLANE; ++nplane ) {
         vidParam->ppSliceList[0]->colour_plane_id = nplane;
-        change_plane_JV( vidParam, nplane, NULL );
-        DeblockPicture( vidParam,* picture );
+        change_plane_JV (vidParam, nplane, NULL );
+        deblockPicture (vidParam,* picture );
         }
       vidParam->ppSliceList[0]->colour_plane_id = colour_plane_id;
       make_frame_picture_JV(vidParam);
       }
     else
-      DeblockPicture (vidParam,* picture);
+      deblockPicture (vidParam,* picture);
     }
     //}}}
   else if (vidParam->separate_colour_plane_flag != 0)

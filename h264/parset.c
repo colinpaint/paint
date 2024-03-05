@@ -35,25 +35,27 @@ static const byte ZZ_SCAN8[64] = {
 //}}}
 
 //{{{
-static void updateMaxValue (sFrameFormat *format)
-{
+static void updateMaxValue (sFrameFormat *format) {
+
   format->max_value[0] = (1 << format->bit_depth[0]) - 1;
   format->max_value_sq[0] = format->max_value[0] * format->max_value[0];
+
   format->max_value[1] = (1 << format->bit_depth[1]) - 1;
   format->max_value_sq[1] = format->max_value[1] * format->max_value[1];
+
   format->max_value[2] = (1 << format->bit_depth[2]) - 1;
   format->max_value_sq[2] = format->max_value[2] * format->max_value[2];
-}
+  }
 //}}}
 //{{{
-static void setup_layer_info (sVidParam* vidParam, sSPSrbsp *sps, LayerParameters *p_Lps)
-{
+static void setup_layer_info (sVidParam* vidParam, sSPSrbsp* sps, LayerParameters* p_Lps) {
+
   int layer_id = p_Lps->layer_id;
   p_Lps->vidParam = vidParam;
   p_Lps->p_Cps = vidParam->p_EncodePar[layer_id];
   p_Lps->p_SPS = sps;
   p_Lps->dpb = vidParam->p_Dpb_layer[layer_id];
-}
+  }
 //}}}
 //{{{
 static void set_coding_par (sSPSrbsp *sps, sCodingParams *cps) {
@@ -250,7 +252,7 @@ static void reset_format_info (sSPSrbsp *sps, sVidParam* vidParam,
 
   output->frame_rate = source->frame_rate;
   output->color_model = source->color_model;
-  output->yuv_format = source->yuv_format = (ColorFormat) sps->chroma_format_idc;
+  output->yuv_format = source->yuv_format = (ColorFormat)sps->chroma_format_idc;
 
   output->auto_crop_bottom = crop_bottom;
   output->auto_crop_right = crop_right;
@@ -267,7 +269,7 @@ static void reset_format_info (sSPSrbsp *sps, sVidParam* vidParam,
 
   if (vidParam->first_sps == TRUE) {
     vidParam->first_sps = FALSE;
-    printf ("Profile IDC: %d %dx%d %dx%d ",
+    printf ("ProfileIDC: %d %dx%d %dx%d ",
             sps->profile_idc, source->width[0], source->height[0], vidParam->width, vidParam->height);
     if (vidParam->yuv_format == YUV400)
       printf ("4:0:0");
@@ -288,13 +290,13 @@ static sSPSrbsp* allocSPS() {
 
    sSPSrbsp* p = calloc (1, sizeof (sSPSrbsp));
    if (p == NULL)
-     no_mem_exit ("sllocSPS: SPS");
+     no_mem_exit ("allocSPS: SPS");
 
    return p;
    }
 //}}}
 //{{{
-static void freeSPS (sSPSrbsp *sps) {
+static void freeSPS (sSPSrbsp* sps) {
 
   assert (sps != NULL);
   free (sps);
@@ -380,12 +382,12 @@ static void scalingList (int *scalingList, int sizeOfScalingList,
   }
 //}}}
 //{{{
-static void initVUI (sSPSrbsp *sps) {
+static void initVUI (sSPSrbsp* sps) {
   sps->vui_seq_parameters.matrix_coefficients = 2;
   }
 //}}}
 //{{{
-static int readHRDParameters (sDataPartition *p, sHRDparams *hrd) {
+static int readHRDParameters (sDataPartition* p, sHRDparams* hrd) {
 
   Bitstream *s = p->bitstream;
   hrd->cpb_cnt_minus1 = read_ue_v ("VUI: cpb_cnt_minus1", s);
@@ -513,7 +515,7 @@ static int readVUI (sDataPartition* p, sSPSrbsp* sps) {
   }
 //}}}
 //{{{
-static void interpretSPS (sVidParam* vidParam, sDataPartition *p, sSPSrbsp *sps) {
+static void interpretSPS (sVidParam* vidParam, sDataPartition* p, sSPSrbsp* sps) {
 
   unsigned i;
   unsigned n_ScalingList;
@@ -1027,7 +1029,7 @@ static void interpretPPS (sVidParam* vidParam, sDataPartition* p, sPPSrbsp* pps)
   }
 //}}}
 //{{{
-static void activatePPS (sVidParam* vidParam, sPPSrbsp *pps) {
+static void activatePPS (sVidParam* vidParam, sPPSrbsp* pps) {
 
   if (vidParam->active_pps != pps) {
     if (vidParam->picture) // && vidParam->num_dec_mb == vidParam->pi)
@@ -1059,7 +1061,7 @@ sPPSrbsp* allocPPS() {
    }
 //}}}
 //{{{
-void makePPSavailable (sVidParam* vidParam, int id, sPPSrbsp *pps) {
+void makePPSavailable (sVidParam* vidParam, int id, sPPSrbsp* pps) {
 
   assert (pps->Valid == TRUE);
 
@@ -1085,7 +1087,7 @@ void cleanUpPPS (sVidParam* vidParam) {
   }
 //}}}
 //{{{
-void processPPS (sVidParam* vidParam, sNalu *nalu) {
+void processPPS (sVidParam* vidParam, sNalu* nalu) {
 
   sDataPartition* dp = allocPartition (1);
   sPPSrbsp* pps = allocPPS();
@@ -1112,6 +1114,7 @@ void processPPS (sVidParam* vidParam, sNalu *nalu) {
   freePPS (pps);
   }
 //}}}
+
 //{{{
 void useParameterSet (sSlice* currSlice) {
 
