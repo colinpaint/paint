@@ -113,7 +113,7 @@ typedef enum {
   FRAME,
   TOP_FIELD,
   BOTTOM_FIELD
-} PictureStructure;           //!< New enum for field processing
+} sPictureStructure;           //!< New enum for field processing
 //}}}
 
 //{{{  enum SliceType

@@ -50,7 +50,7 @@ static void read_ipred_8x8_modes_mbaff (Macroblock* currMB) {
   DataPartition* dP;
   Slice* currSlice = currMB->p_Slice;
   const byte* partMap = assignSE2partition[currSlice->dp_mode];
-  VideoParameters* pVid = currMB->pVid;
+  sVidParam* vidParam = currMB->vidParam;
 
   int mostProbableIntraPredMode;
   int upIntraPredMode;
@@ -60,7 +60,7 @@ static void read_ipred_8x8_modes_mbaff (Macroblock* currMB) {
   currSE.type = SE_INTRAPREDMODE;
   dP = &(currSlice->partArr[partMap[SE_INTRAPREDMODE]]);
 
-  if (!(pVid->active_pps->entropy_coding_mode_flag == (Boolean) CAVLC || dP->bitstream->ei_flag))
+  if (!(vidParam->active_pps->entropy_coding_mode_flag == (Boolean) CAVLC || dP->bitstream->ei_flag))
     currSE.reading = readIntraPredMode_CABAC;
 
   for (int b8 = 0; b8 < 4; ++b8)  {
@@ -71,18 +71,18 @@ static void read_ipred_8x8_modes_mbaff (Macroblock* currMB) {
     bx = ((b8 & 0x01) << 1);
     bi = currMB->block_x + bx;
     // get from stream
-    if (pVid->active_pps->entropy_coding_mode_flag == (Boolean) CAVLC || dP->bitstream->ei_flag)
+    if (vidParam->active_pps->entropy_coding_mode_flag == (Boolean) CAVLC || dP->bitstream->ei_flag)
       readSyntaxElement_Intra4x4PredictionMode (&currSE, dP->bitstream);
     else {
       currSE.context = (b8 << 2);
       dP->readSyntaxElement(currMB, &currSE, dP);
     }
 
-    get4x4Neighbour (currMB, (bx << 2) - 1, (by << 2),     pVid->mb_size[IS_LUMA], &left_block);
-    get4x4Neighbour (currMB, (bx << 2),     (by << 2) - 1, pVid->mb_size[IS_LUMA], &top_block );
+    get4x4Neighbour (currMB, (bx << 2) - 1, (by << 2),     vidParam->mb_size[IS_LUMA], &left_block);
+    get4x4Neighbour (currMB, (bx << 2),     (by << 2) - 1, vidParam->mb_size[IS_LUMA], &top_block );
 
     // get from array and decode
-    if (pVid->active_pps->constrained_intra_pred_flag) {
+    if (vidParam->active_pps->constrained_intra_pred_flag) {
       left_block.available = left_block.available ? currSlice->intra_block[left_block.mb_addr] : 0;
       top_block.available = top_block.available  ? currSlice->intra_block[top_block.mb_addr]  : 0;
       }
@@ -111,7 +111,7 @@ static void read_ipred_8x8_modes (Macroblock* currMB)
   DataPartition *dP;
   Slice* currSlice = currMB->p_Slice;
   const byte *partMap = assignSE2partition[currSlice->dp_mode];
-  VideoParameters *pVid = currMB->pVid;
+  sVidParam *vidParam = currMB->vidParam;
 
   int mostProbableIntraPredMode;
   int upIntraPredMode;
@@ -124,11 +124,11 @@ static void read_ipred_8x8_modes (Macroblock* currMB)
 
   dP = &(currSlice->partArr[partMap[SE_INTRAPREDMODE]]);
 
-  if (!(pVid->active_pps->entropy_coding_mode_flag == (Boolean) CAVLC || dP->bitstream->ei_flag))
+  if (!(vidParam->active_pps->entropy_coding_mode_flag == (Boolean) CAVLC || dP->bitstream->ei_flag))
     currSE.reading = readIntraPredMode_CABAC;
 
-  get4x4Neighbour(currMB, -1,  0, pVid->mb_size[IS_LUMA], &left_mb);
-  get4x4Neighbour(currMB,  0, -1, pVid->mb_size[IS_LUMA], &top_mb );
+  get4x4Neighbour(currMB, -1,  0, vidParam->mb_size[IS_LUMA], &left_mb);
+  get4x4Neighbour(currMB,  0, -1, vidParam->mb_size[IS_LUMA], &top_mb );
 
   for(b8 = 0; b8 < 4; ++b8)  //loop 8x8 blocks
   {
@@ -139,7 +139,7 @@ static void read_ipred_8x8_modes (Macroblock* currMB)
     bi = currMB->block_x + bx;
 
     //get from stream
-    if (pVid->active_pps->entropy_coding_mode_flag == (Boolean) CAVLC || dP->bitstream->ei_flag)
+    if (vidParam->active_pps->entropy_coding_mode_flag == (Boolean) CAVLC || dP->bitstream->ei_flag)
       readSyntaxElement_Intra4x4PredictionMode(&currSE, dP->bitstream);
     else
     {
@@ -147,12 +147,12 @@ static void read_ipred_8x8_modes (Macroblock* currMB)
       dP->readSyntaxElement(currMB, &currSE, dP);
     }
 
-    get4x4Neighbour(currMB, (bx<<2) - 1, (by<<2),     pVid->mb_size[IS_LUMA], &left_block);
-    get4x4Neighbour(currMB, (bx<<2),     (by<<2) - 1, pVid->mb_size[IS_LUMA], &top_block );
+    get4x4Neighbour(currMB, (bx<<2) - 1, (by<<2),     vidParam->mb_size[IS_LUMA], &left_block);
+    get4x4Neighbour(currMB, (bx<<2),     (by<<2) - 1, vidParam->mb_size[IS_LUMA], &top_block );
 
     //get from array and decode
 
-    if (pVid->active_pps->constrained_intra_pred_flag)
+    if (vidParam->active_pps->constrained_intra_pred_flag)
     {
       left_block.available = left_block.available ? currSlice->intra_block[left_block.mb_addr] : 0;
       top_block.available  = top_block.available  ? currSlice->intra_block[top_block.mb_addr]  : 0;
@@ -182,8 +182,8 @@ static void read_ipred_4x4_modes_mbaff (Macroblock* currMB)
   DataPartition *dP;
   Slice* currSlice = currMB->p_Slice;
   const byte *partMap = assignSE2partition[currSlice->dp_mode];
-  VideoParameters *pVid = currMB->pVid;
-  BlockPos *PicPos = pVid->PicPos;
+  sVidParam *vidParam = currMB->vidParam;
+  BlockPos *PicPos = vidParam->PicPos;
 
   int ts, ls;
   int mostProbableIntraPredMode;
@@ -196,7 +196,7 @@ static void read_ipred_4x4_modes_mbaff (Macroblock* currMB)
 
   dP = &(currSlice->partArr[partMap[SE_INTRAPREDMODE]]);
 
-  if (!(pVid->active_pps->entropy_coding_mode_flag == (Boolean) CAVLC || dP->bitstream->ei_flag))
+  if (!(vidParam->active_pps->entropy_coding_mode_flag == (Boolean) CAVLC || dP->bitstream->ei_flag))
     currSE.reading = readIntraPredMode_CABAC;
 
   for(b8 = 0; b8 < 4; ++b8)  //loop 8x8 blocks
@@ -211,7 +211,7 @@ static void read_ipred_4x4_modes_mbaff (Macroblock* currMB)
         bx = ((b8 & 1) << 1) + i;
         bi = currMB->block_x + bx;
         //get from stream
-        if (pVid->active_pps->entropy_coding_mode_flag == (Boolean) CAVLC || dP->bitstream->ei_flag)
+        if (vidParam->active_pps->entropy_coding_mode_flag == (Boolean) CAVLC || dP->bitstream->ei_flag)
           readSyntaxElement_Intra4x4PredictionMode(&currSE, dP->bitstream);
         else
         {
@@ -219,12 +219,12 @@ static void read_ipred_4x4_modes_mbaff (Macroblock* currMB)
           dP->readSyntaxElement(currMB, &currSE, dP);
         }
 
-        get4x4Neighbour(currMB, (bx<<2) - 1, (by<<2),     pVid->mb_size[IS_LUMA], &left_block);
-        get4x4Neighbour(currMB, (bx<<2),     (by<<2) - 1, pVid->mb_size[IS_LUMA], &top_block );
+        get4x4Neighbour(currMB, (bx<<2) - 1, (by<<2),     vidParam->mb_size[IS_LUMA], &left_block);
+        get4x4Neighbour(currMB, (bx<<2),     (by<<2) - 1, vidParam->mb_size[IS_LUMA], &top_block );
 
         //get from array and decode
 
-        if (pVid->active_pps->constrained_intra_pred_flag)
+        if (vidParam->active_pps->constrained_intra_pred_flag)
         {
           left_block.available = left_block.available ? currSlice->intra_block[left_block.mb_addr] : 0;
           top_block.available  = top_block.available  ? currSlice->intra_block[top_block.mb_addr]  : 0;
@@ -261,8 +261,8 @@ static void read_ipred_4x4_modes (Macroblock* currMB) {
   DataPartition* dP;
   Slice* currSlice = currMB->p_Slice;
   const byte* partMap = assignSE2partition[currSlice->dp_mode];
-  VideoParameters* pVid = currMB->pVid;
-  BlockPos* PicPos = pVid->PicPos;
+  sVidParam* vidParam = currMB->vidParam;
+  BlockPos* PicPos = vidParam->PicPos;
 
   int mostProbableIntraPredMode;
   int upIntraPredMode;
@@ -273,11 +273,11 @@ static void read_ipred_4x4_modes (Macroblock* currMB) {
 
   currSE.type = SE_INTRAPREDMODE;
   dP = &(currSlice->partArr[partMap[SE_INTRAPREDMODE]]);
-  if (!(pVid->active_pps->entropy_coding_mode_flag == (Boolean) CAVLC || dP->bitstream->ei_flag))
+  if (!(vidParam->active_pps->entropy_coding_mode_flag == (Boolean) CAVLC || dP->bitstream->ei_flag))
     currSE.reading = readIntraPredMode_CABAC;
 
-  get4x4Neighbour (currMB, -1,  0, pVid->mb_size[IS_LUMA], &left_mb);
-  get4x4Neighbour (currMB,  0, -1, pVid->mb_size[IS_LUMA], &top_mb );
+  get4x4Neighbour (currMB, -1,  0, vidParam->mb_size[IS_LUMA], &left_mb);
+  get4x4Neighbour (currMB,  0, -1, vidParam->mb_size[IS_LUMA], &top_mb );
 
   for (int b8 = 0; b8 < 4; ++b8) {
     // loop 8x8 blocks
@@ -290,18 +290,18 @@ static void read_ipred_4x4_modes (Macroblock* currMB) {
         int bi = currMB->block_x + bx;
 
         // get from stream
-        if (pVid->active_pps->entropy_coding_mode_flag == (Boolean) CAVLC || dP->bitstream->ei_flag)
+        if (vidParam->active_pps->entropy_coding_mode_flag == (Boolean) CAVLC || dP->bitstream->ei_flag)
           readSyntaxElement_Intra4x4PredictionMode (&currSE, dP->bitstream);
         else {
           currSE.context=(b8<<2) + (j<<1) +i;
           dP->readSyntaxElement (currMB, &currSE, dP);
           }
 
-        get4x4Neighbour(currMB, (bx<<2) - 1, (by<<2),     pVid->mb_size[IS_LUMA], &left_block);
-        get4x4Neighbour(currMB, (bx<<2),     (by<<2) - 1, pVid->mb_size[IS_LUMA], &top_block );
+        get4x4Neighbour(currMB, (bx<<2) - 1, (by<<2),     vidParam->mb_size[IS_LUMA], &left_block);
+        get4x4Neighbour(currMB, (bx<<2),     (by<<2) - 1, vidParam->mb_size[IS_LUMA], &top_block );
 
         //get from array and decode
-        if (pVid->active_pps->constrained_intra_pred_flag) {
+        if (vidParam->active_pps->constrained_intra_pred_flag) {
           left_block.available = left_block.available ? currSlice->intra_block[left_block.mb_addr] : 0;
           top_block.available = top_block.available  ? currSlice->intra_block[top_block.mb_addr]  : 0;
           }
@@ -333,7 +333,7 @@ static void read_ipred_4x4_modes (Macroblock* currMB) {
 static void read_ipred_modes (Macroblock* currMB)
 {
   Slice* currSlice = currMB->p_Slice;
-  StorablePicture *dec_picture = currSlice->dec_picture;
+  sStorablePicture *dec_picture = currSlice->dec_picture;
 
   if (currSlice->mb_aff_frame_flag)
   {
@@ -355,12 +355,12 @@ static void read_ipred_modes (Macroblock* currMB)
     SyntaxElement currSE;
     DataPartition *dP;
     const byte *partMap = assignSE2partition[currSlice->dp_mode];
-    VideoParameters *pVid = currMB->pVid;
+    sVidParam *vidParam = currMB->vidParam;
 
     currSE.type = SE_INTRAPREDMODE;
     dP = &(currSlice->partArr[partMap[SE_INTRAPREDMODE]]);
 
-    if (pVid->active_pps->entropy_coding_mode_flag == (Boolean) CAVLC || dP->bitstream->ei_flag)
+    if (vidParam->active_pps->entropy_coding_mode_flag == (Boolean) CAVLC || dP->bitstream->ei_flag)
       currSE.mapping = linfo_ue;
     else
       currSE.reading = readCIPredMode_CABAC;
@@ -456,21 +456,21 @@ static void init_macroblock (Macroblock* currMB)
 static void concealIPCMcoeffs (Macroblock* currMB)
 {
   Slice* currSlice = currMB->p_Slice;
-  VideoParameters *pVid = currMB->pVid;
-  StorablePicture *dec_picture = currSlice->dec_picture;
+  sVidParam *vidParam = currMB->vidParam;
+  sStorablePicture *dec_picture = currSlice->dec_picture;
   int i, j, k;
 
   for(i=0;i<MB_BLOCK_SIZE;++i)
     for(j=0;j<MB_BLOCK_SIZE;++j)
-      currSlice->cof[0][i][j] = pVid->dc_pred_value_comp[0];
-      //currSlice->fcf[0][i][j] = pVid->dc_pred_value_comp[0];
+      currSlice->cof[0][i][j] = vidParam->dc_pred_value_comp[0];
+      //currSlice->fcf[0][i][j] = vidParam->dc_pred_value_comp[0];
 
-  if ((dec_picture->chroma_format_idc != YUV400) && (pVid->separate_colour_plane_flag == 0))
+  if ((dec_picture->chroma_format_idc != YUV400) && (vidParam->separate_colour_plane_flag == 0))
     for (k = 0; k < 2; ++k)
-      for(i=0;i<pVid->mb_cr_size_y;++i)
-        for(j=0;j<pVid->mb_cr_size_x;++j)
-          currSlice->cof[k][i][j] = pVid->dc_pred_value_comp[k];
-          //currSlice->fcf[k][i][j] = pVid->dc_pred_value_comp[k];
+      for(i=0;i<vidParam->mb_cr_size_y;++i)
+        for(j=0;j<vidParam->mb_cr_size_x;++j)
+          currSlice->cof[k][i][j] = vidParam->dc_pred_value_comp[k];
+          //currSlice->fcf[k][i][j] = vidParam->dc_pred_value_comp[k];
 }
 //}}}
 //{{{
@@ -503,15 +503,15 @@ static void init_decoding_engine_IPCM (Slice* currSlice)
 //{{{
 static void read_IPCM_coeffs_from_NAL (Slice* currSlice, struct datapartition_dec *dP)
 {
-  VideoParameters *pVid = currSlice->pVid;
+  sVidParam *vidParam = currSlice->vidParam;
 
-  StorablePicture *dec_picture = currSlice->dec_picture;
+  sStorablePicture *dec_picture = currSlice->dec_picture;
   SyntaxElement currSE;
   int i,j;
 
   //For CABAC, we don't need to read bits to let stream byte aligned
   //  because we have variable for integer bytes position
-  if(pVid->active_pps->entropy_coding_mode_flag == (Boolean) CABAC)
+  if(vidParam->active_pps->entropy_coding_mode_flag == (Boolean) CABAC)
   {
     readIPCM_CABAC(currSlice, dP);
     init_decoding_engine_IPCM(currSlice);
@@ -527,7 +527,7 @@ static void read_IPCM_coeffs_from_NAL (Slice* currSlice, struct datapartition_de
     }
 
     //read luma and chroma IPCM coefficients
-    currSE.len=pVid->bitdepth_luma;
+    currSE.len=vidParam->bitdepth_luma;
 
     for(i=0;i<MB_BLOCK_SIZE;++i)
     {
@@ -538,21 +538,21 @@ static void read_IPCM_coeffs_from_NAL (Slice* currSlice, struct datapartition_de
         //currSlice->fcf[0][i][j] = currSE.value1;
       }
     }
-    currSE.len=pVid->bitdepth_chroma;
-    if ((dec_picture->chroma_format_idc != YUV400) && (pVid->separate_colour_plane_flag == 0))
+    currSE.len=vidParam->bitdepth_chroma;
+    if ((dec_picture->chroma_format_idc != YUV400) && (vidParam->separate_colour_plane_flag == 0))
     {
-      for(i=0;i<pVid->mb_cr_size_y;++i)
+      for(i=0;i<vidParam->mb_cr_size_y;++i)
       {
-        for(j=0;j<pVid->mb_cr_size_x;++j)
+        for(j=0;j<vidParam->mb_cr_size_x;++j)
         {
           readSyntaxElement_FLC(&currSE, dP->bitstream);
           currSlice->cof[1][i][j] = currSE.value1;
           //currSlice->fcf[1][i][j] = currSE.value1;
         }
       }
-      for(i=0;i<pVid->mb_cr_size_y;++i)
+      for(i=0;i<vidParam->mb_cr_size_y;++i)
       {
-        for(j=0;j<pVid->mb_cr_size_x;++j)
+        for(j=0;j<vidParam->mb_cr_size_x;++j)
         {
           readSyntaxElement_FLC(&currSE, dP->bitstream);
           currSlice->cof[2][i][j] = currSE.value1;
@@ -587,22 +587,22 @@ static void SetB8Mode (Macroblock* currMB, int value, int i)
 //{{{
 static void reset_coeffs (Macroblock* currMB)
 {
-  VideoParameters *pVid = currMB->pVid;
+  sVidParam *vidParam = currMB->vidParam;
 
   // CAVLC
-  if (pVid->active_pps->entropy_coding_mode_flag == (Boolean) CAVLC)
-    memset (pVid->nz_coeff[currMB->mbAddrX][0][0], 0, 3 * BLOCK_PIXELS * sizeof(byte));
+  if (vidParam->active_pps->entropy_coding_mode_flag == (Boolean) CAVLC)
+    memset (vidParam->nz_coeff[currMB->mbAddrX][0][0], 0, 3 * BLOCK_PIXELS * sizeof(byte));
 }
 //}}}
 //{{{
 static void field_flag_inference (Macroblock* currMB)
 {
-  VideoParameters *pVid = currMB->pVid;
+  sVidParam *vidParam = currMB->vidParam;
   if (currMB->mbAvailA)
-    currMB->mb_field = pVid->mb_data[currMB->mbAddrA].mb_field;
+    currMB->mb_field = vidParam->mb_data[currMB->mbAddrA].mb_field;
   else
     // check top macroblock pair
-    currMB->mb_field = currMB->mbAvailB ? pVid->mb_data[currMB->mbAddrB].mb_field : FALSE;
+    currMB->mb_field = currMB->mbAvailB ? vidParam->mb_data[currMB->mbAddrB].mb_field : FALSE;
   }
 //}}}
 //{{{
@@ -618,10 +618,10 @@ void skip_macroblock (Macroblock* currMB) {
   int   b_mv_y = 0;
   int   b_ref_idx = 0;
   int   img_block_y   = currMB->block_y;
-  VideoParameters *pVid = currMB->pVid;
+  sVidParam *vidParam = currMB->vidParam;
   Slice* currSlice = currMB->p_Slice;
   int   list_offset = LIST_0 + currMB->list_offset;
-  StorablePicture *dec_picture = currSlice->dec_picture;
+  sStorablePicture *dec_picture = currSlice->dec_picture;
   MotionVector *a_mv = NULL;
   MotionVector *b_mv = NULL;
 
@@ -650,12 +650,12 @@ void skip_macroblock (Macroblock* currMB) {
       a_mv_y    = a_mv->mv_y;
       a_ref_idx = dec_picture->mv_info[mb[0].pos_y][mb[0].pos_x].ref_idx[LIST_0];
 
-      if (currMB->mb_field && !pVid->mb_data[mb[0].mb_addr].mb_field)
+      if (currMB->mb_field && !vidParam->mb_data[mb[0].mb_addr].mb_field)
       {
         a_mv_y    /=2;
         a_ref_idx *=2;
       }
-      if (!currMB->mb_field && pVid->mb_data[mb[0].mb_addr].mb_field)
+      if (!currMB->mb_field && vidParam->mb_data[mb[0].mb_addr].mb_field)
       {
         a_mv_y    *=2;
         a_ref_idx >>=1;
@@ -668,12 +668,12 @@ void skip_macroblock (Macroblock* currMB) {
       b_mv_y    = b_mv->mv_y;
       b_ref_idx = dec_picture->mv_info[mb[1].pos_y][mb[1].pos_x].ref_idx[LIST_0];
 
-      if (currMB->mb_field && !pVid->mb_data[mb[1].mb_addr].mb_field)
+      if (currMB->mb_field && !vidParam->mb_data[mb[1].mb_addr].mb_field)
       {
         b_mv_y    /=2;
         b_ref_idx *=2;
       }
-      if (!currMB->mb_field && pVid->mb_data[mb[1].mb_addr].mb_field)
+      if (!currMB->mb_field && vidParam->mb_data[mb[1].mb_addr].mb_field)
       {
         b_mv_y    *=2;
         b_ref_idx >>=1;
@@ -690,7 +690,7 @@ void skip_macroblock (Macroblock* currMB) {
   if (zeroMotionAbove || zeroMotionLeft)
   {
     PicMotionParams **dec_mv_info = &dec_picture->mv_info[img_block_y];
-    StorablePicture *cur_pic = currSlice->listX[list_offset][0];
+    sStorablePicture *cur_pic = currSlice->listX[list_offset][0];
     PicMotionParams *mv_info = NULL;
 
     for(j = 0; j < BLOCK_SIZE; ++j)
@@ -708,7 +708,7 @@ void skip_macroblock (Macroblock* currMB) {
   {
     PicMotionParams **dec_mv_info = &dec_picture->mv_info[img_block_y];
     PicMotionParams *mv_info = NULL;
-    StorablePicture *cur_pic = currSlice->listX[list_offset][0];
+    sStorablePicture *cur_pic = currSlice->listX[list_offset][0];
     currMB->GetMVPredictor (currMB, mb, &pred_mv, 0, dec_picture->mv_info, LIST_0, 0, 0, MB_BLOCK_SIZE, MB_BLOCK_SIZE);
 
     // Set first block line (position img_block_y)
@@ -731,7 +731,7 @@ static void read_skip_macroblock (Macroblock* currMB)
 {
   currMB->luma_transform_size_8x8_flag = FALSE;
 
-  if(currMB->pVid->active_pps->constrained_intra_pred_flag)
+  if(currMB->vidParam->active_pps->constrained_intra_pred_flag)
   {
     int mb_nr = currMB->mbAddrX;
     currMB->p_Slice->intra_block[mb_nr] = 0;
@@ -858,7 +858,7 @@ static void read_inter_macroblock (Macroblock* currMB)
   currMB->NoMbPartLessThan8x8Flag = TRUE;
   currMB->luma_transform_size_8x8_flag = FALSE;
 
-  if(currMB->pVid->active_pps->constrained_intra_pred_flag)
+  if(currMB->vidParam->active_pps->constrained_intra_pred_flag)
   {
     int mb_nr = currMB->mbAddrX;
     currSlice->intra_block[mb_nr] = 0;
@@ -919,7 +919,7 @@ static void read_P8x8_macroblock (Macroblock* currMB, DataPartition *dP, SyntaxE
   init_macroblock (currMB);
   currSlice->read_motion_info_from_NAL (currMB);
 
-  if(currMB->pVid->active_pps->constrained_intra_pred_flag)
+  if(currMB->vidParam->active_pps->constrained_intra_pred_flag)
   {
     int mb_nr = currMB->mbAddrX;
     currSlice->intra_block[mb_nr] = 0;
@@ -939,8 +939,8 @@ static void read_one_macroblock_i_slice_cavlc (Macroblock* currMB)
 
   DataPartition *dP;
   const byte *partMap = assignSE2partition[currSlice->dp_mode];
-  StorablePicture *dec_picture = currSlice->dec_picture;
-  PicMotionParamsOld *motion = &dec_picture->motion;
+  sStorablePicture *dec_picture = currSlice->dec_picture;
+  sPicMotionParamsOld *motion = &dec_picture->motion;
 
   currMB->mb_field = ((mb_nr&0x01) == 0)? FALSE : currSlice->mb_data[mb_nr-1].mb_field;
 
@@ -993,8 +993,8 @@ static void read_one_macroblock_i_slice_cabac (Macroblock* currMB)
 
   DataPartition *dP;
   const byte *partMap = assignSE2partition[currSlice->dp_mode];
-  StorablePicture *dec_picture = currSlice->dec_picture;
-  PicMotionParamsOld *motion = &dec_picture->motion;
+  sStorablePicture *dec_picture = currSlice->dec_picture;
+  sPicMotionParamsOld *motion = &dec_picture->motion;
 
   currMB->mb_field = ((mb_nr&0x01) == 0)? FALSE : currSlice->mb_data[mb_nr-1].mb_field;
 
@@ -1098,8 +1098,8 @@ static void read_one_macroblock_p_slice_cavlc (Macroblock* currMB)
 
   if (currSlice->mb_aff_frame_flag == 0)
   {
-    StorablePicture *dec_picture = currSlice->dec_picture;
-    PicMotionParamsOld *motion = &dec_picture->motion;
+    sStorablePicture *dec_picture = currSlice->dec_picture;
+    sPicMotionParamsOld *motion = &dec_picture->motion;
 
     currMB->mb_field = FALSE;
 
@@ -1144,21 +1144,21 @@ static void read_one_macroblock_p_slice_cavlc (Macroblock* currMB)
   }
   else
   {
-    VideoParameters *pVid = currMB->pVid;
+    sVidParam *vidParam = currMB->vidParam;
     Macroblock *topMB = NULL;
     int  prevMbSkipped = 0;
-    StorablePicture *dec_picture = currSlice->dec_picture;
-    PicMotionParamsOld *motion = &dec_picture->motion;
+    sStorablePicture *dec_picture = currSlice->dec_picture;
+    sPicMotionParamsOld *motion = &dec_picture->motion;
 
     if (mb_nr&0x01)
     {
-      topMB= &pVid->mb_data[mb_nr-1];
+      topMB= &vidParam->mb_data[mb_nr-1];
       prevMbSkipped = (topMB->mb_type == 0);
     }
     else
       prevMbSkipped = 0;
 
-    currMB->mb_field = ((mb_nr&0x01) == 0)? FALSE : pVid->mb_data[mb_nr-1].mb_field;
+    currMB->mb_field = ((mb_nr&0x01) == 0)? FALSE : vidParam->mb_data[mb_nr-1].mb_field;
 
     update_qp(currMB, currSlice->qp);
     currSE.type = SE_MBTYPE;
@@ -1212,16 +1212,16 @@ static void read_one_macroblock_p_slice_cavlc (Macroblock* currMB)
       else if (currSlice->cod_counter > 0 && ((mb_nr & 0x01) == 0))
       {
         // check left macroblock pair first
-        if (mb_is_available(mb_nr - 2, currMB) && ((mb_nr % (pVid->PicWidthInMbs * 2))!=0))
+        if (mb_is_available(mb_nr - 2, currMB) && ((mb_nr % (vidParam->PicWidthInMbs * 2))!=0))
         {
-          currMB->mb_field = pVid->mb_data[mb_nr-2].mb_field;
+          currMB->mb_field = vidParam->mb_data[mb_nr-2].mb_field;
         }
         else
         {
           // check top macroblock pair
-          if (mb_is_available(mb_nr - 2*pVid->PicWidthInMbs, currMB))
+          if (mb_is_available(mb_nr - 2*vidParam->PicWidthInMbs, currMB))
           {
-            currMB->mb_field = pVid->mb_data[mb_nr-2*pVid->PicWidthInMbs].mb_field;
+            currMB->mb_field = vidParam->mb_data[mb_nr-2*vidParam->PicWidthInMbs].mb_field;
           }
           else
             currMB->mb_field = FALSE;
@@ -1285,7 +1285,7 @@ static void read_one_macroblock_p_slice_cavlc (Macroblock* currMB)
 static void read_one_macroblock_p_slice_cabac (Macroblock* currMB)
 {
   Slice* currSlice = currMB->p_Slice;
-  VideoParameters *pVid = currMB->pVid;
+  sVidParam *vidParam = currMB->vidParam;
   int mb_nr = currMB->mbAddrX;
   SyntaxElement currSE;
   DataPartition *dP;
@@ -1293,8 +1293,8 @@ static void read_one_macroblock_p_slice_cabac (Macroblock* currMB)
 
   if (currSlice->mb_aff_frame_flag == 0)
   {
-    StorablePicture *dec_picture = currSlice->dec_picture;
-    PicMotionParamsOld *motion = &dec_picture->motion;
+    sStorablePicture *dec_picture = currSlice->dec_picture;
+    sPicMotionParamsOld *motion = &dec_picture->motion;
 
     currMB->mb_field = FALSE;
 
@@ -1336,17 +1336,17 @@ static void read_one_macroblock_p_slice_cabac (Macroblock* currMB)
     Macroblock *topMB = NULL;
     int  prevMbSkipped = 0;
     int  check_bottom, read_bottom, read_top;
-    StorablePicture *dec_picture = currSlice->dec_picture;
-    PicMotionParamsOld *motion = &dec_picture->motion;
+    sStorablePicture *dec_picture = currSlice->dec_picture;
+    sPicMotionParamsOld *motion = &dec_picture->motion;
     if (mb_nr&0x01)
     {
-      topMB= &pVid->mb_data[mb_nr-1];
+      topMB= &vidParam->mb_data[mb_nr-1];
       prevMbSkipped = (topMB->mb_type == 0);
     }
     else
       prevMbSkipped = 0;
 
-    currMB->mb_field = ((mb_nr&0x01) == 0)? FALSE : pVid->mb_data[mb_nr-1].mb_field;
+    currMB->mb_field = ((mb_nr&0x01) == 0)? FALSE : vidParam->mb_data[mb_nr-1].mb_field;
 
     update_qp(currMB, currSlice->qp);
     currSE.type = SE_MBTYPE;
@@ -1449,7 +1449,7 @@ static void read_one_macroblock_p_slice_cabac (Macroblock* currMB)
 //{{{
 static void read_one_macroblock_b_slice_cavlc (Macroblock* currMB) {
 
-  VideoParameters *pVid = currMB->pVid;
+  sVidParam *vidParam = currMB->vidParam;
   Slice* currSlice = currMB->p_Slice;
   int mb_nr = currMB->mbAddrX;
   DataPartition *dP;
@@ -1457,8 +1457,8 @@ static void read_one_macroblock_b_slice_cavlc (Macroblock* currMB) {
   const byte *partMap = assignSE2partition[currSlice->dp_mode];
 
   if (currSlice->mb_aff_frame_flag == 0) {
-    StorablePicture *dec_picture = currSlice->dec_picture;
-    PicMotionParamsOld *motion = &dec_picture->motion;
+    sStorablePicture *dec_picture = currSlice->dec_picture;
+    sPicMotionParamsOld *motion = &dec_picture->motion;
 
     currMB->mb_field = FALSE;
     update_qp(currMB, currSlice->qp);
@@ -1498,17 +1498,17 @@ static void read_one_macroblock_b_slice_cavlc (Macroblock* currMB) {
   else {
     Macroblock *topMB = NULL;
     int  prevMbSkipped = 0;
-    StorablePicture *dec_picture = currSlice->dec_picture;
-    PicMotionParamsOld *motion = &dec_picture->motion;
+    sStorablePicture *dec_picture = currSlice->dec_picture;
+    sPicMotionParamsOld *motion = &dec_picture->motion;
 
     if (mb_nr&0x01) {
-      topMB= &pVid->mb_data[mb_nr-1];
+      topMB= &vidParam->mb_data[mb_nr-1];
       prevMbSkipped = topMB->skip_flag;
       }
     else
       prevMbSkipped = 0;
 
-    currMB->mb_field = ((mb_nr&0x01) == 0)? FALSE : pVid->mb_data[mb_nr-1].mb_field;
+    currMB->mb_field = ((mb_nr&0x01) == 0)? FALSE : vidParam->mb_data[mb_nr-1].mb_field;
 
     update_qp(currMB, currSlice->qp);
     currSE.type = SE_MBTYPE;
@@ -1551,12 +1551,12 @@ static void read_one_macroblock_b_slice_cavlc (Macroblock* currMB) {
         }
       else if (currSlice->cod_counter > 0 && ((mb_nr & 0x01) == 0)) {
         // check left macroblock pair first
-        if (mb_is_available(mb_nr - 2, currMB) && ((mb_nr % (pVid->PicWidthInMbs * 2))!=0))
-          currMB->mb_field = pVid->mb_data[mb_nr-2].mb_field;
+        if (mb_is_available(mb_nr - 2, currMB) && ((mb_nr % (vidParam->PicWidthInMbs * 2))!=0))
+          currMB->mb_field = vidParam->mb_data[mb_nr-2].mb_field;
         else {
           // check top macroblock pair
-          if (mb_is_available(mb_nr - 2*pVid->PicWidthInMbs, currMB))
-            currMB->mb_field = pVid->mb_data[mb_nr-2*pVid->PicWidthInMbs].mb_field;
+          if (mb_is_available(mb_nr - 2*vidParam->PicWidthInMbs, currMB))
+            currMB->mb_field = vidParam->mb_data[mb_nr-2*vidParam->PicWidthInMbs].mb_field;
           else
             currMB->mb_field = FALSE;
           }
@@ -1591,7 +1591,7 @@ static void read_one_macroblock_b_slice_cavlc (Macroblock* currMB) {
     //init NoMbPartLessThan8x8Flag
     currMB->NoMbPartLessThan8x8Flag = (!(currSlice->active_sps->direct_8x8_inference_flag))? FALSE: TRUE;
     currMB->luma_transform_size_8x8_flag = FALSE;
-    if(pVid->active_pps->constrained_intra_pred_flag)
+    if(vidParam->active_pps->constrained_intra_pred_flag)
       currSlice->intra_block[mb_nr] = 0;
 
     //--- init macroblock data ---
@@ -1617,7 +1617,7 @@ static void read_one_macroblock_b_slice_cavlc (Macroblock* currMB) {
 static void read_one_macroblock_b_slice_cabac (Macroblock* currMB)
 {
   Slice* currSlice = currMB->p_Slice;
-  VideoParameters *pVid = currMB->pVid;
+  sVidParam *vidParam = currMB->vidParam;
   int mb_nr = currMB->mbAddrX;
   SyntaxElement currSE;
 
@@ -1626,8 +1626,8 @@ static void read_one_macroblock_b_slice_cabac (Macroblock* currMB)
 
   if (currSlice->mb_aff_frame_flag == 0)
   {
-    StorablePicture *dec_picture = currSlice->dec_picture;
-    PicMotionParamsOld *motion = &dec_picture->motion;
+    sStorablePicture *dec_picture = currSlice->dec_picture;
+    sPicMotionParamsOld *motion = &dec_picture->motion;
 
     currMB->mb_field = FALSE;
 
@@ -1675,18 +1675,18 @@ static void read_one_macroblock_b_slice_cabac (Macroblock* currMB)
     Macroblock *topMB = NULL;
     int  prevMbSkipped = 0;
     int  check_bottom, read_bottom, read_top;
-    StorablePicture *dec_picture = currSlice->dec_picture;
-    PicMotionParamsOld *motion = &dec_picture->motion;
+    sStorablePicture *dec_picture = currSlice->dec_picture;
+    sPicMotionParamsOld *motion = &dec_picture->motion;
 
     if (mb_nr&0x01)
     {
-      topMB= &pVid->mb_data[mb_nr-1];
+      topMB= &vidParam->mb_data[mb_nr-1];
       prevMbSkipped = topMB->skip_flag;
     }
     else
       prevMbSkipped = 0;
 
-    currMB->mb_field = ((mb_nr&0x01) == 0)? FALSE : pVid->mb_data[mb_nr-1].mb_field;
+    currMB->mb_field = ((mb_nr&0x01) == 0)? FALSE : vidParam->mb_data[mb_nr-1].mb_field;
 
     update_qp(currMB, currSlice->qp);
     currSE.type = SE_MBTYPE;
@@ -1798,7 +1798,7 @@ static void read_one_macroblock_b_slice_cabac (Macroblock* currMB)
     //transform size flag for INTRA_4x4 and INTRA_8x8 modes
     currMB->luma_transform_size_8x8_flag = FALSE;
 
-    if(pVid->active_pps->constrained_intra_pred_flag)
+    if(vidParam->active_pps->constrained_intra_pred_flag)
     {
       currSlice->intra_block[mb_nr] = 0;
     }
@@ -1833,7 +1833,7 @@ static void read_one_macroblock_b_slice_cabac (Macroblock* currMB)
 //{{{
 void setup_read_macroblock (Slice* currSlice) {
 
-  if (currSlice->pVid->active_pps->entropy_coding_mode_flag == (Boolean) CABAC) {
+  if (currSlice->vidParam->active_pps->entropy_coding_mode_flag == (Boolean) CABAC) {
     switch (currSlice->slice_type) {
       case P_SLICE:
       case SP_SLICE:

@@ -73,25 +73,25 @@
  *    Prefiltering for Intra8x8 prediction
  *************************************************************************************
  */
-static void LowPassForIntra8x8Pred (imgpel *PredPel, int block_up_left, int block_up, int block_left)
+static void LowPassForIntra8x8Pred (sPixel *PredPel, int block_up_left, int block_up, int block_left)
 {
   int i;
-  imgpel LoopArray[25];
+  sPixel LoopArray[25];
 
-  memcpy(&LoopArray[0], &PredPel[0], 25 * sizeof(imgpel));
+  memcpy(&LoopArray[0], &PredPel[0], 25 * sizeof(sPixel));
 
   if(block_up_left)
   {
     if(block_up && block_left)
     {
-      LoopArray[0] = (imgpel) ((P_Q + (P_Z<<1) + P_A + 2)>>2);
+      LoopArray[0] = (sPixel) ((P_Q + (P_Z<<1) + P_A + 2)>>2);
     }
     else
     {
       if(block_up)
-        LoopArray[0] = (imgpel) ((P_Z + (P_Z<<1) + P_A + 2)>>2);
+        LoopArray[0] = (sPixel) ((P_Z + (P_Z<<1) + P_A + 2)>>2);
       else if (block_left)
-        LoopArray[0] = (imgpel) ((P_Z + (P_Z<<1) + P_Q + 2)>>2);
+        LoopArray[0] = (sPixel) ((P_Z + (P_Z<<1) + P_Q + 2)>>2);
     }
   }
 
@@ -99,34 +99,34 @@ static void LowPassForIntra8x8Pred (imgpel *PredPel, int block_up_left, int bloc
   {
     if(block_up_left)
     {
-      LoopArray[1] = (imgpel) ((PredPel[0] + (PredPel[1]<<1) + PredPel[2] + 2)>>2);
+      LoopArray[1] = (sPixel) ((PredPel[0] + (PredPel[1]<<1) + PredPel[2] + 2)>>2);
     }
     else
-      LoopArray[1] = (imgpel) ((PredPel[1] + (PredPel[1]<<1) + PredPel[2] + 2)>>2);
+      LoopArray[1] = (sPixel) ((PredPel[1] + (PredPel[1]<<1) + PredPel[2] + 2)>>2);
 
 
     for(i = 2; i <16; i++)
     {
-      LoopArray[i] = (imgpel) ((PredPel[i-1] + (PredPel[i]<<1) + PredPel[i+1] + 2)>>2);
+      LoopArray[i] = (sPixel) ((PredPel[i-1] + (PredPel[i]<<1) + PredPel[i+1] + 2)>>2);
     }
-    LoopArray[16] = (imgpel) ((P_P + (P_P<<1) + P_O + 2)>>2);
+    LoopArray[16] = (sPixel) ((P_P + (P_P<<1) + P_O + 2)>>2);
   }
 
   if(block_left)
   {
     if(block_up_left)
-      LoopArray[17] = (imgpel) ((P_Z + (P_Q<<1) + P_R + 2)>>2);
+      LoopArray[17] = (sPixel) ((P_Z + (P_Q<<1) + P_R + 2)>>2);
     else
-      LoopArray[17] = (imgpel) ((P_Q + (P_Q<<1) + P_R + 2)>>2);
+      LoopArray[17] = (sPixel) ((P_Q + (P_Q<<1) + P_R + 2)>>2);
 
     for(i = 18; i <24; i++)
     {
-      LoopArray[i] = (imgpel) ((PredPel[i-1] + (PredPel[i]<<1) + PredPel[i+1] + 2)>>2);
+      LoopArray[i] = (sPixel) ((PredPel[i-1] + (PredPel[i]<<1) + PredPel[i+1] + 2)>>2);
     }
-    LoopArray[24] = (imgpel) ((P_W + (P_X<<1) + P_X + 2) >> 2);
+    LoopArray[24] = (sPixel) ((P_W + (P_X<<1) + P_X + 2) >> 2);
   }
 
-  memcpy(&PredPel[0], &LoopArray[0], 25 * sizeof(imgpel));
+  memcpy(&PredPel[0], &LoopArray[0], 25 * sizeof(sPixel));
 }
 //}}}
 //{{{
@@ -136,25 +136,25 @@ static void LowPassForIntra8x8Pred (imgpel *PredPel, int block_up_left, int bloc
  *    Prefiltering for Intra8x8 prediction (Horizontal)
  *************************************************************************************
  */
-static void LowPassForIntra8x8PredHor (imgpel *PredPel, int block_up_left, int block_up, int block_left)
+static void LowPassForIntra8x8PredHor (sPixel *PredPel, int block_up_left, int block_up, int block_left)
 {
   int i;
-  imgpel LoopArray[25];
+  sPixel LoopArray[25];
 
-  memcpy(&LoopArray[0], &PredPel[0], 25 * sizeof(imgpel));
+  memcpy(&LoopArray[0], &PredPel[0], 25 * sizeof(sPixel));
 
   if(block_up_left)
   {
     if(block_up && block_left)
     {
-      LoopArray[0] = (imgpel) ((P_Q + (P_Z<<1) + P_A + 2)>>2);
+      LoopArray[0] = (sPixel) ((P_Q + (P_Z<<1) + P_A + 2)>>2);
     }
     else
     {
       if(block_up)
-        LoopArray[0] = (imgpel) ((P_Z + (P_Z<<1) + P_A + 2)>>2);
+        LoopArray[0] = (sPixel) ((P_Z + (P_Z<<1) + P_A + 2)>>2);
       else if (block_left)
-        LoopArray[0] = (imgpel) ((P_Z + (P_Z<<1) + P_Q + 2)>>2);
+        LoopArray[0] = (sPixel) ((P_Z + (P_Z<<1) + P_Q + 2)>>2);
     }
   }
 
@@ -162,21 +162,21 @@ static void LowPassForIntra8x8PredHor (imgpel *PredPel, int block_up_left, int b
   {
     if(block_up_left)
     {
-      LoopArray[1] = (imgpel) ((PredPel[0] + (PredPel[1]<<1) + PredPel[2] + 2)>>2);
+      LoopArray[1] = (sPixel) ((PredPel[0] + (PredPel[1]<<1) + PredPel[2] + 2)>>2);
     }
     else
-      LoopArray[1] = (imgpel) ((PredPel[1] + (PredPel[1]<<1) + PredPel[2] + 2)>>2);
+      LoopArray[1] = (sPixel) ((PredPel[1] + (PredPel[1]<<1) + PredPel[2] + 2)>>2);
 
 
     for(i = 2; i <16; i++)
     {
-      LoopArray[i] = (imgpel) ((PredPel[i-1] + (PredPel[i]<<1) + PredPel[i+1] + 2)>>2);
+      LoopArray[i] = (sPixel) ((PredPel[i-1] + (PredPel[i]<<1) + PredPel[i+1] + 2)>>2);
     }
-    LoopArray[16] = (imgpel) ((P_P + (P_P<<1) + P_O + 2)>>2);
+    LoopArray[16] = (sPixel) ((P_P + (P_P<<1) + P_O + 2)>>2);
   }
 
 
-  memcpy(&PredPel[0], &LoopArray[0], 17 * sizeof(imgpel));
+  memcpy(&PredPel[0], &LoopArray[0], 17 * sizeof(sPixel));
 }
 //}}}
 //{{{
@@ -186,45 +186,45 @@ static void LowPassForIntra8x8PredHor (imgpel *PredPel, int block_up_left, int b
  *    Prefiltering for Intra8x8 prediction (Vertical)
  *************************************************************************************
  */
-static void LowPassForIntra8x8PredVer (imgpel *PredPel, int block_up_left, int block_up, int block_left)
+static void LowPassForIntra8x8PredVer (sPixel *PredPel, int block_up_left, int block_up, int block_left)
 {
   // These functions need some cleanup and can be further optimized.
   // For convenience, let us copy all data for now. It is obvious that the filtering makes things a bit more "complex"
   int i;
-  imgpel LoopArray[25];
+  sPixel LoopArray[25];
 
-  memcpy(&LoopArray[0], &PredPel[0], 25 * sizeof(imgpel));
+  memcpy(&LoopArray[0], &PredPel[0], 25 * sizeof(sPixel));
 
   if(block_up_left)
   {
     if(block_up && block_left)
     {
-      LoopArray[0] = (imgpel) ((P_Q + (P_Z<<1) + P_A + 2)>>2);
+      LoopArray[0] = (sPixel) ((P_Q + (P_Z<<1) + P_A + 2)>>2);
     }
     else
     {
       if(block_up)
-        LoopArray[0] = (imgpel) ((P_Z + (P_Z<<1) + P_A + 2)>>2);
+        LoopArray[0] = (sPixel) ((P_Z + (P_Z<<1) + P_A + 2)>>2);
       else if (block_left)
-        LoopArray[0] = (imgpel) ((P_Z + (P_Z<<1) + P_Q + 2)>>2);
+        LoopArray[0] = (sPixel) ((P_Z + (P_Z<<1) + P_Q + 2)>>2);
     }
   }
 
   if(block_left)
   {
     if(block_up_left)
-      LoopArray[17] = (imgpel) ((P_Z + (P_Q<<1) + P_R + 2)>>2);
+      LoopArray[17] = (sPixel) ((P_Z + (P_Q<<1) + P_R + 2)>>2);
     else
-      LoopArray[17] = (imgpel) ((P_Q + (P_Q<<1) + P_R + 2)>>2);
+      LoopArray[17] = (sPixel) ((P_Q + (P_Q<<1) + P_R + 2)>>2);
 
     for(i = 18; i <24; i++)
     {
-      LoopArray[i] = (imgpel) ((PredPel[i-1] + (PredPel[i]<<1) + PredPel[i+1] + 2)>>2);
+      LoopArray[i] = (sPixel) ((PredPel[i-1] + (PredPel[i]<<1) + PredPel[i+1] + 2)>>2);
     }
-    LoopArray[24] = (imgpel) ((P_W + (P_X<<1) + P_X + 2) >> 2);
+    LoopArray[24] = (sPixel) ((P_W + (P_X<<1) + P_X + 2) >> 2);
   }
 
-  memcpy(&PredPel[0], &LoopArray[0], 25 * sizeof(imgpel));
+  memcpy(&PredPel[0], &LoopArray[0], 25 * sizeof(sPixel));
 }
 
 //}}}
@@ -246,12 +246,12 @@ static int intra8x8_dc_pred (Macroblock *currMB,
 {
   int i,j;
   int s0 = 0;
-  imgpel PredPel[25];  // array of predictor pels
+  sPixel PredPel[25];  // array of predictor pels
   Slice *currSlice = currMB->p_Slice;
-  VideoParameters* pVid = currMB->pVid;
+  sVidParam* vidParam = currMB->vidParam;
 
-  StorablePicture *dec_picture = currSlice->dec_picture;
-  imgpel **imgY = (pl) ? dec_picture->imgUV[pl - 1] : dec_picture->imgY; // For MB level frame/field coding tools -- set default to imgY
+  sStorablePicture *dec_picture = currSlice->dec_picture;
+  sPixel **imgY = (pl) ? dec_picture->imgUV[pl - 1] : dec_picture->imgY; // For MB level frame/field coding tools -- set default to imgY
 
   PixelPos pix_a;
   PixelPos pix_b, pix_c, pix_d;
@@ -261,8 +261,8 @@ static int intra8x8_dc_pred (Macroblock *currMB,
   int block_available_up_left;
   int block_available_up_right;
 
-  imgpel **mpr = currSlice->mb_pred[pl];
-  int *mb_size = pVid->mb_size[IS_LUMA];
+  sPixel **mpr = currSlice->mb_pred[pl];
+  int *mb_size = vidParam->mb_size[IS_LUMA];
 
   for (int i=0; i<25;i++) PredPel[i]=0;
 
@@ -273,7 +273,7 @@ static int intra8x8_dc_pred (Macroblock *currMB,
 
   pix_c.available = pix_c.available &&!(ioff == 8 && joff == 8);
 
-  if (pVid->active_pps->constrained_intra_pred_flag)
+  if (vidParam->active_pps->constrained_intra_pred_flag)
   {
     block_available_left     = pix_a.available ? currSlice->intra_block [pix_a.mb_addr]: 0;
     block_available_up       = pix_b.available ? currSlice->intra_block [pix_b.mb_addr] : 0;
@@ -291,25 +291,25 @@ static int intra8x8_dc_pred (Macroblock *currMB,
   // form predictor pels
   if (block_available_up)
   {
-    memcpy(&PredPel[1], &imgY[pix_b.pos_y][pix_b.pos_x], BLOCK_SIZE_8x8 * sizeof(imgpel));
+    memcpy(&PredPel[1], &imgY[pix_b.pos_y][pix_b.pos_x], BLOCK_SIZE_8x8 * sizeof(sPixel));
   }
   else
   {
 #if (IMGTYPE == 0)
-    memset(&PredPel[1], pVid->dc_pred_value_comp[pl], BLOCK_SIZE_8x8 * sizeof(imgpel));
+    memset(&PredPel[1], vidParam->dc_pred_value_comp[pl], BLOCK_SIZE_8x8 * sizeof(sPixel));
 #else
-    P_A = P_B = P_C = P_D = P_E = P_F = P_G = P_H = (imgpel) pVid->dc_pred_value_comp[pl];
+    P_A = P_B = P_C = P_D = P_E = P_F = P_G = P_H = (sPixel) vidParam->dc_pred_value_comp[pl];
 #endif
   }
 
   if (block_available_up_right)
   {
-    memcpy(&PredPel[9], &imgY[pix_c.pos_y][pix_c.pos_x], BLOCK_SIZE_8x8 * sizeof(imgpel));
+    memcpy(&PredPel[9], &imgY[pix_c.pos_y][pix_c.pos_x], BLOCK_SIZE_8x8 * sizeof(sPixel));
   }
   else
   {
 #if (IMGTYPE == 0)
-    memset(&PredPel[9], PredPel[8], BLOCK_SIZE_8x8 * sizeof(imgpel));
+    memset(&PredPel[9], PredPel[8], BLOCK_SIZE_8x8 * sizeof(sPixel));
 #else
     P_I = P_J = P_K = P_L = P_M = P_N = P_O = P_P = P_H;
 #endif
@@ -317,7 +317,7 @@ static int intra8x8_dc_pred (Macroblock *currMB,
 
   if (block_available_left)
   {
-    imgpel **img_pred = &imgY[pix_a.pos_y];
+    sPixel **img_pred = &imgY[pix_a.pos_y];
     int pos_x = pix_a.pos_x;
     P_Q = *(*(img_pred ++) + pos_x);
     P_R = *(*(img_pred ++) + pos_x);
@@ -330,7 +330,7 @@ static int intra8x8_dc_pred (Macroblock *currMB,
   }
   else
   {
-    P_Q = P_R = P_S = P_T = P_U = P_V = P_W = P_X = (imgpel) pVid->dc_pred_value_comp[pl];
+    P_Q = P_R = P_S = P_T = P_U = P_V = P_W = P_X = (sPixel) vidParam->dc_pred_value_comp[pl];
   }
 
   if (block_available_up_left)
@@ -339,7 +339,7 @@ static int intra8x8_dc_pred (Macroblock *currMB,
   }
   else
   {
-    P_Z = (imgpel) pVid->dc_pred_value_comp[pl];
+    P_Z = (sPixel) vidParam->dc_pred_value_comp[pl];
   }
 
   LowPassForIntra8x8Pred(PredPel, block_available_up_left, block_available_up, block_available_left);
@@ -362,14 +362,14 @@ static int intra8x8_dc_pred (Macroblock *currMB,
   else //if (!block_available_up && !block_available_left)
   {
     // top left corner, nothing to predict from
-    s0 = pVid->dc_pred_value_comp[pl];
+    s0 = vidParam->dc_pred_value_comp[pl];
   }
 
   for(i = ioff; i < ioff + BLOCK_SIZE_8x8; i++)
-    mpr[joff][i] = (imgpel) s0;
+    mpr[joff][i] = (sPixel) s0;
 
   for(j = joff + 1; j < joff + BLOCK_SIZE_8x8; j++)
-    memcpy(&mpr[j][ioff], &mpr[j - 1][ioff], BLOCK_SIZE_8x8 * sizeof(imgpel));
+    memcpy(&mpr[j][ioff], &mpr[j - 1][ioff], BLOCK_SIZE_8x8 * sizeof(sPixel));
 
   return DECODING_OK;
 }
@@ -391,11 +391,11 @@ static int intra8x8_vert_pred (Macroblock *currMB,
                                      int joff)              //!< pixel offset Y within MB
 {
   Slice *currSlice = currMB->p_Slice;
-  VideoParameters* pVid = currMB->pVid;
+  sVidParam* vidParam = currMB->vidParam;
 
   int i;
-  imgpel PredPel[25];  // array of predictor pels
-  imgpel **imgY = (pl) ? currSlice->dec_picture->imgUV[pl - 1] : currSlice->dec_picture->imgY; // For MB level frame/field coding tools -- set default to imgY
+  sPixel PredPel[25];  // array of predictor pels
+  sPixel **imgY = (pl) ? currSlice->dec_picture->imgUV[pl - 1] : currSlice->dec_picture->imgY; // For MB level frame/field coding tools -- set default to imgY
 
   PixelPos pix_a;
   PixelPos pix_b, pix_c, pix_d;
@@ -406,8 +406,8 @@ static int intra8x8_vert_pred (Macroblock *currMB,
   int block_available_up_right;
 
 
-  imgpel **mpr = currSlice->mb_pred[pl];
-  int *mb_size = pVid->mb_size[IS_LUMA];
+  sPixel **mpr = currSlice->mb_pred[pl];
+  int *mb_size = vidParam->mb_size[IS_LUMA];
 
   for (int i=0; i<25;i++) PredPel[i]=0;
 
@@ -418,7 +418,7 @@ static int intra8x8_vert_pred (Macroblock *currMB,
 
   pix_c.available = pix_c.available &&!(ioff == 8 && joff == 8);
 
-  if (pVid->active_pps->constrained_intra_pred_flag)
+  if (vidParam->active_pps->constrained_intra_pred_flag)
   {
     block_available_left     = pix_a.available ? currSlice->intra_block [pix_a.mb_addr] : 0;
     block_available_up       = pix_b.available ? currSlice->intra_block [pix_b.mb_addr] : 0;
@@ -439,25 +439,25 @@ static int intra8x8_vert_pred (Macroblock *currMB,
   // form predictor pels
   if (block_available_up)
   {
-    memcpy(&PredPel[1], &imgY[pix_b.pos_y][pix_b.pos_x], BLOCK_SIZE_8x8 * sizeof(imgpel));
+    memcpy(&PredPel[1], &imgY[pix_b.pos_y][pix_b.pos_x], BLOCK_SIZE_8x8 * sizeof(sPixel));
   }
   else
   {
 #if (IMGTYPE == 0)
-    memset(&PredPel[1], pVid->dc_pred_value_comp[pl], BLOCK_SIZE_8x8 * sizeof(imgpel));
+    memset(&PredPel[1], vidParam->dc_pred_value_comp[pl], BLOCK_SIZE_8x8 * sizeof(sPixel));
 #else
-    P_A = P_B = P_C = P_D = P_E = P_F = P_G = P_H = (imgpel) pVid->dc_pred_value_comp[pl];
+    P_A = P_B = P_C = P_D = P_E = P_F = P_G = P_H = (sPixel) vidParam->dc_pred_value_comp[pl];
 #endif
   }
 
   if (block_available_up_right)
   {
-    memcpy(&PredPel[9], &imgY[pix_c.pos_y][pix_c.pos_x], BLOCK_SIZE_8x8 * sizeof(imgpel));
+    memcpy(&PredPel[9], &imgY[pix_c.pos_y][pix_c.pos_x], BLOCK_SIZE_8x8 * sizeof(sPixel));
   }
   else
   {
 #if (IMGTYPE == 0)
-    memset(&PredPel[9], PredPel[8], BLOCK_SIZE_8x8 * sizeof(imgpel));
+    memset(&PredPel[9], PredPel[8], BLOCK_SIZE_8x8 * sizeof(sPixel));
 #else
     P_I = P_J = P_K = P_L = P_M = P_N = P_O = P_P = P_H;
 #endif
@@ -469,14 +469,14 @@ static int intra8x8_vert_pred (Macroblock *currMB,
   }
   else
   {
-    P_Z = (imgpel) pVid->dc_pred_value_comp[pl];
+    P_Z = (sPixel) vidParam->dc_pred_value_comp[pl];
   }
 
   LowPassForIntra8x8PredHor(&(P_Z), block_available_up_left, block_available_up, block_available_left);
 
   for (i=joff; i < joff + BLOCK_SIZE_8x8; i++)
   {
-    memcpy(&mpr[i][ioff], &PredPel[1], BLOCK_SIZE_8x8 * sizeof(imgpel));
+    memcpy(&mpr[i][ioff], &PredPel[1], BLOCK_SIZE_8x8 * sizeof(sPixel));
   }
 
   return DECODING_OK;
@@ -499,12 +499,12 @@ static int intra8x8_hor_pred (Macroblock *currMB,
                                     int joff)              //!< pixel offset Y within MB
 {
   Slice *currSlice = currMB->p_Slice;
-  VideoParameters* pVid = currMB->pVid;
+  sVidParam* vidParam = currMB->vidParam;
 
 
   int j;
-  imgpel PredPel[25];  // array of predictor pels
-  imgpel **imgY = (pl) ? currSlice->dec_picture->imgUV[pl - 1] : currSlice->dec_picture->imgY; // For MB level frame/field coding tools -- set default to imgY
+  sPixel PredPel[25];  // array of predictor pels
+  sPixel **imgY = (pl) ? currSlice->dec_picture->imgUV[pl - 1] : currSlice->dec_picture->imgY; // For MB level frame/field coding tools -- set default to imgY
 
   PixelPos pix_a;
   PixelPos pix_b, pix_d;
@@ -520,14 +520,14 @@ static int intra8x8_hor_pred (Macroblock *currMB,
   int ipos4 = ioff + 4, ipos5 = ioff + 5, ipos6 = ioff + 6, ipos7 = ioff + 7;
 #endif
   int jpos;
-  imgpel **mpr = currSlice->mb_pred[pl];
-  int *mb_size = pVid->mb_size[IS_LUMA];
+  sPixel **mpr = currSlice->mb_pred[pl];
+  int *mb_size = vidParam->mb_size[IS_LUMA];
 
   getNonAffNeighbour(currMB, ioff - 1, joff    , mb_size, &pix_a);
   getNonAffNeighbour(currMB, ioff    , joff - 1, mb_size, &pix_b);
   getNonAffNeighbour(currMB, ioff - 1, joff - 1, mb_size, &pix_d);
 
-  if (pVid->active_pps->constrained_intra_pred_flag)
+  if (vidParam->active_pps->constrained_intra_pred_flag)
   {
     block_available_left     = pix_a.available ? currSlice->intra_block [pix_a.mb_addr]: 0;
     block_available_up       = pix_b.available ? currSlice->intra_block [pix_b.mb_addr] : 0;
@@ -546,7 +546,7 @@ static int intra8x8_hor_pred (Macroblock *currMB,
   // form predictor pels
   if (block_available_left)
   {
-    imgpel **img_pred = &imgY[pix_a.pos_y];
+    sPixel **img_pred = &imgY[pix_a.pos_y];
     int pos_x = pix_a.pos_x;
     P_Q = *(*(img_pred ++) + pos_x);
     P_R = *(*(img_pred ++) + pos_x);
@@ -559,7 +559,7 @@ static int intra8x8_hor_pred (Macroblock *currMB,
   }
   else
   {
-    P_Q = P_R = P_S = P_T = P_U = P_V = P_W = P_X = (imgpel) pVid->dc_pred_value_comp[pl];
+    P_Q = P_R = P_S = P_T = P_U = P_V = P_W = P_X = (sPixel) vidParam->dc_pred_value_comp[pl];
   }
 
   if (block_available_up_left)
@@ -568,7 +568,7 @@ static int intra8x8_hor_pred (Macroblock *currMB,
   }
   else
   {
-    P_Z = (imgpel) pVid->dc_pred_value_comp[pl];
+    P_Z = (sPixel) vidParam->dc_pred_value_comp[pl];
   }
 
   LowPassForIntra8x8PredVer(&(P_Z), block_available_up_left, block_available_up, block_available_left);
@@ -577,7 +577,7 @@ static int intra8x8_hor_pred (Macroblock *currMB,
   {
     jpos = j + joff;
 #if (IMGTYPE == 0)
-    memset(&mpr[jpos][ioff], (imgpel) (&P_Q)[j], 8 * sizeof(imgpel));
+    memset(&mpr[jpos][ioff], (sPixel) (&P_Q)[j], 8 * sizeof(sPixel));
 #else
     mpr[jpos][ipos0]  =
       mpr[jpos][ipos1]  =
@@ -586,7 +586,7 @@ static int intra8x8_hor_pred (Macroblock *currMB,
       mpr[jpos][ipos4]  =
       mpr[jpos][ipos5]  =
       mpr[jpos][ipos6]  =
-      mpr[jpos][ipos7]  = (imgpel) (&P_Q)[j];
+      mpr[jpos][ipos7]  = (sPixel) (&P_Q)[j];
 #endif
   }
 
@@ -610,11 +610,11 @@ static int intra8x8_diag_down_right_pred (Macroblock *currMB,
                                                 int joff)              //!< pixel offset Y within MB
 {
   Slice *currSlice = currMB->p_Slice;
-  VideoParameters* pVid = currMB->pVid;
+  sVidParam* vidParam = currMB->vidParam;
 
-  imgpel PredPel[25];    // array of predictor pels
-  imgpel PredArray[16];  // array of final prediction values
-  imgpel **imgY = (pl) ? currSlice->dec_picture->imgUV[pl - 1] : currSlice->dec_picture->imgY; // For MB level frame/field coding tools -- set default to imgY
+  sPixel PredPel[25];    // array of predictor pels
+  sPixel PredArray[16];  // array of final prediction values
+  sPixel **imgY = (pl) ? currSlice->dec_picture->imgUV[pl - 1] : currSlice->dec_picture->imgY; // For MB level frame/field coding tools -- set default to imgY
 
   PixelPos pix_a;
   PixelPos pix_b, pix_c, pix_d;
@@ -624,9 +624,9 @@ static int intra8x8_diag_down_right_pred (Macroblock *currMB,
   int block_available_up_left;
   int block_available_up_right;
 
-  imgpel *pred_pels;
-  imgpel **mb_pred = &currSlice->mb_pred[pl][joff];
-  int *mb_size = pVid->mb_size[IS_LUMA];
+  sPixel *pred_pels;
+  sPixel **mb_pred = &currSlice->mb_pred[pl][joff];
+  int *mb_size = vidParam->mb_size[IS_LUMA];
 
   for (int i=0; i<25;i++) PredPel[i]=0;
 
@@ -637,7 +637,7 @@ static int intra8x8_diag_down_right_pred (Macroblock *currMB,
 
   pix_c.available = pix_c.available &&!(ioff == 8 && joff == 8);
 
-  if (pVid->active_pps->constrained_intra_pred_flag)
+  if (vidParam->active_pps->constrained_intra_pred_flag)
   {
     block_available_left     = pix_a.available ? currSlice->intra_block [pix_a.mb_addr]: 0;
     block_available_up       = pix_b.available ? currSlice->intra_block [pix_b.mb_addr] : 0;
@@ -658,25 +658,25 @@ static int intra8x8_diag_down_right_pred (Macroblock *currMB,
   // form predictor pels
   if (block_available_up)
   {
-    memcpy(&PredPel[1], &imgY[pix_b.pos_y][pix_b.pos_x], BLOCK_SIZE_8x8 * sizeof(imgpel));
+    memcpy(&PredPel[1], &imgY[pix_b.pos_y][pix_b.pos_x], BLOCK_SIZE_8x8 * sizeof(sPixel));
   }
   else
   {
 #if (IMGTYPE == 0)
-    memset(&PredPel[1], pVid->dc_pred_value_comp[pl], BLOCK_SIZE_8x8 * sizeof(imgpel));
+    memset(&PredPel[1], vidParam->dc_pred_value_comp[pl], BLOCK_SIZE_8x8 * sizeof(sPixel));
 #else
-    P_A = P_B = P_C = P_D = P_E = P_F = P_G = P_H = (imgpel) pVid->dc_pred_value_comp[pl];
+    P_A = P_B = P_C = P_D = P_E = P_F = P_G = P_H = (sPixel) vidParam->dc_pred_value_comp[pl];
 #endif
   }
 
   if (block_available_up_right)
   {
-    memcpy(&PredPel[9], &imgY[pix_c.pos_y][pix_c.pos_x], BLOCK_SIZE_8x8 * sizeof(imgpel));
+    memcpy(&PredPel[9], &imgY[pix_c.pos_y][pix_c.pos_x], BLOCK_SIZE_8x8 * sizeof(sPixel));
   }
   else
   {
 #if (IMGTYPE == 0)
-    memset(&PredPel[9], PredPel[8], BLOCK_SIZE_8x8 * sizeof(imgpel));
+    memset(&PredPel[9], PredPel[8], BLOCK_SIZE_8x8 * sizeof(sPixel));
 #else
     P_I = P_J = P_K = P_L = P_M = P_N = P_O = P_P = P_H;
 #endif
@@ -684,7 +684,7 @@ static int intra8x8_diag_down_right_pred (Macroblock *currMB,
 
   if (block_available_left)
   {
-    imgpel **img_pred = &imgY[pix_a.pos_y];
+    sPixel **img_pred = &imgY[pix_a.pos_y];
     int pos_x = pix_a.pos_x;
     P_Q = *(*(img_pred ++) + pos_x);
     P_R = *(*(img_pred ++) + pos_x);
@@ -697,7 +697,7 @@ static int intra8x8_diag_down_right_pred (Macroblock *currMB,
   }
   else
   {
-    P_Q = P_R = P_S = P_T = P_U = P_V = P_W = P_X = (imgpel) pVid->dc_pred_value_comp[pl];
+    P_Q = P_R = P_S = P_T = P_U = P_V = P_W = P_X = (sPixel) vidParam->dc_pred_value_comp[pl];
   }
 
   if (block_available_up_left)
@@ -706,38 +706,38 @@ static int intra8x8_diag_down_right_pred (Macroblock *currMB,
   }
   else
   {
-    P_Z = (imgpel) pVid->dc_pred_value_comp[pl];
+    P_Z = (sPixel) vidParam->dc_pred_value_comp[pl];
   }
 
   LowPassForIntra8x8Pred(PredPel, block_available_up_left, block_available_up, block_available_left);
 
   // Mode DIAG_DOWN_RIGHT_PRED
-  PredArray[ 0] = (imgpel) ((P_X + P_V + ((P_W) << 1) + 2) >> 2);
-  PredArray[ 1] = (imgpel) ((P_W + P_U + ((P_V) << 1) + 2) >> 2);
-  PredArray[ 2] = (imgpel) ((P_V + P_T + ((P_U) << 1) + 2) >> 2);
-  PredArray[ 3] = (imgpel) ((P_U + P_S + ((P_T) << 1) + 2) >> 2);
-  PredArray[ 4] = (imgpel) ((P_T + P_R + ((P_S) << 1) + 2) >> 2);
-  PredArray[ 5] = (imgpel) ((P_S + P_Q + ((P_R) << 1) + 2) >> 2);
-  PredArray[ 6] = (imgpel) ((P_R + P_Z + ((P_Q) << 1) + 2) >> 2);
-  PredArray[ 7] = (imgpel) ((P_Q + P_A + ((P_Z) << 1) + 2) >> 2);
-  PredArray[ 8] = (imgpel) ((P_Z + P_B + ((P_A) << 1) + 2) >> 2);
-  PredArray[ 9] = (imgpel) ((P_A + P_C + ((P_B) << 1) + 2) >> 2);
-  PredArray[10] = (imgpel) ((P_B + P_D + ((P_C) << 1) + 2) >> 2);
-  PredArray[11] = (imgpel) ((P_C + P_E + ((P_D) << 1) + 2) >> 2);
-  PredArray[12] = (imgpel) ((P_D + P_F + ((P_E) << 1) + 2) >> 2);
-  PredArray[13] = (imgpel) ((P_E + P_G + ((P_F) << 1) + 2) >> 2);
-  PredArray[14] = (imgpel) ((P_F + P_H + ((P_G) << 1) + 2) >> 2);
+  PredArray[ 0] = (sPixel) ((P_X + P_V + ((P_W) << 1) + 2) >> 2);
+  PredArray[ 1] = (sPixel) ((P_W + P_U + ((P_V) << 1) + 2) >> 2);
+  PredArray[ 2] = (sPixel) ((P_V + P_T + ((P_U) << 1) + 2) >> 2);
+  PredArray[ 3] = (sPixel) ((P_U + P_S + ((P_T) << 1) + 2) >> 2);
+  PredArray[ 4] = (sPixel) ((P_T + P_R + ((P_S) << 1) + 2) >> 2);
+  PredArray[ 5] = (sPixel) ((P_S + P_Q + ((P_R) << 1) + 2) >> 2);
+  PredArray[ 6] = (sPixel) ((P_R + P_Z + ((P_Q) << 1) + 2) >> 2);
+  PredArray[ 7] = (sPixel) ((P_Q + P_A + ((P_Z) << 1) + 2) >> 2);
+  PredArray[ 8] = (sPixel) ((P_Z + P_B + ((P_A) << 1) + 2) >> 2);
+  PredArray[ 9] = (sPixel) ((P_A + P_C + ((P_B) << 1) + 2) >> 2);
+  PredArray[10] = (sPixel) ((P_B + P_D + ((P_C) << 1) + 2) >> 2);
+  PredArray[11] = (sPixel) ((P_C + P_E + ((P_D) << 1) + 2) >> 2);
+  PredArray[12] = (sPixel) ((P_D + P_F + ((P_E) << 1) + 2) >> 2);
+  PredArray[13] = (sPixel) ((P_E + P_G + ((P_F) << 1) + 2) >> 2);
+  PredArray[14] = (sPixel) ((P_F + P_H + ((P_G) << 1) + 2) >> 2);
 
   pred_pels = &PredArray[7];
 
-  memcpy((*mb_pred++) + ioff, pred_pels--, 8 * sizeof(imgpel));
-  memcpy((*mb_pred++) + ioff, pred_pels--, 8 * sizeof(imgpel));
-  memcpy((*mb_pred++) + ioff, pred_pels--, 8 * sizeof(imgpel));
-  memcpy((*mb_pred++) + ioff, pred_pels--, 8 * sizeof(imgpel));
-  memcpy((*mb_pred++) + ioff, pred_pels--, 8 * sizeof(imgpel));
-  memcpy((*mb_pred++) + ioff, pred_pels--, 8 * sizeof(imgpel));
-  memcpy((*mb_pred++) + ioff, pred_pels--, 8 * sizeof(imgpel));
-  memcpy((*mb_pred  ) + ioff, pred_pels  , 8 * sizeof(imgpel));
+  memcpy((*mb_pred++) + ioff, pred_pels--, 8 * sizeof(sPixel));
+  memcpy((*mb_pred++) + ioff, pred_pels--, 8 * sizeof(sPixel));
+  memcpy((*mb_pred++) + ioff, pred_pels--, 8 * sizeof(sPixel));
+  memcpy((*mb_pred++) + ioff, pred_pels--, 8 * sizeof(sPixel));
+  memcpy((*mb_pred++) + ioff, pred_pels--, 8 * sizeof(sPixel));
+  memcpy((*mb_pred++) + ioff, pred_pels--, 8 * sizeof(sPixel));
+  memcpy((*mb_pred++) + ioff, pred_pels--, 8 * sizeof(sPixel));
+  memcpy((*mb_pred  ) + ioff, pred_pels  , 8 * sizeof(sPixel));
 
   return DECODING_OK;
 }
@@ -759,12 +759,12 @@ static int intra8x8_diag_down_left_pred (Macroblock *currMB,
                                                int joff)              //!< pixel offset Y within MB
 {
   Slice *currSlice = currMB->p_Slice;
-  VideoParameters* pVid = currMB->pVid;
+  sVidParam* vidParam = currMB->vidParam;
 
-  imgpel PredPel[25];    // array of predictor pels
-  imgpel PredArray[16];  // array of final prediction values
-  imgpel *Pred = &PredArray[0];
-  imgpel **imgY = (pl) ? currSlice->dec_picture->imgUV[pl - 1] : currSlice->dec_picture->imgY; // For MB level frame/field coding tools -- set default to imgY
+  sPixel PredPel[25];    // array of predictor pels
+  sPixel PredArray[16];  // array of final prediction values
+  sPixel *Pred = &PredArray[0];
+  sPixel **imgY = (pl) ? currSlice->dec_picture->imgUV[pl - 1] : currSlice->dec_picture->imgY; // For MB level frame/field coding tools -- set default to imgY
 
   PixelPos pix_a;
   PixelPos pix_b, pix_c, pix_d;
@@ -776,8 +776,8 @@ static int intra8x8_diag_down_left_pred (Macroblock *currMB,
 
   for (int i=0; i<25;i++) PredPel[i]=0;
 
-  imgpel **mb_pred = &currSlice->mb_pred[pl][joff];
-  int *mb_size = pVid->mb_size[IS_LUMA];
+  sPixel **mb_pred = &currSlice->mb_pred[pl][joff];
+  int *mb_size = vidParam->mb_size[IS_LUMA];
 
   getNonAffNeighbour(currMB, ioff - 1, joff    , mb_size, &pix_a);
   getNonAffNeighbour(currMB, ioff    , joff - 1, mb_size, &pix_b);
@@ -786,7 +786,7 @@ static int intra8x8_diag_down_left_pred (Macroblock *currMB,
 
   pix_c.available = pix_c.available &&!(ioff == 8 && joff == 8);
 
-  if (pVid->active_pps->constrained_intra_pred_flag)
+  if (vidParam->active_pps->constrained_intra_pred_flag)
   {
     block_available_left     = pix_a.available ? currSlice->intra_block [pix_a.mb_addr]: 0;
     block_available_up       = pix_b.available ? currSlice->intra_block [pix_b.mb_addr] : 0;
@@ -807,25 +807,25 @@ static int intra8x8_diag_down_left_pred (Macroblock *currMB,
   // form predictor pels
   if (block_available_up)
   {
-    memcpy(&PredPel[1], &imgY[pix_b.pos_y][pix_b.pos_x], BLOCK_SIZE_8x8 * sizeof(imgpel));
+    memcpy(&PredPel[1], &imgY[pix_b.pos_y][pix_b.pos_x], BLOCK_SIZE_8x8 * sizeof(sPixel));
   }
   else
   {
 #if (IMGTYPE == 0)
-    memset(&PredPel[1], pVid->dc_pred_value_comp[pl], BLOCK_SIZE_8x8 * sizeof(imgpel));
+    memset(&PredPel[1], vidParam->dc_pred_value_comp[pl], BLOCK_SIZE_8x8 * sizeof(sPixel));
 #else
-    P_A = P_B = P_C = P_D = P_E = P_F = P_G = P_H = (imgpel) pVid->dc_pred_value_comp[pl];
+    P_A = P_B = P_C = P_D = P_E = P_F = P_G = P_H = (sPixel) vidParam->dc_pred_value_comp[pl];
 #endif
   }
 
   if (block_available_up_right)
   {
-    memcpy(&PredPel[9], &imgY[pix_c.pos_y][pix_c.pos_x], BLOCK_SIZE_8x8 * sizeof(imgpel));
+    memcpy(&PredPel[9], &imgY[pix_c.pos_y][pix_c.pos_x], BLOCK_SIZE_8x8 * sizeof(sPixel));
   }
   else
   {
 #if (IMGTYPE == 0)
-    memset(&PredPel[9], PredPel[8], BLOCK_SIZE_8x8 * sizeof(imgpel));
+    memset(&PredPel[9], PredPel[8], BLOCK_SIZE_8x8 * sizeof(sPixel));
 #else
     P_I = P_J = P_K = P_L = P_M = P_N = P_O = P_P = P_H;
 #endif
@@ -833,7 +833,7 @@ static int intra8x8_diag_down_left_pred (Macroblock *currMB,
 
   if (block_available_left)
   {
-    imgpel **img_pred = &imgY[pix_a.pos_y];
+    sPixel **img_pred = &imgY[pix_a.pos_y];
     int pos_x = pix_a.pos_x;
     P_Q = *(*(img_pred ++) + pos_x);
     P_R = *(*(img_pred ++) + pos_x);
@@ -846,7 +846,7 @@ static int intra8x8_diag_down_left_pred (Macroblock *currMB,
   }
   else
   {
-    P_Q = P_R = P_S = P_T = P_U = P_V = P_W = P_X = (imgpel) pVid->dc_pred_value_comp[pl];
+    P_Q = P_R = P_S = P_T = P_U = P_V = P_W = P_X = (sPixel) vidParam->dc_pred_value_comp[pl];
   }
 
   if (block_available_up_left)
@@ -855,38 +855,38 @@ static int intra8x8_diag_down_left_pred (Macroblock *currMB,
   }
   else
   {
-    P_Z = (imgpel) pVid->dc_pred_value_comp[pl];
+    P_Z = (sPixel) vidParam->dc_pred_value_comp[pl];
   }
 
   LowPassForIntra8x8Pred(PredPel, block_available_up_left, block_available_up, block_available_left);
 
   // Mode DIAG_DOWN_LEFT_PRED
-  *Pred++ = (imgpel) ((P_A + P_C + ((P_B) << 1) + 2) >> 2);
-  *Pred++ = (imgpel) ((P_B + P_D + ((P_C) << 1) + 2) >> 2);
-  *Pred++ = (imgpel) ((P_C + P_E + ((P_D) << 1) + 2) >> 2);
-  *Pred++ = (imgpel) ((P_D + P_F + ((P_E) << 1) + 2) >> 2);
-  *Pred++ = (imgpel) ((P_E + P_G + ((P_F) << 1) + 2) >> 2);
-  *Pred++ = (imgpel) ((P_F + P_H + ((P_G) << 1) + 2) >> 2);
-  *Pred++ = (imgpel) ((P_G + P_I + ((P_H) << 1) + 2) >> 2);
-  *Pred++ = (imgpel) ((P_H + P_J + ((P_I) << 1) + 2) >> 2);
-  *Pred++ = (imgpel) ((P_I + P_K + ((P_J) << 1) + 2) >> 2);
-  *Pred++ = (imgpel) ((P_J + P_L + ((P_K) << 1) + 2) >> 2);
-  *Pred++ = (imgpel) ((P_K + P_M + ((P_L) << 1) + 2) >> 2);
-  *Pred++ = (imgpel) ((P_L + P_N + ((P_M) << 1) + 2) >> 2);
-  *Pred++ = (imgpel) ((P_M + P_O + ((P_N) << 1) + 2) >> 2);
-  *Pred++ = (imgpel) ((P_N + P_P + ((P_O) << 1) + 2) >> 2);
-  *Pred   = (imgpel) ((P_O + P_P + ((P_P) << 1) + 2) >> 2);
+  *Pred++ = (sPixel) ((P_A + P_C + ((P_B) << 1) + 2) >> 2);
+  *Pred++ = (sPixel) ((P_B + P_D + ((P_C) << 1) + 2) >> 2);
+  *Pred++ = (sPixel) ((P_C + P_E + ((P_D) << 1) + 2) >> 2);
+  *Pred++ = (sPixel) ((P_D + P_F + ((P_E) << 1) + 2) >> 2);
+  *Pred++ = (sPixel) ((P_E + P_G + ((P_F) << 1) + 2) >> 2);
+  *Pred++ = (sPixel) ((P_F + P_H + ((P_G) << 1) + 2) >> 2);
+  *Pred++ = (sPixel) ((P_G + P_I + ((P_H) << 1) + 2) >> 2);
+  *Pred++ = (sPixel) ((P_H + P_J + ((P_I) << 1) + 2) >> 2);
+  *Pred++ = (sPixel) ((P_I + P_K + ((P_J) << 1) + 2) >> 2);
+  *Pred++ = (sPixel) ((P_J + P_L + ((P_K) << 1) + 2) >> 2);
+  *Pred++ = (sPixel) ((P_K + P_M + ((P_L) << 1) + 2) >> 2);
+  *Pred++ = (sPixel) ((P_L + P_N + ((P_M) << 1) + 2) >> 2);
+  *Pred++ = (sPixel) ((P_M + P_O + ((P_N) << 1) + 2) >> 2);
+  *Pred++ = (sPixel) ((P_N + P_P + ((P_O) << 1) + 2) >> 2);
+  *Pred   = (sPixel) ((P_O + P_P + ((P_P) << 1) + 2) >> 2);
 
   Pred = &PredArray[ 0];
 
-  memcpy((*mb_pred++) + ioff, Pred++, 8 * sizeof(imgpel));
-  memcpy((*mb_pred++) + ioff, Pred++, 8 * sizeof(imgpel));
-  memcpy((*mb_pred++) + ioff, Pred++, 8 * sizeof(imgpel));
-  memcpy((*mb_pred++) + ioff, Pred++, 8 * sizeof(imgpel));
-  memcpy((*mb_pred++) + ioff, Pred++, 8 * sizeof(imgpel));
-  memcpy((*mb_pred++) + ioff, Pred++, 8 * sizeof(imgpel));
-  memcpy((*mb_pred++) + ioff, Pred++, 8 * sizeof(imgpel));
-  memcpy((*mb_pred  ) + ioff, Pred  , 8 * sizeof(imgpel));
+  memcpy((*mb_pred++) + ioff, Pred++, 8 * sizeof(sPixel));
+  memcpy((*mb_pred++) + ioff, Pred++, 8 * sizeof(sPixel));
+  memcpy((*mb_pred++) + ioff, Pred++, 8 * sizeof(sPixel));
+  memcpy((*mb_pred++) + ioff, Pred++, 8 * sizeof(sPixel));
+  memcpy((*mb_pred++) + ioff, Pred++, 8 * sizeof(sPixel));
+  memcpy((*mb_pred++) + ioff, Pred++, 8 * sizeof(sPixel));
+  memcpy((*mb_pred++) + ioff, Pred++, 8 * sizeof(sPixel));
+  memcpy((*mb_pred  ) + ioff, Pred  , 8 * sizeof(sPixel));
 
   return DECODING_OK;
 }
@@ -908,11 +908,11 @@ static int intra8x8_vert_right_pred (Macroblock *currMB,
                                            int joff)              //!< pixel offset Y within MB
 {
   Slice *currSlice = currMB->p_Slice;
-  VideoParameters* pVid = currMB->pVid;
+  sVidParam* vidParam = currMB->vidParam;
 
-  imgpel PredPel[25];  // array of predictor pels
-  imgpel PredArray[22];  // array of final prediction values
-  imgpel **imgY = (pl) ? currSlice->dec_picture->imgUV[pl - 1] : currSlice->dec_picture->imgY; // For MB level frame/field coding tools -- set default to imgY
+  sPixel PredPel[25];  // array of predictor pels
+  sPixel PredArray[22];  // array of final prediction values
+  sPixel **imgY = (pl) ? currSlice->dec_picture->imgUV[pl - 1] : currSlice->dec_picture->imgY; // For MB level frame/field coding tools -- set default to imgY
 
   PixelPos pix_a;
   PixelPos pix_b, pix_c, pix_d;
@@ -924,9 +924,9 @@ static int intra8x8_vert_right_pred (Macroblock *currMB,
 
   for (int i=0; i<25;i++) PredPel[i]=0;
 
-  imgpel *pred_pels;
-  imgpel **mb_pred = &currSlice->mb_pred[pl][joff];
-  int *mb_size = pVid->mb_size[IS_LUMA];
+  sPixel *pred_pels;
+  sPixel **mb_pred = &currSlice->mb_pred[pl][joff];
+  int *mb_size = vidParam->mb_size[IS_LUMA];
 
   getNonAffNeighbour(currMB, ioff - 1, joff    , mb_size, &pix_a);
   getNonAffNeighbour(currMB, ioff    , joff - 1, mb_size, &pix_b);
@@ -935,7 +935,7 @@ static int intra8x8_vert_right_pred (Macroblock *currMB,
 
   pix_c.available = pix_c.available &&!(ioff == 8 && joff == 8);
 
-  if (pVid->active_pps->constrained_intra_pred_flag)
+  if (vidParam->active_pps->constrained_intra_pred_flag)
   {
     block_available_left     = pix_a.available ? currSlice->intra_block [pix_a.mb_addr]: 0;
     block_available_up       = pix_b.available ? currSlice->intra_block [pix_b.mb_addr] : 0;
@@ -956,25 +956,25 @@ static int intra8x8_vert_right_pred (Macroblock *currMB,
   // form predictor pels
   if (block_available_up)
   {
-    memcpy(&PredPel[1], &imgY[pix_b.pos_y][pix_b.pos_x], BLOCK_SIZE_8x8 * sizeof(imgpel));
+    memcpy(&PredPel[1], &imgY[pix_b.pos_y][pix_b.pos_x], BLOCK_SIZE_8x8 * sizeof(sPixel));
   }
   else
   {
 #if (IMGTYPE == 0)
-    memset(&PredPel[1], pVid->dc_pred_value_comp[pl], BLOCK_SIZE_8x8 * sizeof(imgpel));
+    memset(&PredPel[1], vidParam->dc_pred_value_comp[pl], BLOCK_SIZE_8x8 * sizeof(sPixel));
 #else
-    P_A = P_B = P_C = P_D = P_E = P_F = P_G = P_H = (imgpel) pVid->dc_pred_value_comp[pl];
+    P_A = P_B = P_C = P_D = P_E = P_F = P_G = P_H = (sPixel) vidParam->dc_pred_value_comp[pl];
 #endif
   }
 
   if (block_available_up_right)
   {
-    memcpy(&PredPel[9], &imgY[pix_c.pos_y][pix_c.pos_x], BLOCK_SIZE_8x8 * sizeof(imgpel));
+    memcpy(&PredPel[9], &imgY[pix_c.pos_y][pix_c.pos_x], BLOCK_SIZE_8x8 * sizeof(sPixel));
   }
   else
   {
 #if (IMGTYPE == 0)
-    memset(&PredPel[9], PredPel[8], BLOCK_SIZE_8x8 * sizeof(imgpel));
+    memset(&PredPel[9], PredPel[8], BLOCK_SIZE_8x8 * sizeof(sPixel));
 #else
     P_I = P_J = P_K = P_L = P_M = P_N = P_O = P_P = P_H;
 #endif
@@ -982,7 +982,7 @@ static int intra8x8_vert_right_pred (Macroblock *currMB,
 
   if (block_available_left)
   {
-    imgpel **img_pred = &imgY[pix_a.pos_y];
+    sPixel **img_pred = &imgY[pix_a.pos_y];
     int pos_x = pix_a.pos_x;
     P_Q = *(*(img_pred ++) + pos_x);
     P_R = *(*(img_pred ++) + pos_x);
@@ -995,7 +995,7 @@ static int intra8x8_vert_right_pred (Macroblock *currMB,
   }
   else
   {
-    P_Q = P_R = P_S = P_T = P_U = P_V = P_W = P_X = (imgpel) pVid->dc_pred_value_comp[pl];
+    P_Q = P_R = P_S = P_T = P_U = P_V = P_W = P_X = (sPixel) vidParam->dc_pred_value_comp[pl];
   }
 
   if (block_available_up_left)
@@ -1004,44 +1004,44 @@ static int intra8x8_vert_right_pred (Macroblock *currMB,
   }
   else
   {
-    P_Z = (imgpel) pVid->dc_pred_value_comp[pl];
+    P_Z = (sPixel) vidParam->dc_pred_value_comp[pl];
   }
 
   LowPassForIntra8x8Pred(PredPel, block_available_up_left, block_available_up, block_available_left);
 
   pred_pels = PredArray;
-  *pred_pels++ = (imgpel) ((P_V + P_T + ((P_U) << 1) + 2) >> 2);
-  *pred_pels++ = (imgpel) ((P_T + P_R + ((P_S) << 1) + 2) >> 2);
-  *pred_pels++ = (imgpel) ((P_R + P_Z + ((P_Q) << 1) + 2) >> 2);
-  *pred_pels++ = (imgpel) ((P_Z + P_A + 1) >> 1);
-  *pred_pels++ = (imgpel) ((P_A + P_B + 1) >> 1);
-  *pred_pels++ = (imgpel) ((P_B + P_C + 1) >> 1);
-  *pred_pels++ = (imgpel) ((P_C + P_D + 1) >> 1);
-  *pred_pels++ = (imgpel) ((P_D + P_E + 1) >> 1);
-  *pred_pels++ = (imgpel) ((P_E + P_F + 1) >> 1);
-  *pred_pels++ = (imgpel) ((P_F + P_G + 1) >> 1);
-  *pred_pels++ = (imgpel) ((P_G + P_H + 1) >> 1);
+  *pred_pels++ = (sPixel) ((P_V + P_T + ((P_U) << 1) + 2) >> 2);
+  *pred_pels++ = (sPixel) ((P_T + P_R + ((P_S) << 1) + 2) >> 2);
+  *pred_pels++ = (sPixel) ((P_R + P_Z + ((P_Q) << 1) + 2) >> 2);
+  *pred_pels++ = (sPixel) ((P_Z + P_A + 1) >> 1);
+  *pred_pels++ = (sPixel) ((P_A + P_B + 1) >> 1);
+  *pred_pels++ = (sPixel) ((P_B + P_C + 1) >> 1);
+  *pred_pels++ = (sPixel) ((P_C + P_D + 1) >> 1);
+  *pred_pels++ = (sPixel) ((P_D + P_E + 1) >> 1);
+  *pred_pels++ = (sPixel) ((P_E + P_F + 1) >> 1);
+  *pred_pels++ = (sPixel) ((P_F + P_G + 1) >> 1);
+  *pred_pels++ = (sPixel) ((P_G + P_H + 1) >> 1);
 
-  *pred_pels++ = (imgpel) ((P_W + P_U + ((P_V) << 1) + 2) >> 2);
-  *pred_pels++ = (imgpel) ((P_U + P_S + ((P_T) << 1) + 2) >> 2);
-  *pred_pels++ = (imgpel) ((P_S + P_Q + ((P_R) << 1) + 2) >> 2);
-  *pred_pels++ = (imgpel) ((P_Q + P_A + ((P_Z) << 1) + 2) >> 2);
-  *pred_pels++ = (imgpel) ((P_Z + P_B + ((P_A) << 1) + 2) >> 2);
-  *pred_pels++ = (imgpel) ((P_A + P_C + ((P_B) << 1) + 2) >> 2);
-  *pred_pels++ = (imgpel) ((P_B + P_D + ((P_C) << 1) + 2) >> 2);
-  *pred_pels++ = (imgpel) ((P_C + P_E + ((P_D) << 1) + 2) >> 2);
-  *pred_pels++ = (imgpel) ((P_D + P_F + ((P_E) << 1) + 2) >> 2);
-  *pred_pels++ = (imgpel) ((P_E + P_G + ((P_F) << 1) + 2) >> 2);
-  *pred_pels   = (imgpel) ((P_F + P_H + ((P_G) << 1) + 2) >> 2);
+  *pred_pels++ = (sPixel) ((P_W + P_U + ((P_V) << 1) + 2) >> 2);
+  *pred_pels++ = (sPixel) ((P_U + P_S + ((P_T) << 1) + 2) >> 2);
+  *pred_pels++ = (sPixel) ((P_S + P_Q + ((P_R) << 1) + 2) >> 2);
+  *pred_pels++ = (sPixel) ((P_Q + P_A + ((P_Z) << 1) + 2) >> 2);
+  *pred_pels++ = (sPixel) ((P_Z + P_B + ((P_A) << 1) + 2) >> 2);
+  *pred_pels++ = (sPixel) ((P_A + P_C + ((P_B) << 1) + 2) >> 2);
+  *pred_pels++ = (sPixel) ((P_B + P_D + ((P_C) << 1) + 2) >> 2);
+  *pred_pels++ = (sPixel) ((P_C + P_E + ((P_D) << 1) + 2) >> 2);
+  *pred_pels++ = (sPixel) ((P_D + P_F + ((P_E) << 1) + 2) >> 2);
+  *pred_pels++ = (sPixel) ((P_E + P_G + ((P_F) << 1) + 2) >> 2);
+  *pred_pels   = (sPixel) ((P_F + P_H + ((P_G) << 1) + 2) >> 2);
 
-  memcpy((*mb_pred++) + ioff, &PredArray[ 3], 8 * sizeof(imgpel));
-  memcpy((*mb_pred++) + ioff, &PredArray[14], 8 * sizeof(imgpel));
-  memcpy((*mb_pred++) + ioff, &PredArray[ 2], 8 * sizeof(imgpel));
-  memcpy((*mb_pred++) + ioff, &PredArray[13], 8 * sizeof(imgpel));
-  memcpy((*mb_pred++) + ioff, &PredArray[ 1], 8 * sizeof(imgpel));
-  memcpy((*mb_pred++) + ioff, &PredArray[12], 8 * sizeof(imgpel));
-  memcpy((*mb_pred++) + ioff, &PredArray[ 0], 8 * sizeof(imgpel));
-  memcpy((*mb_pred  ) + ioff, &PredArray[11], 8 * sizeof(imgpel));
+  memcpy((*mb_pred++) + ioff, &PredArray[ 3], 8 * sizeof(sPixel));
+  memcpy((*mb_pred++) + ioff, &PredArray[14], 8 * sizeof(sPixel));
+  memcpy((*mb_pred++) + ioff, &PredArray[ 2], 8 * sizeof(sPixel));
+  memcpy((*mb_pred++) + ioff, &PredArray[13], 8 * sizeof(sPixel));
+  memcpy((*mb_pred++) + ioff, &PredArray[ 1], 8 * sizeof(sPixel));
+  memcpy((*mb_pred++) + ioff, &PredArray[12], 8 * sizeof(sPixel));
+  memcpy((*mb_pred++) + ioff, &PredArray[ 0], 8 * sizeof(sPixel));
+  memcpy((*mb_pred  ) + ioff, &PredArray[11], 8 * sizeof(sPixel));
 
   return DECODING_OK;
 }
@@ -1063,12 +1063,12 @@ static int intra8x8_vert_left_pred (Macroblock *currMB,
                                           int joff)              //!< pixel offset Y within MB
 {
   Slice *currSlice = currMB->p_Slice;
-  VideoParameters* pVid = currMB->pVid;
+  sVidParam* vidParam = currMB->vidParam;
 
-  imgpel PredPel[25];  // array of predictor pels
-  imgpel PredArray[22];  // array of final prediction values
-  imgpel *pred_pel = &PredArray[0];
-  imgpel **imgY = (pl) ? currSlice->dec_picture->imgUV[pl - 1] : currSlice->dec_picture->imgY; // For MB level frame/field coding tools -- set default to imgY
+  sPixel PredPel[25];  // array of predictor pels
+  sPixel PredArray[22];  // array of final prediction values
+  sPixel *pred_pel = &PredArray[0];
+  sPixel **imgY = (pl) ? currSlice->dec_picture->imgUV[pl - 1] : currSlice->dec_picture->imgY; // For MB level frame/field coding tools -- set default to imgY
 
   PixelPos pix_a;
   PixelPos pix_b, pix_c, pix_d;
@@ -1078,8 +1078,8 @@ static int intra8x8_vert_left_pred (Macroblock *currMB,
   int block_available_up_left;
   int block_available_up_right;
 
-  imgpel **mb_pred = &currSlice->mb_pred[pl][joff];
-  int *mb_size = pVid->mb_size[IS_LUMA];
+  sPixel **mb_pred = &currSlice->mb_pred[pl][joff];
+  int *mb_size = vidParam->mb_size[IS_LUMA];
 
   for (int i=0; i<25;i++) PredPel[i]=0;
 
@@ -1090,7 +1090,7 @@ static int intra8x8_vert_left_pred (Macroblock *currMB,
 
   pix_c.available = pix_c.available &&!(ioff == 8 && joff == 8);
 
-  if (pVid->active_pps->constrained_intra_pred_flag)
+  if (vidParam->active_pps->constrained_intra_pred_flag)
   {
     block_available_left     = pix_a.available ? currSlice->intra_block [pix_a.mb_addr] : 0;
     block_available_up       = pix_b.available ? currSlice->intra_block [pix_b.mb_addr] : 0;
@@ -1111,25 +1111,25 @@ static int intra8x8_vert_left_pred (Macroblock *currMB,
   // form predictor pels
   if (block_available_up)
   {
-    memcpy(&PredPel[1], &imgY[pix_b.pos_y][pix_b.pos_x], BLOCK_SIZE_8x8 * sizeof(imgpel));
+    memcpy(&PredPel[1], &imgY[pix_b.pos_y][pix_b.pos_x], BLOCK_SIZE_8x8 * sizeof(sPixel));
   }
   else
   {
 #if (IMGTYPE == 0)
-    memset(&PredPel[1], pVid->dc_pred_value_comp[pl], BLOCK_SIZE_8x8 * sizeof(imgpel));
+    memset(&PredPel[1], vidParam->dc_pred_value_comp[pl], BLOCK_SIZE_8x8 * sizeof(sPixel));
 #else
-    P_A = P_B = P_C = P_D = P_E = P_F = P_G = P_H = (imgpel) pVid->dc_pred_value_comp[pl];
+    P_A = P_B = P_C = P_D = P_E = P_F = P_G = P_H = (sPixel) vidParam->dc_pred_value_comp[pl];
 #endif
   }
 
   if (block_available_up_right)
   {
-    memcpy(&PredPel[9], &imgY[pix_c.pos_y][pix_c.pos_x], BLOCK_SIZE_8x8 * sizeof(imgpel));
+    memcpy(&PredPel[9], &imgY[pix_c.pos_y][pix_c.pos_x], BLOCK_SIZE_8x8 * sizeof(sPixel));
   }
   else
   {
 #if (IMGTYPE == 0)
-    memset(&PredPel[9], PredPel[8], BLOCK_SIZE_8x8 * sizeof(imgpel));
+    memset(&PredPel[9], PredPel[8], BLOCK_SIZE_8x8 * sizeof(sPixel));
 #else
     P_I = P_J = P_K = P_L = P_M = P_N = P_O = P_P = P_H;
 #endif
@@ -1137,7 +1137,7 @@ static int intra8x8_vert_left_pred (Macroblock *currMB,
 
   if (block_available_left)
   {
-    imgpel **img_pred = &imgY[pix_a.pos_y];
+    sPixel **img_pred = &imgY[pix_a.pos_y];
     int pos_x = pix_a.pos_x;
     P_Q = *(*(img_pred ++) + pos_x);
     P_R = *(*(img_pred ++) + pos_x);
@@ -1150,7 +1150,7 @@ static int intra8x8_vert_left_pred (Macroblock *currMB,
   }
   else
   {
-    P_Q = P_R = P_S = P_T = P_U = P_V = P_W = P_X = (imgpel) pVid->dc_pred_value_comp[pl];
+    P_Q = P_R = P_S = P_T = P_U = P_V = P_W = P_X = (sPixel) vidParam->dc_pred_value_comp[pl];
   }
 
   if (block_available_up_left)
@@ -1159,42 +1159,42 @@ static int intra8x8_vert_left_pred (Macroblock *currMB,
   }
   else
   {
-    P_Z = (imgpel) pVid->dc_pred_value_comp[pl];
+    P_Z = (sPixel) vidParam->dc_pred_value_comp[pl];
   }
 
   LowPassForIntra8x8Pred(PredPel, block_available_up_left, block_available_up, block_available_left);
 
-  *pred_pel++ = (imgpel) ((P_A + P_B + 1) >> 1);
-  *pred_pel++ = (imgpel) ((P_B + P_C + 1) >> 1);
-  *pred_pel++ = (imgpel) ((P_C + P_D + 1) >> 1);
-  *pred_pel++ = (imgpel) ((P_D + P_E + 1) >> 1);
-  *pred_pel++ = (imgpel) ((P_E + P_F + 1) >> 1);
-  *pred_pel++ = (imgpel) ((P_F + P_G + 1) >> 1);
-  *pred_pel++ = (imgpel) ((P_G + P_H + 1) >> 1);
-  *pred_pel++ = (imgpel) ((P_H + P_I + 1) >> 1);
-  *pred_pel++ = (imgpel) ((P_I + P_J + 1) >> 1);
-  *pred_pel++ = (imgpel) ((P_J + P_K + 1) >> 1);
-  *pred_pel++ = (imgpel) ((P_K + P_L + 1) >> 1);
-  *pred_pel++ = (imgpel) ((P_A + P_C + ((P_B) << 1) + 2) >> 2);
-  *pred_pel++ = (imgpel) ((P_B + P_D + ((P_C) << 1) + 2) >> 2);
-  *pred_pel++ = (imgpel) ((P_C + P_E + ((P_D) << 1) + 2) >> 2);
-  *pred_pel++ = (imgpel) ((P_D + P_F + ((P_E) << 1) + 2) >> 2);
-  *pred_pel++ = (imgpel) ((P_E + P_G + ((P_F) << 1) + 2) >> 2);
-  *pred_pel++ = (imgpel) ((P_F + P_H + ((P_G) << 1) + 2) >> 2);
-  *pred_pel++ = (imgpel) ((P_G + P_I + ((P_H) << 1) + 2) >> 2);
-  *pred_pel++ = (imgpel) ((P_H + P_J + ((P_I) << 1) + 2) >> 2);
-  *pred_pel++ = (imgpel) ((P_I + P_K + ((P_J) << 1) + 2) >> 2);
-  *pred_pel++ = (imgpel) ((P_J + P_L + ((P_K) << 1) + 2) >> 2);
-  *pred_pel   = (imgpel) ((P_K + P_M + ((P_L) << 1) + 2) >> 2);
+  *pred_pel++ = (sPixel) ((P_A + P_B + 1) >> 1);
+  *pred_pel++ = (sPixel) ((P_B + P_C + 1) >> 1);
+  *pred_pel++ = (sPixel) ((P_C + P_D + 1) >> 1);
+  *pred_pel++ = (sPixel) ((P_D + P_E + 1) >> 1);
+  *pred_pel++ = (sPixel) ((P_E + P_F + 1) >> 1);
+  *pred_pel++ = (sPixel) ((P_F + P_G + 1) >> 1);
+  *pred_pel++ = (sPixel) ((P_G + P_H + 1) >> 1);
+  *pred_pel++ = (sPixel) ((P_H + P_I + 1) >> 1);
+  *pred_pel++ = (sPixel) ((P_I + P_J + 1) >> 1);
+  *pred_pel++ = (sPixel) ((P_J + P_K + 1) >> 1);
+  *pred_pel++ = (sPixel) ((P_K + P_L + 1) >> 1);
+  *pred_pel++ = (sPixel) ((P_A + P_C + ((P_B) << 1) + 2) >> 2);
+  *pred_pel++ = (sPixel) ((P_B + P_D + ((P_C) << 1) + 2) >> 2);
+  *pred_pel++ = (sPixel) ((P_C + P_E + ((P_D) << 1) + 2) >> 2);
+  *pred_pel++ = (sPixel) ((P_D + P_F + ((P_E) << 1) + 2) >> 2);
+  *pred_pel++ = (sPixel) ((P_E + P_G + ((P_F) << 1) + 2) >> 2);
+  *pred_pel++ = (sPixel) ((P_F + P_H + ((P_G) << 1) + 2) >> 2);
+  *pred_pel++ = (sPixel) ((P_G + P_I + ((P_H) << 1) + 2) >> 2);
+  *pred_pel++ = (sPixel) ((P_H + P_J + ((P_I) << 1) + 2) >> 2);
+  *pred_pel++ = (sPixel) ((P_I + P_K + ((P_J) << 1) + 2) >> 2);
+  *pred_pel++ = (sPixel) ((P_J + P_L + ((P_K) << 1) + 2) >> 2);
+  *pred_pel   = (sPixel) ((P_K + P_M + ((P_L) << 1) + 2) >> 2);
 
-  memcpy((*mb_pred++) + ioff, &PredArray[ 0], 8 * sizeof(imgpel));
-  memcpy((*mb_pred++) + ioff, &PredArray[11], 8 * sizeof(imgpel));
-  memcpy((*mb_pred++) + ioff, &PredArray[ 1], 8 * sizeof(imgpel));
-  memcpy((*mb_pred++) + ioff, &PredArray[12], 8 * sizeof(imgpel));
-  memcpy((*mb_pred++) + ioff, &PredArray[ 2], 8 * sizeof(imgpel));
-  memcpy((*mb_pred++) + ioff, &PredArray[13], 8 * sizeof(imgpel));
-  memcpy((*mb_pred++) + ioff, &PredArray[ 3], 8 * sizeof(imgpel));
-  memcpy((*mb_pred  ) + ioff, &PredArray[14], 8 * sizeof(imgpel));
+  memcpy((*mb_pred++) + ioff, &PredArray[ 0], 8 * sizeof(sPixel));
+  memcpy((*mb_pred++) + ioff, &PredArray[11], 8 * sizeof(sPixel));
+  memcpy((*mb_pred++) + ioff, &PredArray[ 1], 8 * sizeof(sPixel));
+  memcpy((*mb_pred++) + ioff, &PredArray[12], 8 * sizeof(sPixel));
+  memcpy((*mb_pred++) + ioff, &PredArray[ 2], 8 * sizeof(sPixel));
+  memcpy((*mb_pred++) + ioff, &PredArray[13], 8 * sizeof(sPixel));
+  memcpy((*mb_pred++) + ioff, &PredArray[ 3], 8 * sizeof(sPixel));
+  memcpy((*mb_pred  ) + ioff, &PredArray[14], 8 * sizeof(sPixel));
 
   return DECODING_OK;
 }
@@ -1216,11 +1216,11 @@ static int intra8x8_hor_up_pred (Macroblock *currMB,
                                        int joff)              //!< pixel offset Y within MB
 {
   Slice *currSlice = currMB->p_Slice;
-  VideoParameters* pVid = currMB->pVid;
+  sVidParam* vidParam = currMB->vidParam;
 
-  imgpel PredPel[25];     // array of predictor pels
-  imgpel PredArray[22];   // array of final prediction values
-  imgpel **imgY = (pl) ? currSlice->dec_picture->imgUV[pl - 1] : currSlice->dec_picture->imgY; // For MB level frame/field coding tools -- set default to imgY
+  sPixel PredPel[25];     // array of predictor pels
+  sPixel PredArray[22];   // array of final prediction values
+  sPixel **imgY = (pl) ? currSlice->dec_picture->imgUV[pl - 1] : currSlice->dec_picture->imgY; // For MB level frame/field coding tools -- set default to imgY
 
   PixelPos pix_a;
   PixelPos pix_b, pix_c, pix_d;
@@ -1234,8 +1234,8 @@ static int intra8x8_hor_up_pred (Macroblock *currMB,
 
   for (int i=0; i<25;i++) PredPel[i]=0;
 
-  imgpel **mpr = currSlice->mb_pred[pl];
-  int *mb_size = pVid->mb_size[IS_LUMA];
+  sPixel **mpr = currSlice->mb_pred[pl];
+  int *mb_size = vidParam->mb_size[IS_LUMA];
 
   getNonAffNeighbour(currMB, ioff - 1, joff    , mb_size, &pix_a);
   getNonAffNeighbour(currMB, ioff    , joff - 1, mb_size, &pix_b);
@@ -1244,7 +1244,7 @@ static int intra8x8_hor_up_pred (Macroblock *currMB,
 
   pix_c.available = pix_c.available &&!(ioff == 8 && joff == 8);
 
-  if (pVid->active_pps->constrained_intra_pred_flag)
+  if (vidParam->active_pps->constrained_intra_pred_flag)
   {
     block_available_left     = pix_a.available ? currSlice->intra_block [pix_a.mb_addr] : 0;
     block_available_up       = pix_b.available ? currSlice->intra_block [pix_b.mb_addr] : 0;
@@ -1265,25 +1265,25 @@ static int intra8x8_hor_up_pred (Macroblock *currMB,
   // form predictor pels
   if (block_available_up)
   {
-    memcpy(&PredPel[1], &imgY[pix_b.pos_y][pix_b.pos_x], BLOCK_SIZE_8x8 * sizeof(imgpel));
+    memcpy(&PredPel[1], &imgY[pix_b.pos_y][pix_b.pos_x], BLOCK_SIZE_8x8 * sizeof(sPixel));
   }
   else
   {
 #if (IMGTYPE == 0)
-    memset(&PredPel[1], pVid->dc_pred_value_comp[pl], BLOCK_SIZE_8x8 * sizeof(imgpel));
+    memset(&PredPel[1], vidParam->dc_pred_value_comp[pl], BLOCK_SIZE_8x8 * sizeof(sPixel));
 #else
-    P_A = P_B = P_C = P_D = P_E = P_F = P_G = P_H = (imgpel) pVid->dc_pred_value_comp[pl];
+    P_A = P_B = P_C = P_D = P_E = P_F = P_G = P_H = (sPixel) vidParam->dc_pred_value_comp[pl];
 #endif
   }
 
   if (block_available_up_right)
   {
-    memcpy(&PredPel[9], &imgY[pix_c.pos_y][pix_c.pos_x], BLOCK_SIZE_8x8 * sizeof(imgpel));
+    memcpy(&PredPel[9], &imgY[pix_c.pos_y][pix_c.pos_x], BLOCK_SIZE_8x8 * sizeof(sPixel));
   }
   else
   {
 #if (IMGTYPE == 0)
-    memset(&PredPel[9], PredPel[8], BLOCK_SIZE_8x8 * sizeof(imgpel));
+    memset(&PredPel[9], PredPel[8], BLOCK_SIZE_8x8 * sizeof(sPixel));
 #else
     P_I = P_J = P_K = P_L = P_M = P_N = P_O = P_P = P_H;
 #endif
@@ -1291,7 +1291,7 @@ static int intra8x8_hor_up_pred (Macroblock *currMB,
 
   if (block_available_left)
   {
-    imgpel **img_pred = &imgY[pix_a.pos_y];
+    sPixel **img_pred = &imgY[pix_a.pos_y];
     int pos_x = pix_a.pos_x;
     P_Q = *(*(img_pred ++) + pos_x);
     P_R = *(*(img_pred ++) + pos_x);
@@ -1304,7 +1304,7 @@ static int intra8x8_hor_up_pred (Macroblock *currMB,
   }
   else
   {
-    P_Q = P_R = P_S = P_T = P_U = P_V = P_W = P_X = (imgpel) pVid->dc_pred_value_comp[pl];
+    P_Q = P_R = P_S = P_T = P_U = P_V = P_W = P_X = (sPixel) vidParam->dc_pred_value_comp[pl];
   }
 
   if (block_available_up_left)
@@ -1313,42 +1313,42 @@ static int intra8x8_hor_up_pred (Macroblock *currMB,
   }
   else
   {
-    P_Z = (imgpel) pVid->dc_pred_value_comp[pl];
+    P_Z = (sPixel) vidParam->dc_pred_value_comp[pl];
   }
 
   LowPassForIntra8x8Pred(PredPel, block_available_up_left, block_available_up, block_available_left);
 
-  PredArray[ 0] = (imgpel) ((P_Q + P_R + 1) >> 1);
-  PredArray[ 1] = (imgpel) ((P_S + P_Q + ((P_R) << 1) + 2) >> 2);
-  PredArray[ 2] = (imgpel) ((P_R + P_S + 1) >> 1);
-  PredArray[ 3] = (imgpel) ((P_T + P_R + ((P_S) << 1) + 2) >> 2);
-  PredArray[ 4] = (imgpel) ((P_S + P_T + 1) >> 1);
-  PredArray[ 5] = (imgpel) ((P_U + P_S + ((P_T) << 1) + 2) >> 2);
-  PredArray[ 6] = (imgpel) ((P_T + P_U + 1) >> 1);
-  PredArray[ 7] = (imgpel) ((P_V + P_T + ((P_U) << 1) + 2) >> 2);
-  PredArray[ 8] = (imgpel) ((P_U + P_V + 1) >> 1);
-  PredArray[ 9] = (imgpel) ((P_W + P_U + ((P_V) << 1) + 2) >> 2);
-  PredArray[10] = (imgpel) ((P_V + P_W + 1) >> 1);
-  PredArray[11] = (imgpel) ((P_X + P_V + ((P_W) << 1) + 2) >> 2);
-  PredArray[12] = (imgpel) ((P_W + P_X + 1) >> 1);
-  PredArray[13] = (imgpel) ((P_W + P_X + ((P_X) << 1) + 2) >> 2);
-  PredArray[14] = (imgpel) P_X;
-  PredArray[15] = (imgpel) P_X;
-  PredArray[16] = (imgpel) P_X;
-  PredArray[17] = (imgpel) P_X;
-  PredArray[18] = (imgpel) P_X;
-  PredArray[19] = (imgpel) P_X;
-  PredArray[20] = (imgpel) P_X;
-  PredArray[21] = (imgpel) P_X;
+  PredArray[ 0] = (sPixel) ((P_Q + P_R + 1) >> 1);
+  PredArray[ 1] = (sPixel) ((P_S + P_Q + ((P_R) << 1) + 2) >> 2);
+  PredArray[ 2] = (sPixel) ((P_R + P_S + 1) >> 1);
+  PredArray[ 3] = (sPixel) ((P_T + P_R + ((P_S) << 1) + 2) >> 2);
+  PredArray[ 4] = (sPixel) ((P_S + P_T + 1) >> 1);
+  PredArray[ 5] = (sPixel) ((P_U + P_S + ((P_T) << 1) + 2) >> 2);
+  PredArray[ 6] = (sPixel) ((P_T + P_U + 1) >> 1);
+  PredArray[ 7] = (sPixel) ((P_V + P_T + ((P_U) << 1) + 2) >> 2);
+  PredArray[ 8] = (sPixel) ((P_U + P_V + 1) >> 1);
+  PredArray[ 9] = (sPixel) ((P_W + P_U + ((P_V) << 1) + 2) >> 2);
+  PredArray[10] = (sPixel) ((P_V + P_W + 1) >> 1);
+  PredArray[11] = (sPixel) ((P_X + P_V + ((P_W) << 1) + 2) >> 2);
+  PredArray[12] = (sPixel) ((P_W + P_X + 1) >> 1);
+  PredArray[13] = (sPixel) ((P_W + P_X + ((P_X) << 1) + 2) >> 2);
+  PredArray[14] = (sPixel) P_X;
+  PredArray[15] = (sPixel) P_X;
+  PredArray[16] = (sPixel) P_X;
+  PredArray[17] = (sPixel) P_X;
+  PredArray[18] = (sPixel) P_X;
+  PredArray[19] = (sPixel) P_X;
+  PredArray[20] = (sPixel) P_X;
+  PredArray[21] = (sPixel) P_X;
 
-  memcpy(&mpr[jpos0][ioff], &PredArray[0], 8 * sizeof(imgpel));
-  memcpy(&mpr[jpos1][ioff], &PredArray[2], 8 * sizeof(imgpel));
-  memcpy(&mpr[jpos2][ioff], &PredArray[4], 8 * sizeof(imgpel));
-  memcpy(&mpr[jpos3][ioff], &PredArray[6], 8 * sizeof(imgpel));
-  memcpy(&mpr[jpos4][ioff], &PredArray[8], 8 * sizeof(imgpel));
-  memcpy(&mpr[jpos5][ioff], &PredArray[10], 8 * sizeof(imgpel));
-  memcpy(&mpr[jpos6][ioff], &PredArray[12], 8 * sizeof(imgpel));
-  memcpy(&mpr[jpos7][ioff], &PredArray[14], 8 * sizeof(imgpel));
+  memcpy(&mpr[jpos0][ioff], &PredArray[0], 8 * sizeof(sPixel));
+  memcpy(&mpr[jpos1][ioff], &PredArray[2], 8 * sizeof(sPixel));
+  memcpy(&mpr[jpos2][ioff], &PredArray[4], 8 * sizeof(sPixel));
+  memcpy(&mpr[jpos3][ioff], &PredArray[6], 8 * sizeof(sPixel));
+  memcpy(&mpr[jpos4][ioff], &PredArray[8], 8 * sizeof(sPixel));
+  memcpy(&mpr[jpos5][ioff], &PredArray[10], 8 * sizeof(sPixel));
+  memcpy(&mpr[jpos6][ioff], &PredArray[12], 8 * sizeof(sPixel));
+  memcpy(&mpr[jpos7][ioff], &PredArray[14], 8 * sizeof(sPixel));
 
   return DECODING_OK;
 }
@@ -1370,11 +1370,11 @@ static int intra8x8_hor_down_pred (Macroblock *currMB,
                                          int joff)              //!< pixel offset Y within MB
 {
   Slice *currSlice = currMB->p_Slice;
-  VideoParameters* pVid = currMB->pVid;
+  sVidParam* vidParam = currMB->vidParam;
 
-  imgpel PredPel[25];  // array of predictor pels
-  imgpel PredArray[22];   // array of final prediction values
-  imgpel **imgY = (pl) ? currSlice->dec_picture->imgUV[pl - 1] : currSlice->dec_picture->imgY; // For MB level frame/field coding tools -- set default to imgY
+  sPixel PredPel[25];  // array of predictor pels
+  sPixel PredArray[22];   // array of final prediction values
+  sPixel **imgY = (pl) ? currSlice->dec_picture->imgUV[pl - 1] : currSlice->dec_picture->imgY; // For MB level frame/field coding tools -- set default to imgY
 
   PixelPos pix_a;
   PixelPos pix_b, pix_c, pix_d;
@@ -1384,9 +1384,9 @@ static int intra8x8_hor_down_pred (Macroblock *currMB,
   int block_available_up_left;
   int block_available_up_right;
 
-  imgpel *pred_pels;
-  imgpel **mb_pred = &currSlice->mb_pred[pl][joff];
-  int *mb_size = pVid->mb_size[IS_LUMA];
+  sPixel *pred_pels;
+  sPixel **mb_pred = &currSlice->mb_pred[pl][joff];
+  int *mb_size = vidParam->mb_size[IS_LUMA];
 
   for (int i=0; i<25;i++) PredPel[i]=0;
 
@@ -1397,7 +1397,7 @@ static int intra8x8_hor_down_pred (Macroblock *currMB,
 
   pix_c.available = pix_c.available &&!(ioff == 8 && joff == 8);
 
-  if (pVid->active_pps->constrained_intra_pred_flag)
+  if (vidParam->active_pps->constrained_intra_pred_flag)
   {
     block_available_left     = pix_a.available ? currSlice->intra_block [pix_a.mb_addr] : 0;
     block_available_up       = pix_b.available ? currSlice->intra_block [pix_b.mb_addr] : 0;
@@ -1418,25 +1418,25 @@ static int intra8x8_hor_down_pred (Macroblock *currMB,
   // form predictor pels
   if (block_available_up)
   {
-    memcpy(&PredPel[1], &imgY[pix_b.pos_y][pix_b.pos_x], BLOCK_SIZE_8x8 * sizeof(imgpel));
+    memcpy(&PredPel[1], &imgY[pix_b.pos_y][pix_b.pos_x], BLOCK_SIZE_8x8 * sizeof(sPixel));
   }
   else
   {
 #if (IMGTYPE == 0)
-    memset(&PredPel[1], pVid->dc_pred_value_comp[pl], BLOCK_SIZE_8x8 * sizeof(imgpel));
+    memset(&PredPel[1], vidParam->dc_pred_value_comp[pl], BLOCK_SIZE_8x8 * sizeof(sPixel));
 #else
-    P_A = P_B = P_C = P_D = P_E = P_F = P_G = P_H = (imgpel) pVid->dc_pred_value_comp[pl];
+    P_A = P_B = P_C = P_D = P_E = P_F = P_G = P_H = (sPixel) vidParam->dc_pred_value_comp[pl];
 #endif
   }
 
   if (block_available_up_right)
   {
-    memcpy(&PredPel[9], &imgY[pix_c.pos_y][pix_c.pos_x], BLOCK_SIZE_8x8 * sizeof(imgpel));
+    memcpy(&PredPel[9], &imgY[pix_c.pos_y][pix_c.pos_x], BLOCK_SIZE_8x8 * sizeof(sPixel));
   }
   else
   {
 #if (IMGTYPE == 0)
-    memset(&PredPel[9], PredPel[8], BLOCK_SIZE_8x8 * sizeof(imgpel));
+    memset(&PredPel[9], PredPel[8], BLOCK_SIZE_8x8 * sizeof(sPixel));
 #else
     P_I = P_J = P_K = P_L = P_M = P_N = P_O = P_P = P_H;
 #endif
@@ -1444,7 +1444,7 @@ static int intra8x8_hor_down_pred (Macroblock *currMB,
 
   if (block_available_left)
   {
-    imgpel **img_pred = &imgY[pix_a.pos_y];
+    sPixel **img_pred = &imgY[pix_a.pos_y];
     int pos_x = pix_a.pos_x;
     P_Q = *(*(img_pred ++) + pos_x);
     P_R = *(*(img_pred ++) + pos_x);
@@ -1457,7 +1457,7 @@ static int intra8x8_hor_down_pred (Macroblock *currMB,
   }
   else
   {
-    P_Q = P_R = P_S = P_T = P_U = P_V = P_W = P_X = (imgpel) pVid->dc_pred_value_comp[pl];
+    P_Q = P_R = P_S = P_T = P_U = P_V = P_W = P_X = (sPixel) vidParam->dc_pred_value_comp[pl];
   }
 
   if (block_available_up_left)
@@ -1466,52 +1466,52 @@ static int intra8x8_hor_down_pred (Macroblock *currMB,
   }
   else
   {
-    P_Z = (imgpel) pVid->dc_pred_value_comp[pl];
+    P_Z = (sPixel) vidParam->dc_pred_value_comp[pl];
   }
 
   LowPassForIntra8x8Pred(PredPel, block_available_up_left, block_available_up, block_available_left);
 
   pred_pels = PredArray;
 
-  *pred_pels++ = (imgpel) ((P_X + P_W + 1) >> 1);
-  *pred_pels++ = (imgpel) ((P_V + P_X + (P_W << 1) + 2) >> 2);
-  *pred_pels++ = (imgpel) ((P_W + P_V + 1) >> 1);
-  *pred_pels++ = (imgpel) ((P_U + P_W + ((P_V) << 1) + 2) >> 2);
-  *pred_pels++ = (imgpel) ((P_V + P_U + 1) >> 1);
-  *pred_pels++ = (imgpel) ((P_T + P_V + ((P_U) << 1) + 2) >> 2);
-  *pred_pels++ = (imgpel) ((P_U + P_T + 1) >> 1);
-  *pred_pels++ = (imgpel) ((P_S + P_U + ((P_T) << 1) + 2) >> 2);
-  *pred_pels++ = (imgpel) ((P_T + P_S + 1) >> 1);
-  *pred_pels++ = (imgpel) ((P_R + P_T + ((P_S) << 1) + 2) >> 2);
-  *pred_pels++ = (imgpel) ((P_S + P_R + 1) >> 1);
-  *pred_pels++ = (imgpel) ((P_Q + P_S + ((P_R) << 1) + 2) >> 2);
-  *pred_pels++ = (imgpel) ((P_R + P_Q + 1) >> 1);
-  *pred_pels++ = (imgpel) ((P_Z + P_R + ((P_Q) << 1) + 2) >> 2);
-  *pred_pels++ = (imgpel) ((P_Q + P_Z + 1) >> 1);
-  *pred_pels++ = (imgpel) ((P_Q + P_A + ((P_Z) << 1) + 2) >> 2);
-  *pred_pels++ = (imgpel) ((P_Z + P_B + ((P_A) << 1) + 2) >> 2);
-  *pred_pels++ = (imgpel) ((P_A + P_C + ((P_B) << 1) + 2) >> 2);
-  *pred_pels++ = (imgpel) ((P_B + P_D + ((P_C) << 1) + 2) >> 2);
-  *pred_pels++ = (imgpel) ((P_C + P_E + ((P_D) << 1) + 2) >> 2);
-  *pred_pels++ = (imgpel) ((P_D + P_F + ((P_E) << 1) + 2) >> 2);
-  *pred_pels   = (imgpel) ((P_E + P_G + ((P_F) << 1) + 2) >> 2);
+  *pred_pels++ = (sPixel) ((P_X + P_W + 1) >> 1);
+  *pred_pels++ = (sPixel) ((P_V + P_X + (P_W << 1) + 2) >> 2);
+  *pred_pels++ = (sPixel) ((P_W + P_V + 1) >> 1);
+  *pred_pels++ = (sPixel) ((P_U + P_W + ((P_V) << 1) + 2) >> 2);
+  *pred_pels++ = (sPixel) ((P_V + P_U + 1) >> 1);
+  *pred_pels++ = (sPixel) ((P_T + P_V + ((P_U) << 1) + 2) >> 2);
+  *pred_pels++ = (sPixel) ((P_U + P_T + 1) >> 1);
+  *pred_pels++ = (sPixel) ((P_S + P_U + ((P_T) << 1) + 2) >> 2);
+  *pred_pels++ = (sPixel) ((P_T + P_S + 1) >> 1);
+  *pred_pels++ = (sPixel) ((P_R + P_T + ((P_S) << 1) + 2) >> 2);
+  *pred_pels++ = (sPixel) ((P_S + P_R + 1) >> 1);
+  *pred_pels++ = (sPixel) ((P_Q + P_S + ((P_R) << 1) + 2) >> 2);
+  *pred_pels++ = (sPixel) ((P_R + P_Q + 1) >> 1);
+  *pred_pels++ = (sPixel) ((P_Z + P_R + ((P_Q) << 1) + 2) >> 2);
+  *pred_pels++ = (sPixel) ((P_Q + P_Z + 1) >> 1);
+  *pred_pels++ = (sPixel) ((P_Q + P_A + ((P_Z) << 1) + 2) >> 2);
+  *pred_pels++ = (sPixel) ((P_Z + P_B + ((P_A) << 1) + 2) >> 2);
+  *pred_pels++ = (sPixel) ((P_A + P_C + ((P_B) << 1) + 2) >> 2);
+  *pred_pels++ = (sPixel) ((P_B + P_D + ((P_C) << 1) + 2) >> 2);
+  *pred_pels++ = (sPixel) ((P_C + P_E + ((P_D) << 1) + 2) >> 2);
+  *pred_pels++ = (sPixel) ((P_D + P_F + ((P_E) << 1) + 2) >> 2);
+  *pred_pels   = (sPixel) ((P_E + P_G + ((P_F) << 1) + 2) >> 2);
 
   pred_pels = &PredArray[14];
-  memcpy((*mb_pred++) + ioff, pred_pels, 8 * sizeof(imgpel));
+  memcpy((*mb_pred++) + ioff, pred_pels, 8 * sizeof(sPixel));
   pred_pels -= 2;
-  memcpy((*mb_pred++) + ioff, pred_pels, 8 * sizeof(imgpel));
+  memcpy((*mb_pred++) + ioff, pred_pels, 8 * sizeof(sPixel));
   pred_pels -= 2;
-  memcpy((*mb_pred++) + ioff, pred_pels, 8 * sizeof(imgpel));
+  memcpy((*mb_pred++) + ioff, pred_pels, 8 * sizeof(sPixel));
   pred_pels -= 2;
-  memcpy((*mb_pred++) + ioff, pred_pels, 8 * sizeof(imgpel));
+  memcpy((*mb_pred++) + ioff, pred_pels, 8 * sizeof(sPixel));
   pred_pels -= 2;
-  memcpy((*mb_pred++) + ioff, pred_pels, 8 * sizeof(imgpel));
+  memcpy((*mb_pred++) + ioff, pred_pels, 8 * sizeof(sPixel));
   pred_pels -= 2;
-  memcpy((*mb_pred++) + ioff, pred_pels, 8 * sizeof(imgpel));
+  memcpy((*mb_pred++) + ioff, pred_pels, 8 * sizeof(sPixel));
   pred_pels -= 2;
-  memcpy((*mb_pred++) + ioff, pred_pels, 8 * sizeof(imgpel));
+  memcpy((*mb_pred++) + ioff, pred_pels, 8 * sizeof(sPixel));
   pred_pels -= 2;
-  memcpy((*mb_pred  ) + ioff, pred_pels, 8 * sizeof(imgpel));
+  memcpy((*mb_pred  ) + ioff, pred_pels, 8 * sizeof(sPixel));
 
   return DECODING_OK;
 }
@@ -1597,12 +1597,12 @@ static int intra8x8_dc_pred_mbaff (Macroblock *currMB,
 {
   int i,j;
   int s0 = 0;
-  imgpel PredPel[25];  // array of predictor pels
+  sPixel PredPel[25];  // array of predictor pels
   Slice *currSlice = currMB->p_Slice;
-  VideoParameters* pVid = currMB->pVid;
+  sVidParam* vidParam = currMB->vidParam;
 
-  StorablePicture *dec_picture = currSlice->dec_picture;
-  imgpel **imgY = (pl) ? dec_picture->imgUV[pl - 1] : dec_picture->imgY; // For MB level frame/field coding tools -- set default to imgY
+  sStorablePicture *dec_picture = currSlice->dec_picture;
+  sPixel **imgY = (pl) ? dec_picture->imgUV[pl - 1] : dec_picture->imgY; // For MB level frame/field coding tools -- set default to imgY
 
   PixelPos pix_a[8];
   PixelPos pix_b, pix_c, pix_d;
@@ -1614,8 +1614,8 @@ static int intra8x8_dc_pred_mbaff (Macroblock *currMB,
 
   for (int i=0; i<25;i++) PredPel[i]=0;
 
-  imgpel **mpr = currSlice->mb_pred[pl];
-  int *mb_size = pVid->mb_size[IS_LUMA];
+  sPixel **mpr = currSlice->mb_pred[pl];
+  int *mb_size = vidParam->mb_size[IS_LUMA];
 
   for (i=0;i<8;i++)
   {
@@ -1628,7 +1628,7 @@ static int intra8x8_dc_pred_mbaff (Macroblock *currMB,
 
   pix_c.available = pix_c.available &&!(ioff == 8 && joff == 8);
 
-  if (pVid->active_pps->constrained_intra_pred_flag)
+  if (vidParam->active_pps->constrained_intra_pred_flag)
   {
     for (i=0, block_available_left=1; i<8;i++)
       block_available_left  &= pix_a[i].available ? currSlice->intra_block[pix_a[i].mb_addr]: 0;
@@ -1647,25 +1647,25 @@ static int intra8x8_dc_pred_mbaff (Macroblock *currMB,
   // form predictor pels
   if (block_available_up)
   {
-    memcpy(&PredPel[1], &imgY[pix_b.pos_y][pix_b.pos_x], BLOCK_SIZE_8x8 * sizeof(imgpel));
+    memcpy(&PredPel[1], &imgY[pix_b.pos_y][pix_b.pos_x], BLOCK_SIZE_8x8 * sizeof(sPixel));
   }
   else
   {
 #if (IMGTYPE == 0)
-    memset(&PredPel[1], pVid->dc_pred_value_comp[pl], BLOCK_SIZE_8x8 * sizeof(imgpel));
+    memset(&PredPel[1], vidParam->dc_pred_value_comp[pl], BLOCK_SIZE_8x8 * sizeof(sPixel));
 #else
-    P_A = P_B = P_C = P_D = P_E = P_F = P_G = P_H = (imgpel) pVid->dc_pred_value_comp[pl];
+    P_A = P_B = P_C = P_D = P_E = P_F = P_G = P_H = (sPixel) vidParam->dc_pred_value_comp[pl];
 #endif
   }
 
   if (block_available_up_right)
   {
-    memcpy(&PredPel[9], &imgY[pix_c.pos_y][pix_c.pos_x], BLOCK_SIZE_8x8 * sizeof(imgpel));
+    memcpy(&PredPel[9], &imgY[pix_c.pos_y][pix_c.pos_x], BLOCK_SIZE_8x8 * sizeof(sPixel));
   }
   else
   {
 #if (IMGTYPE == 0)
-    memset(&PredPel[9], PredPel[8], BLOCK_SIZE_8x8 * sizeof(imgpel));
+    memset(&PredPel[9], PredPel[8], BLOCK_SIZE_8x8 * sizeof(sPixel));
 #else
     P_I = P_J = P_K = P_L = P_M = P_N = P_O = P_P = P_H;
 #endif
@@ -1684,7 +1684,7 @@ static int intra8x8_dc_pred_mbaff (Macroblock *currMB,
   }
   else
   {
-    P_Q = P_R = P_S = P_T = P_U = P_V = P_W = P_X = (imgpel) pVid->dc_pred_value_comp[pl];
+    P_Q = P_R = P_S = P_T = P_U = P_V = P_W = P_X = (sPixel) vidParam->dc_pred_value_comp[pl];
   }
 
   if (block_available_up_left)
@@ -1693,7 +1693,7 @@ static int intra8x8_dc_pred_mbaff (Macroblock *currMB,
   }
   else
   {
-    P_Z = (imgpel) pVid->dc_pred_value_comp[pl];
+    P_Z = (sPixel) vidParam->dc_pred_value_comp[pl];
   }
 
   LowPassForIntra8x8Pred(PredPel, block_available_up_left, block_available_up, block_available_left);
@@ -1716,12 +1716,12 @@ static int intra8x8_dc_pred_mbaff (Macroblock *currMB,
   else //if (!block_available_up && !block_available_left)
   {
     // top left corner, nothing to predict from
-    s0 = pVid->dc_pred_value_comp[pl];
+    s0 = vidParam->dc_pred_value_comp[pl];
   }
 
   for(j = joff; j < joff + BLOCK_SIZE_8x8; j++)
     for(i = ioff; i < ioff + BLOCK_SIZE_8x8; i++)
-      mpr[j][i] = (imgpel) s0;
+      mpr[j][i] = (sPixel) s0;
 
   return DECODING_OK;
 }
@@ -1743,11 +1743,11 @@ static int intra8x8_vert_pred_mbaff (Macroblock *currMB,
                                      int joff)              //!< pixel offset Y within MB
 {
   Slice *currSlice = currMB->p_Slice;
-  VideoParameters* pVid = currMB->pVid;
+  sVidParam* vidParam = currMB->vidParam;
 
   int i;
-  imgpel PredPel[25];  // array of predictor pels
-  imgpel **imgY = (pl) ? currSlice->dec_picture->imgUV[pl - 1] : currSlice->dec_picture->imgY; // For MB level frame/field coding tools -- set default to imgY
+  sPixel PredPel[25];  // array of predictor pels
+  sPixel **imgY = (pl) ? currSlice->dec_picture->imgUV[pl - 1] : currSlice->dec_picture->imgY; // For MB level frame/field coding tools -- set default to imgY
 
   PixelPos pix_a[8];
   PixelPos pix_b, pix_c, pix_d;
@@ -1759,8 +1759,8 @@ static int intra8x8_vert_pred_mbaff (Macroblock *currMB,
 
   for (int i=0; i<25;i++) PredPel[i]=0;
 
-  imgpel **mpr = currSlice->mb_pred[pl];
-  int *mb_size = pVid->mb_size[IS_LUMA];
+  sPixel **mpr = currSlice->mb_pred[pl];
+  int *mb_size = vidParam->mb_size[IS_LUMA];
 
   for (i=0;i<8;i++)
   {
@@ -1773,7 +1773,7 @@ static int intra8x8_vert_pred_mbaff (Macroblock *currMB,
 
   pix_c.available = pix_c.available &&!(ioff == 8 && joff == 8);
 
-  if (pVid->active_pps->constrained_intra_pred_flag)
+  if (vidParam->active_pps->constrained_intra_pred_flag)
   {
     for (i=0, block_available_left=1; i<8;i++)
       block_available_left  &= pix_a[i].available ? currSlice->intra_block[pix_a[i].mb_addr]: 0;
@@ -1795,25 +1795,25 @@ static int intra8x8_vert_pred_mbaff (Macroblock *currMB,
   // form predictor pels
   if (block_available_up)
   {
-    memcpy(&PredPel[1], &imgY[pix_b.pos_y][pix_b.pos_x], BLOCK_SIZE_8x8 * sizeof(imgpel));
+    memcpy(&PredPel[1], &imgY[pix_b.pos_y][pix_b.pos_x], BLOCK_SIZE_8x8 * sizeof(sPixel));
   }
   else
   {
 #if (IMGTYPE == 0)
-    memset(&PredPel[1], pVid->dc_pred_value_comp[pl], BLOCK_SIZE_8x8 * sizeof(imgpel));
+    memset(&PredPel[1], vidParam->dc_pred_value_comp[pl], BLOCK_SIZE_8x8 * sizeof(sPixel));
 #else
-    P_A = P_B = P_C = P_D = P_E = P_F = P_G = P_H = (imgpel) pVid->dc_pred_value_comp[pl];
+    P_A = P_B = P_C = P_D = P_E = P_F = P_G = P_H = (sPixel) vidParam->dc_pred_value_comp[pl];
 #endif
   }
 
   if (block_available_up_right)
   {
-    memcpy(&PredPel[9], &imgY[pix_c.pos_y][pix_c.pos_x], BLOCK_SIZE_8x8 * sizeof(imgpel));
+    memcpy(&PredPel[9], &imgY[pix_c.pos_y][pix_c.pos_x], BLOCK_SIZE_8x8 * sizeof(sPixel));
   }
   else
   {
 #if (IMGTYPE == 0)
-    memset(&PredPel[9], PredPel[8], BLOCK_SIZE_8x8 * sizeof(imgpel));
+    memset(&PredPel[9], PredPel[8], BLOCK_SIZE_8x8 * sizeof(sPixel));
 #else
     P_I = P_J = P_K = P_L = P_M = P_N = P_O = P_P = P_H;
 #endif
@@ -1825,14 +1825,14 @@ static int intra8x8_vert_pred_mbaff (Macroblock *currMB,
   }
   else
   {
-    P_Z = (imgpel) pVid->dc_pred_value_comp[pl];
+    P_Z = (sPixel) vidParam->dc_pred_value_comp[pl];
   }
 
   LowPassForIntra8x8PredHor(&(P_Z), block_available_up_left, block_available_up, block_available_left);
 
   for (i=joff; i < joff + BLOCK_SIZE_8x8; i++)
   {
-    memcpy(&mpr[i][ioff], &PredPel[1], BLOCK_SIZE_8x8 * sizeof(imgpel));
+    memcpy(&mpr[i][ioff], &PredPel[1], BLOCK_SIZE_8x8 * sizeof(sPixel));
   }
 
   return DECODING_OK;
@@ -1855,12 +1855,12 @@ static int intra8x8_hor_pred_mbaff (Macroblock *currMB,
                                     int joff)              //!< pixel offset Y within MB
 {
   Slice *currSlice = currMB->p_Slice;
-  VideoParameters* pVid = currMB->pVid;
+  sVidParam* vidParam = currMB->vidParam;
 
 
   int i,j;
-  imgpel PredPel[25];  // array of predictor pels
-  imgpel **imgY = (pl) ? currSlice->dec_picture->imgUV[pl - 1] : currSlice->dec_picture->imgY; // For MB level frame/field coding tools -- set default to imgY
+  sPixel PredPel[25];  // array of predictor pels
+  sPixel **imgY = (pl) ? currSlice->dec_picture->imgUV[pl - 1] : currSlice->dec_picture->imgY; // For MB level frame/field coding tools -- set default to imgY
 
   PixelPos pix_a[8];
   PixelPos pix_b, pix_c, pix_d;
@@ -1876,8 +1876,8 @@ static int intra8x8_hor_pred_mbaff (Macroblock *currMB,
   int ipos4 = ioff + 4, ipos5 = ioff + 5, ipos6 = ioff + 6, ipos7 = ioff + 7;
 #endif
   int jpos;
-  imgpel **mpr = currSlice->mb_pred[pl];
-  int *mb_size = pVid->mb_size[IS_LUMA];
+  sPixel **mpr = currSlice->mb_pred[pl];
+  int *mb_size = vidParam->mb_size[IS_LUMA];
 
   for (i=0;i<8;i++)
   {
@@ -1890,7 +1890,7 @@ static int intra8x8_hor_pred_mbaff (Macroblock *currMB,
 
   pix_c.available = pix_c.available &&!(ioff == 8 && joff == 8);
 
-  if (pVid->active_pps->constrained_intra_pred_flag)
+  if (vidParam->active_pps->constrained_intra_pred_flag)
   {
     for (i=0, block_available_left=1; i<8;i++)
       block_available_left  &= pix_a[i].available ? currSlice->intra_block[pix_a[i].mb_addr]: 0;
@@ -1921,7 +1921,7 @@ static int intra8x8_hor_pred_mbaff (Macroblock *currMB,
   }
   else
   {
-    P_Q = P_R = P_S = P_T = P_U = P_V = P_W = P_X = (imgpel) pVid->dc_pred_value_comp[pl];
+    P_Q = P_R = P_S = P_T = P_U = P_V = P_W = P_X = (sPixel) vidParam->dc_pred_value_comp[pl];
   }
 
   if (block_available_up_left)
@@ -1930,7 +1930,7 @@ static int intra8x8_hor_pred_mbaff (Macroblock *currMB,
   }
   else
   {
-    P_Z = (imgpel) pVid->dc_pred_value_comp[pl];
+    P_Z = (sPixel) vidParam->dc_pred_value_comp[pl];
   }
 
   LowPassForIntra8x8PredVer(&(P_Z), block_available_up_left, block_available_up, block_available_left);
@@ -1939,7 +1939,7 @@ static int intra8x8_hor_pred_mbaff (Macroblock *currMB,
   {
     jpos = j + joff;
 #if (IMGTYPE == 0)
-    memset(&mpr[jpos][ioff], (imgpel) (&P_Q)[j], 8 * sizeof(imgpel));
+    memset(&mpr[jpos][ioff], (sPixel) (&P_Q)[j], 8 * sizeof(sPixel));
 #else
     mpr[jpos][ipos0]  =
       mpr[jpos][ipos1]  =
@@ -1948,7 +1948,7 @@ static int intra8x8_hor_pred_mbaff (Macroblock *currMB,
       mpr[jpos][ipos4]  =
       mpr[jpos][ipos5]  =
       mpr[jpos][ipos6]  =
-      mpr[jpos][ipos7]  = (imgpel) (&P_Q)[j];
+      mpr[jpos][ipos7]  = (sPixel) (&P_Q)[j];
 #endif
   }
 
@@ -1972,13 +1972,13 @@ static int intra8x8_diag_down_right_pred_mbaff (Macroblock *currMB,
                                                 int joff)              //!< pixel offset Y within MB
 {
   Slice *currSlice = currMB->p_Slice;
-  VideoParameters* pVid = currMB->pVid;
+  sVidParam* vidParam = currMB->vidParam;
 
 
   int i;
-  imgpel PredPel[25];  // array of predictor pels
-  imgpel PredArray[16];  // array of final prediction values
-  imgpel **imgY = (pl) ? currSlice->dec_picture->imgUV[pl - 1] : currSlice->dec_picture->imgY; // For MB level frame/field coding tools -- set default to imgY
+  sPixel PredPel[25];  // array of predictor pels
+  sPixel PredArray[16];  // array of final prediction values
+  sPixel **imgY = (pl) ? currSlice->dec_picture->imgUV[pl - 1] : currSlice->dec_picture->imgY; // For MB level frame/field coding tools -- set default to imgY
 
   PixelPos pix_a[8];
   PixelPos pix_b, pix_c, pix_d;
@@ -1988,8 +1988,8 @@ static int intra8x8_diag_down_right_pred_mbaff (Macroblock *currMB,
   int block_available_up_left;
   int block_available_up_right;
 
-  imgpel **mpr = currSlice->mb_pred[pl];
-  int *mb_size = pVid->mb_size[IS_LUMA];
+  sPixel **mpr = currSlice->mb_pred[pl];
+  int *mb_size = vidParam->mb_size[IS_LUMA];
 
   for (int i=0; i<25;i++) PredPel[i]=0;
 
@@ -2004,7 +2004,7 @@ static int intra8x8_diag_down_right_pred_mbaff (Macroblock *currMB,
 
   pix_c.available = pix_c.available &&!(ioff == 8 && joff == 8);
 
-  if (pVid->active_pps->constrained_intra_pred_flag)
+  if (vidParam->active_pps->constrained_intra_pred_flag)
   {
     for (i=0, block_available_left=1; i<8;i++)
       block_available_left  &= pix_a[i].available ? currSlice->intra_block[pix_a[i].mb_addr]: 0;
@@ -2026,25 +2026,25 @@ static int intra8x8_diag_down_right_pred_mbaff (Macroblock *currMB,
   // form predictor pels
   if (block_available_up)
   {
-    memcpy(&PredPel[1], &imgY[pix_b.pos_y][pix_b.pos_x], BLOCK_SIZE_8x8 * sizeof(imgpel));
+    memcpy(&PredPel[1], &imgY[pix_b.pos_y][pix_b.pos_x], BLOCK_SIZE_8x8 * sizeof(sPixel));
   }
   else
   {
 #if (IMGTYPE == 0)
-    memset(&PredPel[1], pVid->dc_pred_value_comp[pl], BLOCK_SIZE_8x8 * sizeof(imgpel));
+    memset(&PredPel[1], vidParam->dc_pred_value_comp[pl], BLOCK_SIZE_8x8 * sizeof(sPixel));
 #else
-    P_A = P_B = P_C = P_D = P_E = P_F = P_G = P_H = (imgpel) pVid->dc_pred_value_comp[pl];
+    P_A = P_B = P_C = P_D = P_E = P_F = P_G = P_H = (sPixel) vidParam->dc_pred_value_comp[pl];
 #endif
   }
 
   if (block_available_up_right)
   {
-    memcpy(&PredPel[9], &imgY[pix_c.pos_y][pix_c.pos_x], BLOCK_SIZE_8x8 * sizeof(imgpel));
+    memcpy(&PredPel[9], &imgY[pix_c.pos_y][pix_c.pos_x], BLOCK_SIZE_8x8 * sizeof(sPixel));
   }
   else
   {
 #if (IMGTYPE == 0)
-    memset(&PredPel[9], PredPel[8], BLOCK_SIZE_8x8 * sizeof(imgpel));
+    memset(&PredPel[9], PredPel[8], BLOCK_SIZE_8x8 * sizeof(sPixel));
 #else
     P_I = P_J = P_K = P_L = P_M = P_N = P_O = P_P = P_H;
 #endif
@@ -2063,7 +2063,7 @@ static int intra8x8_diag_down_right_pred_mbaff (Macroblock *currMB,
   }
   else
   {
-    P_Q = P_R = P_S = P_T = P_U = P_V = P_W = P_X = (imgpel) pVid->dc_pred_value_comp[pl];
+    P_Q = P_R = P_S = P_T = P_U = P_V = P_W = P_X = (sPixel) vidParam->dc_pred_value_comp[pl];
   }
 
   if (block_available_up_left)
@@ -2072,36 +2072,36 @@ static int intra8x8_diag_down_right_pred_mbaff (Macroblock *currMB,
   }
   else
   {
-    P_Z = (imgpel) pVid->dc_pred_value_comp[pl];
+    P_Z = (sPixel) vidParam->dc_pred_value_comp[pl];
   }
 
   LowPassForIntra8x8Pred(PredPel, block_available_up_left, block_available_up, block_available_left);
 
   // Mode DIAG_DOWN_RIGHT_PRED
-  PredArray[ 0] = (imgpel) ((P_X + P_V + 2*(P_W) + 2) >> 2);
-  PredArray[ 1] = (imgpel) ((P_W + P_U + 2*(P_V) + 2) >> 2);
-  PredArray[ 2] = (imgpel) ((P_V + P_T + 2*(P_U) + 2) >> 2);
-  PredArray[ 3] = (imgpel) ((P_U + P_S + 2*(P_T) + 2) >> 2);
-  PredArray[ 4] = (imgpel) ((P_T + P_R + 2*(P_S) + 2) >> 2);
-  PredArray[ 5] = (imgpel) ((P_S + P_Q + 2*(P_R) + 2) >> 2);
-  PredArray[ 6] = (imgpel) ((P_R + P_Z + 2*(P_Q) + 2) >> 2);
-  PredArray[ 7] = (imgpel) ((P_Q + P_A + 2*(P_Z) + 2) >> 2);
-  PredArray[ 8] = (imgpel) ((P_Z + P_B + 2*(P_A) + 2) >> 2);
-  PredArray[ 9] = (imgpel) ((P_A + P_C + 2*(P_B) + 2) >> 2);
-  PredArray[10] = (imgpel) ((P_B + P_D + 2*(P_C) + 2) >> 2);
-  PredArray[11] = (imgpel) ((P_C + P_E + 2*(P_D) + 2) >> 2);
-  PredArray[12] = (imgpel) ((P_D + P_F + 2*(P_E) + 2) >> 2);
-  PredArray[13] = (imgpel) ((P_E + P_G + 2*(P_F) + 2) >> 2);
-  PredArray[14] = (imgpel) ((P_F + P_H + 2*(P_G) + 2) >> 2);
+  PredArray[ 0] = (sPixel) ((P_X + P_V + 2*(P_W) + 2) >> 2);
+  PredArray[ 1] = (sPixel) ((P_W + P_U + 2*(P_V) + 2) >> 2);
+  PredArray[ 2] = (sPixel) ((P_V + P_T + 2*(P_U) + 2) >> 2);
+  PredArray[ 3] = (sPixel) ((P_U + P_S + 2*(P_T) + 2) >> 2);
+  PredArray[ 4] = (sPixel) ((P_T + P_R + 2*(P_S) + 2) >> 2);
+  PredArray[ 5] = (sPixel) ((P_S + P_Q + 2*(P_R) + 2) >> 2);
+  PredArray[ 6] = (sPixel) ((P_R + P_Z + 2*(P_Q) + 2) >> 2);
+  PredArray[ 7] = (sPixel) ((P_Q + P_A + 2*(P_Z) + 2) >> 2);
+  PredArray[ 8] = (sPixel) ((P_Z + P_B + 2*(P_A) + 2) >> 2);
+  PredArray[ 9] = (sPixel) ((P_A + P_C + 2*(P_B) + 2) >> 2);
+  PredArray[10] = (sPixel) ((P_B + P_D + 2*(P_C) + 2) >> 2);
+  PredArray[11] = (sPixel) ((P_C + P_E + 2*(P_D) + 2) >> 2);
+  PredArray[12] = (sPixel) ((P_D + P_F + 2*(P_E) + 2) >> 2);
+  PredArray[13] = (sPixel) ((P_E + P_G + 2*(P_F) + 2) >> 2);
+  PredArray[14] = (sPixel) ((P_F + P_H + 2*(P_G) + 2) >> 2);
 
-  memcpy(&mpr[joff++][ioff], &PredArray[7], 8 * sizeof(imgpel));
-  memcpy(&mpr[joff++][ioff], &PredArray[6], 8 * sizeof(imgpel));
-  memcpy(&mpr[joff++][ioff], &PredArray[5], 8 * sizeof(imgpel));
-  memcpy(&mpr[joff++][ioff], &PredArray[4], 8 * sizeof(imgpel));
-  memcpy(&mpr[joff++][ioff], &PredArray[3], 8 * sizeof(imgpel));
-  memcpy(&mpr[joff++][ioff], &PredArray[2], 8 * sizeof(imgpel));
-  memcpy(&mpr[joff++][ioff], &PredArray[1], 8 * sizeof(imgpel));
-  memcpy(&mpr[joff  ][ioff], &PredArray[0], 8 * sizeof(imgpel));
+  memcpy(&mpr[joff++][ioff], &PredArray[7], 8 * sizeof(sPixel));
+  memcpy(&mpr[joff++][ioff], &PredArray[6], 8 * sizeof(sPixel));
+  memcpy(&mpr[joff++][ioff], &PredArray[5], 8 * sizeof(sPixel));
+  memcpy(&mpr[joff++][ioff], &PredArray[4], 8 * sizeof(sPixel));
+  memcpy(&mpr[joff++][ioff], &PredArray[3], 8 * sizeof(sPixel));
+  memcpy(&mpr[joff++][ioff], &PredArray[2], 8 * sizeof(sPixel));
+  memcpy(&mpr[joff++][ioff], &PredArray[1], 8 * sizeof(sPixel));
+  memcpy(&mpr[joff  ][ioff], &PredArray[0], 8 * sizeof(sPixel));
 
   return DECODING_OK;
 }
@@ -2123,13 +2123,13 @@ static int intra8x8_diag_down_left_pred_mbaff (Macroblock *currMB,
                                                int joff)              //!< pixel offset Y within MB
 {
   Slice *currSlice = currMB->p_Slice;
-  VideoParameters* pVid = currMB->pVid;
+  sVidParam* vidParam = currMB->vidParam;
 
   int i;
-  imgpel PredPel[25];  // array of predictor pels
-  imgpel PredArray[16];  // array of final prediction values
-  imgpel *Pred = &PredArray[0];
-  imgpel **imgY = (pl) ? currSlice->dec_picture->imgUV[pl - 1] : currSlice->dec_picture->imgY; // For MB level frame/field coding tools -- set default to imgY
+  sPixel PredPel[25];  // array of predictor pels
+  sPixel PredArray[16];  // array of final prediction values
+  sPixel *Pred = &PredArray[0];
+  sPixel **imgY = (pl) ? currSlice->dec_picture->imgUV[pl - 1] : currSlice->dec_picture->imgY; // For MB level frame/field coding tools -- set default to imgY
 
   PixelPos pix_a[8];
   PixelPos pix_b, pix_c, pix_d;
@@ -2139,8 +2139,8 @@ static int intra8x8_diag_down_left_pred_mbaff (Macroblock *currMB,
   int block_available_up_left;
   int block_available_up_right;
 
-  imgpel **mpr = currSlice->mb_pred[pl];
-  int *mb_size = pVid->mb_size[IS_LUMA];
+  sPixel **mpr = currSlice->mb_pred[pl];
+  int *mb_size = vidParam->mb_size[IS_LUMA];
 
   for (int i=0; i<25;i++) PredPel[i]=0;
 
@@ -2155,7 +2155,7 @@ static int intra8x8_diag_down_left_pred_mbaff (Macroblock *currMB,
 
   pix_c.available = pix_c.available &&!(ioff == 8 && joff == 8);
 
-  if (pVid->active_pps->constrained_intra_pred_flag)
+  if (vidParam->active_pps->constrained_intra_pred_flag)
   {
     for (i=0, block_available_left=1; i<8;i++)
       block_available_left  &= pix_a[i].available ? currSlice->intra_block[pix_a[i].mb_addr]: 0;
@@ -2177,25 +2177,25 @@ static int intra8x8_diag_down_left_pred_mbaff (Macroblock *currMB,
   // form predictor pels
   if (block_available_up)
   {
-    memcpy(&PredPel[1], &imgY[pix_b.pos_y][pix_b.pos_x], BLOCK_SIZE_8x8 * sizeof(imgpel));
+    memcpy(&PredPel[1], &imgY[pix_b.pos_y][pix_b.pos_x], BLOCK_SIZE_8x8 * sizeof(sPixel));
   }
   else
   {
 #if (IMGTYPE == 0)
-    memset(&PredPel[1], pVid->dc_pred_value_comp[pl], BLOCK_SIZE_8x8 * sizeof(imgpel));
+    memset(&PredPel[1], vidParam->dc_pred_value_comp[pl], BLOCK_SIZE_8x8 * sizeof(sPixel));
 #else
-    P_A = P_B = P_C = P_D = P_E = P_F = P_G = P_H = (imgpel) pVid->dc_pred_value_comp[pl];
+    P_A = P_B = P_C = P_D = P_E = P_F = P_G = P_H = (sPixel) vidParam->dc_pred_value_comp[pl];
 #endif
   }
 
   if (block_available_up_right)
   {
-    memcpy(&PredPel[9], &imgY[pix_c.pos_y][pix_c.pos_x], BLOCK_SIZE_8x8 * sizeof(imgpel));
+    memcpy(&PredPel[9], &imgY[pix_c.pos_y][pix_c.pos_x], BLOCK_SIZE_8x8 * sizeof(sPixel));
   }
   else
   {
 #if (IMGTYPE == 0)
-    memset(&PredPel[9], PredPel[8], BLOCK_SIZE_8x8 * sizeof(imgpel));
+    memset(&PredPel[9], PredPel[8], BLOCK_SIZE_8x8 * sizeof(sPixel));
 #else
     P_I = P_J = P_K = P_L = P_M = P_N = P_O = P_P = P_H;
 #endif
@@ -2214,7 +2214,7 @@ static int intra8x8_diag_down_left_pred_mbaff (Macroblock *currMB,
   }
   else
   {
-    P_Q = P_R = P_S = P_T = P_U = P_V = P_W = P_X = (imgpel) pVid->dc_pred_value_comp[pl];
+    P_Q = P_R = P_S = P_T = P_U = P_V = P_W = P_X = (sPixel) vidParam->dc_pred_value_comp[pl];
   }
 
   if (block_available_up_left)
@@ -2223,38 +2223,38 @@ static int intra8x8_diag_down_left_pred_mbaff (Macroblock *currMB,
   }
   else
   {
-    P_Z = (imgpel) pVid->dc_pred_value_comp[pl];
+    P_Z = (sPixel) vidParam->dc_pred_value_comp[pl];
   }
 
   LowPassForIntra8x8Pred(PredPel, block_available_up_left, block_available_up, block_available_left);
 
   // Mode DIAG_DOWN_LEFT_PRED
-  *Pred++ = (imgpel) ((P_A + P_C + 2*(P_B) + 2) >> 2);
-  *Pred++ = (imgpel) ((P_B + P_D + 2*(P_C) + 2) >> 2);
-  *Pred++ = (imgpel) ((P_C + P_E + 2*(P_D) + 2) >> 2);
-  *Pred++ = (imgpel) ((P_D + P_F + 2*(P_E) + 2) >> 2);
-  *Pred++ = (imgpel) ((P_E + P_G + 2*(P_F) + 2) >> 2);
-  *Pred++ = (imgpel) ((P_F + P_H + 2*(P_G) + 2) >> 2);
-  *Pred++ = (imgpel) ((P_G + P_I + 2*(P_H) + 2) >> 2);
-  *Pred++ = (imgpel) ((P_H + P_J + 2*(P_I) + 2) >> 2);
-  *Pred++ = (imgpel) ((P_I + P_K + 2*(P_J) + 2) >> 2);
-  *Pred++ = (imgpel) ((P_J + P_L + 2*(P_K) + 2) >> 2);
-  *Pred++ = (imgpel) ((P_K + P_M + 2*(P_L) + 2) >> 2);
-  *Pred++ = (imgpel) ((P_L + P_N + 2*(P_M) + 2) >> 2);
-  *Pred++ = (imgpel) ((P_M + P_O + 2*(P_N) + 2) >> 2);
-  *Pred++ = (imgpel) ((P_N + P_P + 2*(P_O) + 2) >> 2);
-  *Pred   = (imgpel) ((P_O + 3*(P_P) + 2) >> 2);
+  *Pred++ = (sPixel) ((P_A + P_C + 2*(P_B) + 2) >> 2);
+  *Pred++ = (sPixel) ((P_B + P_D + 2*(P_C) + 2) >> 2);
+  *Pred++ = (sPixel) ((P_C + P_E + 2*(P_D) + 2) >> 2);
+  *Pred++ = (sPixel) ((P_D + P_F + 2*(P_E) + 2) >> 2);
+  *Pred++ = (sPixel) ((P_E + P_G + 2*(P_F) + 2) >> 2);
+  *Pred++ = (sPixel) ((P_F + P_H + 2*(P_G) + 2) >> 2);
+  *Pred++ = (sPixel) ((P_G + P_I + 2*(P_H) + 2) >> 2);
+  *Pred++ = (sPixel) ((P_H + P_J + 2*(P_I) + 2) >> 2);
+  *Pred++ = (sPixel) ((P_I + P_K + 2*(P_J) + 2) >> 2);
+  *Pred++ = (sPixel) ((P_J + P_L + 2*(P_K) + 2) >> 2);
+  *Pred++ = (sPixel) ((P_K + P_M + 2*(P_L) + 2) >> 2);
+  *Pred++ = (sPixel) ((P_L + P_N + 2*(P_M) + 2) >> 2);
+  *Pred++ = (sPixel) ((P_M + P_O + 2*(P_N) + 2) >> 2);
+  *Pred++ = (sPixel) ((P_N + P_P + 2*(P_O) + 2) >> 2);
+  *Pred   = (sPixel) ((P_O + 3*(P_P) + 2) >> 2);
 
   Pred = &PredArray[ 0];
 
-  memcpy(&mpr[joff++][ioff], Pred++, 8 * sizeof(imgpel));
-  memcpy(&mpr[joff++][ioff], Pred++, 8 * sizeof(imgpel));
-  memcpy(&mpr[joff++][ioff], Pred++, 8 * sizeof(imgpel));
-  memcpy(&mpr[joff++][ioff], Pred++, 8 * sizeof(imgpel));
-  memcpy(&mpr[joff++][ioff], Pred++, 8 * sizeof(imgpel));
-  memcpy(&mpr[joff++][ioff], Pred++, 8 * sizeof(imgpel));
-  memcpy(&mpr[joff++][ioff], Pred++, 8 * sizeof(imgpel));
-  memcpy(&mpr[joff  ][ioff], Pred  , 8 * sizeof(imgpel));
+  memcpy(&mpr[joff++][ioff], Pred++, 8 * sizeof(sPixel));
+  memcpy(&mpr[joff++][ioff], Pred++, 8 * sizeof(sPixel));
+  memcpy(&mpr[joff++][ioff], Pred++, 8 * sizeof(sPixel));
+  memcpy(&mpr[joff++][ioff], Pred++, 8 * sizeof(sPixel));
+  memcpy(&mpr[joff++][ioff], Pred++, 8 * sizeof(sPixel));
+  memcpy(&mpr[joff++][ioff], Pred++, 8 * sizeof(sPixel));
+  memcpy(&mpr[joff++][ioff], Pred++, 8 * sizeof(sPixel));
+  memcpy(&mpr[joff  ][ioff], Pred  , 8 * sizeof(sPixel));
 
   return DECODING_OK;
 }
@@ -2276,12 +2276,12 @@ static int intra8x8_vert_right_pred_mbaff (Macroblock *currMB,
                                            int joff)              //!< pixel offset Y within MB
 {
   Slice *currSlice = currMB->p_Slice;
-  VideoParameters* pVid = currMB->pVid;
+  sVidParam* vidParam = currMB->vidParam;
 
   int i;
-  imgpel PredPel[25];  // array of predictor pels
-  imgpel PredArray[22];  // array of final prediction values
-  imgpel **imgY = (pl) ? currSlice->dec_picture->imgUV[pl - 1] : currSlice->dec_picture->imgY; // For MB level frame/field coding tools -- set default to imgY
+  sPixel PredPel[25];  // array of predictor pels
+  sPixel PredArray[22];  // array of final prediction values
+  sPixel **imgY = (pl) ? currSlice->dec_picture->imgUV[pl - 1] : currSlice->dec_picture->imgY; // For MB level frame/field coding tools -- set default to imgY
 
   PixelPos pix_a[8];
   PixelPos pix_b, pix_c, pix_d;
@@ -2291,8 +2291,8 @@ static int intra8x8_vert_right_pred_mbaff (Macroblock *currMB,
   int block_available_up_left;
   int block_available_up_right;
 
-  imgpel **mpr = currSlice->mb_pred[pl];
-  int *mb_size = pVid->mb_size[IS_LUMA];
+  sPixel **mpr = currSlice->mb_pred[pl];
+  int *mb_size = vidParam->mb_size[IS_LUMA];
 
   for (int i=0; i<25;i++) PredPel[i]=0;
 
@@ -2307,7 +2307,7 @@ static int intra8x8_vert_right_pred_mbaff (Macroblock *currMB,
 
   pix_c.available = pix_c.available &&!(ioff == 8 && joff == 8);
 
-  if (pVid->active_pps->constrained_intra_pred_flag)
+  if (vidParam->active_pps->constrained_intra_pred_flag)
   {
     for (i=0, block_available_left=1; i<8;i++)
       block_available_left  &= pix_a[i].available ? currSlice->intra_block[pix_a[i].mb_addr]: 0;
@@ -2329,25 +2329,25 @@ static int intra8x8_vert_right_pred_mbaff (Macroblock *currMB,
   // form predictor pels
   if (block_available_up)
   {
-    memcpy(&PredPel[1], &imgY[pix_b.pos_y][pix_b.pos_x], BLOCK_SIZE_8x8 * sizeof(imgpel));
+    memcpy(&PredPel[1], &imgY[pix_b.pos_y][pix_b.pos_x], BLOCK_SIZE_8x8 * sizeof(sPixel));
   }
   else
   {
 #if (IMGTYPE == 0)
-    memset(&PredPel[1], pVid->dc_pred_value_comp[pl], BLOCK_SIZE_8x8 * sizeof(imgpel));
+    memset(&PredPel[1], vidParam->dc_pred_value_comp[pl], BLOCK_SIZE_8x8 * sizeof(sPixel));
 #else
-    P_A = P_B = P_C = P_D = P_E = P_F = P_G = P_H = (imgpel) pVid->dc_pred_value_comp[pl];
+    P_A = P_B = P_C = P_D = P_E = P_F = P_G = P_H = (sPixel) vidParam->dc_pred_value_comp[pl];
 #endif
   }
 
   if (block_available_up_right)
   {
-    memcpy(&PredPel[9], &imgY[pix_c.pos_y][pix_c.pos_x], BLOCK_SIZE_8x8 * sizeof(imgpel));
+    memcpy(&PredPel[9], &imgY[pix_c.pos_y][pix_c.pos_x], BLOCK_SIZE_8x8 * sizeof(sPixel));
   }
   else
   {
 #if (IMGTYPE == 0)
-    memset(&PredPel[9], PredPel[8], BLOCK_SIZE_8x8 * sizeof(imgpel));
+    memset(&PredPel[9], PredPel[8], BLOCK_SIZE_8x8 * sizeof(sPixel));
 #else
     P_I = P_J = P_K = P_L = P_M = P_N = P_O = P_P = P_H;
 #endif
@@ -2366,7 +2366,7 @@ static int intra8x8_vert_right_pred_mbaff (Macroblock *currMB,
   }
   else
   {
-    P_Q = P_R = P_S = P_T = P_U = P_V = P_W = P_X = (imgpel) pVid->dc_pred_value_comp[pl];
+    P_Q = P_R = P_S = P_T = P_U = P_V = P_W = P_X = (sPixel) vidParam->dc_pred_value_comp[pl];
   }
 
   if (block_available_up_left)
@@ -2375,43 +2375,43 @@ static int intra8x8_vert_right_pred_mbaff (Macroblock *currMB,
   }
   else
   {
-    P_Z = (imgpel) pVid->dc_pred_value_comp[pl];
+    P_Z = (sPixel) vidParam->dc_pred_value_comp[pl];
   }
 
   LowPassForIntra8x8Pred(PredPel, block_available_up_left, block_available_up, block_available_left);
 
-  PredArray[ 0] = (imgpel) ((P_V + P_T + (P_U << 1) + 2) >> 2);
-  PredArray[ 1] = (imgpel) ((P_T + P_R + (P_S << 1) + 2) >> 2);
-  PredArray[ 2] = (imgpel) ((P_R + P_Z + (P_Q << 1) + 2) >> 2);
-  PredArray[ 3] = (imgpel) ((P_Z + P_A + 1) >> 1);
-  PredArray[ 4] = (imgpel) ((P_A + P_B + 1) >> 1);
-  PredArray[ 5] = (imgpel) ((P_B + P_C + 1) >> 1);
-  PredArray[ 6] = (imgpel) ((P_C + P_D + 1) >> 1);
-  PredArray[ 7] = (imgpel) ((P_D + P_E + 1) >> 1);
-  PredArray[ 8] = (imgpel) ((P_E + P_F + 1) >> 1);
-  PredArray[ 9] = (imgpel) ((P_F + P_G + 1) >> 1);
-  PredArray[10] = (imgpel) ((P_G + P_H + 1) >> 1);
+  PredArray[ 0] = (sPixel) ((P_V + P_T + (P_U << 1) + 2) >> 2);
+  PredArray[ 1] = (sPixel) ((P_T + P_R + (P_S << 1) + 2) >> 2);
+  PredArray[ 2] = (sPixel) ((P_R + P_Z + (P_Q << 1) + 2) >> 2);
+  PredArray[ 3] = (sPixel) ((P_Z + P_A + 1) >> 1);
+  PredArray[ 4] = (sPixel) ((P_A + P_B + 1) >> 1);
+  PredArray[ 5] = (sPixel) ((P_B + P_C + 1) >> 1);
+  PredArray[ 6] = (sPixel) ((P_C + P_D + 1) >> 1);
+  PredArray[ 7] = (sPixel) ((P_D + P_E + 1) >> 1);
+  PredArray[ 8] = (sPixel) ((P_E + P_F + 1) >> 1);
+  PredArray[ 9] = (sPixel) ((P_F + P_G + 1) >> 1);
+  PredArray[10] = (sPixel) ((P_G + P_H + 1) >> 1);
 
-  PredArray[11] = (imgpel) ((P_W + P_U + (P_V << 1) + 2) >> 2);
-  PredArray[12] = (imgpel) ((P_U + P_S + (P_T << 1) + 2) >> 2);
-  PredArray[13] = (imgpel) ((P_S + P_Q + (P_R << 1) + 2) >> 2);
-  PredArray[14] = (imgpel) ((P_Q + P_A + 2*P_Z + 2) >> 2);
-  PredArray[15] = (imgpel) ((P_Z + P_B + 2*P_A + 2) >> 2);
-  PredArray[16] = (imgpel) ((P_A + P_C + 2*P_B + 2) >> 2);
-  PredArray[17] = (imgpel) ((P_B + P_D + 2*P_C + 2) >> 2);
-  PredArray[18] = (imgpel) ((P_C + P_E + 2*P_D + 2) >> 2);
-  PredArray[19] = (imgpel) ((P_D + P_F + 2*P_E + 2) >> 2);
-  PredArray[20] = (imgpel) ((P_E + P_G + 2*P_F + 2) >> 2);
-  PredArray[21] = (imgpel) ((P_F + P_H + 2*P_G + 2) >> 2);
+  PredArray[11] = (sPixel) ((P_W + P_U + (P_V << 1) + 2) >> 2);
+  PredArray[12] = (sPixel) ((P_U + P_S + (P_T << 1) + 2) >> 2);
+  PredArray[13] = (sPixel) ((P_S + P_Q + (P_R << 1) + 2) >> 2);
+  PredArray[14] = (sPixel) ((P_Q + P_A + 2*P_Z + 2) >> 2);
+  PredArray[15] = (sPixel) ((P_Z + P_B + 2*P_A + 2) >> 2);
+  PredArray[16] = (sPixel) ((P_A + P_C + 2*P_B + 2) >> 2);
+  PredArray[17] = (sPixel) ((P_B + P_D + 2*P_C + 2) >> 2);
+  PredArray[18] = (sPixel) ((P_C + P_E + 2*P_D + 2) >> 2);
+  PredArray[19] = (sPixel) ((P_D + P_F + 2*P_E + 2) >> 2);
+  PredArray[20] = (sPixel) ((P_E + P_G + 2*P_F + 2) >> 2);
+  PredArray[21] = (sPixel) ((P_F + P_H + 2*P_G + 2) >> 2);
 
-  memcpy(&mpr[joff++][ioff], &PredArray[ 3], 8 * sizeof(imgpel));
-  memcpy(&mpr[joff++][ioff], &PredArray[14], 8 * sizeof(imgpel));
-  memcpy(&mpr[joff++][ioff], &PredArray[ 2], 8 * sizeof(imgpel));
-  memcpy(&mpr[joff++][ioff], &PredArray[13], 8 * sizeof(imgpel));
-  memcpy(&mpr[joff++][ioff], &PredArray[ 1], 8 * sizeof(imgpel));
-  memcpy(&mpr[joff++][ioff], &PredArray[12], 8 * sizeof(imgpel));
-  memcpy(&mpr[joff++][ioff], &PredArray[ 0], 8 * sizeof(imgpel));
-  memcpy(&mpr[joff  ][ioff], &PredArray[11], 8 * sizeof(imgpel));
+  memcpy(&mpr[joff++][ioff], &PredArray[ 3], 8 * sizeof(sPixel));
+  memcpy(&mpr[joff++][ioff], &PredArray[14], 8 * sizeof(sPixel));
+  memcpy(&mpr[joff++][ioff], &PredArray[ 2], 8 * sizeof(sPixel));
+  memcpy(&mpr[joff++][ioff], &PredArray[13], 8 * sizeof(sPixel));
+  memcpy(&mpr[joff++][ioff], &PredArray[ 1], 8 * sizeof(sPixel));
+  memcpy(&mpr[joff++][ioff], &PredArray[12], 8 * sizeof(sPixel));
+  memcpy(&mpr[joff++][ioff], &PredArray[ 0], 8 * sizeof(sPixel));
+  memcpy(&mpr[joff  ][ioff], &PredArray[11], 8 * sizeof(sPixel));
 
   return DECODING_OK;
 }
@@ -2433,13 +2433,13 @@ static int intra8x8_vert_left_pred_mbaff (Macroblock *currMB,
                                           int joff)              //!< pixel offset Y within MB
 {
   Slice *currSlice = currMB->p_Slice;
-  VideoParameters* pVid = currMB->pVid;
+  sVidParam* vidParam = currMB->vidParam;
 
   int i;
-  imgpel PredPel[25];  // array of predictor pels
-  imgpel PredArray[22];  // array of final prediction values
-  imgpel *pred_pel = &PredArray[0];
-  imgpel **imgY = (pl) ? currSlice->dec_picture->imgUV[pl - 1] : currSlice->dec_picture->imgY; // For MB level frame/field coding tools -- set default to imgY
+  sPixel PredPel[25];  // array of predictor pels
+  sPixel PredArray[22];  // array of final prediction values
+  sPixel *pred_pel = &PredArray[0];
+  sPixel **imgY = (pl) ? currSlice->dec_picture->imgUV[pl - 1] : currSlice->dec_picture->imgY; // For MB level frame/field coding tools -- set default to imgY
 
   PixelPos pix_a[8];
   PixelPos pix_b, pix_c, pix_d;
@@ -2449,8 +2449,8 @@ static int intra8x8_vert_left_pred_mbaff (Macroblock *currMB,
   int block_available_up_left;
   int block_available_up_right;
 
-  imgpel **mpr = currSlice->mb_pred[pl];
-  int *mb_size = pVid->mb_size[IS_LUMA];
+  sPixel **mpr = currSlice->mb_pred[pl];
+  int *mb_size = vidParam->mb_size[IS_LUMA];
 
   for (int i=0; i<25;i++) PredPel[i]=0;
 
@@ -2465,7 +2465,7 @@ static int intra8x8_vert_left_pred_mbaff (Macroblock *currMB,
 
   pix_c.available = pix_c.available &&!(ioff == 8 && joff == 8);
 
-  if (pVid->active_pps->constrained_intra_pred_flag)
+  if (vidParam->active_pps->constrained_intra_pred_flag)
   {
     for (i=0, block_available_left=1; i<8;i++)
       block_available_left  &= pix_a[i].available ? currSlice->intra_block[pix_a[i].mb_addr]: 0;
@@ -2487,25 +2487,25 @@ static int intra8x8_vert_left_pred_mbaff (Macroblock *currMB,
   // form predictor pels
   if (block_available_up)
   {
-    memcpy(&PredPel[1], &imgY[pix_b.pos_y][pix_b.pos_x], BLOCK_SIZE_8x8 * sizeof(imgpel));
+    memcpy(&PredPel[1], &imgY[pix_b.pos_y][pix_b.pos_x], BLOCK_SIZE_8x8 * sizeof(sPixel));
   }
   else
   {
 #if (IMGTYPE == 0)
-    memset(&PredPel[1], pVid->dc_pred_value_comp[pl], BLOCK_SIZE_8x8 * sizeof(imgpel));
+    memset(&PredPel[1], vidParam->dc_pred_value_comp[pl], BLOCK_SIZE_8x8 * sizeof(sPixel));
 #else
-    P_A = P_B = P_C = P_D = P_E = P_F = P_G = P_H = (imgpel) pVid->dc_pred_value_comp[pl];
+    P_A = P_B = P_C = P_D = P_E = P_F = P_G = P_H = (sPixel) vidParam->dc_pred_value_comp[pl];
 #endif
   }
 
   if (block_available_up_right)
   {
-    memcpy(&PredPel[9], &imgY[pix_c.pos_y][pix_c.pos_x], BLOCK_SIZE_8x8 * sizeof(imgpel));
+    memcpy(&PredPel[9], &imgY[pix_c.pos_y][pix_c.pos_x], BLOCK_SIZE_8x8 * sizeof(sPixel));
   }
   else
   {
 #if (IMGTYPE == 0)
-    memset(&PredPel[9], PredPel[8], BLOCK_SIZE_8x8 * sizeof(imgpel));
+    memset(&PredPel[9], PredPel[8], BLOCK_SIZE_8x8 * sizeof(sPixel));
 #else
     P_I = P_J = P_K = P_L = P_M = P_N = P_O = P_P = P_H;
 #endif
@@ -2524,7 +2524,7 @@ static int intra8x8_vert_left_pred_mbaff (Macroblock *currMB,
   }
   else
   {
-    P_Q = P_R = P_S = P_T = P_U = P_V = P_W = P_X = (imgpel) pVid->dc_pred_value_comp[pl];
+    P_Q = P_R = P_S = P_T = P_U = P_V = P_W = P_X = (sPixel) vidParam->dc_pred_value_comp[pl];
   }
 
   if (block_available_up_left)
@@ -2533,42 +2533,42 @@ static int intra8x8_vert_left_pred_mbaff (Macroblock *currMB,
   }
   else
   {
-    P_Z = (imgpel) pVid->dc_pred_value_comp[pl];
+    P_Z = (sPixel) vidParam->dc_pred_value_comp[pl];
   }
 
   LowPassForIntra8x8Pred(PredPel, block_available_up_left, block_available_up, block_available_left);
 
-  *pred_pel++ = (imgpel) ((P_A + P_B + 1) >> 1);
-  *pred_pel++ = (imgpel) ((P_B + P_C + 1) >> 1);
-  *pred_pel++ = (imgpel) ((P_C + P_D + 1) >> 1);
-  *pred_pel++ = (imgpel) ((P_D + P_E + 1) >> 1);
-  *pred_pel++ = (imgpel) ((P_E + P_F + 1) >> 1);
-  *pred_pel++ = (imgpel) ((P_F + P_G + 1) >> 1);
-  *pred_pel++ = (imgpel) ((P_G + P_H + 1) >> 1);
-  *pred_pel++ = (imgpel) ((P_H + P_I + 1) >> 1);
-  *pred_pel++ = (imgpel) ((P_I + P_J + 1) >> 1);
-  *pred_pel++ = (imgpel) ((P_J + P_K + 1) >> 1);
-  *pred_pel++ = (imgpel) ((P_K + P_L + 1) >> 1);
-  *pred_pel++ = (imgpel) ((P_A + P_C + 2*P_B + 2) >> 2);
-  *pred_pel++ = (imgpel) ((P_B + P_D + 2*P_C + 2) >> 2);
-  *pred_pel++ = (imgpel) ((P_C + P_E + 2*P_D + 2) >> 2);
-  *pred_pel++ = (imgpel) ((P_D + P_F + 2*P_E + 2) >> 2);
-  *pred_pel++ = (imgpel) ((P_E + P_G + 2*P_F + 2) >> 2);
-  *pred_pel++ = (imgpel) ((P_F + P_H + 2*P_G + 2) >> 2);
-  *pred_pel++ = (imgpel) ((P_G + P_I + 2*P_H + 2) >> 2);
-  *pred_pel++ = (imgpel) ((P_H + P_J + (P_I << 1) + 2) >> 2);
-  *pred_pel++ = (imgpel) ((P_I + P_K + (P_J << 1) + 2) >> 2);
-  *pred_pel++ = (imgpel) ((P_J + P_L + (P_K << 1) + 2) >> 2);
-  *pred_pel   = (imgpel) ((P_K + P_M + (P_L << 1) + 2) >> 2);
+  *pred_pel++ = (sPixel) ((P_A + P_B + 1) >> 1);
+  *pred_pel++ = (sPixel) ((P_B + P_C + 1) >> 1);
+  *pred_pel++ = (sPixel) ((P_C + P_D + 1) >> 1);
+  *pred_pel++ = (sPixel) ((P_D + P_E + 1) >> 1);
+  *pred_pel++ = (sPixel) ((P_E + P_F + 1) >> 1);
+  *pred_pel++ = (sPixel) ((P_F + P_G + 1) >> 1);
+  *pred_pel++ = (sPixel) ((P_G + P_H + 1) >> 1);
+  *pred_pel++ = (sPixel) ((P_H + P_I + 1) >> 1);
+  *pred_pel++ = (sPixel) ((P_I + P_J + 1) >> 1);
+  *pred_pel++ = (sPixel) ((P_J + P_K + 1) >> 1);
+  *pred_pel++ = (sPixel) ((P_K + P_L + 1) >> 1);
+  *pred_pel++ = (sPixel) ((P_A + P_C + 2*P_B + 2) >> 2);
+  *pred_pel++ = (sPixel) ((P_B + P_D + 2*P_C + 2) >> 2);
+  *pred_pel++ = (sPixel) ((P_C + P_E + 2*P_D + 2) >> 2);
+  *pred_pel++ = (sPixel) ((P_D + P_F + 2*P_E + 2) >> 2);
+  *pred_pel++ = (sPixel) ((P_E + P_G + 2*P_F + 2) >> 2);
+  *pred_pel++ = (sPixel) ((P_F + P_H + 2*P_G + 2) >> 2);
+  *pred_pel++ = (sPixel) ((P_G + P_I + 2*P_H + 2) >> 2);
+  *pred_pel++ = (sPixel) ((P_H + P_J + (P_I << 1) + 2) >> 2);
+  *pred_pel++ = (sPixel) ((P_I + P_K + (P_J << 1) + 2) >> 2);
+  *pred_pel++ = (sPixel) ((P_J + P_L + (P_K << 1) + 2) >> 2);
+  *pred_pel   = (sPixel) ((P_K + P_M + (P_L << 1) + 2) >> 2);
 
-  memcpy(&mpr[joff++][ioff], &PredArray[ 0], 8 * sizeof(imgpel));
-  memcpy(&mpr[joff++][ioff], &PredArray[11], 8 * sizeof(imgpel));
-  memcpy(&mpr[joff++][ioff], &PredArray[ 1], 8 * sizeof(imgpel));
-  memcpy(&mpr[joff++][ioff], &PredArray[12], 8 * sizeof(imgpel));
-  memcpy(&mpr[joff++][ioff], &PredArray[ 2], 8 * sizeof(imgpel));
-  memcpy(&mpr[joff++][ioff], &PredArray[13], 8 * sizeof(imgpel));
-  memcpy(&mpr[joff++][ioff], &PredArray[ 3], 8 * sizeof(imgpel));
-  memcpy(&mpr[joff  ][ioff], &PredArray[14], 8 * sizeof(imgpel));
+  memcpy(&mpr[joff++][ioff], &PredArray[ 0], 8 * sizeof(sPixel));
+  memcpy(&mpr[joff++][ioff], &PredArray[11], 8 * sizeof(sPixel));
+  memcpy(&mpr[joff++][ioff], &PredArray[ 1], 8 * sizeof(sPixel));
+  memcpy(&mpr[joff++][ioff], &PredArray[12], 8 * sizeof(sPixel));
+  memcpy(&mpr[joff++][ioff], &PredArray[ 2], 8 * sizeof(sPixel));
+  memcpy(&mpr[joff++][ioff], &PredArray[13], 8 * sizeof(sPixel));
+  memcpy(&mpr[joff++][ioff], &PredArray[ 3], 8 * sizeof(sPixel));
+  memcpy(&mpr[joff  ][ioff], &PredArray[14], 8 * sizeof(sPixel));
 
   return DECODING_OK;
 }
@@ -2590,12 +2590,12 @@ static int intra8x8_hor_up_pred_mbaff (Macroblock *currMB,
                                        int joff)              //!< pixel offset Y within MB
 {
   Slice *currSlice = currMB->p_Slice;
-  VideoParameters* pVid = currMB->pVid;
+  sVidParam* vidParam = currMB->vidParam;
 
   int i;
-  imgpel PredPel[25];  // array of predictor pels
-  imgpel PredArray[22];   // array of final prediction values
-  imgpel **imgY = (pl) ? currSlice->dec_picture->imgUV[pl - 1] : currSlice->dec_picture->imgY; // For MB level frame/field coding tools -- set default to imgY
+  sPixel PredPel[25];  // array of predictor pels
+  sPixel PredArray[22];   // array of final prediction values
+  sPixel **imgY = (pl) ? currSlice->dec_picture->imgUV[pl - 1] : currSlice->dec_picture->imgY; // For MB level frame/field coding tools -- set default to imgY
 
   PixelPos pix_a[8];
   PixelPos pix_b, pix_c, pix_d;
@@ -2607,8 +2607,8 @@ static int intra8x8_hor_up_pred_mbaff (Macroblock *currMB,
   int jpos0 = joff    , jpos1 = joff + 1, jpos2 = joff + 2, jpos3 = joff + 3;
   int jpos4 = joff + 4, jpos5 = joff + 5, jpos6 = joff + 6, jpos7 = joff + 7;
 
-  imgpel **mpr = currSlice->mb_pred[pl];
-  int *mb_size = pVid->mb_size[IS_LUMA];
+  sPixel **mpr = currSlice->mb_pred[pl];
+  int *mb_size = vidParam->mb_size[IS_LUMA];
 
   for (int i=0; i<25;i++) PredPel[i]=0;
 
@@ -2623,7 +2623,7 @@ static int intra8x8_hor_up_pred_mbaff (Macroblock *currMB,
 
   pix_c.available = pix_c.available &&!(ioff == 8 && joff == 8);
 
-  if (pVid->active_pps->constrained_intra_pred_flag)
+  if (vidParam->active_pps->constrained_intra_pred_flag)
   {
     for (i=0, block_available_left=1; i<8;i++)
       block_available_left  &= pix_a[i].available ? currSlice->intra_block[pix_a[i].mb_addr]: 0;
@@ -2645,25 +2645,25 @@ static int intra8x8_hor_up_pred_mbaff (Macroblock *currMB,
   // form predictor pels
   if (block_available_up)
   {
-    memcpy(&PredPel[1], &imgY[pix_b.pos_y][pix_b.pos_x], BLOCK_SIZE_8x8 * sizeof(imgpel));
+    memcpy(&PredPel[1], &imgY[pix_b.pos_y][pix_b.pos_x], BLOCK_SIZE_8x8 * sizeof(sPixel));
   }
   else
   {
 #if (IMGTYPE == 0)
-    memset(&PredPel[1], pVid->dc_pred_value_comp[pl], BLOCK_SIZE_8x8 * sizeof(imgpel));
+    memset(&PredPel[1], vidParam->dc_pred_value_comp[pl], BLOCK_SIZE_8x8 * sizeof(sPixel));
 #else
-    P_A = P_B = P_C = P_D = P_E = P_F = P_G = P_H = (imgpel) pVid->dc_pred_value_comp[pl];
+    P_A = P_B = P_C = P_D = P_E = P_F = P_G = P_H = (sPixel) vidParam->dc_pred_value_comp[pl];
 #endif
   }
 
   if (block_available_up_right)
   {
-    memcpy(&PredPel[9], &imgY[pix_c.pos_y][pix_c.pos_x], BLOCK_SIZE_8x8 * sizeof(imgpel));
+    memcpy(&PredPel[9], &imgY[pix_c.pos_y][pix_c.pos_x], BLOCK_SIZE_8x8 * sizeof(sPixel));
   }
   else
   {
 #if (IMGTYPE == 0)
-    memset(&PredPel[9], PredPel[8], BLOCK_SIZE_8x8 * sizeof(imgpel));
+    memset(&PredPel[9], PredPel[8], BLOCK_SIZE_8x8 * sizeof(sPixel));
 #else
     P_I = P_J = P_K = P_L = P_M = P_N = P_O = P_P = P_H;
 #endif
@@ -2682,7 +2682,7 @@ static int intra8x8_hor_up_pred_mbaff (Macroblock *currMB,
   }
   else
   {
-    P_Q = P_R = P_S = P_T = P_U = P_V = P_W = P_X = (imgpel) pVid->dc_pred_value_comp[pl];
+    P_Q = P_R = P_S = P_T = P_U = P_V = P_W = P_X = (sPixel) vidParam->dc_pred_value_comp[pl];
   }
 
   if (block_available_up_left)
@@ -2691,42 +2691,42 @@ static int intra8x8_hor_up_pred_mbaff (Macroblock *currMB,
   }
   else
   {
-    P_Z = (imgpel) pVid->dc_pred_value_comp[pl];
+    P_Z = (sPixel) vidParam->dc_pred_value_comp[pl];
   }
 
   LowPassForIntra8x8Pred(PredPel, block_available_up_left, block_available_up, block_available_left);
 
-  PredArray[ 0] = (imgpel) ((P_Q + P_R + 1) >> 1);
-  PredArray[ 1] = (imgpel) ((P_S + P_Q + (P_R << 1) + 2) >> 2);
-  PredArray[ 2] = (imgpel) ((P_R + P_S + 1) >> 1);
-  PredArray[ 3] = (imgpel) ((P_T + P_R + (P_S << 1) + 2) >> 2);
-  PredArray[ 4] = (imgpel) ((P_S + P_T + 1) >> 1);
-  PredArray[ 5] = (imgpel) ((P_U + P_S + (P_T << 1) + 2) >> 2);
-  PredArray[ 6] = (imgpel) ((P_T + P_U + 1) >> 1);
-  PredArray[ 7] = (imgpel) ((P_V + P_T + (P_U << 1) + 2) >> 2);
-  PredArray[ 8] = (imgpel) ((P_U + P_V + 1) >> 1);
-  PredArray[ 9] = (imgpel) ((P_W + P_U + (P_V << 1) + 2) >> 2);
-  PredArray[10] = (imgpel) ((P_V + P_W + 1) >> 1);
-  PredArray[11] = (imgpel) ((P_X + P_V + (P_W << 1) + 2) >> 2);
-  PredArray[12] = (imgpel) ((P_W + P_X + 1) >> 1);
-  PredArray[13] = (imgpel) ((P_W + P_X + (P_X << 1) + 2) >> 2);
-  PredArray[14] = (imgpel) P_X;
-  PredArray[15] = (imgpel) P_X;
-  PredArray[16] = (imgpel) P_X;
-  PredArray[17] = (imgpel) P_X;
-  PredArray[18] = (imgpel) P_X;
-  PredArray[19] = (imgpel) P_X;
-  PredArray[20] = (imgpel) P_X;
-  PredArray[21] = (imgpel) P_X;
+  PredArray[ 0] = (sPixel) ((P_Q + P_R + 1) >> 1);
+  PredArray[ 1] = (sPixel) ((P_S + P_Q + (P_R << 1) + 2) >> 2);
+  PredArray[ 2] = (sPixel) ((P_R + P_S + 1) >> 1);
+  PredArray[ 3] = (sPixel) ((P_T + P_R + (P_S << 1) + 2) >> 2);
+  PredArray[ 4] = (sPixel) ((P_S + P_T + 1) >> 1);
+  PredArray[ 5] = (sPixel) ((P_U + P_S + (P_T << 1) + 2) >> 2);
+  PredArray[ 6] = (sPixel) ((P_T + P_U + 1) >> 1);
+  PredArray[ 7] = (sPixel) ((P_V + P_T + (P_U << 1) + 2) >> 2);
+  PredArray[ 8] = (sPixel) ((P_U + P_V + 1) >> 1);
+  PredArray[ 9] = (sPixel) ((P_W + P_U + (P_V << 1) + 2) >> 2);
+  PredArray[10] = (sPixel) ((P_V + P_W + 1) >> 1);
+  PredArray[11] = (sPixel) ((P_X + P_V + (P_W << 1) + 2) >> 2);
+  PredArray[12] = (sPixel) ((P_W + P_X + 1) >> 1);
+  PredArray[13] = (sPixel) ((P_W + P_X + (P_X << 1) + 2) >> 2);
+  PredArray[14] = (sPixel) P_X;
+  PredArray[15] = (sPixel) P_X;
+  PredArray[16] = (sPixel) P_X;
+  PredArray[17] = (sPixel) P_X;
+  PredArray[18] = (sPixel) P_X;
+  PredArray[19] = (sPixel) P_X;
+  PredArray[20] = (sPixel) P_X;
+  PredArray[21] = (sPixel) P_X;
 
-  memcpy(&mpr[jpos0][ioff], &PredArray[0], 8 * sizeof(imgpel));
-  memcpy(&mpr[jpos1][ioff], &PredArray[2], 8 * sizeof(imgpel));
-  memcpy(&mpr[jpos2][ioff], &PredArray[4], 8 * sizeof(imgpel));
-  memcpy(&mpr[jpos3][ioff], &PredArray[6], 8 * sizeof(imgpel));
-  memcpy(&mpr[jpos4][ioff], &PredArray[8], 8 * sizeof(imgpel));
-  memcpy(&mpr[jpos5][ioff], &PredArray[10], 8 * sizeof(imgpel));
-  memcpy(&mpr[jpos6][ioff], &PredArray[12], 8 * sizeof(imgpel));
-  memcpy(&mpr[jpos7][ioff], &PredArray[14], 8 * sizeof(imgpel));
+  memcpy(&mpr[jpos0][ioff], &PredArray[0], 8 * sizeof(sPixel));
+  memcpy(&mpr[jpos1][ioff], &PredArray[2], 8 * sizeof(sPixel));
+  memcpy(&mpr[jpos2][ioff], &PredArray[4], 8 * sizeof(sPixel));
+  memcpy(&mpr[jpos3][ioff], &PredArray[6], 8 * sizeof(sPixel));
+  memcpy(&mpr[jpos4][ioff], &PredArray[8], 8 * sizeof(sPixel));
+  memcpy(&mpr[jpos5][ioff], &PredArray[10], 8 * sizeof(sPixel));
+  memcpy(&mpr[jpos6][ioff], &PredArray[12], 8 * sizeof(sPixel));
+  memcpy(&mpr[jpos7][ioff], &PredArray[14], 8 * sizeof(sPixel));
 
   return DECODING_OK;
 }
@@ -2748,12 +2748,12 @@ static int intra8x8_hor_down_pred_mbaff (Macroblock *currMB,
                                          int joff)              //!< pixel offset Y within MB
 {
   Slice *currSlice = currMB->p_Slice;
-  VideoParameters* pVid = currMB->pVid;
+  sVidParam* vidParam = currMB->vidParam;
 
   int i;
-  imgpel PredPel[25];  // array of predictor pels
-  imgpel PredArray[22];   // array of final prediction values
-  imgpel **imgY = (pl) ? currSlice->dec_picture->imgUV[pl - 1] : currSlice->dec_picture->imgY; // For MB level frame/field coding tools -- set default to imgY
+  sPixel PredPel[25];  // array of predictor pels
+  sPixel PredArray[22];   // array of final prediction values
+  sPixel **imgY = (pl) ? currSlice->dec_picture->imgUV[pl - 1] : currSlice->dec_picture->imgY; // For MB level frame/field coding tools -- set default to imgY
 
   PixelPos pix_a[8];
   PixelPos pix_b, pix_c, pix_d;
@@ -2765,8 +2765,8 @@ static int intra8x8_hor_down_pred_mbaff (Macroblock *currMB,
   int jpos0 = joff    , jpos1 = joff + 1, jpos2 = joff + 2, jpos3 = joff + 3;
   int jpos4 = joff + 4, jpos5 = joff + 5, jpos6 = joff + 6, jpos7 = joff + 7;
 
-  imgpel **mpr = currSlice->mb_pred[pl];
-  int *mb_size = pVid->mb_size[IS_LUMA];
+  sPixel **mpr = currSlice->mb_pred[pl];
+  int *mb_size = vidParam->mb_size[IS_LUMA];
 
   for (int i=0; i<25;i++) PredPel[i]=0;
 
@@ -2781,7 +2781,7 @@ static int intra8x8_hor_down_pred_mbaff (Macroblock *currMB,
 
   pix_c.available = pix_c.available &&!(ioff == 8 && joff == 8);
 
-  if (pVid->active_pps->constrained_intra_pred_flag)
+  if (vidParam->active_pps->constrained_intra_pred_flag)
   {
     for (i=0, block_available_left=1; i<8;i++)
       block_available_left  &= pix_a[i].available ? currSlice->intra_block[pix_a[i].mb_addr]: 0;
@@ -2803,25 +2803,25 @@ static int intra8x8_hor_down_pred_mbaff (Macroblock *currMB,
   // form predictor pels
   if (block_available_up)
   {
-    memcpy(&PredPel[1], &imgY[pix_b.pos_y][pix_b.pos_x], BLOCK_SIZE_8x8 * sizeof(imgpel));
+    memcpy(&PredPel[1], &imgY[pix_b.pos_y][pix_b.pos_x], BLOCK_SIZE_8x8 * sizeof(sPixel));
   }
   else
   {
 #if (IMGTYPE == 0)
-    memset(&PredPel[1], pVid->dc_pred_value_comp[pl], BLOCK_SIZE_8x8 * sizeof(imgpel));
+    memset(&PredPel[1], vidParam->dc_pred_value_comp[pl], BLOCK_SIZE_8x8 * sizeof(sPixel));
 #else
-    P_A = P_B = P_C = P_D = P_E = P_F = P_G = P_H = (imgpel) pVid->dc_pred_value_comp[pl];
+    P_A = P_B = P_C = P_D = P_E = P_F = P_G = P_H = (sPixel) vidParam->dc_pred_value_comp[pl];
 #endif
   }
 
   if (block_available_up_right)
   {
-    memcpy(&PredPel[9], &imgY[pix_c.pos_y][pix_c.pos_x], BLOCK_SIZE_8x8 * sizeof(imgpel));
+    memcpy(&PredPel[9], &imgY[pix_c.pos_y][pix_c.pos_x], BLOCK_SIZE_8x8 * sizeof(sPixel));
   }
   else
   {
 #if (IMGTYPE == 0)
-    memset(&PredPel[9], PredPel[8], BLOCK_SIZE_8x8 * sizeof(imgpel));
+    memset(&PredPel[9], PredPel[8], BLOCK_SIZE_8x8 * sizeof(sPixel));
 #else
     P_I = P_J = P_K = P_L = P_M = P_N = P_O = P_P = P_H;
 #endif
@@ -2840,7 +2840,7 @@ static int intra8x8_hor_down_pred_mbaff (Macroblock *currMB,
   }
   else
   {
-    P_Q = P_R = P_S = P_T = P_U = P_V = P_W = P_X = (imgpel) pVid->dc_pred_value_comp[pl];
+    P_Q = P_R = P_S = P_T = P_U = P_V = P_W = P_X = (sPixel) vidParam->dc_pred_value_comp[pl];
   }
 
   if (block_available_up_left)
@@ -2849,42 +2849,42 @@ static int intra8x8_hor_down_pred_mbaff (Macroblock *currMB,
   }
   else
   {
-    P_Z = (imgpel) pVid->dc_pred_value_comp[pl];
+    P_Z = (sPixel) vidParam->dc_pred_value_comp[pl];
   }
 
   LowPassForIntra8x8Pred(PredPel, block_available_up_left, block_available_up, block_available_left);
 
-  PredArray[ 0] = (imgpel) ((P_X + P_W + 1) >> 1);
-  PredArray[ 1] = (imgpel) ((P_V + P_X + (P_W << 1) + 2) >> 2);
-  PredArray[ 2] = (imgpel) ((P_W + P_V + 1) >> 1);
-  PredArray[ 3] = (imgpel) ((P_U + P_W + (P_V << 1) + 2) >> 2);
-  PredArray[ 4] = (imgpel) ((P_V + P_U + 1) >> 1);
-  PredArray[ 5] = (imgpel) ((P_T + P_V + (P_U << 1) + 2) >> 2);
-  PredArray[ 6] = (imgpel) ((P_U + P_T + 1) >> 1);
-  PredArray[ 7] = (imgpel) ((P_S + P_U + (P_T << 1) + 2) >> 2);
-  PredArray[ 8] = (imgpel) ((P_T + P_S + 1) >> 1);
-  PredArray[ 9] = (imgpel) ((P_R + P_T + (P_S << 1) + 2) >> 2);
-  PredArray[10] = (imgpel) ((P_S + P_R + 1) >> 1);
-  PredArray[11] = (imgpel) ((P_Q + P_S + (P_R << 1) + 2) >> 2);
-  PredArray[12] = (imgpel) ((P_R + P_Q + 1) >> 1);
-  PredArray[13] = (imgpel) ((P_Z + P_R + (P_Q << 1) + 2) >> 2);
-  PredArray[14] = (imgpel) ((P_Q + P_Z + 1) >> 1);
-  PredArray[15] = (imgpel) ((P_Q + P_A + 2*P_Z + 2) >> 2);
-  PredArray[16] = (imgpel) ((P_Z + P_B + 2*P_A + 2) >> 2);
-  PredArray[17] = (imgpel) ((P_A + P_C + 2*P_B + 2) >> 2);
-  PredArray[18] = (imgpel) ((P_B + P_D + 2*P_C + 2) >> 2);
-  PredArray[19] = (imgpel) ((P_C + P_E + 2*P_D + 2) >> 2);
-  PredArray[20] = (imgpel) ((P_D + P_F + 2*P_E + 2) >> 2);
-  PredArray[21] = (imgpel) ((P_E + P_G + 2*P_F + 2) >> 2);
+  PredArray[ 0] = (sPixel) ((P_X + P_W + 1) >> 1);
+  PredArray[ 1] = (sPixel) ((P_V + P_X + (P_W << 1) + 2) >> 2);
+  PredArray[ 2] = (sPixel) ((P_W + P_V + 1) >> 1);
+  PredArray[ 3] = (sPixel) ((P_U + P_W + (P_V << 1) + 2) >> 2);
+  PredArray[ 4] = (sPixel) ((P_V + P_U + 1) >> 1);
+  PredArray[ 5] = (sPixel) ((P_T + P_V + (P_U << 1) + 2) >> 2);
+  PredArray[ 6] = (sPixel) ((P_U + P_T + 1) >> 1);
+  PredArray[ 7] = (sPixel) ((P_S + P_U + (P_T << 1) + 2) >> 2);
+  PredArray[ 8] = (sPixel) ((P_T + P_S + 1) >> 1);
+  PredArray[ 9] = (sPixel) ((P_R + P_T + (P_S << 1) + 2) >> 2);
+  PredArray[10] = (sPixel) ((P_S + P_R + 1) >> 1);
+  PredArray[11] = (sPixel) ((P_Q + P_S + (P_R << 1) + 2) >> 2);
+  PredArray[12] = (sPixel) ((P_R + P_Q + 1) >> 1);
+  PredArray[13] = (sPixel) ((P_Z + P_R + (P_Q << 1) + 2) >> 2);
+  PredArray[14] = (sPixel) ((P_Q + P_Z + 1) >> 1);
+  PredArray[15] = (sPixel) ((P_Q + P_A + 2*P_Z + 2) >> 2);
+  PredArray[16] = (sPixel) ((P_Z + P_B + 2*P_A + 2) >> 2);
+  PredArray[17] = (sPixel) ((P_A + P_C + 2*P_B + 2) >> 2);
+  PredArray[18] = (sPixel) ((P_B + P_D + 2*P_C + 2) >> 2);
+  PredArray[19] = (sPixel) ((P_C + P_E + 2*P_D + 2) >> 2);
+  PredArray[20] = (sPixel) ((P_D + P_F + 2*P_E + 2) >> 2);
+  PredArray[21] = (sPixel) ((P_E + P_G + 2*P_F + 2) >> 2);
 
-  memcpy(&mpr[jpos0][ioff], &PredArray[14], 8 * sizeof(imgpel));
-  memcpy(&mpr[jpos1][ioff], &PredArray[12], 8 * sizeof(imgpel));
-  memcpy(&mpr[jpos2][ioff], &PredArray[10], 8 * sizeof(imgpel));
-  memcpy(&mpr[jpos3][ioff], &PredArray[ 8], 8 * sizeof(imgpel));
-  memcpy(&mpr[jpos4][ioff], &PredArray[ 6], 8 * sizeof(imgpel));
-  memcpy(&mpr[jpos5][ioff], &PredArray[ 4], 8 * sizeof(imgpel));
-  memcpy(&mpr[jpos6][ioff], &PredArray[ 2], 8 * sizeof(imgpel));
-  memcpy(&mpr[jpos7][ioff], &PredArray[ 0], 8 * sizeof(imgpel));
+  memcpy(&mpr[jpos0][ioff], &PredArray[14], 8 * sizeof(sPixel));
+  memcpy(&mpr[jpos1][ioff], &PredArray[12], 8 * sizeof(sPixel));
+  memcpy(&mpr[jpos2][ioff], &PredArray[10], 8 * sizeof(sPixel));
+  memcpy(&mpr[jpos3][ioff], &PredArray[ 8], 8 * sizeof(sPixel));
+  memcpy(&mpr[jpos4][ioff], &PredArray[ 6], 8 * sizeof(sPixel));
+  memcpy(&mpr[jpos5][ioff], &PredArray[ 4], 8 * sizeof(sPixel));
+  memcpy(&mpr[jpos6][ioff], &PredArray[ 2], 8 * sizeof(sPixel));
+  memcpy(&mpr[jpos7][ioff], &PredArray[ 0], 8 * sizeof(sPixel));
 
   return DECODING_OK;
 }
@@ -2966,23 +2966,23 @@ static int intra_pred_8x8_mbaff (Macroblock *currMB,
 static int intra16x16_dc_pred (Macroblock *currMB, ColorPlane pl)
 {
   Slice *currSlice = currMB->p_Slice;
-  VideoParameters* pVid = currMB->pVid;
+  sVidParam* vidParam = currMB->vidParam;
 
   int s0 = 0, s1 = 0, s2 = 0;
 
   int i,j;
 
-  imgpel **imgY = (pl) ? currSlice->dec_picture->imgUV[pl - 1] : currSlice->dec_picture->imgY;
-  imgpel **mb_pred = &(currSlice->mb_pred[pl][0]);
+  sPixel **imgY = (pl) ? currSlice->dec_picture->imgUV[pl - 1] : currSlice->dec_picture->imgY;
+  sPixel **mb_pred = &(currSlice->mb_pred[pl][0]);
 
   PixelPos a, b;
 
   int up_avail, left_avail;
 
-  getNonAffNeighbour(currMB,   -1,   0, pVid->mb_size[IS_LUMA], &a);
-  getNonAffNeighbour(currMB,    0,  -1, pVid->mb_size[IS_LUMA], &b);
+  getNonAffNeighbour(currMB,   -1,   0, vidParam->mb_size[IS_LUMA], &a);
+  getNonAffNeighbour(currMB,    0,  -1, vidParam->mb_size[IS_LUMA], &b);
 
-  if (!pVid->active_pps->constrained_intra_pred_flag)
+  if (!vidParam->active_pps->constrained_intra_pred_flag)
   {
     up_avail      = b.available;
     left_avail    = a.available;
@@ -2996,7 +2996,7 @@ static int intra16x16_dc_pred (Macroblock *currMB, ColorPlane pl)
   // Sum top predictors
   if (up_avail)
   {
-    imgpel *pel = &imgY[b.pos_y][b.pos_x];
+    sPixel *pel = &imgY[b.pos_y][b.pos_x];
     for (i = 0; i < MB_BLOCK_SIZE; ++i)
     {
       s1 += *pel++;
@@ -3021,19 +3021,19 @@ static int intra16x16_dc_pred (Macroblock *currMB, ColorPlane pl)
   else if (up_avail && !left_avail)
     s0 = (s1 + 8)>>4;              // left edge
   else
-    s0 = pVid->dc_pred_value_comp[pl];                            // top left corner, nothing to predict from
+    s0 = vidParam->dc_pred_value_comp[pl];                            // top left corner, nothing to predict from
 
   for(j = 0; j < MB_BLOCK_SIZE; ++j)
   {
 #if (IMGTYPE == 0)
-    memset(mb_pred[j], s0, MB_BLOCK_SIZE * sizeof(imgpel));
+    memset(mb_pred[j], s0, MB_BLOCK_SIZE * sizeof(sPixel));
 #else
     for(i = 0; i < MB_BLOCK_SIZE; i += 4)
     {
-      mb_pred[j][i    ]=(imgpel) s0;
-      mb_pred[j][i + 1]=(imgpel) s0;
-      mb_pred[j][i + 2]=(imgpel) s0;
-      mb_pred[j][i + 3]=(imgpel) s0;
+      mb_pred[j][i    ]=(sPixel) s0;
+      mb_pred[j][i + 1]=(sPixel) s0;
+      mb_pred[j][i + 2]=(sPixel) s0;
+      mb_pred[j][i + 3]=(sPixel) s0;
     }
 #endif
   }
@@ -3056,19 +3056,19 @@ static int intra16x16_dc_pred (Macroblock *currMB, ColorPlane pl)
 static int intra16x16_vert_pred (Macroblock *currMB, ColorPlane pl)
 {
   Slice *currSlice = currMB->p_Slice;
-  VideoParameters* pVid = currMB->pVid;
+  sVidParam* vidParam = currMB->vidParam;
 
   int j;
 
-  imgpel **imgY = (pl) ? currSlice->dec_picture->imgUV[pl - 1] : currSlice->dec_picture->imgY;
+  sPixel **imgY = (pl) ? currSlice->dec_picture->imgUV[pl - 1] : currSlice->dec_picture->imgY;
 
   PixelPos b;          //!< pixel position p(0,-1)
 
   int up_avail;
 
-  getNonAffNeighbour(currMB,    0,   -1, pVid->mb_size[IS_LUMA], &b);
+  getNonAffNeighbour(currMB,    0,   -1, vidParam->mb_size[IS_LUMA], &b);
 
-  if (!pVid->active_pps->constrained_intra_pred_flag)
+  if (!vidParam->active_pps->constrained_intra_pred_flag)
   {
     up_avail = b.available;
   }
@@ -3080,15 +3080,15 @@ static int intra16x16_vert_pred (Macroblock *currMB, ColorPlane pl)
   if (!up_avail)
     error ("invalid 16x16 intra pred Mode VERT_PRED_16",500);
   {
-    imgpel **prd = &currSlice->mb_pred[pl][0];
-    imgpel *src = &(imgY[b.pos_y][b.pos_x]);
+    sPixel **prd = &currSlice->mb_pred[pl][0];
+    sPixel *src = &(imgY[b.pos_y][b.pos_x]);
 
     for(j=0;j<MB_BLOCK_SIZE; j+= 4)
     {
-      memcpy(*prd++, src, MB_BLOCK_SIZE * sizeof(imgpel));
-      memcpy(*prd++, src, MB_BLOCK_SIZE * sizeof(imgpel));
-      memcpy(*prd++, src, MB_BLOCK_SIZE * sizeof(imgpel));
-      memcpy(*prd++, src, MB_BLOCK_SIZE * sizeof(imgpel));
+      memcpy(*prd++, src, MB_BLOCK_SIZE * sizeof(sPixel));
+      memcpy(*prd++, src, MB_BLOCK_SIZE * sizeof(sPixel));
+      memcpy(*prd++, src, MB_BLOCK_SIZE * sizeof(sPixel));
+      memcpy(*prd++, src, MB_BLOCK_SIZE * sizeof(sPixel));
     }
   }
 
@@ -3109,21 +3109,21 @@ static int intra16x16_vert_pred (Macroblock *currMB, ColorPlane pl)
 static int intra16x16_hor_pred (Macroblock *currMB, ColorPlane pl)
 {
   Slice *currSlice = currMB->p_Slice;
-  VideoParameters* pVid = currMB->pVid;
+  sVidParam* vidParam = currMB->vidParam;
   int j;
 
-  imgpel **imgY = (pl) ? currSlice->dec_picture->imgUV[pl - 1] : currSlice->dec_picture->imgY;
-  imgpel **mb_pred = &(currSlice->mb_pred[pl][0]);
-  imgpel prediction;
+  sPixel **imgY = (pl) ? currSlice->dec_picture->imgUV[pl - 1] : currSlice->dec_picture->imgY;
+  sPixel **mb_pred = &(currSlice->mb_pred[pl][0]);
+  sPixel prediction;
   int pos_y, pos_x;
 
   PixelPos a;
 
   int left_avail;
 
-  getNonAffNeighbour(currMB, -1,  0, pVid->mb_size[IS_LUMA], &a);
+  getNonAffNeighbour(currMB, -1,  0, vidParam->mb_size[IS_LUMA], &a);
 
-  if (!pVid->active_pps->constrained_intra_pred_flag)
+  if (!vidParam->active_pps->constrained_intra_pred_flag)
   {
     left_avail    = a.available;
   }
@@ -3141,13 +3141,13 @@ static int intra16x16_hor_pred (Macroblock *currMB, ColorPlane pl)
   for(j = 0; j < MB_BLOCK_SIZE; ++j)
   {
 #if (IMGTYPE == 0)
-    imgpel *prd = mb_pred[j];
+    sPixel *prd = mb_pred[j];
     prediction = imgY[pos_y++][pos_x];
 
-    memset(prd, prediction, MB_BLOCK_SIZE * sizeof(imgpel));
+    memset(prd, prediction, MB_BLOCK_SIZE * sizeof(sPixel));
 #else
     int i;
-    imgpel *prd = mb_pred[j];
+    sPixel *prd = mb_pred[j];
     prediction = imgY[pos_y++][pos_x];
 
     for(i = 0; i < MB_BLOCK_SIZE; i += 4)
@@ -3177,28 +3177,28 @@ static int intra16x16_hor_pred (Macroblock *currMB, ColorPlane pl)
 static int intra16x16_plane_pred (Macroblock *currMB, ColorPlane pl)
 {
   Slice *currSlice = currMB->p_Slice;
-  VideoParameters* pVid = currMB->pVid;
+  sVidParam* vidParam = currMB->vidParam;
 
   int i,j;
 
   int ih = 0, iv = 0;
   int ib,ic,iaa;
 
-  imgpel **imgY = (pl) ? currSlice->dec_picture->imgUV[pl - 1] : currSlice->dec_picture->imgY;
-  imgpel **mb_pred = &(currSlice->mb_pred[pl][0]);
-  imgpel *mpr_line;
-  int max_imgpel_value = pVid->max_pel_value_comp[pl];
+  sPixel **imgY = (pl) ? currSlice->dec_picture->imgUV[pl - 1] : currSlice->dec_picture->imgY;
+  sPixel **mb_pred = &(currSlice->mb_pred[pl][0]);
+  sPixel *mpr_line;
+  int max_imgpel_value = vidParam->max_pel_value_comp[pl];
   int pos_y, pos_x;
 
   PixelPos a, b, d;
 
   int up_avail, left_avail, left_up_avail;
 
-  getNonAffNeighbour(currMB, -1,  -1, pVid->mb_size[IS_LUMA], &d);
-  getNonAffNeighbour(currMB, -1,   0, pVid->mb_size[IS_LUMA], &a);
-  getNonAffNeighbour(currMB,  0,  -1, pVid->mb_size[IS_LUMA], &b);
+  getNonAffNeighbour(currMB, -1,  -1, vidParam->mb_size[IS_LUMA], &d);
+  getNonAffNeighbour(currMB, -1,   0, vidParam->mb_size[IS_LUMA], &a);
+  getNonAffNeighbour(currMB,  0,  -1, vidParam->mb_size[IS_LUMA], &b);
 
-  if (!pVid->active_pps->constrained_intra_pred_flag)
+  if (!vidParam->active_pps->constrained_intra_pred_flag)
   {
     up_avail      = b.available;
     left_avail    = a.available;
@@ -3233,13 +3233,13 @@ static int intra16x16_plane_pred (Macroblock *currMB, ColorPlane pl)
   for (j = 0;j < MB_BLOCK_SIZE; ++j)
   {
     int ibb = iaa + (j - 7) * ic + 16;
-    imgpel *prd = mb_pred[j];
+    sPixel *prd = mb_pred[j];
     for (i = 0;i < MB_BLOCK_SIZE; i += 4)
     {
-      *prd++ = (imgpel) iClip1(max_imgpel_value, ((ibb + (i - 7) * ib) >> 5));
-      *prd++ = (imgpel) iClip1(max_imgpel_value, ((ibb + (i - 6) * ib) >> 5));
-      *prd++ = (imgpel) iClip1(max_imgpel_value, ((ibb + (i - 5) * ib) >> 5));
-      *prd++ = (imgpel) iClip1(max_imgpel_value, ((ibb + (i - 4) * ib) >> 5));
+      *prd++ = (sPixel) iClip1(max_imgpel_value, ((ibb + (i - 7) * ib) >> 5));
+      *prd++ = (sPixel) iClip1(max_imgpel_value, ((ibb + (i - 6) * ib) >> 5));
+      *prd++ = (sPixel) iClip1(max_imgpel_value, ((ibb + (i - 5) * ib) >> 5));
+      *prd++ = (sPixel) iClip1(max_imgpel_value, ((ibb + (i - 4) * ib) >> 5));
     }
   }// store plane prediction
 
@@ -3299,14 +3299,14 @@ static int intra_pred_16x16_normal (Macroblock *currMB,
 static int intra16x16_dc_pred_mbaff (Macroblock *currMB, ColorPlane pl)
 {
   Slice *currSlice = currMB->p_Slice;
-  VideoParameters* pVid = currMB->pVid;
+  sVidParam* vidParam = currMB->vidParam;
 
   int s0 = 0, s1 = 0, s2 = 0;
 
   int i,j;
 
-  imgpel **imgY = (pl) ? currSlice->dec_picture->imgUV[pl - 1] : currSlice->dec_picture->imgY;
-  imgpel **mb_pred = &(currSlice->mb_pred[pl][0]);
+  sPixel **imgY = (pl) ? currSlice->dec_picture->imgUV[pl - 1] : currSlice->dec_picture->imgY;
+  sPixel **mb_pred = &(currSlice->mb_pred[pl][0]);
 
   PixelPos b;          //!< pixel position p(0,-1)
   PixelPos left[17];    //!< pixel positions p(-1, -1..15)
@@ -3317,11 +3317,11 @@ static int intra16x16_dc_pred_mbaff (Macroblock *currMB, ColorPlane pl)
 
   for (i=0;i<17;++i)
   {
-    getAffNeighbour(currMB, -1,  i-1, pVid->mb_size[IS_LUMA], &left[i]);
+    getAffNeighbour(currMB, -1,  i-1, vidParam->mb_size[IS_LUMA], &left[i]);
   }
-  getAffNeighbour(currMB,    0,   -1, pVid->mb_size[IS_LUMA], &b);
+  getAffNeighbour(currMB,    0,   -1, vidParam->mb_size[IS_LUMA], &b);
 
-  if (!pVid->active_pps->constrained_intra_pred_flag)
+  if (!vidParam->active_pps->constrained_intra_pred_flag)
   {
     up_avail      = b.available;
     left_avail    = left[1].available;
@@ -3347,16 +3347,16 @@ static int intra16x16_dc_pred_mbaff (Macroblock *currMB, ColorPlane pl)
   else if (up_avail && !left_avail)
     s0 = (s1 + 8)>>4;              // left edge
   else
-    s0 = pVid->dc_pred_value_comp[pl];                            // top left corner, nothing to predict from
+    s0 = vidParam->dc_pred_value_comp[pl];                            // top left corner, nothing to predict from
 
   for(j = 0; j < MB_BLOCK_SIZE; ++j)
   {
 #if (IMGTYPE == 0)
-    memset(mb_pred[j], s0, MB_BLOCK_SIZE * sizeof(imgpel));
+    memset(mb_pred[j], s0, MB_BLOCK_SIZE * sizeof(sPixel));
 #else
     for(i = 0; i < MB_BLOCK_SIZE; ++i)
     {
-      mb_pred[j][i]=(imgpel) s0;
+      mb_pred[j][i]=(sPixel) s0;
     }
 #endif
   }
@@ -3378,19 +3378,19 @@ static int intra16x16_dc_pred_mbaff (Macroblock *currMB, ColorPlane pl)
 static int intra16x16_vert_pred_mbaff (Macroblock *currMB, ColorPlane pl)
 {
   Slice *currSlice = currMB->p_Slice;
-  VideoParameters* pVid = currMB->pVid;
+  sVidParam* vidParam = currMB->vidParam;
 
   int j;
 
-  imgpel **imgY = (pl) ? currSlice->dec_picture->imgUV[pl - 1] : currSlice->dec_picture->imgY;
+  sPixel **imgY = (pl) ? currSlice->dec_picture->imgUV[pl - 1] : currSlice->dec_picture->imgY;
 
   PixelPos b;          //!< pixel position p(0,-1)
 
   int up_avail;
 
-  getAffNeighbour(currMB,    0,   -1, pVid->mb_size[IS_LUMA], &b);
+  getAffNeighbour(currMB,    0,   -1, vidParam->mb_size[IS_LUMA], &b);
 
-  if (!pVid->active_pps->constrained_intra_pred_flag)
+  if (!vidParam->active_pps->constrained_intra_pred_flag)
   {
     up_avail = b.available;
   }
@@ -3402,15 +3402,15 @@ static int intra16x16_vert_pred_mbaff (Macroblock *currMB, ColorPlane pl)
   if (!up_avail)
     error ("invalid 16x16 intra pred Mode VERT_PRED_16",500);
   {
-    imgpel **prd = &currSlice->mb_pred[pl][0];
-    imgpel *src = &(imgY[b.pos_y][b.pos_x]);
+    sPixel **prd = &currSlice->mb_pred[pl][0];
+    sPixel *src = &(imgY[b.pos_y][b.pos_x]);
 
     for(j=0;j<MB_BLOCK_SIZE; j+= 4)
     {
-      memcpy(*prd++, src, MB_BLOCK_SIZE * sizeof(imgpel));
-      memcpy(*prd++, src, MB_BLOCK_SIZE * sizeof(imgpel));
-      memcpy(*prd++, src, MB_BLOCK_SIZE * sizeof(imgpel));
-      memcpy(*prd++, src, MB_BLOCK_SIZE * sizeof(imgpel));
+      memcpy(*prd++, src, MB_BLOCK_SIZE * sizeof(sPixel));
+      memcpy(*prd++, src, MB_BLOCK_SIZE * sizeof(sPixel));
+      memcpy(*prd++, src, MB_BLOCK_SIZE * sizeof(sPixel));
+      memcpy(*prd++, src, MB_BLOCK_SIZE * sizeof(sPixel));
     }
   }
 
@@ -3431,12 +3431,12 @@ static int intra16x16_vert_pred_mbaff (Macroblock *currMB, ColorPlane pl)
 static int intra16x16_hor_pred_mbaff (Macroblock *currMB, ColorPlane pl)
 {
   Slice *currSlice = currMB->p_Slice;
-  VideoParameters* pVid = currMB->pVid;
+  sVidParam* vidParam = currMB->vidParam;
   int i,j;
 
-  imgpel **imgY = (pl) ? currSlice->dec_picture->imgUV[pl - 1] : currSlice->dec_picture->imgY;
-  imgpel **mb_pred = &(currSlice->mb_pred[pl][0]);
-  imgpel prediction;
+  sPixel **imgY = (pl) ? currSlice->dec_picture->imgUV[pl - 1] : currSlice->dec_picture->imgY;
+  sPixel **mb_pred = &(currSlice->mb_pred[pl][0]);
+  sPixel prediction;
 
   PixelPos left[17];    //!< pixel positions p(-1, -1..15)
 
@@ -3444,10 +3444,10 @@ static int intra16x16_hor_pred_mbaff (Macroblock *currMB, ColorPlane pl)
 
   for (i=0;i<17;++i)
   {
-    getAffNeighbour(currMB, -1,  i-1, pVid->mb_size[IS_LUMA], &left[i]);
+    getAffNeighbour(currMB, -1,  i-1, vidParam->mb_size[IS_LUMA], &left[i]);
   }
 
-  if (!pVid->active_pps->constrained_intra_pred_flag)
+  if (!vidParam->active_pps->constrained_intra_pred_flag)
   {
     left_avail    = left[1].available;
   }
@@ -3484,17 +3484,17 @@ static int intra16x16_hor_pred_mbaff (Macroblock *currMB, ColorPlane pl)
 static int intra16x16_plane_pred_mbaff (Macroblock *currMB, ColorPlane pl)
 {
   Slice *currSlice = currMB->p_Slice;
-  VideoParameters* pVid = currMB->pVid;
+  sVidParam* vidParam = currMB->vidParam;
 
   int i,j;
 
   int ih = 0, iv = 0;
   int ib,ic,iaa;
 
-  imgpel **imgY = (pl) ? currSlice->dec_picture->imgUV[pl - 1] : currSlice->dec_picture->imgY;
-  imgpel **mb_pred = &(currSlice->mb_pred[pl][0]);
-  imgpel *mpr_line;
-  int max_imgpel_value = pVid->max_pel_value_comp[pl];
+  sPixel **imgY = (pl) ? currSlice->dec_picture->imgUV[pl - 1] : currSlice->dec_picture->imgY;
+  sPixel **mb_pred = &(currSlice->mb_pred[pl][0]);
+  sPixel *mpr_line;
+  int max_imgpel_value = vidParam->max_pel_value_comp[pl];
 
   PixelPos b;          //!< pixel position p(0,-1)
   PixelPos left[17];    //!< pixel positions p(-1, -1..15)
@@ -3503,11 +3503,11 @@ static int intra16x16_plane_pred_mbaff (Macroblock *currMB, ColorPlane pl)
 
   for (i=0;i<17; ++i)
   {
-    getAffNeighbour(currMB, -1,  i-1, pVid->mb_size[IS_LUMA], &left[i]);
+    getAffNeighbour(currMB, -1,  i-1, vidParam->mb_size[IS_LUMA], &left[i]);
   }
-  getAffNeighbour(currMB,    0,   -1, pVid->mb_size[IS_LUMA], &b);
+  getAffNeighbour(currMB,    0,   -1, vidParam->mb_size[IS_LUMA], &b);
 
-  if (!pVid->active_pps->constrained_intra_pred_flag)
+  if (!vidParam->active_pps->constrained_intra_pred_flag)
   {
     up_avail      = b.available;
     left_avail    = left[1].available;
@@ -3542,7 +3542,7 @@ static int intra16x16_plane_pred_mbaff (Macroblock *currMB, ColorPlane pl)
   {
     for (i = 0;i < MB_BLOCK_SIZE; ++i)
     {
-      mb_pred[j][i] = (imgpel) iClip1(max_imgpel_value, ((iaa + (i - 7) * ib + (j - 7) * ic + 16) >> 5));
+      mb_pred[j][i] = (sPixel) iClip1(max_imgpel_value, ((iaa + (i - 7) * ib + (j - 7) * ic + 16) >> 5));
     }
   }// store plane prediction
 
@@ -3588,21 +3588,21 @@ static int intra_pred_16x16_mbaff (Macroblock *currMB,
 //}}}
 
 //{{{
-static void intra_chroma_DC_single (imgpel **curr_img, int up_avail, int left_avail, PixelPos up, PixelPos left, int blk_x, int blk_y, int *pred, int direction )
+static void intra_chroma_DC_single (sPixel **curr_img, int up_avail, int left_avail, PixelPos up, PixelPos left, int blk_x, int blk_y, int *pred, int direction )
 {
   int i;
   int s0 = 0;
 
   if ((direction && up_avail) || (!left_avail && up_avail))
   {
-    imgpel *cur_pel = &curr_img[up.pos_y][up.pos_x + blk_x];
+    sPixel *cur_pel = &curr_img[up.pos_y][up.pos_x + blk_x];
     for (i = 0; i < 4;++i)
       s0 += *(cur_pel++);
     *pred = (s0 + 2) >> 2;
   }
   else if (left_avail)
   {
-    imgpel **cur_pel = &(curr_img[left.pos_y + blk_y - 1]);
+    sPixel **cur_pel = &(curr_img[left.pos_y + blk_y - 1]);
     int pos_x = left.pos_x;
     for (i = 0; i < 4;++i)
       s0 += *((*cur_pel++) + pos_x);
@@ -3611,21 +3611,21 @@ static void intra_chroma_DC_single (imgpel **curr_img, int up_avail, int left_av
 }
 //}}}
 //{{{
-static void intra_chroma_DC_all (imgpel **curr_img, int up_avail, int left_avail, PixelPos up, PixelPos left, int blk_x, int blk_y, int *pred )
+static void intra_chroma_DC_all (sPixel **curr_img, int up_avail, int left_avail, PixelPos up, PixelPos left, int blk_x, int blk_y, int *pred )
 {
   int i;
   int s0 = 0, s1 = 0;
 
   if (up_avail)
   {
-    imgpel *cur_pel = &curr_img[up.pos_y][up.pos_x + blk_x];
+    sPixel *cur_pel = &curr_img[up.pos_y][up.pos_x + blk_x];
     for (i = 0; i < 4;++i)
       s0 += *(cur_pel++);
   }
 
   if (left_avail)
   {
-    imgpel **cur_pel = &(curr_img[left.pos_y + blk_y - 1]);
+    sPixel **cur_pel = &(curr_img[left.pos_y + blk_y - 1]);
     int pos_x = left.pos_x;
     for (i = 0; i < 4;++i)
       s1 += *((*cur_pel++) + pos_x);
@@ -3643,8 +3643,8 @@ static void intra_chroma_DC_all (imgpel **curr_img, int up_avail, int left_avail
 static void intrapred_chroma_dc (Macroblock *currMB)
 {
   Slice *currSlice = currMB->p_Slice;
-  VideoParameters* pVid = currMB->pVid;
-  StorablePicture *dec_picture = currSlice->dec_picture;
+  sVidParam* vidParam = currMB->vidParam;
+  sStorablePicture *dec_picture = currSlice->dec_picture;
   int        b8, b4;
   int        yuv = dec_picture->chroma_format_idc - 1;
   int        blk_x, blk_y;
@@ -3659,16 +3659,16 @@ static void intrapred_chroma_dc (Macroblock *currMB)
   PixelPos up;        //!< pixel position  p(0,-1)
   PixelPos left;      //!< pixel positions p(-1, -1..16)
   int up_avail, left_avail;
-  imgpel **imgUV0 = dec_picture->imgUV[0];
-  imgpel **imgUV1 = dec_picture->imgUV[1];
-  imgpel **mb_pred0 = currSlice->mb_pred[0 + 1];
-  imgpel **mb_pred1 = currSlice->mb_pred[1 + 1];
+  sPixel **imgUV0 = dec_picture->imgUV[0];
+  sPixel **imgUV1 = dec_picture->imgUV[1];
+  sPixel **mb_pred0 = currSlice->mb_pred[0 + 1];
+  sPixel **mb_pred1 = currSlice->mb_pred[1 + 1];
 
 
-  getNonAffNeighbour(currMB, -1,  0, pVid->mb_size[IS_CHROMA], &left);
-  getNonAffNeighbour(currMB,  0, -1, pVid->mb_size[IS_CHROMA], &up);
+  getNonAffNeighbour(currMB, -1,  0, vidParam->mb_size[IS_CHROMA], &left);
+  getNonAffNeighbour(currMB,  0, -1, vidParam->mb_size[IS_CHROMA], &up);
 
-  if (!pVid->active_pps->constrained_intra_pred_flag)
+  if (!vidParam->active_pps->constrained_intra_pred_flag)
   {
     up_avail      = up.available;
     left_avail    = left.available;
@@ -3682,14 +3682,14 @@ static void intrapred_chroma_dc (Macroblock *currMB)
   // DC prediction
   // Note that unlike what is stated in many presentations and papers, this mode does not operate
   // the same way as I_16x16 DC prediction.
-  for(b8 = 0; b8 < (pVid->num_uv_blocks) ;++b8)
+  for(b8 = 0; b8 < (vidParam->num_uv_blocks) ;++b8)
   {
     for (b4 = 0; b4 < 4; ++b4)
     {
       blk_y = subblk_offset_y[yuv][b8][b4];
       blk_x = subblk_offset_x[yuv][b8][b4];
-      pred  = pVid->dc_pred_value_comp[1];
-      pred1 = pVid->dc_pred_value_comp[2];
+      pred  = vidParam->dc_pred_value_comp[1];
+      pred1 = vidParam->dc_pred_value_comp[2];
       //===== get prediction value =====
       switch (block_pos[yuv][b8][b4])
       {
@@ -3716,8 +3716,8 @@ static void intrapred_chroma_dc (Macroblock *currMB)
         int jj;
         for (jj = blk_y; jj < blk_y + BLOCK_SIZE; ++jj)
         {
-          memset(&mb_pred0[jj][blk_x],  pred, BLOCK_SIZE * sizeof(imgpel));
-          memset(&mb_pred1[jj][blk_x], pred1, BLOCK_SIZE * sizeof(imgpel));
+          memset(&mb_pred0[jj][blk_x],  pred, BLOCK_SIZE * sizeof(sPixel));
+          memset(&mb_pred1[jj][blk_x], pred1, BLOCK_SIZE * sizeof(sPixel));
         }
       }
 #else
@@ -3727,8 +3727,8 @@ static void intrapred_chroma_dc (Macroblock *currMB)
         {
           for (ii = blk_x; ii < blk_x + BLOCK_SIZE; ++ii)
           {
-            mb_pred0[jj][ii]=(imgpel) pred;
-            mb_pred1[jj][ii]=(imgpel) pred1;
+            mb_pred0[jj][ii]=(sPixel) pred;
+            mb_pred1[jj][ii]=(sPixel) pred1;
           }
         }
       }
@@ -3740,13 +3740,13 @@ static void intrapred_chroma_dc (Macroblock *currMB)
 //{{{
 static void intrapred_chroma_hor (Macroblock *currMB)
 {
-  VideoParameters* pVid = currMB->pVid;
+  sVidParam* vidParam = currMB->vidParam;
   PixelPos a;  //!< pixel positions p(-1, -1..16)
   int left_avail;
 
-  getNonAffNeighbour(currMB, -1, 0, pVid->mb_size[IS_CHROMA], &a);
+  getNonAffNeighbour(currMB, -1, 0, vidParam->mb_size[IS_CHROMA], &a);
 
-  if (!pVid->active_pps->constrained_intra_pred_flag)
+  if (!vidParam->active_pps->constrained_intra_pred_flag)
     left_avail = a.available;
   else
     left_avail = a.available ? currMB->p_Slice->intra_block[a.mb_addr]: 0;
@@ -3756,33 +3756,33 @@ static void intrapred_chroma_hor (Macroblock *currMB)
   else
   {
     Slice *currSlice = currMB->p_Slice;
-    int cr_MB_x = pVid->mb_cr_size_x;
-    int cr_MB_y = pVid->mb_cr_size_y;
+    int cr_MB_x = vidParam->mb_cr_size_x;
+    int cr_MB_y = vidParam->mb_cr_size_y;
 
     int j;
-    StorablePicture *dec_picture = currSlice->dec_picture;
+    sStorablePicture *dec_picture = currSlice->dec_picture;
 #if (IMGTYPE != 0)
     int i, pred, pred1;
 #endif
     int pos_y = a.pos_y;
     int pos_x = a.pos_x;
-    imgpel **mb_pred0 = currSlice->mb_pred[0 + 1];
-    imgpel **mb_pred1 = currSlice->mb_pred[1 + 1];
-    imgpel **i0 = &dec_picture->imgUV[0][pos_y];
-    imgpel **i1 = &dec_picture->imgUV[1][pos_y];
+    sPixel **mb_pred0 = currSlice->mb_pred[0 + 1];
+    sPixel **mb_pred1 = currSlice->mb_pred[1 + 1];
+    sPixel **i0 = &dec_picture->imgUV[0][pos_y];
+    sPixel **i1 = &dec_picture->imgUV[1][pos_y];
 
     for (j = 0; j < cr_MB_y; ++j)
     {
 #if (IMGTYPE == 0)
-      memset(mb_pred0[j], (*i0++)[pos_x], cr_MB_x * sizeof(imgpel));
-      memset(mb_pred1[j], (*i1++)[pos_x], cr_MB_x * sizeof(imgpel));
+      memset(mb_pred0[j], (*i0++)[pos_x], cr_MB_x * sizeof(sPixel));
+      memset(mb_pred1[j], (*i1++)[pos_x], cr_MB_x * sizeof(sPixel));
 #else
       pred  = (*i0++)[pos_x];
       pred1 = (*i1++)[pos_x];
       for (i = 0; i < cr_MB_x; ++i)
       {
-        mb_pred0[j][i]=(imgpel) pred;
-        mb_pred1[j][i]=(imgpel) pred1;
+        mb_pred0[j][i]=(sPixel) pred;
+        mb_pred1[j][i]=(sPixel) pred1;
       }
 #endif
 
@@ -3794,17 +3794,17 @@ static void intrapred_chroma_hor (Macroblock *currMB)
 static void intrapred_chroma_ver (Macroblock *currMB)
 {
   Slice *currSlice = currMB->p_Slice;
-  VideoParameters* pVid = currMB->pVid;
+  sVidParam* vidParam = currMB->vidParam;
   int j;
-  StorablePicture *dec_picture = currSlice->dec_picture;
+  sStorablePicture *dec_picture = currSlice->dec_picture;
 
   PixelPos up;        //!< pixel position  p(0,-1)
   int up_avail;
-  int cr_MB_x = pVid->mb_cr_size_x;
-  int cr_MB_y = pVid->mb_cr_size_y;
-  getNonAffNeighbour(currMB, 0, -1, pVid->mb_size[IS_CHROMA], &up);
+  int cr_MB_x = vidParam->mb_cr_size_x;
+  int cr_MB_y = vidParam->mb_cr_size_y;
+  getNonAffNeighbour(currMB, 0, -1, vidParam->mb_size[IS_CHROMA], &up);
 
-  if (!pVid->active_pps->constrained_intra_pred_flag)
+  if (!vidParam->active_pps->constrained_intra_pred_flag)
     up_avail      = up.available;
   else
     up_avail = up.available ? currSlice->intra_block[up.mb_addr] : 0;
@@ -3813,15 +3813,15 @@ static void intrapred_chroma_ver (Macroblock *currMB)
     error("unexpected VERT_PRED_8 chroma intra prediction mode",-1);
   else
   {
-    imgpel **mb_pred0 = currSlice->mb_pred[1];
-    imgpel **mb_pred1 = currSlice->mb_pred[2];
-    imgpel *i0 = &(dec_picture->imgUV[0][up.pos_y][up.pos_x]);
-    imgpel *i1 = &(dec_picture->imgUV[1][up.pos_y][up.pos_x]);
+    sPixel **mb_pred0 = currSlice->mb_pred[1];
+    sPixel **mb_pred1 = currSlice->mb_pred[2];
+    sPixel *i0 = &(dec_picture->imgUV[0][up.pos_y][up.pos_x]);
+    sPixel *i1 = &(dec_picture->imgUV[1][up.pos_y][up.pos_x]);
 
     for (j = 0; j < cr_MB_y; ++j)
     {
-      memcpy(mb_pred0[j], i0, cr_MB_x * sizeof(imgpel));
-      memcpy(mb_pred1[j], i1, cr_MB_x * sizeof(imgpel));
+      memcpy(mb_pred0[j], i0, cr_MB_x * sizeof(sPixel));
+      memcpy(mb_pred1[j], i1, cr_MB_x * sizeof(sPixel));
     }
   }
 }
@@ -3830,19 +3830,19 @@ static void intrapred_chroma_ver (Macroblock *currMB)
 static void intrapred_chroma_plane (Macroblock *currMB)
 {
   Slice *currSlice = currMB->p_Slice;
-  VideoParameters* pVid = currMB->pVid;
-  StorablePicture *dec_picture = currSlice->dec_picture;
+  sVidParam* vidParam = currMB->vidParam;
+  sStorablePicture *dec_picture = currSlice->dec_picture;
 
   PixelPos up;        //!< pixel position  p(0,-1)
   PixelPos up_left;
   PixelPos left;  //!< pixel positions p(-1, -1..16)
   int up_avail, left_avail, left_up_avail;
 
-  getNonAffNeighbour(currMB, -1, -1, pVid->mb_size[IS_CHROMA], &up_left);
-  getNonAffNeighbour(currMB, -1,  0, pVid->mb_size[IS_CHROMA], &left);
-  getNonAffNeighbour(currMB,  0, -1, pVid->mb_size[IS_CHROMA], &up);
+  getNonAffNeighbour(currMB, -1, -1, vidParam->mb_size[IS_CHROMA], &up_left);
+  getNonAffNeighbour(currMB, -1,  0, vidParam->mb_size[IS_CHROMA], &left);
+  getNonAffNeighbour(currMB,  0, -1, vidParam->mb_size[IS_CHROMA], &up);
 
-  if (!pVid->active_pps->constrained_intra_pred_flag)
+  if (!vidParam->active_pps->constrained_intra_pred_flag)
   {
     up_avail      = up.available;
     left_avail    = left.available;
@@ -3859,8 +3859,8 @@ static void intrapred_chroma_plane (Macroblock *currMB)
     error("unexpected PLANE_8 chroma intra prediction mode",-1);
   else
   {
-    int cr_MB_x = pVid->mb_cr_size_x;
-    int cr_MB_y = pVid->mb_cr_size_y;
+    int cr_MB_x = vidParam->mb_cr_size_x;
+    int cr_MB_y = vidParam->mb_cr_size_y;
     int cr_MB_y2 = (cr_MB_y >> 1);
     int cr_MB_x2 = (cr_MB_x >> 1);
 
@@ -3869,15 +3869,15 @@ static void intrapred_chroma_plane (Macroblock *currMB)
     int uv;
     for (uv = 0; uv < 2; uv++)
     {
-      imgpel **imgUV = dec_picture->imgUV[uv];
-      imgpel **mb_pred = currSlice->mb_pred[uv + 1];
-      int max_imgpel_value = pVid->max_pel_value_comp[uv + 1];
-      imgpel *upPred = &imgUV[up.pos_y][up.pos_x];
+      sPixel **imgUV = dec_picture->imgUV[uv];
+      sPixel **mb_pred = currSlice->mb_pred[uv + 1];
+      int max_imgpel_value = vidParam->max_pel_value_comp[uv + 1];
+      sPixel *upPred = &imgUV[up.pos_y][up.pos_x];
       int pos_x  = up_left.pos_x;
       int pos_y1 = left.pos_y + cr_MB_y2;
       int pos_y2 = pos_y1 - 2;
-      //imgpel **predU1 = &imgUV[pos_y1];
-      imgpel **predU2 = &imgUV[pos_y2];
+      //sPixel **predU1 = &imgUV[pos_y1];
+      sPixel **predU2 = &imgUV[pos_y2];
       ih = cr_MB_x2 * (upPred[cr_MB_x - 1] - imgUV[up_left.pos_y][pos_x]);
 
       for (i = 0; i < cr_MB_x2 - 1; ++i)
@@ -3900,14 +3900,14 @@ static void intrapred_chroma_plane (Macroblock *currMB)
         int plane = iaa + (j - cr_MB_y2 + 1) * ic + 16 - (cr_MB_x2 - 1) * ib;
 
         for (i = 0; i < cr_MB_x; ++i)
-          mb_pred[j][i]=(imgpel) iClip1(max_imgpel_value, ((i * ib + plane) >> 5));
+          mb_pred[j][i]=(sPixel) iClip1(max_imgpel_value, ((i * ib + plane) >> 5));
       }
     }
   }
 }
 //}}}
 //{{{
-static void intra_chroma_DC_single_mbaff (imgpel **curr_img, int up_avail, int left_avail, PixelPos up, PixelPos left[17], int blk_x, int blk_y, int *pred, int direction )
+static void intra_chroma_DC_single_mbaff (sPixel **curr_img, int up_avail, int left_avail, PixelPos up, PixelPos left[17], int blk_x, int blk_y, int *pred, int direction )
 {
   int i;
   int s0 = 0;
@@ -3927,7 +3927,7 @@ static void intra_chroma_DC_single_mbaff (imgpel **curr_img, int up_avail, int l
 }
 //}}}
 //{{{
-static void intra_chroma_DC_all_mbaff (imgpel **curr_img, int up_avail, int left_avail, PixelPos up, PixelPos left[17], int blk_x, int blk_y, int *pred )
+static void intra_chroma_DC_all_mbaff (sPixel **curr_img, int up_avail, int left_avail, PixelPos up, PixelPos left[17], int blk_x, int blk_y, int *pred )
 {
   int i;
   int s0 = 0, s1 = 0;
@@ -3952,18 +3952,18 @@ static void intra_chroma_DC_all_mbaff (imgpel **curr_img, int up_avail, int left
 static void intrapred_chroma_ver_mbaff (Macroblock *currMB)
 {
   Slice *currSlice = currMB->p_Slice;
-  VideoParameters* pVid = currMB->pVid;
+  sVidParam* vidParam = currMB->vidParam;
   int j;
-  StorablePicture *dec_picture = currSlice->dec_picture;
+  sStorablePicture *dec_picture = currSlice->dec_picture;
 
   PixelPos up;        //!< pixel position  p(0,-1)
   int up_avail;
-  int cr_MB_x = pVid->mb_cr_size_x;
-  int cr_MB_y = pVid->mb_cr_size_y;
+  int cr_MB_x = vidParam->mb_cr_size_x;
+  int cr_MB_y = vidParam->mb_cr_size_y;
 
-  getAffNeighbour(currMB, 0, -1, pVid->mb_size[IS_CHROMA], &up);
+  getAffNeighbour(currMB, 0, -1, vidParam->mb_size[IS_CHROMA], &up);
 
-  if (!pVid->active_pps->constrained_intra_pred_flag)
+  if (!vidParam->active_pps->constrained_intra_pred_flag)
     up_avail      = up.available;
   else
     up_avail = up.available ? currSlice->intra_block[up.mb_addr] : 0;
@@ -3972,15 +3972,15 @@ static void intrapred_chroma_ver_mbaff (Macroblock *currMB)
     error("unexpected VERT_PRED_8 chroma intra prediction mode",-1);
   else
   {
-    imgpel **mb_pred0 = currSlice->mb_pred[1];
-    imgpel **mb_pred1 = currSlice->mb_pred[2];
-    imgpel *i0 = &(dec_picture->imgUV[0][up.pos_y][up.pos_x]);
-    imgpel *i1 = &(dec_picture->imgUV[1][up.pos_y][up.pos_x]);
+    sPixel **mb_pred0 = currSlice->mb_pred[1];
+    sPixel **mb_pred1 = currSlice->mb_pred[2];
+    sPixel *i0 = &(dec_picture->imgUV[0][up.pos_y][up.pos_x]);
+    sPixel *i1 = &(dec_picture->imgUV[1][up.pos_y][up.pos_x]);
 
     for (j = 0; j < cr_MB_y; ++j)
     {
-      memcpy(&(mb_pred0[j][0]),i0, cr_MB_x * sizeof(imgpel));
-      memcpy(&(mb_pred1[j][0]),i1, cr_MB_x * sizeof(imgpel));
+      memcpy(&(mb_pred0[j][0]),i0, cr_MB_x * sizeof(sPixel));
+      memcpy(&(mb_pred1[j][0]),i1, cr_MB_x * sizeof(sPixel));
     }
   }
 }
@@ -3996,9 +3996,9 @@ static void intrapred_chroma_ver_mbaff (Macroblock *currMB)
 static void intra_pred_chroma_mbaff (Macroblock *currMB)
 {
   Slice *currSlice = currMB->p_Slice;
-  VideoParameters* pVid = currMB->pVid;
+  sVidParam* vidParam = currMB->vidParam;
   int i,j, ii, jj;
-  StorablePicture *dec_picture = currSlice->dec_picture;
+  sStorablePicture *dec_picture = currSlice->dec_picture;
 
   int ih, iv, ib, ic, iaa;
 
@@ -4022,14 +4022,14 @@ static void intra_pred_chroma_mbaff (Macroblock *currMB)
 
       int up_avail, left_avail[2];
 
-      int cr_MB_y = pVid->mb_cr_size_y;
+      int cr_MB_y = vidParam->mb_cr_size_y;
       int cr_MB_y2 = (cr_MB_y >> 1);
 
       for (i=0; i < cr_MB_y + 1 ; ++i)
-        getAffNeighbour(currMB, -1, i-1, pVid->mb_size[IS_CHROMA], &left[i]);
-      getAffNeighbour(currMB, 0, -1, pVid->mb_size[IS_CHROMA], &up);
+        getAffNeighbour(currMB, -1, i-1, vidParam->mb_size[IS_CHROMA], &left[i]);
+      getAffNeighbour(currMB, 0, -1, vidParam->mb_size[IS_CHROMA], &up);
 
-      if (!pVid->active_pps->constrained_intra_pred_flag)
+      if (!vidParam->active_pps->constrained_intra_pred_flag)
       {
         up_avail      = up.available;
         left_avail[0] = left_avail[1] = left[1].available;
@@ -4049,19 +4049,19 @@ static void intra_pred_chroma_mbaff (Macroblock *currMB)
       // the same way as I_16x16 DC prediction.
       {
         int pred1;
-        imgpel **imgUV0 = dec_picture->imgUV[0];
-        imgpel **imgUV1 = dec_picture->imgUV[1];
-        imgpel **mb_pred0 = currSlice->mb_pred[0 + 1];
-        imgpel **mb_pred1 = currSlice->mb_pred[1 + 1];
-        for(b8 = 0; b8 < (pVid->num_uv_blocks) ;++b8)
+        sPixel **imgUV0 = dec_picture->imgUV[0];
+        sPixel **imgUV1 = dec_picture->imgUV[1];
+        sPixel **mb_pred0 = currSlice->mb_pred[0 + 1];
+        sPixel **mb_pred1 = currSlice->mb_pred[1 + 1];
+        for(b8 = 0; b8 < (vidParam->num_uv_blocks) ;++b8)
         {
           for (b4 = 0; b4 < 4; ++b4)
           {
             blk_y = subblk_offset_y[yuv][b8][b4];
             blk_x = subblk_offset_x[yuv][b8][b4];
 
-            pred = pVid->dc_pred_value_comp[1];
-            pred1 = pVid->dc_pred_value_comp[2];
+            pred = vidParam->dc_pred_value_comp[1];
+            pred1 = vidParam->dc_pred_value_comp[2];
             //===== get prediction value =====
             switch (block_pos[yuv][b8][b4])
             {
@@ -4096,8 +4096,8 @@ static void intra_pred_chroma_mbaff (Macroblock *currMB)
             {
               for (ii = blk_x; ii < blk_x + BLOCK_SIZE; ++ii)
               {
-                mb_pred0[jj][ii]=(imgpel) pred;
-                mb_pred1[jj][ii]=(imgpel) pred1;
+                mb_pred0[jj][ii]=(sPixel) pred;
+                mb_pred1[jj][ii]=(sPixel) pred1;
               }
             }
           }
@@ -4111,14 +4111,14 @@ static void intra_pred_chroma_mbaff (Macroblock *currMB)
 
       int left_avail[2];
 
-      int cr_MB_x = pVid->mb_cr_size_x;
-      int cr_MB_y = pVid->mb_cr_size_y;
+      int cr_MB_x = vidParam->mb_cr_size_x;
+      int cr_MB_y = vidParam->mb_cr_size_y;
       int cr_MB_y2 = (cr_MB_y >> 1);
 
       for (i=0; i < cr_MB_y + 1 ; ++i)
-        getAffNeighbour(currMB, -1, i-1, pVid->mb_size[IS_CHROMA], &left[i]);
+        getAffNeighbour(currMB, -1, i-1, vidParam->mb_size[IS_CHROMA], &left[i]);
 
-      if (!pVid->active_pps->constrained_intra_pred_flag)
+      if (!vidParam->active_pps->constrained_intra_pred_flag)
       {
         left_avail[0] = left_avail[1] = left[1].available;
       }
@@ -4136,18 +4136,18 @@ static void intra_pred_chroma_mbaff (Macroblock *currMB)
       else
       {
         int pred1;
-        imgpel **mb_pred0 = currSlice->mb_pred[0 + 1];
-        imgpel **mb_pred1 = currSlice->mb_pred[1 + 1];
-        imgpel **i0 = dec_picture->imgUV[0];
-        imgpel **i1 = dec_picture->imgUV[1];
+        sPixel **mb_pred0 = currSlice->mb_pred[0 + 1];
+        sPixel **mb_pred1 = currSlice->mb_pred[1 + 1];
+        sPixel **i0 = dec_picture->imgUV[0];
+        sPixel **i1 = dec_picture->imgUV[1];
         for (j = 0; j < cr_MB_y; ++j)
         {
           pred = i0[left[1 + j].pos_y][left[1 + j].pos_x];
           pred1 = i1[left[1 + j].pos_y][left[1 + j].pos_x];
           for (i = 0; i < cr_MB_x; ++i)
           {
-            mb_pred0[j][i]=(imgpel) pred;
-            mb_pred1[j][i]=(imgpel) pred1;
+            mb_pred0[j][i]=(sPixel) pred;
+            mb_pred1[j][i]=(sPixel) pred1;
           }
         }
       }
@@ -4159,12 +4159,12 @@ static void intra_pred_chroma_mbaff (Macroblock *currMB)
 
       int up_avail;
 
-      int cr_MB_x = pVid->mb_cr_size_x;
-      int cr_MB_y = pVid->mb_cr_size_y;
+      int cr_MB_x = vidParam->mb_cr_size_x;
+      int cr_MB_y = vidParam->mb_cr_size_y;
 
-      getAffNeighbour(currMB, 0, -1, pVid->mb_size[IS_CHROMA], &up);
+      getAffNeighbour(currMB, 0, -1, vidParam->mb_size[IS_CHROMA], &up);
 
-      if (!pVid->active_pps->constrained_intra_pred_flag)
+      if (!vidParam->active_pps->constrained_intra_pred_flag)
         up_avail      = up.available;
       else
         up_avail = up.available ? currSlice->intra_block[up.mb_addr] : 0;
@@ -4173,14 +4173,14 @@ static void intra_pred_chroma_mbaff (Macroblock *currMB)
         error("unexpected VERT_PRED_8 chroma intra prediction mode",-1);
       else
       {
-        imgpel **mb_pred0 = currSlice->mb_pred[0 + 1];
-        imgpel **mb_pred1 = currSlice->mb_pred[1 + 1];
-        imgpel *i0 = &(dec_picture->imgUV[0][up.pos_y][up.pos_x]);
-        imgpel *i1 = &(dec_picture->imgUV[1][up.pos_y][up.pos_x]);
+        sPixel **mb_pred0 = currSlice->mb_pred[0 + 1];
+        sPixel **mb_pred1 = currSlice->mb_pred[1 + 1];
+        sPixel *i0 = &(dec_picture->imgUV[0][up.pos_y][up.pos_x]);
+        sPixel *i1 = &(dec_picture->imgUV[1][up.pos_y][up.pos_x]);
         for (j = 0; j < cr_MB_y; ++j)
         {
-          memcpy(&(mb_pred0[j][0]),i0, cr_MB_x * sizeof(imgpel));
-          memcpy(&(mb_pred1[j][0]),i1, cr_MB_x * sizeof(imgpel));
+          memcpy(&(mb_pred0[j][0]),i0, cr_MB_x * sizeof(sPixel));
+          memcpy(&(mb_pred1[j][0]),i1, cr_MB_x * sizeof(sPixel));
         }
       }
     }
@@ -4192,16 +4192,16 @@ static void intra_pred_chroma_mbaff (Macroblock *currMB)
 
       int up_avail, left_avail[2], left_up_avail;
 
-      int cr_MB_x = pVid->mb_cr_size_x;
-      int cr_MB_y = pVid->mb_cr_size_y;
+      int cr_MB_x = vidParam->mb_cr_size_x;
+      int cr_MB_y = vidParam->mb_cr_size_y;
       int cr_MB_y2 = (cr_MB_y >> 1);
       int cr_MB_x2 = (cr_MB_x >> 1);
 
       for (i=0; i < cr_MB_y + 1 ; ++i)
-        getAffNeighbour(currMB, -1, i-1, pVid->mb_size[IS_CHROMA], &left[i]);
-      getAffNeighbour(currMB, 0, -1, pVid->mb_size[IS_CHROMA], &up);
+        getAffNeighbour(currMB, -1, i-1, vidParam->mb_size[IS_CHROMA], &left[i]);
+      getAffNeighbour(currMB, 0, -1, vidParam->mb_size[IS_CHROMA], &up);
 
-      if (!pVid->active_pps->constrained_intra_pred_flag)
+      if (!vidParam->active_pps->constrained_intra_pred_flag)
       {
         up_avail      = up.available;
         left_avail[0] = left_avail[1] = left[1].available;
@@ -4226,10 +4226,10 @@ static void intra_pred_chroma_mbaff (Macroblock *currMB)
         int uv;
         for (uv = 0; uv < 2; uv++)
         {
-          imgpel **imgUV = dec_picture->imgUV[uv];
-          imgpel **mb_pred = currSlice->mb_pred[uv + 1];
-          int max_imgpel_value = pVid->max_pel_value_comp[uv + 1];
-          imgpel *upPred = &imgUV[up.pos_y][up.pos_x];
+          sPixel **imgUV = dec_picture->imgUV[uv];
+          sPixel **mb_pred = currSlice->mb_pred[uv + 1];
+          int max_imgpel_value = vidParam->max_pel_value_comp[uv + 1];
+          sPixel *upPred = &imgUV[up.pos_y][up.pos_x];
 
           ih = cr_MB_x2 * (upPred[cr_MB_x - 1] - imgUV[left[0].pos_y][left[0].pos_x]);
           for (i = 0; i < cr_MB_x2 - 1; ++i)
@@ -4247,7 +4247,7 @@ static void intra_pred_chroma_mbaff (Macroblock *currMB)
 
           for (j = 0; j < cr_MB_y; ++j)
             for (i = 0; i < cr_MB_x; ++i)
-              mb_pred[j][i]=(imgpel) iClip1(max_imgpel_value, ((iaa + (i - cr_MB_x2 + 1) * ib + (j - cr_MB_y2 + 1) * ic + 16) >> 5));
+              mb_pred[j][i]=(sPixel) iClip1(max_imgpel_value, ((iaa + (i - cr_MB_x2 + 1) * ib + (j - cr_MB_y2 + 1) * ic + 16) >> 5));
         }
       }
     }

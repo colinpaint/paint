@@ -9,7 +9,7 @@
   #define TRACE           0     //!< 0:Trace off 1:Trace on 2:detailed CABAC context information
 #endif
 
-#define IMGTYPE                 0  // Define imgpel size type. 0 implies byte (cannot handle >8 bit depths) and 1 implies unsigned short
+#define IMGTYPE                 0  // Define sPixel size type. 0 implies byte (cannot handle >8 bit depths) and 1 implies unsigned short
 #define ENABLE_FIELD_CTX        1  // Enables Field mode related context types for CABAC
 #define ENABLE_HIGH444_CTX      1  // Enables High 444 profile context types for CABAC.
 #define JCOST_CALC_SCALEUP      1  // 1: J = (D<<LAMBDA_ACCURACY_BITS)+Lambda*R; 0: J = D + ((Lambda*R+Rounding)>>LAMBDA_ACCURACY_BITS)

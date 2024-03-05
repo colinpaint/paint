@@ -35,7 +35,7 @@
 
 //#define DUMP_DPB
 //{{{
-static void dump_dpb (DecodedPictureBuffer* p_Dpb) {
+static void dump_dpb (sDecodedPictureBuffer* p_Dpb) {
 
 #ifdef DUMP_DPB
   for (unsigned i = 0; i < p_Dpb->used_size;i++) {
@@ -75,29 +75,29 @@ static void dump_dpb (DecodedPictureBuffer* p_Dpb) {
   }
 //}}}
 //{{{
-static void gen_field_ref_ids (VideoParameters* pVid, StorablePicture *p) {
+static void gen_field_ref_ids (sVidParam* vidParam, sStorablePicture *p) {
 // Generate Frame parameters from field information.
 
   // copy the list;
-  for (int j = 0; j < pVid->iSliceNumOfCurrPic; j++) {
+  for (int j = 0; j < vidParam->iSliceNumOfCurrPic; j++) {
     if (p->listX[j][LIST_0]) {
-      p->listXsize[j][LIST_0] = pVid->ppSliceList[j]->listXsize[LIST_0];
+      p->listXsize[j][LIST_0] = vidParam->ppSliceList[j]->listXsize[LIST_0];
       for (int i = 0; i < p->listXsize[j][LIST_0]; i++)
-        p->listX[j][LIST_0][i] = pVid->ppSliceList[j]->listX[LIST_0][i];
+        p->listX[j][LIST_0][i] = vidParam->ppSliceList[j]->listX[LIST_0][i];
       }
 
     if(p->listX[j][LIST_1]) {
-      p->listXsize[j][LIST_1] = pVid->ppSliceList[j]->listXsize[LIST_1];
+      p->listXsize[j][LIST_1] = vidParam->ppSliceList[j]->listXsize[LIST_1];
       for(int i = 0; i < p->listXsize[j][LIST_1]; i++)
-        p->listX[j][LIST_1][i] = pVid->ppSliceList[j]->listX[LIST_1][i];
+        p->listX[j][LIST_1][i] = vidParam->ppSliceList[j]->listX[LIST_1][i];
       }
     }
   }
 //}}}
 //{{{
-static void insert_picture_in_dpb (VideoParameters* pVid, FrameStore* fs, StorablePicture* p) {
+static void insert_picture_in_dpb (sVidParam* vidParam, sFrameStore* fs, sStorablePicture* p) {
 
-  InputParameters* p_Inp = pVid->p_Inp;
+  InputParameters* p_Inp = vidParam->p_Inp;
   //  printf ("insert (%s) pic with frame_num #%d, poc %d\n",
   //          (p->structure == FRAME)?"FRAME":(p->structure == TOP_FIELD)?"TOP_FIELD":"BOTTOM_FIELD",
   //          p->pic_num, p->poc);
@@ -120,7 +120,7 @@ static void insert_picture_in_dpb (VideoParameters* pVid, FrameStore* fs, Storab
 
       fs->layer_id = p->layer_id;
       // generate field views
-      dpb_split_field(pVid, fs);
+      dpb_split_field(vidParam, fs);
       break;
     //}}}
     //{{{
@@ -139,11 +139,11 @@ static void insert_picture_in_dpb (VideoParameters* pVid, FrameStore* fs, Storab
         }
       if (fs->is_used == 3)
         // generate frame view
-        dpb_combine_field(pVid, fs);
+        dpb_combine_field(vidParam, fs);
       else
         fs->poc = p->poc;
 
-      gen_field_ref_ids(pVid, p);
+      gen_field_ref_ids(vidParam, p);
       break;
     //}}}
     //{{{
@@ -163,11 +163,11 @@ static void insert_picture_in_dpb (VideoParameters* pVid, FrameStore* fs, Storab
 
       if (fs->is_used == 3)
         // generate frame view
-        dpb_combine_field(pVid, fs);
+        dpb_combine_field(vidParam, fs);
       else
         fs->poc = p->poc;
 
-      gen_field_ref_ids(pVid, p);
+      gen_field_ref_ids(vidParam, p);
       break;
     //}}}
     }
@@ -176,13 +176,13 @@ static void insert_picture_in_dpb (VideoParameters* pVid, FrameStore* fs, Storab
   fs->recovery_frame = p->recovery_frame;
   fs->is_output = p->is_output;
   if (fs->is_used == 3)
-    calculate_frame_no (pVid, p);
+    calculate_frame_no (vidParam, p);
 }
 //}}}
 //{{{
-static int output_one_frame_from_dpb (DecodedPictureBuffer *p_Dpb) {
+static int output_one_frame_from_dpb (sDecodedPictureBuffer* p_Dpb) {
 
-  VideoParameters* pVid = p_Dpb->pVid;
+  sVidParam* vidParam = p_Dpb->vidParam;
   int poc, pos;
 
   // diagnostics
@@ -199,7 +199,7 @@ static int output_one_frame_from_dpb (DecodedPictureBuffer *p_Dpb) {
   //  printf ("output frame with frame_num #%d, poc %d (dpb. p_Dpb->size=%d, p_Dpb->used_size=%d)\n", p_Dpb->fs[pos]->frame_num, p_Dpb->fs[pos]->frame->poc, p_Dpb->size, p_Dpb->used_size);
 
   // picture error concealment
-  if (pVid->conceal_mode != 0) {
+  if (vidParam->conceal_mode != 0) {
     if (p_Dpb->last_output_poc == 0)
       write_lost_ref_after_idr (p_Dpb, pos);
     write_lost_non_ref_pic (p_Dpb, poc);
@@ -207,10 +207,10 @@ static int output_one_frame_from_dpb (DecodedPictureBuffer *p_Dpb) {
 
 // JVT-P072 ends
 
-  write_stored_frame(pVid, p_Dpb->fs[pos]);
+  write_stored_frame(vidParam, p_Dpb->fs[pos]);
 
   // picture error concealment
-  if(pVid->conceal_mode == 0)
+  if(vidParam->conceal_mode == 0)
     if (p_Dpb->last_output_poc >= poc)
       error ("output POC must be in ascending order", 150);
 
@@ -225,14 +225,14 @@ static int output_one_frame_from_dpb (DecodedPictureBuffer *p_Dpb) {
 //{{{
 static void unmark_long_term_field_for_reference_by_frame_idx (
 
-  DecodedPictureBuffer *p_Dpb, PictureStructure structure,
+  sDecodedPictureBuffer* p_Dpb, sPictureStructure structure,
   int long_term_frame_idx, int mark_current, unsigned curr_frame_num, int curr_pic_num) {
 
-  VideoParameters* pVid = p_Dpb->pVid;
+  sVidParam* vidParam = p_Dpb->vidParam;
 
   assert (structure!=FRAME);
   if (curr_pic_num < 0)
-    curr_pic_num += (2 * pVid->max_frame_num);
+    curr_pic_num += (2 * vidParam->max_frame_num);
 
   for (unsigned i = 0; i < p_Dpb->ltref_frames_in_buffer; i++) {
     if (p_Dpb->fs_ltref[i]->long_term_frame_idx == long_term_frame_idx) {
@@ -288,7 +288,7 @@ static void unmark_long_term_field_for_reference_by_frame_idx (
   }
 //}}}
 //{{{
-static int is_short_term_reference (FrameStore* fs) {
+static int is_short_term_reference (sFrameStore* fs) {
 
   if (fs->is_used == 3) // frame
     if ((fs->frame->used_for_reference) && (!fs->frame->is_long_term))
@@ -308,7 +308,7 @@ static int is_short_term_reference (FrameStore* fs) {
   }
 //}}}
 //{{{
-static int is_long_term_reference (FrameStore* fs) {
+static int is_long_term_reference (sFrameStore* fs) {
 
 
   if (fs->is_used == 3) // frame
@@ -330,13 +330,13 @@ static int is_long_term_reference (FrameStore* fs) {
 //}}}
 
 //{{{
-void gen_pic_list_from_frame_list (PictureStructure currStructure, FrameStore **fs_list,
-                                   int list_idx, StorablePicture **list, char *list_size, int long_term) {
+void gen_pic_list_from_frame_list (sPictureStructure currStructure, sFrameStore **fs_list,
+                                   int list_idx, sStorablePicture **list, char *list_size, int long_term) {
 
   int top_idx = 0;
   int bot_idx = 0;
 
-  int (*is_ref)(StorablePicture*s) = (long_term) ? is_long_ref : is_short_ref;
+  int (*is_ref)(sStorablePicture*s) = (long_term) ? is_long_ref : is_short_ref;
 
   if (currStructure == TOP_FIELD) {
     while ((top_idx<list_idx)||(bot_idx<list_idx)) {
@@ -397,7 +397,7 @@ void gen_pic_list_from_frame_list (PictureStructure currStructure, FrameStore **
 //}}}
 //{{{
 
-StorablePicture*  get_long_term_pic (Slice* currSlice, DecodedPictureBuffer *p_Dpb, int LongtermPicNum) {
+sStorablePicture*  get_long_term_pic (Slice* currSlice, sDecodedPictureBuffer* p_Dpb, int LongtermPicNum) {
 
   for (uint32 i = 0; i < p_Dpb->ltref_frames_in_buffer; i++) {
     if (currSlice->structure==FRAME) {
@@ -421,7 +421,7 @@ StorablePicture*  get_long_term_pic (Slice* currSlice, DecodedPictureBuffer *p_D
 
 //{{{
 
-void update_ref_list (DecodedPictureBuffer *p_Dpb) {
+void update_ref_list (sDecodedPictureBuffer* p_Dpb) {
 
   unsigned i, j;
   for (i = 0, j = 0; i < p_Dpb->used_size; i++)
@@ -436,7 +436,7 @@ void update_ref_list (DecodedPictureBuffer *p_Dpb) {
 //}}}
 //{{{
 
-void update_ltref_list (DecodedPictureBuffer *p_Dpb)
+void update_ltref_list (sDecodedPictureBuffer* p_Dpb)
 {
   unsigned i, j;
   for (i = 0, j = 0; i < p_Dpb->used_size; i++)
@@ -457,7 +457,7 @@ void update_ltref_list (DecodedPictureBuffer *p_Dpb)
  *    Calculate picNumX
  ************************************************************************
  */
-static int get_pic_num_x (StorablePicture *p, int difference_of_pic_nums_minus1)
+static int get_pic_num_x (sStorablePicture *p, int difference_of_pic_nums_minus1)
 {
   int currPicNum;
 
@@ -476,7 +476,7 @@ static int get_pic_num_x (StorablePicture *p, int difference_of_pic_nums_minus1)
  *    Adaptive Memory Management: Mark short term picture unused
  ************************************************************************
  */
-void mm_unmark_short_term_for_reference (DecodedPictureBuffer *p_Dpb, StorablePicture *p, int difference_of_pic_nums_minus1)
+void mm_unmark_short_term_for_reference (sDecodedPictureBuffer* p_Dpb, sStorablePicture *p, int difference_of_pic_nums_minus1)
 {
   int picNumX;
 
@@ -536,7 +536,7 @@ void mm_unmark_short_term_for_reference (DecodedPictureBuffer *p_Dpb, StorablePi
  *    Adaptive Memory Management: Mark long term picture unused
  ************************************************************************
  */
-void mm_unmark_long_term_for_reference (DecodedPictureBuffer *p_Dpb, StorablePicture *p, int long_term_pic_num)
+void mm_unmark_long_term_for_reference (sDecodedPictureBuffer* p_Dpb, sStorablePicture *p, int long_term_pic_num)
 {
   uint32 i;
   for (i=0; i<p_Dpb->ltref_frames_in_buffer; i++)
@@ -591,7 +591,7 @@ void mm_unmark_long_term_for_reference (DecodedPictureBuffer *p_Dpb, StorablePic
 //}}}
 
 //{{{
-static void unmark_long_term_frame_for_reference_by_frame_idx (DecodedPictureBuffer *p_Dpb, int long_term_frame_idx)
+static void unmark_long_term_frame_for_reference_by_frame_idx (sDecodedPictureBuffer* p_Dpb, int long_term_frame_idx)
 {
   uint32 i;
   for(i=0; i<p_Dpb->ltref_frames_in_buffer; i++)
@@ -600,7 +600,7 @@ static void unmark_long_term_frame_for_reference_by_frame_idx (DecodedPictureBuf
 }
 //}}}
 //{{{
-static void mark_pic_long_term (DecodedPictureBuffer *p_Dpb, StorablePicture* p,
+static void mark_pic_long_term (sDecodedPictureBuffer* p_Dpb, sStorablePicture* p,
                                 int long_term_frame_idx, int picNumX) {
 
   int add_top, add_bottom;
@@ -685,7 +685,7 @@ static void mark_pic_long_term (DecodedPictureBuffer *p_Dpb, StorablePicture* p,
   }
 //}}}
 //{{{
-void mm_assign_long_term_frame_idx (DecodedPictureBuffer *p_Dpb, StorablePicture* p, int difference_of_pic_nums_minus1, int long_term_frame_idx)
+void mm_assign_long_term_frame_idx (sDecodedPictureBuffer* p_Dpb, sStorablePicture* p, int difference_of_pic_nums_minus1, int long_term_frame_idx)
 {
   int picNumX = get_pic_num_x(p, difference_of_pic_nums_minus1);
 
@@ -697,7 +697,7 @@ void mm_assign_long_term_frame_idx (DecodedPictureBuffer *p_Dpb, StorablePicture
   else
   {
     unsigned i;
-    PictureStructure structure = FRAME;
+    sPictureStructure structure = FRAME;
 
     for (i=0; i<p_Dpb->ref_frames_in_buffer; i++)
     {
@@ -730,7 +730,7 @@ void mm_assign_long_term_frame_idx (DecodedPictureBuffer *p_Dpb, StorablePicture
 }
 //}}}
 //{{{
-void mm_update_max_long_term_frame_idx (DecodedPictureBuffer *p_Dpb, int max_long_term_frame_idx_plus1)
+void mm_update_max_long_term_frame_idx (sDecodedPictureBuffer* p_Dpb, int max_long_term_frame_idx_plus1)
 {
   uint32 i;
 
@@ -743,13 +743,13 @@ void mm_update_max_long_term_frame_idx (DecodedPictureBuffer *p_Dpb, int max_lon
 }
 //}}}
 //{{{
-void mm_unmark_all_long_term_for_reference (DecodedPictureBuffer *p_Dpb)
+void mm_unmark_all_long_term_for_reference (sDecodedPictureBuffer* p_Dpb)
 {
   mm_update_max_long_term_frame_idx(p_Dpb, 0);
 }
 //}}}
 //{{{
-void mm_unmark_all_short_term_for_reference (DecodedPictureBuffer *p_Dpb)
+void mm_unmark_all_short_term_for_reference (sDecodedPictureBuffer* p_Dpb)
 {
   unsigned int i;
   for (i=0; i<p_Dpb->ref_frames_in_buffer; i++)
@@ -758,7 +758,7 @@ void mm_unmark_all_short_term_for_reference (DecodedPictureBuffer *p_Dpb)
 }
 //}}}
 //{{{
-void mm_mark_current_picture_long_term (DecodedPictureBuffer *p_Dpb, StorablePicture *p, int long_term_frame_idx)
+void mm_mark_current_picture_long_term (sDecodedPictureBuffer* p_Dpb, sStorablePicture *p, int long_term_frame_idx)
 {
   // remove long term pictures with same long_term_frame_idx
   if (p->structure == FRAME)
@@ -772,7 +772,7 @@ void mm_mark_current_picture_long_term (DecodedPictureBuffer *p_Dpb, StorablePic
 //}}}
 
 //{{{
-int is_used_for_reference (FrameStore* fs)
+int is_used_for_reference (sFrameStore* fs)
 {
   if (fs->is_reference)
     return 1;
@@ -796,7 +796,7 @@ int is_used_for_reference (FrameStore* fs)
   }
 //}}}
 //{{{
-void get_smallest_poc (DecodedPictureBuffer *p_Dpb, int *poc,int * pos) {
+void get_smallest_poc (sDecodedPictureBuffer* p_Dpb, int *poc,int * pos) {
 
   uint32 i;
 
@@ -814,7 +814,7 @@ void get_smallest_poc (DecodedPictureBuffer *p_Dpb, int *poc,int * pos) {
   }
 //}}}
 //{{{
-int remove_unused_frame_from_dpb (DecodedPictureBuffer *p_Dpb) {
+int remove_unused_frame_from_dpb (sDecodedPictureBuffer* p_Dpb) {
 
   uint32 i;
 
@@ -831,7 +831,7 @@ int remove_unused_frame_from_dpb (DecodedPictureBuffer *p_Dpb) {
 //}}}
 
 //{{{
-int getDpbSize (VideoParameters* pVid, seq_parameter_set_rbsp_t *active_sps) {
+int getDpbSize (sVidParam* vidParam, seq_parameter_set_rbsp_t *active_sps) {
 
   int pic_size_mb = (active_sps->pic_width_in_mbs_minus1 + 1) * (active_sps->pic_height_in_map_units_minus1 + 1) * (active_sps->frame_mbs_only_flag?1:2);
   int size = 0;
@@ -964,23 +964,23 @@ int getDpbSize (VideoParameters* pVid, seq_parameter_set_rbsp_t *active_sps) {
   }
 //}}}
 //{{{
-void check_num_ref (DecodedPictureBuffer *p_Dpb) {
+void check_num_ref (sDecodedPictureBuffer* p_Dpb) {
 
   if ((int)(p_Dpb->ltref_frames_in_buffer + p_Dpb->ref_frames_in_buffer ) > imax(1, p_Dpb->num_ref_frames))
     error ("Max. number of reference frames exceeded. Invalid stream.", 500);
   }
 //}}}
 //{{{
-void init_dpb (VideoParameters* pVid, DecodedPictureBuffer *p_Dpb, int type) {
+void init_dpb (sVidParam* vidParam, sDecodedPictureBuffer* p_Dpb, int type) {
 
   unsigned i;
-  seq_parameter_set_rbsp_t *active_sps = pVid->active_sps;
+  seq_parameter_set_rbsp_t *active_sps = vidParam->active_sps;
 
-  p_Dpb->pVid = pVid;
+  p_Dpb->vidParam = vidParam;
   if (p_Dpb->init_done)
     free_dpb(p_Dpb);
 
-  p_Dpb->size = getDpbSize(pVid, active_sps) + pVid->p_Inp->dpb_plus[type==2? 1: 0];
+  p_Dpb->size = getDpbSize(vidParam, active_sps) + vidParam->p_Inp->dpb_plus[type==2? 1: 0];
   p_Dpb->num_ref_frames = active_sps->num_ref_frames;
 
   if (p_Dpb->size < active_sps->num_ref_frames)
@@ -992,15 +992,15 @@ void init_dpb (VideoParameters* pVid, DecodedPictureBuffer *p_Dpb, int type) {
   p_Dpb->ref_frames_in_buffer = 0;
   p_Dpb->ltref_frames_in_buffer = 0;
 
-  p_Dpb->fs = calloc(p_Dpb->size, sizeof (FrameStore*));
+  p_Dpb->fs = calloc(p_Dpb->size, sizeof (sFrameStore*));
   if (NULL==p_Dpb->fs)
     no_mem_exit("init_dpb: p_Dpb->fs");
 
-  p_Dpb->fs_ref = calloc(p_Dpb->size, sizeof (FrameStore*));
+  p_Dpb->fs_ref = calloc(p_Dpb->size, sizeof (sFrameStore*));
   if (NULL==p_Dpb->fs_ref)
     no_mem_exit("init_dpb: p_Dpb->fs_ref");
 
-  p_Dpb->fs_ltref = calloc(p_Dpb->size, sizeof (FrameStore*));
+  p_Dpb->fs_ltref = calloc(p_Dpb->size, sizeof (sFrameStore*));
   if (NULL==p_Dpb->fs_ltref)
     no_mem_exit("init_dpb: p_Dpb->fs_ltref");
 
@@ -1012,44 +1012,44 @@ void init_dpb (VideoParameters* pVid, DecodedPictureBuffer *p_Dpb, int type) {
     }
 
  /* allocate a dummy storable picture */
-  if (!pVid->no_reference_picture) {
-    pVid->no_reference_picture = alloc_storable_picture (pVid, FRAME, pVid->width, pVid->height, pVid->width_cr, pVid->height_cr, 1);
-    pVid->no_reference_picture->top_field    = pVid->no_reference_picture;
-    pVid->no_reference_picture->bottom_field = pVid->no_reference_picture;
-    pVid->no_reference_picture->frame        = pVid->no_reference_picture;
+  if (!vidParam->no_reference_picture) {
+    vidParam->no_reference_picture = alloc_storable_picture (vidParam, FRAME, vidParam->width, vidParam->height, vidParam->width_cr, vidParam->height_cr, 1);
+    vidParam->no_reference_picture->top_field    = vidParam->no_reference_picture;
+    vidParam->no_reference_picture->bottom_field = vidParam->no_reference_picture;
+    vidParam->no_reference_picture->frame        = vidParam->no_reference_picture;
     }
   p_Dpb->last_output_poc = INT_MIN;
-  pVid->last_has_mmco_5 = 0;
+  vidParam->last_has_mmco_5 = 0;
   p_Dpb->init_done = 1;
 
   // picture error concealment
-  if(pVid->conceal_mode !=0 && !pVid->last_out_fs)
-    pVid->last_out_fs = alloc_frame_store();
+  if(vidParam->conceal_mode !=0 && !vidParam->last_out_fs)
+    vidParam->last_out_fs = alloc_frame_store();
   }
 //}}}
 //{{{
-void re_init_dpb (VideoParameters* pVid, DecodedPictureBuffer *p_Dpb, int type) {
+void re_init_dpb (sVidParam* vidParam, sDecodedPictureBuffer* p_Dpb, int type) {
 
   int i;
-  seq_parameter_set_rbsp_t *active_sps = pVid->active_sps;
+  seq_parameter_set_rbsp_t *active_sps = vidParam->active_sps;
   int iDpbSize;
 
-  iDpbSize = getDpbSize(pVid, active_sps)+pVid->p_Inp->dpb_plus[type==2? 1: 0];
+  iDpbSize = getDpbSize(vidParam, active_sps)+vidParam->p_Inp->dpb_plus[type==2? 1: 0];
   p_Dpb->num_ref_frames = active_sps->num_ref_frames;
 
   if (iDpbSize > (int)p_Dpb->size) {
     if (p_Dpb->size < active_sps->num_ref_frames)
       error ("DPB size at specified level is smaller than the specified number of reference frames. This is not allowed.\n", 1000);
 
-    p_Dpb->fs = realloc(p_Dpb->fs, iDpbSize * sizeof (FrameStore*));
+    p_Dpb->fs = realloc(p_Dpb->fs, iDpbSize * sizeof (sFrameStore*));
     if (NULL==p_Dpb->fs)
       no_mem_exit("re_init_dpb: p_Dpb->fs");
 
-    p_Dpb->fs_ref = realloc(p_Dpb->fs_ref, iDpbSize * sizeof (FrameStore*));
+    p_Dpb->fs_ref = realloc(p_Dpb->fs_ref, iDpbSize * sizeof (sFrameStore*));
     if (NULL==p_Dpb->fs_ref)
       no_mem_exit("re_init_dpb: p_Dpb->fs_ref");
 
-    p_Dpb->fs_ltref = realloc(p_Dpb->fs_ltref, iDpbSize * sizeof (FrameStore*));
+    p_Dpb->fs_ltref = realloc(p_Dpb->fs_ltref, iDpbSize * sizeof (sFrameStore*));
     if (NULL==p_Dpb->fs_ltref)
       no_mem_exit("re_init_dpb: p_Dpb->fs_ltref");
 
@@ -1066,9 +1066,9 @@ void re_init_dpb (VideoParameters* pVid, DecodedPictureBuffer *p_Dpb, int type) 
   }
 //}}}
 //{{{
-void free_dpb (DecodedPictureBuffer *p_Dpb) {
+void free_dpb (sDecodedPictureBuffer* p_Dpb) {
 
-  VideoParameters* pVid = p_Dpb->pVid;
+  sVidParam* vidParam = p_Dpb->vidParam;
   unsigned i;
   if (p_Dpb->fs) {
     for (i = 0; i < p_Dpb->size; i++)
@@ -1087,18 +1087,18 @@ void free_dpb (DecodedPictureBuffer *p_Dpb) {
   p_Dpb->init_done = 0;
 
   // picture error concealment
-  if (pVid->conceal_mode != 0 || pVid->last_out_fs)
-    free_frame_store (pVid->last_out_fs);
+  if (vidParam->conceal_mode != 0 || vidParam->last_out_fs)
+    free_frame_store (vidParam->last_out_fs);
 
-  if (pVid->no_reference_picture) {
-    free_storable_picture (pVid->no_reference_picture);
-    pVid->no_reference_picture = NULL;
+  if (vidParam->no_reference_picture) {
+    free_storable_picture (vidParam->no_reference_picture);
+    vidParam->no_reference_picture = NULL;
     }
   }
 //}}}
 
 //{{{
-void alloc_pic_motion (PicMotionParamsOld *motion, int size_y, int size_x) {
+void alloc_pic_motion (sPicMotionParamsOld *motion, int size_y, int size_x) {
 
   motion->mb_field = calloc (size_y * size_x, sizeof(byte));
   if (motion->mb_field == NULL)
@@ -1106,7 +1106,7 @@ void alloc_pic_motion (PicMotionParamsOld *motion, int size_y, int size_x) {
   }
 //}}}
 //{{{
-void free_pic_motion (PicMotionParamsOld *motion) {
+void free_pic_motion (sPicMotionParamsOld *motion) {
 
   if (motion->mb_field) {
     free (motion->mb_field);
@@ -1116,16 +1116,16 @@ void free_pic_motion (PicMotionParamsOld *motion) {
 //}}}
 
 //{{{
-StorablePicture* alloc_storable_picture (VideoParameters* pVid, PictureStructure structure, int size_x, int size_y, int size_x_cr, int size_y_cr, int is_output)
+sStorablePicture* alloc_storable_picture (sVidParam* vidParam, sPictureStructure structure, int size_x, int size_y, int size_x_cr, int size_y_cr, int is_output)
 {
-  seq_parameter_set_rbsp_t *active_sps = pVid->active_sps;
+  seq_parameter_set_rbsp_t *active_sps = vidParam->active_sps;
 
-  StorablePicture *s;
+  sStorablePicture *s;
   int   nplane;
 
   //printf ("Allocating (%s) picture (x=%d, y=%d, x_cr=%d, y_cr=%d)\n", (type == FRAME)?"FRAME":(type == TOP_FIELD)?"TOP_FIELD":"BOTTOM_FIELD", size_x, size_y, size_x_cr, size_y_cr);
 
-  s = calloc (1, sizeof(StorablePicture));
+  s = calloc (1, sizeof(sStorablePicture));
   if (NULL==s)
     no_mem_exit("alloc_storable_picture: s");
 
@@ -1137,26 +1137,26 @@ StorablePicture* alloc_storable_picture (VideoParameters* pVid, PictureStructure
   s->PicSizeInMbs = (size_x*size_y)/256;
   s->imgUV = NULL;
 
-  get_mem2Dpel_pad (&(s->imgY), size_y, size_x, pVid->iLumaPadY, pVid->iLumaPadX);
-  s->iLumaStride = size_x+2*pVid->iLumaPadX;
-  s->iLumaExpandedHeight = size_y+2*pVid->iLumaPadY;
+  get_mem2Dpel_pad (&(s->imgY), size_y, size_x, vidParam->iLumaPadY, vidParam->iLumaPadX);
+  s->iLumaStride = size_x+2*vidParam->iLumaPadX;
+  s->iLumaExpandedHeight = size_y+2*vidParam->iLumaPadY;
 
   if (active_sps->chroma_format_idc != YUV400)
-    get_mem3Dpel_pad (&(s->imgUV), 2, size_y_cr, size_x_cr, pVid->iChromaPadY, pVid->iChromaPadX);
+    get_mem3Dpel_pad (&(s->imgUV), 2, size_y_cr, size_x_cr, vidParam->iChromaPadY, vidParam->iChromaPadX);
 
-  s->iChromaStride = size_x_cr + 2*pVid->iChromaPadX;
-  s->iChromaExpandedHeight = size_y_cr + 2*pVid->iChromaPadY;
-  s->iLumaPadY   = pVid->iLumaPadY;
-  s->iLumaPadX   = pVid->iLumaPadX;
-  s->iChromaPadY = pVid->iChromaPadY;
-  s->iChromaPadX = pVid->iChromaPadX;
+  s->iChromaStride = size_x_cr + 2*vidParam->iChromaPadX;
+  s->iChromaExpandedHeight = size_y_cr + 2*vidParam->iChromaPadY;
+  s->iLumaPadY   = vidParam->iLumaPadY;
+  s->iLumaPadX   = vidParam->iLumaPadX;
+  s->iChromaPadY = vidParam->iChromaPadY;
+  s->iChromaPadX = vidParam->iChromaPadX;
 
-  s->separate_colour_plane_flag = pVid->separate_colour_plane_flag;
+  s->separate_colour_plane_flag = vidParam->separate_colour_plane_flag;
 
   get_mem2Dmp (&s->mv_info, (size_y >> BLOCK_SHIFT), (size_x >> BLOCK_SHIFT));
   alloc_pic_motion( &s->motion , (size_y >> BLOCK_SHIFT), (size_x >> BLOCK_SHIFT));
 
-  if ((pVid->separate_colour_plane_flag != 0) ) {
+  if ((vidParam->separate_colour_plane_flag != 0) ) {
     for (nplane=0; nplane<MAX_PLANE; nplane++ ) {
       get_mem2Dmp (&s->JVmv_info[nplane], (size_y >> BLOCK_SHIFT), (size_x >> BLOCK_SHIFT));
       alloc_pic_motion (&s->JVmotion[nplane] , (size_y >> BLOCK_SHIFT), (size_x >> BLOCK_SHIFT));
@@ -1184,9 +1184,9 @@ StorablePicture* alloc_storable_picture (VideoParameters* pVid, PictureStructure
   s->size_x_cr_m1 = size_x_cr - 1;
   s->size_y_cr_m1 = size_y_cr - 1;
 
-  s->top_field    = pVid->no_reference_picture;
-  s->bottom_field = pVid->no_reference_picture;
-  s->frame        = pVid->no_reference_picture;
+  s->top_field    = vidParam->no_reference_picture;
+  s->bottom_field = vidParam->no_reference_picture;
+  s->frame        = vidParam->no_reference_picture;
 
   s->dec_ref_pic_marking_buffer = NULL;
 
@@ -1195,11 +1195,11 @@ StorablePicture* alloc_storable_picture (VideoParameters* pVid, PictureStructure
 
   s->top_poc = s->bottom_poc = s->poc = 0;
 
-  if (!pVid->active_sps->frame_mbs_only_flag && structure != FRAME) {
+  if (!vidParam->active_sps->frame_mbs_only_flag && structure != FRAME) {
     int i, j;
     for (j = 0; j < MAX_NUM_SLICES; j++) {
       for (i = 0; i < 2; i++) {
-        s->listX[j][i] = calloc(MAX_LIST_SIZE, sizeof (StorablePicture*)); // +1 for reordering
+        s->listX[j][i] = calloc(MAX_LIST_SIZE, sizeof (sStorablePicture*)); // +1 for reordering
         if (NULL==s->listX[j][i])
         no_mem_exit("alloc_storable_picture: s->listX[i]");
         }
@@ -1210,7 +1210,7 @@ StorablePicture* alloc_storable_picture (VideoParameters* pVid, PictureStructure
   }
 //}}}
 //{{{
-void free_storable_picture (StorablePicture* p) {
+void free_storable_picture (sStorablePicture* p) {
 
   int nplane;
   if (p) {
@@ -1259,9 +1259,9 @@ void free_storable_picture (StorablePicture* p) {
 //}}}
 
 //{{{
-FrameStore* alloc_frame_store() {
+sFrameStore* alloc_frame_store() {
 
-  FrameStore* f = calloc (1, sizeof(FrameStore));
+  sFrameStore* f = calloc (1, sizeof(sFrameStore));
   if (NULL == f)
     no_mem_exit("alloc_frame_store: f");
 
@@ -1277,7 +1277,7 @@ FrameStore* alloc_frame_store() {
   }
 //}}}
 //{{{
-void free_frame_store (FrameStore* f) {
+void free_frame_store (sFrameStore* f) {
 
   if (f) {
     if (f->frame) {
@@ -1300,7 +1300,7 @@ void free_frame_store (FrameStore* f) {
   }
 //}}}
 //{{{
-void unmark_for_reference (FrameStore* fs) {
+void unmark_for_reference (sFrameStore* fs) {
 
   if (fs->is_used & 1)
     if (fs->top_field)
@@ -1331,7 +1331,7 @@ void unmark_for_reference (FrameStore* fs) {
   }
 //}}}
 //{{{
-void unmark_for_long_term_reference (FrameStore* fs) {
+void unmark_for_long_term_reference (sFrameStore* fs) {
 
   if (fs->is_used & 1) {
     if (fs->top_field) {
@@ -1367,9 +1367,9 @@ void unmark_for_long_term_reference (FrameStore* fs) {
 void update_pic_num (Slice* currSlice) {
 
   unsigned int i;
-  VideoParameters* pVid = currSlice->pVid;
-  DecodedPictureBuffer *p_Dpb = currSlice->p_Dpb;
-  seq_parameter_set_rbsp_t *active_sps = pVid->active_sps;
+  sVidParam* vidParam = currSlice->vidParam;
+  sDecodedPictureBuffer* p_Dpb = currSlice->p_Dpb;
+  seq_parameter_set_rbsp_t *active_sps = vidParam->active_sps;
 
   int add_top = 0, add_bottom = 0;
   int max_frame_num = 1 << (active_sps->log2_max_frame_num_minus4 + 4);
@@ -1438,16 +1438,16 @@ void init_lists_i_slice (Slice* currSlice) {
 //{{{
 void init_lists_p_slice (Slice* currSlice) {
 
-  VideoParameters* pVid = currSlice->pVid;
-  DecodedPictureBuffer *p_Dpb = currSlice->p_Dpb;
+  sVidParam* vidParam = currSlice->vidParam;
+  sDecodedPictureBuffer* p_Dpb = currSlice->p_Dpb;
 
   unsigned int i;
 
   int list0idx = 0;
   int listltidx = 0;
 
-  FrameStore **fs_list0;
-  FrameStore **fs_listlt;
+  sFrameStore **fs_list0;
+  sFrameStore **fs_listlt;
 
   if (currSlice->structure == FRAME) {
     for (i=0; i<p_Dpb->ref_frames_in_buffer; i++) {
@@ -1457,7 +1457,7 @@ void init_lists_p_slice (Slice* currSlice) {
       }
     }
     // order list 0 by PicNum
-    qsort((void *)currSlice->listX[0], list0idx, sizeof(StorablePicture*), compare_pic_by_pic_num_desc);
+    qsort((void *)currSlice->listX[0], list0idx, sizeof(sStorablePicture*), compare_pic_by_pic_num_desc);
     currSlice->listXsize[0] = (char) list0idx;
     //printf("listX[0] (PicNum): "); for (i=0; i<list0idx; i++){printf ("%d  ", currSlice->listX[0][i]->pic_num);} printf("\n");
 
@@ -1466,14 +1466,14 @@ void init_lists_p_slice (Slice* currSlice) {
       if (p_Dpb->fs_ltref[i]->is_used==3)
         if (p_Dpb->fs_ltref[i]->frame->is_long_term)
           currSlice->listX[0][list0idx++] = p_Dpb->fs_ltref[i]->frame;
-    qsort((void *)&currSlice->listX[0][(short) currSlice->listXsize[0]], list0idx - currSlice->listXsize[0], sizeof(StorablePicture*), compare_pic_by_lt_pic_num_asc);
+    qsort((void *)&currSlice->listX[0][(short) currSlice->listXsize[0]], list0idx - currSlice->listXsize[0], sizeof(sStorablePicture*), compare_pic_by_lt_pic_num_asc);
     currSlice->listXsize[0] = (char) list0idx;
     }
   else {
-    fs_list0 = calloc(p_Dpb->size, sizeof (FrameStore*));
+    fs_list0 = calloc(p_Dpb->size, sizeof (sFrameStore*));
     if (NULL==fs_list0)
       no_mem_exit("init_lists: fs_list0");
-    fs_listlt = calloc(p_Dpb->size, sizeof (FrameStore*));
+    fs_listlt = calloc(p_Dpb->size, sizeof (sFrameStore*));
     if (NULL==fs_listlt)
       no_mem_exit("init_lists: fs_listlt");
 
@@ -1481,7 +1481,7 @@ void init_lists_p_slice (Slice* currSlice) {
       if (p_Dpb->fs_ref[i]->is_reference)
         fs_list0[list0idx++] = p_Dpb->fs_ref[i];
 
-    qsort((void *)fs_list0, list0idx, sizeof(FrameStore*), compare_fs_by_frame_num_desc);
+    qsort((void *)fs_list0, list0idx, sizeof(sFrameStore*), compare_fs_by_frame_num_desc);
 
     //printf("fs_list0 (FrameNum): "); for (i=0; i<list0idx; i++){printf ("%d  ", fs_list0[i]->frame_num_wrap);} printf("\n");
 
@@ -1494,7 +1494,7 @@ void init_lists_p_slice (Slice* currSlice) {
     for (i=0; i<p_Dpb->ltref_frames_in_buffer; i++)
       fs_listlt[listltidx++]=p_Dpb->fs_ltref[i];
 
-    qsort((void *)fs_listlt, listltidx, sizeof(FrameStore*), compare_fs_by_lt_pic_idx_asc);
+    qsort((void *)fs_listlt, listltidx, sizeof(sFrameStore*), compare_fs_by_lt_pic_idx_asc);
 
     gen_pic_list_from_frame_list(currSlice->structure, fs_listlt, listltidx, currSlice->listX[0], &currSlice->listXsize[0], 1);
 
@@ -1509,16 +1509,16 @@ void init_lists_p_slice (Slice* currSlice) {
 
   // set the unused list entries to NULL
   for (i = currSlice->listXsize[0]; i< (MAX_LIST_SIZE) ; i++)
-    currSlice->listX[0][i] = pVid->no_reference_picture;
+    currSlice->listX[0][i] = vidParam->no_reference_picture;
   for (i = currSlice->listXsize[1]; i< (MAX_LIST_SIZE) ; i++)
-    currSlice->listX[1][i] = pVid->no_reference_picture;
+    currSlice->listX[1][i] = vidParam->no_reference_picture;
   }
 //}}}
 //{{{
 void init_lists_b_slice (Slice* currSlice) {
 
-  VideoParameters* pVid = currSlice->pVid;
-  DecodedPictureBuffer *p_Dpb = currSlice->p_Dpb;
+  sVidParam* vidParam = currSlice->vidParam;
+  sDecodedPictureBuffer* p_Dpb = currSlice->p_Dpb;
 
   unsigned int i;
   int j;
@@ -1527,9 +1527,9 @@ void init_lists_b_slice (Slice* currSlice) {
   int list0idx_1 = 0;
   int listltidx = 0;
 
-  FrameStore **fs_list0;
-  FrameStore **fs_list1;
-  FrameStore **fs_listlt;
+  sFrameStore **fs_list0;
+  sFrameStore **fs_list1;
+  sFrameStore **fs_listlt;
 
   {
     // B-Slice
@@ -1539,7 +1539,7 @@ void init_lists_b_slice (Slice* currSlice) {
           if ((p_Dpb->fs_ref[i]->frame->used_for_reference)&&(!p_Dpb->fs_ref[i]->frame->is_long_term))
             if (currSlice->framepoc >= p_Dpb->fs_ref[i]->frame->poc) //!KS use >= for error concealment
               currSlice->listX[0][list0idx++] = p_Dpb->fs_ref[i]->frame;
-      qsort((void *)currSlice->listX[0], list0idx, sizeof(StorablePicture*), compare_pic_by_poc_desc);
+      qsort((void *)currSlice->listX[0], list0idx, sizeof(sStorablePicture*), compare_pic_by_poc_desc);
 
       //get the backward reference picture (POC>current POC) in list0;
       list0idx_1 = list0idx;
@@ -1548,7 +1548,7 @@ void init_lists_b_slice (Slice* currSlice) {
           if ((p_Dpb->fs_ref[i]->frame->used_for_reference)&&(!p_Dpb->fs_ref[i]->frame->is_long_term))
             if (currSlice->framepoc < p_Dpb->fs_ref[i]->frame->poc)
               currSlice->listX[0][list0idx++] = p_Dpb->fs_ref[i]->frame;
-      qsort((void *)&currSlice->listX[0][list0idx_1], list0idx-list0idx_1, sizeof(StorablePicture*), compare_pic_by_poc_asc);
+      qsort((void *)&currSlice->listX[0][list0idx_1], list0idx-list0idx_1, sizeof(sStorablePicture*), compare_pic_by_poc_asc);
 
       for (j=0; j<list0idx_1; j++)
         currSlice->listX[1][list0idx-list0idx_1+j]=currSlice->listX[0][j];
@@ -1559,8 +1559,8 @@ void init_lists_b_slice (Slice* currSlice) {
 
       //printf("listX[0] (PicNum): "); for (i=0; i<currSlice->listXsize[0]; i++){printf ("%d  ", currSlice->listX[0][i]->pic_num);} printf("\n");
       //printf("listX[1] (PicNum): "); for (i=0; i<currSlice->listXsize[1]; i++){printf ("%d  ", currSlice->listX[1][i]->pic_num);} printf("\n");
-      //printf("currSlice->listX[0] currPoc=%d (Poc): ", pVid->framepoc); for (i=0; i<currSlice->listXsize[0]; i++){printf ("%d  ", currSlice->listX[0][i]->poc);} printf("\n");
-      //printf("currSlice->listX[1] currPoc=%d (Poc): ", pVid->framepoc); for (i=0; i<currSlice->listXsize[1]; i++){printf ("%d  ", currSlice->listX[1][i]->poc);} printf("\n");
+      //printf("currSlice->listX[0] currPoc=%d (Poc): ", vidParam->framepoc); for (i=0; i<currSlice->listXsize[0]; i++){printf ("%d  ", currSlice->listX[0][i]->poc);} printf("\n");
+      //printf("currSlice->listX[1] currPoc=%d (Poc): ", vidParam->framepoc); for (i=0; i<currSlice->listXsize[1]; i++){printf ("%d  ", currSlice->listX[1][i]->poc);} printf("\n");
 
       // long term handling
       for (i=0; i<p_Dpb->ltref_frames_in_buffer; i++) {
@@ -1571,18 +1571,18 @@ void init_lists_b_slice (Slice* currSlice) {
             }
           }
         }
-      qsort((void *)&currSlice->listX[0][(short) currSlice->listXsize[0]], list0idx - currSlice->listXsize[0], sizeof(StorablePicture*), compare_pic_by_lt_pic_num_asc);
-      qsort((void *)&currSlice->listX[1][(short) currSlice->listXsize[0]], list0idx - currSlice->listXsize[0], sizeof(StorablePicture*), compare_pic_by_lt_pic_num_asc);
+      qsort((void *)&currSlice->listX[0][(short) currSlice->listXsize[0]], list0idx - currSlice->listXsize[0], sizeof(sStorablePicture*), compare_pic_by_lt_pic_num_asc);
+      qsort((void *)&currSlice->listX[1][(short) currSlice->listXsize[0]], list0idx - currSlice->listXsize[0], sizeof(sStorablePicture*), compare_pic_by_lt_pic_num_asc);
       currSlice->listXsize[0] = currSlice->listXsize[1] = (char) list0idx;
       }
     else {
-      fs_list0 = calloc(p_Dpb->size, sizeof (FrameStore*));
+      fs_list0 = calloc(p_Dpb->size, sizeof (sFrameStore*));
       if (NULL==fs_list0)
         no_mem_exit("init_lists: fs_list0");
-      fs_list1 = calloc(p_Dpb->size, sizeof (FrameStore*));
+      fs_list1 = calloc(p_Dpb->size, sizeof (sFrameStore*));
       if (NULL==fs_list1)
         no_mem_exit("init_lists: fs_list1");
-      fs_listlt = calloc(p_Dpb->size, sizeof (FrameStore*));
+      fs_listlt = calloc(p_Dpb->size, sizeof (sFrameStore*));
       if (NULL==fs_listlt)
         no_mem_exit("init_lists: fs_listlt");
 
@@ -1593,14 +1593,14 @@ void init_lists_b_slice (Slice* currSlice) {
         if (p_Dpb->fs_ref[i]->is_used)
           if (currSlice->ThisPOC >= p_Dpb->fs_ref[i]->poc)
             fs_list0[list0idx++] = p_Dpb->fs_ref[i];
-      qsort((void *)fs_list0, list0idx, sizeof(FrameStore*), compare_fs_by_poc_desc);
+      qsort((void *)fs_list0, list0idx, sizeof(sFrameStore*), compare_fs_by_poc_desc);
 
       list0idx_1 = list0idx;
       for (i=0; i<p_Dpb->ref_frames_in_buffer; i++)
         if (p_Dpb->fs_ref[i]->is_used)
           if (currSlice->ThisPOC < p_Dpb->fs_ref[i]->poc)
             fs_list0[list0idx++] = p_Dpb->fs_ref[i];
-      qsort((void *)&fs_list0[list0idx_1], list0idx-list0idx_1, sizeof(FrameStore*), compare_fs_by_poc_asc);
+      qsort((void *)&fs_list0[list0idx_1], list0idx-list0idx_1, sizeof(sFrameStore*), compare_fs_by_poc_asc);
 
       for (j=0; j<list0idx_1; j++)
         fs_list1[list0idx-list0idx_1+j]=fs_list0[j];
@@ -1615,14 +1615,14 @@ void init_lists_b_slice (Slice* currSlice) {
       gen_pic_list_from_frame_list(currSlice->structure, fs_list0, list0idx, currSlice->listX[0], &currSlice->listXsize[0], 0);
       gen_pic_list_from_frame_list(currSlice->structure, fs_list1, list0idx, currSlice->listX[1], &currSlice->listXsize[1], 0);
 
-      //printf("currSlice->listX[0] currPoc=%d (Poc): ", pVid->framepoc); for (i=0; i<currSlice->listXsize[0]; i++){printf ("%d  ", currSlice->listX[0][i]->poc);} printf("\n");
-      //printf("currSlice->listX[1] currPoc=%d (Poc): ", pVid->framepoc); for (i=0; i<currSlice->listXsize[1]; i++){printf ("%d  ", currSlice->listX[1][i]->poc);} printf("\n");
+      //printf("currSlice->listX[0] currPoc=%d (Poc): ", vidParam->framepoc); for (i=0; i<currSlice->listXsize[0]; i++){printf ("%d  ", currSlice->listX[0][i]->poc);} printf("\n");
+      //printf("currSlice->listX[1] currPoc=%d (Poc): ", vidParam->framepoc); for (i=0; i<currSlice->listXsize[1]; i++){printf ("%d  ", currSlice->listX[1][i]->poc);} printf("\n");
 
       // long term handling
       for (i=0; i<p_Dpb->ltref_frames_in_buffer; i++)
         fs_listlt[listltidx++]=p_Dpb->fs_ltref[i];
 
-      qsort((void *)fs_listlt, listltidx, sizeof(FrameStore*), compare_fs_by_lt_pic_idx_asc);
+      qsort((void *)fs_listlt, listltidx, sizeof(sFrameStore*), compare_fs_by_lt_pic_idx_asc);
 
       gen_pic_list_from_frame_list(currSlice->structure, fs_listlt, listltidx, currSlice->listX[0], &currSlice->listXsize[0], 1);
       gen_pic_list_from_frame_list(currSlice->structure, fs_listlt, listltidx, currSlice->listX[1], &currSlice->listXsize[1], 1);
@@ -1644,7 +1644,7 @@ void init_lists_b_slice (Slice* currSlice) {
         }
       }
     if (!diff) {
-      StorablePicture *tmp_s = currSlice->listX[1][0];
+      sStorablePicture *tmp_s = currSlice->listX[1][0];
       currSlice->listX[1][0]=currSlice->listX[1][1];
       currSlice->listX[1][1]=tmp_s;
       }
@@ -1656,9 +1656,9 @@ void init_lists_b_slice (Slice* currSlice) {
 
   // set the unused list entries to NULL
   for (i=currSlice->listXsize[0]; i< (MAX_LIST_SIZE) ; i++)
-    currSlice->listX[0][i] = pVid->no_reference_picture;
+    currSlice->listX[0][i] = vidParam->no_reference_picture;
   for (i=currSlice->listXsize[1]; i< (MAX_LIST_SIZE) ; i++)
-    currSlice->listX[1][i] = pVid->no_reference_picture;
+    currSlice->listX[1][i] = vidParam->no_reference_picture;
   }
 //}}}
 //{{{
@@ -1673,14 +1673,14 @@ void init_lists_b_slice (Slice* currSlice) {
  *
  ************************************************************************
  */
-void init_mbaff_lists (VideoParameters* pVid, Slice* currSlice)
+void init_mbaff_lists (sVidParam* vidParam, Slice* currSlice)
 {
   unsigned j;
   int i;
 
   for (i=2;i<6;i++) {
     for (j=0; j<MAX_LIST_SIZE; j++)
-      currSlice->listX[i][j] = pVid->no_reference_picture;
+      currSlice->listX[i][j] = vidParam->no_reference_picture;
     currSlice->listXsize[i]=0;
     }
 
@@ -1702,7 +1702,7 @@ void init_mbaff_lists (VideoParameters* pVid, Slice* currSlice)
   }
 //}}}
 //{{{
-StorablePicture* get_short_term_pic (Slice* currSlice, DecodedPictureBuffer *p_Dpb, int picNum) {
+sStorablePicture* get_short_term_pic (Slice* currSlice, sDecodedPictureBuffer* p_Dpb, int picNum) {
 
   unsigned i;
 
@@ -1722,16 +1722,16 @@ StorablePicture* get_short_term_pic (Slice* currSlice, DecodedPictureBuffer *p_D
       }
     }
 
-  return currSlice->pVid->no_reference_picture;
+  return currSlice->vidParam->no_reference_picture;
   }
 //}}}
 
 //{{{
 static void reorder_short_term (Slice* currSlice, int cur_list, int num_ref_idx_lX_active_minus1, int picNumLX, int *refIdxLX) {
-  StorablePicture **RefPicListX = currSlice->listX[cur_list];
+  sStorablePicture **RefPicListX = currSlice->listX[cur_list];
   int cIdx, nIdx;
 
-  StorablePicture *picLX;
+  sStorablePicture *picLX;
 
   picLX = get_short_term_pic(currSlice, currSlice->p_Dpb, picNumLX);
 
@@ -1751,11 +1751,11 @@ static void reorder_short_term (Slice* currSlice, int cur_list, int num_ref_idx_
 }
 //}}}
 //{{{
-static void reorder_long_term (Slice* currSlice, StorablePicture **RefPicListX, int num_ref_idx_lX_active_minus1, int LongTermPicNum, int *refIdxLX)
+static void reorder_long_term (Slice* currSlice, sStorablePicture **RefPicListX, int num_ref_idx_lX_active_minus1, int LongTermPicNum, int *refIdxLX)
 {
   int cIdx, nIdx;
 
-  StorablePicture *picLX;
+  sStorablePicture *picLX;
 
   picLX = get_long_term_pic(currSlice, currSlice->p_Dpb, LongTermPicNum);
 
@@ -1778,7 +1778,7 @@ static void reorder_long_term (Slice* currSlice, StorablePicture **RefPicListX, 
 //}}}
 
 //{{{
-static void sliding_window_memory_management (DecodedPictureBuffer *p_Dpb, StorablePicture* p) {
+static void sliding_window_memory_management (sDecodedPictureBuffer* p_Dpb, sStorablePicture* p) {
 
   uint32 i;
 
@@ -1799,12 +1799,12 @@ static void sliding_window_memory_management (DecodedPictureBuffer *p_Dpb, Stora
   }
 //}}}
 //{{{
-static void adaptive_memory_management (DecodedPictureBuffer *p_Dpb, StorablePicture* p) {
+static void adaptive_memory_management (sDecodedPictureBuffer* p_Dpb, sStorablePicture* p) {
 
   DecRefPicMarking_t *tmp_drpm;
-  VideoParameters* pVid = p_Dpb->pVid;
+  sVidParam* vidParam = p_Dpb->vidParam;
 
-  pVid->last_has_mmco_5 = 0;
+  vidParam->last_has_mmco_5 = 0;
 
   assert (!p->idr_flag);
   assert (p->adaptive_ref_pic_buffering_flag);
@@ -1849,7 +1849,7 @@ static void adaptive_memory_management (DecodedPictureBuffer *p_Dpb, StorablePic
       case 5:
         mm_unmark_all_short_term_for_reference(p_Dpb);
         mm_unmark_all_long_term_for_reference(p_Dpb);
-        pVid->last_has_mmco_5 = 1;
+        vidParam->last_has_mmco_5 = 1;
         break;
       //}}}
       //{{{
@@ -1867,13 +1867,13 @@ static void adaptive_memory_management (DecodedPictureBuffer *p_Dpb, StorablePic
     free (tmp_drpm);
     }
 
-  if ( pVid->last_has_mmco_5 ) {
+  if ( vidParam->last_has_mmco_5 ) {
     p->pic_num = p->frame_num = 0;
     switch (p->structure) {
       //{{{
       case TOP_FIELD:
         {
-          //p->poc = p->top_poc = pVid->toppoc =0;
+          //p->poc = p->top_poc = vidParam->toppoc =0;
           p->poc = p->top_poc = 0;
           break;
         }
@@ -1881,7 +1881,7 @@ static void adaptive_memory_management (DecodedPictureBuffer *p_Dpb, StorablePic
       //{{{
       case BOTTOM_FIELD:
         {
-          //p->poc = p->bottom_poc = pVid->bottompoc = 0;
+          //p->poc = p->bottom_poc = vidParam->bottompoc = 0;
           p->poc = p->bottom_poc = 0;
           break;
         }
@@ -1892,22 +1892,22 @@ static void adaptive_memory_management (DecodedPictureBuffer *p_Dpb, StorablePic
           p->top_poc    -= p->poc;
           p->bottom_poc -= p->poc;
 
-          //pVid->toppoc = p->top_poc;
-          //pVid->bottompoc = p->bottom_poc;
+          //vidParam->toppoc = p->top_poc;
+          //vidParam->bottompoc = p->bottom_poc;
 
           p->poc = imin (p->top_poc, p->bottom_poc);
-          //pVid->framepoc = p->poc;
+          //vidParam->framepoc = p->poc;
           break;
         }
       //}}}
       }
 
-    flush_dpb(pVid->p_Dpb_layer[0]);
+    flush_dpb(vidParam->p_Dpb_layer[0]);
     }
   }
 //}}}
 //{{{
-void idr_memory_management (DecodedPictureBuffer *p_Dpb, StorablePicture* p) {
+void idr_memory_management (sDecodedPictureBuffer* p_Dpb, sStorablePicture* p) {
 
   uint32 i;
 
@@ -1947,9 +1947,9 @@ void idr_memory_management (DecodedPictureBuffer *p_Dpb, StorablePicture* p) {
 //}}}
 
 //{{{
-void store_picture_in_dpb (DecodedPictureBuffer *p_Dpb, StorablePicture* p) {
+void store_picture_in_dpb (sDecodedPictureBuffer* p_Dpb, sStorablePicture* p) {
 
-  VideoParameters* pVid = p_Dpb->pVid;
+  sVidParam* vidParam = p_Dpb->vidParam;
   int poc, pos;
   // picture error concealment
 
@@ -1959,13 +1959,13 @@ void store_picture_in_dpb (DecodedPictureBuffer *p_Dpb, StorablePicture* p) {
   // if frame, check for new store,
   assert (p!=NULL);
 
-  pVid->last_has_mmco_5 = 0;
-  pVid->last_pic_bottom_field = (p->structure == BOTTOM_FIELD);
+  vidParam->last_has_mmco_5 = 0;
+  vidParam->last_pic_bottom_field = (p->structure == BOTTOM_FIELD);
 
   if (p->idr_flag) {
     idr_memory_management (p_Dpb, p);
     // picture error concealment
-    memset (pVid->pocs_in_dpb, 0, sizeof(int)*100);
+    memset (vidParam->pocs_in_dpb, 0, sizeof(int)*100);
     }
   else {
     // adaptive memory management
@@ -1981,7 +1981,7 @@ void store_picture_in_dpb (DecodedPictureBuffer *p_Dpb, StorablePicture* p) {
             ((p->structure==BOTTOM_FIELD)&&(p_Dpb->last_picture->is_used==1))) {
           if ((p->used_for_reference && (p_Dpb->last_picture->is_orig_reference!=0)) ||
               (!p->used_for_reference && (p_Dpb->last_picture->is_orig_reference==0))) {
-            insert_picture_in_dpb (pVid, p_Dpb->last_picture, p);
+            insert_picture_in_dpb (vidParam, p_Dpb->last_picture, p);
             update_ref_list (p_Dpb);
             update_ltref_list (p_Dpb);
             dump_dpb (p_Dpb);
@@ -2000,7 +2000,7 @@ void store_picture_in_dpb (DecodedPictureBuffer *p_Dpb, StorablePicture* p) {
     sliding_window_memory_management (p_Dpb, p);
 
   // picture error concealment
-  if (pVid->conceal_mode != 0)
+  if (vidParam->conceal_mode != 0)
     for (unsigned i = 0; i < p_Dpb->size;i++)
       if (p_Dpb->fs[i]->is_reference)
         p_Dpb->fs[i]->concealment_reference = 1;
@@ -2008,12 +2008,12 @@ void store_picture_in_dpb (DecodedPictureBuffer *p_Dpb, StorablePicture* p) {
   // first try to remove unused frames
   if (p_Dpb->used_size==p_Dpb->size) {
     // picture error concealment
-    if (pVid->conceal_mode != 0)
+    if (vidParam->conceal_mode != 0)
       conceal_non_ref_pics(p_Dpb, 2);
 
     remove_unused_frame_from_dpb (p_Dpb);
 
-    if (pVid->conceal_mode != 0)
+    if (vidParam->conceal_mode != 0)
       sliding_window_poc_management (p_Dpb, p);
     }
 
@@ -2023,7 +2023,7 @@ void store_picture_in_dpb (DecodedPictureBuffer *p_Dpb, StorablePicture* p) {
     if (!p->used_for_reference) {
       get_smallest_poc(p_Dpb, &poc, &pos);
       if ((-1==pos) || (p->poc < poc)) {
-        direct_output (pVid, p);
+        direct_output (vidParam, p);
         return;
         }
       }
@@ -2039,11 +2039,11 @@ void store_picture_in_dpb (DecodedPictureBuffer *p_Dpb, StorablePicture* p) {
         error ("duplicate frame_num in short-term reference picture buffer", 500);
 
   // store at end of buffer
-  insert_picture_in_dpb (pVid, p_Dpb->fs[p_Dpb->used_size],p);
+  insert_picture_in_dpb (vidParam, p_Dpb->fs[p_Dpb->used_size],p);
 
   // picture error concealment
   if (p->idr_flag)
-    pVid->earlier_missing_poc = 0;
+    vidParam->earlier_missing_poc = 0;
 
   if (p->structure != FRAME)
     p_Dpb->last_picture = p_Dpb->fs[p_Dpb->used_size];
@@ -2052,8 +2052,8 @@ void store_picture_in_dpb (DecodedPictureBuffer *p_Dpb, StorablePicture* p) {
 
   p_Dpb->used_size++;
 
-  if(pVid->conceal_mode != 0)
-    pVid->pocs_in_dpb[p_Dpb->used_size-1] = p->poc;
+  if(vidParam->conceal_mode != 0)
+    vidParam->pocs_in_dpb[p_Dpb->used_size-1] = p->poc;
 
   update_ref_list (p_Dpb);
   update_ltref_list (p_Dpb);
@@ -2062,10 +2062,10 @@ void store_picture_in_dpb (DecodedPictureBuffer *p_Dpb, StorablePicture* p) {
   }
 //}}}
 //{{{
-void remove_frame_from_dpb (DecodedPictureBuffer *p_Dpb, int pos) {
+void remove_frame_from_dpb (sDecodedPictureBuffer* p_Dpb, int pos) {
 
   //printf ("remove frame with frame_num #%d\n", fs->frame_num);
-  FrameStore* fs = p_Dpb->fs[pos];
+  sFrameStore* fs = p_Dpb->fs[pos];
   switch (fs->is_used) {
     case 3:
       free_storable_picture(fs->frame);
@@ -2098,7 +2098,7 @@ void remove_frame_from_dpb (DecodedPictureBuffer *p_Dpb, int pos) {
   fs->is_orig_reference = 0;
 
   // move empty framestore to end of buffer
-  FrameStore* tmp = p_Dpb->fs[pos];
+  sFrameStore* tmp = p_Dpb->fs[pos];
 
   for (unsigned i = pos; i < p_Dpb->used_size-1; i++)
     p_Dpb->fs[i] = p_Dpb->fs[i+1];
@@ -2108,9 +2108,9 @@ void remove_frame_from_dpb (DecodedPictureBuffer *p_Dpb, int pos) {
   }
 //}}}
 //{{{
-void flush_dpb (DecodedPictureBuffer *p_Dpb)
+void flush_dpb (sDecodedPictureBuffer* p_Dpb)
 {
-  VideoParameters* pVid = p_Dpb->pVid;
+  sVidParam* vidParam = p_Dpb->vidParam;
   uint32 i;
 
   // diagnostics
@@ -2118,8 +2118,8 @@ void flush_dpb (DecodedPictureBuffer *p_Dpb)
   if(!p_Dpb->init_done)
     return;
 
-//  if(pVid->conceal_mode == 0)
-  if (pVid->conceal_mode != 0)
+//  if(vidParam->conceal_mode == 0)
+  if (vidParam->conceal_mode != 0)
     conceal_non_ref_pics(p_Dpb, 0);
 
   // mark all frames unused
@@ -2144,18 +2144,18 @@ void reorder_ref_pic_list (Slice* currSlice, int cur_list) {
   int *long_term_pic_idx = currSlice->long_term_pic_idx[cur_list];
   int num_ref_idx_lX_active_minus1 = currSlice->num_ref_idx_active[cur_list] - 1;
 
-  VideoParameters* pVid = currSlice->pVid;
+  sVidParam* vidParam = currSlice->vidParam;
   int i;
 
   int maxPicNum, currPicNum, picNumLXNoWrap, picNumLXPred, picNumLX;
   int refIdxLX = 0;
 
   if (currSlice->structure==FRAME) {
-    maxPicNum  = pVid->max_frame_num;
+    maxPicNum  = vidParam->max_frame_num;
     currPicNum = currSlice->frame_num;
     }
   else {
-    maxPicNum  = 2 * pVid->max_frame_num;
+    maxPicNum  = 2 * vidParam->max_frame_num;
     currPicNum = 2 * currSlice->frame_num + 1;
     }
 
@@ -2198,35 +2198,35 @@ void reorder_ref_pic_list (Slice* currSlice, int cur_list) {
 //}}}
 
 //{{{
-void dpb_split_field (VideoParameters* pVid, FrameStore *fs)
+void dpb_split_field (sVidParam* vidParam, sFrameStore *fs)
 {
   int i, j, ii, jj, jj4;
   int idiv,jdiv;
   int currentmb;
   int twosz16 = 2 * (fs->frame->size_x >> 4);
-  StorablePicture *fs_top = NULL, *fs_btm = NULL;
-  StorablePicture *frame = fs->frame;
+  sStorablePicture *fs_top = NULL, *fs_btm = NULL;
+  sStorablePicture *frame = fs->frame;
 
   fs->poc = frame->poc;
 
   if (!frame->frame_mbs_only_flag) {
-    fs_top = fs->top_field    = alloc_storable_picture(pVid, TOP_FIELD,    frame->size_x, frame->size_y, frame->size_x_cr, frame->size_y_cr, 1);
-    fs_btm = fs->bottom_field = alloc_storable_picture(pVid, BOTTOM_FIELD, frame->size_x, frame->size_y, frame->size_x_cr, frame->size_y_cr, 1);
+    fs_top = fs->top_field    = alloc_storable_picture(vidParam, TOP_FIELD,    frame->size_x, frame->size_y, frame->size_x_cr, frame->size_y_cr, 1);
+    fs_btm = fs->bottom_field = alloc_storable_picture(vidParam, BOTTOM_FIELD, frame->size_x, frame->size_y, frame->size_x_cr, frame->size_y_cr, 1);
 
     for (i = 0; i < (frame->size_y >> 1); i++)
-      memcpy(fs_top->imgY[i], frame->imgY[i*2], frame->size_x*sizeof(imgpel));
+      memcpy(fs_top->imgY[i], frame->imgY[i*2], frame->size_x*sizeof(sPixel));
 
     for (i = 0; i< (frame->size_y_cr >> 1); i++) {
-      memcpy(fs_top->imgUV[0][i], frame->imgUV[0][i*2], frame->size_x_cr*sizeof(imgpel));
-      memcpy(fs_top->imgUV[1][i], frame->imgUV[1][i*2], frame->size_x_cr*sizeof(imgpel));
+      memcpy(fs_top->imgUV[0][i], frame->imgUV[0][i*2], frame->size_x_cr*sizeof(sPixel));
+      memcpy(fs_top->imgUV[1][i], frame->imgUV[1][i*2], frame->size_x_cr*sizeof(sPixel));
     }
 
     for (i = 0; i < (frame->size_y>>1); i++)
-      memcpy(fs_btm->imgY[i], frame->imgY[i*2 + 1], frame->size_x*sizeof(imgpel));
+      memcpy(fs_btm->imgY[i], frame->imgY[i*2 + 1], frame->size_x*sizeof(sPixel));
 
     for (i = 0; i < (frame->size_y_cr>>1); i++) {
-      memcpy(fs_btm->imgUV[0][i], frame->imgUV[0][i*2 + 1], frame->size_x_cr*sizeof(imgpel));
-      memcpy(fs_btm->imgUV[1][i], frame->imgUV[1][i*2 + 1], frame->size_x_cr*sizeof(imgpel));
+      memcpy(fs_btm->imgUV[0][i], frame->imgUV[0][i*2 + 1], frame->size_x_cr*sizeof(sPixel));
+      memcpy(fs_btm->imgUV[1][i], frame->imgUV[1][i*2 + 1], frame->size_x_cr*sizeof(sPixel));
     }
 
     fs_top->poc = frame->top_poc;
@@ -2262,8 +2262,8 @@ void dpb_split_field (VideoParameters* pVid, FrameStore *fs)
     fs_top->iCodingType = fs_btm->iCodingType = frame->iCodingType;
     if(frame->used_for_reference)
     {
-      pad_dec_picture(pVid, fs_top);
-      pad_dec_picture(pVid, fs_btm);
+      pad_dec_picture(vidParam, fs_top);
+      pad_dec_picture(vidParam, fs_btm);
     }
   }
   else {
@@ -2276,7 +2276,7 @@ void dpb_split_field (VideoParameters* pVid, FrameStore *fs)
 
   if (!frame->frame_mbs_only_flag) {
     if (frame->mb_aff_frame_flag) {
-      PicMotionParamsOld *frm_motion = &frame->motion;
+      sPicMotionParamsOld *frm_motion = &frame->motion;
       for (j=0 ; j< (frame->size_y >> 3); j++) {
         jj = (j >> 2)*8 + (j & 0x03);
         jj4 = jj + 4;
@@ -2292,12 +2292,12 @@ void dpb_split_field (VideoParameters* pVid, FrameStore *fs)
             fs_btm->mv_info[j][i].mv[LIST_1] = frame->mv_info[jj4][i].mv[LIST_1];
             fs_btm->mv_info[j][i].ref_idx[LIST_0] = frame->mv_info[jj4][i].ref_idx[LIST_0];
             if(fs_btm->mv_info[j][i].ref_idx[LIST_0] >=0)
-              fs_btm->mv_info[j][i].ref_pic[LIST_0] = pVid->ppSliceList[frame->mv_info[jj4][i].slice_no]->listX[4][(short) fs_btm->mv_info[j][i].ref_idx[LIST_0]];
+              fs_btm->mv_info[j][i].ref_pic[LIST_0] = vidParam->ppSliceList[frame->mv_info[jj4][i].slice_no]->listX[4][(short) fs_btm->mv_info[j][i].ref_idx[LIST_0]];
             else
               fs_btm->mv_info[j][i].ref_pic[LIST_0] = NULL;
             fs_btm->mv_info[j][i].ref_idx[LIST_1] = frame->mv_info[jj4][i].ref_idx[LIST_1];
             if(fs_btm->mv_info[j][i].ref_idx[LIST_1] >=0)
-              fs_btm->mv_info[j][i].ref_pic[LIST_1] = pVid->ppSliceList[frame->mv_info[jj4][i].slice_no]->listX[5][(short) fs_btm->mv_info[j][i].ref_idx[LIST_1]];
+              fs_btm->mv_info[j][i].ref_pic[LIST_1] = vidParam->ppSliceList[frame->mv_info[jj4][i].slice_no]->listX[5][(short) fs_btm->mv_info[j][i].ref_idx[LIST_1]];
             else
               fs_btm->mv_info[j][i].ref_pic[LIST_1] = NULL;
 
@@ -2305,12 +2305,12 @@ void dpb_split_field (VideoParameters* pVid, FrameStore *fs)
             fs_top->mv_info[j][i].mv[LIST_1] = frame->mv_info[jj][i].mv[LIST_1];
             fs_top->mv_info[j][i].ref_idx[LIST_0] = frame->mv_info[jj][i].ref_idx[LIST_0];
             if(fs_top->mv_info[j][i].ref_idx[LIST_0] >=0)
-              fs_top->mv_info[j][i].ref_pic[LIST_0] = pVid->ppSliceList[frame->mv_info[jj][i].slice_no]->listX[2][(short) fs_top->mv_info[j][i].ref_idx[LIST_0]];
+              fs_top->mv_info[j][i].ref_pic[LIST_0] = vidParam->ppSliceList[frame->mv_info[jj][i].slice_no]->listX[2][(short) fs_top->mv_info[j][i].ref_idx[LIST_0]];
             else
               fs_top->mv_info[j][i].ref_pic[LIST_0] = NULL;
             fs_top->mv_info[j][i].ref_idx[LIST_1] = frame->mv_info[jj][i].ref_idx[LIST_1];
             if(fs_top->mv_info[j][i].ref_idx[LIST_1] >=0)
-              fs_top->mv_info[j][i].ref_pic[LIST_1] = pVid->ppSliceList[frame->mv_info[jj][i].slice_no]->listX[3][(short) fs_top->mv_info[j][i].ref_idx[LIST_1]];
+              fs_top->mv_info[j][i].ref_pic[LIST_1] = vidParam->ppSliceList[frame->mv_info[jj][i].slice_no]->listX[3][(short) fs_top->mv_info[j][i].ref_idx[LIST_1]];
             else
               fs_top->mv_info[j][i].ref_pic[LIST_1] = NULL;
           }
@@ -2341,7 +2341,7 @@ void dpb_split_field (VideoParameters* pVid, FrameStore *fs)
           else
           {
             fs_top->mv_info[j][i].ref_idx[LIST_0] = fs_btm->mv_info[j][i].ref_idx[LIST_0] = frame->mv_info[jj][ii].ref_idx[LIST_0];
-            fs_top->mv_info[j][i].ref_pic[LIST_0] = fs_btm->mv_info[j][i].ref_pic[LIST_0] = pVid->ppSliceList[frame->mv_info[jj][ii].slice_no]->listX[LIST_0][(short) frame->mv_info[jj][ii].ref_idx[LIST_0]];
+            fs_top->mv_info[j][i].ref_pic[LIST_0] = fs_btm->mv_info[j][i].ref_pic[LIST_0] = vidParam->ppSliceList[frame->mv_info[jj][ii].slice_no]->listX[LIST_0][(short) frame->mv_info[jj][ii].ref_idx[LIST_0]];
           }
 
           if (frame->mv_info[jj][ii].ref_idx[LIST_1] == -1)
@@ -2352,7 +2352,7 @@ void dpb_split_field (VideoParameters* pVid, FrameStore *fs)
           else
           {
             fs_top->mv_info[j][i].ref_idx[LIST_1] = fs_btm->mv_info[j][i].ref_idx[LIST_1] = frame->mv_info[jj][ii].ref_idx[LIST_1];
-            fs_top->mv_info[j][i].ref_pic[LIST_1] = fs_btm->mv_info[j][i].ref_pic[LIST_1] = pVid->ppSliceList[frame->mv_info[jj][ii].slice_no]->listX[LIST_1][(short) frame->mv_info[jj][ii].ref_idx[LIST_1]];
+            fs_top->mv_info[j][i].ref_pic[LIST_1] = fs_btm->mv_info[j][i].ref_pic[LIST_1] = vidParam->ppSliceList[frame->mv_info[jj][ii].slice_no]->listX[LIST_1][(short) frame->mv_info[jj][ii].ref_idx[LIST_1]];
           }
         }
       }
@@ -2361,22 +2361,22 @@ void dpb_split_field (VideoParameters* pVid, FrameStore *fs)
 }
 //}}}
 //{{{
-void dpb_combine_field_yuv (VideoParameters* pVid, FrameStore *fs)
+void dpb_combine_field_yuv (sVidParam* vidParam, sFrameStore *fs)
 {
   int i, j;
 
   if (!fs->frame)
-    fs->frame = alloc_storable_picture(pVid, FRAME, fs->top_field->size_x, fs->top_field->size_y*2, fs->top_field->size_x_cr, fs->top_field->size_y_cr*2, 1);
+    fs->frame = alloc_storable_picture(vidParam, FRAME, fs->top_field->size_x, fs->top_field->size_y*2, fs->top_field->size_x_cr, fs->top_field->size_y_cr*2, 1);
 
   for (i=0; i<fs->top_field->size_y; i++) {
-    memcpy(fs->frame->imgY[i*2],     fs->top_field->imgY[i]   , fs->top_field->size_x * sizeof(imgpel));     // top field
-    memcpy(fs->frame->imgY[i*2 + 1], fs->bottom_field->imgY[i], fs->bottom_field->size_x * sizeof(imgpel)); // bottom field
+    memcpy(fs->frame->imgY[i*2],     fs->top_field->imgY[i]   , fs->top_field->size_x * sizeof(sPixel));     // top field
+    memcpy(fs->frame->imgY[i*2 + 1], fs->bottom_field->imgY[i], fs->bottom_field->size_x * sizeof(sPixel)); // bottom field
   }
 
   for (j = 0; j < 2; j++) {
     for (i=0; i<fs->top_field->size_y_cr; i++) {
-      memcpy(fs->frame->imgUV[j][i*2],     fs->top_field->imgUV[j][i],    fs->top_field->size_x_cr*sizeof(imgpel));
-      memcpy(fs->frame->imgUV[j][i*2 + 1], fs->bottom_field->imgUV[j][i], fs->bottom_field->size_x_cr*sizeof(imgpel));
+      memcpy(fs->frame->imgUV[j][i*2],     fs->top_field->imgUV[j][i],    fs->top_field->size_x_cr*sizeof(sPixel));
+      memcpy(fs->frame->imgUV[j][i*2 + 1], fs->bottom_field->imgUV[j][i], fs->bottom_field->size_x_cr*sizeof(sPixel));
     }
   }
   fs->poc=fs->frame->poc =fs->frame->frame_poc = imin (fs->top_field->poc, fs->bottom_field->poc);
@@ -2413,15 +2413,15 @@ void dpb_combine_field_yuv (VideoParameters* pVid, FrameStore *fs)
   fs->bottom_field->top_field = fs->top_field;
   fs->bottom_field->bottom_field = fs->bottom_field;
   if (fs->top_field->used_for_reference || fs->bottom_field->used_for_reference)
-    pad_dec_picture(pVid, fs->frame);
+    pad_dec_picture(vidParam, fs->frame);
 }
 //}}}
 //{{{
-void dpb_combine_field (VideoParameters* pVid, FrameStore *fs)
+void dpb_combine_field (sVidParam* vidParam, sFrameStore *fs)
 {
   int i,j, jj, jj4, k, l;
 
-  dpb_combine_field_yuv(pVid, fs);
+  dpb_combine_field_yuv(vidParam, fs);
 
   fs->frame->iCodingType = fs->top_field->iCodingType; //FIELD_CODING;
    //! Use inference flag to remap mvs/references
@@ -2521,13 +2521,13 @@ void free_ref_pic_list_reordering_buffer (Slice* currSlice)
 }
 //}}}
 //{{{
-void fill_frame_num_gap (VideoParameters* pVid, Slice* currSlice) {
+void fill_frame_num_gap (sVidParam* vidParam, Slice* currSlice) {
 
-  seq_parameter_set_rbsp_t *active_sps = pVid->active_sps;
+  seq_parameter_set_rbsp_t *active_sps = vidParam->active_sps;
 
   int CurrFrameNum;
   int UnusedShortTermFrameNum;
-  StorablePicture *picture = NULL;
+  sStorablePicture *picture = NULL;
 
   int tmp1 = currSlice->delta_pic_order_cnt[0];
   int tmp2 = currSlice->delta_pic_order_cnt[1];
@@ -2535,11 +2535,11 @@ void fill_frame_num_gap (VideoParameters* pVid, Slice* currSlice) {
 
   printf ("A gap in frame number is found, try to fill it.\n");
 
-  UnusedShortTermFrameNum = (pVid->pre_frame_num + 1) % pVid->max_frame_num;
-  CurrFrameNum = currSlice->frame_num; //pVid->frame_num;
+  UnusedShortTermFrameNum = (vidParam->pre_frame_num + 1) % vidParam->max_frame_num;
+  CurrFrameNum = currSlice->frame_num; //vidParam->frame_num;
 
   while (CurrFrameNum != UnusedShortTermFrameNum) {
-    picture = alloc_storable_picture (pVid, FRAME, pVid->width, pVid->height, pVid->width_cr, pVid->height_cr, 1);
+    picture = alloc_storable_picture (vidParam, FRAME, vidParam->width, vidParam->height, vidParam->width_cr, vidParam->height_cr, 1);
     picture->coded_frame = 1;
     picture->pic_num = UnusedShortTermFrameNum;
     picture->frame_num = UnusedShortTermFrameNum;
@@ -2550,7 +2550,7 @@ void fill_frame_num_gap (VideoParameters* pVid, Slice* currSlice) {
 
     currSlice->frame_num = UnusedShortTermFrameNum;
     if (active_sps->pic_order_cnt_type != 0)
-      decodePOC (pVid, pVid->ppSliceList[0]);
+      decodePOC (vidParam, vidParam->ppSliceList[0]);
     picture->top_poc    = currSlice->toppoc;
     picture->bottom_poc = currSlice->bottompoc;
     picture->frame_poc  = currSlice->framepoc;
@@ -2559,8 +2559,8 @@ void fill_frame_num_gap (VideoParameters* pVid, Slice* currSlice) {
     store_picture_in_dpb (currSlice->p_Dpb, picture);
 
     picture=NULL;
-    pVid->pre_frame_num = UnusedShortTermFrameNum;
-    UnusedShortTermFrameNum = (UnusedShortTermFrameNum + 1) % pVid->max_frame_num;
+    vidParam->pre_frame_num = UnusedShortTermFrameNum;
+    UnusedShortTermFrameNum = (UnusedShortTermFrameNum + 1) % vidParam->max_frame_num;
     }
 
   currSlice->delta_pic_order_cnt[0] = tmp1;
@@ -2569,11 +2569,11 @@ void fill_frame_num_gap (VideoParameters* pVid, Slice* currSlice) {
   }
 //}}}
 //{{{
-void compute_colocated (Slice* currSlice, StorablePicture **listX[6]) {
+void compute_colocated (Slice* currSlice, sStorablePicture **listX[6]) {
 
   int i, j;
 
-  VideoParameters* pVid = currSlice->pVid;
+  sVidParam* vidParam = currSlice->vidParam;
 
   if (currSlice->direct_spatial_mv_pred_flag == 0) {
     for (j = 0; j < 2 + (currSlice->mb_aff_frame_flag * 4); j += 2) {
@@ -2581,11 +2581,11 @@ void compute_colocated (Slice* currSlice, StorablePicture **listX[6]) {
         int prescale, iTRb, iTRp;
 
         if (j == 0)
-          iTRb = iClip3( -128, 127, pVid->dec_picture->poc - listX[LIST_0 + j][i]->poc );
+          iTRb = iClip3( -128, 127, vidParam->dec_picture->poc - listX[LIST_0 + j][i]->poc );
         else if (j == 2)
-          iTRb = iClip3( -128, 127, pVid->dec_picture->top_poc - listX[LIST_0 + j][i]->poc );
+          iTRb = iClip3( -128, 127, vidParam->dec_picture->top_poc - listX[LIST_0 + j][i]->poc );
         else
-          iTRb = iClip3( -128, 127, pVid->dec_picture->bottom_poc - listX[LIST_0 + j][i]->poc );
+          iTRb = iClip3( -128, 127, vidParam->dec_picture->bottom_poc - listX[LIST_0 + j][i]->poc );
 
         iTRp = iClip3( -128, 127,  listX[LIST_1 + j][0]->poc - listX[LIST_0 + j][i]->poc);
 
@@ -2602,7 +2602,7 @@ void compute_colocated (Slice* currSlice, StorablePicture **listX[6]) {
 //}}}
 
 //{{{
-static inline void copy_img_data (imgpel *out_img, imgpel *in_img, int ostride, int istride, unsigned int size_y, unsigned int size_x)
+static inline void copy_img_data (sPixel *out_img, sPixel *in_img, int ostride, int istride, unsigned int size_y, unsigned int size_x)
 {
   unsigned int i;
   for (i = 0; i < size_y; i++) {
@@ -2613,65 +2613,65 @@ static inline void copy_img_data (imgpel *out_img, imgpel *in_img, int ostride, 
   }
 //}}}
 //{{{
-int init_img_data (VideoParameters* pVid, ImageData *p_ImgData, seq_parameter_set_rbsp_t *sps)
+int init_img_data (sVidParam* vidParam, ImageData *p_ImgData, seq_parameter_set_rbsp_t *sps)
 {
-  InputParameters *p_Inp = pVid->p_Inp;
+  InputParameters *p_Inp = vidParam->p_Inp;
   int memory_size = 0;
   int nplane;
 
   // allocate memory for reference frame buffers: p_ImgData->frm_data
   p_ImgData->format           = p_Inp->output;
-  p_ImgData->format.width[0]  = pVid->width;
-  p_ImgData->format.width[1]  = pVid->width_cr;
-  p_ImgData->format.width[2]  = pVid->width_cr;
-  p_ImgData->format.height[0] = pVid->height;
-  p_ImgData->format.height[1] = pVid->height_cr;
-  p_ImgData->format.height[2] = pVid->height_cr;
+  p_ImgData->format.width[0]  = vidParam->width;
+  p_ImgData->format.width[1]  = vidParam->width_cr;
+  p_ImgData->format.width[2]  = vidParam->width_cr;
+  p_ImgData->format.height[0] = vidParam->height;
+  p_ImgData->format.height[1] = vidParam->height_cr;
+  p_ImgData->format.height[2] = vidParam->height_cr;
   p_ImgData->format.yuv_format          = (ColorFormat) sps->chroma_format_idc;
   p_ImgData->format.auto_crop_bottom    = p_Inp->output.auto_crop_bottom;
   p_ImgData->format.auto_crop_right     = p_Inp->output.auto_crop_right;
   p_ImgData->format.auto_crop_bottom_cr = p_Inp->output.auto_crop_bottom_cr;
   p_ImgData->format.auto_crop_right_cr  = p_Inp->output.auto_crop_right_cr;
-  p_ImgData->frm_stride[0]    = pVid->width;
-  p_ImgData->frm_stride[1]    = p_ImgData->frm_stride[2] = pVid->width_cr;
+  p_ImgData->frm_stride[0]    = vidParam->width;
+  p_ImgData->frm_stride[1]    = p_ImgData->frm_stride[2] = vidParam->width_cr;
   p_ImgData->top_stride[0] = p_ImgData->bot_stride[0] = p_ImgData->frm_stride[0] << 1;
   p_ImgData->top_stride[1] = p_ImgData->top_stride[2] = p_ImgData->bot_stride[1] = p_ImgData->bot_stride[2] = p_ImgData->frm_stride[1] << 1;
 
   if( sps->separate_colour_plane_flag ) {
     for (nplane=0; nplane < MAX_PLANE; nplane++ )
-      memory_size += get_mem2Dpel (&(p_ImgData->frm_data[nplane]), pVid->height, pVid->width);
+      memory_size += get_mem2Dpel (&(p_ImgData->frm_data[nplane]), vidParam->height, vidParam->width);
     }
   else {
-    memory_size += get_mem2Dpel (&(p_ImgData->frm_data[0]), pVid->height, pVid->width);
+    memory_size += get_mem2Dpel (&(p_ImgData->frm_data[0]), vidParam->height, vidParam->width);
 
-    if (pVid->yuv_format != YUV400) {
+    if (vidParam->yuv_format != YUV400) {
       int i, j, k;
-      memory_size += get_mem2Dpel (&(p_ImgData->frm_data[1]), pVid->height_cr, pVid->width_cr);
-      memory_size += get_mem2Dpel (&(p_ImgData->frm_data[2]), pVid->height_cr, pVid->width_cr);
-      if (sizeof(imgpel) == sizeof(unsigned char)) {
+      memory_size += get_mem2Dpel (&(p_ImgData->frm_data[1]), vidParam->height_cr, vidParam->width_cr);
+      memory_size += get_mem2Dpel (&(p_ImgData->frm_data[2]), vidParam->height_cr, vidParam->width_cr);
+      if (sizeof(sPixel) == sizeof(unsigned char)) {
         for (k = 1; k < 3; k++)
-          memset (p_ImgData->frm_data[k][0], 128, pVid->height_cr * pVid->width_cr * sizeof(imgpel));
+          memset (p_ImgData->frm_data[k][0], 128, vidParam->height_cr * vidParam->width_cr * sizeof(sPixel));
         }
       else {
-        imgpel mean_val;
+        sPixel mean_val;
         for (k = 1; k < 3; k++) {
-          mean_val = (imgpel) ((pVid->max_pel_value_comp[k] + 1) >> 1);
-          for (j = 0; j < pVid->height_cr; j++)
-            for (i = 0; i < pVid->width_cr; i++)
+          mean_val = (sPixel) ((vidParam->max_pel_value_comp[k] + 1) >> 1);
+          for (j = 0; j < vidParam->height_cr; j++)
+            for (i = 0; i < vidParam->width_cr; i++)
               p_ImgData->frm_data[k][j][i] = mean_val;
           }
         }
       }
     }
 
-  if (!pVid->active_sps->frame_mbs_only_flag) {
+  if (!vidParam->active_sps->frame_mbs_only_flag) {
     // allocate memory for field reference frame buffers
-    memory_size += init_top_bot_planes(p_ImgData->frm_data[0], pVid->height, &(p_ImgData->top_data[0]), &(p_ImgData->bot_data[0]));
+    memory_size += init_top_bot_planes(p_ImgData->frm_data[0], vidParam->height, &(p_ImgData->top_data[0]), &(p_ImgData->bot_data[0]));
 
-    if (pVid->yuv_format != YUV400) {
-      memory_size += 4 * (sizeof(imgpel**));
-      memory_size += init_top_bot_planes(p_ImgData->frm_data[1], pVid->height_cr, &(p_ImgData->top_data[1]), &(p_ImgData->bot_data[1]));
-      memory_size += init_top_bot_planes(p_ImgData->frm_data[2], pVid->height_cr, &(p_ImgData->top_data[2]), &(p_ImgData->bot_data[2]));
+    if (vidParam->yuv_format != YUV400) {
+      memory_size += 4 * (sizeof(sPixel**));
+      memory_size += init_top_bot_planes(p_ImgData->frm_data[1], vidParam->height_cr, &(p_ImgData->top_data[1]), &(p_ImgData->bot_data[1]));
+      memory_size += init_top_bot_planes(p_ImgData->frm_data[2], vidParam->height_cr, &(p_ImgData->top_data[2]), &(p_ImgData->bot_data[2]));
       }
     }
 
@@ -2679,9 +2679,9 @@ int init_img_data (VideoParameters* pVid, ImageData *p_ImgData, seq_parameter_se
   }
 //}}}
 //{{{
-void free_img_data (VideoParameters* pVid, ImageData *p_ImgData) {
+void free_img_data (sVidParam* vidParam, ImageData *p_ImgData) {
 
-  if ( pVid->separate_colour_plane_flag ) {
+  if ( vidParam->separate_colour_plane_flag ) {
     int nplane;
     for (nplane = 0; nplane < MAX_PLANE; nplane++ ) {
       if (p_ImgData->frm_data[nplane]) {
@@ -2709,7 +2709,7 @@ void free_img_data (VideoParameters* pVid, ImageData *p_ImgData) {
       }
     }
 
-  if (!pVid->active_sps->frame_mbs_only_flag) {
+  if (!vidParam->active_sps->frame_mbs_only_flag) {
     free_top_bot_planes(p_ImgData->top_data[0], p_ImgData->bot_data[0]);
     if (p_ImgData->format.yuv_format != YUV400) {
       free_top_bot_planes (p_ImgData->top_data[1], p_ImgData->bot_data[1]);
@@ -2719,15 +2719,15 @@ void free_img_data (VideoParameters* pVid, ImageData *p_ImgData) {
   }
 //}}}
 //{{{
-void process_picture_in_dpb_s (VideoParameters* pVid, StorablePicture *p_pic)
+void process_picture_in_dpb_s (sVidParam* vidParam, sStorablePicture *p_pic)
 {
-  //InputParameters *p_Inp = pVid->p_Inp;
-  ImageData *p_img_out = &pVid->tempData3;
-  imgpel***  d_img;
+  //InputParameters *p_Inp = vidParam->p_Inp;
+  ImageData *p_img_out = &vidParam->tempData3;
+  sPixel***  d_img;
   int i;
 
-  if (pVid->tempData3.frm_data[0] == NULL)
-    init_img_data (pVid, &(pVid->tempData3), pVid->active_sps);
+  if (vidParam->tempData3.frm_data[0] == NULL)
+    init_img_data (vidParam, &(vidParam->tempData3), vidParam->active_sps);
 
   if (p_pic->structure == FRAME)
     d_img = p_img_out->frm_data;
@@ -2740,18 +2740,18 @@ void process_picture_in_dpb_s (VideoParameters* pVid, StorablePicture *p_pic)
     }
 
   for (i = 0; i < p_pic->size_y; i++)
-    memcpy (d_img[0][i], p_pic->imgY[i], p_pic->size_x*sizeof(imgpel));
+    memcpy (d_img[0][i], p_pic->imgY[i], p_pic->size_x*sizeof(sPixel));
 
-  if (pVid->yuv_format != YUV400) { for(i=0; i<p_pic->size_y_cr; i++)
-      memcpy (d_img[1][i], p_pic->imgUV[0][i], p_pic->size_x_cr * sizeof(imgpel));
+  if (vidParam->yuv_format != YUV400) { for(i=0; i<p_pic->size_y_cr; i++)
+      memcpy (d_img[1][i], p_pic->imgUV[0][i], p_pic->size_x_cr * sizeof(sPixel));
     for (i = 0; i < p_pic->size_y_cr; i++)
-      memcpy (d_img[2][i], p_pic->imgUV[1][i], p_pic->size_x_cr * sizeof(imgpel));
+      memcpy (d_img[2][i], p_pic->imgUV[1][i], p_pic->size_x_cr * sizeof(sPixel));
     }
   }
 //}}}
 
 //{{{
-int remove_unused_proc_pic_from_dpb (DecodedPictureBuffer *p_Dpb) {
+int remove_unused_proc_pic_from_dpb (sDecodedPictureBuffer* p_Dpb) {
 
   assert (!"The function is not available\n");
   return 0;

@@ -42,16 +42,16 @@ extern int get_mem5Dshort (short ******array5D, int dim0, int dim1, int dim2, in
 extern int get_mem6Dshort (short *******array6D, int dim0, int dim1, int dim2, int dim3, int dim4, int dim5);
 extern int get_mem7Dshort (short ********array7D, int dim0, int dim1, int dim2, int dim3, int dim4, int dim5, int dim6);
 
-extern int get_mem1Dpel (imgpel **array2D, int dim0);
-extern int get_mem2Dpel (imgpel ***array2D, int dim0, int dim1);
-extern int get_mem2Dpel_pad (imgpel ***array2D, int dim0, int dim1, int iPadY, int iPadX);
+extern int get_mem1Dpel (sPixel **array2D, int dim0);
+extern int get_mem2Dpel (sPixel ***array2D, int dim0, int dim1);
+extern int get_mem2Dpel_pad (sPixel ***array2D, int dim0, int dim1, int iPadY, int iPadX);
 
-extern int get_mem3Dpel (imgpel ****array3D, int dim0, int dim1, int dim2);
-extern int get_mem3Dpel_pad (imgpel ****array3D, int dim0, int dim1, int dim2, int iPadY, int iPadX);
-extern int get_mem4Dpel (imgpel *****array4D, int dim0, int dim1, int dim2, int dim3);
-extern int get_mem4Dpel_pad (imgpel *****array4D, int dim0, int dim1, int dim2, int dim3, int iPadY, int iPadX);
-extern int get_mem5Dpel (imgpel ******array5D, int dim0, int dim1, int dim2, int dim3, int dim4);
-extern int get_mem5Dpel_pad (imgpel ******array5D, int dim0, int dim1, int dim2, int dim3, int dim4, int iPadY, int iPadX);
+extern int get_mem3Dpel (sPixel ****array3D, int dim0, int dim1, int dim2);
+extern int get_mem3Dpel_pad (sPixel ****array3D, int dim0, int dim1, int dim2, int iPadY, int iPadX);
+extern int get_mem4Dpel (sPixel *****array4D, int dim0, int dim1, int dim2, int dim3);
+extern int get_mem4Dpel_pad (sPixel *****array4D, int dim0, int dim1, int dim2, int dim3, int iPadY, int iPadX);
+extern int get_mem5Dpel (sPixel ******array5D, int dim0, int dim1, int dim2, int dim3, int dim4);
+extern int get_mem5Dpel_pad (sPixel ******array5D, int dim0, int dim1, int dim2, int dim3, int dim4, int iPadY, int iPadX);
 extern int get_mem2Ddouble (double ***array2D, int dim0, int dim1);
 
 extern int get_mem1Dodouble (double **array1D, int dim0, int offset);
@@ -111,15 +111,15 @@ extern void free_mem5Dshort (short   *****array5D);
 extern void free_mem6Dshort (short  ******array6D);
 extern void free_mem7Dshort (short *******array7D);
 
-extern void free_mem1Dpel (imgpel     *array1D);
-extern void free_mem2Dpel (imgpel    **array2D);
-extern void free_mem2Dpel_pad (imgpel **array2D, int iPadY, int iPadX);
-extern void free_mem3Dpel (imgpel   ***array3D);
-extern void free_mem3Dpel_pad (imgpel ***array3D, int iDim12, int iPadY, int iPadX);
-extern void free_mem4Dpel (imgpel  ****array4D);
-extern void free_mem4Dpel_pad (imgpel  ****array4D, int iFrames, int iPadY, int iPadX);
-extern void free_mem5Dpel (imgpel *****array5D);
-extern void free_mem5Dpel_pad (imgpel *****array5D, int iFrames, int iPadY, int iPadX);
+extern void free_mem1Dpel (sPixel     *array1D);
+extern void free_mem2Dpel (sPixel    **array2D);
+extern void free_mem2Dpel_pad (sPixel **array2D, int iPadY, int iPadX);
+extern void free_mem3Dpel (sPixel   ***array3D);
+extern void free_mem3Dpel_pad (sPixel ***array3D, int iDim12, int iPadY, int iPadX);
+extern void free_mem4Dpel (sPixel  ****array4D);
+extern void free_mem4Dpel_pad (sPixel  ****array4D, int iFrames, int iPadY, int iPadX);
+extern void free_mem5Dpel (sPixel *****array5D);
+extern void free_mem5Dpel_pad (sPixel *****array5D, int iFrames, int iPadY, int iPadX);
 extern void free_mem2Ddouble (double **array2D);
 extern void free_mem3Ddouble (double ***array3D);
 
@@ -129,18 +129,18 @@ extern void free_mem3Dodouble (double ***array3D, int rows, int columns, int off
 extern void free_mem2Doint (int **array2D, int offset);
 extern void free_mem3Doint (int ***array3D, int rows, int columns, int offset);
 
-extern int  init_top_bot_planes (imgpel **imgFrame, int height, imgpel ***imgTopField, imgpel ***imgBotField);
-extern void free_top_bot_planes (imgpel **imgTopField, imgpel **imgBotField);
+extern int  init_top_bot_planes (sPixel **imgFrame, int height, sPixel ***imgTopField, sPixel ***imgBotField);
+extern void free_top_bot_planes (sPixel **imgTopField, sPixel **imgBotField);
 
 extern void free_mem2Dwp (WPParams **array2D);
 
-extern void copy2DImage (imgpel **dst_img, imgpel **src_img, int size_x, int size_y);
+extern void copy2DImage (sPixel **dst_img, sPixel **src_img, int size_x, int size_y);
 extern void no_mem_exit (char *where);
-extern int  malloc_mem2Dpel_2SLayers (imgpel ***buf0, int imgtype0, imgpel ***buf1, int imgtype1, int height, int width);
-extern int  malloc_mem3Dpel_2SLayers (imgpel ****buf0, int imgtype0, imgpel ****buf1, int imgtype1, int frames, int height, int width);
+extern int  malloc_mem2Dpel_2SLayers (sPixel ***buf0, int imgtype0, sPixel ***buf1, int imgtype1, int height, int width);
+extern int  malloc_mem3Dpel_2SLayers (sPixel ****buf0, int imgtype0, sPixel ****buf1, int imgtype1, int frames, int height, int width);
 
-extern void free_mem2Dpel_2SLayers (imgpel ***buf0, imgpel ***buf1);
-extern void free_mem3Dpel_2SLayers (imgpel ****buf0, imgpel ****buf1);
+extern void free_mem2Dpel_2SLayers (sPixel ***buf0, sPixel ***buf1);
+extern void free_mem3Dpel_2SLayers (sPixel ****buf0, sPixel ****buf1);
 
 //{{{
 static inline void* mem_malloc(size_t nitems)

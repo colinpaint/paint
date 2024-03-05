@@ -957,7 +957,7 @@ public:
 
       int ret = 0;
       do {
-        DecodedPicList* pDecPicList;
+        sDecodedPicList* pDecPicList;
         ret = DecodeOneFrame (&pDecPicList);
         if (ret == DEC_EOS || ret == DEC_SUCCEED)
           outputPicList (pDecPicList, 0);
@@ -965,7 +965,7 @@ public:
           cLog::log (LOGERROR, "decoding  failed");
         } while (ret == DEC_SUCCEED);
 
-      DecodedPicList* pDecPicList;
+      sDecodedPicList* pDecPicList;
       FinitDecoder (&pDecPicList);
       outputPicList (pDecPicList, 1);
       CloseDecoder();
@@ -979,9 +979,9 @@ public:
 
 private:
   //{{{
-  void outputPicList (DecodedPicList* pDecPic, int bOutputAllFrames) {
+  void outputPicList (sDecodedPicList* pDecPic, int bOutputAllFrames) {
 
-    DecodedPicList* pPic = pDecPic;
+    sDecodedPicList* pPic = pDecPic;
     while (pPic && pPic->bValid == 1) {
       int iWidth = pPic->iWidth * ((pPic->iBitDepth+7)>>3);
       int iHeight = pPic->iHeight;
@@ -1086,7 +1086,7 @@ public:
 
       int ret = 0;
       do {
-        DecodedPicList* pDecPicList;
+        sDecodedPicList* pDecPicList;
         ret = DecodeOneFrame (&pDecPicList);
         if (ret == DEC_EOS || ret == DEC_SUCCEED)
           outputPicList (pDecPicList, 0);
@@ -1094,7 +1094,7 @@ public:
           cLog::log (LOGERROR, "decoding  failed");
         } while (ret == DEC_SUCCEED);
 
-      DecodedPicList* pDecPicList;
+      sDecodedPicList* pDecPicList;
       ret = FinitDecoder (&pDecPicList);
       outputPicList (pDecPicList, 1);
       ret = CloseDecoder();
@@ -1122,9 +1122,9 @@ public:
 
 private:
   //{{{
-  void outputPicList (DecodedPicList* pDecPic, int bOutputAllFrames) {
+  void outputPicList (sDecodedPicList* pDecPic, int bOutputAllFrames) {
 
-    DecodedPicList* pPic = pDecPic;
+    sDecodedPicList* pPic = pDecPic;
     while (pPic && pPic->bValid == 1) {
       int iWidth = pPic->iWidth * ((pPic->iBitDepth+7)>>3);
       int iHeight = pPic->iHeight;

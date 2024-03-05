@@ -63,7 +63,7 @@
 #include "h264decoder.h"
 //}}}
 
-DecoderParams* gDecoder;
+sDecoderParams* gDecoder;
 char errortext[ET_SIZE];
 
 //{{{
@@ -71,63 +71,63 @@ void error (char* text, int code) {
 
   fprintf (stderr, "%s\n", text);
   if (gDecoder) {
-    flush_dpb (gDecoder->pVid->p_Dpb_layer[0]);
+    flush_dpb (gDecoder->vidParam->p_Dpb_layer[0]);
     }
 
   exit (code);
   }
 //}}}
 //{{{
-static void reset_dpb (VideoParameters* pVid, DecodedPictureBuffer* p_Dpb ) {
+static void reset_dpb (sVidParam* vidParam, sDecodedPictureBuffer* p_Dpb ) {
 
-  p_Dpb->pVid = pVid;
+  p_Dpb->vidParam = vidParam;
   p_Dpb->init_done = 0;
   }
 //}}}
 //{{{
 void report_stats_on_error() {
 
-  //free_encoder_memory(pVid);
+  //free_encoder_memory(vidParam);
   exit (-1);
   }
 //}}}
 
 //{{{
-static void alloc_video_params (VideoParameters** pVid) {
+static void alloc_video_params (sVidParam** vidParam) {
 
-  if ((*pVid = (VideoParameters*)calloc (1, sizeof(VideoParameters)))==NULL)
-    no_mem_exit ("alloc_video_params: pVid");
+  if ((*vidParam = (sVidParam*)calloc (1, sizeof(sVidParam)))==NULL)
+    no_mem_exit ("alloc_video_params: vidParam");
 
-  if (((*pVid)->old_slice = (OldSliceParams*)calloc(1, sizeof(OldSliceParams)))==NULL)
-    no_mem_exit ("alloc_video_params: pVid->old_slice");
+  if (((*vidParam)->old_slice = (OldSliceParams*)calloc(1, sizeof(OldSliceParams)))==NULL)
+    no_mem_exit ("alloc_video_params: vidParam->old_slice");
 
   // Allocate new dpb buffer
   for (int i = 0; i < MAX_NUM_DPB_LAYERS; i++) {
-    if (((*pVid)->p_Dpb_layer[i] = (DecodedPictureBuffer*)calloc(1, sizeof(DecodedPictureBuffer)))==NULL)
-      no_mem_exit ("alloc_video_params: pVid->p_Dpb_layer[i]");
+    if (((*vidParam)->p_Dpb_layer[i] = (sDecodedPictureBuffer*)calloc(1, sizeof(sDecodedPictureBuffer)))==NULL)
+      no_mem_exit ("alloc_video_params: vidParam->p_Dpb_layer[i]");
 
-    (*pVid)->p_Dpb_layer[i]->layer_id = i;
-    reset_dpb(*pVid, (*pVid)->p_Dpb_layer[i]);
-    if(((*pVid)->p_EncodePar[i] = (CodingParameters*)calloc(1, sizeof(CodingParameters))) == NULL)
-      no_mem_exit ("alloc_video_params:pVid->p_EncodePar[i]");
+    (*vidParam)->p_Dpb_layer[i]->layer_id = i;
+    reset_dpb(*vidParam, (*vidParam)->p_Dpb_layer[i]);
+    if(((*vidParam)->p_EncodePar[i] = (CodingParameters*)calloc(1, sizeof(CodingParameters))) == NULL)
+      no_mem_exit ("alloc_video_params:vidParam->p_EncodePar[i]");
 
-    ((*pVid)->p_EncodePar[i])->layer_id = i;
-    if(((*pVid)->p_LayerPar[i] = (LayerParameters*)calloc(1, sizeof(LayerParameters))) == NULL)
-      no_mem_exit ("alloc_video_params:pVid->p_LayerPar[i]");
-    ((*pVid)->p_LayerPar[i])->layer_id = i;
+    ((*vidParam)->p_EncodePar[i])->layer_id = i;
+    if(((*vidParam)->p_LayerPar[i] = (LayerParameters*)calloc(1, sizeof(LayerParameters))) == NULL)
+      no_mem_exit ("alloc_video_params:vidParam->p_LayerPar[i]");
+    ((*vidParam)->p_LayerPar[i])->layer_id = i;
     }
 
-  (*pVid)->global_init_done[0] = (*pVid)->global_init_done[1] = 0;
+  (*vidParam)->global_init_done[0] = (*vidParam)->global_init_done[1] = 0;
 
-  if (((*pVid)->ppSliceList = (Slice**)calloc(MAX_NUM_DECSLICES, sizeof(Slice *))) == NULL)
-    no_mem_exit ("alloc_video_params: pVid->ppSliceList");
+  if (((*vidParam)->ppSliceList = (Slice**)calloc(MAX_NUM_DECSLICES, sizeof(Slice *))) == NULL)
+    no_mem_exit ("alloc_video_params: vidParam->ppSliceList");
 
-  (*pVid)->iNumOfSlicesAllocated = MAX_NUM_DECSLICES;
-  (*pVid)->pNextSlice = NULL;
-  (*pVid)->nalu = allocNALU (MAX_CODED_FRAME_SIZE);
-  (*pVid)->pDecOuputPic = (DecodedPicList*)calloc(1, sizeof(DecodedPicList));
-  (*pVid)->pNextPPS = AllocPPS();
-  (*pVid)->first_sps = TRUE;
+  (*vidParam)->iNumOfSlicesAllocated = MAX_NUM_DECSLICES;
+  (*vidParam)->pNextSlice = NULL;
+  (*vidParam)->nalu = allocNALU (MAX_CODED_FRAME_SIZE);
+  (*vidParam)->pDecOuputPic = (sDecodedPicList*)calloc(1, sizeof(sDecodedPicList));
+  (*vidParam)->pNextPPS = AllocPPS();
+  (*vidParam)->first_sps = TRUE;
 }
 //}}}
 //{{{
@@ -137,16 +137,16 @@ static void alloc_params (InputParameters **p_Inp ) {
   }
 //}}}
 //{{{
-static int alloc_decoder (DecoderParams** decoder) {
+static int alloc_decoder (sDecoderParams** decoder) {
 
-  if ((*decoder = (DecoderParams*)calloc(1, sizeof(DecoderParams)))==NULL) {
+  if ((*decoder = (sDecoderParams*)calloc(1, sizeof(sDecoderParams)))==NULL) {
     fprintf (stderr, "alloc_decoder: gDecoder\n");
     return -1;
     }
 
-  alloc_video_params (&((*decoder)->pVid));
+  alloc_video_params (&((*decoder)->vidParam));
   alloc_params (&((*decoder)->p_Inp));
-  (*decoder)->pVid->p_Inp = (*decoder)->p_Inp;
+  (*decoder)->vidParam->p_Inp = (*decoder)->p_Inp;
   (*decoder)->bufferSize = 0;
   (*decoder)->bitcounter = 0;
 
@@ -155,7 +155,7 @@ static int alloc_decoder (DecoderParams** decoder) {
 //}}}
 
 //{{{
-Slice* malloc_slice (InputParameters* p_Inp, VideoParameters* pVid) {
+Slice* malloc_slice (InputParameters* p_Inp, sVidParam* vidParam) {
 
   int i, j, memory_size = 0;
   Slice *currSlice;
@@ -189,7 +189,7 @@ Slice* malloc_slice (InputParameters* p_Inp, VideoParameters* pVid) {
     currSlice->ref_flag[i] = 1;
 
   for (i = 0; i < 6; i++) {
-    currSlice->listX[i] = calloc(MAX_LIST_SIZE, sizeof (StorablePicture*)); // +1 for reordering
+    currSlice->listX[i] = calloc(MAX_LIST_SIZE, sizeof (sStorablePicture*)); // +1 for reordering
     if (NULL == currSlice->listX[i])
       no_mem_exit("malloc_slice: currSlice->listX[i]");
     }
@@ -245,168 +245,168 @@ static void free_slice (Slice *currSlice) {
 //}}}
 
 //{{{
-static void free_img (VideoParameters* pVid) {
+static void free_img (sVidParam* vidParam) {
 
-  if (pVid != NULL) {
-    freeAnnexB (&pVid->annex_b);
+  if (vidParam != NULL) {
+    freeAnnexB (&vidParam->annex_b);
 
     // Free new dpb layers
     for (int i = 0; i < MAX_NUM_DPB_LAYERS; i++) {
-      if (pVid->p_Dpb_layer[i] != NULL) {
-        free (pVid->p_Dpb_layer[i]);
-        pVid->p_Dpb_layer[i] = NULL;
+      if (vidParam->p_Dpb_layer[i] != NULL) {
+        free (vidParam->p_Dpb_layer[i]);
+        vidParam->p_Dpb_layer[i] = NULL;
         }
 
-      if (pVid->p_EncodePar[i]) {
-        free (pVid->p_EncodePar[i]);
-        pVid->p_EncodePar[i] = NULL;
+      if (vidParam->p_EncodePar[i]) {
+        free (vidParam->p_EncodePar[i]);
+        vidParam->p_EncodePar[i] = NULL;
         }
 
-      if (pVid->p_LayerPar[i]) {
-        free (pVid->p_LayerPar[i]);
-        pVid->p_LayerPar[i] = NULL;
+      if (vidParam->p_LayerPar[i]) {
+        free (vidParam->p_LayerPar[i]);
+        vidParam->p_LayerPar[i] = NULL;
         }
       }
 
-    if (pVid->old_slice != NULL) {
-      free (pVid->old_slice);
-      pVid->old_slice = NULL;
+    if (vidParam->old_slice != NULL) {
+      free (vidParam->old_slice);
+      vidParam->old_slice = NULL;
       }
 
-    if (pVid->pNextSlice) {
-      free_slice (pVid->pNextSlice);
-      pVid->pNextSlice=NULL;
+    if (vidParam->pNextSlice) {
+      free_slice (vidParam->pNextSlice);
+      vidParam->pNextSlice=NULL;
       }
 
-    if (pVid->ppSliceList) {
-      for (int i = 0; i < pVid->iNumOfSlicesAllocated; i++)
-        if (pVid->ppSliceList[i])
-          free_slice (pVid->ppSliceList[i]);
-      free (pVid->ppSliceList);
+    if (vidParam->ppSliceList) {
+      for (int i = 0; i < vidParam->iNumOfSlicesAllocated; i++)
+        if (vidParam->ppSliceList[i])
+          free_slice (vidParam->ppSliceList[i]);
+      free (vidParam->ppSliceList);
       }
 
-    if (pVid->nalu) {
-      freeNALU (pVid->nalu);
-      pVid->nalu=NULL;
+    if (vidParam->nalu) {
+      freeNALU (vidParam->nalu);
+      vidParam->nalu=NULL;
       }
 
     //free memory;
-    FreeDecPicList (pVid->pDecOuputPic);
-    if (pVid->pNextPPS) {
-      FreePPS (pVid->pNextPPS);
-      pVid->pNextPPS = NULL;
+    FreeDecPicList (vidParam->pDecOuputPic);
+    if (vidParam->pNextPPS) {
+      FreePPS (vidParam->pNextPPS);
+      vidParam->pNextPPS = NULL;
       }
 
-    free (pVid);
-    pVid = NULL;
+    free (vidParam);
+    vidParam = NULL;
     }
   }
 //}}}
 
 //{{{
-static void init (VideoParameters* pVid) {
+static void init (sVidParam* vidParam) {
 
-  InputParameters *p_Inp = pVid->p_Inp;
-  pVid->oldFrameSizeInMbs = (unsigned int) -1;
+  InputParameters *p_Inp = vidParam->p_Inp;
+  vidParam->oldFrameSizeInMbs = (unsigned int) -1;
 
-  pVid->recovery_point = 0;
-  pVid->recovery_point_found = 0;
-  pVid->recovery_poc = 0x7fffffff; /* set to a max value */
+  vidParam->recovery_point = 0;
+  vidParam->recovery_point_found = 0;
+  vidParam->recovery_poc = 0x7fffffff; /* set to a max value */
 
-  pVid->idr_psnr_number = p_Inp->ref_offset;
-  pVid->psnr_number=0;
+  vidParam->idr_psnr_number = p_Inp->ref_offset;
+  vidParam->psnr_number=0;
 
-  pVid->number = 0;
-  pVid->type = I_SLICE;
+  vidParam->number = 0;
+  vidParam->type = I_SLICE;
 
-  pVid->g_nFrame = 0;
+  vidParam->g_nFrame = 0;
 
   // time for total decoding session
-  pVid->tot_time = 0;
+  vidParam->tot_time = 0;
 
-  pVid->dec_picture = NULL;
-  pVid->MbToSliceGroupMap = NULL;
-  pVid->MapUnitToSliceGroupMap = NULL;
+  vidParam->dec_picture = NULL;
+  vidParam->MbToSliceGroupMap = NULL;
+  vidParam->MapUnitToSliceGroupMap = NULL;
 
-  pVid->LastAccessUnitExists  = 0;
-  pVid->NALUCount = 0;
+  vidParam->LastAccessUnitExists  = 0;
+  vidParam->NALUCount = 0;
 
-  pVid->out_buffer = NULL;
-  pVid->pending_output = NULL;
-  pVid->pending_output_state = FRAME;
-  pVid->recovery_flag = 0;
+  vidParam->out_buffer = NULL;
+  vidParam->pending_output = NULL;
+  vidParam->pending_output_state = FRAME;
+  vidParam->recovery_flag = 0;
 
-  pVid->newframe = 0;
-  pVid->previous_frame_num = 0;
+  vidParam->newframe = 0;
+  vidParam->previous_frame_num = 0;
 
-  pVid->iLumaPadX = MCBUF_LUMA_PAD_X;
-  pVid->iLumaPadY = MCBUF_LUMA_PAD_Y;
-  pVid->iChromaPadX = MCBUF_CHROMA_PAD_X;
-  pVid->iChromaPadY = MCBUF_CHROMA_PAD_Y;
+  vidParam->iLumaPadX = MCBUF_LUMA_PAD_X;
+  vidParam->iLumaPadY = MCBUF_LUMA_PAD_Y;
+  vidParam->iChromaPadX = MCBUF_CHROMA_PAD_X;
+  vidParam->iChromaPadY = MCBUF_CHROMA_PAD_Y;
 
-  pVid->iPostProcess = 0;
-  pVid->bDeblockEnable = 0x3;
-  pVid->last_dec_view_id = -1;
-  pVid->last_dec_layer_id = -1;
+  vidParam->iPostProcess = 0;
+  vidParam->bDeblockEnable = 0x3;
+  vidParam->last_dec_view_id = -1;
+  vidParam->last_dec_layer_id = -1;
   }
 //}}}
 //{{{
-void init_frext (VideoParameters* pVid) {
+void init_frext (sVidParam* vidParam) {
 
   //pel bitdepth init
-  pVid->bitdepth_luma_qp_scale   = 6 * (pVid->bitdepth_luma - 8);
+  vidParam->bitdepth_luma_qp_scale   = 6 * (vidParam->bitdepth_luma - 8);
 
-  if(pVid->bitdepth_luma > pVid->bitdepth_chroma || pVid->active_sps->chroma_format_idc == YUV400)
-    pVid->pic_unit_bitsize_on_disk = (pVid->bitdepth_luma > 8)? 16:8;
+  if(vidParam->bitdepth_luma > vidParam->bitdepth_chroma || vidParam->active_sps->chroma_format_idc == YUV400)
+    vidParam->pic_unit_bitsize_on_disk = (vidParam->bitdepth_luma > 8)? 16:8;
   else
-    pVid->pic_unit_bitsize_on_disk = (pVid->bitdepth_chroma > 8)? 16:8;
-  pVid->dc_pred_value_comp[0]    = 1<<(pVid->bitdepth_luma - 1);
-  pVid->max_pel_value_comp[0] = (1<<pVid->bitdepth_luma) - 1;
-  pVid->mb_size[0][0] = pVid->mb_size[0][1] = MB_BLOCK_SIZE;
+    vidParam->pic_unit_bitsize_on_disk = (vidParam->bitdepth_chroma > 8)? 16:8;
+  vidParam->dc_pred_value_comp[0]    = 1<<(vidParam->bitdepth_luma - 1);
+  vidParam->max_pel_value_comp[0] = (1<<vidParam->bitdepth_luma) - 1;
+  vidParam->mb_size[0][0] = vidParam->mb_size[0][1] = MB_BLOCK_SIZE;
 
-  if (pVid->active_sps->chroma_format_idc != YUV400) {
+  if (vidParam->active_sps->chroma_format_idc != YUV400) {
     //for chrominance part
-    pVid->bitdepth_chroma_qp_scale = 6 * (pVid->bitdepth_chroma - 8);
-    pVid->dc_pred_value_comp[1]    = (1 << (pVid->bitdepth_chroma - 1));
-    pVid->dc_pred_value_comp[2]    = pVid->dc_pred_value_comp[1];
-    pVid->max_pel_value_comp[1]    = (1 << pVid->bitdepth_chroma) - 1;
-    pVid->max_pel_value_comp[2]    = (1 << pVid->bitdepth_chroma) - 1;
-    pVid->num_blk8x8_uv = (1 << pVid->active_sps->chroma_format_idc) & (~(0x1));
-    pVid->num_uv_blocks = (pVid->num_blk8x8_uv >> 1);
-    pVid->num_cdc_coeff = (pVid->num_blk8x8_uv << 1);
-    pVid->mb_size[1][0] = pVid->mb_size[2][0] = pVid->mb_cr_size_x  = (pVid->active_sps->chroma_format_idc==YUV420 || pVid->active_sps->chroma_format_idc==YUV422)?  8 : 16;
-    pVid->mb_size[1][1] = pVid->mb_size[2][1] = pVid->mb_cr_size_y  = (pVid->active_sps->chroma_format_idc==YUV444 || pVid->active_sps->chroma_format_idc==YUV422)? 16 :  8;
+    vidParam->bitdepth_chroma_qp_scale = 6 * (vidParam->bitdepth_chroma - 8);
+    vidParam->dc_pred_value_comp[1]    = (1 << (vidParam->bitdepth_chroma - 1));
+    vidParam->dc_pred_value_comp[2]    = vidParam->dc_pred_value_comp[1];
+    vidParam->max_pel_value_comp[1]    = (1 << vidParam->bitdepth_chroma) - 1;
+    vidParam->max_pel_value_comp[2]    = (1 << vidParam->bitdepth_chroma) - 1;
+    vidParam->num_blk8x8_uv = (1 << vidParam->active_sps->chroma_format_idc) & (~(0x1));
+    vidParam->num_uv_blocks = (vidParam->num_blk8x8_uv >> 1);
+    vidParam->num_cdc_coeff = (vidParam->num_blk8x8_uv << 1);
+    vidParam->mb_size[1][0] = vidParam->mb_size[2][0] = vidParam->mb_cr_size_x  = (vidParam->active_sps->chroma_format_idc==YUV420 || vidParam->active_sps->chroma_format_idc==YUV422)?  8 : 16;
+    vidParam->mb_size[1][1] = vidParam->mb_size[2][1] = vidParam->mb_cr_size_y  = (vidParam->active_sps->chroma_format_idc==YUV444 || vidParam->active_sps->chroma_format_idc==YUV422)? 16 :  8;
 
-    pVid->subpel_x    = pVid->mb_cr_size_x == 8 ? 7 : 3;
-    pVid->subpel_y    = pVid->mb_cr_size_y == 8 ? 7 : 3;
-    pVid->shiftpel_x  = pVid->mb_cr_size_x == 8 ? 3 : 2;
-    pVid->shiftpel_y  = pVid->mb_cr_size_y == 8 ? 3 : 2;
-    pVid->total_scale = pVid->shiftpel_x + pVid->shiftpel_y;
+    vidParam->subpel_x    = vidParam->mb_cr_size_x == 8 ? 7 : 3;
+    vidParam->subpel_y    = vidParam->mb_cr_size_y == 8 ? 7 : 3;
+    vidParam->shiftpel_x  = vidParam->mb_cr_size_x == 8 ? 3 : 2;
+    vidParam->shiftpel_y  = vidParam->mb_cr_size_y == 8 ? 3 : 2;
+    vidParam->total_scale = vidParam->shiftpel_x + vidParam->shiftpel_y;
     }
   else {
-    pVid->bitdepth_chroma_qp_scale = 0;
-    pVid->max_pel_value_comp[1] = 0;
-    pVid->max_pel_value_comp[2] = 0;
-    pVid->num_blk8x8_uv = 0;
-    pVid->num_uv_blocks = 0;
-    pVid->num_cdc_coeff = 0;
-    pVid->mb_size[1][0] = pVid->mb_size[2][0] = pVid->mb_cr_size_x  = 0;
-    pVid->mb_size[1][1] = pVid->mb_size[2][1] = pVid->mb_cr_size_y  = 0;
-    pVid->subpel_x      = 0;
-    pVid->subpel_y      = 0;
-    pVid->shiftpel_x    = 0;
-    pVid->shiftpel_y    = 0;
-    pVid->total_scale   = 0;
+    vidParam->bitdepth_chroma_qp_scale = 0;
+    vidParam->max_pel_value_comp[1] = 0;
+    vidParam->max_pel_value_comp[2] = 0;
+    vidParam->num_blk8x8_uv = 0;
+    vidParam->num_uv_blocks = 0;
+    vidParam->num_cdc_coeff = 0;
+    vidParam->mb_size[1][0] = vidParam->mb_size[2][0] = vidParam->mb_cr_size_x  = 0;
+    vidParam->mb_size[1][1] = vidParam->mb_size[2][1] = vidParam->mb_cr_size_y  = 0;
+    vidParam->subpel_x      = 0;
+    vidParam->subpel_y      = 0;
+    vidParam->shiftpel_x    = 0;
+    vidParam->shiftpel_y    = 0;
+    vidParam->total_scale   = 0;
     }
 
-  pVid->mb_cr_size = pVid->mb_cr_size_x * pVid->mb_cr_size_y;
-  pVid->mb_size_blk[0][0] = pVid->mb_size_blk[0][1] = pVid->mb_size[0][0] >> 2;
-  pVid->mb_size_blk[1][0] = pVid->mb_size_blk[2][0] = pVid->mb_size[1][0] >> 2;
-  pVid->mb_size_blk[1][1] = pVid->mb_size_blk[2][1] = pVid->mb_size[1][1] >> 2;
+  vidParam->mb_cr_size = vidParam->mb_cr_size_x * vidParam->mb_cr_size_y;
+  vidParam->mb_size_blk[0][0] = vidParam->mb_size_blk[0][1] = vidParam->mb_size[0][0] >> 2;
+  vidParam->mb_size_blk[1][0] = vidParam->mb_size_blk[2][0] = vidParam->mb_size[1][0] >> 2;
+  vidParam->mb_size_blk[1][1] = vidParam->mb_size_blk[2][1] = vidParam->mb_size[1][1] >> 2;
 
-  pVid->mb_size_shift[0][0] = pVid->mb_size_shift[0][1] = CeilLog2_sf (pVid->mb_size[0][0]);
-  pVid->mb_size_shift[1][0] = pVid->mb_size_shift[2][0] = CeilLog2_sf (pVid->mb_size[1][0]);
-  pVid->mb_size_shift[1][1] = pVid->mb_size_shift[2][1] = CeilLog2_sf (pVid->mb_size[1][1]);
+  vidParam->mb_size_shift[0][0] = vidParam->mb_size_shift[0][1] = CeilLog2_sf (vidParam->mb_size[0][0]);
+  vidParam->mb_size_shift[1][0] = vidParam->mb_size_shift[2][0] = CeilLog2_sf (vidParam->mb_size[1][0]);
+  vidParam->mb_size_shift[1][1] = vidParam->mb_size_shift[2][1] = CeilLog2_sf (vidParam->mb_size[1][1]);
   }
 //}}}
 
@@ -454,11 +454,11 @@ void FreePartition (DataPartition* dp, int n) {
 //}}}
 
 //{{{
-void free_layer_buffers (VideoParameters* pVid, int layer_id) {
+void free_layer_buffers (sVidParam* vidParam, int layer_id) {
 
-  CodingParameters *cps = pVid->p_EncodePar[layer_id];
+  CodingParameters *cps = vidParam->p_EncodePar[layer_id];
 
-  if (!pVid->global_init_done[layer_id])
+  if (!vidParam->global_init_done[layer_id])
     return;
 
   // CAVLC free mem
@@ -467,7 +467,7 @@ void free_layer_buffers (VideoParameters* pVid, int layer_id) {
     cps->nz_coeff = NULL;
     }
 
-  // free mem, allocated for structure pVid
+  // free mem, allocated for structure vidParam
   if ((cps->separate_colour_plane_flag != 0) ) {
     for (int i = 0; i<MAX_PLANE; i++) {
       free (cps->mb_data_JV[i]);
@@ -506,20 +506,20 @@ void free_layer_buffers (VideoParameters* pVid, int layer_id) {
 
   free_qp_matrices(cps);
 
-  pVid->global_init_done[layer_id] = 0;
+  vidParam->global_init_done[layer_id] = 0;
   }
 //}}}
 //{{{
-int init_global_buffers (VideoParameters* pVid, int layer_id) {
+int init_global_buffers (sVidParam* vidParam, int layer_id) {
 
   int memory_size = 0;
-  CodingParameters *cps = pVid->p_EncodePar[layer_id];
+  CodingParameters *cps = vidParam->p_EncodePar[layer_id];
   BlockPos* PicPos;
 
-  if (pVid->global_init_done[layer_id])
-    free_layer_buffers (pVid, layer_id);
+  if (vidParam->global_init_done[layer_id])
+    free_layer_buffers (vidParam, layer_id);
 
-  // allocate memory in structure pVid
+  // allocate memory in structure vidParam
   if ((cps->separate_colour_plane_flag != 0) ) {
     for (int i = 0; i<MAX_PLANE; ++i )
       if (((cps->mb_data_JV[i]) = (Macroblock*)calloc(cps->FrameSizeInMbs, sizeof(Macroblock))) == NULL)
@@ -561,7 +561,7 @@ int init_global_buffers (VideoParameters* pVid, int layer_id) {
     for (int i = 0; i < MAX_PLANE; ++i ) {
       get_mem2Dint (&(cps->siblock_JV[i]), cps->FrameHeightInMbs, cps->PicWidthInMbs);
       if (cps->siblock_JV[i] == NULL)
-        no_mem_exit ("init_global_buffers: pVid->siblock_JV");
+        no_mem_exit ("init_global_buffers: vidParam->siblock_JV");
       }
     cps->siblock = NULL;
     }
@@ -570,26 +570,26 @@ int init_global_buffers (VideoParameters* pVid, int layer_id) {
 
   init_qp_process (cps);
   cps->oldFrameSizeInMbs = cps->FrameSizeInMbs;
-  pVid->global_init_done[layer_id] = 1;
+  vidParam->global_init_done[layer_id] = 1;
 
   return (memory_size);
   }
 //}}}
 //{{{
-void free_global_buffers (VideoParameters* pVid) {
+void free_global_buffers (sVidParam* vidParam) {
 
-  if (pVid->dec_picture) {
-    free_storable_picture (pVid->dec_picture);
-    pVid->dec_picture = NULL;
+  if (vidParam->dec_picture) {
+    free_storable_picture (vidParam->dec_picture);
+    vidParam->dec_picture = NULL;
     }
   }
 //}}}
 
 //{{{
-DecodedPicList* get_one_avail_dec_pic_from_list (DecodedPicList* pDecPicList, int b3D, int view_id) {
+sDecodedPicList* get_one_avail_dec_pic_from_list (sDecodedPicList* pDecPicList, int b3D, int view_id) {
 
-  DecodedPicList* pPic = pDecPicList;
-  DecodedPicList* pPrior = NULL;
+  sDecodedPicList* pPic = pDecPicList;
+  sDecodedPicList* pPrior = NULL;
 
   if (b3D) {
     while (pPic && (pPic->bValid &(1<<view_id))) {
@@ -605,7 +605,7 @@ DecodedPicList* get_one_avail_dec_pic_from_list (DecodedPicList* pDecPicList, in
     }
 
   if (!pPic) {
-    pPic = (DecodedPicList *)calloc(1, sizeof(*pPic));
+    pPic = (sDecodedPicList *)calloc(1, sizeof(*pPic));
     pPrior->pNext = pPic;
     }
 
@@ -613,32 +613,32 @@ DecodedPicList* get_one_avail_dec_pic_from_list (DecodedPicList* pDecPicList, in
   }
 //}}}
 //{{{
-void ClearDecPicList (VideoParameters* pVid) {
+void ClearDecPicList (sVidParam* vidParam) {
 
   // find the head first;
-  DecodedPicList* pPic = pVid->pDecOuputPic, *pPrior = NULL;
+  sDecodedPicList* pPic = vidParam->pDecOuputPic, *pPrior = NULL;
   while (pPic && !pPic->bValid) {
     pPrior = pPic;
     pPic = pPic->pNext;
     }
 
-  if (pPic && (pPic != pVid->pDecOuputPic)) {
+  if (pPic && (pPic != vidParam->pDecOuputPic)) {
     //move all nodes before pPic to the end;
-    DecodedPicList *pPicTail = pPic;
+    sDecodedPicList *pPicTail = pPic;
     while (pPicTail->pNext)
       pPicTail = pPicTail->pNext;
 
-    pPicTail->pNext = pVid->pDecOuputPic;
-    pVid->pDecOuputPic = pPic;
+    pPicTail->pNext = vidParam->pDecOuputPic;
+    vidParam->pDecOuputPic = pPic;
     pPrior->pNext = NULL;
     }
   }
 //}}}
 //{{{
-void FreeDecPicList (DecodedPicList* pDecPicList) {
+void FreeDecPicList (sDecodedPicList* pDecPicList) {
 
   while (pDecPicList) {
-    DecodedPicList* pPicNext = pDecPicList->pNext;
+    sDecodedPicList* pPicNext = pDecPicList->pNext;
     if (pDecPicList->pY) {
       free (pDecPicList->pY);
       pDecPicList->pY = NULL;
@@ -653,55 +653,55 @@ void FreeDecPicList (DecodedPicList* pDecPicList) {
 //}}}
 
 //{{{
-void set_global_coding_par (VideoParameters* pVid, CodingParameters* cps) {
+void set_global_coding_par (sVidParam* vidParam, CodingParameters* cps) {
 
-  pVid->bitdepth_chroma = 0;
-  pVid->width_cr = 0;
-  pVid->height_cr = 0;
-  pVid->lossless_qpprime_flag = cps->lossless_qpprime_flag;
-  pVid->max_vmv_r = cps->max_vmv_r;
+  vidParam->bitdepth_chroma = 0;
+  vidParam->width_cr = 0;
+  vidParam->height_cr = 0;
+  vidParam->lossless_qpprime_flag = cps->lossless_qpprime_flag;
+  vidParam->max_vmv_r = cps->max_vmv_r;
 
   // Fidelity Range Extensions stuff (part 1)
-  pVid->bitdepth_luma = cps->bitdepth_luma;
-  pVid->bitdepth_scale[0] = cps->bitdepth_scale[0];
-  pVid->bitdepth_chroma = cps->bitdepth_chroma;
-  pVid->bitdepth_scale[1] = cps->bitdepth_scale[1];
+  vidParam->bitdepth_luma = cps->bitdepth_luma;
+  vidParam->bitdepth_scale[0] = cps->bitdepth_scale[0];
+  vidParam->bitdepth_chroma = cps->bitdepth_chroma;
+  vidParam->bitdepth_scale[1] = cps->bitdepth_scale[1];
 
-  pVid->max_frame_num = cps->max_frame_num;
-  pVid->PicWidthInMbs = cps->PicWidthInMbs;
-  pVid->PicHeightInMapUnits = cps->PicHeightInMapUnits;
-  pVid->FrameHeightInMbs = cps->FrameHeightInMbs;
-  pVid->FrameSizeInMbs = cps->FrameSizeInMbs;
+  vidParam->max_frame_num = cps->max_frame_num;
+  vidParam->PicWidthInMbs = cps->PicWidthInMbs;
+  vidParam->PicHeightInMapUnits = cps->PicHeightInMapUnits;
+  vidParam->FrameHeightInMbs = cps->FrameHeightInMbs;
+  vidParam->FrameSizeInMbs = cps->FrameSizeInMbs;
 
-  pVid->yuv_format = cps->yuv_format;
-  pVid->separate_colour_plane_flag = cps->separate_colour_plane_flag;
-  pVid->ChromaArrayType = cps->ChromaArrayType;
+  vidParam->yuv_format = cps->yuv_format;
+  vidParam->separate_colour_plane_flag = cps->separate_colour_plane_flag;
+  vidParam->ChromaArrayType = cps->ChromaArrayType;
 
-  pVid->width = cps->width;
-  pVid->height = cps->height;
-  pVid->iLumaPadX = MCBUF_LUMA_PAD_X;
-  pVid->iLumaPadY = MCBUF_LUMA_PAD_Y;
-  pVid->iChromaPadX = MCBUF_CHROMA_PAD_X;
-  pVid->iChromaPadY = MCBUF_CHROMA_PAD_Y;
+  vidParam->width = cps->width;
+  vidParam->height = cps->height;
+  vidParam->iLumaPadX = MCBUF_LUMA_PAD_X;
+  vidParam->iLumaPadY = MCBUF_LUMA_PAD_Y;
+  vidParam->iChromaPadX = MCBUF_CHROMA_PAD_X;
+  vidParam->iChromaPadY = MCBUF_CHROMA_PAD_Y;
 
-  if (pVid->yuv_format == YUV420) {
-    pVid->width_cr = (pVid->width  >> 1);
-    pVid->height_cr = (pVid->height >> 1);
+  if (vidParam->yuv_format == YUV420) {
+    vidParam->width_cr = (vidParam->width  >> 1);
+    vidParam->height_cr = (vidParam->height >> 1);
     }
-  else if (pVid->yuv_format == YUV422) {
-    pVid->width_cr = (pVid->width >> 1);
-    pVid->height_cr = pVid->height;
-    pVid->iChromaPadY = MCBUF_CHROMA_PAD_Y*2;
+  else if (vidParam->yuv_format == YUV422) {
+    vidParam->width_cr = (vidParam->width >> 1);
+    vidParam->height_cr = vidParam->height;
+    vidParam->iChromaPadY = MCBUF_CHROMA_PAD_Y*2;
     }
-  else if (pVid->yuv_format == YUV444) {
+  else if (vidParam->yuv_format == YUV444) {
     //YUV444
-    pVid->width_cr = pVid->width;
-    pVid->height_cr = pVid->height;
-    pVid->iChromaPadX = pVid->iLumaPadX;
-    pVid->iChromaPadY = pVid->iLumaPadY;
+    vidParam->width_cr = vidParam->width;
+    vidParam->height_cr = vidParam->height;
+    vidParam->iChromaPadX = vidParam->iLumaPadX;
+    vidParam->iChromaPadY = vidParam->iLumaPadY;
     }
 
-  init_frext(pVid);
+  init_frext(vidParam);
   }
 //}}}
 
@@ -715,24 +715,24 @@ int OpenDecoder (InputParameters* p_Inp, byte* chunk, size_t chunkSize) {
   init_time();
 
   memcpy (gDecoder->p_Inp, p_Inp, sizeof(InputParameters));
-  gDecoder->pVid->conceal_mode = p_Inp->conceal_mode;
-  gDecoder->pVid->ref_poc_gap = p_Inp->ref_poc_gap;
-  gDecoder->pVid->poc_gap = p_Inp->poc_gap;
-  gDecoder->pVid->annex_b = allocAnnexB (gDecoder->pVid);
-  openAnnexB (gDecoder->pVid->annex_b, chunk, chunkSize);
+  gDecoder->vidParam->conceal_mode = p_Inp->conceal_mode;
+  gDecoder->vidParam->ref_poc_gap = p_Inp->ref_poc_gap;
+  gDecoder->vidParam->poc_gap = p_Inp->poc_gap;
+  gDecoder->vidParam->annex_b = allocAnnexB (gDecoder->vidParam);
+  openAnnexB (gDecoder->vidParam->annex_b, chunk, chunkSize);
 
-  init_old_slice (gDecoder->pVid->old_slice);
-  init (gDecoder->pVid);
-  init_out_buffer (gDecoder->pVid);
+  init_old_slice (gDecoder->vidParam->old_slice);
+  init (gDecoder->vidParam);
+  init_out_buffer (gDecoder->vidParam);
 
   return DEC_OPEN_NOERR;
   }
 //}}}
 //{{{
-int DecodeOneFrame (DecodedPicList** ppDecPicList) {
+int DecodeOneFrame (sDecodedPicList** ppDecPicList) {
 
-  DecoderParams* pDecoder = gDecoder;
-  ClearDecPicList (gDecoder->pVid);
+  sDecoderParams* pDecoder = gDecoder;
+  ClearDecPicList (gDecoder->vidParam);
 
   int iRet = decode_one_frame (gDecoder);
   if (iRet == SOP)
@@ -742,25 +742,25 @@ int DecodeOneFrame (DecodedPicList** ppDecPicList) {
   else
     iRet |= DEC_ERRMASK;
 
-  *ppDecPicList = gDecoder->pVid->pDecOuputPic;
+  *ppDecPicList = gDecoder->vidParam->pDecOuputPic;
   return iRet;
   }
 //}}}
 //{{{
-int FinitDecoder (DecodedPicList** ppDecPicList) {
+int FinitDecoder (sDecodedPicList** ppDecPicList) {
 
-  ClearDecPicList (gDecoder->pVid);
-  flush_dpb (gDecoder->pVid->p_Dpb_layer[0]);
+  ClearDecPicList (gDecoder->vidParam);
+  flush_dpb (gDecoder->vidParam->p_Dpb_layer[0]);
 
   #if (PAIR_FIELDS_IN_OUTPUT)
-    flush_pending_output (gDecoder->pVid);
+    flush_pending_output (gDecoder->vidParam);
   #endif
 
-  resetAnnexB (gDecoder->pVid->annex_b);
+  resetAnnexB (gDecoder->vidParam->annex_b);
 
-  gDecoder->pVid->newframe = 0;
-  gDecoder->pVid->previous_frame_num = 0;
-  *ppDecPicList = gDecoder->pVid->pDecOuputPic;
+  gDecoder->vidParam->newframe = 0;
+  gDecoder->vidParam->previous_frame_num = 0;
+  *ppDecPicList = gDecoder->vidParam->pDecOuputPic;
 
   return DEC_GEN_NOERR;
   }
@@ -768,19 +768,19 @@ int FinitDecoder (DecodedPicList** ppDecPicList) {
 //{{{
 int CloseDecoder() {
 
-  FmoFinit (gDecoder->pVid);
-  free_layer_buffers (gDecoder->pVid, 0);
-  free_layer_buffers (gDecoder->pVid, 1);
-  free_global_buffers (gDecoder->pVid);
+  FmoFinit (gDecoder->vidParam);
+  free_layer_buffers (gDecoder->vidParam, 0);
+  free_layer_buffers (gDecoder->vidParam, 1);
+  free_global_buffers (gDecoder->vidParam);
 
-  ercClose (gDecoder->pVid, gDecoder->pVid->erc_errorVar);
+  ercClose (gDecoder->vidParam, gDecoder->vidParam->erc_errorVar);
 
-  CleanUpPPS (gDecoder->pVid);
+  CleanUpPPS (gDecoder->vidParam);
 
   for (unsigned i = 0; i < MAX_NUM_DPB_LAYERS; i++)
-    free_dpb (gDecoder->pVid->p_Dpb_layer[i]);
-  uninit_out_buffer (gDecoder->pVid);
-  free_img (gDecoder->pVid);
+    free_dpb (gDecoder->vidParam->p_Dpb_layer[i]);
+  uninit_out_buffer (gDecoder->vidParam);
+  free_img (gDecoder->vidParam);
   free (gDecoder->p_Inp);
   free (gDecoder);
 

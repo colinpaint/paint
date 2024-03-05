@@ -84,11 +84,11 @@ extern int  GetVLCSymbol_IntraMode (byte buffer[],int totbitoffset,int *info, in
 
 extern int readSyntaxElement_FLC                         (SyntaxElement *sym, Bitstream* currStream);
 extern int readSyntaxElement_NumCoeffTrailingOnes        (SyntaxElement *sym,  Bitstream* currStream, char *type);
-extern int readSyntaxElement_NumCoeffTrailingOnesChromaDC(VideoParameters* pVid, SyntaxElement *sym, Bitstream* currStream);
+extern int readSyntaxElement_NumCoeffTrailingOnesChromaDC(sVidParam* vidParam, SyntaxElement *sym, Bitstream* currStream);
 extern int readSyntaxElement_Level_VLC0                  (SyntaxElement *sym, Bitstream* currStream);
 extern int readSyntaxElement_Level_VLCN                  (SyntaxElement *sym, int vlc, Bitstream* currStream);
 extern int readSyntaxElement_TotalZeros                  (SyntaxElement *sym, Bitstream* currStream);
-extern int readSyntaxElement_TotalZerosChromaDC          (VideoParameters* pVid, SyntaxElement *sym, Bitstream* currStream);
+extern int readSyntaxElement_TotalZerosChromaDC          (sVidParam* vidParam, SyntaxElement *sym, Bitstream* currStream);
 extern int readSyntaxElement_Run                         (SyntaxElement *sym, Bitstream* currStream);
 extern int GetBits  (byte buffer[],int totbitoffset,int *info, int bitcount, int numbits);
 extern int ShowBits (byte buffer[],int totbitoffset,int bitcount, int numbits);

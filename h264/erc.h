@@ -16,10 +16,10 @@
 //{{{
 //! YUV pixel domain image arrays for a video frame
 typedef struct frame_s {
-  VideoParameters* pVid;
-  imgpel *yptr;
-  imgpel *uptr;
-  imgpel *vptr;
+  sVidParam* vidParam;
+  sPixel *yptr;
+  sPixel *uptr;
+  sPixel *vptr;
   } frame;
 //}}}
 //{{{
@@ -76,7 +76,7 @@ typedef struct ercVariables_s
 //}}}
 //{{{
 struct concealment_node {
-    StorablePicture* picture;
+    sStorablePicture* picture;
     int  missingpocs;
     struct concealment_node *next;
 };
@@ -84,23 +84,23 @@ struct concealment_node {
 #define xPosMB(currMBNum,picSizeX) ((currMBNum)%((picSizeX)>>4))
 #define yPosMB(currMBNum,picSizeX) ((currMBNum)/((picSizeX)>>4))
 
-int ercConcealIntraFrame (VideoParameters* pVid, frame *recfr,
+int ercConcealIntraFrame (sVidParam* vidParam, frame *recfr,
                           int picSizeX, int picSizeY, ercVariables_t *errorVar );
 int ercConcealInterFrame (frame *recfr, objectBuffer_t *object_list,
                           int picSizeX, int picSizeY, ercVariables_t *errorVar, int chroma_format_idc );
 
-extern struct concealment_node* init_node (StorablePicture* , int );
-extern void init_lists_for_non_reference_loss (DecodedPictureBuffer *p_Dpb, int , PictureStructure );
-extern void conceal_lost_frames (DecodedPictureBuffer *p_Dpb, Slice *pSlice);
-extern void conceal_non_ref_pics (DecodedPictureBuffer *p_Dpb, int diff);
-extern void sliding_window_poc_management (DecodedPictureBuffer *p_Dpb, StorablePicture *p);
-extern void write_lost_non_ref_pic (DecodedPictureBuffer *p_Dpb, int poc);
-extern void write_lost_ref_after_idr (DecodedPictureBuffer *p_Dpb, int pos);
+extern struct concealment_node* init_node (sStorablePicture* , int );
+extern void init_lists_for_non_reference_loss (sDecodedPictureBuffer* p_Dpb, int , sPictureStructure );
+extern void conceal_lost_frames (sDecodedPictureBuffer* p_Dpb, Slice *pSlice);
+extern void conceal_non_ref_pics (sDecodedPictureBuffer* p_Dpb, int diff);
+extern void sliding_window_poc_management (sDecodedPictureBuffer* p_Dpb, sStorablePicture *p);
+extern void write_lost_non_ref_pic (sDecodedPictureBuffer* p_Dpb, int poc);
+extern void write_lost_ref_after_idr (sDecodedPictureBuffer* p_Dpb, int pos);
 
-void ercInit (VideoParameters* pVid, int pic_sizex, int pic_sizey, int flag);
+void ercInit (sVidParam* vidParam, int pic_sizex, int pic_sizey, int flag);
 ercVariables_t* ercOpen();
 void ercReset (ercVariables_t *errorVar, int nOfMBs, int numOfSegments, int picSizeX );
-void ercClose (VideoParameters* pVid, ercVariables_t *errorVar );
+void ercClose (sVidParam* vidParam, ercVariables_t *errorVar );
 void ercSetErrorConcealment (ercVariables_t *errorVar, int value );
 
 void ercStartSegment (int currMBNum, int segment, unsigned int bitPos, ercVariables_t *errorVar );

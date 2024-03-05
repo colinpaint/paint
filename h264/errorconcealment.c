@@ -16,7 +16,7 @@
  *    This simple error concealment implemented in this decoder uses
  *    the existing dependencies of syntax elements.
  *    In case that an element is detected as false this elements and all
- *    dependend elements are marked as elements to conceal in the pVid->ec_flag[]
+ *    dependend elements are marked as elements to conceal in the vidParam->ec_flag[]
  *    array. If the decoder requests a new element by the function
  *    readSyntaxElement_xxxx() this array is checked first if an error concealment has
  *    to be applied on this element.
@@ -33,31 +33,31 @@
 #include "elements.h"
 
 //{{{
-int set_ec_flag (VideoParameters* pVid, int se) {
+int set_ec_flag (sVidParam* vidParam, int se) {
 
   switch (se) {
     case SE_HEADER :
-      pVid->ec_flag[SE_HEADER] = EC_REQ;
+      vidParam->ec_flag[SE_HEADER] = EC_REQ;
     case SE_PTYPE :
-      pVid->ec_flag[SE_PTYPE] = EC_REQ;
+      vidParam->ec_flag[SE_PTYPE] = EC_REQ;
     case SE_MBTYPE :
-      pVid->ec_flag[SE_MBTYPE] = EC_REQ;
+      vidParam->ec_flag[SE_MBTYPE] = EC_REQ;
     //{{{
     case SE_REFFRAME :
-      pVid->ec_flag[SE_REFFRAME] = EC_REQ;
-      pVid->ec_flag[SE_MVD] = EC_REQ; // set all motion vectors to zero length
+      vidParam->ec_flag[SE_REFFRAME] = EC_REQ;
+      vidParam->ec_flag[SE_MVD] = EC_REQ; // set all motion vectors to zero length
       se = SE_CBP_INTER;      // conceal also Inter texture elements
       break;
     //}}}
     //{{{
     case SE_INTRAPREDMODE :
-      pVid->ec_flag[SE_INTRAPREDMODE] = EC_REQ;
+      vidParam->ec_flag[SE_INTRAPREDMODE] = EC_REQ;
       se = SE_CBP_INTRA;      // conceal also Intra texture elements
       break;
     //}}}
     //{{{
     case SE_MVD :
-      pVid->ec_flag[SE_MVD] = EC_REQ;
+      vidParam->ec_flag[SE_MVD] = EC_REQ;
       se = SE_CBP_INTER;      // conceal also Inter texture elements
       break;
     //}}}
@@ -69,40 +69,40 @@ int set_ec_flag (VideoParameters* pVid, int se) {
 
   switch (se) {
     case SE_CBP_INTRA :
-      pVid->ec_flag[SE_CBP_INTRA] = EC_REQ;
+      vidParam->ec_flag[SE_CBP_INTRA] = EC_REQ;
     case SE_LUM_DC_INTRA :
-      pVid->ec_flag[SE_LUM_DC_INTRA] = EC_REQ;
+      vidParam->ec_flag[SE_LUM_DC_INTRA] = EC_REQ;
     case SE_CHR_DC_INTRA :
-      pVid->ec_flag[SE_CHR_DC_INTRA] = EC_REQ;
+      vidParam->ec_flag[SE_CHR_DC_INTRA] = EC_REQ;
     case SE_LUM_AC_INTRA :
-      pVid->ec_flag[SE_LUM_AC_INTRA] = EC_REQ;
+      vidParam->ec_flag[SE_LUM_AC_INTRA] = EC_REQ;
     //{{{
     case SE_CHR_AC_INTRA :
-      pVid->ec_flag[SE_CHR_AC_INTRA] = EC_REQ;
+      vidParam->ec_flag[SE_CHR_AC_INTRA] = EC_REQ;
       break;
     //}}}
 
     case SE_CBP_INTER :
-      pVid->ec_flag[SE_CBP_INTER] = EC_REQ;
+      vidParam->ec_flag[SE_CBP_INTER] = EC_REQ;
     case SE_LUM_DC_INTER :
-      pVid->ec_flag[SE_LUM_DC_INTER] = EC_REQ;
+      vidParam->ec_flag[SE_LUM_DC_INTER] = EC_REQ;
     case SE_CHR_DC_INTER :
-      pVid->ec_flag[SE_CHR_DC_INTER] = EC_REQ;
+      vidParam->ec_flag[SE_CHR_DC_INTER] = EC_REQ;
     case SE_LUM_AC_INTER :
-      pVid->ec_flag[SE_LUM_AC_INTER] = EC_REQ;
+      vidParam->ec_flag[SE_LUM_AC_INTER] = EC_REQ;
     //{{{
     case SE_CHR_AC_INTER :
-      pVid->ec_flag[SE_CHR_AC_INTER] = EC_REQ;
+      vidParam->ec_flag[SE_CHR_AC_INTER] = EC_REQ;
       break;
     //}}}
     //{{{
     case SE_DELTA_QUANT_INTER :
-      pVid->ec_flag[SE_DELTA_QUANT_INTER] = EC_REQ;
+      vidParam->ec_flag[SE_DELTA_QUANT_INTER] = EC_REQ;
       break;
     //}}}
     //{{{
     case SE_DELTA_QUANT_INTRA :
-      pVid->ec_flag[SE_DELTA_QUANT_INTRA] = EC_REQ;
+      vidParam->ec_flag[SE_DELTA_QUANT_INTRA] = EC_REQ;
       break;
     //}}}
     //{{{
@@ -115,17 +115,17 @@ int set_ec_flag (VideoParameters* pVid, int se) {
   }
 //}}}
 //{{{
-void reset_ec_flags (VideoParameters* pVid) {
+void reset_ec_flags (sVidParam* vidParam) {
 
   for (int i = 0; i < SE_MAX_ELEMENTS; i++)
-    pVid->ec_flag[i] = NO_EC;
+    vidParam->ec_flag[i] = NO_EC;
   }
 //}}}
 
 //{{{
-int get_concealed_element (VideoParameters* pVid, SyntaxElement* sym) {
+int get_concealed_element (sVidParam* vidParam, SyntaxElement* sym) {
 
-  if (pVid->ec_flag[sym->type] == NO_EC)
+  if (vidParam->ec_flag[sym->type] == NO_EC)
     return NO_EC;
 
   switch (sym->type) {

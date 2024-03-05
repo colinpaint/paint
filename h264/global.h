@@ -152,7 +152,7 @@ typedef struct cbp_s {
 //! Macroblock
 typedef struct macroblock_dec {
   struct slice*     p_Slice;  // pointer to the current slice
-  struct video_par* pVid;    // pointer to VideoParameters
+  struct video_par* vidParam;    // pointer to sVidParam
   struct inp_par*   p_Inp;
 
   int mbAddrX;                // current MB address
@@ -324,13 +324,13 @@ typedef struct inp_par {
 typedef struct image_data {
   FrameFormat format;                  // image format
 
-  imgpel** frm_data[MAX_PLANE];        // Frame Data
-  imgpel** top_data[MAX_PLANE];        // pointers to top field data
-  imgpel** bot_data[MAX_PLANE];        // pointers to bottom field data
+  sPixel** frm_data[MAX_PLANE];        // Frame Data
+  sPixel** top_data[MAX_PLANE];        // pointers to top field data
+  sPixel** bot_data[MAX_PLANE];        // pointers to bottom field data
 
-  imgpel** frm_data_buf[2][MAX_PLANE]; // Frame Data
-  imgpel** top_data_buf[2][MAX_PLANE]; // pointers to top field data
-  imgpel** bot_data_buf[2][MAX_PLANE]; // pointers to bottom field data
+  sPixel** frm_data_buf[2][MAX_PLANE]; // Frame Data
+  sPixel** top_data_buf[2][MAX_PLANE]; // pointers to top field data
+  sPixel** bot_data_buf[2][MAX_PLANE]; // pointers to bottom field data
 
   int frm_stride[MAX_PLANE];
   int top_stride[MAX_PLANE];
@@ -354,7 +354,7 @@ typedef struct old_slice_par {
 //}}}
 //{{{
 typedef struct slice {
-  struct video_par* pVid;
+  struct video_par* vidParam;
   struct inp_par* p_Inp;
   pic_parameter_set_rbsp_t* active_pps;
   seq_parameter_set_rbsp_t* active_sps;
@@ -408,7 +408,7 @@ typedef struct slice {
   unsigned int        frame_num;   //frame_num for this frame
   unsigned int        field_pic_flag;
   byte                bottom_field_flag;
-  PictureStructure    structure;     //!< Identify picture structure type
+  sPictureStructure    structure;     //!< Identify picture structure type
   int                 start_mb_nr;   //!< MUST be set by NAL even in case of ei_flag == 1
   int                 end_mb_nr_plus1;
   int                 max_part_nr;
@@ -452,18 +452,18 @@ typedef struct slice {
 
   Boolean is_reset_coeff;
   Boolean is_reset_coeff_cr;
-  imgpel  ***mb_pred;
-  imgpel  ***mb_rec;
+  sPixel  ***mb_pred;
+  sPixel  ***mb_rec;
   int     ***mb_rres;
   int     ***cof;
   int     ***fcf;
   int cofu[16];
 
-  imgpel **tmp_block_l0;
-  imgpel **tmp_block_l1;
+  sPixel **tmp_block_l0;
+  sPixel **tmp_block_l1;
   int    **tmp_res;
-  imgpel **tmp_block_l2;
-  imgpel **tmp_block_l3;
+  sPixel **tmp_block_l2;
+  sPixel **tmp_block_l3;
 
   // Scaling matrix info
   int  InvLevelScale4x4_Intra[3][6][4][4];
@@ -504,7 +504,7 @@ typedef struct slice {
   char  *intra_block;
   char  chroma_vector_adjustment[6][32];
   void (*read_CBP_and_coeffs_from_NAL) (Macroblock *currMB);
-  int  (*decode_one_component     )    (Macroblock *currMB, ColorPlane curr_plane, imgpel **currImg, struct storable_picture *dec_picture);
+  int  (*decode_one_component     )    (Macroblock *currMB, ColorPlane curr_plane, sPixel **currImg, struct storable_picture *dec_picture);
   int  (*readSlice                )    (struct video_par *, struct inp_par *);
   int  (*nal_startcode_follows    )    (struct slice*, int );
   void (*read_motion_info_from_NAL)    (Macroblock *currMB);
@@ -545,7 +545,7 @@ typedef struct decodedpic_t {
   int iBufSize;
 
   struct decodedpic_t *pNext;
-  } DecodedPicList;
+  } sDecodedPicList;
 //}}}
 //{{{
 typedef struct coding_par {
@@ -618,7 +618,7 @@ typedef struct coding_par {
 //{{{
 typedef struct layer_par {
   int layer_id;
-  struct video_par* pVid;
+  struct video_par* vidParam;
   CodingParameters* p_Cps;
   seq_parameter_set_rbsp_t* p_SPS;
   struct decoded_picture_buffer* p_Dpb;
@@ -774,13 +774,13 @@ typedef struct video_par {
   void (*get_mb_block_pos) (BlockPos *PicPos, int mb_addr, short *x, short *y);
   void (*GetStrengthVer)   (Macroblock *MbQ, int edge, int mvlimit, struct storable_picture *p);
   void (*GetStrengthHor)   (Macroblock *MbQ, int edge, int mvlimit, struct storable_picture *p);
-  void (*EdgeLoopLumaVer)  (ColorPlane pl, imgpel** Img, byte *Strength, Macroblock *MbQ, int edge);
-  void (*EdgeLoopLumaHor)  (ColorPlane pl, imgpel** Img, byte *Strength, Macroblock *MbQ, int edge, struct storable_picture *p);
-  void (*EdgeLoopChromaVer)(imgpel** Img, byte *Strength, Macroblock *MbQ, int edge, int uv, struct storable_picture *p);
-  void (*EdgeLoopChromaHor)(imgpel** Img, byte *Strength, Macroblock *MbQ, int edge, int uv, struct storable_picture *p);
+  void (*EdgeLoopLumaVer)  (ColorPlane pl, sPixel** Img, byte *Strength, Macroblock *MbQ, int edge);
+  void (*EdgeLoopLumaHor)  (ColorPlane pl, sPixel** Img, byte *Strength, Macroblock *MbQ, int edge, struct storable_picture *p);
+  void (*EdgeLoopChromaVer)(sPixel** Img, byte *Strength, Macroblock *MbQ, int edge, int uv, struct storable_picture *p);
+  void (*EdgeLoopChromaHor)(sPixel** Img, byte *Strength, Macroblock *MbQ, int edge, int uv, struct storable_picture *p);
 
   ImageData tempData3;
-  DecodedPicList* pDecOuputPic;
+  sDecodedPicList* pDecOuputPic;
   int iDeblockMode;  //0: deblock in picture, 1: deblock in slice;
 
   struct nalu_t* nalu;
@@ -844,16 +844,16 @@ typedef struct video_par {
   unsigned int FrameSizeInMbs;
   unsigned int oldFrameSizeInMbs;
   int max_vmv_r;                              // maximum vertical motion vector range in luma quarter frame pixel units for the current level_idc
-  } VideoParameters;
+  } sVidParam;
 //}}}
 //{{{
 typedef struct decoder_params {
   InputParameters* p_Inp;          //!< Input Parameters
-  VideoParameters* pVid;          //!< Image Parameters
+  sVidParam* vidParam;          //!< Image Parameters
   int64            bufferSize;     //!< buffersize for tiff reads (not currently supported)
   int              UsedBits;      // for internal statistics, is adjusted by read_se_v, read_ue_v, read_u_1
   int              bitcounter;
-  } DecoderParams;
+  } sDecoderParams;
 //}}}
 
 //{{{
@@ -885,13 +885,13 @@ static inline int is_BL_profile (unsigned int profile_idc) {
   extern "C" {
 #endif
 //}}}
-  extern DecoderParams* gDecoder;
+  extern sDecoderParams* gDecoder;
 
   extern void error (char* text, int code);
 
-  extern int init_global_buffers (VideoParameters *pVid, int layer_id );
-  extern void free_global_buffers (VideoParameters *pVid);
-  extern void free_layer_buffers (VideoParameters *pVid, int layer_id );
+  extern int init_global_buffers (sVidParam *vidParam, int layer_id );
+  extern void free_global_buffers (sVidParam *vidParam);
+  extern void free_layer_buffers (sVidParam *vidParam, int layer_id );
 
   extern void FreePartition (DataPartition* dp, int n);
   extern DataPartition* AllocPartition (int n);
@@ -900,18 +900,18 @@ static inline int is_BL_profile (unsigned int profile_idc) {
   extern unsigned CeilLog2_sf (unsigned uiVal);
 
   // For 4:4:4 independent mode
-  extern void change_plane_JV (VideoParameters *pVid, int nplane, Slice *pSlice);
-  extern void make_frame_picture_JV (VideoParameters *pVid );
+  extern void change_plane_JV (sVidParam *vidParam, int nplane, Slice *pSlice);
+  extern void make_frame_picture_JV (sVidParam *vidParam );
 
-  extern void FreeDecPicList (DecodedPicList *pDecPicList );
-  extern void ClearDecPicList (VideoParameters *pVid );
-  extern DecodedPicList* get_one_avail_dec_pic_from_list (DecodedPicList *pDecPicList, int b3D, int view_id);
+  extern void FreeDecPicList (sDecodedPicList *pDecPicList );
+  extern void ClearDecPicList (sVidParam *vidParam );
+  extern sDecodedPicList* get_one_avail_dec_pic_from_list (sDecodedPicList *pDecPicList, int b3D, int view_id);
 
-  extern Slice* malloc_slice (InputParameters *p_Inp, VideoParameters *pVid );
+  extern Slice* malloc_slice (InputParameters *p_Inp, sVidParam *vidParam );
   extern void copy_slice_info (Slice* currSlice, OldSliceParams *p_old_slice );
 
-  extern void OpenOutputFiles (VideoParameters *pVid, int view0_id, int view1_id);
-  extern void set_global_coding_par (VideoParameters *pVid, CodingParameters *cps);
+  extern void OpenOutputFiles (sVidParam *vidParam, int view0_id, int view1_id);
+  extern void set_global_coding_par (sVidParam *vidParam, CodingParameters *cps);
 //{{{
 #ifdef __cplusplus
 }

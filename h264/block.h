@@ -101,8 +101,8 @@ extern void itrans_sp (Macroblock* currMB, ColorPlane pl, int ioff, int joff);
 extern void itrans_2 (Macroblock* currMB, ColorPlane pl);
 extern void iTransform (Macroblock* currMB, ColorPlane pl, int smb);
 
-extern void copy_image_data (imgpel  **imgBuf1, imgpel  **imgBuf2, int off1, int off2, int width, int height);
-extern void copy_image_data_16x16 (imgpel  **imgBuf1, imgpel  **imgBuf2, int off1, int off2);
-extern void copy_image_data_8x8 (imgpel  **imgBuf1, imgpel  **imgBuf2, int off1, int off2);
-extern void copy_image_data_4x4 (imgpel  **imgBuf1, imgpel  **imgBuf2, int off1, int off2);
+extern void copy_image_data (sPixel  **imgBuf1, sPixel  **imgBuf2, int off1, int off2, int width, int height);
+extern void copy_image_data_16x16 (sPixel  **imgBuf1, sPixel  **imgBuf2, int off1, int off2);
+extern void copy_image_data_8x8 (sPixel  **imgBuf1, sPixel  **imgBuf2, int off1, int off2);
+extern void copy_image_data_4x4 (sPixel  **imgBuf1, sPixel  **imgBuf2, int off1, int off2);
 extern int CheckVertMV (Macroblock* currMB, int vec1_y, int block_size_y);

@@ -29,14 +29,14 @@
  * \par Output:
  *    memory size in bytes
  ************************************************************************/
-int init_top_bot_planes (imgpel **imgFrame, int dim0, imgpel ***imgTopField, imgpel ***imgBotField)
+int init_top_bot_planes (sPixel **imgFrame, int dim0, sPixel ***imgTopField, sPixel ***imgBotField)
 {
   int i;
 
-  if((*imgTopField   = (imgpel**)mem_malloc((dim0>>1) * sizeof(imgpel*))) == NULL)
+  if((*imgTopField   = (sPixel**)mem_malloc((dim0>>1) * sizeof(sPixel*))) == NULL)
     no_mem_exit("init_top_bot_planes: imgTopField");
 
-  if((*imgBotField   = (imgpel**)mem_malloc((dim0>>1) * sizeof(imgpel*))) == NULL)
+  if((*imgBotField   = (sPixel**)mem_malloc((dim0>>1) * sizeof(sPixel*))) == NULL)
     no_mem_exit("init_top_bot_planes: imgBotField");
 
   for(i = 0; i < (dim0>>1); i++)
@@ -45,7 +45,7 @@ int init_top_bot_planes (imgpel **imgFrame, int dim0, imgpel ***imgTopField, img
     (*imgBotField)[i] =  imgFrame[2 * i + 1];
   }
 
-  return dim0 * sizeof(imgpel*);
+  return dim0 * sizeof(sPixel*);
 }
 //}}}
 //{{{
@@ -57,7 +57,7 @@ int init_top_bot_planes (imgpel **imgFrame, int dim0, imgpel ***imgTopField, img
  * \par Output:
  *    memory size in bytes
  ************************************************************************/
-void free_top_bot_planes (imgpel **imgTopField, imgpel **imgBotField)
+void free_top_bot_planes (sPixel **imgTopField, sPixel **imgBotField)
 {
   mem_free (imgTopField);
   mem_free (imgBotField);
@@ -592,35 +592,35 @@ void free_mem7Dmv (MotionVector *******array7D)
 /*!
  ************************************************************************
  * \brief
- *    Allocate 1D memory array -> imgpel array1D[dim0
+ *    Allocate 1D memory array -> sPixel array1D[dim0
  *
  * \par Output:
  *    memory size in bytes
  ************************************************************************/
-int get_mem1Dpel (imgpel **array1D, int dim0)
+int get_mem1Dpel (sPixel **array1D, int dim0)
 {
-  if((*array1D    = (imgpel*)mem_calloc(dim0,       sizeof(imgpel))) == NULL)
+  if((*array1D    = (sPixel*)mem_calloc(dim0,       sizeof(sPixel))) == NULL)
     no_mem_exit("get_mem1Dpel: array1D");
 
-  return (sizeof(imgpel*) + dim0 * sizeof(imgpel));
+  return (sizeof(sPixel*) + dim0 * sizeof(sPixel));
 }
 //}}}
 //{{{
 /*!
  ************************************************************************
  * \brief
- *    Allocate 2D memory array -> imgpel array2D[dim0][dim1]
+ *    Allocate 2D memory array -> sPixel array2D[dim0][dim1]
  *
  * \par Output:
  *    memory size in bytes
  ************************************************************************/
-int get_mem2Dpel (imgpel ***array2D, int dim0, int dim1)
+int get_mem2Dpel (sPixel ***array2D, int dim0, int dim1)
 {
   int i;
 
-  if((*array2D    = (imgpel**)mem_malloc(dim0 *        sizeof(imgpel*))) == NULL)
+  if((*array2D    = (sPixel**)mem_malloc(dim0 *        sizeof(sPixel*))) == NULL)
     no_mem_exit("get_mem2Dpel: array2D");
-  if((*(*array2D) = (imgpel* )mem_malloc(dim0 * dim1 * sizeof(imgpel ))) == NULL)
+  if((*(*array2D) = (sPixel* )mem_malloc(dim0 * dim1 * sizeof(sPixel ))) == NULL)
     no_mem_exit("get_mem2Dpel: array2D");
 
   for(i = 1 ; i < dim0; i++)
@@ -628,21 +628,21 @@ int get_mem2Dpel (imgpel ***array2D, int dim0, int dim1)
     (*array2D)[i] = (*array2D)[i-1] + dim1;
   }
 
-  return dim0 * (sizeof(imgpel*) + dim1 * sizeof(imgpel));
+  return dim0 * (sizeof(sPixel*) + dim1 * sizeof(sPixel));
 }
 //}}}
 //{{{
-int get_mem2Dpel_pad (imgpel ***array2D, int dim0, int dim1, int iPadY, int iPadX)
+int get_mem2Dpel_pad (sPixel ***array2D, int dim0, int dim1, int iPadY, int iPadX)
 {
   int i;
-  imgpel *curr = NULL;
+  sPixel *curr = NULL;
   int iHeight, iWidth;
 
   iHeight = dim0+2*iPadY;
   iWidth = dim1+2*iPadX;
-  if((*array2D    = (imgpel**)mem_malloc(iHeight*sizeof(imgpel*))) == NULL)
+  if((*array2D    = (sPixel**)mem_malloc(iHeight*sizeof(sPixel*))) == NULL)
     no_mem_exit("get_mem2Dpel_pad: array2D");
-  if((*(*array2D) = (imgpel* )mem_calloc(iHeight * iWidth, sizeof(imgpel ))) == NULL)
+  if((*(*array2D) = (sPixel* )mem_calloc(iHeight * iWidth, sizeof(sPixel ))) == NULL)
     no_mem_exit("get_mem2Dpel_pad: array2D");
 
   (*array2D)[0] += iPadX;
@@ -654,24 +654,24 @@ int get_mem2Dpel_pad (imgpel ***array2D, int dim0, int dim1, int iPadY, int iPad
   }
   (*array2D) = &((*array2D)[iPadY]);
 
-  return iHeight * (sizeof(imgpel*) + iWidth * sizeof(imgpel));
+  return iHeight * (sizeof(sPixel*) + iWidth * sizeof(sPixel));
 }
 //}}}
 //{{{
 /*!
  ************************************************************************
  * \brief
- *    Allocate 3D memory array -> imgpel array3D[dim0][dim1][dim2]
+ *    Allocate 3D memory array -> sPixel array3D[dim0][dim1][dim2]
  *
  * \par Output:
  *    memory size in bytes
  ************************************************************************
  */
-int get_mem3Dpel (imgpel ****array3D, int dim0, int dim1, int dim2)
+int get_mem3Dpel (sPixel ****array3D, int dim0, int dim1, int dim2)
 {
-  int i, mem_size = dim0 * sizeof(imgpel**);
+  int i, mem_size = dim0 * sizeof(sPixel**);
 
-  if(((*array3D) = (imgpel***)malloc(dim0 * sizeof(imgpel**))) == NULL)
+  if(((*array3D) = (sPixel***)malloc(dim0 * sizeof(sPixel**))) == NULL)
     no_mem_exit("get_mem3Dpel: array3D");
 
   mem_size += get_mem2Dpel(*array3D, dim0 * dim1, dim2);
@@ -682,11 +682,11 @@ int get_mem3Dpel (imgpel ****array3D, int dim0, int dim1, int dim2)
   return mem_size;
 }
 
-int get_mem3Dpel_pad(imgpel ****array3D, int dim0, int dim1, int dim2, int iPadY, int iPadX)
+int get_mem3Dpel_pad(sPixel ****array3D, int dim0, int dim1, int dim2, int iPadY, int iPadX)
 {
-  int i, mem_size = dim0 * sizeof(imgpel**);
+  int i, mem_size = dim0 * sizeof(sPixel**);
 
-  if(((*array3D) = (imgpel***)mem_malloc(dim0*sizeof(imgpel**))) == NULL)
+  if(((*array3D) = (sPixel***)mem_malloc(dim0*sizeof(sPixel**))) == NULL)
     no_mem_exit("get_mem3Dpel_pad: array3D");
 
   for(i = 0; i < dim0; i++)
@@ -699,17 +699,17 @@ int get_mem3Dpel_pad(imgpel ****array3D, int dim0, int dim1, int dim2, int iPadY
 /*!
  ************************************************************************
  * \brief
- *    Allocate 4D memory array -> imgpel array4D[dim0][dim1][dim2][dim3]
+ *    Allocate 4D memory array -> sPixel array4D[dim0][dim1][dim2][dim3]
  *
  * \par Output:
  *    memory size in bytes
  ************************************************************************
  */
-int get_mem4Dpel (imgpel *****array4D, int dim0, int dim1, int dim2, int dim3)
+int get_mem4Dpel (sPixel *****array4D, int dim0, int dim1, int dim2, int dim3)
 {
-  int  i, mem_size = dim0 * sizeof(imgpel***);
+  int  i, mem_size = dim0 * sizeof(sPixel***);
 
-  if(((*array4D) = (imgpel****)mem_malloc(dim0 * sizeof(imgpel***))) == NULL)
+  if(((*array4D) = (sPixel****)mem_malloc(dim0 * sizeof(sPixel***))) == NULL)
     no_mem_exit("get_mem4Dpel: array4D");
 
   mem_size += get_mem3Dpel(*array4D, dim0 * dim1, dim2, dim3);
@@ -721,11 +721,11 @@ int get_mem4Dpel (imgpel *****array4D, int dim0, int dim1, int dim2, int dim3)
 }
 //}}}
 //{{{
-int get_mem4Dpel_pad (imgpel *****array4D, int dim0, int dim1, int dim2, int dim3, int iPadY, int iPadX)
+int get_mem4Dpel_pad (sPixel *****array4D, int dim0, int dim1, int dim2, int dim3, int iPadY, int iPadX)
 {
-  int  i, mem_size = dim0 * sizeof(imgpel***);
+  int  i, mem_size = dim0 * sizeof(sPixel***);
 
-  if(((*array4D) = (imgpel****)mem_malloc(dim0 * sizeof(imgpel***))) == NULL)
+  if(((*array4D) = (sPixel****)mem_malloc(dim0 * sizeof(sPixel***))) == NULL)
     no_mem_exit("get_mem4Dpel_pad: array4D");
 
   mem_size += get_mem3Dpel_pad(*array4D, dim0 * dim1, dim2, dim3, iPadY, iPadX);
@@ -740,17 +740,17 @@ int get_mem4Dpel_pad (imgpel *****array4D, int dim0, int dim1, int dim2, int dim
 /*!
  ************************************************************************
  * \brief
- *    Allocate 5D memory array -> imgpel array5D[dim0][dim1][dim2][dim3][dim4]
+ *    Allocate 5D memory array -> sPixel array5D[dim0][dim1][dim2][dim3][dim4]
  *
  * \par Output:
  *    memory size in bytes
  ************************************************************************
  */
-int get_mem5Dpel (imgpel ******array5D, int dim0, int dim1, int dim2, int dim3, int dim4)
+int get_mem5Dpel (sPixel ******array5D, int dim0, int dim1, int dim2, int dim3, int dim4)
 {
-  int  i, mem_size = dim0 * sizeof(imgpel****);
+  int  i, mem_size = dim0 * sizeof(sPixel****);
 
-  if(((*array5D) = (imgpel*****)mem_malloc(dim0 * sizeof(imgpel****))) == NULL)
+  if(((*array5D) = (sPixel*****)mem_malloc(dim0 * sizeof(sPixel****))) == NULL)
     no_mem_exit("get_mem5Dpel: array5D");
 
   mem_size += get_mem4Dpel(*array5D, dim0 * dim1, dim2, dim3, dim4);
@@ -762,11 +762,11 @@ int get_mem5Dpel (imgpel ******array5D, int dim0, int dim1, int dim2, int dim3, 
 }
 //}}}
 //{{{
-int get_mem5Dpel_pad (imgpel ******array5D, int dim0, int dim1, int dim2, int dim3, int dim4, int iPadY, int iPadX)
+int get_mem5Dpel_pad (sPixel ******array5D, int dim0, int dim1, int dim2, int dim3, int dim4, int iPadY, int iPadX)
 {
-  int  i, mem_size = dim0 * sizeof(imgpel****);
+  int  i, mem_size = dim0 * sizeof(sPixel****);
 
-  if(((*array5D) = (imgpel*****)mem_malloc(dim0 * sizeof(imgpel****))) == NULL)
+  if(((*array5D) = (sPixel*****)mem_malloc(dim0 * sizeof(sPixel****))) == NULL)
     no_mem_exit("get_mem5Dpel_pad: array5D");
 
   mem_size += get_mem4Dpel_pad(*array5D, dim0 * dim1, dim2, dim3, dim4, iPadY, iPadX);
@@ -786,7 +786,7 @@ int get_mem5Dpel_pad (imgpel ******array5D, int dim0, int dim1, int dim2, int di
  *    which was allocated with get_mem1Dpel()
  ************************************************************************
  */
-void free_mem1Dpel (imgpel *array1D)
+void free_mem1Dpel (sPixel *array1D)
 {
   if (array1D)
   {
@@ -806,7 +806,7 @@ void free_mem1Dpel (imgpel *array1D)
  *    which was allocated with get_mem2Dpel()
  ************************************************************************
  */
-void free_mem2Dpel (imgpel **array2D)
+void free_mem2Dpel (sPixel **array2D)
 {
   if (array2D)
   {
@@ -824,7 +824,7 @@ void free_mem2Dpel (imgpel **array2D)
 }
 //}}}
 //{{{
-void free_mem2Dpel_pad (imgpel **array2D, int iPadY, int iPadX)
+void free_mem2Dpel_pad (sPixel **array2D, int iPadY, int iPadX)
 {
   if (array2D)
   {
@@ -851,7 +851,7 @@ void free_mem2Dpel_pad (imgpel **array2D, int iPadY, int iPadX)
  *    which was allocated with get_mem3Dpel()
  ************************************************************************
  */
-void free_mem3Dpel (imgpel ***array3D)
+void free_mem3Dpel (sPixel ***array3D)
 {
   if (array3D)
   {
@@ -865,7 +865,7 @@ void free_mem3Dpel (imgpel ***array3D)
 }
 //}}}
 //{{{
-void free_mem3Dpel_pad (imgpel ***array3D, int iDim12, int iPadY, int iPadX)
+void free_mem3Dpel_pad (sPixel ***array3D, int iDim12, int iPadY, int iPadX)
 {
   if (array3D)
   {
@@ -893,7 +893,7 @@ void free_mem3Dpel_pad (imgpel ***array3D, int iDim12, int iPadY, int iPadX)
  *    which was allocated with get_mem4Dpel()
  ************************************************************************
  */
-void free_mem4Dpel (imgpel ****array4D)
+void free_mem4Dpel (sPixel ****array4D)
 {
   if (array4D)
   {
@@ -907,7 +907,7 @@ void free_mem4Dpel (imgpel ****array4D)
 }
 //}}}
 //{{{
-void free_mem4Dpel_pad (imgpel  ****array4D, int iFrames, int iPadY, int iPadX)
+void free_mem4Dpel_pad (sPixel  ****array4D, int iFrames, int iPadY, int iPadX)
 {
   if (array4D)
   {
@@ -928,7 +928,7 @@ void free_mem4Dpel_pad (imgpel  ****array4D, int iFrames, int iPadY, int iPadX)
  *    which was allocated with get_mem5Dpel()
  ************************************************************************
  */
-void free_mem5Dpel (imgpel *****array5D)
+void free_mem5Dpel (sPixel *****array5D)
 {
   if (array5D)
   {
@@ -942,7 +942,7 @@ void free_mem5Dpel (imgpel *****array5D)
 }
 //}}}
 //{{{
-void free_mem5Dpel_pad (imgpel *****array5D, int iFrames, int iPadY, int iPadX)
+void free_mem5Dpel_pad (sPixel *****array5D, int iFrames, int iPadY, int iPadX)
 {
   if (array5D)
   {
