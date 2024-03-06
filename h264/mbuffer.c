@@ -11,8 +11,8 @@
 #include "output.h"
 //}}}
 #define MAX_LIST_SIZE 33
-
 //#define DUMP_DPB
+
 //{{{
 static void dump_dpb (sDPB* dpb) {
 
@@ -1095,7 +1095,7 @@ sPicture* allocPicture (sVidParam* vidParam, sPictureStructure structure,
                         int size_x, int size_y, int size_x_cr, int size_y_cr, int is_output) {
 
   sSPSrbsp* active_sps = vidParam->active_sps;
-  //printf ("Allocating (%s) picture (x=%d, y=%d, x_cr=%d, y_cr=%d)\n", 
+  //printf ("Allocating (%s) picture (x=%d, y=%d, x_cr=%d, y_cr=%d)\n",
   //        (type == FRAME)?"FRAME":(type == TOP_FIELD)?"TOP_FIELD":"BOTTOM_FIELD",
   //        size_x, size_y, size_x_cr, size_y_cr);
 
@@ -1170,9 +1170,9 @@ sPicture* allocPicture (sVidParam* vidParam, sPictureStructure structure,
   if (!vidParam->active_sps->frame_mbs_only_flag && structure != FRAME) {
     for (int j = 0; j < MAX_NUM_SLICES; j++) {
       for (int i = 0; i < 2; i++) {
-        s->listX[j][i] = calloc(MAX_LIST_SIZE, sizeof (sPicture*)); // +1 for reordering
+        s->listX[j][i] = calloc (MAX_LIST_SIZE, sizeof (sPicture*)); // +1 for reordering
         if (NULL==s->listX[j][i])
-        no_mem_exit ("allocPicture: s->listX[i]");
+          no_mem_exit ("allocPicture: s->listX[i]");
         }
       }
     }
@@ -1474,9 +1474,9 @@ void init_lists_p_slice (sSlice* currSlice) {
   currSlice->listXsize[1] = (char) imin (currSlice->listXsize[1], currSlice->num_ref_idx_active[LIST_1]);
 
   // set the unused list entries to NULL
-  for (i = currSlice->listXsize[0]; i< (MAX_LIST_SIZE) ; i++)
+  for (i = currSlice->listXsize[0]; i < (MAX_LIST_SIZE) ; i++)
     currSlice->listX[0][i] = vidParam->no_reference_picture;
-  for (i = currSlice->listXsize[1]; i< (MAX_LIST_SIZE) ; i++)
+  for (i = currSlice->listXsize[1]; i < (MAX_LIST_SIZE) ; i++)
     currSlice->listX[1][i] = vidParam->no_reference_picture;
   }
 //}}}
@@ -1621,36 +1621,27 @@ void init_lists_b_slice (sSlice* currSlice) {
   currSlice->listXsize[1] = (char) imin (currSlice->listXsize[1], currSlice->num_ref_idx_active[LIST_1]);
 
   // set the unused list entries to NULL
-  for (i=currSlice->listXsize[0]; i< (MAX_LIST_SIZE) ; i++)
+  for (i=currSlice->listXsize[0]; i < (MAX_LIST_SIZE) ; i++)
     currSlice->listX[0][i] = vidParam->no_reference_picture;
-  for (i=currSlice->listXsize[1]; i< (MAX_LIST_SIZE) ; i++)
+  for (i=currSlice->listXsize[1]; i < (MAX_LIST_SIZE) ; i++)
     currSlice->listX[1][i] = vidParam->no_reference_picture;
   }
 //}}}
 //{{{
-/*!
-** **********************************************************************
- * \brief
- *    Initialize listX[2..5] from lists 0 and 1
- *    listX[2]: list0 for current_field==top
- *    listX[3]: list1 for current_field==top
- *    listX[4]: list0 for current_field==bottom
- *    listX[5]: list1 for current_field==bottom
- *
-** **********************************************************************
- */
-void init_mbaff_lists (sVidParam* vidParam, sSlice* currSlice)
-{
-  unsigned j;
-  int i;
+void init_mbaff_lists (sVidParam* vidParam, sSlice* currSlice) {
+// Initialize listX[2..5] from lists 0 and 1
+//   listX[2]: list0 for current_field==top
+//   listX[3]: list1 for current_field==top
+//   listX[4]: list0 for current_field==bottom
+//   listX[5]: list1 for current_field==bottom
 
-  for (i=2;i<6;i++) {
-    for (j=0; j<MAX_LIST_SIZE; j++)
+  for (int i = 2; i < 6; i++) {
+    for (unsigned j = 0; j < MAX_LIST_SIZE; j++)
       currSlice->listX[i][j] = vidParam->no_reference_picture;
     currSlice->listXsize[i]=0;
     }
 
-  for (i = 0; i < currSlice->listXsize[0]; i++) {
+  for (int i = 0; i < currSlice->listXsize[0]; i++) {
     currSlice->listX[2][2*i  ] = currSlice->listX[0][i]->top_field;
     currSlice->listX[2][2*i+1] = currSlice->listX[0][i]->bottom_field;
     currSlice->listX[4][2*i  ] = currSlice->listX[0][i]->bottom_field;
@@ -1658,7 +1649,7 @@ void init_mbaff_lists (sVidParam* vidParam, sSlice* currSlice)
     }
   currSlice->listXsize[2] = currSlice->listXsize[4] = currSlice->listXsize[0] * 2;
 
-  for (i = 0; i < currSlice->listXsize[1]; i++) {
+  for (int i = 0; i < currSlice->listXsize[1]; i++) {
     currSlice->listX[3][2*i  ] = currSlice->listX[1][i]->top_field;
     currSlice->listX[3][2*i+1] = currSlice->listX[1][i]->bottom_field;
     currSlice->listX[5][2*i  ] = currSlice->listX[1][i]->bottom_field;
@@ -1670,9 +1661,7 @@ void init_mbaff_lists (sVidParam* vidParam, sSlice* currSlice)
 //{{{
 sPicture* get_short_term_pic (sSlice* currSlice, sDPB* dpb, int picNum) {
 
-  unsigned i;
-
-  for (i = 0; i < dpb->ref_frames_in_buffer; i++) {
+  for (unsigned i = 0; i < dpb->ref_frames_in_buffer; i++) {
     if (currSlice->structure == FRAME) {
       if (dpb->fs_ref[i]->is_reference == 3)
         if ((!dpb->fs_ref[i]->frame->is_long_term)&&(dpb->fs_ref[i]->frame->pic_num == picNum))
@@ -1694,68 +1683,50 @@ sPicture* get_short_term_pic (sSlice* currSlice, sDPB* dpb, int picNum) {
 
 //{{{
 static void reorder_short_term (sSlice* currSlice, int cur_list, int num_ref_idx_lX_active_minus1, int picNumLX, int *refIdxLX) {
+
   sPicture** RefPicListX = currSlice->listX[cur_list];
-  int cIdx, nIdx;
+  sPicture* picLX = get_short_term_pic (currSlice, currSlice->dpb, picNumLX);
 
-  sPicture *picLX;
+  for (int cIdx = num_ref_idx_lX_active_minus1+1; cIdx > *refIdxLX; cIdx--)
+    RefPicListX[cIdx] = RefPicListX[cIdx - 1];
+  RefPicListX[(*refIdxLX)++] = picLX;
 
-  picLX = get_short_term_pic(currSlice, currSlice->dpb, picNumLX);
-
-  for( cIdx = num_ref_idx_lX_active_minus1+1; cIdx > *refIdxLX; cIdx-- )
-    RefPicListX[ cIdx ] = RefPicListX[ cIdx - 1];
-
-  RefPicListX[ (*refIdxLX)++ ] = picLX;
-
-  nIdx = *refIdxLX;
-
-  for( cIdx = *refIdxLX; cIdx <= num_ref_idx_lX_active_minus1+1; cIdx++ )
-  {
-    if (RefPicListX[ cIdx ])
-      if( (RefPicListX[ cIdx ]->is_long_term ) ||  (RefPicListX[ cIdx ]->pic_num != picNumLX ))
-        RefPicListX[ nIdx++ ] = RefPicListX[ cIdx ];
+  int nIdx = *refIdxLX;
+  for (int cIdx = *refIdxLX; cIdx <= num_ref_idx_lX_active_minus1+1; cIdx++)
+    if (RefPicListX[cIdx])
+      if ((RefPicListX[cIdx]->is_long_term) || (RefPicListX[cIdx]->pic_num != picNumLX))
+        RefPicListX[nIdx++] = RefPicListX[ cIdx ];
   }
-}
 //}}}
 //{{{
-static void reorder_long_term (sSlice* currSlice, sPicture** RefPicListX, int num_ref_idx_lX_active_minus1, int LongTermPicNum, int *refIdxLX)
-{
-  int cIdx, nIdx;
+static void reorder_long_term (sSlice* currSlice, sPicture** RefPicListX,
+                               int num_ref_idx_lX_active_minus1, int LongTermPicNum, int *refIdxLX) {
 
-  sPicture *picLX;
+  sPicture *picLX = get_long_term_pic (currSlice, currSlice->dpb, LongTermPicNum);
 
-  picLX = get_long_term_pic(currSlice, currSlice->dpb, LongTermPicNum);
+  for (int cIdx = num_ref_idx_lX_active_minus1+1; cIdx > *refIdxLX; cIdx--)
+    RefPicListX[cIdx] = RefPicListX[cIdx - 1];
+  RefPicListX[(*refIdxLX)++] = picLX;
 
-  for( cIdx = num_ref_idx_lX_active_minus1+1; cIdx > *refIdxLX; cIdx-- )
-    RefPicListX[ cIdx ] = RefPicListX[ cIdx - 1];
-
-  RefPicListX[ (*refIdxLX)++ ] = picLX;
-
-  nIdx = *refIdxLX;
-
-  for( cIdx = *refIdxLX; cIdx <= num_ref_idx_lX_active_minus1+1; cIdx++ )
-  {
-    if (RefPicListX[ cIdx ])
-    {
-      if( (!RefPicListX[ cIdx ]->is_long_term ) ||  (RefPicListX[ cIdx ]->long_term_pic_num != LongTermPicNum ))
-        RefPicListX[ nIdx++ ] = RefPicListX[ cIdx ];
-    }
+  int nIdx = *refIdxLX;
+  for (int cIdx = *refIdxLX; cIdx <= num_ref_idx_lX_active_minus1+1; cIdx++)
+    if (RefPicListX[cIdx])
+      if ((!RefPicListX[cIdx]->is_long_term ) || (RefPicListX[cIdx]->long_term_pic_num != LongTermPicNum))
+        RefPicListX[nIdx++] = RefPicListX[cIdx];
   }
-}
 //}}}
 
 //{{{
 static void sliding_window_memory_management (sDPB* dpb, sPicture* p) {
 
-  uint32 i;
-
   assert (!p->idr_flag);
 
   // if this is a reference pic with sliding window, unmark first ref frame
-  if (dpb->ref_frames_in_buffer == imax(1, dpb->num_ref_frames) - dpb->ltref_frames_in_buffer) {
-    for (i = 0; i < dpb->used_size; i++) {
+  if (dpb->ref_frames_in_buffer == imax (1, dpb->num_ref_frames) - dpb->ltref_frames_in_buffer) {
+    for (uint32 i = 0; i < dpb->used_size; i++) {
       if (dpb->fs[i]->is_reference && (!(dpb->fs[i]->is_long_term))) {
-        unmark_for_reference(dpb->fs[i]);
-        update_ref_list(dpb);
+        unmark_for_reference (dpb->fs[i]);
+        update_ref_list (dpb);
         break;
         }
       }
@@ -1767,7 +1738,7 @@ static void sliding_window_memory_management (sDPB* dpb, sPicture* p) {
 //{{{
 static void adaptive_memory_management (sDPB* dpb, sPicture* p) {
 
-  DecRefPicMarking_t *tmp_drpm;
+  DecRefPicMarking_t* tmp_drpm;
   sVidParam* vidParam = dpb->vidParam;
 
   vidParam->last_has_mmco_5 = 0;
@@ -1781,47 +1752,45 @@ static void adaptive_memory_management (sDPB* dpb, sPicture* p) {
       //{{{
       case 0:
         if (tmp_drpm->Next != NULL)
-        {
           error ("memory_management_control_operation = 0 not last operation in buffer", 500);
-        }
         break;
       //}}}
       //{{{
       case 1:
-        mm_unmark_short_term_for_reference(dpb, p, tmp_drpm->difference_of_pic_nums_minus1);
-        update_ref_list(dpb);
+        mm_unmark_short_term_for_reference (dpb, p, tmp_drpm->difference_of_pic_nums_minus1);
+        update_ref_list (dpb);
         break;
       //}}}
       //{{{
       case 2:
-        mm_unmark_long_term_for_reference(dpb, p, tmp_drpm->long_term_pic_num);
-        update_ltref_list(dpb);
+        mm_unmark_long_term_for_reference (dpb, p, tmp_drpm->long_term_pic_num);
+        update_ltref_list (dpb);
         break;
       //}}}
       //{{{
       case 3:
-        mm_assign_long_term_frame_idx(dpb, p, tmp_drpm->difference_of_pic_nums_minus1, tmp_drpm->long_term_frame_idx);
-        update_ref_list(dpb);
+        mm_assign_long_term_frame_idx (dpb, p, tmp_drpm->difference_of_pic_nums_minus1, tmp_drpm->long_term_frame_idx);
+        update_ref_list (dpb);
         update_ltref_list(dpb);
         break;
       //}}}
       //{{{
       case 4:
         mm_update_max_long_term_frame_idx (dpb, tmp_drpm->max_long_term_frame_idx_plus1);
-        update_ltref_list(dpb);
+        update_ltref_list (dpb);
         break;
       //}}}
       //{{{
       case 5:
-        mm_unmark_all_short_term_for_reference(dpb);
-        mm_unmark_all_long_term_for_reference(dpb);
+        mm_unmark_all_short_term_for_reference (dpb);
+        mm_unmark_all_long_term_for_reference (dpb);
         vidParam->last_has_mmco_5 = 1;
         break;
       //}}}
       //{{{
       case 6:
-        mm_mark_current_picture_long_term(dpb, p, tmp_drpm->long_term_frame_idx);
-        check_num_ref(dpb);
+        mm_mark_current_picture_long_term (dpb, p, tmp_drpm->long_term_frame_idx);
+        check_num_ref (dpb);
         break;
       //}}}
       //{{{
@@ -1833,38 +1802,25 @@ static void adaptive_memory_management (sDPB* dpb, sPicture* p) {
     free (tmp_drpm);
     }
 
-  if ( vidParam->last_has_mmco_5 ) {
+  if (vidParam->last_has_mmco_5 ) {
     p->pic_num = p->frame_num = 0;
     switch (p->structure) {
       //{{{
       case TOP_FIELD:
-        {
-          //p->poc = p->top_poc = vidParam->toppoc =0;
-          p->poc = p->top_poc = 0;
-          break;
-        }
+        p->poc = p->top_poc = 0;
+        break;
       //}}}
       //{{{
       case BOTTOM_FIELD:
-        {
-          //p->poc = p->bottom_poc = vidParam->bottompoc = 0;
-          p->poc = p->bottom_poc = 0;
-          break;
-        }
+        p->poc = p->bottom_poc = 0;
+        break;
       //}}}
       //{{{
       case FRAME:
-        {
-          p->top_poc    -= p->poc;
-          p->bottom_poc -= p->poc;
-
-          //vidParam->toppoc = p->top_poc;
-          //vidParam->bottompoc = p->bottom_poc;
-
-          p->poc = imin (p->top_poc, p->bottom_poc);
-          //vidParam->framepoc = p->poc;
-          break;
-        }
+        p->top_poc    -= p->poc;
+        p->bottom_poc -= p->poc;
+        p->poc = imin (p->top_poc, p->bottom_poc);
+        break;
       //}}}
       }
 
@@ -1875,20 +1831,18 @@ static void adaptive_memory_management (sDPB* dpb, sPicture* p) {
 //{{{
 void idr_memory_management (sDPB* dpb, sPicture* p) {
 
-  uint32 i;
-
   if (p->no_output_of_prior_pics_flag) {
     // free all stored pictures
-    for (i=0; i<dpb->used_size; i++) {
+    for (uint32 i = 0; i < dpb->used_size; i++) {
       // reset all reference settings
       free_frame_store (dpb->fs[i]);
       dpb->fs[i] = alloc_frame_store();
       }
-    for (i = 0; i < dpb->ref_frames_in_buffer; i++)
+    for (uint32 i = 0; i < dpb->ref_frames_in_buffer; i++)
       dpb->fs_ref[i]=NULL;
-    for (i=0; i<dpb->ltref_frames_in_buffer; i++)
+    for (uint32 i = 0; i < dpb->ltref_frames_in_buffer; i++)
       dpb->fs_ltref[i]=NULL;
-    dpb->used_size=0;
+    dpb->used_size = 0;
     }
   else
     flush_dpb (dpb);
@@ -1901,14 +1855,13 @@ void idr_memory_management (sDPB* dpb, sPicture* p) {
 
   if (p->long_term_reference_flag) {
     dpb->max_long_term_pic_idx = 0;
-    p->is_long_term           = 1;
-    p->long_term_frame_idx    = 0;
+    p->is_long_term = 1;
+    p->long_term_frame_idx = 0;
     }
   else {
     dpb->max_long_term_pic_idx = -1;
-    p->is_long_term           = 0;
+    p->is_long_term = 0;
     }
-
   }
 //}}}
 
