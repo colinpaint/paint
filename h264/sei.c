@@ -65,10 +65,7 @@ typedef enum {
   SEI_MAX_ELEMENTS  //!< number of maximum syntax elements
   } SEI_type;
 //}}}
-#define MAX_FN 256
-#define MAX_CODED_BIT_DEPTH  12
-#define MAX_SEI_BIT_DEPTH    12
-#define MAX_NUM_PIVOTS     (1<<MAX_CODED_BIT_DEPTH)
+#define MAX_FN               256
 //{{{  frame_packing_arrangement_information_struct
 typedef struct {
   unsigned int  frame_packing_arrangement_id;
