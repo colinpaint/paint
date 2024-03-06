@@ -2152,7 +2152,7 @@ void dpb_split_field (sVidParam* vidParam, sFrameStore *fs)
 
     fs_top->chroma_format_idc = fs_btm->chroma_format_idc = frame->chroma_format_idc;
     fs_top->iCodingType = fs_btm->iCodingType = frame->iCodingType;
-    if(frame->used_for_reference)  {
+    if (frame->used_for_reference)  {
       pad_dec_picture (vidParam, fs_top);
       pad_dec_picture (vidParam, fs_btm);
       }

@@ -340,10 +340,7 @@ extern void fill_frame_num_gap (sVidParam* vidParam, sSlice *pSlice);
 
 extern void compute_colocated (sSlice* currSlice, sPicture** listX[6]);
 
-extern void pad_dec_picture (sVidParam* vidParam, sPicture* picture);
-extern void pad_buf (sPixel *pImgBuf, int iWidth, int iHeight, int iStride, int iPadX, int iPadY);
-
-extern sPicture * clone_storable_picture (sVidParam* vidParam, sPicture *p_pic );
+extern sPicture* clone_storable_picture (sVidParam* vidParam, sPicture *p_pic );
 
 extern void store_proc_picture_in_dpb (sDPB* dpb, sPicture* p);
 extern int init_img_data (sVidParam* vidParam, ImageData *p_ImgData, sSPSrbsp *sps);

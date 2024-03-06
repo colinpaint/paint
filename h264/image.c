@@ -66,6 +66,33 @@ static void setupBuffers (sVidParam* vidParam, int layer_id) {
     }
   }
 //}}}
+//{{{
+static void pad_buf (sPixel* pImgBuf, int iWidth, int iHeight, int iStride, int iPadX, int iPadY) {
+
+  int pad_width = iPadX + iWidth;
+  memset (pImgBuf - iPadX, *pImgBuf, iPadX * sizeof(sPixel));
+  memset (pImgBuf + iWidth, *(pImgBuf + iWidth - 1), iPadX * sizeof(sPixel));
+
+  sPixel* pLine0 = pImgBuf - iPadX;
+  sPixel* pLine = pLine0 - iPadY * iStride;
+  for (int j = -iPadY; j < 0; j++) {
+    memcpy (pLine, pLine0, iStride * sizeof(sPixel));
+    pLine += iStride;
+    }
+
+  for (int j = 1; j < iHeight; j++) {
+    pLine += iStride;
+    memset (pLine, *(pLine + iPadX), iPadX * sizeof(sPixel));
+    memset (pLine + pad_width, *(pLine + pad_width - 1), iPadX * sizeof(sPixel));
+    }
+
+  pLine0 = pLine + iStride;
+  for (int j = iHeight; j < iHeight + iPadY; j++) {
+    memcpy (pLine0,  pLine, iStride * sizeof(sPixel));
+    pLine0 += iStride;
+    }
+  }
+//}}}
 
 //{{{
 static void update_mbaff_macroblock_data (sPixel** cur_img, sPixel (*temp)[16], int x0, int width, int height) {
@@ -1072,55 +1099,6 @@ static int readNewSlice (sSlice* currSlice) {
 //}}}
 
 //{{{
-void pad_buf (sPixel* pImgBuf, int iWidth, int iHeight, int iStride, int iPadX, int iPadY) {
-
-  int pad_width = iPadX + iWidth;
-  memset (pImgBuf - iPadX, *pImgBuf, iPadX * sizeof(sPixel));
-  memset (pImgBuf + iWidth, *(pImgBuf + iWidth - 1), iPadX * sizeof(sPixel));
-
-  sPixel* pLine0 = pImgBuf - iPadX;
-  sPixel* pLine = pLine0 - iPadY * iStride;
-  for (int j = -iPadY; j < 0; j++) {
-    memcpy (pLine, pLine0, iStride * sizeof(sPixel));
-    pLine += iStride;
-    }
-
-  for (int j = 1; j < iHeight; j++) {
-    pLine += iStride;
-    memset (pLine, *(pLine + iPadX), iPadX * sizeof(sPixel));
-    memset (pLine + pad_width, *(pLine + pad_width - 1), iPadX * sizeof(sPixel));
-    }
-
-  pLine0 = pLine + iStride;
-  for (int j = iHeight; j < iHeight + iPadY; j++) {
-    memcpy (pLine0,  pLine, iStride * sizeof(sPixel));
-    pLine0 += iStride;
-    }
-  }
-//}}}
-//{{{
-void pad_dec_picture (sVidParam* vidParam, sPicture* picture)
-{
-  int iPadX = vidParam->iLumaPadX;
-  int iPadY = vidParam->iLumaPadY;
-  int iWidth = picture->size_x;
-  int iHeight = picture->size_y;
-  int iStride = picture->iLumaStride;
-
-  pad_buf (*picture->imgY, iWidth, iHeight, iStride, iPadX, iPadY);
-
-  if (picture->chroma_format_idc != YUV400) {
-    iPadX = vidParam->iChromaPadX;
-    iPadY = vidParam->iChromaPadY;
-    iWidth = picture->size_x_cr;
-    iHeight = picture->size_y_cr;
-    iStride = picture->iChromaStride;
-    pad_buf (*picture->imgUV[0], iWidth, iHeight, iStride, iPadX, iPadY);
-    pad_buf (*picture->imgUV[1], iWidth, iHeight, iStride, iPadX, iPadY);
-    }
-  }
-//}}}
-//{{{
 void init_old_slice (OldSliceParams* p_old_slice) {
 
   p_old_slice->field_pic_flag = 0;
@@ -1146,6 +1124,28 @@ void calcFrameNum (sVidParam* vidParam, sPicture *p) {
     vidParam->idr_psnr_number = vidParam->g_nFrame * vidParam->ref_poc_gap/(p_Inp->poc_scale);
   vidParam->psnr_number = imax (vidParam->psnr_number, vidParam->idr_psnr_number+psnrPOC);
   vidParam->frame_no = vidParam->idr_psnr_number + psnrPOC;
+  }
+//}}}
+//{{{
+void pad_dec_picture (sVidParam* vidParam, sPicture* picture)
+{
+  int iPadX = vidParam->iLumaPadX;
+  int iPadY = vidParam->iLumaPadY;
+  int iWidth = picture->size_x;
+  int iHeight = picture->size_y;
+  int iStride = picture->iLumaStride;
+
+  pad_buf (*picture->imgY, iWidth, iHeight, iStride, iPadX, iPadY);
+
+  if (picture->chroma_format_idc != YUV400) {
+    iPadX = vidParam->iChromaPadX;
+    iPadY = vidParam->iChromaPadY;
+    iWidth = picture->size_x_cr;
+    iHeight = picture->size_y_cr;
+    iStride = picture->iChromaStride;
+    pad_buf (*picture->imgUV[0], iWidth, iHeight, iStride, iPadX, iPadY);
+    pad_buf (*picture->imgUV[1], iWidth, iHeight, iStride, iPadX, iPadY);
+    }
   }
 //}}}
 //{{{
