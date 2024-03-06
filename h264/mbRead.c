@@ -453,7 +453,7 @@ static void concealIPCMcoeffs (sMacroblock* currMB)
 //{{{
 static void init_decoding_engine_IPCM (sSlice* currSlice)
 {
-  Bitstream* currStream;
+  sBitstream* currStream;
   int ByteStartPosition;
   int PartitionNumber;
   int i;

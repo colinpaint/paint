@@ -363,7 +363,7 @@ static int spsIsEqual (sSPSrbsp* sps1, sSPSrbsp* sps2) {
 //{{{
 // syntax for scaling list matrix values
 static void scalingList (int *scalingList, int sizeOfScalingList,
-                         Boolean* useDefaultScalingMatrix, Bitstream* s) {
+                         Boolean* useDefaultScalingMatrix, sBitstream* s) {
 
   int lastScale = 8;
   int nextScale = 8;
@@ -388,7 +388,7 @@ static void initVUI (sSPSrbsp* sps) {
 //{{{
 static int readHRDParameters (sDataPartition* p, sHRDparams* hrd) {
 
-  Bitstream *s = p->bitstream;
+  sBitstream *s = p->bitstream;
   hrd->cpb_cnt_minus1 = read_ue_v ("VUI cpb_cnt_minus1", s);
   hrd->bit_rate_scale = read_u_v (4, "VUI bit_rate_scale", s);
   hrd->cpb_size_scale = read_u_v (4, "VUI cpb_size_scale", s);
@@ -412,7 +412,7 @@ static int readHRDParameters (sDataPartition* p, sHRDparams* hrd) {
 //{{{
 static int readVUI (sDataPartition* p, sSPSrbsp* sps) {
 
-  Bitstream* s = p->bitstream;
+  sBitstream* s = p->bitstream;
   if (sps->vui_parameters_present_flag) {
     sps->vui_seq_parameters.aspect_ratio_info_present_flag = read_u_1 ("VUI aspect_ratio_info_present_flag", s);
     if (sps->vui_seq_parameters.aspect_ratio_info_present_flag) {
@@ -488,7 +488,7 @@ static void interpretSPS (sVidParam* vidParam, sDataPartition* p, sSPSrbsp* sps)
   unsigned i;
   unsigned n_ScalingList;
   int reserved_zero;
-  Bitstream *s = p->bitstream;
+  sBitstream *s = p->bitstream;
 
   assert (p != NULL);
   assert (p->bitstream != NULL);
@@ -885,7 +885,7 @@ static void interpretPPS (sVidParam* vidParam, sDataPartition* p, sPPSrbsp* pps)
   int chroma_format_idc;
   int NumberBitsPerSliceGroupId;
 
-  Bitstream* s = p->bitstream;
+  sBitstream* s = p->bitstream;
   assert (p != NULL);
   assert (p->bitstream != NULL);
   assert (p->bitstream->streamBuffer != 0);

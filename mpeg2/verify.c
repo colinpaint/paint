@@ -1,7 +1,7 @@
 //{{{
 /* verify.c
  *
- * Bitstream verification routines
+ * sBitstream verification routines
  *
  *
  */

@@ -1185,7 +1185,7 @@ static void ref_pic_list_reordering (sSlice* currSlice) {
 
   byte dP_nr = assignSE2partition[currSlice->dp_mode][SE_HEADER];
   sDataPartition* partition = &(currSlice->partArr[dP_nr]);
-  Bitstream* currStream = partition->bitstream;
+  sBitstream* currStream = partition->bitstream;
 
   alloc_ref_pic_list_reordering_buffer (currSlice);
   if (currSlice->slice_type != I_SLICE &&
@@ -1258,7 +1258,7 @@ static void pred_weight_table (sSlice* currSlice) {
 
   byte dP_nr = assignSE2partition[currSlice->dp_mode][SE_HEADER];
   sDataPartition* partition = &(currSlice->partArr[dP_nr]);
-  Bitstream* currStream = partition->bitstream;
+  sBitstream* currStream = partition->bitstream;
 
   int luma_weight_flag_l0, luma_weight_flag_l1, chroma_weight_flag_l0, chroma_weight_flag_l1;
 
@@ -1437,7 +1437,7 @@ void init_contexts (sSlice* currSlice) {
   }
 //}}}
 //{{{
-void dec_ref_pic_marking (sVidParam* vidParam, Bitstream* currStream, sSlice* pSlice) {
+void dec_ref_pic_marking (sVidParam* vidParam, sBitstream* currStream, sSlice* pSlice) {
 
   // free old buffer content
   while (pSlice->dec_ref_pic_marking_buffer) {
@@ -1708,7 +1708,7 @@ void firstPartOfSliceHeader (sSlice* currSlice) {
   sVidParam* vidParam = currSlice->vidParam;
   byte dP_nr = assignSE2partition[currSlice->dp_mode][SE_HEADER];
   sDataPartition* partition = &(currSlice->partArr[dP_nr]);
-  Bitstream* currStream = partition->bitstream;
+  sBitstream* currStream = partition->bitstream;
 
   // Get first_mb_in_slice
   currSlice->start_mb_nr = read_ue_v ("SLC first_mb_in_slice", currStream);
@@ -1735,7 +1735,7 @@ void restOfSliceHeader (sSlice* currSlice) {
 
   byte dP_nr = assignSE2partition[currSlice->dp_mode][SE_HEADER];
   sDataPartition* partition = &(currSlice->partArr[dP_nr]);
-  Bitstream* currStream = partition->bitstream;
+  sBitstream* currStream = partition->bitstream;
 
   int val, len;
   currSlice->frame_num = read_u_v (active_sps->log2_max_frame_num_minus4 + 4, "SLC frame_num", currStream);

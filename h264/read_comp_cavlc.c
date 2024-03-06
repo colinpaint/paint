@@ -164,7 +164,7 @@ void read_coeff_4x4_CAVLC (sMacroblock* currMB,
   sSyntaxElement currSE;
   sDataPartition *dP;
   const byte *partMap = assignSE2partition[currSlice->dp_mode];
-  Bitstream* currStream;
+  sBitstream* currStream;
 
   int k, code, vlcnum;
   int numcoeff = 0, numtrailingones;
@@ -343,7 +343,7 @@ void read_coeff_4x4_CAVLC_444 (sMacroblock* currMB,
   sSyntaxElement currSE;
   sDataPartition *dP;
   const byte *partMap = assignSE2partition[currSlice->dp_mode];
-  Bitstream* currStream;
+  sBitstream* currStream;
 
   int k, code, vlcnum;
   int numcoeff = 0, numtrailingones;

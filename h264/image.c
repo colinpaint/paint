@@ -850,7 +850,7 @@ static int readNewSlice (sSlice* currSlice) {
   sVidParam* vidParam = currSlice->vidParam;
 
   int current_header = 0;
-  Bitstream* currStream = NULL;
+  sBitstream* currStream = NULL;
   for (;;) {
     sNalu* nalu = vidParam->nalu;
     if (!pendingNalu) {

@@ -17,33 +17,47 @@
 #include "frame.h"
 //}}}
 
-typedef struct bit_stream_dec Bitstream;
 #define ET_SIZE 300      //!< size of error text buffer
 extern char errortext[ET_SIZE]; //!< buffer for error message for exit with error()
 
-//{{{  DecoderStatus_e
+//{{{  enum DecoderStatus
 typedef enum {
   DEC_OPENED = 0,
   DEC_STOPPED,
   } DecoderStatus;
 //}}}
-//{{{  Color_Component
+//{{{  enum Color_Component
 typedef enum {
   LumaComp = 0,
   CrComp = 1,
   CbComp = 2
   } Color_Component;
 //}}}
-//{{{  sPixelPos
-typedef struct PixelPos {
-  int   available;
-  int   mb_addr;
-  short x;
-  short y;
-  short pos_x;
-  short pos_y;
-  } sPixelPos;
+//{{{  CTX defines
+#define NUM_MB_TYPE_CTX  11
+#define NUM_B8_TYPE_CTX  9
+#define NUM_MV_RES_CTX   10
+#define NUM_REF_NO_CTX   6
+#define NUM_DELTA_QP_CTX 4
+#define NUM_MB_AFF_CTX 4
+#define NUM_TRANSFORM_SIZE_CTX 3
 //}}}
+//{{{  texture context defines
+#define NUM_IPR_CTX    2
+#define NUM_CIPR_CTX   4
+#define NUM_CBP_CTX    4
+#define NUM_BCBP_CTX   4
+#define NUM_MAP_CTX   15
+#define NUM_LAST_CTX  15
+#define NUM_ONE_CTX    5
+#define NUM_ABS_CTX    5
+//}}}
+
+struct storablePicture;
+struct DataPartition;
+struct SyntaxElement;
+struct pic_motion_params;
+struct pic_motion_params_old;
 //{{{  sDecodingEnvironment
 typedef struct {
   unsigned int Drange;
@@ -76,36 +90,6 @@ typedef struct {
   } sBiContextType;
 //}}}
 typedef sBiContextType *sBiContextTypePtr;
-//{{{  CTX defines
-#define NUM_MB_TYPE_CTX  11
-#define NUM_B8_TYPE_CTX  9
-#define NUM_MV_RES_CTX   10
-#define NUM_REF_NO_CTX   6
-#define NUM_DELTA_QP_CTX 4
-#define NUM_MB_AFF_CTX 4
-#define NUM_TRANSFORM_SIZE_CTX 3
-//}}}
-//{{{
-struct bit_stream_dec {
-  // CABAC Decoding
-  int read_len;          // actual position in the codebuffer, CABAC only
-  int code_len;          // overall codebuffer length, CABAC only
-
-  // CAVLC Decoding
-  int frame_bitoffset;   // actual position in the codebuffer, bit-oriented, CAVLC only
-  int bitstream_length;  // over codebuffer lnegth, byte oriented, CAVLC only
-
-  // ErrorConcealment
-  byte* streamBuffer;     // actual codebuffer for read bytes
-  int ei_flag;           // error indication, 0: no error, else unspecified error
-  };
-//}}}
-
-struct storablePicture;
-struct DataPartition;
-struct SyntaxElement;
-struct pic_motion_params;
-struct pic_motion_params_old;
 //{{{  sMotionInfoContexts
 typedef struct {
   sBiContextType mb_type_contexts [3][NUM_MB_TYPE_CTX];
@@ -115,16 +99,6 @@ typedef struct {
   sBiContextType delta_qp_contexts[NUM_DELTA_QP_CTX];
   sBiContextType mb_aff_contexts  [NUM_MB_AFF_CTX];
   } sMotionInfoContexts;
-//}}}
-//{{{  texture context defines
-#define NUM_IPR_CTX    2
-#define NUM_CIPR_CTX   4
-#define NUM_CBP_CTX    4
-#define NUM_BCBP_CTX   4
-#define NUM_MAP_CTX   15
-#define NUM_LAST_CTX  15
-#define NUM_ONE_CTX    5
-#define NUM_ABS_CTX    5
 //}}}
 //{{{  sTextureInfoContexts
 typedef struct {
@@ -138,6 +112,31 @@ typedef struct {
   sBiContextType one_contexts [NUM_BLOCK_TYPES][NUM_ONE_CTX];
   sBiContextType abs_contexts [NUM_BLOCK_TYPES][NUM_ABS_CTX];
   } sTextureInfoContexts;
+//}}}
+//{{{
+typedef struct PixelPos {
+  int   available;
+  int   mb_addr;
+  short x;
+  short y;
+  short pos_x;
+  short pos_y;
+  } sPixelPos;
+//}}}
+//{{{
+typedef struct Bitstream {
+  // CABAC Decoding
+  int read_len;          // actual position in the codebuffer, CABAC only
+  int code_len;          // overall codebuffer length, CABAC only
+
+  // CAVLC Decoding
+  int frame_bitoffset;   // actual position in the codebuffer, bit-oriented, CAVLC only
+  int bitstream_length;  // over codebuffer lnegth, byte oriented, CAVLC only
+
+  // ErrorConcealment
+  byte* streamBuffer;     // actual codebuffer for read bytes
+  int ei_flag;           // error indication, 0: no error, else unspecified error
+  } sBitstream;
 //}}}
 //{{{
 /*! Buffer structure for decoded referenc picture marking commands */
@@ -272,7 +271,7 @@ typedef struct SyntaxElement {
 //}}}
 //{{{  typedef struct DataPartition
 typedef struct DataPartition {
-  Bitstream           *bitstream;
+  sBitstream           *bitstream;
   sDecodingEnvironment de_cabac;
 
   int     (*readsSyntaxElement)(struct Macroblock *currMB, struct SyntaxElement *, struct DataPartition *);

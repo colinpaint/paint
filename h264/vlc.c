@@ -6,7 +6,7 @@
 //}}}
 
 //{{{
-int read_ue_v (char* tracestring, Bitstream* bitstream) {
+int read_ue_v (char* tracestring, sBitstream* bitstream) {
 
   sSyntaxElement symbol = {.value1 = 0 };
   symbol.type = SE_HEADER;
@@ -20,7 +20,7 @@ int read_ue_v (char* tracestring, Bitstream* bitstream) {
   }
 //}}}
 //{{{
-int read_se_v (char* tracestring, Bitstream* bitstream) {
+int read_se_v (char* tracestring, sBitstream* bitstream) {
 
   sSyntaxElement symbol = {.value1 = 0 };
   symbol.type = SE_HEADER;
@@ -34,7 +34,7 @@ int read_se_v (char* tracestring, Bitstream* bitstream) {
   }
 //}}}
 //{{{
-int read_u_v (int LenInBits, char* tracestring, Bitstream* bitstream) {
+int read_u_v (int LenInBits, char* tracestring, sBitstream* bitstream) {
 
   sSyntaxElement symbol = {.value1 = 0 };
   symbol.inf = 0;
@@ -50,7 +50,7 @@ int read_u_v (int LenInBits, char* tracestring, Bitstream* bitstream) {
   }
 //}}}
 //{{{
-int read_i_v (int LenInBits, char* tracestring, Bitstream* bitstream) {
+int read_i_v (int LenInBits, char* tracestring, sBitstream* bitstream) {
 
   sSyntaxElement symbol = {.value1 = 0 };
   symbol.inf = 0;
@@ -69,7 +69,7 @@ int read_i_v (int LenInBits, char* tracestring, Bitstream* bitstream) {
   }
 //}}}
 //{{{
-Boolean read_u_1 (char* tracestring, Bitstream* bitstream) {
+Boolean read_u_1 (char* tracestring, sBitstream* bitstream) {
   return (Boolean)read_u_v (1, tracestring, bitstream);
   }
 //}}}
@@ -170,7 +170,7 @@ void linfo_levrun_c2x2 (int len, int info, int* level, int* irun) {
 //}}}
 
 //{{{
-int readsSyntaxElement_VLC (sSyntaxElement* sym, Bitstream* currStream) {
+int readsSyntaxElement_VLC (sSyntaxElement* sym, sBitstream* currStream) {
 
   sym->len =  GetVLCSymbol (currStream->streamBuffer, currStream->frame_bitoffset,
                             &(sym->inf), currStream->bitstream_length);
@@ -189,7 +189,7 @@ int readsSyntaxElement_UVLC (sMacroblock* currMB, sSyntaxElement* sym, struct Da
   }
 //}}}
 //{{{
-int readsSyntaxElement_Intra4x4PredictionMode (sSyntaxElement* sym, Bitstream* currStream) {
+int readsSyntaxElement_Intra4x4PredictionMode (sSyntaxElement* sym, sBitstream* currStream) {
 
   sym->len = GetVLCSymbol_IntraMode (currStream->streamBuffer, currStream->frame_bitoffset, &(sym->inf), currStream->bitstream_length);
   if (sym->len == -1)
@@ -258,7 +258,7 @@ int uvlc_startcode_follows (sSlice* currSlice, int dummy) {
 
   byte dp_Nr = assignSE2partition[currSlice->dp_mode][SE_MBTYPE];
   sDataPartition* dP = &(currSlice->partArr[dp_Nr]);
-  Bitstream* currStream = dP->bitstream;
+  sBitstream* currStream = dP->bitstream;
   byte* buf = currStream->streamBuffer;
 
   return !(more_rbsp_data (buf, currStream->frame_bitoffset,currStream->bitstream_length));
@@ -309,7 +309,7 @@ static inline int ShowBitsThres (int inf, int numbits) {
   }
 //}}}
 //{{{
-static int code_from_bitstream_2d (sSyntaxElement* sym, Bitstream* currStream,
+static int code_from_bitstream_2d (sSyntaxElement* sym, sBitstream* currStream,
                                    const byte *lentab, const byte *codtab,
                                    int tabwidth, int tabheight, int *code) {
 
@@ -349,7 +349,7 @@ static int code_from_bitstream_2d (sSyntaxElement* sym, Bitstream* currStream,
 //}}}
 
 //{{{
-int readsSyntaxElement_FLC (sSyntaxElement* sym, Bitstream* currStream)
+int readsSyntaxElement_FLC (sSyntaxElement* sym, sBitstream* currStream)
 {
   int BitstreamLengthInBits  = (currStream->bitstream_length << 3) + 7;
 
@@ -364,7 +364,7 @@ int readsSyntaxElement_FLC (sSyntaxElement* sym, Bitstream* currStream)
 //}}}
 //{{{
 int readsSyntaxElement_NumCoeffTrailingOnes (sSyntaxElement* sym,
-                                           Bitstream *currStream,
+                                           sBitstream *currStream,
                                            char *type)
 {
   int frame_bitoffset        = currStream->frame_bitoffset;
@@ -455,7 +455,7 @@ int readsSyntaxElement_NumCoeffTrailingOnes (sSyntaxElement* sym,
 }
 //}}}
 //{{{
-int readsSyntaxElement_NumCoeffTrailingOnesChromaDC (sVidParam* vidParam, sSyntaxElement* sym, Bitstream* currStream)
+int readsSyntaxElement_NumCoeffTrailingOnesChromaDC (sVidParam* vidParam, sSyntaxElement* sym, sBitstream* currStream)
 {
   static const byte lentab[3][4][17] =
   {
@@ -510,7 +510,7 @@ int readsSyntaxElement_NumCoeffTrailingOnesChromaDC (sVidParam* vidParam, sSynta
 }
 //}}}
 //{{{
-int readsSyntaxElement_Level_VLC0 (sSyntaxElement* sym, Bitstream* currStream)
+int readsSyntaxElement_Level_VLC0 (sSyntaxElement* sym, sBitstream* currStream)
 {
   int frame_bitoffset        = currStream->frame_bitoffset;
   int BitstreamLengthInBytes = currStream->bitstream_length;
@@ -559,7 +559,7 @@ int readsSyntaxElement_Level_VLC0 (sSyntaxElement* sym, Bitstream* currStream)
 }
 //}}}
 //{{{
-int readsSyntaxElement_Level_VLCN (sSyntaxElement* sym, int vlc, Bitstream* currStream)
+int readsSyntaxElement_Level_VLCN (sSyntaxElement* sym, int vlc, sBitstream* currStream)
 {
   int frame_bitoffset        = currStream->frame_bitoffset;
   int BitstreamLengthInBytes = currStream->bitstream_length;
@@ -622,7 +622,7 @@ int readsSyntaxElement_Level_VLCN (sSyntaxElement* sym, int vlc, Bitstream* curr
 }
 //}}}
 //{{{
-int readsSyntaxElement_TotalZeros (sSyntaxElement* sym,  Bitstream *currStream) {
+int readsSyntaxElement_TotalZeros (sSyntaxElement* sym,  sBitstream *currStream) {
 
   //{{{
   static const byte lentab[TOTRUN_NUM][16] =
@@ -679,7 +679,7 @@ int readsSyntaxElement_TotalZeros (sSyntaxElement* sym,  Bitstream *currStream) 
   }
 //}}}
 //{{{
-int readsSyntaxElement_TotalZerosChromaDC (sVidParam* vidParam, sSyntaxElement* sym, Bitstream* currStream) {
+int readsSyntaxElement_TotalZerosChromaDC (sVidParam* vidParam, sSyntaxElement* sym, sBitstream* currStream) {
 
   //{{{
   static const byte lentab[3][TOTRUN_NUM][16] =
@@ -762,7 +762,7 @@ int readsSyntaxElement_TotalZerosChromaDC (sVidParam* vidParam, sSyntaxElement* 
   }
 //}}}
 //{{{
-int readsSyntaxElement_Run (sSyntaxElement* sym, Bitstream* currStream)
+int readsSyntaxElement_Run (sSyntaxElement* sym, sBitstream* currStream)
 {
   //{{{
   static const byte lentab[TOTRUN_NUM][16] =

@@ -374,9 +374,9 @@ sDataPartition* allocPartition (int n) {
 
   for (int i = 0; i < n; ++i) {// loop over all data partitions
     sDataPartition* dataPart = &(partArr[i]);
-    dataPart->bitstream = (Bitstream *) calloc(1, sizeof(Bitstream));
+    dataPart->bitstream = (sBitstream *) calloc(1, sizeof(sBitstream));
     if (dataPart->bitstream == NULL) {
-      snprintf (errortext, ET_SIZE, "allocPartition: Memory allocation for Bitstream failed");
+      snprintf (errortext, ET_SIZE, "allocPartition: Memory allocation for sBitstream failed");
       error (errortext, 100);
       }
 

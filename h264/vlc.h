@@ -57,11 +57,11 @@ static const byte NTAB3[2][2][2] =
 };
 //}}}
 
-extern int read_se_v (char *tracestring, Bitstream *bitstream);
-extern int read_ue_v (char *tracestring, Bitstream *bitstream);
-extern Boolean read_u_1 (char *tracestring, Bitstream *bitstream);
-extern int read_u_v (int LenInBits, char *tracestring, Bitstream *bitstream);
-extern int read_i_v (int LenInBits, char *tracestring, Bitstream *bitstream);
+extern int read_se_v (char *tracestring, sBitstream *bitstream);
+extern int read_ue_v (char *tracestring, sBitstream *bitstream);
+extern Boolean read_u_1 (char *tracestring, sBitstream *bitstream);
+extern int read_u_v (int LenInBits, char *tracestring, sBitstream *bitstream);
+extern int read_i_v (int LenInBits, char *tracestring, sBitstream *bitstream);
 
 // CAVLC mapping
 extern void linfo_ue (int len, int info, int *value1, int *dummy);
@@ -75,21 +75,21 @@ extern void linfo_levrun_c2x2 (int len,int info,int *level,int *irun);
 
 extern int  uvlc_startcode_follows (sSlice* currSlice, int dummy);
 
-extern int  readsSyntaxElement_VLC (sSyntaxElement *sym, Bitstream* currStream);
+extern int  readsSyntaxElement_VLC (sSyntaxElement *sym, sBitstream* currStream);
 extern int  readsSyntaxElement_UVLC (sMacroblock* currMB, sSyntaxElement *sym, struct DataPartition *dp);
-extern int  readsSyntaxElement_Intra4x4PredictionMode (sSyntaxElement *sym, Bitstream  * currStream);
+extern int  readsSyntaxElement_Intra4x4PredictionMode (sSyntaxElement *sym, sBitstream  * currStream);
 
 extern int  GetVLCSymbol (byte buffer[],int totbitoffset,int *info, int bytecount);
 extern int  GetVLCSymbol_IntraMode (byte buffer[],int totbitoffset,int *info, int bytecount);
 
-extern int readsSyntaxElement_FLC                         (sSyntaxElement *sym, Bitstream* currStream);
-extern int readsSyntaxElement_NumCoeffTrailingOnes        (sSyntaxElement *sym,  Bitstream* currStream, char *type);
-extern int readsSyntaxElement_NumCoeffTrailingOnesChromaDC(sVidParam* vidParam, sSyntaxElement *sym, Bitstream* currStream);
-extern int readsSyntaxElement_Level_VLC0                  (sSyntaxElement *sym, Bitstream* currStream);
-extern int readsSyntaxElement_Level_VLCN                  (sSyntaxElement *sym, int vlc, Bitstream* currStream);
-extern int readsSyntaxElement_TotalZeros                  (sSyntaxElement *sym, Bitstream* currStream);
-extern int readsSyntaxElement_TotalZerosChromaDC          (sVidParam* vidParam, sSyntaxElement *sym, Bitstream* currStream);
-extern int readsSyntaxElement_Run                         (sSyntaxElement *sym, Bitstream* currStream);
+extern int readsSyntaxElement_FLC                         (sSyntaxElement *sym, sBitstream* currStream);
+extern int readsSyntaxElement_NumCoeffTrailingOnes        (sSyntaxElement *sym,  sBitstream* currStream, char *type);
+extern int readsSyntaxElement_NumCoeffTrailingOnesChromaDC(sVidParam* vidParam, sSyntaxElement *sym, sBitstream* currStream);
+extern int readsSyntaxElement_Level_VLC0                  (sSyntaxElement *sym, sBitstream* currStream);
+extern int readsSyntaxElement_Level_VLCN                  (sSyntaxElement *sym, int vlc, sBitstream* currStream);
+extern int readsSyntaxElement_TotalZeros                  (sSyntaxElement *sym, sBitstream* currStream);
+extern int readsSyntaxElement_TotalZerosChromaDC          (sVidParam* vidParam, sSyntaxElement *sym, sBitstream* currStream);
+extern int readsSyntaxElement_Run                         (sSyntaxElement *sym, sBitstream* currStream);
 extern int GetBits  (byte buffer[],int totbitoffset,int *info, int bitcount, int numbits);
 extern int ShowBits (byte buffer[],int totbitoffset,int bitcount, int numbits);
 

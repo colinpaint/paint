@@ -107,7 +107,7 @@ typedef struct {
 static void interpret_spare_pic (byte* payload, int size, sVidParam* vidParam ) {
 
   int x,y;
-  Bitstream* buf;
+  sBitstream* buf;
   int bit0, bit1, no_bit0;
   int target_frame_num = 0;
   int num_spare_pics;
@@ -117,7 +117,7 @@ static void interpret_spare_pic (byte* payload, int size, sVidParam* vidParam ) 
   int m, n, left, right, top, bottom,directx, directy;
   byte*** map;
 
-  buf = malloc (sizeof(Bitstream));
+  buf = malloc (sizeof(sBitstream));
   buf->bitstream_length = size;
   buf->streamBuffer = payload;
   buf->frame_bitoffset = 0;
@@ -274,7 +274,7 @@ static void interpret_spare_pic (byte* payload, int size, sVidParam* vidParam ) 
 //{{{
 static void interpret_subsequence_info (byte* payload, int size, sVidParam* vidParam ) {
 
-  Bitstream* buf = malloc (sizeof(Bitstream));
+  sBitstream* buf = malloc (sizeof(sBitstream));
   buf->bitstream_length = size;
   buf->streamBuffer = payload;
   buf->frame_bitoffset = 0;
@@ -306,10 +306,10 @@ static void interpret_subsequence_info (byte* payload, int size, sVidParam* vidP
 //{{{
 static void interpret_subsequence_layer_characteristics_info (byte* payload, int size, sVidParam* vidParam )
 {
-  Bitstream* buf;
+  sBitstream* buf;
   long num_sub_layers, accurate_statistics_flag, average_bit_rate, average_frame_rate;
 
-  buf = malloc(sizeof(Bitstream));
+  buf = malloc(sizeof(sBitstream));
   buf->bitstream_length = size;
   buf->streamBuffer = payload;
   buf->frame_bitoffset = 0;
@@ -336,7 +336,7 @@ static void interpret_subsequence_characteristics_info (byte* payload, int size,
   unsigned long sub_seq_duration, average_bit_rate, average_frame_rate;
   int num_referenced_subseqs, ref_sub_seq_layer_num, ref_sub_seq_id, ref_sub_seq_direction;
 
-  Bitstream* buf = malloc(sizeof(Bitstream));
+  sBitstream* buf = malloc(sizeof(sBitstream));
   buf->bitstream_length = size;
   buf->streamBuffer = payload;
   buf->frame_bitoffset = 0;
@@ -390,7 +390,7 @@ static void interpret_scene_information (byte* payload, int size, sVidParam* vid
 {
   int scene_id, scene_transition_type, second_scene_id;
 
-  Bitstream* buf = malloc(sizeof(Bitstream));
+  sBitstream* buf = malloc(sizeof(sBitstream));
   buf->bitstream_length = size;
   buf->streamBuffer = payload;
   buf->frame_bitoffset = 0;
@@ -505,7 +505,7 @@ static void interpret_picture_timing_info (byte* payload, int size, sVidParam* v
     return;
     }
 
-  Bitstream* buf = malloc (sizeof(Bitstream));
+  sBitstream* buf = malloc (sizeof(sBitstream));
   buf->bitstream_length = size;
   buf->streamBuffer = payload;
   buf->frame_bitoffset = 0;
@@ -653,8 +653,8 @@ static void interpret_picture_timing_info (byte* payload, int size, sVidParam* v
 //{{{
 static void interpret_pan_scan_rect_info (byte* payload, int size, sVidParam* vidParam ) {
 
-  Bitstream* buf;
-  buf = malloc (sizeof(Bitstream));
+  sBitstream* buf;
+  buf = malloc (sizeof(sBitstream));
   buf->bitstream_length = size;
   buf->streamBuffer = payload;
   buf->frame_bitoffset = 0;
@@ -683,8 +683,8 @@ static void interpret_pan_scan_rect_info (byte* payload, int size, sVidParam* vi
 //{{{
 static void interpret_recovery_point_info (byte* payload, int size, sVidParam* vidParam ) {
 
-  Bitstream* buf;
-  buf = malloc(sizeof(Bitstream));
+  sBitstream* buf;
+  buf = malloc(sizeof(sBitstream));
   buf->bitstream_length = size;
   buf->streamBuffer = payload;
   buf->frame_bitoffset = 0;
@@ -713,7 +713,7 @@ static void interpret_dec_ref_pic_marking_repetition_info (byte* payload, int si
   sDecRefPicMarking *old_drpm;
   int old_idr_flag, old_no_output_of_prior_pics_flag, old_long_term_reference_flag , old_adaptive_ref_pic_buffering_flag;
 
-  Bitstream* buf = malloc(sizeof(Bitstream));
+  sBitstream* buf = malloc(sizeof(sBitstream));
   buf->bitstream_length = size;
   buf->streamBuffer = payload;
   buf->frame_bitoffset = 0;
@@ -803,7 +803,7 @@ static void interpret_dec_ref_pic_marking_repetition_info (byte* payload, int si
 //{{{
 static void interpret_full_frame_freeze_info (byte* payload, int size, sVidParam* vidParam ) {
 
-  Bitstream* buf = malloc(sizeof(Bitstream));
+  sBitstream* buf = malloc(sizeof(sBitstream));
   buf->bitstream_length = size;
   buf->streamBuffer = payload;
   buf->frame_bitoffset = 0;
@@ -825,7 +825,7 @@ static void interpret_full_frame_freeze_release_info (byte* payload, int size, s
 //{{{
 static void interpret_full_frame_snapshot_info (byte* payload, int size, sVidParam* vidParam ) {
 
-  Bitstream* buf = malloc(sizeof(Bitstream));
+  sBitstream* buf = malloc(sizeof(sBitstream));
   buf->bitstream_length = size;
   buf->streamBuffer = payload;
   buf->frame_bitoffset = 0;
@@ -842,7 +842,7 @@ static void interpret_full_frame_snapshot_info (byte* payload, int size, sVidPar
 static void interpret_progressive_refinement_start_info (byte* payload, int size, sVidParam* vidParam ) {
 
 
-  Bitstream* buf = malloc(sizeof(Bitstream));
+  sBitstream* buf = malloc(sizeof(sBitstream));
   buf->bitstream_length = size;
   buf->streamBuffer = payload;
   buf->frame_bitoffset = 0;
@@ -859,7 +859,7 @@ static void interpret_progressive_refinement_start_info (byte* payload, int size
 //{{{
 static void interpret_progressive_refinement_end_info (byte* payload, int size, sVidParam* vidParam ) {
 
-  Bitstream* buf = malloc(sizeof(Bitstream));
+  sBitstream* buf = malloc(sizeof(sBitstream));
   buf->bitstream_length = size;
   buf->streamBuffer = payload;
   buf->frame_bitoffset = 0;
@@ -874,7 +874,7 @@ static void interpret_progressive_refinement_end_info (byte* payload, int size, 
 //{{{
 static void interpret_motion_constrained_slice_group_set_info (byte* payload, int size, sVidParam* vidParam ) {
 
-  Bitstream* buf = malloc(sizeof(Bitstream));
+  sBitstream* buf = malloc(sizeof(sBitstream));
   buf->bitstream_length = size;
   buf->streamBuffer = payload;
   buf->frame_bitoffset = 0;
@@ -915,9 +915,9 @@ static void interpret_film_grain_characteristics_info (byte* payload, int size, 
   int comp_model_value;
   int film_grain_characteristics_repetition_period;
 
-  Bitstream* buf;
+  sBitstream* buf;
 
-  buf = malloc(sizeof(Bitstream));
+  buf = malloc(sizeof(sBitstream));
   buf->bitstream_length = size;
   buf->streamBuffer = payload;
   buf->frame_bitoffset = 0;
@@ -983,7 +983,7 @@ static void interpret_film_grain_characteristics_info (byte* payload, int size, 
 //{{{
 static void interpret_deblocking_filter_display_preference_info (byte* payload, int size, sVidParam* vidParam) {
 
-  Bitstream* buf = malloc(sizeof(Bitstream));
+  sBitstream* buf = malloc(sizeof(sBitstream));
   buf->bitstream_length = size;
   buf->streamBuffer = payload;
   buf->frame_bitoffset = 0;
@@ -1006,7 +1006,7 @@ static void interpret_deblocking_filter_display_preference_info (byte* payload, 
 //{{{
 static void interpret_stereo_video_info_info (byte* payload, int size, sVidParam* vidParam ) {
 
-  Bitstream* buf = malloc (sizeof(Bitstream));
+  sBitstream* buf = malloc (sizeof(sBitstream));
   buf->bitstream_length = size;
   buf->streamBuffer = payload;
   buf->frame_bitoffset = 0;
@@ -1035,7 +1035,7 @@ static void interpret_stereo_video_info_info (byte* payload, int size, sVidParam
 //{{{
 static void interpret_buffering_period_info (byte* payload, int size, sVidParam* vidParam ) {
 
-  Bitstream* buf = malloc(sizeof(Bitstream));
+  sBitstream* buf = malloc(sizeof(sBitstream));
   buf->bitstream_length = size;
   buf->streamBuffer = payload;
   buf->frame_bitoffset = 0;
@@ -1079,7 +1079,7 @@ static void interpret_buffering_period_info (byte* payload, int size, sVidParam*
 static void interpret_frame_packing_arrangement_info (byte* payload, int size, sVidParam* vidParam ) {
 
   frame_packing_arrangement_information_struct seiFramePackingArrangement;
-  Bitstream* buf = malloc(sizeof(Bitstream));
+  sBitstream* buf = malloc(sizeof(sBitstream));
   buf->bitstream_length = size;
   buf->streamBuffer = payload;
   buf->frame_bitoffset = 0;
@@ -1147,7 +1147,7 @@ static void interpret_frame_packing_arrangement_info (byte* payload, int size, s
 //{{{
 static void interpret_post_filter_hints_info (byte* payload, int size, sVidParam* vidParam ) {
 
-  Bitstream* buf = malloc(sizeof(Bitstream));
+  sBitstream* buf = malloc(sizeof(sBitstream));
   buf->bitstream_length = size;
   buf->streamBuffer = payload;
   buf->frame_bitoffset = 0;
@@ -1184,7 +1184,7 @@ static void interpret_post_filter_hints_info (byte* payload, int size, sVidParam
 //{{{
 static void interpret_green_metadata_info (byte* payload, int size, sVidParam* vidParam ) {
 
-  Bitstream* buf = malloc(sizeof(Bitstream));
+  sBitstream* buf = malloc(sizeof(sBitstream));
   buf->bitstream_length = size;
   buf->streamBuffer = payload;
   buf->frame_bitoffset = 0;
