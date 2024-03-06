@@ -313,10 +313,10 @@ extern void store_picture_in_dpb (sDPB* dpb, sPicture* p);
 extern sPicture*  get_short_term_pic (sSlice* curSlice, sDPB* dpb, int picNum);
 
 extern sFrameStore* allocFrameStore();
-extern void freeFrameStore (sFrameStore* f);
-extern void unmark_for_reference( sFrameStore* fs);
-extern void unmark_for_long_term_reference (sFrameStore* fs);
-extern int is_used_for_reference (sFrameStore* fs);
+extern void freeFrameStore (sFrameStore* frameStore);
+extern void unmark_for_reference( sFrameStore* frameStore);
+extern void unmark_for_long_term_reference (sFrameStore* frameStore);
+extern int is_used_for_reference (sFrameStore* frameStore);
 
 extern void init_lists_p_slice (sSlice* curSlice);
 extern void init_lists_b_slice (sSlice* curSlice);
@@ -327,7 +327,7 @@ extern void dpb_split_field (sVidParam* vidParam, sFrameStore *fs);
 extern void dpb_combine_field (sVidParam* vidParam, sFrameStore *fs);
 extern void dpb_combine_field_yuv (sVidParam* vidParam, sFrameStore *fs);
 
-extern void reorder_ref_pic_list (sSlice* curSlice, int cur_list);
+extern void reorder_ref_pic_list (sSlice* curSlice, int curList);
 
 extern void init_mbaff_lists (sVidParam* vidParam, sSlice* curSlice);
 extern void alloc_ref_pic_list_reordering_buffer (sSlice* curSlice);

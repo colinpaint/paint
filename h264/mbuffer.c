@@ -631,7 +631,7 @@ static sPicture* get_long_term_pic (sSlice* curSlice, sDPB* dpb, int LongtermPic
 //}}}
 //{{{
 static void gen_pic_list_from_frame_list (sPictureStructure currStructure, sFrameStore** fs_list,
-                                   int list_idx, sPicture** list, char *list_size, int long_term) {
+                                          int list_idx, sPicture** list, char *list_size, int long_term) {
 
   int top_idx = 0;
   int bot_idx = 0;
@@ -781,17 +781,15 @@ static void mark_pic_long_term (sDPB* dpb, sPicture* p, int long_term_frame_idx,
   }
 //}}}
 //{{{
-static void unmark_long_term_frame_for_reference_by_frame_idx (sDPB* dpb, int long_term_frame_idx)
-{
-  uint32 i;
-  for(i=0; i<dpb->ltref_frames_in_buffer; i++)
+static void unmark_long_term_frame_for_reference_by_frame_idx (sDPB* dpb, int long_term_frame_idx) {
+
+  for (uint32 i = 0; i < dpb->ltref_frames_in_buffer; i++)
     if (dpb->fs_ltref[i]->long_term_frame_idx == long_term_frame_idx)
-      unmark_for_long_term_reference(dpb->fs_ltref[i]);
+      unmark_for_long_term_reference (dpb->fs_ltref[i]);
 }
 //}}}
 
 //{{{
-
 void updateRefList (sDPB* dpb) {
 
   unsigned i, j;
@@ -801,14 +799,13 @@ void updateRefList (sDPB* dpb) {
 
   dpb->ref_frames_in_buffer = j;
 
-  while (j<dpb->size)
+  while (j < dpb->size)
     dpb->fs_ref[j++] = NULL;
   }
 //}}}
 //{{{
+void updateLongTermRefList (sDPB* dpb) {
 
-void updateLongTermRefList (sDPB* dpb)
-{
   unsigned i, j;
   for (i = 0, j = 0; i < dpb->used_size; i++)
     if (is_long_term_reference (dpb->fs[i]))
@@ -816,117 +813,90 @@ void updateLongTermRefList (sDPB* dpb)
 
   dpb->ltref_frames_in_buffer = j;
 
-  while (j<dpb->size)
+  while (j < dpb->size)
     dpb->fs_ltref[j++] = NULL;
   }
 //}}}
 //{{{
-void mm_unmark_long_term_for_reference (sDPB* dpb, sPicture* p, int long_term_pic_num)
-{
-  uint32 i;
-  for (i=0; i<dpb->ltref_frames_in_buffer; i++)
-  {
-    if (p->structure == FRAME)
-    {
-      if ((dpb->fs_ltref[i]->is_reference==3) && (dpb->fs_ltref[i]->is_long_term==3))
-      {
+void mm_unmark_long_term_for_reference (sDPB* dpb, sPicture* p, int long_term_pic_num) {
+
+  for (uint32 i = 0; i < dpb->ltref_frames_in_buffer; i++) {
+    if (p->structure == FRAME) {
+      if ((dpb->fs_ltref[i]->is_reference==3) && (dpb->fs_ltref[i]->is_long_term==3)) {
         if (dpb->fs_ltref[i]->frame->long_term_pic_num == long_term_pic_num)
-        {
           unmark_for_long_term_reference(dpb->fs_ltref[i]);
         }
       }
-    }
-    else
-    {
-      if ((dpb->fs_ltref[i]->is_reference & 1) && ((dpb->fs_ltref[i]->is_long_term & 1)))
-      {
-        if (dpb->fs_ltref[i]->top_field->long_term_pic_num == long_term_pic_num)
-        {
+    else {
+      if ((dpb->fs_ltref[i]->is_reference & 1) && ((dpb->fs_ltref[i]->is_long_term & 1))) {
+        if (dpb->fs_ltref[i]->top_field->long_term_pic_num == long_term_pic_num) {
           dpb->fs_ltref[i]->top_field->used_for_reference = 0;
           dpb->fs_ltref[i]->top_field->is_long_term = 0;
           dpb->fs_ltref[i]->is_reference &= 2;
           dpb->fs_ltref[i]->is_long_term &= 2;
-          if (dpb->fs_ltref[i]->is_used == 3)
-          {
+          if (dpb->fs_ltref[i]->is_used == 3) {
             dpb->fs_ltref[i]->frame->used_for_reference = 0;
             dpb->fs_ltref[i]->frame->is_long_term = 0;
-          }
+            }
           return;
+          }
         }
-      }
-      if ((dpb->fs_ltref[i]->is_reference & 2) && ((dpb->fs_ltref[i]->is_long_term & 2)))
-      {
-        if (dpb->fs_ltref[i]->bottom_field->long_term_pic_num == long_term_pic_num)
-        {
+
+      if ((dpb->fs_ltref[i]->is_reference & 2) && ((dpb->fs_ltref[i]->is_long_term & 2))) {
+        if (dpb->fs_ltref[i]->bottom_field->long_term_pic_num == long_term_pic_num) {
           dpb->fs_ltref[i]->bottom_field->used_for_reference = 0;
           dpb->fs_ltref[i]->bottom_field->is_long_term = 0;
           dpb->fs_ltref[i]->is_reference &= 1;
           dpb->fs_ltref[i]->is_long_term &= 1;
-          if (dpb->fs_ltref[i]->is_used == 3)
-          {
+          if (dpb->fs_ltref[i]->is_used == 3) {
             dpb->fs_ltref[i]->frame->used_for_reference = 0;
             dpb->fs_ltref[i]->frame->is_long_term = 0;
-          }
+            }
           return;
+          }
+
         }
       }
     }
   }
-}
 //}}}
 //{{{
 void mm_unmark_short_term_for_reference (sDPB* dpb, sPicture* p, int difference_of_pic_nums_minus1)
 {
-  int picNumX;
+  int picNumX = get_pic_num_x(p, difference_of_pic_nums_minus1);
 
-  uint32 i;
-
-  picNumX = get_pic_num_x(p, difference_of_pic_nums_minus1);
-
-  for (i=0; i<dpb->ref_frames_in_buffer; i++)
-  {
-    if (p->structure == FRAME)
-    {
-      if ((dpb->fs_ref[i]->is_reference==3) && (dpb->fs_ref[i]->is_long_term==0))
-      {
-        if (dpb->fs_ref[i]->frame->pic_num == picNumX)
-        {
+  for (uint32 i = 0; i < dpb->ref_frames_in_buffer; i++) {
+    if (p->structure == FRAME) {
+      if ((dpb->fs_ref[i]->is_reference==3) && (dpb->fs_ref[i]->is_long_term==0)) {
+        if (dpb->fs_ref[i]->frame->pic_num == picNumX) {
           unmark_for_reference(dpb->fs_ref[i]);
           return;
+          }
         }
       }
-    }
-    else
-    {
-      if ((dpb->fs_ref[i]->is_reference & 1) && (!(dpb->fs_ref[i]->is_long_term & 1)))
-      {
-        if (dpb->fs_ref[i]->top_field->pic_num == picNumX)
-        {
+    else {
+      if ((dpb->fs_ref[i]->is_reference & 1) && (!(dpb->fs_ref[i]->is_long_term & 1))) {
+        if (dpb->fs_ref[i]->top_field->pic_num == picNumX) {
           dpb->fs_ref[i]->top_field->used_for_reference = 0;
           dpb->fs_ref[i]->is_reference &= 2;
           if (dpb->fs_ref[i]->is_used == 3)
-          {
             dpb->fs_ref[i]->frame->used_for_reference = 0;
-          }
           return;
+          }
         }
-      }
-      if ((dpb->fs_ref[i]->is_reference & 2) && (!(dpb->fs_ref[i]->is_long_term & 2)))
-      {
-        if (dpb->fs_ref[i]->bottom_field->pic_num == picNumX)
-        {
+
+      if ((dpb->fs_ref[i]->is_reference & 2) && (!(dpb->fs_ref[i]->is_long_term & 2))) {
+        if (dpb->fs_ref[i]->bottom_field->pic_num == picNumX) {
           dpb->fs_ref[i]->bottom_field->used_for_reference = 0;
           dpb->fs_ref[i]->is_reference &= 1;
           if (dpb->fs_ref[i]->is_used == 3)
-          {
             dpb->fs_ref[i]->frame->used_for_reference = 0;
-          }
           return;
+          }
         }
       }
     }
   }
-}
 //}}}
 //{{{
 void mm_assign_long_term_frame_idx (sDPB* dpb, sPicture* p,
@@ -1110,29 +1080,25 @@ void reInitDpb (sVidParam* vidParam, sDPB* dpb, int type) {
   }
 //}}}
 //{{{
-void flush_dpb (sDPB* dpb)
-{
-  sVidParam* vidParam = dpb->vidParam;
-  uint32 i;
+void flush_dpb (sDPB* dpb) {
 
   // diagnostics
   // printf("Flush remaining frames from the dpb. dpb->size=%d, dpb->used_size=%d\n",dpb->size,dpb->used_size);
-  if(!dpb->init_done)
+  if (!dpb->init_done)
     return;
 
-//  if(vidParam->conceal_mode == 0)
+  sVidParam* vidParam = dpb->vidParam;
   if (vidParam->conceal_mode != 0)
     conceal_non_ref_pics(dpb, 0);
 
   // mark all frames unused
-  for (i=0; i<dpb->used_size; i++)
+  for (uint32 i = 0; i < dpb->used_size; i++)
     unmark_for_reference (dpb->fs[i]);
 
-
-  while (remove_unused_frame_from_dpb(dpb));
+  while (remove_unused_frame_from_dpb (dpb));
 
   // output frames in POC order
-  while (dpb->used_size && output_one_frame_from_dpb(dpb));
+  while (dpb->used_size && output_one_frame_from_dpb (dpb));
 
   dpb->last_output_poc = INT_MIN;
   }
@@ -1517,109 +1483,109 @@ sFrameStore* allocFrameStore() {
   }
 //}}}
 //{{{
-void freeFrameStore (sFrameStore* fs) {
+void freeFrameStore (sFrameStore* frameStore) {
 
-  if (fs) {
-    if (fs->frame) {
-      freePicture (fs->frame);
-      fs->frame=NULL;
+  if (frameStore) {
+    if (frameStore->frame) {
+      freePicture (frameStore->frame);
+      frameStore->frame = NULL;
       }
 
-    if (fs->top_field) {
-      freePicture (fs->top_field);
-      fs->top_field=NULL;
+    if (frameStore->top_field) {
+      freePicture (frameStore->top_field);
+      frameStore->top_field = NULL;
       }
 
-    if (fs->bottom_field) {
-      freePicture (fs->bottom_field);
-      fs->bottom_field=NULL;
+    if (frameStore->bottom_field) {
+      freePicture (frameStore->bottom_field);
+      frameStore->bottom_field = NULL;
       }
 
-    free (fs);
+    free (frameStore);
     }
   }
 //}}}
 //{{{
-void unmark_for_reference (sFrameStore* fs) {
+void unmark_for_reference (sFrameStore* frameStore) {
 
-  if (fs->is_used & 1)
-    if (fs->top_field)
-      fs->top_field->used_for_reference = 0;
+  if (frameStore->is_used & 1)
+    if (frameStore->top_field)
+      frameStore->top_field->used_for_reference = 0;
 
-  if (fs->is_used & 2)
-    if (fs->bottom_field)
-      fs->bottom_field->used_for_reference = 0;
+  if (frameStore->is_used & 2)
+    if (frameStore->bottom_field)
+      frameStore->bottom_field->used_for_reference = 0;
 
-  if (fs->is_used == 3) {
-    if (fs->top_field && fs->bottom_field) {
-      fs->top_field->used_for_reference = 0;
-      fs->bottom_field->used_for_reference = 0;
+  if (frameStore->is_used == 3) {
+    if (frameStore->top_field && frameStore->bottom_field) {
+      frameStore->top_field->used_for_reference = 0;
+      frameStore->bottom_field->used_for_reference = 0;
       }
-    fs->frame->used_for_reference = 0;
+    frameStore->frame->used_for_reference = 0;
     }
 
-  fs->is_reference = 0;
+  frameStore->is_reference = 0;
 
-  if(fs->frame)
-    freePicMotion (&fs->frame->motion);
+  if(frameStore->frame)
+    freePicMotion (&frameStore->frame->motion);
 
-  if (fs->top_field)
-    freePicMotion (&fs->top_field->motion);
+  if (frameStore->top_field)
+    freePicMotion (&frameStore->top_field->motion);
 
-  if (fs->bottom_field)
-    freePicMotion (&fs->bottom_field->motion);
+  if (frameStore->bottom_field)
+    freePicMotion (&frameStore->bottom_field->motion);
   }
 //}}}
 //{{{
-void unmark_for_long_term_reference (sFrameStore* fs) {
+void unmark_for_long_term_reference (sFrameStore* frameStore) {
 
-  if (fs->is_used & 1) {
-    if (fs->top_field) {
-      fs->top_field->used_for_reference = 0;
-      fs->top_field->is_long_term = 0;
+  if (frameStore->is_used & 1) {
+    if (frameStore->top_field) {
+      frameStore->top_field->used_for_reference = 0;
+      frameStore->top_field->is_long_term = 0;
       }
     }
 
-  if (fs->is_used & 2) {
-    if (fs->bottom_field) {
-      fs->bottom_field->used_for_reference = 0;
-      fs->bottom_field->is_long_term = 0;
+  if (frameStore->is_used & 2) {
+    if (frameStore->bottom_field) {
+      frameStore->bottom_field->used_for_reference = 0;
+      frameStore->bottom_field->is_long_term = 0;
       }
     }
 
-  if (fs->is_used == 3) {
-    if (fs->top_field && fs->bottom_field) {
-      fs->top_field->used_for_reference = 0;
-      fs->top_field->is_long_term = 0;
-      fs->bottom_field->used_for_reference = 0;
-      fs->bottom_field->is_long_term = 0;
+  if (frameStore->is_used == 3) {
+    if (frameStore->top_field && frameStore->bottom_field) {
+      frameStore->top_field->used_for_reference = 0;
+      frameStore->top_field->is_long_term = 0;
+      frameStore->bottom_field->used_for_reference = 0;
+      frameStore->bottom_field->is_long_term = 0;
       }
-    fs->frame->used_for_reference = 0;
-    fs->frame->is_long_term = 0;
+    frameStore->frame->used_for_reference = 0;
+    frameStore->frame->is_long_term = 0;
     }
 
-  fs->is_reference = 0;
-  fs->is_long_term = 0;
+  frameStore->is_reference = 0;
+  frameStore->is_long_term = 0;
   }
 //}}}
 //{{{
-int is_used_for_reference (sFrameStore* fs)
+int is_used_for_reference (sFrameStore* frameStore)
 {
-  if (fs->is_reference)
+  if (frameStore->is_reference)
     return 1;
 
-  if (fs->is_used == 3) // frame
-    if (fs->frame->used_for_reference)
+  if (frameStore->is_used == 3) // frame
+    if (frameStore->frame->used_for_reference)
       return 1;
 
-  if (fs->is_used & 1) // top field
-    if (fs->top_field)
-      if (fs->top_field->used_for_reference)
+  if (frameStore->is_used & 1) // top field
+    if (frameStore->top_field)
+      if (frameStore->top_field->used_for_reference)
         return 1;
 
-  if (fs->is_used & 2) // bottom field
-    if (fs->bottom_field)
-      if (fs->bottom_field->used_for_reference)
+  if (frameStore->is_used & 2) // bottom field
+    if (frameStore->bottom_field)
+      if (frameStore->bottom_field->used_for_reference)
         return 1;
 
 
@@ -1629,9 +1595,9 @@ int is_used_for_reference (sFrameStore* fs)
 
 // slice
 //{{{
-static void reorder_short_term (sSlice* curSlice, int cur_list, int num_ref_idx_lX_active_minus1, int picNumLX, int *refIdxLX) {
+static void reorder_short_term (sSlice* curSlice, int curList, int num_ref_idx_lX_active_minus1, int picNumLX, int *refIdxLX) {
 
-  sPicture** RefPicListX = curSlice->listX[cur_list];
+  sPicture** RefPicListX = curSlice->listX[curList];
   sPicture* picLX = get_short_term_pic (curSlice, curSlice->dpb, picNumLX);
 
   for (int cIdx = num_ref_idx_lX_active_minus1+1; cIdx > *refIdxLX; cIdx--)
@@ -1663,15 +1629,14 @@ static void reorder_long_term (sSlice* curSlice, sPicture** RefPicListX,
   }
 //}}}
 //{{{
-void reorder_ref_pic_list (sSlice* curSlice, int cur_list) {
+void reorder_ref_pic_list (sSlice* curSlice, int curList) {
 
-  int* modification_of_pic_nums_idc = curSlice->modification_of_pic_nums_idc[cur_list];
-  int* abs_diff_pic_num_minus1 = curSlice->abs_diff_pic_num_minus1[cur_list];
-  int* long_term_pic_idx = curSlice->long_term_pic_idx[cur_list];
-  int num_ref_idx_lX_active_minus1 = curSlice->num_ref_idx_active[cur_list] - 1;
+  int* modification_of_pic_nums_idc = curSlice->modification_of_pic_nums_idc[curList];
+  int* abs_diff_pic_num_minus1 = curSlice->abs_diff_pic_num_minus1[curList];
+  int* long_term_pic_idx = curSlice->long_term_pic_idx[curList];
+  int num_ref_idx_lX_active_minus1 = curSlice->num_ref_idx_active[curList] - 1;
 
   sVidParam* vidParam = curSlice->vidParam;
-  int i;
 
   int maxPicNum, currPicNum, picNumLXNoWrap, picNumLXPred, picNumLX;
   int refIdxLX = 0;
@@ -1687,7 +1652,7 @@ void reorder_ref_pic_list (sSlice* curSlice, int cur_list) {
 
   picNumLXPred = currPicNum;
 
-  for (i=0; modification_of_pic_nums_idc[i]!=3; i++) {
+  for (int i = 0; modification_of_pic_nums_idc[i] != 3; i++) {
     if (modification_of_pic_nums_idc[i]>3)
       error ("Invalid modification_of_pic_nums_idc command", 500);
 
@@ -1711,21 +1676,20 @@ void reorder_ref_pic_list (sSlice* curSlice, int cur_list) {
       else
         picNumLX = picNumLXNoWrap;
 
-      reorder_short_term (curSlice, cur_list, num_ref_idx_lX_active_minus1, picNumLX, &refIdxLX);
+      reorder_short_term (curSlice, curList, num_ref_idx_lX_active_minus1, picNumLX, &refIdxLX);
       }
     else
-      reorder_long_term (curSlice, curSlice->listX[cur_list], num_ref_idx_lX_active_minus1, long_term_pic_idx[i], &refIdxLX);
+      reorder_long_term (curSlice, curSlice->listX[curList], num_ref_idx_lX_active_minus1, long_term_pic_idx[i], &refIdxLX);
     }
 
   // that's a definition
-  curSlice->listXsize[cur_list] = (char)(num_ref_idx_lX_active_minus1 + 1);
+  curSlice->listXsize[curList] = (char)(num_ref_idx_lX_active_minus1 + 1);
   }
 //}}}
 
 //{{{
 void update_pic_num (sSlice* curSlice) {
 
-  unsigned int i;
   sVidParam* vidParam = curSlice->vidParam;
   sDPB* dpb = curSlice->dpb;
   sSPS *active_sps = vidParam->active_sps;
@@ -1734,10 +1698,10 @@ void update_pic_num (sSlice* curSlice) {
   int max_frame_num = 1 << (active_sps->log2_max_frame_num_minus4 + 4);
 
   if (curSlice->structure == FRAME) {
-    for (i=0; i<dpb->ref_frames_in_buffer; i++) {
-      if ( dpb->fs_ref[i]->is_used==3 ) {
+    for (unsigned int i = 0; i < dpb->ref_frames_in_buffer; i++) {
+      if (dpb->fs_ref[i]->is_used==3 ) {
         if ((dpb->fs_ref[i]->frame->used_for_reference)&&(!dpb->fs_ref[i]->frame->is_long_term)) {
-          if( dpb->fs_ref[i]->frame_num > curSlice->frame_num )
+          if (dpb->fs_ref[i]->frame_num > curSlice->frame_num )
             dpb->fs_ref[i]->frame_num_wrap = dpb->fs_ref[i]->frame_num - max_frame_num;
           else
             dpb->fs_ref[i]->frame_num_wrap = dpb->fs_ref[i]->frame_num;
@@ -1747,7 +1711,7 @@ void update_pic_num (sSlice* curSlice) {
       }
 
     // update long_term_pic_num
-    for (i = 0; i < dpb->ltref_frames_in_buffer; i++) {
+    for (unsigned int i = 0; i < dpb->ltref_frames_in_buffer; i++) {
       if (dpb->fs_ltref[i]->is_used==3) {
         if (dpb->fs_ltref[i]->frame->is_long_term)
           dpb->fs_ltref[i]->frame->long_term_pic_num = dpb->fs_ltref[i]->frame->long_term_frame_idx;
@@ -1756,15 +1720,15 @@ void update_pic_num (sSlice* curSlice) {
     }
   else {
     if (curSlice->structure == TOP_FIELD) {
-      add_top    = 1;
+      add_top = 1;
       add_bottom = 0;
       }
     else {
-      add_top    = 0;
+      add_top = 0;
       add_bottom = 1;
       }
 
-    for (i=0; i<dpb->ref_frames_in_buffer; i++) {
+    for (unsigned int i = 0; i < dpb->ref_frames_in_buffer; i++) {
       if (dpb->fs_ref[i]->is_reference) {
         if( dpb->fs_ref[i]->frame_num > curSlice->frame_num )
           dpb->fs_ref[i]->frame_num_wrap = dpb->fs_ref[i]->frame_num - max_frame_num;
@@ -1778,7 +1742,7 @@ void update_pic_num (sSlice* curSlice) {
       }
 
     // update long_term_pic_num
-    for (i=0; i<dpb->ltref_frames_in_buffer; i++) {
+    for (unsigned int i = 0; i < dpb->ltref_frames_in_buffer; i++) {
       if (dpb->fs_ltref[i]->is_long_term & 1)
         dpb->fs_ltref[i]->top_field->long_term_pic_num = 2 * dpb->fs_ltref[i]->top_field->long_term_frame_idx + add_top;
       if (dpb->fs_ltref[i]->is_long_term & 2)
