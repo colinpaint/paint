@@ -164,7 +164,7 @@ void read_coeff_4x4_CAVLC (sMacroblock* curMb,
   sSyntaxElement currSE;
   sDataPartition *dP;
   const byte *partMap = assignSE2partition[curSlice->dp_mode];
-  sBitstream* currStream;
+  sBitstream* curStream;
 
   int k, code, vlcnum;
   int numcoeff = 0, numtrailingones;
@@ -212,7 +212,7 @@ void read_coeff_4x4_CAVLC (sMacroblock* curMb,
 
   currSE.type = dptype;
   dP = &(curSlice->partArr[partMap[dptype]]);
-  currStream = dP->bitstream;
+  curStream = dP->bitstream;
 
   if (!cdc)
   {
@@ -221,7 +221,7 @@ void read_coeff_4x4_CAVLC (sMacroblock* curMb,
 
     currSE.value1 = (nnz < 2) ? 0 : ((nnz < 4) ? 1 : ((nnz < 8) ? 2 : 3));
 
-    readsSyntaxElement_NumCoeffTrailingOnes(&currSE, currStream, type);
+    readsSyntaxElement_NumCoeffTrailingOnes(&currSE, curStream, type);
 
     numcoeff        =  currSE.value1;
     numtrailingones =  currSE.value2;
@@ -231,7 +231,7 @@ void read_coeff_4x4_CAVLC (sMacroblock* curMb,
   else
   {
     // chroma DC
-    readsSyntaxElement_NumCoeffTrailingOnesChromaDC(vidParam, &currSE, currStream);
+    readsSyntaxElement_NumCoeffTrailingOnesChromaDC(vidParam, &currSE, curStream);
 
     numcoeff        =  currSE.value1;
     numtrailingones =  currSE.value2;
@@ -248,7 +248,7 @@ void read_coeff_4x4_CAVLC (sMacroblock* curMb,
     if (numtrailingones)
     {
       currSE.len = numtrailingones;
-      readsSyntaxElement_FLC (&currSE, currStream);
+      readsSyntaxElement_FLC (&currSE, curStream);
 
       code = currSE.inf;
       ntr = numtrailingones;
@@ -267,9 +267,9 @@ void read_coeff_4x4_CAVLC (sMacroblock* curMb,
     {
 
       if (vlcnum == 0)
-        readsSyntaxElement_Level_VLC0(&currSE, currStream);
+        readsSyntaxElement_Level_VLC0(&currSE, curStream);
       else
-        readsSyntaxElement_Level_VLCN(&currSE, vlcnum, currStream);
+        readsSyntaxElement_Level_VLCN(&currSE, vlcnum, curStream);
 
       if (level_two_or_higher)
       {
@@ -297,9 +297,9 @@ void read_coeff_4x4_CAVLC (sMacroblock* curMb,
       currSE.value1 = vlcnum;
 
       if (cdc)
-        readsSyntaxElement_TotalZerosChromaDC(vidParam, &currSE, currStream);
+        readsSyntaxElement_TotalZerosChromaDC(vidParam, &currSE, curStream);
       else
-        readsSyntaxElement_TotalZeros(&currSE, currStream);
+        readsSyntaxElement_TotalZeros(&currSE, curStream);
 
       totzeros = currSE.value1;
     }
@@ -320,7 +320,7 @@ void read_coeff_4x4_CAVLC (sMacroblock* curMb,
         vlcnum = imin(zerosleft - 1, RUNBEFORE_NUM_M1);
 
         currSE.value1 = vlcnum;
-        readsSyntaxElement_Run(&currSE, currStream);
+        readsSyntaxElement_Run(&currSE, curStream);
         runarr[i] = currSE.value1;
 
         zerosleft -= runarr[i];
@@ -343,7 +343,7 @@ void read_coeff_4x4_CAVLC_444 (sMacroblock* curMb,
   sSyntaxElement currSE;
   sDataPartition *dP;
   const byte *partMap = assignSE2partition[curSlice->dp_mode];
-  sBitstream* currStream;
+  sBitstream* curStream;
 
   int k, code, vlcnum;
   int numcoeff = 0, numtrailingones;
@@ -421,7 +421,7 @@ void read_coeff_4x4_CAVLC_444 (sMacroblock* curMb,
 
   currSE.type = dptype;
   dP = &(curSlice->partArr[partMap[dptype]]);
-  currStream = dP->bitstream;
+  curStream = dP->bitstream;
 
   if (!cdc)
   {
@@ -441,7 +441,7 @@ void read_coeff_4x4_CAVLC_444 (sMacroblock* curMb,
 
     currSE.value1 = (nnz < 2) ? 0 : ((nnz < 4) ? 1 : ((nnz < 8) ? 2 : 3));
 
-    readsSyntaxElement_NumCoeffTrailingOnes(&currSE, currStream, type);
+    readsSyntaxElement_NumCoeffTrailingOnes(&currSE, curStream, type);
 
     numcoeff        =  currSE.value1;
     numtrailingones =  currSE.value2;
@@ -456,7 +456,7 @@ void read_coeff_4x4_CAVLC_444 (sMacroblock* curMb,
   else
   {
     // chroma DC
-    readsSyntaxElement_NumCoeffTrailingOnesChromaDC(vidParam, &currSE, currStream);
+    readsSyntaxElement_NumCoeffTrailingOnesChromaDC(vidParam, &currSE, curStream);
 
     numcoeff        =  currSE.value1;
     numtrailingones =  currSE.value2;
@@ -473,7 +473,7 @@ void read_coeff_4x4_CAVLC_444 (sMacroblock* curMb,
     if (numtrailingones)
     {
       currSE.len = numtrailingones;
-      readsSyntaxElement_FLC (&currSE, currStream);
+      readsSyntaxElement_FLC (&currSE, curStream);
 
       code = currSE.inf;
       ntr = numtrailingones;
@@ -491,9 +491,9 @@ void read_coeff_4x4_CAVLC_444 (sMacroblock* curMb,
     for (k = numcoeff - 1 - numtrailingones; k >= 0; k--)
     {
       if (vlcnum == 0)
-        readsSyntaxElement_Level_VLC0(&currSE, currStream);
+        readsSyntaxElement_Level_VLC0(&currSE, curStream);
       else
-        readsSyntaxElement_Level_VLCN(&currSE, vlcnum, currStream);
+        readsSyntaxElement_Level_VLCN(&currSE, vlcnum, curStream);
 
       if (level_two_or_higher)
       {
@@ -521,9 +521,9 @@ void read_coeff_4x4_CAVLC_444 (sMacroblock* curMb,
       currSE.value1 = vlcnum;
 
       if (cdc)
-        readsSyntaxElement_TotalZerosChromaDC(vidParam, &currSE, currStream);
+        readsSyntaxElement_TotalZerosChromaDC(vidParam, &currSE, curStream);
       else
-        readsSyntaxElement_TotalZeros(&currSE, currStream);
+        readsSyntaxElement_TotalZeros(&currSE, curStream);
 
       totzeros = currSE.value1;
     }
@@ -544,7 +544,7 @@ void read_coeff_4x4_CAVLC_444 (sMacroblock* curMb,
         vlcnum = imin(zerosleft - 1, RUNBEFORE_NUM_M1);
 
         currSE.value1 = vlcnum;
-        readsSyntaxElement_Run(&currSE, currStream);
+        readsSyntaxElement_Run(&currSE, curStream);
         runarr[i] = currSE.value1;
 
         zerosleft -= runarr[i];

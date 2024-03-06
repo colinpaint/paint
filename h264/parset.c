@@ -48,13 +48,13 @@ static void updateMaxValue (sFrameFormat* format) {
   }
 //}}}
 //{{{
-static void setupLayerInfo (sVidParam* vidParam, sSPS* sps, sLayerParam* p_Lps) {
+static void setupLayerInfo (sVidParam* vidParam, sSPS* sps, sLayerParam* lps) {
 
-  int layer_id = p_Lps->layer_id;
-  p_Lps->vidParam = vidParam;
-  p_Lps->p_Cps = vidParam->p_EncodePar[layer_id];
-  p_Lps->p_SPS = sps;
-  p_Lps->dpb = vidParam->p_Dpb_layer[layer_id];
+  int layer_id = lps->layer_id;
+  lps->vidParam = vidParam;
+  lps->p_Cps = vidParam->p_EncodePar[layer_id];
+  lps->p_SPS = sps;
+  lps->dpb = vidParam->p_Dpb_layer[layer_id];
   }
 //}}}
 //{{{

@@ -5,7 +5,7 @@
 extern int  allocate_pred_mem(sSlice* curSlice);
 extern void free_pred_mem    (sSlice* curSlice);
 
-extern void get_block_luma(sPicture* curr_ref, int x_pos, int y_pos, int block_size_x, int block_size_y, sPixel** block,
+extern void get_block_luma(sPicture* curRef, int x_pos, int y_pos, int block_size_x, int block_size_y, sPixel** block,
                            int shift_x,int maxold_x,int maxold_y,int** tmp_res,int max_imgpel_value,sPixel no_ref_value,sMacroblock* curMb);
 
 extern void intra_cr_decoding    (sMacroblock* curMb, int yuv);

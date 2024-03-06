@@ -1598,12 +1598,12 @@ static void get_db_strength_normal (sVidParam* vidParam, sPicture* p, int MbQAdd
  *    Vertical Deblocking with Strength = 4
 ** ***************************************************************************************
  */
-static void luma_ver_deblock_strong (sPixel** cur_img, int pos_x1, int Alpha, int Beta)
+static void luma_ver_deblock_strong (sPixel** curPixel, int pos_x1, int Alpha, int Beta)
 {
   int i;
   for( i = 0 ; i < BLOCK_SIZE ; ++i )
   {
-    sPixel *SrcPtrP = *(cur_img++) + pos_x1;
+    sPixel *SrcPtrP = *(curPixel++) + pos_x1;
     sPixel *SrcPtrQ = SrcPtrP + 1;
     sPixel  L0 = *SrcPtrP;
     sPixel  R0 = *SrcPtrQ;
@@ -1661,7 +1661,7 @@ static void luma_ver_deblock_strong (sPixel** cur_img, int pos_x1, int Alpha, in
  *    Vertical Deblocking with Normal Strength
 ** ***************************************************************************************
  */
-static void luma_ver_deblock_normal (sPixel** cur_img, int pos_x1, int Alpha, int Beta, int C0, int max_imgpel_value)
+static void luma_ver_deblock_normal (sPixel** curPixel, int pos_x1, int Alpha, int Beta, int C0, int max_imgpel_value)
 {
   int i;
   sPixel *SrcPtrP, *SrcPtrQ;
@@ -1671,7 +1671,7 @@ static void luma_ver_deblock_normal (sPixel** cur_img, int pos_x1, int Alpha, in
   {
     for( i= 0 ; i < BLOCK_SIZE ; ++i )
     {
-      SrcPtrP = *(cur_img++) + pos_x1;
+      SrcPtrP = *(curPixel++) + pos_x1;
       SrcPtrQ = SrcPtrP + 1;
       edge_diff = *SrcPtrQ - *SrcPtrP;
 
@@ -1704,7 +1704,7 @@ static void luma_ver_deblock_normal (sPixel** cur_img, int pos_x1, int Alpha, in
   {
     for( i= 0 ; i < BLOCK_SIZE ; ++i )
     {
-      SrcPtrP = *(cur_img++) + pos_x1;
+      SrcPtrP = *(curPixel++) + pos_x1;
       SrcPtrQ = SrcPtrP + 1;
       edge_diff = *SrcPtrQ - *SrcPtrP;
 
@@ -1774,20 +1774,20 @@ static void edge_loop_luma_ver (sColorPlane pl, sPixel** Img, byte* Strength, sM
       int max_imgpel_value = vidParam->max_pel_value_comp[pl];
 
       int pos_x1 = get_pos_x_luma(MbP, (edge - 1));
-      sPixel** cur_img = &Img[get_pos_y_luma(MbP, 0)];
+      sPixel** curPixel = &Img[get_pos_y_luma(MbP, 0)];
       int pel;
 
       for( pel = 0 ; pel < MB_BLOCK_SIZE ; pel += 4 )
       {
         if(*Strength == 4 )    // INTRA strong filtering
         {
-          luma_ver_deblock_strong(cur_img, pos_x1, Alpha, Beta);
+          luma_ver_deblock_strong(curPixel, pos_x1, Alpha, Beta);
         }
         else if( *Strength != 0) // normal filtering
         {
-          luma_ver_deblock_normal(cur_img, pos_x1, Alpha, Beta, ClipTab[ *Strength ] * bitdepth_scale, max_imgpel_value);
+          luma_ver_deblock_normal(curPixel, pos_x1, Alpha, Beta, ClipTab[ *Strength ] * bitdepth_scale, max_imgpel_value);
         }
-        cur_img += 4;
+        curPixel += 4;
         Strength ++;
       }
     }
@@ -2045,7 +2045,7 @@ static void edge_loop_chroma_ver (sPixel** Img, byte* Strength, sMacroblock* MbQ
 
       int pel;
       int pos_x1 = get_pos_x_chroma(MbP, xQ, (block_width - 1));
-      sPixel** cur_img = &Img[get_pos_y_chroma(MbP,yQ, (block_height - 1))];
+      sPixel** curPixel = &Img[get_pos_y_chroma(MbP,yQ, (block_height - 1))];
 
       for( pel = 0 ; pel < PelNum ; ++pel )
       {
@@ -2053,7 +2053,7 @@ static void edge_loop_chroma_ver (sPixel** Img, byte* Strength, sMacroblock* MbQ
 
         if( Strng != 0)
         {
-          sPixel *SrcPtrP = *cur_img + pos_x1;
+          sPixel *SrcPtrP = *curPixel + pos_x1;
           sPixel *SrcPtrQ = SrcPtrP + 1;
           int edge_diff = *SrcPtrQ - *SrcPtrP;
 
@@ -2085,7 +2085,7 @@ static void edge_loop_chroma_ver (sPixel** Img, byte* Strength, sMacroblock* MbQ
             }
           }
         }
-        cur_img++;
+        curPixel++;
       }
     }
   }

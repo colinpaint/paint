@@ -237,7 +237,7 @@ static void update_direct_mv_info_temporal (sMacroblock* curMb) {
   }
 //}}}
 //{{{
-static inline void update_neighbor_mvs (sPicMotionParams** motion, const sPicMotionParams *mv_info, int i4)
+static inline void update_neighbor_mvs (sPicMotionParams** motion, const sPicMotionParams* mv_info, int i4)
 {
   (*motion++)[i4 + 1] = *mv_info;
   (*motion  )[i4    ] = *mv_info;
@@ -245,7 +245,7 @@ static inline void update_neighbor_mvs (sPicMotionParams** motion, const sPicMot
 }
 //}}}
 //{{{
-int get_colocated_info_4x4 (sMacroblock* curMb, sPicture *list1, int i, int j)
+int get_colocated_info_4x4 (sMacroblock* curMb, sPicture* list1, int i, int j)
 {
   if (list1->is_long_term)
     return 1;
@@ -264,7 +264,7 @@ int get_colocated_info_4x4 (sMacroblock* curMb, sPicture *list1, int i, int j)
   }
 //}}}
 //{{{
-int get_colocated_info_8x8 (sMacroblock* curMb, sPicture *list1, int i, int j)
+int get_colocated_info_8x8 (sMacroblock* curMb, sPicture* list1, int i, int j)
 {
   if (list1->is_long_term)
     return 1;

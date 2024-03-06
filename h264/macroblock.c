@@ -1377,10 +1377,10 @@ static void init_cur_imgy (sVidParam* vidParam,sSlice* curSlice,int pl) {
     if (pl == PLANE_Y) {
       for (int j = 0; j < 6; j++) {
         for (int i = 0; i < curSlice->listXsize[j] ; i++) {
-          sPicture* curr_ref = curSlice->listX[j][i];
-          if (curr_ref) {
-            curr_ref->no_ref = noref && (curr_ref == vidref);
-            curr_ref->cur_imgY = curr_ref->imgY;
+          sPicture* curRef = curSlice->listX[j][i];
+          if (curRef) {
+            curRef->no_ref = noref && (curRef == vidref);
+            curRef->curPixelY = curRef->imgY;
             }
           }
         }
@@ -1388,10 +1388,10 @@ static void init_cur_imgy (sVidParam* vidParam,sSlice* curSlice,int pl) {
     else {
       for (int j = 0; j < 6; j++) {
         for (int i = 0; i < curSlice->listXsize[j]; i++) {
-          sPicture* curr_ref = curSlice->listX[j][i];
-          if (curr_ref) {
-            curr_ref->no_ref = noref && (curr_ref == vidref);
-            curr_ref->cur_imgY = curr_ref->imgUV[pl-1];
+          sPicture* curRef = curSlice->listX[j][i];
+          if (curRef) {
+            curRef->no_ref = noref && (curRef == vidref);
+            curRef->curPixelY = curRef->imgUV[pl-1];
             }
           }
         }

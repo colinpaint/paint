@@ -88,7 +88,7 @@ typedef struct storablePicture {
   int         iChromaStride;
   int         iLumaExpandedHeight;
   int         iChromaExpandedHeight;
-  sPixel**    cur_imgY;               // for more efficient get_block_luma
+  sPixel**    curPixelY;               // for more efficient get_block_luma
   int no_ref;
   int iCodingType;
 

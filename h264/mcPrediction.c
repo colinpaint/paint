@@ -156,7 +156,7 @@ static void weighted_bi_prediction (sPixel *mb_pred,
  *    Integer positions
 ** **********************************************************************
  */
-static void get_block_00 (sPixel *block, sPixel* cur_img, int span, int block_size_y)
+static void get_block_00 (sPixel *block, sPixel* curPixel, int span, int block_size_y)
 {
   // fastest to just move an entire block, since block is a temp block is a 256 byte block (16x16)
   // writes 2 lines of 16 sPixel 1 to 8 times depending in block_size_y
@@ -164,12 +164,12 @@ static void get_block_00 (sPixel *block, sPixel* cur_img, int span, int block_si
 
   for (j = 0; j < block_size_y; j += 2)
   {
-    memcpy(block, cur_img, MB_BLOCK_SIZE * sizeof(sPixel));
+    memcpy(block, curPixel, MB_BLOCK_SIZE * sizeof(sPixel));
     block += MB_BLOCK_SIZE;
-    cur_img += span;
-    memcpy(block, cur_img, MB_BLOCK_SIZE * sizeof(sPixel));
+    curPixel += span;
+    memcpy(block, curPixel, MB_BLOCK_SIZE * sizeof(sPixel));
     block += MB_BLOCK_SIZE;
-    cur_img += span;
+    curPixel += span;
   }
 }
 
@@ -181,7 +181,7 @@ static void get_block_00 (sPixel *block, sPixel* cur_img, int span, int block_si
  *    Qpel (1,0) horizontal
 ** **********************************************************************
  */
-static void get_luma_10 (sPixel** block, sPixel** cur_imgY, int block_size_y, int block_size_x, int x_pos , int max_imgpel_value)
+static void get_luma_10 (sPixel** block, sPixel** curPixelY, int block_size_y, int block_size_x, int x_pos , int max_imgpel_value)
 {
   sPixel *p0, *p1, *p2, *p3, *p4, *p5;
   sPixel *orig_line, *cur_line;
@@ -190,8 +190,8 @@ static void get_luma_10 (sPixel** block, sPixel** cur_imgY, int block_size_y, in
 
   for (j = 0; j < block_size_y; j++)
   {
-    cur_line = &(cur_imgY[j][x_pos]);
-    p0 = &cur_imgY[j][x_pos - 2];
+    cur_line = &(curPixelY[j][x_pos]);
+    p0 = &curPixelY[j][x_pos - 2];
     p1 = p0 + 1;
     p2 = p1 + 1;
     p3 = p2 + 1;
@@ -217,7 +217,7 @@ static void get_luma_10 (sPixel** block, sPixel** cur_imgY, int block_size_y, in
  *    Half horizontal
 ** **********************************************************************
  */
-static void get_luma_20 (sPixel** block, sPixel** cur_imgY, int block_size_y, int block_size_x, int x_pos , int max_imgpel_value)
+static void get_luma_20 (sPixel** block, sPixel** curPixelY, int block_size_y, int block_size_x, int x_pos , int max_imgpel_value)
 {
   sPixel *p0, *p1, *p2, *p3, *p4, *p5;
   sPixel *orig_line;
@@ -225,7 +225,7 @@ static void get_luma_20 (sPixel** block, sPixel** cur_imgY, int block_size_y, in
   int result;
   for (j = 0; j < block_size_y; j++)
   {
-    p0 = &cur_imgY[j][x_pos - 2];
+    p0 = &curPixelY[j][x_pos - 2];
     p1 = p0 + 1;
     p2 = p1 + 1;
     p3 = p2 + 1;
@@ -249,7 +249,7 @@ static void get_luma_20 (sPixel** block, sPixel** cur_imgY, int block_size_y, in
  *    Qpel (3,0) horizontal
 ** **********************************************************************
  */
-static void get_luma_30 (sPixel** block, sPixel** cur_imgY, int block_size_y, int block_size_x, int x_pos , int max_imgpel_value)
+static void get_luma_30 (sPixel** block, sPixel** curPixelY, int block_size_y, int block_size_x, int x_pos , int max_imgpel_value)
 {
   sPixel *p0, *p1, *p2, *p3, *p4, *p5;
   sPixel *orig_line, *cur_line;
@@ -258,8 +258,8 @@ static void get_luma_30 (sPixel** block, sPixel** cur_imgY, int block_size_y, in
 
   for (j = 0; j < block_size_y; j++)
   {
-    cur_line = &(cur_imgY[j][x_pos + 1]);
-    p0 = &cur_imgY[j][x_pos - 2];
+    cur_line = &(curPixelY[j][x_pos + 1]);
+    p0 = &curPixelY[j][x_pos - 2];
     p1 = p0 + 1;
     p2 = p1 + 1;
     p3 = p2 + 1;
@@ -285,14 +285,14 @@ static void get_luma_30 (sPixel** block, sPixel** cur_imgY, int block_size_y, in
  *    Qpel vertical (0, 1)
 ** **********************************************************************
  */
-static void get_luma_01 (sPixel** block, sPixel** cur_imgY, int block_size_y, int block_size_x, int x_pos, int shift_x, int max_imgpel_value)
+static void get_luma_01 (sPixel** block, sPixel** curPixelY, int block_size_y, int block_size_x, int x_pos, int shift_x, int max_imgpel_value)
 {
   sPixel *p0, *p1, *p2, *p3, *p4, *p5;
   sPixel *orig_line, *cur_line;
   int i, j;
   int result;
   int jj = 0;
-  p0 = &(cur_imgY[ - 2][x_pos]);
+  p0 = &(curPixelY[ - 2][x_pos]);
   for (j = 0; j < block_size_y; j++)
   {
     p1 = p0 + shift_x;
@@ -301,7 +301,7 @@ static void get_luma_01 (sPixel** block, sPixel** cur_imgY, int block_size_y, in
     p4 = p3 + shift_x;
     p5 = p4 + shift_x;
     orig_line = block[j];
-    cur_line = &(cur_imgY[jj++][x_pos]);
+    cur_line = &(curPixelY[jj++][x_pos]);
 
     for (i = 0; i < block_size_x; i++)
     {
@@ -323,13 +323,13 @@ static void get_luma_01 (sPixel** block, sPixel** cur_imgY, int block_size_y, in
  *    Half vertical
 ** **********************************************************************
  */
-static void get_luma_02 (sPixel** block, sPixel** cur_imgY, int block_size_y, int block_size_x, int x_pos, int shift_x, int max_imgpel_value)
+static void get_luma_02 (sPixel** block, sPixel** curPixelY, int block_size_y, int block_size_x, int x_pos, int shift_x, int max_imgpel_value)
 {
   sPixel *p0, *p1, *p2, *p3, *p4, *p5;
   sPixel *orig_line;
   int i, j;
   int result;
-  p0 = &(cur_imgY[ - 2][x_pos]);
+  p0 = &(curPixelY[ - 2][x_pos]);
   for (j = 0; j < block_size_y; j++)
   {
     p1 = p0 + shift_x;
@@ -356,7 +356,7 @@ static void get_luma_02 (sPixel** block, sPixel** cur_imgY, int block_size_y, in
  *    Qpel vertical (0, 3)
 ** **********************************************************************
  */
-static void get_luma_03 (sPixel** block, sPixel** cur_imgY, int block_size_y, int block_size_x, int x_pos, int shift_x, int max_imgpel_value)
+static void get_luma_03 (sPixel** block, sPixel** curPixelY, int block_size_y, int block_size_x, int x_pos, int shift_x, int max_imgpel_value)
 {
   sPixel *p0, *p1, *p2, *p3, *p4, *p5;
   sPixel *orig_line, *cur_line;
@@ -364,7 +364,7 @@ static void get_luma_03 (sPixel** block, sPixel** cur_imgY, int block_size_y, in
   int result;
   int jj = 1;
 
-  p0 = &(cur_imgY[ -2][x_pos]);
+  p0 = &(curPixelY[ -2][x_pos]);
   for (j = 0; j < block_size_y; j++)
   {
     p1 = p0 + shift_x;
@@ -373,7 +373,7 @@ static void get_luma_03 (sPixel** block, sPixel** cur_imgY, int block_size_y, in
     p4 = p3 + shift_x;
     p5 = p4 + shift_x;
     orig_line = block[j];
-    cur_line = &(cur_imgY[jj++][x_pos]);
+    cur_line = &(curPixelY[jj++][x_pos]);
 
     for (i = 0; i < block_size_x; i++)
     {
@@ -394,7 +394,7 @@ static void get_luma_03 (sPixel** block, sPixel** cur_imgY, int block_size_y, in
  *    Hpel horizontal, Qpel vertical (2, 1)
 ** **********************************************************************
  */
-static void get_luma_21 (sPixel** block, sPixel** cur_imgY, int** tmp_res, int block_size_y, int block_size_x, int x_pos, int max_imgpel_value)
+static void get_luma_21 (sPixel** block, sPixel** curPixelY, int** tmp_res, int block_size_y, int block_size_x, int x_pos, int max_imgpel_value)
 {
   int i, j;
   /* Vertical & horizontal interpolation */
@@ -408,7 +408,7 @@ static void get_luma_21 (sPixel** block, sPixel** cur_imgY, int** tmp_res, int b
 
   for (j = 0; j < block_size_y + 5; j++)
   {
-    p0 = &cur_imgY[jj++][x_pos - 2];
+    p0 = &curPixelY[jj++][x_pos - 2];
     p1 = p0 + 1;
     p2 = p1 + 1;
     p3 = p2 + 1;
@@ -452,7 +452,7 @@ static void get_luma_21 (sPixel** block, sPixel** cur_imgY, int** tmp_res, int b
  *    Hpel horizontal, Hpel vertical (2, 2)
 ** **********************************************************************
  */
-static void get_luma_22 (sPixel** block, sPixel** cur_imgY, int** tmp_res, int block_size_y, int block_size_x, int x_pos, int max_imgpel_value)
+static void get_luma_22 (sPixel** block, sPixel** curPixelY, int** tmp_res, int block_size_y, int block_size_x, int x_pos, int max_imgpel_value)
 {
   int i, j;
   /* Vertical & horizontal interpolation */
@@ -466,7 +466,7 @@ static void get_luma_22 (sPixel** block, sPixel** cur_imgY, int** tmp_res, int b
 
   for (j = 0; j < block_size_y + 5; j++)
   {
-    p0 = &cur_imgY[jj++][x_pos - 2];
+    p0 = &curPixelY[jj++][x_pos - 2];
     p1 = p0 + 1;
     p2 = p1 + 1;
     p3 = p2 + 1;
@@ -506,7 +506,7 @@ static void get_luma_22 (sPixel** block, sPixel** cur_imgY, int** tmp_res, int b
  *    Hpel horizontal, Qpel vertical (2, 3)
 ** **********************************************************************
  */
-static void get_luma_23 (sPixel** block, sPixel** cur_imgY, int** tmp_res, int block_size_y, int block_size_x, int x_pos, int max_imgpel_value)
+static void get_luma_23 (sPixel** block, sPixel** curPixelY, int** tmp_res, int block_size_y, int block_size_x, int x_pos, int max_imgpel_value)
 {
   int i, j;
   /* Vertical & horizontal interpolation */
@@ -520,7 +520,7 @@ static void get_luma_23 (sPixel** block, sPixel** cur_imgY, int** tmp_res, int b
 
   for (j = 0; j < block_size_y + 5; j++)
   {
-    p0 = &cur_imgY[jj++][x_pos - 2];
+    p0 = &curPixelY[jj++][x_pos - 2];
     p1 = p0 + 1;
     p2 = p1 + 1;
     p3 = p2 + 1;
@@ -564,7 +564,7 @@ static void get_luma_23 (sPixel** block, sPixel** cur_imgY, int** tmp_res, int b
  *    Qpel horizontal, Hpel vertical (1, 2)
 ** **********************************************************************
  */
-static void get_luma_12 (sPixel** block, sPixel** cur_imgY, int** tmp_res, int block_size_y, int block_size_x, int x_pos, int shift_x, int max_imgpel_value)
+static void get_luma_12 (sPixel** block, sPixel** curPixelY, int** tmp_res, int block_size_y, int block_size_x, int x_pos, int shift_x, int max_imgpel_value)
 {
   int i, j;
   int *tmp_line;
@@ -573,7 +573,7 @@ static void get_luma_12 (sPixel** block, sPixel** cur_imgY, int** tmp_res, int b
   sPixel *orig_line;
   int result;
 
-  p0 = &(cur_imgY[ -2][x_pos - 2]);
+  p0 = &(curPixelY[ -2][x_pos - 2]);
   for (j = 0; j < block_size_y; j++)
   {
     p1 = p0 + shift_x;
@@ -619,7 +619,7 @@ static void get_luma_12 (sPixel** block, sPixel** cur_imgY, int** tmp_res, int b
  *    Qpel horizontal, Hpel vertical (3, 2)
 ** **********************************************************************
  */
-static void get_luma_32 (sPixel** block, sPixel** cur_imgY, int** tmp_res, int block_size_y, int block_size_x, int x_pos, int shift_x, int max_imgpel_value)
+static void get_luma_32 (sPixel** block, sPixel** curPixelY, int** tmp_res, int block_size_y, int block_size_x, int x_pos, int shift_x, int max_imgpel_value)
 {
   int i, j;
   int *tmp_line;
@@ -628,7 +628,7 @@ static void get_luma_32 (sPixel** block, sPixel** cur_imgY, int** tmp_res, int b
   sPixel *orig_line;
   int result;
 
-  p0 = &(cur_imgY[ -2][x_pos - 2]);
+  p0 = &(curPixelY[ -2][x_pos - 2]);
   for (j = 0; j < block_size_y; j++)
   {
     p1 = p0 + shift_x;
@@ -674,7 +674,7 @@ static void get_luma_32 (sPixel** block, sPixel** cur_imgY, int** tmp_res, int b
  *    Qpel horizontal, Qpel vertical (3, 3)
 ** **********************************************************************
  */
-static void get_luma_33 (sPixel** block, sPixel** cur_imgY, int block_size_y, int block_size_x, int x_pos, int shift_x, int max_imgpel_value)
+static void get_luma_33 (sPixel** block, sPixel** curPixelY, int block_size_y, int block_size_x, int x_pos, int shift_x, int max_imgpel_value)
 {
   int i, j;
   sPixel *p0, *p1, *p2, *p3, *p4, *p5;
@@ -685,7 +685,7 @@ static void get_luma_33 (sPixel** block, sPixel** cur_imgY, int block_size_y, in
 
   for (j = 0; j < block_size_y; j++)
   {
-    p0 = &cur_imgY[jj++][x_pos - 2];
+    p0 = &curPixelY[jj++][x_pos - 2];
     p1 = p0 + 1;
     p2 = p1 + 1;
     p3 = p2 + 1;
@@ -702,7 +702,7 @@ static void get_luma_33 (sPixel** block, sPixel** cur_imgY, int block_size_y, in
     }
   }
 
-  p0 = &(cur_imgY[-2][x_pos + 1]);
+  p0 = &(curPixelY[-2][x_pos + 1]);
   for (j = 0; j < block_size_y; j++)
   {
     p1 = p0 + shift_x;
@@ -730,7 +730,7 @@ static void get_luma_33 (sPixel** block, sPixel** cur_imgY, int block_size_y, in
  *    Qpel horizontal, Qpel vertical (1, 1)
 ** **********************************************************************
  */
-static void get_luma_11 (sPixel** block, sPixel** cur_imgY, int block_size_y, int block_size_x, int x_pos, int shift_x, int max_imgpel_value)
+static void get_luma_11 (sPixel** block, sPixel** curPixelY, int block_size_y, int block_size_x, int x_pos, int shift_x, int max_imgpel_value)
 {
   int i, j;
   sPixel *p0, *p1, *p2, *p3, *p4, *p5;
@@ -741,7 +741,7 @@ static void get_luma_11 (sPixel** block, sPixel** cur_imgY, int block_size_y, in
 
   for (j = 0; j < block_size_y; j++)
   {
-    p0 = &cur_imgY[jj++][x_pos - 2];
+    p0 = &curPixelY[jj++][x_pos - 2];
     p1 = p0 + 1;
     p2 = p1 + 1;
     p3 = p2 + 1;
@@ -758,7 +758,7 @@ static void get_luma_11 (sPixel** block, sPixel** cur_imgY, int block_size_y, in
     }
   }
 
-  p0 = &(cur_imgY[-2][x_pos]);
+  p0 = &(curPixelY[-2][x_pos]);
   for (j = 0; j < block_size_y; j++)
   {
     p1 = p0 + shift_x;
@@ -786,7 +786,7 @@ static void get_luma_11 (sPixel** block, sPixel** cur_imgY, int block_size_y, in
  *    Qpel horizontal, Qpel vertical (1, 3)
 ** **********************************************************************
  */
-static void get_luma_13 (sPixel** block, sPixel** cur_imgY, int block_size_y, int block_size_x, int x_pos, int shift_x, int max_imgpel_value)
+static void get_luma_13 (sPixel** block, sPixel** curPixelY, int block_size_y, int block_size_x, int x_pos, int shift_x, int max_imgpel_value)
 {
   /* Diagonal interpolation */
   int i, j;
@@ -798,7 +798,7 @@ static void get_luma_13 (sPixel** block, sPixel** cur_imgY, int block_size_y, in
 
   for (j = 0; j < block_size_y; j++)
   {
-    p0 = &cur_imgY[jj++][x_pos - 2];
+    p0 = &curPixelY[jj++][x_pos - 2];
     p1 = p0 + 1;
     p2 = p1 + 1;
     p3 = p2 + 1;
@@ -815,7 +815,7 @@ static void get_luma_13 (sPixel** block, sPixel** cur_imgY, int block_size_y, in
     }
   }
 
-  p0 = &(cur_imgY[-2][x_pos]);
+  p0 = &(curPixelY[-2][x_pos]);
   for (j = 0; j < block_size_y; j++)
   {
     p1 = p0 + shift_x;
@@ -843,7 +843,7 @@ static void get_luma_13 (sPixel** block, sPixel** cur_imgY, int block_size_y, in
  *    Qpel horizontal, Qpel vertical (3, 1)
 ** **********************************************************************
  */
-static void get_luma_31 (sPixel** block, sPixel** cur_imgY, int block_size_y, int block_size_x, int x_pos, int shift_x, int max_imgpel_value)
+static void get_luma_31 (sPixel** block, sPixel** curPixelY, int block_size_y, int block_size_x, int x_pos, int shift_x, int max_imgpel_value)
 {
   /* Diagonal interpolation */
   int i, j;
@@ -855,7 +855,7 @@ static void get_luma_31 (sPixel** block, sPixel** cur_imgY, int block_size_y, in
 
   for (j = 0; j < block_size_y; j++)
   {
-    p0 = &cur_imgY[jj++][x_pos - 2];
+    p0 = &curPixelY[jj++][x_pos - 2];
     p1 = p0 + 1;
     p2 = p1 + 1;
     p3 = p2 + 1;
@@ -872,7 +872,7 @@ static void get_luma_31 (sPixel** block, sPixel** cur_imgY, int block_size_y, in
     }
   }
 
-  p0 = &(cur_imgY[-2][x_pos + 1]);
+  p0 = &(curPixelY[-2][x_pos + 1]);
   for (j = 0; j < block_size_y; j++)
   {
     p1 = p0 + shift_x;
@@ -900,16 +900,16 @@ static void get_luma_31 (sPixel** block, sPixel** cur_imgY, int block_size_y, in
  *    Interpolation of 1/4 subpixel
 ** **********************************************************************
  */
-void get_block_luma (sPicture* curr_ref, int x_pos, int y_pos, int block_size_x, int block_size_y, sPixel** block,
+void get_block_luma (sPicture* curRef, int x_pos, int y_pos, int block_size_x, int block_size_y, sPixel** block,
                     int shift_x, int maxold_x, int maxold_y, int** tmp_res, int max_imgpel_value, sPixel no_ref_value, sMacroblock* curMb)
 {
-  if (curr_ref->no_ref) {
+  if (curRef->no_ref) {
     //printf("list[ref_frame] is equal to 'no reference picture' before RAP\n");
     memset(block[0],no_ref_value,block_size_y * block_size_x * sizeof(sPixel));
   }
   else
   {
-    sPixel** cur_imgY = (curMb->vidParam->separate_colour_plane_flag && curMb->p_Slice->colour_plane_id>PLANE_Y)? curr_ref->imgUV[curMb->p_Slice->colour_plane_id-1] : curr_ref->cur_imgY;
+    sPixel** curPixelY = (curMb->vidParam->separate_colour_plane_flag && curMb->p_Slice->colour_plane_id>PLANE_Y)? curRef->imgUV[curMb->p_Slice->colour_plane_id-1] : curRef->curPixelY;
     int dx = (x_pos & 3);
     int dy = (y_pos & 3);
     x_pos >>= 2;
@@ -918,58 +918,58 @@ void get_block_luma (sPicture* curr_ref, int x_pos, int y_pos, int block_size_x,
     y_pos = iClip3(-10, maxold_y+2, y_pos);
 
     if (dx == 0 && dy == 0)
-      get_block_00(&block[0][0], &cur_imgY[y_pos][x_pos], curr_ref->iLumaStride, block_size_y);
+      get_block_00(&block[0][0], &curPixelY[y_pos][x_pos], curRef->iLumaStride, block_size_y);
     else
     { /* other positions */
       if (dy == 0) /* No vertical interpolation */
       {
         if (dx == 1)
-          get_luma_10(block, &cur_imgY[ y_pos], block_size_y, block_size_x, x_pos, max_imgpel_value);
+          get_luma_10(block, &curPixelY[ y_pos], block_size_y, block_size_x, x_pos, max_imgpel_value);
         else if (dx == 2)
-          get_luma_20(block, &cur_imgY[ y_pos], block_size_y, block_size_x, x_pos, max_imgpel_value);
+          get_luma_20(block, &curPixelY[ y_pos], block_size_y, block_size_x, x_pos, max_imgpel_value);
         else
-          get_luma_30(block, &cur_imgY[ y_pos], block_size_y, block_size_x, x_pos, max_imgpel_value);
+          get_luma_30(block, &curPixelY[ y_pos], block_size_y, block_size_x, x_pos, max_imgpel_value);
       }
       else if (dx == 0) /* No horizontal interpolation */
       {
         if (dy == 1)
-          get_luma_01(block, &cur_imgY[y_pos], block_size_y, block_size_x, x_pos, shift_x, max_imgpel_value);
+          get_luma_01(block, &curPixelY[y_pos], block_size_y, block_size_x, x_pos, shift_x, max_imgpel_value);
         else if (dy == 2)
-          get_luma_02(block, &cur_imgY[ y_pos], block_size_y, block_size_x, x_pos, shift_x, max_imgpel_value);
+          get_luma_02(block, &curPixelY[ y_pos], block_size_y, block_size_x, x_pos, shift_x, max_imgpel_value);
         else
-          get_luma_03(block, &cur_imgY[ y_pos], block_size_y, block_size_x, x_pos, shift_x, max_imgpel_value);
+          get_luma_03(block, &curPixelY[ y_pos], block_size_y, block_size_x, x_pos, shift_x, max_imgpel_value);
       }
       else if (dx == 2)  /* Vertical & horizontal interpolation */
       {
         if (dy == 1)
-          get_luma_21(block, &cur_imgY[ y_pos], tmp_res, block_size_y, block_size_x, x_pos, max_imgpel_value);
+          get_luma_21(block, &curPixelY[ y_pos], tmp_res, block_size_y, block_size_x, x_pos, max_imgpel_value);
         else if (dy == 2)
-          get_luma_22(block, &cur_imgY[ y_pos], tmp_res, block_size_y, block_size_x, x_pos, max_imgpel_value);
+          get_luma_22(block, &curPixelY[ y_pos], tmp_res, block_size_y, block_size_x, x_pos, max_imgpel_value);
         else
-          get_luma_23(block, &cur_imgY[ y_pos], tmp_res, block_size_y, block_size_x, x_pos, max_imgpel_value);
+          get_luma_23(block, &curPixelY[ y_pos], tmp_res, block_size_y, block_size_x, x_pos, max_imgpel_value);
       }
       else if (dy == 2)
       {
         if (dx == 1)
-          get_luma_12(block, &cur_imgY[ y_pos], tmp_res, block_size_y, block_size_x, x_pos, shift_x, max_imgpel_value);
+          get_luma_12(block, &curPixelY[ y_pos], tmp_res, block_size_y, block_size_x, x_pos, shift_x, max_imgpel_value);
         else
-          get_luma_32(block, &cur_imgY[ y_pos], tmp_res, block_size_y, block_size_x, x_pos, shift_x, max_imgpel_value);
+          get_luma_32(block, &curPixelY[ y_pos], tmp_res, block_size_y, block_size_x, x_pos, shift_x, max_imgpel_value);
       }
       else
       {
         if (dx == 1)
         {
           if (dy == 1)
-            get_luma_11(block, &cur_imgY[ y_pos], block_size_y, block_size_x, x_pos, shift_x, max_imgpel_value);
+            get_luma_11(block, &curPixelY[ y_pos], block_size_y, block_size_x, x_pos, shift_x, max_imgpel_value);
           else
-            get_luma_13(block, &cur_imgY[ y_pos], block_size_y, block_size_x, x_pos, shift_x, max_imgpel_value);
+            get_luma_13(block, &curPixelY[ y_pos], block_size_y, block_size_x, x_pos, shift_x, max_imgpel_value);
         }
         else
         {
           if (dy == 1)
-            get_luma_31(block, &cur_imgY[ y_pos], block_size_y, block_size_x, x_pos, shift_x, max_imgpel_value);
+            get_luma_31(block, &curPixelY[ y_pos], block_size_y, block_size_x, x_pos, shift_x, max_imgpel_value);
           else
-            get_luma_33(block, &cur_imgY[ y_pos], block_size_y, block_size_x, x_pos, shift_x, max_imgpel_value);
+            get_luma_33(block, &curPixelY[ y_pos], block_size_y, block_size_x, x_pos, shift_x, max_imgpel_value);
         }
       }
     }
@@ -984,10 +984,10 @@ void get_block_luma (sPicture* curr_ref, int x_pos, int y_pos, int block_size_x,
  *    Chroma (0,X)
 ** **********************************************************************
  */
-static void get_chroma_0X (sPixel *block, sPixel *cur_img, int span, int block_size_y, int block_size_x, int w00, int w01, int total_scale)
+static void get_chroma_0X (sPixel* block, sPixel* curPixel, int span, int block_size_y, int block_size_x, int w00, int w01, int total_scale)
 {
-  sPixel *cur_row = cur_img;
-  sPixel *nxt_row = cur_img + span;
+  sPixel *cur_row = curPixel;
+  sPixel *nxt_row = curPixel + span;
 
 
   sPixel *cur_line, *cur_line_p1;
@@ -1017,9 +1017,9 @@ static void get_chroma_0X (sPixel *block, sPixel *cur_img, int span, int block_s
  *    Chroma (X,0)
 ** **********************************************************************
  */
-static void get_chroma_X0 (sPixel *block, sPixel *cur_img, int span, int block_size_y, int block_size_x, int w00, int w10, int total_scale)
+static void get_chroma_X0 (sPixel* block, sPixel* curPixel, int span, int block_size_y, int block_size_x, int w00, int w10, int total_scale)
 {
-  sPixel *cur_row = cur_img;
+  sPixel *cur_row = curPixel;
 
 
     sPixel *cur_line, *cur_line_p1;
@@ -1049,10 +1049,10 @@ static void get_chroma_X0 (sPixel *block, sPixel *cur_img, int span, int block_s
  *    Chroma (X,X)
 ** **********************************************************************
  */
-static void get_chroma_XY (sPixel *block, sPixel *cur_img, int span, int block_size_y, int block_size_x, int w00, int w01, int w10, int w11, int total_scale)
+static void get_chroma_XY (sPixel* block, sPixel* curPixel, int span, int block_size_y, int block_size_x, int w00, int w01, int w10, int w11, int total_scale)
 {
-  sPixel *cur_row = cur_img;
-  sPixel *nxt_row = cur_img + span;
+  sPixel *cur_row = curPixel;
+  sPixel *nxt_row = curPixel + span;
 
 
   {
@@ -1079,14 +1079,14 @@ static void get_chroma_XY (sPixel *block, sPixel *cur_img, int span, int block_s
 }
 //}}}
 //{{{
-static void get_block_chroma (sPicture* curr_ref, int x_pos, int y_pos, int subpel_x, int subpel_y, int maxold_x, int maxold_y,
+static void get_block_chroma (sPicture* curRef, int x_pos, int y_pos, int subpel_x, int subpel_y, int maxold_x, int maxold_y,
                              int block_size_x, int vert_block_size, int shiftpel_x, int shiftpel_y,
                              sPixel *block1, sPixel *block2, int total_scale, sPixel no_ref_value, sVidParam* vidParam)
 {
   sPixel *img1,*img2;
   short dx,dy;
-  int span = curr_ref->iChromaStride;
-  if (curr_ref->no_ref) {
+  int span = curRef->iChromaStride;
+  if (curRef->no_ref) {
     //printf("list[ref_frame] is equal to 'no reference picture' before RAP\n");
     memset(block1,no_ref_value,vert_block_size * block_size_x * sizeof(sPixel));
     memset(block2,no_ref_value,vert_block_size * block_size_x * sizeof(sPixel));
@@ -1101,8 +1101,8 @@ static void get_block_chroma (sPicture* curr_ref, int x_pos, int y_pos, int subp
     assert(vert_block_size <=vidParam->iChromaPadY && block_size_x<=vidParam->iChromaPadX);
     x_pos = iClip3(-vidParam->iChromaPadX, maxold_x, x_pos); //16
     y_pos = iClip3(-vidParam->iChromaPadY, maxold_y, y_pos); //8
-    img1 = &curr_ref->imgUV[0][y_pos][x_pos];
-    img2 = &curr_ref->imgUV[1][y_pos][x_pos];
+    img1 = &curRef->imgUV[0][y_pos][x_pos];
+    img2 = &curRef->imgUV[1][y_pos][x_pos];
 
     if (dx == 0 && dy == 0)
     {
@@ -1219,7 +1219,7 @@ void intra_cr_decoding (sMacroblock* curMb, int yuv)
 //}}}
 
 //{{{
-static inline void set_direct_references (const sPixelPos *mb, char *l0_rFrame, char *l1_rFrame, sPicMotionParams** mv_info)
+static inline void set_direct_references (const sPixelPos* mb, char* l0_rFrame, char* l1_rFrame, sPicMotionParams** mv_info)
 {
   if (mb->available)
   {
@@ -1235,7 +1235,7 @@ static inline void set_direct_references (const sPixelPos *mb, char *l0_rFrame, 
 }
 //}}}
 //{{{
-static void set_direct_references_mb_field (const sPixelPos *mb, char *l0_rFrame, char *l1_rFrame, sPicMotionParams** mv_info, sMacroblock *mb_data)
+static void set_direct_references_mb_field (const sPixelPos* mb, char* l0_rFrame, char* l1_rFrame, sPicMotionParams** mv_info, sMacroblock *mb_data)
 {
   if (mb->available)
   {
@@ -1259,7 +1259,7 @@ static void set_direct_references_mb_field (const sPixelPos *mb, char *l0_rFrame
 }
 //}}}
 //{{{
-static void set_direct_references_mb_frame (const sPixelPos *mb, char *l0_rFrame, char *l1_rFrame, sPicMotionParams** mv_info, sMacroblock *mb_data)
+static void set_direct_references_mb_frame (const sPixelPos* mb, char* l0_rFrame, char* l1_rFrame, sPicMotionParams** mv_info, sMacroblock *mb_data)
 {
   if (mb->available)
   {
@@ -1283,7 +1283,7 @@ static void set_direct_references_mb_frame (const sPixelPos *mb, char *l0_rFrame
 }
 //}}}
 //{{{
-void prepare_direct_params (sMacroblock* curMb, sPicture* picture, sMotionVector *pmvl0, sMotionVector *pmvl1, char *l0_rFrame, char *l1_rFrame)
+void prepare_direct_params (sMacroblock* curMb, sPicture* picture, sMotionVector* pmvl0, sMotionVector *pmvl1, char *l0_rFrame, char *l1_rFrame)
 {
   sSlice* curSlice = curMb->p_Slice;
   char l0_refA, l0_refB, l0_refC;

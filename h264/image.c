@@ -95,18 +95,18 @@ static void pad_buf (sPixel* pImgBuf, int iWidth, int iHeight, int iStride, int 
 //}}}
 
 //{{{
-static void update_mbaff_macroblock_data (sPixel** cur_img, sPixel (*temp)[16], int x0, int width, int height) {
+static void update_mbaff_macroblock_data (sPixel** curPixel, sPixel (*temp)[16], int x0, int width, int height) {
 
   sPixel (*temp_evn)[16] = temp;
   sPixel (*temp_odd)[16] = temp + height;
-  sPixel** temp_img = cur_img;
+  sPixel** temp_img = curPixel;
 
   for (int y = 0; y < 2 * height; ++y)
     memcpy (*temp++, (*temp_img++ + x0), width * sizeof(sPixel));
 
   for (int y = 0; y < height; ++y) {
-    memcpy ((*cur_img++ + x0), *temp_evn++, width * sizeof(sPixel));
-    memcpy ((*cur_img++ + x0), *temp_odd++, width * sizeof(sPixel));
+    memcpy ((*curPixel++ + x0), *temp_evn++, width * sizeof(sPixel));
+    memcpy ((*curPixel++ + x0), *temp_odd++, width * sizeof(sPixel));
     }
   }
 //}}}
@@ -389,10 +389,10 @@ static void init_cur_imgy (sSlice* curSlice, sVidParam* vidParam) {
       case 0:
         for (int j = 0; j < 6; j++) { //for (j = 0; j < (curSlice->slice_type==B_SLICE?2:1); j++) {
           for (int i = 0; i < MAX_LIST_SIZE; i++) {
-            sPicture* curr_ref = curSlice->listX[j][i];
-            if (curr_ref) {
-              curr_ref->no_ref = noref && (curr_ref == vidref);
-              curr_ref->cur_imgY = curr_ref->imgY;
+            sPicture* curRef = curSlice->listX[j][i];
+            if (curRef) {
+              curRef->no_ref = noref && (curRef == vidref);
+              curRef->curPixelY = curRef->imgY;
               }
             }
           }
@@ -411,10 +411,10 @@ static void init_cur_imgy (sSlice* curSlice, sVidParam* vidParam) {
       // since currently this is done at the slice level, it seems safe to do so.
       // Note for some reason I get now a mismatch between version 12 and this one in cabac. I wonder why.
       for (int i = 0; i < MAX_LIST_SIZE; i++) {
-        sPicture *curr_ref = curSlice->listX[j][i];
-        if (curr_ref) {
-          curr_ref->no_ref = noref && (curr_ref == vidref);
-          curr_ref->cur_imgY = curr_ref->imgY;
+        sPicture *curRef = curSlice->listX[j][i];
+        if (curRef) {
+          curRef->no_ref = noref && (curRef == vidref);
+          curRef->curPixelY = curRef->imgY;
           }
         }
       }
@@ -850,7 +850,7 @@ static int readNewSlice (sSlice* curSlice) {
   sVidParam* vidParam = curSlice->vidParam;
 
   int current_header = 0;
-  sBitstream* currStream = NULL;
+  sBitstream* curStream = NULL;
   for (;;) {
     sNalu* nalu = vidParam->nalu;
     if (!pendingNalu) {
@@ -887,11 +887,11 @@ static int readNewSlice (sSlice* curSlice) {
         curSlice->dp_mode = PAR_DP_1;
         curSlice->max_part_nr = 1;
 
-        currStream = curSlice->partArr[0].bitstream;
-        currStream->ei_flag = 0;
-        currStream->frame_bitoffset = currStream->read_len = 0;
-        memcpy (currStream->streamBuffer, &nalu->buf[1], nalu->len-1);
-        currStream->code_len = currStream->bitstream_length = RBSPtoSODB (currStream->streamBuffer, nalu->len-1);
+        curStream = curSlice->partArr[0].bitstream;
+        curStream->ei_flag = 0;
+        curStream->frame_bitoffset = curStream->read_len = 0;
+        memcpy (curStream->streamBuffer, &nalu->buf[1], nalu->len-1);
+        curStream->code_len = curStream->bitstream_length = RBSPtoSODB (curStream->streamBuffer, nalu->len-1);
 
         // Some syntax of the sliceHeader depends on parameter set
         // which depends on the parameter set ID of the slice header.
@@ -933,11 +933,11 @@ static int readNewSlice (sSlice* curSlice) {
           curSlice->current_mb_nr = curSlice->start_mb_nr;
 
         if (vidParam->active_pps->entropy_coding_mode_flag) {
-          int ByteStartPosition = currStream->frame_bitoffset / 8;
-          if ((currStream->frame_bitoffset % 8) != 0)
+          int ByteStartPosition = curStream->frame_bitoffset / 8;
+          if ((curStream->frame_bitoffset % 8) != 0)
             ++ByteStartPosition;
-          arideco_start_decoding (&curSlice->partArr[0].de_cabac, currStream->streamBuffer,
-                                  ByteStartPosition, &currStream->read_len);
+          arideco_start_decoding (&curSlice->partArr[0].de_cabac, curStream->streamBuffer,
+                                  ByteStartPosition, &curStream->read_len);
           }
 
         vidParam->recovery_point = 0;
@@ -956,11 +956,11 @@ static int readNewSlice (sSlice* curSlice) {
         curSlice->nal_reference_idc = nalu->nal_reference_idc;
         curSlice->dp_mode = PAR_DP_3;
         curSlice->max_part_nr = 3;
-        currStream = curSlice->partArr[0].bitstream;
-        currStream->ei_flag = 0;
-        currStream->frame_bitoffset = currStream->read_len = 0;
-        memcpy (currStream->streamBuffer, &nalu->buf[1], nalu->len-1);
-        currStream->code_len = currStream->bitstream_length = RBSPtoSODB(currStream->streamBuffer, nalu->len-1);
+        curStream = curSlice->partArr[0].bitstream;
+        curStream->ei_flag = 0;
+        curStream->frame_bitoffset = curStream->read_len = 0;
+        memcpy (curStream->streamBuffer, &nalu->buf[1], nalu->len-1);
+        curStream->code_len = curStream->bitstream_length = RBSPtoSODB(curStream->streamBuffer, nalu->len-1);
 
         firstPartOfSliceHeader (curSlice);
         useParameterSet (curSlice);
@@ -991,7 +991,7 @@ static int readNewSlice (sSlice* curSlice) {
 
         // need to read the slice ID, which depends on the value of redundant_pic_cnt_present_flag
 
-        int slice_id_a = read_ue_v ("NALU: DP_A slice_id", currStream);
+        int slice_id_a = read_ue_v ("NALU: DP_A slice_id", curStream);
 
         if (vidParam->active_pps->entropy_coding_mode_flag)
           error ("data partition with CABAC not allowed", 500);
@@ -1001,12 +1001,12 @@ static int readNewSlice (sSlice* curSlice) {
           return current_header;
         if (NALU_TYPE_DPB == nalu->nal_unit_type) {
           //{{{  got nalu DPB
-          currStream = curSlice->partArr[1].bitstream;
-          currStream->ei_flag = 0;
-          currStream->frame_bitoffset = currStream->read_len = 0;
-          memcpy (currStream->streamBuffer, &nalu->buf[1], nalu->len-1);
-          currStream->code_len = currStream->bitstream_length = RBSPtoSODB (currStream->streamBuffer, nalu->len-1);
-          int slice_id_b = read_ue_v ("NALU: DP_B slice_id", currStream);
+          curStream = curSlice->partArr[1].bitstream;
+          curStream->ei_flag = 0;
+          curStream->frame_bitoffset = curStream->read_len = 0;
+          memcpy (curStream->streamBuffer, &nalu->buf[1], nalu->len-1);
+          curStream->code_len = curStream->bitstream_length = RBSPtoSODB (curStream->streamBuffer, nalu->len-1);
+          int slice_id_b = read_ue_v ("NALU: DP_B slice_id", curStream);
           curSlice->dpB_NotPresent = 0;
 
           if ((slice_id_b != slice_id_a) || (nalu->lost_packets)) {
@@ -1016,7 +1016,7 @@ static int readNewSlice (sSlice* curSlice) {
             }
           else {
             if (vidParam->active_pps->redundant_pic_cnt_present_flag)
-              read_ue_v ("NALU: DP_B redundant_pic_cnt", currStream);
+              read_ue_v ("NALU: DP_B redundant_pic_cnt", curStream);
 
             // we're finished with DP_B, so let's continue with next DP
             if (!readNextNalu (vidParam, nalu))
@@ -1029,21 +1029,21 @@ static int readNewSlice (sSlice* curSlice) {
 
         if (NALU_TYPE_DPC == nalu->nal_unit_type) {
           //{{{  got nalu DPC
-          currStream = curSlice->partArr[2].bitstream;
-          currStream->ei_flag = 0;
-          currStream->frame_bitoffset = currStream->read_len = 0;
-          memcpy (currStream->streamBuffer, &nalu->buf[1], nalu->len-1);
-          currStream->code_len = currStream->bitstream_length = RBSPtoSODB (currStream->streamBuffer, nalu->len-1);
+          curStream = curSlice->partArr[2].bitstream;
+          curStream->ei_flag = 0;
+          curStream->frame_bitoffset = curStream->read_len = 0;
+          memcpy (curStream->streamBuffer, &nalu->buf[1], nalu->len-1);
+          curStream->code_len = curStream->bitstream_length = RBSPtoSODB (curStream->streamBuffer, nalu->len-1);
 
           curSlice->dpC_NotPresent = 0;
-          int slice_id_c = read_ue_v ("NALU: DP_C slice_id", currStream);
+          int slice_id_c = read_ue_v ("NALU: DP_C slice_id", curStream);
           if ((slice_id_c != slice_id_a)|| (nalu->lost_packets)) {
             printf ("Warning: got a data partition C which does not match DP_A(DP loss!)\n");
             curSlice->dpC_NotPresent =1;
             }
 
           if (vidParam->active_pps->redundant_pic_cnt_present_flag)
-            read_ue_v ("NALU:SLICE_C redudand_pic_cnt", currStream);
+            read_ue_v ("NALU:SLICE_C redudand_pic_cnt", curStream);
           }
           //}}}
         else {

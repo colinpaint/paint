@@ -453,7 +453,7 @@ static void concealIPCMcoeffs (sMacroblock* curMb)
 //{{{
 static void init_decoding_engine_IPCM (sSlice* curSlice)
 {
-  sBitstream* currStream;
+  sBitstream* curStream;
   int ByteStartPosition;
   int PartitionNumber;
   int i;
@@ -470,10 +470,10 @@ static void init_decoding_engine_IPCM (sSlice* curSlice)
 
   for(i=0;i<PartitionNumber;++i)
   {
-    currStream = curSlice->partArr[i].bitstream;
-    ByteStartPosition = currStream->read_len;
+    curStream = curSlice->partArr[i].bitstream;
+    ByteStartPosition = curStream->read_len;
 
-    arideco_start_decoding (&curSlice->partArr[i].de_cabac, currStream->streamBuffer, ByteStartPosition, &currStream->read_len);
+    arideco_start_decoding (&curSlice->partArr[i].de_cabac, curStream->streamBuffer, ByteStartPosition, &curStream->read_len);
   }
 }
 //}}}

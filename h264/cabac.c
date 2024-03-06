@@ -2314,9 +2314,9 @@ void readIPCM_CABAC (sSlice* curSlice, struct DataPartition *dP)
 {
   sVidParam* vidParam = curSlice->vidParam;
   sPicture* picture = curSlice->picture;
-  sBitstream* currStream = dP->bitstream;
+  sBitstream* curStream = dP->bitstream;
   sDecodingEnvironmentPtr dep = &(dP->de_cabac);
-  byte *buf = currStream->streamBuffer;
+  byte *buf = curStream->streamBuffer;
   int BitstreamLengthInBits = (dP->bitstream->bitstream_length << 3) + 7;
 
   int val = 0;
