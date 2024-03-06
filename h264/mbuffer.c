@@ -1717,7 +1717,7 @@ static void sliding_window_memory_management (sDPB* dpb, sPicture* p) {
 //{{{
 static void adaptive_memory_management (sDPB* dpb, sPicture* p) {
 
-  DecRefPicMarking_t* tmp_drpm;
+  sDecRefPicMarking* tmp_drpm;
   sVidParam* vidParam = dpb->vidParam;
 
   vidParam->last_has_mmco_5 = 0;

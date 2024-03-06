@@ -600,7 +600,7 @@ static void read_CBP_and_coeffs_from_NAL_CABAC_420 (sMacroblock* currMB)
   // chroma DC coeff
   if(cbp>15)
   {
-    CBPStructure  *s_cbp = &currMB->s_cbp[0];
+    sCBPStructure  *s_cbp = &currMB->s_cbp[0];
     int uv, ll, k, coef_ctr;
 
     for (ll = 0; ll < 3; ll += 2)
@@ -700,7 +700,7 @@ static void read_CBP_and_coeffs_from_NAL_CABAC_420 (sMacroblock* currMB)
     {
       int b4, b8, uv, k;
       int** cof;
-      CBPStructure  *s_cbp = &currMB->s_cbp[0];
+      sCBPStructure  *s_cbp = &currMB->s_cbp[0];
       for (b8=0; b8 < vidParam->num_blk8x8_uv; ++b8)
       {
         currMB->is_v_block = uv = (b8 > ((vidParam->num_uv_blocks) - 1 ));
@@ -740,7 +740,7 @@ static void read_CBP_and_coeffs_from_NAL_CABAC_420 (sMacroblock* currMB)
     }
     else
     {
-      CBPStructure  *s_cbp = &currMB->s_cbp[0];
+      sCBPStructure  *s_cbp = &currMB->s_cbp[0];
       int b4, b8, k;
       int uv;
       for (b8=0; b8 < vidParam->num_blk8x8_uv; ++b8)
@@ -1513,7 +1513,7 @@ static void read_CBP_and_coeffs_from_NAL_CABAC_422 (sMacroblock* currMB)
 
         //===================== CHROMA DC YUV422 ======================
         {
-          CBPStructure  *s_cbp = &currMB->s_cbp[0];
+          sCBPStructure  *s_cbp = &currMB->s_cbp[0];
           coef_ctr=-1;
           level=1;
           for(k=0;(k<9)&&(level!=0);++k)
@@ -1617,7 +1617,7 @@ static void read_CBP_and_coeffs_from_NAL_CABAC_422 (sMacroblock* currMB)
 
       if(currMB->is_lossless == FALSE)
       {
-        CBPStructure  *s_cbp = &currMB->s_cbp[0];
+        sCBPStructure  *s_cbp = &currMB->s_cbp[0];
         for (b8=0; b8 < vidParam->num_blk8x8_uv; ++b8)
         {
           currMB->is_v_block = uv = (b8 > ((vidParam->num_uv_blocks) - 1 ));
@@ -1656,7 +1656,7 @@ static void read_CBP_and_coeffs_from_NAL_CABAC_422 (sMacroblock* currMB)
       }
       else
       {
-        CBPStructure  *s_cbp = &currMB->s_cbp[0];
+        sCBPStructure  *s_cbp = &currMB->s_cbp[0];
         for (b8=0; b8 < vidParam->num_blk8x8_uv; ++b8)
         {
           currMB->is_v_block = uv = (b8 > ((vidParam->num_uv_blocks) - 1 ));

@@ -849,7 +849,7 @@ void start_macroblock (sSlice* currSlice, sMacroblock** currMB)
       memset((*currMB)->mvd[0][0][0], 0, 2 * MB_BLOCK_PARTITIONS * 2 * sizeof(short));
   }
 
-  memset((*currMB)->s_cbp, 0, 3 * sizeof(CBPStructure));
+  memset((*currMB)->s_cbp, 0, 3 * sizeof(sCBPStructure));
 
   // initialize currSlice->mb_rres
   if (currSlice->is_reset_coeff == FALSE)

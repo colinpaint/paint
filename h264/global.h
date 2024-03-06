@@ -25,7 +25,7 @@ extern char errortext[ET_SIZE]; //!< buffer for error message for exit with erro
 typedef enum {
   DEC_OPENED = 0,
   DEC_STOPPED,
-  } DecoderStatus_e;
+  } DecoderStatus;
 //}}}
 //{{{  Color_Component
 typedef enum {
@@ -35,7 +35,7 @@ typedef enum {
   } Color_Component;
 //}}}
 //{{{  sPixelPos
-typedef struct pix_pos {
+typedef struct PixelPos {
   int   available;
   int   mb_addr;
   short x;
@@ -44,16 +44,16 @@ typedef struct pix_pos {
   short pos_y;
   } sPixelPos;
 //}}}
-//{{{  DecodingEnvironment
+//{{{  sDecodingEnvironment
 typedef struct {
   unsigned int Drange;
   unsigned int Dvalue;
   int DbitsLeft;
   byte* Dcodestrm;
   int* Dcodestrm_len;
-  } DecodingEnvironment;
-typedef DecodingEnvironment *DecodingEnvironmentPtr;
+  } sDecodingEnvironment;
 //}}}
+typedef sDecodingEnvironment *sDecodingEnvironmentPtr;
 //{{{  sMotionVector
 typedef struct {
   short mv_x;
@@ -67,15 +67,15 @@ typedef struct {
   short y;
   } sBlockPos;
 //}}}
-//{{{  BiContextType
+//{{{  sBiContextType
 //! struct for context management
 typedef struct {
   uint16 state;         // index into state-table CP
   unsigned char  MPS;           // Least Probable Symbol 0/1 CP
   unsigned char dummy;          // for alignment
-  } BiContextType;
+  } sBiContextType;
 //}}}
-typedef BiContextType *BiContextTypePtr;
+typedef sBiContextType *sBiContextTypePtr;
 //{{{  CTX defines
 #define NUM_MB_TYPE_CTX  11
 #define NUM_B8_TYPE_CTX  9
@@ -85,21 +85,36 @@ typedef BiContextType *BiContextTypePtr;
 #define NUM_MB_AFF_CTX 4
 #define NUM_TRANSFORM_SIZE_CTX 3
 //}}}
+//{{{
+struct bit_stream_dec {
+  // CABAC Decoding
+  int read_len;          // actual position in the codebuffer, CABAC only
+  int code_len;          // overall codebuffer length, CABAC only
+
+  // CAVLC Decoding
+  int frame_bitoffset;   // actual position in the codebuffer, bit-oriented, CAVLC only
+  int bitstream_length;  // over codebuffer lnegth, byte oriented, CAVLC only
+
+  // ErrorConcealment
+  byte* streamBuffer;     // actual codebuffer for read bytes
+  int ei_flag;           // error indication, 0: no error, else unspecified error
+  };
+//}}}
 
 struct storablePicture;
 struct DataPartition;
 struct SyntaxElement;
 struct pic_motion_params;
 struct pic_motion_params_old;
-//{{{  MotionInfoContexts
+//{{{  sMotionInfoContexts
 typedef struct {
-  BiContextType mb_type_contexts [3][NUM_MB_TYPE_CTX];
-  BiContextType b8_type_contexts [2][NUM_B8_TYPE_CTX];
-  BiContextType mv_res_contexts  [2][NUM_MV_RES_CTX];
-  BiContextType ref_no_contexts  [2][NUM_REF_NO_CTX];
-  BiContextType delta_qp_contexts[NUM_DELTA_QP_CTX];
-  BiContextType mb_aff_contexts  [NUM_MB_AFF_CTX];
-  } MotionInfoContexts;
+  sBiContextType mb_type_contexts [3][NUM_MB_TYPE_CTX];
+  sBiContextType b8_type_contexts [2][NUM_B8_TYPE_CTX];
+  sBiContextType mv_res_contexts  [2][NUM_MV_RES_CTX];
+  sBiContextType ref_no_contexts  [2][NUM_REF_NO_CTX];
+  sBiContextType delta_qp_contexts[NUM_DELTA_QP_CTX];
+  sBiContextType mb_aff_contexts  [NUM_MB_AFF_CTX];
+  } sMotionInfoContexts;
 //}}}
 //{{{  texture context defines
 #define NUM_IPR_CTX    2
@@ -111,41 +126,41 @@ typedef struct {
 #define NUM_ONE_CTX    5
 #define NUM_ABS_CTX    5
 //}}}
-//{{{  TextureInfoContexts
+//{{{  sTextureInfoContexts
 typedef struct {
-  BiContextType transform_size_contexts [NUM_TRANSFORM_SIZE_CTX];
-  BiContextType ipr_contexts [NUM_IPR_CTX];
-  BiContextType cipr_contexts[NUM_CIPR_CTX];
-  BiContextType cbp_contexts [3][NUM_CBP_CTX];
-  BiContextType bcbp_contexts[NUM_BLOCK_TYPES][NUM_BCBP_CTX];
-  BiContextType map_contexts [2][NUM_BLOCK_TYPES][NUM_MAP_CTX];
-  BiContextType last_contexts[2][NUM_BLOCK_TYPES][NUM_LAST_CTX];
-  BiContextType one_contexts [NUM_BLOCK_TYPES][NUM_ONE_CTX];
-  BiContextType abs_contexts [NUM_BLOCK_TYPES][NUM_ABS_CTX];
-  } TextureInfoContexts;
+  sBiContextType transform_size_contexts [NUM_TRANSFORM_SIZE_CTX];
+  sBiContextType ipr_contexts [NUM_IPR_CTX];
+  sBiContextType cipr_contexts[NUM_CIPR_CTX];
+  sBiContextType cbp_contexts [3][NUM_CBP_CTX];
+  sBiContextType bcbp_contexts[NUM_BLOCK_TYPES][NUM_BCBP_CTX];
+  sBiContextType map_contexts [2][NUM_BLOCK_TYPES][NUM_MAP_CTX];
+  sBiContextType last_contexts[2][NUM_BLOCK_TYPES][NUM_LAST_CTX];
+  sBiContextType one_contexts [NUM_BLOCK_TYPES][NUM_ONE_CTX];
+  sBiContextType abs_contexts [NUM_BLOCK_TYPES][NUM_ABS_CTX];
+  } sTextureInfoContexts;
 //}}}
 //{{{
 /*! Buffer structure for decoded referenc picture marking commands */
-typedef struct DecRefPicMarking_s {
+typedef struct DecRefPicMarking {
   int memory_management_control_operation;
   int difference_of_pic_nums_minus1;
   int long_term_pic_num;
   int long_term_frame_idx;
   int max_long_term_frame_idx_plus1;
-  struct DecRefPicMarking_s *Next;
-  } DecRefPicMarking_t;
+  struct DecRefPicMarking *Next;
+  } sDecRefPicMarking;
 //}}}
 //{{{
 //! cbp structure
-typedef struct cbp_s {
+typedef struct CBPStructure {
   int64 blk;
   int64 bits;
   int64 bits_8x8;
-  } CBPStructure;
+  } sCBPStructure;
 //}}}
 //{{{
 //! sMacroblock
-typedef struct macroblock_dec {
+typedef struct Macroblock {
   struct slice*     p_Slice;  // pointer to the current slice
   struct VidParam* vidParam;    // pointer to sVidParam
   struct InputParam*   p_Inp;
@@ -187,17 +202,17 @@ typedef struct macroblock_dec {
   short delta_quant;        // for rate control
   short list_offset;
 
-  struct macroblock_dec   *mb_up;   // pointer to neighboring MB (CABAC)
-  struct macroblock_dec   *mb_left; // pointer to neighboring MB (CABAC)
+  struct Macroblock   *mb_up;   // pointer to neighboring MB (CABAC)
+  struct Macroblock   *mb_left; // pointer to neighboring MB (CABAC)
 
-  struct macroblock_dec   *mbup;    // neighbors for loopfilter
-  struct macroblock_dec   *mbleft;  // neighbors for loopfilter
+  struct Macroblock   *mbup;    // neighbors for loopfilter
+  struct Macroblock   *mbleft;  // neighbors for loopfilter
 
   // some storage of macroblock syntax elements for global access
   short         mb_type;
   short         mvd[2][BLOCK_MULTIPLE][BLOCK_MULTIPLE][2];      //!< indices correspond to [forw,backw][block_y][block_x][x,y]
   int           cbp;
-  CBPStructure  s_cbp[3];
+  sCBPStructure  s_cbp[3];
 
   int   i16mode;
   char  b8mode[4];
@@ -208,6 +223,7 @@ typedef struct macroblock_dec {
   short DFDisableIdc;
   short DFAlphaC0Offset;
   short DFBetaOffset;
+
 
   Boolean mb_field;
   //Flag for MBAFF deblocking;
@@ -220,20 +236,20 @@ typedef struct macroblock_dec {
   Boolean       luma_transform_size_8x8_flag;
   Boolean       NoMbPartLessThan8x8Flag;
 
-  void (*itrans_4x4)(struct macroblock_dec *currMB, sColorPlane pl, int ioff, int joff);
-  void (*itrans_8x8)(struct macroblock_dec *currMB, sColorPlane pl, int ioff, int joff);
+  void (*itrans_4x4)(struct Macroblock *currMB, sColorPlane pl, int ioff, int joff);
+  void (*itrans_8x8)(struct Macroblock *currMB, sColorPlane pl, int ioff, int joff);
 
-  void (*GetMVPredictor) (struct macroblock_dec *currMB, sPixelPos *block,
+  void (*GetMVPredictor) (struct Macroblock *currMB, sPixelPos *block,
     sMotionVector *pmv, short ref_frame, struct pic_motion_params** mv_info, int list, int mb_x, int mb_y, int blockshape_x, int blockshape_y);
 
-  int  (*read_and_store_CBP_block_bit)  (struct macroblock_dec *currMB, DecodingEnvironmentPtr  dep_dp, int type);
-  char (*readRefPictureIdx)             (struct macroblock_dec *currMB, struct SyntaxElement *currSE, struct DataPartition *dP, char b8mode, int list);
+  int  (*read_and_store_CBP_block_bit)  (struct Macroblock *currMB, sDecodingEnvironmentPtr  dep_dp, int type);
+  char (*readRefPictureIdx)             (struct Macroblock *currMB, struct SyntaxElement *currSE, struct DataPartition *dP, char b8mode, int list);
 
-  void (*read_comp_coeff_4x4_CABAC)     (struct macroblock_dec *currMB, struct SyntaxElement *currSE, sColorPlane pl, int (*InvLevelScale4x4)[4], int qp_per, int cbp);
-  void (*read_comp_coeff_8x8_CABAC)     (struct macroblock_dec *currMB, struct SyntaxElement *currSE, sColorPlane pl);
+  void (*read_comp_coeff_4x4_CABAC)     (struct Macroblock *currMB, struct SyntaxElement *currSE, sColorPlane pl, int (*InvLevelScale4x4)[4], int qp_per, int cbp);
+  void (*read_comp_coeff_8x8_CABAC)     (struct Macroblock *currMB, struct SyntaxElement *currSE, sColorPlane pl);
 
-  void (*read_comp_coeff_4x4_CAVLC)     (struct macroblock_dec *currMB, sColorPlane pl, int (*InvLevelScale4x4)[4], int qp_per, int cbp, byte** nzcoeff);
-  void (*read_comp_coeff_8x8_CAVLC)     (struct macroblock_dec *currMB, sColorPlane pl, int (*InvLevelScale8x8)[8], int qp_per, int cbp, byte** nzcoeff);
+  void (*read_comp_coeff_4x4_CAVLC)     (struct Macroblock *currMB, sColorPlane pl, int (*InvLevelScale4x4)[4], int qp_per, int cbp, byte** nzcoeff);
+  void (*read_comp_coeff_8x8_CAVLC)     (struct Macroblock *currMB, sColorPlane pl, int (*InvLevelScale8x8)[8], int qp_per, int cbp, byte** nzcoeff);
   } sMacroblock;
 //}}}
 //{{{
@@ -251,31 +267,15 @@ typedef struct SyntaxElement {
   //! for mapping of CAVLC to syntaxElement
   void  (*mapping)(int len, int info, int *value1, int *value2);
   //! used for CABAC: refers to actual coding method of each individual syntax element type
-  void  (*reading)(struct macroblock_dec *currMB, struct SyntaxElement *, DecodingEnvironmentPtr);
+  void  (*reading)(struct Macroblock *currMB, struct SyntaxElement *, sDecodingEnvironmentPtr);
   } sSyntaxElement;
 //}}}
-//{{{
-//! Bitstream
-struct bit_stream_dec {
-  // CABAC Decoding
-  int read_len;          // actual position in the codebuffer, CABAC only
-  int code_len;          // overall codebuffer length, CABAC only
-
-  // CAVLC Decoding
-  int frame_bitoffset;   // actual position in the codebuffer, bit-oriented, CAVLC only
-  int bitstream_length;  // over codebuffer lnegth, byte oriented, CAVLC only
-
-  // ErrorConcealment
-  byte* streamBuffer;     // actual codebuffer for read bytes
-  int ei_flag;           // error indication, 0: no error, else unspecified error
-  };
-//}}}
-//{{{  typedef struct sDataPartition
+//{{{  typedef struct DataPartition
 typedef struct DataPartition {
   Bitstream           *bitstream;
-  DecodingEnvironment de_cabac;
+  sDecodingEnvironment de_cabac;
 
-  int     (*readsSyntaxElement)(struct macroblock_dec *currMB, struct SyntaxElement *, struct DataPartition *);
+  int     (*readsSyntaxElement)(struct Macroblock *currMB, struct SyntaxElement *, struct DataPartition *);
           /*!< virtual function;
                actual method depends on chosen data partition and
                entropy coding method  */
@@ -419,14 +419,14 @@ typedef struct slice {
   int no_output_of_prior_pics_flag;
   int long_term_reference_flag;
   int adaptive_ref_pic_buffering_flag;
-  DecRefPicMarking_t *dec_ref_pic_marking_buffer;                    //!< stores the memory management control operations
+  sDecRefPicMarking *dec_ref_pic_marking_buffer;                    //!< stores the memory management control operations
 
   char listXsize[6];
   struct storablePicture** listX[6];
 
   sDataPartition       *partArr;      //!< array of partitions
-  MotionInfoContexts  *mot_ctx;      //!< pointer to struct of context models for use in CABAC
-  TextureInfoContexts *tex_ctx;      //!< pointer to struct of context models for use in CABAC
+  sMotionInfoContexts  *mot_ctx;      //!< pointer to struct of context models for use in CABAC
+  sTextureInfoContexts *tex_ctx;      //!< pointer to struct of context models for use in CABAC
 
   int mvscale[6][MAX_REFERENCE_PICTURES];
 
@@ -839,9 +839,9 @@ typedef struct VidParam {
   } sVidParam;
 //}}}
 //{{{
-typedef struct decoderParam {
-  sInputParam* p_Inp; 
-  sVidParam* vidParam;    
+typedef struct DecoderParam {
+  sInputParam* p_Inp;
+  sVidParam* vidParam;
   } sDecoderParam;
 //}}}
 

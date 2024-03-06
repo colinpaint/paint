@@ -1380,8 +1380,8 @@ unsigned ceilLog2_sf (unsigned uiVal) {
 //{{{
 void init_contexts (sSlice* currSlice) {
 
-  MotionInfoContexts*  mc = currSlice->mot_ctx;
-  TextureInfoContexts* tc = currSlice->tex_ctx;
+  sMotionInfoContexts*  mc = currSlice->mot_ctx;
+  sTextureInfoContexts* tc = currSlice->tex_ctx;
 
   int i, j;
   int qp = imax(0, currSlice->qp); //vidParam->qp);
@@ -1441,7 +1441,7 @@ void dec_ref_pic_marking (sVidParam* vidParam, Bitstream* currStream, sSlice* pS
 
   // free old buffer content
   while (pSlice->dec_ref_pic_marking_buffer) {
-    DecRefPicMarking_t* tmp_drpm = pSlice->dec_ref_pic_marking_buffer;
+    sDecRefPicMarking* tmp_drpm = pSlice->dec_ref_pic_marking_buffer;
     pSlice->dec_ref_pic_marking_buffer = tmp_drpm->Next;
     free (tmp_drpm);
     }
@@ -1460,7 +1460,7 @@ void dec_ref_pic_marking (sVidParam* vidParam, Bitstream* currStream, sSlice* pS
       // read Memory Management Control Operation
       int val;
       do {
-        DecRefPicMarking_t* tmp_drpm = (DecRefPicMarking_t*)calloc (1,sizeof (DecRefPicMarking_t));
+        sDecRefPicMarking* tmp_drpm = (sDecRefPicMarking*)calloc (1,sizeof (sDecRefPicMarking));
         tmp_drpm->Next = NULL;
         val = tmp_drpm->memory_management_control_operation =
           read_ue_v ("SLC memory_management_control_operation", currStream);
@@ -1482,7 +1482,7 @@ void dec_ref_pic_marking (sVidParam* vidParam, Bitstream* currStream, sSlice* pS
         if (pSlice->dec_ref_pic_marking_buffer == NULL)
           pSlice->dec_ref_pic_marking_buffer = tmp_drpm;
         else {
-          DecRefPicMarking_t* tmp_drpm2 = pSlice->dec_ref_pic_marking_buffer;
+          sDecRefPicMarking* tmp_drpm2 = pSlice->dec_ref_pic_marking_buffer;
           while (tmp_drpm2->Next != NULL) tmp_drpm2 = tmp_drpm2->Next;
           tmp_drpm2->Next = tmp_drpm;
           }

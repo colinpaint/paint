@@ -79,7 +79,7 @@ typedef struct storablePicture {
   int         qp;
   int         chroma_qp_offset[2];
   int         slice_qp_delta;
-  DecRefPicMarking_t *dec_ref_pic_marking_buffer;  // stores the memory management control operations
+  sDecRefPicMarking *dec_ref_pic_marking_buffer;  // stores the memory management control operations
 
   // picture error concealment
   int         concealed_pic;

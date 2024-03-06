@@ -187,7 +187,7 @@ static void free_slice (sSlice *currSlice) {
     }
 
   while (currSlice->dec_ref_pic_marking_buffer) {
-    DecRefPicMarking_t* tmp_drpm = currSlice->dec_ref_pic_marking_buffer;
+    sDecRefPicMarking* tmp_drpm = currSlice->dec_ref_pic_marking_buffer;
     currSlice->dec_ref_pic_marking_buffer = tmp_drpm->Next;
     free (tmp_drpm);
     }
