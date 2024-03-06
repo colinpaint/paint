@@ -290,7 +290,7 @@ static void flushDirectOutput (sVidParam* vidParam) {
 //}}}
 
 //{{{
-void initOutBuffer (sVidParam* vidParam) {
+void allocOutput (sVidParam* vidParam) {
 
   vidParam->out_buffer = allocFrameStore();
 
@@ -303,7 +303,7 @@ void initOutBuffer (sVidParam* vidParam) {
   }
 //}}}
 //{{{
-void freeOutBuffer (sVidParam* vidParam) {
+void freeOutput (sVidParam* vidParam) {
 
   freeFrameStore (vidParam->out_buffer);
   vidParam->out_buffer = NULL;

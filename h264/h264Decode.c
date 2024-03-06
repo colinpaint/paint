@@ -448,7 +448,7 @@ void free_layer_buffers (sVidParam* vidParam, int layer_id) {
     cps->PicPos = NULL;
     }
 
-  free_qp_matrices(cps);
+  freeQuant (cps);
 
   vidParam->global_init_done[layer_id] = 0;
   }
@@ -512,7 +512,7 @@ int initGlobalBuffers (sVidParam* vidParam, int layer_id) {
   else
     memory_size += get_mem2Dint (&(cps->siblock), cps->FrameHeightInMbs, cps->PicWidthInMbs);
 
-  init_qp_process (cps);
+  allocQuant (cps);
   cps->oldFrameSizeInMbs = cps->FrameSizeInMbs;
   vidParam->global_init_done[layer_id] = 1;
 
@@ -665,9 +665,9 @@ int OpenDecoder (sInputParam* p_Inp, byte* chunk, size_t chunkSize) {
   gDecoder->vidParam->annex_b = allocAnnexB (gDecoder->vidParam);
   openAnnexB (gDecoder->vidParam->annex_b, chunk, chunkSize);
 
-  init_old_slice (gDecoder->vidParam->old_slice);
+  initOldSlice (gDecoder->vidParam->old_slice);
   init (gDecoder->vidParam);
-  initOutBuffer (gDecoder->vidParam);
+  allocOutput (gDecoder->vidParam);
 
   return DEC_OPEN_NOERR;
   }
@@ -723,7 +723,7 @@ int CloseDecoder() {
 
   for (unsigned i = 0; i < MAX_NUM_DPB_LAYERS; i++)
     freeDpb (gDecoder->vidParam->p_Dpb_layer[i]);
-  freeOutBuffer (gDecoder->vidParam);
+  freeOutput (gDecoder->vidParam);
   freeImg (gDecoder->vidParam);
   free (gDecoder->p_Inp);
   free (gDecoder);

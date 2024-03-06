@@ -898,15 +898,15 @@ static int readNewSlice (sSlice* curSlice) {
         // - read the pic_parameter_set_id of the slice header first,
         // - then setup the active parameter sets
         // -  read // the rest of the slice header
-        firstPartOfSliceHeader (curSlice);
+        readSliceHeader (curSlice);
         useParameterSet (curSlice);
         curSlice->active_sps = vidParam->active_sps;
         curSlice->active_pps = vidParam->active_pps;
         curSlice->Transform8x8Mode = vidParam->active_pps->transform_8x8_mode_flag;
         curSlice->chroma444_not_separate = (vidParam->active_sps->chroma_format_idc == YUV444) &&
                                             (vidParam->separate_colour_plane_flag == 0);
-        restOfSliceHeader (curSlice);
-        assign_quant_params (curSlice);
+        readRestSliceHeader (curSlice);
+        assignQuantParams (curSlice);
 
         // if primary slice is replaced with redundant slice, set the correct image type
         if (curSlice->redundant_pic_cnt &&
@@ -962,15 +962,15 @@ static int readNewSlice (sSlice* curSlice) {
         memcpy (curStream->streamBuffer, &nalu->buf[1], nalu->len-1);
         curStream->code_len = curStream->bitstream_length = RBSPtoSODB(curStream->streamBuffer, nalu->len-1);
 
-        firstPartOfSliceHeader (curSlice);
+        readSliceHeader (curSlice);
         useParameterSet (curSlice);
         curSlice->active_sps = vidParam->active_sps;
         curSlice->active_pps = vidParam->active_pps;
         curSlice->Transform8x8Mode = vidParam->active_pps->transform_8x8_mode_flag;
         curSlice->chroma444_not_separate = (vidParam->active_sps->chroma_format_idc == YUV444) &&
                                             (vidParam->separate_colour_plane_flag == 0);
-        restOfSliceHeader (curSlice);
-        assign_quant_params (curSlice);
+        readRestSliceHeader (curSlice);
+        assignQuantParams (curSlice);
 
         if (isNewPicture (vidParam->picture, curSlice, vidParam->old_slice)) {
           if (vidParam->iSliceNumOfCurrPic == 0)
@@ -1099,7 +1099,7 @@ static int readNewSlice (sSlice* curSlice) {
 //}}}
 
 //{{{
-void init_old_slice (sOldSliceParam* p_old_slice) {
+void initOldSlice (sOldSliceParam* p_old_slice) {
 
   p_old_slice->field_pic_flag = 0;
   p_old_slice->pps_id = INT_MAX;
@@ -1127,8 +1127,8 @@ void calcFrameNum (sVidParam* vidParam, sPicture *p) {
   }
 //}}}
 //{{{
-void pad_dec_picture (sVidParam* vidParam, sPicture* picture)
-{
+void padPicture (sVidParam* vidParam, sPicture* picture) {
+
   int iPadX = vidParam->iLumaPadX;
   int iPadY = vidParam->iLumaPadY;
   int iWidth = picture->size_x;
@@ -1236,7 +1236,7 @@ void exitPicture (sVidParam* vidParam, sPicture** picture) {
     fieldPostProcessing (vidParam);
 
   if ((*picture)->used_for_reference)
-    pad_dec_picture (vidParam,* picture);
+    padPicture (vidParam,* picture);
 
   int structure = (*picture)->structure;
   int slice_type = (*picture)->slice_type;

@@ -1703,7 +1703,7 @@ void decodePOC (sVidParam* vidParam, sSlice* pSlice) {
 //}}}
 
 //{{{
-void firstPartOfSliceHeader (sSlice* curSlice) {
+void readSliceHeader (sSlice* curSlice) {
 
   sVidParam* vidParam = curSlice->vidParam;
   byte dP_nr = assignSE2partition[curSlice->dp_mode][SE_HEADER];
@@ -1727,7 +1727,7 @@ void firstPartOfSliceHeader (sSlice* curSlice) {
   }
 //}}}
 //{{{
-void restOfSliceHeader (sSlice* curSlice) {
+void readRestSliceHeader (sSlice* curSlice) {
 
   sVidParam* vidParam = curSlice->vidParam;
   sInputParam* p_Inp = curSlice->p_Inp;
@@ -1781,9 +1781,9 @@ void restOfSliceHeader (sSlice* curSlice) {
     curSlice->idr_pic_id = read_ue_v ("SLC idr_pic_id", curStream);
 
   if (active_sps->pic_order_cnt_type == 0) {
-    curSlice->pic_order_cnt_lsb = read_u_v (active_sps->log2_max_pic_order_cnt_lsb_minus4 + 4, 
+    curSlice->pic_order_cnt_lsb = read_u_v (active_sps->log2_max_pic_order_cnt_lsb_minus4 + 4,
                                              "SLC pic_order_cnt_lsb", curStream);
-    if (vidParam->active_pps->bottom_field_pic_order_in_frame_present_flag  == 1 &&  
+    if (vidParam->active_pps->bottom_field_pic_order_in_frame_present_flag  == 1 &&
         !curSlice->field_pic_flag )
       curSlice->delta_pic_order_cnt_bottom = read_se_v ("SLC delta_pic_order_cnt_bottom", curStream);
     else
@@ -1835,7 +1835,7 @@ void restOfSliceHeader (sSlice* curSlice) {
     (unsigned short)((curSlice->slice_type == P_SLICE || curSlice->slice_type == SP_SLICE)
       ? vidParam->active_pps->weighted_pred_flag
       : (curSlice->slice_type == B_SLICE && vidParam->active_pps->weighted_bipred_idc == 1));
-  curSlice->weighted_bipred_idc = (unsigned short)(curSlice->slice_type == B_SLICE && 
+  curSlice->weighted_bipred_idc = (unsigned short)(curSlice->slice_type == B_SLICE &&
                                                     vidParam->active_pps->weighted_bipred_idc > 0);
 
   if ((vidParam->active_pps->weighted_pred_flag &&

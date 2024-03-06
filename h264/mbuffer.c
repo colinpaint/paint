@@ -14,7 +14,7 @@
 //#define DUMP_DPB
 
 //{{{
-static void dump_dpb (sDPB* dpb) {
+static void dumpDpb (sDPB* dpb) {
 
 #ifdef DUMP_DPB
   for (unsigned i = 0; i < dpb->used_size;i++) {
@@ -54,6 +54,69 @@ static void dump_dpb (sDPB* dpb) {
   }
 //}}}
 //{{{
+static int is_used_for_reference (sFrameStore* frameStore) {
+
+  if (frameStore->is_reference)
+    return 1;
+
+  if (frameStore->is_used == 3) // frame
+    if (frameStore->frame->used_for_reference)
+      return 1;
+
+  if (frameStore->is_used & 1) // top field
+    if (frameStore->top_field)
+      if (frameStore->top_field->used_for_reference)
+        return 1;
+
+  if (frameStore->is_used & 2) // bottom field
+    if (frameStore->bottom_field)
+      if (frameStore->bottom_field->used_for_reference)
+        return 1;
+
+  return 0;
+  }
+//}}}
+//{{{
+static int is_short_term_reference (sFrameStore* frameStore) {
+
+  if (frameStore->is_used == 3) // frame
+    if ((frameStore->frame->used_for_reference) && (!frameStore->frame->is_long_term))
+      return 1;
+
+  if (frameStore->is_used & 1) // top field
+    if (frameStore->top_field)
+      if ((frameStore->top_field->used_for_reference) && (!frameStore->top_field->is_long_term))
+        return 1;
+
+  if (frameStore->is_used & 2) // bottom field
+    if (frameStore->bottom_field)
+      if ((frameStore->bottom_field->used_for_reference) && (!frameStore->bottom_field->is_long_term))
+        return 1;
+
+  return 0;
+  }
+//}}}
+//{{{
+static int is_long_term_reference (sFrameStore* frameStore) {
+
+  if (frameStore->is_used == 3) // frame
+    if ((frameStore->frame->used_for_reference) && (frameStore->frame->is_long_term))
+      return 1;
+
+  if (frameStore->is_used & 1) // top field
+    if (frameStore->top_field)
+      if ((frameStore->top_field->used_for_reference) && (frameStore->top_field->is_long_term))
+        return 1;
+
+  if (frameStore->is_used & 2) // bottom field
+    if (frameStore->bottom_field)
+      if ((frameStore->bottom_field->used_for_reference) && (frameStore->bottom_field->is_long_term))
+        return 1;
+
+  return 0;
+  }
+//}}}
+//{{{
 static void gen_field_ref_ids (sVidParam* vidParam, sPicture *p) {
 // Generate Frame parameters from field information.
 
@@ -74,88 +137,6 @@ static void gen_field_ref_ids (sVidParam* vidParam, sPicture *p) {
   }
 //}}}
 //{{{
-static void insert_picture_in_dpb (sVidParam* vidParam, sFrameStore* fs, sPicture* p) {
-
-  sInputParam* p_Inp = vidParam->p_Inp;
-  //  printf ("insert (%s) pic with frame_num #%d, poc %d\n",
-  //          (p->structure == FRAME)?"FRAME":(p->structure == TOP_FIELD)?"TOP_FIELD":"BOTTOM_FIELD",
-  //          p->pic_num, p->poc);
-  assert (p != NULL);
-  assert (fs != NULL);
-
-  switch (p->structure) {
-    //{{{
-    case FRAME:
-      fs->frame = p;
-      fs->is_used = 3;
-      if (p->used_for_reference) {
-        fs->is_reference = 3;
-        fs->is_orig_reference = 3;
-        if (p->is_long_term) {
-          fs->is_long_term = 3;
-          fs->long_term_frame_idx = p->long_term_frame_idx;
-          }
-        }
-
-      // generate field views
-      dpb_split_field(vidParam, fs);
-      break;
-    //}}}
-    //{{{
-    case TOP_FIELD:
-      fs->top_field = p;
-      fs->is_used |= 1;
-
-      if (p->used_for_reference) {
-        fs->is_reference |= 1;
-        fs->is_orig_reference |= 1;
-        if (p->is_long_term) {
-          fs->is_long_term |= 1;
-          fs->long_term_frame_idx = p->long_term_frame_idx;
-          }
-        }
-      if (fs->is_used == 3)
-        // generate frame view
-        dpb_combine_field(vidParam, fs);
-      else
-        fs->poc = p->poc;
-
-      gen_field_ref_ids(vidParam, p);
-      break;
-    //}}}
-    //{{{
-    case BOTTOM_FIELD:
-      fs->bottom_field = p;
-      fs->is_used |= 2;
-
-      if (p->used_for_reference) {
-        fs->is_reference |= 2;
-        fs->is_orig_reference |= 2;
-        if (p->is_long_term) {
-          fs->is_long_term |= 2;
-          fs->long_term_frame_idx = p->long_term_frame_idx;
-          }
-        }
-
-      if (fs->is_used == 3)
-        // generate frame view
-        dpb_combine_field(vidParam, fs);
-      else
-        fs->poc = p->poc;
-
-      gen_field_ref_ids(vidParam, p);
-      break;
-    //}}}
-    }
-
-  fs->frame_num = p->pic_num;
-  fs->recovery_frame = p->recovery_frame;
-  fs->is_output = p->is_output;
-  if (fs->is_used == 3)
-    calcFrameNum (vidParam, p);
-}
-//}}}
-//{{{
 static int output_one_frame_from_dpb (sDPB* dpb) {
 
   sVidParam* vidParam = dpb->vidParam;
@@ -167,8 +148,7 @@ static int output_one_frame_from_dpb (sDPB* dpb) {
 
   // find smallest POC
   get_smallest_poc (dpb, &poc, &pos);
-
-  if(pos==-1)
+  if (pos == -1)
     return 0;
 
   // call the output function
@@ -179,9 +159,7 @@ static int output_one_frame_from_dpb (sDPB* dpb) {
     if (dpb->last_output_poc == 0)
       write_lost_ref_after_idr (dpb, pos);
     write_lost_non_ref_pic (dpb, poc);
-  }
-
-// JVT-P072 ends
+    }
 
   writeStoredFrame (vidParam, dpb->fs[pos]);
 
@@ -193,8 +171,9 @@ static int output_one_frame_from_dpb (sDPB* dpb) {
   dpb->last_output_poc = poc;
 
   // free frame store and move empty store to end of buffer
-  if (!is_used_for_reference(dpb->fs[pos]))
+  if (!is_used_for_reference (dpb->fs[pos]))
     remove_frame_from_dpb (dpb, pos);
+
   return 1;
   }
 //}}}
@@ -264,58 +243,608 @@ static void unmark_long_term_field_for_reference_by_frame_idx (
   }
 //}}}
 //{{{
-static int is_short_term_reference (sFrameStore* fs) {
+static int get_pic_num_x (sPicture* p, int difference_of_pic_nums_minus1) {
 
-  if (fs->is_used == 3) // frame
-    if ((fs->frame->used_for_reference) && (!fs->frame->is_long_term))
-      return 1;
-
-  if (fs->is_used & 1) // top field
-    if (fs->top_field)
-      if ((fs->top_field->used_for_reference) && (!fs->top_field->is_long_term))
-        return 1;
-
-  if (fs->is_used & 2) // bottom field
-    if (fs->bottom_field)
-      if ((fs->bottom_field->used_for_reference) && (!fs->bottom_field->is_long_term))
-        return 1;
-
-  return 0;
-  }
-//}}}
-//{{{
-static int is_long_term_reference (sFrameStore* fs) {
-
-
-  if (fs->is_used == 3) // frame
-    if ((fs->frame->used_for_reference) && (fs->frame->is_long_term))
-      return 1;
-
-  if (fs->is_used & 1) // top field
-    if (fs->top_field)
-      if ((fs->top_field->used_for_reference) && (fs->top_field->is_long_term))
-        return 1;
-
-  if (fs->is_used & 2) // bottom field
-    if (fs->bottom_field)
-      if ((fs->bottom_field->used_for_reference) && (fs->bottom_field->is_long_term))
-        return 1;
-
-  return 0;
-  }
-//}}}
-//{{{
-static int get_pic_num_x (sPicture* p, int difference_of_pic_nums_minus1)
-{
   int currPicNum;
-
   if (p->structure == FRAME)
     currPicNum = p->frame_num;
   else
     currPicNum = 2 * p->frame_num + 1;
 
   return currPicNum - (difference_of_pic_nums_minus1 + 1);
+  }
+//}}}
+
+// picMotion
+//{{{
+void allocPicMotion (sPicMotionParamsOld* motion, int size_y, int size_x) {
+
+  motion->mb_field = calloc (size_y * size_x, sizeof(byte));
+  if (motion->mb_field == NULL)
+    no_mem_exit ("allocPicture: motion->mb_field");
+  }
+//}}}
+//{{{
+void freePicMotion (sPicMotionParamsOld* motion) {
+
+  if (motion->mb_field) {
+    free (motion->mb_field);
+    motion->mb_field = NULL;
+    }
+  }
+//}}}
+
+// frameStore
+//{{{
+static void dpb_split_field (sVidParam* vidParam, sFrameStore* frameStore) {
+
+  int twosz16 = 2 * (frameStore->frame->size_x >> 4);
+  sPicture* fs_top = NULL;
+  sPicture* fs_btm = NULL;
+  sPicture* frame = frameStore->frame;
+
+  frameStore->poc = frame->poc;
+  if (!frame->frame_mbs_only_flag) {
+    fs_top = frameStore->top_field = allocPicture (vidParam, TOP_FIELD,
+                                                   frame->size_x, frame->size_y, frame->size_x_cr,
+                                                   frame->size_y_cr, 1);
+    fs_btm = frameStore->bottom_field = allocPicture (vidParam, BOTTOM_FIELD,
+                                                      frame->size_x, frame->size_y,
+                                                      frame->size_x_cr, frame->size_y_cr, 1);
+
+    for (int i = 0; i < (frame->size_y >> 1); i++)
+      memcpy (fs_top->imgY[i], frame->imgY[i*2], frame->size_x*sizeof(sPixel));
+
+    for (int i = 0; i< (frame->size_y_cr >> 1); i++) {
+      memcpy (fs_top->imgUV[0][i], frame->imgUV[0][i*2], frame->size_x_cr*sizeof(sPixel));
+      memcpy (fs_top->imgUV[1][i], frame->imgUV[1][i*2], frame->size_x_cr*sizeof(sPixel));
+      }
+
+    for (int i = 0; i < (frame->size_y>>1); i++)
+      memcpy (fs_btm->imgY[i], frame->imgY[i*2 + 1], frame->size_x*sizeof(sPixel));
+
+    for (int i = 0; i < (frame->size_y_cr>>1); i++) {
+      memcpy (fs_btm->imgUV[0][i], frame->imgUV[0][i*2 + 1], frame->size_x_cr*sizeof(sPixel));
+      memcpy (fs_btm->imgUV[1][i], frame->imgUV[1][i*2 + 1], frame->size_x_cr*sizeof(sPixel));
+      }
+
+    fs_top->poc = frame->top_poc;
+    fs_btm->poc = frame->bottom_poc;
+    fs_top->frame_poc = frame->frame_poc;
+    fs_top->bottom_poc = fs_btm->bottom_poc =  frame->bottom_poc;
+    fs_top->top_poc = fs_btm->top_poc =  frame->top_poc;
+    fs_btm->frame_poc = frame->frame_poc;
+
+    fs_top->used_for_reference = fs_btm->used_for_reference = frame->used_for_reference;
+    fs_top->is_long_term = fs_btm->is_long_term = frame->is_long_term;
+    frameStore->long_term_frame_idx = fs_top->long_term_frame_idx
+                                    = fs_btm->long_term_frame_idx
+                                    = frame->long_term_frame_idx;
+
+    fs_top->coded_frame = fs_btm->coded_frame = 1;
+    fs_top->mb_aff_frame_flag = fs_btm->mb_aff_frame_flag = frame->mb_aff_frame_flag;
+
+    frame->top_field = fs_top;
+    frame->bottom_field = fs_btm;
+    frame->frame = frame;
+    fs_top->bottom_field = fs_btm;
+    fs_top->frame = frame;
+    fs_top->top_field = fs_top;
+    fs_btm->top_field = fs_top;
+    fs_btm->frame = frame;
+    fs_btm->bottom_field = fs_btm;
+
+    fs_top->chroma_format_idc = fs_btm->chroma_format_idc = frame->chroma_format_idc;
+    fs_top->iCodingType = fs_btm->iCodingType = frame->iCodingType;
+    if (frame->used_for_reference)  {
+      padPicture (vidParam, fs_top);
+      padPicture (vidParam, fs_btm);
+      }
+    }
+  else {
+    frameStore->top_field = NULL;
+    frameStore->bottom_field = NULL;
+    frame->top_field = NULL;
+    frame->bottom_field = NULL;
+    frame->frame = frame;
+    }
+
+  if (!frame->frame_mbs_only_flag) {
+    if (frame->mb_aff_frame_flag) {
+      sPicMotionParamsOld* frm_motion = &frame->motion;
+      for (int j = 0 ; j < (frame->size_y >> 3); j++) {
+        int jj = (j >> 2)*8 + (j & 0x03);
+        int jj4 = jj + 4;
+        int jdiv = (j >> 1);
+        for (int i = 0 ; i < (frame->size_x>>2); i++) {
+          int idiv = (i >> 2);
+
+          int currentmb = twosz16*(jdiv >> 1)+ (idiv)*2 + (jdiv & 0x01);
+          // Assign field mvs attached to MB-Frame buffer to the proper buffer
+          if (frm_motion->mb_field[currentmb]) {
+            fs_btm->mv_info[j][i].mv[LIST_0] = frame->mv_info[jj4][i].mv[LIST_0];
+            fs_btm->mv_info[j][i].mv[LIST_1] = frame->mv_info[jj4][i].mv[LIST_1];
+            fs_btm->mv_info[j][i].ref_idx[LIST_0] = frame->mv_info[jj4][i].ref_idx[LIST_0];
+            if (fs_btm->mv_info[j][i].ref_idx[LIST_0] >=0)
+              fs_btm->mv_info[j][i].ref_pic[LIST_0] = vidParam->ppSliceList[frame->mv_info[jj4][i].slice_no]->listX[4][(short) fs_btm->mv_info[j][i].ref_idx[LIST_0]];
+            else
+              fs_btm->mv_info[j][i].ref_pic[LIST_0] = NULL;
+            fs_btm->mv_info[j][i].ref_idx[LIST_1] = frame->mv_info[jj4][i].ref_idx[LIST_1];
+            if (fs_btm->mv_info[j][i].ref_idx[LIST_1] >=0)
+              fs_btm->mv_info[j][i].ref_pic[LIST_1] = vidParam->ppSliceList[frame->mv_info[jj4][i].slice_no]->listX[5][(short) fs_btm->mv_info[j][i].ref_idx[LIST_1]];
+            else
+              fs_btm->mv_info[j][i].ref_pic[LIST_1] = NULL;
+
+            fs_top->mv_info[j][i].mv[LIST_0] = frame->mv_info[jj][i].mv[LIST_0];
+            fs_top->mv_info[j][i].mv[LIST_1] = frame->mv_info[jj][i].mv[LIST_1];
+            fs_top->mv_info[j][i].ref_idx[LIST_0] = frame->mv_info[jj][i].ref_idx[LIST_0];
+            if (fs_top->mv_info[j][i].ref_idx[LIST_0] >=0)
+              fs_top->mv_info[j][i].ref_pic[LIST_0] = vidParam->ppSliceList[frame->mv_info[jj][i].slice_no]->listX[2][(short) fs_top->mv_info[j][i].ref_idx[LIST_0]];
+            else
+              fs_top->mv_info[j][i].ref_pic[LIST_0] = NULL;
+            fs_top->mv_info[j][i].ref_idx[LIST_1] = frame->mv_info[jj][i].ref_idx[LIST_1];
+            if (fs_top->mv_info[j][i].ref_idx[LIST_1] >=0)
+              fs_top->mv_info[j][i].ref_pic[LIST_1] = vidParam->ppSliceList[frame->mv_info[jj][i].slice_no]->listX[3][(short) fs_top->mv_info[j][i].ref_idx[LIST_1]];
+            else
+              fs_top->mv_info[j][i].ref_pic[LIST_1] = NULL;
+            }
+          }
+        }
+      }
+
+      //! Generate field MVs from Frame MVs
+    for (int j = 0 ; j < (frame->size_y >> 3) ; j++) {
+      int jj = 2 * RSD(j);
+      int jdiv = (j >> 1);
+      for (int i = 0 ; i < (frame->size_x >> 2) ; i++) {
+        int ii = RSD(i);
+        int idiv = (i >> 2);
+        int currentmb = twosz16 * (jdiv >> 1)+ (idiv)*2 + (jdiv & 0x01);
+        if (!frame->mb_aff_frame_flag  || !frame->motion.mb_field[currentmb]) {
+          fs_top->mv_info[j][i].mv[LIST_0] = fs_btm->mv_info[j][i].mv[LIST_0] = frame->mv_info[jj][ii].mv[LIST_0];
+          fs_top->mv_info[j][i].mv[LIST_1] = fs_btm->mv_info[j][i].mv[LIST_1] = frame->mv_info[jj][ii].mv[LIST_1];
+
+          // Scaling of references is done here since it will not affect spatial direct (2*0 =0)
+          if (frame->mv_info[jj][ii].ref_idx[LIST_0] == -1) {
+            fs_top->mv_info[j][i].ref_idx[LIST_0] = fs_btm->mv_info[j][i].ref_idx[LIST_0] = - 1;
+            fs_top->mv_info[j][i].ref_pic[LIST_0] = fs_btm->mv_info[j][i].ref_pic[LIST_0] = NULL;
+            }
+          else {
+            fs_top->mv_info[j][i].ref_idx[LIST_0] = fs_btm->mv_info[j][i].ref_idx[LIST_0] = frame->mv_info[jj][ii].ref_idx[LIST_0];
+            fs_top->mv_info[j][i].ref_pic[LIST_0] = fs_btm->mv_info[j][i].ref_pic[LIST_0] = vidParam->ppSliceList[frame->mv_info[jj][ii].slice_no]->listX[LIST_0][(short) frame->mv_info[jj][ii].ref_idx[LIST_0]];
+            }
+
+          if (frame->mv_info[jj][ii].ref_idx[LIST_1] == -1) {
+            fs_top->mv_info[j][i].ref_idx[LIST_1] = fs_btm->mv_info[j][i].ref_idx[LIST_1] = - 1;
+            fs_top->mv_info[j][i].ref_pic[LIST_1] = fs_btm->mv_info[j][i].ref_pic[LIST_1] = NULL;
+            }
+          else {
+            fs_top->mv_info[j][i].ref_idx[LIST_1] = fs_btm->mv_info[j][i].ref_idx[LIST_1] = frame->mv_info[jj][ii].ref_idx[LIST_1];
+            fs_top->mv_info[j][i].ref_pic[LIST_1] = fs_btm->mv_info[j][i].ref_pic[LIST_1] = vidParam->ppSliceList[frame->mv_info[jj][ii].slice_no]->listX[LIST_1][(short) frame->mv_info[jj][ii].ref_idx[LIST_1]];
+            }
+          }
+        }
+      }
+    }
+  }
+//}}}
+//{{{
+static void dpb_combine_field (sVidParam* vidParam, sFrameStore* frameStore) {
+
+  dpb_combine_field_yuv (vidParam, frameStore);
+
+  frameStore->frame->iCodingType = frameStore->top_field->iCodingType; //FIELD_CODING;
+   //! Use inference flag to remap mvs/references
+
+  //! Generate Frame parameters from field information.
+  for (int j = 0 ; j < (frameStore->top_field->size_y >> 2); j++) {
+    int jj = (j << 1);
+    int jj4 = jj + 1;
+    for (int i = 0 ; i < (frameStore->top_field->size_x >> 2); i++) {
+      frameStore->frame->mv_info[jj][i].mv[LIST_0] = frameStore->top_field->mv_info[j][i].mv[LIST_0];
+      frameStore->frame->mv_info[jj][i].mv[LIST_1] = frameStore->top_field->mv_info[j][i].mv[LIST_1];
+
+      frameStore->frame->mv_info[jj][i].ref_idx[LIST_0] = frameStore->top_field->mv_info[j][i].ref_idx[LIST_0];
+      frameStore->frame->mv_info[jj][i].ref_idx[LIST_1] = frameStore->top_field->mv_info[j][i].ref_idx[LIST_1];
+
+      /* bug: top field list doesnot exist.*/
+      int l = frameStore->top_field->mv_info[j][i].slice_no;
+      int k = frameStore->top_field->mv_info[j][i].ref_idx[LIST_0];
+      frameStore->frame->mv_info[jj][i].ref_pic[LIST_0] = k>=0? frameStore->top_field->listX[l][LIST_0][k]: NULL;
+      k = frameStore->top_field->mv_info[j][i].ref_idx[LIST_1];
+      frameStore->frame->mv_info[jj][i].ref_pic[LIST_1] = k>=0? frameStore->top_field->listX[l][LIST_1][k]: NULL;
+
+      //! association with id already known for fields.
+      frameStore->frame->mv_info[jj4][i].mv[LIST_0] = frameStore->bottom_field->mv_info[j][i].mv[LIST_0];
+      frameStore->frame->mv_info[jj4][i].mv[LIST_1] = frameStore->bottom_field->mv_info[j][i].mv[LIST_1];
+
+      frameStore->frame->mv_info[jj4][i].ref_idx[LIST_0] = frameStore->bottom_field->mv_info[j][i].ref_idx[LIST_0];
+      frameStore->frame->mv_info[jj4][i].ref_idx[LIST_1] = frameStore->bottom_field->mv_info[j][i].ref_idx[LIST_1];
+      l = frameStore->bottom_field->mv_info[j][i].slice_no;
+
+      k = frameStore->bottom_field->mv_info[j][i].ref_idx[LIST_0];
+      frameStore->frame->mv_info[jj4][i].ref_pic[LIST_0] = k >= 0 ? frameStore->bottom_field->listX[l][LIST_0][k]: NULL;
+      k = frameStore->bottom_field->mv_info[j][i].ref_idx[LIST_1];
+      frameStore->frame->mv_info[jj4][i].ref_pic[LIST_1] = k >= 0 ? frameStore->bottom_field->listX[l][LIST_1][k]: NULL;
+    }
+  }
 }
+//}}}
+//{{{
+static void insert_picture_in_dpb (sVidParam* vidParam, sFrameStore* fs, sPicture* p) {
+
+  sInputParam* p_Inp = vidParam->p_Inp;
+  //  printf ("insert (%s) pic with frame_num #%d, poc %d\n",
+  //          (p->structure == FRAME)?"FRAME":(p->structure == TOP_FIELD)?"TOP_FIELD":"BOTTOM_FIELD",
+  //          p->pic_num, p->poc);
+  assert (p != NULL);
+  assert (fs != NULL);
+
+  switch (p->structure) {
+    //{{{
+    case FRAME:
+      fs->frame = p;
+      fs->is_used = 3;
+      if (p->used_for_reference) {
+        fs->is_reference = 3;
+        fs->is_orig_reference = 3;
+        if (p->is_long_term) {
+          fs->is_long_term = 3;
+          fs->long_term_frame_idx = p->long_term_frame_idx;
+          }
+        }
+
+      // generate field views
+      dpb_split_field (vidParam, fs);
+      break;
+    //}}}
+    //{{{
+    case TOP_FIELD:
+      fs->top_field = p;
+      fs->is_used |= 1;
+
+      if (p->used_for_reference) {
+        fs->is_reference |= 1;
+        fs->is_orig_reference |= 1;
+        if (p->is_long_term) {
+          fs->is_long_term |= 1;
+          fs->long_term_frame_idx = p->long_term_frame_idx;
+          }
+        }
+      if (fs->is_used == 3)
+        // generate frame view
+        dpb_combine_field(vidParam, fs);
+      else
+        fs->poc = p->poc;
+
+      gen_field_ref_ids(vidParam, p);
+      break;
+    //}}}
+    //{{{
+    case BOTTOM_FIELD:
+      fs->bottom_field = p;
+      fs->is_used |= 2;
+
+      if (p->used_for_reference) {
+        fs->is_reference |= 2;
+        fs->is_orig_reference |= 2;
+        if (p->is_long_term) {
+          fs->is_long_term |= 2;
+          fs->long_term_frame_idx = p->long_term_frame_idx;
+          }
+        }
+
+      if (fs->is_used == 3)
+        // generate frame view
+        dpb_combine_field(vidParam, fs);
+      else
+        fs->poc = p->poc;
+
+      gen_field_ref_ids(vidParam, p);
+      break;
+    //}}}
+    }
+
+  fs->frame_num = p->pic_num;
+  fs->recovery_frame = p->recovery_frame;
+  fs->is_output = p->is_output;
+  if (fs->is_used == 3)
+    calcFrameNum (vidParam, p);
+}
+//}}}
+//{{{
+sFrameStore* allocFrameStore() {
+
+  sFrameStore* fs = calloc (1, sizeof(sFrameStore));
+  if (!fs)
+    no_mem_exit ("alloc_frame_store: f");
+
+  fs->is_used = 0;
+  fs->is_reference = 0;
+  fs->is_long_term = 0;
+  fs->is_orig_reference = 0;
+  fs->is_output = 0;
+  fs->frame = NULL;;
+  fs->top_field = NULL;
+  fs->bottom_field = NULL;
+
+  return fs;
+  }
+//}}}
+//{{{
+void freeFrameStore (sFrameStore* frameStore) {
+
+  if (frameStore) {
+    if (frameStore->frame) {
+      freePicture (frameStore->frame);
+      frameStore->frame = NULL;
+      }
+
+    if (frameStore->top_field) {
+      freePicture (frameStore->top_field);
+      frameStore->top_field = NULL;
+      }
+
+    if (frameStore->bottom_field) {
+      freePicture (frameStore->bottom_field);
+      frameStore->bottom_field = NULL;
+      }
+
+    free (frameStore);
+    }
+  }
+//}}}
+//{{{
+void unmark_for_reference (sFrameStore* frameStore) {
+
+  if (frameStore->is_used & 1)
+    if (frameStore->top_field)
+      frameStore->top_field->used_for_reference = 0;
+
+  if (frameStore->is_used & 2)
+    if (frameStore->bottom_field)
+      frameStore->bottom_field->used_for_reference = 0;
+
+  if (frameStore->is_used == 3) {
+    if (frameStore->top_field && frameStore->bottom_field) {
+      frameStore->top_field->used_for_reference = 0;
+      frameStore->bottom_field->used_for_reference = 0;
+      }
+    frameStore->frame->used_for_reference = 0;
+    }
+
+  frameStore->is_reference = 0;
+
+  if(frameStore->frame)
+    freePicMotion (&frameStore->frame->motion);
+
+  if (frameStore->top_field)
+    freePicMotion (&frameStore->top_field->motion);
+
+  if (frameStore->bottom_field)
+    freePicMotion (&frameStore->bottom_field->motion);
+  }
+//}}}
+//{{{
+void unmark_for_long_term_reference (sFrameStore* frameStore) {
+
+  if (frameStore->is_used & 1) {
+    if (frameStore->top_field) {
+      frameStore->top_field->used_for_reference = 0;
+      frameStore->top_field->is_long_term = 0;
+      }
+    }
+
+  if (frameStore->is_used & 2) {
+    if (frameStore->bottom_field) {
+      frameStore->bottom_field->used_for_reference = 0;
+      frameStore->bottom_field->is_long_term = 0;
+      }
+    }
+
+  if (frameStore->is_used == 3) {
+    if (frameStore->top_field && frameStore->bottom_field) {
+      frameStore->top_field->used_for_reference = 0;
+      frameStore->top_field->is_long_term = 0;
+      frameStore->bottom_field->used_for_reference = 0;
+      frameStore->bottom_field->is_long_term = 0;
+      }
+    frameStore->frame->used_for_reference = 0;
+    frameStore->frame->is_long_term = 0;
+    }
+
+  frameStore->is_reference = 0;
+  frameStore->is_long_term = 0;
+  }
+//}}}
+//{{{
+void dpb_combine_field_yuv (sVidParam* vidParam, sFrameStore* frameStore) {
+
+  if (!frameStore->frame)
+    frameStore->frame = allocPicture (vidParam, FRAME,
+                                      frameStore->top_field->size_x, frameStore->top_field->size_y*2,
+                                      frameStore->top_field->size_x_cr, frameStore->top_field->size_y_cr*2, 1);
+
+  for (int i = 0; i < frameStore->top_field->size_y; i++) {
+    memcpy (frameStore->frame->imgY[i*2], frameStore->top_field->imgY[i]   ,
+            frameStore->top_field->size_x * sizeof(sPixel));     // top field
+    memcpy (frameStore->frame->imgY[i*2 + 1], frameStore->bottom_field->imgY[i],
+            frameStore->bottom_field->size_x * sizeof(sPixel)); // bottom field
+    }
+
+  for (int j = 0; j < 2; j++)
+    for (int i = 0; i < frameStore->top_field->size_y_cr; i++) {
+      memcpy (frameStore->frame->imgUV[j][i*2], frameStore->top_field->imgUV[j][i],
+              frameStore->top_field->size_x_cr*sizeof(sPixel));
+      memcpy (frameStore->frame->imgUV[j][i*2 + 1], frameStore->bottom_field->imgUV[j][i],
+              frameStore->bottom_field->size_x_cr*sizeof(sPixel));
+      }
+
+  frameStore->poc = frameStore->frame->poc = frameStore->frame->frame_poc
+                                           = imin (frameStore->top_field->poc, frameStore->bottom_field->poc);
+
+  frameStore->bottom_field->frame_poc = frameStore->top_field->frame_poc = frameStore->frame->poc;
+  frameStore->bottom_field->top_poc = frameStore->frame->top_poc = frameStore->top_field->poc;
+  frameStore->top_field->bottom_poc = frameStore->frame->bottom_poc = frameStore->bottom_field->poc;
+
+  frameStore->frame->used_for_reference = (frameStore->top_field->used_for_reference && frameStore->bottom_field->used_for_reference );
+  frameStore->frame->is_long_term = (frameStore->top_field->is_long_term && frameStore->bottom_field->is_long_term );
+
+  if (frameStore->frame->is_long_term)
+    frameStore->frame->long_term_frame_idx = frameStore->long_term_frame_idx;
+
+  frameStore->frame->top_field = frameStore->top_field;
+  frameStore->frame->bottom_field = frameStore->bottom_field;
+  frameStore->frame->frame = frameStore->frame;
+  frameStore->frame->coded_frame = 0;
+
+  frameStore->frame->chroma_format_idc = frameStore->top_field->chroma_format_idc;
+  frameStore->frame->frame_cropping_flag = frameStore->top_field->frame_cropping_flag;
+  if (frameStore->frame->frame_cropping_flag) {
+    frameStore->frame->frame_crop_top_offset = frameStore->top_field->frame_crop_top_offset;
+    frameStore->frame->frame_crop_bottom_offset = frameStore->top_field->frame_crop_bottom_offset;
+    frameStore->frame->frame_crop_left_offset = frameStore->top_field->frame_crop_left_offset;
+    frameStore->frame->frame_crop_right_offset = frameStore->top_field->frame_crop_right_offset;
+    }
+
+  frameStore->top_field->frame = frameStore->bottom_field->frame = frameStore->frame;
+  frameStore->top_field->top_field = frameStore->top_field;
+  frameStore->top_field->bottom_field = frameStore->bottom_field;
+  frameStore->bottom_field->top_field = frameStore->top_field;
+  frameStore->bottom_field->bottom_field = frameStore->bottom_field;
+  if (frameStore->top_field->used_for_reference || frameStore->bottom_field->used_for_reference)
+    padPicture (vidParam, frameStore->frame);
+  }
+//}}}
+
+// picture
+//{{{
+sPicture* allocPicture (sVidParam* vidParam, sPictureStructure structure,
+                        int size_x, int size_y, int size_x_cr, int size_y_cr, int is_output) {
+
+  sSPS* active_sps = vidParam->active_sps;
+  //printf ("Allocating (%s) picture (x=%d, y=%d, x_cr=%d, y_cr=%d)\n",
+  //        (type == FRAME)?"FRAME":(type == TOP_FIELD)?"TOP_FIELD":"BOTTOM_FIELD",
+  //        size_x, size_y, size_x_cr, size_y_cr);
+
+  sPicture* s = calloc (1, sizeof(sPicture));
+  if (!s)
+    no_mem_exit ("allocPicture failed");
+
+  if (structure != FRAME) {
+    size_y /= 2;
+    size_y_cr /= 2;
+    }
+
+  s->PicSizeInMbs = (size_x*size_y)/256;
+  s->imgUV = NULL;
+
+  get_mem2Dpel_pad (&(s->imgY), size_y, size_x, vidParam->iLumaPadY, vidParam->iLumaPadX);
+  s->iLumaStride = size_x + 2 * vidParam->iLumaPadX;
+  s->iLumaExpandedHeight = size_y + 2 * vidParam->iLumaPadY;
+
+  if (active_sps->chroma_format_idc != YUV400)
+    get_mem3Dpel_pad (&(s->imgUV), 2, size_y_cr, size_x_cr, vidParam->iChromaPadY, vidParam->iChromaPadX);
+
+  s->iChromaStride = size_x_cr + 2*vidParam->iChromaPadX;
+  s->iChromaExpandedHeight = size_y_cr + 2*vidParam->iChromaPadY;
+  s->iLumaPadY = vidParam->iLumaPadY;
+  s->iLumaPadX = vidParam->iLumaPadX;
+  s->iChromaPadY = vidParam->iChromaPadY;
+  s->iChromaPadX = vidParam->iChromaPadX;
+  s->separate_colour_plane_flag = vidParam->separate_colour_plane_flag;
+
+  get_mem2Dmp (&s->mv_info, (size_y >> BLOCK_SHIFT), (size_x >> BLOCK_SHIFT));
+  allocPicMotion (&s->motion , (size_y >> BLOCK_SHIFT), (size_x >> BLOCK_SHIFT));
+
+  if (vidParam->separate_colour_plane_flag != 0)
+    for (int nplane = 0; nplane < MAX_PLANE; nplane++) {
+      get_mem2Dmp (&s->JVmv_info[nplane], (size_y >> BLOCK_SHIFT), (size_x >> BLOCK_SHIFT));
+      allocPicMotion (&s->JVmotion[nplane] , (size_y >> BLOCK_SHIFT), (size_x >> BLOCK_SHIFT));
+      }
+
+  s->pic_num = 0;
+  s->frame_num = 0;
+  s->long_term_frame_idx = 0;
+  s->long_term_pic_num = 0;
+  s->used_for_reference  = 0;
+  s->is_long_term = 0;
+  s->non_existing = 0;
+  s->is_output = 0;
+  s->max_slice_id = 0;
+
+  s->structure = structure;
+
+  s->size_x = size_x;
+  s->size_y = size_y;
+  s->size_x_cr = size_x_cr;
+  s->size_y_cr = size_y_cr;
+  s->size_x_m1 = size_x - 1;
+  s->size_y_m1 = size_y - 1;
+  s->size_x_cr_m1 = size_x_cr - 1;
+  s->size_y_cr_m1 = size_y_cr - 1;
+
+  s->top_field = vidParam->no_reference_picture;
+  s->bottom_field = vidParam->no_reference_picture;
+  s->frame = vidParam->no_reference_picture;
+
+  s->dec_ref_pic_marking_buffer = NULL;
+  s->coded_frame  = 0;
+  s->mb_aff_frame_flag  = 0;
+  s->top_poc = s->bottom_poc = s->poc = 0;
+
+  if (!vidParam->active_sps->frame_mbs_only_flag && structure != FRAME) 
+    for (int j = 0; j < MAX_NUM_SLICES; j++) 
+      for (int i = 0; i < 2; i++) {
+        s->listX[j][i] = calloc (MAX_LIST_SIZE, sizeof (sPicture*)); // +1 for reordering
+        if (NULL == s->listX[j][i])
+          no_mem_exit ("allocPicture: s->listX[i]");
+        }
+
+  return s;
+  }
+//}}}
+//{{{
+void freePicture (sPicture* p) {
+
+  if (p) {
+    if (p->mv_info) {
+      free_mem2Dmp (p->mv_info);
+      p->mv_info = NULL;
+      }
+    freePicMotion (&p->motion);
+
+    if ((p->separate_colour_plane_flag != 0) ) {
+      for (int nplane = 0; nplane < MAX_PLANE; nplane++ ) {
+        if (p->JVmv_info[nplane]) {
+          free_mem2Dmp (p->JVmv_info[nplane]);
+          p->JVmv_info[nplane] = NULL;
+          }
+        freePicMotion (&p->JVmotion[nplane]);
+        }
+      }
+
+    if (p->imgY) {
+      free_mem2Dpel_pad (p->imgY, p->iLumaPadY, p->iLumaPadX);
+      p->imgY = NULL;
+      }
+
+    if (p->imgUV) {
+      free_mem3Dpel_pad (p->imgUV, 2, p->iChromaPadY, p->iChromaPadX);
+      p->imgUV = NULL;
+      }
+
+    for (int j = 0; j < MAX_NUM_SLICES; j++)
+      for (int i = 0; i < 2; i++)
+        if (p->listX[j][i]) {
+          free (p->listX[j][i]);
+          p->listX[j][i] = NULL;
+          }
+
+    free (p);
+    p = NULL;
+    }
+  }
 //}}}
 
 // dpb
@@ -460,7 +989,7 @@ static void checkNumDpbFrames (sDPB* dpb) {
   }
 //}}}
 //{{{
-static void adaptive_memory_management (sDPB* dpb, sPicture* p) {
+static void adaptiveMemoryManagement (sDPB* dpb, sPicture* p) {
 
   sDecRefPicMarking* tmp_drpm;
   sVidParam* vidParam = dpb->vidParam;
@@ -553,7 +1082,7 @@ static void adaptive_memory_management (sDPB* dpb, sPicture* p) {
   }
 //}}}
 //{{{
-static void sliding_window_memory_management (sDPB* dpb, sPicture* p) {
+static void slidingWindowMemoryManagement (sDPB* dpb, sPicture* p) {
 
   assert (!p->idr_flag);
 
@@ -572,7 +1101,7 @@ static void sliding_window_memory_management (sDPB* dpb, sPicture* p) {
   }
 //}}}
 //{{{
-static void idr_memory_management (sDPB* dpb, sPicture* p) {
+static void idrMemoryManagement (sDPB* dpb, sPicture* p) {
 
   if (p->no_output_of_prior_pics_flag) {
     // free all stored pictures
@@ -822,13 +1351,12 @@ void mm_unmark_long_term_for_reference (sDPB* dpb, sPicture* p, int long_term_pi
 
   for (uint32 i = 0; i < dpb->ltref_frames_in_buffer; i++) {
     if (p->structure == FRAME) {
-      if ((dpb->fs_ltref[i]->is_reference==3) && (dpb->fs_ltref[i]->is_long_term==3)) {
+      if ((dpb->fs_ltref[i]->is_reference==3) && (dpb->fs_ltref[i]->is_long_term==3))
         if (dpb->fs_ltref[i]->frame->long_term_pic_num == long_term_pic_num)
-          unmark_for_long_term_reference(dpb->fs_ltref[i]);
-        }
+          unmark_for_long_term_reference (dpb->fs_ltref[i]);
       }
     else {
-      if ((dpb->fs_ltref[i]->is_reference & 1) && ((dpb->fs_ltref[i]->is_long_term & 1))) {
+      if ((dpb->fs_ltref[i]->is_reference & 1) && ((dpb->fs_ltref[i]->is_long_term & 1)))
         if (dpb->fs_ltref[i]->top_field->long_term_pic_num == long_term_pic_num) {
           dpb->fs_ltref[i]->top_field->used_for_reference = 0;
           dpb->fs_ltref[i]->top_field->is_long_term = 0;
@@ -840,9 +1368,8 @@ void mm_unmark_long_term_for_reference (sDPB* dpb, sPicture* p, int long_term_pi
             }
           return;
           }
-        }
 
-      if ((dpb->fs_ltref[i]->is_reference & 2) && ((dpb->fs_ltref[i]->is_long_term & 2))) {
+      if ((dpb->fs_ltref[i]->is_reference & 2) && ((dpb->fs_ltref[i]->is_long_term & 2)))
         if (dpb->fs_ltref[i]->bottom_field->long_term_pic_num == long_term_pic_num) {
           dpb->fs_ltref[i]->bottom_field->used_for_reference = 0;
           dpb->fs_ltref[i]->bottom_field->is_long_term = 0;
@@ -854,8 +1381,6 @@ void mm_unmark_long_term_for_reference (sDPB* dpb, sPicture* p, int long_term_pi
             }
           return;
           }
-
-        }
       }
     }
   }
@@ -1134,14 +1659,14 @@ void store_picture_in_dpb (sDPB* dpb, sPicture* p) {
   vidParam->last_pic_bottom_field = (p->structure == BOTTOM_FIELD);
 
   if (p->idr_flag) {
-    idr_memory_management (dpb, p);
+    idrMemoryManagement (dpb, p);
     // picture error concealment
     memset (vidParam->pocs_in_dpb, 0, sizeof(int)*100);
     }
   else {
     // adaptive memory management
     if (p->used_for_reference && (p->adaptive_ref_pic_buffering_flag))
-      adaptive_memory_management (dpb, p);
+      adaptiveMemoryManagement (dpb, p);
     }
 
   if ((p->structure == TOP_FIELD) || (p->structure == BOTTOM_FIELD)) {
@@ -1155,7 +1680,7 @@ void store_picture_in_dpb (sDPB* dpb, sPicture* p) {
             insert_picture_in_dpb (vidParam, dpb->last_picture, p);
             updateRefList (dpb);
             updateLongTermRefList (dpb);
-            dump_dpb (dpb);
+            dumpDpb (dpb);
             dpb->last_picture = NULL;
             return;
             }
@@ -1168,7 +1693,7 @@ void store_picture_in_dpb (sDPB* dpb, sPicture* p) {
   if ((!p->idr_flag) &&
       (p->used_for_reference &&
       (!p->adaptive_ref_pic_buffering_flag)))
-    sliding_window_memory_management (dpb, p);
+    slidingWindowMemoryManagement (dpb, p);
 
   // picture error concealment
   if (vidParam->conceal_mode != 0)
@@ -1223,13 +1748,13 @@ void store_picture_in_dpb (sDPB* dpb, sPicture* p) {
 
   dpb->used_size++;
 
-  if(vidParam->conceal_mode != 0)
+  if (vidParam->conceal_mode != 0)
     vidParam->pocs_in_dpb[dpb->used_size-1] = p->poc;
 
   updateRefList (dpb);
   updateLongTermRefList (dpb);
   checkNumDpbFrames (dpb);
-  dump_dpb (dpb);
+  dumpDpb (dpb);
   }
 //}}}
 //{{{
@@ -1306,290 +1831,6 @@ void freeDpb (sDPB* dpb) {
     freePicture (vidParam->no_reference_picture);
     vidParam->no_reference_picture = NULL;
     }
-  }
-//}}}
-
-// picMotion
-//{{{
-void allocPicMotion (sPicMotionParamsOld* motion, int size_y, int size_x) {
-
-  motion->mb_field = calloc (size_y * size_x, sizeof(byte));
-  if (motion->mb_field == NULL)
-    no_mem_exit ("allocPicture: motion->mb_field");
-  }
-//}}}
-//{{{
-void freePicMotion (sPicMotionParamsOld* motion) {
-
-  if (motion->mb_field) {
-    free (motion->mb_field);
-    motion->mb_field = NULL;
-    }
-  }
-//}}}
-
-// picture
-//{{{
-sPicture* allocPicture (sVidParam* vidParam, sPictureStructure structure,
-                        int size_x, int size_y, int size_x_cr, int size_y_cr, int is_output) {
-
-  sSPS* active_sps = vidParam->active_sps;
-  //printf ("Allocating (%s) picture (x=%d, y=%d, x_cr=%d, y_cr=%d)\n",
-  //        (type == FRAME)?"FRAME":(type == TOP_FIELD)?"TOP_FIELD":"BOTTOM_FIELD",
-  //        size_x, size_y, size_x_cr, size_y_cr);
-
-  sPicture* s = calloc (1, sizeof(sPicture));
-  if (!s)
-    no_mem_exit ("allocPicture failed");
-
-  if (structure != FRAME) {
-    size_y /= 2;
-    size_y_cr /= 2;
-    }
-
-  s->PicSizeInMbs = (size_x*size_y)/256;
-  s->imgUV = NULL;
-
-  get_mem2Dpel_pad (&(s->imgY), size_y, size_x, vidParam->iLumaPadY, vidParam->iLumaPadX);
-  s->iLumaStride = size_x + 2 * vidParam->iLumaPadX;
-  s->iLumaExpandedHeight = size_y + 2 * vidParam->iLumaPadY;
-
-  if (active_sps->chroma_format_idc != YUV400)
-    get_mem3Dpel_pad (&(s->imgUV), 2, size_y_cr, size_x_cr, vidParam->iChromaPadY, vidParam->iChromaPadX);
-
-  s->iChromaStride = size_x_cr + 2*vidParam->iChromaPadX;
-  s->iChromaExpandedHeight = size_y_cr + 2*vidParam->iChromaPadY;
-  s->iLumaPadY = vidParam->iLumaPadY;
-  s->iLumaPadX = vidParam->iLumaPadX;
-  s->iChromaPadY = vidParam->iChromaPadY;
-  s->iChromaPadX = vidParam->iChromaPadX;
-
-  s->separate_colour_plane_flag = vidParam->separate_colour_plane_flag;
-
-  get_mem2Dmp (&s->mv_info, (size_y >> BLOCK_SHIFT), (size_x >> BLOCK_SHIFT));
-  allocPicMotion (&s->motion , (size_y >> BLOCK_SHIFT), (size_x >> BLOCK_SHIFT));
-
-  if (vidParam->separate_colour_plane_flag != 0) {
-    for (int nplane = 0; nplane < MAX_PLANE; nplane++) {
-      get_mem2Dmp (&s->JVmv_info[nplane], (size_y >> BLOCK_SHIFT), (size_x >> BLOCK_SHIFT));
-      allocPicMotion (&s->JVmotion[nplane] , (size_y >> BLOCK_SHIFT), (size_x >> BLOCK_SHIFT));
-      }
-    }
-
-  s->pic_num = 0;
-  s->frame_num = 0;
-  s->long_term_frame_idx = 0;
-  s->long_term_pic_num = 0;
-  s->used_for_reference  = 0;
-  s->is_long_term = 0;
-  s->non_existing = 0;
-  s->is_output = 0;
-  s->max_slice_id = 0;
-
-  s->structure = structure;
-
-  s->size_x = size_x;
-  s->size_y = size_y;
-  s->size_x_cr = size_x_cr;
-  s->size_y_cr = size_y_cr;
-  s->size_x_m1 = size_x - 1;
-  s->size_y_m1 = size_y - 1;
-  s->size_x_cr_m1 = size_x_cr - 1;
-  s->size_y_cr_m1 = size_y_cr - 1;
-
-  s->top_field = vidParam->no_reference_picture;
-  s->bottom_field = vidParam->no_reference_picture;
-  s->frame = vidParam->no_reference_picture;
-
-  s->dec_ref_pic_marking_buffer = NULL;
-  s->coded_frame  = 0;
-  s->mb_aff_frame_flag  = 0;
-  s->top_poc = s->bottom_poc = s->poc = 0;
-
-  if (!vidParam->active_sps->frame_mbs_only_flag && structure != FRAME) {
-    for (int j = 0; j < MAX_NUM_SLICES; j++) {
-      for (int i = 0; i < 2; i++) {
-        s->listX[j][i] = calloc (MAX_LIST_SIZE, sizeof (sPicture*)); // +1 for reordering
-        if (NULL == s->listX[j][i])
-          no_mem_exit ("allocPicture: s->listX[i]");
-        }
-      }
-    }
-
-  return s;
-  }
-//}}}
-//{{{
-void freePicture (sPicture* p) {
-
-  if (p) {
-    if (p->mv_info) {
-      free_mem2Dmp (p->mv_info);
-      p->mv_info = NULL;
-      }
-    freePicMotion (&p->motion);
-
-    if ((p->separate_colour_plane_flag != 0) ) {
-      for (int nplane = 0; nplane < MAX_PLANE; nplane++ ) {
-        if (p->JVmv_info[nplane]) {
-          free_mem2Dmp (p->JVmv_info[nplane]);
-          p->JVmv_info[nplane] = NULL;
-          }
-        freePicMotion (&p->JVmotion[nplane]);
-        }
-      }
-
-    if (p->imgY) {
-      free_mem2Dpel_pad (p->imgY, p->iLumaPadY, p->iLumaPadX);
-      p->imgY = NULL;
-      }
-
-    if (p->imgUV) {
-      free_mem3Dpel_pad (p->imgUV, 2, p->iChromaPadY, p->iChromaPadX);
-      p->imgUV = NULL;
-      }
-
-    for (int j = 0; j < MAX_NUM_SLICES; j++)
-      for (int i = 0; i < 2; i++)
-        if (p->listX[j][i]) {
-          free (p->listX[j][i]);
-          p->listX[j][i] = NULL;
-          }
-
-    free (p);
-    p = NULL;
-    }
-  }
-//}}}
-
-// frameStore
-//{{{
-sFrameStore* allocFrameStore() {
-
-  sFrameStore* fs = calloc (1, sizeof(sFrameStore));
-  if (NULL == fs)
-    no_mem_exit ("alloc_frame_store: f");
-
-  fs->is_used = 0;
-  fs->is_reference = 0;
-  fs->is_long_term = 0;
-  fs->is_orig_reference = 0;
-  fs->is_output = 0;
-  fs->frame = NULL;;
-  fs->top_field = NULL;
-  fs->bottom_field = NULL;
-
-  return fs;
-  }
-//}}}
-//{{{
-void freeFrameStore (sFrameStore* frameStore) {
-
-  if (frameStore) {
-    if (frameStore->frame) {
-      freePicture (frameStore->frame);
-      frameStore->frame = NULL;
-      }
-
-    if (frameStore->top_field) {
-      freePicture (frameStore->top_field);
-      frameStore->top_field = NULL;
-      }
-
-    if (frameStore->bottom_field) {
-      freePicture (frameStore->bottom_field);
-      frameStore->bottom_field = NULL;
-      }
-
-    free (frameStore);
-    }
-  }
-//}}}
-//{{{
-void unmark_for_reference (sFrameStore* frameStore) {
-
-  if (frameStore->is_used & 1)
-    if (frameStore->top_field)
-      frameStore->top_field->used_for_reference = 0;
-
-  if (frameStore->is_used & 2)
-    if (frameStore->bottom_field)
-      frameStore->bottom_field->used_for_reference = 0;
-
-  if (frameStore->is_used == 3) {
-    if (frameStore->top_field && frameStore->bottom_field) {
-      frameStore->top_field->used_for_reference = 0;
-      frameStore->bottom_field->used_for_reference = 0;
-      }
-    frameStore->frame->used_for_reference = 0;
-    }
-
-  frameStore->is_reference = 0;
-
-  if(frameStore->frame)
-    freePicMotion (&frameStore->frame->motion);
-
-  if (frameStore->top_field)
-    freePicMotion (&frameStore->top_field->motion);
-
-  if (frameStore->bottom_field)
-    freePicMotion (&frameStore->bottom_field->motion);
-  }
-//}}}
-//{{{
-void unmark_for_long_term_reference (sFrameStore* frameStore) {
-
-  if (frameStore->is_used & 1) {
-    if (frameStore->top_field) {
-      frameStore->top_field->used_for_reference = 0;
-      frameStore->top_field->is_long_term = 0;
-      }
-    }
-
-  if (frameStore->is_used & 2) {
-    if (frameStore->bottom_field) {
-      frameStore->bottom_field->used_for_reference = 0;
-      frameStore->bottom_field->is_long_term = 0;
-      }
-    }
-
-  if (frameStore->is_used == 3) {
-    if (frameStore->top_field && frameStore->bottom_field) {
-      frameStore->top_field->used_for_reference = 0;
-      frameStore->top_field->is_long_term = 0;
-      frameStore->bottom_field->used_for_reference = 0;
-      frameStore->bottom_field->is_long_term = 0;
-      }
-    frameStore->frame->used_for_reference = 0;
-    frameStore->frame->is_long_term = 0;
-    }
-
-  frameStore->is_reference = 0;
-  frameStore->is_long_term = 0;
-  }
-//}}}
-//{{{
-int is_used_for_reference (sFrameStore* frameStore)
-{
-  if (frameStore->is_reference)
-    return 1;
-
-  if (frameStore->is_used == 3) // frame
-    if (frameStore->frame->used_for_reference)
-      return 1;
-
-  if (frameStore->is_used & 1) // top field
-    if (frameStore->top_field)
-      if (frameStore->top_field->used_for_reference)
-        return 1;
-
-  if (frameStore->is_used & 2) // bottom field
-    if (frameStore->bottom_field)
-      if (frameStore->bottom_field->used_for_reference)
-        return 1;
-
-
-  return 0;
   }
 //}}}
 
@@ -2039,258 +2280,8 @@ sPicture* get_short_term_pic (sSlice* curSlice, sDPB* dpb, int picNum) {
 //}}}
 
 //{{{
-void dpb_split_field (sVidParam* vidParam, sFrameStore* fs)
-{
-  int twosz16 = 2 * (fs->frame->size_x >> 4);
-  sPicture* fs_top = NULL;
-  sPicture* fs_btm = NULL;
-  sPicture* frame = fs->frame;
+void alloc_ref_pic_list_reordering_buffer (sSlice* curSlice) {
 
-  fs->poc = frame->poc;
-
-  if (!frame->frame_mbs_only_flag) {
-    fs_top = fs->top_field = allocPicture (vidParam, TOP_FIELD,    frame->size_x, frame->size_y, frame->size_x_cr, frame->size_y_cr, 1);
-    fs_btm = fs->bottom_field = allocPicture (vidParam, BOTTOM_FIELD, frame->size_x, frame->size_y, frame->size_x_cr, frame->size_y_cr, 1);
-
-    for (int i = 0; i < (frame->size_y >> 1); i++)
-      memcpy (fs_top->imgY[i], frame->imgY[i*2], frame->size_x*sizeof(sPixel));
-
-    for (int i = 0; i< (frame->size_y_cr >> 1); i++) {
-      memcpy (fs_top->imgUV[0][i], frame->imgUV[0][i*2], frame->size_x_cr*sizeof(sPixel));
-      memcpy (fs_top->imgUV[1][i], frame->imgUV[1][i*2], frame->size_x_cr*sizeof(sPixel));
-      }
-
-    for (int i = 0; i < (frame->size_y>>1); i++)
-      memcpy (fs_btm->imgY[i], frame->imgY[i*2 + 1], frame->size_x*sizeof(sPixel));
-
-    for (int i = 0; i < (frame->size_y_cr>>1); i++) {
-      memcpy (fs_btm->imgUV[0][i], frame->imgUV[0][i*2 + 1], frame->size_x_cr*sizeof(sPixel));
-      memcpy (fs_btm->imgUV[1][i], frame->imgUV[1][i*2 + 1], frame->size_x_cr*sizeof(sPixel));
-      }
-
-    fs_top->poc = frame->top_poc;
-    fs_btm->poc = frame->bottom_poc;
-    fs_top->frame_poc = frame->frame_poc;
-    fs_top->bottom_poc = fs_btm->bottom_poc =  frame->bottom_poc;
-    fs_top->top_poc = fs_btm->top_poc =  frame->top_poc;
-    fs_btm->frame_poc = frame->frame_poc;
-
-    fs_top->used_for_reference = fs_btm->used_for_reference = frame->used_for_reference;
-    fs_top->is_long_term = fs_btm->is_long_term = frame->is_long_term;
-    fs->long_term_frame_idx = fs_top->long_term_frame_idx
-                            = fs_btm->long_term_frame_idx
-                            = frame->long_term_frame_idx;
-
-    fs_top->coded_frame = fs_btm->coded_frame = 1;
-    fs_top->mb_aff_frame_flag = fs_btm->mb_aff_frame_flag = frame->mb_aff_frame_flag;
-
-    frame->top_field = fs_top;
-    frame->bottom_field = fs_btm;
-    frame->frame = frame;
-    fs_top->bottom_field = fs_btm;
-    fs_top->frame = frame;
-    fs_top->top_field = fs_top;
-    fs_btm->top_field = fs_top;
-    fs_btm->frame = frame;
-    fs_btm->bottom_field = fs_btm;
-
-    fs_top->chroma_format_idc = fs_btm->chroma_format_idc = frame->chroma_format_idc;
-    fs_top->iCodingType = fs_btm->iCodingType = frame->iCodingType;
-    if (frame->used_for_reference)  {
-      pad_dec_picture (vidParam, fs_top);
-      pad_dec_picture (vidParam, fs_btm);
-      }
-    }
-  else {
-    fs->top_field       = NULL;
-    fs->bottom_field    = NULL;
-    frame->top_field    = NULL;
-    frame->bottom_field = NULL;
-    frame->frame = frame;
-    }
-
-  if (!frame->frame_mbs_only_flag) {
-    if (frame->mb_aff_frame_flag) {
-      sPicMotionParamsOld *frm_motion = &frame->motion;
-      for (int j = 0 ; j < (frame->size_y >> 3); j++) {
-        int jj = (j >> 2)*8 + (j & 0x03);
-        int jj4 = jj + 4;
-        int jdiv = (j >> 1);
-        for (int i = 0 ; i < (frame->size_x>>2); i++) {
-          int idiv = (i >> 2);
-
-          int currentmb = twosz16*(jdiv >> 1)+ (idiv)*2 + (jdiv & 0x01);
-          // Assign field mvs attached to MB-Frame buffer to the proper buffer
-          if (frm_motion->mb_field[currentmb]) {
-            fs_btm->mv_info[j][i].mv[LIST_0] = frame->mv_info[jj4][i].mv[LIST_0];
-            fs_btm->mv_info[j][i].mv[LIST_1] = frame->mv_info[jj4][i].mv[LIST_1];
-            fs_btm->mv_info[j][i].ref_idx[LIST_0] = frame->mv_info[jj4][i].ref_idx[LIST_0];
-            if(fs_btm->mv_info[j][i].ref_idx[LIST_0] >=0)
-              fs_btm->mv_info[j][i].ref_pic[LIST_0] = vidParam->ppSliceList[frame->mv_info[jj4][i].slice_no]->listX[4][(short) fs_btm->mv_info[j][i].ref_idx[LIST_0]];
-            else
-              fs_btm->mv_info[j][i].ref_pic[LIST_0] = NULL;
-            fs_btm->mv_info[j][i].ref_idx[LIST_1] = frame->mv_info[jj4][i].ref_idx[LIST_1];
-            if(fs_btm->mv_info[j][i].ref_idx[LIST_1] >=0)
-              fs_btm->mv_info[j][i].ref_pic[LIST_1] = vidParam->ppSliceList[frame->mv_info[jj4][i].slice_no]->listX[5][(short) fs_btm->mv_info[j][i].ref_idx[LIST_1]];
-            else
-              fs_btm->mv_info[j][i].ref_pic[LIST_1] = NULL;
-
-            fs_top->mv_info[j][i].mv[LIST_0] = frame->mv_info[jj][i].mv[LIST_0];
-            fs_top->mv_info[j][i].mv[LIST_1] = frame->mv_info[jj][i].mv[LIST_1];
-            fs_top->mv_info[j][i].ref_idx[LIST_0] = frame->mv_info[jj][i].ref_idx[LIST_0];
-            if(fs_top->mv_info[j][i].ref_idx[LIST_0] >=0)
-              fs_top->mv_info[j][i].ref_pic[LIST_0] = vidParam->ppSliceList[frame->mv_info[jj][i].slice_no]->listX[2][(short) fs_top->mv_info[j][i].ref_idx[LIST_0]];
-            else
-              fs_top->mv_info[j][i].ref_pic[LIST_0] = NULL;
-            fs_top->mv_info[j][i].ref_idx[LIST_1] = frame->mv_info[jj][i].ref_idx[LIST_1];
-            if(fs_top->mv_info[j][i].ref_idx[LIST_1] >=0)
-              fs_top->mv_info[j][i].ref_pic[LIST_1] = vidParam->ppSliceList[frame->mv_info[jj][i].slice_no]->listX[3][(short) fs_top->mv_info[j][i].ref_idx[LIST_1]];
-            else
-              fs_top->mv_info[j][i].ref_pic[LIST_1] = NULL;
-            }
-          }
-        }
-      }
-
-      //! Generate field MVs from Frame MVs
-    for (int j = 0 ; j < (frame->size_y >> 3) ; j++) {
-      int jj = 2 * RSD(j);
-      int jdiv = (j >> 1);
-      for (int i = 0 ; i < (frame->size_x >> 2) ; i++) {
-        int ii = RSD(i);
-        int idiv = (i >> 2);
-        int currentmb = twosz16 * (jdiv >> 1)+ (idiv)*2 + (jdiv & 0x01);
-        if (!frame->mb_aff_frame_flag  || !frame->motion.mb_field[currentmb]) {
-          fs_top->mv_info[j][i].mv[LIST_0] = fs_btm->mv_info[j][i].mv[LIST_0] = frame->mv_info[jj][ii].mv[LIST_0];
-          fs_top->mv_info[j][i].mv[LIST_1] = fs_btm->mv_info[j][i].mv[LIST_1] = frame->mv_info[jj][ii].mv[LIST_1];
-
-          // Scaling of references is done here since it will not affect spatial direct (2*0 =0)
-          if (frame->mv_info[jj][ii].ref_idx[LIST_0] == -1) {
-            fs_top->mv_info[j][i].ref_idx[LIST_0] = fs_btm->mv_info[j][i].ref_idx[LIST_0] = - 1;
-            fs_top->mv_info[j][i].ref_pic[LIST_0] = fs_btm->mv_info[j][i].ref_pic[LIST_0] = NULL;
-            }
-          else {
-            fs_top->mv_info[j][i].ref_idx[LIST_0] = fs_btm->mv_info[j][i].ref_idx[LIST_0] = frame->mv_info[jj][ii].ref_idx[LIST_0];
-            fs_top->mv_info[j][i].ref_pic[LIST_0] = fs_btm->mv_info[j][i].ref_pic[LIST_0] = vidParam->ppSliceList[frame->mv_info[jj][ii].slice_no]->listX[LIST_0][(short) frame->mv_info[jj][ii].ref_idx[LIST_0]];
-            }
-
-          if (frame->mv_info[jj][ii].ref_idx[LIST_1] == -1) {
-            fs_top->mv_info[j][i].ref_idx[LIST_1] = fs_btm->mv_info[j][i].ref_idx[LIST_1] = - 1;
-            fs_top->mv_info[j][i].ref_pic[LIST_1] = fs_btm->mv_info[j][i].ref_pic[LIST_1] = NULL;
-            }
-          else {
-            fs_top->mv_info[j][i].ref_idx[LIST_1] = fs_btm->mv_info[j][i].ref_idx[LIST_1] = frame->mv_info[jj][ii].ref_idx[LIST_1];
-            fs_top->mv_info[j][i].ref_pic[LIST_1] = fs_btm->mv_info[j][i].ref_pic[LIST_1] = vidParam->ppSliceList[frame->mv_info[jj][ii].slice_no]->listX[LIST_1][(short) frame->mv_info[jj][ii].ref_idx[LIST_1]];
-            }
-          }
-        }
-      }
-    }
-  }
-//}}}
-//{{{
-void dpb_combine_field_yuv (sVidParam* vidParam, sFrameStore* fs)
-{
-  int i, j;
-
-  if (!fs->frame)
-    fs->frame = allocPicture (vidParam, FRAME, fs->top_field->size_x, fs->top_field->size_y*2, fs->top_field->size_x_cr, fs->top_field->size_y_cr*2, 1);
-
-  for (i=0; i<fs->top_field->size_y; i++) {
-    memcpy(fs->frame->imgY[i*2],     fs->top_field->imgY[i]   , fs->top_field->size_x * sizeof(sPixel));     // top field
-    memcpy(fs->frame->imgY[i*2 + 1], fs->bottom_field->imgY[i], fs->bottom_field->size_x * sizeof(sPixel)); // bottom field
-  }
-
-  for (j = 0; j < 2; j++) {
-    for (i=0; i<fs->top_field->size_y_cr; i++) {
-      memcpy(fs->frame->imgUV[j][i*2],     fs->top_field->imgUV[j][i],    fs->top_field->size_x_cr*sizeof(sPixel));
-      memcpy(fs->frame->imgUV[j][i*2 + 1], fs->bottom_field->imgUV[j][i], fs->bottom_field->size_x_cr*sizeof(sPixel));
-    }
-  }
-  fs->poc=fs->frame->poc =fs->frame->frame_poc = imin (fs->top_field->poc, fs->bottom_field->poc);
-
-  fs->bottom_field->frame_poc=fs->top_field->frame_poc=fs->frame->poc;
-
-  fs->bottom_field->top_poc=fs->frame->top_poc=fs->top_field->poc;
-  fs->top_field->bottom_poc=fs->frame->bottom_poc=fs->bottom_field->poc;
-
-  fs->frame->used_for_reference = (fs->top_field->used_for_reference && fs->bottom_field->used_for_reference );
-  fs->frame->is_long_term = (fs->top_field->is_long_term && fs->bottom_field->is_long_term );
-
-  if (fs->frame->is_long_term)
-    fs->frame->long_term_frame_idx = fs->long_term_frame_idx;
-
-  fs->frame->top_field    = fs->top_field;
-  fs->frame->bottom_field = fs->bottom_field;
-  fs->frame->frame = fs->frame;
-
-  fs->frame->coded_frame = 0;
-
-  fs->frame->chroma_format_idc = fs->top_field->chroma_format_idc;
-  fs->frame->frame_cropping_flag = fs->top_field->frame_cropping_flag;
-  if (fs->frame->frame_cropping_flag) {
-    fs->frame->frame_crop_top_offset = fs->top_field->frame_crop_top_offset;
-    fs->frame->frame_crop_bottom_offset = fs->top_field->frame_crop_bottom_offset;
-    fs->frame->frame_crop_left_offset = fs->top_field->frame_crop_left_offset;
-    fs->frame->frame_crop_right_offset = fs->top_field->frame_crop_right_offset;
-  }
-
-  fs->top_field->frame = fs->bottom_field->frame = fs->frame;
-  fs->top_field->top_field = fs->top_field;
-  fs->top_field->bottom_field = fs->bottom_field;
-  fs->bottom_field->top_field = fs->top_field;
-  fs->bottom_field->bottom_field = fs->bottom_field;
-  if (fs->top_field->used_for_reference || fs->bottom_field->used_for_reference)
-    pad_dec_picture(vidParam, fs->frame);
-}
-//}}}
-//{{{
-void dpb_combine_field (sVidParam* vidParam, sFrameStore* fs)
-{
-  int i,j, jj, jj4, k, l;
-
-  dpb_combine_field_yuv(vidParam, fs);
-
-  fs->frame->iCodingType = fs->top_field->iCodingType; //FIELD_CODING;
-   //! Use inference flag to remap mvs/references
-
-  //! Generate Frame parameters from field information.
-  for (j=0 ; j < (fs->top_field->size_y >> 2) ; j++) {
-    jj = (j << 1);
-    jj4 = jj + 1;
-    for (i=0 ; i< (fs->top_field->size_x >> 2) ; i++) {
-      fs->frame->mv_info[jj][i].mv[LIST_0] = fs->top_field->mv_info[j][i].mv[LIST_0];
-      fs->frame->mv_info[jj][i].mv[LIST_1] = fs->top_field->mv_info[j][i].mv[LIST_1];
-
-      fs->frame->mv_info[jj][i].ref_idx[LIST_0] = fs->top_field->mv_info[j][i].ref_idx[LIST_0];
-      fs->frame->mv_info[jj][i].ref_idx[LIST_1] = fs->top_field->mv_info[j][i].ref_idx[LIST_1];
-
-      /* bug: top field list doesnot exist.*/
-      l = fs->top_field->mv_info[j][i].slice_no;
-      k = fs->top_field->mv_info[j][i].ref_idx[LIST_0];
-      fs->frame->mv_info[jj][i].ref_pic[LIST_0] = k>=0? fs->top_field->listX[l][LIST_0][k]: NULL;
-      k = fs->top_field->mv_info[j][i].ref_idx[LIST_1];
-      fs->frame->mv_info[jj][i].ref_pic[LIST_1] = k>=0? fs->top_field->listX[l][LIST_1][k]: NULL;
-
-      //! association with id already known for fields.
-      fs->frame->mv_info[jj4][i].mv[LIST_0] = fs->bottom_field->mv_info[j][i].mv[LIST_0];
-      fs->frame->mv_info[jj4][i].mv[LIST_1] = fs->bottom_field->mv_info[j][i].mv[LIST_1];
-
-      fs->frame->mv_info[jj4][i].ref_idx[LIST_0] = fs->bottom_field->mv_info[j][i].ref_idx[LIST_0];
-      fs->frame->mv_info[jj4][i].ref_idx[LIST_1]  = fs->bottom_field->mv_info[j][i].ref_idx[LIST_1];
-      l = fs->bottom_field->mv_info[j][i].slice_no;
-
-      k = fs->bottom_field->mv_info[j][i].ref_idx[LIST_0];
-      fs->frame->mv_info[jj4][i].ref_pic[LIST_0] = k >= 0 ? fs->bottom_field->listX[l][LIST_0][k]: NULL;
-      k = fs->bottom_field->mv_info[j][i].ref_idx[LIST_1];
-      fs->frame->mv_info[jj4][i].ref_pic[LIST_1] = k >= 0 ? fs->bottom_field->listX[l][LIST_1][k]: NULL;
-    }
-  }
-}
-//}}}
-//{{{
-void alloc_ref_pic_list_reordering_buffer (sSlice* curSlice)
-{
   if (curSlice->slice_type != I_SLICE && curSlice->slice_type != SI_SLICE) {
     int size = curSlice->num_ref_idx_active[LIST_0] + 1;
     if ((curSlice->modification_of_pic_nums_idc[LIST_0] = calloc (size ,sizeof(int))) == NULL)
@@ -2299,12 +2290,12 @@ void alloc_ref_pic_list_reordering_buffer (sSlice* curSlice)
        no_mem_exit ("alloc_ref_pic_list_reordering_buffer: abs_diff_pic_num_minus1_l0");
     if ((curSlice->long_term_pic_idx[LIST_0] = calloc (size,sizeof(int))) == NULL)
        no_mem_exit ("alloc_ref_pic_list_reordering_buffer: long_term_pic_idx_l0");
-  }
+    }
   else {
     curSlice->modification_of_pic_nums_idc[LIST_0] = NULL;
     curSlice->abs_diff_pic_num_minus1[LIST_0] = NULL;
     curSlice->long_term_pic_idx[LIST_0] = NULL;
-  }
+    }
 
   if (curSlice->slice_type == B_SLICE) {
     int size = curSlice->num_ref_idx_active[LIST_1] + 1;
@@ -2314,17 +2305,17 @@ void alloc_ref_pic_list_reordering_buffer (sSlice* curSlice)
       no_mem_exit ("alloc_ref_pic_list_reordering_buffer: abs_diff_pic_num_minus1_l1");
     if ((curSlice->long_term_pic_idx[LIST_1] = calloc (size,sizeof(int))) == NULL)
       no_mem_exit ("alloc_ref_pic_list_reordering_buffer: long_term_pic_idx_l1");
-  }
+    }
   else {
     curSlice->modification_of_pic_nums_idc[LIST_1] = NULL;
     curSlice->abs_diff_pic_num_minus1[LIST_1] = NULL;
     curSlice->long_term_pic_idx[LIST_1] = NULL;
+    }
   }
-}
 //}}}
 //{{{
-void free_ref_pic_list_reordering_buffer (sSlice* curSlice)
-{
+void free_ref_pic_list_reordering_buffer (sSlice* curSlice) {
+
   if (curSlice->modification_of_pic_nums_idc[LIST_0])
     free(curSlice->modification_of_pic_nums_idc[LIST_0]);
   if (curSlice->abs_diff_pic_num_minus1[LIST_0])
@@ -2346,32 +2337,28 @@ void free_ref_pic_list_reordering_buffer (sSlice* curSlice)
   curSlice->modification_of_pic_nums_idc[LIST_1] = NULL;
   curSlice->abs_diff_pic_num_minus1[LIST_1] = NULL;
   curSlice->long_term_pic_idx[LIST_1] = NULL;
-}
+  }
 //}}}
 //{{{
 void compute_colocated (sSlice* curSlice, sPicture** listX[6]) {
 
-  int i, j;
-
   sVidParam* vidParam = curSlice->vidParam;
-
   if (curSlice->direct_spatial_mv_pred_flag == 0) {
-    for (j = 0; j < 2 + (curSlice->mb_aff_frame_flag * 4); j += 2) {
-      for (i = 0; i < curSlice->listXsize[j];i++) {
-        int prescale, iTRb, iTRp;
-
+    for (int j = 0; j < 2 + (curSlice->mb_aff_frame_flag * 4); j += 2) {
+      for (int i = 0; i < curSlice->listXsize[j];i++) {
+        int iTRb;
         if (j == 0)
-          iTRb = iClip3( -128, 127, vidParam->picture->poc - listX[LIST_0 + j][i]->poc );
+          iTRb = iClip3 (-128, 127, vidParam->picture->poc - listX[LIST_0 + j][i]->poc);
         else if (j == 2)
-          iTRb = iClip3( -128, 127, vidParam->picture->top_poc - listX[LIST_0 + j][i]->poc );
+          iTRb = iClip3 (-128, 127, vidParam->picture->top_poc - listX[LIST_0 + j][i]->poc);
         else
-          iTRb = iClip3( -128, 127, vidParam->picture->bottom_poc - listX[LIST_0 + j][i]->poc );
+          iTRb = iClip3 (-128, 127, vidParam->picture->bottom_poc - listX[LIST_0 + j][i]->poc);
 
-        iTRp = iClip3( -128, 127,  listX[LIST_1 + j][0]->poc - listX[LIST_0 + j][i]->poc);
+        int iTRp = iClip3 (-128, 127, listX[LIST_1 + j][0]->poc - listX[LIST_0 + j][i]->poc);
 
         if (iTRp != 0) {
-          prescale = (16384 + iabs( iTRp / 2)) / iTRp;
-          curSlice->mvscale[j][i] = iClip3 ( -1024, 1023, ( iTRb * prescale + 32 ) >> 6 ) ;
+          int prescale = (16384 + iabs( iTRp / 2)) / iTRp;
+          curSlice->mvscale[j][i] = iClip3 (-1024, 1023, (iTRb * prescale + 32) >> 6) ;
           }
         else
           curSlice->mvscale[j][i] = 9999;
@@ -2430,51 +2417,49 @@ void fill_frame_num_gap (sVidParam* vidParam, sSlice* curSlice) {
   }
 //}}}
 //{{{
-int initImage (sVidParam* vidParam, sImage* image, sSPS* sps)
-{
-  sInputParam *p_Inp = vidParam->p_Inp;
-  int memory_size = 0;
-  int nplane;
+int initImage (sVidParam* vidParam, sImage* image, sSPS* sps) {
+
+  sInputParam* p_Inp = vidParam->p_Inp;
 
   // allocate memory for reference frame buffers: image->frm_data
-  image->format           = p_Inp->output;
+  image->format = p_Inp->output;
   image->format.width[0]  = vidParam->width;
   image->format.width[1]  = vidParam->width_cr;
   image->format.width[2]  = vidParam->width_cr;
   image->format.height[0] = vidParam->height;
   image->format.height[1] = vidParam->height_cr;
   image->format.height[2] = vidParam->height_cr;
-  image->format.yuv_format          = (ColorFormat) sps->chroma_format_idc;
-  image->format.auto_crop_bottom    = p_Inp->output.auto_crop_bottom;
-  image->format.auto_crop_right     = p_Inp->output.auto_crop_right;
+  image->format.yuv_format  = (ColorFormat) sps->chroma_format_idc;
+  image->format.auto_crop_bottom = p_Inp->output.auto_crop_bottom;
+  image->format.auto_crop_right = p_Inp->output.auto_crop_right;
   image->format.auto_crop_bottom_cr = p_Inp->output.auto_crop_bottom_cr;
-  image->format.auto_crop_right_cr  = p_Inp->output.auto_crop_right_cr;
-  image->frm_stride[0]    = vidParam->width;
-  image->frm_stride[1]    = image->frm_stride[2] = vidParam->width_cr;
+  image->format.auto_crop_right_cr = p_Inp->output.auto_crop_right_cr;
+  image->frm_stride[0] = vidParam->width;
+  image->frm_stride[1] = image->frm_stride[2] = vidParam->width_cr;
   image->top_stride[0] = image->bot_stride[0] = image->frm_stride[0] << 1;
   image->top_stride[1] = image->top_stride[2] = image->bot_stride[1] = image->bot_stride[2] = image->frm_stride[1] << 1;
 
+  int memory_size = 0;
   if( sps->separate_colour_plane_flag ) {
-    for (nplane=0; nplane < MAX_PLANE; nplane++ )
+    for (int nplane = 0; nplane < MAX_PLANE; nplane++ )
       memory_size += get_mem2Dpel (&(image->frm_data[nplane]), vidParam->height, vidParam->width);
     }
   else {
     memory_size += get_mem2Dpel (&(image->frm_data[0]), vidParam->height, vidParam->width);
 
     if (vidParam->yuv_format != YUV400) {
-      int i, j, k;
       memory_size += get_mem2Dpel (&(image->frm_data[1]), vidParam->height_cr, vidParam->width_cr);
       memory_size += get_mem2Dpel (&(image->frm_data[2]), vidParam->height_cr, vidParam->width_cr);
       if (sizeof(sPixel) == sizeof(unsigned char)) {
-        for (k = 1; k < 3; k++)
+        for (int k = 1; k < 3; k++)
           memset (image->frm_data[k][0], 128, vidParam->height_cr * vidParam->width_cr * sizeof(sPixel));
         }
       else {
         sPixel mean_val;
-        for (k = 1; k < 3; k++) {
+        for (int k = 1; k < 3; k++) {
           mean_val = (sPixel) ((vidParam->max_pel_value_comp[k] + 1) >> 1);
-          for (j = 0; j < vidParam->height_cr; j++)
-            for (i = 0; i < vidParam->width_cr; i++)
+          for (int j = 0; j < vidParam->height_cr; j++)
+            for (int i = 0; i < vidParam->width_cr; i++)
               image->frm_data[k][j][i] = mean_val;
           }
         }

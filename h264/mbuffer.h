@@ -2,23 +2,20 @@
 #include "global.h"
 
 #define MAX_LIST_SIZE 33
-//{{{
-//! definition of pic motion parameters
+//{{{  sPicMotionParamsOld
 typedef struct pic_motion_params_old {
-  byte *      mb_field;      //!< field macroblock indicator
+  byte*  mb_field;      // field macroblock indicator
   } sPicMotionParamsOld;
 //}}}
-//{{{
-//! definition of pic motion parameters
+//{{{  sPicMotionParams
 typedef struct pic_motion_params {
-  struct storablePicture *ref_pic[2];  //!< referrence picture pointer
-  sMotionVector             mv[2];       //!< motion vector
-  char                     ref_idx[2];  //!< reference picture   [list][subblock_y][subblock_x]
-  //byte                   mb_field;    //!< field macroblock indicator
-  byte                     slice_no;
+  struct storablePicture* ref_pic[2];  // referrence picture pointer
+  sMotionVector           mv[2];       // motion vector
+  char                    ref_idx[2];  // reference picture   [list][subblock_y][subblock_x]
+  byte                    slice_no;
   } sPicMotionParams;
 //}}}
-//{{{
+//{{{  sPicture
 //! definition a picture (field or frame)
 typedef struct storablePicture {
   sPictureStructure structure;
@@ -51,8 +48,8 @@ typedef struct storablePicture {
   int         iLumaPadY, iLumaPadX;
   int         iChromaPadY, iChromaPadX;
 
-  sPixel** imgY;
-  sPixel*** imgUV;
+  sPixel**    imgY;
+  sPixel***   imgUV;
 
   struct pic_motion_params** mv_info;
   struct pic_motion_params** JVmv_info[MAX_PLANE];
@@ -79,7 +76,7 @@ typedef struct storablePicture {
   int         qp;
   int         chroma_qp_offset[2];
   int         slice_qp_delta;
-  sDecRefPicMarking *dec_ref_pic_marking_buffer;  // stores the memory management control operations
+  sDecRefPicMarking* dec_ref_pic_marking_buffer;  // stores the memory management control operations
 
   // picture error concealment
   int         concealed_pic;
@@ -89,8 +86,8 @@ typedef struct storablePicture {
   int         iLumaExpandedHeight;
   int         iChromaExpandedHeight;
   sPixel**    curPixelY;               // for more efficient get_block_luma
-  int no_ref;
-  int iCodingType;
+  int         no_ref;
+  int         iCodingType;
 
   char listXsize[MAX_NUM_SLICES][2];
   struct storablePicture** listX[MAX_NUM_SLICES][2];
@@ -98,13 +95,13 @@ typedef struct storablePicture {
   } sPicture;
 //}}}
 typedef sPicture* StorablePicturePtr;
-//{{{
-//! Frame Stores for Decoded Picture Buffer
+//{{{  sFrameStore
+//! frameStore for Decoded Picture Buffer
 typedef struct frameStore {
-  int       is_used;                //!< 0=empty; 1=top; 2=bottom; 3=both fields (or frame)
-  int       is_reference;           //!< 0=not used for ref; 1=top used; 2=bottom used; 3=both fields (or frame) used
-  int       is_long_term;           //!< 0=not used for ref; 1=top used; 2=bottom used; 3=both fields (or frame) used
-  int       is_orig_reference;      //!< original marking by nal_ref_idc: 0=not used for ref; 1=top used; 2=bottom used; 3=both fields (or frame) used
+  int       is_used;                // 0=empty; 1=top; 2=bottom; 3=both fields (or frame)
+  int       is_reference;           // 0=not used for ref; 1=top used; 2=bottom used; 3=both fields (or frame) used
+  int       is_long_term;           // 0=not used for ref; 1=top used; 2=bottom used; 3=both fields (or frame) used
+  int       is_orig_reference;      // original marking by nal_ref_idc: 0=not used for ref; 1=top used; 2=bottom used; 3=both fields (or frame) used
 
   int       is_non_existent;
 
@@ -124,7 +121,7 @@ typedef struct frameStore {
   sPicture* bottom_field;
   } sFrameStore;
 //}}}
-//{{{
+//{{{  sDPB
 //! Decoded Picture Buffer
 typedef struct decoded_picture_buffer {
   sVidParam* vidParam;
@@ -287,7 +284,14 @@ static inline int is_long_ref (sPicture* s)
 
 extern void gen_pic_list_from_frame_list (sPictureStructure currStructure, sFrameStore** fs_list, int list_idx, sPicture** list, char *list_size, int long_term);
 
-extern sPicture* get_long_term_pic (sSlice* curSlice, sDPB* dpb, int LongtermPicNum);
+extern sFrameStore* allocFrameStore();
+extern void freeFrameStore (sFrameStore* frameStore);
+extern void unmark_for_reference( sFrameStore* frameStore);
+extern void unmark_for_long_term_reference (sFrameStore* frameStore);
+
+extern sPicture* allocPicture (sVidParam* vidParam, sPictureStructure type, int size_x, int size_y, int size_x_cr, int size_y_cr, int is_output);
+extern void freePicture (sPicture* p);
+
 extern void updateRefList (sDPB* dpb);
 extern void updateLongTermRefList (sDPB* dpb);
 extern void mm_mark_current_picture_long_term (sDPB* dpb, sPicture* p, int long_term_frame_idx);
@@ -305,36 +309,21 @@ extern void flush_dpb(sDPB* dpb);
 extern void initDpb (sVidParam* vidParam, sDPB* dpb, int type);
 extern void reInitDpb (sVidParam* vidParam, sDPB* dpb, int type);
 extern void freeDpb (sDPB* dpb);
-
-extern sPicture* allocPicture (sVidParam* vidParam, sPictureStructure type, int size_x, int size_y, int size_x_cr, int size_y_cr, int is_output);
-extern void freePicture (sPicture* p);
+extern sPicture* get_long_term_pic (sSlice* curSlice, sDPB* dpb, int LongtermPicNum);
 
 extern void store_picture_in_dpb (sDPB* dpb, sPicture* p);
 extern sPicture*  get_short_term_pic (sSlice* curSlice, sDPB* dpb, int picNum);
-
-extern sFrameStore* allocFrameStore();
-extern void freeFrameStore (sFrameStore* frameStore);
-extern void unmark_for_reference( sFrameStore* frameStore);
-extern void unmark_for_long_term_reference (sFrameStore* frameStore);
-extern int is_used_for_reference (sFrameStore* frameStore);
 
 extern void init_lists_p_slice (sSlice* curSlice);
 extern void init_lists_b_slice (sSlice* curSlice);
 extern void init_lists_i_slice (sSlice* curSlice);
 extern void update_pic_num (sSlice* curSlice);
-
-extern void dpb_split_field (sVidParam* vidParam, sFrameStore *fs);
-extern void dpb_combine_field (sVidParam* vidParam, sFrameStore *fs);
-extern void dpb_combine_field_yuv (sVidParam* vidParam, sFrameStore *fs);
-
+extern void dpb_combine_field_yuv (sVidParam* vidParam, sFrameStore* frameStore);
 extern void reorder_ref_pic_list (sSlice* curSlice, int curList);
-
 extern void init_mbaff_lists (sVidParam* vidParam, sSlice* curSlice);
 extern void alloc_ref_pic_list_reordering_buffer (sSlice* curSlice);
 extern void free_ref_pic_list_reordering_buffer (sSlice* curSlice);
-
 extern void fill_frame_num_gap (sVidParam* vidParam, sSlice *pSlice);
-
 extern void compute_colocated (sSlice* curSlice, sPicture** listX[6]);
 
 extern void store_proc_picture_in_dpb (sDPB* dpb, sPicture* p);
