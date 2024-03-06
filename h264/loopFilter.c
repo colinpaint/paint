@@ -3135,37 +3135,36 @@ void deblockPicture (sVidParam* vidParam, sPicture *p) {
 
 //{{{
 // likely already set - see testing via asserts
-static void init_neighbors (sVidParam* vidParam) {
+static void initNeighbors (sVidParam* vidParam) {
 
-  int i, j;
   int width = vidParam->PicWidthInMbs;
   int height = vidParam->PicHeightInMbs;
   int size = vidParam->PicSizeInMbs;
-  sMacroblock* currMB = &vidParam->mb_data[0];
 
   // do the top left corner
+  sMacroblock* currMB = &vidParam->mb_data[0];
   currMB->mbup = NULL;
   currMB->mbleft = NULL;
   currMB++;
 
   // do top row
-  for (i = 1; i < width; i++) {
+  for (int i = 1; i < width; i++) {
     currMB->mbup = NULL;
     currMB->mbleft = currMB - 1;
     currMB++;
     }
 
   // do left edge
-  for (i = width; i < size; i += width) {
+  for (int i = width; i < size; i += width) {
     currMB->mbup = currMB - width;
     currMB->mbleft = NULL;
     currMB += width;
     }
 
   // do all others
-  for (j = width + 1; j < width * height + 1; j += width) {
+  for (int j = width + 1; j < width * height + 1; j += width) {
     currMB = &vidParam->mb_data[j];
-    for (i = 1; i < width; i++) {
+    for (int i = 1; i < width; i++) {
       currMB->mbup   = currMB - width;
       currMB->mbleft = currMB - 1;
       currMB++;
@@ -3178,18 +3177,18 @@ void initDeblock (sVidParam* vidParam, int mb_aff_frame_flag) {
 
   if (vidParam->yuv_format == YUV444 && vidParam->separate_colour_plane_flag) {
     change_plane_JV (vidParam, PLANE_Y, NULL);
-    init_neighbors (gDecoder->vidParam);
+    initNeighbors (gDecoder->vidParam);
 
     change_plane_JV (vidParam, PLANE_U, NULL);
-    init_neighbors (gDecoder->vidParam);
+    initNeighbors (gDecoder->vidParam);
 
     change_plane_JV (vidParam, PLANE_V, NULL);
-    init_neighbors (gDecoder->vidParam);
+    initNeighbors (gDecoder->vidParam);
 
     change_plane_JV (vidParam, PLANE_Y, NULL);
     }
   else
-    init_neighbors (gDecoder->vidParam);
+    initNeighbors (gDecoder->vidParam);
 
   if (mb_aff_frame_flag == 1)
     set_loop_filter_functions_mbaff (vidParam);

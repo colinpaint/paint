@@ -88,18 +88,13 @@ static void alloc_VidParamams (sVidParam** vidParam) {
 //}}}
 //{{{
 static void alloc_params (sInputParam** p_Inp ) {
-  if ((*p_Inp = (sInputParam*) calloc(1, sizeof(sInputParam))) == NULL)
-    no_mem_exit ("alloc_params: p_Inp");
+  *p_Inp = (sInputParam*)calloc (1, sizeof(sInputParam));
   }
 //}}}
 //{{{
 static int alloc_decoder (sDecoderParam** decoder) {
 
-  if ((*decoder = (sDecoderParam*)calloc(1, sizeof(sDecoderParam))) == NULL) {
-    fprintf (stderr, "alloc_decoder: gDecoder\n");
-    return -1;
-    }
-
+  *decoder = (sDecoderParam*)calloc (1, sizeof(sDecoderParam));
   alloc_VidParamams (&((*decoder)->vidParam));
   alloc_params (&((*decoder)->p_Inp));
   (*decoder)->vidParam->p_Inp = (*decoder)->p_Inp;
@@ -110,13 +105,10 @@ static int alloc_decoder (sDecoderParam** decoder) {
 //{{{
 sSlice* malloc_slice (sInputParam* p_Inp, sVidParam* vidParam) {
 
-  int i, j, memory_size = 0;
-  sSlice *currSlice;
-
-  currSlice = (sSlice *) calloc(1, sizeof(sSlice));
-  if ( currSlice  == NULL) {
-    snprintf(errortext, ET_SIZE, "Memory allocation for sSlice datastruct in NAL-mode failed");
-    error(errortext,100);
+  sSlice* currSlice = (sSlice*)calloc (1, sizeof(sSlice));
+  if (!currSlice) {
+    snprintf (errortext, ET_SIZE, "Memory allocation for sSlice datastruct in NAL-mode failed");
+    error (errortext, 100);
     }
 
   // create all context models
@@ -126,29 +118,28 @@ sSlice* malloc_slice (sInputParam* p_Inp, sVidParam* vidParam) {
   currSlice->max_part_nr = 3;  //! assume data partitioning (worst case) for the following mallocs()
   currSlice->partArr = allocPartition (currSlice->max_part_nr);
 
-  memory_size += get_mem2Dwp (&(currSlice->WPParam), 2, MAX_REFERENCE_PICTURES);
-  memory_size += get_mem3Dint(&(currSlice->wp_weight), 2, MAX_REFERENCE_PICTURES, 3);
-  memory_size += get_mem3Dint(&(currSlice->wp_offset), 6, MAX_REFERENCE_PICTURES, 3);
-  memory_size += get_mem4Dint(&(currSlice->wbp_weight), 6, MAX_REFERENCE_PICTURES, MAX_REFERENCE_PICTURES, 3);
-  memory_size += get_mem3Dpel(&(currSlice->mb_pred), MAX_PLANE, MB_BLOCK_SIZE, MB_BLOCK_SIZE);
-  memory_size += get_mem3Dpel(&(currSlice->mb_rec ), MAX_PLANE, MB_BLOCK_SIZE, MB_BLOCK_SIZE);
-  memory_size += get_mem3Dint(&(currSlice->mb_rres), MAX_PLANE, MB_BLOCK_SIZE, MB_BLOCK_SIZE);
-  memory_size += get_mem3Dint(&(currSlice->cof    ), MAX_PLANE, MB_BLOCK_SIZE, MB_BLOCK_SIZE);
-  //  memory_size += get_mem3Dint(&(currSlice->fcf    ), MAX_PLANE, MB_BLOCK_SIZE, MB_BLOCK_SIZE);
-  allocate_pred_mem(currSlice);
+  get_mem2Dwp (&(currSlice->WPParam), 2, MAX_REFERENCE_PICTURES);
+  get_mem3Dint (&(currSlice->wp_weight), 2, MAX_REFERENCE_PICTURES, 3);
+  get_mem3Dint (&(currSlice->wp_offset), 6, MAX_REFERENCE_PICTURES, 3);
+  get_mem4Dint (&(currSlice->wbp_weight), 6, MAX_REFERENCE_PICTURES, MAX_REFERENCE_PICTURES, 3);
+  get_mem3Dpel (&(currSlice->mb_pred), MAX_PLANE, MB_BLOCK_SIZE, MB_BLOCK_SIZE);
+  get_mem3Dpel (&(currSlice->mb_rec), MAX_PLANE, MB_BLOCK_SIZE, MB_BLOCK_SIZE);
+  get_mem3Dint (&(currSlice->mb_rres), MAX_PLANE, MB_BLOCK_SIZE, MB_BLOCK_SIZE);
+  get_mem3Dint (&(currSlice->cof), MAX_PLANE, MB_BLOCK_SIZE, MB_BLOCK_SIZE);
+  allocate_pred_mem (currSlice);
 
   // reference flag initialization
-  for (i = 0; i < 17;++i)
+  for (int i = 0; i < 17; ++i)
     currSlice->ref_flag[i] = 1;
 
-  for (i = 0; i < 6; i++) {
-    currSlice->listX[i] = calloc(MAX_LIST_SIZE, sizeof (sPicture*)); // +1 for reordering
-    if (NULL == currSlice->listX[i])
-      no_mem_exit("malloc_slice: currSlice->listX[i]");
+  for (int i = 0; i < 6; i++) {
+    currSlice->listX[i] = calloc (MAX_LIST_SIZE, sizeof (sPicture*)); // +1 for reordering
+    if (!currSlice->listX[i])
+      no_mem_exit ("malloc_slice: currSlice->listX[i]");
     }
 
-  for (j = 0; j < 6; j++) {
-    for (i = 0; i < MAX_LIST_SIZE; i++)
+  for (int j = 0; j < 6; j++) {
+    for (int i = 0; i < MAX_LIST_SIZE; i++)
       currSlice->listX[j][i] = NULL;
     currSlice->listXsize[j]=0;
     }

@@ -713,15 +713,12 @@ typedef struct VidParam {
   int recovery_frame_num;
   int recovery_poc;
 
-  byte* buf;
-  byte* ibuf;
-
   // Redundant slices. Should be moved to another structure and allocated only if extended profile
   unsigned int previous_frame_num; // frame number of previous slice
 
   // non-zero: i-th previous frame is correct
-  int Is_primary_correct;          // if primary frame is correct, 0: incorrect
-  int Is_redundant_correct;        // if redundant frame is correct, 0:incorrect
+  int Is_primary_correct;    // if primary frame is correct, 0: incorrect
+  int Is_redundant_correct;  // if redundant frame is correct, 0:incorrect
 
   struct annexBstruct* annex_b;
   int LastAccessUnitExists;
