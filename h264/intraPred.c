@@ -3934,43 +3934,6 @@ static void intra_chroma_DC_all_mbaff (sPixel** curr_img, int up_avail, int left
 }
 //}}}
 //{{{
-static void intrapred_chroma_ver_mbaff (sMacroblock *curMb)
-{
-  sSlice *curSlice = curMb->p_Slice;
-  sVidParam* vidParam = curMb->vidParam;
-  int j;
-  sPicture* picture = curSlice->picture;
-
-  sPixelPos up;        //!< pixel position  p(0,-1)
-  int up_avail;
-  int cr_MB_x = vidParam->mb_cr_size_x;
-  int cr_MB_y = vidParam->mb_cr_size_y;
-
-  getAffNeighbour(curMb, 0, -1, vidParam->mb_size[IS_CHROMA], &up);
-
-  if (!vidParam->active_pps->constrained_intra_pred_flag)
-    up_avail      = up.available;
-  else
-    up_avail = up.available ? curSlice->intra_block[up.mb_addr] : 0;
-  // Vertical Prediction
-  if (!up_avail)
-    error("unexpected VERT_PRED_8 chroma intra prediction mode",-1);
-  else
-  {
-    sPixel** mb_pred0 = curSlice->mb_pred[1];
-    sPixel** mb_pred1 = curSlice->mb_pred[2];
-    sPixel *i0 = &(picture->imgUV[0][up.pos_y][up.pos_x]);
-    sPixel *i1 = &(picture->imgUV[1][up.pos_y][up.pos_x]);
-
-    for (j = 0; j < cr_MB_y; ++j)
-    {
-      memcpy(&(mb_pred0[j][0]),i0, cr_MB_x * sizeof(sPixel));
-      memcpy(&(mb_pred1[j][0]),i1, cr_MB_x * sizeof(sPixel));
-    }
-  }
-}
-//}}}
-//{{{
 /*!
 ** **********************************************************************
  * \brief

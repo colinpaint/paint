@@ -54,22 +54,6 @@
 //}}}
 
 static const int uv_div[2][4] = {{0, 1, 1, 0}, {0, 1, 0, 0}}; //[x/y][yuv_format]
-//{{{
-static void print_node (struct concealment_node *ptr )
-{
-  printf("Missing POC=%d\n", ptr->missingpocs );
-}
-//}}}
-//{{{
-static void print_list (struct concealment_node *ptr )
-{
-  while( ptr != NULL )
-  {
-    print_node( ptr );
-    ptr = ptr->next;
-  }
-}
-//}}}
 
 // intraFrame
 //{{{
@@ -1770,32 +1754,6 @@ static void update_ref_list_for_concealment (sDPB* dpb) {
   dpb->ref_frames_in_buffer = vidParam->active_pps->num_ref_idx_l0_default_active_minus1;
   }
 //}}}
-//{{{
-static void delete_list (sVidParam* vidParam, struct concealment_node *ptr ) {
-
-
-  if ( vidParam->concealment_head == NULL )
-    return;
-
-  struct concealment_node *temp;
-  if( ptr == vidParam->concealment_head ) {
-    vidParam->concealment_head = NULL;
-    vidParam->concealment_end = NULL;
-    }
-  else {
-    temp = vidParam->concealment_head;
-    while( temp->next != ptr )
-      temp = temp->next;
-    vidParam->concealment_end = temp;
-    }
-
-  while( ptr != NULL ) {
-    temp = ptr->next;
-    free( ptr );
-    ptr = temp;
-    }
-  }
-//}}}
 
 //{{{
 struct concealment_node * init_node (sPicture* picture, int missingpoc ) {
@@ -2057,19 +2015,16 @@ void conceal_non_ref_pics (sDPB* dpb, int diff)
 
         vidParam->frame_to_conceal = conceal_from_picture->frame_num + 1;
 
-        update_ref_list_for_concealment(dpb);
+        update_ref_list_for_concealment (dpb);
         vidParam->conceal_slice_type = B_SLICE;
-        copy_to_conceal(conceal_from_picture, conceal_to_picture, vidParam);
-        concealment_ptr = init_node( conceal_to_picture, missingpoc );
-        add_node(vidParam, concealment_ptr);
-        // Diagnostics
-        // print_node(concealment_ptr);
+        copy_to_conceal (conceal_from_picture, conceal_to_picture, vidParam);
+        concealment_ptr = init_node (conceal_to_picture, missingpoc );
+        add_node (vidParam, concealment_ptr);
       }
     }
   }
 
   //restore the original value
-  //dpb->used_size = dpb->size;
   dpb->used_size = temp_used_size;
 }
 //}}}

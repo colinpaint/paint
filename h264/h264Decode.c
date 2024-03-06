@@ -454,9 +454,8 @@ void free_layer_buffers (sVidParam* vidParam, int layer_id) {
   }
 //}}}
 //{{{
-int initGlobalBuffers (sVidParam* vidParam, int layer_id) {
+void initGlobalBuffers (sVidParam* vidParam, int layer_id) {
 
-  int memory_size = 0;
   sCodingParam *cps = vidParam->p_EncodePar[layer_id];
   sBlockPos* PicPos;
 
@@ -464,7 +463,7 @@ int initGlobalBuffers (sVidParam* vidParam, int layer_id) {
     free_layer_buffers (vidParam, layer_id);
 
   // allocate memory in structure vidParam
-  if ((cps->separate_colour_plane_flag != 0) ) {
+  if (cps->separate_colour_plane_flag != 0) {
     for (int i = 0; i<MAX_PLANE; ++i )
       if (((cps->mb_data_JV[i]) = (sMacroblock*)calloc(cps->FrameSizeInMbs, sizeof(sMacroblock))) == NULL)
         no_mem_exit ("initGlobalBuffers: cps->mb_data_JV");
@@ -473,7 +472,7 @@ int initGlobalBuffers (sVidParam* vidParam, int layer_id) {
   else if (((cps->mb_data) = (sMacroblock*)calloc (cps->FrameSizeInMbs, sizeof(sMacroblock))) == NULL)
     no_mem_exit ("initGlobalBuffers: cps->mb_data");
 
-  if ((cps->separate_colour_plane_flag != 0) ) {
+  if (cps->separate_colour_plane_flag != 0) {
     for (int i = 0; i < MAX_PLANE; ++i )
       if (((cps->intra_block_JV[i]) = (char*) calloc(cps->FrameSizeInMbs, sizeof(char))) == NULL)
         no_mem_exit ("initGlobalBuffers: cps->intra_block_JV");
@@ -497,11 +496,11 @@ int initGlobalBuffers (sVidParam* vidParam, int layer_id) {
     cps->ipredmode = NULL;
     }
   else
-    memory_size += get_mem2D (&(cps->ipredmode), 4*cps->FrameHeightInMbs, 4*cps->PicWidthInMbs);
+    get_mem2D (&(cps->ipredmode), 4*cps->FrameHeightInMbs, 4*cps->PicWidthInMbs);
 
   // CAVLC mem
-  memory_size += get_mem4D (&(cps->nz_coeff), cps->FrameSizeInMbs, 3, BLOCK_SIZE, BLOCK_SIZE);
-  if ((cps->separate_colour_plane_flag != 0)) {
+  get_mem4D (&(cps->nz_coeff), cps->FrameSizeInMbs, 3, BLOCK_SIZE, BLOCK_SIZE);
+  if (cps->separate_colour_plane_flag != 0) {
     for (int i = 0; i < MAX_PLANE; ++i ) {
       get_mem2Dint (&(cps->siblock_JV[i]), cps->FrameHeightInMbs, cps->PicWidthInMbs);
       if (cps->siblock_JV[i] == NULL)
@@ -510,13 +509,11 @@ int initGlobalBuffers (sVidParam* vidParam, int layer_id) {
     cps->siblock = NULL;
     }
   else
-    memory_size += get_mem2Dint (&(cps->siblock), cps->FrameHeightInMbs, cps->PicWidthInMbs);
+    get_mem2Dint (&(cps->siblock), cps->FrameHeightInMbs, cps->PicWidthInMbs);
 
   allocQuant (cps);
   cps->oldFrameSizeInMbs = cps->FrameSizeInMbs;
   vidParam->global_init_done[layer_id] = 1;
-
-  return (memory_size);
   }
 //}}}
 //{{{

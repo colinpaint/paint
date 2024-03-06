@@ -15,19 +15,6 @@
 //}}}
 
 //{{{
-static void compute_residue (sPixel** curImg, sPixel** mpr, int** mb_rres, int mb_x,
-                             int opix_x, int width, int height) {
-
-  for (int j = 0; j < height; j++) {
-    sPixel* imgOrg = &curImg[j][opix_x];
-    sPixel* imgPred = &mpr[j][mb_x];
-    int* m7 = &mb_rres[j][mb_x];
-    for (int i = 0; i < width; i++)
-      *m7++ = *imgOrg++ - *imgPred++;
-    }
-  }
-//}}}
-//{{{
 static void sample_reconstruct (sPixel** curImg, sPixel** mpr, int** mb_rres, int mb_x,
                                 int opix_x, int width, int height, int max_imgpel_value, int dq_bits) {
 

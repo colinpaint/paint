@@ -10,7 +10,6 @@ project (h264 VERSION 1.0.0)
     target_compile_options (${PROJECT_NAME} PUBLIC -Wno-unused-variable
                                                    -Wno-unused-but-set-variable
                                                    -Wno-unused-parameter
-                                                   -Wno-unused-function
                                                    -Wno-implicit-fallthrough
                                                    -Wno-sign-compare
                                                    )

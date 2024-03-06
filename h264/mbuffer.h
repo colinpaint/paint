@@ -282,8 +282,6 @@ static inline int is_long_ref (sPicture* s)
 }
 //}}}
 
-extern void gen_pic_list_from_frame_list (sPictureStructure currStructure, sFrameStore** fs_list, int list_idx, sPicture** list, char *list_size, int long_term);
-
 extern sFrameStore* allocFrameStore();
 extern void freeFrameStore (sFrameStore* frameStore);
 extern void unmark_for_reference( sFrameStore* frameStore);
@@ -309,7 +307,6 @@ extern void flush_dpb(sDPB* dpb);
 extern void initDpb (sVidParam* vidParam, sDPB* dpb, int type);
 extern void reInitDpb (sVidParam* vidParam, sDPB* dpb, int type);
 extern void freeDpb (sDPB* dpb);
-extern sPicture* get_long_term_pic (sSlice* curSlice, sDPB* dpb, int LongtermPicNum);
 
 extern void store_picture_in_dpb (sDPB* dpb, sPicture* p);
 extern sPicture*  get_short_term_pic (sSlice* curSlice, sDPB* dpb, int picNum);
