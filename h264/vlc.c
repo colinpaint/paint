@@ -184,7 +184,7 @@ int readsSyntaxElement_VLC (sSyntaxElement* sym, sBitstream* currStream) {
 }
 //}}}
 //{{{
-int readsSyntaxElement_UVLC (sMacroblock* currMB, sSyntaxElement* sym, sDataPartition* dP) {
+int readsSyntaxElement_UVLC (sMacroblock* curMb, sSyntaxElement* sym, sDataPartition* dP) {
   return (readsSyntaxElement_VLC(sym, dP->bitstream));
   }
 //}}}
@@ -254,10 +254,10 @@ int more_rbsp_data (byte buffer[], int totbitoffset,int bytecount) {
   }
 //}}}
 //{{{
-int uvlc_startcode_follows (sSlice* currSlice, int dummy) {
+int uvlc_startcode_follows (sSlice* curSlice, int dummy) {
 
-  byte dp_Nr = assignSE2partition[currSlice->dp_mode][SE_MBTYPE];
-  sDataPartition* dP = &(currSlice->partArr[dp_Nr]);
+  byte dp_Nr = assignSE2partition[curSlice->dp_mode][SE_MBTYPE];
+  sDataPartition* dP = &(curSlice->partArr[dp_Nr]);
   sBitstream* currStream = dP->bitstream;
   byte* buf = currStream->streamBuffer;
 

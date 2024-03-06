@@ -122,7 +122,7 @@ void free_qp_matrices (sCodingParam* cps)
  * \brief
  *    For mapping the q-matrix to the active id and calculate quantisation values
  *
- * \param currSlice
+ * \param curSlice
  *    sSlice pointer
  * \param pps
  *    Picture parameter set
@@ -131,17 +131,17 @@ void free_qp_matrices (sCodingParam* cps)
  *
 ** **********************************************************************
  */
-void assign_quant_params (sSlice* currSlice)
+void assign_quant_params (sSlice* curSlice)
 {
-  sSPS* sps = currSlice->active_sps;
-  sPPS* pps = currSlice->active_pps;
+  sSPS* sps = curSlice->active_sps;
+  sPPS* pps = curSlice->active_pps;
   int i;
   int n_ScalingList;
 
   if(!pps->pic_scaling_matrix_present_flag && !sps->seq_scaling_matrix_present_flag)
   {
     for(i=0; i<12; i++)
-      currSlice->qmatrix[i] = (i < 6) ? quant_org : quant8_org;
+      curSlice->qmatrix[i] = (i < 6) ? quant_org : quant8_org;
   }
   else
   {
@@ -155,18 +155,18 @@ void assign_quant_params (sSlice* currSlice)
           if(!sps->seq_scaling_list_present_flag[i]) // fall-back rule A
           {
             if(i==0)
-              currSlice->qmatrix[i] = quant_intra_default;
+              curSlice->qmatrix[i] = quant_intra_default;
             else if(i==3)
-              currSlice->qmatrix[i] = quant_inter_default;
+              curSlice->qmatrix[i] = quant_inter_default;
             else
-              currSlice->qmatrix[i] = currSlice->qmatrix[i-1];
+              curSlice->qmatrix[i] = curSlice->qmatrix[i-1];
           }
           else
           {
             if(sps->UseDefaultScalingMatrix4x4Flag[i])
-              currSlice->qmatrix[i] = (i<3) ? quant_intra_default : quant_inter_default;
+              curSlice->qmatrix[i] = (i<3) ? quant_intra_default : quant_inter_default;
             else
-              currSlice->qmatrix[i] = sps->ScalingList4x4[i];
+              curSlice->qmatrix[i] = sps->ScalingList4x4[i];
           }
         }
         else
@@ -174,18 +174,18 @@ void assign_quant_params (sSlice* currSlice)
           if(!sps->seq_scaling_list_present_flag[i]) // fall-back rule A
           {
             if(i==6)
-              currSlice->qmatrix[i] = quant8_intra_default;
+              curSlice->qmatrix[i] = quant8_intra_default;
             else if(i==7)
-              currSlice->qmatrix[i] = quant8_inter_default;
+              curSlice->qmatrix[i] = quant8_inter_default;
             else
-              currSlice->qmatrix[i] = currSlice->qmatrix[i-2];
+              curSlice->qmatrix[i] = curSlice->qmatrix[i-2];
           }
           else
           {
             if(sps->UseDefaultScalingMatrix8x8Flag[i-6])
-              currSlice->qmatrix[i] = (i==6 || i==8 || i==10) ? quant8_intra_default:quant8_inter_default;
+              curSlice->qmatrix[i] = (i==6 || i==8 || i==10) ? quant8_intra_default:quant8_inter_default;
             else
-              currSlice->qmatrix[i] = sps->ScalingList8x8[i-6];
+              curSlice->qmatrix[i] = sps->ScalingList8x8[i-6];
           }
         }
       }
@@ -202,22 +202,22 @@ void assign_quant_params (sSlice* currSlice)
             if (i==0)
             {
               if(!sps->seq_scaling_matrix_present_flag)
-                currSlice->qmatrix[i] = quant_intra_default;
+                curSlice->qmatrix[i] = quant_intra_default;
             }
             else if (i==3)
             {
               if(!sps->seq_scaling_matrix_present_flag)
-                currSlice->qmatrix[i] = quant_inter_default;
+                curSlice->qmatrix[i] = quant_inter_default;
             }
             else
-              currSlice->qmatrix[i] = currSlice->qmatrix[i-1];
+              curSlice->qmatrix[i] = curSlice->qmatrix[i-1];
           }
           else
           {
             if(pps->UseDefaultScalingMatrix4x4Flag[i])
-              currSlice->qmatrix[i] = (i<3) ? quant_intra_default:quant_inter_default;
+              curSlice->qmatrix[i] = (i<3) ? quant_intra_default:quant_inter_default;
             else
-              currSlice->qmatrix[i] = pps->ScalingList4x4[i];
+              curSlice->qmatrix[i] = pps->ScalingList4x4[i];
           }
         }
         else
@@ -227,31 +227,31 @@ void assign_quant_params (sSlice* currSlice)
             if (i==6)
             {
               if(!sps->seq_scaling_matrix_present_flag)
-                currSlice->qmatrix[i] = quant8_intra_default;
+                curSlice->qmatrix[i] = quant8_intra_default;
             }
             else if(i==7)
             {
               if(!sps->seq_scaling_matrix_present_flag)
-                currSlice->qmatrix[i] = quant8_inter_default;
+                curSlice->qmatrix[i] = quant8_inter_default;
             }
             else
-              currSlice->qmatrix[i] = currSlice->qmatrix[i-2];
+              curSlice->qmatrix[i] = curSlice->qmatrix[i-2];
           }
           else
           {
             if(pps->UseDefaultScalingMatrix8x8Flag[i-6])
-              currSlice->qmatrix[i] = (i==6 || i==8 || i==10) ? quant8_intra_default:quant8_inter_default;
+              curSlice->qmatrix[i] = (i==6 || i==8 || i==10) ? quant8_intra_default:quant8_inter_default;
             else
-              currSlice->qmatrix[i] = pps->ScalingList8x8[i-6];
+              curSlice->qmatrix[i] = pps->ScalingList8x8[i-6];
           }
         }
       }
     }
   }
 
-  CalculateQuant4x4Param(currSlice);
+  CalculateQuant4x4Param(curSlice);
   if(pps->transform_8x8_mode_flag)
-    CalculateQuant8x8Param(currSlice);
+    CalculateQuant8x8Param(curSlice);
 }
 //}}}
 
@@ -294,26 +294,26 @@ static void set_dequant8x8 (int (*InvLevelScale8x8)[8], const int (*dequant)[8],
  *
 ** **********************************************************************
  */
-void CalculateQuant4x4Param (sSlice* currSlice)
+void CalculateQuant4x4Param (sSlice* curSlice)
 {
   int k;
   const int (*p_dequant_coef)[4][4] = dequant_coef;
-  int  (*InvLevelScale4x4_Intra_0)[4][4] = currSlice->InvLevelScale4x4_Intra[0];
-  int  (*InvLevelScale4x4_Intra_1)[4][4] = currSlice->InvLevelScale4x4_Intra[1];
-  int  (*InvLevelScale4x4_Intra_2)[4][4] = currSlice->InvLevelScale4x4_Intra[2];
-  int  (*InvLevelScale4x4_Inter_0)[4][4] = currSlice->InvLevelScale4x4_Inter[0];
-  int  (*InvLevelScale4x4_Inter_1)[4][4] = currSlice->InvLevelScale4x4_Inter[1];
-  int  (*InvLevelScale4x4_Inter_2)[4][4] = currSlice->InvLevelScale4x4_Inter[2];
+  int  (*InvLevelScale4x4_Intra_0)[4][4] = curSlice->InvLevelScale4x4_Intra[0];
+  int  (*InvLevelScale4x4_Intra_1)[4][4] = curSlice->InvLevelScale4x4_Intra[1];
+  int  (*InvLevelScale4x4_Intra_2)[4][4] = curSlice->InvLevelScale4x4_Intra[2];
+  int  (*InvLevelScale4x4_Inter_0)[4][4] = curSlice->InvLevelScale4x4_Inter[0];
+  int  (*InvLevelScale4x4_Inter_1)[4][4] = curSlice->InvLevelScale4x4_Inter[1];
+  int  (*InvLevelScale4x4_Inter_2)[4][4] = curSlice->InvLevelScale4x4_Inter[2];
 
 
   for(k=0; k<6; k++)
   {
-    set_dequant4x4(*InvLevelScale4x4_Intra_0++, *p_dequant_coef  , currSlice->qmatrix[0]);
-    set_dequant4x4(*InvLevelScale4x4_Intra_1++, *p_dequant_coef  , currSlice->qmatrix[1]);
-    set_dequant4x4(*InvLevelScale4x4_Intra_2++, *p_dequant_coef  , currSlice->qmatrix[2]);
-    set_dequant4x4(*InvLevelScale4x4_Inter_0++, *p_dequant_coef  , currSlice->qmatrix[3]);
-    set_dequant4x4(*InvLevelScale4x4_Inter_1++, *p_dequant_coef  , currSlice->qmatrix[4]);
-    set_dequant4x4(*InvLevelScale4x4_Inter_2++, *p_dequant_coef++, currSlice->qmatrix[5]);
+    set_dequant4x4(*InvLevelScale4x4_Intra_0++, *p_dequant_coef  , curSlice->qmatrix[0]);
+    set_dequant4x4(*InvLevelScale4x4_Intra_1++, *p_dequant_coef  , curSlice->qmatrix[1]);
+    set_dequant4x4(*InvLevelScale4x4_Intra_2++, *p_dequant_coef  , curSlice->qmatrix[2]);
+    set_dequant4x4(*InvLevelScale4x4_Inter_0++, *p_dequant_coef  , curSlice->qmatrix[3]);
+    set_dequant4x4(*InvLevelScale4x4_Inter_1++, *p_dequant_coef  , curSlice->qmatrix[4]);
+    set_dequant4x4(*InvLevelScale4x4_Inter_2++, *p_dequant_coef++, curSlice->qmatrix[5]);
   }
 }
 //}}}
@@ -325,32 +325,32 @@ void CalculateQuant4x4Param (sSlice* currSlice)
  *
 ** **********************************************************************
  */
-void CalculateQuant8x8Param (sSlice* currSlice)
+void CalculateQuant8x8Param (sSlice* curSlice)
 {
   int k;
   const int (*p_dequant_coef)[8][8] = dequant_coef8;
-  int  (*InvLevelScale8x8_Intra_0)[8][8] = currSlice->InvLevelScale8x8_Intra[0];
-  int  (*InvLevelScale8x8_Intra_1)[8][8] = currSlice->InvLevelScale8x8_Intra[1];
-  int  (*InvLevelScale8x8_Intra_2)[8][8] = currSlice->InvLevelScale8x8_Intra[2];
-  int  (*InvLevelScale8x8_Inter_0)[8][8] = currSlice->InvLevelScale8x8_Inter[0];
-  int  (*InvLevelScale8x8_Inter_1)[8][8] = currSlice->InvLevelScale8x8_Inter[1];
-  int  (*InvLevelScale8x8_Inter_2)[8][8] = currSlice->InvLevelScale8x8_Inter[2];
+  int  (*InvLevelScale8x8_Intra_0)[8][8] = curSlice->InvLevelScale8x8_Intra[0];
+  int  (*InvLevelScale8x8_Intra_1)[8][8] = curSlice->InvLevelScale8x8_Intra[1];
+  int  (*InvLevelScale8x8_Intra_2)[8][8] = curSlice->InvLevelScale8x8_Intra[2];
+  int  (*InvLevelScale8x8_Inter_0)[8][8] = curSlice->InvLevelScale8x8_Inter[0];
+  int  (*InvLevelScale8x8_Inter_1)[8][8] = curSlice->InvLevelScale8x8_Inter[1];
+  int  (*InvLevelScale8x8_Inter_2)[8][8] = curSlice->InvLevelScale8x8_Inter[2];
 
   for(k=0; k<6; k++)
   {
-    set_dequant8x8(*InvLevelScale8x8_Intra_0++, *p_dequant_coef  , currSlice->qmatrix[6]);
-    set_dequant8x8(*InvLevelScale8x8_Inter_0++, *p_dequant_coef++, currSlice->qmatrix[7]);
+    set_dequant8x8(*InvLevelScale8x8_Intra_0++, *p_dequant_coef  , curSlice->qmatrix[6]);
+    set_dequant8x8(*InvLevelScale8x8_Inter_0++, *p_dequant_coef++, curSlice->qmatrix[7]);
   }
 
   p_dequant_coef = dequant_coef8;
-  if( currSlice->active_sps->chroma_format_idc == 3 )  // 4:4:4
+  if( curSlice->active_sps->chroma_format_idc == 3 )  // 4:4:4
   {
     for(k=0; k<6; k++)
     {
-      set_dequant8x8(*InvLevelScale8x8_Intra_1++, *p_dequant_coef  , currSlice->qmatrix[8]);
-      set_dequant8x8(*InvLevelScale8x8_Inter_1++, *p_dequant_coef  , currSlice->qmatrix[9]);
-      set_dequant8x8(*InvLevelScale8x8_Intra_2++, *p_dequant_coef  , currSlice->qmatrix[10]);
-      set_dequant8x8(*InvLevelScale8x8_Inter_2++, *p_dequant_coef++, currSlice->qmatrix[11]);
+      set_dequant8x8(*InvLevelScale8x8_Intra_1++, *p_dequant_coef  , curSlice->qmatrix[8]);
+      set_dequant8x8(*InvLevelScale8x8_Inter_1++, *p_dequant_coef  , curSlice->qmatrix[9]);
+      set_dequant8x8(*InvLevelScale8x8_Intra_2++, *p_dequant_coef  , curSlice->qmatrix[10]);
+      set_dequant8x8(*InvLevelScale8x8_Inter_2++, *p_dequant_coef++, curSlice->qmatrix[11]);
     }
   }
 }

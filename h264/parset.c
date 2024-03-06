@@ -1077,10 +1077,10 @@ void processPPS (sVidParam* vidParam, sNalu* nalu) {
 //}}}
 
 //{{{
-void useParameterSet (sSlice* currSlice) {
+void useParameterSet (sSlice* curSlice) {
 
-  sVidParam* vidParam = currSlice->vidParam;
-  int PicParsetId = currSlice->pic_parameter_set_id;
+  sVidParam* vidParam = curSlice->vidParam;
+  int PicParsetId = curSlice->pic_parameter_set_id;
 
   sPPS* pps = &vidParam->PicParSet[PicParsetId];
   sSPS* sps = &vidParam->SeqParSet[pps->seq_parameter_set_id];
@@ -1105,21 +1105,21 @@ void useParameterSet (sSlice* currSlice) {
     if (sps->num_ref_frames_in_pic_order_cnt_cycle >= MAXnum_ref_frames_in_pic_order_cnt_cycle)
       error ("num_ref_frames_in_pic_order_cnt_cycle too large",-1011);
 
-  vidParam->dpb_layer_id = currSlice->layer_id;
+  vidParam->dpb_layer_id = curSlice->layer_id;
   activateSPS (vidParam, sps);
   activatePPS (vidParam, pps);
 
-  // currSlice->dp_mode is set by read_new_slice (NALU first byte available there)
+  // curSlice->dp_mode is set by read_new_slice (NALU first byte available there)
   if (pps->entropy_coding_mode_flag == (Boolean)CAVLC) {
-    currSlice->nal_startcode_follows = uvlc_startcode_follows;
+    curSlice->nal_startcode_follows = uvlc_startcode_follows;
     for (int i = 0; i < 3; i++)
-      currSlice->partArr[i].readsSyntaxElement = readsSyntaxElement_UVLC;
+      curSlice->partArr[i].readsSyntaxElement = readsSyntaxElement_UVLC;
     }
   else {
-    currSlice->nal_startcode_follows = cabac_startcode_follows;
+    curSlice->nal_startcode_follows = cabac_startcode_follows;
     for (int i = 0; i < 3; i++)
-      currSlice->partArr[i].readsSyntaxElement = readsSyntaxElement_CABAC;
+      curSlice->partArr[i].readsSyntaxElement = readsSyntaxElement_CABAC;
     }
-  vidParam->type = currSlice->slice_type;
+  vidParam->type = curSlice->slice_type;
   }
 //}}}

@@ -53,23 +53,23 @@ static void recon8x8_lossless (int** m7, sPixel** mb_rec, sPixel** mpr, int max_
 //}}}
 
 //{{{
-void itrans8x8 (sMacroblock *currMB, sColorPlane pl, int ioff, int joff) {
+void itrans8x8 (sMacroblock *curMb, sColorPlane pl, int ioff, int joff) {
 
-  sSlice* currSlice = currMB->p_Slice;
-  int** m7     = currSlice->mb_rres[pl];
+  sSlice* curSlice = curMb->p_Slice;
+  int** m7     = curSlice->mb_rres[pl];
 
-  if (currMB->is_lossless == TRUE)
-    recon8x8_lossless(&m7[joff], &currSlice->mb_rec[pl][joff], &currSlice->mb_pred[pl][joff], currMB->vidParam->max_pel_value_comp[pl], ioff);
+  if (curMb->is_lossless == TRUE)
+    recon8x8_lossless(&m7[joff], &curSlice->mb_rec[pl][joff], &curSlice->mb_pred[pl][joff], curMb->vidParam->max_pel_value_comp[pl], ioff);
   else {
     inverse8x8(&m7[joff], &m7[joff], ioff);
-    recon8x8  (&m7[joff], &currSlice->mb_rec[pl][joff], &currSlice->mb_pred[pl][joff], currMB->vidParam->max_pel_value_comp[pl], ioff);
+    recon8x8  (&m7[joff], &curSlice->mb_rec[pl][joff], &curSlice->mb_pred[pl][joff], curMb->vidParam->max_pel_value_comp[pl], ioff);
    }
   }
 //}}}
 //{{{
-void icopy8x8 (sMacroblock *currMB, sColorPlane pl, int ioff, int joff) {
+void icopy8x8 (sMacroblock *curMb, sColorPlane pl, int ioff, int joff) {
 
-  sSlice* currSlice = currMB->p_Slice;
-  copy8x8 (&currSlice->mb_rec[pl][joff], &currSlice->mb_pred[pl][joff], ioff);
+  sSlice* curSlice = curMb->p_Slice;
+  copy8x8 (&curSlice->mb_rec[pl][joff], &curSlice->mb_pred[pl][joff], ioff);
   }
 //}}}

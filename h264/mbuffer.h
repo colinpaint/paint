@@ -286,7 +286,7 @@ static inline int is_long_ref(sPicture *s)
 //}}}
 
 extern void gen_pic_list_from_frame_list (sPictureStructure currStructure, sFrameStore** fs_list, int list_idx, sPicture** list, char *list_size, int long_term);
-extern sPicture* get_long_term_pic (sSlice* currSlice, sDPB* dpb, int LongtermPicNum);
+extern sPicture* get_long_term_pic (sSlice* curSlice, sDPB* dpb, int LongtermPicNum);
 
 extern void update_ref_list (sDPB* dpb);
 extern void update_ltref_list (sDPB* dpb);
@@ -311,7 +311,7 @@ extern sPicture*  allocPicture (sVidParam* vidParam, sPictureStructure type, int
 extern void freePicture (sPicture* p);
 
 extern void store_picture_in_dpb (sDPB* dpb, sPicture* p);
-extern sPicture*  get_short_term_pic (sSlice* currSlice, sDPB* dpb, int picNum);
+extern sPicture*  get_short_term_pic (sSlice* curSlice, sDPB* dpb, int picNum);
 
 extern sFrameStore* alloc_frame_store();
 extern void free_frame_store (sFrameStore* f);
@@ -321,24 +321,24 @@ extern void unmark_for_long_term_reference (sFrameStore* fs);
 extern void remove_frame_from_dpb (sDPB* dpb, int pos);
 
 extern void flush_dpb(sDPB* dpb);
-extern void init_lists_p_slice (sSlice* currSlice);
-extern void init_lists_b_slice (sSlice* currSlice);
-extern void init_lists_i_slice (sSlice* currSlice);
-extern void update_pic_num (sSlice* currSlice);
+extern void init_lists_p_slice (sSlice* curSlice);
+extern void init_lists_b_slice (sSlice* curSlice);
+extern void init_lists_i_slice (sSlice* curSlice);
+extern void update_pic_num (sSlice* curSlice);
 
 extern void dpb_split_field (sVidParam* vidParam, sFrameStore *fs);
 extern void dpb_combine_field (sVidParam* vidParam, sFrameStore *fs);
 extern void dpb_combine_field_yuv (sVidParam* vidParam, sFrameStore *fs);
 
-extern void reorder_ref_pic_list (sSlice* currSlice, int cur_list);
+extern void reorder_ref_pic_list (sSlice* curSlice, int cur_list);
 
-extern void init_mbaff_lists (sVidParam* vidParam, sSlice* currSlice);
-extern void alloc_ref_pic_list_reordering_buffer (sSlice* currSlice);
-extern void free_ref_pic_list_reordering_buffer (sSlice* currSlice);
+extern void init_mbaff_lists (sVidParam* vidParam, sSlice* curSlice);
+extern void alloc_ref_pic_list_reordering_buffer (sSlice* curSlice);
+extern void free_ref_pic_list_reordering_buffer (sSlice* curSlice);
 
 extern void fill_frame_num_gap (sVidParam* vidParam, sSlice *pSlice);
 
-extern void compute_colocated (sSlice* currSlice, sPicture** listX[6]);
+extern void compute_colocated (sSlice* curSlice, sPicture** listX[6]);
 
 extern sPicture* clone_storable_picture (sVidParam* vidParam, sPicture *p_pic );
 

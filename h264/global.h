@@ -235,20 +235,20 @@ typedef struct Macroblock {
   Boolean       luma_transform_size_8x8_flag;
   Boolean       NoMbPartLessThan8x8Flag;
 
-  void (*itrans_4x4)(struct Macroblock *currMB, sColorPlane pl, int ioff, int joff);
-  void (*itrans_8x8)(struct Macroblock *currMB, sColorPlane pl, int ioff, int joff);
+  void (*itrans_4x4)(struct Macroblock *curMb, sColorPlane pl, int ioff, int joff);
+  void (*itrans_8x8)(struct Macroblock *curMb, sColorPlane pl, int ioff, int joff);
 
-  void (*GetMVPredictor) (struct Macroblock *currMB, sPixelPos *block,
+  void (*GetMVPredictor) (struct Macroblock *curMb, sPixelPos *block,
     sMotionVector *pmv, short ref_frame, struct pic_motion_params** mv_info, int list, int mb_x, int mb_y, int blockshape_x, int blockshape_y);
 
-  int  (*read_and_store_CBP_block_bit)  (struct Macroblock *currMB, sDecodingEnvironmentPtr  dep_dp, int type);
-  char (*readRefPictureIdx)             (struct Macroblock *currMB, struct SyntaxElement *currSE, struct DataPartition *dP, char b8mode, int list);
+  int  (*read_and_store_CBP_block_bit)  (struct Macroblock *curMb, sDecodingEnvironmentPtr  dep_dp, int type);
+  char (*readRefPictureIdx)             (struct Macroblock *curMb, struct SyntaxElement *currSE, struct DataPartition *dP, char b8mode, int list);
 
-  void (*read_comp_coeff_4x4_CABAC)     (struct Macroblock *currMB, struct SyntaxElement *currSE, sColorPlane pl, int (*InvLevelScale4x4)[4], int qp_per, int cbp);
-  void (*read_comp_coeff_8x8_CABAC)     (struct Macroblock *currMB, struct SyntaxElement *currSE, sColorPlane pl);
+  void (*read_comp_coeff_4x4_CABAC)     (struct Macroblock *curMb, struct SyntaxElement *currSE, sColorPlane pl, int (*InvLevelScale4x4)[4], int qp_per, int cbp);
+  void (*read_comp_coeff_8x8_CABAC)     (struct Macroblock *curMb, struct SyntaxElement *currSE, sColorPlane pl);
 
-  void (*read_comp_coeff_4x4_CAVLC)     (struct Macroblock *currMB, sColorPlane pl, int (*InvLevelScale4x4)[4], int qp_per, int cbp, byte** nzcoeff);
-  void (*read_comp_coeff_8x8_CAVLC)     (struct Macroblock *currMB, sColorPlane pl, int (*InvLevelScale8x8)[8], int qp_per, int cbp, byte** nzcoeff);
+  void (*read_comp_coeff_4x4_CAVLC)     (struct Macroblock *curMb, sColorPlane pl, int (*InvLevelScale4x4)[4], int qp_per, int cbp, byte** nzcoeff);
+  void (*read_comp_coeff_8x8_CAVLC)     (struct Macroblock *curMb, sColorPlane pl, int (*InvLevelScale8x8)[8], int qp_per, int cbp, byte** nzcoeff);
   } sMacroblock;
 //}}}
 //{{{
@@ -266,7 +266,7 @@ typedef struct SyntaxElement {
   //! for mapping of CAVLC to syntaxElement
   void  (*mapping)(int len, int info, int *value1, int *value2);
   //! used for CABAC: refers to actual coding method of each individual syntax element type
-  void  (*reading)(struct Macroblock *currMB, struct SyntaxElement *, sDecodingEnvironmentPtr);
+  void  (*reading)(struct Macroblock *curMb, struct SyntaxElement *, sDecodingEnvironmentPtr);
   } sSyntaxElement;
 //}}}
 //{{{  typedef struct DataPartition
@@ -274,7 +274,7 @@ typedef struct DataPartition {
   sBitstream           *bitstream;
   sDecodingEnvironment de_cabac;
 
-  int     (*readsSyntaxElement)(struct Macroblock *currMB, struct SyntaxElement *, struct DataPartition *);
+  int     (*readsSyntaxElement)(struct Macroblock *curMb, struct SyntaxElement *, struct DataPartition *);
           /*!< virtual function;
                actual method depends on chosen data partition and
                entropy coding method  */
@@ -495,24 +495,24 @@ typedef struct slice {
   byte** ipredmode;
   char  *intra_block;
   char  chroma_vector_adjustment[6][32];
-  void (*read_CBP_and_coeffs_from_NAL) (sMacroblock *currMB);
-  int  (*decode_one_component     )    (sMacroblock *currMB, sColorPlane curPlane, sPixel** curPixel, struct storablePicture* picture);
+  void (*read_CBP_and_coeffs_from_NAL) (sMacroblock *curMb);
+  int  (*decode_one_component     )    (sMacroblock *curMb, sColorPlane curPlane, sPixel** curPixel, struct storablePicture* picture);
   int  (*readSlice                )    (struct VidParam *, struct InputParam *);
   int  (*nal_startcode_follows    )    (struct slice*, int );
-  void (*read_motion_info_from_NAL)    (sMacroblock *currMB);
-  void (*read_one_macroblock      )    (sMacroblock *currMB);
-  void (*interpret_mb_mode        )    (sMacroblock *currMB);
-  void (*init_lists               )    (struct slice *currSlice);
+  void (*read_motion_info_from_NAL)    (sMacroblock *curMb);
+  void (*read_one_macroblock      )    (sMacroblock *curMb);
+  void (*interpret_mb_mode        )    (sMacroblock *curMb);
+  void (*init_lists               )    (struct slice *curSlice);
 
-  void (*intra_pred_chroma        )    (sMacroblock *currMB);
-  int  (*intra_pred_4x4)               (sMacroblock *currMB, sColorPlane pl, int ioff, int joff,int i4,int j4);
-  int  (*intra_pred_8x8)               (sMacroblock *currMB, sColorPlane pl, int ioff, int joff);
-  int  (*intra_pred_16x16)             (sMacroblock *currMB, sColorPlane pl, int predmode);
+  void (*intra_pred_chroma        )    (sMacroblock *curMb);
+  int  (*intra_pred_4x4)               (sMacroblock *curMb, sColorPlane pl, int ioff, int joff,int i4,int j4);
+  int  (*intra_pred_8x8)               (sMacroblock *curMb, sColorPlane pl, int ioff, int joff);
+  int  (*intra_pred_16x16)             (sMacroblock *curMb, sColorPlane pl, int predmode);
 
   void (*linfo_cbp_intra          )    (int len, int info, int *cbp, int *dummy);
   void (*linfo_cbp_inter          )    (int len, int info, int *cbp, int *dummy);
-  void (*update_direct_mv_info    )    (sMacroblock *currMB);
-  void (*read_coeff_4x4_CAVLC     )    (sMacroblock *currMB, int block_type, int i, int j, int levarr[16], int runarr[16], int *number_coefficients);
+  void (*update_direct_mv_info    )    (sMacroblock *curMb);
+  void (*read_coeff_4x4_CAVLC     )    (sMacroblock *curMb, int block_type, int i, int j, int levarr[16], int runarr[16], int *number_coefficients);
   } sSlice;
 //}}}
 //{{{
@@ -758,7 +758,7 @@ typedef struct VidParam {
   int* MapUnitToSliceGroupMap;
   int NumberOfSliceGroups;  // the number of slice groups -1 (0 == scan order, 7 == maximum)
 
-  void (*getNeighbour)     (sMacroblock *currMB, int xN, int yN, int mb_size[2], sPixelPos *pix);
+  void (*getNeighbour)     (sMacroblock *curMb, int xN, int yN, int mb_size[2], sPixelPos *pix);
   void (*get_mb_block_pos) (sBlockPos *PicPos, int mb_addr, short *x, short *y);
   void (*GetStrengthVer)   (sMacroblock *MbQ, int edge, int mvlimit, struct storablePicture *p);
   void (*GetStrengthHor)   (sMacroblock *MbQ, int edge, int mvlimit, struct storablePicture *p);
@@ -893,7 +893,7 @@ static inline int is_BL_profile (unsigned int profile_idc) {
   extern void clearDecPicList (sVidParam *vidParam );
 
   extern sSlice* malloc_slice (sInputParam *p_Inp, sVidParam *vidParam );
-  extern void copy_slice_info (sSlice* currSlice, sOldSliceParam *p_old_slice );
+  extern void copy_slice_info (sSlice* curSlice, sOldSliceParam *p_old_slice );
 
   extern void set_global_CodingParam (sVidParam *vidParam, sCodingParam *cps);
   extern void OpenOutputFiles (sVidParam *vidParam, int view0_id, int view1_id);
