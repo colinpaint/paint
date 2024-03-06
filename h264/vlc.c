@@ -202,7 +202,7 @@ int readsSyntaxElement_Intra4x4PredictionMode (sSyntaxElement* sym, sBitstream* 
   }
 //}}}
 //{{{
-int GetVLCSymbol_IntraMode (byte buffer[], int totbitoffset,int* info, int bytecount) {
+int GetVLCSymbol_IntraMode (byte buffer[], int totbitoffset, int* info, int bytecount) {
 
   int byteoffset = (totbitoffset >> 3);        // byte from start of buffer
   int bitoffset   = (7 - (totbitoffset & 0x07)); // bit from start of byte
