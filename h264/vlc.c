@@ -184,7 +184,7 @@ int readsSyntaxElement_VLC (sSyntaxElement* sym, sBitstream* currStream) {
 }
 //}}}
 //{{{
-int readsSyntaxElement_UVLC (sMacroblock* currMB, sSyntaxElement* sym, struct DataPartition* dP) {
+int readsSyntaxElement_UVLC (sMacroblock* currMB, sSyntaxElement* sym, sDataPartition* dP) {
   return (readsSyntaxElement_VLC(sym, dP->bitstream));
   }
 //}}}
@@ -622,7 +622,7 @@ int readsSyntaxElement_Level_VLCN (sSyntaxElement* sym, int vlc, sBitstream* cur
 }
 //}}}
 //{{{
-int readsSyntaxElement_TotalZeros (sSyntaxElement* sym,  sBitstream *currStream) {
+int readsSyntaxElement_TotalZeros (sSyntaxElement* sym,  sBitstream* currStream) {
 
   //{{{
   static const byte lentab[TOTRUN_NUM][16] =
@@ -802,7 +802,7 @@ int readsSyntaxElement_Run (sSyntaxElement* sym, sBitstream* currStream)
 //}}}
 
 //{{{
-int GetBits (byte buffer[],int totbitoffset, int*info, int bitcount, int numbits) {
+int GetBits (byte buffer[], int totbitoffset, int* info, int bitcount, int numbits) {
 
   if ((totbitoffset + numbits ) > bitcount)
     return -1;
@@ -832,7 +832,7 @@ int GetBits (byte buffer[],int totbitoffset, int*info, int bitcount, int numbits
   }
 //}}}
 //{{{
-int ShowBits (byte buffer[],int totbitoffset, int bitcount, int numbits) {
+int ShowBits (byte buffer[], int totbitoffset, int bitcount, int numbits) {
 
   if ((totbitoffset + numbits )  > bitcount)
     return -1;
