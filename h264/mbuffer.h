@@ -153,7 +153,7 @@ typedef struct decoded_picture_buffer {
 
 //{{{
 // compares two stored pictures by picture number for qsort in descending order
-static inline int compare_pic_by_pic_num_desc( const void *arg1, const void *arg2 )
+static inline int compare_pic_by_pic_num_desc (const void* arg1, const void* arg2 )
 {
   int pic_num1 = (*(sPicture**)arg1)->pic_num;
   int pic_num2 = (*(sPicture**)arg2)->pic_num;
@@ -168,7 +168,7 @@ static inline int compare_pic_by_pic_num_desc( const void *arg1, const void *arg
 //}}}
 //{{{
 // compares two stored pictures by picture number for qsort in descending order
-static inline int compare_pic_by_lt_pic_num_asc( const void *arg1, const void *arg2 )
+static inline int compare_pic_by_lt_pic_num_asc (const void* arg1, const void* arg2 )
 {
   int long_term_pic_num1 = (*(sPicture**)arg1)->long_term_pic_num;
   int long_term_pic_num2 = (*(sPicture**)arg2)->long_term_pic_num;
@@ -183,7 +183,7 @@ static inline int compare_pic_by_lt_pic_num_asc( const void *arg1, const void *a
 //}}}
 //{{{
 // compares two frame stores by pic_num for qsort in descending order
-static inline int compare_fs_by_frame_num_desc( const void *arg1, const void *arg2 )
+static inline int compare_fs_by_frame_num_desc (const void* arg1, const void* arg2 )
 {
   int frame_num_wrap1 = (*(sFrameStore**)arg1)->frame_num_wrap;
   int frame_num_wrap2 = (*(sFrameStore**)arg2)->frame_num_wrap;
@@ -197,7 +197,7 @@ static inline int compare_fs_by_frame_num_desc( const void *arg1, const void *ar
 //}}}
 //{{{
 // compares two frame stores by lt_pic_num for qsort in descending order
-static inline int compare_fs_by_lt_pic_idx_asc( const void *arg1, const void *arg2 )
+static inline int compare_fs_by_lt_pic_idx_asc (const void* arg1, const void* arg2 )
 {
   int long_term_frame_idx1 = (*(sFrameStore**)arg1)->long_term_frame_idx;
   int long_term_frame_idx2 = (*(sFrameStore**)arg2)->long_term_frame_idx;
@@ -212,7 +212,7 @@ static inline int compare_fs_by_lt_pic_idx_asc( const void *arg1, const void *ar
 //}}}
 //{{{
 // compares two stored pictures by poc for qsort in ascending order
-static inline int compare_pic_by_poc_asc( const void *arg1, const void *arg2 )
+static inline int compare_pic_by_poc_asc (const void* arg1, const void* arg2 )
 {
   int poc1 = (*(sPicture**)arg1)->poc;
   int poc2 = (*(sPicture**)arg2)->poc;
@@ -227,7 +227,7 @@ static inline int compare_pic_by_poc_asc( const void *arg1, const void *arg2 )
 //}}}
 //{{{
 // compares two stored pictures by poc for qsort in descending order
-static inline int compare_pic_by_poc_desc( const void *arg1, const void *arg2 )
+static inline int compare_pic_by_poc_desc (const void* arg1, const void* arg2 )
 {
   int poc1 = (*(sPicture**)arg1)->poc;
   int poc2 = (*(sPicture**)arg2)->poc;
@@ -242,7 +242,7 @@ static inline int compare_pic_by_poc_desc( const void *arg1, const void *arg2 )
 //}}}
 //{{{
 // compares two frame stores by poc for qsort in ascending order
-static inline int compare_fs_by_poc_asc( const void *arg1, const void *arg2 )
+static inline int compare_fs_by_poc_asc (const void* arg1, const void* arg2 )
 {
   int poc1 = (*(sFrameStore**)arg1)->poc;
   int poc2 = (*(sFrameStore**)arg2)->poc;
@@ -257,7 +257,7 @@ static inline int compare_fs_by_poc_asc( const void *arg1, const void *arg2 )
 //}}}
 //{{{
 // compares two frame stores by poc for qsort in descending order
-static inline int compare_fs_by_poc_desc( const void *arg1, const void *arg2 )
+static inline int compare_fs_by_poc_desc (const void* arg1, const void* arg2 )
 {
   int poc1 = (*(sFrameStore**)arg1)->poc;
   int poc2 = (*(sFrameStore**)arg2)->poc;
@@ -272,25 +272,24 @@ static inline int compare_fs_by_poc_desc( const void *arg1, const void *arg2 )
 //}}}
 //{{{
 // returns true, if picture is short term reference picture
-static inline int is_short_ref(sPicture *s)
+static inline int is_short_ref (sPicture* s)
 {
   return ((s->used_for_reference) && (!(s->is_long_term)));
 }
 //}}}
 //{{{
 // returns true, if picture is long term reference picture
-static inline int is_long_ref(sPicture *s)
+static inline int is_long_ref (sPicture* s)
 {
   return ((s->used_for_reference) && (s->is_long_term));
 }
 //}}}
 
 extern void gen_pic_list_from_frame_list (sPictureStructure currStructure, sFrameStore** fs_list, int list_idx, sPicture** list, char *list_size, int long_term);
-extern sPicture* get_long_term_pic (sSlice* curSlice, sDPB* dpb, int LongtermPicNum);
 
+extern sPicture* get_long_term_pic (sSlice* curSlice, sDPB* dpb, int LongtermPicNum);
 extern void updateRefList (sDPB* dpb);
 extern void updateLongTermRefList (sDPB* dpb);
-
 extern void mm_mark_current_picture_long_term (sDPB* dpb, sPicture* p, int long_term_frame_idx);
 extern void mm_unmark_short_term_for_reference (sDPB* dpb, sPicture* p, int difference_of_pic_nums_minus1);
 extern void mm_unmark_long_term_for_reference (sDPB* dpb, sPicture *p, int long_term_pic_num);
@@ -298,10 +297,10 @@ extern void mm_assign_long_term_frame_idx (sDPB* dpb, sPicture* p, int differenc
 extern void mm_update_max_long_term_frame_idx (sDPB* dpb, int max_long_term_frame_idx_plus1);
 extern void mm_unmark_all_short_term_for_reference (sDPB* dpb);
 extern void mm_unmark_all_long_term_for_reference (sDPB* dpb);
-
-extern int  is_used_for_reference (sFrameStore* fs);
 extern void get_smallest_poc (sDPB* dpb, int *poc,int * pos);
 extern int remove_unused_frame_from_dpb (sDPB* dpb);
+extern void remove_frame_from_dpb (sDPB* dpb, int pos);
+extern void flush_dpb(sDPB* dpb);
 
 extern void initDpb (sVidParam* vidParam, sDPB* dpb, int type);
 extern void reInitDpb (sVidParam* vidParam, sDPB* dpb, int type);
@@ -317,10 +316,8 @@ extern sFrameStore* allocFrameStore();
 extern void freeFrameStore (sFrameStore* f);
 extern void unmark_for_reference( sFrameStore* fs);
 extern void unmark_for_long_term_reference (sFrameStore* fs);
+extern int is_used_for_reference (sFrameStore* fs);
 
-extern void remove_frame_from_dpb (sDPB* dpb, int pos);
-
-extern void flush_dpb(sDPB* dpb);
 extern void init_lists_p_slice (sSlice* curSlice);
 extern void init_lists_b_slice (sSlice* curSlice);
 extern void init_lists_i_slice (sSlice* curSlice);
