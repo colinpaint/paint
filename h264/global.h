@@ -44,8 +44,6 @@ typedef struct pix_pos {
   short pos_y;
   } sPixelPos;
 //}}}
-
-//! struct to characterize the state of the arithmetic coding engine
 //{{{  DecodingEnvironment
 typedef struct {
   unsigned int Drange;
@@ -56,8 +54,6 @@ typedef struct {
   } DecodingEnvironment;
 typedef DecodingEnvironment *DecodingEnvironmentPtr;
 //}}}
-
-// Motion Vector structure
 //{{{  sMotionVector
 typedef struct {
   short mv_x;
@@ -80,8 +76,7 @@ typedef struct {
   } BiContextType;
 //}}}
 typedef BiContextType *BiContextTypePtr;
-
-//{{{  defines
+//{{{  CTX defines
 #define NUM_MB_TYPE_CTX  11
 #define NUM_B8_TYPE_CTX  9
 #define NUM_MV_RES_CTX   10
@@ -106,7 +101,7 @@ typedef struct {
   BiContextType mb_aff_contexts  [NUM_MB_AFF_CTX];
   } MotionInfoContexts;
 //}}}
-//{{{  defines
+//{{{  texture context defines
 #define NUM_IPR_CTX    2
 #define NUM_CIPR_CTX   4
 #define NUM_CBP_CTX    4
@@ -263,20 +258,19 @@ typedef struct syntaxelement_dec {
 //! Bitstream
 struct bit_stream_dec {
   // CABAC Decoding
-  int           read_len;           //!< actual position in the codebuffer, CABAC only
-  int           code_len;           //!< overall codebuffer length, CABAC only
+  int read_len;          // actual position in the codebuffer, CABAC only
+  int code_len;          // overall codebuffer length, CABAC only
 
   // CAVLC Decoding
-  int           frame_bitoffset;    //!< actual position in the codebuffer, bit-oriented, CAVLC only
-  int           bitstream_length;   //!< over codebuffer lnegth, byte oriented, CAVLC only
+  int frame_bitoffset;   // actual position in the codebuffer, bit-oriented, CAVLC only
+  int bitstream_length;  // over codebuffer lnegth, byte oriented, CAVLC only
 
   // ErrorConcealment
-  byte          *streamBuffer;      //!< actual codebuffer for read bytes
-  int           ei_flag;            //!< error indication, 0: no error, else unspecified error
+  byte* streamBuffer;     // actual codebuffer for read bytes
+  int ei_flag;           // error indication, 0: no error, else unspecified error
   };
 //}}}
-//{{{
-//! sDataPartition
+//{{{  typedef struct sDataPartition
 typedef struct datapartition_dec {
   Bitstream           *bitstream;
   DecodingEnvironment de_cabac;
@@ -295,7 +289,6 @@ typedef struct wp_params {
 //}}}
 //{{{
 typedef struct inp_par {
-  char infile[FILE_NAME_SIZE];
   int ref_offset;
   int poc_scale;
   int write_uv;
@@ -316,6 +309,8 @@ typedef struct inp_par {
   int export_views;
 
   int dpb_plus[2];
+
+  int vlcDebug;
   } InputParameters;
 //}}}
 //{{{

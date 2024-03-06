@@ -26,7 +26,7 @@
 //}}}
 
 //{{{
-static void reset_mbs (sMacroblock *currMB) {
+static void resetMbs (sMacroblock *currMB) {
 
   currMB->slice_nr = -1;
   currMB->ei_flag =  1;
@@ -34,8 +34,7 @@ static void reset_mbs (sMacroblock *currMB) {
   }
 //}}}
 //{{{
-static void setup_buffers (sVidParam* vidParam, int layer_id) {
-
+static void setupBuffers (sVidParam* vidParam, int layer_id) {
 
   if (vidParam->last_dec_layer_id != layer_id) {
     sCodingParams* cps = vidParam->p_EncodePar[layer_id];
@@ -490,7 +489,7 @@ static void initPicture (sVidParam* vidParam, sSlice *currSlice, InputParameters
     exitPicture (vidParam, &vidParam->picture);
 
   vidParam->dpb_layer_id = currSlice->layer_id;
-  setup_buffers (vidParam, currSlice->layer_id);
+  setupBuffers (vidParam, currSlice->layer_id);
 
   if (vidParam->recovery_point)
     vidParam->recovery_frame_num = (currSlice->frame_num + vidParam->recovery_frame_cnt) % vidParam->max_frame_num;
@@ -599,7 +598,7 @@ static void initPicture (sVidParam* vidParam, sSlice *currSlice, InputParameters
       sMacroblock* currMB = vidParam->mb_data_JV[nplane];
       char* intra_block = vidParam->intra_block_JV[nplane];
       for (int i = 0; i < (int)vidParam->PicSizeInMbs; ++i)
-        reset_mbs (currMB++);
+        resetMbs (currMB++);
       memset (vidParam->ipredmode_JV[nplane][0], DC_PRED, 16 * vidParam->FrameHeightInMbs * vidParam->PicWidthInMbs * sizeof(char));
       if (vidParam->active_pps->constrained_intra_pred_flag)
         for (int i = 0; i < (int)vidParam->PicSizeInMbs; ++i)
@@ -609,7 +608,7 @@ static void initPicture (sVidParam* vidParam, sSlice *currSlice, InputParameters
   else {
     sMacroblock* currMB = vidParam->mb_data;
     for (int i = 0; i < (int)vidParam->PicSizeInMbs; ++i)
-      reset_mbs (currMB++);
+      resetMbs (currMB++);
     if (vidParam->active_pps->constrained_intra_pred_flag)
       for (int i = 0; i < (int)vidParam->PicSizeInMbs; ++i)
         vidParam->intra_block[i] = 1;
@@ -908,7 +907,7 @@ static int readNewSlice (sSlice* currSlice) {
 
         if (vidParam->active_pps->entropy_coding_mode_flag) {
           int ByteStartPosition = currStream->frame_bitoffset / 8;
-          if (currStream->frame_bitoffset%8 != 0)
+          if ((currStream->frame_bitoffset % 8) != 0)
             ++ByteStartPosition;
           arideco_start_decoding (&currSlice->partArr[0].de_cabac, currStream->streamBuffer,
                                   ByteStartPosition, &currStream->read_len);

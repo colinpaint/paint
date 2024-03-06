@@ -576,8 +576,7 @@ static void unmark_long_term_frame_for_reference_by_frame_idx (sDPB* dpb, int lo
 }
 //}}}
 //{{{
-static void mark_pic_long_term (sDPB* dpb, sPicture* p,
-                                int long_term_frame_idx, int picNumX) {
+static void mark_pic_long_term (sDPB* dpb, sPicture* p, int long_term_frame_idx, int picNumX) {
 
   int add_top, add_bottom;
 
@@ -608,11 +607,11 @@ static void mark_pic_long_term (sDPB* dpb, sPicture* p,
 
   else {
     if (p->structure == TOP_FIELD) {
-      add_top    = 1;
+      add_top = 1;
       add_bottom = 0;
       }
     else {
-      add_top    = 0;
+      add_top = 0;
       add_bottom = 1;
       }
 
@@ -638,13 +637,14 @@ static void mark_pic_long_term (sDPB* dpb, sPicture* p,
         }
 
       if (dpb->fs_ref[i]->is_reference & 2) {
-        if ((!dpb->fs_ref[i]->bottom_field->is_long_term)&&(dpb->fs_ref[i]->bottom_field->pic_num == picNumX)) {
-          if ((dpb->fs_ref[i]->is_long_term) && (dpb->fs_ref[i]->long_term_frame_idx != long_term_frame_idx)) {
-              printf ("Warning: assigning long_term_frame_idx different from other field\n");
-            }
+        if ((!dpb->fs_ref[i]->bottom_field->is_long_term) &&
+            (dpb->fs_ref[i]->bottom_field->pic_num == picNumX)) {
+          if ((dpb->fs_ref[i]->is_long_term) && 
+              (dpb->fs_ref[i]->long_term_frame_idx != long_term_frame_idx))
+            printf ("Warning: assigning long_term_frame_idx different from other field\n");
 
           dpb->fs_ref[i]->long_term_frame_idx = dpb->fs_ref[i]->bottom_field->long_term_frame_idx
-                                             = long_term_frame_idx;
+                                              = long_term_frame_idx;
           dpb->fs_ref[i]->bottom_field->long_term_pic_num = 2 * long_term_frame_idx + add_bottom;
           dpb->fs_ref[i]->bottom_field->is_long_term = 1;
           dpb->fs_ref[i]->is_long_term |= 2;
@@ -661,81 +661,69 @@ static void mark_pic_long_term (sDPB* dpb, sPicture* p,
   }
 //}}}
 //{{{
-void mm_assign_long_term_frame_idx (sDPB* dpb, sPicture* p, int difference_of_pic_nums_minus1, int long_term_frame_idx)
-{
+void mm_assign_long_term_frame_idx (sDPB* dpb, sPicture* p, 
+                                    int difference_of_pic_nums_minus1, int long_term_frame_idx) {
+
   int picNumX = get_pic_num_x(p, difference_of_pic_nums_minus1);
 
   // remove frames/fields with same long_term_frame_idx
   if (p->structure == FRAME)
-  {
-    unmark_long_term_frame_for_reference_by_frame_idx(dpb, long_term_frame_idx);
-  }
-  else
-  {
-    unsigned i;
-    sPictureStructure structure = FRAME;
+    unmark_long_term_frame_for_reference_by_frame_idx (dpb, long_term_frame_idx);
 
-    for (i=0; i<dpb->ref_frames_in_buffer; i++)
-    {
-      if (dpb->fs_ref[i]->is_reference & 1)
-      {
-        if (dpb->fs_ref[i]->top_field->pic_num == picNumX)
-        {
+  else {
+    sPictureStructure structure = FRAME;
+    for (unsigned i = 0; i < dpb->ref_frames_in_buffer; i++) {
+      if (dpb->fs_ref[i]->is_reference & 1) {
+        if (dpb->fs_ref[i]->top_field->pic_num == picNumX) {
           structure = TOP_FIELD;
           break;
+          }
         }
-      }
-      if (dpb->fs_ref[i]->is_reference & 2)
-      {
-        if (dpb->fs_ref[i]->bottom_field->pic_num == picNumX)
-        {
+
+      if (dpb->fs_ref[i]->is_reference & 2) {
+        if (dpb->fs_ref[i]->bottom_field->pic_num == picNumX) {
           structure = BOTTOM_FIELD;
           break;
+          }
         }
       }
-    }
-    if (structure==FRAME)
-    {
-      error ("field for long term marking not found",200);
+
+    if (structure == FRAME)
+      error ("field for long term marking not found", 200);
+
+    unmark_long_term_field_for_reference_by_frame_idx (dpb, structure, long_term_frame_idx, 0, 0, picNumX);
     }
 
-    unmark_long_term_field_for_reference_by_frame_idx(dpb, structure, long_term_frame_idx, 0, 0, picNumX);
+  mark_pic_long_term (dpb, p, long_term_frame_idx, picNumX);
   }
-
-  mark_pic_long_term(dpb, p, long_term_frame_idx, picNumX);
-}
 //}}}
 //{{{
-void mm_update_max_long_term_frame_idx (sDPB* dpb, int max_long_term_frame_idx_plus1)
-{
-  uint32 i;
+void mm_update_max_long_term_frame_idx (sDPB* dpb, int max_long_term_frame_idx_plus1) {
 
   dpb->max_long_term_pic_idx = max_long_term_frame_idx_plus1 - 1;
 
   // check for invalid frames
-  for (i=0; i<dpb->ltref_frames_in_buffer; i++)
+  for (uint32 i = 0; i < dpb->ltref_frames_in_buffer; i++)
     if (dpb->fs_ltref[i]->long_term_frame_idx > dpb->max_long_term_pic_idx)
       unmark_for_long_term_reference(dpb->fs_ltref[i]);
-}
+  }
 //}}}
 //{{{
-void mm_unmark_all_long_term_for_reference (sDPB* dpb)
-{
-  mm_update_max_long_term_frame_idx(dpb, 0);
-}
+void mm_unmark_all_long_term_for_reference (sDPB* dpb) {
+  mm_update_max_long_term_frame_idx (dpb, 0);
+  }
 //}}}
 //{{{
-void mm_unmark_all_short_term_for_reference (sDPB* dpb)
-{
-  unsigned int i;
-  for (i=0; i<dpb->ref_frames_in_buffer; i++)
-    unmark_for_reference(dpb->fs_ref[i]);
-  update_ref_list(dpb);
-}
+void mm_unmark_all_short_term_for_reference (sDPB* dpb) {
+
+  for (unsigned int i = 0; i < dpb->ref_frames_in_buffer; i++)
+    unmark_for_reference (dpb->fs_ref[i]);
+  update_ref_list (dpb);
+  }
 //}}}
 //{{{
-void mm_mark_current_picture_long_term (sDPB* dpb, sPicture *p, int long_term_frame_idx)
-{
+void mm_mark_current_picture_long_term (sDPB* dpb, sPicture *p, int long_term_frame_idx) {
+
   // remove long term pictures with same long_term_frame_idx
   if (p->structure == FRAME)
     unmark_long_term_frame_for_reference_by_frame_idx(dpb, long_term_frame_idx);
@@ -744,7 +732,7 @@ void mm_mark_current_picture_long_term (sDPB* dpb, sPicture *p, int long_term_fr
 
   p->is_long_term = 1;
   p->long_term_frame_idx = long_term_frame_idx;
-}
+  }
 //}}}
 
 //{{{
@@ -774,14 +762,12 @@ int is_used_for_reference (sFrameStore* fs)
 //{{{
 void get_smallest_poc (sDPB* dpb, int *poc,int * pos) {
 
-  uint32 i;
-
   if (dpb->used_size<1)
     error ("Cannot determine smallest POC, DPB empty.",150);
 
   *pos = -1;
   *poc = INT_MAX;
-  for (i = 0; i < dpb->used_size; i++) {
+  for (uint32 i = 0; i < dpb->used_size; i++) {
     if ((*poc > dpb->fs[i]->poc)&&(!dpb->fs[i]->is_output)) {
       *poc = dpb->fs[i]->poc;
       *pos = i;
@@ -792,10 +778,8 @@ void get_smallest_poc (sDPB* dpb, int *poc,int * pos) {
 //{{{
 int remove_unused_frame_from_dpb (sDPB* dpb) {
 
-  uint32 i;
-
   // check for frames that were already output and no longer used for reference
-  for (i = 0; i < dpb->used_size; i++) {
+  for (uint32 i = 0; i < dpb->used_size; i++) {
     if (dpb->fs[i]->is_output && (!is_used_for_reference(dpb->fs[i]))) {
       remove_frame_from_dpb(dpb, i);
       return 1;
@@ -2106,7 +2090,7 @@ void reorder_ref_pic_list (sSlice* currSlice, int cur_list) {
 
       reorder_short_term (currSlice, cur_list, num_ref_idx_lX_active_minus1, picNumLX, &refIdxLX);
       }
-    else 
+    else
       reorder_long_term (currSlice, currSlice->listX[cur_list], num_ref_idx_lX_active_minus1, long_term_pic_idx[i], &refIdxLX);
     }
 
@@ -2262,7 +2246,7 @@ void dpb_split_field (sVidParam* vidParam, sFrameStore *fs)
           }
         }
       }
-    }  
+    }
   }
 //}}}
 //{{{

@@ -4,7 +4,6 @@
 
 #include "vlc.h"
 //}}}
-static const int kDebug = 0;
 
 //{{{
 int read_ue_v (char* tracestring, Bitstream* bitstream) {
@@ -14,7 +13,7 @@ int read_ue_v (char* tracestring, Bitstream* bitstream) {
   symbol.mapping = linfo_ue;
   readSyntaxElement_VLC (&symbol, bitstream);
 
-  if (kDebug)
+  if (gDecoder->p_Inp->vlcDebug)
     printf ("read %s %d\n", tracestring, symbol.value1);
 
   return symbol.value1;
@@ -28,7 +27,7 @@ int read_se_v (char* tracestring, Bitstream* bitstream) {
   symbol.mapping = linfo_se;
   readSyntaxElement_VLC (&symbol, bitstream);
 
-  if (kDebug)
+  if (gDecoder->p_Inp->vlcDebug)
     printf ("read %s %d\n", tracestring, symbol.value1);
 
   return symbol.value1;
@@ -44,7 +43,7 @@ int read_u_v (int LenInBits, char* tracestring, Bitstream* bitstream) {
   symbol.len = LenInBits;
   readSyntaxElement_FLC (&symbol, bitstream);
 
-  if (kDebug)
+  if (gDecoder->p_Inp->vlcDebug)
     printf ("read %s %d\n", tracestring, symbol.inf);
 
   return symbol.inf;
@@ -63,7 +62,7 @@ int read_i_v (int LenInBits, char* tracestring, Bitstream* bitstream) {
   // can be negative
   symbol.inf = -( symbol.inf & (1 << (LenInBits - 1)) ) | symbol.inf;
 
-  if (kDebug)
+  if (gDecoder->p_Inp->vlcDebug)
     printf ("read %s %d\n", tracestring, symbol.inf);
 
   return symbol.inf;

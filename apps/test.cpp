@@ -947,6 +947,7 @@ public:
       // input params
       InputParameters InputParams;
       memset (&InputParams, 0, sizeof(InputParameters));
+      InputParams.vlcDebug = 1;
       InputParams.poc_scale = 2;
       InputParams.poc_gap = 2;
       InputParams.ref_poc_gap = 2;
@@ -1071,7 +1072,6 @@ public:
       // input params
       InputParameters InputParams;
       memset (&InputParams, 0, sizeof(InputParameters));
-      strcpy (InputParams.infile, fileName.c_str());
       InputParams.poc_scale = 2;
       InputParams.poc_gap = 2;
       InputParams.ref_poc_gap = 2;
