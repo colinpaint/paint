@@ -47,6 +47,7 @@ add_subdirectory (decoders)
 add_subdirectory (audio)
 add_subdirectory (song)
 add_subdirectory (h264)
+add_subdirectory (mpeg2)
 
 # windows audio capture
 if (CMAKE_HOST_WIN32)
@@ -81,9 +82,9 @@ project (test VERSION 1.0.0)
   target_compile_definitions (${PROJECT_NAME} PRIVATE BUILD_IMPLOT)
   target_include_directories (${PROJECT_NAME} PRIVATE stb)
   if (CMAKE_HOST_WIN32)
-    target_link_libraries (${PROJECT_NAME} PRIVATE app h264 dvb decoders)
+    target_link_libraries (${PROJECT_NAME} PRIVATE app h264 mpeg2 dvb decoders)
   else()
-    target_link_libraries (${PROJECT_NAME} PRIVATE app h264 dvb decoders stdc++fs pthread)
+    target_link_libraries (${PROJECT_NAME} PRIVATE app h264 mpeg2 dvb decoders stdc++fs pthread)
   endif()
 
 # player
