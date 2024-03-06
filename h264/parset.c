@@ -48,7 +48,7 @@ static void updateMaxValue (sFrameFormat* format) {
   }
 //}}}
 //{{{
-static void setup_layer_info (sVidParam* vidParam, sSPSrbsp* sps, sLayerParam* p_Lps) {
+static void setupLayerInfo (sVidParam* vidParam, sSPS* sps, sLayerParam* p_Lps) {
 
   int layer_id = p_Lps->layer_id;
   p_Lps->vidParam = vidParam;
@@ -58,7 +58,7 @@ static void setup_layer_info (sVidParam* vidParam, sSPSrbsp* sps, sLayerParam* p
   }
 //}}}
 //{{{
-static void set_CodingParam (sSPSrbsp* sps, sCodingParam* cps) {
+static void setCodingParam (sSPS* sps, sCodingParam* cps) {
 
   // maximum vertical motion vector range in luma quarter pixel units
   cps->profile_idc = sps->profile_idc;
@@ -177,8 +177,7 @@ static void set_CodingParam (sSPSrbsp* sps, sCodingParam* cps) {
   }
 //}}}
 //{{{
-static void reset_format_info (sSPSrbsp* sps, sVidParam* vidParam,
-                               sFrameFormat *source, sFrameFormat *output) {
+static void resetFormatInfo (sSPS* sps, sVidParam* vidParam, sFrameFormat* source, sFrameFormat* output) {
 
   static const int SubWidthC  [4]= { 1, 2, 2, 1};
   static const int SubHeightC [4]= { 1, 2, 1, 1};
@@ -286,9 +285,9 @@ static void reset_format_info (sSPSrbsp* sps, sVidParam* vidParam,
 
 // SPS
 //{{{
-static sSPSrbsp* allocSPS() {
+static sSPS* allocSPS() {
 
-   sSPSrbsp* p = calloc (1, sizeof (sSPSrbsp));
+   sSPS* p = calloc (1, sizeof (sSPS));
    if (!p)
      no_mem_exit ("allocSPS");
 
@@ -296,14 +295,14 @@ static sSPSrbsp* allocSPS() {
    }
 //}}}
 //{{{
-static void freeSPS (sSPSrbsp* sps) {
+static void freeSPS (sSPS* sps) {
 
   assert (sps);
   free (sps);
   }
 //}}}
 //{{{
-static int spsIsEqual (sSPSrbsp* sps1, sSPSrbsp* sps2) {
+static int spsIsEqual (sSPS* sps1, sSPS* sps2) {
 
   int equal = 1;
 
@@ -362,7 +361,7 @@ static int spsIsEqual (sSPSrbsp* sps1, sSPSrbsp* sps2) {
 //}}}
 //{{{
 // syntax for scaling list matrix values
-static void scalingList (int *scalingList, int sizeOfScalingList,
+static void scalingList (int* scalingList, int sizeOfScalingList,
                          Boolean* useDefaultScalingMatrix, sBitstream* s) {
 
   int lastScale = 8;
@@ -381,12 +380,12 @@ static void scalingList (int *scalingList, int sizeOfScalingList,
   }
 //}}}
 //{{{
-static void initVUI (sSPSrbsp* sps) {
+static void initVUI (sSPS* sps) {
   sps->vui_seq_parameters.matrix_coefficients = 2;
   }
 //}}}
 //{{{
-static int readHRDParameters (sDataPartition* p, sHRDparams* hrd) {
+static int readHRDParameters (sDataPartition* p, sHRD* hrd) {
 
   sBitstream *s = p->bitstream;
   hrd->cpb_cnt_minus1 = read_ue_v ("VUI cpb_cnt_minus1", s);
@@ -410,7 +409,7 @@ static int readHRDParameters (sDataPartition* p, sHRDparams* hrd) {
   }
 //}}}
 //{{{
-static int readVUI (sDataPartition* p, sSPSrbsp* sps) {
+static int readVUI (sDataPartition* p, sSPS* sps) {
 
   sBitstream* s = p->bitstream;
   if (sps->vui_parameters_present_flag) {
@@ -483,7 +482,7 @@ static int readVUI (sDataPartition* p, sSPSrbsp* sps) {
   }
 //}}}
 //{{{
-static void interpretSPS (sVidParam* vidParam, sDataPartition* p, sSPSrbsp* sps) {
+static void interpretSPS (sVidParam* vidParam, sDataPartition* p, sSPS* sps) {
 
   unsigned i;
   unsigned n_ScalingList;
@@ -600,7 +599,7 @@ static void interpretSPS (sVidParam* vidParam, sDataPartition* p, sSPSrbsp* sps)
 //}}}
 
 //{{{
-void get_max_dec_frame_buf_size (sSPSrbsp* sps) {
+void get_max_dec_frame_buf_size (sSPS* sps) {
 
   int pic_size_mb = (sps->pic_width_in_mbs_minus1 + 1) *
                     (sps->pic_height_in_map_units_minus1 + 1) *
@@ -720,17 +719,17 @@ void get_max_dec_frame_buf_size (sSPSrbsp* sps) {
   }
 //}}}
 //{{{
-void makeSPSavailable (sVidParam* vidParam, int id, sSPSrbsp* sps) {
+void makeSPSavailable (sVidParam* vidParam, int id, sSPS* sps) {
 
   assert (sps->Valid == TRUE);
-  memcpy (&vidParam->SeqParSet[id], sps, sizeof (sSPSrbsp));
+  memcpy (&vidParam->SeqParSet[id], sps, sizeof (sSPS));
   }
 //}}}
 //{{{
 void processSPS (sVidParam* vidParam, sNalu* nalu) {
 
   sDataPartition* dp = allocPartition (1);
-  sSPSrbsp* sps = allocSPS();
+  sSPS* sps = allocSPS();
 
   dp->bitstream->ei_flag = 0;
   dp->bitstream->read_len = dp->bitstream->frame_bitoffset = 0;
@@ -766,7 +765,7 @@ void processSPS (sVidParam* vidParam, sNalu* nalu) {
   }
 //}}}
 //{{{
-void activateSPS (sVidParam* vidParam, sSPSrbsp* sps) {
+void activateSPS (sVidParam* vidParam, sSPS* sps) {
 
   sInputParam* p_Inp = vidParam->p_Inp;
 
@@ -776,10 +775,10 @@ void activateSPS (sVidParam* vidParam, sSPSrbsp* sps) {
     vidParam->active_sps = sps;
 
     if (vidParam->dpb_layer_id==0 && is_BL_profile(sps->profile_idc) && !vidParam->p_Dpb_layer[0]->init_done) {
-      set_CodingParam (sps, vidParam->p_EncodePar[0]);
-      setup_layer_info ( vidParam, sps, vidParam->p_LayerPar[0]);
+      setCodingParam (sps, vidParam->p_EncodePar[0]);
+      setupLayerInfo ( vidParam, sps, vidParam->p_LayerPar[0]);
       }
-    set_global_CodingParam(vidParam, vidParam->p_EncodePar[vidParam->dpb_layer_id]);
+    set_global_CodingParam (vidParam, vidParam->p_EncodePar[vidParam->dpb_layer_id]);
 
     init_global_buffers (vidParam, 0);
     if (!vidParam->no_output_of_prior_pics_flag)
@@ -795,13 +794,13 @@ void activateSPS (sVidParam* vidParam, sSPSrbsp* sps) {
       }
     }
 
-  reset_format_info (sps, vidParam, &p_Inp->source, &p_Inp->output);
+  resetFormatInfo (sps, vidParam, &p_Inp->source, &p_Inp->output);
   }
 //}}}
 
 // PPS
 //{{{
-static int ppsIsEqual (sPPSrbsp* pps1, sPPSrbsp* pps2) {
+static int ppsIsEqual (sPPS* pps1, sPPS* pps2) {
 
   if ((!pps1->Valid) || (!pps2->Valid))
     return 0;
@@ -879,7 +878,7 @@ static int ppsIsEqual (sPPSrbsp* pps1, sPPSrbsp* pps2) {
   }
 //}}}
 //{{{
-static void interpretPPS (sVidParam* vidParam, sDataPartition* p, sPPSrbsp* pps) {
+static void interpretPPS (sVidParam* vidParam, sDataPartition* p, sPPS* pps) {
 
   unsigned n_ScalingList;
   int chroma_format_idc;
@@ -990,7 +989,7 @@ static void interpretPPS (sVidParam* vidParam, sDataPartition* p, sPPSrbsp* pps)
   }
 //}}}
 //{{{
-static void activatePPS (sVidParam* vidParam, sPPSrbsp* pps) {
+static void activatePPS (sVidParam* vidParam, sPPS* pps) {
 
   if (vidParam->active_pps != pps) {
     if (vidParam->picture) // this may only happen on slice loss
@@ -1001,9 +1000,9 @@ static void activatePPS (sVidParam* vidParam, sPPSrbsp* pps) {
 //}}}
 
 //{{{
-sPPSrbsp* allocPPS() {
+sPPS* allocPPS() {
 
-  sPPSrbsp* p = calloc (1, sizeof (sPPSrbsp));
+  sPPS* p = calloc (1, sizeof (sPPS));
   if (!p)
     no_mem_exit ("allocPPS");
 
@@ -1012,7 +1011,7 @@ sPPSrbsp* allocPPS() {
   }
 //}}}
 //{{{
- void freePPS (sPPSrbsp* pps) {
+ void freePPS (sPPS* pps) {
 
    assert (pps != NULL);
    if (pps->slice_group_id != NULL)
@@ -1021,14 +1020,14 @@ sPPSrbsp* allocPPS() {
    }
 //}}}
 //{{{
-void makePPSavailable (sVidParam* vidParam, int id, sPPSrbsp* pps) {
+void makePPSavailable (sVidParam* vidParam, int id, sPPS* pps) {
 
   assert (pps->Valid == TRUE);
 
   if (vidParam->PicParSet[id].Valid == TRUE && vidParam->PicParSet[id].slice_group_id != NULL)
     free (vidParam->PicParSet[id].slice_group_id);
 
-  memcpy (&vidParam->PicParSet[id], pps, sizeof (sPPSrbsp));
+  memcpy (&vidParam->PicParSet[id], pps, sizeof (sPPS));
 
   // we can simply use the memory provided with the pps. the PPS is destroyed after this function
   // call and will not try to free if pps->slice_group_id == NULL
@@ -1050,7 +1049,7 @@ void cleanUpPPS (sVidParam* vidParam) {
 void processPPS (sVidParam* vidParam, sNalu* nalu) {
 
   sDataPartition* dp = allocPartition (1);
-  sPPSrbsp* pps = allocPPS();
+  sPPS* pps = allocPPS();
 
   dp->bitstream->ei_flag = 0;
   dp->bitstream->read_len = dp->bitstream->frame_bitoffset = 0;
@@ -1063,7 +1062,7 @@ void processPPS (sVidParam* vidParam, sNalu* nalu) {
     if (pps->pic_parameter_set_id == vidParam->active_pps->pic_parameter_set_id) {
       if (!ppsIsEqual (pps, vidParam->active_pps)) {
         // copy to next PPS;
-        memcpy (vidParam->nextPPS, vidParam->active_pps, sizeof (sPPSrbsp));
+        memcpy (vidParam->nextPPS, vidParam->active_pps, sizeof (sPPS));
         if (vidParam->picture)
           exitPicture (vidParam, &vidParam->picture);
         vidParam->active_pps = NULL;
@@ -1083,8 +1082,8 @@ void useParameterSet (sSlice* currSlice) {
   sVidParam* vidParam = currSlice->vidParam;
   int PicParsetId = currSlice->pic_parameter_set_id;
 
-  sPPSrbsp* pps = &vidParam->PicParSet[PicParsetId];
-  sSPSrbsp* sps = &vidParam->SeqParSet[pps->seq_parameter_set_id];
+  sPPS* pps = &vidParam->PicParSet[PicParsetId];
+  sSPS* sps = &vidParam->SeqParSet[pps->seq_parameter_set_id];
 
   if (pps->Valid != TRUE)
     printf ("Trying to use an invalid (uninitialized) Picture Parameter Set with ID %d, expect the unexpected...\n", PicParsetId);

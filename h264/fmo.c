@@ -12,7 +12,7 @@
 static void FmoGenerateType0MapUnitMap (sVidParam* vidParam, unsigned PicSizeInMapUnits ) {
 // Generate interleaved slice group map type MapUnit map (type 0)
 
-  sPPSrbsp* pps = vidParam->active_pps;
+  sPPS* pps = vidParam->active_pps;
   unsigned iGroup, j;
   unsigned i = 0;
   do
@@ -32,7 +32,7 @@ static void FmoGenerateType0MapUnitMap (sVidParam* vidParam, unsigned PicSizeInM
 // Generate dispersed slice group map type MapUnit map (type 1)
 static void FmoGenerateType1MapUnitMap (sVidParam* vidParam, unsigned PicSizeInMapUnits )
 {
-  sPPSrbsp* pps = vidParam->active_pps;
+  sPPS* pps = vidParam->active_pps;
   unsigned i;
   for( i = 0; i < PicSizeInMapUnits; i++ )
     vidParam->MapUnitToSliceGroupMap[i] = ((i%vidParam->PicWidthInMbs)+(((i/vidParam->PicWidthInMbs)*(pps->num_slice_groups_minus1+1))/2))
@@ -43,7 +43,7 @@ static void FmoGenerateType1MapUnitMap (sVidParam* vidParam, unsigned PicSizeInM
 // Generate foreground with left-over slice group map type MapUnit map (type 2)
 static void FmoGenerateType2MapUnitMap (sVidParam* vidParam, unsigned PicSizeInMapUnits )
 {
-  sPPSrbsp* pps = vidParam->active_pps;
+  sPPS* pps = vidParam->active_pps;
   int iGroup;
   unsigned i, x, y;
   unsigned yTopLeft, xTopLeft, yBottomRight, xBottomRight;
@@ -66,7 +66,7 @@ static void FmoGenerateType2MapUnitMap (sVidParam* vidParam, unsigned PicSizeInM
 // Generate box-out slice group map type MapUnit map (type 3)
 static void FmoGenerateType3MapUnitMap (sVidParam* vidParam, unsigned PicSizeInMapUnits, sSlice* currSlice )
 {
-  sPPSrbsp* pps = vidParam->active_pps;
+  sPPS* pps = vidParam->active_pps;
   unsigned i, k;
   int leftBound, topBound, rightBound, bottomBound;
   int x, y, xDir, yDir;
@@ -132,7 +132,7 @@ static void FmoGenerateType3MapUnitMap (sVidParam* vidParam, unsigned PicSizeInM
 static void FmoGenerateType4MapUnitMap (sVidParam* vidParam, unsigned PicSizeInMapUnits, sSlice* currSlice) {
 // Generate raster scan slice group map type MapUnit map (type 4)
 
-  sPPSrbsp* pps = vidParam->active_pps;
+  sPPS* pps = vidParam->active_pps;
 
   unsigned mapUnitsInSliceGroup0 = imin((pps->slice_group_change_rate_minus1 + 1) * currSlice->slice_group_change_cycle, PicSizeInMapUnits);
   unsigned sizeOfUpperLeftGroup = pps->slice_group_change_direction_flag ? ( PicSizeInMapUnits - mapUnitsInSliceGroup0 ) : mapUnitsInSliceGroup0;
@@ -151,7 +151,7 @@ static void FmoGenerateType4MapUnitMap (sVidParam* vidParam, unsigned PicSizeInM
 // Generate wipe slice group map type MapUnit map (type 5) *
 static void FmoGenerateType5MapUnitMap (sVidParam* vidParam, unsigned PicSizeInMapUnits, sSlice* currSlice )
 {
-  sPPSrbsp* pps = vidParam->active_pps;
+  sPPS* pps = vidParam->active_pps;
 
   unsigned mapUnitsInSliceGroup0 = imin((pps->slice_group_change_rate_minus1 + 1) * currSlice->slice_group_change_cycle, PicSizeInMapUnits);
   unsigned sizeOfUpperLeftGroup = pps->slice_group_change_direction_flag ? ( PicSizeInMapUnits - mapUnitsInSliceGroup0 ) : mapUnitsInSliceGroup0;
@@ -171,7 +171,7 @@ static void FmoGenerateType5MapUnitMap (sVidParam* vidParam, unsigned PicSizeInM
 static void FmoGenerateType6MapUnitMap (sVidParam* vidParam, unsigned PicSizeInMapUnits ) {
 // Generate explicit slice group map type MapUnit map (type 6)
 
-  sPPSrbsp* pps = vidParam->active_pps;
+  sPPS* pps = vidParam->active_pps;
   unsigned i;
   for (i=0; i<PicSizeInMapUnits; i++)
     vidParam->MapUnitToSliceGroupMap[i] = pps->slice_group_id[i];
@@ -182,8 +182,8 @@ static int FmoGenerateMapUnitToSliceGroupMap (sVidParam* vidParam, sSlice* currS
 // Generates vidParam->MapUnitToSliceGroupMap
 // Has to be called every time a new Picture Parameter Set is used
 
-  sSPSrbsp* sps = vidParam->active_sps;
-  sPPSrbsp* pps = vidParam->active_pps;
+  sSPS* sps = vidParam->active_sps;
+  sPPS* pps = vidParam->active_pps;
 
   unsigned int NumSliceGroupMapUnits;
 
@@ -251,7 +251,7 @@ static int FmoGenerateMbToSliceGroupMap (sVidParam* vidParam, sSlice *pSlice) {
     exit (-1);
     }
 
-  sSPSrbsp* sps = vidParam->active_sps;
+  sSPS* sps = vidParam->active_sps;
   if ((sps->frame_mbs_only_flag)|| pSlice->field_pic_flag) {
     int *MbToSliceGroupMap = vidParam->MbToSliceGroupMap;
     int *MapUnitToSliceGroupMap = vidParam->MapUnitToSliceGroupMap;
@@ -275,7 +275,7 @@ static int FmoGenerateMbToSliceGroupMap (sVidParam* vidParam, sSlice *pSlice) {
 //{{{
 int fmo_init (sVidParam* vidParam, sSlice* pSlice) {
 
-  sPPSrbsp* pps = vidParam->active_pps;
+  sPPS* pps = vidParam->active_pps;
 
   FmoGenerateMapUnitToSliceGroupMap (vidParam, pSlice);
   FmoGenerateMbToSliceGroupMap (vidParam, pSlice);

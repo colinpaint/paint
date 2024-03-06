@@ -9,8 +9,7 @@
 
 #define MAXIMUMVALUEOFcpb_cnt   32
 //{{{
-typedef struct
-{
+typedef struct {
   unsigned int cpb_cnt_minus1;                                   // ue(v)
   unsigned int bit_rate_scale;                                   // u(4)
   unsigned int cpb_size_scale;                                   // u(4)
@@ -21,11 +20,10 @@ typedef struct
   unsigned int cpb_removal_delay_length_minus1;                  // u(5)
   unsigned int dpb_output_delay_length_minus1;                   // u(5)
   unsigned int time_offset_length;                               // u(5)
-} sHRDparams;
+} sHRD;
 //}}}
 //{{{
-typedef struct
-{
+typedef struct {
   Boolean      aspect_ratio_info_present_flag;                   // u(1)
   unsigned int aspect_ratio_idc;                                 // u(8)
   unsigned short sar_width;                                      // u(16)
@@ -47,9 +45,9 @@ typedef struct
   unsigned int time_scale;                                       // u(32)
   Boolean      fixed_frame_rate_flag;                            // u(1)
   Boolean      nal_hrd_parameters_present_flag;                  // u(1)
-  sHRDparams nal_hrd_parameters;                           // hrd_paramters_t
+  sHRD nal_hrd_parameters;                           // hrd_paramters_t
   Boolean      vcl_hrd_parameters_present_flag;                  // u(1)
-  sHRDparams vcl_hrd_parameters;                           // hrd_paramters_t
+  sHRD vcl_hrd_parameters;                           // hrd_paramters_t
   // if ((nal_hrd_parameters_present_flag || (vcl_hrd_parameters_present_flag))
   Boolean      low_delay_hrd_flag;                               // u(1)
   Boolean      pic_struct_present_flag;                          // u(1)
@@ -61,13 +59,12 @@ typedef struct
   unsigned int log2_max_mv_length_horizontal;                    // ue(v)
   unsigned int num_reorder_frames;                               // ue(v)
   unsigned int max_dec_frame_buffering;                          // ue(v)
-} vui_seq_parameters_t;
+} sVUI;
 //}}}
 
 #define MAXnum_slice_groups_minus1  8
 //{{{
-typedef struct
-{
+typedef struct {
   Boolean   Valid;                  // indicates the parameter set is valid
   unsigned int pic_parameter_set_id;                             // ue(v)
   unsigned int seq_parameter_set_id;                             // ue(v)
@@ -113,7 +110,7 @@ typedef struct
   Boolean   constrained_intra_pred_flag;                      // u(1)
   Boolean   redundant_pic_cnt_present_flag;                   // u(1)
   Boolean   vui_pic_parameters_flag;                          // u(1)
-} sPPSrbsp;
+} sPPS;
 //}}}
 
 #define MAXnum_ref_frames_in_pic_order_cnt_cycle  256
@@ -160,12 +157,12 @@ typedef struct {
   unsigned int frame_crop_top_offset;                 // ue(v)
   unsigned int frame_crop_bottom_offset;              // ue(v)
   Boolean   vui_parameters_present_flag;                      // u(1)
-  vui_seq_parameters_t vui_seq_parameters;                  // vui_seq_parameters_t
+  sVUI vui_seq_parameters;                  // sVUI
   unsigned  separate_colour_plane_flag;                       // u(1)
   int lossless_qpprime_flag;
-  } sSPSrbsp;
+  } sSPS;
 //}}}
 
 
-sPPSrbsp* allocPPS();
-void freePPS (sPPSrbsp* pps);
+sPPS* allocPPS();
+void freePPS (sPPS* pps);

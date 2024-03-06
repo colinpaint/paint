@@ -343,7 +343,7 @@ extern void compute_colocated (sSlice* currSlice, sPicture** listX[6]);
 extern sPicture* clone_storable_picture (sVidParam* vidParam, sPicture *p_pic );
 
 extern void store_proc_picture_in_dpb (sDPB* dpb, sPicture* p);
-extern int init_img_data (sVidParam* vidParam, sImage *p_ImgData, sSPSrbsp *sps);
+extern int init_img_data (sVidParam* vidParam, sImage *p_ImgData, sSPS *sps);
 extern void free_img_data (sVidParam* vidParam, sImage *p_ImgData);
 
 extern void process_picture_in_dpb_s (sVidParam* vidParam, sPicture *p_pic);

@@ -791,7 +791,7 @@ int remove_unused_frame_from_dpb (sDPB* dpb) {
 //}}}
 
 //{{{
-int getDpbSize (sVidParam* vidParam, sSPSrbsp *active_sps) {
+int getDpbSize (sVidParam* vidParam, sSPS *active_sps) {
 
   int pic_size_mb = (active_sps->pic_width_in_mbs_minus1 + 1) * (active_sps->pic_height_in_map_units_minus1 + 1) * (active_sps->frame_mbs_only_flag?1:2);
   int size = 0;
@@ -933,7 +933,7 @@ void check_num_ref (sDPB* dpb) {
 //{{{
 void init_dpb (sVidParam* vidParam, sDPB* dpb, int type) {
 
-  sSPSrbsp* active_sps = vidParam->active_sps;
+  sSPS* active_sps = vidParam->active_sps;
 
   dpb->vidParam = vidParam;
   if (dpb->init_done)
@@ -988,7 +988,7 @@ void init_dpb (sVidParam* vidParam, sDPB* dpb, int type) {
 //{{{
 void re_init_dpb (sVidParam* vidParam, sDPB* dpb, int type) {
 
-  sSPSrbsp* active_sps = vidParam->active_sps;
+  sSPS* active_sps = vidParam->active_sps;
   int iDpbSize = getDpbSize (vidParam, active_sps)+vidParam->p_Inp->dpb_plus[type == 2 ? 1 : 0];
   dpb->num_ref_frames = active_sps->num_ref_frames;
 
@@ -1073,7 +1073,7 @@ void free_pic_motion (sPicMotionParamsOld* motion) {
 sPicture* allocPicture (sVidParam* vidParam, sPictureStructure structure,
                         int size_x, int size_y, int size_x_cr, int size_y_cr, int is_output) {
 
-  sSPSrbsp* active_sps = vidParam->active_sps;
+  sSPS* active_sps = vidParam->active_sps;
   //printf ("Allocating (%s) picture (x=%d, y=%d, x_cr=%d, y_cr=%d)\n",
   //        (type == FRAME)?"FRAME":(type == TOP_FIELD)?"TOP_FIELD":"BOTTOM_FIELD",
   //        size_x, size_y, size_x_cr, size_y_cr);
@@ -1314,7 +1314,7 @@ void update_pic_num (sSlice* currSlice) {
   unsigned int i;
   sVidParam* vidParam = currSlice->vidParam;
   sDPB* dpb = currSlice->dpb;
-  sSPSrbsp *active_sps = vidParam->active_sps;
+  sSPS *active_sps = vidParam->active_sps;
 
   int add_top = 0, add_bottom = 0;
   int max_frame_num = 1 << (active_sps->log2_max_frame_num_minus4 + 4);
@@ -2407,7 +2407,7 @@ void free_ref_pic_list_reordering_buffer (sSlice* currSlice)
 //{{{
 void fill_frame_num_gap (sVidParam* vidParam, sSlice* currSlice) {
 
-  sSPSrbsp *active_sps = vidParam->active_sps;
+  sSPS *active_sps = vidParam->active_sps;
 
   int CurrFrameNum;
   int UnusedShortTermFrameNum;
@@ -2497,7 +2497,7 @@ static inline void copy_img_data (sPixel *out_img, sPixel *in_img, int ostride, 
   }
 //}}}
 //{{{
-int init_img_data (sVidParam* vidParam, sImage *p_ImgData, sSPSrbsp *sps)
+int init_img_data (sVidParam* vidParam, sImage *p_ImgData, sSPS *sps)
 {
   sInputParam *p_Inp = vidParam->p_Inp;
   int memory_size = 0;

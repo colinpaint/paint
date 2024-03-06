@@ -932,7 +932,7 @@ static void get_db_strength_mbaff (sVidParam* vidParam, sPicture* p, int MbQAddr
 
     sSlice* currSlice = MbQ->p_Slice;
     int mvlimit = ((p->structure!=FRAME) || (p->mb_aff_frame_flag && MbQ->mb_field)) ? 2 : 4;
-    sSPSrbsp *active_sps = vidParam->active_sps;
+    sSPS *active_sps = vidParam->active_sps;
 
     MbQ->DeblockCall = 1;
     get_mb_pos (vidParam, MbQAddr, vidParam->mb_size[IS_LUMA], &mb_x, &mb_y);
@@ -1029,7 +1029,7 @@ static void perform_db_mbaff (sVidParam* vidParam, sPicture* p, int MbQAddr)
     sSlice * currSlice = MbQ->p_Slice;
     int       mvlimit = ((p->structure!=FRAME) || (p->mb_aff_frame_flag && MbQ->mb_field)) ? 2 : 4;
 
-    sSPSrbsp *active_sps = vidParam->active_sps;
+    sSPS *active_sps = vidParam->active_sps;
 
     MbQ->DeblockCall = 1;
     get_mb_pos (vidParam, MbQAddr, vidParam->mb_size[IS_LUMA], &mb_x, &mb_y);
@@ -2197,7 +2197,7 @@ static void perform_db_dep_normal (sMacroblock* MbQ, sPicture* p)
   sPixel    ** imgY = p->imgY;
   sPixel  ** *imgUV = p->imgUV;
 
-  sSPSrbsp *active_sps = vidParam->active_sps;
+  sSPS *active_sps = vidParam->active_sps;
 
   MbQ->DeblockCall = 1;
   get_mb_pos (vidParam, MbQ->mbAddrX, vidParam->mb_size[IS_LUMA], &mb_x, &mb_y);
@@ -2341,7 +2341,7 @@ static void perform_db_ind_normal (sMacroblock* MbQ, sPicture* p)
   sPixel    ** imgY = p->imgY;
   sPixel  ** *imgUV = p->imgUV;
 
-  sSPSrbsp *active_sps = vidParam->active_sps;
+  sSPS *active_sps = vidParam->active_sps;
 
   MbQ->DeblockCall = 1;
   //get_mb_pos (vidParam, MbQ->mbAddrX, vidParam->mb_size[IS_LUMA], &mb_x, &mb_y);
@@ -2725,7 +2725,7 @@ static void deblockMb (sVidParam* vidParam, sPicture* p, int MbQAddr) {
     sPixel  ** *imgUV = p->imgUV;
     sSlice * currSlice = MbQ->p_Slice;
     int       mvlimit = ((p->structure!=FRAME) || (p->mb_aff_frame_flag && MbQ->mb_field)) ? 2 : 4;
-    sSPSrbsp* active_sps = vidParam->active_sps;
+    sSPS* active_sps = vidParam->active_sps;
 
     MbQ->DeblockCall = 1;
     get_mb_pos (vidParam, MbQAddr, vidParam->mb_size[IS_LUMA], &mb_x, &mb_y);
@@ -2884,7 +2884,7 @@ static void get_db_strength (sVidParam* vidParam, sPicture* p, int MbQAddr) {
 
     sSlice * currSlice = MbQ->p_Slice;
     int       mvlimit = ((p->structure!=FRAME) || (p->mb_aff_frame_flag && MbQ->mb_field)) ? 2 : 4;
-    sSPSrbsp *active_sps = vidParam->active_sps;
+    sSPS *active_sps = vidParam->active_sps;
 
     MbQ->DeblockCall = 1;
     get_mb_pos (vidParam, MbQAddr, vidParam->mb_size[IS_LUMA], &mb_x, &mb_y);
@@ -2983,7 +2983,7 @@ static void perform_db (sVidParam* vidParam, sPicture* p, int MbQAddr) {
     sPixel  ** *imgUV = p->imgUV;
     sSlice * currSlice = MbQ->p_Slice;
     int       mvlimit = ((p->structure!=FRAME) || (p->mb_aff_frame_flag && MbQ->mb_field)) ? 2 : 4;
-    sSPSrbsp *active_sps = vidParam->active_sps;
+    sSPS *active_sps = vidParam->active_sps;
 
     MbQ->DeblockCall = 1;
     get_mb_pos (vidParam, MbQAddr, vidParam->mb_size[IS_LUMA], &mb_x, &mb_y);

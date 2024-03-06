@@ -504,7 +504,7 @@ static void copyDecPicture_JV (sVidParam* vidParam, sPicture* dst, sPicture* src
 static void initPicture (sVidParam* vidParam, sSlice *currSlice, sInputParam *p_Inp) {
 
   sPicture* picture = NULL;
-  sSPSrbsp* active_sps = vidParam->active_sps;
+  sSPS* active_sps = vidParam->active_sps;
   sDPB* dpb = currSlice->dpb;
 
   vidParam->PicHeightInMbs = vidParam->FrameHeightInMbs / ( 1 + currSlice->field_pic_flag );
@@ -691,11 +691,11 @@ static void initPictureDecoding (sVidParam* vidParam) {
   sSlice* slice = vidParam->ppSliceList[0];
   if (vidParam->nextPPS->Valid &&
       (int)vidParam->nextPPS->pic_parameter_set_id == slice->pic_parameter_set_id) {
-    sPPSrbsp tmpPPS;
-    memcpy (&tmpPPS, &(vidParam->PicParSet[slice->pic_parameter_set_id]), sizeof (sPPSrbsp));
+    sPPS tmpPPS;
+    memcpy (&tmpPPS, &(vidParam->PicParSet[slice->pic_parameter_set_id]), sizeof (sPPS));
     (vidParam->PicParSet[slice->pic_parameter_set_id]).slice_group_id = NULL;
     makePPSavailable (vidParam, vidParam->nextPPS->pic_parameter_set_id, vidParam->nextPPS);
-    memcpy (vidParam->nextPPS, &tmpPPS, sizeof (sPPSrbsp));
+    memcpy (vidParam->nextPPS, &tmpPPS, sizeof (sPPS));
     tmpPPS.slice_group_id = NULL;
     }
 

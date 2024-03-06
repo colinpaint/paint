@@ -494,7 +494,7 @@ static void interpret_reserved_info (byte* payload, int size, sVidParam* vidPara
 //{{{
 static void interpret_picture_timing_info (byte* payload, int size, sVidParam* vidParam ) {
 
-  sSPSrbsp *active_sps = vidParam->active_sps;
+  sSPS *active_sps = vidParam->active_sps;
 
   int cpb_removal_len = 24;
   int dpb_output_len  = 24;
@@ -1041,7 +1041,7 @@ static void interpret_buffering_period_info (byte* payload, int size, sVidParam*
   buf->frame_bitoffset = 0;
 
   int seq_parameter_set_id = read_ue_v("SEI seq_parameter_set_id"  , buf);
-  sSPSrbsp* sps = &vidParam->SeqParSet[seq_parameter_set_id];
+  sSPS* sps = &vidParam->SeqParSet[seq_parameter_set_id];
   activateSPS (vidParam, sps);
 
   printf ("Buffering period SEI message\n");

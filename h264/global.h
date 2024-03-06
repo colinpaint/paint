@@ -348,8 +348,8 @@ typedef struct OldSliceParam {
 typedef struct slice {
   struct VidParam* vidParam;
   struct InputParam* p_Inp;
-  sPPSrbsp* active_pps;
-  sSPSrbsp* active_sps;
+  sPPS* active_pps;
+  sSPS* active_sps;
 
   // dpb pointer
   struct decoded_picture_buffer* dpb;
@@ -612,7 +612,7 @@ typedef struct LayerParam {
   int layer_id;
   struct VidParam* vidParam;
   sCodingParam* p_Cps;
-  sSPSrbsp* p_SPS;
+  sSPS* p_SPS;
   struct decoded_picture_buffer* dpb;
   } sLayerParam;
 //}}}
@@ -620,11 +620,11 @@ typedef struct LayerParam {
 typedef struct VidParam {
   struct InputParam* p_Inp;
 
-  sPPSrbsp* active_pps;
-  sSPSrbsp* active_sps;
+  sPPS* active_pps;
+  sSPS* active_sps;
 
-  sSPSrbsp SeqParSet[MAXSPS];
-  sPPSrbsp PicParSet[MAXPPS];
+  sSPS SeqParSet[MAXSPS];
+  sPPS PicParSet[MAXPPS];
 
   struct decoded_picture_buffer* p_Dpb_layer[MAX_NUM_DPB_LAYERS];
   sCodingParam* p_EncodePar[MAX_NUM_DPB_LAYERS];
@@ -781,7 +781,7 @@ typedef struct VidParam {
   int bDeblockEnable;
   int iPostProcess;
   int bFrameInit;
-  sPPSrbsp *nextPPS;
+  sPPS *nextPPS;
   int last_dec_poc;
   int last_dec_view_id;
   int last_dec_layer_id;

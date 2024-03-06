@@ -1254,7 +1254,7 @@ static void reset_WPParam (sSlice* currSlice) {
 static void pred_weight_table (sSlice* currSlice) {
 
   sVidParam* vidParam = currSlice->vidParam;
-  sSPSrbsp* active_sps = vidParam->active_sps;
+  sSPS* active_sps = vidParam->active_sps;
 
   byte dP_nr = assignSE2partition[currSlice->dp_mode][SE_HEADER];
   sDataPartition* partition = &(currSlice->partArr[dP_nr]);
@@ -1495,7 +1495,7 @@ void dec_ref_pic_marking (sVidParam* vidParam, sBitstream* currStream, sSlice* p
 //{{{
 int dumpPOC (sVidParam* vidParam) {
 
-  sSPSrbsp* active_sps = vidParam->active_sps;
+  sSPS* active_sps = vidParam->active_sps;
 
   printf ("POC locals...\n");
   printf ("toppoc                                %d\n", (int) vidParam->ppSliceList[0]->toppoc);
@@ -1529,7 +1529,7 @@ int dumpPOC (sVidParam* vidParam) {
 void decodePOC (sVidParam* vidParam, sSlice* pSlice) {
 
   // for POC mode 0:
-  sSPSrbsp* active_sps = vidParam->active_sps;
+  sSPS* active_sps = vidParam->active_sps;
   unsigned int MaxPicOrderCntLsb = (1<<(active_sps->log2_max_pic_order_cnt_lsb_minus4+4));
 
   switch (active_sps->pic_order_cnt_type) {
@@ -1731,7 +1731,7 @@ void restOfSliceHeader (sSlice* currSlice) {
 
   sVidParam* vidParam = currSlice->vidParam;
   sInputParam* p_Inp = currSlice->p_Inp;
-  sSPSrbsp* active_sps = vidParam->active_sps;
+  sSPS* active_sps = vidParam->active_sps;
 
   byte dP_nr = assignSE2partition[currSlice->dp_mode][SE_HEADER];
   sDataPartition* partition = &(currSlice->partArr[dP_nr]);

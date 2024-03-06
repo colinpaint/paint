@@ -1824,7 +1824,7 @@ struct concealment_node * init_node (sPicture* picture, int missingpoc ) {
 void init_lists_for_non_reference_loss (sDPB* dpb, int currSliceType, sPictureStructure currPicStructure)
 {
   sVidParam* vidParam = dpb->vidParam;
-  sSPSrbsp *active_sps = vidParam->active_sps;
+  sSPS *active_sps = vidParam->active_sps;
 
   unsigned i;
   int j;

@@ -1359,7 +1359,7 @@ static void perform_mc_single_wp (sMacroblock* currMB, sColorPlane pl, sPicture*
 {
   sVidParam* vidParam = currMB->vidParam;
   sSlice* currSlice = currMB->p_Slice;
-  sSPSrbsp *active_sps = currSlice->active_sps;
+  sSPS *active_sps = currSlice->active_sps;
   sPixel** tmp_block_l0 = currSlice->tmp_block_l0;
   sPixel** tmp_block_l1 = currSlice->tmp_block_l1;
   static const int mv_mul = 16; // 4 * 4
@@ -1452,7 +1452,7 @@ static void perform_mc_single (sMacroblock* currMB, sColorPlane pl, sPicture* pi
 {
   sVidParam* vidParam = currMB->vidParam;
   sSlice* currSlice = currMB->p_Slice;
-  sSPSrbsp *active_sps = currSlice->active_sps;
+  sSPS *active_sps = currSlice->active_sps;
   sPixel** tmp_block_l0 = currSlice->tmp_block_l0;
   sPixel** tmp_block_l1 = currSlice->tmp_block_l1;
   static const int mv_mul = 16; // 4 * 4
