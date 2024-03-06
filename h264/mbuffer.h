@@ -291,8 +291,8 @@ extern sPicture* get_long_term_pic (sSlice* currSlice, sDPB* dpb, int LongtermPi
 extern void update_ref_list (sDPB* dpb);
 extern void update_ltref_list (sDPB* dpb);
 
-extern void mm_mark_current_picture_long_term (sDPB* dpb, sPicture *p, int long_term_frame_idx);
-extern void mm_unmark_short_term_for_reference (sDPB* dpb, sPicture *p, int difference_of_pic_nums_minus1);
+extern void mm_mark_current_picture_long_term (sDPB* dpb, sPicture* p, int long_term_frame_idx);
+extern void mm_unmark_short_term_for_reference (sDPB* dpb, sPicture* p, int difference_of_pic_nums_minus1);
 extern void mm_unmark_long_term_for_reference (sDPB* dpb, sPicture *p, int long_term_pic_num);
 extern void mm_assign_long_term_frame_idx (sDPB* dpb, sPicture* p, int difference_of_pic_nums_minus1, int long_term_frame_idx);
 extern void mm_update_max_long_term_frame_idx (sDPB* dpb, int max_long_term_frame_idx_plus1);
