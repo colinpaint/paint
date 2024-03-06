@@ -21,8 +21,6 @@ typedef struct bit_stream_dec Bitstream;
 #define ET_SIZE 300      //!< size of error text buffer
 extern char errortext[ET_SIZE]; //!< buffer for error message for exit with error()
 
-struct pic_motion_params_old;
-struct pic_motion_params;
 //{{{  DecoderStatus_e
 typedef enum {
   DEC_OPENED = 0,
@@ -60,12 +58,12 @@ typedef DecodingEnvironment *DecodingEnvironmentPtr;
 //}}}
 
 // Motion Vector structure
- //{{{  sMotionVector
- typedef struct {
-   short mv_x;
-   short mv_y;
-   } sMotionVector;
- //}}}
+//{{{  sMotionVector
+typedef struct {
+  short mv_x;
+  short mv_y;
+  } sMotionVector;
+//}}}
 static const sMotionVector zero_mv = {0, 0};
 //{{{  sBlockPos
 typedef struct {
@@ -80,8 +78,8 @@ typedef struct {
   unsigned char  MPS;           // Least Probable Symbol 0/1 CP
   unsigned char dummy;          // for alignment
   } BiContextType;
-typedef BiContextType *BiContextTypePtr;
 //}}}
+typedef BiContextType *BiContextTypePtr;
 
 //{{{  defines
 #define NUM_MB_TYPE_CTX  11
@@ -92,10 +90,12 @@ typedef BiContextType *BiContextTypePtr;
 #define NUM_MB_AFF_CTX 4
 #define NUM_TRANSFORM_SIZE_CTX 3
 //}}}
-// structures that will be declared somewhere else
+
 struct storablePicture;
 struct datapartition_dec;
 struct syntaxelement_dec;
+struct pic_motion_params;
+struct pic_motion_params_old;
 //{{{  MotionInfoContexts
 typedef struct {
   BiContextType mb_type_contexts [3][NUM_MB_TYPE_CTX];
@@ -889,8 +889,8 @@ static inline int is_BL_profile (unsigned int profile_idc) {
   extern void free_global_buffers (sVidParam *vidParam);
   extern void free_layer_buffers (sVidParam *vidParam, int layer_id );
 
-  extern void freePartition (sDataPartition* dp, int n);
   extern sDataPartition* allocPartition (int n);
+  extern void freePartition (sDataPartition* dp, int n);
 
   extern unsigned ceilLog2 (unsigned uiVal);
   extern unsigned ceilLog2_sf (unsigned uiVal);
@@ -899,15 +899,15 @@ static inline int is_BL_profile (unsigned int profile_idc) {
   extern void change_plane_JV (sVidParam *vidParam, int nplane, sSlice *pSlice);
   extern void make_frame_picture_JV (sVidParam *vidParam );
 
+  extern sDecodedPicList* get_one_avail_dec_pic_from_list (sDecodedPicList *pDecPicList, int b3D, int view_id);
   extern void freeDecPicList (sDecodedPicList *pDecPicList );
   extern void clearDecPicList (sVidParam *vidParam );
-  extern sDecodedPicList* get_one_avail_dec_pic_from_list (sDecodedPicList *pDecPicList, int b3D, int view_id);
 
   extern sSlice* malloc_slice (InputParameters *p_Inp, sVidParam *vidParam );
   extern void copy_slice_info (sSlice* currSlice, OldSliceParams *p_old_slice );
 
-  extern void OpenOutputFiles (sVidParam *vidParam, int view0_id, int view1_id);
   extern void set_global_coding_par (sVidParam *vidParam, sCodingParams *cps);
+  extern void OpenOutputFiles (sVidParam *vidParam, int view0_id, int view1_id);
 //{{{
 #ifdef __cplusplus
 }
