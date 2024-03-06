@@ -392,33 +392,33 @@ static int BType2CtxRef (int btype)
 }
 //}}}
 //{{{
-static char readRefPictureIdx_VLC (sMacroblock* currMB, SyntaxElement* currSE, sDataPartition *dP, char b8mode, int list)
+static char readRefPictureIdx_VLC (sMacroblock* currMB, sSyntaxElement* currSE, sDataPartition *dP, char b8mode, int list)
 {
   currSE->context = BType2CtxRef (b8mode);
   currSE->value2 = list;
-  dP->readSyntaxElement (currMB, currSE, dP);
+  dP->readsSyntaxElement (currMB, currSE, dP);
   return (char) currSE->value1;
 }
 //}}}
 //{{{
-static char readRefPictureIdx_FLC (sMacroblock* currMB, SyntaxElement* currSE, sDataPartition *dP, char b8mode, int list)
+static char readRefPictureIdx_FLC (sMacroblock* currMB, sSyntaxElement* currSE, sDataPartition *dP, char b8mode, int list)
 {
   currSE->context = BType2CtxRef (b8mode);
   currSE->len = 1;
-  readSyntaxElement_FLC(currSE, dP->bitstream);
+  readsSyntaxElement_FLC(currSE, dP->bitstream);
   currSE->value1 = 1 - currSE->value1;
 
   return (char) currSE->value1;
 }
 //}}}
 //{{{
-static char readRefPictureIdx_Null (sMacroblock* currMB, SyntaxElement* currSE, sDataPartition *dP, char b8mode, int list)
+static char readRefPictureIdx_Null (sMacroblock* currMB, sSyntaxElement* currSE, sDataPartition *dP, char b8mode, int list)
 {
   return 0;
 }
 //}}}
 //{{{
-static void prepareListforRefIdx (sMacroblock* currMB, SyntaxElement* currSE, sDataPartition *dP, int num_ref_idx_active, int refidx_present)
+static void prepareListforRefIdx (sMacroblock* currMB, sSyntaxElement* currSE, sDataPartition *dP, int num_ref_idx_active, int refidx_present)
 {
   if(num_ref_idx_active > 1)
   {
@@ -469,7 +469,7 @@ void update_qp (sMacroblock* currMB, int qp)
 }
 //}}}
 //{{{
-void read_delta_quant (SyntaxElement* currSE, sDataPartition *dP, sMacroblock* currMB, const byte *partMap, int type)
+void read_delta_quant (sSyntaxElement* currSE, sDataPartition *dP, sMacroblock* currMB, const byte *partMap, int type)
 {
   sSlice* currSlice = currMB->p_Slice;
   sVidParam* vidParam = currMB->vidParam;
@@ -483,7 +483,7 @@ void read_delta_quant (SyntaxElement* currSE, sDataPartition *dP, sMacroblock* c
   else
     currSE->reading= read_dQuant_CABAC;
 
-  dP->readSyntaxElement(currMB, currSE, dP);
+  dP->readsSyntaxElement(currMB, currSE, dP);
   currMB->delta_quant = (short) currSE->value1;
   if ((currMB->delta_quant < -(26 + vidParam->bitdepth_luma_qp_scale/2)) || (currMB->delta_quant > (25 + vidParam->bitdepth_luma_qp_scale/2)))
   {
@@ -499,7 +499,7 @@ void read_delta_quant (SyntaxElement* currSE, sDataPartition *dP, sMacroblock* c
 //}}}
 
 //{{{
-static void readMBRefPictureIdx (SyntaxElement* currSE, sDataPartition *dP, sMacroblock* currMB, sPicMotionParams** mv_info, int list, int step_v0, int step_h0)
+static void readMBRefPictureIdx (sSyntaxElement* currSE, sDataPartition *dP, sMacroblock* currMB, sPicMotionParams** mv_info, int list, int step_v0, int step_h0)
 {
   if (currMB->mb_type == 1)
   {
@@ -615,7 +615,7 @@ static void readMBRefPictureIdx (SyntaxElement* currSE, sDataPartition *dP, sMac
 }
 //}}}
 //{{{
-static void readMBMotionVectors (SyntaxElement* currSE, sDataPartition *dP, sMacroblock* currMB, int list, int step_h0, int step_v0)
+static void readMBMotionVectors (sSyntaxElement* currSE, sDataPartition *dP, sMacroblock* currMB, int list, int step_h0, int step_v0)
 {
   if (currMB->mb_type == 1)
   {
@@ -642,12 +642,12 @@ static void readMBMotionVectors (SyntaxElement* currSE, sDataPartition *dP, sMac
 
       // X component
       currSE->value2 = list; // identifies the component; only used for context determination
-      dP->readSyntaxElement(currMB, currSE, dP);
+      dP->readsSyntaxElement(currMB, currSE, dP);
       curr_mvd[0] = (short) currSE->value1;
 
       // Y component
       currSE->value2 += 2; // identifies the component; only used for context determination
-      dP->readSyntaxElement(currMB, currSE, dP);
+      dP->readsSyntaxElement(currMB, currSE, dP);
       curr_mvd[1] = (short) currSE->value1;
 
       curr_mv.mv_x = (short)(curr_mvd[0] + pred_mv.mv_x);  // compute motion vector x
@@ -722,7 +722,7 @@ static void readMBMotionVectors (SyntaxElement* currSE, sDataPartition *dP, sMac
               for (k=0; k < 2; ++k)
               {
                 currSE->value2   = (k << 1) + list; // identifies the component; only used for context determination
-                dP->readSyntaxElement(currMB, currSE, dP);
+                dP->readsSyntaxElement(currMB, currSE, dP);
                 curr_mvd[k] = (short) currSE->value1;
               }
 
@@ -1123,7 +1123,7 @@ static void read_motion_info_from_NAL_p_slice (sMacroblock* currMB)
   sVidParam* vidParam = currMB->vidParam;
   sSlice* currSlice = currMB->p_Slice;
 
-  SyntaxElement currSE;
+  sSyntaxElement currSE;
   sDataPartition *dP = NULL;
   const byte *partMap       = assignSE2partition[currSlice->dp_mode];
   short partmode        = ((currMB->mb_type == P8x8) ? 4 : currMB->mb_type);
@@ -1178,7 +1178,7 @@ static void read_motion_info_from_NAL_b_slice (sMacroblock* currMB) {
   sSlice* currSlice = currMB->p_Slice;
   sVidParam* vidParam = currMB->vidParam;
   sPicture* picture = currSlice->picture;
-  SyntaxElement currSE;
+  sSyntaxElement currSE;
   sDataPartition* dP = NULL;
   const byte* partMap = assignSE2partition[currSlice->dp_mode];
   int partmode = ((currMB->mb_type == P8x8) ? 4 : currMB->mb_type);

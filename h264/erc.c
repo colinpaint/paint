@@ -757,7 +757,7 @@ static int edgeDistortion (int predBlocks[], int currYBlockNum, sPixel *predMB,
 *      when the pixel positions to be copied from is not full pixel (any 1/4 pixel position).
 *      It copies the resulting pixel vlaues into predMB.
 * \param vidParam
-*      The pointer of video_par structure of current frame
+*      The pointer of VidParam structure of current frame
 * \param mv
 *      The pointer of the predicted MV of the current (being concealed) MB
 * \param x
@@ -1556,7 +1556,7 @@ static void copy_to_conceal (sPicture *src, sPicture *dst, sVidParam* vidParam)
   int mm, nn;
   int scale = 1;
   sPicture* picture = vidParam->picture;
-  // InputParameters *test;
+  // sInputParam *test;
 
   int current_mb_nr = 0;
 

@@ -148,24 +148,24 @@ void free_mem3Dmp (sPicMotionParams** *array3D)
 /*!
 ** **********************************************************************
  * \brief
- *    Allocate 2D memory array -> WPParams array2D[dim0][dim1]
+ *    Allocate 2D memory array -> sWPParam array2D[dim0][dim1]
  *
  * \par Output:
  *    memory size in bytes
 ** **********************************************************************/
-int get_mem2Dwp (WPParams** *array2D, int dim0, int dim1)
+int get_mem2Dwp (sWPParam** *array2D, int dim0, int dim1)
 {
   int i;
 
-  if((*array2D    = (WPParams**)mem_malloc(dim0 *      sizeof(WPParams*))) == NULL)
+  if((*array2D    = (sWPParam**)mem_malloc(dim0 *      sizeof(sWPParam*))) == NULL)
     no_mem_exit("get_mem2Dwp: array2D");
-  if((*(*array2D) = (WPParams* )mem_calloc(dim0 * dim1,sizeof(WPParams ))) == NULL)
+  if((*(*array2D) = (sWPParam* )mem_calloc(dim0 * dim1,sizeof(sWPParam ))) == NULL)
     no_mem_exit("get_mem2Dwp: array2D");
 
   for(i = 1 ; i < dim0; i++)
     (*array2D)[i] =  (*array2D)[i-1] + dim1;
 
-  return dim0 * (sizeof(WPParams*) + dim1 * sizeof(WPParams));
+  return dim0 * (sizeof(sWPParam*) + dim1 * sizeof(sWPParam));
 }
 //}}}
 //{{{
@@ -176,7 +176,7 @@ int get_mem2Dwp (WPParams** *array2D, int dim0, int dim1)
  *    which was allocated with get_mem2Dwp()
 ** **********************************************************************
  */
-void free_mem2Dwp (WPParams** array2D)
+void free_mem2Dwp (sWPParam** array2D)
 {
   if (array2D)
   {

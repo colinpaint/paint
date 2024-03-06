@@ -76,7 +76,7 @@ static void gen_field_ref_ids (sVidParam* vidParam, sPicture *p) {
 //{{{
 static void insert_picture_in_dpb (sVidParam* vidParam, sFrameStore* fs, sPicture* p) {
 
-  InputParameters* p_Inp = vidParam->p_Inp;
+  sInputParam* p_Inp = vidParam->p_Inp;
   //  printf ("insert (%s) pic with frame_num #%d, poc %d\n",
   //          (p->structure == FRAME)?"FRAME":(p->structure == TOP_FIELD)?"TOP_FIELD":"BOTTOM_FIELD",
   //          p->pic_num, p->poc);
@@ -2497,9 +2497,9 @@ static inline void copy_img_data (sPixel *out_img, sPixel *in_img, int ostride, 
   }
 //}}}
 //{{{
-int init_img_data (sVidParam* vidParam, ImageData *p_ImgData, sSPSrbsp *sps)
+int init_img_data (sVidParam* vidParam, sImage *p_ImgData, sSPSrbsp *sps)
 {
-  InputParameters *p_Inp = vidParam->p_Inp;
+  sInputParam *p_Inp = vidParam->p_Inp;
   int memory_size = 0;
   int nplane;
 
@@ -2563,7 +2563,7 @@ int init_img_data (sVidParam* vidParam, ImageData *p_ImgData, sSPSrbsp *sps)
   }
 //}}}
 //{{{
-void free_img_data (sVidParam* vidParam, ImageData *p_ImgData) {
+void free_img_data (sVidParam* vidParam, sImage *p_ImgData) {
 
   if ( vidParam->separate_colour_plane_flag ) {
     int nplane;
@@ -2605,8 +2605,8 @@ void free_img_data (sVidParam* vidParam, ImageData *p_ImgData) {
 //{{{
 void process_picture_in_dpb_s (sVidParam* vidParam, sPicture *p_pic)
 {
-  //InputParameters *p_Inp = vidParam->p_Inp;
-  ImageData *p_img_out = &vidParam->tempData3;
+  //sInputParam *p_Inp = vidParam->p_Inp;
+  sImage *p_img_out = &vidParam->tempData3;
   sPixel***  d_img;
   int i;
 

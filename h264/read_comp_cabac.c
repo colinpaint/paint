@@ -8,10 +8,10 @@
 #include "transform.h"
 //}}}
 extern void  check_dp_neighbors (sMacroblock* currMB);
-extern void  read_delta_quant (SyntaxElement* currSE, sDataPartition *dP, sMacroblock* currMB, const byte *partMap, int type);
+extern void  read_delta_quant (sSyntaxElement* currSE, sDataPartition *dP, sMacroblock* currMB, const byte *partMap, int type);
 
 //{{{
-static void read_comp_coeff_4x4_smb_CABAC (sMacroblock* currMB, SyntaxElement* currSE, sColorPlane pl, int block_y, int block_x, int start_scan, int64 *cbp_blk)
+static void read_comp_coeff_4x4_smb_CABAC (sMacroblock* currMB, sSyntaxElement* currSE, sColorPlane pl, int block_y, int block_x, int start_scan, int64 *cbp_blk)
 {
   int i,j,k;
   int i0, j0;
@@ -48,7 +48,7 @@ static void read_comp_coeff_4x4_smb_CABAC (sMacroblock* currMB, SyntaxElement* c
         else
           currSE->reading = readRunLevel_CABAC;
 
-        dP->readSyntaxElement(currMB, currSE, dP);
+        dP->readsSyntaxElement(currMB, currSE, dP);
         level = currSE->value1;
 
         if (level != 0)    /* leave if level == 0 */
@@ -78,7 +78,7 @@ static void read_comp_coeff_4x4_smb_CABAC (sMacroblock* currMB, SyntaxElement* c
 
         for(k = 1; (k < 17) && (level != 0); ++k)
         {
-          dP->readSyntaxElement(currMB, currSE, dP);
+          dP->readsSyntaxElement(currMB, currSE, dP);
           level = currSE->value1;
 
           if (level != 0)    /* leave if level == 0 */
@@ -98,7 +98,7 @@ static void read_comp_coeff_4x4_smb_CABAC (sMacroblock* currMB, SyntaxElement* c
 }
 //}}}
 //{{{
-static void read_comp_coeff_4x4_CABAC (sMacroblock* currMB, SyntaxElement* currSE, sColorPlane pl, int (*InvLevelScale4x4)[4], int qp_per, int cbp)
+static void read_comp_coeff_4x4_CABAC (sMacroblock* currMB, sSyntaxElement* currSE, sColorPlane pl, int (*InvLevelScale4x4)[4], int qp_per, int cbp)
 {
   sSlice* currSlice = currMB->p_Slice;
   sVidParam* vidParam = currMB->vidParam;
@@ -175,7 +175,7 @@ static void read_comp_coeff_4x4_CABAC (sMacroblock* currMB, SyntaxElement* currS
 }
 //}}}
 //{{{
-static void read_comp_coeff_4x4_CABAC_ls (sMacroblock* currMB, SyntaxElement* currSE, sColorPlane pl, int (*InvLevelScale4x4)[4], int qp_per, int cbp)
+static void read_comp_coeff_4x4_CABAC_ls (sMacroblock* currMB, sSyntaxElement* currSE, sColorPlane pl, int (*InvLevelScale4x4)[4], int qp_per, int cbp)
 {
   sVidParam* vidParam = currMB->vidParam;
   int start_scan = IS_I16MB (currMB)? 1 : 0;
@@ -197,7 +197,7 @@ static void read_comp_coeff_4x4_CABAC_ls (sMacroblock* currMB, SyntaxElement* cu
 //}}}
 
 //{{{
-static void readCompCoeff8x8_CABAC (sMacroblock* currMB, SyntaxElement* currSE, sColorPlane pl, int b8)
+static void readCompCoeff8x8_CABAC (sMacroblock* currMB, sSyntaxElement* currSE, sColorPlane pl, int b8)
 {
   if (currMB->cbp & (1<<b8))  // are there any coefficients in the current block
   {
@@ -244,7 +244,7 @@ static void readCompCoeff8x8_CABAC (sMacroblock* currMB, SyntaxElement* currSE, 
     // Read DC
     currSE->type = ((currMB->is_intra_block == 1) ? SE_LUM_DC_INTRA : SE_LUM_DC_INTER ); // Intra or Inter?
     dP = &(currSlice->partArr[partMap[currSE->type]]);
-    dP->readSyntaxElement(currMB, currSE, dP);
+    dP->readsSyntaxElement(currMB, currSE, dP);
     level = currSE->value1;
 
     //============ decode =============
@@ -266,7 +266,7 @@ static void readCompCoeff8x8_CABAC (sMacroblock* currMB, SyntaxElement* currSE, 
 
       for(k = 1;(k < 65) && (level != 0);++k)
       {
-        dP->readSyntaxElement(currMB, currSE, dP);
+        dP->readsSyntaxElement(currMB, currSE, dP);
         level = currSE->value1;
 
         //============ decode =============
@@ -296,7 +296,7 @@ static void readCompCoeff8x8_CABAC (sMacroblock* currMB, SyntaxElement* currSE, 
 }
 //}}}
 //{{{
-static void readCompCoeff8x8_CABAC_lossless (sMacroblock* currMB, SyntaxElement* currSE, sColorPlane pl, int b8)
+static void readCompCoeff8x8_CABAC_lossless (sMacroblock* currMB, sSyntaxElement* currSE, sColorPlane pl, int b8)
 {
   if (currMB->cbp & (1<<b8))  // are there any coefficients in the current block
   {
@@ -349,7 +349,7 @@ static void readCompCoeff8x8_CABAC_lossless (sMacroblock* currMB, SyntaxElement*
       dP = &(currSlice->partArr[partMap[currSE->type]]);
       currSE->reading = readRunLevel_CABAC;
 
-      dP->readSyntaxElement(currMB, currSE, dP);
+      dP->readsSyntaxElement(currMB, currSE, dP);
       level = currSE->value1;
 
       //============ decode =============
@@ -370,7 +370,7 @@ static void readCompCoeff8x8_CABAC_lossless (sMacroblock* currMB, SyntaxElement*
 //}}}
 
 //{{{
-static void read_comp_coeff_8x8_MB_CABAC (sMacroblock* currMB, SyntaxElement* currSE, sColorPlane pl)
+static void read_comp_coeff_8x8_MB_CABAC (sMacroblock* currMB, sSyntaxElement* currSE, sColorPlane pl)
 {
   //======= 8x8 transform size & CABAC ========
   readCompCoeff8x8_CABAC (currMB, currSE, pl, 0);
@@ -380,7 +380,7 @@ static void read_comp_coeff_8x8_MB_CABAC (sMacroblock* currMB, SyntaxElement* cu
 }
 //}}}
 //{{{
-static void read_comp_coeff_8x8_MB_CABAC_ls (sMacroblock* currMB, SyntaxElement* currSE, sColorPlane pl)
+static void read_comp_coeff_8x8_MB_CABAC_ls (sMacroblock* currMB, sSyntaxElement* currSE, sColorPlane pl)
 {
   //======= 8x8 transform size & CABAC ========
   readCompCoeff8x8_CABAC_lossless (currMB, currSE, pl, 0);
@@ -396,7 +396,7 @@ static void read_CBP_and_coeffs_from_NAL_CABAC_420 (sMacroblock* currMB)
   int i,j;
   int level;
   int cbp;
-  SyntaxElement currSE;
+  sSyntaxElement currSE;
   sDataPartition *dP = NULL;
   sSlice* currSlice = currMB->p_Slice;
   const byte *partMap = assignSE2partition[currSlice->dp_mode];
@@ -442,7 +442,7 @@ static void read_CBP_and_coeffs_from_NAL_CABAC_420 (sMacroblock* currMB)
       currSE.reading = read_CBP_CABAC;
     }
 
-    dP->readSyntaxElement(currMB, &currSE, dP);
+    dP->readsSyntaxElement(currMB, &currSE, dP);
     currMB->cbp = cbp = currSE.value1;
 
     //============= Transform size flag for INTER MBs =============
@@ -464,11 +464,11 @@ static void read_CBP_and_coeffs_from_NAL_CABAC_420 (sMacroblock* currMB)
       if (dP->bitstream->ei_flag)
       {
         currSE.len = 1;
-        readSyntaxElement_FLC(&currSE, dP->bitstream);
+        readsSyntaxElement_FLC(&currSE, dP->bitstream);
       }
       else
       {
-        dP->readSyntaxElement(currMB, &currSE, dP);
+        dP->readsSyntaxElement(currMB, &currSE, dP);
       }
       currMB->luma_transform_size_8x8_flag = (Boolean) currSE.value1;
     }
@@ -546,7 +546,7 @@ static void read_CBP_and_coeffs_from_NAL_CABAC_420 (sMacroblock* currMB)
 
       for(k = 0; (k < 17) && (level != 0); ++k)
       {
-        dP->readSyntaxElement(currMB, &currSE, dP);
+        dP->readsSyntaxElement(currMB, &currSE, dP);
         level = currSE.value1;
 
         if (level != 0)    /* leave if level == 0 */
@@ -627,7 +627,7 @@ static void read_CBP_and_coeffs_from_NAL_CABAC_420 (sMacroblock* currMB)
 
       for(k = 0; (k < (vidParam->num_cdc_coeff + 1))&&(level!=0);++k)
       {
-        dP->readSyntaxElement(currMB, &currSE, dP);
+        dP->readsSyntaxElement(currMB, &currSE, dP);
         level = currSE.value1;
 
         if (level != 0)
@@ -720,7 +720,7 @@ static void read_CBP_and_coeffs_from_NAL_CABAC_420 (sMacroblock* currMB)
 
           for(k = 0; (k < 16) && (level != 0);++k)
           {
-            dP->readSyntaxElement(currMB, &currSE, dP);
+            dP->readsSyntaxElement(currMB, &currSE, dP);
             level = currSE.value1;
 
             if (level != 0)
@@ -760,7 +760,7 @@ static void read_CBP_and_coeffs_from_NAL_CABAC_420 (sMacroblock* currMB)
 
           for(k=0;(k<16)&&(level!=0);++k)
           {
-            dP->readSyntaxElement(currMB, &currSE, dP);
+            dP->readsSyntaxElement(currMB, &currSE, dP);
             level = currSE.value1;
 
             if (level != 0)
@@ -787,7 +787,7 @@ static void read_CBP_and_coeffs_from_NAL_CABAC_400 (sMacroblock* currMB)
   int k;
   int level;
   int cbp;
-  SyntaxElement currSE;
+  sSyntaxElement currSE;
   sDataPartition *dP = NULL;
   sSlice* currSlice = currMB->p_Slice;
   const byte *partMap = assignSE2partition[currSlice->dp_mode];
@@ -828,7 +828,7 @@ static void read_CBP_and_coeffs_from_NAL_CABAC_400 (sMacroblock* currMB)
       currSE.reading = read_CBP_CABAC;
     }
 
-    dP->readSyntaxElement(currMB, &currSE, dP);
+    dP->readsSyntaxElement(currMB, &currSE, dP);
     currMB->cbp = cbp = currSE.value1;
 
 
@@ -851,11 +851,11 @@ static void read_CBP_and_coeffs_from_NAL_CABAC_400 (sMacroblock* currMB)
       if (dP->bitstream->ei_flag)
       {
         currSE.len = 1;
-        readSyntaxElement_FLC(&currSE, dP->bitstream);
+        readsSyntaxElement_FLC(&currSE, dP->bitstream);
       }
       else
       {
-        dP->readSyntaxElement(currMB, &currSE, dP);
+        dP->readsSyntaxElement(currMB, &currSE, dP);
       }
       currMB->luma_transform_size_8x8_flag = (Boolean) currSE.value1;
     }
@@ -931,7 +931,7 @@ static void read_CBP_and_coeffs_from_NAL_CABAC_400 (sMacroblock* currMB)
 
         for(k = 0; (k < 17) && (level != 0); ++k)
         {
-          dP->readSyntaxElement(currMB, &currSE, dP);
+          dP->readsSyntaxElement(currMB, &currSE, dP);
           level = currSE.value1;
 
           if (level != 0)    /* leave if level == 0 */
@@ -980,7 +980,7 @@ static void read_CBP_and_coeffs_from_NAL_CABAC_444 (sMacroblock* currMB)
   int i, k;
   int level;
   int cbp;
-  SyntaxElement currSE;
+  sSyntaxElement currSE;
   sDataPartition *dP = NULL;
   sSlice* currSlice = currMB->p_Slice;
   const byte *partMap = assignSE2partition[currSlice->dp_mode];
@@ -1034,7 +1034,7 @@ static void read_CBP_and_coeffs_from_NAL_CABAC_444 (sMacroblock* currMB)
       currSE.reading = read_CBP_CABAC;
     }
 
-    dP->readSyntaxElement(currMB, &currSE, dP);
+    dP->readsSyntaxElement(currMB, &currSE, dP);
     currMB->cbp = cbp = currSE.value1;
 
 
@@ -1057,11 +1057,11 @@ static void read_CBP_and_coeffs_from_NAL_CABAC_444 (sMacroblock* currMB)
       if (dP->bitstream->ei_flag)
       {
         currSE.len = 1;
-        readSyntaxElement_FLC(&currSE, dP->bitstream);
+        readsSyntaxElement_FLC(&currSE, dP->bitstream);
       }
       else
       {
-        dP->readSyntaxElement(currMB, &currSE, dP);
+        dP->readsSyntaxElement(currMB, &currSE, dP);
       }
       currMB->luma_transform_size_8x8_flag = (Boolean) currSE.value1;
     }
@@ -1138,7 +1138,7 @@ static void read_CBP_and_coeffs_from_NAL_CABAC_444 (sMacroblock* currMB)
 
         for(k = 0; (k < 17) && (level != 0); ++k)
         {
-          dP->readSyntaxElement(currMB, &currSE, dP);
+          dP->readsSyntaxElement(currMB, &currSE, dP);
           level = currSE.value1;
 
           if (level != 0)    /* leave if level == 0 */
@@ -1220,7 +1220,7 @@ static void read_CBP_and_coeffs_from_NAL_CABAC_444 (sMacroblock* currMB)
 
         for(k=0;(k<17) && (level!=0);++k)
         {
-          dP->readSyntaxElement(currMB, &currSE, dP);
+          dP->readsSyntaxElement(currMB, &currSE, dP);
           level = currSE.value1;
 
           if (level != 0)                     // leave if level == 0
@@ -1275,7 +1275,7 @@ static void read_CBP_and_coeffs_from_NAL_CABAC_422 (sMacroblock* currMB)
   int i,j,k;
   int level;
   int cbp;
-  SyntaxElement currSE;
+  sSyntaxElement currSE;
   sDataPartition *dP = NULL;
   sSlice* currSlice = currMB->p_Slice;
   const byte *partMap = assignSE2partition[currSlice->dp_mode];
@@ -1333,7 +1333,7 @@ static void read_CBP_and_coeffs_from_NAL_CABAC_422 (sMacroblock* currMB)
       currSE.reading = read_CBP_CABAC;
     }
 
-    dP->readSyntaxElement(currMB, &currSE, dP);
+    dP->readsSyntaxElement(currMB, &currSE, dP);
     currMB->cbp = cbp = currSE.value1;
 
 
@@ -1356,11 +1356,11 @@ static void read_CBP_and_coeffs_from_NAL_CABAC_422 (sMacroblock* currMB)
       if (dP->bitstream->ei_flag)
       {
         currSE.len = 1;
-        readSyntaxElement_FLC(&currSE, dP->bitstream);
+        readsSyntaxElement_FLC(&currSE, dP->bitstream);
       }
       else
       {
-        dP->readSyntaxElement(currMB, &currSE, dP);
+        dP->readsSyntaxElement(currMB, &currSE, dP);
       }
       currMB->luma_transform_size_8x8_flag = (Boolean) currSE.value1;
     }
@@ -1437,7 +1437,7 @@ static void read_CBP_and_coeffs_from_NAL_CABAC_422 (sMacroblock* currMB)
 
         for(k = 0; (k < 17) && (level != 0); ++k)
         {
-          dP->readSyntaxElement(currMB, &currSE, dP);
+          dP->readsSyntaxElement(currMB, &currSE, dP);
           level = currSE.value1;
 
           if (level != 0)    /* leave if level == 0 */
@@ -1529,7 +1529,7 @@ static void read_CBP_and_coeffs_from_NAL_CABAC_422 (sMacroblock* currMB)
             else
               currSE.reading = readRunLevel_CABAC;
 
-            dP->readSyntaxElement(currMB, &currSE, dP);
+            dP->readsSyntaxElement(currMB, &currSE, dP);
 
             level = currSE.value1;
 
@@ -1636,7 +1636,7 @@ static void read_CBP_and_coeffs_from_NAL_CABAC_422 (sMacroblock* currMB)
 
             for(k = 0; (k < 16) && (level != 0);++k)
             {
-              dP->readSyntaxElement(currMB, &currSE, dP);
+              dP->readsSyntaxElement(currMB, &currSE, dP);
               level = currSE.value1;
 
               if (level != 0)
@@ -1674,7 +1674,7 @@ static void read_CBP_and_coeffs_from_NAL_CABAC_422 (sMacroblock* currMB)
 
             for(k=0;(k<16)&&(level!=0);++k)
             {
-              dP->readSyntaxElement(currMB, &currSE, dP);
+              dP->readsSyntaxElement(currMB, &currSE, dP);
               level = currSE.value1;
 
               if (level != 0)

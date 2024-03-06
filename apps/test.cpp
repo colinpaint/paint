@@ -945,15 +945,15 @@ public:
       cLog::log (LOGINFO, fmt::format ("read:{} size:{} idr:{}", mFileName, h264ChunkSize, gotIDR));
 
       // input params
-      InputParameters InputParams;
-      memset (&InputParams, 0, sizeof(InputParameters));
-      InputParams.vlcDebug = 1;
-      InputParams.poc_scale = 2;
-      InputParams.poc_gap = 2;
-      InputParams.ref_poc_gap = 2;
-      InputParams.dpb_plus[0] = 1;
-      InputParams.intra_profile_deblocking = 1;
-      OpenDecoder (&InputParams, h264Chunk, h264ChunkSize);
+      sInputParam sInputParams;
+      memset (&sInputParams, 0, sizeof(sInputParam));
+      sInputParams.vlcDebug = 1;
+      sInputParams.poc_scale = 2;
+      sInputParams.poc_gap = 2;
+      sInputParams.ref_poc_gap = 2;
+      sInputParams.dpb_plus[0] = 1;
+      sInputParams.intra_profile_deblocking = 1;
+      OpenDecoder (&sInputParams, h264Chunk, h264ChunkSize);
 
       int ret = 0;
       do {
@@ -1070,15 +1070,15 @@ public:
       //}}}
 
       // input params
-      InputParameters InputParams;
-      memset (&InputParams, 0, sizeof(InputParameters));
-      InputParams.poc_scale = 2;
-      InputParams.poc_gap = 2;
-      InputParams.ref_poc_gap = 2;
-      InputParams.dpb_plus[0] = 1;
-      InputParams.intra_profile_deblocking = 1;
+      sInputParam sInputParams;
+      memset (&sInputParams, 0, sizeof(sInputParam));
+      sInputParams.poc_scale = 2;
+      sInputParams.poc_gap = 2;
+      sInputParams.ref_poc_gap = 2;
+      sInputParams.dpb_plus[0] = 1;
+      sInputParams.intra_profile_deblocking = 1;
 
-      if (OpenDecoder (&InputParams, chunk, fileSize) != DEC_OPEN_NOERR) {
+      if (OpenDecoder (&sInputParams, chunk, fileSize) != DEC_OPEN_NOERR) {
         cLog::log (LOGERROR, "openDecoder failed");
         return;
         }

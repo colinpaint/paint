@@ -37,7 +37,7 @@ static void resetMbs (sMacroblock *currMB) {
 static void setupBuffers (sVidParam* vidParam, int layer_id) {
 
   if (vidParam->last_dec_layer_id != layer_id) {
-    sCodingParams* cps = vidParam->p_EncodePar[layer_id];
+    sCodingParam* cps = vidParam->p_EncodePar[layer_id];
     if (cps->separate_colour_plane_flag) {
       for (int i = 0; i < MAX_PLANE; i++ ) {
         vidParam->mb_data_JV[i] = cps->mb_data_JV[i];
@@ -137,7 +137,7 @@ static void mbAffPostProc (sVidParam* vidParam) {
   }
 //}}}
 //{{{
-static void fill_wp_params (sSlice *currSlice) {
+static void fill_WPParam (sSlice *currSlice) {
 
   if (currSlice->slice_type == B_SLICE) {
     int comp;
@@ -423,7 +423,7 @@ static void init_cur_imgy (sSlice* currSlice, sVidParam* vidParam) {
 //}}}
 
 //{{{
-static int isNewPicture (sPicture* picture, sSlice* currSlice, OldSliceParams* p_old_slice) {
+static int isNewPicture (sPicture* picture, sSlice* currSlice, sOldSliceParam* p_old_slice) {
 
   int result = (NULL == picture);
 
@@ -501,7 +501,7 @@ static void copyDecPicture_JV (sVidParam* vidParam, sPicture* dst, sPicture* src
   }
 //}}}
 //{{{
-static void initPicture (sVidParam* vidParam, sSlice *currSlice, InputParameters *p_Inp) {
+static void initPicture (sVidParam* vidParam, sSlice *currSlice, sInputParam *p_Inp) {
 
   sPicture* picture = NULL;
   sSPSrbsp* active_sps = vidParam->active_sps;
@@ -724,7 +724,7 @@ static void framePostProcessing (sVidParam* vidParam) {}
 static void fieldPostProcessing (sVidParam* vidParam) { vidParam->number /= 2; }
 
 //{{{
-static void copySliceInfo (sSlice* currSlice, OldSliceParams* p_old_slice) {
+static void copySliceInfo (sSlice* currSlice, sOldSliceParam* p_old_slice) {
 
   sVidParam* vidParam = currSlice->vidParam;
 
@@ -834,7 +834,7 @@ static void decodeSlice (sSlice *currSlice, int current_header) {
 
   if ((currSlice->active_pps->weighted_bipred_idc > 0  && (currSlice->slice_type == B_SLICE)) ||
       (currSlice->active_pps->weighted_pred_flag && currSlice->slice_type !=I_SLICE))
-    fill_wp_params (currSlice);
+    fill_WPParam (currSlice);
 
   // decode main slice information
   if ((current_header == SOP || current_header == SOS) && currSlice->ei_flag == 0)
@@ -846,7 +846,7 @@ static int readNewSlice (sSlice* currSlice) {
 
   static sNalu* pendingNalu = NULL;
 
-  InputParameters* p_Inp = currSlice->p_Inp;
+  sInputParam* p_Inp = currSlice->p_Inp;
   sVidParam* vidParam = currSlice->vidParam;
 
   int current_header = 0;
@@ -1099,7 +1099,7 @@ static int readNewSlice (sSlice* currSlice) {
 //}}}
 
 //{{{
-void init_old_slice (OldSliceParams* p_old_slice) {
+void init_old_slice (sOldSliceParam* p_old_slice) {
 
   p_old_slice->field_pic_flag = 0;
   p_old_slice->pps_id = INT_MAX;
@@ -1117,7 +1117,7 @@ void init_old_slice (OldSliceParams* p_old_slice) {
 //{{{
 void calcFrameNum (sVidParam* vidParam, sPicture *p) {
 
-  InputParameters* p_Inp = vidParam->p_Inp;
+  sInputParam* p_Inp = vidParam->p_Inp;
   int psnrPOC = vidParam->active_sps->mb_adaptive_frame_field_flag ? p->poc / (p_Inp->poc_scale) :
                                                                      p->poc / (p_Inp->poc_scale);
   if (psnrPOC == 0)
@@ -1151,7 +1151,7 @@ void pad_dec_picture (sVidParam* vidParam, sPicture* picture)
 //{{{
 void exitPicture (sVidParam* vidParam, sPicture** picture) {
 
-  InputParameters* p_Inp = vidParam->p_Inp;
+  sInputParam* p_Inp = vidParam->p_Inp;
 
   // return if the last picture has already been finished
   if (*picture == NULL ||
@@ -1311,12 +1311,12 @@ void exitPicture (sVidParam* vidParam, sPicture** picture) {
 //}}}
 
 //{{{
-int decode_one_frame (sDecoderParams* pDecoder) {
+int decode_one_frame (sDecoderParam* pDecoder) {
 
   int ret = 0;
 
   sVidParam* vidParam = pDecoder->vidParam;
-  InputParameters* p_Inp = vidParam->p_Inp;
+  sInputParam* p_Inp = vidParam->p_Inp;
 
   // read one picture first
   vidParam->iSliceNumOfCurrPic = 0;

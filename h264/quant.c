@@ -77,7 +77,7 @@ int quant8_org[64] = { //to be use if no q matrix is chosen
  *    Initiate quantization process arrays
 ** *********************************************************************
  */
-void init_qp_process (sCodingParams* cps)
+void init_qp_process (sCodingParam* cps)
 {
   int bitdepth_qp_scale = imax(cps->bitdepth_luma_qp_scale, cps->bitdepth_chroma_qp_scale);
   int i;
@@ -100,7 +100,7 @@ void init_qp_process (sCodingParams* cps)
 }
 //}}}
 //{{{
-void free_qp_matrices (sCodingParams* cps)
+void free_qp_matrices (sCodingParam* cps)
 {
   if (cps->qp_per_matrix != NULL)
   {

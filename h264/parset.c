@@ -48,7 +48,7 @@ static void updateMaxValue (sFrameFormat* format) {
   }
 //}}}
 //{{{
-static void setup_layer_info (sVidParam* vidParam, sSPSrbsp* sps, LayerParameters* p_Lps) {
+static void setup_layer_info (sVidParam* vidParam, sSPSrbsp* sps, sLayerParam* p_Lps) {
 
   int layer_id = p_Lps->layer_id;
   p_Lps->vidParam = vidParam;
@@ -58,7 +58,7 @@ static void setup_layer_info (sVidParam* vidParam, sSPSrbsp* sps, LayerParameter
   }
 //}}}
 //{{{
-static void set_coding_par (sSPSrbsp* sps, sCodingParams* cps) {
+static void set_CodingParam (sSPSrbsp* sps, sCodingParam* cps) {
 
   // maximum vertical motion vector range in luma quarter pixel units
   cps->profile_idc = sps->profile_idc;
@@ -208,7 +208,7 @@ static void reset_format_info (sSPSrbsp* sps, sVidParam* vidParam,
   else
     crop_left = crop_right = crop_top = crop_bottom = 0;
 
-  InputParameters* p_Inp = vidParam->p_Inp;
+  sInputParam* p_Inp = vidParam->p_Inp;
   if ((sps->chroma_format_idc == YUV400) && p_Inp->write_uv) {
     source->width[1] = (source->width[0] >> 1);
     source->width[2] = source->width[1];
@@ -768,7 +768,7 @@ void processSPS (sVidParam* vidParam, sNalu* nalu) {
 //{{{
 void activateSPS (sVidParam* vidParam, sSPSrbsp* sps) {
 
-  InputParameters* p_Inp = vidParam->p_Inp;
+  sInputParam* p_Inp = vidParam->p_Inp;
 
   if (vidParam->active_sps != sps) {
     if (vidParam->picture) // this may only happen on slice loss
@@ -776,10 +776,10 @@ void activateSPS (sVidParam* vidParam, sSPSrbsp* sps) {
     vidParam->active_sps = sps;
 
     if (vidParam->dpb_layer_id==0 && is_BL_profile(sps->profile_idc) && !vidParam->p_Dpb_layer[0]->init_done) {
-      set_coding_par (sps, vidParam->p_EncodePar[0]);
+      set_CodingParam (sps, vidParam->p_EncodePar[0]);
       setup_layer_info ( vidParam, sps, vidParam->p_LayerPar[0]);
       }
-    set_global_coding_par(vidParam, vidParam->p_EncodePar[vidParam->dpb_layer_id]);
+    set_global_CodingParam(vidParam, vidParam->p_EncodePar[vidParam->dpb_layer_id]);
 
     init_global_buffers (vidParam, 0);
     if (!vidParam->no_output_of_prior_pics_flag)
@@ -1114,12 +1114,12 @@ void useParameterSet (sSlice* currSlice) {
   if (pps->entropy_coding_mode_flag == (Boolean)CAVLC) {
     currSlice->nal_startcode_follows = uvlc_startcode_follows;
     for (int i = 0; i < 3; i++)
-      currSlice->partArr[i].readSyntaxElement = readSyntaxElement_UVLC;
+      currSlice->partArr[i].readsSyntaxElement = readsSyntaxElement_UVLC;
     }
   else {
     currSlice->nal_startcode_follows = cabac_startcode_follows;
     for (int i = 0; i < 3; i++)
-      currSlice->partArr[i].readSyntaxElement = readSyntaxElement_CABAC;
+      currSlice->partArr[i].readsSyntaxElement = readsSyntaxElement_CABAC;
     }
   vidParam->type = currSlice->slice_type;
   }

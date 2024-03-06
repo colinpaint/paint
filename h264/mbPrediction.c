@@ -54,7 +54,7 @@ int mb_pred_intra4x4 (sMacroblock* currMB, sColorPlane curPlane, sPixel** curPix
       // -------------------------------------------
       currMB->itrans_4x4  (currMB, curPlane, ioff, joff);
 
-      copy_image_data_4x4(&curPixel[j_pos], &currSlice->mb_rec[curPlane][joff], i_pos, ioff);
+      copy_Image_4x4(&curPixel[j_pos], &currSlice->mb_rec[curPlane][joff], i_pos, ioff);
     }
   }
 
@@ -112,7 +112,7 @@ int mb_pred_intra8x8 (sMacroblock* currMB, sColorPlane curPlane, sPixel** curPix
     else
       icopy8x8(currMB, curPlane, ioff,joff);
 
-    copy_image_data_8x8(&curPixel[currMB->pix_y + joff], &currSlice->mb_rec[curPlane][joff], currMB->pix_x + ioff, ioff);
+    copy_Image_8x8(&curPixel[currMB->pix_y + joff], &currSlice->mb_rec[curPlane][joff], currMB->pix_x + ioff, ioff);
   }
   // chroma decoding** *****************************************************
   if ((picture->chroma_format_idc != YUV400) && (picture->chroma_format_idc != YUV444))
@@ -224,13 +224,13 @@ int mb_pred_skip (sMacroblock* currMB, sColorPlane curPlane, sPixel** curPixel, 
 
   perform_mc(currMB, curPlane, picture, LIST_0, 0, 0, MB_BLOCK_SIZE, MB_BLOCK_SIZE);
 
-  copy_image_data_16x16(&curPixel[currMB->pix_y], currSlice->mb_pred[curPlane], currMB->pix_x, 0);
+  copy_Image_16x16(&curPixel[currMB->pix_y], currSlice->mb_pred[curPlane], currMB->pix_x, 0);
 
   if ((picture->chroma_format_idc != YUV400) && (picture->chroma_format_idc != YUV444))
   {
 
-    copy_image_data(&picture->imgUV[0][currMB->pix_c_y], currSlice->mb_pred[1], currMB->pix_c_x, 0, vidParam->mb_size[1][0], vidParam->mb_size[1][1]);
-    copy_image_data(&picture->imgUV[1][currMB->pix_c_y], currSlice->mb_pred[2], currMB->pix_c_x, 0, vidParam->mb_size[1][0], vidParam->mb_size[1][1]);
+    copy_Image(&picture->imgUV[0][currMB->pix_c_y], currSlice->mb_pred[1], currMB->pix_c_x, 0, vidParam->mb_size[1][0], vidParam->mb_size[1][1]);
+    copy_Image(&picture->imgUV[1][currMB->pix_c_y], currSlice->mb_pred[2], currMB->pix_c_x, 0, vidParam->mb_size[1][0], vidParam->mb_size[1][1]);
   }
   return 1;
 }
@@ -538,12 +538,12 @@ int mb_pred_b_d8x8temporal (sMacroblock* currMB, sColorPlane curPlane, sPixel** 
 
   if (currMB->cbp == 0)
   {
-    copy_image_data_16x16(&curPixel[currMB->pix_y], currSlice->mb_pred[curPlane], currMB->pix_x, 0);
+    copy_Image_16x16(&curPixel[currMB->pix_y], currSlice->mb_pred[curPlane], currMB->pix_x, 0);
 
     if ((picture->chroma_format_idc != YUV400) && (picture->chroma_format_idc != YUV444))
     {
-      copy_image_data(&picture->imgUV[0][currMB->pix_c_y], currSlice->mb_pred[1], currMB->pix_c_x, 0, vidParam->mb_size[1][0], vidParam->mb_size[1][1]);
-      copy_image_data(&picture->imgUV[1][currMB->pix_c_y], currSlice->mb_pred[2], currMB->pix_c_x, 0, vidParam->mb_size[1][0], vidParam->mb_size[1][1]);
+      copy_Image(&picture->imgUV[0][currMB->pix_c_y], currSlice->mb_pred[1], currMB->pix_c_x, 0, vidParam->mb_size[1][0], vidParam->mb_size[1][1]);
+      copy_Image(&picture->imgUV[1][currMB->pix_c_y], currSlice->mb_pred[2], currMB->pix_c_x, 0, vidParam->mb_size[1][0], vidParam->mb_size[1][1]);
     }
   }
   else
@@ -663,12 +663,12 @@ int mb_pred_b_d4x4temporal (sMacroblock* currMB, sColorPlane curPlane, sPixel** 
 
   if (currMB->cbp == 0)
   {
-    copy_image_data_16x16(&curPixel[currMB->pix_y], currSlice->mb_pred[curPlane], currMB->pix_x, 0);
+    copy_Image_16x16(&curPixel[currMB->pix_y], currSlice->mb_pred[curPlane], currMB->pix_x, 0);
 
     if ((picture->chroma_format_idc != YUV400) && (picture->chroma_format_idc != YUV444))
     {
-      copy_image_data(&picture->imgUV[0][currMB->pix_c_y], currSlice->mb_pred[1], currMB->pix_c_x, 0, vidParam->mb_size[1][0], vidParam->mb_size[1][1]);
-      copy_image_data(&picture->imgUV[1][currMB->pix_c_y], currSlice->mb_pred[2], currMB->pix_c_x, 0, vidParam->mb_size[1][0], vidParam->mb_size[1][1]);
+      copy_Image(&picture->imgUV[0][currMB->pix_c_y], currSlice->mb_pred[1], currMB->pix_c_x, 0, vidParam->mb_size[1][0], vidParam->mb_size[1][1]);
+      copy_Image(&picture->imgUV[1][currMB->pix_c_y], currSlice->mb_pred[2], currMB->pix_c_x, 0, vidParam->mb_size[1][0], vidParam->mb_size[1][1]);
     }
   }
   else
@@ -889,12 +889,12 @@ int mb_pred_b_d8x8spatial (sMacroblock* currMB, sColorPlane curPlane, sPixel** c
 
   if (currMB->cbp == 0)
   {
-    copy_image_data_16x16(&curPixel[currMB->pix_y], currSlice->mb_pred[curPlane], currMB->pix_x, 0);
+    copy_Image_16x16(&curPixel[currMB->pix_y], currSlice->mb_pred[curPlane], currMB->pix_x, 0);
 
     if ((picture->chroma_format_idc != YUV400) && (picture->chroma_format_idc != YUV444))
      {
-      copy_image_data(&picture->imgUV[0][currMB->pix_c_y], currSlice->mb_pred[1], currMB->pix_c_x, 0, vidParam->mb_size[1][0], vidParam->mb_size[1][1]);
-      copy_image_data(&picture->imgUV[1][currMB->pix_c_y], currSlice->mb_pred[2], currMB->pix_c_x, 0, vidParam->mb_size[1][0], vidParam->mb_size[1][1]);
+      copy_Image(&picture->imgUV[0][currMB->pix_c_y], currSlice->mb_pred[1], currMB->pix_c_x, 0, vidParam->mb_size[1][0], vidParam->mb_size[1][1]);
+      copy_Image(&picture->imgUV[1][currMB->pix_c_y], currSlice->mb_pred[2], currMB->pix_c_x, 0, vidParam->mb_size[1][0], vidParam->mb_size[1][1]);
     }
   }
   else
@@ -1077,12 +1077,12 @@ int mb_pred_b_d4x4spatial (sMacroblock* currMB, sColorPlane curPlane, sPixel** c
 
   if (currMB->cbp == 0)
   {
-    copy_image_data_16x16(&curPixel[currMB->pix_y], currSlice->mb_pred[curPlane], currMB->pix_x, 0);
+    copy_Image_16x16(&curPixel[currMB->pix_y], currSlice->mb_pred[curPlane], currMB->pix_x, 0);
 
     if ((picture->chroma_format_idc != YUV400) && (picture->chroma_format_idc != YUV444))
     {
-      copy_image_data(&picture->imgUV[0][currMB->pix_c_y], currSlice->mb_pred[1], currMB->pix_c_x, 0, vidParam->mb_size[1][0], vidParam->mb_size[1][1]);
-      copy_image_data(&picture->imgUV[1][currMB->pix_c_y], currSlice->mb_pred[2], currMB->pix_c_x, 0, vidParam->mb_size[1][0], vidParam->mb_size[1][1]);
+      copy_Image(&picture->imgUV[0][currMB->pix_c_y], currSlice->mb_pred[1], currMB->pix_c_x, 0, vidParam->mb_size[1][0], vidParam->mb_size[1][1]);
+      copy_Image(&picture->imgUV[1][currMB->pix_c_y], currSlice->mb_pred[2], currMB->pix_c_x, 0, vidParam->mb_size[1][0], vidParam->mb_size[1][1]);
     }
   }
   else

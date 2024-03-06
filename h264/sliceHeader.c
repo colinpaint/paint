@@ -1238,7 +1238,7 @@ static void ref_pic_list_reordering (sSlice* currSlice) {
   }
 //}}}
 //{{{
-static void reset_wp_params (sSlice* currSlice) {
+static void reset_WPParam (sSlice* currSlice) {
 
   for (int i = 0; i < MAX_REFERENCE_PICTURES; i++) {
     for (int comp = 0; comp < 3; comp++) {
@@ -1274,7 +1274,7 @@ static void pred_weight_table (sSlice* currSlice) {
       currSlice->chroma_log2_weight_denom ? 1<<(currSlice->chroma_log2_weight_denom - 1) : 0;
     }
 
-  reset_wp_params (currSlice);
+  reset_WPParam (currSlice);
 
   for (int i = 0; i < currSlice->num_ref_idx_active[LIST_0]; i++) {
     luma_weight_flag_l0 = read_u_1 ("SLC luma_weight_flag_l0", currStream);
@@ -1730,7 +1730,7 @@ void firstPartOfSliceHeader (sSlice* currSlice) {
 void restOfSliceHeader (sSlice* currSlice) {
 
   sVidParam* vidParam = currSlice->vidParam;
-  InputParameters* p_Inp = currSlice->p_Inp;
+  sInputParam* p_Inp = currSlice->p_Inp;
   sSPSrbsp* active_sps = vidParam->active_sps;
 
   byte dP_nr = assignSE2partition[currSlice->dp_mode][SE_HEADER];

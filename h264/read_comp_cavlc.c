@@ -8,7 +8,7 @@
 #include "mbAccess.h"
 //}}}
 extern void  check_dp_neighbors (sMacroblock* currMB);
-extern void  read_delta_quant (SyntaxElement* currSE, sDataPartition *dP, sMacroblock* currMB, const byte *partMap, int type);
+extern void  read_delta_quant (sSyntaxElement* currSE, sDataPartition *dP, sMacroblock* currMB, const byte *partMap, int type);
 
 //{{{
 static int predict_nnz (sMacroblock* currMB, int block_type, int i,int j)
@@ -161,7 +161,7 @@ void read_coeff_4x4_CAVLC (sMacroblock* currMB,
   sSlice* currSlice = currMB->p_Slice;
   sVidParam* vidParam = currMB->vidParam;
   int mb_nr = currMB->mbAddrX;
-  SyntaxElement currSE;
+  sSyntaxElement currSE;
   sDataPartition *dP;
   const byte *partMap = assignSE2partition[currSlice->dp_mode];
   Bitstream* currStream;
@@ -221,7 +221,7 @@ void read_coeff_4x4_CAVLC (sMacroblock* currMB,
 
     currSE.value1 = (nnz < 2) ? 0 : ((nnz < 4) ? 1 : ((nnz < 8) ? 2 : 3));
 
-    readSyntaxElement_NumCoeffTrailingOnes(&currSE, currStream, type);
+    readsSyntaxElement_NumCoeffTrailingOnes(&currSE, currStream, type);
 
     numcoeff        =  currSE.value1;
     numtrailingones =  currSE.value2;
@@ -231,7 +231,7 @@ void read_coeff_4x4_CAVLC (sMacroblock* currMB,
   else
   {
     // chroma DC
-    readSyntaxElement_NumCoeffTrailingOnesChromaDC(vidParam, &currSE, currStream);
+    readsSyntaxElement_NumCoeffTrailingOnesChromaDC(vidParam, &currSE, currStream);
 
     numcoeff        =  currSE.value1;
     numtrailingones =  currSE.value2;
@@ -248,7 +248,7 @@ void read_coeff_4x4_CAVLC (sMacroblock* currMB,
     if (numtrailingones)
     {
       currSE.len = numtrailingones;
-      readSyntaxElement_FLC (&currSE, currStream);
+      readsSyntaxElement_FLC (&currSE, currStream);
 
       code = currSE.inf;
       ntr = numtrailingones;
@@ -267,9 +267,9 @@ void read_coeff_4x4_CAVLC (sMacroblock* currMB,
     {
 
       if (vlcnum == 0)
-        readSyntaxElement_Level_VLC0(&currSE, currStream);
+        readsSyntaxElement_Level_VLC0(&currSE, currStream);
       else
-        readSyntaxElement_Level_VLCN(&currSE, vlcnum, currStream);
+        readsSyntaxElement_Level_VLCN(&currSE, vlcnum, currStream);
 
       if (level_two_or_higher)
       {
@@ -297,9 +297,9 @@ void read_coeff_4x4_CAVLC (sMacroblock* currMB,
       currSE.value1 = vlcnum;
 
       if (cdc)
-        readSyntaxElement_TotalZerosChromaDC(vidParam, &currSE, currStream);
+        readsSyntaxElement_TotalZerosChromaDC(vidParam, &currSE, currStream);
       else
-        readSyntaxElement_TotalZeros(&currSE, currStream);
+        readsSyntaxElement_TotalZeros(&currSE, currStream);
 
       totzeros = currSE.value1;
     }
@@ -320,7 +320,7 @@ void read_coeff_4x4_CAVLC (sMacroblock* currMB,
         vlcnum = imin(zerosleft - 1, RUNBEFORE_NUM_M1);
 
         currSE.value1 = vlcnum;
-        readSyntaxElement_Run(&currSE, currStream);
+        readsSyntaxElement_Run(&currSE, currStream);
         runarr[i] = currSE.value1;
 
         zerosleft -= runarr[i];
@@ -340,7 +340,7 @@ void read_coeff_4x4_CAVLC_444 (sMacroblock* currMB,
   sSlice* currSlice = currMB->p_Slice;
   sVidParam* vidParam = currMB->vidParam;
   int mb_nr = currMB->mbAddrX;
-  SyntaxElement currSE;
+  sSyntaxElement currSE;
   sDataPartition *dP;
   const byte *partMap = assignSE2partition[currSlice->dp_mode];
   Bitstream* currStream;
@@ -441,7 +441,7 @@ void read_coeff_4x4_CAVLC_444 (sMacroblock* currMB,
 
     currSE.value1 = (nnz < 2) ? 0 : ((nnz < 4) ? 1 : ((nnz < 8) ? 2 : 3));
 
-    readSyntaxElement_NumCoeffTrailingOnes(&currSE, currStream, type);
+    readsSyntaxElement_NumCoeffTrailingOnes(&currSE, currStream, type);
 
     numcoeff        =  currSE.value1;
     numtrailingones =  currSE.value2;
@@ -456,7 +456,7 @@ void read_coeff_4x4_CAVLC_444 (sMacroblock* currMB,
   else
   {
     // chroma DC
-    readSyntaxElement_NumCoeffTrailingOnesChromaDC(vidParam, &currSE, currStream);
+    readsSyntaxElement_NumCoeffTrailingOnesChromaDC(vidParam, &currSE, currStream);
 
     numcoeff        =  currSE.value1;
     numtrailingones =  currSE.value2;
@@ -473,7 +473,7 @@ void read_coeff_4x4_CAVLC_444 (sMacroblock* currMB,
     if (numtrailingones)
     {
       currSE.len = numtrailingones;
-      readSyntaxElement_FLC (&currSE, currStream);
+      readsSyntaxElement_FLC (&currSE, currStream);
 
       code = currSE.inf;
       ntr = numtrailingones;
@@ -491,9 +491,9 @@ void read_coeff_4x4_CAVLC_444 (sMacroblock* currMB,
     for (k = numcoeff - 1 - numtrailingones; k >= 0; k--)
     {
       if (vlcnum == 0)
-        readSyntaxElement_Level_VLC0(&currSE, currStream);
+        readsSyntaxElement_Level_VLC0(&currSE, currStream);
       else
-        readSyntaxElement_Level_VLCN(&currSE, vlcnum, currStream);
+        readsSyntaxElement_Level_VLCN(&currSE, vlcnum, currStream);
 
       if (level_two_or_higher)
       {
@@ -521,9 +521,9 @@ void read_coeff_4x4_CAVLC_444 (sMacroblock* currMB,
       currSE.value1 = vlcnum;
 
       if (cdc)
-        readSyntaxElement_TotalZerosChromaDC(vidParam, &currSE, currStream);
+        readsSyntaxElement_TotalZerosChromaDC(vidParam, &currSE, currStream);
       else
-        readSyntaxElement_TotalZeros(&currSE, currStream);
+        readsSyntaxElement_TotalZeros(&currSE, currStream);
 
       totzeros = currSE.value1;
     }
@@ -544,7 +544,7 @@ void read_coeff_4x4_CAVLC_444 (sMacroblock* currMB,
         vlcnum = imin(zerosleft - 1, RUNBEFORE_NUM_M1);
 
         currSE.value1 = vlcnum;
-        readSyntaxElement_Run(&currSE, currStream);
+        readsSyntaxElement_Run(&currSE, currStream);
         runarr[i] = currSE.value1;
 
         zerosleft -= runarr[i];
@@ -891,7 +891,7 @@ static void read_CBP_and_coeffs_from_NAL_CAVLC_400 (sMacroblock* currMB)
   int k;
   int mb_nr = currMB->mbAddrX;
   int cbp;
-  SyntaxElement currSE;
+  sSyntaxElement currSE;
   sDataPartition *dP = NULL;
   sSlice* currSlice = currMB->p_Slice;
   const byte *partMap = assignSE2partition[currSlice->dp_mode];
@@ -928,7 +928,7 @@ static void read_CBP_and_coeffs_from_NAL_CAVLC_400 (sMacroblock* currMB)
       ? currSlice->linfo_cbp_intra
       : currSlice->linfo_cbp_inter;
 
-    dP->readSyntaxElement(currMB, &currSE, dP);
+    dP->readsSyntaxElement(currMB, &currSE, dP);
     currMB->cbp = cbp = currSE.value1;
 
 
@@ -948,7 +948,7 @@ static void read_CBP_and_coeffs_from_NAL_CAVLC_400 (sMacroblock* currMB)
 
       // read CAVLC transform_size_8x8_flag
       currSE.len = 1;
-      readSyntaxElement_FLC(&currSE, dP->bitstream);
+      readsSyntaxElement_FLC(&currSE, dP->bitstream);
 
       currMB->luma_transform_size_8x8_flag = (Boolean) currSE.value1;
     }
@@ -1059,7 +1059,7 @@ static void read_CBP_and_coeffs_from_NAL_CAVLC_422 (sMacroblock* currMB)
   int i,j,k;
   int mb_nr = currMB->mbAddrX;
   int cbp;
-  SyntaxElement currSE;
+  sSyntaxElement currSE;
   sDataPartition *dP = NULL;
   sSlice* currSlice = currMB->p_Slice;
   const byte *partMap = assignSE2partition[currSlice->dp_mode];
@@ -1104,7 +1104,7 @@ static void read_CBP_and_coeffs_from_NAL_CAVLC_422 (sMacroblock* currMB)
       ? currSlice->linfo_cbp_intra
       : currSlice->linfo_cbp_inter;
 
-    dP->readSyntaxElement(currMB, &currSE, dP);
+    dP->readsSyntaxElement(currMB, &currSE, dP);
     currMB->cbp = cbp = currSE.value1;
 
 
@@ -1124,7 +1124,7 @@ static void read_CBP_and_coeffs_from_NAL_CAVLC_422 (sMacroblock* currMB)
 
       // read CAVLC transform_size_8x8_flag
       currSE.len = 1;
-      readSyntaxElement_FLC(&currSE, dP->bitstream);
+      readsSyntaxElement_FLC(&currSE, dP->bitstream);
 
       currMB->luma_transform_size_8x8_flag = (Boolean) currSE.value1;
     }
@@ -1400,7 +1400,7 @@ static void read_CBP_and_coeffs_from_NAL_CAVLC_444 (sMacroblock* currMB)
   int i,k;
   int mb_nr = currMB->mbAddrX;
   int cbp;
-  SyntaxElement currSE;
+  sSyntaxElement currSE;
   sDataPartition *dP = NULL;
   sSlice* currSlice = currMB->p_Slice;
   const byte *partMap = assignSE2partition[currSlice->dp_mode];
@@ -1439,7 +1439,7 @@ static void read_CBP_and_coeffs_from_NAL_CAVLC_444 (sMacroblock* currMB)
       ? currSlice->linfo_cbp_intra
       : currSlice->linfo_cbp_inter;
 
-    dP->readSyntaxElement(currMB, &currSE, dP);
+    dP->readsSyntaxElement(currMB, &currSE, dP);
     currMB->cbp = cbp = currSE.value1;
 
 
@@ -1459,7 +1459,7 @@ static void read_CBP_and_coeffs_from_NAL_CAVLC_444 (sMacroblock* currMB)
 
       // read CAVLC transform_size_8x8_flag
       currSE.len = 1;
-      readSyntaxElement_FLC(&currSE, dP->bitstream);
+      readsSyntaxElement_FLC(&currSE, dP->bitstream);
 
       currMB->luma_transform_size_8x8_flag = (Boolean) currSE.value1;
     }
@@ -1627,7 +1627,7 @@ static void read_CBP_and_coeffs_from_NAL_CAVLC_420 (sMacroblock* currMB)
   int i,j,k;
   int mb_nr = currMB->mbAddrX;
   int cbp;
-  SyntaxElement currSE;
+  sSyntaxElement currSE;
   sDataPartition *dP = NULL;
   sSlice* currSlice = currMB->p_Slice;
   const byte *partMap = assignSE2partition[currSlice->dp_mode];
@@ -1672,7 +1672,7 @@ static void read_CBP_and_coeffs_from_NAL_CAVLC_420 (sMacroblock* currMB)
       ? currSlice->linfo_cbp_intra
       : currSlice->linfo_cbp_inter;
 
-    dP->readSyntaxElement(currMB, &currSE, dP);
+    dP->readsSyntaxElement(currMB, &currSE, dP);
     currMB->cbp = cbp = currSE.value1;
 
     //============= Transform size flag for INTER MBs =============
@@ -1691,7 +1691,7 @@ static void read_CBP_and_coeffs_from_NAL_CAVLC_420 (sMacroblock* currMB)
 
       // read CAVLC transform_size_8x8_flag
       currSE.len = 1;
-      readSyntaxElement_FLC(&currSE, dP->bitstream);
+      readsSyntaxElement_FLC(&currSE, dP->bitstream);
 
       currMB->luma_transform_size_8x8_flag = (Boolean) currSE.value1;
     }

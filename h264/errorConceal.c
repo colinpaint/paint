@@ -94,7 +94,7 @@ void reset_ec_flags (sVidParam* vidParam) {
 //}}}
 
 //{{{
-int get_concealed_element (sVidParam* vidParam, SyntaxElement* sym) {
+int get_concealed_element (sVidParam* vidParam, sSyntaxElement* sym) {
 
   if (vidParam->ec_flag[sym->type] == NO_EC)
     return NO_EC;

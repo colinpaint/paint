@@ -69,7 +69,7 @@ static void clearPicture (sVidParam* vidParam, sPicture* p) {
 //{{{
 static void writeOutPicture (sVidParam* vidParam, sPicture* p) {
 
-  InputParameters* p_Inp = vidParam->p_Inp;
+  sInputParam* p_Inp = vidParam->p_Inp;
   sDecodedPicList* pDecPic;
 
   static const int SubWidthC  [4]= { 1, 2, 2, 1};

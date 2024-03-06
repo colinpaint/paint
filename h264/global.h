@@ -87,8 +87,8 @@ typedef BiContextType *BiContextTypePtr;
 //}}}
 
 struct storablePicture;
-struct datapartition_dec;
-struct syntaxelement_dec;
+struct DataPartition;
+struct SyntaxElement;
 struct pic_motion_params;
 struct pic_motion_params_old;
 //{{{  MotionInfoContexts
@@ -147,8 +147,8 @@ typedef struct cbp_s {
 //! sMacroblock
 typedef struct macroblock_dec {
   struct slice*     p_Slice;  // pointer to the current slice
-  struct video_par* vidParam;    // pointer to sVidParam
-  struct inp_par*   p_Inp;
+  struct VidParam* vidParam;    // pointer to sVidParam
+  struct InputParam*   p_Inp;
 
   int mbAddrX;                // current MB address
   int mbAddrA;
@@ -227,10 +227,10 @@ typedef struct macroblock_dec {
     sMotionVector *pmv, short ref_frame, struct pic_motion_params** mv_info, int list, int mb_x, int mb_y, int blockshape_x, int blockshape_y);
 
   int  (*read_and_store_CBP_block_bit)  (struct macroblock_dec *currMB, DecodingEnvironmentPtr  dep_dp, int type);
-  char (*readRefPictureIdx)             (struct macroblock_dec *currMB, struct syntaxelement_dec *currSE, struct datapartition_dec *dP, char b8mode, int list);
+  char (*readRefPictureIdx)             (struct macroblock_dec *currMB, struct SyntaxElement *currSE, struct DataPartition *dP, char b8mode, int list);
 
-  void (*read_comp_coeff_4x4_CABAC)     (struct macroblock_dec *currMB, struct syntaxelement_dec *currSE, sColorPlane pl, int (*InvLevelScale4x4)[4], int qp_per, int cbp);
-  void (*read_comp_coeff_8x8_CABAC)     (struct macroblock_dec *currMB, struct syntaxelement_dec *currSE, sColorPlane pl);
+  void (*read_comp_coeff_4x4_CABAC)     (struct macroblock_dec *currMB, struct SyntaxElement *currSE, sColorPlane pl, int (*InvLevelScale4x4)[4], int qp_per, int cbp);
+  void (*read_comp_coeff_8x8_CABAC)     (struct macroblock_dec *currMB, struct SyntaxElement *currSE, sColorPlane pl);
 
   void (*read_comp_coeff_4x4_CAVLC)     (struct macroblock_dec *currMB, sColorPlane pl, int (*InvLevelScale4x4)[4], int qp_per, int cbp, byte** nzcoeff);
   void (*read_comp_coeff_8x8_CAVLC)     (struct macroblock_dec *currMB, sColorPlane pl, int (*InvLevelScale8x8)[8], int qp_per, int cbp, byte** nzcoeff);
@@ -238,7 +238,7 @@ typedef struct macroblock_dec {
 //}}}
 //{{{
 //! Syntaxelement
-typedef struct syntaxelement_dec {
+typedef struct SyntaxElement {
   int           type;                  //!< type of syntax element for data part.
   int           value1;                //!< numerical value of syntax element
   int           value2;                //!< for blocked symbols, e.g. run/level
@@ -251,8 +251,8 @@ typedef struct syntaxelement_dec {
   //! for mapping of CAVLC to syntaxElement
   void  (*mapping)(int len, int info, int *value1, int *value2);
   //! used for CABAC: refers to actual coding method of each individual syntax element type
-  void  (*reading)(struct macroblock_dec *currMB, struct syntaxelement_dec *, DecodingEnvironmentPtr);
-  } SyntaxElement;
+  void  (*reading)(struct macroblock_dec *currMB, struct SyntaxElement *, DecodingEnvironmentPtr);
+  } sSyntaxElement;
 //}}}
 //{{{
 //! Bitstream
@@ -271,24 +271,24 @@ struct bit_stream_dec {
   };
 //}}}
 //{{{  typedef struct sDataPartition
-typedef struct datapartition_dec {
+typedef struct DataPartition {
   Bitstream           *bitstream;
   DecodingEnvironment de_cabac;
 
-  int     (*readSyntaxElement)(struct macroblock_dec *currMB, struct syntaxelement_dec *, struct datapartition_dec *);
+  int     (*readsSyntaxElement)(struct macroblock_dec *currMB, struct SyntaxElement *, struct DataPartition *);
           /*!< virtual function;
                actual method depends on chosen data partition and
                entropy coding method  */
   } sDataPartition;
 //}}}
 //{{{
-typedef struct wp_params {
+typedef struct WPParam {
   short weight[3];
   short offset[3];
-  } WPParams;
+  } sWPParam;
 //}}}
 //{{{
-typedef struct inp_par {
+typedef struct InputParam {
   int ref_offset;
   int poc_scale;
   int write_uv;
@@ -311,10 +311,10 @@ typedef struct inp_par {
   int dpb_plus[2];
 
   int vlcDebug;
-  } InputParameters;
+  } sInputParam;
 //}}}
 //{{{
-typedef struct image_data {
+typedef struct Image {
   sFrameFormat format;                  // image format
 
   sPixel** frm_data[MAX_PLANE];        // Frame Data
@@ -328,10 +328,10 @@ typedef struct image_data {
   int frm_stride[MAX_PLANE];
   int top_stride[MAX_PLANE];
   int bot_stride[MAX_PLANE];
-  } ImageData;
+  } sImage;
 //}}}
 //{{{
-typedef struct old_slice_par {
+typedef struct OldSliceParam {
   unsigned field_pic_flag;
   unsigned frame_num;
   int      nal_ref_idc;
@@ -343,12 +343,12 @@ typedef struct old_slice_par {
   int      idr_pic_id;
   int      pps_id;
   int      layer_id;
-  } OldSliceParams;
+  } sOldSliceParam;
 //}}}
 //{{{
 typedef struct slice {
-  struct video_par* vidParam;
-  struct inp_par* p_Inp;
+  struct VidParam* vidParam;
+  struct InputParam* p_Inp;
   sPPSrbsp* active_pps;
   sSPSrbsp* active_sps;
 
@@ -478,7 +478,7 @@ typedef struct slice {
   unsigned short luma_log2_weight_denom;
   unsigned short chroma_log2_weight_denom;
 
-  WPParams** wp_params; // wp parameters in [list][index]
+  sWPParam** WPParam; // wp parameters in [list][index]
   int*** wp_weight;  // weight in [list][index][component] order
   int*** wp_offset;  // offset in [list][index][component] order
   int**** wbp_weight; //weight in [list][fw_index][bw_index][component] order
@@ -498,7 +498,7 @@ typedef struct slice {
   char  chroma_vector_adjustment[6][32];
   void (*read_CBP_and_coeffs_from_NAL) (sMacroblock *currMB);
   int  (*decode_one_component     )    (sMacroblock *currMB, sColorPlane curPlane, sPixel** curPixel, struct storablePicture* picture);
-  int  (*readSlice                )    (struct video_par *, struct inp_par *);
+  int  (*readSlice                )    (struct VidParam *, struct InputParam *);
   int  (*nal_startcode_follows    )    (struct slice*, int );
   void (*read_motion_info_from_NAL)    (sMacroblock *currMB);
   void (*read_one_macroblock      )    (sMacroblock *currMB);
@@ -517,7 +517,7 @@ typedef struct slice {
   } sSlice;
 //}}}
 //{{{
-typedef struct decodedpic_t {
+typedef struct DecodedPicList {
   int bValid;                 // 0: invalid, 1: valid, 3: valid for 3D output;
   int iViewId;                // -1: single view, >=0 multiview[VIEW1|VIEW0];
   int iPOC;
@@ -537,11 +537,11 @@ typedef struct decodedpic_t {
   int iSkipPicNum;
   int iBufSize;
 
-  struct decodedpic_t *pNext;
+  struct DecodedPicList *pNext;
   } sDecodedPicList;
 //}}}
 //{{{
-typedef struct coding_par {
+typedef struct CodingParam {
   int layer_id;
   int profile_idc;
   int width;
@@ -606,20 +606,20 @@ typedef struct coding_par {
   int** siblock_JV[MAX_PLANE];
   int* qp_per_matrix;
   int* qp_rem_matrix;
-  } sCodingParams;
+  } sCodingParam;
 //}}}
 //{{{
-typedef struct layer_par {
+typedef struct LayerParam {
   int layer_id;
-  struct video_par* vidParam;
-  sCodingParams* p_Cps;
+  struct VidParam* vidParam;
+  sCodingParam* p_Cps;
   sSPSrbsp* p_SPS;
   struct decoded_picture_buffer* dpb;
-  } LayerParameters;
+  } sLayerParam;
 //}}}
 //{{{
-typedef struct video_par {
-  struct inp_par* p_Inp;
+typedef struct VidParam {
+  struct InputParam* p_Inp;
 
   sPPSrbsp* active_pps;
   sSPSrbsp* active_sps;
@@ -628,11 +628,11 @@ typedef struct video_par {
   sPPSrbsp PicParSet[MAXPPS];
 
   struct decoded_picture_buffer* p_Dpb_layer[MAX_NUM_DPB_LAYERS];
-  sCodingParams* p_EncodePar[MAX_NUM_DPB_LAYERS];
-  LayerParameters* p_LayerPar[MAX_NUM_DPB_LAYERS];
+  sCodingParam* p_EncodePar[MAX_NUM_DPB_LAYERS];
+  sLayerParam* p_LayerPar[MAX_NUM_DPB_LAYERS];
 
   struct sei_params* p_SEI;
-  struct old_slice_par* old_slice;
+  struct OldSliceParam* old_slice;
   int number;                       //frame number
 
   // current picture property;
@@ -745,7 +745,7 @@ typedef struct video_par {
   struct object_buffer* erc_object_list;
   struct ercVariables_s* erc_errorVar;
   int erc_mvperMB;
-  struct video_par* erc_img;
+  struct VidParam* erc_img;
   int ec_flag[SE_MAX_ELEMENTS];  // array to set errorconcealment
 
   struct frameStore* out_buffer;
@@ -771,7 +771,7 @@ typedef struct video_par {
   void (*EdgeLoopChromaVer)(sPixel** Img, byte *Strength, sMacroblock *MbQ, int edge, int uv, struct storablePicture *p);
   void (*EdgeLoopChromaHor)(sPixel** Img, byte *Strength, sMacroblock *MbQ, int edge, int uv, struct storablePicture *p);
 
-  ImageData tempData3;
+  sImage tempData3;
   sDecodedPicList* pDecOuputPic;
   int iDeblockMode;  //0: deblock in picture, 1: deblock in slice;
 
@@ -839,12 +839,10 @@ typedef struct video_par {
   } sVidParam;
 //}}}
 //{{{
-typedef struct decoder_params {
-  InputParameters* p_Inp; // Input Parameters
-  sVidParam* vidParam;    // Image Parameters
-  int64      bufferSize;  // buffersize for tiff reads (not currently supported)
-  int        bitcounter;
-  } sDecoderParams;
+typedef struct decoderParam {
+  sInputParam* p_Inp; 
+  sVidParam* vidParam;    
+  } sDecoderParam;
 //}}}
 
 //{{{
@@ -876,7 +874,7 @@ static inline int is_BL_profile (unsigned int profile_idc) {
   extern "C" {
 #endif
 //}}}
-  extern sDecoderParams* gDecoder;
+  extern sDecoderParam* gDecoder;
 
   extern void error (char* text, int code);
 
@@ -898,10 +896,10 @@ static inline int is_BL_profile (unsigned int profile_idc) {
   extern void freeDecPicList (sDecodedPicList *pDecPicList );
   extern void clearDecPicList (sVidParam *vidParam );
 
-  extern sSlice* malloc_slice (InputParameters *p_Inp, sVidParam *vidParam );
-  extern void copy_slice_info (sSlice* currSlice, OldSliceParams *p_old_slice );
+  extern sSlice* malloc_slice (sInputParam *p_Inp, sVidParam *vidParam );
+  extern void copy_slice_info (sSlice* currSlice, sOldSliceParam *p_old_slice );
 
-  extern void set_global_coding_par (sVidParam *vidParam, sCodingParams *cps);
+  extern void set_global_CodingParam (sVidParam *vidParam, sCodingParam *cps);
   extern void OpenOutputFiles (sVidParam *vidParam, int view0_id, int view1_id);
 //{{{
 #ifdef __cplusplus

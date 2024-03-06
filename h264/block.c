@@ -520,7 +520,7 @@ void iMBtrans4x4 (sMacroblock* currMB, sColorPlane pl, int smb) {
     }
 
   // construct picture from 4x4 blocks
-  copy_image_data_16x16 (&curr_img[currMB->pix_y], currSlice->mb_rec[pl], currMB->pix_x, 0);
+  copy_Image_16x16 (&curr_img[currMB->pix_y], currSlice->mb_rec[pl], currMB->pix_x, 0);
   }
 //}}}
 //{{{
@@ -551,7 +551,7 @@ void iMBtrans8x8 (sMacroblock* currMB, sColorPlane pl) {
   else
     icopy8x8 (currMB, pl, 8, 8);
 
-  copy_image_data_16x16 (&curr_img[currMB->pix_y], currMB->p_Slice->mb_rec[pl], currMB->pix_x, 0);
+  copy_Image_16x16 (&curr_img[currMB->pix_y], currMB->p_Slice->mb_rec[pl], currMB->pix_x, 0);
   }
 //}}}
 //{{{
@@ -571,7 +571,7 @@ void iTransform (sMacroblock* currMB, sColorPlane pl, int smb) {
     }
   else {
     curr_img = pl ? picture->imgUV[uv] : picture->imgY;
-    copy_image_data_16x16(&curr_img[currMB->pix_y], currSlice->mb_pred[pl], currMB->pix_x, 0);
+    copy_Image_16x16(&curr_img[currMB->pix_y], currSlice->mb_pred[pl], currMB->pix_x, 0);
     }
 
   if (smb)
@@ -612,7 +612,7 @@ void iTransform (sMacroblock* currMB, sColorPlane pl, int smb) {
             itrans4x4_ls (currMB, uv, *x_pos  , *y_pos  );
             }
           }
-        copy_image_data (curUV, mb_rec, currMB->pix_c_x, 0, vidParam->mb_size[1][0], vidParam->mb_size[1][1]);
+        copy_Image (curUV, mb_rec, currMB->pix_c_x, 0, vidParam->mb_size[1][0], vidParam->mb_size[1][1]);
         currSlice->is_reset_coeff_cr = FALSE;
         }
       else if (smb) {
@@ -623,18 +623,18 @@ void iTransform (sMacroblock* currMB, sColorPlane pl, int smb) {
           for(ioff = 0; ioff < vidParam->mb_cr_size_x ;ioff += BLOCK_SIZE)
             currMB->itrans_4x4 (currMB, uv, ioff, joff);
 
-        copy_image_data (curUV, mb_rec, currMB->pix_c_x, 0, vidParam->mb_size[1][0], vidParam->mb_size[1][1]);
+        copy_Image (curUV, mb_rec, currMB->pix_c_x, 0, vidParam->mb_size[1][0], vidParam->mb_size[1][1]);
         currSlice->is_reset_coeff_cr = FALSE;
         }
       else
-        copy_image_data (curUV, currSlice->mb_pred[uv], currMB->pix_c_x, 0, vidParam->mb_size[1][0], vidParam->mb_size[1][1]);
+        copy_Image (curUV, currSlice->mb_pred[uv], currMB->pix_c_x, 0, vidParam->mb_size[1][0], vidParam->mb_size[1][1]);
       }
     }
   }
 //}}}
 
 //{{{
-void copy_image_data_4x4 (sPixel** imgBuf1, sPixel** imgBuf2, int off1, int off2) {
+void copy_Image_4x4 (sPixel** imgBuf1, sPixel** imgBuf2, int off1, int off2) {
 
   memcpy ((*imgBuf1++ + off1), (*imgBuf2++ + off2), BLOCK_SIZE * sizeof (sPixel));
   memcpy ((*imgBuf1++ + off1), (*imgBuf2++ + off2), BLOCK_SIZE * sizeof (sPixel));
@@ -643,7 +643,7 @@ void copy_image_data_4x4 (sPixel** imgBuf1, sPixel** imgBuf2, int off1, int off2
   }
 //}}}
 //{{{
-void copy_image_data_8x8 (sPixel** imgBuf1, sPixel** imgBuf2, int off1, int off2) {
+void copy_Image_8x8 (sPixel** imgBuf1, sPixel** imgBuf2, int off1, int off2) {
 
   for (int j = 0; j < BLOCK_SIZE_8x8; j+=4) {
     memcpy ((*imgBuf1++ + off1), (*imgBuf2++ + off2), BLOCK_SIZE_8x8 * sizeof (sPixel));
@@ -654,7 +654,7 @@ void copy_image_data_8x8 (sPixel** imgBuf1, sPixel** imgBuf2, int off1, int off2
   }
 //}}}
 //{{{
-void copy_image_data_16x16 (sPixel** imgBuf1, sPixel** imgBuf2, int off1, int off2) {
+void copy_Image_16x16 (sPixel** imgBuf1, sPixel** imgBuf2, int off1, int off2) {
 
   for (int j = 0; j < MB_BLOCK_SIZE; j += 4) {
     memcpy ((*imgBuf1++ + off1), (*imgBuf2++ + off2), MB_BLOCK_SIZE * sizeof (sPixel));
@@ -681,7 +681,7 @@ int CheckVertMV (sMacroblock* currMB, int vec1_y, int block_size_y) {
   }
 //}}}
 //{{{
-void copy_image_data (sPixel** imgBuf1, sPixel** imgBuf2, int off1, int off2, int width, int height) {
+void copy_Image (sPixel** imgBuf1, sPixel** imgBuf2, int off1, int off2, int width, int height) {
 
   for (int j = 0; j < height; ++j)
     memcpy ((*imgBuf1++ + off1), (*imgBuf2++ + off2), width * sizeof (sPixel));

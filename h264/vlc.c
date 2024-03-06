@@ -8,10 +8,10 @@
 //{{{
 int read_ue_v (char* tracestring, Bitstream* bitstream) {
 
-  SyntaxElement symbol = {.value1 = 0 };
+  sSyntaxElement symbol = {.value1 = 0 };
   symbol.type = SE_HEADER;
   symbol.mapping = linfo_ue;
-  readSyntaxElement_VLC (&symbol, bitstream);
+  readsSyntaxElement_VLC (&symbol, bitstream);
 
   if (gDecoder->p_Inp->vlcDebug)
     printf ("read %s %d\n", tracestring, symbol.value1);
@@ -22,10 +22,10 @@ int read_ue_v (char* tracestring, Bitstream* bitstream) {
 //{{{
 int read_se_v (char* tracestring, Bitstream* bitstream) {
 
-  SyntaxElement symbol = {.value1 = 0 };
+  sSyntaxElement symbol = {.value1 = 0 };
   symbol.type = SE_HEADER;
   symbol.mapping = linfo_se;
-  readSyntaxElement_VLC (&symbol, bitstream);
+  readsSyntaxElement_VLC (&symbol, bitstream);
 
   if (gDecoder->p_Inp->vlcDebug)
     printf ("read %s %d\n", tracestring, symbol.value1);
@@ -36,12 +36,12 @@ int read_se_v (char* tracestring, Bitstream* bitstream) {
 //{{{
 int read_u_v (int LenInBits, char* tracestring, Bitstream* bitstream) {
 
-  SyntaxElement symbol = {.value1 = 0 };
+  sSyntaxElement symbol = {.value1 = 0 };
   symbol.inf = 0;
   symbol.type = SE_HEADER;
   symbol.mapping = linfo_ue;
   symbol.len = LenInBits;
-  readSyntaxElement_FLC (&symbol, bitstream);
+  readsSyntaxElement_FLC (&symbol, bitstream);
 
   if (gDecoder->p_Inp->vlcDebug)
     printf ("read %s %d\n", tracestring, symbol.inf);
@@ -52,12 +52,12 @@ int read_u_v (int LenInBits, char* tracestring, Bitstream* bitstream) {
 //{{{
 int read_i_v (int LenInBits, char* tracestring, Bitstream* bitstream) {
 
-  SyntaxElement symbol = {.value1 = 0 };
+  sSyntaxElement symbol = {.value1 = 0 };
   symbol.inf = 0;
   symbol.type = SE_HEADER;
   symbol.mapping = linfo_ue;
   symbol.len = LenInBits;
-  readSyntaxElement_FLC (&symbol, bitstream);
+  readsSyntaxElement_FLC (&symbol, bitstream);
 
   // can be negative
   symbol.inf = -( symbol.inf & (1 << (LenInBits - 1)) ) | symbol.inf;
@@ -170,7 +170,7 @@ void linfo_levrun_c2x2 (int len, int info, int* level, int* irun) {
 //}}}
 
 //{{{
-int readSyntaxElement_VLC (SyntaxElement* sym, Bitstream* currStream) {
+int readsSyntaxElement_VLC (sSyntaxElement* sym, Bitstream* currStream) {
 
   sym->len =  GetVLCSymbol (currStream->streamBuffer, currStream->frame_bitoffset,
                             &(sym->inf), currStream->bitstream_length);
@@ -184,12 +184,12 @@ int readSyntaxElement_VLC (SyntaxElement* sym, Bitstream* currStream) {
 }
 //}}}
 //{{{
-int readSyntaxElement_UVLC (sMacroblock* currMB, SyntaxElement* sym, struct datapartition_dec* dP) {
-  return (readSyntaxElement_VLC(sym, dP->bitstream));
+int readsSyntaxElement_UVLC (sMacroblock* currMB, sSyntaxElement* sym, struct DataPartition* dP) {
+  return (readsSyntaxElement_VLC(sym, dP->bitstream));
   }
 //}}}
 //{{{
-int readSyntaxElement_Intra4x4PredictionMode (SyntaxElement* sym, Bitstream* currStream) {
+int readsSyntaxElement_Intra4x4PredictionMode (sSyntaxElement* sym, Bitstream* currStream) {
 
   sym->len = GetVLCSymbol_IntraMode (currStream->streamBuffer, currStream->frame_bitoffset, &(sym->inf), currStream->bitstream_length);
   if (sym->len == -1)
@@ -309,7 +309,7 @@ static inline int ShowBitsThres (int inf, int numbits) {
   }
 //}}}
 //{{{
-static int code_from_bitstream_2d (SyntaxElement* sym, Bitstream* currStream,
+static int code_from_bitstream_2d (sSyntaxElement* sym, Bitstream* currStream,
                                    const byte *lentab, const byte *codtab,
                                    int tabwidth, int tabheight, int *code) {
 
@@ -349,7 +349,7 @@ static int code_from_bitstream_2d (SyntaxElement* sym, Bitstream* currStream,
 //}}}
 
 //{{{
-int readSyntaxElement_FLC (SyntaxElement* sym, Bitstream* currStream)
+int readsSyntaxElement_FLC (sSyntaxElement* sym, Bitstream* currStream)
 {
   int BitstreamLengthInBits  = (currStream->bitstream_length << 3) + 7;
 
@@ -363,7 +363,7 @@ int readSyntaxElement_FLC (SyntaxElement* sym, Bitstream* currStream)
 }
 //}}}
 //{{{
-int readSyntaxElement_NumCoeffTrailingOnes (SyntaxElement* sym,
+int readsSyntaxElement_NumCoeffTrailingOnes (sSyntaxElement* sym,
                                            Bitstream *currStream,
                                            char *type)
 {
@@ -455,7 +455,7 @@ int readSyntaxElement_NumCoeffTrailingOnes (SyntaxElement* sym,
 }
 //}}}
 //{{{
-int readSyntaxElement_NumCoeffTrailingOnesChromaDC (sVidParam* vidParam, SyntaxElement* sym, Bitstream* currStream)
+int readsSyntaxElement_NumCoeffTrailingOnesChromaDC (sVidParam* vidParam, sSyntaxElement* sym, Bitstream* currStream)
 {
   static const byte lentab[3][4][17] =
   {
@@ -510,7 +510,7 @@ int readSyntaxElement_NumCoeffTrailingOnesChromaDC (sVidParam* vidParam, SyntaxE
 }
 //}}}
 //{{{
-int readSyntaxElement_Level_VLC0 (SyntaxElement* sym, Bitstream* currStream)
+int readsSyntaxElement_Level_VLC0 (sSyntaxElement* sym, Bitstream* currStream)
 {
   int frame_bitoffset        = currStream->frame_bitoffset;
   int BitstreamLengthInBytes = currStream->bitstream_length;
@@ -559,7 +559,7 @@ int readSyntaxElement_Level_VLC0 (SyntaxElement* sym, Bitstream* currStream)
 }
 //}}}
 //{{{
-int readSyntaxElement_Level_VLCN (SyntaxElement* sym, int vlc, Bitstream* currStream)
+int readsSyntaxElement_Level_VLCN (sSyntaxElement* sym, int vlc, Bitstream* currStream)
 {
   int frame_bitoffset        = currStream->frame_bitoffset;
   int BitstreamLengthInBytes = currStream->bitstream_length;
@@ -622,7 +622,7 @@ int readSyntaxElement_Level_VLCN (SyntaxElement* sym, int vlc, Bitstream* currSt
 }
 //}}}
 //{{{
-int readSyntaxElement_TotalZeros (SyntaxElement* sym,  Bitstream *currStream) {
+int readsSyntaxElement_TotalZeros (sSyntaxElement* sym,  Bitstream *currStream) {
 
   //{{{
   static const byte lentab[TOTRUN_NUM][16] =
@@ -679,7 +679,7 @@ int readSyntaxElement_TotalZeros (SyntaxElement* sym,  Bitstream *currStream) {
   }
 //}}}
 //{{{
-int readSyntaxElement_TotalZerosChromaDC (sVidParam* vidParam, SyntaxElement* sym, Bitstream* currStream) {
+int readsSyntaxElement_TotalZerosChromaDC (sVidParam* vidParam, sSyntaxElement* sym, Bitstream* currStream) {
 
   //{{{
   static const byte lentab[3][TOTRUN_NUM][16] =
@@ -762,7 +762,7 @@ int readSyntaxElement_TotalZerosChromaDC (sVidParam* vidParam, SyntaxElement* sy
   }
 //}}}
 //{{{
-int readSyntaxElement_Run (SyntaxElement* sym, Bitstream* currStream)
+int readsSyntaxElement_Run (sSyntaxElement* sym, Bitstream* currStream)
 {
   //{{{
   static const byte lentab[TOTRUN_NUM][16] =
