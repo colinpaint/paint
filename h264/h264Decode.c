@@ -189,7 +189,7 @@ static void free_slice (sSlice *curSlice) {
 //}}}
 
 //{{{
-static void free_img (sVidParam* vidParam) {
+static void freeImg (sVidParam* vidParam) {
 
   if (vidParam != NULL) {
     freeAnnexB (&vidParam->annex_b);
@@ -454,7 +454,7 @@ void free_layer_buffers (sVidParam* vidParam, int layer_id) {
   }
 //}}}
 //{{{
-int init_global_buffers (sVidParam* vidParam, int layer_id) {
+int initGlobalBuffers (sVidParam* vidParam, int layer_id) {
 
   int memory_size = 0;
   sCodingParam *cps = vidParam->p_EncodePar[layer_id];
@@ -467,23 +467,23 @@ int init_global_buffers (sVidParam* vidParam, int layer_id) {
   if ((cps->separate_colour_plane_flag != 0) ) {
     for (int i = 0; i<MAX_PLANE; ++i )
       if (((cps->mb_data_JV[i]) = (sMacroblock*)calloc(cps->FrameSizeInMbs, sizeof(sMacroblock))) == NULL)
-        no_mem_exit ("init_global_buffers: cps->mb_data_JV");
+        no_mem_exit ("initGlobalBuffers: cps->mb_data_JV");
     cps->mb_data = NULL;
     }
   else if (((cps->mb_data) = (sMacroblock*)calloc (cps->FrameSizeInMbs, sizeof(sMacroblock))) == NULL)
-    no_mem_exit ("init_global_buffers: cps->mb_data");
+    no_mem_exit ("initGlobalBuffers: cps->mb_data");
 
   if ((cps->separate_colour_plane_flag != 0) ) {
     for (int i = 0; i < MAX_PLANE; ++i )
       if (((cps->intra_block_JV[i]) = (char*) calloc(cps->FrameSizeInMbs, sizeof(char))) == NULL)
-        no_mem_exit ("init_global_buffers: cps->intra_block_JV");
+        no_mem_exit ("initGlobalBuffers: cps->intra_block_JV");
     cps->intra_block = NULL;
     }
   else if (((cps->intra_block) = (char*)calloc (cps->FrameSizeInMbs, sizeof(char))) == NULL)
-    no_mem_exit ("init_global_buffers: cps->intra_block");
+    no_mem_exit ("initGlobalBuffers: cps->intra_block");
 
   if (((cps->PicPos) = (sBlockPos*)calloc(cps->FrameSizeInMbs + 1, sizeof(sBlockPos))) == NULL)
-    no_mem_exit ("init_global_buffers: PicPos");
+    no_mem_exit ("initGlobalBuffers: PicPos");
 
   PicPos = cps->PicPos;
   for (int i = 0; i < (int) cps->FrameSizeInMbs + 1;++i) {
@@ -505,7 +505,7 @@ int init_global_buffers (sVidParam* vidParam, int layer_id) {
     for (int i = 0; i < MAX_PLANE; ++i ) {
       get_mem2Dint (&(cps->siblock_JV[i]), cps->FrameHeightInMbs, cps->PicWidthInMbs);
       if (cps->siblock_JV[i] == NULL)
-        no_mem_exit ("init_global_buffers: vidParam->siblock_JV");
+        no_mem_exit ("initGlobalBuffers: vidParam->siblock_JV");
       }
     cps->siblock = NULL;
     }
@@ -667,7 +667,7 @@ int OpenDecoder (sInputParam* p_Inp, byte* chunk, size_t chunkSize) {
 
   init_old_slice (gDecoder->vidParam->old_slice);
   init (gDecoder->vidParam);
-  init_out_buffer (gDecoder->vidParam);
+  initOutBuffer (gDecoder->vidParam);
 
   return DEC_OPEN_NOERR;
   }
@@ -722,9 +722,9 @@ int CloseDecoder() {
   cleanUpPPS (gDecoder->vidParam);
 
   for (unsigned i = 0; i < MAX_NUM_DPB_LAYERS; i++)
-    free_dpb (gDecoder->vidParam->p_Dpb_layer[i]);
-  uninit_out_buffer (gDecoder->vidParam);
-  free_img (gDecoder->vidParam);
+    freeDpb (gDecoder->vidParam->p_Dpb_layer[i]);
+  freeOutBuffer (gDecoder->vidParam);
+  freeImg (gDecoder->vidParam);
   free (gDecoder->p_Inp);
   free (gDecoder);
 

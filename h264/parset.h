@@ -2,7 +2,7 @@
 #include "parsetcommon.h"
 #include "nalu.h"
 
-extern int init_global_buffers (sVidParam* vidParam, int layer_id );
+extern int initGlobalBuffers (sVidParam* vidParam, int layer_id );
 extern void free_global_buffers (sVidParam* vidParam);
 extern void free_layer_buffers (sVidParam* vidParam, int layer_id );
 

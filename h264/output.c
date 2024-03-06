@@ -23,7 +23,7 @@ static void img2buf (sPixel** imgX, unsigned char* buf,
   }
 //}}}
 //{{{
-static void allocate_p_dec_pic (sVidParam* vidParam, sDecodedPicList* pDecPic, sPicture* p,
+static void allocateDecPic (sVidParam* vidParam, sDecodedPicList* pDecPic, sPicture* p,
                                 int iLumaSize, int iFrameSize, int iLumaSizeX, int iLumaSizeY,
                                 int iChromaSizeX, int iChromaSizeY) {
 
@@ -47,7 +47,6 @@ static void allocate_p_dec_pic (sVidParam* vidParam, sDecodedPicList* pDecPic, s
   pDecPic->iUVBufStride = iChromaSizeX*symbol_size_in_bytes; //p->size_x_cr*symbol_size_in_bytes;
   }
 //}}}
-
 //{{{
 static void clearPicture (sVidParam* vidParam, sPicture* p) {
 
@@ -109,7 +108,7 @@ static void writeOutPicture (sVidParam* vidParam, sPicture* p) {
   // KS: this buffer should actually be allocated only once, but this is still much faster than the previous version
   pDecPic = get_one_avail_dec_pic_from_list (vidParam->pDecOuputPic, 0, 0);
   if ((pDecPic->pY == NULL) || (pDecPic->iBufSize < iFrameSize))
-    allocate_p_dec_pic (vidParam, pDecPic, p, iLumaSize, iFrameSize, iLumaSizeX, iLumaSizeY, iChromaSizeX, iChromaSizeY);
+    allocateDecPic (vidParam, pDecPic, p, iLumaSize, iFrameSize, iLumaSizeX, iLumaSizeY, iChromaSizeX, iChromaSizeY);
 
   pDecPic->bValid = 1;
   pDecPic->iPOC = p->frame_poc;
@@ -135,9 +134,8 @@ static void writeOutPicture (sVidParam* vidParam, sPicture* p) {
            crop_left, crop_right, crop_top, crop_bottom, pDecPic->iUVBufStride);
   }
 //}}}
-
 //{{{
-void flush_pending_output (sVidParam* vidParam) {
+static void flushPendingOutput (sVidParam* vidParam) {
 
   if (vidParam->pending_output_state != FRAME)
     writeOutPicture (vidParam, vidParam->pending_output);
@@ -159,13 +157,13 @@ void flush_pending_output (sVidParam* vidParam) {
 static void writePicture (sVidParam* vidParam, sPicture* p, int real_structure) {
 
   if (real_structure == FRAME) {
-    flush_pending_output (vidParam);
+    flushPendingOutput (vidParam);
     writeOutPicture (vidParam, p);
     return;
     }
 
   if (real_structure == vidParam->pending_output_state) {
-    flush_pending_output (vidParam);
+    flushPendingOutput (vidParam);
     writePicture (vidParam, p, real_structure);
     return;
     }
@@ -216,7 +214,7 @@ static void writePicture (sVidParam* vidParam, sPicture* p, int real_structure) 
             )
           )
        ) {
-      flush_pending_output (vidParam);
+      flushPendingOutput (vidParam);
       writePicture (vidParam, p, real_structure);
       return;
       }
@@ -231,12 +229,12 @@ static void writePicture (sVidParam* vidParam, sPicture* p, int real_structure) 
       memcpy (vidParam->pending_output->imgUV[1][(i+add)], p->imgUV[1][(i+add)], p->size_x_cr * sizeof(sPixel));
       }
 
-    flush_pending_output (vidParam);
+    flushPendingOutput (vidParam);
     }
   }
 //}}}
 //{{{
-static void write_unpaired_field (sVidParam* vidParam, sFrameStore* fs) {
+static void writeUnpairedField (sVidParam* vidParam, sFrameStore* fs) {
 
   assert (fs->is_used < 3);
 
@@ -275,9 +273,9 @@ static void write_unpaired_field (sVidParam* vidParam, sFrameStore* fs) {
   }
 //}}}
 //{{{
-static void flush_direct_output (sVidParam* vidParam) {
+static void flushDirectOutput (sVidParam* vidParam) {
 
-  write_unpaired_field (vidParam, vidParam->out_buffer);
+  writeUnpairedField (vidParam, vidParam->out_buffer);
   freePicture (vidParam->out_buffer->frame);
 
   vidParam->out_buffer->frame = NULL;
@@ -292,36 +290,37 @@ static void flush_direct_output (sVidParam* vidParam) {
 //}}}
 
 //{{{
-void init_out_buffer (sVidParam* vidParam) {
+void initOutBuffer (sVidParam* vidParam) {
 
-  vidParam->out_buffer = alloc_frame_store();
+  vidParam->out_buffer = allocFrameStore();
 
   vidParam->pending_output = calloc (sizeof(sPicture), 1);
-  if (NULL==vidParam->pending_output)
+  if (NULL == vidParam->pending_output)
     no_mem_exit ("init_out_buffer");
+
   vidParam->pending_output->imgUV = NULL;
   vidParam->pending_output->imgY  = NULL;
   }
 //}}}
 //{{{
-void uninit_out_buffer (sVidParam* vidParam) {
+void freeOutBuffer (sVidParam* vidParam) {
 
-  free_frame_store (vidParam->out_buffer);
-  vidParam->out_buffer=NULL;
+  freeFrameStore (vidParam->out_buffer);
+  vidParam->out_buffer = NULL;
 
-  flush_pending_output(vidParam);
+  flushPendingOutput (vidParam);
   free (vidParam->pending_output);
   }
 //}}}
 
 //{{{
-void write_stored_frame (sVidParam* vidParam, sFrameStore* fs) {
+void writeStoredFrame (sVidParam* vidParam, sFrameStore* fs) {
 
   // make sure no direct output field is pending
-  flush_direct_output (vidParam);
+  flushDirectOutput (vidParam);
 
   if (fs->is_used < 3)
-    write_unpaired_field (vidParam, fs);
+    writeUnpairedField (vidParam, fs);
   else {
     if (fs->recovery_frame)
       vidParam->recovery_flag = 1;
@@ -333,11 +332,11 @@ void write_stored_frame (sVidParam* vidParam, sFrameStore* fs) {
   }
 //}}}
 //{{{
-void direct_output (sVidParam* vidParam, sPicture* p) {
+void directOutput (sVidParam* vidParam, sPicture* p) {
 
   if (p->structure == FRAME) {
     // we have a frame (or complementary field pair), so output it directly
-    flush_direct_output (vidParam);
+    flushDirectOutput (vidParam);
     writePicture (vidParam, p, FRAME);
     calcFrameNum (vidParam, p);
     freePicture (p);
@@ -346,14 +345,14 @@ void direct_output (sVidParam* vidParam, sPicture* p) {
 
   if (p->structure == TOP_FIELD) {
     if (vidParam->out_buffer->is_used & 1)
-      flush_direct_output (vidParam);
+      flushDirectOutput (vidParam);
     vidParam->out_buffer->top_field = p;
     vidParam->out_buffer->is_used |= 1;
     }
 
   if (p->structure == BOTTOM_FIELD) {
     if (vidParam->out_buffer->is_used & 2)
-      flush_direct_output (vidParam);
+      flushDirectOutput (vidParam);
     vidParam->out_buffer->bottom_field = p;
     vidParam->out_buffer->is_used |= 2;
     }

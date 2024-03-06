@@ -288,8 +288,8 @@ static inline int is_long_ref(sPicture *s)
 extern void gen_pic_list_from_frame_list (sPictureStructure currStructure, sFrameStore** fs_list, int list_idx, sPicture** list, char *list_size, int long_term);
 extern sPicture* get_long_term_pic (sSlice* curSlice, sDPB* dpb, int LongtermPicNum);
 
-extern void update_ref_list (sDPB* dpb);
-extern void update_ltref_list (sDPB* dpb);
+extern void updateRefList (sDPB* dpb);
+extern void updateLongTermRefList (sDPB* dpb);
 
 extern void mm_mark_current_picture_long_term (sDPB* dpb, sPicture* p, int long_term_frame_idx);
 extern void mm_unmark_short_term_for_reference (sDPB* dpb, sPicture* p, int difference_of_pic_nums_minus1);
@@ -303,18 +303,18 @@ extern int  is_used_for_reference (sFrameStore* fs);
 extern void get_smallest_poc (sDPB* dpb, int *poc,int * pos);
 extern int remove_unused_frame_from_dpb (sDPB* dpb);
 
-extern void init_dpb (sVidParam* vidParam, sDPB* dpb, int type);
-extern void re_init_dpb (sVidParam* vidParam, sDPB* dpb, int type);
-extern void free_dpb (sDPB* dpb);
+extern void initDpb (sVidParam* vidParam, sDPB* dpb, int type);
+extern void reInitDpb (sVidParam* vidParam, sDPB* dpb, int type);
+extern void freeDpb (sDPB* dpb);
 
-extern sPicture*  allocPicture (sVidParam* vidParam, sPictureStructure type, int size_x, int size_y, int size_x_cr, int size_y_cr, int is_output);
+extern sPicture* allocPicture (sVidParam* vidParam, sPictureStructure type, int size_x, int size_y, int size_x_cr, int size_y_cr, int is_output);
 extern void freePicture (sPicture* p);
 
 extern void store_picture_in_dpb (sDPB* dpb, sPicture* p);
 extern sPicture*  get_short_term_pic (sSlice* curSlice, sDPB* dpb, int picNum);
 
-extern sFrameStore* alloc_frame_store();
-extern void free_frame_store (sFrameStore* f);
+extern sFrameStore* allocFrameStore();
+extern void freeFrameStore (sFrameStore* f);
 extern void unmark_for_reference( sFrameStore* fs);
 extern void unmark_for_long_term_reference (sFrameStore* fs);
 
@@ -340,10 +340,8 @@ extern void fill_frame_num_gap (sVidParam* vidParam, sSlice *pSlice);
 
 extern void compute_colocated (sSlice* curSlice, sPicture** listX[6]);
 
-extern sPicture* clone_storable_picture (sVidParam* vidParam, sPicture *p_pic );
-
 extern void store_proc_picture_in_dpb (sDPB* dpb, sPicture* p);
-extern int init_img_data (sVidParam* vidParam, sImage *p_ImgData, sSPS *sps);
-extern void free_img_data (sVidParam* vidParam, sImage *p_ImgData);
+extern int initImage (sVidParam* vidParam, sImage* image, sSPS *sps);
+extern void freeImage (sVidParam* vidParam, sImage* image);
 
 extern void process_picture_in_dpb_s (sVidParam* vidParam, sPicture *p_pic);

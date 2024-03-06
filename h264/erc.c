@@ -2119,7 +2119,7 @@ void write_lost_non_ref_pic (sDPB* dpb, int poc) {
       concealment_fs.is_reference = 0;
       concealment_fs.is_used = 3;
 
-      write_stored_frame (vidParam, &concealment_fs);
+      writeStoredFrame (vidParam, &concealment_fs);
       delete_node (vidParam, vidParam->concealment_head);
       }
     }

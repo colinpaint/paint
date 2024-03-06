@@ -780,11 +780,11 @@ void activateSPS (sVidParam* vidParam, sSPS* sps) {
       }
     set_global_CodingParam (vidParam, vidParam->p_EncodePar[vidParam->dpb_layer_id]);
 
-    init_global_buffers (vidParam, 0);
+    initGlobalBuffers (vidParam, 0);
     if (!vidParam->no_output_of_prior_pics_flag)
       flush_dpb (vidParam->p_Dpb_layer[0]);
 
-    init_dpb (vidParam, vidParam->p_Dpb_layer[0], 0);
+    initDpb (vidParam, vidParam->p_Dpb_layer[0], 0);
 
     // enable error concealment
     ercInit (vidParam, vidParam->width, vidParam->height, 1);
