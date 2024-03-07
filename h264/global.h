@@ -20,8 +20,6 @@
 #define MAX_NUM_REF_FRAMES_PIC_ORDER  256
 #define ET_SIZE 300      //!< size of error text buffer
 //}}}
-extern char errortext[ET_SIZE]; //!< buffer for error message for exit with error()
-
 //{{{  enum DecoderStatus
 typedef enum {
   DEC_OPENED = 0,
@@ -38,29 +36,33 @@ typedef enum {
 
 //{{{  sHRD
 typedef struct {
-  unsigned int cpb_cnt_minus1;                                 // ue(v)
-  unsigned int bit_rate_scale;                                 // u(4)
-  unsigned int cpb_size_scale;                                 // u(4)
-  unsigned int bit_rate_value_minus1 [32];  // ue(v)
-  unsigned int cpb_size_value_minus1 [32];  // ue(v)
-  unsigned int cbr_flag              [32];  // u(1)
-  unsigned int initial_cpb_removal_delay_length_minus1;        // u(5)
-  unsigned int cpb_removal_delay_length_minus1;                // u(5)
-  unsigned int dpb_output_delay_length_minus1;                 // u(5)
-  unsigned int time_offset_length;                             // u(5)
+  unsigned int cpb_cnt_minus1;             // ue(v)
+  unsigned int bit_rate_scale;             // u(4)
+  unsigned int cpb_size_scale;             // u(4)
+  unsigned int bit_rate_value_minus1[32];  // ue(v)
+  unsigned int cpb_size_value_minus1[32];  // ue(v)
+  unsigned int cbr_flag[32];               // u(1)
+  unsigned int initial_cpb_removal_delay_length_minus1;  // u(5)
+  unsigned int cpb_removal_delay_length_minus1;          // u(5)
+  unsigned int dpb_output_delay_length_minus1;           // u(5)
+  unsigned int time_offset_length;                       // u(5)
   } sHRD;
 //}}}
 //{{{  sVUI
 typedef struct {
   Boolean      aspect_ratio_info_present_flag;       // u(1)
   unsigned int aspect_ratio_idc;                     // u(8)
+
   unsigned short sar_width;                          // u(16)
   unsigned short sar_height;                         // u(16)
+
   Boolean      overscan_info_present_flag;           // u(1)
   Boolean      overscan_appropriate_flag;            // u(1)
+
   Boolean      video_signal_type_present_flag;       // u(1)
   unsigned int video_format;                         // u(3)
   Boolean      video_full_range_flag;                // u(1)
+
   Boolean      colour_description_present_flag;      // u(1)
   unsigned int colour_primaries;                     // u(8)
   unsigned int transfer_characteristics;             // u(8)
@@ -68,16 +70,17 @@ typedef struct {
   Boolean      chroma_location_info_present_flag;    // u(1)
   unsigned int  chroma_sample_loc_type_top_field;    // ue(v)
   unsigned int  chroma_sample_loc_type_bottom_field; // ue(v)
+
   Boolean      timing_info_present_flag;             // u(1)
   unsigned int num_units_in_tick;                    // u(32)
   unsigned int time_scale;                           // u(32)
   Boolean      fixed_frame_rate_flag;                // u(1)
 
   Boolean      nal_hrd_parameters_present_flag;      // u(1)
-  sHRD nal_hrd_parameters;                           // hrd_paramters_t
+  sHRD         nal_hrd_parameters;                   // hrd_paramters_t
 
   Boolean      vcl_hrd_parameters_present_flag;      // u(1)
-  sHRD vcl_hrd_parameters;                           // hrd_paramters_t
+  sHRD         vcl_hrd_parameters;                   // hrd_paramters_t
 
   // if ((nal_hrd_parameters_present_flag || (vcl_hrd_parameters_present_flag))
   Boolean      low_delay_hrd_flag;                      // u(1)
@@ -165,37 +168,37 @@ typedef struct {
 
   // if( pic_order_cnt_type < 2 )  in the sequence parameter set
   Boolean      bottom_field_pic_order_in_frame_present_flag;  // u(1)
-  unsigned int num_slice_groups_minus1;                       // ue(v)
-  unsigned int slice_group_map_type;                          // ue(v)
+  unsigned int num_slice_groups_minus1;             // ue(v)
 
-  // if( slice_group_map_type = = 0 )
-  unsigned int run_length_minus1[8]; // ue(v)
-  // else if( slice_group_map_type = = 2 )
-  unsigned int top_left[8];      // ue(v)
-  unsigned int bottom_right[8];  // ue(v)
-  // else if( slice_group_map_type = = 3 || 4 || 5
-  Boolean   slice_group_change_direction_flag;        // u(1)
-  unsigned int slice_group_change_rate_minus1;        // ue(v)
-  // else if( slice_group_map_type = = 6 )
-  unsigned int pic_size_in_map_units_minus1;          // ue(v)
-  byte*     slice_group_id;                           // complete MBAmap u(v)
+  unsigned int slice_group_map_type;                // ue(v)
+  // if (slice_group_map_type = = 0)
+  unsigned int run_length_minus1[8];                // ue(v)
+  // else if (slice_group_map_type = = 2 )
+  unsigned int top_left[8];                         // ue(v)
+  unsigned int bottom_right[8];                     // ue(v)
+  // else if (slice_group_map_type = = 3 || 4 || 5
+  Boolean   slice_group_change_direction_flag;      // u(1)
+  unsigned int slice_group_change_rate_minus1;      // ue(v)
+  // else if (slice_group_map_type = = 6)
+  unsigned int pic_size_in_map_units_minus1;        // ue(v)
+  byte*     slice_group_id;                         // complete MBAmap u(v)
 
-  int       num_ref_idx_l0_default_active_minus1;     // ue(v)
-  int       num_ref_idx_l1_default_active_minus1;     // ue(v)
-  Boolean   weighted_pred_flag;                       // u(1)
-  unsigned int  weighted_bipred_idc;                      // u(2)
-  int       pic_init_qp_minus26;                      // se(v)
-  int       pic_init_qs_minus26;                      // se(v)
-  int       chroma_qp_index_offset;                   // se(v)
+  int       num_ref_idx_l0_default_active_minus1;   // ue(v)
+  int       num_ref_idx_l1_default_active_minus1;   // ue(v)
+  Boolean   weighted_pred_flag;                     // u(1)
+  unsigned int  weighted_bipred_idc;                    // u(2)
+  int       pic_init_qp_minus26;                    // se(v)
+  int       pic_init_qs_minus26;                    // se(v)
+  int       chroma_qp_index_offset;                 // se(v)
 
-  int       cb_qp_index_offset;                       // se(v)
-  int       cr_qp_index_offset;                       // se(v)
-  int       second_chroma_qp_index_offset;            // se(v)
+  int       cb_qp_index_offset;                     // se(v)
+  int       cr_qp_index_offset;                     // se(v)
+  int       second_chroma_qp_index_offset;          // se(v)
 
-  Boolean   deblocking_filter_control_present_flag;   // u(1)
-  Boolean   constrained_intra_pred_flag;              // u(1)
-  Boolean   redundant_pic_cnt_present_flag;           // u(1)
-  Boolean   vui_pic_parameters_flag;                  // u(1)
+  Boolean   deblocking_filter_control_present_flag; // u(1)
+  Boolean   constrained_intra_pred_flag;            // u(1)
+  Boolean   redundant_pic_cnt_present_flag;         // u(1)
+  Boolean   vui_pic_parameters_flag;                // u(1)
   } sPPS;
 //}}}
 //{{{  sBiContextType
@@ -770,7 +773,7 @@ typedef struct VidParam {
   TIME_T startTime;
   TIME_T endTime;
   int64  totTime;
-    
+
   sPPS* activePPS;
   sSPS* activeSPS;
   sSPS  SeqParSet[32];
@@ -1022,6 +1025,7 @@ static inline int is_HI_intra_only_profile (unsigned int profile_idc, Boolean co
 //}}}
   extern sDecoderParam* gDecoder;
 
+  extern char errortext[ET_SIZE];
   extern void error (char* text, int code);
 
   extern void initGlobalBuffers (sVidParam* vidParam, int layerId);
