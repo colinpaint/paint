@@ -22,11 +22,8 @@ extern void read_coeff_4x4_CAVLC (sMacroblock* curMb, int block_type, int i, int
 extern void read_coeff_4x4_CAVLC_444 (sMacroblock* curMb, int block_type, int i, int j, int levarr[16], int runarr[16], int *number_coefficients);
 extern void set_intra_prediction_modes (sSlice* curSlice);
 extern void setup_read_macroblock (sSlice* curSlice);
-extern void set_read_CBP_and_coeffs_cabac (sSlice* curSlice);
 extern void set_read_CBP_and_coeffs_cavlc (sSlice* curSlice);
 extern void set_read_comp_coeff_cavlc (sMacroblock* curMb);
-extern void set_read_comp_coeff_cabac (sMacroblock* curMb);
-extern void update_direct_types (sSlice* curSlice);
 
 //{{{
 static void GetMotionVectorPredictorMBAFF (sMacroblock* curMb, sPixelPos *block,

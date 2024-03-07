@@ -7,9 +7,6 @@
 #include "vlc.h"
 #include "transform.h"
 //}}}
-extern void  check_dp_neighbors (sMacroblock* curMb);
-extern void  read_delta_quant (sSyntaxElement* currSE, sDataPartition *dP, sMacroblock* curMb, const byte *partMap, int type);
-
 //{{{
 static void read_comp_coeff_4x4_smb_CABAC (sMacroblock* curMb, sSyntaxElement* currSE, sColorPlane pl, int block_y, int block_x, int start_scan, int64 *cbp_blk)
 {

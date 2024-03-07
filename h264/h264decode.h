@@ -10,7 +10,6 @@ typedef enum {
   DEC_NEED_DATA = 2,
   DEC_INVALID_PARAM = 3,
   DEC_ERRMASK = 0x8000
-  //  DEC_ERRMASK = 0x80000000
   } DecErrCode;
 
 typedef struct dec_set_t {

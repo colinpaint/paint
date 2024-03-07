@@ -323,25 +323,6 @@ void ihadamard2x2 (int tblock[4], int block[4])
   block[3] = (t1 - t3);
 }
 //}}}
-//{{{
-//void hadamard2x2 (int** block, int tblock[4])
-//{
-  ////12 additions, 4 assignments
-    //tblock[0] = (block[0][0] + block[0][4] + block[4][0] + block[4][4]);
-    //tblock[1] = (block[0][0] - block[0][4] + block[4][0] - block[4][4]);
-    //tblock[2] = (block[0][0] + block[0][4] - block[4][0] - block[4][4]);
-    //tblock[3] = (block[0][0] - block[0][4] - block[4][0] + block[4][4]);
-//}
-//}}}
-//{{{
-//void ihadamard2x2 (int tblock[4], int block[4])
-//{
-    //block[0] = (tblock[0] + tblock[1] + tblock[2] + tblock[3]);
-    //block[1] = (tblock[0] - tblock[1] + tblock[2] - tblock[3]);
-    //block[2] = (tblock[0] + tblock[1] - tblock[2] - tblock[3]);
-    //block[3] = (tblock[0] - tblock[1] - tblock[2] + tblock[3]);
-//}
-//}}}
 
 //{{{
 void forward8x8 (int** block, int** tblock, int pos_y, int pos_x)

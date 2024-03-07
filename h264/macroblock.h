@@ -145,3 +145,6 @@ extern int  decode_one_macroblock (sMacroblock* curMb, sPicture* picture);
 extern Boolean  exit_macroblock (sSlice* curSlice, int eos_bit);
 
 extern void update_qp (sMacroblock* curMb, int qp);
+
+extern void check_dp_neighbors (sMacroblock* curMb);
+extern void read_delta_quant (sSyntaxElement* currSE, sDataPartition *dP, sMacroblock* curMb, const byte *partMap, int type);

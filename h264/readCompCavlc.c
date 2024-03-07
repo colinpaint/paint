@@ -7,8 +7,6 @@
 #include "transform.h"
 #include "mbAccess.h"
 //}}}
-extern void  check_dp_neighbors (sMacroblock* curMb);
-extern void  read_delta_quant (sSyntaxElement* currSE, sDataPartition *dP, sMacroblock* curMb, const byte *partMap, int type);
 
 //{{{
 static int predict_nnz (sMacroblock* curMb, int block_type, int i,int j)

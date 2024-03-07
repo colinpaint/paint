@@ -26,10 +26,8 @@ char errortext[ET_SIZE];
 void error (char* text, int code) {
 
   fprintf (stderr, "%s\n", text);
-  if (gDecoder) {
+  if (gDecoder)
     flush_dpb (gDecoder->vidParam->dpbLayer[0]);
-    }
-
   exit (code);
   }
 //}}}
@@ -42,14 +40,12 @@ static void reset_dpb (sVidParam* vidParam, sDPB* dpb ) {
 //}}}
 //{{{
 void report_stats_on_error() {
-
-  //free_encoder_memory(vidParam);
   exit (-1);
   }
 //}}}
 
 //{{{
-static void alloc_VidParamams (sVidParam** vidParam) {
+static void allocVidParam (sVidParam** vidParam) {
 
   if ((*vidParam = (sVidParam*)calloc (1, sizeof(sVidParam)))==NULL)
     no_mem_exit ("alloc_VidParamams: vidParam");
@@ -87,21 +83,20 @@ static void alloc_VidParamams (sVidParam** vidParam) {
 }
 //}}}
 //{{{
-static void alloc_params (sInputParam** inputParam ) {
+static void allocInputParam (sInputParam** inputParam ) {
   *inputParam = (sInputParam*)calloc (1, sizeof(sInputParam));
   }
 //}}}
 //{{{
-static int alloc_decoder (sDecoderParam** decoder) {
+static int allocDecoder (sDecoderParam** decoder) {
 
-  *decoder = (sDecoderParam*)calloc (1, sizeof(sDecoderParam));
-  alloc_VidParamams (&((*decoder)->vidParam));
-  alloc_params (&((*decoder)->inputParam));
+  *decoder = (sDecoderParam*)calloc(1, sizeof(sDecoderParam));
+  allocVidParam(&((*decoder)->vidParam));
+  allocInputParam(&((*decoder)->inputParam));
   (*decoder)->vidParam->inputParam = (*decoder)->inputParam;
   return 0;
-  }
+}
 //}}}
-
 //{{{
 sSlice* allocSlice (sInputParam* inputParam, sVidParam* vidParam) {
 
@@ -649,7 +644,7 @@ void setGlobalCodingProgram (sVidParam* vidParam, sCodingParam* cps) {
 //{{{
 int OpenDecoder (sInputParam* inputParam, byte* chunk, size_t chunkSize) {
 
-  int iRet = alloc_decoder (&gDecoder);
+  int iRet = allocDecoder (&gDecoder);
   if (iRet)
     return (iRet|DEC_ERRMASK);
 

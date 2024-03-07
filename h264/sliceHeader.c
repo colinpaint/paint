@@ -1336,17 +1336,6 @@ static void pred_weight_table (sSlice* curSlice) {
     }
   }
 //}}}
-//{{{
-static int picture_order (sSlice* pSlice ) {
-
-  if (pSlice->field_pic_flag == 0) // is a frame
-    return pSlice->framePoc;
-  else if (pSlice->bottom_field_flag == FALSE) // top field
-    return pSlice->topPoc;
-  else // bottom field
-    return pSlice->botPoc;
-  }
-//}}}
 
 //{{{
 unsigned ceilLog2 (unsigned uiVal) {

@@ -261,6 +261,8 @@ typedef struct {
 typedef sDecodingEnvironment* sDecodingEnvironmentPtr;
 
 struct Picture;
+struct Macroblock;
+struct PicMotionParam;
 //{{{  sMotionVector
 typedef struct {
   short mv_x;
@@ -327,10 +329,10 @@ typedef struct SyntaxElement {
   int           k;                     //!< CABAC context for coeff_count,uv
 
   // for mapping of CAVLC to syntaxElement
-  void  (*mapping)(int len, int info, int *value1, int *value2);
+  void (*mapping)(int len, int info, int* value1, int* value2);
 
   // used for CABAC: refers to actual coding method of each individual syntax element type
-  void  (*reading)(struct Macroblock *curMb, struct SyntaxElement *, sDecodingEnvironmentPtr);
+  void (*reading)(struct Macroblock* curMb, struct SyntaxElement*, sDecodingEnvironmentPtr);
   } sSyntaxElement;
 //}}}
 //{{{  sDataPartition
@@ -419,18 +421,22 @@ typedef struct Macroblock {
 
   void (*itrans_4x4)(struct Macroblock *curMb, sColorPlane pl, int ioff, int joff);
   void (*itrans_8x8)(struct Macroblock *curMb, sColorPlane pl, int ioff, int joff);
-
   void (*GetMVPredictor) (struct Macroblock *curMb, sPixelPos *block,
-    sMotionVector *pmv, short ref_frame, struct PicMotionParam** mv_info, int list, int mb_x, int mb_y, int blockshape_x, int blockshape_y);
-
+                          sMotionVector *pmv, short ref_frame, 
+                          struct PicMotionParam** mv_info, 
+                          int list, int mb_x, int mb_y, 
+                          int blockshape_x, int blockshape_y);
   int  (*read_and_store_CBP_block_bit)  (struct Macroblock *curMb, sDecodingEnvironmentPtr dep_dp, int type);
-  char (*readRefPictureIdx)             (struct Macroblock *curMb, struct SyntaxElement *currSE, struct DataPartition *dP, char b8mode, int list);
-
-  void (*read_comp_coeff_4x4_CABAC)     (struct Macroblock *curMb, struct SyntaxElement *currSE, sColorPlane pl, int (*InvLevelScale4x4)[4], int qp_per, int cbp);
-  void (*read_comp_coeff_8x8_CABAC)     (struct Macroblock *curMb, struct SyntaxElement *currSE, sColorPlane pl);
-
-  void (*read_comp_coeff_4x4_CAVLC)     (struct Macroblock *curMb, sColorPlane pl, int (*InvLevelScale4x4)[4], int qp_per, int cbp, byte** nzcoeff);
-  void (*read_comp_coeff_8x8_CAVLC)     (struct Macroblock *curMb, sColorPlane pl, int (*InvLevelScale8x8)[8], int qp_per, int cbp, byte** nzcoeff);
+  char (*readRefPictureIdx)             (struct Macroblock *curMb, struct SyntaxElement *currSE, 
+                                         struct DataPartition *dP, char b8mode, int list);
+  void (*read_comp_coeff_4x4_CABAC)     (struct Macroblock *curMb, struct SyntaxElement *currSE, 
+                                         sColorPlane pl, int (*InvLevelScale4x4)[4], int qp_per, int cbp);
+  void (*read_comp_coeff_8x8_CABAC)     (struct Macroblock *curMb, struct SyntaxElement *currSE, 
+                                         sColorPlane pl);
+  void (*read_comp_coeff_4x4_CAVLC)     (struct Macroblock *curMb, sColorPlane pl, 
+                                         int (*InvLevelScale4x4)[4], int qp_per, int cbp, byte** nzcoeff);
+  void (*read_comp_coeff_8x8_CAVLC)     (struct Macroblock *curMb, sColorPlane pl, 
+                                         int (*InvLevelScale8x8)[8], int qp_per, int cbp, byte** nzcoeff);
   } sMacroblock;
 //}}}
 //{{{  sWPParam
@@ -1047,7 +1053,7 @@ static inline int is_HI_intra_only_profile (unsigned int profile_idc, Boolean co
   extern void clearDecPicList (sVidParam* vidParam);
 
   extern sSlice* allocSlice (sInputParam* inputParam, sVidParam* vidParam);
-  extern void copySliceInfo (sSlice* curSlice, sOldSliceParam* oldSliceParam);
+  //extern void copySliceInfo (sSlice* curSlice, sOldSliceParam* oldSliceParam);
 
   extern void setGlobalCodingProgram (sVidParam* vidParam, sCodingParam* cps);
   extern void OpenOutputFiles (sVidParam* vidParam, int view0_id, int view1_id);
