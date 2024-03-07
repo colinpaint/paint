@@ -2,7 +2,7 @@
 #include <limits.h>
 
 #include "global.h"
-#include "memAlloc.h"
+#include "memory.h"
 
 #include "erc.h"
 #include "sliceHeader.h"
@@ -473,7 +473,7 @@ static void dpb_combine_field (sVidParam* vidParam, sFrameStore* frameStore) {
 //{{{
 static void insert_picture_in_dpb (sVidParam* vidParam, sFrameStore* fs, sPicture* p) {
 
-  sInputParam* p_Inp = vidParam->p_Inp;
+  sInputParam* p_Inp = vidParam->inputParam;
   //  printf ("insert (%s) pic with frame_num #%d, poc %d\n",
   //          (p->structure == FRAME)?"FRAME":(p->structure == TOP_FIELD)?"TOP_FIELD":"BOTTOM_FIELD",
   //          p->pic_num, p->poc);
@@ -1523,7 +1523,7 @@ void initDpb (sVidParam* vidParam, sDPB* dpb, int type) {
   if (dpb->init_done)
     freeDpb (dpb);
 
-  dpb->size = getDpbSize (vidParam, active_sps) + vidParam->p_Inp->dpb_plus[type == 2 ? 1 : 0];
+  dpb->size = getDpbSize (vidParam, active_sps) + vidParam->inputParam->dpb_plus[type == 2 ? 1 : 0];
   dpb->num_ref_frames = active_sps->num_ref_frames;
 
   if (dpb->size < active_sps->num_ref_frames)
@@ -1573,7 +1573,7 @@ void initDpb (sVidParam* vidParam, sDPB* dpb, int type) {
 void reInitDpb (sVidParam* vidParam, sDPB* dpb, int type) {
 
   sSPS* active_sps = vidParam->active_sps;
-  int iDpbSize = getDpbSize (vidParam, active_sps)+vidParam->p_Inp->dpb_plus[type == 2 ? 1 : 0];
+  int iDpbSize = getDpbSize (vidParam, active_sps)+vidParam->inputParam->dpb_plus[type == 2 ? 1 : 0];
   dpb->num_ref_frames = active_sps->num_ref_frames;
 
   if (iDpbSize > (int)dpb->size) {
@@ -2419,7 +2419,7 @@ void fill_frame_num_gap (sVidParam* vidParam, sSlice* curSlice) {
 //{{{
 int initImage (sVidParam* vidParam, sImage* image, sSPS* sps) {
 
-  sInputParam* p_Inp = vidParam->p_Inp;
+  sInputParam* p_Inp = vidParam->inputParam;
 
   // allocate memory for reference frame buffers: image->frm_data
   image->format = p_Inp->output;

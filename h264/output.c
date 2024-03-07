@@ -1,6 +1,6 @@
 //{{{  includes
 #include "global.h"
-#include "memAlloc.h"
+#include "memory.h"
 
 #include "image.h"
 //}}}
@@ -68,7 +68,7 @@ static void clearPicture (sVidParam* vidParam, sPicture* p) {
 //{{{
 static void writeOutPicture (sVidParam* vidParam, sPicture* p) {
 
-  sInputParam* p_Inp = vidParam->p_Inp;
+  sInputParam* p_Inp = vidParam->inputParam;
   sDecodedPicList* pDecPic;
 
   static const int SubWidthC  [4]= { 1, 2, 2, 1};

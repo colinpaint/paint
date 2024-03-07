@@ -1,6 +1,6 @@
 //{{{  includes
 #include "global.h"
-#include "memAlloc.h"
+#include "memory.h"
 
 #include "image.h"
 #include "mcPrediction.h"
@@ -96,8 +96,8 @@ static int alloc_decoder (sDecoderParam** decoder) {
 
   *decoder = (sDecoderParam*)calloc (1, sizeof(sDecoderParam));
   alloc_VidParamams (&((*decoder)->vidParam));
-  alloc_params (&((*decoder)->p_Inp));
-  (*decoder)->vidParam->p_Inp = (*decoder)->p_Inp;
+  alloc_params (&((*decoder)->inputParam));
+  (*decoder)->vidParam->inputParam = (*decoder)->inputParam;
   return 0;
   }
 //}}}
@@ -250,7 +250,7 @@ static void freeImg (sVidParam* vidParam) {
 //{{{
 static void init (sVidParam* vidParam) {
 
-  sInputParam *p_Inp = vidParam->p_Inp;
+  sInputParam *p_Inp = vidParam->inputParam;
   vidParam->oldFrameSizeInMbs = (unsigned int) -1;
 
   vidParam->recovery_point = 0;
@@ -398,7 +398,7 @@ void freePartition (sDataPartition* dp, int n) {
 //}}}
 
 //{{{
-void free_layer_buffers (sVidParam* vidParam, int layer_id) {
+void freeLayerBuffers (sVidParam* vidParam, int layer_id) {
 
   sCodingParam *cps = vidParam->p_EncodePar[layer_id];
 
@@ -460,7 +460,7 @@ void initGlobalBuffers (sVidParam* vidParam, int layer_id) {
   sBlockPos* PicPos;
 
   if (vidParam->global_init_done[layer_id])
-    free_layer_buffers (vidParam, layer_id);
+    freeLayerBuffers (vidParam, layer_id);
 
   // allocate memory in structure vidParam
   if (cps->separate_colour_plane_flag != 0) {
@@ -517,7 +517,7 @@ void initGlobalBuffers (sVidParam* vidParam, int layer_id) {
   }
 //}}}
 //{{{
-void free_global_buffers (sVidParam* vidParam) {
+void freeGlobalBuffers (sVidParam* vidParam) {
 
   if (vidParam->picture) {
     freePicture (vidParam->picture);
@@ -594,7 +594,7 @@ void freeDecPicList (sDecodedPicList* pDecPicList) {
 //}}}
 
 //{{{
-void set_global_CodingParam (sVidParam* vidParam, sCodingParam* cps) {
+void setGlobalCodingProgram (sVidParam* vidParam, sCodingParam* cps) {
 
   vidParam->bitdepth_chroma = 0;
   vidParam->width_cr = 0;
@@ -655,7 +655,7 @@ int OpenDecoder (sInputParam* p_Inp, byte* chunk, size_t chunkSize) {
 
   init_time();
 
-  memcpy (gDecoder->p_Inp, p_Inp, sizeof(sInputParam));
+  memcpy (gDecoder->inputParam, p_Inp, sizeof(sInputParam));
   gDecoder->vidParam->conceal_mode = p_Inp->conceal_mode;
   gDecoder->vidParam->ref_poc_gap = p_Inp->ref_poc_gap;
   gDecoder->vidParam->poc_gap = p_Inp->poc_gap;
@@ -710,9 +710,9 @@ int FinitDecoder (sDecodedPicList** ppDecPicList) {
 int CloseDecoder() {
 
   FmoFinit (gDecoder->vidParam);
-  free_layer_buffers (gDecoder->vidParam, 0);
-  free_layer_buffers (gDecoder->vidParam, 1);
-  free_global_buffers (gDecoder->vidParam);
+  freeLayerBuffers (gDecoder->vidParam, 0);
+  freeLayerBuffers (gDecoder->vidParam, 1);
+  freeGlobalBuffers (gDecoder->vidParam);
 
   ercClose (gDecoder->vidParam, gDecoder->vidParam->erc_errorVar);
 
@@ -722,7 +722,7 @@ int CloseDecoder() {
     freeDpb (gDecoder->vidParam->p_Dpb_layer[i]);
   freeOutput (gDecoder->vidParam);
   freeImg (gDecoder->vidParam);
-  free (gDecoder->p_Inp);
+  free (gDecoder->inputParam);
   free (gDecoder);
 
   gDecoder = NULL;

@@ -53,11 +53,10 @@ typedef enum {
 #define NUM_ABS_CTX    5
 //}}}
 
-struct storablePicture;
+struct Picture;
 struct DataPartition;
 struct SyntaxElement;
-struct pic_motion_params;
-struct pic_motion_params_old;
+struct PicMotionParamOld;
 //{{{  sDecodingEnvironment
 typedef struct {
   unsigned int Drange;
@@ -160,15 +159,15 @@ typedef struct CBPStructure {
 //{{{
 //! sMacroblock
 typedef struct Macroblock {
-  struct slice*     p_Slice;  // pointer to the current slice
-  struct VidParam* vidParam;    // pointer to sVidParam
-  struct InputParam*   p_Inp;
+  struct Slice*      p_Slice;
+  struct VidParam*   vidParam;
+  struct InputParam* inputParam;
 
-  int mbAddrX;                // current MB address
-  int mbAddrA;
-  int mbAddrB;
-  int mbAddrC;
-  int mbAddrD;
+  int     mbAddrX;
+  int     mbAddrA;
+  int     mbAddrB;
+  int     mbAddrC;
+  int     mbAddrD;
 
   Boolean mbAvailA;
   Boolean mbAvailB;
@@ -176,16 +175,16 @@ typedef struct Macroblock {
   Boolean mbAvailD;
 
   sBlockPos mb;
-  int block_x;
-  int block_y;
-  int block_y_aff;
-  int pix_x;
-  int pix_y;
-  int pix_c_x;
-  int pix_c_y;
+  int     block_x;
+  int     block_y;
+  int     block_y_aff;
+  int     pix_x;
+  int     pix_y;
+  int     pix_c_x;
+  int     pix_c_y;
 
-  int subblock_x;
-  int subblock_y;
+  int     subblock_x;
+  int     subblock_y;
 
   int     qp;                    // QP luma
   int     qpc[2];                // QP chroma
@@ -195,22 +194,22 @@ typedef struct Macroblock {
   Boolean is_v_block;
   int     DeblockCall;
 
-  short slice_nr;
-  char  ei_flag;            // error indicator flag that enables concealment
-  char  dpl_flag;           // error indicator flag that signals a missing data partition
-  short delta_quant;        // for rate control
-  short list_offset;
+  short   slice_nr;
+  char    ei_flag;            // error indicator flag that enables concealment
+  char    dpl_flag;           // error indicator flag that signals a missing data partition
+  short   delta_quant;        // for rate control
+  short   list_offset;
 
-  struct Macroblock   *mb_up;   // pointer to neighboring MB (CABAC)
-  struct Macroblock   *mb_left; // pointer to neighboring MB (CABAC)
+  struct Macroblock* mb_up;   // pointer to neighboring MB (CABAC)
+  struct Macroblock* mb_left; // pointer to neighboring MB (CABAC)
 
-  struct Macroblock   *mbup;    // neighbors for loopfilter
-  struct Macroblock   *mbleft;  // neighbors for loopfilter
+  struct Macroblock* mbup;    // neighbors for loopfilter
+  struct Macroblock* mbleft;  // neighbors for loopfilter
 
   // some storage of macroblock syntax elements for global access
-  short         mb_type;
-  short         mvd[2][BLOCK_MULTIPLE][BLOCK_MULTIPLE][2];      //!< indices correspond to [forw,backw][block_y][block_x][x,y]
-  int           cbp;
+  short   mb_type;
+  short   mvd[2][BLOCK_MULTIPLE][BLOCK_MULTIPLE][2];      //!< indices correspond to [forw,backw][block_y][block_x][x,y]
+  int     cbp;
   sCBPStructure  s_cbp[3];
 
   int   i16mode;
@@ -345,9 +344,9 @@ typedef struct OldSliceParam {
   } sOldSliceParam;
 //}}}
 //{{{
-typedef struct slice {
+typedef struct Slice {
   struct VidParam* vidParam;
-  struct InputParam* p_Inp;
+  struct InputParam* inputParam;
   sPPS* active_pps;
   sSPS* active_sps;
 
@@ -421,7 +420,7 @@ typedef struct slice {
   sDecRefPicMarking *dec_ref_pic_marking_buffer;                    //!< stores the memory management control operations
 
   char listXsize[6];
-  struct storablePicture** listX[6];
+  struct Picture** listX[6];
 
   sDataPartition       *partArr;      //!< array of partitions
   sMotionInfoContexts  *mot_ctx;      //!< pointer to struct of context models for use in CABAC
@@ -490,19 +489,19 @@ typedef struct slice {
 
   int erc_mvperMB;
   sMacroblock *mb_data;
-  struct storablePicture* picture;
+  struct Picture* picture;
   int** siblock;
   byte** ipredmode;
   char  *intra_block;
   char  chroma_vector_adjustment[6][32];
   void (*read_CBP_and_coeffs_from_NAL) (sMacroblock *curMb);
-  int  (*decode_one_component     )    (sMacroblock *curMb, sColorPlane curPlane, sPixel** curPixel, struct storablePicture* picture);
+  int  (*decode_one_component     )    (sMacroblock *curMb, sColorPlane curPlane, sPixel** curPixel, struct Picture* picture);
   int  (*readSlice                )    (struct VidParam *, struct InputParam *);
-  int  (*nal_startcode_follows    )    (struct slice*, int );
+  int  (*nal_startcode_follows    )    (struct Slice*, int );
   void (*read_motion_info_from_NAL)    (sMacroblock *curMb);
   void (*read_one_macroblock      )    (sMacroblock *curMb);
   void (*interpret_mb_mode        )    (sMacroblock *curMb);
-  void (*init_lists               )    (struct slice *curSlice);
+  void (*init_lists               )    (struct Slice *curSlice);
 
   void (*intra_pred_chroma        )    (sMacroblock *curMb);
   int  (*intra_pred_4x4)               (sMacroblock *curMb, sColorPlane pl, int ioff, int joff,int i4,int j4);
@@ -618,47 +617,46 @@ typedef struct LayerParam {
 //}}}
 //{{{
 typedef struct VidParam {
-  struct InputParam* p_Inp;
+  struct InputParam* inputParam;
 
   sPPS* active_pps;
   sSPS* active_sps;
-
-  sSPS SeqParSet[MAXSPS];
-  sPPS PicParSet[MAXPPS];
+  sSPS  SeqParSet[MAXSPS];
+  sPPS  PicParSet[MAXPPS];
 
   struct decoded_picture_buffer* p_Dpb_layer[MAX_NUM_DPB_LAYERS];
-  sCodingParam* p_EncodePar[MAX_NUM_DPB_LAYERS];
-  sLayerParam* p_LayerPar[MAX_NUM_DPB_LAYERS];
+  sCodingParam*                  p_EncodePar[MAX_NUM_DPB_LAYERS];
+  sLayerParam*                   p_LayerPar[MAX_NUM_DPB_LAYERS];
 
-  struct sei_params* p_SEI;
+  struct sei_params*    p_SEI;
   struct OldSliceParam* old_slice;
-  int number;                       //frame number
+  int                   number;  //frame number
 
   // current picture property;
   unsigned int num_dec_mb;
-  int iSliceNumOfCurrPic;
-  int iNumOfSlicesAllocated;
-  int iNumOfSlicesDecoded;
-  sSlice** ppSliceList;
-  char* intra_block;
-  char* intra_block_JV[MAX_PLANE];
+  int          iSliceNumOfCurrPic;
+  int          iNumOfSlicesAllocated;
+  int          iNumOfSlicesDecoded;
+  sSlice**     ppSliceList;
+  char*        intra_block;
+  char*        intra_block_JV[MAX_PLANE];
 
-  int type;                          // image type INTER/INTRA
+  int          type;                          // image type INTER/INTRA
 
-  byte** ipredmode;                  // prediction type [90][74]
-  byte** ipredmode_JV[MAX_PLANE];
-  byte**** nz_coeff;
-  int** siblock;
-  int** siblock_JV[MAX_PLANE];
-  sBlockPos* PicPos;
+  byte**       ipredmode;                  // prediction type [90][74]
+  byte**       ipredmode_JV[MAX_PLANE];
+  byte****     nz_coeff;
+  int**        siblock;
+  int**        siblock_JV[MAX_PLANE];
+  sBlockPos*   PicPos;
 
-  int newframe;
-  int structure;                     // Identify picture structure type
+  int          newframe;
+  int          structure;                     // Identify picture structure type
 
-  sSlice* pNextSlice;                 // pointer to first sSlice of next picture;
+  sSlice*      pNextSlice;                 // pointer to first sSlice of next picture;
   sMacroblock* mb_data;               // array containing all MBs of a whole frame
   sMacroblock* mb_data_JV[MAX_PLANE]; // mb_data to be used for 4:4:4 independent mode
-  int ChromaArrayType;
+  int          ChromaArrayType;
 
   // picture error concealment
   // concealment_head points to first node in list, concealment_end points to
@@ -667,140 +665,140 @@ typedef struct VidParam {
   struct concealment_node* concealment_end;
 
   unsigned int pre_frame_num;           // store the frame_num in the last decoded slice. For detecting gap in frame_num.
-  int non_conforming_stream;
+  int          non_conforming_stream;
 
   // for POC mode 0:
-  signed int PrevPicOrderCntMsb;
+  signed int   PrevPicOrderCntMsb;
   unsigned int PrevPicOrderCntLsb;
 
   // for POC mode 1:
-  signed int ExpectedPicOrderCnt, PicOrderCntCycleCnt, FrameNumInPicOrderCntCycle;
+  signed int   ExpectedPicOrderCnt, PicOrderCntCycleCnt, FrameNumInPicOrderCntCycle;
   unsigned int PreviousFrameNum, FrameNumOffset;
-  int ExpectedDeltaPerPicOrderCntCycle;
-  int ThisPOC;
-  int PreviousFrameNumOffset;
+  int          ExpectedDeltaPerPicOrderCntCycle;
+  int          ThisPOC;
+  int          PreviousFrameNumOffset;
 
   unsigned int PicHeightInMbs;
   unsigned int PicSizeInMbs;
 
-  int no_output_of_prior_pics_flag;
+  int          no_output_of_prior_pics_flag;
 
-  int last_has_mmco_5;
-  int last_pic_bottom_field;
+  int          last_has_mmco_5;
+  int          last_pic_bottom_field;
 
-  int idr_psnr_number;
-  int psnr_number;
+  int          idr_psnr_number;
+  int          psnr_number;
 
   // Timing related variables
-  TIME_T start_time;
-  TIME_T end_time;
-  int64 tot_time;
+  TIME_T       start_time;
+  TIME_T       end_time;
+  int64        tot_time;
 
   // picture error concealment
-  int last_ref_pic_poc;
-  int ref_poc_gap;
-  int poc_gap;
-  int conceal_mode;
-  int earlier_missing_poc;
+  int          last_ref_pic_poc;
+  int          ref_poc_gap;
+  int          poc_gap;
+  int          conceal_mode;
+  int          earlier_missing_poc;
   unsigned int frame_to_conceal;
-  int IDR_concealment_flag;
-  int conceal_slice_type;
+  int          IDR_concealment_flag;
+  int          conceal_slice_type;
 
-  Boolean first_sps;
-  int recovery_point;
-  int recovery_point_found;
-  int recovery_frame_cnt;
-  int recovery_frame_num;
-  int recovery_poc;
+  Boolean      first_sps;
+  int          recovery_point;
+  int          recovery_point_found;
+  int          recovery_frame_cnt;
+  int          recovery_frame_num;
+  int          recovery_poc;
 
   // Redundant slices. Should be moved to another structure and allocated only if extended profile
   unsigned int previous_frame_num; // frame number of previous slice
 
   // non-zero: i-th previous frame is correct
-  int Is_primary_correct;    // if primary frame is correct, 0: incorrect
-  int Is_redundant_correct;  // if redundant frame is correct, 0:incorrect
+  int          Is_primary_correct;    // if primary frame is correct, 0: incorrect
+  int          Is_redundant_correct;  // if redundant frame is correct, 0:incorrect
 
-  struct annexBstruct* annex_b;
-  int LastAccessUnitExists;
-  int NALUCount;
+  struct       annexBstruct* annex_b;
+  int          LastAccessUnitExists;
+  int          NALUCount;
 
-  int frame_no;
-  int g_nFrame;
-  Boolean global_init_done[2];
+  int          frame_no;
+  int          g_nFrame;
+  Boolean      global_init_done[2];
 
-  int* qp_per_matrix;
-  int* qp_rem_matrix;
+  int*         qp_per_matrix;
+  int*         qp_rem_matrix;
 
-  int pocs_in_dpb[100];
-  struct frameStore* last_out_fs;
-  struct storablePicture* picture;
-  struct storablePicture* dec_picture_JV[MAX_PLANE];  // picture to be used during 4:4:4 independent mode decoding
-  struct storablePicture* no_reference_picture;       // dummy storable picture for recovery point
+  int          pocs_in_dpb[100];
+  struct       frameStore* last_out_fs;
+  struct       Picture* picture;
+  struct       Picture* dec_picture_JV[MAX_PLANE];  // picture to be used during 4:4:4 independent mode decoding
+  struct       Picture* no_reference_picture;       // dummy storable picture for recovery point
 
   // Error parameters
-  struct object_buffer* erc_object_list;
+  struct object_buffer*  erc_object_list;
   struct ercVariables_s* erc_errorVar;
-  int erc_mvperMB;
-  struct VidParam* erc_img;
-  int ec_flag[SE_MAX_ELEMENTS];  // array to set errorconcealment
+  int                    erc_mvperMB;
+  struct VidParam*       erc_img;
+  int                    ec_flag[SE_MAX_ELEMENTS];  // array to set errorconcealment
 
   struct frameStore* out_buffer;
 
-  struct storablePicture* pending_output;
-  int    pending_output_state;
-  int    recovery_flag;
+  struct Picture*  pending_output;
+  int              pending_output_state;
+  int              recovery_flag;
 
   // report
-  char cslice_type[9];
+  char         cslice_type[9];
 
   // FMO
-  int* MbToSliceGroupMap;
-  int* MapUnitToSliceGroupMap;
-  int NumberOfSliceGroups;  // the number of slice groups -1 (0 == scan order, 7 == maximum)
+  int*         MbToSliceGroupMap;
+  int*         MapUnitToSliceGroupMap;
+  int          NumberOfSliceGroups;  // the number of slice groups -1 (0 == scan order, 7 == maximum)
 
   void (*getNeighbour)     (sMacroblock *curMb, int xN, int yN, int mb_size[2], sPixelPos *pix);
   void (*get_mb_block_pos) (sBlockPos *PicPos, int mb_addr, short *x, short *y);
-  void (*GetStrengthVer)   (sMacroblock *MbQ, int edge, int mvlimit, struct storablePicture *p);
-  void (*GetStrengthHor)   (sMacroblock *MbQ, int edge, int mvlimit, struct storablePicture *p);
+  void (*GetStrengthVer)   (sMacroblock *MbQ, int edge, int mvlimit, struct Picture *p);
+  void (*GetStrengthHor)   (sMacroblock *MbQ, int edge, int mvlimit, struct Picture *p);
   void (*EdgeLoopLumaVer)  (sColorPlane pl, sPixel** Img, byte *Strength, sMacroblock *MbQ, int edge);
-  void (*EdgeLoopLumaHor)  (sColorPlane pl, sPixel** Img, byte *Strength, sMacroblock *MbQ, int edge, struct storablePicture *p);
-  void (*EdgeLoopChromaVer)(sPixel** Img, byte *Strength, sMacroblock *MbQ, int edge, int uv, struct storablePicture *p);
-  void (*EdgeLoopChromaHor)(sPixel** Img, byte *Strength, sMacroblock *MbQ, int edge, int uv, struct storablePicture *p);
+  void (*EdgeLoopLumaHor)  (sColorPlane pl, sPixel** Img, byte *Strength, sMacroblock *MbQ, int edge, struct Picture *p);
+  void (*EdgeLoopChromaVer)(sPixel** Img, byte *Strength, sMacroblock *MbQ, int edge, int uv, struct Picture *p);
+  void (*EdgeLoopChromaHor)(sPixel** Img, byte *Strength, sMacroblock *MbQ, int edge, int uv, struct Picture *p);
 
-  sImage tempData3;
+  sImage       tempData3;
   sDecodedPicList* pDecOuputPic;
-  int iDeblockMode;  //0: deblock in picture, 1: deblock in slice;
+  int          iDeblockMode;  //0: deblock in picture, 1: deblock in slice;
 
   struct nalu_t* nalu;
-  int iLumaPadX;
-  int iLumaPadY;
-  int iChromaPadX;
-  int iChromaPadY;
+  int          iLumaPadX;
+  int          iLumaPadY;
+  int          iChromaPadX;
+  int          iChromaPadY;
 
   // control;
-  int bDeblockEnable;
-  int iPostProcess;
-  int bFrameInit;
-  sPPS *nextPPS;
-  int last_dec_poc;
-  int last_dec_view_id;
-  int last_dec_layer_id;
-  int dpb_layer_id;
+  int   bDeblockEnable;
+  int   iPostProcess;
+  int   bFrameInit;
+  sPPS* nextPPS;
+  int   last_dec_poc;
+  int   last_dec_view_id;
+  int   last_dec_layer_id;
+  int   dpb_layer_id;
 
-  int width;
-  int height;
-  int width_cr;
-  int height_cr;
+  int   width;
+  int   height;
+  int   width_cr;
+  int   height_cr;
 
   // Fidelity Range Extensions Stuff
   int pic_unit_bitsize_on_disk;
   short bitdepth_luma;
   short bitdepth_chroma;
-  int bitdepth_scale[2];
-  int bitdepth_luma_qp_scale;
-  int bitdepth_chroma_qp_scale;
+  int   bitdepth_scale[2];
+  int   bitdepth_luma_qp_scale;
+  int   bitdepth_chroma_qp_scale;
   unsigned int dc_pred_value_comp[MAX_PLANE]; // component value for DC prediction (depends on component pel bit depth)
-  int max_pel_value_comp[MAX_PLANE];          // max value that one picture element (pixel) can take (depends on pic_unit_bitdepth)
+  int  max_pel_value_comp[MAX_PLANE];          // max value that one picture element (pixel) can take (depends on pic_unit_bitdepth)
 
   int separate_colour_plane_flag;
   int pic_unit_size_on_disk;
@@ -831,13 +829,15 @@ typedef struct VidParam {
   unsigned int FrameHeightInMbs;
   unsigned int FrameSizeInMbs;
   unsigned int oldFrameSizeInMbs;
-  int max_vmv_r;  // maximum vertical motion vector range in luma quarter frame pixel units for the current level_idc
+
+  // maximum vertical motion vector range in luma quarter frame pixel units for the current level_idc
+  int max_vmv_r;  
   } sVidParam;
 //}}}
 //{{{
 typedef struct DecoderParam {
-  sInputParam* p_Inp;
-  sVidParam* vidParam;
+  sInputParam* inputParam;
+  sVidParam*   vidParam;
   } sDecoderParam;
 //}}}
 
@@ -875,8 +875,8 @@ static inline int is_BL_profile (unsigned int profile_idc) {
   extern void error (char* text, int code);
 
   extern void initGlobalBuffers (sVidParam *vidParam, int layer_id );
-  extern void free_global_buffers (sVidParam *vidParam);
-  extern void free_layer_buffers (sVidParam *vidParam, int layer_id );
+  extern void freeGlobalBuffers (sVidParam *vidParam);
+  extern void freeLayerBuffers (sVidParam *vidParam, int layer_id );
 
   extern sDataPartition* allocPartition (int n);
   extern void freePartition (sDataPartition* dp, int n);
@@ -895,7 +895,7 @@ static inline int is_BL_profile (unsigned int profile_idc) {
   extern sSlice* malloc_slice (sInputParam *p_Inp, sVidParam *vidParam );
   extern void copy_slice_info (sSlice* curSlice, sOldSliceParam *p_old_slice );
 
-  extern void set_global_CodingParam (sVidParam *vidParam, sCodingParam *cps);
+  extern void setGlobalCodingProgram (sVidParam *vidParam, sCodingParam *cps);
   extern void OpenOutputFiles (sVidParam *vidParam, int view0_id, int view1_id);
 //{{{
 #ifdef __cplusplus

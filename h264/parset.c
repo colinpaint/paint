@@ -1,6 +1,6 @@
 //{{{  includes
 #include "global.h"
-#include "memAlloc.h"
+#include "memory.h"
 
 #include "image.h"
 #include "parsetcommon.h"
@@ -207,7 +207,7 @@ static void resetFormatInfo (sSPS* sps, sVidParam* vidParam, sFrameFormat* sourc
   else
     crop_left = crop_right = crop_top = crop_bottom = 0;
 
-  sInputParam* p_Inp = vidParam->p_Inp;
+  sInputParam* p_Inp = vidParam->inputParam;
   if ((sps->chroma_format_idc == YUV400) && p_Inp->write_uv) {
     source->width[1] = (source->width[0] >> 1);
     source->width[2] = source->width[1];
@@ -767,7 +767,7 @@ void processSPS (sVidParam* vidParam, sNalu* nalu) {
 //{{{
 void activateSPS (sVidParam* vidParam, sSPS* sps) {
 
-  sInputParam* p_Inp = vidParam->p_Inp;
+  sInputParam* p_Inp = vidParam->inputParam;
 
   if (vidParam->active_sps != sps) {
     if (vidParam->picture) // this may only happen on slice loss
@@ -778,7 +778,7 @@ void activateSPS (sVidParam* vidParam, sSPS* sps) {
       setCodingParam (sps, vidParam->p_EncodePar[0]);
       setupLayerInfo ( vidParam, sps, vidParam->p_LayerPar[0]);
       }
-    set_global_CodingParam (vidParam, vidParam->p_EncodePar[vidParam->dpb_layer_id]);
+    setGlobalCodingProgram (vidParam, vidParam->p_EncodePar[vidParam->dpb_layer_id]);
 
     initGlobalBuffers (vidParam, 0);
     if (!vidParam->no_output_of_prior_pics_flag)

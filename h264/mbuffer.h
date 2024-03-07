@@ -3,13 +3,13 @@
 
 #define MAX_LIST_SIZE 33
 //{{{  sPicMotionParamsOld
-typedef struct pic_motion_params_old {
+typedef struct PicMotionParamOld {
   byte*  mb_field;      // field macroblock indicator
   } sPicMotionParamsOld;
 //}}}
 //{{{  sPicMotionParams
 typedef struct pic_motion_params {
-  struct storablePicture* ref_pic[2];  // referrence picture pointer
+  struct Picture* ref_pic[2];  // referrence picture pointer
   sMotionVector           mv[2];       // motion vector
   char                    ref_idx[2];  // reference picture   [list][subblock_y][subblock_x]
   byte                    slice_no;
@@ -17,7 +17,7 @@ typedef struct pic_motion_params {
 //}}}
 //{{{  sPicture
 //! definition a picture (field or frame)
-typedef struct storablePicture {
+typedef struct Picture {
   sPictureStructure structure;
 
   int         poc;
@@ -53,12 +53,12 @@ typedef struct storablePicture {
 
   struct pic_motion_params** mv_info;
   struct pic_motion_params** JVmv_info[MAX_PLANE];
-  struct pic_motion_params_old  motion;
-  struct pic_motion_params_old  JVmotion[MAX_PLANE]; // Motion info for 4:4:4 independent mode decoding
+  struct PicMotionParamOld  motion;
+  struct PicMotionParamOld  JVmotion[MAX_PLANE]; // Motion info for 4:4:4 independent mode decoding
 
-  struct storablePicture* top_field;     // for mb aff, if frame for referencing the top field
-  struct storablePicture* bottom_field;  // for mb aff, if frame for referencing the bottom field
-  struct storablePicture* frame;         // for mb aff, if field for referencing the combined frame
+  struct Picture* top_field;     // for mb aff, if frame for referencing the top field
+  struct Picture* bottom_field;  // for mb aff, if frame for referencing the bottom field
+  struct Picture* frame;         // for mb aff, if field for referencing the combined frame
 
   int         slice_type;
   int         idr_flag;
@@ -90,7 +90,7 @@ typedef struct storablePicture {
   int         iCodingType;
 
   char listXsize[MAX_NUM_SLICES][2];
-  struct storablePicture** listX[MAX_NUM_SLICES][2];
+  struct Picture** listX[MAX_NUM_SLICES][2];
   int         layer_id;
   } sPicture;
 //}}}

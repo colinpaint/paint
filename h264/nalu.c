@@ -1,6 +1,6 @@
 //{{{  includes
 #include "global.h"
-#include "memAlloc.h"
+#include "memory.h"
 
 #include "nalu.h"
 //}}}
@@ -353,7 +353,7 @@ static int NALUtoRBSP (sNalu* nalu) {
 //{{{
 int readNextNalu (sVidParam* vidParam, sNalu* nalu) {
 
-  sInputParam* p_Inp = vidParam->p_Inp;
+  sInputParam* p_Inp = vidParam->inputParam;
 
   int ret = getNALU (vidParam->annex_b, vidParam, nalu);
   if (ret < 0) {

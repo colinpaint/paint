@@ -1,6 +1,6 @@
 //{{{  includes
 #include "global.h"
-#include "memAlloc.h"
+#include "memory.h"
 
 #include "cabac.h"
 #include "elements.h"

@@ -5,7 +5,7 @@
 #include <math.h>
 
 #include "global.h"
-#include "memAlloc.h"
+#include "memory.h"
 
 #include "block.h"
 #include "image.h"

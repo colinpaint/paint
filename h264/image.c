@@ -1,6 +1,6 @@
 //{{{  includes
 #include "global.h"
-#include "memAlloc.h"
+#include "memory.h"
 
 #include "image.h"
 #include "fmo.h"
@@ -846,7 +846,7 @@ static int readNewSlice (sSlice* curSlice) {
 
   static sNalu* pendingNalu = NULL;
 
-  sInputParam* p_Inp = curSlice->p_Inp;
+  sInputParam* p_Inp = curSlice->inputParam;
   sVidParam* vidParam = curSlice->vidParam;
 
   int current_header = 0;
@@ -1117,7 +1117,7 @@ void initOldSlice (sOldSliceParam* p_old_slice) {
 //{{{
 void calcFrameNum (sVidParam* vidParam, sPicture *p) {
 
-  sInputParam* p_Inp = vidParam->p_Inp;
+  sInputParam* p_Inp = vidParam->inputParam;
   int psnrPOC = vidParam->active_sps->mb_adaptive_frame_field_flag ? p->poc / (p_Inp->poc_scale) :
                                                                      p->poc / (p_Inp->poc_scale);
   if (psnrPOC == 0)
@@ -1151,7 +1151,7 @@ void padPicture (sVidParam* vidParam, sPicture* picture) {
 //{{{
 void exitPicture (sVidParam* vidParam, sPicture** picture) {
 
-  sInputParam* p_Inp = vidParam->p_Inp;
+  sInputParam* p_Inp = vidParam->inputParam;
 
   // return if the last picture has already been finished
   if (*picture == NULL ||
@@ -1316,7 +1316,7 @@ int decode_one_frame (sDecoderParam* pDecoder) {
   int ret = 0;
 
   sVidParam* vidParam = pDecoder->vidParam;
-  sInputParam* p_Inp = vidParam->p_Inp;
+  sInputParam* p_Inp = vidParam->inputParam;
 
   // read one picture first
   vidParam->iSliceNumOfCurrPic = 0;
@@ -1354,7 +1354,7 @@ int decode_one_frame (sDecoderParam* pDecoder) {
 
     curSlice = ppSliceList[vidParam->iSliceNumOfCurrPic];
     curSlice->vidParam = vidParam;
-    curSlice->p_Inp = p_Inp;
+    curSlice->inputParam = p_Inp;
     curSlice->dpb = vidParam->p_Dpb_layer[0]; //set default value;
     curSlice->next_header = -8888;
     curSlice->num_dec_mb = 0;

@@ -1730,7 +1730,7 @@ void readSliceHeader (sSlice* curSlice) {
 void readRestSliceHeader (sSlice* curSlice) {
 
   sVidParam* vidParam = curSlice->vidParam;
-  sInputParam* p_Inp = curSlice->p_Inp;
+  sInputParam* p_Inp = curSlice->inputParam;
   sSPS* active_sps = vidParam->active_sps;
 
   byte dP_nr = assignSE2partition[curSlice->dp_mode][SE_HEADER];
