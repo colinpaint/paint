@@ -834,7 +834,7 @@ void start_macroblock (sSlice* curSlice, sMacroblock** curMb)
   // Select appropriate MV predictor function
   init_motion_vector_prediction(*curMb, curSlice->mb_aff_frame_flag);
 
-  set_read_and_store_CBP(curMb, curSlice->activeSPS->chroma_format_idc);
+  set_read_and_store_CBP(curMb, curSlice->activeSPS->chromaFormatIdc);
 
   // Reset syntax element entries in MB struct
 
@@ -1291,7 +1291,7 @@ void setup_slice_methods (sSlice* curSlice) {
 
   set_intra_prediction_modes (curSlice);
 
-  if (curSlice->vidParam->activeSPS->chroma_format_idc==YUV444 && (curSlice->vidParam->separate_colour_plane_flag == 0) )
+  if (curSlice->vidParam->activeSPS->chromaFormatIdc==YUV444 && (curSlice->vidParam->separate_colour_plane_flag == 0) )
     curSlice->read_coeff_4x4_CAVLC = read_coeff_4x4_CAVLC_444;
   else
     curSlice->read_coeff_4x4_CAVLC = read_coeff_4x4_CAVLC;

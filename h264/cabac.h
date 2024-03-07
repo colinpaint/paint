@@ -35,6 +35,6 @@ extern int check_next_mb_and_get_field_mode_CABAC_b_slice (sSlice* curSlice, sSy
 
 extern void CheckAvailabilityOfNeighborsCABAC (sMacroblock* curMb);
 
-extern void set_read_and_store_CBP (sMacroblock** curMb, int chroma_format_idc);
+extern void set_read_and_store_CBP (sMacroblock** curMb, int chromaFormatIdc);
 extern void set_read_CBP_and_coeffs_cabac (sSlice* curSlice);
 extern void set_read_comp_coeff_cabac (sMacroblock* curMb);

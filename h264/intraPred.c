@@ -3631,7 +3631,7 @@ static void intrapred_chroma_dc (sMacroblock *curMb)
   sVidParam* vidParam = curMb->vidParam;
   sPicture* picture = curSlice->picture;
   int        b8, b4;
-  int        yuv = picture->chroma_format_idc - 1;
+  int        yuv = picture->chromaFormatIdc - 1;
   int        blk_x, blk_y;
   int        pred, pred1;
   static const int block_pos[3][4][4]= //[yuv][b8][b4]
@@ -3951,7 +3951,7 @@ static void intra_pred_chroma_mbaff (sMacroblock *curMb)
   int ih, iv, ib, ic, iaa;
 
   int        b8, b4;
-  int        yuv = picture->chroma_format_idc - 1;
+  int        yuv = picture->chromaFormatIdc - 1;
   int        blk_x, blk_y;
   int        pred;
   static const int block_pos[3][4][4]= //[yuv][b8][b4]

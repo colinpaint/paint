@@ -107,7 +107,7 @@ typedef struct {
   Boolean  constrained_set3_flag;     // u(1)
   unsigned int level_idc;             // u(8)
   unsigned int seq_parameter_set_id;  // ue(v)
-  unsigned int chroma_format_idc;     // ue(v)
+  unsigned int chromaFormatIdc;     // ue(v)
 
   Boolean  seq_scaling_matrix_present_flag;    // u(1)
   int      seq_scaling_list_present_flag[12];  // u(1)
@@ -767,7 +767,7 @@ typedef struct CodingParam {
 typedef struct LayerParam {
   int              layerId;
   struct VidParam* vidParam;
-  sCodingParam*    cps;
+  sCodingParam*    codingParam;
   sSPS*            sps;
   struct DPB*      dpb;
   } sLayerParam;
@@ -1055,7 +1055,7 @@ static inline int is_HI_intra_only_profile (unsigned int profile_idc, Boolean co
   extern sSlice* allocSlice (sInputParam* inputParam, sVidParam* vidParam);
   //extern void copySliceInfo (sSlice* curSlice, sOldSliceParam* oldSliceParam);
 
-  extern void setGlobalCodingProgram (sVidParam* vidParam, sCodingParam* cps);
+  extern void setGlobalCodingProgram (sVidParam* vidParam, sCodingParam* codingParam);
   extern void OpenOutputFiles (sVidParam* vidParam, int view0_id, int view1_id);
 //{{{
 #ifdef __cplusplus

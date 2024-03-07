@@ -497,7 +497,7 @@ int readsSyntaxElement_NumCoeffTrailingOnesChromaDC (sVidParam* vidParam, sSynta
   };
 
   int code;
-  int yuv = vidParam->activeSPS->chroma_format_idc - 1;
+  int yuv = vidParam->activeSPS->chromaFormatIdc - 1;
   int retval = code_from_bitstream_2d(sym, curStream, &lentab[yuv][0][0], &codtab[yuv][0][0], 17, 4, &code);
 
   if (retval)
@@ -749,7 +749,7 @@ int readsSyntaxElement_TotalZerosChromaDC (sVidParam* vidParam, sSyntaxElement* 
   //}}}
 
   int code;
-  int yuv = vidParam->activeSPS->chroma_format_idc - 1;
+  int yuv = vidParam->activeSPS->chromaFormatIdc - 1;
   int vlcnum = sym->value1;
   int retval = code_from_bitstream_2d(sym, curStream, &lentab[yuv][vlcnum][0], &codtab[yuv][vlcnum][0], 16, 1, &code);
 

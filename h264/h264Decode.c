@@ -295,7 +295,7 @@ void init_frext (sVidParam* vidParam) {
   //pel bitdepth init
   vidParam->bitdepth_luma_qp_scale   = 6 * (vidParam->bitdepth_luma - 8);
 
-  if(vidParam->bitdepth_luma > vidParam->bitdepth_chroma || vidParam->activeSPS->chroma_format_idc == YUV400)
+  if(vidParam->bitdepth_luma > vidParam->bitdepth_chroma || vidParam->activeSPS->chromaFormatIdc == YUV400)
     vidParam->pic_unit_bitsize_on_disk = (vidParam->bitdepth_luma > 8)? 16:8;
   else
     vidParam->pic_unit_bitsize_on_disk = (vidParam->bitdepth_chroma > 8)? 16:8;
@@ -303,18 +303,18 @@ void init_frext (sVidParam* vidParam) {
   vidParam->max_pel_value_comp[0] = (1<<vidParam->bitdepth_luma) - 1;
   vidParam->mb_size[0][0] = vidParam->mb_size[0][1] = MB_BLOCK_SIZE;
 
-  if (vidParam->activeSPS->chroma_format_idc != YUV400) {
+  if (vidParam->activeSPS->chromaFormatIdc != YUV400) {
     //for chrominance part
     vidParam->bitdepth_chroma_qp_scale = 6 * (vidParam->bitdepth_chroma - 8);
     vidParam->dc_pred_value_comp[1]    = (1 << (vidParam->bitdepth_chroma - 1));
     vidParam->dc_pred_value_comp[2]    = vidParam->dc_pred_value_comp[1];
     vidParam->max_pel_value_comp[1]    = (1 << vidParam->bitdepth_chroma) - 1;
     vidParam->max_pel_value_comp[2]    = (1 << vidParam->bitdepth_chroma) - 1;
-    vidParam->num_blk8x8_uv = (1 << vidParam->activeSPS->chroma_format_idc) & (~(0x1));
+    vidParam->num_blk8x8_uv = (1 << vidParam->activeSPS->chromaFormatIdc) & (~(0x1));
     vidParam->num_uv_blocks = (vidParam->num_blk8x8_uv >> 1);
     vidParam->num_cdc_coeff = (vidParam->num_blk8x8_uv << 1);
-    vidParam->mb_size[1][0] = vidParam->mb_size[2][0] = vidParam->mb_cr_size_x  = (vidParam->activeSPS->chroma_format_idc==YUV420 || vidParam->activeSPS->chroma_format_idc==YUV422)?  8 : 16;
-    vidParam->mb_size[1][1] = vidParam->mb_size[2][1] = vidParam->mb_cr_size_y  = (vidParam->activeSPS->chroma_format_idc==YUV444 || vidParam->activeSPS->chroma_format_idc==YUV422)? 16 :  8;
+    vidParam->mb_size[1][0] = vidParam->mb_size[2][0] = vidParam->mb_cr_size_x  = (vidParam->activeSPS->chromaFormatIdc==YUV420 || vidParam->activeSPS->chromaFormatIdc==YUV422)?  8 : 16;
+    vidParam->mb_size[1][1] = vidParam->mb_size[2][1] = vidParam->mb_cr_size_y  = (vidParam->activeSPS->chromaFormatIdc==YUV444 || vidParam->activeSPS->chromaFormatIdc==YUV422)? 16 :  8;
 
     vidParam->subpel_x    = vidParam->mb_cr_size_x == 8 ? 7 : 3;
     vidParam->subpel_y    = vidParam->mb_cr_size_y == 8 ? 7 : 3;
@@ -395,55 +395,55 @@ void freePartition (sDataPartition* dp, int n) {
 //{{{
 void freeLayerBuffers (sVidParam* vidParam, int layerId) {
 
-  sCodingParam *cps = vidParam->codingParam[layerId];
+  sCodingParam *codingParam = vidParam->codingParam[layerId];
 
   if (!vidParam->globalInitDone[layerId])
     return;
 
   // CAVLC free mem
-  if (cps->nzCoeff) {
-    free_mem4D(cps->nzCoeff);
-    cps->nzCoeff = NULL;
+  if (codingParam->nzCoeff) {
+    free_mem4D(codingParam->nzCoeff);
+    codingParam->nzCoeff = NULL;
     }
 
   // free mem, allocated for structure vidParam
-  if ((cps->separate_colour_plane_flag != 0) ) {
+  if ((codingParam->separate_colour_plane_flag != 0) ) {
     for (int i = 0; i<MAX_PLANE; i++) {
-      free (cps->mbDataJV[i]);
-      cps->mbDataJV[i] = NULL;
-      free_mem2Dint(cps->siBlockJV[i]);
-      cps->siBlockJV[i] = NULL;
-      free_mem2D(cps->predModeJV[i]);
-      cps->predModeJV[i] = NULL;
-      free (cps->intraBlockJV[i]);
-      cps->intraBlockJV[i] = NULL;
+      free (codingParam->mbDataJV[i]);
+      codingParam->mbDataJV[i] = NULL;
+      free_mem2Dint(codingParam->siBlockJV[i]);
+      codingParam->siBlockJV[i] = NULL;
+      free_mem2D(codingParam->predModeJV[i]);
+      codingParam->predModeJV[i] = NULL;
+      free (codingParam->intraBlockJV[i]);
+      codingParam->intraBlockJV[i] = NULL;
       }
     }
   else {
-    if (cps->mbData != NULL) {
-      free(cps->mbData);
-      cps->mbData = NULL;
+    if (codingParam->mbData != NULL) {
+      free(codingParam->mbData);
+      codingParam->mbData = NULL;
       }
-    if (cps->siBlock) {
-      free_mem2Dint(cps->siBlock);
-      cps->siBlock = NULL;
+    if (codingParam->siBlock) {
+      free_mem2Dint(codingParam->siBlock);
+      codingParam->siBlock = NULL;
       }
-    if (cps->predMode) {
-      free_mem2D(cps->predMode);
-      cps->predMode = NULL;
+    if (codingParam->predMode) {
+      free_mem2D(codingParam->predMode);
+      codingParam->predMode = NULL;
       }
-    if (cps->intraBlock) {
-      free (cps->intraBlock);
-      cps->intraBlock = NULL;
+    if (codingParam->intraBlock) {
+      free (codingParam->intraBlock);
+      codingParam->intraBlock = NULL;
       }
     }
 
-  if (cps->picPos) {
-    free(cps->picPos);
-    cps->picPos = NULL;
+  if (codingParam->picPos) {
+    free(codingParam->picPos);
+    codingParam->picPos = NULL;
     }
 
-  freeQuant (cps);
+  freeQuant (codingParam);
 
   vidParam->globalInitDone[layerId] = 0;
   }
@@ -451,63 +451,63 @@ void freeLayerBuffers (sVidParam* vidParam, int layerId) {
 //{{{
 void initGlobalBuffers (sVidParam* vidParam, int layerId) {
 
-  sCodingParam *cps = vidParam->codingParam[layerId];
+  sCodingParam *codingParam = vidParam->codingParam[layerId];
   sBlockPos* picPos;
 
   if (vidParam->globalInitDone[layerId])
     freeLayerBuffers (vidParam, layerId);
 
   // allocate memory in structure vidParam
-  if (cps->separate_colour_plane_flag != 0) {
+  if (codingParam->separate_colour_plane_flag != 0) {
     for (int i = 0; i<MAX_PLANE; ++i )
-      if (((cps->mbDataJV[i]) = (sMacroblock*)calloc(cps->FrameSizeInMbs, sizeof(sMacroblock))) == NULL)
-        no_mem_exit ("initGlobalBuffers: cps->mbDataJV");
-    cps->mbData = NULL;
+      if (((codingParam->mbDataJV[i]) = (sMacroblock*)calloc(codingParam->FrameSizeInMbs, sizeof(sMacroblock))) == NULL)
+        no_mem_exit ("initGlobalBuffers: codingParam->mbDataJV");
+    codingParam->mbData = NULL;
     }
-  else if (((cps->mbData) = (sMacroblock*)calloc (cps->FrameSizeInMbs, sizeof(sMacroblock))) == NULL)
-    no_mem_exit ("initGlobalBuffers: cps->mbData");
+  else if (((codingParam->mbData) = (sMacroblock*)calloc (codingParam->FrameSizeInMbs, sizeof(sMacroblock))) == NULL)
+    no_mem_exit ("initGlobalBuffers: codingParam->mbData");
 
-  if (cps->separate_colour_plane_flag != 0) {
+  if (codingParam->separate_colour_plane_flag != 0) {
     for (int i = 0; i < MAX_PLANE; ++i )
-      if (((cps->intraBlockJV[i]) = (char*) calloc(cps->FrameSizeInMbs, sizeof(char))) == NULL)
-        no_mem_exit ("initGlobalBuffers: cps->intraBlockJV");
-    cps->intraBlock = NULL;
+      if (((codingParam->intraBlockJV[i]) = (char*) calloc(codingParam->FrameSizeInMbs, sizeof(char))) == NULL)
+        no_mem_exit ("initGlobalBuffers: codingParam->intraBlockJV");
+    codingParam->intraBlock = NULL;
     }
-  else if (((cps->intraBlock) = (char*)calloc (cps->FrameSizeInMbs, sizeof(char))) == NULL)
-    no_mem_exit ("initGlobalBuffers: cps->intraBlock");
+  else if (((codingParam->intraBlock) = (char*)calloc (codingParam->FrameSizeInMbs, sizeof(char))) == NULL)
+    no_mem_exit ("initGlobalBuffers: codingParam->intraBlock");
 
-  if (((cps->picPos) = (sBlockPos*)calloc(cps->FrameSizeInMbs + 1, sizeof(sBlockPos))) == NULL)
+  if (((codingParam->picPos) = (sBlockPos*)calloc(codingParam->FrameSizeInMbs + 1, sizeof(sBlockPos))) == NULL)
     no_mem_exit ("initGlobalBuffers: picPos");
 
-  picPos = cps->picPos;
-  for (int i = 0; i < (int) cps->FrameSizeInMbs + 1;++i) {
-    picPos[i].x = (short)(i % cps->PicWidthInMbs);
-    picPos[i].y = (short)(i / cps->PicWidthInMbs);
+  picPos = codingParam->picPos;
+  for (int i = 0; i < (int) codingParam->FrameSizeInMbs + 1;++i) {
+    picPos[i].x = (short)(i % codingParam->PicWidthInMbs);
+    picPos[i].y = (short)(i / codingParam->PicWidthInMbs);
     }
 
-  if( (cps->separate_colour_plane_flag != 0)) {
+  if( (codingParam->separate_colour_plane_flag != 0)) {
     for (int i = 0; i < MAX_PLANE; ++i )
-      get_mem2D (&(cps->predModeJV[i]), 4*cps->FrameHeightInMbs, 4*cps->PicWidthInMbs);
-    cps->predMode = NULL;
+      get_mem2D (&(codingParam->predModeJV[i]), 4*codingParam->FrameHeightInMbs, 4*codingParam->PicWidthInMbs);
+    codingParam->predMode = NULL;
     }
   else
-    get_mem2D (&(cps->predMode), 4*cps->FrameHeightInMbs, 4*cps->PicWidthInMbs);
+    get_mem2D (&(codingParam->predMode), 4*codingParam->FrameHeightInMbs, 4*codingParam->PicWidthInMbs);
 
   // CAVLC mem
-  get_mem4D (&(cps->nzCoeff), cps->FrameSizeInMbs, 3, BLOCK_SIZE, BLOCK_SIZE);
-  if (cps->separate_colour_plane_flag != 0) {
+  get_mem4D (&(codingParam->nzCoeff), codingParam->FrameSizeInMbs, 3, BLOCK_SIZE, BLOCK_SIZE);
+  if (codingParam->separate_colour_plane_flag != 0) {
     for (int i = 0; i < MAX_PLANE; ++i ) {
-      get_mem2Dint (&(cps->siBlockJV[i]), cps->FrameHeightInMbs, cps->PicWidthInMbs);
-      if (cps->siBlockJV[i] == NULL)
+      get_mem2Dint (&(codingParam->siBlockJV[i]), codingParam->FrameHeightInMbs, codingParam->PicWidthInMbs);
+      if (codingParam->siBlockJV[i] == NULL)
         no_mem_exit ("initGlobalBuffers: vidParam->siBlockJV");
       }
-    cps->siBlock = NULL;
+    codingParam->siBlock = NULL;
     }
   else
-    get_mem2Dint (&(cps->siBlock), cps->FrameHeightInMbs, cps->PicWidthInMbs);
+    get_mem2Dint (&(codingParam->siBlock), codingParam->FrameHeightInMbs, codingParam->PicWidthInMbs);
 
-  allocQuant (cps);
-  cps->oldFrameSizeInMbs = cps->FrameSizeInMbs;
+  allocQuant (codingParam);
+  codingParam->oldFrameSizeInMbs = codingParam->FrameSizeInMbs;
   vidParam->globalInitDone[layerId] = 1;
   }
 //}}}
@@ -589,32 +589,32 @@ void freeDecPicList (sDecodedPicList* pDecPicList) {
 //}}}
 
 //{{{
-void setGlobalCodingProgram (sVidParam* vidParam, sCodingParam* cps) {
+void setGlobalCodingProgram (sVidParam* vidParam, sCodingParam* codingParam) {
 
   vidParam->bitdepth_chroma = 0;
   vidParam->widthCr = 0;
   vidParam->heightCr = 0;
-  vidParam->lossless_qpprime_flag = cps->lossless_qpprime_flag;
-  vidParam->max_vmv_r = cps->max_vmv_r;
+  vidParam->lossless_qpprime_flag = codingParam->lossless_qpprime_flag;
+  vidParam->max_vmv_r = codingParam->max_vmv_r;
 
   // Fidelity Range Extensions stuff (part 1)
-  vidParam->bitdepth_luma = cps->bitdepth_luma;
-  vidParam->bitdepth_scale[0] = cps->bitdepth_scale[0];
-  vidParam->bitdepth_chroma = cps->bitdepth_chroma;
-  vidParam->bitdepth_scale[1] = cps->bitdepth_scale[1];
+  vidParam->bitdepth_luma = codingParam->bitdepth_luma;
+  vidParam->bitdepth_scale[0] = codingParam->bitdepth_scale[0];
+  vidParam->bitdepth_chroma = codingParam->bitdepth_chroma;
+  vidParam->bitdepth_scale[1] = codingParam->bitdepth_scale[1];
 
-  vidParam->max_frame_num = cps->max_frame_num;
-  vidParam->PicWidthInMbs = cps->PicWidthInMbs;
-  vidParam->PicHeightInMapUnits = cps->PicHeightInMapUnits;
-  vidParam->FrameHeightInMbs = cps->FrameHeightInMbs;
-  vidParam->FrameSizeInMbs = cps->FrameSizeInMbs;
+  vidParam->max_frame_num = codingParam->max_frame_num;
+  vidParam->PicWidthInMbs = codingParam->PicWidthInMbs;
+  vidParam->PicHeightInMapUnits = codingParam->PicHeightInMapUnits;
+  vidParam->FrameHeightInMbs = codingParam->FrameHeightInMbs;
+  vidParam->FrameSizeInMbs = codingParam->FrameSizeInMbs;
 
-  vidParam->yuvFormat = cps->yuvFormat;
-  vidParam->separate_colour_plane_flag = cps->separate_colour_plane_flag;
-  vidParam->ChromaArrayType = cps->ChromaArrayType;
+  vidParam->yuvFormat = codingParam->yuvFormat;
+  vidParam->separate_colour_plane_flag = codingParam->separate_colour_plane_flag;
+  vidParam->ChromaArrayType = codingParam->ChromaArrayType;
 
-  vidParam->width = cps->width;
-  vidParam->height = cps->height;
+  vidParam->width = codingParam->width;
+  vidParam->height = codingParam->height;
   vidParam->iLumaPadX = MCBUF_LUMA_PAD_X;
   vidParam->iLumaPadY = MCBUF_LUMA_PAD_Y;
   vidParam->iChromaPadX = MCBUF_CHROMA_PAD_X;

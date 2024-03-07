@@ -1267,7 +1267,7 @@ static void pred_weight_table (sSlice* curSlice) {
   curSlice->wp_round_luma =
     curSlice->luma_log2_weight_denom ? 1<<(curSlice->luma_log2_weight_denom - 1) : 0;
 
-  if (0 != activeSPS->chroma_format_idc) {
+  if (0 != activeSPS->chromaFormatIdc) {
     curSlice->chroma_log2_weight_denom =
       (unsigned short) read_ue_v ("SLC chroma_log2_weight_denom", curStream);
     curSlice->wp_round_chroma =
@@ -1288,7 +1288,7 @@ static void pred_weight_table (sSlice* curSlice) {
       curSlice->wp_offset[LIST_0][i][0] = 0;
       }
 
-    if (activeSPS->chroma_format_idc != 0) {
+    if (activeSPS->chromaFormatIdc != 0) {
       chroma_weight_flag_l0 = read_u_1 ("SLC chroma_weight_flag_l0", curStream);
       for (int j = 1; j<3; j++) {
         if (chroma_weight_flag_l0) {
@@ -1318,7 +1318,7 @@ static void pred_weight_table (sSlice* curSlice) {
         curSlice->wp_offset[LIST_1][i][0] = 0;
         }
 
-      if (activeSPS->chroma_format_idc != 0) {
+      if (activeSPS->chromaFormatIdc != 0) {
         chroma_weight_flag_l1 = read_u_1 ("SLC chroma_weight_flag_l1", curStream);
         for (int j = 1; j < 3; j++) {
           if (chroma_weight_flag_l1) {

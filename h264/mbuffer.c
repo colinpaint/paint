@@ -334,7 +334,7 @@ static void dpb_split_field (sVidParam* vidParam, sFrameStore* frameStore) {
     fs_btm->frame = frame;
     fs_btm->bottom_field = fs_btm;
 
-    fs_top->chroma_format_idc = fs_btm->chroma_format_idc = frame->chroma_format_idc;
+    fs_top->chromaFormatIdc = fs_btm->chromaFormatIdc = frame->chromaFormatIdc;
     fs_top->iCodingType = fs_btm->iCodingType = frame->iCodingType;
     if (frame->used_for_reference)  {
       padPicture (vidParam, fs_top);
@@ -698,7 +698,7 @@ void dpb_combine_field_yuv (sVidParam* vidParam, sFrameStore* frameStore) {
   frameStore->frame->frame = frameStore->frame;
   frameStore->frame->coded_frame = 0;
 
-  frameStore->frame->chroma_format_idc = frameStore->top_field->chroma_format_idc;
+  frameStore->frame->chromaFormatIdc = frameStore->top_field->chromaFormatIdc;
   frameStore->frame->frame_cropping_flag = frameStore->top_field->frame_cropping_flag;
   if (frameStore->frame->frame_cropping_flag) {
     frameStore->frame->frame_crop_top_offset = frameStore->top_field->frame_crop_top_offset;
@@ -743,7 +743,7 @@ sPicture* allocPicture (sVidParam* vidParam, sPictureStructure structure,
   s->iLumaStride = size_x + 2 * vidParam->iLumaPadX;
   s->iLumaExpandedHeight = size_y + 2 * vidParam->iLumaPadY;
 
-  if (activeSPS->chroma_format_idc != YUV400)
+  if (activeSPS->chromaFormatIdc != YUV400)
     get_mem3Dpel_pad (&(s->imgUV), 2, size_y_cr, size_x_cr, vidParam->iChromaPadY, vidParam->iChromaPadX);
 
   s->iChromaStride = size_x_cr + 2*vidParam->iChromaPadX;
@@ -2429,7 +2429,7 @@ int initImage (sVidParam* vidParam, sImage* image, sSPS* sps) {
   image->format.height[0] = vidParam->height;
   image->format.height[1] = vidParam->heightCr;
   image->format.height[2] = vidParam->heightCr;
-  image->format.yuvFormat  = (ColorFormat) sps->chroma_format_idc;
+  image->format.yuvFormat  = (eColorFormat)sps->chromaFormatIdc;
   image->format.auto_crop_bottom = inputParam->output.auto_crop_bottom;
   image->format.auto_crop_right = inputParam->output.auto_crop_right;
   image->format.auto_crop_bottom_cr = inputParam->output.auto_crop_bottom_cr;

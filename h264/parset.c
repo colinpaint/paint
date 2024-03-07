@@ -41,146 +41,145 @@ static void updateMaxValue (sFrameFormat* format) {
   }
 //}}}
 //{{{
-static void setupLayerInfo (sVidParam* vidParam, sSPS* sps, sLayerParam* lps) {
+static void setupLayerInfo (sVidParam* vidParam, sSPS* sps, sLayerParam* layerParam) {
 
-  int layerId = lps->layerId;
-  lps->vidParam = vidParam;
-  lps->cps = vidParam->codingParam[layerId];
-  lps->sps = sps;
-  lps->dpb = vidParam->dpbLayer[layerId];
+  layerParam->vidParam = vidParam;
+  layerParam->codingParam = vidParam->codingParam[layerParam->layerId];
+  layerParam->sps = sps;
+  layerParam->dpb = vidParam->dpbLayer[layerParam->layerId];
   }
 //}}}
 //{{{
-static void setCodingParam (sSPS* sps, sCodingParam* cps) {
+static void setCodingParam (sSPS* sps, sCodingParam* codingParam) {
 
   // maximum vertical motion vector range in luma quarter pixel units
-  cps->profile_idc = sps->profile_idc;
-  cps->lossless_qpprime_flag = sps->lossless_qpprime_flag;
+  codingParam->profile_idc = sps->profile_idc;
+  codingParam->lossless_qpprime_flag = sps->lossless_qpprime_flag;
   if (sps->level_idc <= 10)
-    cps->max_vmv_r = 64 * 4;
+    codingParam->max_vmv_r = 64 * 4;
   else if (sps->level_idc <= 20)
-    cps->max_vmv_r = 128 * 4;
+    codingParam->max_vmv_r = 128 * 4;
   else if (sps->level_idc <= 30)
-    cps->max_vmv_r = 256 * 4;
+    codingParam->max_vmv_r = 256 * 4;
   else
-    cps->max_vmv_r = 512 * 4; // 512 pixels in quarter pixels
+    codingParam->max_vmv_r = 512 * 4; // 512 pixels in quarter pixels
 
   // Fidelity Range Extensions stuff (part 1)
-  cps->bitdepth_chroma = 0;
-  cps->widthCr = 0;
-  cps->heightCr = 0;
-  cps->bitdepth_luma       = (short) (sps->bit_depth_luma_minus8 + 8);
-  cps->bitdepth_scale[0]   = 1 << sps->bit_depth_luma_minus8;
-  if (sps->chroma_format_idc != YUV400) {
-    cps->bitdepth_chroma   = (short) (sps->bit_depth_chroma_minus8 + 8);
-    cps->bitdepth_scale[1] = 1 << sps->bit_depth_chroma_minus8;
+  codingParam->bitdepth_chroma = 0;
+  codingParam->widthCr = 0;
+  codingParam->heightCr = 0;
+  codingParam->bitdepth_luma = (short) (sps->bit_depth_luma_minus8 + 8);
+  codingParam->bitdepth_scale[0] = 1 << sps->bit_depth_luma_minus8;
+  if (sps->chromaFormatIdc != YUV400) {
+    codingParam->bitdepth_chroma = (short) (sps->bit_depth_chroma_minus8 + 8);
+    codingParam->bitdepth_scale[1] = 1 << sps->bit_depth_chroma_minus8;
     }
 
-  cps->max_frame_num = 1<<(sps->log2_max_frame_num_minus4+4);
-  cps->PicWidthInMbs = (sps->pic_width_in_mbs_minus1 +1);
-  cps->PicHeightInMapUnits = (sps->pic_height_in_map_units_minus1 +1);
-  cps->FrameHeightInMbs = ( 2 - sps->frame_mbs_only_flag ) * cps->PicHeightInMapUnits;
-  cps->FrameSizeInMbs = cps->PicWidthInMbs * cps->FrameHeightInMbs;
+  codingParam->max_frame_num = 1<<(sps->log2_max_frame_num_minus4+4);
+  codingParam->PicWidthInMbs = (sps->pic_width_in_mbs_minus1 +1);
+  codingParam->PicHeightInMapUnits = (sps->pic_height_in_map_units_minus1 +1);
+  codingParam->FrameHeightInMbs = ( 2 - sps->frame_mbs_only_flag ) * codingParam->PicHeightInMapUnits;
+  codingParam->FrameSizeInMbs = codingParam->PicWidthInMbs * codingParam->FrameHeightInMbs;
 
-  cps->yuvFormat=sps->chroma_format_idc;
-  cps->separate_colour_plane_flag = sps->separate_colour_plane_flag;
-  if (cps->separate_colour_plane_flag )
-    cps->ChromaArrayType = 0;
+  codingParam->yuvFormat=sps->chromaFormatIdc;
+  codingParam->separate_colour_plane_flag = sps->separate_colour_plane_flag;
+  if (codingParam->separate_colour_plane_flag )
+    codingParam->ChromaArrayType = 0;
   else
-    cps->ChromaArrayType = sps->chroma_format_idc;
+    codingParam->ChromaArrayType = sps->chromaFormatIdc;
 
-  cps->width = cps->PicWidthInMbs * MB_BLOCK_SIZE;
-  cps->height = cps->FrameHeightInMbs * MB_BLOCK_SIZE;
+  codingParam->width = codingParam->PicWidthInMbs * MB_BLOCK_SIZE;
+  codingParam->height = codingParam->FrameHeightInMbs * MB_BLOCK_SIZE;
 
-  cps->iLumaPadX = MCBUF_LUMA_PAD_X;
-  cps->iLumaPadY = MCBUF_LUMA_PAD_Y;
-  cps->iChromaPadX = MCBUF_CHROMA_PAD_X;
-  cps->iChromaPadY = MCBUF_CHROMA_PAD_Y;
-  if (sps->chroma_format_idc == YUV420) {
-    cps->widthCr  = (cps->width  >> 1);
-    cps->heightCr = (cps->height >> 1);
+  codingParam->iLumaPadX = MCBUF_LUMA_PAD_X;
+  codingParam->iLumaPadY = MCBUF_LUMA_PAD_Y;
+  codingParam->iChromaPadX = MCBUF_CHROMA_PAD_X;
+  codingParam->iChromaPadY = MCBUF_CHROMA_PAD_Y;
+  if (sps->chromaFormatIdc == YUV420) {
+    codingParam->widthCr  = (codingParam->width  >> 1);
+    codingParam->heightCr = (codingParam->height >> 1);
     }
-  else if (sps->chroma_format_idc == YUV422) {
-    cps->widthCr  = (cps->width >> 1);
-    cps->heightCr = cps->height;
-    cps->iChromaPadY = MCBUF_CHROMA_PAD_Y*2;
+  else if (sps->chromaFormatIdc == YUV422) {
+    codingParam->widthCr  = (codingParam->width >> 1);
+    codingParam->heightCr = codingParam->height;
+    codingParam->iChromaPadY = MCBUF_CHROMA_PAD_Y*2;
     }
-  else if (sps->chroma_format_idc == YUV444) {
-    cps->widthCr = cps->width;
-    cps->heightCr = cps->height;
-    cps->iChromaPadX = cps->iLumaPadX;
-    cps->iChromaPadY = cps->iLumaPadY;
+  else if (sps->chromaFormatIdc == YUV444) {
+    codingParam->widthCr = codingParam->width;
+    codingParam->heightCr = codingParam->height;
+    codingParam->iChromaPadX = codingParam->iLumaPadX;
+    codingParam->iChromaPadY = codingParam->iLumaPadY;
     }
   //pel bitdepth init
-  cps->bitdepth_luma_qp_scale   = 6 * (cps->bitdepth_luma - 8);
+  codingParam->bitdepth_luma_qp_scale   = 6 * (codingParam->bitdepth_luma - 8);
 
-  if (cps->bitdepth_luma > cps->bitdepth_chroma || sps->chroma_format_idc == YUV400)
-    cps->pic_unit_bitsize_on_disk = (cps->bitdepth_luma > 8)? 16:8;
+  if (codingParam->bitdepth_luma > codingParam->bitdepth_chroma || sps->chromaFormatIdc == YUV400)
+    codingParam->pic_unit_bitsize_on_disk = (codingParam->bitdepth_luma > 8)? 16:8;
   else
-    cps->pic_unit_bitsize_on_disk = (cps->bitdepth_chroma > 8)? 16:8;
-  cps->dc_pred_value_comp[0] = 1<<(cps->bitdepth_luma - 1);
-  cps->max_pel_value_comp[0] = (1<<cps->bitdepth_luma) - 1;
-  cps->mb_size[0][0] = cps->mb_size[0][1] = MB_BLOCK_SIZE;
+    codingParam->pic_unit_bitsize_on_disk = (codingParam->bitdepth_chroma > 8)? 16:8;
+  codingParam->dc_pred_value_comp[0] = 1<<(codingParam->bitdepth_luma - 1);
+  codingParam->max_pel_value_comp[0] = (1<<codingParam->bitdepth_luma) - 1;
+  codingParam->mb_size[0][0] = codingParam->mb_size[0][1] = MB_BLOCK_SIZE;
 
-  if (sps->chroma_format_idc != YUV400) {
+  if (sps->chromaFormatIdc != YUV400) {
     // for chrominance part
-    cps->bitdepth_chroma_qp_scale = 6 * (cps->bitdepth_chroma - 8);
-    cps->dc_pred_value_comp[1] = (1 << (cps->bitdepth_chroma - 1));
-    cps->dc_pred_value_comp[2] = cps->dc_pred_value_comp[1];
-    cps->max_pel_value_comp[1] = (1 << cps->bitdepth_chroma) - 1;
-    cps->max_pel_value_comp[2] = (1 << cps->bitdepth_chroma) - 1;
-    cps->num_blk8x8_uv = (1 << sps->chroma_format_idc) & (~(0x1));
-    cps->num_uv_blocks = (cps->num_blk8x8_uv >> 1);
-    cps->num_cdc_coeff = (cps->num_blk8x8_uv << 1);
-    cps->mb_size[1][0] = cps->mb_size[2][0] = cps->mb_cr_size_x  = (sps->chroma_format_idc==YUV420 || sps->chroma_format_idc==YUV422)?  8 : 16;
-    cps->mb_size[1][1] = cps->mb_size[2][1] = cps->mb_cr_size_y  = (sps->chroma_format_idc==YUV444 || sps->chroma_format_idc==YUV422)? 16 :  8;
+    codingParam->bitdepth_chroma_qp_scale = 6 * (codingParam->bitdepth_chroma - 8);
+    codingParam->dc_pred_value_comp[1] = (1 << (codingParam->bitdepth_chroma - 1));
+    codingParam->dc_pred_value_comp[2] = codingParam->dc_pred_value_comp[1];
+    codingParam->max_pel_value_comp[1] = (1 << codingParam->bitdepth_chroma) - 1;
+    codingParam->max_pel_value_comp[2] = (1 << codingParam->bitdepth_chroma) - 1;
+    codingParam->num_blk8x8_uv = (1 << sps->chromaFormatIdc) & (~(0x1));
+    codingParam->num_uv_blocks = (codingParam->num_blk8x8_uv >> 1);
+    codingParam->num_cdc_coeff = (codingParam->num_blk8x8_uv << 1);
+    codingParam->mb_size[1][0] = codingParam->mb_size[2][0] = codingParam->mb_cr_size_x  = (sps->chromaFormatIdc==YUV420 || sps->chromaFormatIdc==YUV422)?  8 : 16;
+    codingParam->mb_size[1][1] = codingParam->mb_size[2][1] = codingParam->mb_cr_size_y  = (sps->chromaFormatIdc==YUV444 || sps->chromaFormatIdc==YUV422)? 16 :  8;
 
-    cps->subpel_x    = cps->mb_cr_size_x == 8 ? 7 : 3;
-    cps->subpel_y    = cps->mb_cr_size_y == 8 ? 7 : 3;
-    cps->shiftpel_x  = cps->mb_cr_size_x == 8 ? 3 : 2;
-    cps->shiftpel_y  = cps->mb_cr_size_y == 8 ? 3 : 2;
-    cps->total_scale = cps->shiftpel_x + cps->shiftpel_y;
+    codingParam->subpel_x    = codingParam->mb_cr_size_x == 8 ? 7 : 3;
+    codingParam->subpel_y    = codingParam->mb_cr_size_y == 8 ? 7 : 3;
+    codingParam->shiftpel_x  = codingParam->mb_cr_size_x == 8 ? 3 : 2;
+    codingParam->shiftpel_y  = codingParam->mb_cr_size_y == 8 ? 3 : 2;
+    codingParam->total_scale = codingParam->shiftpel_x + codingParam->shiftpel_y;
     }
   else {
-    cps->bitdepth_chroma_qp_scale = 0;
-    cps->max_pel_value_comp[1] = 0;
-    cps->max_pel_value_comp[2] = 0;
-    cps->num_blk8x8_uv = 0;
-    cps->num_uv_blocks = 0;
-    cps->num_cdc_coeff = 0;
-    cps->mb_size[1][0] = cps->mb_size[2][0] = cps->mb_cr_size_x  = 0;
-    cps->mb_size[1][1] = cps->mb_size[2][1] = cps->mb_cr_size_y  = 0;
-    cps->subpel_x = 0;
-    cps->subpel_y = 0;
-    cps->shiftpel_x = 0;
-    cps->shiftpel_y = 0;
-    cps->total_scale = 0;
+    codingParam->bitdepth_chroma_qp_scale = 0;
+    codingParam->max_pel_value_comp[1] = 0;
+    codingParam->max_pel_value_comp[2] = 0;
+    codingParam->num_blk8x8_uv = 0;
+    codingParam->num_uv_blocks = 0;
+    codingParam->num_cdc_coeff = 0;
+    codingParam->mb_size[1][0] = codingParam->mb_size[2][0] = codingParam->mb_cr_size_x  = 0;
+    codingParam->mb_size[1][1] = codingParam->mb_size[2][1] = codingParam->mb_cr_size_y  = 0;
+    codingParam->subpel_x = 0;
+    codingParam->subpel_y = 0;
+    codingParam->shiftpel_x = 0;
+    codingParam->shiftpel_y = 0;
+    codingParam->total_scale = 0;
     }
 
-  cps->mb_cr_size = cps->mb_cr_size_x * cps->mb_cr_size_y;
-  cps->mb_size_blk[0][0] = cps->mb_size_blk[0][1] = cps->mb_size[0][0] >> 2;
-  cps->mb_size_blk[1][0] = cps->mb_size_blk[2][0] = cps->mb_size[1][0] >> 2;
-  cps->mb_size_blk[1][1] = cps->mb_size_blk[2][1] = cps->mb_size[1][1] >> 2;
+  codingParam->mb_cr_size = codingParam->mb_cr_size_x * codingParam->mb_cr_size_y;
+  codingParam->mb_size_blk[0][0] = codingParam->mb_size_blk[0][1] = codingParam->mb_size[0][0] >> 2;
+  codingParam->mb_size_blk[1][0] = codingParam->mb_size_blk[2][0] = codingParam->mb_size[1][0] >> 2;
+  codingParam->mb_size_blk[1][1] = codingParam->mb_size_blk[2][1] = codingParam->mb_size[1][1] >> 2;
 
-  cps->mb_size_shift[0][0] = cps->mb_size_shift[0][1] = ceilLog2sf (cps->mb_size[0][0]);
-  cps->mb_size_shift[1][0] = cps->mb_size_shift[2][0] = ceilLog2sf (cps->mb_size[1][0]);
-  cps->mb_size_shift[1][1] = cps->mb_size_shift[2][1] = ceilLog2sf (cps->mb_size[1][1]);
+  codingParam->mb_size_shift[0][0] = codingParam->mb_size_shift[0][1] = ceilLog2sf (codingParam->mb_size[0][0]);
+  codingParam->mb_size_shift[1][0] = codingParam->mb_size_shift[2][0] = ceilLog2sf (codingParam->mb_size[1][0]);
+  codingParam->mb_size_shift[1][1] = codingParam->mb_size_shift[2][1] = ceilLog2sf (codingParam->mb_size[1][1]);
   }
 //}}}
 //{{{
 static void resetFormatInfo (sSPS* sps, sVidParam* vidParam, sFrameFormat* source, sFrameFormat* output) {
 
-  static const int SubWidthC  [4]= { 1, 2, 2, 1};
-  static const int SubHeightC [4]= { 1, 2, 1, 1};
+  static const int SubWidthC[4] = { 1, 2, 2, 1};
+  static const int SubHeightC[4] = { 1, 2, 1, 1};
 
   // cropping for luma
   int crop_left, crop_right;
   int crop_top, crop_bottom;
   if (sps->frame_cropping_flag) {
-    crop_left = SubWidthC [sps->chroma_format_idc] * sps->frame_crop_left_offset;
-    crop_right = SubWidthC [sps->chroma_format_idc] * sps->frame_crop_right_offset;
-    crop_top = SubHeightC[sps->chroma_format_idc] * ( 2 - sps->frame_mbs_only_flag ) *  sps->frame_crop_top_offset;
-    crop_bottom = SubHeightC[sps->chroma_format_idc] * ( 2 - sps->frame_mbs_only_flag ) *  sps->frame_crop_bottom_offset;
+    crop_left = SubWidthC [sps->chromaFormatIdc] * sps->frame_crop_left_offset;
+    crop_right = SubWidthC [sps->chromaFormatIdc] * sps->frame_crop_right_offset;
+    crop_top = SubHeightC[sps->chromaFormatIdc] * ( 2 - sps->frame_mbs_only_flag ) *  sps->frame_crop_top_offset;
+    crop_bottom = SubHeightC[sps->chromaFormatIdc] * ( 2 - sps->frame_mbs_only_flag ) *  sps->frame_crop_bottom_offset;
     }
   else
     crop_left = crop_right = crop_top = crop_bottom = 0;
@@ -199,7 +198,7 @@ static void resetFormatInfo (sSPS* sps, sVidParam* vidParam, sFrameFormat* sourc
     crop_left = crop_right = crop_top = crop_bottom = 0;
 
   sInputParam* inputParam = vidParam->inputParam;
-  if ((sps->chroma_format_idc == YUV400) && inputParam->write_uv) {
+  if ((sps->chromaFormatIdc == YUV400) && inputParam->write_uv) {
     source->width[1] = (source->width[0] >> 1);
     source->width[2] = source->width[1];
     source->height[1] = (source->height[0] >> 1);
@@ -242,7 +241,7 @@ static void resetFormatInfo (sSPS* sps, sVidParam* vidParam, sFrameFormat* sourc
 
   output->frame_rate = source->frame_rate;
   output->color_model = source->color_model;
-  output->yuvFormat = source->yuvFormat = (ColorFormat)sps->chroma_format_idc;
+  output->yuvFormat = source->yuvFormat = (eColorFormat)sps->chromaFormatIdc;
 
   output->auto_crop_bottom = crop_bottom;
   output->auto_crop_right = crop_right;
@@ -511,7 +510,7 @@ static void interpretSPS (sVidParam* vidParam, sDataPartition* p, sSPS* sps) {
   sps->seq_parameter_set_id = read_ue_v ("SPS seq_parameter_set_id", s);
 
   // Fidelity Range Extensions stuff
-  sps->chroma_format_idc = 1;
+  sps->chromaFormatIdc = 1;
   sps->bit_depth_luma_minus8 = 0;
   sps->bit_depth_chroma_minus8 = 0;
   sps->lossless_qpprime_flag = 0;
@@ -522,8 +521,8 @@ static void interpretSPS (sVidParam* vidParam, sDataPartition* p, sSPS* sps) {
       (sps->profile_idc == FREXT_Hi422) ||
       (sps->profile_idc == FREXT_Hi444) ||
       (sps->profile_idc == FREXT_CAVLC444)) {
-    sps->chroma_format_idc = read_ue_v ("SPS chroma_format_idc", s);
-    if (sps->chroma_format_idc == YUV444)
+    sps->chromaFormatIdc = read_ue_v ("SPS chromaFormatIdc", s);
+    if (sps->chromaFormatIdc == YUV444)
       sps->separate_colour_plane_flag = read_u_1 ("SPS separate_colour_plane_flag", s);
 
     sps->bit_depth_luma_minus8 = read_ue_v ("SPS bit_depth_luma_minus8", s);
@@ -536,7 +535,7 @@ static void interpretSPS (sVidParam* vidParam, sDataPartition* p, sSPS* sps) {
 
     sps->seq_scaling_matrix_present_flag = read_u_1 ("SPS seq_scaling_matrix_present_flag", s);
     if (sps->seq_scaling_matrix_present_flag) {
-      n_ScalingList = (sps->chroma_format_idc != YUV444) ? 8 : 12;
+      n_ScalingList = (sps->chromaFormatIdc != YUV444) ? 8 : 12;
       for (i = 0; i < n_ScalingList; i++) {
         sps->seq_scaling_list_present_flag[i] = read_u_1 ("SPS seq_scaling_list_present_flag", s);
         if (sps->seq_scaling_list_present_flag[i]) {
@@ -590,126 +589,6 @@ static void interpretSPS (sVidParam* vidParam, sDataPartition* p, sSPS* sps) {
 //}}}
 
 //{{{
-void get_max_dec_frame_buf_size (sSPS* sps) {
-
-  int pic_size_mb = (sps->pic_width_in_mbs_minus1 + 1) *
-                    (sps->pic_height_in_map_units_minus1 + 1) *
-                    (sps->frame_mbs_only_flag?1:2);
-  int size = 0;
-
-  switch (sps->level_idc) {
-    //{{{
-    case 0:
-      // if there is no level defined, we expect experimental usage and return a DPB size of 16
-      size = 16 * pic_size_mb;
-    //}}}
-    //{{{
-    case 9:
-      size = 396;
-      break;
-    //}}}
-    //{{{
-    case 10:
-      size = 396;
-      break;
-    //}}}
-    //{{{
-    case 11:
-      if (!is_FREXT_profile(sps->profile_idc) && (sps->constrained_set3_flag == 1))
-        size = 396;
-      else
-        size = 900;
-      break;
-    //}}}
-    //{{{
-    case 12:
-      size = 2376;
-      break;
-    //}}}
-    //{{{
-    case 13:
-      size = 2376;
-      break;
-    //}}}
-    //{{{
-    case 20:
-      size = 2376;
-      break;
-    //}}}
-    //{{{
-    case 21:
-      size = 4752;
-      break;
-    //}}}
-    //{{{
-    case 22:
-      size = 8100;
-      break;
-    //}}}
-    //{{{
-    case 30:
-      size = 8100;
-      break;
-    //}}}
-    //{{{
-    case 31:
-      size = 18000;
-      break;
-    //}}}
-    //{{{
-    case 32:
-      size = 20480;
-      break;
-    //}}}
-    //{{{
-    case 40:
-      size = 32768;
-      break;
-    //}}}
-    //{{{
-    case 41:
-      size = 32768;
-      break;
-    //}}}
-    //{{{
-    case 42:
-      size = 34816;
-      break;
-    //}}}
-    //{{{
-    case 50:
-      size = 110400;
-      break;
-    //}}}
-    //{{{
-    case 51:
-      size = 184320;
-      break;
-    //}}}
-    //{{{
-    case 52:
-      size = 184320;
-      break;
-    //}}}
-    case 60:
-    case 61:
-    //{{{
-    case 62:
-      size = 696320;
-      break;
-    //}}}
-    //{{{
-    default:
-      error ("undefined level", 500);
-      break;
-    //}}}
-    }
-
-  size /= pic_size_mb;
-  size = imin(size, 16);
-  }
-//}}}
-//{{{
 void makeSPSavailable (sVidParam* vidParam, int id, sSPS* sps) {
 
   assert (sps->Valid == TRUE);
@@ -720,15 +599,13 @@ void makeSPSavailable (sVidParam* vidParam, int id, sSPS* sps) {
 void processSPS (sVidParam* vidParam, sNalu* nalu) {
 
   sDataPartition* dp = allocPartition (1);
-  sSPS* sps = allocSPS();
-
   dp->bitstream->ei_flag = 0;
   dp->bitstream->read_len = dp->bitstream->frame_bitoffset = 0;
   memcpy (dp->bitstream->streamBuffer, &nalu->buf[1], nalu->len-1);
   dp->bitstream->code_len = dp->bitstream->bitstream_length = RBSPtoSODB (dp->bitstream->streamBuffer, nalu->len-1);
 
+  sSPS* sps = allocSPS();
   interpretSPS (vidParam, dp, sps);
-  get_max_dec_frame_buf_size (sps);
 
   if (sps->Valid) {
     if (vidParam->activeSPS) {
@@ -748,7 +625,7 @@ void processSPS (sVidParam* vidParam, sNalu* nalu) {
     if (vidParam->separate_colour_plane_flag )
       vidParam->ChromaArrayType = 0;
     else
-      vidParam->ChromaArrayType = sps->chroma_format_idc;
+      vidParam->ChromaArrayType = sps->chromaFormatIdc;
     }
 
   freePartition (dp, 1);
@@ -872,7 +749,7 @@ static int ppsIsEqual (sPPS* pps1, sPPS* pps2) {
 static void interpretPPS (sVidParam* vidParam, sDataPartition* p, sPPS* pps) {
 
   unsigned n_ScalingList;
-  int chroma_format_idc;
+  int chromaFormatIdc;
   int NumberBitsPerSliceGroupId;
 
   sBitstream* s = p->bitstream;
@@ -957,8 +834,8 @@ static void interpretPPS (sVidParam* vidParam, sDataPartition* p, sPPS* pps) {
     pps->pic_scaling_matrix_present_flag = read_u_1 ("PPS pic_scaling_matrix_present_flag", s);
 
     if (pps->pic_scaling_matrix_present_flag) {
-      chroma_format_idc = vidParam->SeqParSet[pps->seq_parameter_set_id].chroma_format_idc;
-      n_ScalingList = 6 + ((chroma_format_idc != YUV444) ? 2 : 6) * pps->transform_8x8_mode_flag;
+      chromaFormatIdc = vidParam->SeqParSet[pps->seq_parameter_set_id].chromaFormatIdc;
+      n_ScalingList = 6 + ((chromaFormatIdc != YUV444) ? 2 : 6) * pps->transform_8x8_mode_flag;
       for (unsigned i = 0; i < n_ScalingList; i++) {
         pps->pic_scaling_list_present_flag[i]=
           read_u_1 ("PPS pic_scaling_list_present_flag", s);
@@ -1013,9 +890,7 @@ sPPS* allocPPS() {
 //{{{
 void makePPSavailable (sVidParam* vidParam, int id, sPPS* pps) {
 
-  assert (pps->Valid == TRUE);
-
-  if (vidParam->PicParSet[id].Valid == TRUE && vidParam->PicParSet[id].slice_group_id != NULL)
+  if (vidParam->PicParSet[id].Valid && vidParam->PicParSet[id].slice_group_id)
     free (vidParam->PicParSet[id].slice_group_id);
 
   memcpy (&vidParam->PicParSet[id], pps, sizeof (sPPS));
@@ -1039,14 +914,14 @@ void cleanUpPPS (sVidParam* vidParam) {
 //{{{
 void processPPS (sVidParam* vidParam, sNalu* nalu) {
 
-  sDataPartition* dp = allocPartition (1);
-  sPPS* pps = allocPPS();
 
+  sDataPartition* dp = allocPartition (1);
   dp->bitstream->ei_flag = 0;
   dp->bitstream->read_len = dp->bitstream->frame_bitoffset = 0;
   memcpy (dp->bitstream->streamBuffer, &nalu->buf[1], nalu->len-1);
-
   dp->bitstream->code_len = dp->bitstream->bitstream_length = RBSPtoSODB (dp->bitstream->streamBuffer, nalu->len-1);
+
+  sPPS* pps = allocPPS();
   interpretPPS (vidParam, dp, pps);
 
   if (vidParam->activePPS) {

@@ -135,7 +135,7 @@ static void CalculateQuant8x8Param (sSlice* curSlice) {
     }
 
   p_dequant_coef = dequant_coef8;
-  if (curSlice->activeSPS->chroma_format_idc == 3) {
+  if (curSlice->activeSPS->chromaFormatIdc == 3) {
     // 4:4:4
     for (int k = 0; k < 6; k++) {
       setDequant8x8 (*InvLevelScale8x8_Intra_1++, *p_dequant_coef  , curSlice->qmatrix[8]);
@@ -194,7 +194,7 @@ void assignQuantParams (sSlice* curSlice) {
       curSlice->qmatrix[i] = (i < 6) ? quant_org : quant8_org;
     }
   else {
-    int n_ScalingList = (sps->chroma_format_idc != YUV444) ? 8 : 12;
+    int n_ScalingList = (sps->chromaFormatIdc != YUV444) ? 8 : 12;
     if (sps->seq_scaling_matrix_present_flag) {
       //{{{  check sps first
       for (int i = 0; i < n_ScalingList; i++) {

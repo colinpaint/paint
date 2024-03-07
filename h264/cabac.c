@@ -1455,7 +1455,7 @@ void read_CBP_CABAC (sMacroblock* curMb,
     }
   }
 
-  if ((picture->chroma_format_idc != YUV400) && (picture->chroma_format_idc != YUV444))
+  if ((picture->chromaFormatIdc != YUV400) && (picture->chromaFormatIdc != YUV444))
   {
     // coding of chroma part
     // CABAC decoding for BinIdx 0
@@ -1609,7 +1609,7 @@ static int read_and_store_CBP_block_bit_444 (sMacroblock* curMb,
     get4x4Neighbour(curMb, i    , j - 1, vidParam->mb_size[IS_CHROMA], &block_b);
   }
 
-  if (picture->chroma_format_idc!=YUV444)
+  if (picture->chromaFormatIdc!=YUV444)
   {
     if (type!=LUMA_8x8)
     {
@@ -1738,7 +1738,7 @@ static int read_and_store_CBP_block_bit_444 (sMacroblock* curMb,
     {
       s_cbp[0].bits |= ((int64) 0x33 << bit   );
 
-      if (picture->chroma_format_idc==YUV444)
+      if (picture->chromaFormatIdc==YUV444)
       {
         s_cbp[0].bits_8x8   |= ((int64) 0x33 << bit   );
       }
@@ -2120,9 +2120,9 @@ static int read_and_store_CBP_block_bit_normal (sMacroblock* curMb,
 }
 //}}}
 //{{{
-void set_read_and_store_CBP (sMacroblock** curMb, int chroma_format_idc)
+void set_read_and_store_CBP (sMacroblock** curMb, int chromaFormatIdc)
 {
-  if (chroma_format_idc == YUV444)
+  if (chromaFormatIdc == YUV444)
     (*curMb)->read_and_store_CBP_block_bit = read_and_store_CBP_block_bit_444;
   else
     (*curMb)->read_and_store_CBP_block_bit = read_and_store_CBP_block_bit_normal;
@@ -2352,7 +2352,7 @@ void readIPCM_CABAC (sSlice* curSlice, struct DataPartition *dP)
 
   // read chroma values
   bitdepth = vidParam->bitdepth_chroma;
-  if ((picture->chroma_format_idc != YUV400) && (vidParam->separate_colour_plane_flag == 0))
+  if ((picture->chromaFormatIdc != YUV400) && (vidParam->separate_colour_plane_flag == 0))
   {
     for (uv = 1; uv < 3; ++uv)
     {

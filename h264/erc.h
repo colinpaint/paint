@@ -83,7 +83,7 @@ struct ConcealNode {
 int ercConcealIntraFrame (sVidParam* vidParam, frame *recfr,
                           int picSizeX, int picSizeY, sErcVariables *errorVar );
 int ercConcealInterFrame (frame *recfr, sObjectBuffer *object_list,
-                          int picSizeX, int picSizeY, sErcVariables *errorVar, int chroma_format_idc );
+                          int picSizeX, int picSizeY, sErcVariables *errorVar, int chromaFormatIdc );
 
 extern struct ConcealNode* init_node (sPicture* , int );
 extern void init_lists_for_non_reference_loss (sDPB* dpb, int , sPictureStructure );

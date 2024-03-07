@@ -327,7 +327,7 @@ static void read_ipred_modes (sMacroblock* curMb)
     read_ipred_4x4_modes(curMb);
   }
 
-  if ((picture->chroma_format_idc != YUV400) && (picture->chroma_format_idc != YUV444))
+  if ((picture->chromaFormatIdc != YUV400) && (picture->chromaFormatIdc != YUV444))
   {
     sSyntaxElement currSE;
     sDataPartition *dP;
@@ -442,7 +442,7 @@ static void concealIPCMcoeffs (sMacroblock* curMb)
       curSlice->cof[0][i][j] = vidParam->dc_pred_value_comp[0];
       //curSlice->fcf[0][i][j] = vidParam->dc_pred_value_comp[0];
 
-  if ((picture->chroma_format_idc != YUV400) && (vidParam->separate_colour_plane_flag == 0))
+  if ((picture->chromaFormatIdc != YUV400) && (vidParam->separate_colour_plane_flag == 0))
     for (k = 0; k < 2; ++k)
       for(i=0;i<vidParam->mb_cr_size_y;++i)
         for(j=0;j<vidParam->mb_cr_size_x;++j)
@@ -516,7 +516,7 @@ static void read_IPCM_coeffs_from_NAL (sSlice* curSlice, struct DataPartition *d
       }
     }
     currSE.len=vidParam->bitdepth_chroma;
-    if ((picture->chroma_format_idc != YUV400) && (vidParam->separate_colour_plane_flag == 0))
+    if ((picture->chromaFormatIdc != YUV400) && (vidParam->separate_colour_plane_flag == 0))
     {
       for(i=0;i<vidParam->mb_cr_size_y;++i)
       {

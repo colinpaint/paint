@@ -598,8 +598,8 @@ static void copyPredMB (int currYBlockNum, sPixel *predMB, frame *recfr,
   sPicture* picture = vidParam->picture;
   int j, k, xmin, ymin, xmax, ymax;
   int locationTmp;
-  int uv_x = uv_div[0][picture->chroma_format_idc];
-  int uv_y = uv_div[1][picture->chroma_format_idc];
+  int uv_x = uv_div[0][picture->chromaFormatIdc];
+  int uv_y = uv_div[1][picture->chromaFormatIdc];
 
   xmin = (xPosYBlock(currYBlockNum,picSizeX)<<3);
   ymin = (yPosYBlock(currYBlockNum,picSizeX)<<3);
@@ -615,7 +615,7 @@ static void copyPredMB (int currYBlockNum, sPixel *predMB, frame *recfr,
     }
   }
 
-  if (picture->chroma_format_idc != YUV400)
+  if (picture->chromaFormatIdc != YUV400)
   {
     for (j = (ymin>>uv_y); j <= (ymax>>uv_y); j++)
     {
@@ -769,7 +769,7 @@ static void buildPredRegionYUV (sVidParam* vidParam, int *mv, int x, int y, sPix
   //FRExt
   int f1_x, f1_y, f2_x, f2_y, f3, f4;
   int b8, b4;
-  int yuv = picture->chroma_format_idc - 1;
+  int yuv = picture->chromaFormatIdc - 1;
 
   int ref_frame = imax (mv[2], 0); // !!KS: quick fix, we sometimes seem to get negative ref_pic here, so restrict to zero and above
   int mb_nr = y/16*(vidParam->width/16)+x/16; ///curSlice->current_mb_nr;
@@ -828,7 +828,7 @@ static void buildPredRegionYUV (sVidParam* vidParam, int *mv, int x, int y, sPix
   }
   pMB += 256;
 
-  if (picture->chroma_format_idc != YUV400)
+  if (picture->chromaFormatIdc != YUV400)
   {
     // chroma** *****************************************************
     f1_x = 64/vidParam->mb_cr_size_x;
@@ -928,11 +928,11 @@ static void copyBetweenFrames (frame *recfr, int currYBlockNum, int picSizeX, in
       recfr->yptr[location] = refPic->imgY[j][k];
     }
 
-    for (j = ymin >> uv_div[1][picture->chroma_format_idc]; j < (ymin + regionSize) >> uv_div[1][picture->chroma_format_idc]; j++)
-      for (k = xmin >> uv_div[0][picture->chroma_format_idc]; k < (xmin + regionSize) >> uv_div[0][picture->chroma_format_idc]; k++)
+    for (j = ymin >> uv_div[1][picture->chromaFormatIdc]; j < (ymin + regionSize) >> uv_div[1][picture->chromaFormatIdc]; j++)
+      for (k = xmin >> uv_div[0][picture->chromaFormatIdc]; k < (xmin + regionSize) >> uv_div[0][picture->chromaFormatIdc]; k++)
       {
 //        location = j * picSizeX / 2 + k;
-        location = ((j * picSizeX) >> uv_div[0][picture->chroma_format_idc]) + k;
+        location = ((j * picSizeX) >> uv_div[0][picture->chromaFormatIdc]) + k;
 
 //th        recfr->uptr[location] = picture->imgUV[0][j][k];
 //th        recfr->vptr[location] = picture->imgUV[1][j][k];
@@ -1203,7 +1203,7 @@ static int concealByTrial (frame *recfr, sPixel *predMB,
 
 //{{{
 int ercConcealInterFrame (frame *recfr, sObjectBuffer *object_list,
-                         int picSizeX, int picSizeY, sErcVariables *errorVar, int chroma_format_idc ) {
+                         int picSizeX, int picSizeY, sErcVariables *errorVar, int chromaFormatIdc ) {
 
   sVidParam* vidParam = recfr->vidParam;
 
@@ -1216,7 +1216,7 @@ int ercConcealInterFrame (frame *recfr, sObjectBuffer *object_list,
     /* if there are segments to be concealed */
     if (errorVar->numCorruptedSegments ) {
       sPixel* predMB;
-      if (chroma_format_idc != YUV400)
+      if (chromaFormatIdc != YUV400)
         predMB = (sPixel*)malloc ( (256 + (vidParam->mb_cr_size)*2) * sizeof (sPixel));
       else
         predMB = (sPixel*)malloc (256 * sizeof (sPixel));
@@ -1365,7 +1365,7 @@ static void buildPredblockRegionYUV (sVidParam* vidParam, int *mv,
 
   //FRExt
   int f1_x, f1_y, f2_x, f2_y, f3, f4;
-  int yuv = picture->chroma_format_idc - 1;
+  int yuv = picture->chromaFormatIdc - 1;
 
   int ref_frame = mv[2];
   int mb_nr = current_mb_nr;
@@ -1408,7 +1408,7 @@ static void buildPredblockRegionYUV (sVidParam* vidParam, int *mv,
   }
   pMB += 16;
 
-  if (picture->chroma_format_idc != YUV400)
+  if (picture->chromaFormatIdc != YUV400)
   {
     // chroma** *****************************************************
     f1_x = 64/(vidParam->mb_cr_size_x);
@@ -1553,7 +1553,7 @@ static void copy_to_conceal (sPicture *src, sPicture *dst, sVidParam* vidParam)
   dst->no_output_of_prior_pics_flag = src->no_output_of_prior_pics_flag;
   dst->long_term_reference_flag = src->long_term_reference_flag;
   dst->adaptive_ref_pic_buffering_flag = src->adaptive_ref_pic_buffering_flag = 0;
-  dst->chroma_format_idc = src->chroma_format_idc;
+  dst->chromaFormatIdc = src->chromaFormatIdc;
   dst->frame_mbs_only_flag = src->frame_mbs_only_flag;
   dst->frame_cropping_flag = src->frame_cropping_flag;
   dst->frame_crop_left_offset = src->frame_crop_left_offset;
@@ -1580,7 +1580,7 @@ static void copy_to_conceal (sPicture *src, sPicture *dst, sVidParam* vidParam)
   // Conceals the missing frame by motion vector copy conceal
   if (vidParam->concealMode==2)
   {
-    if (picture->chroma_format_idc != YUV400)
+    if (picture->chromaFormatIdc != YUV400)
     {
       storeYUV = (sPixel *) malloc ( (16 + (vidParam->mb_cr_size_x*vidParam->mb_cr_size_y)*2/16) * sizeof (sPixel));
     }
@@ -1646,7 +1646,7 @@ static void copy_to_conceal (sPicture *src, sPicture *dst, sVidParam* vidParam)
 
         predMB = predMB + (multiplier*multiplier);
 
-        if (picture->chroma_format_idc != YUV400)
+        if (picture->chromaFormatIdc != YUV400)
         {
 
           for(uv=0;uv<2;uv++)

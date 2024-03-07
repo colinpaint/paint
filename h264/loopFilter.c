@@ -267,7 +267,7 @@ static void edge_loop_luma_hor_MBAff (sColorPlane pl, sPixel** Img, byte* Streng
 {
   int      width = p->iLumaStride; //p->size_x;
   int      pel, Strng ;
-  int      PelNum = pl? pelnum_cr[1][p->chroma_format_idc] : MB_BLOCK_SIZE;
+  int      PelNum = pl? pelnum_cr[1][p->chromaFormatIdc] : MB_BLOCK_SIZE;
 
   int      yQ = (edge < MB_BLOCK_SIZE ? edge : 1);
 
@@ -401,7 +401,7 @@ static void edge_loop_chroma_ver_MBAff (sPixel** Img, byte *Strength, sMacrobloc
   const byte* ClipTab = NULL;
   int      indexA, indexB;
   sVidParam* vidParam = MbQ->vidParam;
-  int      PelNum = pelnum_cr[0][p->chroma_format_idc];
+  int      PelNum = pelnum_cr[0][p->chromaFormatIdc];
   int      StrengthIdx;
   int      QP;
   int      xQ = edge, yQ;
@@ -483,7 +483,7 @@ static void edge_loop_chroma_ver_MBAff (sPixel** Img, byte *Strength, sMacrobloc
 static void edge_loop_chroma_hor_MBAff (sPixel** Img, byte *Strength, sMacroblock* MbQ, int edge, int uv, sPicture *p)
 {
   sVidParam* vidParam = MbQ->vidParam;
-  int      PelNum = pelnum_cr[1][p->chroma_format_idc];
+  int      PelNum = pelnum_cr[1][p->chromaFormatIdc];
   int      yQ = (edge < MB_BLOCK_SIZE? edge : 1);
   sPixelPos pixP, pixQ;
   int      bitdepth_scale = vidParam->bitdepth_scale[IS_CHROMA];
@@ -1643,7 +1643,7 @@ static void edge_loop_chroma_ver (sPixel** Img, byte* Strength, sMacroblock* MbQ
 
     if ((Alpha | Beta) != 0)
     {
-      const int PelNum = pelnum_cr[0][p->chroma_format_idc];
+      const int PelNum = pelnum_cr[0][p->chromaFormatIdc];
       const     byte *ClipTab = CLIP_TAB[indexA];
 
       int pel;
@@ -1731,7 +1731,7 @@ static void edge_loop_chroma_hor (sPixel** Img, byte* Strength, sMacroblock* MbQ
 
     if ((Alpha | Beta) != 0)
     {
-      const int PelNum = pelnum_cr[1][p->chroma_format_idc];
+      const int PelNum = pelnum_cr[1][p->chromaFormatIdc];
       const     byte *ClipTab = CLIP_TAB[indexA];
 
       int pel;
@@ -1851,7 +1851,7 @@ static void deblockMb (sVidParam* vidParam, sPicture* p, int MbQAddr) {
     for (edge = 0; edge < 4 ; ++edge ) {
       // If cbp == 0 then deblocking for some macroblock types could be skipped
       if (MbQ->cbp == 0 && (curSlice->slice_type == P_SLICE || curSlice->slice_type == B_SLICE)) {
-        if (filterNon8x8LumaEdgesFlag[edge] == 0 && activeSPS->chroma_format_idc != YUV444)
+        if (filterNon8x8LumaEdgesFlag[edge] == 0 && activeSPS->chromaFormatIdc != YUV444)
           continue;
         else if (edge > 0) {
           if (((MbQ->mb_type == PSKIP && curSlice->slice_type == P_SLICE) || (MbQ->mb_type == P16x16) || (MbQ->mb_type == P16x8)))
@@ -1877,8 +1877,8 @@ static void deblockMb (sVidParam* vidParam, sPicture* p, int MbQAddr) {
               vidParam->EdgeLoopLumaVer(PLANE_V, imgUV[1], Strength, MbQ, edge << 2);
               }
             }
-          if (activeSPS->chroma_format_idc==YUV420 || activeSPS->chroma_format_idc==YUV422) {
-            edge_cr = chroma_edge[0][edge][p->chroma_format_idc];
+          if (activeSPS->chromaFormatIdc==YUV420 || activeSPS->chromaFormatIdc==YUV422) {
+            edge_cr = chroma_edge[0][edge][p->chromaFormatIdc];
             if( (imgUV != NULL) && (edge_cr >= 0)) {
               vidParam->EdgeLoopChromaVer( imgUV[0], Strength, MbQ, edge_cr, 0, p);
               vidParam->EdgeLoopChromaVer( imgUV[1], Strength, MbQ, edge_cr, 1, p);
@@ -1892,7 +1892,7 @@ static void deblockMb (sVidParam* vidParam, sPicture* p, int MbQAddr) {
     for (edge = 0; edge < 4 ; ++edge ) {
       // If cbp == 0 then deblocking for some macroblock types could be skipped
       if (MbQ->cbp == 0 && (curSlice->slice_type == P_SLICE || curSlice->slice_type == B_SLICE)) {
-        if (filterNon8x8LumaEdgesFlag[edge] == 0 && activeSPS->chroma_format_idc==YUV420)
+        if (filterNon8x8LumaEdgesFlag[edge] == 0 && activeSPS->chromaFormatIdc==YUV420)
           continue;
         else if (edge > 0) {
           if (((MbQ->mb_type == PSKIP && curSlice->slice_type == P_SLICE) || (MbQ->mb_type == P16x16) || (MbQ->mb_type == P8x16)))
@@ -1919,8 +1919,8 @@ static void deblockMb (sVidParam* vidParam, sPicture* p, int MbQAddr) {
               }
             }
 
-          if (activeSPS->chroma_format_idc==YUV420 || activeSPS->chroma_format_idc==YUV422) {
-            edge_cr = chroma_edge[1][edge][p->chroma_format_idc];
+          if (activeSPS->chromaFormatIdc==YUV420 || activeSPS->chromaFormatIdc==YUV422) {
+            edge_cr = chroma_edge[1][edge][p->chromaFormatIdc];
             if( (imgUV != NULL) && (edge_cr >= 0)) {
               vidParam->EdgeLoopChromaHor( imgUV[0], Strength, MbQ, edge_cr, 0, p);
               vidParam->EdgeLoopChromaHor( imgUV[1], Strength, MbQ, edge_cr, 1, p);
@@ -1944,8 +1944,8 @@ static void deblockMb (sVidParam* vidParam, sPicture* p, int MbQAddr) {
                 }
               }
 
-            if (activeSPS->chroma_format_idc==YUV420 || activeSPS->chroma_format_idc==YUV422) {
-              edge_cr = chroma_edge[1][edge][p->chroma_format_idc];
+            if (activeSPS->chromaFormatIdc==YUV420 || activeSPS->chromaFormatIdc==YUV422) {
+              edge_cr = chroma_edge[1][edge][p->chromaFormatIdc];
               if( (imgUV != NULL) && (edge_cr >= 0)) {
                 vidParam->EdgeLoopChromaHor( imgUV[0], Strength, MbQ, MB_BLOCK_SIZE, 0, p) ;
                 vidParam->EdgeLoopChromaHor( imgUV[1], Strength, MbQ, MB_BLOCK_SIZE, 1, p) ;
@@ -2010,7 +2010,7 @@ static void get_db_strength (sVidParam* vidParam, sPicture* p, int MbQAddr) {
     for (edge = 0; edge < 4 ; ++edge ) {
       // If cbp == 0 then deblocking for some macroblock types could be skipped
       if (MbQ->cbp == 0 && (curSlice->slice_type == P_SLICE || curSlice->slice_type == B_SLICE)) {
-        if (filterNon8x8LumaEdgesFlag[edge] == 0 && activeSPS->chroma_format_idc != YUV444)
+        if (filterNon8x8LumaEdgesFlag[edge] == 0 && activeSPS->chromaFormatIdc != YUV444)
           continue;
         else if (edge > 0) {
           if (((MbQ->mb_type == PSKIP && curSlice->slice_type == P_SLICE) ||
@@ -2034,7 +2034,7 @@ static void get_db_strength (sVidParam* vidParam, sPicture* p, int MbQAddr) {
     for( edge = 0; edge < 4 ; ++edge ) {
       // If cbp == 0 then deblocking for some macroblock types could be skipped
       if (MbQ->cbp == 0 && (curSlice->slice_type == P_SLICE || curSlice->slice_type == B_SLICE)) {
-        if (filterNon8x8LumaEdgesFlag[edge] == 0 && activeSPS->chroma_format_idc==YUV420)
+        if (filterNon8x8LumaEdgesFlag[edge] == 0 && activeSPS->chromaFormatIdc==YUV420)
           continue;
         else if (edge > 0) {
           if (((MbQ->mb_type == PSKIP && curSlice->slice_type == P_SLICE) ||
@@ -2109,7 +2109,7 @@ static void perform_db (sVidParam* vidParam, sPicture* p, int MbQAddr) {
     for (edge = 0; edge < 4 ; ++edge ) {
       // If cbp == 0 then deblocking for some macroblock types could be skipped
       if (MbQ->cbp == 0 && (curSlice->slice_type == P_SLICE || curSlice->slice_type == B_SLICE)) {
-        if (filterNon8x8LumaEdgesFlag[edge] == 0 && activeSPS->chroma_format_idc != YUV444)
+        if (filterNon8x8LumaEdgesFlag[edge] == 0 && activeSPS->chromaFormatIdc != YUV444)
           continue;
         else if (edge > 0) {
           if (((MbQ->mb_type == PSKIP && curSlice->slice_type == P_SLICE) || (MbQ->mb_type == P16x16) || (MbQ->mb_type == P16x8)))
@@ -2130,8 +2130,8 @@ static void perform_db (sVidParam* vidParam, sPicture* p, int MbQAddr) {
               vidParam->EdgeLoopLumaVer(PLANE_V, imgUV[1], Strength, MbQ, edge << 2);
               }
             }
-          if (activeSPS->chroma_format_idc==YUV420 || activeSPS->chroma_format_idc==YUV422) {
-            edge_cr = chroma_edge[0][edge][p->chroma_format_idc];
+          if (activeSPS->chromaFormatIdc==YUV420 || activeSPS->chromaFormatIdc==YUV422) {
+            edge_cr = chroma_edge[0][edge][p->chromaFormatIdc];
             if ((imgUV != NULL) && (edge_cr >= 0)) {
               vidParam->EdgeLoopChromaVer( imgUV[0], Strength, MbQ, edge_cr, 0, p);
               vidParam->EdgeLoopChromaVer( imgUV[1], Strength, MbQ, edge_cr, 1, p);
@@ -2145,7 +2145,7 @@ static void perform_db (sVidParam* vidParam, sPicture* p, int MbQAddr) {
     for( edge = 0; edge < 4 ; ++edge ) {
       // If cbp == 0 then deblocking for some macroblock types could be skipped
       if (MbQ->cbp == 0 && (curSlice->slice_type == P_SLICE || curSlice->slice_type == B_SLICE)) {
-        if (filterNon8x8LumaEdgesFlag[edge] == 0 && activeSPS->chroma_format_idc==YUV420)
+        if (filterNon8x8LumaEdgesFlag[edge] == 0 && activeSPS->chromaFormatIdc==YUV420)
           continue;
         else if (edge > 0) {
           if (((MbQ->mb_type == PSKIP && curSlice->slice_type == P_SLICE) || (MbQ->mb_type == P16x16) || (MbQ->mb_type == P8x16)))
@@ -2170,8 +2170,8 @@ static void perform_db (sVidParam* vidParam, sPicture* p, int MbQAddr) {
               }
             }
 
-          if (activeSPS->chroma_format_idc==YUV420 || activeSPS->chroma_format_idc==YUV422) {
-            edge_cr = chroma_edge[1][edge][p->chroma_format_idc];
+          if (activeSPS->chromaFormatIdc==YUV420 || activeSPS->chromaFormatIdc==YUV422) {
+            edge_cr = chroma_edge[1][edge][p->chromaFormatIdc];
             if( (imgUV != NULL) && (edge_cr >= 0)) {
               vidParam->EdgeLoopChromaHor (imgUV[0], Strength, MbQ, edge_cr, 0, p);
               vidParam->EdgeLoopChromaHor (imgUV[1], Strength, MbQ, edge_cr, 1, p);
@@ -2195,8 +2195,8 @@ static void perform_db (sVidParam* vidParam, sPicture* p, int MbQAddr) {
                 }
               }
 
-            if (activeSPS->chroma_format_idc==YUV420 || activeSPS->chroma_format_idc==YUV422) {
-              edge_cr = chroma_edge[1][edge][p->chroma_format_idc];
+            if (activeSPS->chromaFormatIdc==YUV420 || activeSPS->chromaFormatIdc==YUV422) {
+              edge_cr = chroma_edge[1][edge][p->chromaFormatIdc];
               if( (imgUV != NULL) && (edge_cr >= 0)) {
                 vidParam->EdgeLoopChromaHor (imgUV[0], Strength, MbQ, MB_BLOCK_SIZE, 0, p) ;
                 vidParam->EdgeLoopChromaHor (imgUV[1], Strength, MbQ, MB_BLOCK_SIZE, 1, p) ;

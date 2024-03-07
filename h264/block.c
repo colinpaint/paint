@@ -564,7 +564,7 @@ void iTransform (sMacroblock* curMb, sColorPlane pl, int smb) {
   if (smb)
     curSlice->is_reset_coeff = FALSE;
 
-  if ((picture->chroma_format_idc != YUV400) && (picture->chroma_format_idc != YUV444)) {
+  if ((picture->chromaFormatIdc != YUV400) && (picture->chromaFormatIdc != YUV444)) {
     sPixel** curUV;
     int ioff, joff;
     sPixel** mb_rec;

@@ -1993,7 +1993,7 @@ static void perform_mc_single_wp (sMacroblock* curMb, sColorPlane pl, sPicture* 
   int i4   = curMb->block_x + i;
   int j4   = curMb->block_y + j;
   int type = curSlice->slice_type;
-  int chroma_format_idc = picture->chroma_format_idc;
+  int chromaFormatIdc = picture->chromaFormatIdc;
   //===== Single List Prediction =====
   int ioff = (i << 2);
   int joff = (j << 2);
@@ -2035,10 +2035,10 @@ static void perform_mc_single_wp (sMacroblock* curMb, sColorPlane pl, sPicture* 
     weighted_mc_prediction(&curSlice->mb_pred[pl][joff], tmp_block_l0, block_size_y, block_size_x, ioff, alpha_l0, wp_offset, wp_denom, max_imgpel_value);
   }
 
-  if ((chroma_format_idc != YUV400) && (chroma_format_idc != YUV444) )
+  if ((chromaFormatIdc != YUV400) && (chromaFormatIdc != YUV444) )
   {
     int ioff_cr,joff_cr,block_size_x_cr,block_size_y_cr;
-    int vec1_y_cr = vec1_y + ((activeSPS->chroma_format_idc == 1)? curSlice->chroma_vector_adjustment[list_offset + pred_dir][ref_idx] : 0);
+    int vec1_y_cr = vec1_y + ((activeSPS->chromaFormatIdc == 1)? curSlice->chroma_vector_adjustment[list_offset + pred_dir][ref_idx] : 0);
     int total_scale = vidParam->total_scale;
     int maxold_x = picture->size_x_cr_m1;
     int maxold_y = (curMb->mb_field) ? (picture->size_y_cr >> 1) - 1 : picture->size_y_cr_m1;
@@ -2085,7 +2085,7 @@ static void perform_mc_single (sMacroblock* curMb, sColorPlane pl, sPicture* pic
   static const int mv_mul = 16; // 4 * 4
   int i4   = curMb->block_x + i;
   int j4   = curMb->block_y + j;
-  int chroma_format_idc = picture->chroma_format_idc;
+  int chromaFormatIdc = picture->chromaFormatIdc;
   //===== Single List Prediction =====
   int ioff = (i << 2);
   int joff = (j << 2);
@@ -2121,10 +2121,10 @@ static void perform_mc_single (sMacroblock* curMb, sColorPlane pl, sPicture* pic
 
   mc_prediction(&curSlice->mb_pred[pl][joff], tmp_block_l0, block_size_y, block_size_x, ioff);
 
-  if ((chroma_format_idc != YUV400) && (chroma_format_idc != YUV444) )
+  if ((chromaFormatIdc != YUV400) && (chromaFormatIdc != YUV444) )
   {
     int ioff_cr,joff_cr,block_size_x_cr,block_size_y_cr;
-    int vec1_y_cr = vec1_y + ((activeSPS->chroma_format_idc == 1)? curSlice->chroma_vector_adjustment[list_offset + pred_dir][ref_idx] : 0);
+    int vec1_y_cr = vec1_y + ((activeSPS->chromaFormatIdc == 1)? curSlice->chroma_vector_adjustment[list_offset + pred_dir][ref_idx] : 0);
     int total_scale = vidParam->total_scale;
     int maxold_x = picture->size_x_cr_m1;
     int maxold_y = (curMb->mb_field) ? (picture->size_y_cr >> 1) - 1 : picture->size_y_cr_m1;
@@ -2169,7 +2169,7 @@ static void perform_mc_bi_wp (sMacroblock* curMb, sColorPlane pl, sPicture* pict
   int j4 = curMb->block_y + j;
   int ioff = (i << 2);
   int joff = (j << 2);
-  int chroma_format_idc = picture->chroma_format_idc;
+  int chromaFormatIdc = picture->chromaFormatIdc;
   int list_offset = curMb->list_offset;
   sPicMotionParam *mv_info = &picture->mv_info[j4][i4];
   sMotionVector *l0_mv_array = &mv_info->mv[LIST_0];
@@ -2238,7 +2238,7 @@ static void perform_mc_bi_wp (sMacroblock* curMb, sColorPlane pl, sPicture* pict
   wp_denom  = pl > 0 ? curSlice->chroma_log2_weight_denom : curSlice->luma_log2_weight_denom;
   weighted_bi_prediction(&curSlice->mb_pred[pl][joff][ioff], block0, block1, block_size_y, block_size_x, weight0[pl], weight1[pl], wp_offset, wp_denom + 1, max_imgpel_value);
 
-  if ((chroma_format_idc != YUV400) && (chroma_format_idc != YUV444) )
+  if ((chromaFormatIdc != YUV400) && (chromaFormatIdc != YUV444) )
   {
     int ioff_cr, joff_cr,block_size_y_cr,block_size_x_cr,vec2_y_cr,vec1_y_cr;
     int maxold_x = picture->size_x_cr_m1;
@@ -2271,7 +2271,7 @@ static void perform_mc_bi_wp (sMacroblock* curMb, sColorPlane pl, sPicture* pict
       joff_cr = joff >> 1;
       block_size_y_cr = block_size_y >> 1;
     }
-    if (chroma_format_idc == 1)
+    if (chromaFormatIdc == 1)
     {
       vec1_y_cr = vec1_y + curSlice->chroma_vector_adjustment[LIST_0 + list_offset][l0_refframe];
       vec2_y_cr = vec2_y + curSlice->chroma_vector_adjustment[LIST_1 + list_offset][l1_refframe];
@@ -2305,7 +2305,7 @@ static void perform_mc_bi (sMacroblock* curMb, sColorPlane pl, sPicture* picture
   int j4 = curMb->block_y + j;
   int ioff = (i << 2);
   int joff = (j << 2);
-  int chroma_format_idc = picture->chroma_format_idc;
+  int chromaFormatIdc = picture->chromaFormatIdc;
   sPicMotionParam *mv_info = &picture->mv_info[j4][i4];
   sMotionVector *l0_mv_array = &mv_info->mv[LIST_0];
   sMotionVector *l1_mv_array = &mv_info->mv[LIST_1];
@@ -2356,10 +2356,10 @@ static void perform_mc_bi (sMacroblock* curMb, sColorPlane pl, sPicture* picture
     get_block_luma(list1, vec2_x, vec2_y, block_size_x, block_size_y, tmp_block_l1,shift_x,maxold_x,maxold_y,tmp_res,max_imgpel_value,no_ref_value, curMb);
   bi_prediction(&curSlice->mb_pred[pl][joff],tmp_block_l0,tmp_block_l1, block_size_y, block_size_x, ioff);
 
-  if ((chroma_format_idc != YUV400) && (chroma_format_idc != YUV444) )
+  if ((chromaFormatIdc != YUV400) && (chromaFormatIdc != YUV444) )
   {
     int ioff_cr, joff_cr,block_size_y_cr,block_size_x_cr,vec2_y_cr,vec1_y_cr;
-    int chroma_format_idc = vidParam->activeSPS->chroma_format_idc;
+    int chromaFormatIdc = vidParam->activeSPS->chromaFormatIdc;
     int maxold_x = picture->size_x_cr_m1;
     int maxold_y = (curMb->mb_field) ? (picture->size_y_cr >> 1) - 1 : picture->size_y_cr_m1;
     int shiftpel_x = vidParam->shiftpel_x;
@@ -2387,7 +2387,7 @@ static void perform_mc_bi (sMacroblock* curMb, sColorPlane pl, sPicture* picture
       joff_cr = joff >> 1;
       block_size_y_cr = block_size_y >> 1;
     }
-    if (chroma_format_idc == 1)
+    if (chromaFormatIdc == 1)
     {
       vec1_y_cr = vec1_y + curSlice->chroma_vector_adjustment[LIST_0 + list_offset][l0_refframe];
       vec2_y_cr = vec2_y + curSlice->chroma_vector_adjustment[LIST_1 + list_offset][l1_refframe];

@@ -37,13 +37,13 @@ static void resetMbs (sMacroblock *curMb) {
 static void setupBuffers (sVidParam* vidParam, int layerId) {
 
   if (vidParam->last_dec_layer_id != layerId) {
-    sCodingParam* cps = vidParam->codingParam[layerId];
-    if (cps->separate_colour_plane_flag) {
+    sCodingParam* codingParam = vidParam->codingParam[layerId];
+    if (codingParam->separate_colour_plane_flag) {
       for (int i = 0; i < MAX_PLANE; i++ ) {
-        vidParam->mbDataJV[i] = cps->mbDataJV[i];
-        vidParam->intraBlockJV[i] = cps->intraBlockJV[i];
-        vidParam->predModeJV[i] = cps->predModeJV[i];
-        vidParam->siBlockJV[i] = cps->siBlockJV[i];
+        vidParam->mbDataJV[i] = codingParam->mbDataJV[i];
+        vidParam->intraBlockJV[i] = codingParam->intraBlockJV[i];
+        vidParam->predModeJV[i] = codingParam->predModeJV[i];
+        vidParam->siBlockJV[i] = codingParam->siBlockJV[i];
         }
       vidParam->mbData = NULL;
       vidParam->intraBlock = NULL;
@@ -51,17 +51,17 @@ static void setupBuffers (sVidParam* vidParam, int layerId) {
       vidParam->siBlock = NULL;
       }
     else {
-      vidParam->mbData = cps->mbData;
-      vidParam->intraBlock = cps->intraBlock;
-      vidParam->predMode = cps->predMode;
-      vidParam->siBlock = cps->siBlock;
+      vidParam->mbData = codingParam->mbData;
+      vidParam->intraBlock = codingParam->intraBlock;
+      vidParam->predMode = codingParam->predMode;
+      vidParam->siBlock = codingParam->siBlock;
       }
 
-    vidParam->picPos = cps->picPos;
-    vidParam->nzCoeff = cps->nzCoeff;
-    vidParam->qpPerMatrix = cps->qpPerMatrix;
-    vidParam->qpRemMatrix = cps->qpRemMatrix;
-    vidParam->oldFrameSizeInMbs = cps->oldFrameSizeInMbs;
+    vidParam->picPos = codingParam->picPos;
+    vidParam->nzCoeff = codingParam->nzCoeff;
+    vidParam->qpPerMatrix = codingParam->qpPerMatrix;
+    vidParam->qpRemMatrix = codingParam->qpRemMatrix;
+    vidParam->oldFrameSizeInMbs = codingParam->oldFrameSizeInMbs;
     vidParam->last_dec_layer_id = layerId;
     }
   }
@@ -126,7 +126,7 @@ static void mbAffPostProc (sVidParam* vidParam) {
       get_mb_pos (vidParam, i, vidParam->mb_size[IS_LUMA], &x0, &y0);
       update_mbaff_macroblock_data (imgY + y0, temp_buffer, x0, MB_BLOCK_SIZE, MB_BLOCK_SIZE);
 
-      if (picture->chroma_format_idc != YUV400) {
+      if (picture->chromaFormatIdc != YUV400) {
         x0 = (short)((x0 * vidParam->mb_cr_size_x) >> 4);
         y0 = (short)((y0 * vidParam->mb_cr_size_y) >> 4);
         update_mbaff_macroblock_data (imgUV[0] + y0, temp_buffer, x0, vidParam->mb_cr_size_x, vidParam->mb_cr_size_y);
@@ -489,7 +489,7 @@ static void copyDecPicture_JV (sVidParam* vidParam, sPicture* dst, sPicture* src
   dst->recovery_frame       = src->recovery_frame;
   dst->coded_frame          = src->coded_frame;
 
-  dst->chroma_format_idc    = src->chroma_format_idc;
+  dst->chromaFormatIdc    = src->chromaFormatIdc;
 
   dst->frame_mbs_only_flag  = src->frame_mbs_only_flag;
 
@@ -661,7 +661,7 @@ static void initPicture (sVidParam* vidParam, sSlice *curSlice, sInputParam *inp
   picture->frame_num = curSlice->frame_num;
   picture->recovery_frame = (unsigned int)((int)curSlice->frame_num == vidParam->recovery_frame_num);
   picture->coded_frame = (curSlice->structure==FRAME);
-  picture->chroma_format_idc = activeSPS->chroma_format_idc;
+  picture->chromaFormatIdc = activeSPS->chromaFormatIdc;
   picture->frame_mbs_only_flag = activeSPS->frame_mbs_only_flag;
   picture->frame_cropping_flag = activeSPS->frame_cropping_flag;
   if (picture->frame_cropping_flag) {
@@ -773,8 +773,8 @@ static void initSlice (sVidParam* vidParam, sSlice *curSlice) {
   curSlice->ref_flag[0] = curSlice->redundant_pic_cnt == 0 ? vidParam->isPrimaryOk :
                                                                vidParam->isReduncantOk;
 
-  if ((curSlice->activeSPS->chroma_format_idc == 0) ||
-      (curSlice->activeSPS->chroma_format_idc == 3)) {
+  if ((curSlice->activeSPS->chromaFormatIdc == 0) ||
+      (curSlice->activeSPS->chromaFormatIdc == 3)) {
     curSlice->linfo_cbp_intra = linfo_cbp_intra_other;
     curSlice->linfo_cbp_inter = linfo_cbp_inter_other;
     }
@@ -903,7 +903,7 @@ static int readNewSlice (sSlice* curSlice) {
         curSlice->activeSPS = vidParam->activeSPS;
         curSlice->activePPS = vidParam->activePPS;
         curSlice->transform8x8Mode = vidParam->activePPS->transform_8x8_mode_flag;
-        curSlice->chroma444notSeparate = (vidParam->activeSPS->chroma_format_idc == YUV444) &&
+        curSlice->chroma444notSeparate = (vidParam->activeSPS->chromaFormatIdc == YUV444) &&
                                             (vidParam->separate_colour_plane_flag == 0);
         readRestSliceHeader (curSlice);
         assignQuantParams (curSlice);
@@ -967,7 +967,7 @@ static int readNewSlice (sSlice* curSlice) {
         curSlice->activeSPS = vidParam->activeSPS;
         curSlice->activePPS = vidParam->activePPS;
         curSlice->transform8x8Mode = vidParam->activePPS->transform_8x8_mode_flag;
-        curSlice->chroma444notSeparate = (vidParam->activeSPS->chroma_format_idc == YUV444) &&
+        curSlice->chroma444notSeparate = (vidParam->activeSPS->chromaFormatIdc == YUV444) &&
                                             (vidParam->separate_colour_plane_flag == 0);
         readRestSliceHeader (curSlice);
         assignQuantParams (curSlice);
@@ -1137,7 +1137,7 @@ void padPicture (sVidParam* vidParam, sPicture* picture) {
 
   pad_buf (*picture->imgY, iWidth, iHeight, iStride, iPadX, iPadY);
 
-  if (picture->chroma_format_idc != YUV400) {
+  if (picture->chromaFormatIdc != YUV400) {
     iPadX = vidParam->iChromaPadX;
     iPadY = vidParam->iChromaPadY;
     iWidth = picture->size_x_cr;
@@ -1163,7 +1163,7 @@ void exitPicture (sVidParam* vidParam, sPicture** picture) {
   frame recfr;
   recfr.vidParam = vidParam;
   recfr.yptr = &(*picture)->imgY[0][0];
-  if ((*picture)->chroma_format_idc != YUV400) {
+  if ((*picture)->chromaFormatIdc != YUV400) {
     recfr.uptr = &(*picture)->imgUV[0][0][0];
     recfr.vptr = &(*picture)->imgUV[1][0][0];
     }
@@ -1204,7 +1204,7 @@ void exitPicture (sVidParam* vidParam, sPicture** picture) {
     if ((*picture)->slice_type == I_SLICE || (*picture)->slice_type == SI_SLICE) // I-frame
       ercConcealIntraFrame (vidParam, &recfr, (*picture)->size_x, (*picture)->size_y, vidParam->ercErrorVar);
     else
-      ercConcealInterFrame (&recfr, vidParam->ercObjectList, (*picture)->size_x, (*picture)->size_y, vidParam->ercErrorVar, (*picture)->chroma_format_idc);
+      ercConcealInterFrame (&recfr, vidParam->ercObjectList, (*picture)->size_x, (*picture)->size_y, vidParam->ercErrorVar, (*picture)->chromaFormatIdc);
     }
   //}}}
   if (!vidParam->deblockMode &&
@@ -1245,7 +1245,7 @@ void exitPicture (sVidParam* vidParam, sPicture** picture) {
   int qp = (*picture)->qp;
   int pic_num = (*picture)->pic_num;
   int is_idr = (*picture)->idrFlag;
-  int chroma_format_idc = (*picture)->chroma_format_idc;
+  int chromaFormatIdc = (*picture)->chromaFormatIdc;
 
   store_picture_in_dpb (vidParam->dpbLayer[0],* picture);
 

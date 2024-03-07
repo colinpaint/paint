@@ -410,7 +410,7 @@ static void read_CBP_and_coeffs_from_NAL_CABAC_420 (sMacroblock* curMb)
   int intra = (curMb->is_intra_block == TRUE);
 
   sPicture* picture = curSlice->picture;
-  int yuv = picture->chroma_format_idc - 1;
+  int yuv = picture->chromaFormatIdc - 1;
 
   int (*InvLevelScale4x4)[4] = NULL;
 
@@ -1291,7 +1291,7 @@ static void read_CBP_and_coeffs_from_NAL_CABAC_422 (sMacroblock* curMb)
 
   int b4;
   sPicture* picture = curSlice->picture;
-  int yuv = picture->chroma_format_idc - 1;
+  int yuv = picture->chromaFormatIdc - 1;
   int m6[4];
 
   int need_transform_size_flag;
@@ -1691,12 +1691,12 @@ static void read_CBP_and_coeffs_from_NAL_CABAC_422 (sMacroblock* curMb)
         }
       } //for (b4=0; b4 < 4; b4++)
     } //for (b8=0; b8 < vidParam->num_blk8x8_uv; b8++)
-  } //if (picture->chroma_format_idc != YUV400)
+  } //if (picture->chromaFormatIdc != YUV400)
 }
 
 void set_read_CBP_and_coeffs_cabac(sSlice* curSlice)
 {
-  switch (curSlice->vidParam->activeSPS->chroma_format_idc)
+  switch (curSlice->vidParam->activeSPS->chromaFormatIdc)
   {
   case YUV444:
     if (curSlice->vidParam->separate_colour_plane_flag == 0)

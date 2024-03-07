@@ -97,7 +97,7 @@ static int predict_nnz_chroma (sMacroblock* curMb, int i,int j)
 {
   sPicture* picture = curMb->slice->picture;
 
-  if (picture->chroma_format_idc != YUV444)
+  if (picture->chromaFormatIdc != YUV444)
   {
     sVidParam* vidParam = curMb->vidParam;
     sSlice* curSlice = curMb->slice;
@@ -1389,7 +1389,7 @@ static void read_CBP_and_coeffs_from_NAL_CAVLC_422 (sMacroblock* curMb)
         }
       }
     }
-  } //if (picture->chroma_format_idc != YUV400)
+  } //if (picture->chromaFormatIdc != YUV400)
 }
 //}}}
 //{{{
@@ -1947,7 +1947,7 @@ void set_read_comp_coeff_cavlc (sMacroblock* curMb)
 //{{{
 void set_read_CBP_and_coeffs_cavlc (sSlice* curSlice) {
 
-  switch (curSlice->vidParam->activeSPS->chroma_format_idc) {
+  switch (curSlice->vidParam->activeSPS->chromaFormatIdc) {
     case YUV444:
       if (curSlice->vidParam->separate_colour_plane_flag == 0)
         curSlice->read_CBP_and_coeffs_from_NAL = read_CBP_and_coeffs_from_NAL_CAVLC_444;

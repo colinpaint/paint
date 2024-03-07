@@ -25,7 +25,7 @@ extern int get_colocated_info_4x4 (sMacroblock* curMb, sPicture *list1, int i, i
 int mb_pred_intra4x4 (sMacroblock* curMb, sColorPlane curPlane, sPixel** curPixel, sPicture* picture)
 {
   sSlice* curSlice = curMb->slice;
-  int yuv = picture->chroma_format_idc - 1;
+  int yuv = picture->chromaFormatIdc - 1;
   int i=0, j=0,k, j4=0,i4=0;
   int j_pos, i_pos;
   int ioff,joff;
@@ -59,7 +59,7 @@ int mb_pred_intra4x4 (sMacroblock* curMb, sColorPlane curPlane, sPixel** curPixe
   }
 
   // chroma decoding** *****************************************************
-  if ((picture->chroma_format_idc != YUV400) && (picture->chroma_format_idc != YUV444))
+  if ((picture->chromaFormatIdc != YUV400) && (picture->chromaFormatIdc != YUV444))
   {
     intra_cr_decoding(curMb, yuv);
   }
@@ -72,7 +72,7 @@ int mb_pred_intra4x4 (sMacroblock* curMb, sColorPlane curPlane, sPixel** curPixe
 //{{{
 int mb_pred_intra16x16 (sMacroblock* curMb, sColorPlane curPlane, sPicture* picture)
 {
-  int yuv = picture->chroma_format_idc - 1;
+  int yuv = picture->chromaFormatIdc - 1;
 
   curMb->slice->intra_pred_16x16(curMb, curPlane, curMb->i16mode);
   curMb->ipmode_DPCM = (char) curMb->i16mode; //For residual DPCM
@@ -81,7 +81,7 @@ int mb_pred_intra16x16 (sMacroblock* curMb, sColorPlane curPlane, sPicture* pict
   iMBtrans4x4(curMb, curPlane, 0);
 
   // chroma decoding** *****************************************************
-  if ((picture->chroma_format_idc != YUV400) && (picture->chroma_format_idc != YUV444))
+  if ((picture->chromaFormatIdc != YUV400) && (picture->chromaFormatIdc != YUV444))
   {
     intra_cr_decoding(curMb, yuv);
   }
@@ -94,7 +94,7 @@ int mb_pred_intra16x16 (sMacroblock* curMb, sColorPlane curPlane, sPicture* pict
 int mb_pred_intra8x8 (sMacroblock* curMb, sColorPlane curPlane, sPixel** curPixel, sPicture* picture)
 {
   sSlice* curSlice = curMb->slice;
-  int yuv = picture->chroma_format_idc - 1;
+  int yuv = picture->chromaFormatIdc - 1;
 
   int block8x8;   // needed for ABT
   curMb->itrans_8x8 = (curMb->is_lossless == FALSE) ? itrans8x8 : Inv_Residual_trans_8x8;
@@ -115,7 +115,7 @@ int mb_pred_intra8x8 (sMacroblock* curMb, sColorPlane curPlane, sPixel** curPixe
     copy_Image_8x8(&curPixel[curMb->pix_y + joff], &curSlice->mb_rec[curPlane][joff], curMb->pix_x + ioff, ioff);
   }
   // chroma decoding** *****************************************************
-  if ((picture->chroma_format_idc != YUV400) && (picture->chroma_format_idc != YUV444))
+  if ((picture->chromaFormatIdc != YUV400) && (picture->chromaFormatIdc != YUV444))
   {
     intra_cr_decoding(curMb, yuv);
   }
@@ -226,7 +226,7 @@ int mb_pred_skip (sMacroblock* curMb, sColorPlane curPlane, sPixel** curPixel, s
 
   copy_Image_16x16(&curPixel[curMb->pix_y], curSlice->mb_pred[curPlane], curMb->pix_x, 0);
 
-  if ((picture->chroma_format_idc != YUV400) && (picture->chroma_format_idc != YUV444))
+  if ((picture->chromaFormatIdc != YUV400) && (picture->chromaFormatIdc != YUV444))
   {
 
     copy_Image(&picture->imgUV[0][curMb->pix_c_y], curSlice->mb_pred[1], curMb->pix_c_x, 0, vidParam->mb_size[1][0], vidParam->mb_size[1][1]);
@@ -540,7 +540,7 @@ int mb_pred_b_d8x8temporal (sMacroblock* curMb, sColorPlane curPlane, sPixel** c
   {
     copy_Image_16x16(&curPixel[curMb->pix_y], curSlice->mb_pred[curPlane], curMb->pix_x, 0);
 
-    if ((picture->chroma_format_idc != YUV400) && (picture->chroma_format_idc != YUV444))
+    if ((picture->chromaFormatIdc != YUV400) && (picture->chromaFormatIdc != YUV444))
     {
       copy_Image(&picture->imgUV[0][curMb->pix_c_y], curSlice->mb_pred[1], curMb->pix_c_x, 0, vidParam->mb_size[1][0], vidParam->mb_size[1][1]);
       copy_Image(&picture->imgUV[1][curMb->pix_c_y], curSlice->mb_pred[2], curMb->pix_c_x, 0, vidParam->mb_size[1][0], vidParam->mb_size[1][1]);
@@ -665,7 +665,7 @@ int mb_pred_b_d4x4temporal (sMacroblock* curMb, sColorPlane curPlane, sPixel** c
   {
     copy_Image_16x16(&curPixel[curMb->pix_y], curSlice->mb_pred[curPlane], curMb->pix_x, 0);
 
-    if ((picture->chroma_format_idc != YUV400) && (picture->chroma_format_idc != YUV444))
+    if ((picture->chromaFormatIdc != YUV400) && (picture->chromaFormatIdc != YUV444))
     {
       copy_Image(&picture->imgUV[0][curMb->pix_c_y], curSlice->mb_pred[1], curMb->pix_c_x, 0, vidParam->mb_size[1][0], vidParam->mb_size[1][1]);
       copy_Image(&picture->imgUV[1][curMb->pix_c_y], curSlice->mb_pred[2], curMb->pix_c_x, 0, vidParam->mb_size[1][0], vidParam->mb_size[1][1]);
@@ -891,7 +891,7 @@ int mb_pred_b_d8x8spatial (sMacroblock* curMb, sColorPlane curPlane, sPixel** cu
   {
     copy_Image_16x16(&curPixel[curMb->pix_y], curSlice->mb_pred[curPlane], curMb->pix_x, 0);
 
-    if ((picture->chroma_format_idc != YUV400) && (picture->chroma_format_idc != YUV444))
+    if ((picture->chromaFormatIdc != YUV400) && (picture->chromaFormatIdc != YUV444))
      {
       copy_Image(&picture->imgUV[0][curMb->pix_c_y], curSlice->mb_pred[1], curMb->pix_c_x, 0, vidParam->mb_size[1][0], vidParam->mb_size[1][1]);
       copy_Image(&picture->imgUV[1][curMb->pix_c_y], curSlice->mb_pred[2], curMb->pix_c_x, 0, vidParam->mb_size[1][0], vidParam->mb_size[1][1]);
@@ -1079,7 +1079,7 @@ int mb_pred_b_d4x4spatial (sMacroblock* curMb, sColorPlane curPlane, sPixel** cu
   {
     copy_Image_16x16(&curPixel[curMb->pix_y], curSlice->mb_pred[curPlane], curMb->pix_x, 0);
 
-    if ((picture->chroma_format_idc != YUV400) && (picture->chroma_format_idc != YUV444))
+    if ((picture->chromaFormatIdc != YUV400) && (picture->chromaFormatIdc != YUV444))
     {
       copy_Image(&picture->imgUV[0][curMb->pix_c_y], curSlice->mb_pred[1], curMb->pix_c_x, 0, vidParam->mb_size[1][0], vidParam->mb_size[1][1]);
       copy_Image(&picture->imgUV[1][curMb->pix_c_y], curSlice->mb_pred[2], curMb->pix_c_x, 0, vidParam->mb_size[1][0], vidParam->mb_size[1][1]);
@@ -1248,7 +1248,7 @@ int mb_pred_ipcm (sMacroblock* curMb)
     }
   }
 
-  if ((picture->chroma_format_idc != YUV400) && (vidParam->separate_colour_plane_flag == 0))
+  if ((picture->chromaFormatIdc != YUV400) && (vidParam->separate_colour_plane_flag == 0))
   {
     for (k = 0; k < 2; ++k)
     {
