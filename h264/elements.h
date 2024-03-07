@@ -38,8 +38,8 @@
 #define SE_EOS               19
 #define SE_MAX_ELEMENTS      20
 
-#define NO_EC               0   //!< no error concealment necessary
-#define EC_REQ              1   //!< error concealment required
+#define NO_EC               0   //!< no error conceal necessary
+#define EC_REQ              1   //!< error conceal required
 #define EC_SYNC             2   //!< search and sync on next header element
 #define MAXPARTITIONMODES   2
 

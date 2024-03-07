@@ -814,7 +814,7 @@ void start_macroblock (sSlice* curSlice, sMacroblock** curMb)
   }
   else
   {
-    (*curMb)->mb = vidParam->PicPos[mb_nr];
+    (*curMb)->mb = vidParam->picPos[mb_nr];
   }
 
   /* Define pixel/block positions */
@@ -1087,7 +1087,7 @@ static void interpret_mb_mode_SI (sMacroblock* curMb)
     curMb->mb_type = SI4MB;
     memset(curMb->b8mode,IBLOCK,4 * sizeof(char));
     memset(curMb->b8pdir,-1,4 * sizeof(char));
-    curMb->slice->siblock[curMb->mb.y][curMb->mb.x]=1;
+    curMb->slice->siBlock[curMb->mb.y][curMb->mb.x]=1;
   }
   else if (mbmode == 1)
   {
@@ -1404,16 +1404,16 @@ void change_plane_JV (sVidParam* vidParam, int nplane, sSlice *pSlice)
 {
   vidParam->mbData = vidParam->mbDataJV[nplane];
   vidParam->picture  = vidParam->dec_picture_JV[nplane];
-  vidParam->siblock = vidParam->siblock_JV[nplane];
-  vidParam->ipredmode = vidParam->ipredmode_JV[nplane];
-  vidParam->intra_block = vidParam->intra_block_JV[nplane];
+  vidParam->siBlock = vidParam->siBlockJV[nplane];
+  vidParam->predMode = vidParam->predModeJV[nplane];
+  vidParam->intraBlock = vidParam->intraBlockJV[nplane];
 
   if (pSlice) {
     pSlice->mbData = vidParam->mbDataJV[nplane];
     pSlice->picture  = vidParam->dec_picture_JV[nplane];
-    pSlice->siblock = vidParam->siblock_JV[nplane];
-    pSlice->ipredmode = vidParam->ipredmode_JV[nplane];
-    pSlice->intra_block = vidParam->intra_block_JV[nplane];
+    pSlice->siBlock = vidParam->siBlockJV[nplane];
+    pSlice->predMode = vidParam->predModeJV[nplane];
+    pSlice->intraBlock = vidParam->intraBlockJV[nplane];
     }
   }
 //}}}

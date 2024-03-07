@@ -12,12 +12,14 @@
 #include "win32.h"
 #include "defines.h"
 #include "ifunctions.h"
-#include "parsetcommon.h"
 #include "types.h"
 #include "frame.h"
 //}}}
-
+//{{{  defines
+#define MAX_PPS  256
+#define MAX_NUM_REF_FRAMES_PIC_ORDER  256
 #define ET_SIZE 300      //!< size of error text buffer
+//}}}
 extern char errortext[ET_SIZE]; //!< buffer for error message for exit with error()
 
 //{{{  enum DecoderStatus
@@ -34,6 +36,168 @@ typedef enum {
   } Color_Component;
 //}}}
 
+//{{{  sHRD
+typedef struct {
+  unsigned int cpb_cnt_minus1;                                 // ue(v)
+  unsigned int bit_rate_scale;                                 // u(4)
+  unsigned int cpb_size_scale;                                 // u(4)
+  unsigned int bit_rate_value_minus1 [32];  // ue(v)
+  unsigned int cpb_size_value_minus1 [32];  // ue(v)
+  unsigned int cbr_flag              [32];  // u(1)
+  unsigned int initial_cpb_removal_delay_length_minus1;        // u(5)
+  unsigned int cpb_removal_delay_length_minus1;                // u(5)
+  unsigned int dpb_output_delay_length_minus1;                 // u(5)
+  unsigned int time_offset_length;                             // u(5)
+  } sHRD;
+//}}}
+//{{{  sVUI
+typedef struct {
+  Boolean      aspect_ratio_info_present_flag;       // u(1)
+  unsigned int aspect_ratio_idc;                     // u(8)
+  unsigned short sar_width;                          // u(16)
+  unsigned short sar_height;                         // u(16)
+  Boolean      overscan_info_present_flag;           // u(1)
+  Boolean      overscan_appropriate_flag;            // u(1)
+  Boolean      video_signal_type_present_flag;       // u(1)
+  unsigned int video_format;                         // u(3)
+  Boolean      video_full_range_flag;                // u(1)
+  Boolean      colour_description_present_flag;      // u(1)
+  unsigned int colour_primaries;                     // u(8)
+  unsigned int transfer_characteristics;             // u(8)
+  unsigned int matrix_coefficients;                  // u(8)
+  Boolean      chroma_location_info_present_flag;    // u(1)
+  unsigned int  chroma_sample_loc_type_top_field;    // ue(v)
+  unsigned int  chroma_sample_loc_type_bottom_field; // ue(v)
+  Boolean      timing_info_present_flag;             // u(1)
+  unsigned int num_units_in_tick;                    // u(32)
+  unsigned int time_scale;                           // u(32)
+  Boolean      fixed_frame_rate_flag;                // u(1)
+
+  Boolean      nal_hrd_parameters_present_flag;      // u(1)
+  sHRD nal_hrd_parameters;                           // hrd_paramters_t
+
+  Boolean      vcl_hrd_parameters_present_flag;      // u(1)
+  sHRD vcl_hrd_parameters;                           // hrd_paramters_t
+
+  // if ((nal_hrd_parameters_present_flag || (vcl_hrd_parameters_present_flag))
+  Boolean      low_delay_hrd_flag;                      // u(1)
+  Boolean      pic_struct_present_flag;                 // u(1)
+  Boolean      bitstream_restriction_flag;              // u(1)
+  Boolean      motion_vectors_over_pic_boundaries_flag; // u(1)
+
+  unsigned int max_bytes_per_pic_denom;                 // ue(v)
+  unsigned int max_bits_per_mb_denom;                   // ue(v)
+  unsigned int log2_max_mv_length_vertical;             // ue(v)
+  unsigned int log2_max_mv_length_horizontal;           // ue(v)
+  unsigned int num_reorder_frames;                      // ue(v)
+  unsigned int max_dec_frame_buffering;                 // ue(v)
+  } sVUI;
+//}}}
+//{{{  sSPS
+typedef struct {
+  Boolean  Valid;
+
+  unsigned int profile_idc;           // u(8)
+  Boolean  constrained_set0_flag;     // u(1)
+  Boolean  constrained_set1_flag;     // u(1)
+  Boolean  constrained_set2_flag;     // u(1)
+  Boolean  constrained_set3_flag;     // u(1)
+  unsigned int level_idc;             // u(8)
+  unsigned int seq_parameter_set_id;  // ue(v)
+  unsigned int chroma_format_idc;     // ue(v)
+
+  Boolean  seq_scaling_matrix_present_flag;    // u(1)
+  int      seq_scaling_list_present_flag[12];  // u(1)
+  int      ScalingList4x4[6][16];              // se(v)
+  int      ScalingList8x8[6][64];              // se(v)
+  Boolean  UseDefaultScalingMatrix4x4Flag[6];
+  Boolean  UseDefaultScalingMatrix8x8Flag[6];
+
+  unsigned int bit_depth_luma_minus8;              // ue(v)
+  unsigned int bit_depth_chroma_minus8;            // ue(v)
+  unsigned int log2_max_frame_num_minus4;          // ue(v)
+  unsigned int pic_order_cnt_type;
+  unsigned int log2_max_pic_order_cnt_lsb_minus4;  // ue(v)
+  Boolean  delta_pic_order_always_zero_flag;       // u(1)
+  int      offset_for_non_ref_pic;                 // se(v)
+  int      offset_for_top_to_bottom_field;         // se(v)
+
+  unsigned int num_ref_frames_in_pic_order_cnt_cycle;                     // ue(v)
+  int      offset_for_ref_frame[MAX_NUM_REF_FRAMES_PIC_ORDER];   // se(v)
+  unsigned int num_ref_frames;                    // ue(v)
+
+  Boolean  gaps_in_frame_num_value_allowed_flag;  // u(1)
+
+  unsigned int pic_width_in_mbs_minus1;           // ue(v)
+  unsigned int pic_height_in_map_units_minus1;    // ue(v)
+  Boolean  frame_mbs_only_flag;                   // u(1)
+  Boolean  mb_adaptive_frame_field_flag;          // u(1)
+  Boolean  direct_8x8_inference_flag;             // u(1)
+
+  Boolean  frame_cropping_flag;                   // u(1)
+  unsigned int frame_crop_left_offset;            // ue(v)
+  unsigned int frame_crop_right_offset;           // ue(v)
+  unsigned int frame_crop_top_offset;             // ue(v)
+  unsigned int frame_crop_bottom_offset;          // ue(v)
+
+  Boolean  vui_parameters_present_flag;           // u(1)
+  sVUI     vui_seq_parameters;                    // sVUI
+
+  unsigned separate_colour_plane_flag;            // u(1)
+  int      lossless_qpprime_flag;
+  } sSPS;
+//}}}
+//{{{  sPPS
+typedef struct {
+  Boolean   Valid;
+
+  unsigned int pic_parameter_set_id;            // ue(v)
+  unsigned int seq_parameter_set_id;            // ue(v)
+  Boolean   entropy_coding_mode_flag;           // u(1)
+  Boolean   transform_8x8_mode_flag;            // u(1)
+
+  Boolean   pic_scaling_matrix_present_flag;    // u(1)
+  int       pic_scaling_list_present_flag[12];  // u(1)
+  int       ScalingList4x4[6][16];              // se(v)
+  int       ScalingList8x8[6][64];              // se(v)
+  Boolean   UseDefaultScalingMatrix4x4Flag[6];
+  Boolean   UseDefaultScalingMatrix8x8Flag[6];
+
+  // if( pic_order_cnt_type < 2 )  in the sequence parameter set
+  Boolean      bottom_field_pic_order_in_frame_present_flag;  // u(1)
+  unsigned int num_slice_groups_minus1;                       // ue(v)
+  unsigned int slice_group_map_type;                          // ue(v)
+
+  // if( slice_group_map_type = = 0 )
+  unsigned int run_length_minus1[8]; // ue(v)
+  // else if( slice_group_map_type = = 2 )
+  unsigned int top_left[8];      // ue(v)
+  unsigned int bottom_right[8];  // ue(v)
+  // else if( slice_group_map_type = = 3 || 4 || 5
+  Boolean   slice_group_change_direction_flag;        // u(1)
+  unsigned int slice_group_change_rate_minus1;        // ue(v)
+  // else if( slice_group_map_type = = 6 )
+  unsigned int pic_size_in_map_units_minus1;          // ue(v)
+  byte*     slice_group_id;                           // complete MBAmap u(v)
+
+  int       num_ref_idx_l0_default_active_minus1;     // ue(v)
+  int       num_ref_idx_l1_default_active_minus1;     // ue(v)
+  Boolean   weighted_pred_flag;                       // u(1)
+  unsigned int  weighted_bipred_idc;                      // u(2)
+  int       pic_init_qp_minus26;                      // se(v)
+  int       pic_init_qs_minus26;                      // se(v)
+  int       chroma_qp_index_offset;                   // se(v)
+
+  int       cb_qp_index_offset;                       // se(v)
+  int       cr_qp_index_offset;                       // se(v)
+  int       second_chroma_qp_index_offset;            // se(v)
+
+  Boolean   deblocking_filter_control_present_flag;   // u(1)
+  Boolean   constrained_intra_pred_flag;              // u(1)
+  Boolean   redundant_pic_cnt_present_flag;           // u(1)
+  Boolean   vui_pic_parameters_flag;                  // u(1)
+  } sPPS;
+//}}}
 //{{{  sBiContextType
 //! struct for context management
 typedef struct {
@@ -211,7 +375,7 @@ typedef struct Macroblock {
   int     DeblockCall;
 
   short   slice_nr;
-  char    ei_flag;            // error indicator flag that enables concealment
+  char    ei_flag;            // error indicator flag that enables conceal
   char    dpl_flag;           // error indicator flag that signals a missing data partition
   short   delta_quant;        // for rate control
   short   list_offset;
@@ -277,20 +441,20 @@ typedef struct InputParam {
   int ref_offset;
   int poc_scale;
   int write_uv;
-  int intra_profile_deblocking;         // Loop filter usage determined by flags and parameters in bitstream
+  int intra_profile_deblocking;  // Loop filter usage determined by flags and parameters in bitstream
 
   // Input/output sequence format related variables
-  sFrameFormat source;                   // source related information
-  sFrameFormat output;                   // output related information
+  sFrameFormat source;           // source related information
+  sFrameFormat output;           // output related information
 
-  // error concealment
+  // error conceal
   int concealMode;
   int ref_poc_gap;
   int pocGap;
 
   // Needed to allow compilation for decoder. May be used later for distortion computation operations
-  int stdRange;                         // 1 - standard range, 0 - full range
-  int videoCode;                        // 1 - 709, 3 - 601:  See VideoCode in io_tiff.
+  int stdRange;                   // 1 - standard range, 0 - full range
+  int videoCode;                  // 1 - 709, 3 - 601:  See VideoCode in io_tiff.
   int export_views;
 
   int dpb_plus[2];
@@ -473,9 +637,9 @@ typedef struct Slice {
   sMacroblock* mbData;
 
   struct Picture* picture;
-  int**   siblock;
-  byte** ipredmode;
-  char*  intra_block;
+  int**   siBlock;
+  byte** predMode;
+  char*  intraBlock;
   char   chroma_vector_adjustment[6][32];
 
   void (*read_CBP_and_coeffs_from_NAL) (sMacroblock *curMb);
@@ -577,15 +741,15 @@ typedef struct CodingParam {
   sMacroblock* mbData;               // array containing all MBs of a whole frame
   sMacroblock* mbDataJV[MAX_PLANE]; // mbData to be used for 4:4:4 independent mode
 
-  char*        intra_block;
-  char*        intra_block_JV[MAX_PLANE];
-  sBlockPos*   PicPos;
-  byte**       ipredmode;             // prediction type [90][74]
-  byte**       ipredmode_JV[MAX_PLANE];
+  char*        intraBlock;
+  char*        intraBlockJV[MAX_PLANE];
+  sBlockPos*   picPos;
+  byte**       predMode;             // prediction type [90][74]
+  byte**       predModeJV[MAX_PLANE];
   byte****     nzCoeff;
 
-  int**        siblock;
-  int**        siblock_JV[MAX_PLANE];
+  int**        siBlock;
+  int**        siBlockJV[MAX_PLANE];
   int*         qpPerMatrix;
   int*         qpRemMatrix;
   } sCodingParam;
@@ -606,11 +770,11 @@ typedef struct VidParam {
   TIME_T startTime;
   TIME_T endTime;
   int64  totTime;
-
+    
   sPPS* activePPS;
   sSPS* activeSPS;
-  sSPS  SeqParSet[MAXSPS];
-  sPPS  PicParSet[MAXPPS];
+  sSPS  SeqParSet[32];
+  sPPS  PicParSet[MAX_PPS];
 
   struct DPB*   dpbLayer[MAX_NUM_DPB_LAYERS];
   sCodingParam* codingParam[MAX_NUM_DPB_LAYERS];
@@ -623,20 +787,20 @@ typedef struct VidParam {
   // current picture property;
   unsigned int num_dec_mb;
   int          iSliceNumOfCurrPic;
-  int          iNumOfSlicesAllocated;
-  int          iNumOfSlicesDecoded;
-  sSlice**     ppSliceList;
-  char*        intra_block;
-  char*        intra_block_JV[MAX_PLANE];
+  int          numSlicesAllocated;
+  int          numSlicesDecoded;
+  sSlice**     sliceList;
+  char*        intraBlock;
+  char*        intraBlockJV[MAX_PLANE];
 
   int          type;                       // image type INTER/INTRA
 
-  byte**       ipredmode;                  // prediction type [90][74]
-  byte**       ipredmode_JV[MAX_PLANE];
+  byte**       predMode;                  // prediction type [90][74]
+  byte**       predModeJV[MAX_PLANE];
   byte****     nzCoeff;
-  int**        siblock;
-  int**        siblock_JV[MAX_PLANE];
-  sBlockPos*   PicPos;
+  int**        siBlock;
+  int**        siBlockJV[MAX_PLANE];
+  sBlockPos*   picPos;
 
   int          newFrame;
   int          structure;           // Identify picture structure type
@@ -646,11 +810,11 @@ typedef struct VidParam {
   sMacroblock* mbDataJV[MAX_PLANE]; // mbData to be used for 4:4:4 independent mode
   int          ChromaArrayType;
 
-  // picture error concealment
+  // picture error conceal
   // concealment_head points to first node in list, concealment_end points to
   // last node in list. Initialize both to NULL, meaning no nodes in list yet
-  struct concealment_node* concealment_head;
-  struct concealment_node* concealment_end;
+  struct ConcealNode* concealment_head;
+  struct ConcealNode* concealment_end;
 
   unsigned int preFrameNum;           // store the frame_num in the last decoded slice. For detecting gap in frame_num.
   int          nonConformingStream;
@@ -677,7 +841,7 @@ typedef struct VidParam {
   int          idrPsnrNum;
   int          psnrNum;
 
-  // picture error concealment
+  // picture error conceal
   int          last_ref_pic_poc;
   int          ref_poc_gap;
   int          pocGap;
@@ -722,8 +886,8 @@ typedef struct VidParam {
   struct Picture* no_reference_picture;       // dummy storable picture for recovery point
 
   // Error parameters
-  struct object_buffer*  ercObjectList;
-  struct ercVariables_s* ercErrorVar;
+  struct ObjectBuffer*  ercObjectList;
+  struct ErcVariables* ercErrorVar;
   int                    ercMvPerMb;
   struct VidParam*       ercImg;
   int                    ecFlag[SE_MAX_ELEMENTS];  // array to set errorconcealment
@@ -742,7 +906,7 @@ typedef struct VidParam {
   int  NumberOfSliceGroups;  // the number of slice groups -1 (0 == scan order, 7 == maximum)
 
   void (*getNeighbour)     (sMacroblock *curMb, int xN, int yN, int mb_size[2], sPixelPos *pix);
-  void (*get_mb_block_pos) (sBlockPos *PicPos, int mb_addr, short *x, short *y);
+  void (*get_mb_block_pos) (sBlockPos *picPos, int mb_addr, short *x, short *y);
   void (*GetStrengthVer)   (sMacroblock *MbQ, int edge, int mvlimit, struct Picture *p);
   void (*GetStrengthHor)   (sMacroblock *MbQ, int edge, int mvlimit, struct Picture *p);
   void (*EdgeLoopLumaVer)  (sColorPlane pl, sPixel** Img, byte *Strength, sMacroblock *MbQ, int edge);
@@ -828,6 +992,14 @@ typedef struct DecoderParam {
 typedef sBiContextType* sBiContextTypePtr;
 static const sMotionVector zero_mv = {0, 0};
 //{{{
+static inline int is_BL_profile (unsigned int profile_idc) {
+  return profile_idc == FREXT_CAVLC444 || profile_idc == BASELINE ||
+         profile_idc == MAIN || profile_idc == EXTENDED ||
+         profile_idc == FREXT_HP || profile_idc == FREXT_Hi10P ||
+         profile_idc == FREXT_Hi422 || profile_idc == FREXT_Hi444;
+}
+//}}}
+//{{{
 static inline int is_FREXT_profile (unsigned int profile_idc) {
   // we allow all FRExt tools, when no profile is active
   return profile_idc == NO_PROFILE || profile_idc == FREXT_HP ||
@@ -840,14 +1012,6 @@ static inline int is_HI_intra_only_profile (unsigned int profile_idc, Boolean co
   return (((profile_idc == FREXT_Hi10P)||(profile_idc == FREXT_Hi422) ||
            (profile_idc == FREXT_Hi444)) && constrained_set3_flag) ||
          (profile_idc == FREXT_CAVLC444);
-}
-//}}}
-//{{{
-static inline int is_BL_profile (unsigned int profile_idc) {
-  return profile_idc == FREXT_CAVLC444 || profile_idc == BASELINE ||
-         profile_idc == MAIN || profile_idc == EXTENDED ||
-         profile_idc == FREXT_HP || profile_idc == FREXT_Hi10P ||
-         profile_idc == FREXT_Hi422 || profile_idc == FREXT_Hi444;
 }
 //}}}
 

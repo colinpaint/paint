@@ -62,7 +62,7 @@ static const int uv_div[2][4] = {{0, 1, 1, 0}, {0, 1, 0, 0}}; //[x/y][yuvFormat]
  * \brief
  *      collects prediction blocks only from the current column
  * \return
- *      Number of usable neighbour Macroblocks for concealment.
+ *      Number of usable neighbour Macroblocks for conceal.
  * \param predBlocks[]
  *      Array for indicating the valid neighbor blocks
  * \param currRow
@@ -222,7 +222,7 @@ static void ercPixConcealIMB (sVidParam* vidParam, sPixel* currFrame, int row, i
 ** **********************************************************************
  * \brief
  *      This function checks the neighbors of a sMacroblock for usability in
- *      concealment. First the OK macroblocks are marked, and if there is not
+ *      conceal. First the OK macroblocks are marked, and if there is not
  *      enough of them, then the CONCEALED ones as well.
  *      A "1" in the the output array means reliable, a "0" non reliable MB.
  *      The block order in "predBlocks":
@@ -231,7 +231,7 @@ static void ercPixConcealIMB (sVidParam* vidParam, sPixel* currFrame, int row, i
  *              2 6 3
  *      i.e., corners first.
  * \return
- *      Number of useable neighbor macroblocks for concealment.
+ *      Number of useable neighbor macroblocks for conceal.
  * \param predBlocks[]
  *      Array for indicating the valid neighbor blocks
  * \param currRow
@@ -341,7 +341,7 @@ static int ercCollect8PredBlocks (int predBlocks[], int currRow, int currColumn,
 /*!
 ** **********************************************************************
  * \brief
- *      Core for the Intra blocks concealment.
+ *      Core for the Intra blocks conceal.
  *      It is called for each color component (Y,U,V) separately
  *      Finds the corrupted blocks and calls pixel interpolation functions
  *      to correct them, one block at a time.
@@ -371,7 +371,7 @@ static void concealBlocks (sVidParam* vidParam, int lastColumn, int lastRow, int
       areaHeight = 0, i = 0, smoothColumn = 0;
   int predBlocks[8], step = 1;
 
-  // in the Y component do the concealment MB-wise (not block-wise):
+  // in the Y component do the conceal MB-wise (not block-wise):
   // this is useful if only whole MBs can be damaged or lost
   if ( comp == 0 )
     step = 2;
@@ -542,14 +542,14 @@ static void concealBlocks (sVidParam* vidParam, int lastColumn, int lastRow, int
 
 //{{{
 int ercConcealIntraFrame (sVidParam* vidParam, frame *recfr,
-                          int picSizeX, int picSizeY, ercVariables_t *errorVar )
+                          int picSizeX, int picSizeY, sErcVariables *errorVar )
 {
   int lastColumn = 0, lastRow = 0;
 
-  // if concealment is on
-  if ( errorVar && errorVar->concealment ) {
+  // if conceal is on
+  if ( errorVar && errorVar->conceal ) {
     // if there are segments to be concealed
-    if ( errorVar->nOfCorruptedSegments ) {
+    if ( errorVar->numCorruptedSegments ) {
       // Y
       lastRow = (int) (picSizeY>>3);
       lastColumn = (int) (picSizeX>>3);
@@ -914,7 +914,7 @@ static void copyBetweenFrames (frame *recfr, int currYBlockNum, int picSizeX, in
   sVidParam* vidParam = recfr->vidParam;
   sPicture* picture = vidParam->picture;
   int j, k, location, xmin, ymin;
-  sPicture* refPic = vidParam->ppSliceList[0]->listX[0][0];
+  sPicture* refPic = vidParam->sliceList[0]->listX[0][0];
 
   /* set the position of the region to be copied */
   xmin = (xPosYBlock(currYBlockNum,picSizeX)<<3);
@@ -961,9 +961,9 @@ static void copyBetweenFrames (frame *recfr, int currYBlockNum, int picSizeX, in
 ** **********************************************************************
  */
 static int concealByCopy (frame *recfr, int currMBNum,
-                         objectBuffer_t *object_list, int picSizeX)
+                         sObjectBuffer *object_list, int picSizeX)
 {
-  objectBuffer_t* currRegion;
+  sObjectBuffer* currRegion;
 
   currRegion = object_list+(currMBNum<<2);
   currRegion->regionMode = REGMODE_INTER_COPY;
@@ -1001,11 +1001,11 @@ static int concealByCopy (frame *recfr, int currMBNum,
  * \param picSizeY
  *      Height of the frame in pixels
  * \param yCondition
- *      array for conditions of Y blocks from ercVariables_t
+ *      array for conditions of Y blocks from sErcVariables
 ** **********************************************************************
  */
 static int concealByTrial (frame *recfr, sPixel *predMB,
-                          int currMBNum, objectBuffer_t *object_list, int predBlocks[],
+                          int currMBNum, sObjectBuffer *object_list, int predBlocks[],
                           int picSizeX, int picSizeY, char *yCondition)
 {
   sVidParam* vidParam = recfr->vidParam;
@@ -1017,7 +1017,7 @@ static int concealByTrial (frame *recfr, sPixel *predMB,
       threshold = ERC_BLOCK_OK,
       minDist, currDist, i, k;
   int regionSize;
-  objectBuffer_t* currRegion;
+  sObjectBuffer* currRegion;
   int mvBest[3] = {0, 0, 0}, mvPred[3] = {0, 0, 0}, *mvptr;
 
   numMBPerLine = (int) (picSizeX>>4);
@@ -1077,7 +1077,7 @@ static int concealByTrial (frame *recfr, sPixel *predMB,
             break;
           }
 
-          /* try the concealment with the Motion Info of the current neighbour
+          /* try the conceal with the Motion Info of the current neighbour
           only try if the neighbour is not Intra */
           if (isBlock(object_list,predMBNum,compSplit1,INTRA) ||
             isBlock(object_list,predMBNum,compSplit2,INTRA))
@@ -1133,7 +1133,7 @@ static int concealByTrial (frame *recfr, sPixel *predMB,
                 MBNum2YBlock(currMBNum,comp,picSizeX),
                 predMB, recfr->yptr, picSizeX, regionSize);
 
-              /* if so far best -> store the pixels as the best concealment */
+              /* if so far best -> store the pixels as the best conceal */
               if (currDist < minDist || !fInterNeighborExists)
               {
 
@@ -1202,8 +1202,8 @@ static int concealByTrial (frame *recfr, sPixel *predMB,
 //}}}
 
 //{{{
-int ercConcealInterFrame (frame *recfr, objectBuffer_t *object_list,
-                         int picSizeX, int picSizeY, ercVariables_t *errorVar, int chroma_format_idc ) {
+int ercConcealInterFrame (frame *recfr, sObjectBuffer *object_list,
+                         int picSizeX, int picSizeY, sErcVariables *errorVar, int chroma_format_idc ) {
 
   sVidParam* vidParam = recfr->vidParam;
 
@@ -1211,10 +1211,10 @@ int ercConcealInterFrame (frame *recfr, objectBuffer_t *object_list,
   int lastCorruptedRow = -1, firstCorruptedRow = -1;
   int currRow = 0, row, column, columnInd, areaHeight = 0, i = 0;
 
-  // if concealment is on
-  if (errorVar && errorVar->concealment ) {
+  // if conceal is on
+  if (errorVar && errorVar->conceal ) {
     /* if there are segments to be concealed */
-    if (errorVar->nOfCorruptedSegments ) {
+    if (errorVar->numCorruptedSegments ) {
       sPixel* predMB;
       if (chroma_format_idc != YUV400)
         predMB = (sPixel*)malloc ( (256 + (vidParam->mb_cr_size)*2) * sizeof (sPixel));
@@ -1524,7 +1524,7 @@ static sPicture* get_last_ref_pic_from_dpb (sDPB* dpb)
 ************************************************************************
 * \brief
 * Conceals the lost reference or non reference frame by either frame copy
-* or motion vector copy concealment.
+* or motion vector copy conceal.
 *
 ************************************************************************
 */
@@ -1566,18 +1566,18 @@ static void copy_to_conceal (sPicture *src, sPicture *dst, sVidParam* vidParam)
 
   picture = src;
 
-  // Conceals the missing frame by frame copy concealment
+  // Conceals the missing frame by frame copy conceal
   if (vidParam->concealMode==1)
   {
     // We need these initializations for using deblocking filter for frame copy
-    // concealment as well.
+    // conceal as well.
     dst->PicWidthInMbs = src->PicWidthInMbs;
     dst->picSizeInMbs = src->picSizeInMbs;
 
     CopyImgData( src->imgY, src->imgUV, dst->imgY, dst->imgUV, vidParam->width, vidParam->height, vidParam->widthCr, vidParam->heightCr);
   }
 
-  // Conceals the missing frame by motion vector copy concealment
+  // Conceals the missing frame by motion vector copy conceal
   if (vidParam->concealMode==2)
   {
     if (picture->chroma_format_idc != YUV400)
@@ -1601,10 +1601,10 @@ static void copy_to_conceal (sPicture *src, sPicture *dst, sVidParam* vidParam)
     {
       init_lists_for_non_reference_loss(
         vidParam->dpbLayer[0],
-        dst->slice_type, vidParam->ppSliceList[0]->structure);
+        dst->slice_type, vidParam->sliceList[0]->structure);
     }
     else
-      vidParam->ppSliceList[0]->init_lists(vidParam->ppSliceList[0]); //vidParam->currentSlice);
+      vidParam->sliceList[0]->init_lists(vidParam->sliceList[0]); //vidParam->currentSlice);
 
     multiplier = BLOCK_SIZE;
 
@@ -1671,7 +1671,7 @@ static void copy_to_conceal (sPicture *src, sPicture *dst, sVidParam* vidParam)
 /*!
 ************************************************************************
 * \brief
-* Uses the previous reference pic for concealment of reference frames
+* Uses the previous reference pic for conceal of reference frames
 *
 ************************************************************************
 */
@@ -1684,7 +1684,7 @@ static void copy_prev_pic_to_concealed_pic (sPicture *picture, sDPB* dpb)
 
   assert(ref_pic != NULL);
 
-  /* copy all the struc from this to current concealment pic */
+  /* copy all the struc from this to current conceal pic */
   vidParam->conceal_slice_type = P_SLICE;
   copy_to_conceal(ref_pic, picture, vidParam);
 }
@@ -1719,7 +1719,7 @@ static int comp (const void *i, const void *j) {
   }
 //}}}
 //{{{
-static void add_node (sVidParam* vidParam, struct concealment_node *concealment_new )
+static void add_node (sVidParam* vidParam, struct ConcealNode *concealment_new )
 {
   if( vidParam->concealment_head == NULL ) {
     vidParam->concealment_end = vidParam->concealment_head = concealment_new;
@@ -1730,7 +1730,7 @@ static void add_node (sVidParam* vidParam, struct concealment_node *concealment_
 }
 //}}}
 //{{{
-static void delete_node (sVidParam* vidParam, struct concealment_node *ptr ) {
+static void delete_node (sVidParam* vidParam, struct ConcealNode *ptr ) {
 
   // We only need to delete the first node in the linked list
   if( ptr == vidParam->concealment_head ) {
@@ -1756,11 +1756,11 @@ static void update_ref_list_for_concealment (sDPB* dpb) {
 //}}}
 
 //{{{
-struct concealment_node * init_node (sPicture* picture, int missingpoc ) {
+struct ConcealNode * init_node (sPicture* picture, int missingpoc ) {
 
-  struct concealment_node* ptr = (struct concealment_node *) calloc( 1, sizeof(struct concealment_node ) );
+  struct ConcealNode* ptr = (struct ConcealNode *) calloc( 1, sizeof(struct ConcealNode ) );
   if ( ptr == NULL )
-    return (struct concealment_node *) NULL;
+    return (struct ConcealNode *) NULL;
   else {
     ptr->picture = picture;
     ptr->missingpocs = missingpoc;
@@ -1809,10 +1809,10 @@ void init_lists_for_non_reference_loss (sDPB* dpb, int currSliceType, sPictureSt
     if (currPicStructure == FRAME) {
       for (i = 0; i < dpb->used_size; i++)
         if (dpb->fs[i]->concealment_reference == 1)
-          vidParam->ppSliceList[0]->listX[0][list0idx++] = dpb->fs[i]->frame;
+          vidParam->sliceList[0]->listX[0][list0idx++] = dpb->fs[i]->frame;
       // order list 0 by PicNum
-      qsort ((void *)vidParam->ppSliceList[0]->listX[0], list0idx, sizeof(sPicture*), compare_pic_by_pic_num_desc);
-      vidParam->ppSliceList[0]->listXsize[0] = (char) list0idx;
+      qsort ((void *)vidParam->sliceList[0]->listX[0], list0idx, sizeof(sPicture*), compare_pic_by_pic_num_desc);
+      vidParam->sliceList[0]->listXsize[0] = (char) list0idx;
       }
     }
 
@@ -1821,53 +1821,53 @@ void init_lists_for_non_reference_loss (sDPB* dpb, int currSliceType, sPictureSt
       for (i = 0; i < dpb->used_size; i++)
         if (dpb->fs[i]->concealment_reference == 1)
           if (vidParam->earlier_missing_poc > dpb->fs[i]->frame->poc)
-            vidParam->ppSliceList[0]->listX[0][list0idx++] = dpb->fs[i]->frame;
+            vidParam->sliceList[0]->listX[0][list0idx++] = dpb->fs[i]->frame;
 
-      qsort ((void *)vidParam->ppSliceList[0]->listX[0], list0idx, sizeof(sPicture*), compare_pic_by_poc_desc);
+      qsort ((void *)vidParam->sliceList[0]->listX[0], list0idx, sizeof(sPicture*), compare_pic_by_poc_desc);
       list0idx_1 = list0idx;
       for (i = 0; i < dpb->used_size; i++)
         if (dpb->fs[i]->concealment_reference == 1)
           if (vidParam->earlier_missing_poc < dpb->fs[i]->frame->poc)
-            vidParam->ppSliceList[0]->listX[0][list0idx++] = dpb->fs[i]->frame;
+            vidParam->sliceList[0]->listX[0][list0idx++] = dpb->fs[i]->frame;
 
-      qsort ((void *)&vidParam->ppSliceList[0]->listX[0][list0idx_1], list0idx-list0idx_1, sizeof(sPicture*), compare_pic_by_poc_asc);
+      qsort ((void *)&vidParam->sliceList[0]->listX[0][list0idx_1], list0idx-list0idx_1, sizeof(sPicture*), compare_pic_by_poc_asc);
       for (j = 0; j < list0idx_1; j++)
-        vidParam->ppSliceList[0]->listX[1][list0idx-list0idx_1+j]=vidParam->ppSliceList[0]->listX[0][j];
+        vidParam->sliceList[0]->listX[1][list0idx-list0idx_1+j]=vidParam->sliceList[0]->listX[0][j];
       for (j = list0idx_1; j < list0idx; j++)
-        vidParam->ppSliceList[0]->listX[1][j-list0idx_1]=vidParam->ppSliceList[0]->listX[0][j];
+        vidParam->sliceList[0]->listX[1][j-list0idx_1]=vidParam->sliceList[0]->listX[0][j];
 
-      vidParam->ppSliceList[0]->listXsize[0] = vidParam->ppSliceList[0]->listXsize[1] = (char) list0idx;
+      vidParam->sliceList[0]->listXsize[0] = vidParam->sliceList[0]->listXsize[1] = (char) list0idx;
 
-      qsort ((void*)&vidParam->ppSliceList[0]->listX[0][(short) vidParam->ppSliceList[0]->listXsize[0]], list0idx-vidParam->ppSliceList[0]->listXsize[0], sizeof(sPicture*), compare_pic_by_lt_pic_num_asc);
-      qsort ((void*)&vidParam->ppSliceList[0]->listX[1][(short) vidParam->ppSliceList[0]->listXsize[0]], list0idx-vidParam->ppSliceList[0]->listXsize[0], sizeof(sPicture*), compare_pic_by_lt_pic_num_asc);
-      vidParam->ppSliceList[0]->listXsize[0] = vidParam->ppSliceList[0]->listXsize[1] = (char) list0idx;
+      qsort ((void*)&vidParam->sliceList[0]->listX[0][(short) vidParam->sliceList[0]->listXsize[0]], list0idx-vidParam->sliceList[0]->listXsize[0], sizeof(sPicture*), compare_pic_by_lt_pic_num_asc);
+      qsort ((void*)&vidParam->sliceList[0]->listX[1][(short) vidParam->sliceList[0]->listXsize[0]], list0idx-vidParam->sliceList[0]->listXsize[0], sizeof(sPicture*), compare_pic_by_lt_pic_num_asc);
+      vidParam->sliceList[0]->listXsize[0] = vidParam->sliceList[0]->listXsize[1] = (char) list0idx;
       }
     }
 
-  if ((vidParam->ppSliceList[0]->listXsize[0] == vidParam->ppSliceList[0]->listXsize[1]) &&
-      (vidParam->ppSliceList[0]->listXsize[0] > 1)) {
+  if ((vidParam->sliceList[0]->listXsize[0] == vidParam->sliceList[0]->listXsize[1]) &&
+      (vidParam->sliceList[0]->listXsize[0] > 1)) {
     // check if lists are identical, if yes swap first two elements of listX[1]
     int diff = 0;
-    for (j = 0; j < vidParam->ppSliceList[0]->listXsize[0]; j++)
-      if (vidParam->ppSliceList[0]->listX[0][j]!=vidParam->ppSliceList[0]->listX[1][j])
+    for (j = 0; j < vidParam->sliceList[0]->listXsize[0]; j++)
+      if (vidParam->sliceList[0]->listX[0][j]!=vidParam->sliceList[0]->listX[1][j])
         diff = 1;
     if (!diff) {
-      tmp_s = vidParam->ppSliceList[0]->listX[1][0];
-      vidParam->ppSliceList[0]->listX[1][0]=vidParam->ppSliceList[0]->listX[1][1];
-      vidParam->ppSliceList[0]->listX[1][1]=tmp_s;
+      tmp_s = vidParam->sliceList[0]->listX[1][0];
+      vidParam->sliceList[0]->listX[1][0]=vidParam->sliceList[0]->listX[1][1];
+      vidParam->sliceList[0]->listX[1][1]=tmp_s;
       }
     }
 
   // set max size
-  vidParam->ppSliceList[0]->listXsize[0] = (char) imin (vidParam->ppSliceList[0]->listXsize[0], (int)activeSPS->num_ref_frames);
-  vidParam->ppSliceList[0]->listXsize[1] = (char) imin (vidParam->ppSliceList[0]->listXsize[1], (int)activeSPS->num_ref_frames);
-  vidParam->ppSliceList[0]->listXsize[1] = 0;
+  vidParam->sliceList[0]->listXsize[0] = (char) imin (vidParam->sliceList[0]->listXsize[0], (int)activeSPS->num_ref_frames);
+  vidParam->sliceList[0]->listXsize[1] = (char) imin (vidParam->sliceList[0]->listXsize[1], (int)activeSPS->num_ref_frames);
+  vidParam->sliceList[0]->listXsize[1] = 0;
 
   // set the unused list entries to NULL
-  for (i = vidParam->ppSliceList[0]->listXsize[0]; i< (MAX_LIST_SIZE) ; i++)
-    vidParam->ppSliceList[0]->listX[0][i] = NULL;
-  for (i = vidParam->ppSliceList[0]->listXsize[1]; i< (MAX_LIST_SIZE) ; i++)
-    vidParam->ppSliceList[0]->listX[1][i] = NULL;
+  for (i = vidParam->sliceList[0]->listXsize[0]; i< (MAX_LIST_SIZE) ; i++)
+    vidParam->sliceList[0]->listX[0][i] = NULL;
+  for (i = vidParam->sliceList[0]->listXsize[1]; i< (MAX_LIST_SIZE) ; i++)
+    vidParam->sliceList[0]->listX[1][i] = NULL;
   }
 //}}}
 //{{{
@@ -1896,7 +1896,7 @@ void conceal_lost_frames (sDPB* dpb, sSlice *pSlice)
   if(vidParam->IDR_concealment_flag == 1)
   {
     // Conceals an IDR frame loss. Uses the reference frame in the previous
-    // GOP for concealment.
+    // GOP for conceal.
     UnusedShortTermFrameNum = 0;
     vidParam->last_ref_pic_poc = -vidParam->pocGap;
     vidParam->earlier_missing_poc = 0;
@@ -1966,7 +1966,7 @@ void conceal_lost_frames (sDPB* dpb, sSlice *pSlice)
 /*!
 ************************************************************************
 * \brief
-* Stores the missing non reference frames in the concealment buffer. The
+* Stores the missing non reference frames in the conceal buffer. The
 * detection is based on the POC difference in the sorted POC array. A missing
 * non reference frame is detected when the dpb is full. A singly linked list
 * is maintained for storing the missing non reference frames.
@@ -1981,7 +1981,7 @@ void conceal_non_ref_pics (sDPB* dpb, int diff)
   unsigned int i, pos = 0;
   sPicture *conceal_from_picture = NULL;
   sPicture *conceal_to_picture = NULL;
-  struct concealment_node *concealment_ptr = NULL;
+  struct ConcealNode *concealment_ptr = NULL;
   int temp_used_size = dpb->used_size;
 
   if(dpb->used_size == 0 )
@@ -2055,9 +2055,9 @@ void sliding_window_poc_management (sDPB* dpb, sPicture *p)
 /*!
 ************************************************************************
 * \brief
-* Outputs the non reference frames. The POCs in the concealment buffer are
+* Outputs the non reference frames. The POCs in the conceal buffer are
 * sorted in ascending order and outputted when the lowest POC in the
-* concealment buffer is lower than the lowest in the dpb-> The linked list
+* conceal buffer is lower than the lowest in the dpb-> The linked list
 * entry corresponding to the outputted POC is immediately deleted.
 *
 ************************************************************************
@@ -2085,7 +2085,7 @@ void write_lost_non_ref_pic (sDPB* dpb, int poc) {
 ************************************************************************
 * \brief
 * Conceals frame loss immediately after the IDR. This special case produces
-* the same result for either frame copy or motion vector copy concealment.
+* the same result for either frame copy or motion vector copy conceal.
 *
 ************************************************************************
 */
@@ -2114,22 +2114,22 @@ void write_lost_ref_after_idr (sDPB* dpb, int pos) {
 void ercInit (sVidParam* vidParam, int pic_sizex, int pic_sizey, int flag) {
 
   ercClose(vidParam, vidParam->ercErrorVar);
-  vidParam->ercObjectList = (objectBuffer_t*)calloc ((pic_sizex * pic_sizey) >> 6, sizeof(objectBuffer_t));
+  vidParam->ercObjectList = (sObjectBuffer*)calloc ((pic_sizex * pic_sizey) >> 6, sizeof(sObjectBuffer));
   if (vidParam->ercObjectList == NULL)
     no_mem_exit ("ercInit: ercObjectList");
 
-  // the error concealment instance is allocated
+  // the error conceal instance is allocated
   vidParam->ercErrorVar = ercOpen();
 
-  // set error concealment ON
+  // set error conceal ON
   ercSetErrorConcealment (vidParam->ercErrorVar, flag);
 }
 //}}}
 //{{{
-ercVariables_t* ercOpen() {
+sErcVariables* ercOpen() {
 
-  ercVariables_t *errorVar = NULL;
-  errorVar = (ercVariables_t*)malloc (sizeof(ercVariables_t));
+  sErcVariables *errorVar = NULL;
+  errorVar = (sErcVariables*)malloc (sizeof(sErcVariables));
   if ( errorVar == NULL )
     no_mem_exit("ercOpen: errorVar");
 
@@ -2141,18 +2141,18 @@ ercVariables_t* ercOpen() {
   errorVar->vCondition = NULL;
   errorVar->prevFrameYCondition = NULL;
 
-  errorVar->concealment = 1;
+  errorVar->conceal = 1;
 
   return errorVar;
 }
 //}}}
 //{{{
-void ercReset (ercVariables_t *errorVar, int nOfMBs, int numOfSegments, int picSizeX ) {
+void ercReset (sErcVariables *errorVar, int nOfMBs, int numOfSegments, int picSizeX ) {
 
   char* tmp = NULL;
 
-  if (errorVar && errorVar->concealment ) {
-    ercSegment_t* segments = NULL;
+  if (errorVar && errorVar->conceal ) {
+    sErcSegment* segments = NULL;
     if (nOfMBs != errorVar->nOfMBs && errorVar->yCondition != NULL) {
       //{{{  free conditions
       free ( errorVar->yCondition );
@@ -2173,10 +2173,10 @@ void ercReset (ercVariables_t *errorVar, int nOfMBs, int numOfSegments, int picS
       //}}}
     if (errorVar->yCondition == NULL) {
       //{{{  allocate conditions, first frame, or frame size is changed)
-      errorVar->segments = (ercSegment_t*)malloc (numOfSegments*sizeof(ercSegment_t) );
+      errorVar->segments = (sErcSegment*)malloc (numOfSegments*sizeof(sErcSegment) );
       if ( errorVar->segments == NULL)
         no_mem_exit ("ercReset: errorVar->segments");
-      memset (errorVar->segments, 0, numOfSegments*sizeof(ercSegment_t));
+      memset (errorVar->segments, 0, numOfSegments*sizeof(sErcSegment));
       errorVar->nOfSegments = numOfSegments;
 
       errorVar->yCondition = (char*)malloc (4*nOfMBs*sizeof(char) );
@@ -2213,27 +2213,27 @@ void ercReset (ercVariables_t *errorVar, int nOfMBs, int numOfSegments, int picS
     if (errorVar->nOfSegments != numOfSegments) {
       free (errorVar->segments);
       errorVar->segments = NULL;
-      errorVar->segments = (ercSegment_t*)malloc (numOfSegments*sizeof(ercSegment_t) );
+      errorVar->segments = (sErcSegment*)malloc (numOfSegments*sizeof(sErcSegment) );
       if (errorVar->segments == NULL)
         no_mem_exit("ercReset: errorVar->segments");
       errorVar->nOfSegments = numOfSegments;
       }
 
-    //memset( errorVar->segments, 0, errorVar->nOfSegments * sizeof(ercSegment_t));
+    //memset( errorVar->segments, 0, errorVar->nOfSegments * sizeof(sErcSegment));
     segments = errorVar->segments;
     for (int i = 0; i < errorVar->nOfSegments; i++) {
       segments->startMBPos = 0;
       segments->endMBPos = (short) (nOfMBs - 1);
-      (segments++)->fCorrupted = 1; //! mark segments as corrupted
+      (segments++)->corrupted = 1; //! mark segments as corrupted
       }
 
     errorVar->currSegment = 0;
-    errorVar->nOfCorruptedSegments = 0;
+    errorVar->numCorruptedSegments = 0;
     }
   }
 //}}}
 //{{{
-void ercClose (sVidParam* vidParam,  ercVariables_t *errorVar ) {
+void ercClose (sVidParam* vidParam,  sErcVariables *errorVar ) {
 
   if ( errorVar != NULL ) {
     if (errorVar->yCondition != NULL) {
@@ -2254,10 +2254,10 @@ void ercClose (sVidParam* vidParam,  ercVariables_t *errorVar ) {
   }
 //}}}
 //{{{
-void ercSetErrorConcealment (ercVariables_t *errorVar, int value ) {
+void ercSetErrorConcealment (sErcVariables *errorVar, int value ) {
 
   if ( errorVar != NULL )
-    errorVar->concealment = value;
+    errorVar->conceal = value;
   }
 //}}}
 
@@ -2279,11 +2279,11 @@ void ercSetErrorConcealment (ercVariables_t *errorVar, int value ) {
  *      Variables for error detector
 ** **********************************************************************
  */
-void ercStartSegment (int currMBNum, int segment, unsigned int bitPos, ercVariables_t *errorVar ) {
+void ercStartSegment (int currMBNum, int segment, unsigned int bitPos, sErcVariables *errorVar ) {
 
-  if ( errorVar && errorVar->concealment ) {
+  if ( errorVar && errorVar->conceal ) {
     errorVar->currSegmentCorrupted = 0;
-    errorVar->segments[ segment ].fCorrupted = 0;
+    errorVar->segments[ segment ].corrupted = 0;
     errorVar->segments[ segment ].startMBPos = (short) currMBNum;
     }
   }
@@ -2304,9 +2304,9 @@ void ercStartSegment (int currMBNum, int segment, unsigned int bitPos, ercVariab
  *      Variables for error detector
 ** **********************************************************************
  */
-void ercStopSegment (int currMBNum, int segment, unsigned int bitPos, ercVariables_t *errorVar ) {
+void ercStopSegment (int currMBNum, int segment, unsigned int bitPos, sErcVariables *errorVar ) {
 
-  if ( errorVar && errorVar->concealment ) {
+  if ( errorVar && errorVar->conceal ) {
     errorVar->segments[ segment ].endMBPos = (short) currMBNum;
     errorVar->currSegment++;
     }
@@ -2324,15 +2324,15 @@ void ercStopSegment (int currMBNum, int segment, unsigned int bitPos, ercVariabl
  *      Variables for error detector
 ** **********************************************************************
  */
-void ercMarkCurrSegmentLost (int picSizeX, ercVariables_t *errorVar )
+void ercMarkCurrSegmentLost (int picSizeX, sErcVariables *errorVar )
 {
   int j = 0;
   int current_segment;
 
   current_segment = errorVar->currSegment-1;
-  if ( errorVar && errorVar->concealment ) {
+  if ( errorVar && errorVar->conceal ) {
     if (errorVar->currSegmentCorrupted == 0) {
-      errorVar->nOfCorruptedSegments++;
+      errorVar->numCorruptedSegments++;
       errorVar->currSegmentCorrupted = 1;
       }
 
@@ -2345,7 +2345,7 @@ void ercMarkCurrSegmentLost (int picSizeX, ercVariables_t *errorVar )
       errorVar->uCondition[j] = ERC_BLOCK_CORRUPTED;
       errorVar->vCondition[j] = ERC_BLOCK_CORRUPTED;
       }
-    errorVar->segments[current_segment].fCorrupted = 1;
+    errorVar->segments[current_segment].corrupted = 1;
     }
   }
 //}}}
@@ -2361,13 +2361,13 @@ void ercMarkCurrSegmentLost (int picSizeX, ercVariables_t *errorVar )
  *      Variables for error detector
 ** **********************************************************************
  */
-void ercMarkCurrSegmentOK (int picSizeX, ercVariables_t *errorVar ) {
+void ercMarkCurrSegmentOK (int picSizeX, sErcVariables *errorVar ) {
 
   int j = 0;
   int current_segment;
 
   current_segment = errorVar->currSegment-1;
-  if ( errorVar && errorVar->concealment ) {
+  if ( errorVar && errorVar->conceal ) {
     // mark all the Blocks belonging to the segment as OK */
     for (j = errorVar->segments[current_segment].startMBPos;
          j <= errorVar->segments[current_segment].endMBPos; j++ ) {
@@ -2378,7 +2378,7 @@ void ercMarkCurrSegmentOK (int picSizeX, ercVariables_t *errorVar ) {
       errorVar->uCondition[j] = ERC_BLOCK_OK;
       errorVar->vCondition[j] = ERC_BLOCK_OK;
       }
-    errorVar->segments[current_segment].fCorrupted = 0;
+    errorVar->segments[current_segment].corrupted = 0;
     }
   }
 //}}}
@@ -2397,11 +2397,11 @@ void ercMarkCurrSegmentOK (int picSizeX, ercVariables_t *errorVar ) {
  *      Variables for error detector
 ** **********************************************************************
  */
-void ercMarkCurrMBConcealed (int currMBNum, int comp, int picSizeX, ercVariables_t *errorVar ) {
+void ercMarkCurrMBConcealed (int currMBNum, int comp, int picSizeX, sErcVariables *errorVar ) {
 
   int setAll = 0;
 
-  if ( errorVar && errorVar->concealment ) {
+  if ( errorVar && errorVar->conceal ) {
     if (comp < 0) {
       setAll = 1;
       comp = 0;

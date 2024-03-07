@@ -26,7 +26,7 @@ static int predict_nnz (sMacroblock* curMb, int block_type, int i,int j)
 
   if ((curMb->is_intra_block == TRUE) && pix.available && vidParam->activePPS->constrained_intra_pred_flag && (curSlice->dp_mode == PAR_DP_3))
   {
-    pix.available &= curSlice->intra_block[pix.mb_addr];
+    pix.available &= curSlice->intraBlock[pix.mb_addr];
     if (!pix.available)
       ++cnt;
   }
@@ -58,7 +58,7 @@ static int predict_nnz (sMacroblock* curMb, int block_type, int i,int j)
 
   if ((curMb->is_intra_block == TRUE) && pix.available && vidParam->activePPS->constrained_intra_pred_flag && (curSlice->dp_mode==PAR_DP_3))
   {
-    pix.available &= curSlice->intra_block[pix.mb_addr];
+    pix.available &= curSlice->intraBlock[pix.mb_addr];
     if (!pix.available)
       ++cnt;
   }
@@ -113,7 +113,7 @@ static int predict_nnz_chroma (sMacroblock* curMb, int i,int j)
 
     if ((curMb->is_intra_block == TRUE) && pix.available && vidParam->activePPS->constrained_intra_pred_flag && (curSlice->dp_mode==PAR_DP_3))
     {
-      pix.available &= curSlice->intra_block[pix.mb_addr];
+      pix.available &= curSlice->intraBlock[pix.mb_addr];
       if (!pix.available)
         ++cnt;
     }
@@ -129,7 +129,7 @@ static int predict_nnz_chroma (sMacroblock* curMb, int i,int j)
 
     if ((curMb->is_intra_block == TRUE) && pix.available && vidParam->activePPS->constrained_intra_pred_flag && (curSlice->dp_mode==PAR_DP_3))
     {
-      pix.available &= curSlice->intra_block[pix.mb_addr];
+      pix.available &= curSlice->intraBlock[pix.mb_addr];
       if (!pix.available)
         ++cnt;
     }

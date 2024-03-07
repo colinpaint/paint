@@ -225,7 +225,7 @@ static int decode_macroblock _ANSI_ARGS_((int *macroblock_type,
   /* reset motion vector predictors */
   if ((*macroblock_type & MACROBLOCK_INTRA) && !concealment_motion_vectors)
   {
-    /* intra mb without concealment motion vectors */
+    /* intra mb without conceal motion vectors */
     /* ISO/IEC 13818-2 section 7.6.3.4: Resetting motion vector predictors */
     PMV[0][0][0]=PMV[0][0][1]=PMV[1][0][0]=PMV[1][0][1]=0;
     PMV[0][1][0]=PMV[0][1][1]=PMV[1][1][0]=PMV[1][1][1]=0;
@@ -492,7 +492,7 @@ static void macroblock_modes (pmacroblock_type,pstwtype,pstwclass,
   }
   else if ((macroblock_type & MACROBLOCK_INTRA) && concealment_motion_vectors)
   {
-    /* concealment motion vectors */
+    /* conceal motion vectors */
     motion_type = (picture_structure==FRAME_PICTURE) ? MC_FRAME : MC_FIELD;
   }
 #if 0

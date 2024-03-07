@@ -582,7 +582,7 @@ static void get_strength_ver_MBAff (byte* Strength, sMacroblock* MbQ, int edge, 
 
   sPixelPos pixP;
   sVidParam* vidParam = MbQ->vidParam;
-  sBlockPos *PicPos = vidParam->PicPos;
+  sBlockPos *picPos = vidParam->picPos;
 
   if ((p->slice_type==SP_SLICE)||(p->slice_type==SI_SLICE) )
   {
@@ -616,7 +616,7 @@ static void get_strength_ver_MBAff (byte* Strength, sMacroblock* MbQ, int edge, 
       }
       else
       {
-        get_mb_block_pos_mbaff (PicPos, MbQ->mbAddrX, &mb_x, &mb_y);
+        get_mb_block_pos_mbaff (picPos, MbQ->mbAddrX, &mb_x, &mb_y);
         for( idx = 0; idx < MB_BLOCK_SIZE; idx += BLOCK_SIZE)
         {
           blkQ = (short) ((idx & 0xFFFC) + (edge >> 2));
@@ -715,7 +715,7 @@ static void get_strength_ver_MBAff (byte* Strength, sMacroblock* MbQ, int edge, 
             }
             else
             {
-              get_mb_block_pos_mbaff (PicPos, MbQ->mbAddrX, &mb_x, &mb_y);
+              get_mb_block_pos_mbaff (picPos, MbQ->mbAddrX, &mb_x, &mb_y);
               {
                 int blk_y  = ((mb_y<<2) + (blkQ >> 2));
                 int blk_x  = ((mb_x<<2) + (blkQ  & 3));
@@ -793,7 +793,7 @@ static void get_strength_hor_MBAff (byte* Strength, sMacroblock* MbQ, int edge, 
 
   sPixelPos pixP;
   sVidParam* vidParam = MbQ->vidParam;
-  sBlockPos *PicPos = vidParam->PicPos;
+  sBlockPos *picPos = vidParam->picPos;
 
   if ((p->slice_type==SP_SLICE)||(p->slice_type==SI_SLICE) )
   {
@@ -853,7 +853,7 @@ static void get_strength_hor_MBAff (byte* Strength, sMacroblock* MbQ, int edge, 
           }
           else
           {
-            get_mb_block_pos_mbaff (PicPos, MbQ->mbAddrX, &mb_x, &mb_y);
+            get_mb_block_pos_mbaff (picPos, MbQ->mbAddrX, &mb_x, &mb_y);
             blk_y  = (short) ((mb_y<<2) + (blkQ >> 2));
             blk_x  = (short) ((mb_x<<2) + (blkQ  & 3));
             blk_y2 = (short) (pixP.pos_y >> 2);
@@ -939,7 +939,7 @@ static void get_strength_ver (sMacroblock* MbQ, int edge, int mvlimit, sPicture*
   byte *Strength = MbQ->strength_ver[edge];
   sSlice* curSlice = MbQ->slice;
   int     StrValue, i;
-  sBlockPos *PicPos = MbQ->vidParam->PicPos;
+  sBlockPos *picPos = MbQ->vidParam->picPos;
 
   if ((curSlice->slice_type==SP_SLICE)||(curSlice->slice_type==SI_SLICE) )
   {
@@ -981,7 +981,7 @@ static void get_strength_ver (sMacroblock* MbQ, int edge, int mvlimit, sPicture*
         else
         {
           int      blkP, blkQ, idx;
-          sBlockPos mb = PicPos[ MbQ->mbAddrX ];
+          sBlockPos mb = picPos[ MbQ->mbAddrX ];
           mb.x <<= BLOCK_SHIFT;
           mb.y <<= BLOCK_SHIFT;
 
@@ -1070,7 +1070,7 @@ static void get_strength_hor (sMacroblock* MbQ, int edge, int mvlimit, sPicture*
   byte  *Strength = MbQ->strength_hor[edge];
   int    StrValue, i;
   sSlice* curSlice = MbQ->slice;
-  sBlockPos *PicPos = MbQ->vidParam->PicPos;
+  sBlockPos *picPos = MbQ->vidParam->picPos;
 
   if ((curSlice->slice_type==SP_SLICE)||(curSlice->slice_type==SI_SLICE) )
   {
@@ -1115,7 +1115,7 @@ static void get_strength_hor (sMacroblock* MbQ, int edge, int mvlimit, sPicture*
         else
         {
           int      blkP, blkQ, idx;
-          sBlockPos mb = PicPos[ MbQ->mbAddrX ];
+          sBlockPos mb = picPos[ MbQ->mbAddrX ];
           mb.x <<= 2;
           mb.y <<= 2;
 

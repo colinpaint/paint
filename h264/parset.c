@@ -3,7 +3,6 @@
 #include "memory.h"
 
 #include "image.h"
-#include "parsetcommon.h"
 #include "parset.h"
 #include "nalu.h"
 #include "fmo.h"
@@ -11,12 +10,6 @@
 #include "vlc.h"
 #include "mbuffer.h"
 #include "erc.h"
-
-#if TRACE
-#define SYMTRACESTRING(s) strncpy(sym->tracestring,s,TRACESTRING_SIZE)
-#else
-#define SYMTRACESTRING(s) // do nothing
-#endif
 //}}}
 extern void init_frext (sVidParam* vidParam);
 
@@ -784,7 +777,7 @@ void activateSPS (sVidParam* vidParam, sSPS* sps) {
 
     initDpb (vidParam, vidParam->dpbLayer[0], 0);
 
-    // enable error concealment
+    // enable error conceal
     ercInit (vidParam, vidParam->width, vidParam->height, 1);
     if (vidParam->picture) {
       ercReset (vidParam->ercErrorVar, vidParam->picSizeInMbs, vidParam->picSizeInMbs, vidParam->picture->size_x);
@@ -1036,7 +1029,7 @@ void makePPSavailable (sVidParam* vidParam, int id, sPPS* pps) {
 //{{{
 void cleanUpPPS (sVidParam* vidParam) {
 
-  for (int i = 0; i < MAXPPS; i++) {
+  for (int i = 0; i < MAX_PPS; i++) {
     if (vidParam->PicParSet[i].Valid == TRUE && vidParam->PicParSet[i].slice_group_id != NULL)
       free (vidParam->PicParSet[i].slice_group_id);
     vidParam->PicParSet[i].Valid = FALSE;
@@ -1100,7 +1093,7 @@ void useParameterSet (sSlice* curSlice) {
     }
 
   if (sps->pic_order_cnt_type == 1)
-    if (sps->num_ref_frames_in_pic_order_cnt_cycle >= MAXnum_ref_frames_in_pic_order_cnt_cycle)
+    if (sps->num_ref_frames_in_pic_order_cnt_cycle >= MAX_NUM_REF_FRAMES_PIC_ORDER)
       error ("num_ref_frames_in_pic_order_cnt_cycle too large",-1011);
 
   vidParam->dpbLayerId = curSlice->layerId;

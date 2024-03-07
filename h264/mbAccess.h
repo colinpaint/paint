@@ -11,5 +11,5 @@ extern void get4x4NeighbourBase (sMacroblock* curMb, int block_x, int block_y, i
 
 extern Boolean mb_is_available (int mbAddr, sMacroblock* curMb);
 extern void get_mb_pos (sVidParam* vidParam, int mb_addr, int mb_size[2], short *x, short *y);
-extern void get_mb_block_pos_normal (sBlockPos *PicPos, int mb_addr, short *x, short *y);
-extern void get_mb_block_pos_mbaff  (sBlockPos *PicPos, int mb_addr, short *x, short *y);
+extern void get_mb_block_pos_normal (sBlockPos *picPos, int mb_addr, short *x, short *y);
+extern void get_mb_block_pos_mbaff  (sBlockPos *picPos, int mb_addr, short *x, short *y);

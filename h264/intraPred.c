@@ -260,10 +260,10 @@ static int intra8x8_dc_pred (sMacroblock *curMb,
 
   if (vidParam->activePPS->constrained_intra_pred_flag)
   {
-    block_available_left     = pix_a.available ? curSlice->intra_block [pix_a.mb_addr]: 0;
-    block_available_up       = pix_b.available ? curSlice->intra_block [pix_b.mb_addr] : 0;
-    block_available_up_right = pix_c.available ? curSlice->intra_block [pix_c.mb_addr] : 0;
-    block_available_up_left  = pix_d.available ? curSlice->intra_block [pix_d.mb_addr] : 0;
+    block_available_left     = pix_a.available ? curSlice->intraBlock [pix_a.mb_addr]: 0;
+    block_available_up       = pix_b.available ? curSlice->intraBlock [pix_b.mb_addr] : 0;
+    block_available_up_right = pix_c.available ? curSlice->intraBlock [pix_c.mb_addr] : 0;
+    block_available_up_left  = pix_d.available ? curSlice->intraBlock [pix_d.mb_addr] : 0;
   }
   else
   {
@@ -405,10 +405,10 @@ static int intra8x8_vert_pred (sMacroblock *curMb,
 
   if (vidParam->activePPS->constrained_intra_pred_flag)
   {
-    block_available_left     = pix_a.available ? curSlice->intra_block [pix_a.mb_addr] : 0;
-    block_available_up       = pix_b.available ? curSlice->intra_block [pix_b.mb_addr] : 0;
-    block_available_up_right = pix_c.available ? curSlice->intra_block [pix_c.mb_addr] : 0;
-    block_available_up_left  = pix_d.available ? curSlice->intra_block [pix_d.mb_addr] : 0;
+    block_available_left     = pix_a.available ? curSlice->intraBlock [pix_a.mb_addr] : 0;
+    block_available_up       = pix_b.available ? curSlice->intraBlock [pix_b.mb_addr] : 0;
+    block_available_up_right = pix_c.available ? curSlice->intraBlock [pix_c.mb_addr] : 0;
+    block_available_up_left  = pix_d.available ? curSlice->intraBlock [pix_d.mb_addr] : 0;
   }
   else
   {
@@ -514,9 +514,9 @@ static int intra8x8_hor_pred (sMacroblock *curMb,
 
   if (vidParam->activePPS->constrained_intra_pred_flag)
   {
-    block_available_left     = pix_a.available ? curSlice->intra_block [pix_a.mb_addr]: 0;
-    block_available_up       = pix_b.available ? curSlice->intra_block [pix_b.mb_addr] : 0;
-    block_available_up_left  = pix_d.available ? curSlice->intra_block [pix_d.mb_addr] : 0;
+    block_available_left     = pix_a.available ? curSlice->intraBlock [pix_a.mb_addr]: 0;
+    block_available_up       = pix_b.available ? curSlice->intraBlock [pix_b.mb_addr] : 0;
+    block_available_up_left  = pix_d.available ? curSlice->intraBlock [pix_d.mb_addr] : 0;
   }
   else
   {
@@ -624,10 +624,10 @@ static int intra8x8_diag_down_right_pred (sMacroblock *curMb,
 
   if (vidParam->activePPS->constrained_intra_pred_flag)
   {
-    block_available_left     = pix_a.available ? curSlice->intra_block [pix_a.mb_addr]: 0;
-    block_available_up       = pix_b.available ? curSlice->intra_block [pix_b.mb_addr] : 0;
-    block_available_up_right = pix_c.available ? curSlice->intra_block [pix_c.mb_addr] : 0;
-    block_available_up_left  = pix_d.available ? curSlice->intra_block [pix_d.mb_addr] : 0;
+    block_available_left     = pix_a.available ? curSlice->intraBlock [pix_a.mb_addr]: 0;
+    block_available_up       = pix_b.available ? curSlice->intraBlock [pix_b.mb_addr] : 0;
+    block_available_up_right = pix_c.available ? curSlice->intraBlock [pix_c.mb_addr] : 0;
+    block_available_up_left  = pix_d.available ? curSlice->intraBlock [pix_d.mb_addr] : 0;
   }
   else
   {
@@ -773,10 +773,10 @@ static int intra8x8_diag_down_left_pred (sMacroblock *curMb,
 
   if (vidParam->activePPS->constrained_intra_pred_flag)
   {
-    block_available_left     = pix_a.available ? curSlice->intra_block [pix_a.mb_addr]: 0;
-    block_available_up       = pix_b.available ? curSlice->intra_block [pix_b.mb_addr] : 0;
-    block_available_up_right = pix_c.available ? curSlice->intra_block [pix_c.mb_addr] : 0;
-    block_available_up_left  = pix_d.available ? curSlice->intra_block [pix_d.mb_addr] : 0;
+    block_available_left     = pix_a.available ? curSlice->intraBlock [pix_a.mb_addr]: 0;
+    block_available_up       = pix_b.available ? curSlice->intraBlock [pix_b.mb_addr] : 0;
+    block_available_up_right = pix_c.available ? curSlice->intraBlock [pix_c.mb_addr] : 0;
+    block_available_up_left  = pix_d.available ? curSlice->intraBlock [pix_d.mb_addr] : 0;
   }
   else
   {
@@ -922,10 +922,10 @@ static int intra8x8_vert_right_pred (sMacroblock *curMb,
 
   if (vidParam->activePPS->constrained_intra_pred_flag)
   {
-    block_available_left     = pix_a.available ? curSlice->intra_block [pix_a.mb_addr]: 0;
-    block_available_up       = pix_b.available ? curSlice->intra_block [pix_b.mb_addr] : 0;
-    block_available_up_right = pix_c.available ? curSlice->intra_block [pix_c.mb_addr] : 0;
-    block_available_up_left  = pix_d.available ? curSlice->intra_block [pix_d.mb_addr] : 0;
+    block_available_left     = pix_a.available ? curSlice->intraBlock [pix_a.mb_addr]: 0;
+    block_available_up       = pix_b.available ? curSlice->intraBlock [pix_b.mb_addr] : 0;
+    block_available_up_right = pix_c.available ? curSlice->intraBlock [pix_c.mb_addr] : 0;
+    block_available_up_left  = pix_d.available ? curSlice->intraBlock [pix_d.mb_addr] : 0;
   }
   else
   {
@@ -1077,10 +1077,10 @@ static int intra8x8_vert_left_pred (sMacroblock *curMb,
 
   if (vidParam->activePPS->constrained_intra_pred_flag)
   {
-    block_available_left     = pix_a.available ? curSlice->intra_block [pix_a.mb_addr] : 0;
-    block_available_up       = pix_b.available ? curSlice->intra_block [pix_b.mb_addr] : 0;
-    block_available_up_right = pix_c.available ? curSlice->intra_block [pix_c.mb_addr] : 0;
-    block_available_up_left  = pix_d.available ? curSlice->intra_block [pix_d.mb_addr] : 0;
+    block_available_left     = pix_a.available ? curSlice->intraBlock [pix_a.mb_addr] : 0;
+    block_available_up       = pix_b.available ? curSlice->intraBlock [pix_b.mb_addr] : 0;
+    block_available_up_right = pix_c.available ? curSlice->intraBlock [pix_c.mb_addr] : 0;
+    block_available_up_left  = pix_d.available ? curSlice->intraBlock [pix_d.mb_addr] : 0;
   }
   else
   {
@@ -1231,10 +1231,10 @@ static int intra8x8_hor_up_pred (sMacroblock *curMb,
 
   if (vidParam->activePPS->constrained_intra_pred_flag)
   {
-    block_available_left     = pix_a.available ? curSlice->intra_block [pix_a.mb_addr] : 0;
-    block_available_up       = pix_b.available ? curSlice->intra_block [pix_b.mb_addr] : 0;
-    block_available_up_right = pix_c.available ? curSlice->intra_block [pix_c.mb_addr] : 0;
-    block_available_up_left  = pix_d.available ? curSlice->intra_block [pix_d.mb_addr] : 0;
+    block_available_left     = pix_a.available ? curSlice->intraBlock [pix_a.mb_addr] : 0;
+    block_available_up       = pix_b.available ? curSlice->intraBlock [pix_b.mb_addr] : 0;
+    block_available_up_right = pix_c.available ? curSlice->intraBlock [pix_c.mb_addr] : 0;
+    block_available_up_left  = pix_d.available ? curSlice->intraBlock [pix_d.mb_addr] : 0;
   }
   else
   {
@@ -1384,10 +1384,10 @@ static int intra8x8_hor_down_pred (sMacroblock *curMb,
 
   if (vidParam->activePPS->constrained_intra_pred_flag)
   {
-    block_available_left     = pix_a.available ? curSlice->intra_block [pix_a.mb_addr] : 0;
-    block_available_up       = pix_b.available ? curSlice->intra_block [pix_b.mb_addr] : 0;
-    block_available_up_right = pix_c.available ? curSlice->intra_block [pix_c.mb_addr] : 0;
-    block_available_up_left  = pix_d.available ? curSlice->intra_block [pix_d.mb_addr] : 0;
+    block_available_left     = pix_a.available ? curSlice->intraBlock [pix_a.mb_addr] : 0;
+    block_available_up       = pix_b.available ? curSlice->intraBlock [pix_b.mb_addr] : 0;
+    block_available_up_right = pix_c.available ? curSlice->intraBlock [pix_c.mb_addr] : 0;
+    block_available_up_left  = pix_d.available ? curSlice->intraBlock [pix_d.mb_addr] : 0;
   }
   else
   {
@@ -1524,7 +1524,7 @@ static int intra_pred_8x8_normal (sMacroblock *curMb,
 {
   int block_x = (curMb->block_x) + (ioff >> 2);
   int block_y = (curMb->block_y) + (joff >> 2);
-  byte predmode = curMb->slice->ipredmode[block_y][block_x];
+  byte predmode = curMb->slice->predMode[block_y][block_x];
 
   curMb->ipmode_DPCM = predmode;  //For residual DPCM
 
@@ -1616,10 +1616,10 @@ static int intra8x8_dc_pred_mbaff (sMacroblock *curMb,
   if (vidParam->activePPS->constrained_intra_pred_flag)
   {
     for (i=0, block_available_left=1; i<8;i++)
-      block_available_left  &= pix_a[i].available ? curSlice->intra_block[pix_a[i].mb_addr]: 0;
-    block_available_up       = pix_b.available ? curSlice->intra_block [pix_b.mb_addr] : 0;
-    block_available_up_right = pix_c.available ? curSlice->intra_block [pix_c.mb_addr] : 0;
-    block_available_up_left  = pix_d.available ? curSlice->intra_block [pix_d.mb_addr] : 0;
+      block_available_left  &= pix_a[i].available ? curSlice->intraBlock[pix_a[i].mb_addr]: 0;
+    block_available_up       = pix_b.available ? curSlice->intraBlock [pix_b.mb_addr] : 0;
+    block_available_up_right = pix_c.available ? curSlice->intraBlock [pix_c.mb_addr] : 0;
+    block_available_up_left  = pix_d.available ? curSlice->intraBlock [pix_d.mb_addr] : 0;
   }
   else
   {
@@ -1761,10 +1761,10 @@ static int intra8x8_vert_pred_mbaff (sMacroblock *curMb,
   if (vidParam->activePPS->constrained_intra_pred_flag)
   {
     for (i=0, block_available_left=1; i<8;i++)
-      block_available_left  &= pix_a[i].available ? curSlice->intra_block[pix_a[i].mb_addr]: 0;
-    block_available_up       = pix_b.available ? curSlice->intra_block [pix_b.mb_addr] : 0;
-    block_available_up_right = pix_c.available ? curSlice->intra_block [pix_c.mb_addr] : 0;
-    block_available_up_left  = pix_d.available ? curSlice->intra_block [pix_d.mb_addr] : 0;
+      block_available_left  &= pix_a[i].available ? curSlice->intraBlock[pix_a[i].mb_addr]: 0;
+    block_available_up       = pix_b.available ? curSlice->intraBlock [pix_b.mb_addr] : 0;
+    block_available_up_right = pix_c.available ? curSlice->intraBlock [pix_c.mb_addr] : 0;
+    block_available_up_left  = pix_d.available ? curSlice->intraBlock [pix_d.mb_addr] : 0;
   }
   else
   {
@@ -1878,9 +1878,9 @@ static int intra8x8_hor_pred_mbaff (sMacroblock *curMb,
   if (vidParam->activePPS->constrained_intra_pred_flag)
   {
     for (i=0, block_available_left=1; i<8;i++)
-      block_available_left  &= pix_a[i].available ? curSlice->intra_block[pix_a[i].mb_addr]: 0;
-    block_available_up       = pix_b.available ? curSlice->intra_block [pix_b.mb_addr] : 0;
-    block_available_up_left  = pix_d.available ? curSlice->intra_block [pix_d.mb_addr] : 0;
+      block_available_left  &= pix_a[i].available ? curSlice->intraBlock[pix_a[i].mb_addr]: 0;
+    block_available_up       = pix_b.available ? curSlice->intraBlock [pix_b.mb_addr] : 0;
+    block_available_up_left  = pix_d.available ? curSlice->intraBlock [pix_d.mb_addr] : 0;
   }
   else
   {
@@ -1992,10 +1992,10 @@ static int intra8x8_diag_down_right_pred_mbaff (sMacroblock *curMb,
   if (vidParam->activePPS->constrained_intra_pred_flag)
   {
     for (i=0, block_available_left=1; i<8;i++)
-      block_available_left  &= pix_a[i].available ? curSlice->intra_block[pix_a[i].mb_addr]: 0;
-    block_available_up       = pix_b.available ? curSlice->intra_block [pix_b.mb_addr] : 0;
-    block_available_up_right = pix_c.available ? curSlice->intra_block [pix_c.mb_addr] : 0;
-    block_available_up_left  = pix_d.available ? curSlice->intra_block [pix_d.mb_addr] : 0;
+      block_available_left  &= pix_a[i].available ? curSlice->intraBlock[pix_a[i].mb_addr]: 0;
+    block_available_up       = pix_b.available ? curSlice->intraBlock [pix_b.mb_addr] : 0;
+    block_available_up_right = pix_c.available ? curSlice->intraBlock [pix_c.mb_addr] : 0;
+    block_available_up_left  = pix_d.available ? curSlice->intraBlock [pix_d.mb_addr] : 0;
   }
   else
   {
@@ -2143,10 +2143,10 @@ static int intra8x8_diag_down_left_pred_mbaff (sMacroblock *curMb,
   if (vidParam->activePPS->constrained_intra_pred_flag)
   {
     for (i=0, block_available_left=1; i<8;i++)
-      block_available_left  &= pix_a[i].available ? curSlice->intra_block[pix_a[i].mb_addr]: 0;
-    block_available_up       = pix_b.available ? curSlice->intra_block [pix_b.mb_addr] : 0;
-    block_available_up_right = pix_c.available ? curSlice->intra_block [pix_c.mb_addr] : 0;
-    block_available_up_left  = pix_d.available ? curSlice->intra_block [pix_d.mb_addr] : 0;
+      block_available_left  &= pix_a[i].available ? curSlice->intraBlock[pix_a[i].mb_addr]: 0;
+    block_available_up       = pix_b.available ? curSlice->intraBlock [pix_b.mb_addr] : 0;
+    block_available_up_right = pix_c.available ? curSlice->intraBlock [pix_c.mb_addr] : 0;
+    block_available_up_left  = pix_d.available ? curSlice->intraBlock [pix_d.mb_addr] : 0;
   }
   else
   {
@@ -2295,10 +2295,10 @@ static int intra8x8_vert_right_pred_mbaff (sMacroblock *curMb,
   if (vidParam->activePPS->constrained_intra_pred_flag)
   {
     for (i=0, block_available_left=1; i<8;i++)
-      block_available_left  &= pix_a[i].available ? curSlice->intra_block[pix_a[i].mb_addr]: 0;
-    block_available_up       = pix_b.available ? curSlice->intra_block [pix_b.mb_addr] : 0;
-    block_available_up_right = pix_c.available ? curSlice->intra_block [pix_c.mb_addr] : 0;
-    block_available_up_left  = pix_d.available ? curSlice->intra_block [pix_d.mb_addr] : 0;
+      block_available_left  &= pix_a[i].available ? curSlice->intraBlock[pix_a[i].mb_addr]: 0;
+    block_available_up       = pix_b.available ? curSlice->intraBlock [pix_b.mb_addr] : 0;
+    block_available_up_right = pix_c.available ? curSlice->intraBlock [pix_c.mb_addr] : 0;
+    block_available_up_left  = pix_d.available ? curSlice->intraBlock [pix_d.mb_addr] : 0;
   }
   else
   {
@@ -2453,10 +2453,10 @@ static int intra8x8_vert_left_pred_mbaff (sMacroblock *curMb,
   if (vidParam->activePPS->constrained_intra_pred_flag)
   {
     for (i=0, block_available_left=1; i<8;i++)
-      block_available_left  &= pix_a[i].available ? curSlice->intra_block[pix_a[i].mb_addr]: 0;
-    block_available_up       = pix_b.available ? curSlice->intra_block [pix_b.mb_addr] : 0;
-    block_available_up_right = pix_c.available ? curSlice->intra_block [pix_c.mb_addr] : 0;
-    block_available_up_left  = pix_d.available ? curSlice->intra_block [pix_d.mb_addr] : 0;
+      block_available_left  &= pix_a[i].available ? curSlice->intraBlock[pix_a[i].mb_addr]: 0;
+    block_available_up       = pix_b.available ? curSlice->intraBlock [pix_b.mb_addr] : 0;
+    block_available_up_right = pix_c.available ? curSlice->intraBlock [pix_c.mb_addr] : 0;
+    block_available_up_left  = pix_d.available ? curSlice->intraBlock [pix_d.mb_addr] : 0;
   }
   else
   {
@@ -2611,10 +2611,10 @@ static int intra8x8_hor_up_pred_mbaff (sMacroblock *curMb,
   if (vidParam->activePPS->constrained_intra_pred_flag)
   {
     for (i=0, block_available_left=1; i<8;i++)
-      block_available_left  &= pix_a[i].available ? curSlice->intra_block[pix_a[i].mb_addr]: 0;
-    block_available_up       = pix_b.available ? curSlice->intra_block [pix_b.mb_addr] : 0;
-    block_available_up_right = pix_c.available ? curSlice->intra_block [pix_c.mb_addr] : 0;
-    block_available_up_left  = pix_d.available ? curSlice->intra_block [pix_d.mb_addr] : 0;
+      block_available_left  &= pix_a[i].available ? curSlice->intraBlock[pix_a[i].mb_addr]: 0;
+    block_available_up       = pix_b.available ? curSlice->intraBlock [pix_b.mb_addr] : 0;
+    block_available_up_right = pix_c.available ? curSlice->intraBlock [pix_c.mb_addr] : 0;
+    block_available_up_left  = pix_d.available ? curSlice->intraBlock [pix_d.mb_addr] : 0;
   }
   else
   {
@@ -2769,10 +2769,10 @@ static int intra8x8_hor_down_pred_mbaff (sMacroblock *curMb,
   if (vidParam->activePPS->constrained_intra_pred_flag)
   {
     for (i=0, block_available_left=1; i<8;i++)
-      block_available_left  &= pix_a[i].available ? curSlice->intra_block[pix_a[i].mb_addr]: 0;
-    block_available_up       = pix_b.available ? curSlice->intra_block [pix_b.mb_addr] : 0;
-    block_available_up_right = pix_c.available ? curSlice->intra_block [pix_c.mb_addr] : 0;
-    block_available_up_left  = pix_d.available ? curSlice->intra_block [pix_d.mb_addr] : 0;
+      block_available_left  &= pix_a[i].available ? curSlice->intraBlock[pix_a[i].mb_addr]: 0;
+    block_available_up       = pix_b.available ? curSlice->intraBlock [pix_b.mb_addr] : 0;
+    block_available_up_right = pix_c.available ? curSlice->intraBlock [pix_c.mb_addr] : 0;
+    block_available_up_left  = pix_d.available ? curSlice->intraBlock [pix_d.mb_addr] : 0;
   }
   else
   {
@@ -2897,7 +2897,7 @@ static int intra_pred_8x8_mbaff (sMacroblock *curMb,
 {
   int block_x = (curMb->block_x) + (ioff >> 2);
   int block_y = (curMb->block_y) + (joff >> 2);
-  byte predmode = curMb->slice->ipredmode[block_y][block_x];
+  byte predmode = curMb->slice->predMode[block_y][block_x];
 
   curMb->ipmode_DPCM = predmode;  //For residual DPCM
 
@@ -2974,8 +2974,8 @@ static int intra16x16_dc_pred (sMacroblock *curMb, sColorPlane pl)
   }
   else
   {
-    up_avail      = b.available ? curSlice->intra_block[b.mb_addr] : 0;
-    left_avail    = a.available ? curSlice->intra_block[a.mb_addr]: 0;
+    up_avail      = b.available ? curSlice->intraBlock[b.mb_addr] : 0;
+    left_avail    = a.available ? curSlice->intraBlock[a.mb_addr]: 0;
   }
 
   // Sum top predictors
@@ -3059,7 +3059,7 @@ static int intra16x16_vert_pred (sMacroblock *curMb, sColorPlane pl)
   }
   else
   {
-    up_avail = b.available ? curSlice->intra_block[b.mb_addr] : 0;
+    up_avail = b.available ? curSlice->intraBlock[b.mb_addr] : 0;
   }
 
   if (!up_avail)
@@ -3114,7 +3114,7 @@ static int intra16x16_hor_pred (sMacroblock *curMb, sColorPlane pl)
   }
   else
   {
-    left_avail  = a.available ? curSlice->intra_block[a.mb_addr]: 0;
+    left_avail  = a.available ? curSlice->intraBlock[a.mb_addr]: 0;
   }
 
   if (!left_avail)
@@ -3191,9 +3191,9 @@ static int intra16x16_plane_pred (sMacroblock *curMb, sColorPlane pl)
   }
   else
   {
-    up_avail      = b.available ? curSlice->intra_block[b.mb_addr] : 0;
-    left_avail    = a.available ? curSlice->intra_block[a.mb_addr] : 0;
-    left_up_avail = d.available ? curSlice->intra_block[d.mb_addr] : 0;
+    up_avail      = b.available ? curSlice->intraBlock[b.mb_addr] : 0;
+    left_avail    = a.available ? curSlice->intraBlock[a.mb_addr] : 0;
+    left_up_avail = d.available ? curSlice->intraBlock[d.mb_addr] : 0;
   }
 
   if (!up_avail || !left_up_avail  || !left_avail)
@@ -3313,9 +3313,9 @@ static int intra16x16_dc_pred_mbaff (sMacroblock *curMb, sColorPlane pl)
   }
   else
   {
-    up_avail      = b.available ? curSlice->intra_block[b.mb_addr] : 0;
+    up_avail      = b.available ? curSlice->intraBlock[b.mb_addr] : 0;
     for (i = 1, left_avail = 1; i < 17; ++i)
-      left_avail  &= left[i].available ? curSlice->intra_block[left[i].mb_addr]: 0;
+      left_avail  &= left[i].available ? curSlice->intraBlock[left[i].mb_addr]: 0;
   }
 
   for (i = 0; i < MB_BLOCK_SIZE; ++i)
@@ -3381,7 +3381,7 @@ static int intra16x16_vert_pred_mbaff (sMacroblock *curMb, sColorPlane pl)
   }
   else
   {
-    up_avail = b.available ? curSlice->intra_block[b.mb_addr] : 0;
+    up_avail = b.available ? curSlice->intraBlock[b.mb_addr] : 0;
   }
 
   if (!up_avail)
@@ -3439,7 +3439,7 @@ static int intra16x16_hor_pred_mbaff (sMacroblock *curMb, sColorPlane pl)
   else
   {
     for (i = 1, left_avail = 1; i < 17; ++i)
-      left_avail  &= left[i].available ? curSlice->intra_block[left[i].mb_addr]: 0;
+      left_avail  &= left[i].available ? curSlice->intraBlock[left[i].mb_addr]: 0;
   }
 
   if (!left_avail)
@@ -3500,10 +3500,10 @@ static int intra16x16_plane_pred_mbaff (sMacroblock *curMb, sColorPlane pl)
   }
   else
   {
-    up_avail      = b.available ? curSlice->intra_block[b.mb_addr] : 0;
+    up_avail      = b.available ? curSlice->intraBlock[b.mb_addr] : 0;
     for (i = 1, left_avail = 1; i < 17; ++i)
-      left_avail  &= left[i].available ? curSlice->intra_block[left[i].mb_addr]: 0;
-    left_up_avail = left[0].available ? curSlice->intra_block[left[0].mb_addr]: 0;
+      left_avail  &= left[i].available ? curSlice->intraBlock[left[i].mb_addr]: 0;
+    left_up_avail = left[0].available ? curSlice->intraBlock[left[0].mb_addr]: 0;
   }
 
   if (!up_avail || !left_up_avail  || !left_avail)
@@ -3660,8 +3660,8 @@ static void intrapred_chroma_dc (sMacroblock *curMb)
   }
   else
   {
-    up_avail = up.available ? curSlice->intra_block[up.mb_addr] : 0;
-    left_avail = left.available ? curSlice->intra_block[left.mb_addr]: 0;
+    up_avail = up.available ? curSlice->intraBlock[up.mb_addr] : 0;
+    left_avail = left.available ? curSlice->intraBlock[left.mb_addr]: 0;
   }
 
   // DC prediction
@@ -3734,7 +3734,7 @@ static void intrapred_chroma_hor (sMacroblock *curMb)
   if (!vidParam->activePPS->constrained_intra_pred_flag)
     left_avail = a.available;
   else
-    left_avail = a.available ? curMb->slice->intra_block[a.mb_addr]: 0;
+    left_avail = a.available ? curMb->slice->intraBlock[a.mb_addr]: 0;
   // Horizontal Prediction
   if (!left_avail )
     error("unexpected HOR_PRED_8 chroma intra prediction mode",-1);
@@ -3792,7 +3792,7 @@ static void intrapred_chroma_ver (sMacroblock *curMb)
   if (!vidParam->activePPS->constrained_intra_pred_flag)
     up_avail      = up.available;
   else
-    up_avail = up.available ? curSlice->intra_block[up.mb_addr] : 0;
+    up_avail = up.available ? curSlice->intraBlock[up.mb_addr] : 0;
   // Vertical Prediction
   if (!up_avail)
     error("unexpected VERT_PRED_8 chroma intra prediction mode",-1);
@@ -3835,9 +3835,9 @@ static void intrapred_chroma_plane (sMacroblock *curMb)
   }
   else
   {
-    up_avail      = up.available ? curSlice->intra_block[up.mb_addr] : 0;
-    left_avail    = left.available ? curSlice->intra_block[left.mb_addr]: 0;
-    left_up_avail = up_left.available ? curSlice->intra_block[up_left.mb_addr]: 0;
+    up_avail      = up.available ? curSlice->intraBlock[up.mb_addr] : 0;
+    left_avail    = left.available ? curSlice->intraBlock[left.mb_addr]: 0;
+    left_up_avail = up_left.available ? curSlice->intraBlock[up_left.mb_addr]: 0;
   }
   // plane prediction
   if (!left_up_avail || !left_avail || !up_avail)
@@ -3984,12 +3984,12 @@ static void intra_pred_chroma_mbaff (sMacroblock *curMb)
       }
       else
       {
-        up_avail = up.available ? curSlice->intra_block[up.mb_addr] : 0;
+        up_avail = up.available ? curSlice->intraBlock[up.mb_addr] : 0;
         for (i=0, left_avail[0] = 1; i < cr_MB_y2;++i)
-          left_avail[0]  &= left[i + 1].available ? curSlice->intra_block[left[i + 1].mb_addr]: 0;
+          left_avail[0]  &= left[i + 1].available ? curSlice->intraBlock[left[i + 1].mb_addr]: 0;
 
         for (i = cr_MB_y2, left_avail[1] = 1; i<cr_MB_y;++i)
-          left_avail[1]  &= left[i + 1].available ? curSlice->intra_block[left[i + 1].mb_addr]: 0;
+          left_avail[1]  &= left[i + 1].available ? curSlice->intraBlock[left[i + 1].mb_addr]: 0;
 
       }
       // DC prediction
@@ -4073,10 +4073,10 @@ static void intra_pred_chroma_mbaff (sMacroblock *curMb)
       else
       {
         for (i=0, left_avail[0] = 1; i < cr_MB_y2;++i)
-          left_avail[0]  &= left[i + 1].available ? curSlice->intra_block[left[i + 1].mb_addr]: 0;
+          left_avail[0]  &= left[i + 1].available ? curSlice->intraBlock[left[i + 1].mb_addr]: 0;
 
         for (i = cr_MB_y2, left_avail[1] = 1; i<cr_MB_y;++i)
-          left_avail[1]  &= left[i + 1].available ? curSlice->intra_block[left[i + 1].mb_addr]: 0;
+          left_avail[1]  &= left[i + 1].available ? curSlice->intraBlock[left[i + 1].mb_addr]: 0;
       }
       // Horizontal Prediction
       if (!left_avail[0] || !left_avail[1])
@@ -4115,7 +4115,7 @@ static void intra_pred_chroma_mbaff (sMacroblock *curMb)
       if (!vidParam->activePPS->constrained_intra_pred_flag)
         up_avail      = up.available;
       else
-        up_avail = up.available ? curSlice->intra_block[up.mb_addr] : 0;
+        up_avail = up.available ? curSlice->intraBlock[up.mb_addr] : 0;
       // Vertical Prediction
       if (!up_avail)
         error("unexpected VERT_PRED_8 chroma intra prediction mode",-1);
@@ -4157,14 +4157,14 @@ static void intra_pred_chroma_mbaff (sMacroblock *curMb)
       }
       else
       {
-        up_avail = up.available ? curSlice->intra_block[up.mb_addr] : 0;
+        up_avail = up.available ? curSlice->intraBlock[up.mb_addr] : 0;
         for (i=0, left_avail[0] = 1; i < cr_MB_y2;++i)
-          left_avail[0]  &= left[i + 1].available ? curSlice->intra_block[left[i + 1].mb_addr]: 0;
+          left_avail[0]  &= left[i + 1].available ? curSlice->intraBlock[left[i + 1].mb_addr]: 0;
 
         for (i = cr_MB_y2, left_avail[1] = 1; i<cr_MB_y;++i)
-          left_avail[1]  &= left[i + 1].available ? curSlice->intra_block[left[i + 1].mb_addr]: 0;
+          left_avail[1]  &= left[i + 1].available ? curSlice->intraBlock[left[i + 1].mb_addr]: 0;
 
-        left_up_avail = left[0].available ? curSlice->intra_block[left[0].mb_addr]: 0;
+        left_up_avail = left[0].available ? curSlice->intraBlock[left[0].mb_addr]: 0;
       }
       // plane prediction
       if (!left_up_avail || !left_avail[0] || !left_avail[1] || !up_avail)

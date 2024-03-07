@@ -60,12 +60,12 @@ static void read_ipred_8x8_modes_mbaff (sMacroblock* curMb) {
 
     // get from array and decode
     if (vidParam->activePPS->constrained_intra_pred_flag) {
-      left_block.available = left_block.available ? curSlice->intra_block[left_block.mb_addr] : 0;
-      top_block.available = top_block.available  ? curSlice->intra_block[top_block.mb_addr]  : 0;
+      left_block.available = left_block.available ? curSlice->intraBlock[left_block.mb_addr] : 0;
+      top_block.available = top_block.available  ? curSlice->intraBlock[top_block.mb_addr]  : 0;
       }
 
-    upIntraPredMode = (top_block.available ) ? curSlice->ipredmode[top_block.pos_y ][top_block.pos_x ] : -1;
-    leftIntraPredMode = (left_block.available) ? curSlice->ipredmode[left_block.pos_y][left_block.pos_x] : -1;
+    upIntraPredMode = (top_block.available ) ? curSlice->predMode[top_block.pos_y ][top_block.pos_x ] : -1;
+    leftIntraPredMode = (left_block.available) ? curSlice->predMode[left_block.pos_y][left_block.pos_x] : -1;
     mostProbableIntraPredMode = (upIntraPredMode < 0 || leftIntraPredMode < 0) ? DC_PRED :
                                   upIntraPredMode < leftIntraPredMode ? upIntraPredMode :
                                                                         leftIntraPredMode;
@@ -73,10 +73,10 @@ static void read_ipred_8x8_modes_mbaff (sMacroblock* curMb) {
                                   currSE.value1 + (currSE.value1 >= mostProbableIntraPredMode);
 
     //set, loop 4x4s in the subblock for 8x8 prediction setting
-    curSlice->ipredmode[bj    ][bi    ] = (byte) dec;
-    curSlice->ipredmode[bj    ][bi + 1] = (byte) dec;
-    curSlice->ipredmode[bj + 1][bi    ] = (byte) dec;
-    curSlice->ipredmode[bj + 1][bi + 1] = (byte) dec;
+    curSlice->predMode[bj    ][bi    ] = (byte) dec;
+    curSlice->predMode[bj    ][bi + 1] = (byte) dec;
+    curSlice->predMode[bj + 1][bi    ] = (byte) dec;
+    curSlice->predMode[bj + 1][bi + 1] = (byte) dec;
     }
   }
 //}}}
@@ -131,12 +131,12 @@ static void read_ipred_8x8_modes (sMacroblock* curMb)
 
     if (vidParam->activePPS->constrained_intra_pred_flag)
     {
-      left_block.available = left_block.available ? curSlice->intra_block[left_block.mb_addr] : 0;
-      top_block.available  = top_block.available  ? curSlice->intra_block[top_block.mb_addr]  : 0;
+      left_block.available = left_block.available ? curSlice->intraBlock[left_block.mb_addr] : 0;
+      top_block.available  = top_block.available  ? curSlice->intraBlock[top_block.mb_addr]  : 0;
     }
 
-    upIntraPredMode            = (top_block.available ) ? curSlice->ipredmode[top_block.pos_y ][top_block.pos_x ] : -1;
-    leftIntraPredMode          = (left_block.available) ? curSlice->ipredmode[left_block.pos_y][left_block.pos_x] : -1;
+    upIntraPredMode            = (top_block.available ) ? curSlice->predMode[top_block.pos_y ][top_block.pos_x ] : -1;
+    leftIntraPredMode          = (left_block.available) ? curSlice->predMode[left_block.pos_y][left_block.pos_x] : -1;
 
     mostProbableIntraPredMode  = (upIntraPredMode < 0 || leftIntraPredMode < 0) ? DC_PRED : upIntraPredMode < leftIntraPredMode ? upIntraPredMode : leftIntraPredMode;
 
@@ -144,10 +144,10 @@ static void read_ipred_8x8_modes (sMacroblock* curMb)
 
     //set
     //loop 4x4s in the subblock for 8x8 prediction setting
-    curSlice->ipredmode[bj    ][bi    ] = (byte) dec;
-    curSlice->ipredmode[bj    ][bi + 1] = (byte) dec;
-    curSlice->ipredmode[bj + 1][bi    ] = (byte) dec;
-    curSlice->ipredmode[bj + 1][bi + 1] = (byte) dec;
+    curSlice->predMode[bj    ][bi    ] = (byte) dec;
+    curSlice->predMode[bj    ][bi + 1] = (byte) dec;
+    curSlice->predMode[bj + 1][bi    ] = (byte) dec;
+    curSlice->predMode[bj + 1][bi + 1] = (byte) dec;
   }
 }
 //}}}
@@ -160,7 +160,7 @@ static void read_ipred_4x4_modes_mbaff (sMacroblock* curMb)
   sSlice* curSlice = curMb->slice;
   const byte *partMap = assignSE2partition[curSlice->dp_mode];
   sVidParam *vidParam = curMb->vidParam;
-  sBlockPos *PicPos = vidParam->PicPos;
+  sBlockPos *picPos = vidParam->picPos;
 
   int ts, ls;
   int mostProbableIntraPredMode;
@@ -203,8 +203,8 @@ static void read_ipred_4x4_modes_mbaff (sMacroblock* curMb)
 
         if (vidParam->activePPS->constrained_intra_pred_flag)
         {
-          left_block.available = left_block.available ? curSlice->intra_block[left_block.mb_addr] : 0;
-          top_block.available  = top_block.available  ? curSlice->intra_block[top_block.mb_addr]  : 0;
+          left_block.available = left_block.available ? curSlice->intraBlock[left_block.mb_addr] : 0;
+          top_block.available  = top_block.available  ? curSlice->intraBlock[top_block.mb_addr]  : 0;
         }
 
         // !! KS: not sure if the following is still correct...
@@ -212,20 +212,20 @@ static void read_ipred_4x4_modes_mbaff (sMacroblock* curMb)
         if (curSlice->slice_type == SI_SLICE)           // need support for MBINTLC1
         {
           if (left_block.available)
-            if (curSlice->siblock [PicPos[left_block.mb_addr].y][PicPos[left_block.mb_addr].x])
+            if (curSlice->siBlock [picPos[left_block.mb_addr].y][picPos[left_block.mb_addr].x])
               ls=1;
 
           if (top_block.available)
-            if (curSlice->siblock [PicPos[top_block.mb_addr].y][PicPos[top_block.mb_addr].x])
+            if (curSlice->siBlock [picPos[top_block.mb_addr].y][picPos[top_block.mb_addr].x])
               ts=1;
         }
 
-        upIntraPredMode            = (top_block.available  &&(ts == 0)) ? curSlice->ipredmode[top_block.pos_y ][top_block.pos_x ] : -1;
-        leftIntraPredMode          = (left_block.available &&(ls == 0)) ? curSlice->ipredmode[left_block.pos_y][left_block.pos_x] : -1;
+        upIntraPredMode            = (top_block.available  &&(ts == 0)) ? curSlice->predMode[top_block.pos_y ][top_block.pos_x ] : -1;
+        leftIntraPredMode          = (left_block.available &&(ls == 0)) ? curSlice->predMode[left_block.pos_y][left_block.pos_x] : -1;
 
         mostProbableIntraPredMode  = (upIntraPredMode < 0 || leftIntraPredMode < 0) ? DC_PRED : upIntraPredMode < leftIntraPredMode ? upIntraPredMode : leftIntraPredMode;
 
-        curSlice->ipredmode[bj][bi] = (byte) ((currSE.value1 == -1) ? mostProbableIntraPredMode : currSE.value1 + (currSE.value1 >= mostProbableIntraPredMode));
+        curSlice->predMode[bj][bi] = (byte) ((currSE.value1 == -1) ? mostProbableIntraPredMode : currSE.value1 + (currSE.value1 >= mostProbableIntraPredMode));
       }
     }
   }
@@ -239,7 +239,7 @@ static void read_ipred_4x4_modes (sMacroblock* curMb) {
   sSlice* curSlice = curMb->slice;
   const byte* partMap = assignSE2partition[curSlice->dp_mode];
   sVidParam* vidParam = curMb->vidParam;
-  sBlockPos* PicPos = vidParam->PicPos;
+  sBlockPos* picPos = vidParam->picPos;
 
   int mostProbableIntraPredMode;
   int upIntraPredMode;
@@ -279,8 +279,8 @@ static void read_ipred_4x4_modes (sMacroblock* curMb) {
 
         //get from array and decode
         if (vidParam->activePPS->constrained_intra_pred_flag) {
-          left_block.available = left_block.available ? curSlice->intra_block[left_block.mb_addr] : 0;
-          top_block.available = top_block.available  ? curSlice->intra_block[top_block.mb_addr]  : 0;
+          left_block.available = left_block.available ? curSlice->intraBlock[left_block.mb_addr] : 0;
+          top_block.available = top_block.available  ? curSlice->intraBlock[top_block.mb_addr]  : 0;
           }
 
         int ts = 0;
@@ -288,19 +288,19 @@ static void read_ipred_4x4_modes (sMacroblock* curMb) {
         if (curSlice->slice_type == SI_SLICE) {
           //{{{  need support for MBINTLC1
           if (left_block.available)
-            if (curSlice->siblock [PicPos[left_block.mb_addr].y][PicPos[left_block.mb_addr].x])
+            if (curSlice->siBlock [picPos[left_block.mb_addr].y][picPos[left_block.mb_addr].x])
               ls = 1;
 
           if (top_block.available)
-            if (curSlice->siblock [PicPos[top_block.mb_addr].y][PicPos[top_block.mb_addr].x])
+            if (curSlice->siBlock [picPos[top_block.mb_addr].y][picPos[top_block.mb_addr].x])
               ts = 1;
           }
           //}}}
 
-        upIntraPredMode = (top_block.available  &&(ts == 0)) ? curSlice->ipredmode[top_block.pos_y ][top_block.pos_x ] : -1;
-        leftIntraPredMode = (left_block.available &&(ls == 0)) ? curSlice->ipredmode[left_block.pos_y][left_block.pos_x] : -1;
+        upIntraPredMode = (top_block.available  &&(ts == 0)) ? curSlice->predMode[top_block.pos_y ][top_block.pos_x ] : -1;
+        leftIntraPredMode = (left_block.available &&(ls == 0)) ? curSlice->predMode[left_block.pos_y][left_block.pos_x] : -1;
         mostProbableIntraPredMode  = (upIntraPredMode < 0 || leftIntraPredMode < 0) ? DC_PRED : upIntraPredMode < leftIntraPredMode ? upIntraPredMode : leftIntraPredMode;
-        curSlice->ipredmode[bj][bi] = (byte)((currSE.value1 == -1) ? mostProbableIntraPredMode : currSE.value1 + (currSE.value1 >= mostProbableIntraPredMode));
+        curSlice->predMode[bj][bi] = (byte)((currSE.value1 == -1) ? mostProbableIntraPredMode : currSE.value1 + (currSE.value1 >= mostProbableIntraPredMode));
         }
       }
     }
@@ -711,7 +711,7 @@ static void read_skip_macroblock (sMacroblock* curMb)
   if(curMb->vidParam->activePPS->constrained_intra_pred_flag)
   {
     int mb_nr = curMb->mbAddrX;
-    curMb->slice->intra_block[mb_nr] = 0;
+    curMb->slice->intraBlock[mb_nr] = 0;
   }
 
   //--- init macroblock data ---
@@ -838,7 +838,7 @@ static void read_inter_macroblock (sMacroblock* curMb)
   if(curMb->vidParam->activePPS->constrained_intra_pred_flag)
   {
     int mb_nr = curMb->mbAddrX;
-    curSlice->intra_block[mb_nr] = 0;
+    curSlice->intraBlock[mb_nr] = 0;
   }
 
   //--- init macroblock data ---
@@ -899,7 +899,7 @@ static void read_P8x8_macroblock (sMacroblock* curMb, sDataPartition *dP, sSynta
   if(curMb->vidParam->activePPS->constrained_intra_pred_flag)
   {
     int mb_nr = curMb->mbAddrX;
-    curSlice->intra_block[mb_nr] = 0;
+    curSlice->intraBlock[mb_nr] = 0;
   }
 
   // read CBP and Coeffs ** *************************************************************
@@ -946,7 +946,7 @@ static void read_one_macroblock_i_slice_cavlc (sMacroblock* curMb)
 
   motion->mb_field[mb_nr] = (byte) curMb->mb_field;
   curMb->block_y_aff = ((curSlice->mb_aff_frame_flag) && (curMb->mb_field)) ? (mb_nr&0x01) ? (curMb->block_y - 4)>>1 : curMb->block_y >> 1 : curMb->block_y;
-  curSlice->siblock[curMb->mb.y][curMb->mb.x] = 0;
+  curSlice->siBlock[curMb->mb.y][curMb->mb.x] = 0;
   curSlice->interpret_mb_mode(curMb);
 
   //init NoMbPartLessThan8x8Flag
@@ -1012,7 +1012,7 @@ static void read_one_macroblock_i_slice_cabac (sMacroblock* curMb)
 
   motion->mb_field[mb_nr] = (byte) curMb->mb_field;
   curMb->block_y_aff = ((curSlice->mb_aff_frame_flag) && (curMb->mb_field)) ? (mb_nr&0x01) ? (curMb->block_y - 4)>>1 : curMb->block_y >> 1 : curMb->block_y;
-  curSlice->siblock[curMb->mb.y][curMb->mb.x] = 0;
+  curSlice->siBlock[curMb->mb.y][curMb->mb.x] = 0;
   curSlice->interpret_mb_mode(curMb);
 
   //init NoMbPartLessThan8x8Flag
@@ -1116,7 +1116,7 @@ static void read_one_macroblock_p_slice_cavlc (sMacroblock* curMb)
     curMb->list_offset = 0;
     motion->mb_field[mb_nr] = (byte) FALSE;
     curMb->block_y_aff = curMb->block_y;
-    curSlice->siblock[curMb->mb.y][curMb->mb.x] = 0;
+    curSlice->siBlock[curMb->mb.y][curMb->mb.x] = 0;
     curSlice->interpret_mb_mode(curMb);
   }
   else
@@ -1212,7 +1212,7 @@ static void read_one_macroblock_p_slice_cavlc (sMacroblock* curMb)
 
     curMb->block_y_aff = (curMb->mb_field) ? (mb_nr&0x01) ? (curMb->block_y - 4)>>1 : curMb->block_y >> 1 : curMb->block_y;
 
-    curSlice->siblock[curMb->mb.y][curMb->mb.x] = 0;
+    curSlice->siBlock[curMb->mb.y][curMb->mb.x] = 0;
 
     curSlice->interpret_mb_mode(curMb);
 
@@ -1305,7 +1305,7 @@ static void read_one_macroblock_p_slice_cabac (sMacroblock* curMb)
 
     motion->mb_field[mb_nr] = (byte) FALSE;
     curMb->block_y_aff = curMb->block_y;
-    curSlice->siblock[curMb->mb.y][curMb->mb.x] = 0;
+    curSlice->siBlock[curMb->mb.y][curMb->mb.x] = 0;
     curSlice->interpret_mb_mode(curMb);
   }
   else
@@ -1386,7 +1386,7 @@ static void read_one_macroblock_p_slice_cabac (sMacroblock* curMb)
 
     motion->mb_field[mb_nr] = (byte) curMb->mb_field;
     curMb->block_y_aff = (curMb->mb_field) ? (mb_nr&0x01) ? (curMb->block_y - 4)>>1 : curMb->block_y >> 1 : curMb->block_y;
-    curSlice->siblock[curMb->mb.y][curMb->mb.x] = 0;
+    curSlice->siBlock[curMb->mb.y][curMb->mb.x] = 0;
     curSlice->interpret_mb_mode(curMb);
     if(curMb->mb_field)
     {
@@ -1469,7 +1469,7 @@ static void read_one_macroblock_b_slice_cavlc (sMacroblock* curMb) {
     curMb->list_offset = 0;
     motion->mb_field[mb_nr] = FALSE;
     curMb->block_y_aff = curMb->block_y;
-    curSlice->siblock[curMb->mb.y][curMb->mb.x] = 0;
+    curSlice->siBlock[curMb->mb.y][curMb->mb.x] = 0;
     curSlice->interpret_mb_mode(curMb);
     }
   else {
@@ -1544,7 +1544,7 @@ static void read_one_macroblock_b_slice_cavlc (sMacroblock* curMb) {
     curMb->list_offset = (curMb->mb_field)? ((mb_nr&0x01)? 4: 2): 0;
     motion->mb_field[mb_nr] = (byte) curMb->mb_field;
     curMb->block_y_aff = (curMb->mb_field) ? (mb_nr&0x01) ? (curMb->block_y - 4)>>1 : curMb->block_y >> 1 : curMb->block_y;
-    curSlice->siblock[curMb->mb.y][curMb->mb.x] = 0;
+    curSlice->siBlock[curMb->mb.y][curMb->mb.x] = 0;
     curSlice->interpret_mb_mode(curMb);
     if(curSlice->mb_aff_frame_flag) {
       if(curMb->mb_field) {
@@ -1569,7 +1569,7 @@ static void read_one_macroblock_b_slice_cavlc (sMacroblock* curMb) {
     curMb->NoMbPartLessThan8x8Flag = (!(curSlice->activeSPS->direct_8x8_inference_flag))? FALSE: TRUE;
     curMb->luma_transform_size_8x8_flag = FALSE;
     if(vidParam->activePPS->constrained_intra_pred_flag)
-      curSlice->intra_block[mb_nr] = 0;
+      curSlice->intraBlock[mb_nr] = 0;
 
     //--- init macroblock data ---
     init_macroblock_direct(curMb);
@@ -1644,7 +1644,7 @@ static void read_one_macroblock_b_slice_cabac (sMacroblock* curMb)
 
     motion->mb_field[mb_nr] = (byte) FALSE;
     curMb->block_y_aff = curMb->block_y;
-    curSlice->siblock[curMb->mb.y][curMb->mb.x] = 0;
+    curSlice->siBlock[curMb->mb.y][curMb->mb.x] = 0;
     curSlice->interpret_mb_mode(curMb);
   }
   else
@@ -1734,7 +1734,7 @@ static void read_one_macroblock_b_slice_cabac (sMacroblock* curMb)
 
     curMb->block_y_aff = (curMb->mb_field) ? (mb_nr&0x01) ? (curMb->block_y - 4)>>1 : curMb->block_y >> 1 : curMb->block_y;
 
-    curSlice->siblock[curMb->mb.y][curMb->mb.x] = 0;
+    curSlice->siBlock[curMb->mb.y][curMb->mb.x] = 0;
 
     curSlice->interpret_mb_mode(curMb);
 
@@ -1777,7 +1777,7 @@ static void read_one_macroblock_b_slice_cabac (sMacroblock* curMb)
 
     if(vidParam->activePPS->constrained_intra_pred_flag)
     {
-      curSlice->intra_block[mb_nr] = 0;
+      curSlice->intraBlock[mb_nr] = 0;
     }
 
     //--- init macroblock data ---

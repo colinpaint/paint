@@ -77,7 +77,7 @@ typedef struct Picture {
   int         slice_qp_delta;
   sDecRefPicMarking* decRefPicMarkingBuffer;  // stores the memory management control operations
 
-  // picture error concealment
+  // picture error conceal
   int         concealed_pic;
   int         proc_flag;
   int         iLumaStride;
@@ -111,7 +111,7 @@ typedef struct FrameStore {
   int       is_output;
   int       poc;
 
-  // picture error concealment
+  // picture error conceal
   int concealment_reference;
 
   sPicture* frame;

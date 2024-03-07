@@ -1,6 +1,9 @@
 #pragma once
-#include "parsetcommon.h"
+#include "defines.h"
 #include "nalu.h"
+
+sPPS* allocPPS();
+void freePPS (sPPS* pps);
 
 extern void processSPS (sVidParam* vidParam, sNalu* nalu);
 extern void activateSPS (sVidParam* vidParam, sSPS* sps);

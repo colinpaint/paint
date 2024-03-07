@@ -75,10 +75,10 @@ static void alloc_VidParamams (sVidParam** vidParam) {
 
   (*vidParam)->globalInitDone[0] = (*vidParam)->globalInitDone[1] = 0;
 
-  if (((*vidParam)->ppSliceList = (sSlice**)calloc(MAX_NUM_DECSLICES, sizeof(sSlice *))) == NULL)
-    no_mem_exit ("alloc_VidParamams: vidParam->ppSliceList");
+  if (((*vidParam)->sliceList = (sSlice**)calloc(MAX_NUM_DECSLICES, sizeof(sSlice *))) == NULL)
+    no_mem_exit ("alloc_VidParamams: vidParam->sliceList");
 
-  (*vidParam)->iNumOfSlicesAllocated = MAX_NUM_DECSLICES;
+  (*vidParam)->numSlicesAllocated = MAX_NUM_DECSLICES;
   (*vidParam)->nextSlice = NULL;
   (*vidParam)->nalu = allocNALU (MAX_CODED_FRAME_SIZE);
   (*vidParam)->decOutputPic = (sDecodedPicList*)calloc(1, sizeof(sDecodedPicList));
@@ -222,11 +222,11 @@ static void freeImg (sVidParam* vidParam) {
       vidParam->nextSlice=NULL;
       }
 
-    if (vidParam->ppSliceList) {
-      for (int i = 0; i < vidParam->iNumOfSlicesAllocated; i++)
-        if (vidParam->ppSliceList[i])
-          free_slice (vidParam->ppSliceList[i]);
-      free (vidParam->ppSliceList);
+    if (vidParam->sliceList) {
+      for (int i = 0; i < vidParam->numSlicesAllocated; i++)
+        if (vidParam->sliceList[i])
+          free_slice (vidParam->sliceList[i]);
+      free (vidParam->sliceList);
       }
 
     if (vidParam->nalu) {
@@ -416,12 +416,12 @@ void freeLayerBuffers (sVidParam* vidParam, int layerId) {
     for (int i = 0; i<MAX_PLANE; i++) {
       free (cps->mbDataJV[i]);
       cps->mbDataJV[i] = NULL;
-      free_mem2Dint(cps->siblock_JV[i]);
-      cps->siblock_JV[i] = NULL;
-      free_mem2D(cps->ipredmode_JV[i]);
-      cps->ipredmode_JV[i] = NULL;
-      free (cps->intra_block_JV[i]);
-      cps->intra_block_JV[i] = NULL;
+      free_mem2Dint(cps->siBlockJV[i]);
+      cps->siBlockJV[i] = NULL;
+      free_mem2D(cps->predModeJV[i]);
+      cps->predModeJV[i] = NULL;
+      free (cps->intraBlockJV[i]);
+      cps->intraBlockJV[i] = NULL;
       }
     }
   else {
@@ -429,23 +429,23 @@ void freeLayerBuffers (sVidParam* vidParam, int layerId) {
       free(cps->mbData);
       cps->mbData = NULL;
       }
-    if (cps->siblock) {
-      free_mem2Dint(cps->siblock);
-      cps->siblock = NULL;
+    if (cps->siBlock) {
+      free_mem2Dint(cps->siBlock);
+      cps->siBlock = NULL;
       }
-    if (cps->ipredmode) {
-      free_mem2D(cps->ipredmode);
-      cps->ipredmode = NULL;
+    if (cps->predMode) {
+      free_mem2D(cps->predMode);
+      cps->predMode = NULL;
       }
-    if (cps->intra_block) {
-      free (cps->intra_block);
-      cps->intra_block = NULL;
+    if (cps->intraBlock) {
+      free (cps->intraBlock);
+      cps->intraBlock = NULL;
       }
     }
 
-  if (cps->PicPos) {
-    free(cps->PicPos);
-    cps->PicPos = NULL;
+  if (cps->picPos) {
+    free(cps->picPos);
+    cps->picPos = NULL;
     }
 
   freeQuant (cps);
@@ -457,7 +457,7 @@ void freeLayerBuffers (sVidParam* vidParam, int layerId) {
 void initGlobalBuffers (sVidParam* vidParam, int layerId) {
 
   sCodingParam *cps = vidParam->codingParam[layerId];
-  sBlockPos* PicPos;
+  sBlockPos* picPos;
 
   if (vidParam->globalInitDone[layerId])
     freeLayerBuffers (vidParam, layerId);
@@ -474,42 +474,42 @@ void initGlobalBuffers (sVidParam* vidParam, int layerId) {
 
   if (cps->separate_colour_plane_flag != 0) {
     for (int i = 0; i < MAX_PLANE; ++i )
-      if (((cps->intra_block_JV[i]) = (char*) calloc(cps->FrameSizeInMbs, sizeof(char))) == NULL)
-        no_mem_exit ("initGlobalBuffers: cps->intra_block_JV");
-    cps->intra_block = NULL;
+      if (((cps->intraBlockJV[i]) = (char*) calloc(cps->FrameSizeInMbs, sizeof(char))) == NULL)
+        no_mem_exit ("initGlobalBuffers: cps->intraBlockJV");
+    cps->intraBlock = NULL;
     }
-  else if (((cps->intra_block) = (char*)calloc (cps->FrameSizeInMbs, sizeof(char))) == NULL)
-    no_mem_exit ("initGlobalBuffers: cps->intra_block");
+  else if (((cps->intraBlock) = (char*)calloc (cps->FrameSizeInMbs, sizeof(char))) == NULL)
+    no_mem_exit ("initGlobalBuffers: cps->intraBlock");
 
-  if (((cps->PicPos) = (sBlockPos*)calloc(cps->FrameSizeInMbs + 1, sizeof(sBlockPos))) == NULL)
-    no_mem_exit ("initGlobalBuffers: PicPos");
+  if (((cps->picPos) = (sBlockPos*)calloc(cps->FrameSizeInMbs + 1, sizeof(sBlockPos))) == NULL)
+    no_mem_exit ("initGlobalBuffers: picPos");
 
-  PicPos = cps->PicPos;
+  picPos = cps->picPos;
   for (int i = 0; i < (int) cps->FrameSizeInMbs + 1;++i) {
-    PicPos[i].x = (short)(i % cps->PicWidthInMbs);
-    PicPos[i].y = (short)(i / cps->PicWidthInMbs);
+    picPos[i].x = (short)(i % cps->PicWidthInMbs);
+    picPos[i].y = (short)(i / cps->PicWidthInMbs);
     }
 
   if( (cps->separate_colour_plane_flag != 0)) {
     for (int i = 0; i < MAX_PLANE; ++i )
-      get_mem2D (&(cps->ipredmode_JV[i]), 4*cps->FrameHeightInMbs, 4*cps->PicWidthInMbs);
-    cps->ipredmode = NULL;
+      get_mem2D (&(cps->predModeJV[i]), 4*cps->FrameHeightInMbs, 4*cps->PicWidthInMbs);
+    cps->predMode = NULL;
     }
   else
-    get_mem2D (&(cps->ipredmode), 4*cps->FrameHeightInMbs, 4*cps->PicWidthInMbs);
+    get_mem2D (&(cps->predMode), 4*cps->FrameHeightInMbs, 4*cps->PicWidthInMbs);
 
   // CAVLC mem
   get_mem4D (&(cps->nzCoeff), cps->FrameSizeInMbs, 3, BLOCK_SIZE, BLOCK_SIZE);
   if (cps->separate_colour_plane_flag != 0) {
     for (int i = 0; i < MAX_PLANE; ++i ) {
-      get_mem2Dint (&(cps->siblock_JV[i]), cps->FrameHeightInMbs, cps->PicWidthInMbs);
-      if (cps->siblock_JV[i] == NULL)
-        no_mem_exit ("initGlobalBuffers: vidParam->siblock_JV");
+      get_mem2Dint (&(cps->siBlockJV[i]), cps->FrameHeightInMbs, cps->PicWidthInMbs);
+      if (cps->siBlockJV[i] == NULL)
+        no_mem_exit ("initGlobalBuffers: vidParam->siBlockJV");
       }
-    cps->siblock = NULL;
+    cps->siBlock = NULL;
     }
   else
-    get_mem2Dint (&(cps->siblock), cps->FrameHeightInMbs, cps->PicWidthInMbs);
+    get_mem2Dint (&(cps->siBlock), cps->FrameHeightInMbs, cps->PicWidthInMbs);
 
   allocQuant (cps);
   cps->oldFrameSizeInMbs = cps->FrameSizeInMbs;

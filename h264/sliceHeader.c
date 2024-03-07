@@ -1498,11 +1498,11 @@ int dumpPOC (sVidParam* vidParam) {
   sSPS* activeSPS = vidParam->activeSPS;
 
   printf ("POC locals...\n");
-  printf ("topPoc                                %d\n", (int) vidParam->ppSliceList[0]->topPoc);
-  printf ("botPoc                             %d\n", (int) vidParam->ppSliceList[0]->botPoc);
-  printf ("frame_num                             %d\n", (int) vidParam->ppSliceList[0]->frame_num);
-  printf ("field_pic_flag                        %d\n", (int) vidParam->ppSliceList[0]->field_pic_flag);
-  printf ("bottom_field_flag                     %d\n", (int) vidParam->ppSliceList[0]->bottom_field_flag);
+  printf ("topPoc                                %d\n", (int) vidParam->sliceList[0]->topPoc);
+  printf ("botPoc                             %d\n", (int) vidParam->sliceList[0]->botPoc);
+  printf ("frame_num                             %d\n", (int) vidParam->sliceList[0]->frame_num);
+  printf ("field_pic_flag                        %d\n", (int) vidParam->sliceList[0]->field_pic_flag);
+  printf ("bottom_field_flag                     %d\n", (int) vidParam->sliceList[0]->bottom_field_flag);
 
   printf ("POC SPS\n");
   printf ("log2_max_frame_num_minus4             %d\n", (int) activeSPS->log2_max_frame_num_minus4);         // POC200301
@@ -1517,9 +1517,9 @@ int dumpPOC (sVidParam* vidParam) {
 
   printf ("POC in SLice Header\n");
   printf ("bottom_field_pic_order_in_frame_present_flag %d\n", (int) vidParam->activePPS->bottom_field_pic_order_in_frame_present_flag);
-  printf ("delta_pic_order_cnt[0]                %d\n", (int) vidParam->ppSliceList[0]->delta_pic_order_cnt[0]);
-  printf ("delta_pic_order_cnt[1]                %d\n", (int) vidParam->ppSliceList[0]->delta_pic_order_cnt[1]);
-  printf ("idrFlag                              %d\n", (int) vidParam->ppSliceList[0]->idrFlag);
+  printf ("delta_pic_order_cnt[0]                %d\n", (int) vidParam->sliceList[0]->delta_pic_order_cnt[0]);
+  printf ("delta_pic_order_cnt[1]                %d\n", (int) vidParam->sliceList[0]->delta_pic_order_cnt[1]);
+  printf ("idrFlag                              %d\n", (int) vidParam->sliceList[0]->idrFlag);
   printf ("max_frame_num                         %d\n", (int) vidParam->max_frame_num);
 
   return 0;
@@ -1743,7 +1743,7 @@ void readRestSliceHeader (sSlice* curSlice) {
   // Tian Dong: frame_num gap processing, if found
   if (curSlice->idrFlag) {
     vidParam->preFrameNum = curSlice->frame_num;
-    // picture error concealment
+    // picture error conceal
     vidParam->last_ref_pic_poc = 0;
     assert(curSlice->frame_num == 0);
     }

@@ -27,7 +27,7 @@ void CheckAvailabilityOfNeighbors (sMacroblock* curMb) {
   sSlice* curSlice = curMb->slice;
   sPicture* picture = curSlice->picture; //vidParam->picture;
   const int mb_nr = curMb->mbAddrX;
-  sBlockPos *PicPos = curMb->vidParam->PicPos;
+  sBlockPos *picPos = curMb->vidParam->picPos;
 
   if (picture->mb_aff_frame_flag) {
     int cur_mb_pair = mb_nr >> 1;
@@ -36,13 +36,13 @@ void CheckAvailabilityOfNeighbors (sMacroblock* curMb) {
     curMb->mbAddrC = 2 * (cur_mb_pair - picture->PicWidthInMbs + 1);
     curMb->mbAddrD = 2 * (cur_mb_pair - picture->PicWidthInMbs - 1);
 
-    curMb->mbAvailA = (Boolean) (mb_is_available(curMb->mbAddrA, curMb) && ((PicPos[cur_mb_pair    ].x)!=0));
+    curMb->mbAvailA = (Boolean) (mb_is_available(curMb->mbAddrA, curMb) && ((picPos[cur_mb_pair    ].x)!=0));
     curMb->mbAvailB = (Boolean) (mb_is_available(curMb->mbAddrB, curMb));
-    curMb->mbAvailC = (Boolean) (mb_is_available(curMb->mbAddrC, curMb) && ((PicPos[cur_mb_pair + 1].x)!=0));
-    curMb->mbAvailD = (Boolean) (mb_is_available(curMb->mbAddrD, curMb) && ((PicPos[cur_mb_pair    ].x)!=0));
+    curMb->mbAvailC = (Boolean) (mb_is_available(curMb->mbAddrC, curMb) && ((picPos[cur_mb_pair + 1].x)!=0));
+    curMb->mbAvailD = (Boolean) (mb_is_available(curMb->mbAddrD, curMb) && ((picPos[cur_mb_pair    ].x)!=0));
     }
   else {
-    sBlockPos* p_pic_pos = &PicPos[mb_nr    ];
+    sBlockPos* p_pic_pos = &picPos[mb_nr    ];
     curMb->mbAddrA = mb_nr - 1;
     curMb->mbAddrD = curMb->mbAddrA - picture->PicWidthInMbs;
     curMb->mbAddrB = curMb->mbAddrD + 1;
@@ -65,9 +65,9 @@ void CheckAvailabilityOfNeighborsNormal (sMacroblock* curMb) {
   sSlice* curSlice = curMb->slice;
   sPicture* picture = curSlice->picture; //vidParam->picture;
   const int mb_nr = curMb->mbAddrX;
-  sBlockPos* PicPos = curMb->vidParam->PicPos;
+  sBlockPos* picPos = curMb->vidParam->picPos;
 
-  sBlockPos* p_pic_pos = &PicPos[mb_nr    ];
+  sBlockPos* p_pic_pos = &picPos[mb_nr    ];
   curMb->mbAddrA = mb_nr - 1;
   curMb->mbAddrD = curMb->mbAddrA - picture->PicWidthInMbs;
   curMb->mbAddrB = curMb->mbAddrD + 1;
@@ -90,7 +90,7 @@ void CheckAvailabilityOfNeighborsMBAFF (sMacroblock* curMb) {
   sSlice* curSlice = curMb->slice;
   sPicture* picture = curSlice->picture; //vidParam->picture;
   const int mb_nr = curMb->mbAddrX;
-  sBlockPos* PicPos = curMb->vidParam->PicPos;
+  sBlockPos* picPos = curMb->vidParam->picPos;
 
   int cur_mb_pair = mb_nr >> 1;
   curMb->mbAddrA = 2 * (cur_mb_pair - 1);
@@ -98,10 +98,10 @@ void CheckAvailabilityOfNeighborsMBAFF (sMacroblock* curMb) {
   curMb->mbAddrC = 2 * (cur_mb_pair - picture->PicWidthInMbs + 1);
   curMb->mbAddrD = 2 * (cur_mb_pair - picture->PicWidthInMbs - 1);
 
-  curMb->mbAvailA = (Boolean) (mb_is_available(curMb->mbAddrA, curMb) && ((PicPos[cur_mb_pair    ].x)!=0));
+  curMb->mbAvailA = (Boolean) (mb_is_available(curMb->mbAddrA, curMb) && ((picPos[cur_mb_pair    ].x)!=0));
   curMb->mbAvailB = (Boolean) (mb_is_available(curMb->mbAddrB, curMb));
-  curMb->mbAvailC = (Boolean) (mb_is_available(curMb->mbAddrC, curMb) && ((PicPos[cur_mb_pair + 1].x)!=0));
-  curMb->mbAvailD = (Boolean) (mb_is_available(curMb->mbAddrD, curMb) && ((PicPos[cur_mb_pair    ].x)!=0));
+  curMb->mbAvailC = (Boolean) (mb_is_available(curMb->mbAddrC, curMb) && ((picPos[cur_mb_pair + 1].x)!=0));
+  curMb->mbAvailD = (Boolean) (mb_is_available(curMb->mbAddrD, curMb) && ((picPos[cur_mb_pair    ].x)!=0));
 
   curMb->mb_left = (curMb->mbAvailA) ? &(curSlice->mbData[curMb->mbAddrA]) : NULL;
   curMb->mb_up   = (curMb->mbAvailB) ? &(curSlice->mbData[curMb->mbAddrB]) : NULL;
@@ -109,17 +109,17 @@ void CheckAvailabilityOfNeighborsMBAFF (sMacroblock* curMb) {
 //}}}
 
 //{{{
-void get_mb_block_pos_normal (sBlockPos* PicPos, int mb_addr, short* x, short* y) {
+void get_mb_block_pos_normal (sBlockPos* picPos, int mb_addr, short* x, short* y) {
 
-  sBlockPos* pPos = &PicPos[ mb_addr ];
+  sBlockPos* pPos = &picPos[ mb_addr ];
   *x = (short) pPos->x;
   *y = (short) pPos->y;
   }
 //}}}
 //{{{
-void get_mb_block_pos_mbaff (sBlockPos* PicPos, int mb_addr, short* x, short* y) {
+void get_mb_block_pos_mbaff (sBlockPos* picPos, int mb_addr, short* x, short* y) {
 
-  sBlockPos* pPos = &PicPos[ mb_addr >> 1 ];
+  sBlockPos* pPos = &picPos[ mb_addr >> 1 ];
   *x = (short)  pPos->x;
   *y = (short) ((pPos->y << 1) + (mb_addr & 0x01));
   }
@@ -127,7 +127,7 @@ void get_mb_block_pos_mbaff (sBlockPos* PicPos, int mb_addr, short* x, short* y)
 //{{{
 void get_mb_pos (sVidParam* vidParam, int mb_addr, int mb_size[2], short* x, short* y) {
 
-  vidParam->get_mb_block_pos (vidParam->PicPos, mb_addr, x, y);
+  vidParam->get_mb_block_pos (vidParam->picPos, mb_addr, x, y);
   (*x) = (short) ((*x) * mb_size[0]);
   (*y) = (short) ((*y) * mb_size[1]);
   }
@@ -170,7 +170,7 @@ void getNonAffNeighbour (sMacroblock* curMb, int xN, int yN, int mb_size[2], sPi
     pix->available = FALSE;
 
   if (pix->available || curMb->DeblockCall) {
-    sBlockPos *CurPos = &(curMb->vidParam->PicPos[ pix->mb_addr ]);
+    sBlockPos *CurPos = &(curMb->vidParam->picPos[ pix->mb_addr ]);
     pix->x     = (short) (xN & (maxW - 1));
     pix->y     = (short) (yN & (maxH - 1));
     pix->pos_x = (short) (pix->x + CurPos->x * maxW);
