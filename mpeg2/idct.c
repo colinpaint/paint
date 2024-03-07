@@ -146,26 +146,21 @@ static void idctcol (short *blk) {
 //}}}
 
 //{{{
+void Fast_IDCT (short *block) {
 /* two dimensional inverse discrete cosine transform */
-void Fast_IDCT (block)
-short *block;
-{
-  int i;
 
-  for (i=0; i<8; i++)
-    idctrow(block+8*i);
+  for (int i = 0; i < 8; i++)
+    idctrow (block+8*i);
 
-  for (i=0; i<8; i++)
-    idctcol(block+i);
+  for (int i = 0; i < 8; i++)
+    idctcol (block+i);
 }
 //}}}
 //{{{
-void Initialize_Fast_IDCT()
-{
-  int i;
+void Initialize_Fast_IDCT() {
 
-  iclp = iclip+512;
-  for (i= -512; i<512; i++)
+  iclp = iclip + 512;
+  for (int i = -512; i < 512; i++)
     iclp[i] = (i<-256) ? -256 : ((i>255) ? 255 : i);
-}
+  }
 //}}}
