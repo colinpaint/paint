@@ -10,26 +10,28 @@
 //}}}
 
 //{{{
-int allocPred (sSlice* curSlice)
-{
+int allocPred (sSlice* curSlice) {
+
   int alloc_size = 0;
+
   alloc_size += get_mem2Dpel(&curSlice->tmp_block_l0, MB_BLOCK_SIZE, MB_BLOCK_SIZE);
   alloc_size += get_mem2Dpel(&curSlice->tmp_block_l1, MB_BLOCK_SIZE, MB_BLOCK_SIZE);
   alloc_size += get_mem2Dpel(&curSlice->tmp_block_l2, MB_BLOCK_SIZE, MB_BLOCK_SIZE);
   alloc_size += get_mem2Dpel(&curSlice->tmp_block_l3, MB_BLOCK_SIZE, MB_BLOCK_SIZE);
   alloc_size += get_mem2Dint(&curSlice->tmp_res, MB_BLOCK_SIZE + 5, MB_BLOCK_SIZE + 5);
+
   return (alloc_size);
-}
+  }
 //}}}
 //{{{
-void freePred (sSlice* curSlice)
-{
-  free_mem2Dint(curSlice->tmp_res);
-  free_mem2Dpel(curSlice->tmp_block_l0);
-  free_mem2Dpel(curSlice->tmp_block_l1);
-  free_mem2Dpel(curSlice->tmp_block_l2);
-  free_mem2Dpel(curSlice->tmp_block_l3);
-}
+void freePred (sSlice* curSlice) {
+
+  free_mem2Dint (curSlice->tmp_res);
+  free_mem2Dpel (curSlice->tmp_block_l0);
+  free_mem2Dpel (curSlice->tmp_block_l1);
+  free_mem2Dpel (curSlice->tmp_block_l2);
+  free_mem2Dpel (curSlice->tmp_block_l3);
+  }
 //}}}
 
 //{{{
@@ -38,11 +40,13 @@ static void update_direct_mv_info_temporal (sMacroblock* curMb) {
   sVidParam* vidParam = curMb->vidParam;
   sSlice* curSlice = curMb->slice;
   int j,k;
-  int partmode        = ((curMb->mb_type == P8x8) ? 4 : curMb->mb_type);
-  int step_h0         = BLOCK_STEP [partmode][0];
-  int step_v0         = BLOCK_STEP [partmode][1];
+
+  int partmode = ((curMb->mb_type == P8x8) ? 4 : curMb->mb_type);
+  int step_h0 = BLOCK_STEP [partmode][0];
+  int step_v0 = BLOCK_STEP [partmode][1];
   int i0, j0, j6;
   int j4, i4;
+
   sPicture* picture = curSlice->picture;
   int list_offset = curMb->list_offset; // ((curSlice->mb_aff_frame_flag)&&(curMb->mb_field))? (mb_nr&0x01) ? 4 : 2 : 0;
   sPicture** list0 = curSlice->listX[LIST_0 + list_offset];
@@ -687,12 +691,6 @@ void update_direct_types (sSlice* curSlice)
 //}}}
 
 //{{{
-/*!
-** **********************************************************************
- * \brief
- *    block single list prediction
-** **********************************************************************
- */
 static void mc_prediction (sPixel** mb_pred, sPixel** block, int block_size_y, int block_size_x, int ioff)
 {
 
@@ -781,12 +779,6 @@ static void weighted_bi_prediction (sPixel *mb_pred,
 //}}}
 
 //{{{
-/*!
-** **********************************************************************
- * \brief
- *    Integer positions
-** **********************************************************************
- */
 static void get_block_00 (sPixel *block, sPixel* curPixel, int span, int block_size_y)
 {
   // fastest to just move an entire block, since block is a temp block is a 256 byte block (16x16)
@@ -806,12 +798,6 @@ static void get_block_00 (sPixel *block, sPixel* curPixel, int span, int block_s
 
 //}}}
 //{{{
-/*!
-** **********************************************************************
- * \brief
- *    Qpel (1,0) horizontal
-** **********************************************************************
- */
 static void get_luma_10 (sPixel** block, sPixel** curPixelY, int block_size_y, int block_size_x, int x_pos , int max_imgpel_value)
 {
   sPixel *p0, *p1, *p2, *p3, *p4, *p5;
@@ -842,12 +828,6 @@ static void get_luma_10 (sPixel** block, sPixel** curPixelY, int block_size_y, i
 }
 //}}}
 //{{{
-/*!
-** **********************************************************************
- * \brief
- *    Half horizontal
-** **********************************************************************
- */
 static void get_luma_20 (sPixel** block, sPixel** curPixelY, int block_size_y, int block_size_x, int x_pos , int max_imgpel_value)
 {
   sPixel *p0, *p1, *p2, *p3, *p4, *p5;
@@ -874,12 +854,6 @@ static void get_luma_20 (sPixel** block, sPixel** curPixelY, int block_size_y, i
 }
 //}}}
 //{{{
-/*!
-** **********************************************************************
- * \brief
- *    Qpel (3,0) horizontal
-** **********************************************************************
- */
 static void get_luma_30 (sPixel** block, sPixel** curPixelY, int block_size_y, int block_size_x, int x_pos , int max_imgpel_value)
 {
   sPixel *p0, *p1, *p2, *p3, *p4, *p5;
@@ -910,12 +884,6 @@ static void get_luma_30 (sPixel** block, sPixel** curPixelY, int block_size_y, i
 }
 //}}}
 //{{{
-/*!
-** **********************************************************************
- * \brief
- *    Qpel vertical (0, 1)
-** **********************************************************************
- */
 static void get_luma_01 (sPixel** block, sPixel** curPixelY, int block_size_y, int block_size_x, int x_pos, int shift_x, int max_imgpel_value)
 {
   sPixel *p0, *p1, *p2, *p3, *p4, *p5;
@@ -948,12 +916,6 @@ static void get_luma_01 (sPixel** block, sPixel** curPixelY, int block_size_y, i
 
 //}}}
 //{{{
-/*!
-** **********************************************************************
- * \brief
- *    Half vertical
-** **********************************************************************
- */
 static void get_luma_02 (sPixel** block, sPixel** curPixelY, int block_size_y, int block_size_x, int x_pos, int shift_x, int max_imgpel_value)
 {
   sPixel *p0, *p1, *p2, *p3, *p4, *p5;
@@ -981,12 +943,6 @@ static void get_luma_02 (sPixel** block, sPixel** curPixelY, int block_size_y, i
 }
 //}}}
 //{{{
-/*!
-** **********************************************************************
- * \brief
- *    Qpel vertical (0, 3)
-** **********************************************************************
- */
 static void get_luma_03 (sPixel** block, sPixel** curPixelY, int block_size_y, int block_size_x, int x_pos, int shift_x, int max_imgpel_value)
 {
   sPixel *p0, *p1, *p2, *p3, *p4, *p5;
@@ -1019,12 +975,6 @@ static void get_luma_03 (sPixel** block, sPixel** curPixelY, int block_size_y, i
 }
 //}}}
 //{{{
-/*!
-** **********************************************************************
- * \brief
- *    Hpel horizontal, Qpel vertical (2, 1)
-** **********************************************************************
- */
 static void get_luma_21 (sPixel** block, sPixel** curPixelY, int** tmp_res, int block_size_y, int block_size_x, int x_pos, int max_imgpel_value)
 {
   int i, j;
@@ -1077,12 +1027,6 @@ static void get_luma_21 (sPixel** block, sPixel** curPixelY, int** tmp_res, int 
 }
 //}}}
 //{{{
-/*!
-** **********************************************************************
- * \brief
- *    Hpel horizontal, Hpel vertical (2, 2)
-** **********************************************************************
- */
 static void get_luma_22 (sPixel** block, sPixel** curPixelY, int** tmp_res, int block_size_y, int block_size_x, int x_pos, int max_imgpel_value)
 {
   int i, j;
@@ -1131,12 +1075,6 @@ static void get_luma_22 (sPixel** block, sPixel** curPixelY, int** tmp_res, int 
 }
 //}}}
 //{{{
-/*!
-** **********************************************************************
- * \brief
- *    Hpel horizontal, Qpel vertical (2, 3)
-** **********************************************************************
- */
 static void get_luma_23 (sPixel** block, sPixel** curPixelY, int** tmp_res, int block_size_y, int block_size_x, int x_pos, int max_imgpel_value)
 {
   int i, j;
@@ -1189,12 +1127,6 @@ static void get_luma_23 (sPixel** block, sPixel** curPixelY, int** tmp_res, int 
 }
 //}}}
 //{{{
-/*!
-** **********************************************************************
- * \brief
- *    Qpel horizontal, Hpel vertical (1, 2)
-** **********************************************************************
- */
 static void get_luma_12 (sPixel** block, sPixel** curPixelY, int** tmp_res, int block_size_y, int block_size_x, int x_pos, int shift_x, int max_imgpel_value)
 {
   int i, j;
@@ -1244,12 +1176,6 @@ static void get_luma_12 (sPixel** block, sPixel** curPixelY, int** tmp_res, int 
 }
 //}}}
 //{{{
-/*!
-** **********************************************************************
- * \brief
- *    Qpel horizontal, Hpel vertical (3, 2)
-** **********************************************************************
- */
 static void get_luma_32 (sPixel** block, sPixel** curPixelY, int** tmp_res, int block_size_y, int block_size_x, int x_pos, int shift_x, int max_imgpel_value)
 {
   int i, j;
@@ -1299,12 +1225,6 @@ static void get_luma_32 (sPixel** block, sPixel** curPixelY, int** tmp_res, int 
 }
 //}}}
 //{{{
-/*!
-** **********************************************************************
- * \brief
- *    Qpel horizontal, Qpel vertical (3, 3)
-** **********************************************************************
- */
 static void get_luma_33 (sPixel** block, sPixel** curPixelY, int block_size_y, int block_size_x, int x_pos, int shift_x, int max_imgpel_value)
 {
   int i, j;
@@ -1355,12 +1275,6 @@ static void get_luma_33 (sPixel** block, sPixel** curPixelY, int block_size_y, i
 }
 //}}}
 //{{{
-/*!
-** **********************************************************************
- * \brief
- *    Qpel horizontal, Qpel vertical (1, 1)
-** **********************************************************************
- */
 static void get_luma_11 (sPixel** block, sPixel** curPixelY, int block_size_y, int block_size_x, int x_pos, int shift_x, int max_imgpel_value)
 {
   int i, j;
@@ -1411,12 +1325,6 @@ static void get_luma_11 (sPixel** block, sPixel** curPixelY, int block_size_y, i
 }
 //}}}
 //{{{
-/*!
-** **********************************************************************
- * \brief
- *    Qpel horizontal, Qpel vertical (1, 3)
-** **********************************************************************
- */
 static void get_luma_13 (sPixel** block, sPixel** curPixelY, int block_size_y, int block_size_x, int x_pos, int shift_x, int max_imgpel_value)
 {
   /* Diagonal interpolation */
@@ -1468,12 +1376,6 @@ static void get_luma_13 (sPixel** block, sPixel** curPixelY, int block_size_y, i
 }
 //}}}
 //{{{
-/*!
-** **********************************************************************
- * \brief
- *    Qpel horizontal, Qpel vertical (3, 1)
-** **********************************************************************
- */
 static void get_luma_31 (sPixel** block, sPixel** curPixelY, int block_size_y, int block_size_x, int x_pos, int shift_x, int max_imgpel_value)
 {
   /* Diagonal interpolation */
@@ -1525,12 +1427,6 @@ static void get_luma_31 (sPixel** block, sPixel** curPixelY, int block_size_y, i
 }
 //}}}
 //{{{
-/*!
-** **********************************************************************
- * \brief
- *    Interpolation of 1/4 subpixel
-** **********************************************************************
- */
 void get_block_luma (sPicture* curRef, int x_pos, int y_pos, int block_size_x, int block_size_y, sPixel** block,
                     int shift_x, int maxold_x, int maxold_y, int** tmp_res, int max_imgpel_value, sPixel no_ref_value, sMacroblock* curMb)
 {
@@ -1609,12 +1505,6 @@ void get_block_luma (sPicture* curRef, int x_pos, int y_pos, int block_size_x, i
 //}}}
 
 //{{{
-/*!
-** **********************************************************************
- * \brief
- *    Chroma (0,X)
-** **********************************************************************
- */
 static void get_chroma_0X (sPixel* block, sPixel* curPixel, int span, int block_size_y, int block_size_x, int w00, int w01, int total_scale)
 {
   sPixel *cur_row = curPixel;
@@ -1642,12 +1532,6 @@ static void get_chroma_0X (sPixel* block, sPixel* curPixel, int span, int block_
 }
 //}}}
 //{{{
-/*!
-** **********************************************************************
- * \brief
- *    Chroma (X,0)
-** **********************************************************************
- */
 static void get_chroma_X0 (sPixel* block, sPixel* curPixel, int span, int block_size_y, int block_size_x, int w00, int w10, int total_scale)
 {
   sPixel *cur_row = curPixel;
@@ -1674,12 +1558,6 @@ static void get_chroma_X0 (sPixel* block, sPixel* curPixel, int span, int block_
 }
 //}}}
 //{{{
-/*!
-** **********************************************************************
- * \brief
- *    Chroma (X,X)
-** **********************************************************************
- */
 static void get_chroma_XY (sPixel* block, sPixel* curPixel, int span, int block_size_y, int block_size_x, int w00, int w01, int w10, int w11, int total_scale)
 {
   sPixel *cur_row = curPixel;
@@ -1809,9 +1687,7 @@ void intra_cr_decoding (sMacroblock* curMb, int yuv)
         {
           joff = subblk_offset_y[yuv][b8][b4];
           ioff = subblk_offset_x[yuv][b8][b4];
-
           curMb->itrans_4x4(curMb, (eColorPlane) (uv + 1), ioff, joff);
-
           copy_Image_4x4(&curUV[curMb->pix_c_y + joff], &(curSlice->mb_rec[uv + 1][joff]), curMb->pix_c_x + ioff, ioff);
         }
       }
@@ -1825,9 +1701,8 @@ void intra_cr_decoding (sMacroblock* curMb, int yuv)
       {
         for(ioff = 0; ioff < 8;ioff+=4)
         {
-          curMb->itrans_4x4(curMb, (eColorPlane) (uv + 1), ioff, joff);
-
-          copy_Image_4x4(&curUV[curMb->pix_c_y + joff], &(curSlice->mb_rec[uv + 1][joff]), curMb->pix_c_x + ioff, ioff);
+          curMb->itrans_4x4 (curMb, (eColorPlane) (uv + 1), ioff, joff);
+          copy_Image_4x4 (&curUV[curMb->pix_c_y + joff], &(curSlice->mb_rec[uv + 1][joff]), curMb->pix_c_x + ioff, ioff);
         }
       }
       curSlice->is_reset_coeff_cr = FALSE;
@@ -1840,7 +1715,6 @@ void intra_cr_decoding (sMacroblock* curMb, int yuv)
         {
           joff = subblk_offset_y[yuv][b8][b4];
           ioff = subblk_offset_x[yuv][b8][b4];
-
           copy_Image_4x4(&curUV[curMb->pix_c_y + joff], &(curSlice->mb_pred[uv + 1][joff]), curMb->pix_c_x + ioff, ioff);
         }
       }

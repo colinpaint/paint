@@ -33,7 +33,6 @@ void itrans4x4 (sMacroblock* curMb, eColorPlane pl, int ioff, int joff) {
 
   sSlice* curSlice = curMb->slice;
   int** mb_rres = curSlice->mb_rres[pl];
-
   inverse4x4 (curSlice->cof[pl],mb_rres,joff,ioff);
 
   sample_reconstruct (&curSlice->mb_rec[pl][joff], &curSlice->mb_pred[pl][joff], &mb_rres[joff], ioff, ioff, BLOCK_SIZE, BLOCK_SIZE, curMb->vidParam->max_pel_value_comp[pl], DQ_BITS);
@@ -43,13 +42,12 @@ void itrans4x4 (sMacroblock* curMb, eColorPlane pl, int ioff, int joff) {
 void itrans4x4_ls (sMacroblock* curMb, eColorPlane pl, int ioff, int joff) {
 
   sSlice* curSlice = curMb->slice;
-  sVidParam* vidParam = curMb->vidParam;
-  int max_imgpel_value = vidParam->max_pel_value_comp[pl];
-
   sPixel** mb_pred = curSlice->mb_pred[pl];
   sPixel** mb_rec = curSlice->mb_rec[pl];
   int** mb_rres = curSlice->mb_rres [pl];
 
+  sVidParam* vidParam = curMb->vidParam;
+  int max_imgpel_value = vidParam->max_pel_value_comp[pl];
   for (int j = joff; j < joff + BLOCK_SIZE; ++j)
     for (int i = ioff; i < ioff + BLOCK_SIZE; ++i)
       mb_rec[j][i] = (sPixel) iClip1(max_imgpel_value, mb_pred[j][i] + mb_rres[j][i]);
@@ -59,13 +57,13 @@ void itrans4x4_ls (sMacroblock* curMb, eColorPlane pl, int ioff, int joff) {
 //{{{
 void Inv_Residual_trans_4x4 (sMacroblock* curMb, eColorPlane pl, int ioff, int joff) {
 
-  int temp[4][4];
   sSlice* curSlice = curMb->slice;
   sPixel** mb_pred = curSlice->mb_pred[pl];
   sPixel** mb_rec = curSlice->mb_rec[pl];
   int** mb_rres = curSlice->mb_rres[pl];
   int** cof = curSlice->cof[pl];
 
+  int temp[4][4];
   if (curMb->ipmode_DPCM == VERT_PRED) {
     for (int i = 0; i<4; ++i) {
       temp[0][i] = cof[joff + 0][ioff + i];
@@ -112,11 +110,11 @@ void Inv_Residual_trans_4x4 (sMacroblock* curMb, eColorPlane pl, int ioff, int j
 void Inv_Residual_trans_8x8 (sMacroblock* curMb, eColorPlane pl, int ioff, int joff) {
 
   sSlice* curSlice = curMb->slice;
-  int temp[8][8];
   sPixel** mb_pred = curSlice->mb_pred[pl];
   sPixel** mb_rec  = curSlice->mb_rec[pl];
-  int   ** mb_rres = curSlice->mb_rres[pl];
+  int** mb_rres = curSlice->mb_rres[pl];
 
+  int temp[8][8];
   if (curMb->ipmode_DPCM == VERT_PRED) {
     for (int i = 0; i < 8; ++i) {
       temp[0][i] = mb_rres[joff + 0][ioff + i];
@@ -171,13 +169,13 @@ void Inv_Residual_trans_8x8 (sMacroblock* curMb, eColorPlane pl, int ioff, int j
 //{{{
 void Inv_Residual_trans_16x16 (sMacroblock* curMb, eColorPlane pl) {
 
-  int temp[16][16];
   sSlice* curSlice = curMb->slice;
   sPixel** mb_pred = curSlice->mb_pred[pl];
-  sPixel** mb_rec  = curSlice->mb_rec[pl];
-  int   ** mb_rres = curSlice->mb_rres[pl];
-  int   ** cof     = curSlice->cof[pl];
+  sPixel** mb_rec = curSlice->mb_rec[pl];
+  int** mb_rres = curSlice->mb_rres[pl];
+  int** cof = curSlice->cof[pl];
 
+  int temp[16][16];
   if (curMb->ipmode_DPCM == VERT_PRED_16) {
     for (int i = 0; i < MB_BLOCK_SIZE; ++i) {
       temp[0][i] = cof[0][i];

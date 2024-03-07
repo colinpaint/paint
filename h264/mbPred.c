@@ -52,16 +52,13 @@ int mb_pred_intra4x4 (sMacroblock* curMb, eColorPlane curPlane, sPixel** curPixe
       // =============== 4x4 itrans ================
       // -------------------------------------------
       curMb->itrans_4x4  (curMb, curPlane, ioff, joff);
-
-      copy_Image_4x4(&curPixel[j_pos], &curSlice->mb_rec[curPlane][joff], i_pos, ioff);
+      copy_Image_4x4 (&curPixel[j_pos], &curSlice->mb_rec[curPlane][joff], i_pos, ioff);
     }
   }
 
   // chroma decoding** *****************************************************
   if ((picture->chromaFormatIdc != YUV400) && (picture->chromaFormatIdc != YUV444))
-  {
     intra_cr_decoding(curMb, yuv);
-  }
 
   if (curMb->cbp != 0)
     curSlice->is_reset_coeff = FALSE;
