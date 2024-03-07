@@ -7,6 +7,7 @@
 #include "vlc.h"
 #include "transform.h"
 //}}}
+
 //{{{
 static void read_comp_coeff_4x4_smb_CABAC (sMacroblock* curMb, sSyntaxElement* currSE, sColorPlane pl, int block_y, int block_x, int start_scan, int64 *cbp_blk)
 {
