@@ -154,31 +154,31 @@ void allocQuant (sCodingParam* codingParam) {
 
   // We should allocate memory outside of this process since maybe we will have a change of SPS
   // and we may need to recreate these. Currently should only support same bitdepth
-  if (codingParam->qp_per_matrix == NULL)
-    if ((codingParam->qp_per_matrix = (int*)malloc((MAX_QP + 1 + bitdepth_qp_scale)*sizeof(int))) == NULL)
-      no_mem_exit ("init_qp_process: codingParam->qp_per_matrix");
+  if (codingParam->qpPerMatrix == NULL)
+    if ((codingParam->qpPerMatrix = (int*)malloc((MAX_QP + 1 + bitdepth_qp_scale)*sizeof(int))) == NULL)
+      no_mem_exit ("init_qp_process: codingParam->qpPerMatrix");
 
-  if (codingParam->qp_rem_matrix == NULL)
-    if ((codingParam->qp_rem_matrix = (int*)malloc((MAX_QP + 1 + bitdepth_qp_scale)*sizeof(int))) == NULL)
-      no_mem_exit ("init_qp_process: codingParam->qp_rem_matrix");
+  if (codingParam->qpRemMatrix == NULL)
+    if ((codingParam->qpRemMatrix = (int*)malloc((MAX_QP + 1 + bitdepth_qp_scale)*sizeof(int))) == NULL)
+      no_mem_exit ("init_qp_process: codingParam->qpRemMatrix");
 
   for (int i = 0; i < MAX_QP + bitdepth_qp_scale + 1; i++) {
-    codingParam->qp_per_matrix[i] = i / 6;
-    codingParam->qp_rem_matrix[i] = i % 6;
+    codingParam->qpPerMatrix[i] = i / 6;
+    codingParam->qpRemMatrix[i] = i % 6;
     }
   }
 //}}}
 //{{{
 void freeQuant (sCodingParam* codingParam) {
 
-  if (codingParam->qp_per_matrix != NULL) {
-    free (codingParam->qp_per_matrix);
-    codingParam->qp_per_matrix = NULL;
+  if (codingParam->qpPerMatrix != NULL) {
+    free (codingParam->qpPerMatrix);
+    codingParam->qpPerMatrix = NULL;
     }
 
-  if (codingParam->qp_rem_matrix != NULL) {
-    free (codingParam->qp_rem_matrix);
-    codingParam->qp_rem_matrix = NULL;
+  if (codingParam->qpRemMatrix != NULL) {
+    free (codingParam->qpRemMatrix);
+    codingParam->qpRemMatrix = NULL;
     }
   }
 //}}}

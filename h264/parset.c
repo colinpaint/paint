@@ -50,11 +50,11 @@ static void updateMaxValue (sFrameFormat* format) {
 //{{{
 static void setupLayerInfo (sVidParam* vidParam, sSPS* sps, sLayerParam* lps) {
 
-  int layer_id = lps->layer_id;
+  int layerId = lps->layerId;
   lps->vidParam = vidParam;
-  lps->p_Cps = vidParam->p_EncodePar[layer_id];
-  lps->p_SPS = sps;
-  lps->dpb = vidParam->p_Dpb_layer[layer_id];
+  lps->cps = vidParam->p_EncodePar[layerId];
+  lps->sps = sps;
+  lps->dpb = vidParam->p_Dpb_layer[layerId];
   }
 //}}}
 //{{{
@@ -172,8 +172,6 @@ static void setCodingParam (sSPS* sps, sCodingParam* cps) {
   cps->mb_size_shift[0][0] = cps->mb_size_shift[0][1] = ceilLog2_sf (cps->mb_size[0][0]);
   cps->mb_size_shift[1][0] = cps->mb_size_shift[2][0] = ceilLog2_sf (cps->mb_size[1][0]);
   cps->mb_size_shift[1][1] = cps->mb_size_shift[2][1] = ceilLog2_sf (cps->mb_size[1][1]);
-
-  cps->rgb_output = (sps->vui_seq_parameters.matrix_coefficients==0);
   }
 //}}}
 //{{{
@@ -1105,7 +1103,7 @@ void useParameterSet (sSlice* curSlice) {
     if (sps->num_ref_frames_in_pic_order_cnt_cycle >= MAXnum_ref_frames_in_pic_order_cnt_cycle)
       error ("num_ref_frames_in_pic_order_cnt_cycle too large",-1011);
 
-  vidParam->dpb_layer_id = curSlice->layer_id;
+  vidParam->dpb_layer_id = curSlice->layerId;
   activateSPS (vidParam, sps);
   activatePPS (vidParam, pps);
 

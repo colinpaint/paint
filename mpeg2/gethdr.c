@@ -474,7 +474,7 @@ static void sequence_extension()
 	ld->MPEG2_Flag = 1;
 
 	ld->scalable_mode = SC_NONE; /* unless overwritten by sequence_scalable_extension() */
-	layer_id = 0;                /* unless overwritten by sequence_scalable_extension() */
+	layerId = 0;                /* unless overwritten by sequence_scalable_extension() */
 
 	profile_and_level_indication = Get_Bits(8);
 	progressive_sequence         = Get_Bits(1);
@@ -683,7 +683,7 @@ static void sequence_scalable_extension()
 		 Table 6-10 of ISO/IEC 13818-2 */
 	ld->scalable_mode = Get_Bits(2) + 1; /* add 1 to make SC_DP != SC_NONE */
 
-	layer_id = Get_Bits(4);
+	layerId = Get_Bits(4);
 
 	if (ld->scalable_mode==SC_SPAT)
 	{
@@ -706,7 +706,7 @@ static void sequence_scalable_extension()
 		if (Verbose_Flag>SEQUENCE_LAYER)
 		{
 			printf("  scalable_mode=%d\n",ld->scalable_mode-1);
-			printf("  layer_id=%d\n",layer_id);
+			printf("  layerId=%d\n",layerId);
 			if (ld->scalable_mode==SC_SPAT)
 			{
 				printf("    lower_layer_prediction_horiontal_size=%d\n",

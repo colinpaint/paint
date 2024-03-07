@@ -219,8 +219,8 @@ static void readCompCoeff8x8_CABAC (sMacroblock* curMb, sSyntaxElement* currSE, 
     // select scan type
     const byte (*pos_scan8x8) = ((curSlice->structure == FRAME) && (!curMb->mb_field)) ? SNGL_SCAN8x8[0] : FIELD_SCAN8x8[0];
 
-    int qp_per = vidParam->qp_per_matrix[ curMb->qp_scaled[pl] ];
-    int qp_rem = vidParam->qp_rem_matrix[ curMb->qp_scaled[pl] ];
+    int qp_per = vidParam->qpPerMatrix[ curMb->qp_scaled[pl] ];
+    int qp_rem = vidParam->qpRemMatrix[ curMb->qp_scaled[pl] ];
 
     int (*InvLevelScale8x8)[8] = (curMb->is_intra_block == TRUE) ? curSlice->InvLevelScale8x8_Intra[transform_pl][qp_rem] : curSlice->InvLevelScale8x8_Inter[transform_pl][qp_rem];
 
@@ -568,8 +568,8 @@ static void read_CBP_and_coeffs_from_NAL_CABAC_420 (sMacroblock* curMb)
 
   update_qp(curMb, curSlice->qp);
 
-  qp_per = vidParam->qp_per_matrix[ curMb->qp_scaled[curSlice->colour_plane_id] ];
-  qp_rem = vidParam->qp_rem_matrix[ curMb->qp_scaled[curSlice->colour_plane_id] ];
+  qp_per = vidParam->qpPerMatrix[ curMb->qp_scaled[curSlice->colour_plane_id] ];
+  qp_rem = vidParam->qpRemMatrix[ curMb->qp_scaled[curSlice->colour_plane_id] ];
 
   // luma coefficients
   //======= Other Modes & CABAC ========
@@ -591,8 +591,8 @@ static void read_CBP_and_coeffs_from_NAL_CABAC_420 (sMacroblock* curMb)
   //init quant parameters for chroma
   for(i=0; i < 2; ++i)
   {
-    qp_per_uv[i] = vidParam->qp_per_matrix[ curMb->qp_scaled[i + 1] ];
-    qp_rem_uv[i] = vidParam->qp_rem_matrix[ curMb->qp_scaled[i + 1] ];
+    qp_per_uv[i] = vidParam->qpPerMatrix[ curMb->qp_scaled[i + 1] ];
+    qp_rem_uv[i] = vidParam->qpRemMatrix[ curMb->qp_scaled[i + 1] ];
   }
 
   //========================== CHROMA DC ============================
@@ -954,8 +954,8 @@ static void read_CBP_and_coeffs_from_NAL_CABAC_400 (sMacroblock* curMb)
 
   update_qp(curMb, curSlice->qp);
 
-  qp_per = vidParam->qp_per_matrix[ curMb->qp_scaled[PLANE_Y] ];
-  qp_rem = vidParam->qp_rem_matrix[ curMb->qp_scaled[PLANE_Y] ];
+  qp_per = vidParam->qpPerMatrix[ curMb->qp_scaled[PLANE_Y] ];
+  qp_rem = vidParam->qpRemMatrix[ curMb->qp_scaled[PLANE_Y] ];
 
   //======= Other Modes & CABAC ========
   //------------------------------------
@@ -1007,8 +1007,8 @@ static void read_CBP_and_coeffs_from_NAL_CABAC_444 (sMacroblock* curMb)
   //init constants for every chroma qp offset
   for (i=0; i<2; ++i)
   {
-    qp_per_uv[i] = vidParam->qp_per_matrix[ curMb->qp_scaled[i + 1] ];
-    qp_rem_uv[i] = vidParam->qp_rem_matrix[ curMb->qp_scaled[i + 1] ];
+    qp_per_uv[i] = vidParam->qpPerMatrix[ curMb->qp_scaled[i + 1] ];
+    qp_rem_uv[i] = vidParam->qpRemMatrix[ curMb->qp_scaled[i + 1] ];
   }
 
 
@@ -1161,14 +1161,14 @@ static void read_CBP_and_coeffs_from_NAL_CABAC_444 (sMacroblock* curMb)
 
   update_qp(curMb, curSlice->qp);
 
-  qp_per = vidParam->qp_per_matrix[ curMb->qp_scaled[curSlice->colour_plane_id] ];
-  qp_rem = vidParam->qp_rem_matrix[ curMb->qp_scaled[curSlice->colour_plane_id] ];
+  qp_per = vidParam->qpPerMatrix[ curMb->qp_scaled[curSlice->colour_plane_id] ];
+  qp_rem = vidParam->qpRemMatrix[ curMb->qp_scaled[curSlice->colour_plane_id] ];
 
   //init quant parameters for chroma
   for(i=0; i < 2; ++i)
   {
-    qp_per_uv[i] = vidParam->qp_per_matrix[ curMb->qp_scaled[i + 1] ];
-    qp_rem_uv[i] = vidParam->qp_rem_matrix[ curMb->qp_scaled[i + 1] ];
+    qp_per_uv[i] = vidParam->qpPerMatrix[ curMb->qp_scaled[i + 1] ];
+    qp_rem_uv[i] = vidParam->qpRemMatrix[ curMb->qp_scaled[i + 1] ];
   }
 
 
@@ -1243,12 +1243,12 @@ static void read_CBP_and_coeffs_from_NAL_CABAC_444 (sMacroblock* curMb)
 
     update_qp(curMb, curSlice->qp);
 
-    qp_per = vidParam->qp_per_matrix[ (curSlice->qp + vidParam->bitdepth_luma_qp_scale) ];
-    qp_rem = vidParam->qp_rem_matrix[ (curSlice->qp + vidParam->bitdepth_luma_qp_scale) ];
+    qp_per = vidParam->qpPerMatrix[ (curSlice->qp + vidParam->bitdepth_luma_qp_scale) ];
+    qp_rem = vidParam->qpRemMatrix[ (curSlice->qp + vidParam->bitdepth_luma_qp_scale) ];
 
     //init constants for every chroma qp offset
-    qp_per_uv[uv] = vidParam->qp_per_matrix[ (curMb->qpc[uv] + vidParam->bitdepth_chroma_qp_scale) ];
-    qp_rem_uv[uv] = vidParam->qp_rem_matrix[ (curMb->qpc[uv] + vidParam->bitdepth_chroma_qp_scale) ];
+    qp_per_uv[uv] = vidParam->qpPerMatrix[ (curMb->qpc[uv] + vidParam->bitdepth_chroma_qp_scale) ];
+    qp_rem_uv[uv] = vidParam->qpRemMatrix[ (curMb->qpc[uv] + vidParam->bitdepth_chroma_qp_scale) ];
 
     InvLevelScale4x4 = intra? curSlice->InvLevelScale4x4_Intra[uv + 1][qp_rem_uv[uv]] : curSlice->InvLevelScale4x4_Inter[uv + 1][qp_rem_uv[uv]];
 
@@ -1307,8 +1307,8 @@ static void read_CBP_and_coeffs_from_NAL_CABAC_422 (sMacroblock* curMb)
   //init constants for every chroma qp offset
   for (i=0; i<2; ++i)
   {
-    qp_per_uv[i] = vidParam->qp_per_matrix[ curMb->qp_scaled[i + 1] ];
-    qp_rem_uv[i] = vidParam->qp_rem_matrix[ curMb->qp_scaled[i + 1] ];
+    qp_per_uv[i] = vidParam->qpPerMatrix[ curMb->qp_scaled[i + 1] ];
+    qp_rem_uv[i] = vidParam->qpRemMatrix[ curMb->qp_scaled[i + 1] ];
   }
 
   // read CBP if not new intra mode
@@ -1460,14 +1460,14 @@ static void read_CBP_and_coeffs_from_NAL_CABAC_422 (sMacroblock* curMb)
 
   update_qp(curMb, curSlice->qp);
 
-  qp_per = vidParam->qp_per_matrix[ curMb->qp_scaled[curSlice->colour_plane_id] ];
-  qp_rem = vidParam->qp_rem_matrix[ curMb->qp_scaled[curSlice->colour_plane_id] ];
+  qp_per = vidParam->qpPerMatrix[ curMb->qp_scaled[curSlice->colour_plane_id] ];
+  qp_rem = vidParam->qpRemMatrix[ curMb->qp_scaled[curSlice->colour_plane_id] ];
 
   //init quant parameters for chroma
   for(i=0; i < 2; ++i)
   {
-    qp_per_uv[i] = vidParam->qp_per_matrix[ curMb->qp_scaled[i + 1] ];
-    qp_rem_uv[i] = vidParam->qp_rem_matrix[ curMb->qp_scaled[i + 1] ];
+    qp_per_uv[i] = vidParam->qpPerMatrix[ curMb->qp_scaled[i + 1] ];
+    qp_rem_uv[i] = vidParam->qpRemMatrix[ curMb->qp_scaled[i + 1] ];
   }
 
   InvLevelScale4x4 = intra? curSlice->InvLevelScale4x4_Intra[curSlice->colour_plane_id][qp_rem] : curSlice->InvLevelScale4x4_Inter[curSlice->colour_plane_id][qp_rem];
@@ -1503,8 +1503,8 @@ static void read_CBP_and_coeffs_from_NAL_CABAC_422 (sMacroblock* curMb)
         int** imgcof = curSlice->cof[uv + 1];
         int m3[2][4] = {{0,0,0,0},{0,0,0,0}};
         int m4[2][4] = {{0,0,0,0},{0,0,0,0}};
-        int qp_per_uv_dc = vidParam->qp_per_matrix[ (curMb->qpc[uv] + 3 + vidParam->bitdepth_chroma_qp_scale) ];       //for YUV422 only
-        int qp_rem_uv_dc = vidParam->qp_rem_matrix[ (curMb->qpc[uv] + 3 + vidParam->bitdepth_chroma_qp_scale) ];       //for YUV422 only
+        int qp_per_uv_dc = vidParam->qpPerMatrix[ (curMb->qpc[uv] + 3 + vidParam->bitdepth_chroma_qp_scale) ];       //for YUV422 only
+        int qp_rem_uv_dc = vidParam->qpRemMatrix[ (curMb->qpc[uv] + 3 + vidParam->bitdepth_chroma_qp_scale) ];       //for YUV422 only
         if (intra)
           InvLevelScale4x4 = curSlice->InvLevelScale4x4_Intra[uv + 1][qp_rem_uv_dc];
         else

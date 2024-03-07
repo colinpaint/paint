@@ -91,7 +91,7 @@ typedef struct Picture {
 
   char listXsize[MAX_NUM_SLICES][2];
   struct Picture** listX[MAX_NUM_SLICES][2];
-  int         layer_id;
+  int         layerId;
   } sPicture;
 //}}}
 typedef sPicture* StorablePicturePtr;
@@ -144,7 +144,7 @@ typedef struct decoded_picture_buffer {
 
   sFrameStore* last_picture;
   unsigned used_size_il;
-  int layer_id;
+  int layerId;
   } sDPB;
 //}}}
 

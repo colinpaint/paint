@@ -367,7 +367,7 @@ EXTERN int frame_center_horizontal_offset[3];
 EXTERN int frame_center_vertical_offset[3];
 //}}}
 //{{{  ISO/IEC 13818-2 section 6.2.2.5: sequence_scalable_extension() header
-EXTERN int layer_id;
+EXTERN int layerId;
 EXTERN int lower_layer_prediction_horizontal_size;
 EXTERN int lower_layer_prediction_vertical_size;
 EXTERN int horizontal_subsampling_factor_m;

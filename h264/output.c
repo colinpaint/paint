@@ -7,7 +7,7 @@
 
 //{{{
 static void img2buf (sPixel** imgX, unsigned char* buf,
-                     int size_x, int size_y, int symbol_size_in_bytes,
+                     int size_x, int size_y, int symbolSizeInBytes,
                      int crop_left, int crop_right, int crop_top, int crop_bottom, int iOutStride) {
 
   if (crop_top || crop_bottom || crop_left || crop_right) {
@@ -23,28 +23,28 @@ static void img2buf (sPixel** imgX, unsigned char* buf,
   }
 //}}}
 //{{{
-static void allocateDecPic (sVidParam* vidParam, sDecodedPicList* pDecPic, sPicture* p,
-                                int iLumaSize, int iFrameSize, int iLumaSizeX, int iLumaSizeY,
-                                int iChromaSizeX, int iChromaSizeY) {
+static void allocDecPic (sVidParam* vidParam, sDecodedPicList* decPic, sPicture* p,
+                         int iLumaSize, int iFrameSize, int iLumaSizeX, int iLumaSizeY,
+                         int iChromaSizeX, int iChromaSizeY) {
 
-  int symbol_size_in_bytes = ((vidParam->pic_unit_bitsize_on_disk+7) >> 3);
+  int symbolSizeInBytes = (vidParam->pic_unit_bitsize_on_disk + 7) >> 3;
 
-  if (pDecPic->pY)
-    mem_free (pDecPic->pY);
+  if (decPic->pY)
+    mem_free (decPic->pY);
 
-  pDecPic->iBufSize = iFrameSize;
-  pDecPic->pY = mem_malloc(pDecPic->iBufSize);
-  pDecPic->pU = pDecPic->pY+iLumaSize;
-  pDecPic->pV = pDecPic->pU + ((iFrameSize-iLumaSize)>>1);
+  decPic->iBufSize = iFrameSize;
+  decPic->pY = mem_malloc(decPic->iBufSize);
+  decPic->pU = decPic->pY + iLumaSize;
+  decPic->pV = decPic->pU + ((iFrameSize-iLumaSize)>>1);
 
   //init;
-  pDecPic->iYUVFormat = p->chroma_format_idc;
-  pDecPic->iYUVStorageFormat = 0;
-  pDecPic->iBitDepth = vidParam->pic_unit_bitsize_on_disk;
-  pDecPic->iWidth = iLumaSizeX; //p->size_x;
-  pDecPic->iHeight = iLumaSizeY; //p->size_y;
-  pDecPic->iYBufStride = iLumaSizeX*symbol_size_in_bytes; //p->size_x *symbol_size_in_bytes;
-  pDecPic->iUVBufStride = iChromaSizeX*symbol_size_in_bytes; //p->size_x_cr*symbol_size_in_bytes;
+  decPic->iYUVFormat = p->chroma_format_idc;
+  decPic->iYUVStorageFormat = 0;
+  decPic->iBitDepth = vidParam->pic_unit_bitsize_on_disk;
+  decPic->iWidth = iLumaSizeX; 
+  decPic->iHeight = iLumaSizeY; 
+  decPic->iYBufStride = iLumaSizeX * symbolSizeInBytes; 
+  decPic->iUVBufStride = iChromaSizeX * symbolSizeInBytes;
   }
 //}}}
 //{{{
@@ -69,17 +69,15 @@ static void clearPicture (sVidParam* vidParam, sPicture* p) {
 static void writeOutPicture (sVidParam* vidParam, sPicture* p) {
 
   sInputParam* inputParam = vidParam->inputParam;
-  sDecodedPicList* pDecPic;
+  sDecodedPicList* decPic;
 
   static const int SubWidthC  [4]= { 1, 2, 2, 1};
   static const int SubHeightC [4]= { 1, 2, 1, 1};
 
   int crop_left, crop_right, crop_top, crop_bottom;
-  int symbol_size_in_bytes = ((vidParam->pic_unit_bitsize_on_disk+7) >> 3);
-  int rgb_output =  vidParam->p_EncodePar[p->layer_id]->rgb_output;
-  //(vidParam->active_sps->vui_seq_parameters.matrix_coefficients==0);
+  int symbolSizeInBytes = ((vidParam->pic_unit_bitsize_on_disk+7) >> 3);
 
-  unsigned char *buf;
+  unsigned char* buf;
   int iLumaSize, iFrameSize;
   int iLumaSizeX, iLumaSizeY;
   int iChromaSizeX, iChromaSizeY;
@@ -101,37 +99,37 @@ static void writeOutPicture (sVidParam* vidParam, sPicture* p) {
   iChromaSizeY = p->size_y_cr - ( 2 - p->frame_mbs_only_flag ) * p->frame_crop_top_offset -( 2 - p->frame_mbs_only_flag ) * p->frame_crop_bottom_offset;
   iLumaSizeX = p->size_x - crop_left-crop_right;
   iLumaSizeY = p->size_y - crop_top - crop_bottom;
-  iLumaSize  = iLumaSizeX * iLumaSizeY * symbol_size_in_bytes;
-  iFrameSize = (iLumaSizeX * iLumaSizeY + 2 * (iChromaSizeX * iChromaSizeY)) * symbol_size_in_bytes; //iLumaSize*iPicSizeTab[p->chroma_format_idc]/2;
+  iLumaSize  = iLumaSizeX * iLumaSizeY * symbolSizeInBytes;
+  iFrameSize = (iLumaSizeX * iLumaSizeY + 2 * (iChromaSizeX * iChromaSizeY)) * symbolSizeInBytes; //iLumaSize*iPicSizeTab[p->chroma_format_idc]/2;
   //printf ("write frame size: %dx%d\n", p->size_x-crop_left-crop_right,p->size_y-crop_top-crop_bottom );
 
   // KS: this buffer should actually be allocated only once, but this is still much faster than the previous version
-  pDecPic = get_one_avail_dec_pic_from_list (vidParam->pDecOuputPic, 0, 0);
-  if ((pDecPic->pY == NULL) || (pDecPic->iBufSize < iFrameSize))
-    allocateDecPic (vidParam, pDecPic, p, iLumaSize, iFrameSize, iLumaSizeX, iLumaSizeY, iChromaSizeX, iChromaSizeY);
+  decPic = get_one_avail_dec_pic_from_list (vidParam->decOutputPic, 0, 0);
+  if ((decPic->pY == NULL) || (decPic->iBufSize < iFrameSize))
+    allocDecPic (vidParam, decPic, p, iLumaSize, iFrameSize, iLumaSizeX, iLumaSizeY, iChromaSizeX, iChromaSizeY);
 
-  pDecPic->bValid = 1;
-  pDecPic->iPOC = p->frame_poc;
+  decPic->bValid = 1;
+  decPic->iPOC = p->frame_poc;
 
-  if (NULL == pDecPic->pY)
+  if (NULL == decPic->pY)
     no_mem_exit ("writeOutPicture: buf");
 
-  buf = (pDecPic->bValid == 1) ? pDecPic->pY : pDecPic->pY + iLumaSizeX * symbol_size_in_bytes;
-  img2buf (p->imgY, buf, p->size_x, p->size_y, symbol_size_in_bytes,
-           crop_left, crop_right, crop_top, crop_bottom, pDecPic->iYBufStride);
+  buf = (decPic->bValid == 1) ? decPic->pY : decPic->pY + iLumaSizeX * symbolSizeInBytes;
+  img2buf (p->imgY, buf, p->size_x, p->size_y, symbolSizeInBytes,
+           crop_left, crop_right, crop_top, crop_bottom, decPic->iYBufStride);
 
   crop_left = p->frame_crop_left_offset;
   crop_right = p->frame_crop_right_offset;
   crop_top = (2 - p->frame_mbs_only_flag) * p->frame_crop_top_offset;
   crop_bottom = (2 - p->frame_mbs_only_flag) * p->frame_crop_bottom_offset;
 
-  buf = (pDecPic->bValid == 1) ? pDecPic->pU : pDecPic->pU + iChromaSizeX*symbol_size_in_bytes;
-  img2buf (p->imgUV[0], buf, p->size_x_cr, p->size_y_cr, symbol_size_in_bytes,
-           crop_left, crop_right, crop_top, crop_bottom, pDecPic->iUVBufStride);
+  buf = (decPic->bValid == 1) ? decPic->pU : decPic->pU + iChromaSizeX*symbolSizeInBytes;
+  img2buf (p->imgUV[0], buf, p->size_x_cr, p->size_y_cr, symbolSizeInBytes,
+           crop_left, crop_right, crop_top, crop_bottom, decPic->iUVBufStride);
 
-  buf = (pDecPic->bValid == 1) ? pDecPic->pV : pDecPic->pV + iChromaSizeX*symbol_size_in_bytes;
-  img2buf (p->imgUV[1], buf, p->size_x_cr, p->size_y_cr, symbol_size_in_bytes,
-           crop_left, crop_right, crop_top, crop_bottom, pDecPic->iUVBufStride);
+  buf = (decPic->bValid == 1) ? decPic->pV : decPic->pV + iChromaSizeX*symbolSizeInBytes;
+  img2buf (p->imgUV[1], buf, p->size_x_cr, p->size_y_cr, symbolSizeInBytes,
+           crop_left, crop_right, crop_top, crop_bottom, decPic->iUVBufStride);
   }
 //}}}
 //{{{

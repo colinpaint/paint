@@ -340,7 +340,7 @@ typedef struct OldSliceParam {
   byte     idr_flag;
   int      idr_pic_id;
   int      pps_id;
-  int      layer_id;
+  int      layerId;
   } sOldSliceParam;
 //}}}
 //{{{
@@ -433,7 +433,7 @@ typedef struct Slice {
   int                 *abs_diff_pic_num_minus1[2];
   int                 *long_term_pic_idx[2];
 
-  int                 layer_id;
+  int                 layerId;
   short               DFDisableIdc;     //!< Disable deblocking filter on slice
   short               DFAlphaC0Offset;  //!< Alpha and C0 offset for filtering slice
   short               DFBetaOffset;     //!< Beta offset for filtering slice
@@ -540,7 +540,7 @@ typedef struct DecodedPicList {
 //}}}
 //{{{
 typedef struct CodingParam {
-  int layer_id;
+  int layerId;
   int profile_idc;
   int width;
   int height;
@@ -590,28 +590,26 @@ typedef struct CodingParam {
   int total_scale;
   unsigned int oldFrameSizeInMbs;
 
-  // padding info;
-  int rgb_output;
-  sMacroblock* mb_data;               //!< array containing all MBs of a whole frame
-  sMacroblock* mb_data_JV[MAX_PLANE]; //!< mb_data to be used for 4:4:4 independent mode
-  char* intra_block;
-  char* intra_block_JV[MAX_PLANE];
-  sBlockPos *PicPos;
-  byte** ipredmode;                  //!< prediction type [90][74]
-  byte** ipredmode_JV[MAX_PLANE];
-  byte**** nz_coeff;
-  int** siblock;
-  int** siblock_JV[MAX_PLANE];
-  int* qp_per_matrix;
-  int* qp_rem_matrix;
+  sMacroblock* mb_data;               // array containing all MBs of a whole frame
+  sMacroblock* mb_data_JV[MAX_PLANE]; // mb_data to be used for 4:4:4 independent mode
+  char*        intra_block;
+  char*        intra_block_JV[MAX_PLANE];
+  sBlockPos*   PicPos;
+  byte**       ipredmode;             // prediction type [90][74]
+  byte**       ipredmode_JV[MAX_PLANE];
+  byte****     nz_coeff;
+  int**        siblock;
+  int**        siblock_JV[MAX_PLANE];
+  int*         qpPerMatrix;
+  int*         qpRemMatrix;
   } sCodingParam;
 //}}}
 //{{{
 typedef struct LayerParam {
-  int layer_id;
+  int              layerId;
   struct VidParam* vidParam;
-  sCodingParam* p_Cps;
-  sSPS* p_SPS;
+  sCodingParam*    cps;
+  sSPS*            sps;
   struct decoded_picture_buffer* dpb;
   } sLayerParam;
 //}}}
@@ -721,13 +719,14 @@ typedef struct VidParam {
   struct       annexBstruct* annex_b;
   int          LastAccessUnitExists;
   int          NALUCount;
+  struct nalu_t* nalu;
 
-  int          frame_no;
-  int          g_nFrame;
-  Boolean      global_init_done[2];
+  int          frameNum;
+  int          gapNumFrame; // ???
+  Boolean      globalInitDone[2];
 
-  int*         qp_per_matrix;
-  int*         qp_rem_matrix;
+  int*         qpPerMatrix;
+  int*         qpRemMatrix;
 
   int          pocs_in_dpb[100];
   struct       frameStore* last_out_fs;
@@ -766,10 +765,9 @@ typedef struct VidParam {
   void (*EdgeLoopChromaHor)(sPixel** Img, byte *Strength, sMacroblock *MbQ, int edge, int uv, struct Picture *p);
 
   sImage       tempData3;
-  sDecodedPicList* pDecOuputPic;
-  int          iDeblockMode;  //0: deblock in picture, 1: deblock in slice;
+  sDecodedPicList* decOutputPic;
+  int          deblockMode;  //0: deblock in picture, 1: deblock in slice;
 
-  struct nalu_t* nalu;
   int          iLumaPadX;
   int          iLumaPadY;
   int          iChromaPadX;
@@ -874,9 +872,9 @@ static inline int is_BL_profile (unsigned int profile_idc) {
 
   extern void error (char* text, int code);
 
-  extern void initGlobalBuffers (sVidParam* vidParam, int layer_id);
+  extern void initGlobalBuffers (sVidParam* vidParam, int layerId);
   extern void freeGlobalBuffers (sVidParam* vidParam);
-  extern void freeLayerBuffers (sVidParam* vidParam, int layer_id);
+  extern void freeLayerBuffers (sVidParam* vidParam, int layerId);
 
   extern sDataPartition* allocPartition (int n);
   extern void freePartition (sDataPartition* dp, int n);

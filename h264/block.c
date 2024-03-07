@@ -260,8 +260,8 @@ void itrans_2 (sMacroblock* curMb, sColorPlane pl) {
   int** cof = curSlice->cof[transform_pl];
 
   int qp_scaled = curMb->qp_scaled[transform_pl];
-  int qp_per = vidParam->qp_per_matrix[ qp_scaled ];
-  int qp_rem = vidParam->qp_rem_matrix[ qp_scaled ];
+  int qp_per = vidParam->qpPerMatrix[ qp_scaled ];
+  int qp_rem = vidParam->qpRemMatrix[ qp_scaled ];
 
   int invLevelScale = curSlice->InvLevelScale4x4_Intra[pl][qp_rem][0][0];
 
@@ -294,10 +294,10 @@ void itrans_sp (sMacroblock* curMb, sColorPlane pl, int ioff, int joff) {
   sSlice* curSlice = curMb->p_Slice;
 
   int qp = (curSlice->slice_type == SI_SLICE) ? curSlice->qs : curSlice->qp;
-  int qp_per = vidParam->qp_per_matrix[qp];
-  int qp_rem = vidParam->qp_rem_matrix[qp];
-  int qp_per_sp = vidParam->qp_per_matrix[curSlice->qs];
-  int qp_rem_sp = vidParam->qp_rem_matrix[curSlice->qs];
+  int qp_per = vidParam->qpPerMatrix[qp];
+  int qp_rem = vidParam->qpRemMatrix[qp];
+  int qp_per_sp = vidParam->qpPerMatrix[curSlice->qs];
+  int qp_rem_sp = vidParam->qpRemMatrix[curSlice->qs];
   int q_bits_sp = Q_BITS + qp_per_sp;
 
   sPixel** mb_pred = curSlice->mb_pred[pl];
@@ -362,10 +362,10 @@ void itrans_sp_cr (sMacroblock* curMb, int uv) {
   int** cof = curSlice->cof[uv + 1];
   int** PBlock = new_mem2Dint(MB_BLOCK_SIZE, MB_BLOCK_SIZE);
 
-  int qp_per = vidParam->qp_per_matrix[ ((curSlice->qp < 0 ? curSlice->qp : QP_SCALE_CR[curSlice->qp]))];
-  int qp_rem = vidParam->qp_rem_matrix[ ((curSlice->qp < 0 ? curSlice->qp : QP_SCALE_CR[curSlice->qp]))];
-  int qp_per_sp = vidParam->qp_per_matrix[ ((curSlice->qs < 0 ? curSlice->qs : QP_SCALE_CR[curSlice->qs]))];
-  int qp_rem_sp = vidParam->qp_rem_matrix[ ((curSlice->qs < 0 ? curSlice->qs : QP_SCALE_CR[curSlice->qs]))];
+  int qp_per = vidParam->qpPerMatrix[ ((curSlice->qp < 0 ? curSlice->qp : QP_SCALE_CR[curSlice->qp]))];
+  int qp_rem = vidParam->qpRemMatrix[ ((curSlice->qp < 0 ? curSlice->qp : QP_SCALE_CR[curSlice->qp]))];
+  int qp_per_sp = vidParam->qpPerMatrix[ ((curSlice->qs < 0 ? curSlice->qs : QP_SCALE_CR[curSlice->qs]))];
+  int qp_rem_sp = vidParam->qpRemMatrix[ ((curSlice->qs < 0 ? curSlice->qs : QP_SCALE_CR[curSlice->qs]))];
   int q_bits_sp = Q_BITS + qp_per_sp;
 
   if (curSlice->slice_type == SI_SLICE) {

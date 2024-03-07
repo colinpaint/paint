@@ -979,9 +979,9 @@ public:
 
 private:
   //{{{
-  void outputPicList (sDecodedPicList* pDecPic, int bOutputAllFrames) {
+  void outputPicList (sDecodedPicList* decPic, int bOutputAllFrames) {
 
-    sDecodedPicList* pPic = pDecPic;
+    sDecodedPicList* pPic = decPic;
     while (pPic && pPic->bValid == 1) {
       int iWidth = pPic->iWidth * ((pPic->iBitDepth+7)>>3);
       int iHeight = pPic->iHeight;
@@ -1121,9 +1121,9 @@ public:
 
 private:
   //{{{
-  void outputPicList (sDecodedPicList* pDecPic, int bOutputAllFrames) {
+  void outputPicList (sDecodedPicList* decPic, int bOutputAllFrames) {
 
-    sDecodedPicList* pPic = pDecPic;
+    sDecodedPicList* pPic = decPic;
     while (pPic && pPic->bValid == 1) {
       int iWidth = pPic->iWidth * ((pPic->iBitDepth+7)>>3);
       int iHeight = pPic->iHeight;
