@@ -49,25 +49,25 @@
 
 #define VIDEO_ELEMENTARY_STREAM 0x1e0
 
-//{{{  scalable_mode 
+//{{{  scalable_mode
 #define SC_NONE 0
 #define SC_DP   1
 #define SC_SPAT 2
 #define SC_SNR  3
 #define SC_TEMP 4
 //}}}
-//{{{  picture coding type 
+//{{{  picture coding type
 #define I_TYPE 1
 #define P_TYPE 2
 #define B_TYPE 3
 #define D_TYPE 4
 //}}}
-//{{{  picture structure 
+//{{{  picture structure
 #define TOP_FIELD     1
 #define BOTTOM_FIELD  2
 #define FRAME_PICTURE 3
 //}}}
-//{{{  macroblock type 
+//{{{  macroblock type
 #define MACROBLOCK_INTRA                        1
 #define MACROBLOCK_PATTERN                      2
 #define MACROBLOCK_MOTION_BACKWARD              4
@@ -76,22 +76,22 @@
 #define SPATIAL_TEMPORAL_WEIGHT_CODE_FLAG       32
 #define PERMITTED_SPATIAL_TEMPORAL_WEIGHT_CLASS 64
 //}}}
-//{{{  motion_type 
+//{{{  motion_type
 #define MC_FIELD 1
 #define MC_FRAME 2
 #define MC_16X8  2
 #define MC_DMV   3
 //}}}
-//{{{  mv_format 
+//{{{  mv_format
 #define MV_FIELD 0
 #define MV_FRAME 1
 //}}}
-//{{{  chroma_format 
+//{{{  chroma_format
 #define CHROMA420 1
 #define CHROMA422 2
 #define CHROMA444 3
 //}}}
-//{{{  extension start code IDs 
+//{{{  extension start code IDs
 #define SEQUENCE_EXTENSION_ID                    1
 #define SEQUENCE_DISPLAY_EXTENSION_ID            2
 #define QUANT_MATRIX_EXTENSION_ID                3
@@ -107,7 +107,7 @@
 #define PROFILE_422                             (128+5)
 #define MAIN_LEVEL                              8
 //}}}
-//{{{  Layers: used by Verbose_Flag, Verifier_Flag, Stats_Flag, and Trace_Flag 
+//{{{  Layers: used by Verbose_Flag, Verifier_Flag, Stats_Flag, and Trace_Flag
 #define NO_LAYER                                0
 #define SEQUENCE_LAYER                          1
 #define PICTURE_LAYER                           2
@@ -118,6 +118,6 @@
 #define ALL_LAYERS                              7
 //}}}
 
-#define FILENAME_LENGTH                       256
-#define MB_WEIGHT                  32
-#define MB_CLASS4                  64
+#define FILENAME_LENGTH  256
+#define MB_WEIGHT        32
+#define MB_CLASS4        64
