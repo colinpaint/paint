@@ -1,34 +1,4 @@
-//{{{
-/* getpic.c, picture decoding                                               */
-
-/* Copyright (C) 1996, MPEG Software Simulation Group. All Rights Reserved. */
-
-/*
- * Disclaimer of Warranty
- *
- * These software programs are available to the user without any license fee or
- * royalty on an "as is" basis.  The MPEG Software Simulation Group disclaims
- * any and all warranties, whether express, implied, or statuary, including any
- * implied warranties or merchantability or of fitness for a particular
- * purpose.  In no event shall the copyright-holder be liable for any
- * incidental, punitive, or consequential damages of any kind whatsoever
- * arising from the use of these programs.
- *
- * This disclaimer of warranty extends to the user of these programs and user's
- * customers, employees, agents, transferees, successors, and assigns.
- *
- * The MPEG Software Simulation Group does not represent or warrant that the
- * programs furnished hereunder are free of infringement of any third-party
- * patents.
- *
- * Commercial implementations of MPEG-1 and MPEG-2 video, including shareware,
- * are subject to royalty fees to patent holders.  Many of these patents are
- * general enough such that they are unavoidable regardless of implementation
- * design.
- *
- */
-//}}}
-//{{{
+//{{{  includes
 #define _CRT_SECURE_NO_WARNINGS
 
 #include <stdio.h>
@@ -36,19 +6,24 @@
 #include "config.h"
 #include "global.h"
 //}}}
-//{{{  private prototypes*/
 static void picture_data _ANSI_ARGS_((int framenum));
+
 static void macroblock_modes _ANSI_ARGS_((int *pmacroblock_type, int *pstwtype,
   int *pstwclass, int *pmotion_type, int *pmotion_vector_count, int *pmv_format, int *pdmv,
   int *pmvscale, int *pdct_type));
+
 static void Clear_Block _ANSI_ARGS_((int comp));
 static void Sum_Block _ANSI_ARGS_((int comp));
 static void Saturate _ANSI_ARGS_((short *bp));
+
 static void Add_Block _ANSI_ARGS_((int comp, int bx, int by,
   int dct_type, int addflag));
+
 static void Update_Picture_Buffers _ANSI_ARGS_((void));
+
 static void frame_reorder _ANSI_ARGS_((int bitstream_framenum,
   int sequence_framenum));
+
 static void Decode_SNR_Macroblock _ANSI_ARGS_((int *SNRMBA, int *SNRMBAinc,
   int MBA, int MBAmax, int *dct_type));
 
@@ -65,59 +40,230 @@ static int slice _ANSI_ARGS_((int framenum, int MBAmax));
 static int start_of_slice _ANSI_ARGS_ ((int MBAmax, int *MBA,
   int *MBAinc, int dc_dct_pred[3], int PMV[2][2][2]));
 
-static int decode_macroblock _ANSI_ARGS_((int *macroblock_type,
-  int *stwtype, int *stwclass, int *motion_type, int *dct_type,
-  int PMV[2][2][2], int dc_dct_pred[3],
-  int motion_vertical_field_select[2][2], int dmvector[2]));
-//}}}
-
 //{{{
-/* decode one frame or field picture */
-void Decode_Picture (bitstream_framenum, sequence_framenum)
-int bitstream_framenum, sequence_framenum;
-{
+static int decode_macroblock _ANSI_ARGS_((int *macroblock_type,
+                                         int *stwtype, int *stwclass, int *motion_type, int *dct_type,
+                                         int PMV[2][2][2], int dc_dct_pred[3],
+                                         int motion_vertical_field_select[2][2], int dmvector[2])) {
+  /* locals */
+  int quantizer_scale_code;
+  int comp;
 
-  if (picture_structure==FRAME_PICTURE && Second_Field)
+  int motion_vector_count;
+  int mv_format;
+  int dmv;
+  int mvscale;
+  int coded_block_pattern;
+
+  /* SCALABILITY: Data Patitioning */
+  if (base.scalable_mode==SC_DP)
   {
-    /* recover from illegal number of field pictures */
-    printf("odd number of field pictures\n");
-    Second_Field = 0;
+    if (base.priority_breakpoint<=2)
+      ld = &enhan;
+    else
+      ld = &base;
   }
 
-  /* IMPLEMENTATION: update picture buffer pointers */
-  Update_Picture_Buffers();
+  /* ISO/IEC 13818-2 section 6.3.17.1: Macroblock modes */
+  macroblock_modes(macroblock_type, stwtype, stwclass,
+    motion_type, &motion_vector_count, &mv_format, &dmv, &mvscale,
+    dct_type);
 
-#ifdef VERIFY
-  Check_Headers(bitstream_framenum, sequence_framenum);
-#endif /* VERIFY */
+  if (Fault_Flag) return(0);  /* trigger: go to next slice */
 
-  /* ISO/IEC 13818-4 section 2.4.5.4 "frame buffer intercept method" */
-  /* (section number based on November 1995 (Dallas) draft of the
-      conformance document) */
-  if(Ersatz_Flag)
-    Substitute_Frame_Buffer(bitstream_framenum, sequence_framenum);
-
-  /* form spatial scalable picture */
-
-  /* form spatial scalable picture */
-  /* ISO/IEC 13818-2 section 7.7: Spatial scalability */
-  if (base.pict_scal && !Second_Field)
+  if (*macroblock_type & MACROBLOCK_QUANT)
   {
-    Spatial_Prediction();
+    quantizer_scale_code = Get_Bits(5);
+
+#ifdef TRACE
+    if (Trace_Flag)
+    {
+      printf("quantiser_scale_code (");
+      Print_Bits(quantizer_scale_code,5,5);
+      printf("): %d\n",quantizer_scale_code);
+    }
+#endif /* TRACE */
+
+    /* ISO/IEC 13818-2 section 7.4.2.2: Quantizer scale factor */
+    if (ld->MPEG2_Flag)
+      ld->quantizer_scale =
+      ld->q_scale_type ? Non_Linear_quantizer_scale[quantizer_scale_code]
+       : (quantizer_scale_code << 1);
+    else
+      ld->quantizer_scale = quantizer_scale_code;
+
+    /* SCALABILITY: Data Partitioning */
+    if (base.scalable_mode==SC_DP)
+      /* make sure base.quantizer_scale is valid */
+      base.quantizer_scale = ld->quantizer_scale;
   }
 
-  /* decode picture data ISO/IEC 13818-2 section 6.2.3.7 */
-  picture_data(bitstream_framenum);
-
-  /* write or display current or previously decoded reference frame */
-  /* ISO/IEC 13818-2 section 6.1.1.11: Frame reordering */
-  frame_reorder(bitstream_framenum, sequence_framenum);
-
-  if (picture_structure!=FRAME_PICTURE)
-    Second_Field = !Second_Field;
-}
+  /* motion vectors */
 
 
+  /* ISO/IEC 13818-2 section 6.3.17.2: Motion vectors */
+
+  /* decode forward motion vectors */
+  if ((*macroblock_type & MACROBLOCK_MOTION_FORWARD)
+    || ((*macroblock_type & MACROBLOCK_INTRA)
+    && concealment_motion_vectors))
+  {
+    if (ld->MPEG2_Flag)
+      motion_vectors(PMV,dmvector,motion_vertical_field_select,
+        0,motion_vector_count,mv_format,f_code[0][0]-1,f_code[0][1]-1,
+        dmv,mvscale);
+    else
+      motion_vector(PMV[0][0],dmvector,
+      forward_f_code-1,forward_f_code-1,0,0,full_pel_forward_vector);
+  }
+
+  if (Fault_Flag) return(0);  /* trigger: go to next slice */
+
+  /* decode backward motion vectors */
+  if (*macroblock_type & MACROBLOCK_MOTION_BACKWARD)
+  {
+    if (ld->MPEG2_Flag)
+      motion_vectors(PMV,dmvector,motion_vertical_field_select,
+        1,motion_vector_count,mv_format,f_code[1][0]-1,f_code[1][1]-1,0,
+        mvscale);
+    else
+      motion_vector(PMV[0][1],dmvector,
+        backward_f_code-1,backward_f_code-1,0,0,full_pel_backward_vector);
+  }
+
+  if (Fault_Flag) return(0);  /* trigger: go to next slice */
+
+  if ((*macroblock_type & MACROBLOCK_INTRA) && concealment_motion_vectors)
+    Flush_Buffer(1); /* remove marker_bit */
+
+  if (base.scalable_mode==SC_DP && base.priority_breakpoint==3)
+    ld = &enhan;
+
+  /* macroblock_pattern */
+  /* ISO/IEC 13818-2 section 6.3.17.4: Coded block pattern */
+  if (*macroblock_type & MACROBLOCK_PATTERN)
+  {
+    coded_block_pattern = Get_coded_block_pattern();
+
+    if (chroma_format==CHROMA422)
+    {
+      /* coded_block_pattern_1 */
+      coded_block_pattern = (coded_block_pattern<<2) | Get_Bits(2);
+
+#ifdef TRACE
+       if (Trace_Flag)
+       {
+         printf("coded_block_pattern_1: ");
+         Print_Bits(coded_block_pattern,2,2);
+         printf(" (%d)\n",coded_block_pattern&3);
+       }
+#endif /* TRACE */
+     }
+     else if (chroma_format==CHROMA444)
+     {
+      /* coded_block_pattern_2 */
+      coded_block_pattern = (coded_block_pattern<<6) | Get_Bits(6);
+
+#ifdef TRACE
+      if (Trace_Flag)
+      {
+        printf("coded_block_pattern_2: ");
+        Print_Bits(coded_block_pattern,6,6);
+        printf(" (%d)\n",coded_block_pattern&63);
+      }
+#endif /* TRACE */
+    }
+  }
+  else
+    coded_block_pattern = (*macroblock_type & MACROBLOCK_INTRA) ?
+      (1<<block_count)-1 : 0;
+
+  if (Fault_Flag) return(0);  /* trigger: go to next slice */
+
+  /* decode blocks */
+  for (comp=0; comp<block_count; comp++)
+  {
+    /* SCALABILITY: Data Partitioning */
+    if (base.scalable_mode==SC_DP)
+    ld = &base;
+
+    Clear_Block(comp);
+
+    if (coded_block_pattern & (1<<(block_count-1-comp)))
+    {
+      if (*macroblock_type & MACROBLOCK_INTRA)
+      {
+        if (ld->MPEG2_Flag)
+          Decode_MPEG2_Intra_Block(comp,dc_dct_pred);
+        else
+          Decode_MPEG1_Intra_Block(comp,dc_dct_pred);
+      }
+      else
+      {
+        if (ld->MPEG2_Flag)
+          Decode_MPEG2_Non_Intra_Block(comp);
+        else
+          Decode_MPEG1_Non_Intra_Block(comp);
+      }
+
+      if (Fault_Flag) return(0);  /* trigger: go to next slice */
+    }
+  }
+
+  if(picture_coding_type==D_TYPE)
+  {
+    /* remove end_of_macroblock (always 1, prevents startcode emulation) */
+    /* ISO/IEC 11172-2 section 2.4.2.7 and 2.4.3.6 */
+    marker_bit("D picture end_of_macroblock bit");
+  }
+
+  /* reset intra_dc predictors */
+  /* ISO/IEC 13818-2 section 7.2.1: DC coefficients in intra blocks */
+  if (!(*macroblock_type & MACROBLOCK_INTRA))
+    dc_dct_pred[0]=dc_dct_pred[1]=dc_dct_pred[2]=0;
+
+  /* reset motion vector predictors */
+  if ((*macroblock_type & MACROBLOCK_INTRA) && !concealment_motion_vectors)
+  {
+    /* intra mb without concealment motion vectors */
+    /* ISO/IEC 13818-2 section 7.6.3.4: Resetting motion vector predictors */
+    PMV[0][0][0]=PMV[0][0][1]=PMV[1][0][0]=PMV[1][0][1]=0;
+    PMV[0][1][0]=PMV[0][1][1]=PMV[1][1][0]=PMV[1][1][1]=0;
+  }
+
+  /* special "No_MC" macroblock_type case */
+  /* ISO/IEC 13818-2 section 7.6.3.5: Prediction in P pictures */
+  if ((picture_coding_type==P_TYPE)
+    && !(*macroblock_type & (MACROBLOCK_MOTION_FORWARD|MACROBLOCK_INTRA)))
+  {
+    /* non-intra mb without forward mv in a P picture */
+    /* ISO/IEC 13818-2 section 7.6.3.4: Resetting motion vector predictors */
+    PMV[0][0][0]=PMV[0][0][1]=PMV[1][0][0]=PMV[1][0][1]=0;
+
+    /* derive motion_type */
+    /* ISO/IEC 13818-2 section 6.3.17.1: Macroblock modes, frame_motion_type */
+    if (picture_structure==FRAME_PICTURE)
+      *motion_type = MC_FRAME;
+    else
+    {
+      *motion_type = MC_FIELD;
+      /* predict from field of same parity */
+      motion_vertical_field_select[0][0] = (picture_structure==BOTTOM_FIELD);
+    }
+  }
+
+  if (*stwclass==4)
+  {
+    /* purely spatially predicted macroblock */
+    /* ISO/IEC 13818-2 section 7.7.5.1: Resetting motion vector predictions */
+    PMV[0][0][0]=PMV[0][0][1]=PMV[1][0][0]=PMV[1][0][1]=0;
+    PMV[0][1][0]=PMV[0][1][1]=PMV[1][1][0]=PMV[1][1][1]=0;
+  }
+
+  /* successfully decoded macroblock */
+  return(1);
+
+} /* decode_macroblock */
 //}}}
 
 //{{{
@@ -183,15 +329,6 @@ int framenum, MBAmax;
     if (Trace_Flag)
       printf("frame %d, MB %d\n",framenum,MBA);
 #endif /* TRACE */
-
-#ifdef DISPLAY
-    if (!progressive_frame && picture_structure==FRAME_PICTURE
-      && MBA==(MBAmax>>1) && framenum!=0 && Output_Type==T_X11
-       && !Display_Progressive_Flag)
-    {
-      Display_Second_Field();
-    }
-#endif
 
     ld = &base;
 
@@ -668,7 +805,6 @@ int comp;
     *Block_Ptr1++ += *Block_Ptr2++;
 }
 //}}}
-
 //{{{
 /* limit coefficients to -2048..2047 */
 /* ISO/IEC 13818-2 section 7.4.3 and 7.4.4: Saturation and Mismatch control */
@@ -784,13 +920,6 @@ int Bitstream_Framenum, Sequence_Framenum;
         Oldref_progressive_frame = progressive_frame = Newref_progressive_frame;
       }
     }
-#ifdef DISPLAY
-    else if (Output_Type==T_X11)
-    {
-      if(!Display_Progressive_Flag)
-        Display_Second_Field();
-    }
-#endif
   }
   else
     Oldref_progressive_frame = progressive_frame;
@@ -842,11 +971,7 @@ int dct_type;
     if ((Two_Streams && enhan.scalable_mode==SC_SNR) || ld->MPEG2_Flag)
       Saturate(ld->block[comp]);
 
-    /* ISO/IEC 13818-2 section Annex A: inverse DCT */
-    if (Reference_IDCT_Flag)
-      Reference_IDCT(ld->block[comp]);
-    else
-      Fast_IDCT(ld->block[comp]);
+    Fast_IDCT(ld->block[comp]);
 
     /* ISO/IEC 13818-2 section 7.6.8: Adding prediction and coefficient data */
     Add_Block(comp,bx,by,dct_type,(macroblock_type & MACROBLOCK_INTRA)==0);
@@ -998,238 +1123,52 @@ int PMV[2][2][2];
   return(1);
 }
 //}}}
+
 //{{{
-/* ISO/IEC 13818-2 sections 7.2 through 7.5 */
-static int decode_macroblock (macroblock_type, stwtype, stwclass,
-  motion_type, dct_type, PMV, dc_dct_pred,
-  motion_vertical_field_select, dmvector)
-int *macroblock_type;
-int *stwtype;
-int *stwclass;
-int *motion_type;
-int *dct_type;
-int PMV[2][2][2];
-int dc_dct_pred[3];
-int motion_vertical_field_select[2][2];
-int dmvector[2];
+/* decode one frame or field picture */
+void Decode_Picture (bitstream_framenum, sequence_framenum)
+int bitstream_framenum, sequence_framenum;
 {
-  /* locals */
-  int quantizer_scale_code;
-  int comp;
 
-  int motion_vector_count;
-  int mv_format;
-  int dmv;
-  int mvscale;
-  int coded_block_pattern;
-
-  /* SCALABILITY: Data Patitioning */
-  if (base.scalable_mode==SC_DP)
+  if (picture_structure==FRAME_PICTURE && Second_Field)
   {
-    if (base.priority_breakpoint<=2)
-      ld = &enhan;
-    else
-      ld = &base;
+    /* recover from illegal number of field pictures */
+    printf("odd number of field pictures\n");
+    Second_Field = 0;
   }
 
-  /* ISO/IEC 13818-2 section 6.3.17.1: Macroblock modes */
-  macroblock_modes(macroblock_type, stwtype, stwclass,
-    motion_type, &motion_vector_count, &mv_format, &dmv, &mvscale,
-    dct_type);
+  /* IMPLEMENTATION: update picture buffer pointers */
+  Update_Picture_Buffers();
 
-  if (Fault_Flag) return(0);  /* trigger: go to next slice */
+#ifdef VERIFY
+  Check_Headers(bitstream_framenum, sequence_framenum);
+#endif /* VERIFY */
 
-  if (*macroblock_type & MACROBLOCK_QUANT)
+  /* ISO/IEC 13818-4 section 2.4.5.4 "frame buffer intercept method" */
+  /* (section number based on November 1995 (Dallas) draft of the
+      conformance document) */
+  if(Ersatz_Flag)
+    Substitute_Frame_Buffer(bitstream_framenum, sequence_framenum);
+
+  /* form spatial scalable picture */
+
+  /* form spatial scalable picture */
+  /* ISO/IEC 13818-2 section 7.7: Spatial scalability */
+  if (base.pict_scal && !Second_Field)
   {
-    quantizer_scale_code = Get_Bits(5);
-
-#ifdef TRACE
-    if (Trace_Flag)
-    {
-      printf("quantiser_scale_code (");
-      Print_Bits(quantizer_scale_code,5,5);
-      printf("): %d\n",quantizer_scale_code);
-    }
-#endif /* TRACE */
-
-    /* ISO/IEC 13818-2 section 7.4.2.2: Quantizer scale factor */
-    if (ld->MPEG2_Flag)
-      ld->quantizer_scale =
-      ld->q_scale_type ? Non_Linear_quantizer_scale[quantizer_scale_code]
-       : (quantizer_scale_code << 1);
-    else
-      ld->quantizer_scale = quantizer_scale_code;
-
-    /* SCALABILITY: Data Partitioning */
-    if (base.scalable_mode==SC_DP)
-      /* make sure base.quantizer_scale is valid */
-      base.quantizer_scale = ld->quantizer_scale;
+    Spatial_Prediction();
   }
 
-  /* motion vectors */
+  /* decode picture data ISO/IEC 13818-2 section 6.2.3.7 */
+  picture_data(bitstream_framenum);
+
+  /* write or display current or previously decoded reference frame */
+  /* ISO/IEC 13818-2 section 6.1.1.11: Frame reordering */
+  frame_reorder(bitstream_framenum, sequence_framenum);
+
+  if (picture_structure!=FRAME_PICTURE)
+    Second_Field = !Second_Field;
+}
 
 
-  /* ISO/IEC 13818-2 section 6.3.17.2: Motion vectors */
-
-  /* decode forward motion vectors */
-  if ((*macroblock_type & MACROBLOCK_MOTION_FORWARD)
-    || ((*macroblock_type & MACROBLOCK_INTRA)
-    && concealment_motion_vectors))
-  {
-    if (ld->MPEG2_Flag)
-      motion_vectors(PMV,dmvector,motion_vertical_field_select,
-        0,motion_vector_count,mv_format,f_code[0][0]-1,f_code[0][1]-1,
-        dmv,mvscale);
-    else
-      motion_vector(PMV[0][0],dmvector,
-      forward_f_code-1,forward_f_code-1,0,0,full_pel_forward_vector);
-  }
-
-  if (Fault_Flag) return(0);  /* trigger: go to next slice */
-
-  /* decode backward motion vectors */
-  if (*macroblock_type & MACROBLOCK_MOTION_BACKWARD)
-  {
-    if (ld->MPEG2_Flag)
-      motion_vectors(PMV,dmvector,motion_vertical_field_select,
-        1,motion_vector_count,mv_format,f_code[1][0]-1,f_code[1][1]-1,0,
-        mvscale);
-    else
-      motion_vector(PMV[0][1],dmvector,
-        backward_f_code-1,backward_f_code-1,0,0,full_pel_backward_vector);
-  }
-
-  if (Fault_Flag) return(0);  /* trigger: go to next slice */
-
-  if ((*macroblock_type & MACROBLOCK_INTRA) && concealment_motion_vectors)
-    Flush_Buffer(1); /* remove marker_bit */
-
-  if (base.scalable_mode==SC_DP && base.priority_breakpoint==3)
-    ld = &enhan;
-
-  /* macroblock_pattern */
-  /* ISO/IEC 13818-2 section 6.3.17.4: Coded block pattern */
-  if (*macroblock_type & MACROBLOCK_PATTERN)
-  {
-    coded_block_pattern = Get_coded_block_pattern();
-
-    if (chroma_format==CHROMA422)
-    {
-      /* coded_block_pattern_1 */
-      coded_block_pattern = (coded_block_pattern<<2) | Get_Bits(2);
-
-#ifdef TRACE
-       if (Trace_Flag)
-       {
-         printf("coded_block_pattern_1: ");
-         Print_Bits(coded_block_pattern,2,2);
-         printf(" (%d)\n",coded_block_pattern&3);
-       }
-#endif /* TRACE */
-     }
-     else if (chroma_format==CHROMA444)
-     {
-      /* coded_block_pattern_2 */
-      coded_block_pattern = (coded_block_pattern<<6) | Get_Bits(6);
-
-#ifdef TRACE
-      if (Trace_Flag)
-      {
-        printf("coded_block_pattern_2: ");
-        Print_Bits(coded_block_pattern,6,6);
-        printf(" (%d)\n",coded_block_pattern&63);
-      }
-#endif /* TRACE */
-    }
-  }
-  else
-    coded_block_pattern = (*macroblock_type & MACROBLOCK_INTRA) ?
-      (1<<block_count)-1 : 0;
-
-  if (Fault_Flag) return(0);  /* trigger: go to next slice */
-
-  /* decode blocks */
-  for (comp=0; comp<block_count; comp++)
-  {
-    /* SCALABILITY: Data Partitioning */
-    if (base.scalable_mode==SC_DP)
-    ld = &base;
-
-    Clear_Block(comp);
-
-    if (coded_block_pattern & (1<<(block_count-1-comp)))
-    {
-      if (*macroblock_type & MACROBLOCK_INTRA)
-      {
-        if (ld->MPEG2_Flag)
-          Decode_MPEG2_Intra_Block(comp,dc_dct_pred);
-        else
-          Decode_MPEG1_Intra_Block(comp,dc_dct_pred);
-      }
-      else
-      {
-        if (ld->MPEG2_Flag)
-          Decode_MPEG2_Non_Intra_Block(comp);
-        else
-          Decode_MPEG1_Non_Intra_Block(comp);
-      }
-
-      if (Fault_Flag) return(0);  /* trigger: go to next slice */
-    }
-  }
-
-  if(picture_coding_type==D_TYPE)
-  {
-    /* remove end_of_macroblock (always 1, prevents startcode emulation) */
-    /* ISO/IEC 11172-2 section 2.4.2.7 and 2.4.3.6 */
-    marker_bit("D picture end_of_macroblock bit");
-  }
-
-  /* reset intra_dc predictors */
-  /* ISO/IEC 13818-2 section 7.2.1: DC coefficients in intra blocks */
-  if (!(*macroblock_type & MACROBLOCK_INTRA))
-    dc_dct_pred[0]=dc_dct_pred[1]=dc_dct_pred[2]=0;
-
-  /* reset motion vector predictors */
-  if ((*macroblock_type & MACROBLOCK_INTRA) && !concealment_motion_vectors)
-  {
-    /* intra mb without concealment motion vectors */
-    /* ISO/IEC 13818-2 section 7.6.3.4: Resetting motion vector predictors */
-    PMV[0][0][0]=PMV[0][0][1]=PMV[1][0][0]=PMV[1][0][1]=0;
-    PMV[0][1][0]=PMV[0][1][1]=PMV[1][1][0]=PMV[1][1][1]=0;
-  }
-
-  /* special "No_MC" macroblock_type case */
-  /* ISO/IEC 13818-2 section 7.6.3.5: Prediction in P pictures */
-  if ((picture_coding_type==P_TYPE)
-    && !(*macroblock_type & (MACROBLOCK_MOTION_FORWARD|MACROBLOCK_INTRA)))
-  {
-    /* non-intra mb without forward mv in a P picture */
-    /* ISO/IEC 13818-2 section 7.6.3.4: Resetting motion vector predictors */
-    PMV[0][0][0]=PMV[0][0][1]=PMV[1][0][0]=PMV[1][0][1]=0;
-
-    /* derive motion_type */
-    /* ISO/IEC 13818-2 section 6.3.17.1: Macroblock modes, frame_motion_type */
-    if (picture_structure==FRAME_PICTURE)
-      *motion_type = MC_FRAME;
-    else
-    {
-      *motion_type = MC_FIELD;
-      /* predict from field of same parity */
-      motion_vertical_field_select[0][0] = (picture_structure==BOTTOM_FIELD);
-    }
-  }
-
-  if (*stwclass==4)
-  {
-    /* purely spatially predicted macroblock */
-    /* ISO/IEC 13818-2 section 7.7.5.1: Resetting motion vector predictions */
-    PMV[0][0][0]=PMV[0][0][1]=PMV[1][0][0]=PMV[1][0][1]=0;
-    PMV[0][1][0]=PMV[0][1][1]=PMV[1][1][0]=PMV[1][1][1]=0;
-  }
-
-  /* successfully decoded macroblock */
-  return(1);
-
-} /* decode_macroblock */
 //}}}

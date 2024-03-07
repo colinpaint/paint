@@ -92,10 +92,6 @@ int Get_Chroma_DC_dct_diff _ANSI_ARGS_((void));
 void Fast_IDCT _ANSI_ARGS_((short *block));
 void Initialize_Fast_IDCT _ANSI_ARGS_((void));
 //}}}
-//{{{  Reference_IDCT.c
-void Initialize_Reference_IDCT _ANSI_ARGS_((void));
-void Reference_IDCT _ANSI_ARGS_((short *block));
-//}}}
 //{{{  motion.c
 void motion_vectors _ANSI_ARGS_((int PMV[2][2][2], int dmvector[2],
   int motion_vertical_field_select[2][2], int s, int motion_vector_count,
@@ -120,15 +116,6 @@ void Spatial_Prediction _ANSI_ARGS_((void));
 //{{{  store.c
 void Write_Frame _ANSI_ARGS_((unsigned char *src[], int frame));
 //}}}
-#ifdef DISPLAY
-//{{{  display.c
-void Initialize_Display_Process _ANSI_ARGS_((char *name));
-void Terminate_Display_Process _ANSI_ARGS_((void));
-void Display_Second_Field _ANSI_ARGS_((void));
-void dither _ANSI_ARGS_((unsigned char *src[]));
-void Initialize_Dither_Matrix _ANSI_ARGS_((void));
-//}}}
-#endif
 
 /* global variables */
 //{{{

@@ -1,34 +1,4 @@
-//{{{
-/* getblk.c, DCT block decoding                                             */
-
-/* Copyright (C) 1996, MPEG Software Simulation Group. All Rights Reserved. */
-
-/*
- * Disclaimer of Warranty
- *
- * These software programs are available to the user without any license fee or
- * royalty on an "as is" basis.  The MPEG Software Simulation Group disclaims
- * any and all warranties, whether express, implied, or statuary, including any
- * implied warranties or merchantability or of fitness for a particular
- * purpose.  In no event shall the copyright-holder be liable for any
- * incidental, punitive, or consequential damages of any kind whatsoever
- * arising from the use of these programs.
- *
- * This disclaimer of warranty extends to the user of these programs and user's
- * customers, employees, agents, transferees, successors, and assigns.
- *
- * The MPEG Software Simulation Group does not represent or warrant that the
- * programs furnished hereunder are free of infringement of any third-party
- * patents.
- *
- * Commercial implementations of MPEG-1 and MPEG-2 video, including shareware,
- * are subject to royalty fees to patent holders.  Many of these patents are
- * general enough such that they are unavoidable regardless of implementation
- * design.
- *
- */
-//}}}
-//{{{
+//{{{  includes
 #define _CRT_SECURE_NO_WARNINGS
 
 #include <stdio.h>
@@ -50,10 +20,8 @@ extern DCTtab DCTtab0a[],DCTtab1a[];
 //{{{
 /* decode one intra coded MPEG-1 block */
 
-void Decode_MPEG1_Intra_Block (comp,dc_dct_pred)
-int comp;
-int dc_dct_pred[];
-{
+void Decode_MPEG1_Intra_Block (int comp, int dc_dct_pred[]) {
+
   int val, i, j, sign;
   unsigned int code;
   DCTtab *tab;
@@ -155,11 +123,8 @@ int dc_dct_pred[];
 }
 //}}}
 //{{{
-/* decode one non-intra coded MPEG-1 block */
+void Decode_MPEG1_Non_Intra_Block (int comp) {
 
-void Decode_MPEG1_Non_Intra_Block (comp)
-int comp;
-{
   int val, i, j, sign;
   unsigned int code;
   DCTtab *tab;
@@ -250,13 +215,10 @@ int comp;
   }
 }
 //}}}
-//{{{
-/* decode one intra coded MPEG-2 block */
 
-void Decode_MPEG2_Intra_Block (comp,dc_dct_pred)
-int comp;
-int dc_dct_pred[];
-{
+//{{{
+void Decode_MPEG2_Intra_Block (int comp, int dc_dct_pred[]) {
+
   int val, i, j, sign, nc, cc, run;
   unsigned int code;
   DCTtab *tab;

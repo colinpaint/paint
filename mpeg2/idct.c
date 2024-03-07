@@ -1,51 +1,9 @@
-//{{{
-/* idct.c, inverse fast discrete cosine transform                           */
-
-/* Copyright (C) 1996, MPEG Software Simulation Group. All Rights Reserved. */
-
-/*
- * Disclaimer of Warranty
- *
- * These software programs are available to the user without any license fee or
- * royalty on an "as is" basis.  The MPEG Software Simulation Group disclaims
- * any and all warranties, whether express, implied, or statuary, including any
- * implied warranties or merchantability or of fitness for a particular
- * purpose.  In no event shall the copyright-holder be liable for any
- * incidental, punitive, or consequential damages of any kind whatsoever
- * arising from the use of these programs.
- *
- * This disclaimer of warranty extends to the user of these programs and user's
- * customers, employees, agents, transferees, successors, and assigns.
- *
- * The MPEG Software Simulation Group does not represent or warrant that the
- * programs furnished hereunder are free of infringement of any third-party
- * patents.
- *
- * Commercial implementations of MPEG-1 and MPEG-2 video, including shareware,
- * are subject to royalty fees to patent holders.  Many of these patents are
- * general enough such that they are unavoidable regardless of implementation
- * design.
- *
- */
-
-/**********************************************************/
-/* inverse two dimensional DCT, Chen-Wang algorithm       */
-/* (cf. IEEE ASSP-32, pp. 803-816, Aug. 1984)             */
-/* 32-bit integer arithmetic (8 bit coefficients)         */
-/* 11 mults, 29 adds per DCT                              */
-/*                                      sE, 18.8.91       */
-/**********************************************************/
-/* coefficients extended to 12 bit for IEEE1180-1990      */
-/* compliance                           sE,  2.1.94       */
-/**********************************************************/
-
-/* this code assumes >> to be a two's-complement arithmetic */
-/* right shift: (-2)>>1 == -1 , (-3)>>1 == -2               */
-//}}}
-//{{{
+//{{{  includes
 #define _CRT_SECURE_NO_WARNINGS
 
 #include "config.h"
+
+//}}}
 
 #define W1 2841 /* 2048*sqrt(2)*cos(1*pi/16) */
 #define W2 2676 /* 2048*sqrt(2)*cos(2*pi/16) */
@@ -62,12 +20,8 @@ void Fast_IDCT _ANSI_ARGS_((short *block));
 static short iclip[1024]; /* clipping table */
 static short *iclp;
 
-/* private prototypes */
-static void idctrow _ANSI_ARGS_((short *blk));
-static void idctcol _ANSI_ARGS_((short *blk));
-//}}}
-
 //{{{
+static void idctrow (short *blk) {
 /* row (horizontal) IDCT
  *
  *           7                       pi         1
@@ -78,9 +32,7 @@ static void idctcol _ANSI_ARGS_((short *blk));
  *        c[1..7] = 128*sqrt(2)
  */
 
-static void idctrow (blk)
-short *blk;
-{
+
   int x0, x1, x2, x3, x4, x5, x6, x7, x8;
 
   /* shortcut */
@@ -132,18 +84,15 @@ short *blk;
 }
 //}}}
 //{{{
+static void idctcol (short *blk) {
 /* column (vertical) IDCT
- *
  *             7                         pi         1
  * dst[8*k] = sum c[l] * src[8*l] * cos( -- * ( k + - ) * l )
  *            l=0                        8          2
- *
  * where: c[0]    = 1/1024
  *        c[1..7] = (1/1024)*sqrt(2)
  */
-static void idctcol (blk)
-short *blk;
-{
+
   int x0, x1, x2, x3, x4, x5, x6, x7, x8;
 
   /* shortcut */

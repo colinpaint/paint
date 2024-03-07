@@ -5,21 +5,23 @@
 #include "config.h"
 #include "global.h"
 //}}}
-//{{{  private prototypes */
 static void Read_Lower_Layer_Component_Framewise _ANSI_ARGS_((int comp, int lw, int lh));
 static void Read_Lower_Layer_Component_Fieldwise _ANSI_ARGS_((int comp, int lw, int lh));
+
 static void Make_Spatial_Prediction_Frame _ANSI_ARGS_((int progressive_frame,
 	int llprogressive_frame, unsigned char *fld0, unsigned char *fld1,
 	short *tmp, unsigned char *dst, int llx0, int lly0, int llw, int llh,
 	int horizontal_size, int vertical_size, int vm, int vn, int hm, int hn,
 	int aperture));
+
 static void Deinterlace _ANSI_ARGS_((unsigned char *fld0, unsigned char *fld1,
 	int j0, int lx, int ly, int aperture));
+
 static void Subsample_Vertical _ANSI_ARGS_((unsigned char *s, short *d,
 	int lx, int lys, int lyd, int m, int n, int j0, int dj));
+
 static void Subsample_Horizontal _ANSI_ARGS_((short *s, unsigned char *d,
 	int x0, int lx, int lxs, int lxd, int ly, int m, int n));
-//}}}
 
 //{{{
 /* get reference frame */
