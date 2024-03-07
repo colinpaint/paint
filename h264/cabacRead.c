@@ -1700,13 +1700,9 @@ void set_read_CBP_and_coeffs_cabac(sSlice* curSlice)
   {
   case YUV444:
     if (curSlice->vidParam->separate_colour_plane_flag == 0)
-    {
       curSlice->read_CBP_and_coeffs_from_NAL = read_CBP_and_coeffs_from_NAL_CABAC_444;
-    }
     else
-    {
       curSlice->read_CBP_and_coeffs_from_NAL = read_CBP_and_coeffs_from_NAL_CABAC_400;
-    }
     break;
   case YUV422:
     curSlice->read_CBP_and_coeffs_from_NAL = read_CBP_and_coeffs_from_NAL_CABAC_422;

@@ -1878,7 +1878,7 @@ void readRestSliceHeader (sSlice* curSlice) {
   // We allow in the decoder config to skip the loop filtering. This is achieved by modifying the parameters here.
   if (is_HI_intra_only_profile (activeSPS->profile_idc, activeSPS->constrained_set3_flag) &&
       (inputParam->intra_profile_deblocking == 0)) {
-    curSlice->DFDisableIdc =1;
+    curSlice->DFDisableIdc = 1;
     curSlice->DFAlphaC0Offset = curSlice->DFBetaOffset = 0;
     }
 

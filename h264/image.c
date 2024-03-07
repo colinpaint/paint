@@ -771,7 +771,7 @@ static void initSlice (sVidParam* vidParam, sSlice *curSlice) {
     for (int i = 16; i > 0;i--)
       curSlice->ref_flag[i] = curSlice->ref_flag[i-1];
   curSlice->ref_flag[0] = curSlice->redundant_pic_cnt == 0 ? vidParam->isPrimaryOk :
-                                                               vidParam->isReduncantOk;
+                                                             vidParam->isReduncantOk;
 
   if ((curSlice->activeSPS->chromaFormatIdc == 0) ||
       (curSlice->activeSPS->chromaFormatIdc == 3)) {
