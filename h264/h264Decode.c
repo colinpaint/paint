@@ -4,7 +4,7 @@
 
 #include "image.h"
 #include "mcPrediction.h"
-#include "mbuffer.h"
+#include "buffer.h"
 #include "fmo.h"
 #include "output.h"
 #include "cabac.h"

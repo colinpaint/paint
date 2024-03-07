@@ -1,6 +1,6 @@
 #pragma once
 #include "global.h"
-#include "mbuffer.h"
+#include "buffer.h"
 #include "block.h"
 
 //{{{

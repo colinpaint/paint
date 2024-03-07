@@ -18,7 +18,7 @@
 #include "quant.h"
 #include "errorConceal.h"
 #include "erc.h"
-#include "mbuffer.h"
+#include "buffer.h"
 #include "mcPrediction.h"
 
 #include <math.h>
@@ -673,9 +673,9 @@ static void initPicture (sVidParam* vidParam, sSlice *curSlice, sInputParam *inp
 
   if (vidParam->separate_colour_plane_flag != 0) {
     vidParam->dec_picture_JV[0] = vidParam->picture;
-    vidParam->dec_picture_JV[1] = allocPicture (vidParam, (sPictureStructure) curSlice->structure, vidParam->width, vidParam->height, vidParam->widthCr, vidParam->heightCr, 1);
+    vidParam->dec_picture_JV[1] = allocPicture (vidParam, (ePicStructure) curSlice->structure, vidParam->width, vidParam->height, vidParam->widthCr, vidParam->heightCr, 1);
     copyDecPicture_JV (vidParam, vidParam->dec_picture_JV[1], vidParam->dec_picture_JV[0] );
-    vidParam->dec_picture_JV[2] = allocPicture (vidParam, (sPictureStructure) curSlice->structure, vidParam->width, vidParam->height, vidParam->widthCr, vidParam->heightCr, 1);
+    vidParam->dec_picture_JV[2] = allocPicture (vidParam, (ePicStructure) curSlice->structure, vidParam->width, vidParam->height, vidParam->widthCr, vidParam->heightCr, 1);
     copyDecPicture_JV (vidParam, vidParam->dec_picture_JV[2], vidParam->dec_picture_JV[0] );
     }
   }

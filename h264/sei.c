@@ -7,7 +7,7 @@
 #include "sei.h"
 #include "vlc.h"
 #include "sliceHeader.h"
-#include "mbuffer.h"
+#include "buffer.h"
 #include "parset.h"
 //}}}
 static const int kDebug = 0;

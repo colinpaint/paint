@@ -419,8 +419,8 @@ typedef struct Macroblock {
   Boolean       luma_transform_size_8x8_flag;
   Boolean       NoMbPartLessThan8x8Flag;
 
-  void (*itrans_4x4)(struct Macroblock *curMb, sColorPlane pl, int ioff, int joff);
-  void (*itrans_8x8)(struct Macroblock *curMb, sColorPlane pl, int ioff, int joff);
+  void (*itrans_4x4)(struct Macroblock *curMb, eColorPlane pl, int ioff, int joff);
+  void (*itrans_8x8)(struct Macroblock *curMb, eColorPlane pl, int ioff, int joff);
   void (*GetMVPredictor) (struct Macroblock *curMb, sPixelPos *block,
                           sMotionVector *pmv, short ref_frame, 
                           struct PicMotionParam** mv_info, 
@@ -430,12 +430,12 @@ typedef struct Macroblock {
   char (*readRefPictureIdx)             (struct Macroblock *curMb, struct SyntaxElement *currSE, 
                                          struct DataPartition *dP, char b8mode, int list);
   void (*read_comp_coeff_4x4_CABAC)     (struct Macroblock *curMb, struct SyntaxElement *currSE, 
-                                         sColorPlane pl, int (*InvLevelScale4x4)[4], int qp_per, int cbp);
+                                         eColorPlane pl, int (*InvLevelScale4x4)[4], int qp_per, int cbp);
   void (*read_comp_coeff_8x8_CABAC)     (struct Macroblock *curMb, struct SyntaxElement *currSE, 
-                                         sColorPlane pl);
-  void (*read_comp_coeff_4x4_CAVLC)     (struct Macroblock *curMb, sColorPlane pl, 
+                                         eColorPlane pl);
+  void (*read_comp_coeff_4x4_CAVLC)     (struct Macroblock *curMb, eColorPlane pl, 
                                          int (*InvLevelScale4x4)[4], int qp_per, int cbp, byte** nzcoeff);
-  void (*read_comp_coeff_8x8_CAVLC)     (struct Macroblock *curMb, sColorPlane pl, 
+  void (*read_comp_coeff_8x8_CAVLC)     (struct Macroblock *curMb, eColorPlane pl, 
                                          int (*InvLevelScale8x8)[8], int qp_per, int cbp, byte** nzcoeff);
   } sMacroblock;
 //}}}
@@ -557,7 +557,7 @@ typedef struct Slice {
   unsigned int      frame_num;     // frame_num for this frame
   unsigned int      field_pic_flag;
   byte              bottom_field_flag;
-  sPictureStructure structure;     // Identify picture structure type
+  ePicStructure     structure;     // Identify picture structure type
   int               start_mb_nr;   // MUST be set by NAL even in case of ei_flag == 1
   int               end_mb_nr_plus1;
   int               max_part_nr;
@@ -652,7 +652,7 @@ typedef struct Slice {
   char   chroma_vector_adjustment[6][32];
 
   void (*read_CBP_and_coeffs_from_NAL) (sMacroblock *curMb);
-  int  (*decode_one_component     )    (sMacroblock *curMb, sColorPlane curPlane, sPixel** curPixel, struct Picture* picture);
+  int  (*decode_one_component     )    (sMacroblock *curMb, eColorPlane curPlane, sPixel** curPixel, struct Picture* picture);
   int  (*readSlice                )    (struct VidParam *, struct InputParam *);
   int  (*nal_startcode_follows    )    (struct Slice*, int );
   void (*read_motion_info_from_NAL)    (sMacroblock *curMb);
@@ -660,9 +660,9 @@ typedef struct Slice {
   void (*interpret_mb_mode        )    (sMacroblock *curMb);
   void (*init_lists               )    (struct Slice *curSlice);
   void (*intra_pred_chroma        )    (sMacroblock *curMb);
-  int  (*intra_pred_4x4)               (sMacroblock *curMb, sColorPlane pl, int ioff, int joff,int i4,int j4);
-  int  (*intra_pred_8x8)               (sMacroblock *curMb, sColorPlane pl, int ioff, int joff);
-  int  (*intra_pred_16x16)             (sMacroblock *curMb, sColorPlane pl, int predmode);
+  int  (*intra_pred_4x4)               (sMacroblock *curMb, eColorPlane pl, int ioff, int joff,int i4,int j4);
+  int  (*intra_pred_8x8)               (sMacroblock *curMb, eColorPlane pl, int ioff, int joff);
+  int  (*intra_pred_16x16)             (sMacroblock *curMb, eColorPlane pl, int predmode);
   void (*linfo_cbp_intra          )    (int len, int info, int *cbp, int *dummy);
   void (*linfo_cbp_inter          )    (int len, int info, int *cbp, int *dummy);
   void (*update_direct_mv_info    )    (sMacroblock *curMb);
@@ -918,8 +918,8 @@ typedef struct VidParam {
   void (*get_mb_block_pos) (sBlockPos *picPos, int mb_addr, short *x, short *y);
   void (*GetStrengthVer)   (sMacroblock *MbQ, int edge, int mvlimit, struct Picture *p);
   void (*GetStrengthHor)   (sMacroblock *MbQ, int edge, int mvlimit, struct Picture *p);
-  void (*EdgeLoopLumaVer)  (sColorPlane pl, sPixel** Img, byte *Strength, sMacroblock *MbQ, int edge);
-  void (*EdgeLoopLumaHor)  (sColorPlane pl, sPixel** Img, byte *Strength, sMacroblock *MbQ, int edge, struct Picture *p);
+  void (*EdgeLoopLumaVer)  (eColorPlane pl, sPixel** Img, byte *Strength, sMacroblock *MbQ, int edge);
+  void (*EdgeLoopLumaHor)  (eColorPlane pl, sPixel** Img, byte *Strength, sMacroblock *MbQ, int edge, struct Picture *p);
   void (*EdgeLoopChromaVer)(sPixel** Img, byte *Strength, sMacroblock *MbQ, int edge, int uv, struct Picture *p);
   void (*EdgeLoopChromaHor)(sPixel** Img, byte *Strength, sMacroblock *MbQ, int edge, int uv, struct Picture *p);
 

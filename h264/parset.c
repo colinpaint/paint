@@ -8,7 +8,7 @@
 #include "fmo.h"
 #include "cabac.h"
 #include "vlc.h"
-#include "mbuffer.h"
+#include "buffer.h"
 #include "erc.h"
 //}}}
 extern void init_frext (sVidParam* vidParam);

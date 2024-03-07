@@ -1,6 +1,6 @@
 #pragma once
 #include "global.h"
-#include "mbuffer.h"
+#include "buffer.h"
 
 extern void no_mem_exit (char *where);
 //{{{

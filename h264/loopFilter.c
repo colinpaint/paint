@@ -136,7 +136,7 @@ static sMacroblock* get_non_aff_neighbor_chroma (sMacroblock* mb, int xN, int yN
  *    Filters 16 pel block edge of Super MB Frame coded MBs
 ** ***************************************************************************************
  */
-static void edge_loop_luma_ver_MBAff (sColorPlane pl, sPixel** Img, byte* Strength, sMacroblock* MbQ, int edge)
+static void edge_loop_luma_ver_MBAff (eColorPlane pl, sPixel** Img, byte* Strength, sMacroblock* MbQ, int edge)
 {
   int      pel, Strng ;
   sPixel   L2 = 0, L1, L0, R0, R1, R2 = 0;
@@ -262,7 +262,7 @@ static void edge_loop_luma_ver_MBAff (sColorPlane pl, sPixel** Img, byte* Streng
  *    Filters 16 pel block edge of Super MB Frame coded MBs
 ** ***************************************************************************************
  */
-static void edge_loop_luma_hor_MBAff (sColorPlane pl, sPixel** Img, byte* Strength, sMacroblock* MbQ,
+static void edge_loop_luma_hor_MBAff (eColorPlane pl, sPixel** Img, byte* Strength, sMacroblock* MbQ,
               int edge, sPicture *p)
 {
   int      width = p->iLumaStride; //p->size_x;
@@ -1352,7 +1352,7 @@ static void luma_ver_deblock_normal (sPixel** curPixel, int pos_x1, int Alpha, i
  *    Filters 16 pel block edge of Frame or Field coded MBs
 ** ***************************************************************************************
  */
-static void edge_loop_luma_ver (sColorPlane pl, sPixel** Img, byte* Strength, sMacroblock* MbQ, int edge)
+static void edge_loop_luma_ver (eColorPlane pl, sPixel** Img, byte* Strength, sMacroblock* MbQ, int edge)
 {
   sVidParam* vidParam = MbQ->vidParam;
 
@@ -1558,7 +1558,7 @@ static void luma_hor_deblock_normal (sPixel* imgP, sPixel *imgQ, int width, int 
  *    Filters 16 pel block edge of Frame or Field coded MBs
 ** ***************************************************************************************
  */
-static void edge_loop_luma_hor (sColorPlane pl, sPixel** Img, byte* Strength, sMacroblock* MbQ, int edge, sPicture *p)
+static void edge_loop_luma_hor (eColorPlane pl, sPixel** Img, byte* Strength, sMacroblock* MbQ, int edge, sPicture *p)
 {
   sVidParam* vidParam = MbQ->vidParam;
 

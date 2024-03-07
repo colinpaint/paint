@@ -5,7 +5,7 @@
 
 #include "fmo.h"
 #include "vlc.h"
-#include "mbuffer.h"
+#include "buffer.h"
 #include "biariDecode.h"
 #include "sliceHeader.h"
 //}}}
@@ -1705,7 +1705,7 @@ void readSliceHeader (sSlice* curSlice) {
   int tmp = read_ue_v ("SLC slice_type", curStream);
   if (tmp > 4)
     tmp -= 5;
-  vidParam->type = curSlice->slice_type = (SliceType)tmp;
+  vidParam->type = curSlice->slice_type = (eSliceType)tmp;
 
   curSlice->pic_parameter_set_id = read_ue_v ("SLC pic_parameter_set_id", curStream);
 
@@ -1755,7 +1755,7 @@ void readRestSliceHeader (sSlice* curSlice) {
       }
     }
 
-  curSlice->structure = (sPictureStructure) vidParam->structure;
+  curSlice->structure = (ePicStructure) vidParam->structure;
   curSlice->mb_aff_frame_flag =
     (activeSPS->mb_adaptive_frame_field_flag && (curSlice->field_pic_flag==0));
 

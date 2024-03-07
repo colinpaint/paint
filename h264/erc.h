@@ -1,5 +1,5 @@
 #pragma once
-#include "mbuffer.h"
+#include "buffer.h"
 #include "output.h"
 
 /* "block" means an 8x8 pixel area */
@@ -86,7 +86,7 @@ int ercConcealInterFrame (frame *recfr, sObjectBuffer *object_list,
                           int picSizeX, int picSizeY, sErcVariables *errorVar, int chromaFormatIdc );
 
 extern struct ConcealNode* init_node (sPicture* , int );
-extern void init_lists_for_non_reference_loss (sDPB* dpb, int , sPictureStructure );
+extern void init_lists_for_non_reference_loss (sDPB* dpb, int , ePicStructure );
 extern void conceal_lost_frames (sDPB* dpb, sSlice *pSlice);
 extern void conceal_non_ref_pics (sDPB* dpb, int diff);
 extern void sliding_window_poc_management (sDPB* dpb, sPicture *p);

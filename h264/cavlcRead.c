@@ -151,11 +151,9 @@ static int predict_nnz_chroma (sMacroblock* curMb, int i,int j)
 //}}}
 
 //{{{
-void read_coeff_4x4_CAVLC (sMacroblock* curMb,
-                           int block_type,
-                           int i, int j, int levarr[16], int runarr[16],
-                           int *number_coefficients)
-{
+void read_coeff_4x4_CAVLC (sMacroblock* curMb, int block_type,
+                           int i, int j, int levarr[16], int runarr[16], int *number_coefficients) {
+
   sSlice* curSlice = curMb->slice;
   sVidParam* vidParam = curMb->vidParam;
   int mb_nr = curMb->mbAddrX;
@@ -173,107 +171,104 @@ void read_coeff_4x4_CAVLC (sMacroblock* curMb,
   char type[15];
   static const int incVlc[] = {0, 3, 6, 12, 24, 48, 32768};    // maximum vlc = 6
 
-  switch (block_type)
-  {
-  case LUMA:
-    max_coeff_num = 16;
-    dptype = (curMb->is_intra_block == TRUE) ? SE_LUM_AC_INTRA : SE_LUM_AC_INTER;
-    vidParam->nzCoeff[mb_nr][0][j][i] = 0;
-    break;
-  case LUMA_INTRA16x16DC:
-    max_coeff_num = 16;
-    dptype = SE_LUM_DC_INTRA;
-    vidParam->nzCoeff[mb_nr][0][j][i] = 0;
-    break;
-  case LUMA_INTRA16x16AC:
-    max_coeff_num = 15;
-    dptype = SE_LUM_AC_INTRA;
-    vidParam->nzCoeff[mb_nr][0][j][i] = 0;
-    break;
-  case CHROMA_DC:
-    max_coeff_num = vidParam->num_cdc_coeff;
-    cdc = 1;
-    dptype = (curMb->is_intra_block == TRUE) ? SE_CHR_DC_INTRA : SE_CHR_DC_INTER;
-    vidParam->nzCoeff[mb_nr][0][j][i] = 0;
-    break;
-  case CHROMA_AC:
-    max_coeff_num = 15;
-    cac = 1;
-    dptype = (curMb->is_intra_block == TRUE) ? SE_CHR_AC_INTRA : SE_CHR_AC_INTER;
-    vidParam->nzCoeff[mb_nr][0][j][i] = 0;
-    break;
-  default:
-    error ("read_coeff_4x4_CAVLC: invalid block type", 600);
-    vidParam->nzCoeff[mb_nr][0][j][i] = 0;
-    break;
-  }
+  switch (block_type) {
+    //{{{
+    case LUMA:
+      max_coeff_num = 16;
+      dptype = (curMb->is_intra_block == TRUE) ? SE_LUM_AC_INTRA : SE_LUM_AC_INTER;
+      vidParam->nzCoeff[mb_nr][0][j][i] = 0;
+      break;
+    //}}}
+    //{{{
+    case LUMA_INTRA16x16DC:
+      max_coeff_num = 16;
+      dptype = SE_LUM_DC_INTRA;
+      vidParam->nzCoeff[mb_nr][0][j][i] = 0;
+      break;
+    //}}}
+    //{{{
+    case LUMA_INTRA16x16AC:
+      max_coeff_num = 15;
+      dptype = SE_LUM_AC_INTRA;
+      vidParam->nzCoeff[mb_nr][0][j][i] = 0;
+      break;
+    //}}}
+    //{{{
+    case CHROMA_DC:
+      max_coeff_num = vidParam->num_cdc_coeff;
+      cdc = 1;
+      dptype = (curMb->is_intra_block == TRUE) ? SE_CHR_DC_INTRA : SE_CHR_DC_INTER;
+      vidParam->nzCoeff[mb_nr][0][j][i] = 0;
+      break;
+    //}}}
+    //{{{
+    case CHROMA_AC:
+      max_coeff_num = 15;
+      cac = 1;
+      dptype = (curMb->is_intra_block == TRUE) ? SE_CHR_AC_INTRA : SE_CHR_AC_INTER;
+      vidParam->nzCoeff[mb_nr][0][j][i] = 0;
+      break;
+    //}}}
+    //{{{
+    default:
+      error ("read_coeff_4x4_CAVLC: invalid block type", 600);
+      vidParam->nzCoeff[mb_nr][0][j][i] = 0;
+      break;
+    //}}}
+    }
 
   currSE.type = dptype;
   dP = &(curSlice->partArr[partMap[dptype]]);
   curStream = dP->bitstream;
 
-  if (!cdc)
-  {
-    // luma or chroma AC
+  if (!cdc) {
+    //{{{  luma or chroma AC
     nnz = (!cac) ? predict_nnz(curMb, LUMA, i<<2, j<<2) : predict_nnz_chroma(curMb, i, ((j-4)<<2));
-
     currSE.value1 = (nnz < 2) ? 0 : ((nnz < 4) ? 1 : ((nnz < 8) ? 2 : 3));
-
     readsSyntaxElement_NumCoeffTrailingOnes(&currSE, curStream, type);
-
     numcoeff        =  currSE.value1;
     numtrailingones =  currSE.value2;
-
     vidParam->nzCoeff[mb_nr][0][j][i] = (byte) numcoeff;
-  }
-  else
-  {
-    // chroma DC
+    }
+    //}}}
+  else {
+    //{{{  chroma DC
     readsSyntaxElement_NumCoeffTrailingOnesChromaDC(vidParam, &currSE, curStream);
-
     numcoeff        =  currSE.value1;
     numtrailingones =  currSE.value2;
-  }
-
-  memset(levarr, 0, max_coeff_num * sizeof(int));
-  memset(runarr, 0, max_coeff_num * sizeof(int));
+    }
+    //}}}
+  memset (levarr, 0, max_coeff_num * sizeof(int));
+  memset (runarr, 0, max_coeff_num * sizeof(int));
 
   numones = numtrailingones;
   *number_coefficients = numcoeff;
-
-  if (numcoeff)
-  {
-    if (numtrailingones)
-    {
+  if (numcoeff) {
+    if (numtrailingones) {
       currSE.len = numtrailingones;
       readsSyntaxElement_FLC (&currSE, curStream);
-
       code = currSE.inf;
       ntr = numtrailingones;
-      for (k = numcoeff - 1; k > numcoeff - 1 - numtrailingones; k--)
-      {
+      for (k = numcoeff - 1; k > numcoeff - 1 - numtrailingones; k--) {
         ntr --;
         levarr[k] = (code>>ntr)&1 ? -1 : 1;
+        }
       }
-    }
 
     // decode levels
     level_two_or_higher = (numcoeff > 3 && numtrailingones == 3)? 0 : 1;
     vlcnum = (numcoeff > 10 && numtrailingones < 3) ? 1 : 0;
-
-    for (k = numcoeff - 1 - numtrailingones; k >= 0; k--)
-    {
-
+    for (k = numcoeff - 1 - numtrailingones; k >= 0; k--) {
+      //{{{  decode level
       if (vlcnum == 0)
         readsSyntaxElement_Level_VLC0(&currSE, curStream);
       else
         readsSyntaxElement_Level_VLCN(&currSE, vlcnum, curStream);
 
-      if (level_two_or_higher)
-      {
+      if (level_two_or_higher) {
         currSE.inf += (currSE.inf > 0) ? 1 : -1;
         level_two_or_higher = 0;
-      }
+        }
 
       levarr[k] = currSE.inf;
       abslevel = iabs(levarr[k]);
@@ -283,14 +278,13 @@ void read_coeff_4x4_CAVLC (sMacroblock* curMb,
       // update VLC table
       if (abslevel  > incVlc[vlcnum])
         ++vlcnum;
-
       if (k == numcoeff - 1 - numtrailingones && abslevel >3)
         vlcnum = 2;
-    }
+      }
+      //}}}
 
-    if (numcoeff < max_coeff_num)
-    {
-      // decode total run
+    if (numcoeff < max_coeff_num) {
+      //{{{  decode total run
       vlcnum = numcoeff - 1;
       currSE.value1 = vlcnum;
 
@@ -300,20 +294,16 @@ void read_coeff_4x4_CAVLC (sMacroblock* curMb,
         readsSyntaxElement_TotalZeros(&currSE, curStream);
 
       totzeros = currSE.value1;
-    }
+      }
+      //}}}
     else
-    {
       totzeros = 0;
-    }
-
-    // decode run before each coefficient
+    //{{{  decode run before each coefficient
     zerosleft = totzeros;
     i = numcoeff - 1;
 
-    if (zerosleft > 0 && i > 0)
-    {
-      do
-      {
+    if (zerosleft > 0 && i > 0) {
+      do {
         // select VLC for runbefore
         vlcnum = imin(zerosleft - 1, RUNBEFORE_NUM_M1);
 
@@ -323,18 +313,17 @@ void read_coeff_4x4_CAVLC (sMacroblock* curMb,
 
         zerosleft -= runarr[i];
         i --;
-      } while (zerosleft != 0 && i != 0);
-    }
+        } while (zerosleft != 0 && i != 0);
+      }
+    //}}}
     runarr[i] = zerosleft;
-  } // if numcoeff
-}
+    } 
+  }
 //}}}
 //{{{
-void read_coeff_4x4_CAVLC_444 (sMacroblock* curMb,
-                               int block_type,
-                               int i, int j, int levarr[16], int runarr[16],
-                               int *number_coefficients)
-{
+void read_coeff_4x4_CAVLC_444 (sMacroblock* curMb, int block_type,
+                               int i, int j, int levarr[16], int runarr[16], int *number_coefficients) {
+
   sSlice* curSlice = curMb->slice;
   sVidParam* vidParam = curMb->vidParam;
   int mb_nr = curMb->mbAddrX;
@@ -352,152 +341,157 @@ void read_coeff_4x4_CAVLC_444 (sMacroblock* curMb,
   char type[15];
   static const int incVlc[] = {0, 3, 6, 12, 24, 48, 32768};    // maximum vlc = 6
 
-  switch (block_type)
-  {
-  case LUMA:
-    max_coeff_num = 16;
-    dptype = (curMb->is_intra_block == TRUE) ? SE_LUM_AC_INTRA : SE_LUM_AC_INTER;
-    vidParam->nzCoeff[mb_nr][0][j][i] = 0;
-    break;
-  case LUMA_INTRA16x16DC:
-    max_coeff_num = 16;
-    dptype = SE_LUM_DC_INTRA;
-    vidParam->nzCoeff[mb_nr][0][j][i] = 0;
-    break;
-  case LUMA_INTRA16x16AC:
-    max_coeff_num = 15;
-    dptype = SE_LUM_AC_INTRA;
-    vidParam->nzCoeff[mb_nr][0][j][i] = 0;
-    break;
-  case CB:
-    max_coeff_num = 16;
-    dptype = ((curMb->is_intra_block == TRUE)) ? SE_LUM_AC_INTRA : SE_LUM_AC_INTER;
-    vidParam->nzCoeff[mb_nr][1][j][i] = 0;
-    break;
-  case CB_INTRA16x16DC:
-    max_coeff_num = 16;
-    dptype = SE_LUM_DC_INTRA;
-    vidParam->nzCoeff[mb_nr][1][j][i] = 0;
-    break;
-  case CB_INTRA16x16AC:
-    max_coeff_num = 15;
-    dptype = SE_LUM_AC_INTRA;
-    vidParam->nzCoeff[mb_nr][1][j][i] = 0;
-    break;
-  case CR:
-    max_coeff_num = 16;
-    dptype = ((curMb->is_intra_block == TRUE)) ? SE_LUM_AC_INTRA : SE_LUM_AC_INTER;
-    vidParam->nzCoeff[mb_nr][2][j][i] = 0;
-    break;
-  case CR_INTRA16x16DC:
-    max_coeff_num = 16;
-    dptype = SE_LUM_DC_INTRA;
-    vidParam->nzCoeff[mb_nr][2][j][i] = 0;
-    break;
-  case CR_INTRA16x16AC:
-    max_coeff_num = 15;
-    dptype = SE_LUM_AC_INTRA;
-    vidParam->nzCoeff[mb_nr][2][j][i] = 0;
-    break;
-  case CHROMA_DC:
-    max_coeff_num = vidParam->num_cdc_coeff;
-    cdc = 1;
-    dptype = (curMb->is_intra_block == TRUE) ? SE_CHR_DC_INTRA : SE_CHR_DC_INTER;
-    vidParam->nzCoeff[mb_nr][0][j][i] = 0;
-    break;
-  case CHROMA_AC:
-    max_coeff_num = 15;
-    cac = 1;
-    dptype = (curMb->is_intra_block == TRUE) ? SE_CHR_AC_INTRA : SE_CHR_AC_INTER;
-    vidParam->nzCoeff[mb_nr][0][j][i] = 0;
-    break;
-  default:
-    error ("read_coeff_4x4_CAVLC: invalid block type", 600);
-    vidParam->nzCoeff[mb_nr][0][j][i] = 0;
-    break;
-  }
+  switch (block_type) {
+    //{{{
+    case LUMA:
+      max_coeff_num = 16;
+      dptype = (curMb->is_intra_block == TRUE) ? SE_LUM_AC_INTRA : SE_LUM_AC_INTER;
+      vidParam->nzCoeff[mb_nr][0][j][i] = 0;
+      break;
+    //}}}
+    //{{{
+    case LUMA_INTRA16x16DC:
+      max_coeff_num = 16;
+      dptype = SE_LUM_DC_INTRA;
+      vidParam->nzCoeff[mb_nr][0][j][i] = 0;
+      break;
+    //}}}
+    //{{{
+    case LUMA_INTRA16x16AC:
+      max_coeff_num = 15;
+      dptype = SE_LUM_AC_INTRA;
+      vidParam->nzCoeff[mb_nr][0][j][i] = 0;
+      break;
+    //}}}
+    //{{{
+    case CB:
+      max_coeff_num = 16;
+      dptype = ((curMb->is_intra_block == TRUE)) ? SE_LUM_AC_INTRA : SE_LUM_AC_INTER;
+      vidParam->nzCoeff[mb_nr][1][j][i] = 0;
+      break;
+    //}}}
+    //{{{
+    case CB_INTRA16x16DC:
+      max_coeff_num = 16;
+      dptype = SE_LUM_DC_INTRA;
+      vidParam->nzCoeff[mb_nr][1][j][i] = 0;
+      break;
+    //}}}
+    //{{{
+    case CB_INTRA16x16AC:
+      max_coeff_num = 15;
+      dptype = SE_LUM_AC_INTRA;
+      vidParam->nzCoeff[mb_nr][1][j][i] = 0;
+      break;
+    //}}}
+    //{{{
+    case CR:
+      max_coeff_num = 16;
+      dptype = ((curMb->is_intra_block == TRUE)) ? SE_LUM_AC_INTRA : SE_LUM_AC_INTER;
+      vidParam->nzCoeff[mb_nr][2][j][i] = 0;
+      break;
+    //}}}
+    //{{{
+    case CR_INTRA16x16DC:
+      max_coeff_num = 16;
+      dptype = SE_LUM_DC_INTRA;
+      vidParam->nzCoeff[mb_nr][2][j][i] = 0;
+      break;
+    //}}}
+    //{{{
+    case CR_INTRA16x16AC:
+      max_coeff_num = 15;
+      dptype = SE_LUM_AC_INTRA;
+      vidParam->nzCoeff[mb_nr][2][j][i] = 0;
+      break;
+    //}}}
+    //{{{
+    case CHROMA_DC:
+      max_coeff_num = vidParam->num_cdc_coeff;
+      cdc = 1;
+      dptype = (curMb->is_intra_block == TRUE) ? SE_CHR_DC_INTRA : SE_CHR_DC_INTER;
+      vidParam->nzCoeff[mb_nr][0][j][i] = 0;
+      break;
+    //}}}
+    //{{{
+    case CHROMA_AC:
+      max_coeff_num = 15;
+      cac = 1;
+      dptype = (curMb->is_intra_block == TRUE) ? SE_CHR_AC_INTRA : SE_CHR_AC_INTER;
+      vidParam->nzCoeff[mb_nr][0][j][i] = 0;
+      break;
+    //}}}
+    //{{{
+    default:
+      error ("read_coeff_4x4_CAVLC: invalid block type", 600);
+      vidParam->nzCoeff[mb_nr][0][j][i] = 0;
+      break;
+    //}}}
+    }
 
   currSE.type = dptype;
   dP = &(curSlice->partArr[partMap[dptype]]);
   curStream = dP->bitstream;
 
-  if (!cdc)
-  {
-    // luma or chroma AC
+  if (!cdc) {
+    //{{{  luma or chroma AC
     if(block_type==LUMA || block_type==LUMA_INTRA16x16DC || block_type==LUMA_INTRA16x16AC ||block_type==CHROMA_AC)
-    {
       nnz = (!cac) ? predict_nnz(curMb, LUMA, i<<2, j<<2) : predict_nnz_chroma(curMb, i, ((j-4)<<2));
-    }
     else if (block_type==CB || block_type==CB_INTRA16x16DC || block_type==CB_INTRA16x16AC)
-    {
       nnz = predict_nnz(curMb, CB, i<<2, j<<2);
-    }
     else
-    {
       nnz = predict_nnz(curMb, CR, i<<2, j<<2);
-    }
 
     currSE.value1 = (nnz < 2) ? 0 : ((nnz < 4) ? 1 : ((nnz < 8) ? 2 : 3));
-
     readsSyntaxElement_NumCoeffTrailingOnes(&currSE, curStream, type);
-
     numcoeff        =  currSE.value1;
     numtrailingones =  currSE.value2;
-
-    if(block_type==LUMA || block_type==LUMA_INTRA16x16DC || block_type==LUMA_INTRA16x16AC ||block_type==CHROMA_AC)
+    if  (block_type==LUMA || block_type==LUMA_INTRA16x16DC || block_type==LUMA_INTRA16x16AC ||block_type==CHROMA_AC)
       vidParam->nzCoeff[mb_nr][0][j][i] = (byte) numcoeff;
     else if (block_type==CB || block_type==CB_INTRA16x16DC || block_type==CB_INTRA16x16AC)
       vidParam->nzCoeff[mb_nr][1][j][i] = (byte) numcoeff;
     else
       vidParam->nzCoeff[mb_nr][2][j][i] = (byte) numcoeff;
-  }
-  else
-  {
-    // chroma DC
+    }
+    //}}}
+  else {
+    //{{{  chroma DC
     readsSyntaxElement_NumCoeffTrailingOnesChromaDC(vidParam, &currSE, curStream);
-
     numcoeff        =  currSE.value1;
     numtrailingones =  currSE.value2;
-  }
-
-  memset(levarr, 0, max_coeff_num * sizeof(int));
-  memset(runarr, 0, max_coeff_num * sizeof(int));
+    }
+    //}}}
+  memset (levarr, 0, max_coeff_num * sizeof(int));
+  memset (runarr, 0, max_coeff_num * sizeof(int));
 
   numones = numtrailingones;
   *number_coefficients = numcoeff;
-
-  if (numcoeff)
-  {
-    if (numtrailingones)
-    {
+  if (numcoeff) {
+    if (numtrailingones) {
       currSE.len = numtrailingones;
       readsSyntaxElement_FLC (&currSE, curStream);
-
       code = currSE.inf;
       ntr = numtrailingones;
-      for (k = numcoeff - 1; k > numcoeff - 1 - numtrailingones; k--)
-      {
+      for (k = numcoeff - 1; k > numcoeff - 1 - numtrailingones; k--) {
         ntr --;
         levarr[k] = (code>>ntr)&1 ? -1 : 1;
+        }
       }
-    }
 
     // decode levels
     level_two_or_higher = (numcoeff > 3 && numtrailingones == 3)? 0 : 1;
     vlcnum = (numcoeff > 10 && numtrailingones < 3) ? 1 : 0;
-
-    for (k = numcoeff - 1 - numtrailingones; k >= 0; k--)
-    {
+    for (k = numcoeff - 1 - numtrailingones; k >= 0; k--) {
+      //{{{  decode level
       if (vlcnum == 0)
         readsSyntaxElement_Level_VLC0(&currSE, curStream);
       else
         readsSyntaxElement_Level_VLCN(&currSE, vlcnum, curStream);
 
-      if (level_two_or_higher)
-      {
+      if (level_two_or_higher) {
         currSE.inf += (currSE.inf > 0) ? 1 : -1;
         level_two_or_higher = 0;
-      }
+        }
 
       levarr[k] = currSE.inf;
       abslevel = iabs(levarr[k]);
@@ -510,11 +504,11 @@ void read_coeff_4x4_CAVLC_444 (sMacroblock* curMb,
 
       if (k == numcoeff - 1 - numtrailingones && abslevel >3)
         vlcnum = 2;
-    }
+      }
+      //}}}
 
-    if (numcoeff < max_coeff_num)
-    {
-      // decode total run
+    if (numcoeff < max_coeff_num) {
+      //{{{  decode total run
       vlcnum = numcoeff - 1;
       currSE.value1 = vlcnum;
 
@@ -524,38 +518,32 @@ void read_coeff_4x4_CAVLC_444 (sMacroblock* curMb,
         readsSyntaxElement_TotalZeros(&currSE, curStream);
 
       totzeros = currSE.value1;
-    }
+      }
+      //}}}
     else
-    {
       totzeros = 0;
-    }
 
     // decode run before each coefficient
     zerosleft = totzeros;
     i = numcoeff - 1;
-
-    if (zerosleft > 0 && i > 0)
-    {
-      do
-      {
+    if (zerosleft > 0 && i > 0) {
+      do {
         // select VLC for runbefore
         vlcnum = imin(zerosleft - 1, RUNBEFORE_NUM_M1);
-
         currSE.value1 = vlcnum;
         readsSyntaxElement_Run(&currSE, curStream);
         runarr[i] = currSE.value1;
-
         zerosleft -= runarr[i];
         i --;
-      } while (zerosleft != 0 && i != 0);
-    }
+        } while (zerosleft != 0 && i != 0);
+      }
     runarr[i] = zerosleft;
-  } // if numcoeff
-}
+    } 
+  }
 //}}}
 
 //{{{
-static void read_comp_coeff_4x4_CAVLC (sMacroblock* curMb, sColorPlane pl, int (*InvLevelScale4x4)[4], int qp_per, int cbp, byte** nzcoeff)
+static void read_comp_coeff_4x4_CAVLC (sMacroblock* curMb, eColorPlane pl, int (*InvLevelScale4x4)[4], int qp_per, int cbp, byte** nzcoeff)
 {
   int block_y, block_x, b8;
   int i, j, k;
@@ -638,7 +626,7 @@ static void read_comp_coeff_4x4_CAVLC (sMacroblock* curMb, sColorPlane pl, int (
 }
 //}}}
 //{{{
-static void read_comp_coeff_4x4_CAVLC_ls (sMacroblock* curMb, sColorPlane pl, int (*InvLevelScale4x4)[4], int qp_per, int cbp, byte** nzcoeff)
+static void read_comp_coeff_4x4_CAVLC_ls (sMacroblock* curMb, eColorPlane pl, int (*InvLevelScale4x4)[4], int qp_per, int cbp, byte** nzcoeff)
 {
   int block_y, block_x, b8;
   int i, j, k;
@@ -715,7 +703,7 @@ static void read_comp_coeff_4x4_CAVLC_ls (sMacroblock* curMb, sColorPlane pl, in
 }
 //}}}
 //{{{
-static void read_comp_coeff_8x8_CAVLC (sMacroblock* curMb, sColorPlane pl, int (*InvLevelScale8x8)[8], int qp_per, int cbp, byte** nzcoeff)
+static void read_comp_coeff_8x8_CAVLC (sMacroblock* curMb, eColorPlane pl, int (*InvLevelScale8x8)[8], int qp_per, int cbp, byte** nzcoeff)
 {
   int block_y, block_x, b4, b8;
   int block_y4, block_x4;
@@ -800,7 +788,7 @@ static void read_comp_coeff_8x8_CAVLC (sMacroblock* curMb, sColorPlane pl, int (
 }
 //}}}
 //{{{
-static void read_comp_coeff_8x8_CAVLC_ls (sMacroblock* curMb, sColorPlane pl, int (*InvLevelScale8x8)[8], int qp_per, int cbp, byte** nzcoeff)
+static void read_comp_coeff_8x8_CAVLC_ls (sMacroblock* curMb, eColorPlane pl, int (*InvLevelScale8x8)[8], int qp_per, int cbp, byte** nzcoeff)
 {
   int block_y, block_x, b4, b8;
   int i, j, k;
@@ -1021,7 +1009,7 @@ static void read_CBP_and_coeffs_from_NAL_CAVLC_400 (sMacroblock* curMb)
 
 
       if(curMb->is_lossless == FALSE)
-        itrans_2(curMb, (sColorPlane) curSlice->colour_plane_id);// transform new intra DC
+        itrans_2(curMb, (eColorPlane) curSlice->colour_plane_id);// transform new intra DC
     }
   }
 
@@ -1197,7 +1185,7 @@ static void read_CBP_and_coeffs_from_NAL_CAVLC_422 (sMacroblock* curMb)
 
 
       if(curMb->is_lossless == FALSE)
-        itrans_2(curMb, (sColorPlane) curSlice->colour_plane_id);// transform new intra DC
+        itrans_2(curMb, (eColorPlane) curSlice->colour_plane_id);// transform new intra DC
     }
   }
 
@@ -1532,7 +1520,7 @@ static void read_CBP_and_coeffs_from_NAL_CAVLC_444 (sMacroblock* curMb)
 
 
       if(curMb->is_lossless == FALSE)
-        itrans_2(curMb, (sColorPlane) curSlice->colour_plane_id);// transform new intra DC
+        itrans_2(curMb, (eColorPlane) curSlice->colour_plane_id);// transform new intra DC
     }
   }
 
@@ -1595,7 +1583,7 @@ static void read_CBP_and_coeffs_from_NAL_CAVLC_444 (sMacroblock* curMb)
 
       if(curMb->is_lossless == FALSE)
       {
-        itrans_2(curMb, (sColorPlane) (uv)); // transform new intra DC
+        itrans_2(curMb, (eColorPlane) (uv)); // transform new intra DC
       }
     } //IS_I16MB
 
@@ -1610,11 +1598,11 @@ static void read_CBP_and_coeffs_from_NAL_CAVLC_444 (sMacroblock* curMb)
 
     if (!curMb->luma_transform_size_8x8_flag) // 4x4 transform
     {
-      curMb->read_comp_coeff_4x4_CAVLC (curMb, (sColorPlane) (uv), InvLevelScale4x4, qp_per_uv[uv], cbp, vidParam->nzCoeff[mb_nr][uv]);
+      curMb->read_comp_coeff_4x4_CAVLC (curMb, (eColorPlane) (uv), InvLevelScale4x4, qp_per_uv[uv], cbp, vidParam->nzCoeff[mb_nr][uv]);
     }
     else // 8x8 transform
     {
-      curMb->read_comp_coeff_8x8_CAVLC (curMb, (sColorPlane) (uv), InvLevelScale8x8, qp_per_uv[uv], cbp, vidParam->nzCoeff[mb_nr][uv]);
+      curMb->read_comp_coeff_8x8_CAVLC (curMb, (eColorPlane) (uv), InvLevelScale8x8, qp_per_uv[uv], cbp, vidParam->nzCoeff[mb_nr][uv]);
     }
   }
 }
@@ -1763,7 +1751,7 @@ static void read_CBP_and_coeffs_from_NAL_CAVLC_420 (sMacroblock* curMb)
 
 
       if(curMb->is_lossless == FALSE)
-        itrans_2(curMb, (sColorPlane) curSlice->colour_plane_id);// transform new intra DC
+        itrans_2(curMb, (eColorPlane) curSlice->colour_plane_id);// transform new intra DC
     }
   }
 
@@ -1930,19 +1918,17 @@ static void read_CBP_and_coeffs_from_NAL_CAVLC_420 (sMacroblock* curMb)
 //}}}
 
 //{{{
-void set_read_comp_coeff_cavlc (sMacroblock* curMb)
-{
-  if (curMb->is_lossless == FALSE)
-  {
+void set_read_comp_coeff_cavlc (sMacroblock* curMb) {
+
+  if (curMb->is_lossless == FALSE) {
     curMb->read_comp_coeff_4x4_CAVLC = read_comp_coeff_4x4_CAVLC;
     curMb->read_comp_coeff_8x8_CAVLC = read_comp_coeff_8x8_CAVLC;
-  }
-  else
-  {
+    }
+  else {
     curMb->read_comp_coeff_4x4_CAVLC = read_comp_coeff_4x4_CAVLC_ls;
     curMb->read_comp_coeff_8x8_CAVLC = read_comp_coeff_8x8_CAVLC_ls;
+    }
   }
-}
 //}}}
 //{{{
 void set_read_CBP_and_coeffs_cavlc (sSlice* curSlice) {

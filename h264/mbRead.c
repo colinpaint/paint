@@ -5,7 +5,7 @@
 #include "elements.h"
 
 #include "block.h"
-#include "mbuffer.h"
+#include "buffer.h"
 #include "macroblock.h"
 #include "fmo.h"
 #include "cabac.h"

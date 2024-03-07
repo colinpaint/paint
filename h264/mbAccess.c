@@ -1,7 +1,7 @@
 //{{{  includes
 #include "global.h"
 
-#include "mbuffer.h"
+#include "buffer.h"
 #include "mbAccess.h"
 //}}}
 

@@ -2,7 +2,7 @@
 #include "global.h"
 #include "memory.h"
 
-#include "mbuffer.h"
+#include "buffer.h"
 #include "image.h"
 #include "mcPrediction.h"
 #include "macroblock.h"
@@ -1779,7 +1779,7 @@ struct ConcealNode * init_node (sPicture* picture, int missingpoc ) {
 *
 ************************************************************************
 */
-void init_lists_for_non_reference_loss (sDPB* dpb, int currSliceType, sPictureStructure currPicStructure)
+void init_lists_for_non_reference_loss (sDPB* dpb, int currSliceType, ePicStructure currPicStructure)
 {
   sVidParam* vidParam = dpb->vidParam;
   sSPS *activeSPS = vidParam->activeSPS;

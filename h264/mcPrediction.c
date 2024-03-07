@@ -4,7 +4,7 @@
 
 #include "block.h"
 #include "mcPrediction.h"
-#include "mbuffer.h"
+#include "buffer.h"
 #include "mbAccess.h"
 #include "macroblock.h"
 //}}}
@@ -1810,7 +1810,7 @@ void intra_cr_decoding (sMacroblock* curMb, int yuv)
           joff = subblk_offset_y[yuv][b8][b4];
           ioff = subblk_offset_x[yuv][b8][b4];
 
-          curMb->itrans_4x4(curMb, (sColorPlane) (uv + 1), ioff, joff);
+          curMb->itrans_4x4(curMb, (eColorPlane) (uv + 1), ioff, joff);
 
           copy_Image_4x4(&curUV[curMb->pix_c_y + joff], &(curSlice->mb_rec[uv + 1][joff]), curMb->pix_c_x + ioff, ioff);
         }
@@ -1825,7 +1825,7 @@ void intra_cr_decoding (sMacroblock* curMb, int yuv)
       {
         for(ioff = 0; ioff < 8;ioff+=4)
         {
-          curMb->itrans_4x4(curMb, (sColorPlane) (uv + 1), ioff, joff);
+          curMb->itrans_4x4(curMb, (eColorPlane) (uv + 1), ioff, joff);
 
           copy_Image_4x4(&curUV[curMb->pix_c_y + joff], &(curSlice->mb_rec[uv + 1][joff]), curMb->pix_c_x + ioff, ioff);
         }
@@ -1982,7 +1982,7 @@ static inline int check_vert_mv (int llimit, int vec1_y,int rlimit)
 }
 //}}}
 //{{{
-static void perform_mc_single_wp (sMacroblock* curMb, sColorPlane pl, sPicture* picture, int pred_dir, int i, int j, int block_size_x, int block_size_y)
+static void perform_mc_single_wp (sMacroblock* curMb, eColorPlane pl, sPicture* picture, int pred_dir, int i, int j, int block_size_x, int block_size_y)
 {
   sVidParam* vidParam = curMb->vidParam;
   sSlice* curSlice = curMb->slice;
@@ -2075,7 +2075,7 @@ static void perform_mc_single_wp (sMacroblock* curMb, sColorPlane pl, sPicture* 
 }
 //}}}
 //{{{
-static void perform_mc_single (sMacroblock* curMb, sColorPlane pl, sPicture* picture, int pred_dir, int i, int j, int block_size_x, int block_size_y)
+static void perform_mc_single (sMacroblock* curMb, eColorPlane pl, sPicture* picture, int pred_dir, int i, int j, int block_size_x, int block_size_y)
 {
   sVidParam* vidParam = curMb->vidParam;
   sSlice* curSlice = curMb->slice;
@@ -2156,7 +2156,7 @@ static void perform_mc_single (sMacroblock* curMb, sColorPlane pl, sPicture* pic
 }
 //}}}
 //{{{
-static void perform_mc_bi_wp (sMacroblock* curMb, sColorPlane pl, sPicture* picture, int i, int j, int block_size_x, int block_size_y)
+static void perform_mc_bi_wp (sMacroblock* curMb, eColorPlane pl, sPicture* picture, int i, int j, int block_size_x, int block_size_y)
 {
   static const int mv_mul = 16;
   int  vec1_x, vec1_y, vec2_x, vec2_y;
@@ -2293,7 +2293,7 @@ static void perform_mc_bi_wp (sMacroblock* curMb, sColorPlane pl, sPicture* pict
 }
 //}}}
 //{{{
-static void perform_mc_bi (sMacroblock* curMb, sColorPlane pl, sPicture* picture, int i, int j, int block_size_x, int block_size_y)
+static void perform_mc_bi (sMacroblock* curMb, eColorPlane pl, sPicture* picture, int i, int j, int block_size_x, int block_size_y)
 {
   static const int mv_mul = 16;
   int vec1_x=0, vec1_y=0, vec2_x=0, vec2_y=0;
@@ -2406,7 +2406,7 @@ static void perform_mc_bi (sMacroblock* curMb, sColorPlane pl, sPicture* picture
 }
 //}}}
 //{{{
-void perform_mc (sMacroblock* curMb, sColorPlane pl, sPicture* picture, int pred_dir, int i, int j, int block_size_x, int block_size_y)
+void perform_mc (sMacroblock* curMb, eColorPlane pl, sPicture* picture, int pred_dir, int i, int j, int block_size_x, int block_size_y)
 {
   sSlice* curSlice = curMb->slice;
   assert (pred_dir<=2);

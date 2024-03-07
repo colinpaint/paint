@@ -1,5 +1,5 @@
 #pragma once
-//{{{  enum sColorPlane
+//{{{  enum eColorPlane
 typedef enum {
   // YUV
   PLANE_Y = 0,  // PLANE_Y
@@ -9,49 +9,44 @@ typedef enum {
   PLANE_G = 0,
   PLANE_B = 1,
   PLANE_R = 2
-} sColorPlane;
+  } eColorPlane;
 //}}}
-//{{{  enum PredList
+//{{{  enum ePredList
 typedef enum {
   LIST_0 = 0,
   LIST_1 = 1,
   BI_PRED = 2,
   BI_PRED_L0 = 3,
   BI_PRED_L1 = 4
-} PredList;
+  } ePredList;
 //}}}
-//{{{  enum ErrorMetric
+//{{{  enum eErrorMetric
 typedef enum {
   ERROR_SAD = 0,
   ERROR_SSE = 1,
   ERROR_SATD = 2,
   ERROR_PSATD = 3
-} ErrorMetric;
+  } eErrorMetric;
 //}}}
-//{{{  enum YuvFormat
+//{{{  enum eYuvFormat
 typedef enum {
   ME_Y_ONLY = 0,
   ME_YUV_FP = 1,
   ME_YUV_FP_SP = 2
-} YuvFormat;
-//}}}
-//{{{  enum DistortionMetric
-typedef enum {
-  DISTORTION_MSE = 0
-} Distortionmetric;
+  } eYuvFormat;
 //}}}
 
 //{{{  enum Data Partitioning Modes
 typedef enum {
   PAR_DP_1,   //!< no data partitioning is supported
   PAR_DP_3    //!< data partitioning with 3 partitions
-} PAR_DP_TYPE;
+  } PAR_DP_TYPE;
 //}}}
 //{{{  enum Output File Types
 typedef enum {
   PAR_OF_ANNEXB,    //!< Annex B byte stream format
   PAR_OF_RTP       //!< RTP packets in outfile
-} PAR_OF_TYPE;
+  } PAR_OF_TYPE;
 //}}}
 //{{{  enum Field Coding Types
 typedef enum {
@@ -59,7 +54,7 @@ typedef enum {
   FIELD_CODING         = 1,
   ADAPTIVE_CODING      = 2,
   FRAME_MB_PAIR_CODING = 3
-} CodingType;
+ } CodingType;
 //}}}
 //{{{  enum definition of H.264 syntax elements
 typedef enum {
@@ -82,41 +77,41 @@ typedef enum {
   SE_BFRAME,
   SE_EOS,
   SE_MAX_ELEMENTS = 20 //!< number of maximum syntax elements
-} SE_type;             // substituting the definitions in elements.h
+  } SE_type;             // substituting the definitions in elements.h
 //}}}
 
-//{{{  enum SliceMode
+//{{{  enum eSliceMode
 typedef enum {
   NO_SLICES,
   FIXED_MB,
   FIXED_RATE,
   CALL_BACK
-} SliceMode;
+  } eSliceMode;
 //}}}
-//{{{  enum symbolMode
+//{{{  enum eSymbolMode
 typedef enum {
   CAVLC,
   CABAC
-} SymbolMode;
+  } eSymbolMode;
 //}}}
-//{{{  enum searchType
+//{{{  enum eSearchType
 typedef enum {
   FULL_SEARCH      = -1,
   FAST_FULL_SEARCH =  0,
   UM_HEX           =  1,
   UM_HEX_SIMPLE    =  2,
   EPZS             =  3
-} SearchType;
+  } eSearchType;
 //}}}
-//{{{  enum pictureStructure
+//{{{  enum ePicStructure
 typedef enum {
   FRAME,
   TOP_FIELD,
   BOTTOM_FIELD
-} sPictureStructure;           //!< New enum for field processing
+  } ePicStructure;
 //}}}
 
-//{{{  enum SliceType
+//{{{  enum eSliceType
 typedef enum {
   P_SLICE = 0,
   B_SLICE = 1,
@@ -124,7 +119,7 @@ typedef enum {
   SP_SLICE = 3,
   SI_SLICE = 4,
   NUM_SLICE_TYPES = 5
-  } SliceType;
+  } eSliceType;
 //}}}
 //{{{  enum Motion Estimation levels
 typedef enum {

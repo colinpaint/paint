@@ -15,7 +15,6 @@
 // *  TYPE_2x2DC      | SE_CHR_DC_INTRA, SE_CHR_DC_INTER
 // *  TYPE_COEFF_C    | SE_CHR_AC_INTRA, SE_CHR_AC_INTER
 // *  TYPE_EOS        | SE_EOS
-
 #define SE_HEADER            0
 #define SE_PTYPE             1
 #define SE_MBTYPE            2

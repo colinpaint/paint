@@ -9,7 +9,7 @@
 //}}}
 
 //{{{
-static void read_comp_coeff_4x4_smb_CABAC (sMacroblock* curMb, sSyntaxElement* currSE, sColorPlane pl, int block_y, int block_x, int start_scan, int64 *cbp_blk)
+static void read_comp_coeff_4x4_smb_CABAC (sMacroblock* curMb, sSyntaxElement* currSE, eColorPlane pl, int block_y, int block_x, int start_scan, int64 *cbp_blk)
 {
   int i,j,k;
   int i0, j0;
@@ -96,7 +96,7 @@ static void read_comp_coeff_4x4_smb_CABAC (sMacroblock* curMb, sSyntaxElement* c
 }
 //}}}
 //{{{
-static void read_comp_coeff_4x4_CABAC (sMacroblock* curMb, sSyntaxElement* currSE, sColorPlane pl, int (*InvLevelScale4x4)[4], int qp_per, int cbp)
+static void read_comp_coeff_4x4_CABAC (sMacroblock* curMb, sSyntaxElement* currSE, eColorPlane pl, int (*InvLevelScale4x4)[4], int qp_per, int cbp)
 {
   sSlice* curSlice = curMb->slice;
   sVidParam* vidParam = curMb->vidParam;
@@ -173,7 +173,7 @@ static void read_comp_coeff_4x4_CABAC (sMacroblock* curMb, sSyntaxElement* currS
 }
 //}}}
 //{{{
-static void read_comp_coeff_4x4_CABAC_ls (sMacroblock* curMb, sSyntaxElement* currSE, sColorPlane pl, int (*InvLevelScale4x4)[4], int qp_per, int cbp)
+static void read_comp_coeff_4x4_CABAC_ls (sMacroblock* curMb, sSyntaxElement* currSE, eColorPlane pl, int (*InvLevelScale4x4)[4], int qp_per, int cbp)
 {
   sVidParam* vidParam = curMb->vidParam;
   int start_scan = IS_I16MB (curMb)? 1 : 0;
@@ -195,7 +195,7 @@ static void read_comp_coeff_4x4_CABAC_ls (sMacroblock* curMb, sSyntaxElement* cu
 //}}}
 
 //{{{
-static void readCompCoeff8x8_CABAC (sMacroblock* curMb, sSyntaxElement* currSE, sColorPlane pl, int b8)
+static void readCompCoeff8x8_CABAC (sMacroblock* curMb, sSyntaxElement* currSE, eColorPlane pl, int b8)
 {
   if (curMb->cbp & (1<<b8))  // are there any coefficients in the current block
   {
@@ -294,7 +294,7 @@ static void readCompCoeff8x8_CABAC (sMacroblock* curMb, sSyntaxElement* currSE, 
 }
 //}}}
 //{{{
-static void readCompCoeff8x8_CABAC_lossless (sMacroblock* curMb, sSyntaxElement* currSE, sColorPlane pl, int b8)
+static void readCompCoeff8x8_CABAC_lossless (sMacroblock* curMb, sSyntaxElement* currSE, eColorPlane pl, int b8)
 {
   if (curMb->cbp & (1<<b8))  // are there any coefficients in the current block
   {
@@ -368,7 +368,7 @@ static void readCompCoeff8x8_CABAC_lossless (sMacroblock* curMb, sSyntaxElement*
 //}}}
 
 //{{{
-static void read_comp_coeff_8x8_MB_CABAC (sMacroblock* curMb, sSyntaxElement* currSE, sColorPlane pl)
+static void read_comp_coeff_8x8_MB_CABAC (sMacroblock* curMb, sSyntaxElement* currSE, eColorPlane pl)
 {
   //======= 8x8 transform size & CABAC ========
   readCompCoeff8x8_CABAC (curMb, currSE, pl, 0);
@@ -378,7 +378,7 @@ static void read_comp_coeff_8x8_MB_CABAC (sMacroblock* curMb, sSyntaxElement* cu
 }
 //}}}
 //{{{
-static void read_comp_coeff_8x8_MB_CABAC_ls (sMacroblock* curMb, sSyntaxElement* currSE, sColorPlane pl)
+static void read_comp_coeff_8x8_MB_CABAC_ls (sMacroblock* curMb, sSyntaxElement* currSE, eColorPlane pl)
 {
   //======= 8x8 transform size & CABAC ========
   readCompCoeff8x8_CABAC_lossless (curMb, currSE, pl, 0);
@@ -560,7 +560,7 @@ static void read_CBP_and_coeffs_from_NAL_CABAC_420 (sMacroblock* curMb)
       }
 
       if(curMb->is_lossless == FALSE)
-        itrans_2(curMb, (sColorPlane) curSlice->colour_plane_id);// transform new intra DC
+        itrans_2(curMb, (eColorPlane) curSlice->colour_plane_id);// transform new intra DC
     }
   }
 
@@ -946,7 +946,7 @@ static void read_CBP_and_coeffs_from_NAL_CABAC_400 (sMacroblock* curMb)
       }
 
       if(curMb->is_lossless == FALSE)
-        itrans_2(curMb, (sColorPlane) curSlice->colour_plane_id);// transform new intra DC
+        itrans_2(curMb, (eColorPlane) curSlice->colour_plane_id);// transform new intra DC
     }
   }
 
@@ -1153,7 +1153,7 @@ static void read_CBP_and_coeffs_from_NAL_CABAC_444 (sMacroblock* curMb)
       }
 
       if(curMb->is_lossless == FALSE)
-        itrans_2(curMb, (sColorPlane) curSlice->colour_plane_id);// transform new intra DC
+        itrans_2(curMb, (eColorPlane) curSlice->colour_plane_id);// transform new intra DC
     }
   }
 
@@ -1235,7 +1235,7 @@ static void read_CBP_and_coeffs_from_NAL_CABAC_444 (sMacroblock* curMb)
 
       if(curMb->is_lossless == FALSE)
       {
-        itrans_2(curMb, (sColorPlane) (uv + 1)); // transform new intra DC
+        itrans_2(curMb, (eColorPlane) (uv + 1)); // transform new intra DC
       }
     } //IS_I16MB
 
@@ -1256,11 +1256,11 @@ static void read_CBP_and_coeffs_from_NAL_CABAC_444 (sMacroblock* curMb)
         if(curMb->luma_transform_size_8x8_flag)
         {
           //======= 8x8 transform size & CABAC ========
-          curMb->read_comp_coeff_8x8_CABAC (curMb, &currSE, (sColorPlane) (PLANE_U + uv));
+          curMb->read_comp_coeff_8x8_CABAC (curMb, &currSE, (eColorPlane) (PLANE_U + uv));
         }
         else //4x4
         {
-          curMb->read_comp_coeff_4x4_CABAC (curMb, &currSE, (sColorPlane) (PLANE_U + uv), InvLevelScale4x4,  qp_per_uv[uv], cbp);
+          curMb->read_comp_coeff_4x4_CABAC (curMb, &currSE, (eColorPlane) (PLANE_U + uv), InvLevelScale4x4,  qp_per_uv[uv], cbp);
         }
       }
     }
@@ -1452,7 +1452,7 @@ static void read_CBP_and_coeffs_from_NAL_CABAC_422 (sMacroblock* curMb)
       }
 
       if(curMb->is_lossless == FALSE)
-        itrans_2(curMb, (sColorPlane) curSlice->colour_plane_id);// transform new intra DC
+        itrans_2(curMb, (eColorPlane) curSlice->colour_plane_id);// transform new intra DC
     }
   }
 
@@ -1726,18 +1726,15 @@ void set_read_CBP_and_coeffs_cabac(sSlice* curSlice)
 //}}}
 
 //{{{
-void set_read_comp_coeff_cabac (sMacroblock* curMb)
-{
-  if (curMb->is_lossless == FALSE)
-  {
+void set_read_comp_coeff_cabac (sMacroblock* curMb) {
+
+  if (curMb->is_lossless == FALSE) {
     curMb->read_comp_coeff_4x4_CABAC = read_comp_coeff_4x4_CABAC;
     curMb->read_comp_coeff_8x8_CABAC = read_comp_coeff_8x8_MB_CABAC;
-  }
-  else
-  {
+    }
+  else {
     curMb->read_comp_coeff_4x4_CABAC = read_comp_coeff_4x4_CABAC_ls;
     curMb->read_comp_coeff_8x8_CABAC = read_comp_coeff_8x8_MB_CABAC_ls;
+    }
   }
-}
-
 //}}}

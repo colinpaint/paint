@@ -17,7 +17,7 @@ typedef struct PicMotionParam {
 //}}}
 //{{{  sPicture
 typedef struct Picture {
-  sPictureStructure structure;
+  ePicStructure structure;
 
   int         poc;
   int         top_poc;
@@ -284,7 +284,7 @@ extern void freeFrameStore (sFrameStore* frameStore);
 extern void unmark_for_reference( sFrameStore* frameStore);
 extern void unmark_for_long_term_reference (sFrameStore* frameStore);
 
-extern sPicture* allocPicture (sVidParam* vidParam, sPictureStructure type, int size_x, int size_y, int size_x_cr, int size_y_cr, int is_output);
+extern sPicture* allocPicture (sVidParam* vidParam, ePicStructure type, int size_x, int size_y, int size_x_cr, int size_y_cr, int is_output);
 extern void freePicture (sPicture* p);
 
 extern void updateRefList (sDPB* dpb);

@@ -1,5 +1,5 @@
 #pragma once
-#include "mbuffer.h"
+#include "buffer.h"
 
 
 extern void calcFrameNum (sVidParam* vidParam, sPicture* p);

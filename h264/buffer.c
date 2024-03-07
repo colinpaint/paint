@@ -7,7 +7,7 @@
 #include "erc.h"
 #include "sliceHeader.h"
 #include "image.h"
-#include "mbuffer.h"
+#include "buffer.h"
 #include "output.h"
 //}}}
 #define MAX_LIST_SIZE 33
@@ -54,7 +54,7 @@ static void dumpDpb (sDPB* dpb) {
   }
 //}}}
 //{{{
-static int is_used_for_reference (sFrameStore* frameStore) {
+static int isReference (sFrameStore* frameStore) {
 
   if (frameStore->is_reference)
     return 1;
@@ -77,7 +77,7 @@ static int is_used_for_reference (sFrameStore* frameStore) {
   }
 //}}}
 //{{{
-static int is_short_term_reference (sFrameStore* frameStore) {
+static int isShortTermReference (sFrameStore* frameStore) {
 
   if (frameStore->is_used == 3) // frame
     if ((frameStore->frame->used_for_reference) && (!frameStore->frame->is_long_term))
@@ -97,7 +97,7 @@ static int is_short_term_reference (sFrameStore* frameStore) {
   }
 //}}}
 //{{{
-static int is_long_term_reference (sFrameStore* frameStore) {
+static int isLongTermReference (sFrameStore* frameStore) {
 
   if (frameStore->is_used == 3) // frame
     if ((frameStore->frame->used_for_reference) && (frameStore->frame->is_long_term))
@@ -137,50 +137,9 @@ static void gen_field_ref_ids (sVidParam* vidParam, sPicture *p) {
   }
 //}}}
 //{{{
-static int output_one_frame_from_dpb (sDPB* dpb) {
-
-  sVidParam* vidParam = dpb->vidParam;
-  int poc, pos;
-
-  // diagnostics
-  if (dpb->used_size < 1)
-    error ("Cannot output frame, DPB empty.",150);
-
-  // find smallest POC
-  get_smallest_poc (dpb, &poc, &pos);
-  if (pos == -1)
-    return 0;
-
-  // call the output function
-  //  printf ("output frame with frame_num #%d, poc %d (dpb. dpb->size=%d, dpb->used_size=%d)\n", dpb->fs[pos]->frame_num, dpb->fs[pos]->frame->poc, dpb->size, dpb->used_size);
-
-  // picture error conceal
-  if (vidParam->concealMode != 0) {
-    if (dpb->last_output_poc == 0)
-      write_lost_ref_after_idr (dpb, pos);
-    write_lost_non_ref_pic (dpb, poc);
-    }
-
-  writeStoredFrame (vidParam, dpb->fs[pos]);
-
-  // picture error conceal
-  if(vidParam->concealMode == 0)
-    if (dpb->last_output_poc >= poc)
-      error ("output POC must be in ascending order", 150);
-
-  dpb->last_output_poc = poc;
-
-  // free frame store and move empty store to end of buffer
-  if (!is_used_for_reference (dpb->fs[pos]))
-    remove_frame_from_dpb (dpb, pos);
-
-  return 1;
-  }
-//}}}
-//{{{
 static void unmark_long_term_field_for_reference_by_frame_idx (
 
-  sDPB* dpb, sPictureStructure structure,
+  sDPB* dpb, ePicStructure structure,
   int long_term_frame_idx, int mark_current, unsigned curr_frame_num, int curr_pic_num) {
 
   sVidParam* vidParam = dpb->vidParam;
@@ -252,6 +211,46 @@ static int get_pic_num_x (sPicture* p, int difference_of_pic_nums_minus1) {
     currPicNum = 2 * p->frame_num + 1;
 
   return currPicNum - (difference_of_pic_nums_minus1 + 1);
+  }
+//}}}
+//{{{
+static int outputDpbFrame (sDPB* dpb) {
+
+  // diagnostics
+  if (dpb->used_size < 1)
+    error ("Cannot output frame, DPB empty.",150);
+
+  // find smallest POC
+  int poc, pos;
+  get_smallest_poc (dpb, &poc, &pos);
+  if (pos == -1)
+    return 0;
+
+  // call the output function
+  //  printf ("output frame with frame_num #%d, poc %d (dpb. dpb->size=%d, dpb->used_size=%d)\n", dpb->fs[pos]->frame_num, dpb->fs[pos]->frame->poc, dpb->size, dpb->used_size);
+
+  // picture error conceal
+  sVidParam* vidParam = dpb->vidParam;
+  if (vidParam->concealMode != 0) {
+    if (dpb->last_output_poc == 0)
+      write_lost_ref_after_idr (dpb, pos);
+    write_lost_non_ref_pic (dpb, poc);
+    }
+
+  writeStoredFrame (vidParam, dpb->fs[pos]);
+
+  // picture error conceal
+  if(vidParam->concealMode == 0)
+    if (dpb->last_output_poc >= poc)
+      error ("output POC must be in ascending order", 150);
+
+  dpb->last_output_poc = poc;
+
+  // free frame store and move empty store to end of buffer
+  if (!isReference (dpb->fs[pos]))
+    remove_frame_from_dpb (dpb, pos);
+
+  return 1;
   }
 //}}}
 
@@ -719,7 +718,7 @@ void dpb_combine_field_yuv (sVidParam* vidParam, sFrameStore* frameStore) {
 
 // picture
 //{{{
-sPicture* allocPicture (sVidParam* vidParam, sPictureStructure structure,
+sPicture* allocPicture (sVidParam* vidParam, ePicStructure structure,
                         int size_x, int size_y, int size_x_cr, int size_y_cr, int is_output) {
 
   sSPS* activeSPS = vidParam->activeSPS;
@@ -793,8 +792,8 @@ sPicture* allocPicture (sVidParam* vidParam, sPictureStructure structure,
   s->mb_aff_frame_flag  = 0;
   s->top_poc = s->bottom_poc = s->poc = 0;
 
-  if (!vidParam->activeSPS->frame_mbs_only_flag && structure != FRAME) 
-    for (int j = 0; j < MAX_NUM_SLICES; j++) 
+  if (!vidParam->activeSPS->frame_mbs_only_flag && structure != FRAME)
+    for (int j = 0; j < MAX_NUM_SLICES; j++)
       for (int i = 0; i < 2; i++) {
         s->listX[j][i] = calloc (MAX_LIST_SIZE, sizeof (sPicture*)); // +1 for reordering
         if (NULL == s->listX[j][i])
@@ -1159,7 +1158,7 @@ static sPicture* get_long_term_pic (sSlice* curSlice, sDPB* dpb, int LongtermPic
   }
 //}}}
 //{{{
-static void gen_pic_list_from_frame_list (sPictureStructure currStructure, sFrameStore** fs_list,
+static void gen_pic_list_from_frame_list (ePicStructure currStructure, sFrameStore** fs_list,
                                           int list_idx, sPicture** list, char *list_size, int long_term) {
 
   int top_idx = 0;
@@ -1323,7 +1322,7 @@ void updateRefList (sDPB* dpb) {
 
   unsigned i, j;
   for (i = 0, j = 0; i < dpb->used_size; i++)
-    if (is_short_term_reference (dpb->fs[i]))
+    if (isShortTermReference (dpb->fs[i]))
       dpb->fs_ref[j++]=dpb->fs[i];
 
   dpb->ref_frames_in_buffer = j;
@@ -1337,7 +1336,7 @@ void updateLongTermRefList (sDPB* dpb) {
 
   unsigned i, j;
   for (i = 0, j = 0; i < dpb->used_size; i++)
-    if (is_long_term_reference (dpb->fs[i]))
+    if (isLongTermReference (dpb->fs[i]))
       dpb->fs_ltref[j++] = dpb->fs[i];
 
   dpb->ltref_frames_in_buffer = j;
@@ -1434,7 +1433,7 @@ void mm_assign_long_term_frame_idx (sDPB* dpb, sPicture* p,
     unmark_long_term_frame_for_reference_by_frame_idx (dpb, long_term_frame_idx);
 
   else {
-    sPictureStructure structure = FRAME;
+    ePicStructure structure = FRAME;
     for (unsigned i = 0; i < dpb->ref_frames_in_buffer; i++) {
       if (dpb->fs_ref[i]->is_reference & 1) {
         if (dpb->fs_ref[i]->top_field->pic_num == picNumX) {
@@ -1623,7 +1622,7 @@ void flush_dpb (sDPB* dpb) {
   while (remove_unused_frame_from_dpb (dpb));
 
   // output frames in POC order
-  while (dpb->used_size && output_one_frame_from_dpb (dpb));
+  while (dpb->used_size && outputDpbFrame (dpb));
 
   dpb->last_output_poc = INT_MIN;
   }
@@ -1633,7 +1632,7 @@ int remove_unused_frame_from_dpb (sDPB* dpb) {
 
   // check for frames that were already output and no longer used for reference
   for (uint32 i = 0; i < dpb->used_size; i++) {
-    if (dpb->fs[i]->is_output && (!is_used_for_reference(dpb->fs[i]))) {
+    if (dpb->fs[i]->is_output && (!isReference(dpb->fs[i]))) {
       remove_frame_from_dpb(dpb, i);
       return 1;
       }
@@ -1725,7 +1724,7 @@ void store_picture_in_dpb (sDPB* dpb, sPicture* p) {
       }
 
     // flush a frame
-    output_one_frame_from_dpb (dpb);
+    outputDpbFrame (dpb);
     }
 
   // check for duplicate frame number in short term reference buffer

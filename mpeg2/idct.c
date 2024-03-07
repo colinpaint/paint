@@ -12,10 +12,6 @@
 #define W6 1108 /* 2048*sqrt(2)*cos(6*pi/16) */
 #define W7 565  /* 2048*sqrt(2)*cos(7*pi/16) */
 
-/* global declarations */
-void Initialize_Fast_IDCT _ANSI_ARGS_((void));
-void Fast_IDCT _ANSI_ARGS_((short *block));
-
 /* private data */
 static short iclip[1024]; /* clipping table */
 static short *iclp;

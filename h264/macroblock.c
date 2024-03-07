@@ -5,7 +5,7 @@
 #include "elements.h"
 
 #include "block.h"
-#include "mbuffer.h"
+#include "buffer.h"
 #include "macroblock.h"
 #include "fmo.h"
 #include "cabac.h"
@@ -266,7 +266,7 @@ static void init_motion_vector_prediction (sMacroblock* curMb, int mb_aff_frame_
 //}}}
 
 //{{{
-static int decode_one_component_i_slice (sMacroblock* curMb, sColorPlane curPlane, sPixel** curPixel, sPicture* picture)
+static int decode_one_component_i_slice (sMacroblock* curMb, eColorPlane curPlane, sPixel** curPixel, sPicture* picture)
 {
   //For residual DPCM
   curMb->ipmode_DPCM = NO_INTRA_PMODE;
@@ -283,7 +283,7 @@ static int decode_one_component_i_slice (sMacroblock* curMb, sColorPlane curPlan
 }
 //}}}
 //{{{
-static int decode_one_component_p_slice (sMacroblock* curMb, sColorPlane curPlane, sPixel** curPixel, sPicture* picture)
+static int decode_one_component_p_slice (sMacroblock* curMb, eColorPlane curPlane, sPixel** curPixel, sPicture* picture)
 {
   //For residual DPCM
   curMb->ipmode_DPCM = NO_INTRA_PMODE;
@@ -310,7 +310,7 @@ static int decode_one_component_p_slice (sMacroblock* curMb, sColorPlane curPlan
 }
 //}}}
 //{{{
-static int decode_one_component_sp_slice (sMacroblock* curMb, sColorPlane curPlane, sPixel** curPixel, sPicture* picture)
+static int decode_one_component_sp_slice (sMacroblock* curMb, eColorPlane curPlane, sPixel** curPixel, sPicture* picture)
 {
   //For residual DPCM
   curMb->ipmode_DPCM = NO_INTRA_PMODE;
@@ -338,7 +338,7 @@ static int decode_one_component_sp_slice (sMacroblock* curMb, sColorPlane curPla
 }
 //}}}
 //{{{
-static int decode_one_component_b_slice (sMacroblock* curMb, sColorPlane curPlane, sPixel** curPixel, sPicture* picture)
+static int decode_one_component_b_slice (sMacroblock* curMb, eColorPlane curPlane, sPixel** curPixel, sPicture* picture)
 {
   //For residual DPCM
   curMb->ipmode_DPCM = NO_INTRA_PMODE;
