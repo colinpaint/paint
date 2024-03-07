@@ -1730,7 +1730,7 @@ void readSliceHeader (sSlice* curSlice) {
 void readRestSliceHeader (sSlice* curSlice) {
 
   sVidParam* vidParam = curSlice->vidParam;
-  sInputParam* p_Inp = curSlice->inputParam;
+  sInputParam* inputParam = curSlice->inputParam;
   sSPS* active_sps = vidParam->active_sps;
 
   byte dP_nr = assignSE2partition[curSlice->dp_mode][SE_HEADER];
@@ -1888,7 +1888,7 @@ void readRestSliceHeader (sSlice* curSlice) {
   // The conformance point for intra profiles is without deblocking, but decoders are still recommended to filter the output.
   // We allow in the decoder config to skip the loop filtering. This is achieved by modifying the parameters here.
   if (is_HI_intra_only_profile (active_sps->profile_idc, active_sps->constrained_set3_flag) &&
-      (p_Inp->intra_profile_deblocking == 0)) {
+      (inputParam->intra_profile_deblocking == 0)) {
     curSlice->DFDisableIdc =1;
     curSlice->DFAlphaC0Offset = curSlice->DFBetaOffset = 0;
     }

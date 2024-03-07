@@ -473,7 +473,7 @@ static void dpb_combine_field (sVidParam* vidParam, sFrameStore* frameStore) {
 //{{{
 static void insert_picture_in_dpb (sVidParam* vidParam, sFrameStore* fs, sPicture* p) {
 
-  sInputParam* p_Inp = vidParam->inputParam;
+  sInputParam* inputParam = vidParam->inputParam;
   //  printf ("insert (%s) pic with frame_num #%d, poc %d\n",
   //          (p->structure == FRAME)?"FRAME":(p->structure == TOP_FIELD)?"TOP_FIELD":"BOTTOM_FIELD",
   //          p->pic_num, p->poc);
@@ -2419,10 +2419,10 @@ void fill_frame_num_gap (sVidParam* vidParam, sSlice* curSlice) {
 //{{{
 int initImage (sVidParam* vidParam, sImage* image, sSPS* sps) {
 
-  sInputParam* p_Inp = vidParam->inputParam;
+  sInputParam* inputParam = vidParam->inputParam;
 
   // allocate memory for reference frame buffers: image->frm_data
-  image->format = p_Inp->output;
+  image->format = inputParam->output;
   image->format.width[0]  = vidParam->width;
   image->format.width[1]  = vidParam->width_cr;
   image->format.width[2]  = vidParam->width_cr;
@@ -2430,10 +2430,10 @@ int initImage (sVidParam* vidParam, sImage* image, sSPS* sps) {
   image->format.height[1] = vidParam->height_cr;
   image->format.height[2] = vidParam->height_cr;
   image->format.yuv_format  = (ColorFormat) sps->chroma_format_idc;
-  image->format.auto_crop_bottom = p_Inp->output.auto_crop_bottom;
-  image->format.auto_crop_right = p_Inp->output.auto_crop_right;
-  image->format.auto_crop_bottom_cr = p_Inp->output.auto_crop_bottom_cr;
-  image->format.auto_crop_right_cr = p_Inp->output.auto_crop_right_cr;
+  image->format.auto_crop_bottom = inputParam->output.auto_crop_bottom;
+  image->format.auto_crop_right = inputParam->output.auto_crop_right;
+  image->format.auto_crop_bottom_cr = inputParam->output.auto_crop_bottom_cr;
+  image->format.auto_crop_right_cr = inputParam->output.auto_crop_right_cr;
   image->frm_stride[0] = vidParam->width;
   image->frm_stride[1] = image->frm_stride[2] = vidParam->width_cr;
   image->top_stride[0] = image->bot_stride[0] = image->frm_stride[0] << 1;

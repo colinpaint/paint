@@ -353,7 +353,7 @@ static int NALUtoRBSP (sNalu* nalu) {
 //{{{
 int readNextNalu (sVidParam* vidParam, sNalu* nalu) {
 
-  sInputParam* p_Inp = vidParam->inputParam;
+  sInputParam* inputParam = vidParam->inputParam;
 
   int ret = getNALU (vidParam->annex_b, vidParam, nalu);
   if (ret < 0) {

@@ -125,7 +125,7 @@ typedef struct frameStore {
 //! Decoded Picture Buffer
 typedef struct decoded_picture_buffer {
   sVidParam* vidParam;
-  sInputParam* p_Inp;
+  sInputParam* inputParam;
 
   sFrameStore** fs;
   sFrameStore** fs_ref;

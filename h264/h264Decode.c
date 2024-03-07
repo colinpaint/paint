@@ -87,8 +87,8 @@ static void alloc_VidParamams (sVidParam** vidParam) {
 }
 //}}}
 //{{{
-static void alloc_params (sInputParam** p_Inp ) {
-  *p_Inp = (sInputParam*)calloc (1, sizeof(sInputParam));
+static void alloc_params (sInputParam** inputParam ) {
+  *inputParam = (sInputParam*)calloc (1, sizeof(sInputParam));
   }
 //}}}
 //{{{
@@ -103,7 +103,7 @@ static int alloc_decoder (sDecoderParam** decoder) {
 //}}}
 
 //{{{
-sSlice* malloc_slice (sInputParam* p_Inp, sVidParam* vidParam) {
+sSlice* malloc_slice (sInputParam* inputParam, sVidParam* vidParam) {
 
   sSlice* curSlice = (sSlice*)calloc (1, sizeof(sSlice));
   if (!curSlice) {
@@ -250,14 +250,14 @@ static void freeImg (sVidParam* vidParam) {
 //{{{
 static void init (sVidParam* vidParam) {
 
-  sInputParam *p_Inp = vidParam->inputParam;
+  sInputParam *inputParam = vidParam->inputParam;
   vidParam->oldFrameSizeInMbs = (unsigned int) -1;
 
   vidParam->recovery_point = 0;
   vidParam->recovery_point_found = 0;
   vidParam->recovery_poc = 0x7fffffff; /* set to a max value */
 
-  vidParam->idr_psnr_number = p_Inp->ref_offset;
+  vidParam->idr_psnr_number = inputParam->ref_offset;
   vidParam->psnr_number=0;
 
   vidParam->number = 0;
@@ -647,7 +647,7 @@ void setGlobalCodingProgram (sVidParam* vidParam, sCodingParam* cps) {
 //}}}
 
 //{{{
-int OpenDecoder (sInputParam* p_Inp, byte* chunk, size_t chunkSize) {
+int OpenDecoder (sInputParam* inputParam, byte* chunk, size_t chunkSize) {
 
   int iRet = alloc_decoder (&gDecoder);
   if (iRet)
@@ -655,10 +655,10 @@ int OpenDecoder (sInputParam* p_Inp, byte* chunk, size_t chunkSize) {
 
   init_time();
 
-  memcpy (gDecoder->inputParam, p_Inp, sizeof(sInputParam));
-  gDecoder->vidParam->conceal_mode = p_Inp->conceal_mode;
-  gDecoder->vidParam->ref_poc_gap = p_Inp->ref_poc_gap;
-  gDecoder->vidParam->poc_gap = p_Inp->poc_gap;
+  memcpy (gDecoder->inputParam, inputParam, sizeof(sInputParam));
+  gDecoder->vidParam->conceal_mode = inputParam->conceal_mode;
+  gDecoder->vidParam->ref_poc_gap = inputParam->ref_poc_gap;
+  gDecoder->vidParam->poc_gap = inputParam->poc_gap;
   gDecoder->vidParam->annex_b = allocAnnexB (gDecoder->vidParam);
   openAnnexB (gDecoder->vidParam->annex_b, chunk, chunkSize);
 

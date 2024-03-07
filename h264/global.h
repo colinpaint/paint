@@ -145,7 +145,7 @@ typedef struct DecRefPicMarking {
   int long_term_pic_num;
   int long_term_frame_idx;
   int max_long_term_frame_idx_plus1;
-  struct DecRefPicMarking *Next;
+  struct DecRefPicMarking* Next;
   } sDecRefPicMarking;
 //}}}
 //{{{
@@ -831,7 +831,7 @@ typedef struct VidParam {
   unsigned int oldFrameSizeInMbs;
 
   // maximum vertical motion vector range in luma quarter frame pixel units for the current level_idc
-  int max_vmv_r;  
+  int max_vmv_r;
   } sVidParam;
 //}}}
 //{{{
@@ -874,9 +874,9 @@ static inline int is_BL_profile (unsigned int profile_idc) {
 
   extern void error (char* text, int code);
 
-  extern void initGlobalBuffers (sVidParam *vidParam, int layer_id );
-  extern void freeGlobalBuffers (sVidParam *vidParam);
-  extern void freeLayerBuffers (sVidParam *vidParam, int layer_id );
+  extern void initGlobalBuffers (sVidParam* vidParam, int layer_id);
+  extern void freeGlobalBuffers (sVidParam* vidParam);
+  extern void freeLayerBuffers (sVidParam* vidParam, int layer_id);
 
   extern sDataPartition* allocPartition (int n);
   extern void freePartition (sDataPartition* dp, int n);
@@ -885,18 +885,18 @@ static inline int is_BL_profile (unsigned int profile_idc) {
   extern unsigned ceilLog2_sf (unsigned uiVal);
 
   // For 4:4:4 independent mode
-  extern void change_plane_JV (sVidParam *vidParam, int nplane, sSlice *pSlice);
-  extern void make_frame_picture_JV (sVidParam *vidParam );
+  extern void change_plane_JV (sVidParam* vidParam, int nplane, sSlice *pSlice);
+  extern void make_frame_picture_JV (sVidParam* vidParam );
 
-  extern sDecodedPicList* get_one_avail_dec_pic_from_list (sDecodedPicList *pDecPicList, int b3D, int view_id);
-  extern void freeDecPicList (sDecodedPicList *pDecPicList );
-  extern void clearDecPicList (sVidParam *vidParam );
+  extern sDecodedPicList* get_one_avail_dec_pic_from_list (sDecodedPicList* pDecPicList, int b3D, int view_id);
+  extern void freeDecPicList (sDecodedPicList* pDecPicList );
+  extern void clearDecPicList (sVidParam* vidParam );
 
-  extern sSlice* malloc_slice (sInputParam *p_Inp, sVidParam *vidParam );
-  extern void copy_slice_info (sSlice* curSlice, sOldSliceParam *p_old_slice );
+  extern sSlice* malloc_slice (sInputParam* inputParam, sVidParam* vidParam);
+  extern void copy_slice_info (sSlice* curSlice, sOldSliceParam* oldSliceParam);
 
-  extern void setGlobalCodingProgram (sVidParam *vidParam, sCodingParam *cps);
-  extern void OpenOutputFiles (sVidParam *vidParam, int view0_id, int view1_id);
+  extern void setGlobalCodingProgram (sVidParam* vidParam, sCodingParam* cps);
+  extern void OpenOutputFiles (sVidParam* vidParam, int view0_id, int view1_id);
 //{{{
 #ifdef __cplusplus
 }

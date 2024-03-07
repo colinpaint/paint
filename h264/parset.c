@@ -207,8 +207,8 @@ static void resetFormatInfo (sSPS* sps, sVidParam* vidParam, sFrameFormat* sourc
   else
     crop_left = crop_right = crop_top = crop_bottom = 0;
 
-  sInputParam* p_Inp = vidParam->inputParam;
-  if ((sps->chroma_format_idc == YUV400) && p_Inp->write_uv) {
+  sInputParam* inputParam = vidParam->inputParam;
+  if ((sps->chroma_format_idc == YUV400) && inputParam->write_uv) {
     source->width[1] = (source->width[0] >> 1);
     source->width[2] = source->width[1];
     source->height[1] = (source->height[0] >> 1);
@@ -767,7 +767,7 @@ void processSPS (sVidParam* vidParam, sNalu* nalu) {
 //{{{
 void activateSPS (sVidParam* vidParam, sSPS* sps) {
 
-  sInputParam* p_Inp = vidParam->inputParam;
+  sInputParam* inputParam = vidParam->inputParam;
 
   if (vidParam->active_sps != sps) {
     if (vidParam->picture) // this may only happen on slice loss
@@ -794,7 +794,7 @@ void activateSPS (sVidParam* vidParam, sSPS* sps) {
       }
     }
 
-  resetFormatInfo (sps, vidParam, &p_Inp->source, &p_Inp->output);
+  resetFormatInfo (sps, vidParam, &inputParam->source, &inputParam->output);
   }
 //}}}
 
@@ -1094,7 +1094,7 @@ void useParameterSet (sSlice* curSlice) {
 
   // In theory, and with a well-designed software, the lines above are everything necessary.
   // In practice, we need to patch many values
-  // in vidParam-> (but no more in p_Inp-> -- these have been taken care of)
+  // in vidParam-> (but no more in inputParam-> -- these have been taken care of)
   // Set Sequence Parameter Stuff first
   if ((int) sps->pic_order_cnt_type < 0 || sps->pic_order_cnt_type > 2) {
     printf ("invalid sps->pic_order_cnt_type = %d\n", (int) sps->pic_order_cnt_type);
