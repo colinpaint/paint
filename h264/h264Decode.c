@@ -121,7 +121,7 @@ sSlice* allocSlice (sInputParam* inputParam, sVidParam* vidParam) {
   get_mem3Dpel (&(curSlice->mb_rec), MAX_PLANE, MB_BLOCK_SIZE, MB_BLOCK_SIZE);
   get_mem3Dint (&(curSlice->mb_rres), MAX_PLANE, MB_BLOCK_SIZE, MB_BLOCK_SIZE);
   get_mem3Dint (&(curSlice->cof), MAX_PLANE, MB_BLOCK_SIZE, MB_BLOCK_SIZE);
-  allocate_pred_mem (curSlice);
+  allocPred (curSlice);
 
   // reference flag initialization
   for (int i = 0; i < 17; ++i)
@@ -143,12 +143,12 @@ sSlice* allocSlice (sInputParam* inputParam, sVidParam* vidParam) {
   }
 //}}}
 //{{{
-static void free_slice (sSlice *curSlice) {
+static void freeSlice (sSlice *curSlice) {
 
   if (curSlice->slice_type != I_SLICE && curSlice->slice_type != SI_SLICE)
     free_ref_pic_list_reordering_buffer (curSlice);
 
-  free_pred_mem (curSlice);
+  freePred (curSlice);
   free_mem3Dint (curSlice->cof);
   free_mem3Dint (curSlice->mb_rres);
   free_mem3Dpel (curSlice->mb_rec);
@@ -213,14 +213,14 @@ static void freeImg (sVidParam* vidParam) {
       }
 
     if (vidParam->nextSlice) {
-      free_slice (vidParam->nextSlice);
+      freeSlice (vidParam->nextSlice);
       vidParam->nextSlice=NULL;
       }
 
     if (vidParam->sliceList) {
       for (int i = 0; i < vidParam->numSlicesAllocated; i++)
         if (vidParam->sliceList[i])
-          free_slice (vidParam->sliceList[i]);
+          freeSlice (vidParam->sliceList[i]);
       free (vidParam->sliceList);
       }
 
