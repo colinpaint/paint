@@ -4,7 +4,7 @@
 
 #include "buffer.h"
 #include "image.h"
-#include "mcPrediction.h"
+#include "mcPred.h"
 #include "macroblock.h"
 #include "erc.h"
 //}}}

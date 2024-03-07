@@ -19,7 +19,7 @@
 #include "errorConceal.h"
 #include "erc.h"
 #include "buffer.h"
-#include "mcPrediction.h"
+#include "mcPred.h"
 
 #include <math.h>
 #include <limits.h>
