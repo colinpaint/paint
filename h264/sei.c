@@ -494,13 +494,13 @@ static void interpret_reserved_info (byte* payload, int size, sVidParam* vidPara
 //{{{
 static void interpret_picture_timing_info (byte* payload, int size, sVidParam* vidParam ) {
 
-  sSPS *active_sps = vidParam->active_sps;
+  sSPS *activeSPS = vidParam->activeSPS;
 
   int cpb_removal_len = 24;
   int dpb_output_len  = 24;
   Boolean CpbDpbDelaysPresentFlag;
 
-  if (NULL == active_sps) {
+  if (NULL == activeSPS) {
     fprintf (stderr, "Warning: no active SPS, timing SEI cannot be parsed\n");
     return;
     }
@@ -514,24 +514,24 @@ static void interpret_picture_timing_info (byte* payload, int size, sVidParam* v
     printf ("SEI Picture timing\n");
 
   // CpbDpbDelaysPresentFlag can also be set "by some means not specified in this Recommendation | International Standard"
-  CpbDpbDelaysPresentFlag = (Boolean)(active_sps->vui_parameters_present_flag
-                              && (   (active_sps->vui_seq_parameters.nal_hrd_parameters_present_flag != 0)
-                                   ||(active_sps->vui_seq_parameters.vcl_hrd_parameters_present_flag != 0)));
+  CpbDpbDelaysPresentFlag = (Boolean)(activeSPS->vui_parameters_present_flag
+                              && (   (activeSPS->vui_seq_parameters.nal_hrd_parameters_present_flag != 0)
+                                   ||(activeSPS->vui_seq_parameters.vcl_hrd_parameters_present_flag != 0)));
 
   if (CpbDpbDelaysPresentFlag ) {
-    if (active_sps->vui_parameters_present_flag) {
-      if (active_sps->vui_seq_parameters.nal_hrd_parameters_present_flag) {
-        cpb_removal_len = active_sps->vui_seq_parameters.nal_hrd_parameters.cpb_removal_delay_length_minus1 + 1;
-        dpb_output_len  = active_sps->vui_seq_parameters.nal_hrd_parameters.dpb_output_delay_length_minus1  + 1;
+    if (activeSPS->vui_parameters_present_flag) {
+      if (activeSPS->vui_seq_parameters.nal_hrd_parameters_present_flag) {
+        cpb_removal_len = activeSPS->vui_seq_parameters.nal_hrd_parameters.cpb_removal_delay_length_minus1 + 1;
+        dpb_output_len  = activeSPS->vui_seq_parameters.nal_hrd_parameters.dpb_output_delay_length_minus1  + 1;
         }
-      else if (active_sps->vui_seq_parameters.vcl_hrd_parameters_present_flag) {
-        cpb_removal_len = active_sps->vui_seq_parameters.vcl_hrd_parameters.cpb_removal_delay_length_minus1 + 1;
-        dpb_output_len = active_sps->vui_seq_parameters.vcl_hrd_parameters.dpb_output_delay_length_minus1  + 1;
+      else if (activeSPS->vui_seq_parameters.vcl_hrd_parameters_present_flag) {
+        cpb_removal_len = activeSPS->vui_seq_parameters.vcl_hrd_parameters.cpb_removal_delay_length_minus1 + 1;
+        dpb_output_len = activeSPS->vui_seq_parameters.vcl_hrd_parameters.dpb_output_delay_length_minus1  + 1;
         }
       }
 
-    if ((active_sps->vui_seq_parameters.nal_hrd_parameters_present_flag)||
-        (active_sps->vui_seq_parameters.vcl_hrd_parameters_present_flag)) {
+    if ((activeSPS->vui_seq_parameters.nal_hrd_parameters_present_flag)||
+        (activeSPS->vui_seq_parameters.vcl_hrd_parameters_present_flag)) {
       int cpb_removal_delay, dpb_output_delay;
       cpb_removal_delay = read_u_v(cpb_removal_len, "SEI cpb_removal_delay" , buf);
       dpb_output_delay = read_u_v(dpb_output_len,  "SEI dpb_output_delay"  , buf);
@@ -543,10 +543,10 @@ static void interpret_picture_timing_info (byte* payload, int size, sVidParam* v
     }
 
   int pic_struct_present_flag, pic_struct;
-  if (!active_sps->vui_parameters_present_flag)
+  if (!activeSPS->vui_parameters_present_flag)
     pic_struct_present_flag = 0;
   else
-    pic_struct_present_flag = active_sps->vui_seq_parameters.pic_struct_present_flag;
+    pic_struct_present_flag = activeSPS->vui_seq_parameters.pic_struct_present_flag;
 
   int NumClockTs = 0;
   if (pic_struct_present_flag) {
@@ -631,10 +631,10 @@ static void interpret_picture_timing_info (byte* payload, int size, sVidParam* v
 
           int time_offset_length;
           int time_offset;
-          if (active_sps->vui_seq_parameters.vcl_hrd_parameters_present_flag)
-            time_offset_length = active_sps->vui_seq_parameters.vcl_hrd_parameters.time_offset_length;
-          else if (active_sps->vui_seq_parameters.nal_hrd_parameters_present_flag)
-            time_offset_length = active_sps->vui_seq_parameters.nal_hrd_parameters.time_offset_length;
+          if (activeSPS->vui_seq_parameters.vcl_hrd_parameters_present_flag)
+            time_offset_length = activeSPS->vui_seq_parameters.vcl_hrd_parameters.time_offset_length;
+          else if (activeSPS->vui_seq_parameters.nal_hrd_parameters_present_flag)
+            time_offset_length = activeSPS->vui_seq_parameters.nal_hrd_parameters.time_offset_length;
           else
             time_offset_length = 24;
           if (time_offset_length)
@@ -722,7 +722,7 @@ static void interpret_dec_ref_pic_marking_repetition_info (byte* payload, int si
   original_frame_num = read_ue_v ("SEI original_frame_num", buf);
 
   int original_bottom_field_flag = 0;
-  if (!vidParam->active_sps->frame_mbs_only_flag) {
+  if (!vidParam->activeSPS->frame_mbs_only_flag) {
     original_field_pic_flag = read_u_1 ("SEI original_field_pic_flag", buf);
     if (original_field_pic_flag)
       original_bottom_field_flag = read_u_1 ("SEI original_bottom_field_flag", buf);
@@ -733,19 +733,19 @@ static void interpret_dec_ref_pic_marking_repetition_info (byte* payload, int si
   printf ("original_frame_num = %d\n", original_frame_num);
 
   // we need to save everything that is probably overwritten in dec_ref_pic_marking()
-  old_drpm = pSlice->dec_ref_pic_marking_buffer;
-  old_idr_flag = pSlice->idr_flag;
+  old_drpm = pSlice->decRefPicMarkingBuffer;
+  old_idr_flag = pSlice->idrFlag;
 
   old_no_output_of_prior_pics_flag = pSlice->no_output_of_prior_pics_flag; //vidParam->no_output_of_prior_pics_flag;
   old_long_term_reference_flag = pSlice->long_term_reference_flag;
   old_adaptive_ref_pic_buffering_flag = pSlice->adaptive_ref_pic_buffering_flag;
 
   // set new initial values
-  pSlice->idr_flag = original_idr_flag;
-  pSlice->dec_ref_pic_marking_buffer = NULL;
+  pSlice->idrFlag = original_idr_flag;
+  pSlice->decRefPicMarkingBuffer = NULL;
   dec_ref_pic_marking (vidParam, buf, pSlice);
   //{{{  print out decoded values
-  //if (vidParam->idr_flag)
+  //if (vidParam->idrFlag)
   //{
     //printf("no_output_of_prior_pics_flag = %d\n", vidParam->no_output_of_prior_pics_flag);
     //printf("long_term_reference_flag     = %d\n", vidParam->long_term_reference_flag);
@@ -755,7 +755,7 @@ static void interpret_dec_ref_pic_marking_repetition_info (byte* payload, int si
     //printf("adaptive_ref_pic_buffering_flag  = %d\n", vidParam->adaptive_ref_pic_buffering_flag);
     //if (vidParam->adaptive_ref_pic_buffering_flag)
     //{
-      //tmp_drpm=vidParam->dec_ref_pic_marking_buffer;
+      //tmp_drpm=vidParam->decRefPicMarkingBuffer;
       //while (tmp_drpm != NULL)
       //{
         //printf("memory_management_control_operation  = %d\n", tmp_drpm->memory_management_control_operation);
@@ -782,15 +782,15 @@ static void interpret_dec_ref_pic_marking_repetition_info (byte* payload, int si
   //}
   //}}}
 
-  while (pSlice->dec_ref_pic_marking_buffer) {
-    tmp_drpm = pSlice->dec_ref_pic_marking_buffer;
-    pSlice->dec_ref_pic_marking_buffer = tmp_drpm->next;
+  while (pSlice->decRefPicMarkingBuffer) {
+    tmp_drpm = pSlice->decRefPicMarkingBuffer;
+    pSlice->decRefPicMarkingBuffer = tmp_drpm->next;
     free (tmp_drpm);
     }
 
   // restore old values in vidParam
-  pSlice->dec_ref_pic_marking_buffer = old_drpm;
-  pSlice->idr_flag = old_idr_flag;
+  pSlice->decRefPicMarkingBuffer = old_drpm;
+  pSlice->idrFlag = old_idr_flag;
   pSlice->no_output_of_prior_pics_flag = old_no_output_of_prior_pics_flag;
   vidParam->no_output_of_prior_pics_flag = pSlice->no_output_of_prior_pics_flag;
   pSlice->long_term_reference_flag = old_long_term_reference_flag;

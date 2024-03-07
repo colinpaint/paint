@@ -40,51 +40,51 @@ static void update_direct_mv_info_temporal (sMacroblock* curMb) {
             int ref_idx;
             int mapped_idx = -1, iref;
 
-            sPicMotionParam* colocated = vidParam->active_sps->direct_8x8_inference_flag ?
+            sPicMotionParam* colocated = vidParam->activeSPS->direct_8x8_inference_flag ?
                                            &list1[0]->mv_info[RSD(curMb->block_y_aff + j0)][RSD(i0)] :
                                            &list1[0]->mv_info[curMb->block_y_aff + j0][i0];
 
             if (curSlice->mb_aff_frame_flag) {
               //{{{
-              assert (vidParam->active_sps->direct_8x8_inference_flag);
+              assert (vidParam->activeSPS->direct_8x8_inference_flag);
               if (!curMb->mb_field && ((curSlice->listX[LIST_1][0]->iCodingType==FRAME_MB_PAIR_CODING && curSlice->listX[LIST_1][0]->motion.mb_field[curMb->mbAddrX]) ||
                 (curSlice->listX[LIST_1][0]->iCodingType==FIELD_CODING))) {
                 if (iabs(picture->poc - curSlice->listX[LIST_1+4][0]->poc)> iabs(picture->poc -curSlice->listX[LIST_1+2][0]->poc) )
-                  colocated = vidParam->active_sps->direct_8x8_inference_flag ?
+                  colocated = vidParam->activeSPS->direct_8x8_inference_flag ?
                     &curSlice->listX[LIST_1+2][0]->mv_info[RSD(curMb->block_y_aff + j0)>>1][RSD(i0)] :
                     &curSlice->listX[LIST_1+2][0]->mv_info[(curMb->block_y_aff + j0)>>1][i0];
                 else
-                  colocated = vidParam->active_sps->direct_8x8_inference_flag ?
+                  colocated = vidParam->activeSPS->direct_8x8_inference_flag ?
                     &curSlice->listX[LIST_1+4][0]->mv_info[RSD(curMb->block_y_aff + j0)>>1][RSD(i0)] :
                     &curSlice->listX[LIST_1+4][0]->mv_info[(curMb->block_y_aff + j0)>>1][i0];
                 }
               }
               //}}}
-            else if (!vidParam->active_sps->frame_mbs_only_flag &&
+            else if (!vidParam->activeSPS->frame_mbs_only_flag &&
                      !curSlice->field_pic_flag &&
                      curSlice->listX[LIST_1][0]->iCodingType != FRAME_CODING) {
               //{{{
               if (iabs(picture->poc - list1[0]->bottom_field->poc) > iabs(picture->poc -list1[0]->top_field->poc) )
-                colocated = vidParam->active_sps->direct_8x8_inference_flag ?
+                colocated = vidParam->activeSPS->direct_8x8_inference_flag ?
                   &list1[0]->top_field->mv_info[RSD(curMb->block_y_aff + j0)>>1][RSD(i0)] :
                   &list1[0]->top_field->mv_info[(curMb->block_y_aff + j0)>>1][i0];
               else
-                colocated = vidParam->active_sps->direct_8x8_inference_flag ?
+                colocated = vidParam->activeSPS->direct_8x8_inference_flag ?
                   &list1[0]->bottom_field->mv_info[RSD(curMb->block_y_aff + j0)>>1][RSD(i0)] :
                   &list1[0]->bottom_field->mv_info[(curMb->block_y_aff + j0)>>1][i0];
               }
               //}}}
-            else if (!vidParam->active_sps->frame_mbs_only_flag &&
+            else if (!vidParam->activeSPS->frame_mbs_only_flag &&
                      curSlice->field_pic_flag &&
                      curSlice->structure != list1[0]->structure &&
                      list1[0]->coded_frame) {
               //{{{
               if (curSlice->structure == TOP_FIELD)
-                colocated = vidParam->active_sps->direct_8x8_inference_flag ?
+                colocated = vidParam->activeSPS->direct_8x8_inference_flag ?
                   &list1[0]->frame->top_field->mv_info[RSD(curMb->block_y_aff + j0)][RSD(i0)] :
                   &list1[0]->frame->top_field->mv_info[curMb->block_y_aff + j0][i0];
               else
-                colocated = vidParam->active_sps->direct_8x8_inference_flag ?
+                colocated = vidParam->activeSPS->direct_8x8_inference_flag ?
                   &list1[0]->frame->bottom_field->mv_info[RSD(curMb->block_y_aff + j0)][RSD(i0)] :
                   &list1[0]->frame->bottom_field->mv_info[curMb->block_y_aff + j0][i0];
               }
@@ -154,7 +154,7 @@ static void update_direct_mv_info_temporal (sMacroblock* curMb) {
                   j6 = curMb->block_y_aff + j;
 
                   for (i4 = i0; i4 < i0 + step_h0; ++i4) {
-                    sPicMotionParam* colocated = vidParam->active_sps->direct_8x8_inference_flag ?
+                    sPicMotionParam* colocated = vidParam->activeSPS->direct_8x8_inference_flag ?
                       &list1[0]->mv_info[RSD(j6)][RSD(i4)] :
                       &list1[0]->mv_info[j6][i4];
                     sPicMotionParam* mv_info = &picture->mv_info[j4][i4];
@@ -163,36 +163,36 @@ static void update_direct_mv_info_temporal (sMacroblock* curMb) {
                       if (!curMb->mb_field && ((curSlice->listX[LIST_1][0]->iCodingType==FRAME_MB_PAIR_CODING && curSlice->listX[LIST_1][0]->motion.mb_field[curMb->mbAddrX]) ||
                           (curSlice->listX[LIST_1][0]->iCodingType==FIELD_CODING))) {
                         if (iabs(picture->poc - curSlice->listX[LIST_1+4][0]->poc)> iabs(picture->poc -curSlice->listX[LIST_1+2][0]->poc) )
-                          colocated = vidParam->active_sps->direct_8x8_inference_flag ?
+                          colocated = vidParam->activeSPS->direct_8x8_inference_flag ?
                             &curSlice->listX[LIST_1+2][0]->mv_info[RSD(j6)>>1][RSD(i4)] :
                             &curSlice->listX[LIST_1+2][0]->mv_info[j6>>1][i4];
                         else
-                          colocated = vidParam->active_sps->direct_8x8_inference_flag ?
+                          colocated = vidParam->activeSPS->direct_8x8_inference_flag ?
                             &curSlice->listX[LIST_1+4][0]->mv_info[RSD(j6)>>1][RSD(i4)] :
                             &curSlice->listX[LIST_1+4][0]->mv_info[j6>>1][i4];
                         }
                       }
-                    else if (!vidParam->active_sps->frame_mbs_only_flag &&
+                    else if (!vidParam->activeSPS->frame_mbs_only_flag &&
                              !curSlice->field_pic_flag &&
                              curSlice->listX[LIST_1][0]->iCodingType!=FRAME_CODING) {
                       if (iabs(picture->poc - list1[0]->bottom_field->poc) > iabs(picture->poc -list1[0]->top_field->poc) )
-                        colocated = vidParam->active_sps->direct_8x8_inference_flag ?
+                        colocated = vidParam->activeSPS->direct_8x8_inference_flag ?
                           &list1[0]->top_field->mv_info[RSD(j6)>>1][RSD(i4)] :
                           &list1[0]->top_field->mv_info[(j6)>>1][i4];
                       else
-                        colocated = vidParam->active_sps->direct_8x8_inference_flag ?
+                        colocated = vidParam->activeSPS->direct_8x8_inference_flag ?
                           &list1[0]->bottom_field->mv_info[RSD(j6)>>1][RSD(i4)] :
                           &list1[0]->bottom_field->mv_info[(j6)>>1][i4];
                       }
-                    else if (!vidParam->active_sps->frame_mbs_only_flag &&
+                    else if (!vidParam->activeSPS->frame_mbs_only_flag &&
                              curSlice->field_pic_flag &&
                              curSlice->structure!=list1[0]->structure && list1[0]->coded_frame) {
                       if (curSlice->structure == TOP_FIELD)
-                        colocated = vidParam->active_sps->direct_8x8_inference_flag ?
+                        colocated = vidParam->activeSPS->direct_8x8_inference_flag ?
                           &list1[0]->frame->top_field->mv_info[RSD(j6)][RSD(i4)] :
                           &list1[0]->frame->top_field->mv_info[j6][i4];
                       else
-                        colocated = vidParam->active_sps->direct_8x8_inference_flag ?
+                        colocated = vidParam->activeSPS->direct_8x8_inference_flag ?
                           &list1[0]->frame->bottom_field->mv_info[RSD(j6)][RSD(i4)] :
                           &list1[0]->frame->bottom_field->mv_info[j6][i4];
                       }
@@ -272,7 +272,7 @@ int get_colocated_info_8x8 (sMacroblock* curMb, sPicture* list1, int i, int j)
     sSlice* curSlice = curMb->slice;
     sVidParam* vidParam = curMb->vidParam;
     if( (curSlice->mb_aff_frame_flag) ||
-      (!vidParam->active_sps->frame_mbs_only_flag && ((!curSlice->structure && list1->iCodingType == FIELD_CODING)||(curSlice->structure!=list1->structure && list1->coded_frame))))
+      (!vidParam->activeSPS->frame_mbs_only_flag && ((!curSlice->structure && list1->iCodingType == FIELD_CODING)||(curSlice->structure!=list1->structure && list1->coded_frame))))
     {
       int jj = RSD(j);
       int ii = RSD(i);
@@ -652,7 +652,7 @@ static void update_direct_mv_info_spatial_4x4 (sMacroblock* curMb)
 //{{{
 void update_direct_types (sSlice* curSlice)
 {
-  if (curSlice->active_sps->direct_8x8_inference_flag)
+  if (curSlice->activeSPS->direct_8x8_inference_flag)
     curSlice->update_direct_mv_info =
       curSlice->direct_spatial_mv_pred_flag ? update_direct_mv_info_spatial_8x8 :
                                                update_direct_mv_info_temporal;

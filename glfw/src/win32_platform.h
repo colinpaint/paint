@@ -349,7 +349,7 @@ typedef VkFlags VkWin32SurfaceCreateFlagsKHR;
 typedef struct VkWin32SurfaceCreateInfoKHR
 {
     VkStructureType                 sType;
-    const void*                     pNext;
+    const void*                     next;
     VkWin32SurfaceCreateFlagsKHR    flags;
     HINSTANCE                       hinstance;
     HWND                            hwnd;

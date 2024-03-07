@@ -75,7 +75,7 @@ static int intra4x4_dc_pred (sMacroblock *curMb,
   getNonAffNeighbour(curMb, ioff - 1, joff   , vidParam->mb_size[IS_LUMA], &pix_a);
   getNonAffNeighbour(curMb, ioff    , joff -1, vidParam->mb_size[IS_LUMA], &pix_b);
 
-  if (vidParam->active_pps->constrained_intra_pred_flag)
+  if (vidParam->activePPS->constrained_intra_pred_flag)
   {
     block_available_left = pix_a.available ? curSlice->intra_block [pix_a.mb_addr] : 0;
     block_available_up   = pix_b.available ? curSlice->intra_block [pix_b.mb_addr] : 0;
@@ -162,7 +162,7 @@ static int intra4x4_vert_pred (sMacroblock *curMb,    //!< current macroblock
 
   getNonAffNeighbour(curMb, ioff, joff - 1 , vidParam->mb_size[IS_LUMA], &pix_b);
 
-  if (vidParam->active_pps->constrained_intra_pred_flag)
+  if (vidParam->activePPS->constrained_intra_pred_flag)
   {
     block_available_up = pix_b.available ? curSlice->intra_block [pix_b.mb_addr] : 0;
   }
@@ -221,7 +221,7 @@ static int intra4x4_hor_pred (sMacroblock *curMb,
 
   getNonAffNeighbour(curMb, ioff - 1 , joff, vidParam->mb_size[IS_LUMA], &pix_a);
 
-  if (vidParam->active_pps->constrained_intra_pred_flag)
+  if (vidParam->activePPS->constrained_intra_pred_flag)
   {
     block_available_left = pix_a.available ? curSlice->intra_block[pix_a.mb_addr]: 0;
   }
@@ -304,7 +304,7 @@ static int intra4x4_diag_down_right_pred (sMacroblock *curMb,    //!< current ma
   getNonAffNeighbour(curMb, ioff    , joff -1 , vidParam->mb_size[IS_LUMA], &pix_b);
   getNonAffNeighbour(curMb, ioff -1 , joff -1 , vidParam->mb_size[IS_LUMA], &pix_d);
 
-  if (vidParam->active_pps->constrained_intra_pred_flag)
+  if (vidParam->activePPS->constrained_intra_pred_flag)
   {
     block_available_left     = pix_a.available ? curSlice->intra_block [pix_a.mb_addr]: 0;
     block_available_up       = pix_b.available ? curSlice->intra_block [pix_b.mb_addr] : 0;
@@ -383,7 +383,7 @@ static int intra4x4_diag_down_left_pred (sMacroblock *curMb,    //!< current mac
 
   pix_c.available = pix_c.available && !((ioff==4) && ((joff==4)||(joff==12)));
 
-  if (vidParam->active_pps->constrained_intra_pred_flag)
+  if (vidParam->activePPS->constrained_intra_pred_flag)
   {
     block_available_up       = pix_b.available ? curSlice->intra_block [pix_b.mb_addr] : 0;
     block_available_up_right = pix_c.available ? curSlice->intra_block [pix_c.mb_addr] : 0;
@@ -470,7 +470,7 @@ static int intra4x4_vert_right_pred (sMacroblock *curMb,    //!< current macrobl
   getNonAffNeighbour(curMb, ioff    , joff -1 , vidParam->mb_size[IS_LUMA], &pix_b);
   getNonAffNeighbour(curMb, ioff -1 , joff -1 , vidParam->mb_size[IS_LUMA], &pix_d);
 
-  if (vidParam->active_pps->constrained_intra_pred_flag)
+  if (vidParam->activePPS->constrained_intra_pred_flag)
   {
     block_available_left     = pix_a.available ? curSlice->intra_block[pix_a.mb_addr]: 0;
     block_available_up       = pix_b.available ? curSlice->intra_block [pix_b.mb_addr] : 0;
@@ -555,7 +555,7 @@ static int intra4x4_vert_left_pred (sMacroblock *curMb,    //!< current macroblo
 
   pix_c.available = pix_c.available && !((ioff==4) && ((joff==4)||(joff==12)));
 
-  if (vidParam->active_pps->constrained_intra_pred_flag)
+  if (vidParam->activePPS->constrained_intra_pred_flag)
   {
     block_available_up       = pix_b.available ? curSlice->intra_block [pix_b.mb_addr] : 0;
     block_available_up_right = pix_c.available ? curSlice->intra_block [pix_c.mb_addr] : 0;
@@ -640,7 +640,7 @@ static int intra4x4_hor_up_pred (sMacroblock *curMb,    //!< current macroblock
 
   getNonAffNeighbour(curMb, ioff -1 , joff, vidParam->mb_size[IS_LUMA], &pix_a);
 
-  if (vidParam->active_pps->constrained_intra_pred_flag)
+  if (vidParam->activePPS->constrained_intra_pred_flag)
   {
     block_available_left = pix_a.available ? curSlice->intra_block[pix_a.mb_addr]: 0;
   }
@@ -716,7 +716,7 @@ static int intra4x4_hor_down_pred (sMacroblock *curMb,    //!< current macrobloc
   getNonAffNeighbour(curMb, ioff    , joff -1 , vidParam->mb_size[IS_LUMA], &pix_b);
   getNonAffNeighbour(curMb, ioff -1 , joff -1 , vidParam->mb_size[IS_LUMA], &pix_d);
 
-  if (vidParam->active_pps->constrained_intra_pred_flag)
+  if (vidParam->activePPS->constrained_intra_pred_flag)
   {
     block_available_left    = pix_a.available ? curSlice->intra_block [pix_a.mb_addr]: 0;
     block_available_up      = pix_b.available ? curSlice->intra_block [pix_b.mb_addr] : 0;
@@ -876,7 +876,7 @@ static int intra4x4_dc_pred_mbaff (sMacroblock *curMb,
   }
   getAffNeighbour(curMb, ioff    , joff -1 , vidParam->mb_size[IS_LUMA], &pix_b);
 
-  if (vidParam->active_pps->constrained_intra_pred_flag)
+  if (vidParam->activePPS->constrained_intra_pred_flag)
   {
     for (i=0, block_available_left=1; i<4;++i)
       block_available_left  &= pix_a[i].available ? curSlice->intra_block[pix_a[i].mb_addr]: 0;
@@ -961,7 +961,7 @@ static int intra4x4_vert_pred_mbaff (sMacroblock *curMb,    //!< current macrobl
 
   getAffNeighbour(curMb, ioff, joff - 1 , vidParam->mb_size[IS_LUMA], &pix_b);
 
-  if (vidParam->active_pps->constrained_intra_pred_flag)
+  if (vidParam->activePPS->constrained_intra_pred_flag)
   {
     block_available_up = pix_b.available ? curSlice->intra_block [pix_b.mb_addr] : 0;
   }
@@ -1028,7 +1028,7 @@ static int intra4x4_hor_pred_mbaff (sMacroblock *curMb,
     getAffNeighbour(curMb, ioff -1 , joff +i , vidParam->mb_size[IS_LUMA], &pix_a[i]);
   }
 
-  if (vidParam->active_pps->constrained_intra_pred_flag)
+  if (vidParam->activePPS->constrained_intra_pred_flag)
   {
     for (i=0, block_available_left=1; i<4;++i)
       block_available_left  &= pix_a[i].available ? curSlice->intra_block[pix_a[i].mb_addr]: 0;
@@ -1091,7 +1091,7 @@ static int intra4x4_diag_down_right_pred_mbaff (sMacroblock *curMb,    //!< curr
   getAffNeighbour(curMb, ioff    , joff -1 , vidParam->mb_size[IS_LUMA], &pix_b);
   getAffNeighbour(curMb, ioff -1 , joff -1 , vidParam->mb_size[IS_LUMA], &pix_d);
 
-  if (vidParam->active_pps->constrained_intra_pred_flag)
+  if (vidParam->activePPS->constrained_intra_pred_flag)
   {
     for (i=0, block_available_left=1; i<4;++i)
       block_available_left  &= pix_a[i].available ? curSlice->intra_block[pix_a[i].mb_addr]: 0;
@@ -1170,7 +1170,7 @@ static int intra4x4_diag_down_left_pred_mbaff (sMacroblock *curMb,    //!< curre
 
   pix_c.available = pix_c.available && !((ioff==4) && ((joff==4)||(joff==12)));
 
-  if (vidParam->active_pps->constrained_intra_pred_flag)
+  if (vidParam->activePPS->constrained_intra_pred_flag)
   {
     block_available_up       = pix_b.available ? curSlice->intra_block [pix_b.mb_addr] : 0;
     block_available_up_right = pix_c.available ? curSlice->intra_block [pix_c.mb_addr] : 0;
@@ -1262,7 +1262,7 @@ static int intra4x4_vert_right_pred_mbaff (sMacroblock *curMb,    //!< current m
   getAffNeighbour(curMb, ioff    , joff -1 , vidParam->mb_size[IS_LUMA], &pix_b);
   getAffNeighbour(curMb, ioff -1 , joff -1 , vidParam->mb_size[IS_LUMA], &pix_d);
 
-  if (vidParam->active_pps->constrained_intra_pred_flag)
+  if (vidParam->activePPS->constrained_intra_pred_flag)
   {
     for (i=0, block_available_left=1; i<4;++i)
       block_available_left  &= pix_a[i].available ? curSlice->intra_block[pix_a[i].mb_addr]: 0;
@@ -1343,7 +1343,7 @@ static int intra4x4_vert_left_pred_mbaff (sMacroblock *curMb,    //!< current ma
 
   pix_c.available = pix_c.available && !((ioff==4) && ((joff==4)||(joff==12)));
 
-  if (vidParam->active_pps->constrained_intra_pred_flag)
+  if (vidParam->activePPS->constrained_intra_pred_flag)
   {
     block_available_up       = pix_b.available ? curSlice->intra_block [pix_b.mb_addr] : 0;
     block_available_up_right = pix_c.available ? curSlice->intra_block [pix_c.mb_addr] : 0;
@@ -1430,7 +1430,7 @@ static int intra4x4_hor_up_pred_mbaff (sMacroblock *curMb,    //!< current macro
     getAffNeighbour(curMb, ioff -1 , joff +i , vidParam->mb_size[IS_LUMA], &pix_a[i]);
   }
 
-  if (vidParam->active_pps->constrained_intra_pred_flag)
+  if (vidParam->activePPS->constrained_intra_pred_flag)
   {
     for (i=0, block_available_left=1; i<4;++i)
       block_available_left  &= pix_a[i].available ? curSlice->intra_block[pix_a[i].mb_addr]: 0;
@@ -1512,7 +1512,7 @@ static int intra4x4_hor_down_pred_mbaff (sMacroblock *curMb,    //!< current mac
   getAffNeighbour(curMb, ioff    , joff -1 , vidParam->mb_size[IS_LUMA], &pix_b);
   getAffNeighbour(curMb, ioff -1 , joff -1 , vidParam->mb_size[IS_LUMA], &pix_d);
 
-  if (vidParam->active_pps->constrained_intra_pred_flag)
+  if (vidParam->activePPS->constrained_intra_pred_flag)
   {
     for (i=0, block_available_left=1; i<4;++i)
       block_available_left  &= pix_a[i].available ? curSlice->intra_block[pix_a[i].mb_addr]: 0;

@@ -380,48 +380,48 @@ int mb_pred_b_d8x8temporal (sMacroblock* curMb, sColorPlane curPlane, sPixel** c
       colocated = &list1[0]->mv_info[RSD(j6)][RSD(i4)];
       if(curMb->vidParam->separate_colour_plane_flag && curMb->vidParam->yuv_format==YUV444)
         colocated = &list1[0]->JVmv_info[curMb->slice->colour_plane_id][RSD(j6)][RSD(i4)];
-      if(curSlice->mb_aff_frame_flag /*&& (!vidParam->active_sps->frame_mbs_only_flag || vidParam->active_sps->direct_8x8_inference_flag)*/)
+      if(curSlice->mb_aff_frame_flag /*&& (!vidParam->activeSPS->frame_mbs_only_flag || vidParam->activeSPS->direct_8x8_inference_flag)*/)
       {
-        assert(vidParam->active_sps->direct_8x8_inference_flag);
+        assert(vidParam->activeSPS->direct_8x8_inference_flag);
         if(!curMb->mb_field && ((curSlice->listX[LIST_1][0]->iCodingType==FRAME_MB_PAIR_CODING && curSlice->listX[LIST_1][0]->motion.mb_field[curMb->mbAddrX]) ||
           (curSlice->listX[LIST_1][0]->iCodingType==FIELD_CODING)))
         {
           if (iabs(picture->poc - curSlice->listX[LIST_1+4][0]->poc)> iabs(picture->poc -curSlice->listX[LIST_1+2][0]->poc) )
           {
-            colocated = vidParam->active_sps->direct_8x8_inference_flag ?
+            colocated = vidParam->activeSPS->direct_8x8_inference_flag ?
               &curSlice->listX[LIST_1+2][0]->mv_info[RSD(j6)>>1][RSD(i4)] : &curSlice->listX[LIST_1+2][0]->mv_info[j6>>1][i4];
           }
           else
           {
-            colocated = vidParam->active_sps->direct_8x8_inference_flag ?
+            colocated = vidParam->activeSPS->direct_8x8_inference_flag ?
               &curSlice->listX[LIST_1+4][0]->mv_info[RSD(j6)>>1][RSD(i4)] : &curSlice->listX[LIST_1+4][0]->mv_info[j6>>1][i4];
           }
         }
       }
-      else if(/*!curSlice->mb_aff_frame_flag &&*/ !vidParam->active_sps->frame_mbs_only_flag &&
+      else if(/*!curSlice->mb_aff_frame_flag &&*/ !vidParam->activeSPS->frame_mbs_only_flag &&
         (!curSlice->field_pic_flag && curSlice->listX[LIST_1][0]->iCodingType!=FRAME_CODING))
       {
         if (iabs(picture->poc - list1[0]->bottom_field->poc)> iabs(picture->poc -list1[0]->top_field->poc) )
         {
-          colocated = vidParam->active_sps->direct_8x8_inference_flag ?
+          colocated = vidParam->activeSPS->direct_8x8_inference_flag ?
             &list1[0]->top_field->mv_info[RSD(j6)>>1][RSD(i4)] : &list1[0]->top_field->mv_info[j6>>1][i4];
         }
         else
         {
-          colocated = vidParam->active_sps->direct_8x8_inference_flag ?
+          colocated = vidParam->activeSPS->direct_8x8_inference_flag ?
             &list1[0]->bottom_field->mv_info[RSD(j6)>>1][RSD(i4)] : &list1[0]->bottom_field->mv_info[j6>>1][i4];
         }
       }
-      else if(!vidParam->active_sps->frame_mbs_only_flag && curSlice->field_pic_flag && curSlice->structure!=list1[0]->structure && list1[0]->coded_frame)
+      else if(!vidParam->activeSPS->frame_mbs_only_flag && curSlice->field_pic_flag && curSlice->structure!=list1[0]->structure && list1[0]->coded_frame)
       {
         if (curSlice->structure == TOP_FIELD)
         {
-          colocated = vidParam->active_sps->direct_8x8_inference_flag ?
+          colocated = vidParam->activeSPS->direct_8x8_inference_flag ?
             &list1[0]->frame->top_field->mv_info[RSD(j6)][RSD(i4)] : &list1[0]->frame->top_field->mv_info[j6][i4];
         }
         else
         {
-          colocated = vidParam->active_sps->direct_8x8_inference_flag ?
+          colocated = vidParam->activeSPS->direct_8x8_inference_flag ?
             &list1[0]->frame->bottom_field->mv_info[RSD(j6)][RSD(i4)] : &list1[0]->frame->bottom_field->mv_info[j6][i4];
         }
       }
@@ -1141,7 +1141,7 @@ int mb_pred_b_inter8x8 (sMacroblock* curMb, sColorPlane curPlane, sPicture* pict
       int k_start = (block8x8 << 2);
       int k_end = k_start;
 
-      if (vidParam->active_sps->direct_8x8_inference_flag)
+      if (vidParam->activeSPS->direct_8x8_inference_flag)
       {
         block_size_x = SMB_BLOCK_SIZE;
         block_size_y = SMB_BLOCK_SIZE;

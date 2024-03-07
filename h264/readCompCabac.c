@@ -448,11 +448,11 @@ static void read_CBP_and_coeffs_from_NAL_CABAC_420 (sMacroblock* curMb)
     //============= Transform size flag for INTER MBs =============
     //-------------------------------------------------------------
     need_transform_size_flag = (((curMb->mb_type >= 1 && curMb->mb_type <= 3)||
-      (IS_DIRECT(curMb) && vidParam->active_sps->direct_8x8_inference_flag) ||
+      (IS_DIRECT(curMb) && vidParam->activeSPS->direct_8x8_inference_flag) ||
       (curMb->NoMbPartLessThan8x8Flag))
       && curMb->mb_type != I8MB && curMb->mb_type != I4MB
       && (curMb->cbp&15)
-      && curSlice->Transform8x8Mode);
+      && curSlice->transform8x8Mode);
 
     if (need_transform_size_flag)
     {
@@ -835,11 +835,11 @@ static void read_CBP_and_coeffs_from_NAL_CABAC_400 (sMacroblock* curMb)
     //============= Transform size flag for INTER MBs =============
     //-------------------------------------------------------------
     need_transform_size_flag = (((curMb->mb_type >= 1 && curMb->mb_type <= 3)||
-      (IS_DIRECT(curMb) && vidParam->active_sps->direct_8x8_inference_flag) ||
+      (IS_DIRECT(curMb) && vidParam->activeSPS->direct_8x8_inference_flag) ||
       (curMb->NoMbPartLessThan8x8Flag))
       && curMb->mb_type != I8MB && curMb->mb_type != I4MB
       && (curMb->cbp&15)
-      && curSlice->Transform8x8Mode);
+      && curSlice->transform8x8Mode);
 
     if (need_transform_size_flag)
     {
@@ -1041,11 +1041,11 @@ static void read_CBP_and_coeffs_from_NAL_CABAC_444 (sMacroblock* curMb)
     //============= Transform size flag for INTER MBs =============
     //-------------------------------------------------------------
     need_transform_size_flag = (((curMb->mb_type >= 1 && curMb->mb_type <= 3)||
-      (IS_DIRECT(curMb) && vidParam->active_sps->direct_8x8_inference_flag) ||
+      (IS_DIRECT(curMb) && vidParam->activeSPS->direct_8x8_inference_flag) ||
       (curMb->NoMbPartLessThan8x8Flag))
       && curMb->mb_type != I8MB && curMb->mb_type != I4MB
       && (curMb->cbp&15)
-      && curSlice->Transform8x8Mode);
+      && curSlice->transform8x8Mode);
 
     if (need_transform_size_flag)
     {
@@ -1340,11 +1340,11 @@ static void read_CBP_and_coeffs_from_NAL_CABAC_422 (sMacroblock* curMb)
     //============= Transform size flag for INTER MBs =============
     //-------------------------------------------------------------
     need_transform_size_flag = (((curMb->mb_type >= 1 && curMb->mb_type <= 3)||
-      (IS_DIRECT(curMb) && vidParam->active_sps->direct_8x8_inference_flag) ||
+      (IS_DIRECT(curMb) && vidParam->activeSPS->direct_8x8_inference_flag) ||
       (curMb->NoMbPartLessThan8x8Flag))
       && curMb->mb_type != I8MB && curMb->mb_type != I4MB
       && (curMb->cbp&15)
-      && curSlice->Transform8x8Mode);
+      && curSlice->transform8x8Mode);
 
     if (need_transform_size_flag)
     {
@@ -1698,7 +1698,7 @@ static void read_CBP_and_coeffs_from_NAL_CABAC_422 (sMacroblock* curMb)
 
 void set_read_CBP_and_coeffs_cabac(sSlice* curSlice)
 {
-  switch (curSlice->vidParam->active_sps->chroma_format_idc)
+  switch (curSlice->vidParam->activeSPS->chroma_format_idc)
   {
   case YUV444:
     if (curSlice->vidParam->separate_colour_plane_flag == 0)

@@ -24,7 +24,7 @@ static int predict_nnz (sMacroblock* curMb, int block_type, int i,int j)
   // left block
   get4x4Neighbour(curMb, i - 1, j, vidParam->mb_size[IS_LUMA], &pix);
 
-  if ((curMb->is_intra_block == TRUE) && pix.available && vidParam->active_pps->constrained_intra_pred_flag && (curSlice->dp_mode == PAR_DP_3))
+  if ((curMb->is_intra_block == TRUE) && pix.available && vidParam->activePPS->constrained_intra_pred_flag && (curSlice->dp_mode == PAR_DP_3))
   {
     pix.available &= curSlice->intra_block[pix.mb_addr];
     if (!pix.available)
@@ -56,7 +56,7 @@ static int predict_nnz (sMacroblock* curMb, int block_type, int i,int j)
   // top block
   get4x4Neighbour(curMb, i, j - 1, vidParam->mb_size[IS_LUMA], &pix);
 
-  if ((curMb->is_intra_block == TRUE) && pix.available && vidParam->active_pps->constrained_intra_pred_flag && (curSlice->dp_mode==PAR_DP_3))
+  if ((curMb->is_intra_block == TRUE) && pix.available && vidParam->activePPS->constrained_intra_pred_flag && (curSlice->dp_mode==PAR_DP_3))
   {
     pix.available &= curSlice->intra_block[pix.mb_addr];
     if (!pix.available)
@@ -111,7 +111,7 @@ static int predict_nnz_chroma (sMacroblock* curMb, int i,int j)
     // left block
     get4x4Neighbour(curMb, ((i&0x01)<<2) - 1, j, vidParam->mb_size[IS_CHROMA], &pix);
 
-    if ((curMb->is_intra_block == TRUE) && pix.available && vidParam->active_pps->constrained_intra_pred_flag && (curSlice->dp_mode==PAR_DP_3))
+    if ((curMb->is_intra_block == TRUE) && pix.available && vidParam->activePPS->constrained_intra_pred_flag && (curSlice->dp_mode==PAR_DP_3))
     {
       pix.available &= curSlice->intra_block[pix.mb_addr];
       if (!pix.available)
@@ -127,7 +127,7 @@ static int predict_nnz_chroma (sMacroblock* curMb, int i,int j)
     // top block
     get4x4Neighbour(curMb, ((i&0x01)<<2), j - 1, vidParam->mb_size[IS_CHROMA], &pix);
 
-    if ((curMb->is_intra_block == TRUE) && pix.available && vidParam->active_pps->constrained_intra_pred_flag && (curSlice->dp_mode==PAR_DP_3))
+    if ((curMb->is_intra_block == TRUE) && pix.available && vidParam->activePPS->constrained_intra_pred_flag && (curSlice->dp_mode==PAR_DP_3))
     {
       pix.available &= curSlice->intra_block[pix.mb_addr];
       if (!pix.available)
@@ -935,11 +935,11 @@ static void read_CBP_and_coeffs_from_NAL_CAVLC_400 (sMacroblock* curMb)
     //============= Transform size flag for INTER MBs =============
     //-------------------------------------------------------------
     need_transform_size_flag = (((curMb->mb_type >= 1 && curMb->mb_type <= 3)||
-      (IS_DIRECT(curMb) && vidParam->active_sps->direct_8x8_inference_flag) ||
+      (IS_DIRECT(curMb) && vidParam->activeSPS->direct_8x8_inference_flag) ||
       (curMb->NoMbPartLessThan8x8Flag))
       && curMb->mb_type != I8MB && curMb->mb_type != I4MB
       && (curMb->cbp&15)
-      && curSlice->Transform8x8Mode);
+      && curSlice->transform8x8Mode);
 
     if (need_transform_size_flag)
     {
@@ -1111,11 +1111,11 @@ static void read_CBP_and_coeffs_from_NAL_CAVLC_422 (sMacroblock* curMb)
     //============= Transform size flag for INTER MBs =============
     //-------------------------------------------------------------
     need_transform_size_flag = (((curMb->mb_type >= 1 && curMb->mb_type <= 3)||
-      (IS_DIRECT(curMb) && vidParam->active_sps->direct_8x8_inference_flag) ||
+      (IS_DIRECT(curMb) && vidParam->activeSPS->direct_8x8_inference_flag) ||
       (curMb->NoMbPartLessThan8x8Flag))
       && curMb->mb_type != I8MB && curMb->mb_type != I4MB
       && (curMb->cbp&15)
-      && curSlice->Transform8x8Mode);
+      && curSlice->transform8x8Mode);
 
     if (need_transform_size_flag)
     {
@@ -1446,11 +1446,11 @@ static void read_CBP_and_coeffs_from_NAL_CAVLC_444 (sMacroblock* curMb)
     //============= Transform size flag for INTER MBs =============
     //-------------------------------------------------------------
     need_transform_size_flag = (((curMb->mb_type >= 1 && curMb->mb_type <= 3)||
-      (IS_DIRECT(curMb) && vidParam->active_sps->direct_8x8_inference_flag) ||
+      (IS_DIRECT(curMb) && vidParam->activeSPS->direct_8x8_inference_flag) ||
       (curMb->NoMbPartLessThan8x8Flag))
       && curMb->mb_type != I8MB && curMb->mb_type != I4MB
       && (curMb->cbp&15)
-      && curSlice->Transform8x8Mode);
+      && curSlice->transform8x8Mode);
 
     if (need_transform_size_flag)
     {
@@ -1678,11 +1678,11 @@ static void read_CBP_and_coeffs_from_NAL_CAVLC_420 (sMacroblock* curMb)
     //============= Transform size flag for INTER MBs =============
     //-------------------------------------------------------------
     need_transform_size_flag = (((curMb->mb_type >= 1 && curMb->mb_type <= 3)||
-      (IS_DIRECT(curMb) && vidParam->active_sps->direct_8x8_inference_flag) ||
+      (IS_DIRECT(curMb) && vidParam->activeSPS->direct_8x8_inference_flag) ||
       (curMb->NoMbPartLessThan8x8Flag))
       && curMb->mb_type != I8MB && curMb->mb_type != I4MB
       && (curMb->cbp&15)
-      && curSlice->Transform8x8Mode);
+      && curSlice->transform8x8Mode);
 
     if (need_transform_size_flag)
     {
@@ -1949,7 +1949,7 @@ void set_read_comp_coeff_cavlc (sMacroblock* curMb)
 //{{{
 void set_read_CBP_and_coeffs_cavlc (sSlice* curSlice) {
 
-  switch (curSlice->vidParam->active_sps->chroma_format_idc) {
+  switch (curSlice->vidParam->activeSPS->chroma_format_idc) {
     case YUV444:
       if (curSlice->vidParam->separate_colour_plane_flag == 0)
         curSlice->read_CBP_and_coeffs_from_NAL = read_CBP_and_coeffs_from_NAL_CAVLC_444;

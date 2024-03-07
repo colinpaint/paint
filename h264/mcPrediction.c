@@ -1359,7 +1359,7 @@ static void perform_mc_single_wp (sMacroblock* curMb, sColorPlane pl, sPicture* 
 {
   sVidParam* vidParam = curMb->vidParam;
   sSlice* curSlice = curMb->slice;
-  sSPS *active_sps = curSlice->active_sps;
+  sSPS *activeSPS = curSlice->activeSPS;
   sPixel** tmp_block_l0 = curSlice->tmp_block_l0;
   sPixel** tmp_block_l1 = curSlice->tmp_block_l1;
   static const int mv_mul = 16; // 4 * 4
@@ -1400,7 +1400,7 @@ static void perform_mc_single_wp (sMacroblock* curMb, sColorPlane pl, sPicture* 
 
   {
     int alpha_l0, wp_offset, wp_denom;
-    if (curMb->mb_field && ((vidParam->active_pps->weighted_pred_flag&&(type==P_SLICE|| type == SP_SLICE))||(vidParam->active_pps->weighted_bipred_idc==1 && (type==B_SLICE))))
+    if (curMb->mb_field && ((vidParam->activePPS->weighted_pred_flag&&(type==P_SLICE|| type == SP_SLICE))||(vidParam->activePPS->weighted_bipred_idc==1 && (type==B_SLICE))))
       ref_idx_wp >>=1;
     alpha_l0  = curSlice->wp_weight[pred_dir][ref_idx_wp][pl];
     wp_offset = curSlice->wp_offset[pred_dir][ref_idx_wp][pl];
@@ -1411,7 +1411,7 @@ static void perform_mc_single_wp (sMacroblock* curMb, sColorPlane pl, sPicture* 
   if ((chroma_format_idc != YUV400) && (chroma_format_idc != YUV444) )
   {
     int ioff_cr,joff_cr,block_size_x_cr,block_size_y_cr;
-    int vec1_y_cr = vec1_y + ((active_sps->chroma_format_idc == 1)? curSlice->chroma_vector_adjustment[list_offset + pred_dir][ref_idx] : 0);
+    int vec1_y_cr = vec1_y + ((activeSPS->chroma_format_idc == 1)? curSlice->chroma_vector_adjustment[list_offset + pred_dir][ref_idx] : 0);
     int total_scale = vidParam->total_scale;
     int maxold_x = picture->size_x_cr_m1;
     int maxold_y = (curMb->mb_field) ? (picture->size_y_cr >> 1) - 1 : picture->size_y_cr_m1;
@@ -1452,7 +1452,7 @@ static void perform_mc_single (sMacroblock* curMb, sColorPlane pl, sPicture* pic
 {
   sVidParam* vidParam = curMb->vidParam;
   sSlice* curSlice = curMb->slice;
-  sSPS *active_sps = curSlice->active_sps;
+  sSPS *activeSPS = curSlice->activeSPS;
   sPixel** tmp_block_l0 = curSlice->tmp_block_l0;
   sPixel** tmp_block_l1 = curSlice->tmp_block_l1;
   static const int mv_mul = 16; // 4 * 4
@@ -1497,7 +1497,7 @@ static void perform_mc_single (sMacroblock* curMb, sColorPlane pl, sPicture* pic
   if ((chroma_format_idc != YUV400) && (chroma_format_idc != YUV444) )
   {
     int ioff_cr,joff_cr,block_size_x_cr,block_size_y_cr;
-    int vec1_y_cr = vec1_y + ((active_sps->chroma_format_idc == 1)? curSlice->chroma_vector_adjustment[list_offset + pred_dir][ref_idx] : 0);
+    int vec1_y_cr = vec1_y + ((activeSPS->chroma_format_idc == 1)? curSlice->chroma_vector_adjustment[list_offset + pred_dir][ref_idx] : 0);
     int total_scale = vidParam->total_scale;
     int maxold_x = picture->size_x_cr_m1;
     int maxold_y = (curMb->mb_field) ? (picture->size_y_cr >> 1) - 1 : picture->size_y_cr_m1;
@@ -1536,7 +1536,7 @@ static void perform_mc_bi_wp (sMacroblock* curMb, sColorPlane pl, sPicture* pict
   sVidParam* vidParam = curMb->vidParam;
   sSlice* curSlice = curMb->slice;
 
-  int weighted_bipred_idc = vidParam->active_pps->weighted_bipred_idc;
+  int weighted_bipred_idc = vidParam->activePPS->weighted_bipred_idc;
   int block_y_aff = curMb->block_y_aff;
   int i4 = curMb->block_x + i;
   int j4 = curMb->block_y + j;
@@ -1732,7 +1732,7 @@ static void perform_mc_bi (sMacroblock* curMb, sColorPlane pl, sPicture* picture
   if ((chroma_format_idc != YUV400) && (chroma_format_idc != YUV444) )
   {
     int ioff_cr, joff_cr,block_size_y_cr,block_size_x_cr,vec2_y_cr,vec1_y_cr;
-    int chroma_format_idc = vidParam->active_sps->chroma_format_idc;
+    int chroma_format_idc = vidParam->activeSPS->chroma_format_idc;
     int maxold_x = picture->size_x_cr_m1;
     int maxold_y = (curMb->mb_field) ? (picture->size_y_cr >> 1) - 1 : picture->size_y_cr_m1;
     int shiftpel_x = vidParam->shiftpel_x;

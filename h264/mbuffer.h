@@ -2,10 +2,10 @@
 #include "global.h"
 
 #define MAX_LIST_SIZE 33
-//{{{  sPicMotionParamOld
+//{{{  sPicMotionParamsOld
 typedef struct PicMotionParamOld {
   byte*  mb_field;      // field macroblock indicator
-  } sPicMotionParamOld;
+  } sPicMotionParamsOld;
 //}}}
 //{{{  sPicMotionParam
 typedef struct PicMotionParam {
@@ -60,7 +60,7 @@ typedef struct Picture {
   struct Picture* frame;         // for mb aff, if field for referencing the combined frame
 
   int         slice_type;
-  int         idr_flag;
+  int         idrFlag;
   int         no_output_of_prior_pics_flag;
   int         long_term_reference_flag;
   int         adaptive_ref_pic_buffering_flag;
@@ -75,7 +75,7 @@ typedef struct Picture {
   int         qp;
   int         chroma_qp_offset[2];
   int         slice_qp_delta;
-  sDecRefPicMarking* dec_ref_pic_marking_buffer;  // stores the memory management control operations
+  sDecRefPicMarking* decRefPicMarkingBuffer;  // stores the memory management control operations
 
   // picture error concealment
   int         concealed_pic;

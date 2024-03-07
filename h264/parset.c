@@ -169,9 +169,9 @@ static void setCodingParam (sSPS* sps, sCodingParam* cps) {
   cps->mb_size_blk[1][0] = cps->mb_size_blk[2][0] = cps->mb_size[1][0] >> 2;
   cps->mb_size_blk[1][1] = cps->mb_size_blk[2][1] = cps->mb_size[1][1] >> 2;
 
-  cps->mb_size_shift[0][0] = cps->mb_size_shift[0][1] = ceilLog2_sf (cps->mb_size[0][0]);
-  cps->mb_size_shift[1][0] = cps->mb_size_shift[2][0] = ceilLog2_sf (cps->mb_size[1][0]);
-  cps->mb_size_shift[1][1] = cps->mb_size_shift[2][1] = ceilLog2_sf (cps->mb_size[1][1]);
+  cps->mb_size_shift[0][0] = cps->mb_size_shift[0][1] = ceilLog2sf (cps->mb_size[0][0]);
+  cps->mb_size_shift[1][0] = cps->mb_size_shift[2][0] = ceilLog2sf (cps->mb_size[1][0]);
+  cps->mb_size_shift[1][1] = cps->mb_size_shift[2][1] = ceilLog2sf (cps->mb_size[1][1]);
   }
 //}}}
 //{{{
@@ -738,12 +738,12 @@ void processSPS (sVidParam* vidParam, sNalu* nalu) {
   get_max_dec_frame_buf_size (sps);
 
   if (sps->Valid) {
-    if (vidParam->active_sps) {
-      if (sps->seq_parameter_set_id == vidParam->active_sps->seq_parameter_set_id) {
-        if (!spsIsEqual (sps, vidParam->active_sps))   {
+    if (vidParam->activeSPS) {
+      if (sps->seq_parameter_set_id == vidParam->activeSPS->seq_parameter_set_id) {
+        if (!spsIsEqual (sps, vidParam->activeSPS))   {
           if (vidParam->picture)
             exitPicture (vidParam, &vidParam->picture);
-          vidParam->active_sps=NULL;
+          vidParam->activeSPS=NULL;
           }
         }
       }
@@ -767,10 +767,10 @@ void activateSPS (sVidParam* vidParam, sSPS* sps) {
 
   sInputParam* inputParam = vidParam->inputParam;
 
-  if (vidParam->active_sps != sps) {
+  if (vidParam->activeSPS != sps) {
     if (vidParam->picture) // this may only happen on slice loss
       exitPicture (vidParam, &vidParam->picture);
-    vidParam->active_sps = sps;
+    vidParam->activeSPS = sps;
 
     if (vidParam->dpb_layer_id==0 && is_BL_profile(sps->profile_idc) && !vidParam->p_Dpb_layer[0]->init_done) {
       setCodingParam (sps, vidParam->p_EncodePar[0]);
@@ -989,10 +989,10 @@ static void interpretPPS (sVidParam* vidParam, sDataPartition* p, sPPS* pps) {
 //{{{
 static void activatePPS (sVidParam* vidParam, sPPS* pps) {
 
-  if (vidParam->active_pps != pps) {
+  if (vidParam->activePPS != pps) {
     if (vidParam->picture) // this may only happen on slice loss
       exitPicture (vidParam, &vidParam->picture);
-    vidParam->active_pps = pps;
+    vidParam->activePPS = pps;
     }
   }
 //}}}
@@ -1056,14 +1056,14 @@ void processPPS (sVidParam* vidParam, sNalu* nalu) {
   dp->bitstream->code_len = dp->bitstream->bitstream_length = RBSPtoSODB (dp->bitstream->streamBuffer, nalu->len-1);
   interpretPPS (vidParam, dp, pps);
 
-  if (vidParam->active_pps) {
-    if (pps->pic_parameter_set_id == vidParam->active_pps->pic_parameter_set_id) {
-      if (!ppsIsEqual (pps, vidParam->active_pps)) {
+  if (vidParam->activePPS) {
+    if (pps->pic_parameter_set_id == vidParam->activePPS->pic_parameter_set_id) {
+      if (!ppsIsEqual (pps, vidParam->activePPS)) {
         // copy to next PPS;
-        memcpy (vidParam->nextPPS, vidParam->active_pps, sizeof (sPPS));
+        memcpy (vidParam->nextPPS, vidParam->activePPS, sizeof (sPPS));
         if (vidParam->picture)
           exitPicture (vidParam, &vidParam->picture);
-        vidParam->active_pps = NULL;
+        vidParam->activePPS = NULL;
         }
       }
     }

@@ -135,7 +135,7 @@ static void CalculateQuant8x8Param (sSlice* curSlice) {
     }
 
   p_dequant_coef = dequant_coef8;
-  if (curSlice->active_sps->chroma_format_idc == 3) {
+  if (curSlice->activeSPS->chroma_format_idc == 3) {
     // 4:4:4
     for (int k = 0; k < 6; k++) {
       setDequant8x8 (*InvLevelScale8x8_Intra_1++, *p_dequant_coef  , curSlice->qmatrix[8]);
@@ -186,8 +186,8 @@ void freeQuant (sCodingParam* codingParam) {
 //{{{
 void assignQuantParams (sSlice* curSlice) {
 
-  sSPS* sps = curSlice->active_sps;
-  sPPS* pps = curSlice->active_pps;
+  sSPS* sps = curSlice->activeSPS;
+  sPPS* pps = curSlice->activePPS;
 
   if (!pps->pic_scaling_matrix_present_flag && !sps->seq_scaling_matrix_present_flag) {
     for (int i = 0; i < 12; i++)

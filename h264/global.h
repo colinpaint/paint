@@ -112,7 +112,7 @@ typedef struct {
   sBiContextType abs_contexts [NUM_BLOCK_TYPES][NUM_ABS_CTX];
   } sTextureInfoContexts;
 //}}}
-//{{{
+//{{{  sPixelPos
 typedef struct PixelPos {
   int   available;
   int   mb_addr;
@@ -122,7 +122,7 @@ typedef struct PixelPos {
   short pos_y;
   } sPixelPos;
 //}}}
-//{{{
+//{{{  sBitstream
 typedef struct Bitstream {
   // CABAC Decoding
   int read_len;          // actual position in the codebuffer, CABAC only
@@ -137,8 +137,7 @@ typedef struct Bitstream {
   int ei_flag;           // error indication, 0: no error, else unspecified error
   } sBitstream;
 //}}}
-//{{{
-/*! Buffer structure for decoded referenc picture marking commands */
+//{{{  sDecRefPicMarking
 typedef struct DecRefPicMarking {
   int memory_management_control_operation;
   int difference_of_pic_nums_minus1;
@@ -148,16 +147,14 @@ typedef struct DecRefPicMarking {
   struct DecRefPicMarking* next;
   } sDecRefPicMarking;
 //}}}
-//{{{
-//! cbp structure
+//{{{  sCBPStructure
 typedef struct CBPStructure {
   int64 blk;
   int64 bits;
   int64 bits_8x8;
   } sCBPStructure;
 //}}}
-//{{{
-//! sMacroblock
+//{{{  sMacroblock
 typedef struct Macroblock {
   struct Slice*      slice;
   struct VidParam*   vidParam;
@@ -250,8 +247,7 @@ typedef struct Macroblock {
   void (*read_comp_coeff_8x8_CAVLC)     (struct Macroblock *curMb, sColorPlane pl, int (*InvLevelScale8x8)[8], int qp_per, int cbp, byte** nzcoeff);
   } sMacroblock;
 //}}}
-//{{{
-//! Syntaxelement
+//{{{  sSyntaxElement
 typedef struct SyntaxElement {
   int           type;                  //!< type of syntax element for data part.
   int           value1;                //!< numerical value of syntax element
@@ -268,7 +264,7 @@ typedef struct SyntaxElement {
   void  (*reading)(struct Macroblock *curMb, struct SyntaxElement *, sDecodingEnvironmentPtr);
   } sSyntaxElement;
 //}}}
-//{{{  typedef struct DataPartition
+//{{{  sDataPartition
 typedef struct DataPartition {
   sBitstream           *bitstream;
   sDecodingEnvironment de_cabac;
@@ -279,13 +275,13 @@ typedef struct DataPartition {
                entropy coding method  */
   } sDataPartition;
 //}}}
-//{{{
+//{{{  sWPParam
 typedef struct WPParam {
   short weight[3];
   short offset[3];
   } sWPParam;
 //}}}
-//{{{
+//{{{  sInputParam
 typedef struct InputParam {
   int ref_offset;
   int poc_scale;
@@ -311,7 +307,7 @@ typedef struct InputParam {
   int vlcDebug;
   } sInputParam;
 //}}}
-//{{{
+//{{{  sImage
 typedef struct Image {
   sFrameFormat format;                  // image format
 
@@ -328,7 +324,7 @@ typedef struct Image {
   int bot_stride[MAX_PLANE];
   } sImage;
 //}}}
-//{{{
+//{{{  sOldSliceParam
 typedef struct OldSliceParam {
   unsigned field_pic_flag;
   unsigned frame_num;
@@ -337,32 +333,30 @@ typedef struct OldSliceParam {
   int      delta_pic_oder_cnt_bottom;
   int      delta_pic_order_cnt[2];
   byte     bottom_field_flag;
-  byte     idr_flag;
-  int      idr_pic_id;
+  byte     idrFlag;
+  int      idrPicId;
   int      pps_id;
   int      layerId;
   } sOldSliceParam;
 //}}}
-//{{{
+//{{{  sSlice
 typedef struct Slice {
   struct VidParam* vidParam;
   struct InputParam* inputParam;
-  sPPS* active_pps;
-  sSPS* active_sps;
+  sPPS* activePPS;
+  sSPS* activeSPS;
 
-  // dpb pointer
   struct DPB* dpb;
 
-  // slice property;
-  int idr_flag;
-  int idr_pic_id;
-  int nal_reference_idc;                       // nal_reference_idc from NAL unit
-  int Transform8x8Mode;
-  Boolean chroma444_not_separate;              // indicates chroma 4:4:4 coding with separate_colour_plane_flag equal to zero
+  int idrFlag;
+  int idrPicId;
+  int nalRefId;                     // nalRefId from NAL
+  int transform8x8Mode;
+  Boolean chroma444notSeparate;   // indicates chroma 4:4:4 coding with separate_colour_plane_flag equal to zero
 
-  int toppoc;      // poc for this top field
-  int bottompoc;   // poc of bottom field of frame
-  int framepoc;    // poc of this frame
+  int topPoc;      // poc for this top field
+  int botPoc;   // poc of bottom field of frame
+  int framePoc;    // poc of this frame
 
   // poc mode 0.
   unsigned int pic_order_cnt_lsb;
@@ -385,28 +379,28 @@ typedef struct Slice {
   int cod_counter;                   // Current count of number of skipped macroblocks in a row
   int allrefzero;
 
-  int                 mb_aff_frame_flag;
-  int                 direct_spatial_mv_pred_flag;       //!< Indicator for direct mode type (1 for Spatial, 0 for Temporal)
-  int                 num_ref_idx_active[2];             //!< number of available list references
+  int               mb_aff_frame_flag;
+  int               direct_spatial_mv_pred_flag;       //!< Indicator for direct mode type (1 for Spatial, 0 for Temporal)
+  int               num_ref_idx_active[2];             //!< number of available list references
 
-  int                 ei_flag;       //!< 0 if the partArr[0] contains valid information
-  int                 qp;
-  int                 slice_qp_delta;
-  int                 qs;
-  int                 slice_qs_delta;
-  int                 slice_type;    //!< slice type
-  int                 model_number;  //!< cabac model number
-  unsigned int        frame_num;   //frame_num for this frame
-  unsigned int        field_pic_flag;
-  byte                bottom_field_flag;
-  sPictureStructure    structure;     //!< Identify picture structure type
-  int                 start_mb_nr;   //!< MUST be set by NAL even in case of ei_flag == 1
-  int                 end_mb_nr_plus1;
-  int                 max_part_nr;
-  int                 dp_mode;       //!< data partitioning mode
-  int                 current_header;
-  int                 next_header;
-  int                 last_dquant;
+  int               ei_flag;       //!< 0 if the partArr[0] contains valid information
+  int               qp;
+  int               slice_qp_delta;
+  int               qs;
+  int               slice_qs_delta;
+  int               slice_type;    //!< slice type
+  int               model_number;  //!< cabac model number
+  unsigned int      frame_num;   //frame_num for this frame
+  unsigned int      field_pic_flag;
+  byte              bottom_field_flag;
+  sPictureStructure structure;     //!< Identify picture structure type
+  int               start_mb_nr;   //!< MUST be set by NAL even in case of ei_flag == 1
+  int               end_mb_nr_plus1;
+  int               max_part_nr;
+  int               dp_mode;       //!< data partitioning mode
+  int               current_header;
+  int               next_header;
+  int               last_dquant;
 
   // slice header information;
   int colour_plane_id;               //!< colour_plane_id of the current coded slice
@@ -417,32 +411,31 @@ typedef struct Slice {
   int no_output_of_prior_pics_flag;
   int long_term_reference_flag;
   int adaptive_ref_pic_buffering_flag;
-  sDecRefPicMarking *dec_ref_pic_marking_buffer;                    //!< stores the memory management control operations
+  sDecRefPicMarking *decRefPicMarkingBuffer;                    //!< stores the memory management control operations
 
   char listXsize[6];
   struct Picture** listX[6];
 
-  sDataPartition       *partArr;      //!< array of partitions
-  sMotionInfoContexts  *mot_ctx;      //!< pointer to struct of context models for use in CABAC
-  sTextureInfoContexts *tex_ctx;      //!< pointer to struct of context models for use in CABAC
+  sDataPartition*       partArr;      //!< array of partitions
+  sMotionInfoContexts*  mot_ctx;      //!< pointer to struct of context models for use in CABAC
+  sTextureInfoContexts* tex_ctx;      //!< pointer to struct of context models for use in CABAC
 
   int mvscale[6][MAX_REFERENCE_PICTURES];
+  int ref_pic_list_reordering_flag[2];
+  int* modification_of_pic_nums_idc[2];
+  int* abs_diff_pic_num_minus1[2];
+  int* long_term_pic_idx[2];
 
-  int                 ref_pic_list_reordering_flag[2];
-  int                 *modification_of_pic_nums_idc[2];
-  int                 *abs_diff_pic_num_minus1[2];
-  int                 *long_term_pic_idx[2];
+  int   layerId;
+  short DFDisableIdc;         // Disable deblocking filter on slice
+  short DFAlphaC0Offset;      // Alpha and C0 offset for filtering slice
+  short DFBetaOffset;         // Beta offset for filtering slice
+  int   pic_parameter_set_id; // the ID of the picture parameter set the slice is reffering to
+  int   dpB_NotPresent;       // non-zero, if data partition B is lost
+  int   dpC_NotPresent;       // non-zero, if data partition C is lost
 
-  int                 layerId;
-  short               DFDisableIdc;     //!< Disable deblocking filter on slice
-  short               DFAlphaC0Offset;  //!< Alpha and C0 offset for filtering slice
-  short               DFBetaOffset;     //!< Beta offset for filtering slice
-  int                 pic_parameter_set_id;   //!<the ID of the picture parameter set the slice is reffering to
-  int                 dpB_NotPresent;    //!< non-zero, if data partition B is lost
-  int                 dpC_NotPresent;    //!< non-zero, if data partition C is lost
-
-  Boolean is_reset_coeff;
-  Boolean is_reset_coeff_cr;
+  Boolean   is_reset_coeff;
+  Boolean   is_reset_coeff_cr;
   sPixel*** mb_pred;
   sPixel*** mb_rec;
   int***    mb_rres;
@@ -465,9 +458,9 @@ typedef struct Slice {
   int* qmatrix[12];
 
   // Cabac
-  int  coeff[64]; // one more for EOB
-  int  coeff_ctr;
-  int  pos;
+  int coeff[64]; // one more for EOB
+  int coeff_ctr;
+  int pos;
 
   //weighted prediction
   unsigned short weighted_pred_flag;
@@ -489,7 +482,7 @@ typedef struct Slice {
 
   int erc_mvperMB;
   sMacroblock* mb_data;
- 
+
   struct Picture* picture;
   int**   siblock;
   byte** ipredmode;
@@ -515,7 +508,7 @@ typedef struct Slice {
   void (*read_coeff_4x4_CAVLC     )    (sMacroblock *curMb, int block_type, int i, int j, int levarr[16], int runarr[16], int *number_coefficients);
   } sSlice;
 //}}}
-//{{{
+//{{{  sDecodedPicList
 typedef struct DecodedPicList {
   int bValid;                 // 0: invalid, 1: valid, 3: valid for 3D output;
   int iViewId;                // -1: single view, >=0 multiview[VIEW1|VIEW0];
@@ -536,10 +529,10 @@ typedef struct DecodedPicList {
   int iSkipPicNum;
   int iBufSize;
 
-  struct DecodedPicList *pNext;
+  struct DecodedPicList *next;
   } sDecodedPicList;
 //}}}
-//{{{
+//{{{  sCodingParam
 typedef struct CodingParam {
   int layerId;
   int profile_idc;
@@ -605,7 +598,7 @@ typedef struct CodingParam {
   int*         qpRemMatrix;
   } sCodingParam;
 //}}}
-//{{{
+//{{{  sLayerParam
 typedef struct LayerParam {
   int              layerId;
   struct VidParam* vidParam;
@@ -614,7 +607,7 @@ typedef struct LayerParam {
   struct DPB* dpb;
   } sLayerParam;
 //}}}
-//{{{
+//{{{  sVidParam
 typedef struct VidParam {
   struct InputParam* inputParam;
 
@@ -622,8 +615,8 @@ typedef struct VidParam {
   TIME_T endTime;
   int64  totTime;
 
-  sPPS* active_pps;
-  sSPS* active_sps;
+  sPPS* activePPS;
+  sSPS* activeSPS;
   sSPS  SeqParSet[MAXSPS];
   sPPS  PicParSet[MAXPPS];
 
@@ -831,7 +824,7 @@ typedef struct VidParam {
   int max_vmv_r;
   } sVidParam;
 //}}}
-//{{{
+//{{{  sDecoderParam
 typedef struct DecoderParam {
   sInputParam* inputParam;
   sVidParam*   vidParam;
@@ -879,18 +872,18 @@ static inline int is_BL_profile (unsigned int profile_idc) {
   extern void freePartition (sDataPartition* dp, int n);
 
   extern unsigned ceilLog2 (unsigned uiVal);
-  extern unsigned ceilLog2_sf (unsigned uiVal);
+  extern unsigned ceilLog2sf (unsigned uiVal);
 
   // For 4:4:4 independent mode
   extern void change_plane_JV (sVidParam* vidParam, int nplane, sSlice *pSlice);
   extern void make_frame_picture_JV (sVidParam* vidParam );
 
-  extern sDecodedPicList* get_one_avail_dec_pic_from_list (sDecodedPicList* pDecPicList, int b3D, int view_id);
-  extern void freeDecPicList (sDecodedPicList* pDecPicList );
-  extern void clearDecPicList (sVidParam* vidParam );
+  extern sDecodedPicList* getAvailableDecPic (sDecodedPicList* pDecPicList, int b3D, int view_id);
+  extern void freeDecPicList (sDecodedPicList* pDecPicList);
+  extern void clearDecPicList (sVidParam* vidParam);
 
-  extern sSlice* malloc_slice (sInputParam* inputParam, sVidParam* vidParam);
-  extern void copy_slice_info (sSlice* curSlice, sOldSliceParam* oldSliceParam);
+  extern sSlice* allocSlice (sInputParam* inputParam, sVidParam* vidParam);
+  extern void copySliceInfo (sSlice* curSlice, sOldSliceParam* oldSliceParam);
 
   extern void setGlobalCodingProgram (sVidParam* vidParam, sCodingParam* cps);
   extern void OpenOutputFiles (sVidParam* vidParam, int view0_id, int view1_id);

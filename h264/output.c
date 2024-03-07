@@ -104,13 +104,11 @@ static void writeOutPicture (sVidParam* vidParam, sPicture* p) {
   //printf ("write frame size: %dx%d\n", p->size_x-crop_left-crop_right,p->size_y-crop_top-crop_bottom );
 
   // KS: this buffer should actually be allocated only once, but this is still much faster than the previous version
-  decPic = get_one_avail_dec_pic_from_list (vidParam->decOutputPic, 0, 0);
+  decPic = getAvailableDecPic (vidParam->decOutputPic, 0, 0);
   if ((decPic->pY == NULL) || (decPic->iBufSize < iFrameSize))
     allocDecPic (vidParam, decPic, p, iLumaSize, iFrameSize, iLumaSizeX, iLumaSizeY, iChromaSizeX, iChromaSizeY);
-
   decPic->bValid = 1;
   decPic->iPOC = p->frame_poc;
-
   if (NULL == decPic->pY)
     no_mem_exit ("writeOutPicture: buf");
 

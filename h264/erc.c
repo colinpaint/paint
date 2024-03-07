@@ -1548,7 +1548,7 @@ static void copy_to_conceal (sPicture *src, sPicture *dst, sVidParam* vidParam)
 
   dst->slice_type = src->slice_type = vidParam->conceal_slice_type;
 
-  dst->idr_flag = FALSE; //since we do not want to clears the ref list
+  dst->idrFlag = FALSE; //since we do not want to clears the ref list
 
   dst->no_output_of_prior_pics_flag = src->no_output_of_prior_pics_flag;
   dst->long_term_reference_flag = src->long_term_reference_flag;
@@ -1751,7 +1751,7 @@ static void update_ref_list_for_concealment (sDPB* dpb) {
     if (dpb->fs[i]->concealment_reference)
       dpb->fs_ref[j++] = dpb->fs[i];
 
-  dpb->ref_frames_in_buffer = vidParam->active_pps->num_ref_idx_l0_default_active_minus1;
+  dpb->ref_frames_in_buffer = vidParam->activePPS->num_ref_idx_l0_default_active_minus1;
   }
 //}}}
 
@@ -1782,11 +1782,11 @@ struct concealment_node * init_node (sPicture* picture, int missingpoc ) {
 void init_lists_for_non_reference_loss (sDPB* dpb, int currSliceType, sPictureStructure currPicStructure)
 {
   sVidParam* vidParam = dpb->vidParam;
-  sSPS *active_sps = vidParam->active_sps;
+  sSPS *activeSPS = vidParam->activeSPS;
 
   unsigned i;
   int j;
-  int max_frame_num = 1 << (active_sps->log2_max_frame_num_minus4 + 4);
+  int max_frame_num = 1 << (activeSPS->log2_max_frame_num_minus4 + 4);
 
   int list0idx = 0;
   int list0idx_1 = 0;
@@ -1859,8 +1859,8 @@ void init_lists_for_non_reference_loss (sDPB* dpb, int currSliceType, sPictureSt
     }
 
   // set max size
-  vidParam->ppSliceList[0]->listXsize[0] = (char) imin (vidParam->ppSliceList[0]->listXsize[0], (int)active_sps->num_ref_frames);
-  vidParam->ppSliceList[0]->listXsize[1] = (char) imin (vidParam->ppSliceList[0]->listXsize[1], (int)active_sps->num_ref_frames);
+  vidParam->ppSliceList[0]->listXsize[0] = (char) imin (vidParam->ppSliceList[0]->listXsize[0], (int)activeSPS->num_ref_frames);
+  vidParam->ppSliceList[0]->listXsize[1] = (char) imin (vidParam->ppSliceList[0]->listXsize[1], (int)activeSPS->num_ref_frames);
   vidParam->ppSliceList[0]->listXsize[1] = 0;
 
   // set the unused list entries to NULL
@@ -1934,7 +1934,7 @@ void conceal_lost_frames (sDPB* dpb, sSlice *pSlice)
     if(vidParam->IDR_concealment_flag == 1)
     {
       picture->slice_type = I_SLICE;
-      picture->idr_flag = TRUE;
+      picture->idrFlag = TRUE;
       flush_dpb(dpb);
       picture->top_poc= 0;
       picture->bottom_poc=picture->top_poc;

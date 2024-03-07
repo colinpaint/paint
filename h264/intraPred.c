@@ -258,7 +258,7 @@ static int intra8x8_dc_pred (sMacroblock *curMb,
 
   pix_c.available = pix_c.available &&!(ioff == 8 && joff == 8);
 
-  if (vidParam->active_pps->constrained_intra_pred_flag)
+  if (vidParam->activePPS->constrained_intra_pred_flag)
   {
     block_available_left     = pix_a.available ? curSlice->intra_block [pix_a.mb_addr]: 0;
     block_available_up       = pix_b.available ? curSlice->intra_block [pix_b.mb_addr] : 0;
@@ -403,7 +403,7 @@ static int intra8x8_vert_pred (sMacroblock *curMb,
 
   pix_c.available = pix_c.available &&!(ioff == 8 && joff == 8);
 
-  if (vidParam->active_pps->constrained_intra_pred_flag)
+  if (vidParam->activePPS->constrained_intra_pred_flag)
   {
     block_available_left     = pix_a.available ? curSlice->intra_block [pix_a.mb_addr] : 0;
     block_available_up       = pix_b.available ? curSlice->intra_block [pix_b.mb_addr] : 0;
@@ -512,7 +512,7 @@ static int intra8x8_hor_pred (sMacroblock *curMb,
   getNonAffNeighbour(curMb, ioff    , joff - 1, mb_size, &pix_b);
   getNonAffNeighbour(curMb, ioff - 1, joff - 1, mb_size, &pix_d);
 
-  if (vidParam->active_pps->constrained_intra_pred_flag)
+  if (vidParam->activePPS->constrained_intra_pred_flag)
   {
     block_available_left     = pix_a.available ? curSlice->intra_block [pix_a.mb_addr]: 0;
     block_available_up       = pix_b.available ? curSlice->intra_block [pix_b.mb_addr] : 0;
@@ -622,7 +622,7 @@ static int intra8x8_diag_down_right_pred (sMacroblock *curMb,
 
   pix_c.available = pix_c.available &&!(ioff == 8 && joff == 8);
 
-  if (vidParam->active_pps->constrained_intra_pred_flag)
+  if (vidParam->activePPS->constrained_intra_pred_flag)
   {
     block_available_left     = pix_a.available ? curSlice->intra_block [pix_a.mb_addr]: 0;
     block_available_up       = pix_b.available ? curSlice->intra_block [pix_b.mb_addr] : 0;
@@ -771,7 +771,7 @@ static int intra8x8_diag_down_left_pred (sMacroblock *curMb,
 
   pix_c.available = pix_c.available &&!(ioff == 8 && joff == 8);
 
-  if (vidParam->active_pps->constrained_intra_pred_flag)
+  if (vidParam->activePPS->constrained_intra_pred_flag)
   {
     block_available_left     = pix_a.available ? curSlice->intra_block [pix_a.mb_addr]: 0;
     block_available_up       = pix_b.available ? curSlice->intra_block [pix_b.mb_addr] : 0;
@@ -920,7 +920,7 @@ static int intra8x8_vert_right_pred (sMacroblock *curMb,
 
   pix_c.available = pix_c.available &&!(ioff == 8 && joff == 8);
 
-  if (vidParam->active_pps->constrained_intra_pred_flag)
+  if (vidParam->activePPS->constrained_intra_pred_flag)
   {
     block_available_left     = pix_a.available ? curSlice->intra_block [pix_a.mb_addr]: 0;
     block_available_up       = pix_b.available ? curSlice->intra_block [pix_b.mb_addr] : 0;
@@ -1075,7 +1075,7 @@ static int intra8x8_vert_left_pred (sMacroblock *curMb,
 
   pix_c.available = pix_c.available &&!(ioff == 8 && joff == 8);
 
-  if (vidParam->active_pps->constrained_intra_pred_flag)
+  if (vidParam->activePPS->constrained_intra_pred_flag)
   {
     block_available_left     = pix_a.available ? curSlice->intra_block [pix_a.mb_addr] : 0;
     block_available_up       = pix_b.available ? curSlice->intra_block [pix_b.mb_addr] : 0;
@@ -1229,7 +1229,7 @@ static int intra8x8_hor_up_pred (sMacroblock *curMb,
 
   pix_c.available = pix_c.available &&!(ioff == 8 && joff == 8);
 
-  if (vidParam->active_pps->constrained_intra_pred_flag)
+  if (vidParam->activePPS->constrained_intra_pred_flag)
   {
     block_available_left     = pix_a.available ? curSlice->intra_block [pix_a.mb_addr] : 0;
     block_available_up       = pix_b.available ? curSlice->intra_block [pix_b.mb_addr] : 0;
@@ -1382,7 +1382,7 @@ static int intra8x8_hor_down_pred (sMacroblock *curMb,
 
   pix_c.available = pix_c.available &&!(ioff == 8 && joff == 8);
 
-  if (vidParam->active_pps->constrained_intra_pred_flag)
+  if (vidParam->activePPS->constrained_intra_pred_flag)
   {
     block_available_left     = pix_a.available ? curSlice->intra_block [pix_a.mb_addr] : 0;
     block_available_up       = pix_b.available ? curSlice->intra_block [pix_b.mb_addr] : 0;
@@ -1613,7 +1613,7 @@ static int intra8x8_dc_pred_mbaff (sMacroblock *curMb,
 
   pix_c.available = pix_c.available &&!(ioff == 8 && joff == 8);
 
-  if (vidParam->active_pps->constrained_intra_pred_flag)
+  if (vidParam->activePPS->constrained_intra_pred_flag)
   {
     for (i=0, block_available_left=1; i<8;i++)
       block_available_left  &= pix_a[i].available ? curSlice->intra_block[pix_a[i].mb_addr]: 0;
@@ -1758,7 +1758,7 @@ static int intra8x8_vert_pred_mbaff (sMacroblock *curMb,
 
   pix_c.available = pix_c.available &&!(ioff == 8 && joff == 8);
 
-  if (vidParam->active_pps->constrained_intra_pred_flag)
+  if (vidParam->activePPS->constrained_intra_pred_flag)
   {
     for (i=0, block_available_left=1; i<8;i++)
       block_available_left  &= pix_a[i].available ? curSlice->intra_block[pix_a[i].mb_addr]: 0;
@@ -1875,7 +1875,7 @@ static int intra8x8_hor_pred_mbaff (sMacroblock *curMb,
 
   pix_c.available = pix_c.available &&!(ioff == 8 && joff == 8);
 
-  if (vidParam->active_pps->constrained_intra_pred_flag)
+  if (vidParam->activePPS->constrained_intra_pred_flag)
   {
     for (i=0, block_available_left=1; i<8;i++)
       block_available_left  &= pix_a[i].available ? curSlice->intra_block[pix_a[i].mb_addr]: 0;
@@ -1989,7 +1989,7 @@ static int intra8x8_diag_down_right_pred_mbaff (sMacroblock *curMb,
 
   pix_c.available = pix_c.available &&!(ioff == 8 && joff == 8);
 
-  if (vidParam->active_pps->constrained_intra_pred_flag)
+  if (vidParam->activePPS->constrained_intra_pred_flag)
   {
     for (i=0, block_available_left=1; i<8;i++)
       block_available_left  &= pix_a[i].available ? curSlice->intra_block[pix_a[i].mb_addr]: 0;
@@ -2140,7 +2140,7 @@ static int intra8x8_diag_down_left_pred_mbaff (sMacroblock *curMb,
 
   pix_c.available = pix_c.available &&!(ioff == 8 && joff == 8);
 
-  if (vidParam->active_pps->constrained_intra_pred_flag)
+  if (vidParam->activePPS->constrained_intra_pred_flag)
   {
     for (i=0, block_available_left=1; i<8;i++)
       block_available_left  &= pix_a[i].available ? curSlice->intra_block[pix_a[i].mb_addr]: 0;
@@ -2292,7 +2292,7 @@ static int intra8x8_vert_right_pred_mbaff (sMacroblock *curMb,
 
   pix_c.available = pix_c.available &&!(ioff == 8 && joff == 8);
 
-  if (vidParam->active_pps->constrained_intra_pred_flag)
+  if (vidParam->activePPS->constrained_intra_pred_flag)
   {
     for (i=0, block_available_left=1; i<8;i++)
       block_available_left  &= pix_a[i].available ? curSlice->intra_block[pix_a[i].mb_addr]: 0;
@@ -2450,7 +2450,7 @@ static int intra8x8_vert_left_pred_mbaff (sMacroblock *curMb,
 
   pix_c.available = pix_c.available &&!(ioff == 8 && joff == 8);
 
-  if (vidParam->active_pps->constrained_intra_pred_flag)
+  if (vidParam->activePPS->constrained_intra_pred_flag)
   {
     for (i=0, block_available_left=1; i<8;i++)
       block_available_left  &= pix_a[i].available ? curSlice->intra_block[pix_a[i].mb_addr]: 0;
@@ -2608,7 +2608,7 @@ static int intra8x8_hor_up_pred_mbaff (sMacroblock *curMb,
 
   pix_c.available = pix_c.available &&!(ioff == 8 && joff == 8);
 
-  if (vidParam->active_pps->constrained_intra_pred_flag)
+  if (vidParam->activePPS->constrained_intra_pred_flag)
   {
     for (i=0, block_available_left=1; i<8;i++)
       block_available_left  &= pix_a[i].available ? curSlice->intra_block[pix_a[i].mb_addr]: 0;
@@ -2766,7 +2766,7 @@ static int intra8x8_hor_down_pred_mbaff (sMacroblock *curMb,
 
   pix_c.available = pix_c.available &&!(ioff == 8 && joff == 8);
 
-  if (vidParam->active_pps->constrained_intra_pred_flag)
+  if (vidParam->activePPS->constrained_intra_pred_flag)
   {
     for (i=0, block_available_left=1; i<8;i++)
       block_available_left  &= pix_a[i].available ? curSlice->intra_block[pix_a[i].mb_addr]: 0;
@@ -2967,7 +2967,7 @@ static int intra16x16_dc_pred (sMacroblock *curMb, sColorPlane pl)
   getNonAffNeighbour(curMb,   -1,   0, vidParam->mb_size[IS_LUMA], &a);
   getNonAffNeighbour(curMb,    0,  -1, vidParam->mb_size[IS_LUMA], &b);
 
-  if (!vidParam->active_pps->constrained_intra_pred_flag)
+  if (!vidParam->activePPS->constrained_intra_pred_flag)
   {
     up_avail      = b.available;
     left_avail    = a.available;
@@ -3053,7 +3053,7 @@ static int intra16x16_vert_pred (sMacroblock *curMb, sColorPlane pl)
 
   getNonAffNeighbour(curMb,    0,   -1, vidParam->mb_size[IS_LUMA], &b);
 
-  if (!vidParam->active_pps->constrained_intra_pred_flag)
+  if (!vidParam->activePPS->constrained_intra_pred_flag)
   {
     up_avail = b.available;
   }
@@ -3108,7 +3108,7 @@ static int intra16x16_hor_pred (sMacroblock *curMb, sColorPlane pl)
 
   getNonAffNeighbour(curMb, -1,  0, vidParam->mb_size[IS_LUMA], &a);
 
-  if (!vidParam->active_pps->constrained_intra_pred_flag)
+  if (!vidParam->activePPS->constrained_intra_pred_flag)
   {
     left_avail    = a.available;
   }
@@ -3183,7 +3183,7 @@ static int intra16x16_plane_pred (sMacroblock *curMb, sColorPlane pl)
   getNonAffNeighbour(curMb, -1,   0, vidParam->mb_size[IS_LUMA], &a);
   getNonAffNeighbour(curMb,  0,  -1, vidParam->mb_size[IS_LUMA], &b);
 
-  if (!vidParam->active_pps->constrained_intra_pred_flag)
+  if (!vidParam->activePPS->constrained_intra_pred_flag)
   {
     up_avail      = b.available;
     left_avail    = a.available;
@@ -3306,7 +3306,7 @@ static int intra16x16_dc_pred_mbaff (sMacroblock *curMb, sColorPlane pl)
   }
   getAffNeighbour(curMb,    0,   -1, vidParam->mb_size[IS_LUMA], &b);
 
-  if (!vidParam->active_pps->constrained_intra_pred_flag)
+  if (!vidParam->activePPS->constrained_intra_pred_flag)
   {
     up_avail      = b.available;
     left_avail    = left[1].available;
@@ -3375,7 +3375,7 @@ static int intra16x16_vert_pred_mbaff (sMacroblock *curMb, sColorPlane pl)
 
   getAffNeighbour(curMb,    0,   -1, vidParam->mb_size[IS_LUMA], &b);
 
-  if (!vidParam->active_pps->constrained_intra_pred_flag)
+  if (!vidParam->activePPS->constrained_intra_pred_flag)
   {
     up_avail = b.available;
   }
@@ -3432,7 +3432,7 @@ static int intra16x16_hor_pred_mbaff (sMacroblock *curMb, sColorPlane pl)
     getAffNeighbour(curMb, -1,  i-1, vidParam->mb_size[IS_LUMA], &left[i]);
   }
 
-  if (!vidParam->active_pps->constrained_intra_pred_flag)
+  if (!vidParam->activePPS->constrained_intra_pred_flag)
   {
     left_avail    = left[1].available;
   }
@@ -3492,7 +3492,7 @@ static int intra16x16_plane_pred_mbaff (sMacroblock *curMb, sColorPlane pl)
   }
   getAffNeighbour(curMb,    0,   -1, vidParam->mb_size[IS_LUMA], &b);
 
-  if (!vidParam->active_pps->constrained_intra_pred_flag)
+  if (!vidParam->activePPS->constrained_intra_pred_flag)
   {
     up_avail      = b.available;
     left_avail    = left[1].available;
@@ -3653,7 +3653,7 @@ static void intrapred_chroma_dc (sMacroblock *curMb)
   getNonAffNeighbour(curMb, -1,  0, vidParam->mb_size[IS_CHROMA], &left);
   getNonAffNeighbour(curMb,  0, -1, vidParam->mb_size[IS_CHROMA], &up);
 
-  if (!vidParam->active_pps->constrained_intra_pred_flag)
+  if (!vidParam->activePPS->constrained_intra_pred_flag)
   {
     up_avail      = up.available;
     left_avail    = left.available;
@@ -3731,7 +3731,7 @@ static void intrapred_chroma_hor (sMacroblock *curMb)
 
   getNonAffNeighbour(curMb, -1, 0, vidParam->mb_size[IS_CHROMA], &a);
 
-  if (!vidParam->active_pps->constrained_intra_pred_flag)
+  if (!vidParam->activePPS->constrained_intra_pred_flag)
     left_avail = a.available;
   else
     left_avail = a.available ? curMb->slice->intra_block[a.mb_addr]: 0;
@@ -3789,7 +3789,7 @@ static void intrapred_chroma_ver (sMacroblock *curMb)
   int cr_MB_y = vidParam->mb_cr_size_y;
   getNonAffNeighbour(curMb, 0, -1, vidParam->mb_size[IS_CHROMA], &up);
 
-  if (!vidParam->active_pps->constrained_intra_pred_flag)
+  if (!vidParam->activePPS->constrained_intra_pred_flag)
     up_avail      = up.available;
   else
     up_avail = up.available ? curSlice->intra_block[up.mb_addr] : 0;
@@ -3827,7 +3827,7 @@ static void intrapred_chroma_plane (sMacroblock *curMb)
   getNonAffNeighbour(curMb, -1,  0, vidParam->mb_size[IS_CHROMA], &left);
   getNonAffNeighbour(curMb,  0, -1, vidParam->mb_size[IS_CHROMA], &up);
 
-  if (!vidParam->active_pps->constrained_intra_pred_flag)
+  if (!vidParam->activePPS->constrained_intra_pred_flag)
   {
     up_avail      = up.available;
     left_avail    = left.available;
@@ -3977,7 +3977,7 @@ static void intra_pred_chroma_mbaff (sMacroblock *curMb)
         getAffNeighbour(curMb, -1, i-1, vidParam->mb_size[IS_CHROMA], &left[i]);
       getAffNeighbour(curMb, 0, -1, vidParam->mb_size[IS_CHROMA], &up);
 
-      if (!vidParam->active_pps->constrained_intra_pred_flag)
+      if (!vidParam->activePPS->constrained_intra_pred_flag)
       {
         up_avail      = up.available;
         left_avail[0] = left_avail[1] = left[1].available;
@@ -4066,7 +4066,7 @@ static void intra_pred_chroma_mbaff (sMacroblock *curMb)
       for (i=0; i < cr_MB_y + 1 ; ++i)
         getAffNeighbour(curMb, -1, i-1, vidParam->mb_size[IS_CHROMA], &left[i]);
 
-      if (!vidParam->active_pps->constrained_intra_pred_flag)
+      if (!vidParam->activePPS->constrained_intra_pred_flag)
       {
         left_avail[0] = left_avail[1] = left[1].available;
       }
@@ -4112,7 +4112,7 @@ static void intra_pred_chroma_mbaff (sMacroblock *curMb)
 
       getAffNeighbour(curMb, 0, -1, vidParam->mb_size[IS_CHROMA], &up);
 
-      if (!vidParam->active_pps->constrained_intra_pred_flag)
+      if (!vidParam->activePPS->constrained_intra_pred_flag)
         up_avail      = up.available;
       else
         up_avail = up.available ? curSlice->intra_block[up.mb_addr] : 0;
@@ -4149,7 +4149,7 @@ static void intra_pred_chroma_mbaff (sMacroblock *curMb)
         getAffNeighbour(curMb, -1, i-1, vidParam->mb_size[IS_CHROMA], &left[i]);
       getAffNeighbour(curMb, 0, -1, vidParam->mb_size[IS_CHROMA], &up);
 
-      if (!vidParam->active_pps->constrained_intra_pred_flag)
+      if (!vidParam->activePPS->constrained_intra_pred_flag)
       {
         up_avail      = up.available;
         left_avail[0] = left_avail[1] = left[1].available;

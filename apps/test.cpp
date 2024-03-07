@@ -1009,7 +1009,7 @@ private:
 
       mOutputFrame++;
       pPic->bValid = 0;
-      pPic = pPic->pNext;
+      pPic = pPic->next;
       }
     }
   //}}}
@@ -1151,7 +1151,7 @@ private:
 
       mOutputFrame++;
       pPic->bValid = 0;
-      pPic = pPic->pNext;
+      pPic = pPic->next;
       }
     }
   //}}}

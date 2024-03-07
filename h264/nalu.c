@@ -229,7 +229,7 @@ static int getNALU (ANNEXB_t* annexB, sVidParam* vidParam, sNalu* nalu) {
       nalu->len = (naluBufCount - 1) - leadingZero8BitsCount;
       memcpy (nalu->buf, annexB->naluBuf + leadingZero8BitsCount, nalu->len);
       nalu->forbidden_bit = (*(nalu->buf) >> 7) & 1;
-      nalu->nal_reference_idc = (NalRefIdc)((*(nalu->buf) >> 5) & 3);
+      nalu->nalRefId = (NalRefIdc)((*(nalu->buf) >> 5) & 3);
       nalu->nal_unit_type = (NaluType)((*(nalu->buf)) & 0x1f);
       annexB->nextStartCodeBytes = 0;
 
@@ -237,7 +237,7 @@ static int getNALU (ANNEXB_t* annexB, sVidParam* vidParam, sNalu* nalu) {
         printf ("last %sNALU %d::%d:%d len:%d, \n",
                 nalu->startcodeprefix_len == 4 ? "l":"s",
                 nalu->forbidden_bit,
-                nalu->nal_reference_idc,
+                nalu->nalRefId,
                 nalu->nal_unit_type,
                 nalu->len
                 );
@@ -282,7 +282,7 @@ static int getNALU (ANNEXB_t* annexB, sVidParam* vidParam, sNalu* nalu) {
   nalu->len = naluBufCount - leadingZero8BitsCount;
   memcpy (nalu->buf, annexB->naluBuf + leadingZero8BitsCount, nalu->len);
   nalu->forbidden_bit = (*(nalu->buf) >> 7) & 1;
-  nalu->nal_reference_idc = (NalRefIdc) ((*(nalu->buf) >> 5) & 3);
+  nalu->nalRefId = (NalRefIdc) ((*(nalu->buf) >> 5) & 3);
   nalu->nal_unit_type = (NaluType) ((*(nalu->buf)) & 0x1f);
   nalu->lost_packets = 0;
 
@@ -290,7 +290,7 @@ static int getNALU (ANNEXB_t* annexB, sVidParam* vidParam, sNalu* nalu) {
     printf ("%sNALU %d::%d:%d len:%d, \n",
             nalu->startcodeprefix_len == 4 ? "l":"s",
             nalu->forbidden_bit,
-            nalu->nal_reference_idc,
+            nalu->nalRefId,
             nalu->nal_unit_type,
             nalu->len
             );

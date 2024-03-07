@@ -103,7 +103,7 @@ static int alloc_decoder (sDecoderParam** decoder) {
 //}}}
 
 //{{{
-sSlice* malloc_slice (sInputParam* inputParam, sVidParam* vidParam) {
+sSlice* allocSlice (sInputParam* inputParam, sVidParam* vidParam) {
 
   sSlice* curSlice = (sSlice*)calloc (1, sizeof(sSlice));
   if (!curSlice) {
@@ -135,7 +135,7 @@ sSlice* malloc_slice (sInputParam* inputParam, sVidParam* vidParam) {
   for (int i = 0; i < 6; i++) {
     curSlice->listX[i] = calloc (MAX_LIST_SIZE, sizeof (sPicture*)); // +1 for reordering
     if (!curSlice->listX[i])
-      no_mem_exit ("malloc_slice: curSlice->listX[i]");
+      no_mem_exit ("allocSlice: curSlice->listX[i]");
     }
 
   for (int j = 0; j < 6; j++) {
@@ -177,9 +177,9 @@ static void free_slice (sSlice *curSlice) {
       }
     }
 
-  while (curSlice->dec_ref_pic_marking_buffer) {
-    sDecRefPicMarking* tmp_drpm = curSlice->dec_ref_pic_marking_buffer;
-    curSlice->dec_ref_pic_marking_buffer = tmp_drpm->next;
+  while (curSlice->decRefPicMarkingBuffer) {
+    sDecRefPicMarking* tmp_drpm = curSlice->decRefPicMarkingBuffer;
+    curSlice->decRefPicMarkingBuffer = tmp_drpm->next;
     free (tmp_drpm);
     }
 
@@ -300,7 +300,7 @@ void init_frext (sVidParam* vidParam) {
   //pel bitdepth init
   vidParam->bitdepth_luma_qp_scale   = 6 * (vidParam->bitdepth_luma - 8);
 
-  if(vidParam->bitdepth_luma > vidParam->bitdepth_chroma || vidParam->active_sps->chroma_format_idc == YUV400)
+  if(vidParam->bitdepth_luma > vidParam->bitdepth_chroma || vidParam->activeSPS->chroma_format_idc == YUV400)
     vidParam->pic_unit_bitsize_on_disk = (vidParam->bitdepth_luma > 8)? 16:8;
   else
     vidParam->pic_unit_bitsize_on_disk = (vidParam->bitdepth_chroma > 8)? 16:8;
@@ -308,18 +308,18 @@ void init_frext (sVidParam* vidParam) {
   vidParam->max_pel_value_comp[0] = (1<<vidParam->bitdepth_luma) - 1;
   vidParam->mb_size[0][0] = vidParam->mb_size[0][1] = MB_BLOCK_SIZE;
 
-  if (vidParam->active_sps->chroma_format_idc != YUV400) {
+  if (vidParam->activeSPS->chroma_format_idc != YUV400) {
     //for chrominance part
     vidParam->bitdepth_chroma_qp_scale = 6 * (vidParam->bitdepth_chroma - 8);
     vidParam->dc_pred_value_comp[1]    = (1 << (vidParam->bitdepth_chroma - 1));
     vidParam->dc_pred_value_comp[2]    = vidParam->dc_pred_value_comp[1];
     vidParam->max_pel_value_comp[1]    = (1 << vidParam->bitdepth_chroma) - 1;
     vidParam->max_pel_value_comp[2]    = (1 << vidParam->bitdepth_chroma) - 1;
-    vidParam->num_blk8x8_uv = (1 << vidParam->active_sps->chroma_format_idc) & (~(0x1));
+    vidParam->num_blk8x8_uv = (1 << vidParam->activeSPS->chroma_format_idc) & (~(0x1));
     vidParam->num_uv_blocks = (vidParam->num_blk8x8_uv >> 1);
     vidParam->num_cdc_coeff = (vidParam->num_blk8x8_uv << 1);
-    vidParam->mb_size[1][0] = vidParam->mb_size[2][0] = vidParam->mb_cr_size_x  = (vidParam->active_sps->chroma_format_idc==YUV420 || vidParam->active_sps->chroma_format_idc==YUV422)?  8 : 16;
-    vidParam->mb_size[1][1] = vidParam->mb_size[2][1] = vidParam->mb_cr_size_y  = (vidParam->active_sps->chroma_format_idc==YUV444 || vidParam->active_sps->chroma_format_idc==YUV422)? 16 :  8;
+    vidParam->mb_size[1][0] = vidParam->mb_size[2][0] = vidParam->mb_cr_size_x  = (vidParam->activeSPS->chroma_format_idc==YUV420 || vidParam->activeSPS->chroma_format_idc==YUV422)?  8 : 16;
+    vidParam->mb_size[1][1] = vidParam->mb_size[2][1] = vidParam->mb_cr_size_y  = (vidParam->activeSPS->chroma_format_idc==YUV444 || vidParam->activeSPS->chroma_format_idc==YUV422)? 16 :  8;
 
     vidParam->subpel_x    = vidParam->mb_cr_size_x == 8 ? 7 : 3;
     vidParam->subpel_y    = vidParam->mb_cr_size_y == 8 ? 7 : 3;
@@ -348,9 +348,9 @@ void init_frext (sVidParam* vidParam) {
   vidParam->mb_size_blk[1][0] = vidParam->mb_size_blk[2][0] = vidParam->mb_size[1][0] >> 2;
   vidParam->mb_size_blk[1][1] = vidParam->mb_size_blk[2][1] = vidParam->mb_size[1][1] >> 2;
 
-  vidParam->mb_size_shift[0][0] = vidParam->mb_size_shift[0][1] = ceilLog2_sf (vidParam->mb_size[0][0]);
-  vidParam->mb_size_shift[1][0] = vidParam->mb_size_shift[2][0] = ceilLog2_sf (vidParam->mb_size[1][0]);
-  vidParam->mb_size_shift[1][1] = vidParam->mb_size_shift[2][1] = ceilLog2_sf (vidParam->mb_size[1][1]);
+  vidParam->mb_size_shift[0][0] = vidParam->mb_size_shift[0][1] = ceilLog2sf (vidParam->mb_size[0][0]);
+  vidParam->mb_size_shift[1][0] = vidParam->mb_size_shift[2][0] = ceilLog2sf (vidParam->mb_size[1][0]);
+  vidParam->mb_size_shift[1][1] = vidParam->mb_size_shift[2][1] = ceilLog2sf (vidParam->mb_size[1][1]);
   }
 //}}}
 
@@ -527,7 +527,7 @@ void freeGlobalBuffers (sVidParam* vidParam) {
 //}}}
 
 //{{{
-sDecodedPicList* get_one_avail_dec_pic_from_list (sDecodedPicList* pDecPicList, int b3D, int view_id) {
+sDecodedPicList* getAvailableDecPic (sDecodedPicList* pDecPicList, int b3D, int view_id) {
 
   sDecodedPicList* pPic = pDecPicList;
   sDecodedPicList* pPrior = NULL;
@@ -535,19 +535,19 @@ sDecodedPicList* get_one_avail_dec_pic_from_list (sDecodedPicList* pDecPicList, 
   if (b3D) {
     while (pPic && (pPic->bValid &(1<<view_id))) {
       pPrior = pPic;
-      pPic = pPic->pNext;
+      pPic = pPic->next;
       }
     }
   else {
     while (pPic && (pPic->bValid)) {
       pPrior = pPic;
-      pPic = pPic->pNext;
+      pPic = pPic->next;
      }
     }
 
   if (!pPic) {
     pPic = (sDecodedPicList *)calloc(1, sizeof(*pPic));
-    pPrior->pNext = pPic;
+    pPrior->next = pPic;
     }
 
   return pPic;
@@ -560,18 +560,18 @@ void ClearDecPicList (sVidParam* vidParam) {
   sDecodedPicList* pPic = vidParam->decOutputPic, *pPrior = NULL;
   while (pPic && !pPic->bValid) {
     pPrior = pPic;
-    pPic = pPic->pNext;
+    pPic = pPic->next;
     }
 
   if (pPic && (pPic != vidParam->decOutputPic)) {
     //move all nodes before pPic to the end;
     sDecodedPicList *pPicTail = pPic;
-    while (pPicTail->pNext)
-      pPicTail = pPicTail->pNext;
+    while (pPicTail->next)
+      pPicTail = pPicTail->next;
 
-    pPicTail->pNext = vidParam->decOutputPic;
+    pPicTail->next = vidParam->decOutputPic;
     vidParam->decOutputPic = pPic;
-    pPrior->pNext = NULL;
+    pPrior->next = NULL;
     }
   }
 //}}}
@@ -579,7 +579,7 @@ void ClearDecPicList (sVidParam* vidParam) {
 void freeDecPicList (sDecodedPicList* pDecPicList) {
 
   while (pDecPicList) {
-    sDecodedPicList* pPicNext = pDecPicList->pNext;
+    sDecodedPicList* pPicNext = pDecPicList->next;
     if (pDecPicList->pY) {
       free (pDecPicList->pY);
       pDecPicList->pY = NULL;

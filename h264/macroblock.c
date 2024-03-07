@@ -365,14 +365,14 @@ static int decode_one_component_b_slice (sMacroblock* curMb, sColorPlane curPlan
     sSlice* curSlice = curMb->slice;
     if (curSlice->direct_spatial_mv_pred_flag == 0)
     {
-      if (curSlice->active_sps->direct_8x8_inference_flag)
+      if (curSlice->activeSPS->direct_8x8_inference_flag)
         mb_pred_b_d8x8temporal (curMb, curPlane, curPixel, picture);
       else
         mb_pred_b_d4x4temporal (curMb, curPlane, curPixel, picture);
     }
     else
     {
-      if (curSlice->active_sps->direct_8x8_inference_flag)
+      if (curSlice->activeSPS->direct_8x8_inference_flag)
         mb_pred_b_d8x8spatial (curMb, curPlane, curPixel, picture);
       else
         mb_pred_b_d4x4spatial (curMb, curPlane, curPixel, picture);
@@ -422,7 +422,7 @@ static void prepareListforRefIdx (sMacroblock* curMb, sSyntaxElement* currSE, sD
 {
   if(num_ref_idx_active > 1)
   {
-    if (curMb->vidParam->active_pps->entropy_coding_mode_flag == (Boolean) CAVLC || dP->bitstream->ei_flag)
+    if (curMb->vidParam->activePPS->entropy_coding_mode_flag == (Boolean) CAVLC || dP->bitstream->ei_flag)
     {
       currSE->mapping = linfo_ue;
       if (refidx_present)
@@ -478,7 +478,7 @@ void read_delta_quant (sSyntaxElement* currSE, sDataPartition *dP, sMacroblock* 
 
   dP = &(curSlice->partArr[partMap[currSE->type]]);
 
-  if (vidParam->active_pps->entropy_coding_mode_flag == (Boolean) CAVLC || dP->bitstream->ei_flag)
+  if (vidParam->activePPS->entropy_coding_mode_flag == (Boolean) CAVLC || dP->bitstream->ei_flag)
     currSE->mapping = linfo_se;
   else
     currSE->reading= read_dQuant_CABAC;
@@ -837,7 +837,7 @@ void start_macroblock (sSlice* curSlice, sMacroblock** curMb)
   // Select appropriate MV predictor function
   init_motion_vector_prediction(*curMb, curSlice->mb_aff_frame_flag);
 
-  set_read_and_store_CBP(curMb, curSlice->active_sps->chroma_format_idc);
+  set_read_and_store_CBP(curMb, curSlice->activeSPS->chroma_format_idc);
 
   // Reset syntax element entries in MB struct
 
@@ -907,7 +907,7 @@ Boolean exit_macroblock (sSlice* curSlice, int eos_bit)
     if(curSlice->nal_startcode_follows(curSlice, eos_bit) == FALSE)
       return FALSE;
 
-    if(curSlice->slice_type == I_SLICE  || curSlice->slice_type == SI_SLICE || vidParam->active_pps->entropy_coding_mode_flag == (Boolean) CABAC)
+    if(curSlice->slice_type == I_SLICE  || curSlice->slice_type == SI_SLICE || vidParam->activePPS->entropy_coding_mode_flag == (Boolean) CABAC)
       return TRUE;
     if(curSlice->cod_counter <= 0)
       return TRUE;
@@ -1150,7 +1150,7 @@ static void read_motion_info_from_NAL_p_slice (sMacroblock* curMb)
   currSE.type = SE_MVD;
   dP = &(curSlice->partArr[partMap[SE_MVD]]);
 
-  if (vidParam->active_pps->entropy_coding_mode_flag == (Boolean) CAVLC || dP->bitstream->ei_flag)
+  if (vidParam->activePPS->entropy_coding_mode_flag == (Boolean) CAVLC || dP->bitstream->ei_flag)
     currSE.mapping = linfo_se;
   else
     currSE.reading = curSlice->mb_aff_frame_flag ? read_mvd_CABAC_mbaff : read_MVD_CABAC;
@@ -1210,7 +1210,7 @@ static void read_motion_info_from_NAL_b_slice (sMacroblock* curMb) {
   currSE.type = SE_MVD;
   dP = &(curSlice->partArr[partMap[SE_MVD]]);
 
-  if (vidParam->active_pps->entropy_coding_mode_flag == (Boolean) CAVLC || dP->bitstream->ei_flag)
+  if (vidParam->activePPS->entropy_coding_mode_flag == (Boolean) CAVLC || dP->bitstream->ei_flag)
     currSE.mapping = linfo_se;
   else
     currSE.reading = curSlice->mb_aff_frame_flag ? read_mvd_CABAC_mbaff : read_MVD_CABAC;
@@ -1294,11 +1294,11 @@ void setup_slice_methods (sSlice* curSlice) {
 
   set_intra_prediction_modes (curSlice);
 
-  if (curSlice->vidParam->active_sps->chroma_format_idc==YUV444 && (curSlice->vidParam->separate_colour_plane_flag == 0) )
+  if (curSlice->vidParam->activeSPS->chroma_format_idc==YUV444 && (curSlice->vidParam->separate_colour_plane_flag == 0) )
     curSlice->read_coeff_4x4_CAVLC = read_coeff_4x4_CAVLC_444;
   else
     curSlice->read_coeff_4x4_CAVLC = read_coeff_4x4_CAVLC;
-  switch (curSlice->vidParam->active_pps->entropy_coding_mode_flag) {
+  switch (curSlice->vidParam->activePPS->entropy_coding_mode_flag) {
     case CABAC:
       set_read_CBP_and_coeffs_cabac(curSlice);
       break;
@@ -1355,7 +1355,7 @@ void check_dp_neighbors (sMacroblock* curMb) {
   vidParam->getNeighbour (curMb, -1,  0, vidParam->mb_size[1], &left);
   vidParam->getNeighbour (curMb,  0, -1, vidParam->mb_size[1], &up);
 
-  if ((curMb->is_intra_block == FALSE) || (!(vidParam->active_pps->constrained_intra_pred_flag)) ) {
+  if ((curMb->is_intra_block == FALSE) || (!(vidParam->activePPS->constrained_intra_pred_flag)) ) {
     if (left.available)
       curMb->dpl_flag |= vidParam->mb_data[left.mb_addr].dpl_flag;
     if (up.available)
@@ -1372,7 +1372,7 @@ static void init_cur_imgy (sVidParam* vidParam,sSlice* curSlice,int pl) {
 
   if (vidParam->separate_colour_plane_flag == 0) {
     sPicture* vidref = vidParam->no_reference_picture;
-    int noref = (curSlice->framepoc < vidParam->recovery_poc);
+    int noref = (curSlice->framePoc < vidParam->recovery_poc);
 
     if (pl == PLANE_Y) {
       for (int j = 0; j < 6; j++) {
@@ -1447,7 +1447,7 @@ int decode_one_macroblock (sMacroblock* curMb, sPicture* picture)
   sSlice* curSlice = curMb->slice;
   sVidParam* vidParam = curMb->vidParam;
 
-  if (curSlice->chroma444_not_separate) {
+  if (curSlice->chroma444notSeparate) {
     if (!curMb->is_intra_block) {
       init_cur_imgy (vidParam, curSlice, PLANE_Y);
       curSlice->decode_one_component (curMb, PLANE_Y, picture->imgY, picture);
