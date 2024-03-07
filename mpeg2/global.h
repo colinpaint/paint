@@ -428,33 +428,7 @@ EXTERN struct layer_data {
 } base, enhan, *ld;
 //}}}
 
-#ifdef VERIFY
-//{{{
-EXTERN int verify_sequence_header;
-EXTERN int verify_group_of_pictures_header;
-EXTERN int verify_picture_header;
-EXTERN int verify_slice_header;
-EXTERN int verify_sequence_extension;
-EXTERN int verify_sequence_display_extension;
-EXTERN int verify_quant_matrix_extension;
-EXTERN int verify_sequence_scalable_extension;
-EXTERN int verify_picture_display_extension;
-EXTERN int verify_picture_coding_extension;
-EXTERN int verify_picture_spatial_scalable_extension;
-EXTERN int verify_picture_temporal_scalable_extension;
-EXTERN int verify_copyright_extension;
-//}}}
-#endif /* VERIFY */
-
 EXTERN int Decode_Layer;
-/* verify.c */
-#ifdef VERIFY
-//{{{
-void Check_Headers _ANSI_ARGS_((int Bitstream_Framenum, int Sequence_Framenum));
-void Clear_Verify_Headers _ANSI_ARGS_((void));
-//}}}
-#endif /* VERIFY */
-
 EXTERN int global_MBA;
 EXTERN int global_pic;
 EXTERN int True_Framenum;
