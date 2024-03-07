@@ -8,27 +8,27 @@ int set_ec_flag (sVidParam* vidParam, int se) {
 
   switch (se) {
     case SE_HEADER :
-      vidParam->ec_flag[SE_HEADER] = EC_REQ;
+      vidParam->ecFlag[SE_HEADER] = EC_REQ;
     case SE_PTYPE :
-      vidParam->ec_flag[SE_PTYPE] = EC_REQ;
+      vidParam->ecFlag[SE_PTYPE] = EC_REQ;
     case SE_MBTYPE :
-      vidParam->ec_flag[SE_MBTYPE] = EC_REQ;
+      vidParam->ecFlag[SE_MBTYPE] = EC_REQ;
     //{{{
     case SE_REFFRAME :
-      vidParam->ec_flag[SE_REFFRAME] = EC_REQ;
-      vidParam->ec_flag[SE_MVD] = EC_REQ; // set all motion vectors to zero length
+      vidParam->ecFlag[SE_REFFRAME] = EC_REQ;
+      vidParam->ecFlag[SE_MVD] = EC_REQ; // set all motion vectors to zero length
       se = SE_CBP_INTER;      // conceal also Inter texture elements
       break;
     //}}}
     //{{{
     case SE_INTRAPREDMODE :
-      vidParam->ec_flag[SE_INTRAPREDMODE] = EC_REQ;
+      vidParam->ecFlag[SE_INTRAPREDMODE] = EC_REQ;
       se = SE_CBP_INTRA;      // conceal also Intra texture elements
       break;
     //}}}
     //{{{
     case SE_MVD :
-      vidParam->ec_flag[SE_MVD] = EC_REQ;
+      vidParam->ecFlag[SE_MVD] = EC_REQ;
       se = SE_CBP_INTER;      // conceal also Inter texture elements
       break;
     //}}}
@@ -40,40 +40,40 @@ int set_ec_flag (sVidParam* vidParam, int se) {
 
   switch (se) {
     case SE_CBP_INTRA :
-      vidParam->ec_flag[SE_CBP_INTRA] = EC_REQ;
+      vidParam->ecFlag[SE_CBP_INTRA] = EC_REQ;
     case SE_LUM_DC_INTRA :
-      vidParam->ec_flag[SE_LUM_DC_INTRA] = EC_REQ;
+      vidParam->ecFlag[SE_LUM_DC_INTRA] = EC_REQ;
     case SE_CHR_DC_INTRA :
-      vidParam->ec_flag[SE_CHR_DC_INTRA] = EC_REQ;
+      vidParam->ecFlag[SE_CHR_DC_INTRA] = EC_REQ;
     case SE_LUM_AC_INTRA :
-      vidParam->ec_flag[SE_LUM_AC_INTRA] = EC_REQ;
+      vidParam->ecFlag[SE_LUM_AC_INTRA] = EC_REQ;
     //{{{
     case SE_CHR_AC_INTRA :
-      vidParam->ec_flag[SE_CHR_AC_INTRA] = EC_REQ;
+      vidParam->ecFlag[SE_CHR_AC_INTRA] = EC_REQ;
       break;
     //}}}
 
     case SE_CBP_INTER :
-      vidParam->ec_flag[SE_CBP_INTER] = EC_REQ;
+      vidParam->ecFlag[SE_CBP_INTER] = EC_REQ;
     case SE_LUM_DC_INTER :
-      vidParam->ec_flag[SE_LUM_DC_INTER] = EC_REQ;
+      vidParam->ecFlag[SE_LUM_DC_INTER] = EC_REQ;
     case SE_CHR_DC_INTER :
-      vidParam->ec_flag[SE_CHR_DC_INTER] = EC_REQ;
+      vidParam->ecFlag[SE_CHR_DC_INTER] = EC_REQ;
     case SE_LUM_AC_INTER :
-      vidParam->ec_flag[SE_LUM_AC_INTER] = EC_REQ;
+      vidParam->ecFlag[SE_LUM_AC_INTER] = EC_REQ;
     //{{{
     case SE_CHR_AC_INTER :
-      vidParam->ec_flag[SE_CHR_AC_INTER] = EC_REQ;
+      vidParam->ecFlag[SE_CHR_AC_INTER] = EC_REQ;
       break;
     //}}}
     //{{{
     case SE_DELTA_QUANT_INTER :
-      vidParam->ec_flag[SE_DELTA_QUANT_INTER] = EC_REQ;
+      vidParam->ecFlag[SE_DELTA_QUANT_INTER] = EC_REQ;
       break;
     //}}}
     //{{{
     case SE_DELTA_QUANT_INTRA :
-      vidParam->ec_flag[SE_DELTA_QUANT_INTRA] = EC_REQ;
+      vidParam->ecFlag[SE_DELTA_QUANT_INTRA] = EC_REQ;
       break;
     //}}}
     //{{{
@@ -89,14 +89,14 @@ int set_ec_flag (sVidParam* vidParam, int se) {
 void reset_ec_flags (sVidParam* vidParam) {
 
   for (int i = 0; i < SE_MAX_ELEMENTS; i++)
-    vidParam->ec_flag[i] = NO_EC;
+    vidParam->ecFlag[i] = NO_EC;
   }
 //}}}
 
 //{{{
 int get_concealed_element (sVidParam* vidParam, sSyntaxElement* sym) {
 
-  if (vidParam->ec_flag[sym->type] == NO_EC)
+  if (vidParam->ecFlag[sym->type] == NO_EC)
     return NO_EC;
 
   switch (sym->type) {

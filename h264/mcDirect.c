@@ -316,7 +316,7 @@ int get_colocated_info_8x8 (sMacroblock* curMb, sPicture* list1, int i, int j)
     {
       sPicMotionParam *fs = &list1->mv_info[RSD(j)][RSD(i)];
       int moving;
-      if(curMb->vidParam->separate_colour_plane_flag && curMb->vidParam->yuv_format==YUV444)
+      if(curMb->vidParam->separate_colour_plane_flag && curMb->vidParam->yuvFormat==YUV444)
         fs = &list1->JVmv_info[curMb->slice->colour_plane_id][RSD(j)][RSD(i)];
       moving= !((((fs->ref_idx[LIST_0] == 0)
         &&  (iabs(fs->mv[LIST_0].mv_x)>>1 == 0)

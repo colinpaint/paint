@@ -313,12 +313,12 @@ void CheckAvailabilityOfNeighborsCABAC (sMacroblock* curMb)
   vidParam->getNeighbour(curMb,  0, -1, mb_size, &up);
 
   if (up.available)
-    curMb->mb_up = &curMb->slice->mb_data[up.mb_addr]; //&vidParam->mb_data[up.mb_addr];
+    curMb->mb_up = &curMb->slice->mbData[up.mb_addr]; //&vidParam->mbData[up.mb_addr];
   else
     curMb->mb_up = NULL;
 
   if (left.available)
-    curMb->mb_left = &curMb->slice->mb_data[left.mb_addr]; //&vidParam->mb_data[left.mb_addr];
+    curMb->mb_left = &curMb->slice->mbData[left.mb_addr]; //&vidParam->mbData[left.mb_addr];
   else
     curMb->mb_left = NULL;
 }
@@ -410,8 +410,8 @@ void readFieldModeInfo_CABAC (sMacroblock* curMb,
   sSlice* curSlice = curMb->slice;
   //sVidParam* vidParam = curMb->vidParam;
   sMotionInfoContexts *ctx  = curSlice->mot_ctx;
-  int a = curMb->mbAvailA ? curSlice->mb_data[curMb->mbAddrA].mb_field : 0;
-  int b = curMb->mbAvailB ? curSlice->mb_data[curMb->mbAddrB].mb_field : 0;
+  int a = curMb->mbAvailA ? curSlice->mbData[curMb->mbAddrA].mb_field : 0;
+  int b = curMb->mbAvailB ? curSlice->mbData[curMb->mbAddrB].mb_field : 0;
   int act_ctx = a + b;
 
   se->value1 = biari_decode_symbol (dep_dp, &ctx->mb_aff_contexts[act_ctx]);
@@ -441,11 +441,11 @@ int check_next_mb_and_get_field_mode_CABAC_p_slice (sSlice* curSlice,
   //get next MB
   ++curSlice->current_mb_nr; // ++vidParam->current_mb_nr;
 
-  curMb = &curSlice->mb_data[curSlice->current_mb_nr];
+  curMb = &curSlice->mbData[curSlice->current_mb_nr];
   curMb->vidParam    = vidParam;
   curMb->slice  = curSlice;
   curMb->slice_nr = curSlice->current_slice_nr;
-  curMb->mb_field = curSlice->mb_data[curSlice->current_mb_nr-1].mb_field;
+  curMb->mb_field = curSlice->mbData[curSlice->current_mb_nr-1].mb_field;
   curMb->mbAddrX  = curSlice->current_mb_nr;
   curMb->list_offset = ((curSlice->mb_aff_frame_flag)&&(curMb->mb_field))? (curMb->mbAddrX&0x01) ? 4 : 2 : 0;
 
@@ -481,7 +481,7 @@ int check_next_mb_and_get_field_mode_CABAC_p_slice (sSlice* curSlice,
 #endif
     readFieldModeInfo_CABAC( curMb, se,dep_dp);
     field = se->value1;
-    curSlice->mb_data[curSlice->current_mb_nr-1].mb_field = field;
+    curSlice->mbData[curSlice->current_mb_nr-1].mb_field = field;
   }
 
   //reset
@@ -527,11 +527,11 @@ int check_next_mb_and_get_field_mode_CABAC_b_slice (sSlice* curSlice,
   //get next MB
   ++curSlice->current_mb_nr; // ++vidParam->current_mb_nr;
 
-  curMb = &curSlice->mb_data[curSlice->current_mb_nr];
+  curMb = &curSlice->mbData[curSlice->current_mb_nr];
   curMb->vidParam    = vidParam;
   curMb->slice  = curSlice;
   curMb->slice_nr = curSlice->current_slice_nr;
-  curMb->mb_field = curSlice->mb_data[curSlice->current_mb_nr-1].mb_field;
+  curMb->mb_field = curSlice->mbData[curSlice->current_mb_nr-1].mb_field;
   curMb->mbAddrX  = curSlice->current_mb_nr;
   curMb->list_offset = ((curSlice->mb_aff_frame_flag)&&(curMb->mb_field))? (curMb->mbAddrX & 0x01) ? 4 : 2 : 0;
 
@@ -568,7 +568,7 @@ int check_next_mb_and_get_field_mode_CABAC_b_slice (sSlice* curSlice,
 #endif
     readFieldModeInfo_CABAC( curMb, se,dep_dp);
     field = se->value1;
-    curSlice->mb_data[curSlice->current_mb_nr-1].mb_field = field;
+    curSlice->mbData[curSlice->current_mb_nr-1].mb_field = field;
   }
 
   //reset
@@ -623,11 +623,11 @@ void read_MVD_CABAC (sMacroblock* curMb,
   get4x4NeighbourBase(curMb, i    , j - 1, mb_size, &block_b);
   if (block_a.available)
   {
-    a = iabs(curSlice->mb_data[block_a.mb_addr].mvd[list_idx][block_a.y][block_a.x][k]);
+    a = iabs(curSlice->mbData[block_a.mb_addr].mvd[list_idx][block_a.y][block_a.x][k]);
   }
   if (block_b.available)
   {
-    a += iabs(curSlice->mb_data[block_b.mb_addr].mvd[list_idx][block_b.y][block_b.x][k]);
+    a += iabs(curSlice->mbData[block_b.mb_addr].mvd[list_idx][block_b.y][block_b.x][k]);
   }
 
   //a += b;
@@ -682,12 +682,12 @@ void read_mvd_CABAC_mbaff (sMacroblock* curMb,
   get4x4NeighbourBase(curMb, i - 1, j    , vidParam->mb_size[IS_LUMA], &block_a);
   if (block_a.available)
   {
-    a = iabs(curSlice->mb_data[block_a.mb_addr].mvd[list_idx][block_a.y][block_a.x][k]);
+    a = iabs(curSlice->mbData[block_a.mb_addr].mvd[list_idx][block_a.y][block_a.x][k]);
     if (curSlice->mb_aff_frame_flag && (k==1))
     {
-      if ((curMb->mb_field==0) && (curSlice->mb_data[block_a.mb_addr].mb_field==1))
+      if ((curMb->mb_field==0) && (curSlice->mbData[block_a.mb_addr].mb_field==1))
         a *= 2;
-      else if ((curMb->mb_field==1) && (curSlice->mb_data[block_a.mb_addr].mb_field==0))
+      else if ((curMb->mb_field==1) && (curSlice->mbData[block_a.mb_addr].mb_field==0))
         a /= 2;
     }
   }
@@ -695,12 +695,12 @@ void read_mvd_CABAC_mbaff (sMacroblock* curMb,
   get4x4NeighbourBase(curMb, i    , j - 1, vidParam->mb_size[IS_LUMA], &block_b);
   if (block_b.available)
   {
-    b = iabs(curSlice->mb_data[block_b.mb_addr].mvd[list_idx][block_b.y][block_b.x][k]);
+    b = iabs(curSlice->mbData[block_b.mb_addr].mvd[list_idx][block_b.y][block_b.x][k]);
     if (curSlice->mb_aff_frame_flag && (k==1))
     {
-      if ((curMb->mb_field==0) && (curSlice->mb_data[block_b.mb_addr].mb_field==1))
+      if ((curMb->mb_field==0) && (curSlice->mbData[block_b.mb_addr].mb_field==1))
         b *= 2;
-      else if ((curMb->mb_field==1) && (curSlice->mb_data[block_b.mb_addr].mb_field==0))
+      else if ((curMb->mb_field==1) && (curSlice->mbData[block_b.mb_addr].mb_field==0))
         b /= 2;
     }
   }
@@ -1313,7 +1313,7 @@ void readRefFrame_CABAC (sMacroblock* curMb,
   if (block_b.available)
   {
     int b8b=((block_b.x >> 1) & 0x01)+(block_b.y & 0x02);
-    neighborMB = &curSlice->mb_data[block_b.mb_addr];
+    neighborMB = &curSlice->mbData[block_b.mb_addr];
     if (!( (neighborMB->mb_type==IPCM) || IS_DIRECT(neighborMB) || (neighborMB->b8mode[b8b]==0 && neighborMB->b8pdir[b8b]==2)))
     {
       if (curSlice->mb_aff_frame_flag && (curMb->mb_field == FALSE) && (neighborMB->mb_field == TRUE))
@@ -1326,7 +1326,7 @@ void readRefFrame_CABAC (sMacroblock* curMb,
   if (block_a.available)
   {
     int b8a=((block_a.x >> 1) & 0x01)+(block_a.y & 0x02);
-    neighborMB = &curSlice->mb_data[block_a.mb_addr];
+    neighborMB = &curSlice->mbData[block_a.mb_addr];
     if (!((neighborMB->mb_type==IPCM) || IS_DIRECT(neighborMB) || (neighborMB->b8mode[b8a]==0 && neighborMB->b8pdir[b8a]==2)))
     {
       if (curSlice->mb_aff_frame_flag && (curMb->mb_field == FALSE) && (neighborMB->mb_field == 1))
@@ -1436,10 +1436,10 @@ void read_CBP_CABAC (sMacroblock* curMb,
         get4x4Neighbour(curMb, (mb_x<<2) - 1, (mb_y << 2), vidParam->mb_size[IS_LUMA], &block_a);
         if (block_a.available)
         {
-          if(curSlice->mb_data[block_a.mb_addr].mb_type==IPCM)
+          if(curSlice->mbData[block_a.mb_addr].mb_type==IPCM)
             a = 0;
           else
-            a = (( (curSlice->mb_data[block_a.mb_addr].cbp & (1<<(2*(block_a.y/2)+1))) == 0) ? 1 : 0);
+            a = (( (curSlice->mbData[block_a.mb_addr].cbp & (1<<(2*(block_a.y/2)+1))) == 0) ? 1 : 0);
         }
         else
           a=0;
@@ -1558,7 +1558,7 @@ static int read_and_store_CBP_block_bit_444 (sMacroblock* curMb,
   sVidParam* vidParam = curMb->vidParam;
   sPicture* picture = curSlice->picture;
   sTextureInfoContexts *tex_ctx = curSlice->tex_ctx;
-  sMacroblock *mb_data = curSlice->mb_data;
+  sMacroblock *mbData = curSlice->mbData;
   int y_ac        = (type==LUMA_16AC || type==LUMA_8x8 || type==LUMA_8x4 || type==LUMA_4x8 || type==LUMA_4x4
                     || type==CB_16AC || type==CB_8x8 || type==CB_8x4 || type==CB_4x8 || type==CB_4x4
                     || type==CR_16AC || type==CR_8x8 || type==CR_8x4 || type==CR_4x8 || type==CR_4x4);
@@ -1616,18 +1616,18 @@ static int read_and_store_CBP_block_bit_444 (sMacroblock* curMb,
       //--- get bits from neighboring blocks ---
       if (block_b.available)
       {
-        if(mb_data[block_b.mb_addr].mb_type==IPCM)
+        if(mbData[block_b.mb_addr].mb_type==IPCM)
           upper_bit=1;
         else
-          upper_bit = get_bit(mb_data[block_b.mb_addr].s_cbp[0].bits, bit + bit_pos_b);
+          upper_bit = get_bit(mbData[block_b.mb_addr].s_cbp[0].bits, bit + bit_pos_b);
       }
 
       if (block_a.available)
       {
-        if(mb_data[block_a.mb_addr].mb_type==IPCM)
+        if(mbData[block_a.mb_addr].mb_type==IPCM)
           left_bit=1;
         else
-          left_bit = get_bit(mb_data[block_a.mb_addr].s_cbp[0].bits, bit + bit_pos_a);
+          left_bit = get_bit(mbData[block_a.mb_addr].s_cbp[0].bits, bit + bit_pos_a);
       }
 
 
@@ -1643,19 +1643,19 @@ static int read_and_store_CBP_block_bit_444 (sMacroblock* curMb,
       //--- get bits from neighbouring blocks ---
       if (block_b.available)
       {
-        if(mb_data[block_b.mb_addr].mb_type==IPCM)
+        if(mbData[block_b.mb_addr].mb_type==IPCM)
           upper_bit = 1;
         else
-          upper_bit = get_bit(mb_data[block_b.mb_addr].s_cbp[0].bits,bit+bit_pos_b);
+          upper_bit = get_bit(mbData[block_b.mb_addr].s_cbp[0].bits,bit+bit_pos_b);
       }
 
 
       if (block_a.available)
       {
-        if(mb_data[block_a.mb_addr].mb_type==IPCM)
+        if(mbData[block_a.mb_addr].mb_type==IPCM)
           left_bit = 1;
         else
-          left_bit = get_bit(mb_data[block_a.mb_addr].s_cbp[0].bits,bit+bit_pos_a);
+          left_bit = get_bit(mbData[block_a.mb_addr].s_cbp[0].bits,bit+bit_pos_a);
       }
 
 
@@ -1668,58 +1668,58 @@ static int read_and_store_CBP_block_bit_444 (sMacroblock* curMb,
   {
     if (block_b.available)
     {
-      if(mb_data[block_b.mb_addr].mb_type==IPCM)
+      if(mbData[block_b.mb_addr].mb_type==IPCM)
       {
         upper_bit=1;
       }
       else if((type==LUMA_8x8 || type==CB_8x8 || type==CR_8x8) &&
-         !mb_data[block_b.mb_addr].luma_transform_size_8x8_flag)
+         !mbData[block_b.mb_addr].luma_transform_size_8x8_flag)
       {
         upper_bit = 0;
       }
       else
       {
         if(type==LUMA_8x8)
-          upper_bit = get_bit(mb_data[block_b.mb_addr].s_cbp[0].bits_8x8, bit + bit_pos_b);
+          upper_bit = get_bit(mbData[block_b.mb_addr].s_cbp[0].bits_8x8, bit + bit_pos_b);
         else if (type==CB_8x8)
-          upper_bit = get_bit(mb_data[block_b.mb_addr].s_cbp[1].bits_8x8, bit + bit_pos_b);
+          upper_bit = get_bit(mbData[block_b.mb_addr].s_cbp[1].bits_8x8, bit + bit_pos_b);
         else if (type==CR_8x8)
-          upper_bit = get_bit(mb_data[block_b.mb_addr].s_cbp[2].bits_8x8, bit + bit_pos_b);
+          upper_bit = get_bit(mbData[block_b.mb_addr].s_cbp[2].bits_8x8, bit + bit_pos_b);
         else if ((type==CB_4x4)||(type==CB_4x8)||(type==CB_8x4)||(type==CB_16AC)||(type==CB_16DC))
-          upper_bit = get_bit(mb_data[block_b.mb_addr].s_cbp[1].bits,bit+bit_pos_b);
+          upper_bit = get_bit(mbData[block_b.mb_addr].s_cbp[1].bits,bit+bit_pos_b);
         else if ((type==CR_4x4)||(type==CR_4x8)||(type==CR_8x4)||(type==CR_16AC)||(type==CR_16DC))
-          upper_bit = get_bit(mb_data[block_b.mb_addr].s_cbp[2].bits,bit+bit_pos_b);
+          upper_bit = get_bit(mbData[block_b.mb_addr].s_cbp[2].bits,bit+bit_pos_b);
         else
-          upper_bit = get_bit(mb_data[block_b.mb_addr].s_cbp[0].bits,bit+bit_pos_b);
+          upper_bit = get_bit(mbData[block_b.mb_addr].s_cbp[0].bits,bit+bit_pos_b);
       }
     }
 
 
     if (block_a.available)
     {
-      if(mb_data[block_a.mb_addr].mb_type==IPCM)
+      if(mbData[block_a.mb_addr].mb_type==IPCM)
       {
         left_bit=1;
       }
       else if((type==LUMA_8x8 || type==CB_8x8 || type==CR_8x8) &&
-         !mb_data[block_a.mb_addr].luma_transform_size_8x8_flag)
+         !mbData[block_a.mb_addr].luma_transform_size_8x8_flag)
       {
         left_bit=0;
       }
       else
       {
         if(type==LUMA_8x8)
-          left_bit = get_bit(mb_data[block_a.mb_addr].s_cbp[0].bits_8x8,bit+bit_pos_a);
+          left_bit = get_bit(mbData[block_a.mb_addr].s_cbp[0].bits_8x8,bit+bit_pos_a);
         else if (type==CB_8x8)
-          left_bit = get_bit(mb_data[block_a.mb_addr].s_cbp[1].bits_8x8,bit+bit_pos_a);
+          left_bit = get_bit(mbData[block_a.mb_addr].s_cbp[1].bits_8x8,bit+bit_pos_a);
         else if (type==CR_8x8)
-          left_bit = get_bit(mb_data[block_a.mb_addr].s_cbp[2].bits_8x8,bit+bit_pos_a);
+          left_bit = get_bit(mbData[block_a.mb_addr].s_cbp[2].bits_8x8,bit+bit_pos_a);
         else if ((type==CB_4x4)||(type==CB_4x8)||(type==CB_8x4)||(type==CB_16AC)||(type==CB_16DC))
-          left_bit = get_bit(mb_data[block_a.mb_addr].s_cbp[1].bits,bit+bit_pos_a);
+          left_bit = get_bit(mbData[block_a.mb_addr].s_cbp[1].bits,bit+bit_pos_a);
         else if ((type==CR_4x4)||(type==CR_4x8)||(type==CR_8x4)||(type==CR_16AC)||(type==CR_16DC))
-          left_bit = get_bit(mb_data[block_a.mb_addr].s_cbp[2].bits,bit+bit_pos_a);
+          left_bit = get_bit(mbData[block_a.mb_addr].s_cbp[2].bits,bit+bit_pos_a);
         else
-          left_bit = get_bit(mb_data[block_a.mb_addr].s_cbp[0].bits,bit+bit_pos_a);
+          left_bit = get_bit(mbData[block_a.mb_addr].s_cbp[0].bits,bit+bit_pos_a);
       }
     }
 
@@ -1828,7 +1828,7 @@ static int read_and_store_CBP_block_bit_normal (sMacroblock* curMb,
   sVidParam* vidParam = curMb->vidParam;
   sTextureInfoContexts *tex_ctx = curSlice->tex_ctx;
   int cbp_bit     = 1;  // always one for 8x8 mode
-  sMacroblock *mb_data = curSlice->mb_data;
+  sMacroblock *mbData = curSlice->mbData;
 
   if (type==LUMA_16DC)
   {
@@ -1844,12 +1844,12 @@ static int read_and_store_CBP_block_bit_normal (sMacroblock* curMb,
     //--- get bits from neighboring blocks ---
     if (block_b.available)
     {
-      upper_bit = set_cbp_bit(&mb_data[block_b.mb_addr]);
+      upper_bit = set_cbp_bit(&mbData[block_b.mb_addr]);
     }
 
     if (block_a.available)
     {
-      left_bit = set_cbp_bit(&mb_data[block_a.mb_addr]);
+      left_bit = set_cbp_bit(&mbData[block_a.mb_addr]);
     }
 
     ctx = 2 * upper_bit + left_bit;
@@ -1881,12 +1881,12 @@ static int read_and_store_CBP_block_bit_normal (sMacroblock* curMb,
     //--- get bits from neighboring blocks ---
     if (block_b.available)
     {
-      upper_bit = set_cbp_bit_ac(&mb_data[block_b.mb_addr], &block_b);
+      upper_bit = set_cbp_bit_ac(&mbData[block_b.mb_addr], &block_b);
     }
 
     if (block_a.available)
     {
-      left_bit = set_cbp_bit_ac(&mb_data[block_a.mb_addr], &block_a);
+      left_bit = set_cbp_bit_ac(&mbData[block_a.mb_addr], &block_a);
     }
 
     ctx = 2 * upper_bit + left_bit;
@@ -1918,12 +1918,12 @@ static int read_and_store_CBP_block_bit_normal (sMacroblock* curMb,
     //--- get bits from neighboring blocks ---
     if (block_b.available)
     {
-      upper_bit = set_cbp_bit_ac(&mb_data[block_b.mb_addr], &block_b);
+      upper_bit = set_cbp_bit_ac(&mbData[block_b.mb_addr], &block_b);
     }
 
     if (block_a.available)
     {
-      left_bit = set_cbp_bit_ac(&mb_data[block_a.mb_addr], &block_a);
+      left_bit = set_cbp_bit_ac(&mbData[block_a.mb_addr], &block_a);
     }
 
     ctx = 2 * upper_bit + left_bit;
@@ -1955,12 +1955,12 @@ static int read_and_store_CBP_block_bit_normal (sMacroblock* curMb,
     //--- get bits from neighboring blocks ---
     if (block_b.available)
     {
-      upper_bit = set_cbp_bit_ac(&mb_data[block_b.mb_addr], &block_b);
+      upper_bit = set_cbp_bit_ac(&mbData[block_b.mb_addr], &block_b);
     }
 
     if (block_a.available)
     {
-      left_bit = set_cbp_bit_ac(&mb_data[block_a.mb_addr], &block_a);
+      left_bit = set_cbp_bit_ac(&mbData[block_a.mb_addr], &block_a);
     }
 
     ctx = 2 * upper_bit + left_bit;
@@ -1993,12 +1993,12 @@ static int read_and_store_CBP_block_bit_normal (sMacroblock* curMb,
     //--- get bits from neighboring blocks ---
     if (block_b.available)
     {
-      upper_bit = set_cbp_bit_ac(&mb_data[block_b.mb_addr], &block_b);
+      upper_bit = set_cbp_bit_ac(&mbData[block_b.mb_addr], &block_b);
     }
 
     if (block_a.available)
     {
-      left_bit = set_cbp_bit_ac(&mb_data[block_a.mb_addr], &block_a);
+      left_bit = set_cbp_bit_ac(&mbData[block_a.mb_addr], &block_a);
     }
 
     ctx = 2 * upper_bit + left_bit;
@@ -2041,18 +2041,18 @@ static int read_and_store_CBP_block_bit_normal (sMacroblock* curMb,
     //--- get bits from neighboring blocks ---
     if (block_b.available)
     {
-      if(mb_data[block_b.mb_addr].mb_type==IPCM)
+      if(mbData[block_b.mb_addr].mb_type==IPCM)
         upper_bit = 1;
       else
-        upper_bit = get_bit(mb_data[block_b.mb_addr].s_cbp[0].bits, bit);
+        upper_bit = get_bit(mbData[block_b.mb_addr].s_cbp[0].bits, bit);
     }
 
     if (block_a.available)
     {
-      if(mb_data[block_a.mb_addr].mb_type==IPCM)
+      if(mbData[block_a.mb_addr].mb_type==IPCM)
         left_bit = 1;
       else
-        left_bit = get_bit(mb_data[block_a.mb_addr].s_cbp[0].bits, bit);
+        left_bit = get_bit(mbData[block_a.mb_addr].s_cbp[0].bits, bit);
     }
 
     ctx = 2 * upper_bit + left_bit;
@@ -2085,23 +2085,23 @@ static int read_and_store_CBP_block_bit_normal (sMacroblock* curMb,
     //--- get bits from neighboring blocks ---
     if (block_b.available)
     {
-      if(mb_data[block_b.mb_addr].mb_type==IPCM)
+      if(mbData[block_b.mb_addr].mb_type==IPCM)
         upper_bit=1;
       else
       {
         int bit_pos_b = 4*block_b.y + block_b.x;
-        upper_bit = get_bit(mb_data[block_b.mb_addr].s_cbp[0].bits, bit + bit_pos_b);
+        upper_bit = get_bit(mbData[block_b.mb_addr].s_cbp[0].bits, bit + bit_pos_b);
       }
     }
 
     if (block_a.available)
     {
-      if(mb_data[block_a.mb_addr].mb_type==IPCM)
+      if(mbData[block_a.mb_addr].mb_type==IPCM)
         left_bit=1;
       else
       {
         int bit_pos_a = 4*block_a.y + block_a.x;
-        left_bit = get_bit(mb_data[block_a.mb_addr].s_cbp[0].bits,bit + bit_pos_a);
+        left_bit = get_bit(mbData[block_a.mb_addr].s_cbp[0].bits,bit + bit_pos_a);
       }
     }
 

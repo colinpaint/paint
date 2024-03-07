@@ -133,20 +133,20 @@ static void writeOutPicture (sVidParam* vidParam, sPicture* p) {
 //{{{
 static void flushPendingOutput (sVidParam* vidParam) {
 
-  if (vidParam->pending_output_state != FRAME)
-    writeOutPicture (vidParam, vidParam->pending_output);
+  if (vidParam->pendingOutputState != FRAME)
+    writeOutPicture (vidParam, vidParam->pendingOutput);
 
-  if (vidParam->pending_output->imgY) {
-    free_mem2Dpel (vidParam->pending_output->imgY);
-    vidParam->pending_output->imgY=NULL;
+  if (vidParam->pendingOutput->imgY) {
+    free_mem2Dpel (vidParam->pendingOutput->imgY);
+    vidParam->pendingOutput->imgY=NULL;
     }
 
-  if (vidParam->pending_output->imgUV) {
-    free_mem3Dpel (vidParam->pending_output->imgUV);
-    vidParam->pending_output->imgUV=NULL;
+  if (vidParam->pendingOutput->imgUV) {
+    free_mem3Dpel (vidParam->pendingOutput->imgUV);
+    vidParam->pendingOutput->imgUV=NULL;
     }
 
-  vidParam->pending_output_state = FRAME;
+  vidParam->pendingOutputState = FRAME;
   }
 //}}}
 //{{{
@@ -158,55 +158,55 @@ static void writePicture (sVidParam* vidParam, sPicture* p, int real_structure) 
     return;
     }
 
-  if (real_structure == vidParam->pending_output_state) {
+  if (real_structure == vidParam->pendingOutputState) {
     flushPendingOutput (vidParam);
     writePicture (vidParam, p, real_structure);
     return;
     }
 
-  if (vidParam->pending_output_state == FRAME) {
+  if (vidParam->pendingOutputState == FRAME) {
     //{{{  output frame
-    vidParam->pending_output->size_x = p->size_x;
-    vidParam->pending_output->size_y = p->size_y;
-    vidParam->pending_output->size_x_cr = p->size_x_cr;
-    vidParam->pending_output->size_y_cr = p->size_y_cr;
-    vidParam->pending_output->chroma_format_idc = p->chroma_format_idc;
+    vidParam->pendingOutput->size_x = p->size_x;
+    vidParam->pendingOutput->size_y = p->size_y;
+    vidParam->pendingOutput->size_x_cr = p->size_x_cr;
+    vidParam->pendingOutput->size_y_cr = p->size_y_cr;
+    vidParam->pendingOutput->chroma_format_idc = p->chroma_format_idc;
 
-    vidParam->pending_output->frame_mbs_only_flag = p->frame_mbs_only_flag;
-    vidParam->pending_output->frame_cropping_flag = p->frame_cropping_flag;
-    if (vidParam->pending_output->frame_cropping_flag) {
-      vidParam->pending_output->frame_crop_left_offset = p->frame_crop_left_offset;
-      vidParam->pending_output->frame_crop_right_offset = p->frame_crop_right_offset;
-      vidParam->pending_output->frame_crop_top_offset = p->frame_crop_top_offset;
-      vidParam->pending_output->frame_crop_bottom_offset = p->frame_crop_bottom_offset;
+    vidParam->pendingOutput->frame_mbs_only_flag = p->frame_mbs_only_flag;
+    vidParam->pendingOutput->frame_cropping_flag = p->frame_cropping_flag;
+    if (vidParam->pendingOutput->frame_cropping_flag) {
+      vidParam->pendingOutput->frame_crop_left_offset = p->frame_crop_left_offset;
+      vidParam->pendingOutput->frame_crop_right_offset = p->frame_crop_right_offset;
+      vidParam->pendingOutput->frame_crop_top_offset = p->frame_crop_top_offset;
+      vidParam->pendingOutput->frame_crop_bottom_offset = p->frame_crop_bottom_offset;
       }
 
-    get_mem2Dpel (&(vidParam->pending_output->imgY), vidParam->pending_output->size_y, vidParam->pending_output->size_x);
-    get_mem3Dpel (&(vidParam->pending_output->imgUV), 2, vidParam->pending_output->size_y_cr, vidParam->pending_output->size_x_cr);
+    get_mem2Dpel (&(vidParam->pendingOutput->imgY), vidParam->pendingOutput->size_y, vidParam->pendingOutput->size_x);
+    get_mem3Dpel (&(vidParam->pendingOutput->imgUV), 2, vidParam->pendingOutput->size_y_cr, vidParam->pendingOutput->size_x_cr);
 
-    clearPicture (vidParam, vidParam->pending_output);
+    clearPicture (vidParam, vidParam->pendingOutput);
 
     // copy first field
     int add = (real_structure == TOP_FIELD) ? 0 : 1;
-    for (int i = 0; i < vidParam->pending_output->size_y; i += 2)
-      memcpy (vidParam->pending_output->imgY[(i+add)], p->imgY[(i+add)], p->size_x * sizeof(sPixel));
-    for (int i = 0; i < vidParam->pending_output->size_y_cr; i += 2) {
-      memcpy (vidParam->pending_output->imgUV[0][(i+add)], p->imgUV[0][(i+add)], p->size_x_cr * sizeof(sPixel));
-      memcpy (vidParam->pending_output->imgUV[1][(i+add)], p->imgUV[1][(i+add)], p->size_x_cr * sizeof(sPixel));
+    for (int i = 0; i < vidParam->pendingOutput->size_y; i += 2)
+      memcpy (vidParam->pendingOutput->imgY[(i+add)], p->imgY[(i+add)], p->size_x * sizeof(sPixel));
+    for (int i = 0; i < vidParam->pendingOutput->size_y_cr; i += 2) {
+      memcpy (vidParam->pendingOutput->imgUV[0][(i+add)], p->imgUV[0][(i+add)], p->size_x_cr * sizeof(sPixel));
+      memcpy (vidParam->pendingOutput->imgUV[1][(i+add)], p->imgUV[1][(i+add)], p->size_x_cr * sizeof(sPixel));
       }
 
-    vidParam->pending_output_state = real_structure;
+    vidParam->pendingOutputState = real_structure;
     }
     //}}}
   else {
-    if (  (vidParam->pending_output->size_x!=p->size_x) || (vidParam->pending_output->size_y!= p->size_y)
-       || (vidParam->pending_output->frame_mbs_only_flag != p->frame_mbs_only_flag)
-       || (vidParam->pending_output->frame_cropping_flag != p->frame_cropping_flag)
-       || ( vidParam->pending_output->frame_cropping_flag &&
-            (  (vidParam->pending_output->frame_crop_left_offset   != p->frame_crop_left_offset)
-             ||(vidParam->pending_output->frame_crop_right_offset  != p->frame_crop_right_offset)
-             ||(vidParam->pending_output->frame_crop_top_offset    != p->frame_crop_top_offset)
-             ||(vidParam->pending_output->frame_crop_bottom_offset != p->frame_crop_bottom_offset)
+    if (  (vidParam->pendingOutput->size_x!=p->size_x) || (vidParam->pendingOutput->size_y!= p->size_y)
+       || (vidParam->pendingOutput->frame_mbs_only_flag != p->frame_mbs_only_flag)
+       || (vidParam->pendingOutput->frame_cropping_flag != p->frame_cropping_flag)
+       || ( vidParam->pendingOutput->frame_cropping_flag &&
+            (  (vidParam->pendingOutput->frame_crop_left_offset   != p->frame_crop_left_offset)
+             ||(vidParam->pendingOutput->frame_crop_right_offset  != p->frame_crop_right_offset)
+             ||(vidParam->pendingOutput->frame_crop_top_offset    != p->frame_crop_top_offset)
+             ||(vidParam->pendingOutput->frame_crop_bottom_offset != p->frame_crop_bottom_offset)
             )
           )
        ) {
@@ -217,12 +217,12 @@ static void writePicture (sVidParam* vidParam, sPicture* p, int real_structure) 
 
     // copy second field
     int add = (real_structure == TOP_FIELD) ? 0 : 1;
-    for (int i = 0; i < vidParam->pending_output->size_y; i+=2)
-      memcpy (vidParam->pending_output->imgY[(i+add)], p->imgY[(i+add)], p->size_x * sizeof(sPixel));
+    for (int i = 0; i < vidParam->pendingOutput->size_y; i+=2)
+      memcpy (vidParam->pendingOutput->imgY[(i+add)], p->imgY[(i+add)], p->size_x * sizeof(sPixel));
 
-    for (int i = 0; i < vidParam->pending_output->size_y_cr; i+=2) {
-      memcpy (vidParam->pending_output->imgUV[0][(i+add)], p->imgUV[0][(i+add)], p->size_x_cr * sizeof(sPixel));
-      memcpy (vidParam->pending_output->imgUV[1][(i+add)], p->imgUV[1][(i+add)], p->size_x_cr * sizeof(sPixel));
+    for (int i = 0; i < vidParam->pendingOutput->size_y_cr; i+=2) {
+      memcpy (vidParam->pendingOutput->imgUV[0][(i+add)], p->imgUV[0][(i+add)], p->size_x_cr * sizeof(sPixel));
+      memcpy (vidParam->pendingOutput->imgUV[1][(i+add)], p->imgUV[1][(i+add)], p->size_x_cr * sizeof(sPixel));
       }
 
     flushPendingOutput (vidParam);
@@ -271,41 +271,41 @@ static void writeUnpairedField (sVidParam* vidParam, sFrameStore* fs) {
 //{{{
 static void flushDirectOutput (sVidParam* vidParam) {
 
-  writeUnpairedField (vidParam, vidParam->out_buffer);
-  freePicture (vidParam->out_buffer->frame);
+  writeUnpairedField (vidParam, vidParam->outBuffer);
+  freePicture (vidParam->outBuffer->frame);
 
-  vidParam->out_buffer->frame = NULL;
-  freePicture (vidParam->out_buffer->top_field);
+  vidParam->outBuffer->frame = NULL;
+  freePicture (vidParam->outBuffer->top_field);
 
-  vidParam->out_buffer->top_field = NULL;
-  freePicture (vidParam->out_buffer->bottom_field);
+  vidParam->outBuffer->top_field = NULL;
+  freePicture (vidParam->outBuffer->bottom_field);
 
-  vidParam->out_buffer->bottom_field = NULL;
-  vidParam->out_buffer->is_used = 0;
+  vidParam->outBuffer->bottom_field = NULL;
+  vidParam->outBuffer->is_used = 0;
   }
 //}}}
 
 //{{{
 void allocOutput (sVidParam* vidParam) {
 
-  vidParam->out_buffer = allocFrameStore();
+  vidParam->outBuffer = allocFrameStore();
 
-  vidParam->pending_output = calloc (sizeof(sPicture), 1);
-  if (NULL == vidParam->pending_output)
+  vidParam->pendingOutput = calloc (sizeof(sPicture), 1);
+  if (NULL == vidParam->pendingOutput)
     no_mem_exit ("init_out_buffer");
 
-  vidParam->pending_output->imgUV = NULL;
-  vidParam->pending_output->imgY  = NULL;
+  vidParam->pendingOutput->imgUV = NULL;
+  vidParam->pendingOutput->imgY  = NULL;
   }
 //}}}
 //{{{
 void freeOutput (sVidParam* vidParam) {
 
-  freeFrameStore (vidParam->out_buffer);
-  vidParam->out_buffer = NULL;
+  freeFrameStore (vidParam->outBuffer);
+  vidParam->outBuffer = NULL;
 
   flushPendingOutput (vidParam);
-  free (vidParam->pending_output);
+  free (vidParam->pendingOutput);
   }
 //}}}
 
@@ -319,8 +319,8 @@ void writeStoredFrame (sVidParam* vidParam, sFrameStore* fs) {
     writeUnpairedField (vidParam, fs);
   else {
     if (fs->recovery_frame)
-      vidParam->recovery_flag = 1;
-    if ((!vidParam->nonConformingStream) || vidParam->recovery_flag)
+      vidParam->recoveryFlag = 1;
+    if ((!vidParam->nonConformingStream) || vidParam->recoveryFlag)
       writePicture (vidParam, fs->frame, FRAME);
     }
 
@@ -340,35 +340,35 @@ void directOutput (sVidParam* vidParam, sPicture* p) {
     }
 
   if (p->structure == TOP_FIELD) {
-    if (vidParam->out_buffer->is_used & 1)
+    if (vidParam->outBuffer->is_used & 1)
       flushDirectOutput (vidParam);
-    vidParam->out_buffer->top_field = p;
-    vidParam->out_buffer->is_used |= 1;
+    vidParam->outBuffer->top_field = p;
+    vidParam->outBuffer->is_used |= 1;
     }
 
   if (p->structure == BOTTOM_FIELD) {
-    if (vidParam->out_buffer->is_used & 2)
+    if (vidParam->outBuffer->is_used & 2)
       flushDirectOutput (vidParam);
-    vidParam->out_buffer->bottom_field = p;
-    vidParam->out_buffer->is_used |= 2;
+    vidParam->outBuffer->bottom_field = p;
+    vidParam->outBuffer->is_used |= 2;
     }
 
-  if (vidParam->out_buffer->is_used == 3) {
+  if (vidParam->outBuffer->is_used == 3) {
     // we have both fields, so output them
-    dpb_combine_field_yuv (vidParam, vidParam->out_buffer);
-    writePicture (vidParam, vidParam->out_buffer->frame, FRAME);
+    dpb_combine_field_yuv (vidParam, vidParam->outBuffer);
+    writePicture (vidParam, vidParam->outBuffer->frame, FRAME);
 
     calcFrameNum (vidParam, p);
-    freePicture (vidParam->out_buffer->frame);
+    freePicture (vidParam->outBuffer->frame);
 
-    vidParam->out_buffer->frame = NULL;
-    freePicture (vidParam->out_buffer->top_field);
+    vidParam->outBuffer->frame = NULL;
+    freePicture (vidParam->outBuffer->top_field);
 
-    vidParam->out_buffer->top_field = NULL;
-    freePicture (vidParam->out_buffer->bottom_field);
+    vidParam->outBuffer->top_field = NULL;
+    freePicture (vidParam->outBuffer->bottom_field);
 
-    vidParam->out_buffer->bottom_field = NULL;
-    vidParam->out_buffer->is_used = 0;
+    vidParam->outBuffer->bottom_field = NULL;
+    vidParam->outBuffer->is_used = 0;
     }
   }
 //}}}

@@ -245,9 +245,9 @@ static int FmoGenerateMbToSliceGroupMap (sVidParam* vidParam, sSlice *pSlice) {
   if (vidParam->MbToSliceGroupMap)
     free (vidParam->MbToSliceGroupMap);
 
-  if ((vidParam->MbToSliceGroupMap = malloc ((vidParam->PicSizeInMbs) * sizeof (int))) == NULL) {
+  if ((vidParam->MbToSliceGroupMap = malloc ((vidParam->picSizeInMbs) * sizeof (int))) == NULL) {
     printf ("cannot allocate %d bytes for vidParam->MbToSliceGroupMap, exit\n",
-            (int) ((vidParam->PicSizeInMbs) * sizeof (int)));
+            (int) ((vidParam->picSizeInMbs) * sizeof (int)));
     exit (-1);
     }
 
@@ -255,16 +255,16 @@ static int FmoGenerateMbToSliceGroupMap (sVidParam* vidParam, sSlice *pSlice) {
   if ((sps->frame_mbs_only_flag)|| pSlice->field_pic_flag) {
     int *MbToSliceGroupMap = vidParam->MbToSliceGroupMap;
     int *MapUnitToSliceGroupMap = vidParam->MapUnitToSliceGroupMap;
-    for (unsigned i = 0; i < vidParam->PicSizeInMbs; i++)
+    for (unsigned i = 0; i < vidParam->picSizeInMbs; i++)
       *MbToSliceGroupMap++ = *MapUnitToSliceGroupMap++;
     }
   else
     if (sps->mb_adaptive_frame_field_flag  &&  (!pSlice->field_pic_flag)) {
-      for (unsigned i = 0; i < vidParam->PicSizeInMbs; i++)
+      for (unsigned i = 0; i < vidParam->picSizeInMbs; i++)
         vidParam->MbToSliceGroupMap[i] = vidParam->MapUnitToSliceGroupMap[i/2];
       }
     else {
-      for (unsigned i = 0; i < vidParam->PicSizeInMbs; i++)
+      for (unsigned i = 0; i < vidParam->picSizeInMbs; i++)
         vidParam->MbToSliceGroupMap[i] = vidParam->MapUnitToSliceGroupMap[(i/(2*vidParam->PicWidthInMbs))*vidParam->PicWidthInMbs+(i%vidParam->PicWidthInMbs)];
       }
 
@@ -295,7 +295,7 @@ int fmo_init (sVidParam* vidParam, sSlice* pSlice) {
   printf("\n");
   printf("FMO Map (Mb):\n");
 
-  for (int j = 0; j < vidParam->PicHeightInMbs; j++) {
+  for (int j = 0; j < vidParam->picHeightInMbs; j++) {
     for (int i = 0; i < vidParam->PicWidthInMbs; i++) {
       printf ("%c", 48 + vidParam->MbToSliceGroupMap[i + j * vidParam->PicWidthInMbs]);
       }
@@ -342,7 +342,7 @@ int FmoGetLastMBInSliceGroup (sVidParam* vidParam, int SliceGroup)
 {
   int i;
 
-  for (i=vidParam->PicSizeInMbs-1; i>=0; i--)
+  for (i=vidParam->picSizeInMbs-1; i>=0; i--)
     if (FmoGetSliceGroupId (vidParam, i) == SliceGroup)
       return i;
   return -1;
@@ -352,7 +352,7 @@ int FmoGetLastMBInSliceGroup (sVidParam* vidParam, int SliceGroup)
 //{{{
 int FmoGetSliceGroupId (sVidParam* vidParam, int mb)
 {
-  assert (mb < (int) vidParam->PicSizeInMbs);
+  assert (mb < (int) vidParam->picSizeInMbs);
   assert (vidParam->MbToSliceGroupMap != NULL);
   return vidParam->MbToSliceGroupMap[mb];
 }
@@ -362,10 +362,10 @@ int FmoGetNextMBNr (sVidParam* vidParam, int CurrentMbNr)
 {
   int SliceGroup = FmoGetSliceGroupId (vidParam, CurrentMbNr);
 
-  while (++CurrentMbNr<(int)vidParam->PicSizeInMbs && vidParam->MbToSliceGroupMap [CurrentMbNr] != SliceGroup)
+  while (++CurrentMbNr<(int)vidParam->picSizeInMbs && vidParam->MbToSliceGroupMap [CurrentMbNr] != SliceGroup)
     ;
 
-  if (CurrentMbNr >= (int)vidParam->PicSizeInMbs)
+  if (CurrentMbNr >= (int)vidParam->picSizeInMbs)
     return -1;    // No further MB in this slice (could be end of picture)
   else
     return CurrentMbNr;

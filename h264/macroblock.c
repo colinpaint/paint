@@ -41,29 +41,29 @@ static void GetMotionVectorPredictorMBAFF (sMacroblock* curMb, sPixelPos *block,
 
   if (curMb->mb_field) {
     rFrameL  = block[0].available
-      ? (vidParam->mb_data[block[0].mb_addr].mb_field
+      ? (vidParam->mbData[block[0].mb_addr].mb_field
       ? mv_info[block[0].pos_y][block[0].pos_x].ref_idx[list]
     : mv_info[block[0].pos_y][block[0].pos_x].ref_idx[list] * 2) : -1;
     rFrameU  = block[1].available
-      ? (vidParam->mb_data[block[1].mb_addr].mb_field
+      ? (vidParam->mbData[block[1].mb_addr].mb_field
       ? mv_info[block[1].pos_y][block[1].pos_x].ref_idx[list]
     : mv_info[block[1].pos_y][block[1].pos_x].ref_idx[list] * 2) : -1;
     rFrameUR = block[2].available
-      ? (vidParam->mb_data[block[2].mb_addr].mb_field
+      ? (vidParam->mbData[block[2].mb_addr].mb_field
       ? mv_info[block[2].pos_y][block[2].pos_x].ref_idx[list]
     : mv_info[block[2].pos_y][block[2].pos_x].ref_idx[list] * 2) : -1;
     }
   else {
     rFrameL = block[0].available
-      ? (vidParam->mb_data[block[0].mb_addr].mb_field
+      ? (vidParam->mbData[block[0].mb_addr].mb_field
       ? mv_info[block[0].pos_y][block[0].pos_x].ref_idx[list] >>1
       : mv_info[block[0].pos_y][block[0].pos_x].ref_idx[list]) : -1;
     rFrameU  = block[1].available
-      ? (vidParam->mb_data[block[1].mb_addr].mb_field
+      ? (vidParam->mbData[block[1].mb_addr].mb_field
       ? mv_info[block[1].pos_y][block[1].pos_x].ref_idx[list] >>1
       : mv_info[block[1].pos_y][block[1].pos_x].ref_idx[list]) : -1;
     rFrameUR = block[2].available
-      ? (vidParam->mb_data[block[2].mb_addr].mb_field
+      ? (vidParam->mbData[block[2].mb_addr].mb_field
       ? mv_info[block[2].pos_y][block[2].pos_x].ref_idx[list] >>1
       : mv_info[block[2].pos_y][block[2].pos_x].ref_idx[list]) : -1;
     }
@@ -106,29 +106,29 @@ static void GetMotionVectorPredictorMBAFF (sMacroblock* curMb, sPixelPos *block,
       }
     else {
       if (curMb->mb_field) {
-        mv_a = block[0].available  ? vidParam->mb_data[block[0].mb_addr].mb_field
+        mv_a = block[0].available  ? vidParam->mbData[block[0].mb_addr].mb_field
           ? mv_info[block[0].pos_y][block[0].pos_x].mv[list].mv_y
         : mv_info[block[0].pos_y][block[0].pos_x].mv[list].mv_y / 2
           : 0;
-        mv_b = block[1].available  ? vidParam->mb_data[block[1].mb_addr].mb_field
+        mv_b = block[1].available  ? vidParam->mbData[block[1].mb_addr].mb_field
           ? mv_info[block[1].pos_y][block[1].pos_x].mv[list].mv_y
         : mv_info[block[1].pos_y][block[1].pos_x].mv[list].mv_y / 2
           : 0;
-        mv_c = block[2].available  ? vidParam->mb_data[block[2].mb_addr].mb_field
+        mv_c = block[2].available  ? vidParam->mbData[block[2].mb_addr].mb_field
           ? mv_info[block[2].pos_y][block[2].pos_x].mv[list].mv_y
         : mv_info[block[2].pos_y][block[2].pos_x].mv[list].mv_y / 2
           : 0;
         }
       else {
-        mv_a = block[0].available  ? vidParam->mb_data[block[0].mb_addr].mb_field
+        mv_a = block[0].available  ? vidParam->mbData[block[0].mb_addr].mb_field
           ? mv_info[block[0].pos_y][block[0].pos_x].mv[list].mv_y * 2
           : mv_info[block[0].pos_y][block[0].pos_x].mv[list].mv_y
         : 0;
-        mv_b = block[1].available  ? vidParam->mb_data[block[1].mb_addr].mb_field
+        mv_b = block[1].available  ? vidParam->mbData[block[1].mb_addr].mb_field
           ? mv_info[block[1].pos_y][block[1].pos_x].mv[list].mv_y * 2
           : mv_info[block[1].pos_y][block[1].pos_x].mv[list].mv_y
         : 0;
-        mv_c = block[2].available  ? vidParam->mb_data[block[2].mb_addr].mb_field
+        mv_c = block[2].available  ? vidParam->mbData[block[2].mb_addr].mb_field
           ? mv_info[block[2].pos_y][block[2].pos_x].mv[list].mv_y * 2
           : mv_info[block[2].pos_y][block[2].pos_x].mv[list].mv_y
         : 0;
@@ -795,13 +795,13 @@ void start_macroblock (sSlice* curSlice, sMacroblock** curMb)
   sVidParam* vidParam = curSlice->vidParam;
   int mb_nr = curSlice->current_mb_nr;
 
-  *curMb = &curSlice->mb_data[mb_nr];
+  *curMb = &curSlice->mbData[mb_nr];
 
   (*curMb)->slice = curSlice;
   (*curMb)->vidParam   = vidParam;
   (*curMb)->mbAddrX = mb_nr;
 
-  //assert (mb_nr < (int) vidParam->PicSizeInMbs);
+  //assert (mb_nr < (int) vidParam->picSizeInMbs);
 
   /* Update coordinates of the current macroblock */
   if (curSlice->mb_aff_frame_flag)
@@ -883,14 +883,14 @@ Boolean exit_macroblock (sSlice* curSlice, int eos_bit)
   sVidParam* vidParam = curSlice->vidParam;
 
  //! The if() statement below resembles the original code, which tested
-  //! vidParam->current_mb_nr == vidParam->PicSizeInMbs.  Both is, of course, nonsense
+  //! vidParam->current_mb_nr == vidParam->picSizeInMbs.  Both is, of course, nonsense
   //! In an error prone environment, one can only be sure to have a new
   //! picture by checking the tr of the next slice header!
 
 // printf ("exit_macroblock: FmoGetLastMBOfPicture %d, vidParam->current_mb_nr %d\n", FmoGetLastMBOfPicture(), vidParam->current_mb_nr);
   ++(curSlice->num_dec_mb);
 
-  if(curSlice->current_mb_nr == vidParam->PicSizeInMbs - 1) //if (vidParam->num_dec_mb == vidParam->PicSizeInMbs)
+  if(curSlice->current_mb_nr == vidParam->picSizeInMbs - 1) //if (vidParam->num_dec_mb == vidParam->picSizeInMbs)
     return TRUE;
   // ask for last mb in the slice  CAVLC
   else
@@ -1357,9 +1357,9 @@ void check_dp_neighbors (sMacroblock* curMb) {
 
   if ((curMb->is_intra_block == FALSE) || (!(vidParam->activePPS->constrained_intra_pred_flag)) ) {
     if (left.available)
-      curMb->dpl_flag |= vidParam->mb_data[left.mb_addr].dpl_flag;
+      curMb->dpl_flag |= vidParam->mbData[left.mb_addr].dpl_flag;
     if (up.available)
-      curMb->dpl_flag |= vidParam->mb_data[up.mb_addr].dpl_flag;
+      curMb->dpl_flag |= vidParam->mbData[up.mb_addr].dpl_flag;
     }
   }
 //}}}
@@ -1402,14 +1402,14 @@ static void init_cur_imgy (sVidParam* vidParam,sSlice* curSlice,int pl) {
 //{{{
 void change_plane_JV (sVidParam* vidParam, int nplane, sSlice *pSlice)
 {
-  vidParam->mb_data = vidParam->mb_data_JV[nplane];
+  vidParam->mbData = vidParam->mbDataJV[nplane];
   vidParam->picture  = vidParam->dec_picture_JV[nplane];
   vidParam->siblock = vidParam->siblock_JV[nplane];
   vidParam->ipredmode = vidParam->ipredmode_JV[nplane];
   vidParam->intra_block = vidParam->intra_block_JV[nplane];
 
   if (pSlice) {
-    pSlice->mb_data = vidParam->mb_data_JV[nplane];
+    pSlice->mbData = vidParam->mbDataJV[nplane];
     pSlice->picture  = vidParam->dec_picture_JV[nplane];
     pSlice->siblock = vidParam->siblock_JV[nplane];
     pSlice->ipredmode = vidParam->ipredmode_JV[nplane];

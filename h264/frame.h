@@ -26,7 +26,7 @@ typedef enum {
   } PixelFormat;
 
 typedef struct frame_format {
-  ColorFormat yuv_format;                    // YUV format (0=4:0:0, 1=4:2:0, 2=4:2:2, 3=4:4:4)
+  ColorFormat yuvFormat;                    // YUV format (0=4:0:0, 1=4:2:0, 2=4:2:2, 3=4:4:4)
   ColorModel  color_model;                   // 4:4:4 format (0: YUV, 1: RGB, 2: XYZ)
   PixelFormat pixel_format;                  // pixel format support for certain interleaved yuv sources
   double      frame_rate;                    // frame rate

@@ -53,7 +53,7 @@
 //}}}
 //}}}
 
-static const int uv_div[2][4] = {{0, 1, 1, 0}, {0, 1, 0, 0}}; //[x/y][yuv_format]
+static const int uv_div[2][4] = {{0, 1, 1, 0}, {0, 1, 0, 0}}; //[x/y][yuvFormat]
 
 // intraFrame
 //{{{
@@ -775,7 +775,7 @@ static void buildPredRegionYUV (sVidParam* vidParam, int *mv, int x, int y, sPix
   int mb_nr = y/16*(vidParam->width/16)+x/16; ///curSlice->current_mb_nr;
   int** tmp_res = NULL;
 
-  sMacroblock* curMb = &vidParam->mb_data[mb_nr];   // intialization code deleted, see below, StW
+  sMacroblock* curMb = &vidParam->mbData[mb_nr];   // intialization code deleted, see below, StW
   curSlice = curMb->slice;
   tmp_res = curSlice->tmp_res;
 
@@ -1109,7 +1109,7 @@ static int concealByTrial (frame *recfr, sPixel *predMB,
                   mvPred[0] = mvPred[1] = 0;
                   mvPred[2] = 0;
 
-                  buildPredRegionYUV(vidParam->erc_img, mvPred, currRegion->xMin, currRegion->yMin, predMB);
+                  buildPredRegionYUV(vidParam->ercImg, mvPred, currRegion->xMin, currRegion->yMin, predMB);
                 }
               }
               /* build motion using the neighbour's Motion Parameters */
@@ -1125,7 +1125,7 @@ static int concealByTrial (frame *recfr, sPixel *predMB,
                 mvPred[1] = mvptr[1];
                 mvPred[2] = mvptr[2];
 
-                buildPredRegionYUV(vidParam->erc_img, mvPred, currRegion->xMin, currRegion->yMin, predMB);
+                buildPredRegionYUV(vidParam->ercImg, mvPred, currRegion->xMin, currRegion->yMin, predMB);
               }
 
               /* measure absolute boundary pixel difference */
@@ -1167,7 +1167,7 @@ static int concealByTrial (frame *recfr, sPixel *predMB,
       mvPred[0] = mvPred[1] = 0;
       mvPred[2] = 0;
 
-      buildPredRegionYUV(vidParam->erc_img, mvPred, currRegion->xMin, currRegion->yMin, predMB);
+      buildPredRegionYUV(vidParam->ercImg, mvPred, currRegion->xMin, currRegion->yMin, predMB);
 
       currDist = edgeDistortion(predBlocks,
         MBNum2YBlock(currMBNum,comp,picSizeX),
@@ -1247,7 +1247,7 @@ int ercConcealInterFrame (frame *recfr, objectBuffer_t *object_list,
                 ercCollect8PredBlocks (predBlocks, (currRow<<1), (column<<1),
                   errorVar->yCondition, (lastRow<<1), (lastColumn<<1), 2, 0);
 
-                if(vidParam->erc_mvperMB >= MVPERMB_THR)
+                if(vidParam->ercMvPerMb >= MVPERMB_THR)
                   concealByTrial(recfr, predMB,
                     currRow*lastColumn+column, object_list, predBlocks,
                     picSizeX, picSizeY,
@@ -1269,7 +1269,7 @@ int ercConcealInterFrame (frame *recfr, objectBuffer_t *object_list,
                 ercCollect8PredBlocks (predBlocks, (currRow<<1), (column<<1),
                   errorVar->yCondition, (lastRow<<1), (lastColumn<<1), 2, 0);
 
-                if(vidParam->erc_mvperMB >= MVPERMB_THR)
+                if(vidParam->ercMvPerMb >= MVPERMB_THR)
                   concealByTrial(recfr, predMB,
                     currRow*lastColumn+column, object_list, predBlocks,
                     picSizeX, picSizeY,
@@ -1308,7 +1308,7 @@ int ercConcealInterFrame (frame *recfr, objectBuffer_t *object_list,
                 ercCollect8PredBlocks (predBlocks, (currRow<<1), (column<<1),
                   errorVar->yCondition, (lastRow<<1), (lastColumn<<1), 2, 0);
 
-                if(vidParam->erc_mvperMB >= MVPERMB_THR)
+                if(vidParam->ercMvPerMb >= MVPERMB_THR)
                   concealByTrial(recfr, predMB,
                     currRow*lastColumn+column, object_list, predBlocks,
                     picSizeX, picSizeY,
@@ -1370,7 +1370,7 @@ static void buildPredblockRegionYUV (sVidParam* vidParam, int *mv,
   int ref_frame = mv[2];
   int mb_nr = current_mb_nr;
 
-  sMacroblock* curMb = &vidParam->mb_data[mb_nr];   // intialization code deleted, see below, StW
+  sMacroblock* curMb = &vidParam->mbData[mb_nr];   // intialization code deleted, see below, StW
   sSlice* curSlice = curMb->slice;
 
   get_mem2Dpel(&tmp_block, MB_BLOCK_SIZE, MB_BLOCK_SIZE);
@@ -1544,7 +1544,7 @@ static void copy_to_conceal (sPicture *src, sPicture *dst, sVidParam* vidParam)
 
   int current_mb_nr = 0;
 
-  dst->PicSizeInMbs  = src->PicSizeInMbs;
+  dst->picSizeInMbs  = src->picSizeInMbs;
 
   dst->slice_type = src->slice_type = vidParam->conceal_slice_type;
 
@@ -1567,18 +1567,18 @@ static void copy_to_conceal (sPicture *src, sPicture *dst, sVidParam* vidParam)
   picture = src;
 
   // Conceals the missing frame by frame copy concealment
-  if (vidParam->conceal_mode==1)
+  if (vidParam->concealMode==1)
   {
     // We need these initializations for using deblocking filter for frame copy
     // concealment as well.
     dst->PicWidthInMbs = src->PicWidthInMbs;
-    dst->PicSizeInMbs = src->PicSizeInMbs;
+    dst->picSizeInMbs = src->picSizeInMbs;
 
-    CopyImgData( src->imgY, src->imgUV, dst->imgY, dst->imgUV, vidParam->width, vidParam->height, vidParam->width_cr, vidParam->height_cr);
+    CopyImgData( src->imgY, src->imgUV, dst->imgY, dst->imgUV, vidParam->width, vidParam->height, vidParam->widthCr, vidParam->heightCr);
   }
 
   // Conceals the missing frame by motion vector copy concealment
-  if (vidParam->conceal_mode==2)
+  if (vidParam->concealMode==2)
   {
     if (picture->chroma_format_idc != YUV400)
     {
@@ -1589,18 +1589,18 @@ static void copy_to_conceal (sPicture *src, sPicture *dst, sVidParam* vidParam)
       storeYUV = (sPixel *) malloc (16  * sizeof (sPixel));
     }
 
-    vidParam->erc_img = vidParam;
+    vidParam->ercImg = vidParam;
 
     dst->PicWidthInMbs = src->PicWidthInMbs;
-    dst->PicSizeInMbs = src->PicSizeInMbs;
+    dst->picSizeInMbs = src->picSizeInMbs;
     mb_width = dst->PicWidthInMbs;
-    mb_height = (dst->PicSizeInMbs)/(dst->PicWidthInMbs);
+    mb_height = (dst->picSizeInMbs)/(dst->PicWidthInMbs);
     scale = (vidParam->conceal_slice_type == B_SLICE) ? 2 : 1;
 
     if(vidParam->conceal_slice_type == B_SLICE)
     {
       init_lists_for_non_reference_loss(
-        vidParam->p_Dpb_layer[0],
+        vidParam->dpbLayer[0],
         dst->slice_type, vidParam->ppSliceList[0]->structure);
     }
     else
@@ -1632,7 +1632,7 @@ static void copy_to_conceal (sPicture *src, sPicture *dst, sVidParam* vidParam)
         if ((mm%16==0) && (nn%16==0))
           current_mb_nr++;
 
-        buildPredblockRegionYUV(vidParam->erc_img, mv, x, y, storeYUV, LIST_0, current_mb_nr);
+        buildPredblockRegionYUV(vidParam->ercImg, mv, x, y, storeYUV, LIST_0, current_mb_nr);
 
         predMB = storeYUV;
 
@@ -1696,10 +1696,10 @@ static sPicture* get_pic_from_dpb (sDPB* dpb, int missingpoc, unsigned int *pos)
   int used_size = dpb->used_size - 1;
   int i, concealfrom = 0;
 
-  if(vidParam->conceal_mode == 1)
-    concealfrom = missingpoc - vidParam->poc_gap;
-  else if (vidParam->conceal_mode == 2)
-    concealfrom = missingpoc + vidParam->poc_gap;
+  if(vidParam->concealMode == 1)
+    concealfrom = missingpoc - vidParam->pocGap;
+  else if (vidParam->concealMode == 2)
+    concealfrom = missingpoc + vidParam->pocGap;
 
   for(i = used_size; i >= 0; i--)
   {
@@ -1898,7 +1898,7 @@ void conceal_lost_frames (sDPB* dpb, sSlice *pSlice)
     // Conceals an IDR frame loss. Uses the reference frame in the previous
     // GOP for concealment.
     UnusedShortTermFrameNum = 0;
-    vidParam->last_ref_pic_poc = -vidParam->poc_gap;
+    vidParam->last_ref_pic_poc = -vidParam->pocGap;
     vidParam->earlier_missing_poc = 0;
   }
   else
@@ -1908,7 +1908,7 @@ void conceal_lost_frames (sDPB* dpb, sSlice *pSlice)
 
   while (CurrFrameNum != UnusedShortTermFrameNum)
   {
-    picture = allocPicture (vidParam, FRAME, vidParam->width, vidParam->height, vidParam->width_cr, vidParam->height_cr, 1);
+    picture = allocPicture (vidParam, FRAME, vidParam->width, vidParam->height, vidParam->widthCr, vidParam->heightCr, 1);
 
     picture->coded_frame = 1;
     picture->pic_num = UnusedShortTermFrameNum;
@@ -1943,7 +1943,7 @@ void conceal_lost_frames (sDPB* dpb, sSlice *pSlice)
       vidParam->last_ref_pic_poc = picture->poc;
     }
 
-    store_picture_in_dpb (vidParam->p_Dpb_layer[0], picture);
+    store_picture_in_dpb (vidParam->dpbLayer[0], picture);
 
     picture=NULL;
 
@@ -1992,11 +1992,11 @@ void conceal_non_ref_pics (sDPB* dpb, int diff)
   for(i=0;i<dpb->size-diff;i++)
   {
     dpb->used_size = dpb->size;
-    if((vidParam->pocs_in_dpb[i+1] - vidParam->pocs_in_dpb[i]) > vidParam->poc_gap)
+    if((vidParam->pocs_in_dpb[i+1] - vidParam->pocs_in_dpb[i]) > vidParam->pocGap)
     {
-      conceal_to_picture = allocPicture(vidParam, FRAME, vidParam->width, vidParam->height, vidParam->width_cr, vidParam->height_cr, 1);
+      conceal_to_picture = allocPicture(vidParam, FRAME, vidParam->width, vidParam->height, vidParam->widthCr, vidParam->heightCr, 1);
 
-      missingpoc = vidParam->pocs_in_dpb[i] + vidParam->poc_gap;
+      missingpoc = vidParam->pocs_in_dpb[i] + vidParam->pocGap;
       // Diagnostics
       // printf("\n missingpoc = %d\n",missingpoc);
 
@@ -2068,7 +2068,7 @@ void write_lost_non_ref_pic (sDPB* dpb, int poc) {
   sVidParam* vidParam = dpb->vidParam;
   sFrameStore concealment_fs;
   if (poc > 0) {
-    if ((poc - dpb->last_output_poc) > vidParam->poc_gap) {
+    if ((poc - dpb->last_output_poc) > vidParam->pocGap) {
       concealment_fs.frame = vidParam->concealment_head->picture;
       concealment_fs.is_output = 0;
       concealment_fs.is_reference = 0;
@@ -2093,19 +2093,19 @@ void write_lost_ref_after_idr (sDPB* dpb, int pos) {
 
   sVidParam* vidParam = dpb->vidParam;
   int temp = 1;
-  if (vidParam->last_out_fs->frame == NULL) {
-    vidParam->last_out_fs->frame = allocPicture (vidParam, FRAME, vidParam->width, vidParam->height,
-                                                 vidParam->width_cr, vidParam->height_cr, 1);
-    vidParam->last_out_fs->is_used = 3;
+  if (vidParam->lastOutFramestore->frame == NULL) {
+    vidParam->lastOutFramestore->frame = allocPicture (vidParam, FRAME, vidParam->width, vidParam->height,
+                                                 vidParam->widthCr, vidParam->heightCr, 1);
+    vidParam->lastOutFramestore->is_used = 3;
     }
 
-  if (vidParam->conceal_mode == 2) {
+  if (vidParam->concealMode == 2) {
     temp = 2;
-    vidParam->conceal_mode = 1;
+    vidParam->concealMode = 1;
     }
-  copy_to_conceal (dpb->fs[pos]->frame, vidParam->last_out_fs->frame, vidParam);
+  copy_to_conceal (dpb->fs[pos]->frame, vidParam->lastOutFramestore->frame, vidParam);
 
-  vidParam->conceal_mode = temp;
+  vidParam->concealMode = temp;
   }
 //}}}
 
@@ -2113,16 +2113,16 @@ void write_lost_ref_after_idr (sDPB* dpb, int pos) {
 //{{{
 void ercInit (sVidParam* vidParam, int pic_sizex, int pic_sizey, int flag) {
 
-  ercClose(vidParam, vidParam->erc_errorVar);
-  vidParam->erc_object_list = (objectBuffer_t*)calloc ((pic_sizex * pic_sizey) >> 6, sizeof(objectBuffer_t));
-  if (vidParam->erc_object_list == NULL)
-    no_mem_exit ("ercInit: erc_object_list");
+  ercClose(vidParam, vidParam->ercErrorVar);
+  vidParam->ercObjectList = (objectBuffer_t*)calloc ((pic_sizex * pic_sizey) >> 6, sizeof(objectBuffer_t));
+  if (vidParam->ercObjectList == NULL)
+    no_mem_exit ("ercInit: ercObjectList");
 
   // the error concealment instance is allocated
-  vidParam->erc_errorVar = ercOpen();
+  vidParam->ercErrorVar = ercOpen();
 
   // set error concealment ON
-  ercSetErrorConcealment (vidParam->erc_errorVar, flag);
+  ercSetErrorConcealment (vidParam->ercErrorVar, flag);
 }
 //}}}
 //{{{
@@ -2247,9 +2247,9 @@ void ercClose (sVidParam* vidParam,  ercVariables_t *errorVar ) {
     errorVar = NULL;
     }
 
-  if (vidParam->erc_object_list) {
-    free (vidParam->erc_object_list);
-    vidParam->erc_object_list=NULL;
+  if (vidParam->ercObjectList) {
+    free (vidParam->ercObjectList);
+    vidParam->ercObjectList=NULL;
     }
   }
 //}}}

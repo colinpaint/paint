@@ -568,7 +568,7 @@ static void reset_coeffs (sMacroblock* curMb)
 
   // CAVLC
   if (vidParam->activePPS->entropy_coding_mode_flag == (Boolean) CAVLC)
-    memset (vidParam->nz_coeff[curMb->mbAddrX][0][0], 0, 3 * BLOCK_PIXELS * sizeof(byte));
+    memset (vidParam->nzCoeff[curMb->mbAddrX][0][0], 0, 3 * BLOCK_PIXELS * sizeof(byte));
 }
 //}}}
 //{{{
@@ -576,10 +576,10 @@ static void field_flag_inference (sMacroblock* curMb)
 {
   sVidParam *vidParam = curMb->vidParam;
   if (curMb->mbAvailA)
-    curMb->mb_field = vidParam->mb_data[curMb->mbAddrA].mb_field;
+    curMb->mb_field = vidParam->mbData[curMb->mbAddrA].mb_field;
   else
     // check top macroblock pair
-    curMb->mb_field = curMb->mbAvailB ? vidParam->mb_data[curMb->mbAddrB].mb_field : FALSE;
+    curMb->mb_field = curMb->mbAvailB ? vidParam->mbData[curMb->mbAddrB].mb_field : FALSE;
   }
 //}}}
 //{{{
@@ -627,12 +627,12 @@ void skip_macroblock (sMacroblock* curMb) {
       a_mv_y    = a_mv->mv_y;
       a_ref_idx = picture->mv_info[mb[0].pos_y][mb[0].pos_x].ref_idx[LIST_0];
 
-      if (curMb->mb_field && !vidParam->mb_data[mb[0].mb_addr].mb_field)
+      if (curMb->mb_field && !vidParam->mbData[mb[0].mb_addr].mb_field)
       {
         a_mv_y    /=2;
         a_ref_idx *=2;
       }
-      if (!curMb->mb_field && vidParam->mb_data[mb[0].mb_addr].mb_field)
+      if (!curMb->mb_field && vidParam->mbData[mb[0].mb_addr].mb_field)
       {
         a_mv_y    *=2;
         a_ref_idx >>=1;
@@ -645,12 +645,12 @@ void skip_macroblock (sMacroblock* curMb) {
       b_mv_y    = b_mv->mv_y;
       b_ref_idx = picture->mv_info[mb[1].pos_y][mb[1].pos_x].ref_idx[LIST_0];
 
-      if (curMb->mb_field && !vidParam->mb_data[mb[1].mb_addr].mb_field)
+      if (curMb->mb_field && !vidParam->mbData[mb[1].mb_addr].mb_field)
       {
         b_mv_y    /=2;
         b_ref_idx *=2;
       }
-      if (!curMb->mb_field && vidParam->mb_data[mb[1].mb_addr].mb_field)
+      if (!curMb->mb_field && vidParam->mbData[mb[1].mb_addr].mb_field)
       {
         b_mv_y    *=2;
         b_ref_idx >>=1;
@@ -919,7 +919,7 @@ static void read_one_macroblock_i_slice_cavlc (sMacroblock* curMb)
   sPicture* picture = curSlice->picture;
   sPicMotionParamsOld *motion = &picture->motion;
 
-  curMb->mb_field = ((mb_nr&0x01) == 0)? FALSE : curSlice->mb_data[mb_nr-1].mb_field;
+  curMb->mb_field = ((mb_nr&0x01) == 0)? FALSE : curSlice->mbData[mb_nr-1].mb_field;
 
   update_qp(curMb, curSlice->qp);
   currSE.type = SE_MBTYPE;
@@ -973,7 +973,7 @@ static void read_one_macroblock_i_slice_cabac (sMacroblock* curMb)
   sPicture* picture = curSlice->picture;
   sPicMotionParamsOld *motion = &picture->motion;
 
-  curMb->mb_field = ((mb_nr&0x01) == 0)? FALSE : curSlice->mb_data[mb_nr-1].mb_field;
+  curMb->mb_field = ((mb_nr&0x01) == 0)? FALSE : curSlice->mbData[mb_nr-1].mb_field;
 
   update_qp(curMb, curSlice->qp);
   currSE.type = SE_MBTYPE;
@@ -1129,13 +1129,13 @@ static void read_one_macroblock_p_slice_cavlc (sMacroblock* curMb)
 
     if (mb_nr&0x01)
     {
-      topMB= &vidParam->mb_data[mb_nr-1];
+      topMB= &vidParam->mbData[mb_nr-1];
       prevMbSkipped = (topMB->mb_type == 0);
     }
     else
       prevMbSkipped = 0;
 
-    curMb->mb_field = ((mb_nr&0x01) == 0)? FALSE : vidParam->mb_data[mb_nr-1].mb_field;
+    curMb->mb_field = ((mb_nr&0x01) == 0)? FALSE : vidParam->mbData[mb_nr-1].mb_field;
 
     update_qp(curMb, curSlice->qp);
     currSE.type = SE_MBTYPE;
@@ -1191,14 +1191,14 @@ static void read_one_macroblock_p_slice_cavlc (sMacroblock* curMb)
         // check left macroblock pair first
         if (mb_is_available(mb_nr - 2, curMb) && ((mb_nr % (vidParam->PicWidthInMbs * 2))!=0))
         {
-          curMb->mb_field = vidParam->mb_data[mb_nr-2].mb_field;
+          curMb->mb_field = vidParam->mbData[mb_nr-2].mb_field;
         }
         else
         {
           // check top macroblock pair
           if (mb_is_available(mb_nr - 2*vidParam->PicWidthInMbs, curMb))
           {
-            curMb->mb_field = vidParam->mb_data[mb_nr-2*vidParam->PicWidthInMbs].mb_field;
+            curMb->mb_field = vidParam->mbData[mb_nr-2*vidParam->PicWidthInMbs].mb_field;
           }
           else
             curMb->mb_field = FALSE;
@@ -1317,13 +1317,13 @@ static void read_one_macroblock_p_slice_cabac (sMacroblock* curMb)
     sPicMotionParamsOld *motion = &picture->motion;
     if (mb_nr&0x01)
     {
-      topMB= &vidParam->mb_data[mb_nr-1];
+      topMB= &vidParam->mbData[mb_nr-1];
       prevMbSkipped = (topMB->mb_type == 0);
     }
     else
       prevMbSkipped = 0;
 
-    curMb->mb_field = ((mb_nr&0x01) == 0)? FALSE : vidParam->mb_data[mb_nr-1].mb_field;
+    curMb->mb_field = ((mb_nr&0x01) == 0)? FALSE : vidParam->mbData[mb_nr-1].mb_field;
 
     update_qp(curMb, curSlice->qp);
     currSE.type = SE_MBTYPE;
@@ -1479,13 +1479,13 @@ static void read_one_macroblock_b_slice_cavlc (sMacroblock* curMb) {
     sPicMotionParamsOld *motion = &picture->motion;
 
     if (mb_nr&0x01) {
-      topMB= &vidParam->mb_data[mb_nr-1];
+      topMB= &vidParam->mbData[mb_nr-1];
       prevMbSkipped = topMB->skip_flag;
       }
     else
       prevMbSkipped = 0;
 
-    curMb->mb_field = ((mb_nr&0x01) == 0)? FALSE : vidParam->mb_data[mb_nr-1].mb_field;
+    curMb->mb_field = ((mb_nr&0x01) == 0)? FALSE : vidParam->mbData[mb_nr-1].mb_field;
 
     update_qp(curMb, curSlice->qp);
     currSE.type = SE_MBTYPE;
@@ -1529,11 +1529,11 @@ static void read_one_macroblock_b_slice_cavlc (sMacroblock* curMb) {
       else if (curSlice->cod_counter > 0 && ((mb_nr & 0x01) == 0)) {
         // check left macroblock pair first
         if (mb_is_available(mb_nr - 2, curMb) && ((mb_nr % (vidParam->PicWidthInMbs * 2))!=0))
-          curMb->mb_field = vidParam->mb_data[mb_nr-2].mb_field;
+          curMb->mb_field = vidParam->mbData[mb_nr-2].mb_field;
         else {
           // check top macroblock pair
           if (mb_is_available(mb_nr - 2*vidParam->PicWidthInMbs, curMb))
-            curMb->mb_field = vidParam->mb_data[mb_nr-2*vidParam->PicWidthInMbs].mb_field;
+            curMb->mb_field = vidParam->mbData[mb_nr-2*vidParam->PicWidthInMbs].mb_field;
           else
             curMb->mb_field = FALSE;
           }
@@ -1657,13 +1657,13 @@ static void read_one_macroblock_b_slice_cabac (sMacroblock* curMb)
 
     if (mb_nr&0x01)
     {
-      topMB= &vidParam->mb_data[mb_nr-1];
+      topMB= &vidParam->mbData[mb_nr-1];
       prevMbSkipped = topMB->skip_flag;
     }
     else
       prevMbSkipped = 0;
 
-    curMb->mb_field = ((mb_nr&0x01) == 0)? FALSE : vidParam->mb_data[mb_nr-1].mb_field;
+    curMb->mb_field = ((mb_nr&0x01) == 0)? FALSE : vidParam->mbData[mb_nr-1].mb_field;
 
     update_qp(curMb, curSlice->qp);
     currSE.type = SE_MBTYPE;

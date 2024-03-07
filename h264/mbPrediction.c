@@ -378,7 +378,7 @@ int mb_pred_b_d8x8temporal (sMacroblock* curMb, sColorPlane curPlane, sPixel** c
       j6   = curMb->block_y_aff + j;
       mv_info = &picture->mv_info[j4][i4];
       colocated = &list1[0]->mv_info[RSD(j6)][RSD(i4)];
-      if(curMb->vidParam->separate_colour_plane_flag && curMb->vidParam->yuv_format==YUV444)
+      if(curMb->vidParam->separate_colour_plane_flag && curMb->vidParam->yuvFormat==YUV444)
         colocated = &list1[0]->JVmv_info[curMb->slice->colour_plane_id][RSD(j6)][RSD(i4)];
       if(curSlice->mb_aff_frame_flag /*&& (!vidParam->activeSPS->frame_mbs_only_flag || vidParam->activeSPS->direct_8x8_inference_flag)*/)
       {
@@ -588,7 +588,7 @@ int mb_pred_b_d4x4temporal (sMacroblock* curMb, sColorPlane curPlane, sPixel** c
       int j6   = curMb->block_y_aff + j;
       sPicMotionParam *mv_info = &picture->mv_info[j4][i4];
       sPicMotionParam *colocated = &list1[0]->mv_info[j6][i4];
-      if(curMb->vidParam->separate_colour_plane_flag && curMb->vidParam->yuv_format==YUV444)
+      if(curMb->vidParam->separate_colour_plane_flag && curMb->vidParam->yuvFormat==YUV444)
         colocated = &list1[0]->JVmv_info[curMb->slice->colour_plane_id][RSD(j6)][RSD(i4)];
       assert (pred_dir<=2);
 
@@ -1265,9 +1265,9 @@ int mb_pred_ipcm (sMacroblock* curMb)
   // for deblocking filter
   update_qp(curMb, 0);
 
-  // for CAVLC: Set the nz_coeff to 16.
+  // for CAVLC: Set the nzCoeff to 16.
   // These parameters are to be used in CAVLC decoding of neighbour blocks
-  memset(vidParam->nz_coeff[curMb->mbAddrX][0][0], 16, 3 * BLOCK_PIXELS * sizeof(byte));
+  memset(vidParam->nzCoeff[curMb->mbAddrX][0][0], 16, 3 * BLOCK_PIXELS * sizeof(byte));
 
   // for CABAC decoding of MB skip flag
   curMb->skip_flag = 0;

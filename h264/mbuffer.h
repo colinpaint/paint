@@ -43,7 +43,7 @@ typedef struct Picture {
   int         coded_frame;
   int         mb_aff_frame_flag;
   unsigned    PicWidthInMbs;
-  unsigned    PicSizeInMbs;
+  unsigned    picSizeInMbs;
   int         iLumaPadY, iLumaPadX;
   int         iChromaPadY, iChromaPadX;
 
@@ -95,7 +95,7 @@ typedef struct Picture {
 //}}}
 typedef sPicture* sPicturePtr;
 //{{{  sFrameStore
-typedef struct frameStore {
+typedef struct FrameStore {
   int       is_used;                // 0=empty; 1=top; 2=bottom; 3=both fields (or frame)
   int       is_reference;           // 0=not used for ref; 1=top used; 2=bottom used; 3=both fields (or frame) used
   int       is_long_term;           // 0=not used for ref; 1=top used; 2=bottom used; 3=both fields (or frame) used

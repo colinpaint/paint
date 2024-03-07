@@ -52,9 +52,9 @@ static void setupLayerInfo (sVidParam* vidParam, sSPS* sps, sLayerParam* lps) {
 
   int layerId = lps->layerId;
   lps->vidParam = vidParam;
-  lps->cps = vidParam->p_EncodePar[layerId];
+  lps->cps = vidParam->codingParam[layerId];
   lps->sps = sps;
-  lps->dpb = vidParam->p_Dpb_layer[layerId];
+  lps->dpb = vidParam->dpbLayer[layerId];
   }
 //}}}
 //{{{
@@ -74,8 +74,8 @@ static void setCodingParam (sSPS* sps, sCodingParam* cps) {
 
   // Fidelity Range Extensions stuff (part 1)
   cps->bitdepth_chroma = 0;
-  cps->width_cr = 0;
-  cps->height_cr = 0;
+  cps->widthCr = 0;
+  cps->heightCr = 0;
   cps->bitdepth_luma       = (short) (sps->bit_depth_luma_minus8 + 8);
   cps->bitdepth_scale[0]   = 1 << sps->bit_depth_luma_minus8;
   if (sps->chroma_format_idc != YUV400) {
@@ -89,7 +89,7 @@ static void setCodingParam (sSPS* sps, sCodingParam* cps) {
   cps->FrameHeightInMbs = ( 2 - sps->frame_mbs_only_flag ) * cps->PicHeightInMapUnits;
   cps->FrameSizeInMbs = cps->PicWidthInMbs * cps->FrameHeightInMbs;
 
-  cps->yuv_format=sps->chroma_format_idc;
+  cps->yuvFormat=sps->chroma_format_idc;
   cps->separate_colour_plane_flag = sps->separate_colour_plane_flag;
   if (cps->separate_colour_plane_flag )
     cps->ChromaArrayType = 0;
@@ -104,17 +104,17 @@ static void setCodingParam (sSPS* sps, sCodingParam* cps) {
   cps->iChromaPadX = MCBUF_CHROMA_PAD_X;
   cps->iChromaPadY = MCBUF_CHROMA_PAD_Y;
   if (sps->chroma_format_idc == YUV420) {
-    cps->width_cr  = (cps->width  >> 1);
-    cps->height_cr = (cps->height >> 1);
+    cps->widthCr  = (cps->width  >> 1);
+    cps->heightCr = (cps->height >> 1);
     }
   else if (sps->chroma_format_idc == YUV422) {
-    cps->width_cr  = (cps->width >> 1);
-    cps->height_cr = cps->height;
+    cps->widthCr  = (cps->width >> 1);
+    cps->heightCr = cps->height;
     cps->iChromaPadY = MCBUF_CHROMA_PAD_Y*2;
     }
   else if (sps->chroma_format_idc == YUV444) {
-    cps->width_cr = cps->width;
-    cps->height_cr = cps->height;
+    cps->widthCr = cps->width;
+    cps->heightCr = cps->height;
     cps->iChromaPadX = cps->iLumaPadX;
     cps->iChromaPadY = cps->iLumaPadY;
     }
@@ -213,18 +213,18 @@ static void resetFormatInfo (sSPS* sps, sVidParam* vidParam, sFrameFormat* sourc
     source->height[2] = source->height[1];
     }
   else {
-    source->width[1] = vidParam->width_cr - crop_left - crop_right;
+    source->width[1] = vidParam->widthCr - crop_left - crop_right;
     source->width[2] = source->width[1];
-    source->height[1] = vidParam->height_cr - crop_top - crop_bottom;
+    source->height[1] = vidParam->heightCr - crop_top - crop_bottom;
     source->height[2] = source->height[1];
     }
 
   output->width[0] = vidParam->width;
-  source->width[1] = vidParam->width_cr;
-  source->width[2] = vidParam->width_cr;
+  source->width[1] = vidParam->widthCr;
+  source->width[2] = vidParam->widthCr;
   output->height[0] = vidParam->height;
-  output->height[1] = vidParam->height_cr;
-  output->height[2] = vidParam->height_cr;
+  output->height[1] = vidParam->heightCr;
+  output->height[2] = vidParam->heightCr;
 
   source->size_cmp[0] = source->width[0] * source->height[0];
   source->size_cmp[1] = source->width[1] * source->height[1];
@@ -249,7 +249,7 @@ static void resetFormatInfo (sSPS* sps, sVidParam* vidParam, sFrameFormat* sourc
 
   output->frame_rate = source->frame_rate;
   output->color_model = source->color_model;
-  output->yuv_format = source->yuv_format = (ColorFormat)sps->chroma_format_idc;
+  output->yuvFormat = source->yuvFormat = (ColorFormat)sps->chroma_format_idc;
 
   output->auto_crop_bottom = crop_bottom;
   output->auto_crop_right = crop_right;
@@ -264,15 +264,15 @@ static void resetFormatInfo (sSPS* sps, sVidParam* vidParam, sFrameFormat* sourc
   updateMaxValue (source);
   updateMaxValue (output);
 
-  if (vidParam->first_sps == TRUE) {
-    vidParam->first_sps = FALSE;
+  if (vidParam->firstSPS == TRUE) {
+    vidParam->firstSPS = FALSE;
     printf ("ProfileIDC: %d %dx%d %dx%d ",
             sps->profile_idc, source->width[0], source->height[0], vidParam->width, vidParam->height);
-    if (vidParam->yuv_format == YUV400)
+    if (vidParam->yuvFormat == YUV400)
       printf ("4:0:0");
-    else if (vidParam->yuv_format == YUV420)
+    else if (vidParam->yuvFormat == YUV420)
       printf ("4:2:0");
-    else if (vidParam->yuv_format == YUV422)
+    else if (vidParam->yuvFormat == YUV422)
       printf ("4:2:2");
     else
       printf ("4:4:4");
@@ -772,23 +772,23 @@ void activateSPS (sVidParam* vidParam, sSPS* sps) {
       exitPicture (vidParam, &vidParam->picture);
     vidParam->activeSPS = sps;
 
-    if (vidParam->dpb_layer_id==0 && is_BL_profile(sps->profile_idc) && !vidParam->p_Dpb_layer[0]->init_done) {
-      setCodingParam (sps, vidParam->p_EncodePar[0]);
-      setupLayerInfo ( vidParam, sps, vidParam->p_LayerPar[0]);
+    if (vidParam->dpbLayerId==0 && is_BL_profile(sps->profile_idc) && !vidParam->dpbLayer[0]->init_done) {
+      setCodingParam (sps, vidParam->codingParam[0]);
+      setupLayerInfo ( vidParam, sps, vidParam->layerParam[0]);
       }
-    setGlobalCodingProgram (vidParam, vidParam->p_EncodePar[vidParam->dpb_layer_id]);
+    setGlobalCodingProgram (vidParam, vidParam->codingParam[vidParam->dpbLayerId]);
 
     initGlobalBuffers (vidParam, 0);
     if (!vidParam->no_output_of_prior_pics_flag)
-      flush_dpb (vidParam->p_Dpb_layer[0]);
+      flush_dpb (vidParam->dpbLayer[0]);
 
-    initDpb (vidParam, vidParam->p_Dpb_layer[0], 0);
+    initDpb (vidParam, vidParam->dpbLayer[0], 0);
 
     // enable error concealment
     ercInit (vidParam, vidParam->width, vidParam->height, 1);
     if (vidParam->picture) {
-      ercReset (vidParam->erc_errorVar, vidParam->PicSizeInMbs, vidParam->PicSizeInMbs, vidParam->picture->size_x);
-      vidParam->erc_mvperMB = 0;
+      ercReset (vidParam->ercErrorVar, vidParam->picSizeInMbs, vidParam->picSizeInMbs, vidParam->picture->size_x);
+      vidParam->ercMvPerMb = 0;
       }
     }
 
@@ -1103,7 +1103,7 @@ void useParameterSet (sSlice* curSlice) {
     if (sps->num_ref_frames_in_pic_order_cnt_cycle >= MAXnum_ref_frames_in_pic_order_cnt_cycle)
       error ("num_ref_frames_in_pic_order_cnt_cycle too large",-1011);
 
-  vidParam->dpb_layer_id = curSlice->layerId;
+  vidParam->dpbLayerId = curSlice->layerId;
   activateSPS (vidParam, sps);
   activatePPS (vidParam, pps);
 

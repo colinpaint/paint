@@ -949,7 +949,7 @@ public:
       memset (&sInputParams, 0, sizeof(sInputParam));
       sInputParams.vlcDebug = 1;
       sInputParams.poc_scale = 2;
-      sInputParams.poc_gap = 2;
+      sInputParams.pocGap = 2;
       sInputParams.ref_poc_gap = 2;
       sInputParams.dpb_plus[0] = 1;
       sInputParams.intra_profile_deblocking = 1;
@@ -1073,7 +1073,7 @@ public:
       sInputParam sInputParams;
       memset (&sInputParams, 0, sizeof(sInputParam));
       sInputParams.poc_scale = 2;
-      sInputParams.poc_gap = 2;
+      sInputParams.pocGap = 2;
       sInputParams.ref_poc_gap = 2;
       sInputParams.dpb_plus[0] = 1;
       sInputParams.intra_profile_deblocking = 1;

@@ -9,12 +9,12 @@
 Boolean mb_is_available (int mbAddr, sMacroblock* curMb) {
 
   sSlice* curSlice = curMb->slice;
-  if ((mbAddr < 0) || (mbAddr > ((int)curSlice->picture->PicSizeInMbs - 1)))
+  if ((mbAddr < 0) || (mbAddr > ((int)curSlice->picture->picSizeInMbs - 1)))
     return FALSE;
 
   // the following line checks both: slice number and if the mb has been decoded
   if (!curMb->DeblockCall)
-    if (curSlice->mb_data[mbAddr].slice_nr != curMb->slice_nr)
+    if (curSlice->mbData[mbAddr].slice_nr != curMb->slice_nr)
       return FALSE;
 
   return TRUE;
@@ -55,8 +55,8 @@ void CheckAvailabilityOfNeighbors (sMacroblock* curMb) {
     curMb->mbAvailB = (Boolean) (mb_is_available(curMb->mbAddrB, curMb));
     }
 
-  curMb->mb_left = (curMb->mbAvailA) ? &(curSlice->mb_data[curMb->mbAddrA]) : NULL;
-  curMb->mb_up   = (curMb->mbAvailB) ? &(curSlice->mb_data[curMb->mbAddrB]) : NULL;
+  curMb->mb_left = (curMb->mbAvailA) ? &(curSlice->mbData[curMb->mbAddrA]) : NULL;
+  curMb->mb_up   = (curMb->mbAvailB) ? &(curSlice->mbData[curMb->mbAddrB]) : NULL;
   }
 //}}}
 //{{{
@@ -80,8 +80,8 @@ void CheckAvailabilityOfNeighborsNormal (sMacroblock* curMb) {
   curMb->mbAvailB = (Boolean) (mb_is_available(curMb->mbAddrB, curMb));
 
 
-  curMb->mb_left = (curMb->mbAvailA) ? &(curSlice->mb_data[curMb->mbAddrA]) : NULL;
-  curMb->mb_up   = (curMb->mbAvailB) ? &(curSlice->mb_data[curMb->mbAddrB]) : NULL;
+  curMb->mb_left = (curMb->mbAvailA) ? &(curSlice->mbData[curMb->mbAddrA]) : NULL;
+  curMb->mb_up   = (curMb->mbAvailB) ? &(curSlice->mbData[curMb->mbAddrB]) : NULL;
   }
 //}}}
 //{{{
@@ -103,8 +103,8 @@ void CheckAvailabilityOfNeighborsMBAFF (sMacroblock* curMb) {
   curMb->mbAvailC = (Boolean) (mb_is_available(curMb->mbAddrC, curMb) && ((PicPos[cur_mb_pair + 1].x)!=0));
   curMb->mbAvailD = (Boolean) (mb_is_available(curMb->mbAddrD, curMb) && ((PicPos[cur_mb_pair    ].x)!=0));
 
-  curMb->mb_left = (curMb->mbAvailA) ? &(curSlice->mb_data[curMb->mbAddrA]) : NULL;
-  curMb->mb_up   = (curMb->mbAvailB) ? &(curSlice->mb_data[curMb->mbAddrB]) : NULL;
+  curMb->mb_left = (curMb->mbAvailA) ? &(curSlice->mbData[curMb->mbAddrA]) : NULL;
+  curMb->mb_up   = (curMb->mbAvailB) ? &(curSlice->mbData[curMb->mbAddrB]) : NULL;
   }
 //}}}
 
@@ -212,7 +212,7 @@ void getAffNeighbour (sMacroblock* curMb, int xN, int yN, int mb_size[2], sPixel
           pix->mb_addr   = curMb->mbAddrA;
           pix->available = curMb->mbAvailA;
           if (curMb->mbAvailA) {
-            if(!vidParam->mb_data[curMb->mbAddrA].mb_field)
+            if(!vidParam->mbData[curMb->mbAddrA].mb_field)
                yM = yN;
             else {
               (pix->mb_addr)++;
@@ -229,7 +229,7 @@ void getAffNeighbour (sMacroblock* curMb, int xN, int yN, int mb_size[2], sPixel
           pix->mb_addr   = curMb->mbAddrD;
           pix->available = curMb->mbAvailD;
           if (curMb->mbAvailD) {
-            if(!vidParam->mb_data[curMb->mbAddrD].mb_field) {
+            if(!vidParam->mbData[curMb->mbAddrD].mb_field) {
               (pix->mb_addr)++;
                yM = 2 * yN;
               }
@@ -257,7 +257,7 @@ void getAffNeighbour (sMacroblock* curMb, int xN, int yN, int mb_size[2], sPixel
             pix->mb_addr   = curMb->mbAddrA;
             pix->available = curMb->mbAvailA;
             if (curMb->mbAvailA) {
-              if(!vidParam->mb_data[curMb->mbAddrA].mb_field)
+              if(!vidParam->mbData[curMb->mbAddrA].mb_field)
                  yM = yN;
               else {
                 (pix->mb_addr)+= ((yN & 0x01) != 0);
@@ -271,7 +271,7 @@ void getAffNeighbour (sMacroblock* curMb, int xN, int yN, int mb_size[2], sPixel
             pix->mb_addr   = curMb->mbAddrA;
             pix->available = curMb->mbAvailA;
             if (curMb->mbAvailA) {
-              if(!vidParam->mb_data[curMb->mbAddrA].mb_field) {
+              if(!vidParam->mbData[curMb->mbAddrA].mb_field) {
                 (pix->mb_addr)++;
                  yM = yN;
                 }
@@ -291,7 +291,7 @@ void getAffNeighbour (sMacroblock* curMb, int xN, int yN, int mb_size[2], sPixel
             pix->mb_addr  = curMb->mbAddrA;
             pix->available = curMb->mbAvailA;
             if (curMb->mbAvailA) {
-              if(!vidParam->mb_data[curMb->mbAddrA].mb_field) {
+              if(!vidParam->mbData[curMb->mbAddrA].mb_field) {
                 if (yN < (maxH >> 1))
                    yM = yN << 1;
                 else {
@@ -309,7 +309,7 @@ void getAffNeighbour (sMacroblock* curMb, int xN, int yN, int mb_size[2], sPixel
             pix->mb_addr  = curMb->mbAddrA;
             pix->available = curMb->mbAvailA;
             if (curMb->mbAvailA) {
-              if(!vidParam->mb_data[curMb->mbAddrA].mb_field) {
+              if(!vidParam->mbData[curMb->mbAddrA].mb_field) {
                 if (yN < (maxH >> 1))
                   yM = (yN << 1) + 1;
                 else {
@@ -341,7 +341,7 @@ void getAffNeighbour (sMacroblock* curMb, int xN, int yN, int mb_size[2], sPixel
             // for the deblocker if the current MB is a frame and the one above is a field
             // then the neighbor is the top MB of the pair
             if (curMb->mbAvailB) {
-              if (!(curMb->DeblockCall == 1 && (vidParam->mb_data[curMb->mbAddrB]).mb_field))
+              if (!(curMb->DeblockCall == 1 && (vidParam->mbData[curMb->mbAddrB]).mb_field))
                 pix->mb_addr  += 1;
               }
 
@@ -365,7 +365,7 @@ void getAffNeighbour (sMacroblock* curMb, int xN, int yN, int mb_size[2], sPixel
              pix->mb_addr   = curMb->mbAddrB;
              pix->available = curMb->mbAvailB;
              if (curMb->mbAvailB) {
-               if(!vidParam->mb_data[curMb->mbAddrB].mb_field) {
+               if(!vidParam->mbData[curMb->mbAddrB].mb_field) {
                  (pix->mb_addr)++;
                   yM = 2* yN;
                  }
@@ -423,7 +423,7 @@ void getAffNeighbour (sMacroblock* curMb, int xN, int yN, int mb_size[2], sPixel
             pix->mb_addr   = curMb->mbAddrC;
             pix->available = curMb->mbAvailC;
             if (curMb->mbAvailC) {
-              if(!vidParam->mb_data[curMb->mbAddrC].mb_field) {
+              if(!vidParam->mbData[curMb->mbAddrC].mb_field) {
                 (pix->mb_addr)++;
                  yM = 2* yN;
                 }

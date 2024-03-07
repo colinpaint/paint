@@ -1235,12 +1235,12 @@ static inline void set_direct_references (const sPixelPos* mb, char* l0_rFrame, 
 }
 //}}}
 //{{{
-static void set_direct_references_mb_field (const sPixelPos* mb, char* l0_rFrame, char* l1_rFrame, sPicMotionParam** mv_info, sMacroblock *mb_data)
+static void set_direct_references_mb_field (const sPixelPos* mb, char* l0_rFrame, char* l1_rFrame, sPicMotionParam** mv_info, sMacroblock *mbData)
 {
   if (mb->available)
   {
     char *ref_idx = mv_info[mb->pos_y][mb->pos_x].ref_idx;
-    if (mb_data[mb->mb_addr].mb_field)
+    if (mbData[mb->mb_addr].mb_field)
     {
       *l0_rFrame  = ref_idx[LIST_0];
       *l1_rFrame  = ref_idx[LIST_1];
@@ -1259,12 +1259,12 @@ static void set_direct_references_mb_field (const sPixelPos* mb, char* l0_rFrame
 }
 //}}}
 //{{{
-static void set_direct_references_mb_frame (const sPixelPos* mb, char* l0_rFrame, char* l1_rFrame, sPicMotionParam** mv_info, sMacroblock *mb_data)
+static void set_direct_references_mb_frame (const sPixelPos* mb, char* l0_rFrame, char* l1_rFrame, sPicMotionParam** mv_info, sMacroblock *mbData)
 {
   if (mb->available)
   {
     char *ref_idx = mv_info[mb->pos_y][mb->pos_x].ref_idx;
-    if (mb_data[mb->mb_addr].mb_field)
+    if (mbData[mb->mb_addr].mb_field)
     {
       *l0_rFrame  = (ref_idx[LIST_0] >> 1);
       *l1_rFrame  = (ref_idx[LIST_1] >> 1);
@@ -1305,15 +1305,15 @@ void prepare_direct_params (sMacroblock* curMb, sPicture* picture, sMotionVector
     sVidParam* vidParam = curMb->vidParam;
     if (curMb->mb_field)
     {
-      set_direct_references_mb_field(&mb[0], &l0_refA, &l1_refA, mv_info, vidParam->mb_data);
-      set_direct_references_mb_field(&mb[1], &l0_refB, &l1_refB, mv_info, vidParam->mb_data);
-      set_direct_references_mb_field(&mb[2], &l0_refC, &l1_refC, mv_info, vidParam->mb_data);
+      set_direct_references_mb_field(&mb[0], &l0_refA, &l1_refA, mv_info, vidParam->mbData);
+      set_direct_references_mb_field(&mb[1], &l0_refB, &l1_refB, mv_info, vidParam->mbData);
+      set_direct_references_mb_field(&mb[2], &l0_refC, &l1_refC, mv_info, vidParam->mbData);
     }
     else
     {
-      set_direct_references_mb_frame(&mb[0], &l0_refA, &l1_refA, mv_info, vidParam->mb_data);
-      set_direct_references_mb_frame(&mb[1], &l0_refB, &l1_refB, mv_info, vidParam->mb_data);
-      set_direct_references_mb_frame(&mb[2], &l0_refC, &l1_refC, mv_info, vidParam->mb_data);
+      set_direct_references_mb_frame(&mb[0], &l0_refA, &l1_refA, mv_info, vidParam->mbData);
+      set_direct_references_mb_frame(&mb[1], &l0_refB, &l1_refB, mv_info, vidParam->mbData);
+      set_direct_references_mb_frame(&mb[2], &l0_refC, &l1_refC, mv_info, vidParam->mbData);
     }
   }
 
