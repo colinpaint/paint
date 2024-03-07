@@ -1,4 +1,4 @@
-//{{{
+//{{{  includes
 #define _CRT_SECURE_NO_WARNINGS
 
 #include <stdio.h>
@@ -19,109 +19,6 @@ static int Read_Component _ANSI_ARGS_ ((char *fname, unsigned char *frame,
 	int width, int height));
 static int Extract_Components _ANSI_ARGS_ ((char *filename,
 	unsigned char *frame[3], int framenum));
-//}}}
-
-//{{{
-/* substitute frame buffer routine */
-void Substitute_Frame_Buffer (bitstream_framenum, sequence_framenum)
-int bitstream_framenum;
-int sequence_framenum;
-{
-	/* static tracking variables */
-	static int previous_temporal_reference;
-	static int previous_bitstream_framenum;
-	static int previous_anchor_temporal_reference;
-	static int previous_anchor_bitstream_framenum;
-	static int previous_picture_coding_type;
-	static int bgate;
-
-	/* local temporary variables */
-	int substitute_display_framenum;
-
-
-#ifdef DEBUG
-	printf("SUB: seq fn(%d) bitfn(%d) tempref(%d) picstr(%d) type(%d)\n",
-		sequence_framenum, bitstream_framenum, temporal_reference,
-		picture_structure, picture_coding_type);
-#endif
-
-	/* we don't substitute at the first picture of a sequence */
-	if((sequence_framenum!=0)||(Second_Field))
-	{
-		/* only at the start of the frame */
-		if ((picture_structure==FRAME_PICTURE)||(!Second_Field))
-		{
-			if(picture_coding_type==P_TYPE)
-			{
-				/* the most recently decoded reference frame needs substituting */
-				substitute_display_framenum = bitstream_framenum - 1;
-
-				Read_Frame(Substitute_Picture_Filename, forward_reference_frame,
-					substitute_display_framenum);
-			}
-			/* only the first B frame in a consequitve set of B pictures
-				 loads a substitute backward_reference_frame since all subsequent
-				 B frames predict from the same reference pictures */
-			else if((picture_coding_type==B_TYPE)&&(bgate!=1))
-			{
-				substitute_display_framenum =
-					(previous_temporal_reference - temporal_reference)
-						+ bitstream_framenum - 1;
-
-				Read_Frame(Substitute_Picture_Filename, backward_reference_frame,
-					substitute_display_framenum);
-			}
-		} /* P fields can predict from the two most recently decoded fields, even
-				 from the first field of the same frame being decoded */
-		else if(Second_Field && (picture_coding_type==P_TYPE))
-		{
-			/* our favourite case: the IP field picture pair */
-			if((previous_picture_coding_type==I_TYPE)&&(picture_coding_type==P_TYPE))
-			{
-				substitute_display_framenum = bitstream_framenum;
-			}
-			else /* our more generic P field picture pair */
-			{
-				substitute_display_framenum =
-					(temporal_reference - previous_anchor_temporal_reference)
-						+ bitstream_framenum - 1;
-			}
-
-			Read_Frame(Substitute_Picture_Filename, current_frame, substitute_display_framenum);
-		}
-#ifdef DEBUG
-		else if((picture_coding_type!=B_TYPE)||(picture_coding_type!=D_TYPE))
-		{
-			printf("NO SUBS FOR THIS PICTURE\n");
-		}
-#endif
-	}
-
-
-	/* set b gate so we don't redundantly load next time around */
-	if(picture_coding_type==B_TYPE)
-		bgate = 1;
-	else
-		bgate = 0;
-
-	/* update general tracking variables */
-	if((picture_structure==FRAME_PICTURE)||(!Second_Field))
-	{
-		previous_temporal_reference  = temporal_reference;
-		previous_bitstream_framenum  = bitstream_framenum;
-	}
-
-	/* update reference frame tracking variables */
-	if((picture_coding_type!=B_TYPE) &&
-		((picture_structure==FRAME_PICTURE)||Second_Field))
-	{
-		previous_anchor_temporal_reference  = temporal_reference;
-		previous_anchor_bitstream_framenum  = bitstream_framenum;
-	}
-
-	previous_picture_coding_type = picture_coding_type;
-
-}
 //}}}
 
 //{{{
@@ -362,4 +259,107 @@ int field_mode;    /* 0 = frame, 1 = field                      */
 
 }
 
+//}}}
+
+//{{{
+/* substitute frame buffer routine */
+void Substitute_Frame_Buffer (bitstream_framenum, sequence_framenum)
+int bitstream_framenum;
+int sequence_framenum;
+{
+	/* static tracking variables */
+	static int previous_temporal_reference;
+	static int previous_bitstream_framenum;
+	static int previous_anchor_temporal_reference;
+	static int previous_anchor_bitstream_framenum;
+	static int previous_picture_coding_type;
+	static int bgate;
+
+	/* local temporary variables */
+	int substitute_display_framenum;
+
+
+#ifdef DEBUG
+	printf("SUB: seq fn(%d) bitfn(%d) tempref(%d) picstr(%d) type(%d)\n",
+		sequence_framenum, bitstream_framenum, temporal_reference,
+		picture_structure, picture_coding_type);
+#endif
+
+	/* we don't substitute at the first picture of a sequence */
+	if((sequence_framenum!=0)||(Second_Field))
+	{
+		/* only at the start of the frame */
+		if ((picture_structure==FRAME_PICTURE)||(!Second_Field))
+		{
+			if(picture_coding_type==P_TYPE)
+			{
+				/* the most recently decoded reference frame needs substituting */
+				substitute_display_framenum = bitstream_framenum - 1;
+
+				Read_Frame(Substitute_Picture_Filename, forward_reference_frame,
+					substitute_display_framenum);
+			}
+			/* only the first B frame in a consequitve set of B pictures
+				 loads a substitute backward_reference_frame since all subsequent
+				 B frames predict from the same reference pictures */
+			else if((picture_coding_type==B_TYPE)&&(bgate!=1))
+			{
+				substitute_display_framenum =
+					(previous_temporal_reference - temporal_reference)
+						+ bitstream_framenum - 1;
+
+				Read_Frame(Substitute_Picture_Filename, backward_reference_frame,
+					substitute_display_framenum);
+			}
+		} /* P fields can predict from the two most recently decoded fields, even
+				 from the first field of the same frame being decoded */
+		else if(Second_Field && (picture_coding_type==P_TYPE))
+		{
+			/* our favourite case: the IP field picture pair */
+			if((previous_picture_coding_type==I_TYPE)&&(picture_coding_type==P_TYPE))
+			{
+				substitute_display_framenum = bitstream_framenum;
+			}
+			else /* our more generic P field picture pair */
+			{
+				substitute_display_framenum =
+					(temporal_reference - previous_anchor_temporal_reference)
+						+ bitstream_framenum - 1;
+			}
+
+			Read_Frame(Substitute_Picture_Filename, current_frame, substitute_display_framenum);
+		}
+#ifdef DEBUG
+		else if((picture_coding_type!=B_TYPE)||(picture_coding_type!=D_TYPE))
+		{
+			printf("NO SUBS FOR THIS PICTURE\n");
+		}
+#endif
+	}
+
+
+	/* set b gate so we don't redundantly load next time around */
+	if(picture_coding_type==B_TYPE)
+		bgate = 1;
+	else
+		bgate = 0;
+
+	/* update general tracking variables */
+	if((picture_structure==FRAME_PICTURE)||(!Second_Field))
+	{
+		previous_temporal_reference  = temporal_reference;
+		previous_bitstream_framenum  = bitstream_framenum;
+	}
+
+	/* update reference frame tracking variables */
+	if((picture_coding_type!=B_TYPE) &&
+		((picture_structure==FRAME_PICTURE)||Second_Field))
+	{
+		previous_anchor_temporal_reference  = temporal_reference;
+		previous_anchor_bitstream_framenum  = bitstream_framenum;
+	}
+
+	previous_picture_coding_type = picture_coding_type;
+
+}
 //}}}

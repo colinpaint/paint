@@ -10,7 +10,6 @@
 #include "config.h"
 #include "global.h"
 //}}}
-//{{{  private prototypes
 static int  video_sequence _ANSI_ARGS_((int *framenum));
 static int Decode_Bitstream _ANSI_ARGS_((void));
 static int  Headers _ANSI_ARGS_((void));
@@ -18,10 +17,61 @@ static void Initialize_Sequence _ANSI_ARGS_((void));
 static void Initialize_Decoder _ANSI_ARGS_((void));
 static void Deinitialize_Sequence _ANSI_ARGS_((void));
 static void Process_Options _ANSI_ARGS_((int argc, char *argv[]));
-//}}}
 
-static void Clear_Options();
-static void Print_Options();
+//{{{
+static void Clear_Options()
+{
+  Verbose_Flag = 0;
+  Output_Type = 0;
+  Output_Picture_Filename = " ";
+  hiQdither  = 0;
+  Output_Type = 0;
+  Frame_Store_Flag = 0;
+  Spatial_Flag = 0;
+  Lower_Layer_Picture_Filename = " ";
+  Reference_IDCT_Flag = 0;
+  Trace_Flag = 0;
+  Quiet_Flag = 0;
+  Ersatz_Flag = 0;
+  Substitute_Picture_Filename  = " ";
+  Two_Streams = 0;
+  Enhancement_Layer_Bitstream_Filename = " ";
+  Big_Picture_Flag = 0;
+  Main_Bitstream_Flag = 0;
+  Main_Bitstream_Filename = " ";
+  Verify_Flag = 0;
+  Stats_Flag  = 0;
+  User_Data_Flag = 0;
+}
+//}}}
+//{{{
+static void Print_Options()
+{
+
+  printf("Verbose_Flag                         = %d\n", Verbose_Flag);
+  printf("Output_Type                          = %d\n", Output_Type);
+  printf("Output_Picture_Filename              = %s\n", Output_Picture_Filename);
+  printf("hiQdither                            = %d\n", hiQdither);
+  printf("Output_Type                          = %d\n", Output_Type);
+  printf("Frame_Store_Flag                     = %d\n", Frame_Store_Flag);
+  printf("Spatial_Flag                         = %d\n", Spatial_Flag);
+  printf("Lower_Layer_Picture_Filename         = %s\n", Lower_Layer_Picture_Filename);
+  printf("Reference_IDCT_Flag                  = %d\n", Reference_IDCT_Flag);
+  printf("Trace_Flag                           = %d\n", Trace_Flag);
+  printf("Quiet_Flag                           = %d\n", Quiet_Flag);
+  printf("Ersatz_Flag                          = %d\n", Ersatz_Flag);
+  printf("Substitute_Picture_Filename          = %s\n", Substitute_Picture_Filename);
+  printf("Two_Streams                          = %d\n", Two_Streams);
+  printf("Enhancement_Layer_Bitstream_Filename = %s\n", Enhancement_Layer_Bitstream_Filename);
+  printf("Big_Picture_Flag                     = %d\n", Big_Picture_Flag);
+  printf("Main_Bitstream_Flag                  = %d\n", Main_Bitstream_Flag);
+  printf("Main_Bitstream_Filename              = %s\n", Main_Bitstream_Filename);
+  printf("Verify_Flag                          = %d\n", Verify_Flag);
+  printf("Stats_Flag                           = %d\n", Stats_Flag);
+  printf("User_Data_Flag                       = %d\n", User_Data_Flag);
+
+}
+//}}}
 
 //{{{
 int main (argc,argv)
@@ -557,60 +607,5 @@ int *Bitstream_Framenumber;
 
   *Bitstream_Framenumber = Bitstream_Framenum;
   return(Return_Value);
-}
-//}}}
-
-//{{{
-static void Clear_Options()
-{
-  Verbose_Flag = 0;
-  Output_Type = 0;
-  Output_Picture_Filename = " ";
-  hiQdither  = 0;
-  Output_Type = 0;
-  Frame_Store_Flag = 0;
-  Spatial_Flag = 0;
-  Lower_Layer_Picture_Filename = " ";
-  Reference_IDCT_Flag = 0;
-  Trace_Flag = 0;
-  Quiet_Flag = 0;
-  Ersatz_Flag = 0;
-  Substitute_Picture_Filename  = " ";
-  Two_Streams = 0;
-  Enhancement_Layer_Bitstream_Filename = " ";
-  Big_Picture_Flag = 0;
-  Main_Bitstream_Flag = 0;
-  Main_Bitstream_Filename = " ";
-  Verify_Flag = 0;
-  Stats_Flag  = 0;
-  User_Data_Flag = 0;
-}
-//}}}
-//{{{
-static void Print_Options()
-{
-
-  printf("Verbose_Flag                         = %d\n", Verbose_Flag);
-  printf("Output_Type                          = %d\n", Output_Type);
-  printf("Output_Picture_Filename              = %s\n", Output_Picture_Filename);
-  printf("hiQdither                            = %d\n", hiQdither);
-  printf("Output_Type                          = %d\n", Output_Type);
-  printf("Frame_Store_Flag                     = %d\n", Frame_Store_Flag);
-  printf("Spatial_Flag                         = %d\n", Spatial_Flag);
-  printf("Lower_Layer_Picture_Filename         = %s\n", Lower_Layer_Picture_Filename);
-  printf("Reference_IDCT_Flag                  = %d\n", Reference_IDCT_Flag);
-  printf("Trace_Flag                           = %d\n", Trace_Flag);
-  printf("Quiet_Flag                           = %d\n", Quiet_Flag);
-  printf("Ersatz_Flag                          = %d\n", Ersatz_Flag);
-  printf("Substitute_Picture_Filename          = %s\n", Substitute_Picture_Filename);
-  printf("Two_Streams                          = %d\n", Two_Streams);
-  printf("Enhancement_Layer_Bitstream_Filename = %s\n", Enhancement_Layer_Bitstream_Filename);
-  printf("Big_Picture_Flag                     = %d\n", Big_Picture_Flag);
-  printf("Main_Bitstream_Flag                  = %d\n", Main_Bitstream_Flag);
-  printf("Main_Bitstream_Filename              = %s\n", Main_Bitstream_Filename);
-  printf("Verify_Flag                          = %d\n", Verify_Flag);
-  printf("Stats_Flag                           = %d\n", Stats_Flag);
-  printf("User_Data_Flag                       = %d\n", User_Data_Flag);
-
 }
 //}}}

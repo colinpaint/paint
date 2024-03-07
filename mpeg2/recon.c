@@ -1,4 +1,4 @@
-//{{{
+//{{{  includes
 #define _CRT_SECURE_NO_WARNINGS
 
 #include <stdio.h>
@@ -15,219 +15,6 @@ static void form_prediction _ANSI_ARGS_((unsigned char *src[], int sfield,
 
 static void form_component_prediction _ANSI_ARGS_((unsigned char *src, unsigned char *dst,
   int lx, int lx2, int w, int h, int x, int y, int dx, int dy, int average_flag));
-
-//{{{
-void form_predictions (bx,by,macroblock_type,motion_type,PMV,motion_vertical_field_select,dmvector,stwtype)
-int bx, by;
-int macroblock_type;
-int motion_type;
-int PMV[2][2][2], motion_vertical_field_select[2][2], dmvector[2];
-int stwtype;
-{
-  int currentfield;
-  unsigned char **predframe;
-  int DMV[2][2];
-  int stwtop, stwbot;
-
-  stwtop = stwtype%3; /* 0:temporal, 1:(spat+temp)/2, 2:spatial */
-  stwbot = stwtype/3;
-
-  if ((macroblock_type & MACROBLOCK_MOTION_FORWARD)
-   || (picture_coding_type==P_TYPE))
-  {
-    if (picture_structure==FRAME_PICTURE)
-    {
-      if ((motion_type==MC_FRAME)
-        || !(macroblock_type & MACROBLOCK_MOTION_FORWARD))
-      {
-        /* frame-based prediction (broken into top and bottom halves
-             for spatial scalability prediction purposes) */
-        if (stwtop<2)
-          form_prediction(forward_reference_frame,0,current_frame,0,
-            Coded_Picture_Width,Coded_Picture_Width<<1,16,8,bx,by,
-            PMV[0][0][0],PMV[0][0][1],stwtop);
-
-        if (stwbot<2)
-          form_prediction(forward_reference_frame,1,current_frame,1,
-            Coded_Picture_Width,Coded_Picture_Width<<1,16,8,bx,by,
-            PMV[0][0][0],PMV[0][0][1],stwbot);
-      }
-      else if (motion_type==MC_FIELD) /* field-based prediction */
-      {
-        /* top field prediction */
-        if (stwtop<2)
-          form_prediction(forward_reference_frame,motion_vertical_field_select[0][0],
-            current_frame,0,Coded_Picture_Width<<1,Coded_Picture_Width<<1,16,8,
-            bx,by>>1,PMV[0][0][0],PMV[0][0][1]>>1,stwtop);
-
-        /* bottom field prediction */
-        if (stwbot<2)
-          form_prediction(forward_reference_frame,motion_vertical_field_select[1][0],
-            current_frame,1,Coded_Picture_Width<<1,Coded_Picture_Width<<1,16,8,
-            bx,by>>1,PMV[1][0][0],PMV[1][0][1]>>1,stwbot);
-      }
-      else if (motion_type==MC_DMV) /* dual prime prediction */
-      {
-        /* calculate derived motion vectors */
-        Dual_Prime_Arithmetic(DMV,dmvector,PMV[0][0][0],PMV[0][0][1]>>1);
-
-        if (stwtop<2)
-        {
-          /* predict top field from top field */
-          form_prediction(forward_reference_frame,0,current_frame,0,
-            Coded_Picture_Width<<1,Coded_Picture_Width<<1,16,8,bx,by>>1,
-            PMV[0][0][0],PMV[0][0][1]>>1,0);
-
-          /* predict and add to top field from bottom field */
-          form_prediction(forward_reference_frame,1,current_frame,0,
-            Coded_Picture_Width<<1,Coded_Picture_Width<<1,16,8,bx,by>>1,
-            DMV[0][0],DMV[0][1],1);
-        }
-
-        if (stwbot<2)
-        {
-          /* predict bottom field from bottom field */
-          form_prediction(forward_reference_frame,1,current_frame,1,
-            Coded_Picture_Width<<1,Coded_Picture_Width<<1,16,8,bx,by>>1,
-            PMV[0][0][0],PMV[0][0][1]>>1,0);
-
-          /* predict and add to bottom field from top field */
-          form_prediction(forward_reference_frame,0,current_frame,1,
-            Coded_Picture_Width<<1,Coded_Picture_Width<<1,16,8,bx,by>>1,
-            DMV[1][0],DMV[1][1],1);
-        }
-      }
-      else
-        /* invalid motion_type */
-        printf("invalid motion_type\n");
-    }
-    else /* TOP_FIELD or BOTTOM_FIELD */
-    {
-      /* field picture */
-      currentfield = (picture_structure==BOTTOM_FIELD);
-
-      /* determine which frame to use for prediction */
-      if ((picture_coding_type==P_TYPE) && Second_Field
-         && (currentfield!=motion_vertical_field_select[0][0]))
-        predframe = backward_reference_frame; /* same frame */
-      else
-        predframe = forward_reference_frame; /* previous frame */
-
-      if ((motion_type==MC_FIELD)
-        || !(macroblock_type & MACROBLOCK_MOTION_FORWARD))
-      {
-        /* field-based prediction */
-        if (stwtop<2)
-          form_prediction(predframe,motion_vertical_field_select[0][0],current_frame,0,
-            Coded_Picture_Width<<1,Coded_Picture_Width<<1,16,16,bx,by,
-            PMV[0][0][0],PMV[0][0][1],stwtop);
-      }
-      else if (motion_type==MC_16X8)
-      {
-        if (stwtop<2)
-        {
-          form_prediction(predframe,motion_vertical_field_select[0][0],current_frame,0,
-            Coded_Picture_Width<<1,Coded_Picture_Width<<1,16,8,bx,by,
-            PMV[0][0][0],PMV[0][0][1],stwtop);
-
-          /* determine which frame to use for lower half prediction */
-          if ((picture_coding_type==P_TYPE) && Second_Field
-             && (currentfield!=motion_vertical_field_select[1][0]))
-            predframe = backward_reference_frame; /* same frame */
-          else
-            predframe = forward_reference_frame; /* previous frame */
-
-          form_prediction(predframe,motion_vertical_field_select[1][0],current_frame,0,
-            Coded_Picture_Width<<1,Coded_Picture_Width<<1,16,8,bx,by+8,
-            PMV[1][0][0],PMV[1][0][1],stwtop);
-        }
-      }
-      else if (motion_type==MC_DMV) /* dual prime prediction */
-      {
-        if (Second_Field)
-          predframe = backward_reference_frame; /* same frame */
-        else
-          predframe = forward_reference_frame; /* previous frame */
-
-        /* calculate derived motion vectors */
-        Dual_Prime_Arithmetic(DMV,dmvector,PMV[0][0][0],PMV[0][0][1]);
-
-        /* predict from field of same parity */
-        form_prediction(forward_reference_frame,currentfield,current_frame,0,
-          Coded_Picture_Width<<1,Coded_Picture_Width<<1,16,16,bx,by,
-          PMV[0][0][0],PMV[0][0][1],0);
-
-        /* predict from field of opposite parity */
-        form_prediction(predframe,!currentfield,current_frame,0,
-          Coded_Picture_Width<<1,Coded_Picture_Width<<1,16,16,bx,by,
-          DMV[0][0],DMV[0][1],1);
-      }
-      else
-        /* invalid motion_type */
-        printf("invalid motion_type\n");
-    }
-    stwtop = stwbot = 1;
-  }
-
-  if (macroblock_type & MACROBLOCK_MOTION_BACKWARD)
-  {
-    if (picture_structure==FRAME_PICTURE)
-    {
-      if (motion_type==MC_FRAME)
-      {
-        /* frame-based prediction */
-        if (stwtop<2)
-          form_prediction(backward_reference_frame,0,current_frame,0,
-            Coded_Picture_Width,Coded_Picture_Width<<1,16,8,bx,by,
-            PMV[0][1][0],PMV[0][1][1],stwtop);
-
-        if (stwbot<2)
-          form_prediction(backward_reference_frame,1,current_frame,1,
-            Coded_Picture_Width,Coded_Picture_Width<<1,16,8,bx,by,
-            PMV[0][1][0],PMV[0][1][1],stwbot);
-      }
-      else /* field-based prediction */
-      {
-        /* top field prediction */
-        if (stwtop<2)
-          form_prediction(backward_reference_frame,motion_vertical_field_select[0][1],
-            current_frame,0,Coded_Picture_Width<<1,Coded_Picture_Width<<1,16,8,
-            bx,by>>1,PMV[0][1][0],PMV[0][1][1]>>1,stwtop);
-
-        /* bottom field prediction */
-        if (stwbot<2)
-          form_prediction(backward_reference_frame,motion_vertical_field_select[1][1],
-            current_frame,1,Coded_Picture_Width<<1,Coded_Picture_Width<<1,16,8,
-            bx,by>>1,PMV[1][1][0],PMV[1][1][1]>>1,stwbot);
-      }
-    }
-    else /* TOP_FIELD or BOTTOM_FIELD */
-    {
-      /* field picture */
-      if (motion_type==MC_FIELD)
-      {
-        /* field-based prediction */
-        form_prediction(backward_reference_frame,motion_vertical_field_select[0][1],
-          current_frame,0,Coded_Picture_Width<<1,Coded_Picture_Width<<1,16,16,
-          bx,by,PMV[0][1][0],PMV[0][1][1],stwtop);
-      }
-      else if (motion_type==MC_16X8)
-      {
-        form_prediction(backward_reference_frame,motion_vertical_field_select[0][1],
-          current_frame,0,Coded_Picture_Width<<1,Coded_Picture_Width<<1,16,8,
-          bx,by,PMV[0][1][0],PMV[0][1][1],stwtop);
-
-        form_prediction(backward_reference_frame,motion_vertical_field_select[1][1],
-          current_frame,0,Coded_Picture_Width<<1,Coded_Picture_Width<<1,16,8,
-          bx,by+8,PMV[1][1][0],PMV[1][1][1],stwtop);
-      }
-      else
-        /* invalid motion_type */
-        printf("invalid motion_type\n");
-    }
-  }
-}
-//}}}
 
 //{{{
 /* ISO/IEC 13818-2 section 7.6.4: Forming predictions */
@@ -445,4 +232,217 @@ int average_flag;     /* add prediction error to prediction ? */
     lx,lx2,w,h,x,y,dx,dy,average_flag);
 }
 
+//}}}
+
+//{{{
+void form_predictions (bx,by,macroblock_type,motion_type,PMV,motion_vertical_field_select,dmvector,stwtype)
+int bx, by;
+int macroblock_type;
+int motion_type;
+int PMV[2][2][2], motion_vertical_field_select[2][2], dmvector[2];
+int stwtype;
+{
+  int currentfield;
+  unsigned char **predframe;
+  int DMV[2][2];
+  int stwtop, stwbot;
+
+  stwtop = stwtype%3; /* 0:temporal, 1:(spat+temp)/2, 2:spatial */
+  stwbot = stwtype/3;
+
+  if ((macroblock_type & MACROBLOCK_MOTION_FORWARD)
+   || (picture_coding_type==P_TYPE))
+  {
+    if (picture_structure==FRAME_PICTURE)
+    {
+      if ((motion_type==MC_FRAME)
+        || !(macroblock_type & MACROBLOCK_MOTION_FORWARD))
+      {
+        /* frame-based prediction (broken into top and bottom halves
+             for spatial scalability prediction purposes) */
+        if (stwtop<2)
+          form_prediction(forward_reference_frame,0,current_frame,0,
+            Coded_Picture_Width,Coded_Picture_Width<<1,16,8,bx,by,
+            PMV[0][0][0],PMV[0][0][1],stwtop);
+
+        if (stwbot<2)
+          form_prediction(forward_reference_frame,1,current_frame,1,
+            Coded_Picture_Width,Coded_Picture_Width<<1,16,8,bx,by,
+            PMV[0][0][0],PMV[0][0][1],stwbot);
+      }
+      else if (motion_type==MC_FIELD) /* field-based prediction */
+      {
+        /* top field prediction */
+        if (stwtop<2)
+          form_prediction(forward_reference_frame,motion_vertical_field_select[0][0],
+            current_frame,0,Coded_Picture_Width<<1,Coded_Picture_Width<<1,16,8,
+            bx,by>>1,PMV[0][0][0],PMV[0][0][1]>>1,stwtop);
+
+        /* bottom field prediction */
+        if (stwbot<2)
+          form_prediction(forward_reference_frame,motion_vertical_field_select[1][0],
+            current_frame,1,Coded_Picture_Width<<1,Coded_Picture_Width<<1,16,8,
+            bx,by>>1,PMV[1][0][0],PMV[1][0][1]>>1,stwbot);
+      }
+      else if (motion_type==MC_DMV) /* dual prime prediction */
+      {
+        /* calculate derived motion vectors */
+        Dual_Prime_Arithmetic(DMV,dmvector,PMV[0][0][0],PMV[0][0][1]>>1);
+
+        if (stwtop<2)
+        {
+          /* predict top field from top field */
+          form_prediction(forward_reference_frame,0,current_frame,0,
+            Coded_Picture_Width<<1,Coded_Picture_Width<<1,16,8,bx,by>>1,
+            PMV[0][0][0],PMV[0][0][1]>>1,0);
+
+          /* predict and add to top field from bottom field */
+          form_prediction(forward_reference_frame,1,current_frame,0,
+            Coded_Picture_Width<<1,Coded_Picture_Width<<1,16,8,bx,by>>1,
+            DMV[0][0],DMV[0][1],1);
+        }
+
+        if (stwbot<2)
+        {
+          /* predict bottom field from bottom field */
+          form_prediction(forward_reference_frame,1,current_frame,1,
+            Coded_Picture_Width<<1,Coded_Picture_Width<<1,16,8,bx,by>>1,
+            PMV[0][0][0],PMV[0][0][1]>>1,0);
+
+          /* predict and add to bottom field from top field */
+          form_prediction(forward_reference_frame,0,current_frame,1,
+            Coded_Picture_Width<<1,Coded_Picture_Width<<1,16,8,bx,by>>1,
+            DMV[1][0],DMV[1][1],1);
+        }
+      }
+      else
+        /* invalid motion_type */
+        printf("invalid motion_type\n");
+    }
+    else /* TOP_FIELD or BOTTOM_FIELD */
+    {
+      /* field picture */
+      currentfield = (picture_structure==BOTTOM_FIELD);
+
+      /* determine which frame to use for prediction */
+      if ((picture_coding_type==P_TYPE) && Second_Field
+         && (currentfield!=motion_vertical_field_select[0][0]))
+        predframe = backward_reference_frame; /* same frame */
+      else
+        predframe = forward_reference_frame; /* previous frame */
+
+      if ((motion_type==MC_FIELD)
+        || !(macroblock_type & MACROBLOCK_MOTION_FORWARD))
+      {
+        /* field-based prediction */
+        if (stwtop<2)
+          form_prediction(predframe,motion_vertical_field_select[0][0],current_frame,0,
+            Coded_Picture_Width<<1,Coded_Picture_Width<<1,16,16,bx,by,
+            PMV[0][0][0],PMV[0][0][1],stwtop);
+      }
+      else if (motion_type==MC_16X8)
+      {
+        if (stwtop<2)
+        {
+          form_prediction(predframe,motion_vertical_field_select[0][0],current_frame,0,
+            Coded_Picture_Width<<1,Coded_Picture_Width<<1,16,8,bx,by,
+            PMV[0][0][0],PMV[0][0][1],stwtop);
+
+          /* determine which frame to use for lower half prediction */
+          if ((picture_coding_type==P_TYPE) && Second_Field
+             && (currentfield!=motion_vertical_field_select[1][0]))
+            predframe = backward_reference_frame; /* same frame */
+          else
+            predframe = forward_reference_frame; /* previous frame */
+
+          form_prediction(predframe,motion_vertical_field_select[1][0],current_frame,0,
+            Coded_Picture_Width<<1,Coded_Picture_Width<<1,16,8,bx,by+8,
+            PMV[1][0][0],PMV[1][0][1],stwtop);
+        }
+      }
+      else if (motion_type==MC_DMV) /* dual prime prediction */
+      {
+        if (Second_Field)
+          predframe = backward_reference_frame; /* same frame */
+        else
+          predframe = forward_reference_frame; /* previous frame */
+
+        /* calculate derived motion vectors */
+        Dual_Prime_Arithmetic(DMV,dmvector,PMV[0][0][0],PMV[0][0][1]);
+
+        /* predict from field of same parity */
+        form_prediction(forward_reference_frame,currentfield,current_frame,0,
+          Coded_Picture_Width<<1,Coded_Picture_Width<<1,16,16,bx,by,
+          PMV[0][0][0],PMV[0][0][1],0);
+
+        /* predict from field of opposite parity */
+        form_prediction(predframe,!currentfield,current_frame,0,
+          Coded_Picture_Width<<1,Coded_Picture_Width<<1,16,16,bx,by,
+          DMV[0][0],DMV[0][1],1);
+      }
+      else
+        /* invalid motion_type */
+        printf("invalid motion_type\n");
+    }
+    stwtop = stwbot = 1;
+  }
+
+  if (macroblock_type & MACROBLOCK_MOTION_BACKWARD)
+  {
+    if (picture_structure==FRAME_PICTURE)
+    {
+      if (motion_type==MC_FRAME)
+      {
+        /* frame-based prediction */
+        if (stwtop<2)
+          form_prediction(backward_reference_frame,0,current_frame,0,
+            Coded_Picture_Width,Coded_Picture_Width<<1,16,8,bx,by,
+            PMV[0][1][0],PMV[0][1][1],stwtop);
+
+        if (stwbot<2)
+          form_prediction(backward_reference_frame,1,current_frame,1,
+            Coded_Picture_Width,Coded_Picture_Width<<1,16,8,bx,by,
+            PMV[0][1][0],PMV[0][1][1],stwbot);
+      }
+      else /* field-based prediction */
+      {
+        /* top field prediction */
+        if (stwtop<2)
+          form_prediction(backward_reference_frame,motion_vertical_field_select[0][1],
+            current_frame,0,Coded_Picture_Width<<1,Coded_Picture_Width<<1,16,8,
+            bx,by>>1,PMV[0][1][0],PMV[0][1][1]>>1,stwtop);
+
+        /* bottom field prediction */
+        if (stwbot<2)
+          form_prediction(backward_reference_frame,motion_vertical_field_select[1][1],
+            current_frame,1,Coded_Picture_Width<<1,Coded_Picture_Width<<1,16,8,
+            bx,by>>1,PMV[1][1][0],PMV[1][1][1]>>1,stwbot);
+      }
+    }
+    else /* TOP_FIELD or BOTTOM_FIELD */
+    {
+      /* field picture */
+      if (motion_type==MC_FIELD)
+      {
+        /* field-based prediction */
+        form_prediction(backward_reference_frame,motion_vertical_field_select[0][1],
+          current_frame,0,Coded_Picture_Width<<1,Coded_Picture_Width<<1,16,16,
+          bx,by,PMV[0][1][0],PMV[0][1][1],stwtop);
+      }
+      else if (motion_type==MC_16X8)
+      {
+        form_prediction(backward_reference_frame,motion_vertical_field_select[0][1],
+          current_frame,0,Coded_Picture_Width<<1,Coded_Picture_Width<<1,16,8,
+          bx,by,PMV[0][1][0],PMV[0][1][1],stwtop);
+
+        form_prediction(backward_reference_frame,motion_vertical_field_select[1][1],
+          current_frame,0,Coded_Picture_Width<<1,Coded_Picture_Width<<1,16,8,
+          bx,by+8,PMV[1][1][0],PMV[1][1][1],stwtop);
+      }
+      else
+        /* invalid motion_type */
+        printf("invalid motion_type\n");
+    }
+  }
+}
 //}}}

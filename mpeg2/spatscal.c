@@ -1,10 +1,10 @@
-//{{{
-#define _CRT_SECURE_NO_WARNINGS
+ //{{{  includes
+ #define _CRT_SECURE_NO_WARNINGS
 
-#include <stdio.h>
-#include "config.h"
-#include "global.h"
-//}}}
+ #include <stdio.h>
+ #include "config.h"
+ #include "global.h"
+ //}}}
 static void Read_Lower_Layer_Component_Framewise _ANSI_ARGS_((int comp, int lw, int lh));
 static void Read_Lower_Layer_Component_Fieldwise _ANSI_ARGS_((int comp, int lw, int lh));
 
@@ -22,65 +22,6 @@ static void Subsample_Vertical _ANSI_ARGS_((unsigned char *s, short *d,
 
 static void Subsample_Horizontal _ANSI_ARGS_((short *s, unsigned char *d,
 	int x0, int lx, int lxs, int lxd, int ly, int m, int n));
-
-//{{{
-/* get reference frame */
-void Spatial_Prediction()
-{
-
-	if(Frame_Store_Flag)
-	{
-		Read_Lower_Layer_Component_Framewise(0,lower_layer_prediction_horizontal_size,
-			lower_layer_prediction_vertical_size);      /* Y */
-		Read_Lower_Layer_Component_Framewise(1,lower_layer_prediction_horizontal_size>>1,
-			lower_layer_prediction_vertical_size>>1);   /* Cb ("U") */
-		Read_Lower_Layer_Component_Framewise(2,lower_layer_prediction_horizontal_size>>1,
-			lower_layer_prediction_vertical_size>>1);   /* Cr ("V") */
-	}
-	else
-	{
-		Read_Lower_Layer_Component_Fieldwise(0,lower_layer_prediction_horizontal_size,
-			lower_layer_prediction_vertical_size);      /* Y */
-		Read_Lower_Layer_Component_Fieldwise(1,lower_layer_prediction_horizontal_size>>1,
-			lower_layer_prediction_vertical_size>>1);   /* Cb ("U") */
-		Read_Lower_Layer_Component_Fieldwise(2,lower_layer_prediction_horizontal_size>>1,
-			lower_layer_prediction_vertical_size>>1);   /* Cr ("V") */
-	}
-
-
-	Make_Spatial_Prediction_Frame  /* Y */
-		(progressive_frame,lower_layer_progressive_frame,llframe0[0],llframe1[0],
-		 lltmp,current_frame[0],lower_layer_horizontal_offset,
-		 lower_layer_vertical_offset,
-		 lower_layer_prediction_horizontal_size,
-		 lower_layer_prediction_vertical_size,
-		 horizontal_size,vertical_size,vertical_subsampling_factor_m,
-		 vertical_subsampling_factor_n,horizontal_subsampling_factor_m,
-		 horizontal_subsampling_factor_n,
-		 picture_structure!=FRAME_PICTURE); /* this changed from CD to DIS */
-
-	Make_Spatial_Prediction_Frame  /* Cb */
-		(progressive_frame,lower_layer_progressive_frame,llframe0[1],llframe1[1],
-		 lltmp,current_frame[1],lower_layer_horizontal_offset/2,
-		 lower_layer_vertical_offset/2,
-		 lower_layer_prediction_horizontal_size>>1,
-		 lower_layer_prediction_vertical_size>>1,
-		 horizontal_size>>1,vertical_size>>1,vertical_subsampling_factor_m,
-		 vertical_subsampling_factor_n,horizontal_subsampling_factor_m,
-		 horizontal_subsampling_factor_n,1);
-
-	Make_Spatial_Prediction_Frame  /* Cr */
-		(progressive_frame,lower_layer_progressive_frame,llframe0[2],llframe1[2],
-		 lltmp,current_frame[2],lower_layer_horizontal_offset/2,
-		 lower_layer_vertical_offset/2,
-		 lower_layer_prediction_horizontal_size>>1,
-		 lower_layer_prediction_vertical_size>>1,
-		 horizontal_size>>1,vertical_size>>1,vertical_subsampling_factor_m,
-		 vertical_subsampling_factor_n,horizontal_subsampling_factor_m,
-		 horizontal_subsampling_factor_n,1);
-
-}
-//}}}
 
 //{{{
 static void Read_Lower_Layer_Component_Framewise (comp,lw,lh)
@@ -338,5 +279,64 @@ int x0, lx, lxs, lxd, ly, m, n;
 			s2+= lxs;
 		}
 	}
+}
+//}}}
+
+//{{{
+/* get reference frame */
+void Spatial_Prediction()
+{
+
+	if(Frame_Store_Flag)
+	{
+		Read_Lower_Layer_Component_Framewise(0,lower_layer_prediction_horizontal_size,
+			lower_layer_prediction_vertical_size);      /* Y */
+		Read_Lower_Layer_Component_Framewise(1,lower_layer_prediction_horizontal_size>>1,
+			lower_layer_prediction_vertical_size>>1);   /* Cb ("U") */
+		Read_Lower_Layer_Component_Framewise(2,lower_layer_prediction_horizontal_size>>1,
+			lower_layer_prediction_vertical_size>>1);   /* Cr ("V") */
+	}
+	else
+	{
+		Read_Lower_Layer_Component_Fieldwise(0,lower_layer_prediction_horizontal_size,
+			lower_layer_prediction_vertical_size);      /* Y */
+		Read_Lower_Layer_Component_Fieldwise(1,lower_layer_prediction_horizontal_size>>1,
+			lower_layer_prediction_vertical_size>>1);   /* Cb ("U") */
+		Read_Lower_Layer_Component_Fieldwise(2,lower_layer_prediction_horizontal_size>>1,
+			lower_layer_prediction_vertical_size>>1);   /* Cr ("V") */
+	}
+
+
+	Make_Spatial_Prediction_Frame  /* Y */
+		(progressive_frame,lower_layer_progressive_frame,llframe0[0],llframe1[0],
+		 lltmp,current_frame[0],lower_layer_horizontal_offset,
+		 lower_layer_vertical_offset,
+		 lower_layer_prediction_horizontal_size,
+		 lower_layer_prediction_vertical_size,
+		 horizontal_size,vertical_size,vertical_subsampling_factor_m,
+		 vertical_subsampling_factor_n,horizontal_subsampling_factor_m,
+		 horizontal_subsampling_factor_n,
+		 picture_structure!=FRAME_PICTURE); /* this changed from CD to DIS */
+
+	Make_Spatial_Prediction_Frame  /* Cb */
+		(progressive_frame,lower_layer_progressive_frame,llframe0[1],llframe1[1],
+		 lltmp,current_frame[1],lower_layer_horizontal_offset/2,
+		 lower_layer_vertical_offset/2,
+		 lower_layer_prediction_horizontal_size>>1,
+		 lower_layer_prediction_vertical_size>>1,
+		 horizontal_size>>1,vertical_size>>1,vertical_subsampling_factor_m,
+		 vertical_subsampling_factor_n,horizontal_subsampling_factor_m,
+		 horizontal_subsampling_factor_n,1);
+
+	Make_Spatial_Prediction_Frame  /* Cr */
+		(progressive_frame,lower_layer_progressive_frame,llframe0[2],llframe1[2],
+		 lltmp,current_frame[2],lower_layer_horizontal_offset/2,
+		 lower_layer_vertical_offset/2,
+		 lower_layer_prediction_horizontal_size>>1,
+		 lower_layer_prediction_vertical_size>>1,
+		 horizontal_size>>1,vertical_size>>1,vertical_subsampling_factor_m,
+		 vertical_subsampling_factor_n,horizontal_subsampling_factor_m,
+		 horizontal_subsampling_factor_n,1);
+
 }
 //}}}
