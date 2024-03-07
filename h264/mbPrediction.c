@@ -12,7 +12,6 @@
 #include "image.h"
 #include "mbAccess.h"
 #include "biariDecode.h"
-#include "transform8x8.h"
 #include "transform.h"
 #include "mcPrediction.h"
 #include "quant.h"
