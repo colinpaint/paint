@@ -20,7 +20,6 @@ Boolean mb_is_available (int mbAddr, sMacroblock* curMb) {
   return TRUE;
   }
 //}}}
-
 //{{{
 void CheckAvailabilityOfNeighbors (sMacroblock* curMb) {
 
@@ -59,6 +58,7 @@ void CheckAvailabilityOfNeighbors (sMacroblock* curMb) {
   curMb->mb_up   = (curMb->mbAvailB) ? &(curSlice->mbData[curMb->mbAddrB]) : NULL;
   }
 //}}}
+
 //{{{
 void CheckAvailabilityOfNeighborsNormal (sMacroblock* curMb) {
 
@@ -85,6 +85,14 @@ void CheckAvailabilityOfNeighborsNormal (sMacroblock* curMb) {
   }
 //}}}
 //{{{
+void get_mb_block_pos_normal (sBlockPos* picPos, int mb_addr, short* x, short* y) {
+
+  sBlockPos* pPos = &picPos[ mb_addr ];
+  *x = (short) pPos->x;
+  *y = (short) pPos->y;
+  }
+//}}}
+//{{{
 void CheckAvailabilityOfNeighborsMBAFF (sMacroblock* curMb) {
 
   sSlice* curSlice = curMb->slice;
@@ -105,15 +113,6 @@ void CheckAvailabilityOfNeighborsMBAFF (sMacroblock* curMb) {
 
   curMb->mb_left = (curMb->mbAvailA) ? &(curSlice->mbData[curMb->mbAddrA]) : NULL;
   curMb->mb_up   = (curMb->mbAvailB) ? &(curSlice->mbData[curMb->mbAddrB]) : NULL;
-  }
-//}}}
-
-//{{{
-void get_mb_block_pos_normal (sBlockPos* picPos, int mb_addr, short* x, short* y) {
-
-  sBlockPos* pPos = &picPos[ mb_addr ];
-  *x = (short) pPos->x;
-  *y = (short) pPos->y;
   }
 //}}}
 //{{{
@@ -452,7 +451,6 @@ void getAffNeighbour (sMacroblock* curMb, int xN, int yN, int mb_size[2], sPixel
     }
   }
 //}}}
-
 //{{{
 void get4x4Neighbour (sMacroblock* curMb, int block_x, int block_y, int mb_size[2], sPixelPos* pix) {
 
