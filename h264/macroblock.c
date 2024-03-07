@@ -14,9 +14,9 @@
 #include "mbAccess.h"
 #include "biariDecode.h"
 #include "transform.h"
-#include "mcPrediction.h"
+#include "mcPred.h"
 #include "quant.h"
-#include "mbPrediction.h"
+#include "mbPred.h"
 //}}}
 extern void read_coeff_4x4_CAVLC (sMacroblock* curMb, int block_type, int i, int j, int levarr[16], int runarr[16], int *number_coefficients);
 extern void read_coeff_4x4_CAVLC_444 (sMacroblock* curMb, int block_type, int i, int j, int levarr[16], int runarr[16], int *number_coefficients);

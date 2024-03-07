@@ -3,7 +3,7 @@
 #include "memory.h"
 
 #include "block.h"
-#include "mcPrediction.h"
+#include "mcPred.h"
 #include "buffer.h"
 #include "mbAccess.h"
 #include "macroblock.h"

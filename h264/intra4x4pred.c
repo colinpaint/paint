@@ -1,7 +1,7 @@
 //{{{  includes
 #include "global.h"
 
-#include "intra4x4Pred.h"
+#include "intraPred.h"
 #include "mbAccess.h"
 #include "image.h"
 //}}}

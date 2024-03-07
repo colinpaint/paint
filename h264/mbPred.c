@@ -13,9 +13,9 @@
 #include "mbAccess.h"
 #include "biariDecode.h"
 #include "transform.h"
-#include "mcPrediction.h"
+#include "mcPred.h"
 #include "quant.h"
-#include "mbPrediction.h"
+#include "mbPred.h"
 //}}}
 extern int get_colocated_info_8x8 (sMacroblock* curMb, sPicture *list1, int i, int j);
 extern int get_colocated_info_4x4 (sMacroblock* curMb, sPicture *list1, int i, int j);

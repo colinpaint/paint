@@ -14,9 +14,9 @@
 #include "mbAccess.h"
 #include "biariDecode.h"
 #include "transform.h"
-#include "mcPrediction.h"
+#include "mcPred.h"
 #include "quant.h"
-#include "mbPrediction.h"
+#include "mbPred.h"
 //}}}
 
 //{{{
