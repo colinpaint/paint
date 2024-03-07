@@ -909,7 +909,7 @@ void get_block_luma (sPicture* curRef, int x_pos, int y_pos, int block_size_x, i
   }
   else
   {
-    sPixel** curPixelY = (curMb->vidParam->separate_colour_plane_flag && curMb->p_Slice->colour_plane_id>PLANE_Y)? curRef->imgUV[curMb->p_Slice->colour_plane_id-1] : curRef->curPixelY;
+    sPixel** curPixelY = (curMb->vidParam->separate_colour_plane_flag && curMb->slice->colour_plane_id>PLANE_Y)? curRef->imgUV[curMb->slice->colour_plane_id-1] : curRef->curPixelY;
     int dx = (x_pos & 3);
     int dy = (y_pos & 3);
     x_pos >>= 2;
@@ -1142,7 +1142,7 @@ static void get_block_chroma (sPicture* curRef, int x_pos, int y_pos, int subpel
 void intra_cr_decoding (sMacroblock* curMb, int yuv)
 {
   sVidParam* vidParam = curMb->vidParam;
-  sSlice* curSlice = curMb->p_Slice;
+  sSlice* curSlice = curMb->slice;
   sPicture* picture = curSlice->picture;
   sPixel** curUV;
   int uv;
@@ -1285,7 +1285,7 @@ static void set_direct_references_mb_frame (const sPixelPos* mb, char* l0_rFrame
 //{{{
 void prepare_direct_params (sMacroblock* curMb, sPicture* picture, sMotionVector* pmvl0, sMotionVector *pmvl1, char *l0_rFrame, char *l1_rFrame)
 {
-  sSlice* curSlice = curMb->p_Slice;
+  sSlice* curSlice = curMb->slice;
   char l0_refA, l0_refB, l0_refC;
   char l1_refA, l1_refB, l1_refC;
   sPicMotionParams** mv_info = picture->mv_info;
@@ -1358,7 +1358,7 @@ static inline int check_vert_mv (int llimit, int vec1_y,int rlimit)
 static void perform_mc_single_wp (sMacroblock* curMb, sColorPlane pl, sPicture* picture, int pred_dir, int i, int j, int block_size_x, int block_size_y)
 {
   sVidParam* vidParam = curMb->vidParam;
-  sSlice* curSlice = curMb->p_Slice;
+  sSlice* curSlice = curMb->slice;
   sSPS *active_sps = curSlice->active_sps;
   sPixel** tmp_block_l0 = curSlice->tmp_block_l0;
   sPixel** tmp_block_l1 = curSlice->tmp_block_l1;
@@ -1451,7 +1451,7 @@ static void perform_mc_single_wp (sMacroblock* curMb, sColorPlane pl, sPicture* 
 static void perform_mc_single (sMacroblock* curMb, sColorPlane pl, sPicture* picture, int pred_dir, int i, int j, int block_size_x, int block_size_y)
 {
   sVidParam* vidParam = curMb->vidParam;
-  sSlice* curSlice = curMb->p_Slice;
+  sSlice* curSlice = curMb->slice;
   sSPS *active_sps = curSlice->active_sps;
   sPixel** tmp_block_l0 = curSlice->tmp_block_l0;
   sPixel** tmp_block_l1 = curSlice->tmp_block_l1;
@@ -1534,7 +1534,7 @@ static void perform_mc_bi_wp (sMacroblock* curMb, sColorPlane pl, sPicture* pict
   static const int mv_mul = 16;
   int  vec1_x, vec1_y, vec2_x, vec2_y;
   sVidParam* vidParam = curMb->vidParam;
-  sSlice* curSlice = curMb->p_Slice;
+  sSlice* curSlice = curMb->slice;
 
   int weighted_bipred_idc = vidParam->active_pps->weighted_bipred_idc;
   int block_y_aff = curMb->block_y_aff;
@@ -1671,7 +1671,7 @@ static void perform_mc_bi (sMacroblock* curMb, sColorPlane pl, sPicture* picture
   static const int mv_mul = 16;
   int vec1_x=0, vec1_y=0, vec2_x=0, vec2_y=0;
   sVidParam* vidParam = curMb->vidParam;
-  sSlice* curSlice = curMb->p_Slice;
+  sSlice* curSlice = curMb->slice;
 
   int block_y_aff = curMb->block_y_aff;
   int i4 = curMb->block_x + i;
@@ -1781,7 +1781,7 @@ static void perform_mc_bi (sMacroblock* curMb, sColorPlane pl, sPicture* picture
 //{{{
 void perform_mc (sMacroblock* curMb, sColorPlane pl, sPicture* picture, int pred_dir, int i, int j, int block_size_x, int block_size_y)
 {
-  sSlice* curSlice = curMb->p_Slice;
+  sSlice* curSlice = curMb->slice;
   assert (pred_dir<=2);
   if (pred_dir != 2)
   {

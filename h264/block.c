@@ -31,7 +31,7 @@ static void sample_reconstruct (sPixel** curImg, sPixel** mpr, int** mb_rres, in
 //{{{
 void itrans4x4 (sMacroblock* curMb, sColorPlane pl, int ioff, int joff) {
 
-  sSlice* curSlice = curMb->p_Slice;
+  sSlice* curSlice = curMb->slice;
   int** mb_rres = curSlice->mb_rres[pl];
 
   inverse4x4 (curSlice->cof[pl],mb_rres,joff,ioff);
@@ -42,7 +42,7 @@ void itrans4x4 (sMacroblock* curMb, sColorPlane pl, int ioff, int joff) {
 //{{{
 void itrans4x4_ls (sMacroblock* curMb, sColorPlane pl, int ioff, int joff) {
 
-  sSlice* curSlice = curMb->p_Slice;
+  sSlice* curSlice = curMb->slice;
   sVidParam* vidParam = curMb->vidParam;
   int max_imgpel_value = vidParam->max_pel_value_comp[pl];
 
@@ -60,7 +60,7 @@ void itrans4x4_ls (sMacroblock* curMb, sColorPlane pl, int ioff, int joff) {
 void Inv_Residual_trans_4x4 (sMacroblock* curMb, sColorPlane pl, int ioff, int joff) {
 
   int temp[4][4];
-  sSlice* curSlice = curMb->p_Slice;
+  sSlice* curSlice = curMb->slice;
   sPixel** mb_pred = curSlice->mb_pred[pl];
   sPixel** mb_rec = curSlice->mb_rec[pl];
   int** mb_rres = curSlice->mb_rres[pl];
@@ -111,7 +111,7 @@ void Inv_Residual_trans_4x4 (sMacroblock* curMb, sColorPlane pl, int ioff, int j
 //{{{
 void Inv_Residual_trans_8x8 (sMacroblock* curMb, sColorPlane pl, int ioff, int joff) {
 
-  sSlice* curSlice = curMb->p_Slice;
+  sSlice* curSlice = curMb->slice;
   int temp[8][8];
   sPixel** mb_pred = curSlice->mb_pred[pl];
   sPixel** mb_rec  = curSlice->mb_rec[pl];
@@ -172,7 +172,7 @@ void Inv_Residual_trans_8x8 (sMacroblock* curMb, sColorPlane pl, int ioff, int j
 void Inv_Residual_trans_16x16 (sMacroblock* curMb, sColorPlane pl) {
 
   int temp[16][16];
-  sSlice* curSlice = curMb->p_Slice;
+  sSlice* curSlice = curMb->slice;
   sPixel** mb_pred = curSlice->mb_pred[pl];
   sPixel** mb_rec  = curSlice->mb_rec[pl];
   int   ** mb_rres = curSlice->mb_rres[pl];
@@ -216,7 +216,7 @@ void Inv_Residual_trans_16x16 (sMacroblock* curMb, sColorPlane pl) {
 //{{{
 void Inv_Residual_trans_Chroma (sMacroblock* curMb, int uv) {
 
-  sSlice* curSlice = curMb->p_Slice;
+  sSlice* curSlice = curMb->slice;
   int** mb_rres = curSlice->mb_rres[uv+1];
   int** cof = curSlice->cof[uv+1];
 
@@ -253,7 +253,7 @@ void Inv_Residual_trans_Chroma (sMacroblock* curMb, int uv) {
 //{{{
 void itrans_2 (sMacroblock* curMb, sColorPlane pl) {
 
-  sSlice* curSlice = curMb->p_Slice;
+  sSlice* curSlice = curMb->slice;
   sVidParam* vidParam = curMb->vidParam;
 
   int transform_pl = (vidParam->separate_colour_plane_flag != 0) ? PLANE_Y : pl;
@@ -291,7 +291,7 @@ void itrans_2 (sMacroblock* curMb, sColorPlane pl) {
 void itrans_sp (sMacroblock* curMb, sColorPlane pl, int ioff, int joff) {
 
   sVidParam* vidParam = curMb->vidParam;
-  sSlice* curSlice = curMb->p_Slice;
+  sSlice* curSlice = curMb->slice;
 
   int qp = (curSlice->slice_type == SI_SLICE) ? curSlice->qs : curSlice->qp;
   int qp_per = vidParam->qpPerMatrix[qp];
@@ -355,7 +355,7 @@ void itrans_sp (sMacroblock* curMb, sColorPlane pl, int ioff, int joff) {
 //{{{
 void itrans_sp_cr (sMacroblock* curMb, int uv) {
 
-  sSlice* curSlice = curMb->p_Slice;
+  sSlice* curSlice = curMb->slice;
   sVidParam* vidParam = curMb->vidParam;
   int mp1[BLOCK_SIZE];
   sPixel** mb_pred = curSlice->mb_pred[uv + 1];
@@ -448,8 +448,8 @@ void itrans_sp_cr (sMacroblock* curMb, int uv) {
 //{{{
 void iMBtrans4x4 (sMacroblock* curMb, sColorPlane pl, int smb) {
 
-  sSlice* curSlice = curMb->p_Slice;
-  sPicture* picture = curMb->p_Slice->picture;
+  sSlice* curSlice = curMb->slice;
+  sPicture* picture = curMb->slice->picture;
   sPixel** curr_img = pl ? picture->imgUV[pl - 1] : picture->imgY;
 
   if (curMb->is_lossless && curMb->mb_type == I16MB)
@@ -514,7 +514,7 @@ void iMBtrans4x4 (sMacroblock* curMb, sColorPlane pl, int smb) {
 void iMBtrans8x8 (sMacroblock* curMb, sColorPlane pl) {
 
   //sVidParam* vidParam = curMb->vidParam;
-  sPicture* picture = curMb->p_Slice->picture;
+  sPicture* picture = curMb->slice->picture;
   sPixel** curr_img = pl ? picture->imgUV[pl - 1]: picture->imgY;
 
   // Perform 8x8 idct
@@ -538,13 +538,13 @@ void iMBtrans8x8 (sMacroblock* curMb, sColorPlane pl) {
   else
     icopy8x8 (curMb, pl, 8, 8);
 
-  copy_Image_16x16 (&curr_img[curMb->pix_y], curMb->p_Slice->mb_rec[pl], curMb->pix_x, 0);
+  copy_Image_16x16 (&curr_img[curMb->pix_y], curMb->slice->mb_rec[pl], curMb->pix_x, 0);
   }
 //}}}
 //{{{
 void iTransform (sMacroblock* curMb, sColorPlane pl, int smb) {
 
-  sSlice* curSlice = curMb->p_Slice;
+  sSlice* curSlice = curMb->slice;
   sVidParam* vidParam = curMb->vidParam;
   sPicture* picture = curSlice->picture;
   sPixel** curr_img;
@@ -656,7 +656,7 @@ void copy_Image_16x16 (sPixel** imgBuf1, sPixel** imgBuf2, int off1, int off2) {
 int CheckVertMV (sMacroblock* curMb, int vec1_y, int block_size_y) {
 
   sVidParam* vidParam = curMb->vidParam;
-  sPicture* picture = curMb->p_Slice->picture;
+  sPicture* picture = curMb->slice->picture;
 
   int y_pos = vec1_y>>2;
   int maxold_y = (curMb->mb_field) ? (picture->size_y >> 1) - 1 : picture->size_y_m1;

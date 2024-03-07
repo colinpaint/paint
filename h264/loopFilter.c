@@ -937,7 +937,7 @@ static void set_loop_filter_functions_mbaff (sVidParam* vidParam)
 static void get_strength_ver (sMacroblock* MbQ, int edge, int mvlimit, sPicture* p)
 {
   byte *Strength = MbQ->strength_ver[edge];
-  sSlice* curSlice = MbQ->p_Slice;
+  sSlice* curSlice = MbQ->slice;
   int     StrValue, i;
   sBlockPos *PicPos = MbQ->vidParam->PicPos;
 
@@ -1069,7 +1069,7 @@ static void get_strength_hor (sMacroblock* MbQ, int edge, int mvlimit, sPicture*
 {
   byte  *Strength = MbQ->strength_hor[edge];
   int    StrValue, i;
-  sSlice* curSlice = MbQ->p_Slice;
+  sSlice* curSlice = MbQ->slice;
   sBlockPos *PicPos = MbQ->vidParam->PicPos;
 
   if ((curSlice->slice_type==SP_SLICE)||(curSlice->slice_type==SI_SLICE) )
@@ -1818,7 +1818,7 @@ static void deblockMb (sVidParam* vidParam, sPicture* p, int MbQAddr) {
 
     sPixel    ** imgY = p->imgY;
     sPixel  ** *imgUV = p->imgUV;
-    sSlice * curSlice = MbQ->p_Slice;
+    sSlice * curSlice = MbQ->slice;
     int       mvlimit = ((p->structure!=FRAME) || (p->mb_aff_frame_flag && MbQ->mb_field)) ? 2 : 4;
     sSPS* active_sps = vidParam->active_sps;
 
@@ -1977,7 +1977,7 @@ static void get_db_strength (sVidParam* vidParam, sPicture* p, int MbQAddr) {
     int           filterLeftMbEdgeFlag;
     int           filterTopMbEdgeFlag;
 
-    sSlice * curSlice = MbQ->p_Slice;
+    sSlice * curSlice = MbQ->slice;
     int       mvlimit = ((p->structure!=FRAME) || (p->mb_aff_frame_flag && MbQ->mb_field)) ? 2 : 4;
     sSPS *active_sps = vidParam->active_sps;
 
@@ -2076,7 +2076,7 @@ static void perform_db (sVidParam* vidParam, sPicture* p, int MbQAddr) {
     int           edge_cr;
     sPixel    ** imgY = p->imgY;
     sPixel  ** *imgUV = p->imgUV;
-    sSlice * curSlice = MbQ->p_Slice;
+    sSlice * curSlice = MbQ->slice;
     int       mvlimit = ((p->structure!=FRAME) || (p->mb_aff_frame_flag && MbQ->mb_field)) ? 2 : 4;
     sSPS *active_sps = vidParam->active_sps;
 

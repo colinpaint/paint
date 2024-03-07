@@ -1442,7 +1442,7 @@ void dec_ref_pic_marking (sVidParam* vidParam, sBitstream* curStream, sSlice* pS
   // free old buffer content
   while (pSlice->dec_ref_pic_marking_buffer) {
     sDecRefPicMarking* tmp_drpm = pSlice->dec_ref_pic_marking_buffer;
-    pSlice->dec_ref_pic_marking_buffer = tmp_drpm->Next;
+    pSlice->dec_ref_pic_marking_buffer = tmp_drpm->next;
     free (tmp_drpm);
     }
 
@@ -1461,7 +1461,7 @@ void dec_ref_pic_marking (sVidParam* vidParam, sBitstream* curStream, sSlice* pS
       int val;
       do {
         sDecRefPicMarking* tmp_drpm = (sDecRefPicMarking*)calloc (1,sizeof (sDecRefPicMarking));
-        tmp_drpm->Next = NULL;
+        tmp_drpm->next = NULL;
         val = tmp_drpm->memory_management_control_operation =
           read_ue_v ("SLC memory_management_control_operation", curStream);
         if ((val == 1) || (val == 3))
@@ -1483,8 +1483,8 @@ void dec_ref_pic_marking (sVidParam* vidParam, sBitstream* curStream, sSlice* pS
           pSlice->dec_ref_pic_marking_buffer = tmp_drpm;
         else {
           sDecRefPicMarking* tmp_drpm2 = pSlice->dec_ref_pic_marking_buffer;
-          while (tmp_drpm2->Next != NULL) tmp_drpm2 = tmp_drpm2->Next;
-          tmp_drpm2->Next = tmp_drpm;
+          while (tmp_drpm2->next != NULL) tmp_drpm2 = tmp_drpm2->next;
+          tmp_drpm2->next = tmp_drpm;
           }
         } while (val != 0);
       }

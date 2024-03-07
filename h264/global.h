@@ -61,9 +61,9 @@ struct PicMotionParamOld;
 typedef struct {
   unsigned int Drange;
   unsigned int Dvalue;
-  int DbitsLeft;
-  byte* Dcodestrm;
-  int* Dcodestrm_len;
+  int          DbitsLeft;
+  byte*        Dcodestrm;
+  int*         Dcodestrm_len;
   } sDecodingEnvironment;
 //}}}
 typedef sDecodingEnvironment *sDecodingEnvironmentPtr;
@@ -83,9 +83,9 @@ typedef struct {
 //{{{  sBiContextType
 //! struct for context management
 typedef struct {
-  uint16 state;         // index into state-table CP
-  unsigned char  MPS;           // Least Probable Symbol 0/1 CP
-  unsigned char dummy;          // for alignment
+  uint16         state;  // index into state-table CP
+  unsigned char  MPS;    // Least Probable Symbol 0/1 CP
+  unsigned char dummy;   // for alignment
   } sBiContextType;
 //}}}
 typedef sBiContextType *sBiContextTypePtr;
@@ -145,7 +145,7 @@ typedef struct DecRefPicMarking {
   int long_term_pic_num;
   int long_term_frame_idx;
   int max_long_term_frame_idx_plus1;
-  struct DecRefPicMarking* Next;
+  struct DecRefPicMarking* next;
   } sDecRefPicMarking;
 //}}}
 //{{{
@@ -159,7 +159,7 @@ typedef struct CBPStructure {
 //{{{
 //! sMacroblock
 typedef struct Macroblock {
-  struct Slice*      p_Slice;
+  struct Slice*      slice;
   struct VidParam*   vidParam;
   struct InputParam* inputParam;
 
@@ -744,16 +744,15 @@ typedef struct VidParam {
   struct frameStore* out_buffer;
 
   struct Picture*  pending_output;
-  int              pending_output_state;
-  int              recovery_flag;
-
+  int           pending_output_state;
+  int           recovery_flag;
   // report
-  char         cslice_type[9];
+  char cslice_type[9];
 
   // FMO
-  int*         MbToSliceGroupMap;
-  int*         MapUnitToSliceGroupMap;
-  int          NumberOfSliceGroups;  // the number of slice groups -1 (0 == scan order, 7 == maximum)
+  int* MbToSliceGroupMap;
+  int* MapUnitToSliceGroupMap;
+  int  NumberOfSliceGroups;  // the number of slice groups -1 (0 == scan order, 7 == maximum)
 
   void (*getNeighbour)     (sMacroblock *curMb, int xN, int yN, int mb_size[2], sPixelPos *pix);
   void (*get_mb_block_pos) (sBlockPos *PicPos, int mb_addr, short *x, short *y);
@@ -766,12 +765,12 @@ typedef struct VidParam {
 
   sImage       tempData3;
   sDecodedPicList* decOutputPic;
-  int          deblockMode;  //0: deblock in picture, 1: deblock in slice;
+  int          deblockMode;  // 0: deblock in picture, 1: deblock in slice;
 
-  int          iLumaPadX;
-  int          iLumaPadY;
-  int          iChromaPadX;
-  int          iChromaPadY;
+  int   iLumaPadX;
+  int   iLumaPadY;
+  int   iChromaPadX;
+  int   iChromaPadY;
 
   // control;
   int   bDeblockEnable;

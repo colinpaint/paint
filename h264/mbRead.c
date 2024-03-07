@@ -25,7 +25,7 @@ static void read_ipred_8x8_modes_mbaff (sMacroblock* curMb) {
   int bi, bj, bx, by, dec;
   sSyntaxElement currSE;
   sDataPartition* dP;
-  sSlice* curSlice = curMb->p_Slice;
+  sSlice* curSlice = curMb->slice;
   const byte* partMap = assignSE2partition[curSlice->dp_mode];
   sVidParam* vidParam = curMb->vidParam;
 
@@ -86,7 +86,7 @@ static void read_ipred_8x8_modes (sMacroblock* curMb)
   int b8, bi, bj, bx, by, dec;
   sSyntaxElement currSE;
   sDataPartition *dP;
-  sSlice* curSlice = curMb->p_Slice;
+  sSlice* curSlice = curMb->slice;
   const byte *partMap = assignSE2partition[curSlice->dp_mode];
   sVidParam *vidParam = curMb->vidParam;
 
@@ -157,7 +157,7 @@ static void read_ipred_4x4_modes_mbaff (sMacroblock* curMb)
   int b8,i,j,bi,bj,bx,by;
   sSyntaxElement currSE;
   sDataPartition *dP;
-  sSlice* curSlice = curMb->p_Slice;
+  sSlice* curSlice = curMb->slice;
   const byte *partMap = assignSE2partition[curSlice->dp_mode];
   sVidParam *vidParam = curMb->vidParam;
   sBlockPos *PicPos = vidParam->PicPos;
@@ -236,7 +236,7 @@ static void read_ipred_4x4_modes (sMacroblock* curMb) {
 
   sSyntaxElement currSE;
   sDataPartition* dP;
-  sSlice* curSlice = curMb->p_Slice;
+  sSlice* curSlice = curMb->slice;
   const byte* partMap = assignSE2partition[curSlice->dp_mode];
   sVidParam* vidParam = curMb->vidParam;
   sBlockPos* PicPos = vidParam->PicPos;
@@ -309,7 +309,7 @@ static void read_ipred_4x4_modes (sMacroblock* curMb) {
 //{{{
 static void read_ipred_modes (sMacroblock* curMb)
 {
-  sSlice* curSlice = curMb->p_Slice;
+  sSlice* curSlice = curMb->slice;
   sPicture* picture = curSlice->picture;
 
   if (curSlice->mb_aff_frame_flag)
@@ -376,8 +376,8 @@ static void reset_mv_info_list (sPicMotionParams *mv_info, int list, int slice_n
 //{{{
 static void init_macroblock_basic (sMacroblock* curMb) {
 
-  sPicMotionParams** mv_info = &curMb->p_Slice->picture->mv_info[curMb->block_y];
-  int slice_no =  curMb->p_Slice->current_slice_nr;
+  sPicMotionParams** mv_info = &curMb->slice->picture->mv_info[curMb->block_y];
+  int slice_no =  curMb->slice->current_slice_nr;
 
   // reset vectors and pred. modes
   for (int j = 0; j < BLOCK_SIZE; ++j) {
@@ -392,8 +392,8 @@ static void init_macroblock_basic (sMacroblock* curMb) {
 //{{{
 static void init_macroblock_direct (sMacroblock* curMb) {
 
-  int slice_no = curMb->p_Slice->current_slice_nr;
-  sPicMotionParams** mv_info = &curMb->p_Slice->picture->mv_info[curMb->block_y];
+  int slice_no = curMb->slice->current_slice_nr;
+  sPicMotionParams** mv_info = &curMb->slice->picture->mv_info[curMb->block_y];
 
   set_read_comp_coeff_cabac(curMb);
   set_read_comp_coeff_cavlc(curMb);
@@ -411,7 +411,7 @@ static void init_macroblock_direct (sMacroblock* curMb) {
 static void init_macroblock (sMacroblock* curMb)
 {
   int j, i;
-  sSlice* curSlice = curMb->p_Slice;
+  sSlice* curSlice = curMb->slice;
   sPicMotionParams** mv_info = &curSlice->picture->mv_info[curMb->block_y];
   int slice_no = curSlice->current_slice_nr;
   // reset vectors and pred. modes
@@ -432,7 +432,7 @@ static void init_macroblock (sMacroblock* curMb)
 //{{{
 static void concealIPCMcoeffs (sMacroblock* curMb)
 {
-  sSlice* curSlice = curMb->p_Slice;
+  sSlice* curSlice = curMb->slice;
   sVidParam *vidParam = curMb->vidParam;
   sPicture* picture = curSlice->picture;
   int i, j, k;
@@ -543,7 +543,7 @@ static void read_IPCM_coeffs_from_NAL (sSlice* curSlice, struct DataPartition *d
 //{{{
 static void SetB8Mode (sMacroblock* curMb, int value, int i)
 {
-  sSlice* curSlice = curMb->p_Slice;
+  sSlice* curSlice = curMb->slice;
   static const char p_v2b8 [ 5] = {4, 5, 6, 7, IBLOCK};
   static const char p_v2pd [ 5] = {0, 0, 0, 0, -1};
   static const char b_v2b8 [14] = {0, 4, 4, 4, 5, 6, 5, 6, 5, 6, 7, 7, 7, IBLOCK};
@@ -596,7 +596,7 @@ void skip_macroblock (sMacroblock* curMb) {
   int   b_ref_idx = 0;
   int   img_block_y   = curMb->block_y;
   sVidParam *vidParam = curMb->vidParam;
-  sSlice* curSlice = curMb->p_Slice;
+  sSlice* curSlice = curMb->slice;
   int   list_offset = LIST_0 + curMb->list_offset;
   sPicture* picture = curSlice->picture;
   sMotionVector *a_mv = NULL;
@@ -711,7 +711,7 @@ static void read_skip_macroblock (sMacroblock* curMb)
   if(curMb->vidParam->active_pps->constrained_intra_pred_flag)
   {
     int mb_nr = curMb->mbAddrX;
-    curMb->p_Slice->intra_block[mb_nr] = 0;
+    curMb->slice->intra_block[mb_nr] = 0;
   }
 
   //--- init macroblock data ---
@@ -736,13 +736,13 @@ static void read_intra_macroblock (sMacroblock* curMb)
   read_ipred_modes(curMb);
 
   // read CBP and Coeffs ** *************************************************************
-  curMb->p_Slice->read_CBP_and_coeffs_from_NAL (curMb);
+  curMb->slice->read_CBP_and_coeffs_from_NAL (curMb);
 }
 //}}}
 //{{{
 static void read_intra4x4_macroblock_cavlc (sMacroblock* curMb, const byte *partMap)
 {
-  sSlice* curSlice = curMb->p_Slice;
+  sSlice* curSlice = curMb->slice;
   //transform size flag for INTRA_4x4 and INTRA_8x8 modes
   if (curSlice->Transform8x8Mode)
   {
@@ -781,7 +781,7 @@ static void read_intra4x4_macroblock_cavlc (sMacroblock* curMb, const byte *part
 //{{{
 static void read_intra4x4_macroblock_cabac (sMacroblock* curMb, const byte *partMap)
 {
-  sSlice* curSlice = curMb->p_Slice;
+  sSlice* curSlice = curMb->slice;
 
   //transform size flag for INTRA_4x4 and INTRA_8x8 modes
   if (curSlice->Transform8x8Mode)
@@ -829,7 +829,7 @@ static void read_intra4x4_macroblock_cabac (sMacroblock* curMb, const byte *part
 //{{{
 static void read_inter_macroblock (sMacroblock* curMb)
 {
-  sSlice* curSlice = curMb->p_Slice;
+  sSlice* curSlice = curMb->slice;
 
   //init NoMbPartLessThan8x8Flag
   curMb->NoMbPartLessThan8x8Flag = TRUE;
@@ -853,7 +853,7 @@ static void read_inter_macroblock (sMacroblock* curMb)
 //{{{
 static void read_i_pcm_macroblock (sMacroblock* curMb, const byte *partMap)
 {
-  sSlice* curSlice = curMb->p_Slice;
+  sSlice* curSlice = curMb->slice;
   curMb->NoMbPartLessThan8x8Flag = TRUE;
   curMb->luma_transform_size_8x8_flag = FALSE;
 
@@ -877,7 +877,7 @@ static void read_i_pcm_macroblock (sMacroblock* curMb, const byte *partMap)
 static void read_P8x8_macroblock (sMacroblock* curMb, sDataPartition *dP, sSyntaxElement* currSE)
 {
   int i;
-  sSlice* curSlice = curMb->p_Slice;
+  sSlice* curSlice = curMb->slice;
   //====== READ 8x8 SUB-PARTITION MODES (modes of 8x8 blocks) and Intra VBST block modes ======
   curMb->NoMbPartLessThan8x8Flag = TRUE;
   curMb->luma_transform_size_8x8_flag = FALSE;
@@ -909,7 +909,7 @@ static void read_P8x8_macroblock (sMacroblock* curMb, sDataPartition *dP, sSynta
 //{{{
 static void read_one_macroblock_i_slice_cavlc (sMacroblock* curMb)
 {
-  sSlice* curSlice = curMb->p_Slice;
+  sSlice* curSlice = curMb->slice;
 
   sSyntaxElement currSE;
   int mb_nr = curMb->mbAddrX;
@@ -963,7 +963,7 @@ static void read_one_macroblock_i_slice_cavlc (sMacroblock* curMb)
 //{{{
 static void read_one_macroblock_i_slice_cabac (sMacroblock* curMb)
 {
-  sSlice* curSlice = curMb->p_Slice;
+  sSlice* curSlice = curMb->slice;
 
   sSyntaxElement currSE;
   int mb_nr = curMb->mbAddrX;
@@ -1066,7 +1066,7 @@ static void read_one_macroblock_i_slice_cabac (sMacroblock* curMb)
 //{{{
 static void read_one_macroblock_p_slice_cavlc (sMacroblock* curMb)
 {
-  sSlice* curSlice = curMb->p_Slice;
+  sSlice* curSlice = curMb->slice;
   sSyntaxElement currSE;
   int mb_nr = curMb->mbAddrX;
 
@@ -1261,7 +1261,7 @@ static void read_one_macroblock_p_slice_cavlc (sMacroblock* curMb)
 //{{{
 static void read_one_macroblock_p_slice_cabac (sMacroblock* curMb)
 {
-  sSlice* curSlice = curMb->p_Slice;
+  sSlice* curSlice = curMb->slice;
   sVidParam *vidParam = curMb->vidParam;
   int mb_nr = curMb->mbAddrX;
   sSyntaxElement currSE;
@@ -1427,7 +1427,7 @@ static void read_one_macroblock_p_slice_cabac (sMacroblock* curMb)
 static void read_one_macroblock_b_slice_cavlc (sMacroblock* curMb) {
 
   sVidParam *vidParam = curMb->vidParam;
-  sSlice* curSlice = curMb->p_Slice;
+  sSlice* curSlice = curMb->slice;
   int mb_nr = curMb->mbAddrX;
   sDataPartition *dP;
   sSyntaxElement currSE;
@@ -1593,7 +1593,7 @@ static void read_one_macroblock_b_slice_cavlc (sMacroblock* curMb) {
 //{{{
 static void read_one_macroblock_b_slice_cabac (sMacroblock* curMb)
 {
-  sSlice* curSlice = curMb->p_Slice;
+  sSlice* curSlice = curMb->slice;
   sVidParam *vidParam = curMb->vidParam;
   int mb_nr = curMb->mbAddrX;
   sSyntaxElement currSE;

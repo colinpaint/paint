@@ -784,7 +784,7 @@ static void interpret_dec_ref_pic_marking_repetition_info (byte* payload, int si
 
   while (pSlice->dec_ref_pic_marking_buffer) {
     tmp_drpm = pSlice->dec_ref_pic_marking_buffer;
-    pSlice->dec_ref_pic_marking_buffer = tmp_drpm->Next;
+    pSlice->dec_ref_pic_marking_buffer = tmp_drpm->next;
     free (tmp_drpm);
     }
 

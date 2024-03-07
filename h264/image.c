@@ -336,7 +336,7 @@ static void ercWriteMBMODEandMV (sMacroblock* curMb) {
           pRegion->mv[1] = picture->mv_info[jj][ii].mv[LIST_0].mv_y;
           }
 
-        curMb->p_Slice->erc_mvperMB += iabs(pRegion->mv[0]) + iabs(pRegion->mv[1]);
+        curMb->slice->erc_mvperMB += iabs(pRegion->mv[0]) + iabs(pRegion->mv[1]);
         pRegion->mv[2] = picture->mv_info[jj][ii].ref_idx[LIST_0];
         }
       }
@@ -370,7 +370,7 @@ static void ercWriteMBMODEandMV (sMacroblock* curMb) {
                           picture->mv_info[jj][ii+1].mv[idx].mv_y +
                           picture->mv_info[jj+1][ii].mv[idx].mv_y +
                           picture->mv_info[jj+1][ii+1].mv[idx].mv_y + 2)/4;
-        curMb->p_Slice->erc_mvperMB += iabs(pRegion->mv[0]) + iabs(pRegion->mv[1]);
+        curMb->slice->erc_mvperMB += iabs(pRegion->mv[0]) + iabs(pRegion->mv[1]);
 
         pRegion->mv[2]  = (picture->mv_info[jj][ii].ref_idx[idx]);
         }

@@ -362,7 +362,7 @@ static int decode_one_component_b_slice (sMacroblock* curMb, sColorPlane curPlan
     mb_pred_p_inter8x16(curMb, curPlane, picture);
   else if (curMb->mb_type == BSKIP_DIRECT)
   {
-    sSlice* curSlice = curMb->p_Slice;
+    sSlice* curSlice = curMb->slice;
     if (curSlice->direct_spatial_mv_pred_flag == 0)
     {
       if (curSlice->active_sps->direct_8x8_inference_flag)
@@ -445,7 +445,7 @@ static void prepareListforRefIdx (sMacroblock* curMb, sSyntaxElement* currSE, sD
 void set_chroma_qp (sMacroblock* curMb)
 {
   sVidParam* vidParam = curMb->vidParam;
-  sPicture* picture = curMb->p_Slice->picture;
+  sPicture* picture = curMb->slice->picture;
   int i;
 
   for (i=0; i<2; ++i)
@@ -471,7 +471,7 @@ void update_qp (sMacroblock* curMb, int qp)
 //{{{
 void read_delta_quant (sSyntaxElement* currSE, sDataPartition *dP, sMacroblock* curMb, const byte *partMap, int type)
 {
-  sSlice* curSlice = curMb->p_Slice;
+  sSlice* curSlice = curMb->slice;
   sVidParam* vidParam = curMb->vidParam;
 
   currSE->type = type;
@@ -626,7 +626,7 @@ static void readMBMotionVectors (sSyntaxElement* currSE, sDataPartition *dP, sMa
       sMotionVector pred_mv, curr_mv;
       short (*mvd)[4][2];
       //sVidParam* vidParam = curMb->vidParam;
-      sPicMotionParams** mv_info = curMb->p_Slice->picture->mv_info;
+      sPicMotionParams** mv_info = curMb->slice->picture->mv_info;
       sPixelPos block[4]; // neighbor blocks
 
       curMb->subblock_x = 0; // position used for context determination
@@ -684,7 +684,7 @@ static void readMBMotionVectors (sSyntaxElement* currSE, sDataPartition *dP, sMa
     sMotionVector pred_mv, curr_mv;
     short (*mvd)[4][2];
     //sVidParam* vidParam = curMb->vidParam;
-    sPicMotionParams** mv_info = curMb->p_Slice->picture->mv_info;
+    sPicMotionParams** mv_info = curMb->slice->picture->mv_info;
     sPixelPos block[4]; // neighbor blocks
 
     int i, j, i0, j0, kk, k;
@@ -770,7 +770,7 @@ void invScaleCoeff (sMacroblock* curMb, int level, int run, int qp_per, int i, i
     j0 = pos_scan4x4[coef_ctr][1];
 
     curMb->s_cbp[0].blk |= i64_power2((j << 2) + i) ;
-    curMb->p_Slice->cof[0][(j<<2) + j0][(i<<2) + i0]= rshift_rnd_sf((level * InvLevelScale4x4[j0][i0]) << qp_per, 4);
+    curMb->slice->cof[0][(j<<2) + j0][(i<<2) + i0]= rshift_rnd_sf((level * InvLevelScale4x4[j0][i0]) << qp_per, 4);
   }
 }
 //}}}
@@ -797,7 +797,7 @@ void start_macroblock (sSlice* curSlice, sMacroblock** curMb)
 
   *curMb = &curSlice->mb_data[mb_nr];
 
-  (*curMb)->p_Slice = curSlice;
+  (*curMb)->slice = curSlice;
   (*curMb)->vidParam   = vidParam;
   (*curMb)->mbAddrX = mb_nr;
 
@@ -931,7 +931,7 @@ static void interpret_mb_mode_P (sMacroblock* curMb)
   else if((mbmode == 4 || mbmode == 5))
   {
     curMb->mb_type = P8x8;
-    curMb->p_Slice->allrefzero = (mbmode == 5);
+    curMb->slice->allrefzero = (mbmode == 5);
   }
   else if(mbmode == 6)
   {
@@ -1087,7 +1087,7 @@ static void interpret_mb_mode_SI (sMacroblock* curMb)
     curMb->mb_type = SI4MB;
     memset(curMb->b8mode,IBLOCK,4 * sizeof(char));
     memset(curMb->b8pdir,-1,4 * sizeof(char));
-    curMb->p_Slice->siblock[curMb->mb.y][curMb->mb.x]=1;
+    curMb->slice->siblock[curMb->mb.y][curMb->mb.x]=1;
   }
   else if (mbmode == 1)
   {
@@ -1121,7 +1121,7 @@ static void interpret_mb_mode_SI (sMacroblock* curMb)
 static void read_motion_info_from_NAL_p_slice (sMacroblock* curMb)
 {
   sVidParam* vidParam = curMb->vidParam;
-  sSlice* curSlice = curMb->p_Slice;
+  sSlice* curSlice = curMb->slice;
 
   sSyntaxElement currSE;
   sDataPartition *dP = NULL;
@@ -1175,7 +1175,7 @@ static void read_motion_info_from_NAL_p_slice (sMacroblock* curMb)
 //{{{
 static void read_motion_info_from_NAL_b_slice (sMacroblock* curMb) {
 
-  sSlice* curSlice = curMb->p_Slice;
+  sSlice* curSlice = curMb->slice;
   sVidParam* vidParam = curMb->vidParam;
   sPicture* picture = curSlice->picture;
   sSyntaxElement currSE;
@@ -1444,7 +1444,7 @@ void make_frame_picture_JV (sVidParam* vidParam) {
 //{{{
 int decode_one_macroblock (sMacroblock* curMb, sPicture* picture)
 {
-  sSlice* curSlice = curMb->p_Slice;
+  sSlice* curSlice = curMb->slice;
   sVidParam* vidParam = curMb->vidParam;
 
   if (curSlice->chroma444_not_separate) {

@@ -13,7 +13,7 @@
 static void update_direct_mv_info_temporal (sMacroblock* curMb) {
 
   sVidParam* vidParam = curMb->vidParam;
-  sSlice* curSlice = curMb->p_Slice;
+  sSlice* curSlice = curMb->slice;
   int j,k;
   int partmode        = ((curMb->mb_type == P8x8) ? 4 : curMb->mb_type);
   int step_h0         = BLOCK_STEP [partmode][0];
@@ -269,7 +269,7 @@ int get_colocated_info_8x8 (sMacroblock* curMb, sPicture* list1, int i, int j)
   if (list1->is_long_term)
     return 1;
   else {
-    sSlice* curSlice = curMb->p_Slice;
+    sSlice* curSlice = curMb->slice;
     sVidParam* vidParam = curMb->vidParam;
     if( (curSlice->mb_aff_frame_flag) ||
       (!vidParam->active_sps->frame_mbs_only_flag && ((!curSlice->structure && list1->iCodingType == FIELD_CODING)||(curSlice->structure!=list1->structure && list1->coded_frame))))
@@ -317,7 +317,7 @@ int get_colocated_info_8x8 (sMacroblock* curMb, sPicture* list1, int i, int j)
       sPicMotionParams *fs = &list1->mv_info[RSD(j)][RSD(i)];
       int moving;
       if(curMb->vidParam->separate_colour_plane_flag && curMb->vidParam->yuv_format==YUV444)
-        fs = &list1->JVmv_info[curMb->p_Slice->colour_plane_id][RSD(j)][RSD(i)];
+        fs = &list1->JVmv_info[curMb->slice->colour_plane_id][RSD(j)][RSD(i)];
       moving= !((((fs->ref_idx[LIST_0] == 0)
         &&  (iabs(fs->mv[LIST_0].mv_x)>>1 == 0)
         &&  (iabs(fs->mv[LIST_0].mv_y)>>1 == 0)))
@@ -339,7 +339,7 @@ static void update_direct_mv_info_spatial_8x8 (sMacroblock* curMb)
   if (has_direct)
   {
     //sVidParam* vidParam = curMb->vidParam;
-    sSlice* curSlice = curMb->p_Slice;
+    sSlice* curSlice = curMb->slice;
     int i,j,k;
 
     int j4, i4;
@@ -498,7 +498,7 @@ static void update_direct_mv_info_spatial_4x4 (sMacroblock* curMb)
   if (has_direct)
   {
     sVidParam* vidParam = curMb->vidParam;
-    sSlice* curSlice = curMb->p_Slice;
+    sSlice* curSlice = curMb->slice;
     int i,j,k;
 
     int j4, i4;

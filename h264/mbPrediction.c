@@ -24,7 +24,7 @@ extern int get_colocated_info_4x4 (sMacroblock* curMb, sPicture *list1, int i, i
 //{{{
 int mb_pred_intra4x4 (sMacroblock* curMb, sColorPlane curPlane, sPixel** curPixel, sPicture* picture)
 {
-  sSlice* curSlice = curMb->p_Slice;
+  sSlice* curSlice = curMb->slice;
   int yuv = picture->chroma_format_idc - 1;
   int i=0, j=0,k, j4=0,i4=0;
   int j_pos, i_pos;
@@ -74,7 +74,7 @@ int mb_pred_intra16x16 (sMacroblock* curMb, sColorPlane curPlane, sPicture* pict
 {
   int yuv = picture->chroma_format_idc - 1;
 
-  curMb->p_Slice->intra_pred_16x16(curMb, curPlane, curMb->i16mode);
+  curMb->slice->intra_pred_16x16(curMb, curPlane, curMb->i16mode);
   curMb->ipmode_DPCM = (char) curMb->i16mode; //For residual DPCM
   // =============== 4x4 itrans ================
   // -------------------------------------------
@@ -86,14 +86,14 @@ int mb_pred_intra16x16 (sMacroblock* curMb, sColorPlane curPlane, sPicture* pict
     intra_cr_decoding(curMb, yuv);
   }
 
-  curMb->p_Slice->is_reset_coeff = FALSE;
+  curMb->slice->is_reset_coeff = FALSE;
   return 1;
 }
 //}}}
 //{{{
 int mb_pred_intra8x8 (sMacroblock* curMb, sColorPlane curPlane, sPixel** curPixel, sPicture* picture)
 {
-  sSlice* curSlice = curMb->p_Slice;
+  sSlice* curSlice = curMb->slice;
   int yuv = picture->chroma_format_idc - 1;
 
   int block8x8;   // needed for ABT
@@ -129,7 +129,7 @@ int mb_pred_intra8x8 (sMacroblock* curMb, sColorPlane curPlane, sPixel** curPixe
 //{{{
 static void set_chroma_vector (sMacroblock* curMb)
 {
-  sSlice* curSlice = curMb->p_Slice;
+  sSlice* curSlice = curMb->slice;
   sVidParam* vidParam = curMb->vidParam;
 
   if (!curSlice->mb_aff_frame_flag)
@@ -217,7 +217,7 @@ static void set_chroma_vector (sMacroblock* curMb)
 //{{{
 int mb_pred_skip (sMacroblock* curMb, sColorPlane curPlane, sPixel** curPixel, sPicture* picture)
 {
-  sSlice* curSlice = curMb->p_Slice;
+  sSlice* curSlice = curMb->slice;
   sVidParam* vidParam = curMb->vidParam;
 
   set_chroma_vector(curMb);
@@ -252,7 +252,7 @@ int mb_pred_p_inter8x8 (sMacroblock* curMb, sColorPlane curPlane, sPicture* pict
   int block8x8;   // needed for ABT
   int i=0, j=0,k;
 
-  sSlice* curSlice = curMb->p_Slice;
+  sSlice* curSlice = curMb->slice;
   int smb = curSlice->slice_type == SP_SLICE && (curMb->is_intra_block == FALSE);
 
   set_chroma_vector(curMb);
@@ -287,7 +287,7 @@ int mb_pred_p_inter8x8 (sMacroblock* curMb, sColorPlane curPlane, sPicture* pict
 //{{{
 int mb_pred_p_inter16x16 (sMacroblock* curMb, sColorPlane curPlane, sPicture* picture)
 {
-  sSlice* curSlice = curMb->p_Slice;
+  sSlice* curSlice = curMb->slice;
   int smb = (curSlice->slice_type == SP_SLICE);
 
   set_chroma_vector(curMb);
@@ -302,7 +302,7 @@ int mb_pred_p_inter16x16 (sMacroblock* curMb, sColorPlane curPlane, sPicture* pi
 //{{{
 int mb_pred_p_inter16x8 (sMacroblock* curMb, sColorPlane curPlane, sPicture* picture)
 {
-  sSlice* curSlice = curMb->p_Slice;
+  sSlice* curSlice = curMb->slice;
   int smb = (curSlice->slice_type == SP_SLICE);
 
   set_chroma_vector(curMb);
@@ -319,7 +319,7 @@ int mb_pred_p_inter16x8 (sMacroblock* curMb, sColorPlane curPlane, sPicture* pic
 //{{{
 int mb_pred_p_inter8x16 (sMacroblock* curMb, sColorPlane curPlane, sPicture* picture)
 {
-  sSlice* curSlice = curMb->p_Slice;
+  sSlice* curSlice = curMb->slice;
   int smb = (curSlice->slice_type == SP_SLICE);
 
   set_chroma_vector(curMb);
@@ -351,7 +351,7 @@ int mb_pred_b_d8x8temporal (sMacroblock* curMb, sColorPlane curPlane, sPixel** c
 
   int k, i, j, i4, j4, j6;
   int block8x8;   // needed for ABT
-  sSlice* curSlice = curMb->p_Slice;
+  sSlice* curSlice = curMb->slice;
   sVidParam* vidParam = curMb->vidParam;
   sPicMotionParams *mv_info = NULL, *colocated = NULL;
 
@@ -379,7 +379,7 @@ int mb_pred_b_d8x8temporal (sMacroblock* curMb, sColorPlane curPlane, sPixel** c
       mv_info = &picture->mv_info[j4][i4];
       colocated = &list1[0]->mv_info[RSD(j6)][RSD(i4)];
       if(curMb->vidParam->separate_colour_plane_flag && curMb->vidParam->yuv_format==YUV444)
-        colocated = &list1[0]->JVmv_info[curMb->p_Slice->colour_plane_id][RSD(j6)][RSD(i4)];
+        colocated = &list1[0]->JVmv_info[curMb->slice->colour_plane_id][RSD(j6)][RSD(i4)];
       if(curSlice->mb_aff_frame_flag /*&& (!vidParam->active_sps->frame_mbs_only_flag || vidParam->active_sps->direct_8x8_inference_flag)*/)
       {
         assert(vidParam->active_sps->direct_8x8_inference_flag);
@@ -562,7 +562,7 @@ int mb_pred_b_d4x4temporal (sMacroblock* curMb, sColorPlane curPlane, sPixel** c
 
   int k;
   int block8x8;   // needed for ABT
-  sSlice* curSlice = curMb->p_Slice;
+  sSlice* curSlice = curMb->slice;
   sVidParam* vidParam = curMb->vidParam;
 
   int list_offset = curMb->list_offset;
@@ -589,7 +589,7 @@ int mb_pred_b_d4x4temporal (sMacroblock* curMb, sColorPlane curPlane, sPixel** c
       sPicMotionParams *mv_info = &picture->mv_info[j4][i4];
       sPicMotionParams *colocated = &list1[0]->mv_info[j6][i4];
       if(curMb->vidParam->separate_colour_plane_flag && curMb->vidParam->yuv_format==YUV444)
-        colocated = &list1[0]->JVmv_info[curMb->p_Slice->colour_plane_id][RSD(j6)][RSD(i4)];
+        colocated = &list1[0]->JVmv_info[curMb->slice->colour_plane_id][RSD(j6)][RSD(i4)];
       assert (pred_dir<=2);
 
       refList = (colocated->ref_idx[LIST_0]== -1 ? LIST_1 : LIST_0);
@@ -688,7 +688,7 @@ int mb_pred_b_d8x8spatial (sMacroblock* curMb, sColorPlane curPlane, sPixel** cu
   sMotionVector pmvl0 = zero_mv, pmvl1 = zero_mv;
   int i4, j4;
   int block8x8;
-  sSlice* curSlice = curMb->p_Slice;
+  sSlice* curSlice = curMb->slice;
   sVidParam* vidParam = curMb->vidParam;
 
   sPicMotionParams *mv_info;
@@ -913,7 +913,7 @@ int mb_pred_b_d4x4spatial (sMacroblock* curMb, sColorPlane curPlane, sPixel** cu
   sMotionVector pmvl0 = zero_mv, pmvl1 = zero_mv;
   int k;
   int block8x8;
-  sSlice* curSlice = curMb->p_Slice;
+  sSlice* curSlice = curMb->slice;
   sVidParam* vidParam = curMb->vidParam;
 
   sPicMotionParams *mv_info;
@@ -1102,7 +1102,7 @@ int mb_pred_b_inter8x8 (sMacroblock* curMb, sColorPlane curPlane, sPicture* pict
   int block_size_x, block_size_y;
   int k;
   int block8x8;   // needed for ABT
-  sSlice* curSlice = curMb->p_Slice;
+  sSlice* curSlice = curMb->slice;
   sVidParam* vidParam = curMb->vidParam;
 
   int list_offset = curMb->list_offset;
@@ -1233,7 +1233,7 @@ int mb_pred_b_inter8x8 (sMacroblock* curMb, sColorPlane curPlane, sPicture* pict
 int mb_pred_ipcm (sMacroblock* curMb)
 {
   int i, j, k;
-  sSlice* curSlice = curMb->p_Slice;
+  sSlice* curSlice = curMb->slice;
   sVidParam* vidParam = curMb->vidParam;
   sPicture* picture = curSlice->picture;
 

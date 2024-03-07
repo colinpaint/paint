@@ -1004,7 +1004,7 @@ static void adaptiveMemoryManagement (sDPB* dpb, sPicture* p) {
     switch (tmp_drpm->memory_management_control_operation) {
       //{{{
       case 0:
-        if (tmp_drpm->Next != NULL)
+        if (tmp_drpm->next != NULL)
           error ("memory_management_control_operation = 0 not last operation in buffer", 500);
         break;
       //}}}
@@ -1051,7 +1051,7 @@ static void adaptiveMemoryManagement (sDPB* dpb, sPicture* p) {
         error ("invalid memory_management_control_operation in buffer", 500);
       //}}}
       }
-    p->dec_ref_pic_marking_buffer = tmp_drpm->Next;
+    p->dec_ref_pic_marking_buffer = tmp_drpm->next;
     free (tmp_drpm);
     }
 

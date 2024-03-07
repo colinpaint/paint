@@ -313,12 +313,12 @@ void CheckAvailabilityOfNeighborsCABAC (sMacroblock* curMb)
   vidParam->getNeighbour(curMb,  0, -1, mb_size, &up);
 
   if (up.available)
-    curMb->mb_up = &curMb->p_Slice->mb_data[up.mb_addr]; //&vidParam->mb_data[up.mb_addr];
+    curMb->mb_up = &curMb->slice->mb_data[up.mb_addr]; //&vidParam->mb_data[up.mb_addr];
   else
     curMb->mb_up = NULL;
 
   if (left.available)
-    curMb->mb_left = &curMb->p_Slice->mb_data[left.mb_addr]; //&vidParam->mb_data[left.mb_addr];
+    curMb->mb_left = &curMb->slice->mb_data[left.mb_addr]; //&vidParam->mb_data[left.mb_addr];
   else
     curMb->mb_left = NULL;
 }
@@ -407,7 +407,7 @@ void readFieldModeInfo_CABAC (sMacroblock* curMb,
                              sSyntaxElement *se,
                              sDecodingEnvironmentPtr dep_dp)
 {
-  sSlice* curSlice = curMb->p_Slice;
+  sSlice* curSlice = curMb->slice;
   //sVidParam* vidParam = curMb->vidParam;
   sMotionInfoContexts *ctx  = curSlice->mot_ctx;
   int a = curMb->mbAvailA ? curSlice->mb_data[curMb->mbAddrA].mb_field : 0;
@@ -443,7 +443,7 @@ int check_next_mb_and_get_field_mode_CABAC_p_slice (sSlice* curSlice,
 
   curMb = &curSlice->mb_data[curSlice->current_mb_nr];
   curMb->vidParam    = vidParam;
-  curMb->p_Slice  = curSlice;
+  curMb->slice  = curSlice;
   curMb->slice_nr = curSlice->current_slice_nr;
   curMb->mb_field = curSlice->mb_data[curSlice->current_mb_nr-1].mb_field;
   curMb->mbAddrX  = curSlice->current_mb_nr;
@@ -529,7 +529,7 @@ int check_next_mb_and_get_field_mode_CABAC_b_slice (sSlice* curSlice,
 
   curMb = &curSlice->mb_data[curSlice->current_mb_nr];
   curMb->vidParam    = vidParam;
-  curMb->p_Slice  = curSlice;
+  curMb->slice  = curSlice;
   curMb->slice_nr = curSlice->current_slice_nr;
   curMb->mb_field = curSlice->mb_data[curSlice->current_mb_nr-1].mb_field;
   curMb->mbAddrX  = curSlice->current_mb_nr;
@@ -607,7 +607,7 @@ void read_MVD_CABAC (sMacroblock* curMb,
                     sDecodingEnvironmentPtr dep_dp)
 {
   int *mb_size = curMb->vidParam->mb_size[IS_LUMA];
-  sSlice* curSlice = curMb->p_Slice;
+  sSlice* curSlice = curMb->slice;
   sMotionInfoContexts *ctx = curSlice->mot_ctx;
   int i = curMb->subblock_x;
   int j = curMb->subblock_y;
@@ -667,7 +667,7 @@ void read_mvd_CABAC_mbaff (sMacroblock* curMb,
                     sDecodingEnvironmentPtr dep_dp)
 {
   sVidParam* vidParam = curMb->vidParam;
-  sSlice* curSlice = curMb->p_Slice;
+  sSlice* curSlice = curMb->slice;
   sMotionInfoContexts *ctx = curSlice->mot_ctx;
   int i = curMb->subblock_x;
   int j = curMb->subblock_y;
@@ -739,7 +739,7 @@ void readB8_typeInfo_CABAC_p_slice (sMacroblock* curMb,
                                     sSyntaxElement *se,
                                     sDecodingEnvironmentPtr dep_dp)
 {
-  sSlice* curSlice = curMb->p_Slice;
+  sSlice* curSlice = curMb->slice;
   int act_sym = 0;
 
   sMotionInfoContexts *ctx = curSlice->mot_ctx;
@@ -773,7 +773,7 @@ void readB8_typeInfo_CABAC_b_slice (sMacroblock* curMb,
                                     sSyntaxElement *se,
                                     sDecodingEnvironmentPtr dep_dp)
 {
-  sSlice* curSlice = curMb->p_Slice;
+  sSlice* curSlice = curMb->slice;
   int act_sym = 0;
 
   sMotionInfoContexts *ctx = curSlice->mot_ctx;
@@ -837,13 +837,13 @@ void read_skip_flag_CABAC_p_slice (sMacroblock* curMb,
 {
   int a = (curMb->mb_left != NULL) ? (curMb->mb_left->skip_flag == 0) : 0;
   int b = (curMb->mb_up   != NULL) ? (curMb->mb_up  ->skip_flag == 0) : 0;
-  sBiContextType *mb_type_contexts = &curMb->p_Slice->mot_ctx->mb_type_contexts[1][a + b];
+  sBiContextType *mb_type_contexts = &curMb->slice->mot_ctx->mb_type_contexts[1][a + b];
 
   se->value1 = (biari_decode_symbol(dep_dp, mb_type_contexts) != 1);
 
   if (!se->value1)
   {
-    curMb->p_Slice->last_dquant = 0;
+    curMb->slice->last_dquant = 0;
   }
 }
 //}}}
@@ -861,13 +861,13 @@ void read_skip_flag_CABAC_b_slice (sMacroblock* curMb,
 {
   int a = (curMb->mb_left != NULL) ? (curMb->mb_left->skip_flag == 0) : 0;
   int b = (curMb->mb_up   != NULL) ? (curMb->mb_up  ->skip_flag == 0) : 0;
-  sBiContextType *mb_type_contexts = &curMb->p_Slice->mot_ctx->mb_type_contexts[2][7 + a + b];
+  sBiContextType *mb_type_contexts = &curMb->slice->mot_ctx->mb_type_contexts[2][7 + a + b];
 
   se->value1 = se->value2 = (biari_decode_symbol (dep_dp, mb_type_contexts) != 1);
 
   if (!se->value1)
   {
-    curMb->p_Slice->last_dquant = 0;
+    curMb->slice->last_dquant = 0;
   }
 }
 //}}}
@@ -885,7 +885,7 @@ void readMB_transform_size_flag_CABAC (sMacroblock* curMb,
                                       sSyntaxElement *se,
                                       sDecodingEnvironmentPtr dep_dp)
 {
-  sSlice* curSlice = curMb->p_Slice;
+  sSlice* curSlice = curMb->slice;
   sTextureInfoContexts*ctx = curSlice->tex_ctx;
 
   int b = (curMb->mb_up   == NULL) ? 0 : curMb->mb_up->luma_transform_size_8x8_flag;
@@ -909,7 +909,7 @@ void readMB_typeInfo_CABAC_i_slice (sMacroblock* curMb,
                            sSyntaxElement *se,
                            sDecodingEnvironmentPtr dep_dp)
 {
-  sSlice* curSlice = curMb->p_Slice;
+  sSlice* curSlice = curMb->slice;
   sMotionInfoContexts *ctx = curSlice->mot_ctx;
 
   int a = 0, b = 0;
@@ -1054,7 +1054,7 @@ void readMB_typeInfo_CABAC_p_slice (sMacroblock* curMb,
                            sSyntaxElement *se,
                            sDecodingEnvironmentPtr dep_dp)
 {
-  sSlice* curSlice = curMb->p_Slice;
+  sSlice* curSlice = curMb->slice;
   sMotionInfoContexts *ctx = curSlice->mot_ctx;
 
   int act_ctx;
@@ -1141,7 +1141,7 @@ void readMB_typeInfo_CABAC_b_slice (sMacroblock* curMb,
                            sSyntaxElement *se,
                            sDecodingEnvironmentPtr dep_dp)
 {
-  sSlice* curSlice = curMb->p_Slice;
+  sSlice* curSlice = curMb->slice;
   sMotionInfoContexts *ctx = curSlice->mot_ctx;
 
   int a = 0, b = 0;
@@ -1265,7 +1265,7 @@ void readIntraPredMode_CABAC (sMacroblock* curMb,
                               sSyntaxElement *se,
                               sDecodingEnvironmentPtr dep_dp)
 {
-  sSlice* curSlice = curMb->p_Slice;
+  sSlice* curSlice = curMb->slice;
   sTextureInfoContexts *ctx     = curSlice->tex_ctx;
   // use_most_probable_mode
   int act_sym = biari_decode_symbol(dep_dp, ctx->ipr_contexts);
@@ -1293,7 +1293,7 @@ void readRefFrame_CABAC (sMacroblock* curMb,
                         sSyntaxElement *se,
                         sDecodingEnvironmentPtr dep_dp)
 {
-  sSlice* curSlice = curMb->p_Slice;
+  sSlice* curSlice = curMb->slice;
   sVidParam* vidParam = curMb->vidParam;
   sPicture* picture = curSlice->picture;
   sMotionInfoContexts *ctx = curSlice->mot_ctx;
@@ -1362,7 +1362,7 @@ void read_dQuant_CABAC (sMacroblock* curMb,
                        sSyntaxElement *se,
                        sDecodingEnvironmentPtr dep_dp)
 {
-  sSlice* curSlice = curMb->p_Slice;
+  sSlice* curSlice = curMb->slice;
   sMotionInfoContexts *ctx = curSlice->mot_ctx;
   int *dquant = &se->value1;
   int act_ctx = ((curSlice->last_dquant != 0) ? 1 : 0);
@@ -1396,8 +1396,8 @@ void read_CBP_CABAC (sMacroblock* curMb,
                     sDecodingEnvironmentPtr dep_dp)
 {
   sVidParam* vidParam = curMb->vidParam;
-  sPicture* picture = curMb->p_Slice->picture;
-  sSlice* curSlice = curMb->p_Slice;
+  sPicture* picture = curMb->slice->picture;
+  sSlice* curSlice = curMb->slice;
   sTextureInfoContexts *ctx = curSlice->tex_ctx;
   sMacroblock *neighborMB = NULL;
 
@@ -1525,7 +1525,7 @@ void readCIPredMode_CABAC (sMacroblock* curMb,
                           sSyntaxElement *se,
                           sDecodingEnvironmentPtr dep_dp)
 {
-  sSlice* curSlice = curMb->p_Slice;
+  sSlice* curSlice = curMb->slice;
   sTextureInfoContexts *ctx = curSlice->tex_ctx;
   int                 *act_sym  = &se->value1;
 
@@ -1554,7 +1554,7 @@ static int read_and_store_CBP_block_bit_444 (sMacroblock* curMb,
                                              sDecodingEnvironmentPtr  dep_dp,
                                              int                     type)
 {
-  sSlice* curSlice = curMb->p_Slice;
+  sSlice* curSlice = curMb->slice;
   sVidParam* vidParam = curMb->vidParam;
   sPicture* picture = curSlice->picture;
   sTextureInfoContexts *tex_ctx = curSlice->tex_ctx;
@@ -1824,7 +1824,7 @@ static int read_and_store_CBP_block_bit_normal (sMacroblock* curMb,
                                                 sDecodingEnvironmentPtr  dep_dp,
                                                 int                     type)
 {
-  sSlice* curSlice = curMb->p_Slice;
+  sSlice* curSlice = curMb->slice;
   sVidParam* vidParam = curMb->vidParam;
   sTextureInfoContexts *tex_ctx = curSlice->tex_ctx;
   int cbp_bit     = 1;  // always one for 8x8 mode
@@ -2141,7 +2141,7 @@ static int read_significance_map (sMacroblock* curMb,
                                   int                     type,
                                   int                     coeff[])
 {
-  sSlice* curSlice = curMb->p_Slice;
+  sSlice* curSlice = curMb->slice;
   int               fld    = ( curSlice->structure!=FRAME || curMb->mb_field );
   const byte *pos2ctx_Map = (fld) ? pos2ctx_map_int[type] : pos2ctx_map[type];
   const byte *pos2ctx_Last = pos2ctx_last[type];
@@ -2247,7 +2247,7 @@ void readRunLevel_CABAC (sMacroblock* curMb,
                          sSyntaxElement  *se,
                          sDecodingEnvironmentPtr dep_dp)
 {
-  sSlice* curSlice = curMb->p_Slice;
+  sSlice* curSlice = curMb->slice;
   int  *coeff_ctr = &curSlice->coeff_ctr;
   int  *coeff = curSlice->coeff;
 

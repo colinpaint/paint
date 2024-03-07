@@ -776,7 +776,7 @@ static void buildPredRegionYUV (sVidParam* vidParam, int *mv, int x, int y, sPix
   int** tmp_res = NULL;
 
   sMacroblock* curMb = &vidParam->mb_data[mb_nr];   // intialization code deleted, see below, StW
-  curSlice = curMb->p_Slice;
+  curSlice = curMb->slice;
   tmp_res = curSlice->tmp_res;
 
   // This should be allocated only once.
@@ -1371,7 +1371,7 @@ static void buildPredblockRegionYUV (sVidParam* vidParam, int *mv,
   int mb_nr = current_mb_nr;
 
   sMacroblock* curMb = &vidParam->mb_data[mb_nr];   // intialization code deleted, see below, StW
-  sSlice* curSlice = curMb->p_Slice;
+  sSlice* curSlice = curMb->slice;
 
   get_mem2Dpel(&tmp_block, MB_BLOCK_SIZE, MB_BLOCK_SIZE);
 
