@@ -1902,7 +1902,7 @@ void conceal_lost_frames (sDPB* dpb, sSlice *pSlice)
     vidParam->earlier_missing_poc = 0;
   }
   else
-    UnusedShortTermFrameNum = (vidParam->pre_frame_num + 1) % vidParam->max_frame_num;
+    UnusedShortTermFrameNum = (vidParam->preFrameNum + 1) % vidParam->max_frame_num;
 
   CurrFrameNum = pSlice->frame_num;
 
@@ -1947,7 +1947,7 @@ void conceal_lost_frames (sDPB* dpb, sSlice *pSlice)
 
     picture=NULL;
 
-    vidParam->pre_frame_num = UnusedShortTermFrameNum;
+    vidParam->preFrameNum = UnusedShortTermFrameNum;
     UnusedShortTermFrameNum = (UnusedShortTermFrameNum + 1) % vidParam->max_frame_num;
 
     // update reference flags and set current flag.

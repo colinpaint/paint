@@ -29,8 +29,8 @@ static inline void mem_free (void *a) {
   }
 //}}}
 
-extern int get_mem2Dmp (sPicMotionParams** *array2D, int dim0, int dim1);
-extern int get_mem3Dmp (sPicMotionParams** **array3D, int dim0, int dim1, int dim2);
+extern int get_mem2Dmp (sPicMotionParam** *array2D, int dim0, int dim1);
+extern int get_mem3Dmp (sPicMotionParam** **array3D, int dim0, int dim1, int dim2);
 
 extern int get_mem2Dmv (sMotionVector** *array2D, int dim0, int dim1);
 extern int get_mem3Dmv (sMotionVector** **array3D, int dim0, int dim1, int dim2);
@@ -94,8 +94,8 @@ extern int get_offset_mem2Dshort(short** *array2D, int rows, int columns, int of
 
 extern void free_offset_mem2Dshort(short** array2D, int columns, int offset_x, int offset_y);
 
-extern void free_mem2Dmp (sPicMotionParams   ** array2D);
-extern void free_mem3Dmp (sPicMotionParams  ** *array2D);
+extern void free_mem2Dmp (sPicMotionParam   ** array2D);
+extern void free_mem3Dmp (sPicMotionParam  ** *array2D);
 
 extern void free_mem2Dmv (sMotionVector    ** array2D);
 extern void free_mem3Dmv (sMotionVector   ** *array2D);
@@ -104,11 +104,11 @@ extern void free_mem5Dmv (sMotionVector ** ***array2D);
 extern void free_mem6Dmv (sMotionVector** ****array2D);
 extern void free_mem7Dmv (sMotionVector** *****array7D);
 
-extern int get_mem2D_spp (StorablePicturePtr ** *array3D, int dim0, int dim1);
-extern int get_mem3D_spp (StorablePicturePtr** **array3D, int dim0, int dim1, int dim2);
+extern int get_mem2D_spp (sPicturePtr ** *array3D, int dim0, int dim1);
+extern int get_mem3D_spp (sPicturePtr** **array3D, int dim0, int dim1, int dim2);
 
-extern void free_mem2D_spp (StorablePicturePtr ** array2D);
-extern void free_mem3D_spp (StorablePicturePtr** *array2D);
+extern void free_mem2D_spp (sPicturePtr ** array2D);
+extern void free_mem3D_spp (sPicturePtr** *array2D);
 
 extern void free_mem2D (byte     ** array2D);
 extern void free_mem3D (byte    ** *array3D);

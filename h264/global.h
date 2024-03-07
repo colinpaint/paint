@@ -238,7 +238,7 @@ typedef struct Macroblock {
   void (*itrans_8x8)(struct Macroblock *curMb, sColorPlane pl, int ioff, int joff);
 
   void (*GetMVPredictor) (struct Macroblock *curMb, sPixelPos *block,
-    sMotionVector *pmv, short ref_frame, struct pic_motion_params** mv_info, int list, int mb_x, int mb_y, int blockshape_x, int blockshape_y);
+    sMotionVector *pmv, short ref_frame, struct PicMotionParam** mv_info, int list, int mb_x, int mb_y, int blockshape_x, int blockshape_y);
 
   int  (*read_and_store_CBP_block_bit)  (struct Macroblock *curMb, sDecodingEnvironmentPtr  dep_dp, int type);
   char (*readRefPictureIdx)             (struct Macroblock *curMb, struct SyntaxElement *currSE, struct DataPartition *dP, char b8mode, int list);
@@ -351,7 +351,7 @@ typedef struct Slice {
   sSPS* active_sps;
 
   // dpb pointer
-  struct decoded_picture_buffer* dpb;
+  struct DPB* dpb;
 
   // slice property;
   int idr_flag;
@@ -443,24 +443,24 @@ typedef struct Slice {
 
   Boolean is_reset_coeff;
   Boolean is_reset_coeff_cr;
-  sPixel ** *mb_pred;
-  sPixel ** *mb_rec;
-  int    ** *mb_rres;
-  int    ** *cof;
-  int    ** *fcf;
-  int cofu[16];
+  sPixel*** mb_pred;
+  sPixel*** mb_rec;
+  int***    mb_rres;
+  int***    cof;
+  int***    fcf;
+  int       cofu[16];
 
-  sPixel** tmp_block_l0;
-  sPixel** tmp_block_l1;
-  int   ** tmp_res;
-  sPixel** tmp_block_l2;
-  sPixel** tmp_block_l3;
+  sPixel**  tmp_block_l0;
+  sPixel**  tmp_block_l1;
+  int**     tmp_res;
+  sPixel**  tmp_block_l2;
+  sPixel**  tmp_block_l3;
 
   // Scaling matrix info
-  int  InvLevelScale4x4_Intra[3][6][4][4];
-  int  InvLevelScale4x4_Inter[3][6][4][4];
-  int  InvLevelScale8x8_Intra[3][6][8][8];
-  int  InvLevelScale8x8_Inter[3][6][8][8];
+  int InvLevelScale4x4_Intra[3][6][4][4];
+  int InvLevelScale4x4_Inter[3][6][4][4];
+  int InvLevelScale8x8_Intra[3][6][8][8];
+  int InvLevelScale8x8_Inter[3][6][8][8];
 
   int* qmatrix[12];
 
@@ -476,24 +476,25 @@ typedef struct Slice {
   unsigned short luma_log2_weight_denom;
   unsigned short chroma_log2_weight_denom;
 
-  sWPParam** WPParam; // wp parameters in [list][index]
-  int*** wp_weight;  // weight in [list][index][component] order
-  int*** wp_offset;  // offset in [list][index][component] order
-  int**** wbp_weight; //weight in [list][fw_index][bw_index][component] order
-  short wp_round_luma;
-  short wp_round_chroma;
+  sWPParam** WPParam;     // wp parameters in [list][index]
+  int***     wp_weight;   // weight in [list][index][component] order
+  int***     wp_offset;   // offset in [list][index][component] order
+  int****    wbp_weight;  // weight in [list][fw_index][bw_index][component] order
+  short      wp_round_luma;
+  short      wp_round_chroma;
 
   // for signalling to the neighbour logic that this is a deblocker call
-  int max_mb_vmv_r;                          //!< maximum vertical motion vector range in luma quarter pixel units for the current level_idc
-  int ref_flag[17];                //!< 0: i-th previous frame is incorrect
+  int max_mb_vmv_r;        // maximum vertical motion vector range in luma quarter pixel units for the current level_idc
+  int ref_flag[17];        // 0: i-th previous frame is incorrect
 
   int erc_mvperMB;
-  sMacroblock *mb_data;
+  sMacroblock* mb_data;
+ 
   struct Picture* picture;
-  int** siblock;
+  int**   siblock;
   byte** ipredmode;
-  char  *intra_block;
-  char  chroma_vector_adjustment[6][32];
+  char*  intra_block;
+  char   chroma_vector_adjustment[6][32];
   void (*read_CBP_and_coeffs_from_NAL) (sMacroblock *curMb);
   int  (*decode_one_component     )    (sMacroblock *curMb, sColorPlane curPlane, sPixel** curPixel, struct Picture* picture);
   int  (*readSlice                )    (struct VidParam *, struct InputParam *);
@@ -610,23 +611,27 @@ typedef struct LayerParam {
   struct VidParam* vidParam;
   sCodingParam*    cps;
   sSPS*            sps;
-  struct decoded_picture_buffer* dpb;
+  struct DPB* dpb;
   } sLayerParam;
 //}}}
 //{{{
 typedef struct VidParam {
   struct InputParam* inputParam;
 
+  TIME_T startTime;
+  TIME_T endTime;
+  int64  totTime;
+
   sPPS* active_pps;
   sSPS* active_sps;
   sSPS  SeqParSet[MAXSPS];
   sPPS  PicParSet[MAXPPS];
 
-  struct decoded_picture_buffer* p_Dpb_layer[MAX_NUM_DPB_LAYERS];
+  struct DPB* p_Dpb_layer[MAX_NUM_DPB_LAYERS];
   sCodingParam*                  p_EncodePar[MAX_NUM_DPB_LAYERS];
   sLayerParam*                   p_LayerPar[MAX_NUM_DPB_LAYERS];
 
-  struct sei_params*    p_SEI;
+  struct sei_params*    sei;
   struct OldSliceParam* old_slice;
   int                   number;  //frame number
 
@@ -662,8 +667,8 @@ typedef struct VidParam {
   struct concealment_node* concealment_head;
   struct concealment_node* concealment_end;
 
-  unsigned int pre_frame_num;           // store the frame_num in the last decoded slice. For detecting gap in frame_num.
-  int          non_conforming_stream;
+  unsigned int preFrameNum;           // store the frame_num in the last decoded slice. For detecting gap in frame_num.
+  int          nonConformingStream;
 
   // for POC mode 0:
   signed int   PrevPicOrderCntMsb;
@@ -686,11 +691,6 @@ typedef struct VidParam {
 
   int          idr_psnr_number;
   int          psnr_number;
-
-  // Timing related variables
-  TIME_T       start_time;
-  TIME_T       end_time;
-  int64        tot_time;
 
   // picture error concealment
   int          last_ref_pic_poc;

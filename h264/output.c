@@ -322,7 +322,7 @@ void writeStoredFrame (sVidParam* vidParam, sFrameStore* fs) {
   else {
     if (fs->recovery_frame)
       vidParam->recovery_flag = 1;
-    if ((!vidParam->non_conforming_stream) || vidParam->recovery_flag)
+    if ((!vidParam->nonConformingStream) || vidParam->recovery_flag)
       writePicture (vidParam, fs->frame, FRAME);
     }
 

@@ -335,7 +335,7 @@ int mb_pred_p_inter8x16 (sMacroblock* curMb, sColorPlane curPlane, sPicture* pic
 //}}}
 
 //{{{
-static inline void update_neighbor_mvs (sPicMotionParams** motion, const sPicMotionParams *mv_info, int i4)
+static inline void update_neighbor_mvs (sPicMotionParam** motion, const sPicMotionParam *mv_info, int i4)
 {
   (*motion++)[i4 + 1] = *mv_info;
   (*motion  )[i4    ] = *mv_info;
@@ -353,7 +353,7 @@ int mb_pred_b_d8x8temporal (sMacroblock* curMb, sColorPlane curPlane, sPixel** c
   int block8x8;   // needed for ABT
   sSlice* curSlice = curMb->slice;
   sVidParam* vidParam = curMb->vidParam;
-  sPicMotionParams *mv_info = NULL, *colocated = NULL;
+  sPicMotionParam *mv_info = NULL, *colocated = NULL;
 
   int list_offset = curMb->list_offset;
   sPicture** list0 = curSlice->listX[LIST_0 + list_offset];
@@ -586,8 +586,8 @@ int mb_pred_b_d4x4temporal (sMacroblock* curMb, sColorPlane curPlane, sPixel** c
       int i4   = curMb->block_x + i;
       int j4   = curMb->block_y + j;
       int j6   = curMb->block_y_aff + j;
-      sPicMotionParams *mv_info = &picture->mv_info[j4][i4];
-      sPicMotionParams *colocated = &list1[0]->mv_info[j6][i4];
+      sPicMotionParam *mv_info = &picture->mv_info[j4][i4];
+      sPicMotionParam *colocated = &list1[0]->mv_info[j6][i4];
       if(curMb->vidParam->separate_colour_plane_flag && curMb->vidParam->yuv_format==YUV444)
         colocated = &list1[0]->JVmv_info[curMb->slice->colour_plane_id][RSD(j6)][RSD(i4)];
       assert (pred_dir<=2);
@@ -691,7 +691,7 @@ int mb_pred_b_d8x8spatial (sMacroblock* curMb, sColorPlane curPlane, sPixel** cu
   sSlice* curSlice = curMb->slice;
   sVidParam* vidParam = curMb->vidParam;
 
-  sPicMotionParams *mv_info;
+  sPicMotionParam *mv_info;
   int list_offset = curMb->list_offset;
   sPicture** list0 = curSlice->listX[LIST_0 + list_offset];
   sPicture** list1 = curSlice->listX[LIST_1 + list_offset];
@@ -916,7 +916,7 @@ int mb_pred_b_d4x4spatial (sMacroblock* curMb, sColorPlane curPlane, sPixel** cu
   sSlice* curSlice = curMb->slice;
   sVidParam* vidParam = curMb->vidParam;
 
-  sPicMotionParams *mv_info;
+  sPicMotionParam *mv_info;
   int list_offset = curMb->list_offset;
   sPicture** list0 = curSlice->listX[LIST_0 + list_offset];
   sPicture** list1 = curSlice->listX[LIST_1 + list_offset];
@@ -1163,7 +1163,7 @@ int mb_pred_b_inter8x8 (sMacroblock* curMb, sColorPlane curPlane, sPicture* pict
           int j  = ((decode_block_scan[k] >> 2) & 3);
           int i4  = curMb->block_x + i;
           int j4  = curMb->block_y + j;
-          sPicMotionParams *mv_info = &picture->mv_info[j4][i4];
+          sPicMotionParam *mv_info = &picture->mv_info[j4][i4];
 
           assert (pred_dir<=2);
 
@@ -1192,7 +1192,7 @@ int mb_pred_b_inter8x8 (sMacroblock* curMb, sColorPlane curPlane, sPicture* pict
           int j = ((decode_block_scan[k] >> 2) & 3);
           int i4   = curMb->block_x + i;
           int j4   = curMb->block_y + j;
-          sPicMotionParams *mv_info = &picture->mv_info[j4][i4];
+          sPicMotionParam *mv_info = &picture->mv_info[j4][i4];
 
           assert (pred_dir<=2);
 

@@ -2,21 +2,20 @@
 #include "global.h"
 
 #define MAX_LIST_SIZE 33
-//{{{  sPicMotionParamsOld
+//{{{  sPicMotionParamOld
 typedef struct PicMotionParamOld {
   byte*  mb_field;      // field macroblock indicator
-  } sPicMotionParamsOld;
+  } sPicMotionParamOld;
 //}}}
-//{{{  sPicMotionParams
-typedef struct pic_motion_params {
+//{{{  sPicMotionParam
+typedef struct PicMotionParam {
   struct Picture* ref_pic[2];  // referrence picture pointer
   sMotionVector           mv[2];       // motion vector
   char                    ref_idx[2];  // reference picture   [list][subblock_y][subblock_x]
   byte                    slice_no;
-  } sPicMotionParams;
+  } sPicMotionParam;
 //}}}
 //{{{  sPicture
-//! definition a picture (field or frame)
 typedef struct Picture {
   sPictureStructure structure;
 
@@ -51,8 +50,8 @@ typedef struct Picture {
   sPixel**    imgY;
   sPixel***   imgUV;
 
-  struct pic_motion_params** mv_info;
-  struct pic_motion_params** JVmv_info[MAX_PLANE];
+  struct PicMotionParam** mv_info;
+  struct PicMotionParam** JVmv_info[MAX_PLANE];
   struct PicMotionParamOld  motion;
   struct PicMotionParamOld  JVmotion[MAX_PLANE]; // Motion info for 4:4:4 independent mode decoding
 
@@ -94,9 +93,8 @@ typedef struct Picture {
   int         layerId;
   } sPicture;
 //}}}
-typedef sPicture* StorablePicturePtr;
+typedef sPicture* sPicturePtr;
 //{{{  sFrameStore
-//! frameStore for Decoded Picture Buffer
 typedef struct frameStore {
   int       is_used;                // 0=empty; 1=top; 2=bottom; 3=both fields (or frame)
   int       is_reference;           // 0=not used for ref; 1=top used; 2=bottom used; 3=both fields (or frame) used
@@ -122,8 +120,7 @@ typedef struct frameStore {
   } sFrameStore;
 //}}}
 //{{{  sDPB
-//! Decoded Picture Buffer
-typedef struct decoded_picture_buffer {
+typedef struct DPB {
   sVidParam* vidParam;
   sInputParam* inputParam;
 

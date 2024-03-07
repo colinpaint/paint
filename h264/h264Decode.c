@@ -266,7 +266,7 @@ static void init (sVidParam* vidParam) {
   vidParam->gapNumFrame = 0;
 
   // time for total decoding session
-  vidParam->tot_time = 0;
+  vidParam->totTime = 0;
 
   vidParam->picture = NULL;
   vidParam->MbToSliceGroupMap = NULL;

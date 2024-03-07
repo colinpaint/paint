@@ -271,7 +271,7 @@ static void reorderLists (sSlice* curSlice) {
     if (curSlice->ref_pic_list_reordering_flag[LIST_0])
       reorder_ref_pic_list(curSlice, LIST_0);
     if (vidParam->no_reference_picture == curSlice->listX[0][curSlice->num_ref_idx_active[LIST_0] - 1]) {
-      if (vidParam->non_conforming_stream)
+      if (vidParam->nonConformingStream)
         printf("RefPicList0[ %d ] is equal to 'no reference picture'\n", curSlice->num_ref_idx_active[LIST_0] - 1);
       else
         error("RefPicList0[ num_ref_idx_l0_active_minus1 ] is equal to 'no reference picture', invalid bitstream",500);
@@ -284,7 +284,7 @@ static void reorderLists (sSlice* curSlice) {
     if (curSlice->ref_pic_list_reordering_flag[LIST_1])
       reorder_ref_pic_list(curSlice, LIST_1);
     if (vidParam->no_reference_picture == curSlice->listX[1][curSlice->num_ref_idx_active[LIST_1]-1]) {
-      if (vidParam->non_conforming_stream)
+      if (vidParam->nonConformingStream)
         printf("RefPicList1[ %d ] is equal to 'no reference picture'\n", curSlice->num_ref_idx_active[LIST_1] - 1);
       else
         error("RefPicList1[ num_ref_idx_l1_active_minus1 ] is equal to 'no reference picture', invalid bitstream",500);
@@ -523,12 +523,12 @@ static void initPicture (sVidParam* vidParam, sSlice *curSlice, sInputParam *inp
   if (curSlice->idr_flag)
     vidParam->recovery_frame_num = curSlice->frame_num;
   if (vidParam->recovery_point == 0 &&
-    curSlice->frame_num != vidParam->pre_frame_num &&
-    curSlice->frame_num != (vidParam->pre_frame_num + 1) % vidParam->max_frame_num) {
+    curSlice->frame_num != vidParam->preFrameNum &&
+    curSlice->frame_num != (vidParam->preFrameNum + 1) % vidParam->max_frame_num) {
     if (active_sps->gaps_in_frame_num_value_allowed_flag == 0) {
       // picture error concealment
       if (inputParam->conceal_mode != 0) {
-        if ((curSlice->frame_num) < ((vidParam->pre_frame_num + 1) % vidParam->max_frame_num)) {
+        if ((curSlice->frame_num) < ((vidParam->preFrameNum + 1) % vidParam->max_frame_num)) {
           /* Conceal lost IDR frames and any frames immediately following the IDR.
           // Use frame copy for these since lists cannot be formed correctly for motion copy*/
           vidParam->conceal_mode = 1;
@@ -553,7 +553,7 @@ static void initPicture (sVidParam* vidParam, sSlice *curSlice, sInputParam *inp
     }
 
   if (curSlice->nal_reference_idc)
-    vidParam->pre_frame_num = curSlice->frame_num;
+    vidParam->preFrameNum = curSlice->frame_num;
 
   // calculate POC
   decodePOC (vidParam, curSlice);
@@ -565,7 +565,7 @@ static void initPicture (sVidParam* vidParam, sSlice *curSlice, sInputParam *inp
     vidParam->last_ref_pic_poc = curSlice->framepoc;
 
   if (curSlice->structure == FRAME || curSlice->structure == TOP_FIELD)
-    gettime (&(vidParam->start_time));
+    gettime (&(vidParam->startTime));
 
   picture = vidParam->picture = allocPicture (vidParam, curSlice->structure, vidParam->width, vidParam->height, vidParam->width_cr, vidParam->height_cr, 1);
   picture->top_poc = curSlice->toppoc;
@@ -871,10 +871,10 @@ static int readNewSlice (sSlice* curSlice) {
           if (vidParam->recovery_point_found == 0) {
             if (nalu->nal_unit_type != NALU_TYPE_IDR) {
               printf ("Warning: Decoding does not start with an IDR picture.\n");
-              vidParam->non_conforming_stream = 1;
+              vidParam->nonConformingStream = 1;
               }
             else
-              vidParam->non_conforming_stream = 0;
+              vidParam->nonConformingStream = 0;
             }
           vidParam->recovery_point_found = 1;
           }
@@ -1251,7 +1251,7 @@ void exitPicture (sVidParam* vidParam, sPicture** picture) {
 
   *picture = NULL;
   if (vidParam->last_has_mmco_5)
-    vidParam->pre_frame_num = 0;
+    vidParam->preFrameNum = 0;
 
   if (structure == TOP_FIELD || structure == FRAME) {
     //{{{  frame type string
@@ -1295,11 +1295,11 @@ void exitPicture (sVidParam* vidParam, sPicture** picture) {
   vidParam->cslice_type[8] = 0;
 
   if ((structure == FRAME) || structure == BOTTOM_FIELD) {
-    gettime (&(vidParam->end_time));
-    int64 tmp_time = timediff(&(vidParam->start_time), &(vidParam->end_time));
-    vidParam->tot_time += tmp_time;
+    gettime (&(vidParam->endTime));
+    int64 tmpTime = timediff(&(vidParam->startTime), &(vidParam->endTime));
+    vidParam->totTime += tmpTime;
     printf ("%5d %s poc:%4d pic:%3d qp:%2d %dms\n",
-            vidParam->frameNum, vidParam->cslice_type, frame_poc, pic_num, qp, (int)timenorm(tmp_time));
+            vidParam->frameNum, vidParam->cslice_type, frame_poc, pic_num, qp, (int)timenorm (tmpTime));
 
     if (slice_type == I_SLICE || slice_type == SI_SLICE ||
         slice_type == P_SLICE || refpic) // I or P pictures

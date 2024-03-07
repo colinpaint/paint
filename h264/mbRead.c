@@ -353,7 +353,7 @@ static void read_ipred_modes (sMacroblock* curMb)
 }
 //}}}
 //{{{
-static void reset_mv_info (sPicMotionParams *mv_info, int slice_no)
+static void reset_mv_info (sPicMotionParam *mv_info, int slice_no)
 {
   mv_info->ref_pic[LIST_0] = NULL;
   mv_info->ref_pic[LIST_1] = NULL;
@@ -365,7 +365,7 @@ static void reset_mv_info (sPicMotionParams *mv_info, int slice_no)
 }
 //}}}
 //{{{
-static void reset_mv_info_list (sPicMotionParams *mv_info, int list, int slice_no) {
+static void reset_mv_info_list (sPicMotionParam *mv_info, int list, int slice_no) {
 
   mv_info->ref_pic[list] = NULL;
   mv_info->mv[list] = zero_mv;
@@ -376,7 +376,7 @@ static void reset_mv_info_list (sPicMotionParams *mv_info, int list, int slice_n
 //{{{
 static void init_macroblock_basic (sMacroblock* curMb) {
 
-  sPicMotionParams** mv_info = &curMb->slice->picture->mv_info[curMb->block_y];
+  sPicMotionParam** mv_info = &curMb->slice->picture->mv_info[curMb->block_y];
   int slice_no =  curMb->slice->current_slice_nr;
 
   // reset vectors and pred. modes
@@ -393,7 +393,7 @@ static void init_macroblock_basic (sMacroblock* curMb) {
 static void init_macroblock_direct (sMacroblock* curMb) {
 
   int slice_no = curMb->slice->current_slice_nr;
-  sPicMotionParams** mv_info = &curMb->slice->picture->mv_info[curMb->block_y];
+  sPicMotionParam** mv_info = &curMb->slice->picture->mv_info[curMb->block_y];
 
   set_read_comp_coeff_cabac(curMb);
   set_read_comp_coeff_cavlc(curMb);
@@ -412,7 +412,7 @@ static void init_macroblock (sMacroblock* curMb)
 {
   int j, i;
   sSlice* curSlice = curMb->slice;
-  sPicMotionParams** mv_info = &curSlice->picture->mv_info[curMb->block_y];
+  sPicMotionParam** mv_info = &curSlice->picture->mv_info[curMb->block_y];
   int slice_no = curSlice->current_slice_nr;
   // reset vectors and pred. modes
 
@@ -666,9 +666,9 @@ void skip_macroblock (sMacroblock* curMb) {
 
   if (zeroMotionAbove || zeroMotionLeft)
   {
-    sPicMotionParams** dec_mv_info = &picture->mv_info[img_block_y];
+    sPicMotionParam** dec_mv_info = &picture->mv_info[img_block_y];
     sPicture *cur_pic = curSlice->listX[list_offset][0];
-    sPicMotionParams *mv_info = NULL;
+    sPicMotionParam *mv_info = NULL;
 
     for(j = 0; j < BLOCK_SIZE; ++j)
     {
@@ -683,8 +683,8 @@ void skip_macroblock (sMacroblock* curMb) {
   }
   else
   {
-    sPicMotionParams** dec_mv_info = &picture->mv_info[img_block_y];
-    sPicMotionParams *mv_info = NULL;
+    sPicMotionParam** dec_mv_info = &picture->mv_info[img_block_y];
+    sPicMotionParam *mv_info = NULL;
     sPicture *cur_pic = curSlice->listX[list_offset][0];
     curMb->GetMVPredictor (curMb, mb, &pred_mv, 0, picture->mv_info, LIST_0, 0, 0, MB_BLOCK_SIZE, MB_BLOCK_SIZE);
 
@@ -917,7 +917,7 @@ static void read_one_macroblock_i_slice_cavlc (sMacroblock* curMb)
   sDataPartition *dP;
   const byte *partMap = assignSE2partition[curSlice->dp_mode];
   sPicture* picture = curSlice->picture;
-  sPicMotionParamsOld *motion = &picture->motion;
+  sPicMotionParamOld *motion = &picture->motion;
 
   curMb->mb_field = ((mb_nr&0x01) == 0)? FALSE : curSlice->mb_data[mb_nr-1].mb_field;
 
@@ -971,7 +971,7 @@ static void read_one_macroblock_i_slice_cabac (sMacroblock* curMb)
   sDataPartition *dP;
   const byte *partMap = assignSE2partition[curSlice->dp_mode];
   sPicture* picture = curSlice->picture;
-  sPicMotionParamsOld *motion = &picture->motion;
+  sPicMotionParamOld *motion = &picture->motion;
 
   curMb->mb_field = ((mb_nr&0x01) == 0)? FALSE : curSlice->mb_data[mb_nr-1].mb_field;
 
@@ -1076,7 +1076,7 @@ static void read_one_macroblock_p_slice_cavlc (sMacroblock* curMb)
   if (curSlice->mb_aff_frame_flag == 0)
   {
     sPicture* picture = curSlice->picture;
-    sPicMotionParamsOld *motion = &picture->motion;
+    sPicMotionParamOld *motion = &picture->motion;
 
     curMb->mb_field = FALSE;
 
@@ -1125,7 +1125,7 @@ static void read_one_macroblock_p_slice_cavlc (sMacroblock* curMb)
     sMacroblock *topMB = NULL;
     int  prevMbSkipped = 0;
     sPicture* picture = curSlice->picture;
-    sPicMotionParamsOld *motion = &picture->motion;
+    sPicMotionParamOld *motion = &picture->motion;
 
     if (mb_nr&0x01)
     {
@@ -1271,7 +1271,7 @@ static void read_one_macroblock_p_slice_cabac (sMacroblock* curMb)
   if (curSlice->mb_aff_frame_flag == 0)
   {
     sPicture* picture = curSlice->picture;
-    sPicMotionParamsOld *motion = &picture->motion;
+    sPicMotionParamOld *motion = &picture->motion;
 
     curMb->mb_field = FALSE;
 
@@ -1314,7 +1314,7 @@ static void read_one_macroblock_p_slice_cabac (sMacroblock* curMb)
     int  prevMbSkipped = 0;
     int  check_bottom, read_bottom, read_top;
     sPicture* picture = curSlice->picture;
-    sPicMotionParamsOld *motion = &picture->motion;
+    sPicMotionParamOld *motion = &picture->motion;
     if (mb_nr&0x01)
     {
       topMB= &vidParam->mb_data[mb_nr-1];
@@ -1435,7 +1435,7 @@ static void read_one_macroblock_b_slice_cavlc (sMacroblock* curMb) {
 
   if (curSlice->mb_aff_frame_flag == 0) {
     sPicture* picture = curSlice->picture;
-    sPicMotionParamsOld *motion = &picture->motion;
+    sPicMotionParamOld *motion = &picture->motion;
 
     curMb->mb_field = FALSE;
     update_qp(curMb, curSlice->qp);
@@ -1476,7 +1476,7 @@ static void read_one_macroblock_b_slice_cavlc (sMacroblock* curMb) {
     sMacroblock *topMB = NULL;
     int  prevMbSkipped = 0;
     sPicture* picture = curSlice->picture;
-    sPicMotionParamsOld *motion = &picture->motion;
+    sPicMotionParamOld *motion = &picture->motion;
 
     if (mb_nr&0x01) {
       topMB= &vidParam->mb_data[mb_nr-1];
@@ -1604,7 +1604,7 @@ static void read_one_macroblock_b_slice_cabac (sMacroblock* curMb)
   if (curSlice->mb_aff_frame_flag == 0)
   {
     sPicture* picture = curSlice->picture;
-    sPicMotionParamsOld *motion = &picture->motion;
+    sPicMotionParamOld *motion = &picture->motion;
 
     curMb->mb_field = FALSE;
 
@@ -1653,7 +1653,7 @@ static void read_one_macroblock_b_slice_cabac (sMacroblock* curMb)
     int  prevMbSkipped = 0;
     int  check_bottom, read_bottom, read_top;
     sPicture* picture = curSlice->picture;
-    sPicMotionParamsOld *motion = &picture->motion;
+    sPicMotionParamOld *motion = &picture->motion;
 
     if (mb_nr&0x01)
     {

@@ -1742,7 +1742,7 @@ void readRestSliceHeader (sSlice* curSlice) {
 
   // Tian Dong: frame_num gap processing, if found
   if (curSlice->idr_flag) {
-    vidParam->pre_frame_num = curSlice->frame_num;
+    vidParam->preFrameNum = curSlice->frame_num;
     // picture error concealment
     vidParam->last_ref_pic_poc = 0;
     assert(curSlice->frame_num == 0);

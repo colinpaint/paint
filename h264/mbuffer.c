@@ -257,7 +257,7 @@ static int get_pic_num_x (sPicture* p, int difference_of_pic_nums_minus1) {
 
 // picMotion
 //{{{
-void allocPicMotion (sPicMotionParamsOld* motion, int size_y, int size_x) {
+void allocPicMotion (sPicMotionParamOld* motion, int size_y, int size_x) {
 
   motion->mb_field = calloc (size_y * size_x, sizeof(byte));
   if (motion->mb_field == NULL)
@@ -265,7 +265,7 @@ void allocPicMotion (sPicMotionParamsOld* motion, int size_y, int size_x) {
   }
 //}}}
 //{{{
-void freePicMotion (sPicMotionParamsOld* motion) {
+void freePicMotion (sPicMotionParamOld* motion) {
 
   if (motion->mb_field) {
     free (motion->mb_field);
@@ -351,7 +351,7 @@ static void dpb_split_field (sVidParam* vidParam, sFrameStore* frameStore) {
 
   if (!frame->frame_mbs_only_flag) {
     if (frame->mb_aff_frame_flag) {
-      sPicMotionParamsOld* frm_motion = &frame->motion;
+      sPicMotionParamOld* frm_motion = &frame->motion;
       for (int j = 0 ; j < (frame->size_y >> 3); j++) {
         int jj = (j >> 2)*8 + (j & 0x03);
         int jj4 = jj + 4;
@@ -2383,7 +2383,7 @@ void fill_frame_num_gap (sVidParam* vidParam, sSlice* curSlice) {
 
   printf ("A gap in frame number is found, try to fill it.\n");
 
-  UnusedShortTermFrameNum = (vidParam->pre_frame_num + 1) % vidParam->max_frame_num;
+  UnusedShortTermFrameNum = (vidParam->preFrameNum + 1) % vidParam->max_frame_num;
   CurrFrameNum = curSlice->frame_num; //vidParam->frame_num;
 
   while (CurrFrameNum != UnusedShortTermFrameNum) {
@@ -2407,7 +2407,7 @@ void fill_frame_num_gap (sVidParam* vidParam, sSlice* curSlice) {
     store_picture_in_dpb (curSlice->dpb, picture);
 
     picture=NULL;
-    vidParam->pre_frame_num = UnusedShortTermFrameNum;
+    vidParam->preFrameNum = UnusedShortTermFrameNum;
     UnusedShortTermFrameNum = (UnusedShortTermFrameNum + 1) % vidParam->max_frame_num;
     }
 
