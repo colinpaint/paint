@@ -292,34 +292,34 @@ static void init (sVidParam* vidParam) {
 //{{{
 void init_frext (sVidParam* vidParam) {
 
-  //pel bitdepth init
-  vidParam->bitdepth_luma_qp_scale   = 6 * (vidParam->bitdepth_luma - 8);
+  // pel bitdepth init
+  vidParam->bitdepth_luma_qp_scale = 6 * (vidParam->bitdepth_luma - 8);
 
   if(vidParam->bitdepth_luma > vidParam->bitdepth_chroma || vidParam->activeSPS->chromaFormatIdc == YUV400)
     vidParam->pic_unit_bitsize_on_disk = (vidParam->bitdepth_luma > 8)? 16:8;
   else
     vidParam->pic_unit_bitsize_on_disk = (vidParam->bitdepth_chroma > 8)? 16:8;
-  vidParam->dc_pred_value_comp[0]    = 1<<(vidParam->bitdepth_luma - 1);
+  vidParam->dc_pred_value_comp[0] = 1<<(vidParam->bitdepth_luma - 1);
   vidParam->max_pel_value_comp[0] = (1<<vidParam->bitdepth_luma) - 1;
   vidParam->mb_size[0][0] = vidParam->mb_size[0][1] = MB_BLOCK_SIZE;
 
   if (vidParam->activeSPS->chromaFormatIdc != YUV400) {
-    //for chrominance part
+    // for chrominance part
     vidParam->bitdepth_chroma_qp_scale = 6 * (vidParam->bitdepth_chroma - 8);
-    vidParam->dc_pred_value_comp[1]    = (1 << (vidParam->bitdepth_chroma - 1));
-    vidParam->dc_pred_value_comp[2]    = vidParam->dc_pred_value_comp[1];
-    vidParam->max_pel_value_comp[1]    = (1 << vidParam->bitdepth_chroma) - 1;
-    vidParam->max_pel_value_comp[2]    = (1 << vidParam->bitdepth_chroma) - 1;
+    vidParam->dc_pred_value_comp[1] = (1 << (vidParam->bitdepth_chroma - 1));
+    vidParam->dc_pred_value_comp[2] = vidParam->dc_pred_value_comp[1];
+    vidParam->max_pel_value_comp[1] = (1 << vidParam->bitdepth_chroma) - 1;
+    vidParam->max_pel_value_comp[2] = (1 << vidParam->bitdepth_chroma) - 1;
     vidParam->num_blk8x8_uv = (1 << vidParam->activeSPS->chromaFormatIdc) & (~(0x1));
     vidParam->num_uv_blocks = (vidParam->num_blk8x8_uv >> 1);
     vidParam->num_cdc_coeff = (vidParam->num_blk8x8_uv << 1);
     vidParam->mb_size[1][0] = vidParam->mb_size[2][0] = vidParam->mb_cr_size_x  = (vidParam->activeSPS->chromaFormatIdc==YUV420 || vidParam->activeSPS->chromaFormatIdc==YUV422)?  8 : 16;
     vidParam->mb_size[1][1] = vidParam->mb_size[2][1] = vidParam->mb_cr_size_y  = (vidParam->activeSPS->chromaFormatIdc==YUV444 || vidParam->activeSPS->chromaFormatIdc==YUV422)? 16 :  8;
 
-    vidParam->subpel_x    = vidParam->mb_cr_size_x == 8 ? 7 : 3;
-    vidParam->subpel_y    = vidParam->mb_cr_size_y == 8 ? 7 : 3;
-    vidParam->shiftpel_x  = vidParam->mb_cr_size_x == 8 ? 3 : 2;
-    vidParam->shiftpel_y  = vidParam->mb_cr_size_y == 8 ? 3 : 2;
+    vidParam->subpel_x = vidParam->mb_cr_size_x == 8 ? 7 : 3;
+    vidParam->subpel_y = vidParam->mb_cr_size_y == 8 ? 7 : 3;
+    vidParam->shiftpel_x = vidParam->mb_cr_size_x == 8 ? 3 : 2;
+    vidParam->shiftpel_y = vidParam->mb_cr_size_y == 8 ? 3 : 2;
     vidParam->total_scale = vidParam->shiftpel_x + vidParam->shiftpel_y;
     }
   else {
@@ -331,11 +331,11 @@ void init_frext (sVidParam* vidParam) {
     vidParam->num_cdc_coeff = 0;
     vidParam->mb_size[1][0] = vidParam->mb_size[2][0] = vidParam->mb_cr_size_x  = 0;
     vidParam->mb_size[1][1] = vidParam->mb_size[2][1] = vidParam->mb_cr_size_y  = 0;
-    vidParam->subpel_x      = 0;
-    vidParam->subpel_y      = 0;
-    vidParam->shiftpel_x    = 0;
-    vidParam->shiftpel_y    = 0;
-    vidParam->total_scale   = 0;
+    vidParam->subpel_x = 0;
+    vidParam->subpel_y = 0;
+    vidParam->shiftpel_x = 0;
+    vidParam->shiftpel_y = 0;
+    vidParam->total_scale = 0;
     }
 
   vidParam->mb_cr_size = vidParam->mb_cr_size_x * vidParam->mb_cr_size_y;
