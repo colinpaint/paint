@@ -92,7 +92,7 @@ static void writeOutPicture (sVidParam* vidParam, sPicture* p) {
   int lumaSizeX = p->size_x - crop_left-crop_right;
   int lumaSizeY = p->size_y - crop_top - crop_bottom;
   int lumaSize  = lumaSizeX * lumaSizeY * symbolSizeInBytes;
-  int frameSize = (lumaSizeX * lumaSizeY + 2 * (chromaSizeX * chromaSizeY)) * symbolSizeInBytes; 
+  int frameSize = (lumaSizeX * lumaSizeY + 2 * (chromaSizeX * chromaSizeY)) * symbolSizeInBytes;
 
   sDecodedPicList* decPic = getAvailableDecPic (vidParam->decOutputPic, 0, 0);
   if ((decPic->yBuf == NULL) || (decPic->bufSize < frameSize))
@@ -189,7 +189,7 @@ static void writePicture (sVidParam* vidParam, sPicture* p, int real_structure) 
     }
     //}}}
   else {
-    if (  (vidParam->pendingOutput->size_x!=p->size_x) || 
+    if (  (vidParam->pendingOutput->size_x!=p->size_x) ||
            (vidParam->pendingOutput->size_y!= p->size_y)
        || (vidParam->pendingOutput->frame_mbs_only_flag != p->frame_mbs_only_flag)
        || (vidParam->pendingOutput->frame_cropping_flag != p->frame_cropping_flag)
