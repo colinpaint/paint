@@ -650,7 +650,7 @@ void activateSPS (sVidParam* vidParam, sSPS* sps) {
 
     initGlobalBuffers (vidParam, 0);
     if (!vidParam->no_output_of_prior_pics_flag)
-      flush_dpb (vidParam->dpbLayer[0]);
+      flushDpb (vidParam->dpbLayer[0]);
 
     initDpb (vidParam, vidParam->dpbLayer[0], 0);
 

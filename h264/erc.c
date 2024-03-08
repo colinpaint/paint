@@ -1935,7 +1935,7 @@ void conceal_lost_frames (sDPB* dpb, sSlice *pSlice)
     {
       picture->sliceType = I_SLICE;
       picture->idrFlag = TRUE;
-      flush_dpb(dpb);
+      flushDpb(dpb);
       picture->topPoc= 0;
       picture->botPoc=picture->topPoc;
       picture->framePoc=picture->topPoc;
@@ -1943,7 +1943,7 @@ void conceal_lost_frames (sDPB* dpb, sSlice *pSlice)
       vidParam->last_ref_pic_poc = picture->poc;
     }
 
-    store_picture_in_dpb (vidParam->dpbLayer[0], picture);
+    storePictureDpb (vidParam->dpbLayer[0], picture);
 
     picture=NULL;
 

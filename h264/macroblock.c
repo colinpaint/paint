@@ -1239,47 +1239,47 @@ void setup_slice_methods (sSlice* curSlice) {
   switch (curSlice->sliceType) {
     //{{{
     case P_SLICE:
-      curSlice->interpret_mb_mode         = interpret_mb_mode_P;
+      curSlice->interpret_mb_mode = interpret_mb_mode_P;
       curSlice->read_motion_info_from_NAL = read_motion_info_from_NAL_p_slice;
-      curSlice->decode_one_component      = decode_one_component_p_slice;
-      curSlice->update_direct_mv_info     = NULL;
-      curSlice->init_lists                = init_lists_p_slice;
+      curSlice->decode_one_component = decode_one_component_p_slice;
+      curSlice->update_direct_mv_info = NULL;
+      curSlice->init_lists = init_lists_p_slice;
       break;
     //}}}
     //{{{
     case SP_SLICE:
-      curSlice->interpret_mb_mode         = interpret_mb_mode_P;
+      curSlice->interpret_mb_mode = interpret_mb_mode_P;
       curSlice->read_motion_info_from_NAL = read_motion_info_from_NAL_p_slice;
-      curSlice->decode_one_component      = decode_one_component_sp_slice;
-      curSlice->update_direct_mv_info     = NULL;
-      curSlice->init_lists                = init_lists_p_slice;
+      curSlice->decode_one_component = decode_one_component_sp_slice;
+      curSlice->update_direct_mv_info = NULL;
+      curSlice->init_lists = init_lists_p_slice;
       break;
     //}}}
     //{{{
     case B_SLICE:
-      curSlice->interpret_mb_mode         = interpret_mb_mode_B;
+      curSlice->interpret_mb_mode = interpret_mb_mode_B;
       curSlice->read_motion_info_from_NAL = read_motion_info_from_NAL_b_slice;
-      curSlice->decode_one_component      = decode_one_component_b_slice;
-      update_direct_types(curSlice);
-      curSlice->init_lists                = init_lists_b_slice;
+      curSlice->decode_one_component = decode_one_component_b_slice;
+      update_direct_types (curSlice);
+      curSlice->init_lists  = init_lists_b_slice;
       break;
     //}}}
     //{{{
     case I_SLICE:
-      curSlice->interpret_mb_mode         = interpret_mb_mode_I;
+      curSlice->interpret_mb_mode = interpret_mb_mode_I;
       curSlice->read_motion_info_from_NAL = NULL;
-      curSlice->decode_one_component      = decode_one_component_i_slice;
-      curSlice->update_direct_mv_info     = NULL;
-      curSlice->init_lists                = init_lists_i_slice;
+      curSlice->decode_one_component = decode_one_component_i_slice;
+      curSlice->update_direct_mv_info = NULL;
+      curSlice->init_lists = init_lists_i_slice;
       break;
     //}}}
     //{{{
     case SI_SLICE:
-      curSlice->interpret_mb_mode         = interpret_mb_mode_SI;
+      curSlice->interpret_mb_mode = interpret_mb_mode_SI;
       curSlice->read_motion_info_from_NAL = NULL;
-      curSlice->decode_one_component      = decode_one_component_i_slice;
-      curSlice->update_direct_mv_info     = NULL;
-      curSlice->init_lists                = init_lists_i_slice;
+      curSlice->decode_one_component = decode_one_component_i_slice;
+      curSlice->update_direct_mv_info = NULL;
+      curSlice->init_lists = init_lists_i_slice;
       break;
     //}}}
     //{{{

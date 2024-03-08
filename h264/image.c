@@ -269,7 +269,7 @@ static void reorderLists (sSlice* slice) {
 
   if ((slice->sliceType != I_SLICE) && (slice->sliceType != SI_SLICE)) {
     if (slice->ref_pic_list_reordering_flag[LIST_0])
-      reorder_ref_pic_list (slice, LIST_0);
+      reorderRefPicList (slice, LIST_0);
     if (vidParam->no_reference_picture == slice->listX[0][slice->num_ref_idx_active[LIST_0] - 1]) {
       if (vidParam->nonConformingStream)
         printf("RefPicList0[ %d ] is equal to 'no reference picture'\n", slice->num_ref_idx_active[LIST_0] - 1);
@@ -282,7 +282,7 @@ static void reorderLists (sSlice* slice) {
 
   if (slice->sliceType == B_SLICE) {
     if (slice->ref_pic_list_reordering_flag[LIST_1])
-      reorder_ref_pic_list(slice, LIST_1);
+      reorderRefPicList(slice, LIST_1);
     if (vidParam->no_reference_picture == slice->listX[1][slice->num_ref_idx_active[LIST_1]-1]) {
       if (vidParam->nonConformingStream)
         printf("RefPicList1[ %d ] is equal to 'no reference picture'\n", slice->num_ref_idx_active[LIST_1] - 1);
@@ -548,7 +548,7 @@ static void initPicture (sVidParam* vidParam, sSlice* slice, sInputParam* inputP
         error ("An unintentional loss of pictures occurs! Exit\n", 100);
       }
     if (vidParam->concealMode == 0)
-      fill_frame_num_gap (vidParam, slice);
+      fillFrameNumGap (vidParam, slice);
     }
 
   if (slice->nalRefId)
@@ -1219,7 +1219,7 @@ void exitPicture (sVidParam* vidParam, sPicture** picture) {
   int isIdr = (*picture)->idrFlag;
   int chromaFormatIdc = (*picture)->chromaFormatIdc;
 
-  store_picture_in_dpb (vidParam->dpbLayer[0], *picture);
+  storePictureDpb (vidParam->dpbLayer[0], *picture);
 
   *picture = NULL;
   if (vidParam->last_has_mmco_5)

@@ -27,7 +27,7 @@ void error (char* text, int code) {
 
   fprintf (stderr, "%s\n", text);
   if (gDecoder)
-    flush_dpb (gDecoder->vidParam->dpbLayer[0]);
+    flushDpb (gDecoder->vidParam->dpbLayer[0]);
   exit (code);
   }
 //}}}
@@ -684,7 +684,7 @@ int DecodeOneFrame (sDecodedPicList** ppDecPicList) {
 int FinitDecoder (sDecodedPicList** ppDecPicList) {
 
   ClearDecPicList (gDecoder->vidParam);
-  flush_dpb (gDecoder->vidParam->dpbLayer[0]);
+  flushDpb (gDecoder->vidParam->dpbLayer[0]);
 
   #if (PAIR_FIELDS_IN_OUTPUT)
     flush_pending_output (gDecoder->vidParam);
