@@ -1219,8 +1219,8 @@ void exitPicture (sVidParam* vidParam, sPicture** picture) {
   int chromaFormatIdc = (*picture)->chromaFormatIdc;
 
   storePictureDpb (vidParam->dpbLayer[0], *picture);
-
   *picture = NULL;
+
   if (vidParam->last_has_mmco_5)
     vidParam->preFrameNum = 0;
 
