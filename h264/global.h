@@ -304,7 +304,7 @@ typedef struct Bitstream {
 typedef struct DecRefPicMarking {
   int memory_management_control_operation;
   int difference_of_pic_nums_minus1;
-  int long_term_pic_num;
+  int longTermPicNum;
   int longTermFrameIndex;
   int max_long_term_frame_idx_plus1;
   struct DecRefPicMarking* next;
@@ -710,7 +710,7 @@ typedef struct CodingParam {
   int max_vmv_r;                  // maximum vertical motion vector range in luma quarter frame pixel units for the current level_idc
   int sepColourPlaneFlag;
   int ChromaArrayType;
-  int max_frame_num;
+  int maxFrameNum;
 
   unsigned int PicWidthInMbs;
   unsigned int PicHeightInMapUnits;
@@ -918,7 +918,6 @@ typedef struct VidParam {
   int   iPostProcess;
   int   bFrameInit;
   sPPS* nextPPS;
-  int   last_dec_poc;
   int   last_dec_view_id;
   int   last_dec_layer_id;
   int   dpbLayerId;
@@ -960,7 +959,7 @@ typedef struct VidParam {
   int shiftpelX;
   int shiftpelY;
   int totalScale;
-  int max_frame_num;
+  int maxFrameNum;
 
   unsigned int PicWidthInMbs;
   unsigned int PicHeightInMapUnits;

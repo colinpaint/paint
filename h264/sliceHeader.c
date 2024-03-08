@@ -1457,8 +1457,8 @@ void dec_ref_pic_marking (sVidParam* vidParam, sBitstream* curStream, sSlice* pS
           tmp_drpm->difference_of_pic_nums_minus1 =
             readUeV ("SLC difference_of_pic_nums_minus1", curStream);
         if (val==2)
-          tmp_drpm->long_term_pic_num =
-            readUeV ("SLC long_term_pic_num", curStream);
+          tmp_drpm->longTermPicNum =
+            readUeV ("SLC longTermPicNum", curStream);
 
         if ((val == 3 ) || (val == 6))
           tmp_drpm->longTermFrameIndex =
@@ -1509,7 +1509,7 @@ int dumpPOC (sVidParam* vidParam) {
   printf ("deltaPicOrderCount[0]                %d\n", (int) vidParam->sliceList[0]->deltaPicOrderCount[0]);
   printf ("deltaPicOrderCount[1]                %d\n", (int) vidParam->sliceList[0]->deltaPicOrderCount[1]);
   printf ("idrFlag                              %d\n", (int) vidParam->sliceList[0]->idrFlag);
-  printf ("max_frame_num                         %d\n", (int) vidParam->max_frame_num);
+  printf ("maxFrameNum                         %d\n", (int) vidParam->maxFrameNum);
 
   return 0;
   }
@@ -1590,7 +1590,7 @@ void decodePOC (sVidParam* vidParam, sSlice* pSlice) {
           }
         if (pSlice->frameNum<vidParam->PreviousFrameNum)
           //not first pix of IDRGOP
-          vidParam->FrameNumOffset = vidParam->PreviousFrameNumOffset + vidParam->max_frame_num;
+          vidParam->FrameNumOffset = vidParam->PreviousFrameNumOffset + vidParam->maxFrameNum;
         else
           vidParam->FrameNumOffset = vidParam->PreviousFrameNumOffset;
         }
@@ -1659,7 +1659,7 @@ void decodePOC (sVidParam* vidParam, sSlice* pSlice) {
           }
 
         if (pSlice->frameNum<vidParam->PreviousFrameNum)
-          vidParam->FrameNumOffset = vidParam->PreviousFrameNumOffset + vidParam->max_frame_num;
+          vidParam->FrameNumOffset = vidParam->PreviousFrameNumOffset + vidParam->maxFrameNum;
         else
           vidParam->FrameNumOffset = vidParam->PreviousFrameNumOffset;
 

@@ -766,7 +766,7 @@ static void interpret_dec_ref_pic_marking_repetition_info (byte* payload, int si
         //}
         //if (tmp_drpm->memory_management_control_operation==2)
         //{
-          //printf("long_term_pic_num                    = %d\n", tmp_drpm->long_term_pic_num);
+          //printf("longTermPicNum                    = %d\n", tmp_drpm->longTermPicNum);
         //}
         //if ((tmp_drpm->memory_management_control_operation==3)||(tmp_drpm->memory_management_control_operation==6))
         //{

@@ -27,7 +27,7 @@ typedef struct Picture {
   unsigned int recoveryFrame;
 
   int         picNum;
-  int         long_term_pic_num;
+  int         longTermPicNum;
   int         longTermFrameIndex;
 
   byte        isLongTerm;
@@ -106,7 +106,7 @@ typedef struct FrameStore {
   unsigned  frameNum;
   unsigned  recoveryFrame;
 
-  int       frame_num_wrap;
+  int       frameNumWrap;
   int       longTermFrameIndex;
   int       is_output;
   int       poc;
@@ -125,8 +125,8 @@ typedef struct DPB {
   sInputParam*  inputParam;
 
   sFrameStore** fs;
-  sFrameStore** fs_ref;
-  sFrameStore** fs_ltref;
+  sFrameStore** fsRef;
+  sFrameStore** fsLongTermRef;
 
   unsigned size;
   unsigned usedSize;
@@ -162,8 +162,8 @@ static inline int compare_pic_by_pic_num_desc (const void* arg1, const void* arg
 // compares two stored pictures by picture number for qsort in descending order
 static inline int compare_pic_by_lt_pic_num_asc (const void* arg1, const void* arg2 )
 {
-  int long_term_pic_num1 = (*(sPicture**)arg1)->long_term_pic_num;
-  int long_term_pic_num2 = (*(sPicture**)arg2)->long_term_pic_num;
+  int long_term_pic_num1 = (*(sPicture**)arg1)->longTermPicNum;
+  int long_term_pic_num2 = (*(sPicture**)arg2)->longTermPicNum;
 
   if ( long_term_pic_num1 < long_term_pic_num2)
     return -1;
@@ -177,8 +177,8 @@ static inline int compare_pic_by_lt_pic_num_asc (const void* arg1, const void* a
 // compares two frame stores by picNum for qsort in descending order
 static inline int compare_fs_by_frame_num_desc (const void* arg1, const void* arg2 )
 {
-  int frame_num_wrap1 = (*(sFrameStore**)arg1)->frame_num_wrap;
-  int frame_num_wrap2 = (*(sFrameStore**)arg2)->frame_num_wrap;
+  int frame_num_wrap1 = (*(sFrameStore**)arg1)->frameNumWrap;
+  int frame_num_wrap2 = (*(sFrameStore**)arg2)->frameNumWrap;
   if ( frame_num_wrap1 < frame_num_wrap2)
     return 1;
   if ( frame_num_wrap1 > frame_num_wrap2)
@@ -290,7 +290,7 @@ extern void updateRefList (sDPB* dpb);
 extern void updateLongTermRefList (sDPB* dpb);
 extern void mm_mark_current_picture_long_term (sDPB* dpb, sPicture* p, int longTermFrameIndex);
 extern void mm_unmark_short_term_for_reference (sDPB* dpb, sPicture* p, int difference_of_pic_nums_minus1);
-extern void mm_unmark_long_term_for_reference (sDPB* dpb, sPicture *p, int long_term_pic_num);
+extern void mm_unmark_long_term_for_reference (sDPB* dpb, sPicture *p, int longTermPicNum);
 extern void mm_assign_long_term_frame_idx (sDPB* dpb, sPicture* p, int difference_of_pic_nums_minus1, int longTermFrameIndex);
 extern void mm_update_max_long_term_frame_idx (sDPB* dpb, int max_long_term_frame_idx_plus1);
 extern void mm_unmark_all_short_term_for_reference (sDPB* dpb);
@@ -312,7 +312,7 @@ extern void freeImage (sVidParam* vidParam, sImage* image);
 extern void init_lists_p_slice (sSlice* slice);
 extern void init_lists_b_slice (sSlice* slice);
 extern void init_lists_i_slice (sSlice* slice);
-extern void update_pic_num (sSlice* slice);
+extern void updatePicNum (sSlice* slice);
 
 extern void dpbCombineField (sVidParam* vidParam, sFrameStore* frameStore);
 extern void reorderRefPicList (sSlice* slice, int curList);

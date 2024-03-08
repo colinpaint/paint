@@ -1749,7 +1749,7 @@ static void update_ref_list_for_concealment (sDPB* dpb) {
   unsigned j = 0;
   for (unsigned i = 0; i < dpb->usedSize; i++)
     if (dpb->fs[i]->concealment_reference)
-      dpb->fs_ref[j++] = dpb->fs[i];
+      dpb->fsRef[j++] = dpb->fs[i];
 
   dpb->refFramesInBuffer = vidParam->activePPS->numRefIndexL0defaultActiveMinus1;
   }
@@ -1786,7 +1786,7 @@ void init_lists_for_non_reference_loss (sDPB* dpb, int currSliceType, ePicStruct
 
   unsigned i;
   int j;
-  int max_frame_num = 1 << (activeSPS->log2_max_frame_num_minus4 + 4);
+  int maxFrameNum = 1 << (activeSPS->log2_max_frame_num_minus4 + 4);
 
   int list0idx = 0;
   int list0idx_1 = 0;
@@ -1796,10 +1796,10 @@ void init_lists_for_non_reference_loss (sDPB* dpb, int currSliceType, ePicStruct
     for (i = 0; i < dpb->refFramesInBuffer; i++) {
       if (dpb->fs[i]->concealment_reference == 1) {
         if (dpb->fs[i]->frameNum > vidParam->frame_to_conceal)
-          dpb->fs_ref[i]->frame_num_wrap = dpb->fs[i]->frameNum - max_frame_num;
+          dpb->fsRef[i]->frameNumWrap = dpb->fs[i]->frameNum - maxFrameNum;
         else
-          dpb->fs_ref[i]->frame_num_wrap = dpb->fs[i]->frameNum;
-        dpb->fs_ref[i]->frame->picNum = dpb->fs_ref[i]->frame_num_wrap;
+          dpb->fsRef[i]->frameNumWrap = dpb->fs[i]->frameNum;
+        dpb->fsRef[i]->frame->picNum = dpb->fsRef[i]->frameNumWrap;
         }
       }
     }
@@ -1902,7 +1902,7 @@ void concealLostFrames (sDPB* dpb, sSlice *pSlice)
     vidParam->earlier_missing_poc = 0;
   }
   else
-    UnusedShortTermFrameNum = (vidParam->preFrameNum + 1) % vidParam->max_frame_num;
+    UnusedShortTermFrameNum = (vidParam->preFrameNum + 1) % vidParam->maxFrameNum;
 
   CurrFrameNum = pSlice->frameNum;
 
@@ -1948,7 +1948,7 @@ void concealLostFrames (sDPB* dpb, sSlice *pSlice)
     picture=NULL;
 
     vidParam->preFrameNum = UnusedShortTermFrameNum;
-    UnusedShortTermFrameNum = (UnusedShortTermFrameNum + 1) % vidParam->max_frame_num;
+    UnusedShortTermFrameNum = (UnusedShortTermFrameNum + 1) % vidParam->maxFrameNum;
 
     // update reference flags and set current flag.
     for(i=16;i>0;i--)

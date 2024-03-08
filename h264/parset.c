@@ -75,7 +75,7 @@ static void setCodingParam (sSPS* sps, sCodingParam* codingParam) {
     codingParam->bitdepth_scale[1] = 1 << sps->bit_depth_chroma_minus8;
     }
 
-  codingParam->max_frame_num = 1<<(sps->log2_max_frame_num_minus4+4);
+  codingParam->maxFrameNum = 1<<(sps->log2_max_frame_num_minus4+4);
   codingParam->PicWidthInMbs = (sps->pic_width_in_mbs_minus1 +1);
   codingParam->PicHeightInMapUnits = (sps->pic_height_in_map_units_minus1 +1);
   codingParam->FrameHeightInMbs = ( 2 - sps->frameMbOnlyFlag ) * codingParam->PicHeightInMapUnits;

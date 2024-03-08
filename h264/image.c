@@ -505,16 +505,16 @@ static void initPicture (sVidParam* vidParam, sSlice* slice, sInputParam* inputP
   setupBuffers (vidParam, slice->layerId);
 
   if (vidParam->recovery_point)
-    vidParam->recoveryFrameNum = (slice->frameNum + vidParam->recoveryFrameCount) % vidParam->max_frame_num;
+    vidParam->recoveryFrameNum = (slice->frameNum + vidParam->recoveryFrameCount) % vidParam->maxFrameNum;
   if (slice->idrFlag)
     vidParam->recoveryFrameNum = slice->frameNum;
   if (vidParam->recovery_point == 0 &&
     slice->frameNum != vidParam->preFrameNum &&
-    slice->frameNum != (vidParam->preFrameNum + 1) % vidParam->max_frame_num) {
+    slice->frameNum != (vidParam->preFrameNum + 1) % vidParam->maxFrameNum) {
     if (activeSPS->gaps_in_frame_num_value_allowed_flag == 0) {
       // picture error conceal
       if (inputParam->concealMode != 0) {
-        if ((slice->frameNum) < ((vidParam->preFrameNum + 1) % vidParam->max_frame_num)) {
+        if ((slice->frameNum) < ((vidParam->preFrameNum + 1) % vidParam->maxFrameNum)) {
           /* Conceal lost IDR frames and any frames immediately following the IDR.
           // Use frame copy for these since lists cannot be formed correctly for motion copy*/
           vidParam->concealMode = 1;
@@ -696,7 +696,7 @@ static void initPictureDecoding (sVidParam* vidParam) {
   vidParam->structure = slice->structure;
   fmo_init (vidParam, slice);
 
-  update_pic_num (slice);
+  updatePicNum (slice);
 
   initDeblock (vidParam, slice->mbAffFrameFlag);
   for (int j = 0; j < vidParam->curPicSliceNum; j++) {
@@ -1404,13 +1404,6 @@ int decodeFrame (sDecoderParam* decoder) {
     vidParam->ercMvPerMb += slice->ercMvPerMb;
     }
     //}}}
-
-  if (vidParam->picture->structure == FRAME)
-    vidParam->last_dec_poc = vidParam->picture->framePoc;
-  else if (vidParam->picture->structure == TopField)
-    vidParam->last_dec_poc = vidParam->picture->topPoc;
-  else if (vidParam->picture->structure == BotField)
-    vidParam->last_dec_poc = vidParam->picture->botPoc;
 
   exitPicture (vidParam, &vidParam->picture);
   vidParam->prevFrameNum = sliceList[0]->frameNum;

@@ -592,7 +592,7 @@ void setGlobalCodingProgram (sVidParam* vidParam, sCodingParam* codingParam) {
   vidParam->bitdepthChroma = codingParam->bitdepthChroma;
   vidParam->bitdepth_scale[1] = codingParam->bitdepth_scale[1];
 
-  vidParam->max_frame_num = codingParam->max_frame_num;
+  vidParam->maxFrameNum = codingParam->maxFrameNum;
   vidParam->PicWidthInMbs = codingParam->PicWidthInMbs;
   vidParam->PicHeightInMapUnits = codingParam->PicHeightInMapUnits;
   vidParam->FrameHeightInMbs = codingParam->FrameHeightInMbs;
