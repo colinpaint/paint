@@ -97,37 +97,37 @@ static void GetMotionVectorPredictorMBAFF (sMacroblock* curMb, sPixelPos *block,
 
   for (hv = 0; hv < 2; hv++) {
     if (hv == 0) {
-      mv_a = block[0].available ? mvInfo[block[0].pos_y][block[0].pos_x].mv[list].mv_x : 0;
-      mv_b = block[1].available ? mvInfo[block[1].pos_y][block[1].pos_x].mv[list].mv_x : 0;
-      mv_c = block[2].available ? mvInfo[block[2].pos_y][block[2].pos_x].mv[list].mv_x : 0;
+      mv_a = block[0].available ? mvInfo[block[0].pos_y][block[0].pos_x].mv[list].mvX : 0;
+      mv_b = block[1].available ? mvInfo[block[1].pos_y][block[1].pos_x].mv[list].mvX : 0;
+      mv_c = block[2].available ? mvInfo[block[2].pos_y][block[2].pos_x].mv[list].mvX : 0;
       }
     else {
       if (curMb->mb_field) {
         mv_a = block[0].available  ? vidParam->mbData[block[0].mb_addr].mb_field
-          ? mvInfo[block[0].pos_y][block[0].pos_x].mv[list].mv_y
-        : mvInfo[block[0].pos_y][block[0].pos_x].mv[list].mv_y / 2
+          ? mvInfo[block[0].pos_y][block[0].pos_x].mv[list].mvY
+        : mvInfo[block[0].pos_y][block[0].pos_x].mv[list].mvY / 2
           : 0;
         mv_b = block[1].available  ? vidParam->mbData[block[1].mb_addr].mb_field
-          ? mvInfo[block[1].pos_y][block[1].pos_x].mv[list].mv_y
-        : mvInfo[block[1].pos_y][block[1].pos_x].mv[list].mv_y / 2
+          ? mvInfo[block[1].pos_y][block[1].pos_x].mv[list].mvY
+        : mvInfo[block[1].pos_y][block[1].pos_x].mv[list].mvY / 2
           : 0;
         mv_c = block[2].available  ? vidParam->mbData[block[2].mb_addr].mb_field
-          ? mvInfo[block[2].pos_y][block[2].pos_x].mv[list].mv_y
-        : mvInfo[block[2].pos_y][block[2].pos_x].mv[list].mv_y / 2
+          ? mvInfo[block[2].pos_y][block[2].pos_x].mv[list].mvY
+        : mvInfo[block[2].pos_y][block[2].pos_x].mv[list].mvY / 2
           : 0;
         }
       else {
         mv_a = block[0].available  ? vidParam->mbData[block[0].mb_addr].mb_field
-          ? mvInfo[block[0].pos_y][block[0].pos_x].mv[list].mv_y * 2
-          : mvInfo[block[0].pos_y][block[0].pos_x].mv[list].mv_y
+          ? mvInfo[block[0].pos_y][block[0].pos_x].mv[list].mvY * 2
+          : mvInfo[block[0].pos_y][block[0].pos_x].mv[list].mvY
         : 0;
         mv_b = block[1].available  ? vidParam->mbData[block[1].mb_addr].mb_field
-          ? mvInfo[block[1].pos_y][block[1].pos_x].mv[list].mv_y * 2
-          : mvInfo[block[1].pos_y][block[1].pos_x].mv[list].mv_y
+          ? mvInfo[block[1].pos_y][block[1].pos_x].mv[list].mvY * 2
+          : mvInfo[block[1].pos_y][block[1].pos_x].mv[list].mvY
         : 0;
         mv_c = block[2].available  ? vidParam->mbData[block[2].mb_addr].mb_field
-          ? mvInfo[block[2].pos_y][block[2].pos_x].mv[list].mv_y * 2
-          : mvInfo[block[2].pos_y][block[2].pos_x].mv[list].mv_y
+          ? mvInfo[block[2].pos_y][block[2].pos_x].mv[list].mvY * 2
+          : mvInfo[block[2].pos_y][block[2].pos_x].mv[list].mvY
         : 0;
         }
       }
@@ -153,9 +153,9 @@ static void GetMotionVectorPredictorMBAFF (sMacroblock* curMb, sPixelPos *block,
         }
 
     if (hv == 0)
-      pmv->mv_x = (short) pred_vec;
+      pmv->mvX = (short) pred_vec;
     else
-      pmv->mv_y = (short) pred_vec;
+      pmv->mvY = (short) pred_vec;
     }
   }
 //}}}
@@ -215,8 +215,8 @@ static void GetMotionVectorPredictorNormal (sMacroblock* curMb, sPixelPos *block
         sMotionVector *mv_b = block[1].available ? &mvInfo[block[1].pos_y][block[1].pos_x].mv[list] : (sMotionVector *) &zero_mv;
         sMotionVector *mv_c = block[2].available ? &mvInfo[block[2].pos_y][block[2].pos_x].mv[list] : (sMotionVector *) &zero_mv;
 
-        pmv->mv_x = (short) imedian(mv_a->mv_x, mv_b->mv_x, mv_c->mv_x);
-        pmv->mv_y = (short) imedian(mv_a->mv_y, mv_b->mv_y, mv_c->mv_y);
+        pmv->mvX = (short) imedian(mv_a->mvX, mv_b->mvX, mv_c->mvX);
+        pmv->mvY = (short) imedian(mv_a->mvY, mv_b->mvY, mv_c->mvY);
       }
       break;
     //}}}
@@ -256,9 +256,9 @@ static void GetMotionVectorPredictorNormal (sMacroblock* curMb, sPixelPos *block
   }
 //}}}
 //{{{
-static void init_motion_vector_prediction (sMacroblock* curMb, int mb_aff_frame_flag) {
+static void init_motion_vector_prediction (sMacroblock* curMb, int mbAffFrameFlag) {
 
-  if (mb_aff_frame_flag)
+  if (mbAffFrameFlag)
     curMb->GetMVPredictor = GetMotionVectorPredictorMBAFF;
   else
     curMb->GetMVPredictor = GetMotionVectorPredictorNormal;
@@ -415,15 +415,15 @@ static char readRefPictureIdx_Null (sMacroblock* curMb, sSyntaxElement* currSE, 
 }
 //}}}
 //{{{
-static void prepareListforRefIdx (sMacroblock* curMb, sSyntaxElement* currSE, sDataPartition *dP, int num_ref_idx_active, int refidx_present)
+static void prepareListforRefIdx (sMacroblock* curMb, sSyntaxElement* currSE, sDataPartition *dP, int numRefIndexActive, int refidx_present)
 {
-  if(num_ref_idx_active > 1)
+  if(numRefIndexActive > 1)
   {
     if (curMb->vidParam->activePPS->entropy_coding_mode_flag == (Boolean) CAVLC || dP->bitstream->eiFlag)
     {
       currSE->mapping = linfo_ue;
       if (refidx_present)
-        curMb->readRefPictureIdx = (num_ref_idx_active == 2) ? readRefPictureIdx_FLC : readRefPictureIdx_VLC;
+        curMb->readRefPictureIdx = (numRefIndexActive == 2) ? readRefPictureIdx_FLC : readRefPictureIdx_VLC;
       else
         curMb->readRefPictureIdx = readRefPictureIdx_Null;
     }
@@ -447,7 +447,7 @@ void set_chroma_qp (sMacroblock* curMb)
 
   for (i=0; i<2; ++i)
   {
-    curMb->qpc[i] = iClip3 ( -vidParam->bitdepth_chroma_qp_scale, 51, curMb->qp + picture->chroma_qp_offset[i] );
+    curMb->qpc[i] = iClip3 ( -vidParam->bitdepth_chroma_qp_scale, 51, curMb->qp + picture->chromaQpOffset[i] );
     curMb->qpc[i] = curMb->qpc[i] < 0 ? curMb->qpc[i] : QP_SCALE_CR[curMb->qpc[i]];
     curMb->qp_scaled[i + 1] = curMb->qpc[i] + vidParam->bitdepth_chroma_qp_scale;
   }
@@ -647,8 +647,8 @@ static void readMBMotionVectors (sSyntaxElement* currSE, sDataPartition *dP, sMa
       dP->readsSyntaxElement(curMb, currSE, dP);
       curr_mvd[1] = (short) currSE->value1;
 
-      curr_mv.mv_x = (short)(curr_mvd[0] + pred_mv.mv_x);  // compute motion vector x
-      curr_mv.mv_y = (short)(curr_mvd[1] + pred_mv.mv_y);  // compute motion vector y
+      curr_mv.mvX = (short)(curr_mvd[0] + pred_mv.mvX);  // compute motion vector x
+      curr_mv.mvY = (short)(curr_mvd[1] + pred_mv.mvY);  // compute motion vector y
 
       for(jj = j4; jj < j4 + step_v0; ++jj)
       {
@@ -723,8 +723,8 @@ static void readMBMotionVectors (sSyntaxElement* currSE, sDataPartition *dP, sMa
                 curr_mvd[k] = (short) currSE->value1;
               }
 
-              curr_mv.mv_x = (short)(curr_mvd[0] + pred_mv.mv_x);  // compute motion vector
-              curr_mv.mv_y = (short)(curr_mvd[1] + pred_mv.mv_y);  // compute motion vector
+              curr_mv.mvX = (short)(curr_mvd[0] + pred_mv.mvX);  // compute motion vector
+              curr_mv.mvY = (short)(curr_mvd[1] + pred_mv.mvY);  // compute motion vector
 
               for(jj = j4; jj < j4 + step_v; ++jj)
               {
@@ -801,7 +801,7 @@ void startMacroblock (sSlice* curSlice, sMacroblock** curMb)
   //assert (mb_nr < (int) vidParam->picSizeInMbs);
 
   /* Update coordinates of the current macroblock */
-  if (curSlice->mb_aff_frame_flag)
+  if (curSlice->mbAffFrameFlag)
   {
     (*curMb)->mb.x = (short) (   (mb_nr) % ((2*vidParam->width) / MB_BLOCK_SIZE));
     (*curMb)->mb.y = (short) (2*((mb_nr) / ((2*vidParam->width) / MB_BLOCK_SIZE)));
@@ -832,7 +832,7 @@ void startMacroblock (sSlice* curSlice, sMacroblock** curMb)
   CheckAvailabilityOfNeighbors(*curMb);
 
   // Select appropriate MV predictor function
-  init_motion_vector_prediction(*curMb, curSlice->mb_aff_frame_flag);
+  init_motion_vector_prediction(*curMb, curSlice->mbAffFrameFlag);
 
   set_read_and_store_CBP(curMb, curSlice->activeSPS->chromaFormatIdc);
 
@@ -1122,7 +1122,7 @@ static void read_motion_info_from_NAL_p_slice (sMacroblock* curMb)
 
   sSyntaxElement currSE;
   sDataPartition *dP = NULL;
-  const byte *partMap       = assignSE2partition[curSlice->dp_mode];
+  const byte *partMap       = assignSE2partition[curSlice->dataPartitionMode];
   short partmode        = ((curMb->mb_type == P8x8) ? 4 : curMb->mb_type);
   int step_h0         = BLOCK_STEP [partmode][0];
   int step_v0         = BLOCK_STEP [partmode][1];
@@ -1140,7 +1140,7 @@ static void read_motion_info_from_NAL_p_slice (sMacroblock* curMb)
   dP = &(curSlice->partArr[partMap[SE_REFFRAME]]);
 
   //  For LIST_0, if multiple ref. pictures, read LIST_0 reference picture indices for the MB** *********
-  prepareListforRefIdx (curMb, &currSE, dP, curSlice->num_ref_idx_active[LIST_0], (curMb->mb_type != P8x8) || (!curSlice->allrefzero));
+  prepareListforRefIdx (curMb, &currSE, dP, curSlice->numRefIndexActive[LIST_0], (curMb->mb_type != P8x8) || (!curSlice->allrefzero));
   readMBRefPictureIdx  (&currSE, dP, curMb, p_mv_info, LIST_0, step_v0, step_h0);
 
   //=====  READ MOTION VECTORS =====
@@ -1150,7 +1150,7 @@ static void read_motion_info_from_NAL_p_slice (sMacroblock* curMb)
   if (vidParam->activePPS->entropy_coding_mode_flag == (Boolean) CAVLC || dP->bitstream->eiFlag)
     currSE.mapping = linfo_se;
   else
-    currSE.reading = curSlice->mb_aff_frame_flag ? read_mvd_CABAC_mbaff : read_MVD_CABAC;
+    currSE.reading = curSlice->mbAffFrameFlag ? read_mvd_CABAC_mbaff : read_MVD_CABAC;
 
   // LIST_0 Motion vectors
   readMBMotionVectors (&currSE, dP, curMb, LIST_0, step_h0, step_v0);
@@ -1177,7 +1177,7 @@ static void read_motion_info_from_NAL_b_slice (sMacroblock* curMb) {
   sPicture* picture = curSlice->picture;
   sSyntaxElement currSE;
   sDataPartition* dP = NULL;
-  const byte* partMap = assignSE2partition[curSlice->dp_mode];
+  const byte* partMap = assignSE2partition[curSlice->dataPartitionMode];
   int partmode = ((curMb->mb_type == P8x8) ? 4 : curMb->mb_type);
   int step_h0 = BLOCK_STEP [partmode][0];
   int step_v0 = BLOCK_STEP [partmode][1];
@@ -1196,11 +1196,11 @@ static void read_motion_info_from_NAL_b_slice (sMacroblock* curMb) {
   dP = &(curSlice->partArr[partMap[SE_REFFRAME]]);
 
   //  For LIST_0, if multiple ref. pictures, read LIST_0 reference picture indices for the MB** *********
-  prepareListforRefIdx (curMb, &currSE, dP, curSlice->num_ref_idx_active[LIST_0], TRUE);
+  prepareListforRefIdx (curMb, &currSE, dP, curSlice->numRefIndexActive[LIST_0], TRUE);
   readMBRefPictureIdx (&currSE, dP, curMb, p_mv_info, LIST_0, step_v0, step_h0);
 
   //  For LIST_1, if multiple ref. pictures, read LIST_1 reference picture indices for the MB** *********
-  prepareListforRefIdx (curMb, &currSE, dP, curSlice->num_ref_idx_active[LIST_1], TRUE);
+  prepareListforRefIdx (curMb, &currSE, dP, curSlice->numRefIndexActive[LIST_1], TRUE);
   readMBRefPictureIdx (&currSE, dP, curMb, p_mv_info, LIST_1, step_v0, step_h0);
 
   //=====  READ MOTION VECTORS =====
@@ -1210,7 +1210,7 @@ static void read_motion_info_from_NAL_b_slice (sMacroblock* curMb) {
   if (vidParam->activePPS->entropy_coding_mode_flag == (Boolean) CAVLC || dP->bitstream->eiFlag)
     currSE.mapping = linfo_se;
   else
-    currSE.reading = curSlice->mb_aff_frame_flag ? read_mvd_CABAC_mbaff : read_MVD_CABAC;
+    currSE.reading = curSlice->mbAffFrameFlag ? read_mvd_CABAC_mbaff : read_MVD_CABAC;
 
   // LIST_0 Motion vectors
   readMBMotionVectors (&currSE, dP, curMb, LIST_0, step_h0, step_v0);
@@ -1291,7 +1291,7 @@ void setup_slice_methods (sSlice* curSlice) {
 
   set_intra_prediction_modes (curSlice);
 
-  if (curSlice->vidParam->activeSPS->chromaFormatIdc==YUV444 && (curSlice->vidParam->separate_colour_plane_flag == 0) )
+  if (curSlice->vidParam->activeSPS->chromaFormatIdc==YUV444 && (curSlice->vidParam->sepColourPlaneFlag == 0) )
     curSlice->read_coeff_4x4_CAVLC = read_coeff_4x4_CAVLC_444;
   else
     curSlice->read_coeff_4x4_CAVLC = read_coeff_4x4_CAVLC;
@@ -1367,16 +1367,16 @@ void checkDpNeighbours (sMacroblock* curMb) {
 // this at the MB level, and it really should be done at the slice level
 static void init_cur_imgy (sVidParam* vidParam,sSlice* curSlice,int pl) {
 
-  if (vidParam->separate_colour_plane_flag == 0) {
-    sPicture* vidref = vidParam->no_reference_picture;
-    int noref = (curSlice->framePoc < vidParam->recovery_poc);
+  if (vidParam->sepColourPlaneFlag == 0) {
+    sPicture* vidref = vidParam->noReferencePicture;
+    int noref = (curSlice->framePoc < vidParam->recoveryPoc);
 
     if (pl == PLANE_Y) {
       for (int j = 0; j < 6; j++) {
         for (int i = 0; i < curSlice->listXsize[j] ; i++) {
           sPicture* curRef = curSlice->listX[j][i];
           if (curRef) {
-            curRef->no_ref = noref && (curRef == vidref);
+            curRef->noRef = noref && (curRef == vidref);
             curRef->curPixelY = curRef->imgY;
             }
           }
@@ -1387,7 +1387,7 @@ static void init_cur_imgy (sVidParam* vidParam,sSlice* curSlice,int pl) {
         for (int i = 0; i < curSlice->listXsize[j]; i++) {
           sPicture* curRef = curSlice->listX[j][i];
           if (curRef) {
-            curRef->no_ref = noref && (curRef == vidref);
+            curRef->noRef = noref && (curRef == vidref);
             curRef->curPixelY = curRef->imgUV[pl-1];
             }
           }
@@ -1421,7 +1421,7 @@ void make_frame_picture_JV (sVidParam* vidParam) {
 
   // copy;
   if (vidParam->picture->usedForReference) {
-    int nsize = (vidParam->picture->size_y/BLOCK_SIZE)*(vidParam->picture->size_x/BLOCK_SIZE)*sizeof(sPicMotionParam);
+    int nsize = (vidParam->picture->sizeY/BLOCK_SIZE)*(vidParam->picture->sizeX/BLOCK_SIZE)*sizeof(sPicMotionParam);
     memcpy (&(vidParam->picture->JVmv_info[PLANE_Y][0][0]), &(vidParam->dec_picture_JV[PLANE_Y]->mvInfo[0][0]), nsize);
     memcpy (&(vidParam->picture->JVmv_info[PLANE_U][0][0]), &(vidParam->dec_picture_JV[PLANE_U]->mvInfo[0][0]), nsize);
     memcpy (&(vidParam->picture->JVmv_info[PLANE_V][0][0]), &(vidParam->dec_picture_JV[PLANE_V]->mvInfo[0][0]), nsize);

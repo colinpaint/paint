@@ -79,8 +79,8 @@ void checkZeroByteVCL (sVidParam* vidParam, sNalu* nalu) {
   int CheckZeroByte = 0;
 
   // This function deals only with VCL NAL units
-  if (!(nalu->nal_unit_type >= NALU_TYPE_SLICE &&
-        nalu->nal_unit_type <= NALU_TYPE_IDR))
+  if (!(nalu->nalUnitType >= NALU_TYPE_SLICE &&
+        nalu->nalUnitType <= NALU_TYPE_IDR))
     return;
 
   if (vidParam->LastAccessUnitExists)
@@ -105,21 +105,21 @@ void checkZeroByteNonVCL (sVidParam* vidParam, sNalu* nalu) {
   int CheckZeroByte = 0;
 
   // This function deals only with non-VCL NAL units
-  if (nalu->nal_unit_type >= 1 &&
-      nalu->nal_unit_type <= 5)
+  if (nalu->nalUnitType >= 1 &&
+      nalu->nalUnitType <= 5)
     return;
 
   // for SPS and PPS, zero_byte shall exist
-  if (nalu->nal_unit_type == NALU_TYPE_SPS ||
-      nalu->nal_unit_type == NALU_TYPE_PPS)
+  if (nalu->nalUnitType == NALU_TYPE_SPS ||
+      nalu->nalUnitType == NALU_TYPE_PPS)
     CheckZeroByte = 1;
 
   // check the possibility of the current NALU to be the start of a new access unit, according to 7.4.1.2.3
-  if (nalu->nal_unit_type == NALU_TYPE_AUD ||
-      nalu->nal_unit_type == NALU_TYPE_SPS ||
-      nalu->nal_unit_type == NALU_TYPE_PPS ||
-      nalu->nal_unit_type == NALU_TYPE_SEI ||
-      (nalu->nal_unit_type >= 13 && nalu->nal_unit_type <= 18)) {
+  if (nalu->nalUnitType == NALU_TYPE_AUD ||
+      nalu->nalUnitType == NALU_TYPE_SPS ||
+      nalu->nalUnitType == NALU_TYPE_PPS ||
+      nalu->nalUnitType == NALU_TYPE_SEI ||
+      (nalu->nalUnitType >= 13 && nalu->nalUnitType <= 18)) {
     if (vidParam->LastAccessUnitExists) {
       // deliver the last access unit to decoder
       vidParam->LastAccessUnitExists = 0;
@@ -230,7 +230,7 @@ static int getNALU (ANNEXB_t* annexB, sVidParam* vidParam, sNalu* nalu) {
       memcpy (nalu->buf, annexB->naluBuf + leadingZero8BitsCount, nalu->len);
       nalu->forbidden_bit = (*(nalu->buf) >> 7) & 1;
       nalu->nalRefId = (NalRefIdc)((*(nalu->buf) >> 5) & 3);
-      nalu->nal_unit_type = (NaluType)((*(nalu->buf)) & 0x1f);
+      nalu->nalUnitType = (NaluType)((*(nalu->buf)) & 0x1f);
       annexB->nextStartCodeBytes = 0;
 
       if (kDebug)
@@ -238,7 +238,7 @@ static int getNALU (ANNEXB_t* annexB, sVidParam* vidParam, sNalu* nalu) {
                 nalu->startcodeprefix_len == 4 ? "l":"s",
                 nalu->forbidden_bit,
                 nalu->nalRefId,
-                nalu->nal_unit_type,
+                nalu->nalUnitType,
                 nalu->len
                 );
 
@@ -283,7 +283,7 @@ static int getNALU (ANNEXB_t* annexB, sVidParam* vidParam, sNalu* nalu) {
   memcpy (nalu->buf, annexB->naluBuf + leadingZero8BitsCount, nalu->len);
   nalu->forbidden_bit = (*(nalu->buf) >> 7) & 1;
   nalu->nalRefId = (NalRefIdc) ((*(nalu->buf) >> 5) & 3);
-  nalu->nal_unit_type = (NaluType) ((*(nalu->buf)) & 0x1f);
+  nalu->nalUnitType = (NaluType) ((*(nalu->buf)) & 0x1f);
   nalu->lost_packets = 0;
 
   if (kDebug)
@@ -291,7 +291,7 @@ static int getNALU (ANNEXB_t* annexB, sVidParam* vidParam, sNalu* nalu) {
             nalu->startcodeprefix_len == 4 ? "l":"s",
             nalu->forbidden_bit,
             nalu->nalRefId,
-            nalu->nal_unit_type,
+            nalu->nalUnitType,
             nalu->len
             );
 

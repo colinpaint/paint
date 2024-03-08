@@ -1100,7 +1100,7 @@ typedef struct AVCodecContext {
      *
      *   @note the counter is not incremented if encoding/decoding resulted in
      *   an error.
-     *   @deprecated use frame_num instead
+     *   @deprecated use frameNum instead
      */
     attribute_deprecated
     int frame_number;
@@ -2115,7 +2115,7 @@ typedef struct AVCodecContext {
      *   @note the counter is not incremented if encoding/decoding resulted in
      *   an error.
      */
-    int64_t frame_num;
+    int64_t frameNum;
 } AVCodecContext;
 
 /**
@@ -2892,9 +2892,9 @@ typedef struct AVCodecParserContext {
     /**
      * Indicate whether a picture is coded as a frame, top field or bottom field.
      *
-     * For example, H.264 field_pic_flag equal to 0 corresponds to
-     * AV_PICTURE_STRUCTURE_FRAME. An H.264 picture with field_pic_flag
-     * equal to 1 and bottom_field_flag equal to 0 corresponds to
+     * For example, H.264 fieldPicFlag equal to 0 corresponds to
+     * AV_PICTURE_STRUCTURE_FRAME. An H.264 picture with fieldPicFlag
+     * equal to 1 and botFieldFlag equal to 0 corresponds to
      * AV_PICTURE_STRUCTURE_TOP_FIELD.
      */
     enum AVPictureStructure picture_structure;

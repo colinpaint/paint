@@ -11,7 +11,7 @@
 
 #include "win32.h"
 #include "defines.h"
-#include "ifunctions.h"
+#include "functions.h"
 #include "types.h"
 #include "frame.h"
 //}}}
@@ -119,7 +119,7 @@ typedef struct {
   unsigned int bit_depth_luma_minus8;             // ue(v)
   unsigned int bit_depth_chroma_minus8;           // ue(v)
   unsigned int log2_max_frame_num_minus4;         // ue(v)
-  unsigned int pic_order_cnt_type;
+  unsigned int picOrderCountType;
   unsigned int log2_max_pic_order_cnt_lsb_minus4; // ue(v)
   Boolean  delta_pic_order_always_zero_flag;      // u(1)
   int      offset_for_non_ref_pic;                // se(v)
@@ -133,20 +133,20 @@ typedef struct {
 
   unsigned int pic_width_in_mbs_minus1;           // ue(v)
   unsigned int pic_height_in_map_units_minus1;    // ue(v)
-  Boolean  frame_mbs_only_flag;                   // u(1)
+  Boolean  frameMbOnlyFlag;                   // u(1)
   Boolean  mb_adaptive_frame_field_flag;          // u(1)
   Boolean  direct_8x8_inference_flag;             // u(1)
 
-  Boolean  frame_cropping_flag;                   // u(1)
-  unsigned int frame_crop_left_offset;            // ue(v)
-  unsigned int frame_crop_right_offset;           // ue(v)
-  unsigned int frame_crop_top_offset;             // ue(v)
-  unsigned int frame_crop_bottom_offset;          // ue(v)
+  Boolean  frameCropFlag;                   // u(1)
+  unsigned int frameCropLeft;            // ue(v)
+  unsigned int frameCropRight;           // ue(v)
+  unsigned int frameCropTop;             // ue(v)
+  unsigned int frameCropBot;          // ue(v)
 
   Boolean  vui_parameters_present_flag;           // u(1)
   sVUI     vui_seq_parameters;                    // sVUI
 
-  unsigned separate_colour_plane_flag;            // u(1)
+  unsigned sepColourPlaneFlag;            // u(1)
   int      lossless_qpprime_flag;
   } sSPS;
 //}}}
@@ -154,7 +154,7 @@ typedef struct {
 typedef struct {
   Boolean   valid;
 
-  unsigned int pic_parameter_set_id;            // ue(v)
+  unsigned int ppsId;            // ue(v)
   unsigned int seq_parameter_set_id;            // ue(v)
   Boolean   entropy_coding_mode_flag;           // u(1)
   Boolean   transform_8x8_mode_flag;            // u(1)
@@ -166,8 +166,8 @@ typedef struct {
   Boolean   UseDefaultScalingMatrix4x4Flag[6];
   Boolean   UseDefaultScalingMatrix8x8Flag[6];
 
-  // if( pic_order_cnt_type < 2 )  in the sequence parameter set
-  Boolean      bottom_field_pic_order_in_frame_present_flag;  // u(1)
+  // if( picOrderCountType < 2 )  in the sequence parameter set
+  Boolean      botFieldPicOrderFramePresentFlag;  // u(1)
   unsigned int num_slice_groups_minus1;             // ue(v)
 
   unsigned int slice_group_map_type;                // ue(v)
@@ -189,11 +189,11 @@ typedef struct {
   unsigned int  weighted_bipred_idc;                    // u(2)
   int       pic_init_qp_minus26;                    // se(v)
   int       pic_init_qs_minus26;                    // se(v)
-  int       chroma_qp_index_offset;                 // se(v)
+  int       chromaQpIndexOffset;                 // se(v)
 
   int       cb_qp_index_offset;                     // se(v)
   int       cr_qp_index_offset;                     // se(v)
-  int       second_chroma_qp_index_offset;          // se(v)
+  int       secondChromaQpIndexOffset;          // se(v)
 
   Boolean   deblocking_filter_control_present_flag; // u(1)
   Boolean   constrained_intra_pred_flag;            // u(1)
@@ -265,8 +265,8 @@ struct Macroblock;
 struct PicMotionParam;
 //{{{  sMotionVector
 typedef struct {
-  short mv_x;
-  short mv_y;
+  short mvX;
+  short mvY;
   } sMotionVector;
 //}}}
 //{{{  sBlockPos
@@ -338,7 +338,7 @@ typedef struct SyntaxElement {
 //{{{  sDataPartition
 typedef struct DataPartition {
   sBitstream*          bitstream;
-  sDecodingEnvironment de_cabac;
+  sDecodingEnvironment deCabac;
   int (*readsSyntaxElement)(struct Macroblock *curMb, struct SyntaxElement *, struct DataPartition *);
   } sDataPartition;
 //}}}
@@ -490,16 +490,16 @@ typedef struct Image {
 //}}}
 //{{{  sOldSliceParam
 typedef struct OldSliceParam {
-  unsigned field_pic_flag;
-  unsigned frame_num;
-  int      nal_ref_idc;
-  unsigned pic_oder_cnt_lsb;
-  int      delta_pic_oder_cnt_bottom;
-  int      delta_pic_order_cnt[2];
-  byte     bottom_field_flag;
+  unsigned fieldPicFlag;
+  unsigned frameNum;
+  int      nalRefIdc;
+  unsigned picOrderCountLsb;
+  int      deltaPicOrderCountBot;
+  int      deltaPicOrderCount[2];
+  byte     botFieldFlag;
   byte     idrFlag;
   int      idrPicId;
-  int      pps_id;
+  int      ppsId;
   int      layerId;
   } sOldSliceParam;
 //}}}
@@ -516,18 +516,18 @@ typedef struct Slice {
   int idrPicId;
   int nalRefId;                   // nalRefId from NAL
   int transform8x8Mode;
-  Boolean chroma444notSeparate;   // indicates chroma 4:4:4 coding with separate_colour_plane_flag equal to zero
+  Boolean chroma444notSeparate;   // indicates chroma 4:4:4 coding with sepColourPlaneFlag equal to zero
 
   int topPoc;   // poc for this top field
   int botPoc;   // poc of bottom field of frame
   int framePoc; // poc of this frame
 
   // poc mode 0
-  unsigned int pic_order_cnt_lsb;
-  int delta_pic_order_cnt_bottom;
+  unsigned int picOrderCountLsb;
+  int deletaPicOrderCountBot;
 
   // poc mode 1
-  int delta_pic_order_cnt[2];
+  int deltaPicOrderCount[2];
 
   // POC mode 0
   signed int PicOrderCntMsb;
@@ -543,9 +543,9 @@ typedef struct Slice {
   int cod_counter;             // Current count of number of skipped macroblocks in a row
   int allrefzero;
 
-  int               mb_aff_frame_flag;
+  int               mbAffFrameFlag;
   int               direct_spatial_mv_pred_flag; // Indicator for direct mode type (1 for Spatial, 0 for Temporal)
-  int               num_ref_idx_active[2];       // number of available list references
+  int               numRefIndexActive[2];       // number of available list references
 
   int               eiFlag;       // 0 if the partArr[0] contains valid information
   int               qp;
@@ -554,27 +554,27 @@ typedef struct Slice {
   int               slice_qs_delta;
   int               sliceType;    // slice type
   int               model_number;  // cabac model number
-  unsigned int      frame_num;     // frame_num for this frame
-  unsigned int      field_pic_flag;
-  byte              bottom_field_flag;
+  unsigned int      frameNum;     // frameNum for this frame
+  unsigned int      fieldPicFlag;
+  byte              botFieldFlag;
   ePicStructure     structure;     // Identify picture structure type
-  int               start_mb_nr;   // MUST be set by NAL even in case of eiFlag == 1
+  int               startMbNum;   // MUST be set by NAL even in case of eiFlag == 1
   int               end_mb_nr_plus1;
-  int               max_part_nr;
-  int               dp_mode;       // data partitioning mode
+  int               maxPartitionNum;
+  int               dataPartitionMode;       // data partitioning mode
   int               current_header;
   int               next_header;
   int               last_dquant;
 
   // slice header information;
   int colour_plane_id;             // colour_plane_id of the current coded slice
-  int redundant_pic_cnt;
+  int redundantPicCount;
   int sp_switch;                   // 1 for switching sp, 0 for normal sp
   int slice_group_change_cycle;
-  int redundant_slice_ref_idx;     // reference index of redundant slice
-  int no_output_of_prior_pics_flag;
-  int long_term_reference_flag;
-  int adaptive_ref_pic_buffering_flag;
+  int redundantSliceRefIndex;     // reference index of redundant slice
+  int noOutputPriorPicFlag;
+  int longTermRefFlag;
+  int adaptiveRefPicBufferingFlag;
   sDecRefPicMarking* decRefPicMarkingBuffer; // stores the memory management control operations
 
   char listXsize[6];
@@ -594,9 +594,9 @@ typedef struct Slice {
   short DFDisableIdc;         // Disable deblocking filter on slice
   short DFAlphaC0Offset;      // Alpha and C0 offset for filtering slice
   short DFBetaOffset;         // Beta offset for filtering slice
-  int   pic_parameter_set_id; // the ID of the picture parameter set the slice is reffering to
-  int   dpB_NotPresent;       // non-zero, if data partition B is lost
-  int   dpC_NotPresent;       // non-zero, if data partition C is lost
+  int   ppsId; // the ID of the picture parameter set the slice is reffering to
+  int   noDataPartitionB;       // non-zero, if data partition B is lost
+  int   noDataPartitionC;       // non-zero, if data partition C is lost
 
   Boolean   is_reset_coeff;
   Boolean   is_reset_coeff_cr;
@@ -633,14 +633,14 @@ typedef struct Slice {
   unsigned short chroma_log2_weight_denom;
   sWPParam** WPParam;     // wp parameters in [list][index]
   int***     wp_weight;   // weight in [list][index][component] order
-  int***     wp_offset;   // offset in [list][index][component] order
-  int****    wbp_weight;  // weight in [list][fw_index][bw_index][component] order
+  int***     wpOffset;   // offset in [list][index][component] order
+  int****    wbpWeight;  // weight in [list][fw_index][bw_index][component] order
   short      wp_round_luma;
   short      wp_round_chroma;
 
   // for signalling to the neighbour logic that this is a deblocker call
   int max_mb_vmv_r;        // maximum vertical motion vector range in luma quarter pixel units for the current level_idc
-  int ref_flag[17];        // 0: i-th previous frame is incorrect
+  int refFlag[17];        // 0: i-th previous frame is incorrect
 
   int ercMvPerMb;
   sMacroblock* mbData;
@@ -726,7 +726,7 @@ typedef struct CodingParam {
   int mb_size_shift[3][2];
 
   int max_vmv_r;                  // maximum vertical motion vector range in luma quarter frame pixel units for the current level_idc
-  int separate_colour_plane_flag;
+  int sepColourPlaneFlag;
   int ChromaArrayType;
   int max_frame_num;
 
@@ -824,7 +824,7 @@ typedef struct VidParam {
   struct ConcealNode* concealment_head;
   struct ConcealNode* concealment_end;
 
-  unsigned int preFrameNum;           // store the frame_num in the last decoded slice. For detecting gap in frame_num.
+  unsigned int preFrameNum;           // store the frameNum in the last decoded slice. For detecting gap in frameNum.
   int          nonConformingStream;
 
   // for POC mode 0:
@@ -841,7 +841,7 @@ typedef struct VidParam {
   unsigned int picHeightInMbs;
   unsigned int picSizeInMbs;
 
-  int          no_output_of_prior_pics_flag;
+  int          noOutputPriorPicFlag;
 
   int          last_has_mmco_5;
   int          last_pic_bottom_field;
@@ -850,21 +850,21 @@ typedef struct VidParam {
   int          psnrNum;
 
   // picture error conceal
-  int          last_ref_pic_poc;
+  int          lastRefPicPoc;
   int          ref_poc_gap;
   int          pocGap;
   int          concealMode;
   int          earlier_missing_poc;
   unsigned int frame_to_conceal;
-  int          IDR_concealment_flag;
+  int          IdrConcealFlag;
   int          conceal_slice_type;
 
   Boolean      firstSPS;
   int          recovery_point;
-  int          recovery_point_found;
-  int          recovery_frame_cnt;
-  int          recovery_frame_num;
-  int          recovery_poc;
+  int          recoveryPointFound;
+  int          recoveryFrameCount;
+  int          recoveryFrameNum;
+  int          recoveryPoc;
 
   // Redundant slices. Should be moved to another structure and allocated only if extended profile
   unsigned int prevFrameNum; // frame number of previous slice
@@ -891,7 +891,7 @@ typedef struct VidParam {
 
   struct Picture* picture;
   struct Picture* dec_picture_JV[MAX_PLANE];  // picture to be used during 4:4:4 independent mode decoding
-  struct Picture* no_reference_picture;       // dummy storable picture for recovery point
+  struct Picture* noReferencePicture;       // dummy storable picture for recovery point
 
   // Error parameters
   struct ObjectBuffer*  ercObjectList;
@@ -956,7 +956,7 @@ typedef struct VidParam {
   unsigned int dc_pred_value_comp[MAX_PLANE]; // component value for DC prediction (depends on component pel bit depth)
   int  max_pel_value_comp[MAX_PLANE];          // max value that one picture element (pixel) can take (depends on pic_unit_bitdepth)
 
-  int separate_colour_plane_flag;
+  int sepColourPlaneFlag;
   int pic_unit_size_on_disk;
 
   int profile_idc;

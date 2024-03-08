@@ -287,9 +287,9 @@ int cabac_startcode_follows (sSlice* curSlice, int eos_bit)
 
   if( eos_bit )
   {
-    const byte   *partMap    = assignSE2partition[curSlice->dp_mode];
+    const byte   *partMap    = assignSE2partition[curSlice->dataPartitionMode];
     sDataPartition *dP = &(curSlice->partArr[partMap[SE_MBTYPE]]);
-    sDecodingEnvironmentPtr dep_dp = &(dP->de_cabac);
+    sDecodingEnvironmentPtr dep_dp = &(dP->deCabac);
 
     bit = biari_decode_final (dep_dp); //GB
   }
@@ -430,7 +430,7 @@ int check_next_mb_and_get_field_mode_CABAC_p_slice (sSlice* curSlice,
   sMotionInfoContexts *mot_ctx  = curSlice->mot_ctx;
 
   int length;
-  sDecodingEnvironmentPtr    dep_dp = &(act_dp->de_cabac);
+  sDecodingEnvironmentPtr    dep_dp = &(act_dp->deCabac);
 
   int skip   = 0;
   int field  = 0;
@@ -447,7 +447,7 @@ int check_next_mb_and_get_field_mode_CABAC_p_slice (sSlice* curSlice,
   curMb->slice_nr = curSlice->curSliceNum;
   curMb->mb_field = curSlice->mbData[curSlice->current_mb_nr-1].mb_field;
   curMb->mbAddrX  = curSlice->current_mb_nr;
-  curMb->list_offset = ((curSlice->mb_aff_frame_flag)&&(curMb->mb_field))? (curMb->mbAddrX&0x01) ? 4 : 2 : 0;
+  curMb->list_offset = ((curSlice->mbAffFrameFlag)&&(curMb->mb_field))? (curMb->mbAddrX&0x01) ? 4 : 2 : 0;
 
   CheckAvailabilityOfNeighborsMBAFF(curMb);
   CheckAvailabilityOfNeighborsCABAC(curMb);
@@ -515,7 +515,7 @@ int check_next_mb_and_get_field_mode_CABAC_b_slice (sSlice* curSlice,
   sDecodingEnvironmentPtr    dep_dp_copy;
 
   int length;
-  sDecodingEnvironmentPtr    dep_dp = &(act_dp->de_cabac);
+  sDecodingEnvironmentPtr    dep_dp = &(act_dp->deCabac);
   sMotionInfoContexts  *mot_ctx = curSlice->mot_ctx;
 
   int skip   = 0;
@@ -533,7 +533,7 @@ int check_next_mb_and_get_field_mode_CABAC_b_slice (sSlice* curSlice,
   curMb->slice_nr = curSlice->curSliceNum;
   curMb->mb_field = curSlice->mbData[curSlice->current_mb_nr-1].mb_field;
   curMb->mbAddrX  = curSlice->current_mb_nr;
-  curMb->list_offset = ((curSlice->mb_aff_frame_flag)&&(curMb->mb_field))? (curMb->mbAddrX & 0x01) ? 4 : 2 : 0;
+  curMb->list_offset = ((curSlice->mbAffFrameFlag)&&(curMb->mb_field))? (curMb->mbAddrX & 0x01) ? 4 : 2 : 0;
 
   CheckAvailabilityOfNeighborsMBAFF(curMb);
   CheckAvailabilityOfNeighborsCABAC(curMb);
@@ -683,7 +683,7 @@ void read_mvd_CABAC_mbaff (sMacroblock* curMb,
   if (block_a.available)
   {
     a = iabs(curSlice->mbData[block_a.mb_addr].mvd[list_idx][block_a.y][block_a.x][k]);
-    if (curSlice->mb_aff_frame_flag && (k==1))
+    if (curSlice->mbAffFrameFlag && (k==1))
     {
       if ((curMb->mb_field==0) && (curSlice->mbData[block_a.mb_addr].mb_field==1))
         a *= 2;
@@ -696,7 +696,7 @@ void read_mvd_CABAC_mbaff (sMacroblock* curMb,
   if (block_b.available)
   {
     b = iabs(curSlice->mbData[block_b.mb_addr].mvd[list_idx][block_b.y][block_b.x][k]);
-    if (curSlice->mb_aff_frame_flag && (k==1))
+    if (curSlice->mbAffFrameFlag && (k==1))
     {
       if ((curMb->mb_field==0) && (curSlice->mbData[block_b.mb_addr].mb_field==1))
         b *= 2;
@@ -1316,7 +1316,7 @@ void readRefFrame_CABAC (sMacroblock* curMb,
     neighborMB = &curSlice->mbData[block_b.mb_addr];
     if (!( (neighborMB->mb_type==IPCM) || IS_DIRECT(neighborMB) || (neighborMB->b8mode[b8b]==0 && neighborMB->b8pdir[b8b]==2)))
     {
-      if (curSlice->mb_aff_frame_flag && (curMb->mb_field == FALSE) && (neighborMB->mb_field == TRUE))
+      if (curSlice->mbAffFrameFlag && (curMb->mb_field == FALSE) && (neighborMB->mb_field == TRUE))
         b = (picture->mvInfo[block_b.pos_y][block_b.pos_x].refIndex[list] > 1 ? 2 : 0);
       else
         b = (picture->mvInfo[block_b.pos_y][block_b.pos_x].refIndex[list] > 0 ? 2 : 0);
@@ -1329,7 +1329,7 @@ void readRefFrame_CABAC (sMacroblock* curMb,
     neighborMB = &curSlice->mbData[block_a.mb_addr];
     if (!((neighborMB->mb_type==IPCM) || IS_DIRECT(neighborMB) || (neighborMB->b8mode[b8a]==0 && neighborMB->b8pdir[b8a]==2)))
     {
-      if (curSlice->mb_aff_frame_flag && (curMb->mb_field == FALSE) && (neighborMB->mb_field == 1))
+      if (curSlice->mbAffFrameFlag && (curMb->mb_field == FALSE) && (neighborMB->mb_field == 1))
         a = (picture->mvInfo[block_a.pos_y][block_a.pos_x].refIndex[list] > 1 ? 1 : 0);
       else
         a = (picture->mvInfo[block_a.pos_y][block_a.pos_x].refIndex[list] > 0 ? 1 : 0);
@@ -1636,7 +1636,7 @@ static int read_and_store_CBP_block_bit_444 (sMacroblock* curMb,
       cbp_bit = biari_decode_symbol (dep_dp, tex_ctx->bcbp_contexts[type2ctx_bcbp[type]] + ctx);
     }
   }
-  else if( (vidParam->separate_colour_plane_flag != 0) )
+  else if( (vidParam->sepColourPlaneFlag != 0) )
   {
     if (type!=LUMA_8x8)
     {
@@ -2291,7 +2291,7 @@ void readRunLevel_CABAC (sMacroblock* curMb,
  */
 int readsSyntaxElement_CABAC (sMacroblock* curMb, sSyntaxElement *se, sDataPartition *this_dataPart)
 {
-  sDecodingEnvironmentPtr dep_dp = &(this_dataPart->de_cabac);
+  sDecodingEnvironmentPtr dep_dp = &(this_dataPart->deCabac);
   int curr_len = arideco_bits_read(dep_dp);
 
   // perform the actual decoding by calling the appropriate method
@@ -2315,7 +2315,7 @@ void readIPCM_CABAC (sSlice* curSlice, struct DataPartition *dP)
   sVidParam* vidParam = curSlice->vidParam;
   sPicture* picture = curSlice->picture;
   sBitstream* curStream = dP->bitstream;
-  sDecodingEnvironmentPtr dep = &(dP->de_cabac);
+  sDecodingEnvironmentPtr dep = &(dP->deCabac);
   byte *buf = curStream->streamBuffer;
   int BitstreamLengthInBits = (dP->bitstream->bitstreamLength << 3) + 7;
 
@@ -2352,7 +2352,7 @@ void readIPCM_CABAC (sSlice* curSlice, struct DataPartition *dP)
 
   // read chroma values
   bitdepth = vidParam->bitdepth_chroma;
-  if ((picture->chromaFormatIdc != YUV400) && (vidParam->separate_colour_plane_flag == 0))
+  if ((picture->chromaFormatIdc != YUV400) && (vidParam->sepColourPlaneFlag == 0))
   {
     for (uv = 1; uv < 3; ++uv)
     {

@@ -55,8 +55,8 @@ static void clearPicture (sVidParam* vidParam, sPicture* p) {
 
   printf ("-------------------- clearPicture -----------------\n");
 
-  for (int i = 0; i < p->size_y; i++)
-    for (int j = 0; j < p->size_x; j++)
+  for (int i = 0; i < p->sizeY; i++)
+    for (int j = 0; j < p->sizeX; j++)
       p->imgY[i][j] = (sPixel)vidParam->dc_pred_value_comp[0];
 
   for (int i = 0; i < p->size_y_cr;i++)
@@ -81,20 +81,20 @@ static void writeOutPicture (sVidParam* vidParam, sPicture* p) {
   int cropRight;
   int cropTop;
   int cropBottom;
-  if (p->frame_cropping_flag) {
-    cropLeft = SubWidthC [p->chromaFormatIdc] * p->frame_crop_left_offset;
-    cropRight = SubWidthC [p->chromaFormatIdc] * p->frame_crop_right_offset;
-    cropTop = SubHeightC[p->chromaFormatIdc] * ( 2 - p->frame_mbs_only_flag ) * p->frame_crop_top_offset;
-    cropBottom = SubHeightC[p->chromaFormatIdc] * ( 2 - p->frame_mbs_only_flag ) * p->frame_crop_bottom_offset;
+  if (p->frameCropFlag) {
+    cropLeft = SubWidthC [p->chromaFormatIdc] * p->frameCropLeft;
+    cropRight = SubWidthC [p->chromaFormatIdc] * p->frameCropRight;
+    cropTop = SubHeightC[p->chromaFormatIdc] * ( 2 - p->frameMbOnlyFlag ) * p->frameCropTop;
+    cropBottom = SubHeightC[p->chromaFormatIdc] * ( 2 - p->frameMbOnlyFlag ) * p->frameCropBot;
     }
   else
     cropLeft = cropRight = cropTop = cropBottom = 0;
 
   int symbolSizeInBytes = ((vidParam->pic_unit_bitsize_on_disk+7) >> 3);
-  int chromaSizeX =  p->size_x_cr- p->frame_crop_left_offset -p->frame_crop_right_offset;
-  int chromaSizeY = p->size_y_cr - ( 2 - p->frame_mbs_only_flag ) * p->frame_crop_top_offset -( 2 - p->frame_mbs_only_flag ) * p->frame_crop_bottom_offset;
-  int lumaSizeX = p->size_x - cropLeft - cropRight;
-  int lumaSizeY = p->size_y - cropTop - cropBottom;
+  int chromaSizeX =  p->size_x_cr- p->frameCropLeft -p->frameCropRight;
+  int chromaSizeY = p->size_y_cr - ( 2 - p->frameMbOnlyFlag ) * p->frameCropTop -( 2 - p->frameMbOnlyFlag ) * p->frameCropBot;
+  int lumaSizeX = p->sizeX - cropLeft - cropRight;
+  int lumaSizeY = p->sizeY - cropTop - cropBottom;
   int lumaSize = lumaSizeX * lumaSizeY * symbolSizeInBytes;
   int frameSize = (lumaSizeX * lumaSizeY + 2 * (chromaSizeX * chromaSizeY)) * symbolSizeInBytes;
 
@@ -108,13 +108,13 @@ static void writeOutPicture (sVidParam* vidParam, sPicture* p) {
 
   img2buf (p->imgY,
            (decodedPicture->valid == 1) ? decodedPicture->yBuf : decodedPicture->yBuf + lumaSizeX * symbolSizeInBytes,
-           p->size_x, p->size_y, symbolSizeInBytes,
+           p->sizeX, p->sizeY, symbolSizeInBytes,
            cropLeft, cropRight, cropTop, cropBottom, decodedPicture->yStride);
 
-  cropLeft = p->frame_crop_left_offset;
-  cropRight = p->frame_crop_right_offset;
-  cropTop = (2 - p->frame_mbs_only_flag) * p->frame_crop_top_offset;
-  cropBottom = (2 - p->frame_mbs_only_flag) * p->frame_crop_bottom_offset;
+  cropLeft = p->frameCropLeft;
+  cropRight = p->frameCropRight;
+  cropTop = (2 - p->frameMbOnlyFlag) * p->frameCropTop;
+  cropBottom = (2 - p->frameMbOnlyFlag) * p->frameCropBot;
 
   img2buf (p->imgUV[0],
            (decodedPicture->valid == 1) ? decodedPicture->uBuf : decodedPicture->uBuf + chromaSizeX * symbolSizeInBytes,
@@ -164,30 +164,30 @@ static void writePicture (sVidParam* vidParam, sPicture* p, int real_structure) 
 
   if (vidParam->pendingOutputState == FRAME) {
     //{{{  output frame
-    vidParam->pendingOutput->size_x = p->size_x;
-    vidParam->pendingOutput->size_y = p->size_y;
+    vidParam->pendingOutput->sizeX = p->sizeX;
+    vidParam->pendingOutput->sizeY = p->sizeY;
     vidParam->pendingOutput->size_x_cr = p->size_x_cr;
     vidParam->pendingOutput->size_y_cr = p->size_y_cr;
     vidParam->pendingOutput->chromaFormatIdc = p->chromaFormatIdc;
 
-    vidParam->pendingOutput->frame_mbs_only_flag = p->frame_mbs_only_flag;
-    vidParam->pendingOutput->frame_cropping_flag = p->frame_cropping_flag;
-    if (vidParam->pendingOutput->frame_cropping_flag) {
-      vidParam->pendingOutput->frame_crop_left_offset = p->frame_crop_left_offset;
-      vidParam->pendingOutput->frame_crop_right_offset = p->frame_crop_right_offset;
-      vidParam->pendingOutput->frame_crop_top_offset = p->frame_crop_top_offset;
-      vidParam->pendingOutput->frame_crop_bottom_offset = p->frame_crop_bottom_offset;
+    vidParam->pendingOutput->frameMbOnlyFlag = p->frameMbOnlyFlag;
+    vidParam->pendingOutput->frameCropFlag = p->frameCropFlag;
+    if (vidParam->pendingOutput->frameCropFlag) {
+      vidParam->pendingOutput->frameCropLeft = p->frameCropLeft;
+      vidParam->pendingOutput->frameCropRight = p->frameCropRight;
+      vidParam->pendingOutput->frameCropTop = p->frameCropTop;
+      vidParam->pendingOutput->frameCropBot = p->frameCropBot;
       }
 
-    get_mem2Dpel (&(vidParam->pendingOutput->imgY), vidParam->pendingOutput->size_y, vidParam->pendingOutput->size_x);
+    get_mem2Dpel (&(vidParam->pendingOutput->imgY), vidParam->pendingOutput->sizeY, vidParam->pendingOutput->sizeX);
     get_mem3Dpel (&(vidParam->pendingOutput->imgUV), 2, vidParam->pendingOutput->size_y_cr, vidParam->pendingOutput->size_x_cr);
 
     clearPicture (vidParam, vidParam->pendingOutput);
 
     // copy first field
     int add = (real_structure == TOP_FIELD) ? 0 : 1;
-    for (int i = 0; i < vidParam->pendingOutput->size_y; i += 2)
-      memcpy (vidParam->pendingOutput->imgY[(i+add)], p->imgY[(i+add)], p->size_x * sizeof(sPixel));
+    for (int i = 0; i < vidParam->pendingOutput->sizeY; i += 2)
+      memcpy (vidParam->pendingOutput->imgY[(i+add)], p->imgY[(i+add)], p->sizeX * sizeof(sPixel));
     for (int i = 0; i < vidParam->pendingOutput->size_y_cr; i += 2) {
       memcpy (vidParam->pendingOutput->imgUV[0][(i+add)], p->imgUV[0][(i+add)], p->size_x_cr * sizeof(sPixel));
       memcpy (vidParam->pendingOutput->imgUV[1][(i+add)], p->imgUV[1][(i+add)], p->size_x_cr * sizeof(sPixel));
@@ -197,15 +197,15 @@ static void writePicture (sVidParam* vidParam, sPicture* p, int real_structure) 
     }
     //}}}
   else {
-    if ((vidParam->pendingOutput->size_x!=p->size_x) ||
-        (vidParam->pendingOutput->size_y!= p->size_y) ||
-        (vidParam->pendingOutput->frame_mbs_only_flag != p->frame_mbs_only_flag) ||
-        (vidParam->pendingOutput->frame_cropping_flag != p->frame_cropping_flag) ||
-        (vidParam->pendingOutput->frame_cropping_flag &&
-         ((vidParam->pendingOutput->frame_crop_left_offset != p->frame_crop_left_offset) ||
-          (vidParam->pendingOutput->frame_crop_right_offset != p->frame_crop_right_offset) ||
-          (vidParam->pendingOutput->frame_crop_top_offset != p->frame_crop_top_offset) ||
-          (vidParam->pendingOutput->frame_crop_bottom_offset != p->frame_crop_bottom_offset)))) {
+    if ((vidParam->pendingOutput->sizeX!=p->sizeX) ||
+        (vidParam->pendingOutput->sizeY!= p->sizeY) ||
+        (vidParam->pendingOutput->frameMbOnlyFlag != p->frameMbOnlyFlag) ||
+        (vidParam->pendingOutput->frameCropFlag != p->frameCropFlag) ||
+        (vidParam->pendingOutput->frameCropFlag &&
+         ((vidParam->pendingOutput->frameCropLeft != p->frameCropLeft) ||
+          (vidParam->pendingOutput->frameCropRight != p->frameCropRight) ||
+          (vidParam->pendingOutput->frameCropTop != p->frameCropTop) ||
+          (vidParam->pendingOutput->frameCropBot != p->frameCropBot)))) {
       flushPendingOutput (vidParam);
       writePicture (vidParam, p, real_structure);
       return;
@@ -213,8 +213,8 @@ static void writePicture (sVidParam* vidParam, sPicture* p, int real_structure) 
 
     // copy second field
     int add = (real_structure == TOP_FIELD) ? 0 : 1;
-    for (int i = 0; i < vidParam->pendingOutput->size_y; i+=2)
-      memcpy (vidParam->pendingOutput->imgY[(i+add)], p->imgY[(i+add)], p->size_x * sizeof(sPixel));
+    for (int i = 0; i < vidParam->pendingOutput->sizeY; i+=2)
+      memcpy (vidParam->pendingOutput->imgY[(i+add)], p->imgY[(i+add)], p->sizeX * sizeof(sPixel));
 
     for (int i = 0; i < vidParam->pendingOutput->size_y_cr; i+=2) {
       memcpy (vidParam->pendingOutput->imgUV[0][(i+add)], p->imgUV[0][(i+add)], p->size_x_cr * sizeof(sPixel));
@@ -234,7 +234,7 @@ static void writeUnpairedField (sVidParam* vidParam, sFrameStore* frameStore) {
     // we have a top field, construct an empty bottom field
     sPicture* p = frameStore->top_field;
     frameStore->bottom_field = allocPicture (vidParam, BOTTOM_FIELD,
-                                             p->size_x, 2 * p->size_y, p->size_x_cr, 2 * p->size_y_cr, 1);
+                                             p->sizeX, 2 * p->sizeY, p->size_x_cr, 2 * p->size_y_cr, 1);
     frameStore->bottom_field->chromaFormatIdc = p->chromaFormatIdc;
 
     clearPicture (vidParam, frameStore->bottom_field);
@@ -245,16 +245,16 @@ static void writeUnpairedField (sVidParam* vidParam, sFrameStore* frameStore) {
   if (frameStore->isUsed & 0x02) {
     // we have a bottom field, construct an empty top field
     sPicture* p = frameStore->bottom_field;
-    frameStore->top_field = allocPicture (vidParam, TOP_FIELD, p->size_x, 2*p->size_y, p->size_x_cr, 2*p->size_y_cr, 1);
+    frameStore->top_field = allocPicture (vidParam, TOP_FIELD, p->sizeX, 2*p->sizeY, p->size_x_cr, 2*p->size_y_cr, 1);
     frameStore->top_field->chromaFormatIdc = p->chromaFormatIdc;
     clearPicture (vidParam, frameStore->top_field);
 
-    frameStore ->top_field->frame_cropping_flag = frameStore->bottom_field->frame_cropping_flag;
-    if (frameStore->top_field->frame_cropping_flag) {
-      frameStore->top_field->frame_crop_top_offset = frameStore->bottom_field->frame_crop_top_offset;
-      frameStore->top_field->frame_crop_bottom_offset = frameStore->bottom_field->frame_crop_bottom_offset;
-      frameStore->top_field->frame_crop_left_offset = frameStore->bottom_field->frame_crop_left_offset;
-      frameStore->top_field->frame_crop_right_offset = frameStore->bottom_field->frame_crop_right_offset;
+    frameStore ->top_field->frameCropFlag = frameStore->bottom_field->frameCropFlag;
+    if (frameStore->top_field->frameCropFlag) {
+      frameStore->top_field->frameCropTop = frameStore->bottom_field->frameCropTop;
+      frameStore->top_field->frameCropBot = frameStore->bottom_field->frameCropBot;
+      frameStore->top_field->frameCropLeft = frameStore->bottom_field->frameCropLeft;
+      frameStore->top_field->frameCropRight = frameStore->bottom_field->frameCropRight;
       }
 
     dpb_combine_field_yuv (vidParam, frameStore);
@@ -355,7 +355,7 @@ void writeStoredFrame (sVidParam* vidParam, sFrameStore* frameStore) {
   if (frameStore->isUsed < 3)
     writeUnpairedField (vidParam, frameStore);
   else {
-    if (frameStore->recovery_frame)
+    if (frameStore->recoveryFrame)
       vidParam->recoveryFlag = 1;
     if ((!vidParam->nonConformingStream) || vidParam->recoveryFlag)
       writePicture (vidParam, frameStore->frame, FRAME);

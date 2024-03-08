@@ -8,7 +8,6 @@
 #include "config.h"
 #include "global.h"
 
-/* private prototypes*/
 static void Read_Frame (char *filename,  unsigned char *frame_buffer[], int framenum);
 static void Copy_Frame (unsigned char *src, unsigned char *dst,  int width, int height, int parity, int incr);
 static int Read_Components (char *filename,  unsigned char *frame[3], int framenum);

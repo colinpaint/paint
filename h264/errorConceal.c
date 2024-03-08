@@ -4,7 +4,7 @@
 //}}}
 
 //{{{
-int set_ec_flag (sVidParam* vidParam, int se) {
+int setEcFlag (sVidParam* vidParam, int se) {
 
   switch (se) {
     case SE_HEADER :

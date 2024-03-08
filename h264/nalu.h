@@ -1,7 +1,7 @@
 #pragma once
 #include "defines.h"
 
-//{{{  values for nal_unit_type
+//{{{  values for nalUnitType
 typedef enum {
   NALU_TYPE_SLICE    = 1,
   NALU_TYPE_DPA      = 2,
@@ -22,7 +22,7 @@ typedef enum {
   NALU_TYPE_VDRD     = 24  // View and Dependency Representation Delimiter NAL Unit
   } NaluType;
 //}}}
-//{{{  values for nal_ref_idc
+//{{{  values for nalRefIdc
 typedef enum {
   NALU_PRIORITY_HIGHEST     = 3,
   NALU_PRIORITY_HIGH        = 2,
@@ -37,7 +37,7 @@ typedef struct nalu_t {
   unsigned  len;                   // Length of the NAL unit (Excluding the start code, which does not belong to the NALU)
   unsigned  max_size;              // NAL Unit Buffer size
   int       forbidden_bit;         // should be always FALSE
-  NaluType  nal_unit_type;         // NALU_TYPE_xxxx
+  NaluType  nalUnitType;         // NALU_TYPE_xxxx
   NalRefIdc nalRefId;     // NALU_PRIORITY_xxxx
   byte*     buf;                   // contains the first byte followed by the EBSP
   uint16    lost_packets;          // true, if packet loss is detected

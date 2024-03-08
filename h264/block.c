@@ -254,7 +254,7 @@ void itrans_2 (sMacroblock* curMb, eColorPlane pl) {
   sSlice* curSlice = curMb->slice;
   sVidParam* vidParam = curMb->vidParam;
 
-  int transform_pl = (vidParam->separate_colour_plane_flag != 0) ? PLANE_Y : pl;
+  int transform_pl = (vidParam->sepColourPlaneFlag != 0) ? PLANE_Y : pl;
   int** cof = curSlice->cof[transform_pl];
 
   int qp_scaled = curMb->qp_scaled[transform_pl];
@@ -657,7 +657,7 @@ int CheckVertMV (sMacroblock* curMb, int vec1_y, int block_size_y) {
   sPicture* picture = curMb->slice->picture;
 
   int y_pos = vec1_y>>2;
-  int maxold_y = (curMb->mb_field) ? (picture->size_y >> 1) - 1 : picture->size_y_m1;
+  int maxold_y = (curMb->mb_field) ? (picture->sizeY >> 1) - 1 : picture->size_y_m1;
 
   if (y_pos < (-vidParam->iLumaPadY + 2) || y_pos > (maxold_y + vidParam->iLumaPadY - block_size_y - 2))
     return 1;

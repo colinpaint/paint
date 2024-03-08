@@ -809,7 +809,7 @@ static void buildPredRegionYUV (sVidParam* vidParam, int *mv, int x, int y, sPix
       get_block_luma(curSlice->listX[0][ref_frame], vec1_x, vec1_y, BLOCK_SIZE, BLOCK_SIZE,
         tmp_block,
         picture->iLumaStride,picture->size_x_m1,
-        (curMb->mb_field) ? (picture->size_y >> 1) - 1 : picture->size_y_m1,tmp_res,
+        (curMb->mb_field) ? (picture->sizeY >> 1) - 1 : picture->size_y_m1,tmp_res,
         vidParam->max_pel_value_comp[PLANE_Y],(sPixel) vidParam->dc_pred_value_comp[PLANE_Y], curMb);
 
       for(ii=0;ii<BLOCK_SIZE;ii++)
@@ -1391,7 +1391,7 @@ static void buildPredblockRegionYUV (sVidParam* vidParam, int *mv,
   vec1_x = x*mv_mul + mv[0];
   vec1_y = y*mv_mul + mv[1];
   get_block_luma(curSlice->listX[list][ref_frame],  vec1_x, vec1_y, BLOCK_SIZE, BLOCK_SIZE, tmp_block,
-    picture->iLumaStride,picture->size_x_m1, (curMb->mb_field) ? (picture->size_y >> 1) - 1 : picture->size_y_m1,curSlice->tmp_res,
+    picture->iLumaStride,picture->size_x_m1, (curMb->mb_field) ? (picture->sizeY >> 1) - 1 : picture->size_y_m1,curSlice->tmp_res,
     vidParam->max_pel_value_comp[PLANE_Y],(sPixel) vidParam->dc_pred_value_comp[PLANE_Y], curMb);
 
   for(jj=0;jj<MB_BLOCK_SIZE/BLOCK_SIZE;jj++)
@@ -1550,16 +1550,16 @@ static void copy_to_conceal (sPicture *src, sPicture *dst, sVidParam* vidParam)
 
   dst->idrFlag = FALSE; //since we do not want to clears the ref list
 
-  dst->no_output_of_prior_pics_flag = src->no_output_of_prior_pics_flag;
-  dst->long_term_reference_flag = src->long_term_reference_flag;
-  dst->adaptive_ref_pic_buffering_flag = src->adaptive_ref_pic_buffering_flag = 0;
+  dst->noOutputPriorPicFlag = src->noOutputPriorPicFlag;
+  dst->longTermRefFlag = src->longTermRefFlag;
+  dst->adaptiveRefPicBufferingFlag = src->adaptiveRefPicBufferingFlag = 0;
   dst->chromaFormatIdc = src->chromaFormatIdc;
-  dst->frame_mbs_only_flag = src->frame_mbs_only_flag;
-  dst->frame_cropping_flag = src->frame_cropping_flag;
-  dst->frame_crop_left_offset = src->frame_crop_left_offset;
-  dst->frame_crop_right_offset = src->frame_crop_right_offset;
-  dst->frame_crop_bottom_offset = src->frame_crop_bottom_offset;
-  dst->frame_crop_top_offset = src->frame_crop_top_offset;
+  dst->frameMbOnlyFlag = src->frameMbOnlyFlag;
+  dst->frameCropFlag = src->frameCropFlag;
+  dst->frameCropLeft = src->frameCropLeft;
+  dst->frameCropRight = src->frameCropRight;
+  dst->frameCropBot = src->frameCropBot;
+  dst->frameCropTop = src->frameCropTop;
 
   dst->qp = src->qp;
   dst->slice_qp_delta = src->slice_qp_delta;
@@ -1615,15 +1615,15 @@ static void copy_to_conceal (sPicture *src, sPicture *dst, sVidParam* vidParam)
       {
         nn = j * BLOCK_SIZE;
 
-        mv[0] = src->mvInfo[i][j].mv[LIST_0].mv_x / scale;
-        mv[1] = src->mvInfo[i][j].mv[LIST_0].mv_y / scale;
+        mv[0] = src->mvInfo[i][j].mv[LIST_0].mvX / scale;
+        mv[1] = src->mvInfo[i][j].mv[LIST_0].mvY / scale;
         mv[2] = src->mvInfo[i][j].refIndex[LIST_0];
 
         if(mv[2]<0)
           mv[2]=0;
 
-        dst->mvInfo[i][j].mv[LIST_0].mv_x = (short) mv[0];
-        dst->mvInfo[i][j].mv[LIST_0].mv_y = (short) mv[1];
+        dst->mvInfo[i][j].mv[LIST_0].mvX = (short) mv[0];
+        dst->mvInfo[i][j].mv[LIST_0].mvY = (short) mv[1];
         dst->mvInfo[i][j].refIndex[LIST_0] = (char) mv[2];
 
         x = (j) * multiplier;
@@ -1795,11 +1795,11 @@ void init_lists_for_non_reference_loss (sDPB* dpb, int currSliceType, ePicStruct
   if (currPicStructure == FRAME) {
     for (i = 0; i < dpb->refFramesInBuffer; i++) {
       if (dpb->fs[i]->concealment_reference == 1) {
-        if (dpb->fs[i]->frame_num > vidParam->frame_to_conceal)
-          dpb->fs_ref[i]->frame_num_wrap = dpb->fs[i]->frame_num - max_frame_num;
+        if (dpb->fs[i]->frameNum > vidParam->frame_to_conceal)
+          dpb->fs_ref[i]->frame_num_wrap = dpb->fs[i]->frameNum - max_frame_num;
         else
-          dpb->fs_ref[i]->frame_num_wrap = dpb->fs[i]->frame_num;
-        dpb->fs_ref[i]->frame->pic_num = dpb->fs_ref[i]->frame_num_wrap;
+          dpb->fs_ref[i]->frame_num_wrap = dpb->fs[i]->frameNum;
+        dpb->fs_ref[i]->frame->picNum = dpb->fs_ref[i]->frame_num_wrap;
         }
       }
     }
@@ -1879,59 +1879,59 @@ void init_lists_for_non_reference_loss (sDPB* dpb, int currSliceType, ePicStruct
 * based on the sudden decrease in frame number.
 ************************************************************************
 */
-void conceal_lost_frames (sDPB* dpb, sSlice *pSlice)
+void concealLostFrames (sDPB* dpb, sSlice *pSlice)
 {
   sVidParam* vidParam = dpb->vidParam;
   int CurrFrameNum;
   int UnusedShortTermFrameNum;
   sPicture *picture = NULL;
-  int tmp1 = pSlice->delta_pic_order_cnt[0];
-  int tmp2 = pSlice->delta_pic_order_cnt[1];
+  int tmp1 = pSlice->deltaPicOrderCount[0];
+  int tmp2 = pSlice->deltaPicOrderCount[1];
   int i;
 
-  pSlice->delta_pic_order_cnt[0] = pSlice->delta_pic_order_cnt[1] = 0;
+  pSlice->deltaPicOrderCount[0] = pSlice->deltaPicOrderCount[1] = 0;
 
   // printf("A gap in frame number is found, try to fill it.\n");
 
-  if(vidParam->IDR_concealment_flag == 1)
+  if(vidParam->IdrConcealFlag == 1)
   {
     // Conceals an IDR frame loss. Uses the reference frame in the previous
     // GOP for conceal.
     UnusedShortTermFrameNum = 0;
-    vidParam->last_ref_pic_poc = -vidParam->pocGap;
+    vidParam->lastRefPicPoc = -vidParam->pocGap;
     vidParam->earlier_missing_poc = 0;
   }
   else
     UnusedShortTermFrameNum = (vidParam->preFrameNum + 1) % vidParam->max_frame_num;
 
-  CurrFrameNum = pSlice->frame_num;
+  CurrFrameNum = pSlice->frameNum;
 
   while (CurrFrameNum != UnusedShortTermFrameNum)
   {
     picture = allocPicture (vidParam, FRAME, vidParam->width, vidParam->height, vidParam->widthCr, vidParam->heightCr, 1);
 
-    picture->coded_frame = 1;
-    picture->pic_num = UnusedShortTermFrameNum;
-    picture->frame_num = UnusedShortTermFrameNum;
+    picture->codedFrame = 1;
+    picture->picNum = UnusedShortTermFrameNum;
+    picture->frameNum = UnusedShortTermFrameNum;
     picture->non_existing = 0;
     picture->is_output = 0;
     picture->usedForReference = 1;
     picture->concealed_pic = 1;
 
-    picture->adaptive_ref_pic_buffering_flag = 0;
+    picture->adaptiveRefPicBufferingFlag = 0;
 
-    pSlice->frame_num = UnusedShortTermFrameNum;
+    pSlice->frameNum = UnusedShortTermFrameNum;
 
-    picture->topPoc = vidParam->last_ref_pic_poc + vidParam->ref_poc_gap;
+    picture->topPoc = vidParam->lastRefPicPoc + vidParam->ref_poc_gap;
     picture->botPoc = picture->topPoc;
     picture->framePoc = picture->topPoc;
     picture->poc = picture->topPoc;
-    vidParam->last_ref_pic_poc = picture->poc;
+    vidParam->lastRefPicPoc = picture->poc;
 
     copy_prev_pic_to_concealed_pic(picture, dpb);
 
     //if (UnusedShortTermFrameNum == 0)
-    if(vidParam->IDR_concealment_flag == 1)
+    if(vidParam->IdrConcealFlag == 1)
     {
       picture->sliceType = I_SLICE;
       picture->idrFlag = TRUE;
@@ -1940,7 +1940,7 @@ void conceal_lost_frames (sDPB* dpb, sSlice *pSlice)
       picture->botPoc=picture->topPoc;
       picture->framePoc=picture->topPoc;
       picture->poc=picture->topPoc;
-      vidParam->last_ref_pic_poc = picture->poc;
+      vidParam->lastRefPicPoc = picture->poc;
     }
 
     storePictureDpb (vidParam->dpbLayer[0], picture);
@@ -1953,13 +1953,13 @@ void conceal_lost_frames (sDPB* dpb, sSlice *pSlice)
     // update reference flags and set current flag.
     for(i=16;i>0;i--)
     {
-      pSlice->ref_flag[i] = pSlice->ref_flag[i-1];
+      pSlice->refFlag[i] = pSlice->refFlag[i-1];
     }
-    pSlice->ref_flag[0] = 0;
+    pSlice->refFlag[0] = 0;
   }
-  pSlice->delta_pic_order_cnt[0] = tmp1;
-  pSlice->delta_pic_order_cnt[1] = tmp2;
-  pSlice->frame_num = CurrFrameNum;
+  pSlice->deltaPicOrderCount[0] = tmp1;
+  pSlice->deltaPicOrderCount[1] = tmp2;
+  pSlice->frameNum = CurrFrameNum;
 }
 //}}}
 //{{{
@@ -2013,7 +2013,7 @@ void conceal_non_ref_pics (sDPB* dpb, int diff)
 
         dpb->usedSize = pos + 1;
 
-        vidParam->frame_to_conceal = conceal_from_picture->frame_num + 1;
+        vidParam->frame_to_conceal = conceal_from_picture->frameNum + 1;
 
         update_ref_list_for_concealment (dpb);
         vidParam->conceal_slice_type = B_SLICE;

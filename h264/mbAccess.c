@@ -28,7 +28,7 @@ void CheckAvailabilityOfNeighbors (sMacroblock* curMb) {
   const int mb_nr = curMb->mbAddrX;
   sBlockPos *picPos = curMb->vidParam->picPos;
 
-  if (picture->mb_aff_frame_flag) {
+  if (picture->mbAffFrameFlag) {
     int cur_mb_pair = mb_nr >> 1;
     curMb->mbAddrA = 2 * (cur_mb_pair - 1);
     curMb->mbAddrB = 2 * (cur_mb_pair - picture->PicWidthInMbs);

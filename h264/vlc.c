@@ -6,7 +6,7 @@
 //}}}
 
 //{{{
-int read_ue_v (char* tracestring, sBitstream* bitstream) {
+int readUeV (char* tracestring, sBitstream* bitstream) {
 
   sSyntaxElement symbol = {.value1 = 0 };
   symbol.type = SE_HEADER;
@@ -20,7 +20,7 @@ int read_ue_v (char* tracestring, sBitstream* bitstream) {
   }
 //}}}
 //{{{
-int read_se_v (char* tracestring, sBitstream* bitstream) {
+int readSeV (char* tracestring, sBitstream* bitstream) {
 
   sSyntaxElement symbol = {.value1 = 0 };
   symbol.type = SE_HEADER;
@@ -34,7 +34,7 @@ int read_se_v (char* tracestring, sBitstream* bitstream) {
   }
 //}}}
 //{{{
-int read_u_v (int LenInBits, char* tracestring, sBitstream* bitstream) {
+int readUv (int LenInBits, char* tracestring, sBitstream* bitstream) {
 
   sSyntaxElement symbol = {.value1 = 0 };
   symbol.inf = 0;
@@ -50,7 +50,7 @@ int read_u_v (int LenInBits, char* tracestring, sBitstream* bitstream) {
   }
 //}}}
 //{{{
-int read_i_v (int LenInBits, char* tracestring, sBitstream* bitstream) {
+int readIv (int LenInBits, char* tracestring, sBitstream* bitstream) {
 
   sSyntaxElement symbol = {.value1 = 0 };
   symbol.inf = 0;
@@ -69,8 +69,8 @@ int read_i_v (int LenInBits, char* tracestring, sBitstream* bitstream) {
   }
 //}}}
 //{{{
-Boolean read_u_1 (char* tracestring, sBitstream* bitstream) {
-  return (Boolean)read_u_v (1, tracestring, bitstream);
+Boolean readU1 (char* tracestring, sBitstream* bitstream) {
+  return (Boolean)readUv (1, tracestring, bitstream);
   }
 //}}}
 
@@ -256,7 +256,7 @@ int more_rbsp_data (byte buffer[], int totbitoffset,int bytecount) {
 //{{{
 int uvlc_startcode_follows (sSlice* curSlice, int dummy) {
 
-  byte dp_Nr = assignSE2partition[curSlice->dp_mode][SE_MBTYPE];
+  byte dp_Nr = assignSE2partition[curSlice->dataPartitionMode][SE_MBTYPE];
   sDataPartition* dP = &(curSlice->partArr[dp_Nr]);
   sBitstream* curStream = dP->bitstream;
   byte* buf = curStream->streamBuffer;

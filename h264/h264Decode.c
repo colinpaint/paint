@@ -110,13 +110,13 @@ sSlice* allocSlice (sInputParam* inputParam, sVidParam* vidParam) {
   curSlice->mot_ctx = create_contexts_MotionInfo();
   curSlice->tex_ctx = create_contexts_TextureInfo();
 
-  curSlice->max_part_nr = 3;  //! assume data partitioning (worst case) for the following mallocs()
-  curSlice->partArr = allocPartition (curSlice->max_part_nr);
+  curSlice->maxPartitionNum = 3;  //! assume data partitioning (worst case) for the following mallocs()
+  curSlice->partArr = allocPartition (curSlice->maxPartitionNum);
 
   get_mem2Dwp (&(curSlice->WPParam), 2, MAX_REFERENCE_PICTURES);
   get_mem3Dint (&(curSlice->wp_weight), 2, MAX_REFERENCE_PICTURES, 3);
-  get_mem3Dint (&(curSlice->wp_offset), 6, MAX_REFERENCE_PICTURES, 3);
-  get_mem4Dint (&(curSlice->wbp_weight), 6, MAX_REFERENCE_PICTURES, MAX_REFERENCE_PICTURES, 3);
+  get_mem3Dint (&(curSlice->wpOffset), 6, MAX_REFERENCE_PICTURES, 3);
+  get_mem4Dint (&(curSlice->wbpWeight), 6, MAX_REFERENCE_PICTURES, MAX_REFERENCE_PICTURES, 3);
   get_mem3Dpel (&(curSlice->mb_pred), MAX_PLANE, MB_BLOCK_SIZE, MB_BLOCK_SIZE);
   get_mem3Dpel (&(curSlice->mb_rec), MAX_PLANE, MB_BLOCK_SIZE, MB_BLOCK_SIZE);
   get_mem3Dint (&(curSlice->mb_rres), MAX_PLANE, MB_BLOCK_SIZE, MB_BLOCK_SIZE);
@@ -125,7 +125,7 @@ sSlice* allocSlice (sInputParam* inputParam, sVidParam* vidParam) {
 
   // reference flag initialization
   for (int i = 0; i < 17; ++i)
-    curSlice->ref_flag[i] = 1;
+    curSlice->refFlag[i] = 1;
 
   for (int i = 0; i < 6; i++) {
     curSlice->listX[i] = calloc (MAX_LIST_SIZE, sizeof (sPicture*)); // +1 for reordering
@@ -146,7 +146,7 @@ sSlice* allocSlice (sInputParam* inputParam, sVidParam* vidParam) {
 static void freeSlice (sSlice *curSlice) {
 
   if (curSlice->sliceType != I_SLICE && curSlice->sliceType != SI_SLICE)
-    free_ref_pic_list_reordering_buffer (curSlice);
+    freeRefPicListReorderingBuffer (curSlice);
 
   freePred (curSlice);
   free_mem3Dint (curSlice->cof);
@@ -156,8 +156,8 @@ static void freeSlice (sSlice *curSlice) {
 
   free_mem2Dwp (curSlice->WPParam);
   free_mem3Dint (curSlice->wp_weight);
-  free_mem3Dint (curSlice->wp_offset);
-  free_mem4Dint (curSlice->wbp_weight);
+  free_mem3Dint (curSlice->wpOffset);
+  free_mem4Dint (curSlice->wbpWeight);
 
   freePartition (curSlice->partArr, 3);
 
@@ -249,8 +249,8 @@ static void init (sVidParam* vidParam) {
   vidParam->oldFrameSizeInMbs = (unsigned int) -1;
 
   vidParam->recovery_point = 0;
-  vidParam->recovery_point_found = 0;
-  vidParam->recovery_poc = 0x7fffffff; /* set to a max value */
+  vidParam->recoveryPointFound = 0;
+  vidParam->recoveryPoc = 0x7fffffff; /* set to a max value */
 
   vidParam->idrPsnrNum = inputParam->ref_offset;
   vidParam->psnrNum=0;
@@ -405,7 +405,7 @@ void freeLayerBuffers (sVidParam* vidParam, int layerId) {
     }
 
   // free mem, allocated for structure vidParam
-  if ((codingParam->separate_colour_plane_flag != 0) ) {
+  if ((codingParam->sepColourPlaneFlag != 0) ) {
     for (int i = 0; i<MAX_PLANE; i++) {
       free (codingParam->mbDataJV[i]);
       codingParam->mbDataJV[i] = NULL;
@@ -456,7 +456,7 @@ void initGlobalBuffers (sVidParam* vidParam, int layerId) {
     freeLayerBuffers (vidParam, layerId);
 
   // allocate memory in structure vidParam
-  if (codingParam->separate_colour_plane_flag != 0) {
+  if (codingParam->sepColourPlaneFlag != 0) {
     for (int i = 0; i<MAX_PLANE; ++i )
       if (((codingParam->mbDataJV[i]) = (sMacroblock*)calloc(codingParam->FrameSizeInMbs, sizeof(sMacroblock))) == NULL)
         no_mem_exit ("initGlobalBuffers: codingParam->mbDataJV");
@@ -465,7 +465,7 @@ void initGlobalBuffers (sVidParam* vidParam, int layerId) {
   else if (((codingParam->mbData) = (sMacroblock*)calloc (codingParam->FrameSizeInMbs, sizeof(sMacroblock))) == NULL)
     no_mem_exit ("initGlobalBuffers: codingParam->mbData");
 
-  if (codingParam->separate_colour_plane_flag != 0) {
+  if (codingParam->sepColourPlaneFlag != 0) {
     for (int i = 0; i < MAX_PLANE; ++i )
       if (((codingParam->intraBlockJV[i]) = (char*) calloc(codingParam->FrameSizeInMbs, sizeof(char))) == NULL)
         no_mem_exit ("initGlobalBuffers: codingParam->intraBlockJV");
@@ -483,7 +483,7 @@ void initGlobalBuffers (sVidParam* vidParam, int layerId) {
     picPos[i].y = (short)(i / codingParam->PicWidthInMbs);
     }
 
-  if( (codingParam->separate_colour_plane_flag != 0)) {
+  if( (codingParam->sepColourPlaneFlag != 0)) {
     for (int i = 0; i < MAX_PLANE; ++i )
       get_mem2D (&(codingParam->predModeJV[i]), 4*codingParam->FrameHeightInMbs, 4*codingParam->PicWidthInMbs);
     codingParam->predMode = NULL;
@@ -493,7 +493,7 @@ void initGlobalBuffers (sVidParam* vidParam, int layerId) {
 
   // CAVLC mem
   get_mem4D (&(codingParam->nzCoeff), codingParam->FrameSizeInMbs, 3, BLOCK_SIZE, BLOCK_SIZE);
-  if (codingParam->separate_colour_plane_flag != 0) {
+  if (codingParam->sepColourPlaneFlag != 0) {
     for (int i = 0; i < MAX_PLANE; ++i ) {
       get_mem2Dint (&(codingParam->siBlockJV[i]), codingParam->FrameHeightInMbs, codingParam->PicWidthInMbs);
       if (codingParam->siBlockJV[i] == NULL)
@@ -599,7 +599,7 @@ void setGlobalCodingProgram (sVidParam* vidParam, sCodingParam* codingParam) {
   vidParam->FrameSizeInMbs = codingParam->FrameSizeInMbs;
 
   vidParam->yuvFormat = codingParam->yuvFormat;
-  vidParam->separate_colour_plane_flag = codingParam->separate_colour_plane_flag;
+  vidParam->sepColourPlaneFlag = codingParam->sepColourPlaneFlag;
   vidParam->ChromaArrayType = codingParam->ChromaArrayType;
 
   vidParam->width = codingParam->width;

@@ -252,14 +252,14 @@ static int FmoGenerateMbToSliceGroupMap (sVidParam* vidParam, sSlice *pSlice) {
     }
 
   sSPS* sps = vidParam->activeSPS;
-  if ((sps->frame_mbs_only_flag)|| pSlice->field_pic_flag) {
+  if ((sps->frameMbOnlyFlag)|| pSlice->fieldPicFlag) {
     int *MbToSliceGroupMap = vidParam->MbToSliceGroupMap;
     int *MapUnitToSliceGroupMap = vidParam->MapUnitToSliceGroupMap;
     for (unsigned i = 0; i < vidParam->picSizeInMbs; i++)
       *MbToSliceGroupMap++ = *MapUnitToSliceGroupMap++;
     }
   else
-    if (sps->mb_adaptive_frame_field_flag  &&  (!pSlice->field_pic_flag)) {
+    if (sps->mb_adaptive_frame_field_flag  &&  (!pSlice->fieldPicFlag)) {
       for (unsigned i = 0; i < vidParam->picSizeInMbs; i++)
         vidParam->MbToSliceGroupMap[i] = vidParam->MapUnitToSliceGroupMap[i/2];
       }

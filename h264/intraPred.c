@@ -4202,7 +4202,7 @@ static void intra_pred_chroma (sMacroblock* curMb)
 //{{{
 void set_intra_prediction_modes (sSlice *curSlice) {
 
-  if (curSlice->mb_aff_frame_flag) {
+  if (curSlice->mbAffFrameFlag) {
     curSlice->intra_pred_4x4 = intra_pred_4x4_mbaff;
     curSlice->intra_pred_8x8 = intra_pred_8x8_mbaff;
     curSlice->intra_pred_16x16 = intra_pred_16x16_mbaff;

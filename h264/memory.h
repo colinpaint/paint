@@ -161,7 +161,7 @@ extern void free_top_bot_planes (sPixel** imgTopField, sPixel** imgBotField);
 
 extern void free_mem2Dwp (sWPParam** array2D);
 
-extern void copy2DImage (sPixel** dst_img, sPixel** src_img, int size_x, int size_y);
+extern void copy2DImage (sPixel** dst_img, sPixel** src_img, int sizeX, int sizeY);
 extern int  malloc_mem2Dpel_2SLayers (sPixel** *buf0, int imgtype0, sPixel** *buf1, int imgtype1, int height, int width);
 extern int  malloc_mem3Dpel_2SLayers (sPixel** **buf0, int imgtype0, sPixel** **buf1, int imgtype1, int frames, int height, int width);
 

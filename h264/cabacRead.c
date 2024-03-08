@@ -17,7 +17,7 @@ static void read_comp_coeff_4x4_smb_CABAC (sMacroblock* curMb, sSyntaxElement* c
   sDataPartition *dP;
   //sVidParam* vidParam = curMb->vidParam;
   sSlice* curSlice = curMb->slice;
-  const byte *partMap = assignSE2partition[curSlice->dp_mode];
+  const byte *partMap = assignSE2partition[curSlice->dataPartitionMode];
 
   const byte (*pos_scan4x4)[2] = ((curSlice->structure == FRAME) && (!curMb->mb_field)) ? SNGL_SCAN : FIELD_SCAN;
   const byte *pos_scan_4x4 = pos_scan4x4[0];
@@ -105,7 +105,7 @@ static void read_comp_coeff_4x4_CABAC (sMacroblock* curMb, sSyntaxElement* currS
   int i, j;
   int64 *cbp_blk = &curMb->s_cbp[pl].blk;
 
-  if( pl == PLANE_Y || (vidParam->separate_colour_plane_flag != 0) )
+  if( pl == PLANE_Y || (vidParam->sepColourPlaneFlag != 0) )
     currSE->context = (IS_I16MB(curMb) ? LUMA_16AC: LUMA_4x4);
   else if (pl == PLANE_U)
     currSE->context = (IS_I16MB(curMb) ? CB_16AC: CB_4x4);
@@ -180,7 +180,7 @@ static void read_comp_coeff_4x4_CABAC_ls (sMacroblock* curMb, sSyntaxElement* cu
   int block_y, block_x;
   int64 *cbp_blk = &curMb->s_cbp[pl].blk;
 
-  if( pl == PLANE_Y || (vidParam->separate_colour_plane_flag != 0) )
+  if( pl == PLANE_Y || (vidParam->sepColourPlaneFlag != 0) )
     currSE->context = (IS_I16MB(curMb) ? LUMA_16AC: LUMA_4x4);
   else if (pl == PLANE_U)
     currSE->context = (IS_I16MB(curMb) ? CB_16AC: CB_4x4);
@@ -200,7 +200,7 @@ static void readCompCoeff8x8_CABAC (sMacroblock* curMb, sSyntaxElement* currSE, 
   if (curMb->cbp & (1<<b8))  // are there any coefficients in the current block
   {
     sVidParam* vidParam = curMb->vidParam;
-    int transform_pl = (vidParam->separate_colour_plane_flag != 0) ? curMb->slice->colour_plane_id : pl;
+    int transform_pl = (vidParam->sepColourPlaneFlag != 0) ? curMb->slice->colour_plane_id : pl;
 
     int** tcoeffs;
     int i,j,k;
@@ -208,7 +208,7 @@ static void readCompCoeff8x8_CABAC (sMacroblock* curMb, sSyntaxElement* currSE, 
 
     sDataPartition *dP;
     sSlice* curSlice = curMb->slice;
-    const byte *partMap = assignSE2partition[curSlice->dp_mode];
+    const byte *partMap = assignSE2partition[curSlice->dataPartitionMode];
     int boff_x, boff_y;
 
     int64 cbp_mask = (int64) 51 << (4 * b8 - 2 * (b8 & 0x01)); // corresponds to 110011, as if all four 4x4 blocks contain coeff, shifted to block position
@@ -230,7 +230,7 @@ static void readCompCoeff8x8_CABAC (sMacroblock* curMb, sSyntaxElement* currSE, 
     curMb->subblock_x = boff_x; // position for coeff_count ctx
     curMb->subblock_y = boff_y; // position for coeff_count ctx
 
-    if (pl==PLANE_Y || (vidParam->separate_colour_plane_flag != 0))
+    if (pl==PLANE_Y || (vidParam->sepColourPlaneFlag != 0))
       currSE->context = LUMA_8x8;
     else if (pl==PLANE_U)
       currSE->context = CB_8x8;
@@ -306,7 +306,7 @@ static void readCompCoeff8x8_CABAC_lossless (sMacroblock* curMb, sSyntaxElement*
 
     sDataPartition *dP;
     sSlice* curSlice = curMb->slice;
-    const byte *partMap = assignSE2partition[curSlice->dp_mode];
+    const byte *partMap = assignSE2partition[curSlice->dataPartitionMode];
     int boff_x, boff_y;
 
     int64 cbp_mask = (int64) 51 << (4 * b8 - 2 * (b8 & 0x01)); // corresponds to 110011, as if all four 4x4 blocks contain coeff, shifted to block position
@@ -323,7 +323,7 @@ static void readCompCoeff8x8_CABAC_lossless (sMacroblock* curMb, sSyntaxElement*
     curMb->subblock_x = boff_x; // position for coeff_count ctx
     curMb->subblock_y = boff_y; // position for coeff_count ctx
 
-    if (pl==PLANE_Y || (vidParam->separate_colour_plane_flag != 0))
+    if (pl==PLANE_Y || (vidParam->sepColourPlaneFlag != 0))
       currSE->context = LUMA_8x8;
     else if (pl==PLANE_U)
       currSE->context = CB_8x8;
@@ -397,7 +397,7 @@ static void read_CBP_and_coeffs_from_NAL_CABAC_420 (sMacroblock* curMb)
   sSyntaxElement currSE;
   sDataPartition *dP = NULL;
   sSlice* curSlice = curMb->slice;
-  const byte *partMap = assignSE2partition[curSlice->dp_mode];
+  const byte *partMap = assignSE2partition[curSlice->dataPartitionMode];
   int i0, j0;
 
   int qp_per, qp_rem;
@@ -476,12 +476,12 @@ static void read_CBP_and_coeffs_from_NAL_CABAC_420 (sMacroblock* curMb)
     {
       readDeltaQuant(&currSE, dP, curMb, partMap, ((curMb->is_intra_block == FALSE)) ? SE_DELTA_QUANT_INTER : SE_DELTA_QUANT_INTRA);
 
-      if (curSlice->dp_mode)
+      if (curSlice->dataPartitionMode)
       {
-        if ((curMb->is_intra_block == FALSE) && curSlice->dpC_NotPresent )
+        if ((curMb->is_intra_block == FALSE) && curSlice->noDataPartitionC )
           curMb->dpl_flag = 1;
 
-        if( intra && curSlice->dpB_NotPresent )
+        if( intra && curSlice->noDataPartitionB )
         {
           curMb->eiFlag = 1;
           curMb->dpl_flag = 1;
@@ -503,9 +503,9 @@ static void read_CBP_and_coeffs_from_NAL_CABAC_420 (sMacroblock* curMb)
 
     readDeltaQuant(&currSE, dP, curMb, partMap, SE_DELTA_QUANT_INTRA);
 
-    if (curSlice->dp_mode)
+    if (curSlice->dataPartitionMode)
     {
-      if (curSlice->dpB_NotPresent)
+      if (curSlice->noDataPartitionB)
       {
         curMb->eiFlag  = 1;
         curMb->dpl_flag = 1;
@@ -768,7 +768,7 @@ static void read_CBP_and_coeffs_from_NAL_CABAC_400 (sMacroblock* curMb)
   sSyntaxElement currSE;
   sDataPartition *dP = NULL;
   sSlice* curSlice = curMb->slice;
-  const byte *partMap = assignSE2partition[curSlice->dp_mode];
+  const byte *partMap = assignSE2partition[curSlice->dataPartitionMode];
   int i0, j0;
 
   int qp_per, qp_rem;
@@ -837,11 +837,11 @@ static void read_CBP_and_coeffs_from_NAL_CABAC_400 (sMacroblock* curMb)
     {
       readDeltaQuant(&currSE, dP, curMb, partMap, ((curMb->is_intra_block == FALSE)) ? SE_DELTA_QUANT_INTER : SE_DELTA_QUANT_INTRA);
 
-      if (curSlice->dp_mode)  {
-        if ((curMb->is_intra_block == FALSE) && curSlice->dpC_NotPresent )
+      if (curSlice->dataPartitionMode)  {
+        if ((curMb->is_intra_block == FALSE) && curSlice->noDataPartitionC )
           curMb->dpl_flag = 1;
 
-        if( intra && curSlice->dpB_NotPresent )  {
+        if( intra && curSlice->noDataPartitionB )  {
           curMb->eiFlag = 1;
           curMb->dpl_flag = 1;
         }
@@ -860,8 +860,8 @@ static void read_CBP_and_coeffs_from_NAL_CABAC_400 (sMacroblock* curMb)
     cbp = curMb->cbp;
     readDeltaQuant(&currSE, dP, curMb, partMap, SE_DELTA_QUANT_INTRA);
 
-    if (curSlice->dp_mode) {
-      if (curSlice->dpB_NotPresent) {
+    if (curSlice->dataPartitionMode) {
+      if (curSlice->noDataPartitionB) {
         curMb->eiFlag  = 1;
         curMb->dpl_flag = 1;
       }
@@ -937,7 +937,7 @@ static void read_CBP_and_coeffs_from_NAL_CABAC_444 (sMacroblock* curMb)
   sSyntaxElement currSE;
   sDataPartition *dP = NULL;
   sSlice* curSlice = curMb->slice;
-  const byte *partMap = assignSE2partition[curSlice->dp_mode];
+  const byte *partMap = assignSE2partition[curSlice->dataPartitionMode];
   int coef_ctr, i0, j0;
 
   int qp_per, qp_rem;
@@ -1019,11 +1019,11 @@ static void read_CBP_and_coeffs_from_NAL_CABAC_444 (sMacroblock* curMb)
     {
       readDeltaQuant(&currSE, dP, curMb, partMap, ((curMb->is_intra_block == FALSE)) ? SE_DELTA_QUANT_INTER : SE_DELTA_QUANT_INTRA);
 
-      if (curSlice->dp_mode) {
-        if ((curMb->is_intra_block == FALSE) && curSlice->dpC_NotPresent )
+      if (curSlice->dataPartitionMode) {
+        if ((curMb->is_intra_block == FALSE) && curSlice->noDataPartitionC )
           curMb->dpl_flag = 1;
 
-        if( intra && curSlice->dpB_NotPresent ) {
+        if( intra && curSlice->noDataPartitionB ) {
           curMb->eiFlag = 1;
           curMb->dpl_flag = 1;
         }
@@ -1043,8 +1043,8 @@ static void read_CBP_and_coeffs_from_NAL_CABAC_444 (sMacroblock* curMb)
 
     readDeltaQuant(&currSE, dP, curMb, partMap, SE_DELTA_QUANT_INTRA);
 
-    if (curSlice->dp_mode) {
-      if (curSlice->dpB_NotPresent) {
+    if (curSlice->dataPartitionMode) {
+      if (curSlice->noDataPartitionB) {
         curMb->eiFlag  = 1;
         curMb->dpl_flag = 1;
       }
@@ -1129,7 +1129,7 @@ static void read_CBP_and_coeffs_from_NAL_CABAC_444 (sMacroblock* curMb)
         currSE.type = SE_LUM_DC_INTRA;
         dP = &(curSlice->partArr[partMap[currSE.type]]);
 
-        if( (vidParam->separate_colour_plane_flag != 0) )
+        if( (vidParam->sepColourPlaneFlag != 0) )
           currSE.context = LUMA_16DC;
         else
           currSE.context = (uv==0) ? CB_16DC : CR_16DC;
@@ -1195,7 +1195,7 @@ static void read_CBP_and_coeffs_from_NAL_CABAC_422 (sMacroblock* curMb)
   sSyntaxElement currSE;
   sDataPartition *dP = NULL;
   sSlice* curSlice = curMb->slice;
-  const byte *partMap = assignSE2partition[curSlice->dp_mode];
+  const byte *partMap = assignSE2partition[curSlice->dataPartitionMode];
   int coef_ctr, i0, j0, b8;
   int ll;
 
@@ -1281,12 +1281,12 @@ static void read_CBP_and_coeffs_from_NAL_CABAC_422 (sMacroblock* curMb)
     if (cbp !=0) {
       readDeltaQuant(&currSE, dP, curMb, partMap, ((curMb->is_intra_block == FALSE)) ? SE_DELTA_QUANT_INTER : SE_DELTA_QUANT_INTRA);
 
-      if (curSlice->dp_mode)
+      if (curSlice->dataPartitionMode)
       {
-        if ((curMb->is_intra_block == FALSE) && curSlice->dpC_NotPresent )
+        if ((curMb->is_intra_block == FALSE) && curSlice->noDataPartitionC )
           curMb->dpl_flag = 1;
 
-        if( intra && curSlice->dpB_NotPresent ) {
+        if( intra && curSlice->noDataPartitionB ) {
           curMb->eiFlag = 1;
           curMb->dpl_flag = 1;
         }
@@ -1306,8 +1306,8 @@ static void read_CBP_and_coeffs_from_NAL_CABAC_422 (sMacroblock* curMb)
 
     readDeltaQuant(&currSE, dP, curMb, partMap, SE_DELTA_QUANT_INTRA);
 
-    if (curSlice->dp_mode) {
-      if (curSlice->dpB_NotPresent) {
+    if (curSlice->dataPartitionMode) {
+      if (curSlice->noDataPartitionB) {
         curMb->eiFlag  = 1;
         curMb->dpl_flag = 1;
       }
@@ -1590,7 +1590,7 @@ void set_read_CBP_and_coeffs_cabac(sSlice* curSlice)
   switch (curSlice->vidParam->activeSPS->chromaFormatIdc)
   {
   case YUV444:
-    if (curSlice->vidParam->separate_colour_plane_flag == 0)
+    if (curSlice->vidParam->sepColourPlaneFlag == 0)
       curSlice->read_CBP_and_coeffs_from_NAL = read_CBP_and_coeffs_from_NAL_CABAC_444;
     else
       curSlice->read_CBP_and_coeffs_from_NAL = read_CBP_and_coeffs_from_NAL_CABAC_400;

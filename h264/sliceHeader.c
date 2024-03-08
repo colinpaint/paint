@@ -1183,7 +1183,7 @@ static const char INIT_FLD_LAST_P[3][22][15][2] =
 //{{{
 static void ref_pic_list_reordering (sSlice* curSlice) {
 
-  byte dP_nr = assignSE2partition[curSlice->dp_mode][SE_HEADER];
+  byte dP_nr = assignSE2partition[curSlice->dataPartitionMode][SE_HEADER];
   sDataPartition* partition = &(curSlice->partArr[dP_nr]);
   sBitstream* curStream = partition->bitstream;
 
@@ -1191,20 +1191,20 @@ static void ref_pic_list_reordering (sSlice* curSlice) {
   if (curSlice->sliceType != I_SLICE &&
       curSlice->sliceType != SI_SLICE) {
     int val = curSlice->ref_pic_list_reordering_flag[LIST_0] =
-      read_u_1 ("SLC ref_pic_list_reordering_flag_l0", curStream);
+      readU1 ("SLC ref_pic_list_reordering_flag_l0", curStream);
 
     if (val) {
       int i = 0;
       do {
         val = curSlice->modification_of_pic_nums_idc[LIST_0][i] =
-          read_ue_v("SLC modification_of_pic_nums_idc_l0", curStream);
+          readUeV("SLC modification_of_pic_nums_idc_l0", curStream);
         if (val==0 || val==1)
           curSlice->abs_diff_pic_num_minus1[LIST_0][i] =
-            read_ue_v ("SLC abs_diff_pic_num_minus1_l0", curStream);
+            readUeV ("SLC abs_diff_pic_num_minus1_l0", curStream);
         else {
           if (val == 2)
             curSlice->long_term_pic_idx[LIST_0][i] =
-              read_ue_v ("SLC long_term_pic_idx_l0", curStream);
+              readUeV ("SLC long_term_pic_idx_l0", curStream);
           }
         i++;
         } while (val != 3);
@@ -1213,19 +1213,19 @@ static void ref_pic_list_reordering (sSlice* curSlice) {
 
   if (curSlice->sliceType == B_SLICE) {
     int val = curSlice->ref_pic_list_reordering_flag[LIST_1] =
-      read_u_1 ("SLC ref_pic_list_reordering_flag_l1", curStream);
+      readU1 ("SLC ref_pic_list_reordering_flag_l1", curStream);
     if (val) {
       int i = 0;
       do {
         val = curSlice->modification_of_pic_nums_idc[LIST_1][i] =
-          read_ue_v ("SLC modification_of_pic_nums_idc_l1", curStream);
+          readUeV ("SLC modification_of_pic_nums_idc_l1", curStream);
         if (val == 0 || val == 1)
           curSlice->abs_diff_pic_num_minus1[LIST_1][i] =
-            read_ue_v ("SLC abs_diff_pic_num_minus1_l1", curStream);
+            readUeV ("SLC abs_diff_pic_num_minus1_l1", curStream);
         else {
           if (val == 2)
             curSlice->long_term_pic_idx[LIST_1][i] =
-              read_ue_v ("SLC long_term_pic_idx_l1", curStream);
+              readUeV ("SLC long_term_pic_idx_l1", curStream);
           }
         i++;
         } while (val != 3);
@@ -1233,8 +1233,8 @@ static void ref_pic_list_reordering (sSlice* curSlice) {
     }
 
   // set reference index of redundant slices.
-  if (curSlice->redundant_pic_cnt && (curSlice->sliceType != I_SLICE) )
-    curSlice->redundant_slice_ref_idx = curSlice->abs_diff_pic_num_minus1[LIST_0][0] + 1;
+  if (curSlice->redundantPicCount && (curSlice->sliceType != I_SLICE) )
+    curSlice->redundantSliceRefIndex = curSlice->abs_diff_pic_num_minus1[LIST_0][0] + 1;
   }
 //}}}
 //{{{
@@ -1256,49 +1256,49 @@ static void pred_weight_table (sSlice* curSlice) {
   sVidParam* vidParam = curSlice->vidParam;
   sSPS* activeSPS = vidParam->activeSPS;
 
-  byte dP_nr = assignSE2partition[curSlice->dp_mode][SE_HEADER];
+  byte dP_nr = assignSE2partition[curSlice->dataPartitionMode][SE_HEADER];
   sDataPartition* partition = &(curSlice->partArr[dP_nr]);
   sBitstream* curStream = partition->bitstream;
 
   int luma_weight_flag_l0, luma_weight_flag_l1, chroma_weight_flag_l0, chroma_weight_flag_l1;
 
   curSlice->luma_log2_weight_denom =
-    (unsigned short) read_ue_v ("SLC luma_log2_weight_denom", curStream);
+    (unsigned short) readUeV ("SLC luma_log2_weight_denom", curStream);
   curSlice->wp_round_luma =
     curSlice->luma_log2_weight_denom ? 1<<(curSlice->luma_log2_weight_denom - 1) : 0;
 
   if (0 != activeSPS->chromaFormatIdc) {
     curSlice->chroma_log2_weight_denom =
-      (unsigned short) read_ue_v ("SLC chroma_log2_weight_denom", curStream);
+      (unsigned short) readUeV ("SLC chroma_log2_weight_denom", curStream);
     curSlice->wp_round_chroma =
       curSlice->chroma_log2_weight_denom ? 1<<(curSlice->chroma_log2_weight_denom - 1) : 0;
     }
 
   reset_WPParam (curSlice);
 
-  for (int i = 0; i < curSlice->num_ref_idx_active[LIST_0]; i++) {
-    luma_weight_flag_l0 = read_u_1 ("SLC luma_weight_flag_l0", curStream);
+  for (int i = 0; i < curSlice->numRefIndexActive[LIST_0]; i++) {
+    luma_weight_flag_l0 = readU1 ("SLC luma_weight_flag_l0", curStream);
     if (luma_weight_flag_l0) {
-      curSlice->wp_weight[LIST_0][i][0] = read_se_v ("SLC luma_weight_l0", curStream);
-      curSlice->wp_offset[LIST_0][i][0] = read_se_v ("SLC luma_offset_l0", curStream);
-      curSlice->wp_offset[LIST_0][i][0] = curSlice->wp_offset[LIST_0][i][0]<<(vidParam->bitdepth_luma - 8);
+      curSlice->wp_weight[LIST_0][i][0] = readSeV ("SLC luma_weight_l0", curStream);
+      curSlice->wpOffset[LIST_0][i][0] = readSeV ("SLC luma_offset_l0", curStream);
+      curSlice->wpOffset[LIST_0][i][0] = curSlice->wpOffset[LIST_0][i][0]<<(vidParam->bitdepth_luma - 8);
       }
     else {
       curSlice->wp_weight[LIST_0][i][0] = 1 << curSlice->luma_log2_weight_denom;
-      curSlice->wp_offset[LIST_0][i][0] = 0;
+      curSlice->wpOffset[LIST_0][i][0] = 0;
       }
 
     if (activeSPS->chromaFormatIdc != 0) {
-      chroma_weight_flag_l0 = read_u_1 ("SLC chroma_weight_flag_l0", curStream);
+      chroma_weight_flag_l0 = readU1 ("SLC chroma_weight_flag_l0", curStream);
       for (int j = 1; j<3; j++) {
         if (chroma_weight_flag_l0) {
-          curSlice->wp_weight[LIST_0][i][j] = read_se_v("SLC chroma_weight_l0", curStream);
-          curSlice->wp_offset[LIST_0][i][j] = read_se_v("SLC chroma_offset_l0", curStream);
-          curSlice->wp_offset[LIST_0][i][j] = curSlice->wp_offset[LIST_0][i][j]<<(vidParam->bitdepth_chroma-8);
+          curSlice->wp_weight[LIST_0][i][j] = readSeV("SLC chroma_weight_l0", curStream);
+          curSlice->wpOffset[LIST_0][i][j] = readSeV("SLC chroma_offset_l0", curStream);
+          curSlice->wpOffset[LIST_0][i][j] = curSlice->wpOffset[LIST_0][i][j]<<(vidParam->bitdepth_chroma-8);
           }
         else {
           curSlice->wp_weight[LIST_0][i][j] = 1<<curSlice->chroma_log2_weight_denom;
-          curSlice->wp_offset[LIST_0][i][j] = 0;
+          curSlice->wpOffset[LIST_0][i][j] = 0;
           }
         }
       }
@@ -1306,29 +1306,29 @@ static void pred_weight_table (sSlice* curSlice) {
 
   if ((curSlice->sliceType == B_SLICE) &&
       vidParam->activePPS->weighted_bipred_idc == 1) {
-    for (int i = 0; i < curSlice->num_ref_idx_active[LIST_1]; i++) {
-      luma_weight_flag_l1 = read_u_1("SLC luma_weight_flag_l1", curStream);
+    for (int i = 0; i < curSlice->numRefIndexActive[LIST_1]; i++) {
+      luma_weight_flag_l1 = readU1("SLC luma_weight_flag_l1", curStream);
       if (luma_weight_flag_l1) {
-        curSlice->wp_weight[LIST_1][i][0] = read_se_v ("SLC luma_weight_l1", curStream);
-        curSlice->wp_offset[LIST_1][i][0] = read_se_v ("SLC luma_offset_l1", curStream);
-        curSlice->wp_offset[LIST_1][i][0] = curSlice->wp_offset[LIST_1][i][0]<<(vidParam->bitdepth_luma-8);
+        curSlice->wp_weight[LIST_1][i][0] = readSeV ("SLC luma_weight_l1", curStream);
+        curSlice->wpOffset[LIST_1][i][0] = readSeV ("SLC luma_offset_l1", curStream);
+        curSlice->wpOffset[LIST_1][i][0] = curSlice->wpOffset[LIST_1][i][0]<<(vidParam->bitdepth_luma-8);
         }
       else {
         curSlice->wp_weight[LIST_1][i][0] = 1<<curSlice->luma_log2_weight_denom;
-        curSlice->wp_offset[LIST_1][i][0] = 0;
+        curSlice->wpOffset[LIST_1][i][0] = 0;
         }
 
       if (activeSPS->chromaFormatIdc != 0) {
-        chroma_weight_flag_l1 = read_u_1 ("SLC chroma_weight_flag_l1", curStream);
+        chroma_weight_flag_l1 = readU1 ("SLC chroma_weight_flag_l1", curStream);
         for (int j = 1; j < 3; j++) {
           if (chroma_weight_flag_l1) {
-            curSlice->wp_weight[LIST_1][i][j] = read_se_v("SLC chroma_weight_l1", curStream);
-            curSlice->wp_offset[LIST_1][i][j] = read_se_v("SLC chroma_offset_l1", curStream);
-            curSlice->wp_offset[LIST_1][i][j] = curSlice->wp_offset[LIST_1][i][j]<<(vidParam->bitdepth_chroma-8);
+            curSlice->wp_weight[LIST_1][i][j] = readSeV("SLC chroma_weight_l1", curStream);
+            curSlice->wpOffset[LIST_1][i][j] = readSeV("SLC chroma_offset_l1", curStream);
+            curSlice->wpOffset[LIST_1][i][j] = curSlice->wpOffset[LIST_1][i][j]<<(vidParam->bitdepth_chroma-8);
             }
           else {
             curSlice->wp_weight[LIST_1][i][j] = 1<<curSlice->chroma_log2_weight_denom;
-            curSlice->wp_offset[LIST_1][i][j] = 0;
+            curSlice->wpOffset[LIST_1][i][j] = 0;
             }
           }
         }
@@ -1436,36 +1436,36 @@ void dec_ref_pic_marking (sVidParam* vidParam, sBitstream* curStream, sSlice* pS
     }
 
   if (pSlice->idrFlag) {
-    pSlice->no_output_of_prior_pics_flag =
-      read_u_1 ("SLC no_output_of_prior_pics_flag", curStream);
-    vidParam->no_output_of_prior_pics_flag = pSlice->no_output_of_prior_pics_flag;
-    pSlice->long_term_reference_flag =
-      read_u_1 ("SLC long_term_reference_flag", curStream);
+    pSlice->noOutputPriorPicFlag =
+      readU1 ("SLC noOutputPriorPicFlag", curStream);
+    vidParam->noOutputPriorPicFlag = pSlice->noOutputPriorPicFlag;
+    pSlice->longTermRefFlag =
+      readU1 ("SLC longTermRefFlag", curStream);
     }
   else {
-    pSlice->adaptive_ref_pic_buffering_flag =
-      read_u_1 ("SLC adaptive_ref_pic_buffering_flag", curStream);
-    if (pSlice->adaptive_ref_pic_buffering_flag) {
+    pSlice->adaptiveRefPicBufferingFlag =
+      readU1 ("SLC adaptiveRefPicBufferingFlag", curStream);
+    if (pSlice->adaptiveRefPicBufferingFlag) {
       // read Memory Management Control Operation
       int val;
       do {
         sDecRefPicMarking* tmp_drpm = (sDecRefPicMarking*)calloc (1,sizeof (sDecRefPicMarking));
         tmp_drpm->next = NULL;
         val = tmp_drpm->memory_management_control_operation =
-          read_ue_v ("SLC memory_management_control_operation", curStream);
+          readUeV ("SLC memory_management_control_operation", curStream);
         if ((val == 1) || (val == 3))
           tmp_drpm->difference_of_pic_nums_minus1 =
-            read_ue_v ("SLC difference_of_pic_nums_minus1", curStream);
+            readUeV ("SLC difference_of_pic_nums_minus1", curStream);
         if (val==2)
           tmp_drpm->long_term_pic_num =
-            read_ue_v ("SLC long_term_pic_num", curStream);
+            readUeV ("SLC long_term_pic_num", curStream);
 
         if ((val == 3 ) || (val == 6))
           tmp_drpm->longTermFrameIndex =
-            read_ue_v ("SLC longTermFrameIndex", curStream);
+            readUeV ("SLC longTermFrameIndex", curStream);
         if (val == 4)
           tmp_drpm->max_long_term_frame_idx_plus1 =
-            read_ue_v ("SLC max_long_term_pic_idx_plus1", curStream);
+            readUeV ("SLC max_long_term_pic_idx_plus1", curStream);
 
         // add command
         if (pSlice->decRefPicMarkingBuffer == NULL)
@@ -1489,14 +1489,14 @@ int dumpPOC (sVidParam* vidParam) {
   printf ("POC locals...\n");
   printf ("topPoc                                %d\n", (int) vidParam->sliceList[0]->topPoc);
   printf ("botPoc                             %d\n", (int) vidParam->sliceList[0]->botPoc);
-  printf ("frame_num                             %d\n", (int) vidParam->sliceList[0]->frame_num);
-  printf ("field_pic_flag                        %d\n", (int) vidParam->sliceList[0]->field_pic_flag);
-  printf ("bottom_field_flag                     %d\n", (int) vidParam->sliceList[0]->bottom_field_flag);
+  printf ("frameNum                             %d\n", (int) vidParam->sliceList[0]->frameNum);
+  printf ("fieldPicFlag                        %d\n", (int) vidParam->sliceList[0]->fieldPicFlag);
+  printf ("botFieldFlag                     %d\n", (int) vidParam->sliceList[0]->botFieldFlag);
 
   printf ("POC SPS\n");
   printf ("log2_max_frame_num_minus4             %d\n", (int) activeSPS->log2_max_frame_num_minus4);         // POC200301
   printf ("log2_max_pic_order_cnt_lsb_minus4     %d\n", (int) activeSPS->log2_max_pic_order_cnt_lsb_minus4);
-  printf ("pic_order_cnt_type                    %d\n", (int) activeSPS->pic_order_cnt_type);
+  printf ("picOrderCountType                    %d\n", (int) activeSPS->picOrderCountType);
   printf ("num_ref_frames_in_pic_order_cnt_cycle %d\n", (int) activeSPS->num_ref_frames_in_pic_order_cnt_cycle);
   printf ("delta_pic_order_always_zero_flag      %d\n", (int) activeSPS->delta_pic_order_always_zero_flag);
   printf ("offset_for_non_ref_pic                %d\n", (int) activeSPS->offset_for_non_ref_pic);
@@ -1505,9 +1505,9 @@ int dumpPOC (sVidParam* vidParam) {
   printf ("offset_for_ref_frame[1]               %d\n", (int) activeSPS->offset_for_ref_frame[1]);
 
   printf ("POC in SLice Header\n");
-  printf ("bottom_field_pic_order_in_frame_present_flag %d\n", (int) vidParam->activePPS->bottom_field_pic_order_in_frame_present_flag);
-  printf ("delta_pic_order_cnt[0]                %d\n", (int) vidParam->sliceList[0]->delta_pic_order_cnt[0]);
-  printf ("delta_pic_order_cnt[1]                %d\n", (int) vidParam->sliceList[0]->delta_pic_order_cnt[1]);
+  printf ("botFieldPicOrderFramePresentFlag %d\n", (int) vidParam->activePPS->botFieldPicOrderFramePresentFlag);
+  printf ("deltaPicOrderCount[0]                %d\n", (int) vidParam->sliceList[0]->deltaPicOrderCount[0]);
+  printf ("deltaPicOrderCount[1]                %d\n", (int) vidParam->sliceList[0]->deltaPicOrderCount[1]);
   printf ("idrFlag                              %d\n", (int) vidParam->sliceList[0]->idrFlag);
   printf ("max_frame_num                         %d\n", (int) vidParam->max_frame_num);
 
@@ -1521,7 +1521,7 @@ void decodePOC (sVidParam* vidParam, sSlice* pSlice) {
   sSPS* activeSPS = vidParam->activeSPS;
   unsigned int MaxPicOrderCntLsb = (1<<(activeSPS->log2_max_pic_order_cnt_lsb_minus4+4));
 
-  switch (activeSPS->pic_order_cnt_type) {
+  switch (activeSPS->picOrderCountType) {
     //{{{
     case 0: // POC MODE 0
       // 1st
@@ -1543,33 +1543,33 @@ void decodePOC (sVidParam* vidParam, sSlice* pSlice) {
         }
 
       // Calculate the MSBs of current picture
-      if( pSlice->pic_order_cnt_lsb  <  vidParam->PrevPicOrderCntLsb  &&
-        ( vidParam->PrevPicOrderCntLsb - pSlice->pic_order_cnt_lsb )  >=  ( MaxPicOrderCntLsb / 2 ) )
+      if( pSlice->picOrderCountLsb  <  vidParam->PrevPicOrderCntLsb  &&
+        ( vidParam->PrevPicOrderCntLsb - pSlice->picOrderCountLsb )  >=  ( MaxPicOrderCntLsb / 2 ) )
         pSlice->PicOrderCntMsb = vidParam->PrevPicOrderCntMsb + MaxPicOrderCntLsb;
-      else if ( pSlice->pic_order_cnt_lsb  >  vidParam->PrevPicOrderCntLsb  &&
-        ( pSlice->pic_order_cnt_lsb - vidParam->PrevPicOrderCntLsb )  >  ( MaxPicOrderCntLsb / 2 ) )
+      else if ( pSlice->picOrderCountLsb  >  vidParam->PrevPicOrderCntLsb  &&
+        ( pSlice->picOrderCountLsb - vidParam->PrevPicOrderCntLsb )  >  ( MaxPicOrderCntLsb / 2 ) )
         pSlice->PicOrderCntMsb = vidParam->PrevPicOrderCntMsb - MaxPicOrderCntLsb;
       else
         pSlice->PicOrderCntMsb = vidParam->PrevPicOrderCntMsb;
 
       // 2nd
-      if (pSlice->field_pic_flag==0) {
+      if (pSlice->fieldPicFlag==0) {
         //frame pix
-        pSlice->topPoc = pSlice->PicOrderCntMsb + pSlice->pic_order_cnt_lsb;
-        pSlice->botPoc = pSlice->topPoc + pSlice->delta_pic_order_cnt_bottom;
+        pSlice->topPoc = pSlice->PicOrderCntMsb + pSlice->picOrderCountLsb;
+        pSlice->botPoc = pSlice->topPoc + pSlice->deletaPicOrderCountBot;
         pSlice->thisPoc = pSlice->framePoc = (pSlice->topPoc < pSlice->botPoc)? pSlice->topPoc : pSlice->botPoc; // POC200301
         }
-      else if (pSlice->bottom_field_flag == FALSE) // top field
-        pSlice->thisPoc= pSlice->topPoc = pSlice->PicOrderCntMsb + pSlice->pic_order_cnt_lsb;
+      else if (pSlice->botFieldFlag == FALSE) // top field
+        pSlice->thisPoc= pSlice->topPoc = pSlice->PicOrderCntMsb + pSlice->picOrderCountLsb;
       else // bottom field
-        pSlice->thisPoc= pSlice->botPoc = pSlice->PicOrderCntMsb + pSlice->pic_order_cnt_lsb;
+        pSlice->thisPoc= pSlice->botPoc = pSlice->PicOrderCntMsb + pSlice->picOrderCountLsb;
       pSlice->framePoc = pSlice->thisPoc;
 
       vidParam->thisPoc = pSlice->thisPoc;
-      vidParam->PreviousFrameNum = pSlice->frame_num;
+      vidParam->PreviousFrameNum = pSlice->frameNum;
 
       if(pSlice->nalRefId) {
-        vidParam->PrevPicOrderCntLsb = pSlice->pic_order_cnt_lsb;
+        vidParam->PrevPicOrderCntLsb = pSlice->picOrderCountLsb;
         vidParam->PrevPicOrderCntMsb = pSlice->PicOrderCntMsb;
         }
 
@@ -1580,15 +1580,15 @@ void decodePOC (sVidParam* vidParam, sSlice* pSlice) {
       // 1st
       if (pSlice->idrFlag) {
         vidParam->FrameNumOffset=0;     //  first pix of IDRGOP,
-        if (pSlice->frame_num)
-          error ("frame_num not equal to zero in IDR picture", -1020);
+        if (pSlice->frameNum)
+          error ("frameNum not equal to zero in IDR picture", -1020);
         }
       else {
         if (vidParam->last_has_mmco_5) {
           vidParam->PreviousFrameNumOffset = 0;
           vidParam->PreviousFrameNum = 0;
           }
-        if (pSlice->frame_num<vidParam->PreviousFrameNum)
+        if (pSlice->frameNum<vidParam->PreviousFrameNum)
           //not first pix of IDRGOP
           vidParam->FrameNumOffset = vidParam->PreviousFrameNumOffset + vidParam->max_frame_num;
         else
@@ -1597,7 +1597,7 @@ void decodePOC (sVidParam* vidParam, sSlice* pSlice) {
 
       // 2nd
       if (activeSPS->num_ref_frames_in_pic_order_cnt_cycle)
-        pSlice->AbsFrameNum = vidParam->FrameNumOffset+pSlice->frame_num;
+        pSlice->AbsFrameNum = vidParam->FrameNumOffset+pSlice->frameNum;
       else
         pSlice->AbsFrameNum=0;
       if ((!pSlice->nalRefId) && pSlice->AbsFrameNum > 0)
@@ -1625,21 +1625,21 @@ void decodePOC (sVidParam* vidParam, sSlice* pSlice) {
       if (!pSlice->nalRefId)
         vidParam->ExpectedPicOrderCnt += activeSPS->offset_for_non_ref_pic;
 
-      if (pSlice->field_pic_flag == 0) {
+      if (pSlice->fieldPicFlag == 0) {
         // frame pix
-        pSlice->topPoc = vidParam->ExpectedPicOrderCnt + pSlice->delta_pic_order_cnt[0];
-        pSlice->botPoc = pSlice->topPoc + activeSPS->offset_for_top_to_bottom_field + pSlice->delta_pic_order_cnt[1];
+        pSlice->topPoc = vidParam->ExpectedPicOrderCnt + pSlice->deltaPicOrderCount[0];
+        pSlice->botPoc = pSlice->topPoc + activeSPS->offset_for_top_to_bottom_field + pSlice->deltaPicOrderCount[1];
         pSlice->thisPoc = pSlice->framePoc = (pSlice->topPoc < pSlice->botPoc)? pSlice->topPoc : pSlice->botPoc; // POC200301
         }
-      else if (pSlice->bottom_field_flag == FALSE)
+      else if (pSlice->botFieldFlag == FALSE)
         // top field
-        pSlice->thisPoc = pSlice->topPoc = vidParam->ExpectedPicOrderCnt + pSlice->delta_pic_order_cnt[0];
+        pSlice->thisPoc = pSlice->topPoc = vidParam->ExpectedPicOrderCnt + pSlice->deltaPicOrderCount[0];
       else
         // bottom field
-        pSlice->thisPoc = pSlice->botPoc = vidParam->ExpectedPicOrderCnt + activeSPS->offset_for_top_to_bottom_field + pSlice->delta_pic_order_cnt[0];
+        pSlice->thisPoc = pSlice->botPoc = vidParam->ExpectedPicOrderCnt + activeSPS->offset_for_top_to_bottom_field + pSlice->deltaPicOrderCount[0];
       pSlice->framePoc=pSlice->thisPoc;
 
-      vidParam->PreviousFrameNum=pSlice->frame_num;
+      vidParam->PreviousFrameNum=pSlice->frameNum;
       vidParam->PreviousFrameNumOffset=vidParam->FrameNumOffset;
       break;
     //}}}
@@ -1649,8 +1649,8 @@ void decodePOC (sVidParam* vidParam, sSlice* pSlice) {
         // IDR picture, first pix of IDRGOP,
         vidParam->FrameNumOffset = 0;
         pSlice->thisPoc = pSlice->framePoc = pSlice->topPoc = pSlice->botPoc = 0;
-        if (pSlice->frame_num)
-          error ("frame_num not equal to zero in IDR picture", -1020);
+        if (pSlice->frameNum)
+          error ("frameNum not equal to zero in IDR picture", -1020);
         }
       else {
         if (vidParam->last_has_mmco_5) {
@@ -1658,26 +1658,26 @@ void decodePOC (sVidParam* vidParam, sSlice* pSlice) {
           vidParam->PreviousFrameNumOffset = 0;
           }
 
-        if (pSlice->frame_num<vidParam->PreviousFrameNum)
+        if (pSlice->frameNum<vidParam->PreviousFrameNum)
           vidParam->FrameNumOffset = vidParam->PreviousFrameNumOffset + vidParam->max_frame_num;
         else
           vidParam->FrameNumOffset = vidParam->PreviousFrameNumOffset;
 
-        pSlice->AbsFrameNum = vidParam->FrameNumOffset+pSlice->frame_num;
+        pSlice->AbsFrameNum = vidParam->FrameNumOffset+pSlice->frameNum;
         if (!pSlice->nalRefId)
           pSlice->thisPoc = (2*pSlice->AbsFrameNum - 1);
         else
           pSlice->thisPoc = (2*pSlice->AbsFrameNum);
 
-        if (pSlice->field_pic_flag==0)
+        if (pSlice->fieldPicFlag==0)
           pSlice->topPoc = pSlice->botPoc = pSlice->framePoc = pSlice->thisPoc;
-        else if (pSlice->bottom_field_flag == FALSE)
+        else if (pSlice->botFieldFlag == FALSE)
           pSlice->topPoc = pSlice->framePoc = pSlice->thisPoc;
         else
           pSlice->botPoc = pSlice->framePoc = pSlice->thisPoc;
         }
 
-      vidParam->PreviousFrameNum=pSlice->frame_num;
+      vidParam->PreviousFrameNum=pSlice->frameNum;
       vidParam->PreviousFrameNumOffset=vidParam->FrameNumOffset;
       break;
     //}}}
@@ -1695,22 +1695,22 @@ void decodePOC (sVidParam* vidParam, sSlice* pSlice) {
 void readSliceHeader (sSlice* curSlice) {
 
   sVidParam* vidParam = curSlice->vidParam;
-  byte dP_nr = assignSE2partition[curSlice->dp_mode][SE_HEADER];
+  byte dP_nr = assignSE2partition[curSlice->dataPartitionMode][SE_HEADER];
   sDataPartition* partition = &(curSlice->partArr[dP_nr]);
   sBitstream* curStream = partition->bitstream;
 
   // Get first_mb_in_slice
-  curSlice->start_mb_nr = read_ue_v ("SLC first_mb_in_slice", curStream);
+  curSlice->startMbNum = readUeV ("SLC first_mb_in_slice", curStream);
 
-  int tmp = read_ue_v ("SLC sliceType", curStream);
+  int tmp = readUeV ("SLC sliceType", curStream);
   if (tmp > 4)
     tmp -= 5;
   vidParam->type = curSlice->sliceType = (eSliceType)tmp;
 
-  curSlice->pic_parameter_set_id = read_ue_v ("SLC pic_parameter_set_id", curStream);
+  curSlice->ppsId = readUeV ("SLC ppsId", curStream);
 
-  if (vidParam->separate_colour_plane_flag)
-    curSlice->colour_plane_id = read_u_v (2, "SLC colour_plane_id", curStream);
+  if (vidParam->sepColourPlaneFlag)
+    curSlice->colour_plane_id = readUv (2, "SLC colour_plane_id", curStream);
   else
     curSlice->colour_plane_id = PLANE_Y;
   }
@@ -1722,101 +1722,101 @@ void readRestSliceHeader (sSlice* curSlice) {
   sInputParam* inputParam = curSlice->inputParam;
   sSPS* activeSPS = vidParam->activeSPS;
 
-  byte dP_nr = assignSE2partition[curSlice->dp_mode][SE_HEADER];
+  byte dP_nr = assignSE2partition[curSlice->dataPartitionMode][SE_HEADER];
   sDataPartition* partition = &(curSlice->partArr[dP_nr]);
   sBitstream* curStream = partition->bitstream;
 
   int val, len;
-  curSlice->frame_num = read_u_v (activeSPS->log2_max_frame_num_minus4 + 4, "SLC frame_num", curStream);
+  curSlice->frameNum = readUv (activeSPS->log2_max_frame_num_minus4 + 4, "SLC frameNum", curStream);
 
-  // Tian Dong: frame_num gap processing, if found
+  // Tian Dong: frameNum gap processing, if found
   if (curSlice->idrFlag) {
-    vidParam->preFrameNum = curSlice->frame_num;
+    vidParam->preFrameNum = curSlice->frameNum;
     // picture error conceal
-    vidParam->last_ref_pic_poc = 0;
-    assert(curSlice->frame_num == 0);
+    vidParam->lastRefPicPoc = 0;
+    assert(curSlice->frameNum == 0);
     }
 
-  if (activeSPS->frame_mbs_only_flag) {
+  if (activeSPS->frameMbOnlyFlag) {
     vidParam->structure = FRAME;
-    curSlice->field_pic_flag=0;
+    curSlice->fieldPicFlag=0;
     }
   else {
-    // field_pic_flag   u(1)
-    curSlice->field_pic_flag = read_u_1 ("SLC field_pic_flag", curStream);
-    if (curSlice->field_pic_flag) {
-      // bottom_field_flag  u(1)
-      curSlice->bottom_field_flag = (byte)read_u_1 ("SLC bottom_field_flag", curStream);
-      vidParam->structure = curSlice->bottom_field_flag ? BOTTOM_FIELD : TOP_FIELD;
+    // fieldPicFlag   u(1)
+    curSlice->fieldPicFlag = readU1 ("SLC fieldPicFlag", curStream);
+    if (curSlice->fieldPicFlag) {
+      // botFieldFlag  u(1)
+      curSlice->botFieldFlag = (byte)readU1 ("SLC botFieldFlag", curStream);
+      vidParam->structure = curSlice->botFieldFlag ? BOTTOM_FIELD : TOP_FIELD;
       }
     else {
       vidParam->structure = FRAME;
-      curSlice->bottom_field_flag = FALSE;
+      curSlice->botFieldFlag = FALSE;
       }
     }
 
   curSlice->structure = (ePicStructure) vidParam->structure;
-  curSlice->mb_aff_frame_flag =
-    (activeSPS->mb_adaptive_frame_field_flag && (curSlice->field_pic_flag==0));
+  curSlice->mbAffFrameFlag =
+    (activeSPS->mb_adaptive_frame_field_flag && (curSlice->fieldPicFlag==0));
 
   if (curSlice->structure == FRAME)
-    assert (curSlice->field_pic_flag == 0);
+    assert (curSlice->fieldPicFlag == 0);
   if (curSlice->structure == TOP_FIELD)
-    assert (curSlice->field_pic_flag == 1 && (curSlice->bottom_field_flag == FALSE));
+    assert (curSlice->fieldPicFlag == 1 && (curSlice->botFieldFlag == FALSE));
   if (curSlice->structure == BOTTOM_FIELD)
-    assert (curSlice->field_pic_flag == 1 && (curSlice->bottom_field_flag == TRUE ));
+    assert (curSlice->fieldPicFlag == 1 && (curSlice->botFieldFlag == TRUE ));
 
   if (curSlice->idrFlag)
-    curSlice->idrPicId = read_ue_v ("SLC idrPicId", curStream);
+    curSlice->idrPicId = readUeV ("SLC idrPicId", curStream);
 
-  if (activeSPS->pic_order_cnt_type == 0) {
-    curSlice->pic_order_cnt_lsb = read_u_v (activeSPS->log2_max_pic_order_cnt_lsb_minus4 + 4,
-                                             "SLC pic_order_cnt_lsb", curStream);
-    if (vidParam->activePPS->bottom_field_pic_order_in_frame_present_flag  == 1 &&
-        !curSlice->field_pic_flag )
-      curSlice->delta_pic_order_cnt_bottom = read_se_v ("SLC delta_pic_order_cnt_bottom", curStream);
+  if (activeSPS->picOrderCountType == 0) {
+    curSlice->picOrderCountLsb = readUv (activeSPS->log2_max_pic_order_cnt_lsb_minus4 + 4,
+                                             "SLC picOrderCountLsb", curStream);
+    if (vidParam->activePPS->botFieldPicOrderFramePresentFlag  == 1 &&
+        !curSlice->fieldPicFlag )
+      curSlice->deletaPicOrderCountBot = readSeV ("SLC deletaPicOrderCountBot", curStream);
     else
-      curSlice->delta_pic_order_cnt_bottom = 0;
+      curSlice->deletaPicOrderCountBot = 0;
     }
 
-  if (activeSPS->pic_order_cnt_type == 1) {
+  if (activeSPS->picOrderCountType == 1) {
     if (!activeSPS->delta_pic_order_always_zero_flag) {
-      curSlice->delta_pic_order_cnt[0] = read_se_v ("SLC delta_pic_order_cnt[0]", curStream);
-      if (vidParam->activePPS->bottom_field_pic_order_in_frame_present_flag == 1 &&
-          !curSlice->field_pic_flag)
-        curSlice->delta_pic_order_cnt[1] = read_se_v ("SLC delta_pic_order_cnt[1]", curStream);
+      curSlice->deltaPicOrderCount[0] = readSeV ("SLC deltaPicOrderCount[0]", curStream);
+      if (vidParam->activePPS->botFieldPicOrderFramePresentFlag == 1 &&
+          !curSlice->fieldPicFlag)
+        curSlice->deltaPicOrderCount[1] = readSeV ("SLC deltaPicOrderCount[1]", curStream);
       else
-        curSlice->delta_pic_order_cnt[1] = 0;  // set to zero if not in stream
+        curSlice->deltaPicOrderCount[1] = 0;  // set to zero if not in stream
       }
     else {
-      curSlice->delta_pic_order_cnt[0] = 0;
-      curSlice->delta_pic_order_cnt[1] = 0;
+      curSlice->deltaPicOrderCount[0] = 0;
+      curSlice->deltaPicOrderCount[1] = 0;
       }
     }
 
-  // redundant_pic_cnt is missing here
+  // redundantPicCount is missing here
   if (vidParam->activePPS->redundant_pic_cnt_present_flag)
-    curSlice->redundant_pic_cnt = read_ue_v ("SLC redundant_pic_cnt", curStream);
+    curSlice->redundantPicCount = readUeV ("SLC redundantPicCount", curStream);
 
   if (curSlice->sliceType == B_SLICE)
-    curSlice->direct_spatial_mv_pred_flag = read_u_1 ("SLC direct_spatial_mv_pred_flag", curStream);
+    curSlice->direct_spatial_mv_pred_flag = readU1 ("SLC direct_spatial_mv_pred_flag", curStream);
 
-  curSlice->num_ref_idx_active[LIST_0] = vidParam->activePPS->num_ref_idx_l0_default_active_minus1 + 1;
-  curSlice->num_ref_idx_active[LIST_1] = vidParam->activePPS->num_ref_idx_l1_default_active_minus1 + 1;
+  curSlice->numRefIndexActive[LIST_0] = vidParam->activePPS->num_ref_idx_l0_default_active_minus1 + 1;
+  curSlice->numRefIndexActive[LIST_1] = vidParam->activePPS->num_ref_idx_l1_default_active_minus1 + 1;
 
   if (curSlice->sliceType == P_SLICE ||
       curSlice->sliceType == SP_SLICE ||
       curSlice->sliceType == B_SLICE) {
-    val = read_u_1 ("SLC num_ref_idx_override_flag", curStream);
+    val = readU1 ("SLC num_ref_idx_override_flag", curStream);
     if (val) {
-      curSlice->num_ref_idx_active[LIST_0] = 1 + read_ue_v ("SLC num_ref_idx_l0_active_minus1", curStream);
+      curSlice->numRefIndexActive[LIST_0] = 1 + readUeV ("SLC num_ref_idx_l0_active_minus1", curStream);
       if (curSlice->sliceType == B_SLICE)
-        curSlice->num_ref_idx_active[LIST_1] = 1 + read_ue_v ("SLC num_ref_idx_l1_active_minus1", curStream);
+        curSlice->numRefIndexActive[LIST_1] = 1 + readUeV ("SLC num_ref_idx_l1_active_minus1", curStream);
       }
     }
 
   if (curSlice->sliceType != B_SLICE)
-    curSlice->num_ref_idx_active[LIST_1] = 0;
+    curSlice->numRefIndexActive[LIST_1] = 0;
 
   ref_pic_list_reordering (curSlice);
 
@@ -1838,11 +1838,11 @@ void readRestSliceHeader (sSlice* curSlice) {
   if (vidParam->activePPS->entropy_coding_mode_flag &&
       curSlice->sliceType != I_SLICE &&
       curSlice->sliceType != SI_SLICE)
-    curSlice->model_number = read_ue_v ("SLC cabac_init_idc", curStream);
+    curSlice->model_number = readUeV ("SLC cabac_init_idc", curStream);
   else
     curSlice->model_number = 0;
 
-  curSlice->slice_qp_delta = val = read_se_v ("SLC slice_qp_delta", curStream);
+  curSlice->slice_qp_delta = val = readSeV ("SLC slice_qp_delta", curStream);
   curSlice->qp = 26 + vidParam->activePPS->pic_init_qp_minus26 + val;
 
   if ((curSlice->qp < -vidParam->bitdepth_luma_qp_scale) || (curSlice->qp > 51))
@@ -1850,8 +1850,8 @@ void readRestSliceHeader (sSlice* curSlice) {
 
   if (curSlice->sliceType == SP_SLICE || curSlice->sliceType == SI_SLICE) {
     if (curSlice->sliceType == SP_SLICE)
-      curSlice->sp_switch = read_u_1 ("SLC sp_for_switch_flag", curStream);
-    curSlice->slice_qs_delta = val = read_se_v ("SLC slice_qs_delta", curStream);
+      curSlice->sp_switch = readU1 ("SLC sp_for_switch_flag", curStream);
+    curSlice->slice_qs_delta = val = readSeV ("SLC slice_qs_delta", curStream);
     curSlice->qs = 26 + vidParam->activePPS->pic_init_qs_minus26 + val;
     if ((curSlice->qs < 0) || (curSlice->qs > 51))
       error ("slice_qs_delta makes slice_qs_y out of range", 500);
@@ -1860,10 +1860,10 @@ void readRestSliceHeader (sSlice* curSlice) {
   //printf ("deblocking_filter_control_present_flag:%d\n",
   //        vidParam->activePPS->deblocking_filter_control_present_flag);
   if (vidParam->activePPS->deblocking_filter_control_present_flag) {
-    curSlice->DFDisableIdc = (short) read_ue_v ("SLC disable_deblocking_filter_idc", curStream);
+    curSlice->DFDisableIdc = (short) readUeV ("SLC disable_deblocking_filter_idc", curStream);
     if (curSlice->DFDisableIdc != 1) {
-      curSlice->DFAlphaC0Offset = (short)(2 * read_se_v ("SLC slice_alpha_c0_offset_div2", curStream));
-      curSlice->DFBetaOffset = (short)(2 * read_se_v ("SLC slice_beta_offset_div2", curStream));
+      curSlice->DFAlphaC0Offset = (short)(2 * readSeV ("SLC slice_alpha_c0_offset_div2", curStream));
+      curSlice->DFBetaOffset = (short)(2 * readSeV ("SLC slice_beta_offset_div2", curStream));
       }
     else
       curSlice->DFAlphaC0Offset = curSlice->DFBetaOffset = 0;
@@ -1891,10 +1891,10 @@ void readRestSliceHeader (sSlice* curSlice) {
       len += 1;
 
     len = ceilLog2 (len+1);
-    curSlice->slice_group_change_cycle = read_u_v (len, "SLC slice_group_change_cycle", curStream);
+    curSlice->slice_group_change_cycle = readUv (len, "SLC slice_group_change_cycle", curStream);
     }
 
-  vidParam->picHeightInMbs = vidParam->FrameHeightInMbs / ( 1 + curSlice->field_pic_flag );
+  vidParam->picHeightInMbs = vidParam->FrameHeightInMbs / ( 1 + curSlice->fieldPicFlag );
   vidParam->picSizeInMbs   = vidParam->PicWidthInMbs * vidParam->picHeightInMbs;
   vidParam->FrameSizeInMbs = vidParam->PicWidthInMbs * vidParam->FrameHeightInMbs;
   }

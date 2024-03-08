@@ -48,7 +48,7 @@ static void update_direct_mv_info_temporal (sMacroblock* curMb) {
   int j4, i4;
 
   sPicture* picture = curSlice->picture;
-  int list_offset = curMb->list_offset; // ((curSlice->mb_aff_frame_flag)&&(curMb->mb_field))? (mb_nr&0x01) ? 4 : 2 : 0;
+  int list_offset = curMb->list_offset; // ((curSlice->mbAffFrameFlag)&&(curMb->mb_field))? (mb_nr&0x01) ? 4 : 2 : 0;
   sPicture** list0 = curSlice->listX[LIST_0 + list_offset];
   sPicture** list1 = curSlice->listX[LIST_1 + list_offset];
 
@@ -71,7 +71,7 @@ static void update_direct_mv_info_temporal (sMacroblock* curMb) {
                                            &list1[0]->mvInfo[RSD(curMb->block_y_aff + j0)][RSD(i0)] :
                                            &list1[0]->mvInfo[curMb->block_y_aff + j0][i0];
 
-            if (curSlice->mb_aff_frame_flag) {
+            if (curSlice->mbAffFrameFlag) {
               //{{{
               assert (vidParam->activeSPS->direct_8x8_inference_flag);
               if (!curMb->mb_field && ((curSlice->listX[LIST_1][0]->iCodingType==FRAME_MB_PAIR_CODING && curSlice->listX[LIST_1][0]->motion.mb_field[curMb->mbAddrX]) ||
@@ -87,8 +87,8 @@ static void update_direct_mv_info_temporal (sMacroblock* curMb) {
                 }
               }
               //}}}
-            else if (!vidParam->activeSPS->frame_mbs_only_flag &&
-                     !curSlice->field_pic_flag &&
+            else if (!vidParam->activeSPS->frameMbOnlyFlag &&
+                     !curSlice->fieldPicFlag &&
                      curSlice->listX[LIST_1][0]->iCodingType != FRAME_CODING) {
               //{{{
               if (iabs(picture->poc - list1[0]->bottom_field->poc) > iabs(picture->poc -list1[0]->top_field->poc) )
@@ -101,10 +101,10 @@ static void update_direct_mv_info_temporal (sMacroblock* curMb) {
                   &list1[0]->bottom_field->mvInfo[(curMb->block_y_aff + j0)>>1][i0];
               }
               //}}}
-            else if (!vidParam->activeSPS->frame_mbs_only_flag &&
-                     curSlice->field_pic_flag &&
+            else if (!vidParam->activeSPS->frameMbOnlyFlag &&
+                     curSlice->fieldPicFlag &&
                      curSlice->structure != list1[0]->structure &&
-                     list1[0]->coded_frame) {
+                     list1[0]->codedFrame) {
               //{{{
               if (curSlice->structure == TOP_FIELD)
                 colocated = vidParam->activeSPS->direct_8x8_inference_flag ?
@@ -135,19 +135,19 @@ static void update_direct_mv_info_temporal (sMacroblock* curMb) {
               }
               //}}}
             else {
-              if ((curSlice->mb_aff_frame_flag && ( (curMb->mb_field && colocated->refPic[refList]->structure==FRAME) ||
+              if ((curSlice->mbAffFrameFlag && ( (curMb->mb_field && colocated->refPic[refList]->structure==FRAME) ||
                   (!curMb->mb_field && colocated->refPic[refList]->structure!=FRAME))) ||
-                  (!curSlice->mb_aff_frame_flag && ((curSlice->field_pic_flag==0 && colocated->refPic[refList]->structure!=FRAME)||
-                  (curSlice->field_pic_flag==1 && colocated->refPic[refList]->structure==FRAME))) ) {
+                  (!curSlice->mbAffFrameFlag && ((curSlice->fieldPicFlag==0 && colocated->refPic[refList]->structure!=FRAME)||
+                  (curSlice->fieldPicFlag==1 && colocated->refPic[refList]->structure==FRAME))) ) {
                 //{{{  Frame with field co-located
                 for (iref = 0;
-                     iref < imin(curSlice->num_ref_idx_active[LIST_0], curSlice->listXsize[LIST_0 + list_offset]);
+                     iref < imin(curSlice->numRefIndexActive[LIST_0], curSlice->listXsize[LIST_0 + list_offset]);
                      ++iref) {
                   if (curSlice->listX[LIST_0 + list_offset][iref]->top_field == colocated->refPic[refList] ||
                     curSlice->listX[LIST_0 + list_offset][iref]->bottom_field == colocated->refPic[refList] ||
                     curSlice->listX[LIST_0 + list_offset][iref]->frame == colocated->refPic[refList] )
                   {
-                    if ((curSlice->field_pic_flag==1) && (curSlice->listX[LIST_0 + list_offset][iref]->structure != curSlice->structure))
+                    if ((curSlice->fieldPicFlag==1) && (curSlice->listX[LIST_0 + list_offset][iref]->structure != curSlice->structure))
                       mapped_idx=INVALIDINDEX;
                     else {
                       mapped_idx = iref;
@@ -162,7 +162,7 @@ static void update_direct_mv_info_temporal (sMacroblock* curMb) {
               else {
                 //{{{
                 for (iref = 0;
-                     iref < imin(curSlice->num_ref_idx_active[LIST_0], curSlice->listXsize[LIST_0 + list_offset]);
+                     iref < imin(curSlice->numRefIndexActive[LIST_0], curSlice->listXsize[LIST_0 + list_offset]);
                      ++iref) {
                   if (curSlice->listX[LIST_0 + list_offset][iref] == colocated->refPic[refList]) {
                     mapped_idx = iref;
@@ -185,8 +185,8 @@ static void update_direct_mv_info_temporal (sMacroblock* curMb) {
                       &list1[0]->mvInfo[RSD(j6)][RSD(i4)] :
                       &list1[0]->mvInfo[j6][i4];
                     sPicMotionParam* mvInfo = &picture->mvInfo[j4][i4];
-                    int mv_y;
-                    if (curSlice->mb_aff_frame_flag) {
+                    int mvY;
+                    if (curSlice->mbAffFrameFlag) {
                       if (!curMb->mb_field && ((curSlice->listX[LIST_1][0]->iCodingType==FRAME_MB_PAIR_CODING && curSlice->listX[LIST_1][0]->motion.mb_field[curMb->mbAddrX]) ||
                           (curSlice->listX[LIST_1][0]->iCodingType==FIELD_CODING))) {
                         if (iabs(picture->poc - curSlice->listX[LIST_1+4][0]->poc)> iabs(picture->poc -curSlice->listX[LIST_1+2][0]->poc) )
@@ -199,8 +199,8 @@ static void update_direct_mv_info_temporal (sMacroblock* curMb) {
                             &curSlice->listX[LIST_1+4][0]->mvInfo[j6>>1][i4];
                         }
                       }
-                    else if (!vidParam->activeSPS->frame_mbs_only_flag &&
-                             !curSlice->field_pic_flag &&
+                    else if (!vidParam->activeSPS->frameMbOnlyFlag &&
+                             !curSlice->fieldPicFlag &&
                              curSlice->listX[LIST_1][0]->iCodingType!=FRAME_CODING) {
                       if (iabs(picture->poc - list1[0]->bottom_field->poc) > iabs(picture->poc -list1[0]->top_field->poc) )
                         colocated = vidParam->activeSPS->direct_8x8_inference_flag ?
@@ -211,9 +211,9 @@ static void update_direct_mv_info_temporal (sMacroblock* curMb) {
                           &list1[0]->bottom_field->mvInfo[RSD(j6)>>1][RSD(i4)] :
                           &list1[0]->bottom_field->mvInfo[(j6)>>1][i4];
                       }
-                    else if (!vidParam->activeSPS->frame_mbs_only_flag &&
-                             curSlice->field_pic_flag &&
-                             curSlice->structure!=list1[0]->structure && list1[0]->coded_frame) {
+                    else if (!vidParam->activeSPS->frameMbOnlyFlag &&
+                             curSlice->fieldPicFlag &&
+                             curSlice->structure!=list1[0]->structure && list1[0]->codedFrame) {
                       if (curSlice->structure == TOP_FIELD)
                         colocated = vidParam->activeSPS->direct_8x8_inference_flag ?
                           &list1[0]->frame->top_field->mvInfo[RSD(j6)][RSD(i4)] :
@@ -224,13 +224,13 @@ static void update_direct_mv_info_temporal (sMacroblock* curMb) {
                           &list1[0]->frame->bottom_field->mvInfo[j6][i4];
                       }
 
-                    mv_y = colocated->mv[refList].mv_y;
-                    if ((curSlice->mb_aff_frame_flag && !curMb->mb_field && colocated->refPic[refList]->structure!=FRAME) ||
-                        (!curSlice->mb_aff_frame_flag && curSlice->field_pic_flag==0 && colocated->refPic[refList]->structure!=FRAME))
-                      mv_y *= 2;
-                    else if ((curSlice->mb_aff_frame_flag && curMb->mb_field && colocated->refPic[refList]->structure==FRAME) ||
-                             (!curSlice->mb_aff_frame_flag && curSlice->field_pic_flag==1 && colocated->refPic[refList]->structure==FRAME))
-                      mv_y /= 2;
+                    mvY = colocated->mv[refList].mvY;
+                    if ((curSlice->mbAffFrameFlag && !curMb->mb_field && colocated->refPic[refList]->structure!=FRAME) ||
+                        (!curSlice->mbAffFrameFlag && curSlice->fieldPicFlag==0 && colocated->refPic[refList]->structure!=FRAME))
+                      mvY *= 2;
+                    else if ((curSlice->mbAffFrameFlag && curMb->mb_field && colocated->refPic[refList]->structure==FRAME) ||
+                             (!curSlice->mbAffFrameFlag && curSlice->fieldPicFlag==1 && colocated->refPic[refList]->structure==FRAME))
+                      mvY /= 2;
 
                     mv_scale = curSlice->mvscale[LIST_0 + list_offset][mapped_idx];
                     mvInfo->refIndex [LIST_0] = (char) mapped_idx;
@@ -238,15 +238,15 @@ static void update_direct_mv_info_temporal (sMacroblock* curMb) {
                     mvInfo->refPic[LIST_0] = list0[mapped_idx];
                     mvInfo->refPic[LIST_1] = list1[0];
                     if (mv_scale == 9999 || curSlice->listX[LIST_0+list_offset][mapped_idx]->isLongTerm) {
-                      mvInfo->mv[LIST_0].mv_x = colocated->mv[refList].mv_x;
-                      mvInfo->mv[LIST_0].mv_y = (short) mv_y;
+                      mvInfo->mv[LIST_0].mvX = colocated->mv[refList].mvX;
+                      mvInfo->mv[LIST_0].mvY = (short) mvY;
                       mvInfo->mv[LIST_1] = zero_mv;
                       }
                     else {
-                      mvInfo->mv[LIST_0].mv_x = (short)((mv_scale * colocated->mv[refList].mv_x + 128 ) >> 8);
-                      mvInfo->mv[LIST_0].mv_y = (short)((mv_scale * mv_y/*colocated->mv[refList].mv_y*/ + 128 ) >> 8);
-                      mvInfo->mv[LIST_1].mv_x = (short)(mvInfo->mv[LIST_0].mv_x - colocated->mv[refList].mv_x);
-                      mvInfo->mv[LIST_1].mv_y = (short)(mvInfo->mv[LIST_0].mv_y - mv_y/*colocated->mv[refList].mv_y*/);
+                      mvInfo->mv[LIST_0].mvX = (short)((mv_scale * colocated->mv[refList].mvX + 128 ) >> 8);
+                      mvInfo->mv[LIST_0].mvY = (short)((mv_scale * mvY/*colocated->mv[refList].mvY*/ + 128 ) >> 8);
+                      mvInfo->mv[LIST_1].mvX = (short)(mvInfo->mv[LIST_0].mvX - colocated->mv[refList].mvX);
+                      mvInfo->mv[LIST_1].mvY = (short)(mvInfo->mv[LIST_0].mvY - mvY/*colocated->mv[refList].mvY*/);
                       }
                     }
                  }
@@ -280,12 +280,12 @@ int get_colocated_info_4x4 (sMacroblock* curMb, sPicture* list1, int i, int j)
     sPicMotionParam *fs = &list1->mvInfo[j][i];
 
     int moving = !((((fs->refIndex[LIST_0] == 0) &&
-                     (iabs(fs->mv[LIST_0].mv_x)>>1 == 0) &&
-                     (iabs(fs->mv[LIST_0].mv_y)>>1 == 0))) ||
+                     (iabs(fs->mv[LIST_0].mvX)>>1 == 0) &&
+                     (iabs(fs->mv[LIST_0].mvY)>>1 == 0))) ||
                    ((fs->refIndex[LIST_0] == -1) &&
                     (fs->refIndex[LIST_1] == 0) &&
-                    (iabs(fs->mv[LIST_1].mv_x)>>1 == 0) &&
-                    (iabs(fs->mv[LIST_1].mv_y)>>1 == 0)));
+                    (iabs(fs->mv[LIST_1].mvX)>>1 == 0) &&
+                    (iabs(fs->mv[LIST_1].mvY)>>1 == 0)));
     return moving;
     }
   }
@@ -298,8 +298,8 @@ int get_colocated_info_8x8 (sMacroblock* curMb, sPicture* list1, int i, int j)
   else {
     sSlice* curSlice = curMb->slice;
     sVidParam* vidParam = curMb->vidParam;
-    if( (curSlice->mb_aff_frame_flag) ||
-      (!vidParam->activeSPS->frame_mbs_only_flag && ((!curSlice->structure && list1->iCodingType == FIELD_CODING)||(curSlice->structure!=list1->structure && list1->coded_frame))))
+    if( (curSlice->mbAffFrameFlag) ||
+      (!vidParam->activeSPS->frameMbOnlyFlag && ((!curSlice->structure && list1->iCodingType == FIELD_CODING)||(curSlice->structure!=list1->structure && list1->codedFrame))))
     {
       int jj = RSD(j);
       int ii = RSD(i);
@@ -307,7 +307,7 @@ int get_colocated_info_8x8 (sMacroblock* curMb, sPicture* list1, int i, int j)
       int moving;
       sPicMotionParam *fs = &list1->mvInfo[jj][ii];
 
-      if(curSlice->field_pic_flag && curSlice->structure!=list1->structure && list1->coded_frame)
+      if(curSlice->fieldPicFlag && curSlice->structure!=list1->structure && list1->codedFrame)
       {
          if(curSlice->structure == TOP_FIELD)
            fs = list1->top_field->mvInfo[jj] + ii;
@@ -316,9 +316,9 @@ int get_colocated_info_8x8 (sMacroblock* curMb, sPicture* list1, int i, int j)
       }
       else
       {
-        if( (curSlice->mb_aff_frame_flag && ((!curMb->mb_field && list1->motion.mb_field[curMb->mbAddrX]) ||
+        if( (curSlice->mbAffFrameFlag && ((!curMb->mb_field && list1->motion.mb_field[curMb->mbAddrX]) ||
           (!curMb->mb_field && list1->iCodingType == FIELD_CODING)))
-          || (!curSlice->mb_aff_frame_flag))
+          || (!curSlice->mbAffFrameFlag))
         {
           if (iabs(curSlice->picture->poc - list1->bottom_field->poc)> iabs(curSlice->picture->poc -list1->top_field->poc) )
           {
@@ -331,27 +331,27 @@ int get_colocated_info_8x8 (sMacroblock* curMb, sPicture* list1, int i, int j)
         }
       }
       moving = !((((fs->refIndex[LIST_0] == 0)
-        &&  (iabs(fs->mv[LIST_0].mv_x)>>1 == 0)
-        &&  (iabs(fs->mv[LIST_0].mv_y)>>1 == 0)))
+        &&  (iabs(fs->mv[LIST_0].mvX)>>1 == 0)
+        &&  (iabs(fs->mv[LIST_0].mvY)>>1 == 0)))
         || ((fs->refIndex[LIST_0] == -1)
         &&  (fs->refIndex[LIST_1] == 0)
-        &&  (iabs(fs->mv[LIST_1].mv_x)>>1 == 0)
-        &&  (iabs(fs->mv[LIST_1].mv_y)>>1 == 0)));
+        &&  (iabs(fs->mv[LIST_1].mvX)>>1 == 0)
+        &&  (iabs(fs->mv[LIST_1].mvY)>>1 == 0)));
       return moving;
     }
     else
     {
       sPicMotionParam *fs = &list1->mvInfo[RSD(j)][RSD(i)];
       int moving;
-      if(curMb->vidParam->separate_colour_plane_flag && curMb->vidParam->yuvFormat==YUV444)
+      if(curMb->vidParam->sepColourPlaneFlag && curMb->vidParam->yuvFormat==YUV444)
         fs = &list1->JVmv_info[curMb->slice->colour_plane_id][RSD(j)][RSD(i)];
       moving= !((((fs->refIndex[LIST_0] == 0)
-        &&  (iabs(fs->mv[LIST_0].mv_x)>>1 == 0)
-        &&  (iabs(fs->mv[LIST_0].mv_y)>>1 == 0)))
+        &&  (iabs(fs->mv[LIST_0].mvX)>>1 == 0)
+        &&  (iabs(fs->mv[LIST_0].mvY)>>1 == 0)))
         || ((fs->refIndex[LIST_0] == -1)
         &&  (fs->refIndex[LIST_1] == 0)
-        &&  (iabs(fs->mv[LIST_1].mv_x)>>1 == 0)
-        &&  (iabs(fs->mv[LIST_1].mv_y)>>1 == 0)));
+        &&  (iabs(fs->mv[LIST_1].mvX)>>1 == 0)
+        &&  (iabs(fs->mv[LIST_1].mvY)>>1 == 0)));
       return moving;
     }
   }
@@ -372,7 +372,7 @@ static void update_direct_mv_info_spatial_8x8 (sMacroblock* curMb)
     int j4, i4;
     sPicture* picture = curSlice->picture;
 
-    int list_offset = curMb->list_offset; // ((curSlice->mb_aff_frame_flag)&&(curMb->mb_field))? (mb_nr&0x01) ? 4 : 2 : 0;
+    int list_offset = curMb->list_offset; // ((curSlice->mbAffFrameFlag)&&(curMb->mb_field))? (mb_nr&0x01) ? 4 : 2 : 0;
     sPicture** list0 = curSlice->listX[LIST_0 + list_offset];
     sPicture** list1 = curSlice->listX[LIST_1 + list_offset];
 
@@ -531,7 +531,7 @@ static void update_direct_mv_info_spatial_4x4 (sMacroblock* curMb)
     int j4, i4;
     sPicture* picture = vidParam->picture;
 
-    int list_offset = curMb->list_offset; // ((curSlice->mb_aff_frame_flag)&&(curMb->mb_field))? (mb_nr&0x01) ? 4 : 2 : 0;
+    int list_offset = curMb->list_offset; // ((curSlice->mbAffFrameFlag)&&(curMb->mb_field))? (mb_nr&0x01) ? 4 : 2 : 0;
     sPicture** list0 = curSlice->listX[LIST_0 + list_offset];
     sPicture** list1 = curSlice->listX[LIST_1 + list_offset];
 
@@ -705,7 +705,7 @@ static void mc_prediction (sPixel** mb_pred, sPixel** block, int block_size_y, i
 //{{{
 static void weighted_mc_prediction (sPixel** mb_pred, sPixel** block,
                                     int block_size_y, int block_size_x,
-                                    int ioff, int wp_scale, int wp_offset,
+                                    int ioff, int wp_scale, int wpOffset,
                                     int weight_denom, int color_clip)
 {
   int i, j;
@@ -715,7 +715,7 @@ static void weighted_mc_prediction (sPixel** mb_pred, sPixel** block,
   {
     for(i = 0; i < block_size_x; i++)
     {
-      result = rshift_rnd((wp_scale * block[j][i]), weight_denom) + wp_offset;
+      result = rshift_rnd((wp_scale * block[j][i]), weight_denom) + wpOffset;
       mb_pred[j][i + ioff] = (sPixel)iClip3(0, color_clip, result);
     }
   }
@@ -756,7 +756,7 @@ static void weighted_bi_prediction (sPixel *mb_pred,
                                     int block_size_x,
                                     int wp_scale_l0,
                                     int wp_scale_l1,
-                                    int wp_offset,
+                                    int wpOffset,
                                     int weight_denom,
                                     int color_clip)
 {
@@ -769,7 +769,7 @@ static void weighted_bi_prediction (sPixel *mb_pred,
     {
       result = rshift_rnd_sf((wp_scale_l0 * *(block_l0++) + wp_scale_l1 * *(block_l1++)),  weight_denom);
 
-      *(mb_pred++) = (sPixel) iClip1(color_clip, result + wp_offset);
+      *(mb_pred++) = (sPixel) iClip1(color_clip, result + wpOffset);
     }
     mb_pred += row_inc;
     block_l0 += row_inc;
@@ -1430,13 +1430,13 @@ static void get_luma_31 (sPixel** block, sPixel** curPixelY, int block_size_y, i
 void get_block_luma (sPicture* curRef, int x_pos, int y_pos, int block_size_x, int block_size_y, sPixel** block,
                     int shift_x, int maxold_x, int maxold_y, int** tmp_res, int max_imgpel_value, sPixel no_ref_value, sMacroblock* curMb)
 {
-  if (curRef->no_ref) {
+  if (curRef->noRef) {
     //printf("list[ref_frame] is equal to 'no reference picture' before RAP\n");
     memset(block[0],no_ref_value,block_size_y * block_size_x * sizeof(sPixel));
   }
   else
   {
-    sPixel** curPixelY = (curMb->vidParam->separate_colour_plane_flag && curMb->slice->colour_plane_id>PLANE_Y)? curRef->imgUV[curMb->slice->colour_plane_id-1] : curRef->curPixelY;
+    sPixel** curPixelY = (curMb->vidParam->sepColourPlaneFlag && curMb->slice->colour_plane_id>PLANE_Y)? curRef->imgUV[curMb->slice->colour_plane_id-1] : curRef->curPixelY;
     int dx = (x_pos & 3);
     int dy = (y_pos & 3);
     x_pos >>= 2;
@@ -1595,7 +1595,7 @@ static void get_block_chroma (sPicture* curRef, int x_pos, int y_pos, int subpel
   sPixel *img1,*img2;
   short dx,dy;
   int span = curRef->iChromaStride;
-  if (curRef->no_ref) {
+  if (curRef->noRef) {
     //printf("list[ref_frame] is equal to 'no reference picture' before RAP\n");
     memset(block1,no_ref_value,vert_block_size * block_size_x * sizeof(sPixel));
     memset(block2,no_ref_value,vert_block_size * block_size_x * sizeof(sPixel));
@@ -1799,7 +1799,7 @@ void prepare_direct_params (sMacroblock* curMb, sPicture* picture, sMotionVector
 
   getNeighbours (curMb, mb, 0, 0, 16);
 
-  if (!curSlice->mb_aff_frame_flag) {
+  if (!curSlice->mbAffFrameFlag) {
     set_direct_references (&mb[0], &l0_refA, &l1_refA, mvInfo);
     set_direct_references (&mb[1], &l0_refB, &l1_refB, mvInfo);
     set_direct_references (&mb[2], &l0_refC, &l1_refC, mvInfo);
@@ -1832,15 +1832,15 @@ void prepare_direct_params (sMacroblock* curMb, sPicture* picture, sMotionVector
 //{{{
 static void check_motion_vector_range (const sMotionVector *mv, sSlice *pSlice)
 {
-  if (mv->mv_x > 8191 || mv->mv_x < -8192)
+  if (mv->mvX > 8191 || mv->mvX < -8192)
   {
-    fprintf(stderr,"WARNING! Horizontal motion vector %d is out of allowed range {-8192, 8191} in picture %d, macroblock %d\n", mv->mv_x, pSlice->vidParam->number, pSlice->current_mb_nr);
+    fprintf(stderr,"WARNING! Horizontal motion vector %d is out of allowed range {-8192, 8191} in picture %d, macroblock %d\n", mv->mvX, pSlice->vidParam->number, pSlice->current_mb_nr);
     //error("invalid stream: too big horizontal motion vector", 500);
   }
 
-  if (mv->mv_y > (pSlice->max_mb_vmv_r - 1) || mv->mv_y < (-pSlice->max_mb_vmv_r))
+  if (mv->mvY > (pSlice->max_mb_vmv_r - 1) || mv->mvY < (-pSlice->max_mb_vmv_r))
   {
-    fprintf(stderr,"WARNING! Vertical motion vector %d is out of allowed range {%d, %d} in picture %d, macroblock %d\n", mv->mv_y, (-pSlice->max_mb_vmv_r), (pSlice->max_mb_vmv_r - 1), pSlice->vidParam->number, pSlice->current_mb_nr);
+    fprintf(stderr,"WARNING! Vertical motion vector %d is out of allowed range {%d, %d} in picture %d, macroblock %d\n", mv->mvY, (-pSlice->max_mb_vmv_r), (pSlice->max_mb_vmv_r - 1), pSlice->vidParam->number, pSlice->current_mb_nr);
     //error("invalid stream: too big vertical motion vector", 500);
   }
 }
@@ -1880,7 +1880,7 @@ static void perform_mc_single_wp (sMacroblock* curMb, eColorPlane pl, sPicture* 
   int vec1_x, vec1_y;
   // vars for get_block_luma
   int maxold_x = picture->size_x_m1;
-  int maxold_y = (curMb->mb_field) ? (picture->size_y >> 1) - 1 : picture->size_y_m1;
+  int maxold_y = (curMb->mb_field) ? (picture->sizeY >> 1) - 1 : picture->size_y_m1;
   int shift_x  = picture->iLumaStride;
   int** tmp_res = curSlice->tmp_res;
   int max_imgpel_value = vidParam->max_pel_value_comp[pl];
@@ -1888,8 +1888,8 @@ static void perform_mc_single_wp (sMacroblock* curMb, eColorPlane pl, sPicture* 
   //
 
   check_motion_vector_range(mv_array, curSlice);
-  vec1_x = i4 * mv_mul + mv_array->mv_x;
-  vec1_y = (curMb->block_y_aff + j) * mv_mul + mv_array->mv_y;
+  vec1_x = i4 * mv_mul + mv_array->mvX;
+  vec1_y = (curMb->block_y_aff + j) * mv_mul + mv_array->mvY;
   if(block_size_y > (vidParam->iLumaPadY-4) && CheckVertMV(curMb, vec1_y, block_size_y))
   {
     get_block_luma(list, vec1_x, vec1_y, block_size_x, BLOCK_SIZE_8x8, tmp_block_l0, shift_x,maxold_x,maxold_y,tmp_res,max_imgpel_value,no_ref_value, curMb);
@@ -1900,13 +1900,13 @@ static void perform_mc_single_wp (sMacroblock* curMb, eColorPlane pl, sPicture* 
 
 
   {
-    int alpha_l0, wp_offset, wp_denom;
+    int alpha_l0, wpOffset, wp_denom;
     if (curMb->mb_field && ((vidParam->activePPS->weighted_pred_flag&&(type==P_SLICE|| type == SP_SLICE))||(vidParam->activePPS->weighted_bipred_idc==1 && (type==B_SLICE))))
       ref_idx_wp >>=1;
     alpha_l0  = curSlice->wp_weight[pred_dir][ref_idx_wp][pl];
-    wp_offset = curSlice->wp_offset[pred_dir][ref_idx_wp][pl];
+    wpOffset = curSlice->wpOffset[pred_dir][ref_idx_wp][pl];
     wp_denom  = pl > 0 ? curSlice->chroma_log2_weight_denom : curSlice->luma_log2_weight_denom;
-    weighted_mc_prediction(&curSlice->mb_pred[pl][joff], tmp_block_l0, block_size_y, block_size_x, ioff, alpha_l0, wp_offset, wp_denom, max_imgpel_value);
+    weighted_mc_prediction(&curSlice->mb_pred[pl][joff], tmp_block_l0, block_size_y, block_size_x, ioff, alpha_l0, wpOffset, wp_denom, max_imgpel_value);
   }
 
   if ((chromaFormatIdc != YUV400) && (chromaFormatIdc != YUV444) )
@@ -1940,7 +1940,7 @@ static void perform_mc_single_wp (sMacroblock* curMb, eColorPlane pl, sPicture* 
     no_ref_value = (sPixel)vidParam->dc_pred_value_comp[1];
     {
       int *weight = curSlice->wp_weight[pred_dir][ref_idx_wp];
-      int *offset = curSlice->wp_offset[pred_dir][ref_idx_wp];
+      int *offset = curSlice->wpOffset[pred_dir][ref_idx_wp];
       get_block_chroma(list,vec1_x,vec1_y_cr,vidParam->subpel_x,vidParam->subpel_y,maxold_x,maxold_y,block_size_x_cr,block_size_y_cr,vidParam->shiftpel_x,vidParam->shiftpel_y,&tmp_block_l0[0][0],&tmp_block_l1[0][0] ,total_scale,no_ref_value,vidParam);
       weighted_mc_prediction(&curSlice->mb_pred[1][joff_cr], tmp_block_l0, block_size_y_cr, block_size_x_cr, ioff_cr, weight[1], offset[1], chroma_log2_weight, vidParam->max_pel_value_comp[1]);
       weighted_mc_prediction(&curSlice->mb_pred[2][joff_cr], tmp_block_l1, block_size_y_cr, block_size_x_cr, ioff_cr, weight[2], offset[2], chroma_log2_weight, vidParam->max_pel_value_comp[2]);
@@ -1971,19 +1971,19 @@ static void perform_mc_single (sMacroblock* curMb, eColorPlane pl, sPicture* pic
   int vec1_x, vec1_y;
   // vars for get_block_luma
   int maxold_x = picture->size_x_m1;
-  int maxold_y = (curMb->mb_field) ? (picture->size_y >> 1) - 1 : picture->size_y_m1;
+  int maxold_y = (curMb->mb_field) ? (picture->sizeY >> 1) - 1 : picture->size_y_m1;
   int shift_x  = picture->iLumaStride;
   int** tmp_res = curSlice->tmp_res;
   int max_imgpel_value = vidParam->max_pel_value_comp[pl];
   sPixel no_ref_value = (sPixel) vidParam->dc_pred_value_comp[pl];
   //
 
-  //if (iabs(mv_array->mv_x) > 4 * 126 || iabs(mv_array->mv_y) > 4 * 126)
-    //printf("motion vector %d %d\n", mv_array->mv_x, mv_array->mv_y);
+  //if (iabs(mv_array->mvX) > 4 * 126 || iabs(mv_array->mvY) > 4 * 126)
+    //printf("motion vector %d %d\n", mv_array->mvX, mv_array->mvY);
 
   check_motion_vector_range(mv_array, curSlice);
-  vec1_x = i4 * mv_mul + mv_array->mv_x;
-  vec1_y = (curMb->block_y_aff + j) * mv_mul + mv_array->mv_y;
+  vec1_x = i4 * mv_mul + mv_array->mvX;
+  vec1_y = (curMb->block_y_aff + j) * mv_mul + mv_array->mvY;
 
   if (block_size_y > (vidParam->iLumaPadY-4) && CheckVertMV(curMb, vec1_y, block_size_y))
   {
@@ -2056,11 +2056,11 @@ static void perform_mc_bi_wp (sMacroblock* curMb, eColorPlane pl, sPicture* pict
 
   /// WP Parameters
   int wt_list_offset = (weighted_bipred_idc==2)? list_offset : 0;
-  int *weight0 = curSlice->wbp_weight[LIST_0 + wt_list_offset][l0_ref_idx][l1_ref_idx];
-  int *weight1 = curSlice->wbp_weight[LIST_1 + wt_list_offset][l0_ref_idx][l1_ref_idx];
-  int *offset0 = curSlice->wp_offset[LIST_0 + wt_list_offset][l0_ref_idx];
-  int *offset1 = curSlice->wp_offset[LIST_1 + wt_list_offset][l1_ref_idx];
-  int maxold_y = (curMb->mb_field) ? (picture->size_y >> 1) - 1 : picture->size_y_m1;
+  int *weight0 = curSlice->wbpWeight[LIST_0 + wt_list_offset][l0_ref_idx][l1_ref_idx];
+  int *weight1 = curSlice->wbpWeight[LIST_1 + wt_list_offset][l0_ref_idx][l1_ref_idx];
+  int *offset0 = curSlice->wpOffset[LIST_0 + wt_list_offset][l0_ref_idx];
+  int *offset1 = curSlice->wpOffset[LIST_1 + wt_list_offset][l1_ref_idx];
+  int maxold_y = (curMb->mb_field) ? (picture->sizeY >> 1) - 1 : picture->size_y_m1;
   int pady = vidParam->iLumaPadY;
   int rlimit = maxold_y + pady - block_size_y - 2;
   int llimit = 2 - pady;
@@ -2075,7 +2075,7 @@ static void perform_mc_bi_wp (sMacroblock* curMb, eColorPlane pl, sPicture* pict
   sPixel *block2 = tmp_block_l2[0];
   sPixel** tmp_block_l3 = curSlice->tmp_block_l3;
   sPixel *block3 = tmp_block_l3[0];
-  int wp_offset;
+  int wpOffset;
   int wp_denom;
 
   // vars for get_block_luma
@@ -2087,10 +2087,10 @@ static void perform_mc_bi_wp (sMacroblock* curMb, eColorPlane pl, sPicture* pict
 
   check_motion_vector_range(l0_mv_array, curSlice);
   check_motion_vector_range(l1_mv_array, curSlice);
-  vec1_x = i4 * mv_mul + l0_mv_array->mv_x;
-  vec2_x = i4 * mv_mul + l1_mv_array->mv_x;
-  vec1_y = (block_y_aff + j) * mv_mul + l0_mv_array->mv_y;
-  vec2_y = (block_y_aff + j) * mv_mul + l1_mv_array->mv_y;
+  vec1_x = i4 * mv_mul + l0_mv_array->mvX;
+  vec2_x = i4 * mv_mul + l1_mv_array->mvX;
+  vec1_y = (block_y_aff + j) * mv_mul + l0_mv_array->mvY;
+  vec2_y = (block_y_aff + j) * mv_mul + l1_mv_array->mvY;
 
   if (big_blocky && check_vert_mv(llimit, vec1_y, rlimit))
   {
@@ -2108,9 +2108,9 @@ static void perform_mc_bi_wp (sMacroblock* curMb, eColorPlane pl, sPicture* pict
     get_block_luma(list1, vec2_x, vec2_y, block_size_x, block_size_y, tmp_block_l1,shift_x,maxold_x,maxold_y,tmp_res,max_imgpel_value,no_ref_value, curMb);
 
 
-  wp_offset = ((offset0[pl] + offset1[pl] + 1) >>1);
+  wpOffset = ((offset0[pl] + offset1[pl] + 1) >>1);
   wp_denom  = pl > 0 ? curSlice->chroma_log2_weight_denom : curSlice->luma_log2_weight_denom;
-  weighted_bi_prediction(&curSlice->mb_pred[pl][joff][ioff], block0, block1, block_size_y, block_size_x, weight0[pl], weight1[pl], wp_offset, wp_denom + 1, max_imgpel_value);
+  weighted_bi_prediction(&curSlice->mb_pred[pl][joff][ioff], block0, block1, block_size_y, block_size_x, weight0[pl], weight1[pl], wpOffset, wp_denom + 1, max_imgpel_value);
 
   if ((chromaFormatIdc != YUV400) && (chromaFormatIdc != YUV444) )
   {
@@ -2157,12 +2157,12 @@ static void perform_mc_bi_wp (sMacroblock* curMb, eColorPlane pl, sPicture* pict
     }
     no_ref_value = (sPixel)vidParam->dc_pred_value_comp[1];
 
-    wp_offset = ((offset0[1] + offset1[1] + 1) >>1);
+    wpOffset = ((offset0[1] + offset1[1] + 1) >>1);
     get_block_chroma(list0,vec1_x,vec1_y_cr,subpel_x,subpel_y,maxold_x,maxold_y,block_size_x_cr,block_size_y_cr,shiftpel_x,shiftpel_y,block0,block2 ,total_scale,no_ref_value,vidParam);
     get_block_chroma(list1,vec2_x,vec2_y_cr,subpel_x,subpel_y,maxold_x,maxold_y,block_size_x_cr,block_size_y_cr,shiftpel_x,shiftpel_y,block1,block3 ,total_scale,no_ref_value,vidParam);
-    weighted_bi_prediction(&curSlice->mb_pred[1][joff_cr][ioff_cr],block0,block1,block_size_y_cr,block_size_x_cr,weight0[1],weight1[1],wp_offset,chroma_log2,vidParam->max_pel_value_comp[1]);
-    wp_offset = ((offset0[2] + offset1[2] + 1) >>1);
-    weighted_bi_prediction(&curSlice->mb_pred[2][joff_cr][ioff_cr],block2,block3,block_size_y_cr,block_size_x_cr,weight0[2],weight1[2],wp_offset,chroma_log2,vidParam->max_pel_value_comp[2]);
+    weighted_bi_prediction(&curSlice->mb_pred[1][joff_cr][ioff_cr],block0,block1,block_size_y_cr,block_size_x_cr,weight0[1],weight1[1],wpOffset,chroma_log2,vidParam->max_pel_value_comp[1]);
+    wpOffset = ((offset0[2] + offset1[2] + 1) >>1);
+    weighted_bi_prediction(&curSlice->mb_pred[2][joff_cr][ioff_cr],block2,block3,block_size_y_cr,block_size_x_cr,weight0[2],weight1[2],wpOffset,chroma_log2,vidParam->max_pel_value_comp[2]);
   }
 }
 //}}}
@@ -2187,7 +2187,7 @@ static void perform_mc_bi (sMacroblock* curMb, eColorPlane pl, sPicture* picture
   short l1_refframe = mvInfo->refIndex[LIST_1];
   int list_offset = curMb->list_offset;
 
-  int maxold_y = (curMb->mb_field) ? (picture->size_y >> 1) - 1 : picture->size_y_m1;
+  int maxold_y = (curMb->mb_field) ? (picture->sizeY >> 1) - 1 : picture->size_y_m1;
   int pady = vidParam->iLumaPadY;
   int rlimit = maxold_y + pady - block_size_y - 2;
   int llimit = 2 - pady;
@@ -2210,10 +2210,10 @@ static void perform_mc_bi (sMacroblock* curMb, eColorPlane pl, sPicture* picture
   sPixel no_ref_value = (sPixel) vidParam->dc_pred_value_comp[pl];
   check_motion_vector_range(l0_mv_array, curSlice);
   check_motion_vector_range(l1_mv_array, curSlice);
-  vec1_x = i4 * mv_mul + l0_mv_array->mv_x;
-  vec2_x = i4 * mv_mul + l1_mv_array->mv_x;
-  vec1_y = (block_y_aff + j) * mv_mul + l0_mv_array->mv_y;
-  vec2_y = (block_y_aff + j) * mv_mul + l1_mv_array->mv_y;
+  vec1_x = i4 * mv_mul + l0_mv_array->mvX;
+  vec2_x = i4 * mv_mul + l1_mv_array->mvX;
+  vec1_y = (block_y_aff + j) * mv_mul + l0_mv_array->mvY;
+  vec2_y = (block_y_aff + j) * mv_mul + l1_mv_array->mvY;
   if (big_blocky && check_vert_mv(llimit, vec1_y, rlimit))
   {
     get_block_luma(list0, vec1_x, vec1_y, block_size_x, BLOCK_SIZE_8x8, tmp_block_l0, shift_x,maxold_x,maxold_y,tmp_res,max_imgpel_value,no_ref_value, curMb);
