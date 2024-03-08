@@ -172,12 +172,12 @@ void linfo_levrun_c2x2 (int len, int info, int* level, int* irun) {
 //{{{
 int readsSyntaxElement_VLC (sSyntaxElement* sym, sBitstream* curStream) {
 
-  sym->len =  GetVLCSymbol (curStream->streamBuffer, curStream->frame_bitoffset,
-                            &(sym->inf), curStream->bitstream_length);
+  sym->len =  GetVLCSymbol (curStream->streamBuffer, curStream->frameBitOffset,
+                            &(sym->inf), curStream->bitstreamLength);
   if (sym->len == -1)
     return -1;
 
-  curStream->frame_bitoffset += sym->len;
+  curStream->frameBitOffset += sym->len;
   sym->mapping (sym->len, sym->inf, &(sym->value1), &(sym->value2));
 
   return 1;
@@ -191,11 +191,11 @@ int readsSyntaxElement_UVLC (sMacroblock* curMb, sSyntaxElement* sym, sDataParti
 //{{{
 int readsSyntaxElement_Intra4x4PredictionMode (sSyntaxElement* sym, sBitstream* curStream) {
 
-  sym->len = GetVLCSymbol_IntraMode (curStream->streamBuffer, curStream->frame_bitoffset, &(sym->inf), curStream->bitstream_length);
+  sym->len = GetVLCSymbol_IntraMode (curStream->streamBuffer, curStream->frameBitOffset, &(sym->inf), curStream->bitstreamLength);
   if (sym->len == -1)
     return -1;
 
-  curStream->frame_bitoffset += sym->len;
+  curStream->frameBitOffset += sym->len;
   sym->value1       = (sym->len == 1) ? -1 : sym->inf;
 
   return 1;
@@ -261,7 +261,7 @@ int uvlc_startcode_follows (sSlice* curSlice, int dummy) {
   sBitstream* curStream = dP->bitstream;
   byte* buf = curStream->streamBuffer;
 
-  return !(more_rbsp_data (buf, curStream->frame_bitoffset,curStream->bitstream_length));
+  return !(more_rbsp_data (buf, curStream->frameBitOffset,curStream->bitstreamLength));
   }
 //}}}
 //{{{
@@ -315,14 +315,14 @@ static int code_from_bitstream_2d (sSyntaxElement* sym, sBitstream* curStream,
 
   const byte* len = &lentab[0], *cod = &codtab[0];
 
-  int* frame_bitoffset = &curStream->frame_bitoffset;
-  byte* buf = &curStream->streamBuffer[*frame_bitoffset >> 3];
+  int* frameBitOffset = &curStream->frameBitOffset;
+  byte* buf = &curStream->streamBuffer[*frameBitOffset >> 3];
 
   // Apply bitoffset to three bytes (maximum that may be traversed by ShowBitsThres)
   // Even at the end of a stream we will still be pulling out of allocated memory as alloc is done by MAX_CODED_FRAME_SIZE
   unsigned int inf = ((*buf) << 16) + (*(buf + 1) << 8) + *(buf + 2);
   // Offset is constant so apply before extracting different numbers of bits
-  inf <<= (*frame_bitoffset & 0x07);
+  inf <<= (*frameBitOffset & 0x07);
   // Arithmetic shift so wipe any sign which may be extended inside ShowBitsThres
   inf  &= 0xFFFFFF;
 
@@ -335,7 +335,7 @@ static int code_from_bitstream_2d (sSyntaxElement* sym, sBitstream* curStream,
         }
       else {
         sym->len = *len;
-        *frame_bitoffset += *len; // move bitstream pointer
+        *frameBitOffset += *len; // move bitstream pointer
         *code = *cod;
         sym->value1 = i;
         sym->value2 = j;
@@ -351,13 +351,13 @@ static int code_from_bitstream_2d (sSyntaxElement* sym, sBitstream* curStream,
 //{{{
 int readsSyntaxElement_FLC (sSyntaxElement* sym, sBitstream* curStream)
 {
-  int BitstreamLengthInBits  = (curStream->bitstream_length << 3) + 7;
+  int BitstreamLengthInBits  = (curStream->bitstreamLength << 3) + 7;
 
-  if ((GetBits(curStream->streamBuffer, curStream->frame_bitoffset, &(sym->inf), BitstreamLengthInBits, sym->len)) < 0)
+  if ((GetBits(curStream->streamBuffer, curStream->frameBitOffset, &(sym->inf), BitstreamLengthInBits, sym->len)) < 0)
     return -1;
 
   sym->value1 = sym->inf;
-  curStream->frame_bitoffset += sym->len; // move bitstream pointer
+  curStream->frameBitOffset += sym->len; // move bitstream pointer
 
   return 1;
 }
@@ -367,8 +367,8 @@ int readsSyntaxElement_NumCoeffTrailingOnes (sSyntaxElement* sym,
                                            sBitstream *curStream,
                                            char *type)
 {
-  int frame_bitoffset        = curStream->frame_bitoffset;
-  int BitstreamLengthInBytes = curStream->bitstream_length;
+  int frameBitOffset        = curStream->frameBitOffset;
+  int BitstreamLengthInBytes = curStream->bitstreamLength;
   int BitstreamLengthInBits  = (BitstreamLengthInBytes << 3) + 7;
   byte *buf                  = curStream->streamBuffer;
 
@@ -424,9 +424,9 @@ int readsSyntaxElement_NumCoeffTrailingOnes (sSyntaxElement* sym,
   if (vlcnum == 3)
   {
     // read 6 bit FLC
-    //code = ShowBits(buf, frame_bitoffset, BitstreamLengthInBytes, 6);
-    code = ShowBits(buf, frame_bitoffset, BitstreamLengthInBits, 6);
-    curStream->frame_bitoffset += 6;
+    //code = ShowBits(buf, frameBitOffset, BitstreamLengthInBytes, 6);
+    code = ShowBits(buf, frameBitOffset, BitstreamLengthInBits, 6);
+    curStream->frameBitOffset += 6;
     sym->value2 = (code & 3);
     sym->value1 = (code >> 2);
 
@@ -512,13 +512,13 @@ int readsSyntaxElement_NumCoeffTrailingOnesChromaDC (sVidParam* vidParam, sSynta
 //{{{
 int readsSyntaxElement_Level_VLC0 (sSyntaxElement* sym, sBitstream* curStream)
 {
-  int frame_bitoffset        = curStream->frame_bitoffset;
-  int BitstreamLengthInBytes = curStream->bitstream_length;
+  int frameBitOffset        = curStream->frameBitOffset;
+  int BitstreamLengthInBytes = curStream->bitstreamLength;
   int BitstreamLengthInBits  = (BitstreamLengthInBytes << 3) + 7;
   byte *buf                  = curStream->streamBuffer;
   int len = 1, sign = 0, level = 0, code = 1;
 
-  while (!ShowBits(buf, frame_bitoffset++, BitstreamLengthInBits, 1))
+  while (!ShowBits(buf, frameBitOffset++, BitstreamLengthInBits, 1))
     len++;
 
   if (len < 15)
@@ -530,9 +530,9 @@ int readsSyntaxElement_Level_VLC0 (sSyntaxElement* sym, sBitstream* curStream)
   {
     // escape code
     code <<= 4;
-    code |= ShowBits(buf, frame_bitoffset, BitstreamLengthInBits, 4);
+    code |= ShowBits(buf, frameBitOffset, BitstreamLengthInBits, 4);
     len  += 4;
-    frame_bitoffset += 4;
+    frameBitOffset += 4;
     sign = (code & 0x01);
     level = ((code >> 1) & 0x07) + 8;
   }
@@ -542,9 +542,9 @@ int readsSyntaxElement_Level_VLC0 (sSyntaxElement* sym, sBitstream* curStream)
     int addbit = (len - 16);
     int offset = (2048 << addbit) - 2032;
     len   -= 4;
-    code   = ShowBits(buf, frame_bitoffset, BitstreamLengthInBits, len);
+    code   = ShowBits(buf, frameBitOffset, BitstreamLengthInBits, len);
     sign   = (code & 0x01);
-    frame_bitoffset += len;
+    frameBitOffset += len;
     level = (code >> 1) + offset;
 
     code |= (1 << (len)); // for display purpose only
@@ -554,15 +554,15 @@ int readsSyntaxElement_Level_VLC0 (sSyntaxElement* sym, sBitstream* curStream)
   sym->inf = (sign) ? -level : level ;
   sym->len = len;
 
-  curStream->frame_bitoffset = frame_bitoffset;
+  curStream->frameBitOffset = frameBitOffset;
   return 0;
 }
 //}}}
 //{{{
 int readsSyntaxElement_Level_VLCN (sSyntaxElement* sym, int vlc, sBitstream* curStream)
 {
-  int frame_bitoffset        = curStream->frame_bitoffset;
-  int BitstreamLengthInBytes = curStream->bitstream_length;
+  int frameBitOffset        = curStream->frameBitOffset;
+  int BitstreamLengthInBytes = curStream->bitstreamLength;
   int BitstreamLengthInBits  = (BitstreamLengthInBytes << 3) + 7;
   byte *buf                  = curStream->streamBuffer;
 
@@ -573,24 +573,24 @@ int readsSyntaxElement_Level_VLCN (sSyntaxElement* sym, int vlc, sBitstream* cur
   int shift = vlc - 1;
 
   // read pre zeros
-  while (!ShowBits(buf, frame_bitoffset ++, BitstreamLengthInBits, 1))
+  while (!ShowBits(buf, frameBitOffset ++, BitstreamLengthInBits, 1))
     len++;
 
-  frame_bitoffset -= len;
+  frameBitOffset -= len;
 
   if (len < 16) {
     levabs = ((len - 1) << shift) + 1;
 
     // read (vlc-1) bits -> suffix
     if (shift) {
-      sb =  ShowBits(buf, frame_bitoffset + len, BitstreamLengthInBits, shift);
+      sb =  ShowBits(buf, frameBitOffset + len, BitstreamLengthInBits, shift);
       code = (code << (shift) )| sb;
       levabs += sb;
       len += (shift);
     }
 
     // read 1 bit -> sign
-    sign = ShowBits(buf, frame_bitoffset + len, BitstreamLengthInBits, 1);
+    sign = ShowBits(buf, frameBitOffset + len, BitstreamLengthInBits, 1);
     code = (code << 1)| sign;
     len ++;
   }
@@ -599,14 +599,14 @@ int readsSyntaxElement_Level_VLCN (sSyntaxElement* sym, int vlc, sBitstream* cur
     int addbit = len - 5;
     int offset = (1 << addbit) + (15 << shift) - 2047;
 
-    sb = ShowBits(buf, frame_bitoffset + len, BitstreamLengthInBits, addbit);
+    sb = ShowBits(buf, frameBitOffset + len, BitstreamLengthInBits, addbit);
     code = (code << addbit ) | sb;
     len   += addbit;
 
     levabs = sb + offset;
 
     // read 1 bit -> sign
-    sign = ShowBits(buf, frame_bitoffset + len, BitstreamLengthInBits, 1);
+    sign = ShowBits(buf, frameBitOffset + len, BitstreamLengthInBits, 1);
 
     code = (code << 1)| sign;
 
@@ -616,7 +616,7 @@ int readsSyntaxElement_Level_VLCN (sSyntaxElement* sym, int vlc, sBitstream* cur
   sym->inf = (sign)? -levabs : levabs;
   sym->len = len;
 
-  curStream->frame_bitoffset = frame_bitoffset + len;
+  curStream->frameBitOffset = frameBitOffset + len;
 
   return 0;
 }

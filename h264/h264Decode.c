@@ -145,7 +145,7 @@ sSlice* allocSlice (sInputParam* inputParam, sVidParam* vidParam) {
 //{{{
 static void freeSlice (sSlice *curSlice) {
 
-  if (curSlice->slice_type != I_SLICE && curSlice->slice_type != SI_SLICE)
+  if (curSlice->sliceType != I_SLICE && curSlice->sliceType != SI_SLICE)
     free_ref_pic_list_reordering_buffer (curSlice);
 
   freePred (curSlice);
@@ -261,8 +261,6 @@ static void init (sVidParam* vidParam) {
   vidParam->gapNumFrame = 0;
 
   // time for total decoding session
-  vidParam->totTime = 0;
-
   vidParam->picture = NULL;
   vidParam->MbToSliceGroupMap = NULL;
   vidParam->MapUnitToSliceGroupMap = NULL;
@@ -528,13 +526,13 @@ sDecodedPicList* getAvailableDecPic (sDecodedPicList* pDecPicList, int b3D, int 
   sDecodedPicList* pPrior = NULL;
 
   if (b3D) {
-    while (pPic && (pPic->bValid &(1<<view_id))) {
+    while (pPic && (pPic->valid &(1<<view_id))) {
       pPrior = pPic;
       pPic = pPic->next;
       }
     }
   else {
-    while (pPic && (pPic->bValid)) {
+    while (pPic && (pPic->valid)) {
       pPrior = pPic;
       pPic = pPic->next;
      }
@@ -553,7 +551,7 @@ void ClearDecPicList (sVidParam* vidParam) {
 
   // find the head first;
   sDecodedPicList* pPic = vidParam->decOutputPic, *pPrior = NULL;
-  while (pPic && !pPic->bValid) {
+  while (pPic && !pPic->valid) {
     pPrior = pPic;
     pPic = pPic->next;
     }
@@ -575,11 +573,11 @@ void freeDecPicList (sDecodedPicList* pDecPicList) {
 
   while (pDecPicList) {
     sDecodedPicList* pPicNext = pDecPicList->next;
-    if (pDecPicList->pY) {
-      free (pDecPicList->pY);
-      pDecPicList->pY = NULL;
-      pDecPicList->pU = NULL;
-      pDecPicList->pV = NULL;
+    if (pDecPicList->yBuf) {
+      free (pDecPicList->yBuf);
+      pDecPicList->yBuf = NULL;
+      pDecPicList->uBuf = NULL;
+      pDecPicList->vBuf = NULL;
       }
 
     free (pDecPicList);
@@ -670,7 +668,7 @@ int DecodeOneFrame (sDecodedPicList** ppDecPicList) {
   sDecoderParam* pDecoder = gDecoder;
   ClearDecPicList (gDecoder->vidParam);
 
-  int iRet = decode_one_frame (gDecoder);
+  int iRet = decodeFrame (gDecoder);
   if (iRet == SOP)
     iRet = DEC_SUCCEED;
   else if (iRet == EOS)

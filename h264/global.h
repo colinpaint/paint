@@ -20,18 +20,18 @@
 #define MAX_NUM_REF_FRAMES_PIC_ORDER  256
 #define ET_SIZE 300      //!< size of error text buffer
 //}}}
-//{{{  enum DecoderStatus
+//{{{  enum eDecoderStatus
 typedef enum {
   DEC_OPENED = 0,
   DEC_STOPPED,
-  } DecoderStatus;
+  } eDecoderStatus;
 //}}}
-//{{{  enum Color_Component
+//{{{  enum eColorComponent
 typedef enum {
   LumaComp = 0,
   CrComp = 1,
   CbComp = 2
-  } Color_Component;
+  } eColorComponent;
 //}}}
 
 //{{{  sHRD
@@ -68,8 +68,8 @@ typedef struct {
   unsigned int transfer_characteristics;             // u(8)
   unsigned int matrix_coefficients;                  // u(8)
   Boolean      chroma_location_info_present_flag;    // u(1)
-  unsigned int  chroma_sample_loc_type_top_field;    // ue(v)
-  unsigned int  chroma_sample_loc_type_bottom_field; // ue(v)
+  unsigned int chroma_sample_loc_type_top_field;     // ue(v)
+  unsigned int chroma_sample_loc_type_bottom_field;  // ue(v)
 
   Boolean      timing_info_present_flag;             // u(1)
   unsigned int num_units_in_tick;                    // u(32)
@@ -98,7 +98,7 @@ typedef struct {
 //}}}
 //{{{  sSPS
 typedef struct {
-  Boolean  Valid;
+  Boolean  valid;
 
   unsigned int profile_idc;           // u(8)
   Boolean  constrained_set0_flag;     // u(1)
@@ -107,7 +107,7 @@ typedef struct {
   Boolean  constrained_set3_flag;     // u(1)
   unsigned int level_idc;             // u(8)
   unsigned int seq_parameter_set_id;  // ue(v)
-  unsigned int chromaFormatIdc;     // ue(v)
+  unsigned int chromaFormatIdc;       // ue(v)
 
   Boolean  seq_scaling_matrix_present_flag;    // u(1)
   int      seq_scaling_list_present_flag[12];  // u(1)
@@ -116,17 +116,17 @@ typedef struct {
   Boolean  UseDefaultScalingMatrix4x4Flag[6];
   Boolean  UseDefaultScalingMatrix8x8Flag[6];
 
-  unsigned int bit_depth_luma_minus8;              // ue(v)
-  unsigned int bit_depth_chroma_minus8;            // ue(v)
-  unsigned int log2_max_frame_num_minus4;          // ue(v)
+  unsigned int bit_depth_luma_minus8;             // ue(v)
+  unsigned int bit_depth_chroma_minus8;           // ue(v)
+  unsigned int log2_max_frame_num_minus4;         // ue(v)
   unsigned int pic_order_cnt_type;
-  unsigned int log2_max_pic_order_cnt_lsb_minus4;  // ue(v)
-  Boolean  delta_pic_order_always_zero_flag;       // u(1)
-  int      offset_for_non_ref_pic;                 // se(v)
-  int      offset_for_top_to_bottom_field;         // se(v)
+  unsigned int log2_max_pic_order_cnt_lsb_minus4; // ue(v)
+  Boolean  delta_pic_order_always_zero_flag;      // u(1)
+  int      offset_for_non_ref_pic;                // se(v)
+  int      offset_for_top_to_bottom_field;        // se(v)
 
-  unsigned int num_ref_frames_in_pic_order_cnt_cycle;                     // ue(v)
-  int      offset_for_ref_frame[MAX_NUM_REF_FRAMES_PIC_ORDER];   // se(v)
+  unsigned int num_ref_frames_in_pic_order_cnt_cycle;          // ue(v)
+  int      offset_for_ref_frame[MAX_NUM_REF_FRAMES_PIC_ORDER]; // se(v)
   unsigned int num_ref_frames;                    // ue(v)
 
   Boolean  gaps_in_frame_num_value_allowed_flag;  // u(1)
@@ -152,7 +152,7 @@ typedef struct {
 //}}}
 //{{{  sPPS
 typedef struct {
-  Boolean   Valid;
+  Boolean   valid;
 
   unsigned int pic_parameter_set_id;            // ue(v)
   unsigned int seq_parameter_set_id;            // ue(v)
@@ -288,16 +288,16 @@ typedef struct PixelPos {
 //{{{  sBitstream
 typedef struct Bitstream {
   // CABAC Decoding
-  int read_len;          // actual position in the codebuffer, CABAC only
-  int code_len;          // overall codebuffer length, CABAC only
+  int readLen;          // actual position in the codebuffer, CABAC only
+  int codeLen;          // overall codebuffer length, CABAC only
 
   // CAVLC Decoding
-  int frame_bitoffset;   // actual position in the codebuffer, bit-oriented, CAVLC only
-  int bitstream_length;  // over codebuffer lnegth, byte oriented, CAVLC only
+  int frameBitOffset;   // actual position in the codebuffer, bit-oriented, CAVLC only
+  int bitstreamLength;  // over codebuffer lnegth, byte oriented, CAVLC only
 
   // ErrorConcealment
-  byte* streamBuffer;     // actual codebuffer for read bytes
-  int ei_flag;           // error indication, 0: no error, else unspecified error
+  byte* streamBuffer;   // actual codebuffer for read bytes
+  int eiFlag;           // error indication, 0: no error, else unspecified error
   } sBitstream;
 //}}}
 //{{{  sDecRefPicMarking
@@ -380,7 +380,7 @@ typedef struct Macroblock {
   int     DeblockCall;
 
   short   slice_nr;
-  char    ei_flag;            // error indicator flag that enables conceal
+  char    eiFlag;            // error indicator flag that enables conceal
   char    dpl_flag;           // error indicator flag that signals a missing data partition
   short   delta_quant;        // for rate control
   short   list_offset;
@@ -422,20 +422,20 @@ typedef struct Macroblock {
   void (*itrans_4x4)(struct Macroblock *curMb, eColorPlane pl, int ioff, int joff);
   void (*itrans_8x8)(struct Macroblock *curMb, eColorPlane pl, int ioff, int joff);
   void (*GetMVPredictor) (struct Macroblock *curMb, sPixelPos *block,
-                          sMotionVector *pmv, short ref_frame, 
-                          struct PicMotionParam** mv_info, 
-                          int list, int mb_x, int mb_y, 
+                          sMotionVector *pmv, short ref_frame,
+                          struct PicMotionParam** mv_info,
+                          int list, int mb_x, int mb_y,
                           int blockshape_x, int blockshape_y);
   int  (*read_and_store_CBP_block_bit)  (struct Macroblock *curMb, sDecodingEnvironmentPtr dep_dp, int type);
-  char (*readRefPictureIdx)             (struct Macroblock *curMb, struct SyntaxElement *currSE, 
+  char (*readRefPictureIdx)             (struct Macroblock *curMb, struct SyntaxElement *currSE,
                                          struct DataPartition *dP, char b8mode, int list);
-  void (*read_comp_coeff_4x4_CABAC)     (struct Macroblock *curMb, struct SyntaxElement *currSE, 
+  void (*read_comp_coeff_4x4_CABAC)     (struct Macroblock *curMb, struct SyntaxElement *currSE,
                                          eColorPlane pl, int (*InvLevelScale4x4)[4], int qp_per, int cbp);
-  void (*read_comp_coeff_8x8_CABAC)     (struct Macroblock *curMb, struct SyntaxElement *currSE, 
+  void (*read_comp_coeff_8x8_CABAC)     (struct Macroblock *curMb, struct SyntaxElement *currSE,
                                          eColorPlane pl);
-  void (*read_comp_coeff_4x4_CAVLC)     (struct Macroblock *curMb, eColorPlane pl, 
+  void (*read_comp_coeff_4x4_CAVLC)     (struct Macroblock *curMb, eColorPlane pl,
                                          int (*InvLevelScale4x4)[4], int qp_per, int cbp, byte** nzcoeff);
-  void (*read_comp_coeff_8x8_CAVLC)     (struct Macroblock *curMb, eColorPlane pl, 
+  void (*read_comp_coeff_8x8_CAVLC)     (struct Macroblock *curMb, eColorPlane pl,
                                          int (*InvLevelScale8x8)[8], int qp_per, int cbp, byte** nzcoeff);
   } sMacroblock;
 //}}}
@@ -538,8 +538,8 @@ typedef struct Slice {
 
   // information need to move to slice
   unsigned int current_mb_nr;  // bitstream order
-  unsigned int num_dec_mb;
-  short current_slice_nr;
+  unsigned int numDecodedMb;
+  short curSliceNum;
   int cod_counter;             // Current count of number of skipped macroblocks in a row
   int allrefzero;
 
@@ -547,18 +547,18 @@ typedef struct Slice {
   int               direct_spatial_mv_pred_flag; // Indicator for direct mode type (1 for Spatial, 0 for Temporal)
   int               num_ref_idx_active[2];       // number of available list references
 
-  int               ei_flag;       // 0 if the partArr[0] contains valid information
+  int               eiFlag;       // 0 if the partArr[0] contains valid information
   int               qp;
   int               slice_qp_delta;
   int               qs;
   int               slice_qs_delta;
-  int               slice_type;    // slice type
+  int               sliceType;    // slice type
   int               model_number;  // cabac model number
   unsigned int      frame_num;     // frame_num for this frame
   unsigned int      field_pic_flag;
   byte              bottom_field_flag;
   ePicStructure     structure;     // Identify picture structure type
-  int               start_mb_nr;   // MUST be set by NAL even in case of ei_flag == 1
+  int               start_mb_nr;   // MUST be set by NAL even in case of eiFlag == 1
   int               end_mb_nr_plus1;
   int               max_part_nr;
   int               dp_mode;       // data partitioning mode
@@ -671,24 +671,24 @@ typedef struct Slice {
 //}}}
 //{{{  sDecodedPicList
 typedef struct DecodedPicList {
-  int bValid;                 // 0: invalid, 1: valid, 3: valid for 3D output;
-  int iViewId;                // -1: single view, >=0 multiview[VIEW1|VIEW0];
-  int iPOC;
+  int valid;             // 0: invalid, 1: valid, 3: valid for 3D output;
+  int viewId;            // -1: single view, >=0 multiview[VIEW1|VIEW0];
+  int poc;
 
-  int iYUVFormat;             // 0: 4:0:0, 1: 4:2:0, 2: 4:2:2, 3: 4:4:4
-  int iYUVStorageFormat;      // 0: YUV seperate; 1: YUV interleaved; 2: 3D output;
+  int yuvFormat;         // 0: 4:0:0, 1: 4:2:0, 2: 4:2:2, 3: 4:4:4
+  int yuvStorageFormat;  // 0: YUV seperate; 1: YUV interleaved; 2: 3D output;
   int iBitDepth;
 
-  byte* pY;                   // if iPictureFormat is 1, [0]: top; [1] bottom;
-  byte* pU;
-  byte* pV;
+  byte* yBuf;            // if iPictureFormat is 1, [0]: top; [1] bottom;
+  byte* uBuf;
+  byte* vBuf;
 
-  int iWidth;                 // frame width;
-  int iHeight;                // frame height;
-  int iYBufStride;            // stride of pY[0/1] buffer in bytes;
-  int iUVBufStride;           // stride of pU[0/1] and pV[0/1] buffer in bytes;
-  int iSkipPicNum;
-  int iBufSize;
+  int width;             // frame width;
+  int height;            // frame height;
+  int yStride;           // stride of yBuf[0/1] buffer in bytes;
+  int uvStride;          // stride of uBuf[0/1] and vBuf[0/1] buffer in bytes;
+  int skipPicNum;
+  int bufSize;
 
   struct DecodedPicList *next;
   } sDecodedPicList;
@@ -778,7 +778,6 @@ typedef struct VidParam {
 
   TIME_T startTime;
   TIME_T endTime;
-  int64  totTime;
 
   sPPS* activePPS;
   sSPS* activeSPS;
@@ -794,8 +793,8 @@ typedef struct VidParam {
   int                   number;  //frame number
 
   // current picture property;
-  unsigned int num_dec_mb;
-  int          iSliceNumOfCurrPic;
+  unsigned int numDecodedMb;
+  int          curPicSliceNum;
   int          numSlicesAllocated;
   int          numSlicesDecoded;
   sSlice**     sliceList;

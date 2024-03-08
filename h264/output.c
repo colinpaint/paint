@@ -29,21 +29,21 @@ static void allocDecPic (sVidParam* vidParam, sDecodedPicList* decPic, sPicture*
 
   int symbolSizeInBytes = (vidParam->pic_unit_bitsize_on_disk + 7) >> 3;
 
-  if (decPic->pY)
-    mem_free (decPic->pY);
+  if (decPic->yBuf)
+    mem_free (decPic->yBuf);
 
-  decPic->iBufSize = iFrameSize;
-  decPic->pY = mem_malloc(decPic->iBufSize);
-  decPic->pU = decPic->pY + iLumaSize;
-  decPic->pV = decPic->pU + ((iFrameSize-iLumaSize)>>1);
+  decPic->bufSize = iFrameSize;
+  decPic->yBuf = mem_malloc(decPic->bufSize);
+  decPic->uBuf = decPic->yBuf + iLumaSize;
+  decPic->vBuf = decPic->uBuf + ((iFrameSize-iLumaSize)>>1);
 
-  decPic->iYUVFormat = p->chromaFormatIdc;
-  decPic->iYUVStorageFormat = 0;
+  decPic->yuvFormat = p->chromaFormatIdc;
+  decPic->yuvStorageFormat = 0;
   decPic->iBitDepth = vidParam->pic_unit_bitsize_on_disk;
-  decPic->iWidth = iLumaSizeX;
-  decPic->iHeight = iLumaSizeY;
-  decPic->iYBufStride = iLumaSizeX * symbolSizeInBytes;
-  decPic->iUVBufStride = iChromaSizeX * symbolSizeInBytes;
+  decPic->width = iLumaSizeX;
+  decPic->height = iLumaSizeY;
+  decPic->yStride = iLumaSizeX * symbolSizeInBytes;
+  decPic->uvStride = iChromaSizeX * symbolSizeInBytes;
   }
 //}}}
 //{{{
@@ -95,29 +95,29 @@ static void writeOutPicture (sVidParam* vidParam, sPicture* p) {
   int frameSize = (lumaSizeX * lumaSizeY + 2 * (chromaSizeX * chromaSizeY)) * symbolSizeInBytes; 
 
   sDecodedPicList* decPic = getAvailableDecPic (vidParam->decOutputPic, 0, 0);
-  if ((decPic->pY == NULL) || (decPic->iBufSize < frameSize))
+  if ((decPic->yBuf == NULL) || (decPic->bufSize < frameSize))
     allocDecPic (vidParam, decPic, p, lumaSize, frameSize, lumaSizeX, lumaSizeY, chromaSizeX, chromaSizeY);
-  decPic->bValid = 1;
-  decPic->iPOC = p->frame_poc;
-  if (NULL == decPic->pY)
+  decPic->valid = 1;
+  decPic->poc = p->framePoc;
+  if (NULL == decPic->yBuf)
     no_mem_exit ("writeOutPicture: buf");
 
-  unsigned char* buf = (decPic->bValid == 1) ? decPic->pY : decPic->pY + lumaSizeX * symbolSizeInBytes;
+  unsigned char* buf = (decPic->valid == 1) ? decPic->yBuf : decPic->yBuf + lumaSizeX * symbolSizeInBytes;
   img2buf (p->imgY, buf, p->size_x, p->size_y, symbolSizeInBytes,
-           crop_left, crop_right, crop_top, crop_bottom, decPic->iYBufStride);
+           crop_left, crop_right, crop_top, crop_bottom, decPic->yStride);
 
   crop_left = p->frame_crop_left_offset;
   crop_right = p->frame_crop_right_offset;
   crop_top = (2 - p->frame_mbs_only_flag) * p->frame_crop_top_offset;
   crop_bottom = (2 - p->frame_mbs_only_flag) * p->frame_crop_bottom_offset;
 
-  buf = (decPic->bValid == 1) ? decPic->pU : decPic->pU + chromaSizeX * symbolSizeInBytes;
+  buf = (decPic->valid == 1) ? decPic->uBuf : decPic->uBuf + chromaSizeX * symbolSizeInBytes;
   img2buf (p->imgUV[0], buf, p->size_x_cr, p->size_y_cr, symbolSizeInBytes,
-           crop_left, crop_right, crop_top, crop_bottom, decPic->iUVBufStride);
+           crop_left, crop_right, crop_top, crop_bottom, decPic->uvStride);
 
-  buf = (decPic->bValid == 1) ? decPic->pV : decPic->pV + chromaSizeX * symbolSizeInBytes;
+  buf = (decPic->valid == 1) ? decPic->vBuf : decPic->vBuf + chromaSizeX * symbolSizeInBytes;
   img2buf (p->imgUV[1], buf, p->size_x_cr, p->size_y_cr, symbolSizeInBytes,
-           crop_left, crop_right, crop_top, crop_bottom, decPic->iUVBufStride);
+           crop_left, crop_right, crop_top, crop_bottom, decPic->uvStride);
   }
 //}}}
 //{{{

@@ -1509,7 +1509,7 @@ static sPicture* get_last_ref_pic_from_dpb (sDPB* dpb)
     {
       if (((dpb->fs[i]->frame->used_for_reference) &&
         (!dpb->fs[i]->frame->is_long_term)) /*||  ((dpb->fs[i]->frame->used_for_reference==0)
-                                           && (dpb->fs[i]->frame->slice_type == P_SLICE))*/ )
+                                           && (dpb->fs[i]->frame->sliceType == P_SLICE))*/ )
       {
         return dpb->fs[i]->frame;
       }
@@ -1546,7 +1546,7 @@ static void copy_to_conceal (sPicture *src, sPicture *dst, sVidParam* vidParam)
 
   dst->picSizeInMbs  = src->picSizeInMbs;
 
-  dst->slice_type = src->slice_type = vidParam->conceal_slice_type;
+  dst->sliceType = src->sliceType = vidParam->conceal_slice_type;
 
   dst->idrFlag = FALSE; //since we do not want to clears the ref list
 
@@ -1601,7 +1601,7 @@ static void copy_to_conceal (sPicture *src, sPicture *dst, sVidParam* vidParam)
     {
       init_lists_for_non_reference_loss(
         vidParam->dpbLayer[0],
-        dst->slice_type, vidParam->sliceList[0]->structure);
+        dst->sliceType, vidParam->sliceList[0]->structure);
     }
     else
       vidParam->sliceList[0]->init_lists(vidParam->sliceList[0]); //vidParam->currentSlice);
@@ -1922,10 +1922,10 @@ void conceal_lost_frames (sDPB* dpb, sSlice *pSlice)
 
     pSlice->frame_num = UnusedShortTermFrameNum;
 
-    picture->top_poc = vidParam->last_ref_pic_poc + vidParam->ref_poc_gap;
-    picture->bottom_poc = picture->top_poc;
-    picture->frame_poc = picture->top_poc;
-    picture->poc = picture->top_poc;
+    picture->topPoc = vidParam->last_ref_pic_poc + vidParam->ref_poc_gap;
+    picture->botPoc = picture->topPoc;
+    picture->framePoc = picture->topPoc;
+    picture->poc = picture->topPoc;
     vidParam->last_ref_pic_poc = picture->poc;
 
     copy_prev_pic_to_concealed_pic(picture, dpb);
@@ -1933,13 +1933,13 @@ void conceal_lost_frames (sDPB* dpb, sSlice *pSlice)
     //if (UnusedShortTermFrameNum == 0)
     if(vidParam->IDR_concealment_flag == 1)
     {
-      picture->slice_type = I_SLICE;
+      picture->sliceType = I_SLICE;
       picture->idrFlag = TRUE;
       flush_dpb(dpb);
-      picture->top_poc= 0;
-      picture->bottom_poc=picture->top_poc;
-      picture->frame_poc=picture->top_poc;
-      picture->poc=picture->top_poc;
+      picture->topPoc= 0;
+      picture->botPoc=picture->topPoc;
+      picture->framePoc=picture->topPoc;
+      picture->poc=picture->topPoc;
       vidParam->last_ref_pic_poc = picture->poc;
     }
 
@@ -2003,9 +2003,9 @@ void conceal_non_ref_pics (sDPB* dpb, int diff)
       if(missingpoc > vidParam->earlier_missing_poc)
       {
         vidParam->earlier_missing_poc  = missingpoc;
-        conceal_to_picture->top_poc = missingpoc;
-        conceal_to_picture->bottom_poc = missingpoc;
-        conceal_to_picture->frame_poc = missingpoc;
+        conceal_to_picture->topPoc = missingpoc;
+        conceal_to_picture->botPoc = missingpoc;
+        conceal_to_picture->framePoc = missingpoc;
         conceal_to_picture->poc = missingpoc;
         conceal_from_picture = get_pic_from_dpb(dpb, missingpoc, &pos);
 

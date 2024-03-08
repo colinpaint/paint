@@ -1866,7 +1866,7 @@ static void perform_mc_single_wp (sMacroblock* curMb, eColorPlane pl, sPicture* 
   static const int mv_mul = 16; // 4 * 4
   int i4   = curMb->block_x + i;
   int j4   = curMb->block_y + j;
-  int type = curSlice->slice_type;
+  int type = curSlice->sliceType;
   int chromaFormatIdc = picture->chromaFormatIdc;
   //===== Single List Prediction =====
   int ioff = (i << 2);

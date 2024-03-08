@@ -1188,8 +1188,8 @@ static void ref_pic_list_reordering (sSlice* curSlice) {
   sBitstream* curStream = partition->bitstream;
 
   alloc_ref_pic_list_reordering_buffer (curSlice);
-  if (curSlice->slice_type != I_SLICE &&
-      curSlice->slice_type != SI_SLICE) {
+  if (curSlice->sliceType != I_SLICE &&
+      curSlice->sliceType != SI_SLICE) {
     int val = curSlice->ref_pic_list_reordering_flag[LIST_0] =
       read_u_1 ("SLC ref_pic_list_reordering_flag_l0", curStream);
 
@@ -1211,7 +1211,7 @@ static void ref_pic_list_reordering (sSlice* curSlice) {
       }
     }
 
-  if (curSlice->slice_type == B_SLICE) {
+  if (curSlice->sliceType == B_SLICE) {
     int val = curSlice->ref_pic_list_reordering_flag[LIST_1] =
       read_u_1 ("SLC ref_pic_list_reordering_flag_l1", curStream);
     if (val) {
@@ -1233,7 +1233,7 @@ static void ref_pic_list_reordering (sSlice* curSlice) {
     }
 
   // set reference index of redundant slices.
-  if (curSlice->redundant_pic_cnt && (curSlice->slice_type != I_SLICE) )
+  if (curSlice->redundant_pic_cnt && (curSlice->sliceType != I_SLICE) )
     curSlice->redundant_slice_ref_idx = curSlice->abs_diff_pic_num_minus1[LIST_0][0] + 1;
   }
 //}}}
@@ -1304,7 +1304,7 @@ static void pred_weight_table (sSlice* curSlice) {
       }
     }
 
-  if ((curSlice->slice_type == B_SLICE) &&
+  if ((curSlice->sliceType == B_SLICE) &&
       vidParam->activePPS->weighted_bipred_idc == 1) {
     for (int i = 0; i < curSlice->num_ref_idx_active[LIST_1]; i++) {
       luma_weight_flag_l1 = read_u_1("SLC luma_weight_flag_l1", curStream);
@@ -1377,7 +1377,7 @@ void init_contexts (sSlice* curSlice) {
   int model_number = curSlice->model_number;
 
   //--- motion coding contexts ---
-  if ((curSlice->slice_type == I_SLICE)||(curSlice->slice_type == SI_SLICE)) {
+  if ((curSlice->sliceType == I_SLICE)||(curSlice->sliceType == SI_SLICE)) {
     IBIARI_CTX_INIT2 (3, NUM_MB_TYPE_CTX,   mc->mb_type_contexts,     INIT_MB_TYPE,    model_number, qp);
     IBIARI_CTX_INIT2 (2, NUM_B8_TYPE_CTX,   mc->b8_type_contexts,     INIT_B8_TYPE,    model_number, qp);
     IBIARI_CTX_INIT2 (2, NUM_MV_RES_CTX,    mc->mv_res_contexts,      INIT_MV_RES,     model_number, qp);
@@ -1702,10 +1702,10 @@ void readSliceHeader (sSlice* curSlice) {
   // Get first_mb_in_slice
   curSlice->start_mb_nr = read_ue_v ("SLC first_mb_in_slice", curStream);
 
-  int tmp = read_ue_v ("SLC slice_type", curStream);
+  int tmp = read_ue_v ("SLC sliceType", curStream);
   if (tmp > 4)
     tmp -= 5;
-  vidParam->type = curSlice->slice_type = (eSliceType)tmp;
+  vidParam->type = curSlice->sliceType = (eSliceType)tmp;
 
   curSlice->pic_parameter_set_id = read_ue_v ("SLC pic_parameter_set_id", curStream);
 
@@ -1798,46 +1798,46 @@ void readRestSliceHeader (sSlice* curSlice) {
   if (vidParam->activePPS->redundant_pic_cnt_present_flag)
     curSlice->redundant_pic_cnt = read_ue_v ("SLC redundant_pic_cnt", curStream);
 
-  if (curSlice->slice_type == B_SLICE)
+  if (curSlice->sliceType == B_SLICE)
     curSlice->direct_spatial_mv_pred_flag = read_u_1 ("SLC direct_spatial_mv_pred_flag", curStream);
 
   curSlice->num_ref_idx_active[LIST_0] = vidParam->activePPS->num_ref_idx_l0_default_active_minus1 + 1;
   curSlice->num_ref_idx_active[LIST_1] = vidParam->activePPS->num_ref_idx_l1_default_active_minus1 + 1;
 
-  if (curSlice->slice_type == P_SLICE ||
-      curSlice->slice_type == SP_SLICE ||
-      curSlice->slice_type == B_SLICE) {
+  if (curSlice->sliceType == P_SLICE ||
+      curSlice->sliceType == SP_SLICE ||
+      curSlice->sliceType == B_SLICE) {
     val = read_u_1 ("SLC num_ref_idx_override_flag", curStream);
     if (val) {
       curSlice->num_ref_idx_active[LIST_0] = 1 + read_ue_v ("SLC num_ref_idx_l0_active_minus1", curStream);
-      if (curSlice->slice_type == B_SLICE)
+      if (curSlice->sliceType == B_SLICE)
         curSlice->num_ref_idx_active[LIST_1] = 1 + read_ue_v ("SLC num_ref_idx_l1_active_minus1", curStream);
       }
     }
 
-  if (curSlice->slice_type != B_SLICE)
+  if (curSlice->sliceType != B_SLICE)
     curSlice->num_ref_idx_active[LIST_1] = 0;
 
   ref_pic_list_reordering (curSlice);
 
   curSlice->weighted_pred_flag =
-    (unsigned short)((curSlice->slice_type == P_SLICE || curSlice->slice_type == SP_SLICE)
+    (unsigned short)((curSlice->sliceType == P_SLICE || curSlice->sliceType == SP_SLICE)
       ? vidParam->activePPS->weighted_pred_flag
-      : (curSlice->slice_type == B_SLICE && vidParam->activePPS->weighted_bipred_idc == 1));
-  curSlice->weighted_bipred_idc = (unsigned short)(curSlice->slice_type == B_SLICE &&
+      : (curSlice->sliceType == B_SLICE && vidParam->activePPS->weighted_bipred_idc == 1));
+  curSlice->weighted_bipred_idc = (unsigned short)(curSlice->sliceType == B_SLICE &&
                                                     vidParam->activePPS->weighted_bipred_idc > 0);
 
   if ((vidParam->activePPS->weighted_pred_flag &&
-      (curSlice->slice_type == P_SLICE || curSlice->slice_type == SP_SLICE)) ||
-      (vidParam->activePPS->weighted_bipred_idc == 1 && (curSlice->slice_type == B_SLICE)))
+      (curSlice->sliceType == P_SLICE || curSlice->sliceType == SP_SLICE)) ||
+      (vidParam->activePPS->weighted_bipred_idc == 1 && (curSlice->sliceType == B_SLICE)))
     pred_weight_table (curSlice);
 
   if (curSlice->nalRefId)
     dec_ref_pic_marking (vidParam, curStream, curSlice);
 
   if (vidParam->activePPS->entropy_coding_mode_flag &&
-      curSlice->slice_type != I_SLICE &&
-      curSlice->slice_type != SI_SLICE)
+      curSlice->sliceType != I_SLICE &&
+      curSlice->sliceType != SI_SLICE)
     curSlice->model_number = read_ue_v ("SLC cabac_init_idc", curStream);
   else
     curSlice->model_number = 0;
@@ -1848,8 +1848,8 @@ void readRestSliceHeader (sSlice* curSlice) {
   if ((curSlice->qp < -vidParam->bitdepth_luma_qp_scale) || (curSlice->qp > 51))
     error ("slice_qp_delta makes slice_qp_y out of range", 500);
 
-  if (curSlice->slice_type == SP_SLICE || curSlice->slice_type == SI_SLICE) {
-    if (curSlice->slice_type == SP_SLICE)
+  if (curSlice->sliceType == SP_SLICE || curSlice->sliceType == SI_SLICE) {
+    if (curSlice->sliceType == SP_SLICE)
       curSlice->sp_switch = read_u_1 ("SLC sp_for_switch_flag", curStream);
     curSlice->slice_qs_delta = val = read_se_v ("SLC slice_qs_delta", curStream);
     curSlice->qs = 26 + vidParam->activePPS->pic_init_qs_minus26 + val;
@@ -1872,7 +1872,7 @@ void readRestSliceHeader (sSlice* curSlice) {
     curSlice->DFDisableIdc = curSlice->DFAlphaC0Offset = curSlice->DFBetaOffset = 0;
 
   //printf ("sSlice:%d, DFParameters:(%d,%d,%d)\n\n",
-  //        curSlice->current_slice_nr, curSlice->DFDisableIdc, curSlice->DFAlphaC0Offset, curSlice->DFBetaOffset);
+  //        curSlice->curSliceNum, curSlice->DFDisableIdc, curSlice->DFAlphaC0Offset, curSlice->DFBetaOffset);
 
   // The conformance point for intra profiles is without deblocking, but decoders are still recommended to filter the output.
   // We allow in the decoder config to skip the loop filtering. This is achieved by modifying the parameters here.

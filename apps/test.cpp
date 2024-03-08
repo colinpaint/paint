@@ -982,33 +982,33 @@ private:
   void outputPicList (sDecodedPicList* decPic, int bOutputAllFrames) {
 
     sDecodedPicList* pPic = decPic;
-    while (pPic && pPic->bValid == 1) {
-      int iWidth = pPic->iWidth * ((pPic->iBitDepth+7)>>3);
-      int iHeight = pPic->iHeight;
-      int iStride = pPic->iYBufStride;
+    while (pPic && pPic->valid == 1) {
+      int width = pPic->width * ((pPic->iBitDepth+7)>>3);
+      int height = pPic->height;
+      int iStride = pPic->yStride;
 
-      int iWidthUV = pPic->iWidth >> 1;
+      int iWidthUV = pPic->width >> 1;
       iWidthUV *= ((pPic->iBitDepth + 7) >> 3);
-      int iHeightUV = pPic->iHeight >> 1;
-      int iStrideUV = pPic->iUVBufStride;
+      int iHeightUV = pPic->height >> 1;
+      int iStrideUV = pPic->uvStride;
 
       cLog::log (LOGINFO, fmt::format ("outputPicList {} {}x{} {}:{}",
-                                       mOutputFrame, iWidth, iHeight, iStride, iStrideUV));
+                                       mOutputFrame, width, height, iStride, iStrideUV));
 
       mVideoFrames[mOutputFrame % kVideoFrames]->releaseResources();
       cSoftVideoFrame* videoFrame = mVideoFrames[mOutputFrame % kVideoFrames];
-      videoFrame->setWidth (iWidth);
-      videoFrame->setHeight (iHeight);
+      videoFrame->setWidth (width);
+      videoFrame->setHeight (height);
       videoFrame->mStrideY = iStride;
       videoFrame->mStrideUV = iStrideUV;
       videoFrame->mInterlaced = 0;
       videoFrame->mTopFieldFirst = 0;
-      videoFrame->setPixels (pPic->pY, pPic->pU, pPic->pV, iStride, iStrideUV, iHeight);
+      videoFrame->setPixels (pPic->yBuf, pPic->uBuf, pPic->vBuf, iStride, iStrideUV, height);
       videoFrame->mTextureDirty = true;
       mVideoFrame = videoFrame;
 
       mOutputFrame++;
-      pPic->bValid = 0;
+      pPic->valid = 0;
       pPic = pPic->next;
       }
     }
@@ -1124,33 +1124,33 @@ private:
   void outputPicList (sDecodedPicList* decPic, int bOutputAllFrames) {
 
     sDecodedPicList* pPic = decPic;
-    while (pPic && pPic->bValid == 1) {
-      int iWidth = pPic->iWidth * ((pPic->iBitDepth+7)>>3);
-      int iHeight = pPic->iHeight;
-      int iStride = pPic->iYBufStride;
+    while (pPic && pPic->valid == 1) {
+      int width = pPic->width * ((pPic->iBitDepth+7)>>3);
+      int height = pPic->height;
+      int iStride = pPic->yStride;
 
-      int iWidthUV = pPic->iWidth >> 1;
+      int iWidthUV = pPic->width >> 1;
       iWidthUV *= ((pPic->iBitDepth + 7) >> 3);
-      int iHeightUV = pPic->iHeight >> 1;
-      int iStrideUV = pPic->iUVBufStride;
+      int iHeightUV = pPic->height >> 1;
+      int iStrideUV = pPic->uvStride;
 
       cLog::log (LOGINFO, fmt::format ("outputPicList {} {}x{} {}:{}",
-                                       mOutputFrame, iWidth, iHeight, iStride, iStrideUV));
+                                       mOutputFrame, width, height, iStride, iStrideUV));
 
       mVideoFrames[mOutputFrame % kVideoFrames]->releaseResources();
       cSoftVideoFrame* videoFrame = mVideoFrames[mOutputFrame % kVideoFrames];
-      videoFrame->setWidth (iWidth);
-      videoFrame->setHeight (iHeight);
+      videoFrame->setWidth (width);
+      videoFrame->setHeight (height);
       videoFrame->mStrideY = iStride;
       videoFrame->mStrideUV = iStrideUV;
       videoFrame->mInterlaced = 0;
       videoFrame->mTopFieldFirst = 0;
-      videoFrame->setPixels (pPic->pY, pPic->pU, pPic->pV, iStride, iStrideUV, iHeight);
+      videoFrame->setPixels (pPic->yBuf, pPic->uBuf, pPic->vBuf, iStride, iStrideUV, height);
       videoFrame->mTextureDirty = true;
       mVideoFrame = videoFrame;
 
       mOutputFrame++;
-      pPic->bValid = 0;
+      pPic->valid = 0;
       pPic = pPic->next;
       }
     }

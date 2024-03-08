@@ -4281,12 +4281,12 @@ ImGuiIO& ImGui::GetIO()
     return GImGui->IO;
 }
 
-// Pass this to your backend rendering function! Valid after Render() and until the next call to NewFrame()
+// Pass this to your backend rendering function! valid after Render() and until the next call to NewFrame()
 ImDrawData* ImGui::GetDrawData()
 {
     ImGuiContext& g = *GImGui;
     ImGuiViewportP* viewport = g.Viewports[0];
-    return viewport->DrawDataP.Valid ? &viewport->DrawDataP : NULL;
+    return viewport->DrawDataP.valid ? &viewport->DrawDataP : NULL;
 }
 
 double ImGui::GetTime()
@@ -4606,7 +4606,7 @@ void ImGui::NewFrame()
 
     // Mark rendering data as invalid to prevent user who may have a handle on it to use it.
     for (ImGuiViewportP* viewport : g.Viewports)
-        viewport->DrawDataP.Valid = false;
+        viewport->DrawDataP.valid = false;
 
     // Drag and drop keep the source ID alive so even if the source disappear our state is consistent
     if (g.DragDropActive && g.DragDropPayload.SourceId == g.ActiveId)
@@ -4906,7 +4906,7 @@ static void InitViewportDrawData(ImGuiViewportP* viewport)
     viewport->DrawDataBuilder.Layers[0]->resize(0);
     viewport->DrawDataBuilder.Layers[1]->resize(0);
 
-    draw_data->Valid = true;
+    draw_data->valid = true;
     draw_data->CmdListsCount = 0;
     draw_data->TotalVtxCount = draw_data->TotalIdxCount = 0;
     draw_data->DisplayPos = viewport->Pos;
@@ -8686,7 +8686,7 @@ bool ImGui::IsMouseHoveringRect(const ImVec2& r_min, const ImVec2& r_max, bool c
     return true;
 }
 
-// Return if a mouse click/drag went past the given threshold. Valid to call during the MouseReleased frame.
+// Return if a mouse click/drag went past the given threshold. valid to call during the MouseReleased frame.
 // [Internal] This doesn't test if the button is pressed
 bool ImGui::IsMouseDragPastThreshold(ImGuiMouseButton button, float lock_threshold)
 {

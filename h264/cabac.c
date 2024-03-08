@@ -444,7 +444,7 @@ int check_next_mb_and_get_field_mode_CABAC_p_slice (sSlice* curSlice,
   curMb = &curSlice->mbData[curSlice->current_mb_nr];
   curMb->vidParam    = vidParam;
   curMb->slice  = curSlice;
-  curMb->slice_nr = curSlice->current_slice_nr;
+  curMb->slice_nr = curSlice->curSliceNum;
   curMb->mb_field = curSlice->mbData[curSlice->current_mb_nr-1].mb_field;
   curMb->mbAddrX  = curSlice->current_mb_nr;
   curMb->list_offset = ((curSlice->mb_aff_frame_flag)&&(curMb->mb_field))? (curMb->mbAddrX&0x01) ? 4 : 2 : 0;
@@ -530,7 +530,7 @@ int check_next_mb_and_get_field_mode_CABAC_b_slice (sSlice* curSlice,
   curMb = &curSlice->mbData[curSlice->current_mb_nr];
   curMb->vidParam    = vidParam;
   curMb->slice  = curSlice;
-  curMb->slice_nr = curSlice->current_slice_nr;
+  curMb->slice_nr = curSlice->curSliceNum;
   curMb->mb_field = curSlice->mbData[curSlice->current_mb_nr-1].mb_field;
   curMb->mbAddrX  = curSlice->current_mb_nr;
   curMb->list_offset = ((curSlice->mb_aff_frame_flag)&&(curMb->mb_field))? (curMb->mbAddrX & 0x01) ? 4 : 2 : 0;
@@ -918,7 +918,7 @@ void readMB_typeInfo_CABAC_i_slice (sMacroblock* curMb,
   int mode_sym;
   int curr_mb_type = 0;
 
-  if(curSlice->slice_type == I_SLICE)  // INTRA-frame
+  if(curSlice->sliceType == I_SLICE)  // INTRA-frame
   {
     if (curMb->mb_up != NULL)
       b = (((curMb->mb_up)->mb_type != I4MB && curMb->mb_up->mb_type != I8MB) ? 1 : 0 );
@@ -969,7 +969,7 @@ void readMB_typeInfo_CABAC_i_slice (sMacroblock* curMb,
       }
     }
   }
-  else if(curSlice->slice_type == SI_SLICE)  // SI-frame
+  else if(curSlice->sliceType == SI_SLICE)  // SI-frame
   {
     // special ctx's for SI4MB
     if (curMb->mb_up != NULL)
@@ -2317,7 +2317,7 @@ void readIPCM_CABAC (sSlice* curSlice, struct DataPartition *dP)
   sBitstream* curStream = dP->bitstream;
   sDecodingEnvironmentPtr dep = &(dP->de_cabac);
   byte *buf = curStream->streamBuffer;
-  int BitstreamLengthInBits = (dP->bitstream->bitstream_length << 3) + 7;
+  int BitstreamLengthInBits = (dP->bitstream->bitstreamLength << 3) + 7;
 
   int val = 0;
 

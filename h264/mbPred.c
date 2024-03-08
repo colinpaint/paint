@@ -249,7 +249,7 @@ int mb_pred_p_inter8x8 (sMacroblock* curMb, eColorPlane curPlane, sPicture* pict
   int i=0, j=0,k;
 
   sSlice* curSlice = curMb->slice;
-  int smb = curSlice->slice_type == SP_SLICE && (curMb->is_intra_block == FALSE);
+  int smb = curSlice->sliceType == SP_SLICE && (curMb->is_intra_block == FALSE);
 
   set_chroma_vector(curMb);
 
@@ -284,7 +284,7 @@ int mb_pred_p_inter8x8 (sMacroblock* curMb, eColorPlane curPlane, sPicture* pict
 int mb_pred_p_inter16x16 (sMacroblock* curMb, eColorPlane curPlane, sPicture* picture)
 {
   sSlice* curSlice = curMb->slice;
-  int smb = (curSlice->slice_type == SP_SLICE);
+  int smb = (curSlice->sliceType == SP_SLICE);
 
   set_chroma_vector(curMb);
   perform_mc (curMb, curPlane, picture, curMb->b8pdir[0], 0, 0, MB_BLOCK_SIZE, MB_BLOCK_SIZE);
@@ -299,7 +299,7 @@ int mb_pred_p_inter16x16 (sMacroblock* curMb, eColorPlane curPlane, sPicture* pi
 int mb_pred_p_inter16x8 (sMacroblock* curMb, eColorPlane curPlane, sPicture* picture)
 {
   sSlice* curSlice = curMb->slice;
-  int smb = (curSlice->slice_type == SP_SLICE);
+  int smb = (curSlice->sliceType == SP_SLICE);
 
   set_chroma_vector(curMb);
 
@@ -316,7 +316,7 @@ int mb_pred_p_inter16x8 (sMacroblock* curMb, eColorPlane curPlane, sPicture* pic
 int mb_pred_p_inter8x16 (sMacroblock* curMb, eColorPlane curPlane, sPicture* picture)
 {
   sSlice* curSlice = curMb->slice;
-  int smb = (curSlice->slice_type == SP_SLICE);
+  int smb = (curSlice->sliceType == SP_SLICE);
 
   set_chroma_vector(curMb);
 

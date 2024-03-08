@@ -118,9 +118,9 @@ static void interpret_spare_pic (byte* payload, int size, sVidParam* vidParam ) 
   byte*** map;
 
   buf = malloc (sizeof(sBitstream));
-  buf->bitstream_length = size;
+  buf->bitstreamLength = size;
   buf->streamBuffer = payload;
-  buf->frame_bitoffset = 0;
+  buf->frameBitOffset = 0;
 
   target_frame_num = read_ue_v ("SEI target_frame_num", buf);
   num_spare_pics = 1 + read_ue_v ("SEI num_spare_pics_minus1", buf);
@@ -275,9 +275,9 @@ static void interpret_spare_pic (byte* payload, int size, sVidParam* vidParam ) 
 static void interpret_subsequence_info (byte* payload, int size, sVidParam* vidParam ) {
 
   sBitstream* buf = malloc (sizeof(sBitstream));
-  buf->bitstream_length = size;
+  buf->bitstreamLength = size;
   buf->streamBuffer = payload;
-  buf->frame_bitoffset = 0;
+  buf->frameBitOffset = 0;
 
   int sub_seq_layer_num = read_ue_v ("SEI sub_seq_layer_num", buf);
   int sub_seq_id = read_ue_v ("SEI sub_seq_id", buf);
@@ -310,9 +310,9 @@ static void interpret_subsequence_layer_characteristics_info (byte* payload, int
   long num_sub_layers, accurate_statistics_flag, average_bit_rate, average_frame_rate;
 
   buf = malloc(sizeof(sBitstream));
-  buf->bitstream_length = size;
+  buf->bitstreamLength = size;
   buf->streamBuffer = payload;
-  buf->frame_bitoffset = 0;
+  buf->frameBitOffset = 0;
 
   num_sub_layers = 1 + read_ue_v("SEI num_sub_layers_minus1", buf);
   printf ("SEI Sub-sequence layer characteristics num_sub_layers_minus1 %ld\n", num_sub_layers - 1);
@@ -337,9 +337,9 @@ static void interpret_subsequence_characteristics_info (byte* payload, int size,
   int num_referenced_subseqs, ref_sub_seq_layer_num, ref_sub_seq_id, ref_sub_seq_direction;
 
   sBitstream* buf = malloc(sizeof(sBitstream));
-  buf->bitstream_length = size;
+  buf->bitstreamLength = size;
   buf->streamBuffer = payload;
-  buf->frame_bitoffset = 0;
+  buf->frameBitOffset = 0;
 
   sub_seq_layer_num = read_ue_v("SEI sub_seq_layer_num", buf);
   sub_seq_id        = read_ue_v("SEI sub_seq_id", buf);
@@ -391,9 +391,9 @@ static void interpret_scene_information (byte* payload, int size, sVidParam* vid
   int scene_id, scene_transition_type, second_scene_id;
 
   sBitstream* buf = malloc(sizeof(sBitstream));
-  buf->bitstream_length = size;
+  buf->bitstreamLength = size;
   buf->streamBuffer = payload;
-  buf->frame_bitoffset = 0;
+  buf->frameBitOffset = 0;
 
   scene_id              = read_ue_v ("SEI scene_id"             , buf);
   scene_transition_type = read_ue_v ("SEI scene_transition_type", buf);
@@ -506,9 +506,9 @@ static void interpret_picture_timing_info (byte* payload, int size, sVidParam* v
     }
 
   sBitstream* buf = malloc (sizeof(sBitstream));
-  buf->bitstream_length = size;
+  buf->bitstreamLength = size;
   buf->streamBuffer = payload;
-  buf->frame_bitoffset = 0;
+  buf->frameBitOffset = 0;
 
   if (kDebug)
     printf ("SEI Picture timing\n");
@@ -655,9 +655,9 @@ static void interpret_pan_scan_rect_info (byte* payload, int size, sVidParam* vi
 
   sBitstream* buf;
   buf = malloc (sizeof(sBitstream));
-  buf->bitstream_length = size;
+  buf->bitstreamLength = size;
   buf->streamBuffer = payload;
-  buf->frame_bitoffset = 0;
+  buf->frameBitOffset = 0;
 
   int pan_scan_rect_id = read_ue_v ("SEI pan_scan_rect_id", buf);
   int pan_scan_rect_cancel_flag = read_u_1 ("SEI pan_scan_rect_cancel_flag", buf);
@@ -685,9 +685,9 @@ static void interpret_recovery_point_info (byte* payload, int size, sVidParam* v
 
   sBitstream* buf;
   buf = malloc(sizeof(sBitstream));
-  buf->bitstream_length = size;
+  buf->bitstreamLength = size;
   buf->streamBuffer = payload;
-  buf->frame_bitoffset = 0;
+  buf->frameBitOffset = 0;
 
   int recovery_frame_cnt = read_ue_v ("SEI recovery_frame_cnt", buf);
   int exact_match_flag = read_u_1 ("SEI exact_match_flag", buf);
@@ -714,9 +714,9 @@ static void interpret_dec_ref_pic_marking_repetition_info (byte* payload, int si
   int old_idr_flag, old_no_output_of_prior_pics_flag, old_long_term_reference_flag , old_adaptive_ref_pic_buffering_flag;
 
   sBitstream* buf = malloc(sizeof(sBitstream));
-  buf->bitstream_length = size;
+  buf->bitstreamLength = size;
   buf->streamBuffer = payload;
-  buf->frame_bitoffset = 0;
+  buf->frameBitOffset = 0;
 
   original_idr_flag = read_u_1 ("SEI original_idr_flag", buf);
   original_frame_num = read_ue_v ("SEI original_frame_num", buf);
@@ -804,9 +804,9 @@ static void interpret_dec_ref_pic_marking_repetition_info (byte* payload, int si
 static void interpret_full_frame_freeze_info (byte* payload, int size, sVidParam* vidParam ) {
 
   sBitstream* buf = malloc(sizeof(sBitstream));
-  buf->bitstream_length = size;
+  buf->bitstreamLength = size;
   buf->streamBuffer = payload;
-  buf->frame_bitoffset = 0;
+  buf->frameBitOffset = 0;
 
   int full_frame_freeze_repetition_period = read_ue_v ("SEI full_frame_freeze_repetition_period", buf);
   printf ("full_frame_freeze_repetition_period = %d\n", full_frame_freeze_repetition_period);
@@ -826,9 +826,9 @@ static void interpret_full_frame_freeze_release_info (byte* payload, int size, s
 static void interpret_full_frame_snapshot_info (byte* payload, int size, sVidParam* vidParam ) {
 
   sBitstream* buf = malloc(sizeof(sBitstream));
-  buf->bitstream_length = size;
+  buf->bitstreamLength = size;
   buf->streamBuffer = payload;
-  buf->frame_bitoffset = 0;
+  buf->frameBitOffset = 0;
 
   int snapshot_id = read_ue_v("SEI snapshot_id", buf);
 
@@ -843,9 +843,9 @@ static void interpret_progressive_refinement_start_info (byte* payload, int size
 
 
   sBitstream* buf = malloc(sizeof(sBitstream));
-  buf->bitstream_length = size;
+  buf->bitstreamLength = size;
   buf->streamBuffer = payload;
-  buf->frame_bitoffset = 0;
+  buf->frameBitOffset = 0;
 
   int progressive_refinement_id   = read_ue_v("SEI progressive_refinement_id"  , buf);
   int num_refinement_steps_minus1 = read_ue_v("SEI num_refinement_steps_minus1", buf);
@@ -860,9 +860,9 @@ static void interpret_progressive_refinement_start_info (byte* payload, int size
 static void interpret_progressive_refinement_end_info (byte* payload, int size, sVidParam* vidParam ) {
 
   sBitstream* buf = malloc(sizeof(sBitstream));
-  buf->bitstream_length = size;
+  buf->bitstreamLength = size;
   buf->streamBuffer = payload;
-  buf->frame_bitoffset = 0;
+  buf->frameBitOffset = 0;
 
   int progressive_refinement_id   = read_ue_v("SEI progressive_refinement_id"  , buf);
   printf ("SEI Progressive refinement segment end\n");
@@ -875,9 +875,9 @@ static void interpret_progressive_refinement_end_info (byte* payload, int size, 
 static void interpret_motion_constrained_slice_group_set_info (byte* payload, int size, sVidParam* vidParam ) {
 
   sBitstream* buf = malloc(sizeof(sBitstream));
-  buf->bitstream_length = size;
+  buf->bitstreamLength = size;
   buf->streamBuffer = payload;
-  buf->frame_bitoffset = 0;
+  buf->frameBitOffset = 0;
 
   int num_slice_groups_minus1 = read_ue_v ("SEI num_slice_groups_minus1" , buf);
   int sliceGroupSize = ceilLog2 (num_slice_groups_minus1 + 1);
@@ -918,9 +918,9 @@ static void interpret_film_grain_characteristics_info (byte* payload, int size, 
   sBitstream* buf;
 
   buf = malloc(sizeof(sBitstream));
-  buf->bitstream_length = size;
+  buf->bitstreamLength = size;
   buf->streamBuffer = payload;
-  buf->frame_bitoffset = 0;
+  buf->frameBitOffset = 0;
 
   film_grain_characteristics_cancel_flag = read_u_1 ("SEI film_grain_characteristics_cancel_flag", buf);
   printf ("film_grain_characteristics_cancel_flag = %d\n", film_grain_characteristics_cancel_flag);
@@ -984,9 +984,9 @@ static void interpret_film_grain_characteristics_info (byte* payload, int size, 
 static void interpret_deblocking_filter_display_preference_info (byte* payload, int size, sVidParam* vidParam) {
 
   sBitstream* buf = malloc(sizeof(sBitstream));
-  buf->bitstream_length = size;
+  buf->bitstreamLength = size;
   buf->streamBuffer = payload;
-  buf->frame_bitoffset = 0;
+  buf->frameBitOffset = 0;
 
   int deblocking_display_preference_cancel_flag = read_u_1("SEI deblocking_display_preference_cancel_flag", buf);
   printf ("deblocking_display_preference_cancel_flag = %d\n", deblocking_display_preference_cancel_flag);
@@ -1007,9 +1007,9 @@ static void interpret_deblocking_filter_display_preference_info (byte* payload, 
 static void interpret_stereo_video_info_info (byte* payload, int size, sVidParam* vidParam ) {
 
   sBitstream* buf = malloc (sizeof(sBitstream));
-  buf->bitstream_length = size;
+  buf->bitstreamLength = size;
   buf->streamBuffer = payload;
-  buf->frame_bitoffset = 0;
+  buf->frameBitOffset = 0;
 
   int field_views_flags = read_u_1 ("SEI field_views_flags", buf);
   printf("field_views_flags = %d\n", field_views_flags);
@@ -1036,9 +1036,9 @@ static void interpret_stereo_video_info_info (byte* payload, int size, sVidParam
 static void interpret_buffering_period_info (byte* payload, int size, sVidParam* vidParam ) {
 
   sBitstream* buf = malloc(sizeof(sBitstream));
-  buf->bitstream_length = size;
+  buf->bitstreamLength = size;
   buf->streamBuffer = payload;
-  buf->frame_bitoffset = 0;
+  buf->frameBitOffset = 0;
 
   int seq_parameter_set_id = read_ue_v("SEI seq_parameter_set_id"  , buf);
   sSPS* sps = &vidParam->SeqParSet[seq_parameter_set_id];
@@ -1080,9 +1080,9 @@ static void interpret_frame_packing_arrangement_info (byte* payload, int size, s
 
   frame_packing_arrangement_information_struct seiFramePackingArrangement;
   sBitstream* buf = malloc(sizeof(sBitstream));
-  buf->bitstream_length = size;
+  buf->bitstreamLength = size;
   buf->streamBuffer = payload;
-  buf->frame_bitoffset = 0;
+  buf->frameBitOffset = 0;
 
   printf ("Frame packing arrangement SEI message\n");
 
@@ -1148,9 +1148,9 @@ static void interpret_frame_packing_arrangement_info (byte* payload, int size, s
 static void interpret_post_filter_hints_info (byte* payload, int size, sVidParam* vidParam ) {
 
   sBitstream* buf = malloc(sizeof(sBitstream));
-  buf->bitstream_length = size;
+  buf->bitstreamLength = size;
   buf->streamBuffer = payload;
-  buf->frame_bitoffset = 0;
+  buf->frameBitOffset = 0;
 
   unsigned int filter_hint_size_y = read_ue_v("SEI filter_hint_size_y", buf); // interpret post-filter hint SEI here
   unsigned int filter_hint_size_x = read_ue_v("SEI filter_hint_size_x", buf); // interpret post-filter hint SEI here
@@ -1185,9 +1185,9 @@ static void interpret_post_filter_hints_info (byte* payload, int size, sVidParam
 static void interpret_green_metadata_info (byte* payload, int size, sVidParam* vidParam ) {
 
   sBitstream* buf = malloc(sizeof(sBitstream));
-  buf->bitstream_length = size;
+  buf->bitstreamLength = size;
   buf->streamBuffer = payload;
-  buf->frame_bitoffset = 0;
+  buf->frameBitOffset = 0;
 
   printf ("Green Metadata Info SEI message\n");
 

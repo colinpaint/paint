@@ -2825,7 +2825,7 @@ struct ImDrawList
 // as this is one of the oldest structure exposed by the library! Basically, ImDrawList == CmdList)
 struct ImDrawData
 {
-    bool                Valid;              // Only valid after Render() is called and before the next NewFrame() is called.
+    bool                valid;              // Only valid after Render() is called and before the next NewFrame() is called.
     int                 CmdListsCount;      // Number of ImDrawList* to render (should always be == CmdLists.size)
     int                 TotalIdxCount;      // For convenience, sum of all ImDrawList's IdxBuffer.Size
     int                 TotalVtxCount;      // For convenience, sum of all ImDrawList's VtxBuffer.Size

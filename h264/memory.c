@@ -620,25 +620,25 @@ int get_mem2Dpel_pad (sPixel** *array2D, int dim0, int dim1, int iPadY, int iPad
 {
   int i;
   sPixel *curr = NULL;
-  int iHeight, iWidth;
+  int height, width;
 
-  iHeight = dim0+2*iPadY;
-  iWidth = dim1+2*iPadX;
-  if((*array2D    = (sPixel**)mem_malloc(iHeight*sizeof(sPixel*))) == NULL)
+  height = dim0+2*iPadY;
+  width = dim1+2*iPadX;
+  if((*array2D    = (sPixel**)mem_malloc(height*sizeof(sPixel*))) == NULL)
     no_mem_exit("get_mem2Dpel_pad: array2D");
-  if((*(*array2D) = (sPixel* )mem_calloc(iHeight * iWidth, sizeof(sPixel ))) == NULL)
+  if((*(*array2D) = (sPixel* )mem_calloc(height * width, sizeof(sPixel ))) == NULL)
     no_mem_exit("get_mem2Dpel_pad: array2D");
 
   (*array2D)[0] += iPadX;
   curr = (*array2D)[0];
-  for(i = 1 ; i < iHeight; i++)
+  for(i = 1 ; i < height; i++)
   {
-    curr += iWidth;
+    curr += width;
     (*array2D)[i] = curr;
   }
   (*array2D) = &((*array2D)[iPadY]);
 
-  return iHeight * (sizeof(sPixel*) + iWidth * sizeof(sPixel));
+  return height * (sizeof(sPixel*) + width * sizeof(sPixel));
 }
 //}}}
 //{{{
@@ -1046,25 +1046,25 @@ int get_mem2Dint_pad (int** *array2D, int dim0, int dim1, int iPadY, int iPadX)
 {
   int i;
   int *curr = NULL;
-  int iHeight, iWidth;
+  int height, width;
 
-  iHeight = dim0+2*iPadY;
-  iWidth = dim1+2*iPadX;
-  if((*array2D    = (int**)mem_malloc(iHeight*sizeof(int*))) == NULL)
+  height = dim0+2*iPadY;
+  width = dim1+2*iPadX;
+  if((*array2D    = (int**)mem_malloc(height*sizeof(int*))) == NULL)
     no_mem_exit("get_mem2Dint_pad: array2D");
-  if((*(*array2D) = (int* )mem_calloc(iHeight * iWidth, sizeof(int ))) == NULL)
+  if((*(*array2D) = (int* )mem_calloc(height * width, sizeof(int ))) == NULL)
     no_mem_exit("get_mem2Dint_pad: array2D");
 
   (*array2D)[0] += iPadX;
   curr = (*array2D)[0];
-  for(i = 1 ; i < iHeight; i++)
+  for(i = 1 ; i < height; i++)
   {
-    curr += iWidth;
+    curr += width;
     (*array2D)[i] = curr;
   }
   (*array2D) = &((*array2D)[iPadY]);
 
-  return iHeight * (sizeof(int*) + iWidth * sizeof(int));
+  return height * (sizeof(int*) + width * sizeof(int));
 }
 //}}}
 //{{{

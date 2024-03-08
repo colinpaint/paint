@@ -96,7 +96,7 @@ static const byte AC_next_state_LPS_64[64] =
 //}}}
 static const byte renorm_table_32[32]={6,5,4,4,3,3,3,3,2,2,2,2,2,2,2,2,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1};
 
-extern void arideco_start_decoding (sDecodingEnvironmentPtr eep, unsigned char *code_buffer, int firstbyte, int *code_len);
+extern void arideco_start_decoding (sDecodingEnvironmentPtr eep, unsigned char *code_buffer, int firstbyte, int *codeLen);
 extern int  arideco_bits_read (sDecodingEnvironmentPtr dep);
 extern void arideco_done_decoding (sDecodingEnvironmentPtr dep);
 

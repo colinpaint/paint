@@ -24,14 +24,14 @@ static void dumpDpb (sDPB* dpb) {
       if (dpb->fs[i]->top_field)
         printf ("T: poc=%d  ", dpb->fs[i]->top_field->poc);
       else
-        printf ("T: poc=%d  ", dpb->fs[i]->frame->top_poc);
+        printf ("T: poc=%d  ", dpb->fs[i]->frame->topPoc);
       }
 
     if (dpb->fs[i]->is_used & 2) {
       if (dpb->fs[i]->bottom_field)
         printf ("B: poc=%d  ", dpb->fs[i]->bottom_field->poc);
       else
-        printf ("B: poc=%d  ", dpb->fs[i]->frame->bottom_poc);
+        printf ("B: poc=%d  ", dpb->fs[i]->frame->botPoc);
       }
 
     if (dpb->fs[i]->is_used == 3)
@@ -117,11 +117,11 @@ static int isLongTermReference (sFrameStore* frameStore) {
   }
 //}}}
 //{{{
-static void gen_field_ref_ids (sVidParam* vidParam, sPicture *p) {
+static void gen_field_ref_ids (sVidParam* vidParam, sPicture* p) {
 // Generate Frame parameters from field information.
 
   // copy the list;
-  for (int j = 0; j < vidParam->iSliceNumOfCurrPic; j++) {
+  for (int j = 0; j < vidParam->curPicSliceNum; j++) {
     if (p->listX[j][LIST_0]) {
       p->listXsize[j][LIST_0] = vidParam->sliceList[j]->listXsize[LIST_0];
       for (int i = 0; i < p->listXsize[j][LIST_0]; i++)
@@ -307,12 +307,12 @@ static void dpb_split_field (sVidParam* vidParam, sFrameStore* frameStore) {
       memcpy (fs_btm->imgUV[1][i], frame->imgUV[1][i*2 + 1], frame->size_x_cr*sizeof(sPixel));
       }
 
-    fs_top->poc = frame->top_poc;
-    fs_btm->poc = frame->bottom_poc;
-    fs_top->frame_poc = frame->frame_poc;
-    fs_top->bottom_poc = fs_btm->bottom_poc =  frame->bottom_poc;
-    fs_top->top_poc = fs_btm->top_poc =  frame->top_poc;
-    fs_btm->frame_poc = frame->frame_poc;
+    fs_top->poc = frame->topPoc;
+    fs_btm->poc = frame->botPoc;
+    fs_top->framePoc = frame->framePoc;
+    fs_top->botPoc = fs_btm->botPoc =  frame->botPoc;
+    fs_top->topPoc = fs_btm->topPoc =  frame->topPoc;
+    fs_btm->framePoc = frame->framePoc;
 
     fs_top->used_for_reference = fs_btm->used_for_reference = frame->used_for_reference;
     fs_top->is_long_term = fs_btm->is_long_term = frame->is_long_term;
@@ -679,12 +679,12 @@ void dpb_combine_field_yuv (sVidParam* vidParam, sFrameStore* frameStore) {
               frameStore->bottom_field->size_x_cr*sizeof(sPixel));
       }
 
-  frameStore->poc = frameStore->frame->poc = frameStore->frame->frame_poc
+  frameStore->poc = frameStore->frame->poc = frameStore->frame->framePoc
                                            = imin (frameStore->top_field->poc, frameStore->bottom_field->poc);
 
-  frameStore->bottom_field->frame_poc = frameStore->top_field->frame_poc = frameStore->frame->poc;
-  frameStore->bottom_field->top_poc = frameStore->frame->top_poc = frameStore->top_field->poc;
-  frameStore->top_field->bottom_poc = frameStore->frame->bottom_poc = frameStore->bottom_field->poc;
+  frameStore->bottom_field->framePoc = frameStore->top_field->framePoc = frameStore->frame->poc;
+  frameStore->bottom_field->topPoc = frameStore->frame->topPoc = frameStore->top_field->poc;
+  frameStore->top_field->botPoc = frameStore->frame->botPoc = frameStore->bottom_field->poc;
 
   frameStore->frame->used_for_reference = (frameStore->top_field->used_for_reference && frameStore->bottom_field->used_for_reference );
   frameStore->frame->is_long_term = (frameStore->top_field->is_long_term && frameStore->bottom_field->is_long_term );
@@ -790,7 +790,7 @@ sPicture* allocPicture (sVidParam* vidParam, ePicStructure structure,
   s->decRefPicMarkingBuffer = NULL;
   s->coded_frame  = 0;
   s->mb_aff_frame_flag  = 0;
-  s->top_poc = s->bottom_poc = s->poc = 0;
+  s->topPoc = s->botPoc = s->poc = 0;
 
   if (!vidParam->activeSPS->frame_mbs_only_flag && structure != FRAME)
     for (int j = 0; j < MAX_NUM_SLICES; j++)
@@ -1059,19 +1059,19 @@ static void adaptiveMemoryManagement (sDPB* dpb, sPicture* p) {
     switch (p->structure) {
       //{{{
       case TOP_FIELD:
-        p->poc = p->top_poc = 0;
+        p->poc = p->topPoc = 0;
         break;
       //}}}
       //{{{
       case BOTTOM_FIELD:
-        p->poc = p->bottom_poc = 0;
+        p->poc = p->botPoc = 0;
         break;
       //}}}
       //{{{
       case FRAME:
-        p->top_poc    -= p->poc;
-        p->bottom_poc -= p->poc;
-        p->poc = imin (p->top_poc, p->bottom_poc);
+        p->topPoc    -= p->poc;
+        p->botPoc -= p->poc;
+        p->poc = imin (p->topPoc, p->botPoc);
         break;
       //}}}
       }
@@ -2281,7 +2281,7 @@ sPicture* get_short_term_pic (sSlice* curSlice, sDPB* dpb, int picNum) {
 //{{{
 void alloc_ref_pic_list_reordering_buffer (sSlice* curSlice) {
 
-  if (curSlice->slice_type != I_SLICE && curSlice->slice_type != SI_SLICE) {
+  if (curSlice->sliceType != I_SLICE && curSlice->sliceType != SI_SLICE) {
     int size = curSlice->num_ref_idx_active[LIST_0] + 1;
     if ((curSlice->modification_of_pic_nums_idc[LIST_0] = calloc (size ,sizeof(int))) == NULL)
        no_mem_exit ("alloc_ref_pic_list_reordering_buffer: modification_of_pic_nums_idc_l0");
@@ -2296,7 +2296,7 @@ void alloc_ref_pic_list_reordering_buffer (sSlice* curSlice) {
     curSlice->long_term_pic_idx[LIST_0] = NULL;
     }
 
-  if (curSlice->slice_type == B_SLICE) {
+  if (curSlice->sliceType == B_SLICE) {
     int size = curSlice->num_ref_idx_active[LIST_1] + 1;
     if ((curSlice->modification_of_pic_nums_idc[LIST_1] = calloc (size,sizeof(int))) == NULL)
       no_mem_exit ("alloc_ref_pic_list_reordering_buffer: modification_of_pic_nums_idc_l1");
@@ -2349,9 +2349,9 @@ void compute_colocated (sSlice* curSlice, sPicture** listX[6]) {
         if (j == 0)
           iTRb = iClip3 (-128, 127, vidParam->picture->poc - listX[LIST_0 + j][i]->poc);
         else if (j == 2)
-          iTRb = iClip3 (-128, 127, vidParam->picture->top_poc - listX[LIST_0 + j][i]->poc);
+          iTRb = iClip3 (-128, 127, vidParam->picture->topPoc - listX[LIST_0 + j][i]->poc);
         else
-          iTRb = iClip3 (-128, 127, vidParam->picture->bottom_poc - listX[LIST_0 + j][i]->poc);
+          iTRb = iClip3 (-128, 127, vidParam->picture->botPoc - listX[LIST_0 + j][i]->poc);
 
         int iTRp = iClip3 (-128, 127, listX[LIST_1 + j][0]->poc - listX[LIST_0 + j][i]->poc);
 
@@ -2398,9 +2398,9 @@ void fill_frame_num_gap (sVidParam* vidParam, sSlice* curSlice) {
     curSlice->frame_num = UnusedShortTermFrameNum;
     if (activeSPS->pic_order_cnt_type != 0)
       decodePOC (vidParam, vidParam->sliceList[0]);
-    picture->top_poc    = curSlice->topPoc;
-    picture->bottom_poc = curSlice->botPoc;
-    picture->frame_poc  = curSlice->framePoc;
+    picture->topPoc    = curSlice->topPoc;
+    picture->botPoc = curSlice->botPoc;
+    picture->framePoc  = curSlice->framePoc;
     picture->poc        = curSlice->framePoc;
 
     store_picture_in_dpb (curSlice->dpb, picture);

@@ -55,10 +55,10 @@ static inline unsigned int getword (sDecodingEnvironmentPtr dep) {
 //}}}
 //{{{
 void arideco_start_decoding (sDecodingEnvironmentPtr dep, unsigned char *code_buffer,
-                            int firstbyte, int *code_len) {
+                            int firstbyte, int *codeLen) {
 
   dep->Dcodestrm      = code_buffer;
-  dep->Dcodestrm_len  = code_len;
+  dep->Dcodestrm_len  = codeLen;
   *dep->Dcodestrm_len = firstbyte;
 
   dep->Dvalue = getbyte(dep);

@@ -20,9 +20,9 @@ typedef struct Picture {
   ePicStructure structure;
 
   int         poc;
-  int         top_poc;
-  int         bottom_poc;
-  int         frame_poc;
+  int         topPoc;
+  int         botPoc;
+  int         framePoc;
   unsigned int frame_num;
   unsigned int recovery_frame;
 
@@ -59,7 +59,7 @@ typedef struct Picture {
   struct Picture* bottom_field;  // for mb aff, if frame for referencing the bottom field
   struct Picture* frame;         // for mb aff, if field for referencing the combined frame
 
-  int         slice_type;
+  int         sliceType;
   int         idrFlag;
   int         no_output_of_prior_pics_flag;
   int         long_term_reference_flag;

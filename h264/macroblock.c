@@ -419,7 +419,7 @@ static void prepareListforRefIdx (sMacroblock* curMb, sSyntaxElement* currSE, sD
 {
   if(num_ref_idx_active > 1)
   {
-    if (curMb->vidParam->activePPS->entropy_coding_mode_flag == (Boolean) CAVLC || dP->bitstream->ei_flag)
+    if (curMb->vidParam->activePPS->entropy_coding_mode_flag == (Boolean) CAVLC || dP->bitstream->eiFlag)
     {
       currSE->mapping = linfo_ue;
       if (refidx_present)
@@ -475,7 +475,7 @@ void read_delta_quant (sSyntaxElement* currSE, sDataPartition *dP, sMacroblock* 
 
   dP = &(curSlice->partArr[partMap[currSE->type]]);
 
-  if (vidParam->activePPS->entropy_coding_mode_flag == (Boolean) CAVLC || dP->bitstream->ei_flag)
+  if (vidParam->activePPS->entropy_coding_mode_flag == (Boolean) CAVLC || dP->bitstream->eiFlag)
     currSE->mapping = linfo_se;
   else
     currSE->reading= read_dQuant_CABAC;
@@ -827,7 +827,7 @@ void start_macroblock (sSlice* curSlice, sMacroblock** curMb)
 
   // Save the slice number of this macroblock. When the macroblock below
   // is coded it will use this to decide if prediction for above is possible
-  (*curMb)->slice_nr = (short) curSlice->current_slice_nr;
+  (*curMb)->slice_nr = (short) curSlice->curSliceNum;
 
   CheckAvailabilityOfNeighbors(*curMb);
 
@@ -838,9 +838,9 @@ void start_macroblock (sSlice* curSlice, sMacroblock** curMb)
 
   // Reset syntax element entries in MB struct
 
-  if (curSlice->slice_type != I_SLICE)
+  if (curSlice->sliceType != I_SLICE)
   {
-    if (curSlice->slice_type != B_SLICE)
+    if (curSlice->sliceType != B_SLICE)
       memset((*curMb)->mvd[0][0][0], 0, MB_BLOCK_PARTITIONS * 2 * sizeof(short));
     else
       memset((*curMb)->mvd[0][0][0], 0, 2 * MB_BLOCK_PARTITIONS * 2 * sizeof(short));
@@ -885,9 +885,9 @@ Boolean exit_macroblock (sSlice* curSlice, int eos_bit)
   //! picture by checking the tr of the next slice header!
 
 // printf ("exit_macroblock: FmoGetLastMBOfPicture %d, vidParam->current_mb_nr %d\n", FmoGetLastMBOfPicture(), vidParam->current_mb_nr);
-  ++(curSlice->num_dec_mb);
+  ++(curSlice->numDecodedMb);
 
-  if(curSlice->current_mb_nr == vidParam->picSizeInMbs - 1) //if (vidParam->num_dec_mb == vidParam->picSizeInMbs)
+  if(curSlice->current_mb_nr == vidParam->picSizeInMbs - 1) //if (vidParam->numDecodedMb == vidParam->picSizeInMbs)
     return TRUE;
   // ask for last mb in the slice  CAVLC
   else
@@ -904,7 +904,7 @@ Boolean exit_macroblock (sSlice* curSlice, int eos_bit)
     if(curSlice->nal_startcode_follows(curSlice, eos_bit) == FALSE)
       return FALSE;
 
-    if(curSlice->slice_type == I_SLICE  || curSlice->slice_type == SI_SLICE || vidParam->activePPS->entropy_coding_mode_flag == (Boolean) CABAC)
+    if(curSlice->sliceType == I_SLICE  || curSlice->sliceType == SI_SLICE || vidParam->activePPS->entropy_coding_mode_flag == (Boolean) CABAC)
       return TRUE;
     if(curSlice->cod_counter <= 0)
       return TRUE;
@@ -1147,7 +1147,7 @@ static void read_motion_info_from_NAL_p_slice (sMacroblock* curMb)
   currSE.type = SE_MVD;
   dP = &(curSlice->partArr[partMap[SE_MVD]]);
 
-  if (vidParam->activePPS->entropy_coding_mode_flag == (Boolean) CAVLC || dP->bitstream->ei_flag)
+  if (vidParam->activePPS->entropy_coding_mode_flag == (Boolean) CAVLC || dP->bitstream->eiFlag)
     currSE.mapping = linfo_se;
   else
     currSE.reading = curSlice->mb_aff_frame_flag ? read_mvd_CABAC_mbaff : read_MVD_CABAC;
@@ -1207,7 +1207,7 @@ static void read_motion_info_from_NAL_b_slice (sMacroblock* curMb) {
   currSE.type = SE_MVD;
   dP = &(curSlice->partArr[partMap[SE_MVD]]);
 
-  if (vidParam->activePPS->entropy_coding_mode_flag == (Boolean) CAVLC || dP->bitstream->ei_flag)
+  if (vidParam->activePPS->entropy_coding_mode_flag == (Boolean) CAVLC || dP->bitstream->eiFlag)
     currSE.mapping = linfo_se;
   else
     currSE.reading = curSlice->mb_aff_frame_flag ? read_mvd_CABAC_mbaff : read_MVD_CABAC;
@@ -1236,7 +1236,7 @@ void setup_slice_methods (sSlice* curSlice) {
 
   setup_read_macroblock (curSlice);
 
-  switch (curSlice->slice_type) {
+  switch (curSlice->sliceType) {
     //{{{
     case P_SLICE:
       curSlice->interpret_mb_mode         = interpret_mb_mode_P;

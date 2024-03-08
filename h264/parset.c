@@ -296,7 +296,7 @@ static int spsIsEqual (sSPS* sps1, sSPS* sps2) {
 
   int equal = 1;
 
-  if ((!sps1->Valid) || (!sps2->Valid))
+  if ((!sps1->valid) || (!sps2->valid))
     return 0;
 
   equal &= (sps1->profile_idc == sps2->profile_idc);
@@ -584,14 +584,14 @@ static void interpretSPS (sVidParam* vidParam, sDataPartition* p, sSPS* sps) {
   initVUI (sps);
   readVUI (p, sps);
 
-  sps->Valid = TRUE;
+  sps->valid = TRUE;
   }
 //}}}
 
 //{{{
 void makeSPSavailable (sVidParam* vidParam, int id, sSPS* sps) {
 
-  assert (sps->Valid == TRUE);
+  assert (sps->valid == TRUE);
   memcpy (&vidParam->SeqParSet[id], sps, sizeof (sSPS));
   }
 //}}}
@@ -599,15 +599,15 @@ void makeSPSavailable (sVidParam* vidParam, int id, sSPS* sps) {
 void processSPS (sVidParam* vidParam, sNalu* nalu) {
 
   sDataPartition* dp = allocPartition (1);
-  dp->bitstream->ei_flag = 0;
-  dp->bitstream->read_len = dp->bitstream->frame_bitoffset = 0;
+  dp->bitstream->eiFlag = 0;
+  dp->bitstream->readLen = dp->bitstream->frameBitOffset = 0;
   memcpy (dp->bitstream->streamBuffer, &nalu->buf[1], nalu->len-1);
-  dp->bitstream->code_len = dp->bitstream->bitstream_length = RBSPtoSODB (dp->bitstream->streamBuffer, nalu->len-1);
+  dp->bitstream->codeLen = dp->bitstream->bitstreamLength = RBSPtoSODB (dp->bitstream->streamBuffer, nalu->len-1);
 
   sSPS* sps = allocSPS();
   interpretSPS (vidParam, dp, sps);
 
-  if (sps->Valid) {
+  if (sps->valid) {
     if (vidParam->activeSPS) {
       if (sps->seq_parameter_set_id == vidParam->activeSPS->seq_parameter_set_id) {
         if (!spsIsEqual (sps, vidParam->activeSPS))   {
@@ -670,7 +670,7 @@ void activateSPS (sVidParam* vidParam, sSPS* sps) {
 //{{{
 static int ppsIsEqual (sPPS* pps1, sPPS* pps2) {
 
-  if ((!pps1->Valid) || (!pps2->Valid))
+  if ((!pps1->valid) || (!pps2->valid))
     return 0;
 
   int equal = 1;
@@ -827,7 +827,7 @@ static void interpretPPS (sVidParam* vidParam, sDataPartition* p, sPPS* pps) {
   pps->redundant_pic_cnt_present_flag =
     read_u_1 ("PPS redundant_pic_cnt_present_flag", s);
 
-  if (more_rbsp_data (s->streamBuffer, s->frame_bitoffset,s->bitstream_length)) {
+  if (more_rbsp_data (s->streamBuffer, s->frameBitOffset,s->bitstreamLength)) {
     //{{{  more_data_in_rbsp
     // Fidelity Range Extensions Stuff
     pps->transform_8x8_mode_flag = read_u_1 ("PPS transform_8x8_mode_flag", s);
@@ -853,7 +853,7 @@ static void interpretPPS (sVidParam* vidParam, sDataPartition* p, sPPS* pps) {
   else
     pps->second_chroma_qp_index_offset = pps->chroma_qp_index_offset;
 
-  pps->Valid = TRUE;
+  pps->valid = TRUE;
   }
 //}}}
 //{{{
@@ -890,7 +890,7 @@ sPPS* allocPPS() {
 //{{{
 void makePPSavailable (sVidParam* vidParam, int id, sPPS* pps) {
 
-  if (vidParam->PicParSet[id].Valid && vidParam->PicParSet[id].slice_group_id)
+  if (vidParam->PicParSet[id].valid && vidParam->PicParSet[id].slice_group_id)
     free (vidParam->PicParSet[id].slice_group_id);
 
   memcpy (&vidParam->PicParSet[id], pps, sizeof (sPPS));
@@ -905,9 +905,9 @@ void makePPSavailable (sVidParam* vidParam, int id, sPPS* pps) {
 void cleanUpPPS (sVidParam* vidParam) {
 
   for (int i = 0; i < MAX_PPS; i++) {
-    if (vidParam->PicParSet[i].Valid == TRUE && vidParam->PicParSet[i].slice_group_id != NULL)
+    if (vidParam->PicParSet[i].valid == TRUE && vidParam->PicParSet[i].slice_group_id != NULL)
       free (vidParam->PicParSet[i].slice_group_id);
-    vidParam->PicParSet[i].Valid = FALSE;
+    vidParam->PicParSet[i].valid = FALSE;
     }
   }
 //}}}
@@ -916,10 +916,10 @@ void processPPS (sVidParam* vidParam, sNalu* nalu) {
 
 
   sDataPartition* dp = allocPartition (1);
-  dp->bitstream->ei_flag = 0;
-  dp->bitstream->read_len = dp->bitstream->frame_bitoffset = 0;
+  dp->bitstream->eiFlag = 0;
+  dp->bitstream->readLen = dp->bitstream->frameBitOffset = 0;
   memcpy (dp->bitstream->streamBuffer, &nalu->buf[1], nalu->len-1);
-  dp->bitstream->code_len = dp->bitstream->bitstream_length = RBSPtoSODB (dp->bitstream->streamBuffer, nalu->len-1);
+  dp->bitstream->codeLen = dp->bitstream->bitstreamLength = RBSPtoSODB (dp->bitstream->streamBuffer, nalu->len-1);
 
   sPPS* pps = allocPPS();
   interpretPPS (vidParam, dp, pps);
@@ -951,10 +951,10 @@ void useParameterSet (sSlice* curSlice) {
   sPPS* pps = &vidParam->PicParSet[PicParsetId];
   sSPS* sps = &vidParam->SeqParSet[pps->seq_parameter_set_id];
 
-  if (pps->Valid != TRUE)
+  if (pps->valid != TRUE)
     printf ("Trying to use an invalid (uninitialized) Picture Parameter Set with ID %d, expect the unexpected...\n", PicParsetId);
 
-  if (sps->Valid != TRUE)
+  if (sps->valid != TRUE)
     printf ("PicParset %d references uninitialized) SPS ID %d, unexpected\n",
             PicParsetId, (int) pps->seq_parameter_set_id);
 
@@ -986,6 +986,6 @@ void useParameterSet (sSlice* curSlice) {
     for (int i = 0; i < 3; i++)
       curSlice->partArr[i].readsSyntaxElement = readsSyntaxElement_CABAC;
     }
-  vidParam->type = curSlice->slice_type;
+  vidParam->type = curSlice->sliceType;
   }
 //}}}

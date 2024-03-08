@@ -953,7 +953,7 @@ static void read_CBP_and_coeffs_from_NAL_CAVLC_400 (sMacroblock* curMb)
 
         if( intra && curSlice->dpB_NotPresent )
         {
-          curMb->ei_flag = 1;
+          curMb->eiFlag = 1;
           curMb->dpl_flag = 1;
         }
 
@@ -977,7 +977,7 @@ static void read_CBP_and_coeffs_from_NAL_CAVLC_400 (sMacroblock* curMb)
     {
       if (curSlice->dpB_NotPresent)
       {
-        curMb->ei_flag  = 1;
+        curMb->eiFlag  = 1;
         curMb->dpl_flag = 1;
       }
       check_dp_neighbors (curMb);
@@ -1129,7 +1129,7 @@ static void read_CBP_and_coeffs_from_NAL_CAVLC_422 (sMacroblock* curMb)
 
         if( intra && curSlice->dpB_NotPresent )
         {
-          curMb->ei_flag = 1;
+          curMb->eiFlag = 1;
           curMb->dpl_flag = 1;
         }
 
@@ -1153,7 +1153,7 @@ static void read_CBP_and_coeffs_from_NAL_CAVLC_422 (sMacroblock* curMb)
     {
       if (curSlice->dpB_NotPresent)
       {
-        curMb->ei_flag  = 1;
+        curMb->eiFlag  = 1;
         curMb->dpl_flag = 1;
       }
       check_dp_neighbors (curMb);
@@ -1464,7 +1464,7 @@ static void read_CBP_and_coeffs_from_NAL_CAVLC_444 (sMacroblock* curMb)
 
         if( intra && curSlice->dpB_NotPresent )
         {
-          curMb->ei_flag = 1;
+          curMb->eiFlag = 1;
           curMb->dpl_flag = 1;
         }
 
@@ -1488,7 +1488,7 @@ static void read_CBP_and_coeffs_from_NAL_CAVLC_444 (sMacroblock* curMb)
     {
       if (curSlice->dpB_NotPresent)
       {
-        curMb->ei_flag  = 1;
+        curMb->eiFlag  = 1;
         curMb->dpl_flag = 1;
       }
       check_dp_neighbors (curMb);
@@ -1696,7 +1696,7 @@ static void read_CBP_and_coeffs_from_NAL_CAVLC_420 (sMacroblock* curMb)
 
         if( intra && curSlice->dpB_NotPresent )
         {
-          curMb->ei_flag = 1;
+          curMb->eiFlag = 1;
           curMb->dpl_flag = 1;
         }
 
@@ -1719,7 +1719,7 @@ static void read_CBP_and_coeffs_from_NAL_CAVLC_420 (sMacroblock* curMb)
     {
       if (curSlice->dpB_NotPresent)
       {
-        curMb->ei_flag  = 1;
+        curMb->eiFlag  = 1;
         curMb->dpl_flag = 1;
       }
       check_dp_neighbors (curMb);
