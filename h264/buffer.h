@@ -9,9 +9,9 @@ typedef struct PicMotionParamOld {
 //}}}
 //{{{  sPicMotionParam
 typedef struct PicMotionParam {
-  struct Picture* ref_pic[2];  // referrence picture pointer
+  struct Picture* refPic[2];  // referrence picture pointer
   sMotionVector           mv[2];       // motion vector
-  char                    ref_idx[2];  // reference picture   [list][subblock_y][subblock_x]
+  char                    refIndex[2];  // reference picture   [list][subblock_y][subblock_x]
   byte                    slice_no;
   } sPicMotionParam;
 //}}}
@@ -28,10 +28,10 @@ typedef struct Picture {
 
   int         pic_num;
   int         long_term_pic_num;
-  int         long_term_frame_idx;
+  int         longTermFrameIndex;
 
-  byte        is_long_term;
-  int         used_for_reference;
+  byte        isLongTerm;
+  int         usedForReference;
   int         is_output;
   int         non_existing;
   int         separate_colour_plane_flag;
@@ -50,7 +50,7 @@ typedef struct Picture {
   sPixel**    imgY;
   sPixel***   imgUV;
 
-  struct PicMotionParam** mv_info;
+  struct PicMotionParam** mvInfo;
   struct PicMotionParam** JVmv_info[MAX_PLANE];
   struct PicMotionParamOld  motion;
   struct PicMotionParamOld  JVmotion[MAX_PLANE]; // Motion info for 4:4:4 independent mode decoding
@@ -96,10 +96,10 @@ typedef struct Picture {
 typedef sPicture* sPicturePtr;
 //{{{  sFrameStore
 typedef struct FrameStore {
-  int       is_used;                // 0=empty; 1=top; 2=bottom; 3=both fields (or frame)
-  int       is_reference;           // 0=not used for ref; 1=top used; 2=bottom used; 3=both fields (or frame) used
-  int       is_long_term;           // 0=not used for ref; 1=top used; 2=bottom used; 3=both fields (or frame) used
-  int       is_orig_reference;      // original marking by nal_ref_idc: 0=not used for ref; 1=top used; 2=bottom used; 3=both fields (or frame) used
+  int       isUsed;                // 0=empty; 1=top; 2=bottom; 3=both fields (or frame)
+  int       isReference;           // 0=not used for ref; 1=top used; 2=bottom used; 3=both fields (or frame) used
+  int       isLongTerm;           // 0=not used for ref; 1=top used; 2=bottom used; 3=both fields (or frame) used
+  int       isOrigReference;      // original marking by nal_ref_idc: 0=not used for ref; 1=top used; 2=bottom used; 3=both fields (or frame) used
 
   int       is_non_existent;
 
@@ -107,7 +107,7 @@ typedef struct FrameStore {
   unsigned  recovery_frame;
 
   int       frame_num_wrap;
-  int       long_term_frame_idx;
+  int       longTermFrameIndex;
   int       is_output;
   int       poc;
 
@@ -191,8 +191,8 @@ static inline int compare_fs_by_frame_num_desc (const void* arg1, const void* ar
 // compares two frame stores by lt_pic_num for qsort in descending order
 static inline int compare_fs_by_lt_pic_idx_asc (const void* arg1, const void* arg2 )
 {
-  int long_term_frame_idx1 = (*(sFrameStore**)arg1)->long_term_frame_idx;
-  int long_term_frame_idx2 = (*(sFrameStore**)arg2)->long_term_frame_idx;
+  int long_term_frame_idx1 = (*(sFrameStore**)arg1)->longTermFrameIndex;
+  int long_term_frame_idx2 = (*(sFrameStore**)arg2)->longTermFrameIndex;
 
   if ( long_term_frame_idx1 < long_term_frame_idx2)
     return -1;
@@ -266,14 +266,14 @@ static inline int compare_fs_by_poc_desc (const void* arg1, const void* arg2 )
 // returns true, if picture is short term reference picture
 static inline int is_short_ref (sPicture* s)
 {
-  return ((s->used_for_reference) && (!(s->is_long_term)));
+  return ((s->usedForReference) && (!(s->isLongTerm)));
 }
 //}}}
 //{{{
 // returns true, if picture is long term reference picture
 static inline int is_long_ref (sPicture* s)
 {
-  return ((s->used_for_reference) && (s->is_long_term));
+  return ((s->usedForReference) && (s->isLongTerm));
 }
 //}}}
 
@@ -288,10 +288,10 @@ extern void fillFrameNumGap (sVidParam* vidParam, sSlice *pSlice);
 
 extern void updateRefList (sDPB* dpb);
 extern void updateLongTermRefList (sDPB* dpb);
-extern void mm_mark_current_picture_long_term (sDPB* dpb, sPicture* p, int long_term_frame_idx);
+extern void mm_mark_current_picture_long_term (sDPB* dpb, sPicture* p, int longTermFrameIndex);
 extern void mm_unmark_short_term_for_reference (sDPB* dpb, sPicture* p, int difference_of_pic_nums_minus1);
 extern void mm_unmark_long_term_for_reference (sDPB* dpb, sPicture *p, int long_term_pic_num);
-extern void mm_assign_long_term_frame_idx (sDPB* dpb, sPicture* p, int difference_of_pic_nums_minus1, int long_term_frame_idx);
+extern void mm_assign_long_term_frame_idx (sDPB* dpb, sPicture* p, int difference_of_pic_nums_minus1, int longTermFrameIndex);
 extern void mm_update_max_long_term_frame_idx (sDPB* dpb, int max_long_term_frame_idx_plus1);
 extern void mm_unmark_all_short_term_for_reference (sDPB* dpb);
 extern void mm_unmark_all_long_term_for_reference (sDPB* dpb);

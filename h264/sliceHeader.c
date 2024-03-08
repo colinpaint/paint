@@ -1461,8 +1461,8 @@ void dec_ref_pic_marking (sVidParam* vidParam, sBitstream* curStream, sSlice* pS
             read_ue_v ("SLC long_term_pic_num", curStream);
 
         if ((val == 3 ) || (val == 6))
-          tmp_drpm->long_term_frame_idx =
-            read_ue_v ("SLC long_term_frame_idx", curStream);
+          tmp_drpm->longTermFrameIndex =
+            read_ue_v ("SLC longTermFrameIndex", curStream);
         if (val == 4)
           tmp_drpm->max_long_term_frame_idx_plus1 =
             read_ue_v ("SLC max_long_term_pic_idx_plus1", curStream);

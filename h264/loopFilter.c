@@ -633,12 +633,12 @@ static void get_strength_ver_MBAff (byte* Strength, sMacroblock* MbQ, int edge, 
             int blk_y2 = (pixP.pos_y >> 2);
             int blk_x2 = (pixP.pos_x >> 2);
 
-            sPicMotionParam *mv_info_p = &p->mv_info[blk_y ][blk_x ];
-            sPicMotionParam *mv_info_q = &p->mv_info[blk_y2][blk_x2];
-            sPicturePtr ref_p0 = mv_info_p->ref_pic[LIST_0];
-            sPicturePtr ref_q0 = mv_info_q->ref_pic[LIST_0];
-            sPicturePtr ref_p1 = mv_info_p->ref_pic[LIST_1];
-            sPicturePtr ref_q1 = mv_info_q->ref_pic[LIST_1];
+            sPicMotionParam *mv_info_p = &p->mvInfo[blk_y ][blk_x ];
+            sPicMotionParam *mv_info_q = &p->mvInfo[blk_y2][blk_x2];
+            sPicturePtr ref_p0 = mv_info_p->refPic[LIST_0];
+            sPicturePtr ref_q0 = mv_info_q->refPic[LIST_0];
+            sPicturePtr ref_p1 = mv_info_p->refPic[LIST_1];
+            sPicturePtr ref_q1 = mv_info_q->refPic[LIST_1];
 
             if ( ((ref_p0==ref_q0) && (ref_p1==ref_q1))||((ref_p0==ref_q1) && (ref_p1==ref_q0)))
             {
@@ -722,12 +722,12 @@ static void get_strength_ver_MBAff (byte* Strength, sMacroblock* MbQ, int edge, 
                 int blk_y2 = (pixP.pos_y >> 2);
                 int blk_x2 = (pixP.pos_x >> 2);
 
-                sPicMotionParam *mv_info_p = &p->mv_info[blk_y ][blk_x ];
-                sPicMotionParam *mv_info_q = &p->mv_info[blk_y2][blk_x2];
-                sPicturePtr ref_p0 = mv_info_p->ref_pic[LIST_0];
-                sPicturePtr ref_q0 = mv_info_q->ref_pic[LIST_0];
-                sPicturePtr ref_p1 = mv_info_p->ref_pic[LIST_1];
-                sPicturePtr ref_q1 = mv_info_q->ref_pic[LIST_1];
+                sPicMotionParam *mv_info_p = &p->mvInfo[blk_y ][blk_x ];
+                sPicMotionParam *mv_info_q = &p->mvInfo[blk_y2][blk_x2];
+                sPicturePtr ref_p0 = mv_info_p->refPic[LIST_0];
+                sPicturePtr ref_q0 = mv_info_q->refPic[LIST_0];
+                sPicturePtr ref_p1 = mv_info_p->refPic[LIST_1];
+                sPicturePtr ref_q1 = mv_info_q->refPic[LIST_1];
 
                 if ( ((ref_p0==ref_q0) && (ref_p1==ref_q1))||((ref_p0==ref_q1) && (ref_p1==ref_q0)))
                 {
@@ -860,12 +860,12 @@ static void get_strength_hor_MBAff (byte* Strength, sMacroblock* MbQ, int edge, 
             blk_x2 = (short) (pixP.pos_x >> 2);
 
             {
-              sPicMotionParam *mv_info_p = &p->mv_info[blk_y ][blk_x ];
-              sPicMotionParam *mv_info_q = &p->mv_info[blk_y2][blk_x2];
-              sPicturePtr ref_p0 = mv_info_p->ref_pic[LIST_0];
-              sPicturePtr ref_q0 = mv_info_q->ref_pic[LIST_0];
-              sPicturePtr ref_p1 = mv_info_p->ref_pic[LIST_1];
-              sPicturePtr ref_q1 = mv_info_q->ref_pic[LIST_1];
+              sPicMotionParam *mv_info_p = &p->mvInfo[blk_y ][blk_x ];
+              sPicMotionParam *mv_info_q = &p->mvInfo[blk_y2][blk_x2];
+              sPicturePtr ref_p0 = mv_info_p->refPic[LIST_0];
+              sPicturePtr ref_q0 = mv_info_q->refPic[LIST_0];
+              sPicturePtr ref_p1 = mv_info_p->refPic[LIST_1];
+              sPicturePtr ref_q1 = mv_info_q->refPic[LIST_1];
 
               if ( ((ref_p0==ref_q0) && (ref_p1==ref_q1)) ||
                 ((ref_p0==ref_q1) && (ref_p1==ref_q0)))
@@ -997,12 +997,12 @@ static void get_strength_ver (sMacroblock* MbQ, int edge, int mvlimit, sPicture*
               int blk_x  = mb.x + (blkQ  & 3);
               int blk_y2 = (short)(get_pos_y_luma(neighbor,  0) + idx) >> 2;
               int blk_x2 = (short)(get_pos_x_luma(neighbor, xQ)      ) >> 2;
-              sPicMotionParam *mv_info_p = &p->mv_info[blk_y ][blk_x ];
-              sPicMotionParam *mv_info_q = &p->mv_info[blk_y2][blk_x2];
-              sPicturePtr ref_p0 = mv_info_p->ref_pic[LIST_0];
-              sPicturePtr ref_q0 = mv_info_q->ref_pic[LIST_0];
-              sPicturePtr ref_p1 = mv_info_p->ref_pic[LIST_1];
-              sPicturePtr ref_q1 = mv_info_q->ref_pic[LIST_1];
+              sPicMotionParam *mv_info_p = &p->mvInfo[blk_y ][blk_x ];
+              sPicMotionParam *mv_info_q = &p->mvInfo[blk_y2][blk_x2];
+              sPicturePtr ref_p0 = mv_info_p->refPic[LIST_0];
+              sPicturePtr ref_q0 = mv_info_q->refPic[LIST_0];
+              sPicturePtr ref_p1 = mv_info_p->refPic[LIST_1];
+              sPicturePtr ref_q1 = mv_info_q->refPic[LIST_1];
 
               if ( ((ref_p0==ref_q0) && (ref_p1==ref_q1)) || ((ref_p0==ref_q1) && (ref_p1==ref_q0)))
               {
@@ -1133,13 +1133,13 @@ static void get_strength_hor (sMacroblock* MbQ, int edge, int mvlimit, sPicture*
               int blk_y2 = get_pos_y_luma(neighbor,yQ) >> 2;
               int blk_x2 = ((short)(get_pos_x_luma(neighbor,0)) >> 2) + idx;
 
-              sPicMotionParam *mv_info_p = &p->mv_info[blk_y ][blk_x ];
-              sPicMotionParam *mv_info_q = &p->mv_info[blk_y2][blk_x2];
+              sPicMotionParam *mv_info_p = &p->mvInfo[blk_y ][blk_x ];
+              sPicMotionParam *mv_info_q = &p->mvInfo[blk_y2][blk_x2];
 
-              sPicturePtr ref_p0 = mv_info_p->ref_pic[LIST_0];
-              sPicturePtr ref_q0 = mv_info_q->ref_pic[LIST_0];
-              sPicturePtr ref_p1 = mv_info_p->ref_pic[LIST_1];
-              sPicturePtr ref_q1 = mv_info_q->ref_pic[LIST_1];
+              sPicturePtr ref_p0 = mv_info_p->refPic[LIST_0];
+              sPicturePtr ref_q0 = mv_info_q->refPic[LIST_0];
+              sPicturePtr ref_p1 = mv_info_p->refPic[LIST_1];
+              sPicturePtr ref_q1 = mv_info_q->refPic[LIST_1];
 
               if ( ((ref_p0==ref_q0) && (ref_p1==ref_q1)) || ((ref_p0==ref_q1) && (ref_p1==ref_q0)))
               {

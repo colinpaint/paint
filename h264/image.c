@@ -182,7 +182,7 @@ static void fillWPParam (sSlice* slice) {
           else if (slice->activePPS->weighted_bipred_idc == 2) {
             td = iClip3(-128,127,slice->listX[LIST_1][j]->poc - slice->listX[LIST_0][i]->poc);
             if (td == 0 ||
-                slice->listX[LIST_1][j]->is_long_term || slice->listX[LIST_0][i]->is_long_term) {
+                slice->listX[LIST_1][j]->isLongTerm || slice->listX[LIST_0][i]->isLongTerm) {
               slice->wbp_weight[0][i][j][comp] = 32;
               slice->wbp_weight[1][i][j][comp] = 32;
               }
@@ -217,8 +217,8 @@ static void fillWPParam (sSlice* slice) {
               else if (slice->activePPS->weighted_bipred_idc == 2) {
                 td = iClip3 (-128, 127, slice->listX[k+LIST_1][j]->poc - slice->listX[k+LIST_0][i]->poc);
                 if (td == 0 ||
-                    slice->listX[k+LIST_1][j]->is_long_term ||
-                    slice->listX[k+LIST_0][i]->is_long_term) {
+                    slice->listX[k+LIST_1][j]->isLongTerm ||
+                    slice->listX[k+LIST_0][i]->isLongTerm) {
                   slice->wbp_weight[k+0][i][j][comp] = 32;
                   slice->wbp_weight[k+1][i][j][comp] = 32;
                   }
@@ -325,17 +325,17 @@ static void ercWriteMBMODEandMV (sMacroblock* mb) {
         int jj = 4*mby + (i >> 1  )*2;
         if (mb->b8mode[i]>=5 && mb->b8mode[i]<=7) {
           // SMALL BLOCKS
-          pRegion->mv[0] = (picture->mv_info[jj][ii].mv[LIST_0].mv_x + picture->mv_info[jj][ii + 1].mv[LIST_0].mv_x + picture->mv_info[jj + 1][ii].mv[LIST_0].mv_x + picture->mv_info[jj + 1][ii + 1].mv[LIST_0].mv_x + 2)/4;
-          pRegion->mv[1] = (picture->mv_info[jj][ii].mv[LIST_0].mv_y + picture->mv_info[jj][ii + 1].mv[LIST_0].mv_y + picture->mv_info[jj + 1][ii].mv[LIST_0].mv_y + picture->mv_info[jj + 1][ii + 1].mv[LIST_0].mv_y + 2)/4;
+          pRegion->mv[0] = (picture->mvInfo[jj][ii].mv[LIST_0].mv_x + picture->mvInfo[jj][ii + 1].mv[LIST_0].mv_x + picture->mvInfo[jj + 1][ii].mv[LIST_0].mv_x + picture->mvInfo[jj + 1][ii + 1].mv[LIST_0].mv_x + 2)/4;
+          pRegion->mv[1] = (picture->mvInfo[jj][ii].mv[LIST_0].mv_y + picture->mvInfo[jj][ii + 1].mv[LIST_0].mv_y + picture->mvInfo[jj + 1][ii].mv[LIST_0].mv_y + picture->mvInfo[jj + 1][ii + 1].mv[LIST_0].mv_y + 2)/4;
           }
         else {
           // 16x16, 16x8, 8x16, 8x8
-          pRegion->mv[0] = picture->mv_info[jj][ii].mv[LIST_0].mv_x;
-          pRegion->mv[1] = picture->mv_info[jj][ii].mv[LIST_0].mv_y;
+          pRegion->mv[0] = picture->mvInfo[jj][ii].mv[LIST_0].mv_x;
+          pRegion->mv[1] = picture->mvInfo[jj][ii].mv[LIST_0].mv_y;
           }
 
         mb->slice->ercMvPerMb += iabs(pRegion->mv[0]) + iabs(pRegion->mv[1]);
-        pRegion->mv[2] = picture->mv_info[jj][ii].ref_idx[LIST_0];
+        pRegion->mv[2] = picture->mvInfo[jj][ii].refIndex[LIST_0];
         }
       }
     }
@@ -358,19 +358,19 @@ static void ercWriteMBMODEandMV (sMacroblock* mb) {
         pRegion->mv[2] = 0;
         }
       else {
-        int idx = (picture->mv_info[jj][ii].ref_idx[0] < 0) ? 1 : 0;
-        pRegion->mv[0] = (picture->mv_info[jj][ii].mv[idx].mv_x +
-                          picture->mv_info[jj][ii+1].mv[idx].mv_x +
-                          picture->mv_info[jj+1][ii].mv[idx].mv_x +
-                          picture->mv_info[jj+1][ii+1].mv[idx].mv_x + 2)/4;
+        int idx = (picture->mvInfo[jj][ii].refIndex[0] < 0) ? 1 : 0;
+        pRegion->mv[0] = (picture->mvInfo[jj][ii].mv[idx].mv_x +
+                          picture->mvInfo[jj][ii+1].mv[idx].mv_x +
+                          picture->mvInfo[jj+1][ii].mv[idx].mv_x +
+                          picture->mvInfo[jj+1][ii+1].mv[idx].mv_x + 2)/4;
 
-        pRegion->mv[1] = (picture->mv_info[jj][ii].mv[idx].mv_y +
-                          picture->mv_info[jj][ii+1].mv[idx].mv_y +
-                          picture->mv_info[jj+1][ii].mv[idx].mv_y +
-                          picture->mv_info[jj+1][ii+1].mv[idx].mv_y + 2)/4;
+        pRegion->mv[1] = (picture->mvInfo[jj][ii].mv[idx].mv_y +
+                          picture->mvInfo[jj][ii+1].mv[idx].mv_y +
+                          picture->mvInfo[jj+1][ii].mv[idx].mv_y +
+                          picture->mvInfo[jj+1][ii+1].mv[idx].mv_y + 2)/4;
         mb->slice->ercMvPerMb += iabs(pRegion->mv[0]) + iabs(pRegion->mv[1]);
 
-        pRegion->mv[2]  = (picture->mv_info[jj][ii].ref_idx[idx]);
+        pRegion->mv[2]  = (picture->mvInfo[jj][ii].refIndex[idx]);
         }
       }
     }
@@ -404,7 +404,7 @@ static void initCurImg (sSlice* slice, sVidParam* vidParam) {
     int total_lists = slice->mb_aff_frame_flag ? 6 : (slice->sliceType == B_SLICE ? 2 : 1);
 
     for (int j = 0; j < total_lists; j++) {
-      // note that if we always set this to MAX_LIST_SIZE, we avoid crashes with invalid ref_idx being set
+      // note that if we always set this to MAX_LIST_SIZE, we avoid crashes with invalid refIndex being set
       // since currently this is done at the slice level, it seems safe to do so.
       // Note for some reason I get now a mismatch between version 12 and this one in cabac. I wonder why.
       for (int i = 0; i < MAX_LIST_SIZE; i++) {
@@ -471,7 +471,7 @@ static void copyDecPicture_JV (sVidParam* vidParam, sPicture* dst, sPicture* src
   dst->poc = src->poc;
 
   dst->sliceType = src->sliceType;
-  dst->used_for_reference = src->used_for_reference;
+  dst->usedForReference = src->usedForReference;
   dst->idrFlag = src->idrFlag;
   dst->no_output_of_prior_pics_flag = src->no_output_of_prior_pics_flag;
   dst->long_term_reference_flag = src->long_term_reference_flag;
@@ -640,7 +640,7 @@ static void initPicture (sVidParam* vidParam, sSlice* slice, sInputParam* inputP
     }
 
   picture->sliceType = vidParam->type;
-  picture->used_for_reference = (slice->nalRefId != 0);
+  picture->usedForReference = (slice->nalRefId != 0);
   picture->idrFlag = slice->idrFlag;
   picture->no_output_of_prior_pics_flag = slice->no_output_of_prior_pics_flag;
   picture->long_term_reference_flag = slice->long_term_reference_flag;
@@ -1179,7 +1179,7 @@ void exitPicture (sVidParam* vidParam, sPicture** picture) {
     }
   //}}}
   if (!vidParam->deblockMode &&
-      (vidParam->bDeblockEnable & (1 << (*picture)->used_for_reference))) {
+      (vidParam->bDeblockEnable & (1 << (*picture)->usedForReference))) {
     //{{{  deblocking for frame or field
     if( (vidParam->separate_colour_plane_flag != 0) ) {
       int colour_plane_id = vidParam->sliceList[0]->colour_plane_id;
@@ -1206,13 +1206,13 @@ void exitPicture (sVidParam* vidParam, sPicture** picture) {
   else
     fieldPostProcessing (vidParam);
 
-  if ((*picture)->used_for_reference)
+  if ((*picture)->usedForReference)
     padPicture (vidParam, *picture);
 
   int structure = (*picture)->structure;
   int sliceType = (*picture)->sliceType;
   int framePoc = (*picture)->framePoc;
-  int refpic = (*picture)->used_for_reference;
+  int refpic = (*picture)->usedForReference;
   int qp = (*picture)->qp;
   int picNum = (*picture)->pic_num;
   int isIdr = (*picture)->idrFlag;

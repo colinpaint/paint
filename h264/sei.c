@@ -770,7 +770,7 @@ static void interpret_dec_ref_pic_marking_repetition_info (byte* payload, int si
         //}
         //if ((tmp_drpm->memory_management_control_operation==3)||(tmp_drpm->memory_management_control_operation==6))
         //{
-          //printf("long_term_frame_idx                  = %d\n", tmp_drpm->long_term_frame_idx);
+          //printf("longTermFrameIndex                  = %d\n", tmp_drpm->longTermFrameIndex);
         //}
         //if (tmp_drpm->memory_management_control_operation==4)
         //{

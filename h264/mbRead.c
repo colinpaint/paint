@@ -353,39 +353,39 @@ static void read_ipred_modes (sMacroblock* curMb)
 }
 //}}}
 //{{{
-static void reset_mv_info (sPicMotionParam *mv_info, int slice_no)
+static void reset_mv_info (sPicMotionParam *mvInfo, int slice_no)
 {
-  mv_info->ref_pic[LIST_0] = NULL;
-  mv_info->ref_pic[LIST_1] = NULL;
-  mv_info->mv[LIST_0] = zero_mv;
-  mv_info->mv[LIST_1] = zero_mv;
-  mv_info->ref_idx[LIST_0] = -1;
-  mv_info->ref_idx[LIST_1] = -1;
-  mv_info->slice_no = slice_no;
+  mvInfo->refPic[LIST_0] = NULL;
+  mvInfo->refPic[LIST_1] = NULL;
+  mvInfo->mv[LIST_0] = zero_mv;
+  mvInfo->mv[LIST_1] = zero_mv;
+  mvInfo->refIndex[LIST_0] = -1;
+  mvInfo->refIndex[LIST_1] = -1;
+  mvInfo->slice_no = slice_no;
 }
 //}}}
 //{{{
-static void reset_mv_info_list (sPicMotionParam *mv_info, int list, int slice_no) {
+static void reset_mv_info_list (sPicMotionParam *mvInfo, int list, int slice_no) {
 
-  mv_info->ref_pic[list] = NULL;
-  mv_info->mv[list] = zero_mv;
-  mv_info->ref_idx[list] = -1;
-  mv_info->slice_no = slice_no;
+  mvInfo->refPic[list] = NULL;
+  mvInfo->mv[list] = zero_mv;
+  mvInfo->refIndex[list] = -1;
+  mvInfo->slice_no = slice_no;
   }
 //}}}
 //{{{
 static void init_macroblock_basic (sMacroblock* curMb) {
 
-  sPicMotionParam** mv_info = &curMb->slice->picture->mv_info[curMb->block_y];
+  sPicMotionParam** mvInfo = &curMb->slice->picture->mvInfo[curMb->block_y];
   int slice_no =  curMb->slice->curSliceNum;
 
   // reset vectors and pred. modes
   for (int j = 0; j < BLOCK_SIZE; ++j) {
     int i = curMb->block_x;
-    reset_mv_info_list(*mv_info + (i++), LIST_1, slice_no);
-    reset_mv_info_list(*mv_info + (i++), LIST_1, slice_no);
-    reset_mv_info_list(*mv_info + (i++), LIST_1, slice_no);
-    reset_mv_info_list(*(mv_info++) + i, LIST_1, slice_no);
+    reset_mv_info_list(*mvInfo + (i++), LIST_1, slice_no);
+    reset_mv_info_list(*mvInfo + (i++), LIST_1, slice_no);
+    reset_mv_info_list(*mvInfo + (i++), LIST_1, slice_no);
+    reset_mv_info_list(*(mvInfo++) + i, LIST_1, slice_no);
     }
   }
 //}}}
@@ -393,17 +393,17 @@ static void init_macroblock_basic (sMacroblock* curMb) {
 static void init_macroblock_direct (sMacroblock* curMb) {
 
   int slice_no = curMb->slice->curSliceNum;
-  sPicMotionParam** mv_info = &curMb->slice->picture->mv_info[curMb->block_y];
+  sPicMotionParam** mvInfo = &curMb->slice->picture->mvInfo[curMb->block_y];
 
   set_read_comp_coeff_cabac(curMb);
   set_read_comp_coeff_cavlc(curMb);
 
   int i = curMb->block_x;
   for (int j = 0; j < BLOCK_SIZE; ++j) {
-    (*mv_info+i)->slice_no = slice_no;
-    (*mv_info+i+1)->slice_no = slice_no;
-    (*mv_info+i+2)->slice_no = slice_no;
-    (*(mv_info++)+i+3)->slice_no = slice_no;
+    (*mvInfo+i)->slice_no = slice_no;
+    (*mvInfo+i+1)->slice_no = slice_no;
+    (*mvInfo+i+2)->slice_no = slice_no;
+    (*(mvInfo++)+i+3)->slice_no = slice_no;
     }
   }
 //}}}
@@ -412,17 +412,17 @@ static void init_macroblock (sMacroblock* curMb)
 {
   int j, i;
   sSlice* curSlice = curMb->slice;
-  sPicMotionParam** mv_info = &curSlice->picture->mv_info[curMb->block_y];
+  sPicMotionParam** mvInfo = &curSlice->picture->mvInfo[curMb->block_y];
   int slice_no = curSlice->curSliceNum;
   // reset vectors and pred. modes
 
   for(j = 0; j < BLOCK_SIZE; ++j)
   {
     i = curMb->block_x;
-    reset_mv_info(*mv_info + (i++), slice_no);
-    reset_mv_info(*mv_info + (i++), slice_no);
-    reset_mv_info(*mv_info + (i++), slice_no);
-    reset_mv_info(*(mv_info++) + i, slice_no);
+    reset_mv_info(*mvInfo + (i++), slice_no);
+    reset_mv_info(*mvInfo + (i++), slice_no);
+    reset_mv_info(*mvInfo + (i++), slice_no);
+    reset_mv_info(*(mvInfo++) + i, slice_no);
   }
 
   set_read_comp_coeff_cabac(curMb);
@@ -607,25 +607,25 @@ void skip_macroblock (sMacroblock* curMb) {
   {
     if (mb[0].available)
     {
-      a_mv      = &picture->mv_info[mb[0].pos_y][mb[0].pos_x].mv[LIST_0];
+      a_mv      = &picture->mvInfo[mb[0].pos_y][mb[0].pos_x].mv[LIST_0];
       a_mv_y    = a_mv->mv_y;
-      a_ref_idx = picture->mv_info[mb[0].pos_y][mb[0].pos_x].ref_idx[LIST_0];
+      a_ref_idx = picture->mvInfo[mb[0].pos_y][mb[0].pos_x].refIndex[LIST_0];
     }
 
     if (mb[1].available)
     {
-      b_mv      = &picture->mv_info[mb[1].pos_y][mb[1].pos_x].mv[LIST_0];
+      b_mv      = &picture->mvInfo[mb[1].pos_y][mb[1].pos_x].mv[LIST_0];
       b_mv_y    = b_mv->mv_y;
-      b_ref_idx = picture->mv_info[mb[1].pos_y][mb[1].pos_x].ref_idx[LIST_0];
+      b_ref_idx = picture->mvInfo[mb[1].pos_y][mb[1].pos_x].refIndex[LIST_0];
     }
   }
   else
   {
     if (mb[0].available)
     {
-      a_mv      = &picture->mv_info[mb[0].pos_y][mb[0].pos_x].mv[LIST_0];
+      a_mv      = &picture->mvInfo[mb[0].pos_y][mb[0].pos_x].mv[LIST_0];
       a_mv_y    = a_mv->mv_y;
-      a_ref_idx = picture->mv_info[mb[0].pos_y][mb[0].pos_x].ref_idx[LIST_0];
+      a_ref_idx = picture->mvInfo[mb[0].pos_y][mb[0].pos_x].refIndex[LIST_0];
 
       if (curMb->mb_field && !vidParam->mbData[mb[0].mb_addr].mb_field)
       {
@@ -641,9 +641,9 @@ void skip_macroblock (sMacroblock* curMb) {
 
     if (mb[1].available)
     {
-      b_mv      = &picture->mv_info[mb[1].pos_y][mb[1].pos_x].mv[LIST_0];
+      b_mv      = &picture->mvInfo[mb[1].pos_y][mb[1].pos_x].mv[LIST_0];
       b_mv_y    = b_mv->mv_y;
-      b_ref_idx = picture->mv_info[mb[1].pos_y][mb[1].pos_x].ref_idx[LIST_0];
+      b_ref_idx = picture->mvInfo[mb[1].pos_y][mb[1].pos_x].refIndex[LIST_0];
 
       if (curMb->mb_field && !vidParam->mbData[mb[1].mb_addr].mb_field)
       {
@@ -666,37 +666,37 @@ void skip_macroblock (sMacroblock* curMb) {
 
   if (zeroMotionAbove || zeroMotionLeft)
   {
-    sPicMotionParam** dec_mv_info = &picture->mv_info[img_block_y];
+    sPicMotionParam** dec_mv_info = &picture->mvInfo[img_block_y];
     sPicture *cur_pic = curSlice->listX[list_offset][0];
-    sPicMotionParam *mv_info = NULL;
+    sPicMotionParam *mvInfo = NULL;
 
     for(j = 0; j < BLOCK_SIZE; ++j)
     {
       for(i = curMb->block_x; i < curMb->block_x + BLOCK_SIZE; ++i)
       {
-        mv_info = &dec_mv_info[j][i];
-        mv_info->ref_pic[LIST_0] = cur_pic;
-        mv_info->mv     [LIST_0] = zero_mv;
-        mv_info->ref_idx[LIST_0] = 0;
+        mvInfo = &dec_mv_info[j][i];
+        mvInfo->refPic[LIST_0] = cur_pic;
+        mvInfo->mv     [LIST_0] = zero_mv;
+        mvInfo->refIndex[LIST_0] = 0;
       }
     }
   }
   else
   {
-    sPicMotionParam** dec_mv_info = &picture->mv_info[img_block_y];
-    sPicMotionParam *mv_info = NULL;
+    sPicMotionParam** dec_mv_info = &picture->mvInfo[img_block_y];
+    sPicMotionParam *mvInfo = NULL;
     sPicture *cur_pic = curSlice->listX[list_offset][0];
-    curMb->GetMVPredictor (curMb, mb, &pred_mv, 0, picture->mv_info, LIST_0, 0, 0, MB_BLOCK_SIZE, MB_BLOCK_SIZE);
+    curMb->GetMVPredictor (curMb, mb, &pred_mv, 0, picture->mvInfo, LIST_0, 0, 0, MB_BLOCK_SIZE, MB_BLOCK_SIZE);
 
     // Set first block line (position img_block_y)
     for(j = 0; j < BLOCK_SIZE; ++j)
     {
       for(i = curMb->block_x; i < curMb->block_x + BLOCK_SIZE; ++i)
       {
-        mv_info = &dec_mv_info[j][i];
-        mv_info->ref_pic[LIST_0] = cur_pic;
-        mv_info->mv     [LIST_0] = pred_mv;
-        mv_info->ref_idx[LIST_0] = 0;
+        mvInfo = &dec_mv_info[j][i];
+        mvInfo->refPic[LIST_0] = cur_pic;
+        mvInfo->mv     [LIST_0] = pred_mv;
+        mvInfo->refIndex[LIST_0] = 0;
       }
     }
   }

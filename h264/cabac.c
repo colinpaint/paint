@@ -1317,9 +1317,9 @@ void readRefFrame_CABAC (sMacroblock* curMb,
     if (!( (neighborMB->mb_type==IPCM) || IS_DIRECT(neighborMB) || (neighborMB->b8mode[b8b]==0 && neighborMB->b8pdir[b8b]==2)))
     {
       if (curSlice->mb_aff_frame_flag && (curMb->mb_field == FALSE) && (neighborMB->mb_field == TRUE))
-        b = (picture->mv_info[block_b.pos_y][block_b.pos_x].ref_idx[list] > 1 ? 2 : 0);
+        b = (picture->mvInfo[block_b.pos_y][block_b.pos_x].refIndex[list] > 1 ? 2 : 0);
       else
-        b = (picture->mv_info[block_b.pos_y][block_b.pos_x].ref_idx[list] > 0 ? 2 : 0);
+        b = (picture->mvInfo[block_b.pos_y][block_b.pos_x].refIndex[list] > 0 ? 2 : 0);
     }
   }
 
@@ -1330,9 +1330,9 @@ void readRefFrame_CABAC (sMacroblock* curMb,
     if (!((neighborMB->mb_type==IPCM) || IS_DIRECT(neighborMB) || (neighborMB->b8mode[b8a]==0 && neighborMB->b8pdir[b8a]==2)))
     {
       if (curSlice->mb_aff_frame_flag && (curMb->mb_field == FALSE) && (neighborMB->mb_field == 1))
-        a = (picture->mv_info[block_a.pos_y][block_a.pos_x].ref_idx[list] > 1 ? 1 : 0);
+        a = (picture->mvInfo[block_a.pos_y][block_a.pos_x].refIndex[list] > 1 ? 1 : 0);
       else
-        a = (picture->mv_info[block_a.pos_y][block_a.pos_x].ref_idx[list] > 0 ? 1 : 0);
+        a = (picture->mvInfo[block_a.pos_y][block_a.pos_x].refIndex[list] > 0 ? 1 : 0);
     }
   }
 

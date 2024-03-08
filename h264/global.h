@@ -305,7 +305,7 @@ typedef struct DecRefPicMarking {
   int memory_management_control_operation;
   int difference_of_pic_nums_minus1;
   int long_term_pic_num;
-  int long_term_frame_idx;
+  int longTermFrameIndex;
   int max_long_term_frame_idx_plus1;
   struct DecRefPicMarking* next;
   } sDecRefPicMarking;
@@ -423,7 +423,7 @@ typedef struct Macroblock {
   void (*itrans_8x8)(struct Macroblock *curMb, eColorPlane pl, int ioff, int joff);
   void (*GetMVPredictor) (struct Macroblock *curMb, sPixelPos *block,
                           sMotionVector *pmv, short ref_frame,
-                          struct PicMotionParam** mv_info,
+                          struct PicMotionParam** mvInfo,
                           int list, int mb_x, int mb_y,
                           int blockshape_x, int blockshape_y);
   int  (*read_and_store_CBP_block_bit)  (struct Macroblock *curMb, sDecodingEnvironmentPtr dep_dp, int type);

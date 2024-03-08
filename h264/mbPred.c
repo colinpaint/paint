@@ -331,25 +331,25 @@ int mb_pred_p_inter8x16 (sMacroblock* curMb, eColorPlane curPlane, sPicture* pic
 //}}}
 
 //{{{
-static inline void update_neighbor_mvs (sPicMotionParam** motion, const sPicMotionParam *mv_info, int i4)
+static inline void update_neighbor_mvs (sPicMotionParam** motion, const sPicMotionParam *mvInfo, int i4)
 {
-  (*motion++)[i4 + 1] = *mv_info;
-  (*motion  )[i4    ] = *mv_info;
-  (*motion  )[i4 + 1] = *mv_info;
+  (*motion++)[i4 + 1] = *mvInfo;
+  (*motion  )[i4    ] = *mvInfo;
+  (*motion  )[i4 + 1] = *mvInfo;
 }
 //}}}
 
 //{{{
 int mb_pred_b_d8x8temporal (sMacroblock* curMb, eColorPlane curPlane, sPixel** curPixel, sPicture* picture)
 {
-  short ref_idx;
+  short refIndex;
   int refList;
 
   int k, i, j, i4, j4, j6;
   int block8x8;   // needed for ABT
   sSlice* curSlice = curMb->slice;
   sVidParam* vidParam = curMb->vidParam;
-  sPicMotionParam *mv_info = NULL, *colocated = NULL;
+  sPicMotionParam *mvInfo = NULL, *colocated = NULL;
 
   int list_offset = curMb->list_offset;
   sPicture** list0 = curSlice->listX[LIST_0 + list_offset];
@@ -372,8 +372,8 @@ int mb_pred_b_d8x8temporal (sMacroblock* curMb, eColorPlane curPlane, sPixel** c
       i4   = curMb->block_x + i;
       j4   = curMb->block_y + j;
       j6   = curMb->block_y_aff + j;
-      mv_info = &picture->mv_info[j4][i4];
-      colocated = &list1[0]->mv_info[RSD(j6)][RSD(i4)];
+      mvInfo = &picture->mvInfo[j4][i4];
+      colocated = &list1[0]->mvInfo[RSD(j6)][RSD(i4)];
       if(curMb->vidParam->separate_colour_plane_flag && curMb->vidParam->yuvFormat==YUV444)
         colocated = &list1[0]->JVmv_info[curMb->slice->colour_plane_id][RSD(j6)][RSD(i4)];
       if(curSlice->mb_aff_frame_flag /*&& (!vidParam->activeSPS->frame_mbs_only_flag || vidParam->activeSPS->direct_8x8_inference_flag)*/)
@@ -385,12 +385,12 @@ int mb_pred_b_d8x8temporal (sMacroblock* curMb, eColorPlane curPlane, sPixel** c
           if (iabs(picture->poc - curSlice->listX[LIST_1+4][0]->poc)> iabs(picture->poc -curSlice->listX[LIST_1+2][0]->poc) )
           {
             colocated = vidParam->activeSPS->direct_8x8_inference_flag ?
-              &curSlice->listX[LIST_1+2][0]->mv_info[RSD(j6)>>1][RSD(i4)] : &curSlice->listX[LIST_1+2][0]->mv_info[j6>>1][i4];
+              &curSlice->listX[LIST_1+2][0]->mvInfo[RSD(j6)>>1][RSD(i4)] : &curSlice->listX[LIST_1+2][0]->mvInfo[j6>>1][i4];
           }
           else
           {
             colocated = vidParam->activeSPS->direct_8x8_inference_flag ?
-              &curSlice->listX[LIST_1+4][0]->mv_info[RSD(j6)>>1][RSD(i4)] : &curSlice->listX[LIST_1+4][0]->mv_info[j6>>1][i4];
+              &curSlice->listX[LIST_1+4][0]->mvInfo[RSD(j6)>>1][RSD(i4)] : &curSlice->listX[LIST_1+4][0]->mvInfo[j6>>1][i4];
           }
         }
       }
@@ -400,12 +400,12 @@ int mb_pred_b_d8x8temporal (sMacroblock* curMb, eColorPlane curPlane, sPixel** c
         if (iabs(picture->poc - list1[0]->bottom_field->poc)> iabs(picture->poc -list1[0]->top_field->poc) )
         {
           colocated = vidParam->activeSPS->direct_8x8_inference_flag ?
-            &list1[0]->top_field->mv_info[RSD(j6)>>1][RSD(i4)] : &list1[0]->top_field->mv_info[j6>>1][i4];
+            &list1[0]->top_field->mvInfo[RSD(j6)>>1][RSD(i4)] : &list1[0]->top_field->mvInfo[j6>>1][i4];
         }
         else
         {
           colocated = vidParam->activeSPS->direct_8x8_inference_flag ?
-            &list1[0]->bottom_field->mv_info[RSD(j6)>>1][RSD(i4)] : &list1[0]->bottom_field->mv_info[j6>>1][i4];
+            &list1[0]->bottom_field->mvInfo[RSD(j6)>>1][RSD(i4)] : &list1[0]->bottom_field->mvInfo[j6>>1][i4];
         }
       }
       else if(!vidParam->activeSPS->frame_mbs_only_flag && curSlice->field_pic_flag && curSlice->structure!=list1[0]->structure && list1[0]->coded_frame)
@@ -413,43 +413,43 @@ int mb_pred_b_d8x8temporal (sMacroblock* curMb, eColorPlane curPlane, sPixel** c
         if (curSlice->structure == TOP_FIELD)
         {
           colocated = vidParam->activeSPS->direct_8x8_inference_flag ?
-            &list1[0]->frame->top_field->mv_info[RSD(j6)][RSD(i4)] : &list1[0]->frame->top_field->mv_info[j6][i4];
+            &list1[0]->frame->top_field->mvInfo[RSD(j6)][RSD(i4)] : &list1[0]->frame->top_field->mvInfo[j6][i4];
         }
         else
         {
           colocated = vidParam->activeSPS->direct_8x8_inference_flag ?
-            &list1[0]->frame->bottom_field->mv_info[RSD(j6)][RSD(i4)] : &list1[0]->frame->bottom_field->mv_info[j6][i4];
+            &list1[0]->frame->bottom_field->mvInfo[RSD(j6)][RSD(i4)] : &list1[0]->frame->bottom_field->mvInfo[j6][i4];
         }
       }
 
 
       assert (pred_dir<=2);
 
-      refList = (colocated->ref_idx[LIST_0]== -1 ? LIST_1 : LIST_0);
-      ref_idx =  colocated->ref_idx[refList];
+      refList = (colocated->refIndex[LIST_0]== -1 ? LIST_1 : LIST_0);
+      refIndex =  colocated->refIndex[refList];
 
-      if(ref_idx==-1) // co-located is intra mode
+      if(refIndex==-1) // co-located is intra mode
       {
-        mv_info->mv[LIST_0] = zero_mv;
-        mv_info->mv[LIST_1] = zero_mv;
+        mvInfo->mv[LIST_0] = zero_mv;
+        mvInfo->mv[LIST_1] = zero_mv;
 
-        mv_info->ref_idx[LIST_0] = 0;
-        mv_info->ref_idx[LIST_1] = 0;
+        mvInfo->refIndex[LIST_0] = 0;
+        mvInfo->refIndex[LIST_1] = 0;
       }
       else // co-located skip or inter mode
       {
         int mapped_idx=0;
         int iref;
-        if( (curSlice->mb_aff_frame_flag && ( (curMb->mb_field && colocated->ref_pic[refList]->structure==FRAME) ||
-          (!curMb->mb_field && colocated->ref_pic[refList]->structure!=FRAME))) ||
-          (!curSlice->mb_aff_frame_flag && ((curSlice->field_pic_flag==0 && colocated->ref_pic[refList]->structure!=FRAME)
-          ||(curSlice->field_pic_flag==1 && colocated->ref_pic[refList]->structure==FRAME))) )
+        if( (curSlice->mb_aff_frame_flag && ( (curMb->mb_field && colocated->refPic[refList]->structure==FRAME) ||
+          (!curMb->mb_field && colocated->refPic[refList]->structure!=FRAME))) ||
+          (!curSlice->mb_aff_frame_flag && ((curSlice->field_pic_flag==0 && colocated->refPic[refList]->structure!=FRAME)
+          ||(curSlice->field_pic_flag==1 && colocated->refPic[refList]->structure==FRAME))) )
         {
           for (iref = 0; iref < imin(curSlice->num_ref_idx_active[LIST_0], curSlice->listXsize[LIST_0 + list_offset]);iref++)
           {
-            if(curSlice->listX[LIST_0 + list_offset][iref]->top_field == colocated->ref_pic[refList] ||
-              curSlice->listX[LIST_0 + list_offset][iref]->bottom_field == colocated->ref_pic[refList] ||
-              curSlice->listX[LIST_0 + list_offset][iref]->frame == colocated->ref_pic[refList])
+            if(curSlice->listX[LIST_0 + list_offset][iref]->top_field == colocated->refPic[refList] ||
+              curSlice->listX[LIST_0 + list_offset][iref]->bottom_field == colocated->refPic[refList] ||
+              curSlice->listX[LIST_0 + list_offset][iref]->frame == colocated->refPic[refList])
             {
               if ((curSlice->field_pic_flag==1) && (curSlice->listX[LIST_0 + list_offset][iref]->structure != curSlice->structure))
               {
@@ -471,7 +471,7 @@ int mb_pred_b_d8x8temporal (sMacroblock* curMb, eColorPlane curPlane, sPixel** c
         {
           for (iref = 0; iref < imin(curSlice->num_ref_idx_active[LIST_0], curSlice->listXsize[LIST_0 + list_offset]);iref++)
           {
-            if(curSlice->listX[LIST_0 + list_offset][iref] == colocated->ref_pic[refList])
+            if(curSlice->listX[LIST_0 + list_offset][iref] == colocated->refPic[refList])
             {
               mapped_idx = iref;
               break;
@@ -487,31 +487,31 @@ int mb_pred_b_d8x8temporal (sMacroblock* curMb, eColorPlane curPlane, sPixel** c
         {
           int mv_scale = curSlice->mvscale[LIST_0 + list_offset][mapped_idx];
           int mv_y = colocated->mv[refList].mv_y;
-          if((curSlice->mb_aff_frame_flag && !curMb->mb_field && colocated->ref_pic[refList]->structure!=FRAME) ||
-            (!curSlice->mb_aff_frame_flag && curSlice->field_pic_flag==0 && colocated->ref_pic[refList]->structure!=FRAME) )
+          if((curSlice->mb_aff_frame_flag && !curMb->mb_field && colocated->refPic[refList]->structure!=FRAME) ||
+            (!curSlice->mb_aff_frame_flag && curSlice->field_pic_flag==0 && colocated->refPic[refList]->structure!=FRAME) )
             mv_y *= 2;
-          else if((curSlice->mb_aff_frame_flag && curMb->mb_field && colocated->ref_pic[refList]->structure==FRAME) ||
-            (!curSlice->mb_aff_frame_flag && curSlice->field_pic_flag==1 && colocated->ref_pic[refList]->structure==FRAME) )
+          else if((curSlice->mb_aff_frame_flag && curMb->mb_field && colocated->refPic[refList]->structure==FRAME) ||
+            (!curSlice->mb_aff_frame_flag && curSlice->field_pic_flag==1 && colocated->refPic[refList]->structure==FRAME) )
             mv_y /= 2;
 
           //! In such case, an array is needed for each different reference.
-          if (mv_scale == 9999 || curSlice->listX[LIST_0 + list_offset][mapped_idx]->is_long_term)
+          if (mv_scale == 9999 || curSlice->listX[LIST_0 + list_offset][mapped_idx]->isLongTerm)
           {
-            mv_info->mv[LIST_0].mv_x = colocated->mv[refList].mv_x;
-            mv_info->mv[LIST_0].mv_y = (short) mv_y;
-            mv_info->mv[LIST_1] = zero_mv;
+            mvInfo->mv[LIST_0].mv_x = colocated->mv[refList].mv_x;
+            mvInfo->mv[LIST_0].mv_y = (short) mv_y;
+            mvInfo->mv[LIST_1] = zero_mv;
           }
           else
           {
-            mv_info->mv[LIST_0].mv_x = (short) ((mv_scale * colocated->mv[refList].mv_x + 128 ) >> 8);
-            mv_info->mv[LIST_0].mv_y = (short) ((mv_scale * mv_y/*colocated->mv[refList].mv_y*/ + 128 ) >> 8);
+            mvInfo->mv[LIST_0].mv_x = (short) ((mv_scale * colocated->mv[refList].mv_x + 128 ) >> 8);
+            mvInfo->mv[LIST_0].mv_y = (short) ((mv_scale * mv_y/*colocated->mv[refList].mv_y*/ + 128 ) >> 8);
 
-            mv_info->mv[LIST_1].mv_x = (short) (mv_info->mv[LIST_0].mv_x - colocated->mv[refList].mv_x);
-            mv_info->mv[LIST_1].mv_y = (short) (mv_info->mv[LIST_0].mv_y - mv_y/*colocated->mv[refList].mv_y*/);
+            mvInfo->mv[LIST_1].mv_x = (short) (mvInfo->mv[LIST_0].mv_x - colocated->mv[refList].mv_x);
+            mvInfo->mv[LIST_1].mv_y = (short) (mvInfo->mv[LIST_0].mv_y - mv_y/*colocated->mv[refList].mv_y*/);
           }
 
-          mv_info->ref_idx[LIST_0] = (char) mapped_idx; //colocated->ref_idx[refList];
-          mv_info->ref_idx[LIST_1] = 0;
+          mvInfo->refIndex[LIST_0] = (char) mapped_idx; //colocated->refIndex[refList];
+          mvInfo->refIndex[LIST_1] = 0;
         }
         else if (INVALIDINDEX == mapped_idx)
         {
@@ -520,8 +520,8 @@ int mb_pred_b_d8x8temporal (sMacroblock* curMb, eColorPlane curPlane, sPixel** c
 
       }
       // store reference picture ID determined by direct mode
-      mv_info->ref_pic[LIST_0] = list0[(short)mv_info->ref_idx[LIST_0]];
-      mv_info->ref_pic[LIST_1] = list1[(short)mv_info->ref_idx[LIST_1]];
+      mvInfo->refPic[LIST_0] = list0[(short)mvInfo->refIndex[LIST_0]];
+      mvInfo->refPic[LIST_1] = list1[(short)mvInfo->refIndex[LIST_1]];
     }
 
     for (k = k_start; k < k_end; k ++)
@@ -553,7 +553,7 @@ int mb_pred_b_d8x8temporal (sMacroblock* curMb, eColorPlane curPlane, sPixel** c
 //{{{
 int mb_pred_b_d4x4temporal (sMacroblock* curMb, eColorPlane curPlane, sPixel** curPixel, sPicture* picture)
 {
-  short ref_idx;
+  short refIndex;
   int refList;
 
   int k;
@@ -582,22 +582,22 @@ int mb_pred_b_d4x4temporal (sMacroblock* curMb, eColorPlane curPlane, sPixel** c
       int i4   = curMb->block_x + i;
       int j4   = curMb->block_y + j;
       int j6   = curMb->block_y_aff + j;
-      sPicMotionParam *mv_info = &picture->mv_info[j4][i4];
-      sPicMotionParam *colocated = &list1[0]->mv_info[j6][i4];
+      sPicMotionParam *mvInfo = &picture->mvInfo[j4][i4];
+      sPicMotionParam *colocated = &list1[0]->mvInfo[j6][i4];
       if(curMb->vidParam->separate_colour_plane_flag && curMb->vidParam->yuvFormat==YUV444)
         colocated = &list1[0]->JVmv_info[curMb->slice->colour_plane_id][RSD(j6)][RSD(i4)];
       assert (pred_dir<=2);
 
-      refList = (colocated->ref_idx[LIST_0]== -1 ? LIST_1 : LIST_0);
-      ref_idx =  colocated->ref_idx[refList];
+      refList = (colocated->refIndex[LIST_0]== -1 ? LIST_1 : LIST_0);
+      refIndex =  colocated->refIndex[refList];
 
-      if(ref_idx==-1) // co-located is intra mode
+      if(refIndex==-1) // co-located is intra mode
       {
-        mv_info->mv[LIST_0] = zero_mv;
-        mv_info->mv[LIST_1] = zero_mv;
+        mvInfo->mv[LIST_0] = zero_mv;
+        mvInfo->mv[LIST_1] = zero_mv;
 
-        mv_info->ref_idx[LIST_0] = 0;
-        mv_info->ref_idx[LIST_1] = 0;
+        mvInfo->refIndex[LIST_0] = 0;
+        mvInfo->refIndex[LIST_1] = 0;
       }
       else // co-located skip or inter mode
       {
@@ -606,7 +606,7 @@ int mb_pred_b_d4x4temporal (sMacroblock* curMb, eColorPlane curPlane, sPixel** c
 
         for (iref=0;iref<imin(curSlice->num_ref_idx_active[LIST_0], curSlice->listXsize[LIST_0 + list_offset]);iref++)
         {
-          if(curSlice->listX[LIST_0 + list_offset][iref] == colocated->ref_pic[refList])
+          if(curSlice->listX[LIST_0 + list_offset][iref] == colocated->refPic[refList])
           {
             mapped_idx=iref;
             break;
@@ -625,27 +625,27 @@ int mb_pred_b_d4x4temporal (sMacroblock* curMb, eColorPlane curPlane, sPixel** c
           int mv_scale = curSlice->mvscale[LIST_0 + list_offset][mapped_idx];
 
           //! In such case, an array is needed for each different reference.
-          if (mv_scale == 9999 || curSlice->listX[LIST_0+list_offset][mapped_idx]->is_long_term)
+          if (mv_scale == 9999 || curSlice->listX[LIST_0+list_offset][mapped_idx]->isLongTerm)
           {
-            mv_info->mv[LIST_0] = colocated->mv[refList];
-            mv_info->mv[LIST_1] = zero_mv;
+            mvInfo->mv[LIST_0] = colocated->mv[refList];
+            mvInfo->mv[LIST_1] = zero_mv;
           }
           else
           {
-            mv_info->mv[LIST_0].mv_x = (short) ((mv_scale * colocated->mv[refList].mv_x + 128 ) >> 8);
-            mv_info->mv[LIST_0].mv_y = (short) ((mv_scale * colocated->mv[refList].mv_y + 128 ) >> 8);
+            mvInfo->mv[LIST_0].mv_x = (short) ((mv_scale * colocated->mv[refList].mv_x + 128 ) >> 8);
+            mvInfo->mv[LIST_0].mv_y = (short) ((mv_scale * colocated->mv[refList].mv_y + 128 ) >> 8);
 
-            mv_info->mv[LIST_1].mv_x = (short) (mv_info->mv[LIST_0].mv_x - colocated->mv[refList].mv_x);
-            mv_info->mv[LIST_1].mv_y = (short) (mv_info->mv[LIST_0].mv_y - colocated->mv[refList].mv_y);
+            mvInfo->mv[LIST_1].mv_x = (short) (mvInfo->mv[LIST_0].mv_x - colocated->mv[refList].mv_x);
+            mvInfo->mv[LIST_1].mv_y = (short) (mvInfo->mv[LIST_0].mv_y - colocated->mv[refList].mv_y);
           }
 
-          mv_info->ref_idx[LIST_0] = (char) mapped_idx; //colocated->ref_idx[refList];
-          mv_info->ref_idx[LIST_1] = 0;
+          mvInfo->refIndex[LIST_0] = (char) mapped_idx; //colocated->refIndex[refList];
+          mvInfo->refIndex[LIST_1] = 0;
         }
       }
       // store reference picture ID determined by direct mode
-      mv_info->ref_pic[LIST_0] = list0[(short)mv_info->ref_idx[LIST_0]];
-      mv_info->ref_pic[LIST_1] = list1[(short)mv_info->ref_idx[LIST_1]];
+      mvInfo->refPic[LIST_0] = list0[(short)mvInfo->refIndex[LIST_0]];
+      mvInfo->refPic[LIST_1] = list1[(short)mvInfo->refIndex[LIST_1]];
     }
 
     for (k = k_start; k < k_end; k ++)
@@ -687,7 +687,7 @@ int mb_pred_b_d8x8spatial (sMacroblock* curMb, eColorPlane curPlane, sPixel** cu
   sSlice* curSlice = curMb->slice;
   sVidParam* vidParam = curMb->vidParam;
 
-  sPicMotionParam *mv_info;
+  sPicMotionParam *mvInfo;
   int list_offset = curMb->list_offset;
   sPicture** list0 = curSlice->listX[LIST_0 + list_offset];
   sPicture** list1 = curSlice->listX[LIST_1 + list_offset];
@@ -713,28 +713,28 @@ int mb_pred_b_d8x8spatial (sMacroblock* curMb, eColorPlane curPlane, sPixel** cu
 
       is_not_moving = (get_colocated_info_8x8(curMb, list1[0], i4, curMb->block_y_aff + j) == 0);
 
-      mv_info = &picture->mv_info[j4][i4];
+      mvInfo = &picture->mvInfo[j4][i4];
 
       //===== DIRECT PREDICTION =====
       if (l1_rFrame == -1)
       {
         if (is_not_moving)
         {
-          mv_info->ref_pic[LIST_0] = list0[0];
-          mv_info->ref_pic[LIST_1] = NULL;
-          mv_info->mv[LIST_0] = zero_mv;
-          mv_info->mv[LIST_1] = zero_mv;
-          mv_info->ref_idx[LIST_0] = 0;
-          mv_info->ref_idx[LIST_1] = -1;
+          mvInfo->refPic[LIST_0] = list0[0];
+          mvInfo->refPic[LIST_1] = NULL;
+          mvInfo->mv[LIST_0] = zero_mv;
+          mvInfo->mv[LIST_1] = zero_mv;
+          mvInfo->refIndex[LIST_0] = 0;
+          mvInfo->refIndex[LIST_1] = -1;
         }
         else
         {
-          mv_info->ref_pic[LIST_0] = list0[(short) l0_rFrame];
-          mv_info->ref_pic[LIST_1] = NULL;
-          mv_info->mv[LIST_0] = pmvl0;
-          mv_info->mv[LIST_1] = zero_mv;
-          mv_info->ref_idx[LIST_0] = l0_rFrame;
-          mv_info->ref_idx[LIST_1] = -1;
+          mvInfo->refPic[LIST_0] = list0[(short) l0_rFrame];
+          mvInfo->refPic[LIST_1] = NULL;
+          mvInfo->mv[LIST_0] = pmvl0;
+          mvInfo->mv[LIST_1] = zero_mv;
+          mvInfo->refIndex[LIST_0] = l0_rFrame;
+          mvInfo->refIndex[LIST_1] = -1;
         }
         pred_dir = 0;
       }
@@ -742,21 +742,21 @@ int mb_pred_b_d8x8spatial (sMacroblock* curMb, eColorPlane curPlane, sPixel** cu
       {
         if  (is_not_moving)
         {
-          mv_info->ref_pic[LIST_0] = NULL;
-          mv_info->ref_pic[LIST_1] = list1[0];
-          mv_info->mv[LIST_0] = zero_mv;
-          mv_info->mv[LIST_1] = zero_mv;
-          mv_info->ref_idx[LIST_0] = -1;
-          mv_info->ref_idx[LIST_1] = 0;
+          mvInfo->refPic[LIST_0] = NULL;
+          mvInfo->refPic[LIST_1] = list1[0];
+          mvInfo->mv[LIST_0] = zero_mv;
+          mvInfo->mv[LIST_1] = zero_mv;
+          mvInfo->refIndex[LIST_0] = -1;
+          mvInfo->refIndex[LIST_1] = 0;
         }
         else
         {
-          mv_info->ref_pic[LIST_0] = NULL;
-          mv_info->ref_pic[LIST_1] = list1[(short) l1_rFrame];
-          mv_info->mv[LIST_0] = zero_mv;
-          mv_info->mv[LIST_1] = pmvl1;
-          mv_info->ref_idx[LIST_0] = -1;
-          mv_info->ref_idx[LIST_1] = l1_rFrame;
+          mvInfo->refPic[LIST_0] = NULL;
+          mvInfo->refPic[LIST_1] = list1[(short) l1_rFrame];
+          mvInfo->mv[LIST_0] = zero_mv;
+          mvInfo->mv[LIST_1] = pmvl1;
+          mvInfo->refIndex[LIST_0] = -1;
+          mvInfo->refIndex[LIST_1] = l1_rFrame;
         }
         pred_dir = 1;
       }
@@ -764,33 +764,33 @@ int mb_pred_b_d8x8spatial (sMacroblock* curMb, eColorPlane curPlane, sPixel** cu
       {
         if (l0_rFrame == 0 && ((is_not_moving)))
         {
-          mv_info->ref_pic[LIST_0] = list0[0];
-          mv_info->mv[LIST_0] = zero_mv;
-          mv_info->ref_idx[LIST_0] = 0;
+          mvInfo->refPic[LIST_0] = list0[0];
+          mvInfo->mv[LIST_0] = zero_mv;
+          mvInfo->refIndex[LIST_0] = 0;
         }
         else
         {
-          mv_info->ref_pic[LIST_0] = list0[(short) l0_rFrame];
-          mv_info->mv[LIST_0] = pmvl0;
-          mv_info->ref_idx[LIST_0] = l0_rFrame;
+          mvInfo->refPic[LIST_0] = list0[(short) l0_rFrame];
+          mvInfo->mv[LIST_0] = pmvl0;
+          mvInfo->refIndex[LIST_0] = l0_rFrame;
         }
 
         if  (l1_rFrame == 0 && ((is_not_moving)))
         {
-          mv_info->ref_pic[LIST_1] = list1[0];
-          mv_info->mv[LIST_1] = zero_mv;
-          mv_info->ref_idx[LIST_1]    = 0;
+          mvInfo->refPic[LIST_1] = list1[0];
+          mvInfo->mv[LIST_1] = zero_mv;
+          mvInfo->refIndex[LIST_1]    = 0;
         }
         else
         {
-          mv_info->ref_pic[LIST_1] = list1[(short) l1_rFrame];
-          mv_info->mv[LIST_1] = pmvl1;
-          mv_info->ref_idx[LIST_1] = l1_rFrame;
+          mvInfo->refPic[LIST_1] = list1[(short) l1_rFrame];
+          mvInfo->mv[LIST_1] = pmvl1;
+          mvInfo->refIndex[LIST_1] = l1_rFrame;
         }
         pred_dir = 2;
       }
 
-      update_neighbor_mvs(&picture->mv_info[j4], mv_info, i4);
+      update_neighbor_mvs(&picture->mvInfo[j4], mvInfo, i4);
       perform_mc(curMb, curPlane, picture, pred_dir, i, j, SMB_BLOCK_SIZE, SMB_BLOCK_SIZE);
     }
   }
@@ -804,16 +804,16 @@ int mb_pred_b_d8x8spatial (sMacroblock* curMb, eColorPlane curPlane, sPixel** cu
       {
         for (i4 = curMb->block_x; i4 < curMb->block_x + BLOCK_MULTIPLE; i4 += 2)
         {
-          mv_info = &picture->mv_info[j4][i4];
+          mvInfo = &picture->mvInfo[j4][i4];
 
-          mv_info->ref_pic[LIST_0] = list0[0];
-          mv_info->ref_pic[LIST_1] = list1[0];
-          mv_info->mv[LIST_0] = zero_mv;
-          mv_info->mv[LIST_1] = zero_mv;
-          mv_info->ref_idx[LIST_0] = 0;
-          mv_info->ref_idx[LIST_1] = 0;
+          mvInfo->refPic[LIST_0] = list0[0];
+          mvInfo->refPic[LIST_1] = list1[0];
+          mvInfo->mv[LIST_0] = zero_mv;
+          mvInfo->mv[LIST_1] = zero_mv;
+          mvInfo->refIndex[LIST_0] = 0;
+          mvInfo->refIndex[LIST_1] = 0;
 
-          update_neighbor_mvs(&picture->mv_info[j4], mv_info, i4);
+          update_neighbor_mvs(&picture->mvInfo[j4], mvInfo, i4);
         }
       }
     }
@@ -825,16 +825,16 @@ int mb_pred_b_d8x8spatial (sMacroblock* curMb, eColorPlane curPlane, sPixel** cu
       {
         for (i4 = curMb->block_x; i4 < curMb->block_x + BLOCK_MULTIPLE; i4 += 2)
         {
-          mv_info = &picture->mv_info[j4][i4];
+          mvInfo = &picture->mvInfo[j4][i4];
 
-          mv_info->ref_pic[LIST_0] = list0[(short) l0_rFrame];
-          mv_info->ref_pic[LIST_1] = NULL;
-          mv_info->mv[LIST_0] = pmvl0;
-          mv_info->mv[LIST_1] = zero_mv;
-          mv_info->ref_idx[LIST_0] = l0_rFrame;
-          mv_info->ref_idx[LIST_1] = -1;
+          mvInfo->refPic[LIST_0] = list0[(short) l0_rFrame];
+          mvInfo->refPic[LIST_1] = NULL;
+          mvInfo->mv[LIST_0] = pmvl0;
+          mvInfo->mv[LIST_1] = zero_mv;
+          mvInfo->refIndex[LIST_0] = l0_rFrame;
+          mvInfo->refIndex[LIST_1] = -1;
 
-          update_neighbor_mvs(&picture->mv_info[j4], mv_info, i4);
+          update_neighbor_mvs(&picture->mvInfo[j4], mvInfo, i4);
         }
       }
     }
@@ -845,16 +845,16 @@ int mb_pred_b_d8x8spatial (sMacroblock* curMb, eColorPlane curPlane, sPixel** cu
       {
         for (i4 = curMb->block_x; i4 < curMb->block_x + BLOCK_MULTIPLE; i4 += 2)
         {
-          mv_info = &picture->mv_info[j4][i4];
+          mvInfo = &picture->mvInfo[j4][i4];
 
-          mv_info->ref_pic[LIST_0] = NULL;
-          mv_info->ref_pic[LIST_1] = list1[(short) l1_rFrame];
-          mv_info->mv[LIST_0] = zero_mv;
-          mv_info->mv[LIST_1] = pmvl1;
-          mv_info->ref_idx[LIST_0] = -1;
-          mv_info->ref_idx[LIST_1] = l1_rFrame;
+          mvInfo->refPic[LIST_0] = NULL;
+          mvInfo->refPic[LIST_1] = list1[(short) l1_rFrame];
+          mvInfo->mv[LIST_0] = zero_mv;
+          mvInfo->mv[LIST_1] = pmvl1;
+          mvInfo->refIndex[LIST_0] = -1;
+          mvInfo->refIndex[LIST_1] = l1_rFrame;
 
-          update_neighbor_mvs(&picture->mv_info[j4], mv_info, i4);
+          update_neighbor_mvs(&picture->mvInfo[j4], mvInfo, i4);
         }
       }
     }
@@ -866,16 +866,16 @@ int mb_pred_b_d8x8spatial (sMacroblock* curMb, eColorPlane curPlane, sPixel** cu
       {
         for (i4 = curMb->block_x; i4 < curMb->block_x + BLOCK_MULTIPLE; i4 += 2)
         {
-          mv_info = &picture->mv_info[j4][i4];
+          mvInfo = &picture->mvInfo[j4][i4];
 
-          mv_info->ref_pic[LIST_0] = list0[(short) l0_rFrame];
-          mv_info->ref_pic[LIST_1] = list1[(short) l1_rFrame];
-          mv_info->mv[LIST_0] = pmvl0;
-          mv_info->mv[LIST_1] = pmvl1;
-          mv_info->ref_idx[LIST_0] = l0_rFrame;
-          mv_info->ref_idx[LIST_1] = l1_rFrame;
+          mvInfo->refPic[LIST_0] = list0[(short) l0_rFrame];
+          mvInfo->refPic[LIST_1] = list1[(short) l1_rFrame];
+          mvInfo->mv[LIST_0] = pmvl0;
+          mvInfo->mv[LIST_1] = pmvl1;
+          mvInfo->refIndex[LIST_0] = l0_rFrame;
+          mvInfo->refIndex[LIST_1] = l1_rFrame;
 
-          update_neighbor_mvs(&picture->mv_info[j4], mv_info, i4);
+          update_neighbor_mvs(&picture->mvInfo[j4], mvInfo, i4);
         }
       }
     }
@@ -912,7 +912,7 @@ int mb_pred_b_d4x4spatial (sMacroblock* curMb, eColorPlane curPlane, sPixel** cu
   sSlice* curSlice = curMb->slice;
   sVidParam* vidParam = curMb->vidParam;
 
-  sPicMotionParam *mv_info;
+  sPicMotionParam *mvInfo;
   int list_offset = curMb->list_offset;
   sPicture** list0 = curSlice->listX[LIST_0 + list_offset];
   sPicture** list1 = curSlice->listX[LIST_1 + list_offset];
@@ -935,7 +935,7 @@ int mb_pred_b_d4x4spatial (sMacroblock* curMb, eColorPlane curPlane, sPixel** cu
       int i4  = curMb->block_x + i;
       int j4  = curMb->block_y + j;
 
-      mv_info = &picture->mv_info[j4][i4];
+      mvInfo = &picture->mvInfo[j4][i4];
       //===== DIRECT PREDICTION =====
       if (l0_rFrame == 0 || l1_rFrame == 0)
       {
@@ -945,21 +945,21 @@ int mb_pred_b_d4x4spatial (sMacroblock* curMb, eColorPlane curPlane, sPixel** cu
         {
           if (is_not_moving)
           {
-            mv_info->ref_pic[LIST_0] = list0[0];
-            mv_info->ref_pic[LIST_1] = NULL;
-            mv_info->mv[LIST_0] = zero_mv;
-            mv_info->mv[LIST_1] = zero_mv;
-            mv_info->ref_idx[LIST_0] = 0;
-            mv_info->ref_idx[LIST_1] = -1;
+            mvInfo->refPic[LIST_0] = list0[0];
+            mvInfo->refPic[LIST_1] = NULL;
+            mvInfo->mv[LIST_0] = zero_mv;
+            mvInfo->mv[LIST_1] = zero_mv;
+            mvInfo->refIndex[LIST_0] = 0;
+            mvInfo->refIndex[LIST_1] = -1;
           }
           else
           {
-            mv_info->ref_pic[LIST_0] = list0[(short) l0_rFrame];
-            mv_info->ref_pic[LIST_1] = NULL;
-            mv_info->mv[LIST_0] = pmvl0;
-            mv_info->mv[LIST_1] = zero_mv;
-            mv_info->ref_idx[LIST_0] = l0_rFrame;
-            mv_info->ref_idx[LIST_1] = -1;
+            mvInfo->refPic[LIST_0] = list0[(short) l0_rFrame];
+            mvInfo->refPic[LIST_1] = NULL;
+            mvInfo->mv[LIST_0] = pmvl0;
+            mvInfo->mv[LIST_1] = zero_mv;
+            mvInfo->refIndex[LIST_0] = l0_rFrame;
+            mvInfo->refIndex[LIST_1] = -1;
           }
           pred_dir = 0;
         }
@@ -967,21 +967,21 @@ int mb_pred_b_d4x4spatial (sMacroblock* curMb, eColorPlane curPlane, sPixel** cu
         {
           if  (is_not_moving)
           {
-            mv_info->ref_pic[LIST_0] = NULL;
-            mv_info->ref_pic[LIST_1] = list1[0];
-            mv_info->mv[LIST_0] = zero_mv;
-            mv_info->mv[LIST_1] = zero_mv;
-            mv_info->ref_idx[LIST_0] = -1;
-            mv_info->ref_idx[LIST_1] = 0;
+            mvInfo->refPic[LIST_0] = NULL;
+            mvInfo->refPic[LIST_1] = list1[0];
+            mvInfo->mv[LIST_0] = zero_mv;
+            mvInfo->mv[LIST_1] = zero_mv;
+            mvInfo->refIndex[LIST_0] = -1;
+            mvInfo->refIndex[LIST_1] = 0;
           }
           else
           {
-            mv_info->ref_pic[LIST_0] = NULL;
-            mv_info->ref_pic[LIST_1] = list1[(short) l1_rFrame];
-            mv_info->mv[LIST_0] = zero_mv;
-            mv_info->mv[LIST_1] = pmvl1;
-            mv_info->ref_idx[LIST_0] = -1;
-            mv_info->ref_idx[LIST_1] = l1_rFrame;
+            mvInfo->refPic[LIST_0] = NULL;
+            mvInfo->refPic[LIST_1] = list1[(short) l1_rFrame];
+            mvInfo->mv[LIST_0] = zero_mv;
+            mvInfo->mv[LIST_1] = pmvl1;
+            mvInfo->refIndex[LIST_0] = -1;
+            mvInfo->refIndex[LIST_1] = l1_rFrame;
           }
           pred_dir = 1;
         }
@@ -989,75 +989,75 @@ int mb_pred_b_d4x4spatial (sMacroblock* curMb, eColorPlane curPlane, sPixel** cu
         {
           if (l0_rFrame == 0 && ((is_not_moving)))
           {
-            mv_info->ref_pic[LIST_0] = list0[0];
-            mv_info->mv[LIST_0] = zero_mv;
-            mv_info->ref_idx[LIST_0] = 0;
+            mvInfo->refPic[LIST_0] = list0[0];
+            mvInfo->mv[LIST_0] = zero_mv;
+            mvInfo->refIndex[LIST_0] = 0;
           }
           else
           {
-            mv_info->ref_pic[LIST_0] = list0[(short) l0_rFrame];
-            mv_info->mv[LIST_0] = pmvl0;
-            mv_info->ref_idx[LIST_0] = l0_rFrame;
+            mvInfo->refPic[LIST_0] = list0[(short) l0_rFrame];
+            mvInfo->mv[LIST_0] = pmvl0;
+            mvInfo->refIndex[LIST_0] = l0_rFrame;
           }
 
           if  (l1_rFrame == 0 && ((is_not_moving)))
           {
-            mv_info->ref_pic[LIST_1] = list1[0];
-            mv_info->mv[LIST_1] = zero_mv;
-            mv_info->ref_idx[LIST_1] = 0;
+            mvInfo->refPic[LIST_1] = list1[0];
+            mvInfo->mv[LIST_1] = zero_mv;
+            mvInfo->refIndex[LIST_1] = 0;
           }
           else
           {
-            mv_info->ref_pic[LIST_1] = list1[(short) l1_rFrame];
-            mv_info->mv[LIST_1] = pmvl1;
-            mv_info->ref_idx[LIST_1] = l1_rFrame;
+            mvInfo->refPic[LIST_1] = list1[(short) l1_rFrame];
+            mvInfo->mv[LIST_1] = pmvl1;
+            mvInfo->refIndex[LIST_1] = l1_rFrame;
           }
           pred_dir = 2;
         }
       }
       else
       {
-        mv_info = &picture->mv_info[j4][i4];
+        mvInfo = &picture->mvInfo[j4][i4];
 
         if (l0_rFrame < 0 && l1_rFrame < 0)
         {
           pred_dir = 2;
-          mv_info->ref_pic[LIST_0] = list0[0];
-          mv_info->ref_pic[LIST_1] = list1[0];
-          mv_info->mv[LIST_0] = zero_mv;
-          mv_info->mv[LIST_1] = zero_mv;
-          mv_info->ref_idx[LIST_0] = 0;
-          mv_info->ref_idx[LIST_1] = 0;
+          mvInfo->refPic[LIST_0] = list0[0];
+          mvInfo->refPic[LIST_1] = list1[0];
+          mvInfo->mv[LIST_0] = zero_mv;
+          mvInfo->mv[LIST_1] = zero_mv;
+          mvInfo->refIndex[LIST_0] = 0;
+          mvInfo->refIndex[LIST_1] = 0;
         }
         else if (l1_rFrame == -1)
         {
           pred_dir = 0;
-          mv_info->ref_pic[LIST_0] = list0[(short) l0_rFrame];
-          mv_info->ref_pic[LIST_1] = NULL;
-          mv_info->mv[LIST_0] = pmvl0;
-          mv_info->mv[LIST_1] = zero_mv;
-          mv_info->ref_idx[LIST_0] = l0_rFrame;
-          mv_info->ref_idx[LIST_1] = -1;
+          mvInfo->refPic[LIST_0] = list0[(short) l0_rFrame];
+          mvInfo->refPic[LIST_1] = NULL;
+          mvInfo->mv[LIST_0] = pmvl0;
+          mvInfo->mv[LIST_1] = zero_mv;
+          mvInfo->refIndex[LIST_0] = l0_rFrame;
+          mvInfo->refIndex[LIST_1] = -1;
         }
         else if (l0_rFrame == -1)
         {
           pred_dir = 1;
-          mv_info->ref_pic[LIST_0] = NULL;
-          mv_info->ref_pic[LIST_1] = list1[(short) l1_rFrame];
-          mv_info->mv[LIST_0] = zero_mv;
-          mv_info->mv[LIST_1] = pmvl1;
-          mv_info->ref_idx[LIST_0] = -1;
-          mv_info->ref_idx[LIST_1] = l1_rFrame;
+          mvInfo->refPic[LIST_0] = NULL;
+          mvInfo->refPic[LIST_1] = list1[(short) l1_rFrame];
+          mvInfo->mv[LIST_0] = zero_mv;
+          mvInfo->mv[LIST_1] = pmvl1;
+          mvInfo->refIndex[LIST_0] = -1;
+          mvInfo->refIndex[LIST_1] = l1_rFrame;
         }
         else
         {
           pred_dir = 2;
-          mv_info->ref_pic[LIST_0] = list0[(short) l0_rFrame];
-          mv_info->ref_pic[LIST_1] = list1[(short) l1_rFrame];
-          mv_info->mv[LIST_0] = pmvl0;
-          mv_info->mv[LIST_1] = pmvl1;
-          mv_info->ref_idx[LIST_0] = l0_rFrame;
-          mv_info->ref_idx[LIST_1] = l1_rFrame;
+          mvInfo->refPic[LIST_0] = list0[(short) l0_rFrame];
+          mvInfo->refPic[LIST_1] = list1[(short) l1_rFrame];
+          mvInfo->mv[LIST_0] = pmvl0;
+          mvInfo->mv[LIST_1] = pmvl1;
+          mvInfo->refIndex[LIST_0] = l0_rFrame;
+          mvInfo->refIndex[LIST_1] = l1_rFrame;
         }
       }
     }
@@ -1159,17 +1159,17 @@ int mb_pred_b_inter8x8 (sMacroblock* curMb, eColorPlane curPlane, sPicture* pict
           int j  = ((decode_block_scan[k] >> 2) & 3);
           int i4  = curMb->block_x + i;
           int j4  = curMb->block_y + j;
-          sPicMotionParam *mv_info = &picture->mv_info[j4][i4];
+          sPicMotionParam *mvInfo = &picture->mvInfo[j4][i4];
 
           assert (pred_dir<=2);
 
           //===== DIRECT PREDICTION =====
           // motion information should be already set
-          if (mv_info->ref_idx[LIST_1] == -1)
+          if (mvInfo->refIndex[LIST_1] == -1)
           {
             pred_dir = 0;
           }
-          else if (mv_info->ref_idx[LIST_0] == -1)
+          else if (mvInfo->refIndex[LIST_0] == -1)
           {
             pred_dir = 1;
           }
@@ -1188,13 +1188,13 @@ int mb_pred_b_inter8x8 (sMacroblock* curMb, eColorPlane curPlane, sPicture* pict
           int j = ((decode_block_scan[k] >> 2) & 3);
           int i4   = curMb->block_x + i;
           int j4   = curMb->block_y + j;
-          sPicMotionParam *mv_info = &picture->mv_info[j4][i4];
+          sPicMotionParam *mvInfo = &picture->mvInfo[j4][i4];
 
           assert (pred_dir<=2);
 
           // store reference picture ID determined by direct mode
-          mv_info->ref_pic[LIST_0] = list0[(short)mv_info->ref_idx[LIST_0]];
-          mv_info->ref_pic[LIST_1] = list1[(short)mv_info->ref_idx[LIST_1]];
+          mvInfo->refPic[LIST_0] = list0[(short)mvInfo->refIndex[LIST_0]];
+          mvInfo->refPic[LIST_1] = list1[(short)mvInfo->refIndex[LIST_1]];
         }
       }
 

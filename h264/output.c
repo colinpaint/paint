@@ -228,9 +228,9 @@ static void writePicture (sVidParam* vidParam, sPicture* p, int real_structure) 
 //{{{
 static void writeUnpairedField (sVidParam* vidParam, sFrameStore* frameStore) {
 
-  assert (frameStore->is_used < 3);
+  assert (frameStore->isUsed < 3);
 
-  if (frameStore->is_used & 0x01) {
+  if (frameStore->isUsed & 0x01) {
     // we have a top field, construct an empty bottom field
     sPicture* p = frameStore->top_field;
     frameStore->bottom_field = allocPicture (vidParam, BOTTOM_FIELD,
@@ -242,7 +242,7 @@ static void writeUnpairedField (sVidParam* vidParam, sFrameStore* frameStore) {
     writePicture (vidParam, frameStore->frame, TOP_FIELD);
     }
 
-  if (frameStore->is_used & 0x02) {
+  if (frameStore->isUsed & 0x02) {
     // we have a bottom field, construct an empty top field
     sPicture* p = frameStore->bottom_field;
     frameStore->top_field = allocPicture (vidParam, TOP_FIELD, p->size_x, 2*p->size_y, p->size_x_cr, 2*p->size_y_cr, 1);
@@ -261,7 +261,7 @@ static void writeUnpairedField (sVidParam* vidParam, sFrameStore* frameStore) {
     writePicture (vidParam, frameStore->frame, BOTTOM_FIELD);
     }
 
-  frameStore->is_used = 3;
+  frameStore->isUsed = 3;
   }
 //}}}
 //{{{
@@ -277,7 +277,7 @@ static void flushDirectOutput (sVidParam* vidParam) {
   freePicture (vidParam->outBuffer->bottom_field);
 
   vidParam->outBuffer->bottom_field = NULL;
-  vidParam->outBuffer->is_used = 0;
+  vidParam->outBuffer->isUsed = 0;
   }
 //}}}
 
@@ -314,20 +314,20 @@ void directOutput (sVidParam* vidParam, sPicture* picture) {
     }
 
   if (picture->structure == TOP_FIELD) {
-    if (vidParam->outBuffer->is_used & 1)
+    if (vidParam->outBuffer->isUsed & 1)
       flushDirectOutput (vidParam);
     vidParam->outBuffer->top_field = picture;
-    vidParam->outBuffer->is_used |= 1;
+    vidParam->outBuffer->isUsed |= 1;
     }
 
   if (picture->structure == BOTTOM_FIELD) {
-    if (vidParam->outBuffer->is_used & 2)
+    if (vidParam->outBuffer->isUsed & 2)
       flushDirectOutput (vidParam);
     vidParam->outBuffer->bottom_field = picture;
-    vidParam->outBuffer->is_used |= 2;
+    vidParam->outBuffer->isUsed |= 2;
     }
 
-  if (vidParam->outBuffer->is_used == 3) {
+  if (vidParam->outBuffer->isUsed == 3) {
     // we have both fields, so output them
     dpb_combine_field_yuv (vidParam, vidParam->outBuffer);
     writePicture (vidParam, vidParam->outBuffer->frame, FRAME);
@@ -342,7 +342,7 @@ void directOutput (sVidParam* vidParam, sPicture* picture) {
     freePicture (vidParam->outBuffer->bottom_field);
 
     vidParam->outBuffer->bottom_field = NULL;
-    vidParam->outBuffer->is_used = 0;
+    vidParam->outBuffer->isUsed = 0;
     }
   }
 //}}}
@@ -352,7 +352,7 @@ void writeStoredFrame (sVidParam* vidParam, sFrameStore* frameStore) {
   // make sure no direct output field is pending
   flushDirectOutput (vidParam);
 
-  if (frameStore->is_used < 3)
+  if (frameStore->isUsed < 3)
     writeUnpairedField (vidParam, frameStore);
   else {
     if (frameStore->recovery_frame)

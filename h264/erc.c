@@ -771,7 +771,7 @@ static void buildPredRegionYUV (sVidParam* vidParam, int *mv, int x, int y, sPix
   int b8, b4;
   int yuv = picture->chromaFormatIdc - 1;
 
-  int ref_frame = imax (mv[2], 0); // !!KS: quick fix, we sometimes seem to get negative ref_pic here, so restrict to zero and above
+  int ref_frame = imax (mv[2], 0); // !!KS: quick fix, we sometimes seem to get negative refPic here, so restrict to zero and above
   int mb_nr = y/16*(vidParam->width/16)+x/16; ///curSlice->current_mb_nr;
   int** tmp_res = NULL;
 
@@ -1505,10 +1505,10 @@ static sPicture* get_last_ref_pic_from_dpb (sDPB* dpb)
 
   for(i = usedSize; i >= 0; i--)
   {
-    if (dpb->fs[i]->is_used==3)
+    if (dpb->fs[i]->isUsed==3)
     {
-      if (((dpb->fs[i]->frame->used_for_reference) &&
-        (!dpb->fs[i]->frame->is_long_term)) /*||  ((dpb->fs[i]->frame->used_for_reference==0)
+      if (((dpb->fs[i]->frame->usedForReference) &&
+        (!dpb->fs[i]->frame->isLongTerm)) /*||  ((dpb->fs[i]->frame->usedForReference==0)
                                            && (dpb->fs[i]->frame->sliceType == P_SLICE))*/ )
       {
         return dpb->fs[i]->frame;
@@ -1615,16 +1615,16 @@ static void copy_to_conceal (sPicture *src, sPicture *dst, sVidParam* vidParam)
       {
         nn = j * BLOCK_SIZE;
 
-        mv[0] = src->mv_info[i][j].mv[LIST_0].mv_x / scale;
-        mv[1] = src->mv_info[i][j].mv[LIST_0].mv_y / scale;
-        mv[2] = src->mv_info[i][j].ref_idx[LIST_0];
+        mv[0] = src->mvInfo[i][j].mv[LIST_0].mv_x / scale;
+        mv[1] = src->mvInfo[i][j].mv[LIST_0].mv_y / scale;
+        mv[2] = src->mvInfo[i][j].refIndex[LIST_0];
 
         if(mv[2]<0)
           mv[2]=0;
 
-        dst->mv_info[i][j].mv[LIST_0].mv_x = (short) mv[0];
-        dst->mv_info[i][j].mv[LIST_0].mv_y = (short) mv[1];
-        dst->mv_info[i][j].ref_idx[LIST_0] = (char) mv[2];
+        dst->mvInfo[i][j].mv[LIST_0].mv_x = (short) mv[0];
+        dst->mvInfo[i][j].mv[LIST_0].mv_y = (short) mv[1];
+        dst->mvInfo[i][j].refIndex[LIST_0] = (char) mv[2];
 
         x = (j) * multiplier;
         y = (i) * multiplier;
@@ -1680,13 +1680,13 @@ static void copy_prev_pic_to_concealed_pic (sPicture *picture, sDPB* dpb)
 {
   sVidParam* vidParam = dpb->vidParam;
   /* get the last ref pic in dpb */
-  sPicture *ref_pic = get_last_ref_pic_from_dpb(dpb);
+  sPicture *refPic = get_last_ref_pic_from_dpb(dpb);
 
-  assert(ref_pic != NULL);
+  assert(refPic != NULL);
 
   /* copy all the struc from this to current conceal pic */
   vidParam->conceal_slice_type = P_SLICE;
-  copy_to_conceal(ref_pic, picture, vidParam);
+  copy_to_conceal(refPic, picture, vidParam);
 }
 //}}}
 //{{{
@@ -1915,7 +1915,7 @@ void conceal_lost_frames (sDPB* dpb, sSlice *pSlice)
     picture->frame_num = UnusedShortTermFrameNum;
     picture->non_existing = 0;
     picture->is_output = 0;
-    picture->used_for_reference = 1;
+    picture->usedForReference = 1;
     picture->concealed_pic = 1;
 
     picture->adaptive_ref_pic_buffering_flag = 0;
@@ -2071,8 +2071,8 @@ void write_lost_non_ref_pic (sDPB* dpb, int poc) {
     if ((poc - dpb->lastOutputPoc) > vidParam->pocGap) {
       concealment_fs.frame = vidParam->concealment_head->picture;
       concealment_fs.is_output = 0;
-      concealment_fs.is_reference = 0;
-      concealment_fs.is_used = 3;
+      concealment_fs.isReference = 0;
+      concealment_fs.isUsed = 3;
 
       writeStoredFrame (vidParam, &concealment_fs);
       delete_node (vidParam, vidParam->concealment_head);
@@ -2096,7 +2096,7 @@ void write_lost_ref_after_idr (sDPB* dpb, int pos) {
   if (vidParam->lastOutFramestore->frame == NULL) {
     vidParam->lastOutFramestore->frame = allocPicture (vidParam, FRAME, vidParam->width, vidParam->height,
                                                  vidParam->widthCr, vidParam->heightCr, 1);
-    vidParam->lastOutFramestore->is_used = 3;
+    vidParam->lastOutFramestore->isUsed = 3;
     }
 
   if (vidParam->concealMode == 2) {
