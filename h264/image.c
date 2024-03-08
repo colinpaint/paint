@@ -149,7 +149,6 @@ static void mbAffPostProc (sVidParam* vidParam) {
 static void fillWPParam (sSlice* slice) {
 
   if (slice->sliceType == B_SLICE) {
-    int comp;
     int log_weight_denom;
     int tb, td;
     int tx, DistScaleFactor;
@@ -163,7 +162,7 @@ static void fillWPParam (sSlice* slice) {
       slice->wp_round_luma = 16;
       slice->wp_round_chroma = 16;
       for (int i = 0; i < MAX_REFERENCE_PICTURES; ++i)
-        for (comp = 0; comp < 3; ++comp) {
+        for (int comp = 0; comp < 3; ++comp) {
           log_weight_denom = (comp == 0) ? slice->luma_log2_weight_denom : slice->chroma_log2_weight_denom;
           slice->wp_weight[0][i][comp] = 1 << log_weight_denom;
           slice->wp_weight[1][i][comp] = 1 << log_weight_denom;
@@ -174,24 +173,23 @@ static void fillWPParam (sSlice* slice) {
 
     for (int i = 0; i < max_l0_ref; ++i)
       for (int j = 0; j < max_l1_ref; ++j)
-        for (comp = 0; comp<3; ++comp) {
+        for (int comp = 0; comp < 3; ++comp) {
           log_weight_denom = (comp == 0) ? slice->luma_log2_weight_denom : slice->chroma_log2_weight_denom;
           if (slice->activePPS->weighted_bipred_idc == 1) {
-            slice->wbp_weight[0][i][j][comp] =  slice->wp_weight[0][i][comp];
-            slice->wbp_weight[1][i][j][comp] =  slice->wp_weight[1][j][comp];
+            slice->wbp_weight[0][i][j][comp] = slice->wp_weight[0][i][comp];
+            slice->wbp_weight[1][i][j][comp] = slice->wp_weight[1][j][comp];
             }
           else if (slice->activePPS->weighted_bipred_idc == 2) {
             td = iClip3(-128,127,slice->listX[LIST_1][j]->poc - slice->listX[LIST_0][i]->poc);
             if (td == 0 ||
-                slice->listX[LIST_1][j]->is_long_term ||
-                slice->listX[LIST_0][i]->is_long_term) {
+                slice->listX[LIST_1][j]->is_long_term || slice->listX[LIST_0][i]->is_long_term) {
               slice->wbp_weight[0][i][j][comp] = 32;
               slice->wbp_weight[1][i][j][comp] = 32;
               }
             else {
-              tb = iClip3(-128,127,slice->thisPoc - slice->listX[LIST_0][i]->poc);
-              tx = (16384 + iabs(td/2))/td;
-              DistScaleFactor = iClip3(-1024, 1023, (tx*tb + 32 )>>6);
+              tb = iClip3(-128, 127, slice->thisPoc - slice->listX[LIST_0][i]->poc);
+              tx = (16384 + iabs (td / 2)) / td;
+              DistScaleFactor = iClip3 (-1024, 1023, (tx*tb + 32 )>>6);
               slice->wbp_weight[1][i][j][comp] = DistScaleFactor >> 2;
               slice->wbp_weight[0][i][j][comp] = 64 - slice->wbp_weight[1][i][j][comp];
               if (slice->wbp_weight[1][i][j][comp] < -64 || slice->wbp_weight[1][i][j][comp] > 128) {
@@ -207,7 +205,7 @@ static void fillWPParam (sSlice* slice) {
     if (slice->mb_aff_frame_flag)
       for (int i = 0; i < 2*max_l0_ref; ++i)
         for (int j = 0; j < 2*max_l1_ref; ++j)
-          for (comp = 0; comp<3; ++comp)
+          for (int comp = 0; comp<3; ++comp)
             for (int k = 2; k < 6; k += 2) {
               slice->wp_offset[k+0][i][comp] = slice->wp_offset[0][i>>1][comp];
               slice->wp_offset[k+1][j][comp] = slice->wp_offset[1][j>>1][comp];
@@ -228,7 +226,7 @@ static void fillWPParam (sSlice* slice) {
                   tb = iClip3(-128,127, ((k == 2) ? slice->topPoc :
                                                     slice->botPoc) - slice->listX[k+LIST_0][i]->poc);
                   tx = (16384 + iabs(td/2)) / td;
-                  DistScaleFactor = iClip3(-1024, 1023, (tx*tb + 32 )>>6);
+                  DistScaleFactor = iClip3 (-1024, 1023, (tx*tb + 32 )>>6);
                   slice->wbp_weight[k+1][i][j][comp] = DistScaleFactor >> 2;
                   slice->wbp_weight[k+0][i][j][comp] = 64 - slice->wbp_weight[k+1][i][j][comp];
                   if (slice->wbp_weight[k+1][i][j][comp] < -64 ||
@@ -1102,6 +1100,7 @@ void calcFrameNum (sVidParam* vidParam, sPicture* p) {
                                                                     p->poc / (inputParam->poc_scale);
   if (psnrPOC == 0)
     vidParam->idrPsnrNum = vidParam->gapNumFrame * vidParam->ref_poc_gap / (inputParam->poc_scale);
+
   vidParam->psnrNum = imax (vidParam->psnrNum, vidParam->idrPsnrNum+psnrPOC);
   vidParam->frameNum = vidParam->idrPsnrNum + psnrPOC;
   }
@@ -1127,8 +1126,8 @@ void exitPicture (sVidParam* vidParam, sPicture** picture) {
 
   // return if the last picture has already been finished
   if (*picture == NULL ||
-      (vidParam->numDecodedMb != vidParam->picSizeInMbs &&
-       (vidParam->yuvFormat != YUV444 || !vidParam->separate_colour_plane_flag)))
+      ((vidParam->numDecodedMb != vidParam->picSizeInMbs) &&
+       ((vidParam->yuvFormat != YUV444) || !vidParam->separate_colour_plane_flag)))
     return;
 
   //{{{  error conceal
@@ -1208,14 +1207,14 @@ void exitPicture (sVidParam* vidParam, sPicture** picture) {
     fieldPostProcessing (vidParam);
 
   if ((*picture)->used_for_reference)
-    padPicture (vidParam,* picture);
+    padPicture (vidParam, *picture);
 
   int structure = (*picture)->structure;
   int sliceType = (*picture)->sliceType;
   int framePoc = (*picture)->framePoc;
   int refpic = (*picture)->used_for_reference;
   int qp = (*picture)->qp;
-  int pic_num = (*picture)->pic_num;
+  int picNum = (*picture)->pic_num;
   int isIdr = (*picture)->idrFlag;
   int chromaFormatIdc = (*picture)->chromaFormatIdc;
 
@@ -1268,7 +1267,7 @@ void exitPicture (sVidParam* vidParam, sPicture** picture) {
   if ((structure == FRAME) || structure == BOTTOM_FIELD) {
     gettime (&(vidParam->endTime));
     printf ("%5d %s poc:%4d pic:%3d qp:%2d %dms\n",
-            vidParam->frameNum, vidParam->sliceTypeText, framePoc, pic_num, qp,
+            vidParam->frameNum, vidParam->sliceTypeText, framePoc, picNum, qp,
             (int)timenorm (timediff (&(vidParam->startTime), &(vidParam->endTime))));
 
     // I or P pictures ?
@@ -1401,8 +1400,6 @@ int decodeFrame (sDecoderParam* pDecoder) {
     //{{{  decode slice
     slice = sliceList[sliceNum];
     current_header = slice->current_header;
-    assert (current_header != EOS);
-    assert (slice->sliceNum == sliceNum);
     initSlice (vidParam, slice);
 
     if (slice->activePPS->entropy_coding_mode_flag) {
@@ -1410,12 +1407,12 @@ int decodeFrame (sDecoderParam* pDecoder) {
       cabac_new_slice (slice);
       }
 
-    if ((slice->activePPS->weighted_bipred_idc > 0  && (slice->sliceType == B_SLICE)) ||
-        (slice->activePPS->weighted_pred_flag && slice->sliceType != I_SLICE))
+    if (((slice->activePPS->weighted_bipred_idc > 0)  && (slice->sliceType == B_SLICE)) ||
+        (slice->activePPS->weighted_pred_flag && (slice->sliceType != I_SLICE)))
       fillWPParam (slice);
 
     // decode main slice information
-    if ((current_header == SOP || current_header == SOS) && slice->eiFlag == 0)
+    if (((current_header == SOP) || (current_header == SOS)) && (slice->eiFlag == 0))
       decodeOneSlice (slice);
 
     vidParam->numSlicesDecoded++;

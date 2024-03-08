@@ -146,6 +146,7 @@ static void flushPendingOutput (sVidParam* vidParam) {
   vidParam->pendingOutputState = FRAME;
   }
 //}}}
+
 //{{{
 static void writePicture (sVidParam* vidParam, sPicture* p, int real_structure) {
 
@@ -232,13 +233,12 @@ static void writeUnpairedField (sVidParam* vidParam, sFrameStore* frameStore) {
   if (frameStore->is_used & 0x01) {
     // we have a top field, construct an empty bottom field
     sPicture* p = frameStore->top_field;
-    frameStore->bottom_field = allocPicture (vidParam, BOTTOM_FIELD, 
+    frameStore->bottom_field = allocPicture (vidParam, BOTTOM_FIELD,
                                              p->size_x, 2 * p->size_y, p->size_x_cr, 2 * p->size_y_cr, 1);
     frameStore->bottom_field->chromaFormatIdc = p->chromaFormatIdc;
 
     clearPicture (vidParam, frameStore->bottom_field);
     dpb_combine_field_yuv (vidParam, frameStore);
-
     writePicture (vidParam, frameStore->frame, TOP_FIELD);
     }
 
@@ -250,14 +250,14 @@ static void writeUnpairedField (sVidParam* vidParam, sFrameStore* frameStore) {
     clearPicture (vidParam, frameStore->top_field);
 
     frameStore ->top_field->frame_cropping_flag = frameStore->bottom_field->frame_cropping_flag;
-    if(frameStore->top_field->frame_cropping_flag) {
+    if (frameStore->top_field->frame_cropping_flag) {
       frameStore->top_field->frame_crop_top_offset = frameStore->bottom_field->frame_crop_top_offset;
       frameStore->top_field->frame_crop_bottom_offset = frameStore->bottom_field->frame_crop_bottom_offset;
       frameStore->top_field->frame_crop_left_offset = frameStore->bottom_field->frame_crop_left_offset;
       frameStore->top_field->frame_crop_right_offset = frameStore->bottom_field->frame_crop_right_offset;
       }
-    dpb_combine_field_yuv (vidParam, frameStore);
 
+    dpb_combine_field_yuv (vidParam, frameStore);
     writePicture (vidParam, frameStore->frame, BOTTOM_FIELD);
     }
 
@@ -285,13 +285,9 @@ static void flushDirectOutput (sVidParam* vidParam) {
 void allocOutput (sVidParam* vidParam) {
 
   vidParam->outBuffer = allocFrameStore();
-
   vidParam->pendingOutput = calloc (sizeof(sPicture), 1);
-  if (!vidParam->pendingOutput)
-    no_mem_exit ("init_out_buffer");
-
   vidParam->pendingOutput->imgUV = NULL;
-  vidParam->pendingOutput->imgY  = NULL;
+  vidParam->pendingOutput->imgY = NULL;
   }
 //}}}
 //{{{
@@ -305,6 +301,51 @@ void freeOutput (sVidParam* vidParam) {
   }
 //}}}
 
+//{{{
+void directOutput (sVidParam* vidParam, sPicture* picture) {
+
+  if (picture->structure == FRAME) {
+    // we have a frame (or complementary field pair), so output it directly
+    flushDirectOutput (vidParam);
+    writePicture (vidParam, picture, FRAME);
+    calcFrameNum (vidParam, picture);
+    freePicture (picture);
+    return;
+    }
+
+  if (picture->structure == TOP_FIELD) {
+    if (vidParam->outBuffer->is_used & 1)
+      flushDirectOutput (vidParam);
+    vidParam->outBuffer->top_field = picture;
+    vidParam->outBuffer->is_used |= 1;
+    }
+
+  if (picture->structure == BOTTOM_FIELD) {
+    if (vidParam->outBuffer->is_used & 2)
+      flushDirectOutput (vidParam);
+    vidParam->outBuffer->bottom_field = picture;
+    vidParam->outBuffer->is_used |= 2;
+    }
+
+  if (vidParam->outBuffer->is_used == 3) {
+    // we have both fields, so output them
+    dpb_combine_field_yuv (vidParam, vidParam->outBuffer);
+    writePicture (vidParam, vidParam->outBuffer->frame, FRAME);
+
+    calcFrameNum (vidParam, picture);
+    freePicture (vidParam->outBuffer->frame);
+
+    vidParam->outBuffer->frame = NULL;
+    freePicture (vidParam->outBuffer->top_field);
+
+    vidParam->outBuffer->top_field = NULL;
+    freePicture (vidParam->outBuffer->bottom_field);
+
+    vidParam->outBuffer->bottom_field = NULL;
+    vidParam->outBuffer->is_used = 0;
+    }
+  }
+//}}}
 //{{{
 void writeStoredFrame (sVidParam* vidParam, sFrameStore* frameStore) {
 
@@ -321,50 +362,5 @@ void writeStoredFrame (sVidParam* vidParam, sFrameStore* frameStore) {
     }
 
   frameStore->is_output = 1;
-  }
-//}}}
-//{{{
-void directOutput (sVidParam* vidParam, sPicture* p) {
-
-  if (p->structure == FRAME) {
-    // we have a frame (or complementary field pair), so output it directly
-    flushDirectOutput (vidParam);
-    writePicture (vidParam, p, FRAME);
-    calcFrameNum (vidParam, p);
-    freePicture (p);
-    return;
-    }
-
-  if (p->structure == TOP_FIELD) {
-    if (vidParam->outBuffer->is_used & 1)
-      flushDirectOutput (vidParam);
-    vidParam->outBuffer->top_field = p;
-    vidParam->outBuffer->is_used |= 1;
-    }
-
-  if (p->structure == BOTTOM_FIELD) {
-    if (vidParam->outBuffer->is_used & 2)
-      flushDirectOutput (vidParam);
-    vidParam->outBuffer->bottom_field = p;
-    vidParam->outBuffer->is_used |= 2;
-    }
-
-  if (vidParam->outBuffer->is_used == 3) {
-    // we have both fields, so output them
-    dpb_combine_field_yuv (vidParam, vidParam->outBuffer);
-    writePicture (vidParam, vidParam->outBuffer->frame, FRAME);
-
-    calcFrameNum (vidParam, p);
-    freePicture (vidParam->outBuffer->frame);
-
-    vidParam->outBuffer->frame = NULL;
-    freePicture (vidParam->outBuffer->top_field);
-
-    vidParam->outBuffer->top_field = NULL;
-    freePicture (vidParam->outBuffer->bottom_field);
-
-    vidParam->outBuffer->bottom_field = NULL;
-    vidParam->outBuffer->is_used = 0;
-    }
   }
 //}}}
