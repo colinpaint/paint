@@ -1040,6 +1040,8 @@ static inline int is_HI_intra_only_profile (unsigned int profile_idc, Boolean co
   extern sDataPartition* allocPartition (int n);
   extern void freePartition (sDataPartition* dp, int n);
 
+  extern sSlice* allocSlice (sInputParam* inputParam, sVidParam* vidParam);
+
   extern unsigned ceilLog2 (unsigned uiVal);
   extern unsigned ceilLog2sf (unsigned uiVal);
 
@@ -1051,11 +1053,7 @@ static inline int is_HI_intra_only_profile (unsigned int profile_idc, Boolean co
   extern void freeDecodedPictures (sDecodedPicture* decodedPicture);
   extern void clearDecodedPictures (sVidParam* vidParam);
 
-  extern sSlice* allocSlice (sInputParam* inputParam, sVidParam* vidParam);
-  //extern void copySliceInfo (sSlice* curSlice, sOldSliceParam* oldSliceParam);
-
   extern void setGlobalCodingProgram (sVidParam* vidParam, sCodingParam* codingParam);
-  extern void OpenOutputFiles (sVidParam* vidParam, int view0_id, int view1_id);
 //{{{
 #ifdef __cplusplus
 }

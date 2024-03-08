@@ -9,16 +9,11 @@
 #include "global.h"
 
 /* private prototypes*/
-static void Read_Frame _ANSI_ARGS_((char *filename,
-  unsigned char *frame_buffer[], int framenum));
-static void Copy_Frame _ANSI_ARGS_((unsigned char *src, unsigned char *dst,
-  int width, int height, int parity, int incr));
-static int Read_Components _ANSI_ARGS_ ((char *filename,
-  unsigned char *frame[3], int framenum));
-static int Read_Component _ANSI_ARGS_ ((char *fname, unsigned char *frame,
-  int width, int height));
-static int Extract_Components _ANSI_ARGS_ ((char *filename,
-  unsigned char *frame[3], int framenum));
+static void Read_Frame (char *filename,  unsigned char *frame_buffer[], int framenum);
+static void Copy_Frame (unsigned char *src, unsigned char *dst,  int width, int height, int parity, int incr);
+static int Read_Components (char *filename,  unsigned char *frame[3], int framenum);
+static int Read_Component (char *fname, unsigned char *frame,  int width, int height);
+static int Extract_Components (char *filename,  unsigned char *frame[3], int framenum);
 //}}}
 
 //{{{

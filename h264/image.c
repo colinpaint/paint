@@ -508,8 +508,8 @@ static void initPicture (sVidParam* vidParam, sSlice* slice, sInputParam* inputP
   vidParam->picSizeInMbs = vidParam->PicWidthInMbs * vidParam->picHeightInMbs;
   vidParam->FrameSizeInMbs = vidParam->PicWidthInMbs * vidParam->FrameHeightInMbs;
   vidParam->bFrameInit = 1;
-  if (vidParam->picture)
-    // this may only happen on slice loss
+
+  if (vidParam->picture) // this may only happen on slice loss
     exitPicture (vidParam, &vidParam->picture);
 
   vidParam->dpbLayerId = slice->layerId;
@@ -1314,10 +1314,8 @@ int decodeFrame (sDecoderParam* pDecoder) {
     current_header = SOS;
     }
 
-  while (current_header != SOP && current_header != EOS) {
+  while ((current_header != SOP) && (current_header != EOS)) {
     //{{{  no pending slices
-    assert (vidParam->curPicSliceNum < vidParam->numSlicesAllocated);
-
     if (!sliceList[vidParam->curPicSliceNum])
       sliceList[vidParam->curPicSliceNum] = allocSlice (inputParam, vidParam);
 
