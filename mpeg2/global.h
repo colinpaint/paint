@@ -1,47 +1,6 @@
-//{{{
-/* global.h, global variables                                               */
-
-/* Copyright (C) 1996, MPEG Software Simulation Group. All Rights Reserved. */
-
-/*
- * Disclaimer of Warranty
- *
- * These software programs are available to the user without any license fee or
- * royalty on an "as is" basis.  The MPEG Software Simulation Group disclaims
- * any and all warranties, whether express, implied, or statuary, including any
- * implied warranties or merchantability or of fitness for a particular
- * purpose.  In no event shall the copyright-holder be liable for any
- * incidental, punitive, or consequential damages of any kind whatsoever
- * arising from the use of these programs.
- *
- * This disclaimer of warranty extends to the user of these programs and user's
- * customers, employees, agents, transferees, successors, and assigns.
- *
- * The MPEG Software Simulation Group does not represent or warrant that the
- * programs furnished hereunder are free of infringement of any third-party
- * patents.
- *
- * Commercial implementations of MPEG-1 and MPEG-2 video, including shareware,
- * are subject to royalty fees to patent holders.  Many of these patents are
- * general enough such that they are unavoidable regardless of implementation
- * design.
- *
- */
-//}}}
 #include "mpeg2dec.h"
 
-/* choose between declaration (GLOBAL undefined)
- * and definition (GLOBAL defined)
- * GLOBAL is defined in exactly one file mpeg2dec.c)
- */
-
-#ifndef GLOBAL
-  #define EXTERN extern
-#else
-  #define EXTERN
-#endif
-
-/* prototypes of global functions */
+#define EXTERN extern
 //{{{  readpic.c
 void Substitute_Frame_Buffer _ANSI_ARGS_ ((int bitstream_framenum,
   int sequence_framenum));
@@ -117,7 +76,6 @@ void Spatial_Prediction _ANSI_ARGS_((void));
 void Write_Frame _ANSI_ARGS_((unsigned char *src[], int frame));
 //}}}
 
-/* global variables */
 //{{{
 EXTERN char Version[]
 #ifdef GLOBAL

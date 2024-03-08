@@ -15,15 +15,6 @@ void Initialize_Buffer() {
   ld->Rdptr = ld->Rdbfr + 2048;
   ld->Rdmax = ld->Rdptr;
 
-#ifdef VERIFY
-  /*  only the verifier uses this particular bit counter
-   *  Bitcnt keeps track of the current parser position with respect
-   *  to the video elementary stream being decoded, regardless
-   *  of whether or not it is wrapped within a systems layer stream
-   */
-  ld->Bitcnt = 0;
-#endif
-
   ld->Bfr = 0;
   Flush_Buffer(0); /* fills valid data into bfr */
   }
@@ -49,7 +40,7 @@ void Fill_Buffer() {
     while (Buffer_Level & 3)
       ld->Rdbfr[Buffer_Level++] = 0;
 
-  /* pad the buffer with sequence end codes */
+    /* pad the buffer with sequence end codes */
     while (Buffer_Level < 2048) {
       ld->Rdbfr[Buffer_Level++] = SEQUENCE_END_CODE>>24;
       ld->Rdbfr[Buffer_Level++] = SEQUENCE_END_CODE>>16;
@@ -61,10 +52,10 @@ void Fill_Buffer() {
 //}}}
 
 //{{{
-/* MPEG-1 system layer demultiplexer */
 int Get_Byte() {
+/* MPEG-1 system layer demultiplexer */
 
-  while(ld->Rdptr >= ld->Rdbfr+2048) {
+  while (ld->Rdptr >= ld->Rdbfr+2048) {
     read(ld->Infile,ld->Rdbfr,2048);
     ld->Rdptr -= 2048;
     ld->Rdmax -= 2048;
@@ -74,8 +65,8 @@ int Get_Byte() {
   }
 //}}}
 //{{{
-/* extract a 16-bit word from the bitstream buffer */
 int Get_Word() {
+/* extract a 16-bit word from the bitstream buffer */
 
   int Val = Get_Byte();
   return (Val<<8) | Get_Byte();

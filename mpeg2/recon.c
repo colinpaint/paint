@@ -7,8 +7,10 @@
 #include "global.h"
 //}}}
 
-
 //{{{
+static void form_component_prediction (unsigned char *src, unsigned char *dst,
+                                       int lx, int lx2, int w, int h,
+                                       int x, int y, int dx, int dy, int average_flag) {
 /* ISO/IEC 13818-2 section 7.6.4: Forming predictions */
 /* NOTE: the arithmetic below produces numerically equivalent results
  *  to 7.6.4, yet is more elegant. It differs in the following ways:
@@ -33,10 +35,6 @@
  *  was chosen for its elegance.
 */
 
-static void form_component_prediction (unsigned char *src, unsigned char *dst,
-                                       int lx, int lx2, int w, int h,
-                                       int x, int y, int dx, int dy, int average_flag) {
-
   int xint;      /* horizontal integer sample vector: analogous to int_vec[0] */
   int yint;      /* vertical integer sample vectors: analogous to int_vec[1] */
   int xh;        /* horizontal half sample flag: analogous to half_flag[0]  */
@@ -58,127 +56,104 @@ static void form_component_prediction (unsigned char *src, unsigned char *dst,
   s = src + lx*(y+yint) + x + xint;
   d = dst + lx*y + x;
 
-  if (!xh && !yh) /* no horizontal nor vertical half-pel */
-  {
-    if (average_flag)
-    {
-      for (j=0; j<h; j++)
-      {
-        for (i=0; i<w; i++)
-        {
+  if (!xh && !yh) {
+    //{{{  no horizontal nor vertical half-pel */
+    if (average_flag) {
+      for (j=0; j<h; j++) {
+        for (i=0; i<w; i++) {
           v = d[i]+s[i];
           d[i] = (v+(v>=0?1:0))>>1;
-        }
+          }
 
         s+= lx2;
         d+= lx2;
+        }
       }
-    }
-    else
-    {
-      for (j=0; j<h; j++)
-      {
+    else {
+      for (j=0; j<h; j++) {
         for (i=0; i<w; i++)
-        {
           d[i] = s[i];
-        }
-
         s+= lx2;
         d+= lx2;
+        }
       }
     }
-  }
-  else if (!xh && yh) /* no horizontal but vertical half-pel */
-  {
-    if (average_flag)
-    {
-      for (j=0; j<h; j++)
-      {
-        for (i=0; i<w; i++)
-        {
+    //}}}
+  else if (!xh && yh) {
+    //{{{  no horizontal but vertical half-pel */
+    if (average_flag) {
+      for (j=0; j<h; j++) {
+        for (i=0; i<w; i++) {
           v = d[i] + ((unsigned int)(s[i]+s[i+lx]+1)>>1);
           d[i]=(v+(v>=0?1:0))>>1;
         }
 
         s+= lx2;
         d+= lx2;
-      }
-    }
-    else
-    {
-      for (j=0; j<h; j++)
-      {
-        for (i=0; i<w; i++)
-        {
-          d[i] = (unsigned int)(s[i]+s[i+lx]+1)>>1;
         }
+      }
+    else {
+      for (j=0; j<h; j++) {
+        for (i=0; i<w; i++)
+          d[i] = (unsigned int)(s[i]+s[i+lx]+1)>>1;
 
         s+= lx2;
         d+= lx2;
+        }
       }
     }
-  }
-  else if (xh && !yh) /* horizontal but no vertical half-pel */
-  {
-    if (average_flag)
-    {
-      for (j=0; j<h; j++)
-      {
-        for (i=0; i<w; i++)
-        {
+    //}}}
+  else if (xh && !yh) {
+    //{{{  horizontal but no vertical half-pel */
+    if (average_flag) {
+      for (j=0; j<h; j++) {
+        for (i=0; i<w; i++) {
           v = d[i] + ((unsigned int)(s[i]+s[i+1]+1)>>1);
           d[i] = (v+(v>=0?1:0))>>1;
-        }
+          }
 
         s+= lx2;
         d+= lx2;
+        }
       }
-    }
-    else
-    {
-      for (j=0; j<h; j++)
-      {
-        for (i=0; i<w; i++)
-        {
+    else {
+      for (j=0; j<h; j++) {
+        for (i=0; i<w; i++) {
           d[i] = (unsigned int)(s[i]+s[i+1]+1)>>1;
-        }
+          }
 
         s+= lx2;
         d+= lx2;
+        }
       }
     }
-  }
-  else /* if (xh && yh) horizontal and vertical half-pel */
-  {
-    if (average_flag)
-    {
-      for (j=0; j<h; j++)
-      {
-        for (i=0; i<w; i++)
-        {
+    //}}}
+  else {
+    //{{{  if (xh && yh) horizontal and vertical half-pel */
+    if (average_flag) {
+      for (j=0; j<h; j++) {
+        for (i=0; i<w; i++) {
           v = d[i] + ((unsigned int)(s[i]+s[i+1]+s[i+lx]+s[i+lx+1]+2)>>2);
           d[i] = (v+(v>=0?1:0))>>1;
-        }
+          }
 
         s+= lx2;
         d+= lx2;
+        }
       }
-    }
-    else
-    {
-      for (j=0; j<h; j++)
-      {
-        for (i=0; i<w; i++)
-        {
+    else {
+      for (j=0; j<h; j++) {
+        for (i=0; i<w; i++) {
           d[i] = (unsigned int)(s[i]+s[i+1]+s[i+lx]+s[i+lx+1]+2)>>2;
-        }
+          }
 
         s+= lx2;
         d+= lx2;
+        }
       }
     }
+    //}}}
   }
-}
 //}}}
 //{{{
 static void form_prediction (unsigned char *src[], int sfield,

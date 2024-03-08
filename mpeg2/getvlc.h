@@ -1,48 +1,10 @@
-//{{{
-/* getvlc.h, variable length code tables                                    */
-
-/* Copyright (C) 1996, MPEG Software Simulation Group. All Rights Reserved. */
-
-/*
- * Disclaimer of Warranty
- *
- * These software programs are available to the user without any license fee or
- * royalty on an "as is" basis.  The MPEG Software Simulation Group disclaims
- * any and all warranties, whether express, implied, or statuary, including any
- * implied warranties or merchantability or of fitness for a particular
- * purpose.  In no event shall the copyright-holder be liable for any
- * incidental, punitive, or consequential damages of any kind whatsoever
- * arising from the use of these programs.
- *
- * This disclaimer of warranty extends to the user of these programs and user's
- * customers, employees, agents, transferees, successors, and assigns.
- *
- * The MPEG Software Simulation Group does not represent or warrant that the
- * programs furnished hereunder are free of infringement of any third-party
- * patents.
- *
- * Commercial implementations of MPEG-1 and MPEG-2 video, including shareware,
- * are subject to royalty fees to patent holders.  Many of these patents are
- * general enough such that they are unavoidable regardless of implementation
- * design.
- *
- */
-
-/* NOTE: #define constants such as MACROBLOCK_QUANT are upper case
-   as per C programming convention. However, the MPEG document
-   (ISO/IEC 13818-2) lists them in all lower case (e.g. Annex B) */
-
-/* NOTE: the VLC tables are in a flash format---a transformation
-   of the tables in Annex B to a form more convenient towards
-   parallel (more than one-bit-at-a-time) decoding */
-//}}}
 typedef struct {
   char val, len;
-} VLCtab;
+  } VLCtab;
 
 typedef struct {
   char run, level, len;
-} DCTtab;
+  } DCTtab;
 
 //{{{
 /* Table B-3, macroblock_type in P-pictures, codes 001..1xx */

@@ -22,170 +22,148 @@ static char *MBdescr[]={
 };
 //}}}
 //{{{
-static int Get_P_macroblock_type()
-{
+static int Get_P_macroblock_type() {
+
   int code;
-  if ((code = Show_Bits(6))>=8)
-  {
+  if ((code = Show_Bits(6))>=8) {
     code >>= 3;
     Flush_Buffer(PMBtab0[code].len);
     return PMBtab0[code].val;
-  }
+    }
 
-  if (code==0)
-  {
+  if (code==0) {
     if (!Quiet_Flag)
       printf("Invalid macroblock_type code\n");
     Fault_Flag = 1;
     return 0;
-  }
+    }
 
   Flush_Buffer(PMBtab1[code].len);
   return PMBtab1[code].val;
-}
+  }
 //}}}
 //{{{
-static int Get_B_macroblock_type()
-{
-  int code;
-  if ((code = Show_Bits(6))>=8)
-  {
-    code >>= 2;
-    Flush_Buffer(BMBtab0[code].len);
-    return BMBtab0[code].val;
-  }
+static int Get_B_macroblock_type() {
 
-  if (code==0)
-  {
+  int code;
+  if ((code = Show_Bits(6))>=8) {
+    code >>= 2;
+    Flush_Buffer (BMBtab0[code].len);
+    return BMBtab0[code].val;
+    }
+
+  if (code == 0) {
     if (!Quiet_Flag)
-      printf("Invalid macroblock_type code\n");
+      printf ("Invalid macroblock_type code\n");
     Fault_Flag = 1;
     return 0;
-  }
+    }
 
-  Flush_Buffer(BMBtab1[code].len);
+  Flush_Buffer (BMBtab1[code].len);
   return BMBtab1[code].val;
-}
+  }
 //}}}
 //{{{
-static int Get_D_macroblock_type()
-{
-  if (!Get_Bits1())
-  {
+static int Get_D_macroblock_type() {
+
+  if (!Get_Bits1()) {
     if (!Quiet_Flag)
-      printf("Invalid macroblock_type code\n");
-    Fault_Flag=1;
-  }
+      printf ("Invalid macroblock_type code\n");
+    Fault_Flag = 1;
+    }
 
   return 1;
-}
+  }
 //}}}
 //{{{
+static int Get_I_Spatial_macroblock_type() {
 /* macroblock_type for pictures with spatial scalability */
-static int Get_I_Spatial_macroblock_type()
-{
-  int code;
-  code = Show_Bits(4);
 
-  if (code==0)
-  {
+  int code = Show_Bits(4);
+  if (code==0) {
     if (!Quiet_Flag)
-      printf("Invalid macroblock_type code\n");
+      printf ("Invalid macroblock_type code\n");
     Fault_Flag = 1;
     return 0;
-  }
+    }
 
-  Flush_Buffer(spIMBtab[code].len);
+  Flush_Buffer (spIMBtab[code].len);
   return spIMBtab[code].val;
-}
+  }
 //}}}
 //{{{
-static int Get_P_Spatial_macroblock_type()
-{
-  int code;
+static int Get_P_Spatial_macroblock_type() {
 
-  code = Show_Bits(7);
-
-  if (code<2)
-  {
+  int code = Show_Bits(7);
+  if (code<2) {
     if (!Quiet_Flag)
-      printf("Invalid macroblock_type code\n");
+      printf ("Invalid macroblock_type code\n");
     Fault_Flag = 1;
     return 0;
-  }
+    }
 
-  if (code>=16)
-  {
+  if (code >= 16) {
     code >>= 3;
-    Flush_Buffer(spPMBtab0[code].len);
+    Flush_Buffer (spPMBtab0[code].len);
     return spPMBtab0[code].val;
-  }
+    }
 
-  Flush_Buffer(spPMBtab1[code].len);
+  Flush_Buffer (spPMBtab1[code].len);
   return spPMBtab1[code].val;
-}
+  }
 //}}}
 //{{{
-static int Get_B_Spatial_macroblock_type()
-{
-  int code;
-  VLCtab *p;
+static int Get_B_Spatial_macroblock_type() {
 
-  code = Show_Bits(9);
+  VLCtab* p;
 
+  int code = Show_Bits(9);
   if (code>=64)
     p = &spBMBtab0[(code>>5)-2];
   else if (code>=16)
     p = &spBMBtab1[(code>>2)-4];
   else if (code>=8)
     p = &spBMBtab2[code-8];
-  else
-  {
+  else {
     if (!Quiet_Flag)
-      printf("Invalid macroblock_type code\n");
+      printf ("Invalid macroblock_type code\n");
     Fault_Flag = 1;
     return 0;
-  }
+    }
 
-  Flush_Buffer(p->len);
+  Flush_Buffer (p->len);
   return p->val;
-}
+  }
 //}}}
 //{{{
-static int Get_SNR_macroblock_type()
-{
-  int code;
-  code = Show_Bits(3);
+static int Get_SNR_macroblock_type() {
 
-  if (code==0)
-  {
+  int code = Show_Bits(3);
+  if (code == 0) {
     if (!Quiet_Flag)
-      printf("Invalid macroblock_type code\n");
+      printf ("Invalid macroblock_type code\n");
     Fault_Flag = 1;
     return 0;
-  }
+    }
 
-  Flush_Buffer(SNRMBtab[code].len);
+  Flush_Buffer (SNRMBtab[code].len);
   return SNRMBtab[code].val;
-}
+  }
 //}}}
 //{{{
-static int Get_I_macroblock_type()
-{
-  if (Get_Bits1())
-  {
-    return 1;
-  }
+static int Get_I_macroblock_type() {
 
-  if (!Get_Bits1())
-  {
+  if (Get_Bits1())
+    return 1;
+
+  if (!Get_Bits1()) {
     if (!Quiet_Flag)
-      printf("Invalid macroblock_type code\n");
+      printf ("Invalid macroblock_type code\n");
     Fault_Flag = 1;
-  }
+    }
 
   return 17;
-}
+  }
 //}}}
 
 //{{{
@@ -247,8 +225,8 @@ int Get_motion_code() {
   }
 //}}}
 //{{{
-/* get differential motion vector (for dual prime prediction) */
 int Get_dmvector() {
+/* get differential motion vector (for dual prime prediction) */
 
   if (Get_Bits(1))
     return Get_Bits(1) ? -1 : 1;
@@ -257,18 +235,18 @@ int Get_dmvector() {
   }
 //}}}
 //{{{
-int Get_coded_block_pattern()
-{
+int Get_coded_block_pattern() {
+
   int code;
-  if ((code = Show_Bits(9))>=128) {
+  if ((code = Show_Bits (9)) >= 128) {
     code >>= 4;
-    Flush_Buffer(CBPtab0[code].len);
+    Flush_Buffer (CBPtab0[code].len);
     return CBPtab0[code].val;
     }
 
   if (code>=8) {
     code >>= 1;
-    Flush_Buffer(CBPtab1[code].len);
+    Flush_Buffer (CBPtab1[code].len);
     return CBPtab1[code].val;
     }
 
@@ -277,16 +255,16 @@ int Get_coded_block_pattern()
     return 0;
     }
 
-  Flush_Buffer(CBPtab2[code].len);
+  Flush_Buffer (CBPtab2[code].len);
   return CBPtab2[code].val;
   }
 //}}}
 //{{{
-int Get_macroblock_address_increment()
-{
+int Get_macroblock_address_increment() {
+
   int code;
   int val = 0;
-  while ((code = Show_Bits(11))<24) {
+  while ((code = Show_Bits (11)) < 24) {
     if (code != 15) {
       /* if not macroblock_stuffing */
       if (code == 8) /* if macroblock_escape */
@@ -308,7 +286,7 @@ int Get_macroblock_address_increment()
     }
 
   /* codes 00010 ... 011xx */
-  if (code>=128) {
+  if (code >= 128) {
     /* remove leading zeros */
     code >>= 6;
     Flush_Buffer (MBAtab1[code].len);
@@ -316,7 +294,7 @@ int Get_macroblock_address_increment()
     }
 
   /* codes 00000011000 ... 0000111xxxx */
-  code-= 24; /* remove common base */
+  code -= 24; /* remove common base */
   Flush_Buffer (MBAtab2[code].len);
   return val + MBAtab2[code].val;
   }
@@ -330,19 +308,18 @@ int Get_Luma_DC_dct_diff() {
    the spec, yet the results, dct_diff, are the same.
 */
 
-  int code, size, dct_diff;
-
   /* decode length */
-  code = Show_Bits(5);
+  int code = Show_Bits(5);
 
+  int size, dct_diff;
   if (code<31) {
     size = DClumtab0[code].val;
-    Flush_Buffer(DClumtab0[code].len);
+    Flush_Buffer (DClumtab0[code].len);
     }
   else {
     code = Show_Bits(9) - 0x1f0;
     size = DClumtab1[code].val;
-    Flush_Buffer(DClumtab1[code].len);
+    Flush_Buffer (DClumtab1[code].len);
     }
 
   if (size==0)

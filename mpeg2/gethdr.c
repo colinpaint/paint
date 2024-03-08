@@ -10,7 +10,6 @@
 static int Temporal_Reference_Base = 0;
 static int True_Framenum_max  = -1;
 static int Temporal_Reference_GOP_Reset = 0;
-
 #define RESERVED    -1
 
 //{{{
@@ -37,10 +36,9 @@ static double frame_rate_Table[16] =
 //}}}
 
 //{{{
-/* decode sequence extension */
-
-/* ISO/IEC 13818-2 section 6.2.2.3 */
 static void sequence_extension() {
+/* decode sequence extension */
+/* ISO/IEC 13818-2 section 6.2.2.3 */
 
   int horizontal_size_extension;
   int vertical_size_extension;
@@ -76,17 +74,15 @@ static void sequence_extension() {
     if((profile_and_level_indication&15)==5) {
       profile = PROFILE_422;
       level   = MAIN_LEVEL;
+      }
     }
-  }
   else {
     profile = profile_and_level_indication >> 4;  /* Profile is upper nibble */
     level   = profile_and_level_indication & 0xF;  /* Level is lower nibble */
-  }
-
+    }
 
   horizontal_size = (horizontal_size_extension<<12) | (horizontal_size&0x0fff);
   vertical_size = (vertical_size_extension<<12) | (vertical_size&0x0fff);
-
 
   /* ISO/IEC 13818-2 does not define bit_rate_value to be composed of
    * both the original bit_rate_value parsed in sequence_header() and
@@ -117,111 +113,91 @@ static void sequence_extension() {
   }
 //}}}
 //{{{
+static void sequence_display_extension() {
 /* decode sequence display extension */
 
-static void sequence_display_extension()
-{
-  int pos;
-
-  pos = ld->Bitcnt;
-  video_format      = Get_Bits(3);
+  int pos = ld->Bitcnt;
+  video_format = Get_Bits(3);
   color_description = Get_Bits(1);
 
-  if (color_description)
-  {
-    color_primaries          = Get_Bits(8);
+  if (color_description) {
+    color_primaries = Get_Bits(8);
     transfer_characteristics = Get_Bits(8);
-    matrix_coefficients      = Get_Bits(8);
-  }
+    matrix_coefficients = Get_Bits(8);
+    }
 
   display_horizontal_size = Get_Bits(14);
-  marker_bit("sequence_display_extension");
+  marker_bit ("sequence_display_extension");
   display_vertical_size   = Get_Bits(14);
 
-  if (Verbose_Flag>NO_LAYER)
-  {
+  if (Verbose_Flag>NO_LAYER) {
     printf("sequence display extension (byte %d)\n",(pos>>3)-4);
-    if (Verbose_Flag>SEQUENCE_LAYER)
-    {
-
-      printf("  video_format=%d\n",video_format);
-      printf("  color_description=%d\n",color_description);
-
-      if (color_description)
-      {
-        printf("    color_primaries=%d\n",color_primaries);
-        printf("    transfer_characteristics=%d\n",transfer_characteristics);
-        printf("    matrix_coefficients=%d\n",matrix_coefficients);
+    if (Verbose_Flag>SEQUENCE_LAYER) {
+      printf ("  video_format=%d\n",video_format);
+      printf ("  color_description=%d\n",color_description);
+      if (color_description) {
+        printf ("    color_primaries=%d\n",color_primaries);
+        printf ("    transfer_characteristics=%d\n",transfer_characteristics);
+        printf ("    matrix_coefficients=%d\n",matrix_coefficients);
+        }
+      printf ("  display_horizontal_size=%d\n",display_horizontal_size);
+      printf ("  display_vertical_size=%d\n",display_vertical_size);
       }
-      printf("  display_horizontal_size=%d\n",display_horizontal_size);
-      printf("  display_vertical_size=%d\n",display_vertical_size);
     }
   }
-}
 //}}}
 //{{{
+static void quant_matrix_extension() {
 /* decode quant matrix entension */
 /* ISO/IEC 13818-2 section 6.2.3.2 */
-static void quant_matrix_extension()
-{
+
   int i;
-  int pos;
-
-  pos = ld->Bitcnt;
-
-  if((ld->load_intra_quantizer_matrix = Get_Bits(1)))
-  {
-    for (i=0; i<64; i++)
-    {
+  int pos = ld->Bitcnt;
+  if((ld->load_intra_quantizer_matrix = Get_Bits(1))) {
+    for (i=0; i<64; i++) {
       ld->chroma_intra_quantizer_matrix[scan[ZIG_ZAG][i]]
-      = ld->intra_quantizer_matrix[scan[ZIG_ZAG][i]]
-      = Get_Bits(8);
+        = ld->intra_quantizer_matrix[scan[ZIG_ZAG][i]]
+        = Get_Bits(8);
+      }
     }
-  }
 
-  if((ld->load_non_intra_quantizer_matrix = Get_Bits(1)))
-  {
-    for (i=0; i<64; i++)
-    {
+  if ((ld->load_non_intra_quantizer_matrix = Get_Bits(1))) {
+    for (i = 0; i < 64; i++) {
       ld->chroma_non_intra_quantizer_matrix[scan[ZIG_ZAG][i]]
-      = ld->non_intra_quantizer_matrix[scan[ZIG_ZAG][i]]
-      = Get_Bits(8);
+        = ld->non_intra_quantizer_matrix[scan[ZIG_ZAG][i]]
+        = Get_Bits (8);
+      }
+    }
+
+  if ((ld->load_chroma_intra_quantizer_matrix = Get_Bits(1))) {
+    for (i = 0; i < 64; i++)
+      ld->chroma_intra_quantizer_matrix[scan[ZIG_ZAG][i]] = Get_Bits(8);
+    }
+
+  if ((ld->load_chroma_non_intra_quantizer_matrix = Get_Bits(1))) {
+    for (i = 0; i < 64; i++)
+      ld->chroma_non_intra_quantizer_matrix[scan[ZIG_ZAG][i]] = Get_Bits(8);
+    }
+
+  if (Verbose_Flag>NO_LAYER) {
+    printf ("quant matrix extension (byte %d)\n",(pos>>3)-4);
+    printf ("  load_intra_quantizer_matrix=%d\n",
+      ld->load_intra_quantizer_matrix);
+    printf ("  load_non_intra_quantizer_matrix=%d\n",
+      ld->load_non_intra_quantizer_matrix);
+    printf ("  load_chroma_intra_quantizer_matrix=%d\n",
+      ld->load_chroma_intra_quantizer_matrix);
+    printf ("  load_chroma_non_intra_quantizer_matrix=%d\n",
+      ld->load_chroma_non_intra_quantizer_matrix);
     }
   }
-
-  if((ld->load_chroma_intra_quantizer_matrix = Get_Bits(1)))
-  {
-    for (i=0; i<64; i++)
-      ld->chroma_intra_quantizer_matrix[scan[ZIG_ZAG][i]] = Get_Bits(8);
-  }
-
-  if((ld->load_chroma_non_intra_quantizer_matrix = Get_Bits(1)))
-  {
-    for (i=0; i<64; i++)
-      ld->chroma_non_intra_quantizer_matrix[scan[ZIG_ZAG][i]] = Get_Bits(8);
-  }
-
-  if (Verbose_Flag>NO_LAYER)
-  {
-    printf("quant matrix extension (byte %d)\n",(pos>>3)-4);
-    printf("  load_intra_quantizer_matrix=%d\n",
-      ld->load_intra_quantizer_matrix);
-    printf("  load_non_intra_quantizer_matrix=%d\n",
-      ld->load_non_intra_quantizer_matrix);
-    printf("  load_chroma_intra_quantizer_matrix=%d\n",
-      ld->load_chroma_intra_quantizer_matrix);
-    printf("  load_chroma_non_intra_quantizer_matrix=%d\n",
-      ld->load_chroma_non_intra_quantizer_matrix);
-  }
-}
 //}}}
 //{{{
+static void sequence_scalable_extension() {
 /* decode sequence scalable extension */
 /* ISO/IEC 13818-2   section 6.2.2.5 */
-static void sequence_scalable_extension()
-{
-  int pos;
-  pos = ld->Bitcnt;
+
+  int pos = ld->Bitcnt;
 
   /* values (without the +1 offset) of scalable_mode are defined in
      Table 6-10 of ISO/IEC 13818-2 */
@@ -229,124 +205,95 @@ static void sequence_scalable_extension()
 
   layerId = Get_Bits(4);
 
-  if (ld->scalable_mode==SC_SPAT)
-  {
+  if (ld->scalable_mode==SC_SPAT) {
     lower_layer_prediction_horizontal_size = Get_Bits(14);
     marker_bit("sequence_scalable_extension()");
     lower_layer_prediction_vertical_size   = Get_Bits(14);
-    horizontal_subsampling_factor_m        = Get_Bits(5);
-    horizontal_subsampling_factor_n        = Get_Bits(5);
-    vertical_subsampling_factor_m          = Get_Bits(5);
-    vertical_subsampling_factor_n          = Get_Bits(5);
-  }
+    horizontal_subsampling_factor_m = Get_Bits(5);
+    horizontal_subsampling_factor_n = Get_Bits(5);
+    vertical_subsampling_factor_m = Get_Bits(5);
+    vertical_subsampling_factor_n = Get_Bits(5);
+    }
 
-  if (ld->scalable_mode==SC_TEMP)
-    Error("temporal scalability not implemented\n");
+  if (ld->scalable_mode == SC_TEMP)
+    Error ("temporal scalability not implemented\n");
 
-  if (Verbose_Flag>NO_LAYER)
-  {
-    printf("sequence scalable extension (byte %d)\n",(pos>>3)-4);
-    if (Verbose_Flag>SEQUENCE_LAYER)
-    {
-      printf("  scalable_mode=%d\n",ld->scalable_mode-1);
-      printf("  layerId=%d\n",layerId);
-      if (ld->scalable_mode==SC_SPAT)
-      {
-        printf("    lower_layer_prediction_horiontal_size=%d\n",
-          lower_layer_prediction_horizontal_size);
-        printf("    lower_layer_prediction_vertical_size=%d\n",
-          lower_layer_prediction_vertical_size);
-        printf("    horizontal_subsampling_factor_m=%d\n",
-          horizontal_subsampling_factor_m);
-        printf("    horizontal_subsampling_factor_n=%d\n",
-          horizontal_subsampling_factor_n);
-        printf("    vertical_subsampling_factor_m=%d\n",
-          vertical_subsampling_factor_m);
-        printf("    vertical_subsampling_factor_n=%d\n",
-          vertical_subsampling_factor_n);
+  if (Verbose_Flag>NO_LAYER) {
+    printf ("sequence scalable extension (byte %d)\n",(pos>>3)-4);
+    if (Verbose_Flag>SEQUENCE_LAYER) { 
+      printf ("  scalable_mode=%d\n",ld->scalable_mode-1);
+      printf ("  layerId=%d\n",layerId);
+      if (ld->scalable_mode == SC_SPAT) {
+        printf ("    lower_layer_prediction_horiontal_size=%d\n", lower_layer_prediction_horizontal_size);
+        printf ("    lower_layer_prediction_vertical_size=%d\n", lower_layer_prediction_vertical_size);
+        printf ("    horizontal_subsampling_factor_m=%d\n", horizontal_subsampling_factor_m);
+        printf ("    horizontal_subsampling_factor_n=%d\n", horizontal_subsampling_factor_n);
+        printf ("    vertical_subsampling_factor_m=%d\n", vertical_subsampling_factor_m);
+        printf ("    vertical_subsampling_factor_n=%d\n", vertical_subsampling_factor_n); }
       }
     }
   }
-}
 //}}}
 //{{{
+static void picture_display_extension() {
 /* decode picture display extension */
 /* ISO/IEC 13818-2 section 6.2.3.3. */
-static void picture_display_extension()
-{
+
   int i;
   int number_of_frame_center_offsets;
-  int pos;
-
-  pos = ld->Bitcnt;
+  int pos = ld->Bitcnt;
   /* based on ISO/IEC 13818-2 section 6.3.12
     (November 1994) Picture display extensions */
 
   /* derive number_of_frame_center_offsets */
-  if(progressive_sequence)
-  {
-    if(repeat_first_field)
-    {
-      if(top_field_first)
-        number_of_frame_center_offsets = 3;
+  if(progressive_sequence) {
+    if(repeat_first_field) {
+      if(top_field_first) number_of_frame_center_offsets = 3;
       else
         number_of_frame_center_offsets = 2;
-    }
+      }
     else
-    {
       number_of_frame_center_offsets = 1;
     }
-  }
-  else
-  {
+  else {
     if(picture_structure!=FRAME_PICTURE)
-    {
       number_of_frame_center_offsets = 1;
-    }
-    else
-    {
+    else {
       if(repeat_first_field)
         number_of_frame_center_offsets = 3;
       else
         number_of_frame_center_offsets = 2;
+      }
     }
-  }
-
 
   /* now parse */
-  for (i=0; i<number_of_frame_center_offsets; i++)
-  {
+  for (i=0; i<number_of_frame_center_offsets; i++) {
     frame_center_horizontal_offset[i] = Get_Bits(16);
     marker_bit("picture_display_extension, first marker bit");
 
     frame_center_vertical_offset[i]   = Get_Bits(16);
     marker_bit("picture_display_extension, second marker bit");
-  }
+    }
 
-  if (Verbose_Flag>NO_LAYER)
-  {
+  if (Verbose_Flag>NO_LAYER) {
     printf("picture display extension (byte %d)\n",(pos>>3)-4);
-    if (Verbose_Flag>SEQUENCE_LAYER)
-    {
+    if (Verbose_Flag>SEQUENCE_LAYER) {
 
-      for (i=0; i<number_of_frame_center_offsets; i++)
-      {
+      for (i=0; i<number_of_frame_center_offsets; i++) {
         printf("  frame_center_horizontal_offset[%d]=%d\n",i,
           frame_center_horizontal_offset[i]);
         printf("  frame_center_vertical_offset[%d]=%d\n",i,
           frame_center_vertical_offset[i]);
+        }
       }
-    }
+   }
   }
-}
 //}}}
 //{{{
+static void picture_coding_extension() {
 /* decode picture coding extension */
-static void picture_coding_extension()
-{
-  int pos;
 
-  pos = ld->Bitcnt;
+  int pos = ld->Bitcnt;
 
   f_code[0][0] = Get_Bits(4);
   f_code[0][1] = Get_Bits(4);
@@ -366,57 +313,51 @@ static void picture_coding_extension()
   progressive_frame          = Get_Bits(1);
   composite_display_flag     = Get_Bits(1);
 
-  if (composite_display_flag)
-  {
+  if (composite_display_flag) {
     v_axis            = Get_Bits(1);
     field_sequence    = Get_Bits(3);
     sub_carrier       = Get_Bits(1);
     burst_amplitude   = Get_Bits(7);
     sub_carrier_phase = Get_Bits(8);
-  }
-
-  if (Verbose_Flag>NO_LAYER)
-  {
-    printf("picture coding extension (byte %d)\n",(pos>>3)-4);
-    if (Verbose_Flag>SEQUENCE_LAYER)
-    {
-      printf("  forward horizontal f_code=%d\n", f_code[0][0]);
-      printf("  forward vertical f_code=%d\n", f_code[0][1]);
-      printf("  backward horizontal f_code=%d\n", f_code[1][0]);
-      printf("  backward_vertical f_code=%d\n", f_code[1][1]);
-      printf("  intra_dc_precision=%d\n",intra_dc_precision);
-      printf("  picture_structure=%d\n",picture_structure);
-      printf("  top_field_first=%d\n",top_field_first);
-      printf("  frame_pred_frame_dct=%d\n",frame_pred_frame_dct);
-      printf("  concealment_motion_vectors=%d\n",concealment_motion_vectors);
-      printf("  q_scale_type=%d\n",ld->q_scale_type);
-      printf("  intra_vlc_format=%d\n",intra_vlc_format);
-      printf("  alternate_scan=%d\n",ld->alternate_scan);
-      printf("  repeat_first_field=%d\n",repeat_first_field);
-      printf("  chroma_420_type=%d\n",chroma_420_type);
-      printf("  progressive_frame=%d\n",progressive_frame);
-      printf("  composite_display_flag=%d\n",composite_display_flag);
-
-      if (composite_display_flag)
-      {
-        printf("    v_axis=%d\n",v_axis);
-        printf("    field_sequence=%d\n",field_sequence);
-        printf("    sub_carrier=%d\n",sub_carrier);
-        printf("    burst_amplitude=%d\n",burst_amplitude);
-        printf("    sub_carrier_phase=%d\n",sub_carrier_phase);
-      }
     }
+
+  if (Verbose_Flag>NO_LAYER) {
+    printf ("picture coding extension (byte %d)\n",(pos>>3)-4);
+    if (Verbose_Flag>SEQUENCE_LAYER) {
+      printf ("  forward horizontal f_code=%d\n", f_code[0][0]);
+      printf ("  forward vertical f_code=%d\n", f_code[0][1]);
+      printf ("  backward horizontal f_code=%d\n", f_code[1][0]);
+      printf ("  backward_vertical f_code=%d\n", f_code[1][1]);
+      printf ("  intra_dc_precision=%d\n",intra_dc_precision);
+      printf ("  picture_structure=%d\n",picture_structure);
+      printf ("  top_field_first=%d\n",top_field_first);
+      printf ("  frame_pred_frame_dct=%d\n",frame_pred_frame_dct);
+      printf("  concealment_motion_vectors=%d\n",concealment_motion_vectors);
+      printf ("  q_scale_type=%d\n",ld->q_scale_type);
+      printf ("  intra_vlc_format=%d\n",intra_vlc_format);
+      printf ("  alternate_scan=%d\n",ld->alternate_scan);
+      printf ("  repeat_first_field=%d\n",repeat_first_field);
+      printf ("  chroma_420_type=%d\n",chroma_420_type);
+      printf ("  progressive_frame=%d\n",progressive_frame);
+      printf ("  composite_display_flag=%d\n",composite_display_flag);
+
+      if (composite_display_flag) {
+        printf ("    v_axis=%d\n",v_axis);
+        printf ("    field_sequence=%d\n",field_sequence);
+        printf ("    sub_carrier=%d\n",sub_carrier);
+        printf ("    burst_amplitude=%d\n",burst_amplitude);
+        printf ("    sub_carrier_phase=%d\n",sub_carrier_phase);
+        }
+      }
+   }
   }
-}
 //}}}
 //{{{
+static void picture_spatial_scalable_extension() {
 /* decode picture spatial scalable extension */
 /* ISO/IEC 13818-2 section 6.2.3.5. */
-static void picture_spatial_scalable_extension()
-{
-  int pos;
 
-  pos = ld->Bitcnt;
+  int pos = ld->Bitcnt;
 
   ld->pict_scal = 1; /* use spatial scalability in this picture */
 
@@ -425,81 +366,71 @@ static void picture_spatial_scalable_extension()
   lower_layer_horizontal_offset = Get_Bits(15);
   if (lower_layer_horizontal_offset>=16384)
     lower_layer_horizontal_offset-= 32768;
+
   marker_bit("picture_spatial_scalable_extension(), second marker bit");
   lower_layer_vertical_offset = Get_Bits(15);
   if (lower_layer_vertical_offset>=16384)
     lower_layer_vertical_offset-= 32768;
+
   spatial_temporal_weight_code_table_index = Get_Bits(2);
   lower_layer_progressive_frame = Get_Bits(1);
   lower_layer_deinterlaced_field_select = Get_Bits(1);
 
-  if (Verbose_Flag>NO_LAYER)
-  {
-    printf("picture spatial scalable extension (byte %d)\n",(pos>>3)-4);
-    if (Verbose_Flag>SEQUENCE_LAYER)
-    {
-      printf("  lower_layer_temporal_reference=%d\n",lower_layer_temporal_reference);
-      printf("  lower_layer_horizontal_offset=%d\n",lower_layer_horizontal_offset);
-      printf("  lower_layer_vertical_offset=%d\n",lower_layer_vertical_offset);
-      printf("  spatial_temporal_weight_code_table_index=%d\n",
-        spatial_temporal_weight_code_table_index);
-      printf("  lower_layer_progressive_frame=%d\n",lower_layer_progressive_frame);
-      printf("  lower_layer_deinterlaced_field_select=%d\n",lower_layer_deinterlaced_field_select);
+  if (Verbose_Flag>NO_LAYER) {
+    printf ("picture spatial scalable extension (byte %d)\n",(pos>>3)-4);
+    if (Verbose_Flag>SEQUENCE_LAYER) {
+      printf ("  lower_layer_temporal_reference=%d\n",lower_layer_temporal_reference);
+      printf ("  lower_layer_horizontal_offset=%d\n",lower_layer_horizontal_offset);
+      printf ("  lower_layer_vertical_offset=%d\n",lower_layer_vertical_offset);
+      printf ("  spatial_temporal_weight_code_table_index=%d\n", spatial_temporal_weight_code_table_index);
+      printf ("  lower_layer_progressive_frame=%d\n",lower_layer_progressive_frame);
+      printf ("  lower_layer_deinterlaced_field_select=%d\n",lower_layer_deinterlaced_field_select);
+      }
     }
   }
-}
 //}}}
 //{{{
+static void picture_temporal_scalable_extension() {
 /* decode picture temporal scalable extension
  *
  * not implemented
  */
 /* ISO/IEC 13818-2 section 6.2.3.4. */
-static void picture_temporal_scalable_extension()
-{
-  Error("temporal scalability not supported\n");
 
-}
+  Error("temporal scalability not supported\n");
+  }
 //}}}
 //{{{
+static int extra_bit_information() {
 /* decode extra bit information */
 /* ISO/IEC 13818-2 section 6.2.3.4. */
-static int extra_bit_information()
-{
-  int Byte_Count = 0;
 
-  while (Get_Bits1())
-  {
+  int Byte_Count = 0;
+  while (Get_Bits1()) {
     Flush_Buffer(8);
     Byte_Count++;
-  }
+    }
 
   return(Byte_Count);
-}
+  }
 //}}}
 
 //{{{
+static void user_data() {
 /* ISO/IEC 13818-2  sections 6.3.4.1 and 6.2.2.2.2 */
-static void user_data()
-{
+
   /* skip ahead to the next start code */
   next_start_code();
-}
+  }
 //}}}
 //{{{
+static void copyright_extension() {
 /* Copyright extension */
 /* ISO/IEC 13818-2 section 6.2.3.6. */
 /* (header added in November, 1994 to the IS document) */
 
-
-static void copyright_extension()
-{
-  int pos;
   int reserved_data;
-
-  pos = ld->Bitcnt;
-
-
+  int pos = ld->Bitcnt;
   copyright_flag =       Get_Bits(1);
   copyright_identifier = Get_Bits(8);
   original_or_copy =     Get_Bits(1);
@@ -514,45 +445,38 @@ static void copyright_extension()
   marker_bit("copyright_extension(), third marker bit");
   copyright_number_3 =   Get_Bits(22);
 
-  if(Verbose_Flag>NO_LAYER)
-  {
+  if(Verbose_Flag>NO_LAYER) {
     printf("copyright_extension (byte %d)\n",(pos>>3)-4);
-    if (Verbose_Flag>SEQUENCE_LAYER)
-    {
+    if (Verbose_Flag>SEQUENCE_LAYER) {
       printf("  copyright_flag =%d\n",copyright_flag);
-
       printf("  copyright_identifier=%d\n",copyright_identifier);
-
-      printf("  original_or_copy = %d (original=1, copy=0)\n",
-        original_or_copy);
-
+      printf("  original_or_copy = %d (original=1, copy=0)\n", original_or_copy);
       printf("  copyright_number_1=%d\n",copyright_number_1);
       printf("  copyright_number_2=%d\n",copyright_number_2);
       printf("  copyright_number_3=%d\n",copyright_number_3);
+      }
     }
   }
-}
 //}}}
 //{{{
+static void Update_Temporal_Reference_Tacking_Data() {
 /* introduced in September 1995 to assist Spatial Scalability */
-static void Update_Temporal_Reference_Tacking_Data()
-{
+
   static int temporal_reference_wrap  = 0;
   static int temporal_reference_old   = 0;
 
-  if (ld == &base)      /* *CH* */
-  {
-    if (picture_coding_type!=B_TYPE && temporal_reference!=temporal_reference_old)
-    /* check first field of */
-    {
-       /* non-B-frame */
-      if (temporal_reference_wrap)
-      {/* wrap occured at previous I- or P-frame */
-       /* now all intervening B-frames which could
-          still have high temporal_reference values are done  */
+  if (ld == &base) {
+    /* *CH* */
+    if (picture_coding_type!=B_TYPE && temporal_reference!=temporal_reference_old) {
+      /* check first field of */
+      /* non-B-frame */
+      if (temporal_reference_wrap) {
+        /* wrap occured at previous I- or P-frame */
+        /* now all intervening B-frames which could
+           still have high temporal_reference values are done  */
         Temporal_Reference_Base += 1024;
-      temporal_reference_wrap = 0;
-      }
+        temporal_reference_wrap = 0;
+        }
 
       /* distinguish from a reset */
       if (temporal_reference<temporal_reference_old && !Temporal_Reference_GOP_Reset)
@@ -560,7 +484,7 @@ static void Update_Temporal_Reference_Tacking_Data()
 
       temporal_reference_old = temporal_reference;
       Temporal_Reference_GOP_Reset = 0;
-    }
+      }
 
     True_Framenum = Temporal_Reference_Base + temporal_reference;
 
@@ -570,23 +494,20 @@ static void Update_Temporal_Reference_Tacking_Data()
 
     True_Framenum_max = (True_Framenum > True_Framenum_max) ?
                         True_Framenum : True_Framenum_max;
+    }
   }
-}
 //}}}
 
 //{{{
+static void extension_and_user_data() {
 /* decode extension and user data */
 /* ISO/IEC 13818-2 section 6.2.2.2 */
-static void extension_and_user_data()
-{
-  int code,ext_ID;
 
+  int code,ext_ID;
   next_start_code();
 
-  while ((code = Show_Bits(32))==EXTENSION_START_CODE || code==USER_DATA_START_CODE)
-  {
-    if (code==EXTENSION_START_CODE)
-    {
+  while ((code = Show_Bits(32))==EXTENSION_START_CODE || code==USER_DATA_START_CODE) {
+    if (code==EXTENSION_START_CODE) {
       Flush_Buffer32();
       ext_ID = Get_Bits(4);
       switch (ext_ID)
@@ -623,26 +544,23 @@ static void extension_and_user_data()
         break;
       }
       next_start_code();
-    }
-    else
-    {
+      }
+    else {
       if (Verbose_Flag>NO_LAYER)
         printf("user data\n");
       Flush_Buffer32();
       user_data();
+      }
     }
   }
-}
 //}}}
 //{{{
+static void sequence_header() {
 /* decode sequence header */
 
-static void sequence_header()
-{
   int i;
-  int pos;
 
-  pos = ld->Bitcnt;
+  int pos = ld->Bitcnt;
   horizontal_size             = Get_Bits(12);
   vertical_size               = Get_Bits(12);
   aspect_ratio_information    = Get_Bits(4);
@@ -652,71 +570,62 @@ static void sequence_header()
   vbv_buffer_size             = Get_Bits(10);
   constrained_parameters_flag = Get_Bits(1);
 
-  if((ld->load_intra_quantizer_matrix = Get_Bits(1)))
-  {
-    for (i=0; i<64; i++)
+  if((ld->load_intra_quantizer_matrix = Get_Bits(1))) {
+    for (i = 0; i < 64; i++)
       ld->intra_quantizer_matrix[scan[ZIG_ZAG][i]] = Get_Bits(8);
-  }
-  else
-  {
-    for (i=0; i<64; i++)
+    }
+  else {
+    for (i = 0; i < 64; i++)
       ld->intra_quantizer_matrix[i] = default_intra_quantizer_matrix[i];
-  }
+    }
 
-  if((ld->load_non_intra_quantizer_matrix = Get_Bits(1)))
-  {
-    for (i=0; i<64; i++)
+  if((ld->load_non_intra_quantizer_matrix = Get_Bits(1))) {
+    for (i = 0; i < 64; i++)
       ld->non_intra_quantizer_matrix[scan[ZIG_ZAG][i]] = Get_Bits(8);
-  }
-  else
-  {
-    for (i=0; i<64; i++)
+    }
+  else {
+    for (i = 0; i < 64; i++)
       ld->non_intra_quantizer_matrix[i] = 16;
-  }
+    }
 
   /* copy luminance to chrominance matrices */
-  for (i=0; i<64; i++)
-  {
+  for (i = 0; i < 64; i++) {
     ld->chroma_intra_quantizer_matrix[i] =
       ld->intra_quantizer_matrix[i];
-
     ld->chroma_non_intra_quantizer_matrix[i] =
       ld->non_intra_quantizer_matrix[i];
-  }
-
-  if (Verbose_Flag > NO_LAYER)
-  {
-    printf("sequence header (byte %d)\n",(pos>>3)-4);
-    if (Verbose_Flag > SEQUENCE_LAYER)
-    {
-      printf("  horizontal_size=%d\n",horizontal_size);
-      printf("  vertical_size=%d\n",vertical_size);
-      printf("  aspect_ratio_information=%d\n",aspect_ratio_information);
-      printf("  frame_rate_code=%d",frame_rate_code);
-      printf("  bit_rate_value=%d\n",bit_rate_value);
-      printf("  vbv_buffer_size=%d\n",vbv_buffer_size);
-      printf("  constrained_parameters_flag=%d\n",constrained_parameters_flag);
-      printf("  load_intra_quantizer_matrix=%d\n",ld->load_intra_quantizer_matrix);
-      printf("  load_non_intra_quantizer_matrix=%d\n",ld->load_non_intra_quantizer_matrix);
     }
-  }
+
+  if (Verbose_Flag > NO_LAYER) {
+    printf ("sequence header (byte %d)\n",(pos>>3)-4);
+    if (Verbose_Flag > SEQUENCE_LAYER) {
+      printf ("  horizontal_size=%d\n",horizontal_size);
+      printf ("  vertical_size=%d\n",vertical_size);
+      printf ("  aspect_ratio_information=%d\n",aspect_ratio_information);
+      printf ("  frame_rate_code=%d",frame_rate_code);
+      printf ("  bit_rate_value=%d\n",bit_rate_value);
+      printf ("  vbv_buffer_size=%d\n",vbv_buffer_size);
+      printf ("  constrained_parameters_flag=%d\n",constrained_parameters_flag);
+      printf ("  load_intra_quantizer_matrix=%d\n",ld->load_intra_quantizer_matrix);
+      printf ("  load_non_intra_quantizer_matrix=%d\n",ld->load_non_intra_quantizer_matrix);
+      }
+    }
 
   extension_and_user_data();
-}
-
+  }
 //}}}
 //{{{
+static void group_of_pictures_header() {
 /* decode group of pictures header */
 /* ISO/IEC 13818-2 section 6.2.2.6 */
-static void group_of_pictures_header()
-{
+
   int pos;
 
-  if (ld == &base)
-  {
+  if (ld == &base) {
     Temporal_Reference_Base = True_Framenum_max + 1;  /* *CH* */
     Temporal_Reference_GOP_Reset = 1;
-  }
+    }
+
   pos = ld->Bitcnt;
   drop_flag   = Get_Bits(1);
   hour        = Get_Bits(5);
@@ -727,27 +636,24 @@ static void group_of_pictures_header()
   closed_gop  = Get_Bits(1);
   broken_link = Get_Bits(1);
 
-  if (Verbose_Flag > NO_LAYER)
-  {
+  if (Verbose_Flag > NO_LAYER) {
     printf("group of pictures (byte %d)\n",(pos>>3)-4);
-    if (Verbose_Flag > SEQUENCE_LAYER)
-    {
+    if (Verbose_Flag > SEQUENCE_LAYER) {
       printf("  drop_flag=%d\n",drop_flag);
       printf("  timecode %d:%02d:%02d:%02d\n",hour,minute,sec,frame);
       printf("  closed_gop=%d\n",closed_gop);
       printf("  broken_link=%d\n",broken_link);
+      }
     }
-  }
 
   extension_and_user_data();
-}
+  }
 //}}}
 //{{{
+static void picture_header() {
 /* decode picture header */
-
 /* ISO/IEC 13818-2 section 6.2.3 */
-static void picture_header()
-{
+
   int pos;
   int Extra_Information_Byte_Count;
 
@@ -759,54 +665,45 @@ static void picture_header()
   picture_coding_type = Get_Bits(3);
   vbv_delay           = Get_Bits(16);
 
-  if (picture_coding_type==P_TYPE || picture_coding_type==B_TYPE)
-  {
+  if (picture_coding_type==P_TYPE || picture_coding_type==B_TYPE) {
     full_pel_forward_vector = Get_Bits(1);
     forward_f_code = Get_Bits(3);
-  }
-  if (picture_coding_type==B_TYPE)
-  {
+    }
+  if (picture_coding_type==B_TYPE) {
     full_pel_backward_vector = Get_Bits(1);
     backward_f_code = Get_Bits(3);
-  }
+    }
 
-  if (Verbose_Flag>NO_LAYER)
-  {
-    printf("picture header (byte %d)\n",(pos>>3)-4);
-    if (Verbose_Flag>SEQUENCE_LAYER)
-    {
-      printf("  temporal_reference=%d\n",temporal_reference);
-      printf("  picture_coding_type=%d\n",picture_coding_type);
-      printf("  vbv_delay=%d\n",vbv_delay);
-      if (picture_coding_type==P_TYPE || picture_coding_type==B_TYPE)
-      {
-        printf("  full_pel_forward_vector=%d\n",full_pel_forward_vector);
-        printf("  forward_f_code =%d\n",forward_f_code);
-      }
-      if (picture_coding_type==B_TYPE)
-      {
-        printf("  full_pel_backward_vector=%d\n",full_pel_backward_vector);
-        printf("  backward_f_code =%d\n",backward_f_code);
+  if (Verbose_Flag>NO_LAYER) {
+    printf ("picture header (byte %d)\n",(pos>>3)-4);
+    if (Verbose_Flag>SEQUENCE_LAYER) {
+      printf ("  temporal_reference=%d\n",temporal_reference);
+      printf ("  picture_coding_type=%d\n",picture_coding_type);
+      printf ("  vbv_delay=%d\n",vbv_delay);
+      if (picture_coding_type==P_TYPE || picture_coding_type==B_TYPE) {
+        printf ("  full_pel_forward_vector=%d\n",full_pel_forward_vector);
+        printf ("  forward_f_code =%d\n",forward_f_code);
+        }
+      if (picture_coding_type==B_TYPE) {
+        printf ("  full_pel_backward_vector=%d\n",full_pel_backward_vector);
+        printf ("  backward_f_code =%d\n",backward_f_code);
       }
     }
   }
 
-  Extra_Information_Byte_Count =
-    extra_bit_information();
-
+  Extra_Information_Byte_Count = extra_bit_information();
   extension_and_user_data();
 
   /* update tracking information used to assist spatial scalability */
   Update_Temporal_Reference_Tacking_Data();
-}
+  }
 //}}}
 
 //{{{
+int slice_header() {
 /* decode slice header */
-
 /* ISO/IEC 13818-2 section 6.2.4 */
-int slice_header()
-{
+
   int slice_vertical_position_extension;
   int quantizer_scale_code;
   int pos;
@@ -828,49 +725,38 @@ int slice_header()
 
   /* slice_id introduced in March 1995 as part of the video corridendum
      (after the IS was drafted in November 1994) */
-  if (Get_Bits(1))
-  {
+  if (Get_Bits(1)) {
     ld->intra_slice = Get_Bits(1);
-
     slice_picture_id_enable = Get_Bits(1);
-  slice_picture_id = Get_Bits(6);
-
+    slice_picture_id = Get_Bits(6);
     extra_information_slice = extra_bit_information();
-  }
+    }
   else
     ld->intra_slice = 0;
 
-  if (Verbose_Flag>PICTURE_LAYER)
-  {
+  if (Verbose_Flag>PICTURE_LAYER) {
     printf("slice header (byte %d)\n",(pos>>3)-4);
-    if (Verbose_Flag>SLICE_LAYER)
-    {
+    if (Verbose_Flag>SLICE_LAYER) {
       if (ld->MPEG2_Flag && vertical_size>2800)
         printf("  slice_vertical_position_extension=%d\n",slice_vertical_position_extension);
 
       if (ld->scalable_mode==SC_DP)
         printf("  priority_breakpoint=%d\n",ld->priority_breakpoint);
-
       printf("  quantizer_scale_code=%d\n",quantizer_scale_code);
-
       printf("  slice_picture_id_enable = %d\n", slice_picture_id_enable);
-
       if(slice_picture_id_enable)
         printf("  slice_picture_id = %d\n", slice_picture_id);
-
+      }
     }
-  }
 
   return slice_vertical_position_extension;
-}
+  }
 //}}}
 //{{{
-/*
- * decode headers from one input stream
- * until an End of Sequence or picture start code
- * is found
- */
 int Get_Hdr() {
+// decode headers from one input stream
+// until an End of Sequence or picture start code
+// is found
 
   unsigned int code;
 
@@ -911,4 +797,4 @@ void next_start_code() {
     Flush_Buffer(8);
   }
 //}}}
-void marker_bit (char *text) { int marker = Get_Bits(1); }
+ void marker_bit (char *text) { int marker = Get_Bits(1); }

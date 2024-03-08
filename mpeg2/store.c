@@ -7,7 +7,6 @@
 #include "global.h"
 //}}}
 
-//{{{
 void Write_Frame (unsigned char *src[], int frame) {
 
   if (progressive_sequence || progressive_frame || Frame_Store_Flag) {
@@ -24,4 +23,3 @@ void Write_Frame (unsigned char *src[], int frame) {
     //store_one(outname,src, Coded_Picture_Width,Coded_Picture_Width<<1,vertical_size>>1);
     }
   }
-//}}}
