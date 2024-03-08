@@ -1,78 +1,76 @@
 #include "mpeg2dec.h"
-
 //{{{  readpic.c
-void Substitute_Frame_Buffer _ANSI_ARGS_ ((int bitstream_framenum,
-  int sequence_framenum));
+void Substitute_Frame_Buffer (int bitstream_framenum, int sequence_framenum);
 //}}}
-//{{{  Get_Bits.c
-void Initialize_Buffer _ANSI_ARGS_((void));
-void Fill_Buffer _ANSI_ARGS_((void));
-unsigned int Show_Bits _ANSI_ARGS_((int n));
-unsigned int Get_Bits1 _ANSI_ARGS_((void));
-void Flush_Buffer _ANSI_ARGS_((int n));
-unsigned int Get_Bits _ANSI_ARGS_((int n));
-int Get_Byte _ANSI_ARGS_((void));
-int Get_Word _ANSI_ARGS_((void));
+//{{{  getbits.c
+void Initialize_Buffer();
+void Fill_Buffer();
+unsigned int Show_Bits (int n);
+unsigned int Get_Bits1();
+void Flush_Buffer (int n);
+unsigned int Get_Bits (int n);
+int Get_Byte();
+int Get_Word();
 //}}}
 //{{{  systems.c
-void Next_Packet _ANSI_ARGS_((void));
-int Get_Long _ANSI_ARGS_((void));
-void Flush_Buffer32 _ANSI_ARGS_((void));
-unsigned int Get_Bits32 _ANSI_ARGS_((void));
+void Next_Packet();
+int Get_Long();
+void Flush_Buffer32();
+unsigned int Get_Bits32();
 //}}}
 //{{{  getblk.c
-void Decode_MPEG1_Intra_Block _ANSI_ARGS_((int comp, int dc_dct_pred[]));
-void Decode_MPEG1_Non_Intra_Block _ANSI_ARGS_((int comp));
-void Decode_MPEG2_Intra_Block _ANSI_ARGS_((int comp, int dc_dct_pred[]));
-void Decode_MPEG2_Non_Intra_Block _ANSI_ARGS_((int comp));
+void Decode_MPEG1_Intra_Block (int comp, int dc_dct_pred[]);
+void Decode_MPEG1_Non_Intra_Block (int comp);
+void Decode_MPEG2_Intra_Block (int comp, int dc_dct_pred[]);
+void Decode_MPEG2_Non_Intra_Block (int comp);
 //}}}
 //{{{  gethdr.c
-int Get_Hdr _ANSI_ARGS_((void));
-void next_start_code _ANSI_ARGS_((void));
-int slice_header _ANSI_ARGS_((void));
-void marker_bit _ANSI_ARGS_((char *text));
+int Get_Hdr();
+void next_start_code (void);
+int slice_header();
+void marker_bit (char *text);
 //}}}
 //{{{  getpic.c
-void Decode_Picture _ANSI_ARGS_((int bitstream_framenum,
-  int sequence_framenum));
-void Output_Last_Frame_of_Sequence _ANSI_ARGS_((int framenum));
+void Decode_Picture (int bitstream_framenum, int sequence_framenum);
+void Output_Last_Frame_of_Sequence (int framenum);
 //}}}
 //{{{  getvlc.c
-int Get_macroblock_type _ANSI_ARGS_((void));
-int Get_motion_code _ANSI_ARGS_((void));
-int Get_dmvector _ANSI_ARGS_((void));
-int Get_coded_block_pattern _ANSI_ARGS_((void));
-int Get_macroblock_address_increment _ANSI_ARGS_((void));
-int Get_Luma_DC_dct_diff _ANSI_ARGS_((void));
-int Get_Chroma_DC_dct_diff _ANSI_ARGS_((void));
+int Get_macroblock_type();
+int Get_motion_code();
+int Get_dmvector();
+int Get_coded_block_pattern();
+int Get_macroblock_address_increment (void);
+int Get_Luma_DC_dct_diff();
+int Get_Chroma_DC_dct_diff();
 //}}}
 //{{{  idct.c
-void Fast_IDCT _ANSI_ARGS_((short *block));
-void Initialize_Fast_IDCT _ANSI_ARGS_((void));
+void Fast_IDCT (short *block);
+void Initialize_Fast_IDCT();
 //}}}
 //{{{  motion.c
-void motion_vectors _ANSI_ARGS_((int PMV[2][2][2], int dmvector[2],
-  int motion_vertical_field_select[2][2], int s, int motion_vector_count,
-  int mv_format, int h_r_size, int v_r_size, int dmv, int mvscale));
-void motion_vector _ANSI_ARGS_((int *PMV, int *dmvector,
-  int h_r_size, int v_r_size, int dmv, int mvscale, int full_pel_vector));
-void Dual_Prime_Arithmetic _ANSI_ARGS_((int DMV[][2], int *dmvector, int mvx, int mvy));
+void motion_vectors (int PMV[2][2][2], int dmvector[2],
+                     int motion_vertical_field_select[2][2], int s, int motion_vector_count,
+                     int mv_format, int h_r_size, int v_r_size, int dmv, int mvscale);
+void motion_vector (int *PMV, int *dmvector,
+                    int h_r_size, int v_r_size, int dmv, int mvscale, int full_pel_vector);
+
+void Dual_Prime_Arithmetic (int DMV[][2], int *dmvector, int mvx, int mvy);
 //}}}
 //{{{  mpeg2dec.c
-void Error _ANSI_ARGS_((char *text));
-void Warning _ANSI_ARGS_((char *text));
-void Print_Bits _ANSI_ARGS_((int code, int bits, int len));
+void Error (char *text);
+void Warning (char *text);
+void Print_Bits (int code, int bits, int len);
 //}}}
 //{{{  recon.c
-void form_predictions _ANSI_ARGS_((int bx, int by, int macroblock_type,
-  int motion_type, int PMV[2][2][2], int motion_vertical_field_select[2][2],
-  int dmvector[2], int stwtype));
+void form_predictions (int bx, int by, int macroblock_type,
+                       int motion_type, int PMV[2][2][2], int motion_vertical_field_select[2][2],
+                       int dmvector[2], int stwtype);
 //}}}
 //{{{  spatscal.c
-void Spatial_Prediction _ANSI_ARGS_((void));
+void Spatial_Prediction();
 //}}}
 //{{{  store.c
-void Write_Frame _ANSI_ARGS_((unsigned char *src[], int frame));
+void Write_Frame (unsigned char *src[], int frame);
 //}}}
 
 extern char Version[];
@@ -115,7 +113,6 @@ extern char *Output_Picture_Filename;
 extern char *Substitute_Picture_Filename;
 extern char *Main_Bitstream_Filename;
 extern char *Enhancement_Layer_Bitstream_Filename;
-
 //}}}
 //{{{  buffers for multiuse purposes
 extern char Error_Text[256];
@@ -136,7 +133,6 @@ extern unsigned char *llframe1[3];
 extern short *lltmp;
 extern char *Lower_Layer_Picture_Filename;
 //}}}
-
 //{{{  non-normative variables derived from normative elements
 extern int Coded_Picture_Width;
 extern int Coded_Picture_Height;
@@ -154,8 +150,6 @@ extern int mb_height;
 extern double bit_rate;
 extern double frame_rate;
 //}}}
-
-/* headers */
 //{{{  ISO/IEC 13818-2 section 6.2.2.1:  sequence_header()
 extern int aspect_ratio_information;
 extern int frame_rate_code;
@@ -257,11 +251,13 @@ extern struct layer_data {
   unsigned char Rdbfr[2048];
   unsigned char *Rdptr;
   unsigned char Inbfr[16];
+
   /* from mpeg2play */
   unsigned int Bfr;
   unsigned char *Rdmax;
   int Incnt;
   int Bitcnt;
+
   /* sequence header and quant_matrix_extension() */
   int intra_quantizer_matrix[64];
   int non_intra_quantizer_matrix[64];
@@ -274,19 +270,23 @@ extern struct layer_data {
   int load_chroma_non_intra_quantizer_matrix;
 
   int MPEG2_Flag;
+
   /* sequence scalable extension */
   int scalable_mode;
+
   /* picture coding extension */
   int q_scale_type;
   int alternate_scan;
+
   /* picture spatial scalable extension */
   int pict_scal;
+
   /* slice/macroblock */
   int priority_breakpoint;
   int quantizer_scale;
   int intra_slice;
   short block[12][64];
-} base, enhan, *ld;
+  } base, enhan, *ld;
 //}}}
 
 extern int Decode_Layer;
