@@ -51,7 +51,7 @@ static void addBlock (int comp, int bx, int by, int dct_type, int addflag) {
     if (chroma_format==CHROMA420)
       by >>= 1;
     if (picture_structure==FRAME_PICTURE) {
-      if (dct_type && (chroma_format!=CHROMA420)) {
+      if (dct_type && (chroma_format != CHROMA420)) {
         /* field DCT coding */
         rfp = current_frame[cc] + Chroma_Width*(by+((comp&2)>>1)) + bx + (comp&8);
         iincr = (Chroma_Width<<1) - 8;
@@ -302,7 +302,7 @@ static void macroblock_modes (int* pmacroblock_type, int* pstwtype, int* pstwcla
   }
 //}}}
 //{{{
-static int decode_macroblock (int* macroblock_type, int* stwtype, int* stwclass, 
+static int decode_macroblock (int* macroblock_type, int* stwtype, int* stwclass,
                               int* motion_type, int* dct_type,
                               int PMV[2][2][2], int dc_dct_pred[3],
                               int motion_vertical_field_select[2][2], int dmvector[2]) {
@@ -374,7 +374,7 @@ static int decode_macroblock (int* macroblock_type, int* stwtype, int* stwclass,
                      backward_f_code-1,backward_f_code-1,0,0,full_pel_backward_vector);
     }
 
-  if (Fault_Flag) 
+  if (Fault_Flag)
     return(0);  /* trigger: go to next slice */
 
   if ((*macroblock_type & MACROBLOCK_INTRA) && concealment_motion_vectors)
@@ -471,7 +471,7 @@ static int decode_macroblock (int* macroblock_type, int* stwtype, int* stwclass,
 
   /* successfully decoded macroblock */
   return(1);
-  } 
+  }
 //}}}
 
 //{{{
@@ -499,7 +499,7 @@ static void frame_reorder (int Bitstream_Framenum, int Sequence_Framenum) {
   }
 //}}}
 //{{{
-static void motion_compensation (int MBA, int macroblock_type, int motion_type, 
+static void motion_compensation (int MBA, int macroblock_type, int motion_type,
                                  int PMV[2][2][2], int motion_vertical_field_select[2][2],
                                  int dmvector[2], int stwtype, int dct_type) {
 /* ISO/IEC 13818-2 section 7.6 */
@@ -524,17 +524,6 @@ static void motion_compensation (int MBA, int macroblock_type, int motion_type,
   /* copy or add block data into picture */
   for (comp=0; comp<block_count; comp++) {
     /* SCALABILITY: SNR */
-    /* ISO/IEC 13818-2 section 7.8.3.4: Addition of coefficients from
-       the two a layers */
-    if (Two_Streams && enhan.scalable_mode==SC_SNR)
-      sumBlock (comp); /* add SNR enhancement layer data to base layer */
-
-    /* MPEG-2 saturation and mismatch control */
-    /* base layer could be MPEG-1 stream, enhancement MPEG-2 SNR */
-    /* ISO/IEC 13818-2 section 7.4.3 and 7.4.4: Saturation and Mismatch control */
-    if ((Two_Streams && enhan.scalable_mode==SC_SNR) || ld->MPEG2_Flag)
-      saturate (ld->block[comp]);
-
     Fast_IDCT (ld->block[comp]);
 
     /* ISO/IEC 13818-2 section 7.6.8: Adding prediction and coefficient data */
@@ -543,7 +532,7 @@ static void motion_compensation (int MBA, int macroblock_type, int motion_type,
   }
 //}}}
 //{{{
-static void skipped_macroblock (int dc_dct_pred[3], int PMV[2][2][2], 
+static void skipped_macroblock (int dc_dct_pred[3], int PMV[2][2][2],
                                 int* motion_type, int motion_vertical_field_select[2][2],
                                 int* stwtype, int* macroblock_type) {
 /* ISO/IEC 13818-2 section 7.6.6 */
@@ -682,25 +671,20 @@ static void decode_SNR_Macroblock (int* SNRMBA, int* SNRMBAinc, int MBA, int MBA
 /* ISO/IEC 13818-2 section 6.3.16 */
 static int slice (int framenum, int MBAmax) {
 
-  int MBA;
-  int MBAinc, macroblock_type, motion_type, dct_type;
+  int motion_type;
   int dc_dct_pred[3];
   int PMV[2][2][2], motion_vertical_field_select[2][2];
   int dmvector[2];
   int stwtype, stwclass;
-  int SNRMBA, SNRMBAinc;
   int ret;
 
-  MBA = 0; /* macroblock address */
-  MBAinc = 0;
+  int macroblock_type = 0;
+  int dct_type = 0;
+  int MBA = 0; /* macroblock address */
+  int MBAinc = 0;
 
   if ((ret = startSlice (MBAmax, &MBA, &MBAinc, dc_dct_pred, PMV))!=1)
     return (ret);
-
-  if (Two_Streams && enhan.scalable_mode==SC_SNR) {
-    SNRMBA = 0;
-    SNRMBAinc = 0;
-    }
 
   Fault_Flag = 0;
   for (;;) {
@@ -756,11 +740,6 @@ resync: /* if Fault_Flag: resynchronize to next next_start_code */
                           motion_vertical_field_select, &stwtype, &macroblock_type);
       }
 
-    /* SCALABILITY: SNR */
-    /* ISO/IEC 13818-2 section 7.8 */
-    /* NOTE: we currently ignore faults encountered in this routine */
-    if (Two_Streams && enhan.scalable_mode==SC_SNR)
-      decode_SNR_Macroblock (&SNRMBA, &SNRMBAinc, MBA, MBAmax, &dct_type);
 
     /* ISO/IEC 13818-2 section 7.6 */
     motion_compensation (MBA, macroblock_type, motion_type, PMV,
@@ -770,12 +749,6 @@ resync: /* if Fault_Flag: resynchronize to next next_start_code */
     /* advance to next macroblock */
     MBA++;
     MBAinc--;
-
-    /* SCALABILITY: SNR */
-    if (Two_Streams && enhan.scalable_mode==SC_SNR) {
-      SNRMBA++;
-      SNRMBAinc--;
-      }
 
     if (MBA>=MBAmax)
       return(-1); /* all macroblocks decoded */

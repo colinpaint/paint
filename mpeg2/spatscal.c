@@ -1,10 +1,13 @@
- //{{{  includes
- #define _CRT_SECURE_NO_WARNINGS
+//{{{  includes
+#define _CRT_SECURE_NO_WARNINGS
 
- #include <stdio.h>
- #include "config.h"
- #include "global.h"
- //}}}
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+#include "config.h"
+#include "global.h"
+//}}}
 
 //{{{
 static void Read_Lower_Layer_Component_Framewise (int comp, int lw, int lh) {
@@ -46,7 +49,7 @@ static void Read_Lower_Layer_Component_Fieldwise (int comp, int lw, int lh) {
 
 	sprintf (fname,Lower_Layer_Picture_Filename,True_Framenum,lower_layer_progressive_frame ? 'f':'a');
 	strcat (fname,ext[comp]);
-	if (Verbose_Flag>1)
+	if (Verbose_Flag > 1)
 		printf ("reading %s\n",fname);
 	fd = fopen(fname,"rb");
 	if (fd == NULL) exit(-1);
@@ -156,11 +159,11 @@ static void Subsample_Horizontal (short *s, unsigned char *d,
 	}
 //}}}
 //{{{
-static void Make_Spatial_Prediction_Frame (int progressive_frame, int llprogressive_frame, 
+static void Make_Spatial_Prediction_Frame (int progressive_frame, int llprogressive_frame,
 																					 unsigned char *fld0, unsigned char *fld1,
-																					 short *tmp, unsigned char *dst, 
+																					 short *tmp, unsigned char *dst,
 																					 int llx0, int lly0, int llw, int llh,
-																					 int horizontal_size, int vertical_size, 
+																					 int horizontal_size, int vertical_size,
 																					 int vm, int vn, int hm, int hn,
 																					 int aperture) {
 /* form spatial prediction */

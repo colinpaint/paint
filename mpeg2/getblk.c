@@ -31,11 +31,12 @@ void Decode_MPEG2_Intra_Block (int comp, int dc_dct_pred[]) {
   ld1 = (ld->scalable_mode==SC_DP) ? &base : ld;
   bp = ld1->block[comp];
 
-  if (base.scalable_mode==SC_DP)
+  if (base.scalable_mode==SC_DP) {
     if (base.priority_breakpoint<64)
       ld = &enhan;
     else
       ld = &base;
+    }
 
   cc = (comp<4) ? 0 : (comp&1)+1;
 
@@ -147,11 +148,12 @@ void Decode_MPEG2_Non_Intra_Block (int comp) {
   ld1 = (ld->scalable_mode==SC_DP) ? &base : ld;
   bp = ld1->block[comp];
 
-  if (base.scalable_mode==SC_DP)
+  if (base.scalable_mode==SC_DP) {
     if (base.priority_breakpoint<64)
       ld = &enhan;
     else
       ld = &base;
+    }
 
   qmat = (comp<4 || chroma_format==CHROMA420)
          ? ld1->non_intra_quantizer_matrix

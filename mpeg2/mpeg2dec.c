@@ -12,181 +12,89 @@
 //}}}
 
 //{{{
-static int Headers() {
-
-  int ret;
-  ld = &base;
-  /* return when end of sequence (0) or picture
-     header has been parsed (1) */
-  ret = Get_Hdr();
-  if (Two_Streams) {
-    ld = &enhan;
-    if (Get_Hdr() != ret && !Quiet_Flag)
-      fprintf(stderr,"streams out of sync\n");
-    ld = &base;
-    }
-  return ret;
-  }
+char Version[] ="mpeg2decode V1.2a, 96/07/19"
+;
 //}}}
 //{{{
-static void Deinitialize_Sequence() {
-
-  /* clear flags */
-  base.MPEG2_Flag=0;
-  for (int i = 0; i < 3; i++) {
-    free (backward_reference_frame[i]);
-    free (forward_reference_frame[i]);
-    free (auxframe[i]);
-
-    if (base.scalable_mode == SC_SPAT) {
-      free (llframe0[i]);
-      free (llframe1[i]);
-      }
-    }
-
-  if (base.scalable_mode == SC_SPAT)
-    free (lltmp);
-  }
+char Author[] ="(C) 1996, MPEG Software Simulation Group"
+;
 //}}}
 //{{{
-/* mostly IMPLEMENTAION specific rouintes */
-static void Initialize_Sequence() {
-
-  int cc, size;
-  static int Table_6_20[3] = {6,8,12};
-
-  /* check scalability mode of enhancement layer */
-  if (Two_Streams && (enhan.scalable_mode!=SC_SNR) && (base.scalable_mode!=SC_DP))
-    Error("unsupported scalability mode\n");
-
-  /* force MPEG-1 parameters for proper decoder behavior */
-  /* see ISO/IEC 13818-2 section D.9.14 */
-  if (!base.MPEG2_Flag) {
-    progressive_sequence = 1;
-    progressive_frame = 1;
-    picture_structure = FRAME_PICTURE;
-    frame_pred_frame_dct = 1;
-    chroma_format = CHROMA420;
-    matrix_coefficients = 5;
-    }
-
-  /* round to nearest multiple of coded macroblocks */
-  /* ISO/IEC 13818-2 section 6.3.3 sequence_header() */
-  mb_width = (horizontal_size+15)/16;
-  mb_height = (base.MPEG2_Flag && !progressive_sequence) ? 2*((vertical_size+31)/32)
-                                        : (vertical_size+15)/16;
-  Coded_Picture_Width = 16*mb_width;
-  Coded_Picture_Height = 16*mb_height;
-
-  /* ISO/IEC 13818-2 sections 6.1.1.8, 6.1.1.9, and 6.1.1.10 */
-  Chroma_Width = (chroma_format==CHROMA444) ? Coded_Picture_Width : Coded_Picture_Width>>1;
-  Chroma_Height = (chroma_format!=CHROMA420) ? Coded_Picture_Height : Coded_Picture_Height>>1;
-
-  /* derived based on Table 6-20 in ISO/IEC 13818-2 section 6.3.17 */
-  block_count = Table_6_20[chroma_format-1];
-
-  for (cc=0; cc<3; cc++) {
-    if (cc==0)
-      size = Coded_Picture_Width*Coded_Picture_Height;
-    else
-      size = Chroma_Width*Chroma_Height;
-
-    if (!(backward_reference_frame[cc] = (unsigned char *)malloc(size)))
-      Error("backward_reference_frame[] malloc failed\n");
-
-    if (!(forward_reference_frame[cc] = (unsigned char *)malloc(size)))
-      Error("forward_reference_frame[] malloc failed\n");
-
-    if (!(auxframe[cc] = (unsigned char *)malloc(size)))
-      Error("auxframe[] malloc failed\n");
-
-    if (Ersatz_Flag)
-      if (!(substitute_frame[cc] = (unsigned char *)malloc(size)))
-        Error("substitute_frame[] malloc failed\n");
-
-    if (base.scalable_mode==SC_SPAT) {
-      /* this assumes lower layer is 4:2:0 */
-      if (!(llframe0[cc] = (unsigned char *)malloc((lower_layer_prediction_horizontal_size*lower_layer_prediction_vertical_size)/(cc?4:1))))
-        Error("llframe0 malloc failed\n");
-      if (!(llframe1[cc] = (unsigned char *)malloc((lower_layer_prediction_horizontal_size*lower_layer_prediction_vertical_size)/(cc?4:1))))
-        Error("llframe1 malloc failed\n");
-    }
+/* zig-zag and alternate scan patterns */
+unsigned char scan[2][64] =
+{
+  { /* Zig-Zag scan pattern  */
+    0,1,8,16,9,2,3,10,17,24,32,25,18,11,4,5,
+    12,19,26,33,40,48,41,34,27,20,13,6,7,14,21,28,
+    35,42,49,56,57,50,43,36,29,22,15,23,30,37,44,51,
+    58,59,52,45,38,31,39,46,53,60,61,54,47,55,62,63
+  },
+  { /* Alternate scan pattern */
+    0,8,16,24,1,9,2,10,17,25,32,40,48,56,57,49,
+    41,33,26,18,3,11,4,12,19,27,34,42,50,58,35,43,
+    51,59,20,28,5,13,6,14,21,29,36,44,52,60,37,45,
+    53,61,22,30,7,15,23,31,38,46,54,62,39,47,55,63
   }
-
-  /* SCALABILITY: Spatial */
-  if (base.scalable_mode==SC_SPAT)
-    if (!(lltmp = (short *)malloc(lower_layer_prediction_horizontal_size*((lower_layer_prediction_vertical_size*vertical_subsampling_factor_n)/vertical_subsampling_factor_m)*sizeof(short))))
-      Error("lltmp malloc failed\n");
-  }
+}
+;
 //}}}
 //{{{
-static int video_sequence (int* Bitstream_Framenumber) {
-
-  int Return_Value;
-
-  int Bitstream_Framenum = *Bitstream_Framenumber;
-  int Sequence_Framenum=0;
-
-  Initialize_Sequence();
-
-  /* decode picture whose header has already been parsed in Decode_Bitstream() */
-  Decode_Picture(Bitstream_Framenum, Sequence_Framenum);
-
-  /* update picture numbers */
-  if (!Second_Field) {
-    Bitstream_Framenum++;
-    Sequence_Framenum++;
-   }
-
-  /* loop through the rest of the pictures in the sequence */
-  while ((Return_Value = Headers())) {
-    Decode_Picture(Bitstream_Framenum, Sequence_Framenum);
-    if (!Second_Field) {
-      Bitstream_Framenum++;
-      Sequence_Framenum++;
-      }
-    }
-
-  /* put last frame */
-  if (Sequence_Framenum!=0)
-    Output_Last_Frame_of_Sequence(Bitstream_Framenum);
-
-  Deinitialize_Sequence();
-
-  *Bitstream_Framenumber = Bitstream_Framenum;
-
-  return(Return_Value);
-  }
+/* default intra quantization matrix */
+unsigned char default_intra_quantizer_matrix[64] =
+{
+  8, 16, 19, 22, 26, 27, 29, 34,
+  16, 16, 22, 24, 27, 29, 34, 37,
+  19, 22, 26, 27, 29, 34, 34, 38,
+  22, 22, 26, 27, 29, 34, 37, 40,
+  22, 26, 27, 29, 32, 35, 40, 48,
+  26, 27, 29, 32, 35, 40, 48, 58,
+  26, 27, 29, 34, 38, 46, 56, 69,
+  27, 29, 35, 38, 46, 56, 69, 83
+}
+;
 //}}}
 //{{{
-static int Decode_Bitstream() {
-
-  int ret;
-  int Bitstream_Framenum = 0;
-  for(;;) {
-    ret = Headers();
-    if (ret==1)
-      ret = video_sequence(&Bitstream_Framenum);
-    else
-      return(ret);
-    }
-  }
+/* non-linear quantization coefficient table */
+unsigned char Non_Linear_quantizer_scale[32] =
+{
+   0, 1, 2, 3, 4, 5, 6, 7,
+   8,10,12,14,16,18,20,22,
+  24,28,32,36,40,44,48,52,
+  56,64,72,80,88,96,104,112
+}
+;
 //}}}
 //{{{
-/* IMPLEMENTAION specific rouintes */
-static void Initialize_Decoder() {
+/* color space conversion coefficients
+ * for YCbCr -> RGB mapping
+ *
+ * entries are {crv,cbu,cgu,cgv}
+ *
+ * crv=(255/224)*65536*(1-cr)/0.5
+ * cbu=(255/224)*65536*(1-cb)/0.5
+ * cgu=(255/224)*65536*(cb/cg)*(1-cb)/0.5
+ * cgv=(255/224)*65536*(cr/cg)*(1-cr)/0.5
+ *
+ * where Y=cr*R+cg*G+cb*B (cr+cg+cb=1)
+ */
 
-  /* Clip table */
-  if (!(Clip = (unsigned char *)malloc(1024)))
-    Error ("Clip[] malloc failed\n");
+/* ISO/IEC 13818-2 section 6.3.6 sequence_display_extension() */
 
-  Clip += 384;
-  for (int i = -384; i < 640; i++)
-    Clip[i] = (i<0) ? 0 : ((i>255) ? 255 : i);
-
-  /* IDCT */
-  Initialize_Fast_IDCT();
-  }
+int Inverse_Table_6_9[8][4]
+#ifdef GLOBAL
+=
+{
+  {117504, 138453, 13954, 34903}, /* no sequence_display_extension */
+  {117504, 138453, 13954, 34903}, /* ITU-R Rec. 709 (1990) */
+  {104597, 132201, 25675, 53279}, /* unspecified */
+  {104597, 132201, 25675, 53279}, /* reserved */
+  {104448, 132798, 24759, 53109}, /* FCC */
+  {104597, 132201, 25675, 53279}, /* ITU-R Rec. 624-4 System B, G */
+  {104597, 132201, 25675, 53279}, /* SMPTE 170M */
+  {117579, 136230, 16907, 35559}  /* SMPTE 240M (1987) */
+}
+#endif
+;
 //}}}
 
 //{{{
@@ -205,7 +113,6 @@ static void Clear_Options() {
   Quiet_Flag = 0;
   Ersatz_Flag = 0;
   Substitute_Picture_Filename  = " ";
-  Two_Streams = 0;
   Enhancement_Layer_Bitstream_Filename = " ";
   Big_Picture_Flag = 0;
   Main_Bitstream_Flag = 0;
@@ -231,7 +138,6 @@ static void Print_Options() {
   printf("Quiet_Flag                           = %d\n", Quiet_Flag);
   printf("Ersatz_Flag                          = %d\n", Ersatz_Flag);
   printf("Substitute_Picture_Filename          = %s\n", Substitute_Picture_Filename);
-  printf("Two_Streams                          = %d\n", Two_Streams);
   printf("Enhancement_Layer_Bitstream_Filename = %s\n", Enhancement_Layer_Bitstream_Filename);
   printf("Big_Picture_Flag                     = %d\n", Big_Picture_Flag);
   printf("Main_Bitstream_Flag                  = %d\n", Main_Bitstream_Flag);
@@ -304,8 +210,6 @@ static void Process_Options (int argc, char *argv[]) {
           break;
 
 
-          Two_Streams = 1; /* either Data Partitioning (DP) or SNR Scalability enhancment */
-
           if(NextArg || LastArg) {
             printf("ERROR: -e must be followed by filename\n");
             exit(ERROR);
@@ -363,11 +267,11 @@ static void Process_Options (int argc, char *argv[]) {
         case 'X':
           Ersatz_Flag = 1;
           if (NextArg || LastArg) {
-           printf("ERROR: -x must be followed by filename\n");
-           exit(ERROR);
-           }
-         else
-          Substitute_Picture_Filename = argv[++i];
+            printf("ERROR: -x must be followed by filename\n");
+            exit(ERROR);
+            }
+           else
+            Substitute_Picture_Filename = argv[++i];
           break;
         //}}}
         //{{{
@@ -400,14 +304,181 @@ static void Process_Options (int argc, char *argv[]) {
   //}}}
 
 //{{{
+static void Initialize_Decoder() {
+
+  /* Clip table */
+  if (!(Clip = (unsigned char *)malloc(1024)))
+    Error ("Clip[] malloc failed\n");
+
+  Clip += 384;
+  for (int i = -384; i < 640; i++)
+    Clip[i] = (i<0) ? 0 : ((i>255) ? 255 : i);
+
+  /* IDCT */
+  Initialize_Fast_IDCT();
+  }
+//}}}
+//{{{
+static int Headers() {
+
+  int ret;
+  ld = &base;
+  /* return when end of sequence (0) or picture
+     header has been parsed (1) */
+  ret = Get_Hdr();
+  return ret;
+  }
+//}}}
+//{{{
+static void Initialize_Sequence() {
+
+  int cc, size;
+  static int Table_6_20[3] = {6,8,12};
+
+  /* force MPEG-1 parameters for proper decoder behavior */
+  /* see ISO/IEC 13818-2 section D.9.14 */
+  if (!base.MPEG2_Flag) {
+    progressive_sequence = 1;
+    progressive_frame = 1;
+    picture_structure = FRAME_PICTURE;
+    frame_pred_frame_dct = 1;
+    chroma_format = CHROMA420;
+    matrix_coefficients = 5;
+    }
+
+  /* round to nearest multiple of coded macroblocks */
+  /* ISO/IEC 13818-2 section 6.3.3 sequence_header() */
+  mb_width = (horizontal_size+15)/16;
+  mb_height = (base.MPEG2_Flag && !progressive_sequence) ? 2*((vertical_size+31)/32)
+                                        : (vertical_size+15)/16;
+  Coded_Picture_Width = 16*mb_width;
+  Coded_Picture_Height = 16*mb_height;
+
+  /* ISO/IEC 13818-2 sections 6.1.1.8, 6.1.1.9, and 6.1.1.10 */
+  Chroma_Width = (chroma_format==CHROMA444) ? Coded_Picture_Width : Coded_Picture_Width>>1;
+  Chroma_Height = (chroma_format!=CHROMA420) ? Coded_Picture_Height : Coded_Picture_Height>>1;
+
+  /* derived based on Table 6-20 in ISO/IEC 13818-2 section 6.3.17 */
+  block_count = Table_6_20[chroma_format-1];
+
+  for (cc=0; cc<3; cc++) {
+    if (cc==0)
+      size = Coded_Picture_Width*Coded_Picture_Height;
+    else
+      size = Chroma_Width*Chroma_Height;
+
+    if (!(backward_reference_frame[cc] = (unsigned char *)malloc(size)))
+      Error("backward_reference_frame[] malloc failed\n");
+
+    if (!(forward_reference_frame[cc] = (unsigned char *)malloc(size)))
+      Error("forward_reference_frame[] malloc failed\n");
+
+    if (!(auxframe[cc] = (unsigned char *)malloc(size)))
+      Error("auxframe[] malloc failed\n");
+
+    if (Ersatz_Flag)
+      if (!(substitute_frame[cc] = (unsigned char *)malloc(size)))
+        Error("substitute_frame[] malloc failed\n");
+
+    if (base.scalable_mode==SC_SPAT) {
+      /* this assumes lower layer is 4:2:0 */
+      if (!(llframe0[cc] = (unsigned char *)malloc((lower_layer_prediction_horizontal_size*lower_layer_prediction_vertical_size)/(cc?4:1))))
+        Error("llframe0 malloc failed\n");
+      if (!(llframe1[cc] = (unsigned char *)malloc((lower_layer_prediction_horizontal_size*lower_layer_prediction_vertical_size)/(cc?4:1))))
+        Error("llframe1 malloc failed\n");
+    }
+  }
+
+  /* SCALABILITY: Spatial */
+  if (base.scalable_mode==SC_SPAT)
+    if (!(lltmp = (short *)malloc(lower_layer_prediction_horizontal_size*((lower_layer_prediction_vertical_size*vertical_subsampling_factor_n)/vertical_subsampling_factor_m)*sizeof(short))))
+      Error("lltmp malloc failed\n");
+  }
+//}}}
+//{{{
+static void Deinitialize_Sequence() {
+
+  /* clear flags */
+  base.MPEG2_Flag=0;
+  for (int i = 0; i < 3; i++) {
+    free (backward_reference_frame[i]);
+    free (forward_reference_frame[i]);
+    free (auxframe[i]);
+
+    if (base.scalable_mode == SC_SPAT) {
+      free (llframe0[i]);
+      free (llframe1[i]);
+      }
+    }
+
+  if (base.scalable_mode == SC_SPAT)
+    free (lltmp);
+  }
+//}}}
+//{{{
+static int video_sequence (int* Bitstream_Framenumber) {
+
+  int Return_Value;
+  int Bitstream_Framenum = *Bitstream_Framenumber;
+  int Sequence_Framenum = 0;
+
+  Initialize_Sequence();
+
+  /* decode picture whose header has already been parsed in Decode_Bitstream() */
+  Decode_Picture(Bitstream_Framenum, Sequence_Framenum);
+
+  /* update picture numbers */
+  if (!Second_Field) {
+    Bitstream_Framenum++;
+    Sequence_Framenum++;
+   }
+
+  /* loop through the rest of the pictures in the sequence */
+  while ((Return_Value = Headers())) {
+    Decode_Picture(Bitstream_Framenum, Sequence_Framenum);
+    if (!Second_Field) {
+      Bitstream_Framenum++;
+      Sequence_Framenum++;
+      }
+    }
+
+  /* put last frame */
+  if (Sequence_Framenum!=0)
+    Output_Last_Frame_of_Sequence (Bitstream_Framenum);
+
+  Deinitialize_Sequence();
+
+  *Bitstream_Framenumber = Bitstream_Framenum;
+
+  return(Return_Value);
+  }
+//}}}
+//{{{
+static int Decode_Bitstream() {
+
+  int ret;
+  int Bitstream_Framenum = 0;
+
+  for(;;) {
+    ret = Headers();
+    if (ret==1)
+      ret = video_sequence (&Bitstream_Framenum);
+    else
+      return (ret);
+    }
+  }
+//}}}
+
+//{{{
 void Error (char *text) {
 
   fprintf(stderr,text);
   exit(1);
   }
 
-/* Trace_Flag output */
-void Print_Bits(int code, int bits, int len) {
+//}}}
+//{{{
+void Print_Bits (int code, int bits, int len) {
 
   for (int i = 0; i < len; i++)
     printf ("%d", (code >> (bits-1-i))&1);
@@ -470,23 +541,9 @@ int main (int argc, char *argv[]) {
     lseek (base.Infile, 0l, 0);
 
   Initialize_Buffer();
-
-  if (Two_Streams) {
-    ld = &enhan; /* select enhancement layer context */
-    if ((enhan.Infile = open (Enhancement_Layer_Bitstream_Filename,O_RDONLY|O_BINARY))<0) {
-      sprintf(Error_Text,"enhancment layer bitstream file %s not found\n", Enhancement_Layer_Bitstream_Filename);
-      Error (Error_Text);
-      }
-
-    Initialize_Buffer();
-    ld = &base;
-  }
-
   Initialize_Decoder();
   ret = Decode_Bitstream();
   close (base.Infile);
-  if (Two_Streams)
-    close (enhan.Infile);
 
   return 0;
   }
