@@ -138,13 +138,13 @@ extern void set_read_comp_coeff_cavlc (sMacroblock* curMb);
 extern void setup_slice_methods (sSlice* curSlice);
 extern void setup_slice_methods_mbaff (sSlice* curSlice);
 
-extern void get_neighbors (sMacroblock* curMb, sPixelPos *block, int mb_x, int mb_y, int blockshape_x);
+extern void getNeighbours (sMacroblock* curMb, sPixelPos *block, int mb_x, int mb_y, int blockshape_x);
 
-extern void start_macroblock (sSlice* curSlice, sMacroblock** curMb);
-extern int  decode_one_macroblock (sMacroblock* curMb, sPicture* picture);
-extern Boolean  exit_macroblock (sSlice* curSlice, int eos_bit);
+extern void startMacroblock (sSlice* curSlice, sMacroblock** curMb);
+extern int decodeOneMacroblock (sMacroblock* curMb, sPicture* picture);
+extern Boolean exitMacroblock (sSlice* curSlice, int eos_bit);
 
-extern void update_qp (sMacroblock* curMb, int qp);
+extern void updateQp (sMacroblock* curMb, int qp);
 
-extern void check_dp_neighbors (sMacroblock* curMb);
-extern void read_delta_quant (sSyntaxElement* currSE, sDataPartition *dP, sMacroblock* curMb, const byte *partMap, int type);
+extern void checkDpNeighbours (sMacroblock* curMb);
+extern void readDeltaQuant (sSyntaxElement* currSE, sDataPartition *dP, sMacroblock* curMb, const byte *partMap, int type);

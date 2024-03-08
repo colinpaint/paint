@@ -656,7 +656,7 @@ typedef struct Slice {
   int  (*readSlice                )    (struct VidParam *, struct InputParam *);
   int  (*nal_startcode_follows    )    (struct Slice*, int );
   void (*read_motion_info_from_NAL)    (sMacroblock *curMb);
-  void (*read_one_macroblock      )    (sMacroblock *curMb);
+  void (*readOneMacroblock      )    (sMacroblock *curMb);
   void (*interpret_mb_mode        )    (sMacroblock *curMb);
   void (*init_lists               )    (struct Slice *curSlice);
   void (*intra_pred_chroma        )    (sMacroblock *curMb);

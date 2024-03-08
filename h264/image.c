@@ -807,9 +807,9 @@ static void decodeOneSlice (sSlice* slice) {
   // loop over macroblocks
   while (end_of_slice == FALSE) {
     sMacroblock* mb;
-    start_macroblock (slice, &mb);
-    slice->read_one_macroblock (mb);
-    decode_one_macroblock (mb, slice->picture);
+    startMacroblock (slice, &mb);
+    slice->readOneMacroblock (mb);
+    decodeOneMacroblock (mb, slice->picture);
 
     if (slice->mb_aff_frame_flag && mb->mb_field) {
       slice->num_ref_idx_active[LIST_0] >>= 1;
@@ -817,7 +817,7 @@ static void decodeOneSlice (sSlice* slice) {
       }
 
     ercWriteMBMODEandMV (mb);
-    end_of_slice = exit_macroblock (slice, (!slice->mb_aff_frame_flag|| slice->current_mb_nr%2));
+    end_of_slice = exitMacroblock (slice, (!slice->mb_aff_frame_flag|| slice->current_mb_nr%2));
     }
   }
 //}}}

@@ -1797,7 +1797,7 @@ void prepare_direct_params (sMacroblock* curMb, sPicture* picture, sMotionVector
 
   sPixelPos mb[4];
 
-  get_neighbors (curMb, mb, 0, 0, 16);
+  getNeighbours (curMb, mb, 0, 0, 16);
 
   if (!curSlice->mb_aff_frame_flag) {
     set_direct_references (&mb[0], &l0_refA, &l1_refA, mv_info);

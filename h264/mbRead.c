@@ -602,7 +602,7 @@ void skip_macroblock (sMacroblock* curMb) {
   sMotionVector *a_mv = NULL;
   sMotionVector *b_mv = NULL;
 
-  get_neighbors(curMb, mb, 0, 0, MB_BLOCK_SIZE);
+  getNeighbours(curMb, mb, 0, 0, MB_BLOCK_SIZE);
   if (curSlice->mb_aff_frame_flag == 0)
   {
     if (mb[0].available)
@@ -921,7 +921,7 @@ static void read_one_macroblock_i_slice_cavlc (sMacroblock* curMb)
 
   curMb->mb_field = ((mb_nr&0x01) == 0)? FALSE : curSlice->mbData[mb_nr-1].mb_field;
 
-  update_qp(curMb, curSlice->qp);
+  updateQp(curMb, curSlice->qp);
   currSE.type = SE_MBTYPE;
 
   //  read MB mode** ***************************************************************
@@ -975,7 +975,7 @@ static void read_one_macroblock_i_slice_cabac (sMacroblock* curMb)
 
   curMb->mb_field = ((mb_nr&0x01) == 0)? FALSE : curSlice->mbData[mb_nr-1].mb_field;
 
-  update_qp(curMb, curSlice->qp);
+  updateQp(curMb, curSlice->qp);
   currSE.type = SE_MBTYPE;
 
   //  read MB mode** ***************************************************************
@@ -1080,7 +1080,7 @@ static void read_one_macroblock_p_slice_cavlc (sMacroblock* curMb)
 
     curMb->mb_field = FALSE;
 
-    update_qp(curMb, curSlice->qp);
+    updateQp(curMb, curSlice->qp);
     currSE.type = SE_MBTYPE;
 
     //  read MB mode** ***************************************************************
@@ -1137,7 +1137,7 @@ static void read_one_macroblock_p_slice_cavlc (sMacroblock* curMb)
 
     curMb->mb_field = ((mb_nr&0x01) == 0)? FALSE : vidParam->mbData[mb_nr-1].mb_field;
 
-    update_qp(curMb, curSlice->qp);
+    updateQp(curMb, curSlice->qp);
     currSE.type = SE_MBTYPE;
 
     //  read MB mode** ***************************************************************
@@ -1275,7 +1275,7 @@ static void read_one_macroblock_p_slice_cabac (sMacroblock* curMb)
 
     curMb->mb_field = FALSE;
 
-    update_qp(curMb, curSlice->qp);
+    updateQp(curMb, curSlice->qp);
     currSE.type = SE_MBTYPE;
 
     //  read MB mode** ***************************************************************
@@ -1325,7 +1325,7 @@ static void read_one_macroblock_p_slice_cabac (sMacroblock* curMb)
 
     curMb->mb_field = ((mb_nr&0x01) == 0)? FALSE : vidParam->mbData[mb_nr-1].mb_field;
 
-    update_qp(curMb, curSlice->qp);
+    updateQp(curMb, curSlice->qp);
     currSE.type = SE_MBTYPE;
 
     //  read MB mode** ***************************************************************
@@ -1438,7 +1438,7 @@ static void read_one_macroblock_b_slice_cavlc (sMacroblock* curMb) {
     sPicMotionParamsOld *motion = &picture->motion;
 
     curMb->mb_field = FALSE;
-    update_qp(curMb, curSlice->qp);
+    updateQp(curMb, curSlice->qp);
     currSE.type = SE_MBTYPE;
 
     //  read MB mode** ***************************************************************
@@ -1487,7 +1487,7 @@ static void read_one_macroblock_b_slice_cavlc (sMacroblock* curMb) {
 
     curMb->mb_field = ((mb_nr&0x01) == 0)? FALSE : vidParam->mbData[mb_nr-1].mb_field;
 
-    update_qp(curMb, curSlice->qp);
+    updateQp(curMb, curSlice->qp);
     currSE.type = SE_MBTYPE;
 
     //  read MB mode** ***************************************************************
@@ -1608,7 +1608,7 @@ static void read_one_macroblock_b_slice_cabac (sMacroblock* curMb)
 
     curMb->mb_field = FALSE;
 
-    update_qp(curMb, curSlice->qp);
+    updateQp(curMb, curSlice->qp);
     currSE.type = SE_MBTYPE;
 
     //  read MB mode** ***************************************************************
@@ -1665,7 +1665,7 @@ static void read_one_macroblock_b_slice_cabac (sMacroblock* curMb)
 
     curMb->mb_field = ((mb_nr&0x01) == 0)? FALSE : vidParam->mbData[mb_nr-1].mb_field;
 
-    update_qp(curMb, curSlice->qp);
+    updateQp(curMb, curSlice->qp);
     currSE.type = SE_MBTYPE;
 
     //  read MB mode** ***************************************************************
@@ -1814,14 +1814,14 @@ void setup_read_macroblock (sSlice* curSlice) {
     switch (curSlice->sliceType) {
       case P_SLICE:
       case SP_SLICE:
-        curSlice->read_one_macroblock = read_one_macroblock_p_slice_cabac;
+        curSlice->readOneMacroblock = read_one_macroblock_p_slice_cabac;
         break;
       case B_SLICE:
-        curSlice->read_one_macroblock = read_one_macroblock_b_slice_cabac;
+        curSlice->readOneMacroblock = read_one_macroblock_b_slice_cabac;
         break;
       case I_SLICE:
       case SI_SLICE:
-        curSlice->read_one_macroblock = read_one_macroblock_i_slice_cabac;
+        curSlice->readOneMacroblock = read_one_macroblock_i_slice_cabac;
         break;
       default:
         printf("Unsupported slice type\n");
@@ -1833,14 +1833,14 @@ void setup_read_macroblock (sSlice* curSlice) {
     switch (curSlice->sliceType) {
       case P_SLICE:
       case SP_SLICE:
-        curSlice->read_one_macroblock = read_one_macroblock_p_slice_cavlc;
+        curSlice->readOneMacroblock = read_one_macroblock_p_slice_cavlc;
         break;
       case B_SLICE:
-        curSlice->read_one_macroblock = read_one_macroblock_b_slice_cavlc;
+        curSlice->readOneMacroblock = read_one_macroblock_b_slice_cavlc;
         break;
       case I_SLICE:
       case SI_SLICE:
-        curSlice->read_one_macroblock = read_one_macroblock_i_slice_cavlc;
+        curSlice->readOneMacroblock = read_one_macroblock_i_slice_cavlc;
         break;
       default:
         printf("Unsupported slice type\n");

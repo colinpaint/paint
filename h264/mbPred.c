@@ -1259,7 +1259,7 @@ int mb_pred_ipcm (sMacroblock* curMb)
   }
 
   // for deblocking filter
-  update_qp(curMb, 0);
+  updateQp(curMb, 0);
 
   // for CAVLC: Set the nzCoeff to 16.
   // These parameters are to be used in CAVLC decoding of neighbour blocks

@@ -454,7 +454,7 @@ void set_chroma_qp (sMacroblock* curMb)
 }
 //}}}
 //{{{
-void update_qp (sMacroblock* curMb, int qp)
+void updateQp (sMacroblock* curMb, int qp)
 {
   sVidParam* vidParam = curMb->vidParam;
   curMb->qp = qp;
@@ -466,7 +466,7 @@ void update_qp (sMacroblock* curMb, int qp)
 }
 //}}}
 //{{{
-void read_delta_quant (sSyntaxElement* currSE, sDataPartition *dP, sMacroblock* curMb, const byte *partMap, int type)
+void readDeltaQuant (sSyntaxElement* currSE, sDataPartition *dP, sMacroblock* curMb, const byte *partMap, int type)
 {
   sSlice* curSlice = curMb->slice;
   sVidParam* vidParam = curMb->vidParam;
@@ -491,7 +491,7 @@ void read_delta_quant (sSyntaxElement* currSE, sDataPartition *dP, sMacroblock* 
   }
 
   curSlice->qp = ((curSlice->qp + curMb->delta_quant + 52 + 2*vidParam->bitdepth_luma_qp_scale)%(52+vidParam->bitdepth_luma_qp_scale)) - vidParam->bitdepth_luma_qp_scale;
-  update_qp(curMb, curSlice->qp);
+  updateQp(curMb, curSlice->qp);
 }
 //}}}
 
@@ -632,7 +632,7 @@ static void readMBMotionVectors (sSyntaxElement* currSE, sDataPartition *dP, sMa
       j4  = curMb->block_y;
       mvd = &curMb->mvd [list][0];
 
-      get_neighbors(curMb, block, 0, 0, step_h0 << 2);
+      getNeighbours(curMb, block, 0, 0, step_h0 << 2);
 
       // first get MV predictor
       curMb->GetMVPredictor (curMb, block, &pred_mv, mv_info[j4][i4].ref_idx[list], mv_info, list, 0, 0, step_h0 << 2, step_v0 << 2);
@@ -711,7 +711,7 @@ static void readMBMotionVectors (sSyntaxElement* currSE, sDataPartition *dP, sMa
               curMb->subblock_x = i << 2; // position used for context determination
               i4 = curMb->block_x + i;
 
-              get_neighbors(curMb, block, BLOCK_SIZE * i, BLOCK_SIZE * j, step_h4);
+              getNeighbours(curMb, block, BLOCK_SIZE * i, BLOCK_SIZE * j, step_h4);
 
               // first get MV predictor
               curMb->GetMVPredictor (curMb, block, &pred_mv, cur_ref_idx, mv_info, list, BLOCK_SIZE * i, BLOCK_SIZE * j, step_h4, step_v4);
@@ -787,7 +787,7 @@ static void setup_mb_pos_info (sMacroblock* curMb)
 //}}}
 
 //{{{
-void start_macroblock (sSlice* curSlice, sMacroblock** curMb)
+void startMacroblock (sSlice* curSlice, sMacroblock** curMb)
 {
   sVidParam* vidParam = curSlice->vidParam;
   int mb_nr = curSlice->current_mb_nr;
@@ -875,7 +875,7 @@ void start_macroblock (sSlice* curSlice, sMacroblock** curMb)
 }
 //}}}
 //{{{
-Boolean exit_macroblock (sSlice* curSlice, int eos_bit)
+Boolean exitMacroblock (sSlice* curSlice, int eos_bit)
 {
   sVidParam* vidParam = curSlice->vidParam;
 
@@ -884,7 +884,7 @@ Boolean exit_macroblock (sSlice* curSlice, int eos_bit)
   //! In an error prone environment, one can only be sure to have a new
   //! picture by checking the tr of the next slice header!
 
-// printf ("exit_macroblock: FmoGetLastMBOfPicture %d, vidParam->current_mb_nr %d\n", FmoGetLastMBOfPicture(), vidParam->current_mb_nr);
+// printf ("exitMacroblock: FmoGetLastMBOfPicture %d, vidParam->current_mb_nr %d\n", FmoGetLastMBOfPicture(), vidParam->current_mb_nr);
   ++(curSlice->numDecodedMb);
 
   if(curSlice->current_mb_nr == vidParam->picSizeInMbs - 1) //if (vidParam->numDecodedMb == vidParam->picSizeInMbs)
@@ -1310,7 +1310,7 @@ void setup_slice_methods (sSlice* curSlice) {
 //}}}
 
 //{{{
-void get_neighbors (sMacroblock* curMb,       // <--  current sMacroblock
+void getNeighbours (sMacroblock* curMb,       // <--  current sMacroblock
                    sPixelPos   *block,     // <--> neighbor blocks
                    int         mb_x,         // <--  block x position
                    int         mb_y,         // <--  block y position
@@ -1344,7 +1344,7 @@ void get_neighbors (sMacroblock* curMb,       // <--  current sMacroblock
   }
 //}}}
 //{{{
-void check_dp_neighbors (sMacroblock* curMb) {
+void checkDpNeighbours (sMacroblock* curMb) {
 
   sVidParam* vidParam = curMb->vidParam;
   sPixelPos up, left;
@@ -1439,7 +1439,7 @@ void make_frame_picture_JV (sVidParam* vidParam) {
 //}}}
 
 //{{{
-int decode_one_macroblock (sMacroblock* curMb, sPicture* picture)
+int decodeOneMacroblock (sMacroblock* curMb, sPicture* picture)
 {
   sSlice* curSlice = curMb->slice;
   sVidParam* vidParam = curMb->vidParam;

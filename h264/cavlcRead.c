@@ -944,7 +944,7 @@ static void read_CBP_and_coeffs_from_NAL_CAVLC_400 (sMacroblock* curMb)
     // Delta quant only if nonzero coeffs
     if (cbp !=0)
     {
-      read_delta_quant(&currSE, dP, curMb, partMap, ((curMb->is_intra_block == FALSE)) ? SE_DELTA_QUANT_INTER : SE_DELTA_QUANT_INTRA);
+      readDeltaQuant(&currSE, dP, curMb, partMap, ((curMb->is_intra_block == FALSE)) ? SE_DELTA_QUANT_INTER : SE_DELTA_QUANT_INTRA);
 
       if (curSlice->dp_mode)
       {
@@ -958,7 +958,7 @@ static void read_CBP_and_coeffs_from_NAL_CAVLC_400 (sMacroblock* curMb)
         }
 
         // check for prediction from neighbours
-        check_dp_neighbors (curMb);
+        checkDpNeighbours (curMb);
         if (curMb->dpl_flag)
         {
           cbp = 0;
@@ -971,7 +971,7 @@ static void read_CBP_and_coeffs_from_NAL_CAVLC_400 (sMacroblock* curMb)
   {
     cbp = curMb->cbp;
 
-    read_delta_quant(&currSE, dP, curMb, partMap, SE_DELTA_QUANT_INTRA);
+    readDeltaQuant(&currSE, dP, curMb, partMap, SE_DELTA_QUANT_INTRA);
 
     if (curSlice->dp_mode)
     {
@@ -980,7 +980,7 @@ static void read_CBP_and_coeffs_from_NAL_CAVLC_400 (sMacroblock* curMb)
         curMb->eiFlag  = 1;
         curMb->dpl_flag = 1;
       }
-      check_dp_neighbors (curMb);
+      checkDpNeighbours (curMb);
       if (curMb->dpl_flag)
       {
         curMb->cbp = cbp = 0;
@@ -1013,7 +1013,7 @@ static void read_CBP_and_coeffs_from_NAL_CAVLC_400 (sMacroblock* curMb)
     }
   }
 
-  update_qp(curMb, curSlice->qp);
+  updateQp(curMb, curSlice->qp);
 
   qp_per = vidParam->qpPerMatrix[ curMb->qp_scaled[PLANE_Y] ];
   qp_rem = vidParam->qpRemMatrix[ curMb->qp_scaled[PLANE_Y] ];
@@ -1120,7 +1120,7 @@ static void read_CBP_and_coeffs_from_NAL_CAVLC_422 (sMacroblock* curMb)
     // Delta quant only if nonzero coeffs
     if (cbp !=0)
     {
-      read_delta_quant(&currSE, dP, curMb, partMap, ((curMb->is_intra_block == FALSE)) ? SE_DELTA_QUANT_INTER : SE_DELTA_QUANT_INTRA);
+      readDeltaQuant(&currSE, dP, curMb, partMap, ((curMb->is_intra_block == FALSE)) ? SE_DELTA_QUANT_INTER : SE_DELTA_QUANT_INTRA);
 
       if (curSlice->dp_mode)
       {
@@ -1134,7 +1134,7 @@ static void read_CBP_and_coeffs_from_NAL_CAVLC_422 (sMacroblock* curMb)
         }
 
         // check for prediction from neighbours
-        check_dp_neighbors (curMb);
+        checkDpNeighbours (curMb);
         if (curMb->dpl_flag)
         {
           cbp = 0;
@@ -1147,7 +1147,7 @@ static void read_CBP_and_coeffs_from_NAL_CAVLC_422 (sMacroblock* curMb)
   {
     cbp = curMb->cbp;
 
-    read_delta_quant(&currSE, dP, curMb, partMap, SE_DELTA_QUANT_INTRA);
+    readDeltaQuant(&currSE, dP, curMb, partMap, SE_DELTA_QUANT_INTRA);
 
     if (curSlice->dp_mode)
     {
@@ -1156,7 +1156,7 @@ static void read_CBP_and_coeffs_from_NAL_CAVLC_422 (sMacroblock* curMb)
         curMb->eiFlag  = 1;
         curMb->dpl_flag = 1;
       }
-      check_dp_neighbors (curMb);
+      checkDpNeighbours (curMb);
       if (curMb->dpl_flag)
       {
         curMb->cbp = cbp = 0;
@@ -1189,7 +1189,7 @@ static void read_CBP_and_coeffs_from_NAL_CAVLC_422 (sMacroblock* curMb)
     }
   }
 
-  update_qp(curMb, curSlice->qp);
+  updateQp(curMb, curSlice->qp);
 
   qp_per = vidParam->qpPerMatrix[ curMb->qp_scaled[curSlice->colour_plane_id] ];
   qp_rem = vidParam->qpRemMatrix[ curMb->qp_scaled[curSlice->colour_plane_id] ];
@@ -1455,7 +1455,7 @@ static void read_CBP_and_coeffs_from_NAL_CAVLC_444 (sMacroblock* curMb)
     // Delta quant only if nonzero coeffs
     if (cbp !=0)
     {
-      read_delta_quant(&currSE, dP, curMb, partMap, ((curMb->is_intra_block == FALSE)) ? SE_DELTA_QUANT_INTER : SE_DELTA_QUANT_INTRA);
+      readDeltaQuant(&currSE, dP, curMb, partMap, ((curMb->is_intra_block == FALSE)) ? SE_DELTA_QUANT_INTER : SE_DELTA_QUANT_INTRA);
 
       if (curSlice->dp_mode)
       {
@@ -1469,7 +1469,7 @@ static void read_CBP_and_coeffs_from_NAL_CAVLC_444 (sMacroblock* curMb)
         }
 
         // check for prediction from neighbours
-        check_dp_neighbors (curMb);
+        checkDpNeighbours (curMb);
         if (curMb->dpl_flag)
         {
           cbp = 0;
@@ -1482,7 +1482,7 @@ static void read_CBP_and_coeffs_from_NAL_CAVLC_444 (sMacroblock* curMb)
   {
     cbp = curMb->cbp;
 
-    read_delta_quant(&currSE, dP, curMb, partMap, SE_DELTA_QUANT_INTRA);
+    readDeltaQuant(&currSE, dP, curMb, partMap, SE_DELTA_QUANT_INTRA);
 
     if (curSlice->dp_mode)
     {
@@ -1491,7 +1491,7 @@ static void read_CBP_and_coeffs_from_NAL_CAVLC_444 (sMacroblock* curMb)
         curMb->eiFlag  = 1;
         curMb->dpl_flag = 1;
       }
-      check_dp_neighbors (curMb);
+      checkDpNeighbours (curMb);
       if (curMb->dpl_flag)
       {
         curMb->cbp = cbp = 0;
@@ -1524,7 +1524,7 @@ static void read_CBP_and_coeffs_from_NAL_CAVLC_444 (sMacroblock* curMb)
     }
   }
 
-  update_qp(curMb, curSlice->qp);
+  updateQp(curMb, curSlice->qp);
 
   qp_per = vidParam->qpPerMatrix[ curMb->qp_scaled[curSlice->colour_plane_id] ];
   qp_rem = vidParam->qpRemMatrix[ curMb->qp_scaled[curSlice->colour_plane_id] ];
@@ -1587,7 +1587,7 @@ static void read_CBP_and_coeffs_from_NAL_CAVLC_444 (sMacroblock* curMb)
       }
     } //IS_I16MB
 
-    update_qp(curMb, curSlice->qp);
+    updateQp(curMb, curSlice->qp);
 
     //init constants for every chroma qp offset
     qp_per_uv[uv] = vidParam->qpPerMatrix[ curMb->qp_scaled[uv] ];
@@ -1687,7 +1687,7 @@ static void read_CBP_and_coeffs_from_NAL_CAVLC_420 (sMacroblock* curMb)
     // Delta quant only if nonzero coeffs
     if (cbp !=0)
     {
-      read_delta_quant(&currSE, dP, curMb, partMap, ((curMb->is_intra_block == FALSE)) ? SE_DELTA_QUANT_INTER : SE_DELTA_QUANT_INTRA);
+      readDeltaQuant(&currSE, dP, curMb, partMap, ((curMb->is_intra_block == FALSE)) ? SE_DELTA_QUANT_INTER : SE_DELTA_QUANT_INTRA);
 
       if (curSlice->dp_mode)
       {
@@ -1701,7 +1701,7 @@ static void read_CBP_and_coeffs_from_NAL_CAVLC_420 (sMacroblock* curMb)
         }
 
         // check for prediction from neighbours
-        check_dp_neighbors (curMb);
+        checkDpNeighbours (curMb);
         if (curMb->dpl_flag)
         {
           cbp = 0;
@@ -1713,7 +1713,7 @@ static void read_CBP_and_coeffs_from_NAL_CAVLC_420 (sMacroblock* curMb)
   else
   {
     cbp = curMb->cbp;
-    read_delta_quant(&currSE, dP, curMb, partMap, SE_DELTA_QUANT_INTRA);
+    readDeltaQuant(&currSE, dP, curMb, partMap, SE_DELTA_QUANT_INTRA);
 
     if (curSlice->dp_mode)
     {
@@ -1722,7 +1722,7 @@ static void read_CBP_and_coeffs_from_NAL_CAVLC_420 (sMacroblock* curMb)
         curMb->eiFlag  = 1;
         curMb->dpl_flag = 1;
       }
-      check_dp_neighbors (curMb);
+      checkDpNeighbours (curMb);
       if (curMb->dpl_flag)
       {
         curMb->cbp = cbp = 0;
@@ -1755,7 +1755,7 @@ static void read_CBP_and_coeffs_from_NAL_CAVLC_420 (sMacroblock* curMb)
     }
   }
 
-  update_qp(curMb, curSlice->qp);
+  updateQp(curMb, curSlice->qp);
 
   qp_per = vidParam->qpPerMatrix[ curMb->qp_scaled[curSlice->colour_plane_id] ];
   qp_rem = vidParam->qpRemMatrix[ curMb->qp_scaled[curSlice->colour_plane_id] ];
