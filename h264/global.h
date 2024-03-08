@@ -127,7 +127,7 @@ typedef struct {
 
   unsigned int num_ref_frames_in_pic_order_cnt_cycle;          // ue(v)
   int      offset_for_ref_frame[MAX_NUM_REF_FRAMES_PIC_ORDER]; // se(v)
-  unsigned int num_ref_frames;                    // ue(v)
+  unsigned int numRefFrames;                    // ue(v)
 
   Boolean  gaps_in_frame_num_value_allowed_flag;  // u(1)
 
@@ -669,8 +669,8 @@ typedef struct Slice {
   void (*read_coeff_4x4_CAVLC     )    (sMacroblock *curMb, int block_type, int i, int j, int levarr[16], int runarr[16], int *number_coefficients);
   } sSlice;
 //}}}
-//{{{  sDecodedPicList
-typedef struct DecodedPicList {
+//{{{  sDecodedPicture
+typedef struct DecodedPicture {
   int valid;             // 0: invalid, 1: valid, 3: valid for 3D output;
   int viewId;            // -1: single view, >=0 multiview[VIEW1|VIEW0];
   int poc;
@@ -690,8 +690,8 @@ typedef struct DecodedPicList {
   int skipPicNum;
   int bufSize;
 
-  struct DecodedPicList *next;
-  } sDecodedPicList;
+  struct DecodedPicture* next;
+  } sDecodedPicture;
 //}}}
 //{{{  sCodingParam
 typedef struct CodingParam {
@@ -923,7 +923,7 @@ typedef struct VidParam {
   void (*EdgeLoopChromaHor)(sPixel** Img, byte *Strength, sMacroblock *MbQ, int edge, int uv, struct Picture *p);
 
   sImage       tempData3;
-  sDecodedPicList* decOutputPic;
+  sDecodedPicture* decOutputPic;
   int          deblockMode;  // 0: deblock in picture, 1: deblock in slice;
 
   int   iLumaPadX;
@@ -1047,9 +1047,9 @@ static inline int is_HI_intra_only_profile (unsigned int profile_idc, Boolean co
   extern void change_plane_JV (sVidParam* vidParam, int nplane, sSlice *pSlice);
   extern void make_frame_picture_JV (sVidParam* vidParam );
 
-  extern sDecodedPicList* getAvailableDecPic (sDecodedPicList* pDecPicList, int b3D, int view_id);
-  extern void freeDecPicList (sDecodedPicList* pDecPicList);
-  extern void clearDecPicList (sVidParam* vidParam);
+  extern sDecodedPicture* getAvailableDecodedPicture (sDecodedPicture* decodedPicture);
+  extern void freeDecodedPictures (sDecodedPicture* decodedPicture);
+  extern void clearDecodedPictures (sVidParam* vidParam);
 
   extern sSlice* allocSlice (sInputParam* inputParam, sVidParam* vidParam);
   //extern void copySliceInfo (sSlice* curSlice, sOldSliceParam* oldSliceParam);

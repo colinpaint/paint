@@ -108,7 +108,7 @@ static void unmark_long_term_field_for_reference_by_frame_idx (
   if (curr_pic_num < 0)
     curr_pic_num += (2 * vidParam->max_frame_num);
 
-  for (unsigned i = 0; i < dpb->ltref_frames_in_buffer; i++) {
+  for (unsigned i = 0; i < dpb->longTermRefFramesInBuffer; i++) {
     if (dpb->fs_ltref[i]->long_term_frame_idx == long_term_frame_idx) {
       if (structure == TOP_FIELD) {
         if (dpb->fs_ltref[i]->is_long_term == 3)
@@ -118,9 +118,9 @@ static void unmark_long_term_field_for_reference_by_frame_idx (
             unmark_for_long_term_reference(dpb->fs_ltref[i]);
           else {
             if (mark_current) {
-              if (dpb->last_picture) {
-                if ((dpb->last_picture != dpb->fs_ltref[i]) ||
-                    dpb->last_picture->frame_num != curr_frame_num)
+              if (dpb->lastPicture) {
+                if ((dpb->lastPicture != dpb->fs_ltref[i]) ||
+                    dpb->lastPicture->frame_num != curr_frame_num)
                   unmark_for_long_term_reference(dpb->fs_ltref[i]);
                 }
               else
@@ -142,9 +142,9 @@ static void unmark_long_term_field_for_reference_by_frame_idx (
             unmark_for_long_term_reference(dpb->fs_ltref[i]);
           else {
             if (mark_current) {
-              if (dpb->last_picture) {
-                if ((dpb->last_picture != dpb->fs_ltref[i]) ||
-                    dpb->last_picture->frame_num != curr_frame_num)
+              if (dpb->lastPicture) {
+                if ((dpb->lastPicture != dpb->fs_ltref[i]) ||
+                    dpb->lastPicture->frame_num != curr_frame_num)
                   unmark_for_long_term_reference(dpb->fs_ltref[i]);
                 }
               else
@@ -177,7 +177,7 @@ static int get_pic_num_x (sPicture* p, int difference_of_pic_nums_minus1) {
 static int outputDpbFrame (sDPB* dpb) {
 
   // diagnostics
-  if (dpb->used_size < 1)
+  if (dpb->usedSize < 1)
     error ("Cannot output frame, DPB empty.",150);
 
   // find smallest POC
@@ -187,12 +187,12 @@ static int outputDpbFrame (sDPB* dpb) {
     return 0;
 
   // call the output function
-  //  printf ("output frame with frame_num #%d, poc %d (dpb. dpb->size=%d, dpb->used_size=%d)\n", dpb->fs[pos]->frame_num, dpb->fs[pos]->frame->poc, dpb->size, dpb->used_size);
+  //printf ("output frame with frame_num #%d, poc %d (dpb. dpb->size=%d, dpb->usedSize=%d)\n", dpb->fs[pos]->frame_num, dpb->fs[pos]->frame->poc, dpb->size, dpb->usedSize);
 
   // picture error conceal
   sVidParam* vidParam = dpb->vidParam;
   if (vidParam->concealMode != 0) {
-    if (dpb->last_output_poc == 0)
+    if (dpb->lastOutputPoc == 0)
       write_lost_ref_after_idr (dpb, pos);
     write_lost_non_ref_pic (dpb, poc);
     }
@@ -201,10 +201,10 @@ static int outputDpbFrame (sDPB* dpb) {
 
   // picture error conceal
   if(vidParam->concealMode == 0)
-    if (dpb->last_output_poc >= poc)
+    if (dpb->lastOutputPoc >= poc)
       error ("output POC must be in ascending order", 150);
 
-  dpb->last_output_poc = poc;
+  dpb->lastOutputPoc = poc;
 
   // free frame store and move empty store to end of buffer
   if (!isReference (dpb->fs[pos]))
@@ -757,7 +757,7 @@ sPicture* allocPicture (sVidParam* vidParam, ePicStructure structure,
     for (int j = 0; j < MAX_NUM_SLICES; j++)
       for (int i = 0; i < 2; i++) {
         s->listX[j][i] = calloc (MAX_LIST_SIZE, sizeof (sPicture*)); // +1 for reordering
-        if (NULL == s->listX[j][i])
+        if (!s->listX[j][i])
           no_mem_exit ("allocPicture: s->listX[i]");
         }
 
@@ -806,13 +806,56 @@ void freePicture (sPicture* p) {
     }
   }
 //}}}
+//{{{
+void fillFrameNumGap (sVidParam* vidParam, sSlice* slice) {
+
+  sSPS* activeSPS = vidParam->activeSPS;
+
+  int tmp1 = slice->delta_pic_order_cnt[0];
+  int tmp2 = slice->delta_pic_order_cnt[1];
+  slice->delta_pic_order_cnt[0] = slice->delta_pic_order_cnt[1] = 0;
+
+  printf ("A gap in frame number is found, try to fill it.\n");
+
+  int unusedShortTermFrameNum = (vidParam->preFrameNum + 1) % vidParam->max_frame_num;
+  int curFrameNum = slice->frame_num; //vidParam->frame_num;
+
+  sPicture* picture = NULL;
+  while (curFrameNum != unusedShortTermFrameNum) {
+    picture = allocPicture (vidParam, FRAME, vidParam->width, vidParam->height, vidParam->widthCr, vidParam->heightCr, 1);
+    picture->coded_frame = 1;
+    picture->pic_num = unusedShortTermFrameNum;
+    picture->frame_num = unusedShortTermFrameNum;
+    picture->non_existing = 1;
+    picture->is_output = 1;
+    picture->used_for_reference = 1;
+    picture->adaptive_ref_pic_buffering_flag = 0;
+
+    slice->frame_num = unusedShortTermFrameNum;
+    if (activeSPS->pic_order_cnt_type != 0)
+      decodePOC (vidParam, vidParam->sliceList[0]);
+    picture->topPoc = slice->topPoc;
+    picture->botPoc = slice->botPoc;
+    picture->framePoc = slice->framePoc;
+    picture->poc = slice->framePoc;
+    storePictureDpb (slice->dpb, picture);
+
+    vidParam->preFrameNum = unusedShortTermFrameNum;
+    unusedShortTermFrameNum = (unusedShortTermFrameNum + 1) % vidParam->max_frame_num;
+    }
+
+  slice->delta_pic_order_cnt[0] = tmp1;
+  slice->delta_pic_order_cnt[1] = tmp2;
+  slice->frame_num = curFrameNum;
+  }
+//}}}
 
 // dpb
 //{{{
 static void dumpDpb (sDPB* dpb) {
 
 #ifdef DUMP_DPB
-  for (unsigned i = 0; i < dpb->used_size;i++) {
+  for (unsigned i = 0; i < dpb->usedSize;i++) {
     printf ("(");
     printf ("fn=%d  ", dpb->fs[i]->frame_num);
     if (dpb->fs[i]->is_used & 1) {
@@ -987,31 +1030,31 @@ void initDpb (sVidParam* vidParam, sDPB* dpb, int type) {
   sSPS* activeSPS = vidParam->activeSPS;
 
   dpb->vidParam = vidParam;
-  if (dpb->init_done)
+  if (dpb->initDone)
     freeDpb (dpb);
 
   dpb->size = getDpbSize (vidParam, activeSPS) + vidParam->inputParam->dpb_plus[type == 2 ? 1 : 0];
-  dpb->num_ref_frames = activeSPS->num_ref_frames;
+  dpb->numRefFrames = activeSPS->numRefFrames;
 
-  if (dpb->size < activeSPS->num_ref_frames)
+  if (dpb->size < activeSPS->numRefFrames)
     error ("DPB size at specified level is smaller than the specified number of reference frames. This is not allowed.\n", 1000);
 
-  dpb->used_size = 0;
-  dpb->last_picture = NULL;
+  dpb->usedSize = 0;
+  dpb->lastPicture = NULL;
 
-  dpb->ref_frames_in_buffer = 0;
-  dpb->ltref_frames_in_buffer = 0;
+  dpb->refFramesInBuffer = 0;
+  dpb->longTermRefFramesInBuffer = 0;
 
   dpb->fs = calloc (dpb->size, sizeof (sFrameStore*));
-  if (NULL == dpb->fs)
+  if (!dpb->fs)
     no_mem_exit ("initDpb: dpb->fs");
 
   dpb->fs_ref = calloc (dpb->size, sizeof (sFrameStore*));
-  if (NULL==dpb->fs_ref)
+  if (!dpb->fs_ref)
     no_mem_exit ("initDpb: dpb->fs_ref");
 
   dpb->fs_ltref = calloc (dpb->size, sizeof (sFrameStore*));
-  if (NULL == dpb->fs_ltref)
+  if (!dpb->fs_ltref)
     no_mem_exit ("initDpb: dpb->fs_ltref");
 
   for (unsigned i = 0; i < dpb->size; i++) {
@@ -1027,9 +1070,9 @@ void initDpb (sVidParam* vidParam, sDPB* dpb, int type) {
     vidParam->no_reference_picture->bottom_field = vidParam->no_reference_picture;
     vidParam->no_reference_picture->frame = vidParam->no_reference_picture;
     }
-  dpb->last_output_poc = INT_MIN;
+  dpb->lastOutputPoc = INT_MIN;
   vidParam->last_has_mmco_5 = 0;
-  dpb->init_done = 1;
+  dpb->initDone = 1;
 
   // picture error conceal
   if (vidParam->concealMode !=0 && !vidParam->lastOutFramestore)
@@ -1041,22 +1084,22 @@ void reInitDpb (sVidParam* vidParam, sDPB* dpb, int type) {
 
   sSPS* activeSPS = vidParam->activeSPS;
   int iDpbSize = getDpbSize (vidParam, activeSPS)+vidParam->inputParam->dpb_plus[type == 2 ? 1 : 0];
-  dpb->num_ref_frames = activeSPS->num_ref_frames;
+  dpb->numRefFrames = activeSPS->numRefFrames;
 
   if (iDpbSize > (int)dpb->size) {
-    if (dpb->size < activeSPS->num_ref_frames)
+    if (dpb->size < activeSPS->numRefFrames)
       error ("DPB size at specified level is smaller than the specified number of reference frames. This is not allowed.\n", 1000);
 
     dpb->fs = realloc (dpb->fs, iDpbSize * sizeof (sFrameStore*));
-    if (NULL == dpb->fs)
+    if (!dpb->fs)
       no_mem_exit ("reInitDpb: dpb->fs");
 
     dpb->fs_ref = realloc(dpb->fs_ref, iDpbSize * sizeof (sFrameStore*));
-    if (NULL == dpb->fs_ref)
+    if (!dpb->fs_ref)
       no_mem_exit ("reInitDpb: dpb->fs_ref");
 
     dpb->fs_ltref = realloc(dpb->fs_ltref, iDpbSize * sizeof (sFrameStore*));
-    if (NULL == dpb->fs_ltref)
+    if (!dpb->fs_ltref)
       no_mem_exit ("reInitDpb: dpb->fs_ltref");
 
     for (int i = dpb->size; i < iDpbSize; i++) {
@@ -1066,15 +1109,15 @@ void reInitDpb (sVidParam* vidParam, sDPB* dpb, int type) {
       }
 
     dpb->size = iDpbSize;
-    dpb->last_output_poc = INT_MIN;
-    dpb->init_done = 1;
+    dpb->lastOutputPoc = INT_MIN;
+    dpb->initDone = 1;
     }
   }
 //}}}
 //{{{
 void flushDpb (sDPB* dpb) {
 
-  if (!dpb->init_done)
+  if (!dpb->initDone)
     return;
 
   sVidParam* vidParam = dpb->vidParam;
@@ -1082,22 +1125,22 @@ void flushDpb (sDPB* dpb) {
     conceal_non_ref_pics(dpb, 0);
 
   // mark all frames unused
-  for (uint32 i = 0; i < dpb->used_size; i++)
+  for (uint32 i = 0; i < dpb->usedSize; i++)
     unmark_for_reference (dpb->fs[i]);
 
   while (removeUnusedDpb (dpb));
 
   // output frames in POC order
-  while (dpb->used_size && outputDpbFrame (dpb));
+  while (dpb->usedSize && outputDpbFrame (dpb));
 
-  dpb->last_output_poc = INT_MIN;
+  dpb->lastOutputPoc = INT_MIN;
   }
 //}}}
 
 //{{{
 static void checkNumDpbFrames (sDPB* dpb) {
 
-  if ((int)(dpb->ltref_frames_in_buffer + dpb->ref_frames_in_buffer) > imax (1, dpb->num_ref_frames))
+  if ((int)(dpb->longTermRefFramesInBuffer + dpb->refFramesInBuffer) > imax (1, dpb->numRefFrames))
     error ("Max. number of reference frames exceeded. Invalid stream.", 500);
   }
 //}}}
@@ -1200,8 +1243,8 @@ static void slidingWindowMemoryManagement (sDPB* dpb, sPicture* p) {
   assert (!p->idrFlag);
 
   // if this is a reference pic with sliding window, unmark first ref frame
-  if (dpb->ref_frames_in_buffer == imax (1, dpb->num_ref_frames) - dpb->ltref_frames_in_buffer) {
-    for (uint32 i = 0; i < dpb->used_size; i++) {
+  if (dpb->refFramesInBuffer == imax (1, dpb->numRefFrames) - dpb->longTermRefFramesInBuffer) {
+    for (uint32 i = 0; i < dpb->usedSize; i++) {
       if (dpb->fs[i]->is_reference && (!(dpb->fs[i]->is_long_term))) {
         unmark_for_reference (dpb->fs[i]);
         updateRefList (dpb);
@@ -1218,33 +1261,33 @@ static void idrMemoryManagement (sDPB* dpb, sPicture* p) {
 
   if (p->no_output_of_prior_pics_flag) {
     // free all stored pictures
-    for (uint32 i = 0; i < dpb->used_size; i++) {
+    for (uint32 i = 0; i < dpb->usedSize; i++) {
       // reset all reference settings
       freeFrameStore (dpb->fs[i]);
       dpb->fs[i] = allocFrameStore();
       }
-    for (uint32 i = 0; i < dpb->ref_frames_in_buffer; i++)
+    for (uint32 i = 0; i < dpb->refFramesInBuffer; i++)
       dpb->fs_ref[i]=NULL;
-    for (uint32 i = 0; i < dpb->ltref_frames_in_buffer; i++)
+    for (uint32 i = 0; i < dpb->longTermRefFramesInBuffer; i++)
       dpb->fs_ltref[i]=NULL;
-    dpb->used_size = 0;
+    dpb->usedSize = 0;
     }
   else
     flushDpb (dpb);
 
-  dpb->last_picture = NULL;
+  dpb->lastPicture = NULL;
 
   updateRefList (dpb);
   updateLongTermRefList (dpb);
-  dpb->last_output_poc = INT_MIN;
+  dpb->lastOutputPoc = INT_MIN;
 
   if (p->long_term_reference_flag) {
-    dpb->max_long_term_pic_idx = 0;
+    dpb->maxLongTermPicIndex = 0;
     p->is_long_term = 1;
     p->long_term_frame_idx = 0;
     }
   else {
-    dpb->max_long_term_pic_idx = -1;
+    dpb->maxLongTermPicIndex = -1;
     p->is_long_term = 0;
     }
   }
@@ -1252,7 +1295,7 @@ static void idrMemoryManagement (sDPB* dpb, sPicture* p) {
 //{{{
 static sPicture* get_long_term_pic (sSlice* curSlice, sDPB* dpb, int LongtermPicNum) {
 
-  for (uint32 i = 0; i < dpb->ltref_frames_in_buffer; i++) {
+  for (uint32 i = 0; i < dpb->longTermRefFramesInBuffer; i++) {
     if (curSlice->structure==FRAME) {
       if (dpb->fs_ltref[i]->is_reference == 3)
         if ((dpb->fs_ltref[i]->frame->is_long_term)&&(dpb->fs_ltref[i]->frame->long_term_pic_num == LongtermPicNum))
@@ -1343,7 +1386,7 @@ static void mark_pic_long_term (sDPB* dpb, sPicture* p, int long_term_frame_idx,
   int add_top, add_bottom;
 
   if (p->structure == FRAME) {
-    for (uint32 i = 0; i < dpb->ref_frames_in_buffer; i++) {
+    for (uint32 i = 0; i < dpb->refFramesInBuffer; i++) {
       if (dpb->fs_ref[i]->is_reference == 3) {
         if ((!dpb->fs_ref[i]->frame->is_long_term)&&(dpb->fs_ref[i]->frame->pic_num == picNumX)) {
           dpb->fs_ref[i]->long_term_frame_idx = dpb->fs_ref[i]->frame->long_term_frame_idx
@@ -1377,7 +1420,7 @@ static void mark_pic_long_term (sDPB* dpb, sPicture* p, int long_term_frame_idx,
       add_bottom = 1;
       }
 
-    for (uint32 i = 0; i < dpb->ref_frames_in_buffer; i++) {
+    for (uint32 i = 0; i < dpb->refFramesInBuffer; i++) {
       if (dpb->fs_ref[i]->is_reference & 1) {
         if ((!dpb->fs_ref[i]->top_field->is_long_term) &&
             (dpb->fs_ref[i]->top_field->pic_num == picNumX)) {
@@ -1425,7 +1468,7 @@ static void mark_pic_long_term (sDPB* dpb, sPicture* p, int long_term_frame_idx,
 //{{{
 static void unmark_long_term_frame_for_reference_by_frame_idx (sDPB* dpb, int long_term_frame_idx) {
 
-  for (uint32 i = 0; i < dpb->ltref_frames_in_buffer; i++)
+  for (uint32 i = 0; i < dpb->longTermRefFramesInBuffer; i++)
     if (dpb->fs_ltref[i]->long_term_frame_idx == long_term_frame_idx)
       unmark_for_long_term_reference (dpb->fs_ltref[i]);
 }
@@ -1435,11 +1478,11 @@ static void unmark_long_term_frame_for_reference_by_frame_idx (sDPB* dpb, int lo
 void updateRefList (sDPB* dpb) {
 
   unsigned i, j;
-  for (i = 0, j = 0; i < dpb->used_size; i++)
+  for (i = 0, j = 0; i < dpb->usedSize; i++)
     if (isShortTermReference (dpb->fs[i]))
       dpb->fs_ref[j++]=dpb->fs[i];
 
-  dpb->ref_frames_in_buffer = j;
+  dpb->refFramesInBuffer = j;
 
   while (j < dpb->size)
     dpb->fs_ref[j++] = NULL;
@@ -1449,11 +1492,11 @@ void updateRefList (sDPB* dpb) {
 void updateLongTermRefList (sDPB* dpb) {
 
   unsigned i, j;
-  for (i = 0, j = 0; i < dpb->used_size; i++)
+  for (i = 0, j = 0; i < dpb->usedSize; i++)
     if (isLongTermReference (dpb->fs[i]))
       dpb->fs_ltref[j++] = dpb->fs[i];
 
-  dpb->ltref_frames_in_buffer = j;
+  dpb->longTermRefFramesInBuffer = j;
 
   while (j < dpb->size)
     dpb->fs_ltref[j++] = NULL;
@@ -1462,7 +1505,7 @@ void updateLongTermRefList (sDPB* dpb) {
 //{{{
 void mm_unmark_long_term_for_reference (sDPB* dpb, sPicture* p, int long_term_pic_num) {
 
-  for (uint32 i = 0; i < dpb->ltref_frames_in_buffer; i++) {
+  for (uint32 i = 0; i < dpb->longTermRefFramesInBuffer; i++) {
     if (p->structure == FRAME) {
       if ((dpb->fs_ltref[i]->is_reference==3) && (dpb->fs_ltref[i]->is_long_term==3))
         if (dpb->fs_ltref[i]->frame->long_term_pic_num == long_term_pic_num)
@@ -1503,7 +1546,7 @@ void mm_unmark_short_term_for_reference (sDPB* dpb, sPicture* p, int difference_
 {
   int picNumX = get_pic_num_x(p, difference_of_pic_nums_minus1);
 
-  for (uint32 i = 0; i < dpb->ref_frames_in_buffer; i++) {
+  for (uint32 i = 0; i < dpb->refFramesInBuffer; i++) {
     if (p->structure == FRAME) {
       if ((dpb->fs_ref[i]->is_reference==3) && (dpb->fs_ref[i]->is_long_term==0)) {
         if (dpb->fs_ref[i]->frame->pic_num == picNumX) {
@@ -1548,7 +1591,7 @@ void mm_assign_long_term_frame_idx (sDPB* dpb, sPicture* p,
 
   else {
     ePicStructure structure = FRAME;
-    for (unsigned i = 0; i < dpb->ref_frames_in_buffer; i++) {
+    for (unsigned i = 0; i < dpb->refFramesInBuffer; i++) {
       if (dpb->fs_ref[i]->is_reference & 1) {
         if (dpb->fs_ref[i]->top_field->pic_num == picNumX) {
           structure = TOP_FIELD;
@@ -1576,11 +1619,11 @@ void mm_assign_long_term_frame_idx (sDPB* dpb, sPicture* p,
 //{{{
 void mm_update_max_long_term_frame_idx (sDPB* dpb, int max_long_term_frame_idx_plus1) {
 
-  dpb->max_long_term_pic_idx = max_long_term_frame_idx_plus1 - 1;
+  dpb->maxLongTermPicIndex = max_long_term_frame_idx_plus1 - 1;
 
   // check for invalid frames
-  for (uint32 i = 0; i < dpb->ltref_frames_in_buffer; i++)
-    if (dpb->fs_ltref[i]->long_term_frame_idx > dpb->max_long_term_pic_idx)
+  for (uint32 i = 0; i < dpb->longTermRefFramesInBuffer; i++)
+    if (dpb->fs_ltref[i]->long_term_frame_idx > dpb->maxLongTermPicIndex)
       unmark_for_long_term_reference(dpb->fs_ltref[i]);
   }
 //}}}
@@ -1592,7 +1635,7 @@ void mm_unmark_all_long_term_for_reference (sDPB* dpb) {
 //{{{
 void mm_unmark_all_short_term_for_reference (sDPB* dpb) {
 
-  for (unsigned int i = 0; i < dpb->ref_frames_in_buffer; i++)
+  for (unsigned int i = 0; i < dpb->refFramesInBuffer; i++)
     unmark_for_reference (dpb->fs_ref[i]);
   updateRefList (dpb);
   }
@@ -1613,12 +1656,12 @@ void mm_mark_current_picture_long_term (sDPB* dpb, sPicture* p, int long_term_fr
 //{{{
 void get_smallest_poc (sDPB* dpb, int* poc, int* pos) {
 
-  if (dpb->used_size<1)
+  if (dpb->usedSize<1)
     error ("Cannot determine smallest POC, DPB empty.",150);
 
   *pos = -1;
   *poc = INT_MAX;
-  for (uint32 i = 0; i < dpb->used_size; i++) {
+  for (uint32 i = 0; i < dpb->usedSize; i++) {
     if ((*poc > dpb->fs[i]->poc)&&(!dpb->fs[i]->is_output)) {
       *poc = dpb->fs[i]->poc;
       *pos = i;
@@ -1631,7 +1674,7 @@ void get_smallest_poc (sDPB* dpb, int* poc, int* pos) {
 int removeUnusedDpb (sDPB* dpb) {
 
   // check for frames that were already output and no longer used for reference
-  for (uint32 i = 0; i < dpb->used_size; i++) {
+  for (uint32 i = 0; i < dpb->usedSize; i++) {
     if (dpb->fs[i]->is_output && (!isReference(dpb->fs[i]))) {
       removeFrameDpb(dpb, i);
       return 1;
@@ -1670,17 +1713,17 @@ void storePictureDpb (sDPB* dpb, sPicture* p) {
 
   if ((p->structure == TOP_FIELD) || (p->structure == BOTTOM_FIELD)) {
     // check for frame store with same pic_number
-    if (dpb->last_picture) {
-      if ((int)dpb->last_picture->frame_num == p->pic_num) {
-        if (((p->structure == TOP_FIELD) && (dpb->last_picture->is_used == 2))||
-            ((p->structure == BOTTOM_FIELD) && (dpb->last_picture->is_used == 1))) {
-          if ((p->used_for_reference && (dpb->last_picture->is_orig_reference != 0)) ||
-              (!p->used_for_reference && (dpb->last_picture->is_orig_reference == 0))) {
-            insert_picture_in_dpb (vidParam, dpb->last_picture, p);
+    if (dpb->lastPicture) {
+      if ((int)dpb->lastPicture->frame_num == p->pic_num) {
+        if (((p->structure == TOP_FIELD) && (dpb->lastPicture->is_used == 2))||
+            ((p->structure == BOTTOM_FIELD) && (dpb->lastPicture->is_used == 1))) {
+          if ((p->used_for_reference && (dpb->lastPicture->is_orig_reference != 0)) ||
+              (!p->used_for_reference && (dpb->lastPicture->is_orig_reference == 0))) {
+            insert_picture_in_dpb (vidParam, dpb->lastPicture, p);
             updateRefList (dpb);
             updateLongTermRefList (dpb);
             dumpDpb (dpb);
-            dpb->last_picture = NULL;
+            dpb->lastPicture = NULL;
             return;
             }
           }
@@ -1701,7 +1744,7 @@ void storePictureDpb (sDPB* dpb, sPicture* p) {
         dpb->fs[i]->concealment_reference = 1;
 
   // first try to remove unused frames
-  if (dpb->used_size == dpb->size) {
+  if (dpb->usedSize == dpb->size) {
     // picture error conceal
     if (vidParam->concealMode != 0)
       conceal_non_ref_pics (dpb, 2);
@@ -1713,7 +1756,7 @@ void storePictureDpb (sDPB* dpb, sPicture* p) {
     }
 
   // then output frames until one can be removed
-  while (dpb->used_size == dpb->size) {
+  while (dpb->usedSize == dpb->size) {
     // non-reference frames may be output directly
     if (!p->used_for_reference) {
       get_smallest_poc (dpb, &poc, &pos);
@@ -1729,26 +1772,26 @@ void storePictureDpb (sDPB* dpb, sPicture* p) {
 
   // check for duplicate frame number in short term reference buffer
   if ((p->used_for_reference) && (!p->is_long_term))
-    for (unsigned i = 0; i < dpb->ref_frames_in_buffer; i++)
+    for (unsigned i = 0; i < dpb->refFramesInBuffer; i++)
       if (dpb->fs_ref[i]->frame_num == p->frame_num)
         error ("duplicate frame_num in short-term reference picture buffer", 500);
 
   // store at end of buffer
-  insert_picture_in_dpb (vidParam, dpb->fs[dpb->used_size],p);
+  insert_picture_in_dpb (vidParam, dpb->fs[dpb->usedSize],p);
 
   // picture error conceal
   if (p->idrFlag)
     vidParam->earlier_missing_poc = 0;
 
   if (p->structure != FRAME)
-    dpb->last_picture = dpb->fs[dpb->used_size];
+    dpb->lastPicture = dpb->fs[dpb->usedSize];
   else
-    dpb->last_picture = NULL;
+    dpb->lastPicture = NULL;
 
-  dpb->used_size++;
+  dpb->usedSize++;
 
   if (vidParam->concealMode != 0)
-    vidParam->pocs_in_dpb[dpb->used_size-1] = p->poc;
+    vidParam->pocs_in_dpb[dpb->usedSize-1] = p->poc;
 
   updateRefList (dpb);
   updateLongTermRefList (dpb);
@@ -1795,11 +1838,11 @@ void removeFrameDpb (sDPB* dpb, int pos) {
   // move empty framestore to end of buffer
   sFrameStore* tmp = dpb->fs[pos];
 
-  for (unsigned i = pos; i < dpb->used_size-1; i++)
+  for (unsigned i = pos; i < dpb->usedSize-1; i++)
     dpb->fs[i] = dpb->fs[i+1];
 
-  dpb->fs[dpb->used_size-1] = tmp;
-  dpb->used_size--;
+  dpb->fs[dpb->usedSize-1] = tmp;
+  dpb->usedSize--;
   }
 //}}}
 //{{{
@@ -1819,8 +1862,8 @@ void freeDpb (sDPB* dpb) {
     free (dpb->fs_ltref);
 
 
-  dpb->last_output_poc = INT_MIN;
-  dpb->init_done = 0;
+  dpb->lastOutputPoc = INT_MIN;
+  dpb->initDone = 0;
 
   // picture error conceal
   if (vidParam->concealMode != 0 || vidParam->lastOutFramestore)
@@ -1968,25 +2011,25 @@ static void reorderLongTerm (sSlice* slice, sPicture** RefPicListX,
   }
 //}}}
 //{{{
-void reorderRefPicList (sSlice* curSlice, int curList) {
+void reorderRefPicList (sSlice* slice, int curList) {
 
-  int* modification_of_pic_nums_idc = curSlice->modification_of_pic_nums_idc[curList];
-  int* abs_diff_pic_num_minus1 = curSlice->abs_diff_pic_num_minus1[curList];
-  int* long_term_pic_idx = curSlice->long_term_pic_idx[curList];
-  int num_ref_idx_lX_active_minus1 = curSlice->num_ref_idx_active[curList] - 1;
+  int* modification_of_pic_nums_idc = slice->modification_of_pic_nums_idc[curList];
+  int* abs_diff_pic_num_minus1 = slice->abs_diff_pic_num_minus1[curList];
+  int* long_term_pic_idx = slice->long_term_pic_idx[curList];
+  int num_ref_idx_lX_active_minus1 = slice->num_ref_idx_active[curList] - 1;
 
-  sVidParam* vidParam = curSlice->vidParam;
+  sVidParam* vidParam = slice->vidParam;
 
   int maxPicNum, currPicNum, picNumLXNoWrap, picNumLXPred, picNumLX;
   int refIdxLX = 0;
 
-  if (curSlice->structure==FRAME) {
+  if (slice->structure==FRAME) {
     maxPicNum = vidParam->max_frame_num;
-    currPicNum = curSlice->frame_num;
+    currPicNum = slice->frame_num;
     }
   else {
     maxPicNum = 2 * vidParam->max_frame_num;
-    currPicNum = 2 * curSlice->frame_num + 1;
+    currPicNum = 2 * slice->frame_num + 1;
     }
 
   picNumLXPred = currPicNum;
@@ -2015,14 +2058,14 @@ void reorderRefPicList (sSlice* curSlice, int curList) {
       else
         picNumLX = picNumLXNoWrap;
 
-      reorderShortTerm (curSlice, curList, num_ref_idx_lX_active_minus1, picNumLX, &refIdxLX);
+      reorderShortTerm (slice, curList, num_ref_idx_lX_active_minus1, picNumLX, &refIdxLX);
       }
     else
-      reorderLongTerm (curSlice, curSlice->listX[curList], num_ref_idx_lX_active_minus1, long_term_pic_idx[i], &refIdxLX);
+      reorderLongTerm (slice, slice->listX[curList], num_ref_idx_lX_active_minus1, long_term_pic_idx[i], &refIdxLX);
     }
 
   // that's a definition
-  curSlice->listXsize[curList] = (char)(num_ref_idx_lX_active_minus1 + 1);
+  slice->listXsize[curList] = (char)(num_ref_idx_lX_active_minus1 + 1);
   }
 //}}}
 
@@ -2037,7 +2080,7 @@ void update_pic_num (sSlice* slice) {
   int max_frame_num = 1 << (activeSPS->log2_max_frame_num_minus4 + 4);
 
   if (slice->structure == FRAME) {
-    for (unsigned int i = 0; i < dpb->ref_frames_in_buffer; i++) {
+    for (unsigned int i = 0; i < dpb->refFramesInBuffer; i++) {
       if (dpb->fs_ref[i]->is_used==3 ) {
         if ((dpb->fs_ref[i]->frame->used_for_reference)&&(!dpb->fs_ref[i]->frame->is_long_term)) {
           if (dpb->fs_ref[i]->frame_num > slice->frame_num )
@@ -2050,7 +2093,7 @@ void update_pic_num (sSlice* slice) {
       }
 
     // update long_term_pic_num
-    for (unsigned int i = 0; i < dpb->ltref_frames_in_buffer; i++) {
+    for (unsigned int i = 0; i < dpb->longTermRefFramesInBuffer; i++) {
       if (dpb->fs_ltref[i]->is_used==3) {
         if (dpb->fs_ltref[i]->frame->is_long_term)
           dpb->fs_ltref[i]->frame->long_term_pic_num = dpb->fs_ltref[i]->frame->long_term_frame_idx;
@@ -2067,7 +2110,7 @@ void update_pic_num (sSlice* slice) {
       add_bottom = 1;
       }
 
-    for (unsigned int i = 0; i < dpb->ref_frames_in_buffer; i++) {
+    for (unsigned int i = 0; i < dpb->refFramesInBuffer; i++) {
       if (dpb->fs_ref[i]->is_reference) {
         if( dpb->fs_ref[i]->frame_num > slice->frame_num )
           dpb->fs_ref[i]->frame_num_wrap = dpb->fs_ref[i]->frame_num - max_frame_num;
@@ -2081,7 +2124,7 @@ void update_pic_num (sSlice* slice) {
       }
 
     // update long_term_pic_num
-    for (unsigned int i = 0; i < dpb->ltref_frames_in_buffer; i++) {
+    for (unsigned int i = 0; i < dpb->longTermRefFramesInBuffer; i++) {
       if (dpb->fs_ltref[i]->is_long_term & 1)
         dpb->fs_ltref[i]->top_field->long_term_pic_num = 2 * dpb->fs_ltref[i]->top_field->long_term_frame_idx + add_top;
       if (dpb->fs_ltref[i]->is_long_term & 2)
@@ -2112,7 +2155,7 @@ void init_lists_p_slice (sSlice* slice) {
   sFrameStore** fs_listlt;
 
   if (slice->structure == FRAME) {
-    for (i=0; i<dpb->ref_frames_in_buffer; i++) {
+    for (i=0; i<dpb->refFramesInBuffer; i++) {
       if (dpb->fs_ref[i]->is_used==3) {
         if ((dpb->fs_ref[i]->frame->used_for_reference) && (!dpb->fs_ref[i]->frame->is_long_term))
           slice->listX[0][list0idx++] = dpb->fs_ref[i]->frame;
@@ -2124,7 +2167,7 @@ void init_lists_p_slice (sSlice* slice) {
     //printf("listX[0] (PicNum): "); for (i=0; i<list0idx; i++){printf ("%d  ", slice->listX[0][i]->pic_num);} printf("\n");
 
     // long term handling
-    for (i=0; i<dpb->ltref_frames_in_buffer; i++)
+    for (i=0; i<dpb->longTermRefFramesInBuffer; i++)
       if (dpb->fs_ltref[i]->is_used==3)
         if (dpb->fs_ltref[i]->frame->is_long_term)
           slice->listX[0][list0idx++] = dpb->fs_ltref[i]->frame;
@@ -2139,7 +2182,7 @@ void init_lists_p_slice (sSlice* slice) {
     if (NULL==fs_listlt)
       no_mem_exit("init_lists: fs_listlt");
 
-    for (i=0; i<dpb->ref_frames_in_buffer; i++)
+    for (i=0; i<dpb->refFramesInBuffer; i++)
       if (dpb->fs_ref[i]->is_reference)
         fs_list0[list0idx++] = dpb->fs_ref[i];
 
@@ -2153,7 +2196,7 @@ void init_lists_p_slice (sSlice* slice) {
     //printf("listX[0] (PicNum): "); for (i=0; i < slice->listXsize[0]; i++){printf ("%d  ", slice->listX[0][i]->pic_num);} printf("\n");
 
     // long term handling
-    for (i=0; i<dpb->ltref_frames_in_buffer; i++)
+    for (i=0; i<dpb->longTermRefFramesInBuffer; i++)
       fs_listlt[listltidx++]=dpb->fs_ltref[i];
 
     qsort((void *)fs_listlt, listltidx, sizeof(sFrameStore*), compare_fs_by_lt_pic_idx_asc);
@@ -2193,112 +2236,93 @@ void init_lists_b_slice (sSlice* slice) {
   sFrameStore** fs_list1;
   sFrameStore** fs_listlt;
 
-  {
-    // B-sSlice
-    if (slice->structure == FRAME) {
-      for (i = 0; i < dpb->ref_frames_in_buffer; i++)
-        if (dpb->fs_ref[i]->is_used==3)
-          if ((dpb->fs_ref[i]->frame->used_for_reference)&&(!dpb->fs_ref[i]->frame->is_long_term))
-            if (slice->framePoc >= dpb->fs_ref[i]->frame->poc) //!KS use >= for error conceal
-              slice->listX[0][list0idx++] = dpb->fs_ref[i]->frame;
-      qsort((void *)slice->listX[0], list0idx, sizeof(sPicture*), compare_pic_by_poc_desc);
+  // B Slice
+  if (slice->structure == FRAME) {
+    //{{{  frame
+    for (i = 0; i < dpb->refFramesInBuffer; i++)
+      if (dpb->fs_ref[i]->is_used==3)
+        if ((dpb->fs_ref[i]->frame->used_for_reference)&&(!dpb->fs_ref[i]->frame->is_long_term))
+          if (slice->framePoc >= dpb->fs_ref[i]->frame->poc) //!KS use >= for error conceal
+            slice->listX[0][list0idx++] = dpb->fs_ref[i]->frame;
+    qsort ((void *)slice->listX[0], list0idx, sizeof(sPicture*), compare_pic_by_poc_desc);
 
-      //get the backward reference picture (POC>current POC) in list0;
-      list0idx_1 = list0idx;
-      for (i=0; i<dpb->ref_frames_in_buffer; i++)
-        if (dpb->fs_ref[i]->is_used==3)
-          if ((dpb->fs_ref[i]->frame->used_for_reference)&&(!dpb->fs_ref[i]->frame->is_long_term))
-            if (slice->framePoc < dpb->fs_ref[i]->frame->poc)
-              slice->listX[0][list0idx++] = dpb->fs_ref[i]->frame;
-      qsort((void *)&slice->listX[0][list0idx_1], list0idx-list0idx_1, sizeof(sPicture*), compare_pic_by_poc_asc);
+    // get the backward reference picture (POC>current POC) in list0;
+    list0idx_1 = list0idx;
+    for (i = 0; i < dpb->refFramesInBuffer; i++)
+      if (dpb->fs_ref[i]->is_used==3)
+        if ((dpb->fs_ref[i]->frame->used_for_reference)&&(!dpb->fs_ref[i]->frame->is_long_term))
+          if (slice->framePoc < dpb->fs_ref[i]->frame->poc)
+            slice->listX[0][list0idx++] = dpb->fs_ref[i]->frame;
+    qsort ((void*)&slice->listX[0][list0idx_1], list0idx-list0idx_1, sizeof(sPicture*), compare_pic_by_poc_asc);
 
-      for (j=0; j<list0idx_1; j++)
-        slice->listX[1][list0idx-list0idx_1+j]=slice->listX[0][j];
-      for (j=list0idx_1; j<list0idx; j++)
-        slice->listX[1][j-list0idx_1]=slice->listX[0][j];
+    for (j = 0; j < list0idx_1; j++)
+      slice->listX[1][list0idx-list0idx_1+j]=slice->listX[0][j];
+    for (j = list0idx_1; j < list0idx; j++)
+      slice->listX[1][j-list0idx_1] = slice->listX[0][j];
+    slice->listXsize[0] = slice->listXsize[1] = (char) list0idx;
 
-      slice->listXsize[0] = slice->listXsize[1] = (char) list0idx;
-
-      //printf("listX[0] (PicNum): "); for (i=0; i<slice->listXsize[0]; i++){printf ("%d  ", slice->listX[0][i]->pic_num);} printf("\n");
-      //printf("listX[1] (PicNum): "); for (i=0; i<slice->listXsize[1]; i++){printf ("%d  ", slice->listX[1][i]->pic_num);} printf("\n");
-      //printf("slice->listX[0] currPoc=%d (Poc): ", vidParam->framePoc); for (i=0; i<slice->listXsize[0]; i++){printf ("%d  ", slice->listX[0][i]->poc);} printf("\n");
-      //printf("slice->listX[1] currPoc=%d (Poc): ", vidParam->framePoc); for (i=0; i<slice->listXsize[1]; i++){printf ("%d  ", slice->listX[1][i]->poc);} printf("\n");
-
-      // long term handling
-      for (i=0; i<dpb->ltref_frames_in_buffer; i++) {
-        if (dpb->fs_ltref[i]->is_used==3) {
-          if (dpb->fs_ltref[i]->frame->is_long_term) {
-            slice->listX[0][list0idx]   = dpb->fs_ltref[i]->frame;
-            slice->listX[1][list0idx++] = dpb->fs_ltref[i]->frame;
-            }
+    // long term handling
+    for (i = 0; i < dpb->longTermRefFramesInBuffer; i++) {
+      if (dpb->fs_ltref[i]->is_used == 3) {
+        if (dpb->fs_ltref[i]->frame->is_long_term) {
+          slice->listX[0][list0idx] = dpb->fs_ltref[i]->frame;
+          slice->listX[1][list0idx++] = dpb->fs_ltref[i]->frame;
           }
         }
-      qsort((void *)&slice->listX[0][(short) slice->listXsize[0]], list0idx - slice->listXsize[0], sizeof(sPicture*), compare_pic_by_lt_pic_num_asc);
-      qsort((void *)&slice->listX[1][(short) slice->listXsize[0]], list0idx - slice->listXsize[0], sizeof(sPicture*), compare_pic_by_lt_pic_num_asc);
-      slice->listXsize[0] = slice->listXsize[1] = (char) list0idx;
       }
-    else {
-      fs_list0 = calloc(dpb->size, sizeof (sFrameStore*));
-      if (NULL==fs_list0)
-        no_mem_exit("init_lists: fs_list0");
-      fs_list1 = calloc(dpb->size, sizeof (sFrameStore*));
-      if (NULL==fs_list1)
-        no_mem_exit("init_lists: fs_list1");
-      fs_listlt = calloc(dpb->size, sizeof (sFrameStore*));
-      if (NULL==fs_listlt)
-        no_mem_exit("init_lists: fs_listlt");
-
-      slice->listXsize[0] = 0;
-      slice->listXsize[1] = 1;
-
-      for (i=0; i<dpb->ref_frames_in_buffer; i++)
-        if (dpb->fs_ref[i]->is_used)
-          if (slice->thisPoc >= dpb->fs_ref[i]->poc)
-            fs_list0[list0idx++] = dpb->fs_ref[i];
-      qsort((void *)fs_list0, list0idx, sizeof(sFrameStore*), compare_fs_by_poc_desc);
-
-      list0idx_1 = list0idx;
-      for (i=0; i<dpb->ref_frames_in_buffer; i++)
-        if (dpb->fs_ref[i]->is_used)
-          if (slice->thisPoc < dpb->fs_ref[i]->poc)
-            fs_list0[list0idx++] = dpb->fs_ref[i];
-      qsort((void *)&fs_list0[list0idx_1], list0idx-list0idx_1, sizeof(sFrameStore*), compare_fs_by_poc_asc);
-
-      for (j=0; j<list0idx_1; j++)
-        fs_list1[list0idx-list0idx_1+j]=fs_list0[j];
-      for (j=list0idx_1; j<list0idx; j++)
-        fs_list1[j-list0idx_1]=fs_list0[j];
-
-      //printf("fs_list0 currPoc=%d (Poc): ", slice->thisPoc); for (i=0; i<list0idx; i++){printf ("%d  ", fs_list0[i]->poc);} printf("\n");
-      //printf("fs_list1 currPoc=%d (Poc): ", slice->thisPoc); for (i=0; i<list0idx; i++){printf ("%d  ", fs_list1[i]->poc);} printf("\n");
-
-      slice->listXsize[0] = 0;
-      slice->listXsize[1] = 0;
-      gen_pic_list_from_frame_list(slice->structure, fs_list0, list0idx, slice->listX[0], &slice->listXsize[0], 0);
-      gen_pic_list_from_frame_list(slice->structure, fs_list1, list0idx, slice->listX[1], &slice->listXsize[1], 0);
-
-      //printf("slice->listX[0] currPoc=%d (Poc): ", vidParam->framePoc); for (i=0; i<slice->listXsize[0]; i++){printf ("%d  ", slice->listX[0][i]->poc);} printf("\n");
-      //printf("slice->listX[1] currPoc=%d (Poc): ", vidParam->framePoc); for (i=0; i<slice->listXsize[1]; i++){printf ("%d  ", slice->listX[1][i]->poc);} printf("\n");
-
-      // long term handling
-      for (i=0; i<dpb->ltref_frames_in_buffer; i++)
-        fs_listlt[listltidx++]=dpb->fs_ltref[i];
-
-      qsort((void *)fs_listlt, listltidx, sizeof(sFrameStore*), compare_fs_by_lt_pic_idx_asc);
-
-      gen_pic_list_from_frame_list(slice->structure, fs_listlt, listltidx, slice->listX[0], &slice->listXsize[0], 1);
-      gen_pic_list_from_frame_list(slice->structure, fs_listlt, listltidx, slice->listX[1], &slice->listXsize[1], 1);
-
-      free(fs_list0);
-      free(fs_list1);
-      free(fs_listlt);
-      }
+    qsort ((void *)&slice->listX[0][(short) slice->listXsize[0]], list0idx - slice->listXsize[0], sizeof(sPicture*), compare_pic_by_lt_pic_num_asc);
+    qsort ((void *)&slice->listX[1][(short) slice->listXsize[0]], list0idx - slice->listXsize[0], sizeof(sPicture*), compare_pic_by_lt_pic_num_asc);
+    slice->listXsize[0] = slice->listXsize[1] = (char)list0idx;
     }
+    //}}}
+  else {
+    //{{{  field
+    fs_list0 = calloc(dpb->size, sizeof (sFrameStore*));
+    fs_list1 = calloc(dpb->size, sizeof (sFrameStore*));
+    fs_listlt = calloc(dpb->size, sizeof (sFrameStore*));
+    slice->listXsize[0] = 0;
+    slice->listXsize[1] = 1;
 
-  if ((slice->listXsize[0] == slice->listXsize[1]) && (slice->listXsize[0] > 1))
-  {
+    for (i = 0; i < dpb->refFramesInBuffer; i++)
+      if (dpb->fs_ref[i]->is_used)
+        if (slice->thisPoc >= dpb->fs_ref[i]->poc)
+          fs_list0[list0idx++] = dpb->fs_ref[i];
+    qsort ((void *)fs_list0, list0idx, sizeof(sFrameStore*), compare_fs_by_poc_desc);
+
+    list0idx_1 = list0idx;
+    for (i = 0; i < dpb->refFramesInBuffer; i++)
+      if (dpb->fs_ref[i]->is_used)
+        if (slice->thisPoc < dpb->fs_ref[i]->poc)
+          fs_list0[list0idx++] = dpb->fs_ref[i];
+    qsort ((void*)&fs_list0[list0idx_1], list0idx-list0idx_1, sizeof(sFrameStore*), compare_fs_by_poc_asc);
+
+    for (j = 0; j < list0idx_1; j++)
+      fs_list1[list0idx-list0idx_1+j]=fs_list0[j];
+    for (j = list0idx_1; j < list0idx; j++)
+      fs_list1[j-list0idx_1]=fs_list0[j];
+
+    slice->listXsize[0] = 0;
+    slice->listXsize[1] = 0;
+    gen_pic_list_from_frame_list(slice->structure, fs_list0, list0idx, slice->listX[0], &slice->listXsize[0], 0);
+    gen_pic_list_from_frame_list(slice->structure, fs_list1, list0idx, slice->listX[1], &slice->listXsize[1], 0);
+
+    // long term handling
+    for (i = 0; i < dpb->longTermRefFramesInBuffer; i++)
+      fs_listlt[listltidx++] = dpb->fs_ltref[i];
+
+    qsort ((void*)fs_listlt, listltidx, sizeof(sFrameStore*), compare_fs_by_lt_pic_idx_asc);
+    gen_pic_list_from_frame_list (slice->structure, fs_listlt, listltidx, slice->listX[0], &slice->listXsize[0], 1);
+    gen_pic_list_from_frame_list (slice->structure, fs_listlt, listltidx, slice->listX[1], &slice->listXsize[1], 1);
+
+    free (fs_list0);
+    free (fs_list1);
+    free (fs_listlt);
+    }
+    //}}}
+
+  if ((slice->listXsize[0] == slice->listXsize[1]) && (slice->listXsize[0] > 1)) {
     // check if lists are identical, if yes swap first two elements of slice->listX[1]
-    int diff=0;
+    int diff = 0;
     for (j = 0; j< slice->listXsize[0]; j++) {
       if (slice->listX[0][j] != slice->listX[1][j]) {
         diff = 1;
@@ -2306,20 +2330,20 @@ void init_lists_b_slice (sSlice* slice) {
         }
       }
     if (!diff) {
-      sPicture *tmp_s = slice->listX[1][0];
-      slice->listX[1][0]=slice->listX[1][1];
-      slice->listX[1][1]=tmp_s;
+      sPicture* tmp_s = slice->listX[1][0];
+      slice->listX[1][0] = slice->listX[1][1];
+      slice->listX[1][1] = tmp_s;
       }
     }
 
   // set max size
-  slice->listXsize[0] = (char) imin (slice->listXsize[0], slice->num_ref_idx_active[LIST_0]);
-  slice->listXsize[1] = (char) imin (slice->listXsize[1], slice->num_ref_idx_active[LIST_1]);
+  slice->listXsize[0] = (char)imin (slice->listXsize[0], slice->num_ref_idx_active[LIST_0]);
+  slice->listXsize[1] = (char)imin (slice->listXsize[1], slice->num_ref_idx_active[LIST_1]);
 
   // set the unused list entries to NULL
-  for (i=slice->listXsize[0]; i < (MAX_LIST_SIZE) ; i++)
+  for (i = slice->listXsize[0]; i < (MAX_LIST_SIZE) ; i++)
     slice->listX[0][i] = vidParam->no_reference_picture;
-  for (i=slice->listXsize[1]; i < (MAX_LIST_SIZE) ; i++)
+  for (i = slice->listXsize[1]; i < (MAX_LIST_SIZE) ; i++)
     slice->listX[1][i] = vidParam->no_reference_picture;
   }
 //}}}
@@ -2357,7 +2381,7 @@ void init_mbaff_lists (sVidParam* vidParam, sSlice* slice) {
 //{{{
 sPicture* get_short_term_pic (sSlice* slice, sDPB* dpb, int picNum) {
 
-  for (unsigned i = 0; i < dpb->ref_frames_in_buffer; i++) {
+  for (unsigned i = 0; i < dpb->refFramesInBuffer; i++) {
     if (slice->structure == FRAME) {
       if (dpb->fs_ref[i]->is_reference == 3)
         if ((!dpb->fs_ref[i]->frame->is_long_term)&&(dpb->fs_ref[i]->frame->pic_num == picNum))
@@ -2463,48 +2487,5 @@ void compute_colocated (sSlice* slice, sPicture** listX[6]) {
         }
      }
     }
-  }
-//}}}
-//{{{
-void fillFrameNumGap (sVidParam* vidParam, sSlice* slice) {
-
-  sSPS* activeSPS = vidParam->activeSPS;
-
-  int tmp1 = slice->delta_pic_order_cnt[0];
-  int tmp2 = slice->delta_pic_order_cnt[1];
-  slice->delta_pic_order_cnt[0] = slice->delta_pic_order_cnt[1] = 0;
-
-  printf ("A gap in frame number is found, try to fill it.\n");
-
-  int unusedShortTermFrameNum = (vidParam->preFrameNum + 1) % vidParam->max_frame_num;
-  int curFrameNum = slice->frame_num; //vidParam->frame_num;
-
-  sPicture* picture = NULL;
-  while (curFrameNum != unusedShortTermFrameNum) {
-    picture = allocPicture (vidParam, FRAME, vidParam->width, vidParam->height, vidParam->widthCr, vidParam->heightCr, 1);
-    picture->coded_frame = 1;
-    picture->pic_num = unusedShortTermFrameNum;
-    picture->frame_num = unusedShortTermFrameNum;
-    picture->non_existing = 1;
-    picture->is_output = 1;
-    picture->used_for_reference = 1;
-    picture->adaptive_ref_pic_buffering_flag = 0;
-
-    slice->frame_num = unusedShortTermFrameNum;
-    if (activeSPS->pic_order_cnt_type != 0)
-      decodePOC (vidParam, vidParam->sliceList[0]);
-    picture->topPoc = slice->topPoc;
-    picture->botPoc = slice->botPoc;
-    picture->framePoc = slice->framePoc;
-    picture->poc = slice->framePoc;
-    storePictureDpb (slice->dpb, picture);
-
-    vidParam->preFrameNum = unusedShortTermFrameNum;
-    unusedShortTermFrameNum = (unusedShortTermFrameNum + 1) % vidParam->max_frame_num;
-    }
-
-  slice->delta_pic_order_cnt[0] = tmp1;
-  slice->delta_pic_order_cnt[1] = tmp2;
-  slice->frame_num = curFrameNum;
   }
 //}}}

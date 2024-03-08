@@ -6,27 +6,27 @@
 //}}}
 
 //{{{
-static void allocDecodedPic (sVidParam* vidParam, sDecodedPicList* decodedPic, sPicture* p,
+static void allocDecodedPic (sVidParam* vidParam, sDecodedPicture* decodedPicture, sPicture* p,
                              int lumaSize, int frameSize, int lumaSizeX, int lumaSizeY,
                              int chromaSizeX, int chromaSizeY) {
 
   int symbolSizeInBytes = (vidParam->pic_unit_bitsize_on_disk + 7) >> 3;
 
-  if (decodedPic->yBuf)
-    mem_free (decodedPic->yBuf);
+  if (decodedPicture->yBuf)
+    mem_free (decodedPicture->yBuf);
 
-  decodedPic->bufSize = frameSize;
-  decodedPic->yBuf = mem_malloc (decodedPic->bufSize);
-  decodedPic->uBuf = decodedPic->yBuf + lumaSize;
-  decodedPic->vBuf = decodedPic->uBuf + ((frameSize - lumaSize)>>1);
+  decodedPicture->bufSize = frameSize;
+  decodedPicture->yBuf = mem_malloc (decodedPicture->bufSize);
+  decodedPicture->uBuf = decodedPicture->yBuf + lumaSize;
+  decodedPicture->vBuf = decodedPicture->uBuf + ((frameSize - lumaSize)>>1);
 
-  decodedPic->yuvFormat = p->chromaFormatIdc;
-  decodedPic->yuvStorageFormat = 0;
-  decodedPic->iBitDepth = vidParam->pic_unit_bitsize_on_disk;
-  decodedPic->width = lumaSizeX;
-  decodedPic->height = lumaSizeY;
-  decodedPic->yStride = lumaSizeX * symbolSizeInBytes;
-  decodedPic->uvStride = chromaSizeX * symbolSizeInBytes;
+  decodedPicture->yuvFormat = p->chromaFormatIdc;
+  decodedPicture->yuvStorageFormat = 0;
+  decodedPicture->iBitDepth = vidParam->pic_unit_bitsize_on_disk;
+  decodedPicture->width = lumaSizeX;
+  decodedPicture->height = lumaSizeY;
+  decodedPicture->yStride = lumaSizeX * symbolSizeInBytes;
+  decodedPicture->uvStride = chromaSizeX * symbolSizeInBytes;
   }
 //}}}
 
@@ -98,18 +98,18 @@ static void writeOutPicture (sVidParam* vidParam, sPicture* p) {
   int lumaSize = lumaSizeX * lumaSizeY * symbolSizeInBytes;
   int frameSize = (lumaSizeX * lumaSizeY + 2 * (chromaSizeX * chromaSizeY)) * symbolSizeInBytes;
 
-  sDecodedPicList* decodedPic = getAvailableDecPic (vidParam->decOutputPic, 0, 0);
-  if (!decodedPic->yBuf || (decodedPic->bufSize < frameSize))
-    allocDecodedPic (vidParam, decodedPic, p, lumaSize, frameSize, lumaSizeX, lumaSizeY, chromaSizeX, chromaSizeY);
-  decodedPic->valid = 1;
-  decodedPic->poc = p->framePoc;
-  if (!decodedPic->yBuf)
+  sDecodedPicture* decodedPicture = getAvailableDecodedPicture (vidParam->decOutputPic);
+  if (!decodedPicture->yBuf || (decodedPicture->bufSize < frameSize))
+    allocDecodedPic (vidParam, decodedPicture, p, lumaSize, frameSize, lumaSizeX, lumaSizeY, chromaSizeX, chromaSizeY);
+  decodedPicture->valid = 1;
+  decodedPicture->poc = p->framePoc;
+  if (!decodedPicture->yBuf)
     no_mem_exit ("writeOutPicture: buf");
 
   img2buf (p->imgY,
-           (decodedPic->valid == 1) ? decodedPic->yBuf : decodedPic->yBuf + lumaSizeX * symbolSizeInBytes,
+           (decodedPicture->valid == 1) ? decodedPicture->yBuf : decodedPicture->yBuf + lumaSizeX * symbolSizeInBytes,
            p->size_x, p->size_y, symbolSizeInBytes,
-           cropLeft, cropRight, cropTop, cropBottom, decodedPic->yStride);
+           cropLeft, cropRight, cropTop, cropBottom, decodedPicture->yStride);
 
   cropLeft = p->frame_crop_left_offset;
   cropRight = p->frame_crop_right_offset;
@@ -117,14 +117,14 @@ static void writeOutPicture (sVidParam* vidParam, sPicture* p) {
   cropBottom = (2 - p->frame_mbs_only_flag) * p->frame_crop_bottom_offset;
 
   img2buf (p->imgUV[0],
-           (decodedPic->valid == 1) ? decodedPic->uBuf : decodedPic->uBuf + chromaSizeX * symbolSizeInBytes,
+           (decodedPicture->valid == 1) ? decodedPicture->uBuf : decodedPicture->uBuf + chromaSizeX * symbolSizeInBytes,
            p->size_x_cr, p->size_y_cr, symbolSizeInBytes,
-           cropLeft, cropRight, cropTop, cropBottom, decodedPic->uvStride);
+           cropLeft, cropRight, cropTop, cropBottom, decodedPicture->uvStride);
 
   img2buf (p->imgUV[1],
-           (decodedPic->valid == 1) ? decodedPic->vBuf : decodedPic->vBuf + chromaSizeX * symbolSizeInBytes,
+           (decodedPicture->valid == 1) ? decodedPicture->vBuf : decodedPicture->vBuf + chromaSizeX * symbolSizeInBytes,
            p->size_x_cr, p->size_y_cr, symbolSizeInBytes,
-           cropLeft, cropRight, cropTop, cropBottom, decodedPic->uvStride);
+           cropLeft, cropRight, cropTop, cropBottom, decodedPicture->uvStride);
   }
 //}}}
 //{{{

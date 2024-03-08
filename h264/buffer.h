@@ -121,26 +121,24 @@ typedef struct FrameStore {
 //}}}
 //{{{  sDPB
 typedef struct DPB {
-  sVidParam* vidParam;
-  sInputParam* inputParam;
+  sVidParam*    vidParam;
+  sInputParam*  inputParam;
 
   sFrameStore** fs;
   sFrameStore** fs_ref;
   sFrameStore** fs_ltref;
-  sFrameStore** fs_ilref; // inter-layer reference (for multi-layered codecs)
 
   unsigned size;
-  unsigned used_size;
-  unsigned ref_frames_in_buffer;
-  unsigned ltref_frames_in_buffer;
-  int last_output_poc;
+  unsigned usedSize;
+  unsigned refFramesInBuffer;
+  unsigned longTermRefFramesInBuffer;
+ 
+  int lastOutputPoc;
+  int maxLongTermPicIndex;
+  int initDone;
+  int numRefFrames;
 
-  int max_long_term_pic_idx;
-  int init_done;
-  int num_ref_frames;
-
-  sFrameStore* last_picture;
-  unsigned used_size_il;
+  sFrameStore* lastPicture;
   int layerId;
   } sDPB;
 //}}}
@@ -286,6 +284,7 @@ extern void unmark_for_long_term_reference (sFrameStore* frameStore);
 
 extern sPicture* allocPicture (sVidParam* vidParam, ePicStructure type, int size_x, int size_y, int size_x_cr, int size_y_cr, int is_output);
 extern void freePicture (sPicture* p);
+extern void fillFrameNumGap (sVidParam* vidParam, sSlice *pSlice);
 
 extern void updateRefList (sDPB* dpb);
 extern void updateLongTermRefList (sDPB* dpb);
@@ -323,4 +322,3 @@ extern sPicture* get_short_term_pic (sSlice* slice, sDPB* dpb, int picNum);
 extern void alloc_ref_pic_list_reordering_buffer (sSlice* slice);
 extern void free_ref_pic_list_reordering_buffer (sSlice* slice);
 extern void compute_colocated (sSlice* slice, sPicture** listX[6]);
-extern void fillFrameNumGap (sVidParam* vidParam, sSlice *pSlice);

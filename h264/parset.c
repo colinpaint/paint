@@ -323,7 +323,7 @@ static int spsIsEqual (sSPS* sps1, sSPS* sps2) {
       equal &= (sps1->offset_for_ref_frame[i] == sps2->offset_for_ref_frame[i]);
     }
 
-  equal &= (sps1->num_ref_frames == sps2->num_ref_frames);
+  equal &= (sps1->numRefFrames == sps2->numRefFrames);
   equal &= (sps1->gaps_in_frame_num_value_allowed_flag == sps2->gaps_in_frame_num_value_allowed_flag);
   equal &= (sps1->pic_width_in_mbs_minus1 == sps2->pic_width_in_mbs_minus1);
   equal &= (sps1->pic_height_in_map_units_minus1 == sps2->pic_height_in_map_units_minus1);
@@ -562,7 +562,7 @@ static void interpretSPS (sVidParam* vidParam, sDataPartition* p, sSPS* sps) {
       sps->offset_for_ref_frame[i] = read_se_v ("SPS offset_for_ref_frame[i]", s);
     }
 
-  sps->num_ref_frames = read_ue_v ("SPS num_ref_frames", s);
+  sps->numRefFrames = read_ue_v ("SPS numRefFrames", s);
   sps->gaps_in_frame_num_value_allowed_flag = read_u_1 ("SPS gaps_in_frame_num_value_allowed_flag", s);
   sps->pic_width_in_mbs_minus1 = read_ue_v ("SPS pic_width_in_mbs_minus1", s);
   sps->pic_height_in_map_units_minus1 = read_ue_v ("SPS pic_height_in_map_units_minus1", s);
@@ -642,7 +642,7 @@ void activateSPS (sVidParam* vidParam, sSPS* sps) {
       exitPicture (vidParam, &vidParam->picture);
     vidParam->activeSPS = sps;
 
-    if (vidParam->dpbLayerId==0 && is_BL_profile(sps->profile_idc) && !vidParam->dpbLayer[0]->init_done) {
+    if (vidParam->dpbLayerId==0 && is_BL_profile(sps->profile_idc) && !vidParam->dpbLayer[0]->initDone) {
       setCodingParam (sps, vidParam->codingParam[0]);
       setupLayerInfo ( vidParam, sps, vidParam->layerParam[0]);
       }

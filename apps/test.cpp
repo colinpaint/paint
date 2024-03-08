@@ -957,17 +957,17 @@ public:
 
       int ret = 0;
       do {
-        sDecodedPicList* pDecPicList;
-        ret = DecodeOneFrame (&pDecPicList);
+        sDecodedPicture* decodedPicture;
+        ret = DecodeOneFrame (&decodedPicture);
         if (ret == DEC_EOS || ret == DEC_SUCCEED)
-          outputPicList (pDecPicList, 0);
+          outputPicList (decodedPicture, 0);
         else
           cLog::log (LOGERROR, "decoding  failed");
         } while (ret == DEC_SUCCEED);
 
-      sDecodedPicList* pDecPicList;
-      FinitDecoder (&pDecPicList);
-      outputPicList (pDecPicList, 1);
+      sDecodedPicture* decodedPicture;
+      FinitDecoder (&decodedPicture);
+      outputPicList (decodedPicture, 1);
       CloseDecoder();
 
       delete[] h264Chunk;
@@ -979,9 +979,9 @@ public:
 
 private:
   //{{{
-  void outputPicList (sDecodedPicList* decPic, int bOutputAllFrames) {
+  void outputPicList (sDecodedPicture* decPic, int bOutputAllFrames) {
 
-    sDecodedPicList* pPic = decPic;
+    sDecodedPicture* pPic = decPic;
     while (pPic && pPic->valid == 1) {
       int width = pPic->width * ((pPic->iBitDepth+7)>>3);
       int height = pPic->height;
@@ -1085,17 +1085,17 @@ public:
 
       int ret = 0;
       do {
-        sDecodedPicList* pDecPicList;
-        ret = DecodeOneFrame (&pDecPicList);
+        sDecodedPicture* decodedPicture;
+        ret = DecodeOneFrame (&decodedPicture);
         if (ret == DEC_EOS || ret == DEC_SUCCEED)
-          outputPicList (pDecPicList, 0);
+          outputPicList (decodedPicture, 0);
         else
           cLog::log (LOGERROR, "decoding  failed");
         } while (ret == DEC_SUCCEED);
 
-      sDecodedPicList* pDecPicList;
-      ret = FinitDecoder (&pDecPicList);
-      outputPicList (pDecPicList, 1);
+      sDecodedPicture* decodedPicture;
+      ret = FinitDecoder (&decodedPicture);
+      outputPicList (decodedPicture, 1);
       ret = CloseDecoder();
 
       delete[] chunk;
@@ -1121,9 +1121,9 @@ public:
 
 private:
   //{{{
-  void outputPicList (sDecodedPicList* decPic, int bOutputAllFrames) {
+  void outputPicList (sDecodedPicture* decPic, int bOutputAllFrames) {
 
-    sDecodedPicList* pPic = decPic;
+    sDecodedPicture* pPic = decPic;
     while (pPic && pPic->valid == 1) {
       int width = pPic->width * ((pPic->iBitDepth+7)>>3);
       int height = pPic->height;

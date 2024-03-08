@@ -35,7 +35,7 @@ void error (char* text, int code) {
 static void reset_dpb (sVidParam* vidParam, sDPB* dpb ) {
 
   dpb->vidParam = vidParam;
-  dpb->init_done = 0;
+  dpb->initDone = 0;
   }
 //}}}
 //{{{
@@ -77,7 +77,7 @@ static void allocVidParam (sVidParam** vidParam) {
   (*vidParam)->numSlicesAllocated = MAX_NUM_DECSLICES;
   (*vidParam)->nextSlice = NULL;
   (*vidParam)->nalu = allocNALU (MAX_CODED_FRAME_SIZE);
-  (*vidParam)->decOutputPic = (sDecodedPicList*)calloc(1, sizeof(sDecodedPicList));
+  (*vidParam)->decOutputPic = (sDecodedPicture*)calloc(1, sizeof(sDecodedPicture));
   (*vidParam)->nextPPS = allocPPS();
   (*vidParam)->firstSPS = TRUE;
 }
@@ -230,7 +230,7 @@ static void freeImg (sVidParam* vidParam) {
       }
 
     //free memory;
-    freeDecPicList (vidParam->decOutputPic);
+    freeDecodedPictures (vidParam->decOutputPic);
     if (vidParam->nextPPS) {
       freePPS (vidParam->nextPPS);
       vidParam->nextPPS = NULL;
@@ -520,68 +520,59 @@ void freeGlobalBuffers (sVidParam* vidParam) {
 //}}}
 
 //{{{
-sDecodedPicList* getAvailableDecPic (sDecodedPicList* pDecPicList, int b3D, int view_id) {
+sDecodedPicture* getAvailableDecodedPicture (sDecodedPicture* decodedPicture) {
 
-  sDecodedPicList* pPic = pDecPicList;
-  sDecodedPicList* pPrior = NULL;
-
-  if (b3D) {
-    while (pPic && (pPic->valid &(1<<view_id))) {
-      pPrior = pPic;
-      pPic = pPic->next;
-      }
-    }
-  else {
-    while (pPic && (pPic->valid)) {
-      pPrior = pPic;
-      pPic = pPic->next;
-     }
+  sDecodedPicture* prevDecodedPicture = NULL;
+  while (decodedPicture && (decodedPicture->valid)) {
+    prevDecodedPicture = decodedPicture;
+    decodedPicture = decodedPicture->next;
     }
 
-  if (!pPic) {
-    pPic = (sDecodedPicList *)calloc(1, sizeof(*pPic));
-    pPrior->next = pPic;
+  if (!decodedPicture) {
+    decodedPicture = (sDecodedPicture*)calloc(1, sizeof(*decodedPicture));
+    prevDecodedPicture->next = decodedPicture;
     }
 
-  return pPic;
+  return decodedPicture;
   }
 //}}}
 //{{{
-void ClearDecPicList (sVidParam* vidParam) {
+void ClearDecodedPictures (sVidParam* vidParam) {
 
   // find the head first;
-  sDecodedPicList* pPic = vidParam->decOutputPic, *pPrior = NULL;
-  while (pPic && !pPic->valid) {
-    pPrior = pPic;
-    pPic = pPic->next;
+  sDecodedPicture* prevDecodedPicture = NULL;
+  sDecodedPicture* decodedPicture = vidParam->decOutputPic;
+  while (decodedPicture && !decodedPicture->valid) {
+    prevDecodedPicture = decodedPicture;
+    decodedPicture = decodedPicture->next;
     }
 
-  if (pPic && (pPic != vidParam->decOutputPic)) {
-    //move all nodes before pPic to the end;
-    sDecodedPicList *pPicTail = pPic;
-    while (pPicTail->next)
-      pPicTail = pPicTail->next;
+  if (decodedPicture && (decodedPicture != vidParam->decOutputPic)) {
+    // move all nodes before decodedPicture to the end;
+    sDecodedPicture* decodedPictureTail = decodedPicture;
+    while (decodedPictureTail->next)
+      decodedPictureTail = decodedPictureTail->next;
 
-    pPicTail->next = vidParam->decOutputPic;
-    vidParam->decOutputPic = pPic;
-    pPrior->next = NULL;
+    decodedPictureTail->next = vidParam->decOutputPic;
+    vidParam->decOutputPic = decodedPicture;
+    prevDecodedPicture->next = NULL;
     }
   }
 //}}}
 //{{{
-void freeDecPicList (sDecodedPicList* pDecPicList) {
+void freeDecodedPictures (sDecodedPicture* decodedPicture) {
 
-  while (pDecPicList) {
-    sDecodedPicList* pPicNext = pDecPicList->next;
-    if (pDecPicList->yBuf) {
-      free (pDecPicList->yBuf);
-      pDecPicList->yBuf = NULL;
-      pDecPicList->uBuf = NULL;
-      pDecPicList->vBuf = NULL;
+  while (decodedPicture) {
+    sDecodedPicture* nextDecodedPicture = decodedPicture->next;
+    if (decodedPicture->yBuf) {
+      free (decodedPicture->yBuf);
+      decodedPicture->yBuf = NULL;
+      decodedPicture->uBuf = NULL;
+      decodedPicture->vBuf = NULL;
       }
 
-    free (pDecPicList);
-    pDecPicList = pPicNext;
+    free (decodedPicture);
+    decodedPicture = nextDecodedPicture;
    }
   }
 //}}}
@@ -663,10 +654,10 @@ int OpenDecoder (sInputParam* inputParam, byte* chunk, size_t chunkSize) {
   }
 //}}}
 //{{{
-int DecodeOneFrame (sDecodedPicList** ppDecPicList) {
+int DecodeOneFrame (sDecodedPicture** ppDecPicList) {
 
   sDecoderParam* pDecoder = gDecoder;
-  ClearDecPicList (gDecoder->vidParam);
+  ClearDecodedPictures (gDecoder->vidParam);
 
   int iRet = decodeFrame (gDecoder);
   if (iRet == SOP)
@@ -681,9 +672,9 @@ int DecodeOneFrame (sDecodedPicList** ppDecPicList) {
   }
 //}}}
 //{{{
-int FinitDecoder (sDecodedPicList** ppDecPicList) {
+int FinitDecoder (sDecodedPicture** ppDecPicList) {
 
-  ClearDecPicList (gDecoder->vidParam);
+  ClearDecodedPictures (gDecoder->vidParam);
   flushDpb (gDecoder->vidParam->dpbLayer[0]);
 
   #if (PAIR_FIELDS_IN_OUTPUT)
