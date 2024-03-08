@@ -64,7 +64,7 @@ static void sequence_extension() {
   frame_rate_extension_n       = Get_Bits(2);
   frame_rate_extension_d       = Get_Bits(5);
 
-  frame_rate = frame_rate_Table[frame_rate_code] *
+  frameRate = frame_rate_Table[frame_rate_code] *
     ((frame_rate_extension_n+1)/(frame_rate_extension_d+1));
 
   /* special case for 422 profile & level must be made */

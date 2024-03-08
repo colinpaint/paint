@@ -162,7 +162,7 @@ static void pixMeanInterpolateBlock (sVidParam* vidParam, sPixel *src[], sPixel 
       if ( srcCounter > 0 )
         block[ k + column ] = (sPixel)(tmp/srcCounter);
       else
-        block[ k + column ] = (sPixel) (blockSize == 8 ? vidParam->dc_pred_value_comp[1] : vidParam->dc_pred_value_comp[0]);
+        block[ k + column ] = (sPixel) (blockSize == 8 ? vidParam->dcPredValueComp[1] : vidParam->dcPredValueComp[0]);
     }
     k += frameWidth;
   }
@@ -621,7 +621,7 @@ static void copyPredMB (int currYBlockNum, sPixel *predMB, frame *recfr,
     {
       for (k = (xmin>>uv_x); k <= (xmax>>uv_x); k++)
       {
-        locationTmp = (j-(ymin>>uv_y)) * vidParam->mb_cr_size_x + (k-(xmin>>1)) + 256;
+        locationTmp = (j-(ymin>>uv_y)) * vidParam->mbCrSizeX + (k-(xmin>>1)) + 256;
         picture->imgUV[0][j][k] = predMB[locationTmp];
 
         locationTmp += 64;
@@ -785,10 +785,10 @@ static void buildPredRegionYUV (sVidParam* vidParam, int *mv, int x, int y, sPix
   /* Update coordinates of the current concealed macroblock */
   curMb->mb.x = (short) (x/MB_BLOCK_SIZE);
   curMb->mb.y = (short) (y/MB_BLOCK_SIZE);
-  curMb->block_y = curMb->mb.y * BLOCK_SIZE;
-  curMb->pix_c_y = curMb->mb.y * vidParam->mb_cr_size_y;
-  curMb->block_x = curMb->mb.x * BLOCK_SIZE;
-  curMb->pix_c_x = curMb->mb.x * vidParam->mb_cr_size_x;
+  curMb->blockY = curMb->mb.y * BLOCK_SIZE;
+  curMb->piccY = curMb->mb.y * vidParam->mbCrSizeY;
+  curMb->blockX = curMb->mb.x * BLOCK_SIZE;
+  curMb->pixcX = curMb->mb.x * vidParam->mbCrSizeX;
 
   mv_mul=4;
 
@@ -797,11 +797,11 @@ static void buildPredRegionYUV (sVidParam* vidParam, int *mv, int x, int y, sPix
   for(j=0;j<MB_BLOCK_SIZE/BLOCK_SIZE;j++)
   {
     joff=j*4;
-    j4=curMb->block_y+j;
+    j4=curMb->blockY+j;
     for(i=0;i<MB_BLOCK_SIZE/BLOCK_SIZE;i++)
     {
       ioff=i*4;
-      i4=curMb->block_x+i;
+      i4=curMb->blockX+i;
 
       vec1_x = i4*4*mv_mul + mv[0];
       vec1_y = j4*4*mv_mul + mv[1];
@@ -809,8 +809,8 @@ static void buildPredRegionYUV (sVidParam* vidParam, int *mv, int x, int y, sPix
       get_block_luma(curSlice->listX[0][ref_frame], vec1_x, vec1_y, BLOCK_SIZE, BLOCK_SIZE,
         tmp_block,
         picture->iLumaStride,picture->size_x_m1,
-        (curMb->mb_field) ? (picture->sizeY >> 1) - 1 : picture->size_y_m1,tmp_res,
-        vidParam->max_pel_value_comp[PLANE_Y],(sPixel) vidParam->dc_pred_value_comp[PLANE_Y], curMb);
+        (curMb->mbField) ? (picture->sizeY >> 1) - 1 : picture->size_y_m1,tmp_res,
+        vidParam->maxPelValueComp[PLANE_Y],(sPixel) vidParam->dcPredValueComp[PLANE_Y], curMb);
 
       for(ii=0;ii<BLOCK_SIZE;ii++)
         for(jj=0;jj<MB_BLOCK_SIZE/BLOCK_SIZE;jj++)
@@ -831,10 +831,10 @@ static void buildPredRegionYUV (sVidParam* vidParam, int *mv, int x, int y, sPix
   if (picture->chromaFormatIdc != YUV400)
   {
     // chroma** *****************************************************
-    f1_x = 64/vidParam->mb_cr_size_x;
+    f1_x = 64/vidParam->mbCrSizeX;
     f2_x=f1_x-1;
 
-    f1_y = 64/vidParam->mb_cr_size_y;
+    f1_y = 64/vidParam->mbCrSizeY;
     f2_y=f1_y-1;
 
     f3=f1_x*f1_y;
@@ -842,14 +842,14 @@ static void buildPredRegionYUV (sVidParam* vidParam, int *mv, int x, int y, sPix
 
     for(uv=0;uv<2;uv++)
     {
-      for (b8=0;b8<(vidParam->num_uv_blocks);b8++)
+      for (b8=0;b8<(vidParam->numUvBlocks);b8++)
       {
         for(b4=0;b4<4;b4++)
         {
           joff = subblk_offset_y[yuv][b8][b4];
-          j4=curMb->pix_c_y+joff;
+          j4=curMb->piccY+joff;
           ioff = subblk_offset_x[yuv][b8][b4];
-          i4=curMb->pix_c_x+ioff;
+          i4=curMb->pixcX+ioff;
 
           for(jj=0;jj<4;jj++)
           {
@@ -858,10 +858,10 @@ static void buildPredRegionYUV (sVidParam* vidParam, int *mv, int x, int y, sPix
               i1=(i4+ii)*f1_x + mv[0];
               j1=(j4+jj)*f1_y + mv[1];
 
-              ii0=iClip3 (0, picture->size_x_cr-1, i1/f1_x);
-              jj0=iClip3 (0, picture->size_y_cr-1, j1/f1_y);
-              ii1=iClip3 (0, picture->size_x_cr-1, ((i1+f2_x)/f1_x));
-              jj1=iClip3 (0, picture->size_y_cr-1, ((j1+f2_y)/f1_y));
+              ii0=iClip3 (0, picture->sizeXcr-1, i1/f1_x);
+              jj0=iClip3 (0, picture->sizeYcr-1, j1/f1_y);
+              ii1=iClip3 (0, picture->sizeXcr-1, ((i1+f2_x)/f1_x));
+              jj1=iClip3 (0, picture->sizeYcr-1, ((j1+f2_y)/f1_y));
 
               if1=(i1 & f2_x);
               jf1=(j1 & f2_y);
@@ -1217,7 +1217,7 @@ int ercConcealInterFrame (frame *recfr, sObjectBuffer *object_list,
     if (errorVar->numCorruptedSegments ) {
       sPixel* predMB;
       if (chromaFormatIdc != YUV400)
-        predMB = (sPixel*)malloc ( (256 + (vidParam->mb_cr_size)*2) * sizeof (sPixel));
+        predMB = (sPixel*)malloc ( (256 + (vidParam->mbCrSize)*2) * sizeof (sPixel));
       else
         predMB = (sPixel*)malloc (256 * sizeof (sPixel));
 
@@ -1379,10 +1379,10 @@ static void buildPredblockRegionYUV (sVidParam* vidParam, int *mv,
 
   curMb->mb.x = (short) (x/BLOCK_SIZE);
   curMb->mb.y = (short) (y/BLOCK_SIZE);
-  curMb->block_y = curMb->mb.y * BLOCK_SIZE;
-  curMb->pix_c_y = curMb->mb.y * vidParam->mb_cr_size_y/4;
-  curMb->block_x = curMb->mb.x * BLOCK_SIZE;
-  curMb->pix_c_x = curMb->mb.x * vidParam->mb_cr_size_x/4;
+  curMb->blockY = curMb->mb.y * BLOCK_SIZE;
+  curMb->piccY = curMb->mb.y * vidParam->mbCrSizeY/4;
+  curMb->blockX = curMb->mb.x * BLOCK_SIZE;
+  curMb->pixcX = curMb->mb.x * vidParam->mbCrSizeX/4;
 
   mv_mul=4;
 
@@ -1391,8 +1391,8 @@ static void buildPredblockRegionYUV (sVidParam* vidParam, int *mv,
   vec1_x = x*mv_mul + mv[0];
   vec1_y = y*mv_mul + mv[1];
   get_block_luma(curSlice->listX[list][ref_frame],  vec1_x, vec1_y, BLOCK_SIZE, BLOCK_SIZE, tmp_block,
-    picture->iLumaStride,picture->size_x_m1, (curMb->mb_field) ? (picture->sizeY >> 1) - 1 : picture->size_y_m1,curSlice->tmp_res,
-    vidParam->max_pel_value_comp[PLANE_Y],(sPixel) vidParam->dc_pred_value_comp[PLANE_Y], curMb);
+    picture->iLumaStride,picture->size_x_m1, (curMb->mbField) ? (picture->sizeY >> 1) - 1 : picture->size_y_m1,curSlice->tmp_res,
+    vidParam->maxPelValueComp[PLANE_Y],(sPixel) vidParam->dcPredValueComp[PLANE_Y], curMb);
 
   for(jj=0;jj<MB_BLOCK_SIZE/BLOCK_SIZE;jj++)
     for(ii=0;ii<BLOCK_SIZE;ii++)
@@ -1411,10 +1411,10 @@ static void buildPredblockRegionYUV (sVidParam* vidParam, int *mv,
   if (picture->chromaFormatIdc != YUV400)
   {
     // chroma** *****************************************************
-    f1_x = 64/(vidParam->mb_cr_size_x);
+    f1_x = 64/(vidParam->mbCrSizeX);
     f2_x=f1_x-1;
 
-    f1_y = 64/(vidParam->mb_cr_size_y);
+    f1_y = 64/(vidParam->mbCrSizeY);
     f2_y=f1_y-1;
 
     f3=f1_x*f1_y;
@@ -1423,9 +1423,9 @@ static void buildPredblockRegionYUV (sVidParam* vidParam, int *mv,
     for(uv=0;uv<2;uv++)
     {
       joff = subblk_offset_y[yuv][0][0];
-      j4=curMb->pix_c_y+joff;
+      j4=curMb->piccY+joff;
       ioff = subblk_offset_x[yuv][0][0];
-      i4=curMb->pix_c_x+ioff;
+      i4=curMb->pixcX+ioff;
 
       for(jj=0;jj<2;jj++)
       {
@@ -1434,10 +1434,10 @@ static void buildPredblockRegionYUV (sVidParam* vidParam, int *mv,
           i1=(i4+ii)*f1_x + mv[0];
           j1=(j4+jj)*f1_y + mv[1];
 
-          ii0=iClip3 (0, picture->size_x_cr-1, i1/f1_x);
-          jj0=iClip3 (0, picture->size_y_cr-1, j1/f1_y);
-          ii1=iClip3 (0, picture->size_x_cr-1, ((i1+f2_x)/f1_x));
-          jj1=iClip3 (0, picture->size_y_cr-1, ((j1+f2_y)/f1_y));
+          ii0=iClip3 (0, picture->sizeXcr-1, i1/f1_x);
+          jj0=iClip3 (0, picture->sizeYcr-1, j1/f1_y);
+          ii1=iClip3 (0, picture->sizeXcr-1, ((i1+f2_x)/f1_x));
+          jj1=iClip3 (0, picture->sizeYcr-1, ((j1+f2_y)/f1_y));
 
           if1=(i1 & f2_x);
           jf1=(j1 & f2_y);
@@ -1582,7 +1582,7 @@ static void copy_to_conceal (sPicture *src, sPicture *dst, sVidParam* vidParam)
   {
     if (picture->chromaFormatIdc != YUV400)
     {
-      storeYUV = (sPixel *) malloc ( (16 + (vidParam->mb_cr_size_x*vidParam->mb_cr_size_y)*2/16) * sizeof (sPixel));
+      storeYUV = (sPixel *) malloc ( (16 + (vidParam->mbCrSizeX*vidParam->mbCrSizeY)*2/16) * sizeof (sPixel));
     }
     else
     {
@@ -1751,7 +1751,7 @@ static void update_ref_list_for_concealment (sDPB* dpb) {
     if (dpb->fs[i]->concealment_reference)
       dpb->fs_ref[j++] = dpb->fs[i];
 
-  dpb->refFramesInBuffer = vidParam->activePPS->num_ref_idx_l0_default_active_minus1;
+  dpb->refFramesInBuffer = vidParam->activePPS->numRefIndexL0defaultActiveMinus1;
   }
 //}}}
 
@@ -1922,7 +1922,7 @@ void concealLostFrames (sDPB* dpb, sSlice *pSlice)
 
     pSlice->frameNum = UnusedShortTermFrameNum;
 
-    picture->topPoc = vidParam->lastRefPicPoc + vidParam->ref_poc_gap;
+    picture->topPoc = vidParam->lastRefPicPoc + vidParam->refPocGap;
     picture->botPoc = picture->topPoc;
     picture->framePoc = picture->topPoc;
     picture->poc = picture->topPoc;

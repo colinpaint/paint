@@ -2756,16 +2756,16 @@ static void ImGuiListClipper_SortAndFuseRanges(ImVector<ImGuiListClipperRange>& 
     }
 }
 
-static void ImGuiListClipper_SeekCursorAndSetupPrevLine(float pos_y, float line_height)
+static void ImGuiListClipper_SeekCursorAndSetupPrevLine(float posY, float line_height)
 {
     // Set cursor position and a few other things so that SetScrollHereY() and Columns() can work when seeking cursor.
     // FIXME: It is problematic that we have to do that here, because custom/equivalent end-user code would stumble on the same issue.
     // The clipper should probably have a final step to display the last item in a regular manner, maybe with an opt-out flag for data sets which may have costly seek?
     ImGuiContext& g = *GImGui;
     ImGuiWindow* window = g.CurrentWindow;
-    float off_y = pos_y - window->DC.CursorPos.y;
-    window->DC.CursorPos.y = pos_y;
-    window->DC.CursorMaxPos.y = ImMax(window->DC.CursorMaxPos.y, pos_y - g.Style.ItemSpacing.y);
+    float off_y = posY - window->DC.CursorPos.y;
+    window->DC.CursorPos.y = posY;
+    window->DC.CursorMaxPos.y = ImMax(window->DC.CursorMaxPos.y, posY - g.Style.ItemSpacing.y);
     window->DC.CursorPosPrevLine.y = window->DC.CursorPos.y - line_height;  // Setting those fields so that SetScrollHereY() can properly function after the end of our clipper usage.
     window->DC.PrevLineSize.y = (line_height - g.Style.ItemSpacing.y);      // If we end up needing more accurate data (to e.g. use SameLine) we may as well make the clipper have a fourth step to let user process and display the last item in their list.
     if (ImGuiOldColumns* columns = window->DC.CurrentColumns)
@@ -2786,8 +2786,8 @@ static void ImGuiListClipper_SeekCursorForItem(ImGuiListClipper* clipper, int it
     // StartPosY starts from ItemsFrozen hence the subtraction
     // Perform the add and multiply with double to allow seeking through larger ranges
     ImGuiListClipperData* data = (ImGuiListClipperData*)clipper->TempData;
-    float pos_y = (float)((double)clipper->StartPosY + data->LossynessOffset + (double)(item_n - data->ItemsFrozen) * clipper->ItemsHeight);
-    ImGuiListClipper_SeekCursorAndSetupPrevLine(pos_y, clipper->ItemsHeight);
+    float posY = (float)((double)clipper->StartPosY + data->LossynessOffset + (double)(item_n - data->ItemsFrozen) * clipper->ItemsHeight);
+    ImGuiListClipper_SeekCursorAndSetupPrevLine(posY, clipper->ItemsHeight);
 }
 
 ImGuiListClipper::ImGuiListClipper()
@@ -14376,14 +14376,14 @@ void ImGui::ShowMetricsWindow(bool* p_open)
         if (TreeNode("By submission order (begin stack)"))
         {
             // Here we display windows in their submitted order/hierarchy, however note that the Begin stack doesn't constitute a Parent<>Child relationship!
-            ImVector<ImGuiWindow*>& temp_buffer = g.WindowsTempSortBuffer;
-            temp_buffer.resize(0);
+            ImVector<ImGuiWindow*>& tempBuffer = g.WindowsTempSortBuffer;
+            tempBuffer.resize(0);
             for (ImGuiWindow* window : g.Windows)
                 if (window->LastFrameActive + 1 >= g.FrameCount)
-                    temp_buffer.push_back(window);
+                    tempBuffer.push_back(window);
             struct Func { static int IMGUI_CDECL WindowComparerByBeginOrder(const void* lhs, const void* rhs) { return ((int)(*(const ImGuiWindow* const *)lhs)->BeginOrderWithinContext - (*(const ImGuiWindow* const*)rhs)->BeginOrderWithinContext); } };
-            ImQsort(temp_buffer.Data, (size_t)temp_buffer.Size, sizeof(ImGuiWindow*), Func::WindowComparerByBeginOrder);
-            DebugNodeWindowsListByBeginStackParent(temp_buffer.Data, temp_buffer.Size, NULL);
+            ImQsort(tempBuffer.Data, (size_t)tempBuffer.Size, sizeof(ImGuiWindow*), Func::WindowComparerByBeginOrder);
+            DebugNodeWindowsListByBeginStackParent(tempBuffer.Data, tempBuffer.Size, NULL);
             TreePop();
         }
 

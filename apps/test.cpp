@@ -948,11 +948,11 @@ public:
       sInputParam sInputParams;
       memset (&sInputParams, 0, sizeof(sInputParam));
       //sInputParams.vlcDebug = 1;
-      sInputParams.poc_scale = 2;
+      sInputParams.pocScale = 2;
       sInputParams.pocGap = 2;
-      sInputParams.ref_poc_gap = 2;
+      sInputParams.refPocGap = 2;
       sInputParams.dpb_plus[0] = 1;
-      sInputParams.intra_profile_deblocking = 1;
+      sInputParams.intraProfileDeblocking = 1;
       OpenDecoder (&sInputParams, h264Chunk, h264ChunkSize);
 
       int ret = 0;
@@ -1072,11 +1072,11 @@ public:
       // input params
       sInputParam sInputParams;
       memset (&sInputParams, 0, sizeof(sInputParam));
-      sInputParams.poc_scale = 2;
+      sInputParams.pocScale = 2;
       sInputParams.pocGap = 2;
-      sInputParams.ref_poc_gap = 2;
+      sInputParams.refPocGap = 2;
       sInputParams.dpb_plus[0] = 1;
-      sInputParams.intra_profile_deblocking = 1;
+      sInputParams.intraProfileDeblocking = 1;
 
       if (OpenDecoder (&sInputParams, chunk, fileSize) != DEC_OPEN_NOERR) {
         cLog::log (LOGERROR, "openDecoder failed");

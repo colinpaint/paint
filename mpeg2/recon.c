@@ -270,7 +270,7 @@ void form_predictions (int bx, int by, int macroblock_type, int motion_type,
       }
     else {
       //{{{  field picture */
-      currentfield = (picture_structure==BOTTOM_FIELD);
+      currentfield = (picture_structure==BotField);
 
       /* determine which frame to use for prediction */
       if ((picture_coding_type==P_TYPE) && Second_Field

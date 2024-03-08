@@ -122,7 +122,7 @@ void ihadamard4x2 (int** tblock, int** block)
 //}}}
 
 //{{{
-void forward4x4 (int** block, int** tblock, int pos_y, int pos_x)
+void forward4x4 (int** block, int** tblock, int posY, int posX)
 {
   int i, ii;
   int tmp[16];
@@ -131,9 +131,9 @@ void forward4x4 (int** block, int** tblock, int pos_y, int pos_x)
   int t0,t1,t2,t3;
 
   // Horizontal
-  for (i=pos_y; i < pos_y + BLOCK_SIZE; i++)
+  for (i=posY; i < posY + BLOCK_SIZE; i++)
   {
-    pblock = &block[i][pos_x];
+    pblock = &block[i][posX];
     p0 = *(pblock++);
     p1 = *(pblock++);
     p2 = *(pblock++);
@@ -164,16 +164,16 @@ void forward4x4 (int** block, int** tblock, int pos_y, int pos_x)
     t2 = p1 - p2;
     t3 = p0 - p3;
 
-    ii = pos_x + i;
-    tblock[pos_y    ][ii] = t0 +  t1;
-    tblock[pos_y + 1][ii] = t2 + (t3 << 1);
-    tblock[pos_y + 2][ii] = t0 -  t1;
-    tblock[pos_y + 3][ii] = t3 - (t2 << 1);
+    ii = posX + i;
+    tblock[posY    ][ii] = t0 +  t1;
+    tblock[posY + 1][ii] = t2 + (t3 << 1);
+    tblock[posY + 2][ii] = t0 -  t1;
+    tblock[posY + 3][ii] = t3 - (t2 << 1);
   }
 }
 //}}}
 //{{{
-void inverse4x4 (int** tblock, int** block, int pos_y, int pos_x)
+void inverse4x4 (int** tblock, int** block, int posY, int posX)
 {
   int i, ii;
   int tmp[16];
@@ -182,9 +182,9 @@ void inverse4x4 (int** tblock, int** block, int pos_y, int pos_x)
   int t0,t1,t2,t3;
 
   // Horizontal
-  for (i = pos_y; i < pos_y + BLOCK_SIZE; i++)
+  for (i = posY; i < posY + BLOCK_SIZE; i++)
   {
-    pblock = &tblock[i][pos_x];
+    pblock = &tblock[i][posX];
     t0 = *(pblock++);
     t1 = *(pblock++);
     t2 = *(pblock++);
@@ -215,11 +215,11 @@ void inverse4x4 (int** tblock, int** block, int pos_y, int pos_x)
     p2 =(t1 >> 1) - t3;
     p3 = t1 + (t3 >> 1);
 
-    ii = i + pos_x;
-    block[pos_y    ][ii] = p0 + p3;
-    block[pos_y + 1][ii] = p1 + p2;
-    block[pos_y + 2][ii] = p1 - p2;
-    block[pos_y + 3][ii] = p0 - p3;
+    ii = i + posX;
+    block[posY    ][ii] = p0 + p3;
+    block[posY + 1][ii] = p1 + p2;
+    block[posY + 2][ii] = p1 - p2;
+    block[posY + 3][ii] = p0 - p3;
   }
 }
 //}}}
@@ -325,7 +325,7 @@ void ihadamard4x4 (int** tblock, int** block)
 //}}}
 
 //{{{
-void forward8x8 (int** block, int** tblock, int pos_y, int pos_x)
+void forward8x8 (int** block, int** tblock, int posY, int posX)
 {
   int i, ii;
   int tmp[64];
@@ -335,9 +335,9 @@ void forward8x8 (int** block, int** tblock, int pos_y, int pos_x)
   int b0, b1, b2, b3, b4, b5, b6, b7;
 
   // Horizontal
-  for (i=pos_y; i < pos_y + BLOCK_SIZE_8x8; i++)
+  for (i=posY; i < posY + BLOCK_SIZE_8x8; i++)
   {
-    pblock = &block[i][pos_x];
+    pblock = &block[i][posX];
     p0 = *(pblock++);
     p1 = *(pblock++);
     p2 = *(pblock++);
@@ -410,20 +410,20 @@ void forward8x8 (int** block, int** tblock, int pos_y, int pos_x)
     b6 = a0 + a3 - ((a1 >> 1) + a1);
     b7 = a1 - a2 + ((a3 >> 1) + a3);
 
-    ii = pos_x + i;
-    tblock[pos_y    ][ii] =  b0 + b1;
-    tblock[pos_y + 1][ii] =  b4 + (b7 >> 2);
-    tblock[pos_y + 2][ii] =  b2 + (b3 >> 1);
-    tblock[pos_y + 3][ii] =  b5 + (b6 >> 2);
-    tblock[pos_y + 4][ii] =  b0 - b1;
-    tblock[pos_y + 5][ii] =  b6 - (b5 >> 2);
-    tblock[pos_y + 6][ii] = (b2 >> 1) - b3;
-    tblock[pos_y + 7][ii] = (b4 >> 2) - b7;
+    ii = posX + i;
+    tblock[posY    ][ii] =  b0 + b1;
+    tblock[posY + 1][ii] =  b4 + (b7 >> 2);
+    tblock[posY + 2][ii] =  b2 + (b3 >> 1);
+    tblock[posY + 3][ii] =  b5 + (b6 >> 2);
+    tblock[posY + 4][ii] =  b0 - b1;
+    tblock[posY + 5][ii] =  b6 - (b5 >> 2);
+    tblock[posY + 6][ii] = (b2 >> 1) - b3;
+    tblock[posY + 7][ii] = (b4 >> 2) - b7;
   }
 }
 //}}}
 //{{{
-void inverse8x8 (int** tblock, int** block, int pos_x)
+void inverse8x8 (int** tblock, int** block, int posX)
 {
   int i, ii;
   int tmp[64];
@@ -435,7 +435,7 @@ void inverse8x8 (int** tblock, int** block, int pos_x)
   // Horizontal
   for (i=0; i < BLOCK_SIZE_8x8; i++)
   {
-    pblock = &tblock[i][pos_x];
+    pblock = &tblock[i][posX];
     p0 = *(pblock++);
     p1 = *(pblock++);
     p2 = *(pblock++);
@@ -510,7 +510,7 @@ void inverse8x8 (int** tblock, int** block, int pos_x)
     b3 =  a1 + (a2 >> 2);
     b5 =  a2 - (a1 >> 2);
 
-    ii = i + pos_x;
+    ii = i + posX;
     block[0][ii] = b0 + b7;
     block[1][ii] = b2 - b5;
     block[2][ii] = b4 + b3;
@@ -565,11 +565,11 @@ void itrans8x8 (sMacroblock *curMb, eColorPlane pl, int ioff, int joff) {
   sSlice* curSlice = curMb->slice;
   int** m7 = curSlice->mb_rres[pl];
 
-  if (curMb->is_lossless == TRUE)
-    recon8x8_lossless (&m7[joff], &curSlice->mb_rec[pl][joff], &curSlice->mb_pred[pl][joff], curMb->vidParam->max_pel_value_comp[pl], ioff);
+  if (curMb->isLossless == TRUE)
+    recon8x8_lossless (&m7[joff], &curSlice->mb_rec[pl][joff], &curSlice->mb_pred[pl][joff], curMb->vidParam->maxPelValueComp[pl], ioff);
   else {
     inverse8x8 (&m7[joff], &m7[joff], ioff);
-    recon8x8 (&m7[joff], &curSlice->mb_rec[pl][joff], &curSlice->mb_pred[pl][joff], curMb->vidParam->max_pel_value_comp[pl], ioff);
+    recon8x8 (&m7[joff], &curSlice->mb_rec[pl][joff], &curSlice->mb_pred[pl][joff], curMb->vidParam->maxPelValueComp[pl], ioff);
    }
   }
 //}}}

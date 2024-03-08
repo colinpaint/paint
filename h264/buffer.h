@@ -4,14 +4,14 @@
 #define MAX_LIST_SIZE 33
 //{{{  sPicMotionParamsOld
 typedef struct PicMotionParamOld {
-  byte*  mb_field;      // field macroblock indicator
+  byte*  mbField;      // field macroblock indicator
   } sPicMotionParamsOld;
 //}}}
 //{{{  sPicMotionParam
 typedef struct PicMotionParam {
   struct Picture* refPic[2];  // referrence picture pointer
   sMotionVector           mv[2];       // motion vector
-  char                    refIndex[2];  // reference picture   [list][subblock_y][subblock_x]
+  char                    refIndex[2];  // reference picture   [list][subblockY][subblockX]
   byte                    slice_no;
   } sPicMotionParam;
 //}}}
@@ -36,9 +36,9 @@ typedef struct Picture {
   int         non_existing;
   int         sepColourPlaneFlag;
 
-  short       max_slice_id;
+  short       maxSliceId;
 
-  int         sizeX, sizeY, size_x_cr, size_y_cr;
+  int         sizeX, sizeY, sizeXcr, sizeYcr;
   int         size_x_m1, size_y_m1, size_x_cr_m1, size_y_cr_m1;
   int         codedFrame;
   int         mbAffFrameFlag;
@@ -55,8 +55,8 @@ typedef struct Picture {
   struct PicMotionParamOld  motion;
   struct PicMotionParamOld  JVmotion[MAX_PLANE]; // Motion info for 4:4:4 independent mode decoding
 
-  struct Picture* top_field;     // for mb aff, if frame for referencing the top field
-  struct Picture* bottom_field;  // for mb aff, if frame for referencing the bottom field
+  struct Picture* topField;     // for mb aff, if frame for referencing the top field
+  struct Picture* botField;  // for mb aff, if frame for referencing the bottom field
   struct Picture* frame;         // for mb aff, if field for referencing the combined frame
 
   int         sliceType;
@@ -115,8 +115,8 @@ typedef struct FrameStore {
   int concealment_reference;
 
   sPicture* frame;
-  sPicture* top_field;
-  sPicture* bottom_field;
+  sPicture* topField;
+  sPicture* botField;
   } sFrameStore;
 //}}}
 //{{{  sDPB
@@ -282,7 +282,7 @@ extern void freeFrameStore (sFrameStore* frameStore);
 extern void unmark_for_reference( sFrameStore* frameStore);
 extern void unmark_for_long_term_reference (sFrameStore* frameStore);
 
-extern sPicture* allocPicture (sVidParam* vidParam, ePicStructure type, int sizeX, int sizeY, int size_x_cr, int size_y_cr, int is_output);
+extern sPicture* allocPicture (sVidParam* vidParam, ePicStructure type, int sizeX, int sizeY, int sizeXcr, int sizeYcr, int is_output);
 extern void freePicture (sPicture* p);
 extern void fillFrameNumGap (sVidParam* vidParam, sSlice *pSlice);
 
@@ -314,7 +314,7 @@ extern void init_lists_b_slice (sSlice* slice);
 extern void init_lists_i_slice (sSlice* slice);
 extern void update_pic_num (sSlice* slice);
 
-extern void dpb_combine_field_yuv (sVidParam* vidParam, sFrameStore* frameStore);
+extern void dpbCombineField (sVidParam* vidParam, sFrameStore* frameStore);
 extern void reorderRefPicList (sSlice* slice, int curList);
 extern void init_mbaff_lists (sVidParam* vidParam, sSlice* slice);
 extern sPicture* get_short_term_pic (sSlice* slice, sDPB* dpb, int picNum);

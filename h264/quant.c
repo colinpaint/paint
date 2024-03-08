@@ -150,7 +150,7 @@ static void CalculateQuant8x8Param (sSlice* curSlice) {
 //{{{
 void allocQuant (sCodingParam* codingParam) {
 
-  int bitdepth_qp_scale = imax (codingParam->bitdepth_luma_qp_scale, codingParam->bitdepth_chroma_qp_scale);
+  int bitdepth_qp_scale = imax (codingParam->bitdepth_luma_qp_scale, codingParam->bitdepthChromaQpScale);
 
   // We should allocate memory outside of this process since maybe we will have a change of SPS
   // and we may need to recreate these. Currently should only support same bitdepth
@@ -189,7 +189,7 @@ void assignQuantParams (sSlice* curSlice) {
   sSPS* sps = curSlice->activeSPS;
   sPPS* pps = curSlice->activePPS;
 
-  if (!pps->pic_scaling_matrix_present_flag && !sps->seq_scaling_matrix_present_flag) {
+  if (!pps->picScalingMatrixPresentFlag && !sps->seq_scaling_matrix_present_flag) {
     for (int i = 0; i < 12; i++)
       curSlice->qmatrix[i] = (i < 6) ? quant_org : quant8_org;
     }
@@ -209,10 +209,10 @@ void assignQuantParams (sSlice* curSlice) {
               curSlice->qmatrix[i] = curSlice->qmatrix[i-1];
             }
           else {
-            if (sps->UseDefaultScalingMatrix4x4Flag[i])
+            if (sps->useDefaultScalingMatrix4x4Flag[i])
               curSlice->qmatrix[i] = (i<3) ? quant_intra_default : quant_inter_default;
             else
-              curSlice->qmatrix[i] = sps->ScalingList4x4[i];
+              curSlice->qmatrix[i] = sps->scalingList4x4[i];
           }
         }
         else {
@@ -226,20 +226,20 @@ void assignQuantParams (sSlice* curSlice) {
               curSlice->qmatrix[i] = curSlice->qmatrix[i-2];
             }
           else {
-            if (sps->UseDefaultScalingMatrix8x8Flag[i-6])
+            if (sps->useDefaultScalingMatrix8x8Flag[i-6])
               curSlice->qmatrix[i] = (i==6 || i==8 || i==10) ? quant8_intra_default:quant8_inter_default;
             else
-              curSlice->qmatrix[i] = sps->ScalingList8x8[i-6];
+              curSlice->qmatrix[i] = sps->scalingList8x8[i-6];
             }
           }
         }
       }
       //}}}
-    if (pps->pic_scaling_matrix_present_flag) {
+    if (pps->picScalingMatrixPresentFlag) {
       //{{{  then check pps
       for (int i = 0; i < n_ScalingList; i++) {
         if (i < 6) {
-          if (!pps->pic_scaling_list_present_flag[i]) {
+          if (!pps->picScalingListPresentFlag[i]) {
             // fall-back rule B
             if (i == 0) {
               if (!sps->seq_scaling_matrix_present_flag)
@@ -253,14 +253,14 @@ void assignQuantParams (sSlice* curSlice) {
               curSlice->qmatrix[i] = curSlice->qmatrix[i-1];
             }
           else {
-            if (pps->UseDefaultScalingMatrix4x4Flag[i])
+            if (pps->useDefaultScalingMatrix4x4Flag[i])
               curSlice->qmatrix[i] = (i<3) ? quant_intra_default:quant_inter_default;
             else
-              curSlice->qmatrix[i] = pps->ScalingList4x4[i];
+              curSlice->qmatrix[i] = pps->scalingList4x4[i];
             }
           }
         else {
-          if (!pps->pic_scaling_list_present_flag[i]) {
+          if (!pps->picScalingListPresentFlag[i]) {
             // fall-back rule B
             if (i == 6) {
               if (!sps->seq_scaling_matrix_present_flag)
@@ -274,10 +274,10 @@ void assignQuantParams (sSlice* curSlice) {
               curSlice->qmatrix[i] = curSlice->qmatrix[i-2];
             }
           else {
-            if (pps->UseDefaultScalingMatrix8x8Flag[i-6])
+            if (pps->useDefaultScalingMatrix8x8Flag[i-6])
               curSlice->qmatrix[i] = (i==6 || i==8 || i==10) ? quant8_intra_default:quant8_inter_default;
             else
-              curSlice->qmatrix[i] = pps->ScalingList8x8[i-6];
+              curSlice->qmatrix[i] = pps->scalingList8x8[i-6];
             }
           }
         }
@@ -286,7 +286,7 @@ void assignQuantParams (sSlice* curSlice) {
     }
 
   CalculateQuant4x4Param (curSlice);
-  if (pps->transform_8x8_mode_flag)
+  if (pps->transform8x8modeFlag)
     CalculateQuant8x8Param (curSlice);
   }
 //}}}

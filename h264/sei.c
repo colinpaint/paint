@@ -879,14 +879,14 @@ static void interpret_motion_constrained_slice_group_set_info (byte* payload, in
   buf->streamBuffer = payload;
   buf->frameBitOffset = 0;
 
-  int num_slice_groups_minus1 = readUeV ("SEI num_slice_groups_minus1" , buf);
-  int sliceGroupSize = ceilLog2 (num_slice_groups_minus1 + 1);
+  int numSliceGroupsMinus1 = readUeV ("SEI numSliceGroupsMinus1" , buf);
+  int sliceGroupSize = ceilLog2 (numSliceGroupsMinus1 + 1);
   printf ("Motion-constrained slice group set SEI message\n");
-  printf ("num_slice_groups_minus1 = %d\n", num_slice_groups_minus1);
+  printf ("numSliceGroupsMinus1 = %d\n", numSliceGroupsMinus1);
 
-  for (int i = 0; i <= num_slice_groups_minus1; i++) {
-    int slice_group_id = readUv (sliceGroupSize, "SEI slice_group_id" , buf);
-    printf ("slice_group_id = %d\n", slice_group_id);
+  for (int i = 0; i <= numSliceGroupsMinus1; i++) {
+    int sliceGroupId = readUv (sliceGroupSize, "SEI sliceGroupId" , buf);
+    printf ("sliceGroupId = %d\n", sliceGroupId);
     }
 
   int exact_match_flag = readU1 ("SEI exact_match_flag"  , buf);
@@ -1040,12 +1040,12 @@ static void interpret_buffering_period_info (byte* payload, int size, sVidParam*
   buf->streamBuffer = payload;
   buf->frameBitOffset = 0;
 
-  int seq_parameter_set_id = readUeV("SEI seq_parameter_set_id"  , buf);
-  sSPS* sps = &vidParam->SeqParSet[seq_parameter_set_id];
+  int spsId = readUeV("SEI spsId"  , buf);
+  sSPS* sps = &vidParam->SeqParSet[spsId];
   activateSPS (vidParam, sps);
 
   printf ("Buffering period SEI message\n");
-  printf ("seq_parameter_set_id   = %d\n", seq_parameter_set_id);
+  printf ("spsId   = %d\n", spsId);
 
   // Note: NalHrdBpPresentFlag and CpbDpbDelaysPresentFlag can also be set "by some means not specified in this Recommendation | International Standard"
   if (sps->vui_parameters_present_flag) {

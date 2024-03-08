@@ -106,8 +106,8 @@ typedef enum {
 //{{{  enum ePicStructure
 typedef enum {
   FRAME,
-  TOP_FIELD,
-  BOTTOM_FIELD
+  TopField,
+  BotField
   } ePicStructure;
 //}}}
 

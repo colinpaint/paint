@@ -1242,10 +1242,10 @@ static void reset_WPParam (sSlice* curSlice) {
 
   for (int i = 0; i < MAX_REFERENCE_PICTURES; i++) {
     for (int comp = 0; comp < 3; comp++) {
-      int log_weight_denom = (comp == 0) ? curSlice->luma_log2_weight_denom :
-                                           curSlice->chroma_log2_weight_denom;
-      curSlice->wp_weight[0][i][comp] = 1 << log_weight_denom;
-      curSlice->wp_weight[1][i][comp] = 1 << log_weight_denom;
+      int logWeightDenom = (comp == 0) ? curSlice->lumaLog2weightDenom :
+                                           curSlice->chromaLog2weightDenom;
+      curSlice->wpWeight[0][i][comp] = 1 << logWeightDenom;
+      curSlice->wpWeight[1][i][comp] = 1 << logWeightDenom;
       }
     }
   }
@@ -1262,16 +1262,16 @@ static void pred_weight_table (sSlice* curSlice) {
 
   int luma_weight_flag_l0, luma_weight_flag_l1, chroma_weight_flag_l0, chroma_weight_flag_l1;
 
-  curSlice->luma_log2_weight_denom =
-    (unsigned short) readUeV ("SLC luma_log2_weight_denom", curStream);
+  curSlice->lumaLog2weightDenom =
+    (unsigned short) readUeV ("SLC lumaLog2weightDenom", curStream);
   curSlice->wp_round_luma =
-    curSlice->luma_log2_weight_denom ? 1<<(curSlice->luma_log2_weight_denom - 1) : 0;
+    curSlice->lumaLog2weightDenom ? 1<<(curSlice->lumaLog2weightDenom - 1) : 0;
 
   if (0 != activeSPS->chromaFormatIdc) {
-    curSlice->chroma_log2_weight_denom =
-      (unsigned short) readUeV ("SLC chroma_log2_weight_denom", curStream);
+    curSlice->chromaLog2weightDenom =
+      (unsigned short) readUeV ("SLC chromaLog2weightDenom", curStream);
     curSlice->wp_round_chroma =
-      curSlice->chroma_log2_weight_denom ? 1<<(curSlice->chroma_log2_weight_denom - 1) : 0;
+      curSlice->chromaLog2weightDenom ? 1<<(curSlice->chromaLog2weightDenom - 1) : 0;
     }
 
   reset_WPParam (curSlice);
@@ -1279,12 +1279,12 @@ static void pred_weight_table (sSlice* curSlice) {
   for (int i = 0; i < curSlice->numRefIndexActive[LIST_0]; i++) {
     luma_weight_flag_l0 = readU1 ("SLC luma_weight_flag_l0", curStream);
     if (luma_weight_flag_l0) {
-      curSlice->wp_weight[LIST_0][i][0] = readSeV ("SLC luma_weight_l0", curStream);
+      curSlice->wpWeight[LIST_0][i][0] = readSeV ("SLC luma_weight_l0", curStream);
       curSlice->wpOffset[LIST_0][i][0] = readSeV ("SLC luma_offset_l0", curStream);
-      curSlice->wpOffset[LIST_0][i][0] = curSlice->wpOffset[LIST_0][i][0]<<(vidParam->bitdepth_luma - 8);
+      curSlice->wpOffset[LIST_0][i][0] = curSlice->wpOffset[LIST_0][i][0]<<(vidParam->bitdepthLuma - 8);
       }
     else {
-      curSlice->wp_weight[LIST_0][i][0] = 1 << curSlice->luma_log2_weight_denom;
+      curSlice->wpWeight[LIST_0][i][0] = 1 << curSlice->lumaLog2weightDenom;
       curSlice->wpOffset[LIST_0][i][0] = 0;
       }
 
@@ -1292,12 +1292,12 @@ static void pred_weight_table (sSlice* curSlice) {
       chroma_weight_flag_l0 = readU1 ("SLC chroma_weight_flag_l0", curStream);
       for (int j = 1; j<3; j++) {
         if (chroma_weight_flag_l0) {
-          curSlice->wp_weight[LIST_0][i][j] = readSeV("SLC chroma_weight_l0", curStream);
+          curSlice->wpWeight[LIST_0][i][j] = readSeV("SLC chroma_weight_l0", curStream);
           curSlice->wpOffset[LIST_0][i][j] = readSeV("SLC chroma_offset_l0", curStream);
-          curSlice->wpOffset[LIST_0][i][j] = curSlice->wpOffset[LIST_0][i][j]<<(vidParam->bitdepth_chroma-8);
+          curSlice->wpOffset[LIST_0][i][j] = curSlice->wpOffset[LIST_0][i][j]<<(vidParam->bitdepthChroma-8);
           }
         else {
-          curSlice->wp_weight[LIST_0][i][j] = 1<<curSlice->chroma_log2_weight_denom;
+          curSlice->wpWeight[LIST_0][i][j] = 1<<curSlice->chromaLog2weightDenom;
           curSlice->wpOffset[LIST_0][i][j] = 0;
           }
         }
@@ -1305,16 +1305,16 @@ static void pred_weight_table (sSlice* curSlice) {
     }
 
   if ((curSlice->sliceType == B_SLICE) &&
-      vidParam->activePPS->weighted_bipred_idc == 1) {
+      vidParam->activePPS->weightedBiPredIdc == 1) {
     for (int i = 0; i < curSlice->numRefIndexActive[LIST_1]; i++) {
       luma_weight_flag_l1 = readU1("SLC luma_weight_flag_l1", curStream);
       if (luma_weight_flag_l1) {
-        curSlice->wp_weight[LIST_1][i][0] = readSeV ("SLC luma_weight_l1", curStream);
+        curSlice->wpWeight[LIST_1][i][0] = readSeV ("SLC luma_weight_l1", curStream);
         curSlice->wpOffset[LIST_1][i][0] = readSeV ("SLC luma_offset_l1", curStream);
-        curSlice->wpOffset[LIST_1][i][0] = curSlice->wpOffset[LIST_1][i][0]<<(vidParam->bitdepth_luma-8);
+        curSlice->wpOffset[LIST_1][i][0] = curSlice->wpOffset[LIST_1][i][0]<<(vidParam->bitdepthLuma-8);
         }
       else {
-        curSlice->wp_weight[LIST_1][i][0] = 1<<curSlice->luma_log2_weight_denom;
+        curSlice->wpWeight[LIST_1][i][0] = 1<<curSlice->lumaLog2weightDenom;
         curSlice->wpOffset[LIST_1][i][0] = 0;
         }
 
@@ -1322,12 +1322,12 @@ static void pred_weight_table (sSlice* curSlice) {
         chroma_weight_flag_l1 = readU1 ("SLC chroma_weight_flag_l1", curStream);
         for (int j = 1; j < 3; j++) {
           if (chroma_weight_flag_l1) {
-            curSlice->wp_weight[LIST_1][i][j] = readSeV("SLC chroma_weight_l1", curStream);
+            curSlice->wpWeight[LIST_1][i][j] = readSeV("SLC chroma_weight_l1", curStream);
             curSlice->wpOffset[LIST_1][i][j] = readSeV("SLC chroma_offset_l1", curStream);
-            curSlice->wpOffset[LIST_1][i][j] = curSlice->wpOffset[LIST_1][i][j]<<(vidParam->bitdepth_chroma-8);
+            curSlice->wpOffset[LIST_1][i][j] = curSlice->wpOffset[LIST_1][i][j]<<(vidParam->bitdepthChroma-8);
             }
           else {
-            curSlice->wp_weight[LIST_1][i][j] = 1<<curSlice->chroma_log2_weight_denom;
+            curSlice->wpWeight[LIST_1][i][j] = 1<<curSlice->chromaLog2weightDenom;
             curSlice->wpOffset[LIST_1][i][j] = 0;
             }
           }
@@ -1710,9 +1710,9 @@ void readSliceHeader (sSlice* curSlice) {
   curSlice->ppsId = readUeV ("SLC ppsId", curStream);
 
   if (vidParam->sepColourPlaneFlag)
-    curSlice->colour_plane_id = readUv (2, "SLC colour_plane_id", curStream);
+    curSlice->colourPlaneId = readUv (2, "SLC colourPlaneId", curStream);
   else
-    curSlice->colour_plane_id = PLANE_Y;
+    curSlice->colourPlaneId = PLANE_Y;
   }
 //}}}
 //{{{
@@ -1747,7 +1747,7 @@ void readRestSliceHeader (sSlice* curSlice) {
     if (curSlice->fieldPicFlag) {
       // botFieldFlag  u(1)
       curSlice->botFieldFlag = (byte)readU1 ("SLC botFieldFlag", curStream);
-      vidParam->structure = curSlice->botFieldFlag ? BOTTOM_FIELD : TOP_FIELD;
+      vidParam->structure = curSlice->botFieldFlag ? BotField : TopField;
       }
     else {
       vidParam->structure = FRAME;
@@ -1761,9 +1761,9 @@ void readRestSliceHeader (sSlice* curSlice) {
 
   if (curSlice->structure == FRAME)
     assert (curSlice->fieldPicFlag == 0);
-  if (curSlice->structure == TOP_FIELD)
+  if (curSlice->structure == TopField)
     assert (curSlice->fieldPicFlag == 1 && (curSlice->botFieldFlag == FALSE));
-  if (curSlice->structure == BOTTOM_FIELD)
+  if (curSlice->structure == BotField)
     assert (curSlice->fieldPicFlag == 1 && (curSlice->botFieldFlag == TRUE ));
 
   if (curSlice->idrFlag)
@@ -1795,14 +1795,14 @@ void readRestSliceHeader (sSlice* curSlice) {
     }
 
   // redundantPicCount is missing here
-  if (vidParam->activePPS->redundant_pic_cnt_present_flag)
+  if (vidParam->activePPS->redundantPicCountPresentFlag)
     curSlice->redundantPicCount = readUeV ("SLC redundantPicCount", curStream);
 
   if (curSlice->sliceType == B_SLICE)
     curSlice->direct_spatial_mv_pred_flag = readU1 ("SLC direct_spatial_mv_pred_flag", curStream);
 
-  curSlice->numRefIndexActive[LIST_0] = vidParam->activePPS->num_ref_idx_l0_default_active_minus1 + 1;
-  curSlice->numRefIndexActive[LIST_1] = vidParam->activePPS->num_ref_idx_l1_default_active_minus1 + 1;
+  curSlice->numRefIndexActive[LIST_0] = vidParam->activePPS->numRefIndexL0defaultActiveMinus1 + 1;
+  curSlice->numRefIndexActive[LIST_1] = vidParam->activePPS->numRefIndexL1defaultActiveMinus1 + 1;
 
   if (curSlice->sliceType == P_SLICE ||
       curSlice->sliceType == SP_SLICE ||
@@ -1820,22 +1820,22 @@ void readRestSliceHeader (sSlice* curSlice) {
 
   ref_pic_list_reordering (curSlice);
 
-  curSlice->weighted_pred_flag =
+  curSlice->weightedPredFlag =
     (unsigned short)((curSlice->sliceType == P_SLICE || curSlice->sliceType == SP_SLICE)
-      ? vidParam->activePPS->weighted_pred_flag
-      : (curSlice->sliceType == B_SLICE && vidParam->activePPS->weighted_bipred_idc == 1));
-  curSlice->weighted_bipred_idc = (unsigned short)(curSlice->sliceType == B_SLICE &&
-                                                    vidParam->activePPS->weighted_bipred_idc > 0);
+      ? vidParam->activePPS->weightedPredFlag
+      : (curSlice->sliceType == B_SLICE && vidParam->activePPS->weightedBiPredIdc == 1));
+  curSlice->weightedBiPredIdc = (unsigned short)(curSlice->sliceType == B_SLICE &&
+                                                    vidParam->activePPS->weightedBiPredIdc > 0);
 
-  if ((vidParam->activePPS->weighted_pred_flag &&
+  if ((vidParam->activePPS->weightedPredFlag &&
       (curSlice->sliceType == P_SLICE || curSlice->sliceType == SP_SLICE)) ||
-      (vidParam->activePPS->weighted_bipred_idc == 1 && (curSlice->sliceType == B_SLICE)))
+      (vidParam->activePPS->weightedBiPredIdc == 1 && (curSlice->sliceType == B_SLICE)))
     pred_weight_table (curSlice);
 
   if (curSlice->nalRefId)
     dec_ref_pic_marking (vidParam, curStream, curSlice);
 
-  if (vidParam->activePPS->entropy_coding_mode_flag &&
+  if (vidParam->activePPS->entropyCodingModeFlag &&
       curSlice->sliceType != I_SLICE &&
       curSlice->sliceType != SI_SLICE)
     curSlice->model_number = readUeV ("SLC cabac_init_idc", curStream);
@@ -1843,7 +1843,7 @@ void readRestSliceHeader (sSlice* curSlice) {
     curSlice->model_number = 0;
 
   curSlice->slice_qp_delta = val = readSeV ("SLC slice_qp_delta", curStream);
-  curSlice->qp = 26 + vidParam->activePPS->pic_init_qp_minus26 + val;
+  curSlice->qp = 26 + vidParam->activePPS->picInitQpMinus26 + val;
 
   if ((curSlice->qp < -vidParam->bitdepth_luma_qp_scale) || (curSlice->qp > 51))
     error ("slice_qp_delta makes slice_qp_y out of range", 500);
@@ -1852,14 +1852,14 @@ void readRestSliceHeader (sSlice* curSlice) {
     if (curSlice->sliceType == SP_SLICE)
       curSlice->sp_switch = readU1 ("SLC sp_for_switch_flag", curStream);
     curSlice->slice_qs_delta = val = readSeV ("SLC slice_qs_delta", curStream);
-    curSlice->qs = 26 + vidParam->activePPS->pic_init_qs_minus26 + val;
+    curSlice->qs = 26 + vidParam->activePPS->picInitQsMinus26 + val;
     if ((curSlice->qs < 0) || (curSlice->qs > 51))
       error ("slice_qs_delta makes slice_qs_y out of range", 500);
     }
 
-  //printf ("deblocking_filter_control_present_flag:%d\n",
-  //        vidParam->activePPS->deblocking_filter_control_present_flag);
-  if (vidParam->activePPS->deblocking_filter_control_present_flag) {
+  //printf ("deblockingFilterControlPresentFlag:%d\n",
+  //        vidParam->activePPS->deblockingFilterControlPresentFlag);
+  if (vidParam->activePPS->deblockingFilterControlPresentFlag) {
     curSlice->DFDisableIdc = (short) readUeV ("SLC disable_deblocking_filter_idc", curStream);
     if (curSlice->DFDisableIdc != 1) {
       curSlice->DFAlphaC0Offset = (short)(2 * readSeV ("SLC slice_alpha_c0_offset_div2", curStream));
@@ -1876,18 +1876,18 @@ void readRestSliceHeader (sSlice* curSlice) {
 
   // The conformance point for intra profiles is without deblocking, but decoders are still recommended to filter the output.
   // We allow in the decoder config to skip the loop filtering. This is achieved by modifying the parameters here.
-  if (is_HI_intra_only_profile (activeSPS->profile_idc, activeSPS->constrained_set3_flag) &&
-      (inputParam->intra_profile_deblocking == 0)) {
+  if (is_HI_intra_only_profile (activeSPS->profileIdc, activeSPS->constrained_set3_flag) &&
+      (inputParam->intraProfileDeblocking == 0)) {
     curSlice->DFDisableIdc = 1;
     curSlice->DFAlphaC0Offset = curSlice->DFBetaOffset = 0;
     }
 
-  if (vidParam->activePPS->num_slice_groups_minus1>0 && vidParam->activePPS->slice_group_map_type>=3 &&
-      vidParam->activePPS->slice_group_map_type <= 5) {
+  if (vidParam->activePPS->numSliceGroupsMinus1>0 && vidParam->activePPS->sliceGroupMapType>=3 &&
+      vidParam->activePPS->sliceGroupMapType <= 5) {
     len = (activeSPS->pic_height_in_map_units_minus1+1) * (activeSPS->pic_width_in_mbs_minus1+1)/
-          (vidParam->activePPS->slice_group_change_rate_minus1 + 1);
+          (vidParam->activePPS->sliceGroupChangeRateMius1 + 1);
     if (((activeSPS->pic_height_in_map_units_minus1+1) * (activeSPS->pic_width_in_mbs_minus1+1))%
-          (vidParam->activePPS->slice_group_change_rate_minus1 + 1))
+          (vidParam->activePPS->sliceGroupChangeRateMius1 + 1))
       len += 1;
 
     len = ceilLog2 (len+1);

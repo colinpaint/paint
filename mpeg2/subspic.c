@@ -37,7 +37,7 @@ static void Read_Frame (char* fname, unsigned char* frame[], int framenum) {
   /* first field (which we are attempting to substitute) must be
      of opposite field parity to the current one */
   if ((Second_Field)&&(picture_coding_type == P_TYPE)) {
-    parity = (picture_structure == TOP_FIELD ? 1 : 0);
+    parity = (picture_structure == TopField ? 1 : 0);
     field_mode = (picture_structure == FRAME_PICTURE ? 0 : 1);
     }
   else {

@@ -27,17 +27,17 @@ typedef enum {
 
 typedef struct FrameFormat {
   eColorFormat yuvFormat;             // YUV format (0=4:0:0, 1=4:2:0, 2=4:2:2, 3=4:4:4)
-  eColorModel  color_model;           // 4:4:4 format (0: YUV, 1: RGB, 2: XYZ)
+  eColorModel  colourModel;           // 4:4:4 format (0: YUV, 1: RGB, 2: XYZ)
   ePixelFormat pixel_format;          // pixel format support for certain interleaved yuv sources
-  double       frame_rate;            // frame rate
+  double       frameRate;            // frame rate
 
   int          width[3];              // component frame width
   int          height[3];             // component frame height
 
-  int          auto_crop_right;       // luma component auto crop right
-  int          auto_crop_bottom;      // luma component auto crop bottom
-  int          auto_crop_right_cr;    // chroma component auto crop right
-  int          auto_crop_bottom_cr;   // chroma component auto crop bottom
+  int          autoCropRight;       // luma component auto crop right
+  int          autoCropBot;      // luma component auto crop bottom
+  int          autoCropRightCr;    // chroma component auto crop right
+  int          autoCropBotCr;   // chroma component auto crop bottom
   int          width_crop;            // width after cropping consideration
   int          height_crop;           // height after cropping consideration
 

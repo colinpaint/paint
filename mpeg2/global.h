@@ -148,7 +148,7 @@ extern int vertical_size;
 extern int mb_width;
 extern int mb_height;
 extern double bit_rate;
-extern double frame_rate;
+extern double frameRate;
 //}}}
 //{{{  ISO/IEC 13818-2 section 6.2.2.1:  sequence_header()
 extern int aspect_ratio_information;

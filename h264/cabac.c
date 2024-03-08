@@ -307,20 +307,20 @@ void CheckAvailabilityOfNeighborsCABAC (sMacroblock* curMb)
 {
   sVidParam* vidParam = curMb->vidParam;
   sPixelPos up, left;
-  int *mb_size = vidParam->mb_size[IS_LUMA];
+  int *mbSize = vidParam->mbSize[IS_LUMA];
 
-  vidParam->getNeighbour(curMb, -1,  0, mb_size, &left);
-  vidParam->getNeighbour(curMb,  0, -1, mb_size, &up);
+  vidParam->getNeighbour(curMb, -1,  0, mbSize, &left);
+  vidParam->getNeighbour(curMb,  0, -1, mbSize, &up);
 
   if (up.available)
-    curMb->mb_up = &curMb->slice->mbData[up.mb_addr]; //&vidParam->mbData[up.mb_addr];
+    curMb->mbCabacUp = &curMb->slice->mbData[up.mbAddr]; //&vidParam->mbData[up.mbAddr];
   else
-    curMb->mb_up = NULL;
+    curMb->mbCabacUp = NULL;
 
   if (left.available)
-    curMb->mb_left = &curMb->slice->mbData[left.mb_addr]; //&vidParam->mbData[left.mb_addr];
+    curMb->mbCabacLeft = &curMb->slice->mbData[left.mbAddr]; //&vidParam->mbData[left.mbAddr];
   else
-    curMb->mb_left = NULL;
+    curMb->mbCabacLeft = NULL;
 }
 //}}}
 //{{{
@@ -410,8 +410,8 @@ void readFieldModeInfo_CABAC (sMacroblock* curMb,
   sSlice* curSlice = curMb->slice;
   //sVidParam* vidParam = curMb->vidParam;
   sMotionInfoContexts *ctx  = curSlice->mot_ctx;
-  int a = curMb->mbAvailA ? curSlice->mbData[curMb->mbAddrA].mb_field : 0;
-  int b = curMb->mbAvailB ? curSlice->mbData[curMb->mbAddrB].mb_field : 0;
+  int a = curMb->mbAvailA ? curSlice->mbData[curMb->mbAddrA].mbField : 0;
+  int b = curMb->mbAvailB ? curSlice->mbData[curMb->mbAddrB].mbField : 0;
   int act_ctx = a + b;
 
   se->value1 = biari_decode_symbol (dep_dp, &ctx->mb_aff_contexts[act_ctx]);
@@ -444,10 +444,10 @@ int check_next_mb_and_get_field_mode_CABAC_p_slice (sSlice* curSlice,
   curMb = &curSlice->mbData[curSlice->current_mb_nr];
   curMb->vidParam    = vidParam;
   curMb->slice  = curSlice;
-  curMb->slice_nr = curSlice->curSliceNum;
-  curMb->mb_field = curSlice->mbData[curSlice->current_mb_nr-1].mb_field;
+  curMb->sliceNum = curSlice->curSliceNum;
+  curMb->mbField = curSlice->mbData[curSlice->current_mb_nr-1].mbField;
   curMb->mbAddrX  = curSlice->current_mb_nr;
-  curMb->list_offset = ((curSlice->mbAffFrameFlag)&&(curMb->mb_field))? (curMb->mbAddrX&0x01) ? 4 : 2 : 0;
+  curMb->listOffset = ((curSlice->mbAffFrameFlag)&&(curMb->mbField))? (curMb->mbAddrX&0x01) ? 4 : 2 : 0;
 
   CheckAvailabilityOfNeighborsMBAFF(curMb);
   CheckAvailabilityOfNeighborsCABAC(curMb);
@@ -481,7 +481,7 @@ int check_next_mb_and_get_field_mode_CABAC_p_slice (sSlice* curSlice,
 #endif
     readFieldModeInfo_CABAC( curMb, se,dep_dp);
     field = se->value1;
-    curSlice->mbData[curSlice->current_mb_nr-1].mb_field = field;
+    curSlice->mbData[curSlice->current_mb_nr-1].mbField = field;
   }
 
   //reset
@@ -530,10 +530,10 @@ int check_next_mb_and_get_field_mode_CABAC_b_slice (sSlice* curSlice,
   curMb = &curSlice->mbData[curSlice->current_mb_nr];
   curMb->vidParam    = vidParam;
   curMb->slice  = curSlice;
-  curMb->slice_nr = curSlice->curSliceNum;
-  curMb->mb_field = curSlice->mbData[curSlice->current_mb_nr-1].mb_field;
+  curMb->sliceNum = curSlice->curSliceNum;
+  curMb->mbField = curSlice->mbData[curSlice->current_mb_nr-1].mbField;
   curMb->mbAddrX  = curSlice->current_mb_nr;
-  curMb->list_offset = ((curSlice->mbAffFrameFlag)&&(curMb->mb_field))? (curMb->mbAddrX & 0x01) ? 4 : 2 : 0;
+  curMb->listOffset = ((curSlice->mbAffFrameFlag)&&(curMb->mbField))? (curMb->mbAddrX & 0x01) ? 4 : 2 : 0;
 
   CheckAvailabilityOfNeighborsMBAFF(curMb);
   CheckAvailabilityOfNeighborsCABAC(curMb);
@@ -568,7 +568,7 @@ int check_next_mb_and_get_field_mode_CABAC_b_slice (sSlice* curSlice,
 #endif
     readFieldModeInfo_CABAC( curMb, se,dep_dp);
     field = se->value1;
-    curSlice->mbData[curSlice->current_mb_nr-1].mb_field = field;
+    curSlice->mbData[curSlice->current_mb_nr-1].mbField = field;
   }
 
   //reset
@@ -606,11 +606,11 @@ void read_MVD_CABAC (sMacroblock* curMb,
                     sSyntaxElement *se,
                     sDecodingEnvironmentPtr dep_dp)
 {
-  int *mb_size = curMb->vidParam->mb_size[IS_LUMA];
+  int *mbSize = curMb->vidParam->mbSize[IS_LUMA];
   sSlice* curSlice = curMb->slice;
   sMotionInfoContexts *ctx = curSlice->mot_ctx;
-  int i = curMb->subblock_x;
-  int j = curMb->subblock_y;
+  int i = curMb->subblockX;
+  int j = curMb->subblockY;
   int a = 0;
   //int act_ctx;
   int act_sym;
@@ -619,15 +619,15 @@ void read_MVD_CABAC (sMacroblock* curMb,
 
   sPixelPos block_a, block_b;
 
-  get4x4NeighbourBase(curMb, i - 1, j    , mb_size, &block_a);
-  get4x4NeighbourBase(curMb, i    , j - 1, mb_size, &block_b);
+  get4x4NeighbourBase(curMb, i - 1, j    , mbSize, &block_a);
+  get4x4NeighbourBase(curMb, i    , j - 1, mbSize, &block_b);
   if (block_a.available)
   {
-    a = iabs(curSlice->mbData[block_a.mb_addr].mvd[list_idx][block_a.y][block_a.x][k]);
+    a = iabs(curSlice->mbData[block_a.mbAddr].mvd[list_idx][block_a.y][block_a.x][k]);
   }
   if (block_b.available)
   {
-    a += iabs(curSlice->mbData[block_b.mb_addr].mvd[list_idx][block_b.y][block_b.x][k]);
+    a += iabs(curSlice->mbData[block_b.mbAddr].mvd[list_idx][block_b.y][block_b.x][k]);
   }
 
   //a += b;
@@ -669,8 +669,8 @@ void read_mvd_CABAC_mbaff (sMacroblock* curMb,
   sVidParam* vidParam = curMb->vidParam;
   sSlice* curSlice = curMb->slice;
   sMotionInfoContexts *ctx = curSlice->mot_ctx;
-  int i = curMb->subblock_x;
-  int j = curMb->subblock_y;
+  int i = curMb->subblockX;
+  int j = curMb->subblockY;
   int a = 0, b = 0;
   int act_ctx;
   int act_sym;
@@ -679,28 +679,28 @@ void read_mvd_CABAC_mbaff (sMacroblock* curMb,
 
   sPixelPos block_a, block_b;
 
-  get4x4NeighbourBase(curMb, i - 1, j    , vidParam->mb_size[IS_LUMA], &block_a);
+  get4x4NeighbourBase(curMb, i - 1, j    , vidParam->mbSize[IS_LUMA], &block_a);
   if (block_a.available)
   {
-    a = iabs(curSlice->mbData[block_a.mb_addr].mvd[list_idx][block_a.y][block_a.x][k]);
+    a = iabs(curSlice->mbData[block_a.mbAddr].mvd[list_idx][block_a.y][block_a.x][k]);
     if (curSlice->mbAffFrameFlag && (k==1))
     {
-      if ((curMb->mb_field==0) && (curSlice->mbData[block_a.mb_addr].mb_field==1))
+      if ((curMb->mbField==0) && (curSlice->mbData[block_a.mbAddr].mbField==1))
         a *= 2;
-      else if ((curMb->mb_field==1) && (curSlice->mbData[block_a.mb_addr].mb_field==0))
+      else if ((curMb->mbField==1) && (curSlice->mbData[block_a.mbAddr].mbField==0))
         a /= 2;
     }
   }
 
-  get4x4NeighbourBase(curMb, i    , j - 1, vidParam->mb_size[IS_LUMA], &block_b);
+  get4x4NeighbourBase(curMb, i    , j - 1, vidParam->mbSize[IS_LUMA], &block_b);
   if (block_b.available)
   {
-    b = iabs(curSlice->mbData[block_b.mb_addr].mvd[list_idx][block_b.y][block_b.x][k]);
+    b = iabs(curSlice->mbData[block_b.mbAddr].mvd[list_idx][block_b.y][block_b.x][k]);
     if (curSlice->mbAffFrameFlag && (k==1))
     {
-      if ((curMb->mb_field==0) && (curSlice->mbData[block_b.mb_addr].mb_field==1))
+      if ((curMb->mbField==0) && (curSlice->mbData[block_b.mbAddr].mbField==1))
         b *= 2;
-      else if ((curMb->mb_field==1) && (curSlice->mbData[block_b.mb_addr].mb_field==0))
+      else if ((curMb->mbField==1) && (curSlice->mbData[block_b.mbAddr].mbField==0))
         b /= 2;
     }
   }
@@ -835,8 +835,8 @@ void read_skip_flag_CABAC_p_slice (sMacroblock* curMb,
                                   sSyntaxElement *se,
                                   sDecodingEnvironmentPtr dep_dp)
 {
-  int a = (curMb->mb_left != NULL) ? (curMb->mb_left->skip_flag == 0) : 0;
-  int b = (curMb->mb_up   != NULL) ? (curMb->mb_up  ->skip_flag == 0) : 0;
+  int a = (curMb->mbCabacLeft != NULL) ? (curMb->mbCabacLeft->skipFlag == 0) : 0;
+  int b = (curMb->mbCabacUp   != NULL) ? (curMb->mbCabacUp  ->skipFlag == 0) : 0;
   sBiContextType *mb_type_contexts = &curMb->slice->mot_ctx->mb_type_contexts[1][a + b];
 
   se->value1 = (biari_decode_symbol(dep_dp, mb_type_contexts) != 1);
@@ -859,8 +859,8 @@ void read_skip_flag_CABAC_b_slice (sMacroblock* curMb,
                                   sSyntaxElement *se,
                                   sDecodingEnvironmentPtr dep_dp)
 {
-  int a = (curMb->mb_left != NULL) ? (curMb->mb_left->skip_flag == 0) : 0;
-  int b = (curMb->mb_up   != NULL) ? (curMb->mb_up  ->skip_flag == 0) : 0;
+  int a = (curMb->mbCabacLeft != NULL) ? (curMb->mbCabacLeft->skipFlag == 0) : 0;
+  int b = (curMb->mbCabacUp   != NULL) ? (curMb->mbCabacUp  ->skipFlag == 0) : 0;
   sBiContextType *mb_type_contexts = &curMb->slice->mot_ctx->mb_type_contexts[2][7 + a + b];
 
   se->value1 = se->value2 = (biari_decode_symbol (dep_dp, mb_type_contexts) != 1);
@@ -888,8 +888,8 @@ void readMB_transform_size_flag_CABAC (sMacroblock* curMb,
   sSlice* curSlice = curMb->slice;
   sTextureInfoContexts*ctx = curSlice->tex_ctx;
 
-  int b = (curMb->mb_up   == NULL) ? 0 : curMb->mb_up->luma_transform_size_8x8_flag;
-  int a = (curMb->mb_left == NULL) ? 0 : curMb->mb_left->luma_transform_size_8x8_flag;
+  int b = (curMb->mbCabacUp   == NULL) ? 0 : curMb->mbCabacUp->lumaTransformSize8x8flag;
+  int a = (curMb->mbCabacLeft == NULL) ? 0 : curMb->mbCabacLeft->lumaTransformSize8x8flag;
 
   int act_sym = biari_decode_symbol(dep_dp, ctx->transform_size_contexts + a + b );
 
@@ -920,11 +920,11 @@ void readMB_typeInfo_CABAC_i_slice (sMacroblock* curMb,
 
   if(curSlice->sliceType == I_SLICE)  // INTRA-frame
   {
-    if (curMb->mb_up != NULL)
-      b = (((curMb->mb_up)->mb_type != I4MB && curMb->mb_up->mb_type != I8MB) ? 1 : 0 );
+    if (curMb->mbCabacUp != NULL)
+      b = (((curMb->mbCabacUp)->mbType != I4MB && curMb->mbCabacUp->mbType != I8MB) ? 1 : 0 );
 
-    if (curMb->mb_left != NULL)
-      a = (((curMb->mb_left)->mb_type != I4MB && curMb->mb_left->mb_type != I8MB) ? 1 : 0 );
+    if (curMb->mbCabacLeft != NULL)
+      a = (((curMb->mbCabacLeft)->mbType != I4MB && curMb->mbCabacLeft->mbType != I8MB) ? 1 : 0 );
 
     act_ctx = a + b;
     act_sym = biari_decode_symbol(dep_dp, ctx->mb_type_contexts[0] + act_ctx);
@@ -972,11 +972,11 @@ void readMB_typeInfo_CABAC_i_slice (sMacroblock* curMb,
   else if(curSlice->sliceType == SI_SLICE)  // SI-frame
   {
     // special ctx's for SI4MB
-    if (curMb->mb_up != NULL)
-      b = (( (curMb->mb_up)->mb_type != SI4MB) ? 1 : 0 );
+    if (curMb->mbCabacUp != NULL)
+      b = (( (curMb->mbCabacUp)->mbType != SI4MB) ? 1 : 0 );
 
-    if (curMb->mb_left != NULL)
-      a = (( (curMb->mb_left)->mb_type != SI4MB) ? 1 : 0 );
+    if (curMb->mbCabacLeft != NULL)
+      a = (( (curMb->mbCabacLeft)->mbType != SI4MB) ? 1 : 0 );
 
     act_ctx = a + b;
     act_sym = biari_decode_symbol(dep_dp, ctx->mb_type_contexts[1] + act_ctx);
@@ -988,11 +988,11 @@ void readMB_typeInfo_CABAC_i_slice (sMacroblock* curMb,
     }
     else // analog INTRA_IMG
     {
-      if (curMb->mb_up != NULL)
-        b = (( (curMb->mb_up)->mb_type != I4MB) ? 1 : 0 );
+      if (curMb->mbCabacUp != NULL)
+        b = (( (curMb->mbCabacUp)->mbType != I4MB) ? 1 : 0 );
 
-      if (curMb->mb_left != NULL)
-        a = (( (curMb->mb_left)->mb_type != I4MB) ? 1 : 0 );
+      if (curMb->mbCabacLeft != NULL)
+        a = (( (curMb->mbCabacLeft)->mbType != I4MB) ? 1 : 0 );
 
       act_ctx = a + b;
       act_sym = biari_decode_symbol(dep_dp, ctx->mb_type_contexts[0] + act_ctx);
@@ -1151,11 +1151,11 @@ void readMB_typeInfo_CABAC_b_slice (sMacroblock* curMb,
   int curr_mb_type;
   sBiContextType *mb_type_contexts = ctx->mb_type_contexts[2];
 
-  if (curMb->mb_up != NULL)
-    b = (( (curMb->mb_up)->mb_type != 0) ? 1 : 0 );
+  if (curMb->mbCabacUp != NULL)
+    b = (( (curMb->mbCabacUp)->mbType != 0) ? 1 : 0 );
 
-  if (curMb->mb_left != NULL)
-    a = (( (curMb->mb_left)->mb_type != 0) ? 1 : 0 );
+  if (curMb->mbCabacLeft != NULL)
+    a = (( (curMb->mbCabacLeft)->mbType != 0) ? 1 : 0 );
 
   act_ctx = a + b;
 
@@ -1307,32 +1307,32 @@ void readRefFrame_CABAC (sMacroblock* curMb,
 
   sPixelPos block_a, block_b;
 
-  get4x4Neighbour(curMb, curMb->subblock_x - 1, curMb->subblock_y    , vidParam->mb_size[IS_LUMA], &block_a);
-  get4x4Neighbour(curMb, curMb->subblock_x,     curMb->subblock_y - 1, vidParam->mb_size[IS_LUMA], &block_b);
+  get4x4Neighbour(curMb, curMb->subblockX - 1, curMb->subblockY    , vidParam->mbSize[IS_LUMA], &block_a);
+  get4x4Neighbour(curMb, curMb->subblockX,     curMb->subblockY - 1, vidParam->mbSize[IS_LUMA], &block_b);
 
   if (block_b.available)
   {
     int b8b=((block_b.x >> 1) & 0x01)+(block_b.y & 0x02);
-    neighborMB = &curSlice->mbData[block_b.mb_addr];
-    if (!( (neighborMB->mb_type==IPCM) || IS_DIRECT(neighborMB) || (neighborMB->b8mode[b8b]==0 && neighborMB->b8pdir[b8b]==2)))
+    neighborMB = &curSlice->mbData[block_b.mbAddr];
+    if (!( (neighborMB->mbType==IPCM) || IS_DIRECT(neighborMB) || (neighborMB->b8mode[b8b]==0 && neighborMB->b8pdir[b8b]==2)))
     {
-      if (curSlice->mbAffFrameFlag && (curMb->mb_field == FALSE) && (neighborMB->mb_field == TRUE))
-        b = (picture->mvInfo[block_b.pos_y][block_b.pos_x].refIndex[list] > 1 ? 2 : 0);
+      if (curSlice->mbAffFrameFlag && (curMb->mbField == FALSE) && (neighborMB->mbField == TRUE))
+        b = (picture->mvInfo[block_b.posY][block_b.posX].refIndex[list] > 1 ? 2 : 0);
       else
-        b = (picture->mvInfo[block_b.pos_y][block_b.pos_x].refIndex[list] > 0 ? 2 : 0);
+        b = (picture->mvInfo[block_b.posY][block_b.posX].refIndex[list] > 0 ? 2 : 0);
     }
   }
 
   if (block_a.available)
   {
     int b8a=((block_a.x >> 1) & 0x01)+(block_a.y & 0x02);
-    neighborMB = &curSlice->mbData[block_a.mb_addr];
-    if (!((neighborMB->mb_type==IPCM) || IS_DIRECT(neighborMB) || (neighborMB->b8mode[b8a]==0 && neighborMB->b8pdir[b8a]==2)))
+    neighborMB = &curSlice->mbData[block_a.mbAddr];
+    if (!((neighborMB->mbType==IPCM) || IS_DIRECT(neighborMB) || (neighborMB->b8mode[b8a]==0 && neighborMB->b8pdir[b8a]==2)))
     {
-      if (curSlice->mbAffFrameFlag && (curMb->mb_field == FALSE) && (neighborMB->mb_field == 1))
-        a = (picture->mvInfo[block_a.pos_y][block_a.pos_x].refIndex[list] > 1 ? 1 : 0);
+      if (curSlice->mbAffFrameFlag && (curMb->mbField == FALSE) && (neighborMB->mbField == 1))
+        a = (picture->mvInfo[block_a.posY][block_a.posX].refIndex[list] > 1 ? 1 : 0);
       else
-        a = (picture->mvInfo[block_a.pos_y][block_a.pos_x].refIndex[list] > 0 ? 1 : 0);
+        a = (picture->mvInfo[block_a.posY][block_a.posX].refIndex[list] > 0 ? 1 : 0);
     }
   }
 
@@ -1414,7 +1414,7 @@ void read_CBP_CABAC (sMacroblock* curMb,
   {
     if (mb_y == 0)
     {
-      neighborMB = curMb->mb_up;
+      neighborMB = curMb->mbCabacUp;
       b = 0;
     }
 
@@ -1424,7 +1424,7 @@ void read_CBP_CABAC (sMacroblock* curMb,
       {
         if (neighborMB != NULL)
         {
-          if(neighborMB->mb_type!=IPCM)
+          if(neighborMB->mbType!=IPCM)
             b = (( (neighborMB->cbp & (1<<(2 + (mb_x>>1)))) == 0) ? 2 : 0);
         }
       }
@@ -1433,13 +1433,13 @@ void read_CBP_CABAC (sMacroblock* curMb,
 
       if (mb_x == 0)
       {
-        get4x4Neighbour(curMb, (mb_x<<2) - 1, (mb_y << 2), vidParam->mb_size[IS_LUMA], &block_a);
+        get4x4Neighbour(curMb, (mb_x<<2) - 1, (mb_y << 2), vidParam->mbSize[IS_LUMA], &block_a);
         if (block_a.available)
         {
-          if(curSlice->mbData[block_a.mb_addr].mb_type==IPCM)
+          if(curSlice->mbData[block_a.mbAddr].mbType==IPCM)
             a = 0;
           else
-            a = (( (curSlice->mbData[block_a.mb_addr].cbp & (1<<(2*(block_a.y/2)+1))) == 0) ? 1 : 0);
+            a = (( (curSlice->mbData[block_a.mbAddr].cbp & (1<<(2*(block_a.y/2)+1))) == 0) ? 1 : 0);
         }
         else
           a=0;
@@ -1460,18 +1460,18 @@ void read_CBP_CABAC (sMacroblock* curMb,
     // coding of chroma part
     // CABAC decoding for BinIdx 0
     b = 0;
-    neighborMB = curMb->mb_up;
+    neighborMB = curMb->mbCabacUp;
     if (neighborMB != NULL)
     {
-      if (neighborMB->mb_type==IPCM || (neighborMB->cbp > 15))
+      if (neighborMB->mbType==IPCM || (neighborMB->cbp > 15))
         b = 2;
     }
 
     a = 0;
-    neighborMB = curMb->mb_left;
+    neighborMB = curMb->mbCabacLeft;
     if (neighborMB != NULL)
     {
-      if (neighborMB->mb_type==IPCM || (neighborMB->cbp > 15))
+      if (neighborMB->mbType==IPCM || (neighborMB->cbp > 15))
         a = 1;
     }
 
@@ -1482,20 +1482,20 @@ void read_CBP_CABAC (sMacroblock* curMb,
     if (cbp_bit) // set the chroma bits
     {
       b = 0;
-      neighborMB = curMb->mb_up;
+      neighborMB = curMb->mbCabacUp;
       if (neighborMB != NULL)
       {
-        //if ((neighborMB->mb_type == IPCM) || ((neighborMB->cbp > 15) && ((neighborMB->cbp >> 4) == 2)))
-        if ((neighborMB->mb_type == IPCM) || ((neighborMB->cbp >> 4) == 2))
+        //if ((neighborMB->mbType == IPCM) || ((neighborMB->cbp > 15) && ((neighborMB->cbp >> 4) == 2)))
+        if ((neighborMB->mbType == IPCM) || ((neighborMB->cbp >> 4) == 2))
           b = 2;
       }
 
 
       a = 0;
-      neighborMB = curMb->mb_left;
+      neighborMB = curMb->mbCabacLeft;
       if (neighborMB != NULL)
       {
-        if ((neighborMB->mb_type == IPCM) || ((neighborMB->cbp >> 4) == 2))
+        if ((neighborMB->mbType == IPCM) || ((neighborMB->cbp >> 4) == 2))
           a = 1;
       }
 
@@ -1529,11 +1529,11 @@ void readCIPredMode_CABAC (sMacroblock* curMb,
   sTextureInfoContexts *ctx = curSlice->tex_ctx;
   int                 *act_sym  = &se->value1;
 
-  sMacroblock          *MbUp   = curMb->mb_up;
-  sMacroblock          *MbLeft = curMb->mb_left;
+  sMacroblock          *MbUp   = curMb->mbCabacUp;
+  sMacroblock          *MbLeft = curMb->mbCabacLeft;
 
-  int b = (MbUp != NULL)   ? (((MbUp->c_ipred_mode   != 0) && (MbUp->mb_type != IPCM)) ? 1 : 0) : 0;
-  int a = (MbLeft != NULL) ? (((MbLeft->c_ipred_mode != 0) && (MbLeft->mb_type != IPCM)) ? 1 : 0) : 0;
+  int b = (MbUp != NULL)   ? (((MbUp->cPredMode   != 0) && (MbUp->mbType != IPCM)) ? 1 : 0) : 0;
+  int a = (MbLeft != NULL) ? (((MbLeft->cPredMode != 0) && (MbLeft->mbType != IPCM)) ? 1 : 0) : 0;
   int act_ctx = a + b;
 
   *act_sym = biari_decode_symbol(dep_dp, ctx->cipr_contexts + act_ctx );
@@ -1563,15 +1563,15 @@ static int read_and_store_CBP_block_bit_444 (sMacroblock* curMb,
                     || type==CB_16AC || type==CB_8x8 || type==CB_8x4 || type==CB_4x8 || type==CB_4x4
                     || type==CR_16AC || type==CR_8x8 || type==CR_8x4 || type==CR_4x8 || type==CR_4x4);
   int y_dc        = (type==LUMA_16DC || type==CB_16DC || type==CR_16DC);
-  int u_ac        = (type==CHROMA_AC && !curMb->is_v_block);
-  int v_ac        = (type==CHROMA_AC &&  curMb->is_v_block);
+  int u_ac        = (type==CHROMA_AC && !curMb->isVblock);
+  int v_ac        = (type==CHROMA_AC &&  curMb->isVblock);
   int chroma_dc   = (type==CHROMA_DC || type==CHROMA_DC_2x4 || type==CHROMA_DC_4x4);
-  int u_dc        = (chroma_dc && !curMb->is_v_block);
-  int v_dc        = (chroma_dc &&  curMb->is_v_block);
-  int j           = (y_ac || u_ac || v_ac ? curMb->subblock_y : 0);
-  int i           = (y_ac || u_ac || v_ac ? curMb->subblock_x : 0);
+  int u_dc        = (chroma_dc && !curMb->isVblock);
+  int v_dc        = (chroma_dc &&  curMb->isVblock);
+  int j           = (y_ac || u_ac || v_ac ? curMb->subblockY : 0);
+  int i           = (y_ac || u_ac || v_ac ? curMb->subblockX : 0);
   int bit         = (y_dc ? 0 : y_ac ? 1 : u_dc ? 17 : v_dc ? 18 : u_ac ? 19 : 35);
-  int default_bit = (curMb->is_intra_block ? 1 : 0);
+  int default_bit = (curMb->isIntraBlock ? 1 : 0);
   int upper_bit   = default_bit;
   int left_bit    = default_bit;
   int cbp_bit     = 1;  // always one for 8x8 mode
@@ -1582,8 +1582,8 @@ static int read_and_store_CBP_block_bit_444 (sMacroblock* curMb,
   sPixelPos block_a, block_b;
   if (y_ac)
   {
-    get4x4Neighbour(curMb, i - 1, j    , vidParam->mb_size[IS_LUMA], &block_a);
-    get4x4Neighbour(curMb, i    , j - 1, vidParam->mb_size[IS_LUMA], &block_b);
+    get4x4Neighbour(curMb, i - 1, j    , vidParam->mbSize[IS_LUMA], &block_a);
+    get4x4Neighbour(curMb, i    , j - 1, vidParam->mbSize[IS_LUMA], &block_b);
     if (block_a.available)
         bit_pos_a = 4*block_a.y + block_a.x;
       if (block_b.available)
@@ -1591,13 +1591,13 @@ static int read_and_store_CBP_block_bit_444 (sMacroblock* curMb,
   }
   else if (y_dc)
   {
-    get4x4Neighbour(curMb, i - 1, j    , vidParam->mb_size[IS_LUMA], &block_a);
-    get4x4Neighbour(curMb, i    , j - 1, vidParam->mb_size[IS_LUMA], &block_b);
+    get4x4Neighbour(curMb, i - 1, j    , vidParam->mbSize[IS_LUMA], &block_a);
+    get4x4Neighbour(curMb, i    , j - 1, vidParam->mbSize[IS_LUMA], &block_b);
   }
   else if (u_ac||v_ac)
   {
-    get4x4Neighbour(curMb, i - 1, j    , vidParam->mb_size[IS_CHROMA], &block_a);
-    get4x4Neighbour(curMb, i    , j - 1, vidParam->mb_size[IS_CHROMA], &block_b);
+    get4x4Neighbour(curMb, i - 1, j    , vidParam->mbSize[IS_CHROMA], &block_a);
+    get4x4Neighbour(curMb, i    , j - 1, vidParam->mbSize[IS_CHROMA], &block_b);
     if (block_a.available)
       bit_pos_a = 4*block_a.y + block_a.x;
     if (block_b.available)
@@ -1605,8 +1605,8 @@ static int read_and_store_CBP_block_bit_444 (sMacroblock* curMb,
   }
   else
   {
-    get4x4Neighbour(curMb, i - 1, j    , vidParam->mb_size[IS_CHROMA], &block_a);
-    get4x4Neighbour(curMb, i    , j - 1, vidParam->mb_size[IS_CHROMA], &block_b);
+    get4x4Neighbour(curMb, i - 1, j    , vidParam->mbSize[IS_CHROMA], &block_a);
+    get4x4Neighbour(curMb, i    , j - 1, vidParam->mbSize[IS_CHROMA], &block_b);
   }
 
   if (picture->chromaFormatIdc!=YUV444)
@@ -1616,18 +1616,18 @@ static int read_and_store_CBP_block_bit_444 (sMacroblock* curMb,
       //--- get bits from neighboring blocks ---
       if (block_b.available)
       {
-        if(mbData[block_b.mb_addr].mb_type==IPCM)
+        if(mbData[block_b.mbAddr].mbType==IPCM)
           upper_bit=1;
         else
-          upper_bit = get_bit(mbData[block_b.mb_addr].s_cbp[0].bits, bit + bit_pos_b);
+          upper_bit = get_bit(mbData[block_b.mbAddr].cbpStructure[0].bits, bit + bit_pos_b);
       }
 
       if (block_a.available)
       {
-        if(mbData[block_a.mb_addr].mb_type==IPCM)
+        if(mbData[block_a.mbAddr].mbType==IPCM)
           left_bit=1;
         else
-          left_bit = get_bit(mbData[block_a.mb_addr].s_cbp[0].bits, bit + bit_pos_a);
+          left_bit = get_bit(mbData[block_a.mbAddr].cbpStructure[0].bits, bit + bit_pos_a);
       }
 
 
@@ -1643,19 +1643,19 @@ static int read_and_store_CBP_block_bit_444 (sMacroblock* curMb,
       //--- get bits from neighbouring blocks ---
       if (block_b.available)
       {
-        if(mbData[block_b.mb_addr].mb_type==IPCM)
+        if(mbData[block_b.mbAddr].mbType==IPCM)
           upper_bit = 1;
         else
-          upper_bit = get_bit(mbData[block_b.mb_addr].s_cbp[0].bits,bit+bit_pos_b);
+          upper_bit = get_bit(mbData[block_b.mbAddr].cbpStructure[0].bits,bit+bit_pos_b);
       }
 
 
       if (block_a.available)
       {
-        if(mbData[block_a.mb_addr].mb_type==IPCM)
+        if(mbData[block_a.mbAddr].mbType==IPCM)
           left_bit = 1;
         else
-          left_bit = get_bit(mbData[block_a.mb_addr].s_cbp[0].bits,bit+bit_pos_a);
+          left_bit = get_bit(mbData[block_a.mbAddr].cbpStructure[0].bits,bit+bit_pos_a);
       }
 
 
@@ -1668,58 +1668,58 @@ static int read_and_store_CBP_block_bit_444 (sMacroblock* curMb,
   {
     if (block_b.available)
     {
-      if(mbData[block_b.mb_addr].mb_type==IPCM)
+      if(mbData[block_b.mbAddr].mbType==IPCM)
       {
         upper_bit=1;
       }
       else if((type==LUMA_8x8 || type==CB_8x8 || type==CR_8x8) &&
-         !mbData[block_b.mb_addr].luma_transform_size_8x8_flag)
+         !mbData[block_b.mbAddr].lumaTransformSize8x8flag)
       {
         upper_bit = 0;
       }
       else
       {
         if(type==LUMA_8x8)
-          upper_bit = get_bit(mbData[block_b.mb_addr].s_cbp[0].bits_8x8, bit + bit_pos_b);
+          upper_bit = get_bit(mbData[block_b.mbAddr].cbpStructure[0].bits_8x8, bit + bit_pos_b);
         else if (type==CB_8x8)
-          upper_bit = get_bit(mbData[block_b.mb_addr].s_cbp[1].bits_8x8, bit + bit_pos_b);
+          upper_bit = get_bit(mbData[block_b.mbAddr].cbpStructure[1].bits_8x8, bit + bit_pos_b);
         else if (type==CR_8x8)
-          upper_bit = get_bit(mbData[block_b.mb_addr].s_cbp[2].bits_8x8, bit + bit_pos_b);
+          upper_bit = get_bit(mbData[block_b.mbAddr].cbpStructure[2].bits_8x8, bit + bit_pos_b);
         else if ((type==CB_4x4)||(type==CB_4x8)||(type==CB_8x4)||(type==CB_16AC)||(type==CB_16DC))
-          upper_bit = get_bit(mbData[block_b.mb_addr].s_cbp[1].bits,bit+bit_pos_b);
+          upper_bit = get_bit(mbData[block_b.mbAddr].cbpStructure[1].bits,bit+bit_pos_b);
         else if ((type==CR_4x4)||(type==CR_4x8)||(type==CR_8x4)||(type==CR_16AC)||(type==CR_16DC))
-          upper_bit = get_bit(mbData[block_b.mb_addr].s_cbp[2].bits,bit+bit_pos_b);
+          upper_bit = get_bit(mbData[block_b.mbAddr].cbpStructure[2].bits,bit+bit_pos_b);
         else
-          upper_bit = get_bit(mbData[block_b.mb_addr].s_cbp[0].bits,bit+bit_pos_b);
+          upper_bit = get_bit(mbData[block_b.mbAddr].cbpStructure[0].bits,bit+bit_pos_b);
       }
     }
 
 
     if (block_a.available)
     {
-      if(mbData[block_a.mb_addr].mb_type==IPCM)
+      if(mbData[block_a.mbAddr].mbType==IPCM)
       {
         left_bit=1;
       }
       else if((type==LUMA_8x8 || type==CB_8x8 || type==CR_8x8) &&
-         !mbData[block_a.mb_addr].luma_transform_size_8x8_flag)
+         !mbData[block_a.mbAddr].lumaTransformSize8x8flag)
       {
         left_bit=0;
       }
       else
       {
         if(type==LUMA_8x8)
-          left_bit = get_bit(mbData[block_a.mb_addr].s_cbp[0].bits_8x8,bit+bit_pos_a);
+          left_bit = get_bit(mbData[block_a.mbAddr].cbpStructure[0].bits_8x8,bit+bit_pos_a);
         else if (type==CB_8x8)
-          left_bit = get_bit(mbData[block_a.mb_addr].s_cbp[1].bits_8x8,bit+bit_pos_a);
+          left_bit = get_bit(mbData[block_a.mbAddr].cbpStructure[1].bits_8x8,bit+bit_pos_a);
         else if (type==CR_8x8)
-          left_bit = get_bit(mbData[block_a.mb_addr].s_cbp[2].bits_8x8,bit+bit_pos_a);
+          left_bit = get_bit(mbData[block_a.mbAddr].cbpStructure[2].bits_8x8,bit+bit_pos_a);
         else if ((type==CB_4x4)||(type==CB_4x8)||(type==CB_8x4)||(type==CB_16AC)||(type==CB_16DC))
-          left_bit = get_bit(mbData[block_a.mb_addr].s_cbp[1].bits,bit+bit_pos_a);
+          left_bit = get_bit(mbData[block_a.mbAddr].cbpStructure[1].bits,bit+bit_pos_a);
         else if ((type==CR_4x4)||(type==CR_4x8)||(type==CR_8x4)||(type==CR_16AC)||(type==CR_16DC))
-          left_bit = get_bit(mbData[block_a.mb_addr].s_cbp[2].bits,bit+bit_pos_a);
+          left_bit = get_bit(mbData[block_a.mbAddr].cbpStructure[2].bits,bit+bit_pos_a);
         else
-          left_bit = get_bit(mbData[block_a.mb_addr].s_cbp[0].bits,bit+bit_pos_a);
+          left_bit = get_bit(mbData[block_a.mbAddr].cbpStructure[0].bits,bit+bit_pos_a);
       }
     }
 
@@ -1733,61 +1733,61 @@ static int read_and_store_CBP_block_bit_444 (sMacroblock* curMb,
 
   if (cbp_bit)
   {
-    sCBPStructure  *s_cbp = curMb->s_cbp;
+    sCBPStructure  *cbpStructure = curMb->cbpStructure;
     if (type==LUMA_8x8)
     {
-      s_cbp[0].bits |= ((int64) 0x33 << bit   );
+      cbpStructure[0].bits |= ((int64) 0x33 << bit   );
 
       if (picture->chromaFormatIdc==YUV444)
       {
-        s_cbp[0].bits_8x8   |= ((int64) 0x33 << bit   );
+        cbpStructure[0].bits_8x8   |= ((int64) 0x33 << bit   );
       }
     }
     else if (type==CB_8x8)
     {
-      s_cbp[1].bits_8x8   |= ((int64) 0x33 << bit   );
-      s_cbp[1].bits   |= ((int64) 0x33 << bit   );
+      cbpStructure[1].bits_8x8   |= ((int64) 0x33 << bit   );
+      cbpStructure[1].bits   |= ((int64) 0x33 << bit   );
     }
     else if (type==CR_8x8)
     {
-      s_cbp[2].bits_8x8   |= ((int64) 0x33 << bit   );
-      s_cbp[2].bits   |= ((int64) 0x33 << bit   );
+      cbpStructure[2].bits_8x8   |= ((int64) 0x33 << bit   );
+      cbpStructure[2].bits   |= ((int64) 0x33 << bit   );
     }
     else if (type==LUMA_8x4)
     {
-      s_cbp[0].bits   |= ((int64) 0x03 << bit   );
+      cbpStructure[0].bits   |= ((int64) 0x03 << bit   );
     }
     else if (type==CB_8x4)
     {
-      s_cbp[1].bits   |= ((int64) 0x03 << bit   );
+      cbpStructure[1].bits   |= ((int64) 0x03 << bit   );
     }
     else if (type==CR_8x4)
     {
-      s_cbp[2].bits   |= ((int64) 0x03 << bit   );
+      cbpStructure[2].bits   |= ((int64) 0x03 << bit   );
     }
     else if (type==LUMA_4x8)
     {
-      s_cbp[0].bits   |= ((int64) 0x11<< bit   );
+      cbpStructure[0].bits   |= ((int64) 0x11<< bit   );
     }
     else if (type==CB_4x8)
     {
-      s_cbp[1].bits   |= ((int64)0x11<< bit   );
+      cbpStructure[1].bits   |= ((int64)0x11<< bit   );
     }
     else if (type==CR_4x8)
     {
-      s_cbp[2].bits   |= ((int64)0x11<< bit   );
+      cbpStructure[2].bits   |= ((int64)0x11<< bit   );
     }
     else if ((type==CB_4x4)||(type==CB_16AC)||(type==CB_16DC))
     {
-      s_cbp[1].bits   |= i64_power2(bit);
+      cbpStructure[1].bits   |= i64_power2(bit);
     }
     else if ((type==CR_4x4)||(type==CR_16AC)||(type==CR_16DC))
     {
-      s_cbp[2].bits   |= i64_power2(bit);
+      cbpStructure[2].bits   |= i64_power2(bit);
     }
     else
     {
-      s_cbp[0].bits   |= i64_power2(bit);
+      cbpStructure[0].bits   |= i64_power2(bit);
     }
   }
   return cbp_bit;
@@ -1796,20 +1796,20 @@ static int read_and_store_CBP_block_bit_444 (sMacroblock* curMb,
 
 static inline int set_cbp_bit(sMacroblock *neighbor_mb)
 {
-  if(neighbor_mb->mb_type == IPCM)
+  if(neighbor_mb->mbType == IPCM)
     return 1;
   else
-    return (int) (neighbor_mb->s_cbp[0].bits & 0x01);
+    return (int) (neighbor_mb->cbpStructure[0].bits & 0x01);
 }
 
 static inline int set_cbp_bit_ac(sMacroblock *neighbor_mb, sPixelPos *block)
 {
-  if (neighbor_mb->mb_type == IPCM)
+  if (neighbor_mb->mbType == IPCM)
     return 1;
   else
   {
     int bit_pos = 1 + (block->y << 2) + block->x;
-    return get_bit(neighbor_mb->s_cbp[0].bits, bit_pos);
+    return get_bit(neighbor_mb->cbpStructure[0].bits, bit_pos);
   }
 }
 //}}}
@@ -1838,18 +1838,18 @@ static int read_and_store_CBP_block_bit_normal (sMacroblock* curMb,
 
     sPixelPos block_a, block_b;
 
-    get4x4NeighbourBase(curMb, -1,  0, vidParam->mb_size[IS_LUMA], &block_a);
-    get4x4NeighbourBase(curMb,  0, -1, vidParam->mb_size[IS_LUMA], &block_b);
+    get4x4NeighbourBase(curMb, -1,  0, vidParam->mbSize[IS_LUMA], &block_a);
+    get4x4NeighbourBase(curMb,  0, -1, vidParam->mbSize[IS_LUMA], &block_b);
 
     //--- get bits from neighboring blocks ---
     if (block_b.available)
     {
-      upper_bit = set_cbp_bit(&mbData[block_b.mb_addr]);
+      upper_bit = set_cbp_bit(&mbData[block_b.mbAddr]);
     }
 
     if (block_a.available)
     {
-      left_bit = set_cbp_bit(&mbData[block_a.mb_addr]);
+      left_bit = set_cbp_bit(&mbData[block_a.mbAddr]);
     }
 
     ctx = 2 * upper_bit + left_bit;
@@ -1860,33 +1860,33 @@ static int read_and_store_CBP_block_bit_normal (sMacroblock* curMb,
 
     if (cbp_bit)
     {
-      curMb->s_cbp[0].bits |= 1;
+      curMb->cbpStructure[0].bits |= 1;
     }
   }
   else if (type==LUMA_16AC)
   {
-    int j           = curMb->subblock_y;
-    int i           = curMb->subblock_x;
+    int j           = curMb->subblockY;
+    int i           = curMb->subblockX;
     int bit         = 1;
-    int default_bit = (curMb->is_intra_block ? 1 : 0);
+    int default_bit = (curMb->isIntraBlock ? 1 : 0);
     int upper_bit   = default_bit;
     int left_bit    = default_bit;
     int ctx;
 
     sPixelPos block_a, block_b;
 
-    get4x4NeighbourBase(curMb, i - 1, j    , vidParam->mb_size[IS_LUMA], &block_a);
-    get4x4NeighbourBase(curMb, i    , j - 1, vidParam->mb_size[IS_LUMA], &block_b);
+    get4x4NeighbourBase(curMb, i - 1, j    , vidParam->mbSize[IS_LUMA], &block_a);
+    get4x4NeighbourBase(curMb, i    , j - 1, vidParam->mbSize[IS_LUMA], &block_b);
 
     //--- get bits from neighboring blocks ---
     if (block_b.available)
     {
-      upper_bit = set_cbp_bit_ac(&mbData[block_b.mb_addr], &block_b);
+      upper_bit = set_cbp_bit_ac(&mbData[block_b.mbAddr], &block_b);
     }
 
     if (block_a.available)
     {
-      left_bit = set_cbp_bit_ac(&mbData[block_a.mb_addr], &block_a);
+      left_bit = set_cbp_bit_ac(&mbData[block_a.mbAddr], &block_a);
     }
 
     ctx = 2 * upper_bit + left_bit;
@@ -1897,33 +1897,33 @@ static int read_and_store_CBP_block_bit_normal (sMacroblock* curMb,
     {
       //--- set bits for current block ---
       bit = 1 + j + (i >> 2);
-      curMb->s_cbp[0].bits   |= i64_power2(bit);
+      curMb->cbpStructure[0].bits   |= i64_power2(bit);
     }
   }
   else if (type==LUMA_8x4)
   {
-    int j           = curMb->subblock_y;
-    int i           = curMb->subblock_x;
+    int j           = curMb->subblockY;
+    int i           = curMb->subblockX;
     int bit         = 1;
-    int default_bit = (curMb->is_intra_block ? 1 : 0);
+    int default_bit = (curMb->isIntraBlock ? 1 : 0);
     int upper_bit   = default_bit;
     int left_bit    = default_bit;
     int ctx;
 
     sPixelPos block_a, block_b;
 
-    get4x4NeighbourBase(curMb, i - 1, j    , vidParam->mb_size[IS_LUMA], &block_a);
-    get4x4NeighbourBase(curMb, i    , j - 1, vidParam->mb_size[IS_LUMA], &block_b);
+    get4x4NeighbourBase(curMb, i - 1, j    , vidParam->mbSize[IS_LUMA], &block_a);
+    get4x4NeighbourBase(curMb, i    , j - 1, vidParam->mbSize[IS_LUMA], &block_b);
 
     //--- get bits from neighboring blocks ---
     if (block_b.available)
     {
-      upper_bit = set_cbp_bit_ac(&mbData[block_b.mb_addr], &block_b);
+      upper_bit = set_cbp_bit_ac(&mbData[block_b.mbAddr], &block_b);
     }
 
     if (block_a.available)
     {
-      left_bit = set_cbp_bit_ac(&mbData[block_a.mb_addr], &block_a);
+      left_bit = set_cbp_bit_ac(&mbData[block_a.mbAddr], &block_a);
     }
 
     ctx = 2 * upper_bit + left_bit;
@@ -1934,33 +1934,33 @@ static int read_and_store_CBP_block_bit_normal (sMacroblock* curMb,
     {
       //--- set bits for current block ---
       bit = 1 + j + (i >> 2);
-      curMb->s_cbp[0].bits   |= ((int64) 0x03 << bit   );
+      curMb->cbpStructure[0].bits   |= ((int64) 0x03 << bit   );
     }
   }
   else if (type==LUMA_4x8)
   {
-    int j           = curMb->subblock_y;
-    int i           = curMb->subblock_x;
+    int j           = curMb->subblockY;
+    int i           = curMb->subblockX;
     int bit         = 1;
-    int default_bit = (curMb->is_intra_block ? 1 : 0);
+    int default_bit = (curMb->isIntraBlock ? 1 : 0);
     int upper_bit   = default_bit;
     int left_bit    = default_bit;
     int ctx;
 
     sPixelPos block_a, block_b;
 
-    get4x4NeighbourBase(curMb, i - 1, j    , vidParam->mb_size[IS_LUMA], &block_a);
-    get4x4NeighbourBase(curMb, i    , j - 1, vidParam->mb_size[IS_LUMA], &block_b);
+    get4x4NeighbourBase(curMb, i - 1, j    , vidParam->mbSize[IS_LUMA], &block_a);
+    get4x4NeighbourBase(curMb, i    , j - 1, vidParam->mbSize[IS_LUMA], &block_b);
 
     //--- get bits from neighboring blocks ---
     if (block_b.available)
     {
-      upper_bit = set_cbp_bit_ac(&mbData[block_b.mb_addr], &block_b);
+      upper_bit = set_cbp_bit_ac(&mbData[block_b.mbAddr], &block_b);
     }
 
     if (block_a.available)
     {
-      left_bit = set_cbp_bit_ac(&mbData[block_a.mb_addr], &block_a);
+      left_bit = set_cbp_bit_ac(&mbData[block_a.mbAddr], &block_a);
     }
 
     ctx = 2 * upper_bit + left_bit;
@@ -1972,33 +1972,33 @@ static int read_and_store_CBP_block_bit_normal (sMacroblock* curMb,
       //--- set bits for current block ---
       bit = 1 + j + (i >> 2);
 
-      curMb->s_cbp[0].bits   |= ((int64) 0x11 << bit   );
+      curMb->cbpStructure[0].bits   |= ((int64) 0x11 << bit   );
     }
   }
   else if (type==LUMA_4x4)
   {
-    int j           = curMb->subblock_y;
-    int i           = curMb->subblock_x;
+    int j           = curMb->subblockY;
+    int i           = curMb->subblockX;
     int bit         = 1;
-    int default_bit = (curMb->is_intra_block ? 1 : 0);
+    int default_bit = (curMb->isIntraBlock ? 1 : 0);
     int upper_bit   = default_bit;
     int left_bit    = default_bit;
     int ctx;
 
     sPixelPos block_a, block_b;
 
-    get4x4NeighbourBase(curMb, i - 1, j    , vidParam->mb_size[IS_LUMA], &block_a);
-    get4x4NeighbourBase(curMb, i    , j - 1, vidParam->mb_size[IS_LUMA], &block_b);
+    get4x4NeighbourBase(curMb, i - 1, j    , vidParam->mbSize[IS_LUMA], &block_a);
+    get4x4NeighbourBase(curMb, i    , j - 1, vidParam->mbSize[IS_LUMA], &block_b);
 
     //--- get bits from neighboring blocks ---
     if (block_b.available)
     {
-      upper_bit = set_cbp_bit_ac(&mbData[block_b.mb_addr], &block_b);
+      upper_bit = set_cbp_bit_ac(&mbData[block_b.mbAddr], &block_b);
     }
 
     if (block_a.available)
     {
-      left_bit = set_cbp_bit_ac(&mbData[block_a.mb_addr], &block_a);
+      left_bit = set_cbp_bit_ac(&mbData[block_a.mbAddr], &block_a);
     }
 
     ctx = 2 * upper_bit + left_bit;
@@ -2010,49 +2010,49 @@ static int read_and_store_CBP_block_bit_normal (sMacroblock* curMb,
       //--- set bits for current block ---
       bit = 1 + j + (i >> 2);
 
-      curMb->s_cbp[0].bits   |= i64_power2(bit);
+      curMb->cbpStructure[0].bits   |= i64_power2(bit);
     }
   }
   else if (type == LUMA_8x8)
   {
-    int j           = curMb->subblock_y;
-    int i           = curMb->subblock_x;
+    int j           = curMb->subblockY;
+    int i           = curMb->subblockX;
     //--- set bits for current block ---
     int bit         = 1 + j + (i >> 2);
 
-    curMb->s_cbp[0].bits |= ((int64) 0x33 << bit   );
+    curMb->cbpStructure[0].bits |= ((int64) 0x33 << bit   );
   }
   else if (type==CHROMA_DC || type==CHROMA_DC_2x4 || type==CHROMA_DC_4x4)
   {
-    int u_dc        = (!curMb->is_v_block);
+    int u_dc        = (!curMb->isVblock);
     int j           = 0;
     int i           = 0;
     int bit         = (u_dc ? 17 : 18);
-    int default_bit = (curMb->is_intra_block ? 1 : 0);
+    int default_bit = (curMb->isIntraBlock ? 1 : 0);
     int upper_bit   = default_bit;
     int left_bit    = default_bit;
     int ctx;
 
     sPixelPos block_a, block_b;
 
-    get4x4NeighbourBase(curMb, i - 1, j    , vidParam->mb_size[IS_CHROMA], &block_a);
-    get4x4NeighbourBase(curMb, i    , j - 1, vidParam->mb_size[IS_CHROMA], &block_b);
+    get4x4NeighbourBase(curMb, i - 1, j    , vidParam->mbSize[IS_CHROMA], &block_a);
+    get4x4NeighbourBase(curMb, i    , j - 1, vidParam->mbSize[IS_CHROMA], &block_b);
 
     //--- get bits from neighboring blocks ---
     if (block_b.available)
     {
-      if(mbData[block_b.mb_addr].mb_type==IPCM)
+      if(mbData[block_b.mbAddr].mbType==IPCM)
         upper_bit = 1;
       else
-        upper_bit = get_bit(mbData[block_b.mb_addr].s_cbp[0].bits, bit);
+        upper_bit = get_bit(mbData[block_b.mbAddr].cbpStructure[0].bits, bit);
     }
 
     if (block_a.available)
     {
-      if(mbData[block_a.mb_addr].mb_type==IPCM)
+      if(mbData[block_a.mbAddr].mbType==IPCM)
         left_bit = 1;
       else
-        left_bit = get_bit(mbData[block_a.mb_addr].s_cbp[0].bits, bit);
+        left_bit = get_bit(mbData[block_a.mbAddr].cbpStructure[0].bits, bit);
     }
 
     ctx = 2 * upper_bit + left_bit;
@@ -2063,45 +2063,45 @@ static int read_and_store_CBP_block_bit_normal (sMacroblock* curMb,
     {
       //--- set bits for current block ---
       bit = (u_dc ? 17 : 18);
-      curMb->s_cbp[0].bits   |= i64_power2(bit);
+      curMb->cbpStructure[0].bits   |= i64_power2(bit);
     }
   }
   else
   {
-    int u_ac        = (!curMb->is_v_block);
-    int j           = curMb->subblock_y;
-    int i           = curMb->subblock_x;
+    int u_ac        = (!curMb->isVblock);
+    int j           = curMb->subblockY;
+    int i           = curMb->subblockX;
     int bit         = (u_ac ? 19 : 35);
-    int default_bit = (curMb->is_intra_block ? 1 : 0);
+    int default_bit = (curMb->isIntraBlock ? 1 : 0);
     int upper_bit   = default_bit;
     int left_bit    = default_bit;
     int ctx;
 
     sPixelPos block_a, block_b;
 
-    get4x4NeighbourBase(curMb, i - 1, j    , vidParam->mb_size[IS_CHROMA], &block_a);
-    get4x4NeighbourBase(curMb, i    , j - 1, vidParam->mb_size[IS_CHROMA], &block_b);
+    get4x4NeighbourBase(curMb, i - 1, j    , vidParam->mbSize[IS_CHROMA], &block_a);
+    get4x4NeighbourBase(curMb, i    , j - 1, vidParam->mbSize[IS_CHROMA], &block_b);
 
     //--- get bits from neighboring blocks ---
     if (block_b.available)
     {
-      if(mbData[block_b.mb_addr].mb_type==IPCM)
+      if(mbData[block_b.mbAddr].mbType==IPCM)
         upper_bit=1;
       else
       {
         int bit_pos_b = 4*block_b.y + block_b.x;
-        upper_bit = get_bit(mbData[block_b.mb_addr].s_cbp[0].bits, bit + bit_pos_b);
+        upper_bit = get_bit(mbData[block_b.mbAddr].cbpStructure[0].bits, bit + bit_pos_b);
       }
     }
 
     if (block_a.available)
     {
-      if(mbData[block_a.mb_addr].mb_type==IPCM)
+      if(mbData[block_a.mbAddr].mbType==IPCM)
         left_bit=1;
       else
       {
         int bit_pos_a = 4*block_a.y + block_a.x;
-        left_bit = get_bit(mbData[block_a.mb_addr].s_cbp[0].bits,bit + bit_pos_a);
+        left_bit = get_bit(mbData[block_a.mbAddr].cbpStructure[0].bits,bit + bit_pos_a);
       }
     }
 
@@ -2113,7 +2113,7 @@ static int read_and_store_CBP_block_bit_normal (sMacroblock* curMb,
     {
       //--- set bits for current block ---
       bit = (u_ac ? 19 + j + (i >> 2) : 35 + j + (i >> 2));
-      curMb->s_cbp[0].bits   |= i64_power2(bit);
+      curMb->cbpStructure[0].bits   |= i64_power2(bit);
     }
   }
   return cbp_bit;
@@ -2142,7 +2142,7 @@ static int read_significance_map (sMacroblock* curMb,
                                   int                     coeff[])
 {
   sSlice* curSlice = curMb->slice;
-  int               fld    = ( curSlice->structure!=FRAME || curMb->mb_field );
+  int               fld    = ( curSlice->structure!=FRAME || curMb->mbField );
   const byte *pos2ctx_Map = (fld) ? pos2ctx_map_int[type] : pos2ctx_map[type];
   const byte *pos2ctx_Last = pos2ctx_last[type];
 
@@ -2335,7 +2335,7 @@ void readIPCM_CABAC (sSlice* curSlice, struct DataPartition *dP)
   bitoffset = (*dep->Dcodestrm_len) << 3;
 
   // read luma values
-  bitdepth = vidParam->bitdepth_luma;
+  bitdepth = vidParam->bitdepthLuma;
   for(i=0;i<MB_BLOCK_SIZE;++i)
   {
     for(j=0;j<MB_BLOCK_SIZE;++j)
@@ -2351,14 +2351,14 @@ void readIPCM_CABAC (sSlice* curSlice, struct DataPartition *dP)
   }
 
   // read chroma values
-  bitdepth = vidParam->bitdepth_chroma;
+  bitdepth = vidParam->bitdepthChroma;
   if ((picture->chromaFormatIdc != YUV400) && (vidParam->sepColourPlaneFlag == 0))
   {
     for (uv = 1; uv < 3; ++uv)
     {
-      for(i = 0; i < vidParam->mb_cr_size_y; ++i)
+      for(i = 0; i < vidParam->mbCrSizeY; ++i)
       {
-        for(j = 0; j < vidParam->mb_cr_size_x; ++j)
+        for(j = 0; j < vidParam->mbCrSizeX; ++j)
         {
           bits_read += GetBits(buf, bitoffset, &val, BitstreamLengthInBits, bitdepth);
 #if TRACE

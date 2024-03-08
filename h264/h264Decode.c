@@ -114,7 +114,7 @@ sSlice* allocSlice (sInputParam* inputParam, sVidParam* vidParam) {
   curSlice->partArr = allocPartition (curSlice->maxPartitionNum);
 
   get_mem2Dwp (&(curSlice->WPParam), 2, MAX_REFERENCE_PICTURES);
-  get_mem3Dint (&(curSlice->wp_weight), 2, MAX_REFERENCE_PICTURES, 3);
+  get_mem3Dint (&(curSlice->wpWeight), 2, MAX_REFERENCE_PICTURES, 3);
   get_mem3Dint (&(curSlice->wpOffset), 6, MAX_REFERENCE_PICTURES, 3);
   get_mem4Dint (&(curSlice->wbpWeight), 6, MAX_REFERENCE_PICTURES, MAX_REFERENCE_PICTURES, 3);
   get_mem3Dpel (&(curSlice->mb_pred), MAX_PLANE, MB_BLOCK_SIZE, MB_BLOCK_SIZE);
@@ -155,7 +155,7 @@ static void freeSlice (sSlice *curSlice) {
   free_mem3Dpel (curSlice->mb_pred);
 
   free_mem2Dwp (curSlice->WPParam);
-  free_mem3Dint (curSlice->wp_weight);
+  free_mem3Dint (curSlice->wpWeight);
   free_mem3Dint (curSlice->wpOffset);
   free_mem4Dint (curSlice->wbpWeight);
 
@@ -252,7 +252,7 @@ static void init (sVidParam* vidParam) {
   vidParam->recoveryPointFound = 0;
   vidParam->recoveryPoc = 0x7fffffff; /* set to a max value */
 
-  vidParam->idrPsnrNum = inputParam->ref_offset;
+  vidParam->idrPsnrNum = inputParam->refOffset;
   vidParam->psnrNum=0;
 
   vidParam->number = 0;
@@ -269,8 +269,8 @@ static void init (sVidParam* vidParam) {
   vidParam->NALUCount = 0;
 
   vidParam->outBuffer = NULL;
-  vidParam->pendingOutput = NULL;
-  vidParam->pendingOutputState = FRAME;
+  vidParam->pendingOut = NULL;
+  vidParam->pendingOutState = FRAME;
   vidParam->recoveryFlag = 0;
 
   vidParam->newFrame = 0;
@@ -291,59 +291,59 @@ static void init (sVidParam* vidParam) {
 void init_frext (sVidParam* vidParam) {
 
   // pel bitdepth init
-  vidParam->bitdepth_luma_qp_scale = 6 * (vidParam->bitdepth_luma - 8);
+  vidParam->bitdepth_luma_qp_scale = 6 * (vidParam->bitdepthLuma - 8);
 
-  if(vidParam->bitdepth_luma > vidParam->bitdepth_chroma || vidParam->activeSPS->chromaFormatIdc == YUV400)
-    vidParam->pic_unit_bitsize_on_disk = (vidParam->bitdepth_luma > 8)? 16:8;
+  if(vidParam->bitdepthLuma > vidParam->bitdepthChroma || vidParam->activeSPS->chromaFormatIdc == YUV400)
+    vidParam->picUnitBitSizeDisk = (vidParam->bitdepthLuma > 8)? 16:8;
   else
-    vidParam->pic_unit_bitsize_on_disk = (vidParam->bitdepth_chroma > 8)? 16:8;
-  vidParam->dc_pred_value_comp[0] = 1<<(vidParam->bitdepth_luma - 1);
-  vidParam->max_pel_value_comp[0] = (1<<vidParam->bitdepth_luma) - 1;
-  vidParam->mb_size[0][0] = vidParam->mb_size[0][1] = MB_BLOCK_SIZE;
+    vidParam->picUnitBitSizeDisk = (vidParam->bitdepthChroma > 8)? 16:8;
+  vidParam->dcPredValueComp[0] = 1<<(vidParam->bitdepthLuma - 1);
+  vidParam->maxPelValueComp[0] = (1<<vidParam->bitdepthLuma) - 1;
+  vidParam->mbSize[0][0] = vidParam->mbSize[0][1] = MB_BLOCK_SIZE;
 
   if (vidParam->activeSPS->chromaFormatIdc != YUV400) {
     // for chrominance part
-    vidParam->bitdepth_chroma_qp_scale = 6 * (vidParam->bitdepth_chroma - 8);
-    vidParam->dc_pred_value_comp[1] = (1 << (vidParam->bitdepth_chroma - 1));
-    vidParam->dc_pred_value_comp[2] = vidParam->dc_pred_value_comp[1];
-    vidParam->max_pel_value_comp[1] = (1 << vidParam->bitdepth_chroma) - 1;
-    vidParam->max_pel_value_comp[2] = (1 << vidParam->bitdepth_chroma) - 1;
-    vidParam->num_blk8x8_uv = (1 << vidParam->activeSPS->chromaFormatIdc) & (~(0x1));
-    vidParam->num_uv_blocks = (vidParam->num_blk8x8_uv >> 1);
-    vidParam->num_cdc_coeff = (vidParam->num_blk8x8_uv << 1);
-    vidParam->mb_size[1][0] = vidParam->mb_size[2][0] = vidParam->mb_cr_size_x  = (vidParam->activeSPS->chromaFormatIdc==YUV420 || vidParam->activeSPS->chromaFormatIdc==YUV422)?  8 : 16;
-    vidParam->mb_size[1][1] = vidParam->mb_size[2][1] = vidParam->mb_cr_size_y  = (vidParam->activeSPS->chromaFormatIdc==YUV444 || vidParam->activeSPS->chromaFormatIdc==YUV422)? 16 :  8;
+    vidParam->bitdepthChromaQpScale = 6 * (vidParam->bitdepthChroma - 8);
+    vidParam->dcPredValueComp[1] = (1 << (vidParam->bitdepthChroma - 1));
+    vidParam->dcPredValueComp[2] = vidParam->dcPredValueComp[1];
+    vidParam->maxPelValueComp[1] = (1 << vidParam->bitdepthChroma) - 1;
+    vidParam->maxPelValueComp[2] = (1 << vidParam->bitdepthChroma) - 1;
+    vidParam->numBlock8x8uv = (1 << vidParam->activeSPS->chromaFormatIdc) & (~(0x1));
+    vidParam->numUvBlocks = (vidParam->numBlock8x8uv >> 1);
+    vidParam->numCdcCoeff = (vidParam->numBlock8x8uv << 1);
+    vidParam->mbSize[1][0] = vidParam->mbSize[2][0] = vidParam->mbCrSizeX  = (vidParam->activeSPS->chromaFormatIdc==YUV420 || vidParam->activeSPS->chromaFormatIdc==YUV422)?  8 : 16;
+    vidParam->mbSize[1][1] = vidParam->mbSize[2][1] = vidParam->mbCrSizeY  = (vidParam->activeSPS->chromaFormatIdc==YUV444 || vidParam->activeSPS->chromaFormatIdc==YUV422)? 16 :  8;
 
-    vidParam->subpel_x = vidParam->mb_cr_size_x == 8 ? 7 : 3;
-    vidParam->subpel_y = vidParam->mb_cr_size_y == 8 ? 7 : 3;
-    vidParam->shiftpel_x = vidParam->mb_cr_size_x == 8 ? 3 : 2;
-    vidParam->shiftpel_y = vidParam->mb_cr_size_y == 8 ? 3 : 2;
-    vidParam->total_scale = vidParam->shiftpel_x + vidParam->shiftpel_y;
+    vidParam->subpelX = vidParam->mbCrSizeX == 8 ? 7 : 3;
+    vidParam->subpelY = vidParam->mbCrSizeY == 8 ? 7 : 3;
+    vidParam->shiftpelX = vidParam->mbCrSizeX == 8 ? 3 : 2;
+    vidParam->shiftpelY = vidParam->mbCrSizeY == 8 ? 3 : 2;
+    vidParam->totalScale = vidParam->shiftpelX + vidParam->shiftpelY;
     }
   else {
-    vidParam->bitdepth_chroma_qp_scale = 0;
-    vidParam->max_pel_value_comp[1] = 0;
-    vidParam->max_pel_value_comp[2] = 0;
-    vidParam->num_blk8x8_uv = 0;
-    vidParam->num_uv_blocks = 0;
-    vidParam->num_cdc_coeff = 0;
-    vidParam->mb_size[1][0] = vidParam->mb_size[2][0] = vidParam->mb_cr_size_x  = 0;
-    vidParam->mb_size[1][1] = vidParam->mb_size[2][1] = vidParam->mb_cr_size_y  = 0;
-    vidParam->subpel_x = 0;
-    vidParam->subpel_y = 0;
-    vidParam->shiftpel_x = 0;
-    vidParam->shiftpel_y = 0;
-    vidParam->total_scale = 0;
+    vidParam->bitdepthChromaQpScale = 0;
+    vidParam->maxPelValueComp[1] = 0;
+    vidParam->maxPelValueComp[2] = 0;
+    vidParam->numBlock8x8uv = 0;
+    vidParam->numUvBlocks = 0;
+    vidParam->numCdcCoeff = 0;
+    vidParam->mbSize[1][0] = vidParam->mbSize[2][0] = vidParam->mbCrSizeX  = 0;
+    vidParam->mbSize[1][1] = vidParam->mbSize[2][1] = vidParam->mbCrSizeY  = 0;
+    vidParam->subpelX = 0;
+    vidParam->subpelY = 0;
+    vidParam->shiftpelX = 0;
+    vidParam->shiftpelY = 0;
+    vidParam->totalScale = 0;
     }
 
-  vidParam->mb_cr_size = vidParam->mb_cr_size_x * vidParam->mb_cr_size_y;
-  vidParam->mb_size_blk[0][0] = vidParam->mb_size_blk[0][1] = vidParam->mb_size[0][0] >> 2;
-  vidParam->mb_size_blk[1][0] = vidParam->mb_size_blk[2][0] = vidParam->mb_size[1][0] >> 2;
-  vidParam->mb_size_blk[1][1] = vidParam->mb_size_blk[2][1] = vidParam->mb_size[1][1] >> 2;
+  vidParam->mbCrSize = vidParam->mbCrSizeX * vidParam->mbCrSizeY;
+  vidParam->mbSizeBlock[0][0] = vidParam->mbSizeBlock[0][1] = vidParam->mbSize[0][0] >> 2;
+  vidParam->mbSizeBlock[1][0] = vidParam->mbSizeBlock[2][0] = vidParam->mbSize[1][0] >> 2;
+  vidParam->mbSizeBlock[1][1] = vidParam->mbSizeBlock[2][1] = vidParam->mbSize[1][1] >> 2;
 
-  vidParam->mb_size_shift[0][0] = vidParam->mb_size_shift[0][1] = ceilLog2sf (vidParam->mb_size[0][0]);
-  vidParam->mb_size_shift[1][0] = vidParam->mb_size_shift[2][0] = ceilLog2sf (vidParam->mb_size[1][0]);
-  vidParam->mb_size_shift[1][1] = vidParam->mb_size_shift[2][1] = ceilLog2sf (vidParam->mb_size[1][1]);
+  vidParam->mbSizeShift[0][0] = vidParam->mbSizeShift[0][1] = ceilLog2sf (vidParam->mbSize[0][0]);
+  vidParam->mbSizeShift[1][0] = vidParam->mbSizeShift[2][0] = ceilLog2sf (vidParam->mbSize[1][0]);
+  vidParam->mbSizeShift[1][1] = vidParam->mbSizeShift[2][1] = ceilLog2sf (vidParam->mbSize[1][1]);
   }
 //}}}
 
@@ -520,7 +520,7 @@ void freeGlobalBuffers (sVidParam* vidParam) {
 //}}}
 
 //{{{
-sDecodedPicture* getAvailableDecodedPicture (sDecodedPicture* decodedPicture) {
+sDecodedPicture* getDecodedPicture (sDecodedPicture* decodedPicture) {
 
   sDecodedPicture* prevDecodedPicture = NULL;
   while (decodedPicture && (decodedPicture->valid)) {
@@ -580,16 +580,16 @@ void freeDecodedPictures (sDecodedPicture* decodedPicture) {
 //{{{
 void setGlobalCodingProgram (sVidParam* vidParam, sCodingParam* codingParam) {
 
-  vidParam->bitdepth_chroma = 0;
+  vidParam->bitdepthChroma = 0;
   vidParam->widthCr = 0;
   vidParam->heightCr = 0;
   vidParam->lossless_qpprime_flag = codingParam->lossless_qpprime_flag;
   vidParam->max_vmv_r = codingParam->max_vmv_r;
 
   // Fidelity Range Extensions stuff (part 1)
-  vidParam->bitdepth_luma = codingParam->bitdepth_luma;
+  vidParam->bitdepthLuma = codingParam->bitdepthLuma;
   vidParam->bitdepth_scale[0] = codingParam->bitdepth_scale[0];
-  vidParam->bitdepth_chroma = codingParam->bitdepth_chroma;
+  vidParam->bitdepthChroma = codingParam->bitdepthChroma;
   vidParam->bitdepth_scale[1] = codingParam->bitdepth_scale[1];
 
   vidParam->max_frame_num = codingParam->max_frame_num;
@@ -641,7 +641,7 @@ int OpenDecoder (sInputParam* inputParam, byte* chunk, size_t chunkSize) {
 
   memcpy (gDecoder->inputParam, inputParam, sizeof(sInputParam));
   gDecoder->vidParam->concealMode = inputParam->concealMode;
-  gDecoder->vidParam->ref_poc_gap = inputParam->ref_poc_gap;
+  gDecoder->vidParam->refPocGap = inputParam->refPocGap;
   gDecoder->vidParam->pocGap = inputParam->pocGap;
   gDecoder->vidParam->annexB = allocAnnexB (gDecoder->vidParam);
   openAnnexB (gDecoder->vidParam->annexB, chunk, chunkSize);
@@ -656,7 +656,7 @@ int OpenDecoder (sInputParam* inputParam, byte* chunk, size_t chunkSize) {
 //{{{
 int DecodeOneFrame (sDecodedPicture** ppDecPicList) {
 
-  sDecoderParam* pDecoder = gDecoder;
+  sDecoderParam* decoder = gDecoder;
   ClearDecodedPictures (gDecoder->vidParam);
 
   int iRet = decodeFrame (gDecoder);

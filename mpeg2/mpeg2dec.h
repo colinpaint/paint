@@ -63,8 +63,8 @@
 #define D_TYPE 4
 //}}}
 //{{{  picture structure
-#define TOP_FIELD     1
-#define BOTTOM_FIELD  2
+#define TopField     1
+#define BotField  2
 #define FRAME_PICTURE 3
 //}}}
 //{{{  macroblock type

@@ -776,9 +776,9 @@ typedef struct AVFrame {
      * @{
      */
     size_t crop_top;
-    size_t crop_bottom;
+    size_t cropBot;
     size_t crop_left;
-    size_t crop_right;
+    size_t cropRight;
     /**
      * @}
      */
@@ -1027,8 +1027,8 @@ enum {
 };
 
 /**
- * Crop the given video AVFrame according to its crop_left/crop_top/crop_right/
- * crop_bottom fields. If cropping is successful, the function will adjust the
+ * Crop the given video AVFrame according to its crop_left/crop_top/cropRight/
+ * cropBot fields. If cropping is successful, the function will adjust the
  * data pointers and the width/height fields, and set the crop fields to 0.
  *
  * In all cases, the cropping boundaries will be rounded to the inherent

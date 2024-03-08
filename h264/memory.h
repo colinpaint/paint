@@ -4,7 +4,7 @@
 
 extern void no_mem_exit (char *where);
 //{{{
-static inline void* mem_malloc (size_t nitems) {
+static inline void* memAlloc (size_t nitems) {
 
   void* d;
   if ((d = malloc(nitems)) == NULL) {
@@ -18,13 +18,13 @@ static inline void* mem_malloc (size_t nitems) {
 static inline void* mem_calloc (size_t nitems, size_t size) {
 
   size_t padded_size = nitems * size;
-  void* d = mem_malloc (padded_size);
+  void* d = memAlloc (padded_size);
   memset (d, 0, (int)padded_size);
   return d;
   }
 //}}}
 //{{{
-static inline void mem_free (void *a) {
+static inline void memFree (void *a) {
   free_pointer (a);
   }
 //}}}

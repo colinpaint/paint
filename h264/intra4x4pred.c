@@ -71,13 +71,13 @@ static int intra4x4_dc_pred (sMacroblock *curMb,
 
   sPixel** mb_pred = curSlice->mb_pred[pl];
 
-  getNonAffNeighbour(curMb, ioff - 1, joff   , vidParam->mb_size[IS_LUMA], &pix_a);
-  getNonAffNeighbour(curMb, ioff    , joff -1, vidParam->mb_size[IS_LUMA], &pix_b);
+  getNonAffNeighbour(curMb, ioff - 1, joff   , vidParam->mbSize[IS_LUMA], &pix_a);
+  getNonAffNeighbour(curMb, ioff    , joff -1, vidParam->mbSize[IS_LUMA], &pix_b);
 
-  if (vidParam->activePPS->constrained_intra_pred_flag)
+  if (vidParam->activePPS->constrainedIntraPredFlag)
   {
-    block_available_left = pix_a.available ? curSlice->intraBlock [pix_a.mb_addr] : 0;
-    block_available_up   = pix_b.available ? curSlice->intraBlock [pix_b.mb_addr] : 0;
+    block_available_left = pix_a.available ? curSlice->intraBlock [pix_a.mbAddr] : 0;
+    block_available_up   = pix_b.available ? curSlice->intraBlock [pix_b.mbAddr] : 0;
   }
   else
   {
@@ -88,7 +88,7 @@ static int intra4x4_dc_pred (sMacroblock *curMb,
   // form predictor pels
   if (block_available_up)
   {
-    curpel = &imgY[pix_b.pos_y][pix_b.pos_x];
+    curpel = &imgY[pix_b.posY][pix_b.posX];
     s0 += *curpel++;
     s0 += *curpel++;
     s0 += *curpel++;
@@ -97,12 +97,12 @@ static int intra4x4_dc_pred (sMacroblock *curMb,
 
   if (block_available_left)
   {
-    sPixel** img_pred = &imgY[pix_a.pos_y];
-    int pos_x = pix_a.pos_x;
-    s0 += *(*(img_pred ++) + pos_x);
-    s0 += *(*(img_pred ++) + pos_x);
-    s0 += *(*(img_pred ++) + pos_x);
-    s0 += *(*(img_pred   ) + pos_x);
+    sPixel** img_pred = &imgY[pix_a.posY];
+    int posX = pix_a.posX;
+    s0 += *(*(img_pred ++) + posX);
+    s0 += *(*(img_pred ++) + posX);
+    s0 += *(*(img_pred ++) + posX);
+    s0 += *(*(img_pred   ) + posX);
   }
 
   if (block_available_up && block_available_left)
@@ -123,7 +123,7 @@ static int intra4x4_dc_pred (sMacroblock *curMb,
   else //if (!block_available_up && !block_available_left)
   {
     // top left corner, nothing to predict from
-    s0 = vidParam->dc_pred_value_comp[pl];
+    s0 = vidParam->dcPredValueComp[pl];
   }
 
   for (j=joff; j < joff + BLOCK_SIZE; ++j)
@@ -159,11 +159,11 @@ static int intra4x4_vert_pred (sMacroblock *curMb,    //!< current macroblock
   int block_available_up;
   sPixelPos pix_b;
 
-  getNonAffNeighbour(curMb, ioff, joff - 1 , vidParam->mb_size[IS_LUMA], &pix_b);
+  getNonAffNeighbour(curMb, ioff, joff - 1 , vidParam->mbSize[IS_LUMA], &pix_b);
 
-  if (vidParam->activePPS->constrained_intra_pred_flag)
+  if (vidParam->activePPS->constrainedIntraPredFlag)
   {
-    block_available_up = pix_b.available ? curSlice->intraBlock [pix_b.mb_addr] : 0;
+    block_available_up = pix_b.available ? curSlice->intraBlock [pix_b.mbAddr] : 0;
   }
   else
   {
@@ -177,7 +177,7 @@ static int intra4x4_vert_pred (sMacroblock *curMb,    //!< current macroblock
   else
   {
     sPixel** mb_pred = curSlice->mb_pred[pl];
-    sPixel *imgY = (pl) ? &curSlice->picture->imgUV[pl - 1][pix_b.pos_y][pix_b.pos_x] : &curSlice->picture->imgY[pix_b.pos_y][pix_b.pos_x];
+    sPixel *imgY = (pl) ? &curSlice->picture->imgUV[pl - 1][pix_b.posY][pix_b.posX] : &curSlice->picture->imgY[pix_b.posY][pix_b.posX];
     memcpy(&(mb_pred[joff++][ioff]), imgY, BLOCK_SIZE * sizeof(sPixel));
     memcpy(&(mb_pred[joff++][ioff]), imgY, BLOCK_SIZE * sizeof(sPixel));
     memcpy(&(mb_pred[joff++][ioff]), imgY, BLOCK_SIZE * sizeof(sPixel));
@@ -218,11 +218,11 @@ static int intra4x4_hor_pred (sMacroblock *curMb,
 
   int block_available_left;
 
-  getNonAffNeighbour(curMb, ioff - 1 , joff, vidParam->mb_size[IS_LUMA], &pix_a);
+  getNonAffNeighbour(curMb, ioff - 1 , joff, vidParam->mbSize[IS_LUMA], &pix_a);
 
-  if (vidParam->activePPS->constrained_intra_pred_flag)
+  if (vidParam->activePPS->constrainedIntraPredFlag)
   {
-    block_available_left = pix_a.available ? curSlice->intraBlock[pix_a.mb_addr]: 0;
+    block_available_left = pix_a.available ? curSlice->intraBlock[pix_a.mbAddr]: 0;
   }
   else
   {
@@ -236,19 +236,19 @@ static int intra4x4_hor_pred (sMacroblock *curMb,
   {
     sPixel** imgY = (pl) ? curSlice->picture->imgUV[pl - 1] : curSlice->picture->imgY;
     sPixel** mb_pred  =  &curSlice->mb_pred[pl][joff];
-    sPixel** img_pred =  &imgY[pix_a.pos_y];
-    int pos_x = pix_a.pos_x;
+    sPixel** img_pred =  &imgY[pix_a.posY];
+    int posX = pix_a.posX;
 
-    memset((*(mb_pred++) + ioff), *(*(img_pred++) + pos_x), BLOCK_SIZE * sizeof (sPixel));
-    memset((*(mb_pred++) + ioff), *(*(img_pred++) + pos_x), BLOCK_SIZE * sizeof (sPixel));
-    memset((*(mb_pred++) + ioff), *(*(img_pred++) + pos_x), BLOCK_SIZE * sizeof (sPixel));
-    memset((*(mb_pred  ) + ioff), *(*(img_pred  ) + pos_x), BLOCK_SIZE * sizeof (sPixel));
+    memset((*(mb_pred++) + ioff), *(*(img_pred++) + posX), BLOCK_SIZE * sizeof (sPixel));
+    memset((*(mb_pred++) + ioff), *(*(img_pred++) + posX), BLOCK_SIZE * sizeof (sPixel));
+    memset((*(mb_pred++) + ioff), *(*(img_pred++) + posX), BLOCK_SIZE * sizeof (sPixel));
+    memset((*(mb_pred  ) + ioff), *(*(img_pred  ) + posX), BLOCK_SIZE * sizeof (sPixel));
   }
 #else
   {
     int j;
-    int pos_y = pix_a.pos_y;
-    int pos_x = pix_a.pos_x;
+    int posY = pix_a.posY;
+    int posX = pix_a.posX;
     sPixel *predrow, prediction;
     sPixel** mb_pred  =  &curSlice->mb_pred[pl][joff];
     sPixel** imgY = (pl) ? curSlice->picture->imgUV[pl - 1] : curSlice->picture->imgY;
@@ -256,7 +256,7 @@ static int intra4x4_hor_pred (sMacroblock *curMb,
     for(j=0;j<BLOCK_SIZE;++j)
     {
       predrow = mb_pred[j];
-      prediction = imgY[pos_y++][pos_x];
+      prediction = imgY[posY++][posX];
       /* store predicted 4x4 block */
       predrow[ioff    ]= prediction;
       predrow[ioff + 1]= prediction;
@@ -299,15 +299,15 @@ static int intra4x4_diag_down_right_pred (sMacroblock *curMb,    //!< current ma
 
   sPixel** mb_pred = curSlice->mb_pred[pl];
 
-  getNonAffNeighbour(curMb, ioff -1 , joff    , vidParam->mb_size[IS_LUMA], &pix_a);
-  getNonAffNeighbour(curMb, ioff    , joff -1 , vidParam->mb_size[IS_LUMA], &pix_b);
-  getNonAffNeighbour(curMb, ioff -1 , joff -1 , vidParam->mb_size[IS_LUMA], &pix_d);
+  getNonAffNeighbour(curMb, ioff -1 , joff    , vidParam->mbSize[IS_LUMA], &pix_a);
+  getNonAffNeighbour(curMb, ioff    , joff -1 , vidParam->mbSize[IS_LUMA], &pix_b);
+  getNonAffNeighbour(curMb, ioff -1 , joff -1 , vidParam->mbSize[IS_LUMA], &pix_d);
 
-  if (vidParam->activePPS->constrained_intra_pred_flag)
+  if (vidParam->activePPS->constrainedIntraPredFlag)
   {
-    block_available_left     = pix_a.available ? curSlice->intraBlock [pix_a.mb_addr]: 0;
-    block_available_up       = pix_b.available ? curSlice->intraBlock [pix_b.mb_addr] : 0;
-    block_available_up_left  = pix_d.available ? curSlice->intraBlock [pix_d.mb_addr] : 0;
+    block_available_left     = pix_a.available ? curSlice->intraBlock [pix_a.mbAddr]: 0;
+    block_available_up       = pix_b.available ? curSlice->intraBlock [pix_b.mbAddr] : 0;
+    block_available_up_left  = pix_d.available ? curSlice->intraBlock [pix_d.mbAddr] : 0;
   }
   else
   {
@@ -322,19 +322,19 @@ static int intra4x4_diag_down_right_pred (sMacroblock *curMb,    //!< current ma
   {
     sPixel PredPixel[7];
     sPixel PredPel[13];
-    sPixel** img_pred = &imgY[pix_a.pos_y];
-    int pix_x = pix_a.pos_x;
-    sPixel *pred_pel = &imgY[pix_b.pos_y][pix_b.pos_x];
+    sPixel** img_pred = &imgY[pix_a.posY];
+    int pixX = pix_a.posX;
+    sPixel *pred_pel = &imgY[pix_b.posY][pix_b.posX];
     // form predictor pels
     // P_A through P_D
     memcpy(&PredPel[1], pred_pel, BLOCK_SIZE * sizeof(sPixel));
 
-    P_I = *(*(img_pred++) + pix_x);
-    P_J = *(*(img_pred++) + pix_x);
-    P_K = *(*(img_pred++) + pix_x);
-    P_L = *(*(img_pred  ) + pix_x);
+    P_I = *(*(img_pred++) + pixX);
+    P_J = *(*(img_pred++) + pixX);
+    P_K = *(*(img_pred++) + pixX);
+    P_L = *(*(img_pred  ) + pixX);
 
-    P_X = imgY[pix_d.pos_y][pix_d.pos_x];
+    P_X = imgY[pix_d.posY][pix_d.posX];
 
     PredPixel[0] = (sPixel) ((P_L + (P_K << 1) + P_J + 2) >> 2);
     PredPixel[1] = (sPixel) ((P_K + (P_J << 1) + P_I + 2) >> 2);
@@ -377,15 +377,15 @@ static int intra4x4_diag_down_left_pred (sMacroblock *curMb,    //!< current mac
   int block_available_up;
   int block_available_up_right;
 
-  getNonAffNeighbour(curMb, ioff    , joff - 1, vidParam->mb_size[IS_LUMA], &pix_b);
-  getNonAffNeighbour(curMb, ioff + 4, joff - 1, vidParam->mb_size[IS_LUMA], &pix_c);
+  getNonAffNeighbour(curMb, ioff    , joff - 1, vidParam->mbSize[IS_LUMA], &pix_b);
+  getNonAffNeighbour(curMb, ioff + 4, joff - 1, vidParam->mbSize[IS_LUMA], &pix_c);
 
   pix_c.available = pix_c.available && !((ioff==4) && ((joff==4)||(joff==12)));
 
-  if (vidParam->activePPS->constrained_intra_pred_flag)
+  if (vidParam->activePPS->constrainedIntraPredFlag)
   {
-    block_available_up       = pix_b.available ? curSlice->intraBlock [pix_b.mb_addr] : 0;
-    block_available_up_right = pix_c.available ? curSlice->intraBlock [pix_c.mb_addr] : 0;
+    block_available_up       = pix_b.available ? curSlice->intraBlock [pix_b.mbAddr] : 0;
+    block_available_up_right = pix_c.available ? curSlice->intraBlock [pix_c.mbAddr] : 0;
   }
   else
   {
@@ -402,7 +402,7 @@ static int intra4x4_diag_down_left_pred (sMacroblock *curMb,    //!< current mac
 
     sPixel PredPixel[8];
     sPixel PredPel[25];
-    sPixel *pred_pel = &imgY[pix_b.pos_y][pix_b.pos_x];
+    sPixel *pred_pel = &imgY[pix_b.posY][pix_b.posX];
 
     // form predictor pels
     // P_A through P_D
@@ -412,7 +412,7 @@ static int intra4x4_diag_down_left_pred (sMacroblock *curMb,    //!< current mac
     // P_E through P_H
     if (block_available_up_right)
     {
-      memcpy(&PredPel[5], &imgY[pix_c.pos_y][pix_c.pos_x], BLOCK_SIZE * sizeof(sPixel));
+      memcpy(&PredPel[5], &imgY[pix_c.posY][pix_c.posX], BLOCK_SIZE * sizeof(sPixel));
     }
     else
     {
@@ -465,15 +465,15 @@ static int intra4x4_vert_right_pred (sMacroblock *curMb,    //!< current macrobl
   int block_available_left;
   int block_available_up_left;
 
-  getNonAffNeighbour(curMb, ioff -1 , joff    , vidParam->mb_size[IS_LUMA], &pix_a);
-  getNonAffNeighbour(curMb, ioff    , joff -1 , vidParam->mb_size[IS_LUMA], &pix_b);
-  getNonAffNeighbour(curMb, ioff -1 , joff -1 , vidParam->mb_size[IS_LUMA], &pix_d);
+  getNonAffNeighbour(curMb, ioff -1 , joff    , vidParam->mbSize[IS_LUMA], &pix_a);
+  getNonAffNeighbour(curMb, ioff    , joff -1 , vidParam->mbSize[IS_LUMA], &pix_b);
+  getNonAffNeighbour(curMb, ioff -1 , joff -1 , vidParam->mbSize[IS_LUMA], &pix_d);
 
-  if (vidParam->activePPS->constrained_intra_pred_flag)
+  if (vidParam->activePPS->constrainedIntraPredFlag)
   {
-    block_available_left     = pix_a.available ? curSlice->intraBlock[pix_a.mb_addr]: 0;
-    block_available_up       = pix_b.available ? curSlice->intraBlock [pix_b.mb_addr] : 0;
-    block_available_up_left  = pix_d.available ? curSlice->intraBlock [pix_d.mb_addr] : 0;
+    block_available_left     = pix_a.available ? curSlice->intraBlock[pix_a.mbAddr]: 0;
+    block_available_up       = pix_b.available ? curSlice->intraBlock [pix_b.mbAddr] : 0;
+    block_available_up_left  = pix_d.available ? curSlice->intraBlock [pix_d.mbAddr] : 0;
   }
   else
   {
@@ -490,19 +490,19 @@ static int intra4x4_vert_right_pred (sMacroblock *curMb,    //!< current macrobl
     sPixel PredPixel[10];
     sPixel PredPel[13];
 
-    sPixel** img_pred = &imgY[pix_a.pos_y];
-    int pix_x = pix_a.pos_x;
-    sPixel *pred_pel = &imgY[pix_b.pos_y][pix_b.pos_x];
+    sPixel** img_pred = &imgY[pix_a.posY];
+    int pixX = pix_a.posX;
+    sPixel *pred_pel = &imgY[pix_b.posY][pix_b.posX];
     // form predictor pels
     // P_A through P_D
     memcpy(&PredPel[1], pred_pel, BLOCK_SIZE * sizeof(sPixel));
 
 
-    P_I = *(*(img_pred++) + pix_x);
-    P_J = *(*(img_pred++) + pix_x);
-    P_K = *(*(img_pred++) + pix_x);
+    P_I = *(*(img_pred++) + pixX);
+    P_J = *(*(img_pred++) + pixX);
+    P_K = *(*(img_pred++) + pixX);
 
-    P_X = imgY[pix_d.pos_y][pix_d.pos_x];
+    P_X = imgY[pix_d.posY][pix_d.posX];
 
     PredPixel[0] = (sPixel) ((P_X + (P_I << 1) + P_J + 2) >> 2);
     PredPixel[1] = (sPixel) ((P_X + P_A + 1) >> 1);
@@ -549,15 +549,15 @@ static int intra4x4_vert_left_pred (sMacroblock *curMb,    //!< current macroblo
   int block_available_up;
   int block_available_up_right;
 
-  getNonAffNeighbour(curMb, ioff    , joff -1 , vidParam->mb_size[IS_LUMA], &pix_b);
-  getNonAffNeighbour(curMb, ioff +4 , joff -1 , vidParam->mb_size[IS_LUMA], &pix_c);
+  getNonAffNeighbour(curMb, ioff    , joff -1 , vidParam->mbSize[IS_LUMA], &pix_b);
+  getNonAffNeighbour(curMb, ioff +4 , joff -1 , vidParam->mbSize[IS_LUMA], &pix_c);
 
   pix_c.available = pix_c.available && !((ioff==4) && ((joff==4)||(joff==12)));
 
-  if (vidParam->activePPS->constrained_intra_pred_flag)
+  if (vidParam->activePPS->constrainedIntraPredFlag)
   {
-    block_available_up       = pix_b.available ? curSlice->intraBlock [pix_b.mb_addr] : 0;
-    block_available_up_right = pix_c.available ? curSlice->intraBlock [pix_c.mb_addr] : 0;
+    block_available_up       = pix_b.available ? curSlice->intraBlock [pix_b.mbAddr] : 0;
+    block_available_up_right = pix_c.available ? curSlice->intraBlock [pix_c.mbAddr] : 0;
   }
   else
   {
@@ -574,7 +574,7 @@ static int intra4x4_vert_left_pred (sMacroblock *curMb,    //!< current macroblo
     sPixel PredPel[13];
     sPixel** imgY = (pl) ? curSlice->picture->imgUV[pl - 1] : curSlice->picture->imgY;
     sPixel** mb_pred = curSlice->mb_pred[pl];
-    sPixel *pred_pel = &imgY[pix_b.pos_y][pix_b.pos_x];
+    sPixel *pred_pel = &imgY[pix_b.posY][pix_b.posX];
 
     // form predictor pels
     // P_A through P_D
@@ -584,7 +584,7 @@ static int intra4x4_vert_left_pred (sMacroblock *curMb,    //!< current macroblo
     // P_E through P_H
     if (block_available_up_right)
     {
-      memcpy(&PredPel[5], &imgY[pix_c.pos_y][pix_c.pos_x], BLOCK_SIZE * sizeof(sPixel));
+      memcpy(&PredPel[5], &imgY[pix_c.posY][pix_c.posX], BLOCK_SIZE * sizeof(sPixel));
     }
     else
     {
@@ -637,11 +637,11 @@ static int intra4x4_hor_up_pred (sMacroblock *curMb,    //!< current macroblock
 
   int block_available_left;
 
-  getNonAffNeighbour(curMb, ioff -1 , joff, vidParam->mb_size[IS_LUMA], &pix_a);
+  getNonAffNeighbour(curMb, ioff -1 , joff, vidParam->mbSize[IS_LUMA], &pix_a);
 
-  if (vidParam->activePPS->constrained_intra_pred_flag)
+  if (vidParam->activePPS->constrainedIntraPredFlag)
   {
-    block_available_left = pix_a.available ? curSlice->intraBlock[pix_a.mb_addr]: 0;
+    block_available_left = pix_a.available ? curSlice->intraBlock[pix_a.mbAddr]: 0;
   }
   else
   {
@@ -657,14 +657,14 @@ static int intra4x4_hor_up_pred (sMacroblock *curMb,    //!< current macroblock
     sPixel** imgY = (pl) ? curSlice->picture->imgUV[pl - 1] : curSlice->picture->imgY;
     sPixel** mb_pred = curSlice->mb_pred[pl];
 
-    sPixel** img_pred = &imgY[pix_a.pos_y];
-    int pix_x = pix_a.pos_x;
+    sPixel** img_pred = &imgY[pix_a.posY];
+    int pixX = pix_a.posX;
 
     // form predictor pels
-    P_I = *(*(img_pred++) + pix_x);
-    P_J = *(*(img_pred++) + pix_x);
-    P_K = *(*(img_pred++) + pix_x);
-    P_L = *(*(img_pred  ) + pix_x);
+    P_I = *(*(img_pred++) + pixX);
+    P_J = *(*(img_pred++) + pixX);
+    P_K = *(*(img_pred++) + pixX);
+    P_L = *(*(img_pred  ) + pixX);
 
     PredPixel[0] = (sPixel) ((P_I + P_J + 1) >> 1);
     PredPixel[1] = (sPixel) ((P_I + (P_J << 1) + P_K + 2) >> 2);
@@ -711,15 +711,15 @@ static int intra4x4_hor_down_pred (sMacroblock *curMb,    //!< current macrobloc
   int block_available_left;
   int block_available_up_left;
 
-  getNonAffNeighbour(curMb, ioff -1 , joff    , vidParam->mb_size[IS_LUMA], &pix_a);
-  getNonAffNeighbour(curMb, ioff    , joff -1 , vidParam->mb_size[IS_LUMA], &pix_b);
-  getNonAffNeighbour(curMb, ioff -1 , joff -1 , vidParam->mb_size[IS_LUMA], &pix_d);
+  getNonAffNeighbour(curMb, ioff -1 , joff    , vidParam->mbSize[IS_LUMA], &pix_a);
+  getNonAffNeighbour(curMb, ioff    , joff -1 , vidParam->mbSize[IS_LUMA], &pix_b);
+  getNonAffNeighbour(curMb, ioff -1 , joff -1 , vidParam->mbSize[IS_LUMA], &pix_d);
 
-  if (vidParam->activePPS->constrained_intra_pred_flag)
+  if (vidParam->activePPS->constrainedIntraPredFlag)
   {
-    block_available_left    = pix_a.available ? curSlice->intraBlock [pix_a.mb_addr]: 0;
-    block_available_up      = pix_b.available ? curSlice->intraBlock [pix_b.mb_addr] : 0;
-    block_available_up_left = pix_d.available ? curSlice->intraBlock [pix_d.mb_addr] : 0;
+    block_available_left    = pix_a.available ? curSlice->intraBlock [pix_a.mbAddr]: 0;
+    block_available_up      = pix_b.available ? curSlice->intraBlock [pix_b.mbAddr] : 0;
+    block_available_up_left = pix_d.available ? curSlice->intraBlock [pix_d.mbAddr] : 0;
   }
   else
   {
@@ -737,21 +737,21 @@ static int intra4x4_hor_down_pred (sMacroblock *curMb,    //!< current macrobloc
     sPixel** imgY = (pl) ? curSlice->picture->imgUV[pl - 1] : curSlice->picture->imgY;
     sPixel** mb_pred = curSlice->mb_pred[pl];
 
-    sPixel** img_pred = &imgY[pix_a.pos_y];
-    int pix_x = pix_a.pos_x;
-    sPixel *pred_pel = &imgY[pix_b.pos_y][pix_b.pos_x];
+    sPixel** img_pred = &imgY[pix_a.posY];
+    int pixX = pix_a.posX;
+    sPixel *pred_pel = &imgY[pix_b.posY][pix_b.posX];
 
     // form predictor pels
     // P_A through P_D
     memcpy(&PredPel[1], pred_pel, BLOCK_SIZE * sizeof(sPixel));
 
 
-    P_I = *(*(img_pred++) + pix_x);
-    P_J = *(*(img_pred++) + pix_x);
-    P_K = *(*(img_pred++) + pix_x);
-    P_L = *(*(img_pred  ) + pix_x);
+    P_I = *(*(img_pred++) + pixX);
+    P_J = *(*(img_pred++) + pixX);
+    P_K = *(*(img_pred++) + pixX);
+    P_L = *(*(img_pred  ) + pixX);
 
-    P_X = imgY[pix_d.pos_y][pix_d.pos_x];
+    P_X = imgY[pix_d.posY][pix_d.posX];
 
     PredPixel[0] = (sPixel) ((P_K + P_L + 1) >> 1);
     PredPixel[1] = (sPixel) ((P_J + (P_K << 1) + P_L + 2) >> 2);
@@ -871,15 +871,15 @@ static int intra4x4_dc_pred_mbaff (sMacroblock *curMb,
 
   for (i=0;i<4;++i)
   {
-    getAffNeighbour(curMb, ioff - 1, joff + i, vidParam->mb_size[IS_LUMA], &pix_a[i]);
+    getAffNeighbour(curMb, ioff - 1, joff + i, vidParam->mbSize[IS_LUMA], &pix_a[i]);
   }
-  getAffNeighbour(curMb, ioff    , joff -1 , vidParam->mb_size[IS_LUMA], &pix_b);
+  getAffNeighbour(curMb, ioff    , joff -1 , vidParam->mbSize[IS_LUMA], &pix_b);
 
-  if (vidParam->activePPS->constrained_intra_pred_flag)
+  if (vidParam->activePPS->constrainedIntraPredFlag)
   {
     for (i=0, block_available_left=1; i<4;++i)
-      block_available_left  &= pix_a[i].available ? curSlice->intraBlock[pix_a[i].mb_addr]: 0;
-    block_available_up       = pix_b.available ? curSlice->intraBlock [pix_b.mb_addr] : 0;
+      block_available_left  &= pix_a[i].available ? curSlice->intraBlock[pix_a[i].mbAddr]: 0;
+    block_available_up       = pix_b.available ? curSlice->intraBlock [pix_b.mbAddr] : 0;
   }
   else
   {
@@ -890,18 +890,18 @@ static int intra4x4_dc_pred_mbaff (sMacroblock *curMb,
   // form predictor pels
   if (block_available_up)
   {
-    s0 += imgY[pix_b.pos_y][pix_b.pos_x + 0];
-    s0 += imgY[pix_b.pos_y][pix_b.pos_x + 1];
-    s0 += imgY[pix_b.pos_y][pix_b.pos_x + 2];
-    s0 += imgY[pix_b.pos_y][pix_b.pos_x + 3];
+    s0 += imgY[pix_b.posY][pix_b.posX + 0];
+    s0 += imgY[pix_b.posY][pix_b.posX + 1];
+    s0 += imgY[pix_b.posY][pix_b.posX + 2];
+    s0 += imgY[pix_b.posY][pix_b.posX + 3];
   }
 
   if (block_available_left)
   {
-    s0 += imgY[pix_a[0].pos_y][pix_a[0].pos_x];
-    s0 += imgY[pix_a[1].pos_y][pix_a[1].pos_x];
-    s0 += imgY[pix_a[2].pos_y][pix_a[2].pos_x];
-    s0 += imgY[pix_a[3].pos_y][pix_a[3].pos_x];
+    s0 += imgY[pix_a[0].posY][pix_a[0].posX];
+    s0 += imgY[pix_a[1].posY][pix_a[1].posX];
+    s0 += imgY[pix_a[2].posY][pix_a[2].posX];
+    s0 += imgY[pix_a[3].posY][pix_a[3].posX];
   }
 
   if (block_available_up && block_available_left)
@@ -922,7 +922,7 @@ static int intra4x4_dc_pred_mbaff (sMacroblock *curMb,
   else //if (!block_available_up && !block_available_left)
   {
     // top left corner, nothing to predict from
-    s0 = vidParam->dc_pred_value_comp[pl];
+    s0 = vidParam->dcPredValueComp[pl];
   }
 
   for (j=joff; j < joff + BLOCK_SIZE; ++j)
@@ -958,11 +958,11 @@ static int intra4x4_vert_pred_mbaff (sMacroblock *curMb,    //!< current macrobl
   int block_available_up;
   sPixelPos pix_b;
 
-  getAffNeighbour(curMb, ioff, joff - 1 , vidParam->mb_size[IS_LUMA], &pix_b);
+  getAffNeighbour(curMb, ioff, joff - 1 , vidParam->mbSize[IS_LUMA], &pix_b);
 
-  if (vidParam->activePPS->constrained_intra_pred_flag)
+  if (vidParam->activePPS->constrainedIntraPredFlag)
   {
-    block_available_up = pix_b.available ? curSlice->intraBlock [pix_b.mb_addr] : 0;
+    block_available_up = pix_b.available ? curSlice->intraBlock [pix_b.mbAddr] : 0;
   }
   else
   {
@@ -976,7 +976,7 @@ static int intra4x4_vert_pred_mbaff (sMacroblock *curMb,    //!< current macrobl
   else
   {
     sPixel** mb_pred = curSlice->mb_pred[pl];
-    sPixel *imgY = (pl) ? &curSlice->picture->imgUV[pl - 1][pix_b.pos_y][pix_b.pos_x] : &curSlice->picture->imgY[pix_b.pos_y][pix_b.pos_x];
+    sPixel *imgY = (pl) ? &curSlice->picture->imgUV[pl - 1][pix_b.posY][pix_b.posX] : &curSlice->picture->imgY[pix_b.posY][pix_b.posX];
     memcpy(&(mb_pred[joff++][ioff]), imgY, BLOCK_SIZE * sizeof(sPixel));
     memcpy(&(mb_pred[joff++][ioff]), imgY, BLOCK_SIZE * sizeof(sPixel));
     memcpy(&(mb_pred[joff++][ioff]), imgY, BLOCK_SIZE * sizeof(sPixel));
@@ -1024,13 +1024,13 @@ static int intra4x4_hor_pred_mbaff (sMacroblock *curMb,
 
   for (i=0;i<4;++i)
   {
-    getAffNeighbour(curMb, ioff -1 , joff +i , vidParam->mb_size[IS_LUMA], &pix_a[i]);
+    getAffNeighbour(curMb, ioff -1 , joff +i , vidParam->mbSize[IS_LUMA], &pix_a[i]);
   }
 
-  if (vidParam->activePPS->constrained_intra_pred_flag)
+  if (vidParam->activePPS->constrainedIntraPredFlag)
   {
     for (i=0, block_available_left=1; i<4;++i)
-      block_available_left  &= pix_a[i].available ? curSlice->intraBlock[pix_a[i].mb_addr]: 0;
+      block_available_left  &= pix_a[i].available ? curSlice->intraBlock[pix_a[i].mbAddr]: 0;
   }
   else
   {
@@ -1043,7 +1043,7 @@ static int intra4x4_hor_pred_mbaff (sMacroblock *curMb,
   for(j=0;j<BLOCK_SIZE;++j)
   {
     predrow = mb_pred[j+joff];
-    prediction = imgY[pix_a[j].pos_y][pix_a[j].pos_x];
+    prediction = imgY[pix_a[j].posY][pix_a[j].posX];
     for(i = ioff;i < ioff + BLOCK_SIZE;++i)
       predrow[i]= prediction; /* store predicted 4x4 block */
   }
@@ -1084,18 +1084,18 @@ static int intra4x4_diag_down_right_pred_mbaff (sMacroblock *curMb,    //!< curr
 
   for (i=0;i<4;++i)
   {
-    getAffNeighbour(curMb, ioff -1 , joff +i , vidParam->mb_size[IS_LUMA], &pix_a[i]);
+    getAffNeighbour(curMb, ioff -1 , joff +i , vidParam->mbSize[IS_LUMA], &pix_a[i]);
   }
 
-  getAffNeighbour(curMb, ioff    , joff -1 , vidParam->mb_size[IS_LUMA], &pix_b);
-  getAffNeighbour(curMb, ioff -1 , joff -1 , vidParam->mb_size[IS_LUMA], &pix_d);
+  getAffNeighbour(curMb, ioff    , joff -1 , vidParam->mbSize[IS_LUMA], &pix_b);
+  getAffNeighbour(curMb, ioff -1 , joff -1 , vidParam->mbSize[IS_LUMA], &pix_d);
 
-  if (vidParam->activePPS->constrained_intra_pred_flag)
+  if (vidParam->activePPS->constrainedIntraPredFlag)
   {
     for (i=0, block_available_left=1; i<4;++i)
-      block_available_left  &= pix_a[i].available ? curSlice->intraBlock[pix_a[i].mb_addr]: 0;
-    block_available_up       = pix_b.available ? curSlice->intraBlock [pix_b.mb_addr] : 0;
-    block_available_up_left  = pix_d.available ? curSlice->intraBlock [pix_d.mb_addr] : 0;
+      block_available_left  &= pix_a[i].available ? curSlice->intraBlock[pix_a[i].mbAddr]: 0;
+    block_available_up       = pix_b.available ? curSlice->intraBlock [pix_b.mbAddr] : 0;
+    block_available_up_left  = pix_d.available ? curSlice->intraBlock [pix_d.mbAddr] : 0;
   }
   else
   {
@@ -1110,18 +1110,18 @@ static int intra4x4_diag_down_right_pred_mbaff (sMacroblock *curMb,    //!< curr
   {
     sPixel PredPixel[7];
     sPixel PredPel[13];
-    sPixel *pred_pel = &imgY[pix_b.pos_y][pix_b.pos_x];
+    sPixel *pred_pel = &imgY[pix_b.posY][pix_b.posX];
     // form predictor pels
     // P_A through P_D
     memcpy(&PredPel[1], pred_pel, BLOCK_SIZE * sizeof(sPixel));
 
 
-    P_I = imgY[pix_a[0].pos_y][pix_a[0].pos_x];
-    P_J = imgY[pix_a[1].pos_y][pix_a[1].pos_x];
-    P_K = imgY[pix_a[2].pos_y][pix_a[2].pos_x];
-    P_L = imgY[pix_a[3].pos_y][pix_a[3].pos_x];
+    P_I = imgY[pix_a[0].posY][pix_a[0].posX];
+    P_J = imgY[pix_a[1].posY][pix_a[1].posX];
+    P_K = imgY[pix_a[2].posY][pix_a[2].posX];
+    P_L = imgY[pix_a[3].posY][pix_a[3].posX];
 
-    P_X = imgY[pix_d.pos_y][pix_d.pos_x];
+    P_X = imgY[pix_d.posY][pix_d.posX];
 
     PredPixel[0] = (sPixel) ((P_L + (P_K << 1) + P_J + 2) >> 2);
     PredPixel[1] = (sPixel) ((P_K + (P_J << 1) + P_I + 2) >> 2);
@@ -1164,15 +1164,15 @@ static int intra4x4_diag_down_left_pred_mbaff (sMacroblock *curMb,    //!< curre
   int block_available_up;
   int block_available_up_right;
 
-  getAffNeighbour(curMb, ioff    , joff - 1, vidParam->mb_size[IS_LUMA], &pix_b);
-  getAffNeighbour(curMb, ioff + 4, joff - 1, vidParam->mb_size[IS_LUMA], &pix_c);
+  getAffNeighbour(curMb, ioff    , joff - 1, vidParam->mbSize[IS_LUMA], &pix_b);
+  getAffNeighbour(curMb, ioff + 4, joff - 1, vidParam->mbSize[IS_LUMA], &pix_c);
 
   pix_c.available = pix_c.available && !((ioff==4) && ((joff==4)||(joff==12)));
 
-  if (vidParam->activePPS->constrained_intra_pred_flag)
+  if (vidParam->activePPS->constrainedIntraPredFlag)
   {
-    block_available_up       = pix_b.available ? curSlice->intraBlock [pix_b.mb_addr] : 0;
-    block_available_up_right = pix_c.available ? curSlice->intraBlock [pix_c.mb_addr] : 0;
+    block_available_up       = pix_b.available ? curSlice->intraBlock [pix_b.mbAddr] : 0;
+    block_available_up_right = pix_c.available ? curSlice->intraBlock [pix_c.mbAddr] : 0;
   }
   else
   {
@@ -1189,7 +1189,7 @@ static int intra4x4_diag_down_left_pred_mbaff (sMacroblock *curMb,    //!< curre
 
     sPixel PredPixel[8];
     sPixel PredPel[25];
-    sPixel *pred_pel = &imgY[pix_b.pos_y][pix_b.pos_x];
+    sPixel *pred_pel = &imgY[pix_b.posY][pix_b.posX];
 
     // form predictor pels
     // P_A through P_D
@@ -1198,7 +1198,7 @@ static int intra4x4_diag_down_left_pred_mbaff (sMacroblock *curMb,    //!< curre
     // P_E through P_H
     if (block_available_up_right)
     {
-      memcpy(&PredPel[5], &imgY[pix_c.pos_y][pix_c.pos_x], BLOCK_SIZE * sizeof(sPixel));
+      memcpy(&PredPel[5], &imgY[pix_c.posY][pix_c.posX], BLOCK_SIZE * sizeof(sPixel));
     }
     else
     {
@@ -1255,18 +1255,18 @@ static int intra4x4_vert_right_pred_mbaff (sMacroblock *curMb,    //!< current m
 
   for (i=0;i<4;++i)
   {
-    getAffNeighbour(curMb, ioff -1 , joff +i , vidParam->mb_size[IS_LUMA], &pix_a[i]);
+    getAffNeighbour(curMb, ioff -1 , joff +i , vidParam->mbSize[IS_LUMA], &pix_a[i]);
   }
 
-  getAffNeighbour(curMb, ioff    , joff -1 , vidParam->mb_size[IS_LUMA], &pix_b);
-  getAffNeighbour(curMb, ioff -1 , joff -1 , vidParam->mb_size[IS_LUMA], &pix_d);
+  getAffNeighbour(curMb, ioff    , joff -1 , vidParam->mbSize[IS_LUMA], &pix_b);
+  getAffNeighbour(curMb, ioff -1 , joff -1 , vidParam->mbSize[IS_LUMA], &pix_d);
 
-  if (vidParam->activePPS->constrained_intra_pred_flag)
+  if (vidParam->activePPS->constrainedIntraPredFlag)
   {
     for (i=0, block_available_left=1; i<4;++i)
-      block_available_left  &= pix_a[i].available ? curSlice->intraBlock[pix_a[i].mb_addr]: 0;
-    block_available_up       = pix_b.available ? curSlice->intraBlock [pix_b.mb_addr] : 0;
-    block_available_up_left  = pix_d.available ? curSlice->intraBlock [pix_d.mb_addr] : 0;
+      block_available_left  &= pix_a[i].available ? curSlice->intraBlock[pix_a[i].mbAddr]: 0;
+    block_available_up       = pix_b.available ? curSlice->intraBlock [pix_b.mbAddr] : 0;
+    block_available_up_left  = pix_d.available ? curSlice->intraBlock [pix_d.mbAddr] : 0;
   }
   else
   {
@@ -1280,17 +1280,17 @@ static int intra4x4_vert_right_pred_mbaff (sMacroblock *curMb,    //!< current m
   {
     sPixel PredPixel[10];
     sPixel PredPel[13];
-    sPixel *pred_pel = &imgY[pix_b.pos_y][pix_b.pos_x];
+    sPixel *pred_pel = &imgY[pix_b.posY][pix_b.posX];
     // form predictor pels
     // P_A through P_D
     memcpy(&PredPel[1], pred_pel, BLOCK_SIZE * sizeof(sPixel));
 
 
-    P_I = imgY[pix_a[0].pos_y][pix_a[0].pos_x];
-    P_J = imgY[pix_a[1].pos_y][pix_a[1].pos_x];
-    P_K = imgY[pix_a[2].pos_y][pix_a[2].pos_x];
+    P_I = imgY[pix_a[0].posY][pix_a[0].posX];
+    P_J = imgY[pix_a[1].posY][pix_a[1].posX];
+    P_K = imgY[pix_a[2].posY][pix_a[2].posX];
 
-    P_X = imgY[pix_d.pos_y][pix_d.pos_x];
+    P_X = imgY[pix_d.posY][pix_d.posX];
 
     PredPixel[0] = (sPixel) ((P_X + (P_I << 1) + P_J + 2) >> 2);
     PredPixel[1] = (sPixel) ((P_X + P_A + 1) >> 1);
@@ -1337,15 +1337,15 @@ static int intra4x4_vert_left_pred_mbaff (sMacroblock *curMb,    //!< current ma
   int block_available_up;
   int block_available_up_right;
 
-  getAffNeighbour(curMb, ioff    , joff -1 , vidParam->mb_size[IS_LUMA], &pix_b);
-  getAffNeighbour(curMb, ioff +4 , joff -1 , vidParam->mb_size[IS_LUMA], &pix_c);
+  getAffNeighbour(curMb, ioff    , joff -1 , vidParam->mbSize[IS_LUMA], &pix_b);
+  getAffNeighbour(curMb, ioff +4 , joff -1 , vidParam->mbSize[IS_LUMA], &pix_c);
 
   pix_c.available = pix_c.available && !((ioff==4) && ((joff==4)||(joff==12)));
 
-  if (vidParam->activePPS->constrained_intra_pred_flag)
+  if (vidParam->activePPS->constrainedIntraPredFlag)
   {
-    block_available_up       = pix_b.available ? curSlice->intraBlock [pix_b.mb_addr] : 0;
-    block_available_up_right = pix_c.available ? curSlice->intraBlock [pix_c.mb_addr] : 0;
+    block_available_up       = pix_b.available ? curSlice->intraBlock [pix_b.mbAddr] : 0;
+    block_available_up_right = pix_c.available ? curSlice->intraBlock [pix_c.mbAddr] : 0;
   }
   else
   {
@@ -1361,7 +1361,7 @@ static int intra4x4_vert_left_pred_mbaff (sMacroblock *curMb,    //!< current ma
     sPixel PredPel[13];
     sPixel** imgY = (pl) ? curSlice->picture->imgUV[pl - 1] : curSlice->picture->imgY;
     sPixel** mb_pred = curSlice->mb_pred[pl];
-    sPixel *pred_pel = &imgY[pix_b.pos_y][pix_b.pos_x];
+    sPixel *pred_pel = &imgY[pix_b.posY][pix_b.posX];
 
     // form predictor pels
     // P_A through P_D
@@ -1370,7 +1370,7 @@ static int intra4x4_vert_left_pred_mbaff (sMacroblock *curMb,    //!< current ma
     // P_E through P_H
     if (block_available_up_right)
     {
-      memcpy(&PredPel[5], &imgY[pix_c.pos_y][pix_c.pos_x], BLOCK_SIZE * sizeof(sPixel));
+      memcpy(&PredPel[5], &imgY[pix_c.posY][pix_c.posX], BLOCK_SIZE * sizeof(sPixel));
     }
     else
     {
@@ -1426,13 +1426,13 @@ static int intra4x4_hor_up_pred_mbaff (sMacroblock *curMb,    //!< current macro
 
   for (i=0;i<4;++i)
   {
-    getAffNeighbour(curMb, ioff -1 , joff +i , vidParam->mb_size[IS_LUMA], &pix_a[i]);
+    getAffNeighbour(curMb, ioff -1 , joff +i , vidParam->mbSize[IS_LUMA], &pix_a[i]);
   }
 
-  if (vidParam->activePPS->constrained_intra_pred_flag)
+  if (vidParam->activePPS->constrainedIntraPredFlag)
   {
     for (i=0, block_available_left=1; i<4;++i)
-      block_available_left  &= pix_a[i].available ? curSlice->intraBlock[pix_a[i].mb_addr]: 0;
+      block_available_left  &= pix_a[i].available ? curSlice->intraBlock[pix_a[i].mbAddr]: 0;
   }
   else
   {
@@ -1447,10 +1447,10 @@ static int intra4x4_hor_up_pred_mbaff (sMacroblock *curMb,    //!< current macro
     sPixel PredPel[13];
 
     // form predictor pels
-    P_I = imgY[pix_a[0].pos_y][pix_a[0].pos_x];
-    P_J = imgY[pix_a[1].pos_y][pix_a[1].pos_x];
-    P_K = imgY[pix_a[2].pos_y][pix_a[2].pos_x];
-    P_L = imgY[pix_a[3].pos_y][pix_a[3].pos_x];
+    P_I = imgY[pix_a[0].posY][pix_a[0].posX];
+    P_J = imgY[pix_a[1].posY][pix_a[1].posX];
+    P_K = imgY[pix_a[2].posY][pix_a[2].posX];
+    P_L = imgY[pix_a[3].posY][pix_a[3].posX];
 
     PredPixel[0] = (sPixel) ((P_I + P_J + 1) >> 1);
     PredPixel[1] = (sPixel) ((P_I + (P_J << 1) + P_K + 2) >> 2);
@@ -1505,18 +1505,18 @@ static int intra4x4_hor_down_pred_mbaff (sMacroblock *curMb,    //!< current mac
 
   for (i=0;i<4;++i)
   {
-    getAffNeighbour(curMb, ioff -1 , joff +i , vidParam->mb_size[IS_LUMA], &pix_a[i]);
+    getAffNeighbour(curMb, ioff -1 , joff +i , vidParam->mbSize[IS_LUMA], &pix_a[i]);
   }
 
-  getAffNeighbour(curMb, ioff    , joff -1 , vidParam->mb_size[IS_LUMA], &pix_b);
-  getAffNeighbour(curMb, ioff -1 , joff -1 , vidParam->mb_size[IS_LUMA], &pix_d);
+  getAffNeighbour(curMb, ioff    , joff -1 , vidParam->mbSize[IS_LUMA], &pix_b);
+  getAffNeighbour(curMb, ioff -1 , joff -1 , vidParam->mbSize[IS_LUMA], &pix_d);
 
-  if (vidParam->activePPS->constrained_intra_pred_flag)
+  if (vidParam->activePPS->constrainedIntraPredFlag)
   {
     for (i=0, block_available_left=1; i<4;++i)
-      block_available_left  &= pix_a[i].available ? curSlice->intraBlock[pix_a[i].mb_addr]: 0;
-    block_available_up       = pix_b.available ? curSlice->intraBlock [pix_b.mb_addr] : 0;
-    block_available_up_left  = pix_d.available ? curSlice->intraBlock [pix_d.mb_addr] : 0;
+      block_available_left  &= pix_a[i].available ? curSlice->intraBlock[pix_a[i].mbAddr]: 0;
+    block_available_up       = pix_b.available ? curSlice->intraBlock [pix_b.mbAddr] : 0;
+    block_available_up_left  = pix_d.available ? curSlice->intraBlock [pix_d.mbAddr] : 0;
   }
   else
   {
@@ -1531,18 +1531,18 @@ static int intra4x4_hor_down_pred_mbaff (sMacroblock *curMb,    //!< current mac
   {
     sPixel PredPixel[10];
     sPixel PredPel[13];
-    sPixel *pred_pel = &imgY[pix_b.pos_y][pix_b.pos_x];
+    sPixel *pred_pel = &imgY[pix_b.posY][pix_b.posX];
 
     // form predictor pels
     // P_A through P_D
     memcpy(&PredPel[1], pred_pel, BLOCK_SIZE * sizeof(sPixel));
 
-    P_I = imgY[pix_a[0].pos_y][pix_a[0].pos_x];
-    P_J = imgY[pix_a[1].pos_y][pix_a[1].pos_x];
-    P_K = imgY[pix_a[2].pos_y][pix_a[2].pos_x];
-    P_L = imgY[pix_a[3].pos_y][pix_a[3].pos_x];
+    P_I = imgY[pix_a[0].posY][pix_a[0].posX];
+    P_J = imgY[pix_a[1].posY][pix_a[1].posX];
+    P_K = imgY[pix_a[2].posY][pix_a[2].posX];
+    P_L = imgY[pix_a[3].posY][pix_a[3].posX];
 
-    P_X = imgY[pix_d.pos_y][pix_d.pos_x];
+    P_X = imgY[pix_d.posY][pix_d.posX];
 
     PredPixel[0] = (sPixel) ((P_K + P_L + 1) >> 1);
     PredPixel[1] = (sPixel) ((P_J + (P_K << 1) + P_L + 2) >> 2);

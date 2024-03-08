@@ -17,10 +17,10 @@ int init_top_bot_planes (sPixel** imgFrame, int dim0, sPixel** *imgTopField, sPi
 {
   int i;
 
-  if((*imgTopField   = (sPixel**)mem_malloc((dim0>>1) * sizeof(sPixel*))) == NULL)
+  if((*imgTopField   = (sPixel**)memAlloc((dim0>>1) * sizeof(sPixel*))) == NULL)
     no_mem_exit("init_top_bot_planes: imgTopField");
 
-  if((*imgBotField   = (sPixel**)mem_malloc((dim0>>1) * sizeof(sPixel*))) == NULL)
+  if((*imgBotField   = (sPixel**)memAlloc((dim0>>1) * sizeof(sPixel*))) == NULL)
     no_mem_exit("init_top_bot_planes: imgBotField");
 
   for(i = 0; i < (dim0>>1); i++)
@@ -43,8 +43,8 @@ int init_top_bot_planes (sPixel** imgFrame, int dim0, sPixel** *imgTopField, sPi
 ** **********************************************************************/
 void free_top_bot_planes (sPixel** imgTopField, sPixel** imgBotField)
 {
-  mem_free (imgTopField);
-  mem_free (imgBotField);
+  memFree (imgTopField);
+  memFree (imgBotField);
 }
 //}}}
 
@@ -61,7 +61,7 @@ int get_mem2Dmp (sPicMotionParam** *array2D, int dim0, int dim1)
 {
   int i;
 
-  if((*array2D    = (sPicMotionParam**)mem_malloc(dim0 *      sizeof(sPicMotionParam*))) == NULL)
+  if((*array2D    = (sPicMotionParam**)memAlloc(dim0 *      sizeof(sPicMotionParam*))) == NULL)
     no_mem_exit("get_mem2Dmp: array2D");
   if((*(*array2D) = (sPicMotionParam* )mem_calloc(dim0 * dim1, sizeof(sPicMotionParam ))) == NULL)
     no_mem_exit("get_mem2Dmp: array2D");
@@ -86,7 +86,7 @@ int get_mem3Dmp (sPicMotionParam** **array3D, int dim0, int dim1, int dim2)
 {
   int i, mem_size = dim0 * sizeof(sPicMotionParam**);
 
-  if(((*array3D) = (sPicMotionParam***)mem_malloc(dim0 * sizeof(sPicMotionParam**))) == NULL)
+  if(((*array3D) = (sPicMotionParam***)memAlloc(dim0 * sizeof(sPicMotionParam**))) == NULL)
     no_mem_exit("get_mem3Dmp: array3D");
 
   mem_size += get_mem2Dmp(*array3D, dim0 * dim1, dim2);
@@ -110,11 +110,11 @@ void free_mem2Dmp (sPicMotionParam** array2D)
   if (array2D)
   {
     if (*array2D)
-      mem_free (*array2D);
+      memFree (*array2D);
     else
       error ("free_mem2Dmp: trying to free unused memory",100);
 
-    mem_free (array2D);
+    memFree (array2D);
   }
   else
   {
@@ -135,7 +135,7 @@ void free_mem3Dmp (sPicMotionParam** *array3D)
   if (array3D)
   {
     free_mem2Dmp(*array3D);
-    mem_free (array3D);
+    memFree (array3D);
   }
   else
   {
@@ -157,7 +157,7 @@ int get_mem2Dwp (sWPParam** *array2D, int dim0, int dim1)
 {
   int i;
 
-  if((*array2D    = (sWPParam**)mem_malloc(dim0 *      sizeof(sWPParam*))) == NULL)
+  if((*array2D    = (sWPParam**)memAlloc(dim0 *      sizeof(sWPParam*))) == NULL)
     no_mem_exit("get_mem2Dwp: array2D");
   if((*(*array2D) = (sWPParam* )mem_calloc(dim0 * dim1,sizeof(sWPParam ))) == NULL)
     no_mem_exit("get_mem2Dwp: array2D");
@@ -181,11 +181,11 @@ void free_mem2Dwp (sWPParam** array2D)
   if (array2D)
   {
     if (*array2D)
-      mem_free (*array2D);
+      memFree (*array2D);
     else
       error ("free_mem2Dwp: trying to free unused memory",100);
 
-    mem_free (array2D);
+    memFree (array2D);
   }
   else
   {
@@ -207,7 +207,7 @@ int get_mem2D_spp (sPicturePtr** *array2D, int dim0, int dim1)
 {
   int i;
 
-  if((*array2D    = (sPicturePtr**)mem_malloc(dim0 *      sizeof(sPicturePtr*))) == NULL)
+  if((*array2D    = (sPicturePtr**)memAlloc(dim0 *      sizeof(sPicturePtr*))) == NULL)
     no_mem_exit("get_mem2D_spp: array2D");
   if((*(*array2D) = (sPicturePtr* )mem_calloc(dim0 * dim1,sizeof(sPicturePtr ))) == NULL)
     no_mem_exit("get_mem2D_spp: array2D");
@@ -232,7 +232,7 @@ int get_mem3D_spp (sPicturePtr** **array3D, int dim0, int dim1, int dim2)
 {
   int i, mem_size = dim0 * sizeof(sPicturePtr**);
 
-  if(((*array3D) = (sPicturePtr***)mem_malloc(dim0 * sizeof(sPicturePtr**))) == NULL)
+  if(((*array3D) = (sPicturePtr***)memAlloc(dim0 * sizeof(sPicturePtr**))) == NULL)
     no_mem_exit("get_mem3D_spp: array3D");
 
   mem_size += get_mem2D_spp(*array3D, dim0 * dim1, dim2);
@@ -256,7 +256,7 @@ int get_mem2Dmv (sMotionVector** *array2D, int dim0, int dim1)
 {
   int i;
 
-  if((*array2D    = (sMotionVector**)mem_malloc(dim0 *      sizeof(sMotionVector*))) == NULL)
+  if((*array2D    = (sMotionVector**)memAlloc(dim0 *      sizeof(sMotionVector*))) == NULL)
     no_mem_exit("get_mem2Dmv: array2D");
   if((*(*array2D) = (sMotionVector* )mem_calloc(dim0 * dim1,sizeof(sMotionVector ))) == NULL)
     no_mem_exit("get_mem2Dmv: array2D");
@@ -281,7 +281,7 @@ int get_mem3Dmv (sMotionVector** **array3D, int dim0, int dim1, int dim2)
 {
   int i, mem_size = dim0 * sizeof(sMotionVector**);
 
-  if(((*array3D) = (sMotionVector***)mem_malloc(dim0 * sizeof(sMotionVector**))) == NULL)
+  if(((*array3D) = (sMotionVector***)memAlloc(dim0 * sizeof(sMotionVector**))) == NULL)
     no_mem_exit("get_mem3Dmv: array3D");
 
   mem_size += get_mem2Dmv(*array3D, dim0 * dim1, dim2);
@@ -306,7 +306,7 @@ int get_mem4Dmv (sMotionVector** ***array4D, int dim0, int dim1, int dim2, int d
 {
   int i, mem_size = dim0 * sizeof(sMotionVector***);
 
-  if(((*array4D) = (sMotionVector****)mem_malloc(dim0 * sizeof(sMotionVector***))) == NULL)
+  if(((*array4D) = (sMotionVector****)memAlloc(dim0 * sizeof(sMotionVector***))) == NULL)
     no_mem_exit("get_mem4Dpel: array4D");
 
   mem_size += get_mem3Dmv(*array4D, dim0 * dim1, dim2, dim3);
@@ -331,7 +331,7 @@ int get_mem5Dmv (sMotionVector** ****array5D, int dim0, int dim1, int dim2, int 
 {
   int i, mem_size = dim0 * sizeof(sMotionVector***);
 
-  if(((*array5D) = (sMotionVector*****)mem_malloc(dim0 * sizeof(sMotionVector****))) == NULL)
+  if(((*array5D) = (sMotionVector*****)memAlloc(dim0 * sizeof(sMotionVector****))) == NULL)
     no_mem_exit("get_mem5Dmv: array5D");
 
   mem_size += get_mem4Dmv(*array5D, dim0 * dim1, dim2, dim3, dim4);
@@ -356,7 +356,7 @@ int get_mem6Dmv (sMotionVector** *****array6D, int dim0, int dim1, int dim2, int
 {
   int i, mem_size = dim0 * sizeof(sMotionVector*****);
 
-  if(((*array6D) = (sMotionVector******)mem_malloc(dim0 * sizeof(sMotionVector*****))) == NULL)
+  if(((*array6D) = (sMotionVector******)memAlloc(dim0 * sizeof(sMotionVector*****))) == NULL)
     no_mem_exit("get_mem6Dmv: array6D");
 
   mem_size += get_mem5Dmv(*array6D, dim0 * dim1, dim2, dim3, dim4, dim5);
@@ -381,7 +381,7 @@ int get_mem7Dmv (sMotionVector** ******array7D, int dim0, int dim1, int dim2, in
 {
   int i, mem_size = dim0 * sizeof(sMotionVector*****);
 
-  if(((*array7D) = (sMotionVector*******)mem_malloc(dim0 * sizeof(sMotionVector******))) == NULL)
+  if(((*array7D) = (sMotionVector*******)memAlloc(dim0 * sizeof(sMotionVector******))) == NULL)
     no_mem_exit("get_mem7Dmv: array7D");
 
   mem_size += get_mem6Dmv(*array7D, dim0 * dim1, dim2, dim3, dim4, dim5, dim6);
@@ -407,11 +407,11 @@ void free_mem2D_spp (sPicturePtr** array2D)
   if (array2D)
   {
     if (*array2D)
-      mem_free (*array2D);
+      memFree (*array2D);
     else
       error ("free_mem2D_spp: trying to free unused memory",100);
 
-    mem_free (array2D);
+    memFree (array2D);
   }
   else
   {
@@ -433,7 +433,7 @@ void free_mem3D_spp (sPicturePtr** *array3D)
   if (array3D)
   {
     free_mem2D_spp(*array3D);
-    mem_free (array3D);
+    memFree (array3D);
   }
   else
   {
@@ -454,11 +454,11 @@ void free_mem2Dmv (sMotionVector** array2D)
   if (array2D)
   {
     if (*array2D)
-      mem_free (*array2D);
+      memFree (*array2D);
     else
       error ("free_mem2Dmv: trying to free unused memory",100);
 
-    mem_free (array2D);
+    memFree (array2D);
   }
   else
   {
@@ -479,7 +479,7 @@ void free_mem3Dmv (sMotionVector** *array3D)
   if (array3D)
   {
     free_mem2Dmv(*array3D);
-    mem_free (array3D);
+    memFree (array3D);
   }
   else
   {
@@ -500,7 +500,7 @@ void free_mem4Dmv (sMotionVector** **array4D)
   if (array4D)
   {
     free_mem3Dmv(*array4D);
-    mem_free (array4D);
+    memFree (array4D);
   }
   else
   {
@@ -521,7 +521,7 @@ void free_mem5Dmv (sMotionVector** ***array5D)
   if (array5D)
   {
     free_mem4Dmv(*array5D);
-    mem_free (array5D);
+    memFree (array5D);
   }
   else
   {
@@ -542,7 +542,7 @@ void free_mem6Dmv (sMotionVector** ****array6D)
   if (array6D)
   {
     free_mem5Dmv(*array6D);
-    mem_free (array6D);
+    memFree (array6D);
   }
   else
   {
@@ -563,7 +563,7 @@ void free_mem7Dmv (sMotionVector** *****array7D)
   if (array7D)
   {
     free_mem6Dmv(*array7D);
-    mem_free (array7D);
+    memFree (array7D);
   }
   else
   {
@@ -602,9 +602,9 @@ int get_mem2Dpel (sPixel** *array2D, int dim0, int dim1)
 {
   int i;
 
-  if((*array2D    = (sPixel**)mem_malloc(dim0 *        sizeof(sPixel*))) == NULL)
+  if((*array2D    = (sPixel**)memAlloc(dim0 *        sizeof(sPixel*))) == NULL)
     no_mem_exit("get_mem2Dpel: array2D");
-  if((*(*array2D) = (sPixel* )mem_malloc(dim0 * dim1 * sizeof(sPixel ))) == NULL)
+  if((*(*array2D) = (sPixel* )memAlloc(dim0 * dim1 * sizeof(sPixel ))) == NULL)
     no_mem_exit("get_mem2Dpel: array2D");
 
   for(i = 1 ; i < dim0; i++)
@@ -624,7 +624,7 @@ int get_mem2Dpel_pad (sPixel** *array2D, int dim0, int dim1, int iPadY, int iPad
 
   height = dim0+2*iPadY;
   width = dim1+2*iPadX;
-  if((*array2D    = (sPixel**)mem_malloc(height*sizeof(sPixel*))) == NULL)
+  if((*array2D    = (sPixel**)memAlloc(height*sizeof(sPixel*))) == NULL)
     no_mem_exit("get_mem2Dpel_pad: array2D");
   if((*(*array2D) = (sPixel* )mem_calloc(height * width, sizeof(sPixel ))) == NULL)
     no_mem_exit("get_mem2Dpel_pad: array2D");
@@ -670,7 +670,7 @@ int get_mem3Dpel_pad(sPixel** **array3D, int dim0, int dim1, int dim2, int iPadY
 {
   int i, mem_size = dim0 * sizeof(sPixel**);
 
-  if(((*array3D) = (sPixel***)mem_malloc(dim0*sizeof(sPixel**))) == NULL)
+  if(((*array3D) = (sPixel***)memAlloc(dim0*sizeof(sPixel**))) == NULL)
     no_mem_exit("get_mem3Dpel_pad: array3D");
 
   for(i = 0; i < dim0; i++)
@@ -693,7 +693,7 @@ int get_mem4Dpel (sPixel** ***array4D, int dim0, int dim1, int dim2, int dim3)
 {
   int  i, mem_size = dim0 * sizeof(sPixel***);
 
-  if(((*array4D) = (sPixel****)mem_malloc(dim0 * sizeof(sPixel***))) == NULL)
+  if(((*array4D) = (sPixel****)memAlloc(dim0 * sizeof(sPixel***))) == NULL)
     no_mem_exit("get_mem4Dpel: array4D");
 
   mem_size += get_mem3Dpel(*array4D, dim0 * dim1, dim2, dim3);
@@ -709,7 +709,7 @@ int get_mem4Dpel_pad (sPixel** ***array4D, int dim0, int dim1, int dim2, int dim
 {
   int  i, mem_size = dim0 * sizeof(sPixel***);
 
-  if(((*array4D) = (sPixel****)mem_malloc(dim0 * sizeof(sPixel***))) == NULL)
+  if(((*array4D) = (sPixel****)memAlloc(dim0 * sizeof(sPixel***))) == NULL)
     no_mem_exit("get_mem4Dpel_pad: array4D");
 
   mem_size += get_mem3Dpel_pad(*array4D, dim0 * dim1, dim2, dim3, iPadY, iPadX);
@@ -734,7 +734,7 @@ int get_mem5Dpel (sPixel** ****array5D, int dim0, int dim1, int dim2, int dim3, 
 {
   int  i, mem_size = dim0 * sizeof(sPixel****);
 
-  if(((*array5D) = (sPixel*****)mem_malloc(dim0 * sizeof(sPixel****))) == NULL)
+  if(((*array5D) = (sPixel*****)memAlloc(dim0 * sizeof(sPixel****))) == NULL)
     no_mem_exit("get_mem5Dpel: array5D");
 
   mem_size += get_mem4Dpel(*array5D, dim0 * dim1, dim2, dim3, dim4);
@@ -750,7 +750,7 @@ int get_mem5Dpel_pad (sPixel** ****array5D, int dim0, int dim1, int dim2, int di
 {
   int  i, mem_size = dim0 * sizeof(sPixel****);
 
-  if(((*array5D) = (sPixel*****)mem_malloc(dim0 * sizeof(sPixel****))) == NULL)
+  if(((*array5D) = (sPixel*****)memAlloc(dim0 * sizeof(sPixel****))) == NULL)
     no_mem_exit("get_mem5Dpel_pad: array5D");
 
   mem_size += get_mem4Dpel_pad(*array5D, dim0 * dim1, dim2, dim3, dim4, iPadY, iPadX);
@@ -774,7 +774,7 @@ void free_mem1Dpel (sPixel *array1D)
 {
   if (array1D)
   {
-    mem_free (array1D);
+    memFree (array1D);
   }
   else
   {
@@ -795,11 +795,11 @@ void free_mem2Dpel (sPixel** array2D)
   if (array2D)
   {
     if (*array2D)
-      mem_free (*array2D);
+      memFree (*array2D);
     else
      error ("free_mem2Dpel: trying to free unused memory",100);
 
-    mem_free (array2D);
+    memFree (array2D);
   }
   else
   {
@@ -814,12 +814,12 @@ void free_mem2Dpel_pad (sPixel** array2D, int iPadY, int iPadX)
   {
     if (*array2D)
     {
-      mem_free (array2D[-iPadY]-iPadX);
+      memFree (array2D[-iPadY]-iPadX);
     }
     else
       error ("free_mem2Dpel_pad: trying to free unused memory",100);
 
-    mem_free (&array2D[-iPadY]);
+    memFree (&array2D[-iPadY]);
   }
   else
   {
@@ -840,7 +840,7 @@ void free_mem3Dpel (sPixel** *array3D)
   if (array3D)
   {
     free_mem2Dpel(*array3D);
-    mem_free (array3D);
+    memFree (array3D);
   }
   else
   {
@@ -860,7 +860,7 @@ void free_mem3Dpel_pad (sPixel** *array3D, int iDim12, int iPadY, int iPadX)
         free_mem2Dpel_pad(array3D[i], iPadY, iPadX);
         array3D[i] = NULL;
       }
-    mem_free (array3D);
+    memFree (array3D);
   }
   else
   {
@@ -882,7 +882,7 @@ void free_mem4Dpel (sPixel** **array4D)
   if (array4D)
   {
     free_mem3Dpel(*array4D);
-    mem_free (array4D);
+    memFree (array4D);
   }
   else
   {
@@ -896,7 +896,7 @@ void free_mem4Dpel_pad (sPixel ** **array4D, int iFrames, int iPadY, int iPadX)
   if (array4D)
   {
     free_mem3Dpel_pad(*array4D, iFrames, iPadY, iPadX);
-    mem_free (array4D);
+    memFree (array4D);
   }
   else
   {
@@ -917,7 +917,7 @@ void free_mem5Dpel (sPixel** ***array5D)
   if (array5D)
   {
     free_mem4Dpel(*array5D);
-    mem_free (array5D);
+    memFree (array5D);
   }
   else
   {
@@ -931,7 +931,7 @@ void free_mem5Dpel_pad (sPixel** ***array5D, int iFrames, int iPadY, int iPadX)
   if (array5D)
   {
     free_mem4Dpel_pad(*array5D, iFrames, iPadY, iPadX);
-    mem_free(array5D);
+    memFree(array5D);
   }
   else
   {
@@ -955,7 +955,7 @@ byte** new_mem2D (int dim0, int dim1)
   int i;
   byte** array2D;
 
-  if((  array2D  = (byte**)mem_malloc(dim0 *      sizeof(byte*))) == NULL)
+  if((  array2D  = (byte**)memAlloc(dim0 *      sizeof(byte*))) == NULL)
     no_mem_exit("get_mem2D: array2D");
   if((*(array2D) = (byte* )mem_calloc(dim0 * dim1,sizeof(byte ))) == NULL)
     no_mem_exit("get_mem2D: array2D");
@@ -979,7 +979,7 @@ int get_mem2D (byte** *array2D, int dim0, int dim1)
 {
   int i;
 
-  if((  *array2D  = (byte**)mem_malloc(dim0 *      sizeof(byte*))) == NULL)
+  if((  *array2D  = (byte**)memAlloc(dim0 *      sizeof(byte*))) == NULL)
     no_mem_exit("get_mem2D: array2D");
   if((*(*array2D) = (byte* )mem_calloc(dim0 * dim1,sizeof(byte ))) == NULL)
     no_mem_exit("get_mem2D: array2D");
@@ -1005,7 +1005,7 @@ int** new_mem2Dint (int dim0, int dim1)
   int i;
   int** array2D;
 
-  if((array2D    = (int**)mem_malloc(dim0 *       sizeof(int*))) == NULL)
+  if((array2D    = (int**)memAlloc(dim0 *       sizeof(int*))) == NULL)
     no_mem_exit("get_mem2Dint: array2D");
   if((*(array2D) = (int* )mem_calloc(dim0 * dim1, sizeof(int ))) == NULL)
     no_mem_exit("get_mem2Dint: array2D");
@@ -1030,7 +1030,7 @@ int get_mem2Dint (int** *array2D, int dim0, int dim1)
 {
   int i;
 
-  if((*array2D    = (int**)mem_malloc(dim0 *       sizeof(int*))) == NULL)
+  if((*array2D    = (int**)memAlloc(dim0 *       sizeof(int*))) == NULL)
     no_mem_exit("get_mem2Dint: array2D");
   if((*(*array2D) = (int* )mem_calloc(dim0 * dim1, sizeof(int ))) == NULL)
     no_mem_exit("get_mem2Dint: array2D");
@@ -1050,7 +1050,7 @@ int get_mem2Dint_pad (int** *array2D, int dim0, int dim1, int iPadY, int iPadX)
 
   height = dim0+2*iPadY;
   width = dim1+2*iPadX;
-  if((*array2D    = (int**)mem_malloc(height*sizeof(int*))) == NULL)
+  if((*array2D    = (int**)memAlloc(height*sizeof(int*))) == NULL)
     no_mem_exit("get_mem2Dint_pad: array2D");
   if((*(*array2D) = (int* )mem_calloc(height * width, sizeof(int ))) == NULL)
     no_mem_exit("get_mem2Dint_pad: array2D");
@@ -1081,7 +1081,7 @@ int get_mem2Dint64 (int64** *array2D, int dim0, int dim1)
 {
   int i;
 
-  if((*array2D    = (int64**)mem_malloc(dim0 *      sizeof(int64*))) == NULL)
+  if((*array2D    = (int64**)memAlloc(dim0 *      sizeof(int64*))) == NULL)
     no_mem_exit("get_mem2Dint64: array2D");
   if((*(*array2D) = (int64* )mem_calloc(dim0 * dim1,sizeof(int64 ))) == NULL)
     no_mem_exit("get_mem2Dint64: array2D");
@@ -1106,7 +1106,7 @@ int get_mem3D (byte** **array3D, int dim0, int dim1, int dim2)
 {
   int  i, mem_size = dim0 * sizeof(byte**);
 
-  if(((*array3D) = (byte***)mem_malloc(dim0 * sizeof(byte**))) == NULL)
+  if(((*array3D) = (byte***)memAlloc(dim0 * sizeof(byte**))) == NULL)
     no_mem_exit("get_mem3D: array3D");
 
   mem_size += get_mem2D(*array3D, dim0 * dim1, dim2);
@@ -1131,7 +1131,7 @@ int get_mem4D (byte** ***array4D, int dim0, int dim1, int dim2, int dim3)
 {
   int  i, mem_size = dim0 * sizeof(byte***);
 
-  if(((*array4D) = (byte****)mem_malloc(dim0 * sizeof(byte***))) == NULL)
+  if(((*array4D) = (byte****)memAlloc(dim0 * sizeof(byte***))) == NULL)
     no_mem_exit("get_mem4D: array4D");
 
   mem_size += get_mem3D(*array4D, dim0 * dim1, dim2, dim3);
@@ -1156,7 +1156,7 @@ int get_mem3Dint (int** **array3D, int dim0, int dim1, int dim2)
 {
   int  i, mem_size = dim0 * sizeof(int**);
 
-  if(((*array3D) = (int***)mem_malloc(dim0 * sizeof(int**))) == NULL)
+  if(((*array3D) = (int***)memAlloc(dim0 * sizeof(int**))) == NULL)
     no_mem_exit("get_mem3Dint: array3D");
 
   mem_size += get_mem2Dint(*array3D, dim0 * dim1, dim2);
@@ -1181,7 +1181,7 @@ int get_mem3Dint64 (int64** **array3D, int dim0, int dim1, int dim2)
 {
   int  i, mem_size = dim0 * sizeof(int64**);
 
-  if(((*array3D) = (int64***)mem_malloc(dim0 * sizeof(int64**))) == NULL)
+  if(((*array3D) = (int64***)memAlloc(dim0 * sizeof(int64**))) == NULL)
     no_mem_exit("get_mem3Dint64: array3D");
 
   mem_size += get_mem2Dint64(*array3D, dim0 * dim1, dim2);
@@ -1197,7 +1197,7 @@ int get_mem2Ddistblk (distblk** *array2D, int dim0, int dim1)
 {
   int i;
 
-  if((*array2D    = (distblk**)mem_malloc(dim0 *      sizeof(distblk*))) == NULL)
+  if((*array2D    = (distblk**)memAlloc(dim0 *      sizeof(distblk*))) == NULL)
     no_mem_exit("get_mem2Ddistblk: array2D");
   if((*(*array2D) = (distblk* )mem_calloc(dim0 * dim1,sizeof(distblk ))) == NULL)
     no_mem_exit("get_mem2Ddistblk: array2D");
@@ -1213,7 +1213,7 @@ int get_mem3Ddistblk (distblk** **array3D, int dim0, int dim1, int dim2)
 {
   int  i, mem_size = dim0 * sizeof(distblk**);
 
-  if(((*array3D) = (distblk***)mem_malloc(dim0 * sizeof(distblk**))) == NULL)
+  if(((*array3D) = (distblk***)memAlloc(dim0 * sizeof(distblk**))) == NULL)
     no_mem_exit("get_mem3Ddistblk: array3D");
 
   mem_size += get_mem2Ddistblk(*array3D, dim0 * dim1, dim2);
@@ -1229,7 +1229,7 @@ int get_mem4Ddistblk (distblk** ***array4D, int dim0, int dim1, int dim2, int di
 {
   int  i, mem_size = dim0 * sizeof(distblk***);
 
-  if(((*array4D) = (distblk****)mem_malloc(dim0 * sizeof(distblk***))) == NULL)
+  if(((*array4D) = (distblk****)memAlloc(dim0 * sizeof(distblk***))) == NULL)
     no_mem_exit("get_mem4Ddistblk: array4D");
 
   mem_size += get_mem3Ddistblk(*array4D, dim0 * dim1, dim2, dim3);
@@ -1254,7 +1254,7 @@ int get_mem4Dint (int** ***array4D, int dim0, int dim1, int dim2, int dim3)
 {
   int  i, mem_size = dim0 * sizeof(int***);
 
-  if(((*array4D) = (int****)mem_malloc(dim0 * sizeof(int***))) == NULL)
+  if(((*array4D) = (int****)memAlloc(dim0 * sizeof(int***))) == NULL)
     no_mem_exit("get_mem4Dint: array4D");
 
   mem_size += get_mem3Dint(*array4D, dim0 * dim1, dim2, dim3);
@@ -1270,7 +1270,7 @@ int get_mem4Dint64 (int64** ***array4D, int dim0, int dim1, int dim2, int dim3)
 {
   int  i, mem_size = dim0 * sizeof(int64***);
 
-  if(((*array4D) = (int64****)mem_malloc(dim0 * sizeof(int64***))) == NULL)
+  if(((*array4D) = (int64****)memAlloc(dim0 * sizeof(int64***))) == NULL)
     no_mem_exit("get_mem4Dint64: array4D");
 
   mem_size += get_mem3Dint64(*array4D, dim0 * dim1, dim2, dim3);
@@ -1295,7 +1295,7 @@ int get_mem5Dint (int** ****array5D, int dim0, int dim1, int dim2, int dim3, int
 {
   int  i, mem_size = dim0 * sizeof(int****);
 
-  if(((*array5D) = (int*****)mem_malloc(dim0 * sizeof(int****))) == NULL)
+  if(((*array5D) = (int*****)memAlloc(dim0 * sizeof(int****))) == NULL)
     no_mem_exit("get_mem5Dint: array5D");
 
   mem_size += get_mem4Dint(*array5D, dim0 * dim1, dim2, dim3, dim4);
@@ -1321,11 +1321,11 @@ void free_mem2D (byte** array2D)
   if (array2D)
   {
     if (*array2D)
-      mem_free (*array2D);
+      memFree (*array2D);
     else
       error ("free_mem2D: trying to free unused memory",100);
 
-    mem_free (array2D);
+    memFree (array2D);
   }
   else
   {
@@ -1346,11 +1346,11 @@ void free_mem2Dint (int** array2D)
   if (array2D)
   {
     if (*array2D)
-      mem_free (*array2D);
+      memFree (*array2D);
     else
       error ("free_mem2Dint: trying to free unused memory",100);
 
-    mem_free (array2D);
+    memFree (array2D);
   }
   else
   {
@@ -1364,11 +1364,11 @@ void free_mem2Dint_pad (int** array2D, int iPadY, int iPadX)
   if (array2D)
   {
     if (*array2D)
-      mem_free (array2D[-iPadY]-iPadX);
+      memFree (array2D[-iPadY]-iPadX);
     else
       error ("free_mem2Dint_pad: trying to free unused memory",100);
 
-    mem_free (&array2D[-iPadY]);
+    memFree (&array2D[-iPadY]);
   }
   else
   {
@@ -1389,10 +1389,10 @@ void free_mem2Dint64 (int64** array2D)
   if (array2D)
   {
     if (*array2D)
-      mem_free (*array2D);
+      memFree (*array2D);
     else
       error ("free_mem2Dint64: trying to free unused memory",100);
-    mem_free (array2D);
+    memFree (array2D);
   }
   else
   {
@@ -1413,7 +1413,7 @@ void free_mem3D (byte** *array3D)
   if (array3D)
   {
    free_mem2D(*array3D);
-   mem_free (array3D);
+   memFree (array3D);
   }
   else
   {
@@ -1434,7 +1434,7 @@ void free_mem4D (byte** **array4D)
   if (array4D)
   {
    free_mem3D(*array4D);
-   mem_free (array4D);
+   memFree (array4D);
   }
   else
   {
@@ -1455,7 +1455,7 @@ void free_mem3Dint (int** *array3D)
   if (array3D)
   {
    free_mem2Dint(*array3D);
-   mem_free (array3D);
+   memFree (array3D);
   }
   else
   {
@@ -1476,7 +1476,7 @@ void free_mem3Dint64 (int64** *array3D)
   if (array3D)
   {
    free_mem2Dint64(*array3D);
-   mem_free (array3D);
+   memFree (array3D);
   }
   else
   {
@@ -1490,7 +1490,7 @@ void free_mem3Ddistblk (distblk** *array3D)
   if (array3D)
   {
    free_mem2Ddistblk(*array3D);
-   mem_free (array3D);
+   memFree (array3D);
   }
   else
   {
@@ -1511,7 +1511,7 @@ void free_mem4Dint (int** **array4D)
   if (array4D)
   {
     free_mem3Dint( *array4D);
-    mem_free (array4D);
+    memFree (array4D);
   } else
   {
     error ("free_mem4Dint: trying to free unused memory",100);
@@ -1524,7 +1524,7 @@ void free_mem4Dint64 (int64** **array4D)
   if (array4D)
   {
     free_mem3Dint64( *array4D);
-    mem_free (array4D);
+    memFree (array4D);
   } else
   {
     error ("free_mem4Dint64: trying to free unused memory",100);
@@ -1537,7 +1537,7 @@ void free_mem4Ddistblk (distblk** **array4D)
   if (array4D)
   {
     free_mem3Ddistblk( *array4D);
-    mem_free (array4D);
+    memFree (array4D);
   } else
   {
     error ("free_mem4Ddistblk: trying to free unused memory",100);
@@ -1557,7 +1557,7 @@ void free_mem5Dint (int** ***array5D)
   if (array5D)
   {
     free_mem4Dint( *array5D);
-    mem_free (array5D);
+    memFree (array5D);
   } else
   {
     error ("free_mem5Dint: trying to free unused memory",100);
@@ -1595,7 +1595,7 @@ uint16** new_mem2Duint16 (int dim0, int dim1)
   int i;
   uint16** array2D;
 
-  if(( array2D = (uint16**)mem_malloc(dim0 *      sizeof(uint16*))) == NULL)
+  if(( array2D = (uint16**)memAlloc(dim0 *      sizeof(uint16*))) == NULL)
     no_mem_exit("get_mem2Duint16: array2D");
   if((*array2D = (uint16* )mem_calloc(dim0 * dim1,sizeof(uint16 ))) == NULL)
     no_mem_exit("get_mem2Duint16: array2D");
@@ -1621,7 +1621,7 @@ int get_mem2Duint16 (uint16** *array2D, int dim0, int dim1)
 {
   int i;
 
-  if((  *array2D  = (uint16**)mem_malloc(dim0 *      sizeof(uint16*))) == NULL)
+  if((  *array2D  = (uint16**)memAlloc(dim0 *      sizeof(uint16*))) == NULL)
     no_mem_exit("get_mem2Duint16: array2D");
 
   if((*(*array2D) = (uint16* )mem_calloc(dim0 * dim1,sizeof(uint16 ))) == NULL)
@@ -1647,7 +1647,7 @@ int get_mem3Duint16 (uint16** **array3D,int dim0, int dim1, int dim2)
 {
   int  i, mem_size = dim0 * sizeof(uint16**);
 
-  if(((*array3D) = (uint16***)mem_malloc(dim0 * sizeof(uint16**))) == NULL)
+  if(((*array3D) = (uint16***)memAlloc(dim0 * sizeof(uint16**))) == NULL)
     no_mem_exit("get_mem3Duint16: array3D");
 
   mem_size += get_mem2Duint16(*array3D, dim0 * dim1, dim2);
@@ -1672,7 +1672,7 @@ int get_mem4Duint16 (uint16** ***array4D, int dim0, int dim1, int dim2, int dim3
 {
   int  i, mem_size = dim0 * sizeof(uint16***);
 
-  if(((*array4D) = (uint16****)mem_malloc(dim0 * sizeof(uint16***))) == NULL)
+  if(((*array4D) = (uint16****)memAlloc(dim0 * sizeof(uint16***))) == NULL)
     no_mem_exit("get_mem4Duint16: array4D");
 
   mem_size += get_mem3Duint16(*array4D, dim0 * dim1, dim2, dim3);
@@ -1699,7 +1699,7 @@ int get_mem2Dshort (short** *array2D, int dim0, int dim1)
   int i;
   short *curr = NULL;
 
-  if((  *array2D  = (short**)mem_malloc(dim0 *      sizeof(short*))) == NULL)
+  if((  *array2D  = (short**)memAlloc(dim0 *      sizeof(short*))) == NULL)
     no_mem_exit("get_mem2Dshort: array2D");
   if((*(*array2D) = (short* )mem_calloc(dim0 * dim1,sizeof(short ))) == NULL)
     no_mem_exit("get_mem2Dshort: array2D");
@@ -1729,7 +1729,7 @@ int get_mem3Dshort (short** **array3D,int dim0, int dim1, int dim2)
   int  i, mem_size = dim0 * sizeof(short**);
   short** curr = NULL;
 
-  if(((*array3D) = (short***)mem_malloc(dim0 * sizeof(short**))) == NULL)
+  if(((*array3D) = (short***)memAlloc(dim0 * sizeof(short**))) == NULL)
     no_mem_exit("get_mem3Dshort: array3D");
 
   mem_size += get_mem2Dshort(*array3D, dim0 * dim1, dim2);
@@ -1758,7 +1758,7 @@ int get_mem4Dshort (short** ***array4D, int dim0, int dim1, int dim2, int dim3)
 {
   int  i, mem_size = dim0 * sizeof(short***);
 
-  if(((*array4D) = (short****)mem_malloc(dim0 * sizeof(short***))) == NULL)
+  if(((*array4D) = (short****)memAlloc(dim0 * sizeof(short***))) == NULL)
     no_mem_exit("get_mem4Dshort: array4D");
 
   mem_size += get_mem3Dshort(*array4D, dim0 * dim1, dim2, dim3);
@@ -1783,7 +1783,7 @@ int get_mem5Dshort (short** ****array5D, int dim0, int dim1, int dim2, int dim3,
 {
   int  i, mem_size = dim0 * sizeof(short****);
 
-  if(((*array5D) = (short*****)mem_malloc(dim0 * sizeof(short****))) == NULL)
+  if(((*array5D) = (short*****)memAlloc(dim0 * sizeof(short****))) == NULL)
     no_mem_exit("get_mem5Dshort: array5D");
 
   mem_size += get_mem4Dshort(*array5D, dim0 * dim1, dim2, dim3, dim4);
@@ -1808,7 +1808,7 @@ int get_mem6Dshort (short** *****array6D, int dim0, int dim1, int dim2, int dim3
 {
   int  i, mem_size = dim0 * sizeof(short*****);
 
-  if(((*array6D) = (short******)mem_malloc(dim0 * sizeof(short*****))) == NULL)
+  if(((*array6D) = (short******)memAlloc(dim0 * sizeof(short*****))) == NULL)
     no_mem_exit("get_mem6Dshort: array6D");
 
   mem_size += get_mem5Dshort(*array6D, dim0 * dim1, dim2, dim3, dim4, dim5);
@@ -1833,7 +1833,7 @@ int get_mem7Dshort (short** ******array7D, int dim0, int dim1, int dim2, int dim
 {
   int  i, mem_size = dim0 * sizeof(short******);
 
-  if(((*array7D) = (short*******)mem_malloc(dim0 * sizeof(short******))) == NULL)
+  if(((*array7D) = (short*******)memAlloc(dim0 * sizeof(short******))) == NULL)
     no_mem_exit("get_mem7Dshort: array7D");
 
   mem_size += get_mem6Dshort(*array7D, dim0 * dim1, dim2, dim3, dim4, dim5, dim6);
@@ -1858,10 +1858,10 @@ void free_mem2Duint16 (uint16** array2D)
   if (array2D)
   {
     if (*array2D)
-      mem_free (*array2D);
+      memFree (*array2D);
     else error ("free_mem2Duint16: trying to free unused memory",100);
 
-    mem_free (array2D);
+    memFree (array2D);
   }
   else
   {
@@ -1882,7 +1882,7 @@ void free_mem3Duint16 (uint16** *array3D)
   if (array3D)
   {
    free_mem2Duint16(*array3D);
-   mem_free (array3D);
+   memFree (array3D);
   }
   else
   {
@@ -1903,7 +1903,7 @@ void free_mem4Duint16 (uint16** **array4D)
   if (array4D)
   {
     free_mem3Duint16( *array4D);
-    mem_free (array4D);
+    memFree (array4D);
   }
   else
   {
@@ -1924,10 +1924,10 @@ void free_mem2Dshort (short** array2D)
   if (array2D)
   {
     if (*array2D)
-      mem_free (*array2D);
+      memFree (*array2D);
     else error ("free_mem2Dshort: trying to free unused memory",100);
 
-    mem_free (array2D);
+    memFree (array2D);
   }
   else
   {
@@ -1948,7 +1948,7 @@ void free_mem3Dshort (short** *array3D)
   if (array3D)
   {
    free_mem2Dshort(*array3D);
-   mem_free (array3D);
+   memFree (array3D);
   }
   else
   {
@@ -1969,7 +1969,7 @@ void free_mem4Dshort (short** **array4D)
   if (array4D)
   {
     free_mem3Dshort( *array4D);
-    mem_free (array4D);
+    memFree (array4D);
   }
   else
   {
@@ -1990,7 +1990,7 @@ void free_mem5Dshort (short** ***array5D)
   if (array5D)
   {
     free_mem4Dshort( *array5D) ;
-    mem_free (array5D);
+    memFree (array5D);
   }
   else
   {
@@ -2011,7 +2011,7 @@ void free_mem6Dshort (short** ****array6D)
   if (array6D)
   {
     free_mem5Dshort( *array6D);
-    mem_free (array6D);
+    memFree (array6D);
   }
   else
   {
@@ -2032,7 +2032,7 @@ void free_mem7Dshort (short** *****array7D)
   if (array7D)
   {
     free_mem6Dshort( *array7D);
-    mem_free (array7D);
+    memFree (array7D);
   }
   else
   {
@@ -2055,7 +2055,7 @@ int get_mem2Ddouble (double** *array2D, int dim0, int dim1)
 {
   int i;
 
-  if((*array2D      = (double**)mem_malloc(dim0 *       sizeof(double*))) == NULL)
+  if((*array2D      = (double**)memAlloc(dim0 *       sizeof(double*))) == NULL)
     no_mem_exit("get_mem2Ddouble: array2D");
 
   if(((*array2D)[0] = (double* )mem_calloc(dim0 * dim1, sizeof(double ))) == NULL)
@@ -2103,7 +2103,7 @@ int get_mem2Dodouble (double** *array2D, int dim0, int dim1, int offset)
 {
   int i;
 
-  if((*array2D      = (double**)mem_malloc(dim0 *      sizeof(double*))) == NULL)
+  if((*array2D      = (double**)memAlloc(dim0 *      sizeof(double*))) == NULL)
     no_mem_exit("get_mem2Dodouble: array2D");
   if(((*array2D)[0] = (double* )mem_calloc(dim0 * dim1,sizeof(double ))) == NULL)
     no_mem_exit("get_mem2Dodouble: array2D");
@@ -2130,7 +2130,7 @@ int get_mem3Dodouble (double** **array3D, int dim0, int dim1, int dim2, int offs
 {
   int  i,j;
 
-  if(((*array3D) = (double***)mem_malloc(dim0 * sizeof(double**))) == NULL)
+  if(((*array3D) = (double***)memAlloc(dim0 * sizeof(double**))) == NULL)
     no_mem_exit("get_mem3Dodouble: array3D");
 
   if(((*array3D)[0] = (double** )mem_calloc(dim0 * dim1,sizeof(double*))) == NULL)
@@ -2164,7 +2164,7 @@ int get_offset_mem2Dshort (short** *array2D, int dim0, int dim1, int offset_y, i
 {
   int i;
 
-  if((*array2D      = (short**)mem_malloc(dim0 * sizeof(short*))) == NULL)
+  if((*array2D      = (short**)memAlloc(dim0 * sizeof(short*))) == NULL)
     no_mem_exit("get_offset_mem2Dshort: array2D");
 
   if(((*array2D)[0] = (short* )mem_calloc(dim0 * dim1,sizeof(short))) == NULL)
@@ -2196,7 +2196,7 @@ int get_mem3Doint (int** **array3D, int dim0, int dim1, int dim2, int offset)
 {
   int  i,j;
 
-  if(((*array3D) = (int***)mem_malloc(dim0 * sizeof(int**))) == NULL)
+  if(((*array3D) = (int***)memAlloc(dim0 * sizeof(int**))) == NULL)
     no_mem_exit("get_mem3Doint: array3D");
 
   if(((*array3D)[0] = (int** )mem_calloc(dim0 * dim1,sizeof(int*))) == NULL)
@@ -2230,7 +2230,7 @@ int get_mem2Doint (int** *array2D, int dim0, int dim1, int offset)
 {
   int i;
 
-  if((*array2D      = (int**)mem_malloc(dim0 * sizeof(int*))) == NULL)
+  if((*array2D      = (int**)memAlloc(dim0 * sizeof(int*))) == NULL)
     no_mem_exit("get_mem2Dint: array2D");
   if(((*array2D)[0] = (int* )mem_calloc(dim0 * dim1,sizeof(int))) == NULL)
     no_mem_exit("get_mem2Dint: array2D");
@@ -2257,11 +2257,11 @@ void free_mem2Ddouble (double** array2D)
   if (array2D)
   {
     if (*array2D)
-      mem_free (*array2D);
+      memFree (*array2D);
     else
       error ("free_mem2Ddouble: trying to free unused memory",100);
 
-    mem_free (array2D);
+    memFree (array2D);
 
   }
   else
@@ -2283,7 +2283,7 @@ void free_mem1Dodouble (double *array1D, int offset)
   if (array1D)
   {
     array1D -= offset;
-    mem_free (array1D);
+    memFree (array1D);
   }
   else
   {
@@ -2305,10 +2305,10 @@ void free_mem2Dodouble (double** array2D, int offset)
   {
     array2D[0] -= offset;
     if (array2D[0])
-      mem_free (array2D[0]);
+      memFree (array2D[0]);
     else error ("free_mem2Dodouble: trying to free unused memory",100);
 
-    mem_free (array2D);
+    memFree (array2D);
 
   } else
   {
@@ -2334,17 +2334,17 @@ void free_mem3Dodouble (double** *array3D, int dim0, int dim1, int offset)
       for (j = -offset; j < dim1 - offset; j++)
       {
         if (array3D[i][j])
-          mem_free (array3D[i][j]);
+          memFree (array3D[i][j]);
         else
           error ("free_mem3Dodouble: trying to free unused memory",100);
       }
     }
     array3D[0] -= offset;
     if (array3D[0])
-      mem_free (array3D[0]);
+      memFree (array3D[0]);
     else
       error ("free_mem3Dodouble: trying to free unused memory",100);
-    mem_free (array3D);
+    memFree (array3D);
   }
   else
   {
@@ -2370,17 +2370,17 @@ void free_mem3Doint (int** *array3D, int dim0, int dim1, int offset)
       for (j = -offset; j < dim1 - offset; j++)
       {
         if (array3D[i][j])
-          mem_free (array3D[i][j]);
+          memFree (array3D[i][j]);
         else
           error ("free_mem3Doint: trying to free unused memory",100);
       }
     }
     array3D[0] -= offset;
     if (array3D[0])
-      mem_free (array3D[0]);
+      memFree (array3D[0]);
     else
       error ("free_mem3Doint: trying to free unused memory",100);
-    mem_free (array3D);
+    memFree (array3D);
   }
   else
   {
@@ -2402,11 +2402,11 @@ void free_mem2Doint (int** array2D, int offset)
   {
     array2D[0] -= offset;
     if (array2D[0])
-      mem_free (array2D[0]);
+      memFree (array2D[0]);
     else
       error ("free_mem2Doint: trying to free unused memory",100);
 
-    mem_free (array2D);
+    memFree (array2D);
 
   }
   else
@@ -2430,11 +2430,11 @@ void free_offset_mem2Dshort (short** array2D, int dim1, int offset_y, int offset
   {
     array2D[0] -= offset_x + offset_y * dim1;
     if (array2D[0])
-      mem_free (array2D[0]);
+      memFree (array2D[0]);
     else
       error ("free_offset_mem2Dshort: trying to free unused memory",100);
 
-    mem_free (array2D);
+    memFree (array2D);
 
   }
   else
@@ -2456,7 +2456,7 @@ void free_mem3Ddouble (double** *array3D)
   if (array3D)
   {
     free_mem2Ddouble(*array3D);
-    mem_free (array3D);
+    memFree (array3D);
   }
   else
   {
@@ -2470,7 +2470,7 @@ void free_mem2Ddistblk (distblk** array2D)
   if (array2D)
   {
     if (*array2D)
-      mem_free (*array2D);
+      memFree (*array2D);
     else
       error ("free_mem2Ddistblk: trying to free unused memory",100);
     free (array2D);

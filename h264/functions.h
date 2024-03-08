@@ -376,9 +376,9 @@ static inline void i64_swap(int64 *x, int64 *y)
 }
 //}}}
 //{{{
-static inline int is_intra_mb(short mb_type)
+static inline int is_intra_mb(short mbType)
 {
-  return (mb_type==SI4MB || mb_type==I4MB || mb_type==I16MB || mb_type==I8MB || mb_type==IPCM);
+  return (mbType==SI4MB || mbType==I4MB || mbType==I16MB || mbType==I8MB || mbType==IPCM);
 }
 //}}}
 

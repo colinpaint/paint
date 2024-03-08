@@ -458,7 +458,7 @@ static int decode_macroblock (int* macroblock_type, int* stwtype, int* stwclass,
     else {
       *motion_type = MC_FIELD;
       /* predict from field of same parity */
-      motion_vertical_field_select[0][0] = (picture_structure==BOTTOM_FIELD);
+      motion_vertical_field_select[0][0] = (picture_structure==BotField);
       }
     }
 
@@ -563,7 +563,7 @@ static void skipped_macroblock (int dc_dct_pred[3], int PMV[2][2][2],
     /* ISO/IEC 13818-2 section 7.6.6.1 and 7.6.6.3: P field picture and B field
        picture */
     motion_vertical_field_select[0][0] = motion_vertical_field_select[0][1] =
-                                         (picture_structure == BOTTOM_FIELD);
+                                         (picture_structure == BotField);
     }
 
   /* skipped I are spatial-only predicted, */
@@ -814,7 +814,7 @@ static void update_Picture_Buffers()
        one-time folding of a line offset into the pointer which stores the
        memory address of the current frame saves offsets and conditional
        branches throughout the remainder of the picture processing loop */
-    if (picture_structure==BOTTOM_FIELD)
+    if (picture_structure==BotField)
       current_frame[cc]+= (cc==0) ? Coded_Picture_Width : Chroma_Width;
   }
 }

@@ -18,10 +18,10 @@ static void FmoGenerateType0MapUnitMap (sVidParam* vidParam, unsigned PicSizeInM
   do
   {
     for( iGroup = 0;
-         (iGroup <= pps->num_slice_groups_minus1) && (i < PicSizeInMapUnits);
-         i += pps->run_length_minus1[iGroup++] + 1 )
+         (iGroup <= pps->numSliceGroupsMinus1) && (i < PicSizeInMapUnits);
+         i += pps->runLengthMinus1[iGroup++] + 1 )
     {
-      for( j = 0; j <= pps->run_length_minus1[ iGroup ] && i + j < PicSizeInMapUnits; j++ )
+      for( j = 0; j <= pps->runLengthMinus1[ iGroup ] && i + j < PicSizeInMapUnits; j++ )
         vidParam->MapUnitToSliceGroupMap[i+j] = iGroup;
     }
   }
@@ -35,8 +35,8 @@ static void FmoGenerateType1MapUnitMap (sVidParam* vidParam, unsigned PicSizeInM
   sPPS* pps = vidParam->activePPS;
   unsigned i;
   for( i = 0; i < PicSizeInMapUnits; i++ )
-    vidParam->MapUnitToSliceGroupMap[i] = ((i%vidParam->PicWidthInMbs)+(((i/vidParam->PicWidthInMbs)*(pps->num_slice_groups_minus1+1))/2))
-                                %(pps->num_slice_groups_minus1+1);
+    vidParam->MapUnitToSliceGroupMap[i] = ((i%vidParam->PicWidthInMbs)+(((i/vidParam->PicWidthInMbs)*(pps->numSliceGroupsMinus1+1))/2))
+                                %(pps->numSliceGroupsMinus1+1);
 }
 //}}}
 //{{{
@@ -49,13 +49,13 @@ static void FmoGenerateType2MapUnitMap (sVidParam* vidParam, unsigned PicSizeInM
   unsigned yTopLeft, xTopLeft, yBottomRight, xBottomRight;
 
   for( i = 0; i < PicSizeInMapUnits; i++ )
-    vidParam->MapUnitToSliceGroupMap[ i ] = pps->num_slice_groups_minus1;
+    vidParam->MapUnitToSliceGroupMap[ i ] = pps->numSliceGroupsMinus1;
 
-  for( iGroup = pps->num_slice_groups_minus1 - 1 ; iGroup >= 0; iGroup--) {
-    yTopLeft = pps->top_left[ iGroup ] / vidParam->PicWidthInMbs;
-    xTopLeft = pps->top_left[ iGroup ] % vidParam->PicWidthInMbs;
-    yBottomRight = pps->bottom_right[ iGroup ] / vidParam->PicWidthInMbs;
-    xBottomRight = pps->bottom_right[ iGroup ] % vidParam->PicWidthInMbs;
+  for( iGroup = pps->numSliceGroupsMinus1 - 1 ; iGroup >= 0; iGroup--) {
+    yTopLeft = pps->topLeft[ iGroup ] / vidParam->PicWidthInMbs;
+    xTopLeft = pps->topLeft[ iGroup ] % vidParam->PicWidthInMbs;
+    yBottomRight = pps->botRight[ iGroup ] / vidParam->PicWidthInMbs;
+    xBottomRight = pps->botRight[ iGroup ] % vidParam->PicWidthInMbs;
     for (y = yTopLeft; y <= yBottomRight; y++ )
       for (x = xTopLeft; x <= xBottomRight; x++ )
         vidParam->MapUnitToSliceGroupMap[ y * vidParam->PicWidthInMbs + x ] = iGroup;
@@ -72,21 +72,21 @@ static void FmoGenerateType3MapUnitMap (sVidParam* vidParam, unsigned PicSizeInM
   int x, y, xDir, yDir;
   int mapUnitVacant;
 
-  unsigned mapUnitsInSliceGroup0 = imin((pps->slice_group_change_rate_minus1 + 1) * curSlice->slice_group_change_cycle, PicSizeInMapUnits);
+  unsigned mapUnitsInSliceGroup0 = imin((pps->sliceGroupChangeRateMius1 + 1) * curSlice->slice_group_change_cycle, PicSizeInMapUnits);
 
   for( i = 0; i < PicSizeInMapUnits; i++ )
     vidParam->MapUnitToSliceGroupMap[ i ] = 2;
 
-  x = ( vidParam->PicWidthInMbs - pps->slice_group_change_direction_flag ) / 2;
-  y = ( vidParam->PicHeightInMapUnits - pps->slice_group_change_direction_flag ) / 2;
+  x = ( vidParam->PicWidthInMbs - pps->sliceGroupChangeDirectionFlag ) / 2;
+  y = ( vidParam->PicHeightInMapUnits - pps->sliceGroupChangeDirectionFlag ) / 2;
 
   leftBound   = x;
   topBound    = y;
   rightBound  = x;
   bottomBound = y;
 
-  xDir =  pps->slice_group_change_direction_flag - 1;
-  yDir =  pps->slice_group_change_direction_flag;
+  xDir =  pps->sliceGroupChangeDirectionFlag - 1;
+  yDir =  pps->sliceGroupChangeDirectionFlag;
 
   for( k = 0; k < PicSizeInMapUnits; k += mapUnitVacant ) {
     mapUnitVacant = ( vidParam->MapUnitToSliceGroupMap[ y * vidParam->PicWidthInMbs + x ]  ==  2 );
@@ -97,27 +97,27 @@ static void FmoGenerateType3MapUnitMap (sVidParam* vidParam, unsigned PicSizeInM
       leftBound = imax( leftBound - 1, 0 );
       x = leftBound;
       xDir = 0;
-      yDir = 2 * pps->slice_group_change_direction_flag - 1;
+      yDir = 2 * pps->sliceGroupChangeDirectionFlag - 1;
     }
     else
       if( xDir  ==  1  &&  x  ==  rightBound ) {
         rightBound = imin( rightBound + 1, (int)vidParam->PicWidthInMbs - 1 );
         x = rightBound;
         xDir = 0;
-        yDir = 1 - 2 * pps->slice_group_change_direction_flag;
+        yDir = 1 - 2 * pps->sliceGroupChangeDirectionFlag;
       }
       else
         if( yDir  ==  -1  &&  y  ==  topBound ) {
           topBound = imax( topBound - 1, 0 );
           y = topBound;
-          xDir = 1 - 2 * pps->slice_group_change_direction_flag;
+          xDir = 1 - 2 * pps->sliceGroupChangeDirectionFlag;
           yDir = 0;
          }
         else
           if( yDir  ==  1  &&  y  ==  bottomBound ) {
             bottomBound = imin( bottomBound + 1, (int)vidParam->PicHeightInMapUnits - 1 );
             y = bottomBound;
-            xDir = 2 * pps->slice_group_change_direction_flag - 1;
+            xDir = 2 * pps->sliceGroupChangeDirectionFlag - 1;
             yDir = 0;
           }
           else {
@@ -134,16 +134,16 @@ static void FmoGenerateType4MapUnitMap (sVidParam* vidParam, unsigned PicSizeInM
 
   sPPS* pps = vidParam->activePPS;
 
-  unsigned mapUnitsInSliceGroup0 = imin((pps->slice_group_change_rate_minus1 + 1) * curSlice->slice_group_change_cycle, PicSizeInMapUnits);
-  unsigned sizeOfUpperLeftGroup = pps->slice_group_change_direction_flag ? ( PicSizeInMapUnits - mapUnitsInSliceGroup0 ) : mapUnitsInSliceGroup0;
+  unsigned mapUnitsInSliceGroup0 = imin((pps->sliceGroupChangeRateMius1 + 1) * curSlice->slice_group_change_cycle, PicSizeInMapUnits);
+  unsigned sizeOfUpperLeftGroup = pps->sliceGroupChangeDirectionFlag ? ( PicSizeInMapUnits - mapUnitsInSliceGroup0 ) : mapUnitsInSliceGroup0;
 
   unsigned i;
 
   for (i = 0; i < PicSizeInMapUnits; i++ )
     if (i < sizeOfUpperLeftGroup )
-      vidParam->MapUnitToSliceGroupMap[ i ] = pps->slice_group_change_direction_flag;
+      vidParam->MapUnitToSliceGroupMap[ i ] = pps->sliceGroupChangeDirectionFlag;
     else
-      vidParam->MapUnitToSliceGroupMap[ i ] = 1 - pps->slice_group_change_direction_flag;
+      vidParam->MapUnitToSliceGroupMap[ i ] = 1 - pps->sliceGroupChangeDirectionFlag;
 
   }
 //}}}
@@ -153,17 +153,17 @@ static void FmoGenerateType5MapUnitMap (sVidParam* vidParam, unsigned PicSizeInM
 {
   sPPS* pps = vidParam->activePPS;
 
-  unsigned mapUnitsInSliceGroup0 = imin((pps->slice_group_change_rate_minus1 + 1) * curSlice->slice_group_change_cycle, PicSizeInMapUnits);
-  unsigned sizeOfUpperLeftGroup = pps->slice_group_change_direction_flag ? ( PicSizeInMapUnits - mapUnitsInSliceGroup0 ) : mapUnitsInSliceGroup0;
+  unsigned mapUnitsInSliceGroup0 = imin((pps->sliceGroupChangeRateMius1 + 1) * curSlice->slice_group_change_cycle, PicSizeInMapUnits);
+  unsigned sizeOfUpperLeftGroup = pps->sliceGroupChangeDirectionFlag ? ( PicSizeInMapUnits - mapUnitsInSliceGroup0 ) : mapUnitsInSliceGroup0;
 
   unsigned i,j, k = 0;
 
   for( j = 0; j < vidParam->PicWidthInMbs; j++ )
     for( i = 0; i < vidParam->PicHeightInMapUnits; i++ )
         if( k++ < sizeOfUpperLeftGroup )
-            vidParam->MapUnitToSliceGroupMap[ i * vidParam->PicWidthInMbs + j ] = pps->slice_group_change_direction_flag;
+            vidParam->MapUnitToSliceGroupMap[ i * vidParam->PicWidthInMbs + j ] = pps->sliceGroupChangeDirectionFlag;
         else
-            vidParam->MapUnitToSliceGroupMap[ i * vidParam->PicWidthInMbs + j ] = 1 - pps->slice_group_change_direction_flag;
+            vidParam->MapUnitToSliceGroupMap[ i * vidParam->PicWidthInMbs + j ] = 1 - pps->sliceGroupChangeDirectionFlag;
 
 }
 //}}}
@@ -174,7 +174,7 @@ static void FmoGenerateType6MapUnitMap (sVidParam* vidParam, unsigned PicSizeInM
   sPPS* pps = vidParam->activePPS;
   unsigned i;
   for (i=0; i<PicSizeInMapUnits; i++)
-    vidParam->MapUnitToSliceGroupMap[i] = pps->slice_group_id[i];
+    vidParam->MapUnitToSliceGroupMap[i] = pps->sliceGroupId[i];
   }
 //}}}
 //{{{
@@ -189,26 +189,26 @@ static int FmoGenerateMapUnitToSliceGroupMap (sVidParam* vidParam, sSlice* curSl
 
   NumSliceGroupMapUnits = (sps->pic_height_in_map_units_minus1+1)* (sps->pic_width_in_mbs_minus1+1);
 
-  if (pps->slice_group_map_type == 6)
-    if ((pps->pic_size_in_map_units_minus1 + 1) != NumSliceGroupMapUnits)
-      error ("wrong pps->pic_size_in_map_units_minus1 for used SPS and FMO type 6", 500);
+  if (pps->sliceGroupMapType == 6)
+    if ((pps->picSizeMapUnitsMinus1 + 1) != NumSliceGroupMapUnits)
+      error ("wrong pps->picSizeMapUnitsMinus1 for used SPS and FMO type 6", 500);
 
   // allocate memory for vidParam->MapUnitToSliceGroupMap
   if (vidParam->MapUnitToSliceGroupMap)
     free (vidParam->MapUnitToSliceGroupMap);
 
   if ((vidParam->MapUnitToSliceGroupMap = malloc ((NumSliceGroupMapUnits) * sizeof (int))) == NULL) {
-    printf ("cannot allocated %d bytes for vidParam->MapUnitToSliceGroupMap, exit\n", (int) ( (pps->pic_size_in_map_units_minus1+1) * sizeof (int)));
+    printf ("cannot allocated %d bytes for vidParam->MapUnitToSliceGroupMap, exit\n", (int) ( (pps->picSizeMapUnitsMinus1+1) * sizeof (int)));
     exit (-1);
     }
 
-  if (pps->num_slice_groups_minus1 == 0) {
+  if (pps->numSliceGroupsMinus1 == 0) {
     // only one slice group
     memset (vidParam->MapUnitToSliceGroupMap, 0, NumSliceGroupMapUnits * sizeof (int));
     return 0;
     }
 
-  switch (pps->slice_group_map_type) {
+  switch (pps->sliceGroupMapType) {
     case 0:
       FmoGenerateType0MapUnitMap (vidParam, NumSliceGroupMapUnits);
       break;
@@ -231,7 +231,7 @@ static int FmoGenerateMapUnitToSliceGroupMap (sVidParam* vidParam, sSlice* curSl
       FmoGenerateType6MapUnitMap (vidParam, NumSliceGroupMapUnits);
       break;
     default:
-      printf ("Illegal slice_group_map_type %d , exit \n", (int) pps->slice_group_map_type);
+      printf ("Illegal sliceGroupMapType %d , exit \n", (int) pps->sliceGroupMapType);
       exit (-1);
       }
   return 0;
@@ -279,7 +279,7 @@ int fmo_init (sVidParam* vidParam, sSlice* pSlice) {
 
   FmoGenerateMapUnitToSliceGroupMap (vidParam, pSlice);
   FmoGenerateMbToSliceGroupMap (vidParam, pSlice);
-  vidParam->NumberOfSliceGroups = pps->num_slice_groups_minus1 + 1;
+  vidParam->NumberOfSliceGroups = pps->numSliceGroupsMinus1 + 1;
 
 #ifdef PRINT_FMO_MAPS
   printf ("\n");

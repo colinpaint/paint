@@ -118,7 +118,7 @@ void Dual_Prime_Arithmetic (int DMV[][2], int *dmvector, int mvx, int mvy) {
     DMV[0][1] = ((mvy+(mvy>0))>>1) + dmvector[1];
 
     /* correct for vertical field shift */
-    if (picture_structure==TOP_FIELD)
+    if (picture_structure==TopField)
       DMV[0][1]--;
     else
       DMV[0][1]++;
