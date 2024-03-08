@@ -36,64 +36,55 @@ static void Read_Lower_Layer_Component_Framewise (comp,lw,lh)
 
 	sprintf(fname,Lower_Layer_Picture_Filename,True_Framenum);
 	strcat(fname,ext[comp]);
-#ifdef VERBOSE
 	if (Verbose_Flag>1)
 		printf("reading %s\n",fname);
-#endif VERBOSE
-	fd=fopen(fname,"rb");
-	if (fd==NULL)
-		exit(-1);
-	for (j=0; j<lh; j++) {
-		 for (i=0; i<lw; i++)
+	fd = fopen (fname,"rb");
+	if (fd == NULL)
+		exit (-1);
+	for (j = 0; j < lh; j++) {
+		 for (i = 0; i < lw; i++)
 			 llframe0[comp][lw*j+i]=getc(fd);
-		 if (! lower_layer_progressive_frame) {
-	j++;
-	for (i=0; i<lw; i++)
-		llframe1[comp][lw*j+i]=getc(fd);
-		 }
-	}
+		 if (!lower_layer_progressive_frame) {
+     	 j++;
+	     for (i=0; i<lw; i++)
+		     llframe1[comp][lw*j+i]=getc(fd);
+		   }
+	   }
 	fclose(fd);
-}
+  }
 //}}}
 //{{{
-static void Read_Lower_Layer_Component_Fieldwise (comp,lw,lh)
-		 int comp;
-		 int lw, lh;
-{
+static void Read_Lower_Layer_Component_Fieldwise (int comp, int lw, int lh) {
+
 	FILE *fd;
 	char fname[256];
 	char ext[3][3] = {".Y",".U",".V"};
-/*  char *ext = {".Y",".U",".V"}; */
 	int i,j;
 
-	sprintf(fname,Lower_Layer_Picture_Filename,True_Framenum,lower_layer_progressive_frame ? 'f':'a');
-	strcat(fname,ext[comp]);
-#ifdef VERBOSE
+	sprintf (fname,Lower_Layer_Picture_Filename,True_Framenum,lower_layer_progressive_frame ? 'f':'a');
+	strcat (fname,ext[comp]);
 	if (Verbose_Flag>1)
-		printf("reading %s\n",fname);
-#endif VERBOSE
-	fd=fopen(fname,"rb");
-	if (fd==NULL) exit(-1);
-	for (j=0; j<lh; j+=lower_layer_progressive_frame?1:2)
-		for (i=0; i<lw; i++)
+		printf ("reading %s\n",fname);
+	fd = fopen(fname,"rb");
+	if (fd == NULL) exit(-1);
+	for (j = 0; j < lh; j += lower_layer_progressive_frame ? 1 : 2)
+		for (i = 0; i < lw; i++)
 			llframe0[comp][lw*j+i]=getc(fd);
 	fclose(fd);
 
-	if (! lower_layer_progressive_frame) {
-		sprintf(fname,Lower_Layer_Picture_Filename,True_Framenum,'b');
-		strcat(fname,ext[comp]);
-#ifdef VERBOSE
-		if (Verbose_Flag>1)
-			printf("reading %s\n",fname);
-#endif VERBOSE
-		fd=fopen(fname,"rb");
-		if (fd==NULL) exit(-1);
-		for (j=1; j<lh; j+=2)
-			for (i=0; i<lw; i++)
+	if (!lower_layer_progressive_frame) {
+		sprintf (fname,Lower_Layer_Picture_Filename,True_Framenum,'b');
+		strcat (fname,ext[comp]);
+		if (Verbose_Flag > 1)
+			printf ("reading %s\n",fname);
+		fd = fopen (fname,"rb");
+		if (fd == NULL) exit(-1);
+		for (j = 1 ; j < lh; j += 2)
+			for (i = 0; i < lw; i++)
 				llframe1[comp][lw*j+i]=getc(fd);
-		fclose(fd);
-	}
-}
+		fclose (fd);
+	  }
+  }
 //}}}
 
 //{{{
@@ -112,27 +103,22 @@ int llx0,lly0,llw,llh,horizontal_size,vertical_size,vm,vn,hm,hn,aperture;
 	llw2 = (llw*hn)/hm;
 	llh2 = (llh*vn)/vm;
 
-	if (llprogressive_frame)
-	{
+	if (llprogressive_frame) {
 		/* progressive -> progressive / interlaced */
 		Subsample_Vertical(fld0,tmp,llw,llh,llh2,vm,vn,0,1);
 	}
-	else if (progressive_frame)
-	{
+	else if (progressive_frame)	{
 		/* interlaced -> progressive */
-		if (lower_layer_deinterlaced_field_select)
-		{
+		if (lower_layer_deinterlaced_field_select){
 			Deinterlace(fld1,fld0,0,llw,llh,aperture);
 			Subsample_Vertical(fld1,tmp,llw,llh,llh2,vm,vn,0,1);
 		}
-		else
-		{
+		else		{
 			Deinterlace(fld0,fld1,1,llw,llh,aperture);
 			Subsample_Vertical(fld0,tmp,llw,llh,llh2,vm,vn,0,1);
 		}
 	}
-	else
-	{
+	else	{
 		/* interlaced -> interlaced */
 		Deinterlace(fld0,fld1,1,llw,llh,aperture);
 		Deinterlace(fld1,fld0,0,llw,llh,aperture);
@@ -141,42 +127,38 @@ int llx0,lly0,llw,llh,horizontal_size,vertical_size,vm,vn,hm,hn,aperture;
 	}
 
 		/* vertical limits */
-		if (lly0<0)
-		{
+		if (lly0<0)	{
 			tmp-= llw*lly0;
 			llh2+= lly0;
 			if (llh2<0)
 				llh2 = 0;
 			h = (vertical_size<llh2) ? vertical_size : llh2;
-		}
-		else
-		{
+		  }
+		else	{
 			dst+= horizontal_size*lly0;
 			h= vertical_size - lly0;
 			if (h>llh2)
 				h = llh2;
-		}
+		  }
 
 		/* horizontal limits */
-		if (llx0<0)
-		{
+		if (llx0<0)		{
 			x0 = -llx0;
 			llw2+= llx0;
 			if (llw2<0)
 				llw2 = 0;
 			w = (horizontal_size<llw2) ? horizontal_size : llw2;
-		}
-		else
-		{
+		  }
+		else		{
 			dst+= llx0;
 			x0 = 0;
 			w = horizontal_size - llx0;
 			if (w>llw2)
 				w = llw2;
-		}
+		  }
 
 	Subsample_Horizontal(tmp,dst,x0,w,llw,horizontal_size,h,hm,hn);
-}
+  }
 //}}}
 //{{{
 /* deinterlace one field (interpolate opposite parity samples)
@@ -202,8 +184,7 @@ int aperture;
 	unsigned char *p0, *p0m1, *p0p1, *p1, *p1m2, *p1p2;
 
 	/* deinterlace one field */
-	for (j=j0; j<ly; j+=2)
-	{
+	for (j=j0; j<ly; j+=2)	{
 		p0 = fld0+lx*j;
 		p0m1 = (j==0)    ? p0+lx : p0-lx;
 		p0p1 = (j==ly-1) ? p0-lx : p0+lx;
@@ -211,8 +192,7 @@ int aperture;
 		if (aperture)
 			for (i=0; i<lx; i++)
 				p0[i] = (unsigned int)(p0m1[i] + p0p1[i] + 1)>>1;
-		else
-		{
+		else		{
 			p1 = fld1 + lx*j;
 			p1m2 = (j<2)     ? p1 : p1-2*lx;
 			p1p2 = (j>=ly-2) ? p1 : p1+2*lx;
@@ -237,8 +217,7 @@ int lx, lys, lyd, m, n, j0, dj;
 	unsigned char *s1, *s2;
 	short *d1;
 
-	for (j=j0; j<lyd; j+=dj)
-	{
+	for (j=j0; j<lyd; j+=dj)	{
 		d1 = d + lx*j;
 		jd = (j*m)/n;
 		s1 = s + lx*jd;
@@ -261,8 +240,7 @@ int x0, lx, lxs, lxd, ly, m, n;
 	short *s1, *s2;
 	unsigned char *d1;
 
-	for (i1=0; i1<lx; i1++)
-	{
+	for (i1=0; i1<lx; i1++)	{
 		d1 = d + i1;
 		i = x0 + i1;
 		id = (i*m)/n;
@@ -284,11 +262,9 @@ int x0, lx, lxs, lxd, ly, m, n;
 
 //{{{
 /* get reference frame */
-void Spatial_Prediction()
-{
+void Spatial_Prediction() {
 
-	if(Frame_Store_Flag)
-	{
+	if(Frame_Store_Flag) {
 		Read_Lower_Layer_Component_Framewise(0,lower_layer_prediction_horizontal_size,
 			lower_layer_prediction_vertical_size);      /* Y */
 		Read_Lower_Layer_Component_Framewise(1,lower_layer_prediction_horizontal_size>>1,
@@ -296,8 +272,7 @@ void Spatial_Prediction()
 		Read_Lower_Layer_Component_Framewise(2,lower_layer_prediction_horizontal_size>>1,
 			lower_layer_prediction_vertical_size>>1);   /* Cr ("V") */
 	}
-	else
-	{
+	else	{
 		Read_Lower_Layer_Component_Fieldwise(0,lower_layer_prediction_horizontal_size,
 			lower_layer_prediction_vertical_size);      /* Y */
 		Read_Lower_Layer_Component_Fieldwise(1,lower_layer_prediction_horizontal_size>>1,

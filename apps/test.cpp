@@ -947,7 +947,7 @@ public:
       // input params
       sInputParam sInputParams;
       memset (&sInputParams, 0, sizeof(sInputParam));
-      sInputParams.vlcDebug = 1;
+      //sInputParams.vlcDebug = 1;
       sInputParams.poc_scale = 2;
       sInputParams.pocGap = 2;
       sInputParams.ref_poc_gap = 2;
