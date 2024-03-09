@@ -61,7 +61,7 @@ int mb_pred_intra4x4 (sMacroblock* curMb, eColorPlane curPlane, sPixel** curPixe
     intra_cr_decoding(curMb, yuv);
 
   if (curMb->cbp != 0)
-    curSlice->is_reset_coeff = FALSE;
+    curSlice->isResetCoef = FALSE;
   return 1;
 }
 //}}}
@@ -82,7 +82,7 @@ int mb_pred_intra16x16 (sMacroblock* curMb, eColorPlane curPlane, sPicture* pict
     intra_cr_decoding(curMb, yuv);
   }
 
-  curMb->slice->is_reset_coeff = FALSE;
+  curMb->slice->isResetCoef = FALSE;
   return 1;
 }
 //}}}
@@ -117,7 +117,7 @@ int mb_pred_intra8x8 (sMacroblock* curMb, eColorPlane curPlane, sPixel** curPixe
   }
 
   if (curMb->cbp != 0)
-    curSlice->is_reset_coeff = FALSE;
+    curSlice->isResetCoef = FALSE;
   return 1;
 }
 //}}}
@@ -276,7 +276,7 @@ int mb_pred_p_inter8x8 (sMacroblock* curMb, eColorPlane curPlane, sPicture* pict
   iTransform (curMb, curPlane, smb);
 
   if (curMb->cbp != 0)
-    curSlice->is_reset_coeff = FALSE;
+    curSlice->isResetCoef = FALSE;
   return 1;
 }
 //}}}
@@ -291,7 +291,7 @@ int mb_pred_p_inter16x16 (sMacroblock* curMb, eColorPlane curPlane, sPicture* pi
   iTransform (curMb, curPlane, smb);
 
   if (curMb->cbp != 0)
-    curSlice->is_reset_coeff = FALSE;
+    curSlice->isResetCoef = FALSE;
   return 1;
 }
 //}}}
@@ -308,7 +308,7 @@ int mb_pred_p_inter16x8 (sMacroblock* curMb, eColorPlane curPlane, sPicture* pic
   iTransform(curMb, curPlane, smb);
 
   if (curMb->cbp != 0)
-    curSlice->is_reset_coeff = FALSE;
+    curSlice->isResetCoef = FALSE;
   return 1;
 }
 //}}}
@@ -325,7 +325,7 @@ int mb_pred_p_inter8x16 (sMacroblock* curMb, eColorPlane curPlane, sPicture* pic
   iTransform(curMb, curPlane, smb);
 
   if (curMb->cbp != 0)
-    curSlice->is_reset_coeff = FALSE;
+    curSlice->isResetCoef = FALSE;
   return 1;
 }
 //}}}
@@ -545,7 +545,7 @@ int mb_pred_b_d8x8temporal (sMacroblock* curMb, eColorPlane curPlane, sPixel** c
   else
   {
     iTransform(curMb, curPlane, 0);
-    curSlice->is_reset_coeff = FALSE;
+    curSlice->isResetCoef = FALSE;
   }
   return 1;
 }
@@ -670,7 +670,7 @@ int mb_pred_b_d4x4temporal (sMacroblock* curMb, eColorPlane curPlane, sPixel** c
   else
   {
     iTransform(curMb, curPlane, 0);
-    curSlice->is_reset_coeff = FALSE;
+    curSlice->isResetCoef = FALSE;
   }
 
   return 1;
@@ -896,7 +896,7 @@ int mb_pred_b_d8x8spatial (sMacroblock* curMb, eColorPlane curPlane, sPixel** cu
   else
   {
     iTransform(curMb, curPlane, 0);
-    curSlice->is_reset_coeff = FALSE;
+    curSlice->isResetCoef = FALSE;
   }
 
   return 1;
@@ -1084,7 +1084,7 @@ int mb_pred_b_d4x4spatial (sMacroblock* curMb, eColorPlane curPlane, sPixel** cu
   else
   {
     iTransform(curMb, curPlane, 0);
-    curSlice->is_reset_coeff = FALSE;
+    curSlice->isResetCoef = FALSE;
   }
 
   return 1;
@@ -1209,7 +1209,7 @@ int mb_pred_b_inter8x8 (sMacroblock* curMb, eColorPlane curPlane, sPicture* pict
 
   iTransform(curMb, curPlane, 0);
   if (curMb->cbp != 0)
-    curSlice->is_reset_coeff = FALSE;
+    curSlice->isResetCoef = FALSE;
   return 1;
 }
 //}}}
@@ -1273,8 +1273,8 @@ int mb_pred_ipcm (sMacroblock* curMb)
 
   //For CABAC decoding of Dquant
   curSlice->lastDquant = 0;
-  curSlice->is_reset_coeff = FALSE;
-  curSlice->is_reset_coeff_cr = FALSE;
+  curSlice->isResetCoef = FALSE;
+  curSlice->isResetCoefCr = FALSE;
   return 1;
 }
 //}}}

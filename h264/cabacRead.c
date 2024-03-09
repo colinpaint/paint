@@ -40,7 +40,7 @@ static void read_comp_coeff_4x4_smb_CABAC (sMacroblock* curMb, sSyntaxElement* c
         * luminance coefficients
         */
         currSE->type = (curMb->isIntraBlock ? SE_LUM_DC_INTRA : SE_LUM_DC_INTER);
-        dP = &(curSlice->partArr[partMap[currSE->type]]);
+        dP = &(curSlice->partitions[partMap[currSE->type]]);
         if (dP->bitstream->eiFlag)
           currSE->mapping = linfo_levrun_inter;
         else
@@ -67,7 +67,7 @@ static void read_comp_coeff_4x4_smb_CABAC (sMacroblock* curMb, sSyntaxElement* c
       {
         // make distinction between INTRA and INTER coded luminance coefficients
         currSE->type = (curMb->isIntraBlock ? SE_LUM_AC_INTRA : SE_LUM_AC_INTER);
-        dP = &(curSlice->partArr[partMap[currSE->type]]);
+        dP = &(curSlice->partitions[partMap[currSE->type]]);
 
         if (dP->bitstream->eiFlag)
           currSE->mapping = linfo_levrun_inter;
@@ -241,7 +241,7 @@ static void readCompCoeff8x8_CABAC (sMacroblock* curMb, sSyntaxElement* currSE, 
 
     // Read DC
     currSE->type = ((curMb->isIntraBlock == 1) ? SE_LUM_DC_INTRA : SE_LUM_DC_INTER ); // Intra or Inter?
-    dP = &(curSlice->partArr[partMap[currSE->type]]);
+    dP = &(curSlice->partitions[partMap[currSE->type]]);
     dP->readsSyntaxElement(curMb, currSE, dP);
     level = currSE->value1;
 
@@ -260,7 +260,7 @@ static void readCompCoeff8x8_CABAC (sMacroblock* curMb, sSyntaxElement* currSE, 
 
       // AC coefficients
       currSE->type    = ((curMb->isIntraBlock == 1) ? SE_LUM_AC_INTRA : SE_LUM_AC_INTER);
-      dP = &(curSlice->partArr[partMap[currSE->type]]);
+      dP = &(curSlice->partitions[partMap[currSE->type]]);
 
       for(k = 1;(k < 65) && (level != 0);++k)
       {
@@ -344,7 +344,7 @@ static void readCompCoeff8x8_CABAC_lossless (sMacroblock* curMb, sSyntaxElement*
         ? (k==0 ? SE_LUM_DC_INTRA : SE_LUM_AC_INTRA)
         : (k==0 ? SE_LUM_DC_INTER : SE_LUM_AC_INTER));
 
-      dP = &(curSlice->partArr[partMap[currSE->type]]);
+      dP = &(curSlice->partitions[partMap[currSE->type]]);
       currSE->reading = readRunLevel_CABAC;
 
       dP->readsSyntaxElement(curMb, currSE, dP);
@@ -427,13 +427,13 @@ static void read_CBP_and_coeffs_from_NAL_CABAC_420 (sMacroblock* curMb)
       ? SE_CBP_INTRA
       : SE_CBP_INTER;
 
-    dP = &(curSlice->partArr[partMap[currSE.type]]);
+    dP = &(curSlice->partitions[partMap[currSE.type]]);
 
     if (dP->bitstream->eiFlag)
     {
       currSE.mapping = (curMb->mbType == I4MB || curMb->mbType == SI4MB || curMb->mbType == I8MB)
-        ? curSlice->linfo_cbp_intra
-        : curSlice->linfo_cbp_inter;
+        ? curSlice->linfoCbpIntra
+        : curSlice->linfoCbpInter;
     }
     else
       currSE.reading = read_CBP_CABAC;
@@ -453,7 +453,7 @@ static void read_CBP_and_coeffs_from_NAL_CABAC_420 (sMacroblock* curMb)
     if (need_transform_size_flag)
     {
       currSE.type   =  SE_HEADER;
-      dP = &(curSlice->partArr[partMap[SE_HEADER]]);
+      dP = &(curSlice->partitions[partMap[SE_HEADER]]);
       currSE.reading = readMB_transform_size_flag_CABAC;
 
       // read CAVLC transform_size_8x8_flag
@@ -524,7 +524,7 @@ static void read_CBP_and_coeffs_from_NAL_CABAC_420 (sMacroblock* curMb)
       pos_scan_4x4 = pos_scan4x4[0];
 
       currSE.type = SE_LUM_DC_INTRA;
-      dP = &(curSlice->partArr[partMap[currSE.type]]);
+      dP = &(curSlice->partitions[partMap[currSE.type]]);
 
       currSE.context      = LUMA_16DC;
       currSE.type         = SE_LUM_DC_INTRA;
@@ -609,7 +609,7 @@ static void read_CBP_and_coeffs_from_NAL_CABAC_420 (sMacroblock* curMb)
       currSE.context = CHROMA_DC;
       currSE.type = (intra ? SE_CHR_DC_INTRA : SE_CHR_DC_INTER);
 
-      dP = &(curSlice->partArr[partMap[currSE.type]]);
+      dP = &(curSlice->partitions[partMap[currSE.type]]);
 
       if (dP->bitstream->eiFlag)
         currSE.mapping = linfo_levrun_c2x2;
@@ -677,7 +677,7 @@ static void read_CBP_and_coeffs_from_NAL_CABAC_420 (sMacroblock* curMb)
     currSE.context      = CHROMA_AC;
     currSE.type         = (curMb->isIntraBlock ? SE_CHR_AC_INTRA : SE_CHR_AC_INTER);
 
-    dP = &(curSlice->partArr[partMap[currSE.type]]);
+    dP = &(curSlice->partitions[partMap[currSE.type]]);
 
     if (dP->bitstream->eiFlag)
       currSE.mapping = linfo_levrun_inter;
@@ -792,12 +792,12 @@ static void read_CBP_and_coeffs_from_NAL_CABAC_400 (sMacroblock* curMb)
       ? SE_CBP_INTRA
       : SE_CBP_INTER;
 
-    dP = &(curSlice->partArr[partMap[currSE.type]]);
+    dP = &(curSlice->partitions[partMap[currSE.type]]);
 
     if (dP->bitstream->eiFlag) {
       currSE.mapping = (curMb->mbType == I4MB || curMb->mbType == SI4MB || curMb->mbType == I8MB)
-        ? curSlice->linfo_cbp_intra
-        : curSlice->linfo_cbp_inter;
+        ? curSlice->linfoCbpIntra
+        : curSlice->linfoCbpInter;
     }
     else
       currSE.reading = read_CBP_CABAC;
@@ -817,7 +817,7 @@ static void read_CBP_and_coeffs_from_NAL_CABAC_400 (sMacroblock* curMb)
 
     if (need_transform_size_flag) {
       currSE.type   =  SE_HEADER;
-      dP = &(curSlice->partArr[partMap[SE_HEADER]]);
+      dP = &(curSlice->partitions[partMap[SE_HEADER]]);
       currSE.reading = readMB_transform_size_flag_CABAC;
 
       // read CAVLC transform_size_8x8_flag
@@ -875,7 +875,7 @@ static void read_CBP_and_coeffs_from_NAL_CABAC_400 (sMacroblock* curMb)
 
       {
         currSE.type = SE_LUM_DC_INTRA;
-        dP = &(curSlice->partArr[partMap[currSE.type]]);
+        dP = &(curSlice->partitions[partMap[currSE.type]]);
 
         currSE.context      = LUMA_16DC;
         currSE.type         = SE_LUM_DC_INTRA;
@@ -973,12 +973,12 @@ static void read_CBP_and_coeffs_from_NAL_CABAC_444 (sMacroblock* curMb)
       ? SE_CBP_INTRA
       : SE_CBP_INTER;
 
-    dP = &(curSlice->partArr[partMap[currSE.type]]);
+    dP = &(curSlice->partitions[partMap[currSE.type]]);
 
     if (dP->bitstream->eiFlag) {
       currSE.mapping = (curMb->mbType == I4MB || curMb->mbType == SI4MB || curMb->mbType == I8MB)
-        ? curSlice->linfo_cbp_intra
-        : curSlice->linfo_cbp_inter;
+        ? curSlice->linfoCbpIntra
+        : curSlice->linfoCbpInter;
     }
     else
       currSE.reading = read_CBP_CABAC;
@@ -999,7 +999,7 @@ static void read_CBP_and_coeffs_from_NAL_CABAC_444 (sMacroblock* curMb)
     if (need_transform_size_flag)
     {
       currSE.type   =  SE_HEADER;
-      dP = &(curSlice->partArr[partMap[SE_HEADER]]);
+      dP = &(curSlice->partitions[partMap[SE_HEADER]]);
       currSE.reading = readMB_transform_size_flag_CABAC;
 
       // read CAVLC transform_size_8x8_flag
@@ -1058,7 +1058,7 @@ static void read_CBP_and_coeffs_from_NAL_CABAC_444 (sMacroblock* curMb)
 
       {
         currSE.type = SE_LUM_DC_INTRA;
-        dP = &(curSlice->partArr[partMap[currSE.type]]);
+        dP = &(curSlice->partitions[partMap[currSE.type]]);
 
         currSE.context      = LUMA_16DC;
         currSE.type         = SE_LUM_DC_INTRA;
@@ -1127,7 +1127,7 @@ static void read_CBP_and_coeffs_from_NAL_CABAC_444 (sMacroblock* curMb)
     {
       {
         currSE.type = SE_LUM_DC_INTRA;
-        dP = &(curSlice->partArr[partMap[currSE.type]]);
+        dP = &(curSlice->partitions[partMap[currSE.type]]);
 
         if( (vidParam->sepColourPlaneFlag != 0) )
           currSE.context = LUMA_16DC;
@@ -1237,12 +1237,12 @@ static void read_CBP_and_coeffs_from_NAL_CABAC_422 (sMacroblock* curMb)
       ? SE_CBP_INTRA
       : SE_CBP_INTER;
 
-    dP = &(curSlice->partArr[partMap[currSE.type]]);
+    dP = &(curSlice->partitions[partMap[currSE.type]]);
 
     if (dP->bitstream->eiFlag) {
       currSE.mapping = (curMb->mbType == I4MB || curMb->mbType == SI4MB || curMb->mbType == I8MB)
-        ? curSlice->linfo_cbp_intra
-        : curSlice->linfo_cbp_inter;
+        ? curSlice->linfoCbpIntra
+        : curSlice->linfoCbpInter;
     }
     else
       currSE.reading = read_CBP_CABAC;
@@ -1262,7 +1262,7 @@ static void read_CBP_and_coeffs_from_NAL_CABAC_422 (sMacroblock* curMb)
 
     if (need_transform_size_flag) {
       currSE.type   =  SE_HEADER;
-      dP = &(curSlice->partArr[partMap[SE_HEADER]]);
+      dP = &(curSlice->partitions[partMap[SE_HEADER]]);
       currSE.reading = readMB_transform_size_flag_CABAC;
 
       // read CAVLC transform_size_8x8_flag
@@ -1321,7 +1321,7 @@ static void read_CBP_and_coeffs_from_NAL_CABAC_422 (sMacroblock* curMb)
 
       {
         currSE.type = SE_LUM_DC_INTRA;
-        dP = &(curSlice->partArr[partMap[currSE.type]]);
+        dP = &(curSlice->partitions[partMap[currSE.type]]);
 
         currSE.context      = LUMA_16DC;
         currSE.type         = SE_LUM_DC_INTRA;
@@ -1412,7 +1412,7 @@ static void read_CBP_and_coeffs_from_NAL_CABAC_422 (sMacroblock* curMb)
             currSE.type         = ((curMb->isIntraBlock == TRUE) ? SE_CHR_DC_INTRA : SE_CHR_DC_INTER);
             curMb->isVblock     = ll;
 
-            dP = &(curSlice->partArr[partMap[currSE.type]]);
+            dP = &(curSlice->partitions[partMap[currSE.type]]);
 
             if (dP->bitstream->eiFlag)
               currSE.mapping = linfo_levrun_c2x2;
@@ -1497,7 +1497,7 @@ static void read_CBP_and_coeffs_from_NAL_CABAC_422 (sMacroblock* curMb)
       currSE.context      = CHROMA_AC;
       currSE.type         = (curMb->isIntraBlock ? SE_CHR_AC_INTRA : SE_CHR_AC_INTER);
 
-      dP = &(curSlice->partArr[partMap[currSE.type]]);
+      dP = &(curSlice->partitions[partMap[currSE.type]]);
 
       if (dP->bitstream->eiFlag)
         currSE.mapping = linfo_levrun_inter;

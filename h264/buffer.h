@@ -321,4 +321,4 @@ extern sPicture* get_short_term_pic (sSlice* slice, sDPB* dpb, int picNum);
 
 extern void alloc_ref_pic_list_reordering_buffer (sSlice* slice);
 extern void freeRefPicListReorderingBuffer (sSlice* slice);
-extern void compute_colocated (sSlice* slice, sPicture** listX[6]);
+extern void computeColocated (sSlice* slice, sPicture** listX[6]);

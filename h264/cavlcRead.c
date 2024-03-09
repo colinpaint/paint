@@ -218,7 +218,7 @@ void readCoef4x4cavlc (sMacroblock* curMb, int block_type,
     }
 
   currSE.type = dptype;
-  dP = &(curSlice->partArr[partMap[dptype]]);
+  dP = &(curSlice->partitions[partMap[dptype]]);
   curStream = dP->bitstream;
 
   if (!cdc) {
@@ -430,7 +430,7 @@ void readCoef4x4cavlc444 (sMacroblock* curMb, int block_type,
     }
 
   currSE.type = dptype;
-  dP = &(curSlice->partArr[partMap[dptype]]);
+  dP = &(curSlice->partitions[partMap[dptype]]);
   curStream = dP->bitstream;
 
   if (!cdc) {
@@ -908,11 +908,11 @@ static void read_CBP_and_coeffs_from_NAL_CAVLC_400 (sMacroblock* curMb)
       ? SE_CBP_INTRA
       : SE_CBP_INTER;
 
-    dP = &(curSlice->partArr[partMap[currSE.type]]);
+    dP = &(curSlice->partitions[partMap[currSE.type]]);
 
     currSE.mapping = (curMb->mbType == I4MB || curMb->mbType == SI4MB || curMb->mbType == I8MB)
-      ? curSlice->linfo_cbp_intra
-      : curSlice->linfo_cbp_inter;
+      ? curSlice->linfoCbpIntra
+      : curSlice->linfoCbpInter;
 
     dP->readsSyntaxElement(curMb, &currSE, dP);
     curMb->cbp = cbp = currSE.value1;
@@ -930,7 +930,7 @@ static void read_CBP_and_coeffs_from_NAL_CAVLC_400 (sMacroblock* curMb)
     if (need_transform_size_flag)
     {
       currSE.type   =  SE_HEADER;
-      dP = &(curSlice->partArr[partMap[SE_HEADER]]);
+      dP = &(curSlice->partitions[partMap[SE_HEADER]]);
 
       // read CAVLC transform_size_8x8_flag
       currSE.len = 1;
@@ -1084,11 +1084,11 @@ static void read_CBP_and_coeffs_from_NAL_CAVLC_422 (sMacroblock* curMb)
       ? SE_CBP_INTRA
       : SE_CBP_INTER;
 
-    dP = &(curSlice->partArr[partMap[currSE.type]]);
+    dP = &(curSlice->partitions[partMap[currSE.type]]);
 
     currSE.mapping = (curMb->mbType == I4MB || curMb->mbType == SI4MB || curMb->mbType == I8MB)
-      ? curSlice->linfo_cbp_intra
-      : curSlice->linfo_cbp_inter;
+      ? curSlice->linfoCbpIntra
+      : curSlice->linfoCbpInter;
 
     dP->readsSyntaxElement(curMb, &currSE, dP);
     curMb->cbp = cbp = currSE.value1;
@@ -1106,7 +1106,7 @@ static void read_CBP_and_coeffs_from_NAL_CAVLC_422 (sMacroblock* curMb)
     if (need_transform_size_flag)
     {
       currSE.type   =  SE_HEADER;
-      dP = &(curSlice->partArr[partMap[SE_HEADER]]);
+      dP = &(curSlice->partitions[partMap[SE_HEADER]]);
 
       // read CAVLC transform_size_8x8_flag
       currSE.len = 1;
@@ -1419,11 +1419,11 @@ static void read_CBP_and_coeffs_from_NAL_CAVLC_444 (sMacroblock* curMb)
       ? SE_CBP_INTRA
       : SE_CBP_INTER;
 
-    dP = &(curSlice->partArr[partMap[currSE.type]]);
+    dP = &(curSlice->partitions[partMap[currSE.type]]);
 
     currSE.mapping = (curMb->mbType == I4MB || curMb->mbType == SI4MB || curMb->mbType == I8MB)
-      ? curSlice->linfo_cbp_intra
-      : curSlice->linfo_cbp_inter;
+      ? curSlice->linfoCbpIntra
+      : curSlice->linfoCbpInter;
 
     dP->readsSyntaxElement(curMb, &currSE, dP);
     curMb->cbp = cbp = currSE.value1;
@@ -1441,7 +1441,7 @@ static void read_CBP_and_coeffs_from_NAL_CAVLC_444 (sMacroblock* curMb)
     if (need_transform_size_flag)
     {
       currSE.type   =  SE_HEADER;
-      dP = &(curSlice->partArr[partMap[SE_HEADER]]);
+      dP = &(curSlice->partitions[partMap[SE_HEADER]]);
 
       // read CAVLC transform_size_8x8_flag
       currSE.len = 1;
@@ -1652,11 +1652,11 @@ static void read_CBP_and_coeffs_from_NAL_CAVLC_420 (sMacroblock* curMb)
       ? SE_CBP_INTRA
       : SE_CBP_INTER;
 
-    dP = &(curSlice->partArr[partMap[currSE.type]]);
+    dP = &(curSlice->partitions[partMap[currSE.type]]);
 
     currSE.mapping = (curMb->mbType == I4MB || curMb->mbType == SI4MB || curMb->mbType == I8MB)
-      ? curSlice->linfo_cbp_intra
-      : curSlice->linfo_cbp_inter;
+      ? curSlice->linfoCbpIntra
+      : curSlice->linfoCbpInter;
 
     dP->readsSyntaxElement(curMb, &currSE, dP);
     curMb->cbp = cbp = currSE.value1;
@@ -1673,7 +1673,7 @@ static void read_CBP_and_coeffs_from_NAL_CAVLC_420 (sMacroblock* curMb)
     if (need_transform_size_flag)
     {
       currSE.type   =  SE_HEADER;
-      dP = &(curSlice->partArr[partMap[SE_HEADER]]);
+      dP = &(curSlice->partitions[partMap[SE_HEADER]]);
 
       // read CAVLC transform_size_8x8_flag
       currSE.len = 1;

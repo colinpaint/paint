@@ -10,15 +10,15 @@ static const int kDebug = 0;
 ANNEXB_t* allocAnnexB (sVidParam* vidParam) {
 
   ANNEXB_t* annexB = (ANNEXB_t*)calloc (1, sizeof(ANNEXB_t));
-  annexB->naluBuf = (byte*)malloc (vidParam->nalu->max_size);
+  annexB->naluBuffer = (byte*)malloc (vidParam->nalu->max_size);
   return annexB;
   }
 //}}}
 //{{{
 void freeAnnexB (ANNEXB_t** p_annexB) {
 
-  free ((*p_annexB)->naluBuf);
-  (*p_annexB)->naluBuf = NULL;
+  free ((*p_annexB)->naluBuffer);
+  (*p_annexB)->naluBuffer = NULL;
 
   free (*p_annexB);
   *p_annexB = NULL;
@@ -79,8 +79,8 @@ void checkZeroByteVCL (sVidParam* vidParam, sNalu* nalu) {
   int CheckZeroByte = 0;
 
   // This function deals only with VCL NAL units
-  if (!(nalu->nalUnitType >= NALU_TYPE_SLICE &&
-        nalu->nalUnitType <= NALU_TYPE_IDR))
+  if (!(nalu->unitType >= NALU_TYPE_SLICE &&
+        nalu->unitType <= NALU_TYPE_IDR))
     return;
 
   if (vidParam->LastAccessUnitExists)
@@ -95,7 +95,7 @@ void checkZeroByteVCL (sVidParam* vidParam, sNalu* nalu) {
   vidParam->LastAccessUnitExists = 1;
 
   // because it is not a very serious problem, we do not exit here
-  if (CheckZeroByte && nalu->startcodeprefix_len == 3)
+  if (CheckZeroByte && nalu->startCodeLen == 3)
     printf ("warning: zero_byte shall exist\n");
    }
 //}}}
@@ -105,21 +105,21 @@ void checkZeroByteNonVCL (sVidParam* vidParam, sNalu* nalu) {
   int CheckZeroByte = 0;
 
   // This function deals only with non-VCL NAL units
-  if (nalu->nalUnitType >= 1 &&
-      nalu->nalUnitType <= 5)
+  if (nalu->unitType >= 1 &&
+      nalu->unitType <= 5)
     return;
 
   // for SPS and PPS, zero_byte shall exist
-  if (nalu->nalUnitType == NALU_TYPE_SPS ||
-      nalu->nalUnitType == NALU_TYPE_PPS)
+  if (nalu->unitType == NALU_TYPE_SPS ||
+      nalu->unitType == NALU_TYPE_PPS)
     CheckZeroByte = 1;
 
   // check the possibility of the current NALU to be the start of a new access unit, according to 7.4.1.2.3
-  if (nalu->nalUnitType == NALU_TYPE_AUD ||
-      nalu->nalUnitType == NALU_TYPE_SPS ||
-      nalu->nalUnitType == NALU_TYPE_PPS ||
-      nalu->nalUnitType == NALU_TYPE_SEI ||
-      (nalu->nalUnitType >= 13 && nalu->nalUnitType <= 18)) {
+  if (nalu->unitType == NALU_TYPE_AUD ||
+      nalu->unitType == NALU_TYPE_SPS ||
+      nalu->unitType == NALU_TYPE_PPS ||
+      nalu->unitType == NALU_TYPE_SEI ||
+      (nalu->unitType >= 13 && nalu->unitType <= 18)) {
     if (vidParam->LastAccessUnitExists) {
       // deliver the last access unit to decoder
       vidParam->LastAccessUnitExists = 0;
@@ -132,7 +132,7 @@ void checkZeroByteNonVCL (sVidParam* vidParam, sNalu* nalu) {
   if (vidParam->NALUCount == 1)
     CheckZeroByte = 1;
 
-  if (CheckZeroByte && nalu->startcodeprefix_len == 3)
+  if (CheckZeroByte && nalu->startCodeLen == 3)
     printf ("Warning: zero_byte should exist\n");
     //because it is not a very serious problem, we do not exit here
   }
@@ -166,7 +166,7 @@ static inline int findStartCode (unsigned char* buf, int zerosInStartcode) {
 static int getNALU (ANNEXB_t* annexB, sVidParam* vidParam, sNalu* nalu) {
 
   int naluBufCount = 0;
-  byte* naluBufPtr = annexB->naluBuf;
+  byte* naluBufPtr = annexB->naluBuffer;
   if (annexB->nextStartCodeBytes != 0) {
     for (int i = 0; i < annexB->nextStartCodeBytes - 1; i++) {
       *naluBufPtr++ = 0;
@@ -202,10 +202,10 @@ static int getNALU (ANNEXB_t* annexB, sVidParam* vidParam, sNalu* nalu) {
 
   int leadingZero8BitsCount = 0;
   if (naluBufCount == 3)
-    nalu->startcodeprefix_len = 3;
+    nalu->startCodeLen = 3;
   else {
     leadingZero8BitsCount = naluBufCount - 4;
-    nalu->startcodeprefix_len = 4;
+    nalu->startCodeLen = 4;
     }
   //{{{  only 1st byte stream NAL unit can have leading_zero_8bits
   if (!annexB->isFirstByteStreamNALU && leadingZero8BitsCount > 0) {
@@ -227,18 +227,18 @@ static int getNALU (ANNEXB_t* annexB, sVidParam* vidParam, sNalu* nalu) {
         naluBufCount--;
 
       nalu->len = (naluBufCount - 1) - leadingZero8BitsCount;
-      memcpy (nalu->buf, annexB->naluBuf + leadingZero8BitsCount, nalu->len);
-      nalu->forbidden_bit = (*(nalu->buf) >> 7) & 1;
-      nalu->nalRefId = (NalRefIdc)((*(nalu->buf) >> 5) & 3);
-      nalu->nalUnitType = (NaluType)((*(nalu->buf)) & 0x1f);
+      memcpy (nalu->buf, annexB->naluBuffer + leadingZero8BitsCount, nalu->len);
+      nalu->forbiddenBit = (*(nalu->buf) >> 7) & 1;
+      nalu->refId = (NalRefIdc)((*(nalu->buf) >> 5) & 3);
+      nalu->unitType = (NaluType)((*(nalu->buf)) & 0x1f);
       annexB->nextStartCodeBytes = 0;
 
       if (kDebug)
         printf ("last %sNALU %d::%d:%d len:%d, \n",
-                nalu->startcodeprefix_len == 4 ? "l":"s",
-                nalu->forbidden_bit,
-                nalu->nalRefId,
-                nalu->nalUnitType,
+                nalu->startCodeLen == 4 ? "l":"s",
+                nalu->forbiddenBit,
+                nalu->refId,
+                nalu->unitType,
                 nalu->len
                 );
 
@@ -280,18 +280,18 @@ static int getNALU (ANNEXB_t* annexB, sVidParam* vidParam, sNalu* nalu) {
   // - naluBufCount is the number of bytes excluding the next start code,
   // - naluBufCount - LeadingZero8BitsCount is the size of the NALU.
   nalu->len = naluBufCount - leadingZero8BitsCount;
-  memcpy (nalu->buf, annexB->naluBuf + leadingZero8BitsCount, nalu->len);
-  nalu->forbidden_bit = (*(nalu->buf) >> 7) & 1;
-  nalu->nalRefId = (NalRefIdc) ((*(nalu->buf) >> 5) & 3);
-  nalu->nalUnitType = (NaluType) ((*(nalu->buf)) & 0x1f);
-  nalu->lost_packets = 0;
+  memcpy (nalu->buf, annexB->naluBuffer + leadingZero8BitsCount, nalu->len);
+  nalu->forbiddenBit = (*(nalu->buf) >> 7) & 1;
+  nalu->refId = (NalRefIdc) ((*(nalu->buf) >> 5) & 3);
+  nalu->unitType = (NaluType) ((*(nalu->buf)) & 0x1f);
+  nalu->lostPackets = 0;
 
   if (kDebug)
     printf ("%sNALU %d::%d:%d len:%d, \n",
-            nalu->startcodeprefix_len == 4 ? "l":"s",
-            nalu->forbidden_bit,
-            nalu->nalRefId,
-            nalu->nalUnitType,
+            nalu->startCodeLen == 4 ? "l":"s",
+            nalu->forbiddenBit,
+            nalu->refId,
+            nalu->unitType,
             nalu->len
             );
 
@@ -373,8 +373,8 @@ int readNextNalu (sVidParam* vidParam, sNalu* nalu) {
     error ("Invalid startcode emulation prevention found.", 602);
 
   // Got a NALU
-  if (nalu->forbidden_bit)
-    error ("Found NALU with forbidden_bit set, bit error?", 603);
+  if (nalu->forbiddenBit)
+    error ("Found NALU with forbiddenBit set, bit error?", 603);
 
   return nalu->len;
   }

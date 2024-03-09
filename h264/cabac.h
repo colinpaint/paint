@@ -6,7 +6,7 @@ extern sTextureInfoContexts* create_contexts_TextureInfo();
 extern void delete_contexts_MotionInfo (sMotionInfoContexts *enco_ctx);
 extern void delete_contexts_TextureInfo (sTextureInfoContexts *enco_ctx);
 
-extern void cabac_new_slice (sSlice* curSlice);
+extern void cabacNewSlice (sSlice* curSlice);
 
 extern void readMB_typeInfo_CABAC_i_slice (sMacroblock* curMb, sSyntaxElement *se, sDecodingEnvironmentPtr dep_dp);
 extern void readMB_typeInfo_CABAC_p_slice (sMacroblock* curMb, sSyntaxElement *se, sDecodingEnvironmentPtr dep_dp);

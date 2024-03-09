@@ -273,7 +273,7 @@ static int FmoGenerateMbToSliceGroupMap (sVidParam* vidParam, sSlice *pSlice) {
 //}}}
 
 //{{{
-int fmo_init (sVidParam* vidParam, sSlice* pSlice) {
+int initFmo (sVidParam* vidParam, sSlice* pSlice) {
 
   sPPS* pps = vidParam->activePPS;
 

@@ -1,6 +1,6 @@
 #pragma once
 
-extern void init_contexts (sSlice* currslice);
+extern void initContexts (sSlice* currslice);
 extern void dec_ref_pic_marking (sVidParam* vidParam, sBitstream* curStream, sSlice* pSlice);
 
 extern int dumpPOC (sVidParam* vidParam);

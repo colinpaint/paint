@@ -257,7 +257,7 @@ int more_rbsp_data (byte buffer[], int totbitoffset,int bytecount) {
 int uvlc_startcode_follows (sSlice* curSlice, int dummy) {
 
   byte dp_Nr = assignSE2partition[curSlice->dataPartitionMode][SE_MBTYPE];
-  sDataPartition* dP = &(curSlice->partArr[dp_Nr]);
+  sDataPartition* dP = &(curSlice->partitions[dp_Nr]);
   sBitstream* curStream = dP->bitstream;
   byte* buf = curStream->streamBuffer;
 

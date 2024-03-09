@@ -560,7 +560,7 @@ void iTransform (sMacroblock* curMb, eColorPlane pl, int smb) {
     }
 
   if (smb)
-    curSlice->is_reset_coeff = FALSE;
+    curSlice->isResetCoef = FALSE;
 
   if ((picture->chromaFormatIdc != YUV400) && (picture->chromaFormatIdc != YUV444)) {
     sPixel** curUV;
@@ -598,7 +598,7 @@ void iTransform (sMacroblock* curMb, eColorPlane pl, int smb) {
             }
           }
         copy_Image (curUV, mb_rec, curMb->pixcX, 0, vidParam->mbSize[1][0], vidParam->mbSize[1][1]);
-        curSlice->is_reset_coeff_cr = FALSE;
+        curSlice->isResetCoefCr = FALSE;
         }
       else if (smb) {
         curMb->itrans_4x4 = (curMb->isLossless == FALSE) ? itrans4x4 : itrans4x4_ls;
@@ -609,7 +609,7 @@ void iTransform (sMacroblock* curMb, eColorPlane pl, int smb) {
             curMb->itrans_4x4 (curMb, uv, ioff, joff);
 
         copy_Image (curUV, mb_rec, curMb->pixcX, 0, vidParam->mbSize[1][0], vidParam->mbSize[1][1]);
-        curSlice->is_reset_coeff_cr = FALSE;
+        curSlice->isResetCoefCr = FALSE;
         }
       else
         copy_Image (curUV, curSlice->mb_pred[uv], curMb->pixcX, 0, vidParam->mbSize[1][0], vidParam->mbSize[1][1]);

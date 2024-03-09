@@ -2450,7 +2450,7 @@ void freeRefPicListReorderingBuffer (sSlice* slice) {
   }
 //}}}
 //{{{
-void compute_colocated (sSlice* slice, sPicture** listX[6]) {
+void computeColocated (sSlice* slice, sPicture** listX[6]) {
 
   sVidParam* vidParam = slice->vidParam;
   if (slice->directSpatialMvPredFlag == 0) {

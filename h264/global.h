@@ -492,7 +492,7 @@ typedef struct Slice {
 
   int idrFlag;
   int idrPicId;
-  int nalRefId;                   
+  int refId;                   
   int transform8x8Mode;
   Boolean chroma444notSeparate;   // indicates chroma 4:4:4 coding with sepColourPlaneFlag equal to zero
 
@@ -521,7 +521,7 @@ typedef struct Slice {
   int           directSpatialMvPredFlag; // Indicator for direct mode type (1 for Spatial, 0 for Temporal)
   int           numRefIndexActive[2];    // number of available list references
 
-  int           eiFlag;       // 0 if the partArr[0] contains valid information
+  int           eiFlag;       // 0 if the partitions[0] contains valid information
   int           qp;
   int           sliceQpDelta;
   int           qs;
@@ -554,7 +554,7 @@ typedef struct Slice {
   char listXsize[6];
   struct Picture** listX[6];
 
-  sDataPartition*       partArr;  // array of partitions
+  sDataPartition*       partitions;  // array of partitions
   sMotionInfoContexts*  mot_ctx;  // pointer to struct of context models for use in CABAC
   sTextureInfoContexts* tex_ctx;  // pointer to struct of context models for use in CABAC
 
@@ -572,8 +572,8 @@ typedef struct Slice {
   int   noDataPartitionB;  // non-zero, if data partition B is lost
   int   noDataPartitionC;  // non-zero, if data partition C is lost
 
-  Boolean   is_reset_coeff;
-  Boolean   is_reset_coeff_cr;
+  Boolean   isResetCoef;
+  Boolean   isResetCoefCr;
   sPixel*** mb_pred;
   sPixel*** mb_rec;
   int***    mb_rres;
@@ -597,7 +597,7 @@ typedef struct Slice {
 
   // Cabac
   int coeff[64]; // one more for EOB
-  int coeff_ctr;
+  int coefCount;
   int pos;
 
   // weighted prediction
@@ -637,8 +637,8 @@ typedef struct Slice {
   int  (*intra_pred_4x4) (sMacroblock* curMb, eColorPlane pl, int ioff, int joff,int i4,int j4);
   int  (*intra_pred_8x8) (sMacroblock* curMb, eColorPlane pl, int ioff, int joff);
   int  (*intra_pred_16x16) (sMacroblock* curMb, eColorPlane pl, int predmode);
-  void (*linfo_cbp_intra) (int len, int info, int* cbp, int* dummy);
-  void (*linfo_cbp_inter) (int len, int info, int* cbp, int* dummy);
+  void (*linfoCbpIntra) (int len, int info, int* cbp, int* dummy);
+  void (*linfoCbpInter) (int len, int info, int* cbp, int* dummy);
   void (*updateDirectMvInfo) (sMacroblock* curMb);
   void (*readCoef4x4cavlc) (sMacroblock* curMb, int block_type, int i, int j, int levarr[16], int runarr[16], int *number_coefficients);
   } sSlice;
@@ -834,7 +834,7 @@ typedef struct VidParam {
   int          conceal_slice_type;
 
   Boolean      firstSPS;
-  int          recovery_point;
+  int          recoveryPoint;
   int          recoveryPointFound;
   int          recoveryFrameCount;
   int          recoveryFrameNum;
@@ -864,7 +864,7 @@ typedef struct VidParam {
   struct FrameStore* lastOutFramestore;
 
   struct Picture* picture;
-  struct Picture* dec_picture_JV[MAX_PLANE];  // picture to be used during 4:4:4 independent mode decoding
+  struct Picture* decPictureJV[MAX_PLANE];  // picture to be used during 4:4:4 independent mode decoding
   struct Picture* noReferencePicture;       // dummy storable picture for recovery point
 
   // Error parameters
@@ -1019,7 +1019,7 @@ static inline int is_HI_intra_only_profile (unsigned int profileIdc, Boolean con
   extern unsigned ceilLog2sf (unsigned uiVal);
 
   // For 4:4:4 independent mode
-  extern void change_plane_JV (sVidParam* vidParam, int nplane, sSlice *pSlice);
+  extern void changePlaneJV (sVidParam* vidParam, int nplane, sSlice *pSlice);
   extern void make_frame_picture_JV (sVidParam* vidParam );
 
   extern sDecodedPicture* getDecodedPicture (sDecodedPicture* decodedPicture);

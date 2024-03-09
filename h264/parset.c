@@ -970,12 +970,12 @@ void useParameterSet (sSlice* curSlice) {
   if (pps->entropyCodingModeFlag == (Boolean)CAVLC) {
     curSlice->nal_startcode_follows = uvlc_startcode_follows;
     for (int i = 0; i < 3; i++)
-      curSlice->partArr[i].readsSyntaxElement = readsSyntaxElement_UVLC;
+      curSlice->partitions[i].readsSyntaxElement = readsSyntaxElement_UVLC;
     }
   else {
     curSlice->nal_startcode_follows = cabac_startcode_follows;
     for (int i = 0; i < 3; i++)
-      curSlice->partArr[i].readsSyntaxElement = readsSyntaxElement_CABAC;
+      curSlice->partitions[i].readsSyntaxElement = readsSyntaxElement_CABAC;
     }
   vidParam->type = curSlice->sliceType;
   }

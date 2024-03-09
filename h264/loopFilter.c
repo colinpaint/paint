@@ -1844,7 +1844,6 @@ void deblockPicture (sVidParam* vidParam, sPicture* p) {
 //}}}
 
 //{{{
-// likely already set - see testing via asserts
 static void initNeighbours (sVidParam* vidParam) {
 
   int width = vidParam->PicWidthInMbs;
@@ -1886,16 +1885,16 @@ static void initNeighbours (sVidParam* vidParam) {
 void initDeblock (sVidParam* vidParam, int mbAffFrameFlag) {
 
   if (vidParam->yuvFormat == YUV444 && vidParam->sepColourPlaneFlag) {
-    change_plane_JV (vidParam, PLANE_Y, NULL);
+    changePlaneJV (vidParam, PLANE_Y, NULL);
     initNeighbours (gDecoder->vidParam);
 
-    change_plane_JV (vidParam, PLANE_U, NULL);
+    changePlaneJV (vidParam, PLANE_U, NULL);
     initNeighbours (gDecoder->vidParam);
 
-    change_plane_JV (vidParam, PLANE_V, NULL);
+    changePlaneJV (vidParam, PLANE_V, NULL);
     initNeighbours (gDecoder->vidParam);
 
-    change_plane_JV (vidParam, PLANE_Y, NULL);
+    changePlaneJV (vidParam, PLANE_Y, NULL);
     }
   else
     initNeighbours (gDecoder->vidParam);

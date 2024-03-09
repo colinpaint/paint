@@ -1691,7 +1691,7 @@ void intra_cr_decoding (sMacroblock* curMb, int yuv)
           copy_Image_4x4(&curUV[curMb->piccY + joff], &(curSlice->mb_rec[uv + 1][joff]), curMb->pixcX + ioff, ioff);
         }
       }
-      curSlice->is_reset_coeff_cr = FALSE;
+      curSlice->isResetCoefCr = FALSE;
     }
     else if (curMb->mbType == SI4MB)
     {
@@ -1705,7 +1705,7 @@ void intra_cr_decoding (sMacroblock* curMb, int yuv)
           copy_Image_4x4 (&curUV[curMb->piccY + joff], &(curSlice->mb_rec[uv + 1][joff]), curMb->pixcX + ioff, ioff);
         }
       }
-      curSlice->is_reset_coeff_cr = FALSE;
+      curSlice->isResetCoefCr = FALSE;
     }
     else
     {

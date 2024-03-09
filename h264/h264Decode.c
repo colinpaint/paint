@@ -111,7 +111,7 @@ sSlice* allocSlice (sInputParam* inputParam, sVidParam* vidParam) {
   curSlice->tex_ctx = create_contexts_TextureInfo();
 
   curSlice->maxPartitionNum = 3;  //! assume data partitioning (worst case) for the following mallocs()
-  curSlice->partArr = allocPartition (curSlice->maxPartitionNum);
+  curSlice->partitions = allocPartition (curSlice->maxPartitionNum);
 
   get_mem2Dwp (&(curSlice->WPParam), 2, MAX_REFERENCE_PICTURES);
   get_mem3Dint (&(curSlice->wpWeight), 2, MAX_REFERENCE_PICTURES, 3);
@@ -159,7 +159,7 @@ static void freeSlice (sSlice *curSlice) {
   free_mem3Dint (curSlice->wpOffset);
   free_mem4Dint (curSlice->wbpWeight);
 
-  freePartition (curSlice->partArr, 3);
+  freePartition (curSlice->partitions, 3);
 
   // delete all context models
   delete_contexts_MotionInfo (curSlice->mot_ctx);
@@ -248,7 +248,7 @@ static void init (sVidParam* vidParam) {
   sInputParam *inputParam = vidParam->inputParam;
   vidParam->oldFrameSizeInMbs = (unsigned int) -1;
 
-  vidParam->recovery_point = 0;
+  vidParam->recoveryPoint = 0;
   vidParam->recoveryPointFound = 0;
   vidParam->recoveryPoc = 0x7fffffff; /* set to a max value */
 
@@ -350,14 +350,14 @@ void init_frext (sVidParam* vidParam) {
 //{{{
 sDataPartition* allocPartition (int n) {
 
-  sDataPartition* partArr = (sDataPartition*)calloc (n, sizeof(sDataPartition));
-  if (partArr == NULL) {
+  sDataPartition* partitions = (sDataPartition*)calloc (n, sizeof(sDataPartition));
+  if (partitions == NULL) {
     snprintf (errortext, ET_SIZE, "allocPartition: Memory allocation for Data Partition failed");
     error (errortext, 100);
     }
 
   for (int i = 0; i < n; ++i) {// loop over all data partitions
-    sDataPartition* dataPart = &(partArr[i]);
+    sDataPartition* dataPart = &(partitions[i]);
     dataPart->bitstream = (sBitstream *) calloc(1, sizeof(sBitstream));
     if (dataPart->bitstream == NULL) {
       snprintf (errortext, ET_SIZE, "allocPartition: Memory allocation for sBitstream failed");
@@ -371,7 +371,7 @@ sDataPartition* allocPartition (int n) {
       }
     }
 
-  return partArr;
+  return partitions;
   }
 //}}}
 //{{{

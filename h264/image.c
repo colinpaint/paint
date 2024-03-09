@@ -426,7 +426,7 @@ static int isNewPicture (sPicture* picture, sSlice* slice, sOldSliceParam* oldSl
   if (slice->fieldPicFlag && oldSliceParam->fieldPicFlag)
     result |= (oldSliceParam->botFieldFlag != slice->botFieldFlag);
 
-  result |= (oldSliceParam->nalRefIdc != slice->nalRefId) && ((oldSliceParam->nalRefIdc == 0) || (slice->nalRefId == 0));
+  result |= (oldSliceParam->nalRefIdc != slice->refId) && ((oldSliceParam->nalRefIdc == 0) || (slice->refId == 0));
   result |= (oldSliceParam->idrFlag != slice->idrFlag);
 
   if (slice->idrFlag && oldSliceParam->idrFlag)
@@ -504,11 +504,11 @@ static void initPicture (sVidParam* vidParam, sSlice* slice, sInputParam* inputP
   vidParam->dpbLayerId = slice->layerId;
   setupBuffers (vidParam, slice->layerId);
 
-  if (vidParam->recovery_point)
+  if (vidParam->recoveryPoint)
     vidParam->recoveryFrameNum = (slice->frameNum + vidParam->recoveryFrameCount) % vidParam->maxFrameNum;
   if (slice->idrFlag)
     vidParam->recoveryFrameNum = slice->frameNum;
-  if (vidParam->recovery_point == 0 &&
+  if (vidParam->recoveryPoint == 0 &&
     slice->frameNum != vidParam->preFrameNum &&
     slice->frameNum != (vidParam->preFrameNum + 1) % vidParam->maxFrameNum) {
     if (activeSPS->gaps_in_frame_num_value_allowed_flag == 0) {
@@ -538,7 +538,7 @@ static void initPicture (sVidParam* vidParam, sSlice* slice, sInputParam* inputP
       fillFrameNumGap (vidParam, slice);
     }
 
-  if (slice->nalRefId)
+  if (slice->refId)
     vidParam->preFrameNum = slice->frameNum;
 
   // calculate POC
@@ -547,7 +547,7 @@ static void initPicture (sVidParam* vidParam, sSlice* slice, sInputParam* inputP
   if (vidParam->recoveryFrameNum == (int)slice->frameNum && vidParam->recoveryPoc == 0x7fffffff)
     vidParam->recoveryPoc = slice->framePoc;
 
-  if(slice->nalRefId)
+  if(slice->refId)
     vidParam->lastRefPicPoc = slice->framePoc;
 
   if ((slice->structure == FRAME) || (slice->structure == TopField))
@@ -630,7 +630,7 @@ static void initPicture (sVidParam* vidParam, sSlice* slice, sInputParam* inputP
     }
 
   picture->sliceType = vidParam->type;
-  picture->usedForReference = (slice->nalRefId != 0);
+  picture->usedForReference = (slice->refId != 0);
   picture->idrFlag = slice->idrFlag;
   picture->noOutputPriorPicFlag = slice->noOutputPriorPicFlag;
   picture->longTermRefFlag = slice->longTermRefFlag;
@@ -659,11 +659,11 @@ static void initPicture (sVidParam* vidParam, sSlice* slice, sInputParam* inputP
     }
 
   if (vidParam->sepColourPlaneFlag != 0) {
-    vidParam->dec_picture_JV[0] = vidParam->picture;
-    vidParam->dec_picture_JV[1] = allocPicture (vidParam, (ePicStructure) slice->structure, vidParam->width, vidParam->height, vidParam->widthCr, vidParam->heightCr, 1);
-    copyDecPicture_JV (vidParam, vidParam->dec_picture_JV[1], vidParam->dec_picture_JV[0] );
-    vidParam->dec_picture_JV[2] = allocPicture (vidParam, (ePicStructure) slice->structure, vidParam->width, vidParam->height, vidParam->widthCr, vidParam->heightCr, 1);
-    copyDecPicture_JV (vidParam, vidParam->dec_picture_JV[2], vidParam->dec_picture_JV[0] );
+    vidParam->decPictureJV[0] = vidParam->picture;
+    vidParam->decPictureJV[1] = allocPicture (vidParam, (ePicStructure) slice->structure, vidParam->width, vidParam->height, vidParam->widthCr, vidParam->heightCr, 1);
+    copyDecPicture_JV (vidParam, vidParam->decPictureJV[1], vidParam->decPictureJV[0] );
+    vidParam->decPictureJV[2] = allocPicture (vidParam, (ePicStructure) slice->structure, vidParam->width, vidParam->height, vidParam->widthCr, vidParam->heightCr, 1);
+    copyDecPicture_JV (vidParam, vidParam->decPictureJV[2], vidParam->decPictureJV[0] );
     }
   }
 //}}}
@@ -694,7 +694,7 @@ static void initPictureDecoding (sVidParam* vidParam) {
   vidParam->picSizeInMbs = vidParam->PicWidthInMbs * vidParam->picHeightInMbs;
   vidParam->FrameSizeInMbs = vidParam->PicWidthInMbs * vidParam->FrameHeightInMbs;
   vidParam->structure = slice->structure;
-  fmo_init (vidParam, slice);
+  initFmo (vidParam, slice);
 
   updatePicNum (slice);
 
@@ -722,8 +722,8 @@ static void copySliceInfo (sSlice* slice, sOldSliceParam* oldSliceParam) {
   if (slice->fieldPicFlag)
     oldSliceParam->botFieldFlag = slice->botFieldFlag;
 
-  oldSliceParam->nalRefIdc = slice->nalRefId;
-  oldSliceParam->idrFlag = (byte) slice->idrFlag;
+  oldSliceParam->nalRefIdc = slice->refId;
+  oldSliceParam->idrFlag = (byte)slice->idrFlag;
 
   if (slice->idrFlag)
     oldSliceParam->idrPicId = slice->idrPicId;
@@ -761,12 +761,12 @@ static void initSlice (sVidParam* vidParam, sSlice* slice) {
 
   if ((slice->activeSPS->chromaFormatIdc == 0) ||
       (slice->activeSPS->chromaFormatIdc == 3)) {
-    slice->linfo_cbp_intra = linfo_cbp_intra_other;
-    slice->linfo_cbp_inter = linfo_cbp_inter_other;
+    slice->linfoCbpIntra = linfo_cbp_intra_other;
+    slice->linfoCbpInter = linfo_cbp_inter_other;
     }
   else {
-    slice->linfo_cbp_intra = linfo_cbp_intra_normal;
-    slice->linfo_cbp_inter = linfo_cbp_inter_normal;
+    slice->linfoCbpIntra = linfo_cbp_intra_normal;
+    slice->linfoCbpInter = linfo_cbp_inter_normal;
     }
   }
 //}}}
@@ -779,7 +779,7 @@ static void decodeOneSlice (sSlice* slice) {
 
   sVidParam* vidParam = slice->vidParam;
   if ((vidParam->sepColourPlaneFlag != 0))
-    change_plane_JV (vidParam, slice->colourPlaneId, slice);
+    changePlaneJV (vidParam, slice->colourPlaneId, slice);
   else {
     slice->mbData = vidParam->mbData;
     slice->picture = vidParam->picture;
@@ -789,7 +789,7 @@ static void decodeOneSlice (sSlice* slice) {
     }
 
   if (slice->sliceType == B_SLICE)
-    compute_colocated (slice, slice->listX);
+    computeColocated (slice, slice->listX);
 
   if (slice->sliceType != I_SLICE && slice->sliceType != SI_SLICE)
     initCurImg (slice, vidParam);
@@ -831,13 +831,13 @@ static int readNewSlice (sSlice* slice) {
       }
 
   process_nalu:
-    switch (nalu->nalUnitType) {
+    switch (nalu->unitType) {
       case NALU_TYPE_SLICE:
       //{{{
       case NALU_TYPE_IDR:
-        if (vidParam->recovery_point || nalu->nalUnitType == NALU_TYPE_IDR) {
+        if (vidParam->recoveryPoint || nalu->unitType == NALU_TYPE_IDR) {
           if (vidParam->recoveryPointFound == 0) {
-            if (nalu->nalUnitType != NALU_TYPE_IDR) {
+            if (nalu->unitType != NALU_TYPE_IDR) {
               printf ("Warning: Decoding does not start with an IDR picture.\n");
               vidParam->nonConformingStream = 1;
               }
@@ -850,12 +850,12 @@ static int readNewSlice (sSlice* slice) {
         if (vidParam->recoveryPointFound == 0)
           break;
 
-        slice->idrFlag = (nalu->nalUnitType == NALU_TYPE_IDR);
-        slice->nalRefId = nalu->nalRefId;
+        slice->idrFlag = (nalu->unitType == NALU_TYPE_IDR);
+        slice->refId = nalu->refId;
         slice->dataPartitionMode = PAR_DP_1;
         slice->maxPartitionNum = 1;
 
-        curStream = slice->partArr[0].bitstream;
+        curStream = slice->partitions[0].bitstream;
         curStream->eiFlag = 0;
         curStream->frameBitOffset = curStream->readLen = 0;
         memcpy (curStream->streamBuffer, &nalu->buf[1], nalu->len-1);
@@ -902,11 +902,11 @@ static int readNewSlice (sSlice* slice) {
           int ByteStartPosition = curStream->frameBitOffset / 8;
           if ((curStream->frameBitOffset % 8) != 0)
             ++ByteStartPosition;
-          arideco_start_decoding (&slice->partArr[0].deCabac, curStream->streamBuffer,
+          arideco_start_decoding (&slice->partitions[0].deCabac, curStream->streamBuffer,
                                   ByteStartPosition, &curStream->readLen);
           }
 
-        vidParam->recovery_point = 0;
+        vidParam->recoveryPoint = 0;
         return curHeader;
         break;
       //}}}
@@ -919,10 +919,10 @@ static int readNewSlice (sSlice* slice) {
         slice->noDataPartitionB = 1;
         slice->noDataPartitionC = 1;
         slice->idrFlag = FALSE;
-        slice->nalRefId = nalu->nalRefId;
+        slice->refId = nalu->refId;
         slice->dataPartitionMode = PAR_DP_3;
         slice->maxPartitionNum = 3;
-        curStream = slice->partArr[0].bitstream;
+        curStream = slice->partitions[0].bitstream;
         curStream->eiFlag = 0;
         curStream->frameBitOffset = curStream->readLen = 0;
         memcpy (curStream->streamBuffer, &nalu->buf[1], nalu->len - 1);
@@ -965,9 +965,9 @@ static int readNewSlice (sSlice* slice) {
         // reading next DP
         if (!readNextNalu (vidParam, nalu))
           return curHeader;
-        if (NALU_TYPE_DPB == nalu->nalUnitType) {
+        if (NALU_TYPE_DPB == nalu->unitType) {
           //{{{  got nalu DPB
-          curStream = slice->partArr[1].bitstream;
+          curStream = slice->partitions[1].bitstream;
           curStream->eiFlag = 0;
           curStream->frameBitOffset = curStream->readLen = 0;
           memcpy (curStream->streamBuffer, &nalu->buf[1], nalu->len-1);
@@ -975,7 +975,7 @@ static int readNewSlice (sSlice* slice) {
           int slice_id_b = readUeV ("NALU dataPartitionB sliceId", curStream);
           slice->noDataPartitionB = 0;
 
-          if ((slice_id_b != slice_id_a) || (nalu->lost_packets)) {
+          if ((slice_id_b != slice_id_a) || (nalu->lostPackets)) {
             printf ("dataPartitionB does not match dataPartitionA\n");
             slice->noDataPartitionB = 1;
             slice->noDataPartitionC = 1;
@@ -993,9 +993,9 @@ static int readNewSlice (sSlice* slice) {
         else
           slice->noDataPartitionB = 1;
 
-        if (NALU_TYPE_DPC == nalu->nalUnitType) {
+        if (NALU_TYPE_DPC == nalu->unitType) {
           //{{{  got nalu DPC
-          curStream = slice->partArr[2].bitstream;
+          curStream = slice->partitions[2].bitstream;
           curStream->eiFlag = 0;
           curStream->frameBitOffset = curStream->readLen = 0;
           memcpy (curStream->streamBuffer, &nalu->buf[1], nalu->len-1);
@@ -1003,7 +1003,7 @@ static int readNewSlice (sSlice* slice) {
 
           slice->noDataPartitionC = 0;
           int slice_id_c = readUeV ("NALU: DP_C slice_id", curStream);
-          if ((slice_id_c != slice_id_a)|| (nalu->lost_packets)) {
+          if ((slice_id_c != slice_id_a)|| (nalu->lostPackets)) {
             printf ("Warning: got a data partition C which does not match DP_A(DP loss!)\n");
             slice->noDataPartitionC =1;
             }
@@ -1018,8 +1018,8 @@ static int readNewSlice (sSlice* slice) {
           }
 
         // check if we read anything else than the expected partitions
-        if ((nalu->nalUnitType != NALU_TYPE_DPB) &&
-            (nalu->nalUnitType != NALU_TYPE_DPC) && (!slice->noDataPartitionC))
+        if ((nalu->unitType != NALU_TYPE_DPB) &&
+            (nalu->unitType != NALU_TYPE_DPC) && (!slice->noDataPartitionC))
           goto process_nalu;
 
         return curHeader;
@@ -1056,7 +1056,7 @@ static int readNewSlice (sSlice* slice) {
       case NALU_TYPE_FILL: break;
       //{{{
       default:
-        printf ("unknown NALU type %d, len %d\n", (int) nalu->nalUnitType, (int) nalu->len);
+        printf ("unknown NALU type %d, len %d\n", (int) nalu->unitType, (int) nalu->len);
         break;
       //}}}
       }
@@ -1173,8 +1173,8 @@ void exitPicture (sVidParam* vidParam, sPicture** picture) {
       int colourPlaneId = vidParam->sliceList[0]->colourPlaneId;
       for (int nplane = 0; nplane < MAX_PLANE; ++nplane ) {
         vidParam->sliceList[0]->colourPlaneId = nplane;
-        change_plane_JV (vidParam, nplane, NULL );
-        deblockPicture (vidParam,* picture );
+        changePlaneJV (vidParam, nplane, NULL );
+        deblockPicture (vidParam, *picture );
         }
       vidParam->sliceList[0]->colourPlaneId = colourPlaneId;
       make_frame_picture_JV(vidParam);
@@ -1310,10 +1310,10 @@ int decodeFrame (sDecoderParam* decoder) {
     slice->dpb = vidParam->dpbLayer[0]; //set default value;
     slice->nextHeader = -8888;
     slice->numDecodedMb = 0;
-    slice->coeff_ctr = -1;
+    slice->coefCount = -1;
     slice->pos = 0;
-    slice->is_reset_coeff = FALSE;
-    slice->is_reset_coeff_cr = FALSE;
+    slice->isResetCoef = FALSE;
+    slice->isResetCoefCr = FALSE;
     curHeader = readNewSlice (slice);
     slice->curHeader = curHeader;
 
@@ -1387,8 +1387,8 @@ int decodeFrame (sDecoderParam* decoder) {
     initSlice (vidParam, slice);
 
     if (slice->activePPS->entropyCodingModeFlag) {
-      init_contexts (slice);
-      cabac_new_slice (slice);
+      initContexts (slice);
+      cabacNewSlice (slice);
       }
 
     if (((slice->activePPS->weightedBiPredIdc > 0)  && (slice->sliceType == B_SLICE)) ||

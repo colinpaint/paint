@@ -467,7 +467,7 @@ void readDeltaQuant (sSyntaxElement* currSE, sDataPartition *dP, sMacroblock* mb
 
   currSE->type = type;
 
-  dP = &(curSlice->partArr[partMap[currSE->type]]);
+  dP = &(curSlice->partitions[partMap[currSE->type]]);
 
   if (vidParam->activePPS->entropyCodingModeFlag == (Boolean)CAVLC || dP->bitstream->eiFlag)
     currSE->mapping = linfo_se;
@@ -766,17 +766,17 @@ void startMacroblock (sSlice* curSlice, sMacroblock** mb) {
   memset((*mb)->cbpStructure, 0, 3 * sizeof(sCBPStructure));
 
   // initialize curSlice->mb_rres
-  if (curSlice->is_reset_coeff == FALSE) {
+  if (curSlice->isResetCoef == FALSE) {
     memset (curSlice->mb_rres[0][0], 0, MB_PIXELS * sizeof(int));
     memset (curSlice->mb_rres[1][0], 0, vidParam->mbCrSize * sizeof(int));
     memset (curSlice->mb_rres[2][0], 0, vidParam->mbCrSize * sizeof(int));
-    if (curSlice->is_reset_coeff_cr == FALSE) {
+    if (curSlice->isResetCoefCr == FALSE) {
       memset (curSlice->cof[0][0], 0, 3 * MB_PIXELS * sizeof(int));
-      curSlice->is_reset_coeff_cr = TRUE;
+      curSlice->isResetCoefCr = TRUE;
       }
     else
       memset (curSlice->cof[0][0], 0, MB_PIXELS * sizeof(int));
-    curSlice->is_reset_coeff = TRUE;
+    curSlice->isResetCoef = TRUE;
     }
 
   // store filtering parameters for this MB
@@ -1035,7 +1035,7 @@ static void readMotionInfoP (sMacroblock* mb){
 
   //=====  READ REFERENCE PICTURE INDICES =====
   currSE.type = SE_REFFRAME;
-  dP = &(curSlice->partArr[partMap[SE_REFFRAME]]);
+  dP = &(curSlice->partitions[partMap[SE_REFFRAME]]);
 
   //  For LIST_0, if multiple ref. pictures, read LIST_0 reference picture indices for the MB
   prepareListforRefIdx (mb, &currSE, dP, curSlice->numRefIndexActive[LIST_0], (mb->mbType != P8x8) || (!curSlice->allrefzero));
@@ -1043,7 +1043,7 @@ static void readMotionInfoP (sMacroblock* mb){
 
   //=====  READ MOTION VECTORS =====
   currSE.type = SE_MVD;
-  dP = &(curSlice->partArr[partMap[SE_MVD]]);
+  dP = &(curSlice->partitions[partMap[SE_MVD]]);
   if (vidParam->activePPS->entropyCodingModeFlag == (Boolean) CAVLC || dP->bitstream->eiFlag)
     currSE.mapping = linfo_se;
   else
@@ -1089,7 +1089,7 @@ static void readMotionInfoB (sMacroblock* mb) {
 
   //=====  READ REFERENCE PICTURE INDICES =====
   currSE.type = SE_REFFRAME;
-  dP = &(curSlice->partArr[partMap[SE_REFFRAME]]);
+  dP = &(curSlice->partitions[partMap[SE_REFFRAME]]);
 
   //  For LIST_0, if multiple ref. pictures, read LIST_0 reference picture indices for the MB
   prepareListforRefIdx (mb, &currSE, dP, curSlice->numRefIndexActive[LIST_0], TRUE);
@@ -1101,7 +1101,7 @@ static void readMotionInfoB (sMacroblock* mb) {
 
   //=====  READ MOTION VECTORS =====
   currSE.type = SE_MVD;
-  dP = &(curSlice->partArr[partMap[SE_MVD]]);
+  dP = &(curSlice->partitions[partMap[SE_MVD]]);
   if (vidParam->activePPS->entropyCodingModeFlag == (Boolean)CAVLC || dP->bitstream->eiFlag)
     currSE.mapping = linfo_se;
   else
@@ -1286,17 +1286,17 @@ static void init_cur_imgy (sVidParam* vidParam, sSlice* slice, int pl) {
   }
 //}}}
 //{{{
-void change_plane_JV (sVidParam* vidParam, int nplane, sSlice* slice) {
+void changePlaneJV (sVidParam* vidParam, int nplane, sSlice* slice) {
 
   vidParam->mbData = vidParam->mbDataJV[nplane];
-  vidParam->picture  = vidParam->dec_picture_JV[nplane];
+  vidParam->picture  = vidParam->decPictureJV[nplane];
   vidParam->siBlock = vidParam->siBlockJV[nplane];
   vidParam->predMode = vidParam->predModeJV[nplane];
   vidParam->intraBlock = vidParam->intraBlockJV[nplane];
 
   if (slice) {
     slice->mbData = vidParam->mbDataJV[nplane];
-    slice->picture  = vidParam->dec_picture_JV[nplane];
+    slice->picture  = vidParam->decPictureJV[nplane];
     slice->siBlock = vidParam->siBlockJV[nplane];
     slice->predMode = vidParam->predModeJV[nplane];
     slice->intraBlock = vidParam->intraBlockJV[nplane];
@@ -1306,23 +1306,23 @@ void change_plane_JV (sVidParam* vidParam, int nplane, sSlice* slice) {
 //{{{
 void make_frame_picture_JV (sVidParam* vidParam) {
 
-  vidParam->picture = vidParam->dec_picture_JV[0];
+  vidParam->picture = vidParam->decPictureJV[0];
 
   // copy;
   if (vidParam->picture->usedForReference) {
     int nsize = (vidParam->picture->sizeY/BLOCK_SIZE)*(vidParam->picture->sizeX/BLOCK_SIZE)*sizeof(sPicMotionParam);
-    memcpy (&(vidParam->picture->JVmv_info[PLANE_Y][0][0]), &(vidParam->dec_picture_JV[PLANE_Y]->mvInfo[0][0]), nsize);
-    memcpy (&(vidParam->picture->JVmv_info[PLANE_U][0][0]), &(vidParam->dec_picture_JV[PLANE_U]->mvInfo[0][0]), nsize);
-    memcpy (&(vidParam->picture->JVmv_info[PLANE_V][0][0]), &(vidParam->dec_picture_JV[PLANE_V]->mvInfo[0][0]), nsize);
+    memcpy (&(vidParam->picture->JVmv_info[PLANE_Y][0][0]), &(vidParam->decPictureJV[PLANE_Y]->mvInfo[0][0]), nsize);
+    memcpy (&(vidParam->picture->JVmv_info[PLANE_U][0][0]), &(vidParam->decPictureJV[PLANE_U]->mvInfo[0][0]), nsize);
+    memcpy (&(vidParam->picture->JVmv_info[PLANE_V][0][0]), &(vidParam->decPictureJV[PLANE_V]->mvInfo[0][0]), nsize);
     }
 
   // This could be done with pointers and seems not necessary
   for (int uv = 0; uv < 2; uv++) {
     for (int line = 0; line < vidParam->height; line++) {
       int nsize = sizeof(sPixel) * vidParam->width;
-      memcpy (vidParam->picture->imgUV[uv][line], vidParam->dec_picture_JV[uv+1]->imgY[line], nsize );
+      memcpy (vidParam->picture->imgUV[uv][line], vidParam->decPictureJV[uv+1]->imgY[line], nsize );
       }
-    freePicture (vidParam->dec_picture_JV[uv+1]);
+    freePicture (vidParam->decPictureJV[uv+1]);
     }
   }
 //}}}
@@ -1347,8 +1347,8 @@ int decodeMacroblock (sMacroblock* mb, sPicture* picture) {
       curSlice->decodeOneComponent (mb, PLANE_U, picture->imgUV[0], picture);
       curSlice->decodeOneComponent (mb, PLANE_V, picture->imgUV[1], picture);
       }
-    curSlice->is_reset_coeff = FALSE;
-    curSlice->is_reset_coeff_cr = FALSE;
+    curSlice->isResetCoef = FALSE;
+    curSlice->isResetCoefCr = FALSE;
     }
   else
     curSlice->decodeOneComponent(mb, PLANE_Y, picture->imgY, picture);

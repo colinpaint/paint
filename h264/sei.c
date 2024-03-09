@@ -694,7 +694,7 @@ static void interpret_recovery_point_info (byte* payload, int size, sVidParam* v
   int broken_link_flag = readU1 ("SEI broken_link_flag", buf);
   int changing_slice_group_idc = readUv (2, "SEI changing_slice_group_idc", buf);
 
-  vidParam->recovery_point = 1;
+  vidParam->recoveryPoint = 1;
   vidParam->recoveryFrameCount = recoveryFrameCount;
   if (kDebug)
     printf ("SEI Recovery point recoveryFrameCount %d exact_match %d broken_link %d changing_slice_group_idc %d\n",

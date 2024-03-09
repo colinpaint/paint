@@ -1184,7 +1184,7 @@ static const char INIT_FLD_LAST_P[3][22][15][2] =
 static void ref_pic_list_reordering (sSlice* curSlice) {
 
   byte dP_nr = assignSE2partition[curSlice->dataPartitionMode][SE_HEADER];
-  sDataPartition* partition = &(curSlice->partArr[dP_nr]);
+  sDataPartition* partition = &(curSlice->partitions[dP_nr]);
   sBitstream* curStream = partition->bitstream;
 
   alloc_ref_pic_list_reordering_buffer (curSlice);
@@ -1257,7 +1257,7 @@ static void pred_weight_table (sSlice* curSlice) {
   sSPS* activeSPS = vidParam->activeSPS;
 
   byte dP_nr = assignSE2partition[curSlice->dataPartitionMode][SE_HEADER];
-  sDataPartition* partition = &(curSlice->partArr[dP_nr]);
+  sDataPartition* partition = &(curSlice->partitions[dP_nr]);
   sBitstream* curStream = partition->bitstream;
 
   int luma_weight_flag_l0, luma_weight_flag_l1, chroma_weight_flag_l0, chroma_weight_flag_l1;
@@ -1367,7 +1367,7 @@ unsigned ceilLog2sf (unsigned uiVal) {
 //}}}
 
 //{{{
-void init_contexts (sSlice* curSlice) {
+void initContexts (sSlice* curSlice) {
 
   sMotionInfoContexts*  mc = curSlice->mot_ctx;
   sTextureInfoContexts* tc = curSlice->tex_ctx;
@@ -1568,7 +1568,7 @@ void decodePOC (sVidParam* vidParam, sSlice* pSlice) {
       vidParam->thisPoc = pSlice->thisPoc;
       vidParam->PreviousFrameNum = pSlice->frameNum;
 
-      if(pSlice->nalRefId) {
+      if(pSlice->refId) {
         vidParam->PrevPicOrderCntLsb = pSlice->picOrderCountLsb;
         vidParam->PrevPicOrderCntMsb = pSlice->PicOrderCntMsb;
         }
@@ -1600,7 +1600,7 @@ void decodePOC (sVidParam* vidParam, sSlice* pSlice) {
         pSlice->AbsFrameNum = vidParam->FrameNumOffset+pSlice->frameNum;
       else
         pSlice->AbsFrameNum=0;
-      if ((!pSlice->nalRefId) && pSlice->AbsFrameNum > 0)
+      if ((!pSlice->refId) && pSlice->AbsFrameNum > 0)
         pSlice->AbsFrameNum--;
 
       // 3rd
@@ -1622,7 +1622,7 @@ void decodePOC (sVidParam* vidParam, sSlice* pSlice) {
       else
         vidParam->ExpectedPicOrderCnt=0;
 
-      if (!pSlice->nalRefId)
+      if (!pSlice->refId)
         vidParam->ExpectedPicOrderCnt += activeSPS->offset_for_non_ref_pic;
 
       if (pSlice->fieldPicFlag == 0) {
@@ -1664,7 +1664,7 @@ void decodePOC (sVidParam* vidParam, sSlice* pSlice) {
           vidParam->FrameNumOffset = vidParam->PreviousFrameNumOffset;
 
         pSlice->AbsFrameNum = vidParam->FrameNumOffset+pSlice->frameNum;
-        if (!pSlice->nalRefId)
+        if (!pSlice->refId)
           pSlice->thisPoc = (2*pSlice->AbsFrameNum - 1);
         else
           pSlice->thisPoc = (2*pSlice->AbsFrameNum);
@@ -1696,7 +1696,7 @@ void readSliceHeader (sSlice* curSlice) {
 
   sVidParam* vidParam = curSlice->vidParam;
   byte dP_nr = assignSE2partition[curSlice->dataPartitionMode][SE_HEADER];
-  sDataPartition* partition = &(curSlice->partArr[dP_nr]);
+  sDataPartition* partition = &(curSlice->partitions[dP_nr]);
   sBitstream* curStream = partition->bitstream;
 
   // Get first_mb_in_slice
@@ -1723,7 +1723,7 @@ void readRestSliceHeader (sSlice* curSlice) {
   sSPS* activeSPS = vidParam->activeSPS;
 
   byte dP_nr = assignSE2partition[curSlice->dataPartitionMode][SE_HEADER];
-  sDataPartition* partition = &(curSlice->partArr[dP_nr]);
+  sDataPartition* partition = &(curSlice->partitions[dP_nr]);
   sBitstream* curStream = partition->bitstream;
 
   int val, len;
@@ -1832,7 +1832,7 @@ void readRestSliceHeader (sSlice* curSlice) {
       (vidParam->activePPS->weightedBiPredIdc == 1 && (curSlice->sliceType == B_SLICE)))
     pred_weight_table (curSlice);
 
-  if (curSlice->nalRefId)
+  if (curSlice->refId)
     dec_ref_pic_marking (vidParam, curStream, curSlice);
 
   if (vidParam->activePPS->entropyCodingModeFlag &&

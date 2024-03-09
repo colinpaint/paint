@@ -288,7 +288,7 @@ int cabac_startcode_follows (sSlice* curSlice, int eos_bit)
   if( eos_bit )
   {
     const byte   *partMap    = assignSE2partition[curSlice->dataPartitionMode];
-    sDataPartition *dP = &(curSlice->partArr[partMap[SE_MBTYPE]]);
+    sDataPartition *dP = &(curSlice->partitions[partMap[SE_MBTYPE]]);
     sDecodingEnvironmentPtr dep_dp = &(dP->deCabac);
 
     bit = biari_decode_final (dep_dp); //GB
@@ -324,7 +324,7 @@ void checkNeighbourCabac (sMacroblock* curMb)
 }
 //}}}
 //{{{
-void cabac_new_slice (sSlice* curSlice)
+void cabacNewSlice (sSlice* curSlice)
 {
   curSlice->lastDquant = 0;
 }
@@ -2116,7 +2116,7 @@ static int read_significance_map (sMacroblock* curMb,
   sBiContextTypePtr  last_ctx = curSlice->tex_ctx->last_contexts[fld][type2ctx_last[type]];
 
   int   i;
-  int   coeff_ctr = 0;
+  int   coefCount = 0;
   int   i0        = 0;
   int   i1        = maxpos[type];
 
@@ -2133,12 +2133,12 @@ static int read_significance_map (sMacroblock* curMb,
     if (biari_decode_symbol   (dep_dp, map_ctx + pos2ctx_Map[i]))
     {
       *(coeff++) = 1;
-      ++coeff_ctr;
+      ++coefCount;
       //--- read last coefficient symbol ---
       if (biari_decode_symbol (dep_dp, last_ctx + pos2ctx_Last[i]))
       {
         memset(coeff, 0, (i1 - i) * sizeof(int));
-        return coeff_ctr;
+        return coefCount;
       }
     }
     else
@@ -2150,10 +2150,10 @@ static int read_significance_map (sMacroblock* curMb,
   if (i < i1 + 1)
   {
     *coeff = 1;
-    ++coeff_ctr;
+    ++coefCount;
   }
 
-  return coeff_ctr;
+  return coefCount;
 }
 //}}}
 //{{{
@@ -2214,17 +2214,17 @@ void readRunLevel_CABAC (sMacroblock* curMb,
                          sDecodingEnvironmentPtr dep_dp)
 {
   sSlice* curSlice = curMb->slice;
-  int  *coeff_ctr = &curSlice->coeff_ctr;
+  int  *coefCount = &curSlice->coefCount;
   int  *coeff = curSlice->coeff;
 
   //--- read coefficients for whole block ---
-  if (*coeff_ctr < 0)
+  if (*coefCount < 0)
   {
     //===== decode CBP-BIT =====
-    if ((*coeff_ctr = curMb->read_and_store_CBP_block_bit (curMb, dep_dp, se->context) ) != 0)
+    if ((*coefCount = curMb->read_and_store_CBP_block_bit (curMb, dep_dp, se->context) ) != 0)
     {
       //===== decode significance map =====
-      *coeff_ctr = read_significance_map (curMb, dep_dp, se->context, coeff);
+      *coefCount = read_significance_map (curMb, dep_dp, se->context, coeff);
 
       //===== decode significant coefficients =====
       read_significant_coefficients    (dep_dp, curSlice->tex_ctx, se->context, coeff);
@@ -2232,7 +2232,7 @@ void readRunLevel_CABAC (sMacroblock* curMb,
   }
 
   //--- set run and level ---
-  if (*coeff_ctr)
+  if (*coefCount)
   {
     //--- set run and level (coefficient) ---
     for (se->value2 = 0; coeff[curSlice->pos] == 0; ++curSlice->pos, ++se->value2);
@@ -2244,7 +2244,7 @@ void readRunLevel_CABAC (sMacroblock* curMb,
     se->value1 = se->value2 = 0;
   }
   //--- decrement coefficient counter and re-set position ---
-  if ((*coeff_ctr)-- == 0)
+  if ((*coefCount)-- == 0)
     curSlice->pos = 0;
 }
 //}}}

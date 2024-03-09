@@ -341,8 +341,8 @@ namespace {
         //}}}
         if (nalSize > 3) {
           uint32_t nalRefIdc = ((*buf) & 0x060) >> 5;
-          uint32_t nalUnitType = (*buf) & 0x1F;
-          switch (nalUnitType) {
+          uint32_t unitType = (*buf) & 0x1F;
+          switch (unitType) {
             //{{{
             case 1: { // slice
               cBitstream bitstream (buf+1, (nalSize - startOffset) * 8);
@@ -488,7 +488,7 @@ namespace {
             //}}}
             //{{{
             default:
-              s += fmt::format ("nal:{}:{} ", nalUnitType, nalSize);
+              s += fmt::format ("nal:{}:{} ", unitType, nalSize);
               break;
             //}}}
             }

@@ -1,7 +1,7 @@
 #pragma once
 #include "defines.h"
 
-//{{{  values for nalUnitType
+//{{{  values for unitType
 typedef enum {
   NALU_TYPE_SLICE    = 1,
   NALU_TYPE_DPA      = 2,
@@ -33,31 +33,27 @@ typedef enum {
 //{{{
 // struct sNalu 
 typedef struct nalu_t {
-  int       startcodeprefix_len;   // 4 for parameter sets and first slice in picture, 3 for everything else (suggested)
-  unsigned  len;                   // Length of the NAL unit (Excluding the start code, which does not belong to the NALU)
-  unsigned  max_size;              // NAL Unit Buffer size
-  int       forbidden_bit;         // should be always FALSE
-  NaluType  nalUnitType;         // NALU_TYPE_xxxx
-  NalRefIdc nalRefId;     // NALU_PRIORITY_xxxx
-  byte*     buf;                   // contains the first byte followed by the EBSP
-  uint16    lost_packets;          // true, if packet loss is detected
+  int       startCodeLen; // 4 for parameter sets and first slice in picture, 3 for everything else (suggested)
+  unsigned  len;          // Length of the NAL unit (Excluding the start code, which does not belong to the NALU)
+  unsigned  max_size;     // NAL Unit Buffer size
+  int       forbiddenBit; // should be always FALSE
+  NaluType  unitType;     // NALU_TYPE_xxxx
+  NalRefIdc refId;        // NALU_PRIORITY_xxxx
+  byte*     buf;          // contains the first byte followed by the EBSP
+  uint16    lostPackets;  // true, if packet loss is detected
   } sNalu;
 //}}}
 
 //{{{
 typedef struct annexBstruct {
-  // buffer
-  byte* buffer;
+  byte*  buffer;
   size_t bufferSize;
-
-  // curBuffer position
-  byte* bufferPtr;
+  byte*  bufferPtr;
   size_t bytesInBuffer;
 
-  // NALU buffer
-  int isFirstByteStreamNALU;
-  int nextStartCodeBytes;
-  byte* naluBuf;
+  int    isFirstByteStreamNALU;
+  int    nextStartCodeBytes;
+  byte*  naluBuffer;
   } ANNEXB_t;
 //}}}
 extern ANNEXB_t* allocAnnexB (sVidParam* vidParam);
