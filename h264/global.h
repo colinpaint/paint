@@ -625,7 +625,7 @@ typedef struct Slice {
   char*  intraBlock;
   char   chroma_vector_adjustment[6][32];
 
-  void (*read_CBP_and_coeffs_from_NAL) (sMacroblock* curMb);
+  void (*readCBPcoeffs) (sMacroblock* curMb);
   int  (*decodeOneComponent) (sMacroblock* curMb, eColorPlane curPlane, sPixel** curPixel, struct Picture* picture);
   int  (*readSlice) (struct VidParam*, struct InputParam*);
   int  (*nal_startcode_follows) (struct Slice*, int);

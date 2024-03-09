@@ -26,14 +26,14 @@ extern void read_skip_flag_CABAC_b_slice (sMacroblock* curMb, sSyntaxElement *se
 extern void readFieldModeInfo_CABAC (sMacroblock* curMb, sSyntaxElement *se, sDecodingEnvironmentPtr dep_dp);
 extern void readMB_transform_size_flag_CABAC (sMacroblock* curMb, sSyntaxElement *se, sDecodingEnvironmentPtr dep_dp);
 
-extern void readIPCM_CABAC (sSlice* curSlice, struct DataPartition *dP);
+extern void readIPCMcabac (sSlice* curSlice, struct DataPartition *dP);
 extern int  cabac_startcode_follows (sSlice* curSlice, int eos_bit);
 extern int  readsSyntaxElement_CABAC (sMacroblock* curMb, sSyntaxElement *se, sDataPartition *this_dataPart);
 
 extern int check_next_mb_and_get_field_mode_CABAC_p_slice (sSlice* curSlice, sSyntaxElement *se, sDataPartition  *act_dp);
 extern int check_next_mb_and_get_field_mode_CABAC_b_slice (sSlice* curSlice, sSyntaxElement *se, sDataPartition  *act_dp);
 
-extern void CheckAvailabilityOfNeighborsCABAC (sMacroblock* curMb);
+extern void checkNeighbourCabac (sMacroblock* curMb);
 
 extern void set_read_and_store_CBP (sMacroblock** curMb, int chromaFormatIdc);
 extern void set_read_CBP_and_coeffs_cabac (sSlice* curSlice);

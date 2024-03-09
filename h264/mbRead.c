@@ -20,75 +20,72 @@
 //}}}
 
 //{{{
-static void read_ipred_8x8_modes_mbaff (sMacroblock* curMb) {
+static void read_ipred_8x8_modes_mbaff (sMacroblock* mb) {
 
   int bi, bj, bx, by, dec;
-  sSyntaxElement currSE;
-  sDataPartition* dP;
-  sSlice* curSlice = curMb->slice;
-  const byte* partMap = assignSE2partition[curSlice->dataPartitionMode];
-  sVidParam* vidParam = curMb->vidParam;
+  sSlice* slice = mb->slice;
+  const byte* partMap = assignSE2partition[slice->dataPartitionMode];
+  sVidParam* vidParam = mb->vidParam;
 
   int mostProbableIntraPredMode;
   int upIntraPredMode;
   int leftIntraPredMode;
 
   sPixelPos left_block, top_block;
-  currSE.type = SE_INTRAPREDMODE;
-  dP = &(curSlice->partArr[partMap[SE_INTRAPREDMODE]]);
 
-  if (!(vidParam->activePPS->entropyCodingModeFlag == (Boolean) CAVLC || dP->bitstream->eiFlag))
-    currSE.reading = readIntraPredMode_CABAC;
+  sSyntaxElement syntaxElement;
+  syntaxElement.type = SE_INTRAPREDMODE;
+  sDataPartition* dP = &(slice->partArr[partMap[SE_INTRAPREDMODE]]);
+
+  if (!(vidParam->activePPS->entropyCodingModeFlag == (Boolean)CAVLC || dP->bitstream->eiFlag))
+    syntaxElement.reading = readIntraPredMode_CABAC;
 
   for (int b8 = 0; b8 < 4; ++b8)  {
     // loop 8x8 blocks
     by = (b8 & 0x02);
-    bj = curMb->blockY + by;
+    bj = mb->blockY + by;
 
     bx = ((b8 & 0x01) << 1);
-    bi = curMb->blockX + bx;
+    bi = mb->blockX + bx;
     // get from stream
-    if (vidParam->activePPS->entropyCodingModeFlag == (Boolean) CAVLC || dP->bitstream->eiFlag)
-      readsSyntaxElement_Intra4x4PredictionMode (&currSE, dP->bitstream);
+    if (vidParam->activePPS->entropyCodingModeFlag == (Boolean)CAVLC || dP->bitstream->eiFlag)
+      readsSyntaxElement_Intra4x4PredictionMode (&syntaxElement, dP->bitstream);
     else {
-      currSE.context = (b8 << 2);
-      dP->readsSyntaxElement(curMb, &currSE, dP);
-    }
+      syntaxElement.context = b8 << 2;
+      dP->readsSyntaxElement (mb, &syntaxElement, dP);
+      }
 
-    get4x4Neighbour (curMb, (bx << 2) - 1, (by << 2),     vidParam->mbSize[IS_LUMA], &left_block);
-    get4x4Neighbour (curMb, (bx << 2),     (by << 2) - 1, vidParam->mbSize[IS_LUMA], &top_block );
+    get4x4Neighbour (mb, (bx << 2) - 1, (by << 2),     vidParam->mbSize[IS_LUMA], &left_block);
+    get4x4Neighbour (mb, (bx << 2),     (by << 2) - 1, vidParam->mbSize[IS_LUMA], &top_block );
 
     // get from array and decode
     if (vidParam->activePPS->constrainedIntraPredFlag) {
-      left_block.available = left_block.available ? curSlice->intraBlock[left_block.mbAddr] : 0;
-      top_block.available = top_block.available  ? curSlice->intraBlock[top_block.mbAddr]  : 0;
+      left_block.available = left_block.available ? slice->intraBlock[left_block.mbAddr] : 0;
+      top_block.available = top_block.available  ? slice->intraBlock[top_block.mbAddr]  : 0;
       }
 
-    upIntraPredMode = (top_block.available ) ? curSlice->predMode[top_block.posY ][top_block.posX ] : -1;
-    leftIntraPredMode = (left_block.available) ? curSlice->predMode[left_block.posY][left_block.posX] : -1;
+    upIntraPredMode = (top_block.available ) ? slice->predMode[top_block.posY ][top_block.posX ] : -1;
+    leftIntraPredMode = (left_block.available) ? slice->predMode[left_block.posY][left_block.posX] : -1;
     mostProbableIntraPredMode = (upIntraPredMode < 0 || leftIntraPredMode < 0) ? DC_PRED :
-                                  upIntraPredMode < leftIntraPredMode ? upIntraPredMode :
-                                                                        leftIntraPredMode;
-    dec = (currSE.value1 == -1) ? mostProbableIntraPredMode :
-                                  currSE.value1 + (currSE.value1 >= mostProbableIntraPredMode);
+                                  upIntraPredMode < leftIntraPredMode ? upIntraPredMode : leftIntraPredMode;
+    dec = (syntaxElement.value1 == -1) ?
+      mostProbableIntraPredMode : syntaxElement.value1 + (syntaxElement.value1 >= mostProbableIntraPredMode);
 
     //set, loop 4x4s in the subblock for 8x8 prediction setting
-    curSlice->predMode[bj    ][bi    ] = (byte) dec;
-    curSlice->predMode[bj    ][bi + 1] = (byte) dec;
-    curSlice->predMode[bj + 1][bi    ] = (byte) dec;
-    curSlice->predMode[bj + 1][bi + 1] = (byte) dec;
+    slice->predMode[bj][bi] = (byte) dec;
+    slice->predMode[bj][bi+1] = (byte) dec;
+    slice->predMode[bj+1][bi] = (byte) dec;
+    slice->predMode[bj+1][bi+1] = (byte) dec;
     }
   }
 //}}}
 //{{{
-static void read_ipred_8x8_modes (sMacroblock* curMb)
-{
+static void read_ipred_8x8_modes (sMacroblock* mb) {
+
   int b8, bi, bj, bx, by, dec;
-  sSyntaxElement currSE;
-  sDataPartition *dP;
-  sSlice* curSlice = curMb->slice;
-  const byte *partMap = assignSE2partition[curSlice->dataPartitionMode];
-  sVidParam *vidParam = curMb->vidParam;
+  sSlice* slice = mb->slice;
+  const byte* partMap = assignSE2partition[slice->dataPartitionMode];
+  sVidParam* vidParam = mb->vidParam;
 
   int mostProbableIntraPredMode;
   int upIntraPredMode;
@@ -97,64 +94,63 @@ static void read_ipred_8x8_modes (sMacroblock* curMb)
   sPixelPos left_mb, top_mb;
   sPixelPos left_block, top_block;
 
-  currSE.type = SE_INTRAPREDMODE;
+  sSyntaxElement syntaxElement;
+  syntaxElement.type = SE_INTRAPREDMODE;
+  sDataPartition* dP = &(slice->partArr[partMap[SE_INTRAPREDMODE]]);
+  if (!(vidParam->activePPS->entropyCodingModeFlag == (Boolean)CAVLC || dP->bitstream->eiFlag))
+    syntaxElement.reading = readIntraPredMode_CABAC;
 
-  dP = &(curSlice->partArr[partMap[SE_INTRAPREDMODE]]);
-
-  if (!(vidParam->activePPS->entropyCodingModeFlag == (Boolean) CAVLC || dP->bitstream->eiFlag))
-    currSE.reading = readIntraPredMode_CABAC;
-
-  get4x4Neighbour(curMb, -1,  0, vidParam->mbSize[IS_LUMA], &left_mb);
-  get4x4Neighbour(curMb,  0, -1, vidParam->mbSize[IS_LUMA], &top_mb );
+  get4x4Neighbour (mb, -1,  0, vidParam->mbSize[IS_LUMA], &left_mb);
+  get4x4Neighbour (mb,  0, -1, vidParam->mbSize[IS_LUMA], &top_mb );
 
   for(b8 = 0; b8 < 4; ++b8) { //loop 8x8 blocks
     by = (b8 & 0x02);
-    bj = curMb->blockY + by;
+    bj = mb->blockY + by;
 
     bx = ((b8 & 0x01) << 1);
-    bi = curMb->blockX + bx;
+    bi = mb->blockX + bx;
 
     //get from stream
-    if (vidParam->activePPS->entropyCodingModeFlag == (Boolean) CAVLC || dP->bitstream->eiFlag)
-      readsSyntaxElement_Intra4x4PredictionMode(&currSE, dP->bitstream);
+    if (vidParam->activePPS->entropyCodingModeFlag == (Boolean)CAVLC || dP->bitstream->eiFlag)
+      readsSyntaxElement_Intra4x4PredictionMode (&syntaxElement, dP->bitstream);
     else {
-      currSE.context = (b8 << 2);
-      dP->readsSyntaxElement(curMb, &currSE, dP);
+      syntaxElement.context = (b8 << 2);
+      dP->readsSyntaxElement(mb, &syntaxElement, dP);
     }
 
-    get4x4Neighbour(curMb, (bx<<2) - 1, (by<<2),     vidParam->mbSize[IS_LUMA], &left_block);
-    get4x4Neighbour(curMb, (bx<<2),     (by<<2) - 1, vidParam->mbSize[IS_LUMA], &top_block );
+    get4x4Neighbour (mb, (bx << 2) - 1, by << 2, vidParam->mbSize[IS_LUMA], &left_block);
+    get4x4Neighbour (mb, bx << 2, (by << 2) - 1, vidParam->mbSize[IS_LUMA], &top_block);
 
-    //get from array and decode
-
+    // get from array and decode
     if (vidParam->activePPS->constrainedIntraPredFlag) {
-      left_block.available = left_block.available ? curSlice->intraBlock[left_block.mbAddr] : 0;
-      top_block.available  = top_block.available  ? curSlice->intraBlock[top_block.mbAddr]  : 0;
+      left_block.available = left_block.available ? slice->intraBlock[left_block.mbAddr] : 0;
+      top_block.available = top_block.available  ? slice->intraBlock[top_block.mbAddr] : 0;
     }
 
-    upIntraPredMode            = (top_block.available ) ? curSlice->predMode[top_block.posY ][top_block.posX ] : -1;
-    leftIntraPredMode          = (left_block.available) ? curSlice->predMode[left_block.posY][left_block.posX] : -1;
-    mostProbableIntraPredMode  = (upIntraPredMode < 0 || leftIntraPredMode < 0) ? DC_PRED : upIntraPredMode < leftIntraPredMode ? upIntraPredMode : leftIntraPredMode;
-    dec = (currSE.value1 == -1) ? mostProbableIntraPredMode : currSE.value1 + (currSE.value1 >= mostProbableIntraPredMode);
+    upIntraPredMode = (top_block.available ) ? slice->predMode[top_block.posY ][top_block.posX ] : -1;
+    leftIntraPredMode = (left_block.available) ? slice->predMode[left_block.posY][left_block.posX] : -1;
+    mostProbableIntraPredMode = (upIntraPredMode < 0 || leftIntraPredMode < 0) ? 
+      DC_PRED : upIntraPredMode < leftIntraPredMode ? upIntraPredMode : leftIntraPredMode;
+    dec = (syntaxElement.value1 == -1) ?
+      mostProbableIntraPredMode : syntaxElement.value1 + (syntaxElement.value1 >= mostProbableIntraPredMode);
 
     //set
     //loop 4x4s in the subblock for 8x8 prediction setting
-    curSlice->predMode[bj    ][bi    ] = (byte) dec;
-    curSlice->predMode[bj    ][bi + 1] = (byte) dec;
-    curSlice->predMode[bj + 1][bi    ] = (byte) dec;
-    curSlice->predMode[bj + 1][bi + 1] = (byte) dec;
+    slice->predMode[bj][bi] = (byte)dec;
+    slice->predMode[bj][bi+1] = (byte)dec;
+    slice->predMode[bj+1][bi] = (byte)dec;
+    slice->predMode[bj+1][bi+1] = (byte)dec;
   }
 }
 //}}}
 //{{{
-static void read_ipred_4x4_modes_mbaff (sMacroblock* curMb) {
+static void read_ipred_4x4_modes_mbaff (sMacroblock* mb) {
 
   int b8,i,j,bi,bj,bx,by;
-  sSyntaxElement currSE;
-  sDataPartition *dP;
-  sSlice* curSlice = curMb->slice;
-  const byte *partMap = assignSE2partition[curSlice->dataPartitionMode];
-  sVidParam *vidParam = curMb->vidParam;
+  sSyntaxElement syntaxElement;
+  sSlice* slice = mb->slice;
+  const byte *partMap = assignSE2partition[slice->dataPartitionMode];
+  sVidParam *vidParam = mb->vidParam;
   sBlockPos *picPos = vidParam->picPos;
 
   int ts, ls;
@@ -163,65 +159,65 @@ static void read_ipred_4x4_modes_mbaff (sMacroblock* curMb) {
   int leftIntraPredMode;
   sPixelPos left_block, top_block;
 
-  currSE.type = SE_INTRAPREDMODE;
-  dP = &(curSlice->partArr[partMap[SE_INTRAPREDMODE]]);
-  if (!(vidParam->activePPS->entropyCodingModeFlag == (Boolean) CAVLC || dP->bitstream->eiFlag))
-    currSE.reading = readIntraPredMode_CABAC;
+  syntaxElement.type = SE_INTRAPREDMODE;
+  sDataPartition* dP = &(slice->partArr[partMap[SE_INTRAPREDMODE]]);
+  if (!(vidParam->activePPS->entropyCodingModeFlag == (Boolean)CAVLC || dP->bitstream->eiFlag))
+    syntaxElement.reading = readIntraPredMode_CABAC;
 
   for (b8 = 0; b8 < 4; ++b8) { //loop 8x8 blocks
     for (j = 0; j < 2; j++) { //loop subblocks
       by = (b8 & 0x02) + j;
-      bj = curMb->blockY + by;
+      bj = mb->blockY + by;
 
       for(i = 0; i < 2; i++) {
         bx = ((b8 & 1) << 1) + i;
-        bi = curMb->blockX + bx;
+        bi = mb->blockX + bx;
         //get from stream
-        if (vidParam->activePPS->entropyCodingModeFlag == (Boolean) CAVLC || dP->bitstream->eiFlag)
-          readsSyntaxElement_Intra4x4PredictionMode(&currSE, dP->bitstream);
+        if (vidParam->activePPS->entropyCodingModeFlag == (Boolean)CAVLC || dP->bitstream->eiFlag)
+          readsSyntaxElement_Intra4x4PredictionMode (&syntaxElement, dP->bitstream);
         else {
-          currSE.context=(b8<<2) + (j<<1) +i;
-          dP->readsSyntaxElement(curMb, &currSE, dP);
+          syntaxElement.context = (b8<<2) + (j<<1) +i;
+          dP->readsSyntaxElement (mb, &syntaxElement, dP);
           }
 
-        get4x4Neighbour(curMb, (bx<<2) - 1, (by<<2),     vidParam->mbSize[IS_LUMA], &left_block);
-        get4x4Neighbour(curMb, (bx<<2),     (by<<2) - 1, vidParam->mbSize[IS_LUMA], &top_block );
+        get4x4Neighbour (mb, (bx<<2) - 1, (by<<2),     vidParam->mbSize[IS_LUMA], &left_block);
+        get4x4Neighbour (mb, (bx<<2),     (by<<2) - 1, vidParam->mbSize[IS_LUMA], &top_block );
 
         // get from array and decode
         if (vidParam->activePPS->constrainedIntraPredFlag) {
-          left_block.available = left_block.available ? curSlice->intraBlock[left_block.mbAddr] : 0;
-          top_block.available  = top_block.available  ? curSlice->intraBlock[top_block.mbAddr]  : 0;
+          left_block.available = left_block.available ? slice->intraBlock[left_block.mbAddr] : 0;
+          top_block.available = top_block.available  ? slice->intraBlock[top_block.mbAddr]  : 0;
           }
 
         // !! KS: not sure if the following is still correct...
         ts = ls = 0;   // Check to see if the neighboring block is SI
-        if (curSlice->sliceType == SI_SLICE) { // need support for MBINTLC1
+        if (slice->sliceType == SI_SLICE) { // need support for MBINTLC1
           if (left_block.available)
-            if (curSlice->siBlock [picPos[left_block.mbAddr].y][picPos[left_block.mbAddr].x])
-              ls=1;
+            if (slice->siBlock [picPos[left_block.mbAddr].y][picPos[left_block.mbAddr].x])
+              ls = 1;
 
           if (top_block.available)
-            if (curSlice->siBlock [picPos[top_block.mbAddr].y][picPos[top_block.mbAddr].x])
-              ts=1;
+            if (slice->siBlock [picPos[top_block.mbAddr].y][picPos[top_block.mbAddr].x])
+              ts = 1;
           }
 
-        upIntraPredMode = (top_block.available  &&(ts == 0)) ? curSlice->predMode[top_block.posY ][top_block.posX ] : -1;
-        leftIntraPredMode = (left_block.available &&(ls == 0)) ? curSlice->predMode[left_block.posY][left_block.posX] : -1;
-        mostProbableIntraPredMode = (upIntraPredMode < 0 || leftIntraPredMode < 0) ? DC_PRED : upIntraPredMode < leftIntraPredMode ? upIntraPredMode : leftIntraPredMode;
-        curSlice->predMode[bj][bi] = (byte) ((currSE.value1 == -1) ? mostProbableIntraPredMode : currSE.value1 + (currSE.value1 >= mostProbableIntraPredMode));
+        upIntraPredMode = (top_block.available  &&(ts == 0)) ? slice->predMode[top_block.posY ][top_block.posX ] : -1;
+        leftIntraPredMode = (left_block.available &&(ls == 0)) ? slice->predMode[left_block.posY][left_block.posX] : -1;
+        mostProbableIntraPredMode = (upIntraPredMode < 0 || leftIntraPredMode < 0) ?
+          DC_PRED : upIntraPredMode < leftIntraPredMode ? upIntraPredMode : leftIntraPredMode;
+        slice->predMode[bj][bi] = (byte) ((syntaxElement.value1 == -1) ?
+          mostProbableIntraPredMode : syntaxElement.value1 + (syntaxElement.value1 >= mostProbableIntraPredMode));
         }
       }
     }
   }
 //}}}
 //{{{
-static void read_ipred_4x4_modes (sMacroblock* curMb) {
+static void read_ipred_4x4_modes (sMacroblock* mb) {
 
-  sSyntaxElement currSE;
-  sDataPartition* dP;
-  sSlice* curSlice = curMb->slice;
-  const byte* partMap = assignSE2partition[curSlice->dataPartitionMode];
-  sVidParam* vidParam = curMb->vidParam;
+  sSlice* slice = mb->slice;
+  const byte* partMap = assignSE2partition[slice->dataPartitionMode];
+  sVidParam* vidParam = mb->vidParam;
   sBlockPos* picPos = vidParam->picPos;
 
   int mostProbableIntraPredMode;
@@ -231,107 +227,110 @@ static void read_ipred_4x4_modes (sMacroblock* curMb) {
   sPixelPos left_mb, top_mb;
   sPixelPos left_block, top_block;
 
-  currSE.type = SE_INTRAPREDMODE;
-  dP = &(curSlice->partArr[partMap[SE_INTRAPREDMODE]]);
-  if (!(vidParam->activePPS->entropyCodingModeFlag == (Boolean) CAVLC || dP->bitstream->eiFlag))
-    currSE.reading = readIntraPredMode_CABAC;
+  sSyntaxElement syntaxElement;
+  syntaxElement.type = SE_INTRAPREDMODE;
+  sDataPartition* dP = &(slice->partArr[partMap[SE_INTRAPREDMODE]]);
+  if (!(vidParam->activePPS->entropyCodingModeFlag == (Boolean)CAVLC || dP->bitstream->eiFlag))
+    syntaxElement.reading = readIntraPredMode_CABAC;
 
-  get4x4Neighbour (curMb, -1,  0, vidParam->mbSize[IS_LUMA], &left_mb);
-  get4x4Neighbour (curMb,  0, -1, vidParam->mbSize[IS_LUMA], &top_mb );
+  get4x4Neighbour (mb, -1,  0, vidParam->mbSize[IS_LUMA], &left_mb);
+  get4x4Neighbour (mb,  0, -1, vidParam->mbSize[IS_LUMA], &top_mb );
 
   for (int b8 = 0; b8 < 4; ++b8) {
     // loop 8x8 blocks
     for (int j = 0; j < 2; j++) {
       // loop subblocks
       int by = (b8 & 0x02) + j;
-      int bj = curMb->blockY + by;
+      int bj = mb->blockY + by;
       for (int i = 0; i < 2; i++) {
         int bx = ((b8 & 1) << 1) + i;
-        int bi = curMb->blockX + bx;
+        int bi = mb->blockX + bx;
 
         // get from stream
-        if (vidParam->activePPS->entropyCodingModeFlag == (Boolean) CAVLC || dP->bitstream->eiFlag)
-          readsSyntaxElement_Intra4x4PredictionMode (&currSE, dP->bitstream);
+        if (vidParam->activePPS->entropyCodingModeFlag == (Boolean)CAVLC || dP->bitstream->eiFlag)
+          readsSyntaxElement_Intra4x4PredictionMode (&syntaxElement, dP->bitstream);
         else {
-          currSE.context=(b8<<2) + (j<<1) +i;
-          dP->readsSyntaxElement (curMb, &currSE, dP);
+          syntaxElement.context=(b8<<2) + (j<<1) +i;
+          dP->readsSyntaxElement (mb, &syntaxElement, dP);
           }
 
-        get4x4Neighbour(curMb, (bx<<2) - 1, (by<<2),     vidParam->mbSize[IS_LUMA], &left_block);
-        get4x4Neighbour(curMb, (bx<<2),     (by<<2) - 1, vidParam->mbSize[IS_LUMA], &top_block );
+        get4x4Neighbour(mb, (bx<<2) - 1, (by<<2), vidParam->mbSize[IS_LUMA], &left_block);
+        get4x4Neighbour(mb, (bx<<2), (by<<2) - 1, vidParam->mbSize[IS_LUMA], &top_block );
 
         //get from array and decode
         if (vidParam->activePPS->constrainedIntraPredFlag) {
-          left_block.available = left_block.available ? curSlice->intraBlock[left_block.mbAddr] : 0;
-          top_block.available = top_block.available  ? curSlice->intraBlock[top_block.mbAddr]  : 0;
+          left_block.available = left_block.available ? slice->intraBlock[left_block.mbAddr] : 0;
+          top_block.available = top_block.available  ? slice->intraBlock[top_block.mbAddr]  : 0;
           }
 
         int ts = 0;
         int ls = 0;   // Check to see if the neighboring block is SI
-        if (curSlice->sliceType == SI_SLICE) {
+        if (slice->sliceType == SI_SLICE) {
           //{{{  need support for MBINTLC1
           if (left_block.available)
-            if (curSlice->siBlock [picPos[left_block.mbAddr].y][picPos[left_block.mbAddr].x])
+            if (slice->siBlock [picPos[left_block.mbAddr].y][picPos[left_block.mbAddr].x])
               ls = 1;
 
           if (top_block.available)
-            if (curSlice->siBlock [picPos[top_block.mbAddr].y][picPos[top_block.mbAddr].x])
+            if (slice->siBlock [picPos[top_block.mbAddr].y][picPos[top_block.mbAddr].x])
               ts = 1;
           }
           //}}}
 
-        upIntraPredMode = (top_block.available  &&(ts == 0)) ? curSlice->predMode[top_block.posY ][top_block.posX ] : -1;
-        leftIntraPredMode = (left_block.available &&(ls == 0)) ? curSlice->predMode[left_block.posY][left_block.posX] : -1;
+        upIntraPredMode = (top_block.available  &&(ts == 0)) ? slice->predMode[top_block.posY ][top_block.posX ] : -1;
+        leftIntraPredMode = (left_block.available &&(ls == 0)) ? slice->predMode[left_block.posY][left_block.posX] : -1;
         mostProbableIntraPredMode  = (upIntraPredMode < 0 || leftIntraPredMode < 0) ? DC_PRED : upIntraPredMode < leftIntraPredMode ? upIntraPredMode : leftIntraPredMode;
-        curSlice->predMode[bj][bi] = (byte)((currSE.value1 == -1) ? mostProbableIntraPredMode : currSE.value1 + (currSE.value1 >= mostProbableIntraPredMode));
+        slice->predMode[bj][bi] = (byte)((syntaxElement.value1 == -1) ?
+          mostProbableIntraPredMode : syntaxElement.value1 + (syntaxElement.value1 >= mostProbableIntraPredMode));
         }
       }
     }
   }
 //}}}
 //{{{
-static void read_ipred_modes (sMacroblock* curMb)
-{
-  sSlice* curSlice = curMb->slice;
-  sPicture* picture = curSlice->picture;
+static void readIpredModes (sMacroblock* mb) {
 
-  if (curSlice->mbAffFrameFlag) {
-    if (curMb->mbType == I8MB)
-      read_ipred_8x8_modes_mbaff(curMb);
-    else if (curMb->mbType == I4MB)
-      read_ipred_4x4_modes_mbaff(curMb);
+  sSlice* slice = mb->slice;
+  sPicture* picture = slice->picture;
+
+  if (slice->mbAffFrameFlag) {
+    if (mb->mbType == I8MB)
+      read_ipred_8x8_modes_mbaff(mb);
+    else if (mb->mbType == I4MB)
+      read_ipred_4x4_modes_mbaff(mb);
     }
   else {
-    if (curMb->mbType == I8MB)
-      read_ipred_8x8_modes(curMb);
-    else if (curMb->mbType == I4MB)
-      read_ipred_4x4_modes(curMb);
+    if (mb->mbType == I8MB)
+      read_ipred_8x8_modes(mb);
+    else if (mb->mbType == I4MB)
+      read_ipred_4x4_modes(mb);
     }
 
   if ((picture->chromaFormatIdc != YUV400) && (picture->chromaFormatIdc != YUV444)) {
-    sSyntaxElement currSE;
+    sSyntaxElement syntaxElement;
     sDataPartition* dP;
-    const byte* partMap = assignSE2partition[curSlice->dataPartitionMode];
-    sVidParam* vidParam = curMb->vidParam;
+    const byte* partMap = assignSE2partition[slice->dataPartitionMode];
+    sVidParam* vidParam = mb->vidParam;
 
-    currSE.type = SE_INTRAPREDMODE;
-    dP = &(curSlice->partArr[partMap[SE_INTRAPREDMODE]]);
+    syntaxElement.type = SE_INTRAPREDMODE;
+    dP = &(slice->partArr[partMap[SE_INTRAPREDMODE]]);
 
     if (vidParam->activePPS->entropyCodingModeFlag == (Boolean)CAVLC || dP->bitstream->eiFlag)
-      currSE.mapping = linfo_ue;
+      syntaxElement.mapping = linfo_ue;
     else
-      currSE.reading = readCIPredMode_CABAC;
+      syntaxElement.reading = readCIPredMode_CABAC;
 
-    dP->readsSyntaxElement (curMb, &currSE, dP);
-    curMb->cPredMode = (char)currSE.value1;
+    dP->readsSyntaxElement (mb, &syntaxElement, dP);
+    mb->cPredMode = (char)syntaxElement.value1;
 
-    if (curMb->cPredMode < DC_PRED_8 || curMb->cPredMode > PLANE_8)
+    if (mb->cPredMode < DC_PRED_8 || mb->cPredMode > PLANE_8)
       error ("illegal chroma intra pred mode!\n", 600);
     }
   }
 //}}}
+
 //{{{
-static void reset_mv_info (sPicMotionParam *mvInfo, int slice_no) {
+static void resetMvInfo (sPicMotionParam* mvInfo, int slice_no) {
 
   mvInfo->refPic[LIST_0] = NULL;
   mvInfo->refPic[LIST_1] = NULL;
@@ -343,40 +342,35 @@ static void reset_mv_info (sPicMotionParam *mvInfo, int slice_no) {
   }
 //}}}
 //{{{
-static void reset_mv_info_list (sPicMotionParam *mvInfo, int list, int slice_no) {
+static void initMacroblock (sMacroblock* mb) {
 
-  mvInfo->refPic[list] = NULL;
-  mvInfo->mv[list] = zero_mv;
-  mvInfo->refIndex[list] = -1;
-  mvInfo->slice_no = slice_no;
-  }
-//}}}
-//{{{
-static void init_macroblock_basic (sMacroblock* curMb) {
-
-  sPicMotionParam** mvInfo = &curMb->slice->picture->mvInfo[curMb->blockY];
-  int slice_no =  curMb->slice->curSliceNum;
+  sSlice* slice = mb->slice;
+  sPicMotionParam** mvInfo = &slice->picture->mvInfo[mb->blockY];
+  int slice_no = slice->curSliceNum;
 
   // reset vectors and pred. modes
-  for (int j = 0; j < BLOCK_SIZE; ++j) {
-    int i = curMb->blockX;
-    reset_mv_info_list(*mvInfo + (i++), LIST_1, slice_no);
-    reset_mv_info_list(*mvInfo + (i++), LIST_1, slice_no);
-    reset_mv_info_list(*mvInfo + (i++), LIST_1, slice_no);
-    reset_mv_info_list(*(mvInfo++) + i, LIST_1, slice_no);
+  for(int j = 0; j < BLOCK_SIZE; ++j) {
+    int i = mb->blockX;
+    resetMvInfo (*mvInfo + (i++), slice_no);
+    resetMvInfo (*mvInfo + (i++), slice_no);
+    resetMvInfo (*mvInfo + (i++), slice_no);
+    resetMvInfo (*(mvInfo++) + i, slice_no);
     }
+
+  set_read_comp_coeff_cabac (mb);
+  set_read_comp_coeff_cavlc (mb);
   }
 //}}}
 //{{{
-static void init_macroblock_direct (sMacroblock* curMb) {
+static void initMacroblockDirect (sMacroblock* mb) {
 
-  int slice_no = curMb->slice->curSliceNum;
-  sPicMotionParam** mvInfo = &curMb->slice->picture->mvInfo[curMb->blockY];
+  int slice_no = mb->slice->curSliceNum;
+  sPicMotionParam** mvInfo = &mb->slice->picture->mvInfo[mb->blockY];
 
-  set_read_comp_coeff_cabac(curMb);
-  set_read_comp_coeff_cavlc(curMb);
+  set_read_comp_coeff_cabac (mb);
+  set_read_comp_coeff_cavlc (mb);
 
-  int i = curMb->blockX;
+  int i = mb->blockX;
   for (int j = 0; j < BLOCK_SIZE; ++j) {
     (*mvInfo+i)->slice_no = slice_no;
     (*mvInfo+i+1)->slice_no = slice_no;
@@ -385,254 +379,230 @@ static void init_macroblock_direct (sMacroblock* curMb) {
     }
   }
 //}}}
+
 //{{{
-static void init_macroblock (sMacroblock* curMb) {
+static void concealIPCMcoeffs (sMacroblock* mb) {
 
-  int j, i;
-  sSlice* curSlice = curMb->slice;
-  sPicMotionParam** mvInfo = &curSlice->picture->mvInfo[curMb->blockY];
-  int slice_no = curSlice->curSliceNum;
-  // reset vectors and pred. modes
+  sSlice* slice = mb->slice;
+  sVidParam* vidParam = mb->vidParam;
+  for (int i = 0; i < MB_BLOCK_SIZE; ++i)
+    for (int j = 0; j < MB_BLOCK_SIZE; ++j)
+      slice->cof[0][i][j] = vidParam->dcPredValueComp[0];
 
-  for(j = 0; j < BLOCK_SIZE; ++j) {
-    i = curMb->blockX;
-    reset_mv_info (*mvInfo + (i++), slice_no);
-    reset_mv_info (*mvInfo + (i++), slice_no);
-    reset_mv_info (*mvInfo + (i++), slice_no);
-    reset_mv_info (*(mvInfo++) + i, slice_no);
-    }
-
-  set_read_comp_coeff_cabac (curMb);
-  set_read_comp_coeff_cavlc (curMb);
-  }
-//}}}
-//{{{
-static void concealIPCMcoeffs (sMacroblock* curMb) {
-
-  sSlice* curSlice = curMb->slice;
-  sVidParam *vidParam = curMb->vidParam;
-  sPicture* picture = curSlice->picture;
-  for (int i = 0; i < MB_BLOCK_SIZE;++i)
-    for (int j = 0; j < MB_BLOCK_SIZE;++j)
-      curSlice->cof[0][i][j] = vidParam->dcPredValueComp[0];
-
+  sPicture* picture = slice->picture;
   if ((picture->chromaFormatIdc != YUV400) && (vidParam->sepColourPlaneFlag == 0))
     for (int k = 0; k < 2; ++k)
-      for (int i = 0; i < vidParam->mbCrSizeY;++i)
-        for (int j = 0; j < vidParam->mbCrSizeX;++j)
-          curSlice->cof[k][i][j] = vidParam->dcPredValueComp[k];
+      for (int i = 0; i < vidParam->mbCrSizeY; ++i)
+        for (int j = 0; j < vidParam->mbCrSizeX; ++j)
+          slice->cof[k][i][j] = vidParam->dcPredValueComp[k];
   }
 //}}}
 //{{{
-static void init_decoding_engine_IPCM (sSlice* curSlice) {
+static void initIPCMdecoding (sSlice* slice) {
 
-
-  int PartitionNumber;
-  if (curSlice->dataPartitionMode == PAR_DP_1)
-    PartitionNumber = 1;
-  else if (curSlice->dataPartitionMode == PAR_DP_3)
-    PartitionNumber = 3;
+  int partitionNum;
+  if (slice->dataPartitionMode == PAR_DP_1)
+    partitionNum = 1;
+  else if (slice->dataPartitionMode == PAR_DP_3)
+    partitionNum = 3;
   else {
     printf ("Partition Mode is not supported\n");
     exit (1);
     }
 
-  for (int i = 0; i < PartitionNumber;++i) {
-    sBitstream* stream = curSlice->partArr[i].bitstream;
+  for (int i = 0; i < partitionNum;++i) {
+    sBitstream* stream = slice->partArr[i].bitstream;
     int byteStartPosition = stream->readLen;
-    arideco_start_decoding (&curSlice->partArr[i].deCabac, stream->streamBuffer, byteStartPosition, &stream->readLen);
+    arideco_start_decoding (&slice->partArr[i].deCabac, stream->streamBuffer, byteStartPosition, &stream->readLen);
     }
   }
 //}}}
 //{{{
-static void read_IPCM_coeffs_from_NAL (sSlice* curSlice, struct DataPartition *dP) {
+static void readIPCMcoeffs (sSlice* slice, struct DataPartition* dP) {
 
-  sVidParam* vidParam = curSlice->vidParam;
-  sPicture* picture = curSlice->picture;
-  sSyntaxElement currSE;
-  int i,j;
+  sVidParam* vidParam = slice->vidParam;
 
   //For CABAC, we don't need to read bits to let stream byte aligned
   //  because we have variable for integer bytes position
-  if (vidParam->activePPS->entropyCodingModeFlag == (Boolean) CABAC) {
-    readIPCM_CABAC(curSlice, dP);
-    init_decoding_engine_IPCM (curSlice);
+  if (vidParam->activePPS->entropyCodingModeFlag == (Boolean)CABAC) {
+    readIPCMcabac (slice, dP);
+    initIPCMdecoding (slice);
     }
   else {
-    //read bits to let stream byte aligned
+    // read bits to let stream byte aligned
+    sSyntaxElement syntaxElement;
     if (((dP->bitstream->frameBitOffset) & 0x07) != 0) {
-      currSE.len = (8 - ((dP->bitstream->frameBitOffset) & 0x07));
-      readsSyntaxElement_FLC (&currSE, dP->bitstream);
+      syntaxElement.len = (8 - ((dP->bitstream->frameBitOffset) & 0x07));
+      readsSyntaxElement_FLC (&syntaxElement, dP->bitstream);
       }
 
     //read luma and chroma IPCM coefficients
-    currSE.len=vidParam->bitdepthLuma;
-    for (i=0;i<MB_BLOCK_SIZE;++i) {
-      for (j=0;j<MB_BLOCK_SIZE;++j) {
-        readsSyntaxElement_FLC (&currSE, dP->bitstream);
-        curSlice->cof[0][i][j] = currSE.value1;
-        //curSlice->fcf[0][i][j] = currSE.value1;
+    syntaxElement.len = vidParam->bitdepthLuma;
+    for (int i = 0; i < MB_BLOCK_SIZE;++i)
+      for (int j = 0; j < MB_BLOCK_SIZE;++j) {
+        readsSyntaxElement_FLC (&syntaxElement, dP->bitstream);
+        slice->cof[0][i][j] = syntaxElement.value1;
         }
-      }
 
-    currSE.len=vidParam->bitdepthChroma;
+    syntaxElement.len = vidParam->bitdepthChroma;
+    sPicture* picture = slice->picture;
     if ((picture->chromaFormatIdc != YUV400) && (vidParam->sepColourPlaneFlag == 0)) {
-      for (i=0;i<vidParam->mbCrSizeY;++i) {
-        for (j=0;j<vidParam->mbCrSizeX;++j) {
-          readsSyntaxElement_FLC (&currSE, dP->bitstream);
-          curSlice->cof[1][i][j] = currSE.value1;
-          //curSlice->fcf[1][i][j] = currSE.value1;
+      for (int i = 0; i < vidParam->mbCrSizeY; ++i)
+        for (int j = 0; j < vidParam->mbCrSizeX; ++j) {
+          readsSyntaxElement_FLC (&syntaxElement, dP->bitstream);
+          slice->cof[1][i][j] = syntaxElement.value1;
           }
-        }
 
-      for (i=0;i<vidParam->mbCrSizeY;++i) {
-        for (j=0;j<vidParam->mbCrSizeX;++j) {
-          readsSyntaxElement_FLC (&currSE, dP->bitstream);
-          curSlice->cof[2][i][j] = currSE.value1;
-          //curSlice->fcf[2][i][j] = currSE.value1;
+      for (int i = 0; i < vidParam->mbCrSizeY; ++i)
+        for (int j = 0; j < vidParam->mbCrSizeX; ++j) {
+          readsSyntaxElement_FLC (&syntaxElement, dP->bitstream);
+          slice->cof[2][i][j] = syntaxElement.value1;
           }
-        }
       }
     }
   }
 //}}}
-//{{{
-static void SetB8Mode (sMacroblock* curMb, int value, int i) {
 
-  sSlice* curSlice = curMb->slice;
+//{{{
+static void SetB8Mode (sMacroblock* mb, int value, int i) {
+
+  sSlice* slice = mb->slice;
   static const char p_v2b8 [ 5] = {4, 5, 6, 7, IBLOCK};
   static const char p_v2pd [ 5] = {0, 0, 0, 0, -1};
   static const char b_v2b8 [14] = {0, 4, 4, 4, 5, 6, 5, 6, 5, 6, 7, 7, 7, IBLOCK};
   static const char b_v2pd [14] = {2, 0, 1, 2, 0, 0, 1, 1, 2, 2, 0, 1, 2, -1};
 
-  if (curSlice->sliceType==B_SLICE) {
-    curMb->b8mode[i] = b_v2b8[value];
-    curMb->b8pdir[i] = b_v2pd[value];
+  if (slice->sliceType == B_SLICE) {
+    mb->b8mode[i] = b_v2b8[value];
+    mb->b8pdir[i] = b_v2pd[value];
     }
   else {
-    curMb->b8mode[i] = p_v2b8[value];
-    curMb->b8pdir[i] = p_v2pd[value];
+    mb->b8mode[i] = p_v2b8[value];
+    mb->b8pdir[i] = p_v2pd[value];
     }
   }
 //}}}
+
 //{{{
-static void reset_coeffs (sMacroblock* curMb) {
+static void resetCoeffs (sMacroblock* mb) {
 
-  sVidParam *vidParam = curMb->vidParam;
+  sVidParam* vidParam = mb->vidParam;
 
-  // CAVLC
-  if (vidParam->activePPS->entropyCodingModeFlag == (Boolean) CAVLC)
-    memset (vidParam->nzCoeff[curMb->mbAddrX][0][0], 0, 3 * BLOCK_PIXELS * sizeof(byte));
+  if (vidParam->activePPS->entropyCodingModeFlag == (Boolean)CAVLC)
+    memset (vidParam->nzCoeff[mb->mbAddrX][0][0], 0, 3 * BLOCK_PIXELS * sizeof(byte));
   }
 //}}}
 //{{{
-static void field_flag_inference (sMacroblock* curMb) {
+static void fieldFlagInference (sMacroblock* mb) {
 
-  sVidParam *vidParam = curMb->vidParam;
-  if (curMb->mbAvailA)
-    curMb->mbField = vidParam->mbData[curMb->mbAddrA].mbField;
+  sVidParam* vidParam = mb->vidParam;
+  if (mb->mbAvailA)
+    mb->mbField = vidParam->mbData[mb->mbAddrA].mbField;
   else
     // check top macroblock pair
-    curMb->mbField = curMb->mbAvailB ? vidParam->mbData[curMb->mbAddrB].mbField : FALSE;
+    mb->mbField = mb->mbAvailB ? vidParam->mbData[mb->mbAddrB].mbField : FALSE;
   }
 //}}}
+
 //{{{
-void skip_macroblock (sMacroblock* curMb) {
+static void skipMacroblocks (sMacroblock* mb) {
 
   sMotionVector pred_mv;
   int zeroMotionAbove;
   int zeroMotionLeft;
-  sPixelPos mb[4];    // neighbor blocks
+  sPixelPos neighbourMb[4];
   int i, j;
   int a_mv_y = 0;
   int a_ref_idx = 0;
   int b_mv_y = 0;
   int b_ref_idx = 0;
-  int img_block_y   = curMb->blockY;
-  sVidParam *vidParam = curMb->vidParam;
-  sSlice* curSlice = curMb->slice;
-  int   listOffset = LIST_0 + curMb->listOffset;
-  sPicture* picture = curSlice->picture;
-  sMotionVector *a_mv = NULL;
-  sMotionVector *b_mv = NULL;
+  int img_block_y   = mb->blockY;
+  sVidParam* vidParam = mb->vidParam;
+  sSlice* slice = mb->slice;
+  int   listOffset = LIST_0 + mb->listOffset;
+  sPicture* picture = slice->picture;
+  sMotionVector* a_mv = NULL;
+  sMotionVector* b_mv = NULL;
 
-  getNeighbours(curMb, mb, 0, 0, MB_BLOCK_SIZE);
-  if (curSlice->mbAffFrameFlag == 0) {
-    if (mb[0].available) {
-      a_mv = &picture->mvInfo[mb[0].posY][mb[0].posX].mv[LIST_0];
+  getNeighbours (mb, neighbourMb, 0, 0, MB_BLOCK_SIZE);
+  if (slice->mbAffFrameFlag == 0) {
+    if (neighbourMb[0].available) {
+      a_mv = &picture->mvInfo[neighbourMb[0].posY][neighbourMb[0].posX].mv[LIST_0];
       a_mv_y = a_mv->mvY;
-      a_ref_idx = picture->mvInfo[mb[0].posY][mb[0].posX].refIndex[LIST_0];
+      a_ref_idx = picture->mvInfo[neighbourMb[0].posY][neighbourMb[0].posX].refIndex[LIST_0];
       }
 
-    if (mb[1].available) {
-      b_mv = &picture->mvInfo[mb[1].posY][mb[1].posX].mv[LIST_0];
+    if (neighbourMb[1].available) {
+      b_mv = &picture->mvInfo[neighbourMb[1].posY][neighbourMb[1].posX].mv[LIST_0];
       b_mv_y = b_mv->mvY;
-      b_ref_idx = picture->mvInfo[mb[1].posY][mb[1].posX].refIndex[LIST_0];
+      b_ref_idx = picture->mvInfo[neighbourMb[1].posY][neighbourMb[1].posX].refIndex[LIST_0];
       }
     }
   else {
-    if (mb[0].available) {
-      a_mv = &picture->mvInfo[mb[0].posY][mb[0].posX].mv[LIST_0];
+    if (neighbourMb[0].available) {
+      a_mv = &picture->mvInfo[neighbourMb[0].posY][neighbourMb[0].posX].mv[LIST_0];
       a_mv_y = a_mv->mvY;
-      a_ref_idx = picture->mvInfo[mb[0].posY][mb[0].posX].refIndex[LIST_0];
+      a_ref_idx = picture->mvInfo[neighbourMb[0].posY][neighbourMb[0].posX].refIndex[LIST_0];
 
-      if (curMb->mbField && !vidParam->mbData[mb[0].mbAddr].mbField) {
-        a_mv_y /=2;
-        a_ref_idx *=2;
-      }
-      if (!curMb->mbField && vidParam->mbData[mb[0].mbAddr].mbField) {
-        a_mv_y *=2;
-        a_ref_idx >>=1;
+      if (mb->mbField && !vidParam->mbData[neighbourMb[0].mbAddr].mbField) {
+        a_mv_y /= 2;
+        a_ref_idx *= 2;
+        }
+      if (!mb->mbField && vidParam->mbData[neighbourMb[0].mbAddr].mbField) {
+        a_mv_y *= 2;
+        a_ref_idx >>= 1;
         }
       }
 
-    if (mb[1].available) {
-      b_mv = &picture->mvInfo[mb[1].posY][mb[1].posX].mv[LIST_0];
+    if (neighbourMb[1].available) {
+      b_mv = &picture->mvInfo[neighbourMb[1].posY][neighbourMb[1].posX].mv[LIST_0];
       b_mv_y = b_mv->mvY;
-      b_ref_idx = picture->mvInfo[mb[1].posY][mb[1].posX].refIndex[LIST_0];
+      b_ref_idx = picture->mvInfo[neighbourMb[1].posY][neighbourMb[1].posX].refIndex[LIST_0];
 
-      if (curMb->mbField && !vidParam->mbData[mb[1].mbAddr].mbField) {
-        b_mv_y /=2;
-        b_ref_idx *=2;
+      if (mb->mbField && !vidParam->mbData[neighbourMb[1].mbAddr].mbField) {
+        b_mv_y /= 2;
+        b_ref_idx *= 2;
         }
-      if (!curMb->mbField && vidParam->mbData[mb[1].mbAddr].mbField) {
-        b_mv_y *=2;
-        b_ref_idx >>=1;
+      if (!mb->mbField && vidParam->mbData[neighbourMb[1].mbAddr].mbField) {
+        b_mv_y *= 2;
+        b_ref_idx >>= 1;
         }
       }
     }
 
-  zeroMotionLeft  = !mb[0].available ? 1 : a_ref_idx==0 && a_mv->mvX == 0 && a_mv_y==0 ? 1 : 0;
-  zeroMotionAbove = !mb[1].available ? 1 : b_ref_idx==0 && b_mv->mvX == 0 && b_mv_y==0 ? 1 : 0;
+  zeroMotionLeft = !neighbourMb[0].available ?
+                     1 : (a_ref_idx==0 && a_mv->mvX == 0 && a_mv_y == 0) ? 1 : 0;
+  zeroMotionAbove = !neighbourMb[1].available ?
+                     1 : (b_ref_idx==0 && b_mv->mvX == 0 && b_mv_y == 0) ? 1 : 0;
 
-  curMb->cbp = 0;
-  reset_coeffs(curMb);
+  mb->cbp = 0;
+  resetCoeffs (mb);
 
   if (zeroMotionAbove || zeroMotionLeft) {
     sPicMotionParam** dec_mv_info = &picture->mvInfo[img_block_y];
-    sPicture *cur_pic = curSlice->listX[listOffset][0];
-    sPicMotionParam *mvInfo = NULL;
+    sPicture* slicePic = slice->listX[listOffset][0];
+    sPicMotionParam* mvInfo = NULL;
 
-    for(j = 0; j < BLOCK_SIZE; ++j) {
-      for(i = curMb->blockX; i < curMb->blockX + BLOCK_SIZE; ++i) {
+    for (j = 0; j < BLOCK_SIZE; ++j) {
+      for (i = mb->blockX; i < mb->blockX + BLOCK_SIZE; ++i) {
         mvInfo = &dec_mv_info[j][i];
-        mvInfo->refPic[LIST_0] = cur_pic;
-        mvInfo->mv     [LIST_0] = zero_mv;
+        mvInfo->refPic[LIST_0] = slicePic;
+        mvInfo->mv [LIST_0] = zero_mv;
         mvInfo->refIndex[LIST_0] = 0;
         }
       }
     }
   else {
     sPicMotionParam** dec_mv_info = &picture->mvInfo[img_block_y];
-    sPicMotionParam *mvInfo = NULL;
-    sPicture *cur_pic = curSlice->listX[listOffset][0];
-    curMb->GetMVPredictor (curMb, mb, &pred_mv, 0, picture->mvInfo, LIST_0, 0, 0, MB_BLOCK_SIZE, MB_BLOCK_SIZE);
+    sPicMotionParam* mvInfo = NULL;
+    sPicture* slicePic = slice->listX[listOffset][0];
+    mb->GetMVPredictor (mb, neighbourMb, &pred_mv, 0, picture->mvInfo, LIST_0, 0, 0, MB_BLOCK_SIZE, MB_BLOCK_SIZE);
 
     // Set first block line (position img_block_y)
     for (j = 0; j < BLOCK_SIZE; ++j) {
-      for (i = curMb->blockX; i < curMb->blockX + BLOCK_SIZE; ++i) {
+      for (i = mb->blockX; i < mb->blockX + BLOCK_SIZE; ++i) {
         mvInfo = &dec_mv_info[j][i];
-        mvInfo->refPic[LIST_0] = cur_pic;
+        mvInfo->refPic[LIST_0] = slicePic;
         mvInfo->mv[LIST_0] = pred_mv;
         mvInfo->refIndex[LIST_0] = 0;
         }
@@ -640,967 +610,976 @@ void skip_macroblock (sMacroblock* curMb) {
     }
   }
 //}}}
-
 //{{{
-static void read_skip_macroblock (sMacroblock* curMb) {
+static void resetMvInfoList (sPicMotionParam* mvInfo, int list, int sliceNum) {
 
-  curMb->lumaTransformSize8x8flag = FALSE;
-  if (curMb->vidParam->activePPS->constrainedIntraPredFlag) {
-    int mb_nr = curMb->mbAddrX;
-    curMb->slice->intraBlock[mb_nr] = 0;
+  mvInfo->refPic[list] = NULL;
+  mvInfo->mv[list] = zero_mv;
+  mvInfo->refIndex[list] = -1;
+  mvInfo->slice_no = sliceNum;
+  }
+//}}}
+//{{{
+static void initMacroblockBasic (sMacroblock* mb) {
+
+  sPicMotionParam** mvInfo = &mb->slice->picture->mvInfo[mb->blockY];
+  int slice_no = mb->slice->curSliceNum;
+
+  // reset vectors and pred. modes
+  for (int j = 0; j < BLOCK_SIZE; ++j) {
+    int i = mb->blockX;
+    resetMvInfoList (*mvInfo + (i++), LIST_1, slice_no);
+    resetMvInfoList (*mvInfo + (i++), LIST_1, slice_no);
+    resetMvInfoList (*mvInfo + (i++), LIST_1, slice_no);
+    resetMvInfoList (*(mvInfo++) + i, LIST_1, slice_no);
+    }
+  }
+//}}}
+//{{{
+static void readSkipMacroblock (sMacroblock* mb) {
+
+  mb->lumaTransformSize8x8flag = FALSE;
+  if (mb->vidParam->activePPS->constrainedIntraPredFlag) {
+    int mbNum = mb->mbAddrX;
+    mb->slice->intraBlock[mbNum] = 0;
     }
 
-  init_macroblock_basic (curMb);
-  skip_macroblock (curMb);
+  initMacroblockBasic (mb);
+  skipMacroblocks (mb);
   }
 //}}}
-//{{{
-static void read_intra_macroblock (sMacroblock* curMb) {
 
-  curMb->noMbPartLessThan8x8Flag = TRUE;
+//{{{
+static void readIntraMacroblock (sMacroblock* mb) {
+
+  mb->noMbPartLessThan8x8Flag = TRUE;
 
   // transform size flag for INTRA_4x4 and INTRA_8x8 modes
-  curMb->lumaTransformSize8x8flag = FALSE;
+  mb->lumaTransformSize8x8flag = FALSE;
 
-  init_macroblock(curMb);
-  read_ipred_modes(curMb);
-  curMb->slice->read_CBP_and_coeffs_from_NAL (curMb);
+  initMacroblock (mb);
+  readIpredModes (mb);
+  mb->slice->readCBPcoeffs (mb);
   }
 //}}}
 //{{{
-static void read_intra4x4_macroblock_cavlc (sMacroblock* curMb, const byte *partMap)
+static void readIntra4x4macroblocCavlc (sMacroblock* mb, const byte* partMap)
 {
-  sSlice* curSlice = curMb->slice;
+  sSlice* slice = mb->slice;
+
   //transform size flag for INTRA_4x4 and INTRA_8x8 modes
-  if (curSlice->transform8x8Mode) {
-    sSyntaxElement currSE;
-    sDataPartition* dP = &(curSlice->partArr[partMap[SE_HEADER]]);
-    currSE.type =  SE_HEADER;
+  if (slice->transform8x8Mode) {
+    sSyntaxElement syntaxElement;
+    sDataPartition* dP = &(slice->partArr[partMap[SE_HEADER]]);
+    syntaxElement.type = SE_HEADER;
 
     // read CAVLC transform_size_8x8_flag
-    currSE.len = (int64)1;
-    readsSyntaxElement_FLC (&currSE, dP->bitstream);
+    syntaxElement.len = (int64)1;
+    readsSyntaxElement_FLC (&syntaxElement, dP->bitstream);
 
-    curMb->lumaTransformSize8x8flag = (Boolean)currSE.value1;
-    if (curMb->lumaTransformSize8x8flag) {
-      curMb->mbType = I8MB;
-      memset (&curMb->b8mode, I8MB, 4 * sizeof(char));
-      memset (&curMb->b8pdir, -1, 4 * sizeof(char));
+    mb->lumaTransformSize8x8flag = (Boolean)syntaxElement.value1;
+    if (mb->lumaTransformSize8x8flag) {
+      mb->mbType = I8MB;
+      memset (&mb->b8mode, I8MB, 4 * sizeof(char));
+      memset (&mb->b8pdir, -1, 4 * sizeof(char));
+      }
     }
-  }
   else
-    curMb->lumaTransformSize8x8flag = FALSE;
+    mb->lumaTransformSize8x8flag = FALSE;
 
-  init_macroblock (curMb);
-  read_ipred_modes (curMb);
-  curSlice->read_CBP_and_coeffs_from_NAL (curMb);
+  initMacroblock (mb);
+  readIpredModes (mb);
+  slice->readCBPcoeffs (mb);
   }
 //}}}
 //{{{
-static void read_intra4x4_macroblock_cabac (sMacroblock* curMb, const byte *partMap) {
+static void readIntra4x4macroblockCabac (sMacroblock* mb, const byte* partMap) {
 
 
   // transform size flag for INTRA_4x4 and INTRA_8x8 modes
-  sSlice* curSlice = curMb->slice;
-  if (curSlice->transform8x8Mode) {
-   sSyntaxElement currSE;
-    sDataPartition *dP = &(curSlice->partArr[partMap[SE_HEADER]]);
-    currSE.type   =  SE_HEADER;
-    currSE.reading = readMB_transform_size_flag_CABAC;
+  sSlice* slice = mb->slice;
+  if (slice->transform8x8Mode) {
+   sSyntaxElement syntaxElement;
+    sDataPartition* dP = &(slice->partArr[partMap[SE_HEADER]]);
+    syntaxElement.type = SE_HEADER;
+    syntaxElement.reading = readMB_transform_size_flag_CABAC;
 
     // read CAVLC transform_size_8x8_flag
     if (dP->bitstream->eiFlag) {
-      currSE.len = (int64) 1;
-      readsSyntaxElement_FLC(&currSE, dP->bitstream);
+      syntaxElement.len = (int64) 1;
+      readsSyntaxElement_FLC (&syntaxElement, dP->bitstream);
       }
     else
-      dP->readsSyntaxElement(curMb, &currSE, dP);
+      dP->readsSyntaxElement (mb, &syntaxElement, dP);
 
-    curMb->lumaTransformSize8x8flag = (Boolean) currSE.value1;
-    if (curMb->lumaTransformSize8x8flag) {
-      curMb->mbType = I8MB;
-      memset(&curMb->b8mode, I8MB, 4 * sizeof(char));
-      memset(&curMb->b8pdir, -1, 4 * sizeof(char));
+    mb->lumaTransformSize8x8flag = (Boolean)syntaxElement.value1;
+    if (mb->lumaTransformSize8x8flag) {
+      mb->mbType = I8MB;
+      memset (&mb->b8mode, I8MB, 4 * sizeof(char));
+      memset (&mb->b8pdir, -1, 4 * sizeof(char));
       }
     }
   else
-    curMb->lumaTransformSize8x8flag = FALSE;
+    mb->lumaTransformSize8x8flag = FALSE;
 
-  init_macroblock(curMb);
-  read_ipred_modes(curMb);
-  curSlice->read_CBP_and_coeffs_from_NAL (curMb);
+  initMacroblock (mb);
+  readIpredModes (mb);
+  slice->readCBPcoeffs (mb);
   }
 //}}}
+
 //{{{
-static void read_inter_macroblock (sMacroblock* curMb) {
+static void readInterMacroblock (sMacroblock* mb) {
 
-  sSlice* curSlice = curMb->slice;
+  sSlice* slice = mb->slice;
 
-  curMb->noMbPartLessThan8x8Flag = TRUE;
-  curMb->lumaTransformSize8x8flag = FALSE;
-  if (curMb->vidParam->activePPS->constrainedIntraPredFlag) {
-    int mb_nr = curMb->mbAddrX;
-    curSlice->intraBlock[mb_nr] = 0;
+  mb->noMbPartLessThan8x8Flag = TRUE;
+  mb->lumaTransformSize8x8flag = FALSE;
+  if (mb->vidParam->activePPS->constrainedIntraPredFlag) {
+    int mbNum = mb->mbAddrX;
+    slice->intraBlock[mbNum] = 0;
     }
 
-  init_macroblock (curMb);
-  curSlice->readMotionInfoFromNAL (curMb);
-  curSlice->read_CBP_and_coeffs_from_NAL (curMb);
+  initMacroblock (mb);
+  slice->readMotionInfoFromNAL (mb);
+  slice->readCBPcoeffs (mb);
   }
 //}}}
 //{{{
-static void read_i_pcm_macroblock (sMacroblock* curMb, const byte *partMap) {
+static void readIPCMmacroblock (sMacroblock* mb, const byte* partMap) {
 
-  sSlice* curSlice = curMb->slice;
-  curMb->noMbPartLessThan8x8Flag = TRUE;
-  curMb->lumaTransformSize8x8flag = FALSE;
+  sSlice* slice = mb->slice;
+  mb->noMbPartLessThan8x8Flag = TRUE;
+  mb->lumaTransformSize8x8flag = FALSE;
 
-  init_macroblock (curMb);
+  initMacroblock (mb);
 
   // here dP is assigned with the same dP as SE_MBTYPE, because IPCM syntax is in the
   // same category as MBTYPE
-  if (curSlice->dataPartitionMode && curSlice->noDataPartitionB )
-    concealIPCMcoeffs (curMb);
+  if (slice->dataPartitionMode && slice->noDataPartitionB )
+    concealIPCMcoeffs (mb);
   else {
-    sDataPartition* dP = &(curSlice->partArr[partMap[SE_LUM_DC_INTRA]]);
-    read_IPCM_coeffs_from_NAL (curSlice, dP);
+    sDataPartition* dP = &(slice->partArr[partMap[SE_LUM_DC_INTRA]]);
+    readIPCMcoeffs (slice, dP);
     }
   }
 //}}}
 //{{{
-static void read_P8x8_macroblock (sMacroblock* curMb, sDataPartition *dP, sSyntaxElement* currSE) {
+static void readI8x8macroblock (sMacroblock* mb, sDataPartition* dP, sSyntaxElement* syntaxElement) {
 
   int i;
-  sSlice* curSlice = curMb->slice;
+  sSlice* slice = mb->slice;
 
   // READ 8x8 SUB-PARTITION MODES (modes of 8x8 blocks) and Intra VBST block modes
-  curMb->noMbPartLessThan8x8Flag = TRUE;
-  curMb->lumaTransformSize8x8flag = FALSE;
+  mb->noMbPartLessThan8x8Flag = TRUE;
+  mb->lumaTransformSize8x8flag = FALSE;
 
   for (i = 0; i < 4; ++i) {
-    dP->readsSyntaxElement (curMb, currSE, dP);
-    SetB8Mode (curMb, currSE->value1, i);
+    dP->readsSyntaxElement (mb, syntaxElement, dP);
+    SetB8Mode (mb, syntaxElement->value1, i);
 
     // set noMbPartLessThan8x8Flag for P8x8 mode
-    curMb->noMbPartLessThan8x8Flag &= (curMb->b8mode[i] == 0 && curSlice->activeSPS->direct_8x8_inference_flag) ||
-      (curMb->b8mode[i] == 4);
+    mb->noMbPartLessThan8x8Flag &= (mb->b8mode[i] == 0 && slice->activeSPS->direct_8x8_inference_flag) ||
+      (mb->b8mode[i] == 4);
     }
 
-  init_macroblock (curMb);
-  curSlice->readMotionInfoFromNAL (curMb);
+  initMacroblock (mb);
+  slice->readMotionInfoFromNAL (mb);
 
-  if (curMb->vidParam->activePPS->constrainedIntraPredFlag) {
-    int mb_nr = curMb->mbAddrX;
-    curSlice->intraBlock[mb_nr] = 0;
+  if (mb->vidParam->activePPS->constrainedIntraPredFlag) {
+    int mbNum = mb->mbAddrX;
+    slice->intraBlock[mbNum] = 0;
     }
 
-  curSlice->read_CBP_and_coeffs_from_NAL (curMb);
+  slice->readCBPcoeffs (mb);
   }
 //}}}
+
 //{{{
-static void read_one_macroblock_i_slice_cavlc (sMacroblock* curMb) {
+static void read_one_macroblock_i_slice_cavlc (sMacroblock* mb) {
 
-  sSlice* curSlice = curMb->slice;
+  sSlice* slice = mb->slice;
 
-  sSyntaxElement currSE;
-  int mb_nr = curMb->mbAddrX;
+  sSyntaxElement syntaxElement;
+  int mbNum = mb->mbAddrX;
 
-  sDataPartition* dP;
-  const byte* partMap = assignSE2partition[curSlice->dataPartitionMode];
-  sPicture* picture = curSlice->picture;
-  sPicMotionParamsOld *motion = &picture->motion;
+  const byte* partMap = assignSE2partition[slice->dataPartitionMode];
+  sPicture* picture = slice->picture;
+  sPicMotionParamsOld* motion = &picture->motion;
 
-  curMb->mbField = ((mb_nr&0x01) == 0)? FALSE : curSlice->mbData[mb_nr-1].mbField;
+  mb->mbField = ((mbNum & 0x01) == 0)? FALSE : slice->mbData[mbNum-1].mbField;
 
-  updateQp(curMb, curSlice->qp);
-  currSE.type = SE_MBTYPE;
+  updateQp(mb, slice->qp);
+  syntaxElement.type = SE_MBTYPE;
 
   // read MB mode
-  dP = &(curSlice->partArr[partMap[SE_MBTYPE]]);
-
-  currSE.mapping = linfo_ue;
+  sDataPartition* dP = &(slice->partArr[partMap[SE_MBTYPE]]);
+  syntaxElement.mapping = linfo_ue;
 
   // read MB aff
-  if (curSlice->mbAffFrameFlag && (mb_nr&0x01) == 0) {
-    currSE.len = (int64) 1;
-    readsSyntaxElement_FLC(&currSE, dP->bitstream);
-    curMb->mbField = (Boolean) currSE.value1;
+  if (slice->mbAffFrameFlag && (mbNum & 0x01) == 0) {
+    syntaxElement.len = (int64) 1;
+    readsSyntaxElement_FLC (&syntaxElement, dP->bitstream);
+    mb->mbField = (Boolean)syntaxElement.value1;
     }
 
   // read MB type
-  dP->readsSyntaxElement(curMb, &currSE, dP);
+  dP->readsSyntaxElement(mb, &syntaxElement, dP);
 
-  curMb->mbType = (short) currSE.value1;
+  mb->mbType = (short) syntaxElement.value1;
   if (!dP->bitstream->eiFlag)
-    curMb->eiFlag = 0;
+    mb->eiFlag = 0;
 
-  motion->mbField[mb_nr] = (byte) curMb->mbField;
-  curMb->blockYaff = ((curSlice->mbAffFrameFlag) && (curMb->mbField)) ? (mb_nr&0x01) ? (curMb->blockY - 4)>>1 : curMb->blockY >> 1 : curMb->blockY;
-  curSlice->siBlock[curMb->mb.y][curMb->mb.x] = 0;
-  curSlice->interpretMbMode(curMb);
+  motion->mbField[mbNum] = (byte) mb->mbField;
+  mb->blockYaff = ((slice->mbAffFrameFlag) && (mb->mbField)) ? (mbNum & 0x01) ? (mb->blockY - 4)>>1 : mb->blockY >> 1 : mb->blockY;
+  slice->siBlock[mb->mb.y][mb->mb.x] = 0;
+  slice->interpretMbMode (mb);
 
-  //init noMbPartLessThan8x8Flag
-  curMb->noMbPartLessThan8x8Flag = TRUE;
-  if(curMb->mbType == IPCM)
-    read_i_pcm_macroblock (curMb, partMap);
-  else if (curMb->mbType == I4MB)
-    read_intra4x4_macroblock_cavlc (curMb, partMap);
-  else 
-    read_intra_macroblock (curMb);
+  mb->noMbPartLessThan8x8Flag = TRUE;
+  if(mb->mbType == IPCM)
+    readIPCMmacroblock (mb, partMap);
+  else if (mb->mbType == I4MB)
+    readIntra4x4macroblocCavlc (mb, partMap);
+  else
+    readIntraMacroblock (mb);
   }
 //}}}
 //{{{
-static void read_one_macroblock_i_slice_cabac (sMacroblock* curMb) {
+static void read_one_macroblock_p_slice_cavlc (sMacroblock* mb) {
 
-  sSlice* curSlice = curMb->slice;
+  sSlice* slice = mb->slice;
+  sSyntaxElement syntaxElement;
+  int mbNum = mb->mbAddrX;
 
-  sSyntaxElement currSE;
-  int mb_nr = curMb->mbAddrX;
+  const byte* partMap = assignSE2partition[slice->dataPartitionMode];
 
-  sDataPartition *dP;
-  const byte *partMap = assignSE2partition[curSlice->dataPartitionMode];
-  sPicture* picture = curSlice->picture;
-  sPicMotionParamsOld *motion = &picture->motion;
+  if (slice->mbAffFrameFlag == 0) {
+    sPicture* picture = slice->picture;
+    sPicMotionParamsOld* motion = &picture->motion;
 
-  curMb->mbField = ((mb_nr&0x01) == 0) ? FALSE : curSlice->mbData[mb_nr-1].mbField;
+    mb->mbField = FALSE;
+    updateQp (mb, slice->qp);
 
-  updateQp (curMb, curSlice->qp);
-  currSE.type = SE_MBTYPE;
+    //  read MB mode
+    syntaxElement.type = SE_MBTYPE;
+    sDataPartition* dP = &(slice->partArr[partMap[SE_MBTYPE]]);
+    syntaxElement.mapping = linfo_ue;
 
-  //  read MB mode**
-  dP = &(curSlice->partArr[partMap[SE_MBTYPE]]);
+    // VLC Non-Intra
+    if (slice->codCount == -1) {
+      dP->readsSyntaxElement(mb, &syntaxElement, dP);
+      slice->codCount = syntaxElement.value1;
+      }
 
-  if (dP->bitstream->eiFlag)
-    currSE.mapping = linfo_ue;
-
-  // read MB aff
-  if (curSlice->mbAffFrameFlag && (mb_nr&0x01)==0) {
-    if (dP->bitstream->eiFlag) {
-      currSE.len = (int64)1;
-      readsSyntaxElement_FLC (&currSE, dP->bitstream);
+    if (slice->codCount==0) {
+      // read MB type
+      dP->readsSyntaxElement(mb, &syntaxElement, dP);
+      ++(syntaxElement.value1);
+      mb->mbType = (short) syntaxElement.value1;
+      if(!dP->bitstream->eiFlag)
+        mb->eiFlag = 0;
+      slice->codCount--;
+      mb->skipFlag = 0;
       }
     else {
-      currSE.reading = readFieldModeInfo_CABAC;
-      dP->readsSyntaxElement (curMb, &currSE, dP);
+      slice->codCount--;
+      mb->mbType = 0;
+      mb->eiFlag = 0;
+      mb->skipFlag = 1;
       }
-    curMb->mbField = (Boolean) currSE.value1;
+
+    // update the list offset;
+    mb->listOffset = 0;
+    motion->mbField[mbNum] = (byte) FALSE;
+    mb->blockYaff = mb->blockY;
+    slice->siBlock[mb->mb.y][mb->mb.x] = 0;
+    slice->interpretMbMode (mb);
+    }
+  else {
+    sVidParam* vidParam = mb->vidParam;
+    sMacroblock* topMB = NULL;
+    int  prevMbSkipped = 0;
+    sPicture* picture = slice->picture;
+    sPicMotionParamsOld* motion = &picture->motion;
+
+    if (mbNum & 0x01) {
+      topMB= &vidParam->mbData[mbNum-1];
+      prevMbSkipped = (topMB->mbType == 0);
+      }
+    else
+      prevMbSkipped = 0;
+
+    mb->mbField = ((mbNum & 0x01) == 0)? FALSE : vidParam->mbData[mbNum-1].mbField;
+    updateQp (mb, slice->qp);
+
+    //  read MB mode
+    syntaxElement.type = SE_MBTYPE;
+    sDataPartition* dP = &(slice->partArr[partMap[SE_MBTYPE]]);
+    syntaxElement.mapping = linfo_ue;
+
+    // VLC Non-Intra
+    if (slice->codCount == -1) {
+      dP->readsSyntaxElement (mb, &syntaxElement, dP);
+      slice->codCount = syntaxElement.value1;
+      }
+
+    if (slice->codCount == 0) {
+      // read MB aff
+      if ((((mbNum & 0x01)==0) || ((mbNum & 0x01) && prevMbSkipped))) {
+        syntaxElement.len = (int64) 1;
+        readsSyntaxElement_FLC (&syntaxElement, dP->bitstream);
+        mb->mbField = (Boolean)syntaxElement.value1;
+        }
+
+      // read MB type
+      dP->readsSyntaxElement (mb, &syntaxElement, dP);
+      ++(syntaxElement.value1);
+      mb->mbType = (short)syntaxElement.value1;
+      if(!dP->bitstream->eiFlag)
+        mb->eiFlag = 0;
+      slice->codCount--;
+      mb->skipFlag = 0;
+      }
+    else {
+      slice->codCount--;
+      mb->mbType = 0;
+      mb->eiFlag = 0;
+      mb->skipFlag = 1;
+
+      // read field flag of bottom block
+      if (slice->codCount == 0 && ((mbNum & 0x01) == 0)) {
+        syntaxElement.len = (int64) 1;
+        readsSyntaxElement_FLC (&syntaxElement, dP->bitstream);
+        dP->bitstream->frameBitOffset--;
+        mb->mbField = (Boolean)syntaxElement.value1;
+        }
+      else if (slice->codCount > 0 && ((mbNum & 0x01) == 0)) {
+        // check left macroblock pair first
+        if (mb_is_available(mbNum - 2, mb) && ((mbNum % (vidParam->PicWidthInMbs * 2))!=0))
+          mb->mbField = vidParam->mbData[mbNum-2].mbField;
+        else {
+          // check top macroblock pair
+          if (mb_is_available (mbNum - 2*vidParam->PicWidthInMbs, mb))
+            mb->mbField = vidParam->mbData[mbNum - 2*vidParam->PicWidthInMbs].mbField;
+          else
+            mb->mbField = FALSE;
+          }
+        }
+      }
+    //update the list offset;
+    mb->listOffset = (mb->mbField)? ((mbNum & 0x01)? 4: 2): 0;
+    motion->mbField[mbNum] = (byte) mb->mbField;
+    mb->blockYaff = (mb->mbField) ? (mbNum & 0x01) ? (mb->blockY - 4)>>1 : mb->blockY >> 1 : mb->blockY;
+    slice->siBlock[mb->mb.y][mb->mb.x] = 0;
+    slice->interpretMbMode (mb);
+    if (mb->mbField) {
+      slice->numRefIndexActive[LIST_0] <<=1;
+      slice->numRefIndexActive[LIST_1] <<=1;
+      }
     }
 
-  CheckAvailabilityOfNeighborsCABAC(curMb);
+  mb->noMbPartLessThan8x8Flag = TRUE;
+  if (mb->mbType == IPCM)
+    readIPCMmacroblock (mb, partMap);
+  else if (mb->mbType == I4MB)
+    readIntra4x4macroblocCavlc (mb, partMap);
+  else if (mb->mbType == P8x8) {
+    syntaxElement.type = SE_MBTYPE;
+    syntaxElement.mapping = linfo_ue;
+    sDataPartition* dP = &(slice->partArr[partMap[SE_MBTYPE]]);
+    readI8x8macroblock (mb, dP, &syntaxElement);
+    }
+  else if (mb->mbType == PSKIP)
+    readSkipMacroblock (mb);
+  else if (mb->isIntraBlock)
+    readIntraMacroblock (mb);
+  else
+    readInterMacroblock (mb);
+  }
+//}}}
+//{{{
+static void read_one_macroblock_b_slice_cavlc (sMacroblock* mb) {
+
+  sVidParam* vidParam = mb->vidParam;
+  sSlice* slice = mb->slice;
+  int mbNum = mb->mbAddrX;
+  sSyntaxElement syntaxElement;
+  const byte *partMap = assignSE2partition[slice->dataPartitionMode];
+
+  if (slice->mbAffFrameFlag == 0) {
+    sPicture* picture = slice->picture;
+    sPicMotionParamsOld *motion = &picture->motion;
+
+    mb->mbField = FALSE;
+    updateQp(mb, slice->qp);
+
+    //  read MB mode
+    syntaxElement.type = SE_MBTYPE;
+    sDataPartition* dP = &(slice->partArr[partMap[SE_MBTYPE]]);
+    syntaxElement.mapping = linfo_ue;
+
+    if(slice->codCount == -1) {
+      dP->readsSyntaxElement(mb, &syntaxElement, dP);
+      slice->codCount = syntaxElement.value1;
+      }
+
+    if (slice->codCount==0) {
+      // read MB type
+      dP->readsSyntaxElement (mb, &syntaxElement, dP);
+      mb->mbType = (short)syntaxElement.value1;
+      if (!dP->bitstream->eiFlag)
+        mb->eiFlag = 0;
+      slice->codCount--;
+      mb->skipFlag = 0;
+      }
+    else {
+      slice->codCount--;
+      mb->mbType = 0;
+      mb->eiFlag = 0;
+      mb->skipFlag = 1;
+      }
+
+    // update the list offset;
+    mb->listOffset = 0;
+    motion->mbField[mbNum] = FALSE;
+    mb->blockYaff = mb->blockY;
+    slice->siBlock[mb->mb.y][mb->mb.x] = 0;
+    slice->interpretMbMode (mb);
+    }
+  else {
+    sMacroblock* topMB = NULL;
+    int prevMbSkipped = 0;
+    sPicture* picture = slice->picture;
+    sPicMotionParamsOld* motion = &picture->motion;
+
+    if (mbNum & 0x01) {
+      topMB = &vidParam->mbData[mbNum-1];
+      prevMbSkipped = topMB->skipFlag;
+      }
+    else
+      prevMbSkipped = 0;
+
+    mb->mbField = ((mbNum & 0x01) == 0)? FALSE : vidParam->mbData[mbNum-1].mbField;
+
+    updateQp (mb, slice->qp);
+
+    //  read MB mode
+    syntaxElement.type = SE_MBTYPE;
+    sDataPartition* dP = &(slice->partArr[partMap[SE_MBTYPE]]);
+    syntaxElement.mapping = linfo_ue;
+    if(slice->codCount == -1) {
+      dP->readsSyntaxElement(mb, &syntaxElement, dP);
+      slice->codCount = syntaxElement.value1;
+      }
+
+    if (slice->codCount==0) {
+      // read MB aff
+      if (((mbNum & 0x01)==0) || ((mbNum & 0x01) && prevMbSkipped)) {
+        syntaxElement.len = (int64) 1;
+        readsSyntaxElement_FLC (&syntaxElement, dP->bitstream);
+        mb->mbField = (Boolean)syntaxElement.value1;
+        }
+
+      // read MB type
+      dP->readsSyntaxElement (mb, &syntaxElement, dP);
+      mb->mbType = (short)syntaxElement.value1;
+      if(!dP->bitstream->eiFlag)
+        mb->eiFlag = 0;
+      slice->codCount--;
+      mb->skipFlag = 0;
+      }
+    else {
+      slice->codCount--;
+      mb->mbType = 0;
+      mb->eiFlag = 0;
+      mb->skipFlag = 1;
+
+      // read field flag of bottom block
+      if ((slice->codCount == 0) && ((mbNum & 0x01) == 0)) {
+        syntaxElement.len = (int64) 1;
+        readsSyntaxElement_FLC (&syntaxElement, dP->bitstream);
+        dP->bitstream->frameBitOffset--;
+        mb->mbField = (Boolean)syntaxElement.value1;
+        }
+      else if ((slice->codCount > 0) && ((mbNum & 0x01) == 0)) {
+        // check left macroblock pair first
+        if (mb_is_available (mbNum - 2, mb) && ((mbNum % (vidParam->PicWidthInMbs * 2))!=0))
+          mb->mbField = vidParam->mbData[mbNum-2].mbField;
+        else {
+          // check top macroblock pair
+          if (mb_is_available (mbNum - 2*vidParam->PicWidthInMbs, mb))
+            mb->mbField = vidParam->mbData[mbNum-2*vidParam->PicWidthInMbs].mbField;
+          else
+            mb->mbField = FALSE;
+          }
+        }
+      }
+
+    // update the list offset;
+    mb->listOffset = (mb->mbField)? ((mbNum & 0x01)? 4: 2): 0;
+    motion->mbField[mbNum] = (byte)mb->mbField;
+    mb->blockYaff = (mb->mbField) ? (mbNum & 0x01) ? (mb->blockY - 4)>>1 : mb->blockY >> 1 : mb->blockY;
+    slice->siBlock[mb->mb.y][mb->mb.x] = 0;
+    slice->interpretMbMode (mb);
+    if (slice->mbAffFrameFlag) {
+      if (mb->mbField) {
+        slice->numRefIndexActive[LIST_0] <<=1;
+        slice->numRefIndexActive[LIST_1] <<=1;
+        }
+      }
+    }
+
+  if (mb->mbType == IPCM)
+    readIPCMmacroblock (mb, partMap);
+  else if (mb->mbType == I4MB)
+    readIntra4x4macroblocCavlc (mb, partMap);
+  else if (mb->mbType == P8x8) {
+    sDataPartition* dP = &(slice->partArr[partMap[SE_MBTYPE]]);
+    syntaxElement.type = SE_MBTYPE;
+    syntaxElement.mapping = linfo_ue;
+    readI8x8macroblock (mb, dP, &syntaxElement);
+    }
+  else if (mb->mbType == BSKIP_DIRECT) {
+    // init noMbPartLessThan8x8Flag
+    mb->noMbPartLessThan8x8Flag = (!(slice->activeSPS->direct_8x8_inference_flag))? FALSE: TRUE;
+    mb->lumaTransformSize8x8flag = FALSE;
+    if(vidParam->activePPS->constrainedIntraPredFlag)
+      slice->intraBlock[mbNum] = 0;
+
+    initMacroblockDirect (mb);
+    if (slice->codCount >= 0) {
+      mb->cbp = 0;
+      resetCoeffs (mb);
+      }
+    else
+      slice->readCBPcoeffs (mb);
+    }
+  else if (mb->isIntraBlock == TRUE)
+    readIntraMacroblock (mb);
+  else
+    readInterMacroblock (mb);
+  }
+//}}}
+
+//{{{
+static void read_one_macroblock_i_slice_cabac (sMacroblock* mb) {
+
+  sSlice* slice = mb->slice;
+
+  sSyntaxElement syntaxElement;
+  int mbNum = mb->mbAddrX;
+
+  const byte* partMap = assignSE2partition[slice->dataPartitionMode];
+  sPicture* picture = slice->picture;
+  sPicMotionParamsOld* motion = &picture->motion;
+
+  mb->mbField = ((mbNum & 0x01) == 0) ? FALSE : slice->mbData[mbNum-1].mbField;
+
+  updateQp (mb, slice->qp);
+
+  //  read MB mode
+  syntaxElement.type = SE_MBTYPE;
+  sDataPartition* dP = &(slice->partArr[partMap[SE_MBTYPE]]);
+  if (dP->bitstream->eiFlag)
+    syntaxElement.mapping = linfo_ue;
+
+  // read MB aff
+  if (slice->mbAffFrameFlag && (mbNum & 0x01)==0) {
+    if (dP->bitstream->eiFlag) {
+      syntaxElement.len = (int64)1;
+      readsSyntaxElement_FLC (&syntaxElement, dP->bitstream);
+      }
+    else {
+      syntaxElement.reading = readFieldModeInfo_CABAC;
+      dP->readsSyntaxElement (mb, &syntaxElement, dP);
+      }
+    mb->mbField = (Boolean)syntaxElement.value1;
+    }
+
+  checkNeighbourCabac(mb);
 
   //  read MB type
-  currSE.reading = readMB_typeInfo_CABAC_i_slice;
-  dP->readsSyntaxElement (curMb, &currSE, dP);
+  syntaxElement.reading = readMB_typeInfo_CABAC_i_slice;
+  dP->readsSyntaxElement (mb, &syntaxElement, dP);
 
-  curMb->mbType = (short) currSE.value1;
+  mb->mbType = (short) syntaxElement.value1;
   if (!dP->bitstream->eiFlag)
-    curMb->eiFlag = 0;
+    mb->eiFlag = 0;
 
-  motion->mbField[mb_nr] = (byte) curMb->mbField;
-  curMb->blockYaff = ((curSlice->mbAffFrameFlag) && (curMb->mbField)) ? (mb_nr&0x01) ? (curMb->blockY - 4)>>1 : curMb->blockY >> 1 : curMb->blockY;
-  curSlice->siBlock[curMb->mb.y][curMb->mb.x] = 0;
-  curSlice->interpretMbMode(curMb);
+  motion->mbField[mbNum] = (byte) mb->mbField;
+  mb->blockYaff = ((slice->mbAffFrameFlag) && (mb->mbField)) ? (mbNum & 0x01) ? (mb->blockY - 4)>>1 : mb->blockY >> 1 : mb->blockY;
+  slice->siBlock[mb->mb.y][mb->mb.x] = 0;
+  slice->interpretMbMode(mb);
 
   //init noMbPartLessThan8x8Flag
-  curMb->noMbPartLessThan8x8Flag = TRUE;
-  if(curMb->mbType == IPCM)
-    read_i_pcm_macroblock(curMb, partMap);
-  else if (curMb->mbType == I4MB) {
+  mb->noMbPartLessThan8x8Flag = TRUE;
+  if (mb->mbType == IPCM)
+    readIPCMmacroblock (mb, partMap);
+  else if (mb->mbType == I4MB) {
     //transform size flag for INTRA_4x4 and INTRA_8x8 modes
-    if (curSlice->transform8x8Mode) {
-      currSE.type   =  SE_HEADER;
-      dP = &(curSlice->partArr[partMap[SE_HEADER]]);
-      currSE.reading = readMB_transform_size_flag_CABAC;
+    if (slice->transform8x8Mode) {
+      syntaxElement.type = SE_HEADER;
+      dP = &(slice->partArr[partMap[SE_HEADER]]);
+      syntaxElement.reading = readMB_transform_size_flag_CABAC;
 
       // read CAVLC transform_size_8x8_flag
       if (dP->bitstream->eiFlag) {
-        currSE.len = (int64) 1;
-        readsSyntaxElement_FLC(&currSE, dP->bitstream);
+        syntaxElement.len = (int64) 1;
+        readsSyntaxElement_FLC(&syntaxElement, dP->bitstream);
         }
       else
-        dP->readsSyntaxElement(curMb, &currSE, dP);
+        dP->readsSyntaxElement(mb, &syntaxElement, dP);
 
-      curMb->lumaTransformSize8x8flag = (Boolean) currSE.value1;
-      if (curMb->lumaTransformSize8x8flag) {
-        curMb->mbType = I8MB;
-        memset(&curMb->b8mode, I8MB, 4 * sizeof(char));
-        memset(&curMb->b8pdir, -1, 4 * sizeof(char));
+      mb->lumaTransformSize8x8flag = (Boolean)syntaxElement.value1;
+      if (mb->lumaTransformSize8x8flag) {
+        mb->mbType = I8MB;
+        memset(&mb->b8mode, I8MB, 4 * sizeof(char));
+        memset(&mb->b8pdir, -1, 4 * sizeof(char));
+        }
       }
-    }
     else
-      curMb->lumaTransformSize8x8flag = FALSE;
+      mb->lumaTransformSize8x8flag = FALSE;
 
-    init_macroblock (curMb);
-    read_ipred_modes (curMb);
-    curSlice->read_CBP_and_coeffs_from_NAL (curMb);
+    initMacroblock (mb);
+    readIpredModes (mb);
+    slice->readCBPcoeffs (mb);
     }
   else
-    read_intra_macroblock (curMb);
+    readIntraMacroblock (mb);
   }
 //}}}
 //{{{
-static void read_one_macroblock_p_slice_cavlc (sMacroblock* curMb) {
-
-  sSlice* curSlice = curMb->slice;
-  sSyntaxElement currSE;
-  int mb_nr = curMb->mbAddrX;
-
-  sDataPartition *dP;
-  const byte *partMap = assignSE2partition[curSlice->dataPartitionMode];
-
-  if (curSlice->mbAffFrameFlag == 0) {
-    sPicture* picture = curSlice->picture;
-    sPicMotionParamsOld *motion = &picture->motion;
-
-    curMb->mbField = FALSE;
-
-    updateQp(curMb, curSlice->qp);
-    currSE.type = SE_MBTYPE;
-
-    //  read MB mode**
-    dP = &(curSlice->partArr[partMap[SE_MBTYPE]]);
-    currSE.mapping = linfo_ue;
-
-    // VLC Non-Intra
-    if (curSlice->codCount == -1) {
-      dP->readsSyntaxElement(curMb, &currSE, dP);
-      curSlice->codCount = currSE.value1;
-      }
-
-    if (curSlice->codCount==0) {
-      // read MB type
-      dP->readsSyntaxElement(curMb, &currSE, dP);
-      ++(currSE.value1);
-      curMb->mbType = (short) currSE.value1;
-      if(!dP->bitstream->eiFlag)
-        curMb->eiFlag = 0;
-      curSlice->codCount--;
-      curMb->skipFlag = 0;
-      }
-    else {
-      curSlice->codCount--;
-      curMb->mbType = 0;
-      curMb->eiFlag = 0;
-      curMb->skipFlag = 1;
-      }
-
-    //update the list offset;
-    curMb->listOffset = 0;
-    motion->mbField[mb_nr] = (byte) FALSE;
-    curMb->blockYaff = curMb->blockY;
-    curSlice->siBlock[curMb->mb.y][curMb->mb.x] = 0;
-    curSlice->interpretMbMode(curMb);
-    }
-  else {
-    sVidParam *vidParam = curMb->vidParam;
-    sMacroblock *topMB = NULL;
-    int  prevMbSkipped = 0;
-    sPicture* picture = curSlice->picture;
-    sPicMotionParamsOld *motion = &picture->motion;
-
-    if (mb_nr&0x01) {
-      topMB= &vidParam->mbData[mb_nr-1];
-      prevMbSkipped = (topMB->mbType == 0);
-      }
-    else
-      prevMbSkipped = 0;
-
-    curMb->mbField = ((mb_nr&0x01) == 0)? FALSE : vidParam->mbData[mb_nr-1].mbField;
-
-    updateQp (curMb, curSlice->qp);
-    currSE.type = SE_MBTYPE;
-
-    //  read MB mode**
-    dP = &(curSlice->partArr[partMap[SE_MBTYPE]]);
-    currSE.mapping = linfo_ue;
-
-    // VLC Non-Intra
-    if (curSlice->codCount == -1) {
-      dP->readsSyntaxElement (curMb, &currSE, dP);
-      curSlice->codCount = currSE.value1;
-      }
-
-    if (curSlice->codCount == 0) {
-      // read MB aff
-      if ((((mb_nr&0x01)==0) || ((mb_nr&0x01) && prevMbSkipped))) {
-        currSE.len = (int64) 1;
-        readsSyntaxElement_FLC (&currSE, dP->bitstream);
-        curMb->mbField = (Boolean) currSE.value1;
-        }
-
-      // read MB type
-      dP->readsSyntaxElement (curMb, &currSE, dP);
-      ++(currSE.value1);
-      curMb->mbType = (short)currSE.value1;
-      if(!dP->bitstream->eiFlag)
-        curMb->eiFlag = 0;
-      curSlice->codCount--;
-      curMb->skipFlag = 0;
-      }
-    else {
-      curSlice->codCount--;
-      curMb->mbType = 0;
-      curMb->eiFlag = 0;
-      curMb->skipFlag = 1;
-
-      // read field flag of bottom block
-      if (curSlice->codCount == 0 && ((mb_nr&0x01) == 0)) {
-        currSE.len = (int64) 1;
-        readsSyntaxElement_FLC(&currSE, dP->bitstream);
-        dP->bitstream->frameBitOffset--;
-        curMb->mbField = (Boolean) currSE.value1;
-        }
-      else if (curSlice->codCount > 0 && ((mb_nr & 0x01) == 0)) {
-        // check left macroblock pair first
-        if (mb_is_available(mb_nr - 2, curMb) && ((mb_nr % (vidParam->PicWidthInMbs * 2))!=0))
-          curMb->mbField = vidParam->mbData[mb_nr-2].mbField;
-        else {
-          // check top macroblock pair
-          if (mb_is_available(mb_nr - 2*vidParam->PicWidthInMbs, curMb))
-            curMb->mbField = vidParam->mbData[mb_nr-2*vidParam->PicWidthInMbs].mbField;
-          else
-            curMb->mbField = FALSE;
-          }
-        }
-      }
-    //update the list offset;
-    curMb->listOffset = (curMb->mbField)? ((mb_nr&0x01)? 4: 2): 0;
-    motion->mbField[mb_nr] = (byte) curMb->mbField;
-    curMb->blockYaff = (curMb->mbField) ? (mb_nr&0x01) ? (curMb->blockY - 4)>>1 : curMb->blockY >> 1 : curMb->blockY;
-    curSlice->siBlock[curMb->mb.y][curMb->mb.x] = 0;
-    curSlice->interpretMbMode(curMb);
-
-    if (curMb->mbField) {
-      curSlice->numRefIndexActive[LIST_0] <<=1;
-      curSlice->numRefIndexActive[LIST_1] <<=1;
-      }
-    }
-
-  curMb->noMbPartLessThan8x8Flag = TRUE;
-
-  if (curMb->mbType == IPCM)
-    read_i_pcm_macroblock (curMb, partMap);
-  else if (curMb->mbType == I4MB)
-    read_intra4x4_macroblock_cavlc (curMb, partMap);
-  else if (curMb->mbType == P8x8) {
-    currSE.type = SE_MBTYPE;
-    currSE.mapping = linfo_ue;
-    dP = &(curSlice->partArr[partMap[SE_MBTYPE]]);
-    read_P8x8_macroblock (curMb, dP, &currSE);
-    }
-  else if (curMb->mbType == PSKIP)
-    read_skip_macroblock (curMb);
-  else if (curMb->isIntraBlock)
-    read_intra_macroblock (curMb);
-  else
-    read_inter_macroblock (curMb);
-  }
-//}}}
-//{{{
-static void read_one_macroblock_p_slice_cabac (sMacroblock* curMb)
+static void read_one_macroblock_p_slice_cabac (sMacroblock* mb)
 {
-  sSlice* curSlice = curMb->slice;
-  sVidParam *vidParam = curMb->vidParam;
-  int mb_nr = curMb->mbAddrX;
-  sSyntaxElement currSE;
-  sDataPartition *dP;
-  const byte *partMap = assignSE2partition[curSlice->dataPartitionMode];
+  sSlice* slice = mb->slice;
+  sVidParam* vidParam = mb->vidParam;
+  int mbNum = mb->mbAddrX;
+  sSyntaxElement syntaxElement;
+  const byte* partMap = assignSE2partition[slice->dataPartitionMode];
 
-  if (curSlice->mbAffFrameFlag == 0) {
-    sPicture* picture = curSlice->picture;
-    sPicMotionParamsOld *motion = &picture->motion;
+  if (slice->mbAffFrameFlag == 0) {
+    sPicture* picture = slice->picture;
+    sPicMotionParamsOld* motion = &picture->motion;
 
-    curMb->mbField = FALSE;
+    mb->mbField = FALSE;
+    updateQp (mb, slice->qp);
 
-    updateQp(curMb, curSlice->qp);
-    currSE.type = SE_MBTYPE;
-
-    // read MB mode**
-    dP = &(curSlice->partArr[partMap[SE_MBTYPE]]);
+    // read MB mode
+    syntaxElement.type = SE_MBTYPE;
+    sDataPartition* dP = &(slice->partArr[partMap[SE_MBTYPE]]);
     if (dP->bitstream->eiFlag)
-      currSE.mapping = linfo_ue;
+      syntaxElement.mapping = linfo_ue;
 
-    CheckAvailabilityOfNeighborsCABAC(curMb);
-    currSE.reading = read_skip_flag_CABAC_p_slice;
-    dP->readsSyntaxElement(curMb, &currSE, dP);
+    checkNeighbourCabac(mb);
+    syntaxElement.reading = read_skip_flag_CABAC_p_slice;
+    dP->readsSyntaxElement(mb, &syntaxElement, dP);
 
-    curMb->mbType   = (short) currSE.value1;
-    curMb->skipFlag = (char) (!(currSE.value1));
+    mb->mbType   = (short) syntaxElement.value1;
+    mb->skipFlag = (char) (!(syntaxElement.value1));
     if (!dP->bitstream->eiFlag)
-      curMb->eiFlag = 0;
+      mb->eiFlag = 0;
 
     // read MB type
-    if (curMb->mbType != 0 ) {
-      currSE.reading = readMB_typeInfo_CABAC_p_slice;
-      dP->readsSyntaxElement(curMb, &currSE, dP);
-      curMb->mbType = (short) currSE.value1;
+    if (mb->mbType != 0 ) {
+      syntaxElement.reading = readMB_typeInfo_CABAC_p_slice;
+      dP->readsSyntaxElement(mb, &syntaxElement, dP);
+      mb->mbType = (short) syntaxElement.value1;
       if(!dP->bitstream->eiFlag)
-        curMb->eiFlag = 0;
+        mb->eiFlag = 0;
       }
 
-    motion->mbField[mb_nr] = (byte) FALSE;
-    curMb->blockYaff = curMb->blockY;
-    curSlice->siBlock[curMb->mb.y][curMb->mb.x] = 0;
-    curSlice->interpretMbMode(curMb);
+    motion->mbField[mbNum] = (byte) FALSE;
+    mb->blockYaff = mb->blockY;
+    slice->siBlock[mb->mb.y][mb->mb.x] = 0;
+    slice->interpretMbMode(mb);
     }
+
   else {
-    sMacroblock *topMB = NULL;
-    int  prevMbSkipped = 0;
-    int  check_bottom, read_bottom, read_top;
-    sPicture* picture = curSlice->picture;
-    sPicMotionParamsOld *motion = &picture->motion;
-    if (mb_nr&0x01) {
-      topMB= &vidParam->mbData[mb_nr-1];
+    sMacroblock* topMB = NULL;
+    int prevMbSkipped = 0;
+    int checkBot, readBot, readTop;
+    sPicture* picture = slice->picture;
+    sPicMotionParamsOld* motion = &picture->motion;
+    if (mbNum & 0x01) {
+      topMB = &vidParam->mbData[mbNum-1];
       prevMbSkipped = (topMB->mbType == 0);
       }
     else
       prevMbSkipped = 0;
 
-    curMb->mbField = ((mb_nr&0x01) == 0)? FALSE : vidParam->mbData[mb_nr-1].mbField;
+    mb->mbField = ((mbNum & 0x01) == 0) ? FALSE : vidParam->mbData[mbNum-1].mbField;
+    updateQp (mb, slice->qp);
 
-    updateQp(curMb, curSlice->qp);
-    currSE.type = SE_MBTYPE;
-
-    //  read MB mode**
-    dP = &(curSlice->partArr[partMap[SE_MBTYPE]]);
+    //  read MB mode
+    syntaxElement.type = SE_MBTYPE;
+    sDataPartition* dP = &(slice->partArr[partMap[SE_MBTYPE]]);
     if (dP->bitstream->eiFlag)
-      currSE.mapping = linfo_ue;
+      syntaxElement.mapping = linfo_ue;
 
     // read MB skipFlag
-    if (((mb_nr&0x01) == 0||prevMbSkipped))
-      field_flag_inference(curMb);
+    if (((mbNum & 0x01) == 0||prevMbSkipped))
+      fieldFlagInference (mb);
 
-    CheckAvailabilityOfNeighborsCABAC(curMb);
-    currSE.reading = read_skip_flag_CABAC_p_slice;
-    dP->readsSyntaxElement(curMb, &currSE, dP);
+    checkNeighbourCabac(mb);
+    syntaxElement.reading = read_skip_flag_CABAC_p_slice;
+    dP->readsSyntaxElement (mb, &syntaxElement, dP);
 
-    curMb->mbType   = (short) currSE.value1;
-    curMb->skipFlag = (char) (!(currSE.value1));
+    mb->mbType = (short)syntaxElement.value1;
+    mb->skipFlag = (char)(!(syntaxElement.value1));
 
     if (!dP->bitstream->eiFlag)
-      curMb->eiFlag = 0;
+      mb->eiFlag = 0;
 
     // read MB AFF
-    check_bottom=read_bottom=read_top=0;
-    if ((mb_nr&0x01)==0) {
-      check_bottom =  curMb->skipFlag;
-      read_top = !check_bottom;
+    checkBot = readBot=readTop=0;
+    if ((mbNum & 0x01)==0) {
+      checkBot = mb->skipFlag;
+      readTop = !checkBot;
       }
     else
-      read_bottom = (topMB->skipFlag && (!curMb->skipFlag));
+      readBot = (topMB->skipFlag && (!mb->skipFlag));
 
-    if (read_bottom || read_top) {
-      currSE.reading = readFieldModeInfo_CABAC;
-      dP->readsSyntaxElement(curMb, &currSE, dP);
-      curMb->mbField = (Boolean) currSE.value1;
-    }
+    if (readBot || readTop) {
+      syntaxElement.reading = readFieldModeInfo_CABAC;
+      dP->readsSyntaxElement (mb, &syntaxElement, dP);
+      mb->mbField = (Boolean)syntaxElement.value1;
+      }
 
-    if (check_bottom)
-      check_next_mb_and_get_field_mode_CABAC_p_slice(curSlice, &currSE, dP);
+    if (checkBot)
+      check_next_mb_and_get_field_mode_CABAC_p_slice (slice, &syntaxElement, dP);
 
     // update the list offset;
-    curMb->listOffset = (curMb->mbField)? ((mb_nr&0x01)? 4: 2): 0;
-
-    CheckAvailabilityOfNeighborsCABAC(curMb);
+    mb->listOffset = (mb->mbField)? ((mbNum & 0x01)? 4: 2): 0;
+    checkNeighbourCabac (mb);
 
     // read MB type
-    if (curMb->mbType != 0 ) {
-      currSE.reading = readMB_typeInfo_CABAC_p_slice;
-      dP->readsSyntaxElement(curMb, &currSE, dP);
-      curMb->mbType = (short) currSE.value1;
+    if (mb->mbType != 0 ) {
+      syntaxElement.reading = readMB_typeInfo_CABAC_p_slice;
+      dP->readsSyntaxElement (mb, &syntaxElement, dP);
+      mb->mbType = (short) syntaxElement.value1;
       if (!dP->bitstream->eiFlag)
-        curMb->eiFlag = 0;
+        mb->eiFlag = 0;
       }
 
-    motion->mbField[mb_nr] = (byte) curMb->mbField;
-    curMb->blockYaff = (curMb->mbField) ? (mb_nr&0x01) ? (curMb->blockY - 4)>>1 : curMb->blockY >> 1 : curMb->blockY;
-    curSlice->siBlock[curMb->mb.y][curMb->mb.x] = 0;
-    curSlice->interpretMbMode(curMb);
-    if (curMb->mbField) {
-      curSlice->numRefIndexActive[LIST_0] <<=1;
-      curSlice->numRefIndexActive[LIST_1] <<=1;
+    motion->mbField[mbNum] = (byte) mb->mbField;
+    mb->blockYaff = (mb->mbField) ? (mbNum & 0x01) ? (mb->blockY - 4)>>1 : mb->blockY >> 1 : mb->blockY;
+    slice->siBlock[mb->mb.y][mb->mb.x] = 0;
+    slice->interpretMbMode(mb);
+    if (mb->mbField) {
+      slice->numRefIndexActive[LIST_0] <<=1;
+      slice->numRefIndexActive[LIST_1] <<=1;
       }
     }
 
-  curMb->noMbPartLessThan8x8Flag = TRUE;
-  if (curMb->mbType == IPCM)
-    read_i_pcm_macroblock (curMb, partMap);
-  else if (curMb->mbType == I4MB)
-    read_intra4x4_macroblock_cabac (curMb, partMap);
-  else if (curMb->mbType == P8x8) {
-    dP = &(curSlice->partArr[partMap[SE_MBTYPE]]);
-    currSE.type = SE_MBTYPE;
+  mb->noMbPartLessThan8x8Flag = TRUE;
+  if (mb->mbType == IPCM)
+    readIPCMmacroblock (mb, partMap);
+  else if (mb->mbType == I4MB)
+    readIntra4x4macroblockCabac (mb, partMap);
+  else if (mb->mbType == P8x8) {
+    sDataPartition* dP = &(slice->partArr[partMap[SE_MBTYPE]]);
+    syntaxElement.type = SE_MBTYPE;
 
     if (dP->bitstream->eiFlag)
-      currSE.mapping = linfo_ue;
+      syntaxElement.mapping = linfo_ue;
     else
-      currSE.reading = readB8_typeInfo_CABAC_p_slice;
+      syntaxElement.reading = readB8_typeInfo_CABAC_p_slice;
 
-    read_P8x8_macroblock(curMb, dP, &currSE);
+    readI8x8macroblock (mb, dP, &syntaxElement);
     }
-  else if (curMb->mbType == PSKIP)
-    read_skip_macroblock (curMb);
-  else if (curMb->isIntraBlock == TRUE)
-    read_intra_macroblock(curMb);
+  else if (mb->mbType == PSKIP)
+    readSkipMacroblock (mb);
+  else if (mb->isIntraBlock == TRUE)
+    readIntraMacroblock (mb);
   else
-    read_inter_macroblock(curMb);
+    readInterMacroblock (mb);
   }
 //}}}
 //{{{
-static void read_one_macroblock_b_slice_cavlc (sMacroblock* curMb) {
+static void read_one_macroblock_b_slice_cabac (sMacroblock* mb) {
 
-  sVidParam *vidParam = curMb->vidParam;
-  sSlice* curSlice = curMb->slice;
-  int mb_nr = curMb->mbAddrX;
-  sDataPartition *dP;
-  sSyntaxElement currSE;
-  const byte *partMap = assignSE2partition[curSlice->dataPartitionMode];
+  sSlice* slice = mb->slice;
+  sVidParam* vidParam = mb->vidParam;
+  int mbNum = mb->mbAddrX;
+  sSyntaxElement syntaxElement;
 
-  if (curSlice->mbAffFrameFlag == 0) {
-    sPicture* picture = curSlice->picture;
-    sPicMotionParamsOld *motion = &picture->motion;
+  const byte* partMap = assignSE2partition[slice->dataPartitionMode];
 
-    curMb->mbField = FALSE;
-    updateQp(curMb, curSlice->qp);
-    currSE.type = SE_MBTYPE;
+  if (slice->mbAffFrameFlag == 0) {
+    sPicture* picture = slice->picture;
+    sPicMotionParamsOld* motion = &picture->motion;
 
-    //  read MB mode**
-    dP = &(curSlice->partArr[partMap[SE_MBTYPE]]);
-    currSE.mapping = linfo_ue;
+    mb->mbField = FALSE;
+    updateQp(mb, slice->qp);
 
-    if(curSlice->codCount == -1) {
-      dP->readsSyntaxElement(curMb, &currSE, dP);
-      curSlice->codCount = currSE.value1;
-      }
-    if (curSlice->codCount==0) {
-      // read MB type
-      dP->readsSyntaxElement(curMb, &currSE, dP);
-      curMb->mbType = (short) currSE.value1;
-      if(!dP->bitstream->eiFlag)
-        curMb->eiFlag = 0;
-      curSlice->codCount--;
-      curMb->skipFlag = 0;
-      }
-    else {
-      curSlice->codCount--;
-      curMb->mbType = 0;
-      curMb->eiFlag = 0;
-      curMb->skipFlag = 1;
-      }
-
-    // update the list offset;
-    curMb->listOffset = 0;
-    motion->mbField[mb_nr] = FALSE;
-    curMb->blockYaff = curMb->blockY;
-    curSlice->siBlock[curMb->mb.y][curMb->mb.x] = 0;
-    curSlice->interpretMbMode(curMb);
-    }
-  else {
-    sMacroblock *topMB = NULL;
-    int  prevMbSkipped = 0;
-    sPicture* picture = curSlice->picture;
-    sPicMotionParamsOld *motion = &picture->motion;
-
-    if (mb_nr&0x01) {
-      topMB= &vidParam->mbData[mb_nr-1];
-      prevMbSkipped = topMB->skipFlag;
-      }
-    else
-      prevMbSkipped = 0;
-
-    curMb->mbField = ((mb_nr&0x01) == 0)? FALSE : vidParam->mbData[mb_nr-1].mbField;
-
-    updateQp(curMb, curSlice->qp);
-    currSE.type = SE_MBTYPE;
-
-    //  read MB mode**
-    dP = &(curSlice->partArr[partMap[SE_MBTYPE]]);
-    currSE.mapping = linfo_ue;
-    if(curSlice->codCount == -1) {
-      dP->readsSyntaxElement(curMb, &currSE, dP);
-      curSlice->codCount = currSE.value1;
-      }
-    if (curSlice->codCount==0) {
-      // read MB aff
-      if ((((mb_nr&0x01)==0) || ((mb_nr&0x01) && prevMbSkipped))) {
-        currSE.len = (int64) 1;
-        readsSyntaxElement_FLC(&currSE, dP->bitstream);
-        curMb->mbField = (Boolean) currSE.value1;
-        }
-
-      // read MB type
-      dP->readsSyntaxElement(curMb, &currSE, dP);
-      curMb->mbType = (short) currSE.value1;
-      if(!dP->bitstream->eiFlag)
-        curMb->eiFlag = 0;
-      curSlice->codCount--;
-      curMb->skipFlag = 0;
-      }
-    else {
-      curSlice->codCount--;
-      curMb->mbType = 0;
-      curMb->eiFlag = 0;
-      curMb->skipFlag = 1;
-
-      // read field flag of bottom block
-      if(curSlice->codCount == 0 && ((mb_nr&0x01) == 0)) {
-        currSE.len = (int64) 1;
-        readsSyntaxElement_FLC(&currSE, dP->bitstream);
-        dP->bitstream->frameBitOffset--;
-        curMb->mbField = (Boolean) currSE.value1;
-        }
-      else if (curSlice->codCount > 0 && ((mb_nr & 0x01) == 0)) {
-        // check left macroblock pair first
-        if (mb_is_available(mb_nr - 2, curMb) && ((mb_nr % (vidParam->PicWidthInMbs * 2))!=0))
-          curMb->mbField = vidParam->mbData[mb_nr-2].mbField;
-        else {
-          // check top macroblock pair
-          if (mb_is_available(mb_nr - 2*vidParam->PicWidthInMbs, curMb))
-            curMb->mbField = vidParam->mbData[mb_nr-2*vidParam->PicWidthInMbs].mbField;
-          else
-            curMb->mbField = FALSE;
-          }
-        }
-      }
-
-    // update the list offset;
-    curMb->listOffset = (curMb->mbField)? ((mb_nr&0x01)? 4: 2): 0;
-    motion->mbField[mb_nr] = (byte) curMb->mbField;
-    curMb->blockYaff = (curMb->mbField) ? (mb_nr&0x01) ? (curMb->blockY - 4)>>1 : curMb->blockY >> 1 : curMb->blockY;
-    curSlice->siBlock[curMb->mb.y][curMb->mb.x] = 0;
-    curSlice->interpretMbMode(curMb);
-    if (curSlice->mbAffFrameFlag) {
-      if (curMb->mbField) {
-        curSlice->numRefIndexActive[LIST_0] <<=1;
-        curSlice->numRefIndexActive[LIST_1] <<=1;
-        }
-      }
-    }
-
-  if (curMb->mbType == IPCM)
-    read_i_pcm_macroblock (curMb, partMap);
-  else if (curMb->mbType == I4MB)
-    read_intra4x4_macroblock_cavlc (curMb, partMap);
-  else if (curMb->mbType == P8x8) {
-    dP = &(curSlice->partArr[partMap[SE_MBTYPE]]);
-    currSE.type = SE_MBTYPE;
-    currSE.mapping = linfo_ue;
-    read_P8x8_macroblock (curMb, dP, &currSE);
-    }
-  else if (curMb->mbType == BSKIP_DIRECT) {
-    // init noMbPartLessThan8x8Flag
-    curMb->noMbPartLessThan8x8Flag = (!(curSlice->activeSPS->direct_8x8_inference_flag))? FALSE: TRUE;
-    curMb->lumaTransformSize8x8flag = FALSE;
-    if(vidParam->activePPS->constrainedIntraPredFlag)
-      curSlice->intraBlock[mb_nr] = 0;
-
-    init_macroblock_direct(curMb);
-    if (curSlice->codCount >= 0) {
-      curMb->cbp = 0;
-      reset_coeffs(curMb);
-      }
-    else
-      curSlice->read_CBP_and_coeffs_from_NAL (curMb);
-    }
-  else if (curMb->isIntraBlock == TRUE)
-    read_intra_macroblock(curMb);
-  else
-    read_inter_macroblock(curMb);
-  }
-//}}}
-//{{{
-static void read_one_macroblock_b_slice_cabac (sMacroblock* curMb) {
-
-  sSlice* curSlice = curMb->slice;
-  sVidParam *vidParam = curMb->vidParam;
-  int mb_nr = curMb->mbAddrX;
-  sSyntaxElement currSE;
-
-  sDataPartition *dP;
-  const byte *partMap = assignSE2partition[curSlice->dataPartitionMode];
-
-  if (curSlice->mbAffFrameFlag == 0) {
-    sPicture* picture = curSlice->picture;
-    sPicMotionParamsOld *motion = &picture->motion;
-
-    curMb->mbField = FALSE;
-
-    updateQp(curMb, curSlice->qp);
-    currSE.type = SE_MBTYPE;
-
-    //  read MB mode**
-    dP = &(curSlice->partArr[partMap[SE_MBTYPE]]);
+    //  read MB mode
+    syntaxElement.type = SE_MBTYPE;
+    sDataPartition* dP = &(slice->partArr[partMap[SE_MBTYPE]]);
     if (dP->bitstream->eiFlag)
-      currSE.mapping = linfo_ue;
+      syntaxElement.mapping = linfo_ue;
 
-    CheckAvailabilityOfNeighborsCABAC(curMb);
-    currSE.reading = read_skip_flag_CABAC_b_slice;
-    dP->readsSyntaxElement(curMb, &currSE, dP);
+    checkNeighbourCabac(mb);
+    syntaxElement.reading = read_skip_flag_CABAC_b_slice;
+    dP->readsSyntaxElement(mb, &syntaxElement, dP);
 
-    curMb->mbType   = (short) currSE.value1;
-    curMb->skipFlag = (char) (!(currSE.value1));
-
-    curMb->cbp = currSE.value2;
+    mb->mbType   = (short)syntaxElement.value1;
+    mb->skipFlag = (char)(!(syntaxElement.value1));
+    mb->cbp = syntaxElement.value2;
 
     if (!dP->bitstream->eiFlag)
-      curMb->eiFlag = 0;
+      mb->eiFlag = 0;
 
-    if (currSE.value1 == 0 && currSE.value2 == 0)
-      curSlice->codCount=0;
+    if (syntaxElement.value1 == 0 && syntaxElement.value2 == 0)
+      slice->codCount=0;
 
     // read MB type
-    if (curMb->mbType != 0 ) {
-      currSE.reading = readMB_typeInfo_CABAC_b_slice;
-      dP->readsSyntaxElement(curMb, &currSE, dP);
-      curMb->mbType = (short) currSE.value1;
-      if(!dP->bitstream->eiFlag)
-        curMb->eiFlag = 0;
+    if (mb->mbType != 0 ) {
+      syntaxElement.reading = readMB_typeInfo_CABAC_b_slice;
+      dP->readsSyntaxElement (mb, &syntaxElement, dP);
+      mb->mbType = (short)syntaxElement.value1;
+      if (!dP->bitstream->eiFlag)
+        mb->eiFlag = 0;
       }
 
-    motion->mbField[mb_nr] = (byte) FALSE;
-    curMb->blockYaff = curMb->blockY;
-    curSlice->siBlock[curMb->mb.y][curMb->mb.x] = 0;
-    curSlice->interpretMbMode(curMb);
+    motion->mbField[mbNum] = (byte) FALSE;
+    mb->blockYaff = mb->blockY;
+    slice->siBlock[mb->mb.y][mb->mb.x] = 0;
+    slice->interpretMbMode (mb);
     }
   else {
-    sMacroblock *topMB = NULL;
+    sMacroblock* topMB = NULL;
     int  prevMbSkipped = 0;
-    int  check_bottom, read_bottom, read_top;
-    sPicture* picture = curSlice->picture;
-    sPicMotionParamsOld *motion = &picture->motion;
+    int  checkBot, readBot, readTop;
+    sPicture* picture = slice->picture;
+    sPicMotionParamsOld* motion = &picture->motion;
 
-    if (mb_nr&0x01) {
-      topMB= &vidParam->mbData[mb_nr-1];
+    if (mbNum & 0x01) {
+      topMB = &vidParam->mbData[mbNum-1];
       prevMbSkipped = topMB->skipFlag;
       }
     else
       prevMbSkipped = 0;
 
-    curMb->mbField = ((mb_nr&0x01) == 0)? FALSE : vidParam->mbData[mb_nr-1].mbField;
+    mb->mbField = ((mbNum & 0x01) == 0)? FALSE : vidParam->mbData[mbNum-1].mbField;
 
-    updateQp(curMb, curSlice->qp);
-    currSE.type = SE_MBTYPE;
+    updateQp (mb, slice->qp);
 
-    //  read MB mode**
-    dP = &(curSlice->partArr[partMap[SE_MBTYPE]]);
-
+    //  read MB mode
+    syntaxElement.type = SE_MBTYPE;
+    sDataPartition* dP = &(slice->partArr[partMap[SE_MBTYPE]]);
     if (dP->bitstream->eiFlag)
-      currSE.mapping = linfo_ue;
+      syntaxElement.mapping = linfo_ue;
 
     // read MB skipFlag
-    if (((mb_nr&0x01) == 0||prevMbSkipped))
-      field_flag_inference(curMb);
+    if ((mbNum & 0x01) == 0 || prevMbSkipped)
+      fieldFlagInference (mb);
 
-    CheckAvailabilityOfNeighborsCABAC(curMb);
-    currSE.reading = read_skip_flag_CABAC_b_slice;
-    dP->readsSyntaxElement(curMb, &currSE, dP);
+    checkNeighbourCabac (mb);
+    syntaxElement.reading = read_skip_flag_CABAC_b_slice;
 
-    curMb->mbType   = (short) currSE.value1;
-    curMb->skipFlag = (char) (!(currSE.value1));
-    curMb->cbp = currSE.value2;
-
+    dP->readsSyntaxElement (mb, &syntaxElement, dP);
+    mb->mbType = (short)syntaxElement.value1;
+    mb->skipFlag = (char)(!(syntaxElement.value1));
+    mb->cbp = syntaxElement.value2;
     if (!dP->bitstream->eiFlag)
-      curMb->eiFlag = 0;
-
-    if (currSE.value1 == 0 && currSE.value2 == 0)
-      curSlice->codCount=0;
+      mb->eiFlag = 0;
+    if (syntaxElement.value1 == 0 && syntaxElement.value2 == 0)
+      slice->codCount = 0;
 
     // read MB AFF
-    check_bottom=read_bottom=read_top=0;
-    if ((mb_nr & 0x01) == 0) {
-      check_bottom =  curMb->skipFlag;
-      read_top = !check_bottom;
+    checkBot=readBot = readTop = 0;
+    if ((mbNum & 0x01) == 0) {
+      checkBot = mb->skipFlag;
+      readTop = !checkBot;
       }
     else
-      read_bottom = (topMB->skipFlag && (!curMb->skipFlag));
+      readBot = topMB->skipFlag && (!mb->skipFlag);
 
-    if (read_bottom || read_top) {
-      currSE.reading = readFieldModeInfo_CABAC;
-      dP->readsSyntaxElement(curMb, &currSE, dP);
-      curMb->mbField = (Boolean) currSE.value1;
+    if (readBot || readTop) {
+      syntaxElement.reading = readFieldModeInfo_CABAC;
+      dP->readsSyntaxElement (mb, &syntaxElement, dP);
+      mb->mbField = (Boolean)syntaxElement.value1;
       }
-    if (check_bottom)
-      check_next_mb_and_get_field_mode_CABAC_b_slice(curSlice, &currSE, dP);
+    if (checkBot)
+      check_next_mb_and_get_field_mode_CABAC_b_slice (slice, &syntaxElement, dP);
 
     //update the list offset;
-    curMb->listOffset = (curMb->mbField)? ((mb_nr&0x01)? 4: 2): 0;
+    mb->listOffset = (mb->mbField)? ((mbNum & 0x01)? 4: 2): 0;
 
-    CheckAvailabilityOfNeighborsCABAC(curMb);
+    checkNeighbourCabac (mb);
 
     // read MB type
-    if (curMb->mbType != 0 ) {
-      currSE.reading = readMB_typeInfo_CABAC_b_slice;
-      dP->readsSyntaxElement (curMb, &currSE, dP);
-      curMb->mbType = (short)currSE.value1;
+    if (mb->mbType != 0 ) {
+      syntaxElement.reading = readMB_typeInfo_CABAC_b_slice;
+      dP->readsSyntaxElement (mb, &syntaxElement, dP);
+      mb->mbType = (short)syntaxElement.value1;
       if(!dP->bitstream->eiFlag)
-        curMb->eiFlag = 0;
+        mb->eiFlag = 0;
       }
 
-    motion->mbField[mb_nr] = (byte) curMb->mbField;
-    curMb->blockYaff = (curMb->mbField) ? (mb_nr&0x01) ? (curMb->blockY - 4)>>1 : curMb->blockY >> 1 : curMb->blockY;
-    curSlice->siBlock[curMb->mb.y][curMb->mb.x] = 0;
-    curSlice->interpretMbMode(curMb);
-    if (curMb->mbField) {
-      curSlice->numRefIndexActive[LIST_0] <<=1;
-      curSlice->numRefIndexActive[LIST_1] <<=1;
+    motion->mbField[mbNum] = (byte) mb->mbField;
+    mb->blockYaff = (mb->mbField) ? (mbNum & 0x01) ? (mb->blockY - 4)>>1 : mb->blockY >> 1 : mb->blockY;
+    slice->siBlock[mb->mb.y][mb->mb.x] = 0;
+    slice->interpretMbMode (mb);
+    if (mb->mbField) {
+      slice->numRefIndexActive[LIST_0] <<=1;
+      slice->numRefIndexActive[LIST_1] <<=1;
       }
     }
 
-  if(curMb->mbType == IPCM)
-    read_i_pcm_macroblock (curMb, partMap);
-  else if (curMb->mbType == I4MB)
-    read_intra4x4_macroblock_cabac (curMb, partMap);
-  else if (curMb->mbType == P8x8) {
-    dP = &(curSlice->partArr[partMap[SE_MBTYPE]]);
-    currSE.type = SE_MBTYPE;
+  if (mb->mbType == IPCM)
+    readIPCMmacroblock (mb, partMap);
+  else if (mb->mbType == I4MB)
+    readIntra4x4macroblockCabac (mb, partMap);
+  else if (mb->mbType == P8x8) {
+    sDataPartition* dP = &(slice->partArr[partMap[SE_MBTYPE]]);
+    syntaxElement.type = SE_MBTYPE;
     if (dP->bitstream->eiFlag)
-      currSE.mapping = linfo_ue;
+      syntaxElement.mapping = linfo_ue;
     else
-      currSE.reading = readB8_typeInfo_CABAC_b_slice;
-    read_P8x8_macroblock(curMb, dP, &currSE);
+      syntaxElement.reading = readB8_typeInfo_CABAC_b_slice;
+    readI8x8macroblock(mb, dP, &syntaxElement);
     }
-  else if (curMb->mbType == BSKIP_DIRECT) {
+  else if (mb->mbType == BSKIP_DIRECT) {
     //init noMbPartLessThan8x8Flag
-    curMb->noMbPartLessThan8x8Flag = (!(curSlice->activeSPS->direct_8x8_inference_flag))? FALSE: TRUE;
+    mb->noMbPartLessThan8x8Flag = (!(slice->activeSPS->direct_8x8_inference_flag))? FALSE: TRUE;
 
-    //============= Transform Size Flag for INTRA MBs =============
-    //transform size flag for INTRA_4x4 and INTRA_8x8 modes
-    curMb->lumaTransformSize8x8flag = FALSE;
+    // transform size flag for INTRA_4x4 and INTRA_8x8 modes
+    mb->lumaTransformSize8x8flag = FALSE;
     if(vidParam->activePPS->constrainedIntraPredFlag)
-      curSlice->intraBlock[mb_nr] = 0;
+      slice->intraBlock[mbNum] = 0;
 
-    //--- init macroblock data
-    init_macroblock_direct (curMb);
-
-    if (curSlice->codCount >= 0) {
-      curSlice->is_reset_coeff = TRUE;
-      curMb->cbp = 0;
-      curSlice->codCount = -1;
+    initMacroblockDirect (mb);
+    if (slice->codCount >= 0) {
+      slice->is_reset_coeff = TRUE;
+      mb->cbp = 0;
+      slice->codCount = -1;
       }
-    else // read CBP and Coeffs **
-      curSlice->read_CBP_and_coeffs_from_NAL (curMb);
+    else // read CBP and Coeffs
+      slice->readCBPcoeffs (mb);
     }
-  else if (curMb->isIntraBlock == TRUE)
-    read_intra_macroblock (curMb);
+  else if (mb->isIntraBlock == TRUE)
+    readIntraMacroblock (mb);
   else
-    read_inter_macroblock (curMb);
+    readInterMacroblock (mb);
   }
 //}}}
-//{{{
-void setReadMacroblock (sSlice* curSlice) {
 
-  if (curSlice->vidParam->activePPS->entropyCodingModeFlag == (Boolean) CABAC) {
-    switch (curSlice->sliceType) {
+//{{{
+void setReadMacroblock (sSlice* slice) {
+
+  if (slice->vidParam->activePPS->entropyCodingModeFlag == (Boolean)CABAC) {
+    switch (slice->sliceType) {
       case P_SLICE:
       case SP_SLICE:
-        curSlice->readOneMacroblock = read_one_macroblock_p_slice_cabac;
+        slice->readOneMacroblock = read_one_macroblock_p_slice_cabac;
         break;
       case B_SLICE:
-        curSlice->readOneMacroblock = read_one_macroblock_b_slice_cabac;
+        slice->readOneMacroblock = read_one_macroblock_b_slice_cabac;
         break;
       case I_SLICE:
       case SI_SLICE:
-        curSlice->readOneMacroblock = read_one_macroblock_i_slice_cabac;
+        slice->readOneMacroblock = read_one_macroblock_i_slice_cabac;
         break;
       default:
         printf("Unsupported slice type\n");
@@ -1609,17 +1588,17 @@ void setReadMacroblock (sSlice* curSlice) {
     }
 
   else {
-    switch (curSlice->sliceType) {
+    switch (slice->sliceType) {
       case P_SLICE:
       case SP_SLICE:
-        curSlice->readOneMacroblock = read_one_macroblock_p_slice_cavlc;
+        slice->readOneMacroblock = read_one_macroblock_p_slice_cavlc;
         break;
       case B_SLICE:
-        curSlice->readOneMacroblock = read_one_macroblock_b_slice_cavlc;
+        slice->readOneMacroblock = read_one_macroblock_b_slice_cavlc;
         break;
       case I_SLICE:
       case SI_SLICE:
-        curSlice->readOneMacroblock = read_one_macroblock_i_slice_cavlc;
+        slice->readOneMacroblock = read_one_macroblock_i_slice_cavlc;
         break;
       default:
         printf("Unsupported slice type\n");

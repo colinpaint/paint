@@ -303,7 +303,7 @@ int cabac_startcode_follows (sSlice* curSlice, int eos_bit)
 //}}}
 
 //{{{
-void CheckAvailabilityOfNeighborsCABAC (sMacroblock* curMb)
+void checkNeighbourCabac (sMacroblock* curMb)
 {
   sVidParam* vidParam = curMb->vidParam;
   sPixelPos up, left;
@@ -450,7 +450,7 @@ int check_next_mb_and_get_field_mode_CABAC_p_slice (sSlice* curSlice,
   curMb->listOffset = ((curSlice->mbAffFrameFlag)&&(curMb->mbField))? (curMb->mbAddrX&0x01) ? 4 : 2 : 0;
 
   CheckAvailabilityOfNeighborsMBAFF(curMb);
-  CheckAvailabilityOfNeighborsCABAC(curMb);
+  checkNeighbourCabac(curMb);
 
   //create
   dep_dp_copy = (sDecodingEnvironmentPtr) calloc(1, sizeof(sDecodingEnvironment) );
@@ -493,7 +493,7 @@ int check_next_mb_and_get_field_mode_CABAC_p_slice (sSlice* curSlice,
     memcpy(mot_ctx->mb_type_contexts[i],mb_type_ctx_copy[i], NUM_MB_TYPE_CTX*sizeof(sBiContextType) );
   memcpy( mot_ctx->mb_aff_contexts,mb_aff_ctx_copy,NUM_MB_AFF_CTX*sizeof(sBiContextType) );
 
-  CheckAvailabilityOfNeighborsCABAC(curMb);
+  checkNeighbourCabac(curMb);
 
   //delete
   free(dep_dp_copy);
@@ -536,7 +536,7 @@ int check_next_mb_and_get_field_mode_CABAC_b_slice (sSlice* curSlice,
   curMb->listOffset = ((curSlice->mbAffFrameFlag)&&(curMb->mbField))? (curMb->mbAddrX & 0x01) ? 4 : 2 : 0;
 
   CheckAvailabilityOfNeighborsMBAFF(curMb);
-  CheckAvailabilityOfNeighborsCABAC(curMb);
+  checkNeighbourCabac(curMb);
 
   //create
   dep_dp_copy = (sDecodingEnvironmentPtr) calloc(1, sizeof(sDecodingEnvironment) );
@@ -582,7 +582,7 @@ int check_next_mb_and_get_field_mode_CABAC_b_slice (sSlice* curSlice,
 
   memcpy( mot_ctx->mb_aff_contexts, mb_aff_ctx_copy, NUM_MB_AFF_CTX * sizeof(sBiContextType) );
 
-  CheckAvailabilityOfNeighborsCABAC(curMb);
+  checkNeighbourCabac(curMb);
 
   //delete
   free(dep_dp_copy);
@@ -2276,7 +2276,7 @@ int readsSyntaxElement_CABAC (sMacroblock* curMb, sSyntaxElement *se, sDataParti
  *    Read I_PCM macroblock
 ** **********************************************************************
 */
-void readIPCM_CABAC (sSlice* curSlice, struct DataPartition *dP)
+void readIPCMcabac (sSlice* curSlice, struct DataPartition *dP)
 {
   sVidParam* vidParam = curSlice->vidParam;
   sPicture* picture = curSlice->picture;

@@ -1234,7 +1234,7 @@ int mb_pred_ipcm (sMacroblock* curMb)
   sPicture* picture = curSlice->picture;
 
   //Copy coefficients to decoded picture buffer
-  //IPCM coefficients are stored in curSlice->cof which is set in function read_IPCM_coeffs_from_NAL()
+  //IPCM coefficients are stored in curSlice->cof which is set in function readIPCMcoeffs()
 
   for(i = 0; i < MB_BLOCK_SIZE; ++i)
   {

@@ -1936,26 +1936,26 @@ void set_read_CBP_and_coeffs_cavlc (sSlice* curSlice) {
   switch (curSlice->vidParam->activeSPS->chromaFormatIdc) {
     case YUV444:
       if (curSlice->vidParam->sepColourPlaneFlag == 0)
-        curSlice->read_CBP_and_coeffs_from_NAL = read_CBP_and_coeffs_from_NAL_CAVLC_444;
+        curSlice->readCBPcoeffs = read_CBP_and_coeffs_from_NAL_CAVLC_444;
       else
-        curSlice->read_CBP_and_coeffs_from_NAL = read_CBP_and_coeffs_from_NAL_CAVLC_400;
+        curSlice->readCBPcoeffs = read_CBP_and_coeffs_from_NAL_CAVLC_400;
       break;
 
     case YUV422:
-      curSlice->read_CBP_and_coeffs_from_NAL = read_CBP_and_coeffs_from_NAL_CAVLC_422;
+      curSlice->readCBPcoeffs = read_CBP_and_coeffs_from_NAL_CAVLC_422;
       break;
 
     case YUV420:
-      curSlice->read_CBP_and_coeffs_from_NAL = read_CBP_and_coeffs_from_NAL_CAVLC_420;
+      curSlice->readCBPcoeffs = read_CBP_and_coeffs_from_NAL_CAVLC_420;
       break;
 
     case YUV400:
-      curSlice->read_CBP_and_coeffs_from_NAL = read_CBP_and_coeffs_from_NAL_CAVLC_400;
+      curSlice->readCBPcoeffs = read_CBP_and_coeffs_from_NAL_CAVLC_400;
       break;
 
     default:
       assert (1);
-      curSlice->read_CBP_and_coeffs_from_NAL = NULL;
+      curSlice->readCBPcoeffs = NULL;
       break;
     }
   }
