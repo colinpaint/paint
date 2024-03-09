@@ -1,4 +1,4 @@
-// dear imgui, v1.90.2 WIP
+// dear imgui, v1.90.1 WIP
 // (drawing and font code)
 
 /*
@@ -641,7 +641,7 @@ void ImDrawList::PrimReserve(int idx_count, int vtx_count)
     _IdxWritePtr = IdxBuffer.Data + idx_buffer_old_size;
 }
 
-// Release the number of reserved vertices/indices from the end of the last reservation made with PrimReserve().
+// Release the a number of reserved vertices/indices from the end of the last reservation made with PrimReserve().
 void ImDrawList::PrimUnreserve(int idx_count, int vtx_count)
 {
     IM_ASSERT_PARANOID(idx_count >= 0 && vtx_count >= 0);
@@ -1852,7 +1852,7 @@ void ImDrawListSplitter::SetCurrentChannel(ImDrawList* draw_list, int idx)
 
 void ImDrawData::Clear()
 {
-    valid = false;
+    Valid = false;
     CmdListsCount = TotalIdxCount = TotalVtxCount = 0;
     CmdLists.resize(0); // The ImDrawList are NOT owned by ImDrawData but e.g. by ImGuiContext, so we don't clear them.
     DisplayPos = DisplaySize = FramebufferScale = ImVec2(0.0f, 0.0f);
@@ -4205,8 +4205,8 @@ static unsigned int stb_decompress(unsigned char *output, const unsigned char *i
 //-----------------------------------------------------------------------------
 // ProggyClean.ttf
 // Copyright (c) 2004, 2005 Tristan Grimmer
-// MIT license (see License.txt in http://www.proggyfonts.net/index.php?menu=download)
-// Download and more information at http://www.proggyfonts.net or http://upperboundsinteractive.com/fonts.php
+// MIT license (see License.txt in http://www.upperbounds.net/download/ProggyClean.ttf.zip)
+// Download and more information at http://upperbounds.net
 //-----------------------------------------------------------------------------
 // File: 'ProggyClean.ttf' (41208 bytes)
 // Exported using misc/fonts/binary_to_compressed_c.cpp (with compression + base85 string encoding).

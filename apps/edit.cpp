@@ -3243,7 +3243,7 @@ namespace {
 
       for (uint32_t glyphIndex = line.mFirstGlyph; glyphIndex < line.getNumGlyphs(); glyphIndex++) {
         uint8_t color = (forceColor == eUndefined) ? line.getColor (glyphIndex) : forceColor;
-        if ((strIndex > 0) && (strIndex < str.maxSize()) &&
+        if ((strIndex > 0) && (strIndex < str.max_size()) &&
             ((color != prevColor) || (line.getChar (glyphIndex) == '\t') || (line.getChar (glyphIndex) == ' '))) {
           // draw colored glyphs, seperated by colorChange,tab,space
           pos.x += mDrawContext.text (pos, prevColor, str.data(), str.data() + strIndex);
@@ -4113,9 +4113,9 @@ namespace {
             copyEndian (&int8, buf, size);
 
             if (dataFormat == eDataFormat::eDec)
-              ImSnprintf (outBuf.data(), outBuf.maxSize(), "%hhd", int8);
+              ImSnprintf (outBuf.data(), outBuf.max_size(), "%hhd", int8);
             else if (dataFormat == eDataFormat::eHex)
-              ImSnprintf (outBuf.data(), outBuf.maxSize(), "0x%02x", int8 & 0xFF);
+              ImSnprintf (outBuf.data(), outBuf.max_size(), "0x%02x", int8 & 0xFF);
 
             break;
             }
@@ -4127,9 +4127,9 @@ namespace {
             copyEndian (&uint8, buf, size);
 
             if (dataFormat == eDataFormat::eDec)
-              ImSnprintf (outBuf.data(), outBuf.maxSize(), "%hhu", uint8);
+              ImSnprintf (outBuf.data(), outBuf.max_size(), "%hhu", uint8);
             if (dataFormat == eDataFormat::eHex)
-              ImSnprintf (outBuf.data(), outBuf.maxSize(), "0x%02x", uint8 & 0XFF);
+              ImSnprintf (outBuf.data(), outBuf.max_size(), "0x%02x", uint8 & 0XFF);
 
             break;
             }
@@ -4141,9 +4141,9 @@ namespace {
             copyEndian (&int16, buf, size);
 
             if (dataFormat == eDataFormat::eDec)
-              ImSnprintf (outBuf.data(), outBuf.maxSize(), "%hd", int16);
+              ImSnprintf (outBuf.data(), outBuf.max_size(), "%hd", int16);
             else if (dataFormat == eDataFormat::eHex)
-              ImSnprintf (outBuf.data(), outBuf.maxSize(), "0x%04x", int16 & 0xFFFF);
+              ImSnprintf (outBuf.data(), outBuf.max_size(), "0x%04x", int16 & 0xFFFF);
 
             break;
             }
@@ -4155,9 +4155,9 @@ namespace {
             copyEndian (&uint16, buf, size);
 
             if (dataFormat == eDataFormat::eDec)
-              ImSnprintf (outBuf.data(), outBuf.maxSize(), "%hu", uint16);
+              ImSnprintf (outBuf.data(), outBuf.max_size(), "%hu", uint16);
             else if (dataFormat == eDataFormat::eHex)
-              ImSnprintf (outBuf.data(), outBuf.maxSize(), "0x%04x", uint16 & 0xFFFF);
+              ImSnprintf (outBuf.data(), outBuf.max_size(), "0x%04x", uint16 & 0xFFFF);
 
             break;
             }
@@ -4169,9 +4169,9 @@ namespace {
             copyEndian (&int32, buf, size);
 
             if (dataFormat == eDataFormat::eDec)
-              ImSnprintf (outBuf.data(), outBuf.maxSize(), "%d", int32);
+              ImSnprintf (outBuf.data(), outBuf.max_size(), "%d", int32);
             else if (dataFormat == eDataFormat::eHex)
-              ImSnprintf (outBuf.data(), outBuf.maxSize(), "0x%08x", int32);
+              ImSnprintf (outBuf.data(), outBuf.max_size(), "0x%08x", int32);
 
             break;
             }
@@ -4182,9 +4182,9 @@ namespace {
             copyEndian (&uint32, buf, size);
 
             if (dataFormat == eDataFormat::eDec)
-              ImSnprintf (outBuf.data(), outBuf.maxSize(), "%u", uint32);
+              ImSnprintf (outBuf.data(), outBuf.max_size(), "%u", uint32);
             else if (dataFormat == eDataFormat::eHex)
-              ImSnprintf (outBuf.data(), outBuf.maxSize(), "0x%08x", uint32);
+              ImSnprintf (outBuf.data(), outBuf.max_size(), "0x%08x", uint32);
 
             break;
             }
@@ -4196,9 +4196,9 @@ namespace {
             copyEndian (&int64, buf, size);
 
             if (dataFormat == eDataFormat::eDec)
-              ImSnprintf (outBuf.data(), outBuf.maxSize(), "%lld", (long long)int64);
+              ImSnprintf (outBuf.data(), outBuf.max_size(), "%lld", (long long)int64);
             else if (dataFormat == eDataFormat::eHex)
-              ImSnprintf (outBuf.data(), outBuf.maxSize(), "0x%016llx", (long long)int64);
+              ImSnprintf (outBuf.data(), outBuf.max_size(), "0x%016llx", (long long)int64);
 
             break;
             }
@@ -4210,9 +4210,9 @@ namespace {
             copyEndian (&uint64, buf, size);
 
             if (dataFormat == eDataFormat::eDec)
-              ImSnprintf (outBuf.data(), outBuf.maxSize(), "%llu", (long long)uint64);
+              ImSnprintf (outBuf.data(), outBuf.max_size(), "%llu", (long long)uint64);
             else if (dataFormat == eDataFormat::eHex)
-              ImSnprintf (outBuf.data(), outBuf.maxSize(), "0x%016llx", (long long)uint64);
+              ImSnprintf (outBuf.data(), outBuf.max_size(), "0x%016llx", (long long)uint64);
 
             break;
             }
@@ -4224,9 +4224,9 @@ namespace {
             copyEndian (&float32, buf, size);
 
             if (dataFormat == eDataFormat::eDec)
-              ImSnprintf (outBuf.data(), outBuf.maxSize(), "%f", float32);
+              ImSnprintf (outBuf.data(), outBuf.max_size(), "%f", float32);
             else if (dataFormat == eDataFormat::eHex)
-              ImSnprintf (outBuf.data(), outBuf.maxSize(), "%a", float32);
+              ImSnprintf (outBuf.data(), outBuf.max_size(), "%a", float32);
 
             break;
             }
@@ -4238,9 +4238,9 @@ namespace {
             copyEndian (&float64, buf, size);
 
             if (dataFormat == eDataFormat::eDec)
-              ImSnprintf (outBuf.data(), outBuf.maxSize(), "%f", float64);
+              ImSnprintf (outBuf.data(), outBuf.max_size(), "%f", float64);
             else if (dataFormat == eDataFormat::eHex)
-              ImSnprintf (outBuf.data(), outBuf.maxSize(), "%a", float64);
+              ImSnprintf (outBuf.data(), outBuf.max_size(), "%a", float64);
             break;
             }
           //}}}
