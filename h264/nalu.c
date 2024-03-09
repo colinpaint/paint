@@ -10,7 +10,7 @@ static const int kDebug = 0;
 ANNEXB_t* allocAnnexB (sVidParam* vidParam) {
 
   ANNEXB_t* annexB = (ANNEXB_t*)calloc (1, sizeof(ANNEXB_t));
-  annexB->naluBuffer = (byte*)malloc (vidParam->nalu->max_size);
+  annexB->naluBuffer = (byte*)malloc (vidParam->nalu->maxSize);
   return annexB;
   }
 //}}}
@@ -55,7 +55,7 @@ sNalu* allocNALU (int buffersize) {
     free (nalu);
     no_mem_exit ("AllocNALU buffer");
     }
-  nalu->max_size = buffersize;
+  nalu->maxSize = buffersize;
 
   return nalu;
   }

@@ -35,7 +35,7 @@ typedef enum {
 typedef struct nalu_t {
   int       startCodeLen; // 4 for parameter sets and first slice in picture, 3 for everything else (suggested)
   unsigned  len;          // Length of the NAL unit (Excluding the start code, which does not belong to the NALU)
-  unsigned  max_size;     // NAL Unit Buffer size
+  unsigned  maxSize;      // NAL Unit Buffer size
   int       forbiddenBit; // should be always FALSE
   NaluType  unitType;     // NALU_TYPE_xxxx
   NalRefIdc refId;        // NALU_PRIORITY_xxxx

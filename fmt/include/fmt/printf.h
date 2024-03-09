@@ -564,7 +564,7 @@ inline auto vsprintf(
   \rst
   Formats arguments and returns the result as a string.
 
- ** Example**::
+  **Example**::
 
     std::string message = fmt::sprintf("The answer is %d", 42);
   \endrst
@@ -594,7 +594,7 @@ inline auto vfprintf(
   \rst
   Prints formatted data to the file *f*.
 
- ** Example**::
+  **Example**::
 
     fmt::fprintf(stderr, "Don't %s!", "panic");
   \endrst
@@ -618,7 +618,7 @@ inline auto vprintf(
   \rst
   Prints formatted data to ``stdout``.
 
- ** Example**::
+  **Example**::
 
     fmt::printf("Elapsed time: %.2f seconds", 1.23);
   \endrst

@@ -666,7 +666,7 @@ FMT_MODULE_EXPORT_BEGIN
   \rst
   Returns an object that formats `tuple` with elements separated by `sep`.
 
- ** Example**::
+  **Example**::
 
     std::tuple<int, char> t = {1, 'a'};
     fmt::print("{}", fmt::join(t, ", "));
@@ -691,7 +691,7 @@ FMT_CONSTEXPR auto join(const std::tuple<T...>& tuple,
   Returns an object that formats `initializer_list` with elements separated by
   `sep`.
 
- ** Example**::
+  **Example**::
 
     fmt::print("{}", fmt::join({1, 2, 3}, ", "));
     // Output: "1, 2, 3"

@@ -497,7 +497,7 @@ void vprint(std::FILE* f, const text_style& ts, const S& format,
   Formats a string and prints it to the specified file stream using ANSI
   escape sequences to specify text formatting.
 
- ** Example**::
+  **Example**::
 
     fmt::print(fmt::emphasis::bold | fg(fmt::color::red),
                "Elapsed time: {0:.2f} seconds", 1.23);
@@ -516,7 +516,7 @@ void print(std::FILE* f, const text_style& ts, const S& format_str,
   Formats a string and prints it to stdout using ANSI escape sequences to
   specify text formatting.
 
- ** Example**::
+  **Example**::
 
     fmt::print(fmt::emphasis::bold | fg(fmt::color::red),
                "Elapsed time: {0:.2f} seconds", 1.23);
@@ -542,7 +542,7 @@ inline std::basic_string<Char> vformat(
   Formats arguments and returns the result as a string using ANSI
   escape sequences to specify text formatting.
 
- ** Example**::
+  **Example**::
 
     #include <fmt/color.h>
     std::string message = fmt::format(fmt::emphasis::bold | fg(fmt::color::red),
@@ -574,7 +574,7 @@ OutputIt vformat_to(
   Formats arguments with the given text_style, writes the result to the output
   iterator ``out`` and returns the iterator past the end of the output range.
 
- ** Example**::
+  **Example**::
 
     std::vector<char> out;
     fmt::format_to(std::back_inserter(out),
@@ -632,7 +632,7 @@ struct formatter<detail::styled_arg<T>, Char> : formatter<T, Char> {
   Returns an argument that will be formatted using ANSI escape sequences,
   to be used in a formatting function.
 
- ** Example**::
+  **Example**::
 
     fmt::print("Elapsed time: {0:.2f} seconds",
                fmt::styled(1.23, fmt::fg(fmt::color::green) |

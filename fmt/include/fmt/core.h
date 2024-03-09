@@ -1912,7 +1912,7 @@ constexpr auto make_format_args(T&&... args)
   It should only be used in a call to a formatting function or
   `dynamic_format_arg_store::push_back`.
 
- ** Example**::
+  **Example**::
 
     fmt::print("Elapsed time: {s:.2f} seconds", fmt::arg("s", 1.23));
   \endrst
@@ -3023,7 +3023,7 @@ using format_string = basic_format_string<char, type_identity_t<Args>...>;
   \rst
   Creates a runtime format string.
 
- ** Example**::
+  **Example**::
 
     // Check format string at runtime instead of compile-time.
     fmt::print(fmt::runtime("{:d}"), "I am not a number");
@@ -3039,7 +3039,7 @@ FMT_API auto vformat(string_view fmt, format_args args) -> std::string;
   Formats ``args`` according to specifications in ``fmt`` and returns the result
   as a string.
 
- ** Example**::
+  **Example**::
 
     #include <fmt/core.h>
     std::string message = fmt::format("The answer is {}.", 42);
@@ -3066,7 +3066,7 @@ auto vformat_to(OutputIt out, string_view fmt, format_args args) -> OutputIt {
  the output iterator ``out`` and returns the iterator past the end of the output
  range. `format_to` does not append a terminating null character.
 
-** Example**::
+ **Example**::
 
    auto out = std::vector<char>();
    fmt::format_to(std::back_inserter(out), "{}", 42);
@@ -3129,7 +3129,7 @@ FMT_API void vprint(std::FILE* f, string_view fmt, format_args args);
   Formats ``args`` according to specifications in ``fmt`` and writes the output
   to ``stdout``.
 
- ** Example**::
+  **Example**::
 
     fmt::print("Elapsed time: {0:.2f} seconds", 1.23);
   \endrst
@@ -3146,7 +3146,7 @@ FMT_INLINE void print(format_string<T...> fmt, T&&... args) {
   Formats ``args`` according to specifications in ``fmt`` and writes the
   output to the file ``f``.
 
- ** Example**::
+  **Example**::
 
     fmt::print(stderr, "Don't {}!", "panic");
   \endrst

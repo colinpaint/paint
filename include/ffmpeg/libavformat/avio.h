@@ -811,12 +811,12 @@ int64_t avio_seek_time(AVIOContext *h, int stream_index,
 struct AVBPrint;
 
 /**
- * Read contents of h into print buffer, up to max_size bytes, or up to EOF.
+ * Read contents of h into print buffer, up to maxSize bytes, or up to EOF.
  *
- * @return 0 for success (max_size bytes read or EOF reached), negative error
+ * @return 0 for success (maxSize bytes read or EOF reached), negative error
  * code otherwise
  */
-int avio_read_to_bprint(AVIOContext *h, struct AVBPrint *pb, size_t max_size);
+int avio_read_to_bprint(AVIOContext *h, struct AVBPrint *pb, size_t maxSize);
 
 /**
  * Accept and allocate a client context on a server context.
