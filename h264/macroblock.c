@@ -927,14 +927,14 @@ static void interpret_mb_mode_B (sMacroblock* mb) {
   short mbtype  = mb->mbType;
   if (mbtype == 0) { // direct
     mbmode = 0;
-    memset(mb->b8mode, 0, 4 * sizeof(char));
-    memset(mb->b8pdir, 2, 4 * sizeof(char));
+    memset (mb->b8mode, 0, 4 * sizeof(char));
+    memset (mb->b8pdir, 2, 4 * sizeof(char));
     }
   else if (mbtype == 23) { // intra4x4
     mb->isIntraBlock = TRUE;
     mbmode = I4MB;
-    memset(mb->b8mode, IBLOCK,4 * sizeof(char));
-    memset(mb->b8pdir, -1,4 * sizeof(char));
+    memset (mb->b8mode, IBLOCK,4 * sizeof(char));
+    memset (mb->b8pdir, -1,4 * sizeof(char));
     }
   else if ((mbtype > 23) && (mbtype < 48) ) { // intra16x16
     mb->isIntraBlock = TRUE;
@@ -1075,7 +1075,7 @@ static void read_motion_info_from_NAL_b_slice (sMacroblock* mb) {
   sSyntaxElement currSE;
   sDataPartition* dP = NULL;
   const byte* partMap = assignSE2partition[curSlice->dataPartitionMode];
-  int partmode = ((mb->mbType == P8x8) ? 4 : mb->mbType);
+  int partmode = (mb->mbType == P8x8) ? 4 : mb->mbType;
   int step_h0 = BLOCK_STEP [partmode][0];
   int step_v0 = BLOCK_STEP [partmode][1];
   int j4, i4;
@@ -1103,7 +1103,7 @@ static void read_motion_info_from_NAL_b_slice (sMacroblock* mb) {
   //=====  READ MOTION VECTORS =====
   currSE.type = SE_MVD;
   dP = &(curSlice->partArr[partMap[SE_MVD]]);
-  if (vidParam->activePPS->entropyCodingModeFlag == (Boolean) CAVLC || dP->bitstream->eiFlag)
+  if (vidParam->activePPS->entropyCodingModeFlag == (Boolean)CAVLC || dP->bitstream->eiFlag)
     currSE.mapping = linfo_se;
   else
     currSE.reading = curSlice->mbAffFrameFlag ? read_mvd_CABAC_mbaff : read_MVD_CABAC;
@@ -1116,7 +1116,7 @@ static void read_motion_info_from_NAL_b_slice (sMacroblock* mb) {
 
   // record reference picture Ids for deblocking decisions
   for (j4 = 0; j4 < 4; ++j4) {
-    for (i4 = mb->blockX; i4 < (mb->blockX + 4); ++i4) {
+    for (i4 = mb->blockX; i4 < mb->blockX + 4; ++i4) {
       sPicMotionParam *mvInfo = &p_mv_info[j4][i4];
       short refIndex = mvInfo->refIndex[LIST_0];
       mvInfo->refPic[LIST_0] = (refIndex >= 0) ? list0[refIndex] : NULL;
