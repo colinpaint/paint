@@ -680,11 +680,11 @@ static void update_direct_mv_info_spatial_4x4 (sMacroblock* curMb)
 void update_direct_types (sSlice* curSlice)
 {
   if (curSlice->activeSPS->direct_8x8_inference_flag)
-    curSlice->update_direct_mv_info =
+    curSlice->updateDirectMvInfo =
       curSlice->direct_spatial_mv_pred_flag ? update_direct_mv_info_spatial_8x8 :
                                                update_direct_mv_info_temporal;
   else
-    curSlice->update_direct_mv_info =
+    curSlice->updateDirectMvInfo =
       curSlice->direct_spatial_mv_pred_flag ? update_direct_mv_info_spatial_4x4 :
                                                update_direct_mv_info_temporal;
 }

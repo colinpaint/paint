@@ -845,7 +845,7 @@ static void read_inter_macroblock (sMacroblock* curMb)
   init_macroblock(curMb);
 
   // read inter frame vector data** *******************************************************
-  curSlice->read_motion_info_from_NAL (curMb);
+  curSlice->readMotionInfoFromNAL (curMb);
   // read CBP and Coeffs ** *************************************************************
   curSlice->read_CBP_and_coeffs_from_NAL (curMb);
 }
@@ -894,7 +894,7 @@ static void read_P8x8_macroblock (sMacroblock* curMb, sDataPartition *dP, sSynta
 
   //--- init macroblock data ---
   init_macroblock (curMb);
-  curSlice->read_motion_info_from_NAL (curMb);
+  curSlice->readMotionInfoFromNAL (curMb);
 
   if(curMb->vidParam->activePPS->constrainedIntraPredFlag)
   {
@@ -947,7 +947,7 @@ static void read_one_macroblock_i_slice_cavlc (sMacroblock* curMb)
   motion->mbField[mb_nr] = (byte) curMb->mbField;
   curMb->blockYaff = ((curSlice->mbAffFrameFlag) && (curMb->mbField)) ? (mb_nr&0x01) ? (curMb->blockY - 4)>>1 : curMb->blockY >> 1 : curMb->blockY;
   curSlice->siBlock[curMb->mb.y][curMb->mb.x] = 0;
-  curSlice->interpret_mb_mode(curMb);
+  curSlice->interpretMbMode(curMb);
 
   //init noMbPartLessThan8x8Flag
   curMb->noMbPartLessThan8x8Flag = TRUE;
@@ -1013,7 +1013,7 @@ static void read_one_macroblock_i_slice_cabac (sMacroblock* curMb)
   motion->mbField[mb_nr] = (byte) curMb->mbField;
   curMb->blockYaff = ((curSlice->mbAffFrameFlag) && (curMb->mbField)) ? (mb_nr&0x01) ? (curMb->blockY - 4)>>1 : curMb->blockY >> 1 : curMb->blockY;
   curSlice->siBlock[curMb->mb.y][curMb->mb.x] = 0;
-  curSlice->interpret_mb_mode(curMb);
+  curSlice->interpretMbMode(curMb);
 
   //init noMbPartLessThan8x8Flag
   curMb->noMbPartLessThan8x8Flag = TRUE;
@@ -1117,7 +1117,7 @@ static void read_one_macroblock_p_slice_cavlc (sMacroblock* curMb)
     motion->mbField[mb_nr] = (byte) FALSE;
     curMb->blockYaff = curMb->blockY;
     curSlice->siBlock[curMb->mb.y][curMb->mb.x] = 0;
-    curSlice->interpret_mb_mode(curMb);
+    curSlice->interpretMbMode(curMb);
   }
   else
   {
@@ -1214,7 +1214,7 @@ static void read_one_macroblock_p_slice_cavlc (sMacroblock* curMb)
 
     curSlice->siBlock[curMb->mb.y][curMb->mb.x] = 0;
 
-    curSlice->interpret_mb_mode(curMb);
+    curSlice->interpretMbMode(curMb);
 
     if(curMb->mbField)
     {
@@ -1306,7 +1306,7 @@ static void read_one_macroblock_p_slice_cabac (sMacroblock* curMb)
     motion->mbField[mb_nr] = (byte) FALSE;
     curMb->blockYaff = curMb->blockY;
     curSlice->siBlock[curMb->mb.y][curMb->mb.x] = 0;
-    curSlice->interpret_mb_mode(curMb);
+    curSlice->interpretMbMode(curMb);
   }
   else
   {
@@ -1387,7 +1387,7 @@ static void read_one_macroblock_p_slice_cabac (sMacroblock* curMb)
     motion->mbField[mb_nr] = (byte) curMb->mbField;
     curMb->blockYaff = (curMb->mbField) ? (mb_nr&0x01) ? (curMb->blockY - 4)>>1 : curMb->blockY >> 1 : curMb->blockY;
     curSlice->siBlock[curMb->mb.y][curMb->mb.x] = 0;
-    curSlice->interpret_mb_mode(curMb);
+    curSlice->interpretMbMode(curMb);
     if(curMb->mbField)
     {
       curSlice->numRefIndexActive[LIST_0] <<=1;
@@ -1470,7 +1470,7 @@ static void read_one_macroblock_b_slice_cavlc (sMacroblock* curMb) {
     motion->mbField[mb_nr] = FALSE;
     curMb->blockYaff = curMb->blockY;
     curSlice->siBlock[curMb->mb.y][curMb->mb.x] = 0;
-    curSlice->interpret_mb_mode(curMb);
+    curSlice->interpretMbMode(curMb);
     }
   else {
     sMacroblock *topMB = NULL;
@@ -1545,7 +1545,7 @@ static void read_one_macroblock_b_slice_cavlc (sMacroblock* curMb) {
     motion->mbField[mb_nr] = (byte) curMb->mbField;
     curMb->blockYaff = (curMb->mbField) ? (mb_nr&0x01) ? (curMb->blockY - 4)>>1 : curMb->blockY >> 1 : curMb->blockY;
     curSlice->siBlock[curMb->mb.y][curMb->mb.x] = 0;
-    curSlice->interpret_mb_mode(curMb);
+    curSlice->interpretMbMode(curMb);
     if(curSlice->mbAffFrameFlag) {
       if(curMb->mbField) {
         curSlice->numRefIndexActive[LIST_0] <<=1;
@@ -1645,7 +1645,7 @@ static void read_one_macroblock_b_slice_cabac (sMacroblock* curMb)
     motion->mbField[mb_nr] = (byte) FALSE;
     curMb->blockYaff = curMb->blockY;
     curSlice->siBlock[curMb->mb.y][curMb->mb.x] = 0;
-    curSlice->interpret_mb_mode(curMb);
+    curSlice->interpretMbMode(curMb);
   }
   else
   {
@@ -1736,7 +1736,7 @@ static void read_one_macroblock_b_slice_cabac (sMacroblock* curMb)
 
     curSlice->siBlock[curMb->mb.y][curMb->mb.x] = 0;
 
-    curSlice->interpret_mb_mode(curMb);
+    curSlice->interpretMbMode(curMb);
 
     if(curMb->mbField)
     {

@@ -135,13 +135,13 @@ static const unsigned char cofuv_blk_y[3][8][4] =
 extern void set_read_comp_coeff_cabac (sMacroblock* curMb);
 extern void set_read_comp_coeff_cavlc (sMacroblock* curMb);
 
-extern void setup_slice_methods (sSlice* curSlice);
+extern void setSliceMethods (sSlice* curSlice);
 extern void setup_slice_methods_mbaff (sSlice* curSlice);
 
 extern void getNeighbours (sMacroblock* curMb, sPixelPos *block, int mb_x, int mb_y, int blockshape_x);
 
 extern void startMacroblock (sSlice* curSlice, sMacroblock** curMb);
-extern int decodeOneMacroblock (sMacroblock* curMb, sPicture* picture);
+extern int decodeMacroblock (sMacroblock* curMb, sPicture* picture);
 extern Boolean exitMacroblock (sSlice* curSlice, int eos_bit);
 
 extern void updateQp (sMacroblock* curMb, int qp);

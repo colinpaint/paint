@@ -747,7 +747,7 @@ static void initSlice (sVidParam* vidParam, sSlice* slice) {
   vidParam->activeSPS = slice->activeSPS;
   vidParam->activePPS = slice->activePPS;
 
-  slice->init_lists (slice);
+  slice->initLists (slice);
   reorderLists (slice);
 
   if (slice->structure == FRAME)
@@ -799,7 +799,7 @@ static void decodeOneSlice (sSlice* slice) {
     sMacroblock* mb;
     startMacroblock (slice, &mb);
     slice->readOneMacroblock (mb);
-    decodeOneMacroblock (mb, slice->picture);
+    decodeMacroblock (mb, slice->picture);
 
     if (slice->mbAffFrameFlag && mb->mbField) {
       slice->numRefIndexActive[LIST_0] >>= 1;
@@ -890,7 +890,7 @@ static int readNewSlice (sSlice* slice) {
         else
           current_header = SOS;
 
-        setup_slice_methods (slice);
+        setSliceMethods (slice);
 
         // Vid->activeSPS, vidParam->activePPS, sliceHeader valid
         if (slice->mbAffFrameFlag)
@@ -947,7 +947,7 @@ static int readNewSlice (sSlice* slice) {
         else
           current_header = SOS;
 
-        setup_slice_methods (slice);
+        setSliceMethods (slice);
 
         // From here on, vidParam->activeSPS, vidParam->activePPS and the slice header are valid
         if (slice->mbAffFrameFlag)

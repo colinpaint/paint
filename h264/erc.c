@@ -1604,7 +1604,7 @@ static void copy_to_conceal (sPicture *src, sPicture *dst, sVidParam* vidParam)
         dst->sliceType, vidParam->sliceList[0]->structure);
     }
     else
-      vidParam->sliceList[0]->init_lists(vidParam->sliceList[0]); //vidParam->currentSlice);
+      vidParam->sliceList[0]->initLists(vidParam->sliceList[0]); //vidParam->currentSlice);
 
     multiplier = BLOCK_SIZE;
 

@@ -309,9 +309,9 @@ extern void freeDpb (sDPB* dpb);
 extern void initImage (sVidParam* vidParam, sImage* image, sSPS *sps);
 extern void freeImage (sVidParam* vidParam, sImage* image);
 
-extern void init_lists_p_slice (sSlice* slice);
-extern void init_lists_b_slice (sSlice* slice);
-extern void init_lists_i_slice (sSlice* slice);
+extern void initListsPslice (sSlice* slice);
+extern void initListsBslice (sSlice* slice);
+extern void initListsIslice (sSlice* slice);
 extern void updatePicNum (sSlice* slice);
 
 extern void dpbCombineField (sVidParam* vidParam, sFrameStore* frameStore);

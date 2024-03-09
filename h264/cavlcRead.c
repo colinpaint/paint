@@ -151,7 +151,7 @@ static int predict_nnz_chroma (sMacroblock* curMb, int i,int j)
 //}}}
 
 //{{{
-void read_coeff_4x4_CAVLC (sMacroblock* curMb, int block_type,
+void readCoef4x4cavlc (sMacroblock* curMb, int block_type,
                            int i, int j, int levarr[16], int runarr[16], int *number_coefficients) {
 
   sSlice* curSlice = curMb->slice;
@@ -211,7 +211,7 @@ void read_coeff_4x4_CAVLC (sMacroblock* curMb, int block_type,
     //}}}
     //{{{
     default:
-      error ("read_coeff_4x4_CAVLC: invalid block type", 600);
+      error ("readCoef4x4cavlc: invalid block type", 600);
       vidParam->nzCoeff[mb_nr][0][j][i] = 0;
       break;
     //}}}
@@ -321,7 +321,7 @@ void read_coeff_4x4_CAVLC (sMacroblock* curMb, int block_type,
   }
 //}}}
 //{{{
-void read_coeff_4x4_CAVLC_444 (sMacroblock* curMb, int block_type,
+void readCoef4x4cavlc444 (sMacroblock* curMb, int block_type,
                                int i, int j, int levarr[16], int runarr[16], int *number_coefficients) {
 
   sSlice* curSlice = curMb->slice;
@@ -423,7 +423,7 @@ void read_coeff_4x4_CAVLC_444 (sMacroblock* curMb, int block_type,
     //}}}
     //{{{
     default:
-      error ("read_coeff_4x4_CAVLC: invalid block type", 600);
+      error ("readCoef4x4cavlc: invalid block type", 600);
       vidParam->nzCoeff[mb_nr][0][j][i] = 0;
       break;
     //}}}
@@ -592,7 +592,7 @@ static void read_comp_coeff_4x4_CAVLC (sMacroblock* curMb, eColorPlane pl, int (
         {
           for (i = block_x4; i < block_x4 + 8; i += BLOCK_SIZE)
           {
-            curSlice->read_coeff_4x4_CAVLC(curMb, cur_context, i >> 2, j >> 2, levarr, runarr, &numcoeff);
+            curSlice->readCoef4x4cavlc(curMb, cur_context, i >> 2, j >> 2, levarr, runarr, &numcoeff);
             pos_scan_4x4 = pos_scan4x4[start_scan];
 
             for (k = 0; k < numcoeff; ++k)
@@ -670,7 +670,7 @@ static void read_comp_coeff_4x4_CAVLC_ls (sMacroblock* curMb, eColorPlane pl, in
         {
           for (i=blockX; i < blockX+2; ++i)
           {
-            curSlice->read_coeff_4x4_CAVLC(curMb, cur_context, i, j, levarr, runarr, &numcoeff);
+            curSlice->readCoef4x4cavlc(curMb, cur_context, i, j, levarr, runarr, &numcoeff);
 
             coef_ctr = start_scan - 1;
 
@@ -751,7 +751,7 @@ static void read_comp_coeff_8x8_CAVLC (sMacroblock* curMb, eColorPlane pl, int (
         {
           for (i = blockX; i < blockX + 2; ++i)
           {
-            curSlice->read_coeff_4x4_CAVLC(curMb, cur_context, i, j, levarr, runarr, &numcoeff);
+            curSlice->readCoef4x4cavlc(curMb, cur_context, i, j, levarr, runarr, &numcoeff);
 
             coef_ctr = start_scan - 1;
 
@@ -834,7 +834,7 @@ static void read_comp_coeff_8x8_CAVLC_ls (sMacroblock* curMb, eColorPlane pl, in
           for (i=blockX; i < blockX+2; ++i)
           {
 
-            curSlice->read_coeff_4x4_CAVLC(curMb, cur_context, i, j, levarr, runarr, &numcoeff);
+            curSlice->readCoef4x4cavlc(curMb, cur_context, i, j, levarr, runarr, &numcoeff);
 
             coef_ctr = start_scan - 1;
 
@@ -991,7 +991,7 @@ static void read_CBP_and_coeffs_from_NAL_CAVLC_400 (sMacroblock* curMb)
     {
       pos_scan_4x4 = pos_scan4x4[0];
 
-      curSlice->read_coeff_4x4_CAVLC(curMb, LUMA_INTRA16x16DC, 0, 0, levarr, runarr, &numcoeff);
+      curSlice->readCoef4x4cavlc(curMb, LUMA_INTRA16x16DC, 0, 0, levarr, runarr, &numcoeff);
 
       for(k = 0; k < numcoeff; ++k)
       {
@@ -1167,7 +1167,7 @@ static void read_CBP_and_coeffs_from_NAL_CAVLC_422 (sMacroblock* curMb)
     {
       pos_scan_4x4 = pos_scan4x4[0];
 
-      curSlice->read_coeff_4x4_CAVLC(curMb, LUMA_INTRA16x16DC, 0, 0, levarr, runarr, &numcoeff);
+      curSlice->readCoef4x4cavlc(curMb, LUMA_INTRA16x16DC, 0, 0, levarr, runarr, &numcoeff);
 
       for(k = 0; k < numcoeff; ++k)
       {
@@ -1243,7 +1243,7 @@ static void read_CBP_and_coeffs_from_NAL_CAVLC_422 (sMacroblock* curMb)
 
 
         //===================== CHROMA DC YUV422 ======================
-        curSlice->read_coeff_4x4_CAVLC(curMb, CHROMA_DC, 0, 0, levarr, runarr, &numcoeff);
+        curSlice->readCoef4x4cavlc(curMb, CHROMA_DC, 0, 0, levarr, runarr, &numcoeff);
         coef_ctr=-1;
         for(k = 0; k < numcoeff; ++k)
         {
@@ -1327,7 +1327,7 @@ static void read_CBP_and_coeffs_from_NAL_CAVLC_422 (sMacroblock* curMb)
           i = cofuv_blk_x[1][b8][b4];
           j = cofuv_blk_y[1][b8][b4];
 
-          curSlice->read_coeff_4x4_CAVLC(curMb, CHROMA_AC, i + 2*uv, j + 4, levarr, runarr, &numcoeff);
+          curSlice->readCoef4x4cavlc(curMb, CHROMA_AC, i + 2*uv, j + 4, levarr, runarr, &numcoeff);
           coef_ctr = 0;
 
           for(k = 0; k < numcoeff;++k)
@@ -1358,7 +1358,7 @@ static void read_CBP_and_coeffs_from_NAL_CAVLC_422 (sMacroblock* curMb)
           i = cofuv_blk_x[1][b8][b4];
           j = cofuv_blk_y[1][b8][b4];
 
-          curSlice->read_coeff_4x4_CAVLC(curMb, CHROMA_AC, i + 2*uv, j + 4, levarr, runarr, &numcoeff);
+          curSlice->readCoef4x4cavlc(curMb, CHROMA_AC, i + 2*uv, j + 4, levarr, runarr, &numcoeff);
           coef_ctr = 0;
 
           for(k = 0; k < numcoeff;++k)
@@ -1502,7 +1502,7 @@ static void read_CBP_and_coeffs_from_NAL_CAVLC_444 (sMacroblock* curMb)
     {
       pos_scan_4x4 = pos_scan4x4[0];
 
-      curSlice->read_coeff_4x4_CAVLC(curMb, LUMA_INTRA16x16DC, 0, 0, levarr, runarr, &numcoeff);
+      curSlice->readCoef4x4cavlc(curMb, LUMA_INTRA16x16DC, 0, 0, levarr, runarr, &numcoeff);
 
       for(k = 0; k < numcoeff; ++k)
       {
@@ -1562,9 +1562,9 @@ static void read_CBP_and_coeffs_from_NAL_CAVLC_444 (sMacroblock* curMb)
     if (IS_I16MB (curMb)) // read DC coeffs for new intra modes
     {
       if (uv == PLANE_U)
-        curSlice->read_coeff_4x4_CAVLC(curMb, CB_INTRA16x16DC, 0, 0, levarr, runarr, &numcoeff);
+        curSlice->readCoef4x4cavlc(curMb, CB_INTRA16x16DC, 0, 0, levarr, runarr, &numcoeff);
       else
-        curSlice->read_coeff_4x4_CAVLC(curMb, CR_INTRA16x16DC, 0, 0, levarr, runarr, &numcoeff);
+        curSlice->readCoef4x4cavlc(curMb, CR_INTRA16x16DC, 0, 0, levarr, runarr, &numcoeff);
 
       coef_ctr=-1;
 
@@ -1733,7 +1733,7 @@ static void read_CBP_and_coeffs_from_NAL_CAVLC_420 (sMacroblock* curMb)
     {
       pos_scan_4x4 = pos_scan4x4[0];
 
-      curSlice->read_coeff_4x4_CAVLC(curMb, LUMA_INTRA16x16DC, 0, 0, levarr, runarr, &numcoeff);
+      curSlice->readCoef4x4cavlc(curMb, LUMA_INTRA16x16DC, 0, 0, levarr, runarr, &numcoeff);
 
       for(k = 0; k < numcoeff; ++k)
       {
@@ -1802,7 +1802,7 @@ static void read_CBP_and_coeffs_from_NAL_CAVLC_420 (sMacroblock* curMb)
       curSlice->cofu[0] = curSlice->cofu[1] = curSlice->cofu[2] = curSlice->cofu[3] = 0;
       coef_ctr=-1;
 
-      curSlice->read_coeff_4x4_CAVLC(curMb, CHROMA_DC, 0, 0, levarr, runarr, &numcoeff);
+      curSlice->readCoef4x4cavlc(curMb, CHROMA_DC, 0, 0, levarr, runarr, &numcoeff);
 
       for(k = 0; k < numcoeff; ++k)
       {
@@ -1863,7 +1863,7 @@ static void read_CBP_and_coeffs_from_NAL_CAVLC_420 (sMacroblock* curMb)
           i = cofuv_blk_x[0][b8][b4];
           j = cofuv_blk_y[0][b8][b4];
 
-          curSlice->read_coeff_4x4_CAVLC(curMb, CHROMA_AC, i + 2*uv, j + 4, levarr, runarr, &numcoeff);
+          curSlice->readCoef4x4cavlc(curMb, CHROMA_AC, i + 2*uv, j + 4, levarr, runarr, &numcoeff);
           coef_ctr = 0;
 
           for(k = 0; k < numcoeff;++k)
@@ -1894,7 +1894,7 @@ static void read_CBP_and_coeffs_from_NAL_CAVLC_420 (sMacroblock* curMb)
           i = cofuv_blk_x[0][b8][b4];
           j = cofuv_blk_y[0][b8][b4];
 
-          curSlice->read_coeff_4x4_CAVLC(curMb, CHROMA_AC, i + 2*uv, j + 4, levarr, runarr, &numcoeff);
+          curSlice->readCoef4x4cavlc(curMb, CHROMA_AC, i + 2*uv, j + 4, levarr, runarr, &numcoeff);
           coef_ctr = 0;
 
           for(k = 0; k < numcoeff;++k)

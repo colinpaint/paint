@@ -2135,14 +2135,14 @@ void updatePicNum (sSlice* slice) {
   }
 //}}}
 //{{{
-void init_lists_i_slice (sSlice* slice) {
+void initListsIslice (sSlice* slice) {
 
   slice->listXsize[0] = 0;
   slice->listXsize[1] = 0;
   }
 //}}}
 //{{{
-void init_lists_p_slice (sSlice* slice) {
+void initListsPslice (sSlice* slice) {
 
   sVidParam* vidParam = slice->vidParam;
   sDPB* dpb = slice->dpb;
@@ -2173,10 +2173,10 @@ void init_lists_p_slice (sSlice* slice) {
   else {
     fsList0 = calloc (dpb->size, sizeof(sFrameStore*));
     if (!fsList0)
-      no_mem_exit ("init_lists: fsList0");
+      no_mem_exit ("initLists: fsList0");
     fsListLongTerm = calloc (dpb->size, sizeof(sFrameStore*));
     if (!fsListLongTerm)
-      no_mem_exit("init_lists: fsListLongTerm");
+      no_mem_exit("initLists: fsListLongTerm");
 
     for (unsigned int i = 0; i < dpb->refFramesInBuffer; i++)
       if (dpb->fsRef[i]->isReference)
@@ -2208,7 +2208,7 @@ void init_lists_p_slice (sSlice* slice) {
   }
 //}}}
 //{{{
-void init_lists_b_slice (sSlice* slice) {
+void initListsBslice (sSlice* slice) {
 
   sVidParam* vidParam = slice->vidParam;
   sDPB* dpb = slice->dpb;

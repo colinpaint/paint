@@ -740,7 +740,8 @@ static void Flush_Buffer32() {
 
   if (System_Stream_Flag && (ld->Rdptr >= ld->Rdmax-4)) {
     while (Incnt <= 24) {
-      if (ld->Rdptr >= ld->Rdmax) Next_Packet();
+      if (ld->Rdptr >= ld->Rdmax)
+        Next_Packet();
       ld->Bfr |= Get_Byte() << (24 - Incnt);
       Incnt += 8;
       }
@@ -943,7 +944,7 @@ static void picture_display_extension() {
   /* derive number_of_frame_center_offsets */
   if (progressive_sequence) {
     if (repeat_first_field) {
-      if (top_field_first) 
+      if (top_field_first)
         number_of_frame_center_offsets = 3;
       else
         number_of_frame_center_offsets = 2;
@@ -1880,29 +1881,29 @@ static void form_predictions (int bx, int by, int macroblock_type, int motion_ty
         /* frame-based prediction (broken into top and bottom halves
              for spatial scalability prediction purposes) */
         if (stwtop<2)
-          form_prediction(forward_reference_frame,0,current_frame,0,
-            Coded_Picture_Width,Coded_Picture_Width<<1,16,8,bx,by,
-            PMV[0][0][0],PMV[0][0][1],stwtop);
+          form_prediction (forward_reference_frame,0,current_frame,0,
+                           Coded_Picture_Width,Coded_Picture_Width<<1,16,8,bx,by,
+                           PMV[0][0][0],PMV[0][0][1],stwtop);
 
         if (stwbot<2)
-          form_prediction(forward_reference_frame,1,current_frame,1,
-            Coded_Picture_Width,Coded_Picture_Width<<1,16,8,bx,by,
-            PMV[0][0][0],PMV[0][0][1],stwbot);
+          form_prediction (forward_reference_frame,1,current_frame,1,
+                           Coded_Picture_Width,Coded_Picture_Width<<1,16,8,bx,by,
+                           PMV[0][0][0],PMV[0][0][1],stwbot);
         }
         //}}}
       else if (motion_type == MC_FIELD) {
         //{{{  field-based prediction */
         /* top field prediction */
         if (stwtop<2)
-          form_prediction(forward_reference_frame,motion_vertical_field_select[0][0],
-            current_frame,0,Coded_Picture_Width<<1,Coded_Picture_Width<<1,16,8,
-            bx,by>>1,PMV[0][0][0],PMV[0][0][1]>>1,stwtop);
+          form_prediction (forward_reference_frame,motion_vertical_field_select[0][0],
+                           current_frame,0,Coded_Picture_Width<<1,Coded_Picture_Width<<1,16,8,
+                           bx,by>>1,PMV[0][0][0],PMV[0][0][1]>>1,stwtop);
 
         /* bottom field prediction */
         if (stwbot<2)
-          form_prediction(forward_reference_frame,motion_vertical_field_select[1][0],
-            current_frame,1,Coded_Picture_Width<<1,Coded_Picture_Width<<1,16,8,
-            bx,by>>1,PMV[1][0][0],PMV[1][0][1]>>1,stwbot);
+          form_prediction (forward_reference_frame,motion_vertical_field_select[1][0],
+                           current_frame,1,Coded_Picture_Width<<1,Coded_Picture_Width<<1,16,8,
+                           bx,by>>1,PMV[1][0][0],PMV[1][0][1]>>1,stwbot);
           }
         //}}}
       else if (motion_type == MC_DMV) {
@@ -1912,26 +1913,26 @@ static void form_predictions (int bx, int by, int macroblock_type, int motion_ty
 
         if (stwtop<2) {
           /* predict top field from top field */
-          form_prediction(forward_reference_frame,0,current_frame,0,
-            Coded_Picture_Width<<1,Coded_Picture_Width<<1,16,8,bx,by>>1,
-            PMV[0][0][0],PMV[0][0][1]>>1,0);
+          form_prediction (forward_reference_frame,0,current_frame,0,
+                           Coded_Picture_Width<<1,Coded_Picture_Width<<1,16,8,bx,by>>1,
+                           PMV[0][0][0],PMV[0][0][1]>>1,0);
 
           /* predict and add to top field from bottom field */
-          form_prediction(forward_reference_frame,1,current_frame,0,
-            Coded_Picture_Width<<1,Coded_Picture_Width<<1,16,8,bx,by>>1,
-            DMV[0][0],DMV[0][1],1);
+          form_prediction (forward_reference_frame,1,current_frame,0,
+                           Coded_Picture_Width<<1,Coded_Picture_Width<<1,16,8,bx,by>>1,
+                           DMV[0][0],DMV[0][1],1);
           }
 
         if (stwbot<2) {
           /* predict bottom field from bottom field */
-          form_prediction(forward_reference_frame,1,current_frame,1,
-            Coded_Picture_Width<<1,Coded_Picture_Width<<1,16,8,bx,by>>1,
-            PMV[0][0][0],PMV[0][0][1]>>1,0);
+          form_prediction (forward_reference_frame,1,current_frame,1,
+                           Coded_Picture_Width<<1,Coded_Picture_Width<<1,16,8,bx,by>>1,
+                           PMV[0][0][0],PMV[0][0][1]>>1,0);
 
           /* predict and add to bottom field from top field */
-          form_prediction(forward_reference_frame,0,current_frame,1,
-            Coded_Picture_Width<<1,Coded_Picture_Width<<1,16,8,bx,by>>1,
-            DMV[1][0],DMV[1][1],1);
+          form_prediction (forward_reference_frame,0,current_frame,1,
+                           Coded_Picture_Width<<1,Coded_Picture_Width<<1,16,8,bx,by>>1,
+                           DMV[1][0],DMV[1][1],1);
           }
         }
         //}}}
@@ -1953,16 +1954,16 @@ static void form_predictions (int bx, int by, int macroblock_type, int motion_ty
         || !(macroblock_type & MACROBLOCK_MOTION_FORWARD)) {
         //{{{  field-based prediction */
         if (stwtop<2)
-          form_prediction(predframe,motion_vertical_field_select[0][0],current_frame,0,
-            Coded_Picture_Width<<1,Coded_Picture_Width<<1,16,16,bx,by,
-            PMV[0][0][0],PMV[0][0][1],stwtop);
+          form_prediction (predframe,motion_vertical_field_select[0][0],current_frame,0,
+                           Coded_Picture_Width<<1,Coded_Picture_Width<<1,16,16,bx,by,
+                           PMV[0][0][0],PMV[0][0][1],stwtop);
         }
         //}}}
-      else if (motion_type==MC_16X8) {
+      else if (motion_type == MC_16X8) {
         if (stwtop<2) {
-          form_prediction(predframe,motion_vertical_field_select[0][0],current_frame,0,
-            Coded_Picture_Width<<1,Coded_Picture_Width<<1,16,8,bx,by,
-            PMV[0][0][0],PMV[0][0][1],stwtop);
+          form_prediction (predframe,motion_vertical_field_select[0][0],current_frame,0,
+                           Coded_Picture_Width<<1,Coded_Picture_Width<<1,16,8,bx,by,
+                           PMV[0][0][0],PMV[0][0][1],stwtop);
 
           /* determine which frame to use for lower half prediction */
           if ((picture_coding_type==P_TYPE) && Second_Field
@@ -1971,9 +1972,9 @@ static void form_predictions (int bx, int by, int macroblock_type, int motion_ty
           else
             predframe = forward_reference_frame; /* previous frame */
 
-          form_prediction(predframe,motion_vertical_field_select[1][0],current_frame,0,
-            Coded_Picture_Width<<1,Coded_Picture_Width<<1,16,8,bx,by+8,
-            PMV[1][0][0],PMV[1][0][1],stwtop);
+          form_prediction (predframe,motion_vertical_field_select[1][0],current_frame,0,
+                           Coded_Picture_Width<<1,Coded_Picture_Width<<1,16,8,bx,by+8,
+                           PMV[1][0][0],PMV[1][0][1],stwtop);
           }
         }
       else if (motion_type==MC_DMV) {
@@ -1987,19 +1988,19 @@ static void form_predictions (int bx, int by, int macroblock_type, int motion_ty
         Dual_Prime_Arithmetic(DMV,dmvector,PMV[0][0][0],PMV[0][0][1]);
 
         /* predict from field of same parity */
-        form_prediction(forward_reference_frame,currentfield,current_frame,0,
-          Coded_Picture_Width<<1,Coded_Picture_Width<<1,16,16,bx,by,
-          PMV[0][0][0],PMV[0][0][1],0);
+        form_prediction (forward_reference_frame,currentfield,current_frame,0,
+                         Coded_Picture_Width<<1,Coded_Picture_Width<<1,16,16,bx,by,
+                         PMV[0][0][0],PMV[0][0][1],0);
 
         /* predict from field of opposite parity */
-        form_prediction(predframe,!currentfield,current_frame,0,
-          Coded_Picture_Width<<1,Coded_Picture_Width<<1,16,16,bx,by,
-          DMV[0][0],DMV[0][1],1);
+        form_prediction (predframe,!currentfield,current_frame,0,
+                         Coded_Picture_Width<<1,Coded_Picture_Width<<1,16,16,bx,by,
+                         DMV[0][0],DMV[0][1],1);
         }
         //}}}
       else
         /* invalid motion_type */
-        printf("invalid motion_type\n");
+        printf ("invalid motion_type\n");
       }
       //}}}
     stwtop = stwbot = 1;
@@ -2010,29 +2011,29 @@ static void form_predictions (int bx, int by, int macroblock_type, int motion_ty
       if (motion_type == MC_FRAME) {
         //{{{  frame-based prediction */
         if (stwtop<2)
-          form_prediction(backward_reference_frame,0,current_frame,0,
-            Coded_Picture_Width,Coded_Picture_Width<<1,16,8,bx,by,
-            PMV[0][1][0],PMV[0][1][1],stwtop);
+          form_prediction (backward_reference_frame,0,current_frame,0,
+                           Coded_Picture_Width,Coded_Picture_Width<<1,16,8,bx,by,
+                           PMV[0][1][0],PMV[0][1][1],stwtop);
 
         if (stwbot<2)
-          form_prediction(backward_reference_frame,1,current_frame,1,
-            Coded_Picture_Width,Coded_Picture_Width<<1,16,8,bx,by,
-            PMV[0][1][0],PMV[0][1][1],stwbot);
+          form_prediction (backward_reference_frame,1,current_frame,1,
+                           Coded_Picture_Width,Coded_Picture_Width<<1,16,8,bx,by,
+                           PMV[0][1][0],PMV[0][1][1],stwbot);
         }
         //}}}
       else {
         //{{{  field-based prediction */
         /* top field prediction */
         if (stwtop<2)
-          form_prediction(backward_reference_frame,motion_vertical_field_select[0][1],
-            current_frame,0,Coded_Picture_Width<<1,Coded_Picture_Width<<1,16,8,
-            bx,by>>1,PMV[0][1][0],PMV[0][1][1]>>1,stwtop);
+          form_prediction (backward_reference_frame,motion_vertical_field_select[0][1],
+                           current_frame,0,Coded_Picture_Width<<1,Coded_Picture_Width<<1,16,8,
+                           bx,by>>1,PMV[0][1][0],PMV[0][1][1]>>1,stwtop);
 
         /* bottom field prediction */
         if (stwbot<2)
-          form_prediction(backward_reference_frame,motion_vertical_field_select[1][1],
-            current_frame,1,Coded_Picture_Width<<1,Coded_Picture_Width<<1,16,8,
-            bx,by>>1,PMV[1][1][0],PMV[1][1][1]>>1,stwbot);
+          form_prediction (backward_reference_frame,motion_vertical_field_select[1][1],
+                           current_frame,1,Coded_Picture_Width<<1,Coded_Picture_Width<<1,16,8,
+                           bx,by>>1,PMV[1][1][0],PMV[1][1][1]>>1,stwbot);
         }
         //}}}
       }
@@ -2040,21 +2041,21 @@ static void form_predictions (int bx, int by, int macroblock_type, int motion_ty
       //{{{  field picture */
       if (motion_type==MC_FIELD) {
         /* field-based prediction */
-        form_prediction(backward_reference_frame,motion_vertical_field_select[0][1],
-          current_frame,0,Coded_Picture_Width<<1,Coded_Picture_Width<<1,16,16,
-          bx,by,PMV[0][1][0],PMV[0][1][1],stwtop);
+        form_prediction (backward_reference_frame,motion_vertical_field_select[0][1],
+                         current_frame,0,Coded_Picture_Width<<1,Coded_Picture_Width<<1,16,16,
+                         bx,by,PMV[0][1][0],PMV[0][1][1],stwtop);
         }
-      else if (motion_type==MC_16X8) {
-        form_prediction(backward_reference_frame,motion_vertical_field_select[0][1],
-          current_frame,0,Coded_Picture_Width<<1,Coded_Picture_Width<<1,16,8,
-          bx,by,PMV[0][1][0],PMV[0][1][1],stwtop);
+      else if (motion_type == MC_16X8) {
+        form_prediction (backward_reference_frame,motion_vertical_field_select[0][1],
+                         current_frame,0,Coded_Picture_Width<<1,Coded_Picture_Width<<1,16,8,
+                         bx,by,PMV[0][1][0],PMV[0][1][1],stwtop);
 
-        form_prediction(backward_reference_frame,motion_vertical_field_select[1][1],
-          current_frame,0,Coded_Picture_Width<<1,Coded_Picture_Width<<1,16,8,
-          bx,by+8,PMV[1][1][0],PMV[1][1][1],stwtop);
+        form_prediction (backward_reference_frame,motion_vertical_field_select[1][1],
+                         current_frame,0,Coded_Picture_Width<<1,Coded_Picture_Width<<1,16,8,
+                         bx,by+8,PMV[1][1][0],PMV[1][1][1],stwtop);
         }
       else
-        printf("invalid motion_type\n");
+        printf ("invalid motion_type\n");
       }
       //}}}
     }
@@ -3074,16 +3075,16 @@ void Write_Frame (unsigned char* src[], int frame) {
 
   if (progressive_sequence || progressive_frame || Frame_Store_Flag) {
     /* progressive */
-    //sprintf(outname,Output_Picture_Filename,frame,'f');
-    //store_one(outname,src,0,Coded_Picture_Width,vertical_size);
+    //sprintf (outname,Output_Picture_Filename,frame,'f');
+    //store_one (outname,src,0,Coded_Picture_Width,vertical_size);
     }
   else {
     /* interlaced */
-    //sprintf(outname,Output_Picture_Filename,frame,'a');
-    //store_one(outname,src,0,Coded_Picture_Width<<1,vertical_size>>1);
+    //sprintf (outname,Output_Picture_Filename,frame,'a');
+    //store_one (outname,src,0,Coded_Picture_Width<<1,vertical_size>>1);
 
-    //sprintf(outname,Output_Picture_Filename,frame,'b');
-    //store_one(outname,src, Coded_Picture_Width,Coded_Picture_Width<<1,vertical_size>>1);
+    //sprintf (outname,Output_Picture_Filename,frame,'b');
+    //store_one (outname,src, Coded_Picture_Width,Coded_Picture_Width<<1,vertical_size>>1);
     }
   }
 //}}}
