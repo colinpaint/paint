@@ -871,10 +871,10 @@ static void sequence_display_extension() {
 
   display_horizontal_size = Get_Bits(14);
   marker_bit ("sequence_display_extension");
-  display_vertical_size   = Get_Bits(14);
+  display_vertical_size = Get_Bits(14);
 
   if (kDebug) {
-    printf("sequence display extension (byte %d)\n",(pos>>3)-4);
+    printf ("sequence display extension (byte %d)\n",(pos>>3)-4);
     printf ("  video_format=%d\n",video_format);
     printf ("  color_description=%d\n",color_description);
     if (color_description) {
@@ -895,7 +895,7 @@ static void quant_matrix_extension() {
   int i;
   int pos = ld->Bitcnt;
   if ((ld->load_intra_quantizer_matrix = Get_Bits(1))) {
-    for (i=0; i<64; i++) {
+    for (i = 0; i < 64; i++) {
       ld->chroma_intra_quantizer_matrix[scan[ZIG_ZAG][i]]
         = ld->intra_quantizer_matrix[scan[ZIG_ZAG][i]]
         = Get_Bits(8);
@@ -941,9 +941,10 @@ static void picture_display_extension() {
     (November 1994) Picture display extensions */
 
   /* derive number_of_frame_center_offsets */
-  if(progressive_sequence) {
-    if(repeat_first_field) {
-      if(top_field_first) number_of_frame_center_offsets = 3;
+  if (progressive_sequence) {
+    if (repeat_first_field) {
+      if (top_field_first) 
+        number_of_frame_center_offsets = 3;
       else
         number_of_frame_center_offsets = 2;
       }
@@ -951,7 +952,7 @@ static void picture_display_extension() {
       number_of_frame_center_offsets = 1;
     }
   else {
-    if(picture_structure!=FRAME_PICTURE)
+    if (picture_structure != FRAME_PICTURE)
       number_of_frame_center_offsets = 1;
     else {
       if(repeat_first_field)
@@ -962,19 +963,19 @@ static void picture_display_extension() {
     }
 
   /* now parse */
-  for (i=0; i<number_of_frame_center_offsets; i++) {
+  for (i = 0; i < number_of_frame_center_offsets; i++) {
     frame_center_horizontal_offset[i] = Get_Bits(16);
-    marker_bit("picture_display_extension, first marker bit");
+    marker_bit ("picture_display_extension, first marker bit");
 
-    frame_center_vertical_offset[i]   = Get_Bits(16);
-    marker_bit("picture_display_extension, second marker bit");
+    frame_center_vertical_offset[i] = Get_Bits(16);
+    marker_bit ("picture_display_extension, second marker bit");
     }
 
   if (kDebug) {
-    printf("picture display extension (byte %d)\n",(pos>>3)-4);
+    printf ("picture display extension (byte %d)\n",(pos>>3)-4);
     for (i = 0; i < number_of_frame_center_offsets; i++) {
-      printf("  frame_center_horizontal_offset[%d]=%d\n",i, frame_center_horizontal_offset[i]);
-      printf("  frame_center_vertical_offset[%d]=%d\n",i, frame_center_vertical_offset[i]);
+      printf ("  frame_center_horizontal_offset[%d]=%d\n",i, frame_center_horizontal_offset[i]);
+      printf ("  frame_center_vertical_offset[%d]=%d\n",i, frame_center_vertical_offset[i]);
       }
     }
   }
@@ -1004,10 +1005,10 @@ static void picture_coding_extension() {
   composite_display_flag     = Get_Bits(1);
 
   if (composite_display_flag) {
-    v_axis            = Get_Bits(1);
-    field_sequence    = Get_Bits(3);
-    sub_carrier       = Get_Bits(1);
-    burst_amplitude   = Get_Bits(7);
+    v_axis = Get_Bits(1);
+    field_sequence = Get_Bits(3);
+    sub_carrier = Get_Bits(1);
+    burst_amplitude = Get_Bits(7);
     sub_carrier_phase = Get_Bits(8);
     }
 
@@ -1047,11 +1048,11 @@ static int extra_bit_information() {
 
   int Byte_Count = 0;
   while (Get_Bits1()) {
-    Flush_Buffer(8);
+    Flush_Buffer (8);
     Byte_Count++;
     }
 
-  return(Byte_Count);
+  return (Byte_Count);
   }
 //}}}
 
@@ -1154,7 +1155,6 @@ static void sumBlock (int comp) {
 
   short* Block_Ptr1 = base.block[comp];
   short* Block_Ptr2 = enhan.block[comp];
-
   for (int i = 0; i < 64; i++)
     *Block_Ptr1++ += *Block_Ptr2++;
   }
@@ -1305,7 +1305,7 @@ static void Initialize_Fast_IDCT() {
 static int Get_P_macroblock_type() {
 
   int code;
-  if ((code = Show_Bits(6))>=8) {
+  if ((code = Show_Bits (6)) >= 8) {
     code >>= 3;
     Flush_Buffer (PMBtab0[code].len);
     return PMBtab0[code].val;
@@ -1444,13 +1444,13 @@ static int Get_coded_block_pattern() {
     return CBPtab0[code].val;
     }
 
-  if (code>=8) {
+  if (code >= 8) {
     code >>= 1;
     Flush_Buffer (CBPtab1[code].len);
     return CBPtab1[code].val;
     }
 
-  if (code<1) {
+  if (code < 1) {
     Fault_Flag = 1;
     return 0;
     }
@@ -1695,7 +1695,6 @@ static void form_component_prediction (unsigned char *src, unsigned char *dst,
  *
  *   2. Half pel flags (xh, yh) are equivalent to the LSB (Least
  *      Significant Bit) of the half-pel coordinates (dx,dy).
- *
  *
  *  NOTE: the work of combining predictions (ISO/IEC 13818-2 section 7.6.7)
  *  is distributed among several other stages.  This is accomplished by
@@ -2063,19 +2062,19 @@ static void form_predictions (int bx, int by, int macroblock_type, int motion_ty
 //}}}
 //{{{
 static void frame_reorder (int Bitstream_Framenum, int Sequence_Framenum) {
+/* tracking variables to insure proper output in spatial scalability */
 
-  /* tracking variables to insure proper output in spatial scalability */
   static int Oldref_progressive_frame, Newref_progressive_frame;
 
   if (Sequence_Framenum!=0) {
-    if (picture_structure==FRAME_PICTURE || Second_Field) {
-      if (picture_coding_type==B_TYPE)
-        Write_Frame(auxframe,Bitstream_Framenum-1);
+    if (picture_structure == FRAME_PICTURE || Second_Field) {
+      if (picture_coding_type == B_TYPE)
+        Write_Frame (auxframe, Bitstream_Framenum-1);
       else {
         Newref_progressive_frame = progressive_frame;
         progressive_frame = Oldref_progressive_frame;
 
-        Write_Frame(forward_reference_frame,Bitstream_Framenum-1);
+        Write_Frame (forward_reference_frame, Bitstream_Framenum-1);
 
         Oldref_progressive_frame = progressive_frame = Newref_progressive_frame;
         }
@@ -2091,20 +2090,17 @@ static void motion_compensation (int MBA, int macroblock_type, int motion_type,
                                  int dmvector[2], int stwtype, int dct_type) {
 /* ISO/IEC 13818-2 section 7.6 */
 
-  int bx, by;
-  int comp;
-
   /* derive current macroblock position within picture */
   /* ISO/IEC 13818-2 section 6.3.1.6 and 6.3.1.7 */
-  bx = 16*(MBA%mb_width);
-  by = 16*(MBA/mb_width);
+  int bx = 16*(MBA%mb_width);
+  int by = 16*(MBA/mb_width);
 
   /* motion compensation */
   if (!(macroblock_type & MACROBLOCK_INTRA))
     form_predictions (bx,by,macroblock_type,motion_type,PMV, motion_vertical_field_select,dmvector,stwtype);
 
   /* copy or add block data into picture */
-  for (comp=0; comp<block_count; comp++) {
+  for (int comp=0; comp<block_count; comp++) {
     /* SCALABILITY: SNR */
     Fast_IDCT (ld->block[comp]);
 
@@ -2119,7 +2115,7 @@ static void skipped_macroblock (int dc_dct_pred[3], int PMV[2][2][2],
                                 int* stwtype, int* macroblock_type) {
 /* ISO/IEC 13818-2 section 7.6.6 */
 
-  for (int comp=0; comp<block_count; comp++)
+  for (int comp = 0; comp < block_count; comp++)
     clearBlock (comp);
 
   /* reset intra_dc predictors */
@@ -2129,7 +2125,7 @@ static void skipped_macroblock (int dc_dct_pred[3], int PMV[2][2][2],
   /* reset motion vector predictors */
   /* ISO/IEC 13818-2 section 7.6.3.4: Resetting motion vector predictors */
   if (picture_coding_type == P_TYPE)
-    PMV[0][0][0]=PMV[0][0][1] = PMV[1][0][0]=PMV[1][0][1]=0;
+    PMV[0][0][0] = PMV[0][0][1] = PMV[1][0][0]=PMV[1][0][1]=0;
 
   /* derive motion_type */
   if (picture_structure == FRAME_PICTURE)
@@ -2138,10 +2134,8 @@ static void skipped_macroblock (int dc_dct_pred[3], int PMV[2][2][2],
     *motion_type = MC_FIELD;
 
     /* predict from field of same parity */
-    /* ISO/IEC 13818-2 section 7.6.6.1 and 7.6.6.3: P field picture and B field
-       picture */
-    motion_vertical_field_select[0][0] = motion_vertical_field_select[0][1] =
-                                         (picture_structure == BotField);
+    /* ISO/IEC 13818-2 section 7.6.6.1 and 7.6.6.3: P field picture and B field picture */
+    motion_vertical_field_select[0][0] = motion_vertical_field_select[0][1] = (picture_structure == BotField);
     }
 
   /* skipped I are spatial-only predicted, */
@@ -2157,21 +2151,16 @@ static void skipped_macroblock (int dc_dct_pred[3], int PMV[2][2][2],
 //{{{
 static void decode_MPEG2_Intra_Block (int comp, int dc_dct_pred[]) {
 
-  int val, i, j, sign, nc, cc, run;
+  int val, j, sign, nc, run;
   unsigned int code;
-  DCTtab *tab;
-  short *bp;
-  int *qmat;
 
   /* with data partitioning, data always goes to base layer */
   struct layer_data* ld1 = &base;
-  bp = ld1->block[comp];
-
-  cc = (comp<4) ? 0 : (comp&1)+1;
-
-  qmat = (comp<4 || chroma_format==CHROMA420)
-         ? ld1->intra_quantizer_matrix
-         : ld1->chroma_intra_quantizer_matrix;
+  short* bp = ld1->block[comp];
+  int cc = (comp<4) ? 0 : (comp&1)+1;
+  int* qmat = (comp<4 || chroma_format==CHROMA420)
+              ? ld1->intra_quantizer_matrix
+              : ld1->chroma_intra_quantizer_matrix;
 
   /* ISO/IEC 13818-2 section 7.2.1: decode DC coefficients */
   if (cc==0)
@@ -2188,7 +2177,8 @@ static void decode_MPEG2_Intra_Block (int comp, int dc_dct_pred[]) {
   nc = 0;
 
   /* decode AC coefficients */
-  for (i = 1; ; i++) {
+  DCTtab* tab;
+  for (int i = 1; ; i++) {
     code = Show_Bits(16);
     if (code>=16384 && !intra_vlc_format)
       tab = &DCTtabnext[(code>>12)-4];
