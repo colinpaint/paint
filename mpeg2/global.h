@@ -1,83 +1,19 @@
 #include "mpeg2dec.h"
-//{{{  readpic.c
-void Substitute_Frame_Buffer (int bitstream_framenum, int sequence_framenum);
-//}}}
-//{{{  getbits.c
-void Initialize_Buffer();
-void Fill_Buffer();
-unsigned int Show_Bits (int n);
-unsigned int Get_Bits1();
-void Flush_Buffer (int n);
-unsigned int Get_Bits (int n);
-int Get_Byte();
-int Get_Word();
-//}}}
-//{{{  systems.c
-void Next_Packet();
-int Get_Long();
-void Flush_Buffer32();
-unsigned int Get_Bits32();
-//}}}
-//{{{  getblk.c
-void Decode_MPEG1_Intra_Block (int comp, int dc_dct_pred[]);
-void Decode_MPEG1_Non_Intra_Block (int comp);
-void Decode_MPEG2_Intra_Block (int comp, int dc_dct_pred[]);
-void Decode_MPEG2_Non_Intra_Block (int comp);
-//}}}
-//{{{  gethdr.c
-int Get_Hdr();
-void next_start_code (void);
-int slice_header();
-void marker_bit (char *text);
-//}}}
-//{{{  getpic.c
-void Decode_Picture (int bitstream_framenum, int sequence_framenum);
-void Output_Last_Frame_of_Sequence (int framenum);
-//}}}
-//{{{  getvlc.c
-int Get_macroblock_type();
-int Get_motion_code();
-int Get_dmvector();
-int Get_coded_block_pattern();
-int Get_macroblock_address_increment (void);
-int Get_Luma_DC_dct_diff();
-int Get_Chroma_DC_dct_diff();
-//}}}
-//{{{  idct.c
-void Fast_IDCT (short *block);
-void Initialize_Fast_IDCT();
-//}}}
-//{{{  motion.c
-void motion_vectors (int PMV[2][2][2], int dmvector[2],
-                     int motion_vertical_field_select[2][2], int s, int motion_vector_count,
-                     int mv_format, int h_r_size, int v_r_size, int dmv, int mvscale);
-void motion_vector (int *PMV, int *dmvector,
-                    int h_r_size, int v_r_size, int dmv, int mvscale, int full_pel_vector);
 
-void Dual_Prime_Arithmetic (int DMV[][2], int *dmvector, int mvx, int mvy);
-//}}}
-//{{{  mpeg2dec.c
-void Error (char *text);
-void Warning (char *text);
-void Print_Bits (int code, int bits, int len);
-//}}}
-//{{{  recon.c
-void form_predictions (int bx, int by, int macroblock_type,
-                       int motion_type, int PMV[2][2][2], int motion_vertical_field_select[2][2],
-                       int dmvector[2], int stwtype);
-//}}}
-//{{{  spatscal.c
-void Spatial_Prediction();
-//}}}
-//{{{  store.c
-void Write_Frame (unsigned char *src[], int frame);
-//}}}
+#define RB "rb"
+#define WB "wb"
 
-extern char Version[];
-extern char Author[];
-extern unsigned char scan[2][64];
-extern unsigned char default_intra_quantizer_matrix[64];
-extern unsigned char Non_Linear_quantizer_scale[32];
+#ifndef O_BINARY
+  #define O_BINARY 0
+#endif
+
+extern void Initialize_Fast_IDCT();
+extern unsigned int Show_Bits (int N);
+extern unsigned int Get_Bits32();
+extern int Get_Hdr();
+extern void Write_Frame (unsigned char *src[], int frame);
+extern void Output_Last_Frame_of_Sequence (int Framenum);
+extern void Error (char *text);
 
 //{{{  output types (Output_Type)
 #define T_YUV   0
@@ -150,14 +86,14 @@ extern int mb_height;
 extern double bit_rate;
 extern double frameRate;
 //}}}
-//{{{  ISO/IEC 13818-2 section 6.2.2.1:  sequence_header()
+//{{{  ISO/IEC 13818-2 section 6.2.2.1: sequence_header()
 extern int aspect_ratio_information;
 extern int frame_rate_code;
 extern int bit_rate_value;
 extern int vbv_buffer_size;
 extern int constrained_parameters_flag;
 //}}}
-//{{{  ISO/IEC 13818-2 section 6.2.2.3:  sequence_extension()
+//{{{  ISO/IEC 13818-2 section 6.2.2.3: sequence_extension()
 extern int profile_and_level_indication;
 extern int progressive_sequence;
 extern int chroma_format;
@@ -165,7 +101,7 @@ extern int low_delay;
 extern int frame_rate_extension_n;
 extern int frame_rate_extension_d;
 //}}}
-//{{{  ISO/IEC 13818-2 section 6.2.2.4:  sequence_display_extension()
+//{{{  ISO/IEC 13818-2 section 6.2.2.4: sequence_display_extension()
 extern int video_format;
 extern int color_description;
 extern int color_primaries;
@@ -174,7 +110,7 @@ extern int matrix_coefficients;
 extern int display_horizontal_size;
 extern int display_vertical_size;
 //}}}
-//{{{  ISO/IEC 13818-2 section 6.2.3: picture_header()
+//{{{  ISO/IEC 13818-2 section 6.2.3:   picture_header()
 extern int temporal_reference;
 extern int picture_coding_type;
 extern int vbv_delay;
@@ -208,15 +144,6 @@ extern int sub_carrier_phase;
 extern int frame_center_horizontal_offset[3];
 extern int frame_center_vertical_offset[3];
 //}}}
-//{{{  ISO/IEC 13818-2 section 6.2.2.5: sequence_scalable_extension() header
-extern int layerId;
-extern int lower_layer_prediction_horizontal_size;
-extern int lower_layer_prediction_vertical_size;
-extern int horizontal_subsampling_factor_m;
-extern int horizontal_subsampling_factor_n;
-extern int vertical_subsampling_factor_m;
-extern int vertical_subsampling_factor_n;
-//}}}
 //{{{  ISO/IEC 13818-2 section 6.2.3.5: picture_spatial_scalable_extension() header
 extern int lower_layer_temporal_reference;
 extern int lower_layer_horizontal_offset;
@@ -225,13 +152,14 @@ extern int spatial_temporal_weight_code_table_index;
 extern int lower_layer_progressive_frame;
 extern int lower_layer_deinterlaced_field_select;
 //}}}
-//{{{  ISO/IEC 13818-2 section 6.2.3.6: copyright_extension() header
-extern int copyright_flag;
-extern int copyright_identifier;
-extern int original_or_copy;
-extern int copyright_number_1;
-extern int copyright_number_2;
-extern int copyright_number_3;
+//{{{  ISO/IEC 13818-2 section 6.2.2.5: sequence_scalable_extension() header
+extern int layerId;
+extern int lower_layer_prediction_horizontal_size;
+extern int lower_layer_prediction_vertical_size;
+extern int horizontal_subsampling_factor_m;
+extern int horizontal_subsampling_factor_n;
+extern int vertical_subsampling_factor_m;
+extern int vertical_subsampling_factor_n;
 //}}}
 //{{{  ISO/IEC 13818-2 section 6.2.2.6: group_of_pictures_header()
 extern int drop_flag;
@@ -245,7 +173,7 @@ extern int broken_link;
 
 //{{{
 /* layer specific variables (needed for SNR and DP scalability) */
-extern struct layer_data {
+struct layer_data {
   /* bit input */
   int Infile;
   unsigned char Rdbfr[2048];

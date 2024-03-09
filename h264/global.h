@@ -446,8 +446,8 @@ typedef struct InputParam {
   int writeUv;
   int intraProfileDeblocking; // Loop filter usage determined by flags and parameters in bitstream
 
-  sFrameFormat source;        
-  sFrameFormat output;        
+  sFrameFormat source;
+  sFrameFormat output;
 
   int concealMode;
   int refPocGap;
@@ -540,7 +540,7 @@ typedef struct Slice {
   unsigned int      fieldPicFlag;
   byte              botFieldFlag;
   ePicStructure     structure;     // Identify picture structure type
-  int               startMbNum;   // MUST be set by NAL even in case of eiFlag == 1
+  int               startMbNum;    // MUST be set by NAL even in case of eiFlag == 1
   int               end_mb_nr_plus1;
   int               maxPartitionNum;
   int               dataPartitionMode;       // data partitioning mode
@@ -562,23 +562,23 @@ typedef struct Slice {
   char listXsize[6];
   struct Picture** listX[6];
 
-  sDataPartition*       partArr;    // array of partitions
-  sMotionInfoContexts*  mot_ctx;    // pointer to struct of context models for use in CABAC
-  sTextureInfoContexts* tex_ctx;    // pointer to struct of context models for use in CABAC
+  sDataPartition*       partArr;  // array of partitions
+  sMotionInfoContexts*  mot_ctx;  // pointer to struct of context models for use in CABAC
+  sTextureInfoContexts* tex_ctx;  // pointer to struct of context models for use in CABAC
 
-  int mvscale[6][MAX_REFERENCE_PICTURES];
-  int ref_pic_list_reordering_flag[2];
-  int* modification_of_pic_nums_idc[2];
-  int* abs_diff_pic_num_minus1[2];
-  int* long_term_pic_idx[2];
+  int   mvscale[6][MAX_REFERENCE_PICTURES];
+  int   ref_pic_list_reordering_flag[2];
+  int*  modification_of_pic_nums_idc[2];
+  int*  abs_diff_pic_num_minus1[2];
+  int*  long_term_pic_idx[2];
 
   int   layerId;
-  short DFDisableIdc;         // Disable deblocking filter on slice
-  short DFAlphaC0Offset;      // Alpha and C0 offset for filtering slice
-  short DFBetaOffset;         // Beta offset for filtering slice
-  int   ppsId; // the ID of the picture parameter set the slice is reffering to
-  int   noDataPartitionB;       // non-zero, if data partition B is lost
-  int   noDataPartitionC;       // non-zero, if data partition C is lost
+  short DFDisableIdc;      // Disable deblocking filter on slice
+  short DFAlphaC0Offset;   // Alpha and C0 offset for filtering slice
+  short DFBetaOffset;      // Beta offset for filtering slice
+  int   ppsId;             // the ID of the picture parameter set the slice is reffering to
+  int   noDataPartitionB;  // non-zero, if data partition B is lost
+  int   noDataPartitionC;  // non-zero, if data partition C is lost
 
   Boolean   is_reset_coeff;
   Boolean   is_reset_coeff_cr;
@@ -621,34 +621,34 @@ typedef struct Slice {
   short      wp_round_chroma;
 
   // for signalling to the neighbour logic that this is a deblocker call
-  int max_mb_vmv_r;        // maximum vertical motion vector range in luma quarter pixel units for the current level_idc
-  int refFlag[17];        // 0: i-th previous frame is incorrect
+  int max_mb_vmv_r;      // maximum vertical motion vector range in luma quarter pixel units for the current level_idc
+  int refFlag[17];       // 0: i-th previous frame is incorrect
 
   int ercMvPerMb;
   sMacroblock* mbData;
-
   struct Picture* picture;
-  int**   siBlock;
+
+  int**  siBlock;
   byte** predMode;
   char*  intraBlock;
   char   chroma_vector_adjustment[6][32];
 
-  void (*read_CBP_and_coeffs_from_NAL) (sMacroblock *curMb);
-  int  (*decode_one_component     )    (sMacroblock *curMb, eColorPlane curPlane, sPixel** curPixel, struct Picture* picture);
-  int  (*readSlice                )    (struct VidParam *, struct InputParam *);
-  int  (*nal_startcode_follows    )    (struct Slice*, int );
-  void (*read_motion_info_from_NAL)    (sMacroblock *curMb);
-  void (*readOneMacroblock      )    (sMacroblock *curMb);
-  void (*interpret_mb_mode        )    (sMacroblock *curMb);
-  void (*init_lists               )    (struct Slice *curSlice);
-  void (*intra_pred_chroma        )    (sMacroblock *curMb);
-  int  (*intra_pred_4x4)               (sMacroblock *curMb, eColorPlane pl, int ioff, int joff,int i4,int j4);
-  int  (*intra_pred_8x8)               (sMacroblock *curMb, eColorPlane pl, int ioff, int joff);
-  int  (*intra_pred_16x16)             (sMacroblock *curMb, eColorPlane pl, int predmode);
-  void (*linfo_cbp_intra          )    (int len, int info, int *cbp, int *dummy);
-  void (*linfo_cbp_inter          )    (int len, int info, int *cbp, int *dummy);
-  void (*update_direct_mv_info    )    (sMacroblock *curMb);
-  void (*read_coeff_4x4_CAVLC     )    (sMacroblock *curMb, int block_type, int i, int j, int levarr[16], int runarr[16], int *number_coefficients);
+  void (*read_CBP_and_coeffs_from_NAL) (sMacroblock* curMb);
+  int  (*decode_one_component) (sMacroblock* curMb, eColorPlane curPlane, sPixel** curPixel, struct Picture* picture);
+  int  (*readSlice) (struct VidParam*, struct InputParam*);
+  int  (*nal_startcode_follows) (struct Slice*, int);
+  void (*read_motion_info_from_NAL) (sMacroblock* curMb);
+  void (*readOneMacroblock) (sMacroblock* curMb);
+  void (*interpret_mb_mode) (sMacroblock* curMb);
+  void (*init_lists) (struct Slice* curSlice);
+  void (*intra_pred_chroma) (sMacroblock* curMb);
+  int  (*intra_pred_4x4) (sMacroblock* curMb, eColorPlane pl, int ioff, int joff,int i4,int j4);
+  int  (*intra_pred_8x8) (sMacroblock* curMb, eColorPlane pl, int ioff, int joff);
+  int  (*intra_pred_16x16) (sMacroblock* curMb, eColorPlane pl, int predmode);
+  void (*linfo_cbp_intra) (int len, int info, int* cbp, int* dummy);
+  void (*linfo_cbp_inter) (int len, int info, int* cbp, int* dummy);
+  void (*update_direct_mv_info) (sMacroblock* curMb);
+  void (*read_coeff_4x4_CAVLC) (sMacroblock* curMb, int block_type, int i, int j, int levarr[16], int runarr[16], int *number_coefficients);
   } sSlice;
 //}}}
 //{{{  sDecodedPicture
