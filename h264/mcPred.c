@@ -681,11 +681,11 @@ void update_direct_types (sSlice* curSlice)
 {
   if (curSlice->activeSPS->direct_8x8_inference_flag)
     curSlice->updateDirectMvInfo =
-      curSlice->direct_spatial_mv_pred_flag ? update_direct_mv_info_spatial_8x8 :
+      curSlice->directSpatialMvPredFlag ? update_direct_mv_info_spatial_8x8 :
                                                update_direct_mv_info_temporal;
   else
     curSlice->updateDirectMvInfo =
-      curSlice->direct_spatial_mv_pred_flag ? update_direct_mv_info_spatial_4x4 :
+      curSlice->directSpatialMvPredFlag ? update_direct_mv_info_spatial_4x4 :
                                                update_direct_mv_info_temporal;
 }
 //}}}
@@ -1834,13 +1834,13 @@ static void check_motion_vector_range (const sMotionVector *mv, sSlice *pSlice)
 {
   if (mv->mvX > 8191 || mv->mvX < -8192)
   {
-    fprintf(stderr,"WARNING! Horizontal motion vector %d is out of allowed range {-8192, 8191} in picture %d, macroblock %d\n", mv->mvX, pSlice->vidParam->number, pSlice->current_mb_nr);
+    fprintf(stderr,"WARNING! Horizontal motion vector %d is out of allowed range {-8192, 8191} in picture %d, macroblock %d\n", mv->mvX, pSlice->vidParam->number, pSlice->curMbNum);
     //error("invalid stream: too big horizontal motion vector", 500);
   }
 
   if (mv->mvY > (pSlice->max_mb_vmv_r - 1) || mv->mvY < (-pSlice->max_mb_vmv_r))
   {
-    fprintf(stderr,"WARNING! Vertical motion vector %d is out of allowed range {%d, %d} in picture %d, macroblock %d\n", mv->mvY, (-pSlice->max_mb_vmv_r), (pSlice->max_mb_vmv_r - 1), pSlice->vidParam->number, pSlice->current_mb_nr);
+    fprintf(stderr,"WARNING! Vertical motion vector %d is out of allowed range {%d, %d} in picture %d, macroblock %d\n", mv->mvY, (-pSlice->max_mb_vmv_r), (pSlice->max_mb_vmv_r - 1), pSlice->vidParam->number, pSlice->curMbNum);
     //error("invalid stream: too big vertical motion vector", 500);
   }
 }

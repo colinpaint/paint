@@ -492,7 +492,7 @@ typedef struct Slice {
 
   int idrFlag;
   int idrPicId;
-  int nalRefId;                   // nalRefId from NAL
+  int nalRefId;                   
   int transform8x8Mode;
   Boolean chroma444notSeparate;   // indicates chroma 4:4:4 coding with sepColourPlaneFlag equal to zero
 
@@ -503,52 +503,48 @@ typedef struct Slice {
   // poc mode 0
   unsigned int picOrderCountLsb;
   int deletaPicOrderCountBot;
+  signed int PicOrderCntMsb;
 
   // poc mode 1
   int deltaPicOrderCount[2];
-
-  // POC mode 0
-  signed int PicOrderCntMsb;
-
-  // POC mode 1
   unsigned int AbsFrameNum;
   int thisPoc;
 
   // information need to move to slice
-  unsigned int current_mb_nr;  // bitstream order
-  unsigned int numDecodedMb;
-  short curSliceNum;
-  int cod_counter;             // Current count of number of skipped macroblocks in a row
-  int allrefzero;
+  unsigned int  curMbNum;  
+  unsigned int  numDecodedMb;
+  short         curSliceNum;
+  int           codCount;    // Current count of number of skipped macroblocks in a row
+  int           allrefzero;
 
-  int               mbAffFrameFlag;
-  int               direct_spatial_mv_pred_flag; // Indicator for direct mode type (1 for Spatial, 0 for Temporal)
-  int               numRefIndexActive[2];       // number of available list references
+  int           mbAffFrameFlag;
+  int           directSpatialMvPredFlag; // Indicator for direct mode type (1 for Spatial, 0 for Temporal)
+  int           numRefIndexActive[2];    // number of available list references
 
-  int               eiFlag;       // 0 if the partArr[0] contains valid information
-  int               qp;
-  int               slice_qp_delta;
-  int               qs;
-  int               slice_qs_delta;
-  int               sliceType;    // slice type
-  int               model_number;  // cabac model number
-  unsigned int      frameNum;     // frameNum for this frame
-  unsigned int      fieldPicFlag;
-  byte              botFieldFlag;
-  ePicStructure     structure;     // Identify picture structure type
-  int               startMbNum;    // MUST be set by NAL even in case of eiFlag == 1
-  int               end_mb_nr_plus1;
-  int               maxPartitionNum;
-  int               dataPartitionMode;       // data partitioning mode
-  int               current_header;
-  int               next_header;
-  int               last_dquant;
+  int           eiFlag;       // 0 if the partArr[0] contains valid information
+  int           qp;
+  int           sliceQpDelta;
+  int           qs;
+  int           sliceQsDelta;
+  int           sliceType;   // slice type
+  int           modelNum;    // cabac model number
+  unsigned int  frameNum;    // frameNum for this frame
+  unsigned int  fieldPicFlag;
+  byte          botFieldFlag;
+  ePicStructure structure;   // Identify picture structure type
+  int           startMbNum;  // MUST be set by NAL even in case of eiFlag == 1
+  int           endMbNumPlus1;
+  int           maxPartitionNum;
+  int           dataPartitionMode;       // data partitioning mode
+  int           curHeader;
+  int           nextHeader;
+  int           lastDquant;
 
   // slice header information;
   int colourPlaneId;             // colourPlaneId of the current coded slice
   int redundantPicCount;
-  int sp_switch;                   // 1 for switching sp, 0 for normal sp
-  int slice_group_change_cycle;
+  int spSwitch;                   // 1 for switching sp, 0 for normal sp
+  int sliceGroupChangeCycle;
   int redundantSliceRefIndex;     // reference index of redundant slice
   int noOutputPriorPicFlag;
   int longTermRefFlag;

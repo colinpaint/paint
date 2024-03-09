@@ -772,7 +772,7 @@ static void buildPredRegionYUV (sVidParam* vidParam, int *mv, int x, int y, sPix
   int yuv = picture->chromaFormatIdc - 1;
 
   int ref_frame = imax (mv[2], 0); // !!KS: quick fix, we sometimes seem to get negative refPic here, so restrict to zero and above
-  int mb_nr = y/16*(vidParam->width/16)+x/16; ///curSlice->current_mb_nr;
+  int mb_nr = y/16*(vidParam->width/16)+x/16; ///curSlice->curMbNum;
   int** tmp_res = NULL;
 
   sMacroblock* curMb = &vidParam->mbData[mb_nr];   // intialization code deleted, see below, StW
@@ -1349,7 +1349,7 @@ int ercConcealInterFrame (frame *recfr, sObjectBuffer *object_list,
 *************************************************************************
 */
 static void buildPredblockRegionYUV (sVidParam* vidParam, int *mv,
-                                    int x, int y, sPixel *predMB, int list, int current_mb_nr)
+                                    int x, int y, sPixel *predMB, int list, int curMbNum)
 {
   sPixel** tmp_block;
   int i=0,j=0,ii=0,jj=0,i1=0,j1=0,j4=0,i4=0;
@@ -1368,7 +1368,7 @@ static void buildPredblockRegionYUV (sVidParam* vidParam, int *mv,
   int yuv = picture->chromaFormatIdc - 1;
 
   int ref_frame = mv[2];
-  int mb_nr = current_mb_nr;
+  int mb_nr = curMbNum;
 
   sMacroblock* curMb = &vidParam->mbData[mb_nr];   // intialization code deleted, see below, StW
   sSlice* curSlice = curMb->slice;
@@ -1542,7 +1542,7 @@ static void copy_to_conceal (sPicture *src, sPicture *dst, sVidParam* vidParam)
   sPicture* picture = vidParam->picture;
   // sInputParam *test;
 
-  int current_mb_nr = 0;
+  int curMbNum = 0;
 
   dst->picSizeInMbs  = src->picSizeInMbs;
 
@@ -1562,7 +1562,7 @@ static void copy_to_conceal (sPicture *src, sPicture *dst, sVidParam* vidParam)
   dst->frameCropTop = src->frameCropTop;
 
   dst->qp = src->qp;
-  dst->slice_qp_delta = src->slice_qp_delta;
+  dst->sliceQpDelta = src->sliceQpDelta;
 
   picture = src;
 
@@ -1630,9 +1630,9 @@ static void copy_to_conceal (sPicture *src, sPicture *dst, sVidParam* vidParam)
         y = (i) * multiplier;
 
         if ((mm%16==0) && (nn%16==0))
-          current_mb_nr++;
+          curMbNum++;
 
-        buildPredblockRegionYUV(vidParam->ercImg, mv, x, y, storeYUV, LIST_0, current_mb_nr);
+        buildPredblockRegionYUV(vidParam->ercImg, mv, x, y, storeYUV, LIST_0, curMbNum);
 
         predMB = storeYUV;
 

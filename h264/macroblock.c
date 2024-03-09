@@ -359,7 +359,7 @@ static int decodeComponentB (sMacroblock* mb, eColorPlane curPlane, sPixel** cur
     mb_pred_p_inter8x16 (mb, curPlane, picture);
   else if (mb->mbType == BSKIP_DIRECT) {
     sSlice* curSlice = mb->slice;
-    if (curSlice->direct_spatial_mv_pred_flag == 0) {
+    if (curSlice->directSpatialMvPredFlag == 0) {
       if (curSlice->activeSPS->direct_8x8_inference_flag)
         mb_pred_b_d8x8temporal (mb, curPlane, curPixel, picture);
       else
@@ -717,7 +717,7 @@ static void setup_mb_pos_info (sMacroblock* mb) {
 void startMacroblock (sSlice* curSlice, sMacroblock** mb) {
 
   sVidParam* vidParam = curSlice->vidParam;
-  int mb_nr = curSlice->current_mb_nr;
+  int mb_nr = curSlice->curMbNum;
 
   *mb = &curSlice->mbData[mb_nr];
   (*mb)->slice = curSlice;
@@ -793,19 +793,19 @@ Boolean exitMacroblock (sSlice* curSlice, int eos_bit) {
   sVidParam* vidParam = curSlice->vidParam;
 
   //! The if() statement below resembles the original code, which tested
-  //! vidParam->current_mb_nr == vidParam->picSizeInMbs.  Both is, of course, nonsense
+  //! vidParam->curMbNum == vidParam->picSizeInMbs.  Both is, of course, nonsense
   //! In an error prone environment, one can only be sure to have a new
   //! picture by checking the tr of the next slice header!
 
-  // printf ("exitMacroblock: FmoGetLastMBOfPicture %d, vidParam->current_mb_nr %d\n", FmoGetLastMBOfPicture(), vidParam->current_mb_nr);
+  // printf ("exitMacroblock: FmoGetLastMBOfPicture %d, vidParam->curMbNum %d\n", FmoGetLastMBOfPicture(), vidParam->curMbNum);
   ++(curSlice->numDecodedMb);
 
-  if (curSlice->current_mb_nr == vidParam->picSizeInMbs - 1) //if (vidParam->numDecodedMb == vidParam->picSizeInMbs)
+  if (curSlice->curMbNum == vidParam->picSizeInMbs - 1) //if (vidParam->numDecodedMb == vidParam->picSizeInMbs)
     return TRUE;
     // ask for last mb in the slice  CAVLC
   else {
-    curSlice->current_mb_nr = FmoGetNextMBNr (vidParam, curSlice->current_mb_nr);
-    if (curSlice->current_mb_nr == -1) {
+    curSlice->curMbNum = FmoGetNextMBNr (vidParam, curSlice->curMbNum);
+    if (curSlice->curMbNum == -1) {
       // End of sSlice group, MUST be end of slice
       assert (curSlice->nal_startcode_follows (curSlice, eos_bit) == TRUE);
       return TRUE;
@@ -817,7 +817,7 @@ Boolean exitMacroblock (sSlice* curSlice, int eos_bit) {
         curSlice->sliceType == SI_SLICE ||
         vidParam->activePPS->entropyCodingModeFlag == (Boolean)CABAC)
       return TRUE;
-    if (curSlice->cod_counter <= 0)
+    if (curSlice->codCount <= 0)
       return TRUE;
 
     return FALSE;

@@ -2453,7 +2453,7 @@ void freeRefPicListReorderingBuffer (sSlice* slice) {
 void compute_colocated (sSlice* slice, sPicture** listX[6]) {
 
   sVidParam* vidParam = slice->vidParam;
-  if (slice->direct_spatial_mv_pred_flag == 0) {
+  if (slice->directSpatialMvPredFlag == 0) {
     for (int j = 0; j < 2 + (slice->mbAffFrameFlag * 4); j += 2) {
       for (int i = 0; i < slice->listXsize[j];i++) {
         int iTRb;

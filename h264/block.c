@@ -318,7 +318,7 @@ void itrans_sp (sMacroblock* curMb, eColorPlane pl, int ioff, int joff) {
 
   forward4x4 (PBlock, PBlock, 0, 0);
 
-  if (curSlice->sp_switch || curSlice->sliceType == SI_SLICE) {
+  if (curSlice->spSwitch || curSlice->sliceType == SI_SLICE) {
     for (int j = 0; j < BLOCK_SIZE;++j)
       for (int i = 0; i < BLOCK_SIZE;++i) {
         // recovering coefficient since they are already dequantized earlier
@@ -387,7 +387,7 @@ void itrans_sp_cr (sMacroblock* curMb, int uv) {
   mp1[2] = (PBlock[0][0] + PBlock[4][0] - PBlock[0][4] - PBlock[4][4]);
   mp1[3] = (PBlock[0][0] - PBlock[4][0] - PBlock[0][4] + PBlock[4][4]);
 
-  if (curSlice->sp_switch || curSlice->sliceType == SI_SLICE) {
+  if (curSlice->spSwitch || curSlice->sliceType == SI_SLICE) {
     for (int n2 = 0; n2 < 2; ++n2 )
       for (int n1 = 0; n1 < 2; ++n1 ) {
         // quantization fo predicted block

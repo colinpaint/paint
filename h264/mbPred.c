@@ -1108,7 +1108,7 @@ int mb_pred_b_inter8x8 (sMacroblock* curMb, eColorPlane curPlane, sPicture* pict
   set_chroma_vector(curMb);
 
   // prepare direct modes
-  if (curSlice->direct_spatial_mv_pred_flag && (!(curMb->b8mode[0] && curMb->b8mode[1] && curMb->b8mode[2] && curMb->b8mode[3])))
+  if (curSlice->directSpatialMvPredFlag && (!(curMb->b8mode[0] && curMb->b8mode[1] && curMb->b8mode[2] && curMb->b8mode[3])))
     prepare_direct_params(curMb, picture, &pmvl0, &pmvl1, &l0_rFrame, &l1_rFrame);
 
   for (block8x8=0; block8x8<4; block8x8++)
@@ -1151,7 +1151,7 @@ int mb_pred_b_inter8x8 (sMacroblock* curMb, eColorPlane curPlane, sPicture* pict
       }
 
       // Prepare mvs (needed for deblocking and mv prediction
-      if (curSlice->direct_spatial_mv_pred_flag)
+      if (curSlice->directSpatialMvPredFlag)
       {
         for (k = k_start; k < k_start + BLOCK_MULTIPLE; k ++)
         {
@@ -1272,7 +1272,7 @@ int mb_pred_ipcm (sMacroblock* curMb)
   curMb->cbpStructure[0].blk = 0xFFFF;
 
   //For CABAC decoding of Dquant
-  curSlice->last_dquant = 0;
+  curSlice->lastDquant = 0;
   curSlice->is_reset_coeff = FALSE;
   curSlice->is_reset_coeff_cr = FALSE;
   return 1;

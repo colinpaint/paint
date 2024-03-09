@@ -172,7 +172,7 @@ static int intra4x4_vert_pred (sMacroblock *curMb,    //!< current macroblock
 
   if (!block_available_up)
   {
-    printf ("warning: Intra_4x4_Vertical prediction mode not allowed at mb %d\n", (int) curSlice->current_mb_nr);
+    printf ("warning: Intra_4x4_Vertical prediction mode not allowed at mb %d\n", (int) curSlice->curMbNum);
   }
   else
   {
@@ -230,7 +230,7 @@ static int intra4x4_hor_pred (sMacroblock *curMb,
   }
 
   if (!block_available_left)
-    printf ("warning: Intra_4x4_Horizontal prediction mode not allowed at mb %d\n",(int) curSlice->current_mb_nr);
+    printf ("warning: Intra_4x4_Horizontal prediction mode not allowed at mb %d\n",(int) curSlice->curMbNum);
   else
 #if (IMGTYPE == 0)
   {
@@ -317,7 +317,7 @@ static int intra4x4_diag_down_right_pred (sMacroblock *curMb,    //!< current ma
   }
 
   if ((!block_available_up)||(!block_available_left)||(!block_available_up_left))
-    printf ("warning: Intra_4x4_Diagonal_Down_Right prediction mode not allowed at mb %d\n",(int) curSlice->current_mb_nr);
+    printf ("warning: Intra_4x4_Diagonal_Down_Right prediction mode not allowed at mb %d\n",(int) curSlice->curMbNum);
   else
   {
     sPixel PredPixel[7];
@@ -394,7 +394,7 @@ static int intra4x4_diag_down_left_pred (sMacroblock *curMb,    //!< current mac
   }
 
   if (!block_available_up)
-    printf ("warning: Intra_4x4_Diagonal_Down_Left prediction mode not allowed at mb %d\n", (int) curSlice->current_mb_nr);
+    printf ("warning: Intra_4x4_Diagonal_Down_Left prediction mode not allowed at mb %d\n", (int) curSlice->curMbNum);
   else
   {
     sPixel** imgY = (pl) ? curSlice->picture->imgUV[pl - 1] : curSlice->picture->imgY;
@@ -483,7 +483,7 @@ static int intra4x4_vert_right_pred (sMacroblock *curMb,    //!< current macrobl
   }
 
   if ((!block_available_up)||(!block_available_left)||(!block_available_up_left))
-    printf ("warning: Intra_4x4_Vertical_Right prediction mode not allowed at mb %d\n", (int) curSlice->current_mb_nr);
+    printf ("warning: Intra_4x4_Vertical_Right prediction mode not allowed at mb %d\n", (int) curSlice->curMbNum);
   {
     sPixel** imgY = (pl) ? curSlice->picture->imgUV[pl - 1] : curSlice->picture->imgY;
     sPixel** mb_pred = curSlice->mb_pred[pl];
@@ -567,7 +567,7 @@ static int intra4x4_vert_left_pred (sMacroblock *curMb,    //!< current macroblo
 
 
   if (!block_available_up)
-    printf ("warning: Intra_4x4_Vertical_Left prediction mode not allowed at mb %d\n", (int) curSlice->current_mb_nr);
+    printf ("warning: Intra_4x4_Vertical_Left prediction mode not allowed at mb %d\n", (int) curSlice->curMbNum);
   else
   {
     sPixel PredPixel[10];
@@ -649,7 +649,7 @@ static int intra4x4_hor_up_pred (sMacroblock *curMb,    //!< current macroblock
   }
 
   if (!block_available_left)
-    printf ("warning: Intra_4x4_Horizontal_Up prediction mode not allowed at mb %d\n",(int) curSlice->current_mb_nr);
+    printf ("warning: Intra_4x4_Horizontal_Up prediction mode not allowed at mb %d\n",(int) curSlice->curMbNum);
   else
   {
     sPixel PredPixel[10];
@@ -729,7 +729,7 @@ static int intra4x4_hor_down_pred (sMacroblock *curMb,    //!< current macrobloc
   }
 
   if ((!block_available_up)||(!block_available_left)||(!block_available_up_left))
-    printf ("warning: Intra_4x4_Horizontal_Down prediction mode not allowed at mb %d\n", (int) curSlice->current_mb_nr);
+    printf ("warning: Intra_4x4_Horizontal_Down prediction mode not allowed at mb %d\n", (int) curSlice->curMbNum);
   else
   {
     sPixel PredPixel[10];
@@ -971,7 +971,7 @@ static int intra4x4_vert_pred_mbaff (sMacroblock *curMb,    //!< current macrobl
 
   if (!block_available_up)
   {
-    printf ("warning: Intra_4x4_Vertical prediction mode not allowed at mb %d\n", (int) curSlice->current_mb_nr);
+    printf ("warning: Intra_4x4_Vertical prediction mode not allowed at mb %d\n", (int) curSlice->curMbNum);
   }
   else
   {
@@ -1038,7 +1038,7 @@ static int intra4x4_hor_pred_mbaff (sMacroblock *curMb,
   }
 
   if (!block_available_left)
-    printf ("warning: Intra_4x4_Horizontal prediction mode not allowed at mb %d\n",(int) curSlice->current_mb_nr);
+    printf ("warning: Intra_4x4_Horizontal prediction mode not allowed at mb %d\n",(int) curSlice->curMbNum);
 
   for(j=0;j<BLOCK_SIZE;++j)
   {
@@ -1105,7 +1105,7 @@ static int intra4x4_diag_down_right_pred_mbaff (sMacroblock *curMb,    //!< curr
   }
 
   if ((!block_available_up)||(!block_available_left)||(!block_available_up_left))
-    printf ("warning: Intra_4x4_Diagonal_Down_Right prediction mode not allowed at mb %d\n",(int) curSlice->current_mb_nr);
+    printf ("warning: Intra_4x4_Diagonal_Down_Right prediction mode not allowed at mb %d\n",(int) curSlice->curMbNum);
   else
   {
     sPixel PredPixel[7];
@@ -1181,7 +1181,7 @@ static int intra4x4_diag_down_left_pred_mbaff (sMacroblock *curMb,    //!< curre
   }
 
   if (!block_available_up)
-    printf ("warning: Intra_4x4_Diagonal_Down_Left prediction mode not allowed at mb %d\n", (int) curSlice->current_mb_nr);
+    printf ("warning: Intra_4x4_Diagonal_Down_Left prediction mode not allowed at mb %d\n", (int) curSlice->curMbNum);
   else
   {
     sPixel** imgY = (pl) ? curSlice->picture->imgUV[pl - 1] : curSlice->picture->imgY;
@@ -1276,7 +1276,7 @@ static int intra4x4_vert_right_pred_mbaff (sMacroblock *curMb,    //!< current m
   }
 
   if ((!block_available_up)||(!block_available_left)||(!block_available_up_left))
-    printf ("warning: Intra_4x4_Vertical_Right prediction mode not allowed at mb %d\n", (int) curSlice->current_mb_nr);
+    printf ("warning: Intra_4x4_Vertical_Right prediction mode not allowed at mb %d\n", (int) curSlice->curMbNum);
   {
     sPixel PredPixel[10];
     sPixel PredPel[13];
@@ -1355,7 +1355,7 @@ static int intra4x4_vert_left_pred_mbaff (sMacroblock *curMb,    //!< current ma
 
 
   if (!block_available_up)
-    printf ("warning: Intra_4x4_Vertical_Left prediction mode not allowed at mb %d\n", (int) curSlice->current_mb_nr);
+    printf ("warning: Intra_4x4_Vertical_Left prediction mode not allowed at mb %d\n", (int) curSlice->curMbNum);
   {
     sPixel PredPixel[10];
     sPixel PredPel[13];
@@ -1440,7 +1440,7 @@ static int intra4x4_hor_up_pred_mbaff (sMacroblock *curMb,    //!< current macro
   }
 
   if (!block_available_left)
-    printf ("warning: Intra_4x4_Horizontal_Up prediction mode not allowed at mb %d\n",(int) curSlice->current_mb_nr);
+    printf ("warning: Intra_4x4_Horizontal_Up prediction mode not allowed at mb %d\n",(int) curSlice->curMbNum);
   else
   {
     sPixel PredPixel[10];
@@ -1526,7 +1526,7 @@ static int intra4x4_hor_down_pred_mbaff (sMacroblock *curMb,    //!< current mac
   }
 
   if ((!block_available_up)||(!block_available_left)||(!block_available_up_left))
-    printf ("warning: Intra_4x4_Horizontal_Down prediction mode not allowed at mb %d\n", (int) curSlice->current_mb_nr);
+    printf ("warning: Intra_4x4_Horizontal_Down prediction mode not allowed at mb %d\n", (int) curSlice->curMbNum);
   else
   {
     sPixel PredPixel[10];

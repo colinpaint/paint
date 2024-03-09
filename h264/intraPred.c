@@ -419,7 +419,7 @@ static int intra8x8_vert_pred (sMacroblock* curMb,
   }
 
   if (!block_available_up)
-    printf ("warning: Intra_8x8_Vertical prediction mode not allowed at mb %d\n", (int) curSlice->current_mb_nr);
+    printf ("warning: Intra_8x8_Vertical prediction mode not allowed at mb %d\n", (int) curSlice->curMbNum);
 
   // form predictor pels
   if (block_available_up)
@@ -526,7 +526,7 @@ static int intra8x8_hor_pred (sMacroblock* curMb,
   }
 
   if (!block_available_left)
-    printf ("warning: Intra_8x8_Horizontal prediction mode not allowed at mb %d\n", (int) curSlice->current_mb_nr);
+    printf ("warning: Intra_8x8_Horizontal prediction mode not allowed at mb %d\n", (int) curSlice->curMbNum);
 
   // form predictor pels
   if (block_available_left)
@@ -638,7 +638,7 @@ static int intra8x8_diag_down_right_pred (sMacroblock* curMb,
   }
 
   if ((!block_available_up)||(!block_available_left)||(!block_available_up_left))
-    printf ("warning: Intra_8x8_Diagonal_Down_Right prediction mode not allowed at mb %d\n", (int) curSlice->current_mb_nr);
+    printf ("warning: Intra_8x8_Diagonal_Down_Right prediction mode not allowed at mb %d\n", (int) curSlice->curMbNum);
 
   // form predictor pels
   if (block_available_up)
@@ -787,7 +787,7 @@ static int intra8x8_diag_down_left_pred (sMacroblock* curMb,
   }
 
   if (!block_available_up)
-    printf ("warning: Intra_8x8_Diagonal_Down_Left prediction mode not allowed at mb %d\n", (int) curSlice->current_mb_nr);
+    printf ("warning: Intra_8x8_Diagonal_Down_Left prediction mode not allowed at mb %d\n", (int) curSlice->curMbNum);
 
   // form predictor pels
   if (block_available_up)
@@ -936,7 +936,7 @@ static int intra8x8_vert_right_pred (sMacroblock* curMb,
   }
 
   if ((!block_available_up)||(!block_available_left)||(!block_available_up_left))
-    printf ("warning: Intra_8x8_Vertical_Right prediction mode not allowed at mb %d\n", (int) curSlice->current_mb_nr);
+    printf ("warning: Intra_8x8_Vertical_Right prediction mode not allowed at mb %d\n", (int) curSlice->curMbNum);
 
   // form predictor pels
   if (block_available_up)
@@ -1091,7 +1091,7 @@ static int intra8x8_vert_left_pred (sMacroblock* curMb,
   }
 
   if (!block_available_up)
-    printf ("warning: Intra_4x4_Vertical_Left prediction mode not allowed at mb %d\n", (int) curSlice->current_mb_nr);
+    printf ("warning: Intra_4x4_Vertical_Left prediction mode not allowed at mb %d\n", (int) curSlice->curMbNum);
 
   // form predictor pels
   if (block_available_up)
@@ -1245,7 +1245,7 @@ static int intra8x8_hor_up_pred (sMacroblock* curMb,
   }
 
   if (!block_available_left)
-    printf ("warning: Intra_8x8_Horizontal_Up prediction mode not allowed at mb %d\n", (int) curSlice->current_mb_nr);
+    printf ("warning: Intra_8x8_Horizontal_Up prediction mode not allowed at mb %d\n", (int) curSlice->curMbNum);
 
   // form predictor pels
   if (block_available_up)
@@ -1398,7 +1398,7 @@ static int intra8x8_hor_down_pred (sMacroblock* curMb,
   }
 
   if ((!block_available_up)||(!block_available_left)||(!block_available_up_left))
-    printf ("warning: Intra_8x8_Horizontal_Down prediction mode not allowed at mb %d\n", (int) curSlice->current_mb_nr);
+    printf ("warning: Intra_8x8_Horizontal_Down prediction mode not allowed at mb %d\n", (int) curSlice->curMbNum);
 
   // form predictor pels
   if (block_available_up)
@@ -1762,7 +1762,7 @@ static int intra8x8_vert_pred_mbaff (sMacroblock* curMb,
   }
 
   if (!block_available_up)
-    printf ("warning: Intra_8x8_Vertical prediction mode not allowed at mb %d\n", (int) curSlice->current_mb_nr);
+    printf ("warning: Intra_8x8_Vertical prediction mode not allowed at mb %d\n", (int) curSlice->curMbNum);
 
   // form predictor pels
   if (block_available_up)
@@ -1877,7 +1877,7 @@ static int intra8x8_hor_pred_mbaff (sMacroblock* curMb,
   }
 
   if (!block_available_left)
-    printf ("warning: Intra_8x8_Horizontal prediction mode not allowed at mb %d\n", (int) curSlice->current_mb_nr);
+    printf ("warning: Intra_8x8_Horizontal prediction mode not allowed at mb %d\n", (int) curSlice->curMbNum);
 
   // form predictor pels
   if (block_available_left)
@@ -1993,7 +1993,7 @@ static int intra8x8_diag_down_right_pred_mbaff (sMacroblock* curMb,
   }
 
   if ((!block_available_up)||(!block_available_left)||(!block_available_up_left))
-    printf ("warning: Intra_8x8_Diagonal_Down_Right prediction mode not allowed at mb %d\n", (int) curSlice->current_mb_nr);
+    printf ("warning: Intra_8x8_Diagonal_Down_Right prediction mode not allowed at mb %d\n", (int) curSlice->curMbNum);
 
   // form predictor pels
   if (block_available_up)
@@ -2144,7 +2144,7 @@ static int intra8x8_diag_down_left_pred_mbaff (sMacroblock* curMb,
   }
 
   if (!block_available_up)
-    printf ("warning: Intra_8x8_Diagonal_Down_Left prediction mode not allowed at mb %d\n", (int) curSlice->current_mb_nr);
+    printf ("warning: Intra_8x8_Diagonal_Down_Left prediction mode not allowed at mb %d\n", (int) curSlice->curMbNum);
 
   // form predictor pels
   if (block_available_up)
@@ -2296,7 +2296,7 @@ static int intra8x8_vert_right_pred_mbaff (sMacroblock* curMb,
   }
 
   if ((!block_available_up)||(!block_available_left)||(!block_available_up_left))
-    printf ("warning: Intra_8x8_Vertical_Right prediction mode not allowed at mb %d\n", (int) curSlice->current_mb_nr);
+    printf ("warning: Intra_8x8_Vertical_Right prediction mode not allowed at mb %d\n", (int) curSlice->curMbNum);
 
   // form predictor pels
   if (block_available_up)
@@ -2454,7 +2454,7 @@ static int intra8x8_vert_left_pred_mbaff (sMacroblock* curMb,
   }
 
   if (!block_available_up)
-    printf ("warning: Intra_4x4_Vertical_Left prediction mode not allowed at mb %d\n", (int) curSlice->current_mb_nr);
+    printf ("warning: Intra_4x4_Vertical_Left prediction mode not allowed at mb %d\n", (int) curSlice->curMbNum);
 
   // form predictor pels
   if (block_available_up)
@@ -2612,7 +2612,7 @@ static int intra8x8_hor_up_pred_mbaff (sMacroblock* curMb,
   }
 
   if (!block_available_left)
-    printf ("warning: Intra_8x8_Horizontal_Up prediction mode not allowed at mb %d\n", (int) curSlice->current_mb_nr);
+    printf ("warning: Intra_8x8_Horizontal_Up prediction mode not allowed at mb %d\n", (int) curSlice->curMbNum);
 
   // form predictor pels
   if (block_available_up)
@@ -2770,7 +2770,7 @@ static int intra8x8_hor_down_pred_mbaff (sMacroblock* curMb,
   }
 
   if ((!block_available_up)||(!block_available_left)||(!block_available_up_left))
-    printf ("warning: Intra_8x8_Horizontal_Down prediction mode not allowed at mb %d\n", (int) curSlice->current_mb_nr);
+    printf ("warning: Intra_8x8_Horizontal_Down prediction mode not allowed at mb %d\n", (int) curSlice->curMbNum);
 
   // form predictor pels
   if (block_available_up)
