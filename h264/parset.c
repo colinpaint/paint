@@ -791,12 +791,11 @@ static void interpretPPS (sVidParam* vidParam, sDataPartition* p, sPPS* pps) {
         NumberBitsPerSliceGroupId = 2;
       else
         NumberBitsPerSliceGroupId = 1;
-      pps->picSizeMapUnitsMinus1      = readUeV ("PPS picSizeMapUnitsMinus1"               , s);
+      pps->picSizeMapUnitsMinus1 = readUeV ("PPS picSizeMapUnitsMinus1"               , s);
       if ((pps->sliceGroupId = calloc (pps->picSizeMapUnitsMinus1+1, 1)) == NULL)
         no_mem_exit ("InterpretPPS sliceGroupId");
       for (unsigned i = 0; i <= pps->picSizeMapUnitsMinus1; i++)
-        pps->sliceGroupId[i] =
-          (byte)readUv (NumberBitsPerSliceGroupId, "sliceGroupId[i]", s);
+        pps->sliceGroupId[i] = (byte)readUv (NumberBitsPerSliceGroupId, "sliceGroupId[i]", s);
       }
     }
     //}}}
@@ -851,7 +850,7 @@ static void interpretPPS (sVidParam* vidParam, sDataPartition* p, sPPS* pps) {
 static void activatePPS (sVidParam* vidParam, sPPS* pps) {
 
   if (vidParam->activePPS != pps) {
-    if (vidParam->picture) // this may only happen on slice loss
+    if (vidParam->picture) // only on slice loss
       exitPicture (vidParam, &vidParam->picture);
     vidParam->activePPS = pps;
     }

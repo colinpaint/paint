@@ -494,13 +494,13 @@ static void interpret_reserved_info (byte* payload, int size, sVidParam* vidPara
 //{{{
 static void interpret_picture_timing_info (byte* payload, int size, sVidParam* vidParam ) {
 
-  sSPS *activeSPS = vidParam->activeSPS;
+  sSPS* activeSPS = vidParam->activeSPS;
 
   int cpb_removal_len = 24;
   int dpb_output_len  = 24;
   Boolean CpbDpbDelaysPresentFlag;
 
-  if (NULL == activeSPS) {
+  if (!activeSPS) {
     fprintf (stderr, "Warning: no active SPS, timing SEI cannot be parsed\n");
     return;
     }
