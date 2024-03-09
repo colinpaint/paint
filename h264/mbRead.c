@@ -1808,7 +1808,7 @@ static void read_one_macroblock_b_slice_cabac (sMacroblock* curMb)
 }
 //}}}
 //{{{
-void setup_read_macroblock (sSlice* curSlice) {
+void setReadMacroblock (sSlice* curSlice) {
 
   if (curSlice->vidParam->activePPS->entropyCodingModeFlag == (Boolean) CABAC) {
     switch (curSlice->sliceType) {

@@ -20,9 +20,9 @@
 //}}}
 extern void readCoef4x4cavlc (sMacroblock* mb, int block_type, int i, int j, int levarr[16], int runarr[16], int *number_coefficients);
 extern void readCoef4x4cavlc444 (sMacroblock* mb, int block_type, int i, int j, int levarr[16], int runarr[16], int *number_coefficients);
-extern void set_intra_prediction_modes (sSlice* curSlice);
-extern void setup_read_macroblock (sSlice* curSlice);
-extern void set_read_CBP_and_coeffs_cavlc (sSlice* curSlice);
+extern void set_intra_prediction_modes (sSlice* slice);
+extern void setReadMacroblock (sSlice* slice);
+extern void set_read_CBP_and_coeffs_cavlc (sSlice* slice);
 extern void set_read_comp_coeff_cavlc (sMacroblock* mb);
 
 //{{{
@@ -266,7 +266,7 @@ static void init_motion_vector_prediction (sMacroblock* mb, int mbAffFrameFlag) 
 //}}}
 
 //{{{
-static int decode_one_component_i_slice (sMacroblock* mb, eColorPlane curPlane, sPixel** curPixel, sPicture* picture)
+static int decodeComponentI (sMacroblock* mb, eColorPlane curPlane, sPixel** curPixel, sPicture* picture)
 {
   //For residual DPCM
   mb->ipmode_DPCM = NO_INTRA_PMODE;
@@ -283,7 +283,7 @@ static int decode_one_component_i_slice (sMacroblock* mb, eColorPlane curPlane, 
   }
 //}}}
 //{{{
-static int decode_one_component_p_slice (sMacroblock* mb, eColorPlane curPlane, sPixel** curPixel, sPicture* picture)
+static int decodeComponentP (sMacroblock* mb, eColorPlane curPlane, sPixel** curPixel, sPicture* picture)
 {
   //For residual DPCM
   mb->ipmode_DPCM = NO_INTRA_PMODE;
@@ -310,7 +310,7 @@ static int decode_one_component_p_slice (sMacroblock* mb, eColorPlane curPlane, 
   }
 //}}}
 //{{{
-static int decode_one_component_sp_slice (sMacroblock* mb, eColorPlane curPlane, sPixel** curPixel, sPicture* picture)
+static int decodeComponentSP (sMacroblock* mb, eColorPlane curPlane, sPixel** curPixel, sPicture* picture)
 {
   //For residual DPCM
   mb->ipmode_DPCM = NO_INTRA_PMODE;
@@ -338,7 +338,7 @@ static int decode_one_component_sp_slice (sMacroblock* mb, eColorPlane curPlane,
   }
 //}}}
 //{{{
-static int decode_one_component_b_slice (sMacroblock* mb, eColorPlane curPlane, sPixel** curPixel, sPicture* picture)
+static int decodeComponentB (sMacroblock* mb, eColorPlane curPlane, sPixel** curPixel, sPicture* picture)
 {
   //For residual DPCM
   mb->ipmode_DPCM = NO_INTRA_PMODE;
@@ -385,7 +385,7 @@ static int BType2CtxRef (int btype) {
   }
 //}}}
 //{{{
-static char readRefPictureIdx_VLC (sMacroblock* mb, sSyntaxElement* currSE,
+static char readRefPictureIdxVLC (sMacroblock* mb, sSyntaxElement* currSE,
                                    sDataPartition* dP, char b8mode, int list) {
 
   currSE->context = BType2CtxRef (b8mode);
@@ -395,7 +395,7 @@ static char readRefPictureIdx_VLC (sMacroblock* mb, sSyntaxElement* currSE,
   }
 //}}}
 //{{{
-static char readRefPictureIdx_FLC (sMacroblock* mb, sSyntaxElement* currSE, sDataPartition *dP, char b8mode, int list)
+static char readRefPictureIdxFLC (sMacroblock* mb, sSyntaxElement* currSE, sDataPartition *dP, char b8mode, int list)
 {
   currSE->context = BType2CtxRef (b8mode);
   currSE->len = 1;
@@ -406,7 +406,7 @@ static char readRefPictureIdx_FLC (sMacroblock* mb, sSyntaxElement* currSE, sDat
   }
 //}}}
 //{{{
-static char readRefPictureIdx_Null (sMacroblock* mb, sSyntaxElement* currSE, sDataPartition *dP, char b8mode, int list)
+static char readRefPictureIdxNull (sMacroblock* mb, sSyntaxElement* currSE, sDataPartition *dP, char b8mode, int list)
 {
   return 0;
 }
@@ -419,17 +419,17 @@ static void prepareListforRefIdx (sMacroblock* mb, sSyntaxElement* currSE,
     if (mb->vidParam->activePPS->entropyCodingModeFlag == (Boolean) CAVLC || dP->bitstream->eiFlag) {
       currSE->mapping = linfo_ue;
       if (refidx_present)
-        mb->readRefPictureIdx = (numRefIndexActive == 2) ? readRefPictureIdx_FLC : readRefPictureIdx_VLC;
+        mb->readRefPictureIdx = (numRefIndexActive == 2) ? readRefPictureIdxFLC : readRefPictureIdxVLC;
       else
-        mb->readRefPictureIdx = readRefPictureIdx_Null;
+        mb->readRefPictureIdx = readRefPictureIdxNull;
       }
     else {
       currSE->reading = readRefFrame_CABAC;
-      mb->readRefPictureIdx = (refidx_present) ? readRefPictureIdx_VLC : readRefPictureIdx_Null;
+      mb->readRefPictureIdx = (refidx_present) ? readRefPictureIdxVLC : readRefPictureIdxNull;
       }
     }
   else
-    mb->readRefPictureIdx = readRefPictureIdx_Null;
+    mb->readRefPictureIdx = readRefPictureIdxNull;
   }
 //}}}
 
@@ -438,7 +438,6 @@ void set_chroma_qp (sMacroblock* mb) {
 
   sVidParam* vidParam = mb->vidParam;
   sPicture* picture = mb->slice->picture;
-
   for (int i = 0; i < 2; ++i) {
     mb->qpc[i] = iClip3 (-vidParam->bitdepthChromaQpScale, 51, mb->qp + picture->chromaQpOffset[i] );
     mb->qpc[i] = mb->qpc[i] < 0 ? mb->qpc[i] : QP_SCALE_CR[mb->qpc[i]];
@@ -827,7 +826,7 @@ Boolean exitMacroblock (sSlice* curSlice, int eos_bit) {
 //}}}
 
 //{{{
-static void interpret_mb_mode_P (sMacroblock* mb) {
+static void interpretMbModeP (sMacroblock* mb) {
 
   static const short ICBPTAB[6] = {0,16,32,15,31,47};
 
@@ -867,7 +866,7 @@ static void interpret_mb_mode_P (sMacroblock* mb) {
   }
 //}}}
 //{{{
-static void interpret_mb_mode_I (sMacroblock* mb) {
+static void interpretMbModeI (sMacroblock* mb) {
 
   static const short ICBPTAB[6] = {0,16,32,15,31,47};
 
@@ -897,7 +896,7 @@ static void interpret_mb_mode_I (sMacroblock* mb) {
   }
 //}}}
 //{{{
-static void interpret_mb_mode_B (sMacroblock* mb) {
+static void interpretMbModeB (sMacroblock* mb) {
 
   //{{{
   static const char offset2pdir16x16[12] = {
@@ -976,7 +975,7 @@ static void interpret_mb_mode_B (sMacroblock* mb) {
   }
 //}}}
 //{{{
-static void interpret_mb_mode_SI (sMacroblock* mb) {
+static void interpretMbModeSI (sMacroblock* mb) {
 
   //sVidParam* vidParam = mb->vidParam;
   const int ICBPTAB[6] = {0,16,32,15,31,47};
@@ -1014,7 +1013,7 @@ static void interpret_mb_mode_SI (sMacroblock* mb) {
   }
 //}}}
 //{{{
-static void read_motion_info_from_NAL_p_slice (sMacroblock* mb){
+static void readMotionInfoP (sMacroblock* mb){
 
   sVidParam* vidParam = mb->vidParam;
   sSlice* curSlice = mb->slice;
@@ -1067,7 +1066,7 @@ static void read_motion_info_from_NAL_p_slice (sMacroblock* mb){
   }
 //}}}
 //{{{
-static void read_motion_info_from_NAL_b_slice (sMacroblock* mb) {
+static void readMotionInfoB (sMacroblock* mb) {
 
   sSlice* curSlice = mb->slice;
   sVidParam* vidParam = mb->vidParam;
@@ -1129,50 +1128,50 @@ static void read_motion_info_from_NAL_b_slice (sMacroblock* mb) {
 //{{{
 void setSliceMethods (sSlice* slice) {
 
-  setup_read_macroblock (slice);
+  setReadMacroblock (slice);
 
   switch (slice->sliceType) {
     //{{{
     case P_SLICE:
-      slice->interpretMbMode = interpret_mb_mode_P;
-      slice->readMotionInfoFromNAL = read_motion_info_from_NAL_p_slice;
-      slice->decodeOneComponent = decode_one_component_p_slice;
+      slice->interpretMbMode = interpretMbModeP;
+      slice->readMotionInfoFromNAL = readMotionInfoP;
+      slice->decodeOneComponent = decodeComponentP;
       slice->updateDirectMvInfo = NULL;
       slice->initLists = initListsPslice;
       break;
     //}}}
     //{{{
     case SP_SLICE:
-      slice->interpretMbMode = interpret_mb_mode_P;
-      slice->readMotionInfoFromNAL = read_motion_info_from_NAL_p_slice;
-      slice->decodeOneComponent = decode_one_component_sp_slice;
+      slice->interpretMbMode = interpretMbModeP;
+      slice->readMotionInfoFromNAL = readMotionInfoP;
+      slice->decodeOneComponent = decodeComponentSP;
       slice->updateDirectMvInfo = NULL;
       slice->initLists = initListsPslice;
       break;
     //}}}
     //{{{
     case B_SLICE:
-      slice->interpretMbMode = interpret_mb_mode_B;
-      slice->readMotionInfoFromNAL = read_motion_info_from_NAL_b_slice;
-      slice->decodeOneComponent = decode_one_component_b_slice;
+      slice->interpretMbMode = interpretMbModeB;
+      slice->readMotionInfoFromNAL = readMotionInfoB;
+      slice->decodeOneComponent = decodeComponentB;
       update_direct_types (slice);
       slice->initLists  = initListsBslice;
       break;
     //}}}
     //{{{
     case I_SLICE:
-      slice->interpretMbMode = interpret_mb_mode_I;
+      slice->interpretMbMode = interpretMbModeI;
       slice->readMotionInfoFromNAL = NULL;
-      slice->decodeOneComponent = decode_one_component_i_slice;
+      slice->decodeOneComponent = decodeComponentI;
       slice->updateDirectMvInfo = NULL;
       slice->initLists = initListsIslice;
       break;
     //}}}
     //{{{
     case SI_SLICE:
-      slice->interpretMbMode = interpret_mb_mode_SI;
+      slice->interpretMbMode = interpretMbModeSI;
       slice->readMotionInfoFromNAL = NULL;
-      slice->decodeOneComponent = decode_one_component_i_slice;
+      slice->decodeOneComponent = decodeComponentI;
       slice->updateDirectMvInfo = NULL;
       slice->initLists = initListsIslice;
       break;
