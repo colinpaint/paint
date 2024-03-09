@@ -443,16 +443,12 @@ typedef struct InputParam {
   int vlcDebug;
   int refOffset;
   int pocScale;
-  int writeUv;
-  int intraProfileDeblocking; // Loop filter usage determined by flags and parameters in bitstream
-
-  sFrameFormat source;
-  sFrameFormat output;
-
-  int concealMode;
   int refPocGap;
   int pocGap;
-
+  int concealMode;
+  int intraProfileDeblocking; // Loop filter usage determined by flags and parameters in bitstream
+  sFrameFormat source;
+  sFrameFormat output;
   int dpb_plus[2];
   } sInputParam;
 //}}}

@@ -197,19 +197,10 @@ static void resetFormatInfo (sSPS* sps, sVidParam* vidParam, sFrameFormat* sourc
   else
     crop_left = cropRight = crop_top = cropBot = 0;
 
-  sInputParam* inputParam = vidParam->inputParam;
-  if ((sps->chromaFormatIdc == YUV400) && inputParam->writeUv) {
-    source->width[1] = (source->width[0] >> 1);
-    source->width[2] = source->width[1];
-    source->height[1] = (source->height[0] >> 1);
-    source->height[2] = source->height[1];
-    }
-  else {
-    source->width[1] = vidParam->widthCr - crop_left - cropRight;
-    source->width[2] = source->width[1];
-    source->height[1] = vidParam->heightCr - crop_top - cropBot;
-    source->height[2] = source->height[1];
-    }
+  source->width[1] = vidParam->widthCr - crop_left - cropRight;
+  source->width[2] = source->width[1];
+  source->height[1] = vidParam->heightCr - crop_top - cropBot;
+  source->height[2] = source->height[1];
 
   output->width[0] = vidParam->width;
   source->width[1] = vidParam->widthCr;
