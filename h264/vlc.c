@@ -455,7 +455,7 @@ int readsSyntaxElement_NumCoeffTrailingOnes (sSyntaxElement* sym,
 }
 //}}}
 //{{{
-int readsSyntaxElement_NumCoeffTrailingOnesChromaDC (sDecoder* vidParam, sSyntaxElement* sym, sBitstream* curStream)
+int readsSyntaxElement_NumCoeffTrailingOnesChromaDC (sDecoder* decoder, sSyntaxElement* sym, sBitstream* curStream)
 {
   static const byte lentab[3][4][17] =
   {
@@ -497,7 +497,7 @@ int readsSyntaxElement_NumCoeffTrailingOnesChromaDC (sDecoder* vidParam, sSyntax
   };
 
   int code;
-  int yuv = vidParam->activeSPS->chromaFormatIdc - 1;
+  int yuv = decoder->activeSPS->chromaFormatIdc - 1;
   int retval = code_from_bitstream_2d(sym, curStream, &lentab[yuv][0][0], &codtab[yuv][0][0], 17, 4, &code);
 
   if (retval)
@@ -679,7 +679,7 @@ int readsSyntaxElement_TotalZeros (sSyntaxElement* sym,  sBitstream* curStream) 
   }
 //}}}
 //{{{
-int readsSyntaxElement_TotalZerosChromaDC (sDecoder* vidParam, sSyntaxElement* sym, sBitstream* curStream) {
+int readsSyntaxElement_TotalZerosChromaDC (sDecoder* decoder, sSyntaxElement* sym, sBitstream* curStream) {
 
   //{{{
   static const byte lentab[3][TOTRUN_NUM][16] =
@@ -749,7 +749,7 @@ int readsSyntaxElement_TotalZerosChromaDC (sDecoder* vidParam, sSyntaxElement* s
   //}}}
 
   int code;
-  int yuv = vidParam->activeSPS->chromaFormatIdc - 1;
+  int yuv = decoder->activeSPS->chromaFormatIdc - 1;
   int vlcnum = sym->value1;
   int retval = code_from_bitstream_2d(sym, curStream, &lentab[yuv][vlcnum][0], &codtab[yuv][vlcnum][0], 16, 1, &code);
 

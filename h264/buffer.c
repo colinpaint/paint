@@ -77,21 +77,21 @@ static int isLongTermReference (sFrameStore* frameStore) {
   }
 //}}}
 //{{{
-static void gen_field_ref_ids (sDecoder* vidParam, sPicture* p) {
+static void gen_field_ref_ids (sDecoder* decoder, sPicture* p) {
 // Generate Frame parameters from field information.
 
   // copy the list;
-  for (int j = 0; j < vidParam->curPicSliceNum; j++) {
+  for (int j = 0; j < decoder->curPicSliceNum; j++) {
     if (p->listX[j][LIST_0]) {
-      p->listXsize[j][LIST_0] = vidParam->sliceList[j]->listXsize[LIST_0];
+      p->listXsize[j][LIST_0] = decoder->sliceList[j]->listXsize[LIST_0];
       for (int i = 0; i < p->listXsize[j][LIST_0]; i++)
-        p->listX[j][LIST_0][i] = vidParam->sliceList[j]->listX[LIST_0][i];
+        p->listX[j][LIST_0][i] = decoder->sliceList[j]->listX[LIST_0][i];
       }
 
     if(p->listX[j][LIST_1]) {
-      p->listXsize[j][LIST_1] = vidParam->sliceList[j]->listXsize[LIST_1];
+      p->listXsize[j][LIST_1] = decoder->sliceList[j]->listXsize[LIST_1];
       for(int i = 0; i < p->listXsize[j][LIST_1]; i++)
-        p->listX[j][LIST_1][i] = vidParam->sliceList[j]->listX[LIST_1][i];
+        p->listX[j][LIST_1][i] = decoder->sliceList[j]->listX[LIST_1][i];
       }
     }
   }
@@ -102,11 +102,11 @@ static void unmark_long_term_field_for_reference_by_frame_idx (
   sDPB* dpb, ePicStructure structure,
   int longTermFrameIndex, int mark_current, unsigned curr_frame_num, int curr_pic_num) {
 
-  sDecoder* vidParam = dpb->vidParam;
+  sDecoder* decoder = dpb->decoder;
 
   assert (structure!=FRAME);
   if (curr_pic_num < 0)
-    curr_pic_num += (2 * vidParam->maxFrameNum);
+    curr_pic_num += (2 * decoder->maxFrameNum);
 
   for (unsigned i = 0; i < dpb->longTermRefFramesInBuffer; i++) {
     if (dpb->fsLongTermRef[i]->longTermFrameIndex == longTermFrameIndex) {
@@ -190,17 +190,17 @@ static int outputDpbFrame (sDPB* dpb) {
   //printf ("output frame with frameNum #%d, poc %d (dpb. dpb->size=%d, dpb->usedSize=%d)\n", dpb->fs[pos]->frameNum, dpb->fs[pos]->frame->poc, dpb->size, dpb->usedSize);
 
   // picture error conceal
-  sDecoder* vidParam = dpb->vidParam;
-  if (vidParam->concealMode != 0) {
+  sDecoder* decoder = dpb->decoder;
+  if (decoder->concealMode != 0) {
     if (dpb->lastOutputPoc == 0)
       write_lost_ref_after_idr (dpb, pos);
     write_lost_non_ref_pic (dpb, poc);
     }
 
-  writeStoredFrame (vidParam, dpb->fs[pos]);
+  writeStoredFrame (decoder, dpb->fs[pos]);
 
   // picture error conceal
-  if(vidParam->concealMode == 0)
+  if(decoder->concealMode == 0)
     if (dpb->lastOutputPoc >= poc)
       error ("output POC must be in ascending order", 150);
 
@@ -278,7 +278,7 @@ void freeFrameStore (sFrameStore* frameStore) {
 //}}}
 
 //{{{
-static void dpbSplitField (sDecoder* vidParam, sFrameStore* frameStore) {
+static void dpbSplitField (sDecoder* decoder, sFrameStore* frameStore) {
 
   int twosz16 = 2 * (frameStore->frame->sizeX >> 4);
   sPicture* fsTop = NULL;
@@ -287,10 +287,10 @@ static void dpbSplitField (sDecoder* vidParam, sFrameStore* frameStore) {
 
   frameStore->poc = frame->poc;
   if (!frame->frameMbOnlyFlag) {
-    fsTop = frameStore->topField = allocPicture (vidParam, TopField,
+    fsTop = frameStore->topField = allocPicture (decoder, TopField,
                                                    frame->sizeX, frame->sizeY, frame->sizeXcr,
                                                    frame->sizeYcr, 1);
-    fsBot = frameStore->botField = allocPicture (vidParam, BotField,
+    fsBot = frameStore->botField = allocPicture (decoder, BotField,
                                                       frame->sizeX, frame->sizeY,
                                                       frame->sizeXcr, frame->sizeYcr, 1);
 
@@ -339,8 +339,8 @@ static void dpbSplitField (sDecoder* vidParam, sFrameStore* frameStore) {
     fsTop->chromaFormatIdc = fsBot->chromaFormatIdc = frame->chromaFormatIdc;
     fsTop->iCodingType = fsBot->iCodingType = frame->iCodingType;
     if (frame->usedForReference)  {
-      padPicture (vidParam, fsTop);
-      padPicture (vidParam, fsBot);
+      padPicture (decoder, fsTop);
+      padPicture (decoder, fsBot);
       }
     }
   else {
@@ -368,12 +368,12 @@ static void dpbSplitField (sDecoder* vidParam, sFrameStore* frameStore) {
             fsBot->mvInfo[j][i].mv[LIST_1] = frame->mvInfo[jj4][i].mv[LIST_1];
             fsBot->mvInfo[j][i].refIndex[LIST_0] = frame->mvInfo[jj4][i].refIndex[LIST_0];
             if (fsBot->mvInfo[j][i].refIndex[LIST_0] >=0)
-              fsBot->mvInfo[j][i].refPic[LIST_0] = vidParam->sliceList[frame->mvInfo[jj4][i].slice_no]->listX[4][(short) fsBot->mvInfo[j][i].refIndex[LIST_0]];
+              fsBot->mvInfo[j][i].refPic[LIST_0] = decoder->sliceList[frame->mvInfo[jj4][i].slice_no]->listX[4][(short) fsBot->mvInfo[j][i].refIndex[LIST_0]];
             else
               fsBot->mvInfo[j][i].refPic[LIST_0] = NULL;
             fsBot->mvInfo[j][i].refIndex[LIST_1] = frame->mvInfo[jj4][i].refIndex[LIST_1];
             if (fsBot->mvInfo[j][i].refIndex[LIST_1] >=0)
-              fsBot->mvInfo[j][i].refPic[LIST_1] = vidParam->sliceList[frame->mvInfo[jj4][i].slice_no]->listX[5][(short) fsBot->mvInfo[j][i].refIndex[LIST_1]];
+              fsBot->mvInfo[j][i].refPic[LIST_1] = decoder->sliceList[frame->mvInfo[jj4][i].slice_no]->listX[5][(short) fsBot->mvInfo[j][i].refIndex[LIST_1]];
             else
               fsBot->mvInfo[j][i].refPic[LIST_1] = NULL;
 
@@ -381,12 +381,12 @@ static void dpbSplitField (sDecoder* vidParam, sFrameStore* frameStore) {
             fsTop->mvInfo[j][i].mv[LIST_1] = frame->mvInfo[jj][i].mv[LIST_1];
             fsTop->mvInfo[j][i].refIndex[LIST_0] = frame->mvInfo[jj][i].refIndex[LIST_0];
             if (fsTop->mvInfo[j][i].refIndex[LIST_0] >=0)
-              fsTop->mvInfo[j][i].refPic[LIST_0] = vidParam->sliceList[frame->mvInfo[jj][i].slice_no]->listX[2][(short) fsTop->mvInfo[j][i].refIndex[LIST_0]];
+              fsTop->mvInfo[j][i].refPic[LIST_0] = decoder->sliceList[frame->mvInfo[jj][i].slice_no]->listX[2][(short) fsTop->mvInfo[j][i].refIndex[LIST_0]];
             else
               fsTop->mvInfo[j][i].refPic[LIST_0] = NULL;
             fsTop->mvInfo[j][i].refIndex[LIST_1] = frame->mvInfo[jj][i].refIndex[LIST_1];
             if (fsTop->mvInfo[j][i].refIndex[LIST_1] >=0)
-              fsTop->mvInfo[j][i].refPic[LIST_1] = vidParam->sliceList[frame->mvInfo[jj][i].slice_no]->listX[3][(short) fsTop->mvInfo[j][i].refIndex[LIST_1]];
+              fsTop->mvInfo[j][i].refPic[LIST_1] = decoder->sliceList[frame->mvInfo[jj][i].slice_no]->listX[3][(short) fsTop->mvInfo[j][i].refIndex[LIST_1]];
             else
               fsTop->mvInfo[j][i].refPic[LIST_1] = NULL;
             }
@@ -413,7 +413,7 @@ static void dpbSplitField (sDecoder* vidParam, sFrameStore* frameStore) {
             }
           else {
             fsTop->mvInfo[j][i].refIndex[LIST_0] = fsBot->mvInfo[j][i].refIndex[LIST_0] = frame->mvInfo[jj][ii].refIndex[LIST_0];
-            fsTop->mvInfo[j][i].refPic[LIST_0] = fsBot->mvInfo[j][i].refPic[LIST_0] = vidParam->sliceList[frame->mvInfo[jj][ii].slice_no]->listX[LIST_0][(short) frame->mvInfo[jj][ii].refIndex[LIST_0]];
+            fsTop->mvInfo[j][i].refPic[LIST_0] = fsBot->mvInfo[j][i].refPic[LIST_0] = decoder->sliceList[frame->mvInfo[jj][ii].slice_no]->listX[LIST_0][(short) frame->mvInfo[jj][ii].refIndex[LIST_0]];
             }
 
           if (frame->mvInfo[jj][ii].refIndex[LIST_1] == -1) {
@@ -422,7 +422,7 @@ static void dpbSplitField (sDecoder* vidParam, sFrameStore* frameStore) {
             }
           else {
             fsTop->mvInfo[j][i].refIndex[LIST_1] = fsBot->mvInfo[j][i].refIndex[LIST_1] = frame->mvInfo[jj][ii].refIndex[LIST_1];
-            fsTop->mvInfo[j][i].refPic[LIST_1] = fsBot->mvInfo[j][i].refPic[LIST_1] = vidParam->sliceList[frame->mvInfo[jj][ii].slice_no]->listX[LIST_1][(short) frame->mvInfo[jj][ii].refIndex[LIST_1]];
+            fsTop->mvInfo[j][i].refPic[LIST_1] = fsBot->mvInfo[j][i].refPic[LIST_1] = decoder->sliceList[frame->mvInfo[jj][ii].slice_no]->listX[LIST_1][(short) frame->mvInfo[jj][ii].refIndex[LIST_1]];
             }
           }
         }
@@ -431,9 +431,9 @@ static void dpbSplitField (sDecoder* vidParam, sFrameStore* frameStore) {
   }
 //}}}
 //{{{
-static void dpb_combine_field (sDecoder* vidParam, sFrameStore* frameStore) {
+static void dpb_combine_field (sDecoder* decoder, sFrameStore* frameStore) {
 
-  dpbCombineField (vidParam, frameStore);
+  dpbCombineField (decoder, frameStore);
 
   frameStore->frame->iCodingType = frameStore->topField->iCodingType; //FIELD_CODING;
    //! Use inference flag to remap mvs/references
@@ -473,7 +473,7 @@ static void dpb_combine_field (sDecoder* vidParam, sFrameStore* frameStore) {
 }
 //}}}
 //{{{
-static void insertPictureDpb (sDecoder* vidParam, sFrameStore* fs, sPicture* p) {
+static void insertPictureDpb (sDecoder* decoder, sFrameStore* fs, sPicture* p) {
 
   //  printf ("insert (%s) pic with frameNum #%d, poc %d\n",
   //          (p->structure == FRAME)?"FRAME":(p->structure == TopField)?"TopField":"BotField",
@@ -496,7 +496,7 @@ static void insertPictureDpb (sDecoder* vidParam, sFrameStore* fs, sPicture* p) 
         }
 
       // generate field views
-      dpbSplitField (vidParam, fs);
+      dpbSplitField (decoder, fs);
       break;
     //}}}
     //{{{
@@ -514,11 +514,11 @@ static void insertPictureDpb (sDecoder* vidParam, sFrameStore* fs, sPicture* p) 
         }
       if (fs->isUsed == 3)
         // generate frame view
-        dpb_combine_field(vidParam, fs);
+        dpb_combine_field(decoder, fs);
       else
         fs->poc = p->poc;
 
-      gen_field_ref_ids(vidParam, p);
+      gen_field_ref_ids(decoder, p);
       break;
     //}}}
     //{{{
@@ -537,11 +537,11 @@ static void insertPictureDpb (sDecoder* vidParam, sFrameStore* fs, sPicture* p) 
 
       if (fs->isUsed == 3)
         // generate frame view
-        dpb_combine_field(vidParam, fs);
+        dpb_combine_field(decoder, fs);
       else
         fs->poc = p->poc;
 
-      gen_field_ref_ids(vidParam, p);
+      gen_field_ref_ids(decoder, p);
       break;
     //}}}
     }
@@ -550,7 +550,7 @@ static void insertPictureDpb (sDecoder* vidParam, sFrameStore* fs, sPicture* p) 
   fs->recoveryFrame = p->recoveryFrame;
   fs->is_output = p->is_output;
   if (fs->isUsed == 3)
-    calcFrameNum (vidParam, p);
+    calcFrameNum (decoder, p);
 }
 //}}}
 //{{{
@@ -617,10 +617,10 @@ void unmark_for_long_term_reference (sFrameStore* frameStore) {
   }
 //}}}
 //{{{
-void dpbCombineField (sDecoder* vidParam, sFrameStore* frameStore) {
+void dpbCombineField (sDecoder* decoder, sFrameStore* frameStore) {
 
   if (!frameStore->frame)
-    frameStore->frame = allocPicture (vidParam, FRAME,
+    frameStore->frame = allocPicture (decoder, FRAME,
                                       frameStore->topField->sizeX, frameStore->topField->sizeY*2,
                                       frameStore->topField->sizeXcr, frameStore->topField->sizeYcr*2, 1);
 
@@ -672,16 +672,16 @@ void dpbCombineField (sDecoder* vidParam, sFrameStore* frameStore) {
   frameStore->botField->topField = frameStore->topField;
   frameStore->botField->botField = frameStore->botField;
   if (frameStore->topField->usedForReference || frameStore->botField->usedForReference)
-    padPicture (vidParam, frameStore->frame);
+    padPicture (decoder, frameStore->frame);
   }
 //}}}
 
 // picture
 //{{{
-sPicture* allocPicture (sDecoder* vidParam, ePicStructure structure,
+sPicture* allocPicture (sDecoder* decoder, ePicStructure structure,
                         int sizeX, int sizeY, int sizeXcr, int sizeYcr, int is_output) {
 
-  sSPS* activeSPS = vidParam->activeSPS;
+  sSPS* activeSPS = decoder->activeSPS;
   //printf ("Allocating (%s) picture (x=%d, y=%d, x_cr=%d, y_cr=%d)\n",
   //        (type == FRAME)?"FRAME":(type == TopField)?"TopField":"BotField",
   //        sizeX, sizeY, sizeXcr, sizeYcr);
@@ -698,25 +698,25 @@ sPicture* allocPicture (sDecoder* vidParam, ePicStructure structure,
   s->picSizeInMbs = (sizeX*sizeY)/256;
   s->imgUV = NULL;
 
-  get_mem2Dpel_pad (&(s->imgY), sizeY, sizeX, vidParam->iLumaPadY, vidParam->iLumaPadX);
-  s->iLumaStride = sizeX + 2 * vidParam->iLumaPadX;
-  s->iLumaExpandedHeight = sizeY + 2 * vidParam->iLumaPadY;
+  get_mem2Dpel_pad (&(s->imgY), sizeY, sizeX, decoder->iLumaPadY, decoder->iLumaPadX);
+  s->iLumaStride = sizeX + 2 * decoder->iLumaPadX;
+  s->iLumaExpandedHeight = sizeY + 2 * decoder->iLumaPadY;
 
   if (activeSPS->chromaFormatIdc != YUV400)
-    get_mem3Dpel_pad (&(s->imgUV), 2, sizeYcr, sizeXcr, vidParam->iChromaPadY, vidParam->iChromaPadX);
+    get_mem3Dpel_pad (&(s->imgUV), 2, sizeYcr, sizeXcr, decoder->iChromaPadY, decoder->iChromaPadX);
 
-  s->iChromaStride = sizeXcr + 2*vidParam->iChromaPadX;
-  s->iChromaExpandedHeight = sizeYcr + 2*vidParam->iChromaPadY;
-  s->iLumaPadY = vidParam->iLumaPadY;
-  s->iLumaPadX = vidParam->iLumaPadX;
-  s->iChromaPadY = vidParam->iChromaPadY;
-  s->iChromaPadX = vidParam->iChromaPadX;
-  s->sepColourPlaneFlag = vidParam->sepColourPlaneFlag;
+  s->iChromaStride = sizeXcr + 2*decoder->iChromaPadX;
+  s->iChromaExpandedHeight = sizeYcr + 2*decoder->iChromaPadY;
+  s->iLumaPadY = decoder->iLumaPadY;
+  s->iLumaPadX = decoder->iLumaPadX;
+  s->iChromaPadY = decoder->iChromaPadY;
+  s->iChromaPadX = decoder->iChromaPadX;
+  s->sepColourPlaneFlag = decoder->sepColourPlaneFlag;
 
   get_mem2Dmp (&s->mvInfo, (sizeY >> BLOCK_SHIFT), (sizeX >> BLOCK_SHIFT));
   allocPicMotion (&s->motion , (sizeY >> BLOCK_SHIFT), (sizeX >> BLOCK_SHIFT));
 
-  if (vidParam->sepColourPlaneFlag != 0)
+  if (decoder->sepColourPlaneFlag != 0)
     for (int nplane = 0; nplane < MAX_PLANE; nplane++) {
       get_mem2Dmp (&s->JVmv_info[nplane], (sizeY >> BLOCK_SHIFT), (sizeX >> BLOCK_SHIFT));
       allocPicMotion (&s->JVmotion[nplane] , (sizeY >> BLOCK_SHIFT), (sizeX >> BLOCK_SHIFT));
@@ -743,16 +743,16 @@ sPicture* allocPicture (sDecoder* vidParam, ePicStructure structure,
   s->size_x_cr_m1 = sizeXcr - 1;
   s->size_y_cr_m1 = sizeYcr - 1;
 
-  s->topField = vidParam->noReferencePicture;
-  s->botField = vidParam->noReferencePicture;
-  s->frame = vidParam->noReferencePicture;
+  s->topField = decoder->noReferencePicture;
+  s->botField = decoder->noReferencePicture;
+  s->frame = decoder->noReferencePicture;
 
   s->decRefPicMarkingBuffer = NULL;
   s->codedFrame  = 0;
   s->mbAffFrameFlag  = 0;
   s->topPoc = s->botPoc = s->poc = 0;
 
-  if (!vidParam->activeSPS->frameMbOnlyFlag && structure != FRAME)
+  if (!decoder->activeSPS->frameMbOnlyFlag && structure != FRAME)
     for (int j = 0; j < MAX_NUM_SLICES; j++)
       for (int i = 0; i < 2; i++) {
         s->listX[j][i] = calloc (MAX_LIST_SIZE, sizeof (sPicture*)); // +1 for reordering
@@ -806,9 +806,9 @@ void freePicture (sPicture* p) {
   }
 //}}}
 //{{{
-void fillFrameNumGap (sDecoder* vidParam, sSlice* slice) {
+void fillFrameNumGap (sDecoder* decoder, sSlice* slice) {
 
-  sSPS* activeSPS = vidParam->activeSPS;
+  sSPS* activeSPS = decoder->activeSPS;
 
   int tmp1 = slice->deltaPicOrderCount[0];
   int tmp2 = slice->deltaPicOrderCount[1];
@@ -816,12 +816,12 @@ void fillFrameNumGap (sDecoder* vidParam, sSlice* slice) {
 
   printf ("A gap in frame number is found, try to fill it.\n");
 
-  int unusedShortTermFrameNum = (vidParam->preFrameNum + 1) % vidParam->maxFrameNum;
-  int curFrameNum = slice->frameNum; //vidParam->frameNum;
+  int unusedShortTermFrameNum = (decoder->preFrameNum + 1) % decoder->maxFrameNum;
+  int curFrameNum = slice->frameNum; //decoder->frameNum;
 
   sPicture* picture = NULL;
   while (curFrameNum != unusedShortTermFrameNum) {
-    picture = allocPicture (vidParam, FRAME, vidParam->width, vidParam->height, vidParam->widthCr, vidParam->heightCr, 1);
+    picture = allocPicture (decoder, FRAME, decoder->width, decoder->height, decoder->widthCr, decoder->heightCr, 1);
     picture->codedFrame = 1;
     picture->picNum = unusedShortTermFrameNum;
     picture->frameNum = unusedShortTermFrameNum;
@@ -832,15 +832,15 @@ void fillFrameNumGap (sDecoder* vidParam, sSlice* slice) {
 
     slice->frameNum = unusedShortTermFrameNum;
     if (activeSPS->picOrderCountType != 0)
-      decodePOC (vidParam, vidParam->sliceList[0]);
+      decodePOC (decoder, decoder->sliceList[0]);
     picture->topPoc = slice->topPoc;
     picture->botPoc = slice->botPoc;
     picture->framePoc = slice->framePoc;
     picture->poc = slice->framePoc;
     storePictureDpb (slice->dpb, picture);
 
-    vidParam->preFrameNum = unusedShortTermFrameNum;
-    unusedShortTermFrameNum = (unusedShortTermFrameNum + 1) % vidParam->maxFrameNum;
+    decoder->preFrameNum = unusedShortTermFrameNum;
+    unusedShortTermFrameNum = (unusedShortTermFrameNum + 1) % decoder->maxFrameNum;
     }
 
   slice->deltaPicOrderCount[0] = tmp1;
@@ -891,7 +891,7 @@ static void dumpDpb (sDPB* dpb) {
   }
 //}}}
 //{{{
-static int getDpbSize (sDecoder* vidParam, sSPS *activeSPS) {
+static int getDpbSize (sDecoder* decoder, sSPS *activeSPS) {
 
   int pic_size_mb = (activeSPS->pic_width_in_mbs_minus1 + 1) * (activeSPS->pic_height_in_map_units_minus1 + 1) * (activeSPS->frameMbOnlyFlag?1:2);
   int size = 0;
@@ -1024,15 +1024,15 @@ static int getDpbSize (sDecoder* vidParam, sSPS *activeSPS) {
   }
 //}}}
 //{{{
-void initDpb (sDecoder* vidParam, sDPB* dpb, int type) {
+void initDpb (sDecoder* decoder, sDPB* dpb, int type) {
 
-  sSPS* activeSPS = vidParam->activeSPS;
+  sSPS* activeSPS = decoder->activeSPS;
 
-  dpb->vidParam = vidParam;
+  dpb->decoder = decoder;
   if (dpb->initDone)
     freeDpb (dpb);
 
-  dpb->size = getDpbSize (vidParam, activeSPS) + vidParam->input.dpbPlus[type == 2 ? 1 : 0];
+  dpb->size = getDpbSize (decoder, activeSPS) + decoder->input.dpbPlus[type == 2 ? 1 : 0];
   dpb->numRefFrames = activeSPS->numRefFrames;
 
   if (dpb->size < activeSPS->numRefFrames)
@@ -1063,26 +1063,26 @@ void initDpb (sDecoder* vidParam, sDPB* dpb, int type) {
     }
 
  /* allocate a dummy storable picture */
-  if (!vidParam->noReferencePicture) {
-    vidParam->noReferencePicture = allocPicture (vidParam, FRAME, vidParam->width, vidParam->height, vidParam->widthCr, vidParam->heightCr, 1);
-    vidParam->noReferencePicture->topField = vidParam->noReferencePicture;
-    vidParam->noReferencePicture->botField = vidParam->noReferencePicture;
-    vidParam->noReferencePicture->frame = vidParam->noReferencePicture;
+  if (!decoder->noReferencePicture) {
+    decoder->noReferencePicture = allocPicture (decoder, FRAME, decoder->width, decoder->height, decoder->widthCr, decoder->heightCr, 1);
+    decoder->noReferencePicture->topField = decoder->noReferencePicture;
+    decoder->noReferencePicture->botField = decoder->noReferencePicture;
+    decoder->noReferencePicture->frame = decoder->noReferencePicture;
     }
   dpb->lastOutputPoc = INT_MIN;
-  vidParam->last_has_mmco_5 = 0;
+  decoder->last_has_mmco_5 = 0;
   dpb->initDone = 1;
 
   // picture error conceal
-  if (vidParam->concealMode !=0 && !vidParam->lastOutFramestore)
-    vidParam->lastOutFramestore = allocFrameStore();
+  if (decoder->concealMode !=0 && !decoder->lastOutFramestore)
+    decoder->lastOutFramestore = allocFrameStore();
   }
 //}}}
 //{{{
-void reInitDpb (sDecoder* vidParam, sDPB* dpb, int type) {
+void reInitDpb (sDecoder* decoder, sDPB* dpb, int type) {
 
-  sSPS* activeSPS = vidParam->activeSPS;
-  int dpbSize = getDpbSize (vidParam, activeSPS) + vidParam->input.dpbPlus[type == 2 ? 1 : 0];
+  sSPS* activeSPS = decoder->activeSPS;
+  int dpbSize = getDpbSize (decoder, activeSPS) + decoder->input.dpbPlus[type == 2 ? 1 : 0];
   dpb->numRefFrames = activeSPS->numRefFrames;
 
   if (dpbSize > (int)dpb->size) {
@@ -1119,8 +1119,8 @@ void flushDpb (sDPB* dpb) {
   if (!dpb->initDone)
     return;
 
-  sDecoder* vidParam = dpb->vidParam;
-  if (vidParam->concealMode != 0)
+  sDecoder* decoder = dpb->decoder;
+  if (decoder->concealMode != 0)
     conceal_non_ref_pics (dpb, 0);
 
   // mark all frames unused
@@ -1147,9 +1147,9 @@ static void checkNumDpbFrames (sDPB* dpb) {
 static void adaptiveMemoryManagement (sDPB* dpb, sPicture* p) {
 
   sDecRefPicMarking* tmp_drpm;
-  sDecoder* vidParam = dpb->vidParam;
+  sDecoder* decoder = dpb->decoder;
 
-  vidParam->last_has_mmco_5 = 0;
+  decoder->last_has_mmco_5 = 0;
 
   assert (!p->idrFlag);
   assert (p->adaptiveRefPicBufferingFlag);
@@ -1192,7 +1192,7 @@ static void adaptiveMemoryManagement (sDPB* dpb, sPicture* p) {
       case 5:
         mm_unmark_all_short_term_for_reference (dpb);
         mm_unmark_all_long_term_for_reference (dpb);
-        vidParam->last_has_mmco_5 = 1;
+        decoder->last_has_mmco_5 = 1;
         break;
       //}}}
       //{{{
@@ -1210,7 +1210,7 @@ static void adaptiveMemoryManagement (sDPB* dpb, sPicture* p) {
     free (tmp_drpm);
     }
 
-  if (vidParam->last_has_mmco_5 ) {
+  if (decoder->last_has_mmco_5 ) {
     p->picNum = p->frameNum = 0;
     switch (p->structure) {
       //{{{
@@ -1232,7 +1232,7 @@ static void adaptiveMemoryManagement (sDPB* dpb, sPicture* p) {
       //}}}
       }
 
-    flushDpb(vidParam->dpbLayer[0]);
+    flushDpb(decoder->dpbLayer[0]);
     }
   }
 //}}}
@@ -1686,7 +1686,7 @@ int removeUnusedDpb (sDPB* dpb) {
 //{{{
 void storePictureDpb (sDPB* dpb, sPicture* p) {
 
-  sDecoder* vidParam = dpb->vidParam;
+  sDecoder* decoder = dpb->decoder;
   int poc, pos;
   // picture error conceal
 
@@ -1696,13 +1696,13 @@ void storePictureDpb (sDPB* dpb, sPicture* p) {
   // if frame, check for new store,
   assert (p!=NULL);
 
-  vidParam->last_has_mmco_5 = 0;
-  vidParam->last_pic_bottom_field = (p->structure == BotField);
+  decoder->last_has_mmco_5 = 0;
+  decoder->last_pic_bottom_field = (p->structure == BotField);
 
   if (p->idrFlag) {
     idrMemoryManagement (dpb, p);
     // picture error conceal
-    memset (vidParam->pocs_in_dpb, 0, sizeof(int)*100);
+    memset (decoder->pocs_in_dpb, 0, sizeof(int)*100);
     }
   else {
     // adaptive memory management
@@ -1718,7 +1718,7 @@ void storePictureDpb (sDPB* dpb, sPicture* p) {
             ((p->structure == BotField) && (dpb->lastPicture->isUsed == 1))) {
           if ((p->usedForReference && (dpb->lastPicture->isOrigReference != 0)) ||
               (!p->usedForReference && (dpb->lastPicture->isOrigReference == 0))) {
-            insertPictureDpb (vidParam, dpb->lastPicture, p);
+            insertPictureDpb (decoder, dpb->lastPicture, p);
             updateRefList (dpb);
             updateLongTermRefList (dpb);
             dumpDpb (dpb);
@@ -1737,7 +1737,7 @@ void storePictureDpb (sDPB* dpb, sPicture* p) {
     slidingWindowMemoryManagement (dpb, p);
 
   // picture error conceal
-  if (vidParam->concealMode != 0)
+  if (decoder->concealMode != 0)
     for (unsigned i = 0; i < dpb->size; i++)
       if (dpb->fs[i]->isReference)
         dpb->fs[i]->concealment_reference = 1;
@@ -1745,12 +1745,12 @@ void storePictureDpb (sDPB* dpb, sPicture* p) {
   // first try to remove unused frames
   if (dpb->usedSize == dpb->size) {
     // picture error conceal
-    if (vidParam->concealMode != 0)
+    if (decoder->concealMode != 0)
       conceal_non_ref_pics (dpb, 2);
 
     removeUnusedDpb (dpb);
 
-    if (vidParam->concealMode != 0)
+    if (decoder->concealMode != 0)
       sliding_window_poc_management (dpb, p);
     }
 
@@ -1760,7 +1760,7 @@ void storePictureDpb (sDPB* dpb, sPicture* p) {
     if (!p->usedForReference) {
       get_smallest_poc (dpb, &poc, &pos);
       if ((-1 == pos) || (p->poc < poc)) {
-        directOutput (vidParam, p);
+        directOutput (decoder, p);
         return;
         }
       }
@@ -1776,11 +1776,11 @@ void storePictureDpb (sDPB* dpb, sPicture* p) {
         error ("duplicate frameNum in short-term reference picture buffer", 500);
 
   // store at end of buffer
-  insertPictureDpb (vidParam, dpb->fs[dpb->usedSize],p);
+  insertPictureDpb (decoder, dpb->fs[dpb->usedSize],p);
 
   // picture error conceal
   if (p->idrFlag)
-    vidParam->earlier_missing_poc = 0;
+    decoder->earlier_missing_poc = 0;
 
   if (p->structure != FRAME)
     dpb->lastPicture = dpb->fs[dpb->usedSize];
@@ -1789,8 +1789,8 @@ void storePictureDpb (sDPB* dpb, sPicture* p) {
 
   dpb->usedSize++;
 
-  if (vidParam->concealMode != 0)
-    vidParam->pocs_in_dpb[dpb->usedSize-1] = p->poc;
+  if (decoder->concealMode != 0)
+    decoder->pocs_in_dpb[dpb->usedSize-1] = p->poc;
 
   updateRefList (dpb);
   updateLongTermRefList (dpb);
@@ -1847,7 +1847,7 @@ void removeFrameDpb (sDPB* dpb, int pos) {
 //{{{
 void freeDpb (sDPB* dpb) {
 
-  sDecoder* vidParam = dpb->vidParam;
+  sDecoder* decoder = dpb->decoder;
   if (dpb->fs) {
     for (unsigned i = 0; i < dpb->size; i++)
       freeFrameStore (dpb->fs[i]);
@@ -1865,77 +1865,77 @@ void freeDpb (sDPB* dpb) {
   dpb->initDone = 0;
 
   // picture error conceal
-  if (vidParam->concealMode != 0 || vidParam->lastOutFramestore)
-    freeFrameStore (vidParam->lastOutFramestore);
+  if (decoder->concealMode != 0 || decoder->lastOutFramestore)
+    freeFrameStore (decoder->lastOutFramestore);
 
-  if (vidParam->noReferencePicture) {
-    freePicture (vidParam->noReferencePicture);
-    vidParam->noReferencePicture = NULL;
+  if (decoder->noReferencePicture) {
+    freePicture (decoder->noReferencePicture);
+    decoder->noReferencePicture = NULL;
     }
   }
 //}}}
 
 // image
 //{{{
-void initImage (sDecoder* vidParam, sImage* image, sSPS* sps) {
+void initImage (sDecoder* decoder, sImage* image, sSPS* sps) {
 
   // allocate memory for reference frame buffers: image->frm_data
-  image->format = vidParam->input.output;
-  image->format.width[0]  = vidParam->width;
-  image->format.width[1]  = vidParam->widthCr;
-  image->format.width[2]  = vidParam->widthCr;
-  image->format.height[0] = vidParam->height;
-  image->format.height[1] = vidParam->heightCr;
-  image->format.height[2] = vidParam->heightCr;
+  image->format = decoder->input.output;
+  image->format.width[0]  = decoder->width;
+  image->format.width[1]  = decoder->widthCr;
+  image->format.width[2]  = decoder->widthCr;
+  image->format.height[0] = decoder->height;
+  image->format.height[1] = decoder->heightCr;
+  image->format.height[2] = decoder->heightCr;
   image->format.yuvFormat  = (eColorFormat)sps->chromaFormatIdc;
-  image->format.autoCropBot = vidParam->input.output.autoCropBot;
-  image->format.autoCropRight = vidParam->input.output.autoCropRight;
-  image->format.autoCropBotCr = vidParam->input.output.autoCropBotCr;
-  image->format.autoCropRightCr = vidParam->input.output.autoCropRightCr;
-  image->frm_stride[0] = vidParam->width;
-  image->frm_stride[1] = image->frm_stride[2] = vidParam->widthCr;
+  image->format.autoCropBot = decoder->input.output.autoCropBot;
+  image->format.autoCropRight = decoder->input.output.autoCropRight;
+  image->format.autoCropBotCr = decoder->input.output.autoCropBotCr;
+  image->format.autoCropRightCr = decoder->input.output.autoCropRightCr;
+  image->frm_stride[0] = decoder->width;
+  image->frm_stride[1] = image->frm_stride[2] = decoder->widthCr;
   image->top_stride[0] = image->bot_stride[0] = image->frm_stride[0] << 1;
   image->top_stride[1] = image->top_stride[2] = image->bot_stride[1] = image->bot_stride[2] = image->frm_stride[1] << 1;
 
   if (sps->sepColourPlaneFlag) {
     for (int nplane = 0; nplane < MAX_PLANE; nplane++ )
-      get_mem2Dpel (&(image->frm_data[nplane]), vidParam->height, vidParam->width);
+      get_mem2Dpel (&(image->frm_data[nplane]), decoder->height, decoder->width);
     }
   else {
-    get_mem2Dpel (&(image->frm_data[0]), vidParam->height, vidParam->width);
-    if (vidParam->yuvFormat != YUV400) {
-      get_mem2Dpel (&(image->frm_data[1]), vidParam->heightCr, vidParam->widthCr);
-      get_mem2Dpel (&(image->frm_data[2]), vidParam->heightCr, vidParam->widthCr);
+    get_mem2Dpel (&(image->frm_data[0]), decoder->height, decoder->width);
+    if (decoder->yuvFormat != YUV400) {
+      get_mem2Dpel (&(image->frm_data[1]), decoder->heightCr, decoder->widthCr);
+      get_mem2Dpel (&(image->frm_data[2]), decoder->heightCr, decoder->widthCr);
       if (sizeof(sPixel) == sizeof(unsigned char)) {
         for (int k = 1; k < 3; k++)
-          memset (image->frm_data[k][0], 128, vidParam->heightCr * vidParam->widthCr * sizeof(sPixel));
+          memset (image->frm_data[k][0], 128, decoder->heightCr * decoder->widthCr * sizeof(sPixel));
         }
       else {
         sPixel mean_val;
         for (int k = 1; k < 3; k++) {
-          mean_val = (sPixel) ((vidParam->maxPelValueComp[k] + 1) >> 1);
-          for (int j = 0; j < vidParam->heightCr; j++)
-            for (int i = 0; i < vidParam->widthCr; i++)
+          mean_val = (sPixel) ((decoder->maxPelValueComp[k] + 1) >> 1);
+          for (int j = 0; j < decoder->heightCr; j++)
+            for (int i = 0; i < decoder->widthCr; i++)
               image->frm_data[k][j][i] = mean_val;
           }
         }
       }
     }
 
-  if (!vidParam->activeSPS->frameMbOnlyFlag) {
+  if (!decoder->activeSPS->frameMbOnlyFlag) {
     // allocate memory for field reference frame buffers
-    init_top_bot_planes (image->frm_data[0], vidParam->height, &(image->top_data[0]), &(image->bot_data[0]));
-    if (vidParam->yuvFormat != YUV400) {
-      init_top_bot_planes (image->frm_data[1], vidParam->heightCr, &(image->top_data[1]), &(image->bot_data[1]));
-      init_top_bot_planes (image->frm_data[2], vidParam->heightCr, &(image->top_data[2]), &(image->bot_data[2]));
+    init_top_bot_planes (image->frm_data[0], decoder->height, &(image->top_data[0]), &(image->bot_data[0]));
+    if (decoder->yuvFormat != YUV400) {
+      init_top_bot_planes (image->frm_data[1], decoder->heightCr, &(image->top_data[1]), &(image->bot_data[1]));
+      init_top_bot_planes (image->frm_data[2], decoder->heightCr, &(image->top_data[2]), &(image->bot_data[2]));
       }
     }
   }
 //}}}
 //{{{
-void freeImage (sDecoder* vidParam, sImage* image) {
+void freeImage (sDecoder* decoder, sImage* image) {
 
-  if (vidParam->sepColourPlaneFlag ) {
+  if (decoder->sepColourPlaneFlag ) {
     for (int nplane = 0; nplane < MAX_PLANE; nplane++ ) {
       if (image->frm_data[nplane]) {
         free_mem2Dpel (image->frm_data[nplane]);      // free ref frame buffers
@@ -1962,7 +1962,7 @@ void freeImage (sDecoder* vidParam, sImage* image) {
       }
     }
 
-  if (!vidParam->activeSPS->frameMbOnlyFlag) {
+  if (!decoder->activeSPS->frameMbOnlyFlag) {
     free_top_bot_planes(image->top_data[0], image->bot_data[0]);
     if (image->format.yuvFormat != YUV400) {
       free_top_bot_planes (image->top_data[1], image->bot_data[1]);
@@ -2015,17 +2015,17 @@ void reorderRefPicList (sSlice* slice, int curList) {
   int* long_term_pic_idx = slice->long_term_pic_idx[curList];
   int num_ref_idx_lX_active_minus1 = slice->numRefIndexActive[curList] - 1;
 
-  sDecoder* vidParam = slice->vidParam;
+  sDecoder* decoder = slice->decoder;
 
   int maxPicNum, currPicNum, picNumLXNoWrap, picNumLXPred, picNumLX;
   int refIdxLX = 0;
 
   if (slice->structure==FRAME) {
-    maxPicNum = vidParam->maxFrameNum;
+    maxPicNum = decoder->maxFrameNum;
     currPicNum = slice->frameNum;
     }
   else {
-    maxPicNum = 2 * vidParam->maxFrameNum;
+    maxPicNum = 2 * decoder->maxFrameNum;
     currPicNum = 2 * slice->frameNum + 1;
     }
 
@@ -2069,8 +2069,8 @@ void reorderRefPicList (sSlice* slice, int curList) {
 //{{{
 void updatePicNum (sSlice* slice) {
 
-  sDecoder* vidParam = slice->vidParam;
-  sSPS* activeSPS = vidParam->activeSPS;
+  sDecoder* decoder = slice->decoder;
+  sSPS* activeSPS = decoder->activeSPS;
 
   int addTop = 0;
   int addBot = 0;
@@ -2141,7 +2141,7 @@ void initListsIslice (sSlice* slice) {
 //{{{
 void initListsPslice (sSlice* slice) {
 
-  sDecoder* vidParam = slice->vidParam;
+  sDecoder* decoder = slice->decoder;
   sDPB* dpb = slice->dpb;
 
   int list0idx = 0;
@@ -2199,15 +2199,15 @@ void initListsPslice (sSlice* slice) {
 
   // set the unused list entries to NULL
   for (unsigned int i = slice->listXsize[0]; i < (MAX_LIST_SIZE) ; i++)
-    slice->listX[0][i] = vidParam->noReferencePicture;
+    slice->listX[0][i] = decoder->noReferencePicture;
   for (unsigned int i = slice->listXsize[1]; i < (MAX_LIST_SIZE) ; i++)
-    slice->listX[1][i] = vidParam->noReferencePicture;
+    slice->listX[1][i] = decoder->noReferencePicture;
   }
 //}}}
 //{{{
 void initListsBslice (sSlice* slice) {
 
-  sDecoder* vidParam = slice->vidParam;
+  sDecoder* decoder = slice->decoder;
   sDPB* dpb = slice->dpb;
 
   unsigned int i;
@@ -2327,13 +2327,13 @@ void initListsBslice (sSlice* slice) {
 
   // set the unused list entries to NULL
   for (i = slice->listXsize[0]; i < (MAX_LIST_SIZE) ; i++)
-    slice->listX[0][i] = vidParam->noReferencePicture;
+    slice->listX[0][i] = decoder->noReferencePicture;
   for (i = slice->listXsize[1]; i < (MAX_LIST_SIZE) ; i++)
-    slice->listX[1][i] = vidParam->noReferencePicture;
+    slice->listX[1][i] = decoder->noReferencePicture;
   }
 //}}}
 //{{{
-void init_mbaff_lists (sDecoder* vidParam, sSlice* slice) {
+void init_mbaff_lists (sDecoder* decoder, sSlice* slice) {
 // Initialize listX[2..5] from lists 0 and 1
 //   listX[2]: list0 for current_field==top
 //   listX[3]: list1 for current_field==top
@@ -2342,7 +2342,7 @@ void init_mbaff_lists (sDecoder* vidParam, sSlice* slice) {
 
   for (int i = 2; i < 6; i++) {
     for (unsigned j = 0; j < MAX_LIST_SIZE; j++)
-      slice->listX[i][j] = vidParam->noReferencePicture;
+      slice->listX[i][j] = decoder->noReferencePicture;
     slice->listXsize[i]=0;
     }
 
@@ -2382,7 +2382,7 @@ sPicture* get_short_term_pic (sSlice* slice, sDPB* dpb, int picNum) {
       }
     }
 
-  return slice->vidParam->noReferencePicture;
+  return slice->decoder->noReferencePicture;
   }
 //}}}
 
@@ -2449,17 +2449,17 @@ void freeRefPicListReorderingBuffer (sSlice* slice) {
 //{{{
 void computeColocated (sSlice* slice, sPicture** listX[6]) {
 
-  sDecoder* vidParam = slice->vidParam;
+  sDecoder* decoder = slice->decoder;
   if (slice->directSpatialMvPredFlag == 0) {
     for (int j = 0; j < 2 + (slice->mbAffFrameFlag * 4); j += 2) {
       for (int i = 0; i < slice->listXsize[j];i++) {
         int iTRb;
         if (j == 0)
-          iTRb = iClip3 (-128, 127, vidParam->picture->poc - listX[LIST_0 + j][i]->poc);
+          iTRb = iClip3 (-128, 127, decoder->picture->poc - listX[LIST_0 + j][i]->poc);
         else if (j == 2)
-          iTRb = iClip3 (-128, 127, vidParam->picture->topPoc - listX[LIST_0 + j][i]->poc);
+          iTRb = iClip3 (-128, 127, decoder->picture->topPoc - listX[LIST_0 + j][i]->poc);
         else
-          iTRb = iClip3 (-128, 127, vidParam->picture->botPoc - listX[LIST_0 + j][i]->poc);
+          iTRb = iClip3 (-128, 127, decoder->picture->botPoc - listX[LIST_0 + j][i]->poc);
 
         int iTRp = iClip3 (-128, 127, listX[LIST_1 + j][0]->poc - listX[LIST_0 + j][i]->poc);
 

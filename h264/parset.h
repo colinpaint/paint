@@ -5,11 +5,11 @@
 sPPS* allocPPS();
 void freePPS (sPPS* pps);
 
-extern void processSPS (sDecoder* vidParam, sNalu* nalu);
-extern void activateSPS (sDecoder* vidParam, sSPS* sps);
+extern void processSPS (sDecoder* decoder, sNalu* nalu);
+extern void activateSPS (sDecoder* decoder, sSPS* sps);
 
-extern void makePPSavailable (sDecoder* vidParam, int id, sPPS* pps);
-extern void processPPS (sDecoder* vidParam, sNalu* nalu);
-extern void cleanUpPPS (sDecoder* vidParam);
+extern void makePPSavailable (sDecoder* decoder, int id, sPPS* pps);
+extern void processPPS (sDecoder* decoder, sNalu* nalu);
+extern void cleanUpPPS (sDecoder* decoder);
 
 extern void useParameterSet (sSlice* curSlice);

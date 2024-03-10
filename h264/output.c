@@ -6,11 +6,11 @@
 //}}}
 
 //{{{
-static void allocDecodedPic (sDecoder* vidParam, sDecodedPicture* decodedPicture, sPicture* p,
+static void allocDecodedPic (sDecoder* decoder, sDecodedPicture* decodedPicture, sPicture* p,
                              int lumaSize, int frameSize, int lumaSizeX, int lumaSizeY,
                              int chromaSizeX, int chromaSizeY) {
 
-  int symbolSizeInBytes = (vidParam->picUnitBitSizeDisk + 7) >> 3;
+  int symbolSizeInBytes = (decoder->picUnitBitSizeDisk + 7) >> 3;
 
   if (decodedPicture->yBuf)
     memFree (decodedPicture->yBuf);
@@ -22,7 +22,7 @@ static void allocDecodedPic (sDecoder* vidParam, sDecodedPicture* decodedPicture
 
   decodedPicture->yuvFormat = p->chromaFormatIdc;
   decodedPicture->yuvStorageFormat = 0;
-  decodedPicture->iBitDepth = vidParam->picUnitBitSizeDisk;
+  decodedPicture->iBitDepth = decoder->picUnitBitSizeDisk;
   decodedPicture->width = lumaSizeX;
   decodedPicture->height = lumaSizeY;
   decodedPicture->yStride = lumaSizeX * symbolSizeInBytes;
@@ -51,25 +51,25 @@ static void img2buf (sPixel** imgX, unsigned char* buf,
   }
 //}}}
 //{{{
-static void clearPicture (sDecoder* vidParam, sPicture* p) {
+static void clearPicture (sDecoder* decoder, sPicture* p) {
 
   printf ("-------------------- clearPicture -----------------\n");
 
   for (int i = 0; i < p->sizeY; i++)
     for (int j = 0; j < p->sizeX; j++)
-      p->imgY[i][j] = (sPixel)vidParam->dcPredValueComp[0];
+      p->imgY[i][j] = (sPixel)decoder->dcPredValueComp[0];
 
   for (int i = 0; i < p->sizeYcr;i++)
     for (int j = 0; j < p->sizeXcr; j++)
-      p->imgUV[0][i][j] = (sPixel)vidParam->dcPredValueComp[1];
+      p->imgUV[0][i][j] = (sPixel)decoder->dcPredValueComp[1];
 
   for (int i = 0; i < p->sizeYcr;i++)
     for (int j = 0; j < p->sizeXcr; j++)
-      p->imgUV[1][i][j] = (sPixel)vidParam->dcPredValueComp[2];
+      p->imgUV[1][i][j] = (sPixel)decoder->dcPredValueComp[2];
   }
 //}}}
 //{{{
-static void writeOutPicture (sDecoder* vidParam, sPicture* p) {
+static void writeOutPicture (sDecoder* decoder, sPicture* p) {
 
   static const int SubWidthC [4]= { 1, 2, 2, 1 };
   static const int SubHeightC [4]= { 1, 2, 1, 1 };
@@ -90,7 +90,7 @@ static void writeOutPicture (sDecoder* vidParam, sPicture* p) {
   else
     cropLeft = cropRight = cropTop = cropBottom = 0;
 
-  int symbolSizeInBytes = ((vidParam->picUnitBitSizeDisk+7) >> 3);
+  int symbolSizeInBytes = ((decoder->picUnitBitSizeDisk+7) >> 3);
   int chromaSizeX =  p->sizeXcr- p->frameCropLeft -p->frameCropRight;
   int chromaSizeY = p->sizeYcr - ( 2 - p->frameMbOnlyFlag ) * p->frameCropTop -( 2 - p->frameMbOnlyFlag ) * p->frameCropBot;
   int lumaSizeX = p->sizeX - cropLeft - cropRight;
@@ -98,9 +98,9 @@ static void writeOutPicture (sDecoder* vidParam, sPicture* p) {
   int lumaSize = lumaSizeX * lumaSizeY * symbolSizeInBytes;
   int frameSize = (lumaSizeX * lumaSizeY + 2 * (chromaSizeX * chromaSizeY)) * symbolSizeInBytes;
 
-  sDecodedPicture* decodedPicture = getDecodedPicture (vidParam->decOutputPic);
+  sDecodedPicture* decodedPicture = getDecodedPicture (decoder->decOutputPic);
   if (!decodedPicture->yBuf || (decodedPicture->bufSize < frameSize))
-    allocDecodedPic (vidParam, decodedPicture, p, lumaSize, frameSize, lumaSizeX, lumaSizeY, chromaSizeX, chromaSizeY);
+    allocDecodedPic (decoder, decodedPicture, p, lumaSize, frameSize, lumaSizeX, lumaSizeY, chromaSizeX, chromaSizeY);
   decodedPicture->valid = 1;
   decodedPicture->poc = p->framePoc;
   if (!decodedPicture->yBuf)
@@ -128,125 +128,125 @@ static void writeOutPicture (sDecoder* vidParam, sPicture* p) {
   }
 //}}}
 //{{{
-static void flushPendingOut (sDecoder* vidParam) {
+static void flushPendingOut (sDecoder* decoder) {
 
-  if (vidParam->pendingOutState != FRAME)
-    writeOutPicture (vidParam, vidParam->pendingOut);
+  if (decoder->pendingOutState != FRAME)
+    writeOutPicture (decoder, decoder->pendingOut);
 
-  if (vidParam->pendingOut->imgY) {
-    free_mem2Dpel (vidParam->pendingOut->imgY);
-    vidParam->pendingOut->imgY = NULL;
+  if (decoder->pendingOut->imgY) {
+    free_mem2Dpel (decoder->pendingOut->imgY);
+    decoder->pendingOut->imgY = NULL;
     }
 
-  if (vidParam->pendingOut->imgUV) {
-    free_mem3Dpel (vidParam->pendingOut->imgUV);
-    vidParam->pendingOut->imgUV = NULL;
+  if (decoder->pendingOut->imgUV) {
+    free_mem3Dpel (decoder->pendingOut->imgUV);
+    decoder->pendingOut->imgUV = NULL;
     }
 
-  vidParam->pendingOutState = FRAME;
+  decoder->pendingOutState = FRAME;
   }
 //}}}
 
 //{{{
-static void writePicture (sDecoder* vidParam, sPicture* p, int real_structure) {
+static void writePicture (sDecoder* decoder, sPicture* p, int real_structure) {
 
   if (real_structure == FRAME) {
-    flushPendingOut (vidParam);
-    writeOutPicture (vidParam, p);
+    flushPendingOut (decoder);
+    writeOutPicture (decoder, p);
     return;
     }
 
-  if (real_structure == vidParam->pendingOutState) {
-    flushPendingOut (vidParam);
-    writePicture (vidParam, p, real_structure);
+  if (real_structure == decoder->pendingOutState) {
+    flushPendingOut (decoder);
+    writePicture (decoder, p, real_structure);
     return;
     }
 
-  if (vidParam->pendingOutState == FRAME) {
+  if (decoder->pendingOutState == FRAME) {
     //{{{  output frame
-    vidParam->pendingOut->sizeX = p->sizeX;
-    vidParam->pendingOut->sizeY = p->sizeY;
-    vidParam->pendingOut->sizeXcr = p->sizeXcr;
-    vidParam->pendingOut->sizeYcr = p->sizeYcr;
-    vidParam->pendingOut->chromaFormatIdc = p->chromaFormatIdc;
+    decoder->pendingOut->sizeX = p->sizeX;
+    decoder->pendingOut->sizeY = p->sizeY;
+    decoder->pendingOut->sizeXcr = p->sizeXcr;
+    decoder->pendingOut->sizeYcr = p->sizeYcr;
+    decoder->pendingOut->chromaFormatIdc = p->chromaFormatIdc;
 
-    vidParam->pendingOut->frameMbOnlyFlag = p->frameMbOnlyFlag;
-    vidParam->pendingOut->frameCropFlag = p->frameCropFlag;
-    if (vidParam->pendingOut->frameCropFlag) {
-      vidParam->pendingOut->frameCropLeft = p->frameCropLeft;
-      vidParam->pendingOut->frameCropRight = p->frameCropRight;
-      vidParam->pendingOut->frameCropTop = p->frameCropTop;
-      vidParam->pendingOut->frameCropBot = p->frameCropBot;
+    decoder->pendingOut->frameMbOnlyFlag = p->frameMbOnlyFlag;
+    decoder->pendingOut->frameCropFlag = p->frameCropFlag;
+    if (decoder->pendingOut->frameCropFlag) {
+      decoder->pendingOut->frameCropLeft = p->frameCropLeft;
+      decoder->pendingOut->frameCropRight = p->frameCropRight;
+      decoder->pendingOut->frameCropTop = p->frameCropTop;
+      decoder->pendingOut->frameCropBot = p->frameCropBot;
       }
 
-    get_mem2Dpel (&(vidParam->pendingOut->imgY), vidParam->pendingOut->sizeY, vidParam->pendingOut->sizeX);
-    get_mem3Dpel (&(vidParam->pendingOut->imgUV), 2, vidParam->pendingOut->sizeYcr, vidParam->pendingOut->sizeXcr);
-    clearPicture (vidParam, vidParam->pendingOut);
+    get_mem2Dpel (&(decoder->pendingOut->imgY), decoder->pendingOut->sizeY, decoder->pendingOut->sizeX);
+    get_mem3Dpel (&(decoder->pendingOut->imgUV), 2, decoder->pendingOut->sizeYcr, decoder->pendingOut->sizeXcr);
+    clearPicture (decoder, decoder->pendingOut);
 
     // copy first field
     int add = (real_structure == TopField) ? 0 : 1;
-    for (int i = 0; i < vidParam->pendingOut->sizeY; i += 2)
-      memcpy (vidParam->pendingOut->imgY[(i+add)], p->imgY[(i+add)], p->sizeX * sizeof(sPixel));
-    for (int i = 0; i < vidParam->pendingOut->sizeYcr; i += 2) {
-      memcpy (vidParam->pendingOut->imgUV[0][(i+add)], p->imgUV[0][(i+add)], p->sizeXcr * sizeof(sPixel));
-      memcpy (vidParam->pendingOut->imgUV[1][(i+add)], p->imgUV[1][(i+add)], p->sizeXcr * sizeof(sPixel));
+    for (int i = 0; i < decoder->pendingOut->sizeY; i += 2)
+      memcpy (decoder->pendingOut->imgY[(i+add)], p->imgY[(i+add)], p->sizeX * sizeof(sPixel));
+    for (int i = 0; i < decoder->pendingOut->sizeYcr; i += 2) {
+      memcpy (decoder->pendingOut->imgUV[0][(i+add)], p->imgUV[0][(i+add)], p->sizeXcr * sizeof(sPixel));
+      memcpy (decoder->pendingOut->imgUV[1][(i+add)], p->imgUV[1][(i+add)], p->sizeXcr * sizeof(sPixel));
       }
 
-    vidParam->pendingOutState = real_structure;
+    decoder->pendingOutState = real_structure;
     }
     //}}}
   else {
-    if ((vidParam->pendingOut->sizeX!=p->sizeX) ||
-        (vidParam->pendingOut->sizeY!= p->sizeY) ||
-        (vidParam->pendingOut->frameMbOnlyFlag != p->frameMbOnlyFlag) ||
-        (vidParam->pendingOut->frameCropFlag != p->frameCropFlag) ||
-        (vidParam->pendingOut->frameCropFlag &&
-         ((vidParam->pendingOut->frameCropLeft != p->frameCropLeft) ||
-          (vidParam->pendingOut->frameCropRight != p->frameCropRight) ||
-          (vidParam->pendingOut->frameCropTop != p->frameCropTop) ||
-          (vidParam->pendingOut->frameCropBot != p->frameCropBot)))) {
-      flushPendingOut (vidParam);
-      writePicture (vidParam, p, real_structure);
+    if ((decoder->pendingOut->sizeX!=p->sizeX) ||
+        (decoder->pendingOut->sizeY!= p->sizeY) ||
+        (decoder->pendingOut->frameMbOnlyFlag != p->frameMbOnlyFlag) ||
+        (decoder->pendingOut->frameCropFlag != p->frameCropFlag) ||
+        (decoder->pendingOut->frameCropFlag &&
+         ((decoder->pendingOut->frameCropLeft != p->frameCropLeft) ||
+          (decoder->pendingOut->frameCropRight != p->frameCropRight) ||
+          (decoder->pendingOut->frameCropTop != p->frameCropTop) ||
+          (decoder->pendingOut->frameCropBot != p->frameCropBot)))) {
+      flushPendingOut (decoder);
+      writePicture (decoder, p, real_structure);
       return;
       }
 
     // copy second field
     int add = (real_structure == TopField) ? 0 : 1;
-    for (int i = 0; i < vidParam->pendingOut->sizeY; i+=2)
-      memcpy (vidParam->pendingOut->imgY[(i+add)], p->imgY[(i+add)], p->sizeX * sizeof(sPixel));
+    for (int i = 0; i < decoder->pendingOut->sizeY; i+=2)
+      memcpy (decoder->pendingOut->imgY[(i+add)], p->imgY[(i+add)], p->sizeX * sizeof(sPixel));
 
-    for (int i = 0; i < vidParam->pendingOut->sizeYcr; i+=2) {
-      memcpy (vidParam->pendingOut->imgUV[0][(i+add)], p->imgUV[0][(i+add)], p->sizeXcr * sizeof(sPixel));
-      memcpy (vidParam->pendingOut->imgUV[1][(i+add)], p->imgUV[1][(i+add)], p->sizeXcr * sizeof(sPixel));
+    for (int i = 0; i < decoder->pendingOut->sizeYcr; i+=2) {
+      memcpy (decoder->pendingOut->imgUV[0][(i+add)], p->imgUV[0][(i+add)], p->sizeXcr * sizeof(sPixel));
+      memcpy (decoder->pendingOut->imgUV[1][(i+add)], p->imgUV[1][(i+add)], p->sizeXcr * sizeof(sPixel));
       }
 
-    flushPendingOut (vidParam);
+    flushPendingOut (decoder);
     }
   }
 //}}}
 //{{{
-static void writeUnpairedField (sDecoder* vidParam, sFrameStore* frameStore) {
+static void writeUnpairedField (sDecoder* decoder, sFrameStore* frameStore) {
 
   assert (frameStore->isUsed < 3);
 
   if (frameStore->isUsed & 0x01) {
     // we have a top field, construct an empty bottom field
     sPicture* p = frameStore->topField;
-    frameStore->botField = allocPicture (vidParam, BotField,
+    frameStore->botField = allocPicture (decoder, BotField,
                                          p->sizeX, 2 * p->sizeY, p->sizeXcr, 2 * p->sizeYcr, 1);
     frameStore->botField->chromaFormatIdc = p->chromaFormatIdc;
 
-    clearPicture (vidParam, frameStore->botField);
-    dpbCombineField (vidParam, frameStore);
-    writePicture (vidParam, frameStore->frame, TopField);
+    clearPicture (decoder, frameStore->botField);
+    dpbCombineField (decoder, frameStore);
+    writePicture (decoder, frameStore->frame, TopField);
     }
 
   if (frameStore->isUsed & 0x02) {
     // we have a bottom field, construct an empty top field
     sPicture* p = frameStore->botField;
-    frameStore->topField = allocPicture (vidParam, TopField, p->sizeX, 2*p->sizeY, p->sizeXcr, 2*p->sizeYcr, 1);
+    frameStore->topField = allocPicture (decoder, TopField, p->sizeX, 2*p->sizeY, p->sizeXcr, 2*p->sizeYcr, 1);
     frameStore->topField->chromaFormatIdc = p->chromaFormatIdc;
-    clearPicture (vidParam, frameStore->topField);
+    clearPicture (decoder, frameStore->topField);
 
     frameStore->topField->frameCropFlag = frameStore->botField->frameCropFlag;
     if (frameStore->topField->frameCropFlag) {
@@ -256,108 +256,108 @@ static void writeUnpairedField (sDecoder* vidParam, sFrameStore* frameStore) {
       frameStore->topField->frameCropRight = frameStore->botField->frameCropRight;
       }
 
-    dpbCombineField (vidParam, frameStore);
-    writePicture (vidParam, frameStore->frame, BotField);
+    dpbCombineField (decoder, frameStore);
+    writePicture (decoder, frameStore->frame, BotField);
     }
 
   frameStore->isUsed = 3;
   }
 //}}}
 //{{{
-static void flushDirectOutput (sDecoder* vidParam) {
+static void flushDirectOutput (sDecoder* decoder) {
 
-  writeUnpairedField (vidParam, vidParam->outBuffer);
-  freePicture (vidParam->outBuffer->frame);
+  writeUnpairedField (decoder, decoder->outBuffer);
+  freePicture (decoder->outBuffer->frame);
 
-  vidParam->outBuffer->frame = NULL;
-  freePicture (vidParam->outBuffer->topField);
+  decoder->outBuffer->frame = NULL;
+  freePicture (decoder->outBuffer->topField);
 
-  vidParam->outBuffer->topField = NULL;
-  freePicture (vidParam->outBuffer->botField);
+  decoder->outBuffer->topField = NULL;
+  freePicture (decoder->outBuffer->botField);
 
-  vidParam->outBuffer->botField = NULL;
-  vidParam->outBuffer->isUsed = 0;
+  decoder->outBuffer->botField = NULL;
+  decoder->outBuffer->isUsed = 0;
   }
 //}}}
 
 //{{{
-void allocOutput (sDecoder* vidParam) {
+void allocOutput (sDecoder* decoder) {
 
-  vidParam->outBuffer = allocFrameStore();
-  vidParam->pendingOut = calloc (sizeof(sPicture), 1);
-  vidParam->pendingOut->imgUV = NULL;
-  vidParam->pendingOut->imgY = NULL;
+  decoder->outBuffer = allocFrameStore();
+  decoder->pendingOut = calloc (sizeof(sPicture), 1);
+  decoder->pendingOut->imgUV = NULL;
+  decoder->pendingOut->imgY = NULL;
   }
 //}}}
 //{{{
-void freeOutput (sDecoder* vidParam) {
+void freeOutput (sDecoder* decoder) {
 
-  freeFrameStore (vidParam->outBuffer);
-  vidParam->outBuffer = NULL;
+  freeFrameStore (decoder->outBuffer);
+  decoder->outBuffer = NULL;
 
-  flushPendingOut (vidParam);
-  free (vidParam->pendingOut);
+  flushPendingOut (decoder);
+  free (decoder->pendingOut);
   }
 //}}}
 
 //{{{
-void directOutput (sDecoder* vidParam, sPicture* picture) {
+void directOutput (sDecoder* decoder, sPicture* picture) {
 
   if (picture->structure == FRAME) {
     // we have a frame (or complementary field pair), so output it directly
-    flushDirectOutput (vidParam);
-    writePicture (vidParam, picture, FRAME);
-    calcFrameNum (vidParam, picture);
+    flushDirectOutput (decoder);
+    writePicture (decoder, picture, FRAME);
+    calcFrameNum (decoder, picture);
     freePicture (picture);
     return;
     }
 
   if (picture->structure == TopField) {
-    if (vidParam->outBuffer->isUsed & 1)
-      flushDirectOutput (vidParam);
-    vidParam->outBuffer->topField = picture;
-    vidParam->outBuffer->isUsed |= 1;
+    if (decoder->outBuffer->isUsed & 1)
+      flushDirectOutput (decoder);
+    decoder->outBuffer->topField = picture;
+    decoder->outBuffer->isUsed |= 1;
     }
 
   if (picture->structure == BotField) {
-    if (vidParam->outBuffer->isUsed & 2)
-      flushDirectOutput (vidParam);
-    vidParam->outBuffer->botField = picture;
-    vidParam->outBuffer->isUsed |= 2;
+    if (decoder->outBuffer->isUsed & 2)
+      flushDirectOutput (decoder);
+    decoder->outBuffer->botField = picture;
+    decoder->outBuffer->isUsed |= 2;
     }
 
-  if (vidParam->outBuffer->isUsed == 3) {
+  if (decoder->outBuffer->isUsed == 3) {
     // we have both fields, so output them
-    dpbCombineField (vidParam, vidParam->outBuffer);
-    writePicture (vidParam, vidParam->outBuffer->frame, FRAME);
+    dpbCombineField (decoder, decoder->outBuffer);
+    writePicture (decoder, decoder->outBuffer->frame, FRAME);
 
-    calcFrameNum (vidParam, picture);
-    freePicture (vidParam->outBuffer->frame);
+    calcFrameNum (decoder, picture);
+    freePicture (decoder->outBuffer->frame);
 
-    vidParam->outBuffer->frame = NULL;
-    freePicture (vidParam->outBuffer->topField);
+    decoder->outBuffer->frame = NULL;
+    freePicture (decoder->outBuffer->topField);
 
-    vidParam->outBuffer->topField = NULL;
-    freePicture (vidParam->outBuffer->botField);
+    decoder->outBuffer->topField = NULL;
+    freePicture (decoder->outBuffer->botField);
 
-    vidParam->outBuffer->botField = NULL;
-    vidParam->outBuffer->isUsed = 0;
+    decoder->outBuffer->botField = NULL;
+    decoder->outBuffer->isUsed = 0;
     }
   }
 //}}}
 //{{{
-void writeStoredFrame (sDecoder* vidParam, sFrameStore* frameStore) {
+void writeStoredFrame (sDecoder* decoder, sFrameStore* frameStore) {
 
   // make sure no direct output field is pending
-  flushDirectOutput (vidParam);
+  flushDirectOutput (decoder);
 
   if (frameStore->isUsed < 3)
-    writeUnpairedField (vidParam, frameStore);
+    writeUnpairedField (decoder, frameStore);
   else {
     if (frameStore->recoveryFrame)
-      vidParam->recoveryFlag = 1;
-    if ((!vidParam->nonConformingStream) || vidParam->recoveryFlag)
-      writePicture (vidParam, frameStore->frame, FRAME);
+      decoder->recoveryFlag = 1;
+    if ((!decoder->nonConformingStream) || decoder->recoveryFlag)
+      writePicture (decoder, frameStore->frame, FRAME);
     }
 
   frameStore->is_output = 1;

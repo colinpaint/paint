@@ -57,7 +57,7 @@ static int intra4x4_dc_pred (sMacroblock *curMb,
                             int joff)
 {
   sSlice *curSlice = curMb->slice;
-  sDecoder* vidParam = curMb->vidParam;
+  sDecoder* decoder = curMb->decoder;
 
   int j;
   int s0 = 0;
@@ -71,10 +71,10 @@ static int intra4x4_dc_pred (sMacroblock *curMb,
 
   sPixel** mb_pred = curSlice->mb_pred[pl];
 
-  getNonAffNeighbour(curMb, ioff - 1, joff   , vidParam->mbSize[IS_LUMA], &pix_a);
-  getNonAffNeighbour(curMb, ioff    , joff -1, vidParam->mbSize[IS_LUMA], &pix_b);
+  getNonAffNeighbour(curMb, ioff - 1, joff   , decoder->mbSize[IS_LUMA], &pix_a);
+  getNonAffNeighbour(curMb, ioff    , joff -1, decoder->mbSize[IS_LUMA], &pix_b);
 
-  if (vidParam->activePPS->constrainedIntraPredFlag)
+  if (decoder->activePPS->constrainedIntraPredFlag)
   {
     block_available_left = pix_a.available ? curSlice->intraBlock [pix_a.mbAddr] : 0;
     block_available_up   = pix_b.available ? curSlice->intraBlock [pix_b.mbAddr] : 0;
@@ -123,7 +123,7 @@ static int intra4x4_dc_pred (sMacroblock *curMb,
   else //if (!block_available_up && !block_available_left)
   {
     // top left corner, nothing to predict from
-    s0 = vidParam->dcPredValueComp[pl];
+    s0 = decoder->dcPredValueComp[pl];
   }
 
   for (j=joff; j < joff + BLOCK_SIZE; ++j)
@@ -154,14 +154,14 @@ static int intra4x4_vert_pred (sMacroblock *curMb,    //!< current macroblock
                                      int joff)              //!< pixel offset Y within MB
 {
   sSlice *curSlice = curMb->slice;
-  sDecoder* vidParam = curMb->vidParam;
+  sDecoder* decoder = curMb->decoder;
 
   int block_available_up;
   sPixelPos pix_b;
 
-  getNonAffNeighbour(curMb, ioff, joff - 1 , vidParam->mbSize[IS_LUMA], &pix_b);
+  getNonAffNeighbour(curMb, ioff, joff - 1 , decoder->mbSize[IS_LUMA], &pix_b);
 
-  if (vidParam->activePPS->constrainedIntraPredFlag)
+  if (decoder->activePPS->constrainedIntraPredFlag)
   {
     block_available_up = pix_b.available ? curSlice->intraBlock [pix_b.mbAddr] : 0;
   }
@@ -211,16 +211,16 @@ static int intra4x4_hor_pred (sMacroblock *curMb,
                                     int ioff,
                                     int joff)
 {
-  sDecoder* vidParam = curMb->vidParam;
+  sDecoder* decoder = curMb->decoder;
   sSlice *curSlice = curMb->slice;
 
   sPixelPos pix_a;
 
   int block_available_left;
 
-  getNonAffNeighbour(curMb, ioff - 1 , joff, vidParam->mbSize[IS_LUMA], &pix_a);
+  getNonAffNeighbour(curMb, ioff - 1 , joff, decoder->mbSize[IS_LUMA], &pix_a);
 
-  if (vidParam->activePPS->constrainedIntraPredFlag)
+  if (decoder->activePPS->constrainedIntraPredFlag)
   {
     block_available_left = pix_a.available ? curSlice->intraBlock[pix_a.mbAddr]: 0;
   }
@@ -286,7 +286,7 @@ static int intra4x4_diag_down_right_pred (sMacroblock *curMb,    //!< current ma
                                                 int joff)              //!< pixel offset Y within MB
 {
   sSlice *curSlice = curMb->slice;
-  sDecoder* vidParam = curMb->vidParam;
+  sDecoder* decoder = curMb->decoder;
 
   sPixel** imgY = (pl) ? curSlice->picture->imgUV[pl - 1] : curSlice->picture->imgY;
 
@@ -299,11 +299,11 @@ static int intra4x4_diag_down_right_pred (sMacroblock *curMb,    //!< current ma
 
   sPixel** mb_pred = curSlice->mb_pred[pl];
 
-  getNonAffNeighbour(curMb, ioff -1 , joff    , vidParam->mbSize[IS_LUMA], &pix_a);
-  getNonAffNeighbour(curMb, ioff    , joff -1 , vidParam->mbSize[IS_LUMA], &pix_b);
-  getNonAffNeighbour(curMb, ioff -1 , joff -1 , vidParam->mbSize[IS_LUMA], &pix_d);
+  getNonAffNeighbour(curMb, ioff -1 , joff    , decoder->mbSize[IS_LUMA], &pix_a);
+  getNonAffNeighbour(curMb, ioff    , joff -1 , decoder->mbSize[IS_LUMA], &pix_b);
+  getNonAffNeighbour(curMb, ioff -1 , joff -1 , decoder->mbSize[IS_LUMA], &pix_d);
 
-  if (vidParam->activePPS->constrainedIntraPredFlag)
+  if (decoder->activePPS->constrainedIntraPredFlag)
   {
     block_available_left     = pix_a.available ? curSlice->intraBlock [pix_a.mbAddr]: 0;
     block_available_up       = pix_b.available ? curSlice->intraBlock [pix_b.mbAddr] : 0;
@@ -370,19 +370,19 @@ static int intra4x4_diag_down_left_pred (sMacroblock *curMb,    //!< current mac
                                         int joff)              //!< pixel offset Y within MB
 {
   sSlice *curSlice = curMb->slice;
-  sDecoder* vidParam = curMb->vidParam;
+  sDecoder* decoder = curMb->decoder;
 
   sPixelPos pix_b, pix_c;
 
   int block_available_up;
   int block_available_up_right;
 
-  getNonAffNeighbour(curMb, ioff    , joff - 1, vidParam->mbSize[IS_LUMA], &pix_b);
-  getNonAffNeighbour(curMb, ioff + 4, joff - 1, vidParam->mbSize[IS_LUMA], &pix_c);
+  getNonAffNeighbour(curMb, ioff    , joff - 1, decoder->mbSize[IS_LUMA], &pix_b);
+  getNonAffNeighbour(curMb, ioff + 4, joff - 1, decoder->mbSize[IS_LUMA], &pix_c);
 
   pix_c.available = pix_c.available && !((ioff==4) && ((joff==4)||(joff==12)));
 
-  if (vidParam->activePPS->constrainedIntraPredFlag)
+  if (decoder->activePPS->constrainedIntraPredFlag)
   {
     block_available_up       = pix_b.available ? curSlice->intraBlock [pix_b.mbAddr] : 0;
     block_available_up_right = pix_c.available ? curSlice->intraBlock [pix_c.mbAddr] : 0;
@@ -457,7 +457,7 @@ static int intra4x4_vert_right_pred (sMacroblock *curMb,    //!< current macrobl
                                     int joff)              //!< pixel offset Y within MB
 {
   sSlice *curSlice = curMb->slice;
-  sDecoder* vidParam = curMb->vidParam;
+  sDecoder* decoder = curMb->decoder;
 
   sPixelPos pix_a, pix_b, pix_d;
 
@@ -465,11 +465,11 @@ static int intra4x4_vert_right_pred (sMacroblock *curMb,    //!< current macrobl
   int block_available_left;
   int block_available_up_left;
 
-  getNonAffNeighbour(curMb, ioff -1 , joff    , vidParam->mbSize[IS_LUMA], &pix_a);
-  getNonAffNeighbour(curMb, ioff    , joff -1 , vidParam->mbSize[IS_LUMA], &pix_b);
-  getNonAffNeighbour(curMb, ioff -1 , joff -1 , vidParam->mbSize[IS_LUMA], &pix_d);
+  getNonAffNeighbour(curMb, ioff -1 , joff    , decoder->mbSize[IS_LUMA], &pix_a);
+  getNonAffNeighbour(curMb, ioff    , joff -1 , decoder->mbSize[IS_LUMA], &pix_b);
+  getNonAffNeighbour(curMb, ioff -1 , joff -1 , decoder->mbSize[IS_LUMA], &pix_d);
 
-  if (vidParam->activePPS->constrainedIntraPredFlag)
+  if (decoder->activePPS->constrainedIntraPredFlag)
   {
     block_available_left     = pix_a.available ? curSlice->intraBlock[pix_a.mbAddr]: 0;
     block_available_up       = pix_b.available ? curSlice->intraBlock [pix_b.mbAddr] : 0;
@@ -542,19 +542,19 @@ static int intra4x4_vert_left_pred (sMacroblock *curMb,    //!< current macroblo
                                           int joff)              //!< pixel offset Y within MB
 {
   sSlice *curSlice = curMb->slice;
-  sDecoder* vidParam = curMb->vidParam;
+  sDecoder* decoder = curMb->decoder;
 
   sPixelPos pix_b, pix_c;
 
   int block_available_up;
   int block_available_up_right;
 
-  getNonAffNeighbour(curMb, ioff    , joff -1 , vidParam->mbSize[IS_LUMA], &pix_b);
-  getNonAffNeighbour(curMb, ioff +4 , joff -1 , vidParam->mbSize[IS_LUMA], &pix_c);
+  getNonAffNeighbour(curMb, ioff    , joff -1 , decoder->mbSize[IS_LUMA], &pix_b);
+  getNonAffNeighbour(curMb, ioff +4 , joff -1 , decoder->mbSize[IS_LUMA], &pix_c);
 
   pix_c.available = pix_c.available && !((ioff==4) && ((joff==4)||(joff==12)));
 
-  if (vidParam->activePPS->constrainedIntraPredFlag)
+  if (decoder->activePPS->constrainedIntraPredFlag)
   {
     block_available_up       = pix_b.available ? curSlice->intraBlock [pix_b.mbAddr] : 0;
     block_available_up_right = pix_c.available ? curSlice->intraBlock [pix_c.mbAddr] : 0;
@@ -631,15 +631,15 @@ static int intra4x4_hor_up_pred (sMacroblock *curMb,    //!< current macroblock
                                 int joff)              //!< pixel offset Y within MB
 {
   sSlice *curSlice = curMb->slice;
-  sDecoder* vidParam = curMb->vidParam;
+  sDecoder* decoder = curMb->decoder;
 
   sPixelPos pix_a;
 
   int block_available_left;
 
-  getNonAffNeighbour(curMb, ioff -1 , joff, vidParam->mbSize[IS_LUMA], &pix_a);
+  getNonAffNeighbour(curMb, ioff -1 , joff, decoder->mbSize[IS_LUMA], &pix_a);
 
-  if (vidParam->activePPS->constrainedIntraPredFlag)
+  if (decoder->activePPS->constrainedIntraPredFlag)
   {
     block_available_left = pix_a.available ? curSlice->intraBlock[pix_a.mbAddr]: 0;
   }
@@ -703,7 +703,7 @@ static int intra4x4_hor_down_pred (sMacroblock *curMb,    //!< current macrobloc
                                          int joff)              //!< pixel offset Y within MB
 {
   sSlice *curSlice = curMb->slice;
-  sDecoder* vidParam = curMb->vidParam;
+  sDecoder* decoder = curMb->decoder;
 
   sPixelPos pix_a, pix_b, pix_d;
 
@@ -711,11 +711,11 @@ static int intra4x4_hor_down_pred (sMacroblock *curMb,    //!< current macrobloc
   int block_available_left;
   int block_available_up_left;
 
-  getNonAffNeighbour(curMb, ioff -1 , joff    , vidParam->mbSize[IS_LUMA], &pix_a);
-  getNonAffNeighbour(curMb, ioff    , joff -1 , vidParam->mbSize[IS_LUMA], &pix_b);
-  getNonAffNeighbour(curMb, ioff -1 , joff -1 , vidParam->mbSize[IS_LUMA], &pix_d);
+  getNonAffNeighbour(curMb, ioff -1 , joff    , decoder->mbSize[IS_LUMA], &pix_a);
+  getNonAffNeighbour(curMb, ioff    , joff -1 , decoder->mbSize[IS_LUMA], &pix_b);
+  getNonAffNeighbour(curMb, ioff -1 , joff -1 , decoder->mbSize[IS_LUMA], &pix_d);
 
-  if (vidParam->activePPS->constrainedIntraPredFlag)
+  if (decoder->activePPS->constrainedIntraPredFlag)
   {
     block_available_left    = pix_a.available ? curSlice->intraBlock [pix_a.mbAddr]: 0;
     block_available_up      = pix_b.available ? curSlice->intraBlock [pix_b.mbAddr] : 0;
@@ -791,8 +791,8 @@ int intra_pred_4x4_normal (sMacroblock *curMb,    //!< current macroblock
                           int img_block_x,       //!< location of block X, multiples of 4
                           int img_block_y)       //!< location of block Y, multiples of 4
 {
-  sDecoder* vidParam = curMb->vidParam;
-  byte predmode = vidParam->predMode[img_block_y][img_block_x];
+  sDecoder* decoder = curMb->decoder;
+  byte predmode = decoder->predMode[img_block_y][img_block_x];
   curMb->ipmode_DPCM = predmode; //For residual DPCM
 
   switch (predmode)
@@ -856,7 +856,7 @@ static int intra4x4_dc_pred_mbaff (sMacroblock *curMb,
                                    int joff)
 {
   sSlice *curSlice = curMb->slice;
-  sDecoder* vidParam = curMb->vidParam;
+  sDecoder* decoder = curMb->decoder;
 
   int i,j;
   int s0 = 0;
@@ -871,11 +871,11 @@ static int intra4x4_dc_pred_mbaff (sMacroblock *curMb,
 
   for (i=0;i<4;++i)
   {
-    getAffNeighbour(curMb, ioff - 1, joff + i, vidParam->mbSize[IS_LUMA], &pix_a[i]);
+    getAffNeighbour(curMb, ioff - 1, joff + i, decoder->mbSize[IS_LUMA], &pix_a[i]);
   }
-  getAffNeighbour(curMb, ioff    , joff -1 , vidParam->mbSize[IS_LUMA], &pix_b);
+  getAffNeighbour(curMb, ioff    , joff -1 , decoder->mbSize[IS_LUMA], &pix_b);
 
-  if (vidParam->activePPS->constrainedIntraPredFlag)
+  if (decoder->activePPS->constrainedIntraPredFlag)
   {
     for (i=0, block_available_left=1; i<4;++i)
       block_available_left  &= pix_a[i].available ? curSlice->intraBlock[pix_a[i].mbAddr]: 0;
@@ -922,7 +922,7 @@ static int intra4x4_dc_pred_mbaff (sMacroblock *curMb,
   else //if (!block_available_up && !block_available_left)
   {
     // top left corner, nothing to predict from
-    s0 = vidParam->dcPredValueComp[pl];
+    s0 = decoder->dcPredValueComp[pl];
   }
 
   for (j=joff; j < joff + BLOCK_SIZE; ++j)
@@ -953,14 +953,14 @@ static int intra4x4_vert_pred_mbaff (sMacroblock *curMb,    //!< current macrobl
                                      int joff)              //!< pixel offset Y within MB
 {
   sSlice *curSlice = curMb->slice;
-  sDecoder* vidParam = curMb->vidParam;
+  sDecoder* decoder = curMb->decoder;
 
   int block_available_up;
   sPixelPos pix_b;
 
-  getAffNeighbour(curMb, ioff, joff - 1 , vidParam->mbSize[IS_LUMA], &pix_b);
+  getAffNeighbour(curMb, ioff, joff - 1 , decoder->mbSize[IS_LUMA], &pix_b);
 
-  if (vidParam->activePPS->constrainedIntraPredFlag)
+  if (decoder->activePPS->constrainedIntraPredFlag)
   {
     block_available_up = pix_b.available ? curSlice->intraBlock [pix_b.mbAddr] : 0;
   }
@@ -1010,7 +1010,7 @@ static int intra4x4_hor_pred_mbaff (sMacroblock *curMb,
                                     int ioff,
                                     int joff)
 {
-  sDecoder* vidParam = curMb->vidParam;
+  sDecoder* decoder = curMb->decoder;
   sSlice *curSlice = curMb->slice;
 
   int i,j;
@@ -1024,10 +1024,10 @@ static int intra4x4_hor_pred_mbaff (sMacroblock *curMb,
 
   for (i=0;i<4;++i)
   {
-    getAffNeighbour(curMb, ioff -1 , joff +i , vidParam->mbSize[IS_LUMA], &pix_a[i]);
+    getAffNeighbour(curMb, ioff -1 , joff +i , decoder->mbSize[IS_LUMA], &pix_a[i]);
   }
 
-  if (vidParam->activePPS->constrainedIntraPredFlag)
+  if (decoder->activePPS->constrainedIntraPredFlag)
   {
     for (i=0, block_available_left=1; i<4;++i)
       block_available_left  &= pix_a[i].available ? curSlice->intraBlock[pix_a[i].mbAddr]: 0;
@@ -1068,7 +1068,7 @@ static int intra4x4_diag_down_right_pred_mbaff (sMacroblock *curMb,    //!< curr
                                                       int joff)              //!< pixel offset Y within MB
 {
   sSlice *curSlice = curMb->slice;
-  sDecoder* vidParam = curMb->vidParam;
+  sDecoder* decoder = curMb->decoder;
 
   int i;
   sPixel** imgY = (pl) ? curSlice->picture->imgUV[pl - 1] : curSlice->picture->imgY;
@@ -1084,13 +1084,13 @@ static int intra4x4_diag_down_right_pred_mbaff (sMacroblock *curMb,    //!< curr
 
   for (i=0;i<4;++i)
   {
-    getAffNeighbour(curMb, ioff -1 , joff +i , vidParam->mbSize[IS_LUMA], &pix_a[i]);
+    getAffNeighbour(curMb, ioff -1 , joff +i , decoder->mbSize[IS_LUMA], &pix_a[i]);
   }
 
-  getAffNeighbour(curMb, ioff    , joff -1 , vidParam->mbSize[IS_LUMA], &pix_b);
-  getAffNeighbour(curMb, ioff -1 , joff -1 , vidParam->mbSize[IS_LUMA], &pix_d);
+  getAffNeighbour(curMb, ioff    , joff -1 , decoder->mbSize[IS_LUMA], &pix_b);
+  getAffNeighbour(curMb, ioff -1 , joff -1 , decoder->mbSize[IS_LUMA], &pix_d);
 
-  if (vidParam->activePPS->constrainedIntraPredFlag)
+  if (decoder->activePPS->constrainedIntraPredFlag)
   {
     for (i=0, block_available_left=1; i<4;++i)
       block_available_left  &= pix_a[i].available ? curSlice->intraBlock[pix_a[i].mbAddr]: 0;
@@ -1157,19 +1157,19 @@ static int intra4x4_diag_down_left_pred_mbaff (sMacroblock *curMb,    //!< curre
                                         int joff)              //!< pixel offset Y within MB
 {
   sSlice *curSlice = curMb->slice;
-  sDecoder* vidParam = curMb->vidParam;
+  sDecoder* decoder = curMb->decoder;
 
   sPixelPos pix_b, pix_c;
 
   int block_available_up;
   int block_available_up_right;
 
-  getAffNeighbour(curMb, ioff    , joff - 1, vidParam->mbSize[IS_LUMA], &pix_b);
-  getAffNeighbour(curMb, ioff + 4, joff - 1, vidParam->mbSize[IS_LUMA], &pix_c);
+  getAffNeighbour(curMb, ioff    , joff - 1, decoder->mbSize[IS_LUMA], &pix_b);
+  getAffNeighbour(curMb, ioff + 4, joff - 1, decoder->mbSize[IS_LUMA], &pix_c);
 
   pix_c.available = pix_c.available && !((ioff==4) && ((joff==4)||(joff==12)));
 
-  if (vidParam->activePPS->constrainedIntraPredFlag)
+  if (decoder->activePPS->constrainedIntraPredFlag)
   {
     block_available_up       = pix_b.available ? curSlice->intraBlock [pix_b.mbAddr] : 0;
     block_available_up_right = pix_c.available ? curSlice->intraBlock [pix_c.mbAddr] : 0;
@@ -1239,7 +1239,7 @@ static int intra4x4_vert_right_pred_mbaff (sMacroblock *curMb,    //!< current m
                                           int joff)              //!< pixel offset Y within MB
 {
   sSlice *curSlice = curMb->slice;
-  sDecoder* vidParam = curMb->vidParam;
+  sDecoder* decoder = curMb->decoder;
 
   int i;
   sPixel** imgY = (pl) ? curSlice->picture->imgUV[pl - 1] : curSlice->picture->imgY;
@@ -1255,13 +1255,13 @@ static int intra4x4_vert_right_pred_mbaff (sMacroblock *curMb,    //!< current m
 
   for (i=0;i<4;++i)
   {
-    getAffNeighbour(curMb, ioff -1 , joff +i , vidParam->mbSize[IS_LUMA], &pix_a[i]);
+    getAffNeighbour(curMb, ioff -1 , joff +i , decoder->mbSize[IS_LUMA], &pix_a[i]);
   }
 
-  getAffNeighbour(curMb, ioff    , joff -1 , vidParam->mbSize[IS_LUMA], &pix_b);
-  getAffNeighbour(curMb, ioff -1 , joff -1 , vidParam->mbSize[IS_LUMA], &pix_d);
+  getAffNeighbour(curMb, ioff    , joff -1 , decoder->mbSize[IS_LUMA], &pix_b);
+  getAffNeighbour(curMb, ioff -1 , joff -1 , decoder->mbSize[IS_LUMA], &pix_d);
 
-  if (vidParam->activePPS->constrainedIntraPredFlag)
+  if (decoder->activePPS->constrainedIntraPredFlag)
   {
     for (i=0, block_available_left=1; i<4;++i)
       block_available_left  &= pix_a[i].available ? curSlice->intraBlock[pix_a[i].mbAddr]: 0;
@@ -1330,19 +1330,19 @@ static int intra4x4_vert_left_pred_mbaff (sMacroblock *curMb,    //!< current ma
                                           int joff)              //!< pixel offset Y within MB
 {
   sSlice *curSlice = curMb->slice;
-  sDecoder* vidParam = curMb->vidParam;
+  sDecoder* decoder = curMb->decoder;
 
   sPixelPos pix_b, pix_c;
 
   int block_available_up;
   int block_available_up_right;
 
-  getAffNeighbour(curMb, ioff    , joff -1 , vidParam->mbSize[IS_LUMA], &pix_b);
-  getAffNeighbour(curMb, ioff +4 , joff -1 , vidParam->mbSize[IS_LUMA], &pix_c);
+  getAffNeighbour(curMb, ioff    , joff -1 , decoder->mbSize[IS_LUMA], &pix_b);
+  getAffNeighbour(curMb, ioff +4 , joff -1 , decoder->mbSize[IS_LUMA], &pix_c);
 
   pix_c.available = pix_c.available && !((ioff==4) && ((joff==4)||(joff==12)));
 
-  if (vidParam->activePPS->constrainedIntraPredFlag)
+  if (decoder->activePPS->constrainedIntraPredFlag)
   {
     block_available_up       = pix_b.available ? curSlice->intraBlock [pix_b.mbAddr] : 0;
     block_available_up_right = pix_c.available ? curSlice->intraBlock [pix_c.mbAddr] : 0;
@@ -1413,7 +1413,7 @@ static int intra4x4_hor_up_pred_mbaff (sMacroblock *curMb,    //!< current macro
                                       int joff)              //!< pixel offset Y within MB
 {
   sSlice *curSlice = curMb->slice;
-  sDecoder* vidParam = curMb->vidParam;
+  sDecoder* decoder = curMb->decoder;
 
   int i;
   sPixel** imgY = (pl) ? curSlice->picture->imgUV[pl - 1] : curSlice->picture->imgY;
@@ -1426,10 +1426,10 @@ static int intra4x4_hor_up_pred_mbaff (sMacroblock *curMb,    //!< current macro
 
   for (i=0;i<4;++i)
   {
-    getAffNeighbour(curMb, ioff -1 , joff +i , vidParam->mbSize[IS_LUMA], &pix_a[i]);
+    getAffNeighbour(curMb, ioff -1 , joff +i , decoder->mbSize[IS_LUMA], &pix_a[i]);
   }
 
-  if (vidParam->activePPS->constrainedIntraPredFlag)
+  if (decoder->activePPS->constrainedIntraPredFlag)
   {
     for (i=0, block_available_left=1; i<4;++i)
       block_available_left  &= pix_a[i].available ? curSlice->intraBlock[pix_a[i].mbAddr]: 0;
@@ -1489,7 +1489,7 @@ static int intra4x4_hor_down_pred_mbaff (sMacroblock *curMb,    //!< current mac
                                          int joff)              //!< pixel offset Y within MB
 {
   sSlice *curSlice = curMb->slice;
-  sDecoder* vidParam = curMb->vidParam;
+  sDecoder* decoder = curMb->decoder;
 
   int i;
   sPixel** imgY = (pl) ? curSlice->picture->imgUV[pl - 1] : curSlice->picture->imgY;
@@ -1505,13 +1505,13 @@ static int intra4x4_hor_down_pred_mbaff (sMacroblock *curMb,    //!< current mac
 
   for (i=0;i<4;++i)
   {
-    getAffNeighbour(curMb, ioff -1 , joff +i , vidParam->mbSize[IS_LUMA], &pix_a[i]);
+    getAffNeighbour(curMb, ioff -1 , joff +i , decoder->mbSize[IS_LUMA], &pix_a[i]);
   }
 
-  getAffNeighbour(curMb, ioff    , joff -1 , vidParam->mbSize[IS_LUMA], &pix_b);
-  getAffNeighbour(curMb, ioff -1 , joff -1 , vidParam->mbSize[IS_LUMA], &pix_d);
+  getAffNeighbour(curMb, ioff    , joff -1 , decoder->mbSize[IS_LUMA], &pix_b);
+  getAffNeighbour(curMb, ioff -1 , joff -1 , decoder->mbSize[IS_LUMA], &pix_d);
 
-  if (vidParam->activePPS->constrainedIntraPredFlag)
+  if (decoder->activePPS->constrainedIntraPredFlag)
   {
     for (i=0, block_available_left=1; i<4;++i)
       block_available_left  &= pix_a[i].available ? curSlice->intraBlock[pix_a[i].mbAddr]: 0;
@@ -1582,8 +1582,8 @@ int intra_pred_4x4_mbaff (sMacroblock *curMb,    //!< current macroblock
                         int img_block_x,       //!< location of block X, multiples of 4
                         int img_block_y)       //!< location of block Y, multiples of 4
 {
-  sDecoder* vidParam = curMb->vidParam;
-  byte predmode = vidParam->predMode[img_block_y][img_block_x];
+  sDecoder* decoder = curMb->decoder;
+  byte predmode = decoder->predMode[img_block_y][img_block_x];
   curMb->ipmode_DPCM = predmode; //For residual DPCM
 
   switch (predmode)

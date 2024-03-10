@@ -11,7 +11,7 @@
 #include "buffer.h"
 #include "erc.h"
 //}}}
-extern void init_frext (sDecoder* vidParam);
+extern void init_frext (sDecoder* decoder);
 
 //{{{
 static const byte ZZ_SCAN[16] = {
@@ -41,12 +41,12 @@ static void updateMaxValue (sFrameFormat* format) {
   }
 //}}}
 //{{{
-static void setupLayerInfo (sDecoder* vidParam, sSPS* sps, sLayer* layer) {
+static void setupLayerInfo (sDecoder* decoder, sSPS* sps, sLayer* layer) {
 
-  layer->vidParam = vidParam;
-  layer->coding = vidParam->coding[layer->layerId];
+  layer->decoder = decoder;
+  layer->coding = decoder->coding[layer->layerId];
   layer->sps = sps;
-  layer->dpb = vidParam->dpbLayer[layer->layerId];
+  layer->dpb = decoder->dpbLayer[layer->layerId];
   }
 //}}}
 //{{{
@@ -167,7 +167,7 @@ static void setCodingParam (sSPS* sps, sCoding* coding) {
   }
 //}}}
 //{{{
-static void resetFormatInfo (sSPS* sps, sDecoder* vidParam, sFrameFormat* source, sFrameFormat* output) {
+static void resetFormatInfo (sSPS* sps, sDecoder* decoder, sFrameFormat* source, sFrameFormat* output) {
 
   static const int SubWidthC[4] = { 1, 2, 2, 1};
   static const int SubHeightC[4] = { 1, 2, 1, 1};
@@ -184,8 +184,8 @@ static void resetFormatInfo (sSPS* sps, sDecoder* vidParam, sFrameFormat* source
   else
     crop_left = cropRight = crop_top = cropBot = 0;
 
-  source->width[0] = vidParam->width - crop_left - cropRight;
-  source->height[0] = vidParam->height - crop_top - cropBot;
+  source->width[0] = decoder->width - crop_left - cropRight;
+  source->height[0] = decoder->height - crop_top - cropBot;
 
   // cropping for chroma
   if (sps->frameCropFlag) {
@@ -197,17 +197,17 @@ static void resetFormatInfo (sSPS* sps, sDecoder* vidParam, sFrameFormat* source
   else
     crop_left = cropRight = crop_top = cropBot = 0;
 
-  source->width[1] = vidParam->widthCr - crop_left - cropRight;
+  source->width[1] = decoder->widthCr - crop_left - cropRight;
   source->width[2] = source->width[1];
-  source->height[1] = vidParam->heightCr - crop_top - cropBot;
+  source->height[1] = decoder->heightCr - crop_top - cropBot;
   source->height[2] = source->height[1];
 
-  output->width[0] = vidParam->width;
-  source->width[1] = vidParam->widthCr;
-  source->width[2] = vidParam->widthCr;
-  output->height[0] = vidParam->height;
-  output->height[1] = vidParam->heightCr;
-  output->height[2] = vidParam->heightCr;
+  output->width[0] = decoder->width;
+  source->width[1] = decoder->widthCr;
+  source->width[2] = decoder->widthCr;
+  output->height[0] = decoder->height;
+  output->height[1] = decoder->heightCr;
+  output->height[2] = decoder->heightCr;
 
   source->size_cmp[0] = source->width[0] * source->height[0];
   source->size_cmp[1] = source->width[1] * source->height[1];
@@ -224,9 +224,9 @@ static void resetFormatInfo (sSPS* sps, sDecoder* vidParam, sFrameFormat* source
   output->mb_width = output->width[0]  / MB_BLOCK_SIZE;
   output->mb_height = output->height[0] / MB_BLOCK_SIZE;
 
-  output->bit_depth[0] = source->bit_depth[0] = vidParam->bitdepthLuma;
-  output->bit_depth[1] = source->bit_depth[1] = vidParam->bitdepthChroma;
-  output->bit_depth[2] = source->bit_depth[2] = vidParam->bitdepthChroma;
+  output->bit_depth[0] = source->bit_depth[0] = decoder->bitdepthLuma;
+  output->bit_depth[1] = source->bit_depth[1] = decoder->bitdepthChroma;
+  output->bit_depth[2] = source->bit_depth[2] = decoder->bitdepthChroma;
   output->pic_unit_size_on_disk = (imax(output->bit_depth[0], output->bit_depth[1]) > 8) ? 16 : 8;
   output->pic_unit_size_shift3 = output->pic_unit_size_on_disk >> 3;
 
@@ -236,8 +236,8 @@ static void resetFormatInfo (sSPS* sps, sDecoder* vidParam, sFrameFormat* source
 
   output->autoCropBot = cropBot;
   output->autoCropRight = cropRight;
-  output->autoCropBotCr = (cropBot * vidParam->mbCrSizeY) / MB_BLOCK_SIZE;
-  output->autoCropRightCr = (cropRight * vidParam->mbCrSizeX) / MB_BLOCK_SIZE;
+  output->autoCropBotCr = (cropBot * decoder->mbCrSizeY) / MB_BLOCK_SIZE;
+  output->autoCropRightCr = (cropRight * decoder->mbCrSizeX) / MB_BLOCK_SIZE;
 
   source->autoCropBot = output->autoCropBot;
   source->autoCropRight = output->autoCropRight;
@@ -247,15 +247,15 @@ static void resetFormatInfo (sSPS* sps, sDecoder* vidParam, sFrameFormat* source
   updateMaxValue (source);
   updateMaxValue (output);
 
-  if (vidParam->firstSPS == TRUE) {
-    vidParam->firstSPS = FALSE;
+  if (decoder->firstSPS == TRUE) {
+    decoder->firstSPS = FALSE;
     printf ("ProfileIDC: %d %dx%d %dx%d ",
-            sps->profileIdc, source->width[0], source->height[0], vidParam->width, vidParam->height);
-    if (vidParam->yuvFormat == YUV400)
+            sps->profileIdc, source->width[0], source->height[0], decoder->width, decoder->height);
+    if (decoder->yuvFormat == YUV400)
       printf ("4:0:0");
-    else if (vidParam->yuvFormat == YUV420)
+    else if (decoder->yuvFormat == YUV420)
       printf ("4:2:0");
-    else if (vidParam->yuvFormat == YUV422)
+    else if (decoder->yuvFormat == YUV422)
       printf ("4:2:2");
     else
       printf ("4:4:4");
@@ -463,7 +463,7 @@ static int readVUI (sDataPartition* p, sSPS* sps) {
   }
 //}}}
 //{{{
-static void interpretSPS (sDecoder* vidParam, sDataPartition* p, sSPS* sps) {
+static void interpretSPS (sDecoder* decoder, sDataPartition* p, sSPS* sps) {
 
   unsigned i;
   unsigned n_ScalingList;
@@ -580,14 +580,14 @@ static void interpretSPS (sDecoder* vidParam, sDataPartition* p, sSPS* sps) {
 //}}}
 
 //{{{
-void makeSPSavailable (sDecoder* vidParam, int id, sSPS* sps) {
+void makeSPSavailable (sDecoder* decoder, int id, sSPS* sps) {
 
   assert (sps->valid == TRUE);
-  memcpy (&vidParam->sps[id], sps, sizeof (sSPS));
+  memcpy (&decoder->sps[id], sps, sizeof (sSPS));
   }
 //}}}
 //{{{
-void processSPS (sDecoder* vidParam, sNalu* nalu) {
+void processSPS (sDecoder* decoder, sNalu* nalu) {
 
   sDataPartition* dp = allocPartition (1);
   dp->bitstream->eiFlag = 0;
@@ -596,27 +596,27 @@ void processSPS (sDecoder* vidParam, sNalu* nalu) {
   dp->bitstream->codeLen = dp->bitstream->bitstreamLength = RBSPtoSODB (dp->bitstream->streamBuffer, nalu->len-1);
 
   sSPS* sps = allocSPS();
-  interpretSPS (vidParam, dp, sps);
+  interpretSPS (decoder, dp, sps);
 
   if (sps->valid) {
-    if (vidParam->activeSPS) {
-      if (sps->spsId == vidParam->activeSPS->spsId) {
-        if (!spsIsEqual (sps, vidParam->activeSPS))   {
-          if (vidParam->picture)
-            exitPicture (vidParam, &vidParam->picture);
-          vidParam->activeSPS=NULL;
+    if (decoder->activeSPS) {
+      if (sps->spsId == decoder->activeSPS->spsId) {
+        if (!spsIsEqual (sps, decoder->activeSPS))   {
+          if (decoder->picture)
+            exitPicture (decoder, &decoder->picture);
+          decoder->activeSPS=NULL;
           }
         }
       }
 
-    makeSPSavailable (vidParam, sps->spsId, sps);
+    makeSPSavailable (decoder, sps->spsId, sps);
 
-    vidParam->profileIdc = sps->profileIdc;
-    vidParam->sepColourPlaneFlag = sps->sepColourPlaneFlag;
-    if (vidParam->sepColourPlaneFlag )
-      vidParam->ChromaArrayType = 0;
+    decoder->profileIdc = sps->profileIdc;
+    decoder->sepColourPlaneFlag = sps->sepColourPlaneFlag;
+    if (decoder->sepColourPlaneFlag )
+      decoder->ChromaArrayType = 0;
     else
-      vidParam->ChromaArrayType = sps->chromaFormatIdc;
+      decoder->ChromaArrayType = sps->chromaFormatIdc;
     }
 
   freePartition (dp, 1);
@@ -624,34 +624,34 @@ void processSPS (sDecoder* vidParam, sNalu* nalu) {
   }
 //}}}
 //{{{
-void activateSPS (sDecoder* vidParam, sSPS* sps) {
+void activateSPS (sDecoder* decoder, sSPS* sps) {
 
-  if (vidParam->activeSPS != sps) {
-    if (vidParam->picture) // this may only happen on slice loss
-      exitPicture (vidParam, &vidParam->picture);
-    vidParam->activeSPS = sps;
+  if (decoder->activeSPS != sps) {
+    if (decoder->picture) // this may only happen on slice loss
+      exitPicture (decoder, &decoder->picture);
+    decoder->activeSPS = sps;
 
-    if (vidParam->dpbLayerId == 0 && is_BL_profile (sps->profileIdc) && !vidParam->dpbLayer[0]->initDone) {
-      setCodingParam (sps, vidParam->coding[0]);
-      setupLayerInfo ( vidParam, sps, vidParam->layer[0]);
+    if (decoder->dpbLayerId == 0 && is_BL_profile (sps->profileIdc) && !decoder->dpbLayer[0]->initDone) {
+      setCodingParam (sps, decoder->coding[0]);
+      setupLayerInfo ( decoder, sps, decoder->layer[0]);
       }
-    setGlobalCodingProgram (vidParam, vidParam->coding[vidParam->dpbLayerId]);
+    setGlobalCodingProgram (decoder, decoder->coding[decoder->dpbLayerId]);
 
-    initGlobalBuffers (vidParam, 0);
-    if (!vidParam->noOutputPriorPicFlag)
-      flushDpb (vidParam->dpbLayer[0]);
+    initGlobalBuffers (decoder, 0);
+    if (!decoder->noOutputPriorPicFlag)
+      flushDpb (decoder->dpbLayer[0]);
 
-    initDpb (vidParam, vidParam->dpbLayer[0], 0);
+    initDpb (decoder, decoder->dpbLayer[0], 0);
 
     // enable error conceal
-    ercInit (vidParam, vidParam->width, vidParam->height, 1);
-    if (vidParam->picture) {
-      ercReset (vidParam->ercErrorVar, vidParam->picSizeInMbs, vidParam->picSizeInMbs, vidParam->picture->sizeX);
-      vidParam->ercMvPerMb = 0;
+    ercInit (decoder, decoder->width, decoder->height, 1);
+    if (decoder->picture) {
+      ercReset (decoder->ercErrorVar, decoder->picSizeInMbs, decoder->picSizeInMbs, decoder->picture->sizeX);
+      decoder->ercMvPerMb = 0;
       }
     }
 
-  resetFormatInfo (sps, vidParam, &vidParam->input.source, &vidParam->input.output);
+  resetFormatInfo (sps, decoder, &decoder->input.source, &decoder->input.output);
   }
 //}}}
 
@@ -735,7 +735,7 @@ static int ppsIsEqual (sPPS* pps1, sPPS* pps2) {
   }
 //}}}
 //{{{
-static void interpretPPS (sDecoder* vidParam, sDataPartition* p, sPPS* pps) {
+static void interpretPPS (sDecoder* decoder, sDataPartition* p, sPPS* pps) {
 
   unsigned n_ScalingList;
   int chromaFormatIdc;
@@ -822,7 +822,7 @@ static void interpretPPS (sDecoder* vidParam, sDataPartition* p, sPPS* pps) {
     pps->picScalingMatrixPresentFlag = readU1 ("PPS picScalingMatrixPresentFlag", s);
 
     if (pps->picScalingMatrixPresentFlag) {
-      chromaFormatIdc = vidParam->sps[pps->spsId].chromaFormatIdc;
+      chromaFormatIdc = decoder->sps[pps->spsId].chromaFormatIdc;
       n_ScalingList = 6 + ((chromaFormatIdc != YUV444) ? 2 : 6) * pps->transform8x8modeFlag;
       for (unsigned i = 0; i < n_ScalingList; i++) {
         pps->picScalingListPresentFlag[i]=
@@ -845,12 +845,12 @@ static void interpretPPS (sDecoder* vidParam, sDataPartition* p, sPPS* pps) {
   }
 //}}}
 //{{{
-static void activatePPS (sDecoder* vidParam, sPPS* pps) {
+static void activatePPS (sDecoder* decoder, sPPS* pps) {
 
-  if (vidParam->activePPS != pps) {
-    if (vidParam->picture) // only on slice loss
-      exitPicture (vidParam, &vidParam->picture);
-    vidParam->activePPS = pps;
+  if (decoder->activePPS != pps) {
+    if (decoder->picture) // only on slice loss
+      exitPicture (decoder, &decoder->picture);
+    decoder->activePPS = pps;
     }
   }
 //}}}
@@ -876,31 +876,31 @@ sPPS* allocPPS() {
    }
 //}}}
 //{{{
-void makePPSavailable (sDecoder* vidParam, int id, sPPS* pps) {
+void makePPSavailable (sDecoder* decoder, int id, sPPS* pps) {
 
-  if (vidParam->pps[id].valid && vidParam->pps[id].sliceGroupId)
-    free (vidParam->pps[id].sliceGroupId);
+  if (decoder->pps[id].valid && decoder->pps[id].sliceGroupId)
+    free (decoder->pps[id].sliceGroupId);
 
-  memcpy (&vidParam->pps[id], pps, sizeof (sPPS));
+  memcpy (&decoder->pps[id], pps, sizeof (sPPS));
 
   // we can simply use the memory provided with the pps. the PPS is destroyed after this function
   // call and will not try to free if pps->sliceGroupId == NULL
-  vidParam->pps[id].sliceGroupId = pps->sliceGroupId;
+  decoder->pps[id].sliceGroupId = pps->sliceGroupId;
   pps->sliceGroupId = NULL;
   }
 //}}}
 //{{{
-void cleanUpPPS (sDecoder* vidParam) {
+void cleanUpPPS (sDecoder* decoder) {
 
   for (int i = 0; i < MAX_PPS; i++) {
-    if (vidParam->pps[i].valid == TRUE && vidParam->pps[i].sliceGroupId != NULL)
-      free (vidParam->pps[i].sliceGroupId);
-    vidParam->pps[i].valid = FALSE;
+    if (decoder->pps[i].valid == TRUE && decoder->pps[i].sliceGroupId != NULL)
+      free (decoder->pps[i].sliceGroupId);
+    decoder->pps[i].valid = FALSE;
     }
   }
 //}}}
 //{{{
-void processPPS (sDecoder* vidParam, sNalu* nalu) {
+void processPPS (sDecoder* decoder, sNalu* nalu) {
 
 
   sDataPartition* dp = allocPartition (1);
@@ -910,21 +910,21 @@ void processPPS (sDecoder* vidParam, sNalu* nalu) {
   dp->bitstream->codeLen = dp->bitstream->bitstreamLength = RBSPtoSODB (dp->bitstream->streamBuffer, nalu->len-1);
 
   sPPS* pps = allocPPS();
-  interpretPPS (vidParam, dp, pps);
+  interpretPPS (decoder, dp, pps);
 
-  if (vidParam->activePPS) {
-    if (pps->ppsId == vidParam->activePPS->ppsId) {
-      if (!ppsIsEqual (pps, vidParam->activePPS)) {
+  if (decoder->activePPS) {
+    if (pps->ppsId == decoder->activePPS->ppsId) {
+      if (!ppsIsEqual (pps, decoder->activePPS)) {
         // copy to next PPS;
-        memcpy (vidParam->nextPPS, vidParam->activePPS, sizeof (sPPS));
-        if (vidParam->picture)
-          exitPicture (vidParam, &vidParam->picture);
-        vidParam->activePPS = NULL;
+        memcpy (decoder->nextPPS, decoder->activePPS, sizeof (sPPS));
+        if (decoder->picture)
+          exitPicture (decoder, &decoder->picture);
+        decoder->activePPS = NULL;
         }
       }
     }
 
-  makePPSavailable (vidParam, pps->ppsId, pps);
+  makePPSavailable (decoder, pps->ppsId, pps);
   freePartition (dp, 1);
   freePPS (pps);
   }
@@ -933,11 +933,11 @@ void processPPS (sDecoder* vidParam, sNalu* nalu) {
 //{{{
 void useParameterSet (sSlice* curSlice) {
 
-  sDecoder* vidParam = curSlice->vidParam;
+  sDecoder* decoder = curSlice->decoder;
   int PicParsetId = curSlice->ppsId;
 
-  sPPS* pps = &vidParam->pps[PicParsetId];
-  sSPS* sps = &vidParam->sps[pps->spsId];
+  sPPS* pps = &decoder->pps[PicParsetId];
+  sSPS* sps = &decoder->sps[pps->spsId];
 
   if (pps->valid != TRUE)
     printf ("Trying to use an invalid (uninitialized) Picture Parameter Set with ID %d, expect the unexpected...\n", PicParsetId);
@@ -948,7 +948,7 @@ void useParameterSet (sSlice* curSlice) {
 
   // In theory, and with a well-designed software, the lines above are everything necessary.
   // In practice, we need to patch many values
-  // in vidParam-> (but no more in input. -- these have been taken care of)
+  // in decoder-> (but no more in input. -- these have been taken care of)
   // Set Sequence Parameter Stuff first
   if ((int) sps->picOrderCountType < 0 || sps->picOrderCountType > 2) {
     printf ("invalid sps->picOrderCountType = %d\n", (int) sps->picOrderCountType);
@@ -959,9 +959,9 @@ void useParameterSet (sSlice* curSlice) {
     if (sps->num_ref_frames_in_pic_order_cnt_cycle >= MAX_NUM_REF_FRAMES_PIC_ORDER)
       error ("num_ref_frames_in_pic_order_cnt_cycle too large",-1011);
 
-  vidParam->dpbLayerId = curSlice->layerId;
-  activateSPS (vidParam, sps);
-  activatePPS (vidParam, pps);
+  decoder->dpbLayerId = curSlice->layerId;
+  activateSPS (decoder, sps);
+  activatePPS (decoder, pps);
 
   // curSlice->dataPartitionMode is set by read_new_slice (NALU first byte available there)
   if (pps->entropyCodingModeFlag == (Boolean)CAVLC) {
@@ -974,6 +974,6 @@ void useParameterSet (sSlice* curSlice) {
     for (int i = 0; i < 3; i++)
       curSlice->partitions[i].readsSyntaxElement = readsSyntaxElement_CABAC;
     }
-  vidParam->type = curSlice->sliceType;
+  decoder->type = curSlice->sliceType;
   }
 //}}}

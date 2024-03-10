@@ -47,7 +47,7 @@ int mb_pred_intra4x4 (sMacroblock* curMb, eColorPlane curPlane, sPixel** curPixe
 
       // PREDICTION
       //===== INTRA PREDICTION =====
-      if (curSlice->intraPred4x4(curMb, curPlane, ioff,joff,i4,j4) == SEARCH_SYNC)  /* make 4x4 prediction block mpr from given prediction vidParam->mb_mode */
+      if (curSlice->intraPred4x4(curMb, curPlane, ioff,joff,i4,j4) == SEARCH_SYNC)  /* make 4x4 prediction block mpr from given prediction decoder->mb_mode */
         return SEARCH_SYNC;                   /* bit error */
       // =============== 4x4 itrans ================
       // -------------------------------------------
@@ -126,7 +126,7 @@ int mb_pred_intra8x8 (sMacroblock* curMb, eColorPlane curPlane, sPixel** curPixe
 static void set_chroma_vector (sMacroblock* curMb)
 {
   sSlice* curSlice = curMb->slice;
-  sDecoder* vidParam = curMb->vidParam;
+  sDecoder* decoder = curMb->decoder;
 
   if (!curSlice->mbAffFrameFlag)
   {
@@ -206,7 +206,7 @@ static void set_chroma_vector (sMacroblock* curMb)
     }
   }
 
-  curSlice->max_mb_vmv_r = (curSlice->structure != FRAME || ( curMb->mbField )) ? vidParam->maxVmvR >> 1 : vidParam->maxVmvR;
+  curSlice->max_mb_vmv_r = (curSlice->structure != FRAME || ( curMb->mbField )) ? decoder->maxVmvR >> 1 : decoder->maxVmvR;
 }
 //}}}
 
@@ -214,7 +214,7 @@ static void set_chroma_vector (sMacroblock* curMb)
 int mb_pred_skip (sMacroblock* curMb, eColorPlane curPlane, sPixel** curPixel, sPicture* picture)
 {
   sSlice* curSlice = curMb->slice;
-  sDecoder* vidParam = curMb->vidParam;
+  sDecoder* decoder = curMb->decoder;
 
   set_chroma_vector(curMb);
 
@@ -225,8 +225,8 @@ int mb_pred_skip (sMacroblock* curMb, eColorPlane curPlane, sPixel** curPixel, s
   if ((picture->chromaFormatIdc != YUV400) && (picture->chromaFormatIdc != YUV444))
   {
 
-    copy_Image(&picture->imgUV[0][curMb->piccY], curSlice->mb_pred[1], curMb->pixcX, 0, vidParam->mbSize[1][0], vidParam->mbSize[1][1]);
-    copy_Image(&picture->imgUV[1][curMb->piccY], curSlice->mb_pred[2], curMb->pixcX, 0, vidParam->mbSize[1][0], vidParam->mbSize[1][1]);
+    copy_Image(&picture->imgUV[0][curMb->piccY], curSlice->mb_pred[1], curMb->pixcX, 0, decoder->mbSize[1][0], decoder->mbSize[1][1]);
+    copy_Image(&picture->imgUV[1][curMb->piccY], curSlice->mb_pred[2], curMb->pixcX, 0, decoder->mbSize[1][0], decoder->mbSize[1][1]);
   }
   return 1;
 }
@@ -348,7 +348,7 @@ int mb_pred_b_d8x8temporal (sMacroblock* curMb, eColorPlane curPlane, sPixel** c
   int k, i, j, i4, j4, j6;
   int block8x8;   // needed for ABT
   sSlice* curSlice = curMb->slice;
-  sDecoder* vidParam = curMb->vidParam;
+  sDecoder* decoder = curMb->decoder;
   sPicMotionParam *mvInfo = NULL, *colocated = NULL;
 
   int listOffset = curMb->listOffset;
@@ -374,50 +374,50 @@ int mb_pred_b_d8x8temporal (sMacroblock* curMb, eColorPlane curPlane, sPixel** c
       j6   = curMb->blockYaff + j;
       mvInfo = &picture->mvInfo[j4][i4];
       colocated = &list1[0]->mvInfo[RSD(j6)][RSD(i4)];
-      if(curMb->vidParam->sepColourPlaneFlag && curMb->vidParam->yuvFormat==YUV444)
+      if(curMb->decoder->sepColourPlaneFlag && curMb->decoder->yuvFormat==YUV444)
         colocated = &list1[0]->JVmv_info[curMb->slice->colourPlaneId][RSD(j6)][RSD(i4)];
-      if(curSlice->mbAffFrameFlag /*&& (!vidParam->activeSPS->frameMbOnlyFlag || vidParam->activeSPS->direct_8x8_inference_flag)*/)
+      if(curSlice->mbAffFrameFlag /*&& (!decoder->activeSPS->frameMbOnlyFlag || decoder->activeSPS->direct_8x8_inference_flag)*/)
       {
-        assert(vidParam->activeSPS->direct_8x8_inference_flag);
+        assert(decoder->activeSPS->direct_8x8_inference_flag);
         if(!curMb->mbField && ((curSlice->listX[LIST_1][0]->iCodingType==FRAME_MB_PAIR_CODING && curSlice->listX[LIST_1][0]->motion.mbField[curMb->mbAddrX]) ||
           (curSlice->listX[LIST_1][0]->iCodingType==FIELD_CODING)))
         {
           if (iabs(picture->poc - curSlice->listX[LIST_1+4][0]->poc)> iabs(picture->poc -curSlice->listX[LIST_1+2][0]->poc) )
           {
-            colocated = vidParam->activeSPS->direct_8x8_inference_flag ?
+            colocated = decoder->activeSPS->direct_8x8_inference_flag ?
               &curSlice->listX[LIST_1+2][0]->mvInfo[RSD(j6)>>1][RSD(i4)] : &curSlice->listX[LIST_1+2][0]->mvInfo[j6>>1][i4];
           }
           else
           {
-            colocated = vidParam->activeSPS->direct_8x8_inference_flag ?
+            colocated = decoder->activeSPS->direct_8x8_inference_flag ?
               &curSlice->listX[LIST_1+4][0]->mvInfo[RSD(j6)>>1][RSD(i4)] : &curSlice->listX[LIST_1+4][0]->mvInfo[j6>>1][i4];
           }
         }
       }
-      else if(/*!curSlice->mbAffFrameFlag &&*/ !vidParam->activeSPS->frameMbOnlyFlag &&
+      else if(/*!curSlice->mbAffFrameFlag &&*/ !decoder->activeSPS->frameMbOnlyFlag &&
         (!curSlice->fieldPicFlag && curSlice->listX[LIST_1][0]->iCodingType!=FRAME_CODING))
       {
         if (iabs(picture->poc - list1[0]->botField->poc)> iabs(picture->poc -list1[0]->topField->poc) )
         {
-          colocated = vidParam->activeSPS->direct_8x8_inference_flag ?
+          colocated = decoder->activeSPS->direct_8x8_inference_flag ?
             &list1[0]->topField->mvInfo[RSD(j6)>>1][RSD(i4)] : &list1[0]->topField->mvInfo[j6>>1][i4];
         }
         else
         {
-          colocated = vidParam->activeSPS->direct_8x8_inference_flag ?
+          colocated = decoder->activeSPS->direct_8x8_inference_flag ?
             &list1[0]->botField->mvInfo[RSD(j6)>>1][RSD(i4)] : &list1[0]->botField->mvInfo[j6>>1][i4];
         }
       }
-      else if(!vidParam->activeSPS->frameMbOnlyFlag && curSlice->fieldPicFlag && curSlice->structure!=list1[0]->structure && list1[0]->codedFrame)
+      else if(!decoder->activeSPS->frameMbOnlyFlag && curSlice->fieldPicFlag && curSlice->structure!=list1[0]->structure && list1[0]->codedFrame)
       {
         if (curSlice->structure == TopField)
         {
-          colocated = vidParam->activeSPS->direct_8x8_inference_flag ?
+          colocated = decoder->activeSPS->direct_8x8_inference_flag ?
             &list1[0]->frame->topField->mvInfo[RSD(j6)][RSD(i4)] : &list1[0]->frame->topField->mvInfo[j6][i4];
         }
         else
         {
-          colocated = vidParam->activeSPS->direct_8x8_inference_flag ?
+          colocated = decoder->activeSPS->direct_8x8_inference_flag ?
             &list1[0]->frame->botField->mvInfo[RSD(j6)][RSD(i4)] : &list1[0]->frame->botField->mvInfo[j6][i4];
         }
       }
@@ -538,8 +538,8 @@ int mb_pred_b_d8x8temporal (sMacroblock* curMb, eColorPlane curPlane, sPixel** c
 
     if ((picture->chromaFormatIdc != YUV400) && (picture->chromaFormatIdc != YUV444))
     {
-      copy_Image(&picture->imgUV[0][curMb->piccY], curSlice->mb_pred[1], curMb->pixcX, 0, vidParam->mbSize[1][0], vidParam->mbSize[1][1]);
-      copy_Image(&picture->imgUV[1][curMb->piccY], curSlice->mb_pred[2], curMb->pixcX, 0, vidParam->mbSize[1][0], vidParam->mbSize[1][1]);
+      copy_Image(&picture->imgUV[0][curMb->piccY], curSlice->mb_pred[1], curMb->pixcX, 0, decoder->mbSize[1][0], decoder->mbSize[1][1]);
+      copy_Image(&picture->imgUV[1][curMb->piccY], curSlice->mb_pred[2], curMb->pixcX, 0, decoder->mbSize[1][0], decoder->mbSize[1][1]);
     }
   }
   else
@@ -559,7 +559,7 @@ int mb_pred_b_d4x4temporal (sMacroblock* curMb, eColorPlane curPlane, sPixel** c
   int k;
   int block8x8;   // needed for ABT
   sSlice* curSlice = curMb->slice;
-  sDecoder* vidParam = curMb->vidParam;
+  sDecoder* decoder = curMb->decoder;
 
   int listOffset = curMb->listOffset;
   sPicture** list0 = curSlice->listX[LIST_0 + listOffset];
@@ -584,7 +584,7 @@ int mb_pred_b_d4x4temporal (sMacroblock* curMb, eColorPlane curPlane, sPixel** c
       int j6   = curMb->blockYaff + j;
       sPicMotionParam *mvInfo = &picture->mvInfo[j4][i4];
       sPicMotionParam *colocated = &list1[0]->mvInfo[j6][i4];
-      if(curMb->vidParam->sepColourPlaneFlag && curMb->vidParam->yuvFormat==YUV444)
+      if(curMb->decoder->sepColourPlaneFlag && curMb->decoder->yuvFormat==YUV444)
         colocated = &list1[0]->JVmv_info[curMb->slice->colourPlaneId][RSD(j6)][RSD(i4)];
       assert (pred_dir<=2);
 
@@ -663,8 +663,8 @@ int mb_pred_b_d4x4temporal (sMacroblock* curMb, eColorPlane curPlane, sPixel** c
 
     if ((picture->chromaFormatIdc != YUV400) && (picture->chromaFormatIdc != YUV444))
     {
-      copy_Image(&picture->imgUV[0][curMb->piccY], curSlice->mb_pred[1], curMb->pixcX, 0, vidParam->mbSize[1][0], vidParam->mbSize[1][1]);
-      copy_Image(&picture->imgUV[1][curMb->piccY], curSlice->mb_pred[2], curMb->pixcX, 0, vidParam->mbSize[1][0], vidParam->mbSize[1][1]);
+      copy_Image(&picture->imgUV[0][curMb->piccY], curSlice->mb_pred[1], curMb->pixcX, 0, decoder->mbSize[1][0], decoder->mbSize[1][1]);
+      copy_Image(&picture->imgUV[1][curMb->piccY], curSlice->mb_pred[2], curMb->pixcX, 0, decoder->mbSize[1][0], decoder->mbSize[1][1]);
     }
   }
   else
@@ -681,11 +681,11 @@ int mb_pred_b_d4x4temporal (sMacroblock* curMb, eColorPlane curPlane, sPixel** c
 int mb_pred_b_d8x8spatial (sMacroblock* curMb, eColorPlane curPlane, sPixel** curPixel, sPicture* picture)
 {
   char l0_rFrame = -1, l1_rFrame = -1;
-  sMotionVector pmvl0 = zero_mv, pmvl1 = zero_mv;
+  sMotionVec pmvl0 = zero_mv, pmvl1 = zero_mv;
   int i4, j4;
   int block8x8;
   sSlice* curSlice = curMb->slice;
-  sDecoder* vidParam = curMb->vidParam;
+  sDecoder* decoder = curMb->decoder;
 
   sPicMotionParam *mvInfo;
   int listOffset = curMb->listOffset;
@@ -889,8 +889,8 @@ int mb_pred_b_d8x8spatial (sMacroblock* curMb, eColorPlane curPlane, sPixel** cu
 
     if ((picture->chromaFormatIdc != YUV400) && (picture->chromaFormatIdc != YUV444))
      {
-      copy_Image(&picture->imgUV[0][curMb->piccY], curSlice->mb_pred[1], curMb->pixcX, 0, vidParam->mbSize[1][0], vidParam->mbSize[1][1]);
-      copy_Image(&picture->imgUV[1][curMb->piccY], curSlice->mb_pred[2], curMb->pixcX, 0, vidParam->mbSize[1][0], vidParam->mbSize[1][1]);
+      copy_Image(&picture->imgUV[0][curMb->piccY], curSlice->mb_pred[1], curMb->pixcX, 0, decoder->mbSize[1][0], decoder->mbSize[1][1]);
+      copy_Image(&picture->imgUV[1][curMb->piccY], curSlice->mb_pred[2], curMb->pixcX, 0, decoder->mbSize[1][0], decoder->mbSize[1][1]);
     }
   }
   else
@@ -906,11 +906,11 @@ int mb_pred_b_d8x8spatial (sMacroblock* curMb, eColorPlane curPlane, sPixel** cu
 int mb_pred_b_d4x4spatial (sMacroblock* curMb, eColorPlane curPlane, sPixel** curPixel, sPicture* picture)
 {
   char l0_rFrame = -1, l1_rFrame = -1;
-  sMotionVector pmvl0 = zero_mv, pmvl1 = zero_mv;
+  sMotionVec pmvl0 = zero_mv, pmvl1 = zero_mv;
   int k;
   int block8x8;
   sSlice* curSlice = curMb->slice;
-  sDecoder* vidParam = curMb->vidParam;
+  sDecoder* decoder = curMb->decoder;
 
   sPicMotionParam *mvInfo;
   int listOffset = curMb->listOffset;
@@ -1077,8 +1077,8 @@ int mb_pred_b_d4x4spatial (sMacroblock* curMb, eColorPlane curPlane, sPixel** cu
 
     if ((picture->chromaFormatIdc != YUV400) && (picture->chromaFormatIdc != YUV444))
     {
-      copy_Image(&picture->imgUV[0][curMb->piccY], curSlice->mb_pred[1], curMb->pixcX, 0, vidParam->mbSize[1][0], vidParam->mbSize[1][1]);
-      copy_Image(&picture->imgUV[1][curMb->piccY], curSlice->mb_pred[2], curMb->pixcX, 0, vidParam->mbSize[1][0], vidParam->mbSize[1][1]);
+      copy_Image(&picture->imgUV[0][curMb->piccY], curSlice->mb_pred[1], curMb->pixcX, 0, decoder->mbSize[1][0], decoder->mbSize[1][1]);
+      copy_Image(&picture->imgUV[1][curMb->piccY], curSlice->mb_pred[2], curMb->pixcX, 0, decoder->mbSize[1][0], decoder->mbSize[1][1]);
     }
   }
   else
@@ -1094,12 +1094,12 @@ int mb_pred_b_d4x4spatial (sMacroblock* curMb, eColorPlane curPlane, sPixel** cu
 int mb_pred_b_inter8x8 (sMacroblock* curMb, eColorPlane curPlane, sPicture* picture)
 {
   char l0_rFrame = -1, l1_rFrame = -1;
-  sMotionVector pmvl0 = zero_mv, pmvl1 = zero_mv;
+  sMotionVec pmvl0 = zero_mv, pmvl1 = zero_mv;
   int block_size_x, block_size_y;
   int k;
   int block8x8;   // needed for ABT
   sSlice* curSlice = curMb->slice;
-  sDecoder* vidParam = curMb->vidParam;
+  sDecoder* decoder = curMb->decoder;
 
   int listOffset = curMb->listOffset;
   sPicture** list0 = curSlice->listX[LIST_0 + listOffset];
@@ -1137,7 +1137,7 @@ int mb_pred_b_inter8x8 (sMacroblock* curMb, eColorPlane curPlane, sPicture* pict
       int k_start = (block8x8 << 2);
       int k_end = k_start;
 
-      if (vidParam->activeSPS->direct_8x8_inference_flag)
+      if (decoder->activeSPS->direct_8x8_inference_flag)
       {
         block_size_x = SMB_BLOCK_SIZE;
         block_size_y = SMB_BLOCK_SIZE;
@@ -1230,7 +1230,7 @@ int mb_pred_ipcm (sMacroblock* curMb)
 {
   int i, j, k;
   sSlice* curSlice = curMb->slice;
-  sDecoder* vidParam = curMb->vidParam;
+  sDecoder* decoder = curMb->decoder;
   sPicture* picture = curSlice->picture;
 
   //Copy coefficients to decoded picture buffer
@@ -1244,13 +1244,13 @@ int mb_pred_ipcm (sMacroblock* curMb)
     }
   }
 
-  if ((picture->chromaFormatIdc != YUV400) && (vidParam->sepColourPlaneFlag == 0))
+  if ((picture->chromaFormatIdc != YUV400) && (decoder->sepColourPlaneFlag == 0))
   {
     for (k = 0; k < 2; ++k)
     {
-      for(i = 0; i < vidParam->mbCrSizeY; ++i)
+      for(i = 0; i < decoder->mbCrSizeY; ++i)
       {
-        for(j = 0;j < vidParam->mbCrSizeX; ++j)
+        for(j = 0;j < decoder->mbCrSizeX; ++j)
         {
           picture->imgUV[k][curMb->piccY+i][curMb->pixcX + j] = (sPixel) curSlice->cof[k + 1][i][j];
         }
@@ -1263,7 +1263,7 @@ int mb_pred_ipcm (sMacroblock* curMb)
 
   // for CAVLC: Set the nzCoeff to 16.
   // These parameters are to be used in CAVLC decoding of neighbour blocks
-  memset(vidParam->nzCoeff[curMb->mbAddrX][0][0], 16, 3 * BLOCK_PIXELS * sizeof(byte));
+  memset(decoder->nzCoeff[curMb->mbAddrX][0][0], 16, 3 * BLOCK_PIXELS * sizeof(byte));
 
   // for CABAC decoding of MB skip flag
   curMb->skipFlag = 0;

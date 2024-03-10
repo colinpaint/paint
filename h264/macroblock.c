@@ -27,40 +27,40 @@ extern void set_read_comp_coeff_cavlc (sMacroblock* mb);
 
 //{{{
 static void GetMotionVectorPredictorMBAFF (sMacroblock* mb, sPixelPos* block,
-                                           sMotionVector *pmv, short  ref_frame, sPicMotionParam** mvInfo,
+                                           sMotionVec *pmv, short  ref_frame, sPicMotionParam** mvInfo,
                                            int list, int mb_x, int mb_y, int blockshape_x, int blockshape_y) {
 
   int mv_a, mv_b, mv_c, pred_vec=0;
   int mvPredType, rFrameL, rFrameU, rFrameUR;
   int hv;
-  sDecoder* vidParam = mb->vidParam;
+  sDecoder* decoder = mb->decoder;
   mvPredType = MVPRED_MEDIAN;
 
   if (mb->mbField) {
     rFrameL  = block[0].available
-      ? (vidParam->mbData[block[0].mbAddr].mbField
+      ? (decoder->mbData[block[0].mbAddr].mbField
       ? mvInfo[block[0].posY][block[0].posX].refIndex[list]
     : mvInfo[block[0].posY][block[0].posX].refIndex[list] * 2) : -1;
     rFrameU  = block[1].available
-      ? (vidParam->mbData[block[1].mbAddr].mbField
+      ? (decoder->mbData[block[1].mbAddr].mbField
       ? mvInfo[block[1].posY][block[1].posX].refIndex[list]
     : mvInfo[block[1].posY][block[1].posX].refIndex[list] * 2) : -1;
     rFrameUR = block[2].available
-      ? (vidParam->mbData[block[2].mbAddr].mbField
+      ? (decoder->mbData[block[2].mbAddr].mbField
       ? mvInfo[block[2].posY][block[2].posX].refIndex[list]
     : mvInfo[block[2].posY][block[2].posX].refIndex[list] * 2) : -1;
     }
   else {
     rFrameL = block[0].available
-      ? (vidParam->mbData[block[0].mbAddr].mbField
+      ? (decoder->mbData[block[0].mbAddr].mbField
       ? mvInfo[block[0].posY][block[0].posX].refIndex[list] >>1
       : mvInfo[block[0].posY][block[0].posX].refIndex[list]) : -1;
     rFrameU  = block[1].available
-      ? (vidParam->mbData[block[1].mbAddr].mbField
+      ? (decoder->mbData[block[1].mbAddr].mbField
       ? mvInfo[block[1].posY][block[1].posX].refIndex[list] >>1
       : mvInfo[block[1].posY][block[1].posX].refIndex[list]) : -1;
     rFrameUR = block[2].available
-      ? (vidParam->mbData[block[2].mbAddr].mbField
+      ? (decoder->mbData[block[2].mbAddr].mbField
       ? mvInfo[block[2].posY][block[2].posX].refIndex[list] >>1
       : mvInfo[block[2].posY][block[2].posX].refIndex[list]) : -1;
     }
@@ -103,29 +103,29 @@ static void GetMotionVectorPredictorMBAFF (sMacroblock* mb, sPixelPos* block,
       }
     else {
       if (mb->mbField) {
-        mv_a = block[0].available  ? vidParam->mbData[block[0].mbAddr].mbField
+        mv_a = block[0].available  ? decoder->mbData[block[0].mbAddr].mbField
           ? mvInfo[block[0].posY][block[0].posX].mv[list].mvY
         : mvInfo[block[0].posY][block[0].posX].mv[list].mvY / 2
           : 0;
-        mv_b = block[1].available  ? vidParam->mbData[block[1].mbAddr].mbField
+        mv_b = block[1].available  ? decoder->mbData[block[1].mbAddr].mbField
           ? mvInfo[block[1].posY][block[1].posX].mv[list].mvY
         : mvInfo[block[1].posY][block[1].posX].mv[list].mvY / 2
           : 0;
-        mv_c = block[2].available  ? vidParam->mbData[block[2].mbAddr].mbField
+        mv_c = block[2].available  ? decoder->mbData[block[2].mbAddr].mbField
           ? mvInfo[block[2].posY][block[2].posX].mv[list].mvY
         : mvInfo[block[2].posY][block[2].posX].mv[list].mvY / 2
           : 0;
         }
       else {
-        mv_a = block[0].available  ? vidParam->mbData[block[0].mbAddr].mbField
+        mv_a = block[0].available  ? decoder->mbData[block[0].mbAddr].mbField
           ? mvInfo[block[0].posY][block[0].posX].mv[list].mvY * 2
           : mvInfo[block[0].posY][block[0].posX].mv[list].mvY
         : 0;
-        mv_b = block[1].available  ? vidParam->mbData[block[1].mbAddr].mbField
+        mv_b = block[1].available  ? decoder->mbData[block[1].mbAddr].mbField
           ? mvInfo[block[1].posY][block[1].posX].mv[list].mvY * 2
           : mvInfo[block[1].posY][block[1].posX].mv[list].mvY
         : 0;
-        mv_c = block[2].available  ? vidParam->mbData[block[2].mbAddr].mbField
+        mv_c = block[2].available  ? decoder->mbData[block[2].mbAddr].mbField
           ? mvInfo[block[2].posY][block[2].posX].mv[list].mvY * 2
           : mvInfo[block[2].posY][block[2].posX].mv[list].mvY
         : 0;
@@ -161,7 +161,7 @@ static void GetMotionVectorPredictorMBAFF (sMacroblock* mb, sPixelPos* block,
 //}}}
 //{{{
 static void GetMotionVectorPredictorNormal (sMacroblock* mb, sPixelPos* block,
-                                            sMotionVector *pmv, short  ref_frame, sPicMotionParam** mvInfo,
+                                            sMotionVec *pmv, short  ref_frame, sPicMotionParam** mvInfo,
                                             int list, int mb_x, int mb_y, int blockshape_x, int blockshape_y) {
   int mvPredType = MVPRED_MEDIAN;
 
@@ -211,9 +211,9 @@ static void GetMotionVectorPredictorNormal (sMacroblock* mb, sPixelPos* block,
       }
       else
       {
-        sMotionVector *mv_a = block[0].available ? &mvInfo[block[0].posY][block[0].posX].mv[list] : (sMotionVector *) &zero_mv;
-        sMotionVector *mv_b = block[1].available ? &mvInfo[block[1].posY][block[1].posX].mv[list] : (sMotionVector *) &zero_mv;
-        sMotionVector *mv_c = block[2].available ? &mvInfo[block[2].posY][block[2].posX].mv[list] : (sMotionVector *) &zero_mv;
+        sMotionVec *mv_a = block[0].available ? &mvInfo[block[0].posY][block[0].posX].mv[list] : (sMotionVec *) &zero_mv;
+        sMotionVec *mv_b = block[1].available ? &mvInfo[block[1].posY][block[1].posX].mv[list] : (sMotionVec *) &zero_mv;
+        sMotionVec *mv_c = block[2].available ? &mvInfo[block[2].posY][block[2].posX].mv[list] : (sMotionVec *) &zero_mv;
 
         pmv->mvX = (short) imedian(mv_a->mvX, mv_b->mvX, mv_c->mvX);
         pmv->mvY = (short) imedian(mv_a->mvY, mv_b->mvY, mv_c->mvY);
@@ -416,7 +416,7 @@ static void prepareListforRefIdx (sMacroblock* mb, sSyntaxElement* currSE,
                                   sDataPartition *dP, int numRefIndexActive, int refidx_present) {
 
   if (numRefIndexActive > 1) {
-    if (mb->vidParam->activePPS->entropyCodingModeFlag == (Boolean) CAVLC || dP->bitstream->eiFlag) {
+    if (mb->decoder->activePPS->entropyCodingModeFlag == (Boolean) CAVLC || dP->bitstream->eiFlag) {
       currSE->mapping = linfo_ue;
       if (refidx_present)
         mb->readRefPictureIdx = (numRefIndexActive == 2) ? readRefPictureIdxFLC : readRefPictureIdxVLC;
@@ -436,25 +436,25 @@ static void prepareListforRefIdx (sMacroblock* mb, sSyntaxElement* currSE,
 //{{{
 void set_chroma_qp (sMacroblock* mb) {
 
-  sDecoder* vidParam = mb->vidParam;
+  sDecoder* decoder = mb->decoder;
   sPicture* picture = mb->slice->picture;
   for (int i = 0; i < 2; ++i) {
-    mb->qpc[i] = iClip3 (-vidParam->bitdepthChromaQpScale, 51, mb->qp + picture->chromaQpOffset[i] );
+    mb->qpc[i] = iClip3 (-decoder->bitdepthChromaQpScale, 51, mb->qp + picture->chromaQpOffset[i] );
     mb->qpc[i] = mb->qpc[i] < 0 ? mb->qpc[i] : QP_SCALE_CR[mb->qpc[i]];
-    mb->qpScaled[i+1] = mb->qpc[i] + vidParam->bitdepthChromaQpScale;
+    mb->qpScaled[i+1] = mb->qpc[i] + decoder->bitdepthChromaQpScale;
   }
 }
 //}}}
 //{{{
 void updateQp (sMacroblock* mb, int qp) {
 
-  sDecoder* vidParam = mb->vidParam;
+  sDecoder* decoder = mb->decoder;
 
   mb->qp = qp;
-  mb->qpScaled[0] = qp + vidParam->bitdepth_luma_qp_scale;
+  mb->qpScaled[0] = qp + decoder->bitdepth_luma_qp_scale;
   set_chroma_qp (mb);
 
-  mb->isLossless = (Boolean)((mb->qpScaled[0] == 0) && (vidParam->lossless_qpprime_flag == 1));
+  mb->isLossless = (Boolean)((mb->qpScaled[0] == 0) && (decoder->lossless_qpprime_flag == 1));
   set_read_comp_coeff_cavlc (mb);
   set_read_comp_coeff_cabac (mb);
   }
@@ -463,27 +463,27 @@ void updateQp (sMacroblock* mb, int qp) {
 void readDeltaQuant (sSyntaxElement* currSE, sDataPartition *dP, sMacroblock* mb, const byte *partMap, int type)
 {
   sSlice* curSlice = mb->slice;
-  sDecoder* vidParam = mb->vidParam;
+  sDecoder* decoder = mb->decoder;
 
   currSE->type = type;
 
   dP = &(curSlice->partitions[partMap[currSE->type]]);
 
-  if (vidParam->activePPS->entropyCodingModeFlag == (Boolean)CAVLC || dP->bitstream->eiFlag)
+  if (decoder->activePPS->entropyCodingModeFlag == (Boolean)CAVLC || dP->bitstream->eiFlag)
     currSE->mapping = linfo_se;
   else
     currSE->reading= read_dQuant_CABAC;
 
   dP->readsSyntaxElement(mb, currSE, dP);
   mb->deltaQuant = (short) currSE->value1;
-  if ((mb->deltaQuant < -(26 + vidParam->bitdepth_luma_qp_scale/2)) ||
-      (mb->deltaQuant > (25 + vidParam->bitdepth_luma_qp_scale/2))) {
+  if ((mb->deltaQuant < -(26 + decoder->bitdepth_luma_qp_scale/2)) ||
+      (mb->deltaQuant > (25 + decoder->bitdepth_luma_qp_scale/2))) {
     printf("mb_qp_delta is out of range (%d)\n", mb->deltaQuant);
-    mb->deltaQuant = iClip3(-(26 + vidParam->bitdepth_luma_qp_scale/2), (25 + vidParam->bitdepth_luma_qp_scale/2), mb->deltaQuant);
+    mb->deltaQuant = iClip3(-(26 + decoder->bitdepth_luma_qp_scale/2), (25 + decoder->bitdepth_luma_qp_scale/2), mb->deltaQuant);
     //error ("mb_qp_delta is out of range", 500);
     }
 
-  curSlice->qp = ((curSlice->qp + mb->deltaQuant + 52 + 2*vidParam->bitdepth_luma_qp_scale) % (52+vidParam->bitdepth_luma_qp_scale)) - vidParam->bitdepth_luma_qp_scale;
+  curSlice->qp = ((curSlice->qp + mb->deltaQuant + 52 + 2*decoder->bitdepth_luma_qp_scale) % (52+decoder->bitdepth_luma_qp_scale)) - decoder->bitdepth_luma_qp_scale;
   updateQp (mb, curSlice->qp);
   }
 //}}}
@@ -571,7 +571,7 @@ static void readMBMotionVectors (sSyntaxElement* currSE, sDataPartition *dP, sMa
       // has forward vector
       int i4, j4, ii, jj;
       short curr_mvd[2];
-      sMotionVector pred_mv, curr_mv;
+      sMotionVec pred_mv, curr_mv;
       short (*mvd)[4][2];
       sPicMotionParam** mvInfo = mb->slice->picture->mvInfo;
       sPixelPos block[4]; // neighbor blocks
@@ -619,7 +619,7 @@ static void readMBMotionVectors (sSyntaxElement* currSE, sDataPartition *dP, sMa
   else {
     int i4, j4, ii, jj;
     short curr_mvd[2];
-    sMotionVector pred_mv, curr_mv;
+    sMotionVec pred_mv, curr_mv;
     short (*mvd)[4][2];
     sPicMotionParam** mvInfo = mb->slice->picture->mvInfo;
     sPixelPos block[4]; // neighbor blocks
@@ -708,31 +708,31 @@ static void setup_mb_pos_info (sMacroblock* mb) {
   mb->pixX = mb_x << MB_BLOCK_SHIFT; /* horizontal luma pixel position */
   mb->pixY = mb_y << MB_BLOCK_SHIFT; /* vertical luma pixel position */
 
-  mb->pixcX = mb_x * mb->vidParam->mbCrSizeX;  /* horizontal chroma pixel position */
-  mb->piccY = mb_y * mb->vidParam->mbCrSizeY;  /* vertical chroma pixel position */
+  mb->pixcX = mb_x * mb->decoder->mbCrSizeX;  /* horizontal chroma pixel position */
+  mb->piccY = mb_y * mb->decoder->mbCrSizeY;  /* vertical chroma pixel position */
   }
 //}}}
 
 //{{{
 void startMacroblock (sSlice* curSlice, sMacroblock** mb) {
 
-  sDecoder* vidParam = curSlice->vidParam;
+  sDecoder* decoder = curSlice->decoder;
   int mb_nr = curSlice->curMbNum;
 
   *mb = &curSlice->mbData[mb_nr];
   (*mb)->slice = curSlice;
-  (*mb)->vidParam   = vidParam;
+  (*mb)->decoder   = decoder;
   (*mb)->mbAddrX = mb_nr;
 
   /* Update coordinates of the current macroblock */
   if (curSlice->mbAffFrameFlag) {
-    (*mb)->mb.x = (short) (   (mb_nr) % ((2*vidParam->width) / MB_BLOCK_SIZE));
-    (*mb)->mb.y = (short) (2*((mb_nr) / ((2*vidParam->width) / MB_BLOCK_SIZE)));
+    (*mb)->mb.x = (short) (   (mb_nr) % ((2*decoder->width) / MB_BLOCK_SIZE));
+    (*mb)->mb.y = (short) (2*((mb_nr) / ((2*decoder->width) / MB_BLOCK_SIZE)));
     (*mb)->mb.y += ((*mb)->mb.x & 0x01);
     (*mb)->mb.x >>= 1;
     }
   else
-    (*mb)->mb = vidParam->picPos[mb_nr];
+    (*mb)->mb = decoder->picPos[mb_nr];
 
   /* Define pixel/block positions */
   setup_mb_pos_info (*mb);
@@ -768,8 +768,8 @@ void startMacroblock (sSlice* curSlice, sMacroblock** mb) {
   // initialize curSlice->mb_rres
   if (curSlice->isResetCoef == FALSE) {
     memset (curSlice->mb_rres[0][0], 0, MB_PIXELS * sizeof(int));
-    memset (curSlice->mb_rres[1][0], 0, vidParam->mbCrSize * sizeof(int));
-    memset (curSlice->mb_rres[2][0], 0, vidParam->mbCrSize * sizeof(int));
+    memset (curSlice->mb_rres[1][0], 0, decoder->mbCrSize * sizeof(int));
+    memset (curSlice->mb_rres[2][0], 0, decoder->mbCrSize * sizeof(int));
     if (curSlice->isResetCoefCr == FALSE) {
       memset (curSlice->cof[0][0], 0, 3 * MB_PIXELS * sizeof(int));
       curSlice->isResetCoefCr = TRUE;
@@ -790,21 +790,21 @@ void startMacroblock (sSlice* curSlice, sMacroblock** mb) {
 //{{{
 Boolean exitMacroblock (sSlice* curSlice, int eos_bit) {
 
-  sDecoder* vidParam = curSlice->vidParam;
+  sDecoder* decoder = curSlice->decoder;
 
   //! The if() statement below resembles the original code, which tested
-  //! vidParam->curMbNum == vidParam->picSizeInMbs.  Both is, of course, nonsense
+  //! decoder->curMbNum == decoder->picSizeInMbs.  Both is, of course, nonsense
   //! In an error prone environment, one can only be sure to have a new
   //! picture by checking the tr of the next slice header!
 
-  // printf ("exitMacroblock: FmoGetLastMBOfPicture %d, vidParam->curMbNum %d\n", FmoGetLastMBOfPicture(), vidParam->curMbNum);
+  // printf ("exitMacroblock: FmoGetLastMBOfPicture %d, decoder->curMbNum %d\n", FmoGetLastMBOfPicture(), decoder->curMbNum);
   ++(curSlice->numDecodedMb);
 
-  if (curSlice->curMbNum == vidParam->picSizeInMbs - 1) //if (vidParam->numDecodedMb == vidParam->picSizeInMbs)
+  if (curSlice->curMbNum == decoder->picSizeInMbs - 1) //if (decoder->numDecodedMb == decoder->picSizeInMbs)
     return TRUE;
     // ask for last mb in the slice  CAVLC
   else {
-    curSlice->curMbNum = FmoGetNextMBNr (vidParam, curSlice->curMbNum);
+    curSlice->curMbNum = FmoGetNextMBNr (decoder, curSlice->curMbNum);
     if (curSlice->curMbNum == -1) {
       // End of sSlice group, MUST be end of slice
       assert (curSlice->nalStartcode (curSlice, eos_bit) == TRUE);
@@ -815,7 +815,7 @@ Boolean exitMacroblock (sSlice* curSlice, int eos_bit) {
       return FALSE;
     if (curSlice->sliceType == I_SLICE  ||
         curSlice->sliceType == SI_SLICE ||
-        vidParam->activePPS->entropyCodingModeFlag == (Boolean)CABAC)
+        decoder->activePPS->entropyCodingModeFlag == (Boolean)CABAC)
       return TRUE;
     if (curSlice->codCount <= 0)
       return TRUE;
@@ -977,7 +977,7 @@ static void interpretMbModeB (sMacroblock* mb) {
 //{{{
 static void interpretMbModeSI (sMacroblock* mb) {
 
-  //sDecoder* vidParam = mb->vidParam;
+  //sDecoder* decoder = mb->decoder;
   const int ICBPTAB[6] = {0,16,32,15,31,47};
 
   short mbmode = mb->mbType;
@@ -1015,7 +1015,7 @@ static void interpretMbModeSI (sMacroblock* mb) {
 //{{{
 static void readMotionInfoP (sMacroblock* mb){
 
-  sDecoder* vidParam = mb->vidParam;
+  sDecoder* decoder = mb->decoder;
   sSlice* curSlice = mb->slice;
 
   sSyntaxElement currSE;
@@ -1044,7 +1044,7 @@ static void readMotionInfoP (sMacroblock* mb){
   //=====  READ MOTION VECTORS =====
   currSE.type = SE_MVD;
   dP = &(curSlice->partitions[partMap[SE_MVD]]);
-  if (vidParam->activePPS->entropyCodingModeFlag == (Boolean) CAVLC || dP->bitstream->eiFlag)
+  if (decoder->activePPS->entropyCodingModeFlag == (Boolean) CAVLC || dP->bitstream->eiFlag)
     currSE.mapping = linfo_se;
   else
     currSE.reading = curSlice->mbAffFrameFlag ? read_mvd_CABAC_mbaff : read_MVD_CABAC;
@@ -1069,7 +1069,7 @@ static void readMotionInfoP (sMacroblock* mb){
 static void readMotionInfoB (sMacroblock* mb) {
 
   sSlice* curSlice = mb->slice;
-  sDecoder* vidParam = mb->vidParam;
+  sDecoder* decoder = mb->decoder;
   sPicture* picture = curSlice->picture;
   sSyntaxElement currSE;
   sDataPartition* dP = NULL;
@@ -1102,7 +1102,7 @@ static void readMotionInfoB (sMacroblock* mb) {
   //=====  READ MOTION VECTORS =====
   currSE.type = SE_MVD;
   dP = &(curSlice->partitions[partMap[SE_MVD]]);
-  if (vidParam->activePPS->entropyCodingModeFlag == (Boolean)CAVLC || dP->bitstream->eiFlag)
+  if (decoder->activePPS->entropyCodingModeFlag == (Boolean)CAVLC || dP->bitstream->eiFlag)
     currSE.mapping = linfo_se;
   else
     currSE.reading = curSlice->mbAffFrameFlag ? read_mvd_CABAC_mbaff : read_MVD_CABAC;
@@ -1185,12 +1185,12 @@ void setSliceMethods (sSlice* slice) {
 
   set_intra_prediction_modes (slice);
 
-  if (slice->vidParam->activeSPS->chromaFormatIdc==YUV444 && (slice->vidParam->sepColourPlaneFlag == 0) )
+  if (slice->decoder->activeSPS->chromaFormatIdc==YUV444 && (slice->decoder->sepColourPlaneFlag == 0) )
     slice->readCoef4x4cavlc = readCoef4x4cavlc444;
   else
     slice->readCoef4x4cavlc = readCoef4x4cavlc;
 
-  switch (slice->vidParam->activePPS->entropyCodingModeFlag) {
+  switch (slice->decoder->activePPS->entropyCodingModeFlag) {
     case CABAC:
       set_read_CBP_and_coeffs_cabac (slice);
       break;
@@ -1207,7 +1207,7 @@ void setSliceMethods (sSlice* slice) {
 //{{{
 void getNeighbours (sMacroblock* mb, sPixelPos* block, int mb_x, int mb_y, int blockshape_x) {
 
-  int* mbSize = mb->vidParam->mbSize[IS_LUMA];
+  int* mbSize = mb->decoder->mbSize[IS_LUMA];
 
   get4x4Neighbour (mb, mb_x - 1, mb_y, mbSize, block);
   get4x4Neighbour (mb, mb_x, mb_y - 1, mbSize, block + 1);
@@ -1236,29 +1236,29 @@ void getNeighbours (sMacroblock* mb, sPixelPos* block, int mb_x, int mb_y, int b
 //{{{
 void checkDpNeighbours (sMacroblock* mb) {
 
-  sDecoder* vidParam = mb->vidParam;
+  sDecoder* decoder = mb->decoder;
   sPixelPos up, left;
-  vidParam->getNeighbour (mb, -1,  0, vidParam->mbSize[1], &left);
-  vidParam->getNeighbour (mb,  0, -1, vidParam->mbSize[1], &up);
+  decoder->getNeighbour (mb, -1,  0, decoder->mbSize[1], &left);
+  decoder->getNeighbour (mb,  0, -1, decoder->mbSize[1], &up);
 
-  if ((mb->isIntraBlock == FALSE) || (!(vidParam->activePPS->constrainedIntraPredFlag)) ) {
+  if ((mb->isIntraBlock == FALSE) || (!(decoder->activePPS->constrainedIntraPredFlag)) ) {
     if (left.available)
-      mb->dplFlag |= vidParam->mbData[left.mbAddr].dplFlag;
+      mb->dplFlag |= decoder->mbData[left.mbAddr].dplFlag;
     if (up.available)
-      mb->dplFlag |= vidParam->mbData[up.mbAddr].dplFlag;
+      mb->dplFlag |= decoder->mbData[up.mbAddr].dplFlag;
     }
   }
 //}}}
 
 //{{{
-static void init_cur_imgy (sDecoder* vidParam, sSlice* slice, int pl) {
+static void init_cur_imgy (sDecoder* decoder, sSlice* slice, int pl) {
 // probably a better way (or place) to do this, but I'm not sure what (where) it is [CJV]
 // this is intended to make get_block_luma faster, but I'm still performing
 // this at the MB level, and it really should be done at the slice level
 
-  if (vidParam->sepColourPlaneFlag == 0) {
-    sPicture* vidref = vidParam->noReferencePicture;
-    int noref = (slice->framePoc < vidParam->recoveryPoc);
+  if (decoder->sepColourPlaneFlag == 0) {
+    sPicture* vidref = decoder->noReferencePicture;
+    int noref = (slice->framePoc < decoder->recoveryPoc);
 
     if (pl == PLANE_Y) {
       for (int j = 0; j < 6; j++) {
@@ -1286,43 +1286,43 @@ static void init_cur_imgy (sDecoder* vidParam, sSlice* slice, int pl) {
   }
 //}}}
 //{{{
-void changePlaneJV (sDecoder* vidParam, int nplane, sSlice* slice) {
+void changePlaneJV (sDecoder* decoder, int nplane, sSlice* slice) {
 
-  vidParam->mbData = vidParam->mbDataJV[nplane];
-  vidParam->picture  = vidParam->decPictureJV[nplane];
-  vidParam->siBlock = vidParam->siBlockJV[nplane];
-  vidParam->predMode = vidParam->predModeJV[nplane];
-  vidParam->intraBlock = vidParam->intraBlockJV[nplane];
+  decoder->mbData = decoder->mbDataJV[nplane];
+  decoder->picture  = decoder->decPictureJV[nplane];
+  decoder->siBlock = decoder->siBlockJV[nplane];
+  decoder->predMode = decoder->predModeJV[nplane];
+  decoder->intraBlock = decoder->intraBlockJV[nplane];
 
   if (slice) {
-    slice->mbData = vidParam->mbDataJV[nplane];
-    slice->picture  = vidParam->decPictureJV[nplane];
-    slice->siBlock = vidParam->siBlockJV[nplane];
-    slice->predMode = vidParam->predModeJV[nplane];
-    slice->intraBlock = vidParam->intraBlockJV[nplane];
+    slice->mbData = decoder->mbDataJV[nplane];
+    slice->picture  = decoder->decPictureJV[nplane];
+    slice->siBlock = decoder->siBlockJV[nplane];
+    slice->predMode = decoder->predModeJV[nplane];
+    slice->intraBlock = decoder->intraBlockJV[nplane];
     }
   }
 //}}}
 //{{{
-void make_frame_picture_JV (sDecoder* vidParam) {
+void make_frame_picture_JV (sDecoder* decoder) {
 
-  vidParam->picture = vidParam->decPictureJV[0];
+  decoder->picture = decoder->decPictureJV[0];
 
   // copy;
-  if (vidParam->picture->usedForReference) {
-    int nsize = (vidParam->picture->sizeY/BLOCK_SIZE)*(vidParam->picture->sizeX/BLOCK_SIZE)*sizeof(sPicMotionParam);
-    memcpy (&(vidParam->picture->JVmv_info[PLANE_Y][0][0]), &(vidParam->decPictureJV[PLANE_Y]->mvInfo[0][0]), nsize);
-    memcpy (&(vidParam->picture->JVmv_info[PLANE_U][0][0]), &(vidParam->decPictureJV[PLANE_U]->mvInfo[0][0]), nsize);
-    memcpy (&(vidParam->picture->JVmv_info[PLANE_V][0][0]), &(vidParam->decPictureJV[PLANE_V]->mvInfo[0][0]), nsize);
+  if (decoder->picture->usedForReference) {
+    int nsize = (decoder->picture->sizeY/BLOCK_SIZE)*(decoder->picture->sizeX/BLOCK_SIZE)*sizeof(sPicMotionParam);
+    memcpy (&(decoder->picture->JVmv_info[PLANE_Y][0][0]), &(decoder->decPictureJV[PLANE_Y]->mvInfo[0][0]), nsize);
+    memcpy (&(decoder->picture->JVmv_info[PLANE_U][0][0]), &(decoder->decPictureJV[PLANE_U]->mvInfo[0][0]), nsize);
+    memcpy (&(decoder->picture->JVmv_info[PLANE_V][0][0]), &(decoder->decPictureJV[PLANE_V]->mvInfo[0][0]), nsize);
     }
 
   // This could be done with pointers and seems not necessary
   for (int uv = 0; uv < 2; uv++) {
-    for (int line = 0; line < vidParam->height; line++) {
-      int nsize = sizeof(sPixel) * vidParam->width;
-      memcpy (vidParam->picture->imgUV[uv][line], vidParam->decPictureJV[uv+1]->imgY[line], nsize );
+    for (int line = 0; line < decoder->height; line++) {
+      int nsize = sizeof(sPixel) * decoder->width;
+      memcpy (decoder->picture->imgUV[uv][line], decoder->decPictureJV[uv+1]->imgY[line], nsize );
       }
-    freePicture (vidParam->decPictureJV[uv+1]);
+    freePicture (decoder->decPictureJV[uv+1]);
     }
   }
 //}}}
@@ -1331,15 +1331,15 @@ void make_frame_picture_JV (sDecoder* vidParam) {
 int decodeMacroblock (sMacroblock* mb, sPicture* picture) {
 
   sSlice* curSlice = mb->slice;
-  sDecoder* vidParam = mb->vidParam;
+  sDecoder* decoder = mb->decoder;
 
   if (curSlice->chroma444notSeparate) {
     if (!mb->isIntraBlock) {
-      init_cur_imgy (vidParam, curSlice, PLANE_Y);
+      init_cur_imgy (decoder, curSlice, PLANE_Y);
       curSlice->decodeOneComponent (mb, PLANE_Y, picture->imgY, picture);
-      init_cur_imgy (vidParam, curSlice, PLANE_U);
+      init_cur_imgy (decoder, curSlice, PLANE_U);
       curSlice->decodeOneComponent (mb, PLANE_U, picture->imgUV[0], picture);
-      init_cur_imgy (vidParam, curSlice, PLANE_V);
+      init_cur_imgy (decoder, curSlice, PLANE_V);
       curSlice->decodeOneComponent (mb, PLANE_V, picture->imgUV[1], picture);
       }
     else {

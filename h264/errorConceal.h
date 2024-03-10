@@ -1,6 +1,6 @@
 #pragma once
 
-extern void reset_ec_flags (sDecoder* vidParam);
-extern int setEcFlag (sDecoder* vidParam, int se);
+extern void reset_ec_flags (sDecoder* decoder);
+extern int setEcFlag (sDecoder* decoder, int se);
 
-extern int  get_concealed_element (sDecoder* vidParam, sSyntaxElement *sym);
+extern int  get_concealed_element (sDecoder* decoder, sSyntaxElement *sym);

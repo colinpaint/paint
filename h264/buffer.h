@@ -8,9 +8,9 @@ typedef struct PicMotionParamOld {
   } sPicMotionParamsOld;
 //}}}
 //{{{  sPicMotionParam
-typedef struct PicMotionParam {
+typedef struct PicMotion {
   struct Picture* refPic[2];  // referrence picture pointer
-  sMotionVector           mv[2];       // motion vector
+  sMotionVec           mv[2];       // motion vector
   char                    refIndex[2];  // reference picture   [list][subblockY][subblockX]
   byte                    slice_no;
   } sPicMotionParam;
@@ -50,8 +50,8 @@ typedef struct Picture {
   sPixel**    imgY;
   sPixel***   imgUV;
 
-  struct PicMotionParam** mvInfo;
-  struct PicMotionParam** JVmv_info[MAX_PLANE];
+  struct PicMotion** mvInfo;
+  struct PicMotion** JVmv_info[MAX_PLANE];
   struct PicMotionParamOld  motion;
   struct PicMotionParamOld  JVmotion[MAX_PLANE]; // Motion info for 4:4:4 independent mode decoding
 
@@ -121,7 +121,7 @@ typedef struct FrameStore {
 //}}}
 //{{{  sDPB
 typedef struct DPB {
-  sDecoder*    vidParam;
+  sDecoder*    decoder;
 
   sFrameStore** fs;
   sFrameStore** fsRef;
@@ -281,9 +281,9 @@ extern void freeFrameStore (sFrameStore* frameStore);
 extern void unmark_for_reference( sFrameStore* frameStore);
 extern void unmark_for_long_term_reference (sFrameStore* frameStore);
 
-extern sPicture* allocPicture (sDecoder* vidParam, ePicStructure type, int sizeX, int sizeY, int sizeXcr, int sizeYcr, int is_output);
+extern sPicture* allocPicture (sDecoder* decoder, ePicStructure type, int sizeX, int sizeY, int sizeXcr, int sizeYcr, int is_output);
 extern void freePicture (sPicture* p);
-extern void fillFrameNumGap (sDecoder* vidParam, sSlice *pSlice);
+extern void fillFrameNumGap (sDecoder* decoder, sSlice *pSlice);
 
 extern void updateRefList (sDPB* dpb);
 extern void updateLongTermRefList (sDPB* dpb);
@@ -296,8 +296,8 @@ extern void mm_unmark_all_short_term_for_reference (sDPB* dpb);
 extern void mm_unmark_all_long_term_for_reference (sDPB* dpb);
 extern void get_smallest_poc (sDPB* dpb, int *poc,int * pos);
 
-extern void initDpb (sDecoder* vidParam, sDPB* dpb, int type);
-extern void reInitDpb (sDecoder* vidParam, sDPB* dpb, int type);
+extern void initDpb (sDecoder* decoder, sDPB* dpb, int type);
+extern void reInitDpb (sDecoder* decoder, sDPB* dpb, int type);
 extern void flushDpb (sDPB* dpb);
 
 extern int removeUnusedDpb (sDPB* dpb);
@@ -305,17 +305,17 @@ extern void storePictureDpb (sDPB* dpb, sPicture* p);
 extern void removeFrameDpb (sDPB* dpb, int pos);
 extern void freeDpb (sDPB* dpb);
 
-extern void initImage (sDecoder* vidParam, sImage* image, sSPS *sps);
-extern void freeImage (sDecoder* vidParam, sImage* image);
+extern void initImage (sDecoder* decoder, sImage* image, sSPS *sps);
+extern void freeImage (sDecoder* decoder, sImage* image);
 
 extern void initListsPslice (sSlice* slice);
 extern void initListsBslice (sSlice* slice);
 extern void initListsIslice (sSlice* slice);
 extern void updatePicNum (sSlice* slice);
 
-extern void dpbCombineField (sDecoder* vidParam, sFrameStore* frameStore);
+extern void dpbCombineField (sDecoder* decoder, sFrameStore* frameStore);
 extern void reorderRefPicList (sSlice* slice, int curList);
-extern void init_mbaff_lists (sDecoder* vidParam, sSlice* slice);
+extern void init_mbaff_lists (sDecoder* decoder, sSlice* slice);
 extern sPicture* get_short_term_pic (sSlice* slice, sDPB* dpb, int picNum);
 
 extern void alloc_ref_pic_list_reordering_buffer (sSlice* slice);

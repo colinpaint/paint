@@ -262,12 +262,12 @@ typedef sDecodingEnvironment* sDecodingEnvironmentPtr;
 
 struct Picture;
 struct Macroblock;
-struct PicMotionParam;
-//{{{  sMotionVector
+struct PicMotion;
+//{{{  sMotionVec
 typedef struct {
   short mvX;
   short mvY;
-  } sMotionVector;
+  } sMotionVec;
 //}}}
 //{{{  sBlockPos
 typedef struct {
@@ -329,23 +329,23 @@ typedef struct SyntaxElement {
   int           k;                     //!< CABAC context for coeff_count,uv
 
   // for mapping of CAVLC to syntaxElement
-  void (*mapping)(int len, int info, int* value1, int* value2);
+  void (*mapping) (int, int, int*, int*);
 
   // used for CABAC: refers to actual coding method of each individual syntax element type
-  void (*reading)(struct Macroblock* curMb, struct SyntaxElement*, sDecodingEnvironmentPtr);
+  void (*reading) (struct Macroblock*, struct SyntaxElement*, sDecodingEnvironmentPtr);
   } sSyntaxElement;
 //}}}
 //{{{  sDataPartition
 typedef struct DataPartition {
   sBitstream*          bitstream;
   sDecodingEnvironment deCabac;
-  int (*readsSyntaxElement)(struct Macroblock *curMb, struct SyntaxElement *, struct DataPartition *);
+  int (*readsSyntaxElement) (struct Macroblock*, struct SyntaxElement*, struct DataPartition*);
   } sDataPartition;
 //}}}
 //{{{  sMacroblock
 typedef struct Macroblock {
-  struct Slice*      slice;
-  struct Decoder*   vidParam;
+  struct Slice*   slice;
+  struct Decoder* decoder;
 
   int     mbAddrX;
   int     mbAddrA;
@@ -370,8 +370,8 @@ typedef struct Macroblock {
   int     subblockX;
   int     subblockY;
 
-  int     qp;                    // QP luma
-  int     qpc[2];                // QP chroma
+  int     qp;                   // QP luma
+  int     qpc[2];               // QP chroma
   int     qpScaled[MAX_PLANE];  // QP scaled for all comps.
   Boolean isLossless;
   Boolean isIntraBlock;
@@ -408,27 +408,25 @@ typedef struct Macroblock {
 
   Boolean mbField;
 
-  //Flag for MBAFF deblocking;
+  // Flag for MBAFF deblocking;
   byte  mixedModeEdgeFlag;
 
   // deblocking strength indices
-  byte strength_ver[4][4];
-  byte strength_hor[4][16];
+  byte strengthV[4][4];
+  byte strengthH[4][16];
 
   Boolean lumaTransformSize8x8flag;
   Boolean noMbPartLessThan8x8Flag;
 
-  void (*itrans_4x4)(struct Macroblock *curMb, eColorPlane pl, int ioff, int joff);
-  void (*itrans_8x8)(struct Macroblock *curMb, eColorPlane pl, int ioff, int joff);
-  void (*GetMVPredictor) (struct Macroblock* curMb, sPixelPos* block,
-                          sMotionVector* pmv, short ref_frame, struct PicMotionParam** mvInfo,
-                          int list, int mb_x, int mb_y, int blockshape_x, int blockshape_y);
-  int  (*read_and_store_CBP_block_bit)(struct Macroblock *curMb, sDecodingEnvironmentPtr dep_dp, int type);
-  char (*readRefPictureIdx) (struct Macroblock *curMb, struct SyntaxElement *currSE, struct DataPartition *dP, char b8mode, int list);
-  void (*read_comp_coeff_4x4_CABAC)(struct Macroblock *curMb, struct SyntaxElement *currSE, eColorPlane pl, int (*InvLevelScale4x4)[4], int qp_per, int cbp);
-  void (*read_comp_coeff_8x8_CABAC)(struct Macroblock *curMb, struct SyntaxElement *currSE, eColorPlane pl);
-  void (*read_comp_coeff_4x4_CAVLC)(struct Macroblock *curMb, eColorPlane pl, int (*InvLevelScale4x4)[4], int qp_per, int cbp, byte** nzcoeff);
-  void (*read_comp_coeff_8x8_CAVLC)(struct Macroblock *curMb, eColorPlane pl, int (*InvLevelScale8x8)[8], int qp_per, int cbp, byte** nzcoeff);
+  void (*itrans_4x4) (struct Macroblock*, eColorPlane, int, int);
+  void (*itrans_8x8) (struct Macroblock*, eColorPlane, int, int);
+  void (*GetMVPredictor) (struct Macroblock*, sPixelPos*, sMotionVec*, short, struct PicMotion**, int, int, int, int, int);
+  int  (*read_and_store_CBP_block_bit) (struct Macroblock*, sDecodingEnvironmentPtr, int);
+  char (*readRefPictureIdx) (struct Macroblock*, struct SyntaxElement*, struct DataPartition*, char, int);
+  void (*read_comp_coeff_4x4_CABAC) (struct Macroblock*, struct SyntaxElement*, eColorPlane, int (*InvLevelScale4x4)[4], int qp_per, int cbp);
+  void (*read_comp_coeff_8x8_CABAC) (struct Macroblock*, struct SyntaxElement*, eColorPlane);
+  void (*read_comp_coeff_4x4_CAVLC) (struct Macroblock*, eColorPlane, int (*InvLevelScale4x4)[4], int, int, byte**);
+  void (*read_comp_coeff_8x8_CAVLC) (struct Macroblock*, eColorPlane, int (*InvLevelScale8x8)[8], int, int, byte**);
   } sMacroblock;
 //}}}
 //{{{  sWPParam
@@ -468,7 +466,7 @@ typedef struct OldSlice {
 //}}}
 //{{{  sSlice
 typedef struct Slice {
-  struct Decoder* vidParam;
+  struct Decoder* decoder;
   sPPS* activePPS;
   sSPS* activeSPS;
 
@@ -723,7 +721,7 @@ typedef struct CodingParam {
 //{{{  sLayer
 typedef struct LayerParam {
   int              layerId;
-  struct Decoder* vidParam;
+  struct Decoder* decoder;
   sCoding*    coding;
   sSPS*            sps;
   struct DPB*      dpb;
@@ -958,7 +956,7 @@ typedef struct Decoder {
 //}}}
 
 typedef sBiContextType* sBiContextTypePtr;
-static const sMotionVector zero_mv = {0, 0};
+static const sMotionVec zero_mv = {0, 0};
 //{{{
 static inline int is_BL_profile (unsigned int profileIdc) {
   return profileIdc == FREXT_CAVLC444 || profileIdc == BASELINE ||
@@ -993,27 +991,27 @@ static inline int is_HI_intra_only_profile (unsigned int profileIdc, Boolean con
   extern char errortext[ET_SIZE];
   extern void error (char* text, int code);
 
-  extern void initGlobalBuffers (sDecoder* vidParam, int layerId);
-  extern void freeGlobalBuffers (sDecoder* vidParam);
-  extern void freeLayerBuffers (sDecoder* vidParam, int layerId);
+  extern void initGlobalBuffers (sDecoder* decoder, int layerId);
+  extern void freeGlobalBuffers (sDecoder* decoder);
+  extern void freeLayerBuffers (sDecoder* decoder, int layerId);
 
   extern sDataPartition* allocPartition (int n);
   extern void freePartition (sDataPartition* dp, int n);
 
-  extern sSlice* allocSlice (sDecoder* vidParam);
+  extern sSlice* allocSlice (sDecoder* decoder);
 
   extern unsigned ceilLog2 (unsigned uiVal);
   extern unsigned ceilLog2sf (unsigned uiVal);
 
   // For 4:4:4 independent mode
-  extern void changePlaneJV (sDecoder* vidParam, int nplane, sSlice *pSlice);
-  extern void make_frame_picture_JV (sDecoder* vidParam );
+  extern void changePlaneJV (sDecoder* decoder, int nplane, sSlice *pSlice);
+  extern void make_frame_picture_JV (sDecoder* decoder );
 
   extern sDecodedPicture* getDecodedPicture (sDecodedPicture* decodedPicture);
   extern void freeDecodedPictures (sDecodedPicture* decodedPicture);
-  extern void clearDecodedPictures (sDecoder* vidParam);
+  extern void clearDecodedPictures (sDecoder* decoder);
 
-  extern void setGlobalCodingProgram (sDecoder* vidParam, sCoding* coding);
+  extern void setGlobalCodingProgram (sDecoder* decoder, sCoding* coding);
 //{{{
 #ifdef __cplusplus
 }
