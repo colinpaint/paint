@@ -954,21 +954,21 @@ public:
       param.refPocGap = 2;
       param.dpbPlus[0] = 1;
       param.intraProfileDeblocking = 1;
-      OpenDecoder (&param, h264Chunk, h264ChunkSize);
+      sDecoder* decoder = OpenDecoder (&param, h264Chunk, h264ChunkSize);
 
       sDecodedPic* decodedPic;
       int ret = 0;
       do {
-        ret = DecodeOneFrame (&decodedPic);
+        ret = DecodeOneFrame (decoder, &decodedPic);
         if (ret == DEC_EOS || ret == DEC_SUCCEED)
           outputPicList (decodedPic);
         else
           cLog::log (LOGERROR, "decoding  failed");
         } while (ret == DEC_SUCCEED);
 
-      FinitDecoder (&decodedPic);
+      FinitDecoder (decoder,&decodedPic);
       outputPicList (decodedPic);
-      CloseDecoder();
+      CloseDecoder (decoder);
 
       delete[] h264Chunk;
 
@@ -1076,12 +1076,12 @@ public:
       param.refPocGap = 2;
       param.dpbPlus[0] = 1;
       param.intraProfileDeblocking = 1;
-      OpenDecoder (&param, chunk, fileSize);
+      sDecoder* decoder = OpenDecoder (&param, chunk, fileSize);
 
       int ret = 0;
       do {
         sDecodedPic* decodedPic;
-        ret = DecodeOneFrame (&decodedPic);
+        ret = DecodeOneFrame (decoder,  &decodedPic);
         if (ret == DEC_EOS || ret == DEC_SUCCEED)
           outputPicList (decodedPic);
         else
@@ -1089,9 +1089,9 @@ public:
         } while (ret == DEC_SUCCEED);
 
       sDecodedPic* decodedPic;
-      FinitDecoder (&decodedPic);
+      FinitDecoder (decoder, &decodedPic);
       outputPicList (decodedPic);
-      CloseDecoder();
+      CloseDecoder (decoder);
 
       delete[] chunk;
 

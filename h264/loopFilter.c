@@ -1886,18 +1886,18 @@ void initDeblock (sDecoder* decoder, int mbAffFrameFlag) {
 
   if (decoder->yuvFormat == YUV444 && decoder->sepColourPlaneFlag) {
     changePlaneJV (decoder, PLANE_Y, NULL);
-    initNeighbours (gDecoder);
+    initNeighbours (decoder);
 
     changePlaneJV (decoder, PLANE_U, NULL);
-    initNeighbours (gDecoder);
+    initNeighbours (decoder);
 
     changePlaneJV (decoder, PLANE_V, NULL);
-    initNeighbours (gDecoder);
+    initNeighbours (decoder);
 
     changePlaneJV (decoder, PLANE_Y, NULL);
     }
   else
-    initNeighbours (gDecoder);
+    initNeighbours (decoder);
 
   if (mbAffFrameFlag == 1)
     set_loop_filter_functions_mbaff (decoder);

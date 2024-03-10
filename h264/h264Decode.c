@@ -577,7 +577,7 @@ void setGlobalCodingProgram (sDecoder* decoder, sCoding* coding) {
 //}}}
 
 //{{{
-void OpenDecoder (sParam* input, byte* chunk, size_t chunkSize) {
+sDecoder* OpenDecoder (sParam* input, byte* chunk, size_t chunkSize) {
 
   // alloc decoder
   sDecoder* decoder = (sDecoder*)calloc (1, sizeof(sDecoder));
@@ -587,9 +587,9 @@ void OpenDecoder (sParam* input, byte* chunk, size_t chunkSize) {
 
   // init input
   memcpy (&(decoder->param), input, sizeof(sParam));
-  gDecoder->concealMode = input->concealMode;
-  gDecoder->refPocGap = input->refPocGap;
-  gDecoder->pocGap = input->pocGap;
+  decoder->concealMode = input->concealMode;
+  decoder->refPocGap = input->refPocGap;
+  decoder->pocGap = input->pocGap;
 
   // init nalu, annexB
   decoder->nalu = allocNALU (MAX_CODED_FRAME_SIZE);
@@ -621,10 +621,12 @@ void OpenDecoder (sParam* input, byte* chunk, size_t chunkSize) {
 
   decoder->decOutputPic = (sDecodedPic*)calloc (1, sizeof(sDecodedPic));
   allocOutput (decoder);
+
+  return decoder;
   }
 //}}}
 //{{{
-int DecodeOneFrame (sDecodedPic** ppDecPicList) {
+int DecodeOneFrame (sDecoder* decoder, sDecodedPic** ppDecPicList) {
 
   ClearDecodedPictures (gDecoder);
 
@@ -641,7 +643,7 @@ int DecodeOneFrame (sDecodedPic** ppDecPicList) {
   }
 //}}}
 //{{{
-void FinitDecoder (sDecodedPic** ppDecPicList) {
+void FinitDecoder (sDecoder* decoder, sDecodedPic** ppDecPicList) {
 
   ClearDecodedPictures (gDecoder);
   flushDpb (gDecoder->dpbLayer[0]);
@@ -654,7 +656,7 @@ void FinitDecoder (sDecodedPic** ppDecPicList) {
   }
 //}}}
 //{{{
-void CloseDecoder() {
+void CloseDecoder (sDecoder* decoder) {
 
   FmoFinit (gDecoder);
   freeLayerBuffers (gDecoder, 0);
