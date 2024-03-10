@@ -757,10 +757,10 @@ static void get_strength_hor_MBAff (byte* Strength, sMacroblock* mb, int edge, i
 //{{{
 static void set_loop_filter_functions_mbaff (sDecoder* decoder) {
 
-  decoder->EdgeLoopLumaVer = edge_loop_luma_ver_MBAff;
-  decoder->EdgeLoopLumaHor = edge_loop_luma_hor_MBAff;
-  decoder->EdgeLoopChromaVer = edge_loop_chroma_ver_MBAff;
-  decoder->EdgeLoopChromaHor = edge_loop_chroma_hor_MBAff;
+  decoder->edgeLoopLumaV = edge_loop_luma_ver_MBAff;
+  decoder->edgeLoopLumaH = edge_loop_luma_hor_MBAff;
+  decoder->edgeLoopChromaV = edge_loop_chroma_ver_MBAff;
+  decoder->edgeLoopChromaH = edge_loop_chroma_hor_MBAff;
   }
 //}}}
 
@@ -1406,12 +1406,12 @@ static void edge_loop_chroma_hor (sPixel** img, byte* Strength, sMacroblock* mb,
 //{{{
 static void set_loop_filter_functions_normal (sDecoder* decoder) {
 
-  decoder->GetStrengthVer    = get_strength_ver;
-  decoder->GetStrengthHor    = get_strength_hor;
-  decoder->EdgeLoopLumaVer   = edge_loop_luma_ver;
-  decoder->EdgeLoopLumaHor   = edge_loop_luma_hor;
-  decoder->EdgeLoopChromaVer = edge_loop_chroma_ver;
-  decoder->EdgeLoopChromaHor = edge_loop_chroma_hor;
+  decoder->getStrengthV    = get_strength_ver;
+  decoder->getStrengthH    = get_strength_hor;
+  decoder->edgeLoopLumaV   = edge_loop_luma_ver;
+  decoder->edgeLoopLumaH   = edge_loop_luma_hor;
+  decoder->edgeLoopChromaV = edge_loop_chroma_ver;
+  decoder->edgeLoopChromaH = edge_loop_chroma_hor;
   }
 //}}}
 
@@ -1488,17 +1488,17 @@ static void deblockMb (sDecoder* decoder, sPicture* p, int mbQAddr) {
         Strength[12] != 0 || Strength[13] != 0 || Strength[14] != 0 || Strength[15] !=0 ) {
           // only if one of the 16 Strength bytes is != 0
           if (filterNon8x8LumaEdgesFlag[edge]) {
-            decoder->EdgeLoopLumaVer (PLANE_Y, imgY, Strength, mb, edge << 2);
+            decoder->edgeLoopLumaV (PLANE_Y, imgY, Strength, mb, edge << 2);
             if (curSlice->chroma444notSeparate) {
-              decoder->EdgeLoopLumaVer(PLANE_U, imgUV[0], Strength, mb, edge << 2);
-              decoder->EdgeLoopLumaVer(PLANE_V, imgUV[1], Strength, mb, edge << 2);
+              decoder->edgeLoopLumaV(PLANE_U, imgUV[0], Strength, mb, edge << 2);
+              decoder->edgeLoopLumaV(PLANE_V, imgUV[1], Strength, mb, edge << 2);
               }
             }
           if (activeSPS->chromaFormatIdc==YUV420 || activeSPS->chromaFormatIdc==YUV422) {
             edge_cr = chroma_edge[0][edge][p->chromaFormatIdc];
             if ((imgUV != NULL) && (edge_cr >= 0)) {
-              decoder->EdgeLoopChromaVer (imgUV[0], Strength, mb, edge_cr, 0, p);
-              decoder->EdgeLoopChromaVer (imgUV[1], Strength, mb, edge_cr, 1, p);
+              decoder->edgeLoopChromaV (imgUV[0], Strength, mb, edge_cr, 0, p);
+              decoder->edgeLoopChromaV (imgUV[1], Strength, mb, edge_cr, 1, p);
               }
             }
           }
@@ -1529,18 +1529,18 @@ static void deblockMb (sDecoder* decoder, sPicture* p, int mbQAddr) {
         Strength[12] != 0 || Strength[13] != 0 || Strength[14] != 0 || Strength[15] !=0 ) {
           // only if one of the 16 Strength bytes is != 0
           if (filterNon8x8LumaEdgesFlag[edge]) {
-            decoder->EdgeLoopLumaHor (PLANE_Y, imgY, Strength, mb, edge << 2, p) ;
+            decoder->edgeLoopLumaH (PLANE_Y, imgY, Strength, mb, edge << 2, p) ;
              if(curSlice->chroma444notSeparate) {
-              decoder->EdgeLoopLumaHor(PLANE_U, imgUV[0], Strength, mb, edge << 2, p);
-              decoder->EdgeLoopLumaHor(PLANE_V, imgUV[1], Strength, mb, edge << 2, p);
+              decoder->edgeLoopLumaH(PLANE_U, imgUV[0], Strength, mb, edge << 2, p);
+              decoder->edgeLoopLumaH(PLANE_V, imgUV[1], Strength, mb, edge << 2, p);
               }
             }
 
           if (activeSPS->chromaFormatIdc==YUV420 || activeSPS->chromaFormatIdc==YUV422) {
             edge_cr = chroma_edge[1][edge][p->chromaFormatIdc];
             if ((imgUV != NULL) && (edge_cr >= 0)) {
-              decoder->EdgeLoopChromaHor (imgUV[0], Strength, mb, edge_cr, 0, p);
-              decoder->EdgeLoopChromaHor (imgUV[1], Strength, mb, edge_cr, 1, p);
+              decoder->edgeLoopChromaH (imgUV[0], Strength, mb, edge_cr, 0, p);
+              decoder->edgeLoopChromaH (imgUV[1], Strength, mb, edge_cr, 1, p);
               }
             }
           }
@@ -1553,18 +1553,18 @@ static void deblockMb (sDecoder* decoder, sPicture* p, int mbQAddr) {
 
           {
             if (filterNon8x8LumaEdgesFlag[edge]) {
-              decoder->EdgeLoopLumaHor(PLANE_Y, imgY, Strength, mb, MB_BLOCK_SIZE, p) ;
+              decoder->edgeLoopLumaH(PLANE_Y, imgY, Strength, mb, MB_BLOCK_SIZE, p) ;
               if(curSlice->chroma444notSeparate) {
-                decoder->EdgeLoopLumaHor(PLANE_U, imgUV[0], Strength, mb, MB_BLOCK_SIZE, p) ;
-                decoder->EdgeLoopLumaHor(PLANE_V, imgUV[1], Strength, mb, MB_BLOCK_SIZE, p) ;
+                decoder->edgeLoopLumaH(PLANE_U, imgUV[0], Strength, mb, MB_BLOCK_SIZE, p) ;
+                decoder->edgeLoopLumaH(PLANE_V, imgUV[1], Strength, mb, MB_BLOCK_SIZE, p) ;
                 }
               }
 
             if (activeSPS->chromaFormatIdc==YUV420 || activeSPS->chromaFormatIdc==YUV422) {
               edge_cr = chroma_edge[1][edge][p->chromaFormatIdc];
               if ((imgUV != NULL) && (edge_cr >= 0)) {
-                decoder->EdgeLoopChromaHor (imgUV[0], Strength, mb, MB_BLOCK_SIZE, 0, p) ;
-                decoder->EdgeLoopChromaHor (imgUV[1], Strength, mb, MB_BLOCK_SIZE, 1, p) ;
+                decoder->edgeLoopChromaH (imgUV[0], Strength, mb, MB_BLOCK_SIZE, 0, p) ;
+                decoder->edgeLoopChromaH (imgUV[1], Strength, mb, MB_BLOCK_SIZE, 1, p) ;
                 }
               }
             }
@@ -1643,7 +1643,7 @@ static void getDeblockStrength (sDecoder* decoder, sPicture* p, int mbQAddr) {
 
       if (edge || filterLeftMbEdgeFlag )
         // Strength for 4 blks in 1 stripe
-        decoder->GetStrengthVer (mb, edge, mvLimit, p);
+        decoder->getStrengthV (mb, edge, mvLimit, p);
       }//end edge
 
     // horizontal deblocking
@@ -1667,7 +1667,7 @@ static void getDeblockStrength (sDecoder* decoder, sPicture* p, int mbQAddr) {
         }
 
       if (edge || filterTopMbEdgeFlag )
-        decoder->GetStrengthHor (mb, edge, mvLimit, p);
+        decoder->getStrengthH (mb, edge, mvLimit, p);
       }//end edge
 
     mb->DeblockCall = 0;
@@ -1740,17 +1740,17 @@ static void performDeblock (sDecoder* decoder, sPicture* p, int mbQAddr) {
         if  (Strength[0] != 0 || Strength[1] != 0 || Strength[2] != 0 || Strength[3] != 0 ) {
           // only if one of the 4 first Strength bytes is != 0
           if (filterNon8x8LumaEdgesFlag[edge]) {
-            decoder->EdgeLoopLumaVer (PLANE_Y, imgY, Strength, mb, edge << 2);
+            decoder->edgeLoopLumaV (PLANE_Y, imgY, Strength, mb, edge << 2);
             if(curSlice->chroma444notSeparate) {
-              decoder->EdgeLoopLumaVer(PLANE_U, imgUV[0], Strength, mb, edge << 2);
-              decoder->EdgeLoopLumaVer(PLANE_V, imgUV[1], Strength, mb, edge << 2);
+              decoder->edgeLoopLumaV(PLANE_U, imgUV[0], Strength, mb, edge << 2);
+              decoder->edgeLoopLumaV(PLANE_V, imgUV[1], Strength, mb, edge << 2);
               }
             }
           if (activeSPS->chromaFormatIdc==YUV420 || activeSPS->chromaFormatIdc==YUV422) {
             edge_cr = chroma_edge[0][edge][p->chromaFormatIdc];
             if ((imgUV != NULL) && (edge_cr >= 0)) {
-              decoder->EdgeLoopChromaVer (imgUV[0], Strength, mb, edge_cr, 0, p);
-              decoder->EdgeLoopChromaVer (imgUV[1], Strength, mb, edge_cr, 1, p);
+              decoder->edgeLoopChromaV (imgUV[0], Strength, mb, edge_cr, 0, p);
+              decoder->edgeLoopChromaV (imgUV[1], Strength, mb, edge_cr, 1, p);
               }
             }
           }
@@ -1779,18 +1779,18 @@ static void performDeblock (sDecoder* decoder, sPicture* p, int mbQAddr) {
             Strength[12] != 0 || Strength[13] != 0 || Strength[14] != 0 || Strength[15] !=0 ) {
           // only if one of the 16 Strength bytes is != 0
           if (filterNon8x8LumaEdgesFlag[edge]) {
-            decoder->EdgeLoopLumaHor (PLANE_Y, imgY, Strength, mb, edge << 2, p) ;
+            decoder->edgeLoopLumaH (PLANE_Y, imgY, Strength, mb, edge << 2, p) ;
             if(curSlice->chroma444notSeparate) {
-              decoder->EdgeLoopLumaHor (PLANE_U, imgUV[0], Strength, mb, edge << 2, p);
-              decoder->EdgeLoopLumaHor (PLANE_V, imgUV[1], Strength, mb, edge << 2, p);
+              decoder->edgeLoopLumaH (PLANE_U, imgUV[0], Strength, mb, edge << 2, p);
+              decoder->edgeLoopLumaH (PLANE_V, imgUV[1], Strength, mb, edge << 2, p);
               }
             }
 
           if (activeSPS->chromaFormatIdc==YUV420 || activeSPS->chromaFormatIdc==YUV422) {
             edge_cr = chroma_edge[1][edge][p->chromaFormatIdc];
             if ((imgUV != NULL) && (edge_cr >= 0)) {
-              decoder->EdgeLoopChromaHor (imgUV[0], Strength, mb, edge_cr, 0, p);
-              decoder->EdgeLoopChromaHor (imgUV[1], Strength, mb, edge_cr, 1, p);
+              decoder->edgeLoopChromaH (imgUV[0], Strength, mb, edge_cr, 0, p);
+              decoder->edgeLoopChromaH (imgUV[1], Strength, mb, edge_cr, 1, p);
               }
             }
           }
@@ -1799,22 +1799,22 @@ static void performDeblock (sDecoder* decoder, sPicture* p, int mbQAddr) {
           //curSlice->mixedModeEdgeFlag)
           // this is the extra horizontal edge between a frame macroblock pair and a field above it
           mb->DeblockCall = 2;
-          decoder->GetStrengthHor (mb, 4, mvLimit, p); // Strength for 4 blks in 1 stripe
+          decoder->getStrengthH (mb, 4, mvLimit, p); // Strength for 4 blks in 1 stripe
 
           {
             if (filterNon8x8LumaEdgesFlag[edge]) {
-              decoder->EdgeLoopLumaHor(PLANE_Y, imgY, Strength, mb, MB_BLOCK_SIZE, p) ;
+              decoder->edgeLoopLumaH(PLANE_Y, imgY, Strength, mb, MB_BLOCK_SIZE, p) ;
               if(curSlice->chroma444notSeparate) {
-                decoder->EdgeLoopLumaHor (PLANE_U, imgUV[0], Strength, mb, MB_BLOCK_SIZE, p) ;
-                decoder->EdgeLoopLumaHor (PLANE_V, imgUV[1], Strength, mb, MB_BLOCK_SIZE, p) ;
+                decoder->edgeLoopLumaH (PLANE_U, imgUV[0], Strength, mb, MB_BLOCK_SIZE, p) ;
+                decoder->edgeLoopLumaH (PLANE_V, imgUV[1], Strength, mb, MB_BLOCK_SIZE, p) ;
                 }
               }
 
             if (activeSPS->chromaFormatIdc==YUV420 || activeSPS->chromaFormatIdc==YUV422) {
               edge_cr = chroma_edge[1][edge][p->chromaFormatIdc];
               if ((imgUV != NULL) && (edge_cr >= 0)) {
-                decoder->EdgeLoopChromaHor (imgUV[0], Strength, mb, MB_BLOCK_SIZE, 0, p) ;
-                decoder->EdgeLoopChromaHor (imgUV[1], Strength, mb, MB_BLOCK_SIZE, 1, p) ;
+                decoder->edgeLoopChromaH (imgUV[0], Strength, mb, MB_BLOCK_SIZE, 0, p) ;
+                decoder->edgeLoopChromaH (imgUV[1], Strength, mb, MB_BLOCK_SIZE, 1, p) ;
                 }
               }
             }

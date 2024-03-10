@@ -641,7 +641,7 @@ static void initPicture (sDecoder* decoder, sSlice* slice) {
   picture->mbAffFrameFlag = slice->mbAffFrameFlag;
   picture->PicWidthInMbs = decoder->PicWidthInMbs;
 
-  decoder->get_mb_block_pos = picture->mbAffFrameFlag ? get_mb_block_pos_mbaff : get_mb_block_pos_normal;
+  decoder->getMbBlockPos = picture->mbAffFrameFlag ? get_mb_block_pos_mbaff : get_mb_block_pos_normal;
   decoder->getNeighbour = picture->mbAffFrameFlag ? getAffNeighbour : getNonAffNeighbour;
 
   picture->picNum = slice->frameNum;

@@ -22,7 +22,7 @@ static void FmoGenerateType0MapUnitMap (sDecoder* decoder, unsigned PicSizeInMap
          i += pps->runLengthMinus1[iGroup++] + 1 )
     {
       for( j = 0; j <= pps->runLengthMinus1[ iGroup ] && i + j < PicSizeInMapUnits; j++ )
-        decoder->MapUnitToSliceGroupMap[i+j] = iGroup;
+        decoder->mapUnitToSliceGroupMap[i+j] = iGroup;
     }
   }
   while( i < PicSizeInMapUnits );
@@ -35,7 +35,7 @@ static void FmoGenerateType1MapUnitMap (sDecoder* decoder, unsigned PicSizeInMap
   sPPS* pps = decoder->activePPS;
   unsigned i;
   for( i = 0; i < PicSizeInMapUnits; i++ )
-    decoder->MapUnitToSliceGroupMap[i] = ((i%decoder->PicWidthInMbs)+(((i/decoder->PicWidthInMbs)*(pps->numSliceGroupsMinus1+1))/2))
+    decoder->mapUnitToSliceGroupMap[i] = ((i%decoder->PicWidthInMbs)+(((i/decoder->PicWidthInMbs)*(pps->numSliceGroupsMinus1+1))/2))
                                 %(pps->numSliceGroupsMinus1+1);
 }
 //}}}
@@ -49,7 +49,7 @@ static void FmoGenerateType2MapUnitMap (sDecoder* decoder, unsigned PicSizeInMap
   unsigned yTopLeft, xTopLeft, yBottomRight, xBottomRight;
 
   for( i = 0; i < PicSizeInMapUnits; i++ )
-    decoder->MapUnitToSliceGroupMap[ i ] = pps->numSliceGroupsMinus1;
+    decoder->mapUnitToSliceGroupMap[ i ] = pps->numSliceGroupsMinus1;
 
   for( iGroup = pps->numSliceGroupsMinus1 - 1 ; iGroup >= 0; iGroup--) {
     yTopLeft = pps->topLeft[ iGroup ] / decoder->PicWidthInMbs;
@@ -58,7 +58,7 @@ static void FmoGenerateType2MapUnitMap (sDecoder* decoder, unsigned PicSizeInMap
     xBottomRight = pps->botRight[ iGroup ] % decoder->PicWidthInMbs;
     for (y = yTopLeft; y <= yBottomRight; y++ )
       for (x = xTopLeft; x <= xBottomRight; x++ )
-        decoder->MapUnitToSliceGroupMap[ y * decoder->PicWidthInMbs + x ] = iGroup;
+        decoder->mapUnitToSliceGroupMap[ y * decoder->PicWidthInMbs + x ] = iGroup;
     }
   }
 //}}}
@@ -75,7 +75,7 @@ static void FmoGenerateType3MapUnitMap (sDecoder* decoder, unsigned PicSizeInMap
   unsigned mapUnitsInSliceGroup0 = imin((pps->sliceGroupChangeRateMius1 + 1) * curSlice->sliceGroupChangeCycle, PicSizeInMapUnits);
 
   for( i = 0; i < PicSizeInMapUnits; i++ )
-    decoder->MapUnitToSliceGroupMap[ i ] = 2;
+    decoder->mapUnitToSliceGroupMap[ i ] = 2;
 
   x = ( decoder->PicWidthInMbs - pps->sliceGroupChangeDirectionFlag ) / 2;
   y = ( decoder->PicHeightInMapUnits - pps->sliceGroupChangeDirectionFlag ) / 2;
@@ -89,9 +89,9 @@ static void FmoGenerateType3MapUnitMap (sDecoder* decoder, unsigned PicSizeInMap
   yDir =  pps->sliceGroupChangeDirectionFlag;
 
   for( k = 0; k < PicSizeInMapUnits; k += mapUnitVacant ) {
-    mapUnitVacant = ( decoder->MapUnitToSliceGroupMap[ y * decoder->PicWidthInMbs + x ]  ==  2 );
+    mapUnitVacant = ( decoder->mapUnitToSliceGroupMap[ y * decoder->PicWidthInMbs + x ]  ==  2 );
     if( mapUnitVacant )
-       decoder->MapUnitToSliceGroupMap[ y * decoder->PicWidthInMbs + x ] = ( k >= mapUnitsInSliceGroup0 );
+       decoder->mapUnitToSliceGroupMap[ y * decoder->PicWidthInMbs + x ] = ( k >= mapUnitsInSliceGroup0 );
 
     if( xDir  ==  -1  &&  x  ==  leftBound ) {
       leftBound = imax( leftBound - 1, 0 );
@@ -141,9 +141,9 @@ static void FmoGenerateType4MapUnitMap (sDecoder* decoder, unsigned PicSizeInMap
 
   for (i = 0; i < PicSizeInMapUnits; i++ )
     if (i < sizeOfUpperLeftGroup )
-      decoder->MapUnitToSliceGroupMap[ i ] = pps->sliceGroupChangeDirectionFlag;
+      decoder->mapUnitToSliceGroupMap[ i ] = pps->sliceGroupChangeDirectionFlag;
     else
-      decoder->MapUnitToSliceGroupMap[ i ] = 1 - pps->sliceGroupChangeDirectionFlag;
+      decoder->mapUnitToSliceGroupMap[ i ] = 1 - pps->sliceGroupChangeDirectionFlag;
 
   }
 //}}}
@@ -161,9 +161,9 @@ static void FmoGenerateType5MapUnitMap (sDecoder* decoder, unsigned PicSizeInMap
   for( j = 0; j < decoder->PicWidthInMbs; j++ )
     for( i = 0; i < decoder->PicHeightInMapUnits; i++ )
         if( k++ < sizeOfUpperLeftGroup )
-            decoder->MapUnitToSliceGroupMap[ i * decoder->PicWidthInMbs + j ] = pps->sliceGroupChangeDirectionFlag;
+            decoder->mapUnitToSliceGroupMap[ i * decoder->PicWidthInMbs + j ] = pps->sliceGroupChangeDirectionFlag;
         else
-            decoder->MapUnitToSliceGroupMap[ i * decoder->PicWidthInMbs + j ] = 1 - pps->sliceGroupChangeDirectionFlag;
+            decoder->mapUnitToSliceGroupMap[ i * decoder->PicWidthInMbs + j ] = 1 - pps->sliceGroupChangeDirectionFlag;
 
 }
 //}}}
@@ -174,12 +174,12 @@ static void FmoGenerateType6MapUnitMap (sDecoder* decoder, unsigned PicSizeInMap
   sPPS* pps = decoder->activePPS;
   unsigned i;
   for (i=0; i<PicSizeInMapUnits; i++)
-    decoder->MapUnitToSliceGroupMap[i] = pps->sliceGroupId[i];
+    decoder->mapUnitToSliceGroupMap[i] = pps->sliceGroupId[i];
   }
 //}}}
 //{{{
 static int FmoGenerateMapUnitToSliceGroupMap (sDecoder* decoder, sSlice* curSlice) {
-// Generates decoder->MapUnitToSliceGroupMap
+// Generates decoder->mapUnitToSliceGroupMap
 // Has to be called every time a new Picture Parameter Set is used
 
   sSPS* sps = decoder->activeSPS;
@@ -193,18 +193,18 @@ static int FmoGenerateMapUnitToSliceGroupMap (sDecoder* decoder, sSlice* curSlic
     if ((pps->picSizeMapUnitsMinus1 + 1) != NumSliceGroupMapUnits)
       error ("wrong pps->picSizeMapUnitsMinus1 for used SPS and FMO type 6", 500);
 
-  // allocate memory for decoder->MapUnitToSliceGroupMap
-  if (decoder->MapUnitToSliceGroupMap)
-    free (decoder->MapUnitToSliceGroupMap);
+  // allocate memory for decoder->mapUnitToSliceGroupMap
+  if (decoder->mapUnitToSliceGroupMap)
+    free (decoder->mapUnitToSliceGroupMap);
 
-  if ((decoder->MapUnitToSliceGroupMap = malloc ((NumSliceGroupMapUnits) * sizeof (int))) == NULL) {
-    printf ("cannot allocated %d bytes for decoder->MapUnitToSliceGroupMap, exit\n", (int) ( (pps->picSizeMapUnitsMinus1+1) * sizeof (int)));
+  if ((decoder->mapUnitToSliceGroupMap = malloc ((NumSliceGroupMapUnits) * sizeof (int))) == NULL) {
+    printf ("cannot allocated %d bytes for decoder->mapUnitToSliceGroupMap, exit\n", (int) ( (pps->picSizeMapUnitsMinus1+1) * sizeof (int)));
     exit (-1);
     }
 
   if (pps->numSliceGroupsMinus1 == 0) {
     // only one slice group
-    memset (decoder->MapUnitToSliceGroupMap, 0, NumSliceGroupMapUnits * sizeof (int));
+    memset (decoder->mapUnitToSliceGroupMap, 0, NumSliceGroupMapUnits * sizeof (int));
     return 0;
     }
 
@@ -238,34 +238,34 @@ static int FmoGenerateMapUnitToSliceGroupMap (sDecoder* decoder, sSlice* curSlic
   }
 //}}}
 //{{{
-// Generates decoder->MbToSliceGroupMap from decoder->MapUnitToSliceGroupMap
+// Generates decoder->mbToSliceGroupMap from decoder->mapUnitToSliceGroupMap
 static int FmoGenerateMbToSliceGroupMap (sDecoder* decoder, sSlice *pSlice) {
 
-  // allocate memory for decoder->MbToSliceGroupMap
-  if (decoder->MbToSliceGroupMap)
-    free (decoder->MbToSliceGroupMap);
+  // allocate memory for decoder->mbToSliceGroupMap
+  if (decoder->mbToSliceGroupMap)
+    free (decoder->mbToSliceGroupMap);
 
-  if ((decoder->MbToSliceGroupMap = malloc ((decoder->picSizeInMbs) * sizeof (int))) == NULL) {
-    printf ("cannot allocate %d bytes for decoder->MbToSliceGroupMap, exit\n",
+  if ((decoder->mbToSliceGroupMap = malloc ((decoder->picSizeInMbs) * sizeof (int))) == NULL) {
+    printf ("cannot allocate %d bytes for decoder->mbToSliceGroupMap, exit\n",
             (int) ((decoder->picSizeInMbs) * sizeof (int)));
     exit (-1);
     }
 
   sSPS* sps = decoder->activeSPS;
   if ((sps->frameMbOnlyFlag)|| pSlice->fieldPicFlag) {
-    int *MbToSliceGroupMap = decoder->MbToSliceGroupMap;
-    int *MapUnitToSliceGroupMap = decoder->MapUnitToSliceGroupMap;
+    int *mbToSliceGroupMap = decoder->mbToSliceGroupMap;
+    int *mapUnitToSliceGroupMap = decoder->mapUnitToSliceGroupMap;
     for (unsigned i = 0; i < decoder->picSizeInMbs; i++)
-      *MbToSliceGroupMap++ = *MapUnitToSliceGroupMap++;
+      *mbToSliceGroupMap++ = *mapUnitToSliceGroupMap++;
     }
   else
     if (sps->mb_adaptive_frame_field_flag  &&  (!pSlice->fieldPicFlag)) {
       for (unsigned i = 0; i < decoder->picSizeInMbs; i++)
-        decoder->MbToSliceGroupMap[i] = decoder->MapUnitToSliceGroupMap[i/2];
+        decoder->mbToSliceGroupMap[i] = decoder->mapUnitToSliceGroupMap[i/2];
       }
     else {
       for (unsigned i = 0; i < decoder->picSizeInMbs; i++)
-        decoder->MbToSliceGroupMap[i] = decoder->MapUnitToSliceGroupMap[(i/(2*decoder->PicWidthInMbs))*decoder->PicWidthInMbs+(i%decoder->PicWidthInMbs)];
+        decoder->mbToSliceGroupMap[i] = decoder->mapUnitToSliceGroupMap[(i/(2*decoder->PicWidthInMbs))*decoder->PicWidthInMbs+(i%decoder->PicWidthInMbs)];
       }
 
   return 0;
@@ -279,7 +279,7 @@ int initFmo (sDecoder* decoder, sSlice* pSlice) {
 
   FmoGenerateMapUnitToSliceGroupMap (decoder, pSlice);
   FmoGenerateMbToSliceGroupMap (decoder, pSlice);
-  decoder->NumberOfSliceGroups = pps->numSliceGroupsMinus1 + 1;
+  decoder->sliceGroupsNum = pps->numSliceGroupsMinus1 + 1;
 
 #ifdef PRINT_FMO_MAPS
   printf ("\n");
@@ -287,7 +287,7 @@ int initFmo (sDecoder* decoder, sSlice* pSlice) {
 
   for (int j = 0; j<decoder->PicHeightInMapUnits; j++) {
     for (int i = 0; i<decoder->PicWidthInMbs; i++) {
-      printf("%c",48+decoder->MapUnitToSliceGroupMap[i+j*decoder->PicWidthInMbs]);
+      printf("%c",48+decoder->mapUnitToSliceGroupMap[i+j*decoder->PicWidthInMbs]);
       }
     printf("\n");
     }
@@ -297,7 +297,7 @@ int initFmo (sDecoder* decoder, sSlice* pSlice) {
 
   for (int j = 0; j < decoder->picHeightInMbs; j++) {
     for (int i = 0; i < decoder->PicWidthInMbs; i++) {
-      printf ("%c", 48 + decoder->MbToSliceGroupMap[i + j * decoder->PicWidthInMbs]);
+      printf ("%c", 48 + decoder->mbToSliceGroupMap[i + j * decoder->PicWidthInMbs]);
       }
     printf ("\n");
     }
@@ -312,14 +312,14 @@ int initFmo (sDecoder* decoder, sSlice* pSlice) {
 //{{{
 int FmoFinit (sDecoder* decoder) {
 
-  if (decoder->MbToSliceGroupMap) {
-    free (decoder->MbToSliceGroupMap);
-    decoder->MbToSliceGroupMap = NULL;
+  if (decoder->mbToSliceGroupMap) {
+    free (decoder->mbToSliceGroupMap);
+    decoder->mbToSliceGroupMap = NULL;
     }
 
-  if (decoder->MapUnitToSliceGroupMap) { 
-    free (decoder->MapUnitToSliceGroupMap);
-    decoder->MapUnitToSliceGroupMap = NULL;
+  if (decoder->mapUnitToSliceGroupMap) { 
+    free (decoder->mapUnitToSliceGroupMap);
+    decoder->mapUnitToSliceGroupMap = NULL;
     }
 
   return 0;
@@ -328,7 +328,7 @@ int FmoFinit (sDecoder* decoder) {
 //{{{
 int FmoGetNumberOfSliceGroup (sDecoder* decoder)
 {
-  return decoder->NumberOfSliceGroups;
+  return decoder->sliceGroupsNum;
 }
 //}}}
 //{{{
@@ -353,8 +353,8 @@ int FmoGetLastMBInSliceGroup (sDecoder* decoder, int SliceGroup)
 int FmoGetSliceGroupId (sDecoder* decoder, int mb)
 {
   assert (mb < (int) decoder->picSizeInMbs);
-  assert (decoder->MbToSliceGroupMap != NULL);
-  return decoder->MbToSliceGroupMap[mb];
+  assert (decoder->mbToSliceGroupMap != NULL);
+  return decoder->mbToSliceGroupMap[mb];
 }
 //}}}
 //{{{
@@ -362,7 +362,7 @@ int FmoGetNextMBNr (sDecoder* decoder, int CurrentMbNr)
 {
   int SliceGroup = FmoGetSliceGroupId (decoder, CurrentMbNr);
 
-  while (++CurrentMbNr<(int)decoder->picSizeInMbs && decoder->MbToSliceGroupMap [CurrentMbNr] != SliceGroup)
+  while (++CurrentMbNr<(int)decoder->picSizeInMbs && decoder->mbToSliceGroupMap [CurrentMbNr] != SliceGroup)
     ;
 
   if (CurrentMbNr >= (int)decoder->picSizeInMbs)

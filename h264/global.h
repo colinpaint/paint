@@ -441,12 +441,13 @@ typedef struct Image {
 //}}}
 //{{{  sDecRefPicMarking
 typedef struct DecRefPicMarking {
+  struct DecRefPicMarking* next;
+
   int memory_management_control_operation;
   int difference_of_pic_nums_minus1;
   int longTermPicNum;
   int longTermFrameIndex;
   int max_long_term_frame_idx_plus1;
-  struct DecRefPicMarking* next;
   } sDecRefPicMarking;
 //}}}
 //{{{  sOldSlice
@@ -626,6 +627,8 @@ typedef struct Slice {
 //}}}
 //{{{  sDecodedPicture
 typedef struct DecodedPicture {
+  struct DecodedPicture* next;
+
   int valid;             // 0: invalid, 1: valid, 3: valid for 3D output;
   int viewId;            // -1: single view, >=0 multiview[VIEW1|VIEW0];
   int poc;
@@ -644,8 +647,6 @@ typedef struct DecodedPicture {
   int uvStride;          // stride of uBuf[0/1] and vBuf[0/1] buffer in bytes;
   int skipPicNum;
   int bufSize;
-
-  struct DecodedPicture* next;
   } sDecodedPicture;
 //}}}
 //{{{  sCoding
@@ -721,8 +722,8 @@ typedef struct CodingParam {
 //{{{  sLayer
 typedef struct LayerParam {
   int              layerId;
-  struct Decoder* decoder;
-  sCoding*    coding;
+  struct Decoder*  decoder;
+  sCoding*         coding;
   sSPS*            sps;
   struct DPB*      dpb;
   } sLayer;
@@ -743,28 +744,36 @@ typedef struct Input {
 //}}}
 //{{{  sDecoder
 typedef struct Decoder {
-  sInput      input;
+  sInput       input;
 
-  TIME_T      startTime;
-  TIME_T      endTime;
+  TIME_T       startTime;
+  TIME_T       endTime;
 
-  sPPS*       activePPS;
-  sSPS*       activeSPS;
-  sSPS        sps[32];
-  sPPS        pps[MAX_PPS];
-  Boolean     firstSPS;
-  int         recoveryPoint;
-  int         recoveryPointFound;
-  int         recoveryFrameCount;
-  int         recoveryFrameNum;
-  int         recoveryPoc;
+  struct       annexBstruct* annexB;
+  int          lastAccessUnitExists;
+  int          naluCount;
+  struct Nalu* nalu;
 
-  struct DPB* dpbLayer[MAX_NUM_DPB_LAYERS];
-  sLayer*     layer[MAX_NUM_DPB_LAYERS];
-  sCoding*    coding[MAX_NUM_DPB_LAYERS];
+  sSPS         sps[32];
+  sSPS*        activeSPS;
+  Boolean      firstSPS;
+
+  sPPS         pps[MAX_PPS];
+  sPPS*        activePPS;
+  sPPS*        nextPPS;
+
+  int          recoveryPoint;
+  int          recoveryPointFound;
+  int          recoveryFrameCount;
+  int          recoveryFrameNum;
+  int          recoveryPoc;
+
+  struct DPB*  dpbLayer[MAX_NUM_DPB_LAYERS];
+  sLayer*      layer[MAX_NUM_DPB_LAYERS];
+  sCoding*     coding[MAX_NUM_DPB_LAYERS];
 
   // loadsa frameNum
-  int          number; 
+  int          number;
   unsigned int preFrameNum;  // last decoded slice. For detecting gap in frameNum.
   int          idrPsnrNum;
   int          psnrNum;
@@ -773,7 +782,7 @@ typedef struct Decoder {
   int          gapNumFrame;
   int          newFrame;
 
-  struct sSEI*     sei;
+  struct sSEI* sei;
   struct OldSlice* oldSlice;
 
   // current picture property
@@ -839,11 +848,6 @@ typedef struct Decoder {
   int          isPrimaryOk;    // if primary frame is correct, 0: incorrect
   int          isReduncantOk;  // if redundant frame is correct, 0:incorrect
 
-  struct       annexBstruct* annexB;
-  int          LastAccessUnitExists;
-  int          NALUCount;
-  struct nalu_t* nalu;
-
   Boolean      globalInitDone[2];
 
   int*         qpPerMatrix;
@@ -873,22 +877,22 @@ typedef struct Decoder {
   char sliceTypeText[9];
 
   // FMO
-  int* MbToSliceGroupMap;
-  int* MapUnitToSliceGroupMap;
-  int  NumberOfSliceGroups;  // the number of slice groups -1 (0 == scan order, 7 == maximum)
+  int* mbToSliceGroupMap;
+  int* mapUnitToSliceGroupMap;
+  int  sliceGroupsNum;  // the number of slice groups -1 (0 == scan order, 7 == maximum)
 
-  void (*getNeighbour)     (sMacroblock *curMb, int xN, int yN, int mbSize[2], sPixelPos *pix);
-  void (*get_mb_block_pos) (sBlockPos *picPos, int mbAddr, short *x, short *y);
-  void (*GetStrengthVer)   (sMacroblock *MbQ, int edge, int mvlimit, struct Picture *p);
-  void (*GetStrengthHor)   (sMacroblock *MbQ, int edge, int mvlimit, struct Picture *p);
-  void (*EdgeLoopLumaVer)  (eColorPlane pl, sPixel** Img, byte *Strength, sMacroblock *MbQ, int edge);
-  void (*EdgeLoopLumaHor)  (eColorPlane pl, sPixel** Img, byte *Strength, sMacroblock *MbQ, int edge, struct Picture *p);
-  void (*EdgeLoopChromaVer)(sPixel** Img, byte *Strength, sMacroblock *MbQ, int edge, int uv, struct Picture *p);
-  void (*EdgeLoopChromaHor)(sPixel** Img, byte *Strength, sMacroblock *MbQ, int edge, int uv, struct Picture *p);
+  void (*getNeighbour) (sMacroblock*, int, int, int[2], sPixelPos*);
+  void (*getMbBlockPos) (sBlockPos*, int, short*, short*);
+  void (*getStrengthV) (sMacroblock*, int, int, struct Picture*);
+  void (*getStrengthH) (sMacroblock*, int, int, struct Picture*);
+  void (*edgeLoopLumaV) (eColorPlane, sPixel**, byte*, sMacroblock*, int);
+  void (*edgeLoopLumaH) (eColorPlane, sPixel**, byte*, sMacroblock*, int, struct Picture*);
+  void (*edgeLoopChromaV) (sPixel**, byte*, sMacroblock*, int, int, struct Picture*);
+  void (*edgeLoopChromaH) (sPixel**, byte*, sMacroblock*, int, int, struct Picture*);
 
+  int          deblockMode;  // 0: deblock in picture, 1: deblock in slice;
   sImage       tempData3;
   sDecodedPicture* decOutputPic;
-  int          deblockMode;  // 0: deblock in picture, 1: deblock in slice;
 
   int   iLumaPadX;
   int   iLumaPadY;
@@ -899,7 +903,6 @@ typedef struct Decoder {
   int   bDeblockEnable;
   int   iPostProcess;
   int   bFrameInit;
-  sPPS* nextPPS;
   int   last_dec_view_id;
   int   last_dec_layer_id;
   int   dpbLayerId;

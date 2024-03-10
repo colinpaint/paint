@@ -83,16 +83,16 @@ void checkZeroByteVCL (sDecoder* decoder, sNalu* nalu) {
         nalu->unitType <= NALU_TYPE_IDR))
     return;
 
-  if (decoder->LastAccessUnitExists)
-    decoder->NALUCount = 0;
-  decoder->NALUCount++;
+  if (decoder->lastAccessUnitExists)
+    decoder->naluCount = 0;
+  decoder->naluCount++;
 
   // the first VCL NAL unit that is the first NAL unit after last VCL NAL unit indicates
   // the start of a new access unit and hence the first NAL unit of the new access unit.
   // (sounds like a tongue twister :-)
-  if (decoder->NALUCount == 1)
+  if (decoder->naluCount == 1)
     CheckZeroByte = 1;
-  decoder->LastAccessUnitExists = 1;
+  decoder->lastAccessUnitExists = 1;
 
   // because it is not a very serious problem, we do not exit here
   if (CheckZeroByte && nalu->startCodeLen == 3)
@@ -120,16 +120,16 @@ void checkZeroByteNonVCL (sDecoder* decoder, sNalu* nalu) {
       nalu->unitType == NALU_TYPE_PPS ||
       nalu->unitType == NALU_TYPE_SEI ||
       (nalu->unitType >= 13 && nalu->unitType <= 18)) {
-    if (decoder->LastAccessUnitExists) {
+    if (decoder->lastAccessUnitExists) {
       // deliver the last access unit to decoder
-      decoder->LastAccessUnitExists = 0;
-      decoder->NALUCount = 0;
+      decoder->lastAccessUnitExists = 0;
+      decoder->naluCount = 0;
       }
     }
-  decoder->NALUCount++;
+  decoder->naluCount++;
 
   // for the first NAL unit in an access unit, zero_byte shall exists
-  if (decoder->NALUCount == 1)
+  if (decoder->naluCount == 1)
     CheckZeroByte = 1;
 
   if (CheckZeroByte && nalu->startCodeLen == 3)

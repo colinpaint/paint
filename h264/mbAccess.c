@@ -126,7 +126,7 @@ void get_mb_block_pos_mbaff (sBlockPos* picPos, int mbAddr, short* x, short* y) 
 //{{{
 void get_mb_pos (sDecoder* decoder, int mbAddr, int mbSize[2], short* x, short* y) {
 
-  decoder->get_mb_block_pos (decoder->picPos, mbAddr, x, y);
+  decoder->getMbBlockPos (decoder->picPos, mbAddr, x, y);
   (*x) = (short) ((*x) * mbSize[0]);
   (*y) = (short) ((*y) * mbSize[1]);
   }

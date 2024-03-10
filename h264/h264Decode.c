@@ -208,11 +208,11 @@ static void init (sDecoder* decoder) {
 
   // time for total decoding session
   decoder->picture = NULL;
-  decoder->MbToSliceGroupMap = NULL;
-  decoder->MapUnitToSliceGroupMap = NULL;
+  decoder->mbToSliceGroupMap = NULL;
+  decoder->mapUnitToSliceGroupMap = NULL;
 
-  decoder->LastAccessUnitExists  = 0;
-  decoder->NALUCount = 0;
+  decoder->lastAccessUnitExists  = 0;
+  decoder->naluCount = 0;
 
   decoder->outBuffer = NULL;
   decoder->pendingOut = NULL;
