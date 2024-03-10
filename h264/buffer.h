@@ -122,7 +122,6 @@ typedef struct FrameStore {
 //{{{  sDPB
 typedef struct DPB {
   sVidParam*    vidParam;
-  sInputParam*  inputParam;
 
   sFrameStore** fs;
   sFrameStore** fsRef;
