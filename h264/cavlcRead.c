@@ -14,35 +14,35 @@ static int predict_nnz (sMacroblock* mb, int block_type, int i,int j)
   sDecoder* decoder = mb->decoder;
   sSlice* slice = mb->slice;
 
-  sPixelPos pix;
+  sPixelPos pixelPos;
 
   int pred_nnz = 0;
   int cnt      = 0;
 
   // left block
-  get4x4Neighbour(mb, i - 1, j, decoder->mbSize[IS_LUMA], &pix);
+  get4x4Neighbour(mb, i - 1, j, decoder->mbSize[IS_LUMA], &pixelPos);
 
-  if ((mb->isIntraBlock == TRUE) && pix.available && decoder->activePPS->constrainedIntraPredFlag && (slice->datadpMode == PAR_DP_3))
+  if ((mb->isIntraBlock == TRUE) && pixelPos.available && decoder->activePPS->constrainedIntraPredFlag && (slice->datadpMode == PAR_DP_3))
   {
-    pix.available &= slice->intraBlock[pix.mbIndex];
-    if (!pix.available)
+    pixelPos.available &= slice->intraBlock[pixelPos.mbIndex];
+    if (!pixelPos.available)
       ++cnt;
   }
 
-  if (pix.available)
+  if (pixelPos.available)
   {
     switch (block_type)
     {
     case LUMA:
-      pred_nnz = decoder->nzCoeff [pix.mbIndex ][0][pix.y][pix.x];
+      pred_nnz = decoder->nzCoeff [pixelPos.mbIndex ][0][pixelPos.y][pixelPos.x];
       ++cnt;
       break;
     case CB:
-      pred_nnz = decoder->nzCoeff [pix.mbIndex ][1][pix.y][pix.x];
+      pred_nnz = decoder->nzCoeff [pixelPos.mbIndex ][1][pixelPos.y][pixelPos.x];
       ++cnt;
       break;
     case CR:
-      pred_nnz = decoder->nzCoeff [pix.mbIndex ][2][pix.y][pix.x];
+      pred_nnz = decoder->nzCoeff [pixelPos.mbIndex ][2][pixelPos.y][pixelPos.x];
       ++cnt;
       break;
     default:
@@ -52,29 +52,29 @@ static int predict_nnz (sMacroblock* mb, int block_type, int i,int j)
   }
 
   // top block
-  get4x4Neighbour(mb, i, j - 1, decoder->mbSize[IS_LUMA], &pix);
+  get4x4Neighbour(mb, i, j - 1, decoder->mbSize[IS_LUMA], &pixelPos);
 
-  if ((mb->isIntraBlock == TRUE) && pix.available && decoder->activePPS->constrainedIntraPredFlag && (slice->datadpMode==PAR_DP_3))
+  if ((mb->isIntraBlock == TRUE) && pixelPos.available && decoder->activePPS->constrainedIntraPredFlag && (slice->datadpMode==PAR_DP_3))
   {
-    pix.available &= slice->intraBlock[pix.mbIndex];
-    if (!pix.available)
+    pixelPos.available &= slice->intraBlock[pixelPos.mbIndex];
+    if (!pixelPos.available)
       ++cnt;
   }
 
-  if (pix.available)
+  if (pixelPos.available)
   {
     switch (block_type)
     {
     case LUMA:
-      pred_nnz += decoder->nzCoeff [pix.mbIndex ][0][pix.y][pix.x];
+      pred_nnz += decoder->nzCoeff [pixelPos.mbIndex ][0][pixelPos.y][pixelPos.x];
       ++cnt;
       break;
     case CB:
-      pred_nnz += decoder->nzCoeff [pix.mbIndex ][1][pix.y][pix.x];
+      pred_nnz += decoder->nzCoeff [pixelPos.mbIndex ][1][pixelPos.y][pixelPos.x];
       ++cnt;
       break;
     case CR:
-      pred_nnz += decoder->nzCoeff [pix.mbIndex ][2][pix.y][pix.x];
+      pred_nnz += decoder->nzCoeff [pixelPos.mbIndex ][2][pixelPos.y][pixelPos.x];
       ++cnt;
       break;
     default:
@@ -101,40 +101,40 @@ static int predict_nnz_chroma (sMacroblock* mb, int i,int j)
   {
     sDecoder* decoder = mb->decoder;
     sSlice* slice = mb->slice;
-    sPixelPos pix;
+    sPixelPos pixelPos;
     int pred_nnz = 0;
     int cnt      = 0;
 
     //YUV420 and YUV422
     // left block
-    get4x4Neighbour(mb, ((i&0x01)<<2) - 1, j, decoder->mbSize[IS_CHROMA], &pix);
+    get4x4Neighbour(mb, ((i&0x01)<<2) - 1, j, decoder->mbSize[IS_CHROMA], &pixelPos);
 
-    if ((mb->isIntraBlock == TRUE) && pix.available && decoder->activePPS->constrainedIntraPredFlag && (slice->datadpMode==PAR_DP_3))
+    if ((mb->isIntraBlock == TRUE) && pixelPos.available && decoder->activePPS->constrainedIntraPredFlag && (slice->datadpMode==PAR_DP_3))
     {
-      pix.available &= slice->intraBlock[pix.mbIndex];
-      if (!pix.available)
+      pixelPos.available &= slice->intraBlock[pixelPos.mbIndex];
+      if (!pixelPos.available)
         ++cnt;
     }
 
-    if (pix.available)
+    if (pixelPos.available)
     {
-      pred_nnz = decoder->nzCoeff [pix.mbIndex ][1][pix.y][2 * (i>>1) + pix.x];
+      pred_nnz = decoder->nzCoeff [pixelPos.mbIndex ][1][pixelPos.y][2 * (i>>1) + pixelPos.x];
       ++cnt;
     }
 
     // top block
-    get4x4Neighbour(mb, ((i&0x01)<<2), j - 1, decoder->mbSize[IS_CHROMA], &pix);
+    get4x4Neighbour(mb, ((i&0x01)<<2), j - 1, decoder->mbSize[IS_CHROMA], &pixelPos);
 
-    if ((mb->isIntraBlock == TRUE) && pix.available && decoder->activePPS->constrainedIntraPredFlag && (slice->datadpMode==PAR_DP_3))
+    if ((mb->isIntraBlock == TRUE) && pixelPos.available && decoder->activePPS->constrainedIntraPredFlag && (slice->datadpMode==PAR_DP_3))
     {
-      pix.available &= slice->intraBlock[pix.mbIndex];
-      if (!pix.available)
+      pixelPos.available &= slice->intraBlock[pixelPos.mbIndex];
+      if (!pixelPos.available)
         ++cnt;
     }
 
-    if (pix.available)
+    if (pixelPos.available)
     {
-      pred_nnz += decoder->nzCoeff [pix.mbIndex ][1][pix.y][2 * (i>>1) + pix.x];
+      pred_nnz += decoder->nzCoeff [pixelPos.mbIndex ][1][pixelPos.y][2 * (i>>1) + pixelPos.x];
       ++cnt;
     }
 

@@ -1554,7 +1554,7 @@ void decodePOC (sDecoder* decoder, sSlice* slice) {
 
       // 2nd
       if (slice->fieldPicFlag==0) {
-        //frame pix
+        //frame pixelPos
         slice->topPoc = slice->PicOrderCntMsb + slice->picOrderCountLsb;
         slice->botPoc = slice->topPoc + slice->deletaPicOrderCountBot;
         slice->thisPoc = slice->framePoc = (slice->topPoc < slice->botPoc)? slice->topPoc : slice->botPoc; // POC200301
@@ -1579,7 +1579,7 @@ void decodePOC (sDecoder* decoder, sSlice* slice) {
     case 1: // POC MODE 1
       // 1st
       if (slice->idrFlag) {
-        decoder->FrameNumOffset=0;     //  first pix of IDRGOP,
+        decoder->FrameNumOffset=0;     //  first pixelPos of IDRGOP,
         if (slice->frameNum)
           error ("frameNum not equal to zero in IDR picture", -1020);
         }
@@ -1589,7 +1589,7 @@ void decodePOC (sDecoder* decoder, sSlice* slice) {
           decoder->PreviousFrameNum = 0;
           }
         if (slice->frameNum<decoder->PreviousFrameNum)
-          //not first pix of IDRGOP
+          //not first pixelPos of IDRGOP
           decoder->FrameNumOffset = decoder->PreviousFrameNumOffset + decoder->maxFrameNum;
         else
           decoder->FrameNumOffset = decoder->PreviousFrameNumOffset;
@@ -1626,7 +1626,7 @@ void decodePOC (sDecoder* decoder, sSlice* slice) {
         decoder->ExpectedPicOrderCnt += activeSPS->offset_for_non_ref_pic;
 
       if (slice->fieldPicFlag == 0) {
-        // frame pix
+        // frame pixelPos
         slice->topPoc = decoder->ExpectedPicOrderCnt + slice->deltaPicOrderCount[0];
         slice->botPoc = slice->topPoc + activeSPS->offset_for_top_to_bottom_field + slice->deltaPicOrderCount[1];
         slice->thisPoc = slice->framePoc = (slice->topPoc < slice->botPoc)? slice->topPoc : slice->botPoc; // POC200301
@@ -1646,7 +1646,7 @@ void decodePOC (sDecoder* decoder, sSlice* slice) {
     //{{{
     case 2: // POC MODE 2
       if (slice->idrFlag) {
-        // IDR picture, first pix of IDRGOP,
+        // IDR picture, first pixelPos of IDRGOP,
         decoder->FrameNumOffset = 0;
         slice->thisPoc = slice->framePoc = slice->topPoc = slice->botPoc = 0;
         if (slice->frameNum)

@@ -342,13 +342,12 @@ static int spsIsEqual (sSPS* sps1, sSPS* sps2) {
 //}}}
 //{{{
 // syntax for scaling list matrix values
-static void scalingList (int* scalingList, int sizeOfScalingList,
-                         Boolean* useDefaultScalingMatrix, sBitstream* s) {
+static void scalingList (int* scalingList, int scalingListSize, Boolean* useDefaultScalingMatrix, sBitstream* s) {
 
   int lastScale = 8;
   int nextScale = 8;
-  for (int j = 0; j < sizeOfScalingList; j++) {
-    int scanj = (sizeOfScalingList == 16) ? ZZ_SCAN[j]:ZZ_SCAN8[j];
+  for (int j = 0; j < scalingListSize; j++) {
+    int scanj = (scalingListSize == 16) ? ZZ_SCAN[j]:ZZ_SCAN8[j];
     if (nextScale != 0) {
       int delta_scale = readSeV ("   : delta_sl   ", s);
       nextScale = (lastScale + delta_scale + 256) % 256;

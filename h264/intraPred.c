@@ -3295,9 +3295,9 @@ static int intra16x16_dc_pred_mbaff (sMacroblock* mb, eColorPlane plane)
   for (i = 0; i < MB_BLOCK_SIZE; ++i)
   {
     if (up_avail)
-      s1 += imgY[b.posY][b.posX+i];    // sum hor pix
+      s1 += imgY[b.posY][b.posX+i];    // sum hor pixelPos
     if (left_avail)
-      s2 += imgY[left[i + 1].posY][left[i + 1].posX];    // sum vert pix
+      s2 += imgY[left[i + 1].posY][left[i + 1].posX];    // sum vert pixelPos
   }
   if (up_avail && left_avail)
     s0 = (s1 + s2 + 16)>>5;       // no edge
