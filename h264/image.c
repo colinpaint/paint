@@ -1172,7 +1172,6 @@ void exitPicture (sDecoder* decoder, sPicture** picture) {
 
     // call the right error conceal function depending on the frame type.
     decoder->ercMvPerMb /= (*picture)->picSizeInMbs;
-    decoder->ercImg = decoder;
     if ((*picture)->sliceType == I_SLICE || (*picture)->sliceType == SI_SLICE) // I-frame
       ercConcealIntraFrame (decoder, &recfr, (*picture)->sizeX, (*picture)->sizeY, decoder->ercErrorVar);
     else

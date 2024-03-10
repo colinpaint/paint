@@ -1109,7 +1109,7 @@ static int concealByTrial (frame *recfr, sPixel *predMB,
                   mvPred[0] = mvPred[1] = 0;
                   mvPred[2] = 0;
 
-                  buildPredRegionYUV(decoder->ercImg, mvPred, currRegion->xMin, currRegion->yMin, predMB);
+                  buildPredRegionYUV (decoder, mvPred, currRegion->xMin, currRegion->yMin, predMB);
                 }
               }
               /* build motion using the neighbour's Motion Parameters */
@@ -1125,7 +1125,7 @@ static int concealByTrial (frame *recfr, sPixel *predMB,
                 mvPred[1] = mvptr[1];
                 mvPred[2] = mvptr[2];
 
-                buildPredRegionYUV(decoder->ercImg, mvPred, currRegion->xMin, currRegion->yMin, predMB);
+                buildPredRegionYUV (decoder, mvPred, currRegion->xMin, currRegion->yMin, predMB);
               }
 
               /* measure absolute boundary pixel difference */
@@ -1167,7 +1167,7 @@ static int concealByTrial (frame *recfr, sPixel *predMB,
       mvPred[0] = mvPred[1] = 0;
       mvPred[2] = 0;
 
-      buildPredRegionYUV(decoder->ercImg, mvPred, currRegion->xMin, currRegion->yMin, predMB);
+      buildPredRegionYUV (decoder, mvPred, currRegion->xMin, currRegion->yMin, predMB);
 
       currDist = edgeDistortion(predBlocks,
         MBNum2YBlock(currMBNum,comp,picSizeX),
@@ -1579,8 +1579,6 @@ static void copy_to_conceal (sPicture *src, sPicture *dst, sDecoder* decoder)
       storeYUV = (sPixel *) malloc (16  * sizeof (sPixel));
     }
 
-    decoder->ercImg = decoder;
-
     dst->PicWidthInMbs = src->PicWidthInMbs;
     dst->picSizeInMbs = src->picSizeInMbs;
     mb_width = dst->PicWidthInMbs;
@@ -1622,7 +1620,7 @@ static void copy_to_conceal (sPicture *src, sPicture *dst, sDecoder* decoder)
         if ((mm%16==0) && (nn%16==0))
           curMbNum++;
 
-        buildPredblockRegionYUV(decoder->ercImg, mv, x, y, storeYUV, LIST_0, curMbNum);
+        buildPredblockRegionYUV (decoder, mv, x, y, storeYUV, LIST_0, curMbNum);
 
         predMB = storeYUV;
 

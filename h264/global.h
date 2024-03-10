@@ -869,7 +869,6 @@ typedef struct Decoder {
   struct ObjectBuffer* ercObjectList;
   struct ErcVariables* ercErrorVar;
   int                  ercMvPerMb;
-  struct Decoder*      ercImg;
   int                  ecFlag[SE_MAX_ELEMENTS];  // array to set errorconcealment
 
   struct FrameStore*   outBuffer;
