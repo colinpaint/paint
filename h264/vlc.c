@@ -13,7 +13,7 @@ int readUeV (char* tracestring, sBitstream* bitstream) {
   symbol.mapping = linfo_ue;
   readsSyntaxElement_VLC (&symbol, bitstream);
 
-  if (gVidParam->inputParam.vlcDebug)
+  if (gVidParam->input.vlcDebug)
     printf ("read %s %d\n", tracestring, symbol.value1);
 
   return symbol.value1;
@@ -27,7 +27,7 @@ int readSeV (char* tracestring, sBitstream* bitstream) {
   symbol.mapping = linfo_se;
   readsSyntaxElement_VLC (&symbol, bitstream);
 
-  if (gVidParam->inputParam.vlcDebug)
+  if (gVidParam->input.vlcDebug)
     printf ("read %s %d\n", tracestring, symbol.value1);
 
   return symbol.value1;
@@ -43,7 +43,7 @@ int readUv (int LenInBits, char* tracestring, sBitstream* bitstream) {
   symbol.len = LenInBits;
   readsSyntaxElement_FLC (&symbol, bitstream);
 
-  if (gVidParam->inputParam.vlcDebug)
+  if (gVidParam->input.vlcDebug)
     printf ("read %s %d\n", tracestring, symbol.inf);
 
   return symbol.inf;
@@ -62,7 +62,7 @@ int readIv (int LenInBits, char* tracestring, sBitstream* bitstream) {
   // can be negative
   symbol.inf = -( symbol.inf & (1 << (LenInBits - 1)) ) | symbol.inf;
 
-  if (gVidParam->inputParam.vlcDebug)
+  if (gVidParam->input.vlcDebug)
     printf ("read %s %d\n", tracestring, symbol.inf);
 
   return symbol.inf;

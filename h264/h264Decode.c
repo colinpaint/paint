@@ -198,7 +198,7 @@ static void init (sVidParam* vidParam) {
   vidParam->recoveryPointFound = 0;
   vidParam->recoveryPoc = 0x7fffffff; /* set to a max value */
 
-  vidParam->idrPsnrNum = vidParam->inputParam.refOffset;
+  vidParam->idrPsnrNum = vidParam->input.refOffset;
   vidParam->psnrNum=0;
 
   vidParam->number = 0;
@@ -577,7 +577,7 @@ void setGlobalCodingProgram (sVidParam* vidParam, sCoding* codingParam) {
 //}}}
 
 //{{{
-void OpenDecoder (sInput* inputParam, byte* chunk, size_t chunkSize) {
+void OpenDecoder (sInput* input, byte* chunk, size_t chunkSize) {
 
   // alloc decoder
   sVidParam* vidParam = (sVidParam*)calloc (1, sizeof(sVidParam));
@@ -585,11 +585,11 @@ void OpenDecoder (sInput* inputParam, byte* chunk, size_t chunkSize) {
 
   init_time();
 
-  // init inputParam
-  memcpy (&(vidParam->inputParam), inputParam, sizeof(sInput));
-  gVidParam->concealMode = inputParam->concealMode;
-  gVidParam->refPocGap = inputParam->refPocGap;
-  gVidParam->pocGap = inputParam->pocGap;
+  // init input
+  memcpy (&(vidParam->input), input, sizeof(sInput));
+  gVidParam->concealMode = input->concealMode;
+  gVidParam->refPocGap = input->refPocGap;
+  gVidParam->pocGap = input->pocGap;
 
   // init nalu, annexB
   vidParam->nalu = allocNALU (MAX_CODED_FRAME_SIZE);

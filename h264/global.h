@@ -730,7 +730,7 @@ typedef struct LayerParam {
   } sLayer;
 //}}}
 //{{{  sInput
-typedef struct InputParam {
+typedef struct Input {
   int vlcDebug;
   int refOffset;
   int pocScale;
@@ -745,7 +745,7 @@ typedef struct InputParam {
 //}}}
 //{{{  sVidParam
 typedef struct VidParam {
-  struct InputParam inputParam;
+  sInput       input;
 
   TIME_T       startTime;
   TIME_T       endTime;
