@@ -425,24 +425,25 @@ static void interpret_filler_payload_info (byte* payload, int size, sDecoder* de
 //}}}
 
 //{{{
-static void interpret_user_data_unregistered_info (byte* payload, int size, sDecoder* decoder)
-{
+static void interpret_user_data_unregistered_info (byte* payload, int size, sDecoder* decoder) {
+
   int offset = 0;
   byte payload_byte;
 
-  printf ("User data unregistered SEI message\n");
-  printf ("uuid_iso_11578 = 0x");
   assert (size>=16);
 
-  for (offset = 0; offset < 16; offset++)
-    printf ("%02x",payload[offset]);
+  if (decoder->param.seiDebug) {
+    printf ("User data unregistered SEI message\n");
+    printf ("uuid_iso_11578 = 0x");
+    for (offset = 0; offset < 16; offset++)
+      printf ("%02x",payload[offset]);
+    printf ("\n");
 
-  printf ("\n");
-
-  while (offset < size) {
-    payload_byte = payload[offset];
-    offset ++;
-    printf ("Unreg data payload_byte = %d\n", payload_byte);
+    while (offset < size) {
+      payload_byte = payload[offset];
+      offset ++;
+      printf ("Unreg data payload_byte = %d\n", payload_byte);
+      }
     }
   }
 //}}}
