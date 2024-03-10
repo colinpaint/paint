@@ -386,37 +386,37 @@ static int BType2CtxRef (int btype) {
 //}}}
 //{{{
 static char readRefPictureIdxVLC (sMacroblock* mb, sSyntaxElement* currSE,
-                                   sDataPartition* dP, char b8mode, int list) {
+                                   sDataPartition* dp, char b8mode, int list) {
 
   currSE->context = BType2CtxRef (b8mode);
   currSE->value2 = list;
-  dP->readsSyntaxElement (mb, currSE, dP);
+  dp->readsSyntaxElement (mb, currSE, dp);
   return (char) currSE->value1;
   }
 //}}}
 //{{{
-static char readRefPictureIdxFLC (sMacroblock* mb, sSyntaxElement* currSE, sDataPartition *dP, char b8mode, int list)
+static char readRefPictureIdxFLC (sMacroblock* mb, sSyntaxElement* currSE, sDataPartition *dp, char b8mode, int list)
 {
   currSE->context = BType2CtxRef (b8mode);
   currSE->len = 1;
-  readsSyntaxElement_FLC(currSE, dP->bitstream);
+  readsSyntaxElement_FLC(currSE, dp->bitstream);
   currSE->value1 = 1 - currSE->value1;
 
   return (char)currSE->value1;
   }
 //}}}
 //{{{
-static char readRefPictureIdxNull (sMacroblock* mb, sSyntaxElement* currSE, sDataPartition *dP, char b8mode, int list)
+static char readRefPictureIdxNull (sMacroblock* mb, sSyntaxElement* currSE, sDataPartition *dp, char b8mode, int list)
 {
   return 0;
 }
 //}}}
 //{{{
 static void prepareListforRefIdx (sMacroblock* mb, sSyntaxElement* currSE,
-                                  sDataPartition *dP, int numRefIndexActive, int refidx_present) {
+                                  sDataPartition *dp, int numRefIndexActive, int refidx_present) {
 
   if (numRefIndexActive > 1) {
-    if (mb->decoder->activePPS->entropyCodingModeFlag == (Boolean) CAVLC || dP->bitstream->eiFlag) {
+    if (mb->decoder->activePPS->entropyCodingModeFlag == (Boolean) CAVLC || dp->bitstream->eiFlag) {
       currSE->mapping = linfo_ue;
       if (refidx_present)
         mb->readRefPictureIndex = (numRefIndexActive == 2) ? readRefPictureIdxFLC : readRefPictureIdxVLC;
@@ -460,21 +460,21 @@ void updateQp (sMacroblock* mb, int qp) {
   }
 //}}}
 //{{{
-void readDeltaQuant (sSyntaxElement* currSE, sDataPartition *dP, sMacroblock* mb, const byte *partMap, int type)
+void readDeltaQuant (sSyntaxElement* currSE, sDataPartition *dp, sMacroblock* mb, const byte *partitionMap, int type)
 {
   sSlice* slice = mb->slice;
   sDecoder* decoder = mb->decoder;
 
   currSE->type = type;
 
-  dP = &(slice->partitions[partMap[currSE->type]]);
+  dp = &(slice->partitions[partitionMap[currSE->type]]);
 
-  if (decoder->activePPS->entropyCodingModeFlag == (Boolean)CAVLC || dP->bitstream->eiFlag)
+  if (decoder->activePPS->entropyCodingModeFlag == (Boolean)CAVLC || dp->bitstream->eiFlag)
     currSE->mapping = linfo_se;
   else
     currSE->reading= read_dQuant_CABAC;
 
-  dP->readsSyntaxElement(mb, currSE, dP);
+  dp->readsSyntaxElement(mb, currSE, dp);
   mb->deltaQuant = (short) currSE->value1;
   if ((mb->deltaQuant < -(26 + decoder->bitdepthLumeQpScale/2)) ||
       (mb->deltaQuant > (25 + decoder->bitdepthLumeQpScale/2))) {
@@ -489,7 +489,7 @@ void readDeltaQuant (sSyntaxElement* currSE, sDataPartition *dP, sMacroblock* mb
 //}}}
 
 //{{{
-static void readMBRefPictureIdx (sSyntaxElement* currSE, sDataPartition *dP,
+static void readMBRefPictureIdx (sSyntaxElement* currSE, sDataPartition *dp,
                                  sMacroblock* mb, sPicMotionParam** mvInfo,
                                  int list, int step_v0, int step_h0) {
 
@@ -497,7 +497,7 @@ static void readMBRefPictureIdx (sSyntaxElement* currSE, sDataPartition *dP,
     if ((mb->b8pdir[0] == list || mb->b8pdir[0] == BI_PRED)) {
       mb->subblockX = 0;
       mb->subblockY = 0;
-      char refframe = mb->readRefPictureIndex(mb, currSE, dP, 1, list);
+      char refframe = mb->readRefPictureIndex(mb, currSE, dp, 1, list);
       for (int j = 0; j <  step_v0; ++j) {
         char* refIndex = &mvInfo[j][mb->blockX].refIndex[list];
         for (int i = 0; i < step_h0; ++i) {
@@ -513,7 +513,7 @@ static void readMBRefPictureIdx (sSyntaxElement* currSE, sDataPartition *dP,
       if ((mb->b8pdir[k] == list || mb->b8pdir[k] == BI_PRED)) {
         mb->subblockY = j0 << 2;
         mb->subblockX = 0;
-        char refframe = mb->readRefPictureIndex(mb, currSE, dP, mb->b8mode[k], list);
+        char refframe = mb->readRefPictureIndex(mb, currSE, dp, mb->b8mode[k], list);
         for (int j = j0; j < j0 + step_v0; ++j) {
           char *refIndex = &mvInfo[j][mb->blockX].refIndex[list];
           for (int i = 0; i < step_h0; ++i) {
@@ -530,7 +530,7 @@ static void readMBRefPictureIdx (sSyntaxElement* currSE, sDataPartition *dP,
       int k = (i0 >> 1);
       if ((mb->b8pdir[k] == list || mb->b8pdir[k] == BI_PRED) && mb->b8mode[k] != 0) {
         mb->subblockX = i0 << 2;
-        char refframe = mb->readRefPictureIndex(mb, currSE, dP, mb->b8mode[k], list);
+        char refframe = mb->readRefPictureIndex(mb, currSE, dp, mb->b8mode[k], list);
         for (int j = 0; j < step_v0; ++j) {
           char *refIndex = &mvInfo[j][mb->blockX + i0].refIndex[list];
           for (int i = 0; i < step_h0; ++i) {
@@ -548,7 +548,7 @@ static void readMBRefPictureIdx (sSyntaxElement* currSE, sDataPartition *dP,
         int k = 2 * (j0 >> 1) + (i0 >> 1);
         if ((mb->b8pdir[k] == list || mb->b8pdir[k] == BI_PRED) && mb->b8mode[k] != 0) {
           mb->subblockX = i0 << 2;
-          char refframe = mb->readRefPictureIndex(mb, currSE, dP, mb->b8mode[k], list);
+          char refframe = mb->readRefPictureIndex(mb, currSE, dp, mb->b8mode[k], list);
           for (int j = j0; j < j0 + step_v0; ++j) {
             char *refIndex = &mvInfo[j][mb->blockX + i0].refIndex[list];
             for (int i = 0; i < step_h0; ++i) {
@@ -563,7 +563,7 @@ static void readMBRefPictureIdx (sSyntaxElement* currSE, sDataPartition *dP,
   }
 //}}}
 //{{{
-static void readMBMotionVectors (sSyntaxElement* currSE, sDataPartition *dP, sMacroblock* mb,
+static void readMBMotionVectors (sSyntaxElement* currSE, sDataPartition *dp, sMacroblock* mb,
                                  int list, int step_h0, int step_v0) {
 
   if (mb->mbType == 1) {
@@ -588,12 +588,12 @@ static void readMBMotionVectors (sSyntaxElement* currSE, sDataPartition *dP, sMa
 
       // X component
       currSE->value2 = list; // identifies the component; only used for context determination
-      dP->readsSyntaxElement(mb, currSE, dP);
+      dp->readsSyntaxElement(mb, currSE, dp);
       curr_mvd[0] = (short) currSE->value1;
 
       // Y component
       currSE->value2 += 2; // identifies the component; only used for context determination
-      dP->readsSyntaxElement(mb, currSE, dP);
+      dp->readsSyntaxElement(mb, currSE, dp);
       curr_mvd[1] = (short) currSE->value1;
 
       curr_mv.mvX = (short)(curr_mvd[0] + pred_mv.mvX);  // compute motion vector x
@@ -650,7 +650,7 @@ static void readMBMotionVectors (sSyntaxElement* currSE, sDataPartition *dP, sMa
 
               for (k = 0; k < 2; ++k) {
                 currSE->value2   = (k << 1) + list; // identifies the component; only used for context determination
-                dP->readsSyntaxElement (mb, currSE, dP);
+                dp->readsSyntaxElement (mb, currSE, dp);
                 curr_mvd[k] = (short)currSE->value1;
                 }
 
@@ -1019,8 +1019,8 @@ static void readMotionInfoP (sMacroblock* mb){
   sSlice* slice = mb->slice;
 
   sSyntaxElement currSE;
-  sDataPartition *dP = NULL;
-  const byte *partMap       = assignSE2partition[slice->dataPartitionMode];
+  sDataPartition *dp = NULL;
+  const byte *partitionMap       = assignSE2partition[slice->dataPartitionMode];
   short partmode        = ((mb->mbType == P8x8) ? 4 : mb->mbType);
   int step_h0         = BLOCK_STEP [partmode][0];
   int step_v0         = BLOCK_STEP [partmode][1];
@@ -1035,22 +1035,22 @@ static void readMotionInfoP (sMacroblock* mb){
 
   //=====  READ REFERENCE PICTURE INDICES =====
   currSE.type = SE_REFFRAME;
-  dP = &(slice->partitions[partMap[SE_REFFRAME]]);
+  dp = &(slice->partitions[partitionMap[SE_REFFRAME]]);
 
   //  For LIST_0, if multiple ref. pictures, read LIST_0 reference picture indices for the MB
-  prepareListforRefIdx (mb, &currSE, dP, slice->numRefIndexActive[LIST_0], (mb->mbType != P8x8) || (!slice->allrefzero));
-  readMBRefPictureIdx  (&currSE, dP, mb, p_mv_info, LIST_0, step_v0, step_h0);
+  prepareListforRefIdx (mb, &currSE, dp, slice->numRefIndexActive[LIST_0], (mb->mbType != P8x8) || (!slice->allrefzero));
+  readMBRefPictureIdx  (&currSE, dp, mb, p_mv_info, LIST_0, step_v0, step_h0);
 
   //=====  READ MOTION VECTORS =====
   currSE.type = SE_MVD;
-  dP = &(slice->partitions[partMap[SE_MVD]]);
-  if (decoder->activePPS->entropyCodingModeFlag == (Boolean) CAVLC || dP->bitstream->eiFlag)
+  dp = &(slice->partitions[partitionMap[SE_MVD]]);
+  if (decoder->activePPS->entropyCodingModeFlag == (Boolean) CAVLC || dp->bitstream->eiFlag)
     currSE.mapping = linfo_se;
   else
     currSE.reading = slice->mbAffFrameFlag ? read_mvd_CABAC_mbaff : read_MVD_CABAC;
 
   // LIST_0 Motion vectors
-  readMBMotionVectors (&currSE, dP, mb, LIST_0, step_h0, step_v0);
+  readMBMotionVectors (&currSE, dp, mb, LIST_0, step_h0, step_v0);
 
   // record reference picture Ids for deblocking decisions
   for (j4 = 0; j4 < 4;++j4)  {
@@ -1072,8 +1072,8 @@ static void readMotionInfoB (sMacroblock* mb) {
   sDecoder* decoder = mb->decoder;
   sPicture* picture = slice->picture;
   sSyntaxElement currSE;
-  sDataPartition* dP = NULL;
-  const byte* partMap = assignSE2partition[slice->dataPartitionMode];
+  sDataPartition* dp = NULL;
+  const byte* partitionMap = assignSE2partition[slice->dataPartitionMode];
   int partmode = (mb->mbType == P8x8) ? 4 : mb->mbType;
   int step_h0 = BLOCK_STEP [partmode][0];
   int step_v0 = BLOCK_STEP [partmode][1];
@@ -1089,29 +1089,29 @@ static void readMotionInfoB (sMacroblock* mb) {
 
   //=====  READ REFERENCE PICTURE INDICES =====
   currSE.type = SE_REFFRAME;
-  dP = &(slice->partitions[partMap[SE_REFFRAME]]);
+  dp = &(slice->partitions[partitionMap[SE_REFFRAME]]);
 
   //  For LIST_0, if multiple ref. pictures, read LIST_0 reference picture indices for the MB
-  prepareListforRefIdx (mb, &currSE, dP, slice->numRefIndexActive[LIST_0], TRUE);
-  readMBRefPictureIdx (&currSE, dP, mb, p_mv_info, LIST_0, step_v0, step_h0);
+  prepareListforRefIdx (mb, &currSE, dp, slice->numRefIndexActive[LIST_0], TRUE);
+  readMBRefPictureIdx (&currSE, dp, mb, p_mv_info, LIST_0, step_v0, step_h0);
 
   //  For LIST_1, if multiple ref. pictures, read LIST_1 reference picture indices for the MB
-  prepareListforRefIdx (mb, &currSE, dP, slice->numRefIndexActive[LIST_1], TRUE);
-  readMBRefPictureIdx (&currSE, dP, mb, p_mv_info, LIST_1, step_v0, step_h0);
+  prepareListforRefIdx (mb, &currSE, dp, slice->numRefIndexActive[LIST_1], TRUE);
+  readMBRefPictureIdx (&currSE, dp, mb, p_mv_info, LIST_1, step_v0, step_h0);
 
   //=====  READ MOTION VECTORS =====
   currSE.type = SE_MVD;
-  dP = &(slice->partitions[partMap[SE_MVD]]);
-  if (decoder->activePPS->entropyCodingModeFlag == (Boolean)CAVLC || dP->bitstream->eiFlag)
+  dp = &(slice->partitions[partitionMap[SE_MVD]]);
+  if (decoder->activePPS->entropyCodingModeFlag == (Boolean)CAVLC || dp->bitstream->eiFlag)
     currSE.mapping = linfo_se;
   else
     currSE.reading = slice->mbAffFrameFlag ? read_mvd_CABAC_mbaff : read_MVD_CABAC;
 
   // LIST_0 Motion vectors
-  readMBMotionVectors (&currSE, dP, mb, LIST_0, step_h0, step_v0);
+  readMBMotionVectors (&currSE, dp, mb, LIST_0, step_h0, step_v0);
 
   // LIST_1 Motion vectors
-  readMBMotionVectors (&currSE, dP, mb, LIST_1, step_h0, step_v0);
+  readMBMotionVectors (&currSE, dp, mb, LIST_1, step_h0, step_v0);
 
   // record reference picture Ids for deblocking decisions
   for (j4 = 0; j4 < 4; ++j4) {

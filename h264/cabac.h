@@ -26,7 +26,7 @@ extern void read_skip_flag_CABAC_b_slice (sMacroblock* mb, sSyntaxElement* se, s
 extern void readFieldModeInfo_CABAC (sMacroblock* mb, sSyntaxElement* se, sDecodingEnv* decodingEnv);
 extern void readMB_transform_size_flag_CABAC (sMacroblock* mb, sSyntaxElement* se, sDecodingEnv* decodingEnv);
 
-extern void readIPCMcabac (sSlice* slice, struct DataPartition* dP);
+extern void readIPCMcabac (sSlice* slice, sDataPartition* dp);
 extern int  cabac_startcode_follows (sSlice* slice, int eos_bit);
 extern int  readsSyntaxElement_CABAC (sMacroblock* mb, sSyntaxElement* se, sDataPartition* this_dataPart);
 

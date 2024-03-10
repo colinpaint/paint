@@ -238,7 +238,7 @@ typedef struct SyntaxElement {
   int           context;               //!< CABAC context
   int           k;                     //!< CABAC context for coeff_count,uv
 
-  // for mapping of CAVLC to syntaxElement
+  // for mapping of CAVLC to se
   void (*mapping) (int, int, int*, int*);
 
   // used for CABAC: refers to actual coding method of each individual syntax element type
