@@ -131,58 +131,58 @@ static void freeSlice (sSlice *slice) {
 //}}}
 
 //{{{
-static void freeImg (sDecoder* decoder) {
+static void freeDecoder (sDecoder* decoder) {
 
-  if (decoder != NULL) {
-    freeAnnexB (&decoder->annexB);
+  freeAnnexB (&decoder->annexB);
 
-    // Free new dpb layers
-    for (int i = 0; i < MAX_NUM_DPB_LAYERS; i++) {
-      if (decoder->dpbLayer[i] != NULL) {
-        free (decoder->dpbLayer[i]);
-        decoder->dpbLayer[i] = NULL;
-        }
-
-      if (decoder->coding[i]) {
-        free (decoder->coding[i]);
-        decoder->coding[i] = NULL;
-        }
-
-      if (decoder->layer[i]) {
-        free (decoder->layer[i]);
-        decoder->layer[i] = NULL;
-        }
+  // Free new dpb layers
+  for (int i = 0; i < MAX_NUM_DPB_LAYERS; i++) {
+    if (decoder->dpbLayer[i] != NULL) {
+      free (decoder->dpbLayer[i]);
+      decoder->dpbLayer[i] = NULL;
       }
 
-    if (decoder->oldSlice != NULL) {
-      free (decoder->oldSlice);
-      decoder->oldSlice = NULL;
+    if (decoder->coding[i]) {
+      free (decoder->coding[i]);
+      decoder->coding[i] = NULL;
       }
 
-    if (decoder->nextSlice) {
-      freeSlice (decoder->nextSlice);
-      decoder->nextSlice=NULL;
-      }
-
-    if (decoder->sliceList) {
-      for (unsigned int i = 0; i < decoder->numAllocatedSlices; i++)
-        if (decoder->sliceList[i])
-          freeSlice (decoder->sliceList[i]);
-      free (decoder->sliceList);
-      }
-
-    if (decoder->nalu) {
-      freeNALU (decoder->nalu);
-      decoder->nalu=NULL;
-      }
-
-    //free memory;
-    freeDecodedPictures (decoder->decOutputPic);
-    if (decoder->nextPPS) {
-      freePPS (decoder->nextPPS);
-      decoder->nextPPS = NULL;
+    if (decoder->layer[i]) {
+      free (decoder->layer[i]);
+      decoder->layer[i] = NULL;
       }
     }
+
+  if (decoder->oldSlice != NULL) {
+    free (decoder->oldSlice);
+    decoder->oldSlice = NULL;
+    }
+
+  if (decoder->nextSlice) {
+    freeSlice (decoder->nextSlice);
+    decoder->nextSlice=NULL;
+    }
+
+  if (decoder->sliceList) {
+    for (unsigned int i = 0; i < decoder->numAllocatedSlices; i++)
+      if (decoder->sliceList[i])
+        freeSlice (decoder->sliceList[i]);
+    free (decoder->sliceList);
+    }
+
+  if (decoder->nalu) {
+    freeNALU (decoder->nalu);
+    decoder->nalu=NULL;
+    }
+
+  //free memory;
+  freeDecodedPictures (decoder->decOutputPic);
+  if (decoder->nextPPS) {
+    freePPS (decoder->nextPPS);
+    decoder->nextPPS = NULL;
+    }
+
+  free (decoder);
   }
 //}}}
 
@@ -665,9 +665,8 @@ void closeDecoder (sDecoder* decoder) {
   for (unsigned i = 0; i < MAX_NUM_DPB_LAYERS; i++)
     freeDpb (decoder->dpbLayer[i]);
   freeOutput (decoder);
-  freeImg (decoder);
-  free (decoder);
+  freeDecoder (decoder);
 
-  decoder = NULL;
+  gDecoder = NULL;
   }
 //}}}
