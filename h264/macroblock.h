@@ -139,5 +139,5 @@ extern Boolean exitMacroblock (sSlice* slice, int eos_bit);
 extern void updateQp (sMacroblock* mb, int qp);
 
 extern void checkDpNeighbours (sMacroblock* mb);
-extern void readDeltaQuant (sSyntaxElement* currSE, sDataPartition *dp, sMacroblock* mb, 
+extern void readDeltaQuant (sSyntaxElement* se, sDataPartition *dp, sMacroblock* mb, 
                             const byte* partitionMap, int type);

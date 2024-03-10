@@ -56,13 +56,13 @@ typedef struct ErcVariables {
 
   /* Array for sSlice level information */
   sErcSegment* segments;
-  int currSegment;
+  int segment;
 
   /* Conditions of the MBs of the previous frame */
   char* prevFrameYCondition;
 
   /* Flag telling if the current segment was found to be corrupted */
-  int currSegmentCorrupted;
+  int segmentCorrupted;
   /* Counter for corrupted segments per picture */
   int numCorruptedSegments;
 
@@ -101,6 +101,6 @@ void ercSetErrorConcealment (sErcVariables *errorVar, int value );
 
 void ercStartSegment (int currMBNum, int segment, unsigned int bitPos, sErcVariables *errorVar );
 void ercStopSegment (int currMBNum, int segment, unsigned int bitPos, sErcVariables *errorVar );
-void ercMarkCurrSegmentLost (int picSizeX, sErcVariables *errorVar );
-void ercMarkCurrSegmentOK (int picSizeX, sErcVariables *errorVar );
+void ercMarksegmentLost (int picSizeX, sErcVariables *errorVar );
+void ercMarksegmentOK (int picSizeX, sErcVariables *errorVar );
 void ercMarkCurrMBConcealed (int currMBNum, int comp, int picSizeX, sErcVariables *errorVar );

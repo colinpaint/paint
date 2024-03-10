@@ -1145,9 +1145,9 @@ void exitPicture (sDecoder* decoder, sPicture** picture) {
 
         // mark current segment as lost or OK
         if(decoder->mbData[i-1].eiFlag)
-          ercMarkCurrSegmentLost ((*picture)->sizeX, decoder->ercErrorVar);
+          ercMarksegmentLost ((*picture)->sizeX, decoder->ercErrorVar);
         else
-          ercMarkCurrSegmentOK ((*picture)->sizeX, decoder->ercErrorVar);
+          ercMarksegmentOK ((*picture)->sizeX, decoder->ercErrorVar);
 
         ++ercSegment;  //! next segment
         ercStartSegment (i, ercSegment, 0 , decoder->ercErrorVar); //! start new segment
@@ -1157,9 +1157,9 @@ void exitPicture (sDecoder* decoder, sPicture** picture) {
     // mark end of the last segment
     ercStopSegment ((*picture)->picSizeInMbs-1, ercSegment, 0, decoder->ercErrorVar);
     if (decoder->mbData[i-1].eiFlag)
-      ercMarkCurrSegmentLost ((*picture)->sizeX, decoder->ercErrorVar);
+      ercMarksegmentLost ((*picture)->sizeX, decoder->ercErrorVar);
     else
-      ercMarkCurrSegmentOK ((*picture)->sizeX, decoder->ercErrorVar);
+      ercMarksegmentOK ((*picture)->sizeX, decoder->ercErrorVar);
 
     // call the right error conceal function depending on the frame type.
     decoder->ercMvPerMb /= (*picture)->picSizeInMbs;

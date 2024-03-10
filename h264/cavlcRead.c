@@ -157,7 +157,7 @@ void readCoef4x4cavlc (sMacroblock* mb, int block_type,
   sSlice* slice = mb->slice;
   sDecoder* decoder = mb->decoder;
   int mb_nr = mb->mbIndexX;
-  sSyntaxElement currSE;
+  sSyntaxElement se;
   sDataPartition *dp;
   const byte *partitionMap = assignSE2partition[slice->dataPartitionMode];
   sBitstream* curStream;
@@ -217,25 +217,25 @@ void readCoef4x4cavlc (sMacroblock* mb, int block_type,
     //}}}
     }
 
-  currSE.type = dptype;
+  se.type = dptype;
   dp = &(slice->partitions[partitionMap[dptype]]);
   curStream = dp->bitstream;
 
   if (!cdc) {
     //{{{  luma or chroma AC
     nnz = (!cac) ? predict_nnz(mb, LUMA, i<<2, j<<2) : predict_nnz_chroma(mb, i, ((j-4)<<2));
-    currSE.value1 = (nnz < 2) ? 0 : ((nnz < 4) ? 1 : ((nnz < 8) ? 2 : 3));
-    readsSyntaxElement_NumCoeffTrailingOnes(&currSE, curStream, type);
-    numcoeff        =  currSE.value1;
-    numtrailingones =  currSE.value2;
+    se.value1 = (nnz < 2) ? 0 : ((nnz < 4) ? 1 : ((nnz < 8) ? 2 : 3));
+    readsSyntaxElement_NumCoeffTrailingOnes(&se, curStream, type);
+    numcoeff        =  se.value1;
+    numtrailingones =  se.value2;
     decoder->nzCoeff[mb_nr][0][j][i] = (byte) numcoeff;
     }
     //}}}
   else {
     //{{{  chroma DC
-    readsSyntaxElement_NumCoeffTrailingOnesChromaDC(decoder, &currSE, curStream);
-    numcoeff        =  currSE.value1;
-    numtrailingones =  currSE.value2;
+    readsSyntaxElement_NumCoeffTrailingOnesChromaDC(decoder, &se, curStream);
+    numcoeff        =  se.value1;
+    numtrailingones =  se.value2;
     }
     //}}}
   memset (levarr, 0, max_coeff_num * sizeof(int));
@@ -245,9 +245,9 @@ void readCoef4x4cavlc (sMacroblock* mb, int block_type,
   *number_coefficients = numcoeff;
   if (numcoeff) {
     if (numtrailingones) {
-      currSE.len = numtrailingones;
-      readsSyntaxElement_FLC (&currSE, curStream);
-      code = currSE.inf;
+      se.len = numtrailingones;
+      readsSyntaxElement_FLC (&se, curStream);
+      code = se.inf;
       ntr = numtrailingones;
       for (k = numcoeff - 1; k > numcoeff - 1 - numtrailingones; k--) {
         ntr --;
@@ -261,16 +261,16 @@ void readCoef4x4cavlc (sMacroblock* mb, int block_type,
     for (k = numcoeff - 1 - numtrailingones; k >= 0; k--) {
       //{{{  decode level
       if (vlcnum == 0)
-        readsSyntaxElement_Level_VLC0(&currSE, curStream);
+        readsSyntaxElement_Level_VLC0(&se, curStream);
       else
-        readsSyntaxElement_Level_VLCN(&currSE, vlcnum, curStream);
+        readsSyntaxElement_Level_VLCN(&se, vlcnum, curStream);
 
       if (level_two_or_higher) {
-        currSE.inf += (currSE.inf > 0) ? 1 : -1;
+        se.inf += (se.inf > 0) ? 1 : -1;
         level_two_or_higher = 0;
         }
 
-      levarr[k] = currSE.inf;
+      levarr[k] = se.inf;
       abslevel = iabs(levarr[k]);
       if (abslevel  == 1)
         ++numones;
@@ -286,14 +286,14 @@ void readCoef4x4cavlc (sMacroblock* mb, int block_type,
     if (numcoeff < max_coeff_num) {
       //{{{  decode total run
       vlcnum = numcoeff - 1;
-      currSE.value1 = vlcnum;
+      se.value1 = vlcnum;
 
       if (cdc)
-        readsSyntaxElement_TotalZerosChromaDC(decoder, &currSE, curStream);
+        readsSyntaxElement_TotalZerosChromaDC(decoder, &se, curStream);
       else
-        readsSyntaxElement_TotalZeros(&currSE, curStream);
+        readsSyntaxElement_TotalZeros(&se, curStream);
 
-      totzeros = currSE.value1;
+      totzeros = se.value1;
       }
       //}}}
     else
@@ -307,9 +307,9 @@ void readCoef4x4cavlc (sMacroblock* mb, int block_type,
         // select VLC for runbefore
         vlcnum = imin(zerosleft - 1, RUNBEFORE_NUM_M1);
 
-        currSE.value1 = vlcnum;
-        readsSyntaxElement_Run(&currSE, curStream);
-        runarr[i] = currSE.value1;
+        se.value1 = vlcnum;
+        readsSyntaxElement_Run(&se, curStream);
+        runarr[i] = se.value1;
 
         zerosleft -= runarr[i];
         i --;
@@ -327,7 +327,7 @@ void readCoef4x4cavlc444 (sMacroblock* mb, int block_type,
   sSlice* slice = mb->slice;
   sDecoder* decoder = mb->decoder;
   int mb_nr = mb->mbIndexX;
-  sSyntaxElement currSE;
+  sSyntaxElement se;
   sDataPartition *dp;
   const byte *partitionMap = assignSE2partition[slice->dataPartitionMode];
   sBitstream* curStream;
@@ -429,7 +429,7 @@ void readCoef4x4cavlc444 (sMacroblock* mb, int block_type,
     //}}}
     }
 
-  currSE.type = dptype;
+  se.type = dptype;
   dp = &(slice->partitions[partitionMap[dptype]]);
   curStream = dp->bitstream;
 
@@ -442,10 +442,10 @@ void readCoef4x4cavlc444 (sMacroblock* mb, int block_type,
     else
       nnz = predict_nnz(mb, CR, i<<2, j<<2);
 
-    currSE.value1 = (nnz < 2) ? 0 : ((nnz < 4) ? 1 : ((nnz < 8) ? 2 : 3));
-    readsSyntaxElement_NumCoeffTrailingOnes(&currSE, curStream, type);
-    numcoeff        =  currSE.value1;
-    numtrailingones =  currSE.value2;
+    se.value1 = (nnz < 2) ? 0 : ((nnz < 4) ? 1 : ((nnz < 8) ? 2 : 3));
+    readsSyntaxElement_NumCoeffTrailingOnes(&se, curStream, type);
+    numcoeff        =  se.value1;
+    numtrailingones =  se.value2;
     if  (block_type==LUMA || block_type==LUMA_INTRA16x16DC || block_type==LUMA_INTRA16x16AC ||block_type==CHROMA_AC)
       decoder->nzCoeff[mb_nr][0][j][i] = (byte) numcoeff;
     else if (block_type==CB || block_type==CB_INTRA16x16DC || block_type==CB_INTRA16x16AC)
@@ -456,9 +456,9 @@ void readCoef4x4cavlc444 (sMacroblock* mb, int block_type,
     //}}}
   else {
     //{{{  chroma DC
-    readsSyntaxElement_NumCoeffTrailingOnesChromaDC(decoder, &currSE, curStream);
-    numcoeff        =  currSE.value1;
-    numtrailingones =  currSE.value2;
+    readsSyntaxElement_NumCoeffTrailingOnesChromaDC(decoder, &se, curStream);
+    numcoeff        =  se.value1;
+    numtrailingones =  se.value2;
     }
     //}}}
   memset (levarr, 0, max_coeff_num * sizeof(int));
@@ -468,9 +468,9 @@ void readCoef4x4cavlc444 (sMacroblock* mb, int block_type,
   *number_coefficients = numcoeff;
   if (numcoeff) {
     if (numtrailingones) {
-      currSE.len = numtrailingones;
-      readsSyntaxElement_FLC (&currSE, curStream);
-      code = currSE.inf;
+      se.len = numtrailingones;
+      readsSyntaxElement_FLC (&se, curStream);
+      code = se.inf;
       ntr = numtrailingones;
       for (k = numcoeff - 1; k > numcoeff - 1 - numtrailingones; k--) {
         ntr --;
@@ -484,16 +484,16 @@ void readCoef4x4cavlc444 (sMacroblock* mb, int block_type,
     for (k = numcoeff - 1 - numtrailingones; k >= 0; k--) {
       //{{{  decode level
       if (vlcnum == 0)
-        readsSyntaxElement_Level_VLC0(&currSE, curStream);
+        readsSyntaxElement_Level_VLC0(&se, curStream);
       else
-        readsSyntaxElement_Level_VLCN(&currSE, vlcnum, curStream);
+        readsSyntaxElement_Level_VLCN(&se, vlcnum, curStream);
 
       if (level_two_or_higher) {
-        currSE.inf += (currSE.inf > 0) ? 1 : -1;
+        se.inf += (se.inf > 0) ? 1 : -1;
         level_two_or_higher = 0;
         }
 
-      levarr[k] = currSE.inf;
+      levarr[k] = se.inf;
       abslevel = iabs(levarr[k]);
       if (abslevel  == 1)
         ++numones;
@@ -510,14 +510,14 @@ void readCoef4x4cavlc444 (sMacroblock* mb, int block_type,
     if (numcoeff < max_coeff_num) {
       //{{{  decode total run
       vlcnum = numcoeff - 1;
-      currSE.value1 = vlcnum;
+      se.value1 = vlcnum;
 
       if (cdc)
-        readsSyntaxElement_TotalZerosChromaDC(decoder, &currSE, curStream);
+        readsSyntaxElement_TotalZerosChromaDC(decoder, &se, curStream);
       else
-        readsSyntaxElement_TotalZeros(&currSE, curStream);
+        readsSyntaxElement_TotalZeros(&se, curStream);
 
-      totzeros = currSE.value1;
+      totzeros = se.value1;
       }
       //}}}
     else
@@ -530,9 +530,9 @@ void readCoef4x4cavlc444 (sMacroblock* mb, int block_type,
       do {
         // select VLC for runbefore
         vlcnum = imin(zerosleft - 1, RUNBEFORE_NUM_M1);
-        currSE.value1 = vlcnum;
-        readsSyntaxElement_Run(&currSE, curStream);
-        runarr[i] = currSE.value1;
+        se.value1 = vlcnum;
+        readsSyntaxElement_Run(&se, curStream);
+        runarr[i] = se.value1;
         zerosleft -= runarr[i];
         i --;
         } while (zerosleft != 0 && i != 0);
@@ -877,7 +877,7 @@ static void read_CBP_and_coeffs_from_NAL_CAVLC_400 (sMacroblock* mb)
   int k;
   int mb_nr = mb->mbIndexX;
   int cbp;
-  sSyntaxElement currSE;
+  sSyntaxElement se;
   sDataPartition *dp = NULL;
   sSlice* slice = mb->slice;
   const byte *partitionMap = assignSE2partition[slice->dataPartitionMode];
@@ -904,18 +904,18 @@ static void read_CBP_and_coeffs_from_NAL_CAVLC_400 (sMacroblock* mb)
   {
     //=====   C B P   =====
     //---------------------
-    currSE.type = (mb->mbType == I4MB || mb->mbType == SI4MB || mb->mbType == I8MB)
+    se.type = (mb->mbType == I4MB || mb->mbType == SI4MB || mb->mbType == I8MB)
       ? SE_CBP_INTRA
       : SE_CBP_INTER;
 
-    dp = &(slice->partitions[partitionMap[currSE.type]]);
+    dp = &(slice->partitions[partitionMap[se.type]]);
 
-    currSE.mapping = (mb->mbType == I4MB || mb->mbType == SI4MB || mb->mbType == I8MB)
+    se.mapping = (mb->mbType == I4MB || mb->mbType == SI4MB || mb->mbType == I8MB)
       ? slice->linfoCbpIntra
       : slice->linfoCbpInter;
 
-    dp->readsSyntaxElement(mb, &currSE, dp);
-    mb->cbp = cbp = currSE.value1;
+    dp->readsSyntaxElement(mb, &se, dp);
+    mb->cbp = cbp = se.value1;
 
 
     //============= Transform size flag for INTER MBs =============
@@ -929,14 +929,14 @@ static void read_CBP_and_coeffs_from_NAL_CAVLC_400 (sMacroblock* mb)
 
     if (need_transform_size_flag)
     {
-      currSE.type   =  SE_HEADER;
+      se.type   =  SE_HEADER;
       dp = &(slice->partitions[partitionMap[SE_HEADER]]);
 
       // read CAVLC transform_size_8x8_flag
-      currSE.len = 1;
-      readsSyntaxElement_FLC(&currSE, dp->bitstream);
+      se.len = 1;
+      readsSyntaxElement_FLC(&se, dp->bitstream);
 
-      mb->lumaTransformSize8x8flag = (Boolean) currSE.value1;
+      mb->lumaTransformSize8x8flag = (Boolean) se.value1;
     }
 
     //=====   DQUANT   =====
@@ -944,7 +944,7 @@ static void read_CBP_and_coeffs_from_NAL_CAVLC_400 (sMacroblock* mb)
     // Delta quant only if nonzero coeffs
     if (cbp !=0)
     {
-      readDeltaQuant(&currSE, dp, mb, partitionMap, ((mb->isIntraBlock == FALSE)) ? SE_DELTA_QUANT_INTER : SE_DELTA_QUANT_INTRA);
+      readDeltaQuant(&se, dp, mb, partitionMap, ((mb->isIntraBlock == FALSE)) ? SE_DELTA_QUANT_INTER : SE_DELTA_QUANT_INTRA);
 
       if (slice->dataPartitionMode)
       {
@@ -971,7 +971,7 @@ static void read_CBP_and_coeffs_from_NAL_CAVLC_400 (sMacroblock* mb)
   {
     cbp = mb->cbp;
 
-    readDeltaQuant(&currSE, dp, mb, partitionMap, SE_DELTA_QUANT_INTRA);
+    readDeltaQuant(&se, dp, mb, partitionMap, SE_DELTA_QUANT_INTRA);
 
     if (slice->dataPartitionMode)
     {
@@ -1045,7 +1045,7 @@ static void read_CBP_and_coeffs_from_NAL_CAVLC_422 (sMacroblock* mb)
   int i,j,k;
   int mb_nr = mb->mbIndexX;
   int cbp;
-  sSyntaxElement currSE;
+  sSyntaxElement se;
   sDataPartition *dp = NULL;
   sSlice* slice = mb->slice;
   const byte *partitionMap = assignSE2partition[slice->dataPartitionMode];
@@ -1080,18 +1080,18 @@ static void read_CBP_and_coeffs_from_NAL_CAVLC_422 (sMacroblock* mb)
   {
     //=====   C B P   =====
     //---------------------
-    currSE.type = (mb->mbType == I4MB || mb->mbType == SI4MB || mb->mbType == I8MB)
+    se.type = (mb->mbType == I4MB || mb->mbType == SI4MB || mb->mbType == I8MB)
       ? SE_CBP_INTRA
       : SE_CBP_INTER;
 
-    dp = &(slice->partitions[partitionMap[currSE.type]]);
+    dp = &(slice->partitions[partitionMap[se.type]]);
 
-    currSE.mapping = (mb->mbType == I4MB || mb->mbType == SI4MB || mb->mbType == I8MB)
+    se.mapping = (mb->mbType == I4MB || mb->mbType == SI4MB || mb->mbType == I8MB)
       ? slice->linfoCbpIntra
       : slice->linfoCbpInter;
 
-    dp->readsSyntaxElement(mb, &currSE, dp);
-    mb->cbp = cbp = currSE.value1;
+    dp->readsSyntaxElement(mb, &se, dp);
+    mb->cbp = cbp = se.value1;
 
 
     //============= Transform size flag for INTER MBs =============
@@ -1105,14 +1105,14 @@ static void read_CBP_and_coeffs_from_NAL_CAVLC_422 (sMacroblock* mb)
 
     if (need_transform_size_flag)
     {
-      currSE.type   =  SE_HEADER;
+      se.type   =  SE_HEADER;
       dp = &(slice->partitions[partitionMap[SE_HEADER]]);
 
       // read CAVLC transform_size_8x8_flag
-      currSE.len = 1;
-      readsSyntaxElement_FLC(&currSE, dp->bitstream);
+      se.len = 1;
+      readsSyntaxElement_FLC(&se, dp->bitstream);
 
-      mb->lumaTransformSize8x8flag = (Boolean) currSE.value1;
+      mb->lumaTransformSize8x8flag = (Boolean) se.value1;
     }
 
     //=====   DQUANT   =====
@@ -1120,7 +1120,7 @@ static void read_CBP_and_coeffs_from_NAL_CAVLC_422 (sMacroblock* mb)
     // Delta quant only if nonzero coeffs
     if (cbp !=0)
     {
-      readDeltaQuant(&currSE, dp, mb, partitionMap, ((mb->isIntraBlock == FALSE)) ? SE_DELTA_QUANT_INTER : SE_DELTA_QUANT_INTRA);
+      readDeltaQuant(&se, dp, mb, partitionMap, ((mb->isIntraBlock == FALSE)) ? SE_DELTA_QUANT_INTER : SE_DELTA_QUANT_INTRA);
 
       if (slice->dataPartitionMode)
       {
@@ -1147,7 +1147,7 @@ static void read_CBP_and_coeffs_from_NAL_CAVLC_422 (sMacroblock* mb)
   {
     cbp = mb->cbp;
 
-    readDeltaQuant(&currSE, dp, mb, partitionMap, SE_DELTA_QUANT_INTRA);
+    readDeltaQuant(&se, dp, mb, partitionMap, SE_DELTA_QUANT_INTRA);
 
     if (slice->dataPartitionMode)
     {
@@ -1386,7 +1386,7 @@ static void read_CBP_and_coeffs_from_NAL_CAVLC_444 (sMacroblock* mb)
   int i,k;
   int mb_nr = mb->mbIndexX;
   int cbp;
-  sSyntaxElement currSE;
+  sSyntaxElement se;
   sDataPartition *dp = NULL;
   sSlice* slice = mb->slice;
   const byte *partitionMap = assignSE2partition[slice->dataPartitionMode];
@@ -1415,18 +1415,18 @@ static void read_CBP_and_coeffs_from_NAL_CAVLC_444 (sMacroblock* mb)
   {
     //=====   C B P   =====
     //---------------------
-    currSE.type = (mb->mbType == I4MB || mb->mbType == SI4MB || mb->mbType == I8MB)
+    se.type = (mb->mbType == I4MB || mb->mbType == SI4MB || mb->mbType == I8MB)
       ? SE_CBP_INTRA
       : SE_CBP_INTER;
 
-    dp = &(slice->partitions[partitionMap[currSE.type]]);
+    dp = &(slice->partitions[partitionMap[se.type]]);
 
-    currSE.mapping = (mb->mbType == I4MB || mb->mbType == SI4MB || mb->mbType == I8MB)
+    se.mapping = (mb->mbType == I4MB || mb->mbType == SI4MB || mb->mbType == I8MB)
       ? slice->linfoCbpIntra
       : slice->linfoCbpInter;
 
-    dp->readsSyntaxElement(mb, &currSE, dp);
-    mb->cbp = cbp = currSE.value1;
+    dp->readsSyntaxElement(mb, &se, dp);
+    mb->cbp = cbp = se.value1;
 
 
     //============= Transform size flag for INTER MBs =============
@@ -1440,14 +1440,14 @@ static void read_CBP_and_coeffs_from_NAL_CAVLC_444 (sMacroblock* mb)
 
     if (need_transform_size_flag)
     {
-      currSE.type   =  SE_HEADER;
+      se.type   =  SE_HEADER;
       dp = &(slice->partitions[partitionMap[SE_HEADER]]);
 
       // read CAVLC transform_size_8x8_flag
-      currSE.len = 1;
-      readsSyntaxElement_FLC(&currSE, dp->bitstream);
+      se.len = 1;
+      readsSyntaxElement_FLC(&se, dp->bitstream);
 
-      mb->lumaTransformSize8x8flag = (Boolean) currSE.value1;
+      mb->lumaTransformSize8x8flag = (Boolean) se.value1;
     }
 
     //=====   DQUANT   =====
@@ -1455,7 +1455,7 @@ static void read_CBP_and_coeffs_from_NAL_CAVLC_444 (sMacroblock* mb)
     // Delta quant only if nonzero coeffs
     if (cbp !=0)
     {
-      readDeltaQuant(&currSE, dp, mb, partitionMap, ((mb->isIntraBlock == FALSE)) ? SE_DELTA_QUANT_INTER : SE_DELTA_QUANT_INTRA);
+      readDeltaQuant(&se, dp, mb, partitionMap, ((mb->isIntraBlock == FALSE)) ? SE_DELTA_QUANT_INTER : SE_DELTA_QUANT_INTRA);
 
       if (slice->dataPartitionMode)
       {
@@ -1482,7 +1482,7 @@ static void read_CBP_and_coeffs_from_NAL_CAVLC_444 (sMacroblock* mb)
   {
     cbp = mb->cbp;
 
-    readDeltaQuant(&currSE, dp, mb, partitionMap, SE_DELTA_QUANT_INTRA);
+    readDeltaQuant(&se, dp, mb, partitionMap, SE_DELTA_QUANT_INTRA);
 
     if (slice->dataPartitionMode)
     {
@@ -1613,7 +1613,7 @@ static void read_CBP_and_coeffs_from_NAL_CAVLC_420 (sMacroblock* mb)
   int i,j,k;
   int mb_nr = mb->mbIndexX;
   int cbp;
-  sSyntaxElement currSE;
+  sSyntaxElement se;
   sDataPartition *dp = NULL;
   sSlice* slice = mb->slice;
   const byte *partitionMap = assignSE2partition[slice->dataPartitionMode];
@@ -1648,18 +1648,18 @@ static void read_CBP_and_coeffs_from_NAL_CAVLC_420 (sMacroblock* mb)
   {
     //=====   C B P   =====
     //---------------------
-    currSE.type = (mb->mbType == I4MB || mb->mbType == SI4MB || mb->mbType == I8MB)
+    se.type = (mb->mbType == I4MB || mb->mbType == SI4MB || mb->mbType == I8MB)
       ? SE_CBP_INTRA
       : SE_CBP_INTER;
 
-    dp = &(slice->partitions[partitionMap[currSE.type]]);
+    dp = &(slice->partitions[partitionMap[se.type]]);
 
-    currSE.mapping = (mb->mbType == I4MB || mb->mbType == SI4MB || mb->mbType == I8MB)
+    se.mapping = (mb->mbType == I4MB || mb->mbType == SI4MB || mb->mbType == I8MB)
       ? slice->linfoCbpIntra
       : slice->linfoCbpInter;
 
-    dp->readsSyntaxElement(mb, &currSE, dp);
-    mb->cbp = cbp = currSE.value1;
+    dp->readsSyntaxElement(mb, &se, dp);
+    mb->cbp = cbp = se.value1;
 
     //============= Transform size flag for INTER MBs =============
     //-------------------------------------------------------------
@@ -1672,14 +1672,14 @@ static void read_CBP_and_coeffs_from_NAL_CAVLC_420 (sMacroblock* mb)
 
     if (need_transform_size_flag)
     {
-      currSE.type   =  SE_HEADER;
+      se.type   =  SE_HEADER;
       dp = &(slice->partitions[partitionMap[SE_HEADER]]);
 
       // read CAVLC transform_size_8x8_flag
-      currSE.len = 1;
-      readsSyntaxElement_FLC(&currSE, dp->bitstream);
+      se.len = 1;
+      readsSyntaxElement_FLC(&se, dp->bitstream);
 
-      mb->lumaTransformSize8x8flag = (Boolean) currSE.value1;
+      mb->lumaTransformSize8x8flag = (Boolean) se.value1;
     }
 
     //=====   DQUANT   =====
@@ -1687,7 +1687,7 @@ static void read_CBP_and_coeffs_from_NAL_CAVLC_420 (sMacroblock* mb)
     // Delta quant only if nonzero coeffs
     if (cbp !=0)
     {
-      readDeltaQuant(&currSE, dp, mb, partitionMap, ((mb->isIntraBlock == FALSE)) ? SE_DELTA_QUANT_INTER : SE_DELTA_QUANT_INTRA);
+      readDeltaQuant(&se, dp, mb, partitionMap, ((mb->isIntraBlock == FALSE)) ? SE_DELTA_QUANT_INTER : SE_DELTA_QUANT_INTRA);
 
       if (slice->dataPartitionMode)
       {
@@ -1713,7 +1713,7 @@ static void read_CBP_and_coeffs_from_NAL_CAVLC_420 (sMacroblock* mb)
   else
   {
     cbp = mb->cbp;
-    readDeltaQuant(&currSE, dp, mb, partitionMap, SE_DELTA_QUANT_INTRA);
+    readDeltaQuant(&se, dp, mb, partitionMap, SE_DELTA_QUANT_INTRA);
 
     if (slice->dataPartitionMode)
     {

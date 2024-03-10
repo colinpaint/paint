@@ -2123,7 +2123,7 @@ sErcVariables* ercOpen() {
 
   errorVar->nOfMBs = 0;
   errorVar->segments = NULL;
-  errorVar->currSegment = 0;
+  errorVar->segment = 0;
   errorVar->yCondition = NULL;
   errorVar->uCondition = NULL;
   errorVar->vCondition = NULL;
@@ -2215,7 +2215,7 @@ void ercReset (sErcVariables *errorVar, int nOfMBs, int numOfSegments, int picSi
       (segments++)->corrupted = 1; //! mark segments as corrupted
       }
 
-    errorVar->currSegment = 0;
+    errorVar->segment = 0;
     errorVar->numCorruptedSegments = 0;
     }
   }
@@ -2270,7 +2270,7 @@ void ercSetErrorConcealment (sErcVariables *errorVar, int value ) {
 void ercStartSegment (int currMBNum, int segment, unsigned int bitPos, sErcVariables *errorVar ) {
 
   if ( errorVar && errorVar->conceal ) {
-    errorVar->currSegmentCorrupted = 0;
+    errorVar->segmentCorrupted = 0;
     errorVar->segments[ segment ].corrupted = 0;
     errorVar->segments[ segment ].startMBPos = (short) currMBNum;
     }
@@ -2296,7 +2296,7 @@ void ercStopSegment (int currMBNum, int segment, unsigned int bitPos, sErcVariab
 
   if ( errorVar && errorVar->conceal ) {
     errorVar->segments[ segment ].endMBPos = (short) currMBNum;
-    errorVar->currSegment++;
+    errorVar->segment++;
     }
   }
 //}}}
@@ -2312,16 +2312,16 @@ void ercStopSegment (int currMBNum, int segment, unsigned int bitPos, sErcVariab
  *      Variables for error detector
 ** **********************************************************************
  */
-void ercMarkCurrSegmentLost (int picSizeX, sErcVariables *errorVar )
+void ercMarksegmentLost (int picSizeX, sErcVariables *errorVar )
 {
   int j = 0;
   int current_segment;
 
-  current_segment = errorVar->currSegment-1;
+  current_segment = errorVar->segment-1;
   if ( errorVar && errorVar->conceal ) {
-    if (errorVar->currSegmentCorrupted == 0) {
+    if (errorVar->segmentCorrupted == 0) {
       errorVar->numCorruptedSegments++;
-      errorVar->currSegmentCorrupted = 1;
+      errorVar->segmentCorrupted = 1;
       }
 
     for ( j = errorVar->segments[current_segment].startMBPos;
@@ -2349,12 +2349,12 @@ void ercMarkCurrSegmentLost (int picSizeX, sErcVariables *errorVar )
  *      Variables for error detector
 ** **********************************************************************
  */
-void ercMarkCurrSegmentOK (int picSizeX, sErcVariables *errorVar ) {
+void ercMarksegmentOK (int picSizeX, sErcVariables *errorVar ) {
 
   int j = 0;
   int current_segment;
 
-  current_segment = errorVar->currSegment-1;
+  current_segment = errorVar->segment-1;
   if ( errorVar && errorVar->conceal ) {
     // mark all the Blocks belonging to the segment as OK */
     for (j = errorVar->segments[current_segment].startMBPos;
