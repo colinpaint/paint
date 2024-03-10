@@ -45,7 +45,7 @@ void report_stats_on_error() {
 //}}}
 
 //{{{
-sSlice* allocSlice (sInputParam* inputParam, sVidParam* vidParam) {
+sSlice* allocSlice (sVidParam* vidParam) {
 
   sSlice* curSlice = (sSlice*)calloc (1, sizeof(sSlice));
   if (!curSlice) {
@@ -192,14 +192,13 @@ static void freeImg (sVidParam* vidParam) {
 //{{{
 static void init (sVidParam* vidParam) {
 
-  sInputParam *inputParam = vidParam->inputParam;
   vidParam->oldFrameSizeInMbs = (unsigned int) -1;
 
   vidParam->recoveryPoint = 0;
   vidParam->recoveryPointFound = 0;
   vidParam->recoveryPoc = 0x7fffffff; /* set to a max value */
 
-  vidParam->idrPsnrNum = inputParam->refOffset;
+  vidParam->idrPsnrNum = vidParam->inputParam->refOffset;
   vidParam->psnrNum=0;
 
   vidParam->number = 0;

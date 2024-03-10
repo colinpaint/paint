@@ -1007,7 +1007,7 @@ static inline int is_HI_intra_only_profile (unsigned int profileIdc, Boolean con
   extern sDataPartition* allocPartition (int n);
   extern void freePartition (sDataPartition* dp, int n);
 
-  extern sSlice* allocSlice (sInputParam* inputParam, sVidParam* vidParam);
+  extern sSlice* allocSlice (sVidParam* vidParam);
 
   extern unsigned ceilLog2 (unsigned uiVal);
   extern unsigned ceilLog2sf (unsigned uiVal);

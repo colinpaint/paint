@@ -1296,7 +1296,7 @@ int decodeFrame (sVidParam* vidParam) {
   while ((curHeader != SOP) && (curHeader != EOS)) {
     //{{{  no pending slices
     if (!sliceList[vidParam->curPicSliceNum])
-      sliceList[vidParam->curPicSliceNum] = allocSlice (vidParam->inputParam, vidParam);
+      sliceList[vidParam->curPicSliceNum] = allocSlice (vidParam);
 
     slice = sliceList[vidParam->curPicSliceNum];
     slice->vidParam = vidParam;
