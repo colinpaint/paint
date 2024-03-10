@@ -453,13 +453,13 @@ void iMBtrans4x4 (sMacroblock* curMb, eColorPlane pl, int smb) {
   if (curMb->isLossless && curMb->mbType == I16MB)
     Inv_Residual_trans_16x16(curMb, pl);
   else if (smb || curMb->isLossless == TRUE) {
-    curMb->itrans_4x4 = (smb) ? itrans_sp : ((curMb->isLossless == FALSE) ? itrans4x4 : Inv_Residual_trans_4x4);
+    curMb->iTrans4x4 = (smb) ? itrans_sp : ((curMb->isLossless == FALSE) ? itrans4x4 : Inv_Residual_trans_4x4);
     for (int block8x8 = 0; block8x8 < MB_BLOCK_SIZE; block8x8 += 4) {
       for (int k = block8x8; k < block8x8 + 4; ++k ) {
         int jj = ((decode_block_scan[k] >> 2) & 3) << BLOCK_SHIFT;
         int ii = (decode_block_scan[k] & 3) << BLOCK_SHIFT;
         // use integer transform and make 4x4 block mb_rres from prediction block mb_pred
-        curMb->itrans_4x4 (curMb, pl, ii, jj);
+        curMb->iTrans4x4 (curMb, pl, ii, jj);
         }
       }
     }
@@ -601,12 +601,12 @@ void iTransform (sMacroblock* curMb, eColorPlane pl, int smb) {
         curSlice->isResetCoefCr = FALSE;
         }
       else if (smb) {
-        curMb->itrans_4x4 = (curMb->isLossless == FALSE) ? itrans4x4 : itrans4x4_ls;
+        curMb->iTrans4x4 = (curMb->isLossless == FALSE) ? itrans4x4 : itrans4x4_ls;
         itrans_sp_cr (curMb, uv - 1);
 
         for (joff = 0; joff < decoder->mbCrSizeY; joff += BLOCK_SIZE)
           for(ioff = 0; ioff < decoder->mbCrSizeX ;ioff += BLOCK_SIZE)
-            curMb->itrans_4x4 (curMb, uv, ioff, joff);
+            curMb->iTrans4x4 (curMb, uv, ioff, joff);
 
         copy_Image (curUV, mb_rec, curMb->pixcX, 0, decoder->mbSize[1][0], decoder->mbSize[1][1]);
         curSlice->isResetCoefCr = FALSE;

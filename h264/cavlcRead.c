@@ -543,7 +543,7 @@ void readCoef4x4cavlc444 (sMacroblock* curMb, int block_type,
 //}}}
 
 //{{{
-static void read_comp_coeff_4x4_CAVLC (sMacroblock* curMb, eColorPlane pl, int (*InvLevelScale4x4)[4], int qp_per, int cbp, byte** nzcoeff)
+static void readCompCoef4x4cavlc (sMacroblock* curMb, eColorPlane pl, int (*InvLevelScale4x4)[4], int qp_per, int cbp, byte** nzcoeff)
 {
   int blockY, blockX, b8;
   int i, j, k;
@@ -703,7 +703,7 @@ static void read_comp_coeff_4x4_CAVLC_ls (sMacroblock* curMb, eColorPlane pl, in
 }
 //}}}
 //{{{
-static void read_comp_coeff_8x8_CAVLC (sMacroblock* curMb, eColorPlane pl, int (*InvLevelScale8x8)[8], int qp_per, int cbp, byte** nzcoeff)
+static void readCompCoef8x8cavlc (sMacroblock* curMb, eColorPlane pl, int (*InvLevelScale8x8)[8], int qp_per, int cbp, byte** nzcoeff)
 {
   int blockY, blockX, b4, b8;
   int block_y4, block_x4;
@@ -1026,11 +1026,11 @@ static void read_CBP_and_coeffs_from_NAL_CAVLC_400 (sMacroblock* curMb)
   {
     if (!curMb->lumaTransformSize8x8flag) // 4x4 transform
     {
-      curMb->read_comp_coeff_4x4_CAVLC (curMb, PLANE_Y, InvLevelScale4x4, qp_per, cbp, decoder->nzCoeff[mb_nr][PLANE_Y]);
+      curMb->readCompCoef4x4cavlc (curMb, PLANE_Y, InvLevelScale4x4, qp_per, cbp, decoder->nzCoeff[mb_nr][PLANE_Y]);
     }
     else // 8x8 transform
     {
-      curMb->read_comp_coeff_8x8_CAVLC (curMb, PLANE_Y, InvLevelScale8x8, qp_per, cbp, decoder->nzCoeff[mb_nr][PLANE_Y]);
+      curMb->readCompCoef8x8cavlc (curMb, PLANE_Y, InvLevelScale8x8, qp_per, cbp, decoder->nzCoeff[mb_nr][PLANE_Y]);
     }
   }
   else
@@ -1209,11 +1209,11 @@ static void read_CBP_and_coeffs_from_NAL_CAVLC_422 (sMacroblock* curMb)
   {
     if (!curMb->lumaTransformSize8x8flag) // 4x4 transform
     {
-      curMb->read_comp_coeff_4x4_CAVLC (curMb, PLANE_Y, InvLevelScale4x4, qp_per, cbp, decoder->nzCoeff[mb_nr][PLANE_Y]);
+      curMb->readCompCoef4x4cavlc (curMb, PLANE_Y, InvLevelScale4x4, qp_per, cbp, decoder->nzCoeff[mb_nr][PLANE_Y]);
     }
     else // 8x8 transform
     {
-      curMb->read_comp_coeff_8x8_CAVLC (curMb, PLANE_Y, InvLevelScale8x8, qp_per, cbp, decoder->nzCoeff[mb_nr][PLANE_Y]);
+      curMb->readCompCoef8x8cavlc (curMb, PLANE_Y, InvLevelScale8x8, qp_per, cbp, decoder->nzCoeff[mb_nr][PLANE_Y]);
     }
   }
   else
@@ -1544,11 +1544,11 @@ static void read_CBP_and_coeffs_from_NAL_CAVLC_444 (sMacroblock* curMb)
   {
     if (!curMb->lumaTransformSize8x8flag) // 4x4 transform
     {
-      curMb->read_comp_coeff_4x4_CAVLC (curMb, PLANE_Y, InvLevelScale4x4, qp_per, cbp, decoder->nzCoeff[mb_nr][PLANE_Y]);
+      curMb->readCompCoef4x4cavlc (curMb, PLANE_Y, InvLevelScale4x4, qp_per, cbp, decoder->nzCoeff[mb_nr][PLANE_Y]);
     }
     else // 8x8 transform
     {
-      curMb->read_comp_coeff_8x8_CAVLC (curMb, PLANE_Y, InvLevelScale8x8, qp_per, cbp, decoder->nzCoeff[mb_nr][PLANE_Y]);
+      curMb->readCompCoef8x8cavlc (curMb, PLANE_Y, InvLevelScale8x8, qp_per, cbp, decoder->nzCoeff[mb_nr][PLANE_Y]);
     }
   }
   else
@@ -1598,11 +1598,11 @@ static void read_CBP_and_coeffs_from_NAL_CAVLC_444 (sMacroblock* curMb)
 
     if (!curMb->lumaTransformSize8x8flag) // 4x4 transform
     {
-      curMb->read_comp_coeff_4x4_CAVLC (curMb, (eColorPlane) (uv), InvLevelScale4x4, qp_per_uv[uv], cbp, decoder->nzCoeff[mb_nr][uv]);
+      curMb->readCompCoef4x4cavlc (curMb, (eColorPlane) (uv), InvLevelScale4x4, qp_per_uv[uv], cbp, decoder->nzCoeff[mb_nr][uv]);
     }
     else // 8x8 transform
     {
-      curMb->read_comp_coeff_8x8_CAVLC (curMb, (eColorPlane) (uv), InvLevelScale8x8, qp_per_uv[uv], cbp, decoder->nzCoeff[mb_nr][uv]);
+      curMb->readCompCoef8x8cavlc (curMb, (eColorPlane) (uv), InvLevelScale8x8, qp_per_uv[uv], cbp, decoder->nzCoeff[mb_nr][uv]);
     }
   }
 }
@@ -1775,11 +1775,11 @@ static void read_CBP_and_coeffs_from_NAL_CAVLC_420 (sMacroblock* curMb)
   {
     if (!curMb->lumaTransformSize8x8flag) // 4x4 transform
     {
-      curMb->read_comp_coeff_4x4_CAVLC (curMb, PLANE_Y, InvLevelScale4x4, qp_per, cbp, decoder->nzCoeff[mb_nr][PLANE_Y]);
+      curMb->readCompCoef4x4cavlc (curMb, PLANE_Y, InvLevelScale4x4, qp_per, cbp, decoder->nzCoeff[mb_nr][PLANE_Y]);
     }
     else // 8x8 transform
     {
-      curMb->read_comp_coeff_8x8_CAVLC (curMb, PLANE_Y, InvLevelScale8x8, qp_per, cbp, decoder->nzCoeff[mb_nr][PLANE_Y]);
+      curMb->readCompCoef8x8cavlc (curMb, PLANE_Y, InvLevelScale8x8, qp_per, cbp, decoder->nzCoeff[mb_nr][PLANE_Y]);
     }
   }
   else
@@ -1921,12 +1921,12 @@ static void read_CBP_and_coeffs_from_NAL_CAVLC_420 (sMacroblock* curMb)
 void set_read_comp_coeff_cavlc (sMacroblock* curMb) {
 
   if (curMb->isLossless == FALSE) {
-    curMb->read_comp_coeff_4x4_CAVLC = read_comp_coeff_4x4_CAVLC;
-    curMb->read_comp_coeff_8x8_CAVLC = read_comp_coeff_8x8_CAVLC;
+    curMb->readCompCoef4x4cavlc = readCompCoef4x4cavlc;
+    curMb->readCompCoef8x8cavlc = readCompCoef8x8cavlc;
     }
   else {
-    curMb->read_comp_coeff_4x4_CAVLC = read_comp_coeff_4x4_CAVLC_ls;
-    curMb->read_comp_coeff_8x8_CAVLC = read_comp_coeff_8x8_CAVLC_ls;
+    curMb->readCompCoef4x4cavlc = read_comp_coeff_4x4_CAVLC_ls;
+    curMb->readCompCoef8x8cavlc = read_comp_coeff_8x8_CAVLC_ls;
     }
   }
 //}}}

@@ -418,15 +418,15 @@ typedef struct Macroblock {
   Boolean lumaTransformSize8x8flag;
   Boolean noMbPartLessThan8x8Flag;
 
-  void (*itrans_4x4) (struct Macroblock*, eColorPlane, int, int);
-  void (*itrans_8x8) (struct Macroblock*, eColorPlane, int, int);
+  void (*iTrans4x4) (struct Macroblock*, eColorPlane, int, int);
+  void (*iTrans8x8) (struct Macroblock*, eColorPlane, int, int);
   void (*GetMVPredictor) (struct Macroblock*, sPixelPos*, sMotionVec*, short, struct PicMotion**, int, int, int, int, int);
-  int  (*read_and_store_CBP_block_bit) (struct Macroblock*, sDecodingEnvironmentPtr, int);
-  char (*readRefPictureIdx) (struct Macroblock*, struct SyntaxElement*, struct DataPartition*, char, int);
-  void (*read_comp_coeff_4x4_CABAC) (struct Macroblock*, struct SyntaxElement*, eColorPlane, int (*InvLevelScale4x4)[4], int qp_per, int cbp);
-  void (*read_comp_coeff_8x8_CABAC) (struct Macroblock*, struct SyntaxElement*, eColorPlane);
-  void (*read_comp_coeff_4x4_CAVLC) (struct Macroblock*, eColorPlane, int (*InvLevelScale4x4)[4], int, int, byte**);
-  void (*read_comp_coeff_8x8_CAVLC) (struct Macroblock*, eColorPlane, int (*InvLevelScale8x8)[8], int, int, byte**);
+  int  (*readStoreCBPblockBit) (struct Macroblock*, sDecodingEnvironmentPtr, int);
+  char (*readRefPictureIndex) (struct Macroblock*, struct SyntaxElement*, struct DataPartition*, char, int);
+  void (*readCompCoef4x4cabac) (struct Macroblock*, struct SyntaxElement*, eColorPlane, int(*)[4], int, int);
+  void (*readCompCoef8x8cabac) (struct Macroblock*, struct SyntaxElement*, eColorPlane);
+  void (*readCompCoef4x4cavlc) (struct Macroblock*, eColorPlane, int(*)[4], int, int, byte**);
+  void (*readCompCoef8x8cavlc) (struct Macroblock*, eColorPlane, int(*)[8], int, int, byte**);
   } sMacroblock;
 //}}}
 //{{{  sWPParam

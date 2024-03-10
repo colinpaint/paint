@@ -1663,7 +1663,7 @@ void intra_cr_decoding (sMacroblock* curMb, int yuv)
 
   for(uv = 0; uv < 2; uv++)
   {
-    curMb->itrans_4x4 = (curMb->isLossless == FALSE) ? itrans4x4 : itrans4x4_ls;
+    curMb->iTrans4x4 = (curMb->isLossless == FALSE) ? itrans4x4 : itrans4x4_ls;
 
     curUV = picture->imgUV[uv];
 
@@ -1687,7 +1687,7 @@ void intra_cr_decoding (sMacroblock* curMb, int yuv)
         {
           joff = subblk_offset_y[yuv][b8][b4];
           ioff = subblk_offset_x[yuv][b8][b4];
-          curMb->itrans_4x4(curMb, (eColorPlane) (uv + 1), ioff, joff);
+          curMb->iTrans4x4(curMb, (eColorPlane) (uv + 1), ioff, joff);
           copy_Image_4x4(&curUV[curMb->piccY + joff], &(curSlice->mb_rec[uv + 1][joff]), curMb->pixcX + ioff, ioff);
         }
       }
@@ -1701,7 +1701,7 @@ void intra_cr_decoding (sMacroblock* curMb, int yuv)
       {
         for(ioff = 0; ioff < 8;ioff+=4)
         {
-          curMb->itrans_4x4 (curMb, (eColorPlane) (uv + 1), ioff, joff);
+          curMb->iTrans4x4 (curMb, (eColorPlane) (uv + 1), ioff, joff);
           copy_Image_4x4 (&curUV[curMb->piccY + joff], &(curSlice->mb_rec[uv + 1][joff]), curMb->pixcX + ioff, ioff);
         }
       }

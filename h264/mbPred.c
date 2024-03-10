@@ -29,7 +29,7 @@ int mb_pred_intra4x4 (sMacroblock* curMb, eColorPlane curPlane, sPixel** curPixe
   int j_pos, i_pos;
   int ioff,joff;
   int block8x8;   // needed for ABT
-  curMb->itrans_4x4 = (curMb->isLossless == FALSE) ? itrans4x4 : Inv_Residual_trans_4x4;
+  curMb->iTrans4x4 = (curMb->isLossless == FALSE) ? itrans4x4 : Inv_Residual_trans_4x4;
 
   for (block8x8 = 0; block8x8 < 4; block8x8++)
   {
@@ -51,7 +51,7 @@ int mb_pred_intra4x4 (sMacroblock* curMb, eColorPlane curPlane, sPixel** curPixe
         return SEARCH_SYNC;                   /* bit error */
       // =============== 4x4 itrans ================
       // -------------------------------------------
-      curMb->itrans_4x4  (curMb, curPlane, ioff, joff);
+      curMb->iTrans4x4  (curMb, curPlane, ioff, joff);
       copy_Image_4x4 (&curPixel[j_pos], &curSlice->mb_rec[curPlane][joff], i_pos, ioff);
     }
   }
@@ -93,7 +93,7 @@ int mb_pred_intra8x8 (sMacroblock* curMb, eColorPlane curPlane, sPixel** curPixe
   int yuv = picture->chromaFormatIdc - 1;
 
   int block8x8;   // needed for ABT
-  curMb->itrans_8x8 = (curMb->isLossless == FALSE) ? itrans8x8 : Inv_Residual_trans_8x8;
+  curMb->iTrans8x8 = (curMb->isLossless == FALSE) ? itrans8x8 : Inv_Residual_trans_8x8;
 
   for (block8x8 = 0; block8x8 < 4; block8x8++)
   {
@@ -104,7 +104,7 @@ int mb_pred_intra8x8 (sMacroblock* curMb, eColorPlane curPlane, sPixel** curPixe
     //PREDICTION
     curSlice->intraPred8x8(curMb, curPlane, ioff, joff);
     if (curMb->cbp & (1 << block8x8))
-      curMb->itrans_8x8    (curMb, curPlane, ioff,joff);      // use inverse integer transform and make 8x8 block m7 from prediction block mpr
+      curMb->iTrans8x8    (curMb, curPlane, ioff,joff);      // use inverse integer transform and make 8x8 block m7 from prediction block mpr
     else
       icopy8x8(curMb, curPlane, ioff,joff);
 

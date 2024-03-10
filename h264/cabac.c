@@ -2089,9 +2089,9 @@ static int read_and_store_CBP_block_bit_normal (sMacroblock* curMb,
 void set_read_and_store_CBP (sMacroblock** curMb, int chromaFormatIdc)
 {
   if (chromaFormatIdc == YUV444)
-    (*curMb)->read_and_store_CBP_block_bit = read_and_store_CBP_block_bit_444;
+    (*curMb)->readStoreCBPblockBit = read_and_store_CBP_block_bit_444;
   else
-    (*curMb)->read_and_store_CBP_block_bit = read_and_store_CBP_block_bit_normal;
+    (*curMb)->readStoreCBPblockBit = read_and_store_CBP_block_bit_normal;
 }
 //}}}
 
@@ -2221,7 +2221,7 @@ void readRunLevel_CABAC (sMacroblock* curMb,
   if (*coefCount < 0)
   {
     //===== decode CBP-BIT =====
-    if ((*coefCount = curMb->read_and_store_CBP_block_bit (curMb, dep_dp, se->context) ) != 0)
+    if ((*coefCount = curMb->readStoreCBPblockBit (curMb, dep_dp, se->context) ) != 0)
     {
       //===== decode significance map =====
       *coefCount = read_significance_map (curMb, dep_dp, se->context, coeff);

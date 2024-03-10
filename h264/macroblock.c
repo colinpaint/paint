@@ -419,17 +419,17 @@ static void prepareListforRefIdx (sMacroblock* mb, sSyntaxElement* currSE,
     if (mb->decoder->activePPS->entropyCodingModeFlag == (Boolean) CAVLC || dP->bitstream->eiFlag) {
       currSE->mapping = linfo_ue;
       if (refidx_present)
-        mb->readRefPictureIdx = (numRefIndexActive == 2) ? readRefPictureIdxFLC : readRefPictureIdxVLC;
+        mb->readRefPictureIndex = (numRefIndexActive == 2) ? readRefPictureIdxFLC : readRefPictureIdxVLC;
       else
-        mb->readRefPictureIdx = readRefPictureIdxNull;
+        mb->readRefPictureIndex = readRefPictureIdxNull;
       }
     else {
       currSE->reading = readRefFrame_CABAC;
-      mb->readRefPictureIdx = (refidx_present) ? readRefPictureIdxVLC : readRefPictureIdxNull;
+      mb->readRefPictureIndex = (refidx_present) ? readRefPictureIdxVLC : readRefPictureIdxNull;
       }
     }
   else
-    mb->readRefPictureIdx = readRefPictureIdxNull;
+    mb->readRefPictureIndex = readRefPictureIdxNull;
   }
 //}}}
 
@@ -497,7 +497,7 @@ static void readMBRefPictureIdx (sSyntaxElement* currSE, sDataPartition *dP,
     if ((mb->b8pdir[0] == list || mb->b8pdir[0] == BI_PRED)) {
       mb->subblockX = 0;
       mb->subblockY = 0;
-      char refframe = mb->readRefPictureIdx(mb, currSE, dP, 1, list);
+      char refframe = mb->readRefPictureIndex(mb, currSE, dP, 1, list);
       for (int j = 0; j <  step_v0; ++j) {
         char* refIndex = &mvInfo[j][mb->blockX].refIndex[list];
         for (int i = 0; i < step_h0; ++i) {
@@ -513,7 +513,7 @@ static void readMBRefPictureIdx (sSyntaxElement* currSE, sDataPartition *dP,
       if ((mb->b8pdir[k] == list || mb->b8pdir[k] == BI_PRED)) {
         mb->subblockY = j0 << 2;
         mb->subblockX = 0;
-        char refframe = mb->readRefPictureIdx(mb, currSE, dP, mb->b8mode[k], list);
+        char refframe = mb->readRefPictureIndex(mb, currSE, dP, mb->b8mode[k], list);
         for (int j = j0; j < j0 + step_v0; ++j) {
           char *refIndex = &mvInfo[j][mb->blockX].refIndex[list];
           for (int i = 0; i < step_h0; ++i) {
@@ -530,7 +530,7 @@ static void readMBRefPictureIdx (sSyntaxElement* currSE, sDataPartition *dP,
       int k = (i0 >> 1);
       if ((mb->b8pdir[k] == list || mb->b8pdir[k] == BI_PRED) && mb->b8mode[k] != 0) {
         mb->subblockX = i0 << 2;
-        char refframe = mb->readRefPictureIdx(mb, currSE, dP, mb->b8mode[k], list);
+        char refframe = mb->readRefPictureIndex(mb, currSE, dP, mb->b8mode[k], list);
         for (int j = 0; j < step_v0; ++j) {
           char *refIndex = &mvInfo[j][mb->blockX + i0].refIndex[list];
           for (int i = 0; i < step_h0; ++i) {
@@ -548,7 +548,7 @@ static void readMBRefPictureIdx (sSyntaxElement* currSE, sDataPartition *dP,
         int k = 2 * (j0 >> 1) + (i0 >> 1);
         if ((mb->b8pdir[k] == list || mb->b8pdir[k] == BI_PRED) && mb->b8mode[k] != 0) {
           mb->subblockX = i0 << 2;
-          char refframe = mb->readRefPictureIdx(mb, currSE, dP, mb->b8mode[k], list);
+          char refframe = mb->readRefPictureIndex(mb, currSE, dP, mb->b8mode[k], list);
           for (int j = j0; j < j0 + step_v0; ++j) {
             char *refIndex = &mvInfo[j][mb->blockX + i0].refIndex[list];
             for (int i = 0; i < step_h0; ++i) {
