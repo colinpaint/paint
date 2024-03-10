@@ -631,7 +631,7 @@ void activateSPS (sDecoder* decoder, sSPS* sps) {
       exitPicture (decoder, &decoder->picture);
     decoder->activeSPS = sps;
 
-    if (decoder->dpbLayerId == 0 && is_BL_profile (sps->profileIdc) && !decoder->dpbLayer[0]->initDone) {
+    if (decoder->dpbLayerId == 0 && isBLprofile (sps->profileIdc) && !decoder->dpbLayer[0]->initDone) {
       setCodingParam (sps, decoder->coding[0]);
       setupLayerInfo ( decoder, sps, decoder->layer[0]);
       }

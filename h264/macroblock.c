@@ -1304,7 +1304,7 @@ void changePlaneJV (sDecoder* decoder, int nplane, sSlice* slice) {
   }
 //}}}
 //{{{
-void make_frame_picture_JV (sDecoder* decoder) {
+void makeFramePictureJV (sDecoder* decoder) {
 
   decoder->picture = decoder->decPictureJV[0];
 

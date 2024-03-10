@@ -914,7 +914,7 @@ static int getDpbSize (sDecoder* decoder, sSPS *activeSPS) {
     //}}}
     //{{{
     case 11:
-      if (!is_FREXT_profile(activeSPS->profileIdc) && (activeSPS->constrained_set3_flag == 1))
+      if (!isFrextProfile(activeSPS->profileIdc) && (activeSPS->constrained_set3_flag == 1))
         size = 396;
       else
         size = 900;

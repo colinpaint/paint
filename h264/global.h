@@ -957,7 +957,7 @@ typedef struct Decoder {
 typedef sBiContextType* sBiContextTypePtr;
 static const sMotionVec zero_mv = {0, 0};
 //{{{
-static inline int is_BL_profile (unsigned int profileIdc) {
+static inline int isBLprofile (unsigned int profileIdc) {
   return profileIdc == FREXT_CAVLC444 || profileIdc == BASELINE ||
          profileIdc == MAIN || profileIdc == EXTENDED ||
          profileIdc == FREXT_HP || profileIdc == FREXT_Hi10P ||
@@ -965,7 +965,7 @@ static inline int is_BL_profile (unsigned int profileIdc) {
 }
 //}}}
 //{{{
-static inline int is_FREXT_profile (unsigned int profileIdc) {
+static inline int isFrextProfile (unsigned int profileIdc) {
   // we allow all FRExt tools, when no profile is active
   return profileIdc == NO_PROFILE || profileIdc == FREXT_HP ||
          profileIdc == FREXT_Hi10P || profileIdc == FREXT_Hi422 ||
@@ -973,7 +973,7 @@ static inline int is_FREXT_profile (unsigned int profileIdc) {
 }
 //}}}
 //{{{
-static inline int is_HI_intra_only_profile (unsigned int profileIdc, Boolean constrained_set3_flag) {
+static inline int isHiIntraOnlyProfile (unsigned int profileIdc, Boolean constrained_set3_flag) {
   return (((profileIdc == FREXT_Hi10P)||(profileIdc == FREXT_Hi422) ||
            (profileIdc == FREXT_Hi444)) && constrained_set3_flag) ||
          (profileIdc == FREXT_CAVLC444);
@@ -1004,7 +1004,7 @@ static inline int is_HI_intra_only_profile (unsigned int profileIdc, Boolean con
 
   // For 4:4:4 independent mode
   extern void changePlaneJV (sDecoder* decoder, int nplane, sSlice *pSlice);
-  extern void make_frame_picture_JV (sDecoder* decoder );
+  extern void makeFramePictureJV (sDecoder* decoder );
 
   extern sDecodedPicture* getDecodedPicture (sDecodedPicture* decodedPicture);
   extern void freeDecodedPictures (sDecodedPicture* decodedPicture);

@@ -1173,14 +1173,14 @@ void exitPicture (sDecoder* decoder, sPicture** picture) {
         deblockPicture (decoder, *picture );
         }
       decoder->sliceList[0]->colourPlaneId = colourPlaneId;
-      make_frame_picture_JV(decoder);
+      makeFramePictureJV(decoder);
       }
     else
       deblockPicture (decoder,* picture);
     }
     //}}}
   else if (decoder->sepColourPlaneFlag != 0)
-    make_frame_picture_JV (decoder);
+    makeFramePictureJV (decoder);
 
   if ((*picture)->mbAffFrameFlag)
     mbAffPostProc (decoder);
