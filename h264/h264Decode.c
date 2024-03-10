@@ -182,9 +182,6 @@ static void freeImg (sDecoder* decoder) {
       freePPS (decoder->nextPPS);
       decoder->nextPPS = NULL;
       }
-
-    free (decoder);
-    decoder = NULL;
     }
   }
 //}}}
