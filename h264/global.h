@@ -409,6 +409,7 @@ typedef struct Macroblock {
   Boolean lumaTransformSize8x8flag;
   Boolean noMbPartLessThan8x8Flag;
 
+  // virtual methods
   void (*iTrans4x4) (struct Macroblock*, eColorPlane, int, int);
   void (*iTrans8x8) (struct Macroblock*, eColorPlane, int, int);
   void (*GetMVPredictor) (struct Macroblock*, sPixelPos*, sMotionVec*, short, struct PicMotion**, int, int, int, int, int);
@@ -609,6 +610,7 @@ typedef struct Slice {
   char*  intraBlock;
   char   chroma_vector_adjustment[6][32];
 
+  // virtual methods
   int  (*nalStartcode) (struct Slice*, int);
   void (*initLists) (struct Slice*);
   void (*readCBPcoeffs) (sMacroblock*);
@@ -738,6 +740,7 @@ typedef struct Input {
   int pocGap;
   int concealMode;
   int intraProfileDeblocking; // Loop filter usage determined by flags and parameters in bitstream
+
   sFrameFormat source;
   sFrameFormat output;
   int dpbPlus[2];
@@ -746,7 +749,6 @@ typedef struct Input {
 //{{{  sDecoder
 typedef struct Decoder {
   sInput       input;
-
   TIME_T       startTime;
   TIME_T       endTime;
 
@@ -762,6 +764,8 @@ typedef struct Decoder {
   sPPS         pps[MAX_PPS];
   sPPS*        activePPS;
   sPPS*        nextPPS;
+
+  struct sSEI* sei;
 
   int          recoveryPoint;
   int          recoveryPointFound;
@@ -783,7 +787,6 @@ typedef struct Decoder {
   int          gapNumFrame;
   int          newFrame;
 
-  struct sSEI* sei;
   struct OldSlice* oldSlice;
 
   // current picture property
@@ -813,6 +816,11 @@ typedef struct Decoder {
   // picture error conceal
   // concealment_head points to first node in list, concealment_end points to
   // last node in list. Initialize both to NULL, meaning no nodes in list yet
+  int          concealMode;
+  int          earlier_missing_poc;
+  unsigned int frame_to_conceal;
+  int          IdrConcealFlag;
+  int          conceal_slice_type;
   struct ConcealNode* concealment_head;
   struct ConcealNode* concealment_end;
 
@@ -820,11 +828,6 @@ typedef struct Decoder {
   int          lastRefPicPoc;
   int          refPocGap;
   int          pocGap;
-  int          concealMode;
-  int          earlier_missing_poc;
-  unsigned int frame_to_conceal;
-  int          IdrConcealFlag;
-  int          conceal_slice_type;
 
   // for POC mode 0:
   signed int   PrevPicOrderCntMsb;
@@ -881,15 +884,6 @@ typedef struct Decoder {
   int* mbToSliceGroupMap;
   int* mapUnitToSliceGroupMap;
   int  sliceGroupsNum;  // the number of slice groups -1 (0 == scan order, 7 == maximum)
-
-  void (*getNeighbour) (sMacroblock*, int, int, int[2], sPixelPos*);
-  void (*getMbBlockPos) (sBlockPos*, int, short*, short*);
-  void (*getStrengthV) (sMacroblock*, int, int, struct Picture*);
-  void (*getStrengthH) (sMacroblock*, int, int, struct Picture*);
-  void (*edgeLoopLumaV) (eColorPlane, sPixel**, byte*, sMacroblock*, int);
-  void (*edgeLoopLumaH) (eColorPlane, sPixel**, byte*, sMacroblock*, int, struct Picture*);
-  void (*edgeLoopChromaV) (sPixel**, byte*, sMacroblock*, int, int, struct Picture*);
-  void (*edgeLoopChromaH) (sPixel**, byte*, sMacroblock*, int, int, struct Picture*);
 
   int          deblockMode;  // 0: deblock in picture, 1: deblock in slice;
   sImage       tempData3;
@@ -955,6 +949,16 @@ typedef struct Decoder {
 
   // maximum vertical motion vector range in luma quarter frame pixel units for the current level_idc
   int maxVmvR;
+
+  // virtual methods
+  void (*getNeighbour) (sMacroblock*, int, int, int[2], sPixelPos*);
+  void (*getMbBlockPos) (sBlockPos*, int, short*, short*);
+  void (*getStrengthV) (sMacroblock*, int, int, struct Picture*);
+  void (*getStrengthH) (sMacroblock*, int, int, struct Picture*);
+  void (*edgeLoopLumaV) (eColorPlane, sPixel**, byte*, sMacroblock*, int);
+  void (*edgeLoopLumaH) (eColorPlane, sPixel**, byte*, sMacroblock*, int, struct Picture*);
+  void (*edgeLoopChromaV) (sPixel**, byte*, sMacroblock*, int, int, struct Picture*);
+  void (*edgeLoopChromaH) (sPixel**, byte*, sMacroblock*, int, int, struct Picture*);
   } sDecoder;
 //}}}
 
