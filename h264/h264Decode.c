@@ -198,7 +198,7 @@ static void init (sVidParam* vidParam) {
   vidParam->recoveryPointFound = 0;
   vidParam->recoveryPoc = 0x7fffffff; /* set to a max value */
 
-  vidParam->idrPsnrNum = vidParam->inputParam->refOffset;
+  vidParam->idrPsnrNum = vidParam->inputParam.refOffset;
   vidParam->psnrNum=0;
 
   vidParam->number = 0;
@@ -586,8 +586,7 @@ void OpenDecoder (sInputParam* inputParam, byte* chunk, size_t chunkSize) {
   init_time();
 
   // init inputParam
-  vidParam->inputParam = (sInputParam*)calloc (1, sizeof(sInputParam));
-  memcpy (gVidParam->inputParam, inputParam, sizeof(sInputParam));
+  memcpy (&(vidParam->inputParam), inputParam, sizeof(sInputParam));
   gVidParam->concealMode = inputParam->concealMode;
   gVidParam->refPocGap = inputParam->refPocGap;
   gVidParam->pocGap = inputParam->pocGap;
@@ -602,7 +601,7 @@ void OpenDecoder (sInputParam* inputParam, byte* chunk, size_t chunkSize) {
   // init slice
   vidParam->globalInitDone[0] = vidParam->globalInitDone[1] = 0;
   vidParam->oldSlice = (sOldSliceParam*)calloc (1, sizeof(sOldSliceParam));
-  vidParam->sliceList = (sSlice**)calloc (MAX_NUM_DECSLICES, sizeof(sSlice *));
+  vidParam->sliceList = (sSlice**)calloc (MAX_NUM_DECSLICES, sizeof(sSlice*));
   vidParam->numSlicesAllocated = MAX_NUM_DECSLICES;
   vidParam->nextSlice = NULL;
   initOldSlice (vidParam->oldSlice);

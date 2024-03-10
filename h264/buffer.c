@@ -1032,7 +1032,7 @@ void initDpb (sVidParam* vidParam, sDPB* dpb, int type) {
   if (dpb->initDone)
     freeDpb (dpb);
 
-  dpb->size = getDpbSize (vidParam, activeSPS) + vidParam->inputParam->dpb_plus[type == 2 ? 1 : 0];
+  dpb->size = getDpbSize (vidParam, activeSPS) + vidParam->inputParam.dpbPlus[type == 2 ? 1 : 0];
   dpb->numRefFrames = activeSPS->numRefFrames;
 
   if (dpb->size < activeSPS->numRefFrames)
@@ -1082,7 +1082,7 @@ void initDpb (sVidParam* vidParam, sDPB* dpb, int type) {
 void reInitDpb (sVidParam* vidParam, sDPB* dpb, int type) {
 
   sSPS* activeSPS = vidParam->activeSPS;
-  int dpbSize = getDpbSize (vidParam, activeSPS) + vidParam->inputParam->dpb_plus[type == 2 ? 1 : 0];
+  int dpbSize = getDpbSize (vidParam, activeSPS) + vidParam->inputParam.dpbPlus[type == 2 ? 1 : 0];
   dpb->numRefFrames = activeSPS->numRefFrames;
 
   if (dpbSize > (int)dpb->size) {
@@ -1880,7 +1880,7 @@ void freeDpb (sDPB* dpb) {
 void initImage (sVidParam* vidParam, sImage* image, sSPS* sps) {
 
   // allocate memory for reference frame buffers: image->frm_data
-  image->format = vidParam->inputParam->output;
+  image->format = vidParam->inputParam.output;
   image->format.width[0]  = vidParam->width;
   image->format.width[1]  = vidParam->widthCr;
   image->format.width[2]  = vidParam->widthCr;
@@ -1888,10 +1888,10 @@ void initImage (sVidParam* vidParam, sImage* image, sSPS* sps) {
   image->format.height[1] = vidParam->heightCr;
   image->format.height[2] = vidParam->heightCr;
   image->format.yuvFormat  = (eColorFormat)sps->chromaFormatIdc;
-  image->format.autoCropBot = vidParam->inputParam->output.autoCropBot;
-  image->format.autoCropRight = vidParam->inputParam->output.autoCropRight;
-  image->format.autoCropBotCr = vidParam->inputParam->output.autoCropBotCr;
-  image->format.autoCropRightCr = vidParam->inputParam->output.autoCropRightCr;
+  image->format.autoCropBot = vidParam->inputParam.output.autoCropBot;
+  image->format.autoCropRight = vidParam->inputParam.output.autoCropRight;
+  image->format.autoCropBotCr = vidParam->inputParam.output.autoCropBotCr;
+  image->format.autoCropRightCr = vidParam->inputParam.output.autoCropRightCr;
   image->frm_stride[0] = vidParam->width;
   image->frm_stride[1] = image->frm_stride[2] = vidParam->widthCr;
   image->top_stride[0] = image->bot_stride[0] = image->frm_stride[0] << 1;

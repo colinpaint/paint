@@ -513,7 +513,7 @@ static void initPicture (sVidParam* vidParam, sSlice* slice) {
     slice->frameNum != (vidParam->preFrameNum + 1) % vidParam->maxFrameNum) {
     if (activeSPS->gaps_in_frame_num_value_allowed_flag == 0) {
       // picture error conceal
-      if (vidParam->inputParam->concealMode != 0) {
+      if (vidParam->inputParam.concealMode != 0) {
         if ((slice->frameNum) < ((vidParam->preFrameNum + 1) % vidParam->maxFrameNum)) {
           /* Conceal lost IDR frames and any frames immediately following the IDR.
           // Use frame copy for these since lists cannot be formed correctly for motion copy*/
@@ -521,11 +521,11 @@ static void initPicture (sVidParam* vidParam, sSlice* slice) {
           vidParam->IdrConcealFlag = 1;
           concealLostFrames (dpb, slice);
           // reset to original conceal mode for future drops
-          vidParam->concealMode = vidParam->inputParam->concealMode;
+          vidParam->concealMode = vidParam->inputParam.concealMode;
           }
         else {
           // reset to original conceal mode for future drops
-          vidParam->concealMode = vidParam->inputParam->concealMode;
+          vidParam->concealMode = vidParam->inputParam.concealMode;
           vidParam->IdrConcealFlag = 0;
           concealLostFrames (dpb, slice);
           }
@@ -1082,10 +1082,10 @@ void initOldSlice (sOldSliceParam* oldSliceParam) {
 //{{{
 void calcFrameNum (sVidParam* vidParam, sPicture* p) {
 
-  int psnrPOC = vidParam->activeSPS->mb_adaptive_frame_field_flag ? p->poc / (vidParam->inputParam->pocScale) :
-                                                                    p->poc / (vidParam->inputParam->pocScale);
+  int psnrPOC = vidParam->activeSPS->mb_adaptive_frame_field_flag ? p->poc / (vidParam->inputParam.pocScale) :
+                                                                    p->poc / (vidParam->inputParam.pocScale);
   if (psnrPOC == 0)
-    vidParam->idrPsnrNum = vidParam->gapNumFrame * vidParam->refPocGap / (vidParam->inputParam->pocScale);
+    vidParam->idrPsnrNum = vidParam->gapNumFrame * vidParam->refPocGap / (vidParam->inputParam.pocScale);
 
   vidParam->psnrNum = imax (vidParam->psnrNum, vidParam->idrPsnrNum+psnrPOC);
   vidParam->frameNum = vidParam->idrPsnrNum + psnrPOC;

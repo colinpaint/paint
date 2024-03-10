@@ -1876,7 +1876,7 @@ void readRestSliceHeader (sSlice* curSlice) {
   // The conformance point for intra profiles is without deblocking, but decoders are still recommended to filter the output.
   // We allow in the decoder config to skip the loop filtering. This is achieved by modifying the parameters here.
   if (is_HI_intra_only_profile (activeSPS->profileIdc, activeSPS->constrained_set3_flag) &&
-      (vidParam->inputParam->intraProfileDeblocking == 0)) {
+      (vidParam->inputParam.intraProfileDeblocking == 0)) {
     curSlice->DFDisableIdc = 1;
     curSlice->DFAlphaC0Offset = curSlice->DFBetaOffset = 0;
     }

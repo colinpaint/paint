@@ -437,20 +437,6 @@ typedef struct WPParam {
   short offset[3];
   } sWPParam;
 //}}}
-//{{{  sInputParam
-typedef struct InputParam {
-  int vlcDebug;
-  int refOffset;
-  int pocScale;
-  int refPocGap;
-  int pocGap;
-  int concealMode;
-  int intraProfileDeblocking; // Loop filter usage determined by flags and parameters in bitstream
-  sFrameFormat source;
-  sFrameFormat output;
-  int dpb_plus[2];
-  } sInputParam;
-//}}}
 //{{{  sImage
 typedef struct Image {
   sFrameFormat format;                 // image format
@@ -743,25 +729,46 @@ typedef struct LayerParam {
   struct DPB*      dpb;
   } sLayerParam;
 //}}}
+//{{{  sInputParam
+typedef struct InputParam {
+  int vlcDebug;
+  int refOffset;
+  int pocScale;
+  int refPocGap;
+  int pocGap;
+  int concealMode;
+  int intraProfileDeblocking; // Loop filter usage determined by flags and parameters in bitstream
+  sFrameFormat source;
+  sFrameFormat output;
+  int dpbPlus[2];
+  } sInputParam;
+//}}}
 //{{{  sVidParam
 typedef struct VidParam {
-  struct InputParam* inputParam;
+  struct InputParam inputParam;
 
-  TIME_T startTime;
-  TIME_T endTime;
+  TIME_T       startTime;
+  TIME_T       endTime;
 
-  sPPS* activePPS;
-  sSPS* activeSPS;
-  sSPS  SeqParSet[32];
-  sPPS  PicParSet[MAX_PPS];
+  sPPS*        activePPS;
+  sSPS*        activeSPS;
+  sSPS         SeqParSet[32];
+  sPPS         PicParSet[MAX_PPS];
+  Boolean      firstSPS;
+  int          recoveryPoint;
+  int          recoveryPointFound;
+  int          recoveryFrameCount;
+  int          recoveryFrameNum;
+  int          recoveryPoc;
+
 
   struct DPB*   dpbLayer[MAX_NUM_DPB_LAYERS];
-  sCodingParam* codingParam[MAX_NUM_DPB_LAYERS];
   sLayerParam*  layerParam[MAX_NUM_DPB_LAYERS];
+  sCodingParam* codingParam[MAX_NUM_DPB_LAYERS];
 
-  struct sei_params*    sei;
-  struct OldSliceParam* oldSlice;
   int                   number;  //frame number
+  struct sSEI*    sei;
+  struct OldSliceParam* oldSlice;
 
   // current picture property;
   unsigned int numDecodedMb;
@@ -772,9 +779,8 @@ typedef struct VidParam {
   char*        intraBlock;
   char*        intraBlockJV[MAX_PLANE];
 
-  int          type;                       // image type INTER/INTRA
-
-  byte**       predMode;                  // prediction type [90][74]
+  int          type;                // image type INTER/INTRA
+  byte**       predMode;            // prediction type [90][74]
   byte**       predModeJV[MAX_PLANE];
   byte****     nzCoeff;
   int**        siBlock;
@@ -797,6 +803,14 @@ typedef struct VidParam {
 
   unsigned int preFrameNum;           // store the frameNum in the last decoded slice. For detecting gap in frameNum.
   int          nonConformingStream;
+  int          lastRefPicPoc;
+  int          refPocGap;
+  int          pocGap;
+  int          concealMode;
+  int          earlier_missing_poc;
+  unsigned int frame_to_conceal;
+  int          IdrConcealFlag;
+  int          conceal_slice_type;
 
   // for POC mode 0:
   signed int   PrevPicOrderCntMsb;
@@ -819,23 +833,6 @@ typedef struct VidParam {
 
   int          idrPsnrNum;
   int          psnrNum;
-
-  // picture error conceal
-  int          lastRefPicPoc;
-  int          refPocGap;
-  int          pocGap;
-  int          concealMode;
-  int          earlier_missing_poc;
-  unsigned int frame_to_conceal;
-  int          IdrConcealFlag;
-  int          conceal_slice_type;
-
-  Boolean      firstSPS;
-  int          recoveryPoint;
-  int          recoveryPointFound;
-  int          recoveryFrameCount;
-  int          recoveryFrameNum;
-  int          recoveryPoc;
 
   // Redundant slices. Should be moved to another structure and allocated only if extended profile
   unsigned int prevFrameNum; // frame number of previous slice

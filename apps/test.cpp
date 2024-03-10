@@ -951,7 +951,7 @@ public:
       sInputParams.pocScale = 2;
       sInputParams.pocGap = 2;
       sInputParams.refPocGap = 2;
-      sInputParams.dpb_plus[0] = 1;
+      sInputParams.dpbPlus[0] = 1;
       sInputParams.intraProfileDeblocking = 1;
       OpenDecoder (&sInputParams, h264Chunk, h264ChunkSize);
 
@@ -1075,7 +1075,7 @@ public:
       sInputParams.pocScale = 2;
       sInputParams.pocGap = 2;
       sInputParams.refPocGap = 2;
-      sInputParams.dpb_plus[0] = 1;
+      sInputParams.dpbPlus[0] = 1;
       sInputParams.intraProfileDeblocking = 1;
 
       OpenDecoder (&sInputParams, chunk, fileSize);
