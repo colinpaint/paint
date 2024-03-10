@@ -19,15 +19,15 @@
 #include "h264decode.h"
 //}}}
 
-sVidParam* gDecoder;
+sVidParam* gVidParam;
 char errortext[ET_SIZE];
 
 //{{{
 void error (char* text, int code) {
 
   fprintf (stderr, "%s\n", text);
-  if (gDecoder)
-    flushDpb (gDecoder->dpbLayer[0]);
+  if (gVidParam)
+    flushDpb (gVidParam->dpbLayer[0]);
   exit (code);
   }
 //}}}
@@ -41,40 +41,6 @@ static void reset_dpb (sVidParam* vidParam, sDPB* dpb ) {
 //{{{
 void report_stats_on_error() {
   exit (-1);
-  }
-//}}}
-
-//{{{
-static sVidParam* allocDecoder() {
-
-  sVidParam* vidParam = (sVidParam*)calloc (1, sizeof(sVidParam));
-
-  vidParam->inputParam = (sInputParam*)calloc (1, sizeof(sInputParam));
-  vidParam->oldSlice = (sOldSliceParam*)calloc (1, sizeof(sOldSliceParam));
-
-  // Allocate new dpb buffer
-  for (int i = 0; i < MAX_NUM_DPB_LAYERS; i++) {
-    vidParam->dpbLayer[i] = (sDPB*)calloc (1, sizeof(sDPB));
-    vidParam->dpbLayer[i]->layerId = i;
-    reset_dpb (vidParam, vidParam->dpbLayer[i]);
-    vidParam->codingParam[i] = (sCodingParam*)calloc (1, sizeof(sCodingParam));
-    vidParam->codingParam[i]->layerId = i;
-    vidParam->layerParam[i] = (sLayerParam*)calloc(1, sizeof(sLayerParam));
-    vidParam->layerParam[i]->layerId = i;
-    }
-
-  vidParam->globalInitDone[0] = vidParam->globalInitDone[1] = 0;
-
-  vidParam->sliceList = (sSlice**)calloc(MAX_NUM_DECSLICES, sizeof(sSlice *));
-
-  vidParam->numSlicesAllocated = MAX_NUM_DECSLICES;
-  vidParam->nextSlice = NULL;
-  vidParam->nalu = allocNALU (MAX_CODED_FRAME_SIZE);
-  vidParam->decOutputPic = (sDecodedPicture*)calloc(1, sizeof(sDecodedPicture));
-  vidParam->nextPPS = allocPPS();
-  vidParam->firstSPS = TRUE;
-
-  return vidParam;
   }
 //}}}
 
@@ -614,29 +580,54 @@ void setGlobalCodingProgram (sVidParam* vidParam, sCodingParam* codingParam) {
 //{{{
 void OpenDecoder (sInputParam* inputParam, byte* chunk, size_t chunkSize) {
 
-  gDecoder = allocDecoder (inputParam);
+  // alloc decoder
+  sVidParam* vidParam = (sVidParam*)calloc (1, sizeof(sVidParam));
+  gVidParam = vidParam;
+
+  vidParam->inputParam = (sInputParam*)calloc (1, sizeof(sInputParam));
+  vidParam->oldSlice = (sOldSliceParam*)calloc (1, sizeof(sOldSliceParam));
+
+  // alloc dpb buffer
+  for (int i = 0; i < MAX_NUM_DPB_LAYERS; i++) {
+    vidParam->dpbLayer[i] = (sDPB*)calloc (1, sizeof(sDPB));
+    vidParam->dpbLayer[i]->layerId = i;
+    reset_dpb (vidParam, vidParam->dpbLayer[i]);
+    vidParam->codingParam[i] = (sCodingParam*)calloc (1, sizeof(sCodingParam));
+    vidParam->codingParam[i]->layerId = i;
+    vidParam->layerParam[i] = (sLayerParam*)calloc(1, sizeof(sLayerParam));
+    vidParam->layerParam[i]->layerId = i;
+    }
+
+  vidParam->globalInitDone[0] = vidParam->globalInitDone[1] = 0;
+  vidParam->sliceList = (sSlice**)calloc(MAX_NUM_DECSLICES, sizeof(sSlice *));
+  vidParam->numSlicesAllocated = MAX_NUM_DECSLICES;
+  vidParam->nextSlice = NULL;
+  vidParam->nalu = allocNALU (MAX_CODED_FRAME_SIZE);
+  vidParam->decOutputPic = (sDecodedPicture*)calloc(1, sizeof(sDecodedPicture));
+  vidParam->nextPPS = allocPPS();
+  vidParam->firstSPS = TRUE;
+
 
   init_time();
 
-  memcpy (gDecoder->inputParam, inputParam, sizeof(sInputParam));
+  memcpy (gVidParam->inputParam, inputParam, sizeof(sInputParam));
+  gVidParam->concealMode = inputParam->concealMode;
+  gVidParam->refPocGap = inputParam->refPocGap;
+  gVidParam->pocGap = inputParam->pocGap;
+  gVidParam->annexB = allocAnnexB (gVidParam);
+  openAnnexB (gVidParam->annexB, chunk, chunkSize);
 
-  gDecoder->concealMode = inputParam->concealMode;
-  gDecoder->refPocGap = inputParam->refPocGap;
-  gDecoder->pocGap = inputParam->pocGap;
-  gDecoder->annexB = allocAnnexB (gDecoder);
-  openAnnexB (gDecoder->annexB, chunk, chunkSize);
-
-  initOldSlice (gDecoder->oldSlice);
-  init (gDecoder);
-  allocOutput (gDecoder);
+  initOldSlice (vidParam->oldSlice);
+  init (vidParam);
+  allocOutput (vidParam);
   }
 //}}}
 //{{{
 int DecodeOneFrame (sDecodedPicture** ppDecPicList) {
 
-  ClearDecodedPictures (gDecoder);
+  ClearDecodedPictures (gVidParam);
 
-  int iRet = decodeFrame (gDecoder);
+  int iRet = decodeFrame (gVidParam);
   if (iRet == SOP)
     iRet = DEC_SUCCEED;
   else if (iRet == EOS)
@@ -644,41 +635,41 @@ int DecodeOneFrame (sDecodedPicture** ppDecPicList) {
   else
     iRet |= DEC_ERRMASK;
 
-  *ppDecPicList = gDecoder->decOutputPic;
+  *ppDecPicList = gVidParam->decOutputPic;
   return iRet;
   }
 //}}}
 //{{{
 void FinitDecoder (sDecodedPicture** ppDecPicList) {
 
-  ClearDecodedPictures (gDecoder);
-  flushDpb (gDecoder->dpbLayer[0]);
+  ClearDecodedPictures (gVidParam);
+  flushDpb (gVidParam->dpbLayer[0]);
 
-  resetAnnexB (gDecoder->annexB);
+  resetAnnexB (gVidParam->annexB);
 
-  gDecoder->newFrame = 0;
-  gDecoder->prevFrameNum = 0;
-  *ppDecPicList = gDecoder->decOutputPic;
+  gVidParam->newFrame = 0;
+  gVidParam->prevFrameNum = 0;
+  *ppDecPicList = gVidParam->decOutputPic;
   }
 //}}}
 //{{{
 void CloseDecoder() {
 
-  FmoFinit (gDecoder);
-  freeLayerBuffers (gDecoder, 0);
-  freeLayerBuffers (gDecoder, 1);
-  freeGlobalBuffers (gDecoder);
+  FmoFinit (gVidParam);
+  freeLayerBuffers (gVidParam, 0);
+  freeLayerBuffers (gVidParam, 1);
+  freeGlobalBuffers (gVidParam);
 
-  ercClose (gDecoder, gDecoder->ercErrorVar);
+  ercClose (gVidParam, gVidParam->ercErrorVar);
 
-  cleanUpPPS (gDecoder);
+  cleanUpPPS (gVidParam);
 
   for (unsigned i = 0; i < MAX_NUM_DPB_LAYERS; i++)
-    freeDpb (gDecoder->dpbLayer[i]);
-  freeOutput (gDecoder);
-  freeImg (gDecoder);
-  free (gDecoder);
+    freeDpb (gVidParam->dpbLayer[i]);
+  freeOutput (gVidParam);
+  freeImg (gVidParam);
+  free (gVidParam);
 
-  gDecoder = NULL;
+  gVidParam = NULL;
   }
 //}}}

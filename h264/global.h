@@ -995,7 +995,7 @@ static inline int is_HI_intra_only_profile (unsigned int profileIdc, Boolean con
   extern "C" {
 #endif
 //}}}
-  extern sVidParam* gDecoder;
+  extern sVidParam* gVidParam;
 
   extern char errortext[ET_SIZE];
   extern void error (char* text, int code);
