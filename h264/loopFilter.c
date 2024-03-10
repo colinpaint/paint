@@ -107,7 +107,7 @@ static sMacroblock* get_non_aff_neighbour_chroma (sMacroblock* mb, int xN, int y
 
 // mbaff
 //{{{
-static void edge_loop_luma_ver_MBAff (eColorPlane pl, sPixel** img,
+static void edge_loop_luma_ver_MBAff (eColorPlane plane, sPixel** img,
                                       byte* Strength, sMacroblock* mbQ, int edge) {
 
   int      pel, Strng ;
@@ -119,8 +119,8 @@ static void edge_loop_luma_ver_MBAff (eColorPlane pl, sPixel** img,
   sPixelPos pixP, pixQ;
 
   sDecoder* decoder = mbQ->decoder;
-  int bitdepthScale = pl ? decoder->bitdepthScale[IS_CHROMA] : decoder->bitdepthScale[IS_LUMA];
-  int max_imgpel_value = decoder->maxPelValueComp[pl];
+  int bitdepthScale = plane ? decoder->bitdepthScale[IS_CHROMA] : decoder->bitdepthScale[IS_LUMA];
+  int max_imgpel_value = decoder->maxPelValueComp[plane];
 
   int AlphaC0Offset = mbQ->DFAlphaC0Offset;
   int BetaOffset = mbQ->DFBetaOffset;
@@ -140,7 +140,7 @@ static void edge_loop_luma_ver_MBAff (eColorPlane pl, sPixel** img,
         SrcPtrP = &(img[pixP.posY][pixP.posX]);
 
         // Average QP of the two blocks
-        QP = pl? ((MbP->qpc[pl-1] + mbQ->qpc[pl-1] + 1) >> 1) : (MbP->qp + mbQ->qp + 1) >> 1;
+        QP = plane? ((MbP->qpc[plane-1] + mbQ->qpc[plane-1] + 1) >> 1) : (MbP->qp + mbQ->qp + 1) >> 1;
         indexA = iClip3(0, MAX_QP, QP + AlphaC0Offset);
         indexB = iClip3(0, MAX_QP, QP + BetaOffset);
         Alpha = ALPHA_TABLE[indexA] * bitdepthScale;
@@ -207,20 +207,20 @@ static void edge_loop_luma_ver_MBAff (eColorPlane pl, sPixel** img,
   }
 //}}}
 //{{{
-static void edge_loop_luma_hor_MBAff (eColorPlane pl, sPixel** img, byte* Strength, sMacroblock* mbQ,
+static void edge_loop_luma_hor_MBAff (eColorPlane plane, sPixel** img, byte* Strength, sMacroblock* mbQ,
                                       int edge, sPicture *p)
 {
   int      width = p->iLumaStride; //p->sizeX;
   int      pel, Strng ;
-  int      PelNum = pl? pelnum_cr[1][p->chromaFormatIdc] : MB_BLOCK_SIZE;
+  int      PelNum = plane? pelnum_cr[1][p->chromaFormatIdc] : MB_BLOCK_SIZE;
 
   int      yQ = (edge < MB_BLOCK_SIZE ? edge : 1);
 
   sPixelPos pixP, pixQ;
 
   sDecoder* decoder = mbQ->decoder;
-  int      bitdepthScale = pl? decoder->bitdepthScale[IS_CHROMA] : decoder->bitdepthScale[IS_LUMA];
-  int      max_imgpel_value = decoder->maxPelValueComp[pl];
+  int      bitdepthScale = plane? decoder->bitdepthScale[IS_CHROMA] : decoder->bitdepthScale[IS_LUMA];
+  int      max_imgpel_value = decoder->maxPelValueComp[plane];
 
   getAffNeighbour(mbQ, 0, yQ - 1, decoder->mbSize[IS_LUMA], &pixP);
 
@@ -234,7 +234,7 @@ static void edge_loop_luma_hor_MBAff (eColorPlane pl, sPixel** img, byte* Streng
     int incP    = ((mbQ->mbField && !MbP->mbField) ? 2 * width : width);
 
     // Average QP of the two blocks
-    int QP = pl? ((MbP->qpc[pl - 1] + mbQ->qpc[pl - 1] + 1) >> 1) : (MbP->qp + mbQ->qp + 1) >> 1;
+    int QP = plane? ((MbP->qpc[plane - 1] + mbQ->qpc[plane - 1] + 1) >> 1) : (MbP->qp + mbQ->qp + 1) >> 1;
     int indexA = iClip3(0, MAX_QP, QP + AlphaC0Offset);
     int indexB = iClip3(0, MAX_QP, QP + BetaOffset);
     int Alpha   = ALPHA_TABLE[indexA] * bitdepthScale;
@@ -1072,16 +1072,16 @@ static void luma_ver_deblock_normal (sPixel** pixel, int pos_x1,
   }
 //}}}
 //{{{
-static void edge_loop_luma_ver (eColorPlane pl, sPixel** img, byte* Strength, sMacroblock* mb, int edge) {
+static void edge_loop_luma_ver (eColorPlane plane, sPixel** img, byte* Strength, sMacroblock* mb, int edge) {
 
   sDecoder* decoder = mb->decoder;
 
   sMacroblock* MbP = get_non_aff_neighbour_luma (mb, edge - 1, 0);
   if (MbP || (mb->DFDisableIdc == 0)) {
-    int bitdepthScale   = pl ? decoder->bitdepthScale[IS_CHROMA] : decoder->bitdepthScale[IS_LUMA];
+    int bitdepthScale   = plane ? decoder->bitdepthScale[IS_CHROMA] : decoder->bitdepthScale[IS_LUMA];
 
     // Average QP of the two blocks
-    int QP = pl? ((MbP->qpc[pl-1] + mb->qpc[pl-1] + 1) >> 1) : (MbP->qp + mb->qp + 1) >> 1;
+    int QP = plane? ((MbP->qpc[plane-1] + mb->qpc[plane-1] + 1) >> 1) : (MbP->qp + mb->qp + 1) >> 1;
     int indexA = iClip3 (0, MAX_QP, QP + mb->DFAlphaC0Offset);
     int indexB = iClip3 (0, MAX_QP, QP + mb->DFBetaOffset);
 
@@ -1089,7 +1089,7 @@ static void edge_loop_luma_ver (eColorPlane pl, sPixel** img, byte* Strength, sM
     int Beta = BETA_TABLE [indexB] * bitdepthScale;
     if ((Alpha | Beta )!= 0) {
       const byte *ClipTab = CLIP_TAB[indexA];
-      int max_imgpel_value = decoder->maxPelValueComp[pl];
+      int max_imgpel_value = decoder->maxPelValueComp[plane];
       int pos_x1 = get_pos_x_luma(MbP, (edge - 1));
       sPixel** pixel = &img[get_pos_y_luma(MbP, 0)];
       for (int pel = 0 ; pel < MB_BLOCK_SIZE ; pel += 4 ) {
@@ -1210,7 +1210,7 @@ static void luma_hor_deblock_normal (sPixel* imgP, sPixel* imgQ, int width,
   }
 //}}}
 //{{{
-static void edge_loop_luma_hor (eColorPlane pl, sPixel** img, byte* Strength,
+static void edge_loop_luma_hor (eColorPlane plane, sPixel** img, byte* Strength,
                                 sMacroblock* mb, int edge, sPicture *p) {
 
   sDecoder* decoder = mb->decoder;
@@ -1219,10 +1219,10 @@ static void edge_loop_luma_hor (eColorPlane pl, sPixel** img, byte* Strength,
   sMacroblock *MbP = get_non_aff_neighbour_luma (mb, 0, ypos);
 
   if (MbP || (mb->DFDisableIdc == 0)) {
-    int bitdepthScale = pl ? decoder->bitdepthScale[IS_CHROMA] : decoder->bitdepthScale[IS_LUMA];
+    int bitdepthScale = plane ? decoder->bitdepthScale[IS_CHROMA] : decoder->bitdepthScale[IS_LUMA];
 
     // Average QP of the two blocks
-    int QP = pl? ((MbP->qpc[pl-1] + mb->qpc[pl-1] + 1) >> 1) : (MbP->qp + mb->qp + 1) >> 1;
+    int QP = plane? ((MbP->qpc[plane-1] + mb->qpc[plane-1] + 1) >> 1) : (MbP->qp + mb->qp + 1) >> 1;
 
     int indexA = iClip3 (0, MAX_QP, QP + mb->DFAlphaC0Offset);
     int indexB = iClip3 (0, MAX_QP, QP + mb->DFBetaOffset);
@@ -1232,7 +1232,7 @@ static void edge_loop_luma_hor (eColorPlane pl, sPixel** img, byte* Strength,
 
     if ((Alpha | Beta) != 0) {
       const byte* ClipTab = CLIP_TAB[indexA];
-      int max_imgpel_value = decoder->maxPelValueComp[pl];
+      int max_imgpel_value = decoder->maxPelValueComp[plane];
       int width = p->iLumaStride;
 
       sPixel* imgP = &img[get_pos_y_luma(MbP, ypos)][get_pos_x_luma(MbP, 0)];

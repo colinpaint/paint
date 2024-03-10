@@ -1251,7 +1251,7 @@ void checkDpNeighbours (sMacroblock* mb) {
 //}}}
 
 //{{{
-static void init_cur_imgy (sDecoder* decoder, sSlice* slice, int pl) {
+static void init_cur_imgy (sDecoder* decoder, sSlice* slice, int plane) {
 // probably a better way (or place) to do this, but I'm not sure what (where) it is [CJV]
 // this is intended to make get_block_luma faster, but I'm still performing
 // this at the MB level, and it really should be done at the slice level
@@ -1260,7 +1260,7 @@ static void init_cur_imgy (sDecoder* decoder, sSlice* slice, int pl) {
     sPicture* vidref = decoder->noReferencePicture;
     int noref = (slice->framePoc < decoder->recoveryPoc);
 
-    if (pl == PLANE_Y) {
+    if (plane == PLANE_Y) {
       for (int j = 0; j < 6; j++) {
         for (int i = 0; i < slice->listXsize[j] ; i++) {
           sPicture* curRef = slice->listX[j][i];
@@ -1277,7 +1277,7 @@ static void init_cur_imgy (sDecoder* decoder, sSlice* slice, int pl) {
           sPicture* curRef = slice->listX[j][i];
           if (curRef) {
             curRef->noRef = noref && (curRef == vidref);
-            curRef->curPixelY = curRef->imgUV[pl-1];
+            curRef->curPixelY = curRef->imgUV[plane-1];
             }
           }
         }

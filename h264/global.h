@@ -644,7 +644,7 @@ typedef struct Slice {
   void (*intraPredChroma) (sMacroblock*);
   int  (*intraPred4x4) (sMacroblock*, eColorPlane, int, int, int, int);
   int  (*intraPred8x8) (sMacroblock*, eColorPlane, int, int);
-  int  (*intraPred16x16) (sMacroblock*, eColorPlane pl, int);
+  int  (*intraPred16x16) (sMacroblock*, eColorPlane plane, int);
   void (*updateDirectMvInfo) (sMacroblock*);
   void (*readCoef4x4cavlc) (sMacroblock*, int, int, int, int[16], int[16], int*);
   void (*linfoCbpIntra) (int, int, int*, int*);

@@ -543,7 +543,7 @@ void readCoef4x4cavlc444 (sMacroblock* mb, int block_type,
 //}}}
 
 //{{{
-static void readCompCoef4x4cavlc (sMacroblock* mb, eColorPlane pl, int (*InvLevelScale4x4)[4], int qp_per, int cbp, byte** nzcoeff)
+static void readCompCoef4x4cavlc (sMacroblock* mb, eColorPlane plane, int (*InvLevelScale4x4)[4], int qp_per, int cbp, byte** nzcoeff)
 {
   int blockY, blockX, b8;
   int i, j, k;
@@ -554,24 +554,24 @@ static void readCompCoef4x4cavlc (sMacroblock* mb, eColorPlane pl, int (*InvLeve
   const byte (*pos_scan4x4)[2] = ((decoder->structure == FRAME) && (!mb->mbField)) ? SNGL_SCAN : FIELD_SCAN;
   const byte *pos_scan_4x4 = pos_scan4x4[0];
   int start_scan = IS_I16MB(mb) ? 1 : 0;
-  int64 *cur_cbp = &mb->cbpStructure[pl].blk;
+  int64 *cur_cbp = &mb->cbpStructure[plane].blk;
   int cur_context;
   int block_y4, block_x4;
 
   if (IS_I16MB(mb))
   {
-    if (pl == PLANE_Y)
+    if (plane == PLANE_Y)
       cur_context = LUMA_INTRA16x16AC;
-    else if (pl == PLANE_U)
+    else if (plane == PLANE_U)
       cur_context = CB_INTRA16x16AC;
     else
       cur_context = CR_INTRA16x16AC;
   }
   else
   {
-    if (pl == PLANE_Y)
+    if (plane == PLANE_Y)
       cur_context = LUMA;
-    else if (pl == PLANE_U)
+    else if (plane == PLANE_U)
       cur_context = CB;
     else
       cur_context = CR;
@@ -607,8 +607,8 @@ static void readCompCoef4x4cavlc (sMacroblock* mb, eColorPlane pl, int (*InvLeve
                 // inverse quant for 4x4 transform only
                 *cur_cbp |= i64_power2(j + (i >> 2));
 
-                slice->cof[pl][j + j0][i + i0]= rshift_rnd_sf((levarr[k] * InvLevelScale4x4[j0][i0])<<qp_per, 4);
-                //slice->fcf[pl][j + j0][i + i0]= levarr[k];
+                slice->cof[plane][j + j0][i + i0]= rshift_rnd_sf((levarr[k] * InvLevelScale4x4[j0][i0])<<qp_per, 4);
+                //slice->fcf[plane][j + j0][i + i0]= levarr[k];
               }
             }
           }
@@ -626,7 +626,7 @@ static void readCompCoef4x4cavlc (sMacroblock* mb, eColorPlane pl, int (*InvLeve
 }
 //}}}
 //{{{
-static void read_comp_coeff_4x4_CAVLC_ls (sMacroblock* mb, eColorPlane pl, int (*InvLevelScale4x4)[4], int qp_per, int cbp, byte** nzcoeff)
+static void read_comp_coeff_4x4_CAVLC_ls (sMacroblock* mb, eColorPlane plane, int (*InvLevelScale4x4)[4], int qp_per, int cbp, byte** nzcoeff)
 {
   int blockY, blockX, b8;
   int i, j, k;
@@ -636,23 +636,23 @@ static void read_comp_coeff_4x4_CAVLC_ls (sMacroblock* mb, eColorPlane pl, int (
   sDecoder* decoder = mb->decoder;
   const byte (*pos_scan4x4)[2] = ((decoder->structure == FRAME) && (!mb->mbField)) ? SNGL_SCAN : FIELD_SCAN;
   int start_scan = IS_I16MB(mb) ? 1 : 0;
-  int64 *cur_cbp = &mb->cbpStructure[pl].blk;
+  int64 *cur_cbp = &mb->cbpStructure[plane].blk;
   int coef_ctr, cur_context;
 
   if (IS_I16MB(mb))
   {
-    if (pl == PLANE_Y)
+    if (plane == PLANE_Y)
       cur_context = LUMA_INTRA16x16AC;
-    else if (pl == PLANE_U)
+    else if (plane == PLANE_U)
       cur_context = CB_INTRA16x16AC;
     else
       cur_context = CR_INTRA16x16AC;
   }
   else
   {
-    if (pl == PLANE_Y)
+    if (plane == PLANE_Y)
       cur_context = LUMA;
-    else if (pl == PLANE_U)
+    else if (plane == PLANE_U)
       cur_context = CB;
     else
       cur_context = CR;
@@ -684,8 +684,8 @@ static void read_comp_coeff_4x4_CAVLC_ls (sMacroblock* mb, eColorPlane pl, int (
                 j0=pos_scan4x4[coef_ctr][1];
 
                 *cur_cbp |= i64_power2((j<<2) + i);
-                slice->cof[pl][(j<<2) + j0][(i<<2) + i0]= levarr[k];
-                //slice->fcf[pl][(j<<2) + j0][(i<<2) + i0]= levarr[k];
+                slice->cof[plane][(j<<2) + j0][(i<<2) + i0]= levarr[k];
+                //slice->fcf[plane][(j<<2) + j0][(i<<2) + i0]= levarr[k];
               }
             }
           }
@@ -703,7 +703,7 @@ static void read_comp_coeff_4x4_CAVLC_ls (sMacroblock* mb, eColorPlane pl, int (
 }
 //}}}
 //{{{
-static void readCompCoef8x8cavlc (sMacroblock* mb, eColorPlane pl, int (*InvLevelScale8x8)[8], int qp_per, int cbp, byte** nzcoeff)
+static void readCompCoef8x8cavlc (sMacroblock* mb, eColorPlane plane, int (*InvLevelScale8x8)[8], int qp_per, int cbp, byte** nzcoeff)
 {
   int blockY, blockX, b4, b8;
   int block_y4, block_x4;
@@ -714,23 +714,23 @@ static void readCompCoef8x8cavlc (sMacroblock* mb, eColorPlane pl, int (*InvLeve
   sDecoder* decoder = mb->decoder;
   const byte (*pos_scan8x8)[2] = ((decoder->structure == FRAME) && (!mb->mbField)) ? SNGL_SCAN8x8 : FIELD_SCAN8x8;
   int start_scan = IS_I16MB(mb) ? 1 : 0;
-  int64 *cur_cbp = &mb->cbpStructure[pl].blk;
+  int64 *cur_cbp = &mb->cbpStructure[plane].blk;
   int coef_ctr, cur_context;
 
   if (IS_I16MB(mb))
   {
-    if (pl == PLANE_Y)
+    if (plane == PLANE_Y)
       cur_context = LUMA_INTRA16x16AC;
-    else if (pl == PLANE_U)
+    else if (plane == PLANE_U)
       cur_context = CB_INTRA16x16AC;
     else
       cur_context = CR_INTRA16x16AC;
   }
   else
   {
-    if (pl == PLANE_Y)
+    if (plane == PLANE_Y)
       cur_context = LUMA;
-    else if (pl == PLANE_U)
+    else if (plane == PLANE_U)
       cur_context = CB;
     else
       cur_context = CR;
@@ -770,7 +770,7 @@ static void readCompCoef8x8cavlc (sMacroblock* mb, eColorPlane pl, int (*InvLeve
                 i0 = pos_scan8x8[b4][0];
                 j0 = pos_scan8x8[b4][1];
 
-                slice->mb_rres[pl][block_y4 +j0][block_x4 +i0] = rshift_rnd_sf((levarr[k] * InvLevelScale8x8[j0][i0])<<qp_per, 6); // dequantization
+                slice->mb_rres[plane][block_y4 +j0][block_x4 +i0] = rshift_rnd_sf((levarr[k] * InvLevelScale8x8[j0][i0])<<qp_per, 6); // dequantization
               }
             }//else (!mb->lumaTransformSize8x8flag)
           }
@@ -788,7 +788,7 @@ static void readCompCoef8x8cavlc (sMacroblock* mb, eColorPlane pl, int (*InvLeve
 }
 //}}}
 //{{{
-static void read_comp_coeff_8x8_CAVLC_ls (sMacroblock* mb, eColorPlane pl, int (*InvLevelScale8x8)[8], int qp_per, int cbp, byte** nzcoeff)
+static void read_comp_coeff_8x8_CAVLC_ls (sMacroblock* mb, eColorPlane plane, int (*InvLevelScale8x8)[8], int qp_per, int cbp, byte** nzcoeff)
 {
   int blockY, blockX, b4, b8;
   int i, j, k;
@@ -797,23 +797,23 @@ static void read_comp_coeff_8x8_CAVLC_ls (sMacroblock* mb, eColorPlane pl, int (
   sDecoder* decoder = mb->decoder;
   const byte (*pos_scan8x8)[2] = ((decoder->structure == FRAME) && (!mb->mbField)) ? SNGL_SCAN8x8 : FIELD_SCAN8x8;
   int start_scan = IS_I16MB(mb) ? 1 : 0;
-  int64 *cur_cbp = &mb->cbpStructure[pl].blk;
+  int64 *cur_cbp = &mb->cbpStructure[plane].blk;
   int coef_ctr, cur_context;
 
   if (IS_I16MB(mb))
   {
-    if (pl == PLANE_Y)
+    if (plane == PLANE_Y)
       cur_context = LUMA_INTRA16x16AC;
-    else if (pl == PLANE_U)
+    else if (plane == PLANE_U)
       cur_context = CB_INTRA16x16AC;
     else
       cur_context = CR_INTRA16x16AC;
   }
   else
   {
-    if (pl == PLANE_Y)
+    if (plane == PLANE_Y)
       cur_context = LUMA;
-    else if (pl == PLANE_U)
+    else if (plane == PLANE_U)
       cur_context = CB;
     else
       cur_context = CR;
@@ -853,7 +853,7 @@ static void read_comp_coeff_8x8_CAVLC_ls (sMacroblock* mb, eColorPlane pl, int (
                 iz=pos_scan8x8[coef_ctr*4+b4][0];
                 jz=pos_scan8x8[coef_ctr*4+b4][1];
 
-                slice->mb_rres[pl][blockY*4 +jz][blockX*4 +iz] = levarr[k];
+                slice->mb_rres[plane][blockY*4 +jz][blockX*4 +iz] = levarr[k];
               }
             }
           }
