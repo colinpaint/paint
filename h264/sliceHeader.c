@@ -1760,7 +1760,7 @@ void readRestSliceHeader (sSlice* slice) {
     slice->idrPicId = readUeV ("SLC idrPicId", s);
 
   if (activeSPS->picOrderCountType == 0) {
-    slice->picOrderCountLsb = 
+    slice->picOrderCountLsb =
       readUv (activeSPS->log2_max_pic_order_cnt_lsb_minus4 + 4, "SLC picOrderCountLsb", s);
     if (decoder->activePPS->botFieldPicOrderFramePresentFlag  == 1 &&
         !slice->fieldPicFlag )
@@ -1831,19 +1831,15 @@ void readRestSliceHeader (sSlice* slice) {
   else
     slice->modelNum = 0;
 
-  slice->sliceQpDelta = val = readSeV ("SLC sliceQpDelta", s);
-  slice->qp = 26 + decoder->activePPS->picInitQpMinus26 + val;
-
-  if ((slice->qp < -decoder->bitdepthLumeQpScale) || (slice->qp > 51))
-    error ("sliceQpDelta makes slice_qp_y out of range", 500);
+  // qp
+  slice->sliceQpDelta = readSeV ("SLC sliceQpDelta", s);
+  slice->qp = 26 + decoder->activePPS->picInitQpMinus26 + slice->sliceQpDelta;
 
   if (slice->sliceType == SP_SLICE || slice->sliceType == SI_SLICE) {
     if (slice->sliceType == SP_SLICE)
       slice->spSwitch = readU1 ("SLC sp_for_switch_flag", s);
-    slice->sliceQsDelta = val = readSeV ("SLC sliceQsDelta", s);
-    slice->qs = 26 + decoder->activePPS->picInitQsMinus26 + val;
-    if ((slice->qs < 0) || (slice->qs > 51))
-      error ("sliceQsDelta makes slice_qs_y out of range", 500);
+    slice->sliceQsDelta = readSeV ("SLC sliceQsDelta", s);
+    slice->qs = 26 + decoder->activePPS->picInitQsMinus26 + slice->sliceQsDelta;
     }
 
   if (decoder->activePPS->deblockingFilterControlPresentFlag) {
@@ -1869,7 +1865,7 @@ void readRestSliceHeader (sSlice* slice) {
   if (decoder->activePPS->numSliceGroupsMinus1>0 && decoder->activePPS->sliceGroupMapType>=3 &&
       decoder->activePPS->sliceGroupMapType <= 5) {
     int len = (activeSPS->pic_height_in_map_units_minus1+1) * (activeSPS->pic_width_in_mbs_minus1+1)/
-          (decoder->activePPS->sliceGroupChangeRateMius1 + 1);
+              (decoder->activePPS->sliceGroupChangeRateMius1 + 1);
     if (((activeSPS->pic_height_in_map_units_minus1+1) * (activeSPS->pic_width_in_mbs_minus1+1))%
           (decoder->activePPS->sliceGroupChangeRateMius1 + 1))
       len += 1;

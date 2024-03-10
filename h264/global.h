@@ -733,7 +733,7 @@ typedef struct LayerParam {
 typedef struct Param {
   int vlcDebug;
   int naluDebug;
-  int imageDebug;
+  int sliceDebug;
   int spsDebug;
   int ppsDebug;
   int seiDebug;
