@@ -798,9 +798,9 @@ Boolean exitMacroblock (sSlice* curSlice, int eos_bit) {
   //! picture by checking the tr of the next slice header!
 
   // printf ("exitMacroblock: FmoGetLastMBOfPicture %d, decoder->curMbNum %d\n", FmoGetLastMBOfPicture(), decoder->curMbNum);
-  ++(curSlice->numDecodedMb);
+  ++(curSlice->numDecodedMbs);
 
-  if (curSlice->curMbNum == decoder->picSizeInMbs - 1) //if (decoder->numDecodedMb == decoder->picSizeInMbs)
+  if (curSlice->curMbNum == decoder->picSizeInMbs - 1) //if (decoder->numDecodedMbs == decoder->picSizeInMbs)
     return TRUE;
     // ask for last mb in the slice  CAVLC
   else {

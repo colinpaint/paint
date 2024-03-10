@@ -442,18 +442,18 @@ typedef struct Image {
 //}}}
 //{{{  sDecodedPic
 typedef struct DecodedPic {
-  int valid;             // 0: invalid, 1: valid, 3: valid for 3D output;
+  int valid;
 
-  int yuvFormat;         // 0: 4:0:0, 1: 4:2:0, 2: 4:2:2, 3: 4:4:4
+  int yuvFormat; // 4:0:0, 4:2:0, 4:2:2, 4:4:4
   int bitDepth;
 
-  int width;             // frame width;
-  int height;            // frame height;
-  int yStride;           // stride of yBuf[0/1] buffer in bytes;
-  int uvStride;          // stride of uBuf[0/1] and vBuf[0/1] buffer in bytes;
+  int width;
+  int height;
+  int yStride;
+  int uvStride;
 
   int bufSize;
-  byte* yBuf;            // if iPictureFormat is 1, [0]: top; [1] bottom;
+  byte* yBuf;
   byte* uBuf;
   byte* vBuf;
 
@@ -518,7 +518,8 @@ typedef struct Slice {
 
   // information need to move to slice
   unsigned int  curMbNum;
-  unsigned int  numDecodedMb;
+  unsigned int  numDecodedMbs;
+
   short         curSliceNum;
   int           codCount;    // Current count of number of skipped macroblocks in a row
   int           allrefzero;
@@ -790,10 +791,11 @@ typedef struct Decoder {
   struct OldSlice* oldSlice;
 
   // current picture property
-  unsigned int numDecodedMb;
-  int          curPicSliceNum;
+  unsigned int numDecodedMbs;
+  int          picSliceIndex;
+  int          numDecodedSlices;
   int          numSlicesAllocated;
-  int          numSlicesDecoded;
+
   sSlice**     sliceList;
   char*        intraBlock;
   char*        intraBlockJV[MAX_PLANE];

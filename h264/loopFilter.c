@@ -1846,9 +1846,10 @@ void deblockPicture (sDecoder* decoder, sPicture* p) {
 //{{{
 static void initNeighbours (sDecoder* decoder) {
 
+  int size = decoder->picSizeInMbs;
   int width = decoder->picWidthMbs;
   int height = decoder->picHeightInMbs;
-  int size = decoder->picSizeInMbs;
+  //printf ("initNeighbours %d %d %d\n", size, width, height);
 
   // do the top left corner
   sMacroblock* mb = &decoder->mbData[0];

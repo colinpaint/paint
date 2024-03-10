@@ -77,11 +77,11 @@ static int isLongTermReference (sFrameStore* frameStore) {
   }
 //}}}
 //{{{
-static void gen_field_ref_ids (sDecoder* decoder, sPicture* p) {
+static void genFieldRefIds (sDecoder* decoder, sPicture* p) {
 // Generate Frame parameters from field information.
 
   // copy the list;
-  for (int j = 0; j < decoder->curPicSliceNum; j++) {
+  for (int j = 0; j < decoder->picSliceIndex; j++) {
     if (p->listX[j][LIST_0]) {
       p->listXsize[j][LIST_0] = decoder->sliceList[j]->listXsize[LIST_0];
       for (int i = 0; i < p->listXsize[j][LIST_0]; i++)
@@ -97,10 +97,8 @@ static void gen_field_ref_ids (sDecoder* decoder, sPicture* p) {
   }
 //}}}
 //{{{
-static void unmark_long_term_field_for_reference_by_frame_idx (
-
-  sDPB* dpb, ePicStructure structure,
-  int longTermFrameIndex, int mark_current, unsigned curr_frame_num, int curr_pic_num) {
+static void unmarkLongTermFieldRefFrameIndex (sDPB* dpb, ePicStructure structure, int longTermFrameIndex, 
+                                              int mark_current, unsigned curr_frame_num, int curr_pic_num) {
 
   sDecoder* decoder = dpb->decoder;
 
@@ -162,7 +160,7 @@ static void unmark_long_term_field_for_reference_by_frame_idx (
   }
 //}}}
 //{{{
-static int get_pic_num_x (sPicture* p, int diffPicNumMinus1) {
+static int getPicNumX (sPicture* p, int diffPicNumMinus1) {
 
   int currPicNum;
   if (p->structure == FRAME)
@@ -518,7 +516,7 @@ static void insertPictureDpb (sDecoder* decoder, sFrameStore* fs, sPicture* p) {
       else
         fs->poc = p->poc;
 
-      gen_field_ref_ids(decoder, p);
+      genFieldRefIds(decoder, p);
       break;
     //}}}
     //{{{
@@ -541,7 +539,7 @@ static void insertPictureDpb (sDecoder* decoder, sFrameStore* fs, sPicture* p) {
       else
         fs->poc = p->poc;
 
-      gen_field_ref_ids(decoder, p);
+      genFieldRefIds(decoder, p);
       break;
     //}}}
     }
@@ -1543,7 +1541,7 @@ void mm_unmark_long_term_for_reference (sDPB* dpb, sPicture* p, int longTermPicN
 //{{{
 void mm_unmark_short_term_for_reference (sDPB* dpb, sPicture* p, int diffPicNumMinus1)
 {
-  int picNumX = get_pic_num_x(p, diffPicNumMinus1);
+  int picNumX = getPicNumX(p, diffPicNumMinus1);
 
   for (uint32 i = 0; i < dpb->refFramesInBuffer; i++) {
     if (p->structure == FRAME) {
@@ -1582,7 +1580,7 @@ void mm_unmark_short_term_for_reference (sDPB* dpb, sPicture* p, int diffPicNumM
 void mm_assign_long_term_frame_idx (sDPB* dpb, sPicture* p,
                                     int diffPicNumMinus1, int longTermFrameIndex) {
 
-  int picNumX = get_pic_num_x(p, diffPicNumMinus1);
+  int picNumX = getPicNumX(p, diffPicNumMinus1);
 
   // remove frames/fields with same longTermFrameIndex
   if (p->structure == FRAME)
@@ -1609,7 +1607,7 @@ void mm_assign_long_term_frame_idx (sDPB* dpb, sPicture* p,
     if (structure == FRAME)
       error ("field for long term marking not found", 200);
 
-    unmark_long_term_field_for_reference_by_frame_idx (dpb, structure, longTermFrameIndex, 0, 0, picNumX);
+    unmarkLongTermFieldRefFrameIndex (dpb, structure, longTermFrameIndex, 0, 0, picNumX);
     }
 
   mark_pic_long_term (dpb, p, longTermFrameIndex, picNumX);
@@ -1646,7 +1644,7 @@ void mm_mark_current_picture_long_term (sDPB* dpb, sPicture* p, int longTermFram
   if (p->structure == FRAME)
     unmark_long_term_frame_for_reference_by_frame_idx(dpb, longTermFrameIndex);
   else
-    unmark_long_term_field_for_reference_by_frame_idx(dpb, p->structure, longTermFrameIndex, 1, p->picNum, 0);
+    unmarkLongTermFieldRefFrameIndex(dpb, p->structure, longTermFrameIndex, 1, p->picNum, 0);
 
   p->isLongTerm = 1;
   p->longTermFrameIndex = longTermFrameIndex;
