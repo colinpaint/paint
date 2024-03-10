@@ -798,7 +798,7 @@ static void decodeOneSlice (sSlice* slice) {
   while (endOfSlice == FALSE) {
     sMacroblock* mb;
     startMacroblock (slice, &mb);
-    slice->readOneMacroblock (mb);
+    slice->readMacroblock (mb);
     decodeMacroblock (mb, slice->picture);
 
     if (slice->mbAffFrameFlag && mb->mbField) {
@@ -1300,7 +1300,6 @@ int decodeFrame (sVidParam* vidParam) {
 
     slice = sliceList[vidParam->curPicSliceNum];
     slice->vidParam = vidParam;
-    slice->inputParam = vidParam->inputParam;
     slice->dpb = vidParam->dpbLayer[0]; //set default value;
     slice->nextHeader = -8888;
     slice->numDecodedMb = 0;

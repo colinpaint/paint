@@ -807,11 +807,11 @@ Boolean exitMacroblock (sSlice* curSlice, int eos_bit) {
     curSlice->curMbNum = FmoGetNextMBNr (vidParam, curSlice->curMbNum);
     if (curSlice->curMbNum == -1) {
       // End of sSlice group, MUST be end of slice
-      assert (curSlice->nal_startcode_follows (curSlice, eos_bit) == TRUE);
+      assert (curSlice->nalStartcode (curSlice, eos_bit) == TRUE);
       return TRUE;
       }
 
-    if (curSlice->nal_startcode_follows(curSlice, eos_bit) == FALSE)
+    if (curSlice->nalStartcode(curSlice, eos_bit) == FALSE)
       return FALSE;
     if (curSlice->sliceType == I_SLICE  ||
         curSlice->sliceType == SI_SLICE ||
@@ -1134,7 +1134,7 @@ void setSliceMethods (sSlice* slice) {
     //{{{
     case P_SLICE:
       slice->interpretMbMode = interpretMbModeP;
-      slice->readMotionInfoFromNAL = readMotionInfoP;
+      slice->nalReadMotionInfo = readMotionInfoP;
       slice->decodeOneComponent = decodeComponentP;
       slice->updateDirectMvInfo = NULL;
       slice->initLists = initListsPslice;
@@ -1143,7 +1143,7 @@ void setSliceMethods (sSlice* slice) {
     //{{{
     case SP_SLICE:
       slice->interpretMbMode = interpretMbModeP;
-      slice->readMotionInfoFromNAL = readMotionInfoP;
+      slice->nalReadMotionInfo = readMotionInfoP;
       slice->decodeOneComponent = decodeComponentSP;
       slice->updateDirectMvInfo = NULL;
       slice->initLists = initListsPslice;
@@ -1152,7 +1152,7 @@ void setSliceMethods (sSlice* slice) {
     //{{{
     case B_SLICE:
       slice->interpretMbMode = interpretMbModeB;
-      slice->readMotionInfoFromNAL = readMotionInfoB;
+      slice->nalReadMotionInfo = readMotionInfoB;
       slice->decodeOneComponent = decodeComponentB;
       update_direct_types (slice);
       slice->initLists  = initListsBslice;
@@ -1161,7 +1161,7 @@ void setSliceMethods (sSlice* slice) {
     //{{{
     case I_SLICE:
       slice->interpretMbMode = interpretMbModeI;
-      slice->readMotionInfoFromNAL = NULL;
+      slice->nalReadMotionInfo = NULL;
       slice->decodeOneComponent = decodeComponentI;
       slice->updateDirectMvInfo = NULL;
       slice->initLists = initListsIslice;
@@ -1170,7 +1170,7 @@ void setSliceMethods (sSlice* slice) {
     //{{{
     case SI_SLICE:
       slice->interpretMbMode = interpretMbModeSI;
-      slice->readMotionInfoFromNAL = NULL;
+      slice->nalReadMotionInfo = NULL;
       slice->decodeOneComponent = decodeComponentI;
       slice->updateDirectMvInfo = NULL;
       slice->initLists = initListsIslice;

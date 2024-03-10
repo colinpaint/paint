@@ -4176,7 +4176,7 @@ static void intra_pred_chroma_mbaff (sMacroblock* curMb)
  *    outside since they are repeated for both components for no reason.
 ** **********************************************************************
  */
-static void intra_pred_chroma (sMacroblock* curMb)
+static void intraPredChroma (sMacroblock* curMb)
 {
   switch (curMb->cPredMode)
   {
@@ -4203,16 +4203,16 @@ static void intra_pred_chroma (sMacroblock* curMb)
 void set_intra_prediction_modes (sSlice *curSlice) {
 
   if (curSlice->mbAffFrameFlag) {
-    curSlice->intra_pred_4x4 = intra_pred_4x4_mbaff;
-    curSlice->intra_pred_8x8 = intra_pred_8x8_mbaff;
-    curSlice->intra_pred_16x16 = intra_pred_16x16_mbaff;
-    curSlice->intra_pred_chroma = intra_pred_chroma_mbaff;
+    curSlice->intraPred4x4 = intra_pred_4x4_mbaff;
+    curSlice->intraPred8x8 = intra_pred_8x8_mbaff;
+    curSlice->intraPred16x16 = intra_pred_16x16_mbaff;
+    curSlice->intraPredChroma = intra_pred_chroma_mbaff;
     }
   else {
-    curSlice->intra_pred_4x4 = intra_pred_4x4_normal;
-    curSlice->intra_pred_8x8 = intra_pred_8x8_normal;
-    curSlice->intra_pred_16x16 = intra_pred_16x16_normal;
-    curSlice->intra_pred_chroma = intra_pred_chroma;
+    curSlice->intraPred4x4 = intra_pred_4x4_normal;
+    curSlice->intraPred8x8 = intra_pred_8x8_normal;
+    curSlice->intraPred16x16 = intra_pred_16x16_normal;
+    curSlice->intraPredChroma = intraPredChroma;
     }
   }
 //}}}

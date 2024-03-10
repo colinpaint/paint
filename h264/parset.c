@@ -965,12 +965,12 @@ void useParameterSet (sSlice* curSlice) {
 
   // curSlice->dataPartitionMode is set by read_new_slice (NALU first byte available there)
   if (pps->entropyCodingModeFlag == (Boolean)CAVLC) {
-    curSlice->nal_startcode_follows = uvlc_startcode_follows;
+    curSlice->nalStartcode = uvlc_startcode_follows;
     for (int i = 0; i < 3; i++)
       curSlice->partitions[i].readsSyntaxElement = readsSyntaxElement_UVLC;
     }
   else {
-    curSlice->nal_startcode_follows = cabac_startcode_follows;
+    curSlice->nalStartcode = cabac_startcode_follows;
     for (int i = 0; i < 3; i++)
       curSlice->partitions[i].readsSyntaxElement = readsSyntaxElement_CABAC;
     }

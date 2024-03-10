@@ -346,7 +346,6 @@ typedef struct DataPartition {
 typedef struct Macroblock {
   struct Slice*      slice;
   struct VidParam*   vidParam;
-  struct InputParam* inputParam;
 
   int     mbAddrX;
   int     mbAddrA;
@@ -484,7 +483,6 @@ typedef struct OldSliceParam {
 //{{{  sSlice
 typedef struct Slice {
   struct VidParam* vidParam;
-  struct InputParam* inputParam;
   sPPS* activePPS;
   sSPS* activeSPS;
 
@@ -625,22 +623,21 @@ typedef struct Slice {
   char*  intraBlock;
   char   chroma_vector_adjustment[6][32];
 
-  void (*readCBPcoeffs) (sMacroblock* curMb);
-  int  (*decodeOneComponent) (sMacroblock* curMb, eColorPlane curPlane, sPixel** curPixel, struct Picture* picture);
-  int  (*readSlice) (struct VidParam*, struct InputParam*);
-  int  (*nal_startcode_follows) (struct Slice*, int);
-  void (*readMotionInfoFromNAL) (sMacroblock* curMb);
-  void (*readOneMacroblock) (sMacroblock* curMb);
-  void (*interpretMbMode) (sMacroblock* curMb);
-  void (*initLists) (struct Slice* curSlice);
-  void (*intra_pred_chroma) (sMacroblock* curMb);
-  int  (*intra_pred_4x4) (sMacroblock* curMb, eColorPlane pl, int ioff, int joff,int i4,int j4);
-  int  (*intra_pred_8x8) (sMacroblock* curMb, eColorPlane pl, int ioff, int joff);
-  int  (*intra_pred_16x16) (sMacroblock* curMb, eColorPlane pl, int predmode);
-  void (*linfoCbpIntra) (int len, int info, int* cbp, int* dummy);
-  void (*linfoCbpInter) (int len, int info, int* cbp, int* dummy);
-  void (*updateDirectMvInfo) (sMacroblock* curMb);
-  void (*readCoef4x4cavlc) (sMacroblock* curMb, int block_type, int i, int j, int levarr[16], int runarr[16], int *number_coefficients);
+  int  (*nalStartcode) (struct Slice*, int);
+  void (*initLists) (struct Slice*);
+  void (*readCBPcoeffs) (sMacroblock*);
+  int  (*decodeOneComponent) (sMacroblock*, eColorPlane, sPixel**, struct Picture*);
+  void (*nalReadMotionInfo) (sMacroblock*);
+  void (*readMacroblock) (sMacroblock*);
+  void (*interpretMbMode) (sMacroblock*);
+  void (*intraPredChroma) (sMacroblock*);
+  int  (*intraPred4x4) (sMacroblock*, eColorPlane, int, int, int, int);
+  int  (*intraPred8x8) (sMacroblock*, eColorPlane, int, int);
+  int  (*intraPred16x16) (sMacroblock*, eColorPlane pl, int);
+  void (*updateDirectMvInfo) (sMacroblock*);
+  void (*readCoef4x4cavlc) (sMacroblock*, int, int, int, int[16], int[16], int*);
+  void (*linfoCbpIntra) (int, int, int*, int*);
+  void (*linfoCbpInter) (int, int, int*, int*);
   } sSlice;
 //}}}
 //{{{  sDecodedPicture

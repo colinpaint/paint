@@ -1659,7 +1659,7 @@ void intra_cr_decoding (sMacroblock* curMb, int yuv)
   int ioff, joff;
   int i,j;
 
-  curSlice->intra_pred_chroma(curMb);// last argument is ignored, computes needed data for both uv channels
+  curSlice->intraPredChroma(curMb);// last argument is ignored, computes needed data for both uv channels
 
   for(uv = 0; uv < 2; uv++)
   {

@@ -741,7 +741,7 @@ static void readInterMacroblock (sMacroblock* mb) {
     }
 
   initMacroblock (mb);
-  slice->readMotionInfoFromNAL (mb);
+  slice->nalReadMotionInfo (mb);
   slice->readCBPcoeffs (mb);
   }
 //}}}
@@ -784,7 +784,7 @@ static void readI8x8macroblock (sMacroblock* mb, sDataPartition* dP, sSyntaxElem
     }
 
   initMacroblock (mb);
-  slice->readMotionInfoFromNAL (mb);
+  slice->nalReadMotionInfo (mb);
 
   if (mb->vidParam->activePPS->constrainedIntraPredFlag) {
     int mbNum = mb->mbAddrX;
@@ -1572,14 +1572,14 @@ void setReadMacroblock (sSlice* slice) {
     switch (slice->sliceType) {
       case P_SLICE:
       case SP_SLICE:
-        slice->readOneMacroblock = read_one_macroblock_p_slice_cabac;
+        slice->readMacroblock = read_one_macroblock_p_slice_cabac;
         break;
       case B_SLICE:
-        slice->readOneMacroblock = read_one_macroblock_b_slice_cabac;
+        slice->readMacroblock = read_one_macroblock_b_slice_cabac;
         break;
       case I_SLICE:
       case SI_SLICE:
-        slice->readOneMacroblock = read_one_macroblock_i_slice_cabac;
+        slice->readMacroblock = read_one_macroblock_i_slice_cabac;
         break;
       default:
         printf("Unsupported slice type\n");
@@ -1591,14 +1591,14 @@ void setReadMacroblock (sSlice* slice) {
     switch (slice->sliceType) {
       case P_SLICE:
       case SP_SLICE:
-        slice->readOneMacroblock = read_one_macroblock_p_slice_cavlc;
+        slice->readMacroblock = read_one_macroblock_p_slice_cavlc;
         break;
       case B_SLICE:
-        slice->readOneMacroblock = read_one_macroblock_b_slice_cavlc;
+        slice->readMacroblock = read_one_macroblock_b_slice_cavlc;
         break;
       case I_SLICE:
       case SI_SLICE:
-        slice->readOneMacroblock = read_one_macroblock_i_slice_cavlc;
+        slice->readMacroblock = read_one_macroblock_i_slice_cavlc;
         break;
       default:
         printf("Unsupported slice type\n");

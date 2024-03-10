@@ -47,7 +47,7 @@ int mb_pred_intra4x4 (sMacroblock* curMb, eColorPlane curPlane, sPixel** curPixe
 
       // PREDICTION
       //===== INTRA PREDICTION =====
-      if (curSlice->intra_pred_4x4(curMb, curPlane, ioff,joff,i4,j4) == SEARCH_SYNC)  /* make 4x4 prediction block mpr from given prediction vidParam->mb_mode */
+      if (curSlice->intraPred4x4(curMb, curPlane, ioff,joff,i4,j4) == SEARCH_SYNC)  /* make 4x4 prediction block mpr from given prediction vidParam->mb_mode */
         return SEARCH_SYNC;                   /* bit error */
       // =============== 4x4 itrans ================
       // -------------------------------------------
@@ -70,7 +70,7 @@ int mb_pred_intra16x16 (sMacroblock* curMb, eColorPlane curPlane, sPicture* pict
 {
   int yuv = picture->chromaFormatIdc - 1;
 
-  curMb->slice->intra_pred_16x16(curMb, curPlane, curMb->i16mode);
+  curMb->slice->intraPred16x16(curMb, curPlane, curMb->i16mode);
   curMb->ipmode_DPCM = (char) curMb->i16mode; //For residual DPCM
   // =============== 4x4 itrans ================
   // -------------------------------------------
@@ -102,7 +102,7 @@ int mb_pred_intra8x8 (sMacroblock* curMb, eColorPlane curPlane, sPixel** curPixe
     int joff = (block8x8 >> 1  ) << 3;
 
     //PREDICTION
-    curSlice->intra_pred_8x8(curMb, curPlane, ioff, joff);
+    curSlice->intraPred8x8(curMb, curPlane, ioff, joff);
     if (curMb->cbp & (1 << block8x8))
       curMb->itrans_8x8    (curMb, curPlane, ioff,joff);      // use inverse integer transform and make 8x8 block m7 from prediction block mpr
     else
