@@ -224,7 +224,7 @@ static void LowPassForIntra8x8PredVer (sPixel* PredPel, int block_up_left, int b
  *
 ** *********************************************************************
  */
-static int intra8x8_dc_pred (sMacroblock * curMb,
+static int intra8x8_dc_pred (sMacroblock * mb,
                                    eColorPlane pl,         //!< current image plane
                                    int ioff,              //!< pixel offset X within MB
                                    int joff)              //!< pixel offset Y within MB
@@ -232,10 +232,10 @@ static int intra8x8_dc_pred (sMacroblock * curMb,
   int i,j;
   int s0 = 0;
   sPixel PredPel[25];  // array of predictor pels
-  sSlice *curSlice = curMb->slice;
-  sDecoder* decoder = curMb->decoder;
+  sSlice *slice = mb->slice;
+  sDecoder* decoder = mb->decoder;
 
-  sPicture* picture = curSlice->picture;
+  sPicture* picture = slice->picture;
   sPixel** imgY = (pl) ? picture->imgUV[pl - 1] : picture->imgY; // For MB level frame/field coding tools -- set default to imgY
 
   sPixelPos pix_a;
@@ -246,24 +246,24 @@ static int intra8x8_dc_pred (sMacroblock * curMb,
   int block_available_up_left;
   int block_available_up_right;
 
-  sPixel** mpr = curSlice->mb_pred[pl];
+  sPixel** mpr = slice->mb_pred[pl];
   int *mbSize = decoder->mbSize[IS_LUMA];
 
   for (int i=0; i<25;i++) PredPel[i]=0;
 
-  getNonAffNeighbour(curMb, ioff - 1, joff, mbSize, &pix_a);
-  getNonAffNeighbour(curMb, ioff    , joff - 1, mbSize, &pix_b);
-  getNonAffNeighbour(curMb, ioff + 8, joff - 1, mbSize, &pix_c);
-  getNonAffNeighbour(curMb, ioff - 1, joff - 1, mbSize, &pix_d);
+  getNonAffNeighbour(mb, ioff - 1, joff, mbSize, &pix_a);
+  getNonAffNeighbour(mb, ioff    , joff - 1, mbSize, &pix_b);
+  getNonAffNeighbour(mb, ioff + 8, joff - 1, mbSize, &pix_c);
+  getNonAffNeighbour(mb, ioff - 1, joff - 1, mbSize, &pix_d);
 
   pix_c.available = pix_c.available &&!(ioff == 8 && joff == 8);
 
   if (decoder->activePPS->constrainedIntraPredFlag)
   {
-    block_available_left     = pix_a.available ? curSlice->intraBlock [pix_a.mbIndex]: 0;
-    block_available_up       = pix_b.available ? curSlice->intraBlock [pix_b.mbIndex] : 0;
-    block_available_up_right = pix_c.available ? curSlice->intraBlock [pix_c.mbIndex] : 0;
-    block_available_up_left  = pix_d.available ? curSlice->intraBlock [pix_d.mbIndex] : 0;
+    block_available_left     = pix_a.available ? slice->intraBlock [pix_a.mbIndex]: 0;
+    block_available_up       = pix_b.available ? slice->intraBlock [pix_b.mbIndex] : 0;
+    block_available_up_right = pix_c.available ? slice->intraBlock [pix_c.mbIndex] : 0;
+    block_available_up_left  = pix_d.available ? slice->intraBlock [pix_d.mbIndex] : 0;
   }
   else
   {
@@ -370,17 +370,17 @@ static int intra8x8_dc_pred (sMacroblock * curMb,
  *
 ** *********************************************************************
  */
-static int intra8x8_vert_pred (sMacroblock* curMb,
+static int intra8x8_vert_pred (sMacroblock* mb,
                                      eColorPlane pl,         //!< current image plane
                                      int ioff,              //!< pixel offset X within MB
                                      int joff)              //!< pixel offset Y within MB
 {
-  sSlice *curSlice = curMb->slice;
-  sDecoder* decoder = curMb->decoder;
+  sSlice *slice = mb->slice;
+  sDecoder* decoder = mb->decoder;
 
   int i;
   sPixel PredPel[25];  // array of predictor pels
-  sPixel** imgY = (pl) ? curSlice->picture->imgUV[pl - 1] : curSlice->picture->imgY; // For MB level frame/field coding tools -- set default to imgY
+  sPixel** imgY = (pl) ? slice->picture->imgUV[pl - 1] : slice->picture->imgY; // For MB level frame/field coding tools -- set default to imgY
 
   sPixelPos pix_a;
   sPixelPos pix_b, pix_c, pix_d;
@@ -391,24 +391,24 @@ static int intra8x8_vert_pred (sMacroblock* curMb,
   int block_available_up_right;
 
 
-  sPixel** mpr = curSlice->mb_pred[pl];
+  sPixel** mpr = slice->mb_pred[pl];
   int *mbSize = decoder->mbSize[IS_LUMA];
 
   for (int i=0; i<25;i++) PredPel[i]=0;
 
-  getNonAffNeighbour(curMb, ioff - 1, joff    , mbSize, &pix_a);
-  getNonAffNeighbour(curMb, ioff    , joff - 1, mbSize, &pix_b);
-  getNonAffNeighbour(curMb, ioff + 8, joff - 1, mbSize, &pix_c);
-  getNonAffNeighbour(curMb, ioff - 1, joff - 1, mbSize, &pix_d);
+  getNonAffNeighbour(mb, ioff - 1, joff    , mbSize, &pix_a);
+  getNonAffNeighbour(mb, ioff    , joff - 1, mbSize, &pix_b);
+  getNonAffNeighbour(mb, ioff + 8, joff - 1, mbSize, &pix_c);
+  getNonAffNeighbour(mb, ioff - 1, joff - 1, mbSize, &pix_d);
 
   pix_c.available = pix_c.available &&!(ioff == 8 && joff == 8);
 
   if (decoder->activePPS->constrainedIntraPredFlag)
   {
-    block_available_left     = pix_a.available ? curSlice->intraBlock [pix_a.mbIndex] : 0;
-    block_available_up       = pix_b.available ? curSlice->intraBlock [pix_b.mbIndex] : 0;
-    block_available_up_right = pix_c.available ? curSlice->intraBlock [pix_c.mbIndex] : 0;
-    block_available_up_left  = pix_d.available ? curSlice->intraBlock [pix_d.mbIndex] : 0;
+    block_available_left     = pix_a.available ? slice->intraBlock [pix_a.mbIndex] : 0;
+    block_available_up       = pix_b.available ? slice->intraBlock [pix_b.mbIndex] : 0;
+    block_available_up_right = pix_c.available ? slice->intraBlock [pix_c.mbIndex] : 0;
+    block_available_up_left  = pix_d.available ? slice->intraBlock [pix_d.mbIndex] : 0;
   }
   else
   {
@@ -419,7 +419,7 @@ static int intra8x8_vert_pred (sMacroblock* curMb,
   }
 
   if (!block_available_up)
-    printf ("warning: Intra_8x8_Vertical prediction mode not allowed at mb %d\n", (int) curSlice->mbIndex);
+    printf ("warning: Intra_8x8_Vertical prediction mode not allowed at mb %d\n", (int) slice->mbIndex);
 
   // form predictor pels
   if (block_available_up)
@@ -478,18 +478,18 @@ static int intra8x8_vert_pred (sMacroblock* curMb,
  *
 ** *********************************************************************
  */
-static int intra8x8_hor_pred (sMacroblock* curMb,
+static int intra8x8_hor_pred (sMacroblock* mb,
                                     eColorPlane pl,         //!< current image plane
                                     int ioff,              //!< pixel offset X within MB
                                     int joff)              //!< pixel offset Y within MB
 {
-  sSlice *curSlice = curMb->slice;
-  sDecoder* decoder = curMb->decoder;
+  sSlice *slice = mb->slice;
+  sDecoder* decoder = mb->decoder;
 
 
   int j;
   sPixel PredPel[25];  // array of predictor pels
-  sPixel** imgY = (pl) ? curSlice->picture->imgUV[pl - 1] : curSlice->picture->imgY; // For MB level frame/field coding tools -- set default to imgY
+  sPixel** imgY = (pl) ? slice->picture->imgUV[pl - 1] : slice->picture->imgY; // For MB level frame/field coding tools -- set default to imgY
 
   sPixelPos pix_a;
   sPixelPos pix_b, pix_d;
@@ -505,18 +505,18 @@ static int intra8x8_hor_pred (sMacroblock* curMb,
   int ipos4 = ioff + 4, ipos5 = ioff + 5, ipos6 = ioff + 6, ipos7 = ioff + 7;
 #endif
   int jpos;
-  sPixel** mpr = curSlice->mb_pred[pl];
+  sPixel** mpr = slice->mb_pred[pl];
   int *mbSize = decoder->mbSize[IS_LUMA];
 
-  getNonAffNeighbour(curMb, ioff - 1, joff    , mbSize, &pix_a);
-  getNonAffNeighbour(curMb, ioff    , joff - 1, mbSize, &pix_b);
-  getNonAffNeighbour(curMb, ioff - 1, joff - 1, mbSize, &pix_d);
+  getNonAffNeighbour(mb, ioff - 1, joff    , mbSize, &pix_a);
+  getNonAffNeighbour(mb, ioff    , joff - 1, mbSize, &pix_b);
+  getNonAffNeighbour(mb, ioff - 1, joff - 1, mbSize, &pix_d);
 
   if (decoder->activePPS->constrainedIntraPredFlag)
   {
-    block_available_left     = pix_a.available ? curSlice->intraBlock [pix_a.mbIndex]: 0;
-    block_available_up       = pix_b.available ? curSlice->intraBlock [pix_b.mbIndex] : 0;
-    block_available_up_left  = pix_d.available ? curSlice->intraBlock [pix_d.mbIndex] : 0;
+    block_available_left     = pix_a.available ? slice->intraBlock [pix_a.mbIndex]: 0;
+    block_available_up       = pix_b.available ? slice->intraBlock [pix_b.mbIndex] : 0;
+    block_available_up_left  = pix_d.available ? slice->intraBlock [pix_d.mbIndex] : 0;
   }
   else
   {
@@ -526,7 +526,7 @@ static int intra8x8_hor_pred (sMacroblock* curMb,
   }
 
   if (!block_available_left)
-    printf ("warning: Intra_8x8_Horizontal prediction mode not allowed at mb %d\n", (int) curSlice->mbIndex);
+    printf ("warning: Intra_8x8_Horizontal prediction mode not allowed at mb %d\n", (int) slice->mbIndex);
 
   // form predictor pels
   if (block_available_left)
@@ -589,17 +589,17 @@ static int intra8x8_hor_pred (sMacroblock* curMb,
  *
 ** *********************************************************************
  */
-static int intra8x8_diag_down_right_pred (sMacroblock* curMb,
+static int intra8x8_diag_down_right_pred (sMacroblock* mb,
                                                 eColorPlane pl,         //!< current image plane
                                                 int ioff,              //!< pixel offset X within MB
                                                 int joff)              //!< pixel offset Y within MB
 {
-  sSlice *curSlice = curMb->slice;
-  sDecoder* decoder = curMb->decoder;
+  sSlice *slice = mb->slice;
+  sDecoder* decoder = mb->decoder;
 
   sPixel PredPel[25];    // array of predictor pels
   sPixel PredArray[16];  // array of final prediction values
-  sPixel** imgY = (pl) ? curSlice->picture->imgUV[pl - 1] : curSlice->picture->imgY; // For MB level frame/field coding tools -- set default to imgY
+  sPixel** imgY = (pl) ? slice->picture->imgUV[pl - 1] : slice->picture->imgY; // For MB level frame/field coding tools -- set default to imgY
 
   sPixelPos pix_a;
   sPixelPos pix_b, pix_c, pix_d;
@@ -610,24 +610,24 @@ static int intra8x8_diag_down_right_pred (sMacroblock* curMb,
   int block_available_up_right;
 
   sPixel *pred_pels;
-  sPixel** mb_pred = &curSlice->mb_pred[pl][joff];
+  sPixel** mb_pred = &slice->mb_pred[pl][joff];
   int *mbSize = decoder->mbSize[IS_LUMA];
 
   for (int i=0; i<25;i++) PredPel[i]=0;
 
-  getNonAffNeighbour(curMb, ioff - 1, joff    , mbSize, &pix_a);
-  getNonAffNeighbour(curMb, ioff    , joff - 1, mbSize, &pix_b);
-  getNonAffNeighbour(curMb, ioff + 8, joff - 1, mbSize, &pix_c);
-  getNonAffNeighbour(curMb, ioff - 1, joff - 1, mbSize, &pix_d);
+  getNonAffNeighbour(mb, ioff - 1, joff    , mbSize, &pix_a);
+  getNonAffNeighbour(mb, ioff    , joff - 1, mbSize, &pix_b);
+  getNonAffNeighbour(mb, ioff + 8, joff - 1, mbSize, &pix_c);
+  getNonAffNeighbour(mb, ioff - 1, joff - 1, mbSize, &pix_d);
 
   pix_c.available = pix_c.available &&!(ioff == 8 && joff == 8);
 
   if (decoder->activePPS->constrainedIntraPredFlag)
   {
-    block_available_left     = pix_a.available ? curSlice->intraBlock [pix_a.mbIndex]: 0;
-    block_available_up       = pix_b.available ? curSlice->intraBlock [pix_b.mbIndex] : 0;
-    block_available_up_right = pix_c.available ? curSlice->intraBlock [pix_c.mbIndex] : 0;
-    block_available_up_left  = pix_d.available ? curSlice->intraBlock [pix_d.mbIndex] : 0;
+    block_available_left     = pix_a.available ? slice->intraBlock [pix_a.mbIndex]: 0;
+    block_available_up       = pix_b.available ? slice->intraBlock [pix_b.mbIndex] : 0;
+    block_available_up_right = pix_c.available ? slice->intraBlock [pix_c.mbIndex] : 0;
+    block_available_up_left  = pix_d.available ? slice->intraBlock [pix_d.mbIndex] : 0;
   }
   else
   {
@@ -638,7 +638,7 @@ static int intra8x8_diag_down_right_pred (sMacroblock* curMb,
   }
 
   if ((!block_available_up)||(!block_available_left)||(!block_available_up_left))
-    printf ("warning: Intra_8x8_Diagonal_Down_Right prediction mode not allowed at mb %d\n", (int) curSlice->mbIndex);
+    printf ("warning: Intra_8x8_Diagonal_Down_Right prediction mode not allowed at mb %d\n", (int) slice->mbIndex);
 
   // form predictor pels
   if (block_available_up)
@@ -738,18 +738,18 @@ static int intra8x8_diag_down_right_pred (sMacroblock* curMb,
  *
 ** *********************************************************************
  */
-static int intra8x8_diag_down_left_pred (sMacroblock* curMb,
+static int intra8x8_diag_down_left_pred (sMacroblock* mb,
                                                eColorPlane pl,         //!< current image plane
                                                int ioff,              //!< pixel offset X within MB
                                                int joff)              //!< pixel offset Y within MB
 {
-  sSlice *curSlice = curMb->slice;
-  sDecoder* decoder = curMb->decoder;
+  sSlice *slice = mb->slice;
+  sDecoder* decoder = mb->decoder;
 
   sPixel PredPel[25];    // array of predictor pels
   sPixel PredArray[16];  // array of final prediction values
   sPixel *Pred = &PredArray[0];
-  sPixel** imgY = (pl) ? curSlice->picture->imgUV[pl - 1] : curSlice->picture->imgY; // For MB level frame/field coding tools -- set default to imgY
+  sPixel** imgY = (pl) ? slice->picture->imgUV[pl - 1] : slice->picture->imgY; // For MB level frame/field coding tools -- set default to imgY
 
   sPixelPos pix_a;
   sPixelPos pix_b, pix_c, pix_d;
@@ -761,22 +761,22 @@ static int intra8x8_diag_down_left_pred (sMacroblock* curMb,
 
   for (int i=0; i<25;i++) PredPel[i]=0;
 
-  sPixel** mb_pred = &curSlice->mb_pred[pl][joff];
+  sPixel** mb_pred = &slice->mb_pred[pl][joff];
   int *mbSize = decoder->mbSize[IS_LUMA];
 
-  getNonAffNeighbour(curMb, ioff - 1, joff    , mbSize, &pix_a);
-  getNonAffNeighbour(curMb, ioff    , joff - 1, mbSize, &pix_b);
-  getNonAffNeighbour(curMb, ioff + 8, joff - 1, mbSize, &pix_c);
-  getNonAffNeighbour(curMb, ioff - 1, joff - 1, mbSize, &pix_d);
+  getNonAffNeighbour(mb, ioff - 1, joff    , mbSize, &pix_a);
+  getNonAffNeighbour(mb, ioff    , joff - 1, mbSize, &pix_b);
+  getNonAffNeighbour(mb, ioff + 8, joff - 1, mbSize, &pix_c);
+  getNonAffNeighbour(mb, ioff - 1, joff - 1, mbSize, &pix_d);
 
   pix_c.available = pix_c.available &&!(ioff == 8 && joff == 8);
 
   if (decoder->activePPS->constrainedIntraPredFlag)
   {
-    block_available_left     = pix_a.available ? curSlice->intraBlock [pix_a.mbIndex]: 0;
-    block_available_up       = pix_b.available ? curSlice->intraBlock [pix_b.mbIndex] : 0;
-    block_available_up_right = pix_c.available ? curSlice->intraBlock [pix_c.mbIndex] : 0;
-    block_available_up_left  = pix_d.available ? curSlice->intraBlock [pix_d.mbIndex] : 0;
+    block_available_left     = pix_a.available ? slice->intraBlock [pix_a.mbIndex]: 0;
+    block_available_up       = pix_b.available ? slice->intraBlock [pix_b.mbIndex] : 0;
+    block_available_up_right = pix_c.available ? slice->intraBlock [pix_c.mbIndex] : 0;
+    block_available_up_left  = pix_d.available ? slice->intraBlock [pix_d.mbIndex] : 0;
   }
   else
   {
@@ -787,7 +787,7 @@ static int intra8x8_diag_down_left_pred (sMacroblock* curMb,
   }
 
   if (!block_available_up)
-    printf ("warning: Intra_8x8_Diagonal_Down_Left prediction mode not allowed at mb %d\n", (int) curSlice->mbIndex);
+    printf ("warning: Intra_8x8_Diagonal_Down_Left prediction mode not allowed at mb %d\n", (int) slice->mbIndex);
 
   // form predictor pels
   if (block_available_up)
@@ -887,17 +887,17 @@ static int intra8x8_diag_down_left_pred (sMacroblock* curMb,
  *
 ** *********************************************************************
  */
-static int intra8x8_vert_right_pred (sMacroblock* curMb,
+static int intra8x8_vert_right_pred (sMacroblock* mb,
                                            eColorPlane pl,         //!< current image plane
                                            int ioff,              //!< pixel offset X within MB
                                            int joff)              //!< pixel offset Y within MB
 {
-  sSlice *curSlice = curMb->slice;
-  sDecoder* decoder = curMb->decoder;
+  sSlice *slice = mb->slice;
+  sDecoder* decoder = mb->decoder;
 
   sPixel PredPel[25];  // array of predictor pels
   sPixel PredArray[22];  // array of final prediction values
-  sPixel** imgY = (pl) ? curSlice->picture->imgUV[pl - 1] : curSlice->picture->imgY; // For MB level frame/field coding tools -- set default to imgY
+  sPixel** imgY = (pl) ? slice->picture->imgUV[pl - 1] : slice->picture->imgY; // For MB level frame/field coding tools -- set default to imgY
 
   sPixelPos pix_a;
   sPixelPos pix_b, pix_c, pix_d;
@@ -910,22 +910,22 @@ static int intra8x8_vert_right_pred (sMacroblock* curMb,
   for (int i=0; i<25;i++) PredPel[i]=0;
 
   sPixel *pred_pels;
-  sPixel** mb_pred = &curSlice->mb_pred[pl][joff];
+  sPixel** mb_pred = &slice->mb_pred[pl][joff];
   int *mbSize = decoder->mbSize[IS_LUMA];
 
-  getNonAffNeighbour(curMb, ioff - 1, joff    , mbSize, &pix_a);
-  getNonAffNeighbour(curMb, ioff    , joff - 1, mbSize, &pix_b);
-  getNonAffNeighbour(curMb, ioff + 8, joff - 1, mbSize, &pix_c);
-  getNonAffNeighbour(curMb, ioff - 1, joff - 1, mbSize, &pix_d);
+  getNonAffNeighbour(mb, ioff - 1, joff    , mbSize, &pix_a);
+  getNonAffNeighbour(mb, ioff    , joff - 1, mbSize, &pix_b);
+  getNonAffNeighbour(mb, ioff + 8, joff - 1, mbSize, &pix_c);
+  getNonAffNeighbour(mb, ioff - 1, joff - 1, mbSize, &pix_d);
 
   pix_c.available = pix_c.available &&!(ioff == 8 && joff == 8);
 
   if (decoder->activePPS->constrainedIntraPredFlag)
   {
-    block_available_left     = pix_a.available ? curSlice->intraBlock [pix_a.mbIndex]: 0;
-    block_available_up       = pix_b.available ? curSlice->intraBlock [pix_b.mbIndex] : 0;
-    block_available_up_right = pix_c.available ? curSlice->intraBlock [pix_c.mbIndex] : 0;
-    block_available_up_left  = pix_d.available ? curSlice->intraBlock [pix_d.mbIndex] : 0;
+    block_available_left     = pix_a.available ? slice->intraBlock [pix_a.mbIndex]: 0;
+    block_available_up       = pix_b.available ? slice->intraBlock [pix_b.mbIndex] : 0;
+    block_available_up_right = pix_c.available ? slice->intraBlock [pix_c.mbIndex] : 0;
+    block_available_up_left  = pix_d.available ? slice->intraBlock [pix_d.mbIndex] : 0;
   }
   else
   {
@@ -936,7 +936,7 @@ static int intra8x8_vert_right_pred (sMacroblock* curMb,
   }
 
   if ((!block_available_up)||(!block_available_left)||(!block_available_up_left))
-    printf ("warning: Intra_8x8_Vertical_Right prediction mode not allowed at mb %d\n", (int) curSlice->mbIndex);
+    printf ("warning: Intra_8x8_Vertical_Right prediction mode not allowed at mb %d\n", (int) slice->mbIndex);
 
   // form predictor pels
   if (block_available_up)
@@ -1042,18 +1042,18 @@ static int intra8x8_vert_right_pred (sMacroblock* curMb,
  *
 ** *********************************************************************
  */
-static int intra8x8_vert_left_pred (sMacroblock* curMb,
+static int intra8x8_vert_left_pred (sMacroblock* mb,
                                           eColorPlane pl,         //!< current image plane
                                           int ioff,              //!< pixel offset X within MB
                                           int joff)              //!< pixel offset Y within MB
 {
-  sSlice *curSlice = curMb->slice;
-  sDecoder* decoder = curMb->decoder;
+  sSlice *slice = mb->slice;
+  sDecoder* decoder = mb->decoder;
 
   sPixel PredPel[25];  // array of predictor pels
   sPixel PredArray[22];  // array of final prediction values
   sPixel *pred_pel = &PredArray[0];
-  sPixel** imgY = (pl) ? curSlice->picture->imgUV[pl - 1] : curSlice->picture->imgY; // For MB level frame/field coding tools -- set default to imgY
+  sPixel** imgY = (pl) ? slice->picture->imgUV[pl - 1] : slice->picture->imgY; // For MB level frame/field coding tools -- set default to imgY
 
   sPixelPos pix_a;
   sPixelPos pix_b, pix_c, pix_d;
@@ -1063,24 +1063,24 @@ static int intra8x8_vert_left_pred (sMacroblock* curMb,
   int block_available_up_left;
   int block_available_up_right;
 
-  sPixel** mb_pred = &curSlice->mb_pred[pl][joff];
+  sPixel** mb_pred = &slice->mb_pred[pl][joff];
   int *mbSize = decoder->mbSize[IS_LUMA];
 
   for (int i=0; i<25;i++) PredPel[i]=0;
 
-  getNonAffNeighbour(curMb, ioff - 1, joff    , mbSize, &pix_a);
-  getNonAffNeighbour(curMb, ioff    , joff - 1, mbSize, &pix_b);
-  getNonAffNeighbour(curMb, ioff + 8, joff - 1, mbSize, &pix_c);
-  getNonAffNeighbour(curMb, ioff - 1, joff - 1, mbSize, &pix_d);
+  getNonAffNeighbour(mb, ioff - 1, joff    , mbSize, &pix_a);
+  getNonAffNeighbour(mb, ioff    , joff - 1, mbSize, &pix_b);
+  getNonAffNeighbour(mb, ioff + 8, joff - 1, mbSize, &pix_c);
+  getNonAffNeighbour(mb, ioff - 1, joff - 1, mbSize, &pix_d);
 
   pix_c.available = pix_c.available &&!(ioff == 8 && joff == 8);
 
   if (decoder->activePPS->constrainedIntraPredFlag)
   {
-    block_available_left     = pix_a.available ? curSlice->intraBlock [pix_a.mbIndex] : 0;
-    block_available_up       = pix_b.available ? curSlice->intraBlock [pix_b.mbIndex] : 0;
-    block_available_up_right = pix_c.available ? curSlice->intraBlock [pix_c.mbIndex] : 0;
-    block_available_up_left  = pix_d.available ? curSlice->intraBlock [pix_d.mbIndex] : 0;
+    block_available_left     = pix_a.available ? slice->intraBlock [pix_a.mbIndex] : 0;
+    block_available_up       = pix_b.available ? slice->intraBlock [pix_b.mbIndex] : 0;
+    block_available_up_right = pix_c.available ? slice->intraBlock [pix_c.mbIndex] : 0;
+    block_available_up_left  = pix_d.available ? slice->intraBlock [pix_d.mbIndex] : 0;
   }
   else
   {
@@ -1091,7 +1091,7 @@ static int intra8x8_vert_left_pred (sMacroblock* curMb,
   }
 
   if (!block_available_up)
-    printf ("warning: Intra_4x4_Vertical_Left prediction mode not allowed at mb %d\n", (int) curSlice->mbIndex);
+    printf ("warning: Intra_4x4_Vertical_Left prediction mode not allowed at mb %d\n", (int) slice->mbIndex);
 
   // form predictor pels
   if (block_available_up)
@@ -1195,17 +1195,17 @@ static int intra8x8_vert_left_pred (sMacroblock* curMb,
  *
 ** *********************************************************************
  */
-static int intra8x8_hor_up_pred (sMacroblock* curMb,
+static int intra8x8_hor_up_pred (sMacroblock* mb,
                                        eColorPlane pl,         //!< current image plane
                                        int ioff,              //!< pixel offset X within MB
                                        int joff)              //!< pixel offset Y within MB
 {
-  sSlice *curSlice = curMb->slice;
-  sDecoder* decoder = curMb->decoder;
+  sSlice *slice = mb->slice;
+  sDecoder* decoder = mb->decoder;
 
   sPixel PredPel[25];     // array of predictor pels
   sPixel PredArray[22];   // array of final prediction values
-  sPixel** imgY = (pl) ? curSlice->picture->imgUV[pl - 1] : curSlice->picture->imgY; // For MB level frame/field coding tools -- set default to imgY
+  sPixel** imgY = (pl) ? slice->picture->imgUV[pl - 1] : slice->picture->imgY; // For MB level frame/field coding tools -- set default to imgY
 
   sPixelPos pix_a;
   sPixelPos pix_b, pix_c, pix_d;
@@ -1219,22 +1219,22 @@ static int intra8x8_hor_up_pred (sMacroblock* curMb,
 
   for (int i=0; i<25;i++) PredPel[i]=0;
 
-  sPixel** mpr = curSlice->mb_pred[pl];
+  sPixel** mpr = slice->mb_pred[pl];
   int *mbSize = decoder->mbSize[IS_LUMA];
 
-  getNonAffNeighbour(curMb, ioff - 1, joff    , mbSize, &pix_a);
-  getNonAffNeighbour(curMb, ioff    , joff - 1, mbSize, &pix_b);
-  getNonAffNeighbour(curMb, ioff + 8, joff - 1, mbSize, &pix_c);
-  getNonAffNeighbour(curMb, ioff - 1, joff - 1, mbSize, &pix_d);
+  getNonAffNeighbour(mb, ioff - 1, joff    , mbSize, &pix_a);
+  getNonAffNeighbour(mb, ioff    , joff - 1, mbSize, &pix_b);
+  getNonAffNeighbour(mb, ioff + 8, joff - 1, mbSize, &pix_c);
+  getNonAffNeighbour(mb, ioff - 1, joff - 1, mbSize, &pix_d);
 
   pix_c.available = pix_c.available &&!(ioff == 8 && joff == 8);
 
   if (decoder->activePPS->constrainedIntraPredFlag)
   {
-    block_available_left     = pix_a.available ? curSlice->intraBlock [pix_a.mbIndex] : 0;
-    block_available_up       = pix_b.available ? curSlice->intraBlock [pix_b.mbIndex] : 0;
-    block_available_up_right = pix_c.available ? curSlice->intraBlock [pix_c.mbIndex] : 0;
-    block_available_up_left  = pix_d.available ? curSlice->intraBlock [pix_d.mbIndex] : 0;
+    block_available_left     = pix_a.available ? slice->intraBlock [pix_a.mbIndex] : 0;
+    block_available_up       = pix_b.available ? slice->intraBlock [pix_b.mbIndex] : 0;
+    block_available_up_right = pix_c.available ? slice->intraBlock [pix_c.mbIndex] : 0;
+    block_available_up_left  = pix_d.available ? slice->intraBlock [pix_d.mbIndex] : 0;
   }
   else
   {
@@ -1245,7 +1245,7 @@ static int intra8x8_hor_up_pred (sMacroblock* curMb,
   }
 
   if (!block_available_left)
-    printf ("warning: Intra_8x8_Horizontal_Up prediction mode not allowed at mb %d\n", (int) curSlice->mbIndex);
+    printf ("warning: Intra_8x8_Horizontal_Up prediction mode not allowed at mb %d\n", (int) slice->mbIndex);
 
   // form predictor pels
   if (block_available_up)
@@ -1349,17 +1349,17 @@ static int intra8x8_hor_up_pred (sMacroblock* curMb,
  *
 ** *********************************************************************
  */
-static int intra8x8_hor_down_pred (sMacroblock* curMb,
+static int intra8x8_hor_down_pred (sMacroblock* mb,
                                          eColorPlane pl,         //!< current image plane
                                          int ioff,              //!< pixel offset X within MB
                                          int joff)              //!< pixel offset Y within MB
 {
-  sSlice *curSlice = curMb->slice;
-  sDecoder* decoder = curMb->decoder;
+  sSlice *slice = mb->slice;
+  sDecoder* decoder = mb->decoder;
 
   sPixel PredPel[25];  // array of predictor pels
   sPixel PredArray[22];   // array of final prediction values
-  sPixel** imgY = (pl) ? curSlice->picture->imgUV[pl - 1] : curSlice->picture->imgY; // For MB level frame/field coding tools -- set default to imgY
+  sPixel** imgY = (pl) ? slice->picture->imgUV[pl - 1] : slice->picture->imgY; // For MB level frame/field coding tools -- set default to imgY
 
   sPixelPos pix_a;
   sPixelPos pix_b, pix_c, pix_d;
@@ -1370,24 +1370,24 @@ static int intra8x8_hor_down_pred (sMacroblock* curMb,
   int block_available_up_right;
 
   sPixel *pred_pels;
-  sPixel** mb_pred = &curSlice->mb_pred[pl][joff];
+  sPixel** mb_pred = &slice->mb_pred[pl][joff];
   int *mbSize = decoder->mbSize[IS_LUMA];
 
   for (int i=0; i<25;i++) PredPel[i]=0;
 
-  getNonAffNeighbour(curMb, ioff - 1, joff    , mbSize, &pix_a);
-  getNonAffNeighbour(curMb, ioff    , joff - 1, mbSize, &pix_b);
-  getNonAffNeighbour(curMb, ioff + 8, joff - 1, mbSize, &pix_c);
-  getNonAffNeighbour(curMb, ioff - 1, joff - 1, mbSize, &pix_d);
+  getNonAffNeighbour(mb, ioff - 1, joff    , mbSize, &pix_a);
+  getNonAffNeighbour(mb, ioff    , joff - 1, mbSize, &pix_b);
+  getNonAffNeighbour(mb, ioff + 8, joff - 1, mbSize, &pix_c);
+  getNonAffNeighbour(mb, ioff - 1, joff - 1, mbSize, &pix_d);
 
   pix_c.available = pix_c.available &&!(ioff == 8 && joff == 8);
 
   if (decoder->activePPS->constrainedIntraPredFlag)
   {
-    block_available_left     = pix_a.available ? curSlice->intraBlock [pix_a.mbIndex] : 0;
-    block_available_up       = pix_b.available ? curSlice->intraBlock [pix_b.mbIndex] : 0;
-    block_available_up_right = pix_c.available ? curSlice->intraBlock [pix_c.mbIndex] : 0;
-    block_available_up_left  = pix_d.available ? curSlice->intraBlock [pix_d.mbIndex] : 0;
+    block_available_left     = pix_a.available ? slice->intraBlock [pix_a.mbIndex] : 0;
+    block_available_up       = pix_b.available ? slice->intraBlock [pix_b.mbIndex] : 0;
+    block_available_up_right = pix_c.available ? slice->intraBlock [pix_c.mbIndex] : 0;
+    block_available_up_left  = pix_d.available ? slice->intraBlock [pix_d.mbIndex] : 0;
   }
   else
   {
@@ -1398,7 +1398,7 @@ static int intra8x8_hor_down_pred (sMacroblock* curMb,
   }
 
   if ((!block_available_up)||(!block_available_left)||(!block_available_up_left))
-    printf ("warning: Intra_8x8_Horizontal_Down prediction mode not allowed at mb %d\n", (int) curSlice->mbIndex);
+    printf ("warning: Intra_8x8_Horizontal_Down prediction mode not allowed at mb %d\n", (int) slice->mbIndex);
 
   // form predictor pels
   if (block_available_up)
@@ -1516,46 +1516,46 @@ static int intra8x8_hor_down_pred (sMacroblock* curMb,
  *
 ** **********************************************************************
  */
-static int intra_pred_8x8_normal (sMacroblock* curMb,
+static int intra_pred_8x8_normal (sMacroblock* mb,
                         eColorPlane pl,         //!< Current color plane
                         int ioff,              //!< ioff
                         int joff)              //!< joff
 
 {
-  int blockX = (curMb->blockX) + (ioff >> 2);
-  int blockY = (curMb->blockY) + (joff >> 2);
-  byte predmode = curMb->slice->predMode[blockY][blockX];
+  int blockX = (mb->blockX) + (ioff >> 2);
+  int blockY = (mb->blockY) + (joff >> 2);
+  byte predmode = mb->slice->predMode[blockY][blockX];
 
-  curMb->ipmode_DPCM = predmode;  //For residual DPCM
+  mb->ipmode_DPCM = predmode;  //For residual DPCM
 
   switch (predmode)
   {
   case DC_PRED:
-    return (intra8x8_dc_pred(curMb, pl, ioff, joff));
+    return (intra8x8_dc_pred(mb, pl, ioff, joff));
     break;
   case VERT_PRED:
-    return (intra8x8_vert_pred(curMb, pl, ioff, joff));
+    return (intra8x8_vert_pred(mb, pl, ioff, joff));
     break;
   case HOR_PRED:
-    return (intra8x8_hor_pred(curMb, pl, ioff, joff));
+    return (intra8x8_hor_pred(mb, pl, ioff, joff));
     break;
   case DIAG_DOWN_RIGHT_PRED:
-    return (intra8x8_diag_down_right_pred(curMb, pl, ioff, joff));
+    return (intra8x8_diag_down_right_pred(mb, pl, ioff, joff));
     break;
   case DIAG_DOWN_LEFT_PRED:
-    return (intra8x8_diag_down_left_pred(curMb, pl, ioff, joff));
+    return (intra8x8_diag_down_left_pred(mb, pl, ioff, joff));
     break;
   case VERT_RIGHT_PRED:
-    return (intra8x8_vert_right_pred(curMb, pl, ioff, joff));
+    return (intra8x8_vert_right_pred(mb, pl, ioff, joff));
     break;
   case VERT_LEFT_PRED:
-    return (intra8x8_vert_left_pred(curMb, pl, ioff, joff));
+    return (intra8x8_vert_left_pred(mb, pl, ioff, joff));
     break;
   case HOR_UP_PRED:
-    return (intra8x8_hor_up_pred(curMb, pl, ioff, joff));
+    return (intra8x8_hor_up_pred(mb, pl, ioff, joff));
     break;
   case HOR_DOWN_PRED:
-    return (intra8x8_hor_down_pred(curMb, pl, ioff, joff));
+    return (intra8x8_hor_down_pred(mb, pl, ioff, joff));
   default:
     printf("Error: illegal intra_8x8 prediction mode: %d\n", (int) predmode);
     return SEARCH_SYNC;
@@ -1565,15 +1565,15 @@ static int intra_pred_8x8_normal (sMacroblock* curMb,
 //}}}
 
 //{{{
-static int intra8x8_dc_pred_mbaff (sMacroblock* curMb, eColorPlane pl, int ioff, int joff) {
+static int intra8x8_dc_pred_mbaff (sMacroblock* mb, eColorPlane pl, int ioff, int joff) {
 
   int i,j;
   int s0 = 0;
   sPixel PredPel[25];  // array of predictor pels
-  sSlice *curSlice = curMb->slice;
-  sDecoder* decoder = curMb->decoder;
+  sSlice *slice = mb->slice;
+  sDecoder* decoder = mb->decoder;
 
-  sPicture* picture = curSlice->picture;
+  sPicture* picture = slice->picture;
   sPixel** imgY = (pl) ? picture->imgUV[pl - 1] : picture->imgY; // For MB level frame/field coding tools -- set default to imgY
 
   sPixelPos pix_a[8];
@@ -1586,27 +1586,27 @@ static int intra8x8_dc_pred_mbaff (sMacroblock* curMb, eColorPlane pl, int ioff,
 
   for (int i=0; i<25;i++) PredPel[i]=0;
 
-  sPixel** mpr = curSlice->mb_pred[pl];
+  sPixel** mpr = slice->mb_pred[pl];
   int *mbSize = decoder->mbSize[IS_LUMA];
 
   for (i=0;i<8;i++)
   {
-    getAffNeighbour(curMb, ioff - 1, joff + i, mbSize, &pix_a[i]);
+    getAffNeighbour(mb, ioff - 1, joff + i, mbSize, &pix_a[i]);
   }
 
-  getAffNeighbour(curMb, ioff    , joff - 1, mbSize, &pix_b);
-  getAffNeighbour(curMb, ioff + 8, joff - 1, mbSize, &pix_c);
-  getAffNeighbour(curMb, ioff - 1, joff - 1, mbSize, &pix_d);
+  getAffNeighbour(mb, ioff    , joff - 1, mbSize, &pix_b);
+  getAffNeighbour(mb, ioff + 8, joff - 1, mbSize, &pix_c);
+  getAffNeighbour(mb, ioff - 1, joff - 1, mbSize, &pix_d);
 
   pix_c.available = pix_c.available &&!(ioff == 8 && joff == 8);
 
   if (decoder->activePPS->constrainedIntraPredFlag)
   {
     for (i=0, block_available_left=1; i<8;i++)
-      block_available_left  &= pix_a[i].available ? curSlice->intraBlock[pix_a[i].mbIndex]: 0;
-    block_available_up       = pix_b.available ? curSlice->intraBlock [pix_b.mbIndex] : 0;
-    block_available_up_right = pix_c.available ? curSlice->intraBlock [pix_c.mbIndex] : 0;
-    block_available_up_left  = pix_d.available ? curSlice->intraBlock [pix_d.mbIndex] : 0;
+      block_available_left  &= pix_a[i].available ? slice->intraBlock[pix_a[i].mbIndex]: 0;
+    block_available_up       = pix_b.available ? slice->intraBlock [pix_b.mbIndex] : 0;
+    block_available_up_right = pix_c.available ? slice->intraBlock [pix_c.mbIndex] : 0;
+    block_available_up_left  = pix_d.available ? slice->intraBlock [pix_d.mbIndex] : 0;
   }
   else
   {
@@ -1709,17 +1709,17 @@ static int intra8x8_dc_pred_mbaff (sMacroblock* curMb, eColorPlane pl, int ioff,
  *
 ** *********************************************************************
  */
-static int intra8x8_vert_pred_mbaff (sMacroblock* curMb,
+static int intra8x8_vert_pred_mbaff (sMacroblock* mb,
                                      eColorPlane pl,         //!< current image plane
                                      int ioff,              //!< pixel offset X within MB
                                      int joff)              //!< pixel offset Y within MB
 {
-  sSlice *curSlice = curMb->slice;
-  sDecoder* decoder = curMb->decoder;
+  sSlice *slice = mb->slice;
+  sDecoder* decoder = mb->decoder;
 
   int i;
   sPixel PredPel[25];  // array of predictor pels
-  sPixel** imgY = (pl) ? curSlice->picture->imgUV[pl - 1] : curSlice->picture->imgY; // For MB level frame/field coding tools -- set default to imgY
+  sPixel** imgY = (pl) ? slice->picture->imgUV[pl - 1] : slice->picture->imgY; // For MB level frame/field coding tools -- set default to imgY
 
   sPixelPos pix_a[8];
   sPixelPos pix_b, pix_c, pix_d;
@@ -1731,27 +1731,27 @@ static int intra8x8_vert_pred_mbaff (sMacroblock* curMb,
 
   for (int i=0; i<25;i++) PredPel[i]=0;
 
-  sPixel** mpr = curSlice->mb_pred[pl];
+  sPixel** mpr = slice->mb_pred[pl];
   int *mbSize = decoder->mbSize[IS_LUMA];
 
   for (i=0;i<8;i++)
   {
-    getAffNeighbour(curMb, ioff - 1, joff + i, mbSize, &pix_a[i]);
+    getAffNeighbour(mb, ioff - 1, joff + i, mbSize, &pix_a[i]);
   }
 
-  getAffNeighbour(curMb, ioff    , joff - 1, mbSize, &pix_b);
-  getAffNeighbour(curMb, ioff + 8, joff - 1, mbSize, &pix_c);
-  getAffNeighbour(curMb, ioff - 1, joff - 1, mbSize, &pix_d);
+  getAffNeighbour(mb, ioff    , joff - 1, mbSize, &pix_b);
+  getAffNeighbour(mb, ioff + 8, joff - 1, mbSize, &pix_c);
+  getAffNeighbour(mb, ioff - 1, joff - 1, mbSize, &pix_d);
 
   pix_c.available = pix_c.available &&!(ioff == 8 && joff == 8);
 
   if (decoder->activePPS->constrainedIntraPredFlag)
   {
     for (i=0, block_available_left=1; i<8;i++)
-      block_available_left  &= pix_a[i].available ? curSlice->intraBlock[pix_a[i].mbIndex]: 0;
-    block_available_up       = pix_b.available ? curSlice->intraBlock [pix_b.mbIndex] : 0;
-    block_available_up_right = pix_c.available ? curSlice->intraBlock [pix_c.mbIndex] : 0;
-    block_available_up_left  = pix_d.available ? curSlice->intraBlock [pix_d.mbIndex] : 0;
+      block_available_left  &= pix_a[i].available ? slice->intraBlock[pix_a[i].mbIndex]: 0;
+    block_available_up       = pix_b.available ? slice->intraBlock [pix_b.mbIndex] : 0;
+    block_available_up_right = pix_c.available ? slice->intraBlock [pix_c.mbIndex] : 0;
+    block_available_up_left  = pix_d.available ? slice->intraBlock [pix_d.mbIndex] : 0;
   }
   else
   {
@@ -1762,7 +1762,7 @@ static int intra8x8_vert_pred_mbaff (sMacroblock* curMb,
   }
 
   if (!block_available_up)
-    printf ("warning: Intra_8x8_Vertical prediction mode not allowed at mb %d\n", (int) curSlice->mbIndex);
+    printf ("warning: Intra_8x8_Vertical prediction mode not allowed at mb %d\n", (int) slice->mbIndex);
 
   // form predictor pels
   if (block_available_up)
@@ -1821,18 +1821,18 @@ static int intra8x8_vert_pred_mbaff (sMacroblock* curMb,
  *
 ** *********************************************************************
  */
-static int intra8x8_hor_pred_mbaff (sMacroblock* curMb,
+static int intra8x8_hor_pred_mbaff (sMacroblock* mb,
                                     eColorPlane pl,         //!< current image plane
                                     int ioff,              //!< pixel offset X within MB
                                     int joff)              //!< pixel offset Y within MB
 {
-  sSlice *curSlice = curMb->slice;
-  sDecoder* decoder = curMb->decoder;
+  sSlice *slice = mb->slice;
+  sDecoder* decoder = mb->decoder;
 
 
   int i,j;
   sPixel PredPel[25];  // array of predictor pels
-  sPixel** imgY = (pl) ? curSlice->picture->imgUV[pl - 1] : curSlice->picture->imgY; // For MB level frame/field coding tools -- set default to imgY
+  sPixel** imgY = (pl) ? slice->picture->imgUV[pl - 1] : slice->picture->imgY; // For MB level frame/field coding tools -- set default to imgY
 
   sPixelPos pix_a[8];
   sPixelPos pix_b, pix_c, pix_d;
@@ -1848,26 +1848,26 @@ static int intra8x8_hor_pred_mbaff (sMacroblock* curMb,
   int ipos4 = ioff + 4, ipos5 = ioff + 5, ipos6 = ioff + 6, ipos7 = ioff + 7;
 #endif
   int jpos;
-  sPixel** mpr = curSlice->mb_pred[pl];
+  sPixel** mpr = slice->mb_pred[pl];
   int *mbSize = decoder->mbSize[IS_LUMA];
 
   for (i=0;i<8;i++)
   {
-    getAffNeighbour(curMb, ioff - 1, joff + i, mbSize, &pix_a[i]);
+    getAffNeighbour(mb, ioff - 1, joff + i, mbSize, &pix_a[i]);
   }
 
-  getAffNeighbour(curMb, ioff    , joff - 1, mbSize, &pix_b);
-  getAffNeighbour(curMb, ioff + 8, joff - 1, mbSize, &pix_c);
-  getAffNeighbour(curMb, ioff - 1, joff - 1, mbSize, &pix_d);
+  getAffNeighbour(mb, ioff    , joff - 1, mbSize, &pix_b);
+  getAffNeighbour(mb, ioff + 8, joff - 1, mbSize, &pix_c);
+  getAffNeighbour(mb, ioff - 1, joff - 1, mbSize, &pix_d);
 
   pix_c.available = pix_c.available &&!(ioff == 8 && joff == 8);
 
   if (decoder->activePPS->constrainedIntraPredFlag)
   {
     for (i=0, block_available_left=1; i<8;i++)
-      block_available_left  &= pix_a[i].available ? curSlice->intraBlock[pix_a[i].mbIndex]: 0;
-    block_available_up       = pix_b.available ? curSlice->intraBlock [pix_b.mbIndex] : 0;
-    block_available_up_left  = pix_d.available ? curSlice->intraBlock [pix_d.mbIndex] : 0;
+      block_available_left  &= pix_a[i].available ? slice->intraBlock[pix_a[i].mbIndex]: 0;
+    block_available_up       = pix_b.available ? slice->intraBlock [pix_b.mbIndex] : 0;
+    block_available_up_left  = pix_d.available ? slice->intraBlock [pix_d.mbIndex] : 0;
   }
   else
   {
@@ -1877,7 +1877,7 @@ static int intra8x8_hor_pred_mbaff (sMacroblock* curMb,
   }
 
   if (!block_available_left)
-    printf ("warning: Intra_8x8_Horizontal prediction mode not allowed at mb %d\n", (int) curSlice->mbIndex);
+    printf ("warning: Intra_8x8_Horizontal prediction mode not allowed at mb %d\n", (int) slice->mbIndex);
 
   // form predictor pels
   if (block_available_left)
@@ -1938,19 +1938,19 @@ static int intra8x8_hor_pred_mbaff (sMacroblock* curMb,
  *
 ** *********************************************************************
  */
-static int intra8x8_diag_down_right_pred_mbaff (sMacroblock* curMb,
+static int intra8x8_diag_down_right_pred_mbaff (sMacroblock* mb,
                                                 eColorPlane pl,         //!< current image plane
                                                 int ioff,              //!< pixel offset X within MB
                                                 int joff)              //!< pixel offset Y within MB
 {
-  sSlice *curSlice = curMb->slice;
-  sDecoder* decoder = curMb->decoder;
+  sSlice *slice = mb->slice;
+  sDecoder* decoder = mb->decoder;
 
 
   int i;
   sPixel PredPel[25];  // array of predictor pels
   sPixel PredArray[16];  // array of final prediction values
-  sPixel** imgY = (pl) ? curSlice->picture->imgUV[pl - 1] : curSlice->picture->imgY; // For MB level frame/field coding tools -- set default to imgY
+  sPixel** imgY = (pl) ? slice->picture->imgUV[pl - 1] : slice->picture->imgY; // For MB level frame/field coding tools -- set default to imgY
 
   sPixelPos pix_a[8];
   sPixelPos pix_b, pix_c, pix_d;
@@ -1960,29 +1960,29 @@ static int intra8x8_diag_down_right_pred_mbaff (sMacroblock* curMb,
   int block_available_up_left;
   int block_available_up_right;
 
-  sPixel** mpr = curSlice->mb_pred[pl];
+  sPixel** mpr = slice->mb_pred[pl];
   int *mbSize = decoder->mbSize[IS_LUMA];
 
   for (int i=0; i<25;i++) PredPel[i]=0;
 
   for (i=0;i<8;i++)
   {
-    getAffNeighbour(curMb, ioff - 1, joff + i, mbSize, &pix_a[i]);
+    getAffNeighbour(mb, ioff - 1, joff + i, mbSize, &pix_a[i]);
   }
 
-  getAffNeighbour(curMb, ioff    , joff - 1, mbSize, &pix_b);
-  getAffNeighbour(curMb, ioff + 8, joff - 1, mbSize, &pix_c);
-  getAffNeighbour(curMb, ioff - 1, joff - 1, mbSize, &pix_d);
+  getAffNeighbour(mb, ioff    , joff - 1, mbSize, &pix_b);
+  getAffNeighbour(mb, ioff + 8, joff - 1, mbSize, &pix_c);
+  getAffNeighbour(mb, ioff - 1, joff - 1, mbSize, &pix_d);
 
   pix_c.available = pix_c.available &&!(ioff == 8 && joff == 8);
 
   if (decoder->activePPS->constrainedIntraPredFlag)
   {
     for (i=0, block_available_left=1; i<8;i++)
-      block_available_left  &= pix_a[i].available ? curSlice->intraBlock[pix_a[i].mbIndex]: 0;
-    block_available_up       = pix_b.available ? curSlice->intraBlock [pix_b.mbIndex] : 0;
-    block_available_up_right = pix_c.available ? curSlice->intraBlock [pix_c.mbIndex] : 0;
-    block_available_up_left  = pix_d.available ? curSlice->intraBlock [pix_d.mbIndex] : 0;
+      block_available_left  &= pix_a[i].available ? slice->intraBlock[pix_a[i].mbIndex]: 0;
+    block_available_up       = pix_b.available ? slice->intraBlock [pix_b.mbIndex] : 0;
+    block_available_up_right = pix_c.available ? slice->intraBlock [pix_c.mbIndex] : 0;
+    block_available_up_left  = pix_d.available ? slice->intraBlock [pix_d.mbIndex] : 0;
   }
   else
   {
@@ -1993,7 +1993,7 @@ static int intra8x8_diag_down_right_pred_mbaff (sMacroblock* curMb,
   }
 
   if ((!block_available_up)||(!block_available_left)||(!block_available_up_left))
-    printf ("warning: Intra_8x8_Diagonal_Down_Right prediction mode not allowed at mb %d\n", (int) curSlice->mbIndex);
+    printf ("warning: Intra_8x8_Diagonal_Down_Right prediction mode not allowed at mb %d\n", (int) slice->mbIndex);
 
   // form predictor pels
   if (block_available_up)
@@ -2089,19 +2089,19 @@ static int intra8x8_diag_down_right_pred_mbaff (sMacroblock* curMb,
  *
 ** *********************************************************************
  */
-static int intra8x8_diag_down_left_pred_mbaff (sMacroblock* curMb,
+static int intra8x8_diag_down_left_pred_mbaff (sMacroblock* mb,
                                                eColorPlane pl,         //!< current image plane
                                                int ioff,              //!< pixel offset X within MB
                                                int joff)              //!< pixel offset Y within MB
 {
-  sSlice *curSlice = curMb->slice;
-  sDecoder* decoder = curMb->decoder;
+  sSlice *slice = mb->slice;
+  sDecoder* decoder = mb->decoder;
 
   int i;
   sPixel PredPel[25];  // array of predictor pels
   sPixel PredArray[16];  // array of final prediction values
   sPixel *Pred = &PredArray[0];
-  sPixel** imgY = (pl) ? curSlice->picture->imgUV[pl - 1] : curSlice->picture->imgY; // For MB level frame/field coding tools -- set default to imgY
+  sPixel** imgY = (pl) ? slice->picture->imgUV[pl - 1] : slice->picture->imgY; // For MB level frame/field coding tools -- set default to imgY
 
   sPixelPos pix_a[8];
   sPixelPos pix_b, pix_c, pix_d;
@@ -2111,29 +2111,29 @@ static int intra8x8_diag_down_left_pred_mbaff (sMacroblock* curMb,
   int block_available_up_left;
   int block_available_up_right;
 
-  sPixel** mpr = curSlice->mb_pred[pl];
+  sPixel** mpr = slice->mb_pred[pl];
   int *mbSize = decoder->mbSize[IS_LUMA];
 
   for (int i=0; i<25;i++) PredPel[i]=0;
 
   for (i=0;i<8;i++)
   {
-    getAffNeighbour(curMb, ioff - 1, joff + i, mbSize, &pix_a[i]);
+    getAffNeighbour(mb, ioff - 1, joff + i, mbSize, &pix_a[i]);
   }
 
-  getAffNeighbour(curMb, ioff    , joff - 1, mbSize, &pix_b);
-  getAffNeighbour(curMb, ioff + 8, joff - 1, mbSize, &pix_c);
-  getAffNeighbour(curMb, ioff - 1, joff - 1, mbSize, &pix_d);
+  getAffNeighbour(mb, ioff    , joff - 1, mbSize, &pix_b);
+  getAffNeighbour(mb, ioff + 8, joff - 1, mbSize, &pix_c);
+  getAffNeighbour(mb, ioff - 1, joff - 1, mbSize, &pix_d);
 
   pix_c.available = pix_c.available &&!(ioff == 8 && joff == 8);
 
   if (decoder->activePPS->constrainedIntraPredFlag)
   {
     for (i=0, block_available_left=1; i<8;i++)
-      block_available_left  &= pix_a[i].available ? curSlice->intraBlock[pix_a[i].mbIndex]: 0;
-    block_available_up       = pix_b.available ? curSlice->intraBlock [pix_b.mbIndex] : 0;
-    block_available_up_right = pix_c.available ? curSlice->intraBlock [pix_c.mbIndex] : 0;
-    block_available_up_left  = pix_d.available ? curSlice->intraBlock [pix_d.mbIndex] : 0;
+      block_available_left  &= pix_a[i].available ? slice->intraBlock[pix_a[i].mbIndex]: 0;
+    block_available_up       = pix_b.available ? slice->intraBlock [pix_b.mbIndex] : 0;
+    block_available_up_right = pix_c.available ? slice->intraBlock [pix_c.mbIndex] : 0;
+    block_available_up_left  = pix_d.available ? slice->intraBlock [pix_d.mbIndex] : 0;
   }
   else
   {
@@ -2144,7 +2144,7 @@ static int intra8x8_diag_down_left_pred_mbaff (sMacroblock* curMb,
   }
 
   if (!block_available_up)
-    printf ("warning: Intra_8x8_Diagonal_Down_Left prediction mode not allowed at mb %d\n", (int) curSlice->mbIndex);
+    printf ("warning: Intra_8x8_Diagonal_Down_Left prediction mode not allowed at mb %d\n", (int) slice->mbIndex);
 
   // form predictor pels
   if (block_available_up)
@@ -2242,18 +2242,18 @@ static int intra8x8_diag_down_left_pred_mbaff (sMacroblock* curMb,
  *
 ** *********************************************************************
  */
-static int intra8x8_vert_right_pred_mbaff (sMacroblock* curMb,
+static int intra8x8_vert_right_pred_mbaff (sMacroblock* mb,
                                            eColorPlane pl,         //!< current image plane
                                            int ioff,              //!< pixel offset X within MB
                                            int joff)              //!< pixel offset Y within MB
 {
-  sSlice *curSlice = curMb->slice;
-  sDecoder* decoder = curMb->decoder;
+  sSlice *slice = mb->slice;
+  sDecoder* decoder = mb->decoder;
 
   int i;
   sPixel PredPel[25];  // array of predictor pels
   sPixel PredArray[22];  // array of final prediction values
-  sPixel** imgY = (pl) ? curSlice->picture->imgUV[pl - 1] : curSlice->picture->imgY; // For MB level frame/field coding tools -- set default to imgY
+  sPixel** imgY = (pl) ? slice->picture->imgUV[pl - 1] : slice->picture->imgY; // For MB level frame/field coding tools -- set default to imgY
 
   sPixelPos pix_a[8];
   sPixelPos pix_b, pix_c, pix_d;
@@ -2263,29 +2263,29 @@ static int intra8x8_vert_right_pred_mbaff (sMacroblock* curMb,
   int block_available_up_left;
   int block_available_up_right;
 
-  sPixel** mpr = curSlice->mb_pred[pl];
+  sPixel** mpr = slice->mb_pred[pl];
   int *mbSize = decoder->mbSize[IS_LUMA];
 
   for (int i=0; i<25;i++) PredPel[i]=0;
 
   for (i=0;i<8;i++)
   {
-    getAffNeighbour(curMb, ioff - 1, joff + i, mbSize, &pix_a[i]);
+    getAffNeighbour(mb, ioff - 1, joff + i, mbSize, &pix_a[i]);
   }
 
-  getAffNeighbour(curMb, ioff    , joff - 1, mbSize, &pix_b);
-  getAffNeighbour(curMb, ioff + 8, joff - 1, mbSize, &pix_c);
-  getAffNeighbour(curMb, ioff - 1, joff - 1, mbSize, &pix_d);
+  getAffNeighbour(mb, ioff    , joff - 1, mbSize, &pix_b);
+  getAffNeighbour(mb, ioff + 8, joff - 1, mbSize, &pix_c);
+  getAffNeighbour(mb, ioff - 1, joff - 1, mbSize, &pix_d);
 
   pix_c.available = pix_c.available &&!(ioff == 8 && joff == 8);
 
   if (decoder->activePPS->constrainedIntraPredFlag)
   {
     for (i=0, block_available_left=1; i<8;i++)
-      block_available_left  &= pix_a[i].available ? curSlice->intraBlock[pix_a[i].mbIndex]: 0;
-    block_available_up       = pix_b.available ? curSlice->intraBlock [pix_b.mbIndex] : 0;
-    block_available_up_right = pix_c.available ? curSlice->intraBlock [pix_c.mbIndex] : 0;
-    block_available_up_left  = pix_d.available ? curSlice->intraBlock [pix_d.mbIndex] : 0;
+      block_available_left  &= pix_a[i].available ? slice->intraBlock[pix_a[i].mbIndex]: 0;
+    block_available_up       = pix_b.available ? slice->intraBlock [pix_b.mbIndex] : 0;
+    block_available_up_right = pix_c.available ? slice->intraBlock [pix_c.mbIndex] : 0;
+    block_available_up_left  = pix_d.available ? slice->intraBlock [pix_d.mbIndex] : 0;
   }
   else
   {
@@ -2296,7 +2296,7 @@ static int intra8x8_vert_right_pred_mbaff (sMacroblock* curMb,
   }
 
   if ((!block_available_up)||(!block_available_left)||(!block_available_up_left))
-    printf ("warning: Intra_8x8_Vertical_Right prediction mode not allowed at mb %d\n", (int) curSlice->mbIndex);
+    printf ("warning: Intra_8x8_Vertical_Right prediction mode not allowed at mb %d\n", (int) slice->mbIndex);
 
   // form predictor pels
   if (block_available_up)
@@ -2399,19 +2399,19 @@ static int intra8x8_vert_right_pred_mbaff (sMacroblock* curMb,
  *
 ** *********************************************************************
  */
-static int intra8x8_vert_left_pred_mbaff (sMacroblock* curMb,
+static int intra8x8_vert_left_pred_mbaff (sMacroblock* mb,
                                           eColorPlane pl,         //!< current image plane
                                           int ioff,              //!< pixel offset X within MB
                                           int joff)              //!< pixel offset Y within MB
 {
-  sSlice *curSlice = curMb->slice;
-  sDecoder* decoder = curMb->decoder;
+  sSlice *slice = mb->slice;
+  sDecoder* decoder = mb->decoder;
 
   int i;
   sPixel PredPel[25];  // array of predictor pels
   sPixel PredArray[22];  // array of final prediction values
   sPixel *pred_pel = &PredArray[0];
-  sPixel** imgY = (pl) ? curSlice->picture->imgUV[pl - 1] : curSlice->picture->imgY; // For MB level frame/field coding tools -- set default to imgY
+  sPixel** imgY = (pl) ? slice->picture->imgUV[pl - 1] : slice->picture->imgY; // For MB level frame/field coding tools -- set default to imgY
 
   sPixelPos pix_a[8];
   sPixelPos pix_b, pix_c, pix_d;
@@ -2421,29 +2421,29 @@ static int intra8x8_vert_left_pred_mbaff (sMacroblock* curMb,
   int block_available_up_left;
   int block_available_up_right;
 
-  sPixel** mpr = curSlice->mb_pred[pl];
+  sPixel** mpr = slice->mb_pred[pl];
   int *mbSize = decoder->mbSize[IS_LUMA];
 
   for (int i=0; i<25;i++) PredPel[i]=0;
 
   for (i=0;i<8;i++)
   {
-    getAffNeighbour(curMb, ioff - 1, joff + i, mbSize, &pix_a[i]);
+    getAffNeighbour(mb, ioff - 1, joff + i, mbSize, &pix_a[i]);
   }
 
-  getAffNeighbour(curMb, ioff    , joff - 1, mbSize, &pix_b);
-  getAffNeighbour(curMb, ioff + 8, joff - 1, mbSize, &pix_c);
-  getAffNeighbour(curMb, ioff - 1, joff - 1, mbSize, &pix_d);
+  getAffNeighbour(mb, ioff    , joff - 1, mbSize, &pix_b);
+  getAffNeighbour(mb, ioff + 8, joff - 1, mbSize, &pix_c);
+  getAffNeighbour(mb, ioff - 1, joff - 1, mbSize, &pix_d);
 
   pix_c.available = pix_c.available &&!(ioff == 8 && joff == 8);
 
   if (decoder->activePPS->constrainedIntraPredFlag)
   {
     for (i=0, block_available_left=1; i<8;i++)
-      block_available_left  &= pix_a[i].available ? curSlice->intraBlock[pix_a[i].mbIndex]: 0;
-    block_available_up       = pix_b.available ? curSlice->intraBlock [pix_b.mbIndex] : 0;
-    block_available_up_right = pix_c.available ? curSlice->intraBlock [pix_c.mbIndex] : 0;
-    block_available_up_left  = pix_d.available ? curSlice->intraBlock [pix_d.mbIndex] : 0;
+      block_available_left  &= pix_a[i].available ? slice->intraBlock[pix_a[i].mbIndex]: 0;
+    block_available_up       = pix_b.available ? slice->intraBlock [pix_b.mbIndex] : 0;
+    block_available_up_right = pix_c.available ? slice->intraBlock [pix_c.mbIndex] : 0;
+    block_available_up_left  = pix_d.available ? slice->intraBlock [pix_d.mbIndex] : 0;
   }
   else
   {
@@ -2454,7 +2454,7 @@ static int intra8x8_vert_left_pred_mbaff (sMacroblock* curMb,
   }
 
   if (!block_available_up)
-    printf ("warning: Intra_4x4_Vertical_Left prediction mode not allowed at mb %d\n", (int) curSlice->mbIndex);
+    printf ("warning: Intra_4x4_Vertical_Left prediction mode not allowed at mb %d\n", (int) slice->mbIndex);
 
   // form predictor pels
   if (block_available_up)
@@ -2556,18 +2556,18 @@ static int intra8x8_vert_left_pred_mbaff (sMacroblock* curMb,
  *
 ** *********************************************************************
  */
-static int intra8x8_hor_up_pred_mbaff (sMacroblock* curMb,
+static int intra8x8_hor_up_pred_mbaff (sMacroblock* mb,
                                        eColorPlane pl,         //!< current image plane
                                        int ioff,              //!< pixel offset X within MB
                                        int joff)              //!< pixel offset Y within MB
 {
-  sSlice *curSlice = curMb->slice;
-  sDecoder* decoder = curMb->decoder;
+  sSlice *slice = mb->slice;
+  sDecoder* decoder = mb->decoder;
 
   int i;
   sPixel PredPel[25];  // array of predictor pels
   sPixel PredArray[22];   // array of final prediction values
-  sPixel** imgY = (pl) ? curSlice->picture->imgUV[pl - 1] : curSlice->picture->imgY; // For MB level frame/field coding tools -- set default to imgY
+  sPixel** imgY = (pl) ? slice->picture->imgUV[pl - 1] : slice->picture->imgY; // For MB level frame/field coding tools -- set default to imgY
 
   sPixelPos pix_a[8];
   sPixelPos pix_b, pix_c, pix_d;
@@ -2579,29 +2579,29 @@ static int intra8x8_hor_up_pred_mbaff (sMacroblock* curMb,
   int jpos0 = joff    , jpos1 = joff + 1, jpos2 = joff + 2, jpos3 = joff + 3;
   int jpos4 = joff + 4, jpos5 = joff + 5, jpos6 = joff + 6, jpos7 = joff + 7;
 
-  sPixel** mpr = curSlice->mb_pred[pl];
+  sPixel** mpr = slice->mb_pred[pl];
   int *mbSize = decoder->mbSize[IS_LUMA];
 
   for (int i=0; i<25;i++) PredPel[i]=0;
 
   for (i=0;i<8;i++)
   {
-    getAffNeighbour(curMb, ioff - 1, joff + i, mbSize, &pix_a[i]);
+    getAffNeighbour(mb, ioff - 1, joff + i, mbSize, &pix_a[i]);
   }
 
-  getAffNeighbour(curMb, ioff    , joff - 1, mbSize, &pix_b);
-  getAffNeighbour(curMb, ioff + 8, joff - 1, mbSize, &pix_c);
-  getAffNeighbour(curMb, ioff - 1, joff - 1, mbSize, &pix_d);
+  getAffNeighbour(mb, ioff    , joff - 1, mbSize, &pix_b);
+  getAffNeighbour(mb, ioff + 8, joff - 1, mbSize, &pix_c);
+  getAffNeighbour(mb, ioff - 1, joff - 1, mbSize, &pix_d);
 
   pix_c.available = pix_c.available &&!(ioff == 8 && joff == 8);
 
   if (decoder->activePPS->constrainedIntraPredFlag)
   {
     for (i=0, block_available_left=1; i<8;i++)
-      block_available_left  &= pix_a[i].available ? curSlice->intraBlock[pix_a[i].mbIndex]: 0;
-    block_available_up       = pix_b.available ? curSlice->intraBlock [pix_b.mbIndex] : 0;
-    block_available_up_right = pix_c.available ? curSlice->intraBlock [pix_c.mbIndex] : 0;
-    block_available_up_left  = pix_d.available ? curSlice->intraBlock [pix_d.mbIndex] : 0;
+      block_available_left  &= pix_a[i].available ? slice->intraBlock[pix_a[i].mbIndex]: 0;
+    block_available_up       = pix_b.available ? slice->intraBlock [pix_b.mbIndex] : 0;
+    block_available_up_right = pix_c.available ? slice->intraBlock [pix_c.mbIndex] : 0;
+    block_available_up_left  = pix_d.available ? slice->intraBlock [pix_d.mbIndex] : 0;
   }
   else
   {
@@ -2612,7 +2612,7 @@ static int intra8x8_hor_up_pred_mbaff (sMacroblock* curMb,
   }
 
   if (!block_available_left)
-    printf ("warning: Intra_8x8_Horizontal_Up prediction mode not allowed at mb %d\n", (int) curSlice->mbIndex);
+    printf ("warning: Intra_8x8_Horizontal_Up prediction mode not allowed at mb %d\n", (int) slice->mbIndex);
 
   // form predictor pels
   if (block_available_up)
@@ -2714,18 +2714,18 @@ static int intra8x8_hor_up_pred_mbaff (sMacroblock* curMb,
  *
 ** *********************************************************************
  */
-static int intra8x8_hor_down_pred_mbaff (sMacroblock* curMb,
+static int intra8x8_hor_down_pred_mbaff (sMacroblock* mb,
                                          eColorPlane pl,         //!< current image plane
                                          int ioff,              //!< pixel offset X within MB
                                          int joff)              //!< pixel offset Y within MB
 {
-  sSlice *curSlice = curMb->slice;
-  sDecoder* decoder = curMb->decoder;
+  sSlice *slice = mb->slice;
+  sDecoder* decoder = mb->decoder;
 
   int i;
   sPixel PredPel[25];  // array of predictor pels
   sPixel PredArray[22];   // array of final prediction values
-  sPixel** imgY = (pl) ? curSlice->picture->imgUV[pl - 1] : curSlice->picture->imgY; // For MB level frame/field coding tools -- set default to imgY
+  sPixel** imgY = (pl) ? slice->picture->imgUV[pl - 1] : slice->picture->imgY; // For MB level frame/field coding tools -- set default to imgY
 
   sPixelPos pix_a[8];
   sPixelPos pix_b, pix_c, pix_d;
@@ -2737,29 +2737,29 @@ static int intra8x8_hor_down_pred_mbaff (sMacroblock* curMb,
   int jpos0 = joff    , jpos1 = joff + 1, jpos2 = joff + 2, jpos3 = joff + 3;
   int jpos4 = joff + 4, jpos5 = joff + 5, jpos6 = joff + 6, jpos7 = joff + 7;
 
-  sPixel** mpr = curSlice->mb_pred[pl];
+  sPixel** mpr = slice->mb_pred[pl];
   int *mbSize = decoder->mbSize[IS_LUMA];
 
   for (int i=0; i<25;i++) PredPel[i]=0;
 
   for (i=0;i<8;i++)
   {
-    getAffNeighbour(curMb, ioff - 1, joff + i, mbSize, &pix_a[i]);
+    getAffNeighbour(mb, ioff - 1, joff + i, mbSize, &pix_a[i]);
   }
 
-  getAffNeighbour(curMb, ioff    , joff - 1, mbSize, &pix_b);
-  getAffNeighbour(curMb, ioff + 8, joff - 1, mbSize, &pix_c);
-  getAffNeighbour(curMb, ioff - 1, joff - 1, mbSize, &pix_d);
+  getAffNeighbour(mb, ioff    , joff - 1, mbSize, &pix_b);
+  getAffNeighbour(mb, ioff + 8, joff - 1, mbSize, &pix_c);
+  getAffNeighbour(mb, ioff - 1, joff - 1, mbSize, &pix_d);
 
   pix_c.available = pix_c.available &&!(ioff == 8 && joff == 8);
 
   if (decoder->activePPS->constrainedIntraPredFlag)
   {
     for (i=0, block_available_left=1; i<8;i++)
-      block_available_left  &= pix_a[i].available ? curSlice->intraBlock[pix_a[i].mbIndex]: 0;
-    block_available_up       = pix_b.available ? curSlice->intraBlock [pix_b.mbIndex] : 0;
-    block_available_up_right = pix_c.available ? curSlice->intraBlock [pix_c.mbIndex] : 0;
-    block_available_up_left  = pix_d.available ? curSlice->intraBlock [pix_d.mbIndex] : 0;
+      block_available_left  &= pix_a[i].available ? slice->intraBlock[pix_a[i].mbIndex]: 0;
+    block_available_up       = pix_b.available ? slice->intraBlock [pix_b.mbIndex] : 0;
+    block_available_up_right = pix_c.available ? slice->intraBlock [pix_c.mbIndex] : 0;
+    block_available_up_left  = pix_d.available ? slice->intraBlock [pix_d.mbIndex] : 0;
   }
   else
   {
@@ -2770,7 +2770,7 @@ static int intra8x8_hor_down_pred_mbaff (sMacroblock* curMb,
   }
 
   if ((!block_available_up)||(!block_available_left)||(!block_available_up_left))
-    printf ("warning: Intra_8x8_Horizontal_Down prediction mode not allowed at mb %d\n", (int) curSlice->mbIndex);
+    printf ("warning: Intra_8x8_Horizontal_Down prediction mode not allowed at mb %d\n", (int) slice->mbIndex);
 
   // form predictor pels
   if (block_available_up)
@@ -2876,46 +2876,46 @@ static int intra8x8_hor_down_pred_mbaff (sMacroblock* curMb,
  *
 ** **********************************************************************
  */
-static int intra_pred_8x8_mbaff (sMacroblock* curMb,
+static int intra_pred_8x8_mbaff (sMacroblock* mb,
                    eColorPlane pl,         //!< Current color plane
                    int ioff,              //!< ioff
                    int joff)              //!< joff
 
 {
-  int blockX = (curMb->blockX) + (ioff >> 2);
-  int blockY = (curMb->blockY) + (joff >> 2);
-  byte predmode = curMb->slice->predMode[blockY][blockX];
+  int blockX = (mb->blockX) + (ioff >> 2);
+  int blockY = (mb->blockY) + (joff >> 2);
+  byte predmode = mb->slice->predMode[blockY][blockX];
 
-  curMb->ipmode_DPCM = predmode;  //For residual DPCM
+  mb->ipmode_DPCM = predmode;  //For residual DPCM
 
   switch (predmode)
   {
   case DC_PRED:
-    return (intra8x8_dc_pred_mbaff(curMb, pl, ioff, joff));
+    return (intra8x8_dc_pred_mbaff(mb, pl, ioff, joff));
     break;
   case VERT_PRED:
-    return (intra8x8_vert_pred_mbaff(curMb, pl, ioff, joff));
+    return (intra8x8_vert_pred_mbaff(mb, pl, ioff, joff));
     break;
   case HOR_PRED:
-    return (intra8x8_hor_pred_mbaff(curMb, pl, ioff, joff));
+    return (intra8x8_hor_pred_mbaff(mb, pl, ioff, joff));
     break;
   case DIAG_DOWN_RIGHT_PRED:
-    return (intra8x8_diag_down_right_pred_mbaff(curMb, pl, ioff, joff));
+    return (intra8x8_diag_down_right_pred_mbaff(mb, pl, ioff, joff));
     break;
   case DIAG_DOWN_LEFT_PRED:
-    return (intra8x8_diag_down_left_pred_mbaff(curMb, pl, ioff, joff));
+    return (intra8x8_diag_down_left_pred_mbaff(mb, pl, ioff, joff));
     break;
   case VERT_RIGHT_PRED:
-    return (intra8x8_vert_right_pred_mbaff(curMb, pl, ioff, joff));
+    return (intra8x8_vert_right_pred_mbaff(mb, pl, ioff, joff));
     break;
   case VERT_LEFT_PRED:
-    return (intra8x8_vert_left_pred_mbaff(curMb, pl, ioff, joff));
+    return (intra8x8_vert_left_pred_mbaff(mb, pl, ioff, joff));
     break;
   case HOR_UP_PRED:
-    return (intra8x8_hor_up_pred_mbaff(curMb, pl, ioff, joff));
+    return (intra8x8_hor_up_pred_mbaff(mb, pl, ioff, joff));
     break;
   case HOR_DOWN_PRED:
-    return (intra8x8_hor_down_pred_mbaff(curMb, pl, ioff, joff));
+    return (intra8x8_hor_down_pred_mbaff(mb, pl, ioff, joff));
   default:
     printf("Error: illegal intra_8x8 prediction mode: %d\n", (int) predmode);
     return SEARCH_SYNC;
@@ -2935,24 +2935,24 @@ static int intra_pred_8x8_mbaff (sMacroblock* curMb,
  *
 ** *********************************************************************
  */
-static int intra16x16_dc_pred (sMacroblock* curMb, eColorPlane pl)
+static int intra16x16_dc_pred (sMacroblock* mb, eColorPlane pl)
 {
-  sSlice *curSlice = curMb->slice;
-  sDecoder* decoder = curMb->decoder;
+  sSlice *slice = mb->slice;
+  sDecoder* decoder = mb->decoder;
 
   int s0 = 0, s1 = 0, s2 = 0;
 
   int i,j;
 
-  sPixel** imgY = (pl) ? curSlice->picture->imgUV[pl - 1] : curSlice->picture->imgY;
-  sPixel** mb_pred = &(curSlice->mb_pred[pl][0]);
+  sPixel** imgY = (pl) ? slice->picture->imgUV[pl - 1] : slice->picture->imgY;
+  sPixel** mb_pred = &(slice->mb_pred[pl][0]);
 
   sPixelPos a, b;
 
   int up_avail, left_avail;
 
-  getNonAffNeighbour(curMb,   -1,   0, decoder->mbSize[IS_LUMA], &a);
-  getNonAffNeighbour(curMb,    0,  -1, decoder->mbSize[IS_LUMA], &b);
+  getNonAffNeighbour(mb,   -1,   0, decoder->mbSize[IS_LUMA], &a);
+  getNonAffNeighbour(mb,    0,  -1, decoder->mbSize[IS_LUMA], &b);
 
   if (!decoder->activePPS->constrainedIntraPredFlag)
   {
@@ -2961,8 +2961,8 @@ static int intra16x16_dc_pred (sMacroblock* curMb, eColorPlane pl)
   }
   else
   {
-    up_avail      = b.available ? curSlice->intraBlock[b.mbIndex] : 0;
-    left_avail    = a.available ? curSlice->intraBlock[a.mbIndex]: 0;
+    up_avail      = b.available ? slice->intraBlock[b.mbIndex] : 0;
+    left_avail    = a.available ? slice->intraBlock[a.mbIndex]: 0;
   }
 
   // Sum top predictors
@@ -3025,20 +3025,20 @@ static int intra16x16_dc_pred (sMacroblock* curMb, eColorPlane pl)
  *
 ** *********************************************************************
  */
-static int intra16x16_vert_pred (sMacroblock* curMb, eColorPlane pl)
+static int intra16x16_vert_pred (sMacroblock* mb, eColorPlane pl)
 {
-  sSlice *curSlice = curMb->slice;
-  sDecoder* decoder = curMb->decoder;
+  sSlice *slice = mb->slice;
+  sDecoder* decoder = mb->decoder;
 
   int j;
 
-  sPixel** imgY = (pl) ? curSlice->picture->imgUV[pl - 1] : curSlice->picture->imgY;
+  sPixel** imgY = (pl) ? slice->picture->imgUV[pl - 1] : slice->picture->imgY;
 
   sPixelPos b;          //!< pixel position p(0,-1)
 
   int up_avail;
 
-  getNonAffNeighbour(curMb,    0,   -1, decoder->mbSize[IS_LUMA], &b);
+  getNonAffNeighbour(mb,    0,   -1, decoder->mbSize[IS_LUMA], &b);
 
   if (!decoder->activePPS->constrainedIntraPredFlag)
   {
@@ -3046,13 +3046,13 @@ static int intra16x16_vert_pred (sMacroblock* curMb, eColorPlane pl)
   }
   else
   {
-    up_avail = b.available ? curSlice->intraBlock[b.mbIndex] : 0;
+    up_avail = b.available ? slice->intraBlock[b.mbIndex] : 0;
   }
 
   if (!up_avail)
     error ("invalid 16x16 intra pred Mode VERT_PRED_16",500);
   {
-    sPixel** prd = &curSlice->mb_pred[pl][0];
+    sPixel** prd = &slice->mb_pred[pl][0];
     sPixel *src = &(imgY[b.posY][b.posX]);
 
     for(j=0;j<MB_BLOCK_SIZE; j+= 4)
@@ -3078,14 +3078,14 @@ static int intra16x16_vert_pred (sMacroblock* curMb, eColorPlane pl)
  *
 ** *********************************************************************
  */
-static int intra16x16_hor_pred (sMacroblock* curMb, eColorPlane pl)
+static int intra16x16_hor_pred (sMacroblock* mb, eColorPlane pl)
 {
-  sSlice *curSlice = curMb->slice;
-  sDecoder* decoder = curMb->decoder;
+  sSlice *slice = mb->slice;
+  sDecoder* decoder = mb->decoder;
   int j;
 
-  sPixel** imgY = (pl) ? curSlice->picture->imgUV[pl - 1] : curSlice->picture->imgY;
-  sPixel** mb_pred = &(curSlice->mb_pred[pl][0]);
+  sPixel** imgY = (pl) ? slice->picture->imgUV[pl - 1] : slice->picture->imgY;
+  sPixel** mb_pred = &(slice->mb_pred[pl][0]);
   sPixel prediction;
   int posY, posX;
 
@@ -3093,7 +3093,7 @@ static int intra16x16_hor_pred (sMacroblock* curMb, eColorPlane pl)
 
   int left_avail;
 
-  getNonAffNeighbour(curMb, -1,  0, decoder->mbSize[IS_LUMA], &a);
+  getNonAffNeighbour(mb, -1,  0, decoder->mbSize[IS_LUMA], &a);
 
   if (!decoder->activePPS->constrainedIntraPredFlag)
   {
@@ -3101,7 +3101,7 @@ static int intra16x16_hor_pred (sMacroblock* curMb, eColorPlane pl)
   }
   else
   {
-    left_avail  = a.available ? curSlice->intraBlock[a.mbIndex]: 0;
+    left_avail  = a.available ? slice->intraBlock[a.mbIndex]: 0;
   }
 
   if (!left_avail)
@@ -3146,18 +3146,18 @@ static int intra16x16_hor_pred (sMacroblock* curMb, eColorPlane pl)
  *
 ** *********************************************************************
  */
-static int intra16x16_plane_pred (sMacroblock* curMb, eColorPlane pl)
+static int intra16x16_plane_pred (sMacroblock* mb, eColorPlane pl)
 {
-  sSlice *curSlice = curMb->slice;
-  sDecoder* decoder = curMb->decoder;
+  sSlice *slice = mb->slice;
+  sDecoder* decoder = mb->decoder;
 
   int i,j;
 
   int ih = 0, iv = 0;
   int ib,ic,iaa;
 
-  sPixel** imgY = (pl) ? curSlice->picture->imgUV[pl - 1] : curSlice->picture->imgY;
-  sPixel** mb_pred = &(curSlice->mb_pred[pl][0]);
+  sPixel** imgY = (pl) ? slice->picture->imgUV[pl - 1] : slice->picture->imgY;
+  sPixel** mb_pred = &(slice->mb_pred[pl][0]);
   sPixel *mpr_line;
   int max_imgpel_value = decoder->maxPelValueComp[pl];
   int posY, posX;
@@ -3166,9 +3166,9 @@ static int intra16x16_plane_pred (sMacroblock* curMb, eColorPlane pl)
 
   int up_avail, left_avail, left_up_avail;
 
-  getNonAffNeighbour(curMb, -1,  -1, decoder->mbSize[IS_LUMA], &d);
-  getNonAffNeighbour(curMb, -1,   0, decoder->mbSize[IS_LUMA], &a);
-  getNonAffNeighbour(curMb,  0,  -1, decoder->mbSize[IS_LUMA], &b);
+  getNonAffNeighbour(mb, -1,  -1, decoder->mbSize[IS_LUMA], &d);
+  getNonAffNeighbour(mb, -1,   0, decoder->mbSize[IS_LUMA], &a);
+  getNonAffNeighbour(mb,  0,  -1, decoder->mbSize[IS_LUMA], &b);
 
   if (!decoder->activePPS->constrainedIntraPredFlag)
   {
@@ -3178,9 +3178,9 @@ static int intra16x16_plane_pred (sMacroblock* curMb, eColorPlane pl)
   }
   else
   {
-    up_avail      = b.available ? curSlice->intraBlock[b.mbIndex] : 0;
-    left_avail    = a.available ? curSlice->intraBlock[a.mbIndex] : 0;
-    left_up_avail = d.available ? curSlice->intraBlock[d.mbIndex] : 0;
+    up_avail      = b.available ? slice->intraBlock[b.mbIndex] : 0;
+    left_avail    = a.available ? slice->intraBlock[a.mbIndex] : 0;
+    left_up_avail = d.available ? slice->intraBlock[d.mbIndex] : 0;
   }
 
   if (!up_avail || !left_up_avail  || !left_avail)
@@ -3219,20 +3219,20 @@ static int intra16x16_plane_pred (sMacroblock* curMb, eColorPlane pl)
 }
 //}}}
 //{{{
-static int intra_pred_16x16_normal (sMacroblock* curMb, eColorPlane pl, int predmode) {
+static int intra_pred_16x16_normal (sMacroblock* mb, eColorPlane pl, int predmode) {
 
   switch (predmode) {
   case VERT_PRED_16:                       // vertical prediction from block above
-    return (intra16x16_vert_pred(curMb, pl));
+    return (intra16x16_vert_pred(mb, pl));
     break;
   case HOR_PRED_16:                        // horizontal prediction from left block
-    return (intra16x16_hor_pred(curMb, pl));
+    return (intra16x16_hor_pred(mb, pl));
     break;
   case DC_PRED_16:                         // DC prediction
-    return (intra16x16_dc_pred(curMb, pl));
+    return (intra16x16_dc_pred(mb, pl));
     break;
   case PLANE_16:// 16 bit integer plan pred
-    return (intra16x16_plane_pred(curMb, pl));
+    return (intra16x16_plane_pred(mb, pl));
     break;
   default:
     {                                    // indication of fault in bitstream,exit
@@ -3255,17 +3255,17 @@ static int intra_pred_16x16_normal (sMacroblock* curMb, eColorPlane pl, int pred
  *
 ** *********************************************************************
  */
-static int intra16x16_dc_pred_mbaff (sMacroblock* curMb, eColorPlane pl)
+static int intra16x16_dc_pred_mbaff (sMacroblock* mb, eColorPlane pl)
 {
-  sSlice *curSlice = curMb->slice;
-  sDecoder* decoder = curMb->decoder;
+  sSlice *slice = mb->slice;
+  sDecoder* decoder = mb->decoder;
 
   int s0 = 0, s1 = 0, s2 = 0;
 
   int i,j;
 
-  sPixel** imgY = (pl) ? curSlice->picture->imgUV[pl - 1] : curSlice->picture->imgY;
-  sPixel** mb_pred = &(curSlice->mb_pred[pl][0]);
+  sPixel** imgY = (pl) ? slice->picture->imgUV[pl - 1] : slice->picture->imgY;
+  sPixel** mb_pred = &(slice->mb_pred[pl][0]);
 
   sPixelPos b;          //!< pixel position p(0,-1)
   sPixelPos left[17];    //!< pixel positions p(-1, -1..15)
@@ -3276,9 +3276,9 @@ static int intra16x16_dc_pred_mbaff (sMacroblock* curMb, eColorPlane pl)
 
   for (i=0;i<17;++i)
   {
-    getAffNeighbour(curMb, -1,  i-1, decoder->mbSize[IS_LUMA], &left[i]);
+    getAffNeighbour(mb, -1,  i-1, decoder->mbSize[IS_LUMA], &left[i]);
   }
-  getAffNeighbour(curMb,    0,   -1, decoder->mbSize[IS_LUMA], &b);
+  getAffNeighbour(mb,    0,   -1, decoder->mbSize[IS_LUMA], &b);
 
   if (!decoder->activePPS->constrainedIntraPredFlag)
   {
@@ -3287,9 +3287,9 @@ static int intra16x16_dc_pred_mbaff (sMacroblock* curMb, eColorPlane pl)
   }
   else
   {
-    up_avail      = b.available ? curSlice->intraBlock[b.mbIndex] : 0;
+    up_avail      = b.available ? slice->intraBlock[b.mbIndex] : 0;
     for (i = 1, left_avail = 1; i < 17; ++i)
-      left_avail  &= left[i].available ? curSlice->intraBlock[left[i].mbIndex]: 0;
+      left_avail  &= left[i].available ? slice->intraBlock[left[i].mbIndex]: 0;
   }
 
   for (i = 0; i < MB_BLOCK_SIZE; ++i)
@@ -3334,20 +3334,20 @@ static int intra16x16_dc_pred_mbaff (sMacroblock* curMb, eColorPlane pl)
  *
 ** *********************************************************************
  */
-static int intra16x16_vert_pred_mbaff (sMacroblock* curMb, eColorPlane pl)
+static int intra16x16_vert_pred_mbaff (sMacroblock* mb, eColorPlane pl)
 {
-  sSlice *curSlice = curMb->slice;
-  sDecoder* decoder = curMb->decoder;
+  sSlice *slice = mb->slice;
+  sDecoder* decoder = mb->decoder;
 
   int j;
 
-  sPixel** imgY = (pl) ? curSlice->picture->imgUV[pl - 1] : curSlice->picture->imgY;
+  sPixel** imgY = (pl) ? slice->picture->imgUV[pl - 1] : slice->picture->imgY;
 
   sPixelPos b;          //!< pixel position p(0,-1)
 
   int up_avail;
 
-  getAffNeighbour(curMb,    0,   -1, decoder->mbSize[IS_LUMA], &b);
+  getAffNeighbour(mb,    0,   -1, decoder->mbSize[IS_LUMA], &b);
 
   if (!decoder->activePPS->constrainedIntraPredFlag)
   {
@@ -3355,13 +3355,13 @@ static int intra16x16_vert_pred_mbaff (sMacroblock* curMb, eColorPlane pl)
   }
   else
   {
-    up_avail = b.available ? curSlice->intraBlock[b.mbIndex] : 0;
+    up_avail = b.available ? slice->intraBlock[b.mbIndex] : 0;
   }
 
   if (!up_avail)
     error ("invalid 16x16 intra pred Mode VERT_PRED_16",500);
   {
-    sPixel** prd = &curSlice->mb_pred[pl][0];
+    sPixel** prd = &slice->mb_pred[pl][0];
     sPixel *src = &(imgY[b.posY][b.posX]);
 
     for(j=0;j<MB_BLOCK_SIZE; j+= 4)
@@ -3387,14 +3387,14 @@ static int intra16x16_vert_pred_mbaff (sMacroblock* curMb, eColorPlane pl)
  *
 ** *********************************************************************
  */
-static int intra16x16_hor_pred_mbaff (sMacroblock* curMb, eColorPlane pl)
+static int intra16x16_hor_pred_mbaff (sMacroblock* mb, eColorPlane pl)
 {
-  sSlice *curSlice = curMb->slice;
-  sDecoder* decoder = curMb->decoder;
+  sSlice *slice = mb->slice;
+  sDecoder* decoder = mb->decoder;
   int i,j;
 
-  sPixel** imgY = (pl) ? curSlice->picture->imgUV[pl - 1] : curSlice->picture->imgY;
-  sPixel** mb_pred = &(curSlice->mb_pred[pl][0]);
+  sPixel** imgY = (pl) ? slice->picture->imgUV[pl - 1] : slice->picture->imgY;
+  sPixel** mb_pred = &(slice->mb_pred[pl][0]);
   sPixel prediction;
 
   sPixelPos left[17];    //!< pixel positions p(-1, -1..15)
@@ -3403,7 +3403,7 @@ static int intra16x16_hor_pred_mbaff (sMacroblock* curMb, eColorPlane pl)
 
   for (i=0;i<17;++i)
   {
-    getAffNeighbour(curMb, -1,  i-1, decoder->mbSize[IS_LUMA], &left[i]);
+    getAffNeighbour(mb, -1,  i-1, decoder->mbSize[IS_LUMA], &left[i]);
   }
 
   if (!decoder->activePPS->constrainedIntraPredFlag)
@@ -3413,7 +3413,7 @@ static int intra16x16_hor_pred_mbaff (sMacroblock* curMb, eColorPlane pl)
   else
   {
     for (i = 1, left_avail = 1; i < 17; ++i)
-      left_avail  &= left[i].available ? curSlice->intraBlock[left[i].mbIndex]: 0;
+      left_avail  &= left[i].available ? slice->intraBlock[left[i].mbIndex]: 0;
   }
 
   if (!left_avail)
@@ -3440,18 +3440,18 @@ static int intra16x16_hor_pred_mbaff (sMacroblock* curMb, eColorPlane pl)
  *
 ** *********************************************************************
  */
-static int intra16x16_plane_pred_mbaff (sMacroblock* curMb, eColorPlane pl)
+static int intra16x16_plane_pred_mbaff (sMacroblock* mb, eColorPlane pl)
 {
-  sSlice *curSlice = curMb->slice;
-  sDecoder* decoder = curMb->decoder;
+  sSlice *slice = mb->slice;
+  sDecoder* decoder = mb->decoder;
 
   int i,j;
 
   int ih = 0, iv = 0;
   int ib,ic,iaa;
 
-  sPixel** imgY = (pl) ? curSlice->picture->imgUV[pl - 1] : curSlice->picture->imgY;
-  sPixel** mb_pred = &(curSlice->mb_pred[pl][0]);
+  sPixel** imgY = (pl) ? slice->picture->imgUV[pl - 1] : slice->picture->imgY;
+  sPixel** mb_pred = &(slice->mb_pred[pl][0]);
   sPixel *mpr_line;
   int max_imgpel_value = decoder->maxPelValueComp[pl];
 
@@ -3462,9 +3462,9 @@ static int intra16x16_plane_pred_mbaff (sMacroblock* curMb, eColorPlane pl)
 
   for (i=0;i<17; ++i)
   {
-    getAffNeighbour(curMb, -1,  i-1, decoder->mbSize[IS_LUMA], &left[i]);
+    getAffNeighbour(mb, -1,  i-1, decoder->mbSize[IS_LUMA], &left[i]);
   }
-  getAffNeighbour(curMb,    0,   -1, decoder->mbSize[IS_LUMA], &b);
+  getAffNeighbour(mb,    0,   -1, decoder->mbSize[IS_LUMA], &b);
 
   if (!decoder->activePPS->constrainedIntraPredFlag)
   {
@@ -3474,10 +3474,10 @@ static int intra16x16_plane_pred_mbaff (sMacroblock* curMb, eColorPlane pl)
   }
   else
   {
-    up_avail      = b.available ? curSlice->intraBlock[b.mbIndex] : 0;
+    up_avail      = b.available ? slice->intraBlock[b.mbIndex] : 0;
     for (i = 1, left_avail = 1; i < 17; ++i)
-      left_avail  &= left[i].available ? curSlice->intraBlock[left[i].mbIndex]: 0;
-    left_up_avail = left[0].available ? curSlice->intraBlock[left[0].mbIndex]: 0;
+      left_avail  &= left[i].available ? slice->intraBlock[left[i].mbIndex]: 0;
+    left_up_avail = left[0].available ? slice->intraBlock[left[0].mbIndex]: 0;
   }
 
   if (!up_avail || !left_up_avail  || !left_avail)
@@ -3509,21 +3509,21 @@ static int intra16x16_plane_pred_mbaff (sMacroblock* curMb, eColorPlane pl)
 }
 //}}}
 //{{{
-static int intra_pred_16x16_mbaff (sMacroblock* curMb, eColorPlane pl, int predmode) {
+static int intra_pred_16x16_mbaff (sMacroblock* mb, eColorPlane pl, int predmode) {
 
   switch (predmode)
   {
   case VERT_PRED_16:                       // vertical prediction from block above
-    return (intra16x16_vert_pred_mbaff(curMb, pl));
+    return (intra16x16_vert_pred_mbaff(mb, pl));
     break;
   case HOR_PRED_16:                        // horizontal prediction from left block
-    return (intra16x16_hor_pred_mbaff(curMb, pl));
+    return (intra16x16_hor_pred_mbaff(mb, pl));
     break;
   case DC_PRED_16:                         // DC prediction
-    return (intra16x16_dc_pred_mbaff(curMb, pl));
+    return (intra16x16_dc_pred_mbaff(mb, pl));
     break;
   case PLANE_16:// 16 bit integer plan pred
-    return (intra16x16_plane_pred_mbaff(curMb, pl));
+    return (intra16x16_plane_pred_mbaff(mb, pl));
     break;
   default:
     {                                    // indication of fault in bitstream,exit
@@ -3587,11 +3587,11 @@ static void intra_chroma_DC_all (sPixel** curr_img, int up_avail, int left_avail
 }
 //}}}
 //{{{
-static void intrapred_chroma_dc (sMacroblock* curMb)
+static void intrapred_chroma_dc (sMacroblock* mb)
 {
-  sSlice *curSlice = curMb->slice;
-  sDecoder* decoder = curMb->decoder;
-  sPicture* picture = curSlice->picture;
+  sSlice *slice = mb->slice;
+  sDecoder* decoder = mb->decoder;
+  sPicture* picture = slice->picture;
   int        b8, b4;
   int        yuv = picture->chromaFormatIdc - 1;
   int        blk_x, blk_y;
@@ -3608,12 +3608,12 @@ static void intrapred_chroma_dc (sMacroblock* curMb)
   int up_avail, left_avail;
   sPixel** imgUV0 = picture->imgUV[0];
   sPixel** imgUV1 = picture->imgUV[1];
-  sPixel** mb_pred0 = curSlice->mb_pred[0 + 1];
-  sPixel** mb_pred1 = curSlice->mb_pred[1 + 1];
+  sPixel** mb_pred0 = slice->mb_pred[0 + 1];
+  sPixel** mb_pred1 = slice->mb_pred[1 + 1];
 
 
-  getNonAffNeighbour(curMb, -1,  0, decoder->mbSize[IS_CHROMA], &left);
-  getNonAffNeighbour(curMb,  0, -1, decoder->mbSize[IS_CHROMA], &up);
+  getNonAffNeighbour(mb, -1,  0, decoder->mbSize[IS_CHROMA], &left);
+  getNonAffNeighbour(mb,  0, -1, decoder->mbSize[IS_CHROMA], &up);
 
   if (!decoder->activePPS->constrainedIntraPredFlag)
   {
@@ -3622,8 +3622,8 @@ static void intrapred_chroma_dc (sMacroblock* curMb)
   }
   else
   {
-    up_avail = up.available ? curSlice->intraBlock[up.mbIndex] : 0;
-    left_avail = left.available ? curSlice->intraBlock[left.mbIndex]: 0;
+    up_avail = up.available ? slice->intraBlock[up.mbIndex] : 0;
+    left_avail = left.available ? slice->intraBlock[left.mbIndex]: 0;
   }
 
   // DC prediction
@@ -3685,36 +3685,36 @@ static void intrapred_chroma_dc (sMacroblock* curMb)
 }
 //}}}
 //{{{
-static void intrapred_chroma_hor (sMacroblock* curMb)
+static void intrapred_chroma_hor (sMacroblock* mb)
 {
-  sDecoder* decoder = curMb->decoder;
+  sDecoder* decoder = mb->decoder;
   sPixelPos a;  //!< pixel positions p(-1, -1..16)
   int left_avail;
 
-  getNonAffNeighbour(curMb, -1, 0, decoder->mbSize[IS_CHROMA], &a);
+  getNonAffNeighbour(mb, -1, 0, decoder->mbSize[IS_CHROMA], &a);
 
   if (!decoder->activePPS->constrainedIntraPredFlag)
     left_avail = a.available;
   else
-    left_avail = a.available ? curMb->slice->intraBlock[a.mbIndex]: 0;
+    left_avail = a.available ? mb->slice->intraBlock[a.mbIndex]: 0;
   // Horizontal Prediction
   if (!left_avail )
     error("unexpected HOR_PRED_8 chroma intra prediction mode",-1);
   else
   {
-    sSlice *curSlice = curMb->slice;
+    sSlice *slice = mb->slice;
     int cr_MB_x = decoder->mbCrSizeX;
     int cr_MB_y = decoder->mbCrSizeY;
 
     int j;
-    sPicture* picture = curSlice->picture;
+    sPicture* picture = slice->picture;
 #if (IMGTYPE != 0)
     int i, pred, pred1;
 #endif
     int posY = a.posY;
     int posX = a.posX;
-    sPixel** mb_pred0 = curSlice->mb_pred[0 + 1];
-    sPixel** mb_pred1 = curSlice->mb_pred[1 + 1];
+    sPixel** mb_pred0 = slice->mb_pred[0 + 1];
+    sPixel** mb_pred1 = slice->mb_pred[1 + 1];
     sPixel** i0 = &picture->imgUV[0][posY];
     sPixel** i1 = &picture->imgUV[1][posY];
 
@@ -3738,30 +3738,30 @@ static void intrapred_chroma_hor (sMacroblock* curMb)
 }
 //}}}
 //{{{
-static void intrapred_chroma_ver (sMacroblock* curMb)
+static void intrapred_chroma_ver (sMacroblock* mb)
 {
-  sSlice *curSlice = curMb->slice;
-  sDecoder* decoder = curMb->decoder;
+  sSlice *slice = mb->slice;
+  sDecoder* decoder = mb->decoder;
   int j;
-  sPicture* picture = curSlice->picture;
+  sPicture* picture = slice->picture;
 
   sPixelPos up;        //!< pixel position  p(0,-1)
   int up_avail;
   int cr_MB_x = decoder->mbCrSizeX;
   int cr_MB_y = decoder->mbCrSizeY;
-  getNonAffNeighbour(curMb, 0, -1, decoder->mbSize[IS_CHROMA], &up);
+  getNonAffNeighbour(mb, 0, -1, decoder->mbSize[IS_CHROMA], &up);
 
   if (!decoder->activePPS->constrainedIntraPredFlag)
     up_avail      = up.available;
   else
-    up_avail = up.available ? curSlice->intraBlock[up.mbIndex] : 0;
+    up_avail = up.available ? slice->intraBlock[up.mbIndex] : 0;
   // Vertical Prediction
   if (!up_avail)
     error("unexpected VERT_PRED_8 chroma intra prediction mode",-1);
   else
   {
-    sPixel** mb_pred0 = curSlice->mb_pred[1];
-    sPixel** mb_pred1 = curSlice->mb_pred[2];
+    sPixel** mb_pred0 = slice->mb_pred[1];
+    sPixel** mb_pred1 = slice->mb_pred[2];
     sPixel *i0 = &(picture->imgUV[0][up.posY][up.posX]);
     sPixel *i1 = &(picture->imgUV[1][up.posY][up.posX]);
 
@@ -3774,20 +3774,20 @@ static void intrapred_chroma_ver (sMacroblock* curMb)
 }
 //}}}
 //{{{
-static void intrapred_chroma_plane (sMacroblock* curMb)
+static void intrapred_chroma_plane (sMacroblock* mb)
 {
-  sSlice *curSlice = curMb->slice;
-  sDecoder* decoder = curMb->decoder;
-  sPicture* picture = curSlice->picture;
+  sSlice *slice = mb->slice;
+  sDecoder* decoder = mb->decoder;
+  sPicture* picture = slice->picture;
 
   sPixelPos up;        //!< pixel position  p(0,-1)
   sPixelPos up_left;
   sPixelPos left;  //!< pixel positions p(-1, -1..16)
   int up_avail, left_avail, left_up_avail;
 
-  getNonAffNeighbour(curMb, -1, -1, decoder->mbSize[IS_CHROMA], &up_left);
-  getNonAffNeighbour(curMb, -1,  0, decoder->mbSize[IS_CHROMA], &left);
-  getNonAffNeighbour(curMb,  0, -1, decoder->mbSize[IS_CHROMA], &up);
+  getNonAffNeighbour(mb, -1, -1, decoder->mbSize[IS_CHROMA], &up_left);
+  getNonAffNeighbour(mb, -1,  0, decoder->mbSize[IS_CHROMA], &left);
+  getNonAffNeighbour(mb,  0, -1, decoder->mbSize[IS_CHROMA], &up);
 
   if (!decoder->activePPS->constrainedIntraPredFlag)
   {
@@ -3797,9 +3797,9 @@ static void intrapred_chroma_plane (sMacroblock* curMb)
   }
   else
   {
-    up_avail      = up.available ? curSlice->intraBlock[up.mbIndex] : 0;
-    left_avail    = left.available ? curSlice->intraBlock[left.mbIndex]: 0;
-    left_up_avail = up_left.available ? curSlice->intraBlock[up_left.mbIndex]: 0;
+    up_avail      = up.available ? slice->intraBlock[up.mbIndex] : 0;
+    left_avail    = left.available ? slice->intraBlock[left.mbIndex]: 0;
+    left_up_avail = up_left.available ? slice->intraBlock[up_left.mbIndex]: 0;
   }
   // plane prediction
   if (!left_up_avail || !left_avail || !up_avail)
@@ -3817,7 +3817,7 @@ static void intrapred_chroma_plane (sMacroblock* curMb)
     for (uv = 0; uv < 2; uv++)
     {
       sPixel** imgUV = picture->imgUV[uv];
-      sPixel** mb_pred = curSlice->mb_pred[uv + 1];
+      sPixel** mb_pred = slice->mb_pred[uv + 1];
       int max_imgpel_value = decoder->maxPelValueComp[uv + 1];
       sPixel *upPred = &imgUV[up.posY][up.posX];
       int posX  = up_left.posX;
@@ -3903,12 +3903,12 @@ static void intra_chroma_DC_all_mbaff (sPixel** curr_img, int up_avail, int left
  *    outside since they are repeated for both components for no reason.
 ** **********************************************************************
  */
-static void intra_pred_chroma_mbaff (sMacroblock* curMb)
+static void intra_pred_chroma_mbaff (sMacroblock* mb)
 {
-  sSlice *curSlice = curMb->slice;
-  sDecoder* decoder = curMb->decoder;
+  sSlice *slice = mb->slice;
+  sDecoder* decoder = mb->decoder;
   int i,j, ii, jj;
-  sPicture* picture = curSlice->picture;
+  sPicture* picture = slice->picture;
 
   int ih, iv, ib, ic, iaa;
 
@@ -3923,7 +3923,7 @@ static void intra_pred_chroma_mbaff (sMacroblock* curMb)
     { {0, 1, 2, 3},{1, 1, 3, 3},{4, 5, 4, 5},{5, 5, 5, 5}}
   };
 
-  switch (curMb->cPredMode)
+  switch (mb->cPredMode)
   {
   case DC_PRED_8:
     {
@@ -3936,8 +3936,8 @@ static void intra_pred_chroma_mbaff (sMacroblock* curMb)
       int cr_MB_y2 = (cr_MB_y >> 1);
 
       for (i=0; i < cr_MB_y + 1 ; ++i)
-        getAffNeighbour(curMb, -1, i-1, decoder->mbSize[IS_CHROMA], &left[i]);
-      getAffNeighbour(curMb, 0, -1, decoder->mbSize[IS_CHROMA], &up);
+        getAffNeighbour(mb, -1, i-1, decoder->mbSize[IS_CHROMA], &left[i]);
+      getAffNeighbour(mb, 0, -1, decoder->mbSize[IS_CHROMA], &up);
 
       if (!decoder->activePPS->constrainedIntraPredFlag)
       {
@@ -3946,12 +3946,12 @@ static void intra_pred_chroma_mbaff (sMacroblock* curMb)
       }
       else
       {
-        up_avail = up.available ? curSlice->intraBlock[up.mbIndex] : 0;
+        up_avail = up.available ? slice->intraBlock[up.mbIndex] : 0;
         for (i=0, left_avail[0] = 1; i < cr_MB_y2;++i)
-          left_avail[0]  &= left[i + 1].available ? curSlice->intraBlock[left[i + 1].mbIndex]: 0;
+          left_avail[0]  &= left[i + 1].available ? slice->intraBlock[left[i + 1].mbIndex]: 0;
 
         for (i = cr_MB_y2, left_avail[1] = 1; i<cr_MB_y;++i)
-          left_avail[1]  &= left[i + 1].available ? curSlice->intraBlock[left[i + 1].mbIndex]: 0;
+          left_avail[1]  &= left[i + 1].available ? slice->intraBlock[left[i + 1].mbIndex]: 0;
 
       }
       // DC prediction
@@ -3961,8 +3961,8 @@ static void intra_pred_chroma_mbaff (sMacroblock* curMb)
         int pred1;
         sPixel** imgUV0 = picture->imgUV[0];
         sPixel** imgUV1 = picture->imgUV[1];
-        sPixel** mb_pred0 = curSlice->mb_pred[0 + 1];
-        sPixel** mb_pred1 = curSlice->mb_pred[1 + 1];
+        sPixel** mb_pred0 = slice->mb_pred[0 + 1];
+        sPixel** mb_pred1 = slice->mb_pred[1 + 1];
         for(b8 = 0; b8 < (decoder->numUvBlocks) ;++b8)
         {
           for (b4 = 0; b4 < 4; ++b4)
@@ -4026,7 +4026,7 @@ static void intra_pred_chroma_mbaff (sMacroblock* curMb)
       int cr_MB_y2 = (cr_MB_y >> 1);
 
       for (i=0; i < cr_MB_y + 1 ; ++i)
-        getAffNeighbour(curMb, -1, i-1, decoder->mbSize[IS_CHROMA], &left[i]);
+        getAffNeighbour(mb, -1, i-1, decoder->mbSize[IS_CHROMA], &left[i]);
 
       if (!decoder->activePPS->constrainedIntraPredFlag)
       {
@@ -4035,10 +4035,10 @@ static void intra_pred_chroma_mbaff (sMacroblock* curMb)
       else
       {
         for (i=0, left_avail[0] = 1; i < cr_MB_y2;++i)
-          left_avail[0]  &= left[i + 1].available ? curSlice->intraBlock[left[i + 1].mbIndex]: 0;
+          left_avail[0]  &= left[i + 1].available ? slice->intraBlock[left[i + 1].mbIndex]: 0;
 
         for (i = cr_MB_y2, left_avail[1] = 1; i<cr_MB_y;++i)
-          left_avail[1]  &= left[i + 1].available ? curSlice->intraBlock[left[i + 1].mbIndex]: 0;
+          left_avail[1]  &= left[i + 1].available ? slice->intraBlock[left[i + 1].mbIndex]: 0;
       }
       // Horizontal Prediction
       if (!left_avail[0] || !left_avail[1])
@@ -4046,8 +4046,8 @@ static void intra_pred_chroma_mbaff (sMacroblock* curMb)
       else
       {
         int pred1;
-        sPixel** mb_pred0 = curSlice->mb_pred[0 + 1];
-        sPixel** mb_pred1 = curSlice->mb_pred[1 + 1];
+        sPixel** mb_pred0 = slice->mb_pred[0 + 1];
+        sPixel** mb_pred1 = slice->mb_pred[1 + 1];
         sPixel** i0 = picture->imgUV[0];
         sPixel** i1 = picture->imgUV[1];
         for (j = 0; j < cr_MB_y; ++j)
@@ -4072,19 +4072,19 @@ static void intra_pred_chroma_mbaff (sMacroblock* curMb)
       int cr_MB_x = decoder->mbCrSizeX;
       int cr_MB_y = decoder->mbCrSizeY;
 
-      getAffNeighbour(curMb, 0, -1, decoder->mbSize[IS_CHROMA], &up);
+      getAffNeighbour(mb, 0, -1, decoder->mbSize[IS_CHROMA], &up);
 
       if (!decoder->activePPS->constrainedIntraPredFlag)
         up_avail      = up.available;
       else
-        up_avail = up.available ? curSlice->intraBlock[up.mbIndex] : 0;
+        up_avail = up.available ? slice->intraBlock[up.mbIndex] : 0;
       // Vertical Prediction
       if (!up_avail)
         error("unexpected VERT_PRED_8 chroma intra prediction mode",-1);
       else
       {
-        sPixel** mb_pred0 = curSlice->mb_pred[0 + 1];
-        sPixel** mb_pred1 = curSlice->mb_pred[1 + 1];
+        sPixel** mb_pred0 = slice->mb_pred[0 + 1];
+        sPixel** mb_pred1 = slice->mb_pred[1 + 1];
         sPixel *i0 = &(picture->imgUV[0][up.posY][up.posX]);
         sPixel *i1 = &(picture->imgUV[1][up.posY][up.posX]);
         for (j = 0; j < cr_MB_y; ++j)
@@ -4108,8 +4108,8 @@ static void intra_pred_chroma_mbaff (sMacroblock* curMb)
       int cr_MB_x2 = (cr_MB_x >> 1);
 
       for (i=0; i < cr_MB_y + 1 ; ++i)
-        getAffNeighbour(curMb, -1, i-1, decoder->mbSize[IS_CHROMA], &left[i]);
-      getAffNeighbour(curMb, 0, -1, decoder->mbSize[IS_CHROMA], &up);
+        getAffNeighbour(mb, -1, i-1, decoder->mbSize[IS_CHROMA], &left[i]);
+      getAffNeighbour(mb, 0, -1, decoder->mbSize[IS_CHROMA], &up);
 
       if (!decoder->activePPS->constrainedIntraPredFlag)
       {
@@ -4119,14 +4119,14 @@ static void intra_pred_chroma_mbaff (sMacroblock* curMb)
       }
       else
       {
-        up_avail = up.available ? curSlice->intraBlock[up.mbIndex] : 0;
+        up_avail = up.available ? slice->intraBlock[up.mbIndex] : 0;
         for (i=0, left_avail[0] = 1; i < cr_MB_y2;++i)
-          left_avail[0]  &= left[i + 1].available ? curSlice->intraBlock[left[i + 1].mbIndex]: 0;
+          left_avail[0]  &= left[i + 1].available ? slice->intraBlock[left[i + 1].mbIndex]: 0;
 
         for (i = cr_MB_y2, left_avail[1] = 1; i<cr_MB_y;++i)
-          left_avail[1]  &= left[i + 1].available ? curSlice->intraBlock[left[i + 1].mbIndex]: 0;
+          left_avail[1]  &= left[i + 1].available ? slice->intraBlock[left[i + 1].mbIndex]: 0;
 
-        left_up_avail = left[0].available ? curSlice->intraBlock[left[0].mbIndex]: 0;
+        left_up_avail = left[0].available ? slice->intraBlock[left[0].mbIndex]: 0;
       }
       // plane prediction
       if (!left_up_avail || !left_avail[0] || !left_avail[1] || !up_avail)
@@ -4137,7 +4137,7 @@ static void intra_pred_chroma_mbaff (sMacroblock* curMb)
         for (uv = 0; uv < 2; uv++)
         {
           sPixel** imgUV = picture->imgUV[uv];
-          sPixel** mb_pred = curSlice->mb_pred[uv + 1];
+          sPixel** mb_pred = slice->mb_pred[uv + 1];
           int max_imgpel_value = decoder->maxPelValueComp[uv + 1];
           sPixel *upPred = &imgUV[up.posY][up.posX];
 
@@ -4176,21 +4176,21 @@ static void intra_pred_chroma_mbaff (sMacroblock* curMb)
  *    outside since they are repeated for both components for no reason.
 ** **********************************************************************
  */
-static void intraPredChroma (sMacroblock* curMb)
+static void intraPredChroma (sMacroblock* mb)
 {
-  switch (curMb->cPredMode)
+  switch (mb->cPredMode)
   {
   case DC_PRED_8:
-    intrapred_chroma_dc(curMb);
+    intrapred_chroma_dc(mb);
     break;
   case HOR_PRED_8:
-    intrapred_chroma_hor(curMb);
+    intrapred_chroma_hor(mb);
     break;
   case VERT_PRED_8:
-    intrapred_chroma_ver(curMb);
+    intrapred_chroma_ver(mb);
     break;
   case PLANE_8:
-    intrapred_chroma_plane(curMb);
+    intrapred_chroma_plane(mb);
     break;
   default:
     error("illegal chroma intra prediction mode", 600);
@@ -4200,19 +4200,19 @@ static void intraPredChroma (sMacroblock* curMb)
 //}}}
 
 //{{{
-void set_intra_prediction_modes (sSlice *curSlice) {
+void set_intra_prediction_modes (sSlice *slice) {
 
-  if (curSlice->mbAffFrameFlag) {
-    curSlice->intraPred4x4 = intra_pred_4x4_mbaff;
-    curSlice->intraPred8x8 = intra_pred_8x8_mbaff;
-    curSlice->intraPred16x16 = intra_pred_16x16_mbaff;
-    curSlice->intraPredChroma = intra_pred_chroma_mbaff;
+  if (slice->mbAffFrameFlag) {
+    slice->intraPred4x4 = intra_pred_4x4_mbaff;
+    slice->intraPred8x8 = intra_pred_8x8_mbaff;
+    slice->intraPred16x16 = intra_pred_16x16_mbaff;
+    slice->intraPredChroma = intra_pred_chroma_mbaff;
     }
   else {
-    curSlice->intraPred4x4 = intra_pred_4x4_normal;
-    curSlice->intraPred8x8 = intra_pred_8x8_normal;
-    curSlice->intraPred16x16 = intra_pred_16x16_normal;
-    curSlice->intraPredChroma = intraPredChroma;
+    slice->intraPred4x4 = intra_pred_4x4_normal;
+    slice->intraPred8x8 = intra_pred_8x8_normal;
+    slice->intraPred16x16 = intra_pred_16x16_normal;
+    slice->intraPredChroma = intraPredChroma;
     }
   }
 //}}}

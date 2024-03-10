@@ -761,7 +761,7 @@ static void buildPredRegionYUV (sDecoder* decoder, int *mv, int x, int y, sPixel
   int vec1_x=0,vec1_y=0;
   int ioff,joff;
   sPixel *pMB = predMB;
-  sSlice* curSlice;// = decoder->currentSlice;
+  sSlice* slice;// = decoder->currentSlice;
   sPicture* picture = decoder->picture;
   int ii0,jj0,ii1,jj1,if1,jf1,if0,jf0;
   int mv_mul;
@@ -772,23 +772,23 @@ static void buildPredRegionYUV (sDecoder* decoder, int *mv, int x, int y, sPixel
   int yuv = picture->chromaFormatIdc - 1;
 
   int ref_frame = imax (mv[2], 0); // !!KS: quick fix, we sometimes seem to get negative refPic here, so restrict to zero and above
-  int mb_nr = y/16*(decoder->width/16)+x/16; ///curSlice->mbIndex;
+  int mb_nr = y/16*(decoder->width/16)+x/16; ///slice->mbIndex;
   int** tmp_res = NULL;
 
-  sMacroblock* curMb = &decoder->mbData[mb_nr];   // intialization code deleted, see below, StW
-  curSlice = curMb->slice;
-  tmp_res = curSlice->tmp_res;
+  sMacroblock* mb = &decoder->mbData[mb_nr];   // intialization code deleted, see below, StW
+  slice = mb->slice;
+  tmp_res = slice->tmp_res;
 
   // This should be allocated only once.
   get_mem2Dpel(&tmp_block, MB_BLOCK_SIZE, MB_BLOCK_SIZE);
 
   /* Update coordinates of the current concealed macroblock */
-  curMb->mb.x = (short) (x/MB_BLOCK_SIZE);
-  curMb->mb.y = (short) (y/MB_BLOCK_SIZE);
-  curMb->blockY = curMb->mb.y * BLOCK_SIZE;
-  curMb->piccY = curMb->mb.y * decoder->mbCrSizeY;
-  curMb->blockX = curMb->mb.x * BLOCK_SIZE;
-  curMb->pixcX = curMb->mb.x * decoder->mbCrSizeX;
+  mb->mb.x = (short) (x/MB_BLOCK_SIZE);
+  mb->mb.y = (short) (y/MB_BLOCK_SIZE);
+  mb->blockY = mb->mb.y * BLOCK_SIZE;
+  mb->piccY = mb->mb.y * decoder->mbCrSizeY;
+  mb->blockX = mb->mb.x * BLOCK_SIZE;
+  mb->pixcX = mb->mb.x * decoder->mbCrSizeX;
 
   mv_mul=4;
 
@@ -797,24 +797,24 @@ static void buildPredRegionYUV (sDecoder* decoder, int *mv, int x, int y, sPixel
   for(j=0;j<MB_BLOCK_SIZE/BLOCK_SIZE;j++)
   {
     joff=j*4;
-    j4=curMb->blockY+j;
+    j4=mb->blockY+j;
     for(i=0;i<MB_BLOCK_SIZE/BLOCK_SIZE;i++)
     {
       ioff=i*4;
-      i4=curMb->blockX+i;
+      i4=mb->blockX+i;
 
       vec1_x = i4*4*mv_mul + mv[0];
       vec1_y = j4*4*mv_mul + mv[1];
 
-      get_block_luma(curSlice->listX[0][ref_frame], vec1_x, vec1_y, BLOCK_SIZE, BLOCK_SIZE,
+      get_block_luma(slice->listX[0][ref_frame], vec1_x, vec1_y, BLOCK_SIZE, BLOCK_SIZE,
         tmp_block,
         picture->iLumaStride,picture->size_x_m1,
-        (curMb->mbField) ? (picture->sizeY >> 1) - 1 : picture->size_y_m1,tmp_res,
-        decoder->maxPelValueComp[PLANE_Y],(sPixel) decoder->dcPredValueComp[PLANE_Y], curMb);
+        (mb->mbField) ? (picture->sizeY >> 1) - 1 : picture->size_y_m1,tmp_res,
+        decoder->maxPelValueComp[PLANE_Y],(sPixel) decoder->dcPredValueComp[PLANE_Y], mb);
 
       for(ii=0;ii<BLOCK_SIZE;ii++)
         for(jj=0;jj<MB_BLOCK_SIZE/BLOCK_SIZE;jj++)
-          curSlice->mb_pred[LumaComp][jj+joff][ii+ioff]=tmp_block[jj][ii];
+          slice->mb_pred[LumaComp][jj+joff][ii+ioff]=tmp_block[jj][ii];
     }
   }
 
@@ -823,7 +823,7 @@ static void buildPredRegionYUV (sDecoder* decoder, int *mv, int x, int y, sPixel
   {
     for (i = 0; i < 16; i++)
     {
-      pMB[j*16+i] = curSlice->mb_pred[LumaComp][j][i];
+      pMB[j*16+i] = slice->mb_pred[LumaComp][j][i];
     }
   }
   pMB += 256;
@@ -847,9 +847,9 @@ static void buildPredRegionYUV (sDecoder* decoder, int *mv, int x, int y, sPixel
         for(b4=0;b4<4;b4++)
         {
           joff = subblk_offset_y[yuv][b8][b4];
-          j4=curMb->piccY+joff;
+          j4=mb->piccY+joff;
           ioff = subblk_offset_x[yuv][b8][b4];
-          i4=curMb->pixcX+ioff;
+          i4=mb->pixcX+ioff;
 
           for(jj=0;jj<4;jj++)
           {
@@ -868,11 +868,11 @@ static void buildPredRegionYUV (sDecoder* decoder, int *mv, int x, int y, sPixel
               if0=f1_x-if1;
               jf0=f1_y-jf1;
 
-              curSlice->mb_pred[uv + 1][jj+joff][ii+ioff] = (sPixel)
-                ((if0*jf0*curSlice->listX[0][ref_frame]->imgUV[uv][jj0][ii0]+
-                if1*jf0*curSlice->listX[0][ref_frame]->imgUV[uv][jj0][ii1]+
-                if0*jf1*curSlice->listX[0][ref_frame]->imgUV[uv][jj1][ii0]+
-                if1*jf1*curSlice->listX[0][ref_frame]->imgUV[uv][jj1][ii1]+f4)/f3);
+              slice->mb_pred[uv + 1][jj+joff][ii+ioff] = (sPixel)
+                ((if0*jf0*slice->listX[0][ref_frame]->imgUV[uv][jj0][ii0]+
+                if1*jf0*slice->listX[0][ref_frame]->imgUV[uv][jj0][ii1]+
+                if0*jf1*slice->listX[0][ref_frame]->imgUV[uv][jj1][ii0]+
+                if1*jf1*slice->listX[0][ref_frame]->imgUV[uv][jj1][ii1]+f4)/f3);
             }
           }
         }
@@ -882,7 +882,7 @@ static void buildPredRegionYUV (sDecoder* decoder, int *mv, int x, int y, sPixel
       {
         for (i = 0; i < 8; i++)
         {
-          pMB[j*8+i] = curSlice->mb_pred[uv + 1][j][i];
+          pMB[j*8+i] = slice->mb_pred[uv + 1][j][i];
         }
       }
       pMB += 64;
@@ -1370,19 +1370,19 @@ static void buildPredblockRegionYUV (sDecoder* decoder, int *mv,
   int ref_frame = mv[2];
   int mb_nr = mbIndex;
 
-  sMacroblock* curMb = &decoder->mbData[mb_nr];   // intialization code deleted, see below, StW
-  sSlice* curSlice = curMb->slice;
+  sMacroblock* mb = &decoder->mbData[mb_nr];   // intialization code deleted, see below, StW
+  sSlice* slice = mb->slice;
 
   get_mem2Dpel(&tmp_block, MB_BLOCK_SIZE, MB_BLOCK_SIZE);
 
   /* Update coordinates of the current concealed macroblock */
 
-  curMb->mb.x = (short) (x/BLOCK_SIZE);
-  curMb->mb.y = (short) (y/BLOCK_SIZE);
-  curMb->blockY = curMb->mb.y * BLOCK_SIZE;
-  curMb->piccY = curMb->mb.y * decoder->mbCrSizeY/4;
-  curMb->blockX = curMb->mb.x * BLOCK_SIZE;
-  curMb->pixcX = curMb->mb.x * decoder->mbCrSizeX/4;
+  mb->mb.x = (short) (x/BLOCK_SIZE);
+  mb->mb.y = (short) (y/BLOCK_SIZE);
+  mb->blockY = mb->mb.y * BLOCK_SIZE;
+  mb->piccY = mb->mb.y * decoder->mbCrSizeY/4;
+  mb->blockX = mb->mb.x * BLOCK_SIZE;
+  mb->pixcX = mb->mb.x * decoder->mbCrSizeX/4;
 
   mv_mul=4;
 
@@ -1390,20 +1390,20 @@ static void buildPredblockRegionYUV (sDecoder* decoder, int *mv,
 
   vec1_x = x*mv_mul + mv[0];
   vec1_y = y*mv_mul + mv[1];
-  get_block_luma(curSlice->listX[list][ref_frame],  vec1_x, vec1_y, BLOCK_SIZE, BLOCK_SIZE, tmp_block,
-    picture->iLumaStride,picture->size_x_m1, (curMb->mbField) ? (picture->sizeY >> 1) - 1 : picture->size_y_m1,curSlice->tmp_res,
-    decoder->maxPelValueComp[PLANE_Y],(sPixel) decoder->dcPredValueComp[PLANE_Y], curMb);
+  get_block_luma(slice->listX[list][ref_frame],  vec1_x, vec1_y, BLOCK_SIZE, BLOCK_SIZE, tmp_block,
+    picture->iLumaStride,picture->size_x_m1, (mb->mbField) ? (picture->sizeY >> 1) - 1 : picture->size_y_m1,slice->tmp_res,
+    decoder->maxPelValueComp[PLANE_Y],(sPixel) decoder->dcPredValueComp[PLANE_Y], mb);
 
   for(jj=0;jj<MB_BLOCK_SIZE/BLOCK_SIZE;jj++)
     for(ii=0;ii<BLOCK_SIZE;ii++)
-      curSlice->mb_pred[LumaComp][jj][ii]=tmp_block[jj][ii];
+      slice->mb_pred[LumaComp][jj][ii]=tmp_block[jj][ii];
 
 
   for (j = 0; j < 4; j++)
   {
     for (i = 0; i < 4; i++)
     {
-      pMB[j*4+i] = curSlice->mb_pred[LumaComp][j][i];
+      pMB[j*4+i] = slice->mb_pred[LumaComp][j][i];
     }
   }
   pMB += 16;
@@ -1423,9 +1423,9 @@ static void buildPredblockRegionYUV (sDecoder* decoder, int *mv,
     for(uv=0;uv<2;uv++)
     {
       joff = subblk_offset_y[yuv][0][0];
-      j4=curMb->piccY+joff;
+      j4=mb->piccY+joff;
       ioff = subblk_offset_x[yuv][0][0];
-      i4=curMb->pixcX+ioff;
+      i4=mb->pixcX+ioff;
 
       for(jj=0;jj<2;jj++)
       {
@@ -1444,10 +1444,10 @@ static void buildPredblockRegionYUV (sDecoder* decoder, int *mv,
           if0=f1_x-if1;
           jf0=f1_y-jf1;
 
-          curSlice->mb_pred[uv + 1][jj][ii]=(sPixel) ((if0*jf0*curSlice->listX[list][ref_frame]->imgUV[uv][jj0][ii0]+
-            if1*jf0*curSlice->listX[list][ref_frame]->imgUV[uv][jj0][ii1]+
-            if0*jf1*curSlice->listX[list][ref_frame]->imgUV[uv][jj1][ii0]+
-            if1*jf1*curSlice->listX[list][ref_frame]->imgUV[uv][jj1][ii1]+f4)/f3);
+          slice->mb_pred[uv + 1][jj][ii]=(sPixel) ((if0*jf0*slice->listX[list][ref_frame]->imgUV[uv][jj0][ii0]+
+            if1*jf0*slice->listX[list][ref_frame]->imgUV[uv][jj0][ii1]+
+            if0*jf1*slice->listX[list][ref_frame]->imgUV[uv][jj1][ii0]+
+            if1*jf1*slice->listX[list][ref_frame]->imgUV[uv][jj1][ii1]+f4)/f3);
         }
       }
 
@@ -1455,7 +1455,7 @@ static void buildPredblockRegionYUV (sDecoder* decoder, int *mv,
       {
         for (i = 0; i < 2; i++)
         {
-          pMB[j*2+i] = curSlice->mb_pred[uv + 1][j][i];
+          pMB[j*2+i] = slice->mb_pred[uv + 1][j][i];
         }
       }
       pMB += 4;
@@ -1762,7 +1762,7 @@ struct ConcealNode * init_node (sPicture* picture, int missingpoc ) {
 ************************************************************************
 * \brief
 *    Initialize the list based on the B frame or non reference 'p' frame
-*    to be concealed. The function initialize curSlice->listX[0] and list 1 depending
+*    to be concealed. The function initialize slice->listX[0] and list 1 depending
 *    on current picture type
 *
 ************************************************************************

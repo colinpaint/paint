@@ -1290,10 +1290,10 @@ static void idrMemoryManagement (sDPB* dpb, sPicture* p) {
   }
 //}}}
 //{{{
-static sPicture* get_long_term_pic (sSlice* curSlice, sDPB* dpb, int LongtermPicNum) {
+static sPicture* get_long_term_pic (sSlice* slice, sDPB* dpb, int LongtermPicNum) {
 
   for (uint32 i = 0; i < dpb->longTermRefFramesInBuffer; i++) {
-    if (curSlice->structure==FRAME) {
+    if (slice->structure==FRAME) {
       if (dpb->fsLongTermRef[i]->isReference == 3)
         if ((dpb->fsLongTermRef[i]->frame->isLongTerm)&&(dpb->fsLongTermRef[i]->frame->longTermPicNum == LongtermPicNum))
           return dpb->fsLongTermRef[i]->frame;

@@ -924,10 +924,10 @@ void processPPS (sDecoder* decoder, sNalu* nalu) {
 //}}}
 
 //{{{
-void useParameterSet (sSlice* curSlice) {
+void useParameterSet (sSlice* slice) {
 
-  sDecoder* decoder = curSlice->decoder;
-  int PicParsetId = curSlice->ppsId;
+  sDecoder* decoder = slice->decoder;
+  int PicParsetId = slice->ppsId;
 
   sPPS* pps = &decoder->pps[PicParsetId];
   sSPS* sps = &decoder->sps[pps->spsId];
@@ -952,21 +952,21 @@ void useParameterSet (sSlice* curSlice) {
     if (sps->num_ref_frames_in_pic_order_cnt_cycle >= MAX_NUM_REF_FRAMES_PIC_ORDER)
       error ("num_ref_frames_in_pic_order_cnt_cycle too large",-1011);
 
-  decoder->dpbLayerId = curSlice->layerId;
+  decoder->dpbLayerId = slice->layerId;
   activateSPS (decoder, sps);
   activatePPS (decoder, pps);
 
-  // curSlice->dataPartitionMode is set by read_new_slice (NALU first byte available there)
+  // slice->dataPartitionMode is set by read_new_slice (NALU first byte available there)
   if (pps->entropyCodingModeFlag == (Boolean)CAVLC) {
-    curSlice->nalStartcode = uvlc_startcode_follows;
+    slice->nalStartcode = uvlc_startcode_follows;
     for (int i = 0; i < 3; i++)
-      curSlice->partitions[i].readsSyntaxElement = readsSyntaxElement_UVLC;
+      slice->partitions[i].readsSyntaxElement = readsSyntaxElement_UVLC;
     }
   else {
-    curSlice->nalStartcode = cabac_startcode_follows;
+    slice->nalStartcode = cabac_startcode_follows;
     for (int i = 0; i < 3; i++)
-      curSlice->partitions[i].readsSyntaxElement = readsSyntaxElement_CABAC;
+      slice->partitions[i].readsSyntaxElement = readsSyntaxElement_CABAC;
     }
-  decoder->type = curSlice->sliceType;
+  decoder->type = slice->sliceType;
   }
 //}}}

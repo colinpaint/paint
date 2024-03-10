@@ -377,7 +377,7 @@ sTextureInfoContexts* create_contexts_TextureInfo()
  *    used for arithmetic decoding of the motion info.
 ** **********************************************************************
  */
-void delete_contexts_MotionInfo (sMotionInfoContexts *deco_ctx)
+void delete_contexts_MotionInfo (sMotionInfoContexts* deco_ctx)
 {
   if( deco_ctx == NULL )
     return;
@@ -393,7 +393,7 @@ void delete_contexts_MotionInfo (sMotionInfoContexts *deco_ctx)
  *    used for arithmetic decoding of the texture info.
 ** **********************************************************************
  */
-void delete_contexts_TextureInfo (sTextureInfoContexts *deco_ctx)
+void delete_contexts_TextureInfo (sTextureInfoContexts* deco_ctx)
 {
   if( deco_ctx == NULL )
     return;
@@ -403,7 +403,7 @@ void delete_contexts_TextureInfo (sTextureInfoContexts *deco_ctx)
 //}}}
 
 //{{{
-void readFieldModeInfo_CABAC (sMacroblock* mb, sSyntaxElement *se, sDecodingEnv* decodingEnv)
+void readFieldModeInfo_CABAC (sMacroblock* mb, sSyntaxElement* se, sDecodingEnv* decodingEnv)
 {
   sSlice* slice = mb->slice;
   sMotionInfoContexts *ctx  = slice->mot_ctx;
@@ -416,7 +416,7 @@ void readFieldModeInfo_CABAC (sMacroblock* mb, sSyntaxElement *se, sDecodingEnv*
 //}}}
 
 //{{{
-int check_next_mb_and_get_field_mode_CABAC_p_slice (sSlice* slice, sSyntaxElement *se, sDataPartition  *act_dp)
+int check_next_mb_and_get_field_mode_CABAC_p_slice (sSlice* slice, sSyntaxElement* se, sDataPartition* act_dp)
 {
   sDecoder* decoder = slice->decoder;
   sBiContextType*          mb_type_ctx_copy[3];
@@ -1341,7 +1341,7 @@ void readRefFrame_CABAC (sMacroblock* mb,
 }
 //}}}
 //{{{
-void read_dQuant_CABAC (sMacroblock* mb, sSyntaxElement *se, sDecodingEnv* decodingEnv) {
+void read_dQuant_CABAC (sMacroblock* mb, sSyntaxElement* se, sDecodingEnv* decodingEnv) {
 
   sSlice* slice = mb->slice;
   sMotionInfoContexts* ctx = slice->mot_ctx;
@@ -1364,7 +1364,7 @@ void read_dQuant_CABAC (sMacroblock* mb, sSyntaxElement *se, sDecodingEnv* decod
   }
 //}}}
 //{{{
-void read_CBP_CABAC (sMacroblock* mb, sSyntaxElement *se, sDecodingEnv* decodingEnv) {
+void read_CBP_CABAC (sMacroblock* mb, sSyntaxElement* se, sDecodingEnv* decodingEnv) {
 
   sDecoder* decoder = mb->decoder;
   sPicture* picture = mb->slice->picture;
@@ -2153,7 +2153,7 @@ static int read_significance_map (sMacroblock* mb,
  *    Read Levels
 ** **********************************************************************
  */
-static void read_significant_coefficients (sDecodingEnv*  decodingEnv,
+static void read_significant_coefficients (sDecodingEnv* decodingEnv,
                                            sTextureInfoContexts    *tex_ctx,
                                            int                     type,
                                            int                    *coeff)
@@ -2245,7 +2245,7 @@ void readRunLevel_CABAC (sMacroblock* mb,
  *    arithmetic decoding
 ** **********************************************************************
  */
-int readsSyntaxElement_CABAC (sMacroblock* mb, sSyntaxElement *se, sDataPartition *this_dataPart)
+int readsSyntaxElement_CABAC (sMacroblock* mb, sSyntaxElement* se, sDataPartition* this_dataPart)
 {
   sDecodingEnv* decodingEnv = &(this_dataPart->deCabac);
   int curr_len = arideco_bits_read(decodingEnv);
@@ -2266,7 +2266,7 @@ int readsSyntaxElement_CABAC (sMacroblock* mb, sSyntaxElement *se, sDataPartitio
  *    Read I_PCM macroblock
 ** **********************************************************************
 */
-void readIPCMcabac (sSlice* slice, struct DataPartition *dP)
+void readIPCMcabac (sSlice* slice, struct DataPartition* dP)
 {
   sDecoder* decoder = slice->decoder;
   sPicture* picture = slice->picture;

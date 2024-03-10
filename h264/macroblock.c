@@ -358,15 +358,15 @@ static int decodeComponentB (sMacroblock* mb, eColorPlane curPlane, sPixel** cur
   else if (mb->mbType == P8x16)
     mb_pred_p_inter8x16 (mb, curPlane, picture);
   else if (mb->mbType == BSKIP_DIRECT) {
-    sSlice* curSlice = mb->slice;
-    if (curSlice->directSpatialMvPredFlag == 0) {
-      if (curSlice->activeSPS->direct_8x8_inference_flag)
+    sSlice* slice = mb->slice;
+    if (slice->directSpatialMvPredFlag == 0) {
+      if (slice->activeSPS->direct_8x8_inference_flag)
         mb_pred_b_d8x8temporal (mb, curPlane, curPixel, picture);
       else
         mb_pred_b_d4x4temporal (mb, curPlane, curPixel, picture);
       }
     else {
-      if (curSlice->activeSPS->direct_8x8_inference_flag)
+      if (slice->activeSPS->direct_8x8_inference_flag)
         mb_pred_b_d8x8spatial (mb, curPlane, curPixel, picture);
       else
         mb_pred_b_d4x4spatial (mb, curPlane, curPixel, picture);
@@ -462,12 +462,12 @@ void updateQp (sMacroblock* mb, int qp) {
 //{{{
 void readDeltaQuant (sSyntaxElement* currSE, sDataPartition *dP, sMacroblock* mb, const byte *partMap, int type)
 {
-  sSlice* curSlice = mb->slice;
+  sSlice* slice = mb->slice;
   sDecoder* decoder = mb->decoder;
 
   currSE->type = type;
 
-  dP = &(curSlice->partitions[partMap[currSE->type]]);
+  dP = &(slice->partitions[partMap[currSE->type]]);
 
   if (decoder->activePPS->entropyCodingModeFlag == (Boolean)CAVLC || dP->bitstream->eiFlag)
     currSE->mapping = linfo_se;
@@ -483,8 +483,8 @@ void readDeltaQuant (sSyntaxElement* currSE, sDataPartition *dP, sMacroblock* mb
     //error ("mb_qp_delta is out of range", 500);
     }
 
-  curSlice->qp = ((curSlice->qp + mb->deltaQuant + 52 + 2*decoder->bitdepthLumeQpScale) % (52+decoder->bitdepthLumeQpScale)) - decoder->bitdepthLumeQpScale;
-  updateQp (mb, curSlice->qp);
+  slice->qp = ((slice->qp + mb->deltaQuant + 52 + 2*decoder->bitdepthLumeQpScale) % (52+decoder->bitdepthLumeQpScale)) - decoder->bitdepthLumeQpScale;
+  updateQp (mb, slice->qp);
   }
 //}}}
 
@@ -714,18 +714,18 @@ static void setup_mb_pos_info (sMacroblock* mb) {
 //}}}
 
 //{{{
-void startMacroblock (sSlice* curSlice, sMacroblock** mb) {
+void startMacroblock (sSlice* slice, sMacroblock** mb) {
 
-  sDecoder* decoder = curSlice->decoder;
-  int mb_nr = curSlice->mbIndex;
+  sDecoder* decoder = slice->decoder;
+  int mb_nr = slice->mbIndex;
 
-  *mb = &curSlice->mbData[mb_nr];
-  (*mb)->slice = curSlice;
+  *mb = &slice->mbData[mb_nr];
+  (*mb)->slice = slice;
   (*mb)->decoder   = decoder;
   (*mb)->mbIndexX = mb_nr;
 
   /* Update coordinates of the current macroblock */
-  if (curSlice->mbAffFrameFlag) {
+  if (slice->mbAffFrameFlag) {
     (*mb)->mb.x = (short) (   (mb_nr) % ((2*decoder->width) / MB_BLOCK_SIZE));
     (*mb)->mb.y = (short) (2*((mb_nr) / ((2*decoder->width) / MB_BLOCK_SIZE)));
     (*mb)->mb.y += ((*mb)->mb.x & 0x01);
@@ -747,17 +747,17 @@ void startMacroblock (sSlice* curSlice, sMacroblock** mb) {
 
   // Save the slice number of this macroblock. When the macroblock below
   // is coded it will use this to decide if prediction for above is possible
-  (*mb)->sliceNum = (short) curSlice->curSliceIndex;
+  (*mb)->sliceNum = (short) slice->curSliceIndex;
 
   CheckAvailabilityOfNeighbors (*mb);
 
   // Select appropriate MV predictor function
-  init_motion_vector_prediction (*mb, curSlice->mbAffFrameFlag);
-  set_read_and_store_CBP (mb, curSlice->activeSPS->chromaFormatIdc);
+  init_motion_vector_prediction (*mb, slice->mbAffFrameFlag);
+  set_read_and_store_CBP (mb, slice->activeSPS->chromaFormatIdc);
 
   // Reset syntax element entries in MB struct
-  if (curSlice->sliceType != I_SLICE) {
-    if (curSlice->sliceType != B_SLICE)
+  if (slice->sliceType != I_SLICE) {
+    if (slice->sliceType != B_SLICE)
       memset((*mb)->mvd[0][0][0], 0, MB_BLOCK_PARTITIONS * 2 * sizeof(short));
     else
       memset((*mb)->mvd[0][0][0], 0, 2 * MB_BLOCK_PARTITIONS * 2 * sizeof(short));
@@ -765,32 +765,32 @@ void startMacroblock (sSlice* curSlice, sMacroblock** mb) {
 
   memset((*mb)->cbpStructure, 0, 3 * sizeof(sCBPStructure));
 
-  // initialize curSlice->mb_rres
-  if (curSlice->isResetCoef == FALSE) {
-    memset (curSlice->mb_rres[0][0], 0, MB_PIXELS * sizeof(int));
-    memset (curSlice->mb_rres[1][0], 0, decoder->mbCrSize * sizeof(int));
-    memset (curSlice->mb_rres[2][0], 0, decoder->mbCrSize * sizeof(int));
-    if (curSlice->isResetCoefCr == FALSE) {
-      memset (curSlice->cof[0][0], 0, 3 * MB_PIXELS * sizeof(int));
-      curSlice->isResetCoefCr = TRUE;
+  // initialize slice->mb_rres
+  if (slice->isResetCoef == FALSE) {
+    memset (slice->mb_rres[0][0], 0, MB_PIXELS * sizeof(int));
+    memset (slice->mb_rres[1][0], 0, decoder->mbCrSize * sizeof(int));
+    memset (slice->mb_rres[2][0], 0, decoder->mbCrSize * sizeof(int));
+    if (slice->isResetCoefCr == FALSE) {
+      memset (slice->cof[0][0], 0, 3 * MB_PIXELS * sizeof(int));
+      slice->isResetCoefCr = TRUE;
       }
     else
-      memset (curSlice->cof[0][0], 0, MB_PIXELS * sizeof(int));
-    curSlice->isResetCoef = TRUE;
+      memset (slice->cof[0][0], 0, MB_PIXELS * sizeof(int));
+    slice->isResetCoef = TRUE;
     }
 
   // store filtering parameters for this MB
-  (*mb)->DFDisableIdc = curSlice->DFDisableIdc;
-  (*mb)->DFAlphaC0Offset = curSlice->DFAlphaC0Offset;
-  (*mb)->DFBetaOffset = curSlice->DFBetaOffset;
+  (*mb)->DFDisableIdc = slice->DFDisableIdc;
+  (*mb)->DFAlphaC0Offset = slice->DFAlphaC0Offset;
+  (*mb)->DFBetaOffset = slice->DFBetaOffset;
   (*mb)->listOffset = 0;
   (*mb)->mixedModeEdgeFlag = 0;
   }
 //}}}
 //{{{
-Boolean exitMacroblock (sSlice* curSlice, int eos_bit) {
+Boolean exitMacroblock (sSlice* slice, int eos_bit) {
 
-  sDecoder* decoder = curSlice->decoder;
+  sDecoder* decoder = slice->decoder;
 
   //! The if() statement below resembles the original code, which tested
   //! decoder->mbIndex == decoder->picSizeInMbs.  Both is, of course, nonsense
@@ -798,26 +798,26 @@ Boolean exitMacroblock (sSlice* curSlice, int eos_bit) {
   //! picture by checking the tr of the next slice header!
 
   // printf ("exitMacroblock: FmoGetLastMBOfPicture %d, decoder->mbIndex %d\n", FmoGetLastMBOfPicture(), decoder->mbIndex);
-  ++(curSlice->numDecodedMbs);
+  ++(slice->numDecodedMbs);
 
-  if (curSlice->mbIndex == decoder->picSizeInMbs - 1) //if (decoder->numDecodedMbs == decoder->picSizeInMbs)
+  if (slice->mbIndex == decoder->picSizeInMbs - 1) //if (decoder->numDecodedMbs == decoder->picSizeInMbs)
     return TRUE;
     // ask for last mb in the slice  CAVLC
   else {
-    curSlice->mbIndex = FmoGetNextMBNr (decoder, curSlice->mbIndex);
-    if (curSlice->mbIndex == -1) {
+    slice->mbIndex = FmoGetNextMBNr (decoder, slice->mbIndex);
+    if (slice->mbIndex == -1) {
       // End of sSlice group, MUST be end of slice
-      assert (curSlice->nalStartcode (curSlice, eos_bit) == TRUE);
+      assert (slice->nalStartcode (slice, eos_bit) == TRUE);
       return TRUE;
       }
 
-    if (curSlice->nalStartcode(curSlice, eos_bit) == FALSE)
+    if (slice->nalStartcode(slice, eos_bit) == FALSE)
       return FALSE;
-    if (curSlice->sliceType == I_SLICE  ||
-        curSlice->sliceType == SI_SLICE ||
+    if (slice->sliceType == I_SLICE  ||
+        slice->sliceType == SI_SLICE ||
         decoder->activePPS->entropyCodingModeFlag == (Boolean)CABAC)
       return TRUE;
-    if (curSlice->codCount <= 0)
+    if (slice->codCount <= 0)
       return TRUE;
 
     return FALSE;
@@ -1016,38 +1016,38 @@ static void interpretMbModeSI (sMacroblock* mb) {
 static void readMotionInfoP (sMacroblock* mb){
 
   sDecoder* decoder = mb->decoder;
-  sSlice* curSlice = mb->slice;
+  sSlice* slice = mb->slice;
 
   sSyntaxElement currSE;
   sDataPartition *dP = NULL;
-  const byte *partMap       = assignSE2partition[curSlice->dataPartitionMode];
+  const byte *partMap       = assignSE2partition[slice->dataPartitionMode];
   short partmode        = ((mb->mbType == P8x8) ? 4 : mb->mbType);
   int step_h0         = BLOCK_STEP [partmode][0];
   int step_v0         = BLOCK_STEP [partmode][1];
 
   int j4;
-  sPicture* picture = curSlice->picture;
+  sPicture* picture = slice->picture;
   sPicMotionParam *mvInfo = NULL;
 
   int listOffset = mb->listOffset;
-  sPicture** list0 = curSlice->listX[LIST_0 + listOffset];
+  sPicture** list0 = slice->listX[LIST_0 + listOffset];
   sPicMotionParam** p_mv_info = &picture->mvInfo[mb->blockY];
 
   //=====  READ REFERENCE PICTURE INDICES =====
   currSE.type = SE_REFFRAME;
-  dP = &(curSlice->partitions[partMap[SE_REFFRAME]]);
+  dP = &(slice->partitions[partMap[SE_REFFRAME]]);
 
   //  For LIST_0, if multiple ref. pictures, read LIST_0 reference picture indices for the MB
-  prepareListforRefIdx (mb, &currSE, dP, curSlice->numRefIndexActive[LIST_0], (mb->mbType != P8x8) || (!curSlice->allrefzero));
+  prepareListforRefIdx (mb, &currSE, dP, slice->numRefIndexActive[LIST_0], (mb->mbType != P8x8) || (!slice->allrefzero));
   readMBRefPictureIdx  (&currSE, dP, mb, p_mv_info, LIST_0, step_v0, step_h0);
 
   //=====  READ MOTION VECTORS =====
   currSE.type = SE_MVD;
-  dP = &(curSlice->partitions[partMap[SE_MVD]]);
+  dP = &(slice->partitions[partMap[SE_MVD]]);
   if (decoder->activePPS->entropyCodingModeFlag == (Boolean) CAVLC || dP->bitstream->eiFlag)
     currSE.mapping = linfo_se;
   else
-    currSE.reading = curSlice->mbAffFrameFlag ? read_mvd_CABAC_mbaff : read_MVD_CABAC;
+    currSE.reading = slice->mbAffFrameFlag ? read_mvd_CABAC_mbaff : read_MVD_CABAC;
 
   // LIST_0 Motion vectors
   readMBMotionVectors (&currSE, dP, mb, LIST_0, step_h0, step_v0);
@@ -1068,44 +1068,44 @@ static void readMotionInfoP (sMacroblock* mb){
 //{{{
 static void readMotionInfoB (sMacroblock* mb) {
 
-  sSlice* curSlice = mb->slice;
+  sSlice* slice = mb->slice;
   sDecoder* decoder = mb->decoder;
-  sPicture* picture = curSlice->picture;
+  sPicture* picture = slice->picture;
   sSyntaxElement currSE;
   sDataPartition* dP = NULL;
-  const byte* partMap = assignSE2partition[curSlice->dataPartitionMode];
+  const byte* partMap = assignSE2partition[slice->dataPartitionMode];
   int partmode = (mb->mbType == P8x8) ? 4 : mb->mbType;
   int step_h0 = BLOCK_STEP [partmode][0];
   int step_v0 = BLOCK_STEP [partmode][1];
   int j4, i4;
 
   int listOffset = mb->listOffset;
-  sPicture** list0 = curSlice->listX[LIST_0 + listOffset];
-  sPicture** list1 = curSlice->listX[LIST_1 + listOffset];
+  sPicture** list0 = slice->listX[LIST_0 + listOffset];
+  sPicture** list1 = slice->listX[LIST_1 + listOffset];
   sPicMotionParam** p_mv_info = &picture->mvInfo[mb->blockY];
 
   if (mb->mbType == P8x8)
-    curSlice->updateDirectMvInfo(mb);
+    slice->updateDirectMvInfo(mb);
 
   //=====  READ REFERENCE PICTURE INDICES =====
   currSE.type = SE_REFFRAME;
-  dP = &(curSlice->partitions[partMap[SE_REFFRAME]]);
+  dP = &(slice->partitions[partMap[SE_REFFRAME]]);
 
   //  For LIST_0, if multiple ref. pictures, read LIST_0 reference picture indices for the MB
-  prepareListforRefIdx (mb, &currSE, dP, curSlice->numRefIndexActive[LIST_0], TRUE);
+  prepareListforRefIdx (mb, &currSE, dP, slice->numRefIndexActive[LIST_0], TRUE);
   readMBRefPictureIdx (&currSE, dP, mb, p_mv_info, LIST_0, step_v0, step_h0);
 
   //  For LIST_1, if multiple ref. pictures, read LIST_1 reference picture indices for the MB
-  prepareListforRefIdx (mb, &currSE, dP, curSlice->numRefIndexActive[LIST_1], TRUE);
+  prepareListforRefIdx (mb, &currSE, dP, slice->numRefIndexActive[LIST_1], TRUE);
   readMBRefPictureIdx (&currSE, dP, mb, p_mv_info, LIST_1, step_v0, step_h0);
 
   //=====  READ MOTION VECTORS =====
   currSE.type = SE_MVD;
-  dP = &(curSlice->partitions[partMap[SE_MVD]]);
+  dP = &(slice->partitions[partMap[SE_MVD]]);
   if (decoder->activePPS->entropyCodingModeFlag == (Boolean)CAVLC || dP->bitstream->eiFlag)
     currSE.mapping = linfo_se;
   else
-    currSE.reading = curSlice->mbAffFrameFlag ? read_mvd_CABAC_mbaff : read_MVD_CABAC;
+    currSE.reading = slice->mbAffFrameFlag ? read_mvd_CABAC_mbaff : read_MVD_CABAC;
 
   // LIST_0 Motion vectors
   readMBMotionVectors (&currSE, dP, mb, LIST_0, step_h0, step_v0);
@@ -1330,28 +1330,28 @@ void makeFramePictureJV (sDecoder* decoder) {
 //{{{
 int decodeMacroblock (sMacroblock* mb, sPicture* picture) {
 
-  sSlice* curSlice = mb->slice;
+  sSlice* slice = mb->slice;
   sDecoder* decoder = mb->decoder;
 
-  if (curSlice->chroma444notSeparate) {
+  if (slice->chroma444notSeparate) {
     if (!mb->isIntraBlock) {
-      init_cur_imgy (decoder, curSlice, PLANE_Y);
-      curSlice->decodeOneComponent (mb, PLANE_Y, picture->imgY, picture);
-      init_cur_imgy (decoder, curSlice, PLANE_U);
-      curSlice->decodeOneComponent (mb, PLANE_U, picture->imgUV[0], picture);
-      init_cur_imgy (decoder, curSlice, PLANE_V);
-      curSlice->decodeOneComponent (mb, PLANE_V, picture->imgUV[1], picture);
+      init_cur_imgy (decoder, slice, PLANE_Y);
+      slice->decodeOneComponent (mb, PLANE_Y, picture->imgY, picture);
+      init_cur_imgy (decoder, slice, PLANE_U);
+      slice->decodeOneComponent (mb, PLANE_U, picture->imgUV[0], picture);
+      init_cur_imgy (decoder, slice, PLANE_V);
+      slice->decodeOneComponent (mb, PLANE_V, picture->imgUV[1], picture);
       }
     else {
-      curSlice->decodeOneComponent (mb, PLANE_Y, picture->imgY, picture);
-      curSlice->decodeOneComponent (mb, PLANE_U, picture->imgUV[0], picture);
-      curSlice->decodeOneComponent (mb, PLANE_V, picture->imgUV[1], picture);
+      slice->decodeOneComponent (mb, PLANE_Y, picture->imgY, picture);
+      slice->decodeOneComponent (mb, PLANE_U, picture->imgUV[0], picture);
+      slice->decodeOneComponent (mb, PLANE_V, picture->imgUV[1], picture);
       }
-    curSlice->isResetCoef = FALSE;
-    curSlice->isResetCoefCr = FALSE;
+    slice->isResetCoef = FALSE;
+    slice->isResetCoefCr = FALSE;
     }
   else
-    curSlice->decodeOneComponent(mb, PLANE_Y, picture->imgY, picture);
+    slice->decodeOneComponent(mb, PLANE_Y, picture->imgY, picture);
 
   return 0;
   }

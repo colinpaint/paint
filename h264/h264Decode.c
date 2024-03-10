@@ -47,86 +47,86 @@ void report_stats_on_error() {
 //{{{
 sSlice* allocSlice (sDecoder* decoder) {
 
-  sSlice* curSlice = (sSlice*)calloc (1, sizeof(sSlice));
-  if (!curSlice) {
+  sSlice* slice = (sSlice*)calloc (1, sizeof(sSlice));
+  if (!slice) {
     snprintf (errorText, ET_SIZE, "Memory allocation for sSlice datastruct in NAL-mode failed");
     error (errorText, 100);
     }
 
   // create all context models
-  curSlice->mot_ctx = create_contexts_MotionInfo();
-  curSlice->tex_ctx = create_contexts_TextureInfo();
+  slice->mot_ctx = create_contexts_MotionInfo();
+  slice->tex_ctx = create_contexts_TextureInfo();
 
-  curSlice->maxPartitionNum = 3;  //! assume data partitioning (worst case) for the following mallocs()
-  curSlice->partitions = allocPartition (curSlice->maxPartitionNum);
+  slice->maxPartitionNum = 3;  //! assume data partitioning (worst case) for the following mallocs()
+  slice->partitions = allocPartition (slice->maxPartitionNum);
 
-  get_mem2Dwp (&(curSlice->WPParam), 2, MAX_REFERENCE_PICTURES);
-  get_mem3Dint (&(curSlice->wpWeight), 2, MAX_REFERENCE_PICTURES, 3);
-  get_mem3Dint (&(curSlice->wpOffset), 6, MAX_REFERENCE_PICTURES, 3);
-  get_mem4Dint (&(curSlice->wbpWeight), 6, MAX_REFERENCE_PICTURES, MAX_REFERENCE_PICTURES, 3);
-  get_mem3Dpel (&(curSlice->mb_pred), MAX_PLANE, MB_BLOCK_SIZE, MB_BLOCK_SIZE);
-  get_mem3Dpel (&(curSlice->mb_rec), MAX_PLANE, MB_BLOCK_SIZE, MB_BLOCK_SIZE);
-  get_mem3Dint (&(curSlice->mb_rres), MAX_PLANE, MB_BLOCK_SIZE, MB_BLOCK_SIZE);
-  get_mem3Dint (&(curSlice->cof), MAX_PLANE, MB_BLOCK_SIZE, MB_BLOCK_SIZE);
-  allocPred (curSlice);
+  get_mem2Dwp (&(slice->WPParam), 2, MAX_REFERENCE_PICTURES);
+  get_mem3Dint (&(slice->wpWeight), 2, MAX_REFERENCE_PICTURES, 3);
+  get_mem3Dint (&(slice->wpOffset), 6, MAX_REFERENCE_PICTURES, 3);
+  get_mem4Dint (&(slice->wbpWeight), 6, MAX_REFERENCE_PICTURES, MAX_REFERENCE_PICTURES, 3);
+  get_mem3Dpel (&(slice->mb_pred), MAX_PLANE, MB_BLOCK_SIZE, MB_BLOCK_SIZE);
+  get_mem3Dpel (&(slice->mb_rec), MAX_PLANE, MB_BLOCK_SIZE, MB_BLOCK_SIZE);
+  get_mem3Dint (&(slice->mb_rres), MAX_PLANE, MB_BLOCK_SIZE, MB_BLOCK_SIZE);
+  get_mem3Dint (&(slice->cof), MAX_PLANE, MB_BLOCK_SIZE, MB_BLOCK_SIZE);
+  allocPred (slice);
 
   // reference flag initialization
   for (int i = 0; i < 17; ++i)
-    curSlice->refFlag[i] = 1;
+    slice->refFlag[i] = 1;
 
   for (int i = 0; i < 6; i++) {
-    curSlice->listX[i] = calloc (MAX_LIST_SIZE, sizeof (sPicture*)); // +1 for reordering
-    if (!curSlice->listX[i])
-      no_mem_exit ("allocSlice: curSlice->listX[i]");
+    slice->listX[i] = calloc (MAX_LIST_SIZE, sizeof (sPicture*)); // +1 for reordering
+    if (!slice->listX[i])
+      no_mem_exit ("allocSlice: slice->listX[i]");
     }
 
   for (int j = 0; j < 6; j++) {
     for (int i = 0; i < MAX_LIST_SIZE; i++)
-      curSlice->listX[j][i] = NULL;
-    curSlice->listXsize[j]=0;
+      slice->listX[j][i] = NULL;
+    slice->listXsize[j]=0;
     }
 
-  return curSlice;
+  return slice;
   }
 //}}}
 //{{{
-static void freeSlice (sSlice *curSlice) {
+static void freeSlice (sSlice *slice) {
 
-  if (curSlice->sliceType != I_SLICE && curSlice->sliceType != SI_SLICE)
-    freeRefPicListReorderingBuffer (curSlice);
+  if (slice->sliceType != I_SLICE && slice->sliceType != SI_SLICE)
+    freeRefPicListReorderingBuffer (slice);
 
-  freePred (curSlice);
-  free_mem3Dint (curSlice->cof);
-  free_mem3Dint (curSlice->mb_rres);
-  free_mem3Dpel (curSlice->mb_rec);
-  free_mem3Dpel (curSlice->mb_pred);
+  freePred (slice);
+  free_mem3Dint (slice->cof);
+  free_mem3Dint (slice->mb_rres);
+  free_mem3Dpel (slice->mb_rec);
+  free_mem3Dpel (slice->mb_pred);
 
-  free_mem2Dwp (curSlice->WPParam);
-  free_mem3Dint (curSlice->wpWeight);
-  free_mem3Dint (curSlice->wpOffset);
-  free_mem4Dint (curSlice->wbpWeight);
+  free_mem2Dwp (slice->WPParam);
+  free_mem3Dint (slice->wpWeight);
+  free_mem3Dint (slice->wpOffset);
+  free_mem4Dint (slice->wbpWeight);
 
-  freePartition (curSlice->partitions, 3);
+  freePartition (slice->partitions, 3);
 
   // delete all context models
-  delete_contexts_MotionInfo (curSlice->mot_ctx);
-  delete_contexts_TextureInfo (curSlice->tex_ctx);
+  delete_contexts_MotionInfo (slice->mot_ctx);
+  delete_contexts_TextureInfo (slice->tex_ctx);
 
   for (int i = 0; i<6; i++) {
-    if (curSlice->listX[i]) {
-      free (curSlice->listX[i]);
-      curSlice->listX[i] = NULL;
+    if (slice->listX[i]) {
+      free (slice->listX[i]);
+      slice->listX[i] = NULL;
       }
     }
 
-  while (curSlice->decRefPicMarkingBuffer) {
-    sDecodedRefPicMarking* tmp_drpm = curSlice->decRefPicMarkingBuffer;
-    curSlice->decRefPicMarkingBuffer = tmp_drpm->next;
+  while (slice->decRefPicMarkingBuffer) {
+    sDecodedRefPicMarking* tmp_drpm = slice->decRefPicMarkingBuffer;
+    slice->decRefPicMarkingBuffer = tmp_drpm->next;
     free (tmp_drpm);
     }
 
-  free (curSlice);
-  curSlice = NULL;
+  free (slice);
+  slice = NULL;
   }
 //}}}
 
