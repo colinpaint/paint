@@ -891,7 +891,6 @@ static int readNewSlice (sSlice* slice) {
           if (decoder->picSliceIndex == 0)
             initPicture (decoder, slice);
           curHeader = SOP;
-          // check zero_byte if it is also the first NAL unit in the access unit
           checkZeroByteVCL (decoder, nalu);
           }
         else
@@ -899,26 +898,25 @@ static int readNewSlice (sSlice* slice) {
 
         setSliceMethods (slice);
 
-        // Vid->activeSPS, decoder->activePPS, sliceHeader valid
+        // decoder->activeSPS, decoder->activePPS, sliceHeader valid
         if (slice->mbAffFrameFlag)
           slice->curMbNum = slice->startMbNum << 1;
         else
           slice->curMbNum = slice->startMbNum;
 
         if (decoder->activePPS->entropyCodingModeFlag) {
-          int ByteStartPosition = s->frameBitOffset / 8;
+          int byteStartPosition = s->frameBitOffset / 8;
           if ((s->frameBitOffset % 8) != 0)
-            ++ByteStartPosition;
-          arideco_start_decoding (&slice->partitions[0].deCabac, s->streamBuffer,
-                                  ByteStartPosition, &s->readLen);
+            ++byteStartPosition;
+          arideco_start_decoding (&slice->partitions[0].deCabac, s->streamBuffer, byteStartPosition, &s->readLen);
           }
 
         decoder->recoveryPoint = 0;
         return curHeader;
-        break;
       //}}}
       //{{{
       case NALU_TYPE_DPA:
+
         if (decoder->recoveryPointFound == 0)
           break;
 
@@ -972,6 +970,7 @@ static int readNewSlice (sSlice* slice) {
         // reading next DP
         if (!readNextNalu (decoder, nalu))
           return curHeader;
+
         if (NALU_TYPE_DPB == nalu->unitType) {
           //{{{  got nalu DPB
           s = slice->partitions[1].bitstream;
@@ -1030,7 +1029,6 @@ static int readNewSlice (sSlice* slice) {
           goto process_nalu;
 
         return curHeader;
-        break;
       //}}}
       //{{{
       case NALU_TYPE_DPB:
@@ -1068,6 +1066,8 @@ static int readNewSlice (sSlice* slice) {
       //}}}
       }
     }
+
+  return curHeader;
   }
 //}}}
 

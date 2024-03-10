@@ -1727,23 +1727,18 @@ void readRestSliceHeader (sSlice* slice) {
   sBitstream* s = partition->bitstream;
   slice->frameNum = readUv (activeSPS->log2_max_frame_num_minus4 + 4, "SLC frameNum", s);
 
-  // Tian Dong: frameNum gap processing, if found
   if (slice->idrFlag) {
     decoder->preFrameNum = slice->frameNum;
-    // picture error conceal
     decoder->lastRefPicPoc = 0;
-    assert(slice->frameNum == 0);
     }
 
   if (activeSPS->frameMbOnlyFlag) {
     decoder->structure = FRAME;
-    slice->fieldPicFlag=0;
+    slice->fieldPicFlag = 0;
     }
   else {
-    // fieldPicFlag   u(1)
     slice->fieldPicFlag = readU1 ("SLC fieldPicFlag", s);
     if (slice->fieldPicFlag) {
-      // botFieldFlag  u(1)
       slice->botFieldFlag = (byte)readU1 ("SLC botFieldFlag", s);
       decoder->structure = slice->botFieldFlag ? BotField : TopField;
       }
@@ -1753,12 +1748,13 @@ void readRestSliceHeader (sSlice* slice) {
       }
     }
 
-  slice->structure = (ePicStructure) decoder->structure;
-  slice->mbAffFrameFlag = (activeSPS->mb_adaptive_frame_field_flag && (slice->fieldPicFlag==0));
+  slice->structure = (ePicStructure)decoder->structure;
+  slice->mbAffFrameFlag = (activeSPS->mb_adaptive_frame_field_flag && (slice->fieldPicFlag == 0));
 
   if (slice->idrFlag)
     slice->idrPicId = readUeV ("SLC idrPicId", s);
 
+  //{{{  picOrderCount
   if (activeSPS->picOrderCountType == 0) {
     slice->picOrderCountLsb =
       readUv (activeSPS->log2_max_pic_order_cnt_lsb_minus4 + 4, "SLC picOrderCountLsb", s);
@@ -1782,8 +1778,8 @@ void readRestSliceHeader (sSlice* slice) {
       slice->deltaPicOrderCount[1] = 0;
       }
     }
+  //}}}
 
-  // redundantPicCount is missing here
   if (decoder->activePPS->redundantPicCountPresentFlag)
     slice->redundantPicCount = readUeV ("SLC redundantPicCount", s);
 
@@ -1793,11 +1789,9 @@ void readRestSliceHeader (sSlice* slice) {
   slice->numRefIndexActive[LIST_0] = decoder->activePPS->numRefIndexL0defaultActiveMinus1 + 1;
   slice->numRefIndexActive[LIST_1] = decoder->activePPS->numRefIndexL1defaultActiveMinus1 + 1;
 
-  if (slice->sliceType == P_SLICE ||
-      slice->sliceType == SP_SLICE ||
-      slice->sliceType == B_SLICE) {
-    int val = readU1 ("SLC num_ref_idx_override_flag", s);
-    if (val) {
+  if (slice->sliceType == P_SLICE || slice->sliceType == SP_SLICE || slice->sliceType == B_SLICE) {
+    int num_ref_idx_override_flag = readU1 ("SLC num_ref_idx_override_flag", s);
+    if (num_ref_idx_override_flag) {
       slice->numRefIndexActive[LIST_0] = 1 + readUeV ("SLC num_ref_idx_l0_active_minus1", s);
       if (slice->sliceType == B_SLICE)
         slice->numRefIndexActive[LIST_1] = 1 + readUeV ("SLC num_ref_idx_l1_active_minus1", s);
@@ -1809,17 +1803,20 @@ void readRestSliceHeader (sSlice* slice) {
 
   ref_pic_list_reordering (slice);
 
+  //{{{  weightedPred
   slice->weightedPredFlag =
     (unsigned short)((slice->sliceType == P_SLICE || slice->sliceType == SP_SLICE)
       ? decoder->activePPS->weightedPredFlag
-      : (slice->sliceType == B_SLICE && decoder->activePPS->weightedBiPredIdc == 1));
-  slice->weightedBiPredIdc = (unsigned short)(slice->sliceType == B_SLICE &&
-                                                    decoder->activePPS->weightedBiPredIdc > 0);
+      : ((slice->sliceType == B_SLICE) && (decoder->activePPS->weightedBiPredIdc == 1)));
+
+  slice->weightedBiPredIdc = 
+    (unsigned short)((slice->sliceType == B_SLICE) && (decoder->activePPS->weightedBiPredIdc > 0));
 
   if ((decoder->activePPS->weightedPredFlag &&
       (slice->sliceType == P_SLICE || slice->sliceType == SP_SLICE)) ||
       (decoder->activePPS->weightedBiPredIdc == 1 && (slice->sliceType == B_SLICE)))
     pred_weight_table (slice);
+  //}}}
 
   if (slice->refId)
     dec_ref_pic_marking (decoder, s, slice);
@@ -1831,7 +1828,7 @@ void readRestSliceHeader (sSlice* slice) {
   else
     slice->modelNum = 0;
 
-  // qp
+  //{{{  qp
   slice->sliceQpDelta = readSeV ("SLC sliceQpDelta", s);
   slice->qp = 26 + decoder->activePPS->picInitQpMinus26 + slice->sliceQpDelta;
 
@@ -1841,6 +1838,7 @@ void readRestSliceHeader (sSlice* slice) {
     slice->sliceQsDelta = readSeV ("SLC sliceQsDelta", s);
     slice->qs = 26 + decoder->activePPS->picInitQsMinus26 + slice->sliceQsDelta;
     }
+  //}}}
 
   if (decoder->activePPS->deblockingFilterControlPresentFlag) {
     slice->DFDisableIdc = (short) readUeV ("SLC disable_deblocking_filter_idc", s);
@@ -1862,6 +1860,7 @@ void readRestSliceHeader (sSlice* slice) {
     slice->DFAlphaC0Offset = slice->DFBetaOffset = 0;
     }
 
+  //{{{  sliceGroup
   if (decoder->activePPS->numSliceGroupsMinus1>0 && decoder->activePPS->sliceGroupMapType>=3 &&
       decoder->activePPS->sliceGroupMapType <= 5) {
     int len = (activeSPS->pic_height_in_map_units_minus1+1) * (activeSPS->pic_width_in_mbs_minus1+1)/
@@ -1873,6 +1872,7 @@ void readRestSliceHeader (sSlice* slice) {
     len = ceilLog2 (len+1);
     slice->sliceGroupChangeCycle = readUv (len, "SLC sliceGroupChangeCycle", s);
     }
+  //}}}
 
   decoder->picHeightInMbs = decoder->frameHeightMbs / ( 1 + slice->fieldPicFlag );
   decoder->picSizeInMbs = decoder->picWidthMbs * decoder->picHeightInMbs;

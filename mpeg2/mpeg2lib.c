@@ -758,7 +758,7 @@ static void Flush_Buffer32() {
   }
 //}}}
 //{{{
-static unsigned int Get_Bits32() {
+unsigned int Get_Bits32() {
 
   unsigned int l = Show_Bits(32);
   Flush_Buffer32();
@@ -1294,7 +1294,7 @@ static void Fast_IDCT (short* block) {
   }
 //}}}
 //{{{
-static void Initialize_Fast_IDCT() {
+void Initialize_Fast_IDCT() {
 
   iclp = iclip + 512;
   for (int i = -512; i < 512; i++)

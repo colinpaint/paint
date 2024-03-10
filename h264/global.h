@@ -202,6 +202,7 @@ typedef struct {
   } sPPS;
 //}}}
 
+struct Macroblock;
 //{{{  sDecodingEnv
 typedef struct {
   unsigned int Drange;
