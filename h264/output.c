@@ -21,7 +21,6 @@ static void allocDecodedPic (sDecoder* decoder, sDecodedPic* decodedPic, sPictur
   decodedPic->vBuf = decodedPic->uBuf + ((frameSize - lumaSize)>>1);
 
   decodedPic->yuvFormat = p->chromaFormatIdc;
-  decodedPic->yuvStorageFormat = 0;
   decodedPic->bitDepth = decoder->picUnitBitSizeDisk;
   decodedPic->width = lumaSizeX;
   decodedPic->height = lumaSizeY;

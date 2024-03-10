@@ -966,7 +966,7 @@ public:
           cLog::log (LOGERROR, "decoding  failed");
         } while (ret == DEC_SUCCEED);
 
-      finishDecoder (decoder,&decodedPic);
+      finishDecoder (decoder, &decodedPic);
       outputPicList (decodedPic);
       closeDecoder (decoder);
 

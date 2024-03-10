@@ -443,21 +443,21 @@ typedef struct Image {
 //{{{  sDecodedPic
 typedef struct DecodedPic {
   int valid;             // 0: invalid, 1: valid, 3: valid for 3D output;
-  int poc;
 
   int yuvFormat;         // 0: 4:0:0, 1: 4:2:0, 2: 4:2:2, 3: 4:4:4
-  int yuvStorageFormat;  // 0: YUV seperate; 1: YUV interleaved; 2: 3D output;
   int bitDepth;
+
+  int width;             // frame width;
+  int height;            // frame height;
+  int yStride;           // stride of yBuf[0/1] buffer in bytes;
+  int uvStride;          // stride of uBuf[0/1] and vBuf[0/1] buffer in bytes;
 
   int bufSize;
   byte* yBuf;            // if iPictureFormat is 1, [0]: top; [1] bottom;
   byte* uBuf;
   byte* vBuf;
 
-  int width;             // frame width;
-  int height;            // frame height;
-  int yStride;           // stride of yBuf[0/1] buffer in bytes;
-  int uvStride;          // stride of uBuf[0/1] and vBuf[0/1] buffer in bytes;
+  int poc;
 
   struct DecodedPic* next;
   } sDecodedPic;
