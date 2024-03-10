@@ -266,51 +266,51 @@ static void init_motion_vector_prediction (sMacroblock* mb, int mbAffFrameFlag) 
 //}}}
 
 //{{{
-static int decodeComponentI (sMacroblock* mb, eColorPlane curPlane, sPixel** curPixel, sPicture* picture)
+static int decodeComponentI (sMacroblock* mb, eColorPlane plane, sPixel** pixel, sPicture* picture)
 {
   //For residual DPCM
   mb->ipmode_DPCM = NO_INTRA_PMODE;
   if (mb->mbType == IPCM)
     mb_pred_ipcm (mb);
   else if (mb->mbType == I16MB)
-    mb_pred_intra16x16 (mb, curPlane, picture);
+    mb_pred_intra16x16 (mb, plane, picture);
   else if (mb->mbType == I4MB)
-    mb_pred_intra4x4 (mb, curPlane, curPixel, picture);
+    mb_pred_intra4x4 (mb, plane, pixel, picture);
   else if (mb->mbType == I8MB)
-    mb_pred_intra8x8 (mb, curPlane, curPixel, picture);
+    mb_pred_intra8x8 (mb, plane, pixel, picture);
 
   return 1;
   }
 //}}}
 //{{{
-static int decodeComponentP (sMacroblock* mb, eColorPlane curPlane, sPixel** curPixel, sPicture* picture)
+static int decodeComponentP (sMacroblock* mb, eColorPlane plane, sPixel** pixel, sPicture* picture)
 {
   //For residual DPCM
   mb->ipmode_DPCM = NO_INTRA_PMODE;
   if (mb->mbType == IPCM)
     mb_pred_ipcm (mb);
   else if (mb->mbType == I16MB)
-    mb_pred_intra16x16 (mb, curPlane, picture);
+    mb_pred_intra16x16 (mb, plane, picture);
   else if (mb->mbType == I4MB)
-    mb_pred_intra4x4 (mb, curPlane, curPixel, picture);
+    mb_pred_intra4x4 (mb, plane, pixel, picture);
   else if (mb->mbType == I8MB)
-    mb_pred_intra8x8 (mb, curPlane, curPixel, picture);
+    mb_pred_intra8x8 (mb, plane, pixel, picture);
   else if (mb->mbType == PSKIP)
-    mb_pred_skip( mb, curPlane, curPixel, picture);
+    mb_pred_skip( mb, plane, pixel, picture);
   else if (mb->mbType == P16x16)
-    mb_pred_p_inter16x16 (mb, curPlane, picture);
+    mb_pred_p_inter16x16 (mb, plane, picture);
   else if (mb->mbType == P16x8)
-    mb_pred_p_inter16x8 (mb, curPlane, picture);
+    mb_pred_p_inter16x8 (mb, plane, picture);
   else if (mb->mbType == P8x16)
-    mb_pred_p_inter8x16 (mb, curPlane, picture);
+    mb_pred_p_inter8x16 (mb, plane, picture);
   else
-    mb_pred_p_inter8x8 (mb, curPlane, picture);
+    mb_pred_p_inter8x8 (mb, plane, picture);
 
   return 1;
   }
 //}}}
 //{{{
-static int decodeComponentSP (sMacroblock* mb, eColorPlane curPlane, sPixel** curPixel, sPicture* picture)
+static int decodeComponentSP (sMacroblock* mb, eColorPlane plane, sPixel** pixel, sPicture* picture)
 {
   //For residual DPCM
   mb->ipmode_DPCM = NO_INTRA_PMODE;
@@ -318,27 +318,27 @@ static int decodeComponentSP (sMacroblock* mb, eColorPlane curPlane, sPixel** cu
   if (mb->mbType == IPCM)
     mb_pred_ipcm (mb);
   else if (mb->mbType == I16MB)
-    mb_pred_intra16x16 (mb, curPlane, picture);
+    mb_pred_intra16x16 (mb, plane, picture);
   else if (mb->mbType == I4MB)
-    mb_pred_intra4x4 (mb, curPlane, curPixel, picture);
+    mb_pred_intra4x4 (mb, plane, pixel, picture);
   else if (mb->mbType == I8MB)
-    mb_pred_intra8x8 (mb, curPlane, curPixel, picture);
+    mb_pred_intra8x8 (mb, plane, pixel, picture);
   else if (mb->mbType == PSKIP)
-    mb_pred_sp_skip (mb, curPlane, picture);
+    mb_pred_sp_skip (mb, plane, picture);
   else if (mb->mbType == P16x16)
-    mb_pred_p_inter16x16 (mb, curPlane, picture);
+    mb_pred_p_inter16x16 (mb, plane, picture);
   else if (mb->mbType == P16x8)
-    mb_pred_p_inter16x8 (mb, curPlane, picture);
+    mb_pred_p_inter16x8 (mb, plane, picture);
   else if (mb->mbType == P8x16)
-    mb_pred_p_inter8x16 (mb, curPlane, picture);
+    mb_pred_p_inter8x16 (mb, plane, picture);
   else
-    mb_pred_p_inter8x8 (mb, curPlane, picture);
+    mb_pred_p_inter8x8 (mb, plane, picture);
 
   return 1;
   }
 //}}}
 //{{{
-static int decodeComponentB (sMacroblock* mb, eColorPlane curPlane, sPixel** curPixel, sPicture* picture)
+static int decodeComponentB (sMacroblock* mb, eColorPlane plane, sPixel** pixel, sPicture* picture)
 {
   //For residual DPCM
   mb->ipmode_DPCM = NO_INTRA_PMODE;
@@ -346,34 +346,34 @@ static int decodeComponentB (sMacroblock* mb, eColorPlane curPlane, sPixel** cur
   if(mb->mbType == IPCM)
     mb_pred_ipcm (mb);
   else if (mb->mbType == I16MB)
-    mb_pred_intra16x16 (mb, curPlane, picture);
+    mb_pred_intra16x16 (mb, plane, picture);
   else if (mb->mbType == I4MB)
-    mb_pred_intra4x4 (mb, curPlane, curPixel, picture);
+    mb_pred_intra4x4 (mb, plane, pixel, picture);
   else if (mb->mbType == I8MB)
-    mb_pred_intra8x8 (mb, curPlane, curPixel, picture);
+    mb_pred_intra8x8 (mb, plane, pixel, picture);
   else if (mb->mbType == P16x16)
-    mb_pred_p_inter16x16 (mb, curPlane, picture);
+    mb_pred_p_inter16x16 (mb, plane, picture);
   else if (mb->mbType == P16x8)
-    mb_pred_p_inter16x8 (mb, curPlane, picture);
+    mb_pred_p_inter16x8 (mb, plane, picture);
   else if (mb->mbType == P8x16)
-    mb_pred_p_inter8x16 (mb, curPlane, picture);
+    mb_pred_p_inter8x16 (mb, plane, picture);
   else if (mb->mbType == BSKIP_DIRECT) {
     sSlice* slice = mb->slice;
     if (slice->directSpatialMvPredFlag == 0) {
       if (slice->activeSPS->direct_8x8_inference_flag)
-        mb_pred_b_d8x8temporal (mb, curPlane, curPixel, picture);
+        mb_pred_b_d8x8temporal (mb, plane, pixel, picture);
       else
-        mb_pred_b_d4x4temporal (mb, curPlane, curPixel, picture);
+        mb_pred_b_d4x4temporal (mb, plane, pixel, picture);
       }
     else {
       if (slice->activeSPS->direct_8x8_inference_flag)
-        mb_pred_b_d8x8spatial (mb, curPlane, curPixel, picture);
+        mb_pred_b_d8x8spatial (mb, plane, pixel, picture);
       else
-        mb_pred_b_d4x4spatial (mb, curPlane, curPixel, picture);
+        mb_pred_b_d4x4spatial (mb, plane, pixel, picture);
       }
     }
   else
-    mb_pred_b_inter8x8 (mb, curPlane, picture);
+    mb_pred_b_inter8x8 (mb, plane, picture);
 
   return 1;
   }

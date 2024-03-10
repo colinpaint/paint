@@ -107,18 +107,18 @@ static void copyPOC (sSlice* fromSlice, sSlice* slice) {
 //}}}
 
 //{{{
-static void updateMbAff (sPixel** curPixel, sPixel (*temp)[16], int x0, int width, int height) {
+static void updateMbAff (sPixel** pixel, sPixel (*temp)[16], int x0, int width, int height) {
 
   sPixel (*temp_evn)[16] = temp;
   sPixel (*temp_odd)[16] = temp + height;
-  sPixel** temp_img = curPixel;
+  sPixel** temp_img = pixel;
 
   for (int y = 0; y < 2 * height; ++y)
     memcpy (*temp++, (*temp_img++ + x0), width * sizeof(sPixel));
 
   for (int y = 0; y < height; ++y) {
-    memcpy ((*curPixel++ + x0), *temp_evn++, width * sizeof(sPixel));
-    memcpy ((*curPixel++ + x0), *temp_odd++, width * sizeof(sPixel));
+    memcpy ((*pixel++ + x0), *temp_evn++, width * sizeof(sPixel));
+    memcpy ((*pixel++ + x0), *temp_odd++, width * sizeof(sPixel));
     }
   }
 //}}}

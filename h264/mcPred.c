@@ -779,7 +779,7 @@ static void weighted_bi_prediction (sPixel *mb_pred,
 //}}}
 
 //{{{
-static void get_block_00 (sPixel *block, sPixel* curPixel, int span, int block_size_y)
+static void get_block_00 (sPixel *block, sPixel* pixel, int span, int block_size_y)
 {
   // fastest to just move an entire block, since block is a temp block is a 256 byte block (16x16)
   // writes 2 lines of 16 sPixel 1 to 8 times depending in block_size_y
@@ -787,12 +787,12 @@ static void get_block_00 (sPixel *block, sPixel* curPixel, int span, int block_s
 
   for (j = 0; j < block_size_y; j += 2)
   {
-    memcpy(block, curPixel, MB_BLOCK_SIZE * sizeof(sPixel));
+    memcpy(block, pixel, MB_BLOCK_SIZE * sizeof(sPixel));
     block += MB_BLOCK_SIZE;
-    curPixel += span;
-    memcpy(block, curPixel, MB_BLOCK_SIZE * sizeof(sPixel));
+    pixel += span;
+    memcpy(block, pixel, MB_BLOCK_SIZE * sizeof(sPixel));
     block += MB_BLOCK_SIZE;
-    curPixel += span;
+    pixel += span;
   }
 }
 
@@ -1505,10 +1505,10 @@ void get_block_luma (sPicture* curRef, int x_pos, int y_pos, int block_size_x, i
 //}}}
 
 //{{{
-static void get_chroma_0X (sPixel* block, sPixel* curPixel, int span, int block_size_y, int block_size_x, int w00, int w01, int totalScale)
+static void get_chroma_0X (sPixel* block, sPixel* pixel, int span, int block_size_y, int block_size_x, int w00, int w01, int totalScale)
 {
-  sPixel *cur_row = curPixel;
-  sPixel *nxt_row = curPixel + span;
+  sPixel *cur_row = pixel;
+  sPixel *nxt_row = pixel + span;
 
 
   sPixel *cur_line, *cur_line_p1;
@@ -1532,9 +1532,9 @@ static void get_chroma_0X (sPixel* block, sPixel* curPixel, int span, int block_
 }
 //}}}
 //{{{
-static void get_chroma_X0 (sPixel* block, sPixel* curPixel, int span, int block_size_y, int block_size_x, int w00, int w10, int totalScale)
+static void get_chroma_X0 (sPixel* block, sPixel* pixel, int span, int block_size_y, int block_size_x, int w00, int w10, int totalScale)
 {
-  sPixel *cur_row = curPixel;
+  sPixel *cur_row = pixel;
 
 
     sPixel *cur_line, *cur_line_p1;
@@ -1558,10 +1558,10 @@ static void get_chroma_X0 (sPixel* block, sPixel* curPixel, int span, int block_
 }
 //}}}
 //{{{
-static void get_chroma_XY (sPixel* block, sPixel* curPixel, int span, int block_size_y, int block_size_x, int w00, int w01, int w10, int w11, int totalScale)
+static void get_chroma_XY (sPixel* block, sPixel* pixel, int span, int block_size_y, int block_size_x, int w00, int w01, int w10, int w11, int totalScale)
 {
-  sPixel *cur_row = curPixel;
-  sPixel *nxt_row = curPixel + span;
+  sPixel *cur_row = pixel;
+  sPixel *nxt_row = pixel + span;
 
 
   {
