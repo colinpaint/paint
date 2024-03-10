@@ -724,7 +724,7 @@ typedef struct CodingParam {
 typedef struct LayerParam {
   int              layerId;
   struct VidParam* vidParam;
-  sCoding*    codingParam;
+  sCoding*    coding;
   sSPS*            sps;
   struct DPB*      dpb;
   } sLayer;
@@ -745,26 +745,25 @@ typedef struct Input {
 //}}}
 //{{{  sVidParam
 typedef struct VidParam {
-  sInput       input;
+  sInput      input;
 
-  TIME_T       startTime;
-  TIME_T       endTime;
+  TIME_T      startTime;
+  TIME_T      endTime;
 
-  sPPS*        activePPS;
-  sSPS*        activeSPS;
-  sSPS         sps[32];
-  sPPS         pps[MAX_PPS];
-  Boolean      firstSPS;
-  int          recoveryPoint;
-  int          recoveryPointFound;
-  int          recoveryFrameCount;
-  int          recoveryFrameNum;
-  int          recoveryPoc;
+  sPPS*       activePPS;
+  sSPS*       activeSPS;
+  sSPS        sps[32];
+  sPPS        pps[MAX_PPS];
+  Boolean     firstSPS;
+  int         recoveryPoint;
+  int         recoveryPointFound;
+  int         recoveryFrameCount;
+  int         recoveryFrameNum;
+  int         recoveryPoc;
 
-
-  struct DPB*   dpbLayer[MAX_NUM_DPB_LAYERS];
-  sLayer*  layerParam[MAX_NUM_DPB_LAYERS];
-  sCoding* codingParam[MAX_NUM_DPB_LAYERS];
+  struct DPB* dpbLayer[MAX_NUM_DPB_LAYERS];
+  sLayer*     layer[MAX_NUM_DPB_LAYERS];
+  sCoding*    coding[MAX_NUM_DPB_LAYERS];
 
   int                   number;  //frame number
   struct sSEI*    sei;
@@ -1014,7 +1013,7 @@ static inline int is_HI_intra_only_profile (unsigned int profileIdc, Boolean con
   extern void freeDecodedPictures (sDecodedPicture* decodedPicture);
   extern void clearDecodedPictures (sVidParam* vidParam);
 
-  extern void setGlobalCodingProgram (sVidParam* vidParam, sCoding* codingParam);
+  extern void setGlobalCodingProgram (sVidParam* vidParam, sCoding* coding);
 //{{{
 #ifdef __cplusplus
 }

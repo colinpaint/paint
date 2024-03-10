@@ -38,13 +38,13 @@ static void resetMb (sMacroblock* mb) {
 static void setupBuffers (sVidParam* vidParam, int layerId) {
 
   if (vidParam->last_dec_layer_id != layerId) {
-    sCoding* codingParam = vidParam->codingParam[layerId];
-    if (codingParam->sepColourPlaneFlag) {
+    sCoding* coding = vidParam->coding[layerId];
+    if (coding->sepColourPlaneFlag) {
       for (int i = 0; i < MAX_PLANE; i++ ) {
-        vidParam->mbDataJV[i] = codingParam->mbDataJV[i];
-        vidParam->intraBlockJV[i] = codingParam->intraBlockJV[i];
-        vidParam->predModeJV[i] = codingParam->predModeJV[i];
-        vidParam->siBlockJV[i] = codingParam->siBlockJV[i];
+        vidParam->mbDataJV[i] = coding->mbDataJV[i];
+        vidParam->intraBlockJV[i] = coding->intraBlockJV[i];
+        vidParam->predModeJV[i] = coding->predModeJV[i];
+        vidParam->siBlockJV[i] = coding->siBlockJV[i];
         }
       vidParam->mbData = NULL;
       vidParam->intraBlock = NULL;
@@ -52,17 +52,17 @@ static void setupBuffers (sVidParam* vidParam, int layerId) {
       vidParam->siBlock = NULL;
       }
     else {
-      vidParam->mbData = codingParam->mbData;
-      vidParam->intraBlock = codingParam->intraBlock;
-      vidParam->predMode = codingParam->predMode;
-      vidParam->siBlock = codingParam->siBlock;
+      vidParam->mbData = coding->mbData;
+      vidParam->intraBlock = coding->intraBlock;
+      vidParam->predMode = coding->predMode;
+      vidParam->siBlock = coding->siBlock;
       }
 
-    vidParam->picPos = codingParam->picPos;
-    vidParam->nzCoeff = codingParam->nzCoeff;
-    vidParam->qpPerMatrix = codingParam->qpPerMatrix;
-    vidParam->qpRemMatrix = codingParam->qpRemMatrix;
-    vidParam->oldFrameSizeInMbs = codingParam->oldFrameSizeInMbs;
+    vidParam->picPos = coding->picPos;
+    vidParam->nzCoeff = coding->nzCoeff;
+    vidParam->qpPerMatrix = coding->qpPerMatrix;
+    vidParam->qpRemMatrix = coding->qpRemMatrix;
+    vidParam->oldFrameSizeInMbs = coding->oldFrameSizeInMbs;
     vidParam->last_dec_layer_id = layerId;
     }
   }

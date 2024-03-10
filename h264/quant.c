@@ -148,37 +148,37 @@ static void CalculateQuant8x8Param (sSlice* curSlice) {
 //}}}
 
 //{{{
-void allocQuant (sCoding* codingParam) {
+void allocQuant (sCoding* coding) {
 
-  int bitdepth_qp_scale = imax (codingParam->bitdepth_luma_qp_scale, codingParam->bitdepthChromaQpScale);
+  int bitdepth_qp_scale = imax (coding->bitdepth_luma_qp_scale, coding->bitdepthChromaQpScale);
 
   // We should allocate memory outside of this process since maybe we will have a change of SPS
   // and we may need to recreate these. Currently should only support same bitdepth
-  if (codingParam->qpPerMatrix == NULL)
-    if ((codingParam->qpPerMatrix = (int*)malloc((MAX_QP + 1 + bitdepth_qp_scale)*sizeof(int))) == NULL)
-      no_mem_exit ("init_qp_process: codingParam->qpPerMatrix");
+  if (coding->qpPerMatrix == NULL)
+    if ((coding->qpPerMatrix = (int*)malloc((MAX_QP + 1 + bitdepth_qp_scale)*sizeof(int))) == NULL)
+      no_mem_exit ("init_qp_process: coding->qpPerMatrix");
 
-  if (codingParam->qpRemMatrix == NULL)
-    if ((codingParam->qpRemMatrix = (int*)malloc((MAX_QP + 1 + bitdepth_qp_scale)*sizeof(int))) == NULL)
-      no_mem_exit ("init_qp_process: codingParam->qpRemMatrix");
+  if (coding->qpRemMatrix == NULL)
+    if ((coding->qpRemMatrix = (int*)malloc((MAX_QP + 1 + bitdepth_qp_scale)*sizeof(int))) == NULL)
+      no_mem_exit ("init_qp_process: coding->qpRemMatrix");
 
   for (int i = 0; i < MAX_QP + bitdepth_qp_scale + 1; i++) {
-    codingParam->qpPerMatrix[i] = i / 6;
-    codingParam->qpRemMatrix[i] = i % 6;
+    coding->qpPerMatrix[i] = i / 6;
+    coding->qpRemMatrix[i] = i % 6;
     }
   }
 //}}}
 //{{{
-void freeQuant (sCoding* codingParam) {
+void freeQuant (sCoding* coding) {
 
-  if (codingParam->qpPerMatrix != NULL) {
-    free (codingParam->qpPerMatrix);
-    codingParam->qpPerMatrix = NULL;
+  if (coding->qpPerMatrix != NULL) {
+    free (coding->qpPerMatrix);
+    coding->qpPerMatrix = NULL;
     }
 
-  if (codingParam->qpRemMatrix != NULL) {
-    free (codingParam->qpRemMatrix);
-    codingParam->qpRemMatrix = NULL;
+  if (coding->qpRemMatrix != NULL) {
+    free (coding->qpRemMatrix);
+    coding->qpRemMatrix = NULL;
     }
   }
 //}}}
