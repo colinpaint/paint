@@ -256,8 +256,8 @@ int more_rbsp_data (byte buffer[], int totbitoffset,int bytecount) {
 //{{{
 int uvlc_startcode_follows (sSlice* slice, int dummy) {
 
-  byte dpIndex = assignSE2dp[slice->datadpMode][SE_MBTYPE];
-  sDatadp* dp = &(slice->dps[dpIndex]);
+  byte partitionIndex = assignSE2dp[slice->datadpMode][SE_MBTYPE];
+  sDatadp* dp = &(slice->dps[partitionIndex]);
   sBitstream* s = dp->bitstream;
   byte* buf = s->streamBuffer;
 
