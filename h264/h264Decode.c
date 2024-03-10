@@ -20,7 +20,7 @@
 //}}}
 
 sDecoder* gVidParam;
-char errortext[ET_SIZE];
+char errorText[ET_SIZE];
 
 //{{{
 void error (char* text, int code) {
@@ -49,8 +49,8 @@ sSlice* allocSlice (sDecoder* decoder) {
 
   sSlice* curSlice = (sSlice*)calloc (1, sizeof(sSlice));
   if (!curSlice) {
-    snprintf (errortext, ET_SIZE, "Memory allocation for sSlice datastruct in NAL-mode failed");
-    error (errortext, 100);
+    snprintf (errorText, ET_SIZE, "Memory allocation for sSlice datastruct in NAL-mode failed");
+    error (errorText, 100);
     }
 
   // create all context models
@@ -298,22 +298,22 @@ sDataPartition* allocPartition (int n) {
 
   sDataPartition* partitions = (sDataPartition*)calloc (n, sizeof(sDataPartition));
   if (partitions == NULL) {
-    snprintf (errortext, ET_SIZE, "allocPartition: Memory allocation for Data Partition failed");
-    error (errortext, 100);
+    snprintf (errorText, ET_SIZE, "allocPartition: Memory allocation for Data Partition failed");
+    error (errorText, 100);
     }
 
   for (int i = 0; i < n; ++i) {// loop over all data partitions
     sDataPartition* dataPart = &(partitions[i]);
     dataPart->bitstream = (sBitstream *) calloc(1, sizeof(sBitstream));
     if (dataPart->bitstream == NULL) {
-      snprintf (errortext, ET_SIZE, "allocPartition: Memory allocation for sBitstream failed");
-      error (errortext, 100);
+      snprintf (errorText, ET_SIZE, "allocPartition: Memory allocation for sBitstream failed");
+      error (errorText, 100);
       }
 
     dataPart->bitstream->streamBuffer = (byte *) calloc(MAX_CODED_FRAME_SIZE, sizeof(byte));
     if (dataPart->bitstream->streamBuffer == NULL) {
-      snprintf (errortext, ET_SIZE, "allocPartition: Memory allocation for streamBuffer failed");
-      error (errortext, 100);
+      snprintf (errorText, ET_SIZE, "allocPartition: Memory allocation for streamBuffer failed");
+      error (errorText, 100);
       }
     }
 

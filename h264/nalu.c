@@ -355,8 +355,8 @@ int readNextNalu (sDecoder* decoder, sNalu* nalu) {
 
   int ret = getNALU (decoder->annexB, decoder, nalu);
   if (ret < 0) {
-    snprintf (errortext, ET_SIZE, "Error while getting the NALU in file format exit\n");
-    error (errortext, 601);
+    snprintf (errorText, ET_SIZE, "Error while getting the NALU in file format exit\n");
+    error (errorText, 601);
     }
   if (ret == 0)
     return 0;

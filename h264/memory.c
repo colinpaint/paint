@@ -1576,8 +1576,8 @@ void free_mem5Dint (int** ***array5D)
  */
 void no_mem_exit (char *where)
 {
-   snprintf(errortext, ET_SIZE, "Could not allocate memory: %s",where);
-   error (errortext, 100);
+   snprintf(errorText, ET_SIZE, "Could not allocate memory: %s",where);
+   error (errorText, 100);
 }
 //}}}
 //{{{

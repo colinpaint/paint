@@ -201,6 +201,57 @@ typedef struct {
   Boolean   vuiPicParamFlag;                    // u(1)
   } sPPS;
 //}}}
+
+//{{{  sDecodingEnv
+typedef struct {
+  unsigned int Drange;
+  unsigned int Dvalue;
+  int          DbitsLeft;
+  byte*        Dcodestrm;
+  int*         Dcodestrm_len;
+  } sDecodingEnv;
+//}}}
+//{{{  sBitstream
+typedef struct Bitstream {
+  // CABAC Decoding
+  int readLen;          // actual position in the codebuffer, CABAC only
+  int codeLen;          // overall codebuffer length, CABAC only
+
+  // CAVLC Decoding
+  int frameBitOffset;   // actual position in the codebuffer, bit-oriented, CAVLC only
+  int bitstreamLength;  // over codebuffer lnegth, byte oriented, CAVLC only
+
+  // ErrorConcealment
+  byte* streamBuffer;   // actual codebuffer for read bytes
+  int eiFlag;           // error indication, 0: no error, else unspecified error
+  } sBitstream;
+//}}}
+//{{{  sSyntaxElement
+typedef struct SyntaxElement {
+  int           type;                  //!< type of syntax element for data part.
+  int           value1;                //!< numerical value of syntax element
+  int           value2;                //!< for blocked symbols, e.g. run/level
+  int           len;                   //!< length of code
+  int           inf;                   //!< info part of CAVLC code
+  unsigned int  bitpattern;            //!< CAVLC bitpattern
+  int           context;               //!< CABAC context
+  int           k;                     //!< CABAC context for coeff_count,uv
+
+  // for mapping of CAVLC to syntaxElement
+  void (*mapping) (int, int, int*, int*);
+
+  // used for CABAC: refers to actual coding method of each individual syntax element type
+  void (*reading) (struct Macroblock*, struct SyntaxElement*, sDecodingEnv*);
+  } sSyntaxElement;
+//}}}
+//{{{  sDataPartition
+typedef struct DataPartition {
+  sBitstream*          bitstream;
+  sDecodingEnv deCabac;
+  int (*readsSyntaxElement) (struct Macroblock*, struct SyntaxElement*, struct DataPartition*);
+  } sDataPartition;
+//}}}
+
 //{{{  sBiContextType
 //! struct for context management
 typedef struct {
@@ -249,35 +300,10 @@ typedef struct {
   sBiContextType abs_contexts[NUM_BLOCK_TYPES][NUM_ABS_CTX];
   } sTextureInfoContexts;
 //}}}
-//{{{  sDecodingEnvironment
-typedef struct {
-  unsigned int Drange;
-  unsigned int Dvalue;
-  int          DbitsLeft;
-  byte*        Dcodestrm;
-  int*         Dcodestrm_len;
-  } sDecodingEnvironment;
-//}}}
-typedef sDecodingEnvironment* sDecodingEnvironmentPtr;
 
 struct Picture;
 struct Macroblock;
 struct PicMotion;
-//{{{  sBitstream
-typedef struct Bitstream {
-  // CABAC Decoding
-  int readLen;          // actual position in the codebuffer, CABAC only
-  int codeLen;          // overall codebuffer length, CABAC only
-
-  // CAVLC Decoding
-  int frameBitOffset;   // actual position in the codebuffer, bit-oriented, CAVLC only
-  int bitstreamLength;  // over codebuffer lnegth, byte oriented, CAVLC only
-
-  // ErrorConcealment
-  byte* streamBuffer;   // actual codebuffer for read bytes
-  int eiFlag;           // error indication, 0: no error, else unspecified error
-  } sBitstream;
-//}}}
 //{{{  sBlockPos
 typedef struct {
   short x;
@@ -300,31 +326,6 @@ typedef struct CBPStructure {
   int64 bits;
   int64 bits_8x8;
   } sCBPStructure;
-//}}}
-//{{{  sSyntaxElement
-typedef struct SyntaxElement {
-  int           type;                  //!< type of syntax element for data part.
-  int           value1;                //!< numerical value of syntax element
-  int           value2;                //!< for blocked symbols, e.g. run/level
-  int           len;                   //!< length of code
-  int           inf;                   //!< info part of CAVLC code
-  unsigned int  bitpattern;            //!< CAVLC bitpattern
-  int           context;               //!< CABAC context
-  int           k;                     //!< CABAC context for coeff_count,uv
-
-  // for mapping of CAVLC to syntaxElement
-  void (*mapping) (int, int, int*, int*);
-
-  // used for CABAC: refers to actual coding method of each individual syntax element type
-  void (*reading) (struct Macroblock*, struct SyntaxElement*, sDecodingEnvironmentPtr);
-  } sSyntaxElement;
-//}}}
-//{{{  sDataPartition
-typedef struct DataPartition {
-  sBitstream*          bitstream;
-  sDecodingEnvironment deCabac;
-  int (*readsSyntaxElement) (struct Macroblock*, struct SyntaxElement*, struct DataPartition*);
-  } sDataPartition;
 //}}}
 //{{{  sMotionVec
 typedef struct {
@@ -411,7 +412,7 @@ typedef struct Macroblock {
   void (*iTrans4x4) (struct Macroblock*, eColorPlane, int, int);
   void (*iTrans8x8) (struct Macroblock*, eColorPlane, int, int);
   void (*GetMVPredictor) (struct Macroblock*, sPixelPos*, sMotionVec*, short, struct PicMotion**, int, int, int, int, int);
-  int  (*readStoreCBPblockBit) (struct Macroblock*, sDecodingEnvironmentPtr, int);
+  int  (*readStoreCBPblockBit) (struct Macroblock*, sDecodingEnv*, int);
   char (*readRefPictureIndex) (struct Macroblock*, struct SyntaxElement*, struct DataPartition*, char, int);
   void (*readCompCoef4x4cabac) (struct Macroblock*, struct SyntaxElement*, eColorPlane, int(*)[4], int, int);
   void (*readCompCoef8x8cabac) (struct Macroblock*, struct SyntaxElement*, eColorPlane);
@@ -957,7 +958,6 @@ typedef struct Decoder {
   } sDecoder;
 //}}}
 
-typedef sBiContextType* sBiContextTypePtr;
 static const sMotionVec zero_mv = {0, 0};
 //{{{
 static inline int isBLprofile (unsigned int profileIdc) {
@@ -990,7 +990,7 @@ static inline int isHiIntraOnlyProfile (unsigned int profileIdc, Boolean constra
 //}}}
   extern sDecoder* gVidParam;
 
-  extern char errortext[ET_SIZE];
+  extern char errorText[ET_SIZE];
   extern void error (char* text, int code);
 
   extern void initGlobalBuffers (sDecoder* decoder, int layerId);

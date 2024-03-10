@@ -10,42 +10,42 @@
 #define QUARTER   0x0100  //(1 << (B_BITS-2))
 
 //{{{
-sDecodingEnvironmentPtr arideco_create_decoding_environment()
+sDecodingEnv* arideco_create_decoding_environment()
 {
-  sDecodingEnvironmentPtr dep;
+  sDecodingEnv* dep;
 
-  if ((dep = calloc(1,sizeof(sDecodingEnvironment))) == NULL)
+  if ((dep = calloc(1,sizeof(sDecodingEnv))) == NULL)
     no_mem_exit("arideco_create_decoding_environment: dep");
   return dep;
 }
 //}}}
 
 //{{{
-void arideco_delete_decoding_environment (sDecodingEnvironmentPtr dep)
+void arideco_delete_decoding_environment (sDecodingEnv* dep)
 {
   if (dep == NULL)
   {
-    snprintf(errortext, ET_SIZE, "Error freeing dep (NULL pointer)");
-    error (errortext, 200);
+    snprintf(errorText, ET_SIZE, "Error freeing dep (NULL pointer)");
+    error (errorText, 200);
   }
   else
     free(dep);
 }
 //}}}
 //{{{
-void arideco_done_decoding (sDecodingEnvironmentPtr dep) {
+void arideco_done_decoding (sDecodingEnv* dep) {
   (*dep->Dcodestrm_len)++;
   }
 //}}}
 
 //{{{
-static inline unsigned int getbyte (sDecodingEnvironmentPtr dep)
+static inline unsigned int getbyte (sDecodingEnv* dep)
 {
   return dep->Dcodestrm[(*dep->Dcodestrm_len)++];
 }
 //}}}
 //{{{
-static inline unsigned int getword (sDecodingEnvironmentPtr dep) {
+static inline unsigned int getword (sDecodingEnv* dep) {
 
   int *len = dep->Dcodestrm_len;
   byte *p_code_strm = &dep->Dcodestrm[*len];
@@ -54,7 +54,7 @@ static inline unsigned int getword (sDecodingEnvironmentPtr dep) {
 }
 //}}}
 //{{{
-void arideco_start_decoding (sDecodingEnvironmentPtr dep, unsigned char *code_buffer,
+void arideco_start_decoding (sDecodingEnv* dep, unsigned char *code_buffer,
                             int firstbyte, int *codeLen) {
 
   dep->Dcodestrm      = code_buffer;
@@ -69,13 +69,13 @@ void arideco_start_decoding (sDecodingEnvironmentPtr dep, unsigned char *code_bu
   }
 //}}}
 //{{{
-int arideco_bits_read (sDecodingEnvironmentPtr dep) {
+int arideco_bits_read (sDecodingEnv* dep) {
   return (((*dep->Dcodestrm_len) << 3) - dep->DbitsLeft);
   }
 //}}}
 
 //{{{
-unsigned int biari_decode_symbol (sDecodingEnvironment* dep, sBiContextType* bi_ct) {
+unsigned int biari_decode_symbol (sDecodingEnv* dep, sBiContextType* bi_ct) {
 
   unsigned int bit = bi_ct->MPS;
   unsigned int* value = &dep->Dvalue;
@@ -120,7 +120,7 @@ unsigned int biari_decode_symbol (sDecodingEnvironment* dep, sBiContextType* bi_
   }
 //}}}
 //{{{
-unsigned int biari_decode_symbol_eq_prob (sDecodingEnvironmentPtr dep)
+unsigned int biari_decode_symbol_eq_prob (sDecodingEnv* dep)
 {
    int tmp_value;
    unsigned int* value = &dep->Dvalue;
@@ -143,7 +143,7 @@ unsigned int biari_decode_symbol_eq_prob (sDecodingEnvironmentPtr dep)
   }
 //}}}
 //{{{
-unsigned int biari_decode_final (sDecodingEnvironmentPtr dep) {
+unsigned int biari_decode_final (sDecodingEnv* dep) {
 
   unsigned int range  = dep->Drange - 2;
   int value = dep->Dvalue;
@@ -171,7 +171,7 @@ unsigned int biari_decode_final (sDecodingEnvironmentPtr dep) {
 //}}}
 
 //{{{
-void biari_init_context (int qp, sBiContextTypePtr ctx, const char* ini)
+void biari_init_context (int qp, sBiContextType* ctx, const char* ini)
 {
   int pstate = ((ini[0]* qp )>>4) + ini[1];
 
