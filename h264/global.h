@@ -734,6 +734,9 @@ typedef struct Param {
   int vlcDebug;
   int naluDebug;
   int imageDebug;
+  int spsDebug;
+  int ppsDebug;
+  int seiDebug;
 
   int refOffset;
   int pocScale;
@@ -791,10 +794,10 @@ typedef struct Decoder {
   struct OldSlice* oldSlice;
 
   // current picture property
+  unsigned int picSliceIndex;
   unsigned int numDecodedMbs;
-  int          picSliceIndex;
-  int          numDecodedSlices;
-  int          numSlicesAllocated;
+  unsigned int numDecodedSlices;
+  unsigned int numAllocatedSlices;
 
   sSlice**     sliceList;
   char*        intraBlock;

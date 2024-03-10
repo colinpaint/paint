@@ -165,7 +165,7 @@ static void freeImg (sDecoder* decoder) {
       }
 
     if (decoder->sliceList) {
-      for (int i = 0; i < decoder->numSlicesAllocated; i++)
+      for (unsigned int i = 0; i < decoder->numAllocatedSlices; i++)
         if (decoder->sliceList[i])
           freeSlice (decoder->sliceList[i]);
       free (decoder->sliceList);
@@ -600,7 +600,7 @@ sDecoder* openDecoder (sParam* input, byte* chunk, size_t chunkSize) {
   decoder->globalInitDone[0] = decoder->globalInitDone[1] = 0;
   decoder->oldSlice = (sOldSlice*)calloc (1, sizeof(sOldSlice));
   decoder->sliceList = (sSlice**)calloc (MAX_NUM_DECSLICES, sizeof(sSlice*));
-  decoder->numSlicesAllocated = MAX_NUM_DECSLICES;
+  decoder->numAllocatedSlices = MAX_NUM_DECSLICES;
   decoder->nextSlice = NULL;
   initOldSlice (decoder->oldSlice);
 

@@ -698,7 +698,7 @@ static void initPictureDecoding (sDecoder* decoder) {
   updatePicNum (slice);
 
   initDeblock (decoder, slice->mbAffFrameFlag);
-  for (int j = 0; j < decoder->picSliceIndex; j++) {
+  for (unsigned int j = 0; j < decoder->picSliceIndex; j++) {
     if (decoder->sliceList[j]->DFDisableIdc != 1)
       deblockMode = 0;
     }
@@ -1362,11 +1362,11 @@ int decodeFrame (sDecoder* decoder) {
          }
 
        decoder->picSliceIndex++;
-       if (decoder->picSliceIndex >= decoder->numSlicesAllocated) {
+       if (decoder->picSliceIndex >= decoder->numAllocatedSlices) {
          sSlice** tmpSliceList = (sSlice**)realloc (
-           decoder->sliceList, (decoder->numSlicesAllocated + MAX_NUM_DECSLICES) * sizeof(sSlice*));
+           decoder->sliceList, (decoder->numAllocatedSlices + MAX_NUM_DECSLICES) * sizeof(sSlice*));
          if (!tmpSliceList) {
-           tmpSliceList = calloc ((decoder->numSlicesAllocated + MAX_NUM_DECSLICES), sizeof(sSlice*));
+           tmpSliceList = calloc ((decoder->numAllocatedSlices + MAX_NUM_DECSLICES), sizeof(sSlice*));
            memcpy (tmpSliceList, decoder->sliceList, decoder->picSliceIndex * sizeof(sSlice*));
            free (decoder->sliceList);
            sliceList = decoder->sliceList = tmpSliceList;
@@ -1375,7 +1375,7 @@ int decodeFrame (sDecoder* decoder) {
            sliceList = decoder->sliceList = tmpSliceList;
            memset (decoder->sliceList + decoder->picSliceIndex, 0, sizeof(sSlice*) * MAX_NUM_DECSLICES);
            }
-         decoder->numSlicesAllocated += MAX_NUM_DECSLICES;
+         decoder->numAllocatedSlices += MAX_NUM_DECSLICES;
         }
       curHeader = SOS;
       }
@@ -1383,8 +1383,8 @@ int decodeFrame (sDecoder* decoder) {
       if (sliceList[decoder->picSliceIndex-1]->mbAffFrameFlag)
         sliceList[decoder->picSliceIndex-1]->endMbNumPlus1 = decoder->frameSizeMbs / 2;
       else
-        sliceList[decoder->picSliceIndex-1]->endMbNumPlus1 = decoder->frameSizeMbs /
-                                                                 (1 + sliceList[decoder->picSliceIndex-1]->fieldPicFlag);
+        sliceList[decoder->picSliceIndex-1]->endMbNumPlus1 = 
+          decoder->frameSizeMbs / (1 + sliceList[decoder->picSliceIndex-1]->fieldPicFlag);
       decoder->newFrame = 1;
       slice->curSliceNum = 0;
 
@@ -1401,7 +1401,7 @@ int decodeFrame (sDecoder* decoder) {
   // decode slices
   ret = curHeader;
   initPictureDecoding (decoder);
-  for (int sliceIndex = 0; sliceIndex < decoder->picSliceIndex; sliceIndex++) {
+  for (unsigned int sliceIndex = 0; sliceIndex < decoder->picSliceIndex; sliceIndex++) {
     slice = sliceList[sliceIndex];
     curHeader = slice->curHeader;
     initSlice (decoder, slice);

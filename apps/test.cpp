@@ -946,6 +946,9 @@ public:
 
       sParam param;
       memset (&param, 0, sizeof(sParam));
+      param.spsDebug = 1;
+      param.ppsDebug = 1;
+      //param.seiDebug = 1;
       //param.vlcDebug = 1;
       //param.naluDebug = 1;
       //param.imageDebug = 1;
@@ -1070,6 +1073,9 @@ public:
 
       sParam param;
       memset (&param, 0, sizeof(sParam));
+      param.spsDebug = 1;
+      param.ppsDebug = 1;
+      //param.seiDebug = 1;
       //param.imageDebug = 1;
       param.pocScale = 2;
       param.pocGap = 2;
