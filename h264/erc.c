@@ -1520,27 +1520,17 @@ static sPicture* get_last_ref_pic_from_dpb (sDPB* dpb)
 }
 //}}}
 //{{{
-/*!
-************************************************************************
-* \brief
-* Conceals the lost reference or non reference frame by either frame copy
-* or motion vector copy conceal.
-*
-************************************************************************
-*/
-
 static void copy_to_conceal (sPicture *src, sPicture *dst, sVidParam* vidParam)
 {
-  int i=0;
+  int i = 0;
   int mv[3];
   int multiplier;
   sPixel *predMB, *storeYUV;
-  int j, y, x, mb_height, mb_width, ii=0, jj=0;
+  int j, y, x, mb_height, mb_width, ii = 0, jj = 0;
   int uv;
   int mm, nn;
   int scale = 1;
   sPicture* picture = vidParam->picture;
-  // sInputParam *test;
 
   int curMbNum = 0;
 
