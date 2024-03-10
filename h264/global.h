@@ -492,7 +492,7 @@ typedef struct Slice {
 
   int idrFlag;
   int idrPicId;
-  int refId;                   
+  int refId;
   int transform8x8Mode;
   Boolean chroma444notSeparate;   // indicates chroma 4:4:4 coding with sepColourPlaneFlag equal to zero
 
@@ -511,7 +511,7 @@ typedef struct Slice {
   int thisPoc;
 
   // information need to move to slice
-  unsigned int  curMbNum;  
+  unsigned int  curMbNum;
   unsigned int  numDecodedMb;
   short         curSliceNum;
   int           codCount;    // Current count of number of skipped macroblocks in a row
@@ -963,12 +963,6 @@ typedef struct VidParam {
   int max_vmv_r;
   } sVidParam;
 //}}}
-//{{{  sDecoderParam
-typedef struct DecoderParam {
-  sInputParam* inputParam;
-  sVidParam*   vidParam;
-  } sDecoderParam;
-//}}}
 
 typedef sBiContextType* sBiContextTypePtr;
 static const sMotionVector zero_mv = {0, 0};
@@ -1001,7 +995,7 @@ static inline int is_HI_intra_only_profile (unsigned int profileIdc, Boolean con
   extern "C" {
 #endif
 //}}}
-  extern sDecoderParam* gDecoder;
+  extern sVidParam* gDecoder;
 
   extern char errortext[ET_SIZE];
   extern void error (char* text, int code);

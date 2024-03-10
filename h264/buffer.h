@@ -132,7 +132,7 @@ typedef struct DPB {
   unsigned usedSize;
   unsigned refFramesInBuffer;
   unsigned longTermRefFramesInBuffer;
- 
+
   int lastOutputPoc;
   int maxLongTermPicIndex;
   int initDone;
@@ -299,7 +299,7 @@ extern void get_smallest_poc (sDPB* dpb, int *poc,int * pos);
 
 extern void initDpb (sVidParam* vidParam, sDPB* dpb, int type);
 extern void reInitDpb (sVidParam* vidParam, sDPB* dpb, int type);
-extern void flushDpb(sDPB* dpb);
+extern void flushDpb (sDPB* dpb);
 
 extern int removeUnusedDpb (sDPB* dpb);
 extern void storePictureDpb (sDPB* dpb, sPicture* p);

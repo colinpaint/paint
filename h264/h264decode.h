@@ -25,11 +25,12 @@ typedef struct dec_set_t {
   extern "C" {
 #endif
 //}}}
-  int SetOptsDecoder(DecSet_t *pDecOpts);
-  int OpenDecoder (sInputParam* inputParam, byte* chunk, size_t chunkSize);
+  int SetOptsDecoder (DecSet_t* pDecOpts);
+
+  void OpenDecoder (sInputParam* inputParam, byte* chunk, size_t chunkSize);
   int DecodeOneFrame (sDecodedPicture** ppDecPic);
-  int FinitDecoder (sDecodedPicture** ppDecPicList);
-  int CloseDecoder();
+  void FinitDecoder (sDecodedPicture** ppDecPicList);
+  void CloseDecoder();
 //{{{
 #ifdef __cplusplus
   }

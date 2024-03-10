@@ -487,7 +487,7 @@ static void copyDecPicture_JV (sVidParam* vidParam, sPicture* dst, sPicture* src
   }
 //}}}
 //{{{
-static void initPicture (sVidParam* vidParam, sSlice* slice, sInputParam* inputParam) {
+static void initPicture (sVidParam* vidParam, sSlice* slice) {
 
   sPicture* picture = NULL;
   sSPS* activeSPS = vidParam->activeSPS;
@@ -513,7 +513,7 @@ static void initPicture (sVidParam* vidParam, sSlice* slice, sInputParam* inputP
     slice->frameNum != (vidParam->preFrameNum + 1) % vidParam->maxFrameNum) {
     if (activeSPS->gaps_in_frame_num_value_allowed_flag == 0) {
       // picture error conceal
-      if (inputParam->concealMode != 0) {
+      if (vidParam->inputParam->concealMode != 0) {
         if ((slice->frameNum) < ((vidParam->preFrameNum + 1) % vidParam->maxFrameNum)) {
           /* Conceal lost IDR frames and any frames immediately following the IDR.
           // Use frame copy for these since lists cannot be formed correctly for motion copy*/
@@ -521,11 +521,11 @@ static void initPicture (sVidParam* vidParam, sSlice* slice, sInputParam* inputP
           vidParam->IdrConcealFlag = 1;
           concealLostFrames (dpb, slice);
           // reset to original conceal mode for future drops
-          vidParam->concealMode = inputParam->concealMode;
+          vidParam->concealMode = vidParam->inputParam->concealMode;
           }
         else {
           // reset to original conceal mode for future drops
-          vidParam->concealMode = inputParam->concealMode;
+          vidParam->concealMode = vidParam->inputParam->concealMode;
           vidParam->IdrConcealFlag = 0;
           concealLostFrames (dpb, slice);
           }
@@ -561,8 +561,8 @@ static void initPicture (sVidParam* vidParam, sSlice* slice, sInputParam* inputP
   picture->sliceQpDelta = slice->sliceQpDelta;
   picture->chromaQpOffset[0] = vidParam->activePPS->chromaQpIndexOffset;
   picture->chromaQpOffset[1] = vidParam->activePPS->secondChromaQpIndexOffset;
-  picture->iCodingType = slice->structure == FRAME ? 
-    (slice->mbAffFrameFlag? FRAME_MB_PAIR_CODING:FRAME_CODING) : FIELD_CODING; 
+  picture->iCodingType = slice->structure == FRAME ?
+    (slice->mbAffFrameFlag? FRAME_MB_PAIR_CODING:FRAME_CODING) : FIELD_CODING;
   picture->layerId = slice->layerId;
 
   // reset all variables of the error conceal instance before decoding of every frame.
@@ -814,7 +814,6 @@ static void decodeOneSlice (sSlice* slice) {
 //{{{
 static int readNewSlice (sSlice* slice) {
 
-  sInputParam* inputParam = slice->inputParam;
   sVidParam* vidParam = slice->vidParam;
 
   int curHeader = 0;
@@ -882,7 +881,7 @@ static int readNewSlice (sSlice* slice) {
 
         if (isNewPicture (vidParam->picture, slice, vidParam->oldSlice)) {
           if (vidParam->curPicSliceNum == 0)
-            initPicture (vidParam, slice, inputParam);
+            initPicture (vidParam, slice);
           curHeader = SOP;
           // check zero_byte if it is also the first NAL unit in the access unit
           checkZeroByteVCL (vidParam, nalu);
@@ -940,7 +939,7 @@ static int readNewSlice (sSlice* slice) {
 
         if (isNewPicture (vidParam->picture, slice, vidParam->oldSlice)) {
           if (vidParam->curPicSliceNum == 0)
-            initPicture (vidParam, slice, inputParam);
+            initPicture (vidParam, slice);
           curHeader = SOP;
           checkZeroByteVCL (vidParam, nalu);
           }
@@ -1083,11 +1082,10 @@ void initOldSlice (sOldSliceParam* oldSliceParam) {
 //{{{
 void calcFrameNum (sVidParam* vidParam, sPicture* p) {
 
-  sInputParam* inputParam = vidParam->inputParam;
-  int psnrPOC = vidParam->activeSPS->mb_adaptive_frame_field_flag ? p->poc / (inputParam->pocScale) :
-                                                                    p->poc / (inputParam->pocScale);
+  int psnrPOC = vidParam->activeSPS->mb_adaptive_frame_field_flag ? p->poc / (vidParam->inputParam->pocScale) :
+                                                                    p->poc / (vidParam->inputParam->pocScale);
   if (psnrPOC == 0)
-    vidParam->idrPsnrNum = vidParam->gapNumFrame * vidParam->refPocGap / (inputParam->pocScale);
+    vidParam->idrPsnrNum = vidParam->gapNumFrame * vidParam->refPocGap / (vidParam->inputParam->pocScale);
 
   vidParam->psnrNum = imax (vidParam->psnrNum, vidParam->idrPsnrNum+psnrPOC);
   vidParam->frameNum = vidParam->idrPsnrNum + psnrPOC;
@@ -1109,8 +1107,6 @@ void padPicture (sVidParam* vidParam, sPicture* picture) {
 //}}}
 //{{{
 void exitPicture (sVidParam* vidParam, sPicture** picture) {
-
-  sInputParam* inputParam = vidParam->inputParam;
 
   // return if the last picture has already been finished
   if (*picture == NULL ||
@@ -1268,12 +1264,10 @@ void exitPicture (sVidParam* vidParam, sPicture** picture) {
 //}}}
 
 //{{{
-int decodeFrame (sDecoderParam* decoder) {
+int decodeFrame (sVidParam* vidParam) {
 
   int ret = 0;
 
-  sVidParam* vidParam = decoder->vidParam;
-  sInputParam* inputParam = vidParam->inputParam;
   vidParam->curPicSliceNum = 0;
   vidParam->numSlicesDecoded = 0;
   vidParam->numDecodedMb = 0;
@@ -1294,7 +1288,7 @@ int decodeFrame (sDecoderParam* decoder) {
     vidParam->nextSlice = slice;
     slice = sliceList[vidParam->curPicSliceNum];
     useParameterSet (slice);
-    initPicture (vidParam, slice, inputParam);
+    initPicture (vidParam, slice);
     vidParam->curPicSliceNum++;
     curHeader = SOS;
     }
@@ -1302,11 +1296,11 @@ int decodeFrame (sDecoderParam* decoder) {
   while ((curHeader != SOP) && (curHeader != EOS)) {
     //{{{  no pending slices
     if (!sliceList[vidParam->curPicSliceNum])
-      sliceList[vidParam->curPicSliceNum] = allocSlice (inputParam, vidParam);
+      sliceList[vidParam->curPicSliceNum] = allocSlice (vidParam->inputParam, vidParam);
 
     slice = sliceList[vidParam->curPicSliceNum];
     slice->vidParam = vidParam;
-    slice->inputParam = inputParam;
+    slice->inputParam = vidParam->inputParam;
     slice->dpb = vidParam->dpbLayer[0]; //set default value;
     slice->nextHeader = -8888;
     slice->numDecodedMb = 0;
@@ -1362,7 +1356,7 @@ int decodeFrame (sDecoderParam* decoder) {
       if (sliceList[vidParam->curPicSliceNum-1]->mbAffFrameFlag)
         sliceList[vidParam->curPicSliceNum-1]->endMbNumPlus1 = vidParam->FrameSizeInMbs / 2;
       else
-        sliceList[vidParam->curPicSliceNum-1]->endMbNumPlus1 = vidParam->FrameSizeInMbs / 
+        sliceList[vidParam->curPicSliceNum-1]->endMbNumPlus1 = vidParam->FrameSizeInMbs /
                                                                  (1 + sliceList[vidParam->curPicSliceNum-1]->fieldPicFlag);
       vidParam->newFrame = 1;
       slice->curSliceNum = 0;

@@ -1078,10 +1078,7 @@ public:
       sInputParams.dpb_plus[0] = 1;
       sInputParams.intraProfileDeblocking = 1;
 
-      if (OpenDecoder (&sInputParams, chunk, fileSize) != DEC_OPEN_NOERR) {
-        cLog::log (LOGERROR, "openDecoder failed");
-        return;
-        }
+      OpenDecoder (&sInputParams, chunk, fileSize);
 
       int ret = 0;
       do {
@@ -1094,9 +1091,9 @@ public:
         } while (ret == DEC_SUCCEED);
 
       sDecodedPicture* decodedPicture;
-      ret = FinitDecoder (&decodedPicture);
+      FinitDecoder (&decodedPicture);
       outputPicList (decodedPicture, 1);
-      ret = CloseDecoder();
+      CloseDecoder();
 
       delete[] chunk;
 
