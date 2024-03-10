@@ -944,7 +944,6 @@ public:
       //}}}
       cLog::log (LOGINFO, fmt::format ("read:{} size:{} idr:{}", mFileName, h264ChunkSize, gotIDR));
 
-      // input params
       sParam param;
       memset (&param, 0, sizeof(sParam));
       //param.vlcDebug = 1;
@@ -1069,7 +1068,6 @@ public:
       cLog::log (LOGINFO, fmt::format ("file read {} {}", fileSize, bytesRead));
       //}}}
 
-      // input params
       sParam param;
       memset (&param, 0, sizeof(sParam));
       //param.imageDebug = 1;
