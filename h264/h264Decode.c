@@ -628,9 +628,9 @@ sDecoder* OpenDecoder (sParam* input, byte* chunk, size_t chunkSize) {
 //{{{
 int DecodeOneFrame (sDecoder* decoder, sDecodedPic** ppDecPicList) {
 
-  ClearDecodedPictures (gDecoder);
+  ClearDecodedPictures (decoder);
 
-  int iRet = decodeFrame (gDecoder);
+  int iRet = decodeFrame (decoder);
   if (iRet == SOP)
     iRet = DEC_SUCCEED;
   else if (iRet == EOS)
@@ -638,41 +638,41 @@ int DecodeOneFrame (sDecoder* decoder, sDecodedPic** ppDecPicList) {
   else
     iRet |= DEC_ERRMASK;
 
-  *ppDecPicList = gDecoder->decOutputPic;
+  *ppDecPicList = decoder->decOutputPic;
   return iRet;
   }
 //}}}
 //{{{
 void FinitDecoder (sDecoder* decoder, sDecodedPic** ppDecPicList) {
 
-  ClearDecodedPictures (gDecoder);
-  flushDpb (gDecoder->dpbLayer[0]);
+  ClearDecodedPictures (decoder);
+  flushDpb (decoder->dpbLayer[0]);
 
-  resetAnnexB (gDecoder->annexB);
+  resetAnnexB (decoder->annexB);
 
-  gDecoder->newFrame = 0;
-  gDecoder->prevFrameNum = 0;
-  *ppDecPicList = gDecoder->decOutputPic;
+  decoder->newFrame = 0;
+  decoder->prevFrameNum = 0;
+  *ppDecPicList = decoder->decOutputPic;
   }
 //}}}
 //{{{
 void CloseDecoder (sDecoder* decoder) {
 
-  FmoFinit (gDecoder);
-  freeLayerBuffers (gDecoder, 0);
-  freeLayerBuffers (gDecoder, 1);
-  freeGlobalBuffers (gDecoder);
+  FmoFinit (decoder);
+  freeLayerBuffers (decoder, 0);
+  freeLayerBuffers (decoder, 1);
+  freeGlobalBuffers (decoder);
 
-  ercClose (gDecoder, gDecoder->ercErrorVar);
+  ercClose (decoder, decoder->ercErrorVar);
 
-  cleanUpPPS (gDecoder);
+  cleanUpPPS (decoder);
 
   for (unsigned i = 0; i < MAX_NUM_DPB_LAYERS; i++)
-    freeDpb (gDecoder->dpbLayer[i]);
-  freeOutput (gDecoder);
-  freeImg (gDecoder);
-  free (gDecoder);
+    freeDpb (decoder->dpbLayer[i]);
+  freeOutput (decoder);
+  freeImg (decoder);
+  free (decoder);
 
-  gDecoder = NULL;
+  decoder = NULL;
   }
 //}}}
