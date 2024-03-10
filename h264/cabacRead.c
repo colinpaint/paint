@@ -15,7 +15,7 @@ static void read_comp_coeff_4x4_smb_CABAC (sMacroblock* curMb, sSyntaxElement* c
   int i0, j0;
   int level = 1;
   sDataPartition *dP;
-  //sVidParam* vidParam = curMb->vidParam;
+  //sDecoder* vidParam = curMb->vidParam;
   sSlice* curSlice = curMb->slice;
   const byte *partMap = assignSE2partition[curSlice->dataPartitionMode];
 
@@ -99,7 +99,7 @@ static void read_comp_coeff_4x4_smb_CABAC (sMacroblock* curMb, sSyntaxElement* c
 static void read_comp_coeff_4x4_CABAC (sMacroblock* curMb, sSyntaxElement* currSE, eColorPlane pl, int (*InvLevelScale4x4)[4], int qp_per, int cbp)
 {
   sSlice* curSlice = curMb->slice;
-  sVidParam* vidParam = curMb->vidParam;
+  sDecoder* vidParam = curMb->vidParam;
   int start_scan = IS_I16MB (curMb)? 1 : 0;
   int blockY, blockX;
   int i, j;
@@ -175,7 +175,7 @@ static void read_comp_coeff_4x4_CABAC (sMacroblock* curMb, sSyntaxElement* currS
 //{{{
 static void read_comp_coeff_4x4_CABAC_ls (sMacroblock* curMb, sSyntaxElement* currSE, eColorPlane pl, int (*InvLevelScale4x4)[4], int qp_per, int cbp)
 {
-  sVidParam* vidParam = curMb->vidParam;
+  sDecoder* vidParam = curMb->vidParam;
   int start_scan = IS_I16MB (curMb)? 1 : 0;
   int blockY, blockX;
   int64 *cbp_blk = &curMb->cbpStructure[pl].blk;
@@ -199,7 +199,7 @@ static void readCompCoeff8x8_CABAC (sMacroblock* curMb, sSyntaxElement* currSE, 
 {
   if (curMb->cbp & (1<<b8))  // are there any coefficients in the current block
   {
-    sVidParam* vidParam = curMb->vidParam;
+    sDecoder* vidParam = curMb->vidParam;
     int transform_pl = (vidParam->sepColourPlaneFlag != 0) ? curMb->slice->colourPlaneId : pl;
 
     int** tcoeffs;
@@ -298,7 +298,7 @@ static void readCompCoeff8x8_CABAC_lossless (sMacroblock* curMb, sSyntaxElement*
 {
   if (curMb->cbp & (1<<b8))  // are there any coefficients in the current block
   {
-    sVidParam* vidParam = curMb->vidParam;
+    sDecoder* vidParam = curMb->vidParam;
 
     int** tcoeffs;
     int i,j,k;
@@ -401,7 +401,7 @@ static void read_CBP_and_coeffs_from_NAL_CABAC_420 (sMacroblock* curMb)
   int i0, j0;
 
   int qp_per, qp_rem;
-  sVidParam* vidParam = curMb->vidParam;
+  sDecoder* vidParam = curMb->vidParam;
   int smb = ((vidParam->type==SP_SLICE) && (curMb->isIntraBlock == FALSE)) || (vidParam->type == SI_SLICE && curMb->mbType == SI4MB);
 
   int qp_per_uv[2];
@@ -772,7 +772,7 @@ static void read_CBP_and_coeffs_from_NAL_CABAC_400 (sMacroblock* curMb)
   int i0, j0;
 
   int qp_per, qp_rem;
-  sVidParam* vidParam = curMb->vidParam;
+  sDecoder* vidParam = curMb->vidParam;
 
   int intra = (curMb->isIntraBlock == TRUE);
 
@@ -941,7 +941,7 @@ static void read_CBP_and_coeffs_from_NAL_CABAC_444 (sMacroblock* curMb)
   int coef_ctr, i0, j0;
 
   int qp_per, qp_rem;
-  sVidParam* vidParam = curMb->vidParam;
+  sDecoder* vidParam = curMb->vidParam;
 
   int uv;
   int qp_per_uv[2];
@@ -1200,7 +1200,7 @@ static void read_CBP_and_coeffs_from_NAL_CABAC_422 (sMacroblock* curMb)
   int ll;
 
   int qp_per, qp_rem;
-  sVidParam* vidParam = curMb->vidParam;
+  sDecoder* vidParam = curMb->vidParam;
 
   int uv;
   int qp_per_uv[2];

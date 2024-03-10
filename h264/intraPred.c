@@ -233,7 +233,7 @@ static int intra8x8_dc_pred (sMacroblock * curMb,
   int s0 = 0;
   sPixel PredPel[25];  // array of predictor pels
   sSlice *curSlice = curMb->slice;
-  sVidParam* vidParam = curMb->vidParam;
+  sDecoder* vidParam = curMb->vidParam;
 
   sPicture* picture = curSlice->picture;
   sPixel** imgY = (pl) ? picture->imgUV[pl - 1] : picture->imgY; // For MB level frame/field coding tools -- set default to imgY
@@ -376,7 +376,7 @@ static int intra8x8_vert_pred (sMacroblock* curMb,
                                      int joff)              //!< pixel offset Y within MB
 {
   sSlice *curSlice = curMb->slice;
-  sVidParam* vidParam = curMb->vidParam;
+  sDecoder* vidParam = curMb->vidParam;
 
   int i;
   sPixel PredPel[25];  // array of predictor pels
@@ -484,7 +484,7 @@ static int intra8x8_hor_pred (sMacroblock* curMb,
                                     int joff)              //!< pixel offset Y within MB
 {
   sSlice *curSlice = curMb->slice;
-  sVidParam* vidParam = curMb->vidParam;
+  sDecoder* vidParam = curMb->vidParam;
 
 
   int j;
@@ -595,7 +595,7 @@ static int intra8x8_diag_down_right_pred (sMacroblock* curMb,
                                                 int joff)              //!< pixel offset Y within MB
 {
   sSlice *curSlice = curMb->slice;
-  sVidParam* vidParam = curMb->vidParam;
+  sDecoder* vidParam = curMb->vidParam;
 
   sPixel PredPel[25];    // array of predictor pels
   sPixel PredArray[16];  // array of final prediction values
@@ -744,7 +744,7 @@ static int intra8x8_diag_down_left_pred (sMacroblock* curMb,
                                                int joff)              //!< pixel offset Y within MB
 {
   sSlice *curSlice = curMb->slice;
-  sVidParam* vidParam = curMb->vidParam;
+  sDecoder* vidParam = curMb->vidParam;
 
   sPixel PredPel[25];    // array of predictor pels
   sPixel PredArray[16];  // array of final prediction values
@@ -893,7 +893,7 @@ static int intra8x8_vert_right_pred (sMacroblock* curMb,
                                            int joff)              //!< pixel offset Y within MB
 {
   sSlice *curSlice = curMb->slice;
-  sVidParam* vidParam = curMb->vidParam;
+  sDecoder* vidParam = curMb->vidParam;
 
   sPixel PredPel[25];  // array of predictor pels
   sPixel PredArray[22];  // array of final prediction values
@@ -1048,7 +1048,7 @@ static int intra8x8_vert_left_pred (sMacroblock* curMb,
                                           int joff)              //!< pixel offset Y within MB
 {
   sSlice *curSlice = curMb->slice;
-  sVidParam* vidParam = curMb->vidParam;
+  sDecoder* vidParam = curMb->vidParam;
 
   sPixel PredPel[25];  // array of predictor pels
   sPixel PredArray[22];  // array of final prediction values
@@ -1201,7 +1201,7 @@ static int intra8x8_hor_up_pred (sMacroblock* curMb,
                                        int joff)              //!< pixel offset Y within MB
 {
   sSlice *curSlice = curMb->slice;
-  sVidParam* vidParam = curMb->vidParam;
+  sDecoder* vidParam = curMb->vidParam;
 
   sPixel PredPel[25];     // array of predictor pels
   sPixel PredArray[22];   // array of final prediction values
@@ -1355,7 +1355,7 @@ static int intra8x8_hor_down_pred (sMacroblock* curMb,
                                          int joff)              //!< pixel offset Y within MB
 {
   sSlice *curSlice = curMb->slice;
-  sVidParam* vidParam = curMb->vidParam;
+  sDecoder* vidParam = curMb->vidParam;
 
   sPixel PredPel[25];  // array of predictor pels
   sPixel PredArray[22];   // array of final prediction values
@@ -1571,7 +1571,7 @@ static int intra8x8_dc_pred_mbaff (sMacroblock* curMb, eColorPlane pl, int ioff,
   int s0 = 0;
   sPixel PredPel[25];  // array of predictor pels
   sSlice *curSlice = curMb->slice;
-  sVidParam* vidParam = curMb->vidParam;
+  sDecoder* vidParam = curMb->vidParam;
 
   sPicture* picture = curSlice->picture;
   sPixel** imgY = (pl) ? picture->imgUV[pl - 1] : picture->imgY; // For MB level frame/field coding tools -- set default to imgY
@@ -1715,7 +1715,7 @@ static int intra8x8_vert_pred_mbaff (sMacroblock* curMb,
                                      int joff)              //!< pixel offset Y within MB
 {
   sSlice *curSlice = curMb->slice;
-  sVidParam* vidParam = curMb->vidParam;
+  sDecoder* vidParam = curMb->vidParam;
 
   int i;
   sPixel PredPel[25];  // array of predictor pels
@@ -1827,7 +1827,7 @@ static int intra8x8_hor_pred_mbaff (sMacroblock* curMb,
                                     int joff)              //!< pixel offset Y within MB
 {
   sSlice *curSlice = curMb->slice;
-  sVidParam* vidParam = curMb->vidParam;
+  sDecoder* vidParam = curMb->vidParam;
 
 
   int i,j;
@@ -1944,7 +1944,7 @@ static int intra8x8_diag_down_right_pred_mbaff (sMacroblock* curMb,
                                                 int joff)              //!< pixel offset Y within MB
 {
   sSlice *curSlice = curMb->slice;
-  sVidParam* vidParam = curMb->vidParam;
+  sDecoder* vidParam = curMb->vidParam;
 
 
   int i;
@@ -2095,7 +2095,7 @@ static int intra8x8_diag_down_left_pred_mbaff (sMacroblock* curMb,
                                                int joff)              //!< pixel offset Y within MB
 {
   sSlice *curSlice = curMb->slice;
-  sVidParam* vidParam = curMb->vidParam;
+  sDecoder* vidParam = curMb->vidParam;
 
   int i;
   sPixel PredPel[25];  // array of predictor pels
@@ -2248,7 +2248,7 @@ static int intra8x8_vert_right_pred_mbaff (sMacroblock* curMb,
                                            int joff)              //!< pixel offset Y within MB
 {
   sSlice *curSlice = curMb->slice;
-  sVidParam* vidParam = curMb->vidParam;
+  sDecoder* vidParam = curMb->vidParam;
 
   int i;
   sPixel PredPel[25];  // array of predictor pels
@@ -2405,7 +2405,7 @@ static int intra8x8_vert_left_pred_mbaff (sMacroblock* curMb,
                                           int joff)              //!< pixel offset Y within MB
 {
   sSlice *curSlice = curMb->slice;
-  sVidParam* vidParam = curMb->vidParam;
+  sDecoder* vidParam = curMb->vidParam;
 
   int i;
   sPixel PredPel[25];  // array of predictor pels
@@ -2562,7 +2562,7 @@ static int intra8x8_hor_up_pred_mbaff (sMacroblock* curMb,
                                        int joff)              //!< pixel offset Y within MB
 {
   sSlice *curSlice = curMb->slice;
-  sVidParam* vidParam = curMb->vidParam;
+  sDecoder* vidParam = curMb->vidParam;
 
   int i;
   sPixel PredPel[25];  // array of predictor pels
@@ -2720,7 +2720,7 @@ static int intra8x8_hor_down_pred_mbaff (sMacroblock* curMb,
                                          int joff)              //!< pixel offset Y within MB
 {
   sSlice *curSlice = curMb->slice;
-  sVidParam* vidParam = curMb->vidParam;
+  sDecoder* vidParam = curMb->vidParam;
 
   int i;
   sPixel PredPel[25];  // array of predictor pels
@@ -2938,7 +2938,7 @@ static int intra_pred_8x8_mbaff (sMacroblock* curMb,
 static int intra16x16_dc_pred (sMacroblock* curMb, eColorPlane pl)
 {
   sSlice *curSlice = curMb->slice;
-  sVidParam* vidParam = curMb->vidParam;
+  sDecoder* vidParam = curMb->vidParam;
 
   int s0 = 0, s1 = 0, s2 = 0;
 
@@ -3028,7 +3028,7 @@ static int intra16x16_dc_pred (sMacroblock* curMb, eColorPlane pl)
 static int intra16x16_vert_pred (sMacroblock* curMb, eColorPlane pl)
 {
   sSlice *curSlice = curMb->slice;
-  sVidParam* vidParam = curMb->vidParam;
+  sDecoder* vidParam = curMb->vidParam;
 
   int j;
 
@@ -3081,7 +3081,7 @@ static int intra16x16_vert_pred (sMacroblock* curMb, eColorPlane pl)
 static int intra16x16_hor_pred (sMacroblock* curMb, eColorPlane pl)
 {
   sSlice *curSlice = curMb->slice;
-  sVidParam* vidParam = curMb->vidParam;
+  sDecoder* vidParam = curMb->vidParam;
   int j;
 
   sPixel** imgY = (pl) ? curSlice->picture->imgUV[pl - 1] : curSlice->picture->imgY;
@@ -3149,7 +3149,7 @@ static int intra16x16_hor_pred (sMacroblock* curMb, eColorPlane pl)
 static int intra16x16_plane_pred (sMacroblock* curMb, eColorPlane pl)
 {
   sSlice *curSlice = curMb->slice;
-  sVidParam* vidParam = curMb->vidParam;
+  sDecoder* vidParam = curMb->vidParam;
 
   int i,j;
 
@@ -3258,7 +3258,7 @@ static int intra_pred_16x16_normal (sMacroblock* curMb, eColorPlane pl, int pred
 static int intra16x16_dc_pred_mbaff (sMacroblock* curMb, eColorPlane pl)
 {
   sSlice *curSlice = curMb->slice;
-  sVidParam* vidParam = curMb->vidParam;
+  sDecoder* vidParam = curMb->vidParam;
 
   int s0 = 0, s1 = 0, s2 = 0;
 
@@ -3337,7 +3337,7 @@ static int intra16x16_dc_pred_mbaff (sMacroblock* curMb, eColorPlane pl)
 static int intra16x16_vert_pred_mbaff (sMacroblock* curMb, eColorPlane pl)
 {
   sSlice *curSlice = curMb->slice;
-  sVidParam* vidParam = curMb->vidParam;
+  sDecoder* vidParam = curMb->vidParam;
 
   int j;
 
@@ -3390,7 +3390,7 @@ static int intra16x16_vert_pred_mbaff (sMacroblock* curMb, eColorPlane pl)
 static int intra16x16_hor_pred_mbaff (sMacroblock* curMb, eColorPlane pl)
 {
   sSlice *curSlice = curMb->slice;
-  sVidParam* vidParam = curMb->vidParam;
+  sDecoder* vidParam = curMb->vidParam;
   int i,j;
 
   sPixel** imgY = (pl) ? curSlice->picture->imgUV[pl - 1] : curSlice->picture->imgY;
@@ -3443,7 +3443,7 @@ static int intra16x16_hor_pred_mbaff (sMacroblock* curMb, eColorPlane pl)
 static int intra16x16_plane_pred_mbaff (sMacroblock* curMb, eColorPlane pl)
 {
   sSlice *curSlice = curMb->slice;
-  sVidParam* vidParam = curMb->vidParam;
+  sDecoder* vidParam = curMb->vidParam;
 
   int i,j;
 
@@ -3590,7 +3590,7 @@ static void intra_chroma_DC_all (sPixel** curr_img, int up_avail, int left_avail
 static void intrapred_chroma_dc (sMacroblock* curMb)
 {
   sSlice *curSlice = curMb->slice;
-  sVidParam* vidParam = curMb->vidParam;
+  sDecoder* vidParam = curMb->vidParam;
   sPicture* picture = curSlice->picture;
   int        b8, b4;
   int        yuv = picture->chromaFormatIdc - 1;
@@ -3687,7 +3687,7 @@ static void intrapred_chroma_dc (sMacroblock* curMb)
 //{{{
 static void intrapred_chroma_hor (sMacroblock* curMb)
 {
-  sVidParam* vidParam = curMb->vidParam;
+  sDecoder* vidParam = curMb->vidParam;
   sPixelPos a;  //!< pixel positions p(-1, -1..16)
   int left_avail;
 
@@ -3741,7 +3741,7 @@ static void intrapred_chroma_hor (sMacroblock* curMb)
 static void intrapred_chroma_ver (sMacroblock* curMb)
 {
   sSlice *curSlice = curMb->slice;
-  sVidParam* vidParam = curMb->vidParam;
+  sDecoder* vidParam = curMb->vidParam;
   int j;
   sPicture* picture = curSlice->picture;
 
@@ -3777,7 +3777,7 @@ static void intrapred_chroma_ver (sMacroblock* curMb)
 static void intrapred_chroma_plane (sMacroblock* curMb)
 {
   sSlice *curSlice = curMb->slice;
-  sVidParam* vidParam = curMb->vidParam;
+  sDecoder* vidParam = curMb->vidParam;
   sPicture* picture = curSlice->picture;
 
   sPixelPos up;        //!< pixel position  p(0,-1)
@@ -3906,7 +3906,7 @@ static void intra_chroma_DC_all_mbaff (sPixel** curr_img, int up_avail, int left
 static void intra_pred_chroma_mbaff (sMacroblock* curMb)
 {
   sSlice *curSlice = curMb->slice;
-  sVidParam* vidParam = curMb->vidParam;
+  sDecoder* vidParam = curMb->vidParam;
   int i,j, ii, jj;
   sPicture* picture = curSlice->picture;
 

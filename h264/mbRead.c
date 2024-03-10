@@ -25,7 +25,7 @@ static void read_ipred_8x8_modes_mbaff (sMacroblock* mb) {
   int bi, bj, bx, by, dec;
   sSlice* slice = mb->slice;
   const byte* partMap = assignSE2partition[slice->dataPartitionMode];
-  sVidParam* vidParam = mb->vidParam;
+  sDecoder* vidParam = mb->vidParam;
 
   int mostProbableIntraPredMode;
   int upIntraPredMode;
@@ -85,7 +85,7 @@ static void read_ipred_8x8_modes (sMacroblock* mb) {
   int b8, bi, bj, bx, by, dec;
   sSlice* slice = mb->slice;
   const byte* partMap = assignSE2partition[slice->dataPartitionMode];
-  sVidParam* vidParam = mb->vidParam;
+  sDecoder* vidParam = mb->vidParam;
 
   int mostProbableIntraPredMode;
   int upIntraPredMode;
@@ -150,7 +150,7 @@ static void read_ipred_4x4_modes_mbaff (sMacroblock* mb) {
   sSyntaxElement syntaxElement;
   sSlice* slice = mb->slice;
   const byte *partMap = assignSE2partition[slice->dataPartitionMode];
-  sVidParam *vidParam = mb->vidParam;
+  sDecoder *vidParam = mb->vidParam;
   sBlockPos *picPos = vidParam->picPos;
 
   int ts, ls;
@@ -217,7 +217,7 @@ static void read_ipred_4x4_modes (sMacroblock* mb) {
 
   sSlice* slice = mb->slice;
   const byte* partMap = assignSE2partition[slice->dataPartitionMode];
-  sVidParam* vidParam = mb->vidParam;
+  sDecoder* vidParam = mb->vidParam;
   sBlockPos* picPos = vidParam->picPos;
 
   int mostProbableIntraPredMode;
@@ -310,7 +310,7 @@ static void readIpredModes (sMacroblock* mb) {
     sSyntaxElement syntaxElement;
     sDataPartition* dP;
     const byte* partMap = assignSE2partition[slice->dataPartitionMode];
-    sVidParam* vidParam = mb->vidParam;
+    sDecoder* vidParam = mb->vidParam;
 
     syntaxElement.type = SE_INTRAPREDMODE;
     dP = &(slice->partitions[partMap[SE_INTRAPREDMODE]]);
@@ -384,7 +384,7 @@ static void initMacroblockDirect (sMacroblock* mb) {
 static void concealIPCMcoeffs (sMacroblock* mb) {
 
   sSlice* slice = mb->slice;
-  sVidParam* vidParam = mb->vidParam;
+  sDecoder* vidParam = mb->vidParam;
   for (int i = 0; i < MB_BLOCK_SIZE; ++i)
     for (int j = 0; j < MB_BLOCK_SIZE; ++j)
       slice->cof[0][i][j] = vidParam->dcPredValueComp[0];
@@ -420,7 +420,7 @@ static void initIPCMdecoding (sSlice* slice) {
 //{{{
 static void readIPCMcoeffs (sSlice* slice, struct DataPartition* dP) {
 
-  sVidParam* vidParam = slice->vidParam;
+  sDecoder* vidParam = slice->vidParam;
 
   //For CABAC, we don't need to read bits to let stream byte aligned
   //  because we have variable for integer bytes position
@@ -486,7 +486,7 @@ static void SetB8Mode (sMacroblock* mb, int value, int i) {
 //{{{
 static void resetCoeffs (sMacroblock* mb) {
 
-  sVidParam* vidParam = mb->vidParam;
+  sDecoder* vidParam = mb->vidParam;
 
   if (vidParam->activePPS->entropyCodingModeFlag == (Boolean)CAVLC)
     memset (vidParam->nzCoeff[mb->mbAddrX][0][0], 0, 3 * BLOCK_PIXELS * sizeof(byte));
@@ -495,7 +495,7 @@ static void resetCoeffs (sMacroblock* mb) {
 //{{{
 static void fieldFlagInference (sMacroblock* mb) {
 
-  sVidParam* vidParam = mb->vidParam;
+  sDecoder* vidParam = mb->vidParam;
   if (mb->mbAvailA)
     mb->mbField = vidParam->mbData[mb->mbAddrA].mbField;
   else
@@ -517,7 +517,7 @@ static void skipMacroblocks (sMacroblock* mb) {
   int b_mv_y = 0;
   int b_ref_idx = 0;
   int img_block_y   = mb->blockY;
-  sVidParam* vidParam = mb->vidParam;
+  sDecoder* vidParam = mb->vidParam;
   sSlice* slice = mb->slice;
   int   listOffset = LIST_0 + mb->listOffset;
   sPicture* picture = slice->picture;
@@ -896,7 +896,7 @@ static void read_one_macroblock_p_slice_cavlc (sMacroblock* mb) {
     slice->interpretMbMode (mb);
     }
   else {
-    sVidParam* vidParam = mb->vidParam;
+    sDecoder* vidParam = mb->vidParam;
     sMacroblock* topMB = NULL;
     int  prevMbSkipped = 0;
     sPicture* picture = slice->picture;
@@ -1000,7 +1000,7 @@ static void read_one_macroblock_p_slice_cavlc (sMacroblock* mb) {
 //{{{
 static void read_one_macroblock_b_slice_cavlc (sMacroblock* mb) {
 
-  sVidParam* vidParam = mb->vidParam;
+  sDecoder* vidParam = mb->vidParam;
   sSlice* slice = mb->slice;
   int mbNum = mb->mbAddrX;
   sSyntaxElement syntaxElement;
@@ -1252,7 +1252,7 @@ static void read_one_macroblock_i_slice_cabac (sMacroblock* mb) {
 static void read_one_macroblock_p_slice_cabac (sMacroblock* mb)
 {
   sSlice* slice = mb->slice;
-  sVidParam* vidParam = mb->vidParam;
+  sDecoder* vidParam = mb->vidParam;
   int mbNum = mb->mbAddrX;
   sSyntaxElement syntaxElement;
   const byte* partMap = assignSE2partition[slice->dataPartitionMode];
@@ -1399,7 +1399,7 @@ static void read_one_macroblock_p_slice_cabac (sMacroblock* mb)
 static void read_one_macroblock_b_slice_cabac (sMacroblock* mb) {
 
   sSlice* slice = mb->slice;
-  sVidParam* vidParam = mb->vidParam;
+  sDecoder* vidParam = mb->vidParam;
   int mbNum = mb->mbAddrX;
   sSyntaxElement syntaxElement;
 

@@ -57,7 +57,7 @@ static int intra4x4_dc_pred (sMacroblock *curMb,
                             int joff)
 {
   sSlice *curSlice = curMb->slice;
-  sVidParam* vidParam = curMb->vidParam;
+  sDecoder* vidParam = curMb->vidParam;
 
   int j;
   int s0 = 0;
@@ -154,7 +154,7 @@ static int intra4x4_vert_pred (sMacroblock *curMb,    //!< current macroblock
                                      int joff)              //!< pixel offset Y within MB
 {
   sSlice *curSlice = curMb->slice;
-  sVidParam* vidParam = curMb->vidParam;
+  sDecoder* vidParam = curMb->vidParam;
 
   int block_available_up;
   sPixelPos pix_b;
@@ -211,7 +211,7 @@ static int intra4x4_hor_pred (sMacroblock *curMb,
                                     int ioff,
                                     int joff)
 {
-  sVidParam* vidParam = curMb->vidParam;
+  sDecoder* vidParam = curMb->vidParam;
   sSlice *curSlice = curMb->slice;
 
   sPixelPos pix_a;
@@ -286,7 +286,7 @@ static int intra4x4_diag_down_right_pred (sMacroblock *curMb,    //!< current ma
                                                 int joff)              //!< pixel offset Y within MB
 {
   sSlice *curSlice = curMb->slice;
-  sVidParam* vidParam = curMb->vidParam;
+  sDecoder* vidParam = curMb->vidParam;
 
   sPixel** imgY = (pl) ? curSlice->picture->imgUV[pl - 1] : curSlice->picture->imgY;
 
@@ -370,7 +370,7 @@ static int intra4x4_diag_down_left_pred (sMacroblock *curMb,    //!< current mac
                                         int joff)              //!< pixel offset Y within MB
 {
   sSlice *curSlice = curMb->slice;
-  sVidParam* vidParam = curMb->vidParam;
+  sDecoder* vidParam = curMb->vidParam;
 
   sPixelPos pix_b, pix_c;
 
@@ -457,7 +457,7 @@ static int intra4x4_vert_right_pred (sMacroblock *curMb,    //!< current macrobl
                                     int joff)              //!< pixel offset Y within MB
 {
   sSlice *curSlice = curMb->slice;
-  sVidParam* vidParam = curMb->vidParam;
+  sDecoder* vidParam = curMb->vidParam;
 
   sPixelPos pix_a, pix_b, pix_d;
 
@@ -542,7 +542,7 @@ static int intra4x4_vert_left_pred (sMacroblock *curMb,    //!< current macroblo
                                           int joff)              //!< pixel offset Y within MB
 {
   sSlice *curSlice = curMb->slice;
-  sVidParam* vidParam = curMb->vidParam;
+  sDecoder* vidParam = curMb->vidParam;
 
   sPixelPos pix_b, pix_c;
 
@@ -631,7 +631,7 @@ static int intra4x4_hor_up_pred (sMacroblock *curMb,    //!< current macroblock
                                 int joff)              //!< pixel offset Y within MB
 {
   sSlice *curSlice = curMb->slice;
-  sVidParam* vidParam = curMb->vidParam;
+  sDecoder* vidParam = curMb->vidParam;
 
   sPixelPos pix_a;
 
@@ -703,7 +703,7 @@ static int intra4x4_hor_down_pred (sMacroblock *curMb,    //!< current macrobloc
                                          int joff)              //!< pixel offset Y within MB
 {
   sSlice *curSlice = curMb->slice;
-  sVidParam* vidParam = curMb->vidParam;
+  sDecoder* vidParam = curMb->vidParam;
 
   sPixelPos pix_a, pix_b, pix_d;
 
@@ -791,7 +791,7 @@ int intra_pred_4x4_normal (sMacroblock *curMb,    //!< current macroblock
                           int img_block_x,       //!< location of block X, multiples of 4
                           int img_block_y)       //!< location of block Y, multiples of 4
 {
-  sVidParam* vidParam = curMb->vidParam;
+  sDecoder* vidParam = curMb->vidParam;
   byte predmode = vidParam->predMode[img_block_y][img_block_x];
   curMb->ipmode_DPCM = predmode; //For residual DPCM
 
@@ -856,7 +856,7 @@ static int intra4x4_dc_pred_mbaff (sMacroblock *curMb,
                                    int joff)
 {
   sSlice *curSlice = curMb->slice;
-  sVidParam* vidParam = curMb->vidParam;
+  sDecoder* vidParam = curMb->vidParam;
 
   int i,j;
   int s0 = 0;
@@ -953,7 +953,7 @@ static int intra4x4_vert_pred_mbaff (sMacroblock *curMb,    //!< current macrobl
                                      int joff)              //!< pixel offset Y within MB
 {
   sSlice *curSlice = curMb->slice;
-  sVidParam* vidParam = curMb->vidParam;
+  sDecoder* vidParam = curMb->vidParam;
 
   int block_available_up;
   sPixelPos pix_b;
@@ -1010,7 +1010,7 @@ static int intra4x4_hor_pred_mbaff (sMacroblock *curMb,
                                     int ioff,
                                     int joff)
 {
-  sVidParam* vidParam = curMb->vidParam;
+  sDecoder* vidParam = curMb->vidParam;
   sSlice *curSlice = curMb->slice;
 
   int i,j;
@@ -1068,7 +1068,7 @@ static int intra4x4_diag_down_right_pred_mbaff (sMacroblock *curMb,    //!< curr
                                                       int joff)              //!< pixel offset Y within MB
 {
   sSlice *curSlice = curMb->slice;
-  sVidParam* vidParam = curMb->vidParam;
+  sDecoder* vidParam = curMb->vidParam;
 
   int i;
   sPixel** imgY = (pl) ? curSlice->picture->imgUV[pl - 1] : curSlice->picture->imgY;
@@ -1157,7 +1157,7 @@ static int intra4x4_diag_down_left_pred_mbaff (sMacroblock *curMb,    //!< curre
                                         int joff)              //!< pixel offset Y within MB
 {
   sSlice *curSlice = curMb->slice;
-  sVidParam* vidParam = curMb->vidParam;
+  sDecoder* vidParam = curMb->vidParam;
 
   sPixelPos pix_b, pix_c;
 
@@ -1239,7 +1239,7 @@ static int intra4x4_vert_right_pred_mbaff (sMacroblock *curMb,    //!< current m
                                           int joff)              //!< pixel offset Y within MB
 {
   sSlice *curSlice = curMb->slice;
-  sVidParam* vidParam = curMb->vidParam;
+  sDecoder* vidParam = curMb->vidParam;
 
   int i;
   sPixel** imgY = (pl) ? curSlice->picture->imgUV[pl - 1] : curSlice->picture->imgY;
@@ -1330,7 +1330,7 @@ static int intra4x4_vert_left_pred_mbaff (sMacroblock *curMb,    //!< current ma
                                           int joff)              //!< pixel offset Y within MB
 {
   sSlice *curSlice = curMb->slice;
-  sVidParam* vidParam = curMb->vidParam;
+  sDecoder* vidParam = curMb->vidParam;
 
   sPixelPos pix_b, pix_c;
 
@@ -1413,7 +1413,7 @@ static int intra4x4_hor_up_pred_mbaff (sMacroblock *curMb,    //!< current macro
                                       int joff)              //!< pixel offset Y within MB
 {
   sSlice *curSlice = curMb->slice;
-  sVidParam* vidParam = curMb->vidParam;
+  sDecoder* vidParam = curMb->vidParam;
 
   int i;
   sPixel** imgY = (pl) ? curSlice->picture->imgUV[pl - 1] : curSlice->picture->imgY;
@@ -1489,7 +1489,7 @@ static int intra4x4_hor_down_pred_mbaff (sMacroblock *curMb,    //!< current mac
                                          int joff)              //!< pixel offset Y within MB
 {
   sSlice *curSlice = curMb->slice;
-  sVidParam* vidParam = curMb->vidParam;
+  sDecoder* vidParam = curMb->vidParam;
 
   int i;
   sPixel** imgY = (pl) ? curSlice->picture->imgUV[pl - 1] : curSlice->picture->imgY;
@@ -1582,7 +1582,7 @@ int intra_pred_4x4_mbaff (sMacroblock *curMb,    //!< current macroblock
                         int img_block_x,       //!< location of block X, multiples of 4
                         int img_block_y)       //!< location of block Y, multiples of 4
 {
-  sVidParam* vidParam = curMb->vidParam;
+  sDecoder* vidParam = curMb->vidParam;
   byte predmode = vidParam->predMode[img_block_y][img_block_x];
   curMb->ipmode_DPCM = predmode; //For residual DPCM
 

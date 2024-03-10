@@ -4,7 +4,7 @@
 //}}}
 
 //{{{
-int setEcFlag (sVidParam* vidParam, int se) {
+int setEcFlag (sDecoder* vidParam, int se) {
 
   switch (se) {
     case SE_HEADER :
@@ -86,7 +86,7 @@ int setEcFlag (sVidParam* vidParam, int se) {
   }
 //}}}
 //{{{
-void reset_ec_flags (sVidParam* vidParam) {
+void reset_ec_flags (sDecoder* vidParam) {
 
   for (int i = 0; i < SE_MAX_ELEMENTS; i++)
     vidParam->ecFlag[i] = NO_EC;
@@ -94,7 +94,7 @@ void reset_ec_flags (sVidParam* vidParam) {
 //}}}
 
 //{{{
-int get_concealed_element (sVidParam* vidParam, sSyntaxElement* sym) {
+int get_concealed_element (sDecoder* vidParam, sSyntaxElement* sym) {
 
   if (vidParam->ecFlag[sym->type] == NO_EC)
     return NO_EC;

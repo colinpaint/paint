@@ -124,7 +124,7 @@ void get_mb_block_pos_mbaff (sBlockPos* picPos, int mbAddr, short* x, short* y) 
   }
 //}}}
 //{{{
-void get_mb_pos (sVidParam* vidParam, int mbAddr, int mbSize[2], short* x, short* y) {
+void get_mb_pos (sDecoder* vidParam, int mbAddr, int mbSize[2], short* x, short* y) {
 
   vidParam->get_mb_block_pos (vidParam->picPos, mbAddr, x, y);
   (*x) = (short) ((*x) * mbSize[0]);
@@ -180,7 +180,7 @@ void getNonAffNeighbour (sMacroblock* curMb, int xN, int yN, int mbSize[2], sPix
 //{{{
 void getAffNeighbour (sMacroblock* curMb, int xN, int yN, int mbSize[2], sPixelPos* pix) {
 
-  sVidParam* vidParam = curMb->vidParam;
+  sDecoder* vidParam = curMb->vidParam;
   int maxW, maxH;
   int yM = -1;
 

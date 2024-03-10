@@ -35,7 +35,7 @@ static void resetMb (sMacroblock* mb) {
   }
 //}}}
 //{{{
-static void setupBuffers (sVidParam* vidParam, int layerId) {
+static void setupBuffers (sDecoder* vidParam, int layerId) {
 
   if (vidParam->last_dec_layer_id != layerId) {
     sCoding* coding = vidParam->coding[layerId];
@@ -121,7 +121,7 @@ static void updateMbAff (sPixel** curPixel, sPixel (*temp)[16], int x0, int widt
   }
 //}}}
 //{{{
-static void mbAffPostProc (sVidParam* vidParam) {
+static void mbAffPostProc (sDecoder* vidParam) {
 
   sPixel tempBuffer[32][16];
   sPicture* picture = vidParam->picture;
@@ -238,7 +238,7 @@ static void fillWPParam (sSlice* slice) {
   }
 //}}}
 //{{{
-static void errorTracking (sVidParam* vidParam, sSlice* slice) {
+static void errorTracking (sDecoder* vidParam, sSlice* slice) {
 
   if (slice->redundantPicCount == 0)
     vidParam->isPrimaryOk = vidParam->isReduncantOk = 1;
@@ -258,7 +258,7 @@ static void errorTracking (sVidParam* vidParam, sSlice* slice) {
 //{{{
 static void reorderLists (sSlice* slice) {
 
-  sVidParam* vidParam = slice->vidParam;
+  sDecoder* vidParam = slice->vidParam;
 
   if ((slice->sliceType != I_SLICE) && (slice->sliceType != SI_SLICE)) {
     if (slice->ref_pic_list_reordering_flag[LIST_0])
@@ -292,7 +292,7 @@ static void reorderLists (sSlice* slice) {
 //{{{
 static void ercWriteMBMODEandMV (sMacroblock* mb) {
 
-  sVidParam* vidParam = mb->vidParam;
+  sDecoder* vidParam = mb->vidParam;
   int currMBNum = mb->mbAddrX; //vidParam->currentSlice->curMbNum;
   sPicture* picture = vidParam->picture;
   int mbx = xPosMB(currMBNum, picture->sizeX), mby = yPosMB(currMBNum, picture->sizeX);
@@ -373,7 +373,7 @@ static void ercWriteMBMODEandMV (sMacroblock* mb) {
   }
 //}}}
 //{{{
-static void initCurImg (sSlice* slice, sVidParam* vidParam) {
+static void initCurImg (sSlice* slice, sDecoder* vidParam) {
 
   if ((vidParam->sepColourPlaneFlag != 0)) {
     sPicture* vidref = vidParam->noReferencePicture;
@@ -432,7 +432,7 @@ static int isNewPicture (sPicture* picture, sSlice* slice, sOldSlice* oldSlicePa
   if (slice->idrFlag && oldSliceParam->idrFlag)
     result |= (oldSliceParam->idrPicId != slice->idrPicId);
 
-  sVidParam* vidParam = slice->vidParam;
+  sDecoder* vidParam = slice->vidParam;
   if (vidParam->activeSPS->picOrderCountType == 0) {
     result |= (oldSliceParam->picOrderCountLsb != slice->picOrderCountLsb);
     if (vidParam->activePPS->botFieldPicOrderFramePresentFlag  ==  1 &&  !slice->fieldPicFlag )
@@ -452,7 +452,7 @@ static int isNewPicture (sPicture* picture, sSlice* slice, sOldSlice* oldSlicePa
   }
 //}}}
 //{{{
-static void copyDecPicture_JV (sVidParam* vidParam, sPicture* dst, sPicture* src) {
+static void copyDecPicture_JV (sDecoder* vidParam, sPicture* dst, sPicture* src) {
 
   dst->topPoc = src->topPoc;
   dst->botPoc = src->botPoc;
@@ -487,7 +487,7 @@ static void copyDecPicture_JV (sVidParam* vidParam, sPicture* dst, sPicture* src
   }
 //}}}
 //{{{
-static void initPicture (sVidParam* vidParam, sSlice* slice) {
+static void initPicture (sDecoder* vidParam, sSlice* slice) {
 
   sPicture* picture = NULL;
   sSPS* activeSPS = vidParam->activeSPS;
@@ -668,7 +668,7 @@ static void initPicture (sVidParam* vidParam, sSlice* slice) {
   }
 //}}}
 //{{{
-static void initPictureDecoding (sVidParam* vidParam) {
+static void initPictureDecoding (sDecoder* vidParam) {
 
   int deblockMode = 1;
 
@@ -707,13 +707,13 @@ static void initPictureDecoding (sVidParam* vidParam) {
   vidParam->deblockMode = deblockMode;
   }
 //}}}
-static void framePostProcessing (sVidParam* vidParam) {}
-static void fieldPostProcessing (sVidParam* vidParam) { vidParam->number /= 2; }
+static void framePostProcessing (sDecoder* vidParam) {}
+static void fieldPostProcessing (sDecoder* vidParam) { vidParam->number /= 2; }
 
 //{{{
 static void copySliceInfo (sSlice* slice, sOldSlice* oldSliceParam) {
 
-  sVidParam* vidParam = slice->vidParam;
+  sDecoder* vidParam = slice->vidParam;
 
   oldSliceParam->ppsId = slice->ppsId;
   oldSliceParam->frameNum = slice->frameNum; //vidParam->frameNum;
@@ -742,7 +742,7 @@ static void copySliceInfo (sSlice* slice, sOldSlice* oldSliceParam) {
   }
 //}}}
 //{{{
-static void initSlice (sVidParam* vidParam, sSlice* slice) {
+static void initSlice (sDecoder* vidParam, sSlice* slice) {
 
   vidParam->activeSPS = slice->activeSPS;
   vidParam->activePPS = slice->activePPS;
@@ -777,7 +777,7 @@ static void decodeOneSlice (sSlice* slice) {
 
   slice->codCount=-1;
 
-  sVidParam* vidParam = slice->vidParam;
+  sDecoder* vidParam = slice->vidParam;
   if ((vidParam->sepColourPlaneFlag != 0))
     changePlaneJV (vidParam, slice->colourPlaneId, slice);
   else {
@@ -814,7 +814,7 @@ static void decodeOneSlice (sSlice* slice) {
 //{{{
 static int readNewSlice (sSlice* slice) {
 
-  sVidParam* vidParam = slice->vidParam;
+  sDecoder* vidParam = slice->vidParam;
 
   int curHeader = 0;
   sBitstream* curStream = NULL;
@@ -1080,7 +1080,7 @@ void initOldSlice (sOldSlice* oldSliceParam) {
   }
 //}}}
 //{{{
-void calcFrameNum (sVidParam* vidParam, sPicture* p) {
+void calcFrameNum (sDecoder* vidParam, sPicture* p) {
 
   int psnrPOC = vidParam->activeSPS->mb_adaptive_frame_field_flag ? p->poc / (vidParam->input.pocScale) :
                                                                     p->poc / (vidParam->input.pocScale);
@@ -1092,7 +1092,7 @@ void calcFrameNum (sVidParam* vidParam, sPicture* p) {
   }
 //}}}
 //{{{
-void padPicture (sVidParam* vidParam, sPicture* picture) {
+void padPicture (sDecoder* vidParam, sPicture* picture) {
 
   padBuf (*picture->imgY, picture->sizeX, picture->sizeY,
            picture->iLumaStride, vidParam->iLumaPadX, vidParam->iLumaPadY);
@@ -1106,7 +1106,7 @@ void padPicture (sVidParam* vidParam, sPicture* picture) {
   }
 //}}}
 //{{{
-void exitPicture (sVidParam* vidParam, sPicture** picture) {
+void exitPicture (sDecoder* vidParam, sPicture** picture) {
 
   // return if the last picture has already been finished
   if (*picture == NULL ||
@@ -1264,7 +1264,7 @@ void exitPicture (sVidParam* vidParam, sPicture** picture) {
 //}}}
 
 //{{{
-int decodeFrame (sVidParam* vidParam) {
+int decodeFrame (sDecoder* vidParam) {
 
   int ret = 0;
 

@@ -104,7 +104,7 @@ typedef struct {
 //}}}
 
 //{{{
-static void interpret_spare_pic (byte* payload, int size, sVidParam* vidParam ) {
+static void interpret_spare_pic (byte* payload, int size, sDecoder* vidParam ) {
 
   int x,y;
   sBitstream* buf;
@@ -272,7 +272,7 @@ static void interpret_spare_pic (byte* payload, int size, sVidParam* vidParam ) 
 //}}}
 
 //{{{
-static void interpret_subsequence_info (byte* payload, int size, sVidParam* vidParam ) {
+static void interpret_subsequence_info (byte* payload, int size, sDecoder* vidParam ) {
 
   sBitstream* buf = malloc (sizeof(sBitstream));
   buf->bitstreamLength = size;
@@ -304,7 +304,7 @@ static void interpret_subsequence_info (byte* payload, int size, sVidParam* vidP
   }
 //}}}
 //{{{
-static void interpret_subsequence_layer_characteristics_info (byte* payload, int size, sVidParam* vidParam )
+static void interpret_subsequence_layer_characteristics_info (byte* payload, int size, sDecoder* vidParam )
 {
   sBitstream* buf;
   long num_sub_layers, accurate_statistics_flag, average_bit_rate, average_frame_rate;
@@ -329,7 +329,7 @@ static void interpret_subsequence_layer_characteristics_info (byte* payload, int
 }
 //}}}
 //{{{
-static void interpret_subsequence_characteristics_info (byte* payload, int size, sVidParam* vidParam ) {
+static void interpret_subsequence_characteristics_info (byte* payload, int size, sDecoder* vidParam ) {
 
   int i;
   int sub_seq_layer_num, sub_seq_id, duration_flag, average_rate_flag, accurate_statistics_flag;
@@ -386,7 +386,7 @@ static void interpret_subsequence_characteristics_info (byte* payload, int size,
   }
 //}}}
 //{{{
-static void interpret_scene_information (byte* payload, int size, sVidParam* vidParam )
+static void interpret_scene_information (byte* payload, int size, sDecoder* vidParam )
 {
   int scene_id, scene_transition_type, second_scene_id;
 
@@ -410,7 +410,7 @@ static void interpret_scene_information (byte* payload, int size, sVidParam* vid
   }
 //}}}
 //{{{
-static void interpret_filler_payload_info (byte* payload, int size, sVidParam* vidParam ) {
+static void interpret_filler_payload_info (byte* payload, int size, sDecoder* vidParam ) {
 
   int payload_cnt = 0;
   while (payload_cnt<size)
@@ -426,7 +426,7 @@ static void interpret_filler_payload_info (byte* payload, int size, sVidParam* v
 //}}}
 
 //{{{
-static void interpret_user_data_unregistered_info (byte* payload, int size, sVidParam* vidParam )
+static void interpret_user_data_unregistered_info (byte* payload, int size, sDecoder* vidParam )
 {
   int offset = 0;
   byte payload_byte;
@@ -448,7 +448,7 @@ static void interpret_user_data_unregistered_info (byte* payload, int size, sVid
   }
 //}}}
 //{{{
-static void interpret_user_data_registered_itu_t_t35_info (byte* payload, int size, sVidParam* vidParam ) {
+static void interpret_user_data_registered_itu_t_t35_info (byte* payload, int size, sDecoder* vidParam ) {
 
   int offset = 0;
   byte itu_t_t35_country_code, itu_t_t35_country_code_extension_byte, payload_byte;
@@ -475,7 +475,7 @@ static void interpret_user_data_registered_itu_t_t35_info (byte* payload, int si
  }
 //}}}
 //{{{
-static void interpret_reserved_info (byte* payload, int size, sVidParam* vidParam )
+static void interpret_reserved_info (byte* payload, int size, sDecoder* vidParam )
 {
   int offset = 0;
   byte payload_byte;
@@ -492,7 +492,7 @@ static void interpret_reserved_info (byte* payload, int size, sVidParam* vidPara
 //}}}
 
 //{{{
-static void interpret_picture_timing_info (byte* payload, int size, sVidParam* vidParam ) {
+static void interpret_picture_timing_info (byte* payload, int size, sDecoder* vidParam ) {
 
   sSPS* activeSPS = vidParam->activeSPS;
 
@@ -651,7 +651,7 @@ static void interpret_picture_timing_info (byte* payload, int size, sVidParam* v
   }
 //}}}
 //{{{
-static void interpret_pan_scan_rect_info (byte* payload, int size, sVidParam* vidParam ) {
+static void interpret_pan_scan_rect_info (byte* payload, int size, sDecoder* vidParam ) {
 
   sBitstream* buf;
   buf = malloc (sizeof(sBitstream));
@@ -681,7 +681,7 @@ static void interpret_pan_scan_rect_info (byte* payload, int size, sVidParam* vi
   }
 //}}}
 //{{{
-static void interpret_recovery_point_info (byte* payload, int size, sVidParam* vidParam ) {
+static void interpret_recovery_point_info (byte* payload, int size, sDecoder* vidParam ) {
 
   sBitstream* buf;
   buf = malloc(sizeof(sBitstream));
@@ -705,7 +705,7 @@ static void interpret_recovery_point_info (byte* payload, int size, sVidParam* v
 //}}}
 //{{{
 static void interpret_dec_ref_pic_marking_repetition_info (byte* payload, int size,
-                                                           sVidParam* vidParam, sSlice *pSlice) {
+                                                           sDecoder* vidParam, sSlice *pSlice) {
   int original_idr_flag, original_frame_num;
   int original_field_pic_flag;
 
@@ -801,7 +801,7 @@ static void interpret_dec_ref_pic_marking_repetition_info (byte* payload, int si
 //}}}
 
 //{{{
-static void interpret_full_frame_freeze_info (byte* payload, int size, sVidParam* vidParam ) {
+static void interpret_full_frame_freeze_info (byte* payload, int size, sDecoder* vidParam ) {
 
   sBitstream* buf = malloc(sizeof(sBitstream));
   buf->bitstreamLength = size;
@@ -815,7 +815,7 @@ static void interpret_full_frame_freeze_info (byte* payload, int size, sVidParam
   }
 //}}}
 //{{{
-static void interpret_full_frame_freeze_release_info (byte* payload, int size, sVidParam* vidParam ) {
+static void interpret_full_frame_freeze_release_info (byte* payload, int size, sDecoder* vidParam ) {
 
   printf ("SEI Full-frame freeze release SEI\n");
   if (size)
@@ -823,7 +823,7 @@ static void interpret_full_frame_freeze_release_info (byte* payload, int size, s
   }
 //}}}
 //{{{
-static void interpret_full_frame_snapshot_info (byte* payload, int size, sVidParam* vidParam ) {
+static void interpret_full_frame_snapshot_info (byte* payload, int size, sDecoder* vidParam ) {
 
   sBitstream* buf = malloc(sizeof(sBitstream));
   buf->bitstreamLength = size;
@@ -839,7 +839,7 @@ static void interpret_full_frame_snapshot_info (byte* payload, int size, sVidPar
 //}}}
 
 //{{{
-static void interpret_progressive_refinement_start_info (byte* payload, int size, sVidParam* vidParam ) {
+static void interpret_progressive_refinement_start_info (byte* payload, int size, sDecoder* vidParam ) {
 
 
   sBitstream* buf = malloc(sizeof(sBitstream));
@@ -857,7 +857,7 @@ static void interpret_progressive_refinement_start_info (byte* payload, int size
   }
 //}}}
 //{{{
-static void interpret_progressive_refinement_end_info (byte* payload, int size, sVidParam* vidParam ) {
+static void interpret_progressive_refinement_end_info (byte* payload, int size, sDecoder* vidParam ) {
 
   sBitstream* buf = malloc(sizeof(sBitstream));
   buf->bitstreamLength = size;
@@ -872,7 +872,7 @@ static void interpret_progressive_refinement_end_info (byte* payload, int size, 
 //}}}
 
 //{{{
-static void interpret_motion_constrained_slice_group_set_info (byte* payload, int size, sVidParam* vidParam ) {
+static void interpret_motion_constrained_slice_group_set_info (byte* payload, int size, sDecoder* vidParam ) {
 
   sBitstream* buf = malloc(sizeof(sBitstream));
   buf->bitstreamLength = size;
@@ -904,7 +904,7 @@ static void interpret_motion_constrained_slice_group_set_info (byte* payload, in
   }
 //}}}
 //{{{
-static void interpret_film_grain_characteristics_info (byte* payload, int size, sVidParam* vidParam ) {
+static void interpret_film_grain_characteristics_info (byte* payload, int size, sDecoder* vidParam ) {
 
   int film_grain_characteristics_cancel_flag;
   int model_id, separate_colour_description_present_flag;
@@ -981,7 +981,7 @@ static void interpret_film_grain_characteristics_info (byte* payload, int size, 
   }
 //}}}
 //{{{
-static void interpret_deblocking_filter_display_preference_info (byte* payload, int size, sVidParam* vidParam) {
+static void interpret_deblocking_filter_display_preference_info (byte* payload, int size, sDecoder* vidParam) {
 
   sBitstream* buf = malloc(sizeof(sBitstream));
   buf->bitstreamLength = size;
@@ -1004,7 +1004,7 @@ static void interpret_deblocking_filter_display_preference_info (byte* payload, 
   }
 //}}}
 //{{{
-static void interpret_stereo_video_info_info (byte* payload, int size, sVidParam* vidParam ) {
+static void interpret_stereo_video_info_info (byte* payload, int size, sDecoder* vidParam ) {
 
   sBitstream* buf = malloc (sizeof(sBitstream));
   buf->bitstreamLength = size;
@@ -1033,7 +1033,7 @@ static void interpret_stereo_video_info_info (byte* payload, int size, sVidParam
   }
 //}}}
 //{{{
-static void interpret_buffering_period_info (byte* payload, int size, sVidParam* vidParam ) {
+static void interpret_buffering_period_info (byte* payload, int size, sDecoder* vidParam ) {
 
   sBitstream* buf = malloc(sizeof(sBitstream));
   buf->bitstreamLength = size;
@@ -1076,7 +1076,7 @@ static void interpret_buffering_period_info (byte* payload, int size, sVidParam*
   }
 //}}}
 //{{{
-static void interpret_frame_packing_arrangement_info (byte* payload, int size, sVidParam* vidParam ) {
+static void interpret_frame_packing_arrangement_info (byte* payload, int size, sDecoder* vidParam ) {
 
   frame_packing_arrangement_information_struct seiFramePackingArrangement;
   sBitstream* buf = malloc(sizeof(sBitstream));
@@ -1145,7 +1145,7 @@ static void interpret_frame_packing_arrangement_info (byte* payload, int size, s
 //}}}
 
 //{{{
-static void interpret_post_filter_hints_info (byte* payload, int size, sVidParam* vidParam ) {
+static void interpret_post_filter_hints_info (byte* payload, int size, sDecoder* vidParam ) {
 
   sBitstream* buf = malloc(sizeof(sBitstream));
   buf->bitstreamLength = size;
@@ -1182,7 +1182,7 @@ static void interpret_post_filter_hints_info (byte* payload, int size, sVidParam
   }
 //}}}
 //{{{
-static void interpret_green_metadata_info (byte* payload, int size, sVidParam* vidParam ) {
+static void interpret_green_metadata_info (byte* payload, int size, sDecoder* vidParam ) {
 
   sBitstream* buf = malloc(sizeof(sBitstream));
   buf->bitstreamLength = size;
@@ -1235,7 +1235,7 @@ static void interpret_green_metadata_info (byte* payload, int size, sVidParam* v
 //}}}
 
 //{{{
-void InterpretSEIMessage (byte* msg, int size, sVidParam* vidParam, sSlice *pSlice) {
+void InterpretSEIMessage (byte* msg, int size, sDecoder* vidParam, sSlice *pSlice) {
 
   int offset = 1;
   do {

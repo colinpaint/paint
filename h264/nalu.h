@@ -56,7 +56,7 @@ typedef struct annexBstruct {
   byte*  naluBuffer;
   } ANNEXB_t;
 //}}}
-extern ANNEXB_t* allocAnnexB (sVidParam* vidParam);
+extern ANNEXB_t* allocAnnexB (sDecoder* vidParam);
 extern void openAnnexB (ANNEXB_t* annexB, byte* chunk, size_t chunkSize);
 extern void resetAnnexB (ANNEXB_t* annexB);
 extern void freeAnnexB (ANNEXB_t** p_annexB);
@@ -64,8 +64,8 @@ extern void freeAnnexB (ANNEXB_t** p_annexB);
 extern sNalu* allocNALU (int);
 extern void freeNALU (sNalu* n);
 
-extern void checkZeroByteVCL (sVidParam* vidParam, sNalu* nalu);
-extern void checkZeroByteNonVCL (sVidParam* vidParam, sNalu* nalu);
+extern void checkZeroByteVCL (sDecoder* vidParam, sNalu* nalu);
+extern void checkZeroByteNonVCL (sDecoder* vidParam, sNalu* nalu);
 
-extern int readNextNalu (sVidParam* vidParam, sNalu* nalu);
+extern int readNextNalu (sDecoder* vidParam, sNalu* nalu);
 extern int RBSPtoSODB (byte* streamBuffer, int last_byte_pos);

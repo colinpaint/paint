@@ -6,7 +6,7 @@
 //}}}
 
 //{{{
-static void allocDecodedPic (sVidParam* vidParam, sDecodedPicture* decodedPicture, sPicture* p,
+static void allocDecodedPic (sDecoder* vidParam, sDecodedPicture* decodedPicture, sPicture* p,
                              int lumaSize, int frameSize, int lumaSizeX, int lumaSizeY,
                              int chromaSizeX, int chromaSizeY) {
 
@@ -51,7 +51,7 @@ static void img2buf (sPixel** imgX, unsigned char* buf,
   }
 //}}}
 //{{{
-static void clearPicture (sVidParam* vidParam, sPicture* p) {
+static void clearPicture (sDecoder* vidParam, sPicture* p) {
 
   printf ("-------------------- clearPicture -----------------\n");
 
@@ -69,7 +69,7 @@ static void clearPicture (sVidParam* vidParam, sPicture* p) {
   }
 //}}}
 //{{{
-static void writeOutPicture (sVidParam* vidParam, sPicture* p) {
+static void writeOutPicture (sDecoder* vidParam, sPicture* p) {
 
   static const int SubWidthC [4]= { 1, 2, 2, 1 };
   static const int SubHeightC [4]= { 1, 2, 1, 1 };
@@ -128,7 +128,7 @@ static void writeOutPicture (sVidParam* vidParam, sPicture* p) {
   }
 //}}}
 //{{{
-static void flushPendingOut (sVidParam* vidParam) {
+static void flushPendingOut (sDecoder* vidParam) {
 
   if (vidParam->pendingOutState != FRAME)
     writeOutPicture (vidParam, vidParam->pendingOut);
@@ -148,7 +148,7 @@ static void flushPendingOut (sVidParam* vidParam) {
 //}}}
 
 //{{{
-static void writePicture (sVidParam* vidParam, sPicture* p, int real_structure) {
+static void writePicture (sDecoder* vidParam, sPicture* p, int real_structure) {
 
   if (real_structure == FRAME) {
     flushPendingOut (vidParam);
@@ -225,7 +225,7 @@ static void writePicture (sVidParam* vidParam, sPicture* p, int real_structure) 
   }
 //}}}
 //{{{
-static void writeUnpairedField (sVidParam* vidParam, sFrameStore* frameStore) {
+static void writeUnpairedField (sDecoder* vidParam, sFrameStore* frameStore) {
 
   assert (frameStore->isUsed < 3);
 
@@ -264,7 +264,7 @@ static void writeUnpairedField (sVidParam* vidParam, sFrameStore* frameStore) {
   }
 //}}}
 //{{{
-static void flushDirectOutput (sVidParam* vidParam) {
+static void flushDirectOutput (sDecoder* vidParam) {
 
   writeUnpairedField (vidParam, vidParam->outBuffer);
   freePicture (vidParam->outBuffer->frame);
@@ -281,7 +281,7 @@ static void flushDirectOutput (sVidParam* vidParam) {
 //}}}
 
 //{{{
-void allocOutput (sVidParam* vidParam) {
+void allocOutput (sDecoder* vidParam) {
 
   vidParam->outBuffer = allocFrameStore();
   vidParam->pendingOut = calloc (sizeof(sPicture), 1);
@@ -290,7 +290,7 @@ void allocOutput (sVidParam* vidParam) {
   }
 //}}}
 //{{{
-void freeOutput (sVidParam* vidParam) {
+void freeOutput (sDecoder* vidParam) {
 
   freeFrameStore (vidParam->outBuffer);
   vidParam->outBuffer = NULL;
@@ -301,7 +301,7 @@ void freeOutput (sVidParam* vidParam) {
 //}}}
 
 //{{{
-void directOutput (sVidParam* vidParam, sPicture* picture) {
+void directOutput (sDecoder* vidParam, sPicture* picture) {
 
   if (picture->structure == FRAME) {
     // we have a frame (or complementary field pair), so output it directly
@@ -346,7 +346,7 @@ void directOutput (sVidParam* vidParam, sPicture* picture) {
   }
 //}}}
 //{{{
-void writeStoredFrame (sVidParam* vidParam, sFrameStore* frameStore) {
+void writeStoredFrame (sDecoder* vidParam, sFrameStore* frameStore) {
 
   // make sure no direct output field is pending
   flushDirectOutput (vidParam);

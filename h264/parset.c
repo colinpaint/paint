@@ -11,7 +11,7 @@
 #include "buffer.h"
 #include "erc.h"
 //}}}
-extern void init_frext (sVidParam* vidParam);
+extern void init_frext (sDecoder* vidParam);
 
 //{{{
 static const byte ZZ_SCAN[16] = {
@@ -41,7 +41,7 @@ static void updateMaxValue (sFrameFormat* format) {
   }
 //}}}
 //{{{
-static void setupLayerInfo (sVidParam* vidParam, sSPS* sps, sLayer* layer) {
+static void setupLayerInfo (sDecoder* vidParam, sSPS* sps, sLayer* layer) {
 
   layer->vidParam = vidParam;
   layer->coding = vidParam->coding[layer->layerId];
@@ -56,13 +56,13 @@ static void setCodingParam (sSPS* sps, sCoding* coding) {
   coding->profileIdc = sps->profileIdc;
   coding->lossless_qpprime_flag = sps->lossless_qpprime_flag;
   if (sps->level_idc <= 10)
-    coding->max_vmv_r = 64 * 4;
+    coding->maxVmvR = 64 * 4;
   else if (sps->level_idc <= 20)
-    coding->max_vmv_r = 128 * 4;
+    coding->maxVmvR = 128 * 4;
   else if (sps->level_idc <= 30)
-    coding->max_vmv_r = 256 * 4;
+    coding->maxVmvR = 256 * 4;
   else
-    coding->max_vmv_r = 512 * 4; // 512 pixels in quarter pixels
+    coding->maxVmvR = 512 * 4; // 512 pixels in quarter pixels
 
   // Fidelity Range Extensions stuff (part 1)
   coding->bitdepthChroma = 0;
@@ -167,7 +167,7 @@ static void setCodingParam (sSPS* sps, sCoding* coding) {
   }
 //}}}
 //{{{
-static void resetFormatInfo (sSPS* sps, sVidParam* vidParam, sFrameFormat* source, sFrameFormat* output) {
+static void resetFormatInfo (sSPS* sps, sDecoder* vidParam, sFrameFormat* source, sFrameFormat* output) {
 
   static const int SubWidthC[4] = { 1, 2, 2, 1};
   static const int SubHeightC[4] = { 1, 2, 1, 1};
@@ -463,7 +463,7 @@ static int readVUI (sDataPartition* p, sSPS* sps) {
   }
 //}}}
 //{{{
-static void interpretSPS (sVidParam* vidParam, sDataPartition* p, sSPS* sps) {
+static void interpretSPS (sDecoder* vidParam, sDataPartition* p, sSPS* sps) {
 
   unsigned i;
   unsigned n_ScalingList;
@@ -580,14 +580,14 @@ static void interpretSPS (sVidParam* vidParam, sDataPartition* p, sSPS* sps) {
 //}}}
 
 //{{{
-void makeSPSavailable (sVidParam* vidParam, int id, sSPS* sps) {
+void makeSPSavailable (sDecoder* vidParam, int id, sSPS* sps) {
 
   assert (sps->valid == TRUE);
   memcpy (&vidParam->sps[id], sps, sizeof (sSPS));
   }
 //}}}
 //{{{
-void processSPS (sVidParam* vidParam, sNalu* nalu) {
+void processSPS (sDecoder* vidParam, sNalu* nalu) {
 
   sDataPartition* dp = allocPartition (1);
   dp->bitstream->eiFlag = 0;
@@ -624,7 +624,7 @@ void processSPS (sVidParam* vidParam, sNalu* nalu) {
   }
 //}}}
 //{{{
-void activateSPS (sVidParam* vidParam, sSPS* sps) {
+void activateSPS (sDecoder* vidParam, sSPS* sps) {
 
   if (vidParam->activeSPS != sps) {
     if (vidParam->picture) // this may only happen on slice loss
@@ -735,7 +735,7 @@ static int ppsIsEqual (sPPS* pps1, sPPS* pps2) {
   }
 //}}}
 //{{{
-static void interpretPPS (sVidParam* vidParam, sDataPartition* p, sPPS* pps) {
+static void interpretPPS (sDecoder* vidParam, sDataPartition* p, sPPS* pps) {
 
   unsigned n_ScalingList;
   int chromaFormatIdc;
@@ -845,7 +845,7 @@ static void interpretPPS (sVidParam* vidParam, sDataPartition* p, sPPS* pps) {
   }
 //}}}
 //{{{
-static void activatePPS (sVidParam* vidParam, sPPS* pps) {
+static void activatePPS (sDecoder* vidParam, sPPS* pps) {
 
   if (vidParam->activePPS != pps) {
     if (vidParam->picture) // only on slice loss
@@ -876,7 +876,7 @@ sPPS* allocPPS() {
    }
 //}}}
 //{{{
-void makePPSavailable (sVidParam* vidParam, int id, sPPS* pps) {
+void makePPSavailable (sDecoder* vidParam, int id, sPPS* pps) {
 
   if (vidParam->pps[id].valid && vidParam->pps[id].sliceGroupId)
     free (vidParam->pps[id].sliceGroupId);
@@ -890,7 +890,7 @@ void makePPSavailable (sVidParam* vidParam, int id, sPPS* pps) {
   }
 //}}}
 //{{{
-void cleanUpPPS (sVidParam* vidParam) {
+void cleanUpPPS (sDecoder* vidParam) {
 
   for (int i = 0; i < MAX_PPS; i++) {
     if (vidParam->pps[i].valid == TRUE && vidParam->pps[i].sliceGroupId != NULL)
@@ -900,7 +900,7 @@ void cleanUpPPS (sVidParam* vidParam) {
   }
 //}}}
 //{{{
-void processPPS (sVidParam* vidParam, sNalu* nalu) {
+void processPPS (sDecoder* vidParam, sNalu* nalu) {
 
 
   sDataPartition* dp = allocPartition (1);
@@ -933,7 +933,7 @@ void processPPS (sVidParam* vidParam, sNalu* nalu) {
 //{{{
 void useParameterSet (sSlice* curSlice) {
 
-  sVidParam* vidParam = curSlice->vidParam;
+  sDecoder* vidParam = curSlice->vidParam;
   int PicParsetId = curSlice->ppsId;
 
   sPPS* pps = &vidParam->pps[PicParsetId];

@@ -19,7 +19,7 @@
 #include "h264decode.h"
 //}}}
 
-sVidParam* gVidParam;
+sDecoder* gVidParam;
 char errortext[ET_SIZE];
 
 //{{{
@@ -32,7 +32,7 @@ void error (char* text, int code) {
   }
 //}}}
 //{{{
-static void reset_dpb (sVidParam* vidParam, sDPB* dpb ) {
+static void reset_dpb (sDecoder* vidParam, sDPB* dpb ) {
 
   dpb->vidParam = vidParam;
   dpb->initDone = 0;
@@ -45,7 +45,7 @@ void report_stats_on_error() {
 //}}}
 
 //{{{
-sSlice* allocSlice (sVidParam* vidParam) {
+sSlice* allocSlice (sDecoder* vidParam) {
 
   sSlice* curSlice = (sSlice*)calloc (1, sizeof(sSlice));
   if (!curSlice) {
@@ -131,7 +131,7 @@ static void freeSlice (sSlice *curSlice) {
 //}}}
 
 //{{{
-static void freeImg (sVidParam* vidParam) {
+static void freeImg (sDecoder* vidParam) {
 
   if (vidParam != NULL) {
     freeAnnexB (&vidParam->annexB);
@@ -190,7 +190,7 @@ static void freeImg (sVidParam* vidParam) {
 //}}}
 
 //{{{
-static void init (sVidParam* vidParam) {
+static void init (sDecoder* vidParam) {
 
   vidParam->oldFrameSizeInMbs = (unsigned int) -1;
 
@@ -234,7 +234,7 @@ static void init (sVidParam* vidParam) {
   }
 //}}}
 //{{{
-void init_frext (sVidParam* vidParam) {
+void init_frext (sDecoder* vidParam) {
 
   // pel bitdepth init
   vidParam->bitdepth_luma_qp_scale = 6 * (vidParam->bitdepthLuma - 8);
@@ -337,7 +337,7 @@ void freePartition (sDataPartition* dp, int n) {
 //}}}
 
 //{{{
-void freeLayerBuffers (sVidParam* vidParam, int layerId) {
+void freeLayerBuffers (sDecoder* vidParam, int layerId) {
 
   sCoding *coding = vidParam->coding[layerId];
 
@@ -393,7 +393,7 @@ void freeLayerBuffers (sVidParam* vidParam, int layerId) {
   }
 //}}}
 //{{{
-void initGlobalBuffers (sVidParam* vidParam, int layerId) {
+void initGlobalBuffers (sDecoder* vidParam, int layerId) {
 
   sCoding *coding = vidParam->coding[layerId];
   sBlockPos* picPos;
@@ -456,7 +456,7 @@ void initGlobalBuffers (sVidParam* vidParam, int layerId) {
   }
 //}}}
 //{{{
-void freeGlobalBuffers (sVidParam* vidParam) {
+void freeGlobalBuffers (sDecoder* vidParam) {
 
   if (vidParam->picture) {
     freePicture (vidParam->picture);
@@ -483,7 +483,7 @@ sDecodedPicture* getDecodedPicture (sDecodedPicture* decodedPicture) {
   }
 //}}}
 //{{{
-void ClearDecodedPictures (sVidParam* vidParam) {
+void ClearDecodedPictures (sDecoder* vidParam) {
 
   // find the head first;
   sDecodedPicture* prevDecodedPicture = NULL;
@@ -524,13 +524,13 @@ void freeDecodedPictures (sDecodedPicture* decodedPicture) {
 //}}}
 
 //{{{
-void setGlobalCodingProgram (sVidParam* vidParam, sCoding* coding) {
+void setGlobalCodingProgram (sDecoder* vidParam, sCoding* coding) {
 
   vidParam->bitdepthChroma = 0;
   vidParam->widthCr = 0;
   vidParam->heightCr = 0;
   vidParam->lossless_qpprime_flag = coding->lossless_qpprime_flag;
-  vidParam->max_vmv_r = coding->max_vmv_r;
+  vidParam->maxVmvR = coding->maxVmvR;
 
   // Fidelity Range Extensions stuff (part 1)
   vidParam->bitdepthLuma = coding->bitdepthLuma;
@@ -580,7 +580,7 @@ void setGlobalCodingProgram (sVidParam* vidParam, sCoding* coding) {
 void OpenDecoder (sInput* input, byte* chunk, size_t chunkSize) {
 
   // alloc decoder
-  sVidParam* vidParam = (sVidParam*)calloc (1, sizeof(sVidParam));
+  sDecoder* vidParam = (sDecoder*)calloc (1, sizeof(sDecoder));
   gVidParam = vidParam;
 
   init_time();

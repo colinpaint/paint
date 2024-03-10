@@ -345,7 +345,7 @@ typedef struct DataPartition {
 //{{{  sMacroblock
 typedef struct Macroblock {
   struct Slice*      slice;
-  struct VidParam*   vidParam;
+  struct Decoder*   vidParam;
 
   int     mbAddrX;
   int     mbAddrA;
@@ -468,7 +468,7 @@ typedef struct OldSlice {
 //}}}
 //{{{  sSlice
 typedef struct Slice {
-  struct VidParam* vidParam;
+  struct Decoder* vidParam;
   sPPS* activePPS;
   sSPS* activeSPS;
 
@@ -682,7 +682,7 @@ typedef struct CodingParam {
   int mbSizeBlock[3][2];  // component macroblock dimensions
   int mbSizeShift[3][2];
 
-  int max_vmv_r;                  // maximum vertical motion vector range in luma quarter frame pixel units for the current level_idc
+  int maxVmvR;                  // maximum vertical motion vector range in luma quarter frame pixel units for the current level_idc
   int sepColourPlaneFlag;
   int ChromaArrayType;
   int maxFrameNum;
@@ -723,7 +723,7 @@ typedef struct CodingParam {
 //{{{  sLayer
 typedef struct LayerParam {
   int              layerId;
-  struct VidParam* vidParam;
+  struct Decoder* vidParam;
   sCoding*    coding;
   sSPS*            sps;
   struct DPB*      dpb;
@@ -743,8 +743,8 @@ typedef struct Input {
   int dpbPlus[2];
   } sInput;
 //}}}
-//{{{  sVidParam
-typedef struct VidParam {
+//{{{  sDecoder
+typedef struct Decoder {
   sInput      input;
 
   TIME_T      startTime;
@@ -765,8 +765,8 @@ typedef struct VidParam {
   sLayer*     layer[MAX_NUM_DPB_LAYERS];
   sCoding*    coding[MAX_NUM_DPB_LAYERS];
 
-  int                   number;  //frame number
-  struct sSEI*    sei;
+  int              number;  //frame number
+  struct sSEI*     sei;
   struct OldSlice* oldSlice;
 
   // current picture property;
@@ -864,7 +864,7 @@ typedef struct VidParam {
   struct ObjectBuffer*  ercObjectList;
   struct ErcVariables* ercErrorVar;
   int                    ercMvPerMb;
-  struct VidParam*       ercImg;
+  struct Decoder*       ercImg;
   int                    ecFlag[SE_MAX_ELEMENTS];  // array to set errorconcealment
 
   struct FrameStore* outBuffer;
@@ -936,8 +936,8 @@ typedef struct VidParam {
   int mb_cr_size_x_blk;
   int mb_cr_size_y_blk;
   int mbCrSize;
-  int mbSize[3][2];       // component macroblock dimensions
-  int mbSizeBlock[3][2];   // component macroblock dimensions
+  int mbSize[3][2];      // component macroblock dimensions
+  int mbSizeBlock[3][2]; // component macroblock dimensions
   int mbSizeShift[3][2];
   int subpelX;
   int subpelY;
@@ -953,8 +953,8 @@ typedef struct VidParam {
   unsigned int oldFrameSizeInMbs;
 
   // maximum vertical motion vector range in luma quarter frame pixel units for the current level_idc
-  int max_vmv_r;
-  } sVidParam;
+  int maxVmvR;
+  } sDecoder;
 //}}}
 
 typedef sBiContextType* sBiContextTypePtr;
@@ -988,32 +988,32 @@ static inline int is_HI_intra_only_profile (unsigned int profileIdc, Boolean con
   extern "C" {
 #endif
 //}}}
-  extern sVidParam* gVidParam;
+  extern sDecoder* gVidParam;
 
   extern char errortext[ET_SIZE];
   extern void error (char* text, int code);
 
-  extern void initGlobalBuffers (sVidParam* vidParam, int layerId);
-  extern void freeGlobalBuffers (sVidParam* vidParam);
-  extern void freeLayerBuffers (sVidParam* vidParam, int layerId);
+  extern void initGlobalBuffers (sDecoder* vidParam, int layerId);
+  extern void freeGlobalBuffers (sDecoder* vidParam);
+  extern void freeLayerBuffers (sDecoder* vidParam, int layerId);
 
   extern sDataPartition* allocPartition (int n);
   extern void freePartition (sDataPartition* dp, int n);
 
-  extern sSlice* allocSlice (sVidParam* vidParam);
+  extern sSlice* allocSlice (sDecoder* vidParam);
 
   extern unsigned ceilLog2 (unsigned uiVal);
   extern unsigned ceilLog2sf (unsigned uiVal);
 
   // For 4:4:4 independent mode
-  extern void changePlaneJV (sVidParam* vidParam, int nplane, sSlice *pSlice);
-  extern void make_frame_picture_JV (sVidParam* vidParam );
+  extern void changePlaneJV (sDecoder* vidParam, int nplane, sSlice *pSlice);
+  extern void make_frame_picture_JV (sDecoder* vidParam );
 
   extern sDecodedPicture* getDecodedPicture (sDecodedPicture* decodedPicture);
   extern void freeDecodedPictures (sDecodedPicture* decodedPicture);
-  extern void clearDecodedPictures (sVidParam* vidParam);
+  extern void clearDecodedPictures (sDecoder* vidParam);
 
-  extern void setGlobalCodingProgram (sVidParam* vidParam, sCoding* coding);
+  extern void setGlobalCodingProgram (sDecoder* vidParam, sCoding* coding);
 //{{{
 #ifdef __cplusplus
 }

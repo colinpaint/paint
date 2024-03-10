@@ -140,7 +140,7 @@ static void edge_loop_luma_ver_MBAff (eColorPlane pl, sPixel** img,
   int      QP;
   sPixelPos pixP, pixQ;
 
-  sVidParam* vidParam = mbQ->vidParam;
+  sDecoder* vidParam = mbQ->vidParam;
   int bitdepth_scale = pl ? vidParam->bitdepth_scale[IS_CHROMA] : vidParam->bitdepth_scale[IS_LUMA];
   int max_imgpel_value = vidParam->maxPelValueComp[pl];
 
@@ -240,7 +240,7 @@ static void edge_loop_luma_hor_MBAff (eColorPlane pl, sPixel** img, byte* Streng
 
   sPixelPos pixP, pixQ;
 
-  sVidParam* vidParam = mbQ->vidParam;
+  sDecoder* vidParam = mbQ->vidParam;
   int      bitdepth_scale = pl? vidParam->bitdepth_scale[IS_CHROMA] : vidParam->bitdepth_scale[IS_LUMA];
   int      max_imgpel_value = vidParam->maxPelValueComp[pl];
 
@@ -344,7 +344,7 @@ static void edge_loop_chroma_ver_MBAff (sPixel** img, byte *Strength, sMacrobloc
   int      Alpha = 0, Beta = 0;
   const byte* ClipTab = NULL;
   int      indexA, indexB;
-  sVidParam* vidParam = mbQ->vidParam;
+  sDecoder* vidParam = mbQ->vidParam;
   int      PelNum = pelnum_cr[0][p->chromaFormatIdc];
   int      StrengthIdx;
   int      QP;
@@ -407,7 +407,7 @@ static void edge_loop_chroma_ver_MBAff (sPixel** img, byte *Strength, sMacrobloc
 //{{{
 static void edge_loop_chroma_hor_MBAff (sPixel** img, byte *Strength, sMacroblock* mbQ, int edge, int uv, sPicture *p)
 {
-  sVidParam* vidParam = mbQ->vidParam;
+  sDecoder* vidParam = mbQ->vidParam;
   int PelNum = pelnum_cr[1][p->chromaFormatIdc];
   int yQ = (edge < MB_BLOCK_SIZE? edge : 1);
   sPixelPos pixP, pixQ;
@@ -480,7 +480,7 @@ static void get_strength_ver_MBAff (byte* Strength, sMacroblock* mb, int edge, i
   int    StrValue, i;
   short  mb_x, mb_y;
   sPixelPos pixP;
-  sVidParam* vidParam = mb->vidParam;
+  sDecoder* vidParam = mb->vidParam;
   sBlockPos *picPos = vidParam->picPos;
 
   sMacroblock* MbP;
@@ -652,7 +652,7 @@ static void get_strength_hor_MBAff (byte* Strength, sMacroblock* mb, int edge, i
   short  mb_x, mb_y;
   sMacroblock *MbP;
   sPixelPos pixP;
-  sVidParam* vidParam = mb->vidParam;
+  sDecoder* vidParam = mb->vidParam;
   sBlockPos *picPos = vidParam->picPos;
 
   if ((p->sliceType==SP_SLICE)||(p->sliceType==SI_SLICE) ) {
@@ -755,7 +755,7 @@ static void get_strength_hor_MBAff (byte* Strength, sMacroblock* mb, int edge, i
   }
 //}}}
 //{{{
-static void set_loop_filter_functions_mbaff (sVidParam* vidParam) {
+static void set_loop_filter_functions_mbaff (sDecoder* vidParam) {
 
   vidParam->EdgeLoopLumaVer = edge_loop_luma_ver_MBAff;
   vidParam->EdgeLoopLumaHor = edge_loop_luma_hor_MBAff;
@@ -1096,7 +1096,7 @@ static void luma_ver_deblock_normal (sPixel** curPixel, int pos_x1,
 //{{{
 static void edge_loop_luma_ver (eColorPlane pl, sPixel** img, byte* Strength, sMacroblock* mb, int edge) {
 
-  sVidParam* vidParam = mb->vidParam;
+  sDecoder* vidParam = mb->vidParam;
 
   sMacroblock* MbP = get_non_aff_neighbour_luma (mb, edge - 1, 0);
   if (MbP || (mb->DFDisableIdc == 0)) {
@@ -1235,7 +1235,7 @@ static void luma_hor_deblock_normal (sPixel* imgP, sPixel* imgQ, int width,
 static void edge_loop_luma_hor (eColorPlane pl, sPixel** img, byte* Strength,
                                 sMacroblock* mb, int edge, sPicture *p) {
 
-  sVidParam* vidParam = mb->vidParam;
+  sDecoder* vidParam = mb->vidParam;
 
   int ypos = (edge < MB_BLOCK_SIZE ? edge - 1: 0);
   sMacroblock *MbP = get_non_aff_neighbour_luma (mb, 0, ypos);
@@ -1276,7 +1276,7 @@ static void edge_loop_luma_hor (eColorPlane pl, sPixel** img, byte* Strength,
 static void edge_loop_chroma_ver (sPixel** img, byte* Strength, sMacroblock* mb,
                                   int edge, int uv, sPicture *p) {
 
-  sVidParam* vidParam = mb->vidParam;
+  sDecoder* vidParam = mb->vidParam;
 
   int block_width  = vidParam->mbCrSizeX;
   int block_height = vidParam->mbCrSizeY;
@@ -1340,7 +1340,7 @@ static void edge_loop_chroma_ver (sPixel** img, byte* Strength, sMacroblock* mb,
 static void edge_loop_chroma_hor (sPixel** img, byte* Strength, sMacroblock* mb,
                                   int edge, int uv, sPicture *p) {
 
-  sVidParam* vidParam = mb->vidParam;
+  sDecoder* vidParam = mb->vidParam;
   int block_width = vidParam->mbCrSizeX;
   int block_height = vidParam->mbCrSizeY;
   int xQ = 0;
@@ -1404,7 +1404,7 @@ static void edge_loop_chroma_hor (sPixel** img, byte* Strength, sMacroblock* mb,
   }
 //}}}
 //{{{
-static void set_loop_filter_functions_normal (sVidParam* vidParam) {
+static void set_loop_filter_functions_normal (sDecoder* vidParam) {
 
   vidParam->GetStrengthVer    = get_strength_ver;
   vidParam->GetStrengthHor    = get_strength_hor;
@@ -1417,7 +1417,7 @@ static void set_loop_filter_functions_normal (sVidParam* vidParam) {
 
 // loopfilter
 //{{{
-static void deblockMb (sVidParam* vidParam, sPicture* p, int mbQAddr) {
+static void deblockMb (sDecoder* vidParam, sPicture* p, int mbQAddr) {
 
   sMacroblock* mb = &(vidParam->mbData[mbQAddr]) ; // current Mb
 
@@ -1578,7 +1578,7 @@ static void deblockMb (sVidParam* vidParam, sPicture* p, int mbQAddr) {
   }
 //}}}
 //{{{
-static void getDeblockStrength (sVidParam* vidParam, sPicture* p, int mbQAddr) {
+static void getDeblockStrength (sDecoder* vidParam, sPicture* p, int mbQAddr) {
 
   sMacroblock* mb = &(vidParam->mbData[mbQAddr]) ; // current Mb
 
@@ -1675,7 +1675,7 @@ static void getDeblockStrength (sVidParam* vidParam, sPicture* p, int mbQAddr) {
   }
 //}}}
 //{{{
-static void performDeblock (sVidParam* vidParam, sPicture* p, int mbQAddr) {
+static void performDeblock (sDecoder* vidParam, sPicture* p, int mbQAddr) {
 
   sMacroblock* mb = &(vidParam->mbData[mbQAddr]) ; // current Mb
 
@@ -1828,7 +1828,7 @@ static void performDeblock (sVidParam* vidParam, sPicture* p, int mbQAddr) {
   }
 //}}}
 //{{{
-void deblockPicture (sVidParam* vidParam, sPicture* p) {
+void deblockPicture (sDecoder* vidParam, sPicture* p) {
 
   if (p->mbAffFrameFlag) {
     for (unsigned i = 0; i < p->picSizeInMbs; ++i)
@@ -1844,7 +1844,7 @@ void deblockPicture (sVidParam* vidParam, sPicture* p) {
 //}}}
 
 //{{{
-static void initNeighbours (sVidParam* vidParam) {
+static void initNeighbours (sDecoder* vidParam) {
 
   int width = vidParam->PicWidthInMbs;
   int height = vidParam->picHeightInMbs;
@@ -1882,7 +1882,7 @@ static void initNeighbours (sVidParam* vidParam) {
   }
 //}}}
 //{{{
-void initDeblock (sVidParam* vidParam, int mbAffFrameFlag) {
+void initDeblock (sDecoder* vidParam, int mbAffFrameFlag) {
 
   if (vidParam->yuvFormat == YUV444 && vidParam->sepColourPlaneFlag) {
     changePlaneJV (vidParam, PLANE_Y, NULL);

@@ -1253,7 +1253,7 @@ static void reset_WPParam (sSlice* curSlice) {
 //{{{
 static void pred_weight_table (sSlice* curSlice) {
 
-  sVidParam* vidParam = curSlice->vidParam;
+  sDecoder* vidParam = curSlice->vidParam;
   sSPS* activeSPS = vidParam->activeSPS;
 
   byte dP_nr = assignSE2partition[curSlice->dataPartitionMode][SE_HEADER];
@@ -1426,7 +1426,7 @@ void initContexts (sSlice* curSlice) {
   }
 //}}}
 //{{{
-void dec_ref_pic_marking (sVidParam* vidParam, sBitstream* curStream, sSlice* pSlice) {
+void dec_ref_pic_marking (sDecoder* vidParam, sBitstream* curStream, sSlice* pSlice) {
 
   // free old buffer content
   while (pSlice->decRefPicMarkingBuffer) {
@@ -1482,7 +1482,7 @@ void dec_ref_pic_marking (sVidParam* vidParam, sBitstream* curStream, sSlice* pS
 //}}}
 
 //{{{
-int dumpPOC (sVidParam* vidParam) {
+int dumpPOC (sDecoder* vidParam) {
 
   sSPS* activeSPS = vidParam->activeSPS;
 
@@ -1515,7 +1515,7 @@ int dumpPOC (sVidParam* vidParam) {
   }
 //}}}
 //{{{
-void decodePOC (sVidParam* vidParam, sSlice* pSlice) {
+void decodePOC (sDecoder* vidParam, sSlice* pSlice) {
 
   // for POC mode 0:
   sSPS* activeSPS = vidParam->activeSPS;
@@ -1694,7 +1694,7 @@ void decodePOC (sVidParam* vidParam, sSlice* pSlice) {
 //{{{
 void readSliceHeader (sSlice* curSlice) {
 
-  sVidParam* vidParam = curSlice->vidParam;
+  sDecoder* vidParam = curSlice->vidParam;
   byte dP_nr = assignSE2partition[curSlice->dataPartitionMode][SE_HEADER];
   sDataPartition* partition = &(curSlice->partitions[dP_nr]);
   sBitstream* curStream = partition->bitstream;
@@ -1718,7 +1718,7 @@ void readSliceHeader (sSlice* curSlice) {
 //{{{
 void readRestSliceHeader (sSlice* curSlice) {
 
-  sVidParam* vidParam = curSlice->vidParam;
+  sDecoder* vidParam = curSlice->vidParam;
   sSPS* activeSPS = vidParam->activeSPS;
 
   byte dP_nr = assignSE2partition[curSlice->dataPartitionMode][SE_HEADER];

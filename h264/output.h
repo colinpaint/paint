@@ -1,7 +1,7 @@
 #pragma once
 
-extern void allocOutput (sVidParam* vidParam);
-extern void freeOutput (sVidParam* vidParam);
+extern void allocOutput (sDecoder* vidParam);
+extern void freeOutput (sDecoder* vidParam);
 
-extern void directOutput (sVidParam* vidParam, sPicture* p);
-extern void writeStoredFrame (sVidParam* vidParam, sFrameStore* frameStore);
+extern void directOutput (sDecoder* vidParam, sPicture* p);
+extern void writeStoredFrame (sDecoder* vidParam, sFrameStore* frameStore);

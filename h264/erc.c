@@ -119,7 +119,7 @@ static int ercCollectColumnBlocks (int predBlocks[], int currRow, int currColumn
  *      Width of the frame in pixels
 ** **********************************************************************
  */
-static void pixMeanInterpolateBlock (sVidParam* vidParam, sPixel *src[], sPixel *block, int blockSize, int frameWidth )
+static void pixMeanInterpolateBlock (sDecoder* vidParam, sPixel *src[], sPixel *block, int blockSize, int frameWidth )
 {
   int row, column, k, tmp, srcCounter = 0, weight = 0, bmax = blockSize - 1;
 
@@ -190,7 +190,7 @@ static void pixMeanInterpolateBlock (sVidParam* vidParam, sPixel *src[], sPixel 
  *      2 for Y, 1 for U/V components
 ** **********************************************************************
  */
-static void ercPixConcealIMB (sVidParam* vidParam, sPixel* currFrame, int row, int column, int predBlocks[], int frameWidth, int mbWidthInBlocks)
+static void ercPixConcealIMB (sDecoder* vidParam, sPixel* currFrame, int row, int column, int predBlocks[], int frameWidth, int mbWidthInBlocks)
 {
    sPixel *src[8]={NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL};
    sPixel* currBlock = NULL;
@@ -363,7 +363,7 @@ static int ercCollect8PredBlocks (int predBlocks[], int currRow, int currColumn,
  *      The block condition (ok, lost) table
 ** **********************************************************************
  */
-static void concealBlocks (sVidParam* vidParam, int lastColumn, int lastRow, int comp, frame *recfr, int picSizeX, char *condition )
+static void concealBlocks (sDecoder* vidParam, int lastColumn, int lastRow, int comp, frame *recfr, int picSizeX, char *condition )
 {
   //int row, column, srcCounter = 0,  thr = ERC_BLOCK_CORRUPTED,
   int row, column, thr = ERC_BLOCK_CORRUPTED,
@@ -541,7 +541,7 @@ static void concealBlocks (sVidParam* vidParam, int lastColumn, int lastRow, int
 //}}}
 
 //{{{
-int ercConcealIntraFrame (sVidParam* vidParam, frame *recfr,
+int ercConcealIntraFrame (sDecoder* vidParam, frame *recfr,
                           int picSizeX, int picSizeY, sErcVariables *errorVar )
 {
   int lastColumn = 0, lastRow = 0;
@@ -594,7 +594,7 @@ int ercConcealIntraFrame (sVidParam* vidParam, frame *recfr,
 static void copyPredMB (int currYBlockNum, sPixel *predMB, frame *recfr,
                         int picSizeX, int regionSize)
 {
-  sVidParam* vidParam = recfr->vidParam;
+  sDecoder* vidParam = recfr->vidParam;
   sPicture* picture = vidParam->picture;
   int j, k, xmin, ymin, xmax, ymax;
   int locationTmp;
@@ -741,7 +741,7 @@ static int edgeDistortion (int predBlocks[], int currYBlockNum, sPixel *predMB,
 *      when the pixel positions to be copied from is not full pixel (any 1/4 pixel position).
 *      It copies the resulting pixel vlaues into predMB.
 * \param vidParam
-*      The pointer of VidParam structure of current frame
+*      The pointer of Decoder structure of current frame
 * \param mv
 *      The pointer of the predicted MV of the current (being concealed) MB
 * \param x
@@ -753,7 +753,7 @@ static int edgeDistortion (int predBlocks[], int currYBlockNum, sPixel *predMB,
 *      the Y,U,V planes are concatenated y = predMB, u = predMB+256, v = predMB+320
 ************************************************************************
 */
-static void buildPredRegionYUV (sVidParam* vidParam, int *mv, int x, int y, sPixel *predMB)
+static void buildPredRegionYUV (sDecoder* vidParam, int *mv, int x, int y, sPixel *predMB)
 {
   sPixel** tmp_block;
   int i=0, j=0, ii=0, jj=0,i1=0,j1=0,j4=0,i4=0;
@@ -911,7 +911,7 @@ static void buildPredRegionYUV (sVidParam* vidParam, int *mv, int x, int y, sPix
  */
 static void copyBetweenFrames (frame *recfr, int currYBlockNum, int picSizeX, int regionSize)
 {
-  sVidParam* vidParam = recfr->vidParam;
+  sDecoder* vidParam = recfr->vidParam;
   sPicture* picture = vidParam->picture;
   int j, k, location, xmin, ymin;
   sPicture* refPic = vidParam->sliceList[0]->listX[0][0];
@@ -1008,7 +1008,7 @@ static int concealByTrial (frame *recfr, sPixel *predMB,
                           int currMBNum, sObjectBuffer *object_list, int predBlocks[],
                           int picSizeX, int picSizeY, char *yCondition)
 {
-  sVidParam* vidParam = recfr->vidParam;
+  sDecoder* vidParam = recfr->vidParam;
 
   int predMBNum = 0, numMBPerLine,
       compSplit1 = 0, compSplit2 = 0, compLeft = 1, comp = 0, compPred, order = 1,
@@ -1205,7 +1205,7 @@ static int concealByTrial (frame *recfr, sPixel *predMB,
 int ercConcealInterFrame (frame *recfr, sObjectBuffer *object_list,
                          int picSizeX, int picSizeY, sErcVariables *errorVar, int chromaFormatIdc ) {
 
-  sVidParam* vidParam = recfr->vidParam;
+  sDecoder* vidParam = recfr->vidParam;
 
   int lastColumn = 0, lastRow = 0, predBlocks[8];
   int lastCorruptedRow = -1, firstCorruptedRow = -1;
@@ -1348,7 +1348,7 @@ int ercConcealInterFrame (frame *recfr, sObjectBuffer *object_list,
 *
 *************************************************************************
 */
-static void buildPredblockRegionYUV (sVidParam* vidParam, int *mv,
+static void buildPredblockRegionYUV (sDecoder* vidParam, int *mv,
                                     int x, int y, sPixel *predMB, int list, int curMbNum)
 {
   sPixel** tmp_block;
@@ -1520,7 +1520,7 @@ static sPicture* get_last_ref_pic_from_dpb (sDPB* dpb)
 }
 //}}}
 //{{{
-static void copy_to_conceal (sPicture *src, sPicture *dst, sVidParam* vidParam)
+static void copy_to_conceal (sPicture *src, sPicture *dst, sDecoder* vidParam)
 {
   int i = 0;
   int mv[3];
@@ -1668,7 +1668,7 @@ static void copy_to_conceal (sPicture *src, sPicture *dst, sVidParam* vidParam)
 
 static void copy_prev_pic_to_concealed_pic (sPicture *picture, sDPB* dpb)
 {
-  sVidParam* vidParam = dpb->vidParam;
+  sDecoder* vidParam = dpb->vidParam;
   /* get the last ref pic in dpb */
   sPicture *refPic = get_last_ref_pic_from_dpb(dpb);
 
@@ -1682,7 +1682,7 @@ static void copy_prev_pic_to_concealed_pic (sPicture *picture, sDPB* dpb)
 //{{{
 static sPicture* get_pic_from_dpb (sDPB* dpb, int missingpoc, unsigned int *pos)
 {
-  sVidParam* vidParam = dpb->vidParam;
+  sDecoder* vidParam = dpb->vidParam;
   int usedSize = dpb->usedSize - 1;
   int i, concealfrom = 0;
 
@@ -1709,7 +1709,7 @@ static int comp (const void *i, const void *j) {
   }
 //}}}
 //{{{
-static void add_node (sVidParam* vidParam, struct ConcealNode *concealment_new )
+static void add_node (sDecoder* vidParam, struct ConcealNode *concealment_new )
 {
   if( vidParam->concealment_head == NULL ) {
     vidParam->concealment_end = vidParam->concealment_head = concealment_new;
@@ -1720,7 +1720,7 @@ static void add_node (sVidParam* vidParam, struct ConcealNode *concealment_new )
 }
 //}}}
 //{{{
-static void delete_node (sVidParam* vidParam, struct ConcealNode *ptr ) {
+static void delete_node (sDecoder* vidParam, struct ConcealNode *ptr ) {
 
   // We only need to delete the first node in the linked list
   if( ptr == vidParam->concealment_head ) {
@@ -1734,7 +1734,7 @@ static void delete_node (sVidParam* vidParam, struct ConcealNode *ptr ) {
 //{{{
 static void update_ref_list_for_concealment (sDPB* dpb) {
 
-  sVidParam* vidParam = dpb->vidParam;
+  sDecoder* vidParam = dpb->vidParam;
 
   unsigned j = 0;
   for (unsigned i = 0; i < dpb->usedSize; i++)
@@ -1771,7 +1771,7 @@ struct ConcealNode * init_node (sPicture* picture, int missingpoc ) {
 */
 void init_lists_for_non_reference_loss (sDPB* dpb, int currSliceType, ePicStructure currPicStructure)
 {
-  sVidParam* vidParam = dpb->vidParam;
+  sDecoder* vidParam = dpb->vidParam;
   sSPS *activeSPS = vidParam->activeSPS;
 
   unsigned i;
@@ -1871,7 +1871,7 @@ void init_lists_for_non_reference_loss (sDPB* dpb, int currSliceType, ePicStruct
 */
 void concealLostFrames (sDPB* dpb, sSlice *pSlice)
 {
-  sVidParam* vidParam = dpb->vidParam;
+  sDecoder* vidParam = dpb->vidParam;
   int CurrFrameNum;
   int UnusedShortTermFrameNum;
   sPicture *picture = NULL;
@@ -1966,7 +1966,7 @@ void concealLostFrames (sDPB* dpb, sSlice *pSlice)
 
 void conceal_non_ref_pics (sDPB* dpb, int diff)
 {
-  sVidParam* vidParam = dpb->vidParam;
+  sDecoder* vidParam = dpb->vidParam;
   int missingpoc = 0;
   unsigned int i, pos = 0;
   sPicture *conceal_from_picture = NULL;
@@ -2032,7 +2032,7 @@ void sliding_window_poc_management (sDPB* dpb, sPicture *p)
 {
   if (dpb->usedSize == dpb->size)
   {
-    sVidParam* vidParam = dpb->vidParam;
+    sDecoder* vidParam = dpb->vidParam;
     unsigned int i;
 
     for(i=0;i<dpb->size-1; i++)
@@ -2055,7 +2055,7 @@ void sliding_window_poc_management (sDPB* dpb, sPicture *p)
 
 void write_lost_non_ref_pic (sDPB* dpb, int poc) {
 
-  sVidParam* vidParam = dpb->vidParam;
+  sDecoder* vidParam = dpb->vidParam;
   sFrameStore concealment_fs;
   if (poc > 0) {
     if ((poc - dpb->lastOutputPoc) > vidParam->pocGap) {
@@ -2081,7 +2081,7 @@ void write_lost_non_ref_pic (sDPB* dpb, int poc) {
 */
 void write_lost_ref_after_idr (sDPB* dpb, int pos) {
 
-  sVidParam* vidParam = dpb->vidParam;
+  sDecoder* vidParam = dpb->vidParam;
   int temp = 1;
   if (vidParam->lastOutFramestore->frame == NULL) {
     vidParam->lastOutFramestore->frame = allocPicture (vidParam, FRAME, vidParam->width, vidParam->height,
@@ -2101,7 +2101,7 @@ void write_lost_ref_after_idr (sDPB* dpb, int pos) {
 
 // api
 //{{{
-void ercInit (sVidParam* vidParam, int pic_sizex, int pic_sizey, int flag) {
+void ercInit (sDecoder* vidParam, int pic_sizex, int pic_sizey, int flag) {
 
   ercClose(vidParam, vidParam->ercErrorVar);
   vidParam->ercObjectList = (sObjectBuffer*)calloc ((pic_sizex * pic_sizey) >> 6, sizeof(sObjectBuffer));
@@ -2223,7 +2223,7 @@ void ercReset (sErcVariables *errorVar, int nOfMBs, int numOfSegments, int picSi
   }
 //}}}
 //{{{
-void ercClose (sVidParam* vidParam,  sErcVariables *errorVar ) {
+void ercClose (sDecoder* vidParam,  sErcVariables *errorVar ) {
 
   if ( errorVar != NULL ) {
     if (errorVar->yCondition != NULL) {

@@ -46,7 +46,7 @@ void itrans4x4_ls (sMacroblock* curMb, eColorPlane pl, int ioff, int joff) {
   sPixel** mb_rec = curSlice->mb_rec[pl];
   int** mb_rres = curSlice->mb_rres [pl];
 
-  sVidParam* vidParam = curMb->vidParam;
+  sDecoder* vidParam = curMb->vidParam;
   int max_imgpel_value = vidParam->maxPelValueComp[pl];
   for (int j = joff; j < joff + BLOCK_SIZE; ++j)
     for (int i = ioff; i < ioff + BLOCK_SIZE; ++i)
@@ -252,7 +252,7 @@ void Inv_Residual_trans_Chroma (sMacroblock* curMb, int uv) {
 void itrans_2 (sMacroblock* curMb, eColorPlane pl) {
 
   sSlice* curSlice = curMb->slice;
-  sVidParam* vidParam = curMb->vidParam;
+  sDecoder* vidParam = curMb->vidParam;
 
   int transform_pl = (vidParam->sepColourPlaneFlag != 0) ? PLANE_Y : pl;
   int** cof = curSlice->cof[transform_pl];
@@ -288,7 +288,7 @@ void itrans_2 (sMacroblock* curMb, eColorPlane pl) {
 //{{{
 void itrans_sp (sMacroblock* curMb, eColorPlane pl, int ioff, int joff) {
 
-  sVidParam* vidParam = curMb->vidParam;
+  sDecoder* vidParam = curMb->vidParam;
   sSlice* curSlice = curMb->slice;
 
   int qp = (curSlice->sliceType == SI_SLICE) ? curSlice->qs : curSlice->qp;
@@ -354,7 +354,7 @@ void itrans_sp (sMacroblock* curMb, eColorPlane pl, int ioff, int joff) {
 void itrans_sp_cr (sMacroblock* curMb, int uv) {
 
   sSlice* curSlice = curMb->slice;
-  sVidParam* vidParam = curMb->vidParam;
+  sDecoder* vidParam = curMb->vidParam;
   int mp1[BLOCK_SIZE];
   sPixel** mb_pred = curSlice->mb_pred[uv + 1];
   int** cof = curSlice->cof[uv + 1];
@@ -511,7 +511,7 @@ void iMBtrans4x4 (sMacroblock* curMb, eColorPlane pl, int smb) {
 //{{{
 void iMBtrans8x8 (sMacroblock* curMb, eColorPlane pl) {
 
-  //sVidParam* vidParam = curMb->vidParam;
+  //sDecoder* vidParam = curMb->vidParam;
   sPicture* picture = curMb->slice->picture;
   sPixel** curr_img = pl ? picture->imgUV[pl - 1]: picture->imgY;
 
@@ -543,7 +543,7 @@ void iMBtrans8x8 (sMacroblock* curMb, eColorPlane pl) {
 void iTransform (sMacroblock* curMb, eColorPlane pl, int smb) {
 
   sSlice* curSlice = curMb->slice;
-  sVidParam* vidParam = curMb->vidParam;
+  sDecoder* vidParam = curMb->vidParam;
   sPicture* picture = curSlice->picture;
   sPixel** curr_img;
   int uv = pl-1;
@@ -653,7 +653,7 @@ void copy_Image_16x16 (sPixel** imgBuf1, sPixel** imgBuf2, int off1, int off2) {
 //{{{
 int CheckVertMV (sMacroblock* curMb, int vec1_y, int block_size_y) {
 
-  sVidParam* vidParam = curMb->vidParam;
+  sDecoder* vidParam = curMb->vidParam;
   sPicture* picture = curMb->slice->picture;
 
   int y_pos = vec1_y>>2;

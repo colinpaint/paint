@@ -1,10 +1,10 @@
 #pragma once
 
-extern int initFmo (sVidParam* vidParam, sSlice* pSlice);
-extern int FmoFinit (sVidParam* vidParam);
+extern int initFmo (sDecoder* vidParam, sSlice* pSlice);
+extern int FmoFinit (sDecoder* vidParam);
 
-extern int FmoGetNumberOfSliceGroup (sVidParam* vidParam);
-extern int FmoGetLastMBOfPicture (sVidParam* vidParam);
-extern int FmoGetLastMBInSliceGroup (sVidParam* vidParam, int SliceGroup);
-extern int FmoGetSliceGroupId (sVidParam* vidParam, int mb);
-extern int FmoGetNextMBNr (sVidParam* vidParam, int CurrentMbNr);
+extern int FmoGetNumberOfSliceGroup (sDecoder* vidParam);
+extern int FmoGetLastMBOfPicture (sDecoder* vidParam);
+extern int FmoGetLastMBInSliceGroup (sDecoder* vidParam, int SliceGroup);
+extern int FmoGetSliceGroupId (sDecoder* vidParam, int mb);
+extern int FmoGetNextMBNr (sDecoder* vidParam, int CurrentMbNr);

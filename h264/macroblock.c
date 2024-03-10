@@ -33,7 +33,7 @@ static void GetMotionVectorPredictorMBAFF (sMacroblock* mb, sPixelPos* block,
   int mv_a, mv_b, mv_c, pred_vec=0;
   int mvPredType, rFrameL, rFrameU, rFrameUR;
   int hv;
-  sVidParam* vidParam = mb->vidParam;
+  sDecoder* vidParam = mb->vidParam;
   mvPredType = MVPRED_MEDIAN;
 
   if (mb->mbField) {
@@ -436,7 +436,7 @@ static void prepareListforRefIdx (sMacroblock* mb, sSyntaxElement* currSE,
 //{{{
 void set_chroma_qp (sMacroblock* mb) {
 
-  sVidParam* vidParam = mb->vidParam;
+  sDecoder* vidParam = mb->vidParam;
   sPicture* picture = mb->slice->picture;
   for (int i = 0; i < 2; ++i) {
     mb->qpc[i] = iClip3 (-vidParam->bitdepthChromaQpScale, 51, mb->qp + picture->chromaQpOffset[i] );
@@ -448,7 +448,7 @@ void set_chroma_qp (sMacroblock* mb) {
 //{{{
 void updateQp (sMacroblock* mb, int qp) {
 
-  sVidParam* vidParam = mb->vidParam;
+  sDecoder* vidParam = mb->vidParam;
 
   mb->qp = qp;
   mb->qpScaled[0] = qp + vidParam->bitdepth_luma_qp_scale;
@@ -463,7 +463,7 @@ void updateQp (sMacroblock* mb, int qp) {
 void readDeltaQuant (sSyntaxElement* currSE, sDataPartition *dP, sMacroblock* mb, const byte *partMap, int type)
 {
   sSlice* curSlice = mb->slice;
-  sVidParam* vidParam = mb->vidParam;
+  sDecoder* vidParam = mb->vidParam;
 
   currSE->type = type;
 
@@ -716,7 +716,7 @@ static void setup_mb_pos_info (sMacroblock* mb) {
 //{{{
 void startMacroblock (sSlice* curSlice, sMacroblock** mb) {
 
-  sVidParam* vidParam = curSlice->vidParam;
+  sDecoder* vidParam = curSlice->vidParam;
   int mb_nr = curSlice->curMbNum;
 
   *mb = &curSlice->mbData[mb_nr];
@@ -790,7 +790,7 @@ void startMacroblock (sSlice* curSlice, sMacroblock** mb) {
 //{{{
 Boolean exitMacroblock (sSlice* curSlice, int eos_bit) {
 
-  sVidParam* vidParam = curSlice->vidParam;
+  sDecoder* vidParam = curSlice->vidParam;
 
   //! The if() statement below resembles the original code, which tested
   //! vidParam->curMbNum == vidParam->picSizeInMbs.  Both is, of course, nonsense
@@ -977,7 +977,7 @@ static void interpretMbModeB (sMacroblock* mb) {
 //{{{
 static void interpretMbModeSI (sMacroblock* mb) {
 
-  //sVidParam* vidParam = mb->vidParam;
+  //sDecoder* vidParam = mb->vidParam;
   const int ICBPTAB[6] = {0,16,32,15,31,47};
 
   short mbmode = mb->mbType;
@@ -1015,7 +1015,7 @@ static void interpretMbModeSI (sMacroblock* mb) {
 //{{{
 static void readMotionInfoP (sMacroblock* mb){
 
-  sVidParam* vidParam = mb->vidParam;
+  sDecoder* vidParam = mb->vidParam;
   sSlice* curSlice = mb->slice;
 
   sSyntaxElement currSE;
@@ -1069,7 +1069,7 @@ static void readMotionInfoP (sMacroblock* mb){
 static void readMotionInfoB (sMacroblock* mb) {
 
   sSlice* curSlice = mb->slice;
-  sVidParam* vidParam = mb->vidParam;
+  sDecoder* vidParam = mb->vidParam;
   sPicture* picture = curSlice->picture;
   sSyntaxElement currSE;
   sDataPartition* dP = NULL;
@@ -1236,7 +1236,7 @@ void getNeighbours (sMacroblock* mb, sPixelPos* block, int mb_x, int mb_y, int b
 //{{{
 void checkDpNeighbours (sMacroblock* mb) {
 
-  sVidParam* vidParam = mb->vidParam;
+  sDecoder* vidParam = mb->vidParam;
   sPixelPos up, left;
   vidParam->getNeighbour (mb, -1,  0, vidParam->mbSize[1], &left);
   vidParam->getNeighbour (mb,  0, -1, vidParam->mbSize[1], &up);
@@ -1251,7 +1251,7 @@ void checkDpNeighbours (sMacroblock* mb) {
 //}}}
 
 //{{{
-static void init_cur_imgy (sVidParam* vidParam, sSlice* slice, int pl) {
+static void init_cur_imgy (sDecoder* vidParam, sSlice* slice, int pl) {
 // probably a better way (or place) to do this, but I'm not sure what (where) it is [CJV]
 // this is intended to make get_block_luma faster, but I'm still performing
 // this at the MB level, and it really should be done at the slice level
@@ -1286,7 +1286,7 @@ static void init_cur_imgy (sVidParam* vidParam, sSlice* slice, int pl) {
   }
 //}}}
 //{{{
-void changePlaneJV (sVidParam* vidParam, int nplane, sSlice* slice) {
+void changePlaneJV (sDecoder* vidParam, int nplane, sSlice* slice) {
 
   vidParam->mbData = vidParam->mbDataJV[nplane];
   vidParam->picture  = vidParam->decPictureJV[nplane];
@@ -1304,7 +1304,7 @@ void changePlaneJV (sVidParam* vidParam, int nplane, sSlice* slice) {
   }
 //}}}
 //{{{
-void make_frame_picture_JV (sVidParam* vidParam) {
+void make_frame_picture_JV (sDecoder* vidParam) {
 
   vidParam->picture = vidParam->decPictureJV[0];
 
@@ -1331,7 +1331,7 @@ void make_frame_picture_JV (sVidParam* vidParam) {
 int decodeMacroblock (sMacroblock* mb, sPicture* picture) {
 
   sSlice* curSlice = mb->slice;
-  sVidParam* vidParam = mb->vidParam;
+  sDecoder* vidParam = mb->vidParam;
 
   if (curSlice->chroma444notSeparate) {
     if (!mb->isIntraBlock) {

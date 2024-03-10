@@ -77,7 +77,7 @@ static int isLongTermReference (sFrameStore* frameStore) {
   }
 //}}}
 //{{{
-static void gen_field_ref_ids (sVidParam* vidParam, sPicture* p) {
+static void gen_field_ref_ids (sDecoder* vidParam, sPicture* p) {
 // Generate Frame parameters from field information.
 
   // copy the list;
@@ -102,7 +102,7 @@ static void unmark_long_term_field_for_reference_by_frame_idx (
   sDPB* dpb, ePicStructure structure,
   int longTermFrameIndex, int mark_current, unsigned curr_frame_num, int curr_pic_num) {
 
-  sVidParam* vidParam = dpb->vidParam;
+  sDecoder* vidParam = dpb->vidParam;
 
   assert (structure!=FRAME);
   if (curr_pic_num < 0)
@@ -190,7 +190,7 @@ static int outputDpbFrame (sDPB* dpb) {
   //printf ("output frame with frameNum #%d, poc %d (dpb. dpb->size=%d, dpb->usedSize=%d)\n", dpb->fs[pos]->frameNum, dpb->fs[pos]->frame->poc, dpb->size, dpb->usedSize);
 
   // picture error conceal
-  sVidParam* vidParam = dpb->vidParam;
+  sDecoder* vidParam = dpb->vidParam;
   if (vidParam->concealMode != 0) {
     if (dpb->lastOutputPoc == 0)
       write_lost_ref_after_idr (dpb, pos);
@@ -278,7 +278,7 @@ void freeFrameStore (sFrameStore* frameStore) {
 //}}}
 
 //{{{
-static void dpbSplitField (sVidParam* vidParam, sFrameStore* frameStore) {
+static void dpbSplitField (sDecoder* vidParam, sFrameStore* frameStore) {
 
   int twosz16 = 2 * (frameStore->frame->sizeX >> 4);
   sPicture* fsTop = NULL;
@@ -431,7 +431,7 @@ static void dpbSplitField (sVidParam* vidParam, sFrameStore* frameStore) {
   }
 //}}}
 //{{{
-static void dpb_combine_field (sVidParam* vidParam, sFrameStore* frameStore) {
+static void dpb_combine_field (sDecoder* vidParam, sFrameStore* frameStore) {
 
   dpbCombineField (vidParam, frameStore);
 
@@ -473,7 +473,7 @@ static void dpb_combine_field (sVidParam* vidParam, sFrameStore* frameStore) {
 }
 //}}}
 //{{{
-static void insertPictureDpb (sVidParam* vidParam, sFrameStore* fs, sPicture* p) {
+static void insertPictureDpb (sDecoder* vidParam, sFrameStore* fs, sPicture* p) {
 
   //  printf ("insert (%s) pic with frameNum #%d, poc %d\n",
   //          (p->structure == FRAME)?"FRAME":(p->structure == TopField)?"TopField":"BotField",
@@ -617,7 +617,7 @@ void unmark_for_long_term_reference (sFrameStore* frameStore) {
   }
 //}}}
 //{{{
-void dpbCombineField (sVidParam* vidParam, sFrameStore* frameStore) {
+void dpbCombineField (sDecoder* vidParam, sFrameStore* frameStore) {
 
   if (!frameStore->frame)
     frameStore->frame = allocPicture (vidParam, FRAME,
@@ -678,7 +678,7 @@ void dpbCombineField (sVidParam* vidParam, sFrameStore* frameStore) {
 
 // picture
 //{{{
-sPicture* allocPicture (sVidParam* vidParam, ePicStructure structure,
+sPicture* allocPicture (sDecoder* vidParam, ePicStructure structure,
                         int sizeX, int sizeY, int sizeXcr, int sizeYcr, int is_output) {
 
   sSPS* activeSPS = vidParam->activeSPS;
@@ -806,7 +806,7 @@ void freePicture (sPicture* p) {
   }
 //}}}
 //{{{
-void fillFrameNumGap (sVidParam* vidParam, sSlice* slice) {
+void fillFrameNumGap (sDecoder* vidParam, sSlice* slice) {
 
   sSPS* activeSPS = vidParam->activeSPS;
 
@@ -891,7 +891,7 @@ static void dumpDpb (sDPB* dpb) {
   }
 //}}}
 //{{{
-static int getDpbSize (sVidParam* vidParam, sSPS *activeSPS) {
+static int getDpbSize (sDecoder* vidParam, sSPS *activeSPS) {
 
   int pic_size_mb = (activeSPS->pic_width_in_mbs_minus1 + 1) * (activeSPS->pic_height_in_map_units_minus1 + 1) * (activeSPS->frameMbOnlyFlag?1:2);
   int size = 0;
@@ -1024,7 +1024,7 @@ static int getDpbSize (sVidParam* vidParam, sSPS *activeSPS) {
   }
 //}}}
 //{{{
-void initDpb (sVidParam* vidParam, sDPB* dpb, int type) {
+void initDpb (sDecoder* vidParam, sDPB* dpb, int type) {
 
   sSPS* activeSPS = vidParam->activeSPS;
 
@@ -1079,7 +1079,7 @@ void initDpb (sVidParam* vidParam, sDPB* dpb, int type) {
   }
 //}}}
 //{{{
-void reInitDpb (sVidParam* vidParam, sDPB* dpb, int type) {
+void reInitDpb (sDecoder* vidParam, sDPB* dpb, int type) {
 
   sSPS* activeSPS = vidParam->activeSPS;
   int dpbSize = getDpbSize (vidParam, activeSPS) + vidParam->input.dpbPlus[type == 2 ? 1 : 0];
@@ -1119,7 +1119,7 @@ void flushDpb (sDPB* dpb) {
   if (!dpb->initDone)
     return;
 
-  sVidParam* vidParam = dpb->vidParam;
+  sDecoder* vidParam = dpb->vidParam;
   if (vidParam->concealMode != 0)
     conceal_non_ref_pics (dpb, 0);
 
@@ -1147,7 +1147,7 @@ static void checkNumDpbFrames (sDPB* dpb) {
 static void adaptiveMemoryManagement (sDPB* dpb, sPicture* p) {
 
   sDecRefPicMarking* tmp_drpm;
-  sVidParam* vidParam = dpb->vidParam;
+  sDecoder* vidParam = dpb->vidParam;
 
   vidParam->last_has_mmco_5 = 0;
 
@@ -1686,7 +1686,7 @@ int removeUnusedDpb (sDPB* dpb) {
 //{{{
 void storePictureDpb (sDPB* dpb, sPicture* p) {
 
-  sVidParam* vidParam = dpb->vidParam;
+  sDecoder* vidParam = dpb->vidParam;
   int poc, pos;
   // picture error conceal
 
@@ -1847,7 +1847,7 @@ void removeFrameDpb (sDPB* dpb, int pos) {
 //{{{
 void freeDpb (sDPB* dpb) {
 
-  sVidParam* vidParam = dpb->vidParam;
+  sDecoder* vidParam = dpb->vidParam;
   if (dpb->fs) {
     for (unsigned i = 0; i < dpb->size; i++)
       freeFrameStore (dpb->fs[i]);
@@ -1877,7 +1877,7 @@ void freeDpb (sDPB* dpb) {
 
 // image
 //{{{
-void initImage (sVidParam* vidParam, sImage* image, sSPS* sps) {
+void initImage (sDecoder* vidParam, sImage* image, sSPS* sps) {
 
   // allocate memory for reference frame buffers: image->frm_data
   image->format = vidParam->input.output;
@@ -1933,7 +1933,7 @@ void initImage (sVidParam* vidParam, sImage* image, sSPS* sps) {
   }
 //}}}
 //{{{
-void freeImage (sVidParam* vidParam, sImage* image) {
+void freeImage (sDecoder* vidParam, sImage* image) {
 
   if (vidParam->sepColourPlaneFlag ) {
     for (int nplane = 0; nplane < MAX_PLANE; nplane++ ) {
@@ -2015,7 +2015,7 @@ void reorderRefPicList (sSlice* slice, int curList) {
   int* long_term_pic_idx = slice->long_term_pic_idx[curList];
   int num_ref_idx_lX_active_minus1 = slice->numRefIndexActive[curList] - 1;
 
-  sVidParam* vidParam = slice->vidParam;
+  sDecoder* vidParam = slice->vidParam;
 
   int maxPicNum, currPicNum, picNumLXNoWrap, picNumLXPred, picNumLX;
   int refIdxLX = 0;
@@ -2069,7 +2069,7 @@ void reorderRefPicList (sSlice* slice, int curList) {
 //{{{
 void updatePicNum (sSlice* slice) {
 
-  sVidParam* vidParam = slice->vidParam;
+  sDecoder* vidParam = slice->vidParam;
   sSPS* activeSPS = vidParam->activeSPS;
 
   int addTop = 0;
@@ -2141,7 +2141,7 @@ void initListsIslice (sSlice* slice) {
 //{{{
 void initListsPslice (sSlice* slice) {
 
-  sVidParam* vidParam = slice->vidParam;
+  sDecoder* vidParam = slice->vidParam;
   sDPB* dpb = slice->dpb;
 
   int list0idx = 0;
@@ -2207,7 +2207,7 @@ void initListsPslice (sSlice* slice) {
 //{{{
 void initListsBslice (sSlice* slice) {
 
-  sVidParam* vidParam = slice->vidParam;
+  sDecoder* vidParam = slice->vidParam;
   sDPB* dpb = slice->dpb;
 
   unsigned int i;
@@ -2333,7 +2333,7 @@ void initListsBslice (sSlice* slice) {
   }
 //}}}
 //{{{
-void init_mbaff_lists (sVidParam* vidParam, sSlice* slice) {
+void init_mbaff_lists (sDecoder* vidParam, sSlice* slice) {
 // Initialize listX[2..5] from lists 0 and 1
 //   listX[2]: list0 for current_field==top
 //   listX[3]: list1 for current_field==top
@@ -2449,7 +2449,7 @@ void freeRefPicListReorderingBuffer (sSlice* slice) {
 //{{{
 void computeColocated (sSlice* slice, sPicture** listX[6]) {
 
-  sVidParam* vidParam = slice->vidParam;
+  sDecoder* vidParam = slice->vidParam;
   if (slice->directSpatialMvPredFlag == 0) {
     for (int j = 0; j < 2 + (slice->mbAffFrameFlag * 4); j += 2) {
       for (int i = 0; i < slice->listXsize[j];i++) {

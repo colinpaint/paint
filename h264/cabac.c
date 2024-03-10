@@ -305,7 +305,7 @@ int cabac_startcode_follows (sSlice* curSlice, int eos_bit)
 //{{{
 void checkNeighbourCabac (sMacroblock* curMb)
 {
-  sVidParam* vidParam = curMb->vidParam;
+  sDecoder* vidParam = curMb->vidParam;
   sPixelPos up, left;
   int *mbSize = vidParam->mbSize[IS_LUMA];
 
@@ -408,7 +408,7 @@ void readFieldModeInfo_CABAC (sMacroblock* curMb,
                              sDecodingEnvironmentPtr dep_dp)
 {
   sSlice* curSlice = curMb->slice;
-  //sVidParam* vidParam = curMb->vidParam;
+  //sDecoder* vidParam = curMb->vidParam;
   sMotionInfoContexts *ctx  = curSlice->mot_ctx;
   int a = curMb->mbAvailA ? curSlice->mbData[curMb->mbAddrA].mbField : 0;
   int b = curMb->mbAvailB ? curSlice->mbData[curMb->mbAddrB].mbField : 0;
@@ -423,7 +423,7 @@ int check_next_mb_and_get_field_mode_CABAC_p_slice (sSlice* curSlice,
                                            sSyntaxElement *se,
                                            sDataPartition  *act_dp)
 {
-  sVidParam* vidParam = curSlice->vidParam;
+  sDecoder* vidParam = curSlice->vidParam;
   sBiContextTypePtr          mb_type_ctx_copy[3];
   sBiContextTypePtr          mb_aff_ctx_copy;
   sDecodingEnvironmentPtr    dep_dp_copy;
@@ -509,7 +509,7 @@ int check_next_mb_and_get_field_mode_CABAC_b_slice (sSlice* curSlice,
                                            sSyntaxElement *se,
                                            sDataPartition  *act_dp)
 {
-  sVidParam* vidParam = curSlice->vidParam;
+  sDecoder* vidParam = curSlice->vidParam;
   sBiContextTypePtr          mb_type_ctx_copy[3];
   sBiContextTypePtr          mb_aff_ctx_copy;
   sDecodingEnvironmentPtr    dep_dp_copy;
@@ -666,7 +666,7 @@ void read_mvd_CABAC_mbaff (sMacroblock* curMb,
                     sSyntaxElement *se,
                     sDecodingEnvironmentPtr dep_dp)
 {
-  sVidParam* vidParam = curMb->vidParam;
+  sDecoder* vidParam = curMb->vidParam;
   sSlice* curSlice = curMb->slice;
   sMotionInfoContexts *ctx = curSlice->mot_ctx;
   int i = curMb->subblockX;
@@ -1294,7 +1294,7 @@ void readRefFrame_CABAC (sMacroblock* curMb,
                         sDecodingEnvironmentPtr dep_dp)
 {
   sSlice* curSlice = curMb->slice;
-  sVidParam* vidParam = curMb->vidParam;
+  sDecoder* vidParam = curMb->vidParam;
   sPicture* picture = curSlice->picture;
   sMotionInfoContexts *ctx = curSlice->mot_ctx;
   sMacroblock *neighborMB = NULL;
@@ -1376,7 +1376,7 @@ void read_dQuant_CABAC (sMacroblock* curMb, sSyntaxElement *se, sDecodingEnviron
 //{{{
 void read_CBP_CABAC (sMacroblock* curMb, sSyntaxElement *se, sDecodingEnvironmentPtr dep_dp) {
 
-  sVidParam* vidParam = curMb->vidParam;
+  sDecoder* vidParam = curMb->vidParam;
   sPicture* picture = curMb->slice->picture;
   sSlice* curSlice = curMb->slice;
   sTextureInfoContexts *ctx = curSlice->tex_ctx;
@@ -1521,7 +1521,7 @@ static int read_and_store_CBP_block_bit_444 (sMacroblock* curMb,
                                              int                     type)
 {
   sSlice* curSlice = curMb->slice;
-  sVidParam* vidParam = curMb->vidParam;
+  sDecoder* vidParam = curMb->vidParam;
   sPicture* picture = curSlice->picture;
   sTextureInfoContexts *tex_ctx = curSlice->tex_ctx;
   sMacroblock *mbData = curSlice->mbData;
@@ -1791,7 +1791,7 @@ static int read_and_store_CBP_block_bit_normal (sMacroblock* curMb,
                                                 int                     type)
 {
   sSlice* curSlice = curMb->slice;
-  sVidParam* vidParam = curMb->vidParam;
+  sDecoder* vidParam = curMb->vidParam;
   sTextureInfoContexts *tex_ctx = curSlice->tex_ctx;
   int cbp_bit     = 1;  // always one for 8x8 mode
   sMacroblock *mbData = curSlice->mbData;
@@ -2278,7 +2278,7 @@ int readsSyntaxElement_CABAC (sMacroblock* curMb, sSyntaxElement *se, sDataParti
 */
 void readIPCMcabac (sSlice* curSlice, struct DataPartition *dP)
 {
-  sVidParam* vidParam = curSlice->vidParam;
+  sDecoder* vidParam = curSlice->vidParam;
   sPicture* picture = curSlice->picture;
   sBitstream* curStream = dP->bitstream;
   sDecodingEnvironmentPtr dep = &(dP->deCabac);

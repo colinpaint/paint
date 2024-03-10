@@ -37,7 +37,7 @@ void freePred (sSlice* curSlice) {
 //{{{
 static void update_direct_mv_info_temporal (sMacroblock* curMb) {
 
-  sVidParam* vidParam = curMb->vidParam;
+  sDecoder* vidParam = curMb->vidParam;
   sSlice* curSlice = curMb->slice;
   int j,k;
 
@@ -297,7 +297,7 @@ int get_colocated_info_8x8 (sMacroblock* curMb, sPicture* list1, int i, int j)
     return 1;
   else {
     sSlice* curSlice = curMb->slice;
-    sVidParam* vidParam = curMb->vidParam;
+    sDecoder* vidParam = curMb->vidParam;
     if( (curSlice->mbAffFrameFlag) ||
       (!vidParam->activeSPS->frameMbOnlyFlag && ((!curSlice->structure && list1->iCodingType == FIELD_CODING)||(curSlice->structure!=list1->structure && list1->codedFrame))))
     {
@@ -365,7 +365,7 @@ static void update_direct_mv_info_spatial_8x8 (sMacroblock* curMb)
 
   if (has_direct)
   {
-    //sVidParam* vidParam = curMb->vidParam;
+    //sDecoder* vidParam = curMb->vidParam;
     sSlice* curSlice = curMb->slice;
     int i,j,k;
 
@@ -524,7 +524,7 @@ static void update_direct_mv_info_spatial_4x4 (sMacroblock* curMb)
 
   if (has_direct)
   {
-    sVidParam* vidParam = curMb->vidParam;
+    sDecoder* vidParam = curMb->vidParam;
     sSlice* curSlice = curMb->slice;
     int i,j,k;
 
@@ -1590,7 +1590,7 @@ static void get_chroma_XY (sPixel* block, sPixel* curPixel, int span, int block_
 //{{{
 static void get_block_chroma (sPicture* curRef, int x_pos, int y_pos, int subpelX, int subpelY, int maxold_x, int maxold_y,
                              int block_size_x, int vert_block_size, int shiftpelX, int shiftpelY,
-                             sPixel *block1, sPixel *block2, int totalScale, sPixel no_ref_value, sVidParam* vidParam)
+                             sPixel *block1, sPixel *block2, int totalScale, sPixel no_ref_value, sDecoder* vidParam)
 {
   sPixel *img1,*img2;
   short dx,dy;
@@ -1650,7 +1650,7 @@ static void get_block_chroma (sPicture* curRef, int x_pos, int y_pos, int subpel
 //{{{
 void intra_cr_decoding (sMacroblock* curMb, int yuv)
 {
-  sVidParam* vidParam = curMb->vidParam;
+  sDecoder* vidParam = curMb->vidParam;
   sSlice* curSlice = curMb->slice;
   sPicture* picture = curSlice->picture;
   sPixel** curUV;
@@ -1805,7 +1805,7 @@ void prepare_direct_params (sMacroblock* curMb, sPicture* picture, sMotionVector
     set_direct_references (&mb[2], &l0_refC, &l1_refC, mvInfo);
     }
   else {
-    sVidParam* vidParam = curMb->vidParam;
+    sDecoder* vidParam = curMb->vidParam;
     if (curMb->mbField) {
       set_direct_references_mb_field (&mb[0], &l0_refA, &l1_refA, mvInfo, vidParam->mbData);
       set_direct_references_mb_field (&mb[1], &l0_refB, &l1_refB, mvInfo, vidParam->mbData);
@@ -1858,7 +1858,7 @@ static inline int check_vert_mv (int llimit, int vec1_y,int rlimit)
 //{{{
 static void perform_mc_single_wp (sMacroblock* curMb, eColorPlane pl, sPicture* picture, int pred_dir, int i, int j, int block_size_x, int block_size_y)
 {
-  sVidParam* vidParam = curMb->vidParam;
+  sDecoder* vidParam = curMb->vidParam;
   sSlice* curSlice = curMb->slice;
   sSPS *activeSPS = curSlice->activeSPS;
   sPixel** tmp_block_l0 = curSlice->tmp_block_l0;
@@ -1951,7 +1951,7 @@ static void perform_mc_single_wp (sMacroblock* curMb, eColorPlane pl, sPicture* 
 //{{{
 static void perform_mc_single (sMacroblock* curMb, eColorPlane pl, sPicture* picture, int pred_dir, int i, int j, int block_size_x, int block_size_y)
 {
-  sVidParam* vidParam = curMb->vidParam;
+  sDecoder* vidParam = curMb->vidParam;
   sSlice* curSlice = curMb->slice;
   sSPS *activeSPS = curSlice->activeSPS;
   sPixel** tmp_block_l0 = curSlice->tmp_block_l0;
@@ -2034,7 +2034,7 @@ static void perform_mc_bi_wp (sMacroblock* curMb, eColorPlane pl, sPicture* pict
 {
   static const int mv_mul = 16;
   int  vec1_x, vec1_y, vec2_x, vec2_y;
-  sVidParam* vidParam = curMb->vidParam;
+  sDecoder* vidParam = curMb->vidParam;
   sSlice* curSlice = curMb->slice;
 
   int weightedBiPredIdc = vidParam->activePPS->weightedBiPredIdc;
@@ -2171,7 +2171,7 @@ static void perform_mc_bi (sMacroblock* curMb, eColorPlane pl, sPicture* picture
 {
   static const int mv_mul = 16;
   int vec1_x=0, vec1_y=0, vec2_x=0, vec2_y=0;
-  sVidParam* vidParam = curMb->vidParam;
+  sDecoder* vidParam = curMb->vidParam;
   sSlice* curSlice = curMb->slice;
 
   int blockYaff = curMb->blockYaff;

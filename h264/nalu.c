@@ -7,7 +7,7 @@
 static const int kDebug = 0;
 
 //{{{
-ANNEXB_t* allocAnnexB (sVidParam* vidParam) {
+ANNEXB_t* allocAnnexB (sDecoder* vidParam) {
 
   ANNEXB_t* annexB = (ANNEXB_t*)calloc (1, sizeof(ANNEXB_t));
   annexB->naluBuffer = (byte*)malloc (vidParam->nalu->maxSize);
@@ -74,7 +74,7 @@ void freeNALU (sNalu* n) {
 //}}}
 
 //{{{
-void checkZeroByteVCL (sVidParam* vidParam, sNalu* nalu) {
+void checkZeroByteVCL (sDecoder* vidParam, sNalu* nalu) {
 
   int CheckZeroByte = 0;
 
@@ -100,7 +100,7 @@ void checkZeroByteVCL (sVidParam* vidParam, sNalu* nalu) {
    }
 //}}}
 //{{{
-void checkZeroByteNonVCL (sVidParam* vidParam, sNalu* nalu) {
+void checkZeroByteNonVCL (sDecoder* vidParam, sNalu* nalu) {
 
   int CheckZeroByte = 0;
 
@@ -163,7 +163,7 @@ static inline int findStartCode (unsigned char* buf, int zerosInStartcode) {
   }
 //}}}
 //{{{
-static int getNALU (ANNEXB_t* annexB, sVidParam* vidParam, sNalu* nalu) {
+static int getNALU (ANNEXB_t* annexB, sDecoder* vidParam, sNalu* nalu) {
 
   int naluBufCount = 0;
   byte* naluBufPtr = annexB->naluBuffer;
@@ -351,7 +351,7 @@ static int NALUtoRBSP (sNalu* nalu) {
   }
 //}}}
 //{{{
-int readNextNalu (sVidParam* vidParam, sNalu* nalu) {
+int readNextNalu (sDecoder* vidParam, sNalu* nalu) {
 
   int ret = getNALU (vidParam->annexB, vidParam, nalu);
   if (ret < 0) {

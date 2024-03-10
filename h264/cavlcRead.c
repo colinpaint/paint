@@ -11,7 +11,7 @@
 //{{{
 static int predict_nnz (sMacroblock* curMb, int block_type, int i,int j)
 {
-  sVidParam* vidParam = curMb->vidParam;
+  sDecoder* vidParam = curMb->vidParam;
   sSlice* curSlice = curMb->slice;
 
   sPixelPos pix;
@@ -99,7 +99,7 @@ static int predict_nnz_chroma (sMacroblock* curMb, int i,int j)
 
   if (picture->chromaFormatIdc != YUV444)
   {
-    sVidParam* vidParam = curMb->vidParam;
+    sDecoder* vidParam = curMb->vidParam;
     sSlice* curSlice = curMb->slice;
     sPixelPos pix;
     int pred_nnz = 0;
@@ -155,7 +155,7 @@ void readCoef4x4cavlc (sMacroblock* curMb, int block_type,
                            int i, int j, int levarr[16], int runarr[16], int *number_coefficients) {
 
   sSlice* curSlice = curMb->slice;
-  sVidParam* vidParam = curMb->vidParam;
+  sDecoder* vidParam = curMb->vidParam;
   int mb_nr = curMb->mbAddrX;
   sSyntaxElement currSE;
   sDataPartition *dP;
@@ -325,7 +325,7 @@ void readCoef4x4cavlc444 (sMacroblock* curMb, int block_type,
                                int i, int j, int levarr[16], int runarr[16], int *number_coefficients) {
 
   sSlice* curSlice = curMb->slice;
-  sVidParam* vidParam = curMb->vidParam;
+  sDecoder* vidParam = curMb->vidParam;
   int mb_nr = curMb->mbAddrX;
   sSyntaxElement currSE;
   sDataPartition *dP;
@@ -550,7 +550,7 @@ static void read_comp_coeff_4x4_CAVLC (sMacroblock* curMb, eColorPlane pl, int (
   int i0, j0;
   int levarr[16] = {0}, runarr[16] = {0}, numcoeff;
   sSlice* curSlice = curMb->slice;
-  sVidParam* vidParam = curMb->vidParam;
+  sDecoder* vidParam = curMb->vidParam;
   const byte (*pos_scan4x4)[2] = ((vidParam->structure == FRAME) && (!curMb->mbField)) ? SNGL_SCAN : FIELD_SCAN;
   const byte *pos_scan_4x4 = pos_scan4x4[0];
   int start_scan = IS_I16MB(curMb) ? 1 : 0;
@@ -633,7 +633,7 @@ static void read_comp_coeff_4x4_CAVLC_ls (sMacroblock* curMb, eColorPlane pl, in
   int i0, j0;
   int levarr[16] = {0}, runarr[16] = {0}, numcoeff;
   sSlice* curSlice = curMb->slice;
-  sVidParam* vidParam = curMb->vidParam;
+  sDecoder* vidParam = curMb->vidParam;
   const byte (*pos_scan4x4)[2] = ((vidParam->structure == FRAME) && (!curMb->mbField)) ? SNGL_SCAN : FIELD_SCAN;
   int start_scan = IS_I16MB(curMb) ? 1 : 0;
   int64 *cur_cbp = &curMb->cbpStructure[pl].blk;
@@ -711,7 +711,7 @@ static void read_comp_coeff_8x8_CAVLC (sMacroblock* curMb, eColorPlane pl, int (
   int i0, j0;
   int levarr[16] = {0}, runarr[16] = {0}, numcoeff;
   sSlice* curSlice = curMb->slice;
-  sVidParam* vidParam = curMb->vidParam;
+  sDecoder* vidParam = curMb->vidParam;
   const byte (*pos_scan8x8)[2] = ((vidParam->structure == FRAME) && (!curMb->mbField)) ? SNGL_SCAN8x8 : FIELD_SCAN8x8;
   int start_scan = IS_I16MB(curMb) ? 1 : 0;
   int64 *cur_cbp = &curMb->cbpStructure[pl].blk;
@@ -794,7 +794,7 @@ static void read_comp_coeff_8x8_CAVLC_ls (sMacroblock* curMb, eColorPlane pl, in
   int i, j, k;
   int levarr[16] = {0}, runarr[16] = {0}, numcoeff;
   sSlice* curSlice = curMb->slice;
-  sVidParam* vidParam = curMb->vidParam;
+  sDecoder* vidParam = curMb->vidParam;
   const byte (*pos_scan8x8)[2] = ((vidParam->structure == FRAME) && (!curMb->mbField)) ? SNGL_SCAN8x8 : FIELD_SCAN8x8;
   int start_scan = IS_I16MB(curMb) ? 1 : 0;
   int64 *cur_cbp = &curMb->cbpStructure[pl].blk;
@@ -886,7 +886,7 @@ static void read_CBP_and_coeffs_from_NAL_CAVLC_400 (sMacroblock* curMb)
   int levarr[16], runarr[16], numcoeff;
 
   int qp_per, qp_rem;
-  sVidParam* vidParam = curMb->vidParam;
+  sDecoder* vidParam = curMb->vidParam;
 
   int intra = (curMb->isIntraBlock == TRUE);
 
@@ -1054,7 +1054,7 @@ static void read_CBP_and_coeffs_from_NAL_CAVLC_422 (sMacroblock* curMb)
   int levarr[16], runarr[16], numcoeff;
 
   int qp_per, qp_rem;
-  sVidParam* vidParam = curMb->vidParam;
+  sDecoder* vidParam = curMb->vidParam;
 
   int uv;
   int qp_per_uv[2];
@@ -1394,7 +1394,7 @@ static void read_CBP_and_coeffs_from_NAL_CAVLC_444 (sMacroblock* curMb)
   int levarr[16], runarr[16], numcoeff;
 
   int qp_per, qp_rem;
-  sVidParam* vidParam = curMb->vidParam;
+  sDecoder* vidParam = curMb->vidParam;
 
   int uv;
   int qp_per_uv[3];
@@ -1622,7 +1622,7 @@ static void read_CBP_and_coeffs_from_NAL_CAVLC_420 (sMacroblock* curMb)
   int levarr[16], runarr[16], numcoeff;
 
   int qp_per, qp_rem;
-  sVidParam* vidParam = curMb->vidParam;
+  sDecoder* vidParam = curMb->vidParam;
   int smb = ((vidParam->type==SP_SLICE) && (curMb->isIntraBlock == FALSE)) || (vidParam->type == SI_SLICE && curMb->mbType == SI4MB);
 
   int uv;
