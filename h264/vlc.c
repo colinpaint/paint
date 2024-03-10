@@ -6,7 +6,7 @@
 //}}}
 
 //{{{
-int readUeV (char* tracestring, sBitstream* s) {
+int readUeV (char* label, sBitstream* s) {
 
   sSyntaxElement symbol = {.value1 = 0 };
   symbol.type = SE_HEADER;
@@ -14,13 +14,13 @@ int readUeV (char* tracestring, sBitstream* s) {
   readsSyntaxElement_VLC (&symbol, s);
 
   if (gDecoder->param.vlcDebug)
-    printf ("read %s %d\n", tracestring, symbol.value1);
+    printf ("read %s %d\n", label, symbol.value1);
 
   return symbol.value1;
   }
 //}}}
 //{{{
-int readSeV (char* tracestring, sBitstream* s) {
+int readSeV (char* label, sBitstream* s) {
 
   sSyntaxElement symbol = {.value1 = 0 };
   symbol.type = SE_HEADER;
@@ -28,13 +28,13 @@ int readSeV (char* tracestring, sBitstream* s) {
   readsSyntaxElement_VLC (&symbol, s);
 
   if (gDecoder->param.vlcDebug)
-    printf ("read %s %d\n", tracestring, symbol.value1);
+    printf ("read %s %d\n", label, symbol.value1);
 
   return symbol.value1;
   }
 //}}}
 //{{{
-int readUv (int LenInBits, char* tracestring, sBitstream* s) {
+int readUv (int LenInBits, char* label, sBitstream* s) {
 
   sSyntaxElement symbol = {.value1 = 0 };
   symbol.inf = 0;
@@ -44,13 +44,13 @@ int readUv (int LenInBits, char* tracestring, sBitstream* s) {
   readsSyntaxElement_FLC (&symbol, s);
 
   if (gDecoder->param.vlcDebug)
-    printf ("read %s %d\n", tracestring, symbol.inf);
+    printf ("read %s %d\n", label, symbol.inf);
 
   return symbol.inf;
   }
 //}}}
 //{{{
-int readIv (int LenInBits, char* tracestring, sBitstream* s) {
+int readIv (int LenInBits, char* label, sBitstream* s) {
 
   sSyntaxElement symbol = {.value1 = 0 };
   symbol.inf = 0;
@@ -63,14 +63,14 @@ int readIv (int LenInBits, char* tracestring, sBitstream* s) {
   symbol.inf = -( symbol.inf & (1 << (LenInBits - 1)) ) | symbol.inf;
 
   if (gDecoder->param.vlcDebug)
-    printf ("read %s %d\n", tracestring, symbol.inf);
+    printf ("read %s %d\n", label, symbol.inf);
 
   return symbol.inf;
   }
 //}}}
 //{{{
-Boolean readU1 (char* tracestring, sBitstream* s) {
-  return (Boolean)readUv (1, tracestring, s);
+Boolean readU1 (char* label, sBitstream* s) {
+  return (Boolean)readUv (1, label, s);
   }
 //}}}
 
@@ -80,7 +80,7 @@ void linfo_ue (int len, int info, int* value1, int* dummy) {
   }
 //}}}
 //{{{
-void linfo_se (int len,  int info, int* value1, int* dummy) {
+void linfo_se (int len, int info, int* value1, int* dummy) {
 
   unsigned int n = ((unsigned int) 1 << (len >> 1)) + (unsigned int) info - 1;
   *value1 = (n + 1) >> 1;
@@ -99,7 +99,7 @@ void linfo_cbp_intra_normal (int len, int info,int* cbp, int* dummy) {
   }
 //}}}
 //{{{
-void linfo_cbp_intra_other (int len, int info,int* cbp, int* dummy) {
+void linfo_cbp_intra_other (int len, int info, int* cbp, int* dummy) {
 
   int cbp_idx;
   linfo_ue(len, info, &cbp_idx, dummy);
@@ -309,8 +309,7 @@ static inline int ShowBitsThres (int inf, int numbits) {
   }
 //}}}
 //{{{
-static int code_from_bitstream_2d (sSyntaxElement* se, sBitstream* s,
-                                   const byte *lentab, const byte *codtab,
+static int code_from_bitstream_2d (sSyntaxElement* se, sBitstream* s, const byte* lentab, const byte* codtab,
                                    int tabwidth, int tabheight, int *code) {
 
   const byte* len = &lentab[0], *cod = &codtab[0];

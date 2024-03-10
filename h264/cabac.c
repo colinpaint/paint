@@ -445,7 +445,7 @@ int check_next_mb_and_get_field_mode_CABAC_p_slice (sSlice* slice, sSyntaxElemen
 
   //check_next_mb
 #if TRACE
-  strncpy(se->tracestring, "mb_skip_flag (of following bottom MB)", TRACESTRING_SIZE);
+  strncpy(se->label, "mb_skip_flag (of following bottom MB)", TRACESTRING_SIZE);
 #endif
   slice->lastDquant = 0;
   read_skip_flag_CABAC_p_slice (mb, se, decodingEnv);
@@ -455,7 +455,7 @@ int check_next_mb_and_get_field_mode_CABAC_p_slice (sSlice* slice, sSyntaxElemen
   if (!skip)
   {
 #if TRACE
-    strncpy(se->tracestring, "mb_field_decoding_flag (of following bottom MB)", TRACESTRING_SIZE);
+    strncpy(se->label, "mb_field_decoding_flag (of following bottom MB)", TRACESTRING_SIZE);
 #endif
     readFieldModeInfo_CABAC (mb, se,decodingEnv);
     field = se->value1;
@@ -533,7 +533,7 @@ int check_next_mb_and_get_field_mode_CABAC_b_slice (sSlice* slice,
 
   //check_next_mb
 #if TRACE
-  strncpy(se->tracestring, "mb_skip_flag (of following bottom MB)", TRACESTRING_SIZE);
+  strncpy(se->label, "mb_skip_flag (of following bottom MB)", TRACESTRING_SIZE);
 #endif
   slice->lastDquant = 0;
   read_skip_flag_CABAC_b_slice (mb, se, decodingEnv);
@@ -542,7 +542,7 @@ int check_next_mb_and_get_field_mode_CABAC_b_slice (sSlice* slice,
   if (!skip)
   {
 #if TRACE
-    strncpy(se->tracestring, "mb_field_decoding_flag (of following bottom MB)", TRACESTRING_SIZE);
+    strncpy(se->label, "mb_field_decoding_flag (of following bottom MB)", TRACESTRING_SIZE);
 #endif
     readFieldModeInfo_CABAC (mb, se,decodingEnv);
     field = se->value1;

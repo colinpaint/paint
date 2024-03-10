@@ -57,11 +57,11 @@ static const byte NTAB3[2][2][2] =
 };
 //}}}
 
-extern int readSeV (char* tracestring, sBitstream* s);
-extern int readUeV (char* tracestring, sBitstream* s);
-extern Boolean readU1 (char* tracestring, sBitstream* s);
-extern int readUv (int LenInBits, char* tracestring, sBitstream* s);
-extern int readIv (int LenInBits, char* tracestring, sBitstream* s);
+extern int readSeV (char* label, sBitstream* s);
+extern int readUeV (char* label, sBitstream* s);
+extern Boolean readU1 (char* label, sBitstream* s);
+extern int readUv (int LenInBits, char* label, sBitstream* s);
+extern int readIv (int LenInBits, char* label, sBitstream* s);
 
 extern void linfo_ue (int len, int info, int* value1, int* dummy);
 extern void linfo_se (int len, int info, int* value1, int* dummy);
