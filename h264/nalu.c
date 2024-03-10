@@ -4,7 +4,6 @@
 
 #include "nalu.h"
 //}}}
-static const int kDebug = 0;
 
 //{{{
 ANNEXB_t* allocAnnexB (sDecoder* decoder) {
@@ -233,7 +232,7 @@ static int getNALU (ANNEXB_t* annexB, sDecoder* decoder, sNalu* nalu) {
       nalu->unitType = (NaluType)((*(nalu->buf)) & 0x1f);
       annexB->nextStartCodeBytes = 0;
 
-      if (kDebug)
+      if (decoder->param.naluDebug)
         printf ("last %sNALU %d::%d:%d len:%d, \n",
                 nalu->startCodeLen == 4 ? "l":"s",
                 nalu->forbiddenBit,
@@ -286,7 +285,7 @@ static int getNALU (ANNEXB_t* annexB, sDecoder* decoder, sNalu* nalu) {
   nalu->unitType = (NaluType) ((*(nalu->buf)) & 0x1f);
   nalu->lostPackets = 0;
 
-  if (kDebug)
+  if (decoder->param.naluDebug)
     printf ("%sNALU %d::%d:%d len:%d, \n",
             nalu->startCodeLen == 4 ? "l":"s",
             nalu->forbiddenBit,

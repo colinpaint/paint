@@ -945,29 +945,30 @@ public:
       cLog::log (LOGINFO, fmt::format ("read:{} size:{} idr:{}", mFileName, h264ChunkSize, gotIDR));
 
       // input params
-      sParam sInputParams;
-      memset (&sInputParams, 0, sizeof(sParam));
-      //sInputParams.vlcDebug = 1;
-      sInputParams.pocScale = 2;
-      sInputParams.pocGap = 2;
-      sInputParams.refPocGap = 2;
-      sInputParams.dpbPlus[0] = 1;
-      sInputParams.intraProfileDeblocking = 1;
-      OpenDecoder (&sInputParams, h264Chunk, h264ChunkSize);
+      sParam param;
+      memset (&param, 0, sizeof(sParam));
+      //param.vlcDebug = 1;
+      //param.naluDebug = 1;
+      //param.imageDebug = 1;
+      param.pocScale = 2;
+      param.pocGap = 2;
+      param.refPocGap = 2;
+      param.dpbPlus[0] = 1;
+      param.intraProfileDeblocking = 1;
+      OpenDecoder (&param, h264Chunk, h264ChunkSize);
 
+      sDecodedPic* decodedPic;
       int ret = 0;
       do {
-        sDecodedPicture* decodedPicture;
-        ret = DecodeOneFrame (&decodedPicture);
+        ret = DecodeOneFrame (&decodedPic);
         if (ret == DEC_EOS || ret == DEC_SUCCEED)
-          outputPicList (decodedPicture, 0);
+          outputPicList (decodedPic);
         else
           cLog::log (LOGERROR, "decoding  failed");
         } while (ret == DEC_SUCCEED);
 
-      sDecodedPicture* decodedPicture;
-      FinitDecoder (&decodedPicture);
-      outputPicList (decodedPicture, 1);
+      FinitDecoder (&decodedPic);
+      outputPicList (decodedPic);
       CloseDecoder();
 
       delete[] h264Chunk;
@@ -979,18 +980,17 @@ public:
 
 private:
   //{{{
-  void outputPicList (sDecodedPicture* decPic, int bOutputAllFrames) {
+  void outputPicList (sDecodedPic* pic) {
 
-    sDecodedPicture* pPic = decPic;
-    while (pPic && pPic->valid == 1) {
-      int width = pPic->width * ((pPic->iBitDepth+7)>>3);
-      int height = pPic->height;
-      int iStride = pPic->yStride;
+    while (pic && pic->valid == 1) {
+      int width = pic->width * ((pic->iBitDepth+7)>>3);
+      int height = pic->height;
+      int iStride = pic->yStride;
 
-      int iWidthUV = pPic->width >> 1;
-      iWidthUV *= ((pPic->iBitDepth + 7) >> 3);
-      int iHeightUV = pPic->height >> 1;
-      int iStrideUV = pPic->uvStride;
+      int iWidthUV = pic->width >> 1;
+      iWidthUV *= ((pic->iBitDepth + 7) >> 3);
+      int iHeightUV = pic->height >> 1;
+      int iStrideUV = pic->uvStride;
 
       cLog::log (LOGINFO, fmt::format ("outputPicList {} {}x{} {}:{}",
                                        mOutputFrame, width, height, iStride, iStrideUV));
@@ -1003,13 +1003,13 @@ private:
       videoFrame->mStrideUV = iStrideUV;
       videoFrame->mInterlaced = 0;
       videoFrame->mTopFieldFirst = 0;
-      videoFrame->setPixels (pPic->yBuf, pPic->uBuf, pPic->vBuf, iStride, iStrideUV, height);
+      videoFrame->setPixels (pic->yBuf, pic->uBuf, pic->vBuf, iStride, iStrideUV, height);
       videoFrame->mTextureDirty = true;
       mVideoFrame = videoFrame;
 
       mOutputFrame++;
-      pPic->valid = 0;
-      pPic = pPic->next;
+      pic->valid = 0;
+      pic = pic->next;
       }
     }
   //}}}
@@ -1070,29 +1070,29 @@ public:
       //}}}
 
       // input params
-      sParam sInputParams;
-      memset (&sInputParams, 0, sizeof(sParam));
-      sInputParams.pocScale = 2;
-      sInputParams.pocGap = 2;
-      sInputParams.refPocGap = 2;
-      sInputParams.dpbPlus[0] = 1;
-      sInputParams.intraProfileDeblocking = 1;
-
-      OpenDecoder (&sInputParams, chunk, fileSize);
+      sParam param;
+      memset (&param, 0, sizeof(sParam));
+      //param.imageDebug = 1;
+      param.pocScale = 2;
+      param.pocGap = 2;
+      param.refPocGap = 2;
+      param.dpbPlus[0] = 1;
+      param.intraProfileDeblocking = 1;
+      OpenDecoder (&param, chunk, fileSize);
 
       int ret = 0;
       do {
-        sDecodedPicture* decodedPicture;
+        sDecodedPic* decodedPicture;
         ret = DecodeOneFrame (&decodedPicture);
         if (ret == DEC_EOS || ret == DEC_SUCCEED)
-          outputPicList (decodedPicture, 0);
+          outputPicList (decodedPicture);
         else
           cLog::log (LOGERROR, "decoding  failed");
         } while (ret == DEC_SUCCEED);
 
-      sDecodedPicture* decodedPicture;
+      sDecodedPic* decodedPicture;
       FinitDecoder (&decodedPicture);
-      outputPicList (decodedPicture, 1);
+      outputPicList (decodedPicture);
       CloseDecoder();
 
       delete[] chunk;
@@ -1118,9 +1118,9 @@ public:
 
 private:
   //{{{
-  void outputPicList (sDecodedPicture* decPic, int bOutputAllFrames) {
+  void outputPicList (sDecodedPic* decPic) {
 
-    sDecodedPicture* pPic = decPic;
+    sDecodedPic* pPic = decPic;
     while (pPic && pPic->valid == 1) {
       int width = pPic->width * ((pPic->iBitDepth+7)>>3);
       int height = pPic->height;

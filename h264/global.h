@@ -440,9 +440,9 @@ typedef struct Image {
   int bot_stride[MAX_PLANE];
   } sImage;
 //}}}
-//{{{  sDecodedPicture
-typedef struct DecodedPicture {
-  struct DecodedPicture* next;
+//{{{  sDecodedPic
+typedef struct DecodedPic {
+  struct DecodedPic* next;
 
   int valid;             // 0: invalid, 1: valid, 3: valid for 3D output;
   int poc;
@@ -461,7 +461,7 @@ typedef struct DecodedPicture {
   int uvStride;          // stride of uBuf[0/1] and vBuf[0/1] buffer in bytes;
   int skipPicNum;
   int bufSize;
-  } sDecodedPicture;
+  } sDecodedPic;
 //}}}
 //{{{  sDecRefPicMarking
 typedef struct DecRefPicMarking {
@@ -732,6 +732,9 @@ typedef struct LayerParam {
 //{{{  sParam
 typedef struct Param {
   int vlcDebug;
+  int naluDebug;
+  int imageDebug;
+
   int refOffset;
   int pocScale;
   int refPocGap;
@@ -885,7 +888,7 @@ typedef struct Decoder {
 
   int          deblockMode;  // 0: deblock in picture, 1: deblock in slice;
   sImage       tempData3;
-  sDecodedPicture* decOutputPic;
+  sDecodedPic* decOutputPic;
 
   int   iLumaPadX;
   int   iLumaPadY;
@@ -1011,8 +1014,8 @@ static inline int isHiIntraOnlyProfile (unsigned int profileIdc, Boolean constra
   extern void changePlaneJV (sDecoder* decoder, int nplane, sSlice *pSlice);
   extern void makeFramePictureJV (sDecoder* decoder );
 
-  extern sDecodedPicture* getDecodedPicture (sDecodedPicture* decodedPicture);
-  extern void freeDecodedPictures (sDecodedPicture* decodedPicture);
+  extern sDecodedPic* getDecodedPicture (sDecodedPic* decodedPicture);
+  extern void freeDecodedPictures (sDecodedPic* decodedPicture);
   extern void clearDecodedPictures (sDecoder* decoder);
 
   extern void setGlobalCodingProgram (sDecoder* decoder, sCoding* coding);

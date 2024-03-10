@@ -466,16 +466,16 @@ void freeGlobalBuffers (sDecoder* decoder) {
 //}}}
 
 //{{{
-sDecodedPicture* getDecodedPicture (sDecodedPicture* decodedPicture) {
+sDecodedPic* getDecodedPicture (sDecodedPic* decodedPicture) {
 
-  sDecodedPicture* prevDecodedPicture = NULL;
+  sDecodedPic* prevDecodedPicture = NULL;
   while (decodedPicture && (decodedPicture->valid)) {
     prevDecodedPicture = decodedPicture;
     decodedPicture = decodedPicture->next;
     }
 
   if (!decodedPicture) {
-    decodedPicture = (sDecodedPicture*)calloc(1, sizeof(*decodedPicture));
+    decodedPicture = (sDecodedPic*)calloc(1, sizeof(*decodedPicture));
     prevDecodedPicture->next = decodedPicture;
     }
 
@@ -486,8 +486,8 @@ sDecodedPicture* getDecodedPicture (sDecodedPicture* decodedPicture) {
 void ClearDecodedPictures (sDecoder* decoder) {
 
   // find the head first;
-  sDecodedPicture* prevDecodedPicture = NULL;
-  sDecodedPicture* decodedPicture = decoder->decOutputPic;
+  sDecodedPic* prevDecodedPicture = NULL;
+  sDecodedPic* decodedPicture = decoder->decOutputPic;
   while (decodedPicture && !decodedPicture->valid) {
     prevDecodedPicture = decodedPicture;
     decodedPicture = decodedPicture->next;
@@ -495,7 +495,7 @@ void ClearDecodedPictures (sDecoder* decoder) {
 
   if (decodedPicture && (decodedPicture != decoder->decOutputPic)) {
     // move all nodes before decodedPicture to the end;
-    sDecodedPicture* decodedPictureTail = decodedPicture;
+    sDecodedPic* decodedPictureTail = decodedPicture;
     while (decodedPictureTail->next)
       decodedPictureTail = decodedPictureTail->next;
 
@@ -506,10 +506,10 @@ void ClearDecodedPictures (sDecoder* decoder) {
   }
 //}}}
 //{{{
-void freeDecodedPictures (sDecodedPicture* decodedPicture) {
+void freeDecodedPictures (sDecodedPic* decodedPicture) {
 
   while (decodedPicture) {
-    sDecodedPicture* nextDecodedPicture = decodedPicture->next;
+    sDecodedPic* nextDecodedPicture = decodedPicture->next;
     if (decodedPicture->yBuf) {
       free (decodedPicture->yBuf);
       decodedPicture->yBuf = NULL;
@@ -619,12 +619,12 @@ void OpenDecoder (sParam* input, byte* chunk, size_t chunkSize) {
     decoder->layer[i]->layerId = i;
     }
 
-  decoder->decOutputPic = (sDecodedPicture*)calloc (1, sizeof(sDecodedPicture));
+  decoder->decOutputPic = (sDecodedPic*)calloc (1, sizeof(sDecodedPic));
   allocOutput (decoder);
   }
 //}}}
 //{{{
-int DecodeOneFrame (sDecodedPicture** ppDecPicList) {
+int DecodeOneFrame (sDecodedPic** ppDecPicList) {
 
   ClearDecodedPictures (gDecoder);
 
@@ -641,7 +641,7 @@ int DecodeOneFrame (sDecodedPicture** ppDecPicList) {
   }
 //}}}
 //{{{
-void FinitDecoder (sDecodedPicture** ppDecPicList) {
+void FinitDecoder (sDecodedPic** ppDecPicList) {
 
   ClearDecodedPictures (gDecoder);
   flushDpb (gDecoder->dpbLayer[0]);

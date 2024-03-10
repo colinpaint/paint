@@ -834,6 +834,13 @@ static int readNewSlice (sSlice* slice) {
       case NALU_TYPE_SLICE:
       //{{{
       case NALU_TYPE_IDR:
+        if (decoder->param.imageDebug) {
+          if (nalu->unitType == NALU_TYPE_IDR)
+            printf ("IDR\n");
+          else
+            printf ("SLC\n");
+          }
+
         if (decoder->recoveryPoint || nalu->unitType == NALU_TYPE_IDR) {
           if (decoder->recoveryPointFound == 0) {
             if (nalu->unitType != NALU_TYPE_IDR) {
@@ -911,6 +918,9 @@ static int readNewSlice (sSlice* slice) {
       //}}}
       //{{{
       case NALU_TYPE_DPA:
+        if (decoder->param.imageDebug)
+          printf ("DPA\n");
+
         if (decoder->recoveryPointFound == 0)
           break;
 
@@ -1036,16 +1046,23 @@ static int readNewSlice (sSlice* slice) {
       //}}}
       //{{{
       case NALU_TYPE_SEI:
+        if (decoder->param.imageDebug)
+          printf ("SEI\n");
+
         InterpretSEIMessage (nalu->buf, nalu->len, decoder, slice);
         break;
       //}}}
       //{{{
       case NALU_TYPE_PPS:
+        if (decoder->param.imageDebug)
+          printf ("PPS\n");
         processPPS (decoder, nalu);
         break;
       //}}}
       //{{{
       case NALU_TYPE_SPS:
+        if (decoder->param.imageDebug)
+          printf ("SPS\n");
         processSPS (decoder, nalu);
         break;
       //}}}

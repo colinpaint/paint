@@ -28,8 +28,8 @@ typedef struct dec_set_t {
   int SetOptsDecoder (DecSet_t* pDecOpts);
 
   void OpenDecoder (sParam* input, byte* chunk, size_t chunkSize);
-  int DecodeOneFrame (sDecodedPicture** ppDecPic);
-  void FinitDecoder (sDecodedPicture** ppDecPicList);
+  int DecodeOneFrame (sDecodedPic** ppDecPic);
+  void FinitDecoder (sDecodedPic** ppDecPicList);
   void CloseDecoder();
 //{{{
 #ifdef __cplusplus

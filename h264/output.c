@@ -6,7 +6,7 @@
 //}}}
 
 //{{{
-static void allocDecodedPic (sDecoder* decoder, sDecodedPicture* decodedPicture, sPicture* p,
+static void allocDecodedPic (sDecoder* decoder, sDecodedPic* decodedPicture, sPicture* p,
                              int lumaSize, int frameSize, int lumaSizeX, int lumaSizeY,
                              int chromaSizeX, int chromaSizeY) {
 
@@ -98,7 +98,7 @@ static void writeOutPicture (sDecoder* decoder, sPicture* p) {
   int lumaSize = lumaSizeX * lumaSizeY * symbolSizeInBytes;
   int frameSize = (lumaSizeX * lumaSizeY + 2 * (chromaSizeX * chromaSizeY)) * symbolSizeInBytes;
 
-  sDecodedPicture* decodedPicture = getDecodedPicture (decoder->decOutputPic);
+  sDecodedPic* decodedPicture = getDecodedPicture (decoder->decOutputPic);
   if (!decodedPicture->yBuf || (decodedPicture->bufSize < frameSize))
     allocDecodedPic (decoder, decodedPicture, p, lumaSize, frameSize, lumaSizeX, lumaSizeY, chromaSizeX, chromaSizeY);
   decodedPicture->valid = 1;
