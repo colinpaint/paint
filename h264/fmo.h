@@ -1,7 +1,7 @@
 #pragma once
 
 extern int initFmo (sDecoder* decoder, sSlice* pSlice);
-extern int FmoFinit (sDecoder* decoder);
+extern int closeFmo (sDecoder* decoder);
 
 extern int FmoGetNumberOfSliceGroup (sDecoder* decoder);
 extern int FmoGetLastMBOfPicture (sDecoder* decoder);

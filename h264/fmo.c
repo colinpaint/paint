@@ -310,7 +310,7 @@ int initFmo (sDecoder* decoder, sSlice* pSlice) {
 //}}}
 
 //{{{
-int FmoFinit (sDecoder* decoder) {
+int closeFmo (sDecoder* decoder) {
 
   if (decoder->mbToSliceGroupMap) {
     free (decoder->mbToSliceGroupMap);

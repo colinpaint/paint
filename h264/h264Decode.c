@@ -483,7 +483,7 @@ sDecodedPic* getDecodedPicture (sDecodedPic* decodedPic) {
   }
 //}}}
 //{{{
-void ClearDecodedPictures (sDecoder* decoder) {
+void clearDecodedPics (sDecoder* decoder) {
 
   // find the head first;
   sDecodedPic* prevDecodedPicture = NULL;
@@ -577,7 +577,7 @@ void setGlobalCodingProgram (sDecoder* decoder, sCoding* coding) {
 //}}}
 
 //{{{
-sDecoder* OpenDecoder (sParam* input, byte* chunk, size_t chunkSize) {
+sDecoder* openDecoder (sParam* input, byte* chunk, size_t chunkSize) {
 
   // alloc decoder
   sDecoder* decoder = (sDecoder*)calloc (1, sizeof(sDecoder));
@@ -626,9 +626,9 @@ sDecoder* OpenDecoder (sParam* input, byte* chunk, size_t chunkSize) {
   }
 //}}}
 //{{{
-int DecodeOneFrame (sDecoder* decoder, sDecodedPic** ppDecPicList) {
+int decodeOneFrame (sDecoder* decoder, sDecodedPic** decPicList) {
 
-  ClearDecodedPictures (decoder);
+  clearDecodedPics (decoder);
 
   int iRet = decodeFrame (decoder);
   if (iRet == SOP)
@@ -638,27 +638,27 @@ int DecodeOneFrame (sDecoder* decoder, sDecodedPic** ppDecPicList) {
   else
     iRet |= DEC_ERRMASK;
 
-  *ppDecPicList = decoder->decOutputPic;
+  *decPicList = decoder->decOutputPic;
   return iRet;
   }
 //}}}
 //{{{
-void FinitDecoder (sDecoder* decoder, sDecodedPic** ppDecPicList) {
+void finishDecoder (sDecoder* decoder, sDecodedPic** decPicList) {
 
-  ClearDecodedPictures (decoder);
+  clearDecodedPics (decoder);
   flushDpb (decoder->dpbLayer[0]);
 
   resetAnnexB (decoder->annexB);
 
   decoder->newFrame = 0;
   decoder->prevFrameNum = 0;
-  *ppDecPicList = decoder->decOutputPic;
+  *decPicList = decoder->decOutputPic;
   }
 //}}}
 //{{{
-void CloseDecoder (sDecoder* decoder) {
+void closeDecoder (sDecoder* decoder) {
 
-  FmoFinit (decoder);
+  closeFmo (decoder);
   freeLayerBuffers (decoder, 0);
   freeLayerBuffers (decoder, 1);
   freeGlobalBuffers (decoder);
