@@ -75,7 +75,7 @@ typedef struct Picture {
   int         qp;
   int         chromaQpOffset[2];
   int         sliceQpDelta;
-  sDecRefPicMarking* decRefPicMarkingBuffer;  // stores the memory management control operations
+  sDecodedRefPicMarking* decRefPicMarkingBuffer;  // stores the memory management control operations
 
   // picture error conceal
   int         concealed_pic;
@@ -288,10 +288,10 @@ extern void fillFrameNumGap (sDecoder* decoder, sSlice *pSlice);
 extern void updateRefList (sDPB* dpb);
 extern void updateLongTermRefList (sDPB* dpb);
 extern void mm_mark_current_picture_long_term (sDPB* dpb, sPicture* p, int longTermFrameIndex);
-extern void mm_unmark_short_term_for_reference (sDPB* dpb, sPicture* p, int difference_of_pic_nums_minus1);
+extern void mm_unmark_short_term_for_reference (sDPB* dpb, sPicture* p, int diffPicNumMinus1);
 extern void mm_unmark_long_term_for_reference (sDPB* dpb, sPicture *p, int longTermPicNum);
-extern void mm_assign_long_term_frame_idx (sDPB* dpb, sPicture* p, int difference_of_pic_nums_minus1, int longTermFrameIndex);
-extern void mm_update_max_long_term_frame_idx (sDPB* dpb, int max_long_term_frame_idx_plus1);
+extern void mm_assign_long_term_frame_idx (sDPB* dpb, sPicture* p, int diffPicNumMinus1, int longTermFrameIndex);
+extern void mm_update_max_long_term_frame_idx (sDPB* dpb, int maxLongTermFrameIndexPlus1);
 extern void mm_unmark_all_short_term_for_reference (sDPB* dpb);
 extern void mm_unmark_all_long_term_for_reference (sDPB* dpb);
 extern void get_smallest_poc (sDPB* dpb, int *poc,int * pos);

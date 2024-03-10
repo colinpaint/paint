@@ -982,12 +982,12 @@ private:
   void outputPicList (sDecodedPic* pic) {
 
     while (pic && pic->valid == 1) {
-      int width = pic->width * ((pic->iBitDepth+7)>>3);
+      int width = pic->width * ((pic->bitDepth+7)>>3);
       int height = pic->height;
       int iStride = pic->yStride;
 
       int iWidthUV = pic->width >> 1;
-      iWidthUV *= ((pic->iBitDepth + 7) >> 3);
+      iWidthUV *= ((pic->bitDepth + 7) >> 3);
       int iHeightUV = pic->height >> 1;
       int iStrideUV = pic->uvStride;
 
@@ -1080,17 +1080,17 @@ public:
 
       int ret = 0;
       do {
-        sDecodedPic* decodedPicture;
-        ret = DecodeOneFrame (&decodedPicture);
+        sDecodedPic* decodedPic;
+        ret = DecodeOneFrame (&decodedPic);
         if (ret == DEC_EOS || ret == DEC_SUCCEED)
-          outputPicList (decodedPicture);
+          outputPicList (decodedPic);
         else
           cLog::log (LOGERROR, "decoding  failed");
         } while (ret == DEC_SUCCEED);
 
-      sDecodedPic* decodedPicture;
-      FinitDecoder (&decodedPicture);
-      outputPicList (decodedPicture);
+      sDecodedPic* decodedPic;
+      FinitDecoder (&decodedPic);
+      outputPicList (decodedPic);
       CloseDecoder();
 
       delete[] chunk;
@@ -1120,12 +1120,12 @@ private:
 
     sDecodedPic* pPic = decPic;
     while (pPic && pPic->valid == 1) {
-      int width = pPic->width * ((pPic->iBitDepth+7)>>3);
+      int width = pPic->width * ((pPic->bitDepth+7)>>3);
       int height = pPic->height;
       int iStride = pPic->yStride;
 
       int iWidthUV = pPic->width >> 1;
-      iWidthUV *= ((pPic->iBitDepth + 7) >> 3);
+      iWidthUV *= ((pPic->bitDepth + 7) >> 3);
       int iHeightUV = pPic->height >> 1;
       int iStrideUV = pPic->uvStride;
 

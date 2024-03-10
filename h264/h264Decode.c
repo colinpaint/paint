@@ -120,7 +120,7 @@ static void freeSlice (sSlice *curSlice) {
     }
 
   while (curSlice->decRefPicMarkingBuffer) {
-    sDecRefPicMarking* tmp_drpm = curSlice->decRefPicMarkingBuffer;
+    sDecodedRefPicMarking* tmp_drpm = curSlice->decRefPicMarkingBuffer;
     curSlice->decRefPicMarkingBuffer = tmp_drpm->next;
     free (tmp_drpm);
     }
@@ -466,20 +466,20 @@ void freeGlobalBuffers (sDecoder* decoder) {
 //}}}
 
 //{{{
-sDecodedPic* getDecodedPicture (sDecodedPic* decodedPicture) {
+sDecodedPic* getDecodedPicture (sDecodedPic* decodedPic) {
 
   sDecodedPic* prevDecodedPicture = NULL;
-  while (decodedPicture && (decodedPicture->valid)) {
-    prevDecodedPicture = decodedPicture;
-    decodedPicture = decodedPicture->next;
+  while (decodedPic && (decodedPic->valid)) {
+    prevDecodedPicture = decodedPic;
+    decodedPic = decodedPic->next;
     }
 
-  if (!decodedPicture) {
-    decodedPicture = (sDecodedPic*)calloc(1, sizeof(*decodedPicture));
-    prevDecodedPicture->next = decodedPicture;
+  if (!decodedPic) {
+    decodedPic = (sDecodedPic*)calloc(1, sizeof(*decodedPic));
+    prevDecodedPicture->next = decodedPic;
     }
 
-  return decodedPicture;
+  return decodedPic;
   }
 //}}}
 //{{{
@@ -487,38 +487,38 @@ void ClearDecodedPictures (sDecoder* decoder) {
 
   // find the head first;
   sDecodedPic* prevDecodedPicture = NULL;
-  sDecodedPic* decodedPicture = decoder->decOutputPic;
-  while (decodedPicture && !decodedPicture->valid) {
-    prevDecodedPicture = decodedPicture;
-    decodedPicture = decodedPicture->next;
+  sDecodedPic* decodedPic = decoder->decOutputPic;
+  while (decodedPic && !decodedPic->valid) {
+    prevDecodedPicture = decodedPic;
+    decodedPic = decodedPic->next;
     }
 
-  if (decodedPicture && (decodedPicture != decoder->decOutputPic)) {
-    // move all nodes before decodedPicture to the end;
-    sDecodedPic* decodedPictureTail = decodedPicture;
+  if (decodedPic && (decodedPic != decoder->decOutputPic)) {
+    // move all nodes before decodedPic to the end;
+    sDecodedPic* decodedPictureTail = decodedPic;
     while (decodedPictureTail->next)
       decodedPictureTail = decodedPictureTail->next;
 
     decodedPictureTail->next = decoder->decOutputPic;
-    decoder->decOutputPic = decodedPicture;
+    decoder->decOutputPic = decodedPic;
     prevDecodedPicture->next = NULL;
     }
   }
 //}}}
 //{{{
-void freeDecodedPictures (sDecodedPic* decodedPicture) {
+void freeDecodedPictures (sDecodedPic* decodedPic) {
 
-  while (decodedPicture) {
-    sDecodedPic* nextDecodedPicture = decodedPicture->next;
-    if (decodedPicture->yBuf) {
-      free (decodedPicture->yBuf);
-      decodedPicture->yBuf = NULL;
-      decodedPicture->uBuf = NULL;
-      decodedPicture->vBuf = NULL;
+  while (decodedPic) {
+    sDecodedPic* nextDecodedPicture = decodedPic->next;
+    if (decodedPic->yBuf) {
+      free (decodedPic->yBuf);
+      decodedPic->yBuf = NULL;
+      decodedPic->uBuf = NULL;
+      decodedPic->vBuf = NULL;
       }
 
-    free (decodedPicture);
-    decodedPicture = nextDecodedPicture;
+    free (decodedPic);
+    decodedPic = nextDecodedPicture;
    }
   }
 //}}}

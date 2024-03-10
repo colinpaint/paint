@@ -1430,7 +1430,7 @@ void dec_ref_pic_marking (sDecoder* decoder, sBitstream* curStream, sSlice* pSli
 
   // free old buffer content
   while (pSlice->decRefPicMarkingBuffer) {
-    sDecRefPicMarking* tmp_drpm = pSlice->decRefPicMarkingBuffer;
+    sDecodedRefPicMarking* tmp_drpm = pSlice->decRefPicMarkingBuffer;
     pSlice->decRefPicMarkingBuffer = tmp_drpm->next;
     free (tmp_drpm);
     }
@@ -1449,13 +1449,13 @@ void dec_ref_pic_marking (sDecoder* decoder, sBitstream* curStream, sSlice* pSli
       // read Memory Management Control Operation
       int val;
       do {
-        sDecRefPicMarking* tmp_drpm = (sDecRefPicMarking*)calloc (1,sizeof (sDecRefPicMarking));
+        sDecodedRefPicMarking* tmp_drpm = (sDecodedRefPicMarking*)calloc (1,sizeof (sDecodedRefPicMarking));
         tmp_drpm->next = NULL;
-        val = tmp_drpm->memory_management_control_operation =
-          readUeV ("SLC memory_management_control_operation", curStream);
+        val = tmp_drpm->memManagement =
+          readUeV ("SLC memManagement", curStream);
         if ((val == 1) || (val == 3))
-          tmp_drpm->difference_of_pic_nums_minus1 =
-            readUeV ("SLC difference_of_pic_nums_minus1", curStream);
+          tmp_drpm->diffPicNumMinus1 =
+            readUeV ("SLC diffPicNumMinus1", curStream);
         if (val==2)
           tmp_drpm->longTermPicNum =
             readUeV ("SLC longTermPicNum", curStream);
@@ -1464,14 +1464,14 @@ void dec_ref_pic_marking (sDecoder* decoder, sBitstream* curStream, sSlice* pSli
           tmp_drpm->longTermFrameIndex =
             readUeV ("SLC longTermFrameIndex", curStream);
         if (val == 4)
-          tmp_drpm->max_long_term_frame_idx_plus1 =
+          tmp_drpm->maxLongTermFrameIndexPlus1 =
             readUeV ("SLC max_long_term_pic_idx_plus1", curStream);
 
         // add command
         if (pSlice->decRefPicMarkingBuffer == NULL)
           pSlice->decRefPicMarkingBuffer = tmp_drpm;
         else {
-          sDecRefPicMarking* tmp_drpm2 = pSlice->decRefPicMarkingBuffer;
+          sDecodedRefPicMarking* tmp_drpm2 = pSlice->decRefPicMarkingBuffer;
           while (tmp_drpm2->next != NULL) tmp_drpm2 = tmp_drpm2->next;
           tmp_drpm2->next = tmp_drpm;
           }

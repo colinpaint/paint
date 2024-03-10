@@ -442,15 +442,14 @@ typedef struct Image {
 //}}}
 //{{{  sDecodedPic
 typedef struct DecodedPic {
-  struct DecodedPic* next;
-
   int valid;             // 0: invalid, 1: valid, 3: valid for 3D output;
   int poc;
 
   int yuvFormat;         // 0: 4:0:0, 1: 4:2:0, 2: 4:2:2, 3: 4:4:4
   int yuvStorageFormat;  // 0: YUV seperate; 1: YUV interleaved; 2: 3D output;
-  int iBitDepth;
+  int bitDepth;
 
+  int bufSize;
   byte* yBuf;            // if iPictureFormat is 1, [0]: top; [1] bottom;
   byte* uBuf;
   byte* vBuf;
@@ -459,20 +458,20 @@ typedef struct DecodedPic {
   int height;            // frame height;
   int yStride;           // stride of yBuf[0/1] buffer in bytes;
   int uvStride;          // stride of uBuf[0/1] and vBuf[0/1] buffer in bytes;
-  int skipPicNum;
-  int bufSize;
+
+  struct DecodedPic* next;
   } sDecodedPic;
 //}}}
-//{{{  sDecRefPicMarking
-typedef struct DecRefPicMarking {
-  struct DecRefPicMarking* next;
-
-  int memory_management_control_operation;
-  int difference_of_pic_nums_minus1;
+//{{{  sDecodedRefPicMarking
+typedef struct DecodedRefPicMarking {
+  int memManagement;
+  int diffPicNumMinus1;
   int longTermPicNum;
   int longTermFrameIndex;
-  int max_long_term_frame_idx_plus1;
-  } sDecRefPicMarking;
+  int maxLongTermFrameIndexPlus1;
+
+  struct DecodedRefPicMarking* next;
+  } sDecodedRefPicMarking;
 //}}}
 //{{{  sOldSlice
 typedef struct OldSlice {
@@ -556,7 +555,7 @@ typedef struct Slice {
   int noOutputPriorPicFlag;
   int longTermRefFlag;
   int adaptiveRefPicBufferingFlag;
-  sDecRefPicMarking* decRefPicMarkingBuffer; // stores the memory management control operations
+  sDecodedRefPicMarking* decRefPicMarkingBuffer; // stores the memory management control operations
 
   char listXsize[6];
   struct Picture** listX[6];
@@ -1014,8 +1013,8 @@ static inline int isHiIntraOnlyProfile (unsigned int profileIdc, Boolean constra
   extern void changePlaneJV (sDecoder* decoder, int nplane, sSlice *pSlice);
   extern void makeFramePictureJV (sDecoder* decoder );
 
-  extern sDecodedPic* getDecodedPicture (sDecodedPic* decodedPicture);
-  extern void freeDecodedPictures (sDecodedPic* decodedPicture);
+  extern sDecodedPic* getDecodedPicture (sDecodedPic* decodedPic);
+  extern void freeDecodedPictures (sDecodedPic* decodedPic);
   extern void clearDecodedPictures (sDecoder* decoder);
 
   extern void setGlobalCodingProgram (sDecoder* decoder, sCoding* coding);

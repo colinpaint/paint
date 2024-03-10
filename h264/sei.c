@@ -709,8 +709,8 @@ static void interpret_dec_ref_pic_marking_repetition_info (byte* payload, int si
   int original_idr_flag, original_frame_num;
   int original_field_pic_flag;
 
-  sDecRefPicMarking *tmp_drpm;
-  sDecRefPicMarking *old_drpm;
+  sDecodedRefPicMarking *tmp_drpm;
+  sDecodedRefPicMarking *old_drpm;
   int old_idr_flag, old_no_output_of_prior_pics_flag, old_long_term_reference_flag , old_adaptive_ref_pic_buffering_flag;
 
   sBitstream* buf = malloc(sizeof(sBitstream));
@@ -758,23 +758,23 @@ static void interpret_dec_ref_pic_marking_repetition_info (byte* payload, int si
       //tmp_drpm=decoder->decRefPicMarkingBuffer;
       //while (tmp_drpm != NULL)
       //{
-        //printf("memory_management_control_operation  = %d\n", tmp_drpm->memory_management_control_operation);
+        //printf("memManagement  = %d\n", tmp_drpm->memManagement);
 
-        //if ((tmp_drpm->memory_management_control_operation==1)||(tmp_drpm->memory_management_control_operation==3))
+        //if ((tmp_drpm->memManagement==1)||(tmp_drpm->memManagement==3))
         //{
-          //printf("difference_of_pic_nums_minus1        = %d\n", tmp_drpm->difference_of_pic_nums_minus1);
+          //printf("diffPicNumMinus1        = %d\n", tmp_drpm->diffPicNumMinus1);
         //}
-        //if (tmp_drpm->memory_management_control_operation==2)
+        //if (tmp_drpm->memManagement==2)
         //{
           //printf("longTermPicNum                    = %d\n", tmp_drpm->longTermPicNum);
         //}
-        //if ((tmp_drpm->memory_management_control_operation==3)||(tmp_drpm->memory_management_control_operation==6))
+        //if ((tmp_drpm->memManagement==3)||(tmp_drpm->memManagement==6))
         //{
           //printf("longTermFrameIndex                  = %d\n", tmp_drpm->longTermFrameIndex);
         //}
-        //if (tmp_drpm->memory_management_control_operation==4)
+        //if (tmp_drpm->memManagement==4)
         //{
-          //printf("max_long_term_pic_idx_plus1          = %d\n", tmp_drpm->max_long_term_frame_idx_plus1);
+          //printf("max_long_term_pic_idx_plus1          = %d\n", tmp_drpm->maxLongTermFrameIndexPlus1);
         //}
         //tmp_drpm = tmp_drpm->Next;
       //}

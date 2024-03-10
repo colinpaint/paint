@@ -162,7 +162,7 @@ static void unmark_long_term_field_for_reference_by_frame_idx (
   }
 //}}}
 //{{{
-static int get_pic_num_x (sPicture* p, int difference_of_pic_nums_minus1) {
+static int get_pic_num_x (sPicture* p, int diffPicNumMinus1) {
 
   int currPicNum;
   if (p->structure == FRAME)
@@ -170,7 +170,7 @@ static int get_pic_num_x (sPicture* p, int difference_of_pic_nums_minus1) {
   else
     currPicNum = 2 * p->frameNum + 1;
 
-  return currPicNum - (difference_of_pic_nums_minus1 + 1);
+  return currPicNum - (diffPicNumMinus1 + 1);
   }
 //}}}
 //{{{
@@ -1146,7 +1146,7 @@ static void checkNumDpbFrames (sDPB* dpb) {
 //{{{
 static void adaptiveMemoryManagement (sDPB* dpb, sPicture* p) {
 
-  sDecRefPicMarking* tmp_drpm;
+  sDecodedRefPicMarking* tmp_drpm;
   sDecoder* decoder = dpb->decoder;
 
   decoder->last_has_mmco_5 = 0;
@@ -1156,16 +1156,16 @@ static void adaptiveMemoryManagement (sDPB* dpb, sPicture* p) {
 
   while (p->decRefPicMarkingBuffer) {
     tmp_drpm = p->decRefPicMarkingBuffer;
-    switch (tmp_drpm->memory_management_control_operation) {
+    switch (tmp_drpm->memManagement) {
       //{{{
       case 0:
         if (tmp_drpm->next != NULL)
-          error ("memory_management_control_operation = 0 not last operation in buffer", 500);
+          error ("memManagement = 0 not last operation in buffer", 500);
         break;
       //}}}
       //{{{
       case 1:
-        mm_unmark_short_term_for_reference (dpb, p, tmp_drpm->difference_of_pic_nums_minus1);
+        mm_unmark_short_term_for_reference (dpb, p, tmp_drpm->diffPicNumMinus1);
         updateRefList (dpb);
         break;
       //}}}
@@ -1177,14 +1177,14 @@ static void adaptiveMemoryManagement (sDPB* dpb, sPicture* p) {
       //}}}
       //{{{
       case 3:
-        mm_assign_long_term_frame_idx (dpb, p, tmp_drpm->difference_of_pic_nums_minus1, tmp_drpm->longTermFrameIndex);
+        mm_assign_long_term_frame_idx (dpb, p, tmp_drpm->diffPicNumMinus1, tmp_drpm->longTermFrameIndex);
         updateRefList (dpb);
         updateLongTermRefList(dpb);
         break;
       //}}}
       //{{{
       case 4:
-        mm_update_max_long_term_frame_idx (dpb, tmp_drpm->max_long_term_frame_idx_plus1);
+        mm_update_max_long_term_frame_idx (dpb, tmp_drpm->maxLongTermFrameIndexPlus1);
         updateLongTermRefList (dpb);
         break;
       //}}}
@@ -1203,7 +1203,7 @@ static void adaptiveMemoryManagement (sDPB* dpb, sPicture* p) {
       //}}}
       //{{{
       default:
-        error ("invalid memory_management_control_operation in buffer", 500);
+        error ("invalid memManagement in buffer", 500);
       //}}}
       }
     p->decRefPicMarkingBuffer = tmp_drpm->next;
@@ -1541,9 +1541,9 @@ void mm_unmark_long_term_for_reference (sDPB* dpb, sPicture* p, int longTermPicN
   }
 //}}}
 //{{{
-void mm_unmark_short_term_for_reference (sDPB* dpb, sPicture* p, int difference_of_pic_nums_minus1)
+void mm_unmark_short_term_for_reference (sDPB* dpb, sPicture* p, int diffPicNumMinus1)
 {
-  int picNumX = get_pic_num_x(p, difference_of_pic_nums_minus1);
+  int picNumX = get_pic_num_x(p, diffPicNumMinus1);
 
   for (uint32 i = 0; i < dpb->refFramesInBuffer; i++) {
     if (p->structure == FRAME) {
@@ -1580,9 +1580,9 @@ void mm_unmark_short_term_for_reference (sDPB* dpb, sPicture* p, int difference_
 //}}}
 //{{{
 void mm_assign_long_term_frame_idx (sDPB* dpb, sPicture* p,
-                                    int difference_of_pic_nums_minus1, int longTermFrameIndex) {
+                                    int diffPicNumMinus1, int longTermFrameIndex) {
 
-  int picNumX = get_pic_num_x(p, difference_of_pic_nums_minus1);
+  int picNumX = get_pic_num_x(p, diffPicNumMinus1);
 
   // remove frames/fields with same longTermFrameIndex
   if (p->structure == FRAME)
@@ -1616,9 +1616,9 @@ void mm_assign_long_term_frame_idx (sDPB* dpb, sPicture* p,
   }
 //}}}
 //{{{
-void mm_update_max_long_term_frame_idx (sDPB* dpb, int max_long_term_frame_idx_plus1) {
+void mm_update_max_long_term_frame_idx (sDPB* dpb, int maxLongTermFrameIndexPlus1) {
 
-  dpb->maxLongTermPicIndex = max_long_term_frame_idx_plus1 - 1;
+  dpb->maxLongTermPicIndex = maxLongTermFrameIndexPlus1 - 1;
 
   // check for invalid frames
   for (uint32 i = 0; i < dpb->longTermRefFramesInBuffer; i++)
