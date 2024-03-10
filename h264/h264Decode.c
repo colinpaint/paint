@@ -583,41 +583,44 @@ void OpenDecoder (sInputParam* inputParam, byte* chunk, size_t chunkSize) {
   sVidParam* vidParam = (sVidParam*)calloc (1, sizeof(sVidParam));
   gVidParam = vidParam;
 
-  vidParam->inputParam = (sInputParam*)calloc (1, sizeof(sInputParam));
-  vidParam->oldSlice = (sOldSliceParam*)calloc (1, sizeof(sOldSliceParam));
+  init_time();
 
-  // alloc dpb buffer
+  // init inputParam
+  vidParam->inputParam = (sInputParam*)calloc (1, sizeof(sInputParam));
+  memcpy (gVidParam->inputParam, inputParam, sizeof(sInputParam));
+  gVidParam->concealMode = inputParam->concealMode;
+  gVidParam->refPocGap = inputParam->refPocGap;
+  gVidParam->pocGap = inputParam->pocGap;
+
+  // init nalu, annexB
+  vidParam->nalu = allocNALU (MAX_CODED_FRAME_SIZE);
+  vidParam->nextPPS = allocPPS();
+  vidParam->firstSPS = TRUE;
+  vidParam->annexB = allocAnnexB (vidParam);
+  openAnnexB (vidParam->annexB, chunk, chunkSize);
+
+  // init slice
+  vidParam->globalInitDone[0] = vidParam->globalInitDone[1] = 0;
+  vidParam->oldSlice = (sOldSliceParam*)calloc (1, sizeof(sOldSliceParam));
+  vidParam->sliceList = (sSlice**)calloc (MAX_NUM_DECSLICES, sizeof(sSlice *));
+  vidParam->numSlicesAllocated = MAX_NUM_DECSLICES;
+  vidParam->nextSlice = NULL;
+  initOldSlice (vidParam->oldSlice);
+
+  init (vidParam);
+
+  // init output
   for (int i = 0; i < MAX_NUM_DPB_LAYERS; i++) {
     vidParam->dpbLayer[i] = (sDPB*)calloc (1, sizeof(sDPB));
     vidParam->dpbLayer[i]->layerId = i;
     reset_dpb (vidParam, vidParam->dpbLayer[i]);
     vidParam->codingParam[i] = (sCodingParam*)calloc (1, sizeof(sCodingParam));
     vidParam->codingParam[i]->layerId = i;
-    vidParam->layerParam[i] = (sLayerParam*)calloc(1, sizeof(sLayerParam));
+    vidParam->layerParam[i] = (sLayerParam*)calloc (1, sizeof(sLayerParam));
     vidParam->layerParam[i]->layerId = i;
     }
 
-  vidParam->globalInitDone[0] = vidParam->globalInitDone[1] = 0;
-  vidParam->sliceList = (sSlice**)calloc(MAX_NUM_DECSLICES, sizeof(sSlice *));
-  vidParam->numSlicesAllocated = MAX_NUM_DECSLICES;
-  vidParam->nextSlice = NULL;
-  vidParam->nalu = allocNALU (MAX_CODED_FRAME_SIZE);
-  vidParam->decOutputPic = (sDecodedPicture*)calloc(1, sizeof(sDecodedPicture));
-  vidParam->nextPPS = allocPPS();
-  vidParam->firstSPS = TRUE;
-
-
-  init_time();
-
-  memcpy (gVidParam->inputParam, inputParam, sizeof(sInputParam));
-  gVidParam->concealMode = inputParam->concealMode;
-  gVidParam->refPocGap = inputParam->refPocGap;
-  gVidParam->pocGap = inputParam->pocGap;
-  gVidParam->annexB = allocAnnexB (gVidParam);
-  openAnnexB (gVidParam->annexB, chunk, chunkSize);
-
-  initOldSlice (vidParam->oldSlice);
-  init (vidParam);
+  vidParam->decOutputPic = (sDecodedPicture*)calloc (1, sizeof(sDecodedPicture));
   allocOutput (vidParam);
   }
 //}}}
