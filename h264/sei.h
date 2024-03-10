@@ -1,3 +1,3 @@
 #pragma once
 
-void InterpretSEIMessage (byte* payload, int size, sDecoder* decoder, sSlice *splice);
+void InterpretSEIMessage (byte* payload, int size, sDecoder* decoder, sSlice* slice);

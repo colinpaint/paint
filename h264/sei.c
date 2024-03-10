@@ -1235,7 +1235,7 @@ static void interpret_green_metadata_info (byte* payload, int size, sDecoder* de
 //}}}
 
 //{{{
-void InterpretSEIMessage (byte* msg, int size, sDecoder* decoder, sSlice *splice) {
+void InterpretSEIMessage (byte* msg, int size, sDecoder* decoder, sSlice* slice) {
 
   int offset = 1;
   do {
@@ -1271,7 +1271,7 @@ void InterpretSEIMessage (byte* msg, int size, sDecoder* decoder, sSlice *splice
       case  SEI_RECOVERY_POINT:
         interpret_recovery_point_info (msg+offset, payload_size, decoder); break;
       case  SEI_DEC_REF_PIC_MARKING_REPETITION:
-        interpret_dec_ref_pic_marking_repetition_info (msg+offset, payload_size, decoder, splice ); break;
+        interpret_dec_ref_pic_marking_repetition_info (msg+offset, payload_size, decoder, slice); break;
       case  SEI_SPARE_PIC:
         interpret_spare_pic (msg+offset, payload_size, decoder); break;
       case  SEI_SCENE_INFO:
