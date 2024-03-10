@@ -626,8 +626,6 @@ void processSPS (sVidParam* vidParam, sNalu* nalu) {
 //{{{
 void activateSPS (sVidParam* vidParam, sSPS* sps) {
 
-  sInputParam* inputParam = vidParam->inputParam;
-
   if (vidParam->activeSPS != sps) {
     if (vidParam->picture) // this may only happen on slice loss
       exitPicture (vidParam, &vidParam->picture);
@@ -653,7 +651,7 @@ void activateSPS (sVidParam* vidParam, sSPS* sps) {
       }
     }
 
-  resetFormatInfo (sps, vidParam, &inputParam->source, &inputParam->output);
+  resetFormatInfo (sps, vidParam, &vidParam->inputParam->source, &vidParam->inputParam->output);
   }
 //}}}
 

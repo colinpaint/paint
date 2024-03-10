@@ -353,8 +353,6 @@ static int NALUtoRBSP (sNalu* nalu) {
 //{{{
 int readNextNalu (sVidParam* vidParam, sNalu* nalu) {
 
-  sInputParam* inputParam = vidParam->inputParam;
-
   int ret = getNALU (vidParam->annexB, vidParam, nalu);
   if (ret < 0) {
     snprintf (errortext, ET_SIZE, "Error while getting the NALU in file format exit\n");

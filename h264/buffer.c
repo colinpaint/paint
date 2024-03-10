@@ -475,7 +475,6 @@ static void dpb_combine_field (sVidParam* vidParam, sFrameStore* frameStore) {
 //{{{
 static void insertPictureDpb (sVidParam* vidParam, sFrameStore* fs, sPicture* p) {
 
-  sInputParam* inputParam = vidParam->inputParam;
   //  printf ("insert (%s) pic with frameNum #%d, poc %d\n",
   //          (p->structure == FRAME)?"FRAME":(p->structure == TopField)?"TopField":"BotField",
   //          p->picNum, p->poc);
@@ -1880,10 +1879,8 @@ void freeDpb (sDPB* dpb) {
 //{{{
 void initImage (sVidParam* vidParam, sImage* image, sSPS* sps) {
 
-  sInputParam* inputParam = vidParam->inputParam;
-
   // allocate memory for reference frame buffers: image->frm_data
-  image->format = inputParam->output;
+  image->format = vidParam->inputParam->output;
   image->format.width[0]  = vidParam->width;
   image->format.width[1]  = vidParam->widthCr;
   image->format.width[2]  = vidParam->widthCr;
@@ -1891,10 +1888,10 @@ void initImage (sVidParam* vidParam, sImage* image, sSPS* sps) {
   image->format.height[1] = vidParam->heightCr;
   image->format.height[2] = vidParam->heightCr;
   image->format.yuvFormat  = (eColorFormat)sps->chromaFormatIdc;
-  image->format.autoCropBot = inputParam->output.autoCropBot;
-  image->format.autoCropRight = inputParam->output.autoCropRight;
-  image->format.autoCropBotCr = inputParam->output.autoCropBotCr;
-  image->format.autoCropRightCr = inputParam->output.autoCropRightCr;
+  image->format.autoCropBot = vidParam->inputParam->output.autoCropBot;
+  image->format.autoCropRight = vidParam->inputParam->output.autoCropRight;
+  image->format.autoCropBotCr = vidParam->inputParam->output.autoCropBotCr;
+  image->format.autoCropRightCr = vidParam->inputParam->output.autoCropRightCr;
   image->frm_stride[0] = vidParam->width;
   image->frm_stride[1] = image->frm_stride[2] = vidParam->widthCr;
   image->top_stride[0] = image->bot_stride[0] = image->frm_stride[0] << 1;
@@ -2153,11 +2150,11 @@ void initListsPslice (sSlice* slice) {
   sFrameStore** fsListLongTerm;
 
   if (slice->structure == FRAME) {
-    for (unsigned int i = 0; i < dpb->refFramesInBuffer; i++) 
-      if (dpb->fsRef[i]->isUsed == 3) 
+    for (unsigned int i = 0; i < dpb->refFramesInBuffer; i++)
+      if (dpb->fsRef[i]->isUsed == 3)
         if ((dpb->fsRef[i]->frame->usedForReference) && (!dpb->fsRef[i]->frame->isLongTerm))
           slice->listX[0][list0idx++] = dpb->fsRef[i]->frame;
-    
+
     // order list 0 by PicNum
     qsort ((void *)slice->listX[0], list0idx, sizeof(sPicture*), compare_pic_by_pic_num_desc);
     slice->listXsize[0] = (char) list0idx;
