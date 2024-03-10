@@ -3235,7 +3235,7 @@ static int intra_pred_16x16_normal (sMacroblock* mb, eColorPlane plane, int pred
     return (intra16x16_plane_pred(mb, plane));
     break;
   default:
-    {                                    // indication of fault in bitstream,exit
+    {                                    // indication of fault in s,exit
       printf("illegal 16x16 intra prediction mode input: %d\n",predmode);
       return SEARCH_SYNC;
     }
@@ -3526,7 +3526,7 @@ static int intra_pred_16x16_mbaff (sMacroblock* mb, eColorPlane plane, int predm
     return (intra16x16_plane_pred_mbaff(mb, plane));
     break;
   default:
-    {                                    // indication of fault in bitstream,exit
+    {                                    // indication of fault in s,exit
       printf("illegal 16x16 intra prediction mode input: %d\n",predmode);
       return SEARCH_SYNC;
     }

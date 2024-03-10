@@ -269,7 +269,7 @@ static void reorderLists (sSlice* slice) {
       if (decoder->nonConformingStream)
         printf ("RefPicList0[ %d ] is equal to 'no reference picture'\n", slice->numRefIndexActive[LIST_0] - 1);
       else
-        error ("RefPicList0[ num_ref_idx_l0_active_minus1 ] is equal to 'no reference picture', invalid bitstream",500);
+        error ("RefPicList0[ num_ref_idx_l0_active_minus1 ] is equal to 'no reference picture', invalid s",500);
       }
     // that's a definition
     slice->listXsize[0] = (char) slice->numRefIndexActive[LIST_0];
@@ -282,7 +282,7 @@ static void reorderLists (sSlice* slice) {
       if (decoder->nonConformingStream)
         printf ("RefPicList1[ %d ] is equal to 'no reference picture'\n", slice->numRefIndexActive[LIST_1] - 1);
       else
-        error ("RefPicList1[ num_ref_idx_l1_active_minus1 ] is equal to 'no reference picture', invalid bitstream",500);
+        error ("RefPicList1[ num_ref_idx_l1_active_minus1 ] is equal to 'no reference picture', invalid s",500);
       }
     // that's a definition
     slice->listXsize[1] = (char)slice->numRefIndexActive[LIST_1];
@@ -853,7 +853,7 @@ static int readNewSlice (sSlice* slice) {
         slice->datadpMode = PAR_DP_1;
         slice->maxdpNum = 1;
 
-        s = slice->dps[0].bitstream;
+        s = slice->dps[0].s;
         s->eiFlag = 0;
         s->frameBitOffset = s->readLen = 0;
         memcpy (s->streamBuffer, &nalu->buf[1], nalu->len-1);
@@ -927,7 +927,7 @@ static int readNewSlice (sSlice* slice) {
         slice->refId = nalu->refId;
         slice->datadpMode = PAR_DP_3;
         slice->maxdpNum = 3;
-        s = slice->dps[0].bitstream;
+        s = slice->dps[0].s;
         s->eiFlag = 0;
         s->frameBitOffset = s->readLen = 0;
         memcpy (s->streamBuffer, &nalu->buf[1], nalu->len - 1);
@@ -973,7 +973,7 @@ static int readNewSlice (sSlice* slice) {
 
         if (NALU_TYPE_DPB == nalu->unitType) {
           //{{{  got nalu DPB
-          s = slice->dps[1].bitstream;
+          s = slice->dps[1].s;
           s->eiFlag = 0;
           s->frameBitOffset = s->readLen = 0;
           memcpy (s->streamBuffer, &nalu->buf[1], nalu->len-1);
@@ -1001,7 +1001,7 @@ static int readNewSlice (sSlice* slice) {
 
         if (NALU_TYPE_DPC == nalu->unitType) {
           //{{{  got nalu DPC
-          s = slice->dps[2].bitstream;
+          s = slice->dps[2].s;
           s->eiFlag = 0;
           s->frameBitOffset = s->readLen = 0;
           memcpy (s->streamBuffer, &nalu->buf[1], nalu->len-1);

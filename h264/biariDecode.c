@@ -62,8 +62,8 @@ void arideco_start_decoding (sDecodingEnv* dep, unsigned char *code_buffer,
   *dep->Dcodestrm_len = firstbyte;
 
   dep->Dvalue = getbyte(dep);
-  dep->Dvalue = (dep->Dvalue << 16) | getword(dep); // lookahead of 2 bytes: always make sure that bitstream buffer
-                                        // contains 2 more bytes than actual bitstream
+  dep->Dvalue = (dep->Dvalue << 16) | getword(dep); // lookahead of 2 bytes: always make sure that s buffer
+                                        // contains 2 more bytes than actual s
   dep->DbitsLeft = 15;
   dep->Drange = HALF;
   }
@@ -112,8 +112,8 @@ unsigned int biari_decode_symbol (sDecodingEnv* dep, sBiContextType* bi_ct) {
     return (bit);
   else {
     *value <<= 16;
-    *value |=  getword(dep);    // lookahead of 2 bytes: always make sure that bitstream buffer
-    // contains 2 more bytes than actual bitstream
+    *value |=  getword(dep);    // lookahead of 2 bytes: always make sure that s buffer
+    // contains 2 more bytes than actual s
     (*DbitsLeft) += 16;
     return (bit);
     }
@@ -127,8 +127,8 @@ unsigned int biari_decode_symbol_eq_prob (sDecodingEnv* dep)
    int* DbitsLeft = &dep->DbitsLeft;
 
   if (--(*DbitsLeft) == 0) {
-    // lookahead of 2 bytes: always make sure that bitstream buffer
-    // contains 2 more bytes than actual bitstream
+    // lookahead of 2 bytes: always make sure that s buffer
+    // contains 2 more bytes than actual s
     *value = (*value << 16) | getword( dep );  
     *DbitsLeft = 16;
     }
@@ -158,8 +158,8 @@ unsigned int biari_decode_final (sDecodingEnv* dep) {
       if( --(dep->DbitsLeft) > 0 )
         return 0;
       else {
-        dep->Dvalue = (dep->Dvalue << 16) | getword( dep ); // lookahead of 2 bytes: always make sure that bitstream buffer
-                                                            // contains 2 more bytes than actual bitstream
+        dep->Dvalue = (dep->Dvalue << 16) | getword( dep ); // lookahead of 2 bytes: always make sure that s buffer
+                                                            // contains 2 more bytes than actual s
         dep->DbitsLeft = 16;
         return 0;
         }

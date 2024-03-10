@@ -247,7 +247,7 @@ typedef struct SyntaxElement {
 //}}}
 //{{{  sDataPartition
 typedef struct Datadp {
-  sBitstream*          bitstream;
+  sBitstream*          s;
   sDecodingEnv deCabac;
   int (*readsSyntaxElement) (struct Macroblock*, struct SyntaxElement*, struct Datadp*);
   } sDataPartition;
@@ -744,7 +744,7 @@ typedef struct Param {
   int refPocGap;
   int pocGap;
   int concealMode;
-  int intraProfileDeblocking; // Loop filter usage determined by flags and parameters in bitstream
+  int intraProfileDeblocking; // Loop filter usage determined by flags and parameters in s
 
   sFrameFormat source;
   sFrameFormat output;

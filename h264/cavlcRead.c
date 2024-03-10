@@ -219,7 +219,7 @@ void readCoef4x4cavlc (sMacroblock* mb, int block_type,
 
   se.type = dptype;
   dp = &(slice->dps[dpMap[dptype]]);
-  s = dp->bitstream;
+  s = dp->s;
 
   if (!cdc) {
     //{{{  luma or chroma AC
@@ -431,7 +431,7 @@ void readCoef4x4cavlc444 (sMacroblock* mb, int block_type,
 
   se.type = dptype;
   dp = &(slice->dps[dpMap[dptype]]);
-  s = dp->bitstream;
+  s = dp->s;
 
   if (!cdc) {
     //{{{  luma or chroma AC
@@ -934,7 +934,7 @@ static void read_CBP_and_coeffs_from_NAL_CAVLC_400 (sMacroblock* mb)
 
       // read CAVLC transform_size_8x8_flag
       se.len = 1;
-      readsSyntaxElement_FLC(&se, dp->bitstream);
+      readsSyntaxElement_FLC(&se, dp->s);
 
       mb->lumaTransformSize8x8flag = (Boolean) se.value1;
     }
@@ -1110,7 +1110,7 @@ static void read_CBP_and_coeffs_from_NAL_CAVLC_422 (sMacroblock* mb)
 
       // read CAVLC transform_size_8x8_flag
       se.len = 1;
-      readsSyntaxElement_FLC(&se, dp->bitstream);
+      readsSyntaxElement_FLC(&se, dp->s);
 
       mb->lumaTransformSize8x8flag = (Boolean) se.value1;
     }
@@ -1445,7 +1445,7 @@ static void read_CBP_and_coeffs_from_NAL_CAVLC_444 (sMacroblock* mb)
 
       // read CAVLC transform_size_8x8_flag
       se.len = 1;
-      readsSyntaxElement_FLC(&se, dp->bitstream);
+      readsSyntaxElement_FLC(&se, dp->s);
 
       mb->lumaTransformSize8x8flag = (Boolean) se.value1;
     }
@@ -1677,7 +1677,7 @@ static void read_CBP_and_coeffs_from_NAL_CAVLC_420 (sMacroblock* mb)
 
       // read CAVLC transform_size_8x8_flag
       se.len = 1;
-      readsSyntaxElement_FLC(&se, dp->bitstream);
+      readsSyntaxElement_FLC(&se, dp->s);
 
       mb->lumaTransformSize8x8flag = (Boolean) se.value1;
     }

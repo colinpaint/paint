@@ -399,7 +399,7 @@ static char readRefPictureIdxFLC (sMacroblock* mb, sSyntaxElement* se, sDataPart
 {
   se->context = BType2CtxRef (b8mode);
   se->len = 1;
-  readsSyntaxElement_FLC(se, dp->bitstream);
+  readsSyntaxElement_FLC(se, dp->s);
   se->value1 = 1 - se->value1;
 
   return (char)se->value1;
@@ -416,7 +416,7 @@ static void prepareListforRefIdx (sMacroblock* mb, sSyntaxElement* se,
                                   sDataPartition *dp, int numRefIndexActive, int refidx_present) {
 
   if (numRefIndexActive > 1) {
-    if (mb->decoder->activePPS->entropyCodingModeFlag == (Boolean) CAVLC || dp->bitstream->eiFlag) {
+    if (mb->decoder->activePPS->entropyCodingModeFlag == (Boolean) CAVLC || dp->s->eiFlag) {
       se->mapping = linfo_ue;
       if (refidx_present)
         mb->readRefPictureIndex = (numRefIndexActive == 2) ? readRefPictureIdxFLC : readRefPictureIdxVLC;
@@ -469,7 +469,7 @@ void readDeltaQuant (sSyntaxElement* se, sDataPartition *dp, sMacroblock* mb, co
 
   dp = &(slice->dps[dpMap[se->type]]);
 
-  if (decoder->activePPS->entropyCodingModeFlag == (Boolean)CAVLC || dp->bitstream->eiFlag)
+  if (decoder->activePPS->entropyCodingModeFlag == (Boolean)CAVLC || dp->s->eiFlag)
     se->mapping = linfo_se;
   else
     se->reading= read_dQuant_CABAC;
@@ -1044,7 +1044,7 @@ static void readMotionInfoP (sMacroblock* mb){
   //=====  READ MOTION VECTORS =====
   se.type = SE_MVD;
   dp = &(slice->dps[dpMap[SE_MVD]]);
-  if (decoder->activePPS->entropyCodingModeFlag == (Boolean) CAVLC || dp->bitstream->eiFlag)
+  if (decoder->activePPS->entropyCodingModeFlag == (Boolean) CAVLC || dp->s->eiFlag)
     se.mapping = linfo_se;
   else
     se.reading = slice->mbAffFrameFlag ? read_mvd_CABAC_mbaff : read_MVD_CABAC;
@@ -1102,7 +1102,7 @@ static void readMotionInfoB (sMacroblock* mb) {
   //=====  READ MOTION VECTORS =====
   se.type = SE_MVD;
   dp = &(slice->dps[dpMap[SE_MVD]]);
-  if (decoder->activePPS->entropyCodingModeFlag == (Boolean)CAVLC || dp->bitstream->eiFlag)
+  if (decoder->activePPS->entropyCodingModeFlag == (Boolean)CAVLC || dp->s->eiFlag)
     se.mapping = linfo_se;
   else
     se.reading = slice->mbAffFrameFlag ? read_mvd_CABAC_mbaff : read_MVD_CABAC;

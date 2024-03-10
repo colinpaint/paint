@@ -299,14 +299,14 @@ sDataPartition* allocdp (int n) {
 
   for (int i = 0; i < n; ++i) {// loop over all data dps
     sDataPartition* dataPart = &(dps[i]);
-    dataPart->bitstream = (sBitstream *) calloc(1, sizeof(sBitstream));
-    if (dataPart->bitstream == NULL) {
+    dataPart->s = (sBitstream *) calloc(1, sizeof(sBitstream));
+    if (dataPart->s == NULL) {
       snprintf (errorText, ET_SIZE, "allocdp: Memory allocation for sBitstream failed");
       error (errorText, 100);
       }
 
-    dataPart->bitstream->streamBuffer = (byte *) calloc(MAX_CODED_FRAME_SIZE, sizeof(byte));
-    if (dataPart->bitstream->streamBuffer == NULL) {
+    dataPart->s->streamBuffer = (byte *) calloc(MAX_CODED_FRAME_SIZE, sizeof(byte));
+    if (dataPart->s->streamBuffer == NULL) {
       snprintf (errorText, ET_SIZE, "allocdp: Memory allocation for streamBuffer failed");
       error (errorText, 100);
       }
@@ -319,12 +319,12 @@ sDataPartition* allocdp (int n) {
 void freedp (sDataPartition* dp, int n) {
 
   assert (dp != NULL);
-  assert (dp->bitstream != NULL);
-  assert (dp->bitstream->streamBuffer != NULL);
+  assert (dp->s != NULL);
+  assert (dp->s->streamBuffer != NULL);
 
   for (int i = 0; i < n; ++i) {
-    free (dp[i].bitstream->streamBuffer);
-    free (dp[i].bitstream);
+    free (dp[i].s->streamBuffer);
+    free (dp[i].s);
     }
 
   free (dp);

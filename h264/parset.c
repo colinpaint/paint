@@ -367,7 +367,7 @@ static void initVUI (sSPS* sps) {
 //{{{
 static int readHRDParameters (sDataPartition* dp, sHRD* hrd) {
 
-  sBitstream *s = dp->bitstream;
+  sBitstream *s = dp->s;
   hrd->cpb_cnt_minus1 = readUeV ("VUI cpb_cnt_minus1", s);
   hrd->bit_rate_scale = readUv (4, "VUI bit_rate_scale", s);
   hrd->cpb_size_scale = readUv (4, "VUI cpb_size_scale", s);
@@ -391,7 +391,7 @@ static int readHRDParameters (sDataPartition* dp, sHRD* hrd) {
 //{{{
 static int readVUI (sDataPartition* p, sSPS* sps) {
 
-  sBitstream* s = p->bitstream;
+  sBitstream* s = p->s;
   if (sps->vui_parameters_present_flag) {
     sps->vui_seq_parameters.aspect_ratio_info_present_flag = readU1 ("VUI aspect_ratio_info_present_flag", s);
     if (sps->vui_seq_parameters.aspect_ratio_info_present_flag) {
@@ -464,7 +464,7 @@ static int readVUI (sDataPartition* p, sSPS* sps) {
 //{{{
 static void interpretSPS (sDecoder* decoder, sDataPartition* dp, sSPS* sps) {
 
-  sBitstream* s = dp->bitstream;
+  sBitstream* s = dp->s;
   sps->profileIdc = readUv (8, "SPS profileIdc", s);
   if ((sps->profileIdc != BASELINE) && (sps->profileIdc != MAIN) && (sps->profileIdc != EXTENDED) &&
       (sps->profileIdc != FREXT_HP) &&
@@ -583,10 +583,10 @@ void makeSPSavailable (sDecoder* decoder, int id, sSPS* sps) {
 void processSPS (sDecoder* decoder, sNalu* nalu) {
 
   sDataPartition* dp = allocdp (1);
-  dp->bitstream->eiFlag = 0;
-  dp->bitstream->readLen = dp->bitstream->frameBitOffset = 0;
-  memcpy (dp->bitstream->streamBuffer, &nalu->buf[1], nalu->len-1);
-  dp->bitstream->codeLen = dp->bitstream->bitstreamLength = RBSPtoSODB (dp->bitstream->streamBuffer, nalu->len-1);
+  dp->s->eiFlag = 0;
+  dp->s->readLen = dp->s->frameBitOffset = 0;
+  memcpy (dp->s->streamBuffer, &nalu->buf[1], nalu->len-1);
+  dp->s->codeLen = dp->s->bitstreamLength = RBSPtoSODB (dp->s->streamBuffer, nalu->len-1);
 
   sSPS* sps = allocSPS();
   interpretSPS (decoder, dp, sps);
@@ -734,7 +734,7 @@ static void interpretPPS (sDecoder* decoder, sDataPartition* dp, sPPS* pps) {
   int chromaFormatIdc;
   int NumberBitsPerSliceGroupId;
 
-  sBitstream* s = dp->bitstream;
+  sBitstream* s = dp->s;
 
   pps->ppsId = readUeV ("PPS ppsId", s);
   pps->spsId = readUeV ("PPS spsId", s);
@@ -889,10 +889,10 @@ void processPPS (sDecoder* decoder, sNalu* nalu) {
 
 
   sDataPartition* dp = allocdp (1);
-  dp->bitstream->eiFlag = 0;
-  dp->bitstream->readLen = dp->bitstream->frameBitOffset = 0;
-  memcpy (dp->bitstream->streamBuffer, &nalu->buf[1], nalu->len-1);
-  dp->bitstream->codeLen = dp->bitstream->bitstreamLength = RBSPtoSODB (dp->bitstream->streamBuffer, nalu->len-1);
+  dp->s->eiFlag = 0;
+  dp->s->readLen = dp->s->frameBitOffset = 0;
+  memcpy (dp->s->streamBuffer, &nalu->buf[1], nalu->len-1);
+  dp->s->codeLen = dp->s->bitstreamLength = RBSPtoSODB (dp->s->streamBuffer, nalu->len-1);
 
   sPPS* pps = allocPPS();
   interpretPPS (decoder, dp, pps);
