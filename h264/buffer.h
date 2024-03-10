@@ -42,7 +42,7 @@ typedef struct Picture {
   int         size_x_m1, size_y_m1, size_x_cr_m1, size_y_cr_m1;
   int         codedFrame;
   int         mbAffFrameFlag;
-  unsigned    PicWidthInMbs;
+  unsigned    picWidthMbs;
   unsigned    picSizeInMbs;
   int         iLumaPadY, iLumaPadX;
   int         iChromaPadY, iChromaPadX;

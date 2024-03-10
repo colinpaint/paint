@@ -147,7 +147,7 @@ typedef struct {
   sVUI     vui_seq_parameters;                    // sVUI
 
   unsigned sepColourPlaneFlag;            // u(1)
-  int      lossless_qpprime_flag;
+  int      losslessQpPrimeFlag;
   } sSPS;
 //}}}
 //{{{  sPPS
@@ -661,21 +661,21 @@ typedef struct CodingParam {
   int picUnitBitSizeDisk;
   short bitdepthLuma;
   short bitdepthChroma;
-  int bitdepth_scale[2];
-  int bitdepth_luma_qp_scale;
+  int bitdepthScale[2];
+  int bitdepthLumeQpScale;
   int bitdepthChromaQpScale;
   unsigned int dcPredValueComp[MAX_PLANE]; // component value for DC prediction (depends on component pel bit depth)
   int maxPelValueComp[MAX_PLANE];          // max value that one picture element (pixel) can take (depends on pic_unit_bitdepth)
 
   int yuvFormat;
-  int lossless_qpprime_flag;
+  int losslessQpPrimeFlag;
   int numBlock8x8uv;
   int numUvBlocks;
   int numCdcCoeff;
   int mbCrSizeX;
   int mbCrSizeY;
-  int mb_cr_size_x_blk;
-  int mb_cr_size_y_blk;
+  int mbCrSizeXblock;
+  int mbCrSizeYblock;
   int mbCrSize;
   int mbSize[3][2];      // component macroblock dimensions
   int mbSizeBlock[3][2];  // component macroblock dimensions
@@ -686,10 +686,10 @@ typedef struct CodingParam {
   int ChromaArrayType;
   int maxFrameNum;
 
-  unsigned int PicWidthInMbs;
-  unsigned int PicHeightInMapUnits;
-  unsigned int FrameHeightInMbs;
-  unsigned int FrameSizeInMbs;
+  unsigned int picWidthMbs;
+  unsigned int picHeightMapUnits;
+  unsigned int frameHeightMbs;
+  unsigned int frameSizeMbs;
 
   int iLumaPadX;
   int iLumaPadY;
@@ -701,7 +701,7 @@ typedef struct CodingParam {
   int shiftpelX;
   int shiftpelY;
   int totalScale;
-  unsigned int oldFrameSizeInMbs;
+  unsigned int oldFrameSizeMbs;
 
   sMacroblock* mbData;               // array containing all MBs of a whole frame
   sMacroblock* mbDataJV[MAX_PLANE]; // mbData to be used for 4:4:4 independent mode
@@ -814,15 +814,15 @@ typedef struct Decoder {
   int          ChromaArrayType;
 
   // picture error conceal
-  // concealment_head points to first node in list, concealment_end points to
+  // concealHead points to first node in list, concealTail points to
   // last node in list. Initialize both to NULL, meaning no nodes in list yet
+  struct ConcealNode* concealHead;
+  struct ConcealNode* concealTail;
   int          concealMode;
-  int          earlier_missing_poc;
-  unsigned int frame_to_conceal;
-  int          IdrConcealFlag;
-  int          conceal_slice_type;
-  struct ConcealNode* concealment_head;
-  struct ConcealNode* concealment_end;
+  int          earlierMissingPoc;
+  unsigned int concealFrame;
+  int          idrConcealFlag;
+  int          concealSliceType;
 
   int          nonConformingStream;
   int          lastRefPicPoc;
@@ -845,8 +845,8 @@ typedef struct Decoder {
 
   int          noOutputPriorPicFlag;
 
-  int          last_has_mmco_5;
-  int          last_pic_bottom_field;
+  int          lastHasMmco5;
+  int          lastPicBotField;
 
   // non-zero: i-th previous frame is correct
   int          isPrimaryOk;    // if primary frame is correct, 0: incorrect
@@ -857,7 +857,7 @@ typedef struct Decoder {
   int*         qpPerMatrix;
   int*         qpRemMatrix;
 
-  int          pocs_in_dpb[100];
+  int          dpbPoc[100];
 
   struct FrameStore* lastOutFramestore;
 
@@ -876,9 +876,6 @@ typedef struct Decoder {
   int                  pendingOutState;
   int                  recoveryFlag;
 
-  // report
-  char sliceTypeText[9];
-
   // FMO
   int* mbToSliceGroupMap;
   int* mapUnitToSliceGroupMap;
@@ -894,11 +891,8 @@ typedef struct Decoder {
   int   iChromaPadY;
 
   // control;
-  int   bDeblockEnable;
-  int   iPostProcess;
-  int   bFrameInit;
-  int   last_dec_view_id;
-  int   last_dec_layer_id;
+  int   deblockEnable;
+  int   lastDecLayerId;
   int   dpbLayerId;
 
   int   width;
@@ -907,28 +901,28 @@ typedef struct Decoder {
   int   heightCr;
 
   // Fidelity Range Extensions Stuff
-  int picUnitBitSizeDisk;
+  int   picUnitBitSizeDisk;
   short bitdepthLuma;
   short bitdepthChroma;
-  int   bitdepth_scale[2];
-  int   bitdepth_luma_qp_scale;
+  int   bitdepthScale[2];
+  int   bitdepthLumeQpScale;
   int   bitdepthChromaQpScale;
   unsigned int dcPredValueComp[MAX_PLANE]; // component value for DC prediction (depends on component pel bit depth)
   int  maxPelValueComp[MAX_PLANE];          // max value that one picture element (pixel) can take (depends on pic_unit_bitdepth)
 
   int sepColourPlaneFlag;
-  int pic_unit_size_on_disk;
+  int picDiskUnitSize;
 
   int profileIdc;
   int yuvFormat;
-  int lossless_qpprime_flag;
+  int losslessQpPrimeFlag;
   int numBlock8x8uv;
   int numUvBlocks;
   int numCdcCoeff;
   int mbCrSizeX;
   int mbCrSizeY;
-  int mb_cr_size_x_blk;
-  int mb_cr_size_y_blk;
+  int mbCrSizeXblock;
+  int mbCrSizeYblock;
   int mbCrSize;
   int mbSize[3][2];      // component macroblock dimensions
   int mbSizeBlock[3][2]; // component macroblock dimensions
@@ -940,11 +934,11 @@ typedef struct Decoder {
   int totalScale;
   int maxFrameNum;
 
-  unsigned int PicWidthInMbs;
-  unsigned int PicHeightInMapUnits;
-  unsigned int FrameHeightInMbs;
-  unsigned int FrameSizeInMbs;
-  unsigned int oldFrameSizeInMbs;
+  unsigned int picWidthMbs;
+  unsigned int picHeightMapUnits;
+  unsigned int frameHeightMbs;
+  unsigned int frameSizeMbs;
+  unsigned int oldFrameSizeMbs;
 
   // maximum vertical motion vector range in luma quarter frame pixel units for the current level_idc
   int maxVmvR;

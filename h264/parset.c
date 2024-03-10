@@ -54,7 +54,7 @@ static void setCodingParam (sSPS* sps, sCoding* coding) {
 
   // maximum vertical motion vector range in luma quarter pixel units
   coding->profileIdc = sps->profileIdc;
-  coding->lossless_qpprime_flag = sps->lossless_qpprime_flag;
+  coding->losslessQpPrimeFlag = sps->losslessQpPrimeFlag;
   if (sps->level_idc <= 10)
     coding->maxVmvR = 64 * 4;
   else if (sps->level_idc <= 20)
@@ -69,17 +69,17 @@ static void setCodingParam (sSPS* sps, sCoding* coding) {
   coding->widthCr = 0;
   coding->heightCr = 0;
   coding->bitdepthLuma = (short) (sps->bit_depth_luma_minus8 + 8);
-  coding->bitdepth_scale[0] = 1 << sps->bit_depth_luma_minus8;
+  coding->bitdepthScale[0] = 1 << sps->bit_depth_luma_minus8;
   if (sps->chromaFormatIdc != YUV400) {
     coding->bitdepthChroma = (short) (sps->bit_depth_chroma_minus8 + 8);
-    coding->bitdepth_scale[1] = 1 << sps->bit_depth_chroma_minus8;
+    coding->bitdepthScale[1] = 1 << sps->bit_depth_chroma_minus8;
     }
 
   coding->maxFrameNum = 1<<(sps->log2_max_frame_num_minus4+4);
-  coding->PicWidthInMbs = (sps->pic_width_in_mbs_minus1 +1);
-  coding->PicHeightInMapUnits = (sps->pic_height_in_map_units_minus1 +1);
-  coding->FrameHeightInMbs = ( 2 - sps->frameMbOnlyFlag ) * coding->PicHeightInMapUnits;
-  coding->FrameSizeInMbs = coding->PicWidthInMbs * coding->FrameHeightInMbs;
+  coding->picWidthMbs = (sps->pic_width_in_mbs_minus1 +1);
+  coding->picHeightMapUnits = (sps->pic_height_in_map_units_minus1 +1);
+  coding->frameHeightMbs = ( 2 - sps->frameMbOnlyFlag ) * coding->picHeightMapUnits;
+  coding->frameSizeMbs = coding->picWidthMbs * coding->frameHeightMbs;
 
   coding->yuvFormat=sps->chromaFormatIdc;
   coding->sepColourPlaneFlag = sps->sepColourPlaneFlag;
@@ -88,8 +88,8 @@ static void setCodingParam (sSPS* sps, sCoding* coding) {
   else
     coding->ChromaArrayType = sps->chromaFormatIdc;
 
-  coding->width = coding->PicWidthInMbs * MB_BLOCK_SIZE;
-  coding->height = coding->FrameHeightInMbs * MB_BLOCK_SIZE;
+  coding->width = coding->picWidthMbs * MB_BLOCK_SIZE;
+  coding->height = coding->frameHeightMbs * MB_BLOCK_SIZE;
 
   coding->iLumaPadX = MCBUF_LUMA_PAD_X;
   coding->iLumaPadY = MCBUF_LUMA_PAD_Y;
@@ -111,7 +111,7 @@ static void setCodingParam (sSPS* sps, sCoding* coding) {
     coding->iChromaPadY = coding->iLumaPadY;
     }
   //pel bitdepth init
-  coding->bitdepth_luma_qp_scale   = 6 * (coding->bitdepthLuma - 8);
+  coding->bitdepthLumeQpScale   = 6 * (coding->bitdepthLuma - 8);
 
   if (coding->bitdepthLuma > coding->bitdepthChroma || sps->chromaFormatIdc == YUV400)
     coding->picUnitBitSizeDisk = (coding->bitdepthLuma > 8)? 16:8;
@@ -227,8 +227,8 @@ static void resetFormatInfo (sSPS* sps, sDecoder* decoder, sFrameFormat* source,
   output->bit_depth[0] = source->bit_depth[0] = decoder->bitdepthLuma;
   output->bit_depth[1] = source->bit_depth[1] = decoder->bitdepthChroma;
   output->bit_depth[2] = source->bit_depth[2] = decoder->bitdepthChroma;
-  output->pic_unit_size_on_disk = (imax(output->bit_depth[0], output->bit_depth[1]) > 8) ? 16 : 8;
-  output->pic_unit_size_shift3 = output->pic_unit_size_on_disk >> 3;
+  output->picDiskUnitSize = (imax(output->bit_depth[0], output->bit_depth[1]) > 8) ? 16 : 8;
+  output->pic_unit_size_shift3 = output->picDiskUnitSize >> 3;
 
   output->frameRate = source->frameRate;
   output->colourModel = source->colourModel;
@@ -504,7 +504,7 @@ static void interpretSPS (sDecoder* decoder, sDataPartition* p, sSPS* sps) {
   sps->chromaFormatIdc = 1;
   sps->bit_depth_luma_minus8 = 0;
   sps->bit_depth_chroma_minus8 = 0;
-  sps->lossless_qpprime_flag = 0;
+  sps->losslessQpPrimeFlag = 0;
   sps->sepColourPlaneFlag = 0;
 
   if ((sps->profileIdc == FREXT_HP   ) ||
@@ -522,7 +522,7 @@ static void interpretSPS (sDecoder* decoder, sDataPartition* p, sSPS* sps) {
         (sps->bit_depth_chroma_minus8+8> sizeof(sPixel)*8))
       error ("Source picture has higher bit depth than sPixel data type", 500);
 
-    sps->lossless_qpprime_flag = readU1 ("SPS lossless_qpprime_y_zero_flag", s);
+    sps->losslessQpPrimeFlag = readU1 ("SPS lossless_qpprime_y_zero_flag", s);
 
     sps->seq_scaling_matrix_present_flag = readU1 ("SPS seq_scaling_matrix_present_flag", s);
     if (sps->seq_scaling_matrix_present_flag) {

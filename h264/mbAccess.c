@@ -31,9 +31,9 @@ void CheckAvailabilityOfNeighbors (sMacroblock* curMb) {
   if (picture->mbAffFrameFlag) {
     int cur_mb_pair = mb_nr >> 1;
     curMb->mbAddrA = 2 * (cur_mb_pair - 1);
-    curMb->mbAddrB = 2 * (cur_mb_pair - picture->PicWidthInMbs);
-    curMb->mbAddrC = 2 * (cur_mb_pair - picture->PicWidthInMbs + 1);
-    curMb->mbAddrD = 2 * (cur_mb_pair - picture->PicWidthInMbs - 1);
+    curMb->mbAddrB = 2 * (cur_mb_pair - picture->picWidthMbs);
+    curMb->mbAddrC = 2 * (cur_mb_pair - picture->picWidthMbs + 1);
+    curMb->mbAddrD = 2 * (cur_mb_pair - picture->picWidthMbs - 1);
 
     curMb->mbAvailA = (Boolean) (mb_is_available(curMb->mbAddrA, curMb) && ((picPos[cur_mb_pair    ].x)!=0));
     curMb->mbAvailB = (Boolean) (mb_is_available(curMb->mbAddrB, curMb));
@@ -43,7 +43,7 @@ void CheckAvailabilityOfNeighbors (sMacroblock* curMb) {
   else {
     sBlockPos* p_pic_pos = &picPos[mb_nr    ];
     curMb->mbAddrA = mb_nr - 1;
-    curMb->mbAddrD = curMb->mbAddrA - picture->PicWidthInMbs;
+    curMb->mbAddrD = curMb->mbAddrA - picture->picWidthMbs;
     curMb->mbAddrB = curMb->mbAddrD + 1;
     curMb->mbAddrC = curMb->mbAddrB + 1;
 
@@ -69,7 +69,7 @@ void CheckAvailabilityOfNeighborsNormal (sMacroblock* curMb) {
 
   sBlockPos* p_pic_pos = &picPos[mb_nr    ];
   curMb->mbAddrA = mb_nr - 1;
-  curMb->mbAddrD = curMb->mbAddrA - picture->PicWidthInMbs;
+  curMb->mbAddrD = curMb->mbAddrA - picture->picWidthMbs;
   curMb->mbAddrB = curMb->mbAddrD + 1;
   curMb->mbAddrC = curMb->mbAddrB + 1;
 
@@ -102,9 +102,9 @@ void CheckAvailabilityOfNeighborsMBAFF (sMacroblock* curMb) {
 
   int cur_mb_pair = mb_nr >> 1;
   curMb->mbAddrA = 2 * (cur_mb_pair - 1);
-  curMb->mbAddrB = 2 * (cur_mb_pair - picture->PicWidthInMbs);
-  curMb->mbAddrC = 2 * (cur_mb_pair - picture->PicWidthInMbs + 1);
-  curMb->mbAddrD = 2 * (cur_mb_pair - picture->PicWidthInMbs - 1);
+  curMb->mbAddrB = 2 * (cur_mb_pair - picture->picWidthMbs);
+  curMb->mbAddrC = 2 * (cur_mb_pair - picture->picWidthMbs + 1);
+  curMb->mbAddrD = 2 * (cur_mb_pair - picture->picWidthMbs - 1);
 
   curMb->mbAvailA = (Boolean) (mb_is_available(curMb->mbAddrA, curMb) && ((picPos[cur_mb_pair    ].x)!=0));
   curMb->mbAvailB = (Boolean) (mb_is_available(curMb->mbAddrB, curMb));

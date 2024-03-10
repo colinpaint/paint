@@ -1530,8 +1530,8 @@ void decodePOC (sDecoder* decoder, sSlice* pSlice) {
         decoder->PrevPicOrderCntLsb = 0;
         }
       else {
-        if (decoder->last_has_mmco_5) {
-          if (decoder->last_pic_bottom_field) {
+        if (decoder->lastHasMmco5) {
+          if (decoder->lastPicBotField) {
             decoder->PrevPicOrderCntMsb = 0;
             decoder->PrevPicOrderCntLsb = 0;
             }
@@ -1584,7 +1584,7 @@ void decodePOC (sDecoder* decoder, sSlice* pSlice) {
           error ("frameNum not equal to zero in IDR picture", -1020);
         }
       else {
-        if (decoder->last_has_mmco_5) {
+        if (decoder->lastHasMmco5) {
           decoder->PreviousFrameNumOffset = 0;
           decoder->PreviousFrameNum = 0;
           }
@@ -1653,7 +1653,7 @@ void decodePOC (sDecoder* decoder, sSlice* pSlice) {
           error ("frameNum not equal to zero in IDR picture", -1020);
         }
       else {
-        if (decoder->last_has_mmco_5) {
+        if (decoder->lastHasMmco5) {
           decoder->PreviousFrameNum = 0;
           decoder->PreviousFrameNumOffset = 0;
           }
@@ -1844,7 +1844,7 @@ void readRestSliceHeader (sSlice* curSlice) {
   curSlice->sliceQpDelta = val = readSeV ("SLC sliceQpDelta", curStream);
   curSlice->qp = 26 + decoder->activePPS->picInitQpMinus26 + val;
 
-  if ((curSlice->qp < -decoder->bitdepth_luma_qp_scale) || (curSlice->qp > 51))
+  if ((curSlice->qp < -decoder->bitdepthLumeQpScale) || (curSlice->qp > 51))
     error ("sliceQpDelta makes slice_qp_y out of range", 500);
 
   if (curSlice->sliceType == SP_SLICE || curSlice->sliceType == SI_SLICE) {
@@ -1893,8 +1893,8 @@ void readRestSliceHeader (sSlice* curSlice) {
     curSlice->sliceGroupChangeCycle = readUv (len, "SLC sliceGroupChangeCycle", curStream);
     }
 
-  decoder->picHeightInMbs = decoder->FrameHeightInMbs / ( 1 + curSlice->fieldPicFlag );
-  decoder->picSizeInMbs   = decoder->PicWidthInMbs * decoder->picHeightInMbs;
-  decoder->FrameSizeInMbs = decoder->PicWidthInMbs * decoder->FrameHeightInMbs;
+  decoder->picHeightInMbs = decoder->frameHeightMbs / ( 1 + curSlice->fieldPicFlag );
+  decoder->picSizeInMbs   = decoder->picWidthMbs * decoder->picHeightInMbs;
+  decoder->frameSizeMbs = decoder->picWidthMbs * decoder->frameHeightMbs;
   }
 //}}}

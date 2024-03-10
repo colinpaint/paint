@@ -1536,7 +1536,7 @@ static void copy_to_conceal (sPicture *src, sPicture *dst, sDecoder* decoder)
 
   dst->picSizeInMbs  = src->picSizeInMbs;
 
-  dst->sliceType = src->sliceType = decoder->conceal_slice_type;
+  dst->sliceType = src->sliceType = decoder->concealSliceType;
 
   dst->idrFlag = FALSE; //since we do not want to clears the ref list
 
@@ -1561,7 +1561,7 @@ static void copy_to_conceal (sPicture *src, sPicture *dst, sDecoder* decoder)
   {
     // We need these initializations for using deblocking filter for frame copy
     // conceal as well.
-    dst->PicWidthInMbs = src->PicWidthInMbs;
+    dst->picWidthMbs = src->picWidthMbs;
     dst->picSizeInMbs = src->picSizeInMbs;
 
     CopyImgData( src->imgY, src->imgUV, dst->imgY, dst->imgUV, decoder->width, decoder->height, decoder->widthCr, decoder->heightCr);
@@ -1579,13 +1579,13 @@ static void copy_to_conceal (sPicture *src, sPicture *dst, sDecoder* decoder)
       storeYUV = (sPixel *) malloc (16  * sizeof (sPixel));
     }
 
-    dst->PicWidthInMbs = src->PicWidthInMbs;
+    dst->picWidthMbs = src->picWidthMbs;
     dst->picSizeInMbs = src->picSizeInMbs;
-    mb_width = dst->PicWidthInMbs;
-    mb_height = (dst->picSizeInMbs)/(dst->PicWidthInMbs);
-    scale = (decoder->conceal_slice_type == B_SLICE) ? 2 : 1;
+    mb_width = dst->picWidthMbs;
+    mb_height = (dst->picSizeInMbs)/(dst->picWidthMbs);
+    scale = (decoder->concealSliceType == B_SLICE) ? 2 : 1;
 
-    if(decoder->conceal_slice_type == B_SLICE)
+    if(decoder->concealSliceType == B_SLICE)
     {
       init_lists_for_non_reference_loss(
         decoder->dpbLayer[0],
@@ -1673,7 +1673,7 @@ static void copy_prev_pic_to_concealed_pic (sPicture *picture, sDPB* dpb)
   assert(refPic != NULL);
 
   /* copy all the struc from this to current conceal pic */
-  decoder->conceal_slice_type = P_SLICE;
+  decoder->concealSliceType = P_SLICE;
   copy_to_conceal(refPic, picture, decoder);
 }
 //}}}
@@ -1709,22 +1709,22 @@ static int comp (const void *i, const void *j) {
 //{{{
 static void add_node (sDecoder* decoder, struct ConcealNode *concealment_new )
 {
-  if( decoder->concealment_head == NULL ) {
-    decoder->concealment_end = decoder->concealment_head = concealment_new;
+  if( decoder->concealHead == NULL ) {
+    decoder->concealTail = decoder->concealHead = concealment_new;
     return;
     }
-  decoder->concealment_end->next = concealment_new;
-  decoder->concealment_end = concealment_new;
+  decoder->concealTail->next = concealment_new;
+  decoder->concealTail = concealment_new;
 }
 //}}}
 //{{{
 static void delete_node (sDecoder* decoder, struct ConcealNode *ptr ) {
 
   // We only need to delete the first node in the linked list
-  if( ptr == decoder->concealment_head ) {
-    decoder->concealment_head = decoder->concealment_head->next;
-    if( decoder->concealment_end == ptr )
-      decoder->concealment_end = decoder->concealment_end->next;
+  if( ptr == decoder->concealHead ) {
+    decoder->concealHead = decoder->concealHead->next;
+    if( decoder->concealTail == ptr )
+      decoder->concealTail = decoder->concealTail->next;
     free(ptr);
     }
   }
@@ -1783,7 +1783,7 @@ void init_lists_for_non_reference_loss (sDPB* dpb, int currSliceType, ePicStruct
   if (currPicStructure == FRAME) {
     for (i = 0; i < dpb->refFramesInBuffer; i++) {
       if (dpb->fs[i]->concealment_reference == 1) {
-        if (dpb->fs[i]->frameNum > decoder->frame_to_conceal)
+        if (dpb->fs[i]->frameNum > decoder->concealFrame)
           dpb->fsRef[i]->frameNumWrap = dpb->fs[i]->frameNum - maxFrameNum;
         else
           dpb->fsRef[i]->frameNumWrap = dpb->fs[i]->frameNum;
@@ -1808,14 +1808,14 @@ void init_lists_for_non_reference_loss (sDPB* dpb, int currSliceType, ePicStruct
     if (currPicStructure == FRAME) {
       for (i = 0; i < dpb->usedSize; i++)
         if (dpb->fs[i]->concealment_reference == 1)
-          if (decoder->earlier_missing_poc > dpb->fs[i]->frame->poc)
+          if (decoder->earlierMissingPoc > dpb->fs[i]->frame->poc)
             decoder->sliceList[0]->listX[0][list0idx++] = dpb->fs[i]->frame;
 
       qsort ((void *)decoder->sliceList[0]->listX[0], list0idx, sizeof(sPicture*), compare_pic_by_poc_desc);
       list0idx_1 = list0idx;
       for (i = 0; i < dpb->usedSize; i++)
         if (dpb->fs[i]->concealment_reference == 1)
-          if (decoder->earlier_missing_poc < dpb->fs[i]->frame->poc)
+          if (decoder->earlierMissingPoc < dpb->fs[i]->frame->poc)
             decoder->sliceList[0]->listX[0][list0idx++] = dpb->fs[i]->frame;
 
       qsort ((void *)&decoder->sliceList[0]->listX[0][list0idx_1], list0idx-list0idx_1, sizeof(sPicture*), compare_pic_by_poc_asc);
@@ -1881,13 +1881,13 @@ void concealLostFrames (sDPB* dpb, sSlice *pSlice)
 
   // printf("A gap in frame number is found, try to fill it.\n");
 
-  if(decoder->IdrConcealFlag == 1)
+  if(decoder->idrConcealFlag == 1)
   {
     // Conceals an IDR frame loss. Uses the reference frame in the previous
     // GOP for conceal.
     UnusedShortTermFrameNum = 0;
     decoder->lastRefPicPoc = -decoder->pocGap;
-    decoder->earlier_missing_poc = 0;
+    decoder->earlierMissingPoc = 0;
   }
   else
     UnusedShortTermFrameNum = (decoder->preFrameNum + 1) % decoder->maxFrameNum;
@@ -1919,7 +1919,7 @@ void concealLostFrames (sDPB* dpb, sSlice *pSlice)
     copy_prev_pic_to_concealed_pic(picture, dpb);
 
     //if (UnusedShortTermFrameNum == 0)
-    if(decoder->IdrConcealFlag == 1)
+    if(decoder->idrConcealFlag == 1)
     {
       picture->sliceType = I_SLICE;
       picture->idrFlag = TRUE;
@@ -1975,22 +1975,22 @@ void conceal_non_ref_pics (sDPB* dpb, int diff)
   if(dpb->usedSize == 0 )
     return;
 
-  qsort(decoder->pocs_in_dpb, dpb->size, sizeof(int), comp);
+  qsort(decoder->dpbPoc, dpb->size, sizeof(int), comp);
 
   for(i=0;i<dpb->size-diff;i++)
   {
     dpb->usedSize = dpb->size;
-    if((decoder->pocs_in_dpb[i+1] - decoder->pocs_in_dpb[i]) > decoder->pocGap)
+    if((decoder->dpbPoc[i+1] - decoder->dpbPoc[i]) > decoder->pocGap)
     {
       conceal_to_picture = allocPicture(decoder, FRAME, decoder->width, decoder->height, decoder->widthCr, decoder->heightCr, 1);
 
-      missingpoc = decoder->pocs_in_dpb[i] + decoder->pocGap;
+      missingpoc = decoder->dpbPoc[i] + decoder->pocGap;
       // Diagnostics
       // printf("\n missingpoc = %d\n",missingpoc);
 
-      if(missingpoc > decoder->earlier_missing_poc)
+      if(missingpoc > decoder->earlierMissingPoc)
       {
-        decoder->earlier_missing_poc  = missingpoc;
+        decoder->earlierMissingPoc  = missingpoc;
         conceal_to_picture->topPoc = missingpoc;
         conceal_to_picture->botPoc = missingpoc;
         conceal_to_picture->framePoc = missingpoc;
@@ -2001,10 +2001,10 @@ void conceal_non_ref_pics (sDPB* dpb, int diff)
 
         dpb->usedSize = pos + 1;
 
-        decoder->frame_to_conceal = conceal_from_picture->frameNum + 1;
+        decoder->concealFrame = conceal_from_picture->frameNum + 1;
 
         update_ref_list_for_concealment (dpb);
-        decoder->conceal_slice_type = B_SLICE;
+        decoder->concealSliceType = B_SLICE;
         copy_to_conceal (conceal_from_picture, conceal_to_picture, decoder);
         concealment_ptr = init_node (conceal_to_picture, missingpoc );
         add_node (decoder, concealment_ptr);
@@ -2034,7 +2034,7 @@ void sliding_window_poc_management (sDPB* dpb, sPicture *p)
     unsigned int i;
 
     for(i=0;i<dpb->size-1; i++)
-      decoder->pocs_in_dpb[i] = decoder->pocs_in_dpb[i+1];
+      decoder->dpbPoc[i] = decoder->dpbPoc[i+1];
   }
 }
 
@@ -2057,13 +2057,13 @@ void write_lost_non_ref_pic (sDPB* dpb, int poc) {
   sFrameStore concealment_fs;
   if (poc > 0) {
     if ((poc - dpb->lastOutputPoc) > decoder->pocGap) {
-      concealment_fs.frame = decoder->concealment_head->picture;
+      concealment_fs.frame = decoder->concealHead->picture;
       concealment_fs.is_output = 0;
       concealment_fs.isReference = 0;
       concealment_fs.isUsed = 3;
 
       writeStoredFrame (decoder, &concealment_fs);
-      delete_node (decoder, decoder->concealment_head);
+      delete_node (decoder, decoder->concealHead);
       }
     }
   }

@@ -141,7 +141,7 @@ static void edge_loop_luma_ver_MBAff (eColorPlane pl, sPixel** img,
   sPixelPos pixP, pixQ;
 
   sDecoder* decoder = mbQ->decoder;
-  int bitdepth_scale = pl ? decoder->bitdepth_scale[IS_CHROMA] : decoder->bitdepth_scale[IS_LUMA];
+  int bitdepthScale = pl ? decoder->bitdepthScale[IS_CHROMA] : decoder->bitdepthScale[IS_LUMA];
   int max_imgpel_value = decoder->maxPelValueComp[pl];
 
   int AlphaC0Offset = mbQ->DFAlphaC0Offset;
@@ -165,8 +165,8 @@ static void edge_loop_luma_ver_MBAff (eColorPlane pl, sPixel** img,
         QP = pl? ((MbP->qpc[pl-1] + mbQ->qpc[pl-1] + 1) >> 1) : (MbP->qp + mbQ->qp + 1) >> 1;
         indexA = iClip3(0, MAX_QP, QP + AlphaC0Offset);
         indexB = iClip3(0, MAX_QP, QP + BetaOffset);
-        Alpha = ALPHA_TABLE[indexA] * bitdepth_scale;
-        Beta = BETA_TABLE [indexB] * bitdepth_scale;
+        Alpha = ALPHA_TABLE[indexA] * bitdepthScale;
+        Beta = BETA_TABLE [indexB] * bitdepthScale;
         ClipTab = CLIP_TAB[indexA];
 
         L0 = SrcPtrP[ 0] ;
@@ -206,7 +206,7 @@ static void edge_loop_luma_ver_MBAff (eColorPlane pl, sPixel** img,
               int aq = (iabs (R0 - R2) < Beta);
               int ap = (iabs (L0 - L2) < Beta);
 
-              int C0 = ClipTab[ Strng ] * bitdepth_scale;
+              int C0 = ClipTab[ Strng ] * bitdepthScale;
               int tc0 = (C0 + ap + aq) ;
               int dif = iClip3 (-tc0, tc0, (((R0 - L0) << 2) + (L1 - R1) + 4) >> 3) ;
 
@@ -241,7 +241,7 @@ static void edge_loop_luma_hor_MBAff (eColorPlane pl, sPixel** img, byte* Streng
   sPixelPos pixP, pixQ;
 
   sDecoder* decoder = mbQ->decoder;
-  int      bitdepth_scale = pl? decoder->bitdepth_scale[IS_CHROMA] : decoder->bitdepth_scale[IS_LUMA];
+  int      bitdepthScale = pl? decoder->bitdepthScale[IS_CHROMA] : decoder->bitdepthScale[IS_LUMA];
   int      max_imgpel_value = decoder->maxPelValueComp[pl];
 
   getAffNeighbour(mbQ, 0, yQ - 1, decoder->mbSize[IS_LUMA], &pixP);
@@ -259,8 +259,8 @@ static void edge_loop_luma_hor_MBAff (eColorPlane pl, sPixel** img, byte* Streng
     int QP = pl? ((MbP->qpc[pl - 1] + mbQ->qpc[pl - 1] + 1) >> 1) : (MbP->qp + mbQ->qp + 1) >> 1;
     int indexA = iClip3(0, MAX_QP, QP + AlphaC0Offset);
     int indexB = iClip3(0, MAX_QP, QP + BetaOffset);
-    int Alpha   = ALPHA_TABLE[indexA] * bitdepth_scale;
-    int Beta    = BETA_TABLE [indexB] * bitdepth_scale;
+    int Alpha   = ALPHA_TABLE[indexA] * bitdepthScale;
+    int Beta    = BETA_TABLE [indexB] * bitdepthScale;
     if ((Alpha | Beta )!= 0) {
       const byte* ClipTab = CLIP_TAB[indexA];
       getAffNeighbour(mbQ, 0, yQ, decoder->mbSize[IS_LUMA], &pixQ);
@@ -310,7 +310,7 @@ static void edge_loop_luma_hor_MBAff (eColorPlane pl, sPixel** img, byte* Streng
                 int aq  = (iabs (R0 - R2) < Beta);
                 int ap  = (iabs (L0 - L2) < Beta);
 
-                int C0  = ClipTab[ Strng ] * bitdepth_scale;
+                int C0  = ClipTab[ Strng ] * bitdepthScale;
                 int tc0  = (C0 + ap + aq) ;
                 int dif = iClip3 (-tc0, tc0, (((R0 - L0) << 2) + (L1 - R1) + 4) >> 3) ;
 
@@ -350,7 +350,7 @@ static void edge_loop_chroma_ver_MBAff (sPixel** img, byte *Strength, sMacrobloc
   int      QP;
   int      xQ = edge, yQ;
   sPixelPos pixP, pixQ;
-  int      bitdepth_scale = decoder->bitdepth_scale[IS_CHROMA];
+  int      bitdepthScale = decoder->bitdepthScale[IS_CHROMA];
   int      max_imgpel_value = decoder->maxPelValueComp[uv + 1];
 
   int      AlphaC0Offset = mbQ->DFAlphaC0Offset;
@@ -374,8 +374,8 @@ static void edge_loop_chroma_ver_MBAff (sPixel** img, byte *Strength, sMacrobloc
         QP = (MbP->qpc[uv] + mbQ->qpc[uv] + 1) >> 1;
         indexA = iClip3(0, MAX_QP, QP + AlphaC0Offset);
         indexB = iClip3(0, MAX_QP, QP + BetaOffset);
-        Alpha   = ALPHA_TABLE[indexA] * bitdepth_scale;
-        Beta    = BETA_TABLE [indexB] * bitdepth_scale;
+        Alpha   = ALPHA_TABLE[indexA] * bitdepthScale;
+        Beta    = BETA_TABLE [indexB] * bitdepthScale;
         ClipTab = CLIP_TAB[indexA];
         L0  = *SrcPtrP;
         R0  = *SrcPtrQ;
@@ -389,7 +389,7 @@ static void edge_loop_chroma_ver_MBAff (sPixel** img, byte *Strength, sMacrobloc
               SrcPtrP[0] = (sPixel) ( ((L1 << 1) + L0 + R1 + 2) >> 2 );
               }
             else {
-              int C0  = ClipTab[ Strng ] * bitdepth_scale;
+              int C0  = ClipTab[ Strng ] * bitdepthScale;
               int tc0  = (C0 + 1);
               int dif = iClip3 (-tc0, tc0, ( ((R0 - L0) << 2) + (L1 - R1) + 4) >> 3 );
               if (dif) {
@@ -411,7 +411,7 @@ static void edge_loop_chroma_hor_MBAff (sPixel** img, byte *Strength, sMacrobloc
   int PelNum = pelnum_cr[1][p->chromaFormatIdc];
   int yQ = (edge < MB_BLOCK_SIZE? edge : 1);
   sPixelPos pixP, pixQ;
-  int bitdepth_scale = decoder->bitdepth_scale[IS_CHROMA];
+  int bitdepthScale = decoder->bitdepthScale[IS_CHROMA];
   int max_imgpel_value = decoder->maxPelValueComp[uv + 1];
 
   int AlphaC0Offset = mbQ->DFAlphaC0Offset;
@@ -430,8 +430,8 @@ static void edge_loop_chroma_hor_MBAff (sPixel** img, byte *Strength, sMacrobloc
     int QP = (MbP->qpc[uv] + mbQ->qpc[uv] + 1) >> 1;
     int indexA = iClip3(0, MAX_QP, QP + AlphaC0Offset);
     int indexB = iClip3(0, MAX_QP, QP + BetaOffset);
-    int Alpha = ALPHA_TABLE[indexA] * bitdepth_scale;
-    int Beta = BETA_TABLE [indexB] * bitdepth_scale;
+    int Alpha = ALPHA_TABLE[indexA] * bitdepthScale;
+    int Beta = BETA_TABLE [indexB] * bitdepthScale;
 
     if ((Alpha | Beta )!= 0) {
       const byte* ClipTab = CLIP_TAB[indexA];
@@ -455,7 +455,7 @@ static void edge_loop_chroma_hor_MBAff (sPixel** img, byte *Strength, sMacrobloc
                 SrcPtrP[0] = (sPixel) ( ((L1 << 1) + L0 + R1 + 2) >> 2 );
                 }
               else {
-                int C0  = ClipTab[ Strng ] * bitdepth_scale;
+                int C0  = ClipTab[ Strng ] * bitdepthScale;
                 int tc0  = (C0 + 1);
                 int dif = iClip3 (-tc0, tc0, ( ((R0 - L0) << 2) + (L1 - R1) + 4) >> 3 );
                 if (dif) {
@@ -1100,15 +1100,15 @@ static void edge_loop_luma_ver (eColorPlane pl, sPixel** img, byte* Strength, sM
 
   sMacroblock* MbP = get_non_aff_neighbour_luma (mb, edge - 1, 0);
   if (MbP || (mb->DFDisableIdc == 0)) {
-    int bitdepth_scale   = pl ? decoder->bitdepth_scale[IS_CHROMA] : decoder->bitdepth_scale[IS_LUMA];
+    int bitdepthScale   = pl ? decoder->bitdepthScale[IS_CHROMA] : decoder->bitdepthScale[IS_LUMA];
 
     // Average QP of the two blocks
     int QP = pl? ((MbP->qpc[pl-1] + mb->qpc[pl-1] + 1) >> 1) : (MbP->qp + mb->qp + 1) >> 1;
     int indexA = iClip3 (0, MAX_QP, QP + mb->DFAlphaC0Offset);
     int indexB = iClip3 (0, MAX_QP, QP + mb->DFBetaOffset);
 
-    int Alpha = ALPHA_TABLE[indexA] * bitdepth_scale;
-    int Beta = BETA_TABLE [indexB] * bitdepth_scale;
+    int Alpha = ALPHA_TABLE[indexA] * bitdepthScale;
+    int Beta = BETA_TABLE [indexB] * bitdepthScale;
     if ((Alpha | Beta )!= 0) {
       const byte *ClipTab = CLIP_TAB[indexA];
       int max_imgpel_value = decoder->maxPelValueComp[pl];
@@ -1118,7 +1118,7 @@ static void edge_loop_luma_ver (eColorPlane pl, sPixel** img, byte* Strength, sM
         if (*Strength == 4) // INTRA strong filtering
           luma_ver_deblock_strong (curPixel, pos_x1, Alpha, Beta);
         else if (*Strength != 0) // normal filtering
-          luma_ver_deblock_normal (curPixel, pos_x1, Alpha, Beta, ClipTab[ *Strength ] * bitdepth_scale, max_imgpel_value);
+          luma_ver_deblock_normal (curPixel, pos_x1, Alpha, Beta, ClipTab[ *Strength ] * bitdepthScale, max_imgpel_value);
         curPixel += 4;
         Strength ++;
         }
@@ -1241,7 +1241,7 @@ static void edge_loop_luma_hor (eColorPlane pl, sPixel** img, byte* Strength,
   sMacroblock *MbP = get_non_aff_neighbour_luma (mb, 0, ypos);
 
   if (MbP || (mb->DFDisableIdc == 0)) {
-    int bitdepth_scale = pl ? decoder->bitdepth_scale[IS_CHROMA] : decoder->bitdepth_scale[IS_LUMA];
+    int bitdepthScale = pl ? decoder->bitdepthScale[IS_CHROMA] : decoder->bitdepthScale[IS_LUMA];
 
     // Average QP of the two blocks
     int QP = pl? ((MbP->qpc[pl-1] + mb->qpc[pl-1] + 1) >> 1) : (MbP->qp + mb->qp + 1) >> 1;
@@ -1249,8 +1249,8 @@ static void edge_loop_luma_hor (eColorPlane pl, sPixel** img, byte* Strength,
     int indexA = iClip3 (0, MAX_QP, QP + mb->DFAlphaC0Offset);
     int indexB = iClip3 (0, MAX_QP, QP + mb->DFBetaOffset);
 
-    int Alpha = ALPHA_TABLE[indexA] * bitdepth_scale;
-    int Beta = BETA_TABLE [indexB] * bitdepth_scale;
+    int Alpha = ALPHA_TABLE[indexA] * bitdepthScale;
+    int Beta = BETA_TABLE [indexB] * bitdepthScale;
 
     if ((Alpha | Beta) != 0) {
       const byte* ClipTab = CLIP_TAB[indexA];
@@ -1263,7 +1263,7 @@ static void edge_loop_luma_hor (eColorPlane pl, sPixel** img, byte* Strength,
         if (*Strength == 4)  // INTRA strong filtering
           luma_hor_deblock_strong (imgP, imgQ, width, Alpha, Beta);
         else if (*Strength != 0) // normal filtering
-          luma_hor_deblock_normal (imgP, imgQ, width, Alpha, Beta, ClipTab[ *Strength ] * bitdepth_scale, max_imgpel_value);
+          luma_hor_deblock_normal (imgP, imgQ, width, Alpha, Beta, ClipTab[ *Strength ] * bitdepthScale, max_imgpel_value);
         imgP += 4;
         imgQ += 4;
         Strength ++;
@@ -1286,7 +1286,7 @@ static void edge_loop_chroma_ver (sPixel** img, byte* Strength, sMacroblock* mb,
   sMacroblock* MbP = get_non_aff_neighbour_chroma (mb,xQ,yQ,block_width,block_height);
 
   if (MbP || (mb->DFDisableIdc == 0)) {
-    int bitdepth_scale   = decoder->bitdepth_scale[IS_CHROMA];
+    int bitdepthScale   = decoder->bitdepthScale[IS_CHROMA];
     int max_imgpel_value = decoder->maxPelValueComp[uv + 1];
     int AlphaC0Offset = mb->DFAlphaC0Offset;
     int BetaOffset = mb->DFBetaOffset;
@@ -1295,8 +1295,8 @@ static void edge_loop_chroma_ver (sPixel** img, byte* Strength, sMacroblock* mb,
     int QP = (MbP->qpc[uv] + mb->qpc[uv] + 1) >> 1;
     int indexA = iClip3(0, MAX_QP, QP + AlphaC0Offset);
     int indexB = iClip3(0, MAX_QP, QP + BetaOffset);
-    int Alpha   = ALPHA_TABLE[indexA] * bitdepth_scale;
-    int Beta    = BETA_TABLE [indexB] * bitdepth_scale;
+    int Alpha   = ALPHA_TABLE[indexA] * bitdepthScale;
+    int Beta    = BETA_TABLE [indexB] * bitdepthScale;
     if ((Alpha | Beta) != 0) {
       const int PelNum = pelnum_cr[0][p->chromaFormatIdc];
       const byte* ClipTab = CLIP_TAB[indexA];
@@ -1319,7 +1319,7 @@ static void edge_loop_chroma_ver (sPixel** img, byte* Strength, sMacroblock* mb,
                   *SrcPtrQ = (sPixel) ( ((R1 << 1) + *SrcPtrQ + L1 + 2) >> 2 );
                   }
                 else {
-                  int tc0  = ClipTab[ Strng ] * bitdepth_scale + 1;
+                  int tc0  = ClipTab[ Strng ] * bitdepthScale + 1;
                   int dif = iClip3 (-tc0, tc0, (((edge_diff) << 2) + (L1 - R1) + 4) >> 3 );
                   if (dif != 0) {
                     *SrcPtrP = (sPixel) iClip1 (max_imgpel_value, *SrcPtrP + dif );
@@ -1349,7 +1349,7 @@ static void edge_loop_chroma_hor (sPixel** img, byte* Strength, sMacroblock* mb,
   sMacroblock* MbP = get_non_aff_neighbour_chroma (mb, xQ, yQ, block_width, block_height);
 
   if (MbP || (mb->DFDisableIdc == 0)) {
-    int bitdepth_scale = decoder->bitdepth_scale[IS_CHROMA];
+    int bitdepthScale = decoder->bitdepthScale[IS_CHROMA];
     int max_imgpel_value = decoder->maxPelValueComp[uv + 1];
 
     int AlphaC0Offset = mb->DFAlphaC0Offset;
@@ -1360,8 +1360,8 @@ static void edge_loop_chroma_hor (sPixel** img, byte* Strength, sMacroblock* mb,
     int QP = (MbP->qpc[uv] + mb->qpc[uv] + 1) >> 1;
     int indexA = iClip3(0, MAX_QP, QP + AlphaC0Offset);
     int indexB = iClip3(0, MAX_QP, QP + BetaOffset);
-    int Alpha = ALPHA_TABLE[indexA] * bitdepth_scale;
-    int Beta = BETA_TABLE [indexB] * bitdepth_scale;
+    int Alpha = ALPHA_TABLE[indexA] * bitdepthScale;
+    int Beta = BETA_TABLE [indexB] * bitdepthScale;
     if ((Alpha | Beta) != 0) {
       const int PelNum = pelnum_cr[1][p->chromaFormatIdc];
       const byte* ClipTab = CLIP_TAB[indexA];
@@ -1384,7 +1384,7 @@ static void edge_loop_chroma_hor (sPixel** img, byte* Strength, sMacroblock* mb,
                   *SrcPtrQ = (sPixel) ( ((R1 << 1) + *SrcPtrQ + L1 + 2) >> 2 );
                   }
                 else {
-                  int tc0  = ClipTab[ Strng ] * bitdepth_scale + 1;
+                  int tc0  = ClipTab[ Strng ] * bitdepthScale + 1;
                   int dif = iClip3 (-tc0, tc0, ( ((edge_diff) << 2) + (L1 - R1) + 4) >> 3 );
 
                   if (dif != 0) {
@@ -1846,7 +1846,7 @@ void deblockPicture (sDecoder* decoder, sPicture* p) {
 //{{{
 static void initNeighbours (sDecoder* decoder) {
 
-  int width = decoder->PicWidthInMbs;
+  int width = decoder->picWidthMbs;
   int height = decoder->picHeightInMbs;
   int size = decoder->picSizeInMbs;
 

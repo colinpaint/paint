@@ -26,6 +26,8 @@
 //}}}
 
 static sNalu* pendingNalu = NULL;
+static char sliceTypeText[9];
+
 //{{{
 static void resetMb (sMacroblock* mb) {
 
@@ -37,7 +39,7 @@ static void resetMb (sMacroblock* mb) {
 //{{{
 static void setupBuffers (sDecoder* decoder, int layerId) {
 
-  if (decoder->last_dec_layer_id != layerId) {
+  if (decoder->lastDecLayerId != layerId) {
     sCoding* coding = decoder->coding[layerId];
     if (coding->sepColourPlaneFlag) {
       for (int i = 0; i < MAX_PLANE; i++ ) {
@@ -62,8 +64,8 @@ static void setupBuffers (sDecoder* decoder, int layerId) {
     decoder->nzCoeff = coding->nzCoeff;
     decoder->qpPerMatrix = coding->qpPerMatrix;
     decoder->qpRemMatrix = coding->qpRemMatrix;
-    decoder->oldFrameSizeInMbs = coding->oldFrameSizeInMbs;
-    decoder->last_dec_layer_id = layerId;
+    decoder->oldFrameSizeMbs = coding->oldFrameSizeMbs;
+    decoder->lastDecLayerId = layerId;
     }
   }
 //}}}
@@ -472,7 +474,7 @@ static void copyDecPicture_JV (sDecoder* decoder, sPicture* dst, sPicture* src) 
   dst->adaptiveRefPicBufferingFlag = src->adaptiveRefPicBufferingFlag;
   dst->decRefPicMarkingBuffer = src->decRefPicMarkingBuffer;
   dst->mbAffFrameFlag = src->mbAffFrameFlag;
-  dst->PicWidthInMbs = src->PicWidthInMbs;
+  dst->picWidthMbs = src->picWidthMbs;
   dst->picNum  = src->picNum;
   dst->frameNum = src->frameNum;
   dst->recoveryFrame = src->recoveryFrame;
@@ -493,10 +495,9 @@ static void initPicture (sDecoder* decoder, sSlice* slice) {
   sSPS* activeSPS = decoder->activeSPS;
   sDPB* dpb = slice->dpb;
 
-  decoder->picHeightInMbs = decoder->FrameHeightInMbs / ( 1 + slice->fieldPicFlag );
-  decoder->picSizeInMbs = decoder->PicWidthInMbs * decoder->picHeightInMbs;
-  decoder->FrameSizeInMbs = decoder->PicWidthInMbs * decoder->FrameHeightInMbs;
-  decoder->bFrameInit = 1;
+  decoder->picHeightInMbs = decoder->frameHeightMbs / ( 1 + slice->fieldPicFlag );
+  decoder->picSizeInMbs = decoder->picWidthMbs * decoder->picHeightInMbs;
+  decoder->frameSizeMbs = decoder->picWidthMbs * decoder->frameHeightMbs;
 
   if (decoder->picture) // this may only happen on slice loss
     exitPicture (decoder, &decoder->picture);
@@ -518,7 +519,7 @@ static void initPicture (sDecoder* decoder, sSlice* slice) {
           /* Conceal lost IDR frames and any frames immediately following the IDR.
           // Use frame copy for these since lists cannot be formed correctly for motion copy*/
           decoder->concealMode = 1;
-          decoder->IdrConcealFlag = 1;
+          decoder->idrConcealFlag = 1;
           concealLostFrames (dpb, slice);
           // reset to original conceal mode for future drops
           decoder->concealMode = decoder->param.concealMode;
@@ -526,7 +527,7 @@ static void initPicture (sDecoder* decoder, sSlice* slice) {
         else {
           // reset to original conceal mode for future drops
           decoder->concealMode = decoder->param.concealMode;
-          decoder->IdrConcealFlag = 0;
+          decoder->idrConcealFlag = 0;
           concealLostFrames (dpb, slice);
           }
         }
@@ -613,7 +614,7 @@ static void initPicture (sDecoder* decoder, sSlice* slice) {
       char* intraBlock = decoder->intraBlockJV[nplane];
       for (int i = 0; i < (int)decoder->picSizeInMbs; ++i)
         resetMb (mb++);
-      memset (decoder->predModeJV[nplane][0], DC_PRED, 16 * decoder->FrameHeightInMbs * decoder->PicWidthInMbs * sizeof(char));
+      memset (decoder->predModeJV[nplane][0], DC_PRED, 16 * decoder->frameHeightMbs * decoder->picWidthMbs * sizeof(char));
       if (decoder->activePPS->constrainedIntraPredFlag)
         for (int i = 0; i < (int)decoder->picSizeInMbs; ++i)
           intraBlock[i] = 1;
@@ -626,7 +627,7 @@ static void initPicture (sDecoder* decoder, sSlice* slice) {
     if (decoder->activePPS->constrainedIntraPredFlag)
       for (int i = 0; i < (int)decoder->picSizeInMbs; ++i)
         decoder->intraBlock[i] = 1;
-    memset (decoder->predMode[0], DC_PRED, 16 * decoder->FrameHeightInMbs * decoder->PicWidthInMbs * sizeof(char));
+    memset (decoder->predMode[0], DC_PRED, 16 * decoder->frameHeightMbs * decoder->picWidthMbs * sizeof(char));
     }
 
   picture->sliceType = decoder->type;
@@ -639,7 +640,7 @@ static void initPicture (sDecoder* decoder, sSlice* slice) {
   slice->decRefPicMarkingBuffer = NULL;
 
   picture->mbAffFrameFlag = slice->mbAffFrameFlag;
-  picture->PicWidthInMbs = decoder->PicWidthInMbs;
+  picture->picWidthMbs = decoder->picWidthMbs;
 
   decoder->getMbBlockPos = picture->mbAffFrameFlag ? get_mb_block_pos_mbaff : get_mb_block_pos_normal;
   decoder->getNeighbour = picture->mbAffFrameFlag ? getAffNeighbour : getNonAffNeighbour;
@@ -690,9 +691,9 @@ static void initPictureDecoding (sDecoder* decoder) {
   if (slice->idrFlag)
     decoder->number = 0;
 
-  decoder->picHeightInMbs = decoder->FrameHeightInMbs / ( 1 + slice->fieldPicFlag );
-  decoder->picSizeInMbs = decoder->PicWidthInMbs * decoder->picHeightInMbs;
-  decoder->FrameSizeInMbs = decoder->PicWidthInMbs * decoder->FrameHeightInMbs;
+  decoder->picHeightInMbs = decoder->frameHeightMbs / ( 1 + slice->fieldPicFlag );
+  decoder->picSizeInMbs = decoder->picWidthMbs * decoder->picHeightInMbs;
+  decoder->frameSizeMbs = decoder->picWidthMbs * decoder->frameHeightMbs;
   decoder->structure = slice->structure;
   initFmo (decoder, slice);
 
@@ -1179,7 +1180,7 @@ void exitPicture (sDecoder* decoder, sPicture** picture) {
     }
   //}}}
   if (!decoder->deblockMode &&
-      (decoder->bDeblockEnable & (1 << (*picture)->usedForReference))) {
+      (decoder->deblockEnable & (1 << (*picture)->usedForReference))) {
     //{{{  deblocking for frame or field
     if( (decoder->sepColourPlaneFlag != 0) ) {
       int colourPlaneId = decoder->sliceList[0]->colourPlaneId;
@@ -1221,53 +1222,66 @@ void exitPicture (sDecoder* decoder, sPicture** picture) {
   storePictureDpb (decoder->dpbLayer[0], *picture);
   *picture = NULL;
 
-  if (decoder->last_has_mmco_5)
+  if (decoder->lastHasMmco5)
     decoder->preFrameNum = 0;
 
   if (structure == TopField || structure == FRAME) {
     //{{{  frame type string
-    if (sliceType == I_SLICE && isIdr) // IDR picture
-      strcpy (decoder->sliceTypeText, "IDR");
-    else if (sliceType == I_SLICE) // I picture
-      strcpy (decoder->sliceTypeText, " I ");
-    else if (sliceType == P_SLICE) // P pictures
-      strcpy (decoder->sliceTypeText, " P ");
-    else if (sliceType == SP_SLICE) // SP pictures
-      strcpy (decoder->sliceTypeText, "SP ");
+    if (sliceType == I_SLICE && isIdr)
+      strcpy (sliceTypeText, "IDR");
+
+    else if (sliceType == I_SLICE)
+      strcpy (sliceTypeText, " I ");
+
+    else if (sliceType == P_SLICE) 
+      strcpy (sliceTypeText, " P ");
+
+    else if (sliceType == SP_SLICE) 
+      strcpy (sliceTypeText, "SP ");
+
     else if  (sliceType == SI_SLICE)
-      strcpy (decoder->sliceTypeText, "SI ");
-    else if (refpic) // stored B pictures
-      strcpy (decoder->sliceTypeText, " B ");
-    else // B pictures
-      strcpy (decoder->sliceTypeText, " b ");
+      strcpy (sliceTypeText, "SI ");
+
+    else if (refpic) 
+      strcpy (sliceTypeText, "rB ");
+
+    else 
+      strcpy (sliceTypeText, " B ");
+
     if (structure == FRAME)
-      strncat (decoder->sliceTypeText, "       ",8-strlen(decoder->sliceTypeText));
+      strncat (sliceTypeText, "    ", 8 - strlen (sliceTypeText));
     }
     //}}}
   else if (structure == BotField) {
     //{{{  frame type string
-    if (sliceType == I_SLICE && isIdr) // IDR picture
-      strncat (decoder->sliceTypeText, "|IDR", 8-strlen(decoder->sliceTypeText));
-    else if (sliceType == I_SLICE) // I picture
-      strncat (decoder->sliceTypeText, "| I ", 8-strlen(decoder->sliceTypeText));
-    else if (sliceType == P_SLICE) // P pictures
-      strncat (decoder->sliceTypeText, "| P ", 8-strlen(decoder->sliceTypeText));
-    else if (sliceType == SP_SLICE) // SP pictures
-      strncat (decoder->sliceTypeText, "|SP ", 8-strlen(decoder->sliceTypeText));
+    if (sliceType == I_SLICE && isIdr) 
+      strncat (sliceTypeText, "|IDR", 8-strlen (sliceTypeText));
+
+    else if (sliceType == I_SLICE)
+      strncat (sliceTypeText, "| I ", 8-strlen (sliceTypeText));
+
+    else if (sliceType == P_SLICE)
+      strncat (sliceTypeText, "| P ", 8-strlen (sliceTypeText));
+
+    else if (sliceType == SP_SLICE)
+      strncat (sliceTypeText, "|SP ", 8-strlen (sliceTypeText));
+
     else if  (sliceType == SI_SLICE)
-      strncat (decoder->sliceTypeText, "|SI ", 8-strlen(decoder->sliceTypeText));
-    else if (refpic) // stored B pictures
-      strncat (decoder->sliceTypeText, "| B ", 8-strlen(decoder->sliceTypeText));
-    else // B pictures
-      strncat (decoder->sliceTypeText, "| b ", 8-strlen(decoder->sliceTypeText));
+      strncat (sliceTypeText, "|SI ", 8-strlen (sliceTypeText));
+
+    else if (refpic)
+      strncat (sliceTypeText, "|rB ", 8-strlen (sliceTypeText));
+
+    else
+      strncat (sliceTypeText, "| B ", 8-strlen (sliceTypeText));
     }
     //}}}
-  decoder->sliceTypeText[8] = 0;
+  sliceTypeText[8] = 0;
 
   if ((structure == FRAME) || structure == BotField) {
     gettime (&(decoder->endTime));
     printf ("%5d %s poc:%4d pic:%3d qp:%2d %dms\n",
-            decoder->frameNum, decoder->sliceTypeText, framePoc, picNum, qp,
+            decoder->frameNum, sliceTypeText, framePoc, picNum, qp,
             (int)timenorm (timediff (&(decoder->startTime), &(decoder->endTime))));
 
     // I or P pictures ?
@@ -1369,9 +1383,9 @@ int decodeFrame (sDecoder* decoder) {
       }
     else {
       if (sliceList[decoder->curPicSliceNum-1]->mbAffFrameFlag)
-        sliceList[decoder->curPicSliceNum-1]->endMbNumPlus1 = decoder->FrameSizeInMbs / 2;
+        sliceList[decoder->curPicSliceNum-1]->endMbNumPlus1 = decoder->frameSizeMbs / 2;
       else
-        sliceList[decoder->curPicSliceNum-1]->endMbNumPlus1 = decoder->FrameSizeInMbs /
+        sliceList[decoder->curPicSliceNum-1]->endMbNumPlus1 = decoder->frameSizeMbs /
                                                                  (1 + sliceList[decoder->curPicSliceNum-1]->fieldPicFlag);
       decoder->newFrame = 1;
       slice->curSliceNum = 0;

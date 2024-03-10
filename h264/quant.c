@@ -150,7 +150,7 @@ static void CalculateQuant8x8Param (sSlice* curSlice) {
 //{{{
 void allocQuant (sCoding* coding) {
 
-  int bitdepth_qp_scale = imax (coding->bitdepth_luma_qp_scale, coding->bitdepthChromaQpScale);
+  int bitdepth_qp_scale = imax (coding->bitdepthLumeQpScale, coding->bitdepthChromaQpScale);
 
   // We should allocate memory outside of this process since maybe we will have a change of SPS
   // and we may need to recreate these. Currently should only support same bitdepth

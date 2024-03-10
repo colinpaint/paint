@@ -1070,7 +1070,7 @@ void initDpb (sDecoder* decoder, sDPB* dpb, int type) {
     decoder->noReferencePicture->frame = decoder->noReferencePicture;
     }
   dpb->lastOutputPoc = INT_MIN;
-  decoder->last_has_mmco_5 = 0;
+  decoder->lastHasMmco5 = 0;
   dpb->initDone = 1;
 
   // picture error conceal
@@ -1149,7 +1149,7 @@ static void adaptiveMemoryManagement (sDPB* dpb, sPicture* p) {
   sDecodedRefPicMarking* tmp_drpm;
   sDecoder* decoder = dpb->decoder;
 
-  decoder->last_has_mmco_5 = 0;
+  decoder->lastHasMmco5 = 0;
 
   assert (!p->idrFlag);
   assert (p->adaptiveRefPicBufferingFlag);
@@ -1192,7 +1192,7 @@ static void adaptiveMemoryManagement (sDPB* dpb, sPicture* p) {
       case 5:
         mm_unmark_all_short_term_for_reference (dpb);
         mm_unmark_all_long_term_for_reference (dpb);
-        decoder->last_has_mmco_5 = 1;
+        decoder->lastHasMmco5 = 1;
         break;
       //}}}
       //{{{
@@ -1210,7 +1210,7 @@ static void adaptiveMemoryManagement (sDPB* dpb, sPicture* p) {
     free (tmp_drpm);
     }
 
-  if (decoder->last_has_mmco_5 ) {
+  if (decoder->lastHasMmco5 ) {
     p->picNum = p->frameNum = 0;
     switch (p->structure) {
       //{{{
@@ -1696,13 +1696,13 @@ void storePictureDpb (sDPB* dpb, sPicture* p) {
   // if frame, check for new store,
   assert (p!=NULL);
 
-  decoder->last_has_mmco_5 = 0;
-  decoder->last_pic_bottom_field = (p->structure == BotField);
+  decoder->lastHasMmco5 = 0;
+  decoder->lastPicBotField = (p->structure == BotField);
 
   if (p->idrFlag) {
     idrMemoryManagement (dpb, p);
     // picture error conceal
-    memset (decoder->pocs_in_dpb, 0, sizeof(int)*100);
+    memset (decoder->dpbPoc, 0, sizeof(int)*100);
     }
   else {
     // adaptive memory management
@@ -1780,7 +1780,7 @@ void storePictureDpb (sDPB* dpb, sPicture* p) {
 
   // picture error conceal
   if (p->idrFlag)
-    decoder->earlier_missing_poc = 0;
+    decoder->earlierMissingPoc = 0;
 
   if (p->structure != FRAME)
     dpb->lastPicture = dpb->fs[dpb->usedSize];
@@ -1790,7 +1790,7 @@ void storePictureDpb (sDPB* dpb, sPicture* p) {
   dpb->usedSize++;
 
   if (decoder->concealMode != 0)
-    decoder->pocs_in_dpb[dpb->usedSize-1] = p->poc;
+    decoder->dpbPoc[dpb->usedSize-1] = p->poc;
 
   updateRefList (dpb);
   updateLongTermRefList (dpb);

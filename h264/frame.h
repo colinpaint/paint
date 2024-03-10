@@ -51,6 +51,6 @@ typedef struct FrameFormat {
   int          max_value[3];          // component max value
   int          max_value_sq[3];       // component max value squared
 
-  int          pic_unit_size_on_disk; // picture sample unit size on storage medium
-  int          pic_unit_size_shift3;  // pic_unit_size_on_disk >> 3
+  int          picDiskUnitSize; // picture sample unit size on storage medium
+  int          pic_unit_size_shift3;  // picDiskUnitSize >> 3
   } sFrameFormat;
