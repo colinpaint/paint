@@ -134,7 +134,7 @@ static void mbAffPostProc (sDecoder* decoder) {
   short y0;
   for (short i = 0; i < (int)picture->picSizeInMbs; i += 2) {
     if (picture->motion.mbField[i]) {
-      get_mb_pos (decoder, i, decoder->mbSize[IS_LUMA], &x0, &y0);
+      getMbPos (decoder, i, decoder->mbSize[IS_LUMA], &x0, &y0);
       updateMbAff (imgY + y0, tempBuffer, x0, MB_BLOCK_SIZE, MB_BLOCK_SIZE);
 
       if (picture->chromaFormatIdc != YUV400) {
@@ -295,7 +295,7 @@ static void reorderLists (sSlice* slice) {
 static void ercWriteMBMODEandMV (sMacroblock* mb) {
 
   sDecoder* decoder = mb->decoder;
-  int currMBNum = mb->mbAddrX; //decoder->currentSlice->curMbNum;
+  int currMBNum = mb->mbIndexX; //decoder->currentSlice->mbIndex;
   sPicture* picture = decoder->picture;
   int mbx = xPosMB(currMBNum, picture->sizeX), mby = yPosMB(currMBNum, picture->sizeX);
 
@@ -806,7 +806,7 @@ static void decodeOneSlice (sSlice* slice) {
       }
 
     ercWriteMBMODEandMV (mb);
-    endOfSlice = exitMacroblock (slice, (!slice->mbAffFrameFlag|| slice->curMbNum%2));
+    endOfSlice = exitMacroblock (slice, (!slice->mbAffFrameFlag|| slice->mbIndex%2));
     }
   }
 //}}}
@@ -900,9 +900,9 @@ static int readNewSlice (sSlice* slice) {
 
         // decoder->activeSPS, decoder->activePPS, sliceHeader valid
         if (slice->mbAffFrameFlag)
-          slice->curMbNum = slice->startMbNum << 1;
+          slice->mbIndex = slice->startMbNum << 1;
         else
-          slice->curMbNum = slice->startMbNum;
+          slice->mbIndex = slice->startMbNum;
 
         if (decoder->activePPS->entropyCodingModeFlag) {
           int byteStartPosition = s->frameBitOffset / 8;
@@ -956,9 +956,9 @@ static int readNewSlice (sSlice* slice) {
 
         // From here on, decoder->activeSPS, decoder->activePPS and the slice header are valid
         if (slice->mbAffFrameFlag)
-          slice->curMbNum = slice->startMbNum << 1;
+          slice->mbIndex = slice->startMbNum << 1;
         else
-          slice->curMbNum = slice->startMbNum;
+          slice->mbIndex = slice->startMbNum;
 
         // need to read the slice ID, which depends on the value of redundantPicCountPresentFlag
 
@@ -1345,9 +1345,9 @@ int decodeFrame (sDecoder* decoder) {
 
     if ((curHeader != SOP && curHeader != EOS) ||
         (decoder->picSliceIndex == 0 && curHeader == SOP)) {
-       slice->curSliceNum = (short)decoder->picSliceIndex;
+       slice->curSliceIndex = (short)decoder->picSliceIndex;
        decoder->picture->maxSliceId =
-         (short)imax (slice->curSliceNum, decoder->picture->maxSliceId);
+         (short)imax (slice->curSliceIndex, decoder->picture->maxSliceId);
        if (decoder->picSliceIndex > 0) {
          copyPOC (*sliceList, slice);
          sliceList[decoder->picSliceIndex-1]->endMbNumPlus1 = slice->startMbNum;
@@ -1378,7 +1378,7 @@ int decodeFrame (sDecoder* decoder) {
         sliceList[decoder->picSliceIndex-1]->endMbNumPlus1 =
           decoder->frameSizeMbs / (1 + sliceList[decoder->picSliceIndex-1]->fieldPicFlag);
       decoder->newFrame = 1;
-      slice->curSliceNum = 0;
+      slice->curSliceIndex = 0;
 
       // keep it in currentslice;
       sliceList[decoder->picSliceIndex] = decoder->nextSlice;

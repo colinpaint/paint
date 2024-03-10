@@ -74,7 +74,7 @@ static void update_direct_mv_info_temporal (sMacroblock* curMb) {
             if (curSlice->mbAffFrameFlag) {
               //{{{
               assert (decoder->activeSPS->direct_8x8_inference_flag);
-              if (!curMb->mbField && ((curSlice->listX[LIST_1][0]->iCodingType==FRAME_MB_PAIR_CODING && curSlice->listX[LIST_1][0]->motion.mbField[curMb->mbAddrX]) ||
+              if (!curMb->mbField && ((curSlice->listX[LIST_1][0]->iCodingType==FRAME_MB_PAIR_CODING && curSlice->listX[LIST_1][0]->motion.mbField[curMb->mbIndexX]) ||
                 (curSlice->listX[LIST_1][0]->iCodingType==FIELD_CODING))) {
                 if (iabs(picture->poc - curSlice->listX[LIST_1+4][0]->poc)> iabs(picture->poc -curSlice->listX[LIST_1+2][0]->poc) )
                   colocated = decoder->activeSPS->direct_8x8_inference_flag ?
@@ -187,7 +187,7 @@ static void update_direct_mv_info_temporal (sMacroblock* curMb) {
                     sPicMotionParam* mvInfo = &picture->mvInfo[j4][i4];
                     int mvY;
                     if (curSlice->mbAffFrameFlag) {
-                      if (!curMb->mbField && ((curSlice->listX[LIST_1][0]->iCodingType==FRAME_MB_PAIR_CODING && curSlice->listX[LIST_1][0]->motion.mbField[curMb->mbAddrX]) ||
+                      if (!curMb->mbField && ((curSlice->listX[LIST_1][0]->iCodingType==FRAME_MB_PAIR_CODING && curSlice->listX[LIST_1][0]->motion.mbField[curMb->mbIndexX]) ||
                           (curSlice->listX[LIST_1][0]->iCodingType==FIELD_CODING))) {
                         if (iabs(picture->poc - curSlice->listX[LIST_1+4][0]->poc)> iabs(picture->poc -curSlice->listX[LIST_1+2][0]->poc) )
                           colocated = decoder->activeSPS->direct_8x8_inference_flag ?
@@ -316,7 +316,7 @@ int get_colocated_info_8x8 (sMacroblock* curMb, sPicture* list1, int i, int j)
       }
       else
       {
-        if( (curSlice->mbAffFrameFlag && ((!curMb->mbField && list1->motion.mbField[curMb->mbAddrX]) ||
+        if( (curSlice->mbAffFrameFlag && ((!curMb->mbField && list1->motion.mbField[curMb->mbIndexX]) ||
           (!curMb->mbField && list1->iCodingType == FIELD_CODING)))
           || (!curSlice->mbAffFrameFlag))
         {
@@ -1745,7 +1745,7 @@ static void set_direct_references_mb_field (const sPixelPos* mb, char* l0_rFrame
   if (mb->available)
   {
     char *refIndex = mvInfo[mb->posY][mb->posX].refIndex;
-    if (mbData[mb->mbAddr].mbField)
+    if (mbData[mb->mbIndex].mbField)
     {
       *l0_rFrame  = refIndex[LIST_0];
       *l1_rFrame  = refIndex[LIST_1];
@@ -1769,7 +1769,7 @@ static void set_direct_references_mb_frame (const sPixelPos* mb, char* l0_rFrame
   if (mb->available)
   {
     char *refIndex = mvInfo[mb->posY][mb->posX].refIndex;
-    if (mbData[mb->mbAddr].mbField)
+    if (mbData[mb->mbIndex].mbField)
     {
       *l0_rFrame  = (refIndex[LIST_0] >> 1);
       *l1_rFrame  = (refIndex[LIST_1] >> 1);
@@ -1834,13 +1834,13 @@ static void check_motion_vector_range (const sMotionVec *mv, sSlice *pSlice)
 {
   if (mv->mvX > 8191 || mv->mvX < -8192)
   {
-    fprintf(stderr,"WARNING! Horizontal motion vector %d is out of allowed range {-8192, 8191} in picture %d, macroblock %d\n", mv->mvX, pSlice->decoder->number, pSlice->curMbNum);
+    fprintf(stderr,"WARNING! Horizontal motion vector %d is out of allowed range {-8192, 8191} in picture %d, macroblock %d\n", mv->mvX, pSlice->decoder->number, pSlice->mbIndex);
     //error("invalid stream: too big horizontal motion vector", 500);
   }
 
   if (mv->mvY > (pSlice->max_mb_vmv_r - 1) || mv->mvY < (-pSlice->max_mb_vmv_r))
   {
-    fprintf(stderr,"WARNING! Vertical motion vector %d is out of allowed range {%d, %d} in picture %d, macroblock %d\n", mv->mvY, (-pSlice->max_mb_vmv_r), (pSlice->max_mb_vmv_r - 1), pSlice->decoder->number, pSlice->curMbNum);
+    fprintf(stderr,"WARNING! Vertical motion vector %d is out of allowed range {%d, %d} in picture %d, macroblock %d\n", mv->mvY, (-pSlice->max_mb_vmv_r), (pSlice->max_mb_vmv_r - 1), pSlice->decoder->number, pSlice->mbIndex);
     //error("invalid stream: too big vertical motion vector", 500);
   }
 }

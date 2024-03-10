@@ -260,10 +260,10 @@ static int intra8x8_dc_pred (sMacroblock * curMb,
 
   if (decoder->activePPS->constrainedIntraPredFlag)
   {
-    block_available_left     = pix_a.available ? curSlice->intraBlock [pix_a.mbAddr]: 0;
-    block_available_up       = pix_b.available ? curSlice->intraBlock [pix_b.mbAddr] : 0;
-    block_available_up_right = pix_c.available ? curSlice->intraBlock [pix_c.mbAddr] : 0;
-    block_available_up_left  = pix_d.available ? curSlice->intraBlock [pix_d.mbAddr] : 0;
+    block_available_left     = pix_a.available ? curSlice->intraBlock [pix_a.mbIndex]: 0;
+    block_available_up       = pix_b.available ? curSlice->intraBlock [pix_b.mbIndex] : 0;
+    block_available_up_right = pix_c.available ? curSlice->intraBlock [pix_c.mbIndex] : 0;
+    block_available_up_left  = pix_d.available ? curSlice->intraBlock [pix_d.mbIndex] : 0;
   }
   else
   {
@@ -405,10 +405,10 @@ static int intra8x8_vert_pred (sMacroblock* curMb,
 
   if (decoder->activePPS->constrainedIntraPredFlag)
   {
-    block_available_left     = pix_a.available ? curSlice->intraBlock [pix_a.mbAddr] : 0;
-    block_available_up       = pix_b.available ? curSlice->intraBlock [pix_b.mbAddr] : 0;
-    block_available_up_right = pix_c.available ? curSlice->intraBlock [pix_c.mbAddr] : 0;
-    block_available_up_left  = pix_d.available ? curSlice->intraBlock [pix_d.mbAddr] : 0;
+    block_available_left     = pix_a.available ? curSlice->intraBlock [pix_a.mbIndex] : 0;
+    block_available_up       = pix_b.available ? curSlice->intraBlock [pix_b.mbIndex] : 0;
+    block_available_up_right = pix_c.available ? curSlice->intraBlock [pix_c.mbIndex] : 0;
+    block_available_up_left  = pix_d.available ? curSlice->intraBlock [pix_d.mbIndex] : 0;
   }
   else
   {
@@ -419,7 +419,7 @@ static int intra8x8_vert_pred (sMacroblock* curMb,
   }
 
   if (!block_available_up)
-    printf ("warning: Intra_8x8_Vertical prediction mode not allowed at mb %d\n", (int) curSlice->curMbNum);
+    printf ("warning: Intra_8x8_Vertical prediction mode not allowed at mb %d\n", (int) curSlice->mbIndex);
 
   // form predictor pels
   if (block_available_up)
@@ -514,9 +514,9 @@ static int intra8x8_hor_pred (sMacroblock* curMb,
 
   if (decoder->activePPS->constrainedIntraPredFlag)
   {
-    block_available_left     = pix_a.available ? curSlice->intraBlock [pix_a.mbAddr]: 0;
-    block_available_up       = pix_b.available ? curSlice->intraBlock [pix_b.mbAddr] : 0;
-    block_available_up_left  = pix_d.available ? curSlice->intraBlock [pix_d.mbAddr] : 0;
+    block_available_left     = pix_a.available ? curSlice->intraBlock [pix_a.mbIndex]: 0;
+    block_available_up       = pix_b.available ? curSlice->intraBlock [pix_b.mbIndex] : 0;
+    block_available_up_left  = pix_d.available ? curSlice->intraBlock [pix_d.mbIndex] : 0;
   }
   else
   {
@@ -526,7 +526,7 @@ static int intra8x8_hor_pred (sMacroblock* curMb,
   }
 
   if (!block_available_left)
-    printf ("warning: Intra_8x8_Horizontal prediction mode not allowed at mb %d\n", (int) curSlice->curMbNum);
+    printf ("warning: Intra_8x8_Horizontal prediction mode not allowed at mb %d\n", (int) curSlice->mbIndex);
 
   // form predictor pels
   if (block_available_left)
@@ -624,10 +624,10 @@ static int intra8x8_diag_down_right_pred (sMacroblock* curMb,
 
   if (decoder->activePPS->constrainedIntraPredFlag)
   {
-    block_available_left     = pix_a.available ? curSlice->intraBlock [pix_a.mbAddr]: 0;
-    block_available_up       = pix_b.available ? curSlice->intraBlock [pix_b.mbAddr] : 0;
-    block_available_up_right = pix_c.available ? curSlice->intraBlock [pix_c.mbAddr] : 0;
-    block_available_up_left  = pix_d.available ? curSlice->intraBlock [pix_d.mbAddr] : 0;
+    block_available_left     = pix_a.available ? curSlice->intraBlock [pix_a.mbIndex]: 0;
+    block_available_up       = pix_b.available ? curSlice->intraBlock [pix_b.mbIndex] : 0;
+    block_available_up_right = pix_c.available ? curSlice->intraBlock [pix_c.mbIndex] : 0;
+    block_available_up_left  = pix_d.available ? curSlice->intraBlock [pix_d.mbIndex] : 0;
   }
   else
   {
@@ -638,7 +638,7 @@ static int intra8x8_diag_down_right_pred (sMacroblock* curMb,
   }
 
   if ((!block_available_up)||(!block_available_left)||(!block_available_up_left))
-    printf ("warning: Intra_8x8_Diagonal_Down_Right prediction mode not allowed at mb %d\n", (int) curSlice->curMbNum);
+    printf ("warning: Intra_8x8_Diagonal_Down_Right prediction mode not allowed at mb %d\n", (int) curSlice->mbIndex);
 
   // form predictor pels
   if (block_available_up)
@@ -773,10 +773,10 @@ static int intra8x8_diag_down_left_pred (sMacroblock* curMb,
 
   if (decoder->activePPS->constrainedIntraPredFlag)
   {
-    block_available_left     = pix_a.available ? curSlice->intraBlock [pix_a.mbAddr]: 0;
-    block_available_up       = pix_b.available ? curSlice->intraBlock [pix_b.mbAddr] : 0;
-    block_available_up_right = pix_c.available ? curSlice->intraBlock [pix_c.mbAddr] : 0;
-    block_available_up_left  = pix_d.available ? curSlice->intraBlock [pix_d.mbAddr] : 0;
+    block_available_left     = pix_a.available ? curSlice->intraBlock [pix_a.mbIndex]: 0;
+    block_available_up       = pix_b.available ? curSlice->intraBlock [pix_b.mbIndex] : 0;
+    block_available_up_right = pix_c.available ? curSlice->intraBlock [pix_c.mbIndex] : 0;
+    block_available_up_left  = pix_d.available ? curSlice->intraBlock [pix_d.mbIndex] : 0;
   }
   else
   {
@@ -787,7 +787,7 @@ static int intra8x8_diag_down_left_pred (sMacroblock* curMb,
   }
 
   if (!block_available_up)
-    printf ("warning: Intra_8x8_Diagonal_Down_Left prediction mode not allowed at mb %d\n", (int) curSlice->curMbNum);
+    printf ("warning: Intra_8x8_Diagonal_Down_Left prediction mode not allowed at mb %d\n", (int) curSlice->mbIndex);
 
   // form predictor pels
   if (block_available_up)
@@ -922,10 +922,10 @@ static int intra8x8_vert_right_pred (sMacroblock* curMb,
 
   if (decoder->activePPS->constrainedIntraPredFlag)
   {
-    block_available_left     = pix_a.available ? curSlice->intraBlock [pix_a.mbAddr]: 0;
-    block_available_up       = pix_b.available ? curSlice->intraBlock [pix_b.mbAddr] : 0;
-    block_available_up_right = pix_c.available ? curSlice->intraBlock [pix_c.mbAddr] : 0;
-    block_available_up_left  = pix_d.available ? curSlice->intraBlock [pix_d.mbAddr] : 0;
+    block_available_left     = pix_a.available ? curSlice->intraBlock [pix_a.mbIndex]: 0;
+    block_available_up       = pix_b.available ? curSlice->intraBlock [pix_b.mbIndex] : 0;
+    block_available_up_right = pix_c.available ? curSlice->intraBlock [pix_c.mbIndex] : 0;
+    block_available_up_left  = pix_d.available ? curSlice->intraBlock [pix_d.mbIndex] : 0;
   }
   else
   {
@@ -936,7 +936,7 @@ static int intra8x8_vert_right_pred (sMacroblock* curMb,
   }
 
   if ((!block_available_up)||(!block_available_left)||(!block_available_up_left))
-    printf ("warning: Intra_8x8_Vertical_Right prediction mode not allowed at mb %d\n", (int) curSlice->curMbNum);
+    printf ("warning: Intra_8x8_Vertical_Right prediction mode not allowed at mb %d\n", (int) curSlice->mbIndex);
 
   // form predictor pels
   if (block_available_up)
@@ -1077,10 +1077,10 @@ static int intra8x8_vert_left_pred (sMacroblock* curMb,
 
   if (decoder->activePPS->constrainedIntraPredFlag)
   {
-    block_available_left     = pix_a.available ? curSlice->intraBlock [pix_a.mbAddr] : 0;
-    block_available_up       = pix_b.available ? curSlice->intraBlock [pix_b.mbAddr] : 0;
-    block_available_up_right = pix_c.available ? curSlice->intraBlock [pix_c.mbAddr] : 0;
-    block_available_up_left  = pix_d.available ? curSlice->intraBlock [pix_d.mbAddr] : 0;
+    block_available_left     = pix_a.available ? curSlice->intraBlock [pix_a.mbIndex] : 0;
+    block_available_up       = pix_b.available ? curSlice->intraBlock [pix_b.mbIndex] : 0;
+    block_available_up_right = pix_c.available ? curSlice->intraBlock [pix_c.mbIndex] : 0;
+    block_available_up_left  = pix_d.available ? curSlice->intraBlock [pix_d.mbIndex] : 0;
   }
   else
   {
@@ -1091,7 +1091,7 @@ static int intra8x8_vert_left_pred (sMacroblock* curMb,
   }
 
   if (!block_available_up)
-    printf ("warning: Intra_4x4_Vertical_Left prediction mode not allowed at mb %d\n", (int) curSlice->curMbNum);
+    printf ("warning: Intra_4x4_Vertical_Left prediction mode not allowed at mb %d\n", (int) curSlice->mbIndex);
 
   // form predictor pels
   if (block_available_up)
@@ -1231,10 +1231,10 @@ static int intra8x8_hor_up_pred (sMacroblock* curMb,
 
   if (decoder->activePPS->constrainedIntraPredFlag)
   {
-    block_available_left     = pix_a.available ? curSlice->intraBlock [pix_a.mbAddr] : 0;
-    block_available_up       = pix_b.available ? curSlice->intraBlock [pix_b.mbAddr] : 0;
-    block_available_up_right = pix_c.available ? curSlice->intraBlock [pix_c.mbAddr] : 0;
-    block_available_up_left  = pix_d.available ? curSlice->intraBlock [pix_d.mbAddr] : 0;
+    block_available_left     = pix_a.available ? curSlice->intraBlock [pix_a.mbIndex] : 0;
+    block_available_up       = pix_b.available ? curSlice->intraBlock [pix_b.mbIndex] : 0;
+    block_available_up_right = pix_c.available ? curSlice->intraBlock [pix_c.mbIndex] : 0;
+    block_available_up_left  = pix_d.available ? curSlice->intraBlock [pix_d.mbIndex] : 0;
   }
   else
   {
@@ -1245,7 +1245,7 @@ static int intra8x8_hor_up_pred (sMacroblock* curMb,
   }
 
   if (!block_available_left)
-    printf ("warning: Intra_8x8_Horizontal_Up prediction mode not allowed at mb %d\n", (int) curSlice->curMbNum);
+    printf ("warning: Intra_8x8_Horizontal_Up prediction mode not allowed at mb %d\n", (int) curSlice->mbIndex);
 
   // form predictor pels
   if (block_available_up)
@@ -1384,10 +1384,10 @@ static int intra8x8_hor_down_pred (sMacroblock* curMb,
 
   if (decoder->activePPS->constrainedIntraPredFlag)
   {
-    block_available_left     = pix_a.available ? curSlice->intraBlock [pix_a.mbAddr] : 0;
-    block_available_up       = pix_b.available ? curSlice->intraBlock [pix_b.mbAddr] : 0;
-    block_available_up_right = pix_c.available ? curSlice->intraBlock [pix_c.mbAddr] : 0;
-    block_available_up_left  = pix_d.available ? curSlice->intraBlock [pix_d.mbAddr] : 0;
+    block_available_left     = pix_a.available ? curSlice->intraBlock [pix_a.mbIndex] : 0;
+    block_available_up       = pix_b.available ? curSlice->intraBlock [pix_b.mbIndex] : 0;
+    block_available_up_right = pix_c.available ? curSlice->intraBlock [pix_c.mbIndex] : 0;
+    block_available_up_left  = pix_d.available ? curSlice->intraBlock [pix_d.mbIndex] : 0;
   }
   else
   {
@@ -1398,7 +1398,7 @@ static int intra8x8_hor_down_pred (sMacroblock* curMb,
   }
 
   if ((!block_available_up)||(!block_available_left)||(!block_available_up_left))
-    printf ("warning: Intra_8x8_Horizontal_Down prediction mode not allowed at mb %d\n", (int) curSlice->curMbNum);
+    printf ("warning: Intra_8x8_Horizontal_Down prediction mode not allowed at mb %d\n", (int) curSlice->mbIndex);
 
   // form predictor pels
   if (block_available_up)
@@ -1603,10 +1603,10 @@ static int intra8x8_dc_pred_mbaff (sMacroblock* curMb, eColorPlane pl, int ioff,
   if (decoder->activePPS->constrainedIntraPredFlag)
   {
     for (i=0, block_available_left=1; i<8;i++)
-      block_available_left  &= pix_a[i].available ? curSlice->intraBlock[pix_a[i].mbAddr]: 0;
-    block_available_up       = pix_b.available ? curSlice->intraBlock [pix_b.mbAddr] : 0;
-    block_available_up_right = pix_c.available ? curSlice->intraBlock [pix_c.mbAddr] : 0;
-    block_available_up_left  = pix_d.available ? curSlice->intraBlock [pix_d.mbAddr] : 0;
+      block_available_left  &= pix_a[i].available ? curSlice->intraBlock[pix_a[i].mbIndex]: 0;
+    block_available_up       = pix_b.available ? curSlice->intraBlock [pix_b.mbIndex] : 0;
+    block_available_up_right = pix_c.available ? curSlice->intraBlock [pix_c.mbIndex] : 0;
+    block_available_up_left  = pix_d.available ? curSlice->intraBlock [pix_d.mbIndex] : 0;
   }
   else
   {
@@ -1748,10 +1748,10 @@ static int intra8x8_vert_pred_mbaff (sMacroblock* curMb,
   if (decoder->activePPS->constrainedIntraPredFlag)
   {
     for (i=0, block_available_left=1; i<8;i++)
-      block_available_left  &= pix_a[i].available ? curSlice->intraBlock[pix_a[i].mbAddr]: 0;
-    block_available_up       = pix_b.available ? curSlice->intraBlock [pix_b.mbAddr] : 0;
-    block_available_up_right = pix_c.available ? curSlice->intraBlock [pix_c.mbAddr] : 0;
-    block_available_up_left  = pix_d.available ? curSlice->intraBlock [pix_d.mbAddr] : 0;
+      block_available_left  &= pix_a[i].available ? curSlice->intraBlock[pix_a[i].mbIndex]: 0;
+    block_available_up       = pix_b.available ? curSlice->intraBlock [pix_b.mbIndex] : 0;
+    block_available_up_right = pix_c.available ? curSlice->intraBlock [pix_c.mbIndex] : 0;
+    block_available_up_left  = pix_d.available ? curSlice->intraBlock [pix_d.mbIndex] : 0;
   }
   else
   {
@@ -1762,7 +1762,7 @@ static int intra8x8_vert_pred_mbaff (sMacroblock* curMb,
   }
 
   if (!block_available_up)
-    printf ("warning: Intra_8x8_Vertical prediction mode not allowed at mb %d\n", (int) curSlice->curMbNum);
+    printf ("warning: Intra_8x8_Vertical prediction mode not allowed at mb %d\n", (int) curSlice->mbIndex);
 
   // form predictor pels
   if (block_available_up)
@@ -1865,9 +1865,9 @@ static int intra8x8_hor_pred_mbaff (sMacroblock* curMb,
   if (decoder->activePPS->constrainedIntraPredFlag)
   {
     for (i=0, block_available_left=1; i<8;i++)
-      block_available_left  &= pix_a[i].available ? curSlice->intraBlock[pix_a[i].mbAddr]: 0;
-    block_available_up       = pix_b.available ? curSlice->intraBlock [pix_b.mbAddr] : 0;
-    block_available_up_left  = pix_d.available ? curSlice->intraBlock [pix_d.mbAddr] : 0;
+      block_available_left  &= pix_a[i].available ? curSlice->intraBlock[pix_a[i].mbIndex]: 0;
+    block_available_up       = pix_b.available ? curSlice->intraBlock [pix_b.mbIndex] : 0;
+    block_available_up_left  = pix_d.available ? curSlice->intraBlock [pix_d.mbIndex] : 0;
   }
   else
   {
@@ -1877,7 +1877,7 @@ static int intra8x8_hor_pred_mbaff (sMacroblock* curMb,
   }
 
   if (!block_available_left)
-    printf ("warning: Intra_8x8_Horizontal prediction mode not allowed at mb %d\n", (int) curSlice->curMbNum);
+    printf ("warning: Intra_8x8_Horizontal prediction mode not allowed at mb %d\n", (int) curSlice->mbIndex);
 
   // form predictor pels
   if (block_available_left)
@@ -1979,10 +1979,10 @@ static int intra8x8_diag_down_right_pred_mbaff (sMacroblock* curMb,
   if (decoder->activePPS->constrainedIntraPredFlag)
   {
     for (i=0, block_available_left=1; i<8;i++)
-      block_available_left  &= pix_a[i].available ? curSlice->intraBlock[pix_a[i].mbAddr]: 0;
-    block_available_up       = pix_b.available ? curSlice->intraBlock [pix_b.mbAddr] : 0;
-    block_available_up_right = pix_c.available ? curSlice->intraBlock [pix_c.mbAddr] : 0;
-    block_available_up_left  = pix_d.available ? curSlice->intraBlock [pix_d.mbAddr] : 0;
+      block_available_left  &= pix_a[i].available ? curSlice->intraBlock[pix_a[i].mbIndex]: 0;
+    block_available_up       = pix_b.available ? curSlice->intraBlock [pix_b.mbIndex] : 0;
+    block_available_up_right = pix_c.available ? curSlice->intraBlock [pix_c.mbIndex] : 0;
+    block_available_up_left  = pix_d.available ? curSlice->intraBlock [pix_d.mbIndex] : 0;
   }
   else
   {
@@ -1993,7 +1993,7 @@ static int intra8x8_diag_down_right_pred_mbaff (sMacroblock* curMb,
   }
 
   if ((!block_available_up)||(!block_available_left)||(!block_available_up_left))
-    printf ("warning: Intra_8x8_Diagonal_Down_Right prediction mode not allowed at mb %d\n", (int) curSlice->curMbNum);
+    printf ("warning: Intra_8x8_Diagonal_Down_Right prediction mode not allowed at mb %d\n", (int) curSlice->mbIndex);
 
   // form predictor pels
   if (block_available_up)
@@ -2130,10 +2130,10 @@ static int intra8x8_diag_down_left_pred_mbaff (sMacroblock* curMb,
   if (decoder->activePPS->constrainedIntraPredFlag)
   {
     for (i=0, block_available_left=1; i<8;i++)
-      block_available_left  &= pix_a[i].available ? curSlice->intraBlock[pix_a[i].mbAddr]: 0;
-    block_available_up       = pix_b.available ? curSlice->intraBlock [pix_b.mbAddr] : 0;
-    block_available_up_right = pix_c.available ? curSlice->intraBlock [pix_c.mbAddr] : 0;
-    block_available_up_left  = pix_d.available ? curSlice->intraBlock [pix_d.mbAddr] : 0;
+      block_available_left  &= pix_a[i].available ? curSlice->intraBlock[pix_a[i].mbIndex]: 0;
+    block_available_up       = pix_b.available ? curSlice->intraBlock [pix_b.mbIndex] : 0;
+    block_available_up_right = pix_c.available ? curSlice->intraBlock [pix_c.mbIndex] : 0;
+    block_available_up_left  = pix_d.available ? curSlice->intraBlock [pix_d.mbIndex] : 0;
   }
   else
   {
@@ -2144,7 +2144,7 @@ static int intra8x8_diag_down_left_pred_mbaff (sMacroblock* curMb,
   }
 
   if (!block_available_up)
-    printf ("warning: Intra_8x8_Diagonal_Down_Left prediction mode not allowed at mb %d\n", (int) curSlice->curMbNum);
+    printf ("warning: Intra_8x8_Diagonal_Down_Left prediction mode not allowed at mb %d\n", (int) curSlice->mbIndex);
 
   // form predictor pels
   if (block_available_up)
@@ -2282,10 +2282,10 @@ static int intra8x8_vert_right_pred_mbaff (sMacroblock* curMb,
   if (decoder->activePPS->constrainedIntraPredFlag)
   {
     for (i=0, block_available_left=1; i<8;i++)
-      block_available_left  &= pix_a[i].available ? curSlice->intraBlock[pix_a[i].mbAddr]: 0;
-    block_available_up       = pix_b.available ? curSlice->intraBlock [pix_b.mbAddr] : 0;
-    block_available_up_right = pix_c.available ? curSlice->intraBlock [pix_c.mbAddr] : 0;
-    block_available_up_left  = pix_d.available ? curSlice->intraBlock [pix_d.mbAddr] : 0;
+      block_available_left  &= pix_a[i].available ? curSlice->intraBlock[pix_a[i].mbIndex]: 0;
+    block_available_up       = pix_b.available ? curSlice->intraBlock [pix_b.mbIndex] : 0;
+    block_available_up_right = pix_c.available ? curSlice->intraBlock [pix_c.mbIndex] : 0;
+    block_available_up_left  = pix_d.available ? curSlice->intraBlock [pix_d.mbIndex] : 0;
   }
   else
   {
@@ -2296,7 +2296,7 @@ static int intra8x8_vert_right_pred_mbaff (sMacroblock* curMb,
   }
 
   if ((!block_available_up)||(!block_available_left)||(!block_available_up_left))
-    printf ("warning: Intra_8x8_Vertical_Right prediction mode not allowed at mb %d\n", (int) curSlice->curMbNum);
+    printf ("warning: Intra_8x8_Vertical_Right prediction mode not allowed at mb %d\n", (int) curSlice->mbIndex);
 
   // form predictor pels
   if (block_available_up)
@@ -2440,10 +2440,10 @@ static int intra8x8_vert_left_pred_mbaff (sMacroblock* curMb,
   if (decoder->activePPS->constrainedIntraPredFlag)
   {
     for (i=0, block_available_left=1; i<8;i++)
-      block_available_left  &= pix_a[i].available ? curSlice->intraBlock[pix_a[i].mbAddr]: 0;
-    block_available_up       = pix_b.available ? curSlice->intraBlock [pix_b.mbAddr] : 0;
-    block_available_up_right = pix_c.available ? curSlice->intraBlock [pix_c.mbAddr] : 0;
-    block_available_up_left  = pix_d.available ? curSlice->intraBlock [pix_d.mbAddr] : 0;
+      block_available_left  &= pix_a[i].available ? curSlice->intraBlock[pix_a[i].mbIndex]: 0;
+    block_available_up       = pix_b.available ? curSlice->intraBlock [pix_b.mbIndex] : 0;
+    block_available_up_right = pix_c.available ? curSlice->intraBlock [pix_c.mbIndex] : 0;
+    block_available_up_left  = pix_d.available ? curSlice->intraBlock [pix_d.mbIndex] : 0;
   }
   else
   {
@@ -2454,7 +2454,7 @@ static int intra8x8_vert_left_pred_mbaff (sMacroblock* curMb,
   }
 
   if (!block_available_up)
-    printf ("warning: Intra_4x4_Vertical_Left prediction mode not allowed at mb %d\n", (int) curSlice->curMbNum);
+    printf ("warning: Intra_4x4_Vertical_Left prediction mode not allowed at mb %d\n", (int) curSlice->mbIndex);
 
   // form predictor pels
   if (block_available_up)
@@ -2598,10 +2598,10 @@ static int intra8x8_hor_up_pred_mbaff (sMacroblock* curMb,
   if (decoder->activePPS->constrainedIntraPredFlag)
   {
     for (i=0, block_available_left=1; i<8;i++)
-      block_available_left  &= pix_a[i].available ? curSlice->intraBlock[pix_a[i].mbAddr]: 0;
-    block_available_up       = pix_b.available ? curSlice->intraBlock [pix_b.mbAddr] : 0;
-    block_available_up_right = pix_c.available ? curSlice->intraBlock [pix_c.mbAddr] : 0;
-    block_available_up_left  = pix_d.available ? curSlice->intraBlock [pix_d.mbAddr] : 0;
+      block_available_left  &= pix_a[i].available ? curSlice->intraBlock[pix_a[i].mbIndex]: 0;
+    block_available_up       = pix_b.available ? curSlice->intraBlock [pix_b.mbIndex] : 0;
+    block_available_up_right = pix_c.available ? curSlice->intraBlock [pix_c.mbIndex] : 0;
+    block_available_up_left  = pix_d.available ? curSlice->intraBlock [pix_d.mbIndex] : 0;
   }
   else
   {
@@ -2612,7 +2612,7 @@ static int intra8x8_hor_up_pred_mbaff (sMacroblock* curMb,
   }
 
   if (!block_available_left)
-    printf ("warning: Intra_8x8_Horizontal_Up prediction mode not allowed at mb %d\n", (int) curSlice->curMbNum);
+    printf ("warning: Intra_8x8_Horizontal_Up prediction mode not allowed at mb %d\n", (int) curSlice->mbIndex);
 
   // form predictor pels
   if (block_available_up)
@@ -2756,10 +2756,10 @@ static int intra8x8_hor_down_pred_mbaff (sMacroblock* curMb,
   if (decoder->activePPS->constrainedIntraPredFlag)
   {
     for (i=0, block_available_left=1; i<8;i++)
-      block_available_left  &= pix_a[i].available ? curSlice->intraBlock[pix_a[i].mbAddr]: 0;
-    block_available_up       = pix_b.available ? curSlice->intraBlock [pix_b.mbAddr] : 0;
-    block_available_up_right = pix_c.available ? curSlice->intraBlock [pix_c.mbAddr] : 0;
-    block_available_up_left  = pix_d.available ? curSlice->intraBlock [pix_d.mbAddr] : 0;
+      block_available_left  &= pix_a[i].available ? curSlice->intraBlock[pix_a[i].mbIndex]: 0;
+    block_available_up       = pix_b.available ? curSlice->intraBlock [pix_b.mbIndex] : 0;
+    block_available_up_right = pix_c.available ? curSlice->intraBlock [pix_c.mbIndex] : 0;
+    block_available_up_left  = pix_d.available ? curSlice->intraBlock [pix_d.mbIndex] : 0;
   }
   else
   {
@@ -2770,7 +2770,7 @@ static int intra8x8_hor_down_pred_mbaff (sMacroblock* curMb,
   }
 
   if ((!block_available_up)||(!block_available_left)||(!block_available_up_left))
-    printf ("warning: Intra_8x8_Horizontal_Down prediction mode not allowed at mb %d\n", (int) curSlice->curMbNum);
+    printf ("warning: Intra_8x8_Horizontal_Down prediction mode not allowed at mb %d\n", (int) curSlice->mbIndex);
 
   // form predictor pels
   if (block_available_up)
@@ -2961,8 +2961,8 @@ static int intra16x16_dc_pred (sMacroblock* curMb, eColorPlane pl)
   }
   else
   {
-    up_avail      = b.available ? curSlice->intraBlock[b.mbAddr] : 0;
-    left_avail    = a.available ? curSlice->intraBlock[a.mbAddr]: 0;
+    up_avail      = b.available ? curSlice->intraBlock[b.mbIndex] : 0;
+    left_avail    = a.available ? curSlice->intraBlock[a.mbIndex]: 0;
   }
 
   // Sum top predictors
@@ -3046,7 +3046,7 @@ static int intra16x16_vert_pred (sMacroblock* curMb, eColorPlane pl)
   }
   else
   {
-    up_avail = b.available ? curSlice->intraBlock[b.mbAddr] : 0;
+    up_avail = b.available ? curSlice->intraBlock[b.mbIndex] : 0;
   }
 
   if (!up_avail)
@@ -3101,7 +3101,7 @@ static int intra16x16_hor_pred (sMacroblock* curMb, eColorPlane pl)
   }
   else
   {
-    left_avail  = a.available ? curSlice->intraBlock[a.mbAddr]: 0;
+    left_avail  = a.available ? curSlice->intraBlock[a.mbIndex]: 0;
   }
 
   if (!left_avail)
@@ -3178,9 +3178,9 @@ static int intra16x16_plane_pred (sMacroblock* curMb, eColorPlane pl)
   }
   else
   {
-    up_avail      = b.available ? curSlice->intraBlock[b.mbAddr] : 0;
-    left_avail    = a.available ? curSlice->intraBlock[a.mbAddr] : 0;
-    left_up_avail = d.available ? curSlice->intraBlock[d.mbAddr] : 0;
+    up_avail      = b.available ? curSlice->intraBlock[b.mbIndex] : 0;
+    left_avail    = a.available ? curSlice->intraBlock[a.mbIndex] : 0;
+    left_up_avail = d.available ? curSlice->intraBlock[d.mbIndex] : 0;
   }
 
   if (!up_avail || !left_up_avail  || !left_avail)
@@ -3287,9 +3287,9 @@ static int intra16x16_dc_pred_mbaff (sMacroblock* curMb, eColorPlane pl)
   }
   else
   {
-    up_avail      = b.available ? curSlice->intraBlock[b.mbAddr] : 0;
+    up_avail      = b.available ? curSlice->intraBlock[b.mbIndex] : 0;
     for (i = 1, left_avail = 1; i < 17; ++i)
-      left_avail  &= left[i].available ? curSlice->intraBlock[left[i].mbAddr]: 0;
+      left_avail  &= left[i].available ? curSlice->intraBlock[left[i].mbIndex]: 0;
   }
 
   for (i = 0; i < MB_BLOCK_SIZE; ++i)
@@ -3355,7 +3355,7 @@ static int intra16x16_vert_pred_mbaff (sMacroblock* curMb, eColorPlane pl)
   }
   else
   {
-    up_avail = b.available ? curSlice->intraBlock[b.mbAddr] : 0;
+    up_avail = b.available ? curSlice->intraBlock[b.mbIndex] : 0;
   }
 
   if (!up_avail)
@@ -3413,7 +3413,7 @@ static int intra16x16_hor_pred_mbaff (sMacroblock* curMb, eColorPlane pl)
   else
   {
     for (i = 1, left_avail = 1; i < 17; ++i)
-      left_avail  &= left[i].available ? curSlice->intraBlock[left[i].mbAddr]: 0;
+      left_avail  &= left[i].available ? curSlice->intraBlock[left[i].mbIndex]: 0;
   }
 
   if (!left_avail)
@@ -3474,10 +3474,10 @@ static int intra16x16_plane_pred_mbaff (sMacroblock* curMb, eColorPlane pl)
   }
   else
   {
-    up_avail      = b.available ? curSlice->intraBlock[b.mbAddr] : 0;
+    up_avail      = b.available ? curSlice->intraBlock[b.mbIndex] : 0;
     for (i = 1, left_avail = 1; i < 17; ++i)
-      left_avail  &= left[i].available ? curSlice->intraBlock[left[i].mbAddr]: 0;
-    left_up_avail = left[0].available ? curSlice->intraBlock[left[0].mbAddr]: 0;
+      left_avail  &= left[i].available ? curSlice->intraBlock[left[i].mbIndex]: 0;
+    left_up_avail = left[0].available ? curSlice->intraBlock[left[0].mbIndex]: 0;
   }
 
   if (!up_avail || !left_up_avail  || !left_avail)
@@ -3622,8 +3622,8 @@ static void intrapred_chroma_dc (sMacroblock* curMb)
   }
   else
   {
-    up_avail = up.available ? curSlice->intraBlock[up.mbAddr] : 0;
-    left_avail = left.available ? curSlice->intraBlock[left.mbAddr]: 0;
+    up_avail = up.available ? curSlice->intraBlock[up.mbIndex] : 0;
+    left_avail = left.available ? curSlice->intraBlock[left.mbIndex]: 0;
   }
 
   // DC prediction
@@ -3696,7 +3696,7 @@ static void intrapred_chroma_hor (sMacroblock* curMb)
   if (!decoder->activePPS->constrainedIntraPredFlag)
     left_avail = a.available;
   else
-    left_avail = a.available ? curMb->slice->intraBlock[a.mbAddr]: 0;
+    left_avail = a.available ? curMb->slice->intraBlock[a.mbIndex]: 0;
   // Horizontal Prediction
   if (!left_avail )
     error("unexpected HOR_PRED_8 chroma intra prediction mode",-1);
@@ -3754,7 +3754,7 @@ static void intrapred_chroma_ver (sMacroblock* curMb)
   if (!decoder->activePPS->constrainedIntraPredFlag)
     up_avail      = up.available;
   else
-    up_avail = up.available ? curSlice->intraBlock[up.mbAddr] : 0;
+    up_avail = up.available ? curSlice->intraBlock[up.mbIndex] : 0;
   // Vertical Prediction
   if (!up_avail)
     error("unexpected VERT_PRED_8 chroma intra prediction mode",-1);
@@ -3797,9 +3797,9 @@ static void intrapred_chroma_plane (sMacroblock* curMb)
   }
   else
   {
-    up_avail      = up.available ? curSlice->intraBlock[up.mbAddr] : 0;
-    left_avail    = left.available ? curSlice->intraBlock[left.mbAddr]: 0;
-    left_up_avail = up_left.available ? curSlice->intraBlock[up_left.mbAddr]: 0;
+    up_avail      = up.available ? curSlice->intraBlock[up.mbIndex] : 0;
+    left_avail    = left.available ? curSlice->intraBlock[left.mbIndex]: 0;
+    left_up_avail = up_left.available ? curSlice->intraBlock[up_left.mbIndex]: 0;
   }
   // plane prediction
   if (!left_up_avail || !left_avail || !up_avail)
@@ -3946,12 +3946,12 @@ static void intra_pred_chroma_mbaff (sMacroblock* curMb)
       }
       else
       {
-        up_avail = up.available ? curSlice->intraBlock[up.mbAddr] : 0;
+        up_avail = up.available ? curSlice->intraBlock[up.mbIndex] : 0;
         for (i=0, left_avail[0] = 1; i < cr_MB_y2;++i)
-          left_avail[0]  &= left[i + 1].available ? curSlice->intraBlock[left[i + 1].mbAddr]: 0;
+          left_avail[0]  &= left[i + 1].available ? curSlice->intraBlock[left[i + 1].mbIndex]: 0;
 
         for (i = cr_MB_y2, left_avail[1] = 1; i<cr_MB_y;++i)
-          left_avail[1]  &= left[i + 1].available ? curSlice->intraBlock[left[i + 1].mbAddr]: 0;
+          left_avail[1]  &= left[i + 1].available ? curSlice->intraBlock[left[i + 1].mbIndex]: 0;
 
       }
       // DC prediction
@@ -4035,10 +4035,10 @@ static void intra_pred_chroma_mbaff (sMacroblock* curMb)
       else
       {
         for (i=0, left_avail[0] = 1; i < cr_MB_y2;++i)
-          left_avail[0]  &= left[i + 1].available ? curSlice->intraBlock[left[i + 1].mbAddr]: 0;
+          left_avail[0]  &= left[i + 1].available ? curSlice->intraBlock[left[i + 1].mbIndex]: 0;
 
         for (i = cr_MB_y2, left_avail[1] = 1; i<cr_MB_y;++i)
-          left_avail[1]  &= left[i + 1].available ? curSlice->intraBlock[left[i + 1].mbAddr]: 0;
+          left_avail[1]  &= left[i + 1].available ? curSlice->intraBlock[left[i + 1].mbIndex]: 0;
       }
       // Horizontal Prediction
       if (!left_avail[0] || !left_avail[1])
@@ -4077,7 +4077,7 @@ static void intra_pred_chroma_mbaff (sMacroblock* curMb)
       if (!decoder->activePPS->constrainedIntraPredFlag)
         up_avail      = up.available;
       else
-        up_avail = up.available ? curSlice->intraBlock[up.mbAddr] : 0;
+        up_avail = up.available ? curSlice->intraBlock[up.mbIndex] : 0;
       // Vertical Prediction
       if (!up_avail)
         error("unexpected VERT_PRED_8 chroma intra prediction mode",-1);
@@ -4119,14 +4119,14 @@ static void intra_pred_chroma_mbaff (sMacroblock* curMb)
       }
       else
       {
-        up_avail = up.available ? curSlice->intraBlock[up.mbAddr] : 0;
+        up_avail = up.available ? curSlice->intraBlock[up.mbIndex] : 0;
         for (i=0, left_avail[0] = 1; i < cr_MB_y2;++i)
-          left_avail[0]  &= left[i + 1].available ? curSlice->intraBlock[left[i + 1].mbAddr]: 0;
+          left_avail[0]  &= left[i + 1].available ? curSlice->intraBlock[left[i + 1].mbIndex]: 0;
 
         for (i = cr_MB_y2, left_avail[1] = 1; i<cr_MB_y;++i)
-          left_avail[1]  &= left[i + 1].available ? curSlice->intraBlock[left[i + 1].mbAddr]: 0;
+          left_avail[1]  &= left[i + 1].available ? curSlice->intraBlock[left[i + 1].mbIndex]: 0;
 
-        left_up_avail = left[0].available ? curSlice->intraBlock[left[0].mbAddr]: 0;
+        left_up_avail = left[0].available ? curSlice->intraBlock[left[0].mbIndex]: 0;
       }
       // plane prediction
       if (!left_up_avail || !left_avail[0] || !left_avail[1] || !up_avail)

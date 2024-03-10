@@ -38,29 +38,29 @@ static void GetMotionVectorPredictorMBAFF (sMacroblock* mb, sPixelPos* block,
 
   if (mb->mbField) {
     rFrameL  = block[0].available
-      ? (decoder->mbData[block[0].mbAddr].mbField
+      ? (decoder->mbData[block[0].mbIndex].mbField
       ? mvInfo[block[0].posY][block[0].posX].refIndex[list]
     : mvInfo[block[0].posY][block[0].posX].refIndex[list] * 2) : -1;
     rFrameU  = block[1].available
-      ? (decoder->mbData[block[1].mbAddr].mbField
+      ? (decoder->mbData[block[1].mbIndex].mbField
       ? mvInfo[block[1].posY][block[1].posX].refIndex[list]
     : mvInfo[block[1].posY][block[1].posX].refIndex[list] * 2) : -1;
     rFrameUR = block[2].available
-      ? (decoder->mbData[block[2].mbAddr].mbField
+      ? (decoder->mbData[block[2].mbIndex].mbField
       ? mvInfo[block[2].posY][block[2].posX].refIndex[list]
     : mvInfo[block[2].posY][block[2].posX].refIndex[list] * 2) : -1;
     }
   else {
     rFrameL = block[0].available
-      ? (decoder->mbData[block[0].mbAddr].mbField
+      ? (decoder->mbData[block[0].mbIndex].mbField
       ? mvInfo[block[0].posY][block[0].posX].refIndex[list] >>1
       : mvInfo[block[0].posY][block[0].posX].refIndex[list]) : -1;
     rFrameU  = block[1].available
-      ? (decoder->mbData[block[1].mbAddr].mbField
+      ? (decoder->mbData[block[1].mbIndex].mbField
       ? mvInfo[block[1].posY][block[1].posX].refIndex[list] >>1
       : mvInfo[block[1].posY][block[1].posX].refIndex[list]) : -1;
     rFrameUR = block[2].available
-      ? (decoder->mbData[block[2].mbAddr].mbField
+      ? (decoder->mbData[block[2].mbIndex].mbField
       ? mvInfo[block[2].posY][block[2].posX].refIndex[list] >>1
       : mvInfo[block[2].posY][block[2].posX].refIndex[list]) : -1;
     }
@@ -103,29 +103,29 @@ static void GetMotionVectorPredictorMBAFF (sMacroblock* mb, sPixelPos* block,
       }
     else {
       if (mb->mbField) {
-        mv_a = block[0].available  ? decoder->mbData[block[0].mbAddr].mbField
+        mv_a = block[0].available  ? decoder->mbData[block[0].mbIndex].mbField
           ? mvInfo[block[0].posY][block[0].posX].mv[list].mvY
         : mvInfo[block[0].posY][block[0].posX].mv[list].mvY / 2
           : 0;
-        mv_b = block[1].available  ? decoder->mbData[block[1].mbAddr].mbField
+        mv_b = block[1].available  ? decoder->mbData[block[1].mbIndex].mbField
           ? mvInfo[block[1].posY][block[1].posX].mv[list].mvY
         : mvInfo[block[1].posY][block[1].posX].mv[list].mvY / 2
           : 0;
-        mv_c = block[2].available  ? decoder->mbData[block[2].mbAddr].mbField
+        mv_c = block[2].available  ? decoder->mbData[block[2].mbIndex].mbField
           ? mvInfo[block[2].posY][block[2].posX].mv[list].mvY
         : mvInfo[block[2].posY][block[2].posX].mv[list].mvY / 2
           : 0;
         }
       else {
-        mv_a = block[0].available  ? decoder->mbData[block[0].mbAddr].mbField
+        mv_a = block[0].available  ? decoder->mbData[block[0].mbIndex].mbField
           ? mvInfo[block[0].posY][block[0].posX].mv[list].mvY * 2
           : mvInfo[block[0].posY][block[0].posX].mv[list].mvY
         : 0;
-        mv_b = block[1].available  ? decoder->mbData[block[1].mbAddr].mbField
+        mv_b = block[1].available  ? decoder->mbData[block[1].mbIndex].mbField
           ? mvInfo[block[1].posY][block[1].posX].mv[list].mvY * 2
           : mvInfo[block[1].posY][block[1].posX].mv[list].mvY
         : 0;
-        mv_c = block[2].available  ? decoder->mbData[block[2].mbAddr].mbField
+        mv_c = block[2].available  ? decoder->mbData[block[2].mbIndex].mbField
           ? mvInfo[block[2].posY][block[2].posX].mv[list].mvY * 2
           : mvInfo[block[2].posY][block[2].posX].mv[list].mvY
         : 0;
@@ -717,12 +717,12 @@ static void setup_mb_pos_info (sMacroblock* mb) {
 void startMacroblock (sSlice* curSlice, sMacroblock** mb) {
 
   sDecoder* decoder = curSlice->decoder;
-  int mb_nr = curSlice->curMbNum;
+  int mb_nr = curSlice->mbIndex;
 
   *mb = &curSlice->mbData[mb_nr];
   (*mb)->slice = curSlice;
   (*mb)->decoder   = decoder;
-  (*mb)->mbAddrX = mb_nr;
+  (*mb)->mbIndexX = mb_nr;
 
   /* Update coordinates of the current macroblock */
   if (curSlice->mbAffFrameFlag) {
@@ -747,7 +747,7 @@ void startMacroblock (sSlice* curSlice, sMacroblock** mb) {
 
   // Save the slice number of this macroblock. When the macroblock below
   // is coded it will use this to decide if prediction for above is possible
-  (*mb)->sliceNum = (short) curSlice->curSliceNum;
+  (*mb)->sliceNum = (short) curSlice->curSliceIndex;
 
   CheckAvailabilityOfNeighbors (*mb);
 
@@ -793,19 +793,19 @@ Boolean exitMacroblock (sSlice* curSlice, int eos_bit) {
   sDecoder* decoder = curSlice->decoder;
 
   //! The if() statement below resembles the original code, which tested
-  //! decoder->curMbNum == decoder->picSizeInMbs.  Both is, of course, nonsense
+  //! decoder->mbIndex == decoder->picSizeInMbs.  Both is, of course, nonsense
   //! In an error prone environment, one can only be sure to have a new
   //! picture by checking the tr of the next slice header!
 
-  // printf ("exitMacroblock: FmoGetLastMBOfPicture %d, decoder->curMbNum %d\n", FmoGetLastMBOfPicture(), decoder->curMbNum);
+  // printf ("exitMacroblock: FmoGetLastMBOfPicture %d, decoder->mbIndex %d\n", FmoGetLastMBOfPicture(), decoder->mbIndex);
   ++(curSlice->numDecodedMbs);
 
-  if (curSlice->curMbNum == decoder->picSizeInMbs - 1) //if (decoder->numDecodedMbs == decoder->picSizeInMbs)
+  if (curSlice->mbIndex == decoder->picSizeInMbs - 1) //if (decoder->numDecodedMbs == decoder->picSizeInMbs)
     return TRUE;
     // ask for last mb in the slice  CAVLC
   else {
-    curSlice->curMbNum = FmoGetNextMBNr (decoder, curSlice->curMbNum);
-    if (curSlice->curMbNum == -1) {
+    curSlice->mbIndex = FmoGetNextMBNr (decoder, curSlice->mbIndex);
+    if (curSlice->mbIndex == -1) {
       // End of sSlice group, MUST be end of slice
       assert (curSlice->nalStartcode (curSlice, eos_bit) == TRUE);
       return TRUE;
@@ -1243,9 +1243,9 @@ void checkDpNeighbours (sMacroblock* mb) {
 
   if ((mb->isIntraBlock == FALSE) || (!(decoder->activePPS->constrainedIntraPredFlag)) ) {
     if (left.available)
-      mb->dplFlag |= decoder->mbData[left.mbAddr].dplFlag;
+      mb->dplFlag |= decoder->mbData[left.mbIndex].dplFlag;
     if (up.available)
-      mb->dplFlag |= decoder->mbData[up.mbAddr].dplFlag;
+      mb->dplFlag |= decoder->mbData[up.mbIndex].dplFlag;
     }
   }
 //}}}

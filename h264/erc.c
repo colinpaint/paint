@@ -772,7 +772,7 @@ static void buildPredRegionYUV (sDecoder* decoder, int *mv, int x, int y, sPixel
   int yuv = picture->chromaFormatIdc - 1;
 
   int ref_frame = imax (mv[2], 0); // !!KS: quick fix, we sometimes seem to get negative refPic here, so restrict to zero and above
-  int mb_nr = y/16*(decoder->width/16)+x/16; ///curSlice->curMbNum;
+  int mb_nr = y/16*(decoder->width/16)+x/16; ///curSlice->mbIndex;
   int** tmp_res = NULL;
 
   sMacroblock* curMb = &decoder->mbData[mb_nr];   // intialization code deleted, see below, StW
@@ -1349,7 +1349,7 @@ int ercConcealInterFrame (frame *recfr, sObjectBuffer *object_list,
 *************************************************************************
 */
 static void buildPredblockRegionYUV (sDecoder* decoder, int *mv,
-                                    int x, int y, sPixel *predMB, int list, int curMbNum)
+                                    int x, int y, sPixel *predMB, int list, int mbIndex)
 {
   sPixel** tmp_block;
   int i=0,j=0,ii=0,jj=0,i1=0,j1=0,j4=0,i4=0;
@@ -1368,7 +1368,7 @@ static void buildPredblockRegionYUV (sDecoder* decoder, int *mv,
   int yuv = picture->chromaFormatIdc - 1;
 
   int ref_frame = mv[2];
-  int mb_nr = curMbNum;
+  int mb_nr = mbIndex;
 
   sMacroblock* curMb = &decoder->mbData[mb_nr];   // intialization code deleted, see below, StW
   sSlice* curSlice = curMb->slice;
@@ -1532,7 +1532,7 @@ static void copy_to_conceal (sPicture *src, sPicture *dst, sDecoder* decoder)
   int scale = 1;
   sPicture* picture = decoder->picture;
 
-  int curMbNum = 0;
+  int mbIndex = 0;
 
   dst->picSizeInMbs  = src->picSizeInMbs;
 
@@ -1618,9 +1618,9 @@ static void copy_to_conceal (sPicture *src, sPicture *dst, sDecoder* decoder)
         y = (i) * multiplier;
 
         if ((mm%16==0) && (nn%16==0))
-          curMbNum++;
+          mbIndex++;
 
-        buildPredblockRegionYUV (decoder, mv, x, y, storeYUV, LIST_0, curMbNum);
+        buildPredblockRegionYUV (decoder, mv, x, y, storeYUV, LIST_0, mbIndex);
 
         predMB = storeYUV;
 

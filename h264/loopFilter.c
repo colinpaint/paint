@@ -1,26 +1,4 @@
-//{{{
-/*!
-** ***********************************************************************************
- * \file loopFilter.c
- *
- * \brief
- *    Filter to reduce blocking artifacts on a macroblock level.
- *    The filter strength is QP dependent.
- *
- * \author
- *    Contributors:
- *    - Peter List       Peter.List@t-systems.de:  Original code                                 (13-Aug-2001)
- *    - Jani Lainema     Jani.Lainema@nokia.com:   Some bug fixing, removal of recursiveness     (16-Aug-2001)
- *    - Peter List       Peter.List@t-systems.de:  inplace filtering and various simplifications (10-Jan-2002)
- *    - Anthony Joch     anthony@ubvideo.com:      Simplified switching between filters and
- *                                                 non-recursive default filter.                 (08-Jul-2002)
- *    - Cristina Gomila  cristina.gomila@thomson.net: Simplification of the chroma deblocking
- *                                                    from JVT-E089                              (21-Nov-2002)
- *    - Alexis Michael Tourapis atour@dolby.com:   Speed/Architecture improvements               (08-Feb-2007)
-** ***********************************************************************************
- */
-//}}}
-//{{{
+//{{{  includes
 #include "global.h"
 
 #include "image.h"
@@ -157,7 +135,7 @@ static void edge_loop_luma_ver_MBAff (eColorPlane pl, sPixel** img,
       if ((Strng = Strength[pel]) != 0) {
         getAffNeighbour (mbQ, edge, pel, decoder->mbSize[IS_LUMA], &pixQ);
 
-        MbP = &(decoder->mbData[pixP.mbAddr]);
+        MbP = &(decoder->mbData[pixP.mbIndex]);
         SrcPtrQ = &(img[pixQ.posY][pixQ.posX]);
         SrcPtrP = &(img[pixP.posY][pixP.posX]);
 
@@ -250,7 +228,7 @@ static void edge_loop_luma_hor_MBAff (eColorPlane pl, sPixel** img, byte* Streng
     int AlphaC0Offset = mbQ->DFAlphaC0Offset;
     int BetaOffset = mbQ->DFBetaOffset;
 
-    sMacroblock *MbP = &(decoder->mbData[pixP.mbAddr]);
+    sMacroblock *MbP = &(decoder->mbData[pixP.mbIndex]);
 
     int incQ    = ((MbP->mbField && !mbQ->mbField) ? 2 * width : width);
     int incP    = ((mbQ->mbField && !MbP->mbField) ? 2 * width : width);
@@ -362,7 +340,7 @@ static void edge_loop_chroma_ver_MBAff (sPixel** img, byte *Strength, sMacrobloc
     yQ = pel;
     getAffNeighbour(mbQ, xQ, yQ, decoder->mbSize[IS_CHROMA], &pixQ);
     getAffNeighbour(mbQ, xQ - 1, yQ, decoder->mbSize[IS_CHROMA], &pixP);
-    MbP = &(decoder->mbData[pixP.mbAddr]);
+    MbP = &(decoder->mbData[pixP.mbIndex]);
     StrengthIdx = (PelNum == 8) ? ((mbQ->mbField && !MbP->mbField) ? pel << 1 :((pel >> 1) << 2) + (pel & 0x01)) : pel;
 
     if (pixP.available || (mbQ->DFDisableIdc == 0)) {
@@ -422,7 +400,7 @@ static void edge_loop_chroma_hor_MBAff (sPixel** img, byte *Strength, sMacrobloc
   getAffNeighbour (mbQ, 0, yQ, decoder->mbSize[IS_CHROMA], &pixQ);
 
   if (pixP.available || (mbQ->DFDisableIdc == 0)) {
-    sMacroblock* MbP = &(decoder->mbData[pixP.mbAddr]);
+    sMacroblock* MbP = &(decoder->mbData[pixP.mbIndex]);
     int incQ = ((MbP->mbField && !mbQ->mbField) ? 2 * width : width);
     int incP = ((mbQ->mbField  && !MbP->mbField) ? 2 * width : width);
 
@@ -489,7 +467,7 @@ static void get_strength_ver_MBAff (byte* Strength, sMacroblock* mb, int edge, i
       getAffNeighbour(mb, edge - 1, idx, decoder->mbSize[IS_LUMA], &pixP);
       blkQ = (short) ((idx & 0xFFFC) + (edge >> 2));
       blkP = (short) ((pixP.y & 0xFFFC) + (pixP.x >> 2));
-      MbP = &(decoder->mbData[pixP.mbAddr]);
+      MbP = &(decoder->mbData[pixP.mbIndex]);
       mb->mixedModeEdgeFlag = (byte) (mb->mbField != MbP->mbField);
       Strength[idx] = (edge == 0) ? 4 : 3;
       }
@@ -497,7 +475,7 @@ static void get_strength_ver_MBAff (byte* Strength, sMacroblock* mb, int edge, i
   else {
     getAffNeighbour (mb, edge - 1, 0, decoder->mbSize[IS_LUMA], &pixP);
 
-    MbP = &(decoder->mbData[pixP.mbAddr]);
+    MbP = &(decoder->mbData[pixP.mbIndex]);
     // Neighboring Frame MBs
     if ((mb->mbField == FALSE && MbP->mbField == FALSE)) {
       mb->mixedModeEdgeFlag = (byte) (mb->mbField != MbP->mbField);
@@ -508,7 +486,7 @@ static void get_strength_ver_MBAff (byte* Strength, sMacroblock* mb, int edge, i
         for (i = 0; i < MB_BLOCK_SIZE; i ++ ) Strength[i] = StrValue;
         }
       else {
-        get_mb_block_pos_mbaff (picPos, mb->mbAddrX, &mb_x, &mb_y);
+        get_mb_block_pos_mbaff (picPos, mb->mbIndexX, &mb_x, &mb_y);
         for (idx = 0; idx < MB_BLOCK_SIZE; idx += BLOCK_SIZE) {
           blkQ = (short) ((idx & 0xFFFC) + (edge >> 2));
           blkP = (short) ((pixP.y & 0xFFFC) + (pixP.x >> 2));
@@ -574,7 +552,7 @@ static void get_strength_ver_MBAff (byte* Strength, sMacroblock* mb, int edge, i
         getAffNeighbour(mb, edge - 1, idx, decoder->mbSize[IS_LUMA], &pixP);
         blkQ = (short) ((idx & 0xFFFC) + (edge >> 2));
         blkP = (short) ((pixP.y & 0xFFFC) + (pixP.x >> 2));
-        MbP = &(decoder->mbData[pixP.mbAddr]);
+        MbP = &(decoder->mbData[pixP.mbIndex]);
         mb->mixedModeEdgeFlag = (byte) (mb->mbField != MbP->mbField);
 
         // Start with Strength=3. or Strength=4 for Mb-edge
@@ -592,7 +570,7 @@ static void get_strength_ver_MBAff (byte* Strength, sMacroblock* mb, int edge, i
             if (mb->mixedModeEdgeFlag) //if (curSlice->mixedModeEdgeFlag)
               Strength[idx] = 1;
             else {
-              get_mb_block_pos_mbaff (picPos, mb->mbAddrX, &mb_x, &mb_y);
+              get_mb_block_pos_mbaff (picPos, mb->mbIndexX, &mb_x, &mb_y);
               {
                 int blk_y  = ((mb_y<<2) + (blkQ >> 2));
                 int blk_x  = ((mb_x<<2) + (blkQ  & 3));
@@ -663,7 +641,7 @@ static void get_strength_hor_MBAff (byte* Strength, sMacroblock* mb, int edge, i
       blkQ = (short) ((yQ & 0xFFFC) + (xQ >> 2));
       blkP = (short) ((pixP.y & 0xFFFC) + (pixP.x >> 2));
 
-      MbP = &(decoder->mbData[pixP.mbAddr]);
+      MbP = &(decoder->mbData[pixP.mbIndex]);
       mb->mixedModeEdgeFlag = (byte) (mb->mbField != MbP->mbField);
 
       StrValue = (edge == 0 && (!MbP->mbField && !mb->mbField)) ? 4 : 3;
@@ -676,7 +654,7 @@ static void get_strength_hor_MBAff (byte* Strength, sMacroblock* mb, int edge, i
     }
   else {
     getAffNeighbour(mb, 0, yQ - 1, decoder->mbSize[IS_LUMA], &pixP);
-    MbP = &(decoder->mbData[pixP.mbAddr]);
+    MbP = &(decoder->mbData[pixP.mbIndex]);
     mb->mixedModeEdgeFlag = (byte) (mb->mbField != MbP->mbField);
 
     // Set intra mode deblocking
@@ -699,7 +677,7 @@ static void get_strength_hor_MBAff (byte* Strength, sMacroblock* mb, int edge, i
           if(mb->mixedModeEdgeFlag) //if (curSlice->mixedModeEdgeFlag)
             StrValue = 1;
           else {
-            get_mb_block_pos_mbaff (picPos, mb->mbAddrX, &mb_x, &mb_y);
+            get_mb_block_pos_mbaff (picPos, mb->mbIndexX, &mb_x, &mb_y);
             blk_y  = (short) ((mb_y<<2) + (blkQ >> 2));
             blk_x  = (short) ((mb_x<<2) + (blkQ  & 3));
             blk_y2 = (short) (pixP.posY >> 2);
@@ -804,7 +782,7 @@ static void get_strength_ver (sMacroblock* mb, int edge, int mvLimit, sPicture* 
         }
         else {
           int blkP, blkQ, idx;
-          sBlockPos blockPos = picPos[ mb->mbAddrX ];
+          sBlockPos blockPos = picPos[ mb->mbIndexX ];
           blockPos.x <<= BLOCK_SHIFT;
           blockPos.y <<= BLOCK_SHIFT;
 
@@ -912,7 +890,7 @@ static void get_strength_hor (sMacroblock* mb, int edge, int mvLimit, sPicture* 
           }
         else {
           int      blkP, blkQ, idx;
-          sBlockPos blockPos = picPos[ mb->mbAddrX ];
+          sBlockPos blockPos = picPos[ mb->mbIndexX ];
           blockPos.x <<= 2;
           blockPos.y <<= 2;
 
@@ -1417,9 +1395,9 @@ static void set_loop_filter_functions_normal (sDecoder* decoder) {
 
 // loopfilter
 //{{{
-static void deblockMb (sDecoder* decoder, sPicture* p, int mbQAddr) {
+static void deblockMb (sDecoder* decoder, sPicture* p, int mbIndex) {
 
-  sMacroblock* mb = &(decoder->mbData[mbQAddr]) ; // current Mb
+  sMacroblock* mb = &(decoder->mbData[mbIndex]) ; // current Mb
 
   // return, if filter is disabled
   if (mb->DFDisableIdc == 1)
@@ -1441,7 +1419,7 @@ static void deblockMb (sDecoder* decoder, sPicture* p, int mbQAddr) {
     sSPS* activeSPS = decoder->activeSPS;
 
     mb->DeblockCall = 1;
-    get_mb_pos (decoder, mbQAddr, decoder->mbSize[IS_LUMA], &mb_x, &mb_y);
+    getMbPos (decoder, mbIndex, decoder->mbSize[IS_LUMA], &mb_x, &mb_y);
     if (mb->mbType == I8MB)
       assert(mb->lumaTransformSize8x8flag);
 
@@ -1458,7 +1436,7 @@ static void deblockMb (sDecoder* decoder, sPicture* p, int mbQAddr) {
       // don't filter at slice boundaries
       filterLeftMbEdgeFlag = mb->mbAvailA;
       // if this the bottom of a frame macroblock pair then always filter the top edge
-      filterTopMbEdgeFlag  = (p->mbAffFrameFlag && !mb->mbField && (mbQAddr & 0x01)) ? 1 : mb->mbAvailB;
+      filterTopMbEdgeFlag  = (p->mbAffFrameFlag && !mb->mbField && (mbIndex & 0x01)) ? 1 : mb->mbAvailB;
       }
 
     if (p->mbAffFrameFlag == 1)
@@ -1578,9 +1556,9 @@ static void deblockMb (sDecoder* decoder, sPicture* p, int mbQAddr) {
   }
 //}}}
 //{{{
-static void getDeblockStrength (sDecoder* decoder, sPicture* p, int mbQAddr) {
+static void getDeblockStrength (sDecoder* decoder, sPicture* p, int mbIndex) {
 
-  sMacroblock* mb = &(decoder->mbData[mbQAddr]) ; // current Mb
+  sMacroblock* mb = &(decoder->mbData[mbIndex]) ; // current Mb
 
   // return, if filter is disabled
   if (mb->DFDisableIdc == 1)
@@ -1598,7 +1576,7 @@ static void getDeblockStrength (sDecoder* decoder, sPicture* p, int mbQAddr) {
     sSPS *activeSPS = decoder->activeSPS;
 
     mb->DeblockCall = 1;
-    get_mb_pos (decoder, mbQAddr, decoder->mbSize[IS_LUMA], &mb_x, &mb_y);
+    getMbPos (decoder, mbIndex, decoder->mbSize[IS_LUMA], &mb_x, &mb_y);
 
     if (mb->mbType == I8MB)
       assert(mb->lumaTransformSize8x8flag);
@@ -1616,7 +1594,7 @@ static void getDeblockStrength (sDecoder* decoder, sPicture* p, int mbQAddr) {
       // don't filter at slice boundaries
       filterLeftMbEdgeFlag = mb->mbAvailA;
       // if this the bottom of a frame macroblock pair then always filter the top edge
-      filterTopMbEdgeFlag = (p->mbAffFrameFlag && !mb->mbField && (mbQAddr & 0x01)) ? 1 : mb->mbAvailB;
+      filterTopMbEdgeFlag = (p->mbAffFrameFlag && !mb->mbField && (mbIndex & 0x01)) ? 1 : mb->mbAvailB;
       }
 
     if (p->mbAffFrameFlag == 1)
@@ -1675,9 +1653,9 @@ static void getDeblockStrength (sDecoder* decoder, sPicture* p, int mbQAddr) {
   }
 //}}}
 //{{{
-static void performDeblock (sDecoder* decoder, sPicture* p, int mbQAddr) {
+static void performDeblock (sDecoder* decoder, sPicture* p, int mbIndex) {
 
-  sMacroblock* mb = &(decoder->mbData[mbQAddr]) ; // current Mb
+  sMacroblock* mb = &(decoder->mbData[mbIndex]) ; // current Mb
 
   // return, if filter is disabled
   if (mb->DFDisableIdc == 1)
@@ -1697,7 +1675,7 @@ static void performDeblock (sDecoder* decoder, sPicture* p, int mbQAddr) {
     sSPS *activeSPS = decoder->activeSPS;
 
     mb->DeblockCall = 1;
-    get_mb_pos (decoder, mbQAddr, decoder->mbSize[IS_LUMA], &mb_x, &mb_y);
+    getMbPos (decoder, mbIndex, decoder->mbSize[IS_LUMA], &mb_x, &mb_y);
 
     if (mb->mbType == I8MB)
       assert(mb->lumaTransformSize8x8flag);
@@ -1715,7 +1693,7 @@ static void performDeblock (sDecoder* decoder, sPicture* p, int mbQAddr) {
       // don't filter at slice boundaries
       filterLeftMbEdgeFlag = mb->mbAvailA;
       // if this the bottom of a frame macroblock pair then always filter the top edge
-      filterTopMbEdgeFlag  = (p->mbAffFrameFlag && !mb->mbField && (mbQAddr & 0x01)) ? 1 : mb->mbAvailB;
+      filterTopMbEdgeFlag  = (p->mbAffFrameFlag && !mb->mbField && (mbIndex & 0x01)) ? 1 : mb->mbAvailB;
       }
 
     if (p->mbAffFrameFlag == 1)

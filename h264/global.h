@@ -313,7 +313,7 @@ typedef struct {
 //{{{  sPixelPos
 typedef struct PixelPos {
   int   available;
-  int   mbAddr;
+  int   mbIndex;
   short x;
   short y;
   short posX;
@@ -338,11 +338,11 @@ typedef struct Macroblock {
   struct Slice*   slice;
   struct Decoder* decoder;
 
-  int     mbAddrX;
-  int     mbAddrA;
-  int     mbAddrB;
-  int     mbAddrC;
-  int     mbAddrD;
+  int     mbIndexX;
+  int     mbIndexA;
+  int     mbIndexB;
+  int     mbIndexC;
+  int     mbIndexD;
 
   Boolean mbAvailA;
   Boolean mbAvailB;
@@ -518,10 +518,10 @@ typedef struct Slice {
   int thisPoc;
 
   // information need to move to slice
-  unsigned int  curMbNum;
+  unsigned int  mbIndex;
   unsigned int  numDecodedMbs;
 
-  short         curSliceNum;
+  short         curSliceIndex;
   int           codCount;    // Current count of number of skipped macroblocks in a row
   int           allrefzero;
 

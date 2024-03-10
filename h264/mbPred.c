@@ -172,7 +172,7 @@ static void set_chroma_vector (sMacroblock* curMb)
   }
   else
   {
-    int mb_nr = (curMb->mbAddrX & 0x01);
+    int mb_nr = (curMb->mbIndexX & 0x01);
     int k,l;
 
     //////////////////////////
@@ -357,7 +357,7 @@ int mb_pred_b_d8x8temporal (sMacroblock* curMb, eColorPlane curPlane, sPixel** c
 
   set_chroma_vector(curMb);
 
-  //printf("curMb %d\n", curMb->mbAddrX);
+  //printf("curMb %d\n", curMb->mbIndexX);
   for (block8x8=0; block8x8<4; block8x8++)
   {
     int pred_dir = curMb->b8pdir[block8x8];
@@ -379,7 +379,7 @@ int mb_pred_b_d8x8temporal (sMacroblock* curMb, eColorPlane curPlane, sPixel** c
       if(curSlice->mbAffFrameFlag /*&& (!decoder->activeSPS->frameMbOnlyFlag || decoder->activeSPS->direct_8x8_inference_flag)*/)
       {
         assert(decoder->activeSPS->direct_8x8_inference_flag);
-        if(!curMb->mbField && ((curSlice->listX[LIST_1][0]->iCodingType==FRAME_MB_PAIR_CODING && curSlice->listX[LIST_1][0]->motion.mbField[curMb->mbAddrX]) ||
+        if(!curMb->mbField && ((curSlice->listX[LIST_1][0]->iCodingType==FRAME_MB_PAIR_CODING && curSlice->listX[LIST_1][0]->motion.mbField[curMb->mbIndexX]) ||
           (curSlice->listX[LIST_1][0]->iCodingType==FIELD_CODING)))
         {
           if (iabs(picture->poc - curSlice->listX[LIST_1+4][0]->poc)> iabs(picture->poc -curSlice->listX[LIST_1+2][0]->poc) )
@@ -1263,7 +1263,7 @@ int mb_pred_ipcm (sMacroblock* curMb)
 
   // for CAVLC: Set the nzCoeff to 16.
   // These parameters are to be used in CAVLC decoding of neighbour blocks
-  memset(decoder->nzCoeff[curMb->mbAddrX][0][0], 16, 3 * BLOCK_PIXELS * sizeof(byte));
+  memset(decoder->nzCoeff[curMb->mbIndexX][0][0], 16, 3 * BLOCK_PIXELS * sizeof(byte));
 
   // for CABAC decoding of MB skip flag
   curMb->skipFlag = 0;

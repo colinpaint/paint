@@ -60,8 +60,8 @@ static void read_ipred_8x8_modes_mbaff (sMacroblock* mb) {
 
     // get from array and decode
     if (decoder->activePPS->constrainedIntraPredFlag) {
-      left_block.available = left_block.available ? slice->intraBlock[left_block.mbAddr] : 0;
-      top_block.available = top_block.available  ? slice->intraBlock[top_block.mbAddr]  : 0;
+      left_block.available = left_block.available ? slice->intraBlock[left_block.mbIndex] : 0;
+      top_block.available = top_block.available  ? slice->intraBlock[top_block.mbIndex]  : 0;
       }
 
     upIntraPredMode = (top_block.available ) ? slice->predMode[top_block.posY ][top_block.posX ] : -1;
@@ -123,8 +123,8 @@ static void read_ipred_8x8_modes (sMacroblock* mb) {
 
     // get from array and decode
     if (decoder->activePPS->constrainedIntraPredFlag) {
-      left_block.available = left_block.available ? slice->intraBlock[left_block.mbAddr] : 0;
-      top_block.available = top_block.available  ? slice->intraBlock[top_block.mbAddr] : 0;
+      left_block.available = left_block.available ? slice->intraBlock[left_block.mbIndex] : 0;
+      top_block.available = top_block.available  ? slice->intraBlock[top_block.mbIndex] : 0;
     }
 
     upIntraPredMode = (top_block.available ) ? slice->predMode[top_block.posY ][top_block.posX ] : -1;
@@ -185,19 +185,19 @@ static void read_ipred_4x4_modes_mbaff (sMacroblock* mb) {
 
         // get from array and decode
         if (decoder->activePPS->constrainedIntraPredFlag) {
-          left_block.available = left_block.available ? slice->intraBlock[left_block.mbAddr] : 0;
-          top_block.available = top_block.available  ? slice->intraBlock[top_block.mbAddr]  : 0;
+          left_block.available = left_block.available ? slice->intraBlock[left_block.mbIndex] : 0;
+          top_block.available = top_block.available  ? slice->intraBlock[top_block.mbIndex]  : 0;
           }
 
         // !! KS: not sure if the following is still correct...
         ts = ls = 0;   // Check to see if the neighboring block is SI
         if (slice->sliceType == SI_SLICE) { // need support for MBINTLC1
           if (left_block.available)
-            if (slice->siBlock [picPos[left_block.mbAddr].y][picPos[left_block.mbAddr].x])
+            if (slice->siBlock [picPos[left_block.mbIndex].y][picPos[left_block.mbIndex].x])
               ls = 1;
 
           if (top_block.available)
-            if (slice->siBlock [picPos[top_block.mbAddr].y][picPos[top_block.mbAddr].x])
+            if (slice->siBlock [picPos[top_block.mbIndex].y][picPos[top_block.mbIndex].x])
               ts = 1;
           }
 
@@ -259,8 +259,8 @@ static void read_ipred_4x4_modes (sMacroblock* mb) {
 
         //get from array and decode
         if (decoder->activePPS->constrainedIntraPredFlag) {
-          left_block.available = left_block.available ? slice->intraBlock[left_block.mbAddr] : 0;
-          top_block.available = top_block.available  ? slice->intraBlock[top_block.mbAddr]  : 0;
+          left_block.available = left_block.available ? slice->intraBlock[left_block.mbIndex] : 0;
+          top_block.available = top_block.available  ? slice->intraBlock[top_block.mbIndex]  : 0;
           }
 
         int ts = 0;
@@ -268,11 +268,11 @@ static void read_ipred_4x4_modes (sMacroblock* mb) {
         if (slice->sliceType == SI_SLICE) {
           //{{{  need support for MBINTLC1
           if (left_block.available)
-            if (slice->siBlock [picPos[left_block.mbAddr].y][picPos[left_block.mbAddr].x])
+            if (slice->siBlock [picPos[left_block.mbIndex].y][picPos[left_block.mbIndex].x])
               ls = 1;
 
           if (top_block.available)
-            if (slice->siBlock [picPos[top_block.mbAddr].y][picPos[top_block.mbAddr].x])
+            if (slice->siBlock [picPos[top_block.mbIndex].y][picPos[top_block.mbIndex].x])
               ts = 1;
           }
           //}}}
@@ -346,7 +346,7 @@ static void initMacroblock (sMacroblock* mb) {
 
   sSlice* slice = mb->slice;
   sPicMotionParam** mvInfo = &slice->picture->mvInfo[mb->blockY];
-  int slice_no = slice->curSliceNum;
+  int slice_no = slice->curSliceIndex;
 
   // reset vectors and pred. modes
   for(int j = 0; j < BLOCK_SIZE; ++j) {
@@ -364,7 +364,7 @@ static void initMacroblock (sMacroblock* mb) {
 //{{{
 static void initMacroblockDirect (sMacroblock* mb) {
 
-  int slice_no = mb->slice->curSliceNum;
+  int slice_no = mb->slice->curSliceIndex;
   sPicMotionParam** mvInfo = &mb->slice->picture->mvInfo[mb->blockY];
 
   set_read_comp_coeff_cabac (mb);
@@ -489,7 +489,7 @@ static void resetCoeffs (sMacroblock* mb) {
   sDecoder* decoder = mb->decoder;
 
   if (decoder->activePPS->entropyCodingModeFlag == (Boolean)CAVLC)
-    memset (decoder->nzCoeff[mb->mbAddrX][0][0], 0, 3 * BLOCK_PIXELS * sizeof(byte));
+    memset (decoder->nzCoeff[mb->mbIndexX][0][0], 0, 3 * BLOCK_PIXELS * sizeof(byte));
   }
 //}}}
 //{{{
@@ -497,10 +497,10 @@ static void fieldFlagInference (sMacroblock* mb) {
 
   sDecoder* decoder = mb->decoder;
   if (mb->mbAvailA)
-    mb->mbField = decoder->mbData[mb->mbAddrA].mbField;
+    mb->mbField = decoder->mbData[mb->mbIndexA].mbField;
   else
     // check top macroblock pair
-    mb->mbField = mb->mbAvailB ? decoder->mbData[mb->mbAddrB].mbField : FALSE;
+    mb->mbField = mb->mbAvailB ? decoder->mbData[mb->mbIndexB].mbField : FALSE;
   }
 //}}}
 
@@ -544,11 +544,11 @@ static void skipMacroblocks (sMacroblock* mb) {
       a_mv_y = a_mv->mvY;
       a_ref_idx = picture->mvInfo[neighbourMb[0].posY][neighbourMb[0].posX].refIndex[LIST_0];
 
-      if (mb->mbField && !decoder->mbData[neighbourMb[0].mbAddr].mbField) {
+      if (mb->mbField && !decoder->mbData[neighbourMb[0].mbIndex].mbField) {
         a_mv_y /= 2;
         a_ref_idx *= 2;
         }
-      if (!mb->mbField && decoder->mbData[neighbourMb[0].mbAddr].mbField) {
+      if (!mb->mbField && decoder->mbData[neighbourMb[0].mbIndex].mbField) {
         a_mv_y *= 2;
         a_ref_idx >>= 1;
         }
@@ -559,11 +559,11 @@ static void skipMacroblocks (sMacroblock* mb) {
       b_mv_y = b_mv->mvY;
       b_ref_idx = picture->mvInfo[neighbourMb[1].posY][neighbourMb[1].posX].refIndex[LIST_0];
 
-      if (mb->mbField && !decoder->mbData[neighbourMb[1].mbAddr].mbField) {
+      if (mb->mbField && !decoder->mbData[neighbourMb[1].mbIndex].mbField) {
         b_mv_y /= 2;
         b_ref_idx *= 2;
         }
-      if (!mb->mbField && decoder->mbData[neighbourMb[1].mbAddr].mbField) {
+      if (!mb->mbField && decoder->mbData[neighbourMb[1].mbIndex].mbField) {
         b_mv_y *= 2;
         b_ref_idx >>= 1;
         }
@@ -623,7 +623,7 @@ static void resetMvInfoList (sPicMotionParam* mvInfo, int list, int sliceNum) {
 static void initMacroblockBasic (sMacroblock* mb) {
 
   sPicMotionParam** mvInfo = &mb->slice->picture->mvInfo[mb->blockY];
-  int slice_no = mb->slice->curSliceNum;
+  int slice_no = mb->slice->curSliceIndex;
 
   // reset vectors and pred. modes
   for (int j = 0; j < BLOCK_SIZE; ++j) {
@@ -640,7 +640,7 @@ static void readSkipMacroblock (sMacroblock* mb) {
 
   mb->lumaTransformSize8x8flag = FALSE;
   if (mb->decoder->activePPS->constrainedIntraPredFlag) {
-    int mbNum = mb->mbAddrX;
+    int mbNum = mb->mbIndexX;
     mb->slice->intraBlock[mbNum] = 0;
     }
 
@@ -736,7 +736,7 @@ static void readInterMacroblock (sMacroblock* mb) {
   mb->noMbPartLessThan8x8Flag = TRUE;
   mb->lumaTransformSize8x8flag = FALSE;
   if (mb->decoder->activePPS->constrainedIntraPredFlag) {
-    int mbNum = mb->mbAddrX;
+    int mbNum = mb->mbIndexX;
     slice->intraBlock[mbNum] = 0;
     }
 
@@ -787,7 +787,7 @@ static void readI8x8macroblock (sMacroblock* mb, sDataPartition* dP, sSyntaxElem
   slice->nalReadMotionInfo (mb);
 
   if (mb->decoder->activePPS->constrainedIntraPredFlag) {
-    int mbNum = mb->mbAddrX;
+    int mbNum = mb->mbIndexX;
     slice->intraBlock[mbNum] = 0;
     }
 
@@ -801,7 +801,7 @@ static void read_one_macroblock_i_slice_cavlc (sMacroblock* mb) {
   sSlice* slice = mb->slice;
 
   sSyntaxElement syntaxElement;
-  int mbNum = mb->mbAddrX;
+  int mbNum = mb->mbIndexX;
 
   const byte* partMap = assignSE2partition[slice->dataPartitionMode];
   sPicture* picture = slice->picture;
@@ -849,7 +849,7 @@ static void read_one_macroblock_p_slice_cavlc (sMacroblock* mb) {
 
   sSlice* slice = mb->slice;
   sSyntaxElement syntaxElement;
-  int mbNum = mb->mbAddrX;
+  int mbNum = mb->mbIndexX;
 
   const byte* partMap = assignSE2partition[slice->dataPartitionMode];
 
@@ -1002,7 +1002,7 @@ static void read_one_macroblock_b_slice_cavlc (sMacroblock* mb) {
 
   sDecoder* decoder = mb->decoder;
   sSlice* slice = mb->slice;
-  int mbNum = mb->mbAddrX;
+  int mbNum = mb->mbIndexX;
   sSyntaxElement syntaxElement;
   const byte *partMap = assignSE2partition[slice->dataPartitionMode];
 
@@ -1167,7 +1167,7 @@ static void read_one_macroblock_i_slice_cabac (sMacroblock* mb) {
   sSlice* slice = mb->slice;
 
   sSyntaxElement syntaxElement;
-  int mbNum = mb->mbAddrX;
+  int mbNum = mb->mbIndexX;
 
   const byte* partMap = assignSE2partition[slice->dataPartitionMode];
   sPicture* picture = slice->picture;
@@ -1253,7 +1253,7 @@ static void read_one_macroblock_p_slice_cabac (sMacroblock* mb)
 {
   sSlice* slice = mb->slice;
   sDecoder* decoder = mb->decoder;
-  int mbNum = mb->mbAddrX;
+  int mbNum = mb->mbIndexX;
   sSyntaxElement syntaxElement;
   const byte* partMap = assignSE2partition[slice->dataPartitionMode];
 
@@ -1400,7 +1400,7 @@ static void read_one_macroblock_b_slice_cabac (sMacroblock* mb) {
 
   sSlice* slice = mb->slice;
   sDecoder* decoder = mb->decoder;
-  int mbNum = mb->mbAddrX;
+  int mbNum = mb->mbIndexX;
   sSyntaxElement syntaxElement;
 
   const byte* partMap = assignSE2partition[slice->dataPartitionMode];
