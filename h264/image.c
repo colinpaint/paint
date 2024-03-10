@@ -38,7 +38,7 @@ static void resetMb (sMacroblock* mb) {
 static void setupBuffers (sVidParam* vidParam, int layerId) {
 
   if (vidParam->last_dec_layer_id != layerId) {
-    sCodingParam* codingParam = vidParam->codingParam[layerId];
+    sCoding* codingParam = vidParam->codingParam[layerId];
     if (codingParam->sepColourPlaneFlag) {
       for (int i = 0; i < MAX_PLANE; i++ ) {
         vidParam->mbDataJV[i] = codingParam->mbDataJV[i];
@@ -415,7 +415,7 @@ static void initCurImg (sSlice* slice, sVidParam* vidParam) {
 //}}}
 
 //{{{
-static int isNewPicture (sPicture* picture, sSlice* slice, sOldSliceParam* oldSliceParam) {
+static int isNewPicture (sPicture* picture, sSlice* slice, sOldSlice* oldSliceParam) {
 
   int result = (NULL == picture);
 
@@ -679,8 +679,8 @@ static void initPictureDecoding (sVidParam* vidParam) {
   if (vidParam->nextPPS->valid &&
       (int)vidParam->nextPPS->ppsId == slice->ppsId) {
     sPPS pps;
-    memcpy (&pps, &(vidParam->PicParSet[slice->ppsId]), sizeof (sPPS));
-    (vidParam->PicParSet[slice->ppsId]).sliceGroupId = NULL;
+    memcpy (&pps, &(vidParam->pps[slice->ppsId]), sizeof (sPPS));
+    (vidParam->pps[slice->ppsId]).sliceGroupId = NULL;
     makePPSavailable (vidParam, vidParam->nextPPS->ppsId, vidParam->nextPPS);
     memcpy (vidParam->nextPPS, &pps, sizeof (sPPS));
     pps.sliceGroupId = NULL;
@@ -711,7 +711,7 @@ static void framePostProcessing (sVidParam* vidParam) {}
 static void fieldPostProcessing (sVidParam* vidParam) { vidParam->number /= 2; }
 
 //{{{
-static void copySliceInfo (sSlice* slice, sOldSliceParam* oldSliceParam) {
+static void copySliceInfo (sSlice* slice, sOldSlice* oldSliceParam) {
 
   sVidParam* vidParam = slice->vidParam;
 
@@ -1064,7 +1064,7 @@ static int readNewSlice (sSlice* slice) {
 //}}}
 
 //{{{
-void initOldSlice (sOldSliceParam* oldSliceParam) {
+void initOldSlice (sOldSlice* oldSliceParam) {
 
   oldSliceParam->fieldPicFlag = 0;
   oldSliceParam->ppsId = INT_MAX;

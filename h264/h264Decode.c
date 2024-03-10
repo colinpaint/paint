@@ -339,7 +339,7 @@ void freePartition (sDataPartition* dp, int n) {
 //{{{
 void freeLayerBuffers (sVidParam* vidParam, int layerId) {
 
-  sCodingParam *codingParam = vidParam->codingParam[layerId];
+  sCoding *codingParam = vidParam->codingParam[layerId];
 
   if (!vidParam->globalInitDone[layerId])
     return;
@@ -395,7 +395,7 @@ void freeLayerBuffers (sVidParam* vidParam, int layerId) {
 //{{{
 void initGlobalBuffers (sVidParam* vidParam, int layerId) {
 
-  sCodingParam *codingParam = vidParam->codingParam[layerId];
+  sCoding *codingParam = vidParam->codingParam[layerId];
   sBlockPos* picPos;
 
   if (vidParam->globalInitDone[layerId])
@@ -524,7 +524,7 @@ void freeDecodedPictures (sDecodedPicture* decodedPicture) {
 //}}}
 
 //{{{
-void setGlobalCodingProgram (sVidParam* vidParam, sCodingParam* codingParam) {
+void setGlobalCodingProgram (sVidParam* vidParam, sCoding* codingParam) {
 
   vidParam->bitdepthChroma = 0;
   vidParam->widthCr = 0;
@@ -577,7 +577,7 @@ void setGlobalCodingProgram (sVidParam* vidParam, sCodingParam* codingParam) {
 //}}}
 
 //{{{
-void OpenDecoder (sInputParam* inputParam, byte* chunk, size_t chunkSize) {
+void OpenDecoder (sInput* inputParam, byte* chunk, size_t chunkSize) {
 
   // alloc decoder
   sVidParam* vidParam = (sVidParam*)calloc (1, sizeof(sVidParam));
@@ -586,7 +586,7 @@ void OpenDecoder (sInputParam* inputParam, byte* chunk, size_t chunkSize) {
   init_time();
 
   // init inputParam
-  memcpy (&(vidParam->inputParam), inputParam, sizeof(sInputParam));
+  memcpy (&(vidParam->inputParam), inputParam, sizeof(sInput));
   gVidParam->concealMode = inputParam->concealMode;
   gVidParam->refPocGap = inputParam->refPocGap;
   gVidParam->pocGap = inputParam->pocGap;
@@ -600,7 +600,7 @@ void OpenDecoder (sInputParam* inputParam, byte* chunk, size_t chunkSize) {
 
   // init slice
   vidParam->globalInitDone[0] = vidParam->globalInitDone[1] = 0;
-  vidParam->oldSlice = (sOldSliceParam*)calloc (1, sizeof(sOldSliceParam));
+  vidParam->oldSlice = (sOldSlice*)calloc (1, sizeof(sOldSlice));
   vidParam->sliceList = (sSlice**)calloc (MAX_NUM_DECSLICES, sizeof(sSlice*));
   vidParam->numSlicesAllocated = MAX_NUM_DECSLICES;
   vidParam->nextSlice = NULL;
@@ -613,9 +613,9 @@ void OpenDecoder (sInputParam* inputParam, byte* chunk, size_t chunkSize) {
     vidParam->dpbLayer[i] = (sDPB*)calloc (1, sizeof(sDPB));
     vidParam->dpbLayer[i]->layerId = i;
     reset_dpb (vidParam, vidParam->dpbLayer[i]);
-    vidParam->codingParam[i] = (sCodingParam*)calloc (1, sizeof(sCodingParam));
+    vidParam->codingParam[i] = (sCoding*)calloc (1, sizeof(sCoding));
     vidParam->codingParam[i]->layerId = i;
-    vidParam->layerParam[i] = (sLayerParam*)calloc (1, sizeof(sLayerParam));
+    vidParam->layerParam[i] = (sLayer*)calloc (1, sizeof(sLayer));
     vidParam->layerParam[i]->layerId = i;
     }
 

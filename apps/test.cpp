@@ -945,8 +945,8 @@ public:
       cLog::log (LOGINFO, fmt::format ("read:{} size:{} idr:{}", mFileName, h264ChunkSize, gotIDR));
 
       // input params
-      sInputParam sInputParams;
-      memset (&sInputParams, 0, sizeof(sInputParam));
+      sInput sInputParams;
+      memset (&sInputParams, 0, sizeof(sInput));
       //sInputParams.vlcDebug = 1;
       sInputParams.pocScale = 2;
       sInputParams.pocGap = 2;
@@ -1070,8 +1070,8 @@ public:
       //}}}
 
       // input params
-      sInputParam sInputParams;
-      memset (&sInputParams, 0, sizeof(sInputParam));
+      sInput sInputParams;
+      memset (&sInputParams, 0, sizeof(sInput));
       sInputParams.pocScale = 2;
       sInputParams.pocGap = 2;
       sInputParams.refPocGap = 2;

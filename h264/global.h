@@ -451,8 +451,8 @@ typedef struct Image {
   int bot_stride[MAX_PLANE];
   } sImage;
 //}}}
-//{{{  sOldSliceParam
-typedef struct OldSliceParam {
+//{{{  sOldSlice
+typedef struct OldSlice {
   unsigned fieldPicFlag;
   unsigned frameNum;
   int      nalRefIdc;
@@ -464,7 +464,7 @@ typedef struct OldSliceParam {
   int      idrPicId;
   int      ppsId;
   int      layerId;
-  } sOldSliceParam;
+  } sOldSlice;
 //}}}
 //{{{  sSlice
 typedef struct Slice {
@@ -650,7 +650,7 @@ typedef struct DecodedPicture {
   struct DecodedPicture* next;
   } sDecodedPicture;
 //}}}
-//{{{  sCodingParam
+//{{{  sCoding
 typedef struct CodingParam {
   int layerId;
   int profileIdc;
@@ -718,18 +718,18 @@ typedef struct CodingParam {
   int**        siBlockJV[MAX_PLANE];
   int*         qpPerMatrix;
   int*         qpRemMatrix;
-  } sCodingParam;
+  } sCoding;
 //}}}
-//{{{  sLayerParam
+//{{{  sLayer
 typedef struct LayerParam {
   int              layerId;
   struct VidParam* vidParam;
-  sCodingParam*    codingParam;
+  sCoding*    codingParam;
   sSPS*            sps;
   struct DPB*      dpb;
-  } sLayerParam;
+  } sLayer;
 //}}}
-//{{{  sInputParam
+//{{{  sInput
 typedef struct InputParam {
   int vlcDebug;
   int refOffset;
@@ -741,7 +741,7 @@ typedef struct InputParam {
   sFrameFormat source;
   sFrameFormat output;
   int dpbPlus[2];
-  } sInputParam;
+  } sInput;
 //}}}
 //{{{  sVidParam
 typedef struct VidParam {
@@ -752,8 +752,8 @@ typedef struct VidParam {
 
   sPPS*        activePPS;
   sSPS*        activeSPS;
-  sSPS         SeqParSet[32];
-  sPPS         PicParSet[MAX_PPS];
+  sSPS         sps[32];
+  sPPS         pps[MAX_PPS];
   Boolean      firstSPS;
   int          recoveryPoint;
   int          recoveryPointFound;
@@ -763,12 +763,12 @@ typedef struct VidParam {
 
 
   struct DPB*   dpbLayer[MAX_NUM_DPB_LAYERS];
-  sLayerParam*  layerParam[MAX_NUM_DPB_LAYERS];
-  sCodingParam* codingParam[MAX_NUM_DPB_LAYERS];
+  sLayer*  layerParam[MAX_NUM_DPB_LAYERS];
+  sCoding* codingParam[MAX_NUM_DPB_LAYERS];
 
   int                   number;  //frame number
   struct sSEI*    sei;
-  struct OldSliceParam* oldSlice;
+  struct OldSlice* oldSlice;
 
   // current picture property;
   unsigned int numDecodedMb;
@@ -1014,7 +1014,7 @@ static inline int is_HI_intra_only_profile (unsigned int profileIdc, Boolean con
   extern void freeDecodedPictures (sDecodedPicture* decodedPicture);
   extern void clearDecodedPictures (sVidParam* vidParam);
 
-  extern void setGlobalCodingProgram (sVidParam* vidParam, sCodingParam* codingParam);
+  extern void setGlobalCodingProgram (sVidParam* vidParam, sCoding* codingParam);
 //{{{
 #ifdef __cplusplus
 }

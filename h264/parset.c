@@ -41,7 +41,7 @@ static void updateMaxValue (sFrameFormat* format) {
   }
 //}}}
 //{{{
-static void setupLayerInfo (sVidParam* vidParam, sSPS* sps, sLayerParam* layerParam) {
+static void setupLayerInfo (sVidParam* vidParam, sSPS* sps, sLayer* layerParam) {
 
   layerParam->vidParam = vidParam;
   layerParam->codingParam = vidParam->codingParam[layerParam->layerId];
@@ -50,7 +50,7 @@ static void setupLayerInfo (sVidParam* vidParam, sSPS* sps, sLayerParam* layerPa
   }
 //}}}
 //{{{
-static void setCodingParam (sSPS* sps, sCodingParam* codingParam) {
+static void setCodingParam (sSPS* sps, sCoding* codingParam) {
 
   // maximum vertical motion vector range in luma quarter pixel units
   codingParam->profileIdc = sps->profileIdc;
@@ -583,7 +583,7 @@ static void interpretSPS (sVidParam* vidParam, sDataPartition* p, sSPS* sps) {
 void makeSPSavailable (sVidParam* vidParam, int id, sSPS* sps) {
 
   assert (sps->valid == TRUE);
-  memcpy (&vidParam->SeqParSet[id], sps, sizeof (sSPS));
+  memcpy (&vidParam->sps[id], sps, sizeof (sSPS));
   }
 //}}}
 //{{{
@@ -822,7 +822,7 @@ static void interpretPPS (sVidParam* vidParam, sDataPartition* p, sPPS* pps) {
     pps->picScalingMatrixPresentFlag = readU1 ("PPS picScalingMatrixPresentFlag", s);
 
     if (pps->picScalingMatrixPresentFlag) {
-      chromaFormatIdc = vidParam->SeqParSet[pps->spsId].chromaFormatIdc;
+      chromaFormatIdc = vidParam->sps[pps->spsId].chromaFormatIdc;
       n_ScalingList = 6 + ((chromaFormatIdc != YUV444) ? 2 : 6) * pps->transform8x8modeFlag;
       for (unsigned i = 0; i < n_ScalingList; i++) {
         pps->picScalingListPresentFlag[i]=
@@ -878,14 +878,14 @@ sPPS* allocPPS() {
 //{{{
 void makePPSavailable (sVidParam* vidParam, int id, sPPS* pps) {
 
-  if (vidParam->PicParSet[id].valid && vidParam->PicParSet[id].sliceGroupId)
-    free (vidParam->PicParSet[id].sliceGroupId);
+  if (vidParam->pps[id].valid && vidParam->pps[id].sliceGroupId)
+    free (vidParam->pps[id].sliceGroupId);
 
-  memcpy (&vidParam->PicParSet[id], pps, sizeof (sPPS));
+  memcpy (&vidParam->pps[id], pps, sizeof (sPPS));
 
   // we can simply use the memory provided with the pps. the PPS is destroyed after this function
   // call and will not try to free if pps->sliceGroupId == NULL
-  vidParam->PicParSet[id].sliceGroupId = pps->sliceGroupId;
+  vidParam->pps[id].sliceGroupId = pps->sliceGroupId;
   pps->sliceGroupId = NULL;
   }
 //}}}
@@ -893,9 +893,9 @@ void makePPSavailable (sVidParam* vidParam, int id, sPPS* pps) {
 void cleanUpPPS (sVidParam* vidParam) {
 
   for (int i = 0; i < MAX_PPS; i++) {
-    if (vidParam->PicParSet[i].valid == TRUE && vidParam->PicParSet[i].sliceGroupId != NULL)
-      free (vidParam->PicParSet[i].sliceGroupId);
-    vidParam->PicParSet[i].valid = FALSE;
+    if (vidParam->pps[i].valid == TRUE && vidParam->pps[i].sliceGroupId != NULL)
+      free (vidParam->pps[i].sliceGroupId);
+    vidParam->pps[i].valid = FALSE;
     }
   }
 //}}}
@@ -936,8 +936,8 @@ void useParameterSet (sSlice* curSlice) {
   sVidParam* vidParam = curSlice->vidParam;
   int PicParsetId = curSlice->ppsId;
 
-  sPPS* pps = &vidParam->PicParSet[PicParsetId];
-  sSPS* sps = &vidParam->SeqParSet[pps->spsId];
+  sPPS* pps = &vidParam->pps[PicParsetId];
+  sSPS* sps = &vidParam->sps[pps->spsId];
 
   if (pps->valid != TRUE)
     printf ("Trying to use an invalid (uninitialized) Picture Parameter Set with ID %d, expect the unexpected...\n", PicParsetId);

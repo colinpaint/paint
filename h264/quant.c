@@ -148,7 +148,7 @@ static void CalculateQuant8x8Param (sSlice* curSlice) {
 //}}}
 
 //{{{
-void allocQuant (sCodingParam* codingParam) {
+void allocQuant (sCoding* codingParam) {
 
   int bitdepth_qp_scale = imax (codingParam->bitdepth_luma_qp_scale, codingParam->bitdepthChromaQpScale);
 
@@ -169,7 +169,7 @@ void allocQuant (sCodingParam* codingParam) {
   }
 //}}}
 //{{{
-void freeQuant (sCodingParam* codingParam) {
+void freeQuant (sCoding* codingParam) {
 
   if (codingParam->qpPerMatrix != NULL) {
     free (codingParam->qpPerMatrix);

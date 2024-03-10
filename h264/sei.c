@@ -1041,7 +1041,7 @@ static void interpret_buffering_period_info (byte* payload, int size, sVidParam*
   buf->frameBitOffset = 0;
 
   int spsId = readUeV("SEI spsId"  , buf);
-  sSPS* sps = &vidParam->SeqParSet[spsId];
+  sSPS* sps = &vidParam->sps[spsId];
   activateSPS (vidParam, sps);
 
   printf ("Buffering period SEI message\n");
