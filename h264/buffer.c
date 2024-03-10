@@ -1032,7 +1032,7 @@ void initDpb (sDecoder* decoder, sDPB* dpb, int type) {
   if (dpb->initDone)
     freeDpb (dpb);
 
-  dpb->size = getDpbSize (decoder, activeSPS) + decoder->input.dpbPlus[type == 2 ? 1 : 0];
+  dpb->size = getDpbSize (decoder, activeSPS) + decoder->param.dpbPlus[type == 2 ? 1 : 0];
   dpb->numRefFrames = activeSPS->numRefFrames;
 
   if (dpb->size < activeSPS->numRefFrames)
@@ -1082,7 +1082,7 @@ void initDpb (sDecoder* decoder, sDPB* dpb, int type) {
 void reInitDpb (sDecoder* decoder, sDPB* dpb, int type) {
 
   sSPS* activeSPS = decoder->activeSPS;
-  int dpbSize = getDpbSize (decoder, activeSPS) + decoder->input.dpbPlus[type == 2 ? 1 : 0];
+  int dpbSize = getDpbSize (decoder, activeSPS) + decoder->param.dpbPlus[type == 2 ? 1 : 0];
   dpb->numRefFrames = activeSPS->numRefFrames;
 
   if (dpbSize > (int)dpb->size) {
@@ -1880,7 +1880,7 @@ void freeDpb (sDPB* dpb) {
 void initImage (sDecoder* decoder, sImage* image, sSPS* sps) {
 
   // allocate memory for reference frame buffers: image->frm_data
-  image->format = decoder->input.output;
+  image->format = decoder->param.output;
   image->format.width[0]  = decoder->width;
   image->format.width[1]  = decoder->widthCr;
   image->format.width[2]  = decoder->widthCr;
@@ -1888,10 +1888,10 @@ void initImage (sDecoder* decoder, sImage* image, sSPS* sps) {
   image->format.height[1] = decoder->heightCr;
   image->format.height[2] = decoder->heightCr;
   image->format.yuvFormat  = (eColorFormat)sps->chromaFormatIdc;
-  image->format.autoCropBot = decoder->input.output.autoCropBot;
-  image->format.autoCropRight = decoder->input.output.autoCropRight;
-  image->format.autoCropBotCr = decoder->input.output.autoCropBotCr;
-  image->format.autoCropRightCr = decoder->input.output.autoCropRightCr;
+  image->format.autoCropBot = decoder->param.output.autoCropBot;
+  image->format.autoCropRight = decoder->param.output.autoCropRight;
+  image->format.autoCropBotCr = decoder->param.output.autoCropBotCr;
+  image->format.autoCropRightCr = decoder->param.output.autoCropRightCr;
   image->frm_stride[0] = decoder->width;
   image->frm_stride[1] = image->frm_stride[2] = decoder->widthCr;
   image->top_stride[0] = image->bot_stride[0] = image->frm_stride[0] << 1;

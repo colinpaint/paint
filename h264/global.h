@@ -731,8 +731,8 @@ typedef struct LayerParam {
   struct DPB*      dpb;
   } sLayer;
 //}}}
-//{{{  sInput
-typedef struct Input {
+//{{{  sParam
+typedef struct Param {
   int vlcDebug;
   int refOffset;
   int pocScale;
@@ -744,11 +744,11 @@ typedef struct Input {
   sFrameFormat source;
   sFrameFormat output;
   int dpbPlus[2];
-  } sInput;
+  } sParam;
 //}}}
 //{{{  sDecoder
 typedef struct Decoder {
-  sInput       input;
+  sParam       param;
   TIME_T       startTime;
   TIME_T       endTime;
 
@@ -992,7 +992,7 @@ static inline int isHiIntraOnlyProfile (unsigned int profileIdc, Boolean constra
   extern "C" {
 #endif
 //}}}
-  extern sDecoder* gVidParam;
+  extern sDecoder* gDecoder;
 
   extern char errorText[ET_SIZE];
   extern void error (char* text, int code);

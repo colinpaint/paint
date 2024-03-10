@@ -651,7 +651,7 @@ void activateSPS (sDecoder* decoder, sSPS* sps) {
       }
     }
 
-  resetFormatInfo (sps, decoder, &decoder->input.source, &decoder->input.output);
+  resetFormatInfo (sps, decoder, &decoder->param.source, &decoder->param.output);
   }
 //}}}
 

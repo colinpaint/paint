@@ -19,15 +19,15 @@
 #include "h264decode.h"
 //}}}
 
-sDecoder* gVidParam;
+sDecoder* gDecoder;
 char errorText[ET_SIZE];
 
 //{{{
 void error (char* text, int code) {
 
   fprintf (stderr, "%s\n", text);
-  if (gVidParam)
-    flushDpb (gVidParam->dpbLayer[0]);
+  if (gDecoder)
+    flushDpb (gDecoder->dpbLayer[0]);
   exit (code);
   }
 //}}}
@@ -198,7 +198,7 @@ static void init (sDecoder* decoder) {
   decoder->recoveryPointFound = 0;
   decoder->recoveryPoc = 0x7fffffff; /* set to a max value */
 
-  decoder->idrPsnrNum = decoder->input.refOffset;
+  decoder->idrPsnrNum = decoder->param.refOffset;
   decoder->psnrNum=0;
 
   decoder->number = 0;
@@ -577,19 +577,19 @@ void setGlobalCodingProgram (sDecoder* decoder, sCoding* coding) {
 //}}}
 
 //{{{
-void OpenDecoder (sInput* input, byte* chunk, size_t chunkSize) {
+void OpenDecoder (sParam* input, byte* chunk, size_t chunkSize) {
 
   // alloc decoder
   sDecoder* decoder = (sDecoder*)calloc (1, sizeof(sDecoder));
-  gVidParam = decoder;
+  gDecoder = decoder;
 
   init_time();
 
   // init input
-  memcpy (&(decoder->input), input, sizeof(sInput));
-  gVidParam->concealMode = input->concealMode;
-  gVidParam->refPocGap = input->refPocGap;
-  gVidParam->pocGap = input->pocGap;
+  memcpy (&(decoder->param), input, sizeof(sParam));
+  gDecoder->concealMode = input->concealMode;
+  gDecoder->refPocGap = input->refPocGap;
+  gDecoder->pocGap = input->pocGap;
 
   // init nalu, annexB
   decoder->nalu = allocNALU (MAX_CODED_FRAME_SIZE);
@@ -626,9 +626,9 @@ void OpenDecoder (sInput* input, byte* chunk, size_t chunkSize) {
 //{{{
 int DecodeOneFrame (sDecodedPicture** ppDecPicList) {
 
-  ClearDecodedPictures (gVidParam);
+  ClearDecodedPictures (gDecoder);
 
-  int iRet = decodeFrame (gVidParam);
+  int iRet = decodeFrame (gDecoder);
   if (iRet == SOP)
     iRet = DEC_SUCCEED;
   else if (iRet == EOS)
@@ -636,41 +636,41 @@ int DecodeOneFrame (sDecodedPicture** ppDecPicList) {
   else
     iRet |= DEC_ERRMASK;
 
-  *ppDecPicList = gVidParam->decOutputPic;
+  *ppDecPicList = gDecoder->decOutputPic;
   return iRet;
   }
 //}}}
 //{{{
 void FinitDecoder (sDecodedPicture** ppDecPicList) {
 
-  ClearDecodedPictures (gVidParam);
-  flushDpb (gVidParam->dpbLayer[0]);
+  ClearDecodedPictures (gDecoder);
+  flushDpb (gDecoder->dpbLayer[0]);
 
-  resetAnnexB (gVidParam->annexB);
+  resetAnnexB (gDecoder->annexB);
 
-  gVidParam->newFrame = 0;
-  gVidParam->prevFrameNum = 0;
-  *ppDecPicList = gVidParam->decOutputPic;
+  gDecoder->newFrame = 0;
+  gDecoder->prevFrameNum = 0;
+  *ppDecPicList = gDecoder->decOutputPic;
   }
 //}}}
 //{{{
 void CloseDecoder() {
 
-  FmoFinit (gVidParam);
-  freeLayerBuffers (gVidParam, 0);
-  freeLayerBuffers (gVidParam, 1);
-  freeGlobalBuffers (gVidParam);
+  FmoFinit (gDecoder);
+  freeLayerBuffers (gDecoder, 0);
+  freeLayerBuffers (gDecoder, 1);
+  freeGlobalBuffers (gDecoder);
 
-  ercClose (gVidParam, gVidParam->ercErrorVar);
+  ercClose (gDecoder, gDecoder->ercErrorVar);
 
-  cleanUpPPS (gVidParam);
+  cleanUpPPS (gDecoder);
 
   for (unsigned i = 0; i < MAX_NUM_DPB_LAYERS; i++)
-    freeDpb (gVidParam->dpbLayer[i]);
-  freeOutput (gVidParam);
-  freeImg (gVidParam);
-  free (gVidParam);
+    freeDpb (gDecoder->dpbLayer[i]);
+  freeOutput (gDecoder);
+  freeImg (gDecoder);
+  free (gDecoder);
 
-  gVidParam = NULL;
+  gDecoder = NULL;
   }
 //}}}

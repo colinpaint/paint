@@ -513,7 +513,7 @@ static void initPicture (sDecoder* decoder, sSlice* slice) {
     slice->frameNum != (decoder->preFrameNum + 1) % decoder->maxFrameNum) {
     if (activeSPS->gaps_in_frame_num_value_allowed_flag == 0) {
       // picture error conceal
-      if (decoder->input.concealMode != 0) {
+      if (decoder->param.concealMode != 0) {
         if ((slice->frameNum) < ((decoder->preFrameNum + 1) % decoder->maxFrameNum)) {
           /* Conceal lost IDR frames and any frames immediately following the IDR.
           // Use frame copy for these since lists cannot be formed correctly for motion copy*/
@@ -521,11 +521,11 @@ static void initPicture (sDecoder* decoder, sSlice* slice) {
           decoder->IdrConcealFlag = 1;
           concealLostFrames (dpb, slice);
           // reset to original conceal mode for future drops
-          decoder->concealMode = decoder->input.concealMode;
+          decoder->concealMode = decoder->param.concealMode;
           }
         else {
           // reset to original conceal mode for future drops
-          decoder->concealMode = decoder->input.concealMode;
+          decoder->concealMode = decoder->param.concealMode;
           decoder->IdrConcealFlag = 0;
           concealLostFrames (dpb, slice);
           }
@@ -1082,10 +1082,10 @@ void initOldSlice (sOldSlice* oldSliceParam) {
 //{{{
 void calcFrameNum (sDecoder* decoder, sPicture* p) {
 
-  int psnrPOC = decoder->activeSPS->mb_adaptive_frame_field_flag ? p->poc / (decoder->input.pocScale) :
-                                                                    p->poc / (decoder->input.pocScale);
+  int psnrPOC = decoder->activeSPS->mb_adaptive_frame_field_flag ? p->poc / (decoder->param.pocScale) :
+                                                                    p->poc / (decoder->param.pocScale);
   if (psnrPOC == 0)
-    decoder->idrPsnrNum = decoder->gapNumFrame * decoder->refPocGap / (decoder->input.pocScale);
+    decoder->idrPsnrNum = decoder->gapNumFrame * decoder->refPocGap / (decoder->param.pocScale);
 
   decoder->psnrNum = imax (decoder->psnrNum, decoder->idrPsnrNum+psnrPOC);
   decoder->frameNum = decoder->idrPsnrNum + psnrPOC;
