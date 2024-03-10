@@ -377,17 +377,18 @@ static void ercWriteMBMODEandMV (sMacroblock* mb) {
 //{{{
 static void initCurImg (sSlice* slice, sDecoder* decoder) {
 
-  if ((decoder->sepColourPlaneFlag != 0)) {
-    sPicture* vidref = decoder->noReferencePicture;
-    int noref = (slice->framePoc < decoder->recoveryPoc);
+  sPicture* vidRefPicture = decoder->noReferencePicture;
+  int noRef = slice->framePoc < decoder->recoveryPoc;
+
+  if (decoder->sepColourPlaneFlag != 0) {
     switch (slice->colourPlaneId) {
       case 0:
-        for (int j = 0; j < 6; j++) { //for (j = 0; j < (slice->sliceType==B_SLICE?2:1); j++) {
+        for (int j = 0; j < 6; j++) { 
           for (int i = 0; i < MAX_LIST_SIZE; i++) {
-            sPicture* curRef = slice->listX[j][i];
-            if (curRef) {
-              curRef->noRef = noref && (curRef == vidref);
-              curRef->curPixelY = curRef->imgY;
+            sPicture* refPicture = slice->listX[j][i];
+            if (refPicture) {
+              refPicture->noRef = noRef && (refPicture == vidRefPicture);
+              refPicture->curPixelY = refPicture->imgY;
               }
             }
           }
@@ -396,19 +397,16 @@ static void initCurImg (sSlice* slice, sDecoder* decoder) {
     }
 
   else {
-    sPicture* vidref = decoder->noReferencePicture;
-    int noref = (slice->framePoc < decoder->recoveryPoc);
-    int total_lists = slice->mbAffFrameFlag ? 6 : (slice->sliceType == B_SLICE ? 2 : 1);
-
-    for (int j = 0; j < total_lists; j++) {
+    int totalLists = slice->mbAffFrameFlag ? 6 : (slice->sliceType == B_SLICE ? 2 : 1);
+    for (int j = 0; j < totalLists; j++) {
       // note that if we always set this to MAX_LIST_SIZE, we avoid crashes with invalid refIndex being set
       // since currently this is done at the slice level, it seems safe to do so.
       // Note for some reason I get now a mismatch between version 12 and this one in cabac. I wonder why.
       for (int i = 0; i < MAX_LIST_SIZE; i++) {
-        sPicture* curRef = slice->listX[j][i];
-        if (curRef) {
-          curRef->noRef = noref && (curRef == vidref);
-          curRef->curPixelY = curRef->imgY;
+        sPicture* refPicture = slice->listX[j][i];
+        if (refPicture) {
+          refPicture->noRef = noRef && (refPicture == vidRefPicture);
+          refPicture->curPixelY = refPicture->imgY;
           }
         }
       }
@@ -1182,15 +1180,15 @@ void exitPicture (sDecoder* decoder, sPicture** picture) {
   if (!decoder->deblockMode &&
       (decoder->deblockEnable & (1 << (*picture)->usedForReference))) {
     //{{{  deblocking for frame or field
-    if( (decoder->sepColourPlaneFlag != 0) ) {
+    if (decoder->sepColourPlaneFlag != 0) {
       int colourPlaneId = decoder->sliceList[0]->colourPlaneId;
-      for (int nplane = 0; nplane < MAX_PLANE; ++nplane ) {
+      for (int nplane = 0; nplane < MAX_PLANE; ++nplane) {
         decoder->sliceList[0]->colourPlaneId = nplane;
         changePlaneJV (decoder, nplane, NULL );
         deblockPicture (decoder, *picture );
         }
       decoder->sliceList[0]->colourPlaneId = colourPlaneId;
-      makeFramePictureJV(decoder);
+      makeFramePictureJV (decoder);
       }
     else
       deblockPicture (decoder,* picture);
@@ -1233,19 +1231,19 @@ void exitPicture (sDecoder* decoder, sPicture** picture) {
     else if (sliceType == I_SLICE)
       strcpy (sliceTypeText, " I ");
 
-    else if (sliceType == P_SLICE) 
+    else if (sliceType == P_SLICE)
       strcpy (sliceTypeText, " P ");
 
-    else if (sliceType == SP_SLICE) 
+    else if (sliceType == SP_SLICE)
       strcpy (sliceTypeText, "SP ");
 
     else if  (sliceType == SI_SLICE)
       strcpy (sliceTypeText, "SI ");
 
-    else if (refpic) 
+    else if (refpic)
       strcpy (sliceTypeText, "rB ");
 
-    else 
+    else
       strcpy (sliceTypeText, " B ");
 
     if (structure == FRAME)
@@ -1254,7 +1252,7 @@ void exitPicture (sDecoder* decoder, sPicture** picture) {
     //}}}
   else if (structure == BotField) {
     //{{{  frame type string
-    if (sliceType == I_SLICE && isIdr) 
+    if (sliceType == I_SLICE && isIdr)
       strncat (sliceTypeText, "|IDR", 8-strlen (sliceTypeText));
 
     else if (sliceType == I_SLICE)
