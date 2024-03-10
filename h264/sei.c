@@ -703,7 +703,7 @@ static void interpret_recovery_point_info (byte* payload, int size, sDecoder* de
 //}}}
 //{{{
 static void interpret_dec_ref_pic_marking_repetition_info (byte* payload, int size,
-                                                           sDecoder* decoder, sSlice *pSlice) {
+                                                           sDecoder* decoder, sSlice *splice) {
   int original_idr_flag, original_frame_num;
   int original_field_pic_flag;
 
@@ -731,17 +731,17 @@ static void interpret_dec_ref_pic_marking_repetition_info (byte* payload, int si
   printf ("original_frame_num = %d\n", original_frame_num);
 
   // we need to save everything that is probably overwritten in dec_ref_pic_marking()
-  old_drpm = pSlice->decRefPicMarkingBuffer;
-  old_idr_flag = pSlice->idrFlag;
+  old_drpm = splice->decRefPicMarkingBuffer;
+  old_idr_flag = splice->idrFlag;
 
-  old_no_output_of_prior_pics_flag = pSlice->noOutputPriorPicFlag; //decoder->noOutputPriorPicFlag;
-  old_long_term_reference_flag = pSlice->longTermRefFlag;
-  old_adaptive_ref_pic_buffering_flag = pSlice->adaptiveRefPicBufferingFlag;
+  old_no_output_of_prior_pics_flag = splice->noOutputPriorPicFlag; //decoder->noOutputPriorPicFlag;
+  old_long_term_reference_flag = splice->longTermRefFlag;
+  old_adaptive_ref_pic_buffering_flag = splice->adaptiveRefPicBufferingFlag;
 
   // set new initial values
-  pSlice->idrFlag = original_idr_flag;
-  pSlice->decRefPicMarkingBuffer = NULL;
-  dec_ref_pic_marking (decoder, buf, pSlice);
+  splice->idrFlag = original_idr_flag;
+  splice->decRefPicMarkingBuffer = NULL;
+  dec_ref_pic_marking (decoder, buf, splice);
   //{{{  print out decoded values
   //if (decoder->idrFlag)
   //{
@@ -780,19 +780,19 @@ static void interpret_dec_ref_pic_marking_repetition_info (byte* payload, int si
   //}
   //}}}
 
-  while (pSlice->decRefPicMarkingBuffer) {
-    tmp_drpm = pSlice->decRefPicMarkingBuffer;
-    pSlice->decRefPicMarkingBuffer = tmp_drpm->next;
+  while (splice->decRefPicMarkingBuffer) {
+    tmp_drpm = splice->decRefPicMarkingBuffer;
+    splice->decRefPicMarkingBuffer = tmp_drpm->next;
     free (tmp_drpm);
     }
 
   // restore old values in decoder
-  pSlice->decRefPicMarkingBuffer = old_drpm;
-  pSlice->idrFlag = old_idr_flag;
-  pSlice->noOutputPriorPicFlag = old_no_output_of_prior_pics_flag;
-  decoder->noOutputPriorPicFlag = pSlice->noOutputPriorPicFlag;
-  pSlice->longTermRefFlag = old_long_term_reference_flag;
-  pSlice->adaptiveRefPicBufferingFlag = old_adaptive_ref_pic_buffering_flag;
+  splice->decRefPicMarkingBuffer = old_drpm;
+  splice->idrFlag = old_idr_flag;
+  splice->noOutputPriorPicFlag = old_no_output_of_prior_pics_flag;
+  decoder->noOutputPriorPicFlag = splice->noOutputPriorPicFlag;
+  splice->longTermRefFlag = old_long_term_reference_flag;
+  splice->adaptiveRefPicBufferingFlag = old_adaptive_ref_pic_buffering_flag;
 
   free (buf);
   }
@@ -1235,7 +1235,7 @@ static void interpret_green_metadata_info (byte* payload, int size, sDecoder* de
 //}}}
 
 //{{{
-void InterpretSEIMessage (byte* msg, int size, sDecoder* decoder, sSlice *pSlice) {
+void InterpretSEIMessage (byte* msg, int size, sDecoder* decoder, sSlice *splice) {
 
   int offset = 1;
   do {
@@ -1271,7 +1271,7 @@ void InterpretSEIMessage (byte* msg, int size, sDecoder* decoder, sSlice *pSlice
       case  SEI_RECOVERY_POINT:
         interpret_recovery_point_info (msg+offset, payload_size, decoder); break;
       case  SEI_DEC_REF_PIC_MARKING_REPETITION:
-        interpret_dec_ref_pic_marking_repetition_info (msg+offset, payload_size, decoder, pSlice ); break;
+        interpret_dec_ref_pic_marking_repetition_info (msg+offset, payload_size, decoder, splice ); break;
       case  SEI_SPARE_PIC:
         interpret_spare_pic (msg+offset, payload_size, decoder); break;
       case  SEI_SCENE_INFO:

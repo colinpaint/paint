@@ -1867,17 +1867,17 @@ void init_lists_for_non_reference_loss (sDPB* dpb, int currSliceType, ePicStruct
 * based on the sudden decrease in frame number.
 ************************************************************************
 */
-void concealLostFrames (sDPB* dpb, sSlice *pSlice)
+void concealLostFrames (sDPB* dpb, sSlice *splice)
 {
   sDecoder* decoder = dpb->decoder;
   int CurrFrameNum;
   int UnusedShortTermFrameNum;
   sPicture *picture = NULL;
-  int tmp1 = pSlice->deltaPicOrderCount[0];
-  int tmp2 = pSlice->deltaPicOrderCount[1];
+  int tmp1 = splice->deltaPicOrderCount[0];
+  int tmp2 = splice->deltaPicOrderCount[1];
   int i;
 
-  pSlice->deltaPicOrderCount[0] = pSlice->deltaPicOrderCount[1] = 0;
+  splice->deltaPicOrderCount[0] = splice->deltaPicOrderCount[1] = 0;
 
   // printf("A gap in frame number is found, try to fill it.\n");
 
@@ -1892,7 +1892,7 @@ void concealLostFrames (sDPB* dpb, sSlice *pSlice)
   else
     UnusedShortTermFrameNum = (decoder->preFrameNum + 1) % decoder->maxFrameNum;
 
-  CurrFrameNum = pSlice->frameNum;
+  CurrFrameNum = splice->frameNum;
 
   while (CurrFrameNum != UnusedShortTermFrameNum)
   {
@@ -1908,7 +1908,7 @@ void concealLostFrames (sDPB* dpb, sSlice *pSlice)
 
     picture->adaptiveRefPicBufferingFlag = 0;
 
-    pSlice->frameNum = UnusedShortTermFrameNum;
+    splice->frameNum = UnusedShortTermFrameNum;
 
     picture->topPoc = decoder->lastRefPicPoc + decoder->refPocGap;
     picture->botPoc = picture->topPoc;
@@ -1941,13 +1941,13 @@ void concealLostFrames (sDPB* dpb, sSlice *pSlice)
     // update reference flags and set current flag.
     for(i=16;i>0;i--)
     {
-      pSlice->refFlag[i] = pSlice->refFlag[i-1];
+      splice->refFlag[i] = splice->refFlag[i-1];
     }
-    pSlice->refFlag[0] = 0;
+    splice->refFlag[0] = 0;
   }
-  pSlice->deltaPicOrderCount[0] = tmp1;
-  pSlice->deltaPicOrderCount[1] = tmp2;
-  pSlice->frameNum = CurrFrameNum;
+  splice->deltaPicOrderCount[0] = tmp1;
+  splice->deltaPicOrderCount[1] = tmp2;
+  splice->frameNum = CurrFrameNum;
 }
 //}}}
 //{{{

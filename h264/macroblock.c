@@ -386,7 +386,7 @@ static int BType2CtxRef (int btype) {
 //}}}
 //{{{
 static char readRefPictureIdxVLC (sMacroblock* mb, sSyntaxElement* se,
-                                   sDataPartition* dp, char b8mode, int list) {
+                                   sDatadp* dp, char b8mode, int list) {
 
   se->context = BType2CtxRef (b8mode);
   se->value2 = list;
@@ -395,7 +395,7 @@ static char readRefPictureIdxVLC (sMacroblock* mb, sSyntaxElement* se,
   }
 //}}}
 //{{{
-static char readRefPictureIdxFLC (sMacroblock* mb, sSyntaxElement* se, sDataPartition *dp, char b8mode, int list)
+static char readRefPictureIdxFLC (sMacroblock* mb, sSyntaxElement* se, sDatadp* dp, char b8mode, int list)
 {
   se->context = BType2CtxRef (b8mode);
   se->len = 1;
@@ -406,14 +406,14 @@ static char readRefPictureIdxFLC (sMacroblock* mb, sSyntaxElement* se, sDataPart
   }
 //}}}
 //{{{
-static char readRefPictureIdxNull (sMacroblock* mb, sSyntaxElement* se, sDataPartition *dp, char b8mode, int list)
+static char readRefPictureIdxNull (sMacroblock* mb, sSyntaxElement* se, sDatadp* dp, char b8mode, int list)
 {
   return 0;
 }
 //}}}
 //{{{
 static void prepareListforRefIdx (sMacroblock* mb, sSyntaxElement* se,
-                                  sDataPartition *dp, int numRefIndexActive, int refidx_present) {
+                                  sDatadp *dp, int numRefIndexActive, int refidx_present) {
 
   if (numRefIndexActive > 1) {
     if (mb->decoder->activePPS->entropyCodingModeFlag == (Boolean) CAVLC || dp->bitstream->eiFlag) {
@@ -460,14 +460,14 @@ void updateQp (sMacroblock* mb, int qp) {
   }
 //}}}
 //{{{
-void readDeltaQuant (sSyntaxElement* se, sDataPartition *dp, sMacroblock* mb, const byte *partitionMap, int type)
+void readDeltaQuant (sSyntaxElement* se, sDatadp *dp, sMacroblock* mb, const byte *dpMap, int type)
 {
   sSlice* slice = mb->slice;
   sDecoder* decoder = mb->decoder;
 
   se->type = type;
 
-  dp = &(slice->partitions[partitionMap[se->type]]);
+  dp = &(slice->dps[dpMap[se->type]]);
 
   if (decoder->activePPS->entropyCodingModeFlag == (Boolean)CAVLC || dp->bitstream->eiFlag)
     se->mapping = linfo_se;
@@ -489,7 +489,7 @@ void readDeltaQuant (sSyntaxElement* se, sDataPartition *dp, sMacroblock* mb, co
 //}}}
 
 //{{{
-static void readMBRefPictureIdx (sSyntaxElement* se, sDataPartition *dp,
+static void readMBRefPictureIdx (sSyntaxElement* se, sDatadp *dp,
                                  sMacroblock* mb, sPicMotionParam** mvInfo,
                                  int list, int step_v0, int step_h0) {
 
@@ -563,7 +563,7 @@ static void readMBRefPictureIdx (sSyntaxElement* se, sDataPartition *dp,
   }
 //}}}
 //{{{
-static void readMBMotionVectors (sSyntaxElement* se, sDataPartition *dp, sMacroblock* mb,
+static void readMBMotionVectors (sSyntaxElement* se, sDatadp *dp, sMacroblock* mb,
                                  int list, int step_h0, int step_v0) {
 
   if (mb->mbType == 1) {
@@ -758,9 +758,9 @@ void startMacroblock (sSlice* slice, sMacroblock** mb) {
   // Reset syntax element entries in MB struct
   if (slice->sliceType != I_SLICE) {
     if (slice->sliceType != B_SLICE)
-      memset((*mb)->mvd[0][0][0], 0, MB_BLOCK_PARTITIONS * 2 * sizeof(short));
+      memset((*mb)->mvd[0][0][0], 0, MB_BLOCK_dpS * 2 * sizeof(short));
     else
-      memset((*mb)->mvd[0][0][0], 0, 2 * MB_BLOCK_PARTITIONS * 2 * sizeof(short));
+      memset((*mb)->mvd[0][0][0], 0, 2 * MB_BLOCK_dpS * 2 * sizeof(short));
     }
 
   memset((*mb)->cbpStructure, 0, 3 * sizeof(sCBPStructure));
@@ -1019,8 +1019,8 @@ static void readMotionInfoP (sMacroblock* mb){
   sSlice* slice = mb->slice;
 
   sSyntaxElement se;
-  sDataPartition *dp = NULL;
-  const byte *partitionMap       = assignSE2partition[slice->dataPartitionMode];
+  sDatadp *dp = NULL;
+  const byte *dpMap       = assignSE2dp[slice->datadpMode];
   short partmode        = ((mb->mbType == P8x8) ? 4 : mb->mbType);
   int step_h0         = BLOCK_STEP [partmode][0];
   int step_v0         = BLOCK_STEP [partmode][1];
@@ -1035,7 +1035,7 @@ static void readMotionInfoP (sMacroblock* mb){
 
   //=====  READ REFERENCE PICTURE INDICES =====
   se.type = SE_REFFRAME;
-  dp = &(slice->partitions[partitionMap[SE_REFFRAME]]);
+  dp = &(slice->dps[dpMap[SE_REFFRAME]]);
 
   //  For LIST_0, if multiple ref. pictures, read LIST_0 reference picture indices for the MB
   prepareListforRefIdx (mb, &se, dp, slice->numRefIndexActive[LIST_0], (mb->mbType != P8x8) || (!slice->allrefzero));
@@ -1043,7 +1043,7 @@ static void readMotionInfoP (sMacroblock* mb){
 
   //=====  READ MOTION VECTORS =====
   se.type = SE_MVD;
-  dp = &(slice->partitions[partitionMap[SE_MVD]]);
+  dp = &(slice->dps[dpMap[SE_MVD]]);
   if (decoder->activePPS->entropyCodingModeFlag == (Boolean) CAVLC || dp->bitstream->eiFlag)
     se.mapping = linfo_se;
   else
@@ -1072,8 +1072,8 @@ static void readMotionInfoB (sMacroblock* mb) {
   sDecoder* decoder = mb->decoder;
   sPicture* picture = slice->picture;
   sSyntaxElement se;
-  sDataPartition* dp = NULL;
-  const byte* partitionMap = assignSE2partition[slice->dataPartitionMode];
+  sDatadp* dp = NULL;
+  const byte* dpMap = assignSE2dp[slice->datadpMode];
   int partmode = (mb->mbType == P8x8) ? 4 : mb->mbType;
   int step_h0 = BLOCK_STEP [partmode][0];
   int step_v0 = BLOCK_STEP [partmode][1];
@@ -1089,7 +1089,7 @@ static void readMotionInfoB (sMacroblock* mb) {
 
   //=====  READ REFERENCE PICTURE INDICES =====
   se.type = SE_REFFRAME;
-  dp = &(slice->partitions[partitionMap[SE_REFFRAME]]);
+  dp = &(slice->dps[dpMap[SE_REFFRAME]]);
 
   //  For LIST_0, if multiple ref. pictures, read LIST_0 reference picture indices for the MB
   prepareListforRefIdx (mb, &se, dp, slice->numRefIndexActive[LIST_0], TRUE);
@@ -1101,7 +1101,7 @@ static void readMotionInfoB (sMacroblock* mb) {
 
   //=====  READ MOTION VECTORS =====
   se.type = SE_MVD;
-  dp = &(slice->partitions[partitionMap[SE_MVD]]);
+  dp = &(slice->dps[dpMap[SE_MVD]]);
   if (decoder->activePPS->entropyCodingModeFlag == (Boolean)CAVLC || dp->bitstream->eiFlag)
     se.mapping = linfo_se;
   else
@@ -1137,7 +1137,7 @@ void setSliceMethods (sSlice* slice) {
       slice->nalReadMotionInfo = readMotionInfoP;
       slice->decodeOneComponent = decodeComponentP;
       slice->updateDirectMvInfo = NULL;
-      slice->initLists = initListsPslice;
+      slice->initLists = initListssplice;
       break;
     //}}}
     //{{{
@@ -1146,7 +1146,7 @@ void setSliceMethods (sSlice* slice) {
       slice->nalReadMotionInfo = readMotionInfoP;
       slice->decodeOneComponent = decodeComponentSP;
       slice->updateDirectMvInfo = NULL;
-      slice->initLists = initListsPslice;
+      slice->initLists = initListssplice;
       break;
     //}}}
     //{{{

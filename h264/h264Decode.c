@@ -57,8 +57,8 @@ sSlice* allocSlice (sDecoder* decoder) {
   slice->mot_ctx = create_contexts_MotionInfo();
   slice->tex_ctx = create_contexts_TextureInfo();
 
-  slice->maxPartitionNum = 3;  //! assume data partitioning (worst case) for the following mallocs()
-  slice->partitions = allocPartition (slice->maxPartitionNum);
+  slice->maxdpNum = 3;  //! assume data dping (worst case) for the following mallocs()
+  slice->dps = allocdp (slice->maxdpNum);
 
   get_mem2Dwp (&(slice->WPParam), 2, MAX_REFERENCE_PICTURES);
   get_mem3Dint (&(slice->wpWeight), 2, MAX_REFERENCE_PICTURES, 3);
@@ -106,7 +106,7 @@ static void freeSlice (sSlice *slice) {
   free_mem3Dint (slice->wpOffset);
   free_mem4Dint (slice->wbpWeight);
 
-  freePartition (slice->partitions, 3);
+  freedp (slice->dps, 3);
 
   // delete all context models
   delete_contexts_MotionInfo (slice->mot_ctx);
@@ -292,34 +292,34 @@ void init_frext (sDecoder* decoder) {
 //}}}
 
 //{{{
-sDataPartition* allocPartition (int n) {
+sDatadp* allocdp (int n) {
 
-  sDataPartition* partitions = (sDataPartition*)calloc (n, sizeof(sDataPartition));
-  if (partitions == NULL) {
-    snprintf (errorText, ET_SIZE, "allocPartition: Memory allocation for Data Partition failed");
+  sDatadp* dps = (sDatadp*)calloc (n, sizeof(sDatadp));
+  if (dps == NULL) {
+    snprintf (errorText, ET_SIZE, "allocdp: Memory allocation for Data dp failed");
     error (errorText, 100);
     }
 
-  for (int i = 0; i < n; ++i) {// loop over all data partitions
-    sDataPartition* dataPart = &(partitions[i]);
+  for (int i = 0; i < n; ++i) {// loop over all data dps
+    sDatadp* dataPart = &(dps[i]);
     dataPart->bitstream = (sBitstream *) calloc(1, sizeof(sBitstream));
     if (dataPart->bitstream == NULL) {
-      snprintf (errorText, ET_SIZE, "allocPartition: Memory allocation for sBitstream failed");
+      snprintf (errorText, ET_SIZE, "allocdp: Memory allocation for sBitstream failed");
       error (errorText, 100);
       }
 
     dataPart->bitstream->streamBuffer = (byte *) calloc(MAX_CODED_FRAME_SIZE, sizeof(byte));
     if (dataPart->bitstream->streamBuffer == NULL) {
-      snprintf (errorText, ET_SIZE, "allocPartition: Memory allocation for streamBuffer failed");
+      snprintf (errorText, ET_SIZE, "allocdp: Memory allocation for streamBuffer failed");
       error (errorText, 100);
       }
     }
 
-  return partitions;
+  return dps;
   }
 //}}}
 //{{{
-void freePartition (sDataPartition* dp, int n) {
+void freedp (sDatadp* dp, int n) {
 
   assert (dp != NULL);
   assert (dp->bitstream != NULL);

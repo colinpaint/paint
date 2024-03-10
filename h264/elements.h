@@ -40,36 +40,36 @@
 #define NO_EC               0   //!< no error conceal necessary
 #define EC_REQ              1   //!< error conceal required
 #define EC_SYNC             2   //!< search and sync on next header element
-#define MAXPARTITIONMODES   2
+#define MAXdpMODES   2
 
-//{{{  maximum possible partition modes as defined in assignSE2partition[][]
+//{{{  maximum possible dp modes as defined in assignSE2dp[][]
 
 /*!
- *  \brief  lookup-table to assign different elements to partition
- *  \note   here we defined up to 6 different partitions similar to
+ *  \brief  lookup-table to assign different elements to dp
+ *  \note   here we defined up to 6 different dps similar to
  *          document Q15-k-18 described in the PROGFRAMEMODE.
  *          The Sliceheader contains the PSYNC information. \par
  *
- *          Elements inside a partition are not ordered. They are
+ *          Elements inside a dp are not ordered. They are
  *          ordered by occurence in the stream.
- *          Assumption: Only partitionlosses are considered. \par
+ *          Assumption: Only dplosses are considered. \par
  *
  *          The texture elements luminance and chrominance are
  *          not ordered in the progressive form
  *          This may be changed in image.c \par
  *
- *          We also defined the proposed internet partition mode
+ *          We also defined the proposed internet dp mode
  *          of Stephan Wenger here. To select the desired mode
  *          uncomment one of the two following lines. \par
  *
  *  -IMPORTANT:
- *          Picture- or Sliceheaders must be assigned to partition 0. \par
- *          Furthermore partitions must follow syntax dependencies as
+ *          Picture- or Sliceheaders must be assigned to dp 0. \par
+ *          Furthermore dps must follow syntax dependencies as
  *          outlined in document Q15-J-23.
  */
 //}}}
-static const byte assignSE2partition[][SE_MAX_ELEMENTS] = {
+static const byte assignSE2dp[][SE_MAX_ELEMENTS] = {
   // 0  1  2  3  4  5  6  7  8  9 10 11 12 13 14 15 16 17 18 19    // element number (do not uncomment)
-  {  0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 }, // all elements in one partition no data partitioning
-  {  0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 0, 2, 2, 2, 2, 0, 0, 0, 0 }  // three partitions per slice
+  {  0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 }, // all elements in one dp no data dping
+  {  0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 0, 2, 2, 2, 2, 0, 0, 0, 0 }  // three dps per slice
   };

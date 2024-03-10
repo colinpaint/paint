@@ -366,7 +366,7 @@ static void initVUI (sSPS* sps) {
   }
 //}}}
 //{{{
-static int readHRDParameters (sDataPartition* dp, sHRD* hrd) {
+static int readHRDParameters (sDatadp* dp, sHRD* hrd) {
 
   sBitstream *s = dp->bitstream;
   hrd->cpb_cnt_minus1 = readUeV ("VUI cpb_cnt_minus1", s);
@@ -390,7 +390,7 @@ static int readHRDParameters (sDataPartition* dp, sHRD* hrd) {
   }
 //}}}
 //{{{
-static int readVUI (sDataPartition* p, sSPS* sps) {
+static int readVUI (sDatadp* p, sSPS* sps) {
 
   sBitstream* s = p->bitstream;
   if (sps->vui_parameters_present_flag) {
@@ -463,7 +463,7 @@ static int readVUI (sDataPartition* p, sSPS* sps) {
   }
 //}}}
 //{{{
-static void interpretSPS (sDecoder* decoder, sDataPartition* dp, sSPS* sps) {
+static void interpretSPS (sDecoder* decoder, sDatadp* dp, sSPS* sps) {
 
   sBitstream* s = dp->bitstream;
   sps->profileIdc = readUv (8, "SPS profileIdc", s);
@@ -583,7 +583,7 @@ void makeSPSavailable (sDecoder* decoder, int id, sSPS* sps) {
 //{{{
 void processSPS (sDecoder* decoder, sNalu* nalu) {
 
-  sDataPartition* dp = allocPartition (1);
+  sDatadp* dp = allocdp (1);
   dp->bitstream->eiFlag = 0;
   dp->bitstream->readLen = dp->bitstream->frameBitOffset = 0;
   memcpy (dp->bitstream->streamBuffer, &nalu->buf[1], nalu->len-1);
@@ -613,7 +613,7 @@ void processSPS (sDecoder* decoder, sNalu* nalu) {
       decoder->ChromaArrayType = sps->chromaFormatIdc;
     }
 
-  freePartition (dp, 1);
+  freedp (dp, 1);
   freeSPS (sps);
   }
 //}}}
@@ -729,7 +729,7 @@ static int ppsIsEqual (sPPS* pps1, sPPS* pps2) {
   }
 //}}}
 //{{{
-static void interpretPPS (sDecoder* decoder, sDataPartition* dp, sPPS* pps) {
+static void interpretPPS (sDecoder* decoder, sDatadp* dp, sPPS* pps) {
 
   unsigned n_ScalingList;
   int chromaFormatIdc;
@@ -889,7 +889,7 @@ void cleanUpPPS (sDecoder* decoder) {
 void processPPS (sDecoder* decoder, sNalu* nalu) {
 
 
-  sDataPartition* dp = allocPartition (1);
+  sDatadp* dp = allocdp (1);
   dp->bitstream->eiFlag = 0;
   dp->bitstream->readLen = dp->bitstream->frameBitOffset = 0;
   memcpy (dp->bitstream->streamBuffer, &nalu->buf[1], nalu->len-1);
@@ -911,7 +911,7 @@ void processPPS (sDecoder* decoder, sNalu* nalu) {
     }
 
   makePPSavailable (decoder, pps->ppsId, pps);
-  freePartition (dp, 1);
+  freedp (dp, 1);
   freePPS (pps);
   }
 //}}}
@@ -949,16 +949,16 @@ void useParameterSet (sSlice* slice) {
   activateSPS (decoder, sps);
   activatePPS (decoder, pps);
 
-  // slice->dataPartitionMode is set by read_new_slice (NALU first byte available there)
+  // slice->datadpMode is set by read_new_slice (NALU first byte available there)
   if (pps->entropyCodingModeFlag == (Boolean)CAVLC) {
     slice->nalStartcode = uvlc_startcode_follows;
     for (int i = 0; i < 3; i++)
-      slice->partitions[i].readsSyntaxElement = readsSyntaxElement_UVLC;
+      slice->dps[i].readsSyntaxElement = readsSyntaxElement_UVLC;
     }
   else {
     slice->nalStartcode = cabac_startcode_follows;
     for (int i = 0; i < 3; i++)
-      slice->partitions[i].readsSyntaxElement = readsSyntaxElement_CABAC;
+      slice->dps[i].readsSyntaxElement = readsSyntaxElement_CABAC;
     }
   decoder->type = slice->sliceType;
   }

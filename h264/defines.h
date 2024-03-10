@@ -65,8 +65,8 @@ typedef enum {
 #define MB_PIXELS_SHIFT        8  // log2(MB_BLOCK_SIZE * MB_BLOCK_SIZE)
 #define MB_BLOCK_SHIFT         4
 #define BLOCK_MULTIPLE         4  // (MB_BLOCK_SIZE/BLOCK_SIZE)
-#define MB_BLOCK_PARTITIONS   16  // (BLOCK_MULTIPLE * BLOCK_MULTIPLE)
-#define BLOCK_CONTEXT         64  // (4 * MB_BLOCK_PARTITIONS)
+#define MB_BLOCK_dpS   16  // (BLOCK_MULTIPLE * BLOCK_MULTIPLE)
+#define BLOCK_CONTEXT         64  // (4 * MB_BLOCK_dpS)
 
 // These variables relate to the subpel accuracy supported by the software (1/4)
 #define BLOCK_SIZE_SP         16  // BLOCK_SIZE << 2

@@ -1830,17 +1830,17 @@ void prepare_direct_params (sMacroblock* mb, sPicture* picture, sMotionVec* pmvl
 //}}}
 
 //{{{
-static void check_motion_vector_range (const sMotionVec *mv, sSlice *pSlice)
+static void check_motion_vector_range (const sMotionVec *mv, sSlice *splice)
 {
   if (mv->mvX > 8191 || mv->mvX < -8192)
   {
-    fprintf(stderr,"WARNING! Horizontal motion vector %d is out of allowed range {-8192, 8191} in picture %d, macroblock %d\n", mv->mvX, pSlice->decoder->number, pSlice->mbIndex);
+    fprintf(stderr,"WARNING! Horizontal motion vector %d is out of allowed range {-8192, 8191} in picture %d, macroblock %d\n", mv->mvX, splice->decoder->number, splice->mbIndex);
     //error("invalid stream: too big horizontal motion vector", 500);
   }
 
-  if (mv->mvY > (pSlice->max_mb_vmv_r - 1) || mv->mvY < (-pSlice->max_mb_vmv_r))
+  if (mv->mvY > (splice->max_mb_vmv_r - 1) || mv->mvY < (-splice->max_mb_vmv_r))
   {
-    fprintf(stderr,"WARNING! Vertical motion vector %d is out of allowed range {%d, %d} in picture %d, macroblock %d\n", mv->mvY, (-pSlice->max_mb_vmv_r), (pSlice->max_mb_vmv_r - 1), pSlice->decoder->number, pSlice->mbIndex);
+    fprintf(stderr,"WARNING! Vertical motion vector %d is out of allowed range {%d, %d} in picture %d, macroblock %d\n", mv->mvY, (-splice->max_mb_vmv_r), (splice->max_mb_vmv_r - 1), splice->decoder->number, splice->mbIndex);
     //error("invalid stream: too big vertical motion vector", 500);
   }
 }

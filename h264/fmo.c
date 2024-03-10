@@ -239,7 +239,7 @@ static int FmoGenerateMapUnitToSliceGroupMap (sDecoder* decoder, sSlice* slice) 
 //}}}
 //{{{
 // Generates decoder->mbToSliceGroupMap from decoder->mapUnitToSliceGroupMap
-static int FmoGenerateMbToSliceGroupMap (sDecoder* decoder, sSlice *pSlice) {
+static int FmoGenerateMbToSliceGroupMap (sDecoder* decoder, sSlice *splice) {
 
   // allocate memory for decoder->mbToSliceGroupMap
   if (decoder->mbToSliceGroupMap)
@@ -252,14 +252,14 @@ static int FmoGenerateMbToSliceGroupMap (sDecoder* decoder, sSlice *pSlice) {
     }
 
   sSPS* sps = decoder->activeSPS;
-  if ((sps->frameMbOnlyFlag)|| pSlice->fieldPicFlag) {
+  if ((sps->frameMbOnlyFlag)|| splice->fieldPicFlag) {
     int *mbToSliceGroupMap = decoder->mbToSliceGroupMap;
     int *mapUnitToSliceGroupMap = decoder->mapUnitToSliceGroupMap;
     for (unsigned i = 0; i < decoder->picSizeInMbs; i++)
       *mbToSliceGroupMap++ = *mapUnitToSliceGroupMap++;
     }
   else
-    if (sps->mb_adaptive_frame_field_flag  &&  (!pSlice->fieldPicFlag)) {
+    if (sps->mb_adaptive_frame_field_flag  &&  (!splice->fieldPicFlag)) {
       for (unsigned i = 0; i < decoder->picSizeInMbs; i++)
         decoder->mbToSliceGroupMap[i] = decoder->mapUnitToSliceGroupMap[i/2];
       }
@@ -273,12 +273,12 @@ static int FmoGenerateMbToSliceGroupMap (sDecoder* decoder, sSlice *pSlice) {
 //}}}
 
 //{{{
-int initFmo (sDecoder* decoder, sSlice* pSlice) {
+int initFmo (sDecoder* decoder, sSlice* splice) {
 
   sPPS* pps = decoder->activePPS;
 
-  FmoGenerateMapUnitToSliceGroupMap (decoder, pSlice);
-  FmoGenerateMbToSliceGroupMap (decoder, pSlice);
+  FmoGenerateMapUnitToSliceGroupMap (decoder, splice);
+  FmoGenerateMbToSliceGroupMap (decoder, splice);
   decoder->sliceGroupsNum = pps->numSliceGroupsMinus1 + 1;
 
 #ifdef PRINT_FMO_MAPS

@@ -850,10 +850,10 @@ static int readNewSlice (sSlice* slice) {
 
         slice->idrFlag = nalu->unitType == NALU_TYPE_IDR;
         slice->refId = nalu->refId;
-        slice->dataPartitionMode = PAR_DP_1;
-        slice->maxPartitionNum = 1;
+        slice->datadpMode = PAR_DP_1;
+        slice->maxdpNum = 1;
 
-        s = slice->partitions[0].bitstream;
+        s = slice->dps[0].bitstream;
         s->eiFlag = 0;
         s->frameBitOffset = s->readLen = 0;
         memcpy (s->streamBuffer, &nalu->buf[1], nalu->len-1);
@@ -908,7 +908,7 @@ static int readNewSlice (sSlice* slice) {
           int byteStartPosition = s->frameBitOffset / 8;
           if ((s->frameBitOffset % 8) != 0)
             ++byteStartPosition;
-          arideco_start_decoding (&slice->partitions[0].deCabac, s->streamBuffer, byteStartPosition, &s->readLen);
+          arideco_start_decoding (&slice->dps[0].deCabac, s->streamBuffer, byteStartPosition, &s->readLen);
           }
 
         decoder->recoveryPoint = 0;
@@ -921,13 +921,13 @@ static int readNewSlice (sSlice* slice) {
           break;
 
         // read DP_A
-        slice->noDataPartitionB = 1;
-        slice->noDataPartitionC = 1;
+        slice->noDatadpB = 1;
+        slice->noDatadpC = 1;
         slice->idrFlag = FALSE;
         slice->refId = nalu->refId;
-        slice->dataPartitionMode = PAR_DP_3;
-        slice->maxPartitionNum = 3;
-        s = slice->partitions[0].bitstream;
+        slice->datadpMode = PAR_DP_3;
+        slice->maxdpNum = 3;
+        s = slice->dps[0].bitstream;
         s->eiFlag = 0;
         s->frameBitOffset = s->readLen = 0;
         memcpy (s->streamBuffer, &nalu->buf[1], nalu->len - 1);
@@ -965,7 +965,7 @@ static int readNewSlice (sSlice* slice) {
         int slice_id_a = readUeV ("NALU: DP_A slice_id", s);
 
         if (decoder->activePPS->entropyCodingModeFlag)
-          error ("data partition with CABAC not allowed", 500);
+          error ("data dp with CABAC not allowed", 500);
 
         // reading next DP
         if (!readNextNalu (decoder, nalu))
@@ -973,22 +973,22 @@ static int readNewSlice (sSlice* slice) {
 
         if (NALU_TYPE_DPB == nalu->unitType) {
           //{{{  got nalu DPB
-          s = slice->partitions[1].bitstream;
+          s = slice->dps[1].bitstream;
           s->eiFlag = 0;
           s->frameBitOffset = s->readLen = 0;
           memcpy (s->streamBuffer, &nalu->buf[1], nalu->len-1);
           s->codeLen = s->bitstreamLength = RBSPtoSODB (s->streamBuffer, nalu->len-1);
-          int slice_id_b = readUeV ("NALU dataPartitionB sliceId", s);
-          slice->noDataPartitionB = 0;
+          int slice_id_b = readUeV ("NALU datadpB sliceId", s);
+          slice->noDatadpB = 0;
 
           if ((slice_id_b != slice_id_a) || (nalu->lostPackets)) {
-            printf ("dataPartitionB does not match dataPartitionA\n");
-            slice->noDataPartitionB = 1;
-            slice->noDataPartitionC = 1;
+            printf ("datadpB does not match datadpA\n");
+            slice->noDatadpB = 1;
+            slice->noDatadpC = 1;
             }
           else {
             if (decoder->activePPS->redundantPicCountPresentFlag)
-              readUeV ("NALU dataPartitionB redundantPicCount", s);
+              readUeV ("NALU datadpB redundantPicCount", s);
 
             // we're finished with DP_B, so let's continue with next DP
             if (!readNextNalu (decoder, nalu))
@@ -997,21 +997,21 @@ static int readNewSlice (sSlice* slice) {
           }
           //}}}
         else
-          slice->noDataPartitionB = 1;
+          slice->noDatadpB = 1;
 
         if (NALU_TYPE_DPC == nalu->unitType) {
           //{{{  got nalu DPC
-          s = slice->partitions[2].bitstream;
+          s = slice->dps[2].bitstream;
           s->eiFlag = 0;
           s->frameBitOffset = s->readLen = 0;
           memcpy (s->streamBuffer, &nalu->buf[1], nalu->len-1);
           s->codeLen = s->bitstreamLength = RBSPtoSODB (s->streamBuffer, nalu->len-1);
 
-          slice->noDataPartitionC = 0;
+          slice->noDatadpC = 0;
           int slice_id_c = readUeV ("NALU: DP_C slice_id", s);
           if ((slice_id_c != slice_id_a)|| (nalu->lostPackets)) {
-            printf ("Warning: got a data partition C which does not match DP_A(DP loss!)\n");
-            slice->noDataPartitionC =1;
+            printf ("Warning: got a data dp C which does not match DP_A(DP loss!)\n");
+            slice->noDatadpC =1;
             }
 
           if (decoder->activePPS->redundantPicCountPresentFlag)
@@ -1019,25 +1019,25 @@ static int readNewSlice (sSlice* slice) {
           }
           //}}}
         else {
-          slice->noDataPartitionC = 1;
+          slice->noDatadpC = 1;
           pendingNalu = nalu;
           }
 
-        // check if we read anything else than the expected partitions
+        // check if we read anything else than the expected dps
         if ((nalu->unitType != NALU_TYPE_DPB) &&
-            (nalu->unitType != NALU_TYPE_DPC) && (!slice->noDataPartitionC))
+            (nalu->unitType != NALU_TYPE_DPC) && (!slice->noDatadpC))
           goto process_nalu;
 
         return curHeader;
       //}}}
       //{{{
       case NALU_TYPE_DPB:
-        printf ("found data partition B without matching DP A\n");
+        printf ("found data dp B without matching DP A\n");
         break;
       //}}}
       //{{{
       case NALU_TYPE_DPC:
-        printf ("found data partition C without matching DP A\n");
+        printf ("found data dp C without matching DP A\n");
         break;
       //}}}
       //{{{
@@ -1355,16 +1355,16 @@ int decodeFrame (sDecoder* decoder) {
 
        decoder->picSliceIndex++;
        if (decoder->picSliceIndex >= decoder->numAllocatedSlices) {
-         sSlice** tmpSliceList = (sSlice**)realloc (
+         sSlice** tmspliceList = (sSlice**)realloc (
            decoder->sliceList, (decoder->numAllocatedSlices + MAX_NUM_DECSLICES) * sizeof(sSlice*));
-         if (!tmpSliceList) {
-           tmpSliceList = calloc ((decoder->numAllocatedSlices + MAX_NUM_DECSLICES), sizeof(sSlice*));
-           memcpy (tmpSliceList, decoder->sliceList, decoder->picSliceIndex * sizeof(sSlice*));
+         if (!tmspliceList) {
+           tmspliceList = calloc ((decoder->numAllocatedSlices + MAX_NUM_DECSLICES), sizeof(sSlice*));
+           memcpy (tmspliceList, decoder->sliceList, decoder->picSliceIndex * sizeof(sSlice*));
            free (decoder->sliceList);
-           sliceList = decoder->sliceList = tmpSliceList;
+           sliceList = decoder->sliceList = tmspliceList;
            }
          else {
-           sliceList = decoder->sliceList = tmpSliceList;
+           sliceList = decoder->sliceList = tmspliceList;
            memset (decoder->sliceList + decoder->picSliceIndex, 0, sizeof(sSlice*) * MAX_NUM_DECSLICES);
            }
          decoder->numAllocatedSlices += MAX_NUM_DECSLICES;
