@@ -816,7 +816,7 @@ static int readNewSlice (sSlice* slice) {
   sDecoder* decoder = slice->decoder;
 
   int curHeader = 0;
-  sBitstream* curStream = NULL;
+  sBitstream* s = NULL;
   for (;;) {
     sNalu* nalu = decoder->nalu;
     if (!pendingNalu) {
@@ -833,13 +833,6 @@ static int readNewSlice (sSlice* slice) {
       case NALU_TYPE_SLICE:
       //{{{
       case NALU_TYPE_IDR:
-        if (decoder->param.imageDebug) {
-          if (nalu->unitType == NALU_TYPE_IDR)
-            printf ("IDR\n");
-          else
-            printf ("SLC\n");
-          }
-
         if (decoder->recoveryPoint || nalu->unitType == NALU_TYPE_IDR) {
           if (decoder->recoveryPointFound == 0) {
             if (nalu->unitType != NALU_TYPE_IDR) {
@@ -855,16 +848,16 @@ static int readNewSlice (sSlice* slice) {
         if (decoder->recoveryPointFound == 0)
           break;
 
-        slice->idrFlag = (nalu->unitType == NALU_TYPE_IDR);
+        slice->idrFlag = nalu->unitType == NALU_TYPE_IDR;
         slice->refId = nalu->refId;
         slice->dataPartitionMode = PAR_DP_1;
         slice->maxPartitionNum = 1;
 
-        curStream = slice->partitions[0].bitstream;
-        curStream->eiFlag = 0;
-        curStream->frameBitOffset = curStream->readLen = 0;
-        memcpy (curStream->streamBuffer, &nalu->buf[1], nalu->len-1);
-        curStream->codeLen = curStream->bitstreamLength = RBSPtoSODB (curStream->streamBuffer, nalu->len - 1);
+        s = slice->partitions[0].bitstream;
+        s->eiFlag = 0;
+        s->frameBitOffset = s->readLen = 0;
+        memcpy (s->streamBuffer, &nalu->buf[1], nalu->len-1);
+        s->codeLen = s->bitstreamLength = RBSPtoSODB (s->streamBuffer, nalu->len - 1);
 
         // Some syntax of the sliceHeader depends on parameter set
         // which depends on the parameter set ID of the slice header.
@@ -872,6 +865,7 @@ static int readNewSlice (sSlice* slice) {
         // - then setup the active parameter sets
         // -  read // the rest of the slice header
         readSliceHeader (slice);
+
         useParameterSet (slice);
         slice->activeSPS = decoder->activeSPS;
         slice->activePPS = decoder->activePPS;
@@ -879,6 +873,14 @@ static int readNewSlice (sSlice* slice) {
         slice->chroma444notSeparate = (decoder->activeSPS->chromaFormatIdc == YUV444) &&
                                       (decoder->sepColourPlaneFlag == 0);
         readRestSliceHeader (slice);
+
+        if (decoder->param.imageDebug) {
+          if (nalu->unitType == NALU_TYPE_IDR)
+            printf ("IDR refId:%d type:%d\n", slice->refId, slice->sliceType);
+          else
+            printf ("SLC refId:%d type:%d\n", slice->refId, slice->sliceType);
+          }
+
         assignQuantParams (slice);
 
         // if primary slice is replaced with redundant slice, set the correct image type
@@ -904,11 +906,11 @@ static int readNewSlice (sSlice* slice) {
           slice->curMbNum = slice->startMbNum;
 
         if (decoder->activePPS->entropyCodingModeFlag) {
-          int ByteStartPosition = curStream->frameBitOffset / 8;
-          if ((curStream->frameBitOffset % 8) != 0)
+          int ByteStartPosition = s->frameBitOffset / 8;
+          if ((s->frameBitOffset % 8) != 0)
             ++ByteStartPosition;
-          arideco_start_decoding (&slice->partitions[0].deCabac, curStream->streamBuffer,
-                                  ByteStartPosition, &curStream->readLen);
+          arideco_start_decoding (&slice->partitions[0].deCabac, s->streamBuffer,
+                                  ByteStartPosition, &s->readLen);
           }
 
         decoder->recoveryPoint = 0;
@@ -930,11 +932,11 @@ static int readNewSlice (sSlice* slice) {
         slice->refId = nalu->refId;
         slice->dataPartitionMode = PAR_DP_3;
         slice->maxPartitionNum = 3;
-        curStream = slice->partitions[0].bitstream;
-        curStream->eiFlag = 0;
-        curStream->frameBitOffset = curStream->readLen = 0;
-        memcpy (curStream->streamBuffer, &nalu->buf[1], nalu->len - 1);
-        curStream->codeLen = curStream->bitstreamLength = RBSPtoSODB (curStream->streamBuffer, nalu->len-1);
+        s = slice->partitions[0].bitstream;
+        s->eiFlag = 0;
+        s->frameBitOffset = s->readLen = 0;
+        memcpy (s->streamBuffer, &nalu->buf[1], nalu->len - 1);
+        s->codeLen = s->bitstreamLength = RBSPtoSODB (s->streamBuffer, nalu->len-1);
 
         readSliceHeader (slice);
         useParameterSet (slice);
@@ -965,7 +967,7 @@ static int readNewSlice (sSlice* slice) {
 
         // need to read the slice ID, which depends on the value of redundantPicCountPresentFlag
 
-        int slice_id_a = readUeV ("NALU: DP_A slice_id", curStream);
+        int slice_id_a = readUeV ("NALU: DP_A slice_id", s);
 
         if (decoder->activePPS->entropyCodingModeFlag)
           error ("data partition with CABAC not allowed", 500);
@@ -975,12 +977,12 @@ static int readNewSlice (sSlice* slice) {
           return curHeader;
         if (NALU_TYPE_DPB == nalu->unitType) {
           //{{{  got nalu DPB
-          curStream = slice->partitions[1].bitstream;
-          curStream->eiFlag = 0;
-          curStream->frameBitOffset = curStream->readLen = 0;
-          memcpy (curStream->streamBuffer, &nalu->buf[1], nalu->len-1);
-          curStream->codeLen = curStream->bitstreamLength = RBSPtoSODB (curStream->streamBuffer, nalu->len-1);
-          int slice_id_b = readUeV ("NALU dataPartitionB sliceId", curStream);
+          s = slice->partitions[1].bitstream;
+          s->eiFlag = 0;
+          s->frameBitOffset = s->readLen = 0;
+          memcpy (s->streamBuffer, &nalu->buf[1], nalu->len-1);
+          s->codeLen = s->bitstreamLength = RBSPtoSODB (s->streamBuffer, nalu->len-1);
+          int slice_id_b = readUeV ("NALU dataPartitionB sliceId", s);
           slice->noDataPartitionB = 0;
 
           if ((slice_id_b != slice_id_a) || (nalu->lostPackets)) {
@@ -990,7 +992,7 @@ static int readNewSlice (sSlice* slice) {
             }
           else {
             if (decoder->activePPS->redundantPicCountPresentFlag)
-              readUeV ("NALU dataPartitionB redundantPicCount", curStream);
+              readUeV ("NALU dataPartitionB redundantPicCount", s);
 
             // we're finished with DP_B, so let's continue with next DP
             if (!readNextNalu (decoder, nalu))
@@ -1003,21 +1005,21 @@ static int readNewSlice (sSlice* slice) {
 
         if (NALU_TYPE_DPC == nalu->unitType) {
           //{{{  got nalu DPC
-          curStream = slice->partitions[2].bitstream;
-          curStream->eiFlag = 0;
-          curStream->frameBitOffset = curStream->readLen = 0;
-          memcpy (curStream->streamBuffer, &nalu->buf[1], nalu->len-1);
-          curStream->codeLen = curStream->bitstreamLength = RBSPtoSODB (curStream->streamBuffer, nalu->len-1);
+          s = slice->partitions[2].bitstream;
+          s->eiFlag = 0;
+          s->frameBitOffset = s->readLen = 0;
+          memcpy (s->streamBuffer, &nalu->buf[1], nalu->len-1);
+          s->codeLen = s->bitstreamLength = RBSPtoSODB (s->streamBuffer, nalu->len-1);
 
           slice->noDataPartitionC = 0;
-          int slice_id_c = readUeV ("NALU: DP_C slice_id", curStream);
+          int slice_id_c = readUeV ("NALU: DP_C slice_id", s);
           if ((slice_id_c != slice_id_a)|| (nalu->lostPackets)) {
             printf ("Warning: got a data partition C which does not match DP_A(DP loss!)\n");
             slice->noDataPartitionC =1;
             }
 
           if (decoder->activePPS->redundantPicCountPresentFlag)
-            readUeV ("NALU:SLICE_C redudand_pic_cnt", curStream);
+            readUeV ("NALU:SLICE_C redudand_pic_cnt", s);
           }
           //}}}
         else {
@@ -1383,7 +1385,7 @@ int decodeFrame (sDecoder* decoder) {
       if (sliceList[decoder->picSliceIndex-1]->mbAffFrameFlag)
         sliceList[decoder->picSliceIndex-1]->endMbNumPlus1 = decoder->frameSizeMbs / 2;
       else
-        sliceList[decoder->picSliceIndex-1]->endMbNumPlus1 = 
+        sliceList[decoder->picSliceIndex-1]->endMbNumPlus1 =
           decoder->frameSizeMbs / (1 + sliceList[decoder->picSliceIndex-1]->fieldPicFlag);
       decoder->newFrame = 1;
       slice->curSliceNum = 0;

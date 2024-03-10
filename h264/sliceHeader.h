@@ -6,5 +6,5 @@ extern void dec_ref_pic_marking (sDecoder* decoder, sBitstream* curStream, sSlic
 extern int dumpPOC (sDecoder* decoder);
 extern void decodePOC (sDecoder* decoder, sSlice* pSlice);
 
-extern void readSliceHeader (sSlice* curSlice);
-extern void readRestSliceHeader (sSlice* curSlice);
+extern void readSliceHeader (sSlice* slice);
+extern void readRestSliceHeader (sSlice* slice);
