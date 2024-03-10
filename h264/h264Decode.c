@@ -292,16 +292,16 @@ void init_frext (sDecoder* decoder) {
 //}}}
 
 //{{{
-sDatadp* allocdp (int n) {
+sDataPartition* allocdp (int n) {
 
-  sDatadp* dps = (sDatadp*)calloc (n, sizeof(sDatadp));
+  sDataPartition* dps = (sDataPartition*)calloc (n, sizeof(sDataPartition));
   if (dps == NULL) {
     snprintf (errorText, ET_SIZE, "allocdp: Memory allocation for Data dp failed");
     error (errorText, 100);
     }
 
   for (int i = 0; i < n; ++i) {// loop over all data dps
-    sDatadp* dataPart = &(dps[i]);
+    sDataPartition* dataPart = &(dps[i]);
     dataPart->bitstream = (sBitstream *) calloc(1, sizeof(sBitstream));
     if (dataPart->bitstream == NULL) {
       snprintf (errorText, ET_SIZE, "allocdp: Memory allocation for sBitstream failed");
@@ -319,7 +319,7 @@ sDatadp* allocdp (int n) {
   }
 //}}}
 //{{{
-void freedp (sDatadp* dp, int n) {
+void freedp (sDataPartition* dp, int n) {
 
   assert (dp != NULL);
   assert (dp->bitstream != NULL);

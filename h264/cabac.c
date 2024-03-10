@@ -271,7 +271,7 @@ int cabac_startcode_follows (sSlice* slice, int eos_bit)
   if( eos_bit )
   {
     const byte   *dpMap    = assignSE2dp[slice->datadpMode];
-    sDatadp *dp = &(slice->dps[dpMap[SE_MBTYPE]]);
+    sDataPartition *dp = &(slice->dps[dpMap[SE_MBTYPE]]);
     sDecodingEnv* decodingEnv = &(dp->deCabac);
 
     bit = biari_decode_final (decodingEnv); //GB
@@ -399,7 +399,7 @@ void readFieldModeInfo_CABAC (sMacroblock* mb, sSyntaxElement* se, sDecodingEnv*
 //}}}
 
 //{{{
-int check_next_mb_and_get_field_mode_CABAC_p_slice (sSlice* slice, sSyntaxElement* se, sDatadp* act_dp)
+int check_next_mb_and_get_field_mode_CABAC_p_slice (sSlice* slice, sSyntaxElement* se, sDataPartition* act_dp)
 {
   sDecoder* decoder = slice->decoder;
   sBiContextType*          mb_type_ctx_copy[3];
@@ -485,7 +485,7 @@ int check_next_mb_and_get_field_mode_CABAC_p_slice (sSlice* slice, sSyntaxElemen
 //{{{
 int check_next_mb_and_get_field_mode_CABAC_b_slice (sSlice* slice,
                                            sSyntaxElement *se,
-                                           sDatadp  *act_dp)
+                                           sDataPartition  *act_dp)
 {
   sDecoder* decoder = slice->decoder;
   sBiContextType*          mb_type_ctx_copy[3];
@@ -2228,7 +2228,7 @@ void readRunLevel_CABAC (sMacroblock* mb,
  *    arithmetic decoding
 ** **********************************************************************
  */
-int readsSyntaxElement_CABAC (sMacroblock* mb, sSyntaxElement* se, sDatadp* this_dataPart)
+int readsSyntaxElement_CABAC (sMacroblock* mb, sSyntaxElement* se, sDataPartition* this_dataPart)
 {
   sDecodingEnv* decodingEnv = &(this_dataPart->deCabac);
   int curr_len = arideco_bits_read(decodingEnv);
@@ -2249,7 +2249,7 @@ int readsSyntaxElement_CABAC (sMacroblock* mb, sSyntaxElement* se, sDatadp* this
  *    Read I_PCM macroblock
 ** **********************************************************************
 */
-void readIPCMcabac (sSlice* slice, sDatadp* dp)
+void readIPCMcabac (sSlice* slice, sDataPartition* dp)
 {
   sDecoder* decoder = slice->decoder;
   sPicture* picture = slice->picture;

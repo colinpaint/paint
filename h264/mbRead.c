@@ -35,7 +35,7 @@ static void read_ipred_8x8_modes_mbaff (sMacroblock* mb) {
 
   sSyntaxElement se;
   se.type = SE_INTRAPREDMODE;
-  sDatadp* dp = &(slice->dps[dpMap[SE_INTRAPREDMODE]]);
+  sDataPartition* dp = &(slice->dps[dpMap[SE_INTRAPREDMODE]]);
 
   if (!(decoder->activePPS->entropyCodingModeFlag == (Boolean)CAVLC || dp->bitstream->eiFlag))
     se.reading = readIntraPredMode_CABAC;
@@ -96,7 +96,7 @@ static void read_ipred_8x8_modes (sMacroblock* mb) {
 
   sSyntaxElement se;
   se.type = SE_INTRAPREDMODE;
-  sDatadp* dp = &(slice->dps[dpMap[SE_INTRAPREDMODE]]);
+  sDataPartition* dp = &(slice->dps[dpMap[SE_INTRAPREDMODE]]);
   if (!(decoder->activePPS->entropyCodingModeFlag == (Boolean)CAVLC || dp->bitstream->eiFlag))
     se.reading = readIntraPredMode_CABAC;
 
@@ -160,7 +160,7 @@ static void read_ipred_4x4_modes_mbaff (sMacroblock* mb) {
   sPixelPos left_block, top_block;
 
   se.type = SE_INTRAPREDMODE;
-  sDatadp* dp = &(slice->dps[dpMap[SE_INTRAPREDMODE]]);
+  sDataPartition* dp = &(slice->dps[dpMap[SE_INTRAPREDMODE]]);
   if (!(decoder->activePPS->entropyCodingModeFlag == (Boolean)CAVLC || dp->bitstream->eiFlag))
     se.reading = readIntraPredMode_CABAC;
 
@@ -229,7 +229,7 @@ static void read_ipred_4x4_modes (sMacroblock* mb) {
 
   sSyntaxElement se;
   se.type = SE_INTRAPREDMODE;
-  sDatadp* dp = &(slice->dps[dpMap[SE_INTRAPREDMODE]]);
+  sDataPartition* dp = &(slice->dps[dpMap[SE_INTRAPREDMODE]]);
   if (!(decoder->activePPS->entropyCodingModeFlag == (Boolean)CAVLC || dp->bitstream->eiFlag))
     se.reading = readIntraPredMode_CABAC;
 
@@ -308,7 +308,7 @@ static void readIpredModes (sMacroblock* mb) {
 
   if ((picture->chromaFormatIdc != YUV400) && (picture->chromaFormatIdc != YUV444)) {
     sSyntaxElement se;
-    sDatadp* dp;
+    sDataPartition* dp;
     const byte* dpMap = assignSE2dp[slice->datadpMode];
     sDecoder* decoder = mb->decoder;
 
@@ -418,7 +418,7 @@ static void initIPCMdecoding (sSlice* slice) {
   }
 //}}}
 //{{{
-static void readIPCMcoeffs (sSlice* slice, sDatadp* dp) {
+static void readIPCMcoeffs (sSlice* slice, sDataPartition* dp) {
 
   sDecoder* decoder = slice->decoder;
 
@@ -670,7 +670,7 @@ static void readIntra4x4macroblocCavlc (sMacroblock* mb, const byte* dpMap)
   //transform size flag for INTRA_4x4 and INTRA_8x8 modes
   if (slice->transform8x8Mode) {
     sSyntaxElement se;
-    sDatadp* dp = &(slice->dps[dpMap[SE_HEADER]]);
+    sDataPartition* dp = &(slice->dps[dpMap[SE_HEADER]]);
     se.type = SE_HEADER;
 
     // read CAVLC transform_size_8x8_flag
@@ -700,7 +700,7 @@ static void readIntra4x4macroblockCabac (sMacroblock* mb, const byte* dpMap) {
   sSlice* slice = mb->slice;
   if (slice->transform8x8Mode) {
    sSyntaxElement se;
-    sDatadp* dp = &(slice->dps[dpMap[SE_HEADER]]);
+    sDataPartition* dp = &(slice->dps[dpMap[SE_HEADER]]);
     se.type = SE_HEADER;
     se.reading = readMB_transform_size_flag_CABAC;
 
@@ -759,13 +759,13 @@ static void readIPCMmacroblock (sMacroblock* mb, const byte* dpMap) {
   if (slice->datadpMode && slice->noDatadpB )
     concealIPCMcoeffs (mb);
   else {
-    sDatadp* dp = &(slice->dps[dpMap[SE_LUM_DC_INTRA]]);
+    sDataPartition* dp = &(slice->dps[dpMap[SE_LUM_DC_INTRA]]);
     readIPCMcoeffs (slice, dp);
     }
   }
 //}}}
 //{{{
-static void readI8x8macroblock (sMacroblock* mb, sDatadp* dp, sSyntaxElement* se) {
+static void readI8x8macroblock (sMacroblock* mb, sDataPartition* dp, sSyntaxElement* se) {
 
   int i;
   sSlice* slice = mb->slice;
@@ -813,7 +813,7 @@ static void read_one_macroblock_i_slice_cavlc (sMacroblock* mb) {
   se.type = SE_MBTYPE;
 
   // read MB mode
-  sDatadp* dp = &(slice->dps[dpMap[SE_MBTYPE]]);
+  sDataPartition* dp = &(slice->dps[dpMap[SE_MBTYPE]]);
   se.mapping = linfo_ue;
 
   // read MB aff
@@ -862,7 +862,7 @@ static void read_one_macroblock_p_slice_cavlc (sMacroblock* mb) {
 
     //  read MB mode
     se.type = SE_MBTYPE;
-    sDatadp* dp = &(slice->dps[dpMap[SE_MBTYPE]]);
+    sDataPartition* dp = &(slice->dps[dpMap[SE_MBTYPE]]);
     se.mapping = linfo_ue;
 
     // VLC Non-Intra
@@ -914,7 +914,7 @@ static void read_one_macroblock_p_slice_cavlc (sMacroblock* mb) {
 
     //  read MB mode
     se.type = SE_MBTYPE;
-    sDatadp* dp = &(slice->dps[dpMap[SE_MBTYPE]]);
+    sDataPartition* dp = &(slice->dps[dpMap[SE_MBTYPE]]);
     se.mapping = linfo_ue;
 
     // VLC Non-Intra
@@ -986,7 +986,7 @@ static void read_one_macroblock_p_slice_cavlc (sMacroblock* mb) {
   else if (mb->mbType == P8x8) {
     se.type = SE_MBTYPE;
     se.mapping = linfo_ue;
-    sDatadp* dp = &(slice->dps[dpMap[SE_MBTYPE]]);
+    sDataPartition* dp = &(slice->dps[dpMap[SE_MBTYPE]]);
     readI8x8macroblock (mb, dp, &se);
     }
   else if (mb->mbType == PSKIP)
@@ -1015,7 +1015,7 @@ static void read_one_macroblock_b_slice_cavlc (sMacroblock* mb) {
 
     //  read MB mode
     se.type = SE_MBTYPE;
-    sDatadp* dp = &(slice->dps[dpMap[SE_MBTYPE]]);
+    sDataPartition* dp = &(slice->dps[dpMap[SE_MBTYPE]]);
     se.mapping = linfo_ue;
 
     if(slice->codCount == -1) {
@@ -1065,7 +1065,7 @@ static void read_one_macroblock_b_slice_cavlc (sMacroblock* mb) {
 
     //  read MB mode
     se.type = SE_MBTYPE;
-    sDatadp* dp = &(slice->dps[dpMap[SE_MBTYPE]]);
+    sDataPartition* dp = &(slice->dps[dpMap[SE_MBTYPE]]);
     se.mapping = linfo_ue;
     if(slice->codCount == -1) {
       dp->readsSyntaxElement(mb, &se, dp);
@@ -1134,7 +1134,7 @@ static void read_one_macroblock_b_slice_cavlc (sMacroblock* mb) {
   else if (mb->mbType == I4MB)
     readIntra4x4macroblocCavlc (mb, dpMap);
   else if (mb->mbType == P8x8) {
-    sDatadp* dp = &(slice->dps[dpMap[SE_MBTYPE]]);
+    sDataPartition* dp = &(slice->dps[dpMap[SE_MBTYPE]]);
     se.type = SE_MBTYPE;
     se.mapping = linfo_ue;
     readI8x8macroblock (mb, dp, &se);
@@ -1179,7 +1179,7 @@ static void read_one_macroblock_i_slice_cabac (sMacroblock* mb) {
 
   //  read MB mode
   se.type = SE_MBTYPE;
-  sDatadp* dp = &(slice->dps[dpMap[SE_MBTYPE]]);
+  sDataPartition* dp = &(slice->dps[dpMap[SE_MBTYPE]]);
   if (dp->bitstream->eiFlag)
     se.mapping = linfo_ue;
 
@@ -1266,7 +1266,7 @@ static void read_one_macroblock_p_slice_cabac (sMacroblock* mb)
 
     // read MB mode
     se.type = SE_MBTYPE;
-    sDatadp* dp = &(slice->dps[dpMap[SE_MBTYPE]]);
+    sDataPartition* dp = &(slice->dps[dpMap[SE_MBTYPE]]);
     if (dp->bitstream->eiFlag)
       se.mapping = linfo_ue;
 
@@ -1312,7 +1312,7 @@ static void read_one_macroblock_p_slice_cabac (sMacroblock* mb)
 
     //  read MB mode
     se.type = SE_MBTYPE;
-    sDatadp* dp = &(slice->dps[dpMap[SE_MBTYPE]]);
+    sDataPartition* dp = &(slice->dps[dpMap[SE_MBTYPE]]);
     if (dp->bitstream->eiFlag)
       se.mapping = linfo_ue;
 
@@ -1377,7 +1377,7 @@ static void read_one_macroblock_p_slice_cabac (sMacroblock* mb)
   else if (mb->mbType == I4MB)
     readIntra4x4macroblockCabac (mb, dpMap);
   else if (mb->mbType == P8x8) {
-    sDatadp* dp = &(slice->dps[dpMap[SE_MBTYPE]]);
+    sDataPartition* dp = &(slice->dps[dpMap[SE_MBTYPE]]);
     se.type = SE_MBTYPE;
 
     if (dp->bitstream->eiFlag)
@@ -1414,7 +1414,7 @@ static void read_one_macroblock_b_slice_cabac (sMacroblock* mb) {
 
     //  read MB mode
     se.type = SE_MBTYPE;
-    sDatadp* dp = &(slice->dps[dpMap[SE_MBTYPE]]);
+    sDataPartition* dp = &(slice->dps[dpMap[SE_MBTYPE]]);
     if (dp->bitstream->eiFlag)
       se.mapping = linfo_ue;
 
@@ -1466,7 +1466,7 @@ static void read_one_macroblock_b_slice_cabac (sMacroblock* mb) {
 
     //  read MB mode
     se.type = SE_MBTYPE;
-    sDatadp* dp = &(slice->dps[dpMap[SE_MBTYPE]]);
+    sDataPartition* dp = &(slice->dps[dpMap[SE_MBTYPE]]);
     if (dp->bitstream->eiFlag)
       se.mapping = linfo_ue;
 
@@ -1532,7 +1532,7 @@ static void read_one_macroblock_b_slice_cabac (sMacroblock* mb) {
   else if (mb->mbType == I4MB)
     readIntra4x4macroblockCabac (mb, dpMap);
   else if (mb->mbType == P8x8) {
-    sDatadp* dp = &(slice->dps[dpMap[SE_MBTYPE]]);
+    sDataPartition* dp = &(slice->dps[dpMap[SE_MBTYPE]]);
     se.type = SE_MBTYPE;
     if (dp->bitstream->eiFlag)
       se.mapping = linfo_ue;

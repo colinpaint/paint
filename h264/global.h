@@ -245,12 +245,12 @@ typedef struct SyntaxElement {
   void (*reading) (struct Macroblock*, struct SyntaxElement*, sDecodingEnv*);
   } sSyntaxElement;
 //}}}
-//{{{  sDatadp
+//{{{  sDataPartition
 typedef struct Datadp {
   sBitstream*          bitstream;
   sDecodingEnv deCabac;
   int (*readsSyntaxElement) (struct Macroblock*, struct SyntaxElement*, struct Datadp*);
-  } sDatadp;
+  } sDataPartition;
 //}}}
 
 //{{{  sBiContextType
@@ -562,7 +562,7 @@ typedef struct Slice {
   char listXsize[6];
   struct Picture** listX[6];
 
-  sDatadp*       dps;  // array of dps
+  sDataPartition*       dps;  // array of dps
   sMotionInfoContexts*  mot_ctx;  // pointer to struct of context models for use in CABAC
   sTextureInfoContexts* tex_ctx;  // pointer to struct of context models for use in CABAC
 
@@ -1000,8 +1000,8 @@ static inline int isHiIntraOnlyProfile (unsigned int profileIdc, Boolean constra
   extern void freeGlobalBuffers (sDecoder* decoder);
   extern void freeLayerBuffers (sDecoder* decoder, int layerId);
 
-  extern sDatadp* allocdp (int n);
-  extern void freedp (sDatadp* dp, int n);
+  extern sDataPartition* allocdp (int n);
+  extern void freedp (sDataPartition* dp, int n);
 
   extern sSlice* allocSlice (sDecoder* decoder);
 

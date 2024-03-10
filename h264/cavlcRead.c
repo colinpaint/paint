@@ -158,7 +158,7 @@ void readCoef4x4cavlc (sMacroblock* mb, int block_type,
   sDecoder* decoder = mb->decoder;
   int mb_nr = mb->mbIndexX;
   sSyntaxElement se;
-  sDatadp *dp;
+  sDataPartition *dp;
   const byte *dpMap = assignSE2dp[slice->datadpMode];
   sBitstream* s;
 
@@ -328,7 +328,7 @@ void readCoef4x4cavlc444 (sMacroblock* mb, int block_type,
   sDecoder* decoder = mb->decoder;
   int mb_nr = mb->mbIndexX;
   sSyntaxElement se;
-  sDatadp *dp;
+  sDataPartition *dp;
   const byte *dpMap = assignSE2dp[slice->datadpMode];
   sBitstream* s;
 
@@ -878,7 +878,7 @@ static void read_CBP_and_coeffs_from_NAL_CAVLC_400 (sMacroblock* mb)
   int mb_nr = mb->mbIndexX;
   int cbp;
   sSyntaxElement se;
-  sDatadp *dp = NULL;
+  sDataPartition *dp = NULL;
   sSlice* slice = mb->slice;
   const byte *dpMap = assignSE2dp[slice->datadpMode];
   int i0, j0;
@@ -1046,7 +1046,7 @@ static void read_CBP_and_coeffs_from_NAL_CAVLC_422 (sMacroblock* mb)
   int mb_nr = mb->mbIndexX;
   int cbp;
   sSyntaxElement se;
-  sDatadp *dp = NULL;
+  sDataPartition *dp = NULL;
   sSlice* slice = mb->slice;
   const byte *dpMap = assignSE2dp[slice->datadpMode];
   int coef_ctr, i0, j0, b8;
@@ -1387,7 +1387,7 @@ static void read_CBP_and_coeffs_from_NAL_CAVLC_444 (sMacroblock* mb)
   int mb_nr = mb->mbIndexX;
   int cbp;
   sSyntaxElement se;
-  sDatadp *dp = NULL;
+  sDataPartition *dp = NULL;
   sSlice* slice = mb->slice;
   const byte *dpMap = assignSE2dp[slice->datadpMode];
   int coef_ctr, i0, j0;
@@ -1614,7 +1614,7 @@ static void read_CBP_and_coeffs_from_NAL_CAVLC_420 (sMacroblock* mb)
   int mb_nr = mb->mbIndexX;
   int cbp;
   sSyntaxElement se;
-  sDatadp *dp = NULL;
+  sDataPartition *dp = NULL;
   sSlice* slice = mb->slice;
   const byte *dpMap = assignSE2dp[slice->datadpMode];
   int coef_ctr, i0, j0, b8;

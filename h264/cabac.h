@@ -26,12 +26,12 @@ extern void read_skip_flag_CABAC_b_slice (sMacroblock* mb, sSyntaxElement* se, s
 extern void readFieldModeInfo_CABAC (sMacroblock* mb, sSyntaxElement* se, sDecodingEnv* decodingEnv);
 extern void readMB_transform_size_flag_CABAC (sMacroblock* mb, sSyntaxElement* se, sDecodingEnv* decodingEnv);
 
-extern void readIPCMcabac (sSlice* slice, sDatadp* dp);
+extern void readIPCMcabac (sSlice* slice, sDataPartition* dp);
 extern int  cabac_startcode_follows (sSlice* slice, int eos_bit);
-extern int  readsSyntaxElement_CABAC (sMacroblock* mb, sSyntaxElement* se, sDatadp* this_dataPart);
+extern int  readsSyntaxElement_CABAC (sMacroblock* mb, sSyntaxElement* se, sDataPartition* this_dataPart);
 
-extern int check_next_mb_and_get_field_mode_CABAC_p_slice (sSlice* slice, sSyntaxElement* se, sDatadp* act_dp);
-extern int check_next_mb_and_get_field_mode_CABAC_b_slice (sSlice* slice, sSyntaxElement* se, sDatadp* act_dp);
+extern int check_next_mb_and_get_field_mode_CABAC_p_slice (sSlice* slice, sSyntaxElement* se, sDataPartition* act_dp);
+extern int check_next_mb_and_get_field_mode_CABAC_b_slice (sSlice* slice, sSyntaxElement* se, sDataPartition* act_dp);
 
 extern void checkNeighbourCabac (sMacroblock* mb);
 

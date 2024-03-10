@@ -386,7 +386,7 @@ static int BType2CtxRef (int btype) {
 //}}}
 //{{{
 static char readRefPictureIdxVLC (sMacroblock* mb, sSyntaxElement* se,
-                                   sDatadp* dp, char b8mode, int list) {
+                                   sDataPartition* dp, char b8mode, int list) {
 
   se->context = BType2CtxRef (b8mode);
   se->value2 = list;
@@ -395,7 +395,7 @@ static char readRefPictureIdxVLC (sMacroblock* mb, sSyntaxElement* se,
   }
 //}}}
 //{{{
-static char readRefPictureIdxFLC (sMacroblock* mb, sSyntaxElement* se, sDatadp* dp, char b8mode, int list)
+static char readRefPictureIdxFLC (sMacroblock* mb, sSyntaxElement* se, sDataPartition* dp, char b8mode, int list)
 {
   se->context = BType2CtxRef (b8mode);
   se->len = 1;
@@ -406,14 +406,14 @@ static char readRefPictureIdxFLC (sMacroblock* mb, sSyntaxElement* se, sDatadp* 
   }
 //}}}
 //{{{
-static char readRefPictureIdxNull (sMacroblock* mb, sSyntaxElement* se, sDatadp* dp, char b8mode, int list)
+static char readRefPictureIdxNull (sMacroblock* mb, sSyntaxElement* se, sDataPartition* dp, char b8mode, int list)
 {
   return 0;
 }
 //}}}
 //{{{
 static void prepareListforRefIdx (sMacroblock* mb, sSyntaxElement* se,
-                                  sDatadp *dp, int numRefIndexActive, int refidx_present) {
+                                  sDataPartition *dp, int numRefIndexActive, int refidx_present) {
 
   if (numRefIndexActive > 1) {
     if (mb->decoder->activePPS->entropyCodingModeFlag == (Boolean) CAVLC || dp->bitstream->eiFlag) {
@@ -460,7 +460,7 @@ void updateQp (sMacroblock* mb, int qp) {
   }
 //}}}
 //{{{
-void readDeltaQuant (sSyntaxElement* se, sDatadp *dp, sMacroblock* mb, const byte *dpMap, int type)
+void readDeltaQuant (sSyntaxElement* se, sDataPartition *dp, sMacroblock* mb, const byte *dpMap, int type)
 {
   sSlice* slice = mb->slice;
   sDecoder* decoder = mb->decoder;
@@ -489,7 +489,7 @@ void readDeltaQuant (sSyntaxElement* se, sDatadp *dp, sMacroblock* mb, const byt
 //}}}
 
 //{{{
-static void readMBRefPictureIdx (sSyntaxElement* se, sDatadp *dp,
+static void readMBRefPictureIdx (sSyntaxElement* se, sDataPartition *dp,
                                  sMacroblock* mb, sPicMotionParam** mvInfo,
                                  int list, int step_v0, int step_h0) {
 
@@ -563,7 +563,7 @@ static void readMBRefPictureIdx (sSyntaxElement* se, sDatadp *dp,
   }
 //}}}
 //{{{
-static void readMBMotionVectors (sSyntaxElement* se, sDatadp *dp, sMacroblock* mb,
+static void readMBMotionVectors (sSyntaxElement* se, sDataPartition *dp, sMacroblock* mb,
                                  int list, int step_h0, int step_v0) {
 
   if (mb->mbType == 1) {
@@ -1019,7 +1019,7 @@ static void readMotionInfoP (sMacroblock* mb){
   sSlice* slice = mb->slice;
 
   sSyntaxElement se;
-  sDatadp *dp = NULL;
+  sDataPartition *dp = NULL;
   const byte *dpMap       = assignSE2dp[slice->datadpMode];
   short partmode        = ((mb->mbType == P8x8) ? 4 : mb->mbType);
   int step_h0         = BLOCK_STEP [partmode][0];
@@ -1072,7 +1072,7 @@ static void readMotionInfoB (sMacroblock* mb) {
   sDecoder* decoder = mb->decoder;
   sPicture* picture = slice->picture;
   sSyntaxElement se;
-  sDatadp* dp = NULL;
+  sDataPartition* dp = NULL;
   const byte* dpMap = assignSE2dp[slice->datadpMode];
   int partmode = (mb->mbType == P8x8) ? 4 : mb->mbType;
   int step_h0 = BLOCK_STEP [partmode][0];

@@ -14,7 +14,7 @@ static void read_comp_coeff_4x4_smb_CABAC (sMacroblock* mb, sSyntaxElement* se, 
   int i,j,k;
   int i0, j0;
   int level = 1;
-  sDatadp *dp;
+  sDataPartition *dp;
   sSlice* slice = mb->slice;
   const byte *dpMap = assignSE2dp[slice->datadpMode];
 
@@ -205,7 +205,7 @@ static void readCompCoeff8x8_CABAC (sMacroblock* mb, sSyntaxElement* se, eColorP
     int i,j,k;
     int level = 1;
 
-    sDatadp *dp;
+    sDataPartition *dp;
     sSlice* slice = mb->slice;
     const byte *dpMap = assignSE2dp[slice->datadpMode];
     int boff_x, boff_y;
@@ -303,7 +303,7 @@ static void readCompCoeff8x8_CABAC_lossless (sMacroblock* mb, sSyntaxElement* se
     int i,j,k;
     int level = 1;
 
-    sDatadp *dp;
+    sDataPartition *dp;
     sSlice* slice = mb->slice;
     const byte *dpMap = assignSE2dp[slice->datadpMode];
     int boff_x, boff_y;
@@ -394,7 +394,7 @@ static void read_CBP_and_coeffs_from_NAL_CABAC_420 (sMacroblock* mb)
   int level;
   int cbp;
   sSyntaxElement se;
-  sDatadp *dp = NULL;
+  sDataPartition *dp = NULL;
   sSlice* slice = mb->slice;
   const byte *dpMap = assignSE2dp[slice->datadpMode];
   int i0, j0;
@@ -765,7 +765,7 @@ static void read_CBP_and_coeffs_from_NAL_CABAC_400 (sMacroblock* mb)
   int level;
   int cbp;
   sSyntaxElement se;
-  sDatadp *dp = NULL;
+  sDataPartition *dp = NULL;
   sSlice* slice = mb->slice;
   const byte *dpMap = assignSE2dp[slice->datadpMode];
   int i0, j0;
@@ -934,7 +934,7 @@ static void read_CBP_and_coeffs_from_NAL_CABAC_444 (sMacroblock* mb)
   int level;
   int cbp;
   sSyntaxElement se;
-  sDatadp *dp = NULL;
+  sDataPartition *dp = NULL;
   sSlice* slice = mb->slice;
   const byte *dpMap = assignSE2dp[slice->datadpMode];
   int coef_ctr, i0, j0;
@@ -1192,7 +1192,7 @@ static void read_CBP_and_coeffs_from_NAL_CABAC_422 (sMacroblock* mb)
   int level;
   int cbp;
   sSyntaxElement se;
-  sDatadp *dp = NULL;
+  sDataPartition *dp = NULL;
   sSlice* slice = mb->slice;
   const byte *dpMap = assignSE2dp[slice->datadpMode];
   int coef_ctr, i0, j0, b8;

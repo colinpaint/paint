@@ -366,7 +366,7 @@ static void initVUI (sSPS* sps) {
   }
 //}}}
 //{{{
-static int readHRDParameters (sDatadp* dp, sHRD* hrd) {
+static int readHRDParameters (sDataPartition* dp, sHRD* hrd) {
 
   sBitstream *s = dp->bitstream;
   hrd->cpb_cnt_minus1 = readUeV ("VUI cpb_cnt_minus1", s);
@@ -390,7 +390,7 @@ static int readHRDParameters (sDatadp* dp, sHRD* hrd) {
   }
 //}}}
 //{{{
-static int readVUI (sDatadp* p, sSPS* sps) {
+static int readVUI (sDataPartition* p, sSPS* sps) {
 
   sBitstream* s = p->bitstream;
   if (sps->vui_parameters_present_flag) {
@@ -463,7 +463,7 @@ static int readVUI (sDatadp* p, sSPS* sps) {
   }
 //}}}
 //{{{
-static void interpretSPS (sDecoder* decoder, sDatadp* dp, sSPS* sps) {
+static void interpretSPS (sDecoder* decoder, sDataPartition* dp, sSPS* sps) {
 
   sBitstream* s = dp->bitstream;
   sps->profileIdc = readUv (8, "SPS profileIdc", s);
@@ -583,7 +583,7 @@ void makeSPSavailable (sDecoder* decoder, int id, sSPS* sps) {
 //{{{
 void processSPS (sDecoder* decoder, sNalu* nalu) {
 
-  sDatadp* dp = allocdp (1);
+  sDataPartition* dp = allocdp (1);
   dp->bitstream->eiFlag = 0;
   dp->bitstream->readLen = dp->bitstream->frameBitOffset = 0;
   memcpy (dp->bitstream->streamBuffer, &nalu->buf[1], nalu->len-1);
@@ -729,7 +729,7 @@ static int ppsIsEqual (sPPS* pps1, sPPS* pps2) {
   }
 //}}}
 //{{{
-static void interpretPPS (sDecoder* decoder, sDatadp* dp, sPPS* pps) {
+static void interpretPPS (sDecoder* decoder, sDataPartition* dp, sPPS* pps) {
 
   unsigned n_ScalingList;
   int chromaFormatIdc;
@@ -889,7 +889,7 @@ void cleanUpPPS (sDecoder* decoder) {
 void processPPS (sDecoder* decoder, sNalu* nalu) {
 
 
-  sDatadp* dp = allocdp (1);
+  sDataPartition* dp = allocdp (1);
   dp->bitstream->eiFlag = 0;
   dp->bitstream->readLen = dp->bitstream->frameBitOffset = 0;
   memcpy (dp->bitstream->streamBuffer, &nalu->buf[1], nalu->len-1);
