@@ -147,17 +147,17 @@ static void flushPendingOut (sDecoder* decoder) {
 //}}}
 
 //{{{
-static void writePicture (sDecoder* decoder, sPicture* p, int real_structure) {
+static void writePicture (sDecoder* decoder, sPicture* p, int realStructure) {
 
-  if (real_structure == FRAME) {
+  if (realStructure == FRAME) {
     flushPendingOut (decoder);
     writeOutPicture (decoder, p);
     return;
     }
 
-  if (real_structure == decoder->pendingOutState) {
+  if (realStructure == decoder->pendingOutState) {
     flushPendingOut (decoder);
-    writePicture (decoder, p, real_structure);
+    writePicture (decoder, p, realStructure);
     return;
     }
 
@@ -183,7 +183,7 @@ static void writePicture (sDecoder* decoder, sPicture* p, int real_structure) {
     clearPicture (decoder, decoder->pendingOut);
 
     // copy first field
-    int add = (real_structure == TopField) ? 0 : 1;
+    int add = (realStructure == TopField) ? 0 : 1;
     for (int i = 0; i < decoder->pendingOut->sizeY; i += 2)
       memcpy (decoder->pendingOut->imgY[(i+add)], p->imgY[(i+add)], p->sizeX * sizeof(sPixel));
     for (int i = 0; i < decoder->pendingOut->sizeYcr; i += 2) {
@@ -191,7 +191,7 @@ static void writePicture (sDecoder* decoder, sPicture* p, int real_structure) {
       memcpy (decoder->pendingOut->imgUV[1][(i+add)], p->imgUV[1][(i+add)], p->sizeXcr * sizeof(sPixel));
       }
 
-    decoder->pendingOutState = real_structure;
+    decoder->pendingOutState = realStructure;
     }
     //}}}
   else {
@@ -205,12 +205,12 @@ static void writePicture (sDecoder* decoder, sPicture* p, int real_structure) {
           (decoder->pendingOut->frameCropTop != p->frameCropTop) ||
           (decoder->pendingOut->frameCropBot != p->frameCropBot)))) {
       flushPendingOut (decoder);
-      writePicture (decoder, p, real_structure);
+      writePicture (decoder, p, realStructure);
       return;
       }
 
     // copy second field
-    int add = (real_structure == TopField) ? 0 : 1;
+    int add = (realStructure == TopField) ? 0 : 1;
     for (int i = 0; i < decoder->pendingOut->sizeY; i+=2)
       memcpy (decoder->pendingOut->imgY[(i+add)], p->imgY[(i+add)], p->sizeX * sizeof(sPixel));
 

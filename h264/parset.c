@@ -366,9 +366,9 @@ static void initVUI (sSPS* sps) {
   }
 //}}}
 //{{{
-static int readHRDParameters (sDataPartition* p, sHRD* hrd) {
+static int readHRDParameters (sDataPartition* dp, sHRD* hrd) {
 
-  sBitstream *s = p->bitstream;
+  sBitstream *s = dp->bitstream;
   hrd->cpb_cnt_minus1 = readUeV ("VUI cpb_cnt_minus1", s);
   hrd->bit_rate_scale = readUv (4, "VUI bit_rate_scale", s);
   hrd->cpb_size_scale = readUv (4, "VUI cpb_size_scale", s);
@@ -463,9 +463,9 @@ static int readVUI (sDataPartition* p, sSPS* sps) {
   }
 //}}}
 //{{{
-static void interpretSPS (sDecoder* decoder, sDataPartition* p, sSPS* sps) {
+static void interpretSPS (sDecoder* decoder, sDataPartition* dp, sSPS* sps) {
 
-  sBitstream* s = p->bitstream;
+  sBitstream* s = dp->bitstream;
   sps->profileIdc = readUv (8, "SPS profileIdc", s);
   if ((sps->profileIdc != BASELINE) && (sps->profileIdc != MAIN) && (sps->profileIdc != EXTENDED) &&
       (sps->profileIdc != FREXT_HP) &&
@@ -561,7 +561,7 @@ static void interpretSPS (sDecoder* decoder, sDataPartition* p, sSPS* sps) {
   sps->vui_parameters_present_flag = (Boolean) readU1 ("SPS vui_parameters_present_flag", s);
 
   initVUI (sps);
-  readVUI (p, sps);
+  readVUI (dp, sps);
 
   if (decoder->param.spsDebug)
     printf ("SPS id:%d refFrames:%d picOrder:%d %dx%d %s %s\n",
@@ -729,17 +729,13 @@ static int ppsIsEqual (sPPS* pps1, sPPS* pps2) {
   }
 //}}}
 //{{{
-static void interpretPPS (sDecoder* decoder, sDataPartition* p, sPPS* pps) {
+static void interpretPPS (sDecoder* decoder, sDataPartition* dp, sPPS* pps) {
 
   unsigned n_ScalingList;
   int chromaFormatIdc;
   int NumberBitsPerSliceGroupId;
 
-  sBitstream* s = p->bitstream;
-  assert (p != NULL);
-  assert (p->bitstream != NULL);
-  assert (p->bitstream->streamBuffer != 0);
-  assert (pps != NULL);
+  sBitstream* s = dp->bitstream;
 
   pps->ppsId = readUeV ("PPS ppsId", s);
   pps->spsId = readUeV ("PPS spsId", s);
@@ -851,12 +847,9 @@ static void activatePPS (sDecoder* decoder, sPPS* pps) {
 //{{{
 sPPS* allocPPS() {
 
-  sPPS* p = calloc (1, sizeof (sPPS));
-  if (!p)
-    no_mem_exit ("allocPPS");
-
-  p->sliceGroupId = NULL;
-  return p;
+  sPPS* pps = calloc (1, sizeof (sPPS));
+  pps->sliceGroupId = NULL;
+  return pps;
   }
 //}}}
 //{{{

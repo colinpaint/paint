@@ -415,39 +415,39 @@ static void initCurImg (sSlice* slice, sDecoder* decoder) {
 //}}}
 
 //{{{
-static int isNewPicture (sPicture* picture, sSlice* slice, sOldSlice* oldSliceParam) {
+static int isNewPicture (sPicture* picture, sSlice* slice, sOldSlice* oldSlice) {
 
   int result = (NULL == picture);
 
-  result |= (oldSliceParam->ppsId != slice->ppsId);
-  result |= (oldSliceParam->frameNum != slice->frameNum);
-  result |= (oldSliceParam->fieldPicFlag != slice->fieldPicFlag);
+  result |= (oldSlice->ppsId != slice->ppsId);
+  result |= (oldSlice->frameNum != slice->frameNum);
+  result |= (oldSlice->fieldPicFlag != slice->fieldPicFlag);
 
-  if (slice->fieldPicFlag && oldSliceParam->fieldPicFlag)
-    result |= (oldSliceParam->botFieldFlag != slice->botFieldFlag);
+  if (slice->fieldPicFlag && oldSlice->fieldPicFlag)
+    result |= (oldSlice->botFieldFlag != slice->botFieldFlag);
 
-  result |= (oldSliceParam->nalRefIdc != slice->refId) && ((oldSliceParam->nalRefIdc == 0) || (slice->refId == 0));
-  result |= (oldSliceParam->idrFlag != slice->idrFlag);
+  result |= (oldSlice->nalRefIdc != slice->refId) && ((oldSlice->nalRefIdc == 0) || (slice->refId == 0));
+  result |= (oldSlice->idrFlag != slice->idrFlag);
 
-  if (slice->idrFlag && oldSliceParam->idrFlag)
-    result |= (oldSliceParam->idrPicId != slice->idrPicId);
+  if (slice->idrFlag && oldSlice->idrFlag)
+    result |= (oldSlice->idrPicId != slice->idrPicId);
 
   sDecoder* decoder = slice->decoder;
   if (decoder->activeSPS->picOrderCountType == 0) {
-    result |= (oldSliceParam->picOrderCountLsb != slice->picOrderCountLsb);
+    result |= (oldSlice->picOrderCountLsb != slice->picOrderCountLsb);
     if (decoder->activePPS->botFieldPicOrderFramePresentFlag  ==  1 &&  !slice->fieldPicFlag )
-      result |= (oldSliceParam->deltaPicOrderCountBot != slice->deletaPicOrderCountBot);
+      result |= (oldSlice->deltaPicOrderCountBot != slice->deletaPicOrderCountBot);
     }
 
   if (decoder->activeSPS->picOrderCountType == 1) {
     if (!decoder->activeSPS->delta_pic_order_always_zero_flag) {
-      result |= (oldSliceParam->deltaPicOrderCount[0] != slice->deltaPicOrderCount[0]);
+      result |= (oldSlice->deltaPicOrderCount[0] != slice->deltaPicOrderCount[0]);
       if (decoder->activePPS->botFieldPicOrderFramePresentFlag  ==  1 &&  !slice->fieldPicFlag )
-        result |= (oldSliceParam->deltaPicOrderCount[1] != slice->deltaPicOrderCount[1]);
+        result |= (oldSlice->deltaPicOrderCount[1] != slice->deltaPicOrderCount[1]);
       }
     }
 
-  result |= (slice->layerId != oldSliceParam->layerId);
+  result |= (slice->layerId != oldSlice->layerId);
   return result;
   }
 //}}}
@@ -710,34 +710,34 @@ static void framePostProcessing (sDecoder* decoder) {}
 static void fieldPostProcessing (sDecoder* decoder) { decoder->number /= 2; }
 
 //{{{
-static void copySliceInfo (sSlice* slice, sOldSlice* oldSliceParam) {
+static void copySliceInfo (sSlice* slice, sOldSlice* oldSlice) {
 
   sDecoder* decoder = slice->decoder;
 
-  oldSliceParam->ppsId = slice->ppsId;
-  oldSliceParam->frameNum = slice->frameNum; //decoder->frameNum;
-  oldSliceParam->fieldPicFlag = slice->fieldPicFlag; //decoder->fieldPicFlag;
+  oldSlice->ppsId = slice->ppsId;
+  oldSlice->frameNum = slice->frameNum; //decoder->frameNum;
+  oldSlice->fieldPicFlag = slice->fieldPicFlag; //decoder->fieldPicFlag;
 
   if (slice->fieldPicFlag)
-    oldSliceParam->botFieldFlag = slice->botFieldFlag;
+    oldSlice->botFieldFlag = slice->botFieldFlag;
 
-  oldSliceParam->nalRefIdc = slice->refId;
-  oldSliceParam->idrFlag = (byte)slice->idrFlag;
+  oldSlice->nalRefIdc = slice->refId;
+  oldSlice->idrFlag = (byte)slice->idrFlag;
 
   if (slice->idrFlag)
-    oldSliceParam->idrPicId = slice->idrPicId;
+    oldSlice->idrPicId = slice->idrPicId;
 
   if (decoder->activeSPS->picOrderCountType == 0) {
-    oldSliceParam->picOrderCountLsb = slice->picOrderCountLsb;
-    oldSliceParam->deltaPicOrderCountBot = slice->deletaPicOrderCountBot;
+    oldSlice->picOrderCountLsb = slice->picOrderCountLsb;
+    oldSlice->deltaPicOrderCountBot = slice->deletaPicOrderCountBot;
     }
 
   if (decoder->activeSPS->picOrderCountType == 1) {
-    oldSliceParam->deltaPicOrderCount[0] = slice->deltaPicOrderCount[0];
-    oldSliceParam->deltaPicOrderCount[1] = slice->deltaPicOrderCount[1];
+    oldSlice->deltaPicOrderCount[0] = slice->deltaPicOrderCount[0];
+    oldSlice->deltaPicOrderCount[1] = slice->deltaPicOrderCount[1];
     }
 
-  oldSliceParam->layerId = slice->layerId;
+  oldSlice->layerId = slice->layerId;
   }
 //}}}
 //{{{
@@ -1072,26 +1072,26 @@ static int readNewSlice (sSlice* slice) {
 //}}}
 
 //{{{
-void initOldSlice (sOldSlice* oldSliceParam) {
+void initOldSlice (sOldSlice* oldSlice) {
 
-  oldSliceParam->fieldPicFlag = 0;
-  oldSliceParam->ppsId = INT_MAX;
-  oldSliceParam->frameNum = INT_MAX;
+  oldSlice->fieldPicFlag = 0;
+  oldSlice->ppsId = INT_MAX;
+  oldSlice->frameNum = INT_MAX;
 
-  oldSliceParam->nalRefIdc = INT_MAX;
-  oldSliceParam->idrFlag = FALSE;
+  oldSlice->nalRefIdc = INT_MAX;
+  oldSlice->idrFlag = FALSE;
 
-  oldSliceParam->picOrderCountLsb = UINT_MAX;
-  oldSliceParam->deltaPicOrderCountBot = INT_MAX;
-  oldSliceParam->deltaPicOrderCount[0] = INT_MAX;
-  oldSliceParam->deltaPicOrderCount[1] = INT_MAX;
+  oldSlice->picOrderCountLsb = UINT_MAX;
+  oldSlice->deltaPicOrderCountBot = INT_MAX;
+  oldSlice->deltaPicOrderCount[0] = INT_MAX;
+  oldSlice->deltaPicOrderCount[1] = INT_MAX;
   }
 //}}}
 //{{{
-void calcFrameNum (sDecoder* decoder, sPicture* p) {
+void calcFrameNum (sDecoder* decoder, sPicture* picture) {
 
-  int psnrPOC = decoder->activeSPS->mb_adaptive_frame_field_flag ? p->poc / (decoder->param.pocScale) :
-                                                                    p->poc / (decoder->param.pocScale);
+  int psnrPOC = decoder->activeSPS->mb_adaptive_frame_field_flag ? picture->poc / (decoder->param.pocScale) :
+                                                                    picture->poc / (decoder->param.pocScale);
   if (psnrPOC == 0)
     decoder->idrPsnrNum = decoder->gapNumFrame * decoder->refPocGap / (decoder->param.pocScale);
 
