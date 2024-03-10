@@ -263,11 +263,20 @@ typedef sDecodingEnvironment* sDecodingEnvironmentPtr;
 struct Picture;
 struct Macroblock;
 struct PicMotion;
-//{{{  sMotionVec
-typedef struct {
-  short mvX;
-  short mvY;
-  } sMotionVec;
+//{{{  sBitstream
+typedef struct Bitstream {
+  // CABAC Decoding
+  int readLen;          // actual position in the codebuffer, CABAC only
+  int codeLen;          // overall codebuffer length, CABAC only
+
+  // CAVLC Decoding
+  int frameBitOffset;   // actual position in the codebuffer, bit-oriented, CAVLC only
+  int bitstreamLength;  // over codebuffer lnegth, byte oriented, CAVLC only
+
+  // ErrorConcealment
+  byte* streamBuffer;   // actual codebuffer for read bytes
+  int eiFlag;           // error indication, 0: no error, else unspecified error
+  } sBitstream;
 //}}}
 //{{{  sBlockPos
 typedef struct {
@@ -284,31 +293,6 @@ typedef struct PixelPos {
   short posX;
   short posY;
   } sPixelPos;
-//}}}
-//{{{  sBitstream
-typedef struct Bitstream {
-  // CABAC Decoding
-  int readLen;          // actual position in the codebuffer, CABAC only
-  int codeLen;          // overall codebuffer length, CABAC only
-
-  // CAVLC Decoding
-  int frameBitOffset;   // actual position in the codebuffer, bit-oriented, CAVLC only
-  int bitstreamLength;  // over codebuffer lnegth, byte oriented, CAVLC only
-
-  // ErrorConcealment
-  byte* streamBuffer;   // actual codebuffer for read bytes
-  int eiFlag;           // error indication, 0: no error, else unspecified error
-  } sBitstream;
-//}}}
-//{{{  sDecRefPicMarking
-typedef struct DecRefPicMarking {
-  int memory_management_control_operation;
-  int difference_of_pic_nums_minus1;
-  int longTermPicNum;
-  int longTermFrameIndex;
-  int max_long_term_frame_idx_plus1;
-  struct DecRefPicMarking* next;
-  } sDecRefPicMarking;
 //}}}
 //{{{  sCBPStructure
 typedef struct CBPStructure {
@@ -341,6 +325,12 @@ typedef struct DataPartition {
   sDecodingEnvironment deCabac;
   int (*readsSyntaxElement) (struct Macroblock*, struct SyntaxElement*, struct DataPartition*);
   } sDataPartition;
+//}}}
+//{{{  sMotionVec
+typedef struct {
+  short mvX;
+  short mvY;
+  } sMotionVec;
 //}}}
 //{{{  sMacroblock
 typedef struct Macroblock {
@@ -448,6 +438,16 @@ typedef struct Image {
   int top_stride[MAX_PLANE];
   int bot_stride[MAX_PLANE];
   } sImage;
+//}}}
+//{{{  sDecRefPicMarking
+typedef struct DecRefPicMarking {
+  int memory_management_control_operation;
+  int difference_of_pic_nums_minus1;
+  int longTermPicNum;
+  int longTermFrameIndex;
+  int max_long_term_frame_idx_plus1;
+  struct DecRefPicMarking* next;
+  } sDecRefPicMarking;
 //}}}
 //{{{  sOldSlice
 typedef struct OldSlice {
@@ -763,11 +763,20 @@ typedef struct Decoder {
   sLayer*     layer[MAX_NUM_DPB_LAYERS];
   sCoding*    coding[MAX_NUM_DPB_LAYERS];
 
-  int              number;  //frame number
+  // loadsa frameNum
+  int          number; 
+  unsigned int preFrameNum;  // last decoded slice. For detecting gap in frameNum.
+  int          idrPsnrNum;
+  int          psnrNum;
+  unsigned int prevFrameNum; // number of previous slice
+  int          frameNum;
+  int          gapNumFrame;
+  int          newFrame;
+
   struct sSEI*     sei;
   struct OldSlice* oldSlice;
 
-  // current picture property;
+  // current picture property
   unsigned int numDecodedMb;
   int          curPicSliceNum;
   int          numSlicesAllocated;
@@ -784,7 +793,6 @@ typedef struct Decoder {
   int**        siBlockJV[MAX_PLANE];
   sBlockPos*   picPos;
 
-  int          newFrame;
   int          structure;           // Identify picture structure type
 
   sSlice*      nextSlice;           // pointer to first sSlice of next picture;
@@ -798,7 +806,6 @@ typedef struct Decoder {
   struct ConcealNode* concealment_head;
   struct ConcealNode* concealment_end;
 
-  unsigned int preFrameNum;           // store the frameNum in the last decoded slice. For detecting gap in frameNum.
   int          nonConformingStream;
   int          lastRefPicPoc;
   int          refPocGap;
@@ -828,12 +835,6 @@ typedef struct Decoder {
   int          last_has_mmco_5;
   int          last_pic_bottom_field;
 
-  int          idrPsnrNum;
-  int          psnrNum;
-
-  // Redundant slices. Should be moved to another structure and allocated only if extended profile
-  unsigned int prevFrameNum; // frame number of previous slice
-
   // non-zero: i-th previous frame is correct
   int          isPrimaryOk;    // if primary frame is correct, 0: incorrect
   int          isReduncantOk;  // if redundant frame is correct, 0:incorrect
@@ -843,8 +844,6 @@ typedef struct Decoder {
   int          NALUCount;
   struct nalu_t* nalu;
 
-  int          frameNum;
-  int          gapNumFrame; // ???
   Boolean      globalInitDone[2];
 
   int*         qpPerMatrix;
@@ -859,16 +858,16 @@ typedef struct Decoder {
   struct Picture* noReferencePicture;       // dummy storable picture for recovery point
 
   // Error parameters
-  struct ObjectBuffer*  ercObjectList;
+  struct ObjectBuffer* ercObjectList;
   struct ErcVariables* ercErrorVar;
-  int                    ercMvPerMb;
-  struct Decoder*       ercImg;
-  int                    ecFlag[SE_MAX_ELEMENTS];  // array to set errorconcealment
+  int                  ercMvPerMb;
+  struct Decoder*      ercImg;
+  int                  ecFlag[SE_MAX_ELEMENTS];  // array to set errorconcealment
 
-  struct FrameStore* outBuffer;
-  struct Picture*  pendingOut;
-  int              pendingOutState;
-  int              recoveryFlag;
+  struct FrameStore*   outBuffer;
+  struct Picture*      pendingOut;
+  int                  pendingOutState;
+  int                  recoveryFlag;
 
   // report
   char sliceTypeText[9];
