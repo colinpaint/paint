@@ -1009,7 +1009,7 @@ static inline int isHiIntraOnlyProfile (unsigned int profileIdc, Boolean constra
   extern unsigned ceilLog2sf (unsigned uiVal);
 
   // For 4:4:4 independent mode
-  extern void changePlaneJV (sDecoder* decoder, int nplane, sSlice *splice);
+  extern void changePlaneJV (sDecoder* decoder, int nplane, sSlice *slice);
   extern void makeFramePictureJV (sDecoder* decoder );
 
   extern sDecodedPic* getDecodedPicture (sDecodedPic* decodedPic);

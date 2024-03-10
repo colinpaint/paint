@@ -1426,26 +1426,26 @@ void initContexts (sSlice* slice) {
   }
 //}}}
 //{{{
-void dec_ref_pic_marking (sDecoder* decoder, sBitstream* s, sSlice* splice) {
+void dec_ref_pic_marking (sDecoder* decoder, sBitstream* s, sSlice* slice) {
 
   // free old buffer content
-  while (splice->decRefPicMarkingBuffer) {
-    sDecodedRefPicMarking* tmp_drpm = splice->decRefPicMarkingBuffer;
-    splice->decRefPicMarkingBuffer = tmp_drpm->next;
+  while (slice->decRefPicMarkingBuffer) {
+    sDecodedRefPicMarking* tmp_drpm = slice->decRefPicMarkingBuffer;
+    slice->decRefPicMarkingBuffer = tmp_drpm->next;
     free (tmp_drpm);
     }
 
-  if (splice->idrFlag) {
-    splice->noOutputPriorPicFlag =
+  if (slice->idrFlag) {
+    slice->noOutputPriorPicFlag =
       readU1 ("SLC noOutputPriorPicFlag", s);
-    decoder->noOutputPriorPicFlag = splice->noOutputPriorPicFlag;
-    splice->longTermRefFlag =
+    decoder->noOutputPriorPicFlag = slice->noOutputPriorPicFlag;
+    slice->longTermRefFlag =
       readU1 ("SLC longTermRefFlag", s);
     }
   else {
-    splice->adaptiveRefPicBufferingFlag =
+    slice->adaptiveRefPicBufferingFlag =
       readU1 ("SLC adaptiveRefPicBufferingFlag", s);
-    if (splice->adaptiveRefPicBufferingFlag) {
+    if (slice->adaptiveRefPicBufferingFlag) {
       // read Memory Management Control Operation
       int val;
       do {
@@ -1468,10 +1468,10 @@ void dec_ref_pic_marking (sDecoder* decoder, sBitstream* s, sSlice* splice) {
             readUeV ("SLC max_long_term_pic_idx_plus1", s);
 
         // add command
-        if (splice->decRefPicMarkingBuffer == NULL)
-          splice->decRefPicMarkingBuffer = tmp_drpm;
+        if (slice->decRefPicMarkingBuffer == NULL)
+          slice->decRefPicMarkingBuffer = tmp_drpm;
         else {
-          sDecodedRefPicMarking* tmp_drpm2 = splice->decRefPicMarkingBuffer;
+          sDecodedRefPicMarking* tmp_drpm2 = slice->decRefPicMarkingBuffer;
           while (tmp_drpm2->next != NULL) tmp_drpm2 = tmp_drpm2->next;
           tmp_drpm2->next = tmp_drpm;
           }
@@ -1515,7 +1515,7 @@ int dumpPOC (sDecoder* decoder) {
   }
 //}}}
 //{{{
-void decodePOC (sDecoder* decoder, sSlice* splice) {
+void decodePOC (sDecoder* decoder, sSlice* slice) {
 
   // for POC mode 0:
   sSPS* activeSPS = decoder->activeSPS;
@@ -1525,7 +1525,7 @@ void decodePOC (sDecoder* decoder, sSlice* splice) {
     //{{{
     case 0: // POC MODE 0
       // 1st
-      if (splice->idrFlag) {
+      if (slice->idrFlag) {
         decoder->PrevPicOrderCntMsb = 0;
         decoder->PrevPicOrderCntLsb = 0;
         }
@@ -1537,40 +1537,40 @@ void decodePOC (sDecoder* decoder, sSlice* splice) {
             }
           else {
             decoder->PrevPicOrderCntMsb = 0;
-            decoder->PrevPicOrderCntLsb = splice->topPoc;
+            decoder->PrevPicOrderCntLsb = slice->topPoc;
             }
           }
         }
 
       // Calculate the MSBs of current picture
-      if( splice->picOrderCountLsb  <  decoder->PrevPicOrderCntLsb  &&
-        ( decoder->PrevPicOrderCntLsb - splice->picOrderCountLsb )  >=  ( MaxPicOrderCntLsb / 2 ) )
-        splice->PicOrderCntMsb = decoder->PrevPicOrderCntMsb + MaxPicOrderCntLsb;
-      else if ( splice->picOrderCountLsb  >  decoder->PrevPicOrderCntLsb  &&
-        ( splice->picOrderCountLsb - decoder->PrevPicOrderCntLsb )  >  ( MaxPicOrderCntLsb / 2 ) )
-        splice->PicOrderCntMsb = decoder->PrevPicOrderCntMsb - MaxPicOrderCntLsb;
+      if( slice->picOrderCountLsb  <  decoder->PrevPicOrderCntLsb  &&
+        ( decoder->PrevPicOrderCntLsb - slice->picOrderCountLsb )  >=  ( MaxPicOrderCntLsb / 2 ) )
+        slice->PicOrderCntMsb = decoder->PrevPicOrderCntMsb + MaxPicOrderCntLsb;
+      else if ( slice->picOrderCountLsb  >  decoder->PrevPicOrderCntLsb  &&
+        ( slice->picOrderCountLsb - decoder->PrevPicOrderCntLsb )  >  ( MaxPicOrderCntLsb / 2 ) )
+        slice->PicOrderCntMsb = decoder->PrevPicOrderCntMsb - MaxPicOrderCntLsb;
       else
-        splice->PicOrderCntMsb = decoder->PrevPicOrderCntMsb;
+        slice->PicOrderCntMsb = decoder->PrevPicOrderCntMsb;
 
       // 2nd
-      if (splice->fieldPicFlag==0) {
+      if (slice->fieldPicFlag==0) {
         //frame pix
-        splice->topPoc = splice->PicOrderCntMsb + splice->picOrderCountLsb;
-        splice->botPoc = splice->topPoc + splice->deletaPicOrderCountBot;
-        splice->thisPoc = splice->framePoc = (splice->topPoc < splice->botPoc)? splice->topPoc : splice->botPoc; // POC200301
+        slice->topPoc = slice->PicOrderCntMsb + slice->picOrderCountLsb;
+        slice->botPoc = slice->topPoc + slice->deletaPicOrderCountBot;
+        slice->thisPoc = slice->framePoc = (slice->topPoc < slice->botPoc)? slice->topPoc : slice->botPoc; // POC200301
         }
-      else if (splice->botFieldFlag == FALSE) // top field
-        splice->thisPoc= splice->topPoc = splice->PicOrderCntMsb + splice->picOrderCountLsb;
+      else if (slice->botFieldFlag == FALSE) // top field
+        slice->thisPoc= slice->topPoc = slice->PicOrderCntMsb + slice->picOrderCountLsb;
       else // bottom field
-        splice->thisPoc= splice->botPoc = splice->PicOrderCntMsb + splice->picOrderCountLsb;
-      splice->framePoc = splice->thisPoc;
+        slice->thisPoc= slice->botPoc = slice->PicOrderCntMsb + slice->picOrderCountLsb;
+      slice->framePoc = slice->thisPoc;
 
-      decoder->thisPoc = splice->thisPoc;
-      decoder->PreviousFrameNum = splice->frameNum;
+      decoder->thisPoc = slice->thisPoc;
+      decoder->PreviousFrameNum = slice->frameNum;
 
-      if(splice->refId) {
-        decoder->PrevPicOrderCntLsb = splice->picOrderCountLsb;
-        decoder->PrevPicOrderCntMsb = splice->PicOrderCntMsb;
+      if(slice->refId) {
+        decoder->PrevPicOrderCntLsb = slice->picOrderCountLsb;
+        decoder->PrevPicOrderCntMsb = slice->PicOrderCntMsb;
         }
 
       break;
@@ -1578,9 +1578,9 @@ void decodePOC (sDecoder* decoder, sSlice* splice) {
     //{{{
     case 1: // POC MODE 1
       // 1st
-      if (splice->idrFlag) {
+      if (slice->idrFlag) {
         decoder->FrameNumOffset=0;     //  first pix of IDRGOP,
-        if (splice->frameNum)
+        if (slice->frameNum)
           error ("frameNum not equal to zero in IDR picture", -1020);
         }
       else {
@@ -1588,7 +1588,7 @@ void decodePOC (sDecoder* decoder, sSlice* splice) {
           decoder->PreviousFrameNumOffset = 0;
           decoder->PreviousFrameNum = 0;
           }
-        if (splice->frameNum<decoder->PreviousFrameNum)
+        if (slice->frameNum<decoder->PreviousFrameNum)
           //not first pix of IDRGOP
           decoder->FrameNumOffset = decoder->PreviousFrameNumOffset + decoder->maxFrameNum;
         else
@@ -1597,11 +1597,11 @@ void decodePOC (sDecoder* decoder, sSlice* splice) {
 
       // 2nd
       if (activeSPS->num_ref_frames_in_pic_order_cnt_cycle)
-        splice->AbsFrameNum = decoder->FrameNumOffset+splice->frameNum;
+        slice->AbsFrameNum = decoder->FrameNumOffset+slice->frameNum;
       else
-        splice->AbsFrameNum=0;
-      if ((!splice->refId) && splice->AbsFrameNum > 0)
-        splice->AbsFrameNum--;
+        slice->AbsFrameNum=0;
+      if ((!slice->refId) && slice->AbsFrameNum > 0)
+        slice->AbsFrameNum--;
 
       // 3rd
       decoder->ExpectedDeltaPerPicOrderCntCycle = 0;
@@ -1609,11 +1609,11 @@ void decodePOC (sDecoder* decoder, sSlice* splice) {
         for (int i = 0; i < (int) activeSPS->num_ref_frames_in_pic_order_cnt_cycle;i++)
           decoder->ExpectedDeltaPerPicOrderCntCycle += activeSPS->offset_for_ref_frame[i];
 
-      if (splice->AbsFrameNum) {
+      if (slice->AbsFrameNum) {
         decoder->PicOrderCntCycleCnt =
-          (splice->AbsFrameNum-1)/activeSPS->num_ref_frames_in_pic_order_cnt_cycle;
+          (slice->AbsFrameNum-1)/activeSPS->num_ref_frames_in_pic_order_cnt_cycle;
         decoder->FrameNumInPicOrderCntCycle =
-          (splice->AbsFrameNum-1)%activeSPS->num_ref_frames_in_pic_order_cnt_cycle;
+          (slice->AbsFrameNum-1)%activeSPS->num_ref_frames_in_pic_order_cnt_cycle;
         decoder->ExpectedPicOrderCnt =
           decoder->PicOrderCntCycleCnt*decoder->ExpectedDeltaPerPicOrderCntCycle;
         for (int i = 0; i <= (int)decoder->FrameNumInPicOrderCntCycle; i++)
@@ -1622,34 +1622,34 @@ void decodePOC (sDecoder* decoder, sSlice* splice) {
       else
         decoder->ExpectedPicOrderCnt=0;
 
-      if (!splice->refId)
+      if (!slice->refId)
         decoder->ExpectedPicOrderCnt += activeSPS->offset_for_non_ref_pic;
 
-      if (splice->fieldPicFlag == 0) {
+      if (slice->fieldPicFlag == 0) {
         // frame pix
-        splice->topPoc = decoder->ExpectedPicOrderCnt + splice->deltaPicOrderCount[0];
-        splice->botPoc = splice->topPoc + activeSPS->offset_for_top_to_bottom_field + splice->deltaPicOrderCount[1];
-        splice->thisPoc = splice->framePoc = (splice->topPoc < splice->botPoc)? splice->topPoc : splice->botPoc; // POC200301
+        slice->topPoc = decoder->ExpectedPicOrderCnt + slice->deltaPicOrderCount[0];
+        slice->botPoc = slice->topPoc + activeSPS->offset_for_top_to_bottom_field + slice->deltaPicOrderCount[1];
+        slice->thisPoc = slice->framePoc = (slice->topPoc < slice->botPoc)? slice->topPoc : slice->botPoc; // POC200301
         }
-      else if (splice->botFieldFlag == FALSE)
+      else if (slice->botFieldFlag == FALSE)
         // top field
-        splice->thisPoc = splice->topPoc = decoder->ExpectedPicOrderCnt + splice->deltaPicOrderCount[0];
+        slice->thisPoc = slice->topPoc = decoder->ExpectedPicOrderCnt + slice->deltaPicOrderCount[0];
       else
         // bottom field
-        splice->thisPoc = splice->botPoc = decoder->ExpectedPicOrderCnt + activeSPS->offset_for_top_to_bottom_field + splice->deltaPicOrderCount[0];
-      splice->framePoc=splice->thisPoc;
+        slice->thisPoc = slice->botPoc = decoder->ExpectedPicOrderCnt + activeSPS->offset_for_top_to_bottom_field + slice->deltaPicOrderCount[0];
+      slice->framePoc=slice->thisPoc;
 
-      decoder->PreviousFrameNum=splice->frameNum;
+      decoder->PreviousFrameNum=slice->frameNum;
       decoder->PreviousFrameNumOffset=decoder->FrameNumOffset;
       break;
     //}}}
     //{{{
     case 2: // POC MODE 2
-      if (splice->idrFlag) {
+      if (slice->idrFlag) {
         // IDR picture, first pix of IDRGOP,
         decoder->FrameNumOffset = 0;
-        splice->thisPoc = splice->framePoc = splice->topPoc = splice->botPoc = 0;
-        if (splice->frameNum)
+        slice->thisPoc = slice->framePoc = slice->topPoc = slice->botPoc = 0;
+        if (slice->frameNum)
           error ("frameNum not equal to zero in IDR picture", -1020);
         }
       else {
@@ -1658,26 +1658,26 @@ void decodePOC (sDecoder* decoder, sSlice* splice) {
           decoder->PreviousFrameNumOffset = 0;
           }
 
-        if (splice->frameNum<decoder->PreviousFrameNum)
+        if (slice->frameNum<decoder->PreviousFrameNum)
           decoder->FrameNumOffset = decoder->PreviousFrameNumOffset + decoder->maxFrameNum;
         else
           decoder->FrameNumOffset = decoder->PreviousFrameNumOffset;
 
-        splice->AbsFrameNum = decoder->FrameNumOffset+splice->frameNum;
-        if (!splice->refId)
-          splice->thisPoc = (2*splice->AbsFrameNum - 1);
+        slice->AbsFrameNum = decoder->FrameNumOffset+slice->frameNum;
+        if (!slice->refId)
+          slice->thisPoc = (2*slice->AbsFrameNum - 1);
         else
-          splice->thisPoc = (2*splice->AbsFrameNum);
+          slice->thisPoc = (2*slice->AbsFrameNum);
 
-        if (splice->fieldPicFlag==0)
-          splice->topPoc = splice->botPoc = splice->framePoc = splice->thisPoc;
-        else if (splice->botFieldFlag == FALSE)
-          splice->topPoc = splice->framePoc = splice->thisPoc;
+        if (slice->fieldPicFlag==0)
+          slice->topPoc = slice->botPoc = slice->framePoc = slice->thisPoc;
+        else if (slice->botFieldFlag == FALSE)
+          slice->topPoc = slice->framePoc = slice->thisPoc;
         else
-          splice->botPoc = splice->framePoc = splice->thisPoc;
+          slice->botPoc = slice->framePoc = slice->thisPoc;
         }
 
-      decoder->PreviousFrameNum=splice->frameNum;
+      decoder->PreviousFrameNum=slice->frameNum;
       decoder->PreviousFrameNumOffset=decoder->FrameNumOffset;
       break;
     //}}}

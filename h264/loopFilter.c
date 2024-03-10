@@ -1384,10 +1384,10 @@ static void edge_loop_chroma_hor (sPixel** img, byte* Strength, sMacroblock* mb,
 //{{{
 static void set_loop_filter_functions_normal (sDecoder* decoder) {
 
-  decoder->getStrengthV    = get_strength_ver;
-  decoder->getStrengthH    = get_strength_hor;
-  decoder->edgeLoopLumaV   = edge_loop_luma_ver;
-  decoder->edgeLoopLumaH   = edge_loop_luma_hor;
+  decoder->getStrengthV = get_strength_ver;
+  decoder->getStrengthH = get_strength_hor;
+  decoder->edgeLoopLumaV = edge_loop_luma_ver;
+  decoder->edgeLoopLumaH = edge_loop_luma_hor;
   decoder->edgeLoopChromaV = edge_loop_chroma_ver;
   decoder->edgeLoopChromaH = edge_loop_chroma_hor;
   }
@@ -1415,7 +1415,7 @@ static void deblockMb (sDecoder* decoder, sPicture* p, int mbIndex) {
     sPixel    ** imgY = p->imgY;
     sPixel  ** *imgUV = p->imgUV;
     sSlice * slice = mb->slice;
-    int       mvLimit = ((p->structure!=FRAME) || (p->mbAffFrameFlag && mb->mbField)) ? 2 : 4;
+    int mvLimit = ((p->structure!=FRAME) || (p->mbAffFrameFlag && mb->mbField)) ? 2 : 4;
     sSPS* activeSPS = decoder->activeSPS;
 
     mb->DeblockCall = 1;
@@ -1572,7 +1572,7 @@ static void getDeblockStrength (sDecoder* decoder, sPicture* p, int mbIndex) {
     int           filterTopMbEdgeFlag;
 
     sSlice * slice = mb->slice;
-    int       mvLimit = ((p->structure!=FRAME) || (p->mbAffFrameFlag && mb->mbField)) ? 2 : 4;
+    int mvLimit = ((p->structure!=FRAME) || (p->mbAffFrameFlag && mb->mbField)) ? 2 : 4;
     sSPS *activeSPS = decoder->activeSPS;
 
     mb->DeblockCall = 1;
@@ -1668,17 +1668,17 @@ static void performDeblock (sDecoder* decoder, sPicture* p, int mbIndex) {
     int           filterLeftMbEdgeFlag;
     int           filterTopMbEdgeFlag;
     int           edge_cr;
-    sPixel    ** imgY = p->imgY;
-    sPixel  ** *imgUV = p->imgUV;
-    sSlice * slice = mb->slice;
-    int       mvLimit = ((p->structure!=FRAME) || (p->mbAffFrameFlag && mb->mbField)) ? 2 : 4;
-    sSPS *activeSPS = decoder->activeSPS;
+    sPixel** imgY = p->imgY;
+    sPixel** *imgUV = p->imgUV;
+    sSlice* slice = mb->slice;
+    int mvLimit = ((p->structure!=FRAME) || (p->mbAffFrameFlag && mb->mbField)) ? 2 : 4;
+    sSPS* activeSPS = decoder->activeSPS;
 
     mb->DeblockCall = 1;
     getMbPos (decoder, mbIndex, decoder->mbSize[IS_LUMA], &mb_x, &mb_y);
 
     if (mb->mbType == I8MB)
-      assert(mb->lumaTransformSize8x8flag);
+      assert (mb->lumaTransformSize8x8flag);
 
     filterNon8x8LumaEdgesFlag[1] =
       filterNon8x8LumaEdgesFlag[3] = !(mb->lumaTransformSize8x8flag);

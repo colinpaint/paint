@@ -1355,16 +1355,16 @@ int decodeFrame (sDecoder* decoder) {
 
        decoder->picSliceIndex++;
        if (decoder->picSliceIndex >= decoder->numAllocatedSlices) {
-         sSlice** tmspliceList = (sSlice**)realloc (
+         sSlice** tmsliceList = (sSlice**)realloc (
            decoder->sliceList, (decoder->numAllocatedSlices + MAX_NUM_DECSLICES) * sizeof(sSlice*));
-         if (!tmspliceList) {
-           tmspliceList = calloc ((decoder->numAllocatedSlices + MAX_NUM_DECSLICES), sizeof(sSlice*));
-           memcpy (tmspliceList, decoder->sliceList, decoder->picSliceIndex * sizeof(sSlice*));
+         if (!tmsliceList) {
+           tmsliceList = calloc ((decoder->numAllocatedSlices + MAX_NUM_DECSLICES), sizeof(sSlice*));
+           memcpy (tmsliceList, decoder->sliceList, decoder->picSliceIndex * sizeof(sSlice*));
            free (decoder->sliceList);
-           sliceList = decoder->sliceList = tmspliceList;
+           sliceList = decoder->sliceList = tmsliceList;
            }
          else {
-           sliceList = decoder->sliceList = tmspliceList;
+           sliceList = decoder->sliceList = tmsliceList;
            memset (decoder->sliceList + decoder->picSliceIndex, 0, sizeof(sSlice*) * MAX_NUM_DECSLICES);
            }
          decoder->numAllocatedSlices += MAX_NUM_DECSLICES;

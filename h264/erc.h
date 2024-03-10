@@ -87,7 +87,7 @@ int ercConcealInterFrame (frame *recfr, sObjectBuffer *object_list,
 
 extern struct ConcealNode* init_node (sPicture* , int );
 extern void init_lists_for_non_reference_loss (sDPB* dpb, int , ePicStructure );
-extern void concealLostFrames (sDPB* dpb, sSlice *splice);
+extern void concealLostFrames (sDPB* dpb, sSlice *slice);
 extern void conceal_non_ref_pics (sDPB* dpb, int diff);
 extern void sliding_window_poc_management (sDPB* dpb, sPicture *p);
 extern void write_lost_non_ref_pic (sDPB* dpb, int poc);

@@ -1867,17 +1867,17 @@ void init_lists_for_non_reference_loss (sDPB* dpb, int currSliceType, ePicStruct
 * based on the sudden decrease in frame number.
 ************************************************************************
 */
-void concealLostFrames (sDPB* dpb, sSlice *splice)
+void concealLostFrames (sDPB* dpb, sSlice *slice)
 {
   sDecoder* decoder = dpb->decoder;
   int CurrFrameNum;
   int UnusedShortTermFrameNum;
   sPicture *picture = NULL;
-  int tmp1 = splice->deltaPicOrderCount[0];
-  int tmp2 = splice->deltaPicOrderCount[1];
+  int tmp1 = slice->deltaPicOrderCount[0];
+  int tmp2 = slice->deltaPicOrderCount[1];
   int i;
 
-  splice->deltaPicOrderCount[0] = splice->deltaPicOrderCount[1] = 0;
+  slice->deltaPicOrderCount[0] = slice->deltaPicOrderCount[1] = 0;
 
   // printf("A gap in frame number is found, try to fill it.\n");
 
@@ -1892,7 +1892,7 @@ void concealLostFrames (sDPB* dpb, sSlice *splice)
   else
     UnusedShortTermFrameNum = (decoder->preFrameNum + 1) % decoder->maxFrameNum;
 
-  CurrFrameNum = splice->frameNum;
+  CurrFrameNum = slice->frameNum;
 
   while (CurrFrameNum != UnusedShortTermFrameNum)
   {
@@ -1908,7 +1908,7 @@ void concealLostFrames (sDPB* dpb, sSlice *splice)
 
     picture->adaptiveRefPicBufferingFlag = 0;
 
-    splice->frameNum = UnusedShortTermFrameNum;
+    slice->frameNum = UnusedShortTermFrameNum;
 
     picture->topPoc = decoder->lastRefPicPoc + decoder->refPocGap;
     picture->botPoc = picture->topPoc;
@@ -1941,13 +1941,13 @@ void concealLostFrames (sDPB* dpb, sSlice *splice)
     // update reference flags and set current flag.
     for(i=16;i>0;i--)
     {
-      splice->refFlag[i] = splice->refFlag[i-1];
+      slice->refFlag[i] = slice->refFlag[i-1];
     }
-    splice->refFlag[0] = 0;
+    slice->refFlag[0] = 0;
   }
-  splice->deltaPicOrderCount[0] = tmp1;
-  splice->deltaPicOrderCount[1] = tmp2;
-  splice->frameNum = CurrFrameNum;
+  slice->deltaPicOrderCount[0] = tmp1;
+  slice->deltaPicOrderCount[1] = tmp2;
+  slice->frameNum = CurrFrameNum;
 }
 //}}}
 //{{{

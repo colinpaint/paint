@@ -102,22 +102,18 @@ static const byte* pos2ctx_last    [] = {pos2ctx_last4x4, pos2ctx_last4x4, pos2c
  *    "0" for max_symbol
 ** *********************************************************************
  */
-static unsigned int unary_bin_max_decode (sDecodingEnv* decodingEnv,
-                                  sBiContextType* ctx,
-                                  int ctx_offset,
-                                  unsigned int max_symbol)
+static unsigned int unary_bin_max_decode (sDecodingEnv* decodingEnv, sBiContextType* ctx,
+                                  int ctx_offset, unsigned int max_symbol)
 {
   unsigned int symbol =  biari_decode_symbol (decodingEnv, ctx );
 
   if (symbol == 0 || (max_symbol == 0))
     return symbol;
-  else
-  {
+  else {
     unsigned int l;
     ctx += ctx_offset;
     symbol = 0;
-    do
-    {
+    do {
       l = biari_decode_symbol(decodingEnv, ctx);
       ++symbol;
     }
@@ -137,21 +133,17 @@ static unsigned int unary_bin_max_decode (sDecodingEnv* decodingEnv,
  *    models for the first and all remaining bins
 ** *********************************************************************
  */
-static unsigned int unary_bin_decode (sDecodingEnv* decodingEnv,
-                                     sBiContextType* ctx,
-                                     int ctx_offset)
+static unsigned int unary_bin_decode (sDecodingEnv* decodingEnv, sBiContextType* ctx, int ctx_offset)
 {
   unsigned int symbol = biari_decode_symbol(decodingEnv, ctx );
 
   if (symbol == 0)
     return 0;
-  else
-  {
+  else {
     unsigned int l;
     ctx += ctx_offset;;
     symbol = 0;
-    do
-    {
+    do {
       l = biari_decode_symbol(decodingEnv, ctx);
       ++symbol;
     }
@@ -168,18 +160,15 @@ static unsigned int unary_bin_decode (sDecodingEnv* decodingEnv,
  *    with prob. of 0.5
 ** **********************************************************************
  */
-static unsigned int exp_golomb_decode_eq_prob (sDecodingEnv* decodingEnv,
-                                              int k)
+static unsigned int exp_golomb_decode_eq_prob (sDecodingEnv* decodingEnv, int k)
 {
   unsigned int l;
   int symbol = 0;
   int binary_symbol = 0;
 
-  do
-  {
+  do {
     l = biari_decode_symbol_eq_prob(decodingEnv);
-    if (l == 1)
-    {
+    if (l == 1) {
       symbol += (1<<k);
       ++k;
     }
@@ -200,22 +189,19 @@ static unsigned int exp_golomb_decode_eq_prob (sDecodingEnv* decodingEnv,
  *    Exp-Golomb decoding for LEVELS
 ** *********************************************************************
  */
-static unsigned int unary_exp_golomb_level_decode (sDecodingEnv* decodingEnv,
-                                                  sBiContextType* ctx)
+static unsigned int unary_exp_golomb_level_decode (sDecodingEnv* decodingEnv, sBiContextType* ctx)
 {
   unsigned int symbol = biari_decode_symbol(decodingEnv, ctx );
 
   if (symbol==0)
     return 0;
-  else
-  {
+  else {
     unsigned int l, k = 1;
     unsigned int exp_start = 13;
 
     symbol = 0;
 
-    do
-    {
+    do {
       l=biari_decode_symbol(decodingEnv, ctx);
       ++symbol;
       ++k;
@@ -235,16 +221,14 @@ static unsigned int unary_exp_golomb_level_decode (sDecodingEnv* decodingEnv,
  *    Exp-Golomb decoding for Motion Vectors
 ** *********************************************************************
  */
-static unsigned int unary_exp_golomb_mv_decode (sDecodingEnv* decodingEnv,
-                                               sBiContextType* ctx,
-                                               unsigned int max_bin)
-{
+static unsigned int unary_exp_golomb_mv_decode (sDecodingEnv* decodingEnv, sBiContextType* ctx,
+                                               unsigned int max_bin) {
+
   unsigned int symbol = biari_decode_symbol(decodingEnv, ctx );
 
   if (symbol == 0)
     return 0;
-  else
-  {
+  else {
     unsigned int exp_start = 8;
     unsigned int l,k = 1;
     unsigned int bin = 1;
@@ -252,8 +236,7 @@ static unsigned int unary_exp_golomb_mv_decode (sDecodingEnv* decodingEnv,
     symbol=0;
 
     ++ctx;
-    do
-    {
+    do {
       l=biari_decode_symbol(decodingEnv, ctx);
       if ((++bin)==2) ctx++;
       if (bin==max_bin)
