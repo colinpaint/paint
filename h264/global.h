@@ -302,7 +302,6 @@ typedef struct {
 //}}}
 
 struct Picture;
-struct Macroblock;
 struct PicMotion;
 //{{{  sBlockPos
 typedef struct {
