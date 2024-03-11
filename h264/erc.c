@@ -1587,7 +1587,7 @@ static void copy_to_conceal (sPicture *src, sPicture *dst, sDecoder* decoder)
 
     if(decoder->concealSliceType == B_SLICE)
     {
-      init_lists_for_non_reference_loss (decoder->dpbLayer, dst->sliceType, decoder->sliceList[0]->structure);
+      init_lists_for_non_reference_loss (decoder->dpb, dst->sliceType, decoder->sliceList[0]->structure);
     }
     else
       decoder->sliceList[0]->initLists(decoder->sliceList[0]); //decoder->currentSlice);
@@ -1929,7 +1929,7 @@ void concealLostFrames (sDPB* dpb, sSlice *slice)
       decoder->lastRefPicPoc = picture->poc;
     }
 
-    storePictureDpb (decoder->dpbLayer, picture);
+    storePictureDpb (decoder->dpb, picture);
 
     picture=NULL;
 

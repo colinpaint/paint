@@ -778,10 +778,6 @@ typedef struct Decoder {
   int          recoveryFrameNum;
   int          recoveryPoc;
 
-  struct DPB*  dpbLayer;
-  sLayer*      layer;
-  sCoding*     coding;
-
   // loadsa frameNum
   int          number;
   unsigned int preFrameNum;  // last decoded slice. For detecting gap in frameNum.
@@ -789,6 +785,10 @@ typedef struct Decoder {
   int          frameNum;
   int          gapNumFrame;
   int          newFrame;
+
+  struct DPB*  dpb;
+  sLayer*      layer;
+  sCoding*     coding;
 
   struct OldSlice* oldSlice;
 
@@ -856,6 +856,7 @@ typedef struct Decoder {
   int          isPrimaryOk;    // if primary frame is correct, 0: incorrect
   int          isReduncantOk;  // if redundant frame is correct, 0:incorrect
 
+  int          layerInitDone;
   Boolean      globalInitDone;
 
   int*         qpPerMatrix;
@@ -896,7 +897,6 @@ typedef struct Decoder {
 
   // control;
   int   deblockEnable;
-  int   layerInitDone;
 
   int   width;
   int   height;

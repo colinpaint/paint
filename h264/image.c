@@ -1195,7 +1195,7 @@ void endPicture (sDecoder* decoder, sPicture** picture) {
   int picNum = (*picture)->picNum;
   int isIdr = (*picture)->idrFlag;
   int chromaFormatIdc = (*picture)->chromaFormatIdc;
-  storePictureDpb (decoder->dpbLayer, *picture);
+  storePictureDpb (decoder->dpb, *picture);
   *picture = NULL;
 
   if (decoder->lastHasMmco5)
@@ -1320,7 +1320,7 @@ int decodeFrame (sDecoder* decoder) {
 
     slice = sliceList[decoder->picSliceIndex];
     slice->decoder = decoder;
-    slice->dpb = decoder->dpbLayer; //set default value;
+    slice->dpb = decoder->dpb; //set default value;
     slice->nextHeader = -8888;
     slice->numDecodedMbs = 0;
     slice->coefCount = -1;

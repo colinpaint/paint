@@ -46,7 +46,7 @@ static void setupLayerInfo (sDecoder* decoder, sSPS* sps, sLayer* layer) {
   layer->decoder = decoder;
   layer->coding = decoder->coding;
   layer->sps = sps;
-  layer->dpb = decoder->dpbLayer;
+  layer->dpb = decoder->dpb;
   }
 //}}}
 //{{{
@@ -624,7 +624,7 @@ void activateSPS (sDecoder* decoder, sSPS* sps) {
       endPicture (decoder, &decoder->picture);
     decoder->activeSPS = sps;
 
-    if (isBLprofile (sps->profileIdc) && !decoder->dpbLayer->initDone) {
+    if (isBLprofile (sps->profileIdc) && !decoder->dpb->initDone) {
       setCodingParam (sps, decoder->coding);
       setupLayerInfo ( decoder, sps, decoder->layer);
       }
@@ -632,9 +632,9 @@ void activateSPS (sDecoder* decoder, sSPS* sps) {
 
     initGlobalBuffers (decoder);
     if (!decoder->noOutputPriorPicFlag)
-      flushDpb (decoder->dpbLayer);
+      flushDpb (decoder->dpb);
 
-    initDpb (decoder, decoder->dpbLayer, 0);
+    initDpb (decoder, decoder->dpb, 0);
 
     // enable error conceal
     ercInit (decoder, decoder->width, decoder->height, 1);
