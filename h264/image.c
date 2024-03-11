@@ -715,8 +715,8 @@ static void copySliceInfo (sSlice* slice, sOldSlice* oldSlice) {
   sDecoder* decoder = slice->decoder;
 
   oldSlice->ppsId = slice->ppsId;
-  oldSlice->frameNum = slice->frameNum; //decoder->frameNum;
-  oldSlice->fieldPicFlag = slice->fieldPicFlag; //decoder->fieldPicFlag;
+  oldSlice->frameNum = slice->frameNum;
+  oldSlice->fieldPicFlag = slice->fieldPicFlag;
 
   if (slice->fieldPicFlag)
     oldSlice->botFieldFlag = slice->botFieldFlag;
@@ -1258,9 +1258,9 @@ void endPicture (sDecoder* decoder, sPicture** picture) {
 
   if ((structure == FRAME) || structure == BotField) {
     gettime (&(decoder->endTime));
-    printf ("%5d %s poc:%4d pic:%3d qp:%2d slices:%d mb:%d %dms\n",
-            decoder->frameNum, sliceTypeText, framePoc, picNum, qp,
-            decoder->numDecodedSlices, decoder->numDecodedMbs,
+    printf ("frame:%4d poc:%4d %s qp:%2d slices:%d mb:%d %dms\n",
+            picNum, framePoc, sliceTypeText, 
+            qp, decoder->numDecodedSlices, decoder->numDecodedMbs,
             (int)timenorm (timediff (&(decoder->startTime), &(decoder->endTime))));
 
     // I or P pictures ?

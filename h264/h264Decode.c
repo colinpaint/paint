@@ -195,8 +195,6 @@ static void init (sDecoder* decoder) {
   decoder->recoveryPointFound = 0;
   decoder->recoveryPoc = 0x7fffffff; /* set to a max value */
 
-  decoder->idrPsnrNum = decoder->param.refOffset;
-
   decoder->number = 0;
   decoder->type = I_SLICE;
 
@@ -460,7 +458,7 @@ void freeGlobalBuffers (sDecoder* decoder) {
 //}}}
 
 //{{{
-sDecodedPic* getDecodedPicture (sDecodedPic* decodedPic) {
+sDecodedPic* allocDecodedPicture (sDecodedPic* decodedPic) {
 
   sDecodedPic* prevDecodedPicture = NULL;
   while (decodedPic && (decodedPic->valid)) {
@@ -469,7 +467,7 @@ sDecodedPic* getDecodedPicture (sDecodedPic* decodedPic) {
     }
 
   if (!decodedPic) {
-    decodedPic = (sDecodedPic*)calloc(1, sizeof(*decodedPic));
+    decodedPic = (sDecodedPic*)calloc (1, sizeof(*decodedPic));
     prevDecodedPicture->next = decodedPic;
     }
 

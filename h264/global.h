@@ -785,7 +785,6 @@ typedef struct Decoder {
   // loadsa frameNum
   int          number;
   unsigned int preFrameNum;  // last decoded slice. For detecting gap in frameNum.
-  int          idrPsnrNum;
   unsigned int prevFrameNum; // number of previous slice
   int          frameNum;
   int          gapNumFrame;
@@ -1011,7 +1010,7 @@ static inline int isHiIntraOnlyProfile (unsigned int profileIdc, Boolean constra
   extern void changePlaneJV (sDecoder* decoder, int nplane, sSlice *slice);
   extern void makeFramePictureJV (sDecoder* decoder );
 
-  extern sDecodedPic* getDecodedPicture (sDecodedPic* decodedPic);
+  extern sDecodedPic* allocDecodedPicture (sDecodedPic* decodedPic);
   extern void freeDecodedPictures (sDecodedPic* decodedPic);
   extern void clearDecodedPictures (sDecoder* decoder);
 

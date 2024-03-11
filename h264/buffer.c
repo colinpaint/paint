@@ -547,9 +547,7 @@ static void insertPictureDpb (sDecoder* decoder, sFrameStore* fs, sPicture* p) {
   fs->frameNum = p->picNum;
   fs->recoveryFrame = p->recoveryFrame;
   fs->is_output = p->is_output;
-  if (fs->isUsed == 3)
-    calcFrameNum (decoder, p);
-}
+  }
 //}}}
 //{{{
 void unmark_for_reference (sFrameStore* frameStore) {
@@ -815,7 +813,7 @@ void fillFrameNumGap (sDecoder* decoder, sSlice* slice) {
   printf ("A gap in frame number is found, try to fill it.\n");
 
   int unusedShortTermFrameNum = (decoder->preFrameNum + 1) % decoder->maxFrameNum;
-  int curFrameNum = slice->frameNum; //decoder->frameNum;
+  int curFrameNum = slice->frameNum; 
 
   sPicture* picture = NULL;
   while (curFrameNum != unusedShortTermFrameNum) {

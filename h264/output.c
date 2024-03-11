@@ -6,26 +6,27 @@
 //}}}
 
 //{{{
-static void allocDecodedPic (sDecoder* decoder, sDecodedPic* decodedPic, sPicture* p,
-                             int lumaSize, int frameSize, int lumaSizeX, int lumaSizeY,
-                             int chromaSizeX, int chromaSizeY) {
+static void allocDecodedPicBuffers (sDecoder* decoder, sDecodedPic* decodedPic, sPicture* p,
+                                    int lumaSize, int frameSize, int lumaSizeX, int lumaSizeY,
+                                    int chromaSizeX, int chromaSizeY) {
 
-  int symbolSizeInBytes = (decoder->picUnitBitSizeDisk + 7) >> 3;
-
-  if (decodedPic->yBuf)
+  if (decodedPic->bufSize != frameSize) {
     memFree (decodedPic->yBuf);
 
-  decodedPic->bufSize = frameSize;
-  decodedPic->yBuf = memAlloc (decodedPic->bufSize);
-  decodedPic->uBuf = decodedPic->yBuf + lumaSize;
-  decodedPic->vBuf = decodedPic->uBuf + ((frameSize - lumaSize)>>1);
+    decodedPic->bufSize = frameSize;
+    decodedPic->yBuf = memAlloc (decodedPic->bufSize);
+    decodedPic->uBuf = decodedPic->yBuf + lumaSize;
+    decodedPic->vBuf = decodedPic->uBuf + ((frameSize - lumaSize)>>1);
 
-  decodedPic->yuvFormat = p->chromaFormatIdc;
-  decodedPic->bitDepth = decoder->picUnitBitSizeDisk;
-  decodedPic->width = lumaSizeX;
-  decodedPic->height = lumaSizeY;
-  decodedPic->yStride = lumaSizeX * symbolSizeInBytes;
-  decodedPic->uvStride = chromaSizeX * symbolSizeInBytes;
+    decodedPic->yuvFormat = p->chromaFormatIdc;
+    decodedPic->bitDepth = decoder->picUnitBitSizeDisk;
+    decodedPic->width = lumaSizeX;
+    decodedPic->height = lumaSizeY;
+
+    int symbolSizeInBytes = (decoder->picUnitBitSizeDisk + 7) >> 3;
+    decodedPic->yStride = lumaSizeX * symbolSizeInBytes;
+    decodedPic->uvStride = chromaSizeX * symbolSizeInBytes;
+    }
   }
 //}}}
 
@@ -97,9 +98,9 @@ static void writeOutPicture (sDecoder* decoder, sPicture* p) {
   int lumaSize = lumaSizeX * lumaSizeY * symbolSizeInBytes;
   int frameSize = (lumaSizeX * lumaSizeY + 2 * (chromaSizeX * chromaSizeY)) * symbolSizeInBytes;
 
-  sDecodedPic* decodedPic = getDecodedPicture (decoder->decOutputPic);
+  sDecodedPic* decodedPic = allocDecodedPicture (decoder->decOutputPic);
   if (!decodedPic->yBuf || (decodedPic->bufSize < frameSize))
-    allocDecodedPic (decoder, decodedPic, p, lumaSize, frameSize, lumaSizeX, lumaSizeY, chromaSizeX, chromaSizeY);
+    allocDecodedPicBuffers (decoder, decodedPic, p, lumaSize, frameSize, lumaSizeX, lumaSizeY, chromaSizeX, chromaSizeY);
   decodedPic->valid = 1;
   decodedPic->poc = p->framePoc;
   if (!decodedPic->yBuf)
@@ -300,24 +301,12 @@ void freeOutput (sDecoder* decoder) {
 //}}}
 
 //{{{
-void calcFrameNum (sDecoder* decoder, sPicture* picture) {
-
-  int psnrPOC = decoder->activeSPS->mb_adaptive_frame_field_flag ? picture->poc / (decoder->param.pocScale) :
-                                                                    picture->poc / (decoder->param.pocScale);
-  if (psnrPOC == 0)
-    decoder->idrPsnrNum = decoder->gapNumFrame * decoder->refPocGap / (decoder->param.pocScale);
-
-  decoder->frameNum = decoder->idrPsnrNum + psnrPOC;
-  }
-//}}}
-//{{{
 void directOutput (sDecoder* decoder, sPicture* picture) {
 
   if (picture->structure == FRAME) {
     // we have a frame (or complementary field pair), so output it directly
     flushDirectOutput (decoder);
     writePicture (decoder, picture, FRAME);
-    calcFrameNum (decoder, picture);
     freePicture (picture);
     return;
     }
@@ -340,8 +329,6 @@ void directOutput (sDecoder* decoder, sPicture* picture) {
     // we have both fields, so output them
     dpbCombineField (decoder, decoder->outBuffer);
     writePicture (decoder, decoder->outBuffer->frame, FRAME);
-
-    calcFrameNum (decoder, picture);
     freePicture (decoder->outBuffer->frame);
 
     decoder->outBuffer->frame = NULL;

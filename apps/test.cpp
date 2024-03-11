@@ -994,8 +994,7 @@ private:
       int iHeightUV = pic->height >> 1;
       int iStrideUV = pic->uvStride;
 
-      cLog::log (LOGINFO, fmt::format ("outputPicList {} {}x{} {}:{}",
-                                       mOutputFrame, width, height, iStride, iStrideUV));
+      //cLog::log (LOGINFO, fmt::format ("output {} {}x{}", mOutputFrame, width, height));
 
       mVideoFrames[mOutputFrame % kVideoFrames]->releaseResources();
       cSoftVideoFrame* videoFrame = mVideoFrames[mOutputFrame % kVideoFrames];
@@ -1135,8 +1134,7 @@ private:
       int iHeightUV = pPic->height >> 1;
       int iStrideUV = pPic->uvStride;
 
-      cLog::log (LOGINFO, fmt::format ("outputPicList {} {}x{} {}:{}",
-                                       mOutputFrame, width, height, iStride, iStrideUV));
+      //cLog::log (LOGINFO, fmt::format ("out {} {}x{}", mOutputFrame, width, height));
 
       mVideoFrames[mOutputFrame % kVideoFrames]->releaseResources();
       cSoftVideoFrame* videoFrame = mVideoFrames[mOutputFrame % kVideoFrames];
