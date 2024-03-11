@@ -102,22 +102,18 @@ static const byte* pos2ctx_last    [] = {pos2ctx_last4x4, pos2ctx_last4x4, pos2c
  *    "0" for max_symbol
 ** *********************************************************************
  */
-static unsigned int unary_bin_max_decode (sDecodingEnv* decodingEnv,
-                                  sBiContextType* ctx,
-                                  int ctx_offset,
-                                  unsigned int max_symbol)
+static unsigned int unary_bin_max_decode (sDecodingEnv* decodingEnv, sBiContextType* ctx,
+                                  int ctx_offset, unsigned int max_symbol)
 {
   unsigned int symbol =  biari_decode_symbol (decodingEnv, ctx );
 
   if (symbol == 0 || (max_symbol == 0))
     return symbol;
-  else
-  {
+  else {
     unsigned int l;
     ctx += ctx_offset;
     symbol = 0;
-    do
-    {
+    do {
       l = biari_decode_symbol(decodingEnv, ctx);
       ++symbol;
     }
@@ -137,21 +133,17 @@ static unsigned int unary_bin_max_decode (sDecodingEnv* decodingEnv,
  *    models for the first and all remaining bins
 ** *********************************************************************
  */
-static unsigned int unary_bin_decode (sDecodingEnv* decodingEnv,
-                                     sBiContextType* ctx,
-                                     int ctx_offset)
+static unsigned int unary_bin_decode (sDecodingEnv* decodingEnv, sBiContextType* ctx, int ctx_offset)
 {
   unsigned int symbol = biari_decode_symbol(decodingEnv, ctx );
 
   if (symbol == 0)
     return 0;
-  else
-  {
+  else {
     unsigned int l;
     ctx += ctx_offset;;
     symbol = 0;
-    do
-    {
+    do {
       l = biari_decode_symbol(decodingEnv, ctx);
       ++symbol;
     }
@@ -168,18 +160,15 @@ static unsigned int unary_bin_decode (sDecodingEnv* decodingEnv,
  *    with prob. of 0.5
 ** **********************************************************************
  */
-static unsigned int exp_golomb_decode_eq_prob (sDecodingEnv* decodingEnv,
-                                              int k)
+static unsigned int exp_golomb_decode_eq_prob (sDecodingEnv* decodingEnv, int k)
 {
   unsigned int l;
   int symbol = 0;
   int binary_symbol = 0;
 
-  do
-  {
+  do {
     l = biari_decode_symbol_eq_prob(decodingEnv);
-    if (l == 1)
-    {
+    if (l == 1) {
       symbol += (1<<k);
       ++k;
     }
@@ -200,22 +189,19 @@ static unsigned int exp_golomb_decode_eq_prob (sDecodingEnv* decodingEnv,
  *    Exp-Golomb decoding for LEVELS
 ** *********************************************************************
  */
-static unsigned int unary_exp_golomb_level_decode (sDecodingEnv* decodingEnv,
-                                                  sBiContextType* ctx)
+static unsigned int unary_exp_golomb_level_decode (sDecodingEnv* decodingEnv, sBiContextType* ctx)
 {
   unsigned int symbol = biari_decode_symbol(decodingEnv, ctx );
 
   if (symbol==0)
     return 0;
-  else
-  {
+  else {
     unsigned int l, k = 1;
     unsigned int exp_start = 13;
 
     symbol = 0;
 
-    do
-    {
+    do {
       l=biari_decode_symbol(decodingEnv, ctx);
       ++symbol;
       ++k;
@@ -235,16 +221,14 @@ static unsigned int unary_exp_golomb_level_decode (sDecodingEnv* decodingEnv,
  *    Exp-Golomb decoding for Motion Vectors
 ** *********************************************************************
  */
-static unsigned int unary_exp_golomb_mv_decode (sDecodingEnv* decodingEnv,
-                                               sBiContextType* ctx,
-                                               unsigned int max_bin)
-{
+static unsigned int unary_exp_golomb_mv_decode (sDecodingEnv* decodingEnv, sBiContextType* ctx,
+                                               unsigned int max_bin) {
+
   unsigned int symbol = biari_decode_symbol(decodingEnv, ctx );
 
   if (symbol == 0)
     return 0;
-  else
-  {
+  else {
     unsigned int exp_start = 8;
     unsigned int l,k = 1;
     unsigned int bin = 1;
@@ -252,8 +236,7 @@ static unsigned int unary_exp_golomb_mv_decode (sDecodingEnv* decodingEnv,
     symbol=0;
 
     ++ctx;
-    do
-    {
+    do {
       l=biari_decode_symbol(decodingEnv, ctx);
       if ((++bin)==2) ctx++;
       if (bin==max_bin)
@@ -287,8 +270,8 @@ int cabac_startcode_follows (sSlice* slice, int eos_bit)
 
   if( eos_bit )
   {
-    const byte   *partitionMap    = assignSE2partition[slice->dataPartitionMode];
-    sDataPartition *dp = &(slice->partitions[partitionMap[SE_MBTYPE]]);
+    const byte   *dpMap    = assignSE2dp[slice->datadpMode];
+    sDataPartition *dp = &(slice->dps[dpMap[SE_MBTYPE]]);
     sDecodingEnv* decodingEnv = &(dp->deCabac);
 
     bit = biari_decode_final (decodingEnv); //GB
@@ -462,7 +445,7 @@ int check_next_mb_and_get_field_mode_CABAC_p_slice (sSlice* slice, sSyntaxElemen
 
   //check_next_mb
 #if TRACE
-  strncpy(se->tracestring, "mb_skip_flag (of following bottom MB)", TRACESTRING_SIZE);
+  strncpy(se->label, "mb_skip_flag (of following bottom MB)", TRACESTRING_SIZE);
 #endif
   slice->lastDquant = 0;
   read_skip_flag_CABAC_p_slice (mb, se, decodingEnv);
@@ -472,7 +455,7 @@ int check_next_mb_and_get_field_mode_CABAC_p_slice (sSlice* slice, sSyntaxElemen
   if (!skip)
   {
 #if TRACE
-    strncpy(se->tracestring, "mb_field_decoding_flag (of following bottom MB)", TRACESTRING_SIZE);
+    strncpy(se->label, "mb_field_decoding_flag (of following bottom MB)", TRACESTRING_SIZE);
 #endif
     readFieldModeInfo_CABAC (mb, se,decodingEnv);
     field = se->value1;
@@ -550,7 +533,7 @@ int check_next_mb_and_get_field_mode_CABAC_b_slice (sSlice* slice,
 
   //check_next_mb
 #if TRACE
-  strncpy(se->tracestring, "mb_skip_flag (of following bottom MB)", TRACESTRING_SIZE);
+  strncpy(se->label, "mb_skip_flag (of following bottom MB)", TRACESTRING_SIZE);
 #endif
   slice->lastDquant = 0;
   read_skip_flag_CABAC_b_slice (mb, se, decodingEnv);
@@ -559,7 +542,7 @@ int check_next_mb_and_get_field_mode_CABAC_b_slice (sSlice* slice,
   if (!skip)
   {
 #if TRACE
-    strncpy(se->tracestring, "mb_field_decoding_flag (of following bottom MB)", TRACESTRING_SIZE);
+    strncpy(se->label, "mb_field_decoding_flag (of following bottom MB)", TRACESTRING_SIZE);
 #endif
     readFieldModeInfo_CABAC (mb, se,decodingEnv);
     field = se->value1;
@@ -2270,10 +2253,10 @@ void readIPCMcabac (sSlice* slice, sDataPartition* dp)
 {
   sDecoder* decoder = slice->decoder;
   sPicture* picture = slice->picture;
-  sBitstream* curStream = dp->bitstream;
+  sBitstream* s = dp->s;
   sDecodingEnv* dep = &(dp->deCabac);
-  byte *buf = curStream->streamBuffer;
-  int BitstreamLengthInBits = (dp->bitstream->bitstreamLength << 3) + 7;
+  byte *buf = s->streamBuffer;
+  int BitstreamLengthInBits = (dp->s->bitstreamLength << 3) + 7;
 
   int val = 0;
 

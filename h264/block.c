@@ -29,25 +29,25 @@ static void sample_reconstruct (sPixel** curImg, sPixel** mpr, int** mb_rres, in
 //}}}
 
 //{{{
-void itrans4x4 (sMacroblock* mb, eColorPlane pl, int ioff, int joff) {
+void itrans4x4 (sMacroblock* mb, eColorPlane plane, int ioff, int joff) {
 
   sSlice* slice = mb->slice;
-  int** mb_rres = slice->mb_rres[pl];
-  inverse4x4 (slice->cof[pl],mb_rres,joff,ioff);
+  int** mb_rres = slice->mb_rres[plane];
+  inverse4x4 (slice->cof[plane],mb_rres,joff,ioff);
 
-  sample_reconstruct (&slice->mb_rec[pl][joff], &slice->mb_pred[pl][joff], &mb_rres[joff], ioff, ioff, BLOCK_SIZE, BLOCK_SIZE, mb->decoder->maxPelValueComp[pl], DQ_BITS);
+  sample_reconstruct (&slice->mb_rec[plane][joff], &slice->mb_pred[plane][joff], &mb_rres[joff], ioff, ioff, BLOCK_SIZE, BLOCK_SIZE, mb->decoder->maxPelValueComp[plane], DQ_BITS);
   }
 //}}}
 //{{{
-void itrans4x4_ls (sMacroblock* mb, eColorPlane pl, int ioff, int joff) {
+void itrans4x4_ls (sMacroblock* mb, eColorPlane plane, int ioff, int joff) {
 
   sSlice* slice = mb->slice;
-  sPixel** mb_pred = slice->mb_pred[pl];
-  sPixel** mb_rec = slice->mb_rec[pl];
-  int** mb_rres = slice->mb_rres [pl];
+  sPixel** mb_pred = slice->mb_pred[plane];
+  sPixel** mb_rec = slice->mb_rec[plane];
+  int** mb_rres = slice->mb_rres [plane];
 
   sDecoder* decoder = mb->decoder;
-  int max_imgpel_value = decoder->maxPelValueComp[pl];
+  int max_imgpel_value = decoder->maxPelValueComp[plane];
   for (int j = joff; j < joff + BLOCK_SIZE; ++j)
     for (int i = ioff; i < ioff + BLOCK_SIZE; ++i)
       mb_rec[j][i] = (sPixel) iClip1(max_imgpel_value, mb_pred[j][i] + mb_rres[j][i]);
@@ -55,13 +55,13 @@ void itrans4x4_ls (sMacroblock* mb, eColorPlane pl, int ioff, int joff) {
 //}}}
 
 //{{{
-void Inv_Residual_trans_4x4 (sMacroblock* mb, eColorPlane pl, int ioff, int joff) {
+void Inv_Residual_trans_4x4 (sMacroblock* mb, eColorPlane plane, int ioff, int joff) {
 
   sSlice* slice = mb->slice;
-  sPixel** mb_pred = slice->mb_pred[pl];
-  sPixel** mb_rec = slice->mb_rec[pl];
-  int** mb_rres = slice->mb_rres[pl];
-  int** cof = slice->cof[pl];
+  sPixel** mb_pred = slice->mb_pred[plane];
+  sPixel** mb_rec = slice->mb_rec[plane];
+  int** mb_rres = slice->mb_rres[plane];
+  int** cof = slice->cof[plane];
 
   int temp[4][4];
   if (mb->ipmode_DPCM == VERT_PRED) {
@@ -107,12 +107,12 @@ void Inv_Residual_trans_4x4 (sMacroblock* mb, eColorPlane pl, int ioff, int joff
   }
 //}}}
 //{{{
-void Inv_Residual_trans_8x8 (sMacroblock* mb, eColorPlane pl, int ioff, int joff) {
+void Inv_Residual_trans_8x8 (sMacroblock* mb, eColorPlane plane, int ioff, int joff) {
 
   sSlice* slice = mb->slice;
-  sPixel** mb_pred = slice->mb_pred[pl];
-  sPixel** mb_rec  = slice->mb_rec[pl];
-  int** mb_rres = slice->mb_rres[pl];
+  sPixel** mb_pred = slice->mb_pred[plane];
+  sPixel** mb_rec  = slice->mb_rec[plane];
+  int** mb_rres = slice->mb_rres[plane];
 
   int temp[8][8];
   if (mb->ipmode_DPCM == VERT_PRED) {
@@ -167,13 +167,13 @@ void Inv_Residual_trans_8x8 (sMacroblock* mb, eColorPlane pl, int ioff, int joff
   }
 //}}}
 //{{{
-void Inv_Residual_trans_16x16 (sMacroblock* mb, eColorPlane pl) {
+void Inv_Residual_trans_16x16 (sMacroblock* mb, eColorPlane plane) {
 
   sSlice* slice = mb->slice;
-  sPixel** mb_pred = slice->mb_pred[pl];
-  sPixel** mb_rec = slice->mb_rec[pl];
-  int** mb_rres = slice->mb_rres[pl];
-  int** cof = slice->cof[pl];
+  sPixel** mb_pred = slice->mb_pred[plane];
+  sPixel** mb_rec = slice->mb_rec[plane];
+  int** mb_rres = slice->mb_rres[plane];
+  int** cof = slice->cof[plane];
 
   int temp[16][16];
   if (mb->ipmode_DPCM == VERT_PRED_16) {
@@ -249,19 +249,19 @@ void Inv_Residual_trans_Chroma (sMacroblock* mb, int uv) {
 //}}}
 
 //{{{
-void itrans_2 (sMacroblock* mb, eColorPlane pl) {
+void itrans_2 (sMacroblock* mb, eColorPlane plane) {
 
   sSlice* slice = mb->slice;
   sDecoder* decoder = mb->decoder;
 
-  int transform_pl = (decoder->sepColourPlaneFlag != 0) ? PLANE_Y : pl;
+  int transform_pl = (decoder->sepColourPlaneFlag != 0) ? PLANE_Y : plane;
   int** cof = slice->cof[transform_pl];
 
   int qpScaled = mb->qpScaled[transform_pl];
   int qp_per = decoder->qpPerMatrix[ qpScaled ];
   int qp_rem = decoder->qpRemMatrix[ qpScaled ];
 
-  int invLevelScale = slice->InvLevelScale4x4_Intra[pl][qp_rem][0][0];
+  int invLevelScale = slice->InvLevelScale4x4_Intra[plane][qp_rem][0][0];
 
   // horizontal
   int** M4;
@@ -286,7 +286,7 @@ void itrans_2 (sMacroblock* mb, eColorPlane pl) {
   }
 //}}}
 //{{{
-void itrans_sp (sMacroblock* mb, eColorPlane pl, int ioff, int joff) {
+void itrans_sp (sMacroblock* mb, eColorPlane plane, int ioff, int joff) {
 
   sDecoder* decoder = mb->decoder;
   sSlice* slice = mb->slice;
@@ -298,11 +298,11 @@ void itrans_sp (sMacroblock* mb, eColorPlane pl, int ioff, int joff) {
   int qp_rem_sp = decoder->qpRemMatrix[slice->qs];
   int q_bits_sp = Q_BITS + qp_per_sp;
 
-  sPixel** mb_pred = slice->mb_pred[pl];
-  sPixel** mb_rec = slice->mb_rec[pl];
-  int** mb_rres = slice->mb_rres[pl];
-  int** cof = slice->cof[pl];
-  int max_imgpel_value = decoder->maxPelValueComp[pl];
+  sPixel** mb_pred = slice->mb_pred[plane];
+  sPixel** mb_rec = slice->mb_rec[plane];
+  int** mb_rres = slice->mb_rres[plane];
+  int** cof = slice->cof[plane];
+  int max_imgpel_value = decoder->maxPelValueComp[plane];
 
   const int (*InvLevelScale4x4)[4] = dequant_coef[qp_rem];
   const int (*InvLevelScale4x4SP)[4] = dequant_coef[qp_rem_sp];
@@ -444,14 +444,14 @@ void itrans_sp_cr (sMacroblock* mb, int uv) {
   }
 //}}}
 //{{{
-void iMBtrans4x4 (sMacroblock* mb, eColorPlane pl, int smb) {
+void iMBtrans4x4 (sMacroblock* mb, eColorPlane plane, int smb) {
 
   sSlice* slice = mb->slice;
   sPicture* picture = mb->slice->picture;
-  sPixel** curr_img = pl ? picture->imgUV[pl - 1] : picture->imgY;
+  sPixel** curr_img = plane ? picture->imgUV[plane - 1] : picture->imgY;
 
   if (mb->isLossless && mb->mbType == I16MB)
-    Inv_Residual_trans_16x16(mb, pl);
+    Inv_Residual_trans_16x16(mb, plane);
   else if (smb || mb->isLossless == TRUE) {
     mb->iTrans4x4 = (smb) ? itrans_sp : ((mb->isLossless == FALSE) ? itrans4x4 : Inv_Residual_trans_4x4);
     for (int block8x8 = 0; block8x8 < MB_BLOCK_SIZE; block8x8 += 4) {
@@ -459,13 +459,13 @@ void iMBtrans4x4 (sMacroblock* mb, eColorPlane pl, int smb) {
         int jj = ((decode_block_scan[k] >> 2) & 3) << BLOCK_SHIFT;
         int ii = (decode_block_scan[k] & 3) << BLOCK_SHIFT;
         // use integer transform and make 4x4 block mb_rres from prediction block mb_pred
-        mb->iTrans4x4 (mb, pl, ii, jj);
+        mb->iTrans4x4 (mb, plane, ii, jj);
         }
       }
     }
   else {
-    int** cof = slice->cof[pl];
-    int** mb_rres = slice->mb_rres[pl];
+    int** cof = slice->cof[plane];
+    int** mb_rres = slice->mb_rres[plane];
 
     if (mb->isIntraBlock == FALSE) {
       if (mb->cbp & 0x01) {
@@ -501,62 +501,62 @@ void iMBtrans4x4 (sMacroblock* mb, eColorPlane pl, int smb) {
         inverse4x4 (cof, mb_rres, jj, 12);
         }
       }
-    sample_reconstruct (slice->mb_rec[pl], slice->mb_pred[pl], mb_rres, 0, 0, MB_BLOCK_SIZE, MB_BLOCK_SIZE, mb->decoder->maxPelValueComp[pl], DQ_BITS);
+    sample_reconstruct (slice->mb_rec[plane], slice->mb_pred[plane], mb_rres, 0, 0, MB_BLOCK_SIZE, MB_BLOCK_SIZE, mb->decoder->maxPelValueComp[plane], DQ_BITS);
     }
 
   // construct picture from 4x4 blocks
-  copy_Image_16x16 (&curr_img[mb->pixY], slice->mb_rec[pl], mb->pixX, 0);
+  copy_Image_16x16 (&curr_img[mb->pixY], slice->mb_rec[plane], mb->pixX, 0);
   }
 //}}}
 //{{{
-void iMBtrans8x8 (sMacroblock* mb, eColorPlane pl) {
+void iMBtrans8x8 (sMacroblock* mb, eColorPlane plane) {
 
   //sDecoder* decoder = mb->decoder;
   sPicture* picture = mb->slice->picture;
-  sPixel** curr_img = pl ? picture->imgUV[pl - 1]: picture->imgY;
+  sPixel** curr_img = plane ? picture->imgUV[plane - 1]: picture->imgY;
 
   // Perform 8x8 idct
   if (mb->cbp & 0x01)
-    itrans8x8 (mb, pl, 0, 0);
+    itrans8x8 (mb, plane, 0, 0);
   else
-    icopy8x8 (mb, pl, 0, 0);
+    icopy8x8 (mb, plane, 0, 0);
 
   if (mb->cbp & 0x02)
-    itrans8x8 (mb, pl, 8, 0);
+    itrans8x8 (mb, plane, 8, 0);
   else
-    icopy8x8 (mb, pl, 8, 0);
+    icopy8x8 (mb, plane, 8, 0);
 
   if (mb->cbp & 0x04)
-    itrans8x8 (mb, pl, 0, 8);
+    itrans8x8 (mb, plane, 0, 8);
   else
-    icopy8x8 (mb, pl, 0, 8);
+    icopy8x8 (mb, plane, 0, 8);
 
   if (mb->cbp & 0x08)
-    itrans8x8 (mb, pl, 8, 8);
+    itrans8x8 (mb, plane, 8, 8);
   else
-    icopy8x8 (mb, pl, 8, 8);
+    icopy8x8 (mb, plane, 8, 8);
 
-  copy_Image_16x16 (&curr_img[mb->pixY], mb->slice->mb_rec[pl], mb->pixX, 0);
+  copy_Image_16x16 (&curr_img[mb->pixY], mb->slice->mb_rec[plane], mb->pixX, 0);
   }
 //}}}
 //{{{
-void iTransform (sMacroblock* mb, eColorPlane pl, int smb) {
+void iTransform (sMacroblock* mb, eColorPlane plane, int smb) {
 
   sSlice* slice = mb->slice;
   sDecoder* decoder = mb->decoder;
   sPicture* picture = slice->picture;
   sPixel** curr_img;
-  int uv = pl-1;
+  int uv = plane-1;
 
   if ((mb->cbp & 15) != 0 || smb) {
     if (mb->lumaTransformSize8x8flag == 0)
-      iMBtrans4x4 (mb, pl, smb);
+      iMBtrans4x4 (mb, plane, smb);
     else
-      iMBtrans8x8 (mb, pl);
+      iMBtrans8x8 (mb, plane);
     }
   else {
-    curr_img = pl ? picture->imgUV[uv] : picture->imgY;
-    copy_Image_16x16(&curr_img[mb->pixY], slice->mb_pred[pl], mb->pixX, 0);
+    curr_img = plane ? picture->imgUV[uv] : picture->imgY;
+    copy_Image_16x16(&curr_img[mb->pixY], slice->mb_pred[plane], mb->pixX, 0);
     }
 
   if (smb)
@@ -651,7 +651,7 @@ void copy_Image_16x16 (sPixel** imgBuf1, sPixel** imgBuf2, int off1, int off2) {
 //}}}
 
 //{{{
-int CheckVertMV (sMacroblock* mb, int vec1_y, int block_size_y) {
+int CheckVertMV (sMacroblock* mb, int vec1_y, int blockSizeY) {
 
   sDecoder* decoder = mb->decoder;
   sPicture* picture = mb->slice->picture;
@@ -659,7 +659,7 @@ int CheckVertMV (sMacroblock* mb, int vec1_y, int block_size_y) {
   int y_pos = vec1_y>>2;
   int maxold_y = (mb->mbField) ? (picture->sizeY >> 1) - 1 : picture->size_y_m1;
 
-  if (y_pos < (-decoder->iLumaPadY + 2) || y_pos > (maxold_y + decoder->iLumaPadY - block_size_y - 2))
+  if (y_pos < (-decoder->iLumaPadY + 2) || y_pos > (maxold_y + decoder->iLumaPadY - blockSizeY - 2))
     return 1;
   else
     return 0;

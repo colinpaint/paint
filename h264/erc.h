@@ -56,13 +56,13 @@ typedef struct ErcVariables {
 
   /* Array for sSlice level information */
   sErcSegment* segments;
-  int currSegment;
+  int segment;
 
   /* Conditions of the MBs of the previous frame */
   char* prevFrameYCondition;
 
   /* Flag telling if the current segment was found to be corrupted */
-  int currSegmentCorrupted;
+  int segmentCorrupted;
   /* Counter for corrupted segments per picture */
   int numCorruptedSegments;
 
@@ -87,7 +87,7 @@ int ercConcealInterFrame (frame *recfr, sObjectBuffer *object_list,
 
 extern struct ConcealNode* init_node (sPicture* , int );
 extern void init_lists_for_non_reference_loss (sDPB* dpb, int , ePicStructure );
-extern void concealLostFrames (sDPB* dpb, sSlice *pSlice);
+extern void concealLostFrames (sDPB* dpb, sSlice *slice);
 extern void conceal_non_ref_pics (sDPB* dpb, int diff);
 extern void sliding_window_poc_management (sDPB* dpb, sPicture *p);
 extern void write_lost_non_ref_pic (sDPB* dpb, int poc);
@@ -101,6 +101,6 @@ void ercSetErrorConcealment (sErcVariables *errorVar, int value );
 
 void ercStartSegment (int currMBNum, int segment, unsigned int bitPos, sErcVariables *errorVar );
 void ercStopSegment (int currMBNum, int segment, unsigned int bitPos, sErcVariables *errorVar );
-void ercMarkCurrSegmentLost (int picSizeX, sErcVariables *errorVar );
-void ercMarkCurrSegmentOK (int picSizeX, sErcVariables *errorVar );
+void ercMarksegmentLost (int picSizeX, sErcVariables *errorVar );
+void ercMarksegmentOK (int picSizeX, sErcVariables *errorVar );
 void ercMarkCurrMBConcealed (int currMBNum, int comp, int picSizeX, sErcVariables *errorVar );

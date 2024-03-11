@@ -6,71 +6,71 @@
 //}}}
 
 //{{{
-int readUeV (char* tracestring, sBitstream* bitstream) {
+int readUeV (char* label, sBitstream* s) {
 
   sSyntaxElement symbol = {.value1 = 0 };
   symbol.type = SE_HEADER;
   symbol.mapping = linfo_ue;
-  readsSyntaxElement_VLC (&symbol, bitstream);
+  readsSyntaxElement_VLC (&symbol, s);
 
   if (gDecoder->param.vlcDebug)
-    printf ("read %s %d\n", tracestring, symbol.value1);
+    printf ("read %s %d\n", label, symbol.value1);
 
   return symbol.value1;
   }
 //}}}
 //{{{
-int readSeV (char* tracestring, sBitstream* bitstream) {
+int readSeV (char* label, sBitstream* s) {
 
   sSyntaxElement symbol = {.value1 = 0 };
   symbol.type = SE_HEADER;
   symbol.mapping = linfo_se;
-  readsSyntaxElement_VLC (&symbol, bitstream);
+  readsSyntaxElement_VLC (&symbol, s);
 
   if (gDecoder->param.vlcDebug)
-    printf ("read %s %d\n", tracestring, symbol.value1);
+    printf ("read %s %d\n", label, symbol.value1);
 
   return symbol.value1;
   }
 //}}}
 //{{{
-int readUv (int LenInBits, char* tracestring, sBitstream* bitstream) {
+int readUv (int LenInBits, char* label, sBitstream* s) {
 
   sSyntaxElement symbol = {.value1 = 0 };
   symbol.inf = 0;
   symbol.type = SE_HEADER;
   symbol.mapping = linfo_ue;
   symbol.len = LenInBits;
-  readsSyntaxElement_FLC (&symbol, bitstream);
+  readsSyntaxElement_FLC (&symbol, s);
 
   if (gDecoder->param.vlcDebug)
-    printf ("read %s %d\n", tracestring, symbol.inf);
+    printf ("read %s %d\n", label, symbol.inf);
 
   return symbol.inf;
   }
 //}}}
 //{{{
-int readIv (int LenInBits, char* tracestring, sBitstream* bitstream) {
+int readIv (int LenInBits, char* label, sBitstream* s) {
 
   sSyntaxElement symbol = {.value1 = 0 };
   symbol.inf = 0;
   symbol.type = SE_HEADER;
   symbol.mapping = linfo_ue;
   symbol.len = LenInBits;
-  readsSyntaxElement_FLC (&symbol, bitstream);
+  readsSyntaxElement_FLC (&symbol, s);
 
   // can be negative
   symbol.inf = -( symbol.inf & (1 << (LenInBits - 1)) ) | symbol.inf;
 
   if (gDecoder->param.vlcDebug)
-    printf ("read %s %d\n", tracestring, symbol.inf);
+    printf ("read %s %d\n", label, symbol.inf);
 
   return symbol.inf;
   }
 //}}}
 //{{{
-Boolean readU1 (char* tracestring, sBitstream* bitstream) {
-  return (Boolean)readUv (1, tracestring, bitstream);
+Boolean readU1 (char* label, sBitstream* s) {
+  return (Boolean)readUv (1, label, s);
   }
 //}}}
 
@@ -80,7 +80,7 @@ void linfo_ue (int len, int info, int* value1, int* dummy) {
   }
 //}}}
 //{{{
-void linfo_se (int len,  int info, int* value1, int* dummy) {
+void linfo_se (int len, int info, int* value1, int* dummy) {
 
   unsigned int n = ((unsigned int) 1 << (len >> 1)) + (unsigned int) info - 1;
   *value1 = (n + 1) >> 1;
@@ -99,7 +99,7 @@ void linfo_cbp_intra_normal (int len, int info,int* cbp, int* dummy) {
   }
 //}}}
 //{{{
-void linfo_cbp_intra_other (int len, int info,int* cbp, int* dummy) {
+void linfo_cbp_intra_other (int len, int info, int* cbp, int* dummy) {
 
   int cbp_idx;
   linfo_ue(len, info, &cbp_idx, dummy);
@@ -170,33 +170,33 @@ void linfo_levrun_c2x2 (int len, int info, int* level, int* irun) {
 //}}}
 
 //{{{
-int readsSyntaxElement_VLC (sSyntaxElement* sym, sBitstream* curStream) {
+int readsSyntaxElement_VLC (sSyntaxElement* se, sBitstream* s) {
 
-  sym->len =  GetVLCSymbol (curStream->streamBuffer, curStream->frameBitOffset,
-                            &(sym->inf), curStream->bitstreamLength);
-  if (sym->len == -1)
+  se->len =  GetVLCSymbol (s->streamBuffer, s->frameBitOffset,
+                            &(se->inf), s->bitstreamLength);
+  if (se->len == -1)
     return -1;
 
-  curStream->frameBitOffset += sym->len;
-  sym->mapping (sym->len, sym->inf, &(sym->value1), &(sym->value2));
+  s->frameBitOffset += se->len;
+  se->mapping (se->len, se->inf, &(se->value1), &(se->value2));
 
   return 1;
 }
 //}}}
 //{{{
-int readsSyntaxElement_UVLC (sMacroblock* mb, sSyntaxElement* sym, sDataPartition* dp) {
-  return (readsSyntaxElement_VLC(sym, dp->bitstream));
+int readsSyntaxElement_UVLC (sMacroblock* mb, sSyntaxElement* se, sDataPartition* dp) {
+  return (readsSyntaxElement_VLC(se, dp->s));
   }
 //}}}
 //{{{
-int readsSyntaxElement_Intra4x4PredictionMode (sSyntaxElement* sym, sBitstream* curStream) {
+int readsSyntaxElement_Intra4x4PredictionMode (sSyntaxElement* se, sBitstream* s) {
 
-  sym->len = GetVLCSymbol_IntraMode (curStream->streamBuffer, curStream->frameBitOffset, &(sym->inf), curStream->bitstreamLength);
-  if (sym->len == -1)
+  se->len = GetVLCSymbol_IntraMode (s->streamBuffer, s->frameBitOffset, &(se->inf), s->bitstreamLength);
+  if (se->len == -1)
     return -1;
 
-  curStream->frameBitOffset += sym->len;
-  sym->value1       = (sym->len == 1) ? -1 : sym->inf;
+  s->frameBitOffset += se->len;
+  se->value1       = (se->len == 1) ? -1 : se->inf;
 
   return 1;
   }
@@ -256,12 +256,12 @@ int more_rbsp_data (byte buffer[], int totbitoffset,int bytecount) {
 //{{{
 int uvlc_startcode_follows (sSlice* slice, int dummy) {
 
-  byte dp_Nr = assignSE2partition[slice->dataPartitionMode][SE_MBTYPE];
-  sDataPartition* dp = &(slice->partitions[dp_Nr]);
-  sBitstream* curStream = dp->bitstream;
-  byte* buf = curStream->streamBuffer;
+  byte partitionIndex = assignSE2dp[slice->datadpMode][SE_MBTYPE];
+  sDataPartition* dp = &(slice->dps[partitionIndex]);
+  sBitstream* s = dp->s;
+  byte* buf = s->streamBuffer;
 
-  return !(more_rbsp_data (buf, curStream->frameBitOffset,curStream->bitstreamLength));
+  return !(more_rbsp_data (buf, s->frameBitOffset,s->bitstreamLength));
   }
 //}}}
 //{{{
@@ -309,14 +309,13 @@ static inline int ShowBitsThres (int inf, int numbits) {
   }
 //}}}
 //{{{
-static int code_from_bitstream_2d (sSyntaxElement* sym, sBitstream* curStream,
-                                   const byte *lentab, const byte *codtab,
+static int code_from_bitstream_2d (sSyntaxElement* se, sBitstream* s, const byte* lentab, const byte* codtab,
                                    int tabwidth, int tabheight, int *code) {
 
   const byte* len = &lentab[0], *cod = &codtab[0];
 
-  int* frameBitOffset = &curStream->frameBitOffset;
-  byte* buf = &curStream->streamBuffer[*frameBitOffset >> 3];
+  int* frameBitOffset = &s->frameBitOffset;
+  byte* buf = &s->streamBuffer[*frameBitOffset >> 3];
 
   // Apply bitoffset to three bytes (maximum that may be traversed by ShowBitsThres)
   // Even at the end of a stream we will still be pulling out of allocated memory as alloc is done by MAX_CODED_FRAME_SIZE
@@ -334,11 +333,11 @@ static int code_from_bitstream_2d (sSyntaxElement* sym, sBitstream* curStream,
         ++cod;
         }
       else {
-        sym->len = *len;
-        *frameBitOffset += *len; // move bitstream pointer
+        se->len = *len;
+        *frameBitOffset += *len; // move s pointer
         *code = *cod;
-        sym->value1 = i;
-        sym->value2 = j;
+        se->value1 = i;
+        se->value2 = j;
         return 0;                 // found code and return
         }
       }
@@ -349,28 +348,28 @@ static int code_from_bitstream_2d (sSyntaxElement* sym, sBitstream* curStream,
 //}}}
 
 //{{{
-int readsSyntaxElement_FLC (sSyntaxElement* sym, sBitstream* curStream)
+int readsSyntaxElement_FLC (sSyntaxElement* se, sBitstream* s)
 {
-  int BitstreamLengthInBits  = (curStream->bitstreamLength << 3) + 7;
+  int BitstreamLengthInBits  = (s->bitstreamLength << 3) + 7;
 
-  if ((GetBits(curStream->streamBuffer, curStream->frameBitOffset, &(sym->inf), BitstreamLengthInBits, sym->len)) < 0)
+  if ((GetBits(s->streamBuffer, s->frameBitOffset, &(se->inf), BitstreamLengthInBits, se->len)) < 0)
     return -1;
 
-  sym->value1 = sym->inf;
-  curStream->frameBitOffset += sym->len; // move bitstream pointer
+  se->value1 = se->inf;
+  s->frameBitOffset += se->len; // move s pointer
 
   return 1;
 }
 //}}}
 //{{{
-int readsSyntaxElement_NumCoeffTrailingOnes (sSyntaxElement* sym,
-                                           sBitstream *curStream,
+int readsSyntaxElement_NumCoeffTrailingOnes (sSyntaxElement* se,
+                                           sBitstream *s,
                                            char *type)
 {
-  int frameBitOffset        = curStream->frameBitOffset;
-  int BitstreamLengthInBytes = curStream->bitstreamLength;
+  int frameBitOffset        = s->frameBitOffset;
+  int BitstreamLengthInBytes = s->bitstreamLength;
   int BitstreamLengthInBits  = (BitstreamLengthInBytes << 3) + 7;
-  byte *buf                  = curStream->streamBuffer;
+  byte *buf                  = s->streamBuffer;
 
   static const byte lentab[3][4][17] =
   {
@@ -417,7 +416,7 @@ int readsSyntaxElement_NumCoeffTrailingOnes (sSyntaxElement* sym,
   };
 
   int retval = 0, code;
-  int vlcnum = sym->value1;
+  int vlcnum = se->value1;
   // vlcnum is the index of Table used to code coeff_token
   // vlcnum==3 means (8<=nC) which uses 6bit FLC
 
@@ -426,24 +425,24 @@ int readsSyntaxElement_NumCoeffTrailingOnes (sSyntaxElement* sym,
     // read 6 bit FLC
     //code = ShowBits(buf, frameBitOffset, BitstreamLengthInBytes, 6);
     code = ShowBits(buf, frameBitOffset, BitstreamLengthInBits, 6);
-    curStream->frameBitOffset += 6;
-    sym->value2 = (code & 3);
-    sym->value1 = (code >> 2);
+    s->frameBitOffset += 6;
+    se->value2 = (code & 3);
+    se->value1 = (code >> 2);
 
-    if (!sym->value1 && sym->value2 == 3)
+    if (!se->value1 && se->value2 == 3)
     {
       // #c = 0, #t1 = 3 =>  #c = 0
-      sym->value2 = 0;
+      se->value2 = 0;
     }
     else
-      sym->value1++;
+      se->value1++;
 
-    sym->len = 6;
+    se->len = 6;
   }
   else
   {
-    //retval = code_from_bitstream_2d(sym, curStream, &lentab[vlcnum][0][0], &codtab[vlcnum][0][0], 17, 4, &code);
-    retval = code_from_bitstream_2d(sym, curStream, lentab[vlcnum][0], codtab[vlcnum][0], 17, 4, &code);
+    //retval = code_from_bitstream_2d(se, s, &lentab[vlcnum][0][0], &codtab[vlcnum][0][0], 17, 4, &code);
+    retval = code_from_bitstream_2d(se, s, lentab[vlcnum][0], codtab[vlcnum][0], 17, 4, &code);
     if (retval)
     {
       printf("ERROR: failed to find NumCoeff/TrailingOnes\n");
@@ -455,7 +454,7 @@ int readsSyntaxElement_NumCoeffTrailingOnes (sSyntaxElement* sym,
 }
 //}}}
 //{{{
-int readsSyntaxElement_NumCoeffTrailingOnesChromaDC (sDecoder* decoder, sSyntaxElement* sym, sBitstream* curStream)
+int readsSyntaxElement_NumCoeffTrailingOnesChromaDC (sDecoder* decoder, sSyntaxElement* se, sBitstream* s)
 {
   static const byte lentab[3][4][17] =
   {
@@ -498,7 +497,7 @@ int readsSyntaxElement_NumCoeffTrailingOnesChromaDC (sDecoder* decoder, sSyntaxE
 
   int code;
   int yuv = decoder->activeSPS->chromaFormatIdc - 1;
-  int retval = code_from_bitstream_2d(sym, curStream, &lentab[yuv][0][0], &codtab[yuv][0][0], 17, 4, &code);
+  int retval = code_from_bitstream_2d(se, s, &lentab[yuv][0][0], &codtab[yuv][0][0], 17, 4, &code);
 
   if (retval)
   {
@@ -510,12 +509,12 @@ int readsSyntaxElement_NumCoeffTrailingOnesChromaDC (sDecoder* decoder, sSyntaxE
 }
 //}}}
 //{{{
-int readsSyntaxElement_Level_VLC0 (sSyntaxElement* sym, sBitstream* curStream)
+int readsSyntaxElement_Level_VLC0 (sSyntaxElement* se, sBitstream* s)
 {
-  int frameBitOffset        = curStream->frameBitOffset;
-  int BitstreamLengthInBytes = curStream->bitstreamLength;
+  int frameBitOffset        = s->frameBitOffset;
+  int BitstreamLengthInBytes = s->bitstreamLength;
   int BitstreamLengthInBits  = (BitstreamLengthInBytes << 3) + 7;
-  byte *buf                  = curStream->streamBuffer;
+  byte *buf                  = s->streamBuffer;
   int len = 1, sign = 0, level = 0, code = 1;
 
   while (!ShowBits(buf, frameBitOffset++, BitstreamLengthInBits, 1))
@@ -551,20 +550,20 @@ int readsSyntaxElement_Level_VLC0 (sSyntaxElement* sym, sBitstream* curStream)
     len += addbit + 16;
  }
 
-  sym->inf = (sign) ? -level : level ;
-  sym->len = len;
+  se->inf = (sign) ? -level : level ;
+  se->len = len;
 
-  curStream->frameBitOffset = frameBitOffset;
+  s->frameBitOffset = frameBitOffset;
   return 0;
 }
 //}}}
 //{{{
-int readsSyntaxElement_Level_VLCN (sSyntaxElement* sym, int vlc, sBitstream* curStream)
+int readsSyntaxElement_Level_VLCN (sSyntaxElement* se, int vlc, sBitstream* s)
 {
-  int frameBitOffset        = curStream->frameBitOffset;
-  int BitstreamLengthInBytes = curStream->bitstreamLength;
+  int frameBitOffset        = s->frameBitOffset;
+  int BitstreamLengthInBytes = s->bitstreamLength;
   int BitstreamLengthInBits  = (BitstreamLengthInBytes << 3) + 7;
-  byte *buf                  = curStream->streamBuffer;
+  byte *buf                  = s->streamBuffer;
 
   int levabs, sign;
   int len = 1;
@@ -613,16 +612,16 @@ int readsSyntaxElement_Level_VLCN (sSyntaxElement* sym, int vlc, sBitstream* cur
     len++;
   }
 
-  sym->inf = (sign)? -levabs : levabs;
-  sym->len = len;
+  se->inf = (sign)? -levabs : levabs;
+  se->len = len;
 
-  curStream->frameBitOffset = frameBitOffset + len;
+  s->frameBitOffset = frameBitOffset + len;
 
   return 0;
 }
 //}}}
 //{{{
-int readsSyntaxElement_TotalZeros (sSyntaxElement* sym,  sBitstream* curStream) {
+int readsSyntaxElement_TotalZeros (sSyntaxElement* se,  sBitstream* s) {
 
   //{{{
   static const byte lentab[TOTRUN_NUM][16] =
@@ -667,8 +666,8 @@ int readsSyntaxElement_TotalZeros (sSyntaxElement* sym,  sBitstream* curStream) 
   //}}}
 
   int code;
-  int vlcnum = sym->value1;
-  int retval = code_from_bitstream_2d(sym, curStream, &lentab[vlcnum][0], &codtab[vlcnum][0], 16, 1, &code);
+  int vlcnum = se->value1;
+  int retval = code_from_bitstream_2d(se, s, &lentab[vlcnum][0], &codtab[vlcnum][0], 16, 1, &code);
 
   if (retval) {
     printf("ERROR: failed to find Total Zeros !cdc\n");
@@ -679,7 +678,7 @@ int readsSyntaxElement_TotalZeros (sSyntaxElement* sym,  sBitstream* curStream) 
   }
 //}}}
 //{{{
-int readsSyntaxElement_TotalZerosChromaDC (sDecoder* decoder, sSyntaxElement* sym, sBitstream* curStream) {
+int readsSyntaxElement_TotalZerosChromaDC (sDecoder* decoder, sSyntaxElement* se, sBitstream* s) {
 
   //{{{
   static const byte lentab[3][TOTRUN_NUM][16] =
@@ -750,8 +749,8 @@ int readsSyntaxElement_TotalZerosChromaDC (sDecoder* decoder, sSyntaxElement* sy
 
   int code;
   int yuv = decoder->activeSPS->chromaFormatIdc - 1;
-  int vlcnum = sym->value1;
-  int retval = code_from_bitstream_2d(sym, curStream, &lentab[yuv][vlcnum][0], &codtab[yuv][vlcnum][0], 16, 1, &code);
+  int vlcnum = se->value1;
+  int retval = code_from_bitstream_2d(se, s, &lentab[yuv][vlcnum][0], &codtab[yuv][vlcnum][0], 16, 1, &code);
 
   if (retval) {
     printf ("ERROR: failed to find Total Zeros\n");
@@ -762,7 +761,7 @@ int readsSyntaxElement_TotalZerosChromaDC (sDecoder* decoder, sSyntaxElement* sy
   }
 //}}}
 //{{{
-int readsSyntaxElement_Run (sSyntaxElement* sym, sBitstream* curStream)
+int readsSyntaxElement_Run (sSyntaxElement* se, sBitstream* s)
 {
   //{{{
   static const byte lentab[TOTRUN_NUM][16] =
@@ -790,8 +789,8 @@ int readsSyntaxElement_Run (sSyntaxElement* sym, sBitstream* curStream)
   //}}}
 
   int code;
-  int vlcnum = sym->value1;
-  int retval = code_from_bitstream_2d (sym, curStream, &lentab[vlcnum][0], &codtab[vlcnum][0], 16, 1, &code);
+  int vlcnum = se->value1;
+  int retval = code_from_bitstream_2d (se, s, &lentab[vlcnum][0], &codtab[vlcnum][0], 16, 1, &code);
   if (retval) {
     printf ("ERROR: failed to find Run\n");
     exit (-1);

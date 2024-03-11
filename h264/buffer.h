@@ -283,7 +283,7 @@ extern void unmark_for_long_term_reference (sFrameStore* frameStore);
 
 extern sPicture* allocPicture (sDecoder* decoder, ePicStructure type, int sizeX, int sizeY, int sizeXcr, int sizeYcr, int is_output);
 extern void freePicture (sPicture* p);
-extern void fillFrameNumGap (sDecoder* decoder, sSlice *pSlice);
+extern void fillFrameNumGap (sDecoder* decoder, sSlice *slice);
 
 extern void updateRefList (sDPB* dpb);
 extern void updateLongTermRefList (sDPB* dpb);
@@ -308,7 +308,7 @@ extern void freeDpb (sDPB* dpb);
 extern void initImage (sDecoder* decoder, sImage* image, sSPS *sps);
 extern void freeImage (sDecoder* decoder, sImage* image);
 
-extern void initListsPslice (sSlice* slice);
+extern void initListsslice (sSlice* slice);
 extern void initListsBslice (sSlice* slice);
 extern void initListsIslice (sSlice* slice);
 extern void updatePicNum (sSlice* slice);

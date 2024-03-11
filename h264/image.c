@@ -269,7 +269,7 @@ static void reorderLists (sSlice* slice) {
       if (decoder->nonConformingStream)
         printf ("RefPicList0[ %d ] is equal to 'no reference picture'\n", slice->numRefIndexActive[LIST_0] - 1);
       else
-        error ("RefPicList0[ num_ref_idx_l0_active_minus1 ] is equal to 'no reference picture', invalid bitstream",500);
+        error ("RefPicList0[ num_ref_idx_l0_active_minus1 ] is equal to 'no reference picture', invalid s",500);
       }
     // that's a definition
     slice->listXsize[0] = (char) slice->numRefIndexActive[LIST_0];
@@ -282,7 +282,7 @@ static void reorderLists (sSlice* slice) {
       if (decoder->nonConformingStream)
         printf ("RefPicList1[ %d ] is equal to 'no reference picture'\n", slice->numRefIndexActive[LIST_1] - 1);
       else
-        error ("RefPicList1[ num_ref_idx_l1_active_minus1 ] is equal to 'no reference picture', invalid bitstream",500);
+        error ("RefPicList1[ num_ref_idx_l1_active_minus1 ] is equal to 'no reference picture', invalid s",500);
       }
     // that's a definition
     slice->listXsize[1] = (char)slice->numRefIndexActive[LIST_1];
@@ -415,39 +415,39 @@ static void initCurImg (sSlice* slice, sDecoder* decoder) {
 //}}}
 
 //{{{
-static int isNewPicture (sPicture* picture, sSlice* slice, sOldSlice* oldSliceParam) {
+static int isNewPicture (sPicture* picture, sSlice* slice, sOldSlice* oldSlice) {
 
   int result = (NULL == picture);
 
-  result |= (oldSliceParam->ppsId != slice->ppsId);
-  result |= (oldSliceParam->frameNum != slice->frameNum);
-  result |= (oldSliceParam->fieldPicFlag != slice->fieldPicFlag);
+  result |= (oldSlice->ppsId != slice->ppsId);
+  result |= (oldSlice->frameNum != slice->frameNum);
+  result |= (oldSlice->fieldPicFlag != slice->fieldPicFlag);
 
-  if (slice->fieldPicFlag && oldSliceParam->fieldPicFlag)
-    result |= (oldSliceParam->botFieldFlag != slice->botFieldFlag);
+  if (slice->fieldPicFlag && oldSlice->fieldPicFlag)
+    result |= (oldSlice->botFieldFlag != slice->botFieldFlag);
 
-  result |= (oldSliceParam->nalRefIdc != slice->refId) && ((oldSliceParam->nalRefIdc == 0) || (slice->refId == 0));
-  result |= (oldSliceParam->idrFlag != slice->idrFlag);
+  result |= (oldSlice->nalRefIdc != slice->refId) && ((oldSlice->nalRefIdc == 0) || (slice->refId == 0));
+  result |= (oldSlice->idrFlag != slice->idrFlag);
 
-  if (slice->idrFlag && oldSliceParam->idrFlag)
-    result |= (oldSliceParam->idrPicId != slice->idrPicId);
+  if (slice->idrFlag && oldSlice->idrFlag)
+    result |= (oldSlice->idrPicId != slice->idrPicId);
 
   sDecoder* decoder = slice->decoder;
   if (decoder->activeSPS->picOrderCountType == 0) {
-    result |= (oldSliceParam->picOrderCountLsb != slice->picOrderCountLsb);
+    result |= (oldSlice->picOrderCountLsb != slice->picOrderCountLsb);
     if (decoder->activePPS->botFieldPicOrderFramePresentFlag  ==  1 &&  !slice->fieldPicFlag )
-      result |= (oldSliceParam->deltaPicOrderCountBot != slice->deletaPicOrderCountBot);
+      result |= (oldSlice->deltaPicOrderCountBot != slice->deletaPicOrderCountBot);
     }
 
   if (decoder->activeSPS->picOrderCountType == 1) {
     if (!decoder->activeSPS->delta_pic_order_always_zero_flag) {
-      result |= (oldSliceParam->deltaPicOrderCount[0] != slice->deltaPicOrderCount[0]);
+      result |= (oldSlice->deltaPicOrderCount[0] != slice->deltaPicOrderCount[0]);
       if (decoder->activePPS->botFieldPicOrderFramePresentFlag  ==  1 &&  !slice->fieldPicFlag )
-        result |= (oldSliceParam->deltaPicOrderCount[1] != slice->deltaPicOrderCount[1]);
+        result |= (oldSlice->deltaPicOrderCount[1] != slice->deltaPicOrderCount[1]);
       }
     }
 
-  result |= (slice->layerId != oldSliceParam->layerId);
+  result |= (slice->layerId != oldSlice->layerId);
   return result;
   }
 //}}}
@@ -710,34 +710,34 @@ static void framePostProcessing (sDecoder* decoder) {}
 static void fieldPostProcessing (sDecoder* decoder) { decoder->number /= 2; }
 
 //{{{
-static void copySliceInfo (sSlice* slice, sOldSlice* oldSliceParam) {
+static void copySliceInfo (sSlice* slice, sOldSlice* oldSlice) {
 
   sDecoder* decoder = slice->decoder;
 
-  oldSliceParam->ppsId = slice->ppsId;
-  oldSliceParam->frameNum = slice->frameNum; //decoder->frameNum;
-  oldSliceParam->fieldPicFlag = slice->fieldPicFlag; //decoder->fieldPicFlag;
+  oldSlice->ppsId = slice->ppsId;
+  oldSlice->frameNum = slice->frameNum; //decoder->frameNum;
+  oldSlice->fieldPicFlag = slice->fieldPicFlag; //decoder->fieldPicFlag;
 
   if (slice->fieldPicFlag)
-    oldSliceParam->botFieldFlag = slice->botFieldFlag;
+    oldSlice->botFieldFlag = slice->botFieldFlag;
 
-  oldSliceParam->nalRefIdc = slice->refId;
-  oldSliceParam->idrFlag = (byte)slice->idrFlag;
+  oldSlice->nalRefIdc = slice->refId;
+  oldSlice->idrFlag = (byte)slice->idrFlag;
 
   if (slice->idrFlag)
-    oldSliceParam->idrPicId = slice->idrPicId;
+    oldSlice->idrPicId = slice->idrPicId;
 
   if (decoder->activeSPS->picOrderCountType == 0) {
-    oldSliceParam->picOrderCountLsb = slice->picOrderCountLsb;
-    oldSliceParam->deltaPicOrderCountBot = slice->deletaPicOrderCountBot;
+    oldSlice->picOrderCountLsb = slice->picOrderCountLsb;
+    oldSlice->deltaPicOrderCountBot = slice->deletaPicOrderCountBot;
     }
 
   if (decoder->activeSPS->picOrderCountType == 1) {
-    oldSliceParam->deltaPicOrderCount[0] = slice->deltaPicOrderCount[0];
-    oldSliceParam->deltaPicOrderCount[1] = slice->deltaPicOrderCount[1];
+    oldSlice->deltaPicOrderCount[0] = slice->deltaPicOrderCount[0];
+    oldSlice->deltaPicOrderCount[1] = slice->deltaPicOrderCount[1];
     }
 
-  oldSliceParam->layerId = slice->layerId;
+  oldSlice->layerId = slice->layerId;
   }
 //}}}
 //{{{
@@ -850,10 +850,10 @@ static int readNewSlice (sSlice* slice) {
 
         slice->idrFlag = nalu->unitType == NALU_TYPE_IDR;
         slice->refId = nalu->refId;
-        slice->dataPartitionMode = PAR_DP_1;
-        slice->maxPartitionNum = 1;
+        slice->datadpMode = PAR_DP_1;
+        slice->maxdpNum = 1;
 
-        s = slice->partitions[0].bitstream;
+        s = slice->dps[0].s;
         s->eiFlag = 0;
         s->frameBitOffset = s->readLen = 0;
         memcpy (s->streamBuffer, &nalu->buf[1], nalu->len-1);
@@ -908,7 +908,7 @@ static int readNewSlice (sSlice* slice) {
           int byteStartPosition = s->frameBitOffset / 8;
           if ((s->frameBitOffset % 8) != 0)
             ++byteStartPosition;
-          arideco_start_decoding (&slice->partitions[0].deCabac, s->streamBuffer, byteStartPosition, &s->readLen);
+          arideco_start_decoding (&slice->dps[0].deCabac, s->streamBuffer, byteStartPosition, &s->readLen);
           }
 
         decoder->recoveryPoint = 0;
@@ -921,13 +921,13 @@ static int readNewSlice (sSlice* slice) {
           break;
 
         // read DP_A
-        slice->noDataPartitionB = 1;
-        slice->noDataPartitionC = 1;
+        slice->noDatadpB = 1;
+        slice->noDatadpC = 1;
         slice->idrFlag = FALSE;
         slice->refId = nalu->refId;
-        slice->dataPartitionMode = PAR_DP_3;
-        slice->maxPartitionNum = 3;
-        s = slice->partitions[0].bitstream;
+        slice->datadpMode = PAR_DP_3;
+        slice->maxdpNum = 3;
+        s = slice->dps[0].s;
         s->eiFlag = 0;
         s->frameBitOffset = s->readLen = 0;
         memcpy (s->streamBuffer, &nalu->buf[1], nalu->len - 1);
@@ -965,7 +965,7 @@ static int readNewSlice (sSlice* slice) {
         int slice_id_a = readUeV ("NALU: DP_A slice_id", s);
 
         if (decoder->activePPS->entropyCodingModeFlag)
-          error ("data partition with CABAC not allowed", 500);
+          error ("data dp with CABAC not allowed", 500);
 
         // reading next DP
         if (!readNextNalu (decoder, nalu))
@@ -973,22 +973,22 @@ static int readNewSlice (sSlice* slice) {
 
         if (NALU_TYPE_DPB == nalu->unitType) {
           //{{{  got nalu DPB
-          s = slice->partitions[1].bitstream;
+          s = slice->dps[1].s;
           s->eiFlag = 0;
           s->frameBitOffset = s->readLen = 0;
           memcpy (s->streamBuffer, &nalu->buf[1], nalu->len-1);
           s->codeLen = s->bitstreamLength = RBSPtoSODB (s->streamBuffer, nalu->len-1);
-          int slice_id_b = readUeV ("NALU dataPartitionB sliceId", s);
-          slice->noDataPartitionB = 0;
+          int slice_id_b = readUeV ("NALU datadpB sliceId", s);
+          slice->noDatadpB = 0;
 
           if ((slice_id_b != slice_id_a) || (nalu->lostPackets)) {
-            printf ("dataPartitionB does not match dataPartitionA\n");
-            slice->noDataPartitionB = 1;
-            slice->noDataPartitionC = 1;
+            printf ("datadpB does not match datadpA\n");
+            slice->noDatadpB = 1;
+            slice->noDatadpC = 1;
             }
           else {
             if (decoder->activePPS->redundantPicCountPresentFlag)
-              readUeV ("NALU dataPartitionB redundantPicCount", s);
+              readUeV ("NALU datadpB redundantPicCount", s);
 
             // we're finished with DP_B, so let's continue with next DP
             if (!readNextNalu (decoder, nalu))
@@ -997,21 +997,21 @@ static int readNewSlice (sSlice* slice) {
           }
           //}}}
         else
-          slice->noDataPartitionB = 1;
+          slice->noDatadpB = 1;
 
         if (NALU_TYPE_DPC == nalu->unitType) {
           //{{{  got nalu DPC
-          s = slice->partitions[2].bitstream;
+          s = slice->dps[2].s;
           s->eiFlag = 0;
           s->frameBitOffset = s->readLen = 0;
           memcpy (s->streamBuffer, &nalu->buf[1], nalu->len-1);
           s->codeLen = s->bitstreamLength = RBSPtoSODB (s->streamBuffer, nalu->len-1);
 
-          slice->noDataPartitionC = 0;
+          slice->noDatadpC = 0;
           int slice_id_c = readUeV ("NALU: DP_C slice_id", s);
           if ((slice_id_c != slice_id_a)|| (nalu->lostPackets)) {
-            printf ("Warning: got a data partition C which does not match DP_A(DP loss!)\n");
-            slice->noDataPartitionC =1;
+            printf ("Warning: got a data dp C which does not match DP_A(DP loss!)\n");
+            slice->noDatadpC =1;
             }
 
           if (decoder->activePPS->redundantPicCountPresentFlag)
@@ -1019,25 +1019,25 @@ static int readNewSlice (sSlice* slice) {
           }
           //}}}
         else {
-          slice->noDataPartitionC = 1;
+          slice->noDatadpC = 1;
           pendingNalu = nalu;
           }
 
-        // check if we read anything else than the expected partitions
+        // check if we read anything else than the expected dps
         if ((nalu->unitType != NALU_TYPE_DPB) &&
-            (nalu->unitType != NALU_TYPE_DPC) && (!slice->noDataPartitionC))
+            (nalu->unitType != NALU_TYPE_DPC) && (!slice->noDatadpC))
           goto process_nalu;
 
         return curHeader;
       //}}}
       //{{{
       case NALU_TYPE_DPB:
-        printf ("found data partition B without matching DP A\n");
+        printf ("found data dp B without matching DP A\n");
         break;
       //}}}
       //{{{
       case NALU_TYPE_DPC:
-        printf ("found data partition C without matching DP A\n");
+        printf ("found data dp C without matching DP A\n");
         break;
       //}}}
       //{{{
@@ -1072,26 +1072,26 @@ static int readNewSlice (sSlice* slice) {
 //}}}
 
 //{{{
-void initOldSlice (sOldSlice* oldSliceParam) {
+void initOldSlice (sOldSlice* oldSlice) {
 
-  oldSliceParam->fieldPicFlag = 0;
-  oldSliceParam->ppsId = INT_MAX;
-  oldSliceParam->frameNum = INT_MAX;
+  oldSlice->fieldPicFlag = 0;
+  oldSlice->ppsId = INT_MAX;
+  oldSlice->frameNum = INT_MAX;
 
-  oldSliceParam->nalRefIdc = INT_MAX;
-  oldSliceParam->idrFlag = FALSE;
+  oldSlice->nalRefIdc = INT_MAX;
+  oldSlice->idrFlag = FALSE;
 
-  oldSliceParam->picOrderCountLsb = UINT_MAX;
-  oldSliceParam->deltaPicOrderCountBot = INT_MAX;
-  oldSliceParam->deltaPicOrderCount[0] = INT_MAX;
-  oldSliceParam->deltaPicOrderCount[1] = INT_MAX;
+  oldSlice->picOrderCountLsb = UINT_MAX;
+  oldSlice->deltaPicOrderCountBot = INT_MAX;
+  oldSlice->deltaPicOrderCount[0] = INT_MAX;
+  oldSlice->deltaPicOrderCount[1] = INT_MAX;
   }
 //}}}
 //{{{
-void calcFrameNum (sDecoder* decoder, sPicture* p) {
+void calcFrameNum (sDecoder* decoder, sPicture* picture) {
 
-  int psnrPOC = decoder->activeSPS->mb_adaptive_frame_field_flag ? p->poc / (decoder->param.pocScale) :
-                                                                    p->poc / (decoder->param.pocScale);
+  int psnrPOC = decoder->activeSPS->mb_adaptive_frame_field_flag ? picture->poc / (decoder->param.pocScale) :
+                                                                    picture->poc / (decoder->param.pocScale);
   if (psnrPOC == 0)
     decoder->idrPsnrNum = decoder->gapNumFrame * decoder->refPocGap / (decoder->param.pocScale);
 
@@ -1145,9 +1145,9 @@ void exitPicture (sDecoder* decoder, sPicture** picture) {
 
         // mark current segment as lost or OK
         if(decoder->mbData[i-1].eiFlag)
-          ercMarkCurrSegmentLost ((*picture)->sizeX, decoder->ercErrorVar);
+          ercMarksegmentLost ((*picture)->sizeX, decoder->ercErrorVar);
         else
-          ercMarkCurrSegmentOK ((*picture)->sizeX, decoder->ercErrorVar);
+          ercMarksegmentOK ((*picture)->sizeX, decoder->ercErrorVar);
 
         ++ercSegment;  //! next segment
         ercStartSegment (i, ercSegment, 0 , decoder->ercErrorVar); //! start new segment
@@ -1157,9 +1157,9 @@ void exitPicture (sDecoder* decoder, sPicture** picture) {
     // mark end of the last segment
     ercStopSegment ((*picture)->picSizeInMbs-1, ercSegment, 0, decoder->ercErrorVar);
     if (decoder->mbData[i-1].eiFlag)
-      ercMarkCurrSegmentLost ((*picture)->sizeX, decoder->ercErrorVar);
+      ercMarksegmentLost ((*picture)->sizeX, decoder->ercErrorVar);
     else
-      ercMarkCurrSegmentOK ((*picture)->sizeX, decoder->ercErrorVar);
+      ercMarksegmentOK ((*picture)->sizeX, decoder->ercErrorVar);
 
     // call the right error conceal function depending on the frame type.
     decoder->ercMvPerMb /= (*picture)->picSizeInMbs;
@@ -1355,16 +1355,16 @@ int decodeFrame (sDecoder* decoder) {
 
        decoder->picSliceIndex++;
        if (decoder->picSliceIndex >= decoder->numAllocatedSlices) {
-         sSlice** tmpSliceList = (sSlice**)realloc (
+         sSlice** tmsliceList = (sSlice**)realloc (
            decoder->sliceList, (decoder->numAllocatedSlices + MAX_NUM_DECSLICES) * sizeof(sSlice*));
-         if (!tmpSliceList) {
-           tmpSliceList = calloc ((decoder->numAllocatedSlices + MAX_NUM_DECSLICES), sizeof(sSlice*));
-           memcpy (tmpSliceList, decoder->sliceList, decoder->picSliceIndex * sizeof(sSlice*));
+         if (!tmsliceList) {
+           tmsliceList = calloc ((decoder->numAllocatedSlices + MAX_NUM_DECSLICES), sizeof(sSlice*));
+           memcpy (tmsliceList, decoder->sliceList, decoder->picSliceIndex * sizeof(sSlice*));
            free (decoder->sliceList);
-           sliceList = decoder->sliceList = tmpSliceList;
+           sliceList = decoder->sliceList = tmsliceList;
            }
          else {
-           sliceList = decoder->sliceList = tmpSliceList;
+           sliceList = decoder->sliceList = tmsliceList;
            memset (decoder->sliceList + decoder->picSliceIndex, 0, sizeof(sSlice*) * MAX_NUM_DECSLICES);
            }
          decoder->numAllocatedSlices += MAX_NUM_DECSLICES;

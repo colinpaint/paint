@@ -225,7 +225,7 @@ static void LowPassForIntra8x8PredVer (sPixel* PredPel, int block_up_left, int b
 ** *********************************************************************
  */
 static int intra8x8_dc_pred (sMacroblock * mb,
-                                   eColorPlane pl,         //!< current image plane
+                                   eColorPlane plane,         //!< current image plane
                                    int ioff,              //!< pixel offset X within MB
                                    int joff)              //!< pixel offset Y within MB
 {
@@ -236,7 +236,7 @@ static int intra8x8_dc_pred (sMacroblock * mb,
   sDecoder* decoder = mb->decoder;
 
   sPicture* picture = slice->picture;
-  sPixel** imgY = (pl) ? picture->imgUV[pl - 1] : picture->imgY; // For MB level frame/field coding tools -- set default to imgY
+  sPixel** imgY = (plane) ? picture->imgUV[plane - 1] : picture->imgY; // For MB level frame/field coding tools -- set default to imgY
 
   sPixelPos pix_a;
   sPixelPos pix_b, pix_c, pix_d;
@@ -246,7 +246,7 @@ static int intra8x8_dc_pred (sMacroblock * mb,
   int block_available_up_left;
   int block_available_up_right;
 
-  sPixel** mpr = slice->mb_pred[pl];
+  sPixel** mpr = slice->mb_pred[plane];
   int *mbSize = decoder->mbSize[IS_LUMA];
 
   for (int i=0; i<25;i++) PredPel[i]=0;
@@ -281,9 +281,9 @@ static int intra8x8_dc_pred (sMacroblock * mb,
   else
   {
 #if (IMGTYPE == 0)
-    memset(&PredPel[1], decoder->dcPredValueComp[pl], BLOCK_SIZE_8x8 * sizeof(sPixel));
+    memset(&PredPel[1], decoder->dcPredValueComp[plane], BLOCK_SIZE_8x8 * sizeof(sPixel));
 #else
-    P_A = P_B = P_C = P_D = P_E = P_F = P_G = P_H = (sPixel) decoder->dcPredValueComp[pl];
+    P_A = P_B = P_C = P_D = P_E = P_F = P_G = P_H = (sPixel) decoder->dcPredValueComp[plane];
 #endif
   }
 
@@ -315,7 +315,7 @@ static int intra8x8_dc_pred (sMacroblock * mb,
   }
   else
   {
-    P_Q = P_R = P_S = P_T = P_U = P_V = P_W = P_X = (sPixel) decoder->dcPredValueComp[pl];
+    P_Q = P_R = P_S = P_T = P_U = P_V = P_W = P_X = (sPixel) decoder->dcPredValueComp[plane];
   }
 
   if (block_available_up_left)
@@ -324,7 +324,7 @@ static int intra8x8_dc_pred (sMacroblock * mb,
   }
   else
   {
-    P_Z = (sPixel) decoder->dcPredValueComp[pl];
+    P_Z = (sPixel) decoder->dcPredValueComp[plane];
   }
 
   LowPassForIntra8x8Pred(PredPel, block_available_up_left, block_available_up, block_available_left);
@@ -347,7 +347,7 @@ static int intra8x8_dc_pred (sMacroblock * mb,
   else //if (!block_available_up && !block_available_left)
   {
     // top left corner, nothing to predict from
-    s0 = decoder->dcPredValueComp[pl];
+    s0 = decoder->dcPredValueComp[plane];
   }
 
   for(i = ioff; i < ioff + BLOCK_SIZE_8x8; i++)
@@ -371,7 +371,7 @@ static int intra8x8_dc_pred (sMacroblock * mb,
 ** *********************************************************************
  */
 static int intra8x8_vert_pred (sMacroblock* mb,
-                                     eColorPlane pl,         //!< current image plane
+                                     eColorPlane plane,         //!< current image plane
                                      int ioff,              //!< pixel offset X within MB
                                      int joff)              //!< pixel offset Y within MB
 {
@@ -380,7 +380,7 @@ static int intra8x8_vert_pred (sMacroblock* mb,
 
   int i;
   sPixel PredPel[25];  // array of predictor pels
-  sPixel** imgY = (pl) ? slice->picture->imgUV[pl - 1] : slice->picture->imgY; // For MB level frame/field coding tools -- set default to imgY
+  sPixel** imgY = (plane) ? slice->picture->imgUV[plane - 1] : slice->picture->imgY; // For MB level frame/field coding tools -- set default to imgY
 
   sPixelPos pix_a;
   sPixelPos pix_b, pix_c, pix_d;
@@ -391,7 +391,7 @@ static int intra8x8_vert_pred (sMacroblock* mb,
   int block_available_up_right;
 
 
-  sPixel** mpr = slice->mb_pred[pl];
+  sPixel** mpr = slice->mb_pred[plane];
   int *mbSize = decoder->mbSize[IS_LUMA];
 
   for (int i=0; i<25;i++) PredPel[i]=0;
@@ -429,9 +429,9 @@ static int intra8x8_vert_pred (sMacroblock* mb,
   else
   {
 #if (IMGTYPE == 0)
-    memset(&PredPel[1], decoder->dcPredValueComp[pl], BLOCK_SIZE_8x8 * sizeof(sPixel));
+    memset(&PredPel[1], decoder->dcPredValueComp[plane], BLOCK_SIZE_8x8 * sizeof(sPixel));
 #else
-    P_A = P_B = P_C = P_D = P_E = P_F = P_G = P_H = (sPixel) decoder->dcPredValueComp[pl];
+    P_A = P_B = P_C = P_D = P_E = P_F = P_G = P_H = (sPixel) decoder->dcPredValueComp[plane];
 #endif
   }
 
@@ -454,7 +454,7 @@ static int intra8x8_vert_pred (sMacroblock* mb,
   }
   else
   {
-    P_Z = (sPixel) decoder->dcPredValueComp[pl];
+    P_Z = (sPixel) decoder->dcPredValueComp[plane];
   }
 
   LowPassForIntra8x8PredHor(&(P_Z), block_available_up_left, block_available_up, block_available_left);
@@ -479,7 +479,7 @@ static int intra8x8_vert_pred (sMacroblock* mb,
 ** *********************************************************************
  */
 static int intra8x8_hor_pred (sMacroblock* mb,
-                                    eColorPlane pl,         //!< current image plane
+                                    eColorPlane plane,         //!< current image plane
                                     int ioff,              //!< pixel offset X within MB
                                     int joff)              //!< pixel offset Y within MB
 {
@@ -489,7 +489,7 @@ static int intra8x8_hor_pred (sMacroblock* mb,
 
   int j;
   sPixel PredPel[25];  // array of predictor pels
-  sPixel** imgY = (pl) ? slice->picture->imgUV[pl - 1] : slice->picture->imgY; // For MB level frame/field coding tools -- set default to imgY
+  sPixel** imgY = (plane) ? slice->picture->imgUV[plane - 1] : slice->picture->imgY; // For MB level frame/field coding tools -- set default to imgY
 
   sPixelPos pix_a;
   sPixelPos pix_b, pix_d;
@@ -505,7 +505,7 @@ static int intra8x8_hor_pred (sMacroblock* mb,
   int ipos4 = ioff + 4, ipos5 = ioff + 5, ipos6 = ioff + 6, ipos7 = ioff + 7;
 #endif
   int jpos;
-  sPixel** mpr = slice->mb_pred[pl];
+  sPixel** mpr = slice->mb_pred[plane];
   int *mbSize = decoder->mbSize[IS_LUMA];
 
   getNonAffNeighbour(mb, ioff - 1, joff    , mbSize, &pix_a);
@@ -544,7 +544,7 @@ static int intra8x8_hor_pred (sMacroblock* mb,
   }
   else
   {
-    P_Q = P_R = P_S = P_T = P_U = P_V = P_W = P_X = (sPixel) decoder->dcPredValueComp[pl];
+    P_Q = P_R = P_S = P_T = P_U = P_V = P_W = P_X = (sPixel) decoder->dcPredValueComp[plane];
   }
 
   if (block_available_up_left)
@@ -553,7 +553,7 @@ static int intra8x8_hor_pred (sMacroblock* mb,
   }
   else
   {
-    P_Z = (sPixel) decoder->dcPredValueComp[pl];
+    P_Z = (sPixel) decoder->dcPredValueComp[plane];
   }
 
   LowPassForIntra8x8PredVer(&(P_Z), block_available_up_left, block_available_up, block_available_left);
@@ -590,7 +590,7 @@ static int intra8x8_hor_pred (sMacroblock* mb,
 ** *********************************************************************
  */
 static int intra8x8_diag_down_right_pred (sMacroblock* mb,
-                                                eColorPlane pl,         //!< current image plane
+                                                eColorPlane plane,         //!< current image plane
                                                 int ioff,              //!< pixel offset X within MB
                                                 int joff)              //!< pixel offset Y within MB
 {
@@ -599,7 +599,7 @@ static int intra8x8_diag_down_right_pred (sMacroblock* mb,
 
   sPixel PredPel[25];    // array of predictor pels
   sPixel PredArray[16];  // array of final prediction values
-  sPixel** imgY = (pl) ? slice->picture->imgUV[pl - 1] : slice->picture->imgY; // For MB level frame/field coding tools -- set default to imgY
+  sPixel** imgY = (plane) ? slice->picture->imgUV[plane - 1] : slice->picture->imgY; // For MB level frame/field coding tools -- set default to imgY
 
   sPixelPos pix_a;
   sPixelPos pix_b, pix_c, pix_d;
@@ -610,7 +610,7 @@ static int intra8x8_diag_down_right_pred (sMacroblock* mb,
   int block_available_up_right;
 
   sPixel *pred_pels;
-  sPixel** mb_pred = &slice->mb_pred[pl][joff];
+  sPixel** mb_pred = &slice->mb_pred[plane][joff];
   int *mbSize = decoder->mbSize[IS_LUMA];
 
   for (int i=0; i<25;i++) PredPel[i]=0;
@@ -648,9 +648,9 @@ static int intra8x8_diag_down_right_pred (sMacroblock* mb,
   else
   {
 #if (IMGTYPE == 0)
-    memset(&PredPel[1], decoder->dcPredValueComp[pl], BLOCK_SIZE_8x8 * sizeof(sPixel));
+    memset(&PredPel[1], decoder->dcPredValueComp[plane], BLOCK_SIZE_8x8 * sizeof(sPixel));
 #else
-    P_A = P_B = P_C = P_D = P_E = P_F = P_G = P_H = (sPixel) decoder->dcPredValueComp[pl];
+    P_A = P_B = P_C = P_D = P_E = P_F = P_G = P_H = (sPixel) decoder->dcPredValueComp[plane];
 #endif
   }
 
@@ -682,7 +682,7 @@ static int intra8x8_diag_down_right_pred (sMacroblock* mb,
   }
   else
   {
-    P_Q = P_R = P_S = P_T = P_U = P_V = P_W = P_X = (sPixel) decoder->dcPredValueComp[pl];
+    P_Q = P_R = P_S = P_T = P_U = P_V = P_W = P_X = (sPixel) decoder->dcPredValueComp[plane];
   }
 
   if (block_available_up_left)
@@ -691,7 +691,7 @@ static int intra8x8_diag_down_right_pred (sMacroblock* mb,
   }
   else
   {
-    P_Z = (sPixel) decoder->dcPredValueComp[pl];
+    P_Z = (sPixel) decoder->dcPredValueComp[plane];
   }
 
   LowPassForIntra8x8Pred(PredPel, block_available_up_left, block_available_up, block_available_left);
@@ -739,7 +739,7 @@ static int intra8x8_diag_down_right_pred (sMacroblock* mb,
 ** *********************************************************************
  */
 static int intra8x8_diag_down_left_pred (sMacroblock* mb,
-                                               eColorPlane pl,         //!< current image plane
+                                               eColorPlane plane,         //!< current image plane
                                                int ioff,              //!< pixel offset X within MB
                                                int joff)              //!< pixel offset Y within MB
 {
@@ -749,7 +749,7 @@ static int intra8x8_diag_down_left_pred (sMacroblock* mb,
   sPixel PredPel[25];    // array of predictor pels
   sPixel PredArray[16];  // array of final prediction values
   sPixel *Pred = &PredArray[0];
-  sPixel** imgY = (pl) ? slice->picture->imgUV[pl - 1] : slice->picture->imgY; // For MB level frame/field coding tools -- set default to imgY
+  sPixel** imgY = (plane) ? slice->picture->imgUV[plane - 1] : slice->picture->imgY; // For MB level frame/field coding tools -- set default to imgY
 
   sPixelPos pix_a;
   sPixelPos pix_b, pix_c, pix_d;
@@ -761,7 +761,7 @@ static int intra8x8_diag_down_left_pred (sMacroblock* mb,
 
   for (int i=0; i<25;i++) PredPel[i]=0;
 
-  sPixel** mb_pred = &slice->mb_pred[pl][joff];
+  sPixel** mb_pred = &slice->mb_pred[plane][joff];
   int *mbSize = decoder->mbSize[IS_LUMA];
 
   getNonAffNeighbour(mb, ioff - 1, joff    , mbSize, &pix_a);
@@ -797,9 +797,9 @@ static int intra8x8_diag_down_left_pred (sMacroblock* mb,
   else
   {
 #if (IMGTYPE == 0)
-    memset(&PredPel[1], decoder->dcPredValueComp[pl], BLOCK_SIZE_8x8 * sizeof(sPixel));
+    memset(&PredPel[1], decoder->dcPredValueComp[plane], BLOCK_SIZE_8x8 * sizeof(sPixel));
 #else
-    P_A = P_B = P_C = P_D = P_E = P_F = P_G = P_H = (sPixel) decoder->dcPredValueComp[pl];
+    P_A = P_B = P_C = P_D = P_E = P_F = P_G = P_H = (sPixel) decoder->dcPredValueComp[plane];
 #endif
   }
 
@@ -831,7 +831,7 @@ static int intra8x8_diag_down_left_pred (sMacroblock* mb,
   }
   else
   {
-    P_Q = P_R = P_S = P_T = P_U = P_V = P_W = P_X = (sPixel) decoder->dcPredValueComp[pl];
+    P_Q = P_R = P_S = P_T = P_U = P_V = P_W = P_X = (sPixel) decoder->dcPredValueComp[plane];
   }
 
   if (block_available_up_left)
@@ -840,7 +840,7 @@ static int intra8x8_diag_down_left_pred (sMacroblock* mb,
   }
   else
   {
-    P_Z = (sPixel) decoder->dcPredValueComp[pl];
+    P_Z = (sPixel) decoder->dcPredValueComp[plane];
   }
 
   LowPassForIntra8x8Pred(PredPel, block_available_up_left, block_available_up, block_available_left);
@@ -888,7 +888,7 @@ static int intra8x8_diag_down_left_pred (sMacroblock* mb,
 ** *********************************************************************
  */
 static int intra8x8_vert_right_pred (sMacroblock* mb,
-                                           eColorPlane pl,         //!< current image plane
+                                           eColorPlane plane,         //!< current image plane
                                            int ioff,              //!< pixel offset X within MB
                                            int joff)              //!< pixel offset Y within MB
 {
@@ -897,7 +897,7 @@ static int intra8x8_vert_right_pred (sMacroblock* mb,
 
   sPixel PredPel[25];  // array of predictor pels
   sPixel PredArray[22];  // array of final prediction values
-  sPixel** imgY = (pl) ? slice->picture->imgUV[pl - 1] : slice->picture->imgY; // For MB level frame/field coding tools -- set default to imgY
+  sPixel** imgY = (plane) ? slice->picture->imgUV[plane - 1] : slice->picture->imgY; // For MB level frame/field coding tools -- set default to imgY
 
   sPixelPos pix_a;
   sPixelPos pix_b, pix_c, pix_d;
@@ -910,7 +910,7 @@ static int intra8x8_vert_right_pred (sMacroblock* mb,
   for (int i=0; i<25;i++) PredPel[i]=0;
 
   sPixel *pred_pels;
-  sPixel** mb_pred = &slice->mb_pred[pl][joff];
+  sPixel** mb_pred = &slice->mb_pred[plane][joff];
   int *mbSize = decoder->mbSize[IS_LUMA];
 
   getNonAffNeighbour(mb, ioff - 1, joff    , mbSize, &pix_a);
@@ -946,9 +946,9 @@ static int intra8x8_vert_right_pred (sMacroblock* mb,
   else
   {
 #if (IMGTYPE == 0)
-    memset(&PredPel[1], decoder->dcPredValueComp[pl], BLOCK_SIZE_8x8 * sizeof(sPixel));
+    memset(&PredPel[1], decoder->dcPredValueComp[plane], BLOCK_SIZE_8x8 * sizeof(sPixel));
 #else
-    P_A = P_B = P_C = P_D = P_E = P_F = P_G = P_H = (sPixel) decoder->dcPredValueComp[pl];
+    P_A = P_B = P_C = P_D = P_E = P_F = P_G = P_H = (sPixel) decoder->dcPredValueComp[plane];
 #endif
   }
 
@@ -980,7 +980,7 @@ static int intra8x8_vert_right_pred (sMacroblock* mb,
   }
   else
   {
-    P_Q = P_R = P_S = P_T = P_U = P_V = P_W = P_X = (sPixel) decoder->dcPredValueComp[pl];
+    P_Q = P_R = P_S = P_T = P_U = P_V = P_W = P_X = (sPixel) decoder->dcPredValueComp[plane];
   }
 
   if (block_available_up_left)
@@ -989,7 +989,7 @@ static int intra8x8_vert_right_pred (sMacroblock* mb,
   }
   else
   {
-    P_Z = (sPixel) decoder->dcPredValueComp[pl];
+    P_Z = (sPixel) decoder->dcPredValueComp[plane];
   }
 
   LowPassForIntra8x8Pred(PredPel, block_available_up_left, block_available_up, block_available_left);
@@ -1043,7 +1043,7 @@ static int intra8x8_vert_right_pred (sMacroblock* mb,
 ** *********************************************************************
  */
 static int intra8x8_vert_left_pred (sMacroblock* mb,
-                                          eColorPlane pl,         //!< current image plane
+                                          eColorPlane plane,         //!< current image plane
                                           int ioff,              //!< pixel offset X within MB
                                           int joff)              //!< pixel offset Y within MB
 {
@@ -1053,7 +1053,7 @@ static int intra8x8_vert_left_pred (sMacroblock* mb,
   sPixel PredPel[25];  // array of predictor pels
   sPixel PredArray[22];  // array of final prediction values
   sPixel *pred_pel = &PredArray[0];
-  sPixel** imgY = (pl) ? slice->picture->imgUV[pl - 1] : slice->picture->imgY; // For MB level frame/field coding tools -- set default to imgY
+  sPixel** imgY = (plane) ? slice->picture->imgUV[plane - 1] : slice->picture->imgY; // For MB level frame/field coding tools -- set default to imgY
 
   sPixelPos pix_a;
   sPixelPos pix_b, pix_c, pix_d;
@@ -1063,7 +1063,7 @@ static int intra8x8_vert_left_pred (sMacroblock* mb,
   int block_available_up_left;
   int block_available_up_right;
 
-  sPixel** mb_pred = &slice->mb_pred[pl][joff];
+  sPixel** mb_pred = &slice->mb_pred[plane][joff];
   int *mbSize = decoder->mbSize[IS_LUMA];
 
   for (int i=0; i<25;i++) PredPel[i]=0;
@@ -1101,9 +1101,9 @@ static int intra8x8_vert_left_pred (sMacroblock* mb,
   else
   {
 #if (IMGTYPE == 0)
-    memset(&PredPel[1], decoder->dcPredValueComp[pl], BLOCK_SIZE_8x8 * sizeof(sPixel));
+    memset(&PredPel[1], decoder->dcPredValueComp[plane], BLOCK_SIZE_8x8 * sizeof(sPixel));
 #else
-    P_A = P_B = P_C = P_D = P_E = P_F = P_G = P_H = (sPixel) decoder->dcPredValueComp[pl];
+    P_A = P_B = P_C = P_D = P_E = P_F = P_G = P_H = (sPixel) decoder->dcPredValueComp[plane];
 #endif
   }
 
@@ -1135,7 +1135,7 @@ static int intra8x8_vert_left_pred (sMacroblock* mb,
   }
   else
   {
-    P_Q = P_R = P_S = P_T = P_U = P_V = P_W = P_X = (sPixel) decoder->dcPredValueComp[pl];
+    P_Q = P_R = P_S = P_T = P_U = P_V = P_W = P_X = (sPixel) decoder->dcPredValueComp[plane];
   }
 
   if (block_available_up_left)
@@ -1144,7 +1144,7 @@ static int intra8x8_vert_left_pred (sMacroblock* mb,
   }
   else
   {
-    P_Z = (sPixel) decoder->dcPredValueComp[pl];
+    P_Z = (sPixel) decoder->dcPredValueComp[plane];
   }
 
   LowPassForIntra8x8Pred(PredPel, block_available_up_left, block_available_up, block_available_left);
@@ -1196,7 +1196,7 @@ static int intra8x8_vert_left_pred (sMacroblock* mb,
 ** *********************************************************************
  */
 static int intra8x8_hor_up_pred (sMacroblock* mb,
-                                       eColorPlane pl,         //!< current image plane
+                                       eColorPlane plane,         //!< current image plane
                                        int ioff,              //!< pixel offset X within MB
                                        int joff)              //!< pixel offset Y within MB
 {
@@ -1205,7 +1205,7 @@ static int intra8x8_hor_up_pred (sMacroblock* mb,
 
   sPixel PredPel[25];     // array of predictor pels
   sPixel PredArray[22];   // array of final prediction values
-  sPixel** imgY = (pl) ? slice->picture->imgUV[pl - 1] : slice->picture->imgY; // For MB level frame/field coding tools -- set default to imgY
+  sPixel** imgY = (plane) ? slice->picture->imgUV[plane - 1] : slice->picture->imgY; // For MB level frame/field coding tools -- set default to imgY
 
   sPixelPos pix_a;
   sPixelPos pix_b, pix_c, pix_d;
@@ -1219,7 +1219,7 @@ static int intra8x8_hor_up_pred (sMacroblock* mb,
 
   for (int i=0; i<25;i++) PredPel[i]=0;
 
-  sPixel** mpr = slice->mb_pred[pl];
+  sPixel** mpr = slice->mb_pred[plane];
   int *mbSize = decoder->mbSize[IS_LUMA];
 
   getNonAffNeighbour(mb, ioff - 1, joff    , mbSize, &pix_a);
@@ -1255,9 +1255,9 @@ static int intra8x8_hor_up_pred (sMacroblock* mb,
   else
   {
 #if (IMGTYPE == 0)
-    memset(&PredPel[1], decoder->dcPredValueComp[pl], BLOCK_SIZE_8x8 * sizeof(sPixel));
+    memset(&PredPel[1], decoder->dcPredValueComp[plane], BLOCK_SIZE_8x8 * sizeof(sPixel));
 #else
-    P_A = P_B = P_C = P_D = P_E = P_F = P_G = P_H = (sPixel) decoder->dcPredValueComp[pl];
+    P_A = P_B = P_C = P_D = P_E = P_F = P_G = P_H = (sPixel) decoder->dcPredValueComp[plane];
 #endif
   }
 
@@ -1289,7 +1289,7 @@ static int intra8x8_hor_up_pred (sMacroblock* mb,
   }
   else
   {
-    P_Q = P_R = P_S = P_T = P_U = P_V = P_W = P_X = (sPixel) decoder->dcPredValueComp[pl];
+    P_Q = P_R = P_S = P_T = P_U = P_V = P_W = P_X = (sPixel) decoder->dcPredValueComp[plane];
   }
 
   if (block_available_up_left)
@@ -1298,7 +1298,7 @@ static int intra8x8_hor_up_pred (sMacroblock* mb,
   }
   else
   {
-    P_Z = (sPixel) decoder->dcPredValueComp[pl];
+    P_Z = (sPixel) decoder->dcPredValueComp[plane];
   }
 
   LowPassForIntra8x8Pred(PredPel, block_available_up_left, block_available_up, block_available_left);
@@ -1350,7 +1350,7 @@ static int intra8x8_hor_up_pred (sMacroblock* mb,
 ** *********************************************************************
  */
 static int intra8x8_hor_down_pred (sMacroblock* mb,
-                                         eColorPlane pl,         //!< current image plane
+                                         eColorPlane plane,         //!< current image plane
                                          int ioff,              //!< pixel offset X within MB
                                          int joff)              //!< pixel offset Y within MB
 {
@@ -1359,7 +1359,7 @@ static int intra8x8_hor_down_pred (sMacroblock* mb,
 
   sPixel PredPel[25];  // array of predictor pels
   sPixel PredArray[22];   // array of final prediction values
-  sPixel** imgY = (pl) ? slice->picture->imgUV[pl - 1] : slice->picture->imgY; // For MB level frame/field coding tools -- set default to imgY
+  sPixel** imgY = (plane) ? slice->picture->imgUV[plane - 1] : slice->picture->imgY; // For MB level frame/field coding tools -- set default to imgY
 
   sPixelPos pix_a;
   sPixelPos pix_b, pix_c, pix_d;
@@ -1370,7 +1370,7 @@ static int intra8x8_hor_down_pred (sMacroblock* mb,
   int block_available_up_right;
 
   sPixel *pred_pels;
-  sPixel** mb_pred = &slice->mb_pred[pl][joff];
+  sPixel** mb_pred = &slice->mb_pred[plane][joff];
   int *mbSize = decoder->mbSize[IS_LUMA];
 
   for (int i=0; i<25;i++) PredPel[i]=0;
@@ -1408,9 +1408,9 @@ static int intra8x8_hor_down_pred (sMacroblock* mb,
   else
   {
 #if (IMGTYPE == 0)
-    memset(&PredPel[1], decoder->dcPredValueComp[pl], BLOCK_SIZE_8x8 * sizeof(sPixel));
+    memset(&PredPel[1], decoder->dcPredValueComp[plane], BLOCK_SIZE_8x8 * sizeof(sPixel));
 #else
-    P_A = P_B = P_C = P_D = P_E = P_F = P_G = P_H = (sPixel) decoder->dcPredValueComp[pl];
+    P_A = P_B = P_C = P_D = P_E = P_F = P_G = P_H = (sPixel) decoder->dcPredValueComp[plane];
 #endif
   }
 
@@ -1442,7 +1442,7 @@ static int intra8x8_hor_down_pred (sMacroblock* mb,
   }
   else
   {
-    P_Q = P_R = P_S = P_T = P_U = P_V = P_W = P_X = (sPixel) decoder->dcPredValueComp[pl];
+    P_Q = P_R = P_S = P_T = P_U = P_V = P_W = P_X = (sPixel) decoder->dcPredValueComp[plane];
   }
 
   if (block_available_up_left)
@@ -1451,7 +1451,7 @@ static int intra8x8_hor_down_pred (sMacroblock* mb,
   }
   else
   {
-    P_Z = (sPixel) decoder->dcPredValueComp[pl];
+    P_Z = (sPixel) decoder->dcPredValueComp[plane];
   }
 
   LowPassForIntra8x8Pred(PredPel, block_available_up_left, block_available_up, block_available_left);
@@ -1517,7 +1517,7 @@ static int intra8x8_hor_down_pred (sMacroblock* mb,
 ** **********************************************************************
  */
 static int intra_pred_8x8_normal (sMacroblock* mb,
-                        eColorPlane pl,         //!< Current color plane
+                        eColorPlane plane,         //!< Current color plane
                         int ioff,              //!< ioff
                         int joff)              //!< joff
 
@@ -1531,31 +1531,31 @@ static int intra_pred_8x8_normal (sMacroblock* mb,
   switch (predmode)
   {
   case DC_PRED:
-    return (intra8x8_dc_pred(mb, pl, ioff, joff));
+    return (intra8x8_dc_pred(mb, plane, ioff, joff));
     break;
   case VERT_PRED:
-    return (intra8x8_vert_pred(mb, pl, ioff, joff));
+    return (intra8x8_vert_pred(mb, plane, ioff, joff));
     break;
   case HOR_PRED:
-    return (intra8x8_hor_pred(mb, pl, ioff, joff));
+    return (intra8x8_hor_pred(mb, plane, ioff, joff));
     break;
   case DIAG_DOWN_RIGHT_PRED:
-    return (intra8x8_diag_down_right_pred(mb, pl, ioff, joff));
+    return (intra8x8_diag_down_right_pred(mb, plane, ioff, joff));
     break;
   case DIAG_DOWN_LEFT_PRED:
-    return (intra8x8_diag_down_left_pred(mb, pl, ioff, joff));
+    return (intra8x8_diag_down_left_pred(mb, plane, ioff, joff));
     break;
   case VERT_RIGHT_PRED:
-    return (intra8x8_vert_right_pred(mb, pl, ioff, joff));
+    return (intra8x8_vert_right_pred(mb, plane, ioff, joff));
     break;
   case VERT_LEFT_PRED:
-    return (intra8x8_vert_left_pred(mb, pl, ioff, joff));
+    return (intra8x8_vert_left_pred(mb, plane, ioff, joff));
     break;
   case HOR_UP_PRED:
-    return (intra8x8_hor_up_pred(mb, pl, ioff, joff));
+    return (intra8x8_hor_up_pred(mb, plane, ioff, joff));
     break;
   case HOR_DOWN_PRED:
-    return (intra8x8_hor_down_pred(mb, pl, ioff, joff));
+    return (intra8x8_hor_down_pred(mb, plane, ioff, joff));
   default:
     printf("Error: illegal intra_8x8 prediction mode: %d\n", (int) predmode);
     return SEARCH_SYNC;
@@ -1565,7 +1565,7 @@ static int intra_pred_8x8_normal (sMacroblock* mb,
 //}}}
 
 //{{{
-static int intra8x8_dc_pred_mbaff (sMacroblock* mb, eColorPlane pl, int ioff, int joff) {
+static int intra8x8_dc_pred_mbaff (sMacroblock* mb, eColorPlane plane, int ioff, int joff) {
 
   int i,j;
   int s0 = 0;
@@ -1574,7 +1574,7 @@ static int intra8x8_dc_pred_mbaff (sMacroblock* mb, eColorPlane pl, int ioff, in
   sDecoder* decoder = mb->decoder;
 
   sPicture* picture = slice->picture;
-  sPixel** imgY = (pl) ? picture->imgUV[pl - 1] : picture->imgY; // For MB level frame/field coding tools -- set default to imgY
+  sPixel** imgY = (plane) ? picture->imgUV[plane - 1] : picture->imgY; // For MB level frame/field coding tools -- set default to imgY
 
   sPixelPos pix_a[8];
   sPixelPos pix_b, pix_c, pix_d;
@@ -1586,7 +1586,7 @@ static int intra8x8_dc_pred_mbaff (sMacroblock* mb, eColorPlane pl, int ioff, in
 
   for (int i=0; i<25;i++) PredPel[i]=0;
 
-  sPixel** mpr = slice->mb_pred[pl];
+  sPixel** mpr = slice->mb_pred[plane];
   int *mbSize = decoder->mbSize[IS_LUMA];
 
   for (i=0;i<8;i++)
@@ -1624,9 +1624,9 @@ static int intra8x8_dc_pred_mbaff (sMacroblock* mb, eColorPlane pl, int ioff, in
   else
   {
 #if (IMGTYPE == 0)
-    memset(&PredPel[1], decoder->dcPredValueComp[pl], BLOCK_SIZE_8x8 * sizeof(sPixel));
+    memset(&PredPel[1], decoder->dcPredValueComp[plane], BLOCK_SIZE_8x8 * sizeof(sPixel));
 #else
-    P_A = P_B = P_C = P_D = P_E = P_F = P_G = P_H = (sPixel) decoder->dcPredValueComp[pl];
+    P_A = P_B = P_C = P_D = P_E = P_F = P_G = P_H = (sPixel) decoder->dcPredValueComp[plane];
 #endif
   }
 
@@ -1656,7 +1656,7 @@ static int intra8x8_dc_pred_mbaff (sMacroblock* mb, eColorPlane pl, int ioff, in
   }
   else
   {
-    P_Q = P_R = P_S = P_T = P_U = P_V = P_W = P_X = (sPixel) decoder->dcPredValueComp[pl];
+    P_Q = P_R = P_S = P_T = P_U = P_V = P_W = P_X = (sPixel) decoder->dcPredValueComp[plane];
   }
 
   if (block_available_up_left)
@@ -1665,7 +1665,7 @@ static int intra8x8_dc_pred_mbaff (sMacroblock* mb, eColorPlane pl, int ioff, in
   }
   else
   {
-    P_Z = (sPixel) decoder->dcPredValueComp[pl];
+    P_Z = (sPixel) decoder->dcPredValueComp[plane];
   }
 
   LowPassForIntra8x8Pred(PredPel, block_available_up_left, block_available_up, block_available_left);
@@ -1688,7 +1688,7 @@ static int intra8x8_dc_pred_mbaff (sMacroblock* mb, eColorPlane pl, int ioff, in
   else //if (!block_available_up && !block_available_left)
   {
     // top left corner, nothing to predict from
-    s0 = decoder->dcPredValueComp[pl];
+    s0 = decoder->dcPredValueComp[plane];
   }
 
   for(j = joff; j < joff + BLOCK_SIZE_8x8; j++)
@@ -1710,7 +1710,7 @@ static int intra8x8_dc_pred_mbaff (sMacroblock* mb, eColorPlane pl, int ioff, in
 ** *********************************************************************
  */
 static int intra8x8_vert_pred_mbaff (sMacroblock* mb,
-                                     eColorPlane pl,         //!< current image plane
+                                     eColorPlane plane,         //!< current image plane
                                      int ioff,              //!< pixel offset X within MB
                                      int joff)              //!< pixel offset Y within MB
 {
@@ -1719,7 +1719,7 @@ static int intra8x8_vert_pred_mbaff (sMacroblock* mb,
 
   int i;
   sPixel PredPel[25];  // array of predictor pels
-  sPixel** imgY = (pl) ? slice->picture->imgUV[pl - 1] : slice->picture->imgY; // For MB level frame/field coding tools -- set default to imgY
+  sPixel** imgY = (plane) ? slice->picture->imgUV[plane - 1] : slice->picture->imgY; // For MB level frame/field coding tools -- set default to imgY
 
   sPixelPos pix_a[8];
   sPixelPos pix_b, pix_c, pix_d;
@@ -1731,7 +1731,7 @@ static int intra8x8_vert_pred_mbaff (sMacroblock* mb,
 
   for (int i=0; i<25;i++) PredPel[i]=0;
 
-  sPixel** mpr = slice->mb_pred[pl];
+  sPixel** mpr = slice->mb_pred[plane];
   int *mbSize = decoder->mbSize[IS_LUMA];
 
   for (i=0;i<8;i++)
@@ -1772,9 +1772,9 @@ static int intra8x8_vert_pred_mbaff (sMacroblock* mb,
   else
   {
 #if (IMGTYPE == 0)
-    memset(&PredPel[1], decoder->dcPredValueComp[pl], BLOCK_SIZE_8x8 * sizeof(sPixel));
+    memset(&PredPel[1], decoder->dcPredValueComp[plane], BLOCK_SIZE_8x8 * sizeof(sPixel));
 #else
-    P_A = P_B = P_C = P_D = P_E = P_F = P_G = P_H = (sPixel) decoder->dcPredValueComp[pl];
+    P_A = P_B = P_C = P_D = P_E = P_F = P_G = P_H = (sPixel) decoder->dcPredValueComp[plane];
 #endif
   }
 
@@ -1797,7 +1797,7 @@ static int intra8x8_vert_pred_mbaff (sMacroblock* mb,
   }
   else
   {
-    P_Z = (sPixel) decoder->dcPredValueComp[pl];
+    P_Z = (sPixel) decoder->dcPredValueComp[plane];
   }
 
   LowPassForIntra8x8PredHor(&(P_Z), block_available_up_left, block_available_up, block_available_left);
@@ -1822,7 +1822,7 @@ static int intra8x8_vert_pred_mbaff (sMacroblock* mb,
 ** *********************************************************************
  */
 static int intra8x8_hor_pred_mbaff (sMacroblock* mb,
-                                    eColorPlane pl,         //!< current image plane
+                                    eColorPlane plane,         //!< current image plane
                                     int ioff,              //!< pixel offset X within MB
                                     int joff)              //!< pixel offset Y within MB
 {
@@ -1832,7 +1832,7 @@ static int intra8x8_hor_pred_mbaff (sMacroblock* mb,
 
   int i,j;
   sPixel PredPel[25];  // array of predictor pels
-  sPixel** imgY = (pl) ? slice->picture->imgUV[pl - 1] : slice->picture->imgY; // For MB level frame/field coding tools -- set default to imgY
+  sPixel** imgY = (plane) ? slice->picture->imgUV[plane - 1] : slice->picture->imgY; // For MB level frame/field coding tools -- set default to imgY
 
   sPixelPos pix_a[8];
   sPixelPos pix_b, pix_c, pix_d;
@@ -1848,7 +1848,7 @@ static int intra8x8_hor_pred_mbaff (sMacroblock* mb,
   int ipos4 = ioff + 4, ipos5 = ioff + 5, ipos6 = ioff + 6, ipos7 = ioff + 7;
 #endif
   int jpos;
-  sPixel** mpr = slice->mb_pred[pl];
+  sPixel** mpr = slice->mb_pred[plane];
   int *mbSize = decoder->mbSize[IS_LUMA];
 
   for (i=0;i<8;i++)
@@ -1893,7 +1893,7 @@ static int intra8x8_hor_pred_mbaff (sMacroblock* mb,
   }
   else
   {
-    P_Q = P_R = P_S = P_T = P_U = P_V = P_W = P_X = (sPixel) decoder->dcPredValueComp[pl];
+    P_Q = P_R = P_S = P_T = P_U = P_V = P_W = P_X = (sPixel) decoder->dcPredValueComp[plane];
   }
 
   if (block_available_up_left)
@@ -1902,7 +1902,7 @@ static int intra8x8_hor_pred_mbaff (sMacroblock* mb,
   }
   else
   {
-    P_Z = (sPixel) decoder->dcPredValueComp[pl];
+    P_Z = (sPixel) decoder->dcPredValueComp[plane];
   }
 
   LowPassForIntra8x8PredVer(&(P_Z), block_available_up_left, block_available_up, block_available_left);
@@ -1939,7 +1939,7 @@ static int intra8x8_hor_pred_mbaff (sMacroblock* mb,
 ** *********************************************************************
  */
 static int intra8x8_diag_down_right_pred_mbaff (sMacroblock* mb,
-                                                eColorPlane pl,         //!< current image plane
+                                                eColorPlane plane,         //!< current image plane
                                                 int ioff,              //!< pixel offset X within MB
                                                 int joff)              //!< pixel offset Y within MB
 {
@@ -1950,7 +1950,7 @@ static int intra8x8_diag_down_right_pred_mbaff (sMacroblock* mb,
   int i;
   sPixel PredPel[25];  // array of predictor pels
   sPixel PredArray[16];  // array of final prediction values
-  sPixel** imgY = (pl) ? slice->picture->imgUV[pl - 1] : slice->picture->imgY; // For MB level frame/field coding tools -- set default to imgY
+  sPixel** imgY = (plane) ? slice->picture->imgUV[plane - 1] : slice->picture->imgY; // For MB level frame/field coding tools -- set default to imgY
 
   sPixelPos pix_a[8];
   sPixelPos pix_b, pix_c, pix_d;
@@ -1960,7 +1960,7 @@ static int intra8x8_diag_down_right_pred_mbaff (sMacroblock* mb,
   int block_available_up_left;
   int block_available_up_right;
 
-  sPixel** mpr = slice->mb_pred[pl];
+  sPixel** mpr = slice->mb_pred[plane];
   int *mbSize = decoder->mbSize[IS_LUMA];
 
   for (int i=0; i<25;i++) PredPel[i]=0;
@@ -2003,9 +2003,9 @@ static int intra8x8_diag_down_right_pred_mbaff (sMacroblock* mb,
   else
   {
 #if (IMGTYPE == 0)
-    memset(&PredPel[1], decoder->dcPredValueComp[pl], BLOCK_SIZE_8x8 * sizeof(sPixel));
+    memset(&PredPel[1], decoder->dcPredValueComp[plane], BLOCK_SIZE_8x8 * sizeof(sPixel));
 #else
-    P_A = P_B = P_C = P_D = P_E = P_F = P_G = P_H = (sPixel) decoder->dcPredValueComp[pl];
+    P_A = P_B = P_C = P_D = P_E = P_F = P_G = P_H = (sPixel) decoder->dcPredValueComp[plane];
 #endif
   }
 
@@ -2035,7 +2035,7 @@ static int intra8x8_diag_down_right_pred_mbaff (sMacroblock* mb,
   }
   else
   {
-    P_Q = P_R = P_S = P_T = P_U = P_V = P_W = P_X = (sPixel) decoder->dcPredValueComp[pl];
+    P_Q = P_R = P_S = P_T = P_U = P_V = P_W = P_X = (sPixel) decoder->dcPredValueComp[plane];
   }
 
   if (block_available_up_left)
@@ -2044,7 +2044,7 @@ static int intra8x8_diag_down_right_pred_mbaff (sMacroblock* mb,
   }
   else
   {
-    P_Z = (sPixel) decoder->dcPredValueComp[pl];
+    P_Z = (sPixel) decoder->dcPredValueComp[plane];
   }
 
   LowPassForIntra8x8Pred(PredPel, block_available_up_left, block_available_up, block_available_left);
@@ -2090,7 +2090,7 @@ static int intra8x8_diag_down_right_pred_mbaff (sMacroblock* mb,
 ** *********************************************************************
  */
 static int intra8x8_diag_down_left_pred_mbaff (sMacroblock* mb,
-                                               eColorPlane pl,         //!< current image plane
+                                               eColorPlane plane,         //!< current image plane
                                                int ioff,              //!< pixel offset X within MB
                                                int joff)              //!< pixel offset Y within MB
 {
@@ -2101,7 +2101,7 @@ static int intra8x8_diag_down_left_pred_mbaff (sMacroblock* mb,
   sPixel PredPel[25];  // array of predictor pels
   sPixel PredArray[16];  // array of final prediction values
   sPixel *Pred = &PredArray[0];
-  sPixel** imgY = (pl) ? slice->picture->imgUV[pl - 1] : slice->picture->imgY; // For MB level frame/field coding tools -- set default to imgY
+  sPixel** imgY = (plane) ? slice->picture->imgUV[plane - 1] : slice->picture->imgY; // For MB level frame/field coding tools -- set default to imgY
 
   sPixelPos pix_a[8];
   sPixelPos pix_b, pix_c, pix_d;
@@ -2111,7 +2111,7 @@ static int intra8x8_diag_down_left_pred_mbaff (sMacroblock* mb,
   int block_available_up_left;
   int block_available_up_right;
 
-  sPixel** mpr = slice->mb_pred[pl];
+  sPixel** mpr = slice->mb_pred[plane];
   int *mbSize = decoder->mbSize[IS_LUMA];
 
   for (int i=0; i<25;i++) PredPel[i]=0;
@@ -2154,9 +2154,9 @@ static int intra8x8_diag_down_left_pred_mbaff (sMacroblock* mb,
   else
   {
 #if (IMGTYPE == 0)
-    memset(&PredPel[1], decoder->dcPredValueComp[pl], BLOCK_SIZE_8x8 * sizeof(sPixel));
+    memset(&PredPel[1], decoder->dcPredValueComp[plane], BLOCK_SIZE_8x8 * sizeof(sPixel));
 #else
-    P_A = P_B = P_C = P_D = P_E = P_F = P_G = P_H = (sPixel) decoder->dcPredValueComp[pl];
+    P_A = P_B = P_C = P_D = P_E = P_F = P_G = P_H = (sPixel) decoder->dcPredValueComp[plane];
 #endif
   }
 
@@ -2186,7 +2186,7 @@ static int intra8x8_diag_down_left_pred_mbaff (sMacroblock* mb,
   }
   else
   {
-    P_Q = P_R = P_S = P_T = P_U = P_V = P_W = P_X = (sPixel) decoder->dcPredValueComp[pl];
+    P_Q = P_R = P_S = P_T = P_U = P_V = P_W = P_X = (sPixel) decoder->dcPredValueComp[plane];
   }
 
   if (block_available_up_left)
@@ -2195,7 +2195,7 @@ static int intra8x8_diag_down_left_pred_mbaff (sMacroblock* mb,
   }
   else
   {
-    P_Z = (sPixel) decoder->dcPredValueComp[pl];
+    P_Z = (sPixel) decoder->dcPredValueComp[plane];
   }
 
   LowPassForIntra8x8Pred(PredPel, block_available_up_left, block_available_up, block_available_left);
@@ -2243,7 +2243,7 @@ static int intra8x8_diag_down_left_pred_mbaff (sMacroblock* mb,
 ** *********************************************************************
  */
 static int intra8x8_vert_right_pred_mbaff (sMacroblock* mb,
-                                           eColorPlane pl,         //!< current image plane
+                                           eColorPlane plane,         //!< current image plane
                                            int ioff,              //!< pixel offset X within MB
                                            int joff)              //!< pixel offset Y within MB
 {
@@ -2253,7 +2253,7 @@ static int intra8x8_vert_right_pred_mbaff (sMacroblock* mb,
   int i;
   sPixel PredPel[25];  // array of predictor pels
   sPixel PredArray[22];  // array of final prediction values
-  sPixel** imgY = (pl) ? slice->picture->imgUV[pl - 1] : slice->picture->imgY; // For MB level frame/field coding tools -- set default to imgY
+  sPixel** imgY = (plane) ? slice->picture->imgUV[plane - 1] : slice->picture->imgY; // For MB level frame/field coding tools -- set default to imgY
 
   sPixelPos pix_a[8];
   sPixelPos pix_b, pix_c, pix_d;
@@ -2263,7 +2263,7 @@ static int intra8x8_vert_right_pred_mbaff (sMacroblock* mb,
   int block_available_up_left;
   int block_available_up_right;
 
-  sPixel** mpr = slice->mb_pred[pl];
+  sPixel** mpr = slice->mb_pred[plane];
   int *mbSize = decoder->mbSize[IS_LUMA];
 
   for (int i=0; i<25;i++) PredPel[i]=0;
@@ -2306,9 +2306,9 @@ static int intra8x8_vert_right_pred_mbaff (sMacroblock* mb,
   else
   {
 #if (IMGTYPE == 0)
-    memset(&PredPel[1], decoder->dcPredValueComp[pl], BLOCK_SIZE_8x8 * sizeof(sPixel));
+    memset(&PredPel[1], decoder->dcPredValueComp[plane], BLOCK_SIZE_8x8 * sizeof(sPixel));
 #else
-    P_A = P_B = P_C = P_D = P_E = P_F = P_G = P_H = (sPixel) decoder->dcPredValueComp[pl];
+    P_A = P_B = P_C = P_D = P_E = P_F = P_G = P_H = (sPixel) decoder->dcPredValueComp[plane];
 #endif
   }
 
@@ -2338,7 +2338,7 @@ static int intra8x8_vert_right_pred_mbaff (sMacroblock* mb,
   }
   else
   {
-    P_Q = P_R = P_S = P_T = P_U = P_V = P_W = P_X = (sPixel) decoder->dcPredValueComp[pl];
+    P_Q = P_R = P_S = P_T = P_U = P_V = P_W = P_X = (sPixel) decoder->dcPredValueComp[plane];
   }
 
   if (block_available_up_left)
@@ -2347,7 +2347,7 @@ static int intra8x8_vert_right_pred_mbaff (sMacroblock* mb,
   }
   else
   {
-    P_Z = (sPixel) decoder->dcPredValueComp[pl];
+    P_Z = (sPixel) decoder->dcPredValueComp[plane];
   }
 
   LowPassForIntra8x8Pred(PredPel, block_available_up_left, block_available_up, block_available_left);
@@ -2400,7 +2400,7 @@ static int intra8x8_vert_right_pred_mbaff (sMacroblock* mb,
 ** *********************************************************************
  */
 static int intra8x8_vert_left_pred_mbaff (sMacroblock* mb,
-                                          eColorPlane pl,         //!< current image plane
+                                          eColorPlane plane,         //!< current image plane
                                           int ioff,              //!< pixel offset X within MB
                                           int joff)              //!< pixel offset Y within MB
 {
@@ -2411,7 +2411,7 @@ static int intra8x8_vert_left_pred_mbaff (sMacroblock* mb,
   sPixel PredPel[25];  // array of predictor pels
   sPixel PredArray[22];  // array of final prediction values
   sPixel *pred_pel = &PredArray[0];
-  sPixel** imgY = (pl) ? slice->picture->imgUV[pl - 1] : slice->picture->imgY; // For MB level frame/field coding tools -- set default to imgY
+  sPixel** imgY = (plane) ? slice->picture->imgUV[plane - 1] : slice->picture->imgY; // For MB level frame/field coding tools -- set default to imgY
 
   sPixelPos pix_a[8];
   sPixelPos pix_b, pix_c, pix_d;
@@ -2421,7 +2421,7 @@ static int intra8x8_vert_left_pred_mbaff (sMacroblock* mb,
   int block_available_up_left;
   int block_available_up_right;
 
-  sPixel** mpr = slice->mb_pred[pl];
+  sPixel** mpr = slice->mb_pred[plane];
   int *mbSize = decoder->mbSize[IS_LUMA];
 
   for (int i=0; i<25;i++) PredPel[i]=0;
@@ -2464,9 +2464,9 @@ static int intra8x8_vert_left_pred_mbaff (sMacroblock* mb,
   else
   {
 #if (IMGTYPE == 0)
-    memset(&PredPel[1], decoder->dcPredValueComp[pl], BLOCK_SIZE_8x8 * sizeof(sPixel));
+    memset(&PredPel[1], decoder->dcPredValueComp[plane], BLOCK_SIZE_8x8 * sizeof(sPixel));
 #else
-    P_A = P_B = P_C = P_D = P_E = P_F = P_G = P_H = (sPixel) decoder->dcPredValueComp[pl];
+    P_A = P_B = P_C = P_D = P_E = P_F = P_G = P_H = (sPixel) decoder->dcPredValueComp[plane];
 #endif
   }
 
@@ -2496,7 +2496,7 @@ static int intra8x8_vert_left_pred_mbaff (sMacroblock* mb,
   }
   else
   {
-    P_Q = P_R = P_S = P_T = P_U = P_V = P_W = P_X = (sPixel) decoder->dcPredValueComp[pl];
+    P_Q = P_R = P_S = P_T = P_U = P_V = P_W = P_X = (sPixel) decoder->dcPredValueComp[plane];
   }
 
   if (block_available_up_left)
@@ -2505,7 +2505,7 @@ static int intra8x8_vert_left_pred_mbaff (sMacroblock* mb,
   }
   else
   {
-    P_Z = (sPixel) decoder->dcPredValueComp[pl];
+    P_Z = (sPixel) decoder->dcPredValueComp[plane];
   }
 
   LowPassForIntra8x8Pred(PredPel, block_available_up_left, block_available_up, block_available_left);
@@ -2557,7 +2557,7 @@ static int intra8x8_vert_left_pred_mbaff (sMacroblock* mb,
 ** *********************************************************************
  */
 static int intra8x8_hor_up_pred_mbaff (sMacroblock* mb,
-                                       eColorPlane pl,         //!< current image plane
+                                       eColorPlane plane,         //!< current image plane
                                        int ioff,              //!< pixel offset X within MB
                                        int joff)              //!< pixel offset Y within MB
 {
@@ -2567,7 +2567,7 @@ static int intra8x8_hor_up_pred_mbaff (sMacroblock* mb,
   int i;
   sPixel PredPel[25];  // array of predictor pels
   sPixel PredArray[22];   // array of final prediction values
-  sPixel** imgY = (pl) ? slice->picture->imgUV[pl - 1] : slice->picture->imgY; // For MB level frame/field coding tools -- set default to imgY
+  sPixel** imgY = (plane) ? slice->picture->imgUV[plane - 1] : slice->picture->imgY; // For MB level frame/field coding tools -- set default to imgY
 
   sPixelPos pix_a[8];
   sPixelPos pix_b, pix_c, pix_d;
@@ -2579,7 +2579,7 @@ static int intra8x8_hor_up_pred_mbaff (sMacroblock* mb,
   int jpos0 = joff    , jpos1 = joff + 1, jpos2 = joff + 2, jpos3 = joff + 3;
   int jpos4 = joff + 4, jpos5 = joff + 5, jpos6 = joff + 6, jpos7 = joff + 7;
 
-  sPixel** mpr = slice->mb_pred[pl];
+  sPixel** mpr = slice->mb_pred[plane];
   int *mbSize = decoder->mbSize[IS_LUMA];
 
   for (int i=0; i<25;i++) PredPel[i]=0;
@@ -2622,9 +2622,9 @@ static int intra8x8_hor_up_pred_mbaff (sMacroblock* mb,
   else
   {
 #if (IMGTYPE == 0)
-    memset(&PredPel[1], decoder->dcPredValueComp[pl], BLOCK_SIZE_8x8 * sizeof(sPixel));
+    memset(&PredPel[1], decoder->dcPredValueComp[plane], BLOCK_SIZE_8x8 * sizeof(sPixel));
 #else
-    P_A = P_B = P_C = P_D = P_E = P_F = P_G = P_H = (sPixel) decoder->dcPredValueComp[pl];
+    P_A = P_B = P_C = P_D = P_E = P_F = P_G = P_H = (sPixel) decoder->dcPredValueComp[plane];
 #endif
   }
 
@@ -2654,7 +2654,7 @@ static int intra8x8_hor_up_pred_mbaff (sMacroblock* mb,
   }
   else
   {
-    P_Q = P_R = P_S = P_T = P_U = P_V = P_W = P_X = (sPixel) decoder->dcPredValueComp[pl];
+    P_Q = P_R = P_S = P_T = P_U = P_V = P_W = P_X = (sPixel) decoder->dcPredValueComp[plane];
   }
 
   if (block_available_up_left)
@@ -2663,7 +2663,7 @@ static int intra8x8_hor_up_pred_mbaff (sMacroblock* mb,
   }
   else
   {
-    P_Z = (sPixel) decoder->dcPredValueComp[pl];
+    P_Z = (sPixel) decoder->dcPredValueComp[plane];
   }
 
   LowPassForIntra8x8Pred(PredPel, block_available_up_left, block_available_up, block_available_left);
@@ -2715,7 +2715,7 @@ static int intra8x8_hor_up_pred_mbaff (sMacroblock* mb,
 ** *********************************************************************
  */
 static int intra8x8_hor_down_pred_mbaff (sMacroblock* mb,
-                                         eColorPlane pl,         //!< current image plane
+                                         eColorPlane plane,         //!< current image plane
                                          int ioff,              //!< pixel offset X within MB
                                          int joff)              //!< pixel offset Y within MB
 {
@@ -2725,7 +2725,7 @@ static int intra8x8_hor_down_pred_mbaff (sMacroblock* mb,
   int i;
   sPixel PredPel[25];  // array of predictor pels
   sPixel PredArray[22];   // array of final prediction values
-  sPixel** imgY = (pl) ? slice->picture->imgUV[pl - 1] : slice->picture->imgY; // For MB level frame/field coding tools -- set default to imgY
+  sPixel** imgY = (plane) ? slice->picture->imgUV[plane - 1] : slice->picture->imgY; // For MB level frame/field coding tools -- set default to imgY
 
   sPixelPos pix_a[8];
   sPixelPos pix_b, pix_c, pix_d;
@@ -2737,7 +2737,7 @@ static int intra8x8_hor_down_pred_mbaff (sMacroblock* mb,
   int jpos0 = joff    , jpos1 = joff + 1, jpos2 = joff + 2, jpos3 = joff + 3;
   int jpos4 = joff + 4, jpos5 = joff + 5, jpos6 = joff + 6, jpos7 = joff + 7;
 
-  sPixel** mpr = slice->mb_pred[pl];
+  sPixel** mpr = slice->mb_pred[plane];
   int *mbSize = decoder->mbSize[IS_LUMA];
 
   for (int i=0; i<25;i++) PredPel[i]=0;
@@ -2780,9 +2780,9 @@ static int intra8x8_hor_down_pred_mbaff (sMacroblock* mb,
   else
   {
 #if (IMGTYPE == 0)
-    memset(&PredPel[1], decoder->dcPredValueComp[pl], BLOCK_SIZE_8x8 * sizeof(sPixel));
+    memset(&PredPel[1], decoder->dcPredValueComp[plane], BLOCK_SIZE_8x8 * sizeof(sPixel));
 #else
-    P_A = P_B = P_C = P_D = P_E = P_F = P_G = P_H = (sPixel) decoder->dcPredValueComp[pl];
+    P_A = P_B = P_C = P_D = P_E = P_F = P_G = P_H = (sPixel) decoder->dcPredValueComp[plane];
 #endif
   }
 
@@ -2812,7 +2812,7 @@ static int intra8x8_hor_down_pred_mbaff (sMacroblock* mb,
   }
   else
   {
-    P_Q = P_R = P_S = P_T = P_U = P_V = P_W = P_X = (sPixel) decoder->dcPredValueComp[pl];
+    P_Q = P_R = P_S = P_T = P_U = P_V = P_W = P_X = (sPixel) decoder->dcPredValueComp[plane];
   }
 
   if (block_available_up_left)
@@ -2821,7 +2821,7 @@ static int intra8x8_hor_down_pred_mbaff (sMacroblock* mb,
   }
   else
   {
-    P_Z = (sPixel) decoder->dcPredValueComp[pl];
+    P_Z = (sPixel) decoder->dcPredValueComp[plane];
   }
 
   LowPassForIntra8x8Pred(PredPel, block_available_up_left, block_available_up, block_available_left);
@@ -2877,7 +2877,7 @@ static int intra8x8_hor_down_pred_mbaff (sMacroblock* mb,
 ** **********************************************************************
  */
 static int intra_pred_8x8_mbaff (sMacroblock* mb,
-                   eColorPlane pl,         //!< Current color plane
+                   eColorPlane plane,         //!< Current color plane
                    int ioff,              //!< ioff
                    int joff)              //!< joff
 
@@ -2891,31 +2891,31 @@ static int intra_pred_8x8_mbaff (sMacroblock* mb,
   switch (predmode)
   {
   case DC_PRED:
-    return (intra8x8_dc_pred_mbaff(mb, pl, ioff, joff));
+    return (intra8x8_dc_pred_mbaff(mb, plane, ioff, joff));
     break;
   case VERT_PRED:
-    return (intra8x8_vert_pred_mbaff(mb, pl, ioff, joff));
+    return (intra8x8_vert_pred_mbaff(mb, plane, ioff, joff));
     break;
   case HOR_PRED:
-    return (intra8x8_hor_pred_mbaff(mb, pl, ioff, joff));
+    return (intra8x8_hor_pred_mbaff(mb, plane, ioff, joff));
     break;
   case DIAG_DOWN_RIGHT_PRED:
-    return (intra8x8_diag_down_right_pred_mbaff(mb, pl, ioff, joff));
+    return (intra8x8_diag_down_right_pred_mbaff(mb, plane, ioff, joff));
     break;
   case DIAG_DOWN_LEFT_PRED:
-    return (intra8x8_diag_down_left_pred_mbaff(mb, pl, ioff, joff));
+    return (intra8x8_diag_down_left_pred_mbaff(mb, plane, ioff, joff));
     break;
   case VERT_RIGHT_PRED:
-    return (intra8x8_vert_right_pred_mbaff(mb, pl, ioff, joff));
+    return (intra8x8_vert_right_pred_mbaff(mb, plane, ioff, joff));
     break;
   case VERT_LEFT_PRED:
-    return (intra8x8_vert_left_pred_mbaff(mb, pl, ioff, joff));
+    return (intra8x8_vert_left_pred_mbaff(mb, plane, ioff, joff));
     break;
   case HOR_UP_PRED:
-    return (intra8x8_hor_up_pred_mbaff(mb, pl, ioff, joff));
+    return (intra8x8_hor_up_pred_mbaff(mb, plane, ioff, joff));
     break;
   case HOR_DOWN_PRED:
-    return (intra8x8_hor_down_pred_mbaff(mb, pl, ioff, joff));
+    return (intra8x8_hor_down_pred_mbaff(mb, plane, ioff, joff));
   default:
     printf("Error: illegal intra_8x8 prediction mode: %d\n", (int) predmode);
     return SEARCH_SYNC;
@@ -2935,7 +2935,7 @@ static int intra_pred_8x8_mbaff (sMacroblock* mb,
  *
 ** *********************************************************************
  */
-static int intra16x16_dc_pred (sMacroblock* mb, eColorPlane pl)
+static int intra16x16_dc_pred (sMacroblock* mb, eColorPlane plane)
 {
   sSlice *slice = mb->slice;
   sDecoder* decoder = mb->decoder;
@@ -2944,8 +2944,8 @@ static int intra16x16_dc_pred (sMacroblock* mb, eColorPlane pl)
 
   int i,j;
 
-  sPixel** imgY = (pl) ? slice->picture->imgUV[pl - 1] : slice->picture->imgY;
-  sPixel** mb_pred = &(slice->mb_pred[pl][0]);
+  sPixel** imgY = (plane) ? slice->picture->imgUV[plane - 1] : slice->picture->imgY;
+  sPixel** mb_pred = &(slice->mb_pred[plane][0]);
 
   sPixelPos a, b;
 
@@ -2993,7 +2993,7 @@ static int intra16x16_dc_pred (sMacroblock* mb, eColorPlane pl)
   else if (up_avail && !left_avail)
     s0 = (s1 + 8)>>4;              // left edge
   else
-    s0 = decoder->dcPredValueComp[pl];                            // top left corner, nothing to predict from
+    s0 = decoder->dcPredValueComp[plane];                            // top left corner, nothing to predict from
 
   for(j = 0; j < MB_BLOCK_SIZE; ++j)
   {
@@ -3025,14 +3025,14 @@ static int intra16x16_dc_pred (sMacroblock* mb, eColorPlane pl)
  *
 ** *********************************************************************
  */
-static int intra16x16_vert_pred (sMacroblock* mb, eColorPlane pl)
+static int intra16x16_vert_pred (sMacroblock* mb, eColorPlane plane)
 {
   sSlice *slice = mb->slice;
   sDecoder* decoder = mb->decoder;
 
   int j;
 
-  sPixel** imgY = (pl) ? slice->picture->imgUV[pl - 1] : slice->picture->imgY;
+  sPixel** imgY = (plane) ? slice->picture->imgUV[plane - 1] : slice->picture->imgY;
 
   sPixelPos b;          //!< pixel position p(0,-1)
 
@@ -3052,7 +3052,7 @@ static int intra16x16_vert_pred (sMacroblock* mb, eColorPlane pl)
   if (!up_avail)
     error ("invalid 16x16 intra pred Mode VERT_PRED_16",500);
   {
-    sPixel** prd = &slice->mb_pred[pl][0];
+    sPixel** prd = &slice->mb_pred[plane][0];
     sPixel *src = &(imgY[b.posY][b.posX]);
 
     for(j=0;j<MB_BLOCK_SIZE; j+= 4)
@@ -3078,14 +3078,14 @@ static int intra16x16_vert_pred (sMacroblock* mb, eColorPlane pl)
  *
 ** *********************************************************************
  */
-static int intra16x16_hor_pred (sMacroblock* mb, eColorPlane pl)
+static int intra16x16_hor_pred (sMacroblock* mb, eColorPlane plane)
 {
   sSlice *slice = mb->slice;
   sDecoder* decoder = mb->decoder;
   int j;
 
-  sPixel** imgY = (pl) ? slice->picture->imgUV[pl - 1] : slice->picture->imgY;
-  sPixel** mb_pred = &(slice->mb_pred[pl][0]);
+  sPixel** imgY = (plane) ? slice->picture->imgUV[plane - 1] : slice->picture->imgY;
+  sPixel** mb_pred = &(slice->mb_pred[plane][0]);
   sPixel prediction;
   int posY, posX;
 
@@ -3146,7 +3146,7 @@ static int intra16x16_hor_pred (sMacroblock* mb, eColorPlane pl)
  *
 ** *********************************************************************
  */
-static int intra16x16_plane_pred (sMacroblock* mb, eColorPlane pl)
+static int intra16x16_plane_pred (sMacroblock* mb, eColorPlane plane)
 {
   sSlice *slice = mb->slice;
   sDecoder* decoder = mb->decoder;
@@ -3156,10 +3156,10 @@ static int intra16x16_plane_pred (sMacroblock* mb, eColorPlane pl)
   int ih = 0, iv = 0;
   int ib,ic,iaa;
 
-  sPixel** imgY = (pl) ? slice->picture->imgUV[pl - 1] : slice->picture->imgY;
-  sPixel** mb_pred = &(slice->mb_pred[pl][0]);
+  sPixel** imgY = (plane) ? slice->picture->imgUV[plane - 1] : slice->picture->imgY;
+  sPixel** mb_pred = &(slice->mb_pred[plane][0]);
   sPixel *mpr_line;
-  int max_imgpel_value = decoder->maxPelValueComp[pl];
+  int max_imgpel_value = decoder->maxPelValueComp[plane];
   int posY, posX;
 
   sPixelPos a, b, d;
@@ -3219,23 +3219,23 @@ static int intra16x16_plane_pred (sMacroblock* mb, eColorPlane pl)
 }
 //}}}
 //{{{
-static int intra_pred_16x16_normal (sMacroblock* mb, eColorPlane pl, int predmode) {
+static int intra_pred_16x16_normal (sMacroblock* mb, eColorPlane plane, int predmode) {
 
   switch (predmode) {
   case VERT_PRED_16:                       // vertical prediction from block above
-    return (intra16x16_vert_pred(mb, pl));
+    return (intra16x16_vert_pred(mb, plane));
     break;
   case HOR_PRED_16:                        // horizontal prediction from left block
-    return (intra16x16_hor_pred(mb, pl));
+    return (intra16x16_hor_pred(mb, plane));
     break;
   case DC_PRED_16:                         // DC prediction
-    return (intra16x16_dc_pred(mb, pl));
+    return (intra16x16_dc_pred(mb, plane));
     break;
   case PLANE_16:// 16 bit integer plan pred
-    return (intra16x16_plane_pred(mb, pl));
+    return (intra16x16_plane_pred(mb, plane));
     break;
   default:
-    {                                    // indication of fault in bitstream,exit
+    {                                    // indication of fault in s,exit
       printf("illegal 16x16 intra prediction mode input: %d\n",predmode);
       return SEARCH_SYNC;
     }
@@ -3255,7 +3255,7 @@ static int intra_pred_16x16_normal (sMacroblock* mb, eColorPlane pl, int predmod
  *
 ** *********************************************************************
  */
-static int intra16x16_dc_pred_mbaff (sMacroblock* mb, eColorPlane pl)
+static int intra16x16_dc_pred_mbaff (sMacroblock* mb, eColorPlane plane)
 {
   sSlice *slice = mb->slice;
   sDecoder* decoder = mb->decoder;
@@ -3264,8 +3264,8 @@ static int intra16x16_dc_pred_mbaff (sMacroblock* mb, eColorPlane pl)
 
   int i,j;
 
-  sPixel** imgY = (pl) ? slice->picture->imgUV[pl - 1] : slice->picture->imgY;
-  sPixel** mb_pred = &(slice->mb_pred[pl][0]);
+  sPixel** imgY = (plane) ? slice->picture->imgUV[plane - 1] : slice->picture->imgY;
+  sPixel** mb_pred = &(slice->mb_pred[plane][0]);
 
   sPixelPos b;          //!< pixel position p(0,-1)
   sPixelPos left[17];    //!< pixel positions p(-1, -1..15)
@@ -3295,9 +3295,9 @@ static int intra16x16_dc_pred_mbaff (sMacroblock* mb, eColorPlane pl)
   for (i = 0; i < MB_BLOCK_SIZE; ++i)
   {
     if (up_avail)
-      s1 += imgY[b.posY][b.posX+i];    // sum hor pix
+      s1 += imgY[b.posY][b.posX+i];    // sum hor pixelPos
     if (left_avail)
-      s2 += imgY[left[i + 1].posY][left[i + 1].posX];    // sum vert pix
+      s2 += imgY[left[i + 1].posY][left[i + 1].posX];    // sum vert pixelPos
   }
   if (up_avail && left_avail)
     s0 = (s1 + s2 + 16)>>5;       // no edge
@@ -3306,7 +3306,7 @@ static int intra16x16_dc_pred_mbaff (sMacroblock* mb, eColorPlane pl)
   else if (up_avail && !left_avail)
     s0 = (s1 + 8)>>4;              // left edge
   else
-    s0 = decoder->dcPredValueComp[pl];                            // top left corner, nothing to predict from
+    s0 = decoder->dcPredValueComp[plane];                            // top left corner, nothing to predict from
 
   for(j = 0; j < MB_BLOCK_SIZE; ++j)
   {
@@ -3334,14 +3334,14 @@ static int intra16x16_dc_pred_mbaff (sMacroblock* mb, eColorPlane pl)
  *
 ** *********************************************************************
  */
-static int intra16x16_vert_pred_mbaff (sMacroblock* mb, eColorPlane pl)
+static int intra16x16_vert_pred_mbaff (sMacroblock* mb, eColorPlane plane)
 {
   sSlice *slice = mb->slice;
   sDecoder* decoder = mb->decoder;
 
   int j;
 
-  sPixel** imgY = (pl) ? slice->picture->imgUV[pl - 1] : slice->picture->imgY;
+  sPixel** imgY = (plane) ? slice->picture->imgUV[plane - 1] : slice->picture->imgY;
 
   sPixelPos b;          //!< pixel position p(0,-1)
 
@@ -3361,7 +3361,7 @@ static int intra16x16_vert_pred_mbaff (sMacroblock* mb, eColorPlane pl)
   if (!up_avail)
     error ("invalid 16x16 intra pred Mode VERT_PRED_16",500);
   {
-    sPixel** prd = &slice->mb_pred[pl][0];
+    sPixel** prd = &slice->mb_pred[plane][0];
     sPixel *src = &(imgY[b.posY][b.posX]);
 
     for(j=0;j<MB_BLOCK_SIZE; j+= 4)
@@ -3387,14 +3387,14 @@ static int intra16x16_vert_pred_mbaff (sMacroblock* mb, eColorPlane pl)
  *
 ** *********************************************************************
  */
-static int intra16x16_hor_pred_mbaff (sMacroblock* mb, eColorPlane pl)
+static int intra16x16_hor_pred_mbaff (sMacroblock* mb, eColorPlane plane)
 {
   sSlice *slice = mb->slice;
   sDecoder* decoder = mb->decoder;
   int i,j;
 
-  sPixel** imgY = (pl) ? slice->picture->imgUV[pl - 1] : slice->picture->imgY;
-  sPixel** mb_pred = &(slice->mb_pred[pl][0]);
+  sPixel** imgY = (plane) ? slice->picture->imgUV[plane - 1] : slice->picture->imgY;
+  sPixel** mb_pred = &(slice->mb_pred[plane][0]);
   sPixel prediction;
 
   sPixelPos left[17];    //!< pixel positions p(-1, -1..15)
@@ -3440,7 +3440,7 @@ static int intra16x16_hor_pred_mbaff (sMacroblock* mb, eColorPlane pl)
  *
 ** *********************************************************************
  */
-static int intra16x16_plane_pred_mbaff (sMacroblock* mb, eColorPlane pl)
+static int intra16x16_plane_pred_mbaff (sMacroblock* mb, eColorPlane plane)
 {
   sSlice *slice = mb->slice;
   sDecoder* decoder = mb->decoder;
@@ -3450,10 +3450,10 @@ static int intra16x16_plane_pred_mbaff (sMacroblock* mb, eColorPlane pl)
   int ih = 0, iv = 0;
   int ib,ic,iaa;
 
-  sPixel** imgY = (pl) ? slice->picture->imgUV[pl - 1] : slice->picture->imgY;
-  sPixel** mb_pred = &(slice->mb_pred[pl][0]);
+  sPixel** imgY = (plane) ? slice->picture->imgUV[plane - 1] : slice->picture->imgY;
+  sPixel** mb_pred = &(slice->mb_pred[plane][0]);
   sPixel *mpr_line;
-  int max_imgpel_value = decoder->maxPelValueComp[pl];
+  int max_imgpel_value = decoder->maxPelValueComp[plane];
 
   sPixelPos b;          //!< pixel position p(0,-1)
   sPixelPos left[17];    //!< pixel positions p(-1, -1..15)
@@ -3509,24 +3509,24 @@ static int intra16x16_plane_pred_mbaff (sMacroblock* mb, eColorPlane pl)
 }
 //}}}
 //{{{
-static int intra_pred_16x16_mbaff (sMacroblock* mb, eColorPlane pl, int predmode) {
+static int intra_pred_16x16_mbaff (sMacroblock* mb, eColorPlane plane, int predmode) {
 
   switch (predmode)
   {
   case VERT_PRED_16:                       // vertical prediction from block above
-    return (intra16x16_vert_pred_mbaff(mb, pl));
+    return (intra16x16_vert_pred_mbaff(mb, plane));
     break;
   case HOR_PRED_16:                        // horizontal prediction from left block
-    return (intra16x16_hor_pred_mbaff(mb, pl));
+    return (intra16x16_hor_pred_mbaff(mb, plane));
     break;
   case DC_PRED_16:                         // DC prediction
-    return (intra16x16_dc_pred_mbaff(mb, pl));
+    return (intra16x16_dc_pred_mbaff(mb, plane));
     break;
   case PLANE_16:// 16 bit integer plan pred
-    return (intra16x16_plane_pred_mbaff(mb, pl));
+    return (intra16x16_plane_pred_mbaff(mb, plane));
     break;
   default:
-    {                                    // indication of fault in bitstream,exit
+    {                                    // indication of fault in s,exit
       printf("illegal 16x16 intra prediction mode input: %d\n",predmode);
       return SEARCH_SYNC;
     }

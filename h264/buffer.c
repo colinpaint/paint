@@ -2137,7 +2137,7 @@ void initListsIslice (sSlice* slice) {
   }
 //}}}
 //{{{
-void initListsPslice (sSlice* slice) {
+void initListsslice (sSlice* slice) {
 
   sDecoder* decoder = slice->decoder;
   sDPB* dpb = slice->dpb;

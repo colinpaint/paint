@@ -57,8 +57,8 @@ sSlice* allocSlice (sDecoder* decoder) {
   slice->mot_ctx = create_contexts_MotionInfo();
   slice->tex_ctx = create_contexts_TextureInfo();
 
-  slice->maxPartitionNum = 3;  //! assume data partitioning (worst case) for the following mallocs()
-  slice->partitions = allocPartition (slice->maxPartitionNum);
+  slice->maxdpNum = 3;  //! assume data dping (worst case) for the following mallocs()
+  slice->dps = allocdp (slice->maxdpNum);
 
   get_mem2Dwp (&(slice->WPParam), 2, MAX_REFERENCE_PICTURES);
   get_mem3Dint (&(slice->wpWeight), 2, MAX_REFERENCE_PICTURES, 3);
@@ -106,7 +106,7 @@ static void freeSlice (sSlice *slice) {
   free_mem3Dint (slice->wpOffset);
   free_mem4Dint (slice->wbpWeight);
 
-  freePartition (slice->partitions, 3);
+  freedp (slice->dps, 3);
 
   // delete all context models
   delete_contexts_MotionInfo (slice->mot_ctx);
@@ -131,61 +131,58 @@ static void freeSlice (sSlice *slice) {
 //}}}
 
 //{{{
-static void freeImg (sDecoder* decoder) {
+static void freeDecoder (sDecoder* decoder) {
 
-  if (decoder != NULL) {
-    freeAnnexB (&decoder->annexB);
+  freeAnnexB (&decoder->annexB);
 
-    // Free new dpb layers
-    for (int i = 0; i < MAX_NUM_DPB_LAYERS; i++) {
-      if (decoder->dpbLayer[i] != NULL) {
-        free (decoder->dpbLayer[i]);
-        decoder->dpbLayer[i] = NULL;
-        }
-
-      if (decoder->coding[i]) {
-        free (decoder->coding[i]);
-        decoder->coding[i] = NULL;
-        }
-
-      if (decoder->layer[i]) {
-        free (decoder->layer[i]);
-        decoder->layer[i] = NULL;
-        }
+  // Free new dpb layers
+  for (int i = 0; i < MAX_NUM_DPB_LAYERS; i++) {
+    if (decoder->dpbLayer[i] != NULL) {
+      free (decoder->dpbLayer[i]);
+      decoder->dpbLayer[i] = NULL;
       }
 
-    if (decoder->oldSlice != NULL) {
-      free (decoder->oldSlice);
-      decoder->oldSlice = NULL;
+    if (decoder->coding[i]) {
+      free (decoder->coding[i]);
+      decoder->coding[i] = NULL;
       }
 
-    if (decoder->nextSlice) {
-      freeSlice (decoder->nextSlice);
-      decoder->nextSlice=NULL;
+    if (decoder->layer[i]) {
+      free (decoder->layer[i]);
+      decoder->layer[i] = NULL;
       }
-
-    if (decoder->sliceList) {
-      for (unsigned int i = 0; i < decoder->numAllocatedSlices; i++)
-        if (decoder->sliceList[i])
-          freeSlice (decoder->sliceList[i]);
-      free (decoder->sliceList);
-      }
-
-    if (decoder->nalu) {
-      freeNALU (decoder->nalu);
-      decoder->nalu=NULL;
-      }
-
-    //free memory;
-    freeDecodedPictures (decoder->decOutputPic);
-    if (decoder->nextPPS) {
-      freePPS (decoder->nextPPS);
-      decoder->nextPPS = NULL;
-      }
-
-    free (decoder);
-    decoder = NULL;
     }
+
+  if (decoder->oldSlice != NULL) {
+    free (decoder->oldSlice);
+    decoder->oldSlice = NULL;
+    }
+
+  if (decoder->nextSlice) {
+    freeSlice (decoder->nextSlice);
+    decoder->nextSlice=NULL;
+    }
+
+  if (decoder->sliceList) {
+    for (unsigned int i = 0; i < decoder->numAllocatedSlices; i++)
+      if (decoder->sliceList[i])
+        freeSlice (decoder->sliceList[i]);
+    free (decoder->sliceList);
+    }
+
+  if (decoder->nalu) {
+    freeNALU (decoder->nalu);
+    decoder->nalu=NULL;
+    }
+
+  //free memory;
+  freeDecodedPictures (decoder->decOutputPic);
+  if (decoder->nextPPS) {
+    freePPS (decoder->nextPPS);
+    decoder->nextPPS = NULL;
+    }
+
+  free (decoder);
   }
 //}}}
 
@@ -292,42 +289,42 @@ void init_frext (sDecoder* decoder) {
 //}}}
 
 //{{{
-sDataPartition* allocPartition (int n) {
+sDataPartition* allocdp (int n) {
 
-  sDataPartition* partitions = (sDataPartition*)calloc (n, sizeof(sDataPartition));
-  if (partitions == NULL) {
-    snprintf (errorText, ET_SIZE, "allocPartition: Memory allocation for Data Partition failed");
+  sDataPartition* dps = (sDataPartition*)calloc (n, sizeof(sDataPartition));
+  if (dps == NULL) {
+    snprintf (errorText, ET_SIZE, "allocdp: Memory allocation for Data dp failed");
     error (errorText, 100);
     }
 
-  for (int i = 0; i < n; ++i) {// loop over all data partitions
-    sDataPartition* dataPart = &(partitions[i]);
-    dataPart->bitstream = (sBitstream *) calloc(1, sizeof(sBitstream));
-    if (dataPart->bitstream == NULL) {
-      snprintf (errorText, ET_SIZE, "allocPartition: Memory allocation for sBitstream failed");
+  for (int i = 0; i < n; ++i) {// loop over all data dps
+    sDataPartition* dataPart = &(dps[i]);
+    dataPart->s = (sBitstream *) calloc(1, sizeof(sBitstream));
+    if (dataPart->s == NULL) {
+      snprintf (errorText, ET_SIZE, "allocdp: Memory allocation for sBitstream failed");
       error (errorText, 100);
       }
 
-    dataPart->bitstream->streamBuffer = (byte *) calloc(MAX_CODED_FRAME_SIZE, sizeof(byte));
-    if (dataPart->bitstream->streamBuffer == NULL) {
-      snprintf (errorText, ET_SIZE, "allocPartition: Memory allocation for streamBuffer failed");
+    dataPart->s->streamBuffer = (byte *) calloc(MAX_CODED_FRAME_SIZE, sizeof(byte));
+    if (dataPart->s->streamBuffer == NULL) {
+      snprintf (errorText, ET_SIZE, "allocdp: Memory allocation for streamBuffer failed");
       error (errorText, 100);
       }
     }
 
-  return partitions;
+  return dps;
   }
 //}}}
 //{{{
-void freePartition (sDataPartition* dp, int n) {
+void freedp (sDataPartition* dp, int n) {
 
   assert (dp != NULL);
-  assert (dp->bitstream != NULL);
-  assert (dp->bitstream->streamBuffer != NULL);
+  assert (dp->s != NULL);
+  assert (dp->s->streamBuffer != NULL);
 
   for (int i = 0; i < n; ++i) {
-    free (dp[i].bitstream->streamBuffer);
-    free (dp[i].bitstream);
+    free (dp[i].s->streamBuffer);
+    free (dp[i].s);
     }
 
   free (dp);
@@ -668,9 +665,8 @@ void closeDecoder (sDecoder* decoder) {
   for (unsigned i = 0; i < MAX_NUM_DPB_LAYERS; i++)
     freeDpb (decoder->dpbLayer[i]);
   freeOutput (decoder);
-  freeImg (decoder);
-  free (decoder);
+  freeDecoder (decoder);
 
-  decoder = NULL;
+  gDecoder = NULL;
   }
 //}}}

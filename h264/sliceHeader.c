@@ -1183,28 +1183,28 @@ static const char INIT_FLD_LAST_P[3][22][15][2] =
 //{{{
 static void ref_pic_list_reordering (sSlice* slice) {
 
-  byte dP_nr = assignSE2partition[slice->dataPartitionMode][SE_HEADER];
-  sDataPartition* partition = &(slice->partitions[dP_nr]);
-  sBitstream* curStream = partition->bitstream;
+  byte partitionIndex = assignSE2dp[slice->datadpMode][SE_HEADER];
+  sDataPartition* dp = &(slice->dps[partitionIndex]);
+  sBitstream* s = dp->s;
 
   alloc_ref_pic_list_reordering_buffer (slice);
   if (slice->sliceType != I_SLICE &&
       slice->sliceType != SI_SLICE) {
     int val = slice->ref_pic_list_reordering_flag[LIST_0] =
-      readU1 ("SLC ref_pic_list_reordering_flag_l0", curStream);
+      readU1 ("SLC ref_pic_list_reordering_flag_l0", s);
 
     if (val) {
       int i = 0;
       do {
         val = slice->modification_of_pic_nums_idc[LIST_0][i] =
-          readUeV("SLC modification_of_pic_nums_idc_l0", curStream);
+          readUeV("SLC modification_of_pic_nums_idc_l0", s);
         if (val==0 || val==1)
           slice->abs_diff_pic_num_minus1[LIST_0][i] =
-            readUeV ("SLC abs_diff_pic_num_minus1_l0", curStream);
+            readUeV ("SLC abs_diff_pic_num_minus1_l0", s);
         else {
           if (val == 2)
             slice->long_term_pic_idx[LIST_0][i] =
-              readUeV ("SLC long_term_pic_idx_l0", curStream);
+              readUeV ("SLC long_term_pic_idx_l0", s);
           }
         i++;
         } while (val != 3);
@@ -1213,19 +1213,19 @@ static void ref_pic_list_reordering (sSlice* slice) {
 
   if (slice->sliceType == B_SLICE) {
     int val = slice->ref_pic_list_reordering_flag[LIST_1] =
-      readU1 ("SLC ref_pic_list_reordering_flag_l1", curStream);
+      readU1 ("SLC ref_pic_list_reordering_flag_l1", s);
     if (val) {
       int i = 0;
       do {
         val = slice->modification_of_pic_nums_idc[LIST_1][i] =
-          readUeV ("SLC modification_of_pic_nums_idc_l1", curStream);
+          readUeV ("SLC modification_of_pic_nums_idc_l1", s);
         if (val == 0 || val == 1)
           slice->abs_diff_pic_num_minus1[LIST_1][i] =
-            readUeV ("SLC abs_diff_pic_num_minus1_l1", curStream);
+            readUeV ("SLC abs_diff_pic_num_minus1_l1", s);
         else {
           if (val == 2)
             slice->long_term_pic_idx[LIST_1][i] =
-              readUeV ("SLC long_term_pic_idx_l1", curStream);
+              readUeV ("SLC long_term_pic_idx_l1", s);
           }
         i++;
         } while (val != 3);
@@ -1256,20 +1256,20 @@ static void pred_weight_table (sSlice* slice) {
   sDecoder* decoder = slice->decoder;
   sSPS* activeSPS = decoder->activeSPS;
 
-  byte dP_nr = assignSE2partition[slice->dataPartitionMode][SE_HEADER];
-  sDataPartition* partition = &(slice->partitions[dP_nr]);
-  sBitstream* curStream = partition->bitstream;
+  byte partitionIndex = assignSE2dp[slice->datadpMode][SE_HEADER];
+  sDataPartition* dp = &(slice->dps[partitionIndex]);
+  sBitstream* s = dp->s;
 
   int luma_weight_flag_l0, luma_weight_flag_l1, chroma_weight_flag_l0, chroma_weight_flag_l1;
 
   slice->lumaLog2weightDenom =
-    (unsigned short) readUeV ("SLC lumaLog2weightDenom", curStream);
+    (unsigned short) readUeV ("SLC lumaLog2weightDenom", s);
   slice->wp_round_luma =
     slice->lumaLog2weightDenom ? 1<<(slice->lumaLog2weightDenom - 1) : 0;
 
   if (0 != activeSPS->chromaFormatIdc) {
     slice->chromaLog2weightDenom =
-      (unsigned short) readUeV ("SLC chromaLog2weightDenom", curStream);
+      (unsigned short) readUeV ("SLC chromaLog2weightDenom", s);
     slice->wp_round_chroma =
       slice->chromaLog2weightDenom ? 1<<(slice->chromaLog2weightDenom - 1) : 0;
     }
@@ -1277,10 +1277,10 @@ static void pred_weight_table (sSlice* slice) {
   reset_WPParam (slice);
 
   for (int i = 0; i < slice->numRefIndexActive[LIST_0]; i++) {
-    luma_weight_flag_l0 = readU1 ("SLC luma_weight_flag_l0", curStream);
+    luma_weight_flag_l0 = readU1 ("SLC luma_weight_flag_l0", s);
     if (luma_weight_flag_l0) {
-      slice->wpWeight[LIST_0][i][0] = readSeV ("SLC luma_weight_l0", curStream);
-      slice->wpOffset[LIST_0][i][0] = readSeV ("SLC luma_offset_l0", curStream);
+      slice->wpWeight[LIST_0][i][0] = readSeV ("SLC luma_weight_l0", s);
+      slice->wpOffset[LIST_0][i][0] = readSeV ("SLC luma_offset_l0", s);
       slice->wpOffset[LIST_0][i][0] = slice->wpOffset[LIST_0][i][0]<<(decoder->bitdepthLuma - 8);
       }
     else {
@@ -1289,11 +1289,11 @@ static void pred_weight_table (sSlice* slice) {
       }
 
     if (activeSPS->chromaFormatIdc != 0) {
-      chroma_weight_flag_l0 = readU1 ("SLC chroma_weight_flag_l0", curStream);
+      chroma_weight_flag_l0 = readU1 ("SLC chroma_weight_flag_l0", s);
       for (int j = 1; j<3; j++) {
         if (chroma_weight_flag_l0) {
-          slice->wpWeight[LIST_0][i][j] = readSeV("SLC chroma_weight_l0", curStream);
-          slice->wpOffset[LIST_0][i][j] = readSeV("SLC chroma_offset_l0", curStream);
+          slice->wpWeight[LIST_0][i][j] = readSeV("SLC chroma_weight_l0", s);
+          slice->wpOffset[LIST_0][i][j] = readSeV("SLC chroma_offset_l0", s);
           slice->wpOffset[LIST_0][i][j] = slice->wpOffset[LIST_0][i][j]<<(decoder->bitdepthChroma-8);
           }
         else {
@@ -1307,10 +1307,10 @@ static void pred_weight_table (sSlice* slice) {
   if ((slice->sliceType == B_SLICE) &&
       decoder->activePPS->weightedBiPredIdc == 1) {
     for (int i = 0; i < slice->numRefIndexActive[LIST_1]; i++) {
-      luma_weight_flag_l1 = readU1("SLC luma_weight_flag_l1", curStream);
+      luma_weight_flag_l1 = readU1("SLC luma_weight_flag_l1", s);
       if (luma_weight_flag_l1) {
-        slice->wpWeight[LIST_1][i][0] = readSeV ("SLC luma_weight_l1", curStream);
-        slice->wpOffset[LIST_1][i][0] = readSeV ("SLC luma_offset_l1", curStream);
+        slice->wpWeight[LIST_1][i][0] = readSeV ("SLC luma_weight_l1", s);
+        slice->wpOffset[LIST_1][i][0] = readSeV ("SLC luma_offset_l1", s);
         slice->wpOffset[LIST_1][i][0] = slice->wpOffset[LIST_1][i][0]<<(decoder->bitdepthLuma-8);
         }
       else {
@@ -1319,11 +1319,11 @@ static void pred_weight_table (sSlice* slice) {
         }
 
       if (activeSPS->chromaFormatIdc != 0) {
-        chroma_weight_flag_l1 = readU1 ("SLC chroma_weight_flag_l1", curStream);
+        chroma_weight_flag_l1 = readU1 ("SLC chroma_weight_flag_l1", s);
         for (int j = 1; j < 3; j++) {
           if (chroma_weight_flag_l1) {
-            slice->wpWeight[LIST_1][i][j] = readSeV("SLC chroma_weight_l1", curStream);
-            slice->wpOffset[LIST_1][i][j] = readSeV("SLC chroma_offset_l1", curStream);
+            slice->wpWeight[LIST_1][i][j] = readSeV("SLC chroma_weight_l1", s);
+            slice->wpOffset[LIST_1][i][j] = readSeV("SLC chroma_offset_l1", s);
             slice->wpOffset[LIST_1][i][j] = slice->wpOffset[LIST_1][i][j]<<(decoder->bitdepthChroma-8);
             }
           else {
@@ -1426,52 +1426,52 @@ void initContexts (sSlice* slice) {
   }
 //}}}
 //{{{
-void dec_ref_pic_marking (sDecoder* decoder, sBitstream* curStream, sSlice* pSlice) {
+void dec_ref_pic_marking (sDecoder* decoder, sBitstream* s, sSlice* slice) {
 
   // free old buffer content
-  while (pSlice->decRefPicMarkingBuffer) {
-    sDecodedRefPicMarking* tmp_drpm = pSlice->decRefPicMarkingBuffer;
-    pSlice->decRefPicMarkingBuffer = tmp_drpm->next;
+  while (slice->decRefPicMarkingBuffer) {
+    sDecodedRefPicMarking* tmp_drpm = slice->decRefPicMarkingBuffer;
+    slice->decRefPicMarkingBuffer = tmp_drpm->next;
     free (tmp_drpm);
     }
 
-  if (pSlice->idrFlag) {
-    pSlice->noOutputPriorPicFlag =
-      readU1 ("SLC noOutputPriorPicFlag", curStream);
-    decoder->noOutputPriorPicFlag = pSlice->noOutputPriorPicFlag;
-    pSlice->longTermRefFlag =
-      readU1 ("SLC longTermRefFlag", curStream);
+  if (slice->idrFlag) {
+    slice->noOutputPriorPicFlag =
+      readU1 ("SLC noOutputPriorPicFlag", s);
+    decoder->noOutputPriorPicFlag = slice->noOutputPriorPicFlag;
+    slice->longTermRefFlag =
+      readU1 ("SLC longTermRefFlag", s);
     }
   else {
-    pSlice->adaptiveRefPicBufferingFlag =
-      readU1 ("SLC adaptiveRefPicBufferingFlag", curStream);
-    if (pSlice->adaptiveRefPicBufferingFlag) {
+    slice->adaptiveRefPicBufferingFlag =
+      readU1 ("SLC adaptiveRefPicBufferingFlag", s);
+    if (slice->adaptiveRefPicBufferingFlag) {
       // read Memory Management Control Operation
       int val;
       do {
         sDecodedRefPicMarking* tmp_drpm = (sDecodedRefPicMarking*)calloc (1,sizeof (sDecodedRefPicMarking));
         tmp_drpm->next = NULL;
         val = tmp_drpm->memManagement =
-          readUeV ("SLC memManagement", curStream);
+          readUeV ("SLC memManagement", s);
         if ((val == 1) || (val == 3))
           tmp_drpm->diffPicNumMinus1 =
-            readUeV ("SLC diffPicNumMinus1", curStream);
+            readUeV ("SLC diffPicNumMinus1", s);
         if (val==2)
           tmp_drpm->longTermPicNum =
-            readUeV ("SLC longTermPicNum", curStream);
+            readUeV ("SLC longTermPicNum", s);
 
         if ((val == 3 ) || (val == 6))
           tmp_drpm->longTermFrameIndex =
-            readUeV ("SLC longTermFrameIndex", curStream);
+            readUeV ("SLC longTermFrameIndex", s);
         if (val == 4)
           tmp_drpm->maxLongTermFrameIndexPlus1 =
-            readUeV ("SLC max_long_term_pic_idx_plus1", curStream);
+            readUeV ("SLC max_long_term_pic_idx_plus1", s);
 
         // add command
-        if (pSlice->decRefPicMarkingBuffer == NULL)
-          pSlice->decRefPicMarkingBuffer = tmp_drpm;
+        if (slice->decRefPicMarkingBuffer == NULL)
+          slice->decRefPicMarkingBuffer = tmp_drpm;
         else {
-          sDecodedRefPicMarking* tmp_drpm2 = pSlice->decRefPicMarkingBuffer;
+          sDecodedRefPicMarking* tmp_drpm2 = slice->decRefPicMarkingBuffer;
           while (tmp_drpm2->next != NULL) tmp_drpm2 = tmp_drpm2->next;
           tmp_drpm2->next = tmp_drpm;
           }
@@ -1515,7 +1515,7 @@ int dumpPOC (sDecoder* decoder) {
   }
 //}}}
 //{{{
-void decodePOC (sDecoder* decoder, sSlice* pSlice) {
+void decodePOC (sDecoder* decoder, sSlice* slice) {
 
   // for POC mode 0:
   sSPS* activeSPS = decoder->activeSPS;
@@ -1525,7 +1525,7 @@ void decodePOC (sDecoder* decoder, sSlice* pSlice) {
     //{{{
     case 0: // POC MODE 0
       // 1st
-      if (pSlice->idrFlag) {
+      if (slice->idrFlag) {
         decoder->PrevPicOrderCntMsb = 0;
         decoder->PrevPicOrderCntLsb = 0;
         }
@@ -1537,40 +1537,40 @@ void decodePOC (sDecoder* decoder, sSlice* pSlice) {
             }
           else {
             decoder->PrevPicOrderCntMsb = 0;
-            decoder->PrevPicOrderCntLsb = pSlice->topPoc;
+            decoder->PrevPicOrderCntLsb = slice->topPoc;
             }
           }
         }
 
       // Calculate the MSBs of current picture
-      if( pSlice->picOrderCountLsb  <  decoder->PrevPicOrderCntLsb  &&
-        ( decoder->PrevPicOrderCntLsb - pSlice->picOrderCountLsb )  >=  ( MaxPicOrderCntLsb / 2 ) )
-        pSlice->PicOrderCntMsb = decoder->PrevPicOrderCntMsb + MaxPicOrderCntLsb;
-      else if ( pSlice->picOrderCountLsb  >  decoder->PrevPicOrderCntLsb  &&
-        ( pSlice->picOrderCountLsb - decoder->PrevPicOrderCntLsb )  >  ( MaxPicOrderCntLsb / 2 ) )
-        pSlice->PicOrderCntMsb = decoder->PrevPicOrderCntMsb - MaxPicOrderCntLsb;
+      if( slice->picOrderCountLsb  <  decoder->PrevPicOrderCntLsb  &&
+        ( decoder->PrevPicOrderCntLsb - slice->picOrderCountLsb )  >=  ( MaxPicOrderCntLsb / 2 ) )
+        slice->PicOrderCntMsb = decoder->PrevPicOrderCntMsb + MaxPicOrderCntLsb;
+      else if ( slice->picOrderCountLsb  >  decoder->PrevPicOrderCntLsb  &&
+        ( slice->picOrderCountLsb - decoder->PrevPicOrderCntLsb )  >  ( MaxPicOrderCntLsb / 2 ) )
+        slice->PicOrderCntMsb = decoder->PrevPicOrderCntMsb - MaxPicOrderCntLsb;
       else
-        pSlice->PicOrderCntMsb = decoder->PrevPicOrderCntMsb;
+        slice->PicOrderCntMsb = decoder->PrevPicOrderCntMsb;
 
       // 2nd
-      if (pSlice->fieldPicFlag==0) {
-        //frame pix
-        pSlice->topPoc = pSlice->PicOrderCntMsb + pSlice->picOrderCountLsb;
-        pSlice->botPoc = pSlice->topPoc + pSlice->deletaPicOrderCountBot;
-        pSlice->thisPoc = pSlice->framePoc = (pSlice->topPoc < pSlice->botPoc)? pSlice->topPoc : pSlice->botPoc; // POC200301
+      if (slice->fieldPicFlag==0) {
+        //frame pixelPos
+        slice->topPoc = slice->PicOrderCntMsb + slice->picOrderCountLsb;
+        slice->botPoc = slice->topPoc + slice->deletaPicOrderCountBot;
+        slice->thisPoc = slice->framePoc = (slice->topPoc < slice->botPoc)? slice->topPoc : slice->botPoc; // POC200301
         }
-      else if (pSlice->botFieldFlag == FALSE) // top field
-        pSlice->thisPoc= pSlice->topPoc = pSlice->PicOrderCntMsb + pSlice->picOrderCountLsb;
+      else if (slice->botFieldFlag == FALSE) // top field
+        slice->thisPoc= slice->topPoc = slice->PicOrderCntMsb + slice->picOrderCountLsb;
       else // bottom field
-        pSlice->thisPoc= pSlice->botPoc = pSlice->PicOrderCntMsb + pSlice->picOrderCountLsb;
-      pSlice->framePoc = pSlice->thisPoc;
+        slice->thisPoc= slice->botPoc = slice->PicOrderCntMsb + slice->picOrderCountLsb;
+      slice->framePoc = slice->thisPoc;
 
-      decoder->thisPoc = pSlice->thisPoc;
-      decoder->PreviousFrameNum = pSlice->frameNum;
+      decoder->thisPoc = slice->thisPoc;
+      decoder->PreviousFrameNum = slice->frameNum;
 
-      if(pSlice->refId) {
-        decoder->PrevPicOrderCntLsb = pSlice->picOrderCountLsb;
-        decoder->PrevPicOrderCntMsb = pSlice->PicOrderCntMsb;
+      if(slice->refId) {
+        decoder->PrevPicOrderCntLsb = slice->picOrderCountLsb;
+        decoder->PrevPicOrderCntMsb = slice->PicOrderCntMsb;
         }
 
       break;
@@ -1578,9 +1578,9 @@ void decodePOC (sDecoder* decoder, sSlice* pSlice) {
     //{{{
     case 1: // POC MODE 1
       // 1st
-      if (pSlice->idrFlag) {
-        decoder->FrameNumOffset=0;     //  first pix of IDRGOP,
-        if (pSlice->frameNum)
+      if (slice->idrFlag) {
+        decoder->FrameNumOffset=0;     //  first pixelPos of IDRGOP,
+        if (slice->frameNum)
           error ("frameNum not equal to zero in IDR picture", -1020);
         }
       else {
@@ -1588,8 +1588,8 @@ void decodePOC (sDecoder* decoder, sSlice* pSlice) {
           decoder->PreviousFrameNumOffset = 0;
           decoder->PreviousFrameNum = 0;
           }
-        if (pSlice->frameNum<decoder->PreviousFrameNum)
-          //not first pix of IDRGOP
+        if (slice->frameNum<decoder->PreviousFrameNum)
+          //not first pixelPos of IDRGOP
           decoder->FrameNumOffset = decoder->PreviousFrameNumOffset + decoder->maxFrameNum;
         else
           decoder->FrameNumOffset = decoder->PreviousFrameNumOffset;
@@ -1597,11 +1597,11 @@ void decodePOC (sDecoder* decoder, sSlice* pSlice) {
 
       // 2nd
       if (activeSPS->num_ref_frames_in_pic_order_cnt_cycle)
-        pSlice->AbsFrameNum = decoder->FrameNumOffset+pSlice->frameNum;
+        slice->AbsFrameNum = decoder->FrameNumOffset+slice->frameNum;
       else
-        pSlice->AbsFrameNum=0;
-      if ((!pSlice->refId) && pSlice->AbsFrameNum > 0)
-        pSlice->AbsFrameNum--;
+        slice->AbsFrameNum=0;
+      if ((!slice->refId) && slice->AbsFrameNum > 0)
+        slice->AbsFrameNum--;
 
       // 3rd
       decoder->ExpectedDeltaPerPicOrderCntCycle = 0;
@@ -1609,11 +1609,11 @@ void decodePOC (sDecoder* decoder, sSlice* pSlice) {
         for (int i = 0; i < (int) activeSPS->num_ref_frames_in_pic_order_cnt_cycle;i++)
           decoder->ExpectedDeltaPerPicOrderCntCycle += activeSPS->offset_for_ref_frame[i];
 
-      if (pSlice->AbsFrameNum) {
+      if (slice->AbsFrameNum) {
         decoder->PicOrderCntCycleCnt =
-          (pSlice->AbsFrameNum-1)/activeSPS->num_ref_frames_in_pic_order_cnt_cycle;
+          (slice->AbsFrameNum-1)/activeSPS->num_ref_frames_in_pic_order_cnt_cycle;
         decoder->FrameNumInPicOrderCntCycle =
-          (pSlice->AbsFrameNum-1)%activeSPS->num_ref_frames_in_pic_order_cnt_cycle;
+          (slice->AbsFrameNum-1)%activeSPS->num_ref_frames_in_pic_order_cnt_cycle;
         decoder->ExpectedPicOrderCnt =
           decoder->PicOrderCntCycleCnt*decoder->ExpectedDeltaPerPicOrderCntCycle;
         for (int i = 0; i <= (int)decoder->FrameNumInPicOrderCntCycle; i++)
@@ -1622,34 +1622,34 @@ void decodePOC (sDecoder* decoder, sSlice* pSlice) {
       else
         decoder->ExpectedPicOrderCnt=0;
 
-      if (!pSlice->refId)
+      if (!slice->refId)
         decoder->ExpectedPicOrderCnt += activeSPS->offset_for_non_ref_pic;
 
-      if (pSlice->fieldPicFlag == 0) {
-        // frame pix
-        pSlice->topPoc = decoder->ExpectedPicOrderCnt + pSlice->deltaPicOrderCount[0];
-        pSlice->botPoc = pSlice->topPoc + activeSPS->offset_for_top_to_bottom_field + pSlice->deltaPicOrderCount[1];
-        pSlice->thisPoc = pSlice->framePoc = (pSlice->topPoc < pSlice->botPoc)? pSlice->topPoc : pSlice->botPoc; // POC200301
+      if (slice->fieldPicFlag == 0) {
+        // frame pixelPos
+        slice->topPoc = decoder->ExpectedPicOrderCnt + slice->deltaPicOrderCount[0];
+        slice->botPoc = slice->topPoc + activeSPS->offset_for_top_to_bottom_field + slice->deltaPicOrderCount[1];
+        slice->thisPoc = slice->framePoc = (slice->topPoc < slice->botPoc)? slice->topPoc : slice->botPoc; // POC200301
         }
-      else if (pSlice->botFieldFlag == FALSE)
+      else if (slice->botFieldFlag == FALSE)
         // top field
-        pSlice->thisPoc = pSlice->topPoc = decoder->ExpectedPicOrderCnt + pSlice->deltaPicOrderCount[0];
+        slice->thisPoc = slice->topPoc = decoder->ExpectedPicOrderCnt + slice->deltaPicOrderCount[0];
       else
         // bottom field
-        pSlice->thisPoc = pSlice->botPoc = decoder->ExpectedPicOrderCnt + activeSPS->offset_for_top_to_bottom_field + pSlice->deltaPicOrderCount[0];
-      pSlice->framePoc=pSlice->thisPoc;
+        slice->thisPoc = slice->botPoc = decoder->ExpectedPicOrderCnt + activeSPS->offset_for_top_to_bottom_field + slice->deltaPicOrderCount[0];
+      slice->framePoc=slice->thisPoc;
 
-      decoder->PreviousFrameNum=pSlice->frameNum;
+      decoder->PreviousFrameNum=slice->frameNum;
       decoder->PreviousFrameNumOffset=decoder->FrameNumOffset;
       break;
     //}}}
     //{{{
     case 2: // POC MODE 2
-      if (pSlice->idrFlag) {
-        // IDR picture, first pix of IDRGOP,
+      if (slice->idrFlag) {
+        // IDR picture, first pixelPos of IDRGOP,
         decoder->FrameNumOffset = 0;
-        pSlice->thisPoc = pSlice->framePoc = pSlice->topPoc = pSlice->botPoc = 0;
-        if (pSlice->frameNum)
+        slice->thisPoc = slice->framePoc = slice->topPoc = slice->botPoc = 0;
+        if (slice->frameNum)
           error ("frameNum not equal to zero in IDR picture", -1020);
         }
       else {
@@ -1658,26 +1658,26 @@ void decodePOC (sDecoder* decoder, sSlice* pSlice) {
           decoder->PreviousFrameNumOffset = 0;
           }
 
-        if (pSlice->frameNum<decoder->PreviousFrameNum)
+        if (slice->frameNum<decoder->PreviousFrameNum)
           decoder->FrameNumOffset = decoder->PreviousFrameNumOffset + decoder->maxFrameNum;
         else
           decoder->FrameNumOffset = decoder->PreviousFrameNumOffset;
 
-        pSlice->AbsFrameNum = decoder->FrameNumOffset+pSlice->frameNum;
-        if (!pSlice->refId)
-          pSlice->thisPoc = (2*pSlice->AbsFrameNum - 1);
+        slice->AbsFrameNum = decoder->FrameNumOffset+slice->frameNum;
+        if (!slice->refId)
+          slice->thisPoc = (2*slice->AbsFrameNum - 1);
         else
-          pSlice->thisPoc = (2*pSlice->AbsFrameNum);
+          slice->thisPoc = (2*slice->AbsFrameNum);
 
-        if (pSlice->fieldPicFlag==0)
-          pSlice->topPoc = pSlice->botPoc = pSlice->framePoc = pSlice->thisPoc;
-        else if (pSlice->botFieldFlag == FALSE)
-          pSlice->topPoc = pSlice->framePoc = pSlice->thisPoc;
+        if (slice->fieldPicFlag==0)
+          slice->topPoc = slice->botPoc = slice->framePoc = slice->thisPoc;
+        else if (slice->botFieldFlag == FALSE)
+          slice->topPoc = slice->framePoc = slice->thisPoc;
         else
-          pSlice->botPoc = pSlice->framePoc = pSlice->thisPoc;
+          slice->botPoc = slice->framePoc = slice->thisPoc;
         }
 
-      decoder->PreviousFrameNum=pSlice->frameNum;
+      decoder->PreviousFrameNum=slice->frameNum;
       decoder->PreviousFrameNumOffset=decoder->FrameNumOffset;
       break;
     //}}}
@@ -1696,9 +1696,9 @@ void readSliceHeader (sSlice* slice) {
 
   sDecoder* decoder = slice->decoder;
 
-  byte dP_nr = assignSE2partition[slice->dataPartitionMode][SE_HEADER];
-  sDataPartition* partition = &(slice->partitions[dP_nr]);
-  sBitstream* s = partition->bitstream;
+  byte partitionIndex = assignSE2dp[slice->datadpMode][SE_HEADER];
+  sDataPartition* dp = &(slice->dps[partitionIndex]);
+  sBitstream* s = dp->s;
 
   // Get first_mb_in_slice
   slice->startMbNum = readUeV ("SLC first_mb_in_slice", s);
@@ -1722,9 +1722,9 @@ void readRestSliceHeader (sSlice* slice) {
   sDecoder* decoder = slice->decoder;
   sSPS* activeSPS = decoder->activeSPS;
 
-  byte dP_nr = assignSE2partition[slice->dataPartitionMode][SE_HEADER];
-  sDataPartition* partition = &(slice->partitions[dP_nr]);
-  sBitstream* s = partition->bitstream;
+  byte partitionIndex = assignSE2dp[slice->datadpMode][SE_HEADER];
+  sDataPartition* dp = &(slice->dps[partitionIndex]);
+  sBitstream* s = dp->s;
   slice->frameNum = readUv (activeSPS->log2_max_frame_num_minus4 + 4, "SLC frameNum", s);
 
   if (slice->idrFlag) {

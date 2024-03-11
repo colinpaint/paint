@@ -1867,17 +1867,17 @@ void init_lists_for_non_reference_loss (sDPB* dpb, int currSliceType, ePicStruct
 * based on the sudden decrease in frame number.
 ************************************************************************
 */
-void concealLostFrames (sDPB* dpb, sSlice *pSlice)
+void concealLostFrames (sDPB* dpb, sSlice *slice)
 {
   sDecoder* decoder = dpb->decoder;
   int CurrFrameNum;
   int UnusedShortTermFrameNum;
   sPicture *picture = NULL;
-  int tmp1 = pSlice->deltaPicOrderCount[0];
-  int tmp2 = pSlice->deltaPicOrderCount[1];
+  int tmp1 = slice->deltaPicOrderCount[0];
+  int tmp2 = slice->deltaPicOrderCount[1];
   int i;
 
-  pSlice->deltaPicOrderCount[0] = pSlice->deltaPicOrderCount[1] = 0;
+  slice->deltaPicOrderCount[0] = slice->deltaPicOrderCount[1] = 0;
 
   // printf("A gap in frame number is found, try to fill it.\n");
 
@@ -1892,7 +1892,7 @@ void concealLostFrames (sDPB* dpb, sSlice *pSlice)
   else
     UnusedShortTermFrameNum = (decoder->preFrameNum + 1) % decoder->maxFrameNum;
 
-  CurrFrameNum = pSlice->frameNum;
+  CurrFrameNum = slice->frameNum;
 
   while (CurrFrameNum != UnusedShortTermFrameNum)
   {
@@ -1908,7 +1908,7 @@ void concealLostFrames (sDPB* dpb, sSlice *pSlice)
 
     picture->adaptiveRefPicBufferingFlag = 0;
 
-    pSlice->frameNum = UnusedShortTermFrameNum;
+    slice->frameNum = UnusedShortTermFrameNum;
 
     picture->topPoc = decoder->lastRefPicPoc + decoder->refPocGap;
     picture->botPoc = picture->topPoc;
@@ -1941,13 +1941,13 @@ void concealLostFrames (sDPB* dpb, sSlice *pSlice)
     // update reference flags and set current flag.
     for(i=16;i>0;i--)
     {
-      pSlice->refFlag[i] = pSlice->refFlag[i-1];
+      slice->refFlag[i] = slice->refFlag[i-1];
     }
-    pSlice->refFlag[0] = 0;
+    slice->refFlag[0] = 0;
   }
-  pSlice->deltaPicOrderCount[0] = tmp1;
-  pSlice->deltaPicOrderCount[1] = tmp2;
-  pSlice->frameNum = CurrFrameNum;
+  slice->deltaPicOrderCount[0] = tmp1;
+  slice->deltaPicOrderCount[1] = tmp2;
+  slice->frameNum = CurrFrameNum;
 }
 //}}}
 //{{{
@@ -2123,7 +2123,7 @@ sErcVariables* ercOpen() {
 
   errorVar->nOfMBs = 0;
   errorVar->segments = NULL;
-  errorVar->currSegment = 0;
+  errorVar->segment = 0;
   errorVar->yCondition = NULL;
   errorVar->uCondition = NULL;
   errorVar->vCondition = NULL;
@@ -2215,7 +2215,7 @@ void ercReset (sErcVariables *errorVar, int nOfMBs, int numOfSegments, int picSi
       (segments++)->corrupted = 1; //! mark segments as corrupted
       }
 
-    errorVar->currSegment = 0;
+    errorVar->segment = 0;
     errorVar->numCorruptedSegments = 0;
     }
   }
@@ -2270,7 +2270,7 @@ void ercSetErrorConcealment (sErcVariables *errorVar, int value ) {
 void ercStartSegment (int currMBNum, int segment, unsigned int bitPos, sErcVariables *errorVar ) {
 
   if ( errorVar && errorVar->conceal ) {
-    errorVar->currSegmentCorrupted = 0;
+    errorVar->segmentCorrupted = 0;
     errorVar->segments[ segment ].corrupted = 0;
     errorVar->segments[ segment ].startMBPos = (short) currMBNum;
     }
@@ -2296,7 +2296,7 @@ void ercStopSegment (int currMBNum, int segment, unsigned int bitPos, sErcVariab
 
   if ( errorVar && errorVar->conceal ) {
     errorVar->segments[ segment ].endMBPos = (short) currMBNum;
-    errorVar->currSegment++;
+    errorVar->segment++;
     }
   }
 //}}}
@@ -2312,16 +2312,16 @@ void ercStopSegment (int currMBNum, int segment, unsigned int bitPos, sErcVariab
  *      Variables for error detector
 ** **********************************************************************
  */
-void ercMarkCurrSegmentLost (int picSizeX, sErcVariables *errorVar )
+void ercMarksegmentLost (int picSizeX, sErcVariables *errorVar )
 {
   int j = 0;
   int current_segment;
 
-  current_segment = errorVar->currSegment-1;
+  current_segment = errorVar->segment-1;
   if ( errorVar && errorVar->conceal ) {
-    if (errorVar->currSegmentCorrupted == 0) {
+    if (errorVar->segmentCorrupted == 0) {
       errorVar->numCorruptedSegments++;
-      errorVar->currSegmentCorrupted = 1;
+      errorVar->segmentCorrupted = 1;
       }
 
     for ( j = errorVar->segments[current_segment].startMBPos;
@@ -2349,12 +2349,12 @@ void ercMarkCurrSegmentLost (int picSizeX, sErcVariables *errorVar )
  *      Variables for error detector
 ** **********************************************************************
  */
-void ercMarkCurrSegmentOK (int picSizeX, sErcVariables *errorVar ) {
+void ercMarksegmentOK (int picSizeX, sErcVariables *errorVar ) {
 
   int j = 0;
   int current_segment;
 
-  current_segment = errorVar->currSegment-1;
+  current_segment = errorVar->segment-1;
   if ( errorVar && errorVar->conceal ) {
     // mark all the Blocks belonging to the segment as OK */
     for (j = errorVar->segments[current_segment].startMBPos;

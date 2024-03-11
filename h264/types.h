@@ -36,10 +36,10 @@ typedef enum {
   } eYuvFormat;
 //}}}
 
-//{{{  enum Data Partitioning Modes
+//{{{  enum Data dping Modes
 typedef enum {
-  PAR_DP_1,   //!< no data partitioning is supported
-  PAR_DP_3    //!< data partitioning with 3 partitions
+  PAR_DP_1,   //!< no data dping is supported
+  PAR_DP_3    //!< data dping with 3 dps
   } PAR_DP_TYPE;
 //}}}
 //{{{  enum Output File Types

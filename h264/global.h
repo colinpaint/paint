@@ -246,10 +246,10 @@ typedef struct SyntaxElement {
   } sSyntaxElement;
 //}}}
 //{{{  sDataPartition
-typedef struct DataPartition {
-  sBitstream*          bitstream;
+typedef struct Datadp {
+  sBitstream*          s;
   sDecodingEnv deCabac;
-  int (*readsSyntaxElement) (struct Macroblock*, struct SyntaxElement*, struct DataPartition*);
+  int (*readsSyntaxElement) (struct Macroblock*, struct SyntaxElement*, struct Datadp*);
   } sDataPartition;
 //}}}
 
@@ -371,7 +371,7 @@ typedef struct Macroblock {
 
   short   sliceNum;
   char    eiFlag;            // error indicator flag that enables conceal
-  char    dplFlag;           // error indicator flag that signals a missing data partition
+  char    dplFlag;           // error indicator flag that signals a missing data dp
   short   deltaQuant;        // for rate control
   short   listOffset;
 
@@ -414,7 +414,7 @@ typedef struct Macroblock {
   void (*iTrans8x8) (struct Macroblock*, eColorPlane, int, int);
   void (*GetMVPredictor) (struct Macroblock*, sPixelPos*, sMotionVec*, short, struct PicMotion**, int, int, int, int, int);
   int  (*readStoreCBPblockBit) (struct Macroblock*, sDecodingEnv*, int);
-  char (*readRefPictureIndex) (struct Macroblock*, struct SyntaxElement*, struct DataPartition*, char, int);
+  char (*readRefPictureIndex) (struct Macroblock*, struct SyntaxElement*, struct Datadp*, char, int);
   void (*readCompCoef4x4cabac) (struct Macroblock*, struct SyntaxElement*, eColorPlane, int(*)[4], int, int);
   void (*readCompCoef8x8cabac) (struct Macroblock*, struct SyntaxElement*, eColorPlane);
   void (*readCompCoef4x4cavlc) (struct Macroblock*, eColorPlane, int(*)[4], int, int, byte**);
@@ -529,7 +529,7 @@ typedef struct Slice {
   int           directSpatialMvPredFlag; // Indicator for direct mode type (1 for Spatial, 0 for Temporal)
   int           numRefIndexActive[2];    // number of available list references
 
-  int           eiFlag;       // 0 if the partitions[0] contains valid information
+  int           eiFlag;       // 0 if the dps[0] contains valid information
   int           qp;
   int           sliceQpDelta;
   int           qs;
@@ -542,8 +542,8 @@ typedef struct Slice {
   ePicStructure structure;   // Identify picture structure type
   int           startMbNum;  // MUST be set by NAL even in case of eiFlag == 1
   int           endMbNumPlus1;
-  int           maxPartitionNum;
-  int           dataPartitionMode;       // data partitioning mode
+  int           maxdpNum;
+  int           datadpMode;       // data dping mode
   int           curHeader;
   int           nextHeader;
   int           lastDquant;
@@ -562,7 +562,7 @@ typedef struct Slice {
   char listXsize[6];
   struct Picture** listX[6];
 
-  sDataPartition*       partitions;  // array of partitions
+  sDataPartition*       dps;  // array of dps
   sMotionInfoContexts*  mot_ctx;  // pointer to struct of context models for use in CABAC
   sTextureInfoContexts* tex_ctx;  // pointer to struct of context models for use in CABAC
 
@@ -577,8 +577,8 @@ typedef struct Slice {
   short DFAlphaC0Offset;   // Alpha and C0 offset for filtering slice
   short DFBetaOffset;      // Beta offset for filtering slice
   int   ppsId;             // the ID of the picture parameter set the slice is reffering to
-  int   noDataPartitionB;  // non-zero, if data partition B is lost
-  int   noDataPartitionC;  // non-zero, if data partition C is lost
+  int   noDatadpB;  // non-zero, if data dp B is lost
+  int   noDatadpC;  // non-zero, if data dp C is lost
 
   Boolean   isResetCoef;
   Boolean   isResetCoefCr;
@@ -644,7 +644,7 @@ typedef struct Slice {
   void (*intraPredChroma) (sMacroblock*);
   int  (*intraPred4x4) (sMacroblock*, eColorPlane, int, int, int, int);
   int  (*intraPred8x8) (sMacroblock*, eColorPlane, int, int);
-  int  (*intraPred16x16) (sMacroblock*, eColorPlane pl, int);
+  int  (*intraPred16x16) (sMacroblock*, eColorPlane plane, int);
   void (*updateDirectMvInfo) (sMacroblock*);
   void (*readCoef4x4cavlc) (sMacroblock*, int, int, int, int[16], int[16], int*);
   void (*linfoCbpIntra) (int, int, int*, int*);
@@ -744,7 +744,7 @@ typedef struct Param {
   int refPocGap;
   int pocGap;
   int concealMode;
-  int intraProfileDeblocking; // Loop filter usage determined by flags and parameters in bitstream
+  int intraProfileDeblocking; // Loop filter usage determined by flags and parameters in s
 
   sFrameFormat source;
   sFrameFormat output;
@@ -1000,8 +1000,8 @@ static inline int isHiIntraOnlyProfile (unsigned int profileIdc, Boolean constra
   extern void freeGlobalBuffers (sDecoder* decoder);
   extern void freeLayerBuffers (sDecoder* decoder, int layerId);
 
-  extern sDataPartition* allocPartition (int n);
-  extern void freePartition (sDataPartition* dp, int n);
+  extern sDataPartition* allocdp (int n);
+  extern void freedp (sDataPartition* dp, int n);
 
   extern sSlice* allocSlice (sDecoder* decoder);
 
@@ -1009,7 +1009,7 @@ static inline int isHiIntraOnlyProfile (unsigned int profileIdc, Boolean constra
   extern unsigned ceilLog2sf (unsigned uiVal);
 
   // For 4:4:4 independent mode
-  extern void changePlaneJV (sDecoder* decoder, int nplane, sSlice *pSlice);
+  extern void changePlaneJV (sDecoder* decoder, int nplane, sSlice *slice);
   extern void makeFramePictureJV (sDecoder* decoder );
 
   extern sDecodedPic* getDecodedPicture (sDecodedPic* decodedPic);

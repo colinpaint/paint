@@ -342,13 +342,12 @@ static int spsIsEqual (sSPS* sps1, sSPS* sps2) {
 //}}}
 //{{{
 // syntax for scaling list matrix values
-static void scalingList (int* scalingList, int sizeOfScalingList,
-                         Boolean* useDefaultScalingMatrix, sBitstream* s) {
+static void scalingList (int* scalingList, int scalingListSize, Boolean* useDefaultScalingMatrix, sBitstream* s) {
 
   int lastScale = 8;
   int nextScale = 8;
-  for (int j = 0; j < sizeOfScalingList; j++) {
-    int scanj = (sizeOfScalingList == 16) ? ZZ_SCAN[j]:ZZ_SCAN8[j];
+  for (int j = 0; j < scalingListSize; j++) {
+    int scanj = (scalingListSize == 16) ? ZZ_SCAN[j]:ZZ_SCAN8[j];
     if (nextScale != 0) {
       int delta_scale = readSeV ("   : delta_sl   ", s);
       nextScale = (lastScale + delta_scale + 256) % 256;
@@ -366,9 +365,9 @@ static void initVUI (sSPS* sps) {
   }
 //}}}
 //{{{
-static int readHRDParameters (sDataPartition* p, sHRD* hrd) {
+static int readHRDParameters (sDataPartition* dp, sHRD* hrd) {
 
-  sBitstream *s = p->bitstream;
+  sBitstream *s = dp->s;
   hrd->cpb_cnt_minus1 = readUeV ("VUI cpb_cnt_minus1", s);
   hrd->bit_rate_scale = readUv (4, "VUI bit_rate_scale", s);
   hrd->cpb_size_scale = readUv (4, "VUI cpb_size_scale", s);
@@ -392,7 +391,7 @@ static int readHRDParameters (sDataPartition* p, sHRD* hrd) {
 //{{{
 static int readVUI (sDataPartition* p, sSPS* sps) {
 
-  sBitstream* s = p->bitstream;
+  sBitstream* s = p->s;
   if (sps->vui_parameters_present_flag) {
     sps->vui_seq_parameters.aspect_ratio_info_present_flag = readU1 ("VUI aspect_ratio_info_present_flag", s);
     if (sps->vui_seq_parameters.aspect_ratio_info_present_flag) {
@@ -463,9 +462,9 @@ static int readVUI (sDataPartition* p, sSPS* sps) {
   }
 //}}}
 //{{{
-static void interpretSPS (sDecoder* decoder, sDataPartition* p, sSPS* sps) {
+static void interpretSPS (sDecoder* decoder, sDataPartition* dp, sSPS* sps) {
 
-  sBitstream* s = p->bitstream;
+  sBitstream* s = dp->s;
   sps->profileIdc = readUv (8, "SPS profileIdc", s);
   if ((sps->profileIdc != BASELINE) && (sps->profileIdc != MAIN) && (sps->profileIdc != EXTENDED) &&
       (sps->profileIdc != FREXT_HP) &&
@@ -561,7 +560,7 @@ static void interpretSPS (sDecoder* decoder, sDataPartition* p, sSPS* sps) {
   sps->vui_parameters_present_flag = (Boolean) readU1 ("SPS vui_parameters_present_flag", s);
 
   initVUI (sps);
-  readVUI (p, sps);
+  readVUI (dp, sps);
 
   if (decoder->param.spsDebug)
     printf ("SPS id:%d refFrames:%d picOrder:%d %dx%d %s %s\n",
@@ -583,11 +582,11 @@ void makeSPSavailable (sDecoder* decoder, int id, sSPS* sps) {
 //{{{
 void processSPS (sDecoder* decoder, sNalu* nalu) {
 
-  sDataPartition* dp = allocPartition (1);
-  dp->bitstream->eiFlag = 0;
-  dp->bitstream->readLen = dp->bitstream->frameBitOffset = 0;
-  memcpy (dp->bitstream->streamBuffer, &nalu->buf[1], nalu->len-1);
-  dp->bitstream->codeLen = dp->bitstream->bitstreamLength = RBSPtoSODB (dp->bitstream->streamBuffer, nalu->len-1);
+  sDataPartition* dp = allocdp (1);
+  dp->s->eiFlag = 0;
+  dp->s->readLen = dp->s->frameBitOffset = 0;
+  memcpy (dp->s->streamBuffer, &nalu->buf[1], nalu->len-1);
+  dp->s->codeLen = dp->s->bitstreamLength = RBSPtoSODB (dp->s->streamBuffer, nalu->len-1);
 
   sSPS* sps = allocSPS();
   interpretSPS (decoder, dp, sps);
@@ -613,7 +612,7 @@ void processSPS (sDecoder* decoder, sNalu* nalu) {
       decoder->ChromaArrayType = sps->chromaFormatIdc;
     }
 
-  freePartition (dp, 1);
+  freedp (dp, 1);
   freeSPS (sps);
   }
 //}}}
@@ -729,17 +728,13 @@ static int ppsIsEqual (sPPS* pps1, sPPS* pps2) {
   }
 //}}}
 //{{{
-static void interpretPPS (sDecoder* decoder, sDataPartition* p, sPPS* pps) {
+static void interpretPPS (sDecoder* decoder, sDataPartition* dp, sPPS* pps) {
 
   unsigned n_ScalingList;
   int chromaFormatIdc;
   int NumberBitsPerSliceGroupId;
 
-  sBitstream* s = p->bitstream;
-  assert (p != NULL);
-  assert (p->bitstream != NULL);
-  assert (p->bitstream->streamBuffer != 0);
-  assert (pps != NULL);
+  sBitstream* s = dp->s;
 
   pps->ppsId = readUeV ("PPS ppsId", s);
   pps->spsId = readUeV ("PPS spsId", s);
@@ -851,12 +846,9 @@ static void activatePPS (sDecoder* decoder, sPPS* pps) {
 //{{{
 sPPS* allocPPS() {
 
-  sPPS* p = calloc (1, sizeof (sPPS));
-  if (!p)
-    no_mem_exit ("allocPPS");
-
-  p->sliceGroupId = NULL;
-  return p;
+  sPPS* pps = calloc (1, sizeof (sPPS));
+  pps->sliceGroupId = NULL;
+  return pps;
   }
 //}}}
 //{{{
@@ -896,11 +888,11 @@ void cleanUpPPS (sDecoder* decoder) {
 void processPPS (sDecoder* decoder, sNalu* nalu) {
 
 
-  sDataPartition* dp = allocPartition (1);
-  dp->bitstream->eiFlag = 0;
-  dp->bitstream->readLen = dp->bitstream->frameBitOffset = 0;
-  memcpy (dp->bitstream->streamBuffer, &nalu->buf[1], nalu->len-1);
-  dp->bitstream->codeLen = dp->bitstream->bitstreamLength = RBSPtoSODB (dp->bitstream->streamBuffer, nalu->len-1);
+  sDataPartition* dp = allocdp (1);
+  dp->s->eiFlag = 0;
+  dp->s->readLen = dp->s->frameBitOffset = 0;
+  memcpy (dp->s->streamBuffer, &nalu->buf[1], nalu->len-1);
+  dp->s->codeLen = dp->s->bitstreamLength = RBSPtoSODB (dp->s->streamBuffer, nalu->len-1);
 
   sPPS* pps = allocPPS();
   interpretPPS (decoder, dp, pps);
@@ -918,7 +910,7 @@ void processPPS (sDecoder* decoder, sNalu* nalu) {
     }
 
   makePPSavailable (decoder, pps->ppsId, pps);
-  freePartition (dp, 1);
+  freedp (dp, 1);
   freePPS (pps);
   }
 //}}}
@@ -956,16 +948,16 @@ void useParameterSet (sSlice* slice) {
   activateSPS (decoder, sps);
   activatePPS (decoder, pps);
 
-  // slice->dataPartitionMode is set by read_new_slice (NALU first byte available there)
+  // slice->datadpMode is set by read_new_slice (NALU first byte available there)
   if (pps->entropyCodingModeFlag == (Boolean)CAVLC) {
     slice->nalStartcode = uvlc_startcode_follows;
     for (int i = 0; i < 3; i++)
-      slice->partitions[i].readsSyntaxElement = readsSyntaxElement_UVLC;
+      slice->dps[i].readsSyntaxElement = readsSyntaxElement_UVLC;
     }
   else {
     slice->nalStartcode = cabac_startcode_follows;
     for (int i = 0; i < 3; i++)
-      slice->partitions[i].readsSyntaxElement = readsSyntaxElement_CABAC;
+      slice->dps[i].readsSyntaxElement = readsSyntaxElement_CABAC;
     }
   decoder->type = slice->sliceType;
   }
