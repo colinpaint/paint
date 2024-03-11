@@ -44,9 +44,9 @@ static void updateMaxValue (sFrameFormat* format) {
 static void setupLayerInfo (sDecoder* decoder, sSPS* sps, sLayer* layer) {
 
   layer->decoder = decoder;
-  layer->coding = decoder->coding[layer->layerId];
+  layer->coding = decoder->coding;
   layer->sps = sps;
-  layer->dpb = decoder->dpbLayer[layer->layerId];
+  layer->dpb = decoder->dpbLayer;
   }
 //}}}
 //{{{
@@ -624,17 +624,17 @@ void activateSPS (sDecoder* decoder, sSPS* sps) {
       endPicture (decoder, &decoder->picture);
     decoder->activeSPS = sps;
 
-    if (decoder->dpbLayerId == 0 && isBLprofile (sps->profileIdc) && !decoder->dpbLayer[0]->initDone) {
-      setCodingParam (sps, decoder->coding[0]);
-      setupLayerInfo ( decoder, sps, decoder->layer[0]);
+    if (decoder->dpbLayerId == 0 && isBLprofile (sps->profileIdc) && !decoder->dpbLayer->initDone) {
+      setCodingParam (sps, decoder->coding);
+      setupLayerInfo ( decoder, sps, decoder->layer);
       }
-    setGlobalCodingProgram (decoder, decoder->coding[decoder->dpbLayerId]);
+    setGlobalCodingProgram (decoder, decoder->coding);
 
     initGlobalBuffers (decoder, 0);
     if (!decoder->noOutputPriorPicFlag)
-      flushDpb (decoder->dpbLayer[0]);
+      flushDpb (decoder->dpbLayer);
 
-    initDpb (decoder, decoder->dpbLayer[0], 0);
+    initDpb (decoder, decoder->dpbLayer, 0);
 
     // enable error conceal
     ercInit (decoder, decoder->width, decoder->height, 1);

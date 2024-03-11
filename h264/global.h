@@ -778,9 +778,9 @@ typedef struct Decoder {
   int          recoveryFrameNum;
   int          recoveryPoc;
 
-  struct DPB*  dpbLayer[MAX_NUM_DPB_LAYERS];
-  sLayer*      layer[MAX_NUM_DPB_LAYERS];
-  sCoding*     coding[MAX_NUM_DPB_LAYERS];
+  struct DPB*  dpbLayer;
+  sLayer*      layer;
+  sCoding*     coding;
 
   // loadsa frameNum
   int          number;

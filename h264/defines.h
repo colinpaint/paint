@@ -28,7 +28,6 @@
 #define MCBUF_LUMA_PAD_Y        12
 #define MCBUF_CHROMA_PAD_X      16
 #define MCBUF_CHROMA_PAD_Y      8
-#define MAX_NUM_DPB_LAYERS      2
 
 //{{{  AVC Profile IDC definitions
 typedef enum {

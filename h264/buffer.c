@@ -1228,7 +1228,7 @@ static void adaptiveMemoryManagement (sDPB* dpb, sPicture* p) {
       //}}}
       }
 
-    flushDpb(decoder->dpbLayer[0]);
+    flushDpb(decoder->dpbLayer);
     }
   }
 //}}}

@@ -27,7 +27,7 @@ void error (char* text, int code) {
 
   fprintf (stderr, "%s\n", text);
   if (gDecoder)
-    flushDpb (gDecoder->dpbLayer[0]);
+    flushDpb (gDecoder->dpbLayer);
   exit (code);
   }
 //}}}
@@ -136,22 +136,20 @@ static void freeDecoder (sDecoder* decoder) {
   freeAnnexB (&decoder->annexB);
 
   // Free new dpb layers
-  for (int i = 0; i < MAX_NUM_DPB_LAYERS; i++) {
-    if (decoder->dpbLayer[i] != NULL) {
-      free (decoder->dpbLayer[i]);
-      decoder->dpbLayer[i] = NULL;
+    if (decoder->dpbLayer != NULL) {
+      free (decoder->dpbLayer);
+      decoder->dpbLayer = NULL;
       }
 
-    if (decoder->coding[i]) {
-      free (decoder->coding[i]);
-      decoder->coding[i] = NULL;
+    if (decoder->coding) {
+      free (decoder->coding);
+      decoder->coding = NULL;
       }
 
-    if (decoder->layer[i]) {
-      free (decoder->layer[i]);
-      decoder->layer[i] = NULL;
+    if (decoder->layer) {
+      free (decoder->layer);
+      decoder->layer = NULL;
       }
-    }
 
   if (decoder->oldSlice != NULL) {
     free (decoder->oldSlice);
@@ -331,7 +329,7 @@ void freedp (sDataPartition* dp, int n) {
 //{{{
 void freeLayerBuffers (sDecoder* decoder, int layerId) {
 
-  sCoding *coding = decoder->coding[layerId];
+  sCoding* coding = decoder->coding;
 
   if (!decoder->globalInitDone[layerId])
     return;
@@ -387,7 +385,7 @@ void freeLayerBuffers (sDecoder* decoder, int layerId) {
 //{{{
 void initGlobalBuffers (sDecoder* decoder, int layerId) {
 
-  sCoding *coding = decoder->coding[layerId];
+  sCoding *coding = decoder->coding;
   sBlockPos* picPos;
 
   if (decoder->globalInitDone[layerId])
@@ -601,15 +599,13 @@ sDecoder* openDecoder (sParam* input, byte* chunk, size_t chunkSize) {
   init (decoder);
 
   // init output
-  for (int i = 0; i < MAX_NUM_DPB_LAYERS; i++) {
-    decoder->dpbLayer[i] = (sDPB*)calloc (1, sizeof(sDPB));
-    decoder->dpbLayer[i]->layerId = i;
-    reset_dpb (decoder, decoder->dpbLayer[i]);
-    decoder->coding[i] = (sCoding*)calloc (1, sizeof(sCoding));
-    decoder->coding[i]->layerId = i;
-    decoder->layer[i] = (sLayer*)calloc (1, sizeof(sLayer));
-    decoder->layer[i]->layerId = i;
-    }
+    decoder->dpbLayer = (sDPB*)calloc (1, sizeof(sDPB));
+    decoder->dpbLayer->layerId = 0;
+    reset_dpb (decoder, decoder->dpbLayer);
+    decoder->coding = (sCoding*)calloc (1, sizeof(sCoding));
+    decoder->coding->layerId = 0;
+    decoder->layer = (sLayer*)calloc (1, sizeof(sLayer));
+    decoder->layer->layerId = 0;
 
   decoder->decOutputPic = (sDecodedPic*)calloc (1, sizeof(sDecodedPic));
   allocOutput (decoder);
@@ -638,7 +634,7 @@ int decodeOneFrame (sDecoder* decoder, sDecodedPic** decPicList) {
 void finishDecoder (sDecoder* decoder, sDecodedPic** decPicList) {
 
   clearDecodedPics (decoder);
-  flushDpb (decoder->dpbLayer[0]);
+  flushDpb (decoder->dpbLayer);
 
   resetAnnexB (decoder->annexB);
 
@@ -659,8 +655,7 @@ void closeDecoder (sDecoder* decoder) {
 
   cleanUpPPS (decoder);
 
-  for (unsigned i = 0; i < MAX_NUM_DPB_LAYERS; i++)
-    freeDpb (decoder->dpbLayer[i]);
+  freeDpb (decoder->dpbLayer);
   freeOutput (decoder);
   freeDecoder (decoder);
 
