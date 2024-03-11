@@ -1196,7 +1196,6 @@ void endPicture (sDecoder* decoder, sPicture** picture) {
   int picNum = (*picture)->picNum;
   int isIdr = (*picture)->idrFlag;
   int chromaFormatIdc = (*picture)->chromaFormatIdc;
-
   storePictureDpb (decoder->dpbLayer[0], *picture);
   *picture = NULL;
 
@@ -1257,9 +1256,18 @@ void endPicture (sDecoder* decoder, sPicture** picture) {
   sliceTypeText[8] = 0;
 
   if ((structure == FRAME) || structure == BotField) {
+    //{{{  count numOutputFrames
+    int numOutputFrames = 0;
+    sDecodedPic* pic = decoder->decOutputPic;
+    while (pic) {
+      if (pic->valid)
+        numOutputFrames++;
+      pic = pic->next;
+      }
+    //}}}
     gettime (&(decoder->endTime));
-    printf ("frame:%4d poc:%4d %s qp:%2d slices:%d mb:%d %dms\n",
-            picNum, framePoc, sliceTypeText, 
+    printf ("---> %d:%d:%d %s qp:%2d slices:%d mb:%d %dms\n",
+            picNum, framePoc, numOutputFrames, sliceTypeText,
             qp, decoder->numDecodedSlices, decoder->numDecodedMbs,
             (int)timenorm (timediff (&(decoder->startTime), &(decoder->endTime))));
 
