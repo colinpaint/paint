@@ -253,7 +253,7 @@ static void update_direct_mv_info_temporal (sMacroblock* mb) {
                 }
                 //}}}
               else if (INVALIDINDEX == mapped_idx)
-                error("temporal direct error: colocated block has ref that is unavailable",-1111);
+                error ("temporal direct error: colocated block has ref that is unavailable",-1111);
               }
             }
             //}}}
@@ -264,21 +264,20 @@ static void update_direct_mv_info_temporal (sMacroblock* mb) {
   }
 //}}}
 //{{{
-static inline void update_neighbor_mvs (sPicMotionParam** motion, const sPicMotionParam* mvInfo, int i4)
-{
+static inline void update_neighbor_mvs (sPicMotionParam** motion, const sPicMotionParam* mvInfo, int i4) {
+
   (*motion++)[i4 + 1] = *mvInfo;
   (*motion  )[i4    ] = *mvInfo;
   (*motion  )[i4 + 1] = *mvInfo;
-}
+  }
 //}}}
 //{{{
-int get_colocated_info_4x4 (sMacroblock* mb, sPicture* list1, int i, int j)
-{
+int get_colocated_info_4x4 (sMacroblock* mb, sPicture* list1, int i, int j) {
+
   if (list1->isLongTerm)
     return 1;
   else {
     sPicMotionParam *fs = &list1->mvInfo[j][i];
-
     int moving = !((((fs->refIndex[LIST_0] == 0) &&
                      (iabs(fs->mv[LIST_0].mvX)>>1 == 0) &&
                      (iabs(fs->mv[LIST_0].mvY)>>1 == 0))) ||
@@ -291,45 +290,41 @@ int get_colocated_info_4x4 (sMacroblock* mb, sPicture* list1, int i, int j)
   }
 //}}}
 //{{{
-int get_colocated_info_8x8 (sMacroblock* mb, sPicture* list1, int i, int j)
-{
+int get_colocated_info_8x8 (sMacroblock* mb, sPicture* list1, int i, int j) {
+
   if (list1->isLongTerm)
     return 1;
   else {
     sSlice* slice = mb->slice;
     sDecoder* decoder = mb->decoder;
-    if( (slice->mbAffFrameFlag) ||
-      (!decoder->activeSPS->frameMbOnlyFlag && ((!slice->structure && list1->iCodingType == FIELD_CODING)||(slice->structure!=list1->structure && list1->codedFrame))))
-    {
+    if ((slice->mbAffFrameFlag) ||
+        (!decoder->activeSPS->frameMbOnlyFlag && 
+        ((!slice->structure && list1->iCodingType == FIELD_CODING) || 
+        (slice->structure!=list1->structure && list1->codedFrame)))) {
       int jj = RSD(j);
       int ii = RSD(i);
       int jdiv = (jj>>1);
       int moving;
-      sPicMotionParam *fs = &list1->mvInfo[jj][ii];
 
-      if(slice->fieldPicFlag && slice->structure!=list1->structure && list1->codedFrame)
-      {
-         if(slice->structure == TopField)
+      sPicMotionParam* fs = &list1->mvInfo[jj][ii];
+
+      if (slice->fieldPicFlag && slice->structure!=list1->structure && list1->codedFrame) {
+         if (slice->structure == TopField)
            fs = list1->topField->mvInfo[jj] + ii;
          else
            fs = list1->botField->mvInfo[jj] + ii;
-      }
-      else
-      {
+        }
+      else {
         if( (slice->mbAffFrameFlag && ((!mb->mbField && list1->motion.mbField[mb->mbIndexX]) ||
           (!mb->mbField && list1->iCodingType == FIELD_CODING)))
-          || (!slice->mbAffFrameFlag))
-        {
+          || (!slice->mbAffFrameFlag)) {
           if (iabs(slice->picture->poc - list1->botField->poc)> iabs(slice->picture->poc -list1->topField->poc) )
-          {
             fs = list1->topField->mvInfo[jdiv] + ii;
-          }
           else
-          {
             fs = list1->botField->mvInfo[jdiv] + ii;
           }
         }
-      }
+
       moving = !((((fs->refIndex[LIST_0] == 0)
         &&  (iabs(fs->mv[LIST_0].mvX)>>1 == 0)
         &&  (iabs(fs->mv[LIST_0].mvY)>>1 == 0)))
@@ -338,24 +333,26 @@ int get_colocated_info_8x8 (sMacroblock* mb, sPicture* list1, int i, int j)
         &&  (iabs(fs->mv[LIST_1].mvX)>>1 == 0)
         &&  (iabs(fs->mv[LIST_1].mvY)>>1 == 0)));
       return moving;
-    }
-    else
-    {
+      }
+    else {
       sPicMotionParam *fs = &list1->mvInfo[RSD(j)][RSD(i)];
+
       int moving;
-      if(mb->decoder->sepColourPlaneFlag && mb->decoder->yuvFormat==YUV444)
+      if (mb->decoder->sepColourPlaneFlag && mb->decoder->yuvFormat==YUV444)
         fs = &list1->JVmv_info[mb->slice->colourPlaneId][RSD(j)][RSD(i)];
-      moving= !((((fs->refIndex[LIST_0] == 0)
+
+      moving = !((((fs->refIndex[LIST_0] == 0)
         &&  (iabs(fs->mv[LIST_0].mvX)>>1 == 0)
         &&  (iabs(fs->mv[LIST_0].mvY)>>1 == 0)))
         || ((fs->refIndex[LIST_0] == -1)
         &&  (fs->refIndex[LIST_1] == 0)
         &&  (iabs(fs->mv[LIST_1].mvX)>>1 == 0)
         &&  (iabs(fs->mv[LIST_1].mvY)>>1 == 0)));
+
       return moving;
+      }
     }
   }
-}
 //}}}
 
 //{{{
@@ -1830,30 +1827,24 @@ void prepare_direct_params (sMacroblock* mb, sPicture* picture, sMotionVec* pmvl
 //}}}
 
 //{{{
-static void check_motion_vector_range (const sMotionVec *mv, sSlice *slice)
-{
+static void check_motion_vector_range (const sMotionVec *mv, sSlice *slice) {
+
   if (mv->mvX > 8191 || mv->mvX < -8192)
-  {
     fprintf(stderr,"WARNING! Horizontal motion vector %d is out of allowed range {-8192, 8191} in picture %d, macroblock %d\n", mv->mvX, slice->decoder->number, slice->mbIndex);
-    //error("invalid stream: too big horizontal motion vector", 500);
-  }
 
   if (mv->mvY > (slice->max_mb_vmv_r - 1) || mv->mvY < (-slice->max_mb_vmv_r))
-  {
     fprintf(stderr,"WARNING! Vertical motion vector %d is out of allowed range {%d, %d} in picture %d, macroblock %d\n", mv->mvY, (-slice->max_mb_vmv_r), (slice->max_mb_vmv_r - 1), slice->decoder->number, slice->mbIndex);
-    //error("invalid stream: too big vertical motion vector", 500);
   }
-}
 //}}}
 //{{{
-static inline int check_vert_mv (int llimit, int vec1_y,int rlimit)
-{
+static inline int check_vert_mv (int llimit, int vec1_y,int rlimit) {
+
   int y_pos = vec1_y >> 2;
   if(y_pos < llimit || y_pos > rlimit)
     return 1;
   else
     return 0;
-}
+  }
 //}}}
 //{{{
 static void perform_mc_single_wp (sMacroblock* mb, eColorPlane plane, sPicture* picture, int predDir, int i, int j, int blockSizeX, int blockSizeY)
@@ -1868,6 +1859,7 @@ static void perform_mc_single_wp (sMacroblock* mb, eColorPlane plane, sPicture* 
   int j4   = mb->blockY + j;
   int type = slice->sliceType;
   int chromaFormatIdc = picture->chromaFormatIdc;
+
   //===== Single List Prediction =====
   int ioff = (i << 2);
   int joff = (j << 2);
@@ -1897,7 +1889,6 @@ static void perform_mc_single_wp (sMacroblock* mb, eColorPlane plane, sPicture* 
   }
   else
     get_block_luma(list, vec1_x, vec1_y, blockSizeX, blockSizeY, tmp_block_l0,shift_x,maxold_x,maxold_y,tmp_res,max_imgpel_value,no_ref_value, mb);
-
 
   {
     int alpha_l0, wpOffset, wp_denom;
@@ -1976,10 +1967,7 @@ static void perform_mc_single (sMacroblock* mb, eColorPlane plane, sPicture* pic
   int** tmp_res = slice->tmp_res;
   int max_imgpel_value = decoder->maxPelValueComp[plane];
   sPixel no_ref_value = (sPixel) decoder->dcPredValueComp[plane];
-  //
 
-  //if (iabs(mv_array->mvX) > 4 * 126 || iabs(mv_array->mvY) > 4 * 126)
-    //printf("motion vector %d %d\n", mv_array->mvX, mv_array->mvY);
 
   check_motion_vector_range(mv_array, slice);
   vec1_x = i4 * mv_mul + mv_array->mvX;
@@ -2280,23 +2268,22 @@ static void perform_mc_bi (sMacroblock* mb, eColorPlane plane, sPicture* picture
 }
 //}}}
 //{{{
-void perform_mc (sMacroblock* mb, eColorPlane plane, sPicture* picture, int predDir, int i, int j, int blockSizeX, int blockSizeY)
-{
+void perform_mc (sMacroblock* mb, eColorPlane plane, sPicture* picture, 
+                 int predDir, int i, int j, int blockSizeX, int blockSizeY) {
+
   sSlice* slice = mb->slice;
   assert (predDir<=2);
-  if (predDir != 2)
-  {
+  if (predDir != 2) {
     if (slice->weightedPredFlag)
       perform_mc_single_wp(mb, plane, picture, predDir, i, j, blockSizeX, blockSizeY);
     else
       perform_mc_single(mb, plane, picture, predDir, i, j, blockSizeX, blockSizeY);
-  }
-  else
-  {
+    }
+  else {
     if (slice->weightedBiPredIdc)
       perform_mc_bi_wp(mb, plane, picture, i, j, blockSizeX, blockSizeY);
     else
       perform_mc_bi(mb, plane, picture, i, j, blockSizeX, blockSizeY);
+    }
   }
-}
 //}}}

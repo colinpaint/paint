@@ -26,7 +26,7 @@ void CheckAvailabilityOfNeighbors (sMacroblock* mb) {
   sSlice* slice = mb->slice;
   sPicture* picture = slice->picture; //decoder->picture;
   const int mb_nr = mb->mbIndexX;
-  sBlockPos *picPos = mb->decoder->picPos;
+  sBlockPos* picPos = mb->decoder->picPos;
 
   if (picture->mbAffFrameFlag) {
     int cur_mb_pair = mb_nr >> 1;
@@ -46,7 +46,6 @@ void CheckAvailabilityOfNeighbors (sMacroblock* mb) {
     mb->mbIndexD = mb->mbIndexA - picture->picWidthMbs;
     mb->mbIndexB = mb->mbIndexD + 1;
     mb->mbIndexC = mb->mbIndexB + 1;
-
 
     mb->mbAvailA = (Boolean) (mb_is_available(mb->mbIndexA, mb) && ((p_pic_pos->x)!=0));
     mb->mbAvailD = (Boolean) (mb_is_available(mb->mbIndexD, mb) && ((p_pic_pos->x)!=0));
@@ -73,12 +72,10 @@ void CheckAvailabilityOfNeighborsNormal (sMacroblock* mb) {
   mb->mbIndexB = mb->mbIndexD + 1;
   mb->mbIndexC = mb->mbIndexB + 1;
 
-
   mb->mbAvailA = (Boolean) (mb_is_available(mb->mbIndexA, mb) && ((p_pic_pos->x)!=0));
   mb->mbAvailD = (Boolean) (mb_is_available(mb->mbIndexD, mb) && ((p_pic_pos->x)!=0));
   mb->mbAvailC = (Boolean) (mb_is_available(mb->mbIndexC, mb) && (((p_pic_pos + 1)->x)!=0));
   mb->mbAvailB = (Boolean) (mb_is_available(mb->mbIndexB, mb));
-
 
   mb->mbCabacLeft = (mb->mbAvailA) ? &(slice->mbData[mb->mbIndexA]) : NULL;
   mb->mbCabacUp   = (mb->mbAvailB) ? &(slice->mbData[mb->mbIndexB]) : NULL;
@@ -92,6 +89,7 @@ void get_mb_block_pos_normal (sBlockPos* picPos, int mbIndex, short* x, short* y
   *y = (short) pPos->y;
   }
 //}}}
+
 //{{{
 void CheckAvailabilityOfNeighborsMBAFF (sMacroblock* mb) {
 
@@ -123,6 +121,7 @@ void get_mb_block_pos_mbaff (sBlockPos* picPos, int mbIndex, short* x, short* y)
   *y = (short) ((pPos->y << 1) + (mbIndex & 0x01));
   }
 //}}}
+
 //{{{
 void getMbPos (sDecoder* decoder, int mbIndex, int mbSize[2], short* x, short* y) {
 
