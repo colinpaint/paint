@@ -10,27 +10,25 @@
 #define QUARTER   0x0100  //(1 << (B_BITS-2))
 
 //{{{
-sDecodingEnv* arideco_create_decoding_environment()
-{
-  sDecodingEnv* dep;
+sDecodingEnv* arideco_create_decoding_environment() {  
 
-  if ((dep = calloc(1,sizeof(sDecodingEnv))) == NULL)
-    no_mem_exit("arideco_create_decoding_environment: dep");
+  sDecodingEnv* dep = calloc (1,sizeof(sDecodingEnv));
+  if (!dep)
+    no_mem_exit ("arideco_create_decoding_environment: dep");
   return dep;
-}
+  }
 //}}}
 
 //{{{
-void arideco_delete_decoding_environment (sDecodingEnv* dep)
-{
-  if (dep == NULL)
-  {
-    snprintf(errorText, ET_SIZE, "Error freeing dep (NULL pointer)");
+void arideco_delete_decoding_environment (sDecodingEnv* dep) {
+
+  if (dep == NULL) {
+    snprintf (errorText, ET_SIZE, "Error freeing dep (NULL pointer)");
     error (errorText, 200);
-  }
+    }
   else
     free(dep);
-}
+  }
 //}}}
 //{{{
 void arideco_done_decoding (sDecodingEnv* dep) {
@@ -39,31 +37,29 @@ void arideco_done_decoding (sDecodingEnv* dep) {
 //}}}
 
 //{{{
-static inline unsigned int getbyte (sDecodingEnv* dep)
-{
+static inline unsigned int getbyte (sDecodingEnv* dep) {
   return dep->Dcodestrm[(*dep->Dcodestrm_len)++];
-}
+  }
 //}}}
 //{{{
 static inline unsigned int getword (sDecodingEnv* dep) {
 
-  int *len = dep->Dcodestrm_len;
-  byte *p_code_strm = &dep->Dcodestrm[*len];
+  int* len = dep->Dcodestrm_len;
+  byte* p_code_strm = &dep->Dcodestrm[*len];
   *len += 2;
-  return ((*p_code_strm<<8) | *(p_code_strm + 1));
-}
+  return (*p_code_strm<<8) | *(p_code_strm + 1);
+  }
 //}}}
 //{{{
-void arideco_start_decoding (sDecodingEnv* dep, unsigned char *code_buffer,
-                            int firstbyte, int *codeLen) {
+void arideco_start_decoding (sDecodingEnv* dep, unsigned char* code_buffer, int firstbyte, int* codeLen) {
 
-  dep->Dcodestrm      = code_buffer;
-  dep->Dcodestrm_len  = codeLen;
+  dep->Dcodestrm = code_buffer;
+  dep->Dcodestrm_len = codeLen;
   *dep->Dcodestrm_len = firstbyte;
 
   dep->Dvalue = getbyte(dep);
   dep->Dvalue = (dep->Dvalue << 16) | getword(dep); // lookahead of 2 bytes: always make sure that s buffer
-                                        // contains 2 more bytes than actual s
+                                                    // contains 2 more bytes than actual s
   dep->DbitsLeft = 15;
   dep->Drange = HALF;
   }
@@ -120,8 +116,8 @@ unsigned int biari_decode_symbol (sDecodingEnv* dep, sBiContextType* bi_ct) {
   }
 //}}}
 //{{{
-unsigned int biari_decode_symbol_eq_prob (sDecodingEnv* dep)
-{
+unsigned int biari_decode_symbol_eq_prob (sDecodingEnv* dep) {
+
    int tmp_value;
    unsigned int* value = &dep->Dvalue;
    int* DbitsLeft = &dep->DbitsLeft;
@@ -129,7 +125,7 @@ unsigned int biari_decode_symbol_eq_prob (sDecodingEnv* dep)
   if (--(*DbitsLeft) == 0) {
     // lookahead of 2 bytes: always make sure that s buffer
     // contains 2 more bytes than actual s
-    *value = (*value << 16) | getword( dep );  
+    *value = (*value << 16) | getword( dep );
     *DbitsLeft = 16;
     }
 
@@ -155,11 +151,11 @@ unsigned int biari_decode_final (sDecodingEnv* dep) {
       }
     else {
       dep->Drange = (range << 1);
-      if( --(dep->DbitsLeft) > 0 )
+      if (--(dep->DbitsLeft) > 0)
         return 0;
       else {
-        dep->Dvalue = (dep->Dvalue << 16) | getword( dep ); // lookahead of 2 bytes: always make sure that s buffer
-                                                            // contains 2 more bytes than actual s
+        dep->Dvalue = (dep->Dvalue << 16) | getword (dep); // lookahead of 2 bytes: always make sure that s buffer
+                                                           // contains 2 more bytes than actual s
         dep->DbitsLeft = 16;
         return 0;
         }
@@ -171,8 +167,8 @@ unsigned int biari_decode_final (sDecodingEnv* dep) {
 //}}}
 
 //{{{
-void biari_init_context (int qp, sBiContextType* ctx, const char* ini)
-{
+void biari_init_context (int qp, sBiContextType* ctx, const char* ini) {
+
   int pstate = ((ini[0]* qp )>>4) + ini[1];
 
   if ( pstate >= 64 ) {

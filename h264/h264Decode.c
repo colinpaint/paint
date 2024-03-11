@@ -164,7 +164,7 @@ static void freeDecoder (sDecoder* decoder) {
     }
 
   if (decoder->sliceList) {
-    for (unsigned int i = 0; i < decoder->numAllocatedSlices; i++)
+    for (int i = 0; i < decoder->numAllocatedSlices; i++)
       if (decoder->sliceList[i])
         freeSlice (decoder->sliceList[i]);
     free (decoder->sliceList);

@@ -81,7 +81,7 @@ static void genFieldRefIds (sDecoder* decoder, sPicture* p) {
 // Generate Frame parameters from field information.
 
   // copy the list;
-  for (unsigned int j = 0; j < decoder->picSliceIndex; j++) {
+  for (int j = 0; j < decoder->picSliceIndex; j++) {
     if (p->listX[j][LIST_0]) {
       p->listXsize[j][LIST_0] = decoder->sliceList[j]->listXsize[LIST_0];
       for (int i = 0; i < p->listXsize[j][LIST_0]; i++)

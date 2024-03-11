@@ -675,8 +675,9 @@ static void initPictureDecoding (sDecoder* decoder) {
     error ("Maximum number of supported slices exceeded, increase MAX_NUM_SLICES", 200);
 
   sSlice* slice = decoder->sliceList[0];
-  if (decoder->nextPPS->valid &&
-      (int)decoder->nextPPS->ppsId == slice->ppsId) {
+  if (decoder->nextPPS->valid && ((int)decoder->nextPPS->ppsId == slice->ppsId)) {
+    if (decoder->param.sliceDebug) 
+      printf ("- switch PPS\n");
     sPPS pps;
     memcpy (&pps, &(decoder->pps[slice->ppsId]), sizeof (sPPS));
     (decoder->pps[slice->ppsId]).sliceGroupId = NULL;
@@ -698,7 +699,7 @@ static void initPictureDecoding (sDecoder* decoder) {
   updatePicNum (slice);
 
   initDeblock (decoder, slice->mbAffFrameFlag);
-  for (unsigned int j = 0; j < decoder->picSliceIndex; j++) {
+  for (int j = 0; j < decoder->picSliceIndex; j++) {
     if (decoder->sliceList[j]->DFDisableIdc != 1)
       deblockMode = 0;
     }
@@ -708,7 +709,6 @@ static void initPictureDecoding (sDecoder* decoder) {
 //}}}
 static void framePostProcessing (sDecoder* decoder) {}
 static void fieldPostProcessing (sDecoder* decoder) { decoder->number /= 2; }
-
 //{{{
 static void copySliceInfo (sSlice* slice, sOldSlice* oldSlice) {
 
@@ -1271,7 +1271,7 @@ void endPicture (sDecoder* decoder, sPicture** picture) {
     gettime (&(decoder->endTime));
     printf ("-------> %s %d:%d:%d qp:%2d slices:%d mb:%d %dms\n",
             sliceTypeText,
-            picNum, framePoc, numOutputFrames, 
+            picNum, framePoc, numOutputFrames,
             qp, decoder->numDecodedSlices, decoder->numDecodedMbs,
             (int)timenorm (timediff (&(decoder->startTime), &(decoder->endTime))));
 
@@ -1297,18 +1297,19 @@ int decodeFrame (sDecoder* decoder) {
   sSlice** sliceList = decoder->sliceList;
   if (decoder->newFrame) {
     if (decoder->nextPPS->valid) {
-      //{{{  use next PPS
       makePPSavailable (decoder, decoder->nextPPS->ppsId, decoder->nextPPS);
       decoder->nextPPS->valid = 0;
       }
-      //}}}
+
     // get firstSlice from slice;
     slice = sliceList[decoder->picSliceIndex];
     sliceList[decoder->picSliceIndex] = decoder->nextSlice;
     decoder->nextSlice = slice;
     slice = sliceList[decoder->picSliceIndex];
+
     useParameterSet (slice);
     initPicture (decoder, slice);
+
     decoder->picSliceIndex++;
     curHeader = SOS;
     }
@@ -1393,7 +1394,8 @@ int decodeFrame (sDecoder* decoder) {
   // decode slices
   ret = curHeader;
   initPictureDecoding (decoder);
-  for (unsigned int sliceIndex = 0; sliceIndex < decoder->picSliceIndex; sliceIndex++) {
+  for (int sliceIndex = 0; sliceIndex < decoder->picSliceIndex; sliceIndex++) {
+    printf ("sliceIndex:%d picSliceIndex:%d\n", sliceIndex, decoder->picSliceIndex);
     slice = sliceList[sliceIndex];
     curHeader = slice->curHeader;
     initSlice (decoder, slice);

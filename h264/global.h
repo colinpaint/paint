@@ -793,10 +793,10 @@ typedef struct Decoder {
   struct OldSlice* oldSlice;
 
   // current picture property
-  unsigned int picSliceIndex;
-  unsigned int numDecodedMbs;
-  unsigned int numDecodedSlices;
-  unsigned int numAllocatedSlices;
+  int          picSliceIndex;
+  int          numDecodedMbs;
+  int          numDecodedSlices;
+  int          numAllocatedSlices;
 
   sSlice**     sliceList;
   char*        intraBlock;
