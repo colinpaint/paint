@@ -327,11 +327,11 @@ void freedp (sDataPartition* dp, int n) {
 //}}}
 
 //{{{
-void freeLayerBuffers (sDecoder* decoder, int layerId) {
+void freeLayerBuffers (sDecoder* decoder) {
 
   sCoding* coding = decoder->coding;
 
-  if (!decoder->globalInitDone[layerId])
+  if (!decoder->globalInitDone)
     return;
 
   // CAVLC free mem
@@ -379,21 +379,21 @@ void freeLayerBuffers (sDecoder* decoder, int layerId) {
 
   freeQuant (coding);
 
-  decoder->globalInitDone[layerId] = 0;
+  decoder->globalInitDone = 0;
   }
 //}}}
 //{{{
-void initGlobalBuffers (sDecoder* decoder, int layerId) {
+void initGlobalBuffers (sDecoder* decoder) {
 
   sCoding *coding = decoder->coding;
   sBlockPos* picPos;
 
-  if (decoder->globalInitDone[layerId])
-    freeLayerBuffers (decoder, layerId);
+  if (decoder->globalInitDone)
+    freeLayerBuffers (decoder);
 
   // allocate memory in structure decoder
   if (coding->sepColourPlaneFlag != 0) {
-    for (int i = 0; i<MAX_PLANE; ++i )
+    for (int i = 0; i < MAX_PLANE; ++i )
       if (((coding->mbDataJV[i]) = (sMacroblock*)calloc(coding->frameSizeMbs, sizeof(sMacroblock))) == NULL)
         no_mem_exit ("initGlobalBuffers: coding->mbDataJV");
     coding->mbData = NULL;
@@ -442,7 +442,7 @@ void initGlobalBuffers (sDecoder* decoder, int layerId) {
 
   allocQuant (coding);
   coding->oldFrameSizeMbs = coding->frameSizeMbs;
-  decoder->globalInitDone[layerId] = 1;
+  decoder->globalInitDone = 1;
   }
 //}}}
 //{{{
@@ -589,7 +589,7 @@ sDecoder* openDecoder (sParam* input, byte* chunk, size_t chunkSize) {
   openAnnexB (decoder->annexB, chunk, chunkSize);
 
   // init slice
-  decoder->globalInitDone[0] = decoder->globalInitDone[1] = 0;
+  decoder->globalInitDone = 0;
   decoder->oldSlice = (sOldSlice*)calloc (1, sizeof(sOldSlice));
   decoder->sliceList = (sSlice**)calloc (MAX_NUM_DECSLICES, sizeof(sSlice*));
   decoder->numAllocatedSlices = MAX_NUM_DECSLICES;
@@ -647,8 +647,7 @@ void finishDecoder (sDecoder* decoder, sDecodedPic** decPicList) {
 void closeDecoder (sDecoder* decoder) {
 
   closeFmo (decoder);
-  freeLayerBuffers (decoder, 0);
-  freeLayerBuffers (decoder, 1);
+  freeLayerBuffers (decoder);
   freeGlobalBuffers (decoder);
 
   ercClose (decoder, decoder->ercErrorVar);

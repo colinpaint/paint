@@ -630,7 +630,7 @@ void activateSPS (sDecoder* decoder, sSPS* sps) {
       }
     setGlobalCodingProgram (decoder, decoder->coding);
 
-    initGlobalBuffers (decoder, 0);
+    initGlobalBuffers (decoder);
     if (!decoder->noOutputPriorPicFlag)
       flushDpb (decoder->dpbLayer);
 

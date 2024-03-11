@@ -856,7 +856,7 @@ typedef struct Decoder {
   int          isPrimaryOk;    // if primary frame is correct, 0: incorrect
   int          isReduncantOk;  // if redundant frame is correct, 0:incorrect
 
-  Boolean      globalInitDone[2];
+  Boolean      globalInitDone;
 
   int*         qpPerMatrix;
   int*         qpRemMatrix;
@@ -993,9 +993,9 @@ static inline int isHiIntraOnlyProfile (unsigned int profileIdc, Boolean constra
   extern char errorText[ET_SIZE];
   extern void error (char* text, int code);
 
-  extern void initGlobalBuffers (sDecoder* decoder, int layerId);
+  extern void initGlobalBuffers (sDecoder* decoder);
   extern void freeGlobalBuffers (sDecoder* decoder);
-  extern void freeLayerBuffers (sDecoder* decoder, int layerId);
+  extern void freeLayerBuffers (sDecoder* decoder);
 
   extern sDataPartition* allocdp (int n);
   extern void freedp (sDataPartition* dp, int n);
