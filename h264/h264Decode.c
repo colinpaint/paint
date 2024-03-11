@@ -196,7 +196,6 @@ static void init (sDecoder* decoder) {
   decoder->recoveryPoc = 0x7fffffff; /* set to a max value */
 
   decoder->idrPsnrNum = decoder->param.refOffset;
-  decoder->psnrNum=0;
 
   decoder->number = 0;
   decoder->type = I_SLICE;

@@ -498,7 +498,7 @@ static void initPicture (sDecoder* decoder, sSlice* slice) {
   decoder->frameSizeMbs = decoder->picWidthMbs * decoder->frameHeightMbs;
 
   if (decoder->picture) // this may only happen on slice loss
-    exitPicture (decoder, &decoder->picture);
+    endPicture (decoder, &decoder->picture);
 
   decoder->dpbLayerId = slice->layerId;
   setupBuffers (decoder, slice->layerId);
@@ -1088,18 +1088,6 @@ void initOldSlice (sOldSlice* oldSlice) {
   }
 //}}}
 //{{{
-void calcFrameNum (sDecoder* decoder, sPicture* picture) {
-
-  int psnrPOC = decoder->activeSPS->mb_adaptive_frame_field_flag ? picture->poc / (decoder->param.pocScale) :
-                                                                    picture->poc / (decoder->param.pocScale);
-  if (psnrPOC == 0)
-    decoder->idrPsnrNum = decoder->gapNumFrame * decoder->refPocGap / (decoder->param.pocScale);
-
-  decoder->psnrNum = imax (decoder->psnrNum, decoder->idrPsnrNum+psnrPOC);
-  decoder->frameNum = decoder->idrPsnrNum + psnrPOC;
-  }
-//}}}
-//{{{
 void padPicture (sDecoder* decoder, sPicture* picture) {
 
   padBuf (*picture->imgY, picture->sizeX, picture->sizeY,
@@ -1114,7 +1102,7 @@ void padPicture (sDecoder* decoder, sPicture* picture) {
   }
 //}}}
 //{{{
-void exitPicture (sDecoder* decoder, sPicture** picture) {
+void endPicture (sDecoder* decoder, sPicture** picture) {
 
   // return if the last picture has already been finished
   if (*picture == NULL ||
@@ -1416,7 +1404,7 @@ int decodeFrame (sDecoder* decoder) {
     decoder->numDecodedSlices++;
     }
 
-  exitPicture (decoder, &decoder->picture);
+  endPicture (decoder, &decoder->picture);
   decoder->prevFrameNum = sliceList[0]->frameNum;
 
   return ret;

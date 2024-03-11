@@ -300,6 +300,17 @@ void freeOutput (sDecoder* decoder) {
 //}}}
 
 //{{{
+void calcFrameNum (sDecoder* decoder, sPicture* picture) {
+
+  int psnrPOC = decoder->activeSPS->mb_adaptive_frame_field_flag ? picture->poc / (decoder->param.pocScale) :
+                                                                    picture->poc / (decoder->param.pocScale);
+  if (psnrPOC == 0)
+    decoder->idrPsnrNum = decoder->gapNumFrame * decoder->refPocGap / (decoder->param.pocScale);
+
+  decoder->frameNum = decoder->idrPsnrNum + psnrPOC;
+  }
+//}}}
+//{{{
 void directOutput (sDecoder* decoder, sPicture* picture) {
 
   if (picture->structure == FRAME) {

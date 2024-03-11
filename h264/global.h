@@ -786,7 +786,6 @@ typedef struct Decoder {
   int          number;
   unsigned int preFrameNum;  // last decoded slice. For detecting gap in frameNum.
   int          idrPsnrNum;
-  int          psnrNum;
   unsigned int prevFrameNum; // number of previous slice
   int          frameNum;
   int          gapNumFrame;

@@ -596,8 +596,8 @@ void processSPS (sDecoder* decoder, sNalu* nalu) {
       if (sps->spsId == decoder->activeSPS->spsId) {
         if (!spsIsEqual (sps, decoder->activeSPS))   {
           if (decoder->picture)
-            exitPicture (decoder, &decoder->picture);
-          decoder->activeSPS=NULL;
+            endPicture (decoder, &decoder->picture);
+          decoder->activeSPS = NULL;
           }
         }
       }
@@ -620,8 +620,8 @@ void processSPS (sDecoder* decoder, sNalu* nalu) {
 void activateSPS (sDecoder* decoder, sSPS* sps) {
 
   if (decoder->activeSPS != sps) {
-    if (decoder->picture) // this may only happen on slice loss
-      exitPicture (decoder, &decoder->picture);
+    if (decoder->picture) // slice loss
+      endPicture (decoder, &decoder->picture);
     decoder->activeSPS = sps;
 
     if (decoder->dpbLayerId == 0 && isBLprofile (sps->profileIdc) && !decoder->dpbLayer[0]->initDone) {
@@ -837,7 +837,7 @@ static void activatePPS (sDecoder* decoder, sPPS* pps) {
 
   if (decoder->activePPS != pps) {
     if (decoder->picture) // only on slice loss
-      exitPicture (decoder, &decoder->picture);
+      endPicture (decoder, &decoder->picture);
     decoder->activePPS = pps;
     }
   }
@@ -903,7 +903,7 @@ void processPPS (sDecoder* decoder, sNalu* nalu) {
         // copy to next PPS;
         memcpy (decoder->nextPPS, decoder->activePPS, sizeof (sPPS));
         if (decoder->picture)
-          exitPicture (decoder, &decoder->picture);
+          endPicture (decoder, &decoder->picture);
         decoder->activePPS = NULL;
         }
       }
