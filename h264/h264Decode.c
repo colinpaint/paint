@@ -220,7 +220,7 @@ static void init (sDecoder* decoder) {
   decoder->iChromaPadY = MCBUF_CHROMA_PAD_Y;
 
   decoder->deblockEnable = 0x3;
-  decoder->lastDecLayerId = -1;
+  decoder->layerInitDone = 0;
   }
 //}}}
 //{{{

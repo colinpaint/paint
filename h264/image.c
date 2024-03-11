@@ -37,9 +37,9 @@ static void resetMb (sMacroblock* mb) {
   }
 //}}}
 //{{{
-static void setupBuffers (sDecoder* decoder, int layerId) {
+static void setupBuffers (sDecoder* decoder) {
 
-  if (decoder->lastDecLayerId != layerId) {
+  if (!decoder->layerInitDone) {
     sCoding* coding = decoder->coding;
     if (coding->sepColourPlaneFlag) {
       for (int i = 0; i < MAX_PLANE; i++ ) {
@@ -65,7 +65,7 @@ static void setupBuffers (sDecoder* decoder, int layerId) {
     decoder->qpPerMatrix = coding->qpPerMatrix;
     decoder->qpRemMatrix = coding->qpRemMatrix;
     decoder->oldFrameSizeMbs = coding->oldFrameSizeMbs;
-    decoder->lastDecLayerId = layerId;
+    decoder->layerInitDone = 1;
     }
   }
 //}}}
@@ -500,7 +500,7 @@ static void initPicture (sDecoder* decoder, sSlice* slice) {
   if (decoder->picture) // this may only happen on slice loss
     endPicture (decoder, &decoder->picture);
 
-  setupBuffers (decoder, slice->layerId);
+  setupBuffers (decoder);
 
   if (decoder->recoveryPoint)
     decoder->recoveryFrameNum = (slice->frameNum + decoder->recoveryFrameCount) % decoder->maxFrameNum;

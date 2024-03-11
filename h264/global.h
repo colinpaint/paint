@@ -896,7 +896,7 @@ typedef struct Decoder {
 
   // control;
   int   deblockEnable;
-  int   lastDecLayerId;
+  int   layerInitDone;
 
   int   width;
   int   height;
@@ -927,8 +927,8 @@ typedef struct Decoder {
   int mbCrSizeXblock;
   int mbCrSizeYblock;
   int mbCrSize;
-  int mbSize[3][2];      // component macroblock dimensions
-  int mbSizeBlock[3][2]; // component macroblock dimensions
+  int mbSize[3][2];
+  int mbSizeBlock[3][2];
   int mbSizeShift[3][2];
   int subpelX;
   int subpelY;
