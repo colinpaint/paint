@@ -624,7 +624,7 @@ void activateSPS (sDecoder* decoder, sSPS* sps) {
       endPicture (decoder, &decoder->picture);
     decoder->activeSPS = sps;
 
-    if (decoder->dpbLayerId == 0 && isBLprofile (sps->profileIdc) && !decoder->dpbLayer->initDone) {
+    if (isBLprofile (sps->profileIdc) && !decoder->dpbLayer->initDone) {
       setCodingParam (sps, decoder->coding);
       setupLayerInfo ( decoder, sps, decoder->layer);
       }
@@ -944,7 +944,6 @@ void useParameterSet (sSlice* slice) {
     if (sps->num_ref_frames_in_pic_order_cnt_cycle >= MAX_NUM_REF_FRAMES_PIC_ORDER)
       error ("num_ref_frames_in_pic_order_cnt_cycle too large",-1011);
 
-  decoder->dpbLayerId = slice->layerId;
   activateSPS (decoder, sps);
   activatePPS (decoder, pps);
 

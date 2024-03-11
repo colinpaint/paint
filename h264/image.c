@@ -500,7 +500,6 @@ static void initPicture (sDecoder* decoder, sSlice* slice) {
   if (decoder->picture) // this may only happen on slice loss
     endPicture (decoder, &decoder->picture);
 
-  decoder->dpbLayerId = slice->layerId;
   setupBuffers (decoder, slice->layerId);
 
   if (decoder->recoveryPoint)

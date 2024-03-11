@@ -897,7 +897,6 @@ typedef struct Decoder {
   // control;
   int   deblockEnable;
   int   lastDecLayerId;
-  int   dpbLayerId;
 
   int   width;
   int   height;
