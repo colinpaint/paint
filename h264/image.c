@@ -1227,6 +1227,8 @@ void endPicture (sDecoder* decoder, sPicture** picture) {
 
     if (structure == FRAME)
       strncat (sliceTypeText, "    ", 8 - strlen (sliceTypeText));
+
+    sliceTypeText[4] = 0;
     }
     //}}}
   else if (structure == BotField) {
@@ -1251,9 +1253,10 @@ void endPicture (sDecoder* decoder, sPicture** picture) {
 
     else
       strncat (sliceTypeText, "| B ", 8-strlen (sliceTypeText));
+
+    sliceTypeText[8] = 0;
     }
     //}}}
-  sliceTypeText[8] = 0;
 
   if ((structure == FRAME) || structure == BotField) {
     //{{{  count numOutputFrames
@@ -1266,8 +1269,9 @@ void endPicture (sDecoder* decoder, sPicture** picture) {
       }
     //}}}
     gettime (&(decoder->endTime));
-    printf ("---> %d:%d:%d %s qp:%2d slices:%d mb:%d %dms\n",
-            picNum, framePoc, numOutputFrames, sliceTypeText,
+    printf ("-------> %s %d:%d:%d qp:%2d slices:%d mb:%d %dms\n",
+            sliceTypeText,
+            picNum, framePoc, numOutputFrames, 
             qp, decoder->numDecodedSlices, decoder->numDecodedMbs,
             (int)timenorm (timediff (&(decoder->startTime), &(decoder->endTime))));
 

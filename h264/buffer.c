@@ -97,7 +97,7 @@ static void genFieldRefIds (sDecoder* decoder, sPicture* p) {
   }
 //}}}
 //{{{
-static void unmarkLongTermFieldRefFrameIndex (sDPB* dpb, ePicStructure structure, int longTermFrameIndex, 
+static void unmarkLongTermFieldRefFrameIndex (sDPB* dpb, ePicStructure structure, int longTermFrameIndex,
                                               int mark_current, unsigned curr_frame_num, int curr_pic_num) {
 
   sDecoder* decoder = dpb->decoder;
@@ -813,7 +813,7 @@ void fillFrameNumGap (sDecoder* decoder, sSlice* slice) {
   printf ("A gap in frame number is found, try to fill it.\n");
 
   int unusedShortTermFrameNum = (decoder->preFrameNum + 1) % decoder->maxFrameNum;
-  int curFrameNum = slice->frameNum; 
+  int curFrameNum = slice->frameNum;
 
   sPicture* picture = NULL;
   while (curFrameNum != unusedShortTermFrameNum) {
@@ -1686,12 +1686,9 @@ void storePictureDpb (sDPB* dpb, sPicture* p) {
   int poc, pos;
   // picture error conceal
 
-  // diagnostics
   //printf ("Storing (%s) non-ref pic with frameNum #%d\n",
   //        (p->type == FRAME)?"FRAME":(p->type == TopField)?"TopField":"BotField", p->picNum);
   // if frame, check for new store,
-  assert (p!=NULL);
-
   decoder->lastHasMmco5 = 0;
   decoder->lastPicBotField = (p->structure == BotField);
 
