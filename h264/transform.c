@@ -582,7 +582,7 @@ static void copy8x8 (sPixel** mb_rec, sPixel** mpr, int ioff) {
   }
 //}}}
 //{{{
-void icopy8x8 (sMacroblock *mb, eColorPlane pl, int ioff, int joff) {
+void icopy8x8 (sMacroblock* mb, eColorPlane pl, int ioff, int joff) {
 
   sSlice* slice = mb->slice;
   copy8x8 (&slice->mb_rec[pl][joff], &slice->mb_pred[pl][joff], ioff);
