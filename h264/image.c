@@ -675,7 +675,7 @@ static void initPictureDecoding (sDecoder* decoder) {
 
   sSlice* slice = decoder->sliceList[0];
   if (decoder->nextPPS->valid && ((int)decoder->nextPPS->ppsId == slice->ppsId)) {
-    if (decoder->param.sliceDebug) 
+    if (decoder->param.sliceDebug)
       printf ("- switch PPS\n");
     sPPS pps;
     memcpy (&pps, &(decoder->pps[slice->ppsId]), sizeof (sPPS));
@@ -1219,15 +1219,15 @@ void endPicture (sDecoder* decoder, sPicture** picture) {
       strcpy (sliceTypeText, "SI ");
 
     else if (refpic)
-      strcpy (sliceTypeText, "rB ");
+      strcpy (sliceTypeText, " B ");
 
     else
-      strcpy (sliceTypeText, " B ");
+      strcpy (sliceTypeText, " b ");
 
     if (structure == FRAME)
       strncat (sliceTypeText, "    ", 8 - strlen (sliceTypeText));
 
-    sliceTypeText[4] = 0;
+    sliceTypeText[3] = 0;
     }
     //}}}
   else if (structure == BotField) {
@@ -1248,10 +1248,10 @@ void endPicture (sDecoder* decoder, sPicture** picture) {
       strncat (sliceTypeText, "|SI ", 8-strlen (sliceTypeText));
 
     else if (refpic)
-      strncat (sliceTypeText, "|rB ", 8-strlen (sliceTypeText));
+      strncat (sliceTypeText, "| B ", 8-strlen (sliceTypeText));
 
     else
-      strncat (sliceTypeText, "| B ", 8-strlen (sliceTypeText));
+      strncat (sliceTypeText, "| b ", 8-strlen (sliceTypeText));
 
     sliceTypeText[8] = 0;
     }

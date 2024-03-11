@@ -892,7 +892,7 @@ static int getDpbSize (sDecoder* decoder, sSPS *activeSPS) {
   int pic_size_mb = (activeSPS->pic_width_in_mbs_minus1 + 1) * (activeSPS->pic_height_in_map_units_minus1 + 1) * (activeSPS->frameMbOnlyFlag?1:2);
   int size = 0;
 
-  switch (activeSPS->level_idc) {
+  switch (activeSPS->levelIdc) {
     //{{{
     case 0:
       // if there is no level defined, we expect experimental usage and return a DPB size of 16

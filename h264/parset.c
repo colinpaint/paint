@@ -55,11 +55,11 @@ static void setCodingParam (sSPS* sps, sCoding* coding) {
   // maximum vertical motion vector range in luma quarter pixel units
   coding->profileIdc = sps->profileIdc;
   coding->losslessQpPrimeFlag = sps->losslessQpPrimeFlag;
-  if (sps->level_idc <= 10)
+  if (sps->levelIdc <= 10)
     coding->maxVmvR = 64 * 4;
-  else if (sps->level_idc <= 20)
+  else if (sps->levelIdc <= 20)
     coding->maxVmvR = 128 * 4;
-  else if (sps->level_idc <= 30)
+  else if (sps->levelIdc <= 30)
     coding->maxVmvR = 256 * 4;
   else
     coding->maxVmvR = 512 * 4; // 512 pixels in quarter pixels
@@ -294,7 +294,7 @@ static int spsIsEqual (sSPS* sps1, sSPS* sps2) {
   equal &= (sps1->constrained_set0_flag == sps2->constrained_set0_flag);
   equal &= (sps1->constrained_set1_flag == sps2->constrained_set1_flag);
   equal &= (sps1->constrained_set2_flag == sps2->constrained_set2_flag);
-  equal &= (sps1->level_idc == sps2->level_idc);
+  equal &= (sps1->levelIdc == sps2->levelIdc);
   equal &= (sps1->spsId == sps2->spsId);
   equal &= (sps1->log2_max_frame_num_minus4 == sps2->log2_max_frame_num_minus4);
   equal &= (sps1->picOrderCountType == sps2->picOrderCountType);
@@ -481,7 +481,7 @@ static void interpretSPS (sDecoder* decoder, sDataPartition* dp, sSPS* sps) {
   if (reserved_zero != 0)
     printf ("reserved_zero flag not 0\n");
 
-  sps->level_idc = readUv (8, "SPS level_idc", s);
+  sps->levelIdc = readUv (8, "SPS levelIdc", s);
   sps->spsId = readUeV ("SPS spsId", s);
 
   // Fidelity Range Extensions stuff

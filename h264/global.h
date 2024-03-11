@@ -100,19 +100,19 @@ typedef struct {
 typedef struct {
   Boolean  valid;
 
-  unsigned int profileIdc;           // u(8)
+  unsigned int profileIdc;            // u(8)
   Boolean  constrained_set0_flag;     // u(1)
   Boolean  constrained_set1_flag;     // u(1)
   Boolean  constrained_set2_flag;     // u(1)
   Boolean  constrained_set3_flag;     // u(1)
-  unsigned int level_idc;             // u(8)
-  unsigned int spsId;  // ue(v)
+  unsigned int levelIdc;              // u(8)
+  unsigned int spsId;                 // ue(v)
   unsigned int chromaFormatIdc;       // ue(v)
 
-  Boolean  seq_scaling_matrix_present_flag;    // u(1)
-  int      seq_scaling_list_present_flag[12];  // u(1)
-  int      scalingList4x4[6][16];              // se(v)
-  int      scalingList8x8[6][64];              // se(v)
+  Boolean  seq_scaling_matrix_present_flag;   // u(1)
+  int      seq_scaling_list_present_flag[12]; // u(1)
+  int      scalingList4x4[6][16];             // se(v)
+  int      scalingList8x8[6][64];             // se(v)
   Boolean  useDefaultScalingMatrix4x4Flag[6];
   Boolean  useDefaultScalingMatrix8x8Flag[6];
 
@@ -127,26 +127,27 @@ typedef struct {
 
   unsigned int num_ref_frames_in_pic_order_cnt_cycle;          // ue(v)
   int      offset_for_ref_frame[MAX_NUM_REF_FRAMES_PIC_ORDER]; // se(v)
-  unsigned int numRefFrames;                    // ue(v)
+  unsigned int numRefFrames;                      // ue(v)
 
   Boolean  gaps_in_frame_num_value_allowed_flag;  // u(1)
 
   unsigned int pic_width_in_mbs_minus1;           // ue(v)
   unsigned int pic_height_in_map_units_minus1;    // ue(v)
-  Boolean  frameMbOnlyFlag;                   // u(1)
-  Boolean  mb_adaptive_frame_field_flag;          // u(1)
-  Boolean  direct_8x8_inference_flag;             // u(1)
+  
+  Boolean  frameMbOnlyFlag;                 // u(1)
+  Boolean  mb_adaptive_frame_field_flag;    // u(1)
+  Boolean  direct_8x8_inference_flag;       // u(1)
 
   Boolean  frameCropFlag;                   // u(1)
-  unsigned int frameCropLeft;            // ue(v)
-  unsigned int frameCropRight;           // ue(v)
-  unsigned int frameCropTop;             // ue(v)
-  unsigned int frameCropBot;          // ue(v)
+  unsigned int frameCropLeft;               // ue(v)
+  unsigned int frameCropRight;              // ue(v)
+  unsigned int frameCropTop;                // ue(v)
+  unsigned int frameCropBot;                // ue(v)
 
-  Boolean  vui_parameters_present_flag;           // u(1)
-  sVUI     vui_seq_parameters;                    // sVUI
+  Boolean  vui_parameters_present_flag;     // u(1)
+  sVUI     vui_seq_parameters;              // sVUI
 
-  unsigned sepColourPlaneFlag;            // u(1)
+  unsigned sepColourPlaneFlag;              // u(1)
   int      losslessQpPrimeFlag;
   } sSPS;
 //}}}
@@ -154,46 +155,46 @@ typedef struct {
 typedef struct {
   Boolean   valid;
 
-  unsigned int ppsId;            // ue(v)
-  unsigned int spsId;            // ue(v)
-  Boolean   entropyCodingModeFlag;          // u(1)
-  Boolean   transform8x8modeFlag;           // u(1)
+  unsigned int ppsId;                      // ue(v)
+  unsigned int spsId;                      // ue(v)
+  Boolean   entropyCodingModeFlag;         // u(1)
+  Boolean   transform8x8modeFlag;          // u(1)
 
-  Boolean   picScalingMatrixPresentFlag;    // u(1)
-  int       picScalingListPresentFlag[12];  // u(1)
-  int       scalingList4x4[6][16];          // se(v)
-  int       scalingList8x8[6][64];          // se(v)
+  Boolean   picScalingMatrixPresentFlag;   // u(1)
+  int       picScalingListPresentFlag[12]; // u(1)
+  int       scalingList4x4[6][16];         // se(v)
+  int       scalingList8x8[6][64];         // se(v)
   Boolean   useDefaultScalingMatrix4x4Flag[6];
   Boolean   useDefaultScalingMatrix8x8Flag[6];
 
   // if( picOrderCountType < 2 )  in the sequence parameter set
   Boolean      botFieldPicOrderFramePresentFlag; // u(1)
-  unsigned int numSliceGroupsMinus1;             // ue(v)
+  unsigned int numSliceGroupsMinus1;            // ue(v)
 
-  unsigned int sliceGroupMapType;                // ue(v)
-  // if (sliceGroupMapType = = 0)
-  unsigned int runLengthMinus1[8];               // ue(v)
-  // else if (sliceGroupMapType = = 2 )
-  unsigned int topLeft[8];                       // ue(v)
-  unsigned int botRight[8];                      // ue(v)
-  // else if (sliceGroupMapType = = 3 || 4 || 5
+  unsigned int sliceGroupMapType;               // ue(v)
+  // if (sliceGroupMapType == 0)
+  unsigned int runLengthMinus1[8];              // ue(v)
+  // else if (sliceGroupMapType == 2 )
+  unsigned int topLeft[8];                      // ue(v)
+  unsigned int botRight[8];                     // ue(v)
+  // else if (sliceGroupMapType == 3 || 4 || 5
   Boolean   sliceGroupChangeDirectionFlag;      // u(1)
   unsigned int sliceGroupChangeRateMius1;       // ue(v)
-  // else if (sliceGroupMapType = = 6)
+  // else if (sliceGroupMapType == 6)
   unsigned int picSizeMapUnitsMinus1;           // ue(v)
   byte*     sliceGroupId;                       // complete MBAmap u(v)
 
   int       numRefIndexL0defaultActiveMinus1;   // ue(v)
   int       numRefIndexL1defaultActiveMinus1;   // ue(v)
-  Boolean   weightedPredFlag;                     // u(1)
-  unsigned int  weightedBiPredIdc;                    // u(2)
-  int       picInitQpMinus26;                    // se(v)
-  int       picInitQsMinus26;                    // se(v)
-  int       chromaQpIndexOffset;                 // se(v)
+  Boolean   weightedPredFlag;                   // u(1)
+  unsigned int  weightedBiPredIdc;              // u(2)
+  int       picInitQpMinus26;                   // se(v)
+  int       picInitQsMinus26;                   // se(v)
+  int       chromaQpIndexOffset;                // se(v)
 
-  int       cbQpIndexOffset;                     // se(v)
-  int       crQpIndexOffset;                     // se(v)
-  int       secondChromaQpIndexOffset;           // se(v)
+  int       cbQpIndexOffset;                    // se(v)
+  int       crQpIndexOffset;                    // se(v)
+  int       secondChromaQpIndexOffset;          // se(v)
 
   Boolean   deblockingFilterControlPresentFlag; // u(1)
   Boolean   constrainedIntraPredFlag;           // u(1)
@@ -621,7 +622,7 @@ typedef struct Slice {
   short      wp_round_chroma;
 
   // for signalling to the neighbour logic that this is a deblocker call
-  int max_mb_vmv_r;      // maximum vertical motion vector range in luma quarter pixel units for the current level_idc
+  int max_mb_vmv_r;      // maximum vertical motion vector range in luma quarter pixel units for the current levelIdc
   int refFlag[17];       // 0: i-th previous frame is incorrect
 
   int ercMvPerMb;
@@ -683,7 +684,7 @@ typedef struct CodingParam {
   int mbSizeBlock[3][2];  // component macroblock dimensions
   int mbSizeShift[3][2];
 
-  int maxVmvR;                  // maximum vertical motion vector range in luma quarter frame pixel units for the current level_idc
+  int maxVmvR;                  // maximum vertical motion vector range in luma quarter frame pixel units for the current levelIdc
   int sepColourPlaneFlag;
   int ChromaArrayType;
   int maxFrameNum;
@@ -943,7 +944,7 @@ typedef struct Decoder {
   unsigned int frameSizeMbs;
   unsigned int oldFrameSizeMbs;
 
-  // maximum vertical motion vector range in luma quarter frame pixel units for the current level_idc
+  // maximum vertical motion vector range in luma quarter frame pixel units for the current levelIdc
   int maxVmvR;
 
   // virtual methods
