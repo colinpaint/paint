@@ -75,8 +75,7 @@ typedef enum {
   NALU_PRIORITY_DISPOSABLE  = 0
   } eNalRefIdc;
 //}}}
-//{{{
-// struct sNalu
+//{{{  sNalu
 typedef struct Nalu {
   int        startCodeLen; // 4 for parameter sets and first slice in picture, 3 for everything else (suggested)
   unsigned   len;          // Length of the NAL unit (Excluding the start code, which does not belong to the NALU)
