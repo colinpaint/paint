@@ -828,9 +828,9 @@ static int readNextSlice (sSlice* slice) {
 
         if (decoder->param.sliceDebug) {
           if (nalu->unitType == NALU_TYPE_IDR)
-            sprintf (decoder->naluStr, "IDR id:%d:%d", slice->refId, slice->sliceType);
+            printf ("IDR id:%d:%d\n", slice->refId, slice->sliceType);
           else
-            sprintf (decoder->naluStr, "SLC id:%d:%d", slice->refId, slice->sliceType);
+            printf ("SLC id:%d:%d\n", slice->refId, slice->sliceType);
           }
 
         assignQuantParams (slice);
@@ -1255,12 +1255,10 @@ void endDecodeFrame (sDecoder* decoder) {
   if ((structure == FRAME) || structure == BotField) {
     //{{{  print frame debug
     gettime (&(decoder->endTime));
-
-    printf ("%d %s %d:%d:%02d %2dms",
-            decoder->decodeFrameNum, decoder->naluStr,
+    printf ("-> %d %d:%d:%02d %2dms",
+            decoder->decodeFrameNum,
             decoder->numDecodedSlices, decoder->numDecodedMbs, qp,
             (int)timenorm (timediff (&(decoder->startTime), &(decoder->endTime))));
-
     printf (" ->%s-> poc:%d pic:%d", decoder->sliceTypeStr, pocNum, picNum);
 
     // count numOutputFrames
@@ -1271,7 +1269,6 @@ void endDecodeFrame (sDecoder* decoder) {
         numOutputFrames++;
       pic = pic->next;
       }
-
     if (numOutputFrames)
       printf (" -> %d\n", numOutputFrames);
     else

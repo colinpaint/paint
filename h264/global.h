@@ -813,7 +813,6 @@ typedef struct Decoder {
   // debug
   TIME_T       startTime;
   TIME_T       endTime;
-  char         naluStr[20];
   char         sliceTypeStr[9];
 
   // nalu
