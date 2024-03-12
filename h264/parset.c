@@ -935,14 +935,13 @@ void useParameterSet (sSlice* slice) {
     printf ("Trying to use an invalid (uninitialized) Picture Parameter Set with ID %d, expect the unexpected...\n", PicParsetId);
 
   if (sps->valid != TRUE)
-    printf ("PicParset %d references uninitialized) SPS ID %d, unexpected\n",
-            PicParsetId, (int) pps->spsId);
+    printf ("PicParset %d references uninitialized) SPS ID %d, unexpected\n", PicParsetId, (int) pps->spsId);
 
   // In theory, and with a well-designed software, the lines above are everything necessary.
   // In practice, we need to patch many values
   // in decoder-> (but no more in input. -- these have been taken care of)
   // Set Sequence Parameter Stuff first
-  if ((int) sps->picOrderCountType < 0 || sps->picOrderCountType > 2) {
+  if ((int)sps->picOrderCountType < 0 || sps->picOrderCountType > 2) {
     printf ("invalid sps->picOrderCountType = %d\n", (int) sps->picOrderCountType);
     error ("picOrderCountType != 1", -1000);
     }
