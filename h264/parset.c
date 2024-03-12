@@ -249,8 +249,7 @@ static void resetFormatInfo (sSPS* sps, sDecoder* decoder, sFrameFormat* source,
 
   if (decoder->firstSPS == TRUE) {
     decoder->firstSPS = FALSE;
-    printf ("ProfileIDC: %d %dx%d %dx%d ",
-            sps->profileIdc, source->width[0], source->height[0], decoder->width, decoder->height);
+    printf ("IDC %d %dx%d %dx%d ", sps->profileIdc, source->width[0], source->height[0], decoder->width, decoder->height);
     if (decoder->yuvFormat == YUV400)
       printf ("4:0:0");
     else if (decoder->yuvFormat == YUV420)
@@ -470,7 +469,7 @@ static void interpretSPS (sDecoder* decoder, sDataPartition* dp, sSPS* sps) {
       (sps->profileIdc != FREXT_HP) &&
       (sps->profileIdc != FREXT_Hi10P) && (sps->profileIdc != FREXT_Hi422) && (sps->profileIdc != FREXT_Hi444) &&
       (sps->profileIdc != FREXT_CAVLC444))
-    printf ("Invalid ProfileIDC:%d\n", sps->profileIdc);
+    printf ("IDC - invalid %d\n", sps->profileIdc);
 
   sps->constrained_set0_flag = readU1 ("SPS constrained_set0_flag", s);
   sps->constrained_set1_flag = readU1 ("SPS constrained_set1_flag", s);
@@ -478,7 +477,7 @@ static void interpretSPS (sDecoder* decoder, sDataPartition* dp, sSPS* sps) {
   sps->constrained_set3_flag = readU1 ("SPS constrained_set3_flag", s);
 
   int reserved_zero = readUv (4, "SPS reserved_zero_4bits", s);
-  if (reserved_zero != 0)
+  if (reserved_zero)
     printf ("reserved_zero flag not 0\n");
 
   sps->levelIdc = readUv (8, "SPS levelIdc", s);
@@ -491,7 +490,7 @@ static void interpretSPS (sDecoder* decoder, sDataPartition* dp, sSPS* sps) {
   sps->losslessQpPrimeFlag = 0;
   sps->sepColourPlaneFlag = 0;
 
-  if ((sps->profileIdc == FREXT_HP   ) ||
+  if ((sps->profileIdc == FREXT_HP) ||
       (sps->profileIdc == FREXT_Hi10P) ||
       (sps->profileIdc == FREXT_Hi422) ||
       (sps->profileIdc == FREXT_Hi444) ||
@@ -527,7 +526,7 @@ static void interpretSPS (sDecoder* decoder, sDataPartition* dp, sSPS* sps) {
   sps->log2_max_frame_num_minus4 = readUeV ("SPS log2_max_frame_num_minus4", s);
 
   sps->picOrderCountType = readUeV ("SPS picOrderCountType", s);
-  if (sps->picOrderCountType == 0)
+  if (!sps->picOrderCountType)
     sps->log2_max_pic_order_cnt_lsb_minus4 = readUeV ("SPS log2_max_pic_order_cnt_lsb_minus4", s);
   else if (sps->picOrderCountType == 1) {
     sps->delta_pic_order_always_zero_flag = readU1 ("SPS delta_pic_order_always_zero_flag", s);
@@ -557,16 +556,22 @@ static void interpretSPS (sDecoder* decoder, sDataPartition* dp, sSPS* sps) {
     sps->frameCropTop = readUeV ("SPS frameCropTop", s);
     sps->frameCropBot = readUeV ("SPS frameCropBot", s);
     }
-  sps->vui_parameters_present_flag = (Boolean) readU1 ("SPS vui_parameters_present_flag", s);
+  sps->vui_parameters_present_flag = (Boolean)readU1 ("SPS vui_parameters_present_flag", s);
 
   initVUI (sps);
   readVUI (dp, sps);
 
-  if (decoder->param.spsDebug)
-    printf ("SPS id:%d refFrames:%d picOrder:%d %dx%d %s %s\n",
+  if (decoder->param.spsDebug) {
+    printf ("SPS id:%d refFrames:%d picOrderCountType:%d mbs:%dx%d",
             sps->spsId, sps->numRefFrames,  sps->picOrderCountType,
-            sps->pic_width_in_mbs_minus1, sps->pic_height_in_map_units_minus1,
-            sps->frameMbOnlyFlag ?"frame":"", sps->frameCropFlag ? "crop":"");
+            sps->pic_width_in_mbs_minus1, sps->pic_height_in_map_units_minus1);
+    if (sps->frameMbOnlyFlag)
+      printf (" frame");
+    if (sps->frameCropFlag)
+      printf (" crop:%d:%d:%d:%d",
+              sps->frameCropLeft, sps->frameCropRight, sps->frameCropTop, sps->frameCropBot);
+    printf ("\n");
+    }
 
   sps->valid = TRUE;
   }
@@ -751,7 +756,7 @@ static void interpretPPS (sDecoder* decoder, sDataPartition* dp, sPPS* pps) {
   if (pps->numSliceGroupsMinus1 > 0) {
     //{{{  FMO
     pps->sliceGroupMapType = readUeV ("PPS sliceGroupMapType", s);
-    if (pps->sliceGroupMapType == 0) {
+    if (!pps->sliceGroupMapType) {
       for (unsigned i = 0; i <= pps->numSliceGroupsMinus1; i++)
         pps->runLengthMinus1 [i] = readUeV ("PPS runLengthMinus1 [i]", s);
       }
@@ -823,11 +828,13 @@ static void interpretPPS (sDecoder* decoder, sDataPartition* dp, sPPS* pps) {
     pps->secondChromaQpIndexOffset = pps->chromaQpIndexOffset;
 
   if (decoder->param.ppsDebug)
-    printf ("PPS id:%d L0:%d L1:%d %s\n",
-            pps->ppsId,
-            pps->numRefIndexL0defaultActiveMinus1,
-            pps->numRefIndexL1defaultActiveMinus1,
-            pps->deblockingFilterControlPresentFlag ? "deblock":"");
+    printf ("PPS id:%d spsId:%d%s%s%s%s L0:%d L1:%d\n",
+            pps->ppsId, pps->spsId,
+            pps->numSliceGroupsMinus1 ? " numSliceGroups":"",
+            pps->entropyCodingModeFlag ? " entropy":"",
+            pps->botFieldPicOrderFramePresentFlag ? " botFieldPicOrderFrame":"",
+            pps->deblockingFilterControlPresentFlag ? " deblock":"",
+            pps->numRefIndexL0defaultActiveMinus1, pps->numRefIndexL1defaultActiveMinus1);
 
   pps->valid = TRUE;
   }

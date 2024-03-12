@@ -46,7 +46,7 @@ typedef struct AnnexB {
   byte*  naluBuffer;
   } sAnnexB;
 //}}}
-//{{{  values for eNaluType
+//{{{  enum eNaluType
 typedef enum {
   NALU_TYPE_SLICE    = 1,
   NALU_TYPE_DPA      = 2,
@@ -67,7 +67,7 @@ typedef enum {
   NALU_TYPE_VDRD     = 24  // View and Dependency Representation Delimiter NAL Unit
   } eNaluType;
 //}}}
-//{{{  values for eNalRefIdc
+//{{{  enum eNalRefIdc
 typedef enum {
   NALU_PRIORITY_HIGHEST     = 3,
   NALU_PRIORITY_HIGH        = 2,
@@ -840,7 +840,6 @@ typedef struct Decoder {
   int          recoveryFrameNum;
   int          recoveryPoc;
 
-  // loadsa frameNum
   int          decodeFrameNum;
   int          idrFrameNum;
   unsigned int preFrameNum;  // last decoded slice. For detecting gap in frameNum.
@@ -924,11 +923,11 @@ typedef struct Decoder {
 
   int          dpbPoc[100];
 
-  struct FrameStore* lastOutFramestore;
-
+  // slice pictures
   struct Picture* picture;
   struct Picture* decPictureJV[MAX_PLANE];  // picture to be used during 4:4:4 independent mode decoding
   struct Picture* noReferencePicture;       // dummy storable picture for recovery point
+  struct FrameStore* lastOutFramestore;
 
   // Error parameters
   struct ObjectBuffer* ercObjectList;

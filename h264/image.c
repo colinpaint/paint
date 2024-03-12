@@ -1141,11 +1141,11 @@ void endPicture (sDecoder* decoder) {
     // call the right error conceal function depending on the frame type.
     decoder->ercMvPerMb /= decoder->picture->picSizeInMbs;
     if (decoder->picture->sliceType == I_SLICE || decoder->picture->sliceType == SI_SLICE) // I-frame
-      ercConcealIntraFrame (decoder, &recfr, 
+      ercConcealIntraFrame (decoder, &recfr,
                             decoder->picture->sizeX, decoder->picture->sizeY, decoder->ercErrorVar);
     else
-      ercConcealInterFrame (&recfr, decoder->ercObjectList, 
-                            decoder->picture->sizeX, decoder->picture->sizeY, decoder->ercErrorVar, 
+      ercConcealInterFrame (&recfr, decoder->ercObjectList,
+                            decoder->picture->sizeX, decoder->picture->sizeY, decoder->ercErrorVar,
                             decoder->picture->chromaFormatIdc);
     }
   //}}}
@@ -1182,7 +1182,7 @@ void endPicture (sDecoder* decoder) {
 
   int structure = decoder->picture->structure;
   int sliceType = decoder->picture->sliceType;
-  int framePoc = decoder->picture->framePoc;
+  int pocNum = decoder->picture->framePoc;
   int refpic = decoder->picture->usedForReference;
   int qp = decoder->picture->qp;
   int picNum = decoder->picture->picNum;
@@ -1254,12 +1254,12 @@ void endPicture (sDecoder* decoder) {
     //{{{  print frame debug
     gettime (&(decoder->endTime));
 
-    printf ("%s %d:%d:%02d %2dms",
-            decoder->naluStr,
+    printf ("%d %s %d:%d:%02d %2dms",
+            decoder->decodeFrameNum, decoder->naluStr,
             decoder->numDecodedSlices, decoder->numDecodedMbs, qp,
             (int)timenorm (timediff (&(decoder->startTime), &(decoder->endTime))));
 
-    printf (" ->%s-> pic:%d poc:%d", decoder->sliceTypeStr, picNum, framePoc);
+    printf (" ->%s-> poc:%d pic:%d", decoder->sliceTypeStr, pocNum, picNum);
 
     // count numOutputFrames
     int numOutputFrames = 0;
