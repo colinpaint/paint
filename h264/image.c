@@ -916,8 +916,8 @@ static int readNewSlice (sSlice* slice) {
           break;
 
         // read DP_A
-        slice->noDatadpB = 1;
-        slice->noDatadpC = 1;
+        slice->noDataPartitionB = 1;
+        slice->noDataPartitionC = 1;
         slice->idrFlag = FALSE;
         slice->refId = nalu->refId;
         slice->datadpMode = PAR_DP_3;
@@ -974,12 +974,12 @@ static int readNewSlice (sSlice* slice) {
           memcpy (s->streamBuffer, &nalu->buf[1], nalu->len-1);
           s->codeLen = s->bitstreamLength = RBSPtoSODB (s->streamBuffer, nalu->len-1);
           int slice_id_b = readUeV ("NALU dataPartitionB sliceId", s);
-          slice->noDatadpB = 0;
+          slice->noDataPartitionB = 0;
 
           if ((slice_id_b != slice_id_a) || (nalu->lostPackets)) {
             printf ("NALU dataPartitionB does not match dataPartitionA\n");
-            slice->noDatadpB = 1;
-            slice->noDatadpC = 1;
+            slice->noDataPartitionB = 1;
+            slice->noDataPartitionC = 1;
             }
           else {
             if (decoder->activePPS->redundantPicCountPresentFlag)
@@ -992,7 +992,7 @@ static int readNewSlice (sSlice* slice) {
           }
           //}}}
         else
-          slice->noDatadpB = 1;
+          slice->noDataPartitionB = 1;
 
         if (NALU_TYPE_DPC == nalu->unitType) {
           //{{{  got nalu dataPartitionC
@@ -1002,11 +1002,11 @@ static int readNewSlice (sSlice* slice) {
           memcpy (s->streamBuffer, &nalu->buf[1], nalu->len-1);
           s->codeLen = s->bitstreamLength = RBSPtoSODB (s->streamBuffer, nalu->len-1);
 
-          slice->noDatadpC = 0;
+          slice->noDataPartitionC = 0;
           int slice_id_c = readUeV ("NALU: DP_C slice_id", s);
           if ((slice_id_c != slice_id_a)|| (nalu->lostPackets)) {
             printf ("dataPartitionC does not match alu dataPartitionA\n");
-            slice->noDatadpC =1;
+            slice->noDataPartitionC =1;
             }
 
           if (decoder->activePPS->redundantPicCountPresentFlag)
@@ -1014,13 +1014,13 @@ static int readNewSlice (sSlice* slice) {
           }
           //}}}
         else {
-          slice->noDatadpC = 1;
+          slice->noDataPartitionC = 1;
           decoder->pendingNalu = nalu;
           }
 
         // check if we read anything else than the expected dps
         if ((nalu->unitType != NALU_TYPE_DPB) &&
-            (nalu->unitType != NALU_TYPE_DPC) && (!slice->noDatadpC))
+            (nalu->unitType != NALU_TYPE_DPC) && (!slice->noDataPartitionC))
           goto process_nalu;
 
         return curHeader;

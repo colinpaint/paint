@@ -34,6 +34,61 @@ typedef enum {
   } eColorComponent;
 //}}}
 
+//{{{
+typedef struct annexBstruct {
+  byte*  buffer;
+  size_t bufferSize;
+  byte*  bufferPtr;
+  size_t bytesInBuffer;
+
+  int    isFirstByteStreamNALU;
+  int    nextStartCodeBytes;
+  byte*  naluBuffer;
+  } ANNEXB_t;
+//}}}
+//{{{  values for eNaluType
+typedef enum {
+  NALU_TYPE_SLICE    = 1,
+  NALU_TYPE_DPA      = 2,
+  NALU_TYPE_DPB      = 3,
+  NALU_TYPE_DPC      = 4,
+  NALU_TYPE_IDR      = 5,
+  NALU_TYPE_SEI      = 6,
+  NALU_TYPE_SPS      = 7,
+  NALU_TYPE_PPS      = 8,
+
+  NALU_TYPE_AUD      = 9,
+  NALU_TYPE_EOSEQ    = 10,
+  NALU_TYPE_EOSTREAM = 11,
+  NALU_TYPE_FILL     = 12,
+  NALU_TYPE_PREFIX   = 14,
+  NALU_TYPE_SUB_SPS  = 15,
+  NALU_TYPE_SLC_EXT  = 20,
+  NALU_TYPE_VDRD     = 24  // View and Dependency Representation Delimiter NAL Unit
+  } eNaluType;
+//}}}
+//{{{  values for eNalRefIdc
+typedef enum {
+  NALU_PRIORITY_HIGHEST     = 3,
+  NALU_PRIORITY_HIGH        = 2,
+  NALU_PRIORITY_LOW         = 1,
+  NALU_PRIORITY_DISPOSABLE  = 0
+  } eNalRefIdc;
+//}}}
+//{{{
+// struct sNalu
+typedef struct Nalu {
+  int        startCodeLen; // 4 for parameter sets and first slice in picture, 3 for everything else (suggested)
+  unsigned   len;          // Length of the NAL unit (Excluding the start code, which does not belong to the NALU)
+  unsigned   maxSize;      // NAL Unit Buffer size
+  int        forbiddenBit; // should be always FALSE
+  eNaluType  unitType;     // NALU_TYPE_xxxx
+  eNalRefIdc refId;        // NALU_PRIORITY_xxxx
+  byte*      buf;          // contains the first byte followed by the EBSP
+  uint16     lostPackets;  // true, if packet loss is detected
+  } sNalu;
+//}}}
+
 //{{{  sHRD
 typedef struct {
   unsigned int cpb_cnt_minus1;             // ue(v)
@@ -578,8 +633,8 @@ typedef struct Slice {
   short DFAlphaC0Offset;   // Alpha and C0 offset for filtering slice
   short DFBetaOffset;      // Beta offset for filtering slice
   int   ppsId;             // the ID of the picture parameter set the slice is reffering to
-  int   noDatadpB;  // non-zero, if data dp B is lost
-  int   noDatadpC;  // non-zero, if data dp C is lost
+  int   noDataPartitionB;  // non-zero, if data dp B is lost
+  int   noDataPartitionC;  // non-zero, if data dp C is lost
 
   Boolean   isResetCoef;
   Boolean   isResetCoefCr;
@@ -766,8 +821,8 @@ typedef struct Decoder {
   struct       annexBstruct* annexB;
   int          lastAccessUnitExists;
   int          naluCount;
-  struct Nalu* nalu;
-  struct nalu* pendingNalu;
+  sNalu*       nalu;
+  sNalu*       pendingNalu;
 
   // sps
   sSPS         sps[32];

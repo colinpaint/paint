@@ -469,10 +469,10 @@ static void read_CBP_and_coeffs_from_NAL_CABAC_420 (sMacroblock* mb) {
       readDeltaQuant(&se, dp, mb, dpMap, ((mb->isIntraBlock == FALSE)) ? SE_DELTA_QUANT_INTER : SE_DELTA_QUANT_INTRA);
 
       if (slice->datadpMode) {
-        if ((mb->isIntraBlock == FALSE) && slice->noDatadpC )
+        if ((mb->isIntraBlock == FALSE) && slice->noDataPartitionC )
           mb->dplFlag = 1;
 
-        if( intra && slice->noDatadpB ) {
+        if( intra && slice->noDataPartitionB ) {
           mb->eiFlag = 1;
           mb->dplFlag = 1;
         }
@@ -491,7 +491,7 @@ static void read_CBP_and_coeffs_from_NAL_CABAC_420 (sMacroblock* mb) {
     cbp = mb->cbp;
     readDeltaQuant(&se, dp, mb, dpMap, SE_DELTA_QUANT_INTRA);
     if (slice->datadpMode) {
-      if (slice->noDatadpB) {
+      if (slice->noDataPartitionB) {
         mb->eiFlag  = 1;
         mb->dplFlag = 1;
       }
@@ -783,10 +783,10 @@ static void read_CBP_and_coeffs_from_NAL_CABAC_400 (sMacroblock* mb)
       readDeltaQuant(&se, dp, mb, dpMap, ((mb->isIntraBlock == FALSE)) ? SE_DELTA_QUANT_INTER : SE_DELTA_QUANT_INTRA);
 
       if (slice->datadpMode)  {
-        if ((mb->isIntraBlock == FALSE) && slice->noDatadpC )
+        if ((mb->isIntraBlock == FALSE) && slice->noDataPartitionC )
           mb->dplFlag = 1;
 
-        if( intra && slice->noDatadpB )  {
+        if( intra && slice->noDataPartitionB )  {
           mb->eiFlag = 1;
           mb->dplFlag = 1;
         }
@@ -806,7 +806,7 @@ static void read_CBP_and_coeffs_from_NAL_CABAC_400 (sMacroblock* mb)
     readDeltaQuant(&se, dp, mb, dpMap, SE_DELTA_QUANT_INTRA);
 
     if (slice->datadpMode) {
-      if (slice->noDatadpB) {
+      if (slice->noDataPartitionB) {
         mb->eiFlag  = 1;
         mb->dplFlag = 1;
       }
@@ -965,10 +965,10 @@ static void read_CBP_and_coeffs_from_NAL_CABAC_444 (sMacroblock* mb)
       readDeltaQuant(&se, dp, mb, dpMap, ((mb->isIntraBlock == FALSE)) ? SE_DELTA_QUANT_INTER : SE_DELTA_QUANT_INTRA);
 
       if (slice->datadpMode) {
-        if ((mb->isIntraBlock == FALSE) && slice->noDatadpC )
+        if ((mb->isIntraBlock == FALSE) && slice->noDataPartitionC )
           mb->dplFlag = 1;
 
-        if( intra && slice->noDatadpB ) {
+        if( intra && slice->noDataPartitionB ) {
           mb->eiFlag = 1;
           mb->dplFlag = 1;
         }
@@ -989,7 +989,7 @@ static void read_CBP_and_coeffs_from_NAL_CABAC_444 (sMacroblock* mb)
     readDeltaQuant(&se, dp, mb, dpMap, SE_DELTA_QUANT_INTRA);
 
     if (slice->datadpMode) {
-      if (slice->noDatadpB) {
+      if (slice->noDataPartitionB) {
         mb->eiFlag  = 1;
         mb->dplFlag = 1;
       }
@@ -1228,10 +1228,10 @@ static void read_CBP_and_coeffs_from_NAL_CABAC_422 (sMacroblock* mb)
 
       if (slice->datadpMode)
       {
-        if ((mb->isIntraBlock == FALSE) && slice->noDatadpC )
+        if ((mb->isIntraBlock == FALSE) && slice->noDataPartitionC )
           mb->dplFlag = 1;
 
-        if( intra && slice->noDatadpB ) {
+        if( intra && slice->noDataPartitionB ) {
           mb->eiFlag = 1;
           mb->dplFlag = 1;
         }
@@ -1252,7 +1252,7 @@ static void read_CBP_and_coeffs_from_NAL_CABAC_422 (sMacroblock* mb)
     readDeltaQuant(&se, dp, mb, dpMap, SE_DELTA_QUANT_INTRA);
 
     if (slice->datadpMode) {
-      if (slice->noDatadpB) {
+      if (slice->noDataPartitionB) {
         mb->eiFlag  = 1;
         mb->dplFlag = 1;
       }

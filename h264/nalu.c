@@ -222,24 +222,20 @@ static int getNALU (ANNEXB_t* annexB, sDecoder* decoder, sNalu* nalu) {
     if (!annexB->bytesInBuffer) {
       //{{{  eof, last NALU
       naluBufPtr -= 2;
-      while (*(naluBufPtr--)==0)
+      while (*(naluBufPtr--) == 0)
         naluBufCount--;
 
       nalu->len = (naluBufCount - 1) - leadingZero8BitsCount;
       memcpy (nalu->buf, annexB->naluBuffer + leadingZero8BitsCount, nalu->len);
       nalu->forbiddenBit = (*(nalu->buf) >> 7) & 1;
-      nalu->refId = (NalRefIdc)((*(nalu->buf) >> 5) & 3);
-      nalu->unitType = (NaluType)((*(nalu->buf)) & 0x1f);
+      nalu->refId = (eNalRefIdc)((*(nalu->buf) >> 5) & 3);
+      nalu->unitType = (eNaluType)((*(nalu->buf)) & 0x1f);
       annexB->nextStartCodeBytes = 0;
 
       if (decoder->param.naluDebug)
         printf ("last %sNALU %d::%d:%d len:%d, \n",
                 nalu->startCodeLen == 4 ? "l":"s",
-                nalu->forbiddenBit,
-                nalu->refId,
-                nalu->unitType,
-                nalu->len
-                );
+                nalu->forbiddenBit, nalu->refId, nalu->unitType, nalu->len);
 
       return (naluBufCount - 1);
       }
@@ -281,8 +277,8 @@ static int getNALU (ANNEXB_t* annexB, sDecoder* decoder, sNalu* nalu) {
   nalu->len = naluBufCount - leadingZero8BitsCount;
   memcpy (nalu->buf, annexB->naluBuffer + leadingZero8BitsCount, nalu->len);
   nalu->forbiddenBit = (*(nalu->buf) >> 7) & 1;
-  nalu->refId = (NalRefIdc) ((*(nalu->buf) >> 5) & 3);
-  nalu->unitType = (NaluType) ((*(nalu->buf)) & 0x1f);
+  nalu->refId = (eNalRefIdc)((*(nalu->buf) >> 5) & 3);  
+  nalu->unitType = (eNaluType)((*(nalu->buf)) & 0x1f);
   nalu->lostPackets = 0;
 
   if (decoder->param.naluDebug)

@@ -756,7 +756,7 @@ static void readIPCMmacroblock (sMacroblock* mb, const byte* dpMap) {
 
   // here dp is assigned with the same dp as SE_MBTYPE, because IPCM syntax is in the
   // same category as MBTYPE
-  if (slice->datadpMode && slice->noDatadpB )
+  if (slice->datadpMode && slice->noDataPartitionB )
     concealIPCMcoeffs (mb);
   else {
     sDataPartition* dp = &(slice->dps[dpMap[SE_LUM_DC_INTRA]]);
