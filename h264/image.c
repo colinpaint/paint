@@ -25,9 +25,6 @@
 #include <limits.h>
 //}}}
 
-static sNalu* pendingNalu = NULL;
-static char sliceTypeText[9];
-
 //{{{
 static void resetMb (sMacroblock* mb) {
 
@@ -265,11 +262,11 @@ static void reorderLists (sSlice* slice) {
   if ((slice->sliceType != I_SLICE) && (slice->sliceType != SI_SLICE)) {
     if (slice->ref_pic_list_reordering_flag[LIST_0])
       reorderRefPicList (slice, LIST_0);
-    if (decoder->noReferencePicture == slice->listX[0][slice->numRefIndexActive[LIST_0] - 1]) {
+    if (decoder->noReferencePicture == slice->listX[0][slice->numRefIndexActive[LIST_0]-1]) {
       if (decoder->nonConformingStream)
-        printf ("RefPicList0[ %d ] is equal to 'no reference picture'\n", slice->numRefIndexActive[LIST_0] - 1);
+        printf ("RefPicList0[%d] is no reference picture\n", slice->numRefIndexActive[LIST_0]-1);
       else
-        error ("RefPicList0[ num_ref_idx_l0_active_minus1 ] is equal to 'no reference picture', invalid s",500);
+        error ("RefPicList0[num_ref_idx_l0_active_minus1] is no reference picture, invalid s", 500);
       }
     // that's a definition
     slice->listXsize[0] = (char) slice->numRefIndexActive[LIST_0];
@@ -280,9 +277,9 @@ static void reorderLists (sSlice* slice) {
       reorderRefPicList (slice, LIST_1);
     if (decoder->noReferencePicture == slice->listX[1][slice->numRefIndexActive[LIST_1]-1]) {
       if (decoder->nonConformingStream)
-        printf ("RefPicList1[ %d ] is equal to 'no reference picture'\n", slice->numRefIndexActive[LIST_1] - 1);
+        printf ("RefPicList1[%d] is no reference picture'\n", slice->numRefIndexActive[LIST_1] - 1);
       else
-        error ("RefPicList1[ num_ref_idx_l1_active_minus1 ] is equal to 'no reference picture', invalid s",500);
+        error ("RefPicList1[num_ref_idx_l1_active_minus1] is no reference picture, invalid s", 500);
       }
     // that's a definition
     slice->listXsize[1] = (char)slice->numRefIndexActive[LIST_1];
@@ -573,13 +570,13 @@ static void initPicture (sDecoder* decoder, sSlice* slice) {
     //{{{
     case TopField:
       picture->poc = slice->topPoc;
-      decoder->number *= 2;
+      decoder->idrFrameNum *= 2;
       break;
     //}}}
     //{{{
     case BotField:
       picture->poc = slice->botPoc;
-      decoder->number = decoder->number * 2 + 1;
+      decoder->idrFrameNum = decoder->idrFrameNum * 2 + 1;
       break;
     //}}}
     //{{{
@@ -676,10 +673,10 @@ static void initPictureDecoding (sDecoder* decoder) {
   sSlice* slice = decoder->sliceList[0];
   if (decoder->nextPPS->valid && ((int)decoder->nextPPS->ppsId == slice->ppsId)) {
     if (decoder->param.sliceDebug)
-      printf ("- switch PPS\n");
+      printf ("- initPictureDecoding switch PPS\n");
     sPPS pps;
     memcpy (&pps, &(decoder->pps[slice->ppsId]), sizeof (sPPS));
-    (decoder->pps[slice->ppsId]).sliceGroupId = NULL;
+    decoder->pps[slice->ppsId].sliceGroupId = NULL;
     makePPSavailable (decoder, decoder->nextPPS->ppsId, decoder->nextPPS);
     memcpy (decoder->nextPPS, &pps, sizeof (sPPS));
     pps.sliceGroupId = NULL;
@@ -687,7 +684,7 @@ static void initPictureDecoding (sDecoder* decoder) {
 
   useParameterSet (slice);
   if (slice->idrFlag)
-    decoder->number = 0;
+    decoder->idrFrameNum = 0;
 
   decoder->picHeightInMbs = decoder->frameHeightMbs / (1 + slice->fieldPicFlag);
   decoder->picSizeInMbs = decoder->picWidthMbs * decoder->picHeightInMbs;
@@ -698,16 +695,15 @@ static void initPictureDecoding (sDecoder* decoder) {
   updatePicNum (slice);
 
   initDeblock (decoder, slice->mbAffFrameFlag);
-  for (int j = 0; j < decoder->picSliceIndex; j++) {
+  for (int j = 0; j < decoder->picSliceIndex; j++)
     if (decoder->sliceList[j]->DFDisableIdc != 1)
       deblockMode = 0;
-    }
 
   decoder->deblockMode = deblockMode;
   }
 //}}}
 static void framePostProcessing (sDecoder* decoder) {}
-static void fieldPostProcessing (sDecoder* decoder) { decoder->number /= 2; }
+static void fieldPostProcessing (sDecoder* decoder) { decoder->idrFrameNum /= 2; }
 //{{{
 static void copySliceInfo (sSlice* slice, sOldSlice* oldSlice) {
 
@@ -818,13 +814,13 @@ static int readNewSlice (sSlice* slice) {
   sBitstream* s = NULL;
   for (;;) {
     sNalu* nalu = decoder->nalu;
-    if (!pendingNalu) {
+    if (!decoder->pendingNalu) {
       if (!readNextNalu (decoder, nalu))
         return EOS;
       }
     else {
-      nalu = pendingNalu;
-      pendingNalu = NULL;
+      nalu = decoder->pendingNalu;
+      decoder->pendingNalu = NULL;
       }
 
   process_nalu:
@@ -835,7 +831,7 @@ static int readNewSlice (sSlice* slice) {
         if (decoder->recoveryPoint || nalu->unitType == NALU_TYPE_IDR) {
           if (decoder->recoveryPointFound == 0) {
             if (nalu->unitType != NALU_TYPE_IDR) {
-              printf ("Warning: Decoding does not start with an IDR picture.\n");
+              printf ("---------- Decoding without IDR\n");
               decoder->nonConformingStream = 1;
               }
             else
@@ -875,9 +871,9 @@ static int readNewSlice (sSlice* slice) {
 
         if (decoder->param.sliceDebug) {
           if (nalu->unitType == NALU_TYPE_IDR)
-            printf ("IDR refId:%d type:%d\n", slice->refId, slice->sliceType);
+            sprintf (decoder->naluStr, "IDR id:%d:%d", slice->refId, slice->sliceType);
           else
-            printf ("SLC refId:%d type:%d\n", slice->refId, slice->sliceType);
+            sprintf (decoder->naluStr, "SLC id:%d:%d", slice->refId, slice->sliceType);
           }
 
         assignQuantParams (slice);
@@ -977,19 +973,19 @@ static int readNewSlice (sSlice* slice) {
           s->frameBitOffset = s->readLen = 0;
           memcpy (s->streamBuffer, &nalu->buf[1], nalu->len-1);
           s->codeLen = s->bitstreamLength = RBSPtoSODB (s->streamBuffer, nalu->len-1);
-          int slice_id_b = readUeV ("NALU datadpB sliceId", s);
+          int slice_id_b = readUeV ("NALU dataPartitionB sliceId", s);
           slice->noDatadpB = 0;
 
           if ((slice_id_b != slice_id_a) || (nalu->lostPackets)) {
-            printf ("datadpB does not match datadpA\n");
+            printf ("NALU dataPartitionB does not match dataPartitionA\n");
             slice->noDatadpB = 1;
             slice->noDatadpC = 1;
             }
           else {
             if (decoder->activePPS->redundantPicCountPresentFlag)
-              readUeV ("NALU datadpB redundantPicCount", s);
+              readUeV ("NALU dataPartitionB redundantPicCount", s);
 
-            // we're finished with DP_B, so let's continue with next DP
+            // we're finished with dataPartitionB, so let's continue with next dataPartition
             if (!readNextNalu (decoder, nalu))
               return curHeader;
             }
@@ -999,7 +995,7 @@ static int readNewSlice (sSlice* slice) {
           slice->noDatadpB = 1;
 
         if (NALU_TYPE_DPC == nalu->unitType) {
-          //{{{  got nalu DPC
+          //{{{  got nalu dataPartitionC
           s = slice->dps[2].s;
           s->eiFlag = 0;
           s->frameBitOffset = s->readLen = 0;
@@ -1009,7 +1005,7 @@ static int readNewSlice (sSlice* slice) {
           slice->noDatadpC = 0;
           int slice_id_c = readUeV ("NALU: DP_C slice_id", s);
           if ((slice_id_c != slice_id_a)|| (nalu->lostPackets)) {
-            printf ("Warning: got a data dp C which does not match DP_A(DP loss!)\n");
+            printf ("dataPartitionC does not match alu dataPartitionA\n");
             slice->noDatadpC =1;
             }
 
@@ -1019,7 +1015,7 @@ static int readNewSlice (sSlice* slice) {
           //}}}
         else {
           slice->noDatadpC = 1;
-          pendingNalu = nalu;
+          decoder->pendingNalu = nalu;
           }
 
         // check if we read anything else than the expected dps
@@ -1031,12 +1027,12 @@ static int readNewSlice (sSlice* slice) {
       //}}}
       //{{{
       case NALU_TYPE_DPB:
-        printf ("found data dp B without matching DP A\n");
+        printf ("dataPartitionB with dataPartitonA\n");
         break;
       //}}}
       //{{{
       case NALU_TYPE_DPC:
-        printf ("found data dp C without matching DP A\n");
+        printf ("dataPartitionC with dataPartitonA\n");
         break;
       //}}}
       //{{{
@@ -1060,7 +1056,7 @@ static int readNewSlice (sSlice* slice) {
       case NALU_TYPE_FILL: break;
       //{{{
       default:
-        printf ("unknown NALU type %d, len %d\n", (int) nalu->unitType, (int) nalu->len);
+        printf ("NALU unknown type %d, len %d\n", (int) nalu->unitType, (int) nalu->len);
         break;
       //}}}
       }
@@ -1173,7 +1169,7 @@ void endPicture (sDecoder* decoder, sPicture** picture) {
       deblockPicture (decoder,* picture);
     }
     //}}}
-  else if (decoder->sepColourPlaneFlag != 0)
+  else if (decoder->sepColourPlaneFlag)
     makeFramePictureJV (decoder);
 
   if ((*picture)->mbAffFrameFlag)
@@ -1202,63 +1198,73 @@ void endPicture (sDecoder* decoder, sPicture** picture) {
     decoder->preFrameNum = 0;
 
   if (structure == TopField || structure == FRAME) {
-    //{{{  frame type string
+    //{{{  sliceTypeStr
     if (sliceType == I_SLICE && isIdr)
-      strcpy (sliceTypeText, "IDR");
+      strcpy (decoder->sliceTypeStr, "IDR");
 
     else if (sliceType == I_SLICE)
-      strcpy (sliceTypeText, " I ");
+      strcpy (decoder->sliceTypeStr, " I ");
 
     else if (sliceType == P_SLICE)
-      strcpy (sliceTypeText, " P ");
+      strcpy (decoder->sliceTypeStr, " P ");
 
     else if (sliceType == SP_SLICE)
-      strcpy (sliceTypeText, "SP ");
+      strcpy (decoder->sliceTypeStr, "SP ");
 
     else if  (sliceType == SI_SLICE)
-      strcpy (sliceTypeText, "SI ");
+      strcpy (decoder->sliceTypeStr, "SI ");
 
     else if (refpic)
-      strcpy (sliceTypeText, " B ");
+      strcpy (decoder->sliceTypeStr, " B ");
 
     else
-      strcpy (sliceTypeText, " b ");
+      strcpy (decoder->sliceTypeStr, " b ");
 
     if (structure == FRAME)
-      strncat (sliceTypeText, "    ", 8 - strlen (sliceTypeText));
+      strncat (decoder->sliceTypeStr, "    ", 8 - strlen (decoder->sliceTypeStr));
 
-    sliceTypeText[3] = 0;
+    decoder->sliceTypeStr[3] = 0;
     }
     //}}}
   else if (structure == BotField) {
-    //{{{  frame type string
+    //{{{  sliceTypeStr
     if (sliceType == I_SLICE && isIdr)
-      strncat (sliceTypeText, "|IDR", 8-strlen (sliceTypeText));
+      strncat (decoder->sliceTypeStr, "|IDR", 8-strlen (decoder->sliceTypeStr));
 
     else if (sliceType == I_SLICE)
-      strncat (sliceTypeText, "| I ", 8-strlen (sliceTypeText));
+      strncat (decoder->sliceTypeStr, "| I ", 8-strlen (decoder->sliceTypeStr));
 
     else if (sliceType == P_SLICE)
-      strncat (sliceTypeText, "| P ", 8-strlen (sliceTypeText));
+      strncat (decoder->sliceTypeStr, "| P ", 8-strlen (decoder->sliceTypeStr));
 
     else if (sliceType == SP_SLICE)
-      strncat (sliceTypeText, "|SP ", 8-strlen (sliceTypeText));
+      strncat (decoder->sliceTypeStr, "|SP ", 8-strlen (decoder->sliceTypeStr));
 
     else if  (sliceType == SI_SLICE)
-      strncat (sliceTypeText, "|SI ", 8-strlen (sliceTypeText));
+      strncat (decoder->sliceTypeStr, "|SI ", 8-strlen (decoder->sliceTypeStr));
 
     else if (refpic)
-      strncat (sliceTypeText, "| B ", 8-strlen (sliceTypeText));
+      strncat (decoder->sliceTypeStr, "| B ", 8-strlen (decoder->sliceTypeStr));
 
     else
-      strncat (sliceTypeText, "| b ", 8-strlen (sliceTypeText));
+      strncat (decoder->sliceTypeStr, "| b ", 8-strlen (decoder->sliceTypeStr));
 
-    sliceTypeText[8] = 0;
+    decoder->sliceTypeStr[8] = 0;
     }
     //}}}
 
   if ((structure == FRAME) || structure == BotField) {
-    //{{{  count numOutputFrames
+    //{{{  print frame debug
+    gettime (&(decoder->endTime));
+
+    printf ("%s %d:%d:%02d %2dms",
+            decoder->naluStr,
+            decoder->numDecodedSlices, decoder->numDecodedMbs, qp,
+            (int)timenorm (timediff (&(decoder->startTime), &(decoder->endTime))));
+
+    printf (" ->%s-> pic:%d poc:%d", decoder->sliceTypeStr, picNum, framePoc);
+
+    // count numOutputFrames
     int numOutputFrames = 0;
     sDecodedPic* pic = decoder->decOutputPic;
     while (pic) {
@@ -1266,19 +1272,17 @@ void endPicture (sDecoder* decoder, sPicture** picture) {
         numOutputFrames++;
       pic = pic->next;
       }
+
+    if (numOutputFrames)
+      printf (" -> %d\n", numOutputFrames);
+    else
+      printf ("\n");
     //}}}
-    gettime (&(decoder->endTime));
-    printf ("-------> %s %d:%d:%d qp:%2d slices:%d mb:%d %dms\n",
-            sliceTypeText,
-            picNum, framePoc, numOutputFrames,
-            qp, decoder->numDecodedSlices, decoder->numDecodedMbs,
-            (int)timenorm (timediff (&(decoder->startTime), &(decoder->endTime))));
 
     // I or P pictures ?
     if (sliceType == I_SLICE || sliceType == SI_SLICE || sliceType == P_SLICE || refpic)
-      ++(decoder->number);
-
-    ++(decoder->gapNumFrame);
+      ++(decoder->idrFrameNum);
+    (decoder->decodeFrameNum)++;
     }
   }
 //}}}
@@ -1327,6 +1331,7 @@ int decodeFrame (sDecoder* decoder) {
     slice->pos = 0;
     slice->isResetCoef = FALSE;
     slice->isResetCoefCr = FALSE;
+
     curHeader = readNewSlice (slice);
     slice->curHeader = curHeader;
 
@@ -1343,8 +1348,8 @@ int decodeFrame (sDecoder* decoder) {
         curHeader != EOS)
       continue;
 
-    if ((curHeader != SOP && curHeader != EOS) ||
-        (decoder->picSliceIndex == 0 && curHeader == SOP)) {
+    if (((curHeader != SOP) && (curHeader != EOS)) ||
+        ((decoder->picSliceIndex == 0) && (curHeader == SOP))) {
        slice->curSliceIndex = (short)decoder->picSliceIndex;
        decoder->picture->maxSliceId =
          (short)imax (slice->curSliceIndex, decoder->picture->maxSliceId);
@@ -1377,6 +1382,7 @@ int decodeFrame (sDecoder* decoder) {
       else
         sliceList[decoder->picSliceIndex-1]->endMbNumPlus1 =
           decoder->frameSizeMbs / (1 + sliceList[decoder->picSliceIndex-1]->fieldPicFlag);
+
       decoder->newFrame = 1;
       slice->curSliceIndex = 0;
 
@@ -1385,7 +1391,6 @@ int decodeFrame (sDecoder* decoder) {
       decoder->nextSlice = slice;
       }
     //}}}
-
     copySliceInfo (slice, decoder->oldSlice);
     }
     //}}}
@@ -1394,7 +1399,6 @@ int decodeFrame (sDecoder* decoder) {
   ret = curHeader;
   initPictureDecoding (decoder);
   for (int sliceIndex = 0; sliceIndex < decoder->picSliceIndex; sliceIndex++) {
-    printf ("sliceIndex:%d picSliceIndex:%d\n", sliceIndex, decoder->picSliceIndex);
     slice = sliceList[sliceIndex];
     curHeader = slice->curHeader;
     initSlice (decoder, slice);

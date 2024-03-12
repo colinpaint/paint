@@ -133,7 +133,7 @@ typedef struct {
 
   unsigned int pic_width_in_mbs_minus1;           // ue(v)
   unsigned int pic_height_in_map_units_minus1;    // ue(v)
-  
+
   Boolean  frameMbOnlyFlag;                 // u(1)
   Boolean  mb_adaptive_frame_field_flag;    // u(1)
   Boolean  direct_8x8_inference_flag;       // u(1)
@@ -755,24 +755,31 @@ typedef struct Param {
 //{{{  sDecoder
 typedef struct Decoder {
   sParam       param;
+
+  // debug
   TIME_T       startTime;
   TIME_T       endTime;
+  char         naluStr[20];
+  char         sliceTypeStr[9];
 
+  // nalu
   struct       annexBstruct* annexB;
   int          lastAccessUnitExists;
   int          naluCount;
   struct Nalu* nalu;
+  struct nalu* pendingNalu;
 
+  // sps
   sSPS         sps[32];
   sSPS*        activeSPS;
   Boolean      firstSPS;
 
+  // pps
   sPPS         pps[MAX_PPS];
   sPPS*        activePPS;
   sPPS*        nextPPS;
 
-  struct sSEI* sei;
-
+  // recovery
   int          recoveryPoint;
   int          recoveryPointFound;
   int          recoveryFrameCount;
@@ -780,17 +787,15 @@ typedef struct Decoder {
   int          recoveryPoc;
 
   // loadsa frameNum
-  int          number;
+  int          decodeFrameNum;
+  int          idrFrameNum;
   unsigned int preFrameNum;  // last decoded slice. For detecting gap in frameNum.
   unsigned int prevFrameNum; // number of previous slice
-  int          frameNum;
-  int          gapNumFrame;
   int          newFrame;
 
   struct DPB*  dpb;
   sLayer*      layer;
   sCoding*     coding;
-
   struct OldSlice* oldSlice;
 
   // current picture property

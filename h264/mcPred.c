@@ -1830,10 +1830,10 @@ void prepare_direct_params (sMacroblock* mb, sPicture* picture, sMotionVec* pmvl
 static void check_motion_vector_range (const sMotionVec *mv, sSlice *slice) {
 
   if (mv->mvX > 8191 || mv->mvX < -8192)
-    fprintf(stderr,"WARNING! Horizontal motion vector %d is out of allowed range {-8192, 8191} in picture %d, macroblock %d\n", mv->mvX, slice->decoder->number, slice->mbIndex);
+    fprintf(stderr,"WARNING! Horizontal motion vector %d is out of allowed range {-8192, 8191} in picture %d, macroblock %d\n", mv->mvX, slice->decoder->idrFrameNum, slice->mbIndex);
 
   if (mv->mvY > (slice->max_mb_vmv_r - 1) || mv->mvY < (-slice->max_mb_vmv_r))
-    fprintf(stderr,"WARNING! Vertical motion vector %d is out of allowed range {%d, %d} in picture %d, macroblock %d\n", mv->mvY, (-slice->max_mb_vmv_r), (slice->max_mb_vmv_r - 1), slice->decoder->number, slice->mbIndex);
+    fprintf(stderr,"WARNING! Vertical motion vector %d is out of allowed range {%d, %d} in picture %d, macroblock %d\n", mv->mvY, (-slice->max_mb_vmv_r), (slice->max_mb_vmv_r - 1), slice->decoder->idrFrameNum, slice->mbIndex);
   }
 //}}}
 //{{{

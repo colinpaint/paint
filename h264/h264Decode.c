@@ -170,7 +170,7 @@ static void freeDecoder (sDecoder* decoder) {
 
   if (decoder->nalu) {
     freeNALU (decoder->nalu);
-    decoder->nalu=NULL;
+    decoder->nalu = NULL;
     }
 
   //free memory;
@@ -184,45 +184,6 @@ static void freeDecoder (sDecoder* decoder) {
   }
 //}}}
 
-//{{{
-static void init (sDecoder* decoder) {
-
-  decoder->oldFrameSizeMbs = (unsigned int) -1;
-
-  decoder->recoveryPoint = 0;
-  decoder->recoveryPointFound = 0;
-  decoder->recoveryPoc = 0x7fffffff; /* set to a max value */
-
-  decoder->number = 0;
-  decoder->type = I_SLICE;
-
-  decoder->gapNumFrame = 0;
-
-  // time for total decoding session
-  decoder->picture = NULL;
-  decoder->mbToSliceGroupMap = NULL;
-  decoder->mapUnitToSliceGroupMap = NULL;
-
-  decoder->lastAccessUnitExists  = 0;
-  decoder->naluCount = 0;
-
-  decoder->outBuffer = NULL;
-  decoder->pendingOut = NULL;
-  decoder->pendingOutState = FRAME;
-  decoder->recoveryFlag = 0;
-
-  decoder->newFrame = 0;
-  decoder->prevFrameNum = 0;
-
-  decoder->iLumaPadX = MCBUF_LUMA_PAD_X;
-  decoder->iLumaPadY = MCBUF_LUMA_PAD_Y;
-  decoder->iChromaPadX = MCBUF_CHROMA_PAD_X;
-  decoder->iChromaPadY = MCBUF_CHROMA_PAD_Y;
-
-  decoder->deblockEnable = 0x3;
-  decoder->layerInitDone = 0;
-  }
-//}}}
 //{{{
 void init_frext (sDecoder* decoder) {
 
@@ -567,7 +528,7 @@ void setGlobalCodingProgram (sDecoder* decoder, sCoding* coding) {
 //}}}
 
 //{{{
-sDecoder* openDecoder (sParam* input, byte* chunk, size_t chunkSize) {
+sDecoder* openDecoder (sParam* param, byte* chunk, size_t chunkSize) {
 
   // alloc decoder
   sDecoder* decoder = (sDecoder*)calloc (1, sizeof(sDecoder));
@@ -575,11 +536,11 @@ sDecoder* openDecoder (sParam* input, byte* chunk, size_t chunkSize) {
 
   init_time();
 
-  // init input
-  memcpy (&(decoder->param), input, sizeof(sParam));
-  decoder->concealMode = input->concealMode;
-  decoder->refPocGap = input->refPocGap;
-  decoder->pocGap = input->pocGap;
+  // init param
+  memcpy (&(decoder->param), param, sizeof(sParam));
+  decoder->concealMode = param->concealMode;
+  decoder->refPocGap = param->refPocGap;
+  decoder->pocGap = param->pocGap;
 
   // init nalu, annexB
   decoder->nalu = allocNALU (MAX_CODED_FRAME_SIZE);
@@ -587,6 +548,9 @@ sDecoder* openDecoder (sParam* input, byte* chunk, size_t chunkSize) {
   decoder->firstSPS = TRUE;
   decoder->annexB = allocAnnexB (decoder);
   openAnnexB (decoder->annexB, chunk, chunkSize);
+  decoder->lastAccessUnitExists  = 0;
+  decoder->naluCount = 0;
+  decoder->pendingNalu = NULL;
 
   // init slice
   decoder->globalInitDone = 0;
@@ -595,17 +559,44 @@ sDecoder* openDecoder (sParam* input, byte* chunk, size_t chunkSize) {
   decoder->numAllocatedSlices = MAX_NUM_DECSLICES;
   decoder->nextSlice = NULL;
   initOldSlice (decoder->oldSlice);
+  decoder->oldFrameSizeMbs = (unsigned int) -1;
 
-  init (decoder);
+  decoder->type = I_SLICE;
+  decoder->picture = NULL;
+  decoder->mbToSliceGroupMap = NULL;
+  decoder->mapUnitToSliceGroupMap = NULL;
 
-  // init output
-    decoder->dpb = (sDPB*)calloc (1, sizeof(sDPB));
-    decoder->dpb->layerId = 0;
-    reset_dpb (decoder, decoder->dpb);
-    decoder->coding = (sCoding*)calloc (1, sizeof(sCoding));
-    decoder->coding->layerId = 0;
-    decoder->layer = (sLayer*)calloc (1, sizeof(sLayer));
-    decoder->layer->layerId = 0;
+  decoder->recoveryFlag = 0;
+  decoder->recoveryPoint = 0;
+  decoder->recoveryPointFound = 0;
+  decoder->recoveryPoc = 0x7fffffff; /* set to a max value */
+
+  decoder->decodeFrameNum = 0;
+  decoder->idrFrameNum = 0;
+  decoder->newFrame = 0;
+  decoder->prevFrameNum = 0;
+
+  decoder->deblockEnable = 0x3;
+
+  decoder->outBuffer = NULL;
+  decoder->pendingOut = NULL;
+  decoder->pendingOutState = FRAME;
+
+  decoder->iLumaPadX = MCBUF_LUMA_PAD_X;
+  decoder->iLumaPadY = MCBUF_LUMA_PAD_Y;
+  decoder->iChromaPadX = MCBUF_CHROMA_PAD_X;
+  decoder->iChromaPadY = MCBUF_CHROMA_PAD_Y;
+
+  decoder->dpb = (sDPB*)calloc (1, sizeof(sDPB));
+  decoder->dpb->layerId = 0;
+  reset_dpb (decoder, decoder->dpb);
+
+  decoder->coding = (sCoding*)calloc (1, sizeof(sCoding));
+  decoder->coding->layerId = 0;
+
+  decoder->layerInitDone = 0;
+  decoder->layer = (sLayer*)calloc (1, sizeof(sLayer));
+  decoder->layer->layerId = 0;
 
   decoder->decOutputPic = (sDecodedPic*)calloc (1, sizeof(sDecodedPic));
   allocOutput (decoder);
