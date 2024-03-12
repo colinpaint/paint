@@ -956,18 +956,15 @@ static int readNewSlice (sSlice* slice) {
           slice->mbIndex = slice->startMbNum;
 
         // need to read the slice ID, which depends on the value of redundantPicCountPresentFlag
-
         int slice_id_a = readUeV ("NALU: DP_A slice_id", s);
-
         if (decoder->activePPS->entropyCodingModeFlag)
-          error ("data dp with CABAC not allowed", 500);
+          error ("dataPartition with CABAC not allowed", 500);
 
-        // reading next DP
         if (!readNextNalu (decoder, nalu))
           return curHeader;
 
         if (NALU_TYPE_DPB == nalu->unitType) {
-          //{{{  got nalu DPB
+          //{{{  got nalu dataPartitionB
           s = slice->dps[1].s;
           s->eiFlag = 0;
           s->frameBitOffset = s->readLen = 0;
@@ -1018,7 +1015,7 @@ static int readNewSlice (sSlice* slice) {
           decoder->pendingNalu = nalu;
           }
 
-        // check if we read anything else than the expected dps
+        // check if we read anything else than the expected dataPartitions
         if ((nalu->unitType != NALU_TYPE_DPB) &&
             (nalu->unitType != NALU_TYPE_DPC) && (!slice->noDataPartitionC))
           goto process_nalu;
@@ -1056,7 +1053,7 @@ static int readNewSlice (sSlice* slice) {
       case NALU_TYPE_FILL: break;
       //{{{
       default:
-        printf ("NALU unknown type %d, len %d\n", (int) nalu->unitType, (int) nalu->len);
+        printf ("NALU - unknown type %d, len %d\n", (int) nalu->unitType, (int) nalu->len);
         break;
       //}}}
       }
