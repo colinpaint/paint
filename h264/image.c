@@ -1031,7 +1031,7 @@ static int readNewSlice (sSlice* slice) {
       //}}}
       //{{{
       case NALU_TYPE_SEI:
-        InterpretSEIMessage (nalu->buf, nalu->len, decoder, slice);
+        processSEI (nalu->buf, nalu->len, decoder, slice);
         break;
       //}}}
       //{{{

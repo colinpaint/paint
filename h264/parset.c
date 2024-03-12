@@ -249,7 +249,7 @@ static void resetFormatInfo (sSPS* sps, sDecoder* decoder, sFrameFormat* source,
 
   if (decoder->firstSPS == TRUE) {
     decoder->firstSPS = FALSE;
-    printf ("IDC %d %dx%d %dx%d ", sps->profileIdc, source->width[0], source->height[0], decoder->width, decoder->height);
+    printf ("-> profile:%d %dx%d %dx%d ", sps->profileIdc, source->width[0], source->height[0], decoder->width, decoder->height);
     if (decoder->yuvFormat == YUV400)
       printf ("4:0:0");
     else if (decoder->yuvFormat == YUV420)

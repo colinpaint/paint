@@ -103,7 +103,7 @@ typedef struct {
 //}}}
 
 //{{{
-static void interpret_spare_pic (byte* payload, int size, sDecoder* decoder) {
+static void process_spare_pic (byte* payload, int size, sDecoder* decoder) {
 
   int x,y;
   sBitstream* buf;
@@ -271,7 +271,7 @@ static void interpret_spare_pic (byte* payload, int size, sDecoder* decoder) {
 //}}}
 
 //{{{
-static void interpret_subsequence_info (byte* payload, int size, sDecoder* decoder) {
+static void process_subsequence_info (byte* payload, int size, sDecoder* decoder) {
 
   sBitstream* buf = malloc (sizeof(sBitstream));
   buf->bitstreamLength = size;
@@ -303,7 +303,7 @@ static void interpret_subsequence_info (byte* payload, int size, sDecoder* decod
   }
 //}}}
 //{{{
-static void interpret_subsequence_layer_characteristics_info (byte* payload, int size, sDecoder* decoder)
+static void process_subsequence_layer_characteristics_info (byte* payload, int size, sDecoder* decoder)
 {
   sBitstream* buf;
   long num_sub_layers, accurate_statistics_flag, average_bit_rate, average_frame_rate;
@@ -328,7 +328,7 @@ static void interpret_subsequence_layer_characteristics_info (byte* payload, int
 }
 //}}}
 //{{{
-static void interpret_subsequence_characteristics_info (byte* payload, int size, sDecoder* decoder) {
+static void process_subsequence_characteristics_info (byte* payload, int size, sDecoder* decoder) {
 
   int i;
   int sub_seq_layer_num, sub_seq_id, duration_flag, average_rate_flag, accurate_statistics_flag;
@@ -385,7 +385,7 @@ static void interpret_subsequence_characteristics_info (byte* payload, int size,
   }
 //}}}
 //{{{
-static void interpret_scene_information (byte* payload, int size, sDecoder* decoder)
+static void process_scene_information (byte* payload, int size, sDecoder* decoder)
 {
   int scene_id, scene_transition_type, second_scene_id;
 
@@ -409,7 +409,7 @@ static void interpret_scene_information (byte* payload, int size, sDecoder* deco
   }
 //}}}
 //{{{
-static void interpret_filler_payload_info (byte* payload, int size, sDecoder* decoder) {
+static void process_filler_payload_info (byte* payload, int size, sDecoder* decoder) {
 
   int payload_cnt = 0;
   while (payload_cnt<size)
@@ -425,7 +425,7 @@ static void interpret_filler_payload_info (byte* payload, int size, sDecoder* de
 //}}}
 
 //{{{
-static void interpret_user_data_unregistered_info (byte* payload, int size, sDecoder* decoder) {
+static void process_user_data_unregistered_info (byte* payload, int size, sDecoder* decoder) {
 
   int offset = 0;
   byte payload_byte;
@@ -448,7 +448,7 @@ static void interpret_user_data_unregistered_info (byte* payload, int size, sDec
   }
 //}}}
 //{{{
-static void interpret_user_data_registered_itu_t_t35_info (byte* payload, int size, sDecoder* decoder) {
+static void process_user_data_registered_itu_t_t35_info (byte* payload, int size, sDecoder* decoder) {
 
   int offset = 0;
   byte itu_t_t35_country_code, itu_t_t35_country_code_extension_byte, payload_byte;
@@ -475,7 +475,7 @@ static void interpret_user_data_registered_itu_t_t35_info (byte* payload, int si
  }
 //}}}
 //{{{
-static void interpret_reserved_info (byte* payload, int size, sDecoder* decoder)
+static void process_reserved_info (byte* payload, int size, sDecoder* decoder)
 {
   int offset = 0;
   byte payload_byte;
@@ -492,16 +492,12 @@ static void interpret_reserved_info (byte* payload, int size, sDecoder* decoder)
 //}}}
 
 //{{{
-static void interpret_picture_timing_info (byte* payload, int size, sDecoder* decoder) {
+static void process_picture_timing_info (byte* payload, int size, sDecoder* decoder) {
 
   sSPS* activeSPS = decoder->activeSPS;
-
-  int cpb_removal_len = 24;
-  int dpb_output_len  = 24;
-  Boolean CpbDpbDelaysPresentFlag;
-
   if (!activeSPS) {
-    fprintf (stderr, "Warning: no active SPS, timing SEI cannot be parsed\n");
+    if (decoder->param.seiDebug)
+      printf ("SEI pictureTiming with no active SPS\n");
     return;
     }
 
@@ -513,12 +509,14 @@ static void interpret_picture_timing_info (byte* payload, int size, sDecoder* de
   if (decoder->param.seiDebug)
     printf ("SEI Picture timing\n");
 
-  // CpbDpbDelaysPresentFlag can also be set "by some means not specified in this Recommendation | International Standard"
-  CpbDpbDelaysPresentFlag = (Boolean)(activeSPS->vui_parameters_present_flag
-                              && (   (activeSPS->vui_seq_parameters.nal_hrd_parameters_present_flag != 0)
-                                   ||(activeSPS->vui_seq_parameters.vcl_hrd_parameters_present_flag != 0)));
+  int cpb_removal_len = 24;
+  int dpb_output_len = 24;
 
-  if (CpbDpbDelaysPresentFlag ) {
+  Boolean CpbDpbDelaysPresentFlag = (Boolean)(activeSPS->vui_parameters_present_flag &&
+                                     ((activeSPS->vui_seq_parameters.nal_hrd_parameters_present_flag != 0) ||
+                                      (activeSPS->vui_seq_parameters.vcl_hrd_parameters_present_flag != 0)));
+
+  if (CpbDpbDelaysPresentFlag) {
     if (activeSPS->vui_parameters_present_flag) {
       if (activeSPS->vui_seq_parameters.nal_hrd_parameters_present_flag) {
         cpb_removal_len = activeSPS->vui_seq_parameters.nal_hrd_parameters.cpb_removal_delay_length_minus1 + 1;
@@ -530,14 +528,14 @@ static void interpret_picture_timing_info (byte* payload, int size, sDecoder* de
         }
       }
 
-    if ((activeSPS->vui_seq_parameters.nal_hrd_parameters_present_flag)||
+    if ((activeSPS->vui_seq_parameters.nal_hrd_parameters_present_flag) ||
         (activeSPS->vui_seq_parameters.vcl_hrd_parameters_present_flag)) {
       int cpb_removal_delay, dpb_output_delay;
-      cpb_removal_delay = readUv(cpb_removal_len, "SEI cpb_removal_delay" , buf);
-      dpb_output_delay = readUv(dpb_output_len,  "SEI dpb_output_delay"  , buf);
+      cpb_removal_delay = readUv (cpb_removal_len, "SEI cpb_removal_delay", buf);
+      dpb_output_delay = readUv (dpb_output_len,  "SEI dpb_output_delay", buf);
       if (decoder->param.seiDebug) {
-        printf ("cpb_removal_delay = %d\n",cpb_removal_delay);
-        printf ("dpb_output_delay  = %d\n",dpb_output_delay);
+        printf ("cpb_removal_delay %d\n", cpb_removal_delay);
+        printf ("dpb_output_delay %d\n", dpb_output_delay);
         }
       }
     }
@@ -548,7 +546,7 @@ static void interpret_picture_timing_info (byte* payload, int size, sDecoder* de
   else
     pic_struct_present_flag = activeSPS->vui_seq_parameters.pic_struct_present_flag;
 
-  int NumClockTs = 0;
+  int numClockTs = 0;
   if (pic_struct_present_flag) {
     pic_struct = readUv (4, "SEI pic_struct" , buf);
     switch (pic_struct) {
@@ -556,30 +554,31 @@ static void interpret_picture_timing_info (byte* payload, int size, sDecoder* de
       case 1:
       //{{{
       case 2:
-        NumClockTs = 1;
+        numClockTs = 1;
         break;
       //}}}
       case 3:
       case 4:
       //{{{
       case 7:
-        NumClockTs = 2;
+        numClockTs = 2;
         break;
       //}}}
       case 5:
       case 6:
       //{{{
       case 8:
-        NumClockTs = 3;
+        numClockTs = 3;
         break;
       //}}}
       //{{{
       default:
-        error ("reserved pic_struct used (can't determine NumClockTs)", 500);
+        error ("reserved pic_struct used (can't determine numClockTs)", 500);
       //}}}
       }
+
     if (decoder->param.seiDebug)
-      for (int i = 0; i < NumClockTs; i++) {
+      for (int i = 0; i < numClockTs; i++) {
         //{{{  print
         int clock_timestamp_flag = readU1 ("SEI clock_timestamp_flag", buf);
         printf ("clock_timestamp_flag = %d\n", clock_timestamp_flag);
@@ -637,10 +636,10 @@ static void interpret_picture_timing_info (byte* payload, int size, sDecoder* de
           else
             time_offset_length = 24;
           if (time_offset_length)
-            time_offset = readIv (time_offset_length, "SEI time_offset"   , buf);
+            time_offset = readIv (time_offset_length, "SEI time_offset", buf);
           else
             time_offset = 0;
-          printf ("time_offset   = %d\n",time_offset);
+          printf ("time_offset   = %d\n", time_offset);
           }
         }
         //}}}
@@ -650,7 +649,7 @@ static void interpret_picture_timing_info (byte* payload, int size, sDecoder* de
   }
 //}}}
 //{{{
-static void interpret_pan_scan_rect_info (byte* payload, int size, sDecoder* decoder) {
+static void process_pan_scan_rect_info (byte* payload, int size, sDecoder* decoder) {
 
   sBitstream* buf;
   buf = malloc (sizeof(sBitstream));
@@ -680,7 +679,7 @@ static void interpret_pan_scan_rect_info (byte* payload, int size, sDecoder* dec
   }
 //}}}
 //{{{
-static void interpret_recovery_point_info (byte* payload, int size, sDecoder* decoder) {
+static void process_recovery_point_info (byte* payload, int size, sDecoder* decoder) {
 
   sBitstream* buf;
   buf = malloc(sizeof(sBitstream));
@@ -703,7 +702,7 @@ static void interpret_recovery_point_info (byte* payload, int size, sDecoder* de
   }
 //}}}
 //{{{
-static void interpret_dec_ref_pic_marking_repetition_info (byte* payload, int size,
+static void process_dec_ref_pic_marking_repetition_info (byte* payload, int size,
                                                            sDecoder* decoder, sSlice *slice) {
   int original_idr_flag, original_frame_num;
   int original_field_pic_flag;
@@ -800,7 +799,7 @@ static void interpret_dec_ref_pic_marking_repetition_info (byte* payload, int si
 //}}}
 
 //{{{
-static void interpret_full_frame_freeze_info (byte* payload, int size, sDecoder* decoder) {
+static void process_full_frame_freeze_info (byte* payload, int size, sDecoder* decoder) {
 
   sBitstream* buf = malloc(sizeof(sBitstream));
   buf->bitstreamLength = size;
@@ -814,7 +813,7 @@ static void interpret_full_frame_freeze_info (byte* payload, int size, sDecoder*
   }
 //}}}
 //{{{
-static void interpret_full_frame_freeze_release_info (byte* payload, int size, sDecoder* decoder) {
+static void process_full_frame_freeze_release_info (byte* payload, int size, sDecoder* decoder) {
 
   printf ("SEI Full-frame freeze release SEI\n");
   if (size)
@@ -822,7 +821,7 @@ static void interpret_full_frame_freeze_release_info (byte* payload, int size, s
   }
 //}}}
 //{{{
-static void interpret_full_frame_snapshot_info (byte* payload, int size, sDecoder* decoder) {
+static void process_full_frame_snapshot_info (byte* payload, int size, sDecoder* decoder) {
 
   sBitstream* buf = malloc(sizeof(sBitstream));
   buf->bitstreamLength = size;
@@ -838,7 +837,7 @@ static void interpret_full_frame_snapshot_info (byte* payload, int size, sDecode
 //}}}
 
 //{{{
-static void interpret_progressive_refinement_start_info (byte* payload, int size, sDecoder* decoder) {
+static void process_progressive_refinement_start_info (byte* payload, int size, sDecoder* decoder) {
 
 
   sBitstream* buf = malloc(sizeof(sBitstream));
@@ -856,7 +855,7 @@ static void interpret_progressive_refinement_start_info (byte* payload, int size
   }
 //}}}
 //{{{
-static void interpret_progressive_refinement_end_info (byte* payload, int size, sDecoder* decoder) {
+static void process_progressive_refinement_end_info (byte* payload, int size, sDecoder* decoder) {
 
   sBitstream* buf = malloc(sizeof(sBitstream));
   buf->bitstreamLength = size;
@@ -871,7 +870,7 @@ static void interpret_progressive_refinement_end_info (byte* payload, int size, 
 //}}}
 
 //{{{
-static void interpret_motion_constrained_slice_group_set_info (byte* payload, int size, sDecoder* decoder) {
+static void process_motion_constrained_slice_group_set_info (byte* payload, int size, sDecoder* decoder) {
 
   sBitstream* buf = malloc(sizeof(sBitstream));
   buf->bitstreamLength = size;
@@ -903,7 +902,7 @@ static void interpret_motion_constrained_slice_group_set_info (byte* payload, in
   }
 //}}}
 //{{{
-static void interpret_film_grain_characteristics_info (byte* payload, int size, sDecoder* decoder) {
+static void process_film_grain_characteristics_info (byte* payload, int size, sDecoder* decoder) {
 
   int film_grain_characteristics_cancel_flag;
   int model_id, separate_colour_description_present_flag;
@@ -980,7 +979,7 @@ static void interpret_film_grain_characteristics_info (byte* payload, int size, 
   }
 //}}}
 //{{{
-static void interpret_deblocking_filter_display_preference_info (byte* payload, int size, sDecoder* decoder) {
+static void process_deblocking_filter_display_preference_info (byte* payload, int size, sDecoder* decoder) {
 
   sBitstream* buf = malloc(sizeof(sBitstream));
   buf->bitstreamLength = size;
@@ -1003,7 +1002,7 @@ static void interpret_deblocking_filter_display_preference_info (byte* payload, 
   }
 //}}}
 //{{{
-static void interpret_stereo_video_info_info (byte* payload, int size, sDecoder* decoder) {
+static void process_stereo_video_info_info (byte* payload, int size, sDecoder* decoder) {
 
   sBitstream* buf = malloc (sizeof(sBitstream));
   buf->bitstreamLength = size;
@@ -1032,7 +1031,7 @@ static void interpret_stereo_video_info_info (byte* payload, int size, sDecoder*
   }
 //}}}
 //{{{
-static void interpret_buffering_period_info (byte* payload, int size, sDecoder* decoder) {
+static void process_buffering_period_info (byte* payload, int size, sDecoder* decoder) {
 
   sBitstream* buf = malloc(sizeof(sBitstream));
   buf->bitstreamLength = size;
@@ -1077,7 +1076,7 @@ static void interpret_buffering_period_info (byte* payload, int size, sDecoder* 
   }
 //}}}
 //{{{
-static void interpret_frame_packing_arrangement_info (byte* payload, int size, sDecoder* decoder) {
+static void process_frame_packing_arrangement_info (byte* payload, int size, sDecoder* decoder) {
 
   frame_packing_arrangement_information_struct seiFramePackingArrangement;
   sBitstream* buf = malloc(sizeof(sBitstream));
@@ -1146,7 +1145,7 @@ static void interpret_frame_packing_arrangement_info (byte* payload, int size, s
 //}}}
 
 //{{{
-static void interpret_post_filter_hints_info (byte* payload, int size, sDecoder* decoder) {
+static void process_post_filter_hints_info (byte* payload, int size, sDecoder* decoder) {
 
   sBitstream* buf = malloc(sizeof(sBitstream));
   buf->bitstreamLength = size;
@@ -1183,7 +1182,7 @@ static void interpret_post_filter_hints_info (byte* payload, int size, sDecoder*
   }
 //}}}
 //{{{
-static void interpret_green_metadata_info (byte* payload, int size, sDecoder* decoder) {
+static void process_green_metadata_info (byte* payload, int size, sDecoder* decoder) {
 
   sBitstream* buf = malloc(sizeof(sBitstream));
   buf->bitstreamLength = size;
@@ -1236,7 +1235,7 @@ static void interpret_green_metadata_info (byte* payload, int size, sDecoder* de
 //}}}
 
 //{{{
-void InterpretSEIMessage (byte* msg, int size, sDecoder* decoder, sSlice* slice) {
+void processSEI (byte* msg, int size, sDecoder* decoder, sSlice* slice) {
 
   int offset = 1;
   do {
@@ -1258,57 +1257,57 @@ void InterpretSEIMessage (byte* msg, int size, sDecoder* decoder, sSlice* slice)
 
     switch (payload_type) {
       case  SEI_BUFFERING_PERIOD:
-        interpret_buffering_period_info (msg+offset, payload_size, decoder); break;
+        process_buffering_period_info (msg+offset, payload_size, decoder); break;
       case  SEI_PIC_TIMING:
-        interpret_picture_timing_info (msg+offset, payload_size, decoder); break;
+        process_picture_timing_info (msg+offset, payload_size, decoder); break;
       case  SEI_PAN_SCAN_RECT:
-        interpret_pan_scan_rect_info (msg+offset, payload_size, decoder); break;
+        process_pan_scan_rect_info (msg+offset, payload_size, decoder); break;
       case  SEI_FILLER_PAYLOAD:
-        interpret_filler_payload_info (msg+offset, payload_size, decoder); break;
+        process_filler_payload_info (msg+offset, payload_size, decoder); break;
       case  SEI_USER_DATA_REGISTERED_ITU_T_T35:
-        interpret_user_data_registered_itu_t_t35_info (msg+offset, payload_size, decoder); break;
+        process_user_data_registered_itu_t_t35_info (msg+offset, payload_size, decoder); break;
       case  SEI_USER_DATA_UNREGISTERED:
-        interpret_user_data_unregistered_info (msg+offset, payload_size, decoder); break;
+        process_user_data_unregistered_info (msg+offset, payload_size, decoder); break;
       case  SEI_RECOVERY_POINT:
-        interpret_recovery_point_info (msg+offset, payload_size, decoder); break;
+        process_recovery_point_info (msg+offset, payload_size, decoder); break;
       case  SEI_DEC_REF_PIC_MARKING_REPETITION:
-        interpret_dec_ref_pic_marking_repetition_info (msg+offset, payload_size, decoder, slice); break;
+        process_dec_ref_pic_marking_repetition_info (msg+offset, payload_size, decoder, slice); break;
       case  SEI_SPARE_PIC:
-        interpret_spare_pic (msg+offset, payload_size, decoder); break;
+        process_spare_pic (msg+offset, payload_size, decoder); break;
       case  SEI_SCENE_INFO:
-        interpret_scene_information (msg+offset, payload_size, decoder); break;
+        process_scene_information (msg+offset, payload_size, decoder); break;
       case  SEI_SUB_SEQ_INFO:
-        interpret_subsequence_info (msg+offset, payload_size, decoder); break;
+        process_subsequence_info (msg+offset, payload_size, decoder); break;
       case  SEI_SUB_SEQ_LAYER_CHARACTERISTICS:
-        interpret_subsequence_layer_characteristics_info (msg+offset, payload_size, decoder); break;
+        process_subsequence_layer_characteristics_info (msg+offset, payload_size, decoder); break;
       case  SEI_SUB_SEQ_CHARACTERISTICS:
-        interpret_subsequence_characteristics_info (msg+offset, payload_size, decoder); break;
+        process_subsequence_characteristics_info (msg+offset, payload_size, decoder); break;
       case  SEI_FULL_FRAME_FREEZE:
-        interpret_full_frame_freeze_info (msg+offset, payload_size, decoder); break;
+        process_full_frame_freeze_info (msg+offset, payload_size, decoder); break;
       case  SEI_FULL_FRAME_FREEZE_RELEASE:
-        interpret_full_frame_freeze_release_info (msg+offset, payload_size, decoder); break;
+        process_full_frame_freeze_release_info (msg+offset, payload_size, decoder); break;
       case  SEI_FULL_FRAME_SNAPSHOT:
-        interpret_full_frame_snapshot_info (msg+offset, payload_size, decoder); break;
+        process_full_frame_snapshot_info (msg+offset, payload_size, decoder); break;
       case  SEI_PROGRESSIVE_REFINEMENT_SEGMENT_START:
-        interpret_progressive_refinement_start_info (msg+offset, payload_size, decoder); break;
+        process_progressive_refinement_start_info (msg+offset, payload_size, decoder); break;
       case  SEI_PROGRESSIVE_REFINEMENT_SEGMENT_END:
-        interpret_progressive_refinement_end_info (msg+offset, payload_size, decoder); break;
+        process_progressive_refinement_end_info (msg+offset, payload_size, decoder); break;
       case  SEI_MOTION_CONSTRAINED_SLICE_GROUP_SET:
-        interpret_motion_constrained_slice_group_set_info (msg+offset, payload_size, decoder); break;
+        process_motion_constrained_slice_group_set_info (msg+offset, payload_size, decoder); break;
       case  SEI_FILM_GRAIN_CHARACTERISTICS:
-        interpret_film_grain_characteristics_info (msg+offset, payload_size, decoder); break;
+        process_film_grain_characteristics_info (msg+offset, payload_size, decoder); break;
       case  SEI_DEBLOCKING_FILTER_DISPLAY_PREFERENCE:
-        interpret_deblocking_filter_display_preference_info (msg+offset, payload_size, decoder); break;
+        process_deblocking_filter_display_preference_info (msg+offset, payload_size, decoder); break;
       case  SEI_STEREO_VIDEO_INFO:
-        interpret_stereo_video_info_info  (msg+offset, payload_size, decoder); break;
+        process_stereo_video_info_info  (msg+offset, payload_size, decoder); break;
       case  SEI_POST_FILTER_HINTS:
-        interpret_post_filter_hints_info (msg+offset, payload_size, decoder); break;
+        process_post_filter_hints_info (msg+offset, payload_size, decoder); break;
       case  SEI_FRAME_PACKING_ARRANGEMENT:
-        interpret_frame_packing_arrangement_info (msg+offset, payload_size, decoder); break;
+        process_frame_packing_arrangement_info (msg+offset, payload_size, decoder); break;
       case  SEI_GREEN_METADATA:
-        interpret_green_metadata_info (msg+offset, payload_size, decoder); break;
+        process_green_metadata_info (msg+offset, payload_size, decoder); break;
       default:
-        interpret_reserved_info (msg+offset, payload_size, decoder); break;
+        process_reserved_info (msg+offset, payload_size, decoder); break;
       }
     offset += payload_size;
     } while (msg[offset] != 0x80);    // more_rbsp_data()  msg[offset] != 0x80
