@@ -34,8 +34,8 @@ typedef enum {
   } eColorComponent;
 //}}}
 
-//{{{
-typedef struct annexBstruct {
+//{{{  sAnnexB
+typedef struct AnnexB {
   byte*  buffer;
   size_t bufferSize;
   byte*  bufferPtr;
@@ -44,7 +44,7 @@ typedef struct annexBstruct {
   int    isFirstByteStreamNALU;
   int    nextStartCodeBytes;
   byte*  naluBuffer;
-  } ANNEXB_t;
+  } sAnnexB;
 //}}}
 //{{{  values for eNaluType
 typedef enum {
@@ -817,7 +817,7 @@ typedef struct Decoder {
   char         sliceTypeStr[9];
 
   // nalu
-  struct       annexBstruct* annexB;
+  sAnnexB*     annexB;
   int          lastAccessUnitExists;
   int          naluCount;
   sNalu*       nalu;

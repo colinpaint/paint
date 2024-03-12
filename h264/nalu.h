@@ -2,10 +2,10 @@
 #include "defines.h"
 #include "global.h"
 
-extern ANNEXB_t* allocAnnexB (sDecoder* decoder);
-extern void openAnnexB (ANNEXB_t* annexB, byte* chunk, size_t chunkSize);
-extern void resetAnnexB (ANNEXB_t* annexB);
-extern void freeAnnexB (ANNEXB_t** p_annexB);
+extern sAnnexB* allocAnnexB (sDecoder* decoder);
+extern void openAnnexB (sAnnexB* annexB, byte* chunk, size_t chunkSize);
+extern void resetAnnexB (sAnnexB* annexB);
+extern void freeAnnexB (sAnnexB** p_annexB);
 
 extern sNalu* allocNALU (int);
 extern void freeNALU (sNalu* n);

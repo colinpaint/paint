@@ -6,15 +6,15 @@
 //}}}
 
 //{{{
-ANNEXB_t* allocAnnexB (sDecoder* decoder) {
+sAnnexB* allocAnnexB (sDecoder* decoder) {
 
-  ANNEXB_t* annexB = (ANNEXB_t*)calloc (1, sizeof(ANNEXB_t));
+  sAnnexB* annexB = (sAnnexB*)calloc (1, sizeof(sAnnexB));
   annexB->naluBuffer = (byte*)malloc (decoder->nalu->maxSize);
   return annexB;
   }
 //}}}
 //{{{
-void freeAnnexB (ANNEXB_t** p_annexB) {
+void freeAnnexB (sAnnexB** p_annexB) {
 
   free ((*p_annexB)->naluBuffer);
   (*p_annexB)->naluBuffer = NULL;
@@ -25,7 +25,7 @@ void freeAnnexB (ANNEXB_t** p_annexB) {
 //}}}
 
 //{{{
-void openAnnexB (ANNEXB_t* annexB, byte* chunk, size_t chunkSize) {
+void openAnnexB (sAnnexB* annexB, byte* chunk, size_t chunkSize) {
 
   annexB->buffer = chunk;
   annexB->bufferSize = chunkSize;
@@ -35,7 +35,7 @@ void openAnnexB (ANNEXB_t* annexB, byte* chunk, size_t chunkSize) {
   }
 //}}}
 //{{{
-void resetAnnexB (ANNEXB_t* annexB) {
+void resetAnnexB (sAnnexB* annexB) {
 
   annexB->bytesInBuffer = annexB->bufferSize;
   annexB->bufferPtr = annexB->buffer;
@@ -138,7 +138,7 @@ void checkZeroByteNonVCL (sDecoder* decoder, sNalu* nalu) {
 //}}}
 
 //{{{
-static inline byte getByte (ANNEXB_t* annexB) {
+static inline byte getByte (sAnnexB* annexB) {
 
   if (annexB->bytesInBuffer) {
     annexB->bytesInBuffer--;
@@ -162,7 +162,7 @@ static inline int findStartCode (unsigned char* buf, int zerosInStartcode) {
   }
 //}}}
 //{{{
-static int getNALU (ANNEXB_t* annexB, sDecoder* decoder, sNalu* nalu) {
+static int getNALU (sAnnexB* annexB, sDecoder* decoder, sNalu* nalu) {
 
   int naluBufCount = 0;
   byte* naluBufPtr = annexB->naluBuffer;
