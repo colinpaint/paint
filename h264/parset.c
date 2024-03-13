@@ -407,7 +407,7 @@ static int readVUI (sDataPartition* p, sSPS* sps) {
 //}}}
 
 //{{{
-static int spsIsEqual (sSPS* sps1, sSPS* sps2) {
+static int isSpsEqual (sSPS* sps1, sSPS* sps2) {
 
   int equal = 1;
 
@@ -602,7 +602,7 @@ void processSPS (sDecoder* decoder, sNalu* nalu) {
   if (sps->valid) {
     if (decoder->activeSPS) {
       if (sps->spsId == decoder->activeSPS->spsId) {
-        if (!spsIsEqual (sps, decoder->activeSPS))   {
+        if (!isSpsEqual (sps, decoder->activeSPS))   {
           if (decoder->picture)
             endDecodeFrame (decoder);
           decoder->activeSPS = NULL;
@@ -686,7 +686,7 @@ void cleanUpPPS (sDecoder* decoder) {
 //}}}
 
 //{{{
-static int ppsIsEqual (sPPS* pps1, sPPS* pps2) {
+static int isPpsEqual (sPPS* pps1, sPPS* pps2) {
 
   if (!pps1->valid || !pps2->valid)
     return 0;
@@ -768,10 +768,8 @@ static void interpretPPS (sDecoder* decoder, sDataPartition* dp, sPPS* pps) {
 
   unsigned n_ScalingList;
   int chromaFormatIdc;
-  int NumberBitsPerSliceGroupId;
 
   sBitstream* s = dp->s;
-
   pps->ppsId = readUeV ("PPS ppsId", s);
   pps->spsId = readUeV ("PPS spsId", s);
   pps->entropyCodingModeFlag = readU1 ("PPS entropyCodingModeFlag", s);
@@ -807,6 +805,7 @@ static void interpretPPS (sDecoder* decoder, sDataPartition* dp, sPPS* pps) {
         readUeV ("PPS sliceGroupChangeRateMius1", s);
       }
     else if (pps->sliceGroupMapType == 6) {
+      int NumberBitsPerSliceGroupId;
       if (pps->numSliceGroupsMinus1+1 >4)
         NumberBitsPerSliceGroupId = 3;
       else if (pps->numSliceGroupsMinus1+1 > 2)
@@ -899,7 +898,7 @@ void processPPS (sDecoder* decoder, sNalu* nalu) {
 
   if (decoder->activePPS) {
     if (pps->ppsId == decoder->activePPS->ppsId) {
-      if (!ppsIsEqual (pps, decoder->activePPS)) {
+      if (!isPpsEqual (pps, decoder->activePPS)) {
         // copy to next PPS;
         memcpy (decoder->nextPPS, decoder->activePPS, sizeof (sPPS));
         if (decoder->picture)
