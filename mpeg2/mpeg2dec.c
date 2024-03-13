@@ -267,11 +267,11 @@ static void Initialize_Sequence() {
 
   /* round to nearest multiple of coded macroblocks */
   /* ISO/IEC 13818-2 section 6.3.3 sequence_header() */
-  mb_width = (horizontal_size+15)/16;
-  mb_height = (base.MPEG2_Flag && !progressive_sequence) ? 2*((vertical_size+31)/32)
+  mbWidth = (horizontal_size+15)/16;
+  mbHeight = (base.MPEG2_Flag && !progressive_sequence) ? 2*((vertical_size+31)/32)
                                         : (vertical_size+15)/16;
-  Coded_Picture_Width = 16*mb_width;
-  Coded_Picture_Height = 16*mb_height;
+  Coded_Picture_Width = 16*mbWidth;
+  Coded_Picture_Height = 16*mbHeight;
 
   /* ISO/IEC 13818-2 sections 6.1.1.8, 6.1.1.9, and 6.1.1.10 */
   Chroma_Width = (chroma_format==CHROMA444) ? Coded_Picture_Width : Coded_Picture_Width>>1;

@@ -5,10 +5,6 @@ typedef enum {
   PLANE_Y = 0,  // PLANE_Y
   PLANE_U = 1,  // PLANE_Cb
   PLANE_V = 2,  // PLANE_Cr
-  // RGB
-  PLANE_G = 0,
-  PLANE_B = 1,
-  PLANE_R = 2
   } eColorPlane;
 //}}}
 //{{{  enum ePredList
@@ -20,43 +16,22 @@ typedef enum {
   BI_PRED_L1 = 4
   } ePredList;
 //}}}
-//{{{  enum eErrorMetric
-typedef enum {
-  ERROR_SAD = 0,
-  ERROR_SSE = 1,
-  ERROR_SATD = 2,
-  ERROR_PSATD = 3
-  } eErrorMetric;
-//}}}
-//{{{  enum eYuvFormat
-typedef enum {
-  ME_Y_ONLY = 0,
-  ME_YUV_FP = 1,
-  ME_YUV_FP_SP = 2
-  } eYuvFormat;
-//}}}
 
-//{{{  enum Data dping Modes
+//{{{  enum eDataPartitionType
 typedef enum {
   PAR_DP_1,   //!< no data dping is supported
   PAR_DP_3    //!< data dping with 3 dps
-  } PAR_DP_TYPE;
+  } eDataPartitionType;
 //}}}
-//{{{  enum Output File Types
-typedef enum {
-  PAR_OF_ANNEXB,    //!< Annex B byte stream format
-  PAR_OF_RTP       //!< RTP packets in outfile
-  } PAR_OF_TYPE;
-//}}}
-//{{{  enum Field Coding Types
+//{{{  enum eCodingType
 typedef enum {
   FRAME_CODING         = 0,
   FIELD_CODING         = 1,
   ADAPTIVE_CODING      = 2,
   FRAME_MB_PAIR_CODING = 3
- } CodingType;
+ } eCodingType;
 //}}}
-//{{{  enum definition of H.264 syntax elements
+//{{{  enum eSeType - definition of H.264 syntax elements
 typedef enum {
   SE_HEADER,
   SE_PTYPE,
@@ -76,8 +51,8 @@ typedef enum {
   SE_DELTA_QUANT,
   SE_BFRAME,
   SE_EOS,
-  SE_MAX_ELEMENTS = 20 //!< number of maximum syntax elements
-  } SE_type;             // substituting the definitions in elements.h
+  SE_MAX_ELEMENTS = 20
+  } eSeType;             
 //}}}
 
 //{{{  enum eSliceMode
@@ -121,34 +96,34 @@ typedef enum {
   NUM_SLICE_TYPES = 5
   } eSliceType;
 //}}}
-//{{{  enum Motion Estimation levels
+//{{{  enum eMotionEstimationLevel
 typedef enum {
-  F_PEL,   //!< Full Pel refinement
-  H_PEL,   //!< Half Pel refinement
-  Q_PEL    //!< Quarter Pel refinement
-  } MELevel;
+  F_PEL,   // Full Pel refinement
+  H_PEL,   // Half Pel refinement
+  Q_PEL    // Quarter Pel refinement
+  } eMotionEstimationLevel;
 //}}}
 //{{{  enum refAccess
 typedef enum {
-  FAST_ACCESS = 0,    //!< Fast/safe reference access
-  UMV_ACCESS = 1      //!< unconstrained reference access
-  } REF_ACCESS_TYPE;
+  FAST_ACCESS = 0, // Fast/safe reference access
+  UMV_ACCESS = 1   // unconstrained reference access
+  } eRefAccessType;
 //}}}
-//{{{  enum componentType
+//{{{  enum eComponentType
 typedef enum {
   IS_LUMA = 0,
   IS_CHROMA = 1
-  } Component_Type;
+  } eComponentType;
 //}}}
-//{{{  enum RCModeType
+//{{{  enum eRcModelType
 typedef enum {
   RC_MODE_0 = 0,
   RC_MODE_1 = 1,
   RC_MODE_2 = 2,
   RC_MODE_3 = 3
-  } RCModeType;
+  } eRcModelType;
 //}}}
-//{{{  enum weightedPredictionTypes
+//{{{  enum  eWeightedPredictionType;
 typedef enum {
   WP_MCPREC_PLUS0 =       4,
   WP_MCPREC_PLUS1 =       5,
@@ -156,5 +131,5 @@ typedef enum {
   WP_MCPREC_MINUS1 =      7,
   WP_MCPREC_MINUS_PLUS0 = 8,
   WP_REGULAR =            9
-  } weighted_prediction_types;
+  } eWeightedPredictionType;
 //}}}

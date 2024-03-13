@@ -2093,8 +2093,8 @@ static void motion_compensation (int MBA, int macroblock_type, int motion_type,
 
   /* derive current macroblock position within picture */
   /* ISO/IEC 13818-2 section 6.3.1.6 and 6.3.1.7 */
-  int bx = 16*(MBA%mb_width);
-  int by = 16*(MBA/mb_width);
+  int bx = 16*(MBA%mbWidth);
+  int by = 16*(MBA/mbWidth);
 
   /* motion compensation */
   if (!(macroblock_type & MACROBLOCK_INTRA))
@@ -2661,7 +2661,7 @@ static int startSlice (int MBAmax, int* MBA, int* MBAinc, int dc_dct_pred[3], in
   /* NOTE: the arithmetic used to derive macroblock_address below is
    *       equivalent to ISO/IEC 13818-2 section 6.3.17: Macroblock
    */
-  *MBA = ((slice_vert_pos_ext<<7) + (code&255) - 1)*mb_width + *MBAinc - 1;
+  *MBA = ((slice_vert_pos_ext<<7) + (code&255) - 1)*mbWidth + *MBAinc - 1;
   *MBAinc = 1; /* first macroblock in slice: not skipped */
 
   /* reset all DC coefficient and motion vector predictors */
@@ -2763,7 +2763,7 @@ static void picture_data (int framenum) {
   int ret;
 
   /* number of macroblocks per picture */
-  int MBAmax = mb_width * mb_height;
+  int MBAmax = mbWidth * mbHeight;
   if (picture_structure != FRAME_PICTURE)
     MBAmax >>= 1; /* field picture has half as mnay macroblocks as frame */
 

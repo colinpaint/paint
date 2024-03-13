@@ -81,8 +81,8 @@ extern int profile, level;
 //{{{  normative derived variables (as per ISO/IEC 13818-2)
 extern int horizontal_size;
 extern int vertical_size;
-extern int mb_width;
-extern int mb_height;
+extern int mbWidth;
+extern int mbHeight;
 extern double bit_rate;
 extern double frameRate;
 //}}}

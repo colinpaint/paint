@@ -1526,7 +1526,7 @@ static void copy_to_conceal (sPicture *src, sPicture *dst, sDecoder* decoder)
   int mv[3];
   int multiplier;
   sPixel *predMB, *storeYUV;
-  int j, y, x, mb_height, mb_width, ii = 0, jj = 0;
+  int j, y, x, mbHeight, mbWidth, ii = 0, jj = 0;
   int uv;
   int mm, nn;
   int scale = 1;
@@ -1581,8 +1581,8 @@ static void copy_to_conceal (sPicture *src, sPicture *dst, sDecoder* decoder)
 
     dst->picWidthMbs = src->picWidthMbs;
     dst->picSizeInMbs = src->picSizeInMbs;
-    mb_width = dst->picWidthMbs;
-    mb_height = (dst->picSizeInMbs)/(dst->picWidthMbs);
+    mbWidth = dst->picWidthMbs;
+    mbHeight = (dst->picSizeInMbs)/(dst->picWidthMbs);
     scale = (decoder->concealSliceType == B_SLICE) ? 2 : 1;
 
     if(decoder->concealSliceType == B_SLICE)
@@ -1594,10 +1594,10 @@ static void copy_to_conceal (sPicture *src, sPicture *dst, sDecoder* decoder)
 
     multiplier = BLOCK_SIZE;
 
-    for(i=0;i<mb_height*4;i++)
+    for(i=0;i<mbHeight*4;i++)
     {
       mm = i * BLOCK_SIZE;
-      for(j=0;j<mb_width*4;j++)
+      for(j=0;j<mbWidth*4;j++)
       {
         nn = j * BLOCK_SIZE;
 

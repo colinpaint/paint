@@ -828,9 +828,9 @@ static int readNextSlice (sSlice* slice) {
 
         if (decoder->param.sliceDebug) {
           if (nalu->unitType == NALU_TYPE_IDR)
-            printf ("IDR id:%d:%d\n", slice->refId, slice->sliceType);
+            printf ("IDR id:%d:%d len:%d\n", slice->refId, slice->sliceType, nalu->len);
           else
-            printf ("SLC id:%d:%d\n", slice->refId, slice->sliceType);
+            printf ("SLC id:%d:%d len %d\n", slice->refId, slice->sliceType, nalu->len);
           }
 
         assignQuantParams (slice);
@@ -868,6 +868,7 @@ static int readNextSlice (sSlice* slice) {
       //}}}
       //{{{
       case NALU_TYPE_DPA:
+        printf ("DPA id:%d:%d len:%d\n", slice->refId, slice->sliceType, nalu->len);
 
         if (decoder->recoveryPointFound == 0)
           break;
@@ -981,26 +982,32 @@ static int readNextSlice (sSlice* slice) {
       //}}}
       //{{{
       case NALU_TYPE_DPB:
-        printf ("dataPartitionB with dataPartitonA\n");
+        printf ("dataPartitionB without dataPartitonA\n");
         break;
       //}}}
       //{{{
       case NALU_TYPE_DPC:
-        printf ("dataPartitionC with dataPartitonA\n");
+        printf ("dataPartitionC without dataPartitonA\n");
         break;
       //}}}
       //{{{
       case NALU_TYPE_SEI:
+        if (decoder->param.seiDebug)
+          printf ("IDR id:%d:%d len:%d\n", slice->refId, slice->sliceType, nalu->len);
         processSEI (nalu->buf, nalu->len, decoder, slice);
         break;
       //}}}
       //{{{
       case NALU_TYPE_PPS:
+        if (decoder->param.spsDebug)
+          printf ("SPS id:%d:%d len:%d\n", slice->refId, slice->sliceType, nalu->len);
         processPPS (decoder, nalu);
         break;
       //}}}
       //{{{
       case NALU_TYPE_SPS:
+        if (decoder->param.spsDebug)
+          printf ("SPS id:%d:%d len:%d\n", slice->refId, slice->sliceType, nalu->len);
         processSPS (decoder, nalu);
         break;
       //}}}

@@ -545,10 +545,10 @@ sDecoder* openDecoder (sParam* param, byte* chunk, size_t chunkSize) {
   // init nalu, annexB
   decoder->nalu = allocNALU (MAX_CODED_FRAME_SIZE);
   decoder->nextPPS = allocPPS();
-  decoder->firstSPS = TRUE;
+  decoder->gotSPS = 0;
   decoder->annexB = allocAnnexB (decoder);
   openAnnexB (decoder->annexB, chunk, chunkSize);
-  decoder->lastAccessUnitExists  = 0;
+  decoder->gotLastNalu = 0;
   decoder->naluCount = 0;
   decoder->pendingNalu = NULL;
 

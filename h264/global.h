@@ -816,16 +816,16 @@ typedef struct Decoder {
   char         sliceTypeStr[9];
 
   // nalu
-  sAnnexB*     annexB;
-  int          lastAccessUnitExists;
+  int          gotLastNalu;
   int          naluCount;
   sNalu*       nalu;
   sNalu*       pendingNalu;
+  sAnnexB*     annexB;
 
   // sps
+  int          gotSPS;
   sSPS         sps[32];
   sSPS*        activeSPS;
-  Boolean      firstSPS;
 
   // pps
   sPPS         pps[MAX_PPS];

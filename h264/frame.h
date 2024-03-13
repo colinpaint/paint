@@ -13,7 +13,7 @@ typedef enum {
   YUV420     =  1, // 4:2:0
   YUV422     =  2, // 4:2:2
   YUV444     =  3  // 4:4:4
-  } eColorFormat;
+  } eYuvFormat;
 
 typedef enum {
   PF_UNKNOWN = -1, // Unknown color ordering
@@ -26,7 +26,7 @@ typedef enum {
   } ePixelFormat;
 
 typedef struct FrameFormat {
-  eColorFormat yuvFormat;             // YUV format (0=4:0:0, 1=4:2:0, 2=4:2:2, 3=4:4:4)
+  eYuvFormat yuvFormat;             // YUV format (0=4:0:0, 1=4:2:0, 2=4:2:2, 3=4:4:4)
   eColorModel  colourModel;           // 4:4:4 format (0: YUV, 1: RGB, 2: XYZ)
   ePixelFormat pixel_format;          // pixel format support for certain interleaved yuv sources
   double       frameRate;            // frame rate
@@ -41,13 +41,13 @@ typedef struct FrameFormat {
   int          width_crop;            // width after cropping consideration
   int          height_crop;           // height after cropping consideration
 
-  int          mb_width;              // luma component frame width
-  int          mb_height;             // luma component frame height
+  int          mbWidth;              // luma component frame width
+  int          mbHeight;             // luma component frame height
 
-  int          size_cmp[3];           // component sizes (width * height)
-  int          size;                  // total image size (sum of size_cmp)
+  int          sizeCmp[3];           // component sizes (width * height)
+  int          size;                  // total image size (sum of sizeCmp)
 
-  int          bit_depth[3];          // component bit depth
+  int          bitDepth[3];          // component bit depth
   int          max_value[3];          // component max value
   int          max_value_sq[3];       // component max value squared
 

@@ -30,13 +30,13 @@ static const byte ZZ_SCAN8[64] = {
 //{{{
 static void updateMaxValue (sFrameFormat* format) {
 
-  format->max_value[0] = (1 << format->bit_depth[0]) - 1;
+  format->max_value[0] = (1 << format->bitDepth[0]) - 1;
   format->max_value_sq[0] = format->max_value[0] * format->max_value[0];
 
-  format->max_value[1] = (1 << format->bit_depth[1]) - 1;
+  format->max_value[1] = (1 << format->bitDepth[1]) - 1;
   format->max_value_sq[1] = format->max_value[1] * format->max_value[1];
 
-  format->max_value[2] = (1 << format->bit_depth[2]) - 1;
+  format->max_value[2] = (1 << format->bitDepth[2]) - 1;
   format->max_value_sq[2] = format->max_value[2] * format->max_value[2];
   }
 //}}}
@@ -173,33 +173,32 @@ static void resetFormatInfo (sSPS* sps, sDecoder* decoder, sFrameFormat* source,
   static const int SubHeightC[4] = { 1, 2, 1, 1};
 
   // cropping for luma
-  int crop_left, cropRight;
-  int crop_top, cropBot;
+  int cropLeft, cropRight, cropTop, cropBot;
   if (sps->frameCropFlag) {
-    crop_left = SubWidthC [sps->chromaFormatIdc] * sps->frameCropLeft;
+    cropLeft = SubWidthC [sps->chromaFormatIdc] * sps->frameCropLeft;
     cropRight = SubWidthC [sps->chromaFormatIdc] * sps->frameCropRight;
-    crop_top = SubHeightC[sps->chromaFormatIdc] * ( 2 - sps->frameMbOnlyFlag ) *  sps->frameCropTop;
+    cropTop = SubHeightC[sps->chromaFormatIdc] * ( 2 - sps->frameMbOnlyFlag ) *  sps->frameCropTop;
     cropBot = SubHeightC[sps->chromaFormatIdc] * ( 2 - sps->frameMbOnlyFlag ) *  sps->frameCropBot;
     }
   else
-    crop_left = cropRight = crop_top = cropBot = 0;
+    cropLeft = cropRight = cropTop = cropBot = 0;
 
-  source->width[0] = decoder->width - crop_left - cropRight;
-  source->height[0] = decoder->height - crop_top - cropBot;
+  source->width[0] = decoder->width - cropLeft - cropRight;
+  source->height[0] = decoder->height - cropTop - cropBot;
 
   // cropping for chroma
   if (sps->frameCropFlag) {
-    crop_left = sps->frameCropLeft;
-    cropRight  = sps->frameCropRight;
-    crop_top = ( 2 - sps->frameMbOnlyFlag ) *  sps->frameCropTop;
-    cropBot = ( 2 - sps->frameMbOnlyFlag ) *  sps->frameCropBot;
+    cropLeft = sps->frameCropLeft;
+    cropRight = sps->frameCropRight;
+    cropTop = (2 - sps->frameMbOnlyFlag) * sps->frameCropTop;
+    cropBot = (2 - sps->frameMbOnlyFlag) * sps->frameCropBot;
     }
   else
-    crop_left = cropRight = crop_top = cropBot = 0;
+    cropLeft = cropRight = cropTop = cropBot = 0;
 
-  source->width[1] = decoder->widthCr - crop_left - cropRight;
+  source->width[1] = decoder->widthCr - cropLeft - cropRight;
   source->width[2] = source->width[1];
-  source->height[1] = decoder->heightCr - crop_top - cropBot;
+  source->height[1] = decoder->heightCr - cropTop - cropBot;
   source->height[2] = source->height[1];
 
   output->width[0] = decoder->width;
@@ -209,30 +208,30 @@ static void resetFormatInfo (sSPS* sps, sDecoder* decoder, sFrameFormat* source,
   output->height[1] = decoder->heightCr;
   output->height[2] = decoder->heightCr;
 
-  source->size_cmp[0] = source->width[0] * source->height[0];
-  source->size_cmp[1] = source->width[1] * source->height[1];
-  source->size_cmp[2] = source->size_cmp[1];
-  source->size = source->size_cmp[0] + source->size_cmp[1] + source->size_cmp[2];
-  source->mb_width = source->width[0]  / MB_BLOCK_SIZE;
-  source->mb_height = source->height[0] / MB_BLOCK_SIZE;
+  source->sizeCmp[0] = source->width[0] * source->height[0];
+  source->sizeCmp[1] = source->width[1] * source->height[1];
+  source->sizeCmp[2] = source->sizeCmp[1];
+  source->size = source->sizeCmp[0] + source->sizeCmp[1] + source->sizeCmp[2];
+  source->mbWidth = source->width[0]  / MB_BLOCK_SIZE;
+  source->mbHeight = source->height[0] / MB_BLOCK_SIZE;
 
   // output size (excluding padding)
-  output->size_cmp[0] = output->width[0] * output->height[0];
-  output->size_cmp[1] = output->width[1] * output->height[1];
-  output->size_cmp[2] = output->size_cmp[1];
-  output->size = output->size_cmp[0] + output->size_cmp[1] + output->size_cmp[2];
-  output->mb_width = output->width[0]  / MB_BLOCK_SIZE;
-  output->mb_height = output->height[0] / MB_BLOCK_SIZE;
+  output->sizeCmp[0] = output->width[0] * output->height[0];
+  output->sizeCmp[1] = output->width[1] * output->height[1];
+  output->sizeCmp[2] = output->sizeCmp[1];
+  output->size = output->sizeCmp[0] + output->sizeCmp[1] + output->sizeCmp[2];
+  output->mbWidth = output->width[0]  / MB_BLOCK_SIZE;
+  output->mbHeight = output->height[0] / MB_BLOCK_SIZE;
 
-  output->bit_depth[0] = source->bit_depth[0] = decoder->bitdepthLuma;
-  output->bit_depth[1] = source->bit_depth[1] = decoder->bitdepthChroma;
-  output->bit_depth[2] = source->bit_depth[2] = decoder->bitdepthChroma;
-  output->picDiskUnitSize = (imax(output->bit_depth[0], output->bit_depth[1]) > 8) ? 16 : 8;
+  output->bitDepth[0] = source->bitDepth[0] = decoder->bitdepthLuma;
+  output->bitDepth[1] = source->bitDepth[1] = decoder->bitdepthChroma;
+  output->bitDepth[2] = source->bitDepth[2] = decoder->bitdepthChroma;
+  output->picDiskUnitSize = (imax(output->bitDepth[0], output->bitDepth[1]) > 8) ? 16 : 8;
   output->pic_unit_size_shift3 = output->picDiskUnitSize >> 3;
 
   output->frameRate = source->frameRate;
   output->colourModel = source->colourModel;
-  output->yuvFormat = source->yuvFormat = (eColorFormat)sps->chromaFormatIdc;
+  output->yuvFormat = source->yuvFormat = sps->chromaFormatIdc;
 
   output->autoCropBot = cropBot;
   output->autoCropRight = cropRight;
@@ -247,9 +246,12 @@ static void resetFormatInfo (sSPS* sps, sDecoder* decoder, sFrameFormat* source,
   updateMaxValue (source);
   updateMaxValue (output);
 
-  if (decoder->firstSPS == TRUE) {
-    decoder->firstSPS = FALSE;
-    printf ("-> profile:%d %dx%d %dx%d ", sps->profileIdc, source->width[0], source->height[0], decoder->width, decoder->height);
+  if (!decoder->gotSPS) {
+    //{{{  print profile info
+    decoder->gotSPS = 1;
+    printf ("-> profile:%d %dx%d %dx%d ", 
+            sps->profileIdc, source->width[0], source->height[0], decoder->width, decoder->height);
+
     if (decoder->yuvFormat == YUV400)
       printf ("4:0:0");
     else if (decoder->yuvFormat == YUV420)
@@ -258,8 +260,10 @@ static void resetFormatInfo (sSPS* sps, sDecoder* decoder, sFrameFormat* source,
       printf ("4:2:2");
     else
       printf ("4:4:4");
-    printf (" %d:%d:%d\n", source->bit_depth[0], source->bit_depth[1], source->bit_depth[2]);
+
+    printf (" %d:%d:%d\n", source->bitDepth[0], source->bitDepth[1], source->bitDepth[2]);
     }
+    //}}}
   }
 //}}}
 
@@ -281,64 +285,7 @@ static void freeSPS (sSPS* sps) {
   free (sps);
   }
 //}}}
-//{{{
-static int spsIsEqual (sSPS* sps1, sSPS* sps2) {
 
-  int equal = 1;
-
-  if ((!sps1->valid) || (!sps2->valid))
-    return 0;
-
-  equal &= (sps1->profileIdc == sps2->profileIdc);
-  equal &= (sps1->constrained_set0_flag == sps2->constrained_set0_flag);
-  equal &= (sps1->constrained_set1_flag == sps2->constrained_set1_flag);
-  equal &= (sps1->constrained_set2_flag == sps2->constrained_set2_flag);
-  equal &= (sps1->levelIdc == sps2->levelIdc);
-  equal &= (sps1->spsId == sps2->spsId);
-  equal &= (sps1->log2_max_frame_num_minus4 == sps2->log2_max_frame_num_minus4);
-  equal &= (sps1->picOrderCountType == sps2->picOrderCountType);
-  if (!equal)
-    return equal;
-
-  if (sps1->picOrderCountType == 0)
-    equal &= (sps1->log2_max_pic_order_cnt_lsb_minus4 == sps2->log2_max_pic_order_cnt_lsb_minus4);
-  else if( sps1->picOrderCountType == 1) {
-    equal &= (sps1->delta_pic_order_always_zero_flag == sps2->delta_pic_order_always_zero_flag);
-    equal &= (sps1->offset_for_non_ref_pic == sps2->offset_for_non_ref_pic);
-    equal &= (sps1->offset_for_top_to_bottom_field == sps2->offset_for_top_to_bottom_field);
-    equal &= (sps1->num_ref_frames_in_pic_order_cnt_cycle == sps2->num_ref_frames_in_pic_order_cnt_cycle);
-    if (!equal)
-      return equal;
-    for (unsigned i = 0 ; i < sps1->num_ref_frames_in_pic_order_cnt_cycle ;i ++)
-      equal &= (sps1->offset_for_ref_frame[i] == sps2->offset_for_ref_frame[i]);
-    }
-
-  equal &= (sps1->numRefFrames == sps2->numRefFrames);
-  equal &= (sps1->gaps_in_frame_num_value_allowed_flag == sps2->gaps_in_frame_num_value_allowed_flag);
-  equal &= (sps1->pic_width_in_mbs_minus1 == sps2->pic_width_in_mbs_minus1);
-  equal &= (sps1->pic_height_in_map_units_minus1 == sps2->pic_height_in_map_units_minus1);
-  equal &= (sps1->frameMbOnlyFlag == sps2->frameMbOnlyFlag);
-
-  if (!equal) return
-    equal;
-  if (!sps1->frameMbOnlyFlag)
-    equal &= (sps1->mb_adaptive_frame_field_flag == sps2->mb_adaptive_frame_field_flag);
-
-  equal &= (sps1->direct_8x8_inference_flag == sps2->direct_8x8_inference_flag);
-  equal &= (sps1->frameCropFlag == sps2->frameCropFlag);
-  if (!equal)
-    return equal;
-  if (sps1->frameCropFlag) {
-    equal &= (sps1->frameCropLeft == sps2->frameCropLeft);
-    equal &= (sps1->frameCropRight == sps2->frameCropRight);
-    equal &= (sps1->frameCropTop == sps2->frameCropTop);
-    equal &= (sps1->frameCropBot == sps2->frameCropBot);
-    }
-  equal &= (sps1->vui_parameters_present_flag == sps2->vui_parameters_present_flag);
-
-  return equal;
-  }
-//}}}
 //{{{
 // syntax for scaling list matrix values
 static void scalingList (int* scalingList, int scalingListSize, Boolean* useDefaultScalingMatrix, sBitstream* s) {
@@ -364,7 +311,7 @@ static void initVUI (sSPS* sps) {
   }
 //}}}
 //{{{
-static int readHRDParameters (sDataPartition* dp, sHRD* hrd) {
+static int readHRD (sDataPartition* dp, sHRD* hrd) {
 
   sBitstream *s = dp->s;
   hrd->cpb_cnt_minus1 = readUeV ("VUI cpb_cnt_minus1", s);
@@ -432,12 +379,12 @@ static int readVUI (sDataPartition* p, sSPS* sps) {
 
     sps->vui_seq_parameters.nal_hrd_parameters_present_flag = readU1 ("VUI nal_hrd_parameters_present_flag", s);
     if (sps->vui_seq_parameters.nal_hrd_parameters_present_flag)
-      readHRDParameters (p, &(sps->vui_seq_parameters.nal_hrd_parameters));
+      readHRD (p, &(sps->vui_seq_parameters.nal_hrd_parameters));
 
     sps->vui_seq_parameters.vcl_hrd_parameters_present_flag = readU1 ("VUI vcl_hrd_parameters_present_flag", s);
 
     if (sps->vui_seq_parameters.vcl_hrd_parameters_present_flag)
-      readHRDParameters(p, &(sps->vui_seq_parameters.vcl_hrd_parameters));
+      readHRD (p, &(sps->vui_seq_parameters.vcl_hrd_parameters));
 
     if (sps->vui_seq_parameters.nal_hrd_parameters_present_flag ||
         sps->vui_seq_parameters.vcl_hrd_parameters_present_flag)
@@ -458,6 +405,65 @@ static int readVUI (sDataPartition* p, sSPS* sps) {
     }
 
   return 0;
+  }
+//}}}
+
+//{{{
+static int spsIsEqual (sSPS* sps1, sSPS* sps2) {
+
+  int equal = 1;
+
+  if ((!sps1->valid) || (!sps2->valid))
+    return 0;
+
+  equal &= (sps1->profileIdc == sps2->profileIdc);
+  equal &= (sps1->constrained_set0_flag == sps2->constrained_set0_flag);
+  equal &= (sps1->constrained_set1_flag == sps2->constrained_set1_flag);
+  equal &= (sps1->constrained_set2_flag == sps2->constrained_set2_flag);
+  equal &= (sps1->levelIdc == sps2->levelIdc);
+  equal &= (sps1->spsId == sps2->spsId);
+  equal &= (sps1->log2_max_frame_num_minus4 == sps2->log2_max_frame_num_minus4);
+  equal &= (sps1->picOrderCountType == sps2->picOrderCountType);
+  if (!equal)
+    return equal;
+
+  if (sps1->picOrderCountType == 0)
+    equal &= (sps1->log2_max_pic_order_cnt_lsb_minus4 == sps2->log2_max_pic_order_cnt_lsb_minus4);
+  else if( sps1->picOrderCountType == 1) {
+    equal &= (sps1->delta_pic_order_always_zero_flag == sps2->delta_pic_order_always_zero_flag);
+    equal &= (sps1->offset_for_non_ref_pic == sps2->offset_for_non_ref_pic);
+    equal &= (sps1->offset_for_top_to_bottom_field == sps2->offset_for_top_to_bottom_field);
+    equal &= (sps1->num_ref_frames_in_pic_order_cnt_cycle == sps2->num_ref_frames_in_pic_order_cnt_cycle);
+    if (!equal)
+      return equal;
+    for (unsigned i = 0 ; i < sps1->num_ref_frames_in_pic_order_cnt_cycle ;i ++)
+      equal &= (sps1->offset_for_ref_frame[i] == sps2->offset_for_ref_frame[i]);
+    }
+
+  equal &= (sps1->numRefFrames == sps2->numRefFrames);
+  equal &= (sps1->gaps_in_frame_num_value_allowed_flag == sps2->gaps_in_frame_num_value_allowed_flag);
+  equal &= (sps1->pic_width_in_mbs_minus1 == sps2->pic_width_in_mbs_minus1);
+  equal &= (sps1->pic_height_in_map_units_minus1 == sps2->pic_height_in_map_units_minus1);
+  equal &= (sps1->frameMbOnlyFlag == sps2->frameMbOnlyFlag);
+
+  if (!equal) return
+    equal;
+  if (!sps1->frameMbOnlyFlag)
+    equal &= (sps1->mb_adaptive_frame_field_flag == sps2->mb_adaptive_frame_field_flag);
+
+  equal &= (sps1->direct_8x8_inference_flag == sps2->direct_8x8_inference_flag);
+  equal &= (sps1->frameCropFlag == sps2->frameCropFlag);
+  if (!equal)
+    return equal;
+  if (sps1->frameCropFlag) {
+    equal &= (sps1->frameCropLeft == sps2->frameCropLeft);
+    equal &= (sps1->frameCropRight == sps2->frameCropRight);
+    equal &= (sps1->frameCropTop == sps2->frameCropTop);
+    equal &= (sps1->frameCropBot == sps2->frameCropBot);
+    }
+  equal &= (sps1->vui_parameters_present_flag == sps2->vui_parameters_present_flag);
+
+  return equal;
   }
 //}}}
 //{{{
@@ -562,7 +568,7 @@ static void interpretSPS (sDecoder* decoder, sDataPartition* dp, sSPS* sps) {
   readVUI (dp, sps);
 
   if (decoder->param.spsDebug) {
-    printf ("SPS id:%d refFrames:%d picOrderCountType:%d mbs:%dx%d",
+    printf ("-> id:%d refFrames:%d picOrderCountType:%d mbs:%dx%d",
             sps->spsId, sps->numRefFrames,  sps->picOrderCountType,
             sps->pic_width_in_mbs_minus1, sps->pic_height_in_map_units_minus1);
     if (sps->frameMbOnlyFlag)
@@ -655,9 +661,37 @@ void activateSPS (sDecoder* decoder, sSPS* sps) {
 
 // PPS
 //{{{
+sPPS* allocPPS() {
+
+  sPPS* pps = calloc (1, sizeof (sPPS));
+  pps->sliceGroupId = NULL;
+  return pps;
+  }
+//}}}
+//{{{
+ void freePPS (sPPS* pps) {
+
+   assert (pps != NULL);
+   if (pps->sliceGroupId != NULL)
+     free (pps->sliceGroupId);
+   free (pps);
+   }
+//}}}
+//{{{
+void cleanUpPPS (sDecoder* decoder) {
+
+  for (int i = 0; i < MAX_PPS; i++) {
+    if ((decoder->pps[i].valid == TRUE) && (decoder->pps[i].sliceGroupId != NULL))
+      free (decoder->pps[i].sliceGroupId);
+    decoder->pps[i].valid = FALSE;
+    }
+  }
+//}}}
+
+//{{{
 static int ppsIsEqual (sPPS* pps1, sPPS* pps2) {
 
-  if ((!pps1->valid) || (!pps2->valid))
+  if (!pps1->valid || !pps2->valid)
     return 0;
 
   int equal = 1;
@@ -828,7 +862,7 @@ static void interpretPPS (sDecoder* decoder, sDataPartition* dp, sPPS* pps) {
     pps->secondChromaQpIndexOffset = pps->chromaQpIndexOffset;
 
   if (decoder->param.ppsDebug)
-    printf ("PPS id:%d spsId:%d%s%s%s%s L0:%d L1:%d\n",
+    printf ("-> id:%d spsId:%d%s%s%s%s L0:%d L1:%d\n",
             pps->ppsId, pps->spsId,
             pps->numSliceGroupsMinus1 ? " numSliceGroups":"",
             pps->entropyCodingModeFlag ? " entropy":"",
@@ -839,56 +873,18 @@ static void interpretPPS (sDecoder* decoder, sDataPartition* dp, sPPS* pps) {
   pps->valid = TRUE;
   }
 //}}}
-//{{{
-static void activatePPS (sDecoder* decoder, sPPS* pps) {
 
-  if (decoder->activePPS != pps) {
-    if (decoder->picture) // only on slice loss
-      endDecodeFrame (decoder);
-    decoder->activePPS = pps;
-    }
-  }
-//}}}
-
-//{{{
-sPPS* allocPPS() {
-
-  sPPS* pps = calloc (1, sizeof (sPPS));
-  pps->sliceGroupId = NULL;
-  return pps;
-  }
-//}}}
-//{{{
- void freePPS (sPPS* pps) {
-
-   assert (pps != NULL);
-   if (pps->sliceGroupId != NULL)
-     free (pps->sliceGroupId);
-   free (pps);
-   }
-//}}}
 //{{{
 void makePPSavailable (sDecoder* decoder, int id, sPPS* pps) {
 
   if (decoder->pps[id].valid && decoder->pps[id].sliceGroupId)
     free (decoder->pps[id].sliceGroupId);
-
   memcpy (&decoder->pps[id], pps, sizeof (sPPS));
 
   // we can simply use the memory provided with the pps. the PPS is destroyed after this function
   // call and will not try to free if pps->sliceGroupId == NULL
   decoder->pps[id].sliceGroupId = pps->sliceGroupId;
   pps->sliceGroupId = NULL;
-  }
-//}}}
-//{{{
-void cleanUpPPS (sDecoder* decoder) {
-
-  for (int i = 0; i < MAX_PPS; i++) {
-    if (decoder->pps[i].valid == TRUE && decoder->pps[i].sliceGroupId != NULL)
-      free (decoder->pps[i].sliceGroupId);
-    decoder->pps[i].valid = FALSE;
-    }
   }
 //}}}
 //{{{
@@ -921,27 +917,35 @@ void processPPS (sDecoder* decoder, sNalu* nalu) {
   freePPS (pps);
   }
 //}}}
+//{{{
+static void activatePPS (sDecoder* decoder, sPPS* pps) {
+
+  if (decoder->activePPS != pps) {
+    if (decoder->picture) // only on slice loss
+      endDecodeFrame (decoder);
+    decoder->activePPS = pps;
+    }
+  }
+//}}}
 
 //{{{
 void useParameterSet (sSlice* slice) {
 
   sDecoder* decoder = slice->decoder;
-  int PicParsetId = slice->ppsId;
 
-  sPPS* pps = &decoder->pps[PicParsetId];
+  sPPS* pps = &decoder->pps[slice->ppsId];
+  if (!pps->valid)
+    printf ("Trying to use an invalid PPS id:%d\n", slice->ppsId);
+
   sSPS* sps = &decoder->sps[pps->spsId];
-
-  if (pps->valid != TRUE)
-    printf ("Trying to use an invalid (uninitialized) Picture Parameter Set with ID %d, expect the unexpected...\n", PicParsetId);
-
-  if (sps->valid != TRUE)
-    printf ("PicParset %d references uninitialized) SPS ID %d, unexpected\n", PicParsetId, (int) pps->spsId);
+  if (!sps->valid)
+    printf ("useParameterSet with no SPS id:%d:%d\n", slice->ppsId, pps->spsId);
 
   // In theory, and with a well-designed software, the lines above are everything necessary.
   // In practice, we need to patch many values
   // in decoder-> (but no more in input. -- these have been taken care of)
   // Set Sequence Parameter Stuff first
-  if ((int)sps->picOrderCountType < 0 || sps->picOrderCountType > 2) {
+  if (((int)sps->picOrderCountType < 0) || (sps->picOrderCountType > 2)) {
     printf ("invalid sps->picOrderCountType = %d\n", (int) sps->picOrderCountType);
     error ("picOrderCountType != 1", -1000);
     }

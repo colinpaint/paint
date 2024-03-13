@@ -82,7 +82,7 @@ void checkZeroByteVCL (sDecoder* decoder, sNalu* nalu) {
         nalu->unitType <= NALU_TYPE_IDR))
     return;
 
-  if (decoder->lastAccessUnitExists)
+  if (decoder->gotLastNalu)
     decoder->naluCount = 0;
   decoder->naluCount++;
 
@@ -91,7 +91,7 @@ void checkZeroByteVCL (sDecoder* decoder, sNalu* nalu) {
   // (sounds like a tongue twister :-)
   if (decoder->naluCount == 1)
     CheckZeroByte = 1;
-  decoder->lastAccessUnitExists = 1;
+  decoder->gotLastNalu = 1;
 
   // because it is not a very serious problem, we do not exit here
   if (CheckZeroByte && nalu->startCodeLen == 3)
@@ -119,9 +119,9 @@ void checkZeroByteNonVCL (sDecoder* decoder, sNalu* nalu) {
       nalu->unitType == NALU_TYPE_PPS ||
       nalu->unitType == NALU_TYPE_SEI ||
       (nalu->unitType >= 13 && nalu->unitType <= 18)) {
-    if (decoder->lastAccessUnitExists) {
+    if (decoder->gotLastNalu) {
       // deliver the last access unit to decoder
-      decoder->lastAccessUnitExists = 0;
+      decoder->gotLastNalu = 0;
       decoder->naluCount = 0;
       }
     }
