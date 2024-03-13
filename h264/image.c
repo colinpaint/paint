@@ -1000,7 +1000,7 @@ static int readNextSlice (sSlice* slice) {
       //{{{
       case NALU_TYPE_PPS:
         if (decoder->param.spsDebug)
-          printf ("SPS id:%d:%d len:%d\n", slice->refId, slice->sliceType, nalu->len);
+          printf ("PPS id:%d:%d len:%d\n", slice->refId, slice->sliceType, nalu->len);
         processPPS (decoder, nalu);
         break;
       //}}}
