@@ -144,7 +144,7 @@ static void mbAffPostProc (sDecoder* decoder) {
   }
 //}}}
 //{{{
-static void fillWPParam (sSlice* slice) {
+static void fillWpParam (sSlice* slice) {
 
   if (slice->sliceType == B_SLICE) {
     int maxL0Ref = slice->numRefIndexActive[LIST_0];
@@ -156,7 +156,7 @@ static void fillWPParam (sSlice* slice) {
       slice->wp_round_chroma = 16;
       for (int i = 0; i < MAX_REFERENCE_PICTURES; ++i)
         for (int comp = 0; comp < 3; ++comp) {
-          int logWeightDenom = (comp == 0) ? slice->lumaLog2weightDenom : slice->chromaLog2weightDenom;
+          int logWeightDenom = !comp ? slice->lumaLog2weightDenom : slice->chromaLog2weightDenom;
           slice->wpWeight[0][i][comp] = 1 << logWeightDenom;
           slice->wpWeight[1][i][comp] = 1 << logWeightDenom;
           slice->wpOffset[0][i][comp] = 0;
@@ -167,14 +167,14 @@ static void fillWPParam (sSlice* slice) {
     for (int i = 0; i < maxL0Ref; ++i)
       for (int j = 0; j < maxL1Ref; ++j)
         for (int comp = 0; comp < 3; ++comp) {
-          int logWeightDenom = (comp == 0) ? slice->lumaLog2weightDenom : slice->chromaLog2weightDenom;
+          int logWeightDenom = !comp ? slice->lumaLog2weightDenom : slice->chromaLog2weightDenom;
           if (slice->activePPS->weightedBiPredIdc == 1) {
             slice->wbpWeight[0][i][j][comp] = slice->wpWeight[0][i][comp];
             slice->wbpWeight[1][i][j][comp] = slice->wpWeight[1][j][comp];
             }
           else if (slice->activePPS->weightedBiPredIdc == 2) {
             int td = iClip3(-128,127,slice->listX[LIST_1][j]->poc - slice->listX[LIST_0][i]->poc);
-            if (td == 0 ||
+            if (!td ||
                 slice->listX[LIST_1][j]->isLongTerm || slice->listX[LIST_0][i]->isLongTerm) {
               slice->wbpWeight[0][i][j][comp] = 32;
               slice->wbpWeight[1][i][j][comp] = 32;
@@ -202,14 +202,14 @@ static void fillWPParam (sSlice* slice) {
             for (int k = 2; k < 6; k += 2) {
               slice->wpOffset[k+0][i][comp] = slice->wpOffset[0][i>>1][comp];
               slice->wpOffset[k+1][j][comp] = slice->wpOffset[1][j>>1][comp];
-              int logWeightDenom = (comp == 0) ? slice->lumaLog2weightDenom : slice->chromaLog2weightDenom;
+              int logWeightDenom = !comp ? slice->lumaLog2weightDenom : slice->chromaLog2weightDenom;
               if (slice->activePPS->weightedBiPredIdc == 1) {
                 slice->wbpWeight[k+0][i][j][comp] = slice->wpWeight[0][i>>1][comp];
                 slice->wbpWeight[k+1][i][j][comp] = slice->wpWeight[1][j>>1][comp];
                 }
               else if (slice->activePPS->weightedBiPredIdc == 2) {
                 int td = iClip3 (-128, 127, slice->listX[k+LIST_1][j]->poc - slice->listX[k+LIST_0][i]->poc);
-                if (td == 0 ||
+                if (!td ||
                     slice->listX[k+LIST_1][j]->isLongTerm ||
                     slice->listX[k+LIST_0][i]->isLongTerm) {
                   slice->wbpWeight[k+0][i][j][comp] = 32;
@@ -248,7 +248,7 @@ static void errorTracking (sDecoder* decoder, sSlice* slice) {
     }
   else if (slice->redundantPicCount && (decoder->type != I_SLICE))
     // reference of redundant slice is incorrect
-    if (slice->refFlag[slice->redundantSliceRefIndex] == 0)
+    if (!slice->refFlag[slice->redundantSliceRefIndex])
       // redundant slice is incorrect
       decoder->isReduncantOk = 0;
   }
@@ -309,7 +309,7 @@ static void ercWriteMBMODEandMV (sMacroblock* mb) {
                                    mb->b8mode[i] == 1 ? REGMODE_INTER_PRED :
                                      REGMODE_INTER_PRED_8x8);
 
-      if (mb->b8mode[i] == 0 || mb->b8mode[i] == IBLOCK) {
+      if (!mb->b8mode[i] || mb->b8mode[i] == IBLOCK) {
         // INTRA OR COPY
         pRegion->mv[0] = 0;
         pRegion->mv[1] = 0;
@@ -378,7 +378,7 @@ static void initCurImg (sSlice* slice, sDecoder* decoder) {
   sPicture* vidRefPicture = decoder->noReferencePicture;
   int noRef = slice->framePoc < decoder->recoveryPoc;
 
-  if (decoder->sepColourPlaneFlag != 0) {
+  if (decoder->sepColourPlaneFlag) {
     switch (slice->colourPlaneId) {
       case 0:
         for (int j = 0; j < 6; j++) {
@@ -431,7 +431,7 @@ static int isNewPicture (sPicture* picture, sSlice* slice, sOldSlice* oldSlice) 
     result |= (oldSlice->idrPicId != slice->idrPicId);
 
   sDecoder* decoder = slice->decoder;
-  if (decoder->activeSPS->picOrderCountType == 0) {
+  if (!decoder->activeSPS->picOrderCountType) {
     result |= (oldSlice->picOrderCountLsb != slice->picOrderCountLsb);
     if (decoder->activePPS->botFieldPicOrderFramePresentFlag  ==  1 &&  !slice->fieldPicFlag )
       result |= (oldSlice->deltaPicOrderCountBot != slice->deletaPicOrderCountBot);
@@ -510,7 +510,7 @@ static void initPicture (sDecoder* decoder, sSlice* slice) {
       slice->frameNum != (decoder->preFrameNum + 1) % decoder->maxFrameNum) {
     if (!activeSPS->gaps_in_frame_num_value_allowed_flag) {
       // picture error conceal
-      if (decoder->param.concealMode != 0) {
+      if (decoder->param.concealMode) {
         if ((slice->frameNum) < ((decoder->preFrameNum + 1) % decoder->maxFrameNum)) {
           /* Conceal lost IDR frames and any frames immediately following the IDR.
           // Use frame copy for these since lists cannot be formed correctly for motion copy*/
@@ -604,7 +604,7 @@ static void initPicture (sDecoder* decoder, sSlice* slice) {
 
   // Set the sliceNum member of each MB to -1, to ensure correct when packet loss occurs
   // TO set sMacroblock Map (mark all MBs as 'have to be concealed')
-  if (decoder->sepColourPlaneFlag != 0) {
+  if (decoder->sepColourPlaneFlag) {
     for (int nplane = 0; nplane < MAX_PLANE; ++nplane ) {
       sMacroblock* mb = decoder->mbDataJV[nplane];
       char* intraBlock = decoder->intraBlockJV[nplane];
@@ -655,7 +655,7 @@ static void initPicture (sDecoder* decoder, sSlice* slice) {
     picture->frameCropBot = activeSPS->frameCropBot;
     }
 
-  if (decoder->sepColourPlaneFlag != 0) {
+  if (decoder->sepColourPlaneFlag) {
     decoder->decPictureJV[0] = decoder->picture;
     decoder->decPictureJV[1] = allocPicture (decoder, (ePicStructure) slice->structure, decoder->width, decoder->height, decoder->widthCr, decoder->heightCr, 1);
     copyDecPictureJV (decoder, decoder->decPictureJV[1], decoder->decPictureJV[0] );
@@ -721,7 +721,7 @@ static void initSlice (sDecoder* decoder, sSlice* slice) {
     init_mbaff_lists (decoder, slice);
 
   // update reference flags and set current decoder->refFlag
-  if (!((slice->redundantPicCount != 0) && (decoder->prevFrameNum == slice->frameNum)))
+  if (!(slice->redundantPicCount && (decoder->prevFrameNum == slice->frameNum)))
     for (int i = 16; i > 0; i--)
       slice->refFlag[i] = slice->refFlag[i-1];
   slice->refFlag[0] = slice->redundantPicCount == 0 ? decoder->isPrimaryOk : decoder->isReduncantOk;
@@ -789,7 +789,7 @@ static int readNextSlice (sSlice* slice) {
       //{{{
       case NALU_TYPE_IDR:
         if (decoder->recoveryPoint || nalu->unitType == NALU_TYPE_IDR) {
-          if (decoder->recoveryPointFound == 0) {
+          if (!decoder->recoveryPointFound) {
             if (nalu->unitType != NALU_TYPE_IDR) {
               printf ("decoding without IDR\n");
               decoder->nonConformingStream = 1;
@@ -800,7 +800,7 @@ static int readNextSlice (sSlice* slice) {
           decoder->recoveryPointFound = 1;
           }
 
-        if (decoder->recoveryPointFound == 0)
+        if (!decoder->recoveryPointFound)
           break;
 
         slice->idrFlag = nalu->unitType == NALU_TYPE_IDR;
@@ -826,7 +826,7 @@ static int readNextSlice (sSlice* slice) {
         slice->activePPS = decoder->activePPS;
         slice->transform8x8Mode = decoder->activePPS->transform8x8modeFlag;
         slice->chroma444notSeparate = (decoder->activeSPS->chromaFormatIdc == YUV444) &&
-                                      (decoder->sepColourPlaneFlag == 0);
+                                      !decoder->sepColourPlaneFlag;
         readRestSliceHeader (slice);
 
         if (decoder->param.sliceDebug) {
@@ -839,11 +839,11 @@ static int readNextSlice (sSlice* slice) {
         assignQuantParams (slice);
 
         // if primary slice is replaced with redundant slice, set the correct image type
-        if (slice->redundantPicCount && decoder->isPrimaryOk == 0 && decoder->isReduncantOk)
+        if (slice->redundantPicCount && !decoder->isPrimaryOk && decoder->isReduncantOk)
           decoder->picture->sliceType = decoder->type;
 
         if (isNewPicture (decoder->picture, slice, decoder->oldSlice)) {
-          if (decoder->picSliceIndex == 0)
+          if (!decoder->picSliceIndex)
             initPicture (decoder, slice);
           curHeader = SOP;
           checkZeroByteVCL (decoder, nalu);
@@ -861,7 +861,7 @@ static int readNextSlice (sSlice* slice) {
 
         if (decoder->activePPS->entropyCodingModeFlag) {
           int byteStartPosition = s->frameBitOffset / 8;
-          if ((s->frameBitOffset % 8) != 0)
+          if (s->frameBitOffset % 8)
             ++byteStartPosition;
           arideco_start_decoding (&slice->dps[0].deCabac, s->streamBuffer, byteStartPosition, &s->readLen);
           }
@@ -873,7 +873,7 @@ static int readNextSlice (sSlice* slice) {
       case NALU_TYPE_DPA:
         printf ("DPA id:%d:%d len:%d\n", slice->refId, slice->sliceType, nalu->len);
 
-        if (decoder->recoveryPointFound == 0)
+        if (!decoder->recoveryPointFound)
           break;
 
         // read DP_A
@@ -895,12 +895,12 @@ static int readNextSlice (sSlice* slice) {
         slice->activePPS = decoder->activePPS;
         slice->transform8x8Mode = decoder->activePPS->transform8x8modeFlag;
         slice->chroma444notSeparate = (decoder->activeSPS->chromaFormatIdc == YUV444) &&
-                                      (decoder->sepColourPlaneFlag == 0);
+                                      !decoder->sepColourPlaneFlag;
         readRestSliceHeader (slice);
         assignQuantParams (slice);
 
         if (isNewPicture (decoder->picture, slice, decoder->oldSlice)) {
-          if (decoder->picSliceIndex == 0)
+          if (!decoder->picSliceIndex)
             initPicture (decoder, slice);
           curHeader = SOP;
           checkZeroByteVCL (decoder, nalu);
@@ -1037,7 +1037,7 @@ static void decodeSlice (sSlice* slice) {
   slice->codCount=-1;
 
   sDecoder* decoder = slice->decoder;
-  if ((decoder->sepColourPlaneFlag != 0))
+  if (decoder->sepColourPlaneFlag)
     changePlaneJV (decoder, slice->colourPlaneId, slice);
   else {
     slice->mbData = decoder->mbData;
@@ -1164,7 +1164,7 @@ void endDecodeFrame (sDecoder* decoder) {
   if (!decoder->deblockMode &&
       (decoder->deblockEnable & (1 << decoder->picture->usedForReference))) {
     //{{{  deblocking for frame or field
-    if (decoder->sepColourPlaneFlag != 0) {
+    if (decoder->sepColourPlaneFlag) {
       int colourPlaneId = decoder->sliceList[0]->colourPlaneId;
       for (int nplane = 0; nplane < MAX_PLANE; ++nplane) {
         decoder->sliceList[0]->colourPlaneId = nplane;
@@ -1348,13 +1348,11 @@ int decodeFrame (sDecoder* decoder) {
     // else,
     //   primary slice will be replaced with redundant slice.
     if (slice->frameNum == decoder->prevFrameNum &&
-        slice->redundantPicCount != 0 &&
-        decoder->isPrimaryOk != 0 &&
-        curHeader != EOS)
+        slice->redundantPicCount && decoder->isPrimaryOk && curHeader != EOS)
       continue;
 
     if (((curHeader != SOP) && (curHeader != EOS)) ||
-        ((decoder->picSliceIndex == 0) && (curHeader == SOP))) {
+        (!decoder->picSliceIndex && (curHeader == SOP))) {
        slice->curSliceIndex = (short)decoder->picSliceIndex;
        decoder->picture->maxSliceId =
          (short)imax (slice->curSliceIndex, decoder->picture->maxSliceId);
@@ -1416,9 +1414,9 @@ int decodeFrame (sDecoder* decoder) {
       //}}}
     if (((slice->activePPS->weightedBiPredIdc > 0)  && (slice->sliceType == B_SLICE)) ||
         (slice->activePPS->weightedPredFlag && (slice->sliceType != I_SLICE)))
-      fillWPParam (slice);
+      fillWpParam (slice);
 
-    if (((curHeader == SOP) || (curHeader == SOS)) && (slice->eiFlag == 0))
+    if (((curHeader == SOP) || (curHeader == SOS)) && !slice->eiFlag)
       decodeSlice (slice);
 
     decoder->ercMvPerMb += slice->ercMvPerMb;
