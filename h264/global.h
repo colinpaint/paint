@@ -304,7 +304,7 @@ typedef struct SyntaxElement {
 typedef struct Datadp {
   sBitstream*          s;
   sDecodingEnv deCabac;
-  int (*readsSyntaxElement) (struct Macroblock*, struct SyntaxElement*, struct Datadp*);
+  int (*readSyntaxElement) (struct Macroblock*, struct SyntaxElement*, struct Datadp*);
   } sDataPartition;
 //}}}
 
@@ -597,7 +597,7 @@ typedef struct Slice {
   ePicStructure structure;   // Identify picture structure type
   int           startMbNum;  // MUST be set by NAL even in case of eiFlag == 1
   int           endMbNumPlus1;
-  int           maxdpNum;
+  int           maxDataPartitions;
   int           datadpMode;       // data dping mode
   int           curHeader;
   int           nextHeader;
@@ -1055,8 +1055,8 @@ static inline int isHiIntraOnlyProfile (unsigned int profileIdc, Boolean constra
   extern void freeGlobalBuffers (sDecoder* decoder);
   extern void freeLayerBuffers (sDecoder* decoder);
 
-  extern sDataPartition* allocdp (int n);
-  extern void freedp (sDataPartition* dp, int n);
+  extern sDataPartition* allocDataPartitions (int n);
+  extern void freeDataPartitions (sDataPartition* dataPartitions, int n);
 
   extern sSlice* allocSlice (sDecoder* decoder);
 

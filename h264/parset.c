@@ -249,7 +249,7 @@ static void resetFormatInfo (sSPS* sps, sDecoder* decoder, sFrameFormat* source,
   if (!decoder->gotSPS) {
     //{{{  print profile info
     decoder->gotSPS = 1;
-    printf ("-> profile:%d %dx%d %dx%d ", 
+    printf ("-> profile:%d %dx%d %dx%d ",
             sps->profileIdc, source->width[0], source->height[0], decoder->width, decoder->height);
 
     if (decoder->yuvFormat == YUV400)
@@ -587,21 +587,20 @@ static void interpretSPS (sDecoder* decoder, sDataPartition* dp, sSPS* sps) {
 void makeSPSavailable (sDecoder* decoder, int id, sSPS* sps) {
 
   assert (sps->valid == TRUE);
-  memcpy (&decoder->sps[id], sps, sizeof (sSPS));
+  memcpy (&decoder->sps[id], sps, sizeof(sSPS));
   }
 //}}}
 //{{{
 void processSPS (sDecoder* decoder, sNalu* nalu) {
 
-  sDataPartition* dp = allocdp (1);
-  dp->s->eiFlag = 0;
-  dp->s->readLen = dp->s->frameBitOffset = 0;
-  memcpy (dp->s->streamBuffer, &nalu->buf[1], nalu->len-1);
-  dp->s->codeLen = dp->s->bitstreamLength = RBSPtoSODB (dp->s->streamBuffer, nalu->len-1);
+  sDataPartition* dataPartition = allocDataPartitions (1);
+  dataPartition->s->eiFlag = 0;
+  dataPartition->s->readLen = dataPartition->s->frameBitOffset = 0;
+  memcpy (dataPartition->s->streamBuffer, &nalu->buf[1], nalu->len-1);
+  dataPartition->s->codeLen = dataPartition->s->bitstreamLength = RBSPtoSODB (dataPartition->s->streamBuffer, nalu->len-1);
 
   sSPS* sps = allocSPS();
-  interpretSPS (decoder, dp, sps);
-
+  interpretSPS (decoder, dataPartition, sps);
   if (sps->valid) {
     if (decoder->activeSPS) {
       if (sps->spsId == decoder->activeSPS->spsId) {
@@ -623,7 +622,7 @@ void processSPS (sDecoder* decoder, sNalu* nalu) {
       decoder->ChromaArrayType = sps->chromaFormatIdc;
     }
 
-  freedp (dp, 1);
+  freeDataPartitions (dataPartition, 1);
   freeSPS (sps);
   }
 //}}}
@@ -891,7 +890,7 @@ void makePPSavailable (sDecoder* decoder, int id, sPPS* pps) {
 void processPPS (sDecoder* decoder, sNalu* nalu) {
 
 
-  sDataPartition* dp = allocdp (1);
+  sDataPartition* dp = allocDataPartitions (1);
   dp->s->eiFlag = 0;
   dp->s->readLen = dp->s->frameBitOffset = 0;
   memcpy (dp->s->streamBuffer, &nalu->buf[1], nalu->len-1);
@@ -913,7 +912,7 @@ void processPPS (sDecoder* decoder, sNalu* nalu) {
     }
 
   makePPSavailable (decoder, pps->ppsId, pps);
-  freedp (dp, 1);
+  freeDataPartitions (dp, 1);
   freePPS (pps);
   }
 //}}}
@@ -933,13 +932,16 @@ void useParameterSet (sSlice* slice) {
 
   sDecoder* decoder = slice->decoder;
 
+  //if (decoder->param.spsDebug)
+  //  printf ("useParameterSet\n");
+
   sPPS* pps = &decoder->pps[slice->ppsId];
   if (!pps->valid)
-    printf ("Trying to use an invalid PPS id:%d\n", slice->ppsId);
+    printf ("useParameterSet - invalid PPS id:%d\n", slice->ppsId);
 
   sSPS* sps = &decoder->sps[pps->spsId];
   if (!sps->valid)
-    printf ("useParameterSet with no SPS id:%d:%d\n", slice->ppsId, pps->spsId);
+    printf ("useParameterSet - no SPS id:%d:%d\n", slice->ppsId, pps->spsId);
 
   // In theory, and with a well-designed software, the lines above are everything necessary.
   // In practice, we need to patch many values
@@ -959,14 +961,14 @@ void useParameterSet (sSlice* slice) {
 
   // slice->datadpMode is set by read_new_slice (NALU first byte available there)
   if (pps->entropyCodingModeFlag == (Boolean)CAVLC) {
-    slice->nalStartcode = uvlc_startcode_follows;
+    slice->nalStartcode = vlcStartcodeFollows;
     for (int i = 0; i < 3; i++)
-      slice->dps[i].readsSyntaxElement = readsSyntaxElement_UVLC;
+      slice->dps[i].readSyntaxElement = readSyntaxElementVLC;
     }
   else {
     slice->nalStartcode = cabac_startcode_follows;
     for (int i = 0; i < 3; i++)
-      slice->dps[i].readsSyntaxElement = readsSyntaxElement_CABAC;
+      slice->dps[i].readSyntaxElement = readSyntaxElementCABAC;
     }
   decoder->type = slice->sliceType;
   }

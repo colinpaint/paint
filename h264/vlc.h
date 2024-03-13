@@ -73,11 +73,11 @@ extern void linfo_levrun_inter (int len, int info, int* level, int* irun);
 extern void linfo_levrun_c2x2 (int len, int info, int* level, int* irun);
 
 extern int readsSyntaxElement_VLC (sSyntaxElement* se, sBitstream* s);
-extern int readsSyntaxElement_UVLC (sMacroblock* mb, sSyntaxElement* se, sDataPartition* dp);
+extern int readSyntaxElementVLC (sMacroblock* mb, sSyntaxElement* se, sDataPartition* dp);
 extern int readsSyntaxElement_Intra4x4PredictionMode (sSyntaxElement* se, sBitstream* s);
 extern int GetVLCSymbol_IntraMode (byte buffer[], int totbitoffset, int* info, int bytecount);
 extern int more_rbsp_data (byte buffer[], int totbitoffset, int bytecount);
-extern int uvlc_startcode_follows (sSlice* slice, int dummy);
+extern int vlcStartcodeFollows (sSlice* slice, int dummy);
 extern int GetVLCSymbol (byte buffer[], int totbitoffset, int* info, int bytecount);
 
 extern int readsSyntaxElement_FLC (sSyntaxElement* se, sBitstream* s);

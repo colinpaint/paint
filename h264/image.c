@@ -263,10 +263,11 @@ static void reorderLists (sSlice* slice) {
       reorderRefPicList (slice, LIST_0);
     if (decoder->noReferencePicture == slice->listX[0][slice->numRefIndexActive[LIST_0]-1]) {
       if (decoder->nonConformingStream)
-        printf ("RefPicList0[%d] is no reference picture\n", slice->numRefIndexActive[LIST_0]-1);
+        printf ("RefPicList0[%d] no refPic\n", slice->numRefIndexActive[LIST_0]-1);
       else
-        error ("RefPicList0[num_ref_idx_l0_active_minus1] is no reference picture, invalid s", 500);
+        error ("RefPicList0[num_ref_idx_l0_active_minus1] no refPic", 500);
       }
+
     // that's a definition
     slice->listXsize[0] = (char) slice->numRefIndexActive[LIST_0];
     }
@@ -276,10 +277,11 @@ static void reorderLists (sSlice* slice) {
       reorderRefPicList (slice, LIST_1);
     if (decoder->noReferencePicture == slice->listX[1][slice->numRefIndexActive[LIST_1]-1]) {
       if (decoder->nonConformingStream)
-        printf ("RefPicList1[%d] is no reference picture'\n", slice->numRefIndexActive[LIST_1] - 1);
+        printf ("RefPicList1[%d] no refPic\n", slice->numRefIndexActive[LIST_1] - 1);
       else
-        error ("RefPicList1[num_ref_idx_l1_active_minus1] is no reference picture, invalid s", 500);
+        error ("RefPicList1[num_ref_idx_l1_active_minus1] no refPic", 500);
       }
+
     // that's a definition
     slice->listXsize[1] = (char)slice->numRefIndexActive[LIST_1];
     }
@@ -668,12 +670,13 @@ static void initPictureDecoding (sDecoder* decoder) {
   int deblockMode = 1;
 
   if (decoder->picSliceIndex >= MAX_NUM_SLICES)
-    error ("Maximum number of supported slices exceeded, increase MAX_NUM_SLICES", 200);
+    error ("MAX_NUM_SLICES exceeded", 200);
 
   sSlice* slice = decoder->sliceList[0];
   if (decoder->nextPPS->valid && ((int)decoder->nextPPS->ppsId == slice->ppsId)) {
     if (decoder->param.sliceDebug)
       printf ("- initPictureDecoding switch PPS\n");
+
     sPPS pps;
     memcpy (&pps, &(decoder->pps[slice->ppsId]), sizeof (sPPS));
     decoder->pps[slice->ppsId].sliceGroupId = NULL;
@@ -803,7 +806,7 @@ static int readNextSlice (sSlice* slice) {
         slice->idrFlag = nalu->unitType == NALU_TYPE_IDR;
         slice->refId = nalu->refId;
         slice->datadpMode = PAR_DP_1;
-        slice->maxdpNum = 1;
+        slice->maxDataPartitions = 1;
 
         sBitstream* s = slice->dps[0].s;
         s->eiFlag = 0;
@@ -874,12 +877,12 @@ static int readNextSlice (sSlice* slice) {
           break;
 
         // read DP_A
-        slice->noDataPartitionB = 1;
-        slice->noDataPartitionC = 1;
         slice->idrFlag = FALSE;
         slice->refId = nalu->refId;
+        slice->noDataPartitionB = 1;
+        slice->noDataPartitionC = 1;
         slice->datadpMode = PAR_DP_3;
-        slice->maxdpNum = 3;
+        slice->maxDataPartitions = 3;
         s = slice->dps[0].s;
         s->eiFlag = 0;
         s->frameBitOffset = s->readLen = 0;
@@ -959,9 +962,9 @@ static int readNextSlice (sSlice* slice) {
 
           slice->noDataPartitionC = 0;
           int slice_id_c = readUeV ("NALU: DP_C slice_id", s);
-          if ((slice_id_c != slice_id_a)|| (nalu->lostPackets)) {
-            printf ("dataPartitionC does not match alu dataPartitionA\n");
-            slice->noDataPartitionC =1;
+          if ((slice_id_c != slice_id_a) || (nalu->lostPackets)) {
+            printf ("dataPartitionC does not match dataPartitionA\n");
+            slice->noDataPartitionC = 1;
             }
 
           if (decoder->activePPS->redundantPicCountPresentFlag)

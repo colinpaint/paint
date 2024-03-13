@@ -1774,7 +1774,7 @@ void readRunLevel_CABAC (sMacroblock* mb, sSyntaxElement  *se, sDecodingEnv* dec
   }
 //}}}
 //{{{
-int readsSyntaxElement_CABAC (sMacroblock* mb, sSyntaxElement* se, sDataPartition* this_dataPart) {
+int readSyntaxElementCABAC (sMacroblock* mb, sSyntaxElement* se, sDataPartition* this_dataPart) {
 
   sDecodingEnv* decodingEnv = &(this_dataPart->deCabac);
   int curr_len = arideco_bits_read(decodingEnv);

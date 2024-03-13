@@ -57,8 +57,8 @@ sSlice* allocSlice (sDecoder* decoder) {
   slice->mot_ctx = create_contexts_MotionInfo();
   slice->tex_ctx = create_contexts_TextureInfo();
 
-  slice->maxdpNum = 3;  //! assume data dping (worst case) for the following mallocs()
-  slice->dps = allocdp (slice->maxdpNum);
+  slice->maxDataPartitions = 3;  // assume dataPartition worst case 
+  slice->dps = allocDataPartitions (slice->maxDataPartitions);
 
   get_mem2Dwp (&(slice->WPParam), 2, MAX_REFERENCE_PICTURES);
   get_mem3Dint (&(slice->wpWeight), 2, MAX_REFERENCE_PICTURES, 3);
@@ -106,7 +106,7 @@ static void freeSlice (sSlice *slice) {
   free_mem3Dint (slice->wpOffset);
   free_mem4Dint (slice->wbpWeight);
 
-  freedp (slice->dps, 3);
+  freeDataPartitions (slice->dps, 3);
 
   // delete all context models
   delete_contexts_MotionInfo (slice->mot_ctx);
@@ -245,45 +245,46 @@ void init_frext (sDecoder* decoder) {
 //}}}
 
 //{{{
-sDataPartition* allocdp (int n) {
+sDataPartition* allocDataPartitions (int n) {
 
-  sDataPartition* dps = (sDataPartition*)calloc (n, sizeof(sDataPartition));
-  if (dps == NULL) {
-    snprintf (errorText, ET_SIZE, "allocdp: Memory allocation for Data dp failed");
+  sDataPartition* dataPartitions = (sDataPartition*)calloc (n, sizeof(sDataPartition));
+  if (!dataPartitions) {
+    snprintf (errorText, ET_SIZE, "allocDataPartitions: Memory allocation for Data dp failed");
     error (errorText, 100);
     }
 
-  for (int i = 0; i < n; ++i) {// loop over all data dps
-    sDataPartition* dataPart = &(dps[i]);
-    dataPart->s = (sBitstream *) calloc(1, sizeof(sBitstream));
-    if (dataPart->s == NULL) {
-      snprintf (errorText, ET_SIZE, "allocdp: Memory allocation for sBitstream failed");
+  for (int i = 0; i < n; ++i) {
+    // loop over all dataPartitions
+    sDataPartition* dataPartition = &(dataPartitions[i]);
+    dataPartition->s = (sBitstream*)calloc(1, sizeof(sBitstream));
+    if (dataPartition->s == NULL) {
+      snprintf (errorText, ET_SIZE, "allocDataPartitions: Memory allocation for sBitstream failed");
       error (errorText, 100);
       }
 
-    dataPart->s->streamBuffer = (byte *) calloc(MAX_CODED_FRAME_SIZE, sizeof(byte));
-    if (dataPart->s->streamBuffer == NULL) {
-      snprintf (errorText, ET_SIZE, "allocdp: Memory allocation for streamBuffer failed");
+    dataPartition->s->streamBuffer = (byte*)calloc(MAX_CODED_FRAME_SIZE, sizeof(byte));
+    if (dataPartition->s->streamBuffer == NULL) {
+      snprintf (errorText, ET_SIZE, "allocDataPartitions: Memory allocation for streamBuffer failed");
       error (errorText, 100);
       }
     }
 
-  return dps;
+  return dataPartitions;
   }
 //}}}
 //{{{
-void freedp (sDataPartition* dp, int n) {
+void freeDataPartitions (sDataPartition* dataPartitions, int n) {
 
-  assert (dp != NULL);
-  assert (dp->s != NULL);
-  assert (dp->s->streamBuffer != NULL);
+  assert (dataPartitions != NULL);
+  assert (dataPartitions->s != NULL);
+  assert (dataPartitions->s->streamBuffer != NULL);
 
   for (int i = 0; i < n; ++i) {
-    free (dp[i].s->streamBuffer);
-    free (dp[i].s);
+    free (dataPartitions[i].s->streamBuffer);
+    free (dataPartitions[i].s);
     }
 
-  free (dp);
+  free (dataPartitions);
   }
 //}}}
 

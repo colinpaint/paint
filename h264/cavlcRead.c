@@ -839,7 +839,7 @@ static void read_CBP_and_coeffs_from_NAL_CAVLC_400 (sMacroblock* mb) {
     dp = &(slice->dps[dpMap[se.type]]);
     se.mapping = (mb->mbType == I4MB || mb->mbType == SI4MB || mb->mbType == I8MB)
       ? slice->linfoCbpIntra : slice->linfoCbpInter;
-    dp->readsSyntaxElement (mb, &se, dp);
+    dp->readSyntaxElement (mb, &se, dp);
     mb->cbp = cbp = se.value1;
 
     // Transform size flag for INTER MBs
@@ -979,7 +979,7 @@ static void read_CBP_and_coeffs_from_NAL_CAVLC_422 (sMacroblock* mb) {
     dp = &(slice->dps[dpMap[se.type]]);
     se.mapping = (mb->mbType == I4MB || mb->mbType == SI4MB || mb->mbType == I8MB)
       ? slice->linfoCbpIntra : slice->linfoCbpInter;
-    dp->readsSyntaxElement (mb, &se, dp);
+    dp->readSyntaxElement (mb, &se, dp);
     mb->cbp = cbp = se.value1;
 
     need_transform_size_flag = (((mb->mbType >= 1 && mb->mbType <= 3)||
@@ -1244,7 +1244,7 @@ static void read_CBP_and_coeffs_from_NAL_CAVLC_444 (sMacroblock* mb) {
     dp = &(slice->dps[dpMap[se.type]]);
     se.mapping = (mb->mbType == I4MB || mb->mbType == SI4MB || mb->mbType == I8MB)
       ? slice->linfoCbpIntra : slice->linfoCbpInter;
-    dp->readsSyntaxElement (mb, &se, dp);
+    dp->readSyntaxElement (mb, &se, dp);
     mb->cbp = cbp = se.value1;
 
     //============= Transform size flag for INTER MBs =============
@@ -1425,7 +1425,7 @@ static void read_CBP_and_coeffs_from_NAL_CAVLC_420 (sMacroblock* mb) {
     dp = &(slice->dps[dpMap[se.type]]);
     se.mapping = (mb->mbType == I4MB || mb->mbType == SI4MB || mb->mbType == I8MB)
       ? slice->linfoCbpIntra : slice->linfoCbpInter;
-    dp->readsSyntaxElement(mb, &se, dp);
+    dp->readSyntaxElement(mb, &se, dp);
     mb->cbp = cbp = se.value1;
 
     need_transform_size_flag = (((mb->mbType >= 1 && mb->mbType <= 3)||

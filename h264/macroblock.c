@@ -390,7 +390,7 @@ static char readRefPictureIdxVLC (sMacroblock* mb, sSyntaxElement* se,
 
   se->context = BType2CtxRef (b8mode);
   se->value2 = list;
-  dp->readsSyntaxElement (mb, se, dp);
+  dp->readSyntaxElement (mb, se, dp);
   return (char) se->value1;
   }
 //}}}
@@ -474,7 +474,7 @@ void readDeltaQuant (sSyntaxElement* se, sDataPartition *dp, sMacroblock* mb, co
   else
     se->reading= read_dQuant_CABAC;
 
-  dp->readsSyntaxElement(mb, se, dp);
+  dp->readSyntaxElement(mb, se, dp);
   mb->deltaQuant = (short) se->value1;
   if ((mb->deltaQuant < -(26 + decoder->bitdepthLumeQpScale/2)) ||
       (mb->deltaQuant > (25 + decoder->bitdepthLumeQpScale/2))) {
@@ -588,12 +588,12 @@ static void readMBMotionVectors (sSyntaxElement* se, sDataPartition *dp, sMacrob
 
       // X component
       se->value2 = list; // identifies the component; only used for context determination
-      dp->readsSyntaxElement(mb, se, dp);
+      dp->readSyntaxElement(mb, se, dp);
       curr_mvd[0] = (short) se->value1;
 
       // Y component
       se->value2 += 2; // identifies the component; only used for context determination
-      dp->readsSyntaxElement(mb, se, dp);
+      dp->readSyntaxElement(mb, se, dp);
       curr_mvd[1] = (short) se->value1;
 
       curr_mv.mvX = (short)(curr_mvd[0] + pred_mv.mvX);  // compute motion vector x
@@ -650,7 +650,7 @@ static void readMBMotionVectors (sSyntaxElement* se, sDataPartition *dp, sMacrob
 
               for (k = 0; k < 2; ++k) {
                 se->value2   = (k << 1) + list; // identifies the component; only used for context determination
-                dp->readsSyntaxElement (mb, se, dp);
+                dp->readSyntaxElement (mb, se, dp);
                 curr_mvd[k] = (short)se->value1;
                 }
 

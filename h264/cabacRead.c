@@ -45,7 +45,7 @@ static void read_comp_coeff_4x4_smb_CABAC (sMacroblock* mb, sSyntaxElement* se, 
         else
           se->reading = readRunLevel_CABAC;
 
-        dp->readsSyntaxElement(mb, se, dp);
+        dp->readSyntaxElement(mb, se, dp);
         level = se->value1;
 
         if (level != 0)    /* leave if level == 0 */
@@ -75,7 +75,7 @@ static void read_comp_coeff_4x4_smb_CABAC (sMacroblock* mb, sSyntaxElement* se, 
 
         for(k = 1; (k < 17) && (level != 0); ++k)
         {
-          dp->readsSyntaxElement(mb, se, dp);
+          dp->readSyntaxElement(mb, se, dp);
           level = se->value1;
 
           if (level != 0)    /* leave if level == 0 */
@@ -241,7 +241,7 @@ static void readCompCoeff8x8_CABAC (sMacroblock* mb, sSyntaxElement* se, eColorP
     // Read DC
     se->type = ((mb->isIntraBlock == 1) ? SE_LUM_DC_INTRA : SE_LUM_DC_INTER ); // Intra or Inter?
     dp = &(slice->dps[dpMap[se->type]]);
-    dp->readsSyntaxElement(mb, se, dp);
+    dp->readSyntaxElement(mb, se, dp);
     level = se->value1;
 
     //============ decode =============
@@ -263,7 +263,7 @@ static void readCompCoeff8x8_CABAC (sMacroblock* mb, sSyntaxElement* se, eColorP
 
       for(k = 1;(k < 65) && (level != 0);++k)
       {
-        dp->readsSyntaxElement(mb, se, dp);
+        dp->readSyntaxElement(mb, se, dp);
         level = se->value1;
 
         //============ decode =============
@@ -346,7 +346,7 @@ static void readCompCoeff8x8_CABAC_lossless (sMacroblock* mb, sSyntaxElement* se
       dp = &(slice->dps[dpMap[se->type]]);
       se->reading = readRunLevel_CABAC;
 
-      dp->readsSyntaxElement(mb, se, dp);
+      dp->readSyntaxElement(mb, se, dp);
       level = se->value1;
 
       //============ decode =============
@@ -435,7 +435,7 @@ static void read_CBP_and_coeffs_from_NAL_CABAC_420 (sMacroblock* mb) {
     else
       se.reading = read_CBP_CABAC;
 
-    dp->readsSyntaxElement(mb, &se, dp);
+    dp->readSyntaxElement(mb, &se, dp);
     mb->cbp = cbp = se.value1;
 
     //============= Transform size flag for INTER MBs =============
@@ -458,7 +458,7 @@ static void read_CBP_and_coeffs_from_NAL_CABAC_420 (sMacroblock* mb) {
         readsSyntaxElement_FLC(&se, dp->s);
       }
       else
-        dp->readsSyntaxElement(mb, &se, dp);
+        dp->readSyntaxElement(mb, &se, dp);
       mb->lumaTransformSize8x8flag = (Boolean) se.value1;
     }
 
@@ -516,7 +516,7 @@ static void read_CBP_and_coeffs_from_NAL_CABAC_420 (sMacroblock* mb) {
 
       level = 1;                            // just to get inside the loop
       for(k = 0; (k < 17) && (level != 0); ++k) {
-        dp->readsSyntaxElement(mb, &se, dp);
+        dp->readSyntaxElement(mb, &se, dp);
         level = se.value1;
 
         if (level != 0) {
@@ -582,7 +582,7 @@ static void read_CBP_and_coeffs_from_NAL_CABAC_420 (sMacroblock* mb) {
         se.reading = readRunLevel_CABAC;
 
       for(k = 0; (k < (decoder->numCdcCoeff + 1)) && (level != 0); ++k) {
-        dp->readsSyntaxElement (mb, &se, dp);
+        dp->readSyntaxElement (mb, &se, dp);
         level = se.value1;
 
         if (level != 0) {
@@ -654,7 +654,7 @@ static void read_CBP_and_coeffs_from_NAL_CABAC_420 (sMacroblock* mb) {
           level = 1;
 
           for(k = 0; (k < 16) && (level != 0);++k) {
-            dp->readsSyntaxElement(mb, &se, dp);
+            dp->readSyntaxElement(mb, &se, dp);
             level = se.value1;
 
             if (level != 0) {
@@ -685,7 +685,7 @@ static void read_CBP_and_coeffs_from_NAL_CABAC_420 (sMacroblock* mb) {
           mb->subblockY = subblk_offset_y[yuv][b8][b4];
           mb->subblockX = subblk_offset_x[yuv][b8][b4];
           for (k = 0; (k < 16) && (level != 0); ++k) {
-            dp->readsSyntaxElement(mb, &se, dp);
+            dp->readSyntaxElement(mb, &se, dp);
             level = se.value1;
 
             if (level != 0) {
@@ -747,7 +747,7 @@ static void read_CBP_and_coeffs_from_NAL_CABAC_400 (sMacroblock* mb)
     else
       se.reading = read_CBP_CABAC;
 
-    dp->readsSyntaxElement(mb, &se, dp);
+    dp->readSyntaxElement(mb, &se, dp);
     mb->cbp = cbp = se.value1;
 
 
@@ -771,7 +771,7 @@ static void read_CBP_and_coeffs_from_NAL_CABAC_400 (sMacroblock* mb)
         readsSyntaxElement_FLC(&se, dp->s);
       }
       else
-        dp->readsSyntaxElement(mb, &se, dp);
+        dp->readSyntaxElement(mb, &se, dp);
       mb->lumaTransformSize8x8flag = (Boolean) se.value1;
     }
 
@@ -833,7 +833,7 @@ static void read_CBP_and_coeffs_from_NAL_CABAC_400 (sMacroblock* mb)
         level = 1;                            // just to get inside the loop
 
         for(k = 0; (k < 17) && (level != 0); ++k) {
-          dp->readsSyntaxElement(mb, &se, dp);
+          dp->readSyntaxElement(mb, &se, dp);
           level = se.value1;
 
           if (level != 0)    /* leave if level == 0 */
@@ -928,7 +928,7 @@ static void read_CBP_and_coeffs_from_NAL_CABAC_444 (sMacroblock* mb)
     else
       se.reading = read_CBP_CABAC;
 
-    dp->readsSyntaxElement(mb, &se, dp);
+    dp->readSyntaxElement(mb, &se, dp);
     mb->cbp = cbp = se.value1;
 
 
@@ -953,7 +953,7 @@ static void read_CBP_and_coeffs_from_NAL_CABAC_444 (sMacroblock* mb)
         readsSyntaxElement_FLC(&se, dp->s);
       }
       else
-        dp->readsSyntaxElement(mb, &se, dp);
+        dp->readSyntaxElement(mb, &se, dp);
       mb->lumaTransformSize8x8flag = (Boolean) se.value1;
     }
 
@@ -1016,7 +1016,7 @@ static void read_CBP_and_coeffs_from_NAL_CABAC_444 (sMacroblock* mb)
         level = 1;                            // just to get inside the loop
 
         for(k = 0; (k < 17) && (level != 0); ++k) {
-          dp->readsSyntaxElement(mb, &se, dp);
+          dp->readSyntaxElement(mb, &se, dp);
           level = se.value1;
 
           if (level != 0)    /* leave if level == 0 */
@@ -1088,7 +1088,7 @@ static void read_CBP_and_coeffs_from_NAL_CABAC_444 (sMacroblock* mb)
         level = 1;                            // just to get inside the loop
 
         for(k=0;(k<17) && (level!=0);++k) {
-          dp->readsSyntaxElement(mb, &se, dp);
+          dp->readSyntaxElement(mb, &se, dp);
           level = se.value1;
 
           if (level != 0)                     // leave if level == 0
@@ -1192,7 +1192,7 @@ static void read_CBP_and_coeffs_from_NAL_CABAC_422 (sMacroblock* mb)
     else
       se.reading = read_CBP_CABAC;
 
-    dp->readsSyntaxElement(mb, &se, dp);
+    dp->readSyntaxElement(mb, &se, dp);
     mb->cbp = cbp = se.value1;
 
 
@@ -1216,7 +1216,7 @@ static void read_CBP_and_coeffs_from_NAL_CABAC_422 (sMacroblock* mb)
         readsSyntaxElement_FLC(&se, dp->s);
       }
       else
-        dp->readsSyntaxElement(mb, &se, dp);
+        dp->readSyntaxElement(mb, &se, dp);
       mb->lumaTransformSize8x8flag = (Boolean) se.value1;
     }
 
@@ -1279,7 +1279,7 @@ static void read_CBP_and_coeffs_from_NAL_CABAC_422 (sMacroblock* mb)
         level = 1;                            // just to get inside the loop
 
         for(k = 0; (k < 17) && (level != 0); ++k) {
-          dp->readsSyntaxElement(mb, &se, dp);
+          dp->readSyntaxElement(mb, &se, dp);
           level = se.value1;
 
           if (level != 0)    /* leave if level == 0 */
@@ -1364,7 +1364,7 @@ static void read_CBP_and_coeffs_from_NAL_CABAC_422 (sMacroblock* mb)
             else
               se.reading = readRunLevel_CABAC;
 
-            dp->readsSyntaxElement(mb, &se, dp);
+            dp->readSyntaxElement(mb, &se, dp);
 
             level = se.value1;
 
@@ -1470,7 +1470,7 @@ static void read_CBP_and_coeffs_from_NAL_CABAC_422 (sMacroblock* mb)
 
             for(k = 0; (k < 16) && (level != 0);++k)
             {
-              dp->readsSyntaxElement(mb, &se, dp);
+              dp->readSyntaxElement(mb, &se, dp);
               level = se.value1;
 
               if (level != 0)
@@ -1508,7 +1508,7 @@ static void read_CBP_and_coeffs_from_NAL_CABAC_422 (sMacroblock* mb)
 
             for(k=0;(k<16)&&(level!=0);++k)
             {
-              dp->readsSyntaxElement(mb, &se, dp);
+              dp->readSyntaxElement(mb, &se, dp);
               level = se.value1;
 
               if (level != 0)
