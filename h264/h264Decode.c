@@ -24,22 +24,17 @@ sDecoder* gDecoder;
 //{{{
 void error (char* text) {
 
-  fprintf (stderr, "%s\n", text);
+  fprintf (stderr, "--- Error -> %s\n", text);
   if (gDecoder)
     flushDpb (gDecoder->dpb);
   exit (0);
   }
 //}}}
 //{{{
-static void reset_dpb (sDecoder* decoder, sDPB* dpb ) {
+static void resetDpb (sDecoder* decoder, sDPB* dpb ) {
 
   dpb->decoder = decoder;
   dpb->initDone = 0;
-  }
-//}}}
-//{{{
-void report_stats_on_error() {
-  exit (-1);
   }
 //}}}
 
@@ -57,14 +52,14 @@ sSlice* allocSlice (sDecoder* decoder) {
   slice->maxDataPartitions = 3;  // assume dataPartition worst case
   slice->dps = allocDataPartitions (slice->maxDataPartitions);
 
-  get_mem2Dwp (&(slice->WPParam), 2, MAX_REFERENCE_PICTURES);
-  get_mem3Dint (&(slice->wpWeight), 2, MAX_REFERENCE_PICTURES, 3);
-  get_mem3Dint (&(slice->wpOffset), 6, MAX_REFERENCE_PICTURES, 3);
-  get_mem4Dint (&(slice->wbpWeight), 6, MAX_REFERENCE_PICTURES, MAX_REFERENCE_PICTURES, 3);
-  get_mem3Dpel (&(slice->mb_pred), MAX_PLANE, MB_BLOCK_SIZE, MB_BLOCK_SIZE);
-  get_mem3Dpel (&(slice->mb_rec), MAX_PLANE, MB_BLOCK_SIZE, MB_BLOCK_SIZE);
-  get_mem3Dint (&(slice->mb_rres), MAX_PLANE, MB_BLOCK_SIZE, MB_BLOCK_SIZE);
-  get_mem3Dint (&(slice->cof), MAX_PLANE, MB_BLOCK_SIZE, MB_BLOCK_SIZE);
+  getMem2Dwp (&(slice->WPParam), 2, MAX_REFERENCE_PICTURES);
+  getMem3Dint (&(slice->wpWeight), 2, MAX_REFERENCE_PICTURES, 3);
+  getMem3Dint (&(slice->wpOffset), 6, MAX_REFERENCE_PICTURES, 3);
+  getMem4Dint (&(slice->wbpWeight), 6, MAX_REFERENCE_PICTURES, MAX_REFERENCE_PICTURES, 3);
+  getMem3Dpel (&(slice->mb_pred), MAX_PLANE, MB_BLOCK_SIZE, MB_BLOCK_SIZE);
+  getMem3Dpel (&(slice->mb_rec), MAX_PLANE, MB_BLOCK_SIZE, MB_BLOCK_SIZE);
+  getMem3Dint (&(slice->mb_rres), MAX_PLANE, MB_BLOCK_SIZE, MB_BLOCK_SIZE);
+  getMem3Dint (&(slice->cof), MAX_PLANE, MB_BLOCK_SIZE, MB_BLOCK_SIZE);
   allocPred (slice);
 
   // reference flag initialization
@@ -182,7 +177,7 @@ static void freeDecoder (sDecoder* decoder) {
 //}}}
 
 //{{{
-void init_frext (sDecoder* decoder) {
+void initFrext (sDecoder* decoder) {
 
   // pel bitdepth init
   decoder->bitdepthLumeQpScale = 6 * (decoder->bitdepthLuma - 8);
@@ -374,24 +369,24 @@ void initGlobalBuffers (sDecoder* decoder) {
 
   if( (coding->sepColourPlaneFlag != 0)) {
     for (int i = 0; i < MAX_PLANE; ++i )
-      get_mem2D (&(coding->predModeJV[i]), 4*coding->frameHeightMbs, 4*coding->picWidthMbs);
+      getMem2D (&(coding->predModeJV[i]), 4*coding->frameHeightMbs, 4*coding->picWidthMbs);
     coding->predMode = NULL;
     }
   else
-    get_mem2D (&(coding->predMode), 4*coding->frameHeightMbs, 4*coding->picWidthMbs);
+    getMem2D (&(coding->predMode), 4*coding->frameHeightMbs, 4*coding->picWidthMbs);
 
   // CAVLC mem
-  get_mem4D (&(coding->nzCoeff), coding->frameSizeMbs, 3, BLOCK_SIZE, BLOCK_SIZE);
+  getMem4D (&(coding->nzCoeff), coding->frameSizeMbs, 3, BLOCK_SIZE, BLOCK_SIZE);
   if (coding->sepColourPlaneFlag != 0) {
     for (int i = 0; i < MAX_PLANE; ++i ) {
-      get_mem2Dint (&(coding->siBlockJV[i]), coding->frameHeightMbs, coding->picWidthMbs);
+      getMem2Dint (&(coding->siBlockJV[i]), coding->frameHeightMbs, coding->picWidthMbs);
       if (coding->siBlockJV[i] == NULL)
         no_mem_exit ("initGlobalBuffers: decoder->siBlockJV");
       }
     coding->siBlock = NULL;
     }
   else
-    get_mem2Dint (&(coding->siBlock), coding->frameHeightMbs, coding->picWidthMbs);
+    getMem2Dint (&(coding->siBlock), coding->frameHeightMbs, coding->picWidthMbs);
 
   allocQuant (coding);
   coding->oldFrameSizeMbs = coding->frameSizeMbs;
@@ -515,7 +510,7 @@ void setGlobalCodingProgram (sDecoder* decoder, sCoding* coding) {
     decoder->iChromaPadY = decoder->iLumaPadY;
     }
 
-  init_frext(decoder);
+  initFrext (decoder);
   }
 //}}}
 
@@ -581,7 +576,7 @@ sDecoder* openDecoder (sParam* param, byte* chunk, size_t chunkSize) {
 
   decoder->dpb = (sDPB*)calloc (1, sizeof(sDPB));
   decoder->dpb->layerId = 0;
-  reset_dpb (decoder, decoder->dpb);
+  resetDpb (decoder, decoder->dpb);
 
   decoder->coding = (sCoding*)calloc (1, sizeof(sCoding));
   decoder->coding->layerId = 0;

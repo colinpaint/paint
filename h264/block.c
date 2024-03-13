@@ -265,7 +265,7 @@ void itrans_2 (sMacroblock* mb, eColorPlane plane) {
 
   // horizontal
   int** M4;
-  get_mem2Dint (&M4, BLOCK_SIZE, BLOCK_SIZE);
+  getMem2Dint (&M4, BLOCK_SIZE, BLOCK_SIZE);
   for (int j = 0; j < 4;++j) {
     M4[j][0] = cof[j<<2][0];
     M4[j][1] = cof[j<<2][4];
@@ -308,7 +308,7 @@ void itrans_sp (sMacroblock* mb, eColorPlane plane, int ioff, int joff) {
   const int (*InvLevelScale4x4SP)[4] = dequant_coef[qp_rem_sp];
 
   int** PBlock;
-  get_mem2Dint (&PBlock, MB_BLOCK_SIZE, MB_BLOCK_SIZE);
+  getMem2Dint (&PBlock, MB_BLOCK_SIZE, MB_BLOCK_SIZE);
   for (int j = 0; j < BLOCK_SIZE; ++j) {
     PBlock[j][0] = mb_pred[j+joff][ioff    ];
     PBlock[j][1] = mb_pred[j+joff][ioff + 1];

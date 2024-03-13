@@ -350,7 +350,7 @@ int readNextNalu (sDecoder* decoder, sNalu* nalu) {
 
   int ret = getNALU (decoder->annexB, decoder, nalu);
   if (ret < 0) 
-    error ("Error while getting the NALU in file format exit\n", 601);
+    error ("Error while getting the NALU in file format exit\n");
   if (ret == 0)
     return 0;
 
@@ -361,11 +361,11 @@ int readNextNalu (sDecoder* decoder, sNalu* nalu) {
 
   ret = NALUtoRBSP (nalu);
   if (ret < 0)
-    error ("Invalid startcode emulation prevention found.", 602);
+    error ("Invalid startcode emulation prevention");
 
   // Got a NALU
   if (nalu->forbiddenBit)
-    error ("Found NALU with forbiddenBit set, bit error?", 603);
+    error ("NALU with forbiddenBit set");
 
   return nalu->len;
   }

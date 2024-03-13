@@ -87,7 +87,6 @@ typedef struct Nalu {
   uint16     lostPackets;  // true, if packet loss is detected
   } sNalu;
 //}}}
-
 //{{{  sHRD
 typedef struct {
   unsigned int cpb_cnt_minus1;             // ue(v)
@@ -1050,6 +1049,7 @@ static inline int isHiIntraOnlyProfile (unsigned int profileIdc, Boolean constra
 
   extern void error (char* text);
 
+  extern void initFrext (sDecoder* decoder);
   extern void initGlobalBuffers (sDecoder* decoder);
   extern void freeGlobalBuffers (sDecoder* decoder);
   extern void freeLayerBuffers (sDecoder* decoder);

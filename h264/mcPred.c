@@ -14,11 +14,11 @@ int allocPred (sSlice* slice) {
 
   int alloc_size = 0;
 
-  alloc_size += get_mem2Dpel(&slice->tmp_block_l0, MB_BLOCK_SIZE, MB_BLOCK_SIZE);
-  alloc_size += get_mem2Dpel(&slice->tmp_block_l1, MB_BLOCK_SIZE, MB_BLOCK_SIZE);
-  alloc_size += get_mem2Dpel(&slice->tmp_block_l2, MB_BLOCK_SIZE, MB_BLOCK_SIZE);
-  alloc_size += get_mem2Dpel(&slice->tmp_block_l3, MB_BLOCK_SIZE, MB_BLOCK_SIZE);
-  alloc_size += get_mem2Dint(&slice->tmp_res, MB_BLOCK_SIZE + 5, MB_BLOCK_SIZE + 5);
+  alloc_size += getMem2Dpel(&slice->tmp_block_l0, MB_BLOCK_SIZE, MB_BLOCK_SIZE);
+  alloc_size += getMem2Dpel(&slice->tmp_block_l1, MB_BLOCK_SIZE, MB_BLOCK_SIZE);
+  alloc_size += getMem2Dpel(&slice->tmp_block_l2, MB_BLOCK_SIZE, MB_BLOCK_SIZE);
+  alloc_size += getMem2Dpel(&slice->tmp_block_l3, MB_BLOCK_SIZE, MB_BLOCK_SIZE);
+  alloc_size += getMem2Dint(&slice->tmp_res, MB_BLOCK_SIZE + 5, MB_BLOCK_SIZE + 5);
 
   return (alloc_size);
   }

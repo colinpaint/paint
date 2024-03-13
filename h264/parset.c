@@ -11,8 +11,6 @@
 #include "buffer.h"
 #include "erc.h"
 //}}}
-extern void init_frext (sDecoder* decoder);
-
 //{{{
 static const byte ZZ_SCAN[16] = {
   0,  1,  4,  8,  5,  2,  3,  6,  9, 12, 13, 10,  7, 11, 14, 15
@@ -509,7 +507,7 @@ static void interpretSPS (sDecoder* decoder, sDataPartition* dp, sSPS* sps) {
     sps->bit_depth_chroma_minus8 = readUeV ("SPS bit_depth_chroma_minus8", s);
     if ((sps->bit_depth_luma_minus8+8 > sizeof(sPixel)*8) ||
         (sps->bit_depth_chroma_minus8+8> sizeof(sPixel)*8))
-      error ("Source picture has higher bit depth than sPixel data type", 500);
+      error ("Source picture has higher bit depth than sPixel data type");
 
     sps->losslessQpPrimeFlag = readU1 ("SPS lossless_qpprime_y_zero_flag", s);
 
@@ -949,12 +947,12 @@ void useParameterSet (sSlice* slice) {
   // Set Sequence Parameter Stuff first
   if (((int)sps->picOrderCountType < 0) || (sps->picOrderCountType > 2)) {
     printf ("invalid sps->picOrderCountType = %d\n", (int) sps->picOrderCountType);
-    error ("picOrderCountType != 1", -1000);
+    error ("picOrderCountType != 1");
     }
 
   if (sps->picOrderCountType == 1)
     if (sps->num_ref_frames_in_pic_order_cnt_cycle >= MAX_NUM_REF_FRAMES_PIC_ORDER)
-      error ("num_ref_frames_in_pic_order_cnt_cycle too large",-1011);
+      error ("num_ref_frames_in_pic_order_cnt_cycle too large");
 
   activateSPS (decoder, sps);
   activatePPS (decoder, pps);

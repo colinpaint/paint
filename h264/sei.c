@@ -126,7 +126,7 @@ static void process_spare_pic (byte* payload, int size, sDecoder* decoder) {
   printf ("SEQ spare picture target_frame_num:%d num_spare_pics:%d\n",
           target_frame_num, num_spare_pics);
 
-  get_mem3D (&map, num_spare_pics, decoder->height >> 4, decoder->width >> 4);
+  getMem3D (&map, num_spare_pics, decoder->height >> 4, decoder->width >> 4);
   for (int i = 0; i < num_spare_pics; i++) {
     if (i == 0) {
       CandidateSpareFrameNum = target_frame_num - 1;
@@ -573,7 +573,7 @@ static void process_picture_timing_info (byte* payload, int size, sDecoder* deco
       //}}}
       //{{{
       default:
-        error ("reserved pic_struct used (can't determine numClockTs)", 500);
+        error ("reserved pic_struct used, can't determine numClockTs");
       //}}}
       }
 
@@ -1157,7 +1157,7 @@ static void process_post_filter_hints_info (byte* payload, int size, sDecoder* d
   unsigned int filter_hint_type = readUv(2, "SEI filter_hint_type", buf); // interpret post-filter hint SEI here
 
   int** *filter_hint;
-  get_mem3Dint (&filter_hint, 3, filter_hint_size_y, filter_hint_size_x);
+  getMem3Dint (&filter_hint, 3, filter_hint_size_y, filter_hint_size_x);
 
   for (unsigned int color_component = 0; color_component < 3; color_component ++)
     for (unsigned int cy = 0; cy < filter_hint_size_y; cy ++)

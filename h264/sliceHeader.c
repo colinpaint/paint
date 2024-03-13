@@ -1581,7 +1581,7 @@ void decodePOC (sDecoder* decoder, sSlice* slice) {
       if (slice->idrFlag) {
         decoder->FrameNumOffset=0;     //  first pixelPos of IDRGOP,
         if (slice->frameNum)
-          error ("frameNum not equal to zero in IDR picture", -1020);
+          error ("frameNum not equal to zero in IDR picture");
         }
       else {
         if (decoder->lastHasMmco5) {
@@ -1650,7 +1650,7 @@ void decodePOC (sDecoder* decoder, sSlice* slice) {
         decoder->FrameNumOffset = 0;
         slice->thisPoc = slice->framePoc = slice->topPoc = slice->botPoc = 0;
         if (slice->frameNum)
-          error ("frameNum not equal to zero in IDR picture", -1020);
+          error ("frameNum not equal to zero in IDR picture");
         }
       else {
         if (decoder->lastHasMmco5) {

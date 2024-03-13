@@ -179,8 +179,8 @@ static void writePicture (sDecoder* decoder, sPicture* p, int realStructure) {
       decoder->pendingOut->frameCropBot = p->frameCropBot;
       }
 
-    get_mem2Dpel (&(decoder->pendingOut->imgY), decoder->pendingOut->sizeY, decoder->pendingOut->sizeX);
-    get_mem3Dpel (&(decoder->pendingOut->imgUV), 2, decoder->pendingOut->sizeYcr, decoder->pendingOut->sizeXcr);
+    getMem2Dpel (&(decoder->pendingOut->imgY), decoder->pendingOut->sizeY, decoder->pendingOut->sizeX);
+    getMem3Dpel (&(decoder->pendingOut->imgUV), 2, decoder->pendingOut->sizeYcr, decoder->pendingOut->sizeXcr);
     clearPicture (decoder, decoder->pendingOut);
 
     // copy first field

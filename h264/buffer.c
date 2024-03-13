@@ -694,12 +694,12 @@ sPicture* allocPicture (sDecoder* decoder, ePicStructure structure,
   s->picSizeInMbs = (sizeX*sizeY)/256;
   s->imgUV = NULL;
 
-  get_mem2Dpel_pad (&(s->imgY), sizeY, sizeX, decoder->iLumaPadY, decoder->iLumaPadX);
+  getMem2Dpel_pad (&(s->imgY), sizeY, sizeX, decoder->iLumaPadY, decoder->iLumaPadX);
   s->iLumaStride = sizeX + 2 * decoder->iLumaPadX;
   s->iLumaExpandedHeight = sizeY + 2 * decoder->iLumaPadY;
 
   if (activeSPS->chromaFormatIdc != YUV400)
-    get_mem3Dpel_pad (&(s->imgUV), 2, sizeYcr, sizeXcr, decoder->iChromaPadY, decoder->iChromaPadX);
+    getMem3Dpel_pad (&(s->imgUV), 2, sizeYcr, sizeXcr, decoder->iChromaPadY, decoder->iChromaPadX);
 
   s->iChromaStride = sizeXcr + 2*decoder->iChromaPadX;
   s->iChromaExpandedHeight = sizeYcr + 2*decoder->iChromaPadY;
@@ -709,12 +709,12 @@ sPicture* allocPicture (sDecoder* decoder, ePicStructure structure,
   s->iChromaPadX = decoder->iChromaPadX;
   s->sepColourPlaneFlag = decoder->sepColourPlaneFlag;
 
-  get_mem2Dmp (&s->mvInfo, (sizeY >> BLOCK_SHIFT), (sizeX >> BLOCK_SHIFT));
+  getMem2Dmp (&s->mvInfo, (sizeY >> BLOCK_SHIFT), (sizeX >> BLOCK_SHIFT));
   allocPicMotion (&s->motion , (sizeY >> BLOCK_SHIFT), (sizeX >> BLOCK_SHIFT));
 
   if (decoder->sepColourPlaneFlag != 0)
     for (int nplane = 0; nplane < MAX_PLANE; nplane++) {
-      get_mem2Dmp (&s->JVmv_info[nplane], (sizeY >> BLOCK_SHIFT), (sizeX >> BLOCK_SHIFT));
+      getMem2Dmp (&s->JVmv_info[nplane], (sizeY >> BLOCK_SHIFT), (sizeX >> BLOCK_SHIFT));
       allocPicMotion (&s->JVmotion[nplane] , (sizeY >> BLOCK_SHIFT), (sizeX >> BLOCK_SHIFT));
       }
 
@@ -1136,7 +1136,7 @@ void flushDpb (sDPB* dpb) {
 static void checkNumDpbFrames (sDPB* dpb) {
 
   if ((int)(dpb->longTermRefFramesInBuffer + dpb->refFramesInBuffer) > imax (1, dpb->numRefFrames))
-    error ("Max. number of reference frames exceeded. Invalid stream.", 500);
+    error ("Max. number of reference frames exceeded. Invalid stream");
   }
 //}}}
 //{{{
@@ -1892,13 +1892,13 @@ void initImage (sDecoder* decoder, sImage* image, sSPS* sps) {
 
   if (sps->sepColourPlaneFlag) {
     for (int nplane = 0; nplane < MAX_PLANE; nplane++ )
-      get_mem2Dpel (&(image->frm_data[nplane]), decoder->height, decoder->width);
+      getMem2Dpel (&(image->frm_data[nplane]), decoder->height, decoder->width);
     }
   else {
-    get_mem2Dpel (&(image->frm_data[0]), decoder->height, decoder->width);
+    getMem2Dpel (&(image->frm_data[0]), decoder->height, decoder->width);
     if (decoder->yuvFormat != YUV400) {
-      get_mem2Dpel (&(image->frm_data[1]), decoder->heightCr, decoder->widthCr);
-      get_mem2Dpel (&(image->frm_data[2]), decoder->heightCr, decoder->widthCr);
+      getMem2Dpel (&(image->frm_data[1]), decoder->heightCr, decoder->widthCr);
+      getMem2Dpel (&(image->frm_data[2]), decoder->heightCr, decoder->widthCr);
       if (sizeof(sPixel) == sizeof(unsigned char)) {
         for (int k = 1; k < 3; k++)
           memset (image->frm_data[k][0], 128, decoder->heightCr * decoder->widthCr * sizeof(sPixel));

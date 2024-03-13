@@ -780,7 +780,7 @@ static void buildPredRegionYUV (sDecoder* decoder, int *mv, int x, int y, sPixel
   tmp_res = slice->tmp_res;
 
   // This should be allocated only once.
-  get_mem2Dpel(&tmp_block, MB_BLOCK_SIZE, MB_BLOCK_SIZE);
+  getMem2Dpel(&tmp_block, MB_BLOCK_SIZE, MB_BLOCK_SIZE);
 
   /* Update coordinates of the current concealed macroblock */
   mb->mb.x = (short) (x/MB_BLOCK_SIZE);
@@ -1373,7 +1373,7 @@ static void buildPredblockRegionYUV (sDecoder* decoder, int *mv,
   sMacroblock* mb = &decoder->mbData[mb_nr];   // intialization code deleted, see below, StW
   sSlice* slice = mb->slice;
 
-  get_mem2Dpel(&tmp_block, MB_BLOCK_SIZE, MB_BLOCK_SIZE);
+  getMem2Dpel(&tmp_block, MB_BLOCK_SIZE, MB_BLOCK_SIZE);
 
   /* Update coordinates of the current concealed macroblock */
 
