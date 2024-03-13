@@ -3050,7 +3050,7 @@ static int intra16x16_vert_pred (sMacroblock* mb, eColorPlane plane)
   }
 
   if (!up_avail)
-    error ("invalid 16x16 intra pred Mode VERT_PRED_16",500);
+    error ("invalid 16x16 intra pred Mode VERT_PRED_16");
   {
     sPixel** prd = &slice->mb_pred[plane][0];
     sPixel *src = &(imgY[b.posY][b.posX]);
@@ -3105,7 +3105,7 @@ static int intra16x16_hor_pred (sMacroblock* mb, eColorPlane plane)
   }
 
   if (!left_avail)
-    error ("invalid 16x16 intra pred Mode HOR_PRED_16",500);
+    error ("invalid 16x16 intra pred Mode HOR_PRED_16");
 
   posY = a.posY;
   posX = a.posX;
@@ -3184,7 +3184,7 @@ static int intra16x16_plane_pred (sMacroblock* mb, eColorPlane plane)
   }
 
   if (!up_avail || !left_up_avail  || !left_avail)
-    error ("invalid 16x16 intra pred Mode PLANE_16",500);
+    error ("invalid 16x16 intra pred Mode PLANE_16");
 
   mpr_line = &imgY[b.posY][b.posX+7];
   posY = a.posY + 7;
@@ -3359,7 +3359,7 @@ static int intra16x16_vert_pred_mbaff (sMacroblock* mb, eColorPlane plane)
   }
 
   if (!up_avail)
-    error ("invalid 16x16 intra pred Mode VERT_PRED_16",500);
+    error ("invalid 16x16 intra pred Mode VERT_PRED_16");
   {
     sPixel** prd = &slice->mb_pred[plane][0];
     sPixel *src = &(imgY[b.posY][b.posX]);
@@ -3417,7 +3417,7 @@ static int intra16x16_hor_pred_mbaff (sMacroblock* mb, eColorPlane plane)
   }
 
   if (!left_avail)
-    error ("invalid 16x16 intra pred Mode HOR_PRED_16",500);
+    error ("invalid 16x16 intra pred Mode HOR_PRED_16");
 
   for(j = 0; j < MB_BLOCK_SIZE; ++j)
   {
@@ -3481,7 +3481,7 @@ static int intra16x16_plane_pred_mbaff (sMacroblock* mb, eColorPlane plane)
   }
 
   if (!up_avail || !left_up_avail  || !left_avail)
-    error ("invalid 16x16 intra pred Mode PLANE_16",500);
+    error ("invalid 16x16 intra pred Mode PLANE_16");
 
   mpr_line = &imgY[b.posY][b.posX+7];
   for (i = 1; i < 8; ++i)
@@ -3699,7 +3699,7 @@ static void intrapred_chroma_hor (sMacroblock* mb)
     left_avail = a.available ? mb->slice->intraBlock[a.mbIndex]: 0;
   // Horizontal Prediction
   if (!left_avail )
-    error("unexpected HOR_PRED_8 chroma intra prediction mode",-1);
+    error("unexpected HOR_PRED_8 chroma intra prediction mode");
   else
   {
     sSlice *slice = mb->slice;
@@ -3757,7 +3757,7 @@ static void intrapred_chroma_ver (sMacroblock* mb)
     up_avail = up.available ? slice->intraBlock[up.mbIndex] : 0;
   // Vertical Prediction
   if (!up_avail)
-    error("unexpected VERT_PRED_8 chroma intra prediction mode",-1);
+    error("unexpected VERT_PRED_8 chroma intra prediction mode");
   else
   {
     sPixel** mb_pred0 = slice->mb_pred[1];
@@ -3803,7 +3803,7 @@ static void intrapred_chroma_plane (sMacroblock* mb)
   }
   // plane prediction
   if (!left_up_avail || !left_avail || !up_avail)
-    error("unexpected PLANE_8 chroma intra prediction mode",-1);
+    error("unexpected PLANE_8 chroma intra prediction mode");
   else
   {
     int cr_MB_x = decoder->mbCrSizeX;
@@ -4042,7 +4042,7 @@ static void intra_pred_chroma_mbaff (sMacroblock* mb)
       }
       // Horizontal Prediction
       if (!left_avail[0] || !left_avail[1])
-        error("unexpected HOR_PRED_8 chroma intra prediction mode",-1);
+        error("unexpected HOR_PRED_8 chroma intra prediction mode");
       else
       {
         int pred1;
@@ -4080,7 +4080,7 @@ static void intra_pred_chroma_mbaff (sMacroblock* mb)
         up_avail = up.available ? slice->intraBlock[up.mbIndex] : 0;
       // Vertical Prediction
       if (!up_avail)
-        error("unexpected VERT_PRED_8 chroma intra prediction mode",-1);
+        error("unexpected VERT_PRED_8 chroma intra prediction mode");
       else
       {
         sPixel** mb_pred0 = slice->mb_pred[0 + 1];
@@ -4130,7 +4130,7 @@ static void intra_pred_chroma_mbaff (sMacroblock* mb)
       }
       // plane prediction
       if (!left_up_avail || !left_avail[0] || !left_avail[1] || !up_avail)
-        error("unexpected PLANE_8 chroma intra prediction mode",-1);
+        error("unexpected PLANE_8 chroma intra prediction mode");
       else
       {
         int uv;
@@ -4163,7 +4163,7 @@ static void intra_pred_chroma_mbaff (sMacroblock* mb)
     }
     break;
   default:
-    error("illegal chroma intra prediction mode", 600);
+    error("illegal chroma intra prediction mode");
     break;
   }
 }
@@ -4193,7 +4193,7 @@ static void intraPredChroma (sMacroblock* mb)
     intrapred_chroma_plane(mb);
     break;
   default:
-    error("illegal chroma intra prediction mode", 600);
+    error("illegal chroma intra prediction mode");
     break;
   }
 }

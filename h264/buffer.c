@@ -176,7 +176,7 @@ static int outputDpbFrame (sDPB* dpb) {
 
   // diagnostics
   if (dpb->usedSize < 1)
-    error ("Cannot output frame, DPB empty.",150);
+    error ("Cannot output frame, DPB empty");
 
   // find smallest POC
   int poc, pos;
@@ -200,7 +200,7 @@ static int outputDpbFrame (sDPB* dpb) {
   // picture error conceal
   if(decoder->concealMode == 0)
     if (dpb->lastOutputPoc >= poc)
-      error ("output POC must be in ascending order", 150);
+      error ("output POC must be in ascending order");
 
   dpb->lastOutputPoc = poc;
 
@@ -995,7 +995,7 @@ static int getDpbSize (sDecoder* decoder, sSPS *activeSPS) {
     //}}}
     //{{{
     default:
-      error ("undefined level", 500);
+      error ("undefined level");
       break;
     //}}}
     }
@@ -1006,7 +1006,7 @@ static int getDpbSize (sDecoder* decoder, sSPS *activeSPS) {
   if (activeSPS->vui_parameters_present_flag && activeSPS->vui_seq_parameters.bitstream_restriction_flag) {
     int size_vui;
     if ((int)activeSPS->vui_seq_parameters.max_dec_frame_buffering > size)
-      error ("max_dec_frame_buffering larger than MaxDpbSize", 500);
+      error ("max_dec_frame_buffering larger than MaxDpbSize");
 
     size_vui = imax (1, activeSPS->vui_seq_parameters.max_dec_frame_buffering);
 #ifdef _DEBUG
@@ -1032,7 +1032,7 @@ void initDpb (sDecoder* decoder, sDPB* dpb, int type) {
   dpb->numRefFrames = activeSPS->numRefFrames;
 
   if (dpb->size < activeSPS->numRefFrames)
-    error ("DPB size at specified level is smaller than the specified number of reference frames. This is not allowed.\n", 1000);
+    error ("DPB size at specified level is smaller than the specified number of reference frames\n");
 
   dpb->usedSize = 0;
   dpb->lastPicture = NULL;
@@ -1083,7 +1083,7 @@ void reInitDpb (sDecoder* decoder, sDPB* dpb, int type) {
 
   if (dpbSize > (int)dpb->size) {
     if (dpb->size < activeSPS->numRefFrames)
-      error ("DPB size at specified level is smaller than the specified number of reference frames\n", 1000);
+      error ("DPB size at specified level is smaller than the specified number of reference frames\n");
 
     dpb->fs = realloc (dpb->fs, dpbSize * sizeof (sFrameStore*));
     if (!dpb->fs)
@@ -1156,7 +1156,7 @@ static void adaptiveMemoryManagement (sDPB* dpb, sPicture* p) {
       //{{{
       case 0:
         if (tmp_drpm->next != NULL)
-          error ("memManagement = 0 not last operation in buffer", 500);
+          error ("memManagement = 0 not last operation in buffer");
         break;
       //}}}
       //{{{
@@ -1199,7 +1199,7 @@ static void adaptiveMemoryManagement (sDPB* dpb, sPicture* p) {
       //}}}
       //{{{
       default:
-        error ("invalid memManagement in buffer", 500);
+        error ("invalid memManagement in buffer");
       //}}}
       }
     p->decRefPicMarkingBuffer = tmp_drpm->next;
@@ -1603,7 +1603,7 @@ void mm_assign_long_term_frame_idx (sDPB* dpb, sPicture* p,
       }
 
     if (structure == FRAME)
-      error ("field for long term marking not found", 200);
+      error ("field for long term marking not found");
 
     unmarkLongTermFieldRefFrameIndex (dpb, structure, longTermFrameIndex, 0, 0, picNumX);
     }
@@ -1652,7 +1652,7 @@ void mm_mark_current_picture_long_term (sDPB* dpb, sPicture* p, int longTermFram
 void get_smallest_poc (sDPB* dpb, int* poc, int* pos) {
 
   if (dpb->usedSize<1)
-    error ("Cannot determine smallest POC, DPB empty.",150);
+    error ("Cannot determine smallest POC, DPB empty");
 
   *pos = -1;
   *poc = INT_MAX;
@@ -1766,7 +1766,7 @@ void storePictureDpb (sDPB* dpb, sPicture* p) {
   if ((p->usedForReference) && (!p->isLongTerm))
     for (unsigned i = 0; i < dpb->refFramesInBuffer; i++)
       if (dpb->fsRef[i]->frameNum == p->frameNum)
-        error ("duplicate frameNum in short-term reference picture buffer", 500);
+        error ("duplicate frameNum in short-term reference picture buffer");
 
   // store at end of buffer
   insertPictureDpb (decoder, dpb->fs[dpb->usedSize],p);
@@ -1820,7 +1820,7 @@ void removeFrameDpb (sDPB* dpb, int pos) {
       break;
 
     default:
-      error ("invalid frame store type",500);
+      error ("invalid frame store type");
     }
   fs->isUsed = 0;
   fs->isLongTerm = 0;
@@ -2026,7 +2026,7 @@ void reorderRefPicList (sSlice* slice, int curList) {
 
   for (int i = 0; modification_of_pic_nums_idc[i] != 3; i++) {
     if (modification_of_pic_nums_idc[i]>3)
-      error ("Invalid modification_of_pic_nums_idc command", 500);
+      error ("Invalid modification_of_pic_nums_idc command");
 
     if (modification_of_pic_nums_idc[i] < 2) {
       if (modification_of_pic_nums_idc[i] == 0) {

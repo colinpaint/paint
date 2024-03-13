@@ -324,7 +324,7 @@ static void readIpredModes (sMacroblock* mb) {
     mb->cPredMode = (char)se.value1;
 
     if (mb->cPredMode < DC_PRED_8 || mb->cPredMode > PLANE_8)
-      error ("illegal chroma intra pred mode!\n", 600);
+      error ("illegal chroma intra pred mode!\n");
     }
   }
 //}}}

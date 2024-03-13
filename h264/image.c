@@ -265,7 +265,7 @@ static void reorderLists (sSlice* slice) {
       if (decoder->nonConformingStream)
         printf ("RefPicList0[%d] no refPic\n", slice->numRefIndexActive[LIST_0]-1);
       else
-        error ("RefPicList0[num_ref_idx_l0_active_minus1] no refPic", 500);
+        error ("RefPicList0[num_ref_idx_l0_active_minus1] no refPic");
       }
 
     // that's a definition
@@ -279,7 +279,7 @@ static void reorderLists (sSlice* slice) {
       if (decoder->nonConformingStream)
         printf ("RefPicList1[%d] no refPic\n", slice->numRefIndexActive[LIST_1] - 1);
       else
-        error ("RefPicList1[num_ref_idx_l1_active_minus1] no refPic", 500);
+        error ("RefPicList1[num_ref_idx_l1_active_minus1] no refPic");
       }
 
     // that's a definition
@@ -529,7 +529,7 @@ static void initPicture (sDecoder* decoder, sSlice* slice) {
         }
       else
         // Advanced Error Concealment would be called here to combat unintentional loss of pictures
-        error ("An unintentional loss of pictures occurs! Exit\n", 100);
+        error ("An unintentional loss of pictures occurs! Exit\n");
       }
     if (!decoder->concealMode)
       fillFrameNumGap (decoder, slice);
@@ -588,7 +588,7 @@ static void initPicture (sDecoder* decoder, sSlice* slice) {
     //}}}
     //{{{
     default:
-      error ("decoder->structure not initialized", 235);
+      error ("decoder->structure not initialized");
     //}}}
     }
 
@@ -670,7 +670,7 @@ static void initPictureDecoding (sDecoder* decoder) {
   int deblockMode = 1;
 
   if (decoder->picSliceIndex >= MAX_NUM_SLICES)
-    error ("MAX_NUM_SLICES exceeded", 200);
+    error ("MAX_NUM_SLICES exceeded");
 
   sSlice* slice = decoder->sliceList[0];
   if (decoder->nextPPS->valid && ((int)decoder->nextPPS->ppsId == slice->ppsId)) {
@@ -919,7 +919,7 @@ static int readNextSlice (sSlice* slice) {
         // need to read the slice ID, which depends on the value of redundantPicCountPresentFlag
         int slice_id_a = readUeV ("NALU: DP_A slice_id", s);
         if (decoder->activePPS->entropyCodingModeFlag)
-          error ("dataPartition with CABAC not allowed", 500);
+          error ("dataPartition with CABAC not allowed");
 
         if (!readNextNalu (decoder, nalu))
           return curHeader;

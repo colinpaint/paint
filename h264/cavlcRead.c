@@ -49,7 +49,7 @@ static int predict_nnz (sMacroblock* mb, int block_type, int i,int j) {
       //}}}
       //{{{
       default:
-        error("writeCoeff4x4_CAVLC: Invalid block type", 600);
+        error("writeCoeff4x4_CAVLC: Invalid block type");
         break;
       //}}}
       }
@@ -87,7 +87,7 @@ static int predict_nnz (sMacroblock* mb, int block_type, int i,int j) {
       //}}}
       //{{{
       default:
-        error("writeCoeff4x4_CAVLC: Invalid block type", 600);
+        error("writeCoeff4x4_CAVLC: Invalid block type");
         break;
         }
       //}}}
@@ -212,7 +212,7 @@ void readCoef4x4cavlc (sMacroblock* mb, int block_type,
     //}}}
     //{{{
     default:
-      error ("readCoef4x4cavlc: invalid block type", 600);
+      error ("readCoef4x4cavlc: invalid block type");
       decoder->nzCoeff[mb_nr][0][j][i] = 0;
       break;
     //}}}
@@ -424,7 +424,7 @@ void readCoef4x4cavlc444 (sMacroblock* mb, int block_type,
     //}}}
     //{{{
     default:
-      error ("readCoef4x4cavlc: invalid block type", 600);
+      error ("readCoef4x4cavlc: invalid block type");
       decoder->nzCoeff[mb_nr][0][j][i] = 0;
       break;
     //}}}

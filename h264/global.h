@@ -1048,8 +1048,7 @@ static inline int isHiIntraOnlyProfile (unsigned int profileIdc, Boolean constra
 //}}}
   extern sDecoder* gDecoder;
 
-  extern char errorText[ET_SIZE];
-  extern void error (char* text, int code);
+  extern void error (char* text);
 
   extern void initGlobalBuffers (sDecoder* decoder);
   extern void freeGlobalBuffers (sDecoder* decoder);

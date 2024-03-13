@@ -515,7 +515,7 @@ int mb_pred_b_d8x8temporal (sMacroblock* mb, eColorPlane plane, sPixel** pixel, 
         }
         else if (INVALIDINDEX == mapped_idx)
         {
-          error("temporal direct error: colocated block has ref that is unavailable",-1111);
+          error("temporal direct error: colocated block has ref that is unavailable");
         }
 
       }
@@ -618,7 +618,7 @@ int mb_pred_b_d4x4temporal (sMacroblock* mb, eColorPlane plane, sPixel** pixel, 
         }
         if (INVALIDINDEX == mapped_idx)
         {
-          error("temporal direct error: colocated block has ref that is unavailable",-1111);
+          error("temporal direct error: colocated block has ref that is unavailable");
         }
         else
         {

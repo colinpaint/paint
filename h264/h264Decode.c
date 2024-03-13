@@ -20,15 +20,14 @@
 //}}}
 
 sDecoder* gDecoder;
-char errorText[ET_SIZE];
 
 //{{{
-void error (char* text, int code) {
+void error (char* text) {
 
   fprintf (stderr, "%s\n", text);
   if (gDecoder)
     flushDpb (gDecoder->dpb);
-  exit (code);
+  exit (0);
   }
 //}}}
 //{{{
@@ -48,16 +47,14 @@ void report_stats_on_error() {
 sSlice* allocSlice (sDecoder* decoder) {
 
   sSlice* slice = (sSlice*)calloc (1, sizeof(sSlice));
-  if (!slice) {
-    snprintf (errorText, ET_SIZE, "Memory allocation for sSlice datastruct in NAL-mode failed");
-    error (errorText, 100);
-    }
+  if (!slice)
+    error ("Memory allocation for sSlice datastruct in NAL-mode failed");
 
   // create all context models
   slice->mot_ctx = create_contexts_MotionInfo();
   slice->tex_ctx = create_contexts_TextureInfo();
 
-  slice->maxDataPartitions = 3;  // assume dataPartition worst case 
+  slice->maxDataPartitions = 3;  // assume dataPartition worst case
   slice->dps = allocDataPartitions (slice->maxDataPartitions);
 
   get_mem2Dwp (&(slice->WPParam), 2, MAX_REFERENCE_PICTURES);
@@ -248,25 +245,19 @@ void init_frext (sDecoder* decoder) {
 sDataPartition* allocDataPartitions (int n) {
 
   sDataPartition* dataPartitions = (sDataPartition*)calloc (n, sizeof(sDataPartition));
-  if (!dataPartitions) {
-    snprintf (errorText, ET_SIZE, "allocDataPartitions: Memory allocation for Data dp failed");
-    error (errorText, 100);
-    }
+  if (!dataPartitions)
+    error ("allocDataPartitions: Memory allocation for Data dp failed");
 
   for (int i = 0; i < n; ++i) {
     // loop over all dataPartitions
     sDataPartition* dataPartition = &(dataPartitions[i]);
     dataPartition->s = (sBitstream*)calloc(1, sizeof(sBitstream));
-    if (dataPartition->s == NULL) {
-      snprintf (errorText, ET_SIZE, "allocDataPartitions: Memory allocation for sBitstream failed");
-      error (errorText, 100);
-      }
+    if (dataPartition->s == NULL)
+      error ("allocDataPartitions: Memory allocation for sBitstream failed");
 
     dataPartition->s->streamBuffer = (byte*)calloc(MAX_CODED_FRAME_SIZE, sizeof(byte));
-    if (dataPartition->s->streamBuffer == NULL) {
-      snprintf (errorText, ET_SIZE, "allocDataPartitions: Memory allocation for streamBuffer failed");
-      error (errorText, 100);
-      }
+    if (dataPartition->s->streamBuffer == NULL)
+      error ("allocDataPartitions: Memory allocation for streamBuffer failed");
     }
 
   return dataPartitions;

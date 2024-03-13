@@ -22,10 +22,8 @@ sDecodingEnv* arideco_create_decoding_environment() {
 //{{{
 void arideco_delete_decoding_environment (sDecodingEnv* dep) {
 
-  if (dep == NULL) {
-    snprintf (errorText, ET_SIZE, "Error freeing dep (NULL pointer)");
-    error (errorText, 200);
-    }
+  if (dep == NULL) 
+    error ("Error freeing dep (NULL pointer)");
   else
     free(dep);
   }
