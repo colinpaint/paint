@@ -732,7 +732,6 @@ static int isPpsEqual (sPPS* pps1, sPPS* pps2) {
   if (!equal)
     return equal;
 
-  // Fidelity Range Extensions
   equal &= (pps1->transform8x8modeFlag == pps2->transform8x8modeFlag);
   equal &= (pps1->picScalingMatrixPresentFlag == pps2->picScalingMatrixPresentFlag);
   if (pps1->picScalingMatrixPresentFlag) {
@@ -748,8 +747,8 @@ static int isPpsEqual (sPPS* pps1, sPPS* pps2) {
         }
       }
     }
-
   equal &= (pps1->secondChromaQpIndexOffset == pps2->secondChromaQpIndexOffset);
+
   return equal;
   }
 //}}}
