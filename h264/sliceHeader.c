@@ -1185,7 +1185,7 @@ static void ref_pic_list_reordering (sSlice* slice) {
 
   byte partitionIndex = assignSE2dp[slice->datadpMode][SE_HEADER];
   sDataPartition* dp = &(slice->dps[partitionIndex]);
-  sBitstream* s = dp->s;
+  sBitStream* s = dp->s;
 
   alloc_ref_pic_list_reordering_buffer (slice);
   if (slice->sliceType != I_SLICE &&
@@ -1258,7 +1258,7 @@ static void pred_weight_table (sSlice* slice) {
 
   byte partitionIndex = assignSE2dp[slice->datadpMode][SE_HEADER];
   sDataPartition* dp = &(slice->dps[partitionIndex]);
-  sBitstream* s = dp->s;
+  sBitStream* s = dp->s;
 
   int luma_weight_flag_l0, luma_weight_flag_l1, chroma_weight_flag_l0, chroma_weight_flag_l1;
 
@@ -1426,7 +1426,7 @@ void initContexts (sSlice* slice) {
   }
 //}}}
 //{{{
-void dec_ref_pic_marking (sDecoder* decoder, sBitstream* s, sSlice* slice) {
+void dec_ref_pic_marking (sDecoder* decoder, sBitStream* s, sSlice* slice) {
 
   // free old buffer content
   while (slice->decRefPicMarkingBuffer) {
@@ -1505,7 +1505,7 @@ int dumpPOC (sDecoder* decoder) {
   printf ("offset_for_ref_frame[1]               %d\n", (int) activeSPS->offset_for_ref_frame[1]);
 
   printf ("POC in SLice Header\n");
-  printf ("botFieldPicOrderFramePresentFlag %d\n", (int) decoder->activePPS->botFieldPicOrderFramePresentFlag);
+  printf ("botFieldPicOrderFramePresent %d\n", (int) decoder->activePPS->botFieldPicOrderFramePresent);
   printf ("deltaPicOrderCount[0]                %d\n", (int) decoder->sliceList[0]->deltaPicOrderCount[0]);
   printf ("deltaPicOrderCount[1]                %d\n", (int) decoder->sliceList[0]->deltaPicOrderCount[1]);
   printf ("idrFlag                              %d\n", (int) decoder->sliceList[0]->idrFlag);
@@ -1698,7 +1698,7 @@ void readSliceHeader (sSlice* slice) {
 
   byte partitionIndex = assignSE2dp[slice->datadpMode][SE_HEADER];
   sDataPartition* dp = &(slice->dps[partitionIndex]);
-  sBitstream* s = dp->s;
+  sBitStream* s = dp->s;
 
   // Get first_mb_in_slice
   slice->startMbNum = readUeV ("SLC first_mb_in_slice", s);
@@ -1724,7 +1724,7 @@ void readRestSliceHeader (sSlice* slice) {
 
   byte partitionIndex = assignSE2dp[slice->datadpMode][SE_HEADER];
   sDataPartition* dp = &(slice->dps[partitionIndex]);
-  sBitstream* s = dp->s;
+  sBitStream* s = dp->s;
   slice->frameNum = readUv (activeSPS->log2_max_frame_num_minus4 + 4, "SLC frameNum", s);
 
   if (slice->idrFlag) {
@@ -1758,7 +1758,7 @@ void readRestSliceHeader (sSlice* slice) {
   if (activeSPS->pocType == 0) {
     slice->picOrderCountLsb =
       readUv (activeSPS->log2_max_pic_order_cnt_lsb_minus4 + 4, "SLC picOrderCountLsb", s);
-    if (decoder->activePPS->botFieldPicOrderFramePresentFlag  == 1 &&
+    if (decoder->activePPS->botFieldPicOrderFramePresent  == 1 &&
         !slice->fieldPicFlag )
       slice->deletaPicOrderCountBot = readSeV ("SLC deletaPicOrderCountBot", s);
     else
@@ -1768,7 +1768,7 @@ void readRestSliceHeader (sSlice* slice) {
   if (activeSPS->pocType == 1) {
     if (!activeSPS->delta_pic_order_always_zero_flag) {
       slice->deltaPicOrderCount[0] = readSeV ("SLC deltaPicOrderCount[0]", s);
-      if ((decoder->activePPS->botFieldPicOrderFramePresentFlag == 1) && !slice->fieldPicFlag)
+      if ((decoder->activePPS->botFieldPicOrderFramePresent == 1) && !slice->fieldPicFlag)
         slice->deltaPicOrderCount[1] = readSeV ("SLC deltaPicOrderCount[1]", s);
       else
         slice->deltaPicOrderCount[1] = 0;  // set to zero if not in stream
@@ -1780,7 +1780,7 @@ void readRestSliceHeader (sSlice* slice) {
     }
   //}}}
 
-  if (decoder->activePPS->redundantPicCountPresentFlag)
+  if (decoder->activePPS->redundantPicCountPresent)
     slice->redundantPicCount = readUeV ("SLC redundantPicCount", s);
 
   if (slice->sliceType == B_SLICE)
@@ -1821,7 +1821,7 @@ void readRestSliceHeader (sSlice* slice) {
   if (slice->refId)
     dec_ref_pic_marking (decoder, s, slice);
 
-  if (decoder->activePPS->entropyCodingModeFlag &&
+  if (decoder->activePPS->entropyCodingMode &&
       slice->sliceType != I_SLICE &&
       slice->sliceType != SI_SLICE)
     slice->modelNum = readUeV ("SLC cabac_init_idc", s);
@@ -1840,7 +1840,7 @@ void readRestSliceHeader (sSlice* slice) {
     }
   //}}}
 
-  if (decoder->activePPS->deblockingFilterControlPresentFlag) {
+  if (decoder->activePPS->deblockFilterControlPresent) {
     slice->DFDisableIdc = (short) readUeV ("SLC disable_deblocking_filter_idc", s);
     if (slice->DFDisableIdc != 1) {
       slice->DFAlphaC0Offset = (short)(2 * readSeV ("SLC slice_alpha_c0_offset_div2", s));

@@ -106,7 +106,7 @@ typedef struct {
 static void process_spare_pic (byte* payload, int size, sDecoder* decoder) {
 
   int x,y;
-  sBitstream* buf;
+  sBitStream* buf;
   int bit0, bit1, no_bit0;
   int target_frame_num = 0;
   int num_spare_pics;
@@ -116,10 +116,10 @@ static void process_spare_pic (byte* payload, int size, sDecoder* decoder) {
   int m, n, left, right, top, bottom,directx, directy;
   byte*** map;
 
-  buf = malloc (sizeof(sBitstream));
-  buf->bitstreamLength = size;
+  buf = malloc (sizeof(sBitStream));
+  buf->bitStreamLen = size;
   buf->streamBuffer = payload;
-  buf->frameBitOffset = 0;
+  buf->bitStreamOffset = 0;
 
   target_frame_num = readUeV ("SEI target_frame_num", buf);
   num_spare_pics = 1 + readUeV ("SEI num_spare_pics_minus1", buf);
@@ -274,10 +274,10 @@ static void process_spare_pic (byte* payload, int size, sDecoder* decoder) {
 //{{{
 static void process_subsequence_info (byte* payload, int size, sDecoder* decoder) {
 
-  sBitstream* buf = malloc (sizeof(sBitstream));
-  buf->bitstreamLength = size;
+  sBitStream* buf = malloc (sizeof(sBitStream));
+  buf->bitStreamLen = size;
   buf->streamBuffer = payload;
-  buf->frameBitOffset = 0;
+  buf->bitStreamOffset = 0;
 
   int sub_seq_layer_num = readUeV ("SEI sub_seq_layer_num", buf);
   int sub_seq_id = readUeV ("SEI sub_seq_id", buf);
@@ -308,13 +308,13 @@ static void process_subsequence_info (byte* payload, int size, sDecoder* decoder
 //{{{
 static void process_subsequence_layer_characteristics_info (byte* payload, int size, sDecoder* decoder)
 {
-  sBitstream* buf;
+  sBitStream* buf;
   long num_sub_layers, accurate_statistics_flag, average_bit_rate, average_frame_rate;
 
-  buf = malloc(sizeof(sBitstream));
-  buf->bitstreamLength = size;
+  buf = malloc(sizeof(sBitStream));
+  buf->bitStreamLen = size;
   buf->streamBuffer = payload;
-  buf->frameBitOffset = 0;
+  buf->bitStreamOffset = 0;
 
   num_sub_layers = 1 + readUeV("SEI num_sub_layers_minus1", buf);
 
@@ -338,10 +338,10 @@ static void process_subsequence_layer_characteristics_info (byte* payload, int s
 //{{{
 static void process_subsequence_characteristics_info (byte* payload, int size, sDecoder* decoder) {
 
-  sBitstream* buf = malloc(sizeof(sBitstream));
-  buf->bitstreamLength = size;
+  sBitStream* buf = malloc(sizeof(sBitStream));
+  buf->bitStreamLen = size;
   buf->streamBuffer = payload;
-  buf->frameBitOffset = 0;
+  buf->bitStreamOffset = 0;
 
   int sub_seq_layer_num = readUeV("SEI sub_seq_layer_num", buf);
   int sub_seq_id        = readUeV("SEI sub_seq_id", buf);
@@ -394,10 +394,10 @@ static void process_subsequence_characteristics_info (byte* payload, int size, s
 static void process_scene_information (byte* payload, int size, sDecoder* decoder) {
 
 
-  sBitstream* buf = malloc(sizeof(sBitstream));
-  buf->bitstreamLength = size;
+  sBitStream* buf = malloc(sizeof(sBitStream));
+  buf->bitStreamLen = size;
   buf->streamBuffer = payload;
-  buf->frameBitOffset = 0;
+  buf->bitStreamOffset = 0;
 
   int second_scene_id;
   int scene_id = readUeV ("SEI scene_id", buf);
@@ -494,10 +494,10 @@ static void process_picture_timing_info (byte* payload, int size, sDecoder* deco
     return;
     }
 
-  sBitstream* buf = malloc (sizeof(sBitstream));
-  buf->bitstreamLength = size;
+  sBitStream* buf = malloc (sizeof(sBitStream));
+  buf->bitStreamLen = size;
   buf->streamBuffer = payload;
-  buf->frameBitOffset = 0;
+  buf->bitStreamOffset = 0;
 
   if (decoder->param.seiDebug)
     printf ("SEI Picture timing\n");
@@ -644,10 +644,10 @@ static void process_picture_timing_info (byte* payload, int size, sDecoder* deco
 //{{{
 static void process_pan_scan_rect_info (byte* payload, int size, sDecoder* decoder) {
 
-  sBitstream* buf = malloc (sizeof(sBitstream));
-  buf->bitstreamLength = size;
+  sBitStream* buf = malloc (sizeof(sBitStream));
+  buf->bitStreamLen = size;
   buf->streamBuffer = payload;
-  buf->frameBitOffset = 0;
+  buf->bitStreamOffset = 0;
 
   int pan_scan_rect_id = readUeV ("SEI pan_scan_rect_id", buf);
   int pan_scan_rect_cancel_flag = readU1 ("SEI pan_scan_rect_cancel_flag", buf);
@@ -673,10 +673,10 @@ static void process_pan_scan_rect_info (byte* payload, int size, sDecoder* decod
 //{{{
 static void process_recovery_point_info (byte* payload, int size, sDecoder* decoder) {
 
-  sBitstream* buf = malloc(sizeof(sBitstream));
-  buf->bitstreamLength = size;
+  sBitStream* buf = malloc(sizeof(sBitStream));
+  buf->bitStreamLen = size;
   buf->streamBuffer = payload;
-  buf->frameBitOffset = 0;
+  buf->bitStreamOffset = 0;
 
   int recoveryFrameCount = readUeV ("SEI recoveryFrameCount", buf);
   int exact_match_flag = readU1 ("SEI exact_match_flag", buf);
@@ -702,10 +702,10 @@ static void process_dec_ref_pic_marking_repetition_info (byte* payload, int size
   sDecodedRefPicMarking *old_drpm;
   int old_idr_flag, old_no_output_of_prior_pics_flag, old_long_term_reference_flag , old_adaptive_ref_pic_buffering_flag;
 
-  sBitstream* buf = malloc(sizeof(sBitstream));
-  buf->bitstreamLength = size;
+  sBitStream* buf = malloc(sizeof(sBitStream));
+  buf->bitStreamLen = size;
   buf->streamBuffer = payload;
-  buf->frameBitOffset = 0;
+  buf->bitStreamOffset = 0;
 
   original_idr_flag = readU1 ("SEI original_idr_flag", buf);
   original_frame_num = readUeV ("SEI original_frame_num", buf);
@@ -809,10 +809,10 @@ static void process_filler_payload_info (byte* payload, int size, sDecoder* deco
 //{{{
 static void process_full_frame_freeze_info (byte* payload, int size, sDecoder* decoder) {
 
-  sBitstream* buf = malloc(sizeof(sBitstream));
-  buf->bitstreamLength = size;
+  sBitStream* buf = malloc(sizeof(sBitStream));
+  buf->bitStreamLen = size;
   buf->streamBuffer = payload;
-  buf->frameBitOffset = 0;
+  buf->bitStreamOffset = 0;
 
   int full_frame_freeze_repetition_period = readUeV ("SEI full_frame_freeze_repetition_period", buf);
   printf ("full_frame_freeze_repetition_period = %d\n", full_frame_freeze_repetition_period);
@@ -831,10 +831,10 @@ static void process_full_frame_freeze_release_info (byte* payload, int size, sDe
 //{{{
 static void process_full_frame_snapshot_info (byte* payload, int size, sDecoder* decoder) {
 
-  sBitstream* buf = malloc(sizeof(sBitstream));
-  buf->bitstreamLength = size;
+  sBitStream* buf = malloc(sizeof(sBitStream));
+  buf->bitStreamLen = size;
   buf->streamBuffer = payload;
-  buf->frameBitOffset = 0;
+  buf->bitStreamOffset = 0;
 
   int snapshot_id = readUeV("SEI snapshot_id", buf);
 
@@ -847,10 +847,10 @@ static void process_full_frame_snapshot_info (byte* payload, int size, sDecoder*
 //{{{
 static void process_progressive_refinement_start_info (byte* payload, int size, sDecoder* decoder) {
 
-  sBitstream* buf = malloc(sizeof(sBitstream));
-  buf->bitstreamLength = size;
+  sBitStream* buf = malloc(sizeof(sBitStream));
+  buf->bitStreamLen = size;
   buf->streamBuffer = payload;
-  buf->frameBitOffset = 0;
+  buf->bitStreamOffset = 0;
 
   int progressive_refinement_id   = readUeV("SEI progressive_refinement_id"  , buf);
   int num_refinement_steps_minus1 = readUeV("SEI num_refinement_steps_minus1", buf);
@@ -864,10 +864,10 @@ static void process_progressive_refinement_start_info (byte* payload, int size, 
 //{{{
 static void process_progressive_refinement_end_info (byte* payload, int size, sDecoder* decoder) {
 
-  sBitstream* buf = malloc(sizeof(sBitstream));
-  buf->bitstreamLength = size;
+  sBitStream* buf = malloc(sizeof(sBitStream));
+  buf->bitStreamLen = size;
   buf->streamBuffer = payload;
-  buf->frameBitOffset = 0;
+  buf->bitStreamOffset = 0;
 
   int progressive_refinement_id   = readUeV("SEI progressive_refinement_id"  , buf);
   printf ("SEI Progressive refinement segment end\n");
@@ -879,10 +879,10 @@ static void process_progressive_refinement_end_info (byte* payload, int size, sD
 //{{{
 static void process_motion_constrained_slice_group_set_info (byte* payload, int size, sDecoder* decoder) {
 
-  sBitstream* buf = malloc(sizeof(sBitstream));
-  buf->bitstreamLength = size;
+  sBitStream* buf = malloc(sizeof(sBitStream));
+  buf->bitStreamLen = size;
   buf->streamBuffer = payload;
-  buf->frameBitOffset = 0;
+  buf->bitStreamOffset = 0;
 
   int numSliceGroupsMinus1 = readUeV ("SEI numSliceGroupsMinus1" , buf);
   int sliceGroupSize = ceilLog2 (numSliceGroupsMinus1 + 1);
@@ -920,10 +920,10 @@ static void process_film_grain_characteristics_info (byte* payload, int size, sD
   int comp_model_value;
   int film_grain_characteristics_repetition_period;
 
-  sBitstream* buf = malloc(sizeof(sBitstream));
-  buf->bitstreamLength = size;
+  sBitStream* buf = malloc(sizeof(sBitStream));
+  buf->bitStreamLen = size;
   buf->streamBuffer = payload;
-  buf->frameBitOffset = 0;
+  buf->bitStreamOffset = 0;
 
   film_grain_characteristics_cancel_flag = readU1 ("SEI film_grain_characteristics_cancel_flag", buf);
   printf ("film_grain_characteristics_cancel_flag = %d\n", film_grain_characteristics_cancel_flag);
@@ -986,10 +986,10 @@ static void process_film_grain_characteristics_info (byte* payload, int size, sD
 //{{{
 static void process_deblocking_filter_display_preference_info (byte* payload, int size, sDecoder* decoder) {
 
-  sBitstream* buf = malloc (sizeof(sBitstream));
-  buf->bitstreamLength = size;
+  sBitStream* buf = malloc (sizeof(sBitStream));
+  buf->bitStreamLen = size;
   buf->streamBuffer = payload;
-  buf->frameBitOffset = 0;
+  buf->bitStreamOffset = 0;
 
   int deblocking_display_preference_cancel_flag = readU1("SEI deblocking_display_preference_cancel_flag", buf);
   printf ("deblocking_display_preference_cancel_flag = %d\n", deblocking_display_preference_cancel_flag);
@@ -1009,10 +1009,10 @@ static void process_deblocking_filter_display_preference_info (byte* payload, in
 //{{{
 static void process_stereo_video_info_info (byte* payload, int size, sDecoder* decoder) {
 
-  sBitstream* buf = malloc (sizeof(sBitstream));
-  buf->bitstreamLength = size;
+  sBitStream* buf = malloc (sizeof(sBitStream));
+  buf->bitStreamLen = size;
   buf->streamBuffer = payload;
-  buf->frameBitOffset = 0;
+  buf->bitStreamOffset = 0;
 
   int field_views_flags = readU1 ("SEI field_views_flags", buf);
   printf("field_views_flags = %d\n", field_views_flags);
@@ -1038,10 +1038,10 @@ static void process_stereo_video_info_info (byte* payload, int size, sDecoder* d
 //{{{
 static void process_buffering_period_info (byte* payload, int size, sDecoder* decoder) {
 
-  sBitstream* buf = malloc (sizeof(sBitstream));
-  buf->bitstreamLength = size;
+  sBitStream* buf = malloc (sizeof(sBitStream));
+  buf->bitStreamLen = size;
   buf->streamBuffer = payload;
-  buf->frameBitOffset = 0;
+  buf->bitStreamOffset = 0;
 
   int spsId = readUeV("SEI spsId", buf);
   sSPS* sps = &decoder->sps[spsId];
@@ -1085,10 +1085,10 @@ static void process_frame_packing_arrangement_info (byte* payload, int size, sDe
 
   frame_packing_arrangement_information_struct seiFramePackingArrangement;
 
-  sBitstream* buf = malloc(sizeof(sBitstream));
-  buf->bitstreamLength = size;
+  sBitStream* buf = malloc(sizeof(sBitStream));
+  buf->bitStreamLen = size;
   buf->streamBuffer = payload;
-  buf->frameBitOffset = 0;
+  buf->bitStreamOffset = 0;
 
   printf ("Frame packing arrangement SEI\n");
 
@@ -1153,10 +1153,10 @@ static void process_frame_packing_arrangement_info (byte* payload, int size, sDe
 //{{{
 static void process_post_filter_hints_info (byte* payload, int size, sDecoder* decoder) {
 
-  sBitstream* buf = malloc (sizeof(sBitstream));
-  buf->bitstreamLength = size;
+  sBitStream* buf = malloc (sizeof(sBitStream));
+  buf->bitStreamLen = size;
   buf->streamBuffer = payload;
-  buf->frameBitOffset = 0;
+  buf->bitStreamOffset = 0;
 
   unsigned int filter_hint_size_y = readUeV("SEI filter_hint_size_y", buf); // interpret post-filter hint SEI here
   unsigned int filter_hint_size_x = readUeV("SEI filter_hint_size_x", buf); // interpret post-filter hint SEI here
@@ -1190,10 +1190,10 @@ static void process_post_filter_hints_info (byte* payload, int size, sDecoder* d
 //{{{
 static void process_green_metadata_info (byte* payload, int size, sDecoder* decoder) {
 
-  sBitstream* buf = malloc (sizeof(sBitstream));
-  buf->bitstreamLength = size;
+  sBitStream* buf = malloc (sizeof(sBitStream));
+  buf->bitStreamLen = size;
   buf->streamBuffer = payload;
-  buf->frameBitOffset = 0;
+  buf->bitStreamOffset = 0;
 
   printf ("Green Metadata Info SEI\n");
 

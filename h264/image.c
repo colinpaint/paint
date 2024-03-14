@@ -28,7 +28,7 @@
 //{{{
 static void resetMb (sMacroblock* mb) {
 
-  mb->eiFlag = 1;
+  mb->errorFlag = 1;
   mb->dplFlag = 0;
   mb->sliceNum = -1;
   }
@@ -433,14 +433,14 @@ static int isNewPicture (sPicture* picture, sSlice* slice, sOldSlice* oldSlice) 
   sDecoder* decoder = slice->decoder;
   if (!decoder->activeSPS->pocType) {
     result |= (oldSlice->picOrderCountLsb != slice->picOrderCountLsb);
-    if (decoder->activePPS->botFieldPicOrderFramePresentFlag  ==  1 &&  !slice->fieldPicFlag )
+    if (decoder->activePPS->botFieldPicOrderFramePresent  ==  1 &&  !slice->fieldPicFlag )
       result |= (oldSlice->deltaPicOrderCountBot != slice->deletaPicOrderCountBot);
     }
 
   if (decoder->activeSPS->pocType == 1) {
     if (!decoder->activeSPS->delta_pic_order_always_zero_flag) {
       result |= (oldSlice->deltaPicOrderCount[0] != slice->deltaPicOrderCount[0]);
-      if (decoder->activePPS->botFieldPicOrderFramePresentFlag  ==  1 &&  !slice->fieldPicFlag )
+      if (decoder->activePPS->botFieldPicOrderFramePresent  ==  1 &&  !slice->fieldPicFlag )
         result |= (oldSlice->deltaPicOrderCount[1] != slice->deltaPicOrderCount[1]);
       }
     }
@@ -599,7 +599,7 @@ static void initPicture (sDecoder* decoder, sSlice* slice) {
     }
 
   // CAVLC init
-  if (decoder->activePPS->entropyCodingModeFlag == (Boolean)CAVLC)
+  if (decoder->activePPS->entropyCodingMode == (Boolean)CAVLC)
     memset (decoder->nzCoeff[0][0][0], -1, decoder->picSizeInMbs * 48 *sizeof(byte)); // 3 * 4 * 4
 
   // Set the sliceNum member of each MB to -1, to ensure correct when packet loss occurs
@@ -806,11 +806,11 @@ static int readNextSlice (sSlice* slice) {
         slice->datadpMode = PAR_DP_1;
         slice->maxDataPartitions = 1;
 
-        sBitstream* s = slice->dps[0].s;
-        s->eiFlag = 0;
-        s->frameBitOffset = s->readLen = 0;
+        sBitStream* s = slice->dps[0].s;
+        s->errorFlag = 0;
+        s->bitStreamOffset = s->readLen = 0;
         memcpy (s->streamBuffer, &nalu->buf[1], nalu->len-1);
-        s->codeLen = s->bitstreamLength = RBSPtoSODB (s->streamBuffer, nalu->len - 1);
+        s->codeLen = s->bitStreamLen = RBSPtoSODB (s->streamBuffer, nalu->len - 1);
 
         // Some syntax of the sliceHeader depends on parameter set
         // which depends on the parameter set ID of the slice header.
@@ -857,9 +857,9 @@ static int readNextSlice (sSlice* slice) {
         else
           slice->mbIndex = slice->startMbNum;
 
-        if (decoder->activePPS->entropyCodingModeFlag) {
-          int byteStartPosition = s->frameBitOffset / 8;
-          if (s->frameBitOffset % 8)
+        if (decoder->activePPS->entropyCodingMode) {
+          int byteStartPosition = s->bitStreamOffset / 8;
+          if (s->bitStreamOffset % 8)
             ++byteStartPosition;
           arideco_start_decoding (&slice->dps[0].deCabac, s->streamBuffer, byteStartPosition, &s->readLen);
           }
@@ -882,10 +882,10 @@ static int readNextSlice (sSlice* slice) {
         slice->datadpMode = PAR_DP_3;
         slice->maxDataPartitions = 3;
         s = slice->dps[0].s;
-        s->eiFlag = 0;
-        s->frameBitOffset = s->readLen = 0;
+        s->errorFlag = 0;
+        s->bitStreamOffset = s->readLen = 0;
         memcpy (s->streamBuffer, &nalu->buf[1], nalu->len - 1);
-        s->codeLen = s->bitstreamLength = RBSPtoSODB (s->streamBuffer, nalu->len-1);
+        s->codeLen = s->bitStreamLen = RBSPtoSODB (s->streamBuffer, nalu->len-1);
 
         readSliceHeader (slice);
         useParameterSet (slice);
@@ -914,9 +914,9 @@ static int readNextSlice (sSlice* slice) {
         else
           slice->mbIndex = slice->startMbNum;
 
-        // need to read the slice ID, which depends on the value of redundantPicCountPresentFlag
+        // need to read the slice ID, which depends on the value of redundantPicCountPresent
         int slice_id_a = readUeV ("NALU: DP_A slice_id", s);
-        if (decoder->activePPS->entropyCodingModeFlag)
+        if (decoder->activePPS->entropyCodingMode)
           error ("dataPartition with CABAC not allowed");
 
         if (!readNextNalu (decoder, nalu))
@@ -925,10 +925,10 @@ static int readNextSlice (sSlice* slice) {
         if (NALU_TYPE_DPB == nalu->unitType) {
           //{{{  got nalu dataPartitionB
           s = slice->dps[1].s;
-          s->eiFlag = 0;
-          s->frameBitOffset = s->readLen = 0;
+          s->errorFlag = 0;
+          s->bitStreamOffset = s->readLen = 0;
           memcpy (s->streamBuffer, &nalu->buf[1], nalu->len-1);
-          s->codeLen = s->bitstreamLength = RBSPtoSODB (s->streamBuffer, nalu->len-1);
+          s->codeLen = s->bitStreamLen = RBSPtoSODB (s->streamBuffer, nalu->len-1);
           int slice_id_b = readUeV ("NALU dataPartitionB sliceId", s);
           slice->noDataPartitionB = 0;
 
@@ -938,7 +938,7 @@ static int readNextSlice (sSlice* slice) {
             slice->noDataPartitionC = 1;
             }
           else {
-            if (decoder->activePPS->redundantPicCountPresentFlag)
+            if (decoder->activePPS->redundantPicCountPresent)
               readUeV ("NALU dataPartitionB redundantPicCount", s);
 
             // we're finished with dataPartitionB, so let's continue with next dataPartition
@@ -953,10 +953,10 @@ static int readNextSlice (sSlice* slice) {
         if (NALU_TYPE_DPC == nalu->unitType) {
           //{{{  got nalu dataPartitionC
           s = slice->dps[2].s;
-          s->eiFlag = 0;
-          s->frameBitOffset = s->readLen = 0;
+          s->errorFlag = 0;
+          s->bitStreamOffset = s->readLen = 0;
           memcpy (s->streamBuffer, &nalu->buf[1], nalu->len-1);
-          s->codeLen = s->bitstreamLength = RBSPtoSODB (s->streamBuffer, nalu->len-1);
+          s->codeLen = s->bitStreamLen = RBSPtoSODB (s->streamBuffer, nalu->len-1);
 
           slice->noDataPartitionC = 0;
           int slice_id_c = readUeV ("NALU: DP_C slice_id", s);
@@ -965,7 +965,7 @@ static int readNextSlice (sSlice* slice) {
             slice->noDataPartitionC = 1;
             }
 
-          if (decoder->activePPS->redundantPicCountPresentFlag)
+          if (decoder->activePPS->redundantPicCountPresent)
             readUeV ("NALU:SLICE_C redudand_pic_cnt", s);
           }
           //}}}
@@ -1127,11 +1127,11 @@ void endDecodeFrame (sDecoder* decoder) {
     ercStartSegment (0, ercSegment, 0 , decoder->ercErrorVar);
     // generate the segments according to the macroblock map
     for (i = 1; i < (int)(decoder->picture->picSizeInMbs); ++i) {
-      if (decoder->mbData[i].eiFlag != decoder->mbData[i-1].eiFlag) {
+      if (decoder->mbData[i].errorFlag != decoder->mbData[i-1].errorFlag) {
         ercStopSegment (i-1, ercSegment, 0, decoder->ercErrorVar); //! stop current segment
 
         // mark current segment as lost or OK
-        if(decoder->mbData[i-1].eiFlag)
+        if(decoder->mbData[i-1].errorFlag)
           ercMarksegmentLost (decoder->picture->sizeX, decoder->ercErrorVar);
         else
           ercMarksegmentOK (decoder->picture->sizeX, decoder->ercErrorVar);
@@ -1143,7 +1143,7 @@ void endDecodeFrame (sDecoder* decoder) {
 
     // mark end of the last segment
     ercStopSegment (decoder->picture->picSizeInMbs-1, ercSegment, 0, decoder->ercErrorVar);
-    if (decoder->mbData[i-1].eiFlag)
+    if (decoder->mbData[i-1].errorFlag)
       ercMarksegmentLost (decoder->picture->sizeX, decoder->ercErrorVar);
     else
       ercMarksegmentOK (decoder->picture->sizeX, decoder->ercErrorVar);
@@ -1400,7 +1400,7 @@ int decodeFrame (sDecoder* decoder) {
     curHeader = slice->curHeader;
     initSlice (decoder, slice);
 
-    if (slice->activePPS->entropyCodingModeFlag) {
+    if (slice->activePPS->entropyCodingMode) {
       //{{{  cabac
       initContexts (slice);
       cabacNewSlice (slice);
@@ -1410,7 +1410,7 @@ int decodeFrame (sDecoder* decoder) {
         (slice->activePPS->weightedPredFlag && (slice->sliceType != I_SLICE)))
       fillWpParam (slice);
 
-    if (((curHeader == SOP) || (curHeader == SOS)) && !slice->eiFlag)
+    if (((curHeader == SOP) || (curHeader == SOS)) && !slice->errorFlag)
       decodeSlice (slice);
 
     decoder->ercMvPerMb += slice->ercMvPerMb;

@@ -222,7 +222,7 @@ void readCoef4x4cavlc (sMacroblock* mb, int block_type,
   se.type = dptype;
   const byte* dpMap = assignSE2dp[slice->datadpMode];
   sDataPartition* dp = &(slice->dps[dpMap[dptype]]);
-  sBitstream* s = dp->s;
+  sBitStream* s = dp->s;
 
   if (!cdc) {
     //{{{  luma or chroma AC
@@ -434,7 +434,7 @@ void readCoef4x4cavlc444 (sMacroblock* mb, int block_type,
   se.type = dptype;
   const byte* dpMap = assignSE2dp[slice->datadpMode];
   sDataPartition* dp = &(slice->dps[dpMap[dptype]]);
-  sBitstream* s = dp->s;
+  sBitStream* s = dp->s;
 
   if (!cdc) {
     //{{{  luma or chroma AC
@@ -868,7 +868,7 @@ static void read_CBP_and_coeffs_from_NAL_CAVLC_400 (sMacroblock* mb) {
           mb->dplFlag = 1;
 
         if( intra && slice->noDataPartitionB ) {
-          mb->eiFlag = 1;
+          mb->errorFlag = 1;
           mb->dplFlag = 1;
           }
 
@@ -888,7 +888,7 @@ static void read_CBP_and_coeffs_from_NAL_CAVLC_400 (sMacroblock* mb) {
     readDeltaQuant(&se, dp, mb, dpMap, SE_DELTA_QUANT_INTRA);
     if (slice->datadpMode) {
       if (slice->noDataPartitionB) {
-        mb->eiFlag  = 1;
+        mb->errorFlag  = 1;
         mb->dplFlag = 1;
       }
       checkDpNeighbours (mb);
@@ -1009,7 +1009,7 @@ static void read_CBP_and_coeffs_from_NAL_CAVLC_422 (sMacroblock* mb) {
           mb->dplFlag = 1;
 
         if( intra && slice->noDataPartitionB ) {
-          mb->eiFlag = 1;
+          mb->errorFlag = 1;
           mb->dplFlag = 1;
         }
 
@@ -1031,7 +1031,7 @@ static void read_CBP_and_coeffs_from_NAL_CAVLC_422 (sMacroblock* mb) {
 
     if (slice->datadpMode) {
       if (slice->noDataPartitionB) {
-        mb->eiFlag  = 1;
+        mb->errorFlag  = 1;
         mb->dplFlag = 1;
       }
       checkDpNeighbours (mb);
@@ -1273,7 +1273,7 @@ static void read_CBP_and_coeffs_from_NAL_CAVLC_444 (sMacroblock* mb) {
           mb->dplFlag = 1;
 
         if( intra && slice->noDataPartitionB ) {
-          mb->eiFlag = 1;
+          mb->errorFlag = 1;
           mb->dplFlag = 1;
         }
 
@@ -1292,7 +1292,7 @@ static void read_CBP_and_coeffs_from_NAL_CAVLC_444 (sMacroblock* mb) {
     readDeltaQuant(&se, dp, mb, dpMap, SE_DELTA_QUANT_INTRA);
     if (slice->datadpMode) {
       if (slice->noDataPartitionB) {
-        mb->eiFlag  = 1;
+        mb->errorFlag  = 1;
         mb->dplFlag = 1;
         }
       checkDpNeighbours (mb);
@@ -1454,7 +1454,7 @@ static void read_CBP_and_coeffs_from_NAL_CAVLC_420 (sMacroblock* mb) {
           mb->dplFlag = 1;
 
         if (intra && slice->noDataPartitionB) {
-          mb->eiFlag = 1;
+          mb->errorFlag = 1;
           mb->dplFlag = 1;
         }
 
@@ -1473,7 +1473,7 @@ static void read_CBP_and_coeffs_from_NAL_CAVLC_420 (sMacroblock* mb) {
 
     if (slice->datadpMode) {
       if (slice->noDataPartitionB) {
-        mb->eiFlag  = 1;
+        mb->errorFlag  = 1;
         mb->dplFlag = 1;
         }
       checkDpNeighbours (mb);

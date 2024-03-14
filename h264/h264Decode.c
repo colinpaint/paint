@@ -246,9 +246,9 @@ sDataPartition* allocDataPartitions (int n) {
   for (int i = 0; i < n; ++i) {
     // loop over all dataPartitions
     sDataPartition* dataPartition = &(dataPartitions[i]);
-    dataPartition->s = (sBitstream*)calloc(1, sizeof(sBitstream));
+    dataPartition->s = (sBitStream*)calloc(1, sizeof(sBitStream));
     if (dataPartition->s == NULL)
-      error ("allocDataPartitions: Memory allocation for sBitstream failed");
+      error ("allocDataPartitions: Memory allocation for sBitStream failed");
 
     dataPartition->s->streamBuffer = (byte*)calloc(MAX_CODED_FRAME_SIZE, sizeof(byte));
     if (dataPartition->s->streamBuffer == NULL)

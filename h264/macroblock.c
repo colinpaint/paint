@@ -416,7 +416,7 @@ static void prepareListforRefIdx (sMacroblock* mb, sSyntaxElement* se,
                                   sDataPartition *dp, int numRefIndexActive, int refidx_present) {
 
   if (numRefIndexActive > 1) {
-    if (mb->decoder->activePPS->entropyCodingModeFlag == (Boolean) CAVLC || dp->s->eiFlag) {
+    if (mb->decoder->activePPS->entropyCodingMode == (Boolean) CAVLC || dp->s->errorFlag) {
       se->mapping = linfo_ue;
       if (refidx_present)
         mb->readRefPictureIndex = (numRefIndexActive == 2) ? readRefPictureIdxFLC : readRefPictureIdxVLC;
@@ -469,7 +469,7 @@ void readDeltaQuant (sSyntaxElement* se, sDataPartition *dp, sMacroblock* mb, co
 
   dp = &(slice->dps[dpMap[se->type]]);
 
-  if (decoder->activePPS->entropyCodingModeFlag == (Boolean)CAVLC || dp->s->eiFlag)
+  if (decoder->activePPS->entropyCodingMode == (Boolean)CAVLC || dp->s->errorFlag)
     se->mapping = linfo_se;
   else
     se->reading= read_dQuant_CABAC;
@@ -815,7 +815,7 @@ Boolean exitMacroblock (sSlice* slice, int eos_bit) {
       return FALSE;
     if (slice->sliceType == I_SLICE  ||
         slice->sliceType == SI_SLICE ||
-        decoder->activePPS->entropyCodingModeFlag == (Boolean)CABAC)
+        decoder->activePPS->entropyCodingMode == (Boolean)CABAC)
       return TRUE;
     if (slice->codCount <= 0)
       return TRUE;
@@ -1044,7 +1044,7 @@ static void readMotionInfoP (sMacroblock* mb){
   //=====  READ MOTION VECTORS =====
   se.type = SE_MVD;
   dp = &(slice->dps[dpMap[SE_MVD]]);
-  if (decoder->activePPS->entropyCodingModeFlag == (Boolean) CAVLC || dp->s->eiFlag)
+  if (decoder->activePPS->entropyCodingMode == (Boolean) CAVLC || dp->s->errorFlag)
     se.mapping = linfo_se;
   else
     se.reading = slice->mbAffFrameFlag ? read_mvd_CABAC_mbaff : read_MVD_CABAC;
@@ -1102,7 +1102,7 @@ static void readMotionInfoB (sMacroblock* mb) {
   //=====  READ MOTION VECTORS =====
   se.type = SE_MVD;
   dp = &(slice->dps[dpMap[SE_MVD]]);
-  if (decoder->activePPS->entropyCodingModeFlag == (Boolean)CAVLC || dp->s->eiFlag)
+  if (decoder->activePPS->entropyCodingMode == (Boolean)CAVLC || dp->s->errorFlag)
     se.mapping = linfo_se;
   else
     se.reading = slice->mbAffFrameFlag ? read_mvd_CABAC_mbaff : read_MVD_CABAC;
@@ -1190,7 +1190,7 @@ void setSliceMethods (sSlice* slice) {
   else
     slice->readCoef4x4cavlc = readCoef4x4cavlc;
 
-  switch (slice->decoder->activePPS->entropyCodingModeFlag) {
+  switch (slice->decoder->activePPS->entropyCodingMode) {
     case CABAC:
       set_read_CBP_and_coeffs_cabac (slice);
       break;

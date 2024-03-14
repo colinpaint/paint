@@ -210,7 +210,7 @@ typedef struct {
 
   unsigned int ppsId;                      // ue(v)
   unsigned int spsId;                      // ue(v)
-  Boolean   entropyCodingModeFlag;         // u(1)
+  Boolean   entropyCodingMode;         // u(1)
   Boolean   transform8x8modeFlag;          // u(1)
 
   Boolean   picScalingMatrixPresentFlag;   // u(1)
@@ -221,7 +221,7 @@ typedef struct {
   Boolean   useDefaultScalingMatrix8x8Flag[6];
 
   // if( pocType < 2 )  in the sequence parameter set
-  Boolean      botFieldPicOrderFramePresentFlag; // u(1)
+  Boolean      botFieldPicOrderFramePresent; // u(1)
   unsigned int numSliceGroupsMinus1;            // ue(v)
 
   unsigned int sliceGroupMapType;               // ue(v)
@@ -249,9 +249,9 @@ typedef struct {
   int       crQpIndexOffset;                    // se(v)
   int       secondChromaQpIndexOffset;          // se(v)
 
-  Boolean   deblockingFilterControlPresentFlag; // u(1)
+  Boolean   deblockFilterControlPresent; // u(1)
   Boolean   constrainedIntraPredFlag;           // u(1)
-  Boolean   redundantPicCountPresentFlag;       // u(1)
+  Boolean   redundantPicCountPresent;       // u(1)
   Boolean   vuiPicParamFlag;                    // u(1)
   } sPPS;
 //}}}
@@ -266,53 +266,53 @@ typedef struct {
   int*         Dcodestrm_len;
   } sDecodingEnv;
 //}}}
-//{{{  sBitstream
-typedef struct Bitstream {
+//{{{  sBitStream
+typedef struct BitStream {
   // CABAC Decoding
-  int readLen;          // actual position in the codebuffer, CABAC only
-  int codeLen;          // overall codebuffer length, CABAC only
+  int   readLen;         // actual position in the codebuffer, CABAC only
+  int   codeLen;         // overall codebuffer length, CABAC only
 
   // CAVLC Decoding
-  int frameBitOffset;   // actual position in the codebuffer, bit-oriented, CAVLC only
-  int bitstreamLength;  // over codebuffer lnegth, byte oriented, CAVLC only
+  int   bitStreamOffset; // actual position in the codebuffer, bit-oriented, CAVLC only
+  int   bitStreamLen;    // over codebuffer lnegth, byte oriented, CAVLC only
 
   // ErrorConcealment
-  byte* streamBuffer;   // actual codebuffer for read bytes
-  int eiFlag;           // error indication, 0: no error, else unspecified error
-  } sBitstream;
+  byte* streamBuffer;    // actual codebuffer for read bytes
+  int   errorFlag;       // error indication, 0: no error, else unspecified error
+  } sBitStream;
 //}}}
 //{{{  sSyntaxElement
 typedef struct SyntaxElement {
-  int           type;                  //!< type of syntax element for data part.
-  int           value1;                //!< numerical value of syntax element
-  int           value2;                //!< for blocked symbols, e.g. run/level
-  int           len;                   //!< length of code
-  int           inf;                   //!< info part of CAVLC code
-  unsigned int  bitpattern;            //!< CAVLC bitpattern
-  int           context;               //!< CABAC context
-  int           k;                     //!< CABAC context for coeff_count,uv
+  int           type;        // type of syntax element for data part.
+  int           value1;      // numerical value of syntax element
+  int           value2;      // for blocked symbols, e.g. run/level
+  int           len;         // length of code
+  int           inf;         // info part of CAVLC code
+  unsigned int  bitpattern;  // CAVLC bitpattern
+  int           context;     // CABAC context
+  int           k;           // CABAC context for coeff_count,uv
 
-  // for mapping of CAVLC to se
+  // CAVLC mapping to syntaxElement
   void (*mapping) (int, int, int*, int*);
 
-  // used for CABAC: refers to actual coding method of each individual syntax element type
+  // CABAC actual coding method of each individual syntax element type
   void (*reading) (struct Macroblock*, struct SyntaxElement*, sDecodingEnv*);
   } sSyntaxElement;
 //}}}
 //{{{  sDataPartition
-typedef struct Datadp {
-  sBitstream*          s;
+typedef struct DataPartition {
+  sBitStream*  s;
   sDecodingEnv deCabac;
-  int (*readSyntaxElement) (struct Macroblock*, struct SyntaxElement*, struct Datadp*);
+  int (*readSyntaxElement) (struct Macroblock*, struct SyntaxElement*, struct DataPartition*);
   } sDataPartition;
 //}}}
 
 //{{{  sBiContextType
 //! struct for context management
 typedef struct {
-  uint16        state;  // index into state-table CP
-  unsigned char MPS;    // Least Probable Symbol 0/1 CP
-  unsigned char dummy;  // for alignment
+  uint16        state; // index into state-table CP
+  unsigned char MPS;   // least probable symbol 0/1 CP
+  unsigned char dummy; // for alignment
   } sBiContextType;
 //}}}
 //{{{  sMotionInfoContexts
@@ -424,7 +424,7 @@ typedef struct Macroblock {
   int     DeblockCall;
 
   short   sliceNum;
-  char    eiFlag;            // error indicator flag that enables conceal
+  char    errorFlag;            // error indicator flag that enables conceal
   char    dplFlag;           // error indicator flag that signals a missing data dp
   short   deltaQuant;        // for rate control
   short   listOffset;
@@ -468,7 +468,7 @@ typedef struct Macroblock {
   void (*iTrans8x8) (struct Macroblock*, eColorPlane, int, int);
   void (*GetMVPredictor) (struct Macroblock*, sPixelPos*, sMotionVec*, short, struct PicMotion**, int, int, int, int, int);
   int  (*readStoreCBPblockBit) (struct Macroblock*, sDecodingEnv*, int);
-  char (*readRefPictureIndex) (struct Macroblock*, struct SyntaxElement*, struct Datadp*, char, int);
+  char (*readRefPictureIndex) (struct Macroblock*, struct SyntaxElement*, struct DataPartition*, char, int);
   void (*readCompCoef4x4cabac) (struct Macroblock*, struct SyntaxElement*, eColorPlane, int(*)[4], int, int);
   void (*readCompCoef8x8cabac) (struct Macroblock*, struct SyntaxElement*, eColorPlane);
   void (*readCompCoef4x4cavlc) (struct Macroblock*, eColorPlane, int(*)[4], int, int, byte**);
@@ -583,7 +583,7 @@ typedef struct Slice {
   int           directSpatialMvPredFlag; // Indicator for direct mode type (1 for Spatial, 0 for Temporal)
   int           numRefIndexActive[2];    // number of available list references
 
-  int           eiFlag;       // 0 if the dps[0] contains valid information
+  int           errorFlag;       // 0 if the dps[0] contains valid information
   int           qp;
   int           sliceQpDelta;
   int           qs;
@@ -594,7 +594,7 @@ typedef struct Slice {
   unsigned int  fieldPicFlag;
   byte          botFieldFlag;
   ePicStructure structure;   // Identify picture structure type
-  int           startMbNum;  // MUST be set by NAL even in case of eiFlag == 1
+  int           startMbNum;  // MUST be set by NAL even in case of errorFlag == 1
   int           endMbNumPlus1;
   int           maxDataPartitions;
   int           datadpMode;       // data dping mode

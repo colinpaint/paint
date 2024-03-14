@@ -40,7 +40,7 @@ static void read_comp_coeff_4x4_smb_CABAC (sMacroblock* mb, sSyntaxElement* se, 
         */
         se->type = (mb->isIntraBlock ? SE_LUM_DC_INTRA : SE_LUM_DC_INTER);
         dp = &(slice->dps[dpMap[se->type]]);
-        if (dp->s->eiFlag)
+        if (dp->s->errorFlag)
           se->mapping = linfo_levrun_inter;
         else
           se->reading = readRunLevel_CABAC;
@@ -68,7 +68,7 @@ static void read_comp_coeff_4x4_smb_CABAC (sMacroblock* mb, sSyntaxElement* se, 
         se->type = (mb->isIntraBlock ? SE_LUM_AC_INTRA : SE_LUM_AC_INTER);
         dp = &(slice->dps[dpMap[se->type]]);
 
-        if (dp->s->eiFlag)
+        if (dp->s->errorFlag)
           se->mapping = linfo_levrun_inter;
         else
           se->reading = readRunLevel_CABAC;
@@ -427,7 +427,7 @@ static void read_CBP_and_coeffs_from_NAL_CABAC_420 (sMacroblock* mb) {
 
     dp = &(slice->dps[dpMap[se.type]]);
 
-    if (dp->s->eiFlag) {
+    if (dp->s->errorFlag) {
       se.mapping = (mb->mbType == I4MB || mb->mbType == SI4MB || mb->mbType == I8MB)
         ? slice->linfoCbpIntra
         : slice->linfoCbpInter;
@@ -453,7 +453,7 @@ static void read_CBP_and_coeffs_from_NAL_CABAC_420 (sMacroblock* mb) {
       se.reading = readMB_transform_size_flag_CABAC;
 
       // read CAVLC transform_size_8x8_flag
-      if (dp->s->eiFlag) {
+      if (dp->s->errorFlag) {
         se.len = 1;
         readsSyntaxElement_FLC(&se, dp->s);
       }
@@ -473,7 +473,7 @@ static void read_CBP_and_coeffs_from_NAL_CABAC_420 (sMacroblock* mb) {
           mb->dplFlag = 1;
 
         if( intra && slice->noDataPartitionB ) {
-          mb->eiFlag = 1;
+          mb->errorFlag = 1;
           mb->dplFlag = 1;
         }
 
@@ -492,7 +492,7 @@ static void read_CBP_and_coeffs_from_NAL_CABAC_420 (sMacroblock* mb) {
     readDeltaQuant(&se, dp, mb, dpMap, SE_DELTA_QUANT_INTRA);
     if (slice->datadpMode) {
       if (slice->noDataPartitionB) {
-        mb->eiFlag  = 1;
+        mb->errorFlag  = 1;
         mb->dplFlag = 1;
       }
       checkDpNeighbours (mb);
@@ -509,7 +509,7 @@ static void read_CBP_and_coeffs_from_NAL_CABAC_420 (sMacroblock* mb) {
       dp = &(slice->dps[dpMap[se.type]]);
       se.context      = LUMA_16DC;
       se.type         = SE_LUM_DC_INTRA;
-      if (dp->s->eiFlag)
+      if (dp->s->errorFlag)
         se.mapping = linfo_levrun_inter;
       else
         se.reading = readRunLevel_CABAC;
@@ -576,7 +576,7 @@ static void read_CBP_and_coeffs_from_NAL_CABAC_420 (sMacroblock* mb) {
       se.type = (intra ? SE_CHR_DC_INTRA : SE_CHR_DC_INTER);
       dp = &(slice->dps[dpMap[se.type]]);
 
-      if (dp->s->eiFlag)
+      if (dp->s->errorFlag)
         se.mapping = linfo_levrun_c2x2;
       else
         se.reading = readRunLevel_CABAC;
@@ -629,7 +629,7 @@ static void read_CBP_and_coeffs_from_NAL_CABAC_420 (sMacroblock* mb) {
     se.context      = CHROMA_AC;
     se.type         = (mb->isIntraBlock ? SE_CHR_AC_INTRA : SE_CHR_AC_INTER);
     dp = &(slice->dps[dpMap[se.type]]);
-    if (dp->s->eiFlag)
+    if (dp->s->errorFlag)
       se.mapping = linfo_levrun_inter;
     else
       se.reading = readRunLevel_CABAC;
@@ -739,7 +739,7 @@ static void read_CBP_and_coeffs_from_NAL_CABAC_400 (sMacroblock* mb)
 
     dp = &(slice->dps[dpMap[se.type]]);
 
-    if (dp->s->eiFlag) {
+    if (dp->s->errorFlag) {
       se.mapping = (mb->mbType == I4MB || mb->mbType == SI4MB || mb->mbType == I8MB)
         ? slice->linfoCbpIntra
         : slice->linfoCbpInter;
@@ -766,7 +766,7 @@ static void read_CBP_and_coeffs_from_NAL_CABAC_400 (sMacroblock* mb)
       se.reading = readMB_transform_size_flag_CABAC;
 
       // read CAVLC transform_size_8x8_flag
-      if (dp->s->eiFlag) {
+      if (dp->s->errorFlag) {
         se.len = 1;
         readsSyntaxElement_FLC(&se, dp->s);
       }
@@ -787,7 +787,7 @@ static void read_CBP_and_coeffs_from_NAL_CABAC_400 (sMacroblock* mb)
           mb->dplFlag = 1;
 
         if( intra && slice->noDataPartitionB )  {
-          mb->eiFlag = 1;
+          mb->errorFlag = 1;
           mb->dplFlag = 1;
         }
 
@@ -807,7 +807,7 @@ static void read_CBP_and_coeffs_from_NAL_CABAC_400 (sMacroblock* mb)
 
     if (slice->datadpMode) {
       if (slice->noDataPartitionB) {
-        mb->eiFlag  = 1;
+        mb->errorFlag  = 1;
         mb->dplFlag = 1;
       }
       checkDpNeighbours (mb);
@@ -825,7 +825,7 @@ static void read_CBP_and_coeffs_from_NAL_CABAC_400 (sMacroblock* mb)
         se.context      = LUMA_16DC;
         se.type         = SE_LUM_DC_INTRA;
 
-        if (dp->s->eiFlag)
+        if (dp->s->errorFlag)
           se.mapping = linfo_levrun_inter;
         else
           se.reading = readRunLevel_CABAC;
@@ -920,7 +920,7 @@ static void read_CBP_and_coeffs_from_NAL_CABAC_444 (sMacroblock* mb)
 
     dp = &(slice->dps[dpMap[se.type]]);
 
-    if (dp->s->eiFlag) {
+    if (dp->s->errorFlag) {
       se.mapping = (mb->mbType == I4MB || mb->mbType == SI4MB || mb->mbType == I8MB)
         ? slice->linfoCbpIntra
         : slice->linfoCbpInter;
@@ -948,7 +948,7 @@ static void read_CBP_and_coeffs_from_NAL_CABAC_444 (sMacroblock* mb)
       se.reading = readMB_transform_size_flag_CABAC;
 
       // read CAVLC transform_size_8x8_flag
-      if (dp->s->eiFlag) {
+      if (dp->s->errorFlag) {
         se.len = 1;
         readsSyntaxElement_FLC(&se, dp->s);
       }
@@ -969,7 +969,7 @@ static void read_CBP_and_coeffs_from_NAL_CABAC_444 (sMacroblock* mb)
           mb->dplFlag = 1;
 
         if( intra && slice->noDataPartitionB ) {
-          mb->eiFlag = 1;
+          mb->errorFlag = 1;
           mb->dplFlag = 1;
         }
 
@@ -990,7 +990,7 @@ static void read_CBP_and_coeffs_from_NAL_CABAC_444 (sMacroblock* mb)
 
     if (slice->datadpMode) {
       if (slice->noDataPartitionB) {
-        mb->eiFlag  = 1;
+        mb->errorFlag  = 1;
         mb->dplFlag = 1;
       }
       checkDpNeighbours (mb);
@@ -1008,7 +1008,7 @@ static void read_CBP_and_coeffs_from_NAL_CABAC_444 (sMacroblock* mb)
         se.context      = LUMA_16DC;
         se.type         = SE_LUM_DC_INTRA;
 
-        if (dp->s->eiFlag)
+        if (dp->s->errorFlag)
           se.mapping = linfo_levrun_inter;
         else
           se.reading = readRunLevel_CABAC;
@@ -1079,7 +1079,7 @@ static void read_CBP_and_coeffs_from_NAL_CABAC_444 (sMacroblock* mb)
         else
           se.context = (uv==0) ? CB_16DC : CR_16DC;
 
-        if (dp->s->eiFlag)
+        if (dp->s->errorFlag)
           se.mapping = linfo_levrun_inter;
         else
           se.reading = readRunLevel_CABAC;
@@ -1184,7 +1184,7 @@ static void read_CBP_and_coeffs_from_NAL_CABAC_422 (sMacroblock* mb)
 
     dp = &(slice->dps[dpMap[se.type]]);
 
-    if (dp->s->eiFlag) {
+    if (dp->s->errorFlag) {
       se.mapping = (mb->mbType == I4MB || mb->mbType == SI4MB || mb->mbType == I8MB)
         ? slice->linfoCbpIntra
         : slice->linfoCbpInter;
@@ -1211,7 +1211,7 @@ static void read_CBP_and_coeffs_from_NAL_CABAC_422 (sMacroblock* mb)
       se.reading = readMB_transform_size_flag_CABAC;
 
       // read CAVLC transform_size_8x8_flag
-      if (dp->s->eiFlag) {
+      if (dp->s->errorFlag) {
         se.len = 1;
         readsSyntaxElement_FLC(&se, dp->s);
       }
@@ -1232,7 +1232,7 @@ static void read_CBP_and_coeffs_from_NAL_CABAC_422 (sMacroblock* mb)
           mb->dplFlag = 1;
 
         if( intra && slice->noDataPartitionB ) {
-          mb->eiFlag = 1;
+          mb->errorFlag = 1;
           mb->dplFlag = 1;
         }
 
@@ -1253,7 +1253,7 @@ static void read_CBP_and_coeffs_from_NAL_CABAC_422 (sMacroblock* mb)
 
     if (slice->datadpMode) {
       if (slice->noDataPartitionB) {
-        mb->eiFlag  = 1;
+        mb->errorFlag  = 1;
         mb->dplFlag = 1;
       }
       checkDpNeighbours (mb);
@@ -1271,7 +1271,7 @@ static void read_CBP_and_coeffs_from_NAL_CABAC_422 (sMacroblock* mb)
         se.context      = LUMA_16DC;
         se.type         = SE_LUM_DC_INTRA;
 
-        if (dp->s->eiFlag)
+        if (dp->s->errorFlag)
           se.mapping = linfo_levrun_inter;
         else
           se.reading = readRunLevel_CABAC;
@@ -1359,7 +1359,7 @@ static void read_CBP_and_coeffs_from_NAL_CABAC_422 (sMacroblock* mb)
 
             dp = &(slice->dps[dpMap[se.type]]);
 
-            if (dp->s->eiFlag)
+            if (dp->s->errorFlag)
               se.mapping = linfo_levrun_c2x2;
             else
               se.reading = readRunLevel_CABAC;
@@ -1444,7 +1444,7 @@ static void read_CBP_and_coeffs_from_NAL_CABAC_422 (sMacroblock* mb)
 
       dp = &(slice->dps[dpMap[se.type]]);
 
-      if (dp->s->eiFlag)
+      if (dp->s->errorFlag)
         se.mapping = linfo_levrun_inter;
       else
         se.reading = readRunLevel_CABAC;

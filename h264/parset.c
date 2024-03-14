@@ -286,7 +286,7 @@ static void freeSPS (sSPS* sps) {
 
 //{{{
 // syntax for scaling list matrix values
-static void scalingList (int* scalingList, int scalingListSize, Boolean* useDefaultScalingMatrix, sBitstream* s) {
+static void scalingList (int* scalingList, int scalingListSize, Boolean* useDefaultScalingMatrix, sBitStream* s) {
 
   int lastScale = 8;
   int nextScale = 8;
@@ -311,7 +311,7 @@ static void initVUI (sSPS* sps) {
 //{{{
 static int readHRD (sDataPartition* dp, sHRD* hrd) {
 
-  sBitstream *s = dp->s;
+  sBitStream *s = dp->s;
   hrd->cpb_cnt_minus1 = readUeV ("VUI cpb_cnt_minus1", s);
   hrd->bit_rate_scale = readUv (4, "VUI bit_rate_scale", s);
   hrd->cpb_size_scale = readUv (4, "VUI cpb_size_scale", s);
@@ -335,7 +335,7 @@ static int readHRD (sDataPartition* dp, sHRD* hrd) {
 //{{{
 static int readVUI (sDataPartition* p, sSPS* sps) {
 
-  sBitstream* s = p->s;
+  sBitStream* s = p->s;
   if (sps->vui_parameters_present_flag) {
     sps->vui_seq_parameters.aspect_ratio_info_present_flag = readU1 ("VUI aspect_ratio_info_present_flag", s);
     if (sps->vui_seq_parameters.aspect_ratio_info_present_flag) {
@@ -467,7 +467,7 @@ static int isSpsEqual (sSPS* sps1, sSPS* sps2) {
 //{{{
 static void interpretSPS (sDecoder* decoder, sDataPartition* dp, sSPS* sps) {
 
-  sBitstream* s = dp->s;
+  sBitStream* s = dp->s;
   sps->profileIdc = readUv (8, "SPS profileIdc", s);
   if ((sps->profileIdc != BASELINE) && (sps->profileIdc != MAIN) && (sps->profileIdc != EXTENDED) &&
       (sps->profileIdc != FREXT_HP) &&
@@ -592,10 +592,10 @@ void makeSPSavailable (sDecoder* decoder, int id, sSPS* sps) {
 void processSPS (sDecoder* decoder, sNalu* nalu) {
 
   sDataPartition* dataPartition = allocDataPartitions (1);
-  dataPartition->s->eiFlag = 0;
-  dataPartition->s->readLen = dataPartition->s->frameBitOffset = 0;
+  dataPartition->s->errorFlag = 0;
+  dataPartition->s->readLen = dataPartition->s->bitStreamOffset = 0;
   memcpy (dataPartition->s->streamBuffer, &nalu->buf[1], nalu->len-1);
-  dataPartition->s->codeLen = dataPartition->s->bitstreamLength = RBSPtoSODB (dataPartition->s->streamBuffer, nalu->len-1);
+  dataPartition->s->codeLen = dataPartition->s->bitStreamLen = RBSPtoSODB (dataPartition->s->streamBuffer, nalu->len-1);
 
   sSPS* sps = allocSPS();
   interpretSPS (decoder, dataPartition, sps);
@@ -683,8 +683,8 @@ static int isPpsEqual (sPPS* pps1, sPPS* pps2) {
   int equal = 1;
   equal &= (pps1->ppsId == pps2->ppsId);
   equal &= (pps1->spsId == pps2->spsId);
-  equal &= (pps1->entropyCodingModeFlag == pps2->entropyCodingModeFlag);
-  equal &= (pps1->botFieldPicOrderFramePresentFlag == pps2->botFieldPicOrderFramePresentFlag);
+  equal &= (pps1->entropyCodingMode == pps2->entropyCodingMode);
+  equal &= (pps1->botFieldPicOrderFramePresent == pps2->botFieldPicOrderFramePresent);
   equal &= (pps1->numSliceGroupsMinus1 == pps2->numSliceGroupsMinus1);
   if (!equal)
     return equal;
@@ -725,9 +725,9 @@ static int isPpsEqual (sPPS* pps1, sPPS* pps2) {
   equal &= (pps1->picInitQpMinus26 == pps2->picInitQpMinus26);
   equal &= (pps1->picInitQsMinus26 == pps2->picInitQsMinus26);
   equal &= (pps1->chromaQpIndexOffset == pps2->chromaQpIndexOffset);
-  equal &= (pps1->deblockingFilterControlPresentFlag == pps2->deblockingFilterControlPresentFlag);
+  equal &= (pps1->deblockFilterControlPresent == pps2->deblockFilterControlPresent);
   equal &= (pps1->constrainedIntraPredFlag == pps2->constrainedIntraPredFlag);
-  equal &= (pps1->redundantPicCountPresentFlag == pps2->redundantPicCountPresentFlag);
+  equal &= (pps1->redundantPicCountPresent == pps2->redundantPicCountPresent);
   if (!equal)
     return equal;
 
@@ -758,17 +758,17 @@ static void interpretPPS (sDecoder* decoder, sDataPartition* dp, sPPS* pps) {
   unsigned n_ScalingList;
   int chromaFormatIdc;
 
-  sBitstream* s = dp->s;
+  sBitStream* s = dp->s;
   pps->ppsId = readUeV ("PPS ppsId", s);
   pps->spsId = readUeV ("PPS spsId", s);
-  pps->entropyCodingModeFlag = readU1 ("PPS entropyCodingModeFlag", s);
+  pps->entropyCodingMode = readU1 ("PPS entropyCodingMode", s);
 
   //! Note: as per JVT-F078 the following bit is unconditional.  If F078 is not accepted, then
   //! one has to fetch the correct SPS to check whether the bit is present (hopefully there is
   //! no consistency problem :-(
   //! The current encoder code handles this in the same way.  When you change this, don't forget
   //! the encoder!  StW, 12/8/02
-  pps->botFieldPicOrderFramePresentFlag = readU1 ("PPS botFieldPicOrderFramePresentFlag", s);
+  pps->botFieldPicOrderFramePresent = readU1 ("PPS botFieldPicOrderFramePresent", s);
   pps->numSliceGroupsMinus1 = readUeV ("PPS numSliceGroupsMinus1", s);
 
   if (pps->numSliceGroupsMinus1 > 0) {
@@ -817,11 +817,11 @@ static void interpretPPS (sDecoder* decoder, sDataPartition* dp, sPPS* pps) {
   pps->picInitQpMinus26 = readSeV ("PPS picInitQpMinus26", s);
   pps->picInitQsMinus26 = readSeV ("PPS picInitQsMinus26", s);
   pps->chromaQpIndexOffset = readSeV ("PPS chromaQpIndexOffset", s);
-  pps->deblockingFilterControlPresentFlag = readU1 ("PPS deblockingFilterControlPresentFlag" , s);
+  pps->deblockFilterControlPresent = readU1 ("PPS deblockFilterControlPresent" , s);
   pps->constrainedIntraPredFlag = readU1 ("PPS constrainedIntraPredFlag", s);
-  pps->redundantPicCountPresentFlag = readU1 ("PPS redundantPicCountPresentFlag", s);
+  pps->redundantPicCountPresent = readU1 ("PPS redundantPicCountPresent", s);
 
-  if (more_rbsp_data (s->streamBuffer, s->frameBitOffset,s->bitstreamLength)) {
+  if (more_rbsp_data (s->streamBuffer, s->bitStreamOffset,s->bitStreamLen)) {
     //{{{  more_data_in_rbsp
     // Fidelity Range Extensions Stuff
     pps->transform8x8modeFlag = readU1 ("PPS transform8x8modeFlag", s);
@@ -849,12 +849,12 @@ static void interpretPPS (sDecoder* decoder, sDataPartition* dp, sPPS* pps) {
   if (decoder->param.ppsDebug)
     printf ("-> ppsId:%d spsId:%d%s%s%s%s%s%s L:%d:%d\n",
             pps->ppsId, pps->spsId,
-            pps->entropyCodingModeFlag ? " cabac":" cavlc",
-            pps->deblockingFilterControlPresentFlag ? " deblock":"",
+            pps->entropyCodingMode ? " cabac":" cavlc",
+            pps->deblockFilterControlPresent ? " deblock":"",
             pps->numSliceGroupsMinus1 ? " numSliceGroups":"",
             pps->constrainedIntraPredFlag ? " constrainedIntraPred":"",
-            pps->redundantPicCountPresentFlag ? " redundant":"",
-            pps->botFieldPicOrderFramePresentFlag ? " botFieldPicOrderFrame":"",
+            pps->redundantPicCountPresent ? " redundant":"",
+            pps->botFieldPicOrderFramePresent ? " botFieldPicOrderFrame":"",
             pps->numRefIndexL0defaultActiveMinus1, pps->numRefIndexL1defaultActiveMinus1);
 
   pps->valid = TRUE;
@@ -877,12 +877,11 @@ void makePPSavailable (sDecoder* decoder, int id, sPPS* pps) {
 //{{{
 void processPPS (sDecoder* decoder, sNalu* nalu) {
 
-
   sDataPartition* dp = allocDataPartitions (1);
-  dp->s->eiFlag = 0;
-  dp->s->readLen = dp->s->frameBitOffset = 0;
+  dp->s->errorFlag = 0;
+  dp->s->readLen = dp->s->bitStreamOffset = 0;
   memcpy (dp->s->streamBuffer, &nalu->buf[1], nalu->len-1);
-  dp->s->codeLen = dp->s->bitstreamLength = RBSPtoSODB (dp->s->streamBuffer, nalu->len-1);
+  dp->s->codeLen = dp->s->bitStreamLen = RBSPtoSODB (dp->s->streamBuffer, nalu->len-1);
 
   sPPS* pps = allocPPS();
   interpretPPS (decoder, dp, pps);
@@ -945,7 +944,7 @@ void useParameterSet (sSlice* slice) {
   activatePPS (decoder, pps);
 
   // slice->datadpMode is set by read_new_slice (NALU first byte available there)
-  if (pps->entropyCodingModeFlag == (Boolean)CAVLC) {
+  if (pps->entropyCodingMode == (Boolean)CAVLC) {
     slice->nalStartcode = vlcStartcodeFollows;
     for (int i = 0; i < 3; i++)
       slice->dps[i].readSyntaxElement = readSyntaxElementVLC;

@@ -37,7 +37,7 @@ static void read_ipred_8x8_modes_mbaff (sMacroblock* mb) {
   se.type = SE_INTRAPREDMODE;
   sDataPartition* dp = &(slice->dps[dpMap[SE_INTRAPREDMODE]]);
 
-  if (!(decoder->activePPS->entropyCodingModeFlag == (Boolean)CAVLC || dp->s->eiFlag))
+  if (!(decoder->activePPS->entropyCodingMode == (Boolean)CAVLC || dp->s->errorFlag))
     se.reading = readIntraPredMode_CABAC;
 
   for (int b8 = 0; b8 < 4; ++b8)  {
@@ -48,7 +48,7 @@ static void read_ipred_8x8_modes_mbaff (sMacroblock* mb) {
     bx = ((b8 & 0x01) << 1);
     bi = mb->blockX + bx;
     // get from stream
-    if (decoder->activePPS->entropyCodingModeFlag == (Boolean)CAVLC || dp->s->eiFlag)
+    if (decoder->activePPS->entropyCodingMode == (Boolean)CAVLC || dp->s->errorFlag)
       readsSyntaxElement_Intra4x4PredictionMode (&se, dp->s);
     else {
       se.context = b8 << 2;
@@ -97,7 +97,7 @@ static void read_ipred_8x8_modes (sMacroblock* mb) {
   sSyntaxElement se;
   se.type = SE_INTRAPREDMODE;
   sDataPartition* dp = &(slice->dps[dpMap[SE_INTRAPREDMODE]]);
-  if (!(decoder->activePPS->entropyCodingModeFlag == (Boolean)CAVLC || dp->s->eiFlag))
+  if (!(decoder->activePPS->entropyCodingMode == (Boolean)CAVLC || dp->s->errorFlag))
     se.reading = readIntraPredMode_CABAC;
 
   get4x4Neighbour (mb, -1,  0, decoder->mbSize[IS_LUMA], &left_mb);
@@ -111,7 +111,7 @@ static void read_ipred_8x8_modes (sMacroblock* mb) {
     bi = mb->blockX + bx;
 
     //get from stream
-    if (decoder->activePPS->entropyCodingModeFlag == (Boolean)CAVLC || dp->s->eiFlag)
+    if (decoder->activePPS->entropyCodingMode == (Boolean)CAVLC || dp->s->errorFlag)
       readsSyntaxElement_Intra4x4PredictionMode (&se, dp->s);
     else {
       se.context = (b8 << 2);
@@ -161,7 +161,7 @@ static void read_ipred_4x4_modes_mbaff (sMacroblock* mb) {
 
   se.type = SE_INTRAPREDMODE;
   sDataPartition* dp = &(slice->dps[dpMap[SE_INTRAPREDMODE]]);
-  if (!(decoder->activePPS->entropyCodingModeFlag == (Boolean)CAVLC || dp->s->eiFlag))
+  if (!(decoder->activePPS->entropyCodingMode == (Boolean)CAVLC || dp->s->errorFlag))
     se.reading = readIntraPredMode_CABAC;
 
   for (b8 = 0; b8 < 4; ++b8) { //loop 8x8 blocks
@@ -173,7 +173,7 @@ static void read_ipred_4x4_modes_mbaff (sMacroblock* mb) {
         bx = ((b8 & 1) << 1) + i;
         bi = mb->blockX + bx;
         //get from stream
-        if (decoder->activePPS->entropyCodingModeFlag == (Boolean)CAVLC || dp->s->eiFlag)
+        if (decoder->activePPS->entropyCodingMode == (Boolean)CAVLC || dp->s->errorFlag)
           readsSyntaxElement_Intra4x4PredictionMode (&se, dp->s);
         else {
           se.context = (b8<<2) + (j<<1) +i;
@@ -230,7 +230,7 @@ static void read_ipred_4x4_modes (sMacroblock* mb) {
   sSyntaxElement se;
   se.type = SE_INTRAPREDMODE;
   sDataPartition* dp = &(slice->dps[dpMap[SE_INTRAPREDMODE]]);
-  if (!(decoder->activePPS->entropyCodingModeFlag == (Boolean)CAVLC || dp->s->eiFlag))
+  if (!(decoder->activePPS->entropyCodingMode == (Boolean)CAVLC || dp->s->errorFlag))
     se.reading = readIntraPredMode_CABAC;
 
   get4x4Neighbour (mb, -1,  0, decoder->mbSize[IS_LUMA], &left_mb);
@@ -247,7 +247,7 @@ static void read_ipred_4x4_modes (sMacroblock* mb) {
         int bi = mb->blockX + bx;
 
         // get from stream
-        if (decoder->activePPS->entropyCodingModeFlag == (Boolean)CAVLC || dp->s->eiFlag)
+        if (decoder->activePPS->entropyCodingMode == (Boolean)CAVLC || dp->s->errorFlag)
           readsSyntaxElement_Intra4x4PredictionMode (&se, dp->s);
         else {
           se.context=(b8<<2) + (j<<1) +i;
@@ -315,7 +315,7 @@ static void readIpredModes (sMacroblock* mb) {
     se.type = SE_INTRAPREDMODE;
     dp = &(slice->dps[dpMap[SE_INTRAPREDMODE]]);
 
-    if (decoder->activePPS->entropyCodingModeFlag == (Boolean)CAVLC || dp->s->eiFlag)
+    if (decoder->activePPS->entropyCodingMode == (Boolean)CAVLC || dp->s->errorFlag)
       se.mapping = linfo_ue;
     else
       se.reading = readCIPredMode_CABAC;
@@ -411,7 +411,7 @@ static void initIPCMdecoding (sSlice* slice) {
     }
 
   for (int i = 0; i < dpNum;++i) {
-    sBitstream* stream = slice->dps[i].s;
+    sBitStream* stream = slice->dps[i].s;
     int byteStartPosition = stream->readLen;
     arideco_start_decoding (&slice->dps[i].deCabac, stream->streamBuffer, byteStartPosition, &stream->readLen);
     }
@@ -424,15 +424,15 @@ static void readIPCMcoeffs (sSlice* slice, sDataPartition* dp) {
 
   //For CABAC, we don't need to read bits to let stream byte aligned
   //  because we have variable for integer bytes position
-  if (decoder->activePPS->entropyCodingModeFlag == (Boolean)CABAC) {
+  if (decoder->activePPS->entropyCodingMode == (Boolean)CABAC) {
     readIPCMcabac (slice, dp);
     initIPCMdecoding (slice);
     }
   else {
     // read bits to let stream byte aligned
     sSyntaxElement se;
-    if (((dp->s->frameBitOffset) & 0x07) != 0) {
-      se.len = (8 - ((dp->s->frameBitOffset) & 0x07));
+    if (((dp->s->bitStreamOffset) & 0x07) != 0) {
+      se.len = (8 - ((dp->s->bitStreamOffset) & 0x07));
       readsSyntaxElement_FLC (&se, dp->s);
       }
 
@@ -488,7 +488,7 @@ static void resetCoeffs (sMacroblock* mb) {
 
   sDecoder* decoder = mb->decoder;
 
-  if (decoder->activePPS->entropyCodingModeFlag == (Boolean)CAVLC)
+  if (decoder->activePPS->entropyCodingMode == (Boolean)CAVLC)
     memset (decoder->nzCoeff[mb->mbIndexX][0][0], 0, 3 * BLOCK_PIXELS * sizeof(byte));
   }
 //}}}
@@ -705,7 +705,7 @@ static void readIntra4x4macroblockCabac (sMacroblock* mb, const byte* dpMap) {
     se.reading = readMB_transform_size_flag_CABAC;
 
     // read CAVLC transform_size_8x8_flag
-    if (dp->s->eiFlag) {
+    if (dp->s->errorFlag) {
       se.len = (int64) 1;
       readsSyntaxElement_FLC (&se, dp->s);
       }
@@ -827,8 +827,8 @@ static void read_one_macroblock_i_slice_cavlc (sMacroblock* mb) {
   dp->readSyntaxElement(mb, &se, dp);
 
   mb->mbType = (short) se.value1;
-  if (!dp->s->eiFlag)
-    mb->eiFlag = 0;
+  if (!dp->s->errorFlag)
+    mb->errorFlag = 0;
 
   motion->mbField[mbNum] = (byte) mb->mbField;
   mb->blockYaff = ((slice->mbAffFrameFlag) && (mb->mbField)) ? (mbNum & 0x01) ? (mb->blockY - 4)>>1 : mb->blockY >> 1 : mb->blockY;
@@ -876,15 +876,15 @@ static void read_one_macroblock_p_slice_cavlc (sMacroblock* mb) {
       dp->readSyntaxElement(mb, &se, dp);
       ++(se.value1);
       mb->mbType = (short) se.value1;
-      if(!dp->s->eiFlag)
-        mb->eiFlag = 0;
+      if(!dp->s->errorFlag)
+        mb->errorFlag = 0;
       slice->codCount--;
       mb->skipFlag = 0;
       }
     else {
       slice->codCount--;
       mb->mbType = 0;
-      mb->eiFlag = 0;
+      mb->errorFlag = 0;
       mb->skipFlag = 1;
       }
 
@@ -935,22 +935,22 @@ static void read_one_macroblock_p_slice_cavlc (sMacroblock* mb) {
       dp->readSyntaxElement (mb, &se, dp);
       ++(se.value1);
       mb->mbType = (short)se.value1;
-      if(!dp->s->eiFlag)
-        mb->eiFlag = 0;
+      if(!dp->s->errorFlag)
+        mb->errorFlag = 0;
       slice->codCount--;
       mb->skipFlag = 0;
       }
     else {
       slice->codCount--;
       mb->mbType = 0;
-      mb->eiFlag = 0;
+      mb->errorFlag = 0;
       mb->skipFlag = 1;
 
       // read field flag of bottom block
       if (slice->codCount == 0 && ((mbNum & 0x01) == 0)) {
         se.len = (int64) 1;
         readsSyntaxElement_FLC (&se, dp->s);
-        dp->s->frameBitOffset--;
+        dp->s->bitStreamOffset--;
         mb->mbField = (Boolean)se.value1;
         }
       else if (slice->codCount > 0 && ((mbNum & 0x01) == 0)) {
@@ -1027,15 +1027,15 @@ static void read_one_macroblock_b_slice_cavlc (sMacroblock* mb) {
       // read MB type
       dp->readSyntaxElement (mb, &se, dp);
       mb->mbType = (short)se.value1;
-      if (!dp->s->eiFlag)
-        mb->eiFlag = 0;
+      if (!dp->s->errorFlag)
+        mb->errorFlag = 0;
       slice->codCount--;
       mb->skipFlag = 0;
       }
     else {
       slice->codCount--;
       mb->mbType = 0;
-      mb->eiFlag = 0;
+      mb->errorFlag = 0;
       mb->skipFlag = 1;
       }
 
@@ -1083,22 +1083,22 @@ static void read_one_macroblock_b_slice_cavlc (sMacroblock* mb) {
       // read MB type
       dp->readSyntaxElement (mb, &se, dp);
       mb->mbType = (short)se.value1;
-      if(!dp->s->eiFlag)
-        mb->eiFlag = 0;
+      if(!dp->s->errorFlag)
+        mb->errorFlag = 0;
       slice->codCount--;
       mb->skipFlag = 0;
       }
     else {
       slice->codCount--;
       mb->mbType = 0;
-      mb->eiFlag = 0;
+      mb->errorFlag = 0;
       mb->skipFlag = 1;
 
       // read field flag of bottom block
       if ((slice->codCount == 0) && ((mbNum & 0x01) == 0)) {
         se.len = (int64) 1;
         readsSyntaxElement_FLC (&se, dp->s);
-        dp->s->frameBitOffset--;
+        dp->s->bitStreamOffset--;
         mb->mbField = (Boolean)se.value1;
         }
       else if ((slice->codCount > 0) && ((mbNum & 0x01) == 0)) {
@@ -1180,12 +1180,12 @@ static void read_one_macroblock_i_slice_cabac (sMacroblock* mb) {
   //  read MB mode
   se.type = SE_MBTYPE;
   sDataPartition* dp = &(slice->dps[dpMap[SE_MBTYPE]]);
-  if (dp->s->eiFlag)
+  if (dp->s->errorFlag)
     se.mapping = linfo_ue;
 
   // read MB aff
   if (slice->mbAffFrameFlag && (mbNum & 0x01)==0) {
-    if (dp->s->eiFlag) {
+    if (dp->s->errorFlag) {
       se.len = (int64)1;
       readsSyntaxElement_FLC (&se, dp->s);
       }
@@ -1203,8 +1203,8 @@ static void read_one_macroblock_i_slice_cabac (sMacroblock* mb) {
   dp->readSyntaxElement (mb, &se, dp);
 
   mb->mbType = (short) se.value1;
-  if (!dp->s->eiFlag)
-    mb->eiFlag = 0;
+  if (!dp->s->errorFlag)
+    mb->errorFlag = 0;
 
   motion->mbField[mbNum] = (byte) mb->mbField;
   mb->blockYaff = ((slice->mbAffFrameFlag) && (mb->mbField)) ? (mbNum & 0x01) ? (mb->blockY - 4)>>1 : mb->blockY >> 1 : mb->blockY;
@@ -1223,7 +1223,7 @@ static void read_one_macroblock_i_slice_cabac (sMacroblock* mb) {
       se.reading = readMB_transform_size_flag_CABAC;
 
       // read CAVLC transform_size_8x8_flag
-      if (dp->s->eiFlag) {
+      if (dp->s->errorFlag) {
         se.len = (int64) 1;
         readsSyntaxElement_FLC(&se, dp->s);
         }
@@ -1267,7 +1267,7 @@ static void read_one_macroblock_p_slice_cabac (sMacroblock* mb)
     // read MB mode
     se.type = SE_MBTYPE;
     sDataPartition* dp = &(slice->dps[dpMap[SE_MBTYPE]]);
-    if (dp->s->eiFlag)
+    if (dp->s->errorFlag)
       se.mapping = linfo_ue;
 
     checkNeighbourCabac(mb);
@@ -1276,16 +1276,16 @@ static void read_one_macroblock_p_slice_cabac (sMacroblock* mb)
 
     mb->mbType   = (short) se.value1;
     mb->skipFlag = (char) (!(se.value1));
-    if (!dp->s->eiFlag)
-      mb->eiFlag = 0;
+    if (!dp->s->errorFlag)
+      mb->errorFlag = 0;
 
     // read MB type
     if (mb->mbType != 0 ) {
       se.reading = readMB_typeInfo_CABAC_p_slice;
       dp->readSyntaxElement(mb, &se, dp);
       mb->mbType = (short) se.value1;
-      if(!dp->s->eiFlag)
-        mb->eiFlag = 0;
+      if(!dp->s->errorFlag)
+        mb->errorFlag = 0;
       }
 
     motion->mbField[mbNum] = (byte) FALSE;
@@ -1313,7 +1313,7 @@ static void read_one_macroblock_p_slice_cabac (sMacroblock* mb)
     //  read MB mode
     se.type = SE_MBTYPE;
     sDataPartition* dp = &(slice->dps[dpMap[SE_MBTYPE]]);
-    if (dp->s->eiFlag)
+    if (dp->s->errorFlag)
       se.mapping = linfo_ue;
 
     // read MB skipFlag
@@ -1327,8 +1327,8 @@ static void read_one_macroblock_p_slice_cabac (sMacroblock* mb)
     mb->mbType = (short)se.value1;
     mb->skipFlag = (char)(!(se.value1));
 
-    if (!dp->s->eiFlag)
-      mb->eiFlag = 0;
+    if (!dp->s->errorFlag)
+      mb->errorFlag = 0;
 
     // read MB AFF
     checkBot = readBot=readTop=0;
@@ -1357,8 +1357,8 @@ static void read_one_macroblock_p_slice_cabac (sMacroblock* mb)
       se.reading = readMB_typeInfo_CABAC_p_slice;
       dp->readSyntaxElement (mb, &se, dp);
       mb->mbType = (short) se.value1;
-      if (!dp->s->eiFlag)
-        mb->eiFlag = 0;
+      if (!dp->s->errorFlag)
+        mb->errorFlag = 0;
       }
 
     motion->mbField[mbNum] = (byte) mb->mbField;
@@ -1380,7 +1380,7 @@ static void read_one_macroblock_p_slice_cabac (sMacroblock* mb)
     sDataPartition* dp = &(slice->dps[dpMap[SE_MBTYPE]]);
     se.type = SE_MBTYPE;
 
-    if (dp->s->eiFlag)
+    if (dp->s->errorFlag)
       se.mapping = linfo_ue;
     else
       se.reading = readB8_typeInfo_CABAC_p_slice;
@@ -1415,7 +1415,7 @@ static void read_one_macroblock_b_slice_cabac (sMacroblock* mb) {
     //  read MB mode
     se.type = SE_MBTYPE;
     sDataPartition* dp = &(slice->dps[dpMap[SE_MBTYPE]]);
-    if (dp->s->eiFlag)
+    if (dp->s->errorFlag)
       se.mapping = linfo_ue;
 
     checkNeighbourCabac(mb);
@@ -1426,8 +1426,8 @@ static void read_one_macroblock_b_slice_cabac (sMacroblock* mb) {
     mb->skipFlag = (char)(!(se.value1));
     mb->cbp = se.value2;
 
-    if (!dp->s->eiFlag)
-      mb->eiFlag = 0;
+    if (!dp->s->errorFlag)
+      mb->errorFlag = 0;
 
     if (se.value1 == 0 && se.value2 == 0)
       slice->codCount=0;
@@ -1437,8 +1437,8 @@ static void read_one_macroblock_b_slice_cabac (sMacroblock* mb) {
       se.reading = readMB_typeInfo_CABAC_b_slice;
       dp->readSyntaxElement (mb, &se, dp);
       mb->mbType = (short)se.value1;
-      if (!dp->s->eiFlag)
-        mb->eiFlag = 0;
+      if (!dp->s->errorFlag)
+        mb->errorFlag = 0;
       }
 
     motion->mbField[mbNum] = (byte) FALSE;
@@ -1467,7 +1467,7 @@ static void read_one_macroblock_b_slice_cabac (sMacroblock* mb) {
     //  read MB mode
     se.type = SE_MBTYPE;
     sDataPartition* dp = &(slice->dps[dpMap[SE_MBTYPE]]);
-    if (dp->s->eiFlag)
+    if (dp->s->errorFlag)
       se.mapping = linfo_ue;
 
     // read MB skipFlag
@@ -1481,8 +1481,8 @@ static void read_one_macroblock_b_slice_cabac (sMacroblock* mb) {
     mb->mbType = (short)se.value1;
     mb->skipFlag = (char)(!(se.value1));
     mb->cbp = se.value2;
-    if (!dp->s->eiFlag)
-      mb->eiFlag = 0;
+    if (!dp->s->errorFlag)
+      mb->errorFlag = 0;
     if (se.value1 == 0 && se.value2 == 0)
       slice->codCount = 0;
 
@@ -1513,8 +1513,8 @@ static void read_one_macroblock_b_slice_cabac (sMacroblock* mb) {
       se.reading = readMB_typeInfo_CABAC_b_slice;
       dp->readSyntaxElement (mb, &se, dp);
       mb->mbType = (short)se.value1;
-      if(!dp->s->eiFlag)
-        mb->eiFlag = 0;
+      if(!dp->s->errorFlag)
+        mb->errorFlag = 0;
       }
 
     motion->mbField[mbNum] = (byte) mb->mbField;
@@ -1534,7 +1534,7 @@ static void read_one_macroblock_b_slice_cabac (sMacroblock* mb) {
   else if (mb->mbType == P8x8) {
     sDataPartition* dp = &(slice->dps[dpMap[SE_MBTYPE]]);
     se.type = SE_MBTYPE;
-    if (dp->s->eiFlag)
+    if (dp->s->errorFlag)
       se.mapping = linfo_ue;
     else
       se.reading = readB8_typeInfo_CABAC_b_slice;
@@ -1568,7 +1568,7 @@ static void read_one_macroblock_b_slice_cabac (sMacroblock* mb) {
 //{{{
 void setReadMacroblock (sSlice* slice) {
 
-  if (slice->decoder->activePPS->entropyCodingModeFlag == (Boolean)CABAC) {
+  if (slice->decoder->activePPS->entropyCodingMode == (Boolean)CABAC) {
     switch (slice->sliceType) {
       case P_SLICE:
       case SP_SLICE:

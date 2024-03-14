@@ -621,7 +621,7 @@ typedef struct AVCodecContext {
     int width, height;
 
     /**
-     * Bitstream width / height, may be different from width/height e.g. when
+     * BitStream width / height, may be different from width/height e.g. when
      * the decoded frame is cropped before being output or lowres is enabled.
      *
      * @note Those field may not match the value of the last

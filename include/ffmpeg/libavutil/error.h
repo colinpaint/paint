@@ -48,7 +48,7 @@
 
 #define FFERRTAG(a, b, c, d) (-(int)MKTAG(a, b, c, d))
 
-#define AVERROR_BSF_NOT_FOUND      FFERRTAG(0xF8,'B','S','F') ///< Bitstream filter not found
+#define AVERROR_BSF_NOT_FOUND      FFERRTAG(0xF8,'B','S','F') ///< BitStream filter not found
 #define AVERROR_BUG                FFERRTAG( 'B','U','G','!') ///< Internal bug, also see AVERROR_BUG2
 #define AVERROR_BUFFER_TOO_SMALL   FFERRTAG( 'B','U','F','S') ///< Buffer too small
 #define AVERROR_DECODER_NOT_FOUND  FFERRTAG(0xF8,'D','E','C') ///< Decoder not found
