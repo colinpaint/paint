@@ -410,16 +410,16 @@ static int readVUI (sDataPartition* dataPartition, sSPS* sps) {
 static int isSpsEqual (sSPS* sps1, sSPS* sps2) {
 
   int equal = 1;
-
   if ((!sps1->valid) || (!sps2->valid))
     return 0;
 
+  equal &= (sps1->spsId == sps2->spsId);
+  equal &= (sps1->levelIdc == sps2->levelIdc);
   equal &= (sps1->profileIdc == sps2->profileIdc);
   equal &= (sps1->constrained_set0_flag == sps2->constrained_set0_flag);
   equal &= (sps1->constrained_set1_flag == sps2->constrained_set1_flag);
   equal &= (sps1->constrained_set2_flag == sps2->constrained_set2_flag);
-  equal &= (sps1->levelIdc == sps2->levelIdc);
-  equal &= (sps1->spsId == sps2->spsId);
+
   equal &= (sps1->log2_max_frame_num_minus4 == sps2->log2_max_frame_num_minus4);
   equal &= (sps1->pocType == sps2->pocType);
   if (!equal)
@@ -434,6 +434,7 @@ static int isSpsEqual (sSPS* sps1, sSPS* sps2) {
     equal &= (sps1->mumRefFramesPocCycle == sps2->mumRefFramesPocCycle);
     if (!equal)
       return equal;
+
     for (unsigned i = 0 ; i < sps1->mumRefFramesPocCycle ;i ++)
       equal &= (sps1->offset_for_ref_frame[i] == sps2->offset_for_ref_frame[i]);
     }
@@ -443,16 +444,16 @@ static int isSpsEqual (sSPS* sps1, sSPS* sps2) {
   equal &= (sps1->pic_width_in_mbs_minus1 == sps2->pic_width_in_mbs_minus1);
   equal &= (sps1->pic_height_in_map_units_minus1 == sps2->pic_height_in_map_units_minus1);
   equal &= (sps1->frameMbOnlyFlag == sps2->frameMbOnlyFlag);
-
   if (!equal) return
     equal;
+
   if (!sps1->frameMbOnlyFlag)
     equal &= (sps1->mb_adaptive_frame_field_flag == sps2->mb_adaptive_frame_field_flag);
-
   equal &= (sps1->direct_8x8_inference_flag == sps2->direct_8x8_inference_flag);
   equal &= (sps1->frameCropFlag == sps2->frameCropFlag);
   if (!equal)
     return equal;
+
   if (sps1->frameCropFlag) {
     equal &= (sps1->frameCropLeft == sps2->frameCropLeft);
     equal &= (sps1->frameCropRight == sps2->frameCropRight);
@@ -718,16 +719,16 @@ static int isPpsEqual (sPPS* pps1, sPPS* pps2) {
       }
     }
 
-  equal &= (pps1->numRefIndexL0defaultActiveMinus1 == pps2->numRefIndexL0defaultActiveMinus1);
-  equal &= (pps1->numRefIndexL1defaultActiveMinus1 == pps2->numRefIndexL1defaultActiveMinus1);
   equal &= (pps1->weightedPredFlag == pps2->weightedPredFlag);
-  equal &= (pps1->weightedBiPredIdc == pps2->weightedBiPredIdc);
   equal &= (pps1->picInitQpMinus26 == pps2->picInitQpMinus26);
   equal &= (pps1->picInitQsMinus26 == pps2->picInitQsMinus26);
+  equal &= (pps1->weightedBiPredIdc == pps2->weightedBiPredIdc);
   equal &= (pps1->chromaQpIndexOffset == pps2->chromaQpIndexOffset);
-  equal &= (pps1->deblockFilterControlPresent == pps2->deblockFilterControlPresent);
   equal &= (pps1->constrainedIntraPredFlag == pps2->constrainedIntraPredFlag);
   equal &= (pps1->redundantPicCountPresent == pps2->redundantPicCountPresent);
+  equal &= (pps1->deblockFilterControlPresent == pps2->deblockFilterControlPresent);
+  equal &= (pps1->numRefIndexL0defaultActiveMinus1 == pps2->numRefIndexL0defaultActiveMinus1);
+  equal &= (pps1->numRefIndexL1defaultActiveMinus1 == pps2->numRefIndexL1defaultActiveMinus1);
   if (!equal)
     return equal;
 
