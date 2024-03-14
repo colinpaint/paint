@@ -1468,8 +1468,8 @@ static void deblockMb (sDecoder* decoder, sPicture* p, int mbIndex) {
           if (filterNon8x8LumaEdgesFlag[edge]) {
             decoder->edgeLoopLumaV (PLANE_Y, imgY, Strength, mb, edge << 2);
             if (slice->chroma444notSeparate) {
-              decoder->edgeLoopLumaV(PLANE_U, imgUV[0], Strength, mb, edge << 2);
-              decoder->edgeLoopLumaV(PLANE_V, imgUV[1], Strength, mb, edge << 2);
+              decoder->edgeLoopLumaV (PLANE_U, imgUV[0], Strength, mb, edge << 2);
+              decoder->edgeLoopLumaV (PLANE_V, imgUV[1], Strength, mb, edge << 2);
               }
             }
           if (activeSPS->chromaFormatIdc==YUV420 || activeSPS->chromaFormatIdc==YUV422) {

@@ -921,7 +921,7 @@ static int readNextSlice (sSlice* slice) {
 
         if (!readNextNalu (decoder, nalu))
           return curHeader;
-           
+
         if (NALU_TYPE_DPB == nalu->unitType) {
           //{{{  got nalu dataPartitionB
           s = slice->dps[1].s;
@@ -1346,10 +1346,9 @@ int decodeFrame (sDecoder* decoder) {
       continue;
 
     if (((curHeader != SOP) && (curHeader != EOS)) ||
-        (!decoder->picSliceIndex && (curHeader == SOP))) {
+        ((curHeader == SOP) && !decoder->picSliceIndex)) {
        slice->curSliceIndex = (short)decoder->picSliceIndex;
-       decoder->picture->maxSliceId =
-         (short)imax (slice->curSliceIndex, decoder->picture->maxSliceId);
+       decoder->picture->maxSliceId = (short)imax (slice->curSliceIndex, decoder->picture->maxSliceId);
        if (decoder->picSliceIndex > 0) {
          copyPOC (*sliceList, slice);
          sliceList[decoder->picSliceIndex-1]->endMbNumPlus1 = slice->startMbNum;
