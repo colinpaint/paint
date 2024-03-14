@@ -827,7 +827,7 @@ void fillFrameNumGap (sDecoder* decoder, sSlice* slice) {
     picture->adaptiveRefPicBufferingFlag = 0;
 
     slice->frameNum = unusedShortTermFrameNum;
-    if (activeSPS->picOrderCountType != 0)
+    if (activeSPS->pocType != 0)
       decodePOC (decoder, decoder->sliceList[0]);
     picture->topPoc = slice->topPoc;
     picture->botPoc = slice->botPoc;

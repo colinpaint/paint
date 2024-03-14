@@ -172,13 +172,13 @@ typedef struct {
   unsigned int bit_depth_luma_minus8;             // ue(v)
   unsigned int bit_depth_chroma_minus8;           // ue(v)
   unsigned int log2_max_frame_num_minus4;         // ue(v)
-  unsigned int picOrderCountType;
+  unsigned int pocType;
   unsigned int log2_max_pic_order_cnt_lsb_minus4; // ue(v)
   Boolean  delta_pic_order_always_zero_flag;      // u(1)
   int      offset_for_non_ref_pic;                // se(v)
   int      offset_for_top_to_bottom_field;        // se(v)
 
-  unsigned int num_ref_frames_in_pic_order_cnt_cycle;          // ue(v)
+  unsigned int mumRefFramesPocCycle;          // ue(v)
   int      offset_for_ref_frame[MAX_NUM_REF_FRAMES_PIC_ORDER]; // se(v)
   unsigned int numRefFrames;                      // ue(v)
 
@@ -220,7 +220,7 @@ typedef struct {
   Boolean   useDefaultScalingMatrix4x4Flag[6];
   Boolean   useDefaultScalingMatrix8x8Flag[6];
 
-  // if( picOrderCountType < 2 )  in the sequence parameter set
+  // if( pocType < 2 )  in the sequence parameter set
   Boolean      botFieldPicOrderFramePresentFlag; // u(1)
   unsigned int numSliceGroupsMinus1;            // ue(v)
 

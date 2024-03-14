@@ -1496,8 +1496,8 @@ int dumpPOC (sDecoder* decoder) {
   printf ("POC SPS\n");
   printf ("log2_max_frame_num_minus4             %d\n", (int) activeSPS->log2_max_frame_num_minus4);         // POC200301
   printf ("log2_max_pic_order_cnt_lsb_minus4     %d\n", (int) activeSPS->log2_max_pic_order_cnt_lsb_minus4);
-  printf ("picOrderCountType                    %d\n", (int) activeSPS->picOrderCountType);
-  printf ("num_ref_frames_in_pic_order_cnt_cycle %d\n", (int) activeSPS->num_ref_frames_in_pic_order_cnt_cycle);
+  printf ("pocType                    %d\n", (int) activeSPS->pocType);
+  printf ("mumRefFramesPocCycle %d\n", (int) activeSPS->mumRefFramesPocCycle);
   printf ("delta_pic_order_always_zero_flag      %d\n", (int) activeSPS->delta_pic_order_always_zero_flag);
   printf ("offset_for_non_ref_pic                %d\n", (int) activeSPS->offset_for_non_ref_pic);
   printf ("offset_for_top_to_bottom_field        %d\n", (int) activeSPS->offset_for_top_to_bottom_field);
@@ -1521,7 +1521,7 @@ void decodePOC (sDecoder* decoder, sSlice* slice) {
   sSPS* activeSPS = decoder->activeSPS;
   unsigned int MaxPicOrderCntLsb = (1<<(activeSPS->log2_max_pic_order_cnt_lsb_minus4+4));
 
-  switch (activeSPS->picOrderCountType) {
+  switch (activeSPS->pocType) {
     //{{{
     case 0: // POC MODE 0
       // 1st
@@ -1596,7 +1596,7 @@ void decodePOC (sDecoder* decoder, sSlice* slice) {
         }
 
       // 2nd
-      if (activeSPS->num_ref_frames_in_pic_order_cnt_cycle)
+      if (activeSPS->mumRefFramesPocCycle)
         slice->AbsFrameNum = decoder->FrameNumOffset+slice->frameNum;
       else
         slice->AbsFrameNum=0;
@@ -1605,15 +1605,15 @@ void decodePOC (sDecoder* decoder, sSlice* slice) {
 
       // 3rd
       decoder->ExpectedDeltaPerPicOrderCntCycle = 0;
-      if (activeSPS->num_ref_frames_in_pic_order_cnt_cycle)
-        for (int i = 0; i < (int) activeSPS->num_ref_frames_in_pic_order_cnt_cycle;i++)
+      if (activeSPS->mumRefFramesPocCycle)
+        for (int i = 0; i < (int) activeSPS->mumRefFramesPocCycle;i++)
           decoder->ExpectedDeltaPerPicOrderCntCycle += activeSPS->offset_for_ref_frame[i];
 
       if (slice->AbsFrameNum) {
         decoder->PicOrderCntCycleCnt =
-          (slice->AbsFrameNum-1)/activeSPS->num_ref_frames_in_pic_order_cnt_cycle;
+          (slice->AbsFrameNum-1)/activeSPS->mumRefFramesPocCycle;
         decoder->FrameNumInPicOrderCntCycle =
-          (slice->AbsFrameNum-1)%activeSPS->num_ref_frames_in_pic_order_cnt_cycle;
+          (slice->AbsFrameNum-1)%activeSPS->mumRefFramesPocCycle;
         decoder->ExpectedPicOrderCnt =
           decoder->PicOrderCntCycleCnt*decoder->ExpectedDeltaPerPicOrderCntCycle;
         for (int i = 0; i <= (int)decoder->FrameNumInPicOrderCntCycle; i++)
@@ -1755,7 +1755,7 @@ void readRestSliceHeader (sSlice* slice) {
     slice->idrPicId = readUeV ("SLC idrPicId", s);
 
   //{{{  picOrderCount
-  if (activeSPS->picOrderCountType == 0) {
+  if (activeSPS->pocType == 0) {
     slice->picOrderCountLsb =
       readUv (activeSPS->log2_max_pic_order_cnt_lsb_minus4 + 4, "SLC picOrderCountLsb", s);
     if (decoder->activePPS->botFieldPicOrderFramePresentFlag  == 1 &&
@@ -1765,7 +1765,7 @@ void readRestSliceHeader (sSlice* slice) {
       slice->deletaPicOrderCountBot = 0;
     }
 
-  if (activeSPS->picOrderCountType == 1) {
+  if (activeSPS->pocType == 1) {
     if (!activeSPS->delta_pic_order_always_zero_flag) {
       slice->deltaPicOrderCount[0] = readSeV ("SLC deltaPicOrderCount[0]", s);
       if ((decoder->activePPS->botFieldPicOrderFramePresentFlag == 1) && !slice->fieldPicFlag)

@@ -431,13 +431,13 @@ static int isNewPicture (sPicture* picture, sSlice* slice, sOldSlice* oldSlice) 
     result |= (oldSlice->idrPicId != slice->idrPicId);
 
   sDecoder* decoder = slice->decoder;
-  if (!decoder->activeSPS->picOrderCountType) {
+  if (!decoder->activeSPS->pocType) {
     result |= (oldSlice->picOrderCountLsb != slice->picOrderCountLsb);
     if (decoder->activePPS->botFieldPicOrderFramePresentFlag  ==  1 &&  !slice->fieldPicFlag )
       result |= (oldSlice->deltaPicOrderCountBot != slice->deletaPicOrderCountBot);
     }
 
-  if (decoder->activeSPS->picOrderCountType == 1) {
+  if (decoder->activeSPS->pocType == 1) {
     if (!decoder->activeSPS->delta_pic_order_always_zero_flag) {
       result |= (oldSlice->deltaPicOrderCount[0] != slice->deltaPicOrderCount[0]);
       if (decoder->activePPS->botFieldPicOrderFramePresentFlag  ==  1 &&  !slice->fieldPicFlag )
@@ -670,7 +670,7 @@ static void initPictureDecoding (sDecoder* decoder) {
   int deblockMode = 1;
 
   if (decoder->picSliceIndex >= MAX_NUM_SLICES)
-    error ("MAX_NUM_SLICES exceeded");
+    error ("initPictureDecoding - MAX_NUM_SLICES exceeded");
 
   sSlice* slice = decoder->sliceList[0];
   if (decoder->nextPPS->valid && ((int)decoder->nextPPS->ppsId == slice->ppsId)) {
@@ -751,11 +751,11 @@ static void copySliceInfo (sSlice* slice, sOldSlice* oldSlice) {
   if (slice->idrFlag)
     oldSlice->idrPicId = slice->idrPicId;
 
-  if (!slice->decoder->activeSPS->picOrderCountType) {
+  if (!slice->decoder->activeSPS->pocType) {
     oldSlice->picOrderCountLsb = slice->picOrderCountLsb;
     oldSlice->deltaPicOrderCountBot = slice->deletaPicOrderCountBot;
     }
-  else if (slice->decoder->activeSPS->picOrderCountType == 1) {
+  else if (slice->decoder->activeSPS->pocType == 1) {
     oldSlice->deltaPicOrderCount[0] = slice->deltaPicOrderCount[0];
     oldSlice->deltaPicOrderCount[1] = slice->deltaPicOrderCount[1];
     }

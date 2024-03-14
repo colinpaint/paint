@@ -421,20 +421,20 @@ static int isSpsEqual (sSPS* sps1, sSPS* sps2) {
   equal &= (sps1->levelIdc == sps2->levelIdc);
   equal &= (sps1->spsId == sps2->spsId);
   equal &= (sps1->log2_max_frame_num_minus4 == sps2->log2_max_frame_num_minus4);
-  equal &= (sps1->picOrderCountType == sps2->picOrderCountType);
+  equal &= (sps1->pocType == sps2->pocType);
   if (!equal)
     return equal;
 
-  if (sps1->picOrderCountType == 0)
+  if (sps1->pocType == 0)
     equal &= (sps1->log2_max_pic_order_cnt_lsb_minus4 == sps2->log2_max_pic_order_cnt_lsb_minus4);
-  else if( sps1->picOrderCountType == 1) {
+  else if( sps1->pocType == 1) {
     equal &= (sps1->delta_pic_order_always_zero_flag == sps2->delta_pic_order_always_zero_flag);
     equal &= (sps1->offset_for_non_ref_pic == sps2->offset_for_non_ref_pic);
     equal &= (sps1->offset_for_top_to_bottom_field == sps2->offset_for_top_to_bottom_field);
-    equal &= (sps1->num_ref_frames_in_pic_order_cnt_cycle == sps2->num_ref_frames_in_pic_order_cnt_cycle);
+    equal &= (sps1->mumRefFramesPocCycle == sps2->mumRefFramesPocCycle);
     if (!equal)
       return equal;
-    for (unsigned i = 0 ; i < sps1->num_ref_frames_in_pic_order_cnt_cycle ;i ++)
+    for (unsigned i = 0 ; i < sps1->mumRefFramesPocCycle ;i ++)
       equal &= (sps1->offset_for_ref_frame[i] == sps2->offset_for_ref_frame[i]);
     }
 
@@ -529,15 +529,15 @@ static void interpretSPS (sDecoder* decoder, sDataPartition* dp, sSPS* sps) {
 
   sps->log2_max_frame_num_minus4 = readUeV ("SPS log2_max_frame_num_minus4", s);
 
-  sps->picOrderCountType = readUeV ("SPS picOrderCountType", s);
-  if (!sps->picOrderCountType)
+  sps->pocType = readUeV ("SPS pocType", s);
+  if (!sps->pocType)
     sps->log2_max_pic_order_cnt_lsb_minus4 = readUeV ("SPS log2_max_pic_order_cnt_lsb_minus4", s);
-  else if (sps->picOrderCountType == 1) {
+  else if (sps->pocType == 1) {
     sps->delta_pic_order_always_zero_flag = readU1 ("SPS delta_pic_order_always_zero_flag", s);
     sps->offset_for_non_ref_pic = readSeV ("SPS offset_for_non_ref_pic", s);
     sps->offset_for_top_to_bottom_field = readSeV ("SPS offset_for_top_to_bottom_field", s);
-    sps->num_ref_frames_in_pic_order_cnt_cycle = readUeV ("SPS num_ref_frames_in_pic_order_cnt_cycle", s);
-    for (unsigned int i = 0; i < sps->num_ref_frames_in_pic_order_cnt_cycle; i++)
+    sps->mumRefFramesPocCycle = readUeV ("SPS mumRefFramesPocCycle", s);
+    for (unsigned int i = 0; i < sps->mumRefFramesPocCycle; i++)
       sps->offset_for_ref_frame[i] = readSeV ("SPS offset_for_ref_frame[i]", s);
     }
 
@@ -566,8 +566,8 @@ static void interpretSPS (sDecoder* decoder, sDataPartition* dp, sSPS* sps) {
   readVUI (dp, sps);
 
   if (decoder->param.spsDebug) {
-    printf ("-> id:%d refFrames:%d picOrderCountType:%d mbs:%dx%d",
-            sps->spsId, sps->numRefFrames,  sps->picOrderCountType,
+    printf ("-> id:%d refFrames:%d pocType:%d mbs:%dx%d",
+            sps->spsId, sps->numRefFrames,  sps->pocType,
             sps->pic_width_in_mbs_minus1, sps->pic_height_in_map_units_minus1);
     if (sps->frameMbOnlyFlag)
       printf (" frame");
@@ -849,11 +849,11 @@ static void interpretPPS (sDecoder* decoder, sDataPartition* dp, sPPS* pps) {
   if (decoder->param.ppsDebug)
     printf ("-> ppsId:%d spsId:%d%s%s%s%s%s%s L:%d:%d\n",
             pps->ppsId, pps->spsId,
-            pps->entropyCodingModeFlag ? " cavlc":" cabac",
+            pps->entropyCodingModeFlag ? " cabac":" cavlc",
             pps->deblockingFilterControlPresentFlag ? " deblock":"",
             pps->numSliceGroupsMinus1 ? " numSliceGroups":"",
-            pps->constrainedIntraPredFlag ? " constrain":"",
-            pps->redundantPicCountPresentFlag ? " redund":"",
+            pps->constrainedIntraPredFlag ? " constrainedIntraPred":"",
+            pps->redundantPicCountPresentFlag ? " redundant":"",
             pps->botFieldPicOrderFramePresentFlag ? " botFieldPicOrderFrame":"",
             pps->numRefIndexL0defaultActiveMinus1, pps->numRefIndexL1defaultActiveMinus1);
 
@@ -935,14 +935,11 @@ void useParameterSet (sSlice* slice) {
   // In practice, we need to patch many values
   // in decoder-> (but no more in input. -- these have been taken care of)
   // Set Sequence Parameter Stuff first
-  if (((int)sps->picOrderCountType < 0) || (sps->picOrderCountType > 2)) {
-    printf ("invalid sps->picOrderCountType = %d\n", (int) sps->picOrderCountType);
-    error ("picOrderCountType != 1");
-    }
-
-  if (sps->picOrderCountType == 1)
-    if (sps->num_ref_frames_in_pic_order_cnt_cycle >= MAX_NUM_REF_FRAMES_PIC_ORDER)
-      error ("num_ref_frames_in_pic_order_cnt_cycle too large");
+  if (sps->pocType > 2) 
+    error ("invalid sps->pocType != 1");
+  if (sps->pocType == 1)
+    if (sps->mumRefFramesPocCycle >= MAX_NUM_REF_FRAMES_PIC_ORDER)
+      error ("mumRefFramesPocCycle too large");
 
   activateSPS (decoder, sps);
   activatePPS (decoder, pps);
