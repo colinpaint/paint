@@ -746,12 +746,12 @@ static void copySliceInfo (sSlice* slice, sOldSlice* oldSlice) {
     oldSlice->botFieldFlag = slice->botFieldFlag;
 
   oldSlice->nalRefIdc = slice->refId;
-  oldSlice->idrFlag = (byte)slice->idrFlag;
 
+  oldSlice->idrFlag = (byte)slice->idrFlag;
   if (slice->idrFlag)
     oldSlice->idrPicId = slice->idrPicId;
 
-  if (!slice->decoder->activeSPS->pocType) {
+  if (slice->decoder->activeSPS->pocType == 0) {
     oldSlice->picOrderCountLsb = slice->picOrderCountLsb;
     oldSlice->deltaPicOrderCountBot = slice->deletaPicOrderCountBot;
     }
@@ -1290,24 +1290,23 @@ void endDecodeFrame (sDecoder* decoder) {
 int decodeFrame (sDecoder* decoder) {
 
   int ret = 0;
+
+  decoder->numDecodedMbs = 0;
   decoder->picSliceIndex = 0;
   decoder->numDecodedSlices = 0;
-  decoder->numDecodedMbs = 0;
 
   int curHeader = 0;
-  sSlice* slice = NULL;
-  sSlice** sliceList = decoder->sliceList;
   if (decoder->newFrame) {
     if (decoder->nextPPS->valid) {
       makePPSavailable (decoder, decoder->nextPPS->ppsId, decoder->nextPPS);
       decoder->nextPPS->valid = 0;
       }
 
-    // get firstSlice from slice;
-    slice = sliceList[decoder->picSliceIndex];
-    sliceList[decoder->picSliceIndex] = decoder->nextSlice;
+    // get firstSlice from sliceList;
+    sSlice* slice = decoder->sliceList[decoder->picSliceIndex];
+    decoder->sliceList[decoder->picSliceIndex] = decoder->nextSlice;
     decoder->nextSlice = slice;
-    slice = sliceList[decoder->picSliceIndex];
+    slice = decoder->sliceList[decoder->picSliceIndex];
 
     useParameterSet (slice);
     initPicture (decoder, slice);
@@ -1318,10 +1317,10 @@ int decodeFrame (sDecoder* decoder) {
 
   while ((curHeader != SOP) && (curHeader != EOS)) {
     //{{{  no pending slices
-    if (!sliceList[decoder->picSliceIndex])
-      sliceList[decoder->picSliceIndex] = allocSlice (decoder);
+    if (!decoder->sliceList[decoder->picSliceIndex])
+      decoder->sliceList[decoder->picSliceIndex] = allocSlice (decoder);
 
-    slice = sliceList[decoder->picSliceIndex];
+    sSlice* slice = decoder->sliceList[decoder->picSliceIndex];
     slice->decoder = decoder;
     slice->dpb = decoder->dpb; //set default value;
     slice->nextHeader = -8888;
@@ -1350,43 +1349,31 @@ int decodeFrame (sDecoder* decoder) {
        slice->curSliceIndex = (short)decoder->picSliceIndex;
        decoder->picture->maxSliceId = (short)imax (slice->curSliceIndex, decoder->picture->maxSliceId);
        if (decoder->picSliceIndex > 0) {
-         copyPOC (*sliceList, slice);
-         sliceList[decoder->picSliceIndex-1]->endMbNumPlus1 = slice->startMbNum;
+         copyPOC (*(decoder->sliceList), slice);
+         decoder->sliceList[decoder->picSliceIndex-1]->endMbNumPlus1 = slice->startMbNum;
          }
 
        decoder->picSliceIndex++;
-       if (decoder->picSliceIndex >= decoder->numAllocatedSlices) {
-         sSlice** tmsliceList = (sSlice**)realloc (
-           decoder->sliceList, (decoder->numAllocatedSlices + MAX_NUM_DECSLICES) * sizeof(sSlice*));
-         if (!tmsliceList) {
-           tmsliceList = calloc ((decoder->numAllocatedSlices + MAX_NUM_DECSLICES), sizeof(sSlice*));
-           memcpy (tmsliceList, decoder->sliceList, decoder->picSliceIndex * sizeof(sSlice*));
-           free (decoder->sliceList);
-           sliceList = decoder->sliceList = tmsliceList;
-           }
-         else {
-           sliceList = decoder->sliceList = tmsliceList;
-           memset (decoder->sliceList + decoder->picSliceIndex, 0, sizeof(sSlice*) * MAX_NUM_DECSLICES);
-           }
-         decoder->numAllocatedSlices += MAX_NUM_DECSLICES;
-        }
+       if (decoder->picSliceIndex >= decoder->numAllocatedSlices)
+         error ("decodeFrame - sliceList numAllocationSlices too small");
       curHeader = SOS;
       }
+
     else {
-      if (sliceList[decoder->picSliceIndex-1]->mbAffFrameFlag)
-        sliceList[decoder->picSliceIndex-1]->endMbNumPlus1 = decoder->frameSizeMbs / 2;
+      if (decoder->sliceList[decoder->picSliceIndex-1]->mbAffFrameFlag)
+        decoder->sliceList[decoder->picSliceIndex-1]->endMbNumPlus1 = decoder->frameSizeMbs / 2;
       else
-        sliceList[decoder->picSliceIndex-1]->endMbNumPlus1 =
-          decoder->frameSizeMbs / (1 + sliceList[decoder->picSliceIndex-1]->fieldPicFlag);
+        decoder->sliceList[decoder->picSliceIndex-1]->endMbNumPlus1 =
+          decoder->frameSizeMbs / (decoder->sliceList[decoder->picSliceIndex-1]->fieldPicFlag + 1);
 
       decoder->newFrame = 1;
-      slice->curSliceIndex = 0;
 
-      // keep it in currentslice;
-      sliceList[decoder->picSliceIndex] = decoder->nextSlice;
+      slice->curSliceIndex = 0;
+      decoder->sliceList[decoder->picSliceIndex] = decoder->nextSlice;
       decoder->nextSlice = slice;
       }
     //}}}
+
     copySliceInfo (slice, decoder->oldSlice);
     }
     //}}}
@@ -1395,17 +1382,18 @@ int decodeFrame (sDecoder* decoder) {
   ret = curHeader;
   initPictureDecoding (decoder);
   for (int sliceIndex = 0; sliceIndex < decoder->picSliceIndex; sliceIndex++) {
-    slice = sliceList[sliceIndex];
+    sSlice* slice = decoder->sliceList[sliceIndex];
     curHeader = slice->curHeader;
     initSlice (decoder, slice);
 
     if (slice->activePPS->entropyCodingMode) {
-      //{{{  cabac
+      //{{{  init cabac
       initContexts (slice);
       cabacNewSlice (slice);
       }
       //}}}
-    if (((slice->activePPS->weightedBiPredIdc > 0)  && (slice->sliceType == B_SLICE)) ||
+
+    if (((slice->activePPS->weightedBiPredIdc > 0) && (slice->sliceType == B_SLICE)) ||
         (slice->activePPS->weightedPredFlag && (slice->sliceType != I_SLICE)))
       fillWpParam (slice);
 
@@ -1418,7 +1406,7 @@ int decodeFrame (sDecoder* decoder) {
     }
 
   endDecodeFrame (decoder);
-  decoder->prevFrameNum = sliceList[0]->frameNum;
+  decoder->prevFrameNum = decoder->sliceList[0]->frameNum;
 
   return ret;
   }

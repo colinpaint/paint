@@ -150,7 +150,7 @@ static void freeDecoder (sDecoder* decoder) {
 
   if (decoder->nextSlice) {
     freeSlice (decoder->nextSlice);
-    decoder->nextSlice=NULL;
+    decoder->nextSlice = NULL;
     }
 
   if (decoder->sliceList) {
