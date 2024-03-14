@@ -360,10 +360,10 @@ void itrans_sp_cr (sMacroblock* mb, int uv) {
   int** cof = slice->cof[uv + 1];
   int** PBlock = new_mem2Dint(MB_BLOCK_SIZE, MB_BLOCK_SIZE);
 
-  int qp_per = decoder->qpPerMatrix[ ((slice->qp < 0 ? slice->qp : QP_SCALE_CR[slice->qp]))];
-  int qp_rem = decoder->qpRemMatrix[ ((slice->qp < 0 ? slice->qp : QP_SCALE_CR[slice->qp]))];
-  int qp_per_sp = decoder->qpPerMatrix[ ((slice->qs < 0 ? slice->qs : QP_SCALE_CR[slice->qs]))];
-  int qp_rem_sp = decoder->qpRemMatrix[ ((slice->qs < 0 ? slice->qs : QP_SCALE_CR[slice->qs]))];
+  int qp_per = decoder->qpPerMatrix[((slice->qp < 0 ? slice->qp : QP_SCALE_CR[slice->qp]))];
+  int qp_rem = decoder->qpRemMatrix[((slice->qp < 0 ? slice->qp : QP_SCALE_CR[slice->qp]))];
+  int qp_per_sp = decoder->qpPerMatrix[((slice->qs < 0 ? slice->qs : QP_SCALE_CR[slice->qs]))];
+  int qp_rem_sp = decoder->qpRemMatrix[((slice->qs < 0 ? slice->qs : QP_SCALE_CR[slice->qs]))];
   int q_bits_sp = Q_BITS + qp_per_sp;
 
   if (slice->sliceType == SI_SLICE) {
