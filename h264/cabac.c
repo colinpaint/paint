@@ -221,8 +221,8 @@ int cabac_startcode_follows (sSlice* slice, int eos_bit) {
   unsigned int  bit;
   if (eos_bit) {
     const byte* dpMap    = assignSE2dp[slice->datadpMode];
-    sDataPartition* dp = &(slice->dps[dpMap[SE_MBTYPE]]);
-    sDecodingEnv* decodingEnv = &(dp->deCabac);
+    sDataPartition* dataPartition = &(slice->dps[dpMap[SE_MBTYPE]]);
+    sDecodingEnv* decodingEnv = &(dataPartition->deCabac);
     bit = biari_decode_final (decodingEnv); //GB
     }
   else
@@ -1790,15 +1790,15 @@ int readSyntaxElementCABAC (sMacroblock* mb, sSyntaxElement* se, sDataPartition*
 //}}}
 
 //{{{
-void readIPCMcabac (sSlice* slice, sDataPartition* dp) {
+void readIPCMcabac (sSlice* slice, sDataPartition* dataPartition) {
 
   sDecoder* decoder = slice->decoder;
   sPicture* picture = slice->picture;
 
-  sBitStream* s = dp->s;
-  sDecodingEnv* dep = &(dp->deCabac);
+  sBitStream* s = dataPartition->s;
+  sDecodingEnv* dep = &(dataPartition->deCabac);
   byte* buf = s->streamBuffer;
-  int BitstreamLengthInBits = (dp->s->bitStreamLen << 3) + 7;
+  int BitstreamLengthInBits = (dataPartition->s->bitStreamLen << 3) + 7;
 
   int val = 0;
 

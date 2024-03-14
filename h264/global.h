@@ -425,7 +425,7 @@ typedef struct Macroblock {
 
   short   sliceNum;
   char    errorFlag;            // error indicator flag that enables conceal
-  char    dplFlag;           // error indicator flag that signals a missing data dp
+  char    dplFlag;           // error indicator flag that signals a missing data dataPartition
   short   deltaQuant;        // for rate control
   short   listOffset;
 
@@ -631,8 +631,8 @@ typedef struct Slice {
   short DFAlphaC0Offset;   // Alpha and C0 offset for filtering slice
   short DFBetaOffset;      // Beta offset for filtering slice
   int   ppsId;             // the ID of the picture parameter set the slice is reffering to
-  int   noDataPartitionB;  // non-zero, if data dp B is lost
-  int   noDataPartitionC;  // non-zero, if data dp C is lost
+  int   noDataPartitionB;  // non-zero, if data dataPartition B is lost
+  int   noDataPartitionC;  // non-zero, if data dataPartition C is lost
 
   Boolean   isResetCoef;
   Boolean   isResetCoefCr;

@@ -241,7 +241,7 @@ sDataPartition* allocDataPartitions (int n) {
 
   sDataPartition* dataPartitions = (sDataPartition*)calloc (n, sizeof(sDataPartition));
   if (!dataPartitions)
-    error ("allocDataPartitions: Memory allocation for Data dp failed");
+    error ("allocDataPartitions: Memory allocation for Data dataPartition failed");
 
   for (int i = 0; i < n; ++i) {
     // loop over all dataPartitions

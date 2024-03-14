@@ -42,15 +42,15 @@
 #define EC_SYNC             2   //!< search and sync on next header element
 #define MAXdpMODES   2
 
-//{{{  maximum possible dp modes as defined in assignSE2dp[][]
+//{{{  maximum possible dataPartition modes as defined in assignSE2dp[][]
 
 /*!
- *  \brief  lookup-table to assign different elements to dp
+ *  \brief  lookup-table to assign different elements to dataPartition
  *  \note   here we defined up to 6 different dps similar to
  *          document Q15-k-18 described in the PROGFRAMEMODE.
  *          The Sliceheader contains the PSYNC information. \par
  *
- *          Elements inside a dp are not ordered. They are
+ *          Elements inside a dataPartition are not ordered. They are
  *          ordered by occurence in the stream.
  *          Assumption: Only dplosses are considered. \par
  *
@@ -58,18 +58,18 @@
  *          not ordered in the progressive form
  *          This may be changed in image.c \par
  *
- *          We also defined the proposed internet dp mode
+ *          We also defined the proposed internet dataPartition mode
  *          of Stephan Wenger here. To select the desired mode
  *          uncomment one of the two following lines. \par
  *
  *  -IMPORTANT:
- *          Picture- or Sliceheaders must be assigned to dp 0. \par
+ *          Picture- or Sliceheaders must be assigned to dataPartition 0. \par
  *          Furthermore dps must follow syntax dependencies as
  *          outlined in document Q15-J-23.
  */
 //}}}
 static const byte assignSE2dp[][SE_MAX_ELEMENTS] = {
   // 0  1  2  3  4  5  6  7  8  9 10 11 12 13 14 15 16 17 18 19    // element number (do not uncomment)
-  {  0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 }, // all elements in one dp no data dping
+  {  0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 }, // all elements in one dataPartition no data dping
   {  0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 0, 2, 2, 2, 2, 0, 0, 0, 0 }  // three dps per slice
   };

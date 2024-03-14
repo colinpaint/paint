@@ -14,7 +14,7 @@ static void read_comp_coeff_4x4_smb_CABAC (sMacroblock* mb, sSyntaxElement* se, 
   int i,j,k;
   int i0, j0;
   int level = 1;
-  sDataPartition *dp;
+  sDataPartition *dataPartition;
   sSlice* slice = mb->slice;
   const byte *dpMap = assignSE2dp[slice->datadpMode];
 
@@ -39,13 +39,13 @@ static void read_comp_coeff_4x4_smb_CABAC (sMacroblock* mb, sSyntaxElement* se, 
         * luminance coefficients
         */
         se->type = (mb->isIntraBlock ? SE_LUM_DC_INTRA : SE_LUM_DC_INTER);
-        dp = &(slice->dps[dpMap[se->type]]);
-        if (dp->s->errorFlag)
+        dataPartition = &(slice->dps[dpMap[se->type]]);
+        if (dataPartition->s->errorFlag)
           se->mapping = linfo_levrun_inter;
         else
           se->reading = readRunLevel_CABAC;
 
-        dp->readSyntaxElement(mb, se, dp);
+        dataPartition->readSyntaxElement(mb, se, dataPartition);
         level = se->value1;
 
         if (level != 0)    /* leave if level == 0 */
@@ -66,16 +66,16 @@ static void read_comp_coeff_4x4_smb_CABAC (sMacroblock* mb, sSyntaxElement* se, 
       {
         // make distinction between INTRA and INTER coded luminance coefficients
         se->type = (mb->isIntraBlock ? SE_LUM_AC_INTRA : SE_LUM_AC_INTER);
-        dp = &(slice->dps[dpMap[se->type]]);
+        dataPartition = &(slice->dps[dpMap[se->type]]);
 
-        if (dp->s->errorFlag)
+        if (dataPartition->s->errorFlag)
           se->mapping = linfo_levrun_inter;
         else
           se->reading = readRunLevel_CABAC;
 
         for(k = 1; (k < 17) && (level != 0); ++k)
         {
-          dp->readSyntaxElement(mb, se, dp);
+          dataPartition->readSyntaxElement(mb, se, dataPartition);
           level = se->value1;
 
           if (level != 0)    /* leave if level == 0 */
@@ -205,7 +205,7 @@ static void readCompCoeff8x8_CABAC (sMacroblock* mb, sSyntaxElement* se, eColorP
     int i,j,k;
     int level = 1;
 
-    sDataPartition *dp;
+    sDataPartition *dataPartition;
     sSlice* slice = mb->slice;
     const byte *dpMap = assignSE2dp[slice->datadpMode];
     int boff_x, boff_y;
@@ -240,8 +240,8 @@ static void readCompCoeff8x8_CABAC (sMacroblock* mb, sSyntaxElement* se, eColorP
 
     // Read DC
     se->type = ((mb->isIntraBlock == 1) ? SE_LUM_DC_INTRA : SE_LUM_DC_INTER ); // Intra or Inter?
-    dp = &(slice->dps[dpMap[se->type]]);
-    dp->readSyntaxElement(mb, se, dp);
+    dataPartition = &(slice->dps[dpMap[se->type]]);
+    dataPartition->readSyntaxElement(mb, se, dataPartition);
     level = se->value1;
 
     //============ decode =============
@@ -259,11 +259,11 @@ static void readCompCoeff8x8_CABAC (sMacroblock* mb, sSyntaxElement* se, eColorP
 
       // AC coefficients
       se->type    = ((mb->isIntraBlock == 1) ? SE_LUM_AC_INTRA : SE_LUM_AC_INTER);
-      dp = &(slice->dps[dpMap[se->type]]);
+      dataPartition = &(slice->dps[dpMap[se->type]]);
 
       for(k = 1;(k < 65) && (level != 0);++k)
       {
-        dp->readSyntaxElement(mb, se, dp);
+        dataPartition->readSyntaxElement(mb, se, dataPartition);
         level = se->value1;
 
         //============ decode =============
@@ -303,7 +303,7 @@ static void readCompCoeff8x8_CABAC_lossless (sMacroblock* mb, sSyntaxElement* se
     int i,j,k;
     int level = 1;
 
-    sDataPartition *dp;
+    sDataPartition *dataPartition;
     sSlice* slice = mb->slice;
     const byte *dpMap = assignSE2dp[slice->datadpMode];
     int boff_x, boff_y;
@@ -343,10 +343,10 @@ static void readCompCoeff8x8_CABAC_lossless (sMacroblock* mb, sSyntaxElement* se
         ? (k==0 ? SE_LUM_DC_INTRA : SE_LUM_AC_INTRA)
         : (k==0 ? SE_LUM_DC_INTER : SE_LUM_AC_INTER));
 
-      dp = &(slice->dps[dpMap[se->type]]);
+      dataPartition = &(slice->dps[dpMap[se->type]]);
       se->reading = readRunLevel_CABAC;
 
-      dp->readSyntaxElement(mb, se, dp);
+      dataPartition->readSyntaxElement(mb, se, dataPartition);
       level = se->value1;
 
       //============ decode =============
@@ -394,7 +394,7 @@ static void read_CBP_and_coeffs_from_NAL_CABAC_420 (sMacroblock* mb) {
   int level;
   int cbp;
   sSyntaxElement se;
-  sDataPartition *dp = NULL;
+  sDataPartition *dataPartition = NULL;
   sSlice* slice = mb->slice;
   const byte *dpMap = assignSE2dp[slice->datadpMode];
   int i0, j0;
@@ -425,9 +425,9 @@ static void read_CBP_and_coeffs_from_NAL_CABAC_420 (sMacroblock* mb) {
       ? SE_CBP_INTRA
       : SE_CBP_INTER;
 
-    dp = &(slice->dps[dpMap[se.type]]);
+    dataPartition = &(slice->dps[dpMap[se.type]]);
 
-    if (dp->s->errorFlag) {
+    if (dataPartition->s->errorFlag) {
       se.mapping = (mb->mbType == I4MB || mb->mbType == SI4MB || mb->mbType == I8MB)
         ? slice->linfoCbpIntra
         : slice->linfoCbpInter;
@@ -435,7 +435,7 @@ static void read_CBP_and_coeffs_from_NAL_CABAC_420 (sMacroblock* mb) {
     else
       se.reading = read_CBP_CABAC;
 
-    dp->readSyntaxElement(mb, &se, dp);
+    dataPartition->readSyntaxElement(mb, &se, dataPartition);
     mb->cbp = cbp = se.value1;
 
     //============= Transform size flag for INTER MBs =============
@@ -449,16 +449,16 @@ static void read_CBP_and_coeffs_from_NAL_CABAC_420 (sMacroblock* mb) {
 
     if (need_transform_size_flag) {
       se.type   =  SE_HEADER;
-      dp = &(slice->dps[dpMap[SE_HEADER]]);
+      dataPartition = &(slice->dps[dpMap[SE_HEADER]]);
       se.reading = readMB_transform_size_flag_CABAC;
 
       // read CAVLC transform_size_8x8_flag
-      if (dp->s->errorFlag) {
+      if (dataPartition->s->errorFlag) {
         se.len = 1;
-        readsSyntaxElement_FLC(&se, dp->s);
+        readsSyntaxElement_FLC(&se, dataPartition->s);
       }
       else
-        dp->readSyntaxElement(mb, &se, dp);
+        dataPartition->readSyntaxElement(mb, &se, dataPartition);
       mb->lumaTransformSize8x8flag = (Boolean) se.value1;
     }
 
@@ -466,7 +466,7 @@ static void read_CBP_and_coeffs_from_NAL_CABAC_420 (sMacroblock* mb) {
     //----------------------
     // Delta quant only if nonzero coeffs
     if (cbp !=0) {
-      readDeltaQuant(&se, dp, mb, dpMap, ((mb->isIntraBlock == FALSE)) ? SE_DELTA_QUANT_INTER : SE_DELTA_QUANT_INTRA);
+      readDeltaQuant(&se, dataPartition, mb, dpMap, ((mb->isIntraBlock == FALSE)) ? SE_DELTA_QUANT_INTER : SE_DELTA_QUANT_INTRA);
 
       if (slice->datadpMode) {
         if ((mb->isIntraBlock == FALSE) && slice->noDataPartitionC )
@@ -489,7 +489,7 @@ static void read_CBP_and_coeffs_from_NAL_CABAC_420 (sMacroblock* mb) {
   else {
     // read DC coeffs for new intra modes
     cbp = mb->cbp;
-    readDeltaQuant(&se, dp, mb, dpMap, SE_DELTA_QUANT_INTRA);
+    readDeltaQuant(&se, dataPartition, mb, dpMap, SE_DELTA_QUANT_INTRA);
     if (slice->datadpMode) {
       if (slice->noDataPartitionB) {
         mb->errorFlag  = 1;
@@ -506,17 +506,17 @@ static void read_CBP_and_coeffs_from_NAL_CABAC_420 (sMacroblock* mb) {
       pos_scan_4x4 = pos_scan4x4[0];
 
       se.type = SE_LUM_DC_INTRA;
-      dp = &(slice->dps[dpMap[se.type]]);
+      dataPartition = &(slice->dps[dpMap[se.type]]);
       se.context      = LUMA_16DC;
       se.type         = SE_LUM_DC_INTRA;
-      if (dp->s->errorFlag)
+      if (dataPartition->s->errorFlag)
         se.mapping = linfo_levrun_inter;
       else
         se.reading = readRunLevel_CABAC;
 
       level = 1;                            // just to get inside the loop
       for(k = 0; (k < 17) && (level != 0); ++k) {
-        dp->readSyntaxElement(mb, &se, dp);
+        dataPartition->readSyntaxElement(mb, &se, dataPartition);
         level = se.value1;
 
         if (level != 0) {
@@ -574,15 +574,15 @@ static void read_CBP_and_coeffs_from_NAL_CABAC_420 (sMacroblock* mb) {
       mb->isVblock = ll;
       se.context = CHROMA_DC;
       se.type = (intra ? SE_CHR_DC_INTRA : SE_CHR_DC_INTER);
-      dp = &(slice->dps[dpMap[se.type]]);
+      dataPartition = &(slice->dps[dpMap[se.type]]);
 
-      if (dp->s->errorFlag)
+      if (dataPartition->s->errorFlag)
         se.mapping = linfo_levrun_c2x2;
       else
         se.reading = readRunLevel_CABAC;
 
       for(k = 0; (k < (decoder->numCdcCoeff + 1)) && (level != 0); ++k) {
-        dp->readSyntaxElement (mb, &se, dp);
+        dataPartition->readSyntaxElement (mb, &se, dataPartition);
         level = se.value1;
 
         if (level != 0) {
@@ -628,8 +628,8 @@ static void read_CBP_and_coeffs_from_NAL_CABAC_420 (sMacroblock* mb) {
   if (cbp >31) {
     se.context      = CHROMA_AC;
     se.type         = (mb->isIntraBlock ? SE_CHR_AC_INTRA : SE_CHR_AC_INTER);
-    dp = &(slice->dps[dpMap[se.type]]);
-    if (dp->s->errorFlag)
+    dataPartition = &(slice->dps[dpMap[se.type]]);
+    if (dataPartition->s->errorFlag)
       se.mapping = linfo_levrun_inter;
     else
       se.reading = readRunLevel_CABAC;
@@ -654,7 +654,7 @@ static void read_CBP_and_coeffs_from_NAL_CABAC_420 (sMacroblock* mb) {
           level = 1;
 
           for(k = 0; (k < 16) && (level != 0);++k) {
-            dp->readSyntaxElement(mb, &se, dp);
+            dataPartition->readSyntaxElement(mb, &se, dataPartition);
             level = se.value1;
 
             if (level != 0) {
@@ -685,7 +685,7 @@ static void read_CBP_and_coeffs_from_NAL_CABAC_420 (sMacroblock* mb) {
           mb->subblockY = subblk_offset_y[yuv][b8][b4];
           mb->subblockX = subblk_offset_x[yuv][b8][b4];
           for (k = 0; (k < 16) && (level != 0); ++k) {
-            dp->readSyntaxElement(mb, &se, dp);
+            dataPartition->readSyntaxElement(mb, &se, dataPartition);
             level = se.value1;
 
             if (level != 0) {
@@ -711,7 +711,7 @@ static void read_CBP_and_coeffs_from_NAL_CABAC_400 (sMacroblock* mb)
   int level;
   int cbp;
   sSyntaxElement se;
-  sDataPartition *dp = NULL;
+  sDataPartition *dataPartition = NULL;
   sSlice* slice = mb->slice;
   const byte *dpMap = assignSE2dp[slice->datadpMode];
   int i0, j0;
@@ -737,9 +737,9 @@ static void read_CBP_and_coeffs_from_NAL_CABAC_400 (sMacroblock* mb)
       ? SE_CBP_INTRA
       : SE_CBP_INTER;
 
-    dp = &(slice->dps[dpMap[se.type]]);
+    dataPartition = &(slice->dps[dpMap[se.type]]);
 
-    if (dp->s->errorFlag) {
+    if (dataPartition->s->errorFlag) {
       se.mapping = (mb->mbType == I4MB || mb->mbType == SI4MB || mb->mbType == I8MB)
         ? slice->linfoCbpIntra
         : slice->linfoCbpInter;
@@ -747,7 +747,7 @@ static void read_CBP_and_coeffs_from_NAL_CABAC_400 (sMacroblock* mb)
     else
       se.reading = read_CBP_CABAC;
 
-    dp->readSyntaxElement(mb, &se, dp);
+    dataPartition->readSyntaxElement(mb, &se, dataPartition);
     mb->cbp = cbp = se.value1;
 
 
@@ -762,16 +762,16 @@ static void read_CBP_and_coeffs_from_NAL_CABAC_400 (sMacroblock* mb)
 
     if (need_transform_size_flag) {
       se.type   =  SE_HEADER;
-      dp = &(slice->dps[dpMap[SE_HEADER]]);
+      dataPartition = &(slice->dps[dpMap[SE_HEADER]]);
       se.reading = readMB_transform_size_flag_CABAC;
 
       // read CAVLC transform_size_8x8_flag
-      if (dp->s->errorFlag) {
+      if (dataPartition->s->errorFlag) {
         se.len = 1;
-        readsSyntaxElement_FLC(&se, dp->s);
+        readsSyntaxElement_FLC(&se, dataPartition->s);
       }
       else
-        dp->readSyntaxElement(mb, &se, dp);
+        dataPartition->readSyntaxElement(mb, &se, dataPartition);
       mb->lumaTransformSize8x8flag = (Boolean) se.value1;
     }
 
@@ -780,7 +780,7 @@ static void read_CBP_and_coeffs_from_NAL_CABAC_400 (sMacroblock* mb)
     // Delta quant only if nonzero coeffs
     if (cbp !=0)
     {
-      readDeltaQuant(&se, dp, mb, dpMap, ((mb->isIntraBlock == FALSE)) ? SE_DELTA_QUANT_INTER : SE_DELTA_QUANT_INTRA);
+      readDeltaQuant(&se, dataPartition, mb, dpMap, ((mb->isIntraBlock == FALSE)) ? SE_DELTA_QUANT_INTER : SE_DELTA_QUANT_INTRA);
 
       if (slice->datadpMode)  {
         if ((mb->isIntraBlock == FALSE) && slice->noDataPartitionC )
@@ -803,7 +803,7 @@ static void read_CBP_and_coeffs_from_NAL_CABAC_400 (sMacroblock* mb)
   else // read DC coeffs for new intra modes
   {
     cbp = mb->cbp;
-    readDeltaQuant(&se, dp, mb, dpMap, SE_DELTA_QUANT_INTRA);
+    readDeltaQuant(&se, dataPartition, mb, dpMap, SE_DELTA_QUANT_INTRA);
 
     if (slice->datadpMode) {
       if (slice->noDataPartitionB) {
@@ -820,12 +820,12 @@ static void read_CBP_and_coeffs_from_NAL_CABAC_400 (sMacroblock* mb)
 
       {
         se.type = SE_LUM_DC_INTRA;
-        dp = &(slice->dps[dpMap[se.type]]);
+        dataPartition = &(slice->dps[dpMap[se.type]]);
 
         se.context      = LUMA_16DC;
         se.type         = SE_LUM_DC_INTRA;
 
-        if (dp->s->errorFlag)
+        if (dataPartition->s->errorFlag)
           se.mapping = linfo_levrun_inter;
         else
           se.reading = readRunLevel_CABAC;
@@ -833,7 +833,7 @@ static void read_CBP_and_coeffs_from_NAL_CABAC_400 (sMacroblock* mb)
         level = 1;                            // just to get inside the loop
 
         for(k = 0; (k < 17) && (level != 0); ++k) {
-          dp->readSyntaxElement(mb, &se, dp);
+          dataPartition->readSyntaxElement(mb, &se, dataPartition);
           level = se.value1;
 
           if (level != 0)    /* leave if level == 0 */
@@ -880,7 +880,7 @@ static void read_CBP_and_coeffs_from_NAL_CABAC_444 (sMacroblock* mb)
   int level;
   int cbp;
   sSyntaxElement se;
-  sDataPartition *dp = NULL;
+  sDataPartition *dataPartition = NULL;
   sSlice* slice = mb->slice;
   const byte *dpMap = assignSE2dp[slice->datadpMode];
   int coef_ctr, i0, j0;
@@ -918,9 +918,9 @@ static void read_CBP_and_coeffs_from_NAL_CABAC_444 (sMacroblock* mb)
       ? SE_CBP_INTRA
       : SE_CBP_INTER;
 
-    dp = &(slice->dps[dpMap[se.type]]);
+    dataPartition = &(slice->dps[dpMap[se.type]]);
 
-    if (dp->s->errorFlag) {
+    if (dataPartition->s->errorFlag) {
       se.mapping = (mb->mbType == I4MB || mb->mbType == SI4MB || mb->mbType == I8MB)
         ? slice->linfoCbpIntra
         : slice->linfoCbpInter;
@@ -928,7 +928,7 @@ static void read_CBP_and_coeffs_from_NAL_CABAC_444 (sMacroblock* mb)
     else
       se.reading = read_CBP_CABAC;
 
-    dp->readSyntaxElement(mb, &se, dp);
+    dataPartition->readSyntaxElement(mb, &se, dataPartition);
     mb->cbp = cbp = se.value1;
 
 
@@ -944,16 +944,16 @@ static void read_CBP_and_coeffs_from_NAL_CABAC_444 (sMacroblock* mb)
     if (need_transform_size_flag)
     {
       se.type   =  SE_HEADER;
-      dp = &(slice->dps[dpMap[SE_HEADER]]);
+      dataPartition = &(slice->dps[dpMap[SE_HEADER]]);
       se.reading = readMB_transform_size_flag_CABAC;
 
       // read CAVLC transform_size_8x8_flag
-      if (dp->s->errorFlag) {
+      if (dataPartition->s->errorFlag) {
         se.len = 1;
-        readsSyntaxElement_FLC(&se, dp->s);
+        readsSyntaxElement_FLC(&se, dataPartition->s);
       }
       else
-        dp->readSyntaxElement(mb, &se, dp);
+        dataPartition->readSyntaxElement(mb, &se, dataPartition);
       mb->lumaTransformSize8x8flag = (Boolean) se.value1;
     }
 
@@ -962,7 +962,7 @@ static void read_CBP_and_coeffs_from_NAL_CABAC_444 (sMacroblock* mb)
     // Delta quant only if nonzero coeffs
     if (cbp !=0)
     {
-      readDeltaQuant(&se, dp, mb, dpMap, ((mb->isIntraBlock == FALSE)) ? SE_DELTA_QUANT_INTER : SE_DELTA_QUANT_INTRA);
+      readDeltaQuant(&se, dataPartition, mb, dpMap, ((mb->isIntraBlock == FALSE)) ? SE_DELTA_QUANT_INTER : SE_DELTA_QUANT_INTRA);
 
       if (slice->datadpMode) {
         if ((mb->isIntraBlock == FALSE) && slice->noDataPartitionC )
@@ -986,7 +986,7 @@ static void read_CBP_and_coeffs_from_NAL_CABAC_444 (sMacroblock* mb)
   {
     cbp = mb->cbp;
 
-    readDeltaQuant(&se, dp, mb, dpMap, SE_DELTA_QUANT_INTRA);
+    readDeltaQuant(&se, dataPartition, mb, dpMap, SE_DELTA_QUANT_INTRA);
 
     if (slice->datadpMode) {
       if (slice->noDataPartitionB) {
@@ -1003,12 +1003,12 @@ static void read_CBP_and_coeffs_from_NAL_CABAC_444 (sMacroblock* mb)
 
       {
         se.type = SE_LUM_DC_INTRA;
-        dp = &(slice->dps[dpMap[se.type]]);
+        dataPartition = &(slice->dps[dpMap[se.type]]);
 
         se.context      = LUMA_16DC;
         se.type         = SE_LUM_DC_INTRA;
 
-        if (dp->s->errorFlag)
+        if (dataPartition->s->errorFlag)
           se.mapping = linfo_levrun_inter;
         else
           se.reading = readRunLevel_CABAC;
@@ -1016,7 +1016,7 @@ static void read_CBP_and_coeffs_from_NAL_CABAC_444 (sMacroblock* mb)
         level = 1;                            // just to get inside the loop
 
         for(k = 0; (k < 17) && (level != 0); ++k) {
-          dp->readSyntaxElement(mb, &se, dp);
+          dataPartition->readSyntaxElement(mb, &se, dataPartition);
           level = se.value1;
 
           if (level != 0)    /* leave if level == 0 */
@@ -1072,14 +1072,14 @@ static void read_CBP_and_coeffs_from_NAL_CABAC_444 (sMacroblock* mb)
     {
       {
         se.type = SE_LUM_DC_INTRA;
-        dp = &(slice->dps[dpMap[se.type]]);
+        dataPartition = &(slice->dps[dpMap[se.type]]);
 
         if( (decoder->sepColourPlaneFlag != 0) )
           se.context = LUMA_16DC;
         else
           se.context = (uv==0) ? CB_16DC : CR_16DC;
 
-        if (dp->s->errorFlag)
+        if (dataPartition->s->errorFlag)
           se.mapping = linfo_levrun_inter;
         else
           se.reading = readRunLevel_CABAC;
@@ -1088,7 +1088,7 @@ static void read_CBP_and_coeffs_from_NAL_CABAC_444 (sMacroblock* mb)
         level = 1;                            // just to get inside the loop
 
         for(k=0;(k<17) && (level!=0);++k) {
-          dp->readSyntaxElement(mb, &se, dp);
+          dataPartition->readSyntaxElement(mb, &se, dataPartition);
           level = se.value1;
 
           if (level != 0)                     // leave if level == 0
@@ -1138,7 +1138,7 @@ static void read_CBP_and_coeffs_from_NAL_CABAC_422 (sMacroblock* mb)
   int level;
   int cbp;
   sSyntaxElement se;
-  sDataPartition *dp = NULL;
+  sDataPartition *dataPartition = NULL;
   sSlice* slice = mb->slice;
   const byte *dpMap = assignSE2dp[slice->datadpMode];
   int coef_ctr, i0, j0, b8;
@@ -1182,9 +1182,9 @@ static void read_CBP_and_coeffs_from_NAL_CABAC_422 (sMacroblock* mb)
       ? SE_CBP_INTRA
       : SE_CBP_INTER;
 
-    dp = &(slice->dps[dpMap[se.type]]);
+    dataPartition = &(slice->dps[dpMap[se.type]]);
 
-    if (dp->s->errorFlag) {
+    if (dataPartition->s->errorFlag) {
       se.mapping = (mb->mbType == I4MB || mb->mbType == SI4MB || mb->mbType == I8MB)
         ? slice->linfoCbpIntra
         : slice->linfoCbpInter;
@@ -1192,7 +1192,7 @@ static void read_CBP_and_coeffs_from_NAL_CABAC_422 (sMacroblock* mb)
     else
       se.reading = read_CBP_CABAC;
 
-    dp->readSyntaxElement(mb, &se, dp);
+    dataPartition->readSyntaxElement(mb, &se, dataPartition);
     mb->cbp = cbp = se.value1;
 
 
@@ -1207,16 +1207,16 @@ static void read_CBP_and_coeffs_from_NAL_CABAC_422 (sMacroblock* mb)
 
     if (need_transform_size_flag) {
       se.type   =  SE_HEADER;
-      dp = &(slice->dps[dpMap[SE_HEADER]]);
+      dataPartition = &(slice->dps[dpMap[SE_HEADER]]);
       se.reading = readMB_transform_size_flag_CABAC;
 
       // read CAVLC transform_size_8x8_flag
-      if (dp->s->errorFlag) {
+      if (dataPartition->s->errorFlag) {
         se.len = 1;
-        readsSyntaxElement_FLC(&se, dp->s);
+        readsSyntaxElement_FLC(&se, dataPartition->s);
       }
       else
-        dp->readSyntaxElement(mb, &se, dp);
+        dataPartition->readSyntaxElement(mb, &se, dataPartition);
       mb->lumaTransformSize8x8flag = (Boolean) se.value1;
     }
 
@@ -1224,7 +1224,7 @@ static void read_CBP_and_coeffs_from_NAL_CABAC_422 (sMacroblock* mb)
     //----------------------
     // Delta quant only if nonzero coeffs
     if (cbp !=0) {
-      readDeltaQuant(&se, dp, mb, dpMap, ((mb->isIntraBlock == FALSE)) ? SE_DELTA_QUANT_INTER : SE_DELTA_QUANT_INTRA);
+      readDeltaQuant(&se, dataPartition, mb, dpMap, ((mb->isIntraBlock == FALSE)) ? SE_DELTA_QUANT_INTER : SE_DELTA_QUANT_INTRA);
 
       if (slice->datadpMode)
       {
@@ -1249,7 +1249,7 @@ static void read_CBP_and_coeffs_from_NAL_CABAC_422 (sMacroblock* mb)
   {
     cbp = mb->cbp;
 
-    readDeltaQuant(&se, dp, mb, dpMap, SE_DELTA_QUANT_INTRA);
+    readDeltaQuant(&se, dataPartition, mb, dpMap, SE_DELTA_QUANT_INTRA);
 
     if (slice->datadpMode) {
       if (slice->noDataPartitionB) {
@@ -1266,12 +1266,12 @@ static void read_CBP_and_coeffs_from_NAL_CABAC_422 (sMacroblock* mb)
 
       {
         se.type = SE_LUM_DC_INTRA;
-        dp = &(slice->dps[dpMap[se.type]]);
+        dataPartition = &(slice->dps[dpMap[se.type]]);
 
         se.context      = LUMA_16DC;
         se.type         = SE_LUM_DC_INTRA;
 
-        if (dp->s->errorFlag)
+        if (dataPartition->s->errorFlag)
           se.mapping = linfo_levrun_inter;
         else
           se.reading = readRunLevel_CABAC;
@@ -1279,7 +1279,7 @@ static void read_CBP_and_coeffs_from_NAL_CABAC_422 (sMacroblock* mb)
         level = 1;                            // just to get inside the loop
 
         for(k = 0; (k < 17) && (level != 0); ++k) {
-          dp->readSyntaxElement(mb, &se, dp);
+          dataPartition->readSyntaxElement(mb, &se, dataPartition);
           level = se.value1;
 
           if (level != 0)    /* leave if level == 0 */
@@ -1357,14 +1357,14 @@ static void read_CBP_and_coeffs_from_NAL_CABAC_422 (sMacroblock* mb)
             se.type         = ((mb->isIntraBlock == TRUE) ? SE_CHR_DC_INTRA : SE_CHR_DC_INTER);
             mb->isVblock     = ll;
 
-            dp = &(slice->dps[dpMap[se.type]]);
+            dataPartition = &(slice->dps[dpMap[se.type]]);
 
-            if (dp->s->errorFlag)
+            if (dataPartition->s->errorFlag)
               se.mapping = linfo_levrun_c2x2;
             else
               se.reading = readRunLevel_CABAC;
 
-            dp->readSyntaxElement(mb, &se, dp);
+            dataPartition->readSyntaxElement(mb, &se, dataPartition);
 
             level = se.value1;
 
@@ -1442,9 +1442,9 @@ static void read_CBP_and_coeffs_from_NAL_CABAC_422 (sMacroblock* mb)
       se.context      = CHROMA_AC;
       se.type         = (mb->isIntraBlock ? SE_CHR_AC_INTRA : SE_CHR_AC_INTER);
 
-      dp = &(slice->dps[dpMap[se.type]]);
+      dataPartition = &(slice->dps[dpMap[se.type]]);
 
-      if (dp->s->errorFlag)
+      if (dataPartition->s->errorFlag)
         se.mapping = linfo_levrun_inter;
       else
         se.reading = readRunLevel_CABAC;
@@ -1470,7 +1470,7 @@ static void read_CBP_and_coeffs_from_NAL_CABAC_422 (sMacroblock* mb)
 
             for(k = 0; (k < 16) && (level != 0);++k)
             {
-              dp->readSyntaxElement(mb, &se, dp);
+              dataPartition->readSyntaxElement(mb, &se, dataPartition);
               level = se.value1;
 
               if (level != 0)
@@ -1508,7 +1508,7 @@ static void read_CBP_and_coeffs_from_NAL_CABAC_422 (sMacroblock* mb)
 
             for(k=0;(k<16)&&(level!=0);++k)
             {
-              dp->readSyntaxElement(mb, &se, dp);
+              dataPartition->readSyntaxElement(mb, &se, dataPartition);
               level = se.value1;
 
               if (level != 0)

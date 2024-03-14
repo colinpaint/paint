@@ -309,9 +309,9 @@ static void initVUI (sSPS* sps) {
   }
 //}}}
 //{{{
-static int readHRD (sDataPartition* dp, sHRD* hrd) {
+static int readHRD (sDataPartition* dataPartition, sHRD* hrd) {
 
-  sBitStream *s = dp->s;
+  sBitStream *s = dataPartition->s;
   hrd->cpb_cnt_minus1 = readUeV ("VUI cpb_cnt_minus1", s);
   hrd->bit_rate_scale = readUv (4, "VUI bit_rate_scale", s);
   hrd->cpb_size_scale = readUv (4, "VUI cpb_size_scale", s);
@@ -333,9 +333,9 @@ static int readHRD (sDataPartition* dp, sHRD* hrd) {
   }
 //}}}
 //{{{
-static int readVUI (sDataPartition* p, sSPS* sps) {
+static int readVUI (sDataPartition* dataPartition, sSPS* sps) {
 
-  sBitStream* s = p->s;
+  sBitStream* s = dataPartition->s;
   if (sps->vui_parameters_present_flag) {
     sps->vui_seq_parameters.aspect_ratio_info_present_flag = readU1 ("VUI aspect_ratio_info_present_flag", s);
     if (sps->vui_seq_parameters.aspect_ratio_info_present_flag) {
@@ -377,12 +377,12 @@ static int readVUI (sDataPartition* p, sSPS* sps) {
 
     sps->vui_seq_parameters.nal_hrd_parameters_present_flag = readU1 ("VUI nal_hrd_parameters_present_flag", s);
     if (sps->vui_seq_parameters.nal_hrd_parameters_present_flag)
-      readHRD (p, &(sps->vui_seq_parameters.nal_hrd_parameters));
+      readHRD (dataPartition, &(sps->vui_seq_parameters.nal_hrd_parameters));
 
     sps->vui_seq_parameters.vcl_hrd_parameters_present_flag = readU1 ("VUI vcl_hrd_parameters_present_flag", s);
 
     if (sps->vui_seq_parameters.vcl_hrd_parameters_present_flag)
-      readHRD (p, &(sps->vui_seq_parameters.vcl_hrd_parameters));
+      readHRD (dataPartition, &(sps->vui_seq_parameters.vcl_hrd_parameters));
 
     if (sps->vui_seq_parameters.nal_hrd_parameters_present_flag ||
         sps->vui_seq_parameters.vcl_hrd_parameters_present_flag)
@@ -465,9 +465,9 @@ static int isSpsEqual (sSPS* sps1, sSPS* sps2) {
   }
 //}}}
 //{{{
-static void interpretSPS (sDecoder* decoder, sDataPartition* dp, sSPS* sps) {
+static void interpretSPS (sDecoder* decoder, sDataPartition* dataPartition, sSPS* sps) {
 
-  sBitStream* s = dp->s;
+  sBitStream* s = dataPartition->s;
   sps->profileIdc = readUv (8, "SPS profileIdc", s);
   if ((sps->profileIdc != BASELINE) && (sps->profileIdc != MAIN) && (sps->profileIdc != EXTENDED) &&
       (sps->profileIdc != FREXT_HP) &&
@@ -563,7 +563,7 @@ static void interpretSPS (sDecoder* decoder, sDataPartition* dp, sSPS* sps) {
   sps->vui_parameters_present_flag = (Boolean)readU1 ("SPS vui_parameters_present_flag", s);
 
   initVUI (sps);
-  readVUI (dp, sps);
+  readVUI (dataPartition, sps);
 
   if (decoder->param.spsDebug) {
     printf ("-> id:%d refFrames:%d pocType:%d mbs:%dx%d",
@@ -753,12 +753,12 @@ static int isPpsEqual (sPPS* pps1, sPPS* pps2) {
   }
 //}}}
 //{{{
-static void interpretPPS (sDecoder* decoder, sDataPartition* dp, sPPS* pps) {
+static void interpretPPS (sDecoder* decoder, sDataPartition* dataPartition, sPPS* pps) {
 
   unsigned n_ScalingList;
   int chromaFormatIdc;
 
-  sBitStream* s = dp->s;
+  sBitStream* s = dataPartition->s;
   pps->ppsId = readUeV ("PPS ppsId", s);
   pps->spsId = readUeV ("PPS spsId", s);
   pps->entropyCodingMode = readU1 ("PPS entropyCodingMode", s);
@@ -877,14 +877,14 @@ void makePPSavailable (sDecoder* decoder, int id, sPPS* pps) {
 //{{{
 void processPPS (sDecoder* decoder, sNalu* nalu) {
 
-  sDataPartition* dp = allocDataPartitions (1);
-  dp->s->errorFlag = 0;
-  dp->s->readLen = dp->s->bitStreamOffset = 0;
-  memcpy (dp->s->streamBuffer, &nalu->buf[1], nalu->len-1);
-  dp->s->codeLen = dp->s->bitStreamLen = RBSPtoSODB (dp->s->streamBuffer, nalu->len-1);
+  sDataPartition* dataPartition = allocDataPartitions (1);
+  dataPartition->s->errorFlag = 0;
+  dataPartition->s->readLen = dataPartition->s->bitStreamOffset = 0;
+  memcpy (dataPartition->s->streamBuffer, &nalu->buf[1], nalu->len-1);
+  dataPartition->s->codeLen = dataPartition->s->bitStreamLen = RBSPtoSODB (dataPartition->s->streamBuffer, nalu->len-1);
 
   sPPS* pps = allocPPS();
-  interpretPPS (decoder, dp, pps);
+  interpretPPS (decoder, dataPartition, pps);
 
   if (decoder->activePPS) {
     if (pps->ppsId == decoder->activePPS->ppsId) {
@@ -899,7 +899,7 @@ void processPPS (sDecoder* decoder, sNalu* nalu) {
     }
 
   makePPSavailable (decoder, pps->ppsId, pps);
-  freeDataPartitions (dp, 1);
+  freeDataPartitions (dataPartition, 1);
   freePPS (pps);
   }
 //}}}
@@ -934,7 +934,7 @@ void useParameterSet (sSlice* slice) {
   // In practice, we need to patch many values
   // in decoder-> (but no more in input. -- these have been taken care of)
   // Set Sequence Parameter Stuff first
-  if (sps->pocType > 2) 
+  if (sps->pocType > 2)
     error ("invalid sps->pocType != 1");
   if (sps->pocType == 1)
     if (sps->mumRefFramesPocCycle >= MAX_NUM_REF_FRAMES_PIC_ORDER)

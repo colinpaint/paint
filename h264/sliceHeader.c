@@ -1184,8 +1184,8 @@ static const char INIT_FLD_LAST_P[3][22][15][2] =
 static void ref_pic_list_reordering (sSlice* slice) {
 
   byte partitionIndex = assignSE2dp[slice->datadpMode][SE_HEADER];
-  sDataPartition* dp = &(slice->dps[partitionIndex]);
-  sBitStream* s = dp->s;
+  sDataPartition* dataPartition = &(slice->dps[partitionIndex]);
+  sBitStream* s = dataPartition->s;
 
   alloc_ref_pic_list_reordering_buffer (slice);
   if (slice->sliceType != I_SLICE &&
@@ -1257,8 +1257,8 @@ static void pred_weight_table (sSlice* slice) {
   sSPS* activeSPS = decoder->activeSPS;
 
   byte partitionIndex = assignSE2dp[slice->datadpMode][SE_HEADER];
-  sDataPartition* dp = &(slice->dps[partitionIndex]);
-  sBitStream* s = dp->s;
+  sDataPartition* dataPartition = &(slice->dps[partitionIndex]);
+  sBitStream* s = dataPartition->s;
 
   int luma_weight_flag_l0, luma_weight_flag_l1, chroma_weight_flag_l0, chroma_weight_flag_l1;
 
@@ -1697,8 +1697,8 @@ void readSliceHeader (sSlice* slice) {
   sDecoder* decoder = slice->decoder;
 
   byte partitionIndex = assignSE2dp[slice->datadpMode][SE_HEADER];
-  sDataPartition* dp = &(slice->dps[partitionIndex]);
-  sBitStream* s = dp->s;
+  sDataPartition* dataPartition = &(slice->dps[partitionIndex]);
+  sBitStream* s = dataPartition->s;
 
   // Get first_mb_in_slice
   slice->startMbNum = readUeV ("SLC first_mb_in_slice", s);
@@ -1723,8 +1723,8 @@ void readRestSliceHeader (sSlice* slice) {
   sSPS* activeSPS = decoder->activeSPS;
 
   byte partitionIndex = assignSE2dp[slice->datadpMode][SE_HEADER];
-  sDataPartition* dp = &(slice->dps[partitionIndex]);
-  sBitStream* s = dp->s;
+  sDataPartition* dataPartition = &(slice->dps[partitionIndex]);
+  sBitStream* s = dataPartition->s;
   slice->frameNum = readUv (activeSPS->log2_max_frame_num_minus4 + 4, "SLC frameNum", s);
 
   if (slice->idrFlag) {
