@@ -138,11 +138,6 @@ static void freeDecoder (sDecoder* decoder) {
       decoder->coding = NULL;
       }
 
-    if (decoder->layer) {
-      free (decoder->layer);
-      decoder->layer = NULL;
-      }
-
   if (decoder->oldSlice != NULL) {
     free (decoder->oldSlice);
     decoder->oldSlice = NULL;
@@ -579,7 +574,6 @@ sDecoder* openDecoder (sParam* param, byte* chunk, size_t chunkSize) {
 
   decoder->coding = (sCoding*)calloc (1, sizeof(sCoding));
   decoder->layerInitDone = 0;
-  decoder->layer = (sLayer*)calloc (1, sizeof(sLayer));
 
   decoder->decOutputPic = (sDecodedPic*)calloc (1, sizeof(sDecodedPic));
   allocOutput (decoder);

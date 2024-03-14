@@ -39,15 +39,6 @@ static void updateMaxValue (sFrameFormat* format) {
   }
 //}}}
 //{{{
-static void setupLayerInfo (sDecoder* decoder, sSPS* sps, sLayer* layer) {
-
-  layer->decoder = decoder;
-  layer->coding = decoder->coding;
-  layer->sps = sps;
-  layer->dpb = decoder->dpb;
-  }
-//}}}
-//{{{
 static void setCodingParam (sSPS* sps, sCoding* coding) {
 
   // maximum vertical motion vector range in luma quarter pixel units
@@ -633,10 +624,8 @@ void activateSPS (sDecoder* decoder, sSPS* sps) {
       endDecodeFrame (decoder);
     decoder->activeSPS = sps;
 
-    if (isBLprofile (sps->profileIdc) && !decoder->dpb->initDone) {
+    if (isBLprofile (sps->profileIdc) && !decoder->dpb->initDone) 
       setCodingParam (sps, decoder->coding);
-      setupLayerInfo ( decoder, sps, decoder->layer);
-      }
     setGlobalCodingProgram (decoder, decoder->coding);
 
     initGlobalBuffers (decoder);
