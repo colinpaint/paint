@@ -599,7 +599,7 @@ static void initPicture (sDecoder* decoder, sSlice* slice) {
     }
 
   // CAVLC init
-  if (decoder->activePPS->entropyCodingModeFlag == (Boolean) CAVLC)
+  if (decoder->activePPS->entropyCodingModeFlag == (Boolean)CAVLC)
     memset (decoder->nzCoeff[0][0][0], -1, decoder->picSizeInMbs * 48 *sizeof(byte)); // 3 * 4 * 4
 
   // Set the sliceNum member of each MB to -1, to ensure correct when packet loss occurs
@@ -921,7 +921,7 @@ static int readNextSlice (sSlice* slice) {
 
         if (!readNextNalu (decoder, nalu))
           return curHeader;
-
+           
         if (NALU_TYPE_DPB == nalu->unitType) {
           //{{{  got nalu dataPartitionB
           s = slice->dps[1].s;
