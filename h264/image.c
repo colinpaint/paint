@@ -445,7 +445,6 @@ static int isNewPicture (sPicture* picture, sSlice* slice, sOldSlice* oldSlice) 
       }
     }
 
-  result |= (slice->layerId != oldSlice->layerId);
   return result;
   }
 //}}}
@@ -560,7 +559,6 @@ static void initPicture (sDecoder* decoder, sSlice* slice) {
   picture->chromaQpOffset[1] = decoder->activePPS->secondChromaQpIndexOffset;
   picture->iCodingType = slice->structure == FRAME ?
     (slice->mbAffFrameFlag? FRAME_MB_PAIR_CODING:FRAME_CODING) : FIELD_CODING;
-  picture->layerId = slice->layerId;
 
   // reset all variables of the error conceal instance before decoding of every frame.
   // here the third parameter should, if perfectly, be equal to the number of slices per frame.
@@ -759,8 +757,6 @@ static void copySliceInfo (sSlice* slice, sOldSlice* oldSlice) {
     oldSlice->deltaPicOrderCount[0] = slice->deltaPicOrderCount[0];
     oldSlice->deltaPicOrderCount[1] = slice->deltaPicOrderCount[1];
     }
-
-  oldSlice->layerId = slice->layerId;
   }
 //}}}
 //{{{

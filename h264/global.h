@@ -540,7 +540,6 @@ typedef struct OldSlice {
   byte     idrFlag;
   int      idrPicId;
   int      ppsId;
-  int      layerId;
   } sOldSlice;
 //}}}
 //{{{  sSlice
@@ -626,7 +625,6 @@ typedef struct Slice {
   int*  abs_diff_pic_num_minus1[2];
   int*  long_term_pic_idx[2];
 
-  int   layerId;
   short DFDisableIdc;      // Disable deblocking filter on slice
   short DFAlphaC0Offset;   // Alpha and C0 offset for filtering slice
   short DFBetaOffset;      // Beta offset for filtering slice
@@ -707,7 +705,6 @@ typedef struct Slice {
 //}}}
 //{{{  sCoding
 typedef struct CodingParam {
-  int layerId;
   int profileIdc;
   int width;
   int height;
@@ -777,7 +774,6 @@ typedef struct CodingParam {
 //}}}
 //{{{  sLayer
 typedef struct LayerParam {
-  int              layerId;
   struct Decoder*  decoder;
   sCoding*         coding;
   sSPS*            sps;

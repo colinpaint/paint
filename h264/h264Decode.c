@@ -575,15 +575,11 @@ sDecoder* openDecoder (sParam* param, byte* chunk, size_t chunkSize) {
   decoder->iChromaPadY = MCBUF_CHROMA_PAD_Y;
 
   decoder->dpb = (sDPB*)calloc (1, sizeof(sDPB));
-  decoder->dpb->layerId = 0;
   resetDpb (decoder, decoder->dpb);
 
   decoder->coding = (sCoding*)calloc (1, sizeof(sCoding));
-  decoder->coding->layerId = 0;
-
   decoder->layerInitDone = 0;
   decoder->layer = (sLayer*)calloc (1, sizeof(sLayer));
-  decoder->layer->layerId = 0;
 
   decoder->decOutputPic = (sDecodedPic*)calloc (1, sizeof(sDecodedPic));
   allocOutput (decoder);

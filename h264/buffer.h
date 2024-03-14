@@ -90,7 +90,6 @@ typedef struct Picture {
 
   char listXsize[MAX_NUM_SLICES][2];
   struct Picture** listX[MAX_NUM_SLICES][2];
-  int         layerId;
   } sPicture;
 //}}}
 typedef sPicture* sPicturePtr;
@@ -138,7 +137,6 @@ typedef struct DPB {
   int numRefFrames;
 
   sFrameStore* lastPicture;
-  int layerId;
   } sDPB;
 //}}}
 
