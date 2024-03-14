@@ -11,6 +11,7 @@
 #include "parset.h"
 //}}}
 
+#define MAX_FN  256
 //{{{
 typedef enum {
   SEI_BUFFERING_PERIOD = 0,
@@ -64,7 +65,6 @@ typedef enum {
   SEI_MAX_ELEMENTS  //!< number of maximum syntax elements
   } SEI_type;
 //}}}
-#define MAX_FN               256
 //{{{  frame_packing_arrangement_information_struct
 typedef struct {
   unsigned int  frame_packing_arrangement_id;
@@ -123,8 +123,9 @@ static void process_spare_pic (byte* payload, int size, sDecoder* decoder) {
 
   target_frame_num = readUeV ("SEI target_frame_num", buf);
   num_spare_pics = 1 + readUeV ("SEI num_spare_pics_minus1", buf);
-  printf ("SEQ spare picture target_frame_num:%d num_spare_pics:%d\n",
-          target_frame_num, num_spare_pics);
+  if (decoder->param.seiDebug)
+    printf ("SEQ spare picture target_frame_num:%d num_spare_pics:%d\n",
+            target_frame_num, num_spare_pics);
 
   getMem3D (&map, num_spare_pics, decoder->height >> 4, decoder->width >> 4);
   for (int i = 0; i < num_spare_pics; i++) {
@@ -289,15 +290,17 @@ static void process_subsequence_info (byte* payload, int size, sDecoder* decoder
   if (sub_seq_frame_num_flag)
     sub_seq_frame_num = readUeV("SEI sub_seq_frame_num", buf);
 
-  printf ("Sub-sequence information SEI message\n");
-  printf ("sub_seq_layer_num = %d\n", sub_seq_layer_num );
-  printf ("sub_seq_id = %d\n", sub_seq_id);
-  printf ("first_ref_pic_flag = %d\n", first_ref_pic_flag);
-  printf ("leading_non_ref_pic_flag = %d\n", leading_non_ref_pic_flag);
-  printf ("last_pic_flag = %d\n", last_pic_flag);
-  printf ("sub_seq_frame_num_flag = %d\n", sub_seq_frame_num_flag);
-  if (sub_seq_frame_num_flag)
-    printf ("sub_seq_frame_num = %d\n", sub_seq_frame_num);
+  if (decoder->param.seiDebug) {
+    printf ("Sub-sequence information SEI\n");
+    printf ("sub_seq_layer_num = %d\n", sub_seq_layer_num );
+    printf ("sub_seq_id = %d\n", sub_seq_id);
+    printf ("first_ref_pic_flag = %d\n", first_ref_pic_flag);
+    printf ("leading_non_ref_pic_flag = %d\n", leading_non_ref_pic_flag);
+    printf ("last_pic_flag = %d\n", last_pic_flag);
+    printf ("sub_seq_frame_num_flag = %d\n", sub_seq_frame_num_flag);
+    if (sub_seq_frame_num_flag)
+      printf ("sub_seq_frame_num = %d\n", sub_seq_frame_num);
+    }
 
   free  (buf);
   }
@@ -314,113 +317,102 @@ static void process_subsequence_layer_characteristics_info (byte* payload, int s
   buf->frameBitOffset = 0;
 
   num_sub_layers = 1 + readUeV("SEI num_sub_layers_minus1", buf);
-  printf ("SEI Sub-sequence layer characteristics num_sub_layers_minus1 %ld\n", num_sub_layers - 1);
+
+  if (decoder->param.seiDebug)
+    printf ("SEI Sub-sequence layer characteristics num_sub_layers_minus1 %ld\n", num_sub_layers - 1);
   for (int i = 0; i < num_sub_layers; i++) {
     accurate_statistics_flag = readU1 ("SEI accurate_statistics_flag", buf);
     average_bit_rate = readUv (16,"SEI average_bit_rate", buf);
     average_frame_rate = readUv (16,"SEI average_frame_rate", buf);
 
-    printf("layer %d: accurate_statistics_flag = %ld\n", i, accurate_statistics_flag);
-    printf("layer %d: average_bit_rate = %ld\n", i, average_bit_rate);
-    printf("layer %d: average_frame_rate= %ld\n", i, average_frame_rate);
-  }
+    if (decoder->param.seiDebug) {
+      printf("layer %d: accurate_statistics_flag = %ld\n", i, accurate_statistics_flag);
+      printf("layer %d: average_bit_rate = %ld\n", i, average_bit_rate);
+      printf("layer %d: average_frame_rate= %ld\n", i, average_frame_rate);
+      }
+    }
+
   free (buf);
-}
+  }
 //}}}
 //{{{
 static void process_subsequence_characteristics_info (byte* payload, int size, sDecoder* decoder) {
 
-  int i;
-  int sub_seq_layer_num, sub_seq_id, duration_flag, average_rate_flag, accurate_statistics_flag;
-  unsigned long sub_seq_duration, average_bit_rate, average_frame_rate;
-  int num_referenced_subseqs, ref_sub_seq_layer_num, ref_sub_seq_id, ref_sub_seq_direction;
-
   sBitstream* buf = malloc(sizeof(sBitstream));
   buf->bitstreamLength = size;
   buf->streamBuffer = payload;
   buf->frameBitOffset = 0;
 
-  sub_seq_layer_num = readUeV("SEI sub_seq_layer_num", buf);
-  sub_seq_id        = readUeV("SEI sub_seq_id", buf);
-  duration_flag     = readU1 ("SEI duration_flag", buf);
+  int sub_seq_layer_num = readUeV("SEI sub_seq_layer_num", buf);
+  int sub_seq_id        = readUeV("SEI sub_seq_id", buf);
+  int duration_flag     = readU1 ("SEI duration_flag", buf);
 
-  printf ("Sub-sequence characteristics SEI message\n");
-  printf ("sub_seq_layer_num = %d\n", sub_seq_layer_num );
-  printf ("sub_seq_id        = %d\n", sub_seq_id);
-  printf ("duration_flag     = %d\n", duration_flag);
-
-  if ( duration_flag ) {
-    sub_seq_duration = readUv (32, "SEI duration_flag", buf);
-    printf ("sub_seq_duration = %ld\n", sub_seq_duration);
+  if (decoder->param.seiDebug) {
+    printf ("Sub-sequence characteristics SEI\n");
+    printf ("sub_seq_layer_num = %d\n", sub_seq_layer_num );
+    printf ("sub_seq_id        = %d\n", sub_seq_id);
+    printf ("duration_flag     = %d\n", duration_flag);
     }
 
-  average_rate_flag = readU1 ("SEI average_rate_flag", buf);
-
-  printf ("average_rate_flag = %d\n", average_rate_flag);
-
-  if ( average_rate_flag ) {
-    accurate_statistics_flag = readU1 (    "SEI accurate_statistics_flag", buf);
-    average_bit_rate         = readUv (16, "SEI average_bit_rate", buf);
-    average_frame_rate       = readUv (16, "SEI average_frame_rate", buf);
-
-    printf ("accurate_statistics_flag = %d\n", accurate_statistics_flag);
-    printf ("average_bit_rate         = %ld\n", average_bit_rate);
-    printf ("average_frame_rate       = %ld\n", average_frame_rate);
+  if (duration_flag) {
+    int sub_seq_duration = readUv (32, "SEI duration_flag", buf);
+    if (decoder->param.seiDebug)
+      printf ("sub_seq_duration = %ld\n", sub_seq_duration);
     }
 
-  num_referenced_subseqs  = readUeV("SEI num_referenced_subseqs", buf);
-  printf ("num_referenced_subseqs = %d\n", num_referenced_subseqs);
-
-  for (i=0; i<num_referenced_subseqs; i++) {
-    ref_sub_seq_layer_num  = readUeV("SEI ref_sub_seq_layer_num", buf);
-    ref_sub_seq_id         = readUeV("SEI ref_sub_seq_id", buf);
-    ref_sub_seq_direction  = readU1 ("SEI ref_sub_seq_direction", buf);
-
-    printf ("ref_sub_seq_layer_num = %d\n", ref_sub_seq_layer_num);
-    printf ("ref_sub_seq_id        = %d\n", ref_sub_seq_id);
-    printf ("ref_sub_seq_direction = %d\n", ref_sub_seq_direction);
+  int average_rate_flag = readU1 ("SEI average_rate_flag", buf);
+  if (decoder->param.seiDebug)
+    printf ("average_rate_flag = %d\n", average_rate_flag);
+  if (average_rate_flag) {
+    int accurate_statistics_flag = readU1 (    "SEI accurate_statistics_flag", buf);
+    int average_bit_rate         = readUv (16, "SEI average_bit_rate", buf);
+    int average_frame_rate       = readUv (16, "SEI average_frame_rate", buf);
+    if (decoder->param.seiDebug) {
+      printf ("accurate_statistics_flag = %d\n", accurate_statistics_flag);
+      printf ("average_bit_rate         = %ld\n", average_bit_rate);
+      printf ("average_frame_rate       = %ld\n", average_frame_rate);
+      }
     }
 
+  int num_referenced_subseqs  = readUeV("SEI num_referenced_subseqs", buf);
+  if (decoder->param.seiDebug)
+    printf ("num_referenced_subseqs = %d\n", num_referenced_subseqs);
+  for (int i = 0; i < num_referenced_subseqs; i++) {
+    int ref_sub_seq_layer_num  = readUeV("SEI ref_sub_seq_layer_num", buf);
+    int ref_sub_seq_id         = readUeV("SEI ref_sub_seq_id", buf);
+    int ref_sub_seq_direction  = readU1 ("SEI ref_sub_seq_direction", buf);
+    if (decoder->param.seiDebug) {
+      printf ("ref_sub_seq_layer_num = %d\n", ref_sub_seq_layer_num);
+      printf ("ref_sub_seq_id        = %d\n", ref_sub_seq_id);
+      printf ("ref_sub_seq_direction = %d\n", ref_sub_seq_direction);
+      }
+    }
   free (buf);
   }
 //}}}
 //{{{
-static void process_scene_information (byte* payload, int size, sDecoder* decoder)
-{
-  int scene_id, scene_transition_type, second_scene_id;
+static void process_scene_information (byte* payload, int size, sDecoder* decoder) {
+
 
   sBitstream* buf = malloc(sizeof(sBitstream));
   buf->bitstreamLength = size;
   buf->streamBuffer = payload;
   buf->frameBitOffset = 0;
 
-  scene_id              = readUeV ("SEI scene_id"             , buf);
-  scene_transition_type = readUeV ("SEI scene_transition_type", buf);
-  if ( scene_transition_type > 3 )
+  int second_scene_id;
+  int scene_id = readUeV ("SEI scene_id", buf);
+  int scene_transition_type = readUeV ("SEI scene_transition_type", buf);
+  if (scene_transition_type > 3)
     second_scene_id = readUeV ("SEI scene_transition_type", buf);
 
-  printf ("Scene information SEI message\n");
-  printf ("scene_transition_type = %d\n", scene_transition_type);
-  printf ("scene_id              = %d\n", scene_id);
-  if (scene_transition_type > 3 )
-    printf ("second_scene_id       = %d\n", second_scene_id);
-
+  if (decoder->param.seiDebug) {
+    printf ("Scene information SEI\n");
+    printf ("scene_transition_type %d\n", scene_transition_type);
+    printf ("scene_id %d\n", scene_id);
+    if (scene_transition_type > 3 )
+      printf ("second_scene_id %d\n", second_scene_id);
+    }
   free (buf);
-  }
-//}}}
-//{{{
-static void process_filler_payload_info (byte* payload, int size, sDecoder* decoder) {
-
-  int payload_cnt = 0;
-  while (payload_cnt<size)
-    if (payload[payload_cnt] == 0xFF)
-       payload_cnt++;
-
-  printf ("Filler payload SEI message\n");
-  if (payload_cnt == size)
-    printf ("read %d bytes of filler payload\n", payload_cnt);
-  else
-    printf ("error reading filler payload: not all bytes are 0xFF (%d of %d)\n", payload_cnt, size);
   }
 //}}}
 
@@ -433,7 +425,7 @@ static void process_user_data_unregistered_info (byte* payload, int size, sDecod
   assert (size>=16);
 
   if (decoder->param.seiDebug) {
-    printf ("User data unregistered SEI message\n");
+    printf ("User data unregistered SEI\n");
     printf ("uuid_iso_11578 = 0x");
     for (offset = 0; offset < 16; offset++)
       printf ("%02x",payload[offset]);
@@ -472,23 +464,24 @@ static void process_user_data_registered_itu_t_t35_info (byte* payload, int size
     if (decoder->param.seiDebug)
       printf ("itu_t_t35 payload_byte %d\n", payload_byte);
     }
- }
+  }
 //}}}
 //{{{
-static void process_reserved_info (byte* payload, int size, sDecoder* decoder)
-{
+static void process_reserved_info (byte* payload, int size, sDecoder* decoder) {
+
   int offset = 0;
   byte payload_byte;
 
-  printf ("SEI Reserved\n");
+  if (decoder->param.seiDebug) {
+    printf ("SEI Reserved\n");
 
-  while (offset < size)
-  {
-    payload_byte = payload[offset];
-    offset ++;
-    printf("reserved_sei_message_payload_byte = %d\n", payload_byte);
+    while (offset < size) {
+      payload_byte = payload[offset];
+      offset++;
+      printf ("reserved_sei_message_payload_byte = %d\n", payload_byte);
+      }
+    }
   }
-}
 //}}}
 
 //{{{
@@ -651,8 +644,7 @@ static void process_picture_timing_info (byte* payload, int size, sDecoder* deco
 //{{{
 static void process_pan_scan_rect_info (byte* payload, int size, sDecoder* decoder) {
 
-  sBitstream* buf;
-  buf = malloc (sizeof(sBitstream));
+  sBitstream* buf = malloc (sizeof(sBitstream));
   buf->bitstreamLength = size;
   buf->streamBuffer = payload;
   buf->frameBitOffset = 0;
@@ -681,8 +673,7 @@ static void process_pan_scan_rect_info (byte* payload, int size, sDecoder* decod
 //{{{
 static void process_recovery_point_info (byte* payload, int size, sDecoder* decoder) {
 
-  sBitstream* buf;
-  buf = malloc(sizeof(sBitstream));
+  sBitstream* buf = malloc(sizeof(sBitstream));
   buf->bitstreamLength = size;
   buf->streamBuffer = payload;
   buf->frameBitOffset = 0;
@@ -799,6 +790,23 @@ static void process_dec_ref_pic_marking_repetition_info (byte* payload, int size
 //}}}
 
 //{{{
+static void process_filler_payload_info (byte* payload, int size, sDecoder* decoder) {
+
+  int payload_cnt = 0;
+  while (payload_cnt<size)
+    if (payload[payload_cnt] == 0xFF)
+       payload_cnt++;
+
+  if (decoder->param.seiDebug) {
+    printf ("Filler payload SEI\n");
+    if (payload_cnt == size)
+      printf ("read %d bytes of filler payload\n", payload_cnt);
+    else
+      printf ("error reading filler payload: not all bytes are 0xFF (%d of %d)\n", payload_cnt, size);
+    }
+  }
+//}}}
+//{{{
 static void process_full_frame_freeze_info (byte* payload, int size, sDecoder* decoder) {
 
   sBitstream* buf = malloc(sizeof(sBitstream));
@@ -817,7 +825,7 @@ static void process_full_frame_freeze_release_info (byte* payload, int size, sDe
 
   printf ("SEI Full-frame freeze release SEI\n");
   if (size)
-    printf ("payload size of this message should be zero, but is %d bytes.\n", size);
+    printf ("payload size should be zero, but is %d bytes.\n", size);
   }
 //}}}
 //{{{
@@ -838,7 +846,6 @@ static void process_full_frame_snapshot_info (byte* payload, int size, sDecoder*
 
 //{{{
 static void process_progressive_refinement_start_info (byte* payload, int size, sDecoder* decoder) {
-
 
   sBitstream* buf = malloc(sizeof(sBitstream));
   buf->bitstreamLength = size;
@@ -879,7 +886,7 @@ static void process_motion_constrained_slice_group_set_info (byte* payload, int 
 
   int numSliceGroupsMinus1 = readUeV ("SEI numSliceGroupsMinus1" , buf);
   int sliceGroupSize = ceilLog2 (numSliceGroupsMinus1 + 1);
-  printf ("Motion-constrained slice group set SEI message\n");
+  printf ("Motion-constrained slice group set SEI\n");
   printf ("numSliceGroupsMinus1 = %d\n", numSliceGroupsMinus1);
 
   for (int i = 0; i <= numSliceGroupsMinus1; i++) {
@@ -913,9 +920,7 @@ static void process_film_grain_characteristics_info (byte* payload, int size, sD
   int comp_model_value;
   int film_grain_characteristics_repetition_period;
 
-  sBitstream* buf;
-
-  buf = malloc(sizeof(sBitstream));
+  sBitstream* buf = malloc(sizeof(sBitstream));
   buf->bitstreamLength = size;
   buf->streamBuffer = payload;
   buf->frameBitOffset = 0;
@@ -981,7 +986,7 @@ static void process_film_grain_characteristics_info (byte* payload, int size, sD
 //{{{
 static void process_deblocking_filter_display_preference_info (byte* payload, int size, sDecoder* decoder) {
 
-  sBitstream* buf = malloc(sizeof(sBitstream));
+  sBitstream* buf = malloc (sizeof(sBitstream));
   buf->bitstreamLength = size;
   buf->streamBuffer = payload;
   buf->frameBitOffset = 0;
@@ -1033,17 +1038,17 @@ static void process_stereo_video_info_info (byte* payload, int size, sDecoder* d
 //{{{
 static void process_buffering_period_info (byte* payload, int size, sDecoder* decoder) {
 
-  sBitstream* buf = malloc(sizeof(sBitstream));
+  sBitstream* buf = malloc (sizeof(sBitstream));
   buf->bitstreamLength = size;
   buf->streamBuffer = payload;
   buf->frameBitOffset = 0;
 
-  int spsId = readUeV("SEI spsId"  , buf);
+  int spsId = readUeV("SEI spsId", buf);
   sSPS* sps = &decoder->sps[spsId];
   activateSPS (decoder, sps);
 
   if (decoder->param.seiDebug)
-    printf ("Buffering period SEI message\n");
+    printf ("Buffering period SEI\n");
 
   // Note: NalHrdBpPresentFlag and CpbDpbDelaysPresentFlag can also be set "by some means not specified in this Recommendation | International Standard"
   if (sps->vui_parameters_present_flag) {
@@ -1079,12 +1084,13 @@ static void process_buffering_period_info (byte* payload, int size, sDecoder* de
 static void process_frame_packing_arrangement_info (byte* payload, int size, sDecoder* decoder) {
 
   frame_packing_arrangement_information_struct seiFramePackingArrangement;
+
   sBitstream* buf = malloc(sizeof(sBitstream));
   buf->bitstreamLength = size;
   buf->streamBuffer = payload;
   buf->frameBitOffset = 0;
 
-  printf ("Frame packing arrangement SEI message\n");
+  printf ("Frame packing arrangement SEI\n");
 
   seiFramePackingArrangement.frame_packing_arrangement_id =
     (unsigned int)readUeV( "SEI frame_packing_arrangement_id", buf);
@@ -1147,7 +1153,7 @@ static void process_frame_packing_arrangement_info (byte* payload, int size, sDe
 //{{{
 static void process_post_filter_hints_info (byte* payload, int size, sDecoder* decoder) {
 
-  sBitstream* buf = malloc(sizeof(sBitstream));
+  sBitstream* buf = malloc (sizeof(sBitstream));
   buf->bitstreamLength = size;
   buf->streamBuffer = payload;
   buf->frameBitOffset = 0;
@@ -1166,7 +1172,7 @@ static void process_post_filter_hints_info (byte* payload, int size, sDecoder* d
 
   unsigned int additional_extension_flag = readU1("SEI additional_extension_flag", buf); // interpret post-filter hint SEI here
 
-  printf(" Post-filter hint SEI message\n");
+  printf(" Post-filter hint SEI\n");
   printf(" post_filter_hint_size_y %d \n", filter_hint_size_y);
   printf(" post_filter_hint_size_x %d \n", filter_hint_size_x);
   printf(" post_filter_hint_type %d \n",   filter_hint_type);
@@ -1184,12 +1190,12 @@ static void process_post_filter_hints_info (byte* payload, int size, sDecoder* d
 //{{{
 static void process_green_metadata_info (byte* payload, int size, sDecoder* decoder) {
 
-  sBitstream* buf = malloc(sizeof(sBitstream));
+  sBitstream* buf = malloc (sizeof(sBitstream));
   buf->bitstreamLength = size;
   buf->streamBuffer = payload;
   buf->frameBitOffset = 0;
 
-  printf ("Green Metadata Info SEI message\n");
+  printf ("Green Metadata Info SEI\n");
 
   Green_metadata_information_struct seiGreenMetadataInfo;
   seiGreenMetadataInfo.green_metadata_type = (unsigned char)readUv(8, "SEI green_metadata_type", buf);

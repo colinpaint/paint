@@ -668,21 +668,10 @@ sPPS* allocPPS() {
 //{{{
  void freePPS (sPPS* pps) {
 
-   assert (pps != NULL);
-   if (pps->sliceGroupId != NULL)
+   if (!pps->sliceGroupId)
      free (pps->sliceGroupId);
    free (pps);
    }
-//}}}
-//{{{
-void cleanUpPPS (sDecoder* decoder) {
-
-  for (int i = 0; i < MAX_PPS; i++) {
-    if ((decoder->pps[i].valid == TRUE) && (decoder->pps[i].sliceGroupId != NULL))
-      free (decoder->pps[i].sliceGroupId);
-    decoder->pps[i].valid = FALSE;
-    }
-  }
 //}}}
 
 //{{{

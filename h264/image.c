@@ -492,7 +492,7 @@ static void initPicture (sDecoder* decoder, sSlice* slice) {
   sDPB* dpb = slice->dpb;
   sSPS* activeSPS = decoder->activeSPS;
 
-  decoder->picHeightInMbs = decoder->frameHeightMbs / ( 1 + slice->fieldPicFlag );
+  decoder->picHeightInMbs = decoder->frameHeightMbs / (slice->fieldPicFlag+1);
   decoder->picSizeInMbs = decoder->picWidthMbs * decoder->picHeightInMbs;
   decoder->frameSizeMbs = decoder->picWidthMbs * decoder->frameHeightMbs;
 
@@ -506,8 +506,8 @@ static void initPicture (sDecoder* decoder, sSlice* slice) {
   if (slice->idrFlag)
     decoder->recoveryFrameNum = slice->frameNum;
   if (!decoder->recoveryPoint &&
-      slice->frameNum != decoder->preFrameNum &&
-      slice->frameNum != (decoder->preFrameNum + 1) % decoder->maxFrameNum) {
+      (slice->frameNum != decoder->preFrameNum) &&
+      (slice->frameNum != (decoder->preFrameNum + 1) % decoder->maxFrameNum)) {
     if (!activeSPS->gaps_in_frame_num_value_allowed_flag) {
       // picture error conceal
       if (decoder->param.concealMode) {
@@ -529,7 +529,7 @@ static void initPicture (sDecoder* decoder, sSlice* slice) {
         }
       else
         // Advanced Error Concealment would be called here to combat unintentional loss of pictures
-        error ("An unintentional loss of pictures occurs! Exit\n");
+        error ("initPicture - unintentional loss of picture\n");
       }
     if (!decoder->concealMode)
       fillFrameNumGap (decoder, slice);
@@ -638,7 +638,7 @@ static void initPicture (sDecoder* decoder, sSlice* slice) {
   picture->mbAffFrameFlag = slice->mbAffFrameFlag;
   picture->picWidthMbs = decoder->picWidthMbs;
 
-  decoder->getMbBlockPos = picture->mbAffFrameFlag ? get_mb_block_pos_mbaff : get_mb_block_pos_normal;
+  decoder->getMbBlockPos = picture->mbAffFrameFlag ? getMbBlockPosMbaff : getMbBlockPosNormal;
   decoder->getNeighbour = picture->mbAffFrameFlag ? getAffNeighbour : getNonAffNeighbour;
 
   picture->picNum = slice->frameNum;
@@ -705,8 +705,6 @@ static void initPictureDecoding (sDecoder* decoder) {
   decoder->deblockMode = deblockMode;
   }
 //}}}
-static void framePostProcessing (sDecoder* decoder) {}
-static void fieldPostProcessing (sDecoder* decoder) { decoder->idrFrameNum /= 2; }
 
 //{{{
 static void initSlice (sDecoder* decoder, sSlice* slice) {
@@ -1183,12 +1181,8 @@ void endDecodeFrame (sDecoder* decoder) {
 
   if (decoder->picture->mbAffFrameFlag)
     mbAffPostProc (decoder);
-
-  if (decoder->structure == FRAME)
-    framePostProcessing (decoder);
-  else
-    fieldPostProcessing (decoder);
-
+  if (decoder->structure != FRAME)
+     decoder->idrFrameNum /= 2;
   if (decoder->picture->usedForReference)
     padPicture (decoder, decoder->picture);
 

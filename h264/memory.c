@@ -92,36 +92,33 @@ void free_mem3Dmp (sPicMotionParam** *array3D)
 //}}}
 
 //{{{
-int getMem2Dwp (sWPParam** *array2D, int dim0, int dim1)
-{
+int getMem2Dwp (sWPParam** *array2D, int dim0, int dim1) {
+
   int i;
-
-  if((*array2D    = (sWPParam**)memAlloc(dim0 *      sizeof(sWPParam*))) == NULL)
+  if ((*array2D    = (sWPParam**)memAlloc(dim0 *      sizeof(sWPParam*))) == NULL)
     no_mem_exit("getMem2Dwp: array2D");
-  if((*(*array2D) = (sWPParam* )mem_calloc(dim0 * dim1,sizeof(sWPParam ))) == NULL)
+  if ((*(*array2D) = (sWPParam* )mem_calloc(dim0 * dim1,sizeof(sWPParam ))) == NULL)
     no_mem_exit("getMem2Dwp: array2D");
 
-  for(i = 1 ; i < dim0; i++)
+  for (i = 1 ; i < dim0; i++)
     (*array2D)[i] =  (*array2D)[i-1] + dim1;
 
   return dim0 * (sizeof(sWPParam*) + dim1 * sizeof(sWPParam));
-}
+  }
 //}}}
 //{{{
-void free_mem2Dwp (sWPParam** array2D)
-{
-  if (array2D)
-  {
+void free_mem2Dwp (sWPParam** array2D) {
+
+  if (array2D) {
     if (*array2D)
       memFree (*array2D);
     else
       error ("free_mem2Dwp: trying to free unused memory");
-
     memFree (array2D);
-  }
+    }
   else
     error ("free_mem2Dwp: trying to free unused memory");
-}
+  }
 //}}}
 
 //{{{
@@ -149,189 +146,111 @@ int getMem2D_spp (sPicturePtr** *array2D, int dim0, int dim1)
 }
 //}}}
 //{{{
-/*!
-** **********************************************************************
- * \brief
- *    Allocate 3D memory array -> sPicturePtr array3D[dim0][dim1][dim2]
- *
- * \par Output:
- *    memory size in bytes
-** **********************************************************************
- */
-int getMem3D_spp (sPicturePtr** **array3D, int dim0, int dim1, int dim2)
-{
-  int i, mem_size = dim0 * sizeof(sPicturePtr**);
+int getMem3D_spp (sPicturePtr** **array3D, int dim0, int dim1, int dim2) {
 
-  if(((*array3D) = (sPicturePtr***)memAlloc(dim0 * sizeof(sPicturePtr**))) == NULL)
+  int i, mem_size = dim0 * sizeof(sPicturePtr**);
+  if (((*array3D) = (sPicturePtr***)memAlloc(dim0 * sizeof(sPicturePtr**))) == NULL)
     no_mem_exit("getMem3D_spp: array3D");
 
   mem_size += getMem2D_spp(*array3D, dim0 * dim1, dim2);
-
-  for(i = 1; i < dim0; i++)
+  for (i = 1; i < dim0; i++)
     (*array3D)[i] = (*array3D)[i - 1] + dim1;
 
   return mem_size;
-}
+  }
 //}}}
 //{{{
-/*!
-** **********************************************************************
- * \brief
- *    Allocate 2D memory array -> sMotionVec array2D[dim0][dim1]
- *
- * \par Output:
- *    memory size in bytes
-** **********************************************************************/
-int getMem2Dmv (sMotionVec** *array2D, int dim0, int dim1)
-{
+int getMem2Dmv (sMotionVec** *array2D, int dim0, int dim1) {
+
   int i;
-
-  if((*array2D    = (sMotionVec**)memAlloc(dim0 *      sizeof(sMotionVec*))) == NULL)
+  if ((*array2D    = (sMotionVec**)memAlloc(dim0 *      sizeof(sMotionVec*))) == NULL)
     no_mem_exit("getMem2Dmv: array2D");
-  if((*(*array2D) = (sMotionVec* )mem_calloc(dim0 * dim1,sizeof(sMotionVec ))) == NULL)
+  if ((*(*array2D) = (sMotionVec* )mem_calloc(dim0 * dim1,sizeof(sMotionVec ))) == NULL)
     no_mem_exit("getMem2Dmv: array2D");
 
-  for(i = 1 ; i < dim0; i++)
+  for (i = 1 ; i < dim0; i++)
     (*array2D)[i] =  (*array2D)[i-1] + dim1;
 
   return dim0 * (sizeof(sMotionVec*) + dim1 * sizeof(sMotionVec));
-}
+  }
 //}}}
 //{{{
-/*!
-** **********************************************************************
- * \brief
- *    Allocate 3D memory array -> sMotionVec array3D[dim0][dim1][dim2]
- *
- * \par Output:
- *    memory size in bytes
-** **********************************************************************
- */
-int getMem3Dmv (sMotionVec** **array3D, int dim0, int dim1, int dim2)
-{
-  int i, mem_size = dim0 * sizeof(sMotionVec**);
+int getMem3Dmv (sMotionVec** **array3D, int dim0, int dim1, int dim2) {
 
-  if(((*array3D) = (sMotionVec***)memAlloc(dim0 * sizeof(sMotionVec**))) == NULL)
+  int i, mem_size = dim0 * sizeof(sMotionVec**);
+  if (((*array3D) = (sMotionVec***)memAlloc(dim0 * sizeof(sMotionVec**))) == NULL)
     no_mem_exit("getMem3Dmv: array3D");
 
   mem_size += getMem2Dmv(*array3D, dim0 * dim1, dim2);
 
-  for(i = 1; i < dim0; i++)
+  for (i = 1; i < dim0; i++)
     (*array3D)[i] = (*array3D)[i - 1] + dim1;
 
   return mem_size;
-}
+  }
 //}}}
 //{{{
-/*!
-** **********************************************************************
- * \brief
- *    Allocate 4D memory array -> sMotionVec array3D[dim0][dim1][dim2][dim3]
- *
- * \par Output:
- *    memory size in bytes
-** **********************************************************************
- */
-int getMem4Dmv (sMotionVec** ***array4D, int dim0, int dim1, int dim2, int dim3)
-{
-  int i, mem_size = dim0 * sizeof(sMotionVec***);
+int getMem4Dmv (sMotionVec** ***array4D, int dim0, int dim1, int dim2, int dim3) {
 
-  if(((*array4D) = (sMotionVec****)memAlloc(dim0 * sizeof(sMotionVec***))) == NULL)
+  int i, mem_size = dim0 * sizeof(sMotionVec***);
+  if (((*array4D) = (sMotionVec****)memAlloc(dim0 * sizeof(sMotionVec***))) == NULL)
     no_mem_exit("getMem4Dpel: array4D");
 
   mem_size += getMem3Dmv(*array4D, dim0 * dim1, dim2, dim3);
 
-  for(i = 1; i < dim0; i++)
+  for (i = 1; i < dim0; i++)
     (*array4D)[i] = (*array4D)[i - 1] + dim1;
 
   return mem_size;
-}
+  }
 //}}}
 //{{{
-/*!
-** **********************************************************************
- * \brief
- *    Allocate 5D memory array -> sMotionVec array3D[dim0][dim1][dim2][dim3][dim4]
- *
- * \par Output:
- *    memory size in bytes
-** **********************************************************************
- */
-int getMem5Dmv (sMotionVec** ****array5D, int dim0, int dim1, int dim2, int dim3, int dim4)
-{
-  int i, mem_size = dim0 * sizeof(sMotionVec***);
+int getMem5Dmv (sMotionVec** ****array5D, int dim0, int dim1, int dim2, int dim3, int dim4) {
 
-  if(((*array5D) = (sMotionVec*****)memAlloc(dim0 * sizeof(sMotionVec****))) == NULL)
+  int i, mem_size = dim0 * sizeof(sMotionVec***);
+  if (((*array5D) = (sMotionVec*****)memAlloc(dim0 * sizeof(sMotionVec****))) == NULL)
     no_mem_exit("getMem5Dmv: array5D");
 
   mem_size += getMem4Dmv(*array5D, dim0 * dim1, dim2, dim3, dim4);
 
-  for(i = 1; i < dim0; i++)
+  for (i = 1; i < dim0; i++)
     (*array5D)[i] = (*array5D)[i - 1] + dim1;
 
   return mem_size;
-}
+  }
 //}}}
 //{{{
-/*!
-** **********************************************************************
- * \brief
- *    Allocate 6D memory array -> sMotionVec array6D[dim0][dim1][dim2][dim3][dim4][dim5]
- *
- * \par Output:
- *    memory size in bytes
-** **********************************************************************
- */
-int getMem6Dmv (sMotionVec** *****array6D, int dim0, int dim1, int dim2, int dim3, int dim4, int dim5)
-{
-  int i, mem_size = dim0 * sizeof(sMotionVec*****);
+int getMem6Dmv (sMotionVec** *****array6D, int dim0, int dim1, int dim2, int dim3, int dim4, int dim5) {
 
-  if(((*array6D) = (sMotionVec******)memAlloc(dim0 * sizeof(sMotionVec*****))) == NULL)
+  int i, mem_size = dim0 * sizeof(sMotionVec*****);
+  if (((*array6D) = (sMotionVec******)memAlloc(dim0 * sizeof(sMotionVec*****))) == NULL)
     no_mem_exit("getMem6Dmv: array6D");
 
   mem_size += getMem5Dmv(*array6D, dim0 * dim1, dim2, dim3, dim4, dim5);
 
-  for(i = 1; i < dim0; i++)
+  for (i = 1; i < dim0; i++)
     (*array6D)[i] = (*array6D)[i - 1] + dim1;
 
   return mem_size;
-}
+  }
 //}}}
 //{{{
-/*!
-** **********************************************************************
- * \brief
- *    Allocate 7D memory array -> sMotionVec array6D[dim0][dim1][dim2][dim3][dim4][dim5][dim6]
- *
- * \par Output:
- *    memory size in bytes
-** **********************************************************************
- */
-int getMem7Dmv (sMotionVec** ******array7D, int dim0, int dim1, int dim2, int dim3, int dim4, int dim5, int dim6)
-{
-  int i, mem_size = dim0 * sizeof(sMotionVec*****);
+int getMem7Dmv (sMotionVec******** array7D, int dim0, int dim1, int dim2, int dim3, int dim4, int dim5, int dim6) {
 
-  if(((*array7D) = (sMotionVec*******)memAlloc(dim0 * sizeof(sMotionVec******))) == NULL)
+  int i, mem_size = dim0 * sizeof(sMotionVec*****);
+  if (((*array7D) = (sMotionVec*******)memAlloc(dim0 * sizeof(sMotionVec******))) == NULL)
     no_mem_exit("getMem7Dmv: array7D");
 
   mem_size += getMem6Dmv(*array7D, dim0 * dim1, dim2, dim3, dim4, dim5, dim6);
 
-  for(i = 1; i < dim0; i++)
+  for (i = 1; i < dim0; i++)
     (*array7D)[i] = (*array7D)[i - 1] + dim1;
 
   return mem_size;
-}
-
+  }
 //}}}
 
 //{{{
-/*!
-** **********************************************************************
- * \brief
- *    free 2D memory array
- *    which was allocated with getMem2D_spp()
-** **********************************************************************
- */
 void free_mem2D_spp (sPicturePtr** array2D)
 {
   if (array2D)
@@ -349,13 +268,6 @@ void free_mem2D_spp (sPicturePtr** array2D)
 
 //}}}
 //{{{
-/*!
-** **********************************************************************
- * \brief
- *    free 3D memory array
- *    which was allocated with getMem3D_spp()
-** **********************************************************************
- */
 void free_mem3D_spp (sPicturePtr** *array3D)
 {
   if (array3D)
@@ -368,13 +280,6 @@ void free_mem3D_spp (sPicturePtr** *array3D)
 }
 //}}}
 //{{{
-/*!
-** **********************************************************************
- * \brief
- *    free 2D memory array
- *    which was allocated with getMem2Dmv()
-** **********************************************************************
- */
 void free_mem2Dmv (sMotionVec** array2D)
 {
   if (array2D)
@@ -391,13 +296,6 @@ void free_mem2Dmv (sMotionVec** array2D)
 }
 //}}}
 //{{{
-/*!
-** **********************************************************************
- * \brief
- *    free 3D memory array
- *    which was allocated with getMem3Dmv()
-** **********************************************************************
- */
 void free_mem3Dmv (sMotionVec** *array3D)
 {
   if (array3D)
@@ -410,13 +308,6 @@ void free_mem3Dmv (sMotionVec** *array3D)
 }
 //}}}
 //{{{
-/*!
-** **********************************************************************
- * \brief
- *    free 4D memory array
- *    which was allocated with getMem4Dmv()
-** **********************************************************************
- */
 void free_mem4Dmv (sMotionVec** **array4D)
 {
   if (array4D)
@@ -429,13 +320,6 @@ void free_mem4Dmv (sMotionVec** **array4D)
 }
 //}}}
 //{{{
-/*!
-** **********************************************************************
- * \brief
- *    free 5D memory array
- *    which was allocated with getMem5Dmv()
-** **********************************************************************
- */
 void free_mem5Dmv (sMotionVec** ***array5D)
 {
   if (array5D)
@@ -448,13 +332,6 @@ void free_mem5Dmv (sMotionVec** ***array5D)
 }
 //}}}
 //{{{
-/*!
-** **********************************************************************
- * \brief
- *    free 6D memory array
- *    which was allocated with getMem6Dmv()
-** **********************************************************************
- */
 void free_mem6Dmv (sMotionVec** ****array6D)
 {
   if (array6D)
@@ -467,13 +344,6 @@ void free_mem6Dmv (sMotionVec** ****array6D)
 }
 //}}}
 //{{{
-/*!
-** **********************************************************************
- * \brief
- *    free 7D memory array
- *    which was allocated with getMem7Dmv()
-** **********************************************************************
- */
 void free_mem7Dmv (sMotionVec** *****array7D)
 {
   if (array7D)

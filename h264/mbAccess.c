@@ -6,7 +6,7 @@
 //}}}
 
 //{{{
-Boolean mb_is_available (int mbIndex, sMacroblock* mb) {
+Boolean isMbAvailable (int mbIndex, sMacroblock* mb) {
 
   sSlice* slice = mb->slice;
   if ((mbIndex < 0) || (mbIndex > ((int)slice->picture->picSizeInMbs - 1)))
@@ -35,11 +35,12 @@ void CheckAvailabilityOfNeighbors (sMacroblock* mb) {
     mb->mbIndexC = 2 * (cur_mb_pair - picture->picWidthMbs + 1);
     mb->mbIndexD = 2 * (cur_mb_pair - picture->picWidthMbs - 1);
 
-    mb->mbAvailA = (Boolean) (mb_is_available(mb->mbIndexA, mb) && ((picPos[cur_mb_pair    ].x)!=0));
-    mb->mbAvailB = (Boolean) (mb_is_available(mb->mbIndexB, mb));
-    mb->mbAvailC = (Boolean) (mb_is_available(mb->mbIndexC, mb) && ((picPos[cur_mb_pair + 1].x)!=0));
-    mb->mbAvailD = (Boolean) (mb_is_available(mb->mbIndexD, mb) && ((picPos[cur_mb_pair    ].x)!=0));
+    mb->mbAvailA = (Boolean) (isMbAvailable(mb->mbIndexA, mb) && ((picPos[cur_mb_pair    ].x)!=0));
+    mb->mbAvailB = (Boolean) (isMbAvailable(mb->mbIndexB, mb));
+    mb->mbAvailC = (Boolean) (isMbAvailable(mb->mbIndexC, mb) && ((picPos[cur_mb_pair + 1].x)!=0));
+    mb->mbAvailD = (Boolean) (isMbAvailable(mb->mbIndexD, mb) && ((picPos[cur_mb_pair    ].x)!=0));
     }
+
   else {
     sBlockPos* p_pic_pos = &picPos[mb_nr    ];
     mb->mbIndexA = mb_nr - 1;
@@ -47,10 +48,10 @@ void CheckAvailabilityOfNeighbors (sMacroblock* mb) {
     mb->mbIndexB = mb->mbIndexD + 1;
     mb->mbIndexC = mb->mbIndexB + 1;
 
-    mb->mbAvailA = (Boolean) (mb_is_available(mb->mbIndexA, mb) && ((p_pic_pos->x)!=0));
-    mb->mbAvailD = (Boolean) (mb_is_available(mb->mbIndexD, mb) && ((p_pic_pos->x)!=0));
-    mb->mbAvailC = (Boolean) (mb_is_available(mb->mbIndexC, mb) && (((p_pic_pos + 1)->x)!=0));
-    mb->mbAvailB = (Boolean) (mb_is_available(mb->mbIndexB, mb));
+    mb->mbAvailA = (Boolean) (isMbAvailable(mb->mbIndexA, mb) && ((p_pic_pos->x)!=0));
+    mb->mbAvailD = (Boolean) (isMbAvailable(mb->mbIndexD, mb) && ((p_pic_pos->x)!=0));
+    mb->mbAvailC = (Boolean) (isMbAvailable(mb->mbIndexC, mb) && (((p_pic_pos + 1)->x)!=0));
+    mb->mbAvailB = (Boolean) (isMbAvailable(mb->mbIndexB, mb));
     }
 
   mb->mbCabacLeft = (mb->mbAvailA) ? &(slice->mbData[mb->mbIndexA]) : NULL;
@@ -72,17 +73,17 @@ void CheckAvailabilityOfNeighborsNormal (sMacroblock* mb) {
   mb->mbIndexB = mb->mbIndexD + 1;
   mb->mbIndexC = mb->mbIndexB + 1;
 
-  mb->mbAvailA = (Boolean) (mb_is_available(mb->mbIndexA, mb) && ((p_pic_pos->x)!=0));
-  mb->mbAvailD = (Boolean) (mb_is_available(mb->mbIndexD, mb) && ((p_pic_pos->x)!=0));
-  mb->mbAvailC = (Boolean) (mb_is_available(mb->mbIndexC, mb) && (((p_pic_pos + 1)->x)!=0));
-  mb->mbAvailB = (Boolean) (mb_is_available(mb->mbIndexB, mb));
+  mb->mbAvailA = (Boolean) (isMbAvailable(mb->mbIndexA, mb) && ((p_pic_pos->x)!=0));
+  mb->mbAvailD = (Boolean) (isMbAvailable(mb->mbIndexD, mb) && ((p_pic_pos->x)!=0));
+  mb->mbAvailC = (Boolean) (isMbAvailable(mb->mbIndexC, mb) && (((p_pic_pos + 1)->x)!=0));
+  mb->mbAvailB = (Boolean) (isMbAvailable(mb->mbIndexB, mb));
 
   mb->mbCabacLeft = (mb->mbAvailA) ? &(slice->mbData[mb->mbIndexA]) : NULL;
   mb->mbCabacUp   = (mb->mbAvailB) ? &(slice->mbData[mb->mbIndexB]) : NULL;
   }
 //}}}
 //{{{
-void get_mb_block_pos_normal (sBlockPos* picPos, int mbIndex, short* x, short* y) {
+void getMbBlockPosNormal (sBlockPos* picPos, int mbIndex, short* x, short* y) {
 
   sBlockPos* pPos = &picPos[ mbIndex ];
   *x = (short) pPos->x;
@@ -94,7 +95,8 @@ void get_mb_block_pos_normal (sBlockPos* picPos, int mbIndex, short* x, short* y
 void CheckAvailabilityOfNeighborsMBAFF (sMacroblock* mb) {
 
   sSlice* slice = mb->slice;
-  sPicture* picture = slice->picture; //decoder->picture;
+  sPicture* picture = slice->picture; 
+
   const int mb_nr = mb->mbIndexX;
   sBlockPos* picPos = mb->decoder->picPos;
 
@@ -104,17 +106,17 @@ void CheckAvailabilityOfNeighborsMBAFF (sMacroblock* mb) {
   mb->mbIndexC = 2 * (cur_mb_pair - picture->picWidthMbs + 1);
   mb->mbIndexD = 2 * (cur_mb_pair - picture->picWidthMbs - 1);
 
-  mb->mbAvailA = (Boolean) (mb_is_available(mb->mbIndexA, mb) && ((picPos[cur_mb_pair    ].x)!=0));
-  mb->mbAvailB = (Boolean) (mb_is_available(mb->mbIndexB, mb));
-  mb->mbAvailC = (Boolean) (mb_is_available(mb->mbIndexC, mb) && ((picPos[cur_mb_pair + 1].x)!=0));
-  mb->mbAvailD = (Boolean) (mb_is_available(mb->mbIndexD, mb) && ((picPos[cur_mb_pair    ].x)!=0));
+  mb->mbAvailA = (Boolean) (isMbAvailable(mb->mbIndexA, mb) && ((picPos[cur_mb_pair    ].x)!=0));
+  mb->mbAvailB = (Boolean) (isMbAvailable(mb->mbIndexB, mb));
+  mb->mbAvailC = (Boolean) (isMbAvailable(mb->mbIndexC, mb) && ((picPos[cur_mb_pair + 1].x)!=0));
+  mb->mbAvailD = (Boolean) (isMbAvailable(mb->mbIndexD, mb) && ((picPos[cur_mb_pair    ].x)!=0));
 
   mb->mbCabacLeft = (mb->mbAvailA) ? &(slice->mbData[mb->mbIndexA]) : NULL;
   mb->mbCabacUp   = (mb->mbAvailB) ? &(slice->mbData[mb->mbIndexB]) : NULL;
   }
 //}}}
 //{{{
-void get_mb_block_pos_mbaff (sBlockPos* picPos, int mbIndex, short* x, short* y) {
+void getMbBlockPosMbaff (sBlockPos* picPos, int mbIndex, short* x, short* y) {
 
   sBlockPos* pPos = &picPos[ mbIndex >> 1 ];
   *x = (short)  pPos->x;
@@ -455,7 +457,6 @@ void getAffNeighbour (sMacroblock* mb, int xN, int yN, int mbSize[2], sPixelPos*
 void get4x4Neighbour (sMacroblock* mb, int blockX, int blockY, int mbSize[2], sPixelPos* pixelPos) {
 
   mb->decoder->getNeighbour (mb, blockX, blockY, mbSize, pixelPos);
-
   if (pixelPos->available) {
     pixelPos->x >>= 2;
     pixelPos->y >>= 2;
@@ -468,7 +469,6 @@ void get4x4Neighbour (sMacroblock* mb, int blockX, int blockY, int mbSize[2], sP
 void get4x4NeighbourBase (sMacroblock* mb, int blockX, int blockY, int mbSize[2], sPixelPos* pixelPos) {
 
   mb->decoder->getNeighbour (mb, blockX, blockY, mbSize, pixelPos);
-
   if (pixelPos->available) {
     pixelPos->x >>= 2;
     pixelPos->y >>= 2;

@@ -2221,15 +2221,15 @@ void ercReset (sErcVariables *errorVar, int nOfMBs, int numOfSegments, int picSi
 //{{{
 void ercClose (sDecoder* decoder,  sErcVariables *errorVar ) {
 
-  if ( errorVar != NULL ) {
-    if (errorVar->yCondition != NULL) {
-      free (errorVar->segments );
-      free (errorVar->yCondition );
-      free (errorVar->uCondition );
-      free (errorVar->vCondition );
-      free (errorVar->prevFrameYCondition );
+  if (errorVar) {
+    if (errorVar->yCondition) {
+      free (errorVar->segments);
+      free (errorVar->yCondition);
+      free (errorVar->uCondition);
+      free (errorVar->vCondition);
+      free (errorVar->prevFrameYCondition);
       }
-    free( errorVar );
+    free (errorVar);
     errorVar = NULL;
     }
 

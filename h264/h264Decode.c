@@ -630,7 +630,11 @@ void closeDecoder (sDecoder* decoder) {
 
   ercClose (decoder, decoder->ercErrorVar);
 
-  cleanUpPPS (decoder);
+  for (unsigned i = 0; i < MAX_PPS; i++) {
+    if (decoder->pps[i].valid && decoder->pps[i].sliceGroupId)
+      free (decoder->pps[i].sliceGroupId);
+    decoder->pps[i].valid = FALSE;
+    }
 
   freeDpb (decoder->dpb);
   freeOutput (decoder);

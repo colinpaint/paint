@@ -486,7 +486,7 @@ static void get_strength_ver_MBAff (byte* Strength, sMacroblock* mb, int edge, i
         for (i = 0; i < MB_BLOCK_SIZE; i ++ ) Strength[i] = StrValue;
         }
       else {
-        get_mb_block_pos_mbaff (picPos, mb->mbIndexX, &mb_x, &mb_y);
+        getMbBlockPosMbaff (picPos, mb->mbIndexX, &mb_x, &mb_y);
         for (idx = 0; idx < MB_BLOCK_SIZE; idx += BLOCK_SIZE) {
           blkQ = (short) ((idx & 0xFFFC) + (edge >> 2));
           blkP = (short) ((pixP.y & 0xFFFC) + (pixP.x >> 2));
@@ -570,7 +570,7 @@ static void get_strength_ver_MBAff (byte* Strength, sMacroblock* mb, int edge, i
             if (mb->mixedModeEdgeFlag) //if (slice->mixedModeEdgeFlag)
               Strength[idx] = 1;
             else {
-              get_mb_block_pos_mbaff (picPos, mb->mbIndexX, &mb_x, &mb_y);
+              getMbBlockPosMbaff (picPos, mb->mbIndexX, &mb_x, &mb_y);
               {
                 int blk_y  = ((mb_y<<2) + (blkQ >> 2));
                 int blk_x  = ((mb_x<<2) + (blkQ  & 3));
@@ -677,7 +677,7 @@ static void get_strength_hor_MBAff (byte* Strength, sMacroblock* mb, int edge, i
           if(mb->mixedModeEdgeFlag) //if (slice->mixedModeEdgeFlag)
             StrValue = 1;
           else {
-            get_mb_block_pos_mbaff (picPos, mb->mbIndexX, &mb_x, &mb_y);
+            getMbBlockPosMbaff (picPos, mb->mbIndexX, &mb_x, &mb_y);
             blk_y  = (short) ((mb_y<<2) + (blkQ >> 2));
             blk_x  = (short) ((mb_x<<2) + (blkQ  & 3));
             blk_y2 = (short) (pixP.posY >> 2);
