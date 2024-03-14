@@ -1144,7 +1144,7 @@ static const char INIT_FLD_LAST_P[3][22][15][2] =
   for (i=0; i<ii; ++i) \
   for (j=0; j<jj; ++j) \
   { \
-  biari_init_context (qp, &(ctx[i][j]), tab ## _I[num][i][j]); \
+  biariInitContext (qp, &(ctx[i][j]), tab ## _I[num][i][j]); \
   } \
 }
 //}}}
@@ -1154,7 +1154,7 @@ static const char INIT_FLD_LAST_P[3][22][15][2] =
   for (i=0; i<ii; ++i) \
   for (j=0; j<jj; ++j) \
   { \
-  biari_init_context (qp, &(ctx[i][j]), tab ## _P[num][i][j]); \
+  biariInitContext (qp, &(ctx[i][j]), tab ## _P[num][i][j]); \
   } \
 }
 //}}}
@@ -1163,7 +1163,7 @@ static const char INIT_FLD_LAST_P[3][22][15][2] =
 { \
   for (j=0; j<jj; ++j) \
   { \
-  biari_init_context (qp, &(ctx[j]), tab ## _I[num][0][j]); \
+  biariInitContext (qp, &(ctx[j]), tab ## _I[num][0][j]); \
   } \
 }
 //}}}
@@ -1173,7 +1173,7 @@ static const char INIT_FLD_LAST_P[3][22][15][2] =
   { \
   for (j=0; j<jj; ++j) \
   { \
-  biari_init_context (qp, &(ctx[j]), tab ## _P[num][0][j]); \
+  biariInitContext (qp, &(ctx[j]), tab ## _P[num][0][j]); \
   } \
   } \
 }

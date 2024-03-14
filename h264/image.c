@@ -857,7 +857,7 @@ static int readNextSlice (sSlice* slice) {
           int byteStartPosition = s->bitStreamOffset / 8;
           if (s->bitStreamOffset % 8)
             ++byteStartPosition;
-          arideco_start_decoding (&slice->dps[0].deCabac, s->streamBuffer, byteStartPosition, &s->readLen);
+          aridecoStartDecoding (&slice->dps[0].deCabac, s->streamBuffer, byteStartPosition, &s->readLen);
           }
 
         decoder->recoveryPoint = 0;
@@ -1251,7 +1251,6 @@ void endDecodeFrame (sDecoder* decoder) {
     decoder->sliceTypeStr[8] = 0;
     }
     //}}}
-
   if ((structure == FRAME) || structure == BotField) {
     //{{{  print frame debug
     gettime (&(decoder->endTime));

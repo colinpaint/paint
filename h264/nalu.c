@@ -277,7 +277,7 @@ static int getNALU (sAnnexB* annexB, sDecoder* decoder, sNalu* nalu) {
   nalu->len = naluBufCount - leadingZero8BitsCount;
   memcpy (nalu->buf, annexB->naluBuffer + leadingZero8BitsCount, nalu->len);
   nalu->forbiddenBit = (*(nalu->buf) >> 7) & 1;
-  nalu->refId = (eNalRefIdc)((*(nalu->buf) >> 5) & 3);  
+  nalu->refId = (eNalRefIdc)((*(nalu->buf) >> 5) & 3);
   nalu->unitType = (eNaluType)((*(nalu->buf)) & 0x1f);
   nalu->lostPackets = 0;
 
@@ -349,7 +349,7 @@ static int NALUtoRBSP (sNalu* nalu) {
 int readNextNalu (sDecoder* decoder, sNalu* nalu) {
 
   int ret = getNALU (decoder->annexB, decoder, nalu);
-  if (ret < 0) 
+  if (ret < 0)
     error ("Error while getting the NALU in file format exit\n");
   if (ret == 0)
     return 0;
@@ -376,19 +376,19 @@ int RBSPtoSODB (byte* streamBuffer, int last_byte_pos) {
 // rawByteSequencePayload to stringOfDataBits
 
   // find trailing 1
-  int bitoffset = 0;
-  int ctr_bit = (streamBuffer[last_byte_pos-1] & (0x01 << bitoffset));
+  int bitOffset = 0;
+  int ctr_bit = (streamBuffer[last_byte_pos-1] & (0x01 << bitOffset));
   while (ctr_bit == 0) {
     // find trailing 1 bit
-    ++bitoffset;
-    if (bitoffset == 8) {
+    ++bitOffset;
+    if (bitOffset == 8) {
       if (last_byte_pos == 0)
         printf (" Panic: All zero data sequence in RBSP \n");
       assert (last_byte_pos != 0);
       --last_byte_pos;
-      bitoffset = 0;
+      bitOffset = 0;
       }
-    ctr_bit = streamBuffer[last_byte_pos - 1] & (0x01<<(bitoffset));
+    ctr_bit = streamBuffer[last_byte_pos - 1] & (0x01 << bitOffset);
     }
 
   return last_byte_pos;

@@ -96,11 +96,11 @@ static const byte AC_next_state_LPS_64[64] =
 //}}}
 static const byte renorm_table_32[32]={6,5,4,4,3,3,3,3,2,2,2,2,2,2,2,2,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1};
 
-extern void arideco_start_decoding (sDecodingEnv* eep, unsigned char *code_buffer, int firstbyte, int *codeLen);
-extern int  arideco_bits_read (sDecodingEnv* dep);
-extern void arideco_done_decoding (sDecodingEnv* dep);
+extern void aridecoStartDecoding (sDecodingEnv* eep, unsigned char *code_buffer, int firstbyte, int *codeLen);
+extern int  aridecoBitsRead (sDecodingEnv* dep);
+extern void aridecoDoneDecoding (sDecodingEnv* dep);
 
-extern void biari_init_context (int qp, sBiContextType* ctx, const char* ini);
-extern unsigned int biari_decode_symbol (sDecodingEnv *dep, sBiContextType *bi_ct );
-extern unsigned int biari_decode_symbol_eq_prob (sDecodingEnv* dep);
-extern unsigned int biari_decode_final (sDecodingEnv* dep);
+extern void biariInitContext (int qp, sBiContextType* ctx, const char* ini);
+extern unsigned int biarDecodeSymbol (sDecodingEnv *dep, sBiContextType *bi_ct );
+extern unsigned int biariDecodeSymbolEqProb (sDecodingEnv* dep);
+extern unsigned int biariDecodeFinal (sDecodingEnv* dep);

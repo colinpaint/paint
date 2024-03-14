@@ -10,26 +10,27 @@
 #define QUARTER   0x0100  //(1 << (B_BITS-2))
 
 //{{{
-sDecodingEnv* arideco_create_decoding_environment() {  
+sDecodingEnv* aridecoCreateDecodingEnv() {
 
   sDecodingEnv* dep = calloc (1,sizeof(sDecodingEnv));
   if (!dep)
-    no_mem_exit ("arideco_create_decoding_environment: dep");
+    no_mem_exit ("aridecoCreateDecodingEnv: dep");
+
   return dep;
   }
 //}}}
 
 //{{{
-void arideco_delete_decoding_environment (sDecodingEnv* dep) {
+void aridecoDeleteDecodingEnv (sDecodingEnv* dep) {
 
-  if (dep == NULL) 
+  if (dep == NULL)
     error ("Error freeing dep (NULL pointer)");
   else
-    free(dep);
+    free (dep);
   }
 //}}}
 //{{{
-void arideco_done_decoding (sDecodingEnv* dep) {
+void aridecoDoneDecoding (sDecodingEnv* dep) {
   (*dep->Dcodestrm_len)++;
   }
 //}}}
@@ -45,11 +46,12 @@ static inline unsigned int getword (sDecodingEnv* dep) {
   int* len = dep->Dcodestrm_len;
   byte* p_code_strm = &dep->Dcodestrm[*len];
   *len += 2;
+
   return (*p_code_strm<<8) | *(p_code_strm + 1);
   }
 //}}}
 //{{{
-void arideco_start_decoding (sDecodingEnv* dep, unsigned char* code_buffer, int firstbyte, int* codeLen) {
+void aridecoStartDecoding (sDecodingEnv* dep, unsigned char* code_buffer, int firstbyte, int* codeLen) {
 
   dep->Dcodestrm = code_buffer;
   dep->Dcodestrm_len = codeLen;
@@ -63,20 +65,20 @@ void arideco_start_decoding (sDecodingEnv* dep, unsigned char* code_buffer, int 
   }
 //}}}
 //{{{
-int arideco_bits_read (sDecodingEnv* dep) {
-  return (((*dep->Dcodestrm_len) << 3) - dep->DbitsLeft);
+int aridecoBitsRead (sDecodingEnv* dep) {
+  return ((*dep->Dcodestrm_len) << 3) - dep->DbitsLeft;
   }
 //}}}
 
 //{{{
-unsigned int biari_decode_symbol (sDecodingEnv* dep, sBiContextType* bi_ct) {
+unsigned int biarDecodeSymbol (sDecodingEnv* dep, sBiContextType* bi_ct) {
 
   unsigned int bit = bi_ct->MPS;
   unsigned int* value = &dep->Dvalue;
   unsigned int* range = &dep->Drange;
 
   uint16* state = &bi_ct->state;
-  unsigned int rLPS = rLPS_table_64x4[*state][(*range>>6) & 0x03];
+  unsigned int rLPS = rLPS_table_64x4[*state][(*range >> 6) & 0x03];
   int* DbitsLeft = &dep->DbitsLeft;
 
   *range -= rLPS;
@@ -92,7 +94,7 @@ unsigned int biari_decode_symbol (sDecodingEnv* dep, sBiContextType* bi_ct) {
     }
   else {
     // LPS
-    int renorm = renorm_table_32[(rLPS>>3) & 0x1F];
+    int renorm = renorm_table_32[(rLPS >> 3) & 0x1F];
     *value -= (*range << *DbitsLeft);
     *range = (rLPS << renorm);
     (*DbitsLeft) -= renorm;
@@ -106,20 +108,20 @@ unsigned int biari_decode_symbol (sDecodingEnv* dep, sBiContextType* bi_ct) {
     return (bit);
   else {
     *value <<= 16;
-    *value |=  getword(dep);    // lookahead of 2 bytes: always make sure that s buffer
+    *value |=  getword (dep);    // lookahead of 2 bytes: always make sure that s buffer
     // contains 2 more bytes than actual s
     (*DbitsLeft) += 16;
-    return (bit);
+    return bit;
     }
   }
 //}}}
 //{{{
-unsigned int biari_decode_symbol_eq_prob (sDecodingEnv* dep) {
+unsigned int biariDecodeSymbolEqProb (sDecodingEnv* dep) {
 
-   int tmp_value;
-   unsigned int* value = &dep->Dvalue;
-   int* DbitsLeft = &dep->DbitsLeft;
+  int tmp_value;
+  unsigned int* value = &dep->Dvalue;
 
+  int* DbitsLeft = &dep->DbitsLeft;
   if (--(*DbitsLeft) == 0) {
     // lookahead of 2 bytes: always make sure that s buffer
     // contains 2 more bytes than actual s
@@ -137,9 +139,10 @@ unsigned int biari_decode_symbol_eq_prob (sDecodingEnv* dep) {
   }
 //}}}
 //{{{
-unsigned int biari_decode_final (sDecodingEnv* dep) {
+unsigned int biariDecodeFinal (sDecodingEnv* dep) {
 
   unsigned int range  = dep->Drange - 2;
+
   int value = dep->Dvalue;
   value -= (range << dep->DbitsLeft);
   if (value < 0) {
@@ -165,19 +168,19 @@ unsigned int biari_decode_final (sDecodingEnv* dep) {
 //}}}
 
 //{{{
-void biari_init_context (int qp, sBiContextType* ctx, const char* ini) {
+void biariInitContext (int qp, sBiContextType* ctx, const char* ini) {
 
-  int pstate = ((ini[0]* qp )>>4) + ini[1];
+  int pstate = ((ini[0] * qp) >> 4) + ini[1];
 
-  if ( pstate >= 64 ) {
-    pstate = imin(126, pstate);
-    ctx->state = (uint16) (pstate - 64);
-    ctx->MPS   = 1;
+  if (pstate >= 64) {
+    pstate = imin (126, pstate);
+    ctx->state = (uint16)(pstate - 64);
+    ctx->MPS = 1;
     }
   else {
     pstate = imax(1, pstate);
-    ctx->state = (uint16) (63 - pstate);
-    ctx->MPS   = 0;
+    ctx->state = (uint16)(63 - pstate);
+    ctx->MPS = 0;
     }
   }
 //}}}
