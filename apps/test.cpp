@@ -908,7 +908,8 @@ public:
     thread ([=]() {
       cLog::setThreadName ("anal");
 
-      uint8_t* h264Chunk = new uint8_t[2000000000];
+
+      uint8_t* h264Chunk = new uint8_t[500000000];
       uint8_t* h264ChunkPtr = h264Chunk;
       size_t h264ChunkSize = 0;
       int gotIDR = 0;
@@ -929,16 +930,20 @@ public:
           }
         );
 
-      //{{{  read kIDR from file
+      //{{{  read from file
       size_t fileChunkSize = 188;
       uint8_t* fileChunk = new uint8_t[fileChunkSize];
-      while (gotIDR <= kIDR) {
+
+      size_t totalBytes = 0;
+      while (totalBytes < 500000000) {
         size_t bytesRead = fread (fileChunk, 1, fileChunkSize, file);
         if (bytesRead > 0)
           mTransportStream->demux (fileChunk, bytesRead);
         else
           break;
+        totalBytes += bytesRead;
         }
+
       delete[] fileChunk;
       fclose (file);
       //}}}

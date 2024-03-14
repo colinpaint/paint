@@ -1369,8 +1369,8 @@ unsigned ceilLog2sf (unsigned uiVal) {
 //{{{
 void initContexts (sSlice* slice) {
 
-  sMotionInfoContexts*  mc = slice->mot_ctx;
-  sTextureInfoContexts* tc = slice->tex_ctx;
+  sMotionInfoContexts*  mc = slice->motionContext;
+  sTextureInfoContexts* tc = slice->textureContext;
 
   int i, j;
   int qp = imax(0, slice->qp); //decoder->qp);
@@ -1486,30 +1486,30 @@ int dumpPOC (sDecoder* decoder) {
 
   sSPS* activeSPS = decoder->activeSPS;
 
-  printf ("POC locals...\n");
-  printf ("topPoc                                %d\n", (int) decoder->sliceList[0]->topPoc);
-  printf ("botPoc                             %d\n", (int) decoder->sliceList[0]->botPoc);
-  printf ("frameNum                             %d\n", (int) decoder->sliceList[0]->frameNum);
-  printf ("fieldPicFlag                        %d\n", (int) decoder->sliceList[0]->fieldPicFlag);
-  printf ("botFieldFlag                     %d\n", (int) decoder->sliceList[0]->botFieldFlag);
+  printf ("POC locals\n");
+  printf ("- topPoc %d\n", (int)decoder->sliceList[0]->topPoc);
+  printf ("- botPoc %d\n", (int)decoder->sliceList[0]->botPoc);
+  printf ("- frameNum %d\n", (int)decoder->sliceList[0]->frameNum);
+  printf ("- fieldPicFlag %d\n", (int)decoder->sliceList[0]->fieldPicFlag);
+  printf ("- botFieldFlag %d\n", (int)decoder->sliceList[0]->botFieldFlag);
 
-  printf ("POC SPS\n");
-  printf ("log2_max_frame_num_minus4             %d\n", (int) activeSPS->log2_max_frame_num_minus4);         // POC200301
-  printf ("log2_max_pic_order_cnt_lsb_minus4     %d\n", (int) activeSPS->log2_max_pic_order_cnt_lsb_minus4);
-  printf ("pocType                    %d\n", (int) activeSPS->pocType);
-  printf ("mumRefFramesPocCycle %d\n", (int) activeSPS->mumRefFramesPocCycle);
-  printf ("delta_pic_order_always_zero_flag      %d\n", (int) activeSPS->delta_pic_order_always_zero_flag);
-  printf ("offset_for_non_ref_pic                %d\n", (int) activeSPS->offset_for_non_ref_pic);
-  printf ("offset_for_top_to_bottom_field        %d\n", (int) activeSPS->offset_for_top_to_bottom_field);
-  printf ("offset_for_ref_frame[0]               %d\n", (int) activeSPS->offset_for_ref_frame[0]);
-  printf ("offset_for_ref_frame[1]               %d\n", (int) activeSPS->offset_for_ref_frame[1]);
+  printf ("POC in SPS\n");
+  printf ("- log2_max_frame_num_minus4 %d\n", (int)activeSPS->log2_max_frame_num_minus4);         // POC200301
+  printf ("- log2_max_pic_order_cnt_lsb_minus4 %d\n", (int)activeSPS->log2_max_pic_order_cnt_lsb_minus4);
+  printf ("- pocType %d\n", (int)activeSPS->pocType);
+  printf ("- numRefFramesPocCycle %d\n", (int)activeSPS->numRefFramesPocCycle);
+  printf ("- delta_pic_order_always_zero_flag %d\n", (int)activeSPS->delta_pic_order_always_zero_flag);
+  printf ("- offset_for_non_ref_pic %d\n", (int)activeSPS->offset_for_non_ref_pic);
+  printf ("- offset_for_top_to_bottom_field %d\n", (int)activeSPS->offset_for_top_to_bottom_field);
+  printf ("- offset_for_ref_frame[0] %d\n", (int)activeSPS->offset_for_ref_frame[0]);
+  printf ("- offset_for_ref_frame[1] %d\n", (int)activeSPS->offset_for_ref_frame[1]);
 
-  printf ("POC in SLice Header\n");
-  printf ("botFieldPicOrderFramePresent %d\n", (int) decoder->activePPS->botFieldPicOrderFramePresent);
-  printf ("deltaPicOrderCount[0]                %d\n", (int) decoder->sliceList[0]->deltaPicOrderCount[0]);
-  printf ("deltaPicOrderCount[1]                %d\n", (int) decoder->sliceList[0]->deltaPicOrderCount[1]);
-  printf ("idrFlag                              %d\n", (int) decoder->sliceList[0]->idrFlag);
-  printf ("maxFrameNum                         %d\n", (int) decoder->maxFrameNum);
+  printf ("POC in sliceHeader\n");
+  printf ("- botFieldPicOrderFramePresent %d\n", (int)decoder->activePPS->botFieldPicOrderFramePresent);
+  printf ("- deltaPicOrderCount[0] %d\n", (int)decoder->sliceList[0]->deltaPicOrderCount[0]);
+  printf ("- deltaPicOrderCount[1] %d\n", (int)decoder->sliceList[0]->deltaPicOrderCount[1]);
+  printf ("- idrFlag %d\n", (int)decoder->sliceList[0]->idrFlag);
+  printf ("- maxFrameNum %d\n", (int)decoder->maxFrameNum);
 
   return 0;
   }
@@ -1596,7 +1596,7 @@ void decodePOC (sDecoder* decoder, sSlice* slice) {
         }
 
       // 2nd
-      if (activeSPS->mumRefFramesPocCycle)
+      if (activeSPS->numRefFramesPocCycle)
         slice->AbsFrameNum = decoder->FrameNumOffset+slice->frameNum;
       else
         slice->AbsFrameNum=0;
@@ -1605,15 +1605,15 @@ void decodePOC (sDecoder* decoder, sSlice* slice) {
 
       // 3rd
       decoder->ExpectedDeltaPerPicOrderCntCycle = 0;
-      if (activeSPS->mumRefFramesPocCycle)
-        for (int i = 0; i < (int) activeSPS->mumRefFramesPocCycle;i++)
+      if (activeSPS->numRefFramesPocCycle)
+        for (int i = 0; i < (int) activeSPS->numRefFramesPocCycle;i++)
           decoder->ExpectedDeltaPerPicOrderCntCycle += activeSPS->offset_for_ref_frame[i];
 
       if (slice->AbsFrameNum) {
         decoder->PicOrderCntCycleCnt =
-          (slice->AbsFrameNum-1)/activeSPS->mumRefFramesPocCycle;
+          (slice->AbsFrameNum-1)/activeSPS->numRefFramesPocCycle;
         decoder->FrameNumInPicOrderCntCycle =
-          (slice->AbsFrameNum-1)%activeSPS->mumRefFramesPocCycle;
+          (slice->AbsFrameNum-1)%activeSPS->numRefFramesPocCycle;
         decoder->ExpectedPicOrderCnt =
           decoder->PicOrderCntCycleCnt*decoder->ExpectedDeltaPerPicOrderCntCycle;
         for (int i = 0; i <= (int)decoder->FrameNumInPicOrderCntCycle; i++)

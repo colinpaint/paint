@@ -688,19 +688,19 @@ void update_direct_types (sSlice* slice)
 //}}}
 
 //{{{
-static void mc_prediction (sPixel** mb_pred, sPixel** block, int blockSizeY, int blockSizeX, int ioff)
+static void mc_prediction (sPixel** mbPred, sPixel** block, int blockSizeY, int blockSizeX, int ioff)
 {
 
   int j;
 
   for (j = 0; j < blockSizeY; j++)
   {
-    memcpy(&mb_pred[j][ioff], block[j], blockSizeX * sizeof(sPixel));
+    memcpy(&mbPred[j][ioff], block[j], blockSizeX * sizeof(sPixel));
   }
 }
 //}}}
 //{{{
-static void weighted_mc_prediction (sPixel** mb_pred, sPixel** block,
+static void weighted_mc_prediction (sPixel** mbPred, sPixel** block,
                                     int blockSizeY, int blockSizeX,
                                     int ioff, int wp_scale, int wpOffset,
                                     int weight_denom, int color_clip)
@@ -713,20 +713,20 @@ static void weighted_mc_prediction (sPixel** mb_pred, sPixel** block,
     for(i = 0; i < blockSizeX; i++)
     {
       result = rshift_rnd((wp_scale * block[j][i]), weight_denom) + wpOffset;
-      mb_pred[j][i + ioff] = (sPixel)iClip3(0, color_clip, result);
+      mbPred[j][i + ioff] = (sPixel)iClip3(0, color_clip, result);
     }
   }
 }
 //}}}
 //{{{
-static void bi_prediction (sPixel** mb_pred,
+static void bi_prediction (sPixel** mbPred,
                            sPixel** block_l0,
                            sPixel** block_l1,
                            int blockSizeY,
                            int blockSizeX,
                            int ioff)
 {
-  sPixel *mpr = &mb_pred[0][ioff];
+  sPixel *mpr = &mbPred[0][ioff];
   sPixel *b0 = block_l0[0];
   sPixel *b1 = block_l1[0];
   int ii, jj;
@@ -746,7 +746,7 @@ static void bi_prediction (sPixel** mb_pred,
 }
 //}}}
 //{{{
-static void weighted_bi_prediction (sPixel *mb_pred,
+static void weighted_bi_prediction (sPixel *mbPred,
                                     sPixel *block_l0,
                                     sPixel *block_l1,
                                     int blockSizeY,
@@ -766,9 +766,9 @@ static void weighted_bi_prediction (sPixel *mb_pred,
     {
       result = rshift_rnd_sf((wp_scale_l0 * *(block_l0++) + wp_scale_l1 * *(block_l1++)),  weight_denom);
 
-      *(mb_pred++) = (sPixel) iClip1(color_clip, result + wpOffset);
+      *(mbPred++) = (sPixel) iClip1(color_clip, result + wpOffset);
     }
-    mb_pred += row_inc;
+    mbPred += row_inc;
     block_l0 += row_inc;
     block_l1 += row_inc;
   }
@@ -1672,7 +1672,7 @@ void intra_cr_decoding (sMacroblock* mb, int yuv)
       {
         for(j=0;j<decoder->mbCrSizeY;j++)
           for(i=0;i<decoder->mbCrSizeX;i++)
-            slice->mb_rres [uv+1][j][i]=slice->cof[uv+1][j][i];
+            slice->mbRess [uv+1][j][i]=slice->cof[uv+1][j][i];
       }
     }
 
@@ -1685,7 +1685,7 @@ void intra_cr_decoding (sMacroblock* mb, int yuv)
           joff = subblk_offset_y[yuv][b8][b4];
           ioff = subblk_offset_x[yuv][b8][b4];
           mb->iTrans4x4(mb, (eColorPlane) (uv + 1), ioff, joff);
-          copy_Image_4x4(&curUV[mb->piccY + joff], &(slice->mb_rec[uv + 1][joff]), mb->pixcX + ioff, ioff);
+          copy_Image_4x4(&curUV[mb->piccY + joff], &(slice->mbRec[uv + 1][joff]), mb->pixcX + ioff, ioff);
         }
       }
       slice->isResetCoefCr = FALSE;
@@ -1699,7 +1699,7 @@ void intra_cr_decoding (sMacroblock* mb, int yuv)
         for(ioff = 0; ioff < 8;ioff+=4)
         {
           mb->iTrans4x4 (mb, (eColorPlane) (uv + 1), ioff, joff);
-          copy_Image_4x4 (&curUV[mb->piccY + joff], &(slice->mb_rec[uv + 1][joff]), mb->pixcX + ioff, ioff);
+          copy_Image_4x4 (&curUV[mb->piccY + joff], &(slice->mbRec[uv + 1][joff]), mb->pixcX + ioff, ioff);
         }
       }
       slice->isResetCoefCr = FALSE;
@@ -1712,7 +1712,7 @@ void intra_cr_decoding (sMacroblock* mb, int yuv)
         {
           joff = subblk_offset_y[yuv][b8][b4];
           ioff = subblk_offset_x[yuv][b8][b4];
-          copy_Image_4x4(&curUV[mb->piccY + joff], &(slice->mb_pred[uv + 1][joff]), mb->pixcX + ioff, ioff);
+          copy_Image_4x4(&curUV[mb->piccY + joff], &(slice->mbPred[uv + 1][joff]), mb->pixcX + ioff, ioff);
         }
       }
     }
@@ -1897,7 +1897,7 @@ static void perform_mc_single_wp (sMacroblock* mb, eColorPlane plane, sPicture* 
     alpha_l0  = slice->wpWeight[predDir][ref_idx_wp][plane];
     wpOffset = slice->wpOffset[predDir][ref_idx_wp][plane];
     wp_denom  = plane > 0 ? slice->chromaLog2weightDenom : slice->lumaLog2weightDenom;
-    weighted_mc_prediction(&slice->mb_pred[plane][joff], tmp_block_l0, blockSizeY, blockSizeX, ioff, alpha_l0, wpOffset, wp_denom, max_imgpel_value);
+    weighted_mc_prediction(&slice->mbPred[plane][joff], tmp_block_l0, blockSizeY, blockSizeX, ioff, alpha_l0, wpOffset, wp_denom, max_imgpel_value);
   }
 
   if ((chromaFormatIdc != YUV400) && (chromaFormatIdc != YUV444) )
@@ -1933,8 +1933,8 @@ static void perform_mc_single_wp (sMacroblock* mb, eColorPlane plane, sPicture* 
       int *weight = slice->wpWeight[predDir][ref_idx_wp];
       int *offset = slice->wpOffset[predDir][ref_idx_wp];
       get_block_chroma(list,vec1_x,vec1_y_cr,decoder->subpelX,decoder->subpelY,maxold_x,maxold_y,block_size_x_cr,block_size_y_cr,decoder->shiftpelX,decoder->shiftpelY,&tmp_block_l0[0][0],&tmp_block_l1[0][0] ,totalScale,no_ref_value,decoder);
-      weighted_mc_prediction(&slice->mb_pred[1][joff_cr], tmp_block_l0, block_size_y_cr, block_size_x_cr, ioff_cr, weight[1], offset[1], chroma_log2_weight, decoder->maxPelValueComp[1]);
-      weighted_mc_prediction(&slice->mb_pred[2][joff_cr], tmp_block_l1, block_size_y_cr, block_size_x_cr, ioff_cr, weight[2], offset[2], chroma_log2_weight, decoder->maxPelValueComp[2]);
+      weighted_mc_prediction(&slice->mbPred[1][joff_cr], tmp_block_l0, block_size_y_cr, block_size_x_cr, ioff_cr, weight[1], offset[1], chroma_log2_weight, decoder->maxPelValueComp[1]);
+      weighted_mc_prediction(&slice->mbPred[2][joff_cr], tmp_block_l1, block_size_y_cr, block_size_x_cr, ioff_cr, weight[2], offset[2], chroma_log2_weight, decoder->maxPelValueComp[2]);
     }
   }
 }
@@ -1981,7 +1981,7 @@ static void perform_mc_single (sMacroblock* mb, eColorPlane plane, sPicture* pic
   else
     get_block_luma(list, vec1_x, vec1_y, blockSizeX, blockSizeY, tmp_block_l0,shift_x,maxold_x,maxold_y,tmp_res,max_imgpel_value,no_ref_value, mb);
 
-  mc_prediction(&slice->mb_pred[plane][joff], tmp_block_l0, blockSizeY, blockSizeX, ioff);
+  mc_prediction(&slice->mbPred[plane][joff], tmp_block_l0, blockSizeY, blockSizeX, ioff);
 
   if ((chromaFormatIdc != YUV400) && (chromaFormatIdc != YUV444) )
   {
@@ -2012,8 +2012,8 @@ static void perform_mc_single (sMacroblock* mb, eColorPlane plane, sPicture* pic
     }
     no_ref_value = (sPixel)decoder->dcPredValueComp[1];
     get_block_chroma(list,vec1_x,vec1_y_cr,decoder->subpelX,decoder->subpelY,maxold_x,maxold_y,block_size_x_cr,block_size_y_cr,decoder->shiftpelX,decoder->shiftpelY,&tmp_block_l0[0][0],&tmp_block_l1[0][0] ,totalScale,no_ref_value,decoder);
-    mc_prediction(&slice->mb_pred[1][joff_cr], tmp_block_l0, block_size_y_cr, block_size_x_cr, ioff_cr);
-    mc_prediction(&slice->mb_pred[2][joff_cr], tmp_block_l1, block_size_y_cr, block_size_x_cr, ioff_cr);
+    mc_prediction(&slice->mbPred[1][joff_cr], tmp_block_l0, block_size_y_cr, block_size_x_cr, ioff_cr);
+    mc_prediction(&slice->mbPred[2][joff_cr], tmp_block_l1, block_size_y_cr, block_size_x_cr, ioff_cr);
   }
 }
 //}}}
@@ -2098,7 +2098,7 @@ static void perform_mc_bi_wp (sMacroblock* mb, eColorPlane plane, sPicture* pict
 
   wpOffset = ((offset0[plane] + offset1[plane] + 1) >>1);
   wp_denom  = plane > 0 ? slice->chromaLog2weightDenom : slice->lumaLog2weightDenom;
-  weighted_bi_prediction(&slice->mb_pred[plane][joff][ioff], block0, block1, blockSizeY, blockSizeX, weight0[plane], weight1[plane], wpOffset, wp_denom + 1, max_imgpel_value);
+  weighted_bi_prediction(&slice->mbPred[plane][joff][ioff], block0, block1, blockSizeY, blockSizeX, weight0[plane], weight1[plane], wpOffset, wp_denom + 1, max_imgpel_value);
 
   if ((chromaFormatIdc != YUV400) && (chromaFormatIdc != YUV444) )
   {
@@ -2148,9 +2148,9 @@ static void perform_mc_bi_wp (sMacroblock* mb, eColorPlane plane, sPicture* pict
     wpOffset = ((offset0[1] + offset1[1] + 1) >>1);
     get_block_chroma(list0,vec1_x,vec1_y_cr,subpelX,subpelY,maxold_x,maxold_y,block_size_x_cr,block_size_y_cr,shiftpelX,shiftpelY,block0,block2 ,totalScale,no_ref_value,decoder);
     get_block_chroma(list1,vec2_x,vec2_y_cr,subpelX,subpelY,maxold_x,maxold_y,block_size_x_cr,block_size_y_cr,shiftpelX,shiftpelY,block1,block3 ,totalScale,no_ref_value,decoder);
-    weighted_bi_prediction(&slice->mb_pred[1][joff_cr][ioff_cr],block0,block1,block_size_y_cr,block_size_x_cr,weight0[1],weight1[1],wpOffset,chroma_log2,decoder->maxPelValueComp[1]);
+    weighted_bi_prediction(&slice->mbPred[1][joff_cr][ioff_cr],block0,block1,block_size_y_cr,block_size_x_cr,weight0[1],weight1[1],wpOffset,chroma_log2,decoder->maxPelValueComp[1]);
     wpOffset = ((offset0[2] + offset1[2] + 1) >>1);
-    weighted_bi_prediction(&slice->mb_pred[2][joff_cr][ioff_cr],block2,block3,block_size_y_cr,block_size_x_cr,weight0[2],weight1[2],wpOffset,chroma_log2,decoder->maxPelValueComp[2]);
+    weighted_bi_prediction(&slice->mbPred[2][joff_cr][ioff_cr],block2,block3,block_size_y_cr,block_size_x_cr,weight0[2],weight1[2],wpOffset,chroma_log2,decoder->maxPelValueComp[2]);
   }
 }
 //}}}
@@ -2216,7 +2216,7 @@ static void perform_mc_bi (sMacroblock* mb, eColorPlane plane, sPicture* picture
   }
   else
     get_block_luma(list1, vec2_x, vec2_y, blockSizeX, blockSizeY, tmp_block_l1,shift_x,maxold_x,maxold_y,tmp_res,max_imgpel_value,no_ref_value, mb);
-  bi_prediction(&slice->mb_pred[plane][joff],tmp_block_l0,tmp_block_l1, blockSizeY, blockSizeX, ioff);
+  bi_prediction(&slice->mbPred[plane][joff],tmp_block_l0,tmp_block_l1, blockSizeY, blockSizeX, ioff);
 
   if ((chromaFormatIdc != YUV400) && (chromaFormatIdc != YUV444) )
   {
@@ -2262,8 +2262,8 @@ static void perform_mc_bi (sMacroblock* mb, eColorPlane plane, sPicture* picture
     no_ref_value = (sPixel)decoder->dcPredValueComp[1];
     get_block_chroma(list0,vec1_x,vec1_y_cr,subpelX,subpelY,maxold_x,maxold_y,block_size_x_cr,block_size_y_cr,shiftpelX,shiftpelY,block0,block2 ,totalScale,no_ref_value,decoder);
     get_block_chroma(list1,vec2_x,vec2_y_cr,subpelX,subpelY,maxold_x,maxold_y,block_size_x_cr,block_size_y_cr,shiftpelX,shiftpelY,block1,block3 ,totalScale,no_ref_value,decoder);
-    bi_prediction(&slice->mb_pred[1][joff_cr],tmp_block_l0,tmp_block_l1, block_size_y_cr, block_size_x_cr, ioff_cr);
-    bi_prediction(&slice->mb_pred[2][joff_cr],tmp_block_l2,tmp_block_l3, block_size_y_cr, block_size_x_cr, ioff_cr);
+    bi_prediction(&slice->mbPred[1][joff_cr],tmp_block_l0,tmp_block_l1, block_size_y_cr, block_size_x_cr, ioff_cr);
+    bi_prediction(&slice->mbPred[2][joff_cr],tmp_block_l2,tmp_block_l3, block_size_y_cr, block_size_x_cr, ioff_cr);
   }
 }
 //}}}

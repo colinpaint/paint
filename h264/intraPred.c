@@ -246,7 +246,7 @@ static int intra8x8_dc_pred (sMacroblock * mb,
   int block_available_up_left;
   int block_available_up_right;
 
-  sPixel** mpr = slice->mb_pred[plane];
+  sPixel** mpr = slice->mbPred[plane];
   int *mbSize = decoder->mbSize[IS_LUMA];
 
   for (int i=0; i<25;i++) PredPel[i]=0;
@@ -391,7 +391,7 @@ static int intra8x8_vert_pred (sMacroblock* mb,
   int block_available_up_right;
 
 
-  sPixel** mpr = slice->mb_pred[plane];
+  sPixel** mpr = slice->mbPred[plane];
   int *mbSize = decoder->mbSize[IS_LUMA];
 
   for (int i=0; i<25;i++) PredPel[i]=0;
@@ -505,7 +505,7 @@ static int intra8x8_hor_pred (sMacroblock* mb,
   int ipos4 = ioff + 4, ipos5 = ioff + 5, ipos6 = ioff + 6, ipos7 = ioff + 7;
 #endif
   int jpos;
-  sPixel** mpr = slice->mb_pred[plane];
+  sPixel** mpr = slice->mbPred[plane];
   int *mbSize = decoder->mbSize[IS_LUMA];
 
   getNonAffNeighbour(mb, ioff - 1, joff    , mbSize, &pix_a);
@@ -610,7 +610,7 @@ static int intra8x8_diag_down_right_pred (sMacroblock* mb,
   int block_available_up_right;
 
   sPixel *pred_pels;
-  sPixel** mb_pred = &slice->mb_pred[plane][joff];
+  sPixel** mbPred = &slice->mbPred[plane][joff];
   int *mbSize = decoder->mbSize[IS_LUMA];
 
   for (int i=0; i<25;i++) PredPel[i]=0;
@@ -715,14 +715,14 @@ static int intra8x8_diag_down_right_pred (sMacroblock* mb,
 
   pred_pels = &PredArray[7];
 
-  memcpy((*mb_pred++) + ioff, pred_pels--, 8 * sizeof(sPixel));
-  memcpy((*mb_pred++) + ioff, pred_pels--, 8 * sizeof(sPixel));
-  memcpy((*mb_pred++) + ioff, pred_pels--, 8 * sizeof(sPixel));
-  memcpy((*mb_pred++) + ioff, pred_pels--, 8 * sizeof(sPixel));
-  memcpy((*mb_pred++) + ioff, pred_pels--, 8 * sizeof(sPixel));
-  memcpy((*mb_pred++) + ioff, pred_pels--, 8 * sizeof(sPixel));
-  memcpy((*mb_pred++) + ioff, pred_pels--, 8 * sizeof(sPixel));
-  memcpy((*mb_pred  ) + ioff, pred_pels  , 8 * sizeof(sPixel));
+  memcpy((*mbPred++) + ioff, pred_pels--, 8 * sizeof(sPixel));
+  memcpy((*mbPred++) + ioff, pred_pels--, 8 * sizeof(sPixel));
+  memcpy((*mbPred++) + ioff, pred_pels--, 8 * sizeof(sPixel));
+  memcpy((*mbPred++) + ioff, pred_pels--, 8 * sizeof(sPixel));
+  memcpy((*mbPred++) + ioff, pred_pels--, 8 * sizeof(sPixel));
+  memcpy((*mbPred++) + ioff, pred_pels--, 8 * sizeof(sPixel));
+  memcpy((*mbPred++) + ioff, pred_pels--, 8 * sizeof(sPixel));
+  memcpy((*mbPred  ) + ioff, pred_pels  , 8 * sizeof(sPixel));
 
   return DECODING_OK;
 }
@@ -761,7 +761,7 @@ static int intra8x8_diag_down_left_pred (sMacroblock* mb,
 
   for (int i=0; i<25;i++) PredPel[i]=0;
 
-  sPixel** mb_pred = &slice->mb_pred[plane][joff];
+  sPixel** mbPred = &slice->mbPred[plane][joff];
   int *mbSize = decoder->mbSize[IS_LUMA];
 
   getNonAffNeighbour(mb, ioff - 1, joff    , mbSize, &pix_a);
@@ -864,14 +864,14 @@ static int intra8x8_diag_down_left_pred (sMacroblock* mb,
 
   Pred = &PredArray[ 0];
 
-  memcpy((*mb_pred++) + ioff, Pred++, 8 * sizeof(sPixel));
-  memcpy((*mb_pred++) + ioff, Pred++, 8 * sizeof(sPixel));
-  memcpy((*mb_pred++) + ioff, Pred++, 8 * sizeof(sPixel));
-  memcpy((*mb_pred++) + ioff, Pred++, 8 * sizeof(sPixel));
-  memcpy((*mb_pred++) + ioff, Pred++, 8 * sizeof(sPixel));
-  memcpy((*mb_pred++) + ioff, Pred++, 8 * sizeof(sPixel));
-  memcpy((*mb_pred++) + ioff, Pred++, 8 * sizeof(sPixel));
-  memcpy((*mb_pred  ) + ioff, Pred  , 8 * sizeof(sPixel));
+  memcpy((*mbPred++) + ioff, Pred++, 8 * sizeof(sPixel));
+  memcpy((*mbPred++) + ioff, Pred++, 8 * sizeof(sPixel));
+  memcpy((*mbPred++) + ioff, Pred++, 8 * sizeof(sPixel));
+  memcpy((*mbPred++) + ioff, Pred++, 8 * sizeof(sPixel));
+  memcpy((*mbPred++) + ioff, Pred++, 8 * sizeof(sPixel));
+  memcpy((*mbPred++) + ioff, Pred++, 8 * sizeof(sPixel));
+  memcpy((*mbPred++) + ioff, Pred++, 8 * sizeof(sPixel));
+  memcpy((*mbPred  ) + ioff, Pred  , 8 * sizeof(sPixel));
 
   return DECODING_OK;
 }
@@ -910,7 +910,7 @@ static int intra8x8_vert_right_pred (sMacroblock* mb,
   for (int i=0; i<25;i++) PredPel[i]=0;
 
   sPixel *pred_pels;
-  sPixel** mb_pred = &slice->mb_pred[plane][joff];
+  sPixel** mbPred = &slice->mbPred[plane][joff];
   int *mbSize = decoder->mbSize[IS_LUMA];
 
   getNonAffNeighbour(mb, ioff - 1, joff    , mbSize, &pix_a);
@@ -1019,14 +1019,14 @@ static int intra8x8_vert_right_pred (sMacroblock* mb,
   *pred_pels++ = (sPixel) ((P_E + P_G + ((P_F) << 1) + 2) >> 2);
   *pred_pels   = (sPixel) ((P_F + P_H + ((P_G) << 1) + 2) >> 2);
 
-  memcpy((*mb_pred++) + ioff, &PredArray[ 3], 8 * sizeof(sPixel));
-  memcpy((*mb_pred++) + ioff, &PredArray[14], 8 * sizeof(sPixel));
-  memcpy((*mb_pred++) + ioff, &PredArray[ 2], 8 * sizeof(sPixel));
-  memcpy((*mb_pred++) + ioff, &PredArray[13], 8 * sizeof(sPixel));
-  memcpy((*mb_pred++) + ioff, &PredArray[ 1], 8 * sizeof(sPixel));
-  memcpy((*mb_pred++) + ioff, &PredArray[12], 8 * sizeof(sPixel));
-  memcpy((*mb_pred++) + ioff, &PredArray[ 0], 8 * sizeof(sPixel));
-  memcpy((*mb_pred  ) + ioff, &PredArray[11], 8 * sizeof(sPixel));
+  memcpy((*mbPred++) + ioff, &PredArray[ 3], 8 * sizeof(sPixel));
+  memcpy((*mbPred++) + ioff, &PredArray[14], 8 * sizeof(sPixel));
+  memcpy((*mbPred++) + ioff, &PredArray[ 2], 8 * sizeof(sPixel));
+  memcpy((*mbPred++) + ioff, &PredArray[13], 8 * sizeof(sPixel));
+  memcpy((*mbPred++) + ioff, &PredArray[ 1], 8 * sizeof(sPixel));
+  memcpy((*mbPred++) + ioff, &PredArray[12], 8 * sizeof(sPixel));
+  memcpy((*mbPred++) + ioff, &PredArray[ 0], 8 * sizeof(sPixel));
+  memcpy((*mbPred  ) + ioff, &PredArray[11], 8 * sizeof(sPixel));
 
   return DECODING_OK;
 }
@@ -1063,7 +1063,7 @@ static int intra8x8_vert_left_pred (sMacroblock* mb,
   int block_available_up_left;
   int block_available_up_right;
 
-  sPixel** mb_pred = &slice->mb_pred[plane][joff];
+  sPixel** mbPred = &slice->mbPred[plane][joff];
   int *mbSize = decoder->mbSize[IS_LUMA];
 
   for (int i=0; i<25;i++) PredPel[i]=0;
@@ -1172,14 +1172,14 @@ static int intra8x8_vert_left_pred (sMacroblock* mb,
   *pred_pel++ = (sPixel) ((P_J + P_L + ((P_K) << 1) + 2) >> 2);
   *pred_pel   = (sPixel) ((P_K + P_M + ((P_L) << 1) + 2) >> 2);
 
-  memcpy((*mb_pred++) + ioff, &PredArray[ 0], 8 * sizeof(sPixel));
-  memcpy((*mb_pred++) + ioff, &PredArray[11], 8 * sizeof(sPixel));
-  memcpy((*mb_pred++) + ioff, &PredArray[ 1], 8 * sizeof(sPixel));
-  memcpy((*mb_pred++) + ioff, &PredArray[12], 8 * sizeof(sPixel));
-  memcpy((*mb_pred++) + ioff, &PredArray[ 2], 8 * sizeof(sPixel));
-  memcpy((*mb_pred++) + ioff, &PredArray[13], 8 * sizeof(sPixel));
-  memcpy((*mb_pred++) + ioff, &PredArray[ 3], 8 * sizeof(sPixel));
-  memcpy((*mb_pred  ) + ioff, &PredArray[14], 8 * sizeof(sPixel));
+  memcpy((*mbPred++) + ioff, &PredArray[ 0], 8 * sizeof(sPixel));
+  memcpy((*mbPred++) + ioff, &PredArray[11], 8 * sizeof(sPixel));
+  memcpy((*mbPred++) + ioff, &PredArray[ 1], 8 * sizeof(sPixel));
+  memcpy((*mbPred++) + ioff, &PredArray[12], 8 * sizeof(sPixel));
+  memcpy((*mbPred++) + ioff, &PredArray[ 2], 8 * sizeof(sPixel));
+  memcpy((*mbPred++) + ioff, &PredArray[13], 8 * sizeof(sPixel));
+  memcpy((*mbPred++) + ioff, &PredArray[ 3], 8 * sizeof(sPixel));
+  memcpy((*mbPred  ) + ioff, &PredArray[14], 8 * sizeof(sPixel));
 
   return DECODING_OK;
 }
@@ -1219,7 +1219,7 @@ static int intra8x8_hor_up_pred (sMacroblock* mb,
 
   for (int i=0; i<25;i++) PredPel[i]=0;
 
-  sPixel** mpr = slice->mb_pred[plane];
+  sPixel** mpr = slice->mbPred[plane];
   int *mbSize = decoder->mbSize[IS_LUMA];
 
   getNonAffNeighbour(mb, ioff - 1, joff    , mbSize, &pix_a);
@@ -1370,7 +1370,7 @@ static int intra8x8_hor_down_pred (sMacroblock* mb,
   int block_available_up_right;
 
   sPixel *pred_pels;
-  sPixel** mb_pred = &slice->mb_pred[plane][joff];
+  sPixel** mbPred = &slice->mbPred[plane][joff];
   int *mbSize = decoder->mbSize[IS_LUMA];
 
   for (int i=0; i<25;i++) PredPel[i]=0;
@@ -1482,21 +1482,21 @@ static int intra8x8_hor_down_pred (sMacroblock* mb,
   *pred_pels   = (sPixel) ((P_E + P_G + ((P_F) << 1) + 2) >> 2);
 
   pred_pels = &PredArray[14];
-  memcpy((*mb_pred++) + ioff, pred_pels, 8 * sizeof(sPixel));
+  memcpy((*mbPred++) + ioff, pred_pels, 8 * sizeof(sPixel));
   pred_pels -= 2;
-  memcpy((*mb_pred++) + ioff, pred_pels, 8 * sizeof(sPixel));
+  memcpy((*mbPred++) + ioff, pred_pels, 8 * sizeof(sPixel));
   pred_pels -= 2;
-  memcpy((*mb_pred++) + ioff, pred_pels, 8 * sizeof(sPixel));
+  memcpy((*mbPred++) + ioff, pred_pels, 8 * sizeof(sPixel));
   pred_pels -= 2;
-  memcpy((*mb_pred++) + ioff, pred_pels, 8 * sizeof(sPixel));
+  memcpy((*mbPred++) + ioff, pred_pels, 8 * sizeof(sPixel));
   pred_pels -= 2;
-  memcpy((*mb_pred++) + ioff, pred_pels, 8 * sizeof(sPixel));
+  memcpy((*mbPred++) + ioff, pred_pels, 8 * sizeof(sPixel));
   pred_pels -= 2;
-  memcpy((*mb_pred++) + ioff, pred_pels, 8 * sizeof(sPixel));
+  memcpy((*mbPred++) + ioff, pred_pels, 8 * sizeof(sPixel));
   pred_pels -= 2;
-  memcpy((*mb_pred++) + ioff, pred_pels, 8 * sizeof(sPixel));
+  memcpy((*mbPred++) + ioff, pred_pels, 8 * sizeof(sPixel));
   pred_pels -= 2;
-  memcpy((*mb_pred  ) + ioff, pred_pels, 8 * sizeof(sPixel));
+  memcpy((*mbPred  ) + ioff, pred_pels, 8 * sizeof(sPixel));
 
   return DECODING_OK;
 }
@@ -1586,7 +1586,7 @@ static int intra8x8_dc_pred_mbaff (sMacroblock* mb, eColorPlane plane, int ioff,
 
   for (int i=0; i<25;i++) PredPel[i]=0;
 
-  sPixel** mpr = slice->mb_pred[plane];
+  sPixel** mpr = slice->mbPred[plane];
   int *mbSize = decoder->mbSize[IS_LUMA];
 
   for (i=0;i<8;i++)
@@ -1731,7 +1731,7 @@ static int intra8x8_vert_pred_mbaff (sMacroblock* mb,
 
   for (int i=0; i<25;i++) PredPel[i]=0;
 
-  sPixel** mpr = slice->mb_pred[plane];
+  sPixel** mpr = slice->mbPred[plane];
   int *mbSize = decoder->mbSize[IS_LUMA];
 
   for (i=0;i<8;i++)
@@ -1848,7 +1848,7 @@ static int intra8x8_hor_pred_mbaff (sMacroblock* mb,
   int ipos4 = ioff + 4, ipos5 = ioff + 5, ipos6 = ioff + 6, ipos7 = ioff + 7;
 #endif
   int jpos;
-  sPixel** mpr = slice->mb_pred[plane];
+  sPixel** mpr = slice->mbPred[plane];
   int *mbSize = decoder->mbSize[IS_LUMA];
 
   for (i=0;i<8;i++)
@@ -1960,7 +1960,7 @@ static int intra8x8_diag_down_right_pred_mbaff (sMacroblock* mb,
   int block_available_up_left;
   int block_available_up_right;
 
-  sPixel** mpr = slice->mb_pred[plane];
+  sPixel** mpr = slice->mbPred[plane];
   int *mbSize = decoder->mbSize[IS_LUMA];
 
   for (int i=0; i<25;i++) PredPel[i]=0;
@@ -2111,7 +2111,7 @@ static int intra8x8_diag_down_left_pred_mbaff (sMacroblock* mb,
   int block_available_up_left;
   int block_available_up_right;
 
-  sPixel** mpr = slice->mb_pred[plane];
+  sPixel** mpr = slice->mbPred[plane];
   int *mbSize = decoder->mbSize[IS_LUMA];
 
   for (int i=0; i<25;i++) PredPel[i]=0;
@@ -2263,7 +2263,7 @@ static int intra8x8_vert_right_pred_mbaff (sMacroblock* mb,
   int block_available_up_left;
   int block_available_up_right;
 
-  sPixel** mpr = slice->mb_pred[plane];
+  sPixel** mpr = slice->mbPred[plane];
   int *mbSize = decoder->mbSize[IS_LUMA];
 
   for (int i=0; i<25;i++) PredPel[i]=0;
@@ -2421,7 +2421,7 @@ static int intra8x8_vert_left_pred_mbaff (sMacroblock* mb,
   int block_available_up_left;
   int block_available_up_right;
 
-  sPixel** mpr = slice->mb_pred[plane];
+  sPixel** mpr = slice->mbPred[plane];
   int *mbSize = decoder->mbSize[IS_LUMA];
 
   for (int i=0; i<25;i++) PredPel[i]=0;
@@ -2579,7 +2579,7 @@ static int intra8x8_hor_up_pred_mbaff (sMacroblock* mb,
   int jpos0 = joff    , jpos1 = joff + 1, jpos2 = joff + 2, jpos3 = joff + 3;
   int jpos4 = joff + 4, jpos5 = joff + 5, jpos6 = joff + 6, jpos7 = joff + 7;
 
-  sPixel** mpr = slice->mb_pred[plane];
+  sPixel** mpr = slice->mbPred[plane];
   int *mbSize = decoder->mbSize[IS_LUMA];
 
   for (int i=0; i<25;i++) PredPel[i]=0;
@@ -2737,7 +2737,7 @@ static int intra8x8_hor_down_pred_mbaff (sMacroblock* mb,
   int jpos0 = joff    , jpos1 = joff + 1, jpos2 = joff + 2, jpos3 = joff + 3;
   int jpos4 = joff + 4, jpos5 = joff + 5, jpos6 = joff + 6, jpos7 = joff + 7;
 
-  sPixel** mpr = slice->mb_pred[plane];
+  sPixel** mpr = slice->mbPred[plane];
   int *mbSize = decoder->mbSize[IS_LUMA];
 
   for (int i=0; i<25;i++) PredPel[i]=0;
@@ -2945,7 +2945,7 @@ static int intra16x16_dc_pred (sMacroblock* mb, eColorPlane plane)
   int i,j;
 
   sPixel** imgY = (plane) ? slice->picture->imgUV[plane - 1] : slice->picture->imgY;
-  sPixel** mb_pred = &(slice->mb_pred[plane][0]);
+  sPixel** mbPred = &(slice->mbPred[plane][0]);
 
   sPixelPos a, b;
 
@@ -2998,14 +2998,14 @@ static int intra16x16_dc_pred (sMacroblock* mb, eColorPlane plane)
   for(j = 0; j < MB_BLOCK_SIZE; ++j)
   {
 #if (IMGTYPE == 0)
-    memset(mb_pred[j], s0, MB_BLOCK_SIZE * sizeof(sPixel));
+    memset(mbPred[j], s0, MB_BLOCK_SIZE * sizeof(sPixel));
 #else
     for(i = 0; i < MB_BLOCK_SIZE; i += 4)
     {
-      mb_pred[j][i    ]=(sPixel) s0;
-      mb_pred[j][i + 1]=(sPixel) s0;
-      mb_pred[j][i + 2]=(sPixel) s0;
-      mb_pred[j][i + 3]=(sPixel) s0;
+      mbPred[j][i    ]=(sPixel) s0;
+      mbPred[j][i + 1]=(sPixel) s0;
+      mbPred[j][i + 2]=(sPixel) s0;
+      mbPred[j][i + 3]=(sPixel) s0;
     }
 #endif
   }
@@ -3052,7 +3052,7 @@ static int intra16x16_vert_pred (sMacroblock* mb, eColorPlane plane)
   if (!up_avail)
     error ("invalid 16x16 intra pred Mode VERT_PRED_16");
   {
-    sPixel** prd = &slice->mb_pred[plane][0];
+    sPixel** prd = &slice->mbPred[plane][0];
     sPixel *src = &(imgY[b.posY][b.posX]);
 
     for(j=0;j<MB_BLOCK_SIZE; j+= 4)
@@ -3085,7 +3085,7 @@ static int intra16x16_hor_pred (sMacroblock* mb, eColorPlane plane)
   int j;
 
   sPixel** imgY = (plane) ? slice->picture->imgUV[plane - 1] : slice->picture->imgY;
-  sPixel** mb_pred = &(slice->mb_pred[plane][0]);
+  sPixel** mbPred = &(slice->mbPred[plane][0]);
   sPixel prediction;
   int posY, posX;
 
@@ -3113,13 +3113,13 @@ static int intra16x16_hor_pred (sMacroblock* mb, eColorPlane plane)
   for(j = 0; j < MB_BLOCK_SIZE; ++j)
   {
 #if (IMGTYPE == 0)
-    sPixel *prd = mb_pred[j];
+    sPixel *prd = mbPred[j];
     prediction = imgY[posY++][posX];
 
     memset(prd, prediction, MB_BLOCK_SIZE * sizeof(sPixel));
 #else
     int i;
-    sPixel *prd = mb_pred[j];
+    sPixel *prd = mbPred[j];
     prediction = imgY[posY++][posX];
 
     for(i = 0; i < MB_BLOCK_SIZE; i += 4)
@@ -3157,7 +3157,7 @@ static int intra16x16_plane_pred (sMacroblock* mb, eColorPlane plane)
   int ib,ic,iaa;
 
   sPixel** imgY = (plane) ? slice->picture->imgUV[plane - 1] : slice->picture->imgY;
-  sPixel** mb_pred = &(slice->mb_pred[plane][0]);
+  sPixel** mbPred = &(slice->mbPred[plane][0]);
   sPixel *mpr_line;
   int max_imgpel_value = decoder->maxPelValueComp[plane];
   int posY, posX;
@@ -3205,7 +3205,7 @@ static int intra16x16_plane_pred (sMacroblock* mb, eColorPlane plane)
   for (j = 0;j < MB_BLOCK_SIZE; ++j)
   {
     int ibb = iaa + (j - 7) * ic + 16;
-    sPixel *prd = mb_pred[j];
+    sPixel *prd = mbPred[j];
     for (i = 0;i < MB_BLOCK_SIZE; i += 4)
     {
       *prd++ = (sPixel) iClip1(max_imgpel_value, ((ibb + (i - 7) * ib) >> 5));
@@ -3265,7 +3265,7 @@ static int intra16x16_dc_pred_mbaff (sMacroblock* mb, eColorPlane plane)
   int i,j;
 
   sPixel** imgY = (plane) ? slice->picture->imgUV[plane - 1] : slice->picture->imgY;
-  sPixel** mb_pred = &(slice->mb_pred[plane][0]);
+  sPixel** mbPred = &(slice->mbPred[plane][0]);
 
   sPixelPos b;          //!< pixel position p(0,-1)
   sPixelPos left[17];    //!< pixel positions p(-1, -1..15)
@@ -3311,11 +3311,11 @@ static int intra16x16_dc_pred_mbaff (sMacroblock* mb, eColorPlane plane)
   for(j = 0; j < MB_BLOCK_SIZE; ++j)
   {
 #if (IMGTYPE == 0)
-    memset(mb_pred[j], s0, MB_BLOCK_SIZE * sizeof(sPixel));
+    memset(mbPred[j], s0, MB_BLOCK_SIZE * sizeof(sPixel));
 #else
     for(i = 0; i < MB_BLOCK_SIZE; ++i)
     {
-      mb_pred[j][i]=(sPixel) s0;
+      mbPred[j][i]=(sPixel) s0;
     }
 #endif
   }
@@ -3361,7 +3361,7 @@ static int intra16x16_vert_pred_mbaff (sMacroblock* mb, eColorPlane plane)
   if (!up_avail)
     error ("invalid 16x16 intra pred Mode VERT_PRED_16");
   {
-    sPixel** prd = &slice->mb_pred[plane][0];
+    sPixel** prd = &slice->mbPred[plane][0];
     sPixel *src = &(imgY[b.posY][b.posX]);
 
     for(j=0;j<MB_BLOCK_SIZE; j+= 4)
@@ -3394,7 +3394,7 @@ static int intra16x16_hor_pred_mbaff (sMacroblock* mb, eColorPlane plane)
   int i,j;
 
   sPixel** imgY = (plane) ? slice->picture->imgUV[plane - 1] : slice->picture->imgY;
-  sPixel** mb_pred = &(slice->mb_pred[plane][0]);
+  sPixel** mbPred = &(slice->mbPred[plane][0]);
   sPixel prediction;
 
   sPixelPos left[17];    //!< pixel positions p(-1, -1..15)
@@ -3423,7 +3423,7 @@ static int intra16x16_hor_pred_mbaff (sMacroblock* mb, eColorPlane plane)
   {
     prediction = imgY[left[j+1].posY][left[j+1].posX];
     for(i = 0; i < MB_BLOCK_SIZE; ++i)
-      mb_pred[j][i]= prediction; // store predicted 16x16 block
+      mbPred[j][i]= prediction; // store predicted 16x16 block
   }
 
   return DECODING_OK;
@@ -3451,7 +3451,7 @@ static int intra16x16_plane_pred_mbaff (sMacroblock* mb, eColorPlane plane)
   int ib,ic,iaa;
 
   sPixel** imgY = (plane) ? slice->picture->imgUV[plane - 1] : slice->picture->imgY;
-  sPixel** mb_pred = &(slice->mb_pred[plane][0]);
+  sPixel** mbPred = &(slice->mbPred[plane][0]);
   sPixel *mpr_line;
   int max_imgpel_value = decoder->maxPelValueComp[plane];
 
@@ -3501,7 +3501,7 @@ static int intra16x16_plane_pred_mbaff (sMacroblock* mb, eColorPlane plane)
   {
     for (i = 0;i < MB_BLOCK_SIZE; ++i)
     {
-      mb_pred[j][i] = (sPixel) iClip1(max_imgpel_value, ((iaa + (i - 7) * ib + (j - 7) * ic + 16) >> 5));
+      mbPred[j][i] = (sPixel) iClip1(max_imgpel_value, ((iaa + (i - 7) * ib + (j - 7) * ic + 16) >> 5));
     }
   }// store plane prediction
 
@@ -3608,8 +3608,8 @@ static void intrapred_chroma_dc (sMacroblock* mb)
   int up_avail, left_avail;
   sPixel** imgUV0 = picture->imgUV[0];
   sPixel** imgUV1 = picture->imgUV[1];
-  sPixel** mb_pred0 = slice->mb_pred[0 + 1];
-  sPixel** mb_pred1 = slice->mb_pred[1 + 1];
+  sPixel** mb_pred0 = slice->mbPred[0 + 1];
+  sPixel** mb_pred1 = slice->mbPred[1 + 1];
 
 
   getNonAffNeighbour(mb, -1,  0, decoder->mbSize[IS_CHROMA], &left);
@@ -3713,8 +3713,8 @@ static void intrapred_chroma_hor (sMacroblock* mb)
 #endif
     int posY = a.posY;
     int posX = a.posX;
-    sPixel** mb_pred0 = slice->mb_pred[0 + 1];
-    sPixel** mb_pred1 = slice->mb_pred[1 + 1];
+    sPixel** mb_pred0 = slice->mbPred[0 + 1];
+    sPixel** mb_pred1 = slice->mbPred[1 + 1];
     sPixel** i0 = &picture->imgUV[0][posY];
     sPixel** i1 = &picture->imgUV[1][posY];
 
@@ -3760,8 +3760,8 @@ static void intrapred_chroma_ver (sMacroblock* mb)
     error("unexpected VERT_PRED_8 chroma intra prediction mode");
   else
   {
-    sPixel** mb_pred0 = slice->mb_pred[1];
-    sPixel** mb_pred1 = slice->mb_pred[2];
+    sPixel** mb_pred0 = slice->mbPred[1];
+    sPixel** mb_pred1 = slice->mbPred[2];
     sPixel *i0 = &(picture->imgUV[0][up.posY][up.posX]);
     sPixel *i1 = &(picture->imgUV[1][up.posY][up.posX]);
 
@@ -3817,7 +3817,7 @@ static void intrapred_chroma_plane (sMacroblock* mb)
     for (uv = 0; uv < 2; uv++)
     {
       sPixel** imgUV = picture->imgUV[uv];
-      sPixel** mb_pred = slice->mb_pred[uv + 1];
+      sPixel** mbPred = slice->mbPred[uv + 1];
       int max_imgpel_value = decoder->maxPelValueComp[uv + 1];
       sPixel *upPred = &imgUV[up.posY][up.posX];
       int posX  = up_left.posX;
@@ -3847,7 +3847,7 @@ static void intrapred_chroma_plane (sMacroblock* mb)
         int plane = iaa + (j - cr_MB_y2 + 1) * ic + 16 - (cr_MB_x2 - 1) * ib;
 
         for (i = 0; i < cr_MB_x; ++i)
-          mb_pred[j][i]=(sPixel) iClip1(max_imgpel_value, ((i * ib + plane) >> 5));
+          mbPred[j][i]=(sPixel) iClip1(max_imgpel_value, ((i * ib + plane) >> 5));
       }
     }
   }
@@ -3961,8 +3961,8 @@ static void intra_pred_chroma_mbaff (sMacroblock* mb)
         int pred1;
         sPixel** imgUV0 = picture->imgUV[0];
         sPixel** imgUV1 = picture->imgUV[1];
-        sPixel** mb_pred0 = slice->mb_pred[0 + 1];
-        sPixel** mb_pred1 = slice->mb_pred[1 + 1];
+        sPixel** mb_pred0 = slice->mbPred[0 + 1];
+        sPixel** mb_pred1 = slice->mbPred[1 + 1];
         for(b8 = 0; b8 < (decoder->numUvBlocks) ;++b8)
         {
           for (b4 = 0; b4 < 4; ++b4)
@@ -4046,8 +4046,8 @@ static void intra_pred_chroma_mbaff (sMacroblock* mb)
       else
       {
         int pred1;
-        sPixel** mb_pred0 = slice->mb_pred[0 + 1];
-        sPixel** mb_pred1 = slice->mb_pred[1 + 1];
+        sPixel** mb_pred0 = slice->mbPred[0 + 1];
+        sPixel** mb_pred1 = slice->mbPred[1 + 1];
         sPixel** i0 = picture->imgUV[0];
         sPixel** i1 = picture->imgUV[1];
         for (j = 0; j < cr_MB_y; ++j)
@@ -4083,8 +4083,8 @@ static void intra_pred_chroma_mbaff (sMacroblock* mb)
         error("unexpected VERT_PRED_8 chroma intra prediction mode");
       else
       {
-        sPixel** mb_pred0 = slice->mb_pred[0 + 1];
-        sPixel** mb_pred1 = slice->mb_pred[1 + 1];
+        sPixel** mb_pred0 = slice->mbPred[0 + 1];
+        sPixel** mb_pred1 = slice->mbPred[1 + 1];
         sPixel *i0 = &(picture->imgUV[0][up.posY][up.posX]);
         sPixel *i1 = &(picture->imgUV[1][up.posY][up.posX]);
         for (j = 0; j < cr_MB_y; ++j)
@@ -4137,7 +4137,7 @@ static void intra_pred_chroma_mbaff (sMacroblock* mb)
         for (uv = 0; uv < 2; uv++)
         {
           sPixel** imgUV = picture->imgUV[uv];
-          sPixel** mb_pred = slice->mb_pred[uv + 1];
+          sPixel** mbPred = slice->mbPred[uv + 1];
           int max_imgpel_value = decoder->maxPelValueComp[uv + 1];
           sPixel *upPred = &imgUV[up.posY][up.posX];
 
@@ -4157,7 +4157,7 @@ static void intra_pred_chroma_mbaff (sMacroblock* mb)
 
           for (j = 0; j < cr_MB_y; ++j)
             for (i = 0; i < cr_MB_x; ++i)
-              mb_pred[j][i]=(sPixel) iClip1(max_imgpel_value, ((iaa + (i - cr_MB_x2 + 1) * ib + (j - cr_MB_y2 + 1) * ic + 16) >> 5));
+              mbPred[j][i]=(sPixel) iClip1(max_imgpel_value, ((iaa + (i - cr_MB_x2 + 1) * ib + (j - cr_MB_y2 + 1) * ic + 16) >> 5));
         }
       }
     }

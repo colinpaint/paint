@@ -726,7 +726,7 @@ static void readCompCoef8x8cavlc (sMacroblock* mb, eColorPlane plane,
                 int b4 = (coef_ctr << 2) + 2*(j - blockY) + (i - blockX);
                 int i0 = pos_scan8x8[b4][0];
                 int j0 = pos_scan8x8[b4][1];
-                slice->mb_rres[plane][block_y4 +j0][block_x4 +i0] = rshift_rnd_sf((levarr[k] * InvLevelScale8x8[j0][i0])<<qp_per, 6); // dequantization
+                slice->mbRess[plane][block_y4 +j0][block_x4 +i0] = rshift_rnd_sf((levarr[k] * InvLevelScale8x8[j0][i0])<<qp_per, 6); // dequantization
                 }
               }
             }
@@ -791,7 +791,7 @@ static void read_comp_coeff_8x8_CAVLC_ls (sMacroblock* mb, eColorPlane plane,
                 int b4 = 2*(j-blockY)+(i-blockX);
                 int iz = pos_scan8x8[coef_ctr*4+b4][0];
                 int jz = pos_scan8x8[coef_ctr*4+b4][1];
-                slice->mb_rres[plane][blockY*4 +jz][blockX*4 +iz] = levarr[k];
+                slice->mbRess[plane][blockY*4 +jz][blockX*4 +iz] = levarr[k];
                 }
               }
             }

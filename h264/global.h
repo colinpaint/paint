@@ -178,7 +178,7 @@ typedef struct {
   int      offset_for_non_ref_pic;                // se(v)
   int      offset_for_top_to_bottom_field;        // se(v)
 
-  unsigned int mumRefFramesPocCycle;          // ue(v)
+  unsigned int numRefFramesPocCycle;          // ue(v)
   int      offset_for_ref_frame[MAX_NUM_REF_FRAMES_PIC_ORDER]; // se(v)
   unsigned int numRefFrames;                      // ue(v)
 
@@ -616,8 +616,8 @@ typedef struct Slice {
   struct Picture** listX[6];
 
   sDataPartition*       dps;  // array of dps
-  sMotionInfoContexts*  mot_ctx;  // pointer to struct of context models for use in CABAC
-  sTextureInfoContexts* tex_ctx;  // pointer to struct of context models for use in CABAC
+  sMotionInfoContexts*  motionContext;  // pointer to struct of context models for use in CABAC
+  sTextureInfoContexts* textureContext;  // pointer to struct of context models for use in CABAC
 
   int   mvscale[6][MAX_REFERENCE_PICTURES];
   int   ref_pic_list_reordering_flag[2];
@@ -634,9 +634,9 @@ typedef struct Slice {
 
   Boolean   isResetCoef;
   Boolean   isResetCoefCr;
-  sPixel*** mb_pred;
-  sPixel*** mb_rec;
-  int***    mb_rres;
+  sPixel*** mbPred;
+  sPixel*** mbRec;
+  int***    mbRess;
   int***    cof;
   int***    fcf;
   int       cofu[16];

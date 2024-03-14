@@ -43,11 +43,11 @@ sSlice* allocSlice (sDecoder* decoder) {
 
   sSlice* slice = (sSlice*)calloc (1, sizeof(sSlice));
   if (!slice)
-    error ("Memory allocation for sSlice datastruct in NAL-mode failed");
+    error ("allocSlice failed");
 
   // create all context models
-  slice->mot_ctx = create_contexts_MotionInfo();
-  slice->tex_ctx = create_contexts_TextureInfo();
+  slice->motionContext = createContextsMotionInfo();
+  slice->textureContext = createContextsTextureInfo();
 
   slice->maxDataPartitions = 3;  // assume dataPartition worst case
   slice->dps = allocDataPartitions (slice->maxDataPartitions);
@@ -56,9 +56,9 @@ sSlice* allocSlice (sDecoder* decoder) {
   getMem3Dint (&(slice->wpWeight), 2, MAX_REFERENCE_PICTURES, 3);
   getMem3Dint (&(slice->wpOffset), 6, MAX_REFERENCE_PICTURES, 3);
   getMem4Dint (&(slice->wbpWeight), 6, MAX_REFERENCE_PICTURES, MAX_REFERENCE_PICTURES, 3);
-  getMem3Dpel (&(slice->mb_pred), MAX_PLANE, MB_BLOCK_SIZE, MB_BLOCK_SIZE);
-  getMem3Dpel (&(slice->mb_rec), MAX_PLANE, MB_BLOCK_SIZE, MB_BLOCK_SIZE);
-  getMem3Dint (&(slice->mb_rres), MAX_PLANE, MB_BLOCK_SIZE, MB_BLOCK_SIZE);
+  getMem3Dpel (&(slice->mbPred), MAX_PLANE, MB_BLOCK_SIZE, MB_BLOCK_SIZE);
+  getMem3Dpel (&(slice->mbRec), MAX_PLANE, MB_BLOCK_SIZE, MB_BLOCK_SIZE);
+  getMem3Dint (&(slice->mbRess), MAX_PLANE, MB_BLOCK_SIZE, MB_BLOCK_SIZE);
   getMem3Dint (&(slice->cof), MAX_PLANE, MB_BLOCK_SIZE, MB_BLOCK_SIZE);
   allocPred (slice);
 
@@ -69,7 +69,7 @@ sSlice* allocSlice (sDecoder* decoder) {
   for (int i = 0; i < 6; i++) {
     slice->listX[i] = calloc (MAX_LIST_SIZE, sizeof (sPicture*)); // +1 for reordering
     if (!slice->listX[i])
-      no_mem_exit ("allocSlice: slice->listX[i]");
+      no_mem_exit ("allocSlice - slice->listX[i]");
     }
 
   for (int j = 0; j < 6; j++) {
@@ -89,9 +89,9 @@ static void freeSlice (sSlice *slice) {
 
   freePred (slice);
   free_mem3Dint (slice->cof);
-  free_mem3Dint (slice->mb_rres);
-  free_mem3Dpel (slice->mb_rec);
-  free_mem3Dpel (slice->mb_pred);
+  free_mem3Dint (slice->mbRess);
+  free_mem3Dpel (slice->mbRec);
+  free_mem3Dpel (slice->mbPred);
 
   free_mem2Dwp (slice->WPParam);
   free_mem3Dint (slice->wpWeight);
@@ -101,8 +101,8 @@ static void freeSlice (sSlice *slice) {
   freeDataPartitions (slice->dps, 3);
 
   // delete all context models
-  delete_contexts_MotionInfo (slice->mot_ctx);
-  delete_contexts_TextureInfo (slice->tex_ctx);
+  delete_contexts_MotionInfo (slice->motionContext);
+  delete_contexts_TextureInfo (slice->textureContext);
 
   for (int i = 0; i<6; i++) {
     if (slice->listX[i]) {

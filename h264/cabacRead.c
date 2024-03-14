@@ -224,7 +224,7 @@ static void readCompCoeff8x8_CABAC (sMacroblock* mb, sSyntaxElement* se, eColorP
     // === set offset in current macroblock ===
     boff_x = (b8&0x01) << 3;
     boff_y = (b8 >> 1) << 3;
-    tcoeffs = &slice->mb_rres[plane][boff_y];
+    tcoeffs = &slice->mbRess[plane][boff_y];
 
     mb->subblockX = boff_x; // position for coeff_count ctx
     mb->subblockY = boff_y; // position for coeff_count ctx
@@ -317,7 +317,7 @@ static void readCompCoeff8x8_CABAC_lossless (sMacroblock* mb, sSyntaxElement* se
     // === set offset in current macroblock ===
     boff_x = (b8&0x01) << 3;
     boff_y = (b8 >> 1) << 3;
-    tcoeffs = &slice->mb_rres[plane][boff_y];
+    tcoeffs = &slice->mbRess[plane][boff_y];
 
     mb->subblockX = boff_x; // position for coeff_count ctx
     mb->subblockY = boff_y; // position for coeff_count ctx

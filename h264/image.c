@@ -671,7 +671,7 @@ static void initPictureDecoding (sDecoder* decoder) {
     error ("initPictureDecoding - MAX_NUM_SLICES exceeded");
 
   sSlice* slice = decoder->sliceList[0];
-  if (decoder->nextPPS->valid && ((int)decoder->nextPPS->ppsId == slice->ppsId)) {
+  if (decoder->nextPPS->valid && (decoder->nextPPS->ppsId == slice->ppsId)) {
     if (decoder->param.sliceDebug)
       printf ("- initPictureDecoding switch PPS\n");
 

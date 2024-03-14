@@ -422,11 +422,11 @@ static int isSpsEqual (sSPS* sps1, sSPS* sps2) {
     equal &= (sps1->delta_pic_order_always_zero_flag == sps2->delta_pic_order_always_zero_flag);
     equal &= (sps1->offset_for_non_ref_pic == sps2->offset_for_non_ref_pic);
     equal &= (sps1->offset_for_top_to_bottom_field == sps2->offset_for_top_to_bottom_field);
-    equal &= (sps1->mumRefFramesPocCycle == sps2->mumRefFramesPocCycle);
+    equal &= (sps1->numRefFramesPocCycle == sps2->numRefFramesPocCycle);
     if (!equal)
       return equal;
 
-    for (unsigned i = 0 ; i < sps1->mumRefFramesPocCycle ;i ++)
+    for (unsigned i = 0 ; i < sps1->numRefFramesPocCycle ;i ++)
       equal &= (sps1->offset_for_ref_frame[i] == sps2->offset_for_ref_frame[i]);
     }
 
@@ -528,8 +528,8 @@ static void interpretSPS (sDecoder* decoder, sDataPartition* dataPartition, sSPS
     sps->delta_pic_order_always_zero_flag = readU1 ("SPS delta_pic_order_always_zero_flag", s);
     sps->offset_for_non_ref_pic = readSeV ("SPS offset_for_non_ref_pic", s);
     sps->offset_for_top_to_bottom_field = readSeV ("SPS offset_for_top_to_bottom_field", s);
-    sps->mumRefFramesPocCycle = readUeV ("SPS mumRefFramesPocCycle", s);
-    for (unsigned int i = 0; i < sps->mumRefFramesPocCycle; i++)
+    sps->numRefFramesPocCycle = readUeV ("SPS numRefFramesPocCycle", s);
+    for (unsigned int i = 0; i < sps->numRefFramesPocCycle; i++)
       sps->offset_for_ref_frame[i] = readSeV ("SPS offset_for_ref_frame[i]", s);
     }
 
@@ -926,8 +926,8 @@ void useParameterSet (sSlice* slice) {
   if (sps->pocType > 2)
     error ("invalid sps->pocType != 1");
   if (sps->pocType == 1)
-    if (sps->mumRefFramesPocCycle >= MAX_NUM_REF_FRAMES_PIC_ORDER)
-      error ("mumRefFramesPocCycle too large");
+    if (sps->numRefFramesPocCycle >= MAX_NUM_REF_FRAMES_PIC_ORDER)
+      error ("numRefFramesPocCycle too large");
 
   activateSPS (decoder, sps);
   activatePPS (decoder, pps);

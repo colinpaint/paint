@@ -765,11 +765,11 @@ void startMacroblock (sSlice* slice, sMacroblock** mb) {
 
   memset((*mb)->cbpStructure, 0, 3 * sizeof(sCBPStructure));
 
-  // initialize slice->mb_rres
+  // initialize slice->mbRess
   if (slice->isResetCoef == FALSE) {
-    memset (slice->mb_rres[0][0], 0, MB_PIXELS * sizeof(int));
-    memset (slice->mb_rres[1][0], 0, decoder->mbCrSize * sizeof(int));
-    memset (slice->mb_rres[2][0], 0, decoder->mbCrSize * sizeof(int));
+    memset (slice->mbRess[0][0], 0, MB_PIXELS * sizeof(int));
+    memset (slice->mbRess[1][0], 0, decoder->mbCrSize * sizeof(int));
+    memset (slice->mbRess[2][0], 0, decoder->mbCrSize * sizeof(int));
     if (slice->isResetCoefCr == FALSE) {
       memset (slice->cof[0][0], 0, 3 * MB_PIXELS * sizeof(int));
       slice->isResetCoefCr = TRUE;

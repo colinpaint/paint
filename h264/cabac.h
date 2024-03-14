@@ -1,8 +1,8 @@
 #pragma once
 #include "global.h"
 
-extern sMotionInfoContexts*  create_contexts_MotionInfo();
-extern sTextureInfoContexts* create_contexts_TextureInfo();
+extern sMotionInfoContexts*  createContextsMotionInfo();
+extern sTextureInfoContexts* createContextsTextureInfo();
 extern void delete_contexts_MotionInfo (sMotionInfoContexts* enco_ctx);
 extern void delete_contexts_TextureInfo (sTextureInfoContexts* enco_ctx);
 

@@ -52,7 +52,7 @@ int mb_pred_intra4x4 (sMacroblock* mb, eColorPlane plane, sPixel** pixel, sPictu
       // =============== 4x4 itrans ================
       // -------------------------------------------
       mb->iTrans4x4  (mb, plane, ioff, joff);
-      copy_Image_4x4 (&pixel[j_pos], &slice->mb_rec[plane][joff], i_pos, ioff);
+      copy_Image_4x4 (&pixel[j_pos], &slice->mbRec[plane][joff], i_pos, ioff);
     }
   }
 
@@ -108,7 +108,7 @@ int mb_pred_intra8x8 (sMacroblock* mb, eColorPlane plane, sPixel** pixel, sPictu
     else
       icopy8x8(mb, plane, ioff,joff);
 
-    copy_Image_8x8(&pixel[mb->pixY + joff], &slice->mb_rec[plane][joff], mb->pixX + ioff, ioff);
+    copy_Image_8x8(&pixel[mb->pixY + joff], &slice->mbRec[plane][joff], mb->pixX + ioff, ioff);
   }
   // chroma decoding** *****************************************************
   if ((picture->chromaFormatIdc != YUV400) && (picture->chromaFormatIdc != YUV444))
@@ -220,13 +220,13 @@ int mb_pred_skip (sMacroblock* mb, eColorPlane plane, sPixel** pixel, sPicture* 
 
   perform_mc(mb, plane, picture, LIST_0, 0, 0, MB_BLOCK_SIZE, MB_BLOCK_SIZE);
 
-  copy_Image_16x16(&pixel[mb->pixY], slice->mb_pred[plane], mb->pixX, 0);
+  copy_Image_16x16(&pixel[mb->pixY], slice->mbPred[plane], mb->pixX, 0);
 
   if ((picture->chromaFormatIdc != YUV400) && (picture->chromaFormatIdc != YUV444))
   {
 
-    copy_Image(&picture->imgUV[0][mb->piccY], slice->mb_pred[1], mb->pixcX, 0, decoder->mbSize[1][0], decoder->mbSize[1][1]);
-    copy_Image(&picture->imgUV[1][mb->piccY], slice->mb_pred[2], mb->pixcX, 0, decoder->mbSize[1][0], decoder->mbSize[1][1]);
+    copy_Image(&picture->imgUV[0][mb->piccY], slice->mbPred[1], mb->pixcX, 0, decoder->mbSize[1][0], decoder->mbSize[1][1]);
+    copy_Image(&picture->imgUV[1][mb->piccY], slice->mbPred[2], mb->pixcX, 0, decoder->mbSize[1][0], decoder->mbSize[1][1]);
   }
   return 1;
 }
@@ -534,12 +534,12 @@ int mb_pred_b_d8x8temporal (sMacroblock* mb, eColorPlane plane, sPixel** pixel, 
 
   if (mb->cbp == 0)
   {
-    copy_Image_16x16(&pixel[mb->pixY], slice->mb_pred[plane], mb->pixX, 0);
+    copy_Image_16x16(&pixel[mb->pixY], slice->mbPred[plane], mb->pixX, 0);
 
     if ((picture->chromaFormatIdc != YUV400) && (picture->chromaFormatIdc != YUV444))
     {
-      copy_Image(&picture->imgUV[0][mb->piccY], slice->mb_pred[1], mb->pixcX, 0, decoder->mbSize[1][0], decoder->mbSize[1][1]);
-      copy_Image(&picture->imgUV[1][mb->piccY], slice->mb_pred[2], mb->pixcX, 0, decoder->mbSize[1][0], decoder->mbSize[1][1]);
+      copy_Image(&picture->imgUV[0][mb->piccY], slice->mbPred[1], mb->pixcX, 0, decoder->mbSize[1][0], decoder->mbSize[1][1]);
+      copy_Image(&picture->imgUV[1][mb->piccY], slice->mbPred[2], mb->pixcX, 0, decoder->mbSize[1][0], decoder->mbSize[1][1]);
     }
   }
   else
@@ -659,12 +659,12 @@ int mb_pred_b_d4x4temporal (sMacroblock* mb, eColorPlane plane, sPixel** pixel, 
 
   if (mb->cbp == 0)
   {
-    copy_Image_16x16(&pixel[mb->pixY], slice->mb_pred[plane], mb->pixX, 0);
+    copy_Image_16x16(&pixel[mb->pixY], slice->mbPred[plane], mb->pixX, 0);
 
     if ((picture->chromaFormatIdc != YUV400) && (picture->chromaFormatIdc != YUV444))
     {
-      copy_Image(&picture->imgUV[0][mb->piccY], slice->mb_pred[1], mb->pixcX, 0, decoder->mbSize[1][0], decoder->mbSize[1][1]);
-      copy_Image(&picture->imgUV[1][mb->piccY], slice->mb_pred[2], mb->pixcX, 0, decoder->mbSize[1][0], decoder->mbSize[1][1]);
+      copy_Image(&picture->imgUV[0][mb->piccY], slice->mbPred[1], mb->pixcX, 0, decoder->mbSize[1][0], decoder->mbSize[1][1]);
+      copy_Image(&picture->imgUV[1][mb->piccY], slice->mbPred[2], mb->pixcX, 0, decoder->mbSize[1][0], decoder->mbSize[1][1]);
     }
   }
   else
@@ -885,12 +885,12 @@ int mb_pred_b_d8x8spatial (sMacroblock* mb, eColorPlane plane, sPixel** pixel, s
 
   if (mb->cbp == 0)
   {
-    copy_Image_16x16(&pixel[mb->pixY], slice->mb_pred[plane], mb->pixX, 0);
+    copy_Image_16x16(&pixel[mb->pixY], slice->mbPred[plane], mb->pixX, 0);
 
     if ((picture->chromaFormatIdc != YUV400) && (picture->chromaFormatIdc != YUV444))
      {
-      copy_Image(&picture->imgUV[0][mb->piccY], slice->mb_pred[1], mb->pixcX, 0, decoder->mbSize[1][0], decoder->mbSize[1][1]);
-      copy_Image(&picture->imgUV[1][mb->piccY], slice->mb_pred[2], mb->pixcX, 0, decoder->mbSize[1][0], decoder->mbSize[1][1]);
+      copy_Image(&picture->imgUV[0][mb->piccY], slice->mbPred[1], mb->pixcX, 0, decoder->mbSize[1][0], decoder->mbSize[1][1]);
+      copy_Image(&picture->imgUV[1][mb->piccY], slice->mbPred[2], mb->pixcX, 0, decoder->mbSize[1][0], decoder->mbSize[1][1]);
     }
   }
   else
@@ -1073,12 +1073,12 @@ int mb_pred_b_d4x4spatial (sMacroblock* mb, eColorPlane plane, sPixel** pixel, s
 
   if (mb->cbp == 0)
   {
-    copy_Image_16x16(&pixel[mb->pixY], slice->mb_pred[plane], mb->pixX, 0);
+    copy_Image_16x16(&pixel[mb->pixY], slice->mbPred[plane], mb->pixX, 0);
 
     if ((picture->chromaFormatIdc != YUV400) && (picture->chromaFormatIdc != YUV444))
     {
-      copy_Image(&picture->imgUV[0][mb->piccY], slice->mb_pred[1], mb->pixcX, 0, decoder->mbSize[1][0], decoder->mbSize[1][1]);
-      copy_Image(&picture->imgUV[1][mb->piccY], slice->mb_pred[2], mb->pixcX, 0, decoder->mbSize[1][0], decoder->mbSize[1][1]);
+      copy_Image(&picture->imgUV[0][mb->piccY], slice->mbPred[1], mb->pixcX, 0, decoder->mbSize[1][0], decoder->mbSize[1][1]);
+      copy_Image(&picture->imgUV[1][mb->piccY], slice->mbPred[2], mb->pixcX, 0, decoder->mbSize[1][0], decoder->mbSize[1][1]);
     }
   }
   else
