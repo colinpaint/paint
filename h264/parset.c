@@ -847,7 +847,7 @@ static void interpretPPS (sDecoder* decoder, sDataPartition* dp, sPPS* pps) {
     pps->secondChromaQpIndexOffset = pps->chromaQpIndexOffset;
 
   if (decoder->param.ppsDebug)
-    printf ("-> id:%d spsId:%d%s%s%s%s%s%s L:%d:%d\n",
+    printf ("-> ppsId:%d spsId:%d%s%s%s%s%s%s L:%d:%d\n",
             pps->ppsId, pps->spsId,
             pps->entropyCodingModeFlag ? " cavlc":" cabac",
             pps->deblockingFilterControlPresentFlag ? " deblock":"",
