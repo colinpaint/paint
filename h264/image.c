@@ -1351,36 +1351,6 @@ static void pred_weight_table (sSlice* slice) {
     }
   }
 //}}}
-
-//{{{
-unsigned ceilLog2 (unsigned uiVal) {
-
-  unsigned uiRet = 0;
-
-  unsigned uiTmp = uiVal - 1;
-  while (uiTmp != 0) {
-    uiTmp >>= 1;
-    uiRet++;
-    }
-
-  return uiRet;
-  }
-//}}}
-//{{{
-unsigned ceilLog2sf (unsigned uiVal) {
-
-  unsigned uiRet = 0;
-
-  unsigned uiTmp = uiVal - 1;
-  while (uiTmp > 0) {
-    uiTmp >>= 1;
-    uiRet++;
-    }
-
-  return uiRet;
-  }
-//}}}
-
 //{{{
 static void initContexts (sSlice* slice) {
 
@@ -1436,96 +1406,6 @@ static void initContexts (sSlice* slice) {
     }
   }
 //}}}
-//{{{
-void dec_ref_pic_marking (sDecoder* decoder, sBitStream* s, sSlice* slice) {
-
-  // free old buffer content
-  while (slice->decRefPicMarkingBuffer) {
-    sDecodedRefPicMarking* tmp_drpm = slice->decRefPicMarkingBuffer;
-    slice->decRefPicMarkingBuffer = tmp_drpm->next;
-    free (tmp_drpm);
-    }
-
-  if (slice->idrFlag) {
-    slice->noOutputPriorPicFlag =
-      readU1 ("SLC noOutputPriorPicFlag", s);
-    decoder->noOutputPriorPicFlag = slice->noOutputPriorPicFlag;
-    slice->longTermRefFlag =
-      readU1 ("SLC longTermRefFlag", s);
-    }
-  else {
-    slice->adaptiveRefPicBufferingFlag =
-      readU1 ("SLC adaptiveRefPicBufferingFlag", s);
-    if (slice->adaptiveRefPicBufferingFlag) {
-      // read Memory Management Control Operation
-      int val;
-      do {
-        sDecodedRefPicMarking* tmp_drpm = (sDecodedRefPicMarking*)calloc (1,sizeof (sDecodedRefPicMarking));
-        tmp_drpm->next = NULL;
-        val = tmp_drpm->memManagement =
-          readUeV ("SLC memManagement", s);
-        if ((val == 1) || (val == 3))
-          tmp_drpm->diffPicNumMinus1 =
-            readUeV ("SLC diffPicNumMinus1", s);
-        if (val==2)
-          tmp_drpm->longTermPicNum =
-            readUeV ("SLC longTermPicNum", s);
-
-        if ((val == 3 ) || (val == 6))
-          tmp_drpm->longTermFrameIndex =
-            readUeV ("SLC longTermFrameIndex", s);
-        if (val == 4)
-          tmp_drpm->maxLongTermFrameIndexPlus1 =
-            readUeV ("SLC max_long_term_pic_idx_plus1", s);
-
-        // add command
-        if (slice->decRefPicMarkingBuffer == NULL)
-          slice->decRefPicMarkingBuffer = tmp_drpm;
-        else {
-          sDecodedRefPicMarking* tmp_drpm2 = slice->decRefPicMarkingBuffer;
-          while (tmp_drpm2->next != NULL) tmp_drpm2 = tmp_drpm2->next;
-          tmp_drpm2->next = tmp_drpm;
-          }
-        } while (val != 0);
-      }
-    }
-  }
-//}}}
-
-//{{{
-static int dumpPOC (sDecoder* decoder) {
-
-  sSPS* activeSPS = decoder->activeSPS;
-
-  printf ("POC locals\n");
-  printf ("- topPoc %d\n", (int)decoder->sliceList[0]->topPoc);
-  printf ("- botPoc %d\n", (int)decoder->sliceList[0]->botPoc);
-  printf ("- frameNum %d\n", (int)decoder->sliceList[0]->frameNum);
-  printf ("- fieldPicFlag %d\n", (int)decoder->sliceList[0]->fieldPicFlag);
-  printf ("- botFieldFlag %d\n", (int)decoder->sliceList[0]->botFieldFlag);
-
-  printf ("POC in SPS\n");
-  printf ("- log2_max_frame_num_minus4 %d\n", (int)activeSPS->log2_max_frame_num_minus4);         // POC200301
-  printf ("- log2_max_pic_order_cnt_lsb_minus4 %d\n", (int)activeSPS->log2_max_pic_order_cnt_lsb_minus4);
-  printf ("- pocType %d\n", (int)activeSPS->pocType);
-  printf ("- numRefFramesPocCycle %d\n", (int)activeSPS->numRefFramesPocCycle);
-  printf ("- delta_pic_order_always_zero_flag %d\n", (int)activeSPS->delta_pic_order_always_zero_flag);
-  printf ("- offset_for_non_ref_pic %d\n", (int)activeSPS->offset_for_non_ref_pic);
-  printf ("- offset_for_top_to_bottom_field %d\n", (int)activeSPS->offset_for_top_to_bottom_field);
-  printf ("- offset_for_ref_frame[0] %d\n", (int)activeSPS->offset_for_ref_frame[0]);
-  printf ("- offset_for_ref_frame[1] %d\n", (int)activeSPS->offset_for_ref_frame[1]);
-
-  printf ("POC in sliceHeader\n");
-  printf ("- botFieldPicOrderFramePresent %d\n", (int)decoder->activePPS->botFieldPicOrderFramePresent);
-  printf ("- deltaPicOrderCount[0] %d\n", (int)decoder->sliceList[0]->deltaPicOrderCount[0]);
-  printf ("- deltaPicOrderCount[1] %d\n", (int)decoder->sliceList[0]->deltaPicOrderCount[1]);
-  printf ("- idrFlag %d\n", (int)decoder->sliceList[0]->idrFlag);
-  printf ("- maxFrameNum %d\n", (int)decoder->maxFrameNum);
-
-  return 0;
-  }
-//}}}
-
 //{{{
 static void resetMb (sMacroblock* mb) {
 
@@ -1600,6 +1480,39 @@ static void copyPOC (sSlice* fromSlice, sSlice* slice) {
   slice->botPoc = fromSlice->botPoc;
   slice->thisPoc = fromSlice->thisPoc;
   slice->framePoc = fromSlice->framePoc;
+  }
+//}}}
+//{{{
+static int dumpPOC (sDecoder* decoder) {
+
+  sSPS* activeSPS = decoder->activeSPS;
+
+  printf ("POC locals\n");
+  printf ("- topPoc %d\n", (int)decoder->sliceList[0]->topPoc);
+  printf ("- botPoc %d\n", (int)decoder->sliceList[0]->botPoc);
+  printf ("- frameNum %d\n", (int)decoder->sliceList[0]->frameNum);
+  printf ("- fieldPicFlag %d\n", (int)decoder->sliceList[0]->fieldPicFlag);
+  printf ("- botFieldFlag %d\n", (int)decoder->sliceList[0]->botFieldFlag);
+
+  printf ("POC in SPS\n");
+  printf ("- log2_max_frame_num_minus4 %d\n", (int)activeSPS->log2_max_frame_num_minus4);         // POC200301
+  printf ("- log2_max_pic_order_cnt_lsb_minus4 %d\n", (int)activeSPS->log2_max_pic_order_cnt_lsb_minus4);
+  printf ("- pocType %d\n", (int)activeSPS->pocType);
+  printf ("- numRefFramesPocCycle %d\n", (int)activeSPS->numRefFramesPocCycle);
+  printf ("- delta_pic_order_always_zero_flag %d\n", (int)activeSPS->delta_pic_order_always_zero_flag);
+  printf ("- offset_for_non_ref_pic %d\n", (int)activeSPS->offset_for_non_ref_pic);
+  printf ("- offset_for_top_to_bottom_field %d\n", (int)activeSPS->offset_for_top_to_bottom_field);
+  printf ("- offset_for_ref_frame[0] %d\n", (int)activeSPS->offset_for_ref_frame[0]);
+  printf ("- offset_for_ref_frame[1] %d\n", (int)activeSPS->offset_for_ref_frame[1]);
+
+  printf ("POC in sliceHeader\n");
+  printf ("- botFieldPicOrderFramePresent %d\n", (int)decoder->activePPS->botFieldPicOrderFramePresent);
+  printf ("- deltaPicOrderCount[0] %d\n", (int)decoder->sliceList[0]->deltaPicOrderCount[0]);
+  printf ("- deltaPicOrderCount[1] %d\n", (int)decoder->sliceList[0]->deltaPicOrderCount[1]);
+  printf ("- idrFlag %d\n", (int)decoder->sliceList[0]->idrFlag);
+  printf ("- maxFrameNum %d\n", (int)decoder->maxFrameNum);
+
+  return 0;
   }
 //}}}
 
@@ -2778,6 +2691,83 @@ static void decodeSlice (sSlice* slice) {
 
     ercWriteMBMODEandMV (mb);
     endOfSlice = exitMacroblock (slice, !slice->mbAffFrameFlag || (slice->mbIndex % 2));
+    }
+  }
+//}}}
+
+//{{{
+unsigned ceilLog2 (unsigned uiVal) {
+
+  unsigned uiRet = 0;
+
+  unsigned uiTmp = uiVal - 1;
+  while (uiTmp != 0) {
+    uiTmp >>= 1;
+    uiRet++;
+    }
+
+  return uiRet;
+  }
+//}}}
+//{{{
+unsigned ceilLog2sf (unsigned uiVal) {
+
+  unsigned uiRet = 0;
+
+  unsigned uiTmp = uiVal - 1;
+  while (uiTmp > 0) {
+    uiTmp >>= 1;
+    uiRet++;
+    }
+
+  return uiRet;
+  }
+//}}}
+//{{{
+void dec_ref_pic_marking (sDecoder* decoder, sBitStream* s, sSlice* slice) {
+
+  // free old buffer content
+  while (slice->decRefPicMarkingBuffer) {
+    sDecodedRefPicMarking* tmp_drpm = slice->decRefPicMarkingBuffer;
+    slice->decRefPicMarkingBuffer = tmp_drpm->next;
+    free (tmp_drpm);
+    }
+
+  if (slice->idrFlag) {
+    slice->noOutputPriorPicFlag = readU1 ("SLC noOutputPriorPicFlag", s);
+    decoder->noOutputPriorPicFlag = slice->noOutputPriorPicFlag;
+    slice->longTermRefFlag = readU1 ("SLC longTermRefFlag", s);
+    }
+  else {
+    slice->adaptiveRefPicBufferingFlag = readU1 ("SLC adaptiveRefPicBufferingFlag", s);
+    if (slice->adaptiveRefPicBufferingFlag) {
+      // read Memory Management Control Operation
+      int val;
+      do {
+        sDecodedRefPicMarking* tempDrpm = (sDecodedRefPicMarking*)calloc (1,sizeof (sDecodedRefPicMarking));
+        tempDrpm->next = NULL;
+        val = tempDrpm->memManagement = readUeV ("SLC memManagement", s);
+        if ((val == 1) || (val == 3))
+          tempDrpm->diffPicNumMinus1 = readUeV ("SLC diffPicNumMinus1", s);
+        if (val == 2)
+          tempDrpm->longTermPicNum = readUeV ("SLC longTermPicNum", s);
+
+        if ((val == 3 ) || (val == 6))
+          tempDrpm->longTermFrameIndex = readUeV ("SLC longTermFrameIndex", s);
+        if (val == 4)
+          tempDrpm->maxLongTermFrameIndexPlus1 = readUeV ("SLC max_long_term_pic_idx_plus1", s);
+
+        // add command
+        if (!slice->decRefPicMarkingBuffer)
+          slice->decRefPicMarkingBuffer = tempDrpm;
+        else {
+          sDecodedRefPicMarking* tempDrpm2 = slice->decRefPicMarkingBuffer;
+          while (tempDrpm2->next)
+            tempDrpm2 = tempDrpm2->next;
+          tempDrpm2->next = tempDrpm;
+          }
+        } while (val != 0);
+      }
     }
   }
 //}}}
