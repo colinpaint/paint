@@ -2124,14 +2124,37 @@ void updatePicNum (sSlice* slice) {
   }
 //}}}
 //{{{
-void initListsIslice (sSlice* slice) {
+sPicture* get_short_term_pic (sSlice* slice, sDPB* dpb, int picNum) {
+
+  for (unsigned i = 0; i < dpb->refFramesInBuffer; i++) {
+    if (slice->structure == FRAME) {
+      if (dpb->fsRef[i]->isReference == 3)
+        if ((!dpb->fsRef[i]->frame->isLongTerm)&&(dpb->fsRef[i]->frame->picNum == picNum))
+          return dpb->fsRef[i]->frame;
+      }
+    else {
+      if (dpb->fsRef[i]->isReference & 1)
+        if ((!dpb->fsRef[i]->topField->isLongTerm)&&(dpb->fsRef[i]->topField->picNum == picNum))
+          return dpb->fsRef[i]->topField;
+      if (dpb->fsRef[i]->isReference & 2)
+        if ((!dpb->fsRef[i]->botField->isLongTerm)&&(dpb->fsRef[i]->botField->picNum == picNum))
+          return dpb->fsRef[i]->botField;
+      }
+    }
+
+  return slice->decoder->noReferencePicture;
+  }
+//}}}
+
+//{{{
+void initListsSliceI (sSlice* slice) {
 
   slice->listXsize[0] = 0;
   slice->listXsize[1] = 0;
   }
 //}}}
 //{{{
-void initListsslice (sSlice* slice) {
+void initListsSliceP (sSlice* slice) {
 
   sDecoder* decoder = slice->decoder;
   sDPB* dpb = slice->dpb;
@@ -2197,7 +2220,7 @@ void initListsslice (sSlice* slice) {
   }
 //}}}
 //{{{
-void initListsBslice (sSlice* slice) {
+void initListsSliceB (sSlice* slice) {
 
   sDecoder* decoder = slice->decoder;
   sDPB* dpb = slice->dpb;
@@ -2353,28 +2376,6 @@ void init_mbaff_lists (sDecoder* decoder, sSlice* slice) {
     slice->listX[5][2*i+1] = slice->listX[1][i]->topField;
     }
   slice->listXsize[3] = slice->listXsize[5] = slice->listXsize[1] * 2;
-  }
-//}}}
-//{{{
-sPicture* get_short_term_pic (sSlice* slice, sDPB* dpb, int picNum) {
-
-  for (unsigned i = 0; i < dpb->refFramesInBuffer; i++) {
-    if (slice->structure == FRAME) {
-      if (dpb->fsRef[i]->isReference == 3)
-        if ((!dpb->fsRef[i]->frame->isLongTerm)&&(dpb->fsRef[i]->frame->picNum == picNum))
-          return dpb->fsRef[i]->frame;
-      }
-    else {
-      if (dpb->fsRef[i]->isReference & 1)
-        if ((!dpb->fsRef[i]->topField->isLongTerm)&&(dpb->fsRef[i]->topField->picNum == picNum))
-          return dpb->fsRef[i]->topField;
-      if (dpb->fsRef[i]->isReference & 2)
-        if ((!dpb->fsRef[i]->botField->isLongTerm)&&(dpb->fsRef[i]->botField->picNum == picNum))
-          return dpb->fsRef[i]->botField;
-      }
-    }
-
-  return slice->decoder->noReferencePicture;
   }
 //}}}
 

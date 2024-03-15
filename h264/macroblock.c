@@ -1137,7 +1137,7 @@ void setSliceMethods (sSlice* slice) {
       slice->nalReadMotionInfo = readMotionInfoP;
       slice->decodeOneComponent = decodeComponentP;
       slice->updateDirectMvInfo = NULL;
-      slice->initLists = initListsslice;
+      slice->initLists = initListsSliceP;
       break;
     //}}}
     //{{{
@@ -1146,7 +1146,7 @@ void setSliceMethods (sSlice* slice) {
       slice->nalReadMotionInfo = readMotionInfoP;
       slice->decodeOneComponent = decodeComponentSP;
       slice->updateDirectMvInfo = NULL;
-      slice->initLists = initListsslice;
+      slice->initLists = initListsSliceP;
       break;
     //}}}
     //{{{
@@ -1155,7 +1155,7 @@ void setSliceMethods (sSlice* slice) {
       slice->nalReadMotionInfo = readMotionInfoB;
       slice->decodeOneComponent = decodeComponentB;
       update_direct_types (slice);
-      slice->initLists  = initListsBslice;
+      slice->initLists  = initListsSliceB;
       break;
     //}}}
     //{{{
@@ -1164,7 +1164,7 @@ void setSliceMethods (sSlice* slice) {
       slice->nalReadMotionInfo = NULL;
       slice->decodeOneComponent = decodeComponentI;
       slice->updateDirectMvInfo = NULL;
-      slice->initLists = initListsIslice;
+      slice->initLists = initListsSliceI;
       break;
     //}}}
     //{{{
@@ -1173,7 +1173,7 @@ void setSliceMethods (sSlice* slice) {
       slice->nalReadMotionInfo = NULL;
       slice->decodeOneComponent = decodeComponentI;
       slice->updateDirectMvInfo = NULL;
-      slice->initLists = initListsIslice;
+      slice->initLists = initListsSliceI;
       break;
     //}}}
     //{{{
