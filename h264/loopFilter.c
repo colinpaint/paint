@@ -1472,7 +1472,7 @@ static void deblockMb (sDecoder* decoder, sPicture* p, int mbIndex) {
               decoder->edgeLoopLumaV (PLANE_V, imgUV[1], Strength, mb, edge << 2);
               }
             }
-          if (activeSPS->chromaFormatIdc==YUV420 || activeSPS->chromaFormatIdc==YUV422) {
+          if (activeSPS->chromaFormatIdc == YUV420 || activeSPS->chromaFormatIdc == YUV422) {
             edge_cr = chroma_edge[0][edge][p->chromaFormatIdc];
             if ((imgUV != NULL) && (edge_cr >= 0)) {
               decoder->edgeLoopChromaV (imgUV[0], Strength, mb, edge_cr, 0, p);
@@ -1514,7 +1514,7 @@ static void deblockMb (sDecoder* decoder, sPicture* p, int mbIndex) {
               }
             }
 
-          if (activeSPS->chromaFormatIdc==YUV420 || activeSPS->chromaFormatIdc==YUV422) {
+          if (activeSPS->chromaFormatIdc == YUV420 || activeSPS->chromaFormatIdc == YUV422) {
             edge_cr = chroma_edge[1][edge][p->chromaFormatIdc];
             if ((imgUV != NULL) && (edge_cr >= 0)) {
               decoder->edgeLoopChromaH (imgUV[0], Strength, mb, edge_cr, 0, p);
@@ -1538,7 +1538,7 @@ static void deblockMb (sDecoder* decoder, sPicture* p, int mbIndex) {
                 }
               }
 
-            if (activeSPS->chromaFormatIdc==YUV420 || activeSPS->chromaFormatIdc==YUV422) {
+            if (activeSPS->chromaFormatIdc == YUV420 || activeSPS->chromaFormatIdc == YUV422) {
               edge_cr = chroma_edge[1][edge][p->chromaFormatIdc];
               if ((imgUV != NULL) && (edge_cr >= 0)) {
                 decoder->edgeLoopChromaH (imgUV[0], Strength, mb, MB_BLOCK_SIZE, 0, p) ;
@@ -1724,7 +1724,7 @@ static void performDeblock (sDecoder* decoder, sPicture* p, int mbIndex) {
               decoder->edgeLoopLumaV(PLANE_V, imgUV[1], Strength, mb, edge << 2);
               }
             }
-          if (activeSPS->chromaFormatIdc==YUV420 || activeSPS->chromaFormatIdc==YUV422) {
+          if (activeSPS->chromaFormatIdc == YUV420 || activeSPS->chromaFormatIdc == YUV422) {
             edge_cr = chroma_edge[0][edge][p->chromaFormatIdc];
             if ((imgUV != NULL) && (edge_cr >= 0)) {
               decoder->edgeLoopChromaV (imgUV[0], Strength, mb, edge_cr, 0, p);
@@ -1764,7 +1764,7 @@ static void performDeblock (sDecoder* decoder, sPicture* p, int mbIndex) {
               }
             }
 
-          if (activeSPS->chromaFormatIdc==YUV420 || activeSPS->chromaFormatIdc==YUV422) {
+          if (activeSPS->chromaFormatIdc == YUV420 || activeSPS->chromaFormatIdc == YUV422) {
             edge_cr = chroma_edge[1][edge][p->chromaFormatIdc];
             if ((imgUV != NULL) && (edge_cr >= 0)) {
               decoder->edgeLoopChromaH (imgUV[0], Strength, mb, edge_cr, 0, p);
@@ -1788,7 +1788,7 @@ static void performDeblock (sDecoder* decoder, sPicture* p, int mbIndex) {
                 }
               }
 
-            if (activeSPS->chromaFormatIdc==YUV420 || activeSPS->chromaFormatIdc==YUV422) {
+            if (activeSPS->chromaFormatIdc == YUV420 || activeSPS->chromaFormatIdc == YUV422) {
               edge_cr = chroma_edge[1][edge][p->chromaFormatIdc];
               if ((imgUV != NULL) && (edge_cr >= 0)) {
                 decoder->edgeLoopChromaH (imgUV[0], Strength, mb, MB_BLOCK_SIZE, 0, p) ;
@@ -1827,7 +1827,6 @@ static void initNeighbours (sDecoder* decoder) {
   int size = decoder->picSizeInMbs;
   int width = decoder->picWidthMbs;
   int height = decoder->picHeightInMbs;
-  //printf ("initNeighbours %d %d %d\n", size, width, height);
 
   // do the top left corner
   sMacroblock* mb = &decoder->mbData[0];

@@ -552,7 +552,7 @@ typedef struct Slice {
   int idrPicId;
   int refId;
   int transform8x8Mode;
-  Boolean chroma444notSeparate;   // indicates chroma 4:4:4 coding with sepColourPlaneFlag equal to zero
+  Boolean chroma444notSeparate; // indicates chroma 4:4:4 coding with sepColourPlaneFlag equal to zero
 
   int topPoc;   // poc for this top field
   int botPoc;   // poc of bottom field of frame

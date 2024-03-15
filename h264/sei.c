@@ -343,48 +343,48 @@ static void process_subsequence_characteristics_info (byte* payload, int size, s
   buf->bitStreamBuffer = payload;
   buf->bitStreamOffset = 0;
 
-  int sub_seq_layer_num = readUeV("SEI sub_seq_layer_num", buf);
-  int sub_seq_id        = readUeV("SEI sub_seq_id", buf);
-  int duration_flag     = readU1 ("SEI duration_flag", buf);
+  int sub_seq_layer_num = readUeV ("SEI sub_seq_layer_num", buf);
+  int sub_seq_id = readUeV ("SEI sub_seq_id", buf);
+  int duration_flag = readU1 ("SEI duration_flag", buf);
 
   if (decoder->param.seiDebug) {
     printf ("Sub-sequence characteristics SEI\n");
-    printf ("sub_seq_layer_num = %d\n", sub_seq_layer_num );
-    printf ("sub_seq_id        = %d\n", sub_seq_id);
-    printf ("duration_flag     = %d\n", duration_flag);
+    printf ("sub_seq_layer_num %d\n", sub_seq_layer_num );
+    printf ("sub_seq_id %d\n", sub_seq_id);
+    printf ("duration_flag %d\n", duration_flag);
     }
 
   if (duration_flag) {
     int sub_seq_duration = readUv (32, "SEI duration_flag", buf);
     if (decoder->param.seiDebug)
-      printf ("sub_seq_duration = %ld\n", sub_seq_duration);
+      printf ("sub_seq_duration = %d\n", sub_seq_duration);
     }
 
   int average_rate_flag = readU1 ("SEI average_rate_flag", buf);
   if (decoder->param.seiDebug)
-    printf ("average_rate_flag = %d\n", average_rate_flag);
+    printf ("average_rate_flag %d\n", average_rate_flag);
   if (average_rate_flag) {
-    int accurate_statistics_flag = readU1 (    "SEI accurate_statistics_flag", buf);
-    int average_bit_rate         = readUv (16, "SEI average_bit_rate", buf);
-    int average_frame_rate       = readUv (16, "SEI average_frame_rate", buf);
+    int accurate_statistics_flag = readU1 ("SEI accurate_statistics_flag", buf);
+    int average_bit_rate = readUv (16, "SEI average_bit_rate", buf);
+    int average_frame_rate = readUv (16, "SEI average_frame_rate", buf);
     if (decoder->param.seiDebug) {
-      printf ("accurate_statistics_flag = %d\n", accurate_statistics_flag);
-      printf ("average_bit_rate         = %ld\n", average_bit_rate);
-      printf ("average_frame_rate       = %ld\n", average_frame_rate);
+      printf ("accurate_statistics_flag %d\n", accurate_statistics_flag);
+      printf ("average_bit_rate %d\n", average_bit_rate);
+      printf ("average_frame_rate %d\n", average_frame_rate);
       }
     }
 
   int num_referenced_subseqs  = readUeV("SEI num_referenced_subseqs", buf);
   if (decoder->param.seiDebug)
-    printf ("num_referenced_subseqs = %d\n", num_referenced_subseqs);
+    printf ("num_referenced_subseqs %d\n", num_referenced_subseqs);
   for (int i = 0; i < num_referenced_subseqs; i++) {
-    int ref_sub_seq_layer_num  = readUeV("SEI ref_sub_seq_layer_num", buf);
-    int ref_sub_seq_id         = readUeV("SEI ref_sub_seq_id", buf);
-    int ref_sub_seq_direction  = readU1 ("SEI ref_sub_seq_direction", buf);
+    int ref_sub_seq_layer_num  = readUeV ("SEI ref_sub_seq_layer_num", buf);
+    int ref_sub_seq_id = readUeV ("SEI ref_sub_seq_id", buf);
+    int ref_sub_seq_direction = readU1  ("SEI ref_sub_seq_direction", buf);
     if (decoder->param.seiDebug) {
-      printf ("ref_sub_seq_layer_num = %d\n", ref_sub_seq_layer_num);
-      printf ("ref_sub_seq_id        = %d\n", ref_sub_seq_id);
-      printf ("ref_sub_seq_direction = %d\n", ref_sub_seq_direction);
+      printf ("ref_sub_seq_layer_num %d\n", ref_sub_seq_layer_num);
+      printf ("ref_sub_seq_id %d\n", ref_sub_seq_id);
+      printf ("ref_sub_seq_direction %d\n", ref_sub_seq_direction);
       }
     }
   free (buf);
