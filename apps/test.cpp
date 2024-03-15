@@ -908,8 +908,7 @@ public:
     thread ([=]() {
       cLog::setThreadName ("anal");
 
-
-      uint8_t* h264Chunk = new uint8_t[500000000];
+      uint8_t* h264Chunk = new uint8_t[1000000000];
       uint8_t* h264ChunkPtr = h264Chunk;
       size_t h264ChunkSize = 0;
       int gotIDR = 0;
@@ -935,7 +934,7 @@ public:
       uint8_t* fileChunk = new uint8_t[fileChunkSize];
 
       size_t totalBytes = 0;
-      while (totalBytes < 500000000) {
+      while (totalBytes < 1000000000) {
         size_t bytesRead = fread (fileChunk, 1, fileChunkSize, file);
         if (bytesRead > 0)
           mTransportStream->demux (fileChunk, bytesRead);

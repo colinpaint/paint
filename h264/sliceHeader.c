@@ -1809,7 +1809,7 @@ void readRestSliceHeader (sSlice* slice) {
       ? decoder->activePPS->weightedPredFlag
       : ((slice->sliceType == B_SLICE) && (decoder->activePPS->weightedBiPredIdc == 1)));
 
-  slice->weightedBiPredIdc = 
+  slice->weightedBiPredIdc =
     (unsigned short)((slice->sliceType == B_SLICE) && (decoder->activePPS->weightedBiPredIdc > 0));
 
   if ((decoder->activePPS->weightedPredFlag &&

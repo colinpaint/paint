@@ -373,7 +373,7 @@ static void ercWriteMBMODEandMV (sMacroblock* mb) {
   }
 //}}}
 //{{{
-static void initCurImg (sSlice* slice, sDecoder* decoder) {
+static void initRefPicture (sSlice* slice, sDecoder* decoder) {
 
   sPicture* vidRefPicture = decoder->noReferencePicture;
   int noRef = slice->framePoc < decoder->recoveryPoc;
@@ -814,7 +814,6 @@ static int readNextSlice (sSlice* slice) {
         // - then setup the active parameter sets
         // -  read // the rest of the slice header
         readSliceHeader (slice);
-
         useParameterSet (slice);
         slice->activeSPS = decoder->activeSPS;
         slice->activePPS = decoder->activePPS;
@@ -1044,8 +1043,8 @@ static void decodeSlice (sSlice* slice) {
   if (slice->sliceType == B_SLICE)
     computeColocated (slice, slice->listX);
 
-  if (slice->sliceType != I_SLICE && slice->sliceType != SI_SLICE)
-    initCurImg (slice, decoder);
+  if ((slice->sliceType != I_SLICE) && (slice->sliceType != SI_SLICE))
+    initRefPicture (slice, decoder);
 
   // loop over macroblocks
   while (endOfSlice == FALSE) {
@@ -1060,7 +1059,7 @@ static void decodeSlice (sSlice* slice) {
       }
 
     ercWriteMBMODEandMV (mb);
-    endOfSlice = exitMacroblock (slice, (!slice->mbAffFrameFlag|| slice->mbIndex%2));
+    endOfSlice = exitMacroblock (slice, !slice->mbAffFrameFlag || (slice->mbIndex % 2));
     }
   }
 //}}}
@@ -1157,8 +1156,8 @@ void endDecodeFrame (sDecoder* decoder) {
   //}}}
   if (!decoder->deblockMode &&
       (decoder->deblockEnable & (1 << decoder->picture->usedForReference))) {
-    //{{{  deblocking for frame or field
     if (decoder->sepColourPlaneFlag) {
+      //{{{  deblockJV
       int colourPlaneId = decoder->sliceList[0]->colourPlaneId;
       for (int nplane = 0; nplane < MAX_PLANE; ++nplane) {
         decoder->sliceList[0]->colourPlaneId = nplane;
@@ -1168,10 +1167,10 @@ void endDecodeFrame (sDecoder* decoder) {
       decoder->sliceList[0]->colourPlaneId = colourPlaneId;
       makeFramePictureJV (decoder);
       }
+      //}}}
     else
       deblockPicture (decoder, decoder->picture);
     }
-    //}}}
   else if (decoder->sepColourPlaneFlag)
     makeFramePictureJV (decoder);
 

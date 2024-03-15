@@ -735,11 +735,11 @@ static void interpretPPS (sDecoder* decoder, sDataPartition* dataPartition, sPPS
   pps->spsId = readUeV ("PPS spsId", s);
   pps->entropyCodingMode = readU1 ("PPS entropyCodingMode", s);
 
-  //! Note: as per JVT-F078 the following bit is unconditional.  If F078 is not accepted, then
-  //! one has to fetch the correct SPS to check whether the bit is present (hopefully there is
-  //! no consistency problem :-(
-  //! The current encoder code handles this in the same way.  When you change this, don't forget
-  //! the encoder!  StW, 12/8/02
+  // Note: as per JVT-F078 the following bit is unconditional.  If F078 is not accepted, then
+  // one has to fetch the correct SPS to check whether the bit is present (hopefully there is
+  // no consistency problem :-(
+  // The current encoder code handles this in the same way.  When you change this, don't forget
+  // the encoder!  StW, 12/8/02
   pps->botFieldPicOrderFramePresent = readU1 ("PPS botFieldPicOrderFramePresent", s);
   pps->numSliceGroupsMinus1 = readUeV ("PPS numSliceGroupsMinus1", s);
 
@@ -857,7 +857,7 @@ void makePPSavailable (sDecoder* decoder, int id, sPPS* pps) {
     free (decoder->pps[id].sliceGroupId);
   memcpy (&decoder->pps[id], pps, sizeof (sPPS));
 
-  // we can simply use the memory provided with the pps. 
+  // we can simply use the memory provided with the pps.
   // the PPS is destroyed after this function call, will not try to free if pps->sliceGroupId == NULL
   decoder->pps[id].sliceGroupId = pps->sliceGroupId;
   pps->sliceGroupId = NULL;
@@ -869,7 +869,7 @@ void processPPS (sDecoder* decoder, sNalu* nalu) {
   sDataPartition* dataPartition = allocDataPartitions (1);
   dataPartition->s->errorFlag = 0;
   dataPartition->s->readLen = dataPartition->s->bitStreamOffset = 0;
-  memcpy (dataPartition->s->bitStreamBuffer, &nalu->buf[1], nalu->len-1);
+  memcpy (dataPartition->s->bitStreamBuffer, &nalu->buf[1], nalu->len - 1);
   dataPartition->s->codeLen = dataPartition->s->bitStreamLen = RBSPtoSODB (dataPartition->s->bitStreamBuffer, nalu->len-1);
 
   sPPS* pps = allocPPS();
