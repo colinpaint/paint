@@ -5,7 +5,6 @@
 #include "memory.h"
 
 #include "erc.h"
-#include "sliceHeader.h"
 #include "image.h"
 #include "buffer.h"
 #include "output.h"

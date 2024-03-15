@@ -2,8 +2,6 @@
 #include "global.h"
 #include "elements.h"
 #include "defines.h"
-
-#include "sliceHeader.h"
 #include "fmo.h"
 //}}}
 //#define PRINT_FMO_MAPS

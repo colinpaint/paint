@@ -11,6 +11,7 @@
 #include "buffer.h"
 #include "erc.h"
 //}}}
+
 //{{{
 static const byte ZZ_SCAN[16] = {
   0,  1,  4,  8,  5,  2,  3,  6,  9, 12, 13, 10,  7, 11, 14, 15
@@ -889,56 +890,12 @@ void processPPS (sDecoder* decoder, sNalu* nalu) {
   }
 //}}}
 //{{{
-static void activatePPS (sDecoder* decoder, sPPS* pps) {
+void activatePPS (sDecoder* decoder, sPPS* pps) {
 
   if (decoder->activePPS != pps) {
     if (decoder->picture) // only on slice loss
       endDecodeFrame (decoder);
     decoder->activePPS = pps;
     }
-  }
-//}}}
-
-//{{{
-void useParameterSet (sSlice* slice) {
-
-  sDecoder* decoder = slice->decoder;
-
-  //if (decoder->param.spsDebug)
-  //  printf ("useParameterSet\n");
-
-  sPPS* pps = &decoder->pps[slice->ppsId];
-  if (!pps->valid)
-    printf ("useParameterSet - invalid PPS id:%d\n", slice->ppsId);
-
-  sSPS* sps = &decoder->sps[pps->spsId];
-  if (!sps->valid)
-    printf ("useParameterSet - no SPS id:%d:%d\n", slice->ppsId, pps->spsId);
-
-  // In theory, and with a well-designed software, the lines above are everything necessary.
-  // In practice, we need to patch many values
-  // in decoder-> (but no more in input. -- these have been taken care of)
-  // Set Sequence Parameter Stuff first
-  if (sps->pocType > 2)
-    error ("invalid sps->pocType != 1");
-  if (sps->pocType == 1)
-    if (sps->numRefFramesPocCycle >= MAX_NUM_REF_FRAMES_PIC_ORDER)
-      error ("numRefFramesPocCycle too large");
-
-  activateSPS (decoder, sps);
-  activatePPS (decoder, pps);
-
-  // slice->datadpMode is set by read_new_slice (NALU first byte available there)
-  if (pps->entropyCodingMode == (Boolean)CAVLC) {
-    slice->nalStartcode = vlcStartcodeFollows;
-    for (int i = 0; i < 3; i++)
-      slice->dps[i].readSyntaxElement = readSyntaxElementVLC;
-    }
-  else {
-    slice->nalStartcode = cabac_startcode_follows;
-    for (int i = 0; i < 3; i++)
-      slice->dps[i].readSyntaxElement = readSyntaxElementCABAC;
-    }
-  decoder->type = slice->sliceType;
   }
 //}}}

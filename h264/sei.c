@@ -6,9 +6,9 @@
 
 #include "sei.h"
 #include "vlc.h"
-#include "sliceHeader.h"
 #include "buffer.h"
 #include "parset.h"
+#include "image.h"
 //}}}
 
 #define MAX_FN  256
