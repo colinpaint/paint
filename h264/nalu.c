@@ -297,7 +297,7 @@ static int getNALU (sAnnexB* annexB, sDecoder* decoder, sNalu* nalu) {
 static int NALUtoRBSP (sNalu* nalu) {
 // networkAbstractionLayerUnit to rawByteSequencePayload
 
-  byte* streamBuffer = nalu->buf;
+  byte* bitStreamBuffer = nalu->buf;
   int end_bytepos = nalu->len;
   if (end_bytepos < 1) {
     nalu->len = end_bytepos;
@@ -308,16 +308,16 @@ static int NALUtoRBSP (sNalu* nalu) {
   int j = 1;
   for (int i = 1; i < end_bytepos; ++i) {
     // in NAL unit, 0x000000, 0x000001 or 0x000002 shall not occur at any byte-aligned position
-    if (count == ZEROBYTES_SHORTSTARTCODE && streamBuffer[i] < 0x03) {
+    if (count == ZEROBYTES_SHORTSTARTCODE && bitStreamBuffer[i] < 0x03) {
       nalu->len = -1;
       return nalu->len;
       }
 
-    if (count == ZEROBYTES_SHORTSTARTCODE && streamBuffer[i] == 0x03) {
+    if (count == ZEROBYTES_SHORTSTARTCODE && bitStreamBuffer[i] == 0x03) {
       // check the 4th byte after 0x000003,
       // except when cabac_zero_word is used
       // , in which case the last three bytes of this NAL unit must be 0x000003
-      if ((i < end_bytepos-1) && (streamBuffer[i+1] > 0x03)) {
+      if ((i < end_bytepos-1) && (bitStreamBuffer[i+1] > 0x03)) {
         nalu->len = -1;
         return nalu->len;
         }
@@ -333,8 +333,8 @@ static int NALUtoRBSP (sNalu* nalu) {
       count = 0;
       }
 
-    streamBuffer[j] = streamBuffer[i];
-    if (streamBuffer[i] == 0x00)
+    bitStreamBuffer[j] = bitStreamBuffer[i];
+    if (bitStreamBuffer[i] == 0x00)
       ++count;
     else
       count = 0;
@@ -372,12 +372,12 @@ int readNextNalu (sDecoder* decoder, sNalu* nalu) {
 //}}}
 
 //{{{
-int RBSPtoSODB (byte* streamBuffer, int last_byte_pos) {
+int RBSPtoSODB (byte* bitStreamBuffer, int last_byte_pos) {
 // rawByteSequencePayload to stringOfDataBits
 
   // find trailing 1
   int bitOffset = 0;
-  int ctr_bit = (streamBuffer[last_byte_pos-1] & (0x01 << bitOffset));
+  int ctr_bit = (bitStreamBuffer[last_byte_pos-1] & (0x01 << bitOffset));
   while (ctr_bit == 0) {
     // find trailing 1 bit
     ++bitOffset;
@@ -388,7 +388,7 @@ int RBSPtoSODB (byte* streamBuffer, int last_byte_pos) {
       --last_byte_pos;
       bitOffset = 0;
       }
-    ctr_bit = streamBuffer[last_byte_pos - 1] & (0x01 << bitOffset);
+    ctr_bit = bitStreamBuffer[last_byte_pos - 1] & (0x01 << bitOffset);
     }
 
   return last_byte_pos;

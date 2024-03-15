@@ -268,17 +268,15 @@ typedef struct {
 //}}}
 //{{{  sBitStream
 typedef struct BitStream {
+  // CAVLC Decoding
+  byte* bitStreamBuffer;    // actual codebuffer for read bytes
+  int   bitStreamOffset; // actual position in the codebuffer, bit-oriented, CAVLC only
+  int   bitStreamLen;    // over codebuffer lnegth, byte oriented, CAVLC only
+  int   errorFlag;       // error indication, 0: no error, else unspecified error
+
   // CABAC Decoding
   int   readLen;         // actual position in the codebuffer, CABAC only
   int   codeLen;         // overall codebuffer length, CABAC only
-
-  // CAVLC Decoding
-  int   bitStreamOffset; // actual position in the codebuffer, bit-oriented, CAVLC only
-  int   bitStreamLen;    // over codebuffer lnegth, byte oriented, CAVLC only
-
-  // ErrorConcealment
-  byte* streamBuffer;    // actual codebuffer for read bytes
-  int   errorFlag;       // error indication, 0: no error, else unspecified error
   } sBitStream;
 //}}}
 //{{{  sSyntaxElement

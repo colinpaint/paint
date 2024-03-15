@@ -805,8 +805,8 @@ static int readNextSlice (sSlice* slice) {
         sBitStream* s = slice->dps[0].s;
         s->errorFlag = 0;
         s->bitStreamOffset = s->readLen = 0;
-        memcpy (s->streamBuffer, &nalu->buf[1], nalu->len-1);
-        s->codeLen = s->bitStreamLen = RBSPtoSODB (s->streamBuffer, nalu->len - 1);
+        memcpy (s->bitStreamBuffer, &nalu->buf[1], nalu->len-1);
+        s->codeLen = s->bitStreamLen = RBSPtoSODB (s->bitStreamBuffer, nalu->len - 1);
 
         // Some syntax of the sliceHeader depends on parameter set
         // which depends on the parameter set ID of the slice header.
@@ -857,7 +857,7 @@ static int readNextSlice (sSlice* slice) {
           int byteStartPosition = s->bitStreamOffset / 8;
           if (s->bitStreamOffset % 8)
             ++byteStartPosition;
-          aridecoStartDecoding (&slice->dps[0].deCabac, s->streamBuffer, byteStartPosition, &s->readLen);
+          aridecoStartDecoding (&slice->dps[0].deCabac, s->bitStreamBuffer, byteStartPosition, &s->readLen);
           }
 
         decoder->recoveryPoint = 0;
@@ -880,8 +880,8 @@ static int readNextSlice (sSlice* slice) {
         s = slice->dps[0].s;
         s->errorFlag = 0;
         s->bitStreamOffset = s->readLen = 0;
-        memcpy (s->streamBuffer, &nalu->buf[1], nalu->len - 1);
-        s->codeLen = s->bitStreamLen = RBSPtoSODB (s->streamBuffer, nalu->len-1);
+        memcpy (s->bitStreamBuffer, &nalu->buf[1], nalu->len - 1);
+        s->codeLen = s->bitStreamLen = RBSPtoSODB (s->bitStreamBuffer, nalu->len-1);
 
         readSliceHeader (slice);
         useParameterSet (slice);
@@ -923,8 +923,8 @@ static int readNextSlice (sSlice* slice) {
           s = slice->dps[1].s;
           s->errorFlag = 0;
           s->bitStreamOffset = s->readLen = 0;
-          memcpy (s->streamBuffer, &nalu->buf[1], nalu->len-1);
-          s->codeLen = s->bitStreamLen = RBSPtoSODB (s->streamBuffer, nalu->len-1);
+          memcpy (s->bitStreamBuffer, &nalu->buf[1], nalu->len-1);
+          s->codeLen = s->bitStreamLen = RBSPtoSODB (s->bitStreamBuffer, nalu->len-1);
           int slice_id_b = readUeV ("NALU dataPartitionB sliceId", s);
           slice->noDataPartitionB = 0;
 
@@ -951,8 +951,8 @@ static int readNextSlice (sSlice* slice) {
           s = slice->dps[2].s;
           s->errorFlag = 0;
           s->bitStreamOffset = s->readLen = 0;
-          memcpy (s->streamBuffer, &nalu->buf[1], nalu->len-1);
-          s->codeLen = s->bitStreamLen = RBSPtoSODB (s->streamBuffer, nalu->len-1);
+          memcpy (s->bitStreamBuffer, &nalu->buf[1], nalu->len-1);
+          s->codeLen = s->bitStreamLen = RBSPtoSODB (s->bitStreamBuffer, nalu->len-1);
 
           slice->noDataPartitionC = 0;
           int slice_id_c = readUeV ("NALU: DP_C slice_id", s);

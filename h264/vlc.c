@@ -172,7 +172,7 @@ void linfo_levrun_c2x2 (int len, int info, int* level, int* irun) {
 //{{{
 int readsSyntaxElement_VLC (sSyntaxElement* se, sBitStream* s) {
 
-  se->len =  GetVLCSymbol (s->streamBuffer, s->bitStreamOffset,
+  se->len =  GetVLCSymbol (s->bitStreamBuffer, s->bitStreamOffset,
                             &(se->inf), s->bitStreamLen);
   if (se->len == -1)
     return -1;
@@ -191,7 +191,7 @@ int readSyntaxElementVLC (sMacroblock* mb, sSyntaxElement* se, sDataPartition* d
 //{{{
 int readsSyntaxElement_Intra4x4PredictionMode (sSyntaxElement* se, sBitStream* s) {
 
-  se->len = GetVLCSymbol_IntraMode (s->streamBuffer, s->bitStreamOffset, &(se->inf), s->bitStreamLen);
+  se->len = GetVLCSymbol_IntraMode (s->bitStreamBuffer, s->bitStreamOffset, &(se->inf), s->bitStreamLen);
   if (se->len == -1)
     return -1;
 
@@ -259,7 +259,7 @@ int vlcStartcodeFollows (sSlice* slice, int dummy) {
   byte partitionIndex = assignSE2dp[slice->datadpMode][SE_MBTYPE];
   sDataPartition* dataPartition = &(slice->dps[partitionIndex]);
   sBitStream* s = dataPartition->s;
-  byte* buf = s->streamBuffer;
+  byte* buf = s->bitStreamBuffer;
 
   return !(more_rbsp_data (buf, s->bitStreamOffset,s->bitStreamLen));
   }
@@ -315,7 +315,7 @@ static int code_from_bitstream_2d (sSyntaxElement* se, sBitStream* s, const byte
   const byte* len = &lentab[0], *cod = &codtab[0];
 
   int* bitStreamOffset = &s->bitStreamOffset;
-  byte* buf = &s->streamBuffer[*bitStreamOffset >> 3];
+  byte* buf = &s->bitStreamBuffer[*bitStreamOffset >> 3];
 
   // Apply bitoffset to three bytes (maximum that may be traversed by ShowBitsThres)
   // Even at the end of a stream we will still be pulling out of allocated memory as alloc is done by MAX_CODED_FRAME_SIZE
@@ -352,7 +352,7 @@ int readsSyntaxElement_FLC (sSyntaxElement* se, sBitStream* s)
 {
   int BitstreamLengthInBits  = (s->bitStreamLen << 3) + 7;
 
-  if ((GetBits(s->streamBuffer, s->bitStreamOffset, &(se->inf), BitstreamLengthInBits, se->len)) < 0)
+  if ((GetBits(s->bitStreamBuffer, s->bitStreamOffset, &(se->inf), BitstreamLengthInBits, se->len)) < 0)
     return -1;
 
   se->value1 = se->inf;
@@ -369,7 +369,7 @@ int readsSyntaxElement_NumCoeffTrailingOnes (sSyntaxElement* se,
   int bitStreamOffset        = s->bitStreamOffset;
   int BitstreamLengthInBytes = s->bitStreamLen;
   int BitstreamLengthInBits  = (BitstreamLengthInBytes << 3) + 7;
-  byte *buf                  = s->streamBuffer;
+  byte *buf                  = s->bitStreamBuffer;
 
   static const byte lentab[3][4][17] =
   {
@@ -514,7 +514,7 @@ int readsSyntaxElement_Level_VLC0 (sSyntaxElement* se, sBitStream* s)
   int bitStreamOffset        = s->bitStreamOffset;
   int BitstreamLengthInBytes = s->bitStreamLen;
   int BitstreamLengthInBits  = (BitstreamLengthInBytes << 3) + 7;
-  byte *buf                  = s->streamBuffer;
+  byte *buf                  = s->bitStreamBuffer;
   int len = 1, sign = 0, level = 0, code = 1;
 
   while (!ShowBits(buf, bitStreamOffset++, BitstreamLengthInBits, 1))
@@ -563,7 +563,7 @@ int readsSyntaxElement_Level_VLCN (sSyntaxElement* se, int vlc, sBitStream* s)
   int bitStreamOffset        = s->bitStreamOffset;
   int BitstreamLengthInBytes = s->bitStreamLen;
   int BitstreamLengthInBits  = (BitstreamLengthInBytes << 3) + 7;
-  byte *buf                  = s->streamBuffer;
+  byte *buf                  = s->bitStreamBuffer;
 
   int levabs, sign;
   int len = 1;

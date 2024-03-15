@@ -398,7 +398,7 @@ static int readVUI (sDataPartition* dataPartition, sSPS* sps) {
 //}}}
 
 //{{{
-static int isSpsEqual (sSPS* sps1, sSPS* sps2) {
+static int isEqualSPS (sSPS* sps1, sSPS* sps2) {
 
   int equal = 1;
   if ((!sps1->valid) || (!sps2->valid))
@@ -586,15 +586,15 @@ void processSPS (sDecoder* decoder, sNalu* nalu) {
   sDataPartition* dataPartition = allocDataPartitions (1);
   dataPartition->s->errorFlag = 0;
   dataPartition->s->readLen = dataPartition->s->bitStreamOffset = 0;
-  memcpy (dataPartition->s->streamBuffer, &nalu->buf[1], nalu->len-1);
-  dataPartition->s->codeLen = dataPartition->s->bitStreamLen = RBSPtoSODB (dataPartition->s->streamBuffer, nalu->len-1);
+  memcpy (dataPartition->s->bitStreamBuffer, &nalu->buf[1], nalu->len-1);
+  dataPartition->s->codeLen = dataPartition->s->bitStreamLen = RBSPtoSODB (dataPartition->s->bitStreamBuffer, nalu->len-1);
 
   sSPS* sps = allocSPS();
   interpretSPS (decoder, dataPartition, sps);
   if (sps->valid) {
     if (decoder->activeSPS) {
       if (sps->spsId == decoder->activeSPS->spsId) {
-        if (!isSpsEqual (sps, decoder->activeSPS))   {
+        if (!isEqualSPS (sps, decoder->activeSPS))   {
           if (decoder->picture)
             endDecodeFrame (decoder);
           decoder->activeSPS = NULL;
@@ -624,7 +624,7 @@ void activateSPS (sDecoder* decoder, sSPS* sps) {
       endDecodeFrame (decoder);
     decoder->activeSPS = sps;
 
-    if (isBLprofile (sps->profileIdc) && !decoder->dpb->initDone) 
+    if (isBLprofile (sps->profileIdc) && !decoder->dpb->initDone)
       setCodingParam (sps, decoder->coding);
     setGlobalCodingProgram (decoder, decoder->coding);
 
@@ -648,24 +648,7 @@ void activateSPS (sDecoder* decoder, sSPS* sps) {
 
 // PPS
 //{{{
-sPPS* allocPPS() {
-
-  sPPS* pps = calloc (1, sizeof (sPPS));
-  pps->sliceGroupId = NULL;
-  return pps;
-  }
-//}}}
-//{{{
- void freePPS (sPPS* pps) {
-
-   if (!pps->sliceGroupId)
-     free (pps->sliceGroupId);
-   free (pps);
-   }
-//}}}
-
-//{{{
-static int isPpsEqual (sPPS* pps1, sPPS* pps2) {
+static int isEqualPPS (sPPS* pps1, sPPS* pps2) {
 
   if (!pps1->valid || !pps2->valid)
     return 0;
@@ -810,7 +793,7 @@ static void interpretPPS (sDecoder* decoder, sDataPartition* dataPartition, sPPS
   pps->constrainedIntraPredFlag = readU1 ("PPS constrainedIntraPredFlag", s);
   pps->redundantPicCountPresent = readU1 ("PPS redundantPicCountPresent", s);
 
-  if (more_rbsp_data (s->streamBuffer, s->bitStreamOffset,s->bitStreamLen)) {
+  if (more_rbsp_data (s->bitStreamBuffer, s->bitStreamOffset,s->bitStreamLen)) {
     //{{{  more_data_in_rbsp
     // Fidelity Range Extensions Stuff
     pps->transform8x8modeFlag = readU1 ("PPS transform8x8modeFlag", s);
@@ -851,14 +834,31 @@ static void interpretPPS (sDecoder* decoder, sDataPartition* dataPartition, sPPS
 //}}}
 
 //{{{
+sPPS* allocPPS() {
+
+  sPPS* pps = calloc (1, sizeof (sPPS));
+  pps->sliceGroupId = NULL;
+  return pps;
+  }
+//}}}
+//{{{
+ void freePPS (sPPS* pps) {
+
+   if (!pps->sliceGroupId)
+     free (pps->sliceGroupId);
+   free (pps);
+   }
+//}}}
+
+//{{{
 void makePPSavailable (sDecoder* decoder, int id, sPPS* pps) {
 
   if (decoder->pps[id].valid && decoder->pps[id].sliceGroupId)
     free (decoder->pps[id].sliceGroupId);
   memcpy (&decoder->pps[id], pps, sizeof (sPPS));
 
-  // we can simply use the memory provided with the pps. the PPS is destroyed after this function
-  // call and will not try to free if pps->sliceGroupId == NULL
+  // we can simply use the memory provided with the pps. 
+  // the PPS is destroyed after this function call, will not try to free if pps->sliceGroupId == NULL
   decoder->pps[id].sliceGroupId = pps->sliceGroupId;
   pps->sliceGroupId = NULL;
   }
@@ -869,15 +869,15 @@ void processPPS (sDecoder* decoder, sNalu* nalu) {
   sDataPartition* dataPartition = allocDataPartitions (1);
   dataPartition->s->errorFlag = 0;
   dataPartition->s->readLen = dataPartition->s->bitStreamOffset = 0;
-  memcpy (dataPartition->s->streamBuffer, &nalu->buf[1], nalu->len-1);
-  dataPartition->s->codeLen = dataPartition->s->bitStreamLen = RBSPtoSODB (dataPartition->s->streamBuffer, nalu->len-1);
+  memcpy (dataPartition->s->bitStreamBuffer, &nalu->buf[1], nalu->len-1);
+  dataPartition->s->codeLen = dataPartition->s->bitStreamLen = RBSPtoSODB (dataPartition->s->bitStreamBuffer, nalu->len-1);
 
   sPPS* pps = allocPPS();
   interpretPPS (decoder, dataPartition, pps);
 
   if (decoder->activePPS) {
     if (pps->ppsId == decoder->activePPS->ppsId) {
-      if (!isPpsEqual (pps, decoder->activePPS)) {
+      if (!isEqualPPS (pps, decoder->activePPS)) {
         // copy to next PPS;
         memcpy (decoder->nextPPS, decoder->activePPS, sizeof (sPPS));
         if (decoder->picture)

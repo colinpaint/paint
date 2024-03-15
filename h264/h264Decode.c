@@ -245,9 +245,9 @@ sDataPartition* allocDataPartitions (int n) {
     if (dataPartition->s == NULL)
       error ("allocDataPartitions: Memory allocation for sBitStream failed");
 
-    dataPartition->s->streamBuffer = (byte*)calloc(MAX_CODED_FRAME_SIZE, sizeof(byte));
-    if (dataPartition->s->streamBuffer == NULL)
-      error ("allocDataPartitions: Memory allocation for streamBuffer failed");
+    dataPartition->s->bitStreamBuffer = (byte*)calloc(MAX_CODED_FRAME_SIZE, sizeof(byte));
+    if (dataPartition->s->bitStreamBuffer == NULL)
+      error ("allocDataPartitions: Memory allocation for bitStreamBuffer failed");
     }
 
   return dataPartitions;
@@ -258,10 +258,10 @@ void freeDataPartitions (sDataPartition* dataPartitions, int n) {
 
   assert (dataPartitions != NULL);
   assert (dataPartitions->s != NULL);
-  assert (dataPartitions->s->streamBuffer != NULL);
+  assert (dataPartitions->s->bitStreamBuffer != NULL);
 
   for (int i = 0; i < n; ++i) {
-    free (dataPartitions[i].s->streamBuffer);
+    free (dataPartitions[i].s->bitStreamBuffer);
     free (dataPartitions[i].s);
     }
 

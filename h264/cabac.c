@@ -1797,7 +1797,7 @@ void readIPCMcabac (sSlice* slice, sDataPartition* dataPartition) {
 
   sBitStream* s = dataPartition->s;
   sDecodingEnv* dep = &(dataPartition->deCabac);
-  byte* buf = s->streamBuffer;
+  byte* buf = s->bitStreamBuffer;
   int BitstreamLengthInBits = (dataPartition->s->bitStreamLen << 3) + 7;
 
   int val = 0;
