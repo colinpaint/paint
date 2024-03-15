@@ -1,10 +1,4 @@
 #pragma once
-
-# if !(defined(WIN32) || defined(WIN64)) && (__STDC_VERSION__ < 199901L)
-  #define static
-  #define inline
-#endif
-
 #include <math.h>
 #include <limits.h>
 
