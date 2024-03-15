@@ -1789,7 +1789,7 @@ void readRestSliceHeader (sSlice* slice) {
   slice->numRefIndexActive[LIST_0] = decoder->activePPS->numRefIndexL0defaultActiveMinus1 + 1;
   slice->numRefIndexActive[LIST_1] = decoder->activePPS->numRefIndexL1defaultActiveMinus1 + 1;
 
-  if (slice->sliceType == P_SLICE || slice->sliceType == SP_SLICE || slice->sliceType == B_SLICE) {
+  if ((slice->sliceType == P_SLICE) || (slice->sliceType == SP_SLICE) || (slice->sliceType == B_SLICE)) {
     int num_ref_idx_override_flag = readU1 ("SLC num_ref_idx_override_flag", s);
     if (num_ref_idx_override_flag) {
       slice->numRefIndexActive[LIST_0] = 1 + readUeV ("SLC num_ref_idx_l0_active_minus1", s);
@@ -1797,24 +1797,20 @@ void readRestSliceHeader (sSlice* slice) {
         slice->numRefIndexActive[LIST_1] = 1 + readUeV ("SLC num_ref_idx_l1_active_minus1", s);
       }
     }
-
   if (slice->sliceType != B_SLICE)
     slice->numRefIndexActive[LIST_1] = 0;
-
   ref_pic_list_reordering (slice);
-
   //{{{  weightedPred
-  slice->weightedPredFlag =
-    (unsigned short)((slice->sliceType == P_SLICE || slice->sliceType == SP_SLICE)
-      ? decoder->activePPS->weightedPredFlag
-      : ((slice->sliceType == B_SLICE) && (decoder->activePPS->weightedBiPredIdc == 1)));
+  slice->weightedPredFlag = (unsigned short)((slice->sliceType == P_SLICE || slice->sliceType == SP_SLICE)
+                              ? decoder->activePPS->weightedPredFlag
+                              : ((slice->sliceType == B_SLICE) && (decoder->activePPS->weightedBiPredIdc == 1)));
 
   slice->weightedBiPredIdc =
     (unsigned short)((slice->sliceType == B_SLICE) && (decoder->activePPS->weightedBiPredIdc > 0));
 
   if ((decoder->activePPS->weightedPredFlag &&
-      (slice->sliceType == P_SLICE || slice->sliceType == SP_SLICE)) ||
-      (decoder->activePPS->weightedBiPredIdc == 1 && (slice->sliceType == B_SLICE)))
+      ((slice->sliceType == P_SLICE) || (slice->sliceType == SP_SLICE))) ||
+      ((decoder->activePPS->weightedBiPredIdc == 1) && (slice->sliceType == B_SLICE)))
     pred_weight_table (slice);
   //}}}
 
@@ -1826,7 +1822,6 @@ void readRestSliceHeader (sSlice* slice) {
     slice->modelNum = readUeV ("SLC cabac_init_idc", s);
   else
     slice->modelNum = 0;
-
   //{{{  qp
   slice->sliceQpDelta = readSeV ("SLC sliceQpDelta", s);
   slice->qp = 26 + decoder->activePPS->picInitQpMinus26 + slice->sliceQpDelta;

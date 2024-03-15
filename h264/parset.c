@@ -57,17 +57,17 @@ static void setCodingParam (sSPS* sps, sCoding* coding) {
   coding->bitdepthChroma = 0;
   coding->widthCr = 0;
   coding->heightCr = 0;
-  coding->bitdepthLuma = (short) (sps->bit_depth_luma_minus8 + 8);
+  coding->bitdepthLuma = (short)(sps->bit_depth_luma_minus8 + 8);
   coding->bitdepthScale[0] = 1 << sps->bit_depth_luma_minus8;
   if (sps->chromaFormatIdc != YUV400) {
     coding->bitdepthChroma = (short) (sps->bit_depth_chroma_minus8 + 8);
     coding->bitdepthScale[1] = 1 << sps->bit_depth_chroma_minus8;
     }
 
-  coding->maxFrameNum = 1<<(sps->log2_max_frame_num_minus4+4);
+  coding->maxFrameNum = 1 << (sps->log2_max_frame_num_minus4+4);
   coding->picWidthMbs = (sps->pic_width_in_mbs_minus1 +1);
   coding->picHeightMapUnits = (sps->pic_height_in_map_units_minus1 +1);
-  coding->frameHeightMbs = ( 2 - sps->frameMbOnlyFlag ) * coding->picHeightMapUnits;
+  coding->frameHeightMbs = (2 - sps->frameMbOnlyFlag) * coding->picHeightMapUnits;
   coding->frameSizeMbs = coding->picWidthMbs * coding->frameHeightMbs;
 
   coding->yuvFormat=sps->chromaFormatIdc;
@@ -84,6 +84,7 @@ static void setCodingParam (sSPS* sps, sCoding* coding) {
   coding->iLumaPadY = MCBUF_LUMA_PAD_Y;
   coding->iChromaPadX = MCBUF_CHROMA_PAD_X;
   coding->iChromaPadY = MCBUF_CHROMA_PAD_Y;
+
   if (sps->chromaFormatIdc == YUV420) {
     coding->widthCr  = (coding->width  >> 1);
     coding->heightCr = (coding->height >> 1);
@@ -99,15 +100,16 @@ static void setCodingParam (sSPS* sps, sCoding* coding) {
     coding->iChromaPadX = coding->iLumaPadX;
     coding->iChromaPadY = coding->iLumaPadY;
     }
+
   //pel bitdepth init
-  coding->bitdepthLumeQpScale   = 6 * (coding->bitdepthLuma - 8);
+  coding->bitdepthLumeQpScale = 6 * (coding->bitdepthLuma - 8);
 
   if (coding->bitdepthLuma > coding->bitdepthChroma || sps->chromaFormatIdc == YUV400)
     coding->picUnitBitSizeDisk = (coding->bitdepthLuma > 8)? 16:8;
   else
     coding->picUnitBitSizeDisk = (coding->bitdepthChroma > 8)? 16:8;
-  coding->dcPredValueComp[0] = 1<<(coding->bitdepthLuma - 1);
-  coding->maxPelValueComp[0] = (1<<coding->bitdepthLuma) - 1;
+  coding->dcPredValueComp[0] = 1 << (coding->bitdepthLuma - 1);
+  coding->maxPelValueComp[0] = (1 << coding->bitdepthLuma) - 1;
   coding->mbSize[0][0] = coding->mbSize[0][1] = MB_BLOCK_SIZE;
 
   if (sps->chromaFormatIdc != YUV400) {

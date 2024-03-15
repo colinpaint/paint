@@ -808,11 +808,9 @@ static int readNextSlice (sSlice* slice) {
         memcpy (s->bitStreamBuffer, &nalu->buf[1], nalu->len-1);
         s->codeLen = s->bitStreamLen = RBSPtoSODB (s->bitStreamBuffer, nalu->len - 1);
 
-        // Some syntax of the sliceHeader depends on parameter set
-        // which depends on the parameter set ID of the slice header.
-        // - read the ppsId of the slice header first,
-        // - then setup the active parameter sets
-        // -  read // the rest of the slice header
+        // Some syntax sliceHeader depends on parameterSet depends on parameterSetID of the slice header
+        // - read the ppsId of the slice header first, then setup the active parameter sets 
+        // read the rest of the slice header
         readSliceHeader (slice);
         useParameterSet (slice);
         slice->activeSPS = decoder->activeSPS;
@@ -827,8 +825,9 @@ static int readNextSlice (sSlice* slice) {
             printf ("IDR");
           else
             printf ("SLC");
-          printf (":%d id:%d:%d %s\n",
-                  nalu->len, slice->refId, slice->sliceType, slice->fieldPicFlag ? "field":"");
+          printf (":%d id:%d:%d frame:%d %s\n",
+                  nalu->len, slice->refId, slice->sliceType, 
+                  slice->frameNum, slice->fieldPicFlag ? "field":"");
           }
         assignQuantParams (slice);
 
