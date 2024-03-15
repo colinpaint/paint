@@ -255,26 +255,6 @@ static void resetFormatInfo (sSPS* sps, sDecoder* decoder, sFrameFormat* source,
     //}}}
   }
 //}}}
-
-// SPS
-//{{{
-static sSPS* allocSPS() {
-
-   sSPS* p = calloc (1, sizeof (sSPS));
-   if (!p)
-     no_mem_exit ("allocSPS");
-
-   return p;
-   }
-//}}}
-//{{{
-static void freeSPS (sSPS* sps) {
-
-  assert (sps);
-  free (sps);
-  }
-//}}}
-
 //{{{
 // syntax for scaling list matrix values
 static void scalingList (int* scalingList, int scalingListSize, Boolean* useDefaultScalingMatrix, sBitStream* s) {
@@ -294,13 +274,91 @@ static void scalingList (int* scalingList, int scalingListSize, Boolean* useDefa
     }
   }
 //}}}
+
+// SPS
+//{{{
+static sSPS* allocSPS() {
+
+   sSPS* p = calloc (1, sizeof (sSPS));
+   if (!p)
+     no_mem_exit ("allocSPS");
+
+   return p;
+   }
+//}}}
+//{{{
+static void freeSPS (sSPS* sps) {
+
+  assert (sps);
+  free (sps);
+  }
+//}}}
+//{{{
+static int isEqualSPS (sSPS* sps1, sSPS* sps2) {
+
+  int equal = 1;
+  if ((!sps1->valid) || (!sps2->valid))
+    return 0;
+
+  equal &= (sps1->spsId == sps2->spsId);
+  equal &= (sps1->levelIdc == sps2->levelIdc);
+  equal &= (sps1->profileIdc == sps2->profileIdc);
+  equal &= (sps1->constrained_set0_flag == sps2->constrained_set0_flag);
+  equal &= (sps1->constrained_set1_flag == sps2->constrained_set1_flag);
+  equal &= (sps1->constrained_set2_flag == sps2->constrained_set2_flag);
+
+  equal &= (sps1->log2_max_frame_num_minus4 == sps2->log2_max_frame_num_minus4);
+  equal &= (sps1->pocType == sps2->pocType);
+  if (!equal)
+    return equal;
+
+  if (sps1->pocType == 0)
+    equal &= (sps1->log2_max_pic_order_cnt_lsb_minus4 == sps2->log2_max_pic_order_cnt_lsb_minus4);
+  else if( sps1->pocType == 1) {
+    equal &= (sps1->delta_pic_order_always_zero_flag == sps2->delta_pic_order_always_zero_flag);
+    equal &= (sps1->offset_for_non_ref_pic == sps2->offset_for_non_ref_pic);
+    equal &= (sps1->offset_for_top_to_bottom_field == sps2->offset_for_top_to_bottom_field);
+    equal &= (sps1->numRefFramesPocCycle == sps2->numRefFramesPocCycle);
+    if (!equal)
+      return equal;
+
+    for (unsigned i = 0 ; i < sps1->numRefFramesPocCycle ;i ++)
+      equal &= (sps1->offset_for_ref_frame[i] == sps2->offset_for_ref_frame[i]);
+    }
+
+  equal &= (sps1->numRefFrames == sps2->numRefFrames);
+  equal &= (sps1->gaps_in_frame_num_value_allowed_flag == sps2->gaps_in_frame_num_value_allowed_flag);
+  equal &= (sps1->pic_width_in_mbs_minus1 == sps2->pic_width_in_mbs_minus1);
+  equal &= (sps1->pic_height_in_map_units_minus1 == sps2->pic_height_in_map_units_minus1);
+  equal &= (sps1->frameMbOnlyFlag == sps2->frameMbOnlyFlag);
+  if (!equal) return
+    equal;
+
+  if (!sps1->frameMbOnlyFlag)
+    equal &= (sps1->mb_adaptive_frame_field_flag == sps2->mb_adaptive_frame_field_flag);
+  equal &= (sps1->direct_8x8_inference_flag == sps2->direct_8x8_inference_flag);
+  equal &= (sps1->frameCropFlag == sps2->frameCropFlag);
+  if (!equal)
+    return equal;
+
+  if (sps1->frameCropFlag) {
+    equal &= (sps1->frameCropLeft == sps2->frameCropLeft);
+    equal &= (sps1->frameCropRight == sps2->frameCropRight);
+    equal &= (sps1->frameCropTop == sps2->frameCropTop);
+    equal &= (sps1->frameCropBot == sps2->frameCropBot);
+    }
+  equal &= (sps1->vui_parameters_present_flag == sps2->vui_parameters_present_flag);
+
+  return equal;
+  }
+//}}}
 //{{{
 static void initVUI (sSPS* sps) {
   sps->vui_seq_parameters.matrix_coefficients = 2;
   }
 //}}}
 //{{{
-static int readHRD (sDataPartition* dataPartition, sHRD* hrd) {
+static void readHRD (sDataPartition* dataPartition, sHRD* hrd) {
 
   sBitStream *s = dataPartition->s;
   hrd->cpb_cnt_minus1 = readUeV ("VUI cpb_cnt_minus1", s);
@@ -319,12 +377,10 @@ static int readHRD (sDataPartition* dataPartition, sHRD* hrd) {
   hrd->cpb_removal_delay_length_minus1 = readUv (5, "VUI cpb_removal_delay_length_minus1", s);
   hrd->dpb_output_delay_length_minus1 = readUv (5, "VUI dpb_output_delay_length_minus1", s);
   hrd->time_offset_length = readUv (5, "VUI time_offset_length", s);
-
-  return 0;
   }
 //}}}
 //{{{
-static int readVUI (sDataPartition* dataPartition, sSPS* sps) {
+static void readVUI (sDataPartition* dataPartition, sSPS* sps) {
 
   sBitStream* s = dataPartition->s;
   if (sps->vui_parameters_present_flag) {
@@ -392,78 +448,17 @@ static int readVUI (sDataPartition* dataPartition, sSPS* sps) {
       sps->vui_seq_parameters.max_dec_frame_buffering = readUeV ("VUI max_dec_frame_buffering", s);
       }
     }
-
-  return 0;
-  }
-//}}}
-
-//{{{
-static int isEqualSPS (sSPS* sps1, sSPS* sps2) {
-
-  int equal = 1;
-  if ((!sps1->valid) || (!sps2->valid))
-    return 0;
-
-  equal &= (sps1->spsId == sps2->spsId);
-  equal &= (sps1->levelIdc == sps2->levelIdc);
-  equal &= (sps1->profileIdc == sps2->profileIdc);
-  equal &= (sps1->constrained_set0_flag == sps2->constrained_set0_flag);
-  equal &= (sps1->constrained_set1_flag == sps2->constrained_set1_flag);
-  equal &= (sps1->constrained_set2_flag == sps2->constrained_set2_flag);
-
-  equal &= (sps1->log2_max_frame_num_minus4 == sps2->log2_max_frame_num_minus4);
-  equal &= (sps1->pocType == sps2->pocType);
-  if (!equal)
-    return equal;
-
-  if (sps1->pocType == 0)
-    equal &= (sps1->log2_max_pic_order_cnt_lsb_minus4 == sps2->log2_max_pic_order_cnt_lsb_minus4);
-  else if( sps1->pocType == 1) {
-    equal &= (sps1->delta_pic_order_always_zero_flag == sps2->delta_pic_order_always_zero_flag);
-    equal &= (sps1->offset_for_non_ref_pic == sps2->offset_for_non_ref_pic);
-    equal &= (sps1->offset_for_top_to_bottom_field == sps2->offset_for_top_to_bottom_field);
-    equal &= (sps1->numRefFramesPocCycle == sps2->numRefFramesPocCycle);
-    if (!equal)
-      return equal;
-
-    for (unsigned i = 0 ; i < sps1->numRefFramesPocCycle ;i ++)
-      equal &= (sps1->offset_for_ref_frame[i] == sps2->offset_for_ref_frame[i]);
-    }
-
-  equal &= (sps1->numRefFrames == sps2->numRefFrames);
-  equal &= (sps1->gaps_in_frame_num_value_allowed_flag == sps2->gaps_in_frame_num_value_allowed_flag);
-  equal &= (sps1->pic_width_in_mbs_minus1 == sps2->pic_width_in_mbs_minus1);
-  equal &= (sps1->pic_height_in_map_units_minus1 == sps2->pic_height_in_map_units_minus1);
-  equal &= (sps1->frameMbOnlyFlag == sps2->frameMbOnlyFlag);
-  if (!equal) return
-    equal;
-
-  if (!sps1->frameMbOnlyFlag)
-    equal &= (sps1->mb_adaptive_frame_field_flag == sps2->mb_adaptive_frame_field_flag);
-  equal &= (sps1->direct_8x8_inference_flag == sps2->direct_8x8_inference_flag);
-  equal &= (sps1->frameCropFlag == sps2->frameCropFlag);
-  if (!equal)
-    return equal;
-
-  if (sps1->frameCropFlag) {
-    equal &= (sps1->frameCropLeft == sps2->frameCropLeft);
-    equal &= (sps1->frameCropRight == sps2->frameCropRight);
-    equal &= (sps1->frameCropTop == sps2->frameCropTop);
-    equal &= (sps1->frameCropBot == sps2->frameCropBot);
-    }
-  equal &= (sps1->vui_parameters_present_flag == sps2->vui_parameters_present_flag);
-
-  return equal;
   }
 //}}}
 //{{{
-static void interpretSPS (sDecoder* decoder, sDataPartition* dataPartition, sSPS* sps) {
+static void readSPS (sDecoder* decoder, sDataPartition* dataPartition, sSPS* sps) {
 
   sBitStream* s = dataPartition->s;
   sps->profileIdc = readUv (8, "SPS profileIdc", s);
-  if ((sps->profileIdc != BASELINE) && (sps->profileIdc != MAIN) && (sps->profileIdc != EXTENDED) &&
-      (sps->profileIdc != FREXT_HP) &&
-      (sps->profileIdc != FREXT_Hi10P) && (sps->profileIdc != FREXT_Hi422) && (sps->profileIdc != FREXT_Hi444) &&
+  if ((sps->profileIdc != BASELINE) && (sps->profileIdc != MAIN) &&
+      (sps->profileIdc != EXTENDED) &&
+      (sps->profileIdc != FREXT_HP) && (sps->profileIdc != FREXT_Hi10P) &&
+      (sps->profileIdc != FREXT_Hi422) && (sps->profileIdc != FREXT_Hi444) &&
       (sps->profileIdc != FREXT_CAVLC444))
     printf ("IDC - invalid %d\n", sps->profileIdc);
 
@@ -572,14 +567,14 @@ static void interpretSPS (sDecoder* decoder, sDataPartition* dataPartition, sSPS
   sps->valid = TRUE;
   }
 //}}}
-
 //{{{
-void makeSPSavailable (sDecoder* decoder, int id, sSPS* sps) {
+static void makeSPSavailable (sDecoder* decoder, int id, sSPS* sps) {
 
   assert (sps->valid == TRUE);
   memcpy (&decoder->sps[id], sps, sizeof(sSPS));
   }
 //}}}
+
 //{{{
 void processSPS (sDecoder* decoder, sNalu* nalu) {
 
@@ -590,7 +585,7 @@ void processSPS (sDecoder* decoder, sNalu* nalu) {
   dataPartition->s->codeLen = dataPartition->s->bitStreamLen = RBSPtoSODB (dataPartition->s->bitStreamBuffer, nalu->len-1);
 
   sSPS* sps = allocSPS();
-  interpretSPS (decoder, dataPartition, sps);
+  readSPS (decoder, dataPartition, sps);
   if (sps->valid) {
     if (decoder->activeSPS) {
       if (sps->spsId == decoder->activeSPS->spsId) {
@@ -725,7 +720,7 @@ static int isEqualPPS (sPPS* pps1, sPPS* pps2) {
   }
 //}}}
 //{{{
-static void interpretPPS (sDecoder* decoder, sDataPartition* dataPartition, sPPS* pps) {
+static void readPPS (sDecoder* decoder, sDataPartition* dataPartition, sPPS* pps) {
 
   unsigned n_ScalingList;
   int chromaFormatIdc;
@@ -775,7 +770,7 @@ static void interpretPPS (sDecoder* decoder, sDataPartition* dataPartition, sPPS
         NumberBitsPerSliceGroupId = 1;
       pps->picSizeMapUnitsMinus1 = readUeV ("PPS picSizeMapUnitsMinus1", s);
       if ((pps->sliceGroupId = calloc (pps->picSizeMapUnitsMinus1+1, 1)) == NULL)
-        no_mem_exit ("InterpretPPS sliceGroupId");
+        no_mem_exit ("readPPS sliceGroupId");
       for (unsigned i = 0; i <= pps->picSizeMapUnitsMinus1; i++)
         pps->sliceGroupId[i] = (byte)readUv (NumberBitsPerSliceGroupId, "sliceGroupId[i]", s);
       }
@@ -873,8 +868,7 @@ void processPPS (sDecoder* decoder, sNalu* nalu) {
   dataPartition->s->codeLen = dataPartition->s->bitStreamLen = RBSPtoSODB (dataPartition->s->bitStreamBuffer, nalu->len-1);
 
   sPPS* pps = allocPPS();
-  interpretPPS (decoder, dataPartition, pps);
-
+  readPPS (decoder, dataPartition, pps);
   if (decoder->activePPS) {
     if (pps->ppsId == decoder->activePPS->ppsId) {
       if (!isEqualPPS (pps, decoder->activePPS)) {

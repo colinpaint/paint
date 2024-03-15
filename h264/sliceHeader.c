@@ -1822,8 +1822,7 @@ void readRestSliceHeader (sSlice* slice) {
     dec_ref_pic_marking (decoder, s, slice);
 
   if (decoder->activePPS->entropyCodingMode &&
-      slice->sliceType != I_SLICE &&
-      slice->sliceType != SI_SLICE)
+      (slice->sliceType != I_SLICE) && (slice->sliceType != SI_SLICE))
     slice->modelNum = readUeV ("SLC cabac_init_idc", s);
   else
     slice->modelNum = 0;

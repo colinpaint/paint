@@ -824,11 +824,12 @@ static int readNextSlice (sSlice* slice) {
 
         if (decoder->param.sliceDebug) {
           if (nalu->unitType == NALU_TYPE_IDR)
-            printf ("IDR id:%d:%d len:%d\n", slice->refId, slice->sliceType, nalu->len);
+            printf ("IDR");
           else
-            printf ("SLC id:%d:%d len %d\n", slice->refId, slice->sliceType, nalu->len);
+            printf ("SLC");
+          printf (":%d id:%d:%d %s\n",
+                  nalu->len, slice->refId, slice->sliceType, slice->fieldPicFlag ? "field":"");
           }
-
         assignQuantParams (slice);
 
         // if primary slice is replaced with redundant slice, set the correct image type

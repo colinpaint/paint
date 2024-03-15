@@ -2,8 +2,8 @@
 #include "defines.h"
 #include "nalu.h"
 
-sPPS* allocPPS();
-void freePPS (sPPS* pps);
+extern sPPS* allocPPS();
+extern void freePPS (sPPS* pps);
 
 extern void processSPS (sDecoder* decoder, sNalu* nalu);
 extern void activateSPS (sDecoder* decoder, sSPS* sps);
