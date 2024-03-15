@@ -36,7 +36,7 @@ static const byte SNGL_SCAN8x8[64][2] = {
 //}}}
 //{{{
 //! field scan pattern
-static const byte FIELD_SCAN8x8[64][2] = {   
+static const byte FIELD_SCAN8x8[64][2] = {
   {0,0}, {0,1}, {0,2}, {1,0}, {1,1}, {0,3}, {0,4}, {1,2}, {2,0}, {1,3}, {0,5}, {0,6}, {0,7}, {1,4}, {2,1}, {3,0},
   {2,2}, {1,5}, {1,6}, {1,7}, {2,3}, {3,1}, {4,0}, {3,2}, {2,4}, {2,5}, {2,6}, {2,7}, {3,3}, {4,1}, {5,0}, {4,2},
   {3,4}, {3,5}, {3,6}, {3,7}, {4,3}, {5,1}, {6,0}, {5,2}, {4,4}, {4,5}, {4,6}, {4,7}, {5,3}, {6,1}, {6,2}, {5,4},
@@ -64,7 +64,7 @@ static const unsigned char cbp_blk_chroma[8][4] = {
 };
 //}}}
 //{{{
-static const unsigned char cofuv_blk_x[3][8][4] = { 
+static const unsigned char cofuv_blk_x[3][8][4] = {
   { {0, 1, 0, 1},
     {0, 1, 0, 1},
     {0, 0, 0, 0},
@@ -124,6 +124,9 @@ static const unsigned char cofuv_blk_y[3][8][4] = {
 };
 //}}}
 
+extern int get_colocated_info_8x8 (sMacroblock* mb, sPicture* list1, int i, int j);
+extern int get_colocated_info_4x4 (sMacroblock* mb, sPicture* list1, int i, int j);
+
 extern void set_read_comp_coeff_cabac (sMacroblock* mb);
 extern void set_read_comp_coeff_cavlc (sMacroblock* mb);
 
@@ -139,5 +142,5 @@ extern Boolean exitMacroblock (sSlice* slice, int eos_bit);
 extern void updateQp (sMacroblock* mb, int qp);
 
 extern void checkDpNeighbours (sMacroblock* mb);
-extern void readDeltaQuant (sSyntaxElement* se, sDataPartition *dataPartition, sMacroblock* mb, 
+extern void readDeltaQuant (sSyntaxElement* se, sDataPartition *dataPartition, sMacroblock* mb,
                             const byte* dpMap, int type);

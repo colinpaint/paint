@@ -129,7 +129,7 @@ static void read_ipred_8x8_modes (sMacroblock* mb) {
 
     upIntraPredMode = (top_block.available ) ? slice->predMode[top_block.posY ][top_block.posX ] : -1;
     leftIntraPredMode = (left_block.available) ? slice->predMode[left_block.posY][left_block.posX] : -1;
-    mostProbableIntraPredMode = (upIntraPredMode < 0 || leftIntraPredMode < 0) ? 
+    mostProbableIntraPredMode = (upIntraPredMode < 0 || leftIntraPredMode < 0) ?
       DC_PRED : upIntraPredMode < leftIntraPredMode ? upIntraPredMode : leftIntraPredMode;
     dec = (se.value1 == -1) ?
       mostProbableIntraPredMode : se.value1 + (se.value1 >= mostProbableIntraPredMode);
@@ -796,7 +796,7 @@ static void readI8x8macroblock (sMacroblock* mb, sDataPartition* dataPartition, 
 //}}}
 
 //{{{
-static void read_one_macroblock_i_slice_cavlc (sMacroblock* mb) {
+static void readOneMacroblockIsliceCavlc (sMacroblock* mb) {
 
   sSlice* slice = mb->slice;
 
@@ -845,7 +845,7 @@ static void read_one_macroblock_i_slice_cavlc (sMacroblock* mb) {
   }
 //}}}
 //{{{
-static void read_one_macroblock_p_slice_cavlc (sMacroblock* mb) {
+static void readOneMacroblockPsliceCavlc (sMacroblock* mb) {
 
   sSlice* slice = mb->slice;
   sSyntaxElement se;
@@ -998,7 +998,7 @@ static void read_one_macroblock_p_slice_cavlc (sMacroblock* mb) {
   }
 //}}}
 //{{{
-static void read_one_macroblock_b_slice_cavlc (sMacroblock* mb) {
+static void readOneMacroblockBsliceCavlc (sMacroblock* mb) {
 
   sDecoder* decoder = mb->decoder;
   sSlice* slice = mb->slice;
@@ -1162,7 +1162,7 @@ static void read_one_macroblock_b_slice_cavlc (sMacroblock* mb) {
 //}}}
 
 //{{{
-static void read_one_macroblock_i_slice_cabac (sMacroblock* mb) {
+static void readOneMacroblockIsliceCabac (sMacroblock* mb) {
 
   sSlice* slice = mb->slice;
 
@@ -1249,7 +1249,7 @@ static void read_one_macroblock_i_slice_cabac (sMacroblock* mb) {
   }
 //}}}
 //{{{
-static void read_one_macroblock_p_slice_cabac (sMacroblock* mb)
+static void readOneMacroblockPsliceCabac (sMacroblock* mb)
 {
   sSlice* slice = mb->slice;
   sDecoder* decoder = mb->decoder;
@@ -1396,7 +1396,7 @@ static void read_one_macroblock_p_slice_cabac (sMacroblock* mb)
   }
 //}}}
 //{{{
-static void read_one_macroblock_b_slice_cabac (sMacroblock* mb) {
+static void readOneMacroblockBsliceCabac (sMacroblock* mb) {
 
   sSlice* slice = mb->slice;
   sDecoder* decoder = mb->decoder;
@@ -1572,17 +1572,17 @@ void setReadMacroblock (sSlice* slice) {
     switch (slice->sliceType) {
       case P_SLICE:
       case SP_SLICE:
-        slice->readMacroblock = read_one_macroblock_p_slice_cabac;
+        slice->readMacroblock = readOneMacroblockPsliceCabac;
         break;
       case B_SLICE:
-        slice->readMacroblock = read_one_macroblock_b_slice_cabac;
+        slice->readMacroblock = readOneMacroblockBsliceCabac;
         break;
       case I_SLICE:
       case SI_SLICE:
-        slice->readMacroblock = read_one_macroblock_i_slice_cabac;
+        slice->readMacroblock = readOneMacroblockIsliceCabac;
         break;
       default:
-        printf("Unsupported slice type\n");
+        printf ("Unsupported slice type\n");
         break;
       }
     }
@@ -1591,17 +1591,17 @@ void setReadMacroblock (sSlice* slice) {
     switch (slice->sliceType) {
       case P_SLICE:
       case SP_SLICE:
-        slice->readMacroblock = read_one_macroblock_p_slice_cavlc;
+        slice->readMacroblock = readOneMacroblockPsliceCavlc;
         break;
       case B_SLICE:
-        slice->readMacroblock = read_one_macroblock_b_slice_cavlc;
+        slice->readMacroblock = readOneMacroblockBsliceCavlc;
         break;
       case I_SLICE:
       case SI_SLICE:
-        slice->readMacroblock = read_one_macroblock_i_slice_cavlc;
+        slice->readMacroblock = readOneMacroblockIsliceCavlc;
         break;
       default:
-        printf("Unsupported slice type\n");
+        printf ("Unsupported slice type\n");
         break;
       }
     }

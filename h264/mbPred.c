@@ -17,8 +17,6 @@
 #include "quant.h"
 #include "mbPred.h"
 //}}}
-extern int get_colocated_info_8x8 (sMacroblock* mb, sPicture* list1, int i, int j);
-extern int get_colocated_info_4x4 (sMacroblock* mb, sPicture* list1, int i, int j);
 
 //{{{
 int mb_pred_intra4x4 (sMacroblock* mb, eColorPlane plane, sPixel** pixel, sPicture* picture)
@@ -224,7 +222,6 @@ int mb_pred_skip (sMacroblock* mb, eColorPlane plane, sPixel** pixel, sPicture* 
 
   if ((picture->chromaFormatIdc != YUV400) && (picture->chromaFormatIdc != YUV444))
   {
-
     copy_Image(&picture->imgUV[0][mb->piccY], slice->mbPred[1], mb->pixcX, 0, decoder->mbSize[1][0], decoder->mbSize[1][1]);
     copy_Image(&picture->imgUV[1][mb->piccY], slice->mbPred[2], mb->pixcX, 0, decoder->mbSize[1][0], decoder->mbSize[1][1]);
   }
@@ -1215,55 +1212,30 @@ int mb_pred_b_inter8x8 (sMacroblock* mb, eColorPlane plane, sPicture* picture)
 //}}}
 
 //{{{
-/*!
-** **********************************************************************
- * \brief
- *    Copy IPCM coefficients to decoded picture buffer and set parameters for this MB
- *    (for IPCM CABAC and IPCM CAVLC  28/11/2003)
- *
- * \author
- *    Dong Wang <Dong.Wang@bristol.ac.uk>
-** **********************************************************************
- */
-
 int mb_pred_ipcm (sMacroblock* mb)
 {
-  int i, j, k;
-  sSlice* slice = mb->slice;
   sDecoder* decoder = mb->decoder;
+  sSlice* slice = mb->slice;
   sPicture* picture = slice->picture;
 
-  //Copy coefficients to decoded picture buffer
-  //IPCM coefficients are stored in slice->cof which is set in function readIPCMcoeffs()
-
-  for(i = 0; i < MB_BLOCK_SIZE; ++i)
-  {
-    for(j = 0;j < MB_BLOCK_SIZE ; ++j)
-    {
+  // Copy coefficients to decoded picture buffer
+  // IPCM coefficients are stored in slice->cof which is set in function readIPCMcoeffs()
+  for (int i = 0; i < MB_BLOCK_SIZE; ++i)
+    for (int j = 0;j < MB_BLOCK_SIZE ; ++j)
       picture->imgY[mb->pixY + i][mb->pixX + j] = (sPixel) slice->cof[0][i][j];
-    }
-  }
 
   if ((picture->chromaFormatIdc != YUV400) && (decoder->sepColourPlaneFlag == 0))
-  {
-    for (k = 0; k < 2; ++k)
-    {
-      for(i = 0; i < decoder->mbCrSizeY; ++i)
-      {
-        for(j = 0;j < decoder->mbCrSizeX; ++j)
-        {
+    for (int k = 0; k < 2; ++k)
+      for(int i = 0; i < decoder->mbCrSizeY; ++i)
+        for (int j = 0; j < decoder->mbCrSizeX; ++j)
           picture->imgUV[k][mb->piccY+i][mb->pixcX + j] = (sPixel) slice->cof[k + 1][i][j];
-        }
-      }
-    }
-  }
 
   // for deblocking filter
-  updateQp(mb, 0);
+  updateQp (mb, 0);
 
   // for CAVLC: Set the nzCoeff to 16.
   // These parameters are to be used in CAVLC decoding of neighbour blocks
-  memset(decoder->nzCoeff[mb->mbIndexX][0][0], 16, 3 * BLOCK_PIXELS * sizeof(byte));
+  memset (decoder->nzCoeff[mb->mbIndexX][0][0], 16, 3 * BLOCK_PIXELS * sizeof(byte));
 
   // for CABAC decoding of MB skip flag
   mb->skipFlag = 0;
