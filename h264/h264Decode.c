@@ -121,32 +121,22 @@ static void freeSlice (sSlice *slice) {
   slice = NULL;
   }
 //}}}
-
 //{{{
 static void freeDecoder (sDecoder* decoder) {
 
   freeAnnexB (&decoder->annexB);
 
-  // Free new dpb layers
-    if (decoder->dpb != NULL) {
-      free (decoder->dpb);
-      decoder->dpb = NULL;
-      }
+  free (decoder->dpb);
+  decoder->dpb = NULL;
 
-    if (decoder->coding) {
-      free (decoder->coding);
-      decoder->coding = NULL;
-      }
+  free (decoder->coding);
+  decoder->coding = NULL;
 
-  if (decoder->oldSlice != NULL) {
-    free (decoder->oldSlice);
-    decoder->oldSlice = NULL;
-    }
+  free (decoder->oldSlice);
+  decoder->oldSlice = NULL;
 
-  if (decoder->nextSlice) {
-    freeSlice (decoder->nextSlice);
-    decoder->nextSlice = NULL;
-    }
+  freeSlice (decoder->nextSlice);
+  decoder->nextSlice = NULL;
 
   if (decoder->sliceList) {
     for (int i = 0; i < decoder->numAllocatedSlices; i++)
@@ -155,17 +145,12 @@ static void freeDecoder (sDecoder* decoder) {
     free (decoder->sliceList);
     }
 
-  if (decoder->nalu) {
-    freeNALU (decoder->nalu);
-    decoder->nalu = NULL;
-    }
+  freeNALU (decoder->nalu);
+  decoder->nalu = NULL;
 
-  //free memory;
   freeDecodedPictures (decoder->decOutputPic);
-  if (decoder->nextPPS) {
-    freePPS (decoder->nextPPS);
-    decoder->nextPPS = NULL;
-    }
+  freePPS (decoder->nextPPS);
+  decoder->nextPPS = NULL;
 
   free (decoder);
   }
@@ -270,127 +255,92 @@ void freeDataPartitions (sDataPartition* dataPartitions, int n) {
 //}}}
 
 //{{{
-void freeLayerBuffers (sDecoder* decoder) {
-
-  sCoding* coding = decoder->coding;
-
-  if (!decoder->globalInitDone)
-    return;
-
-  // CAVLC free mem
-  if (coding->nzCoeff) {
-    free_mem4D (coding->nzCoeff);
-    coding->nzCoeff = NULL;
-    }
-
-  // free mem, allocated for structure decoder
-  if ((coding->sepColourPlaneFlag != 0) ) {
-    for (int i = 0; i < MAX_PLANE; i++) {
-      free (coding->mbDataJV[i]);
-      coding->mbDataJV[i] = NULL;
-
-      free_mem2Dint (coding->siBlockJV[i]);
-      coding->siBlockJV[i] = NULL;
-
-      free_mem2D (coding->predModeJV[i]);
-      coding->predModeJV[i] = NULL;
-
-      free (coding->intraBlockJV[i]);
-      coding->intraBlockJV[i] = NULL;
-      }
-    }
-  else {
-    if (coding->mbData != NULL) {
-      free (coding->mbData);
-      coding->mbData = NULL;
-      }
-    if (coding->siBlock) {
-      free_mem2Dint (coding->siBlock);
-      coding->siBlock = NULL;
-      }
-    if (coding->predMode) {
-      free_mem2D (coding->predMode);
-      coding->predMode = NULL;
-      }
-    if (coding->intraBlock) {
-      free (coding->intraBlock);
-      coding->intraBlock = NULL;
-      }
-    }
-
-  if (coding->picPos) {
-    free (coding->picPos);
-    coding->picPos = NULL;
-    }
-
-  freeQuant (coding);
-
-  decoder->globalInitDone = 0;
-  }
-//}}}
-//{{{
 void initGlobalBuffers (sDecoder* decoder) {
 
-  sCoding* coding = decoder->coding;
-
-  if (decoder->globalInitDone)
-    freeLayerBuffers (decoder);
+  freeLayerBuffers (decoder);
 
   // allocate memory in structure decoder
-  if (coding->sepColourPlaneFlag != 0)
-    for (int i = 0; i < MAX_PLANE; ++i )
-      coding->mbDataJV[i] = (sMacroblock*)calloc (coding->frameSizeMbs, sizeof(sMacroblock));
-  else 
-    coding->mbData = (sMacroblock*)calloc (coding->frameSizeMbs, sizeof(sMacroblock));
-
-  if (coding->sepColourPlaneFlag != 0) {
-    for (int i = 0; i < MAX_PLANE; ++i )
-      coding->intraBlockJV[i] = (char*)calloc (coding->frameSizeMbs, sizeof(char));
-    coding->intraBlock = NULL;
+  if (decoder->coding->sepColourPlaneFlag) {
+    for (int i = 0; i < MAX_PLANE; ++i)
+      decoder->coding->mbDataJV[i] = (sMacroblock*)calloc (decoder->coding->frameSizeMbs, sizeof(sMacroblock));
+    for (int i = 0; i < MAX_PLANE; ++i)
+      decoder->coding->intraBlockJV[i] = (char*)calloc (decoder->coding->frameSizeMbs, sizeof(char));
+    for (int i = 0; i < MAX_PLANE; ++i)
+      getMem2D (&(decoder->coding->predModeJV[i]), 4*decoder->coding->frameHeightMbs, 4*decoder->coding->picWidthMbs);
+    for (int i = 0; i < MAX_PLANE; ++i)
+      getMem2Dint (&(decoder->coding->siBlockJV[i]), decoder->coding->frameHeightMbs, decoder->coding->picWidthMbs);
+    decoder->coding->intraBlock = NULL;
+    decoder->coding->predMode = NULL;
+    decoder->coding->siBlock = NULL;
     }
-  else 
-    coding->intraBlock = (char*)calloc (coding->frameSizeMbs, sizeof(char));
-
-  coding->picPos = (sBlockPos*)calloc (coding->frameSizeMbs + 1, sizeof(sBlockPos));
-  sBlockPos* blockPos = coding->picPos;
-  for (int i = 0; i < (int) coding->frameSizeMbs + 1;++i) {
-    blockPos[i].x = (short)(i % coding->picWidthMbs);
-    blockPos[i].y = (short)(i / coding->picWidthMbs);
+  else {
+    decoder->coding->mbData = (sMacroblock*)calloc (decoder->coding->frameSizeMbs, sizeof(sMacroblock));
+    decoder->coding->intraBlock = (char*)calloc (decoder->coding->frameSizeMbs, sizeof(char));
+    getMem2D (&(decoder->coding->predMode), 4*decoder->coding->frameHeightMbs, 4*decoder->coding->picWidthMbs);
+    getMem2Dint (&(decoder->coding->siBlock), decoder->coding->frameHeightMbs, decoder->coding->picWidthMbs);
     }
 
-  if( (coding->sepColourPlaneFlag != 0)) {
-    for (int i = 0; i < MAX_PLANE; ++i )
-      getMem2D (&(coding->predModeJV[i]), 4*coding->frameHeightMbs, 4*coding->picWidthMbs);
-    coding->predMode = NULL;
+  decoder->coding->picPos = (sBlockPos*)calloc (decoder->coding->frameSizeMbs + 1, sizeof(sBlockPos));
+  sBlockPos* blockPos = decoder->coding->picPos;
+  for (unsigned i = 0; i < decoder->coding->frameSizeMbs+1; ++i) {
+    blockPos[i].x = (short)(i % decoder->coding->picWidthMbs);
+    blockPos[i].y = (short)(i / decoder->coding->picWidthMbs);
     }
-  else
-    getMem2D (&(coding->predMode), 4*coding->frameHeightMbs, 4*coding->picWidthMbs);
 
-  // CAVLC mem
-  getMem4D (&(coding->nzCoeff), coding->frameSizeMbs, 3, BLOCK_SIZE, BLOCK_SIZE);
-  if (coding->sepColourPlaneFlag != 0) {
-    for (int i = 0; i < MAX_PLANE; ++i ) {
-      getMem2Dint (&(coding->siBlockJV[i]), coding->frameHeightMbs, coding->picWidthMbs);
-      if (coding->siBlockJV[i] == NULL)
-        no_mem_exit ("initGlobalBuffers: decoder->siBlockJV");
-      }
-    coding->siBlock = NULL;
-    }
-  else
-    getMem2Dint (&(coding->siBlock), coding->frameHeightMbs, coding->picWidthMbs);
+  getMem4D (&(decoder->coding->nzCoeff), decoder->coding->frameSizeMbs, 3, BLOCK_SIZE, BLOCK_SIZE);
 
-  allocQuant (coding);
-  coding->oldFrameSizeMbs = coding->frameSizeMbs;
-  decoder->globalInitDone = 1;
+  allocQuant (decoder->coding);
+  decoder->coding->oldFrameSizeMbs = decoder->coding->frameSizeMbs;
   }
 //}}}
 //{{{
 void freeGlobalBuffers (sDecoder* decoder) {
 
-  if (decoder->picture) {
-    freePicture (decoder->picture);
-    decoder->picture = NULL;
+  freePicture (decoder->picture);
+  decoder->picture = NULL;
+  }
+//}}}
+//{{{
+void freeLayerBuffers (sDecoder* decoder) {
+
+  // CAVLC free mem
+  free_mem4D (decoder->coding->nzCoeff);
+  decoder->coding->nzCoeff = NULL;
+
+  // free mem, allocated for structure decoder
+  if (decoder->coding->sepColourPlaneFlag) {
+    for (int i = 0; i < MAX_PLANE; i++) {
+      free (decoder->coding->mbDataJV[i]);
+      decoder->coding->mbDataJV[i] = NULL;
+
+      free_mem2Dint (decoder->coding->siBlockJV[i]);
+      decoder->coding->siBlockJV[i] = NULL;
+
+      free_mem2D (decoder->coding->predModeJV[i]);
+      decoder->coding->predModeJV[i] = NULL;
+
+      free (decoder->coding->intraBlockJV[i]);
+      decoder->coding->intraBlockJV[i] = NULL;
+      }
     }
+  else {
+    free (decoder->coding->mbData);
+    decoder->coding->mbData = NULL;
+
+    free_mem2Dint (decoder->coding->siBlock);
+    decoder->coding->siBlock = NULL;
+
+    free_mem2D (decoder->coding->predMode);
+    decoder->coding->predMode = NULL;
+
+    free (decoder->coding->intraBlock);
+    decoder->coding->intraBlock = NULL;
+    }
+
+  free (decoder->coding->picPos);
+  decoder->coding->picPos = NULL;
+
+  freeQuant (decoder->coding);
   }
 //}}}
 
@@ -531,7 +481,6 @@ sDecoder* openDecoder (sParam* param, byte* chunk, size_t chunkSize) {
   decoder->pendingNalu = NULL;
 
   // init slice
-  decoder->globalInitDone = 0;
   decoder->oldSlice = (sOldSlice*)calloc (1, sizeof(sOldSlice));
   decoder->sliceList = (sSlice**)calloc (MAX_NUM_DECSLICES, sizeof(sSlice*));
   decoder->numAllocatedSlices = MAX_NUM_DECSLICES;

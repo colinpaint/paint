@@ -908,7 +908,6 @@ typedef struct Decoder {
   int          isReduncantOk;  // if redundant frame is correct, 0:incorrect
 
   int          layerInitDone;
-  Boolean      globalInitDone;
 
   int*         qpPerMatrix;
   int*         qpRemMatrix;
