@@ -241,10 +241,6 @@ sDataPartition* allocDataPartitions (int n) {
 //{{{
 void freeDataPartitions (sDataPartition* dataPartitions, int n) {
 
-  assert (dataPartitions != NULL);
-  assert (dataPartitions->s != NULL);
-  assert (dataPartitions->s->bitStreamBuffer != NULL);
-
   for (int i = 0; i < n; ++i) {
     free (dataPartitions[i].s->bitStreamBuffer);
     free (dataPartitions[i].s);
@@ -261,13 +257,13 @@ void initGlobalBuffers (sDecoder* decoder) {
 
   // allocate memory in structure decoder
   if (decoder->coding->sepColourPlaneFlag) {
-    for (int i = 0; i < MAX_PLANE; ++i)
+    for (unsigned i = 0; i < MAX_PLANE; ++i)
       decoder->coding->mbDataJV[i] = (sMacroblock*)calloc (decoder->coding->frameSizeMbs, sizeof(sMacroblock));
-    for (int i = 0; i < MAX_PLANE; ++i)
+    for (unsigned i = 0; i < MAX_PLANE; ++i)
       decoder->coding->intraBlockJV[i] = (char*)calloc (decoder->coding->frameSizeMbs, sizeof(char));
-    for (int i = 0; i < MAX_PLANE; ++i)
+    for (unsigned i = 0; i < MAX_PLANE; ++i)
       getMem2D (&(decoder->coding->predModeJV[i]), 4*decoder->coding->frameHeightMbs, 4*decoder->coding->picWidthMbs);
-    for (int i = 0; i < MAX_PLANE; ++i)
+    for (unsigned i = 0; i < MAX_PLANE; ++i)
       getMem2Dint (&(decoder->coding->siBlockJV[i]), decoder->coding->frameHeightMbs, decoder->coding->picWidthMbs);
     decoder->coding->intraBlock = NULL;
     decoder->coding->predMode = NULL;
@@ -303,11 +299,9 @@ void freeGlobalBuffers (sDecoder* decoder) {
 //{{{
 void freeLayerBuffers (sDecoder* decoder) {
 
-  // CAVLC free mem
   free_mem4D (decoder->coding->nzCoeff);
   decoder->coding->nzCoeff = NULL;
 
-  // free mem, allocated for structure decoder
   if (decoder->coding->sepColourPlaneFlag) {
     for (int i = 0; i < MAX_PLANE; i++) {
       free (decoder->coding->mbDataJV[i]);
