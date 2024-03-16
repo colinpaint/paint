@@ -271,6 +271,7 @@ void initGlobalBuffers (sDecoder* decoder) {
       getMem2Dint (&(decoder->coding->siBlockJV[i]), decoder->coding->frameHeightMbs, decoder->coding->picWidthMbs);
     }
   else {
+    printf ("------ initGlobalBuffers\n");
     decoder->coding->mbData = (sMacroblock*)calloc (decoder->coding->frameSizeMbs, sizeof(sMacroblock));
     decoder->coding->intraBlock = (char*)calloc (decoder->coding->frameSizeMbs, sizeof(char));
 

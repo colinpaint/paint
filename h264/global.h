@@ -387,8 +387,8 @@ typedef struct {
 //}}}
 //{{{  sMacroblock
 typedef struct Macroblock {
-  struct Slice*   slice;
   struct Decoder* decoder;
+  struct Slice*   slice;
 
   int     mbIndexX;
   int     mbIndexA;
@@ -416,6 +416,7 @@ typedef struct Macroblock {
   int     qp;                   // QP luma
   int     qpc[2];               // QP chroma
   int     qpScaled[MAX_PLANE];  // QP scaled for all comps.
+
   Boolean isLossless;
   Boolean isIntraBlock;
   Boolean isVblock;
@@ -543,9 +544,9 @@ typedef struct OldSlice {
 //{{{  sSlice
 typedef struct Slice {
   struct Decoder* decoder;
+
   sPPS* activePPS;
   sSPS* activeSPS;
-
   struct DPB* dpb;
 
   int idrFlag;
