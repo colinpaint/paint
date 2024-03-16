@@ -25,7 +25,6 @@
 #include <math.h>
 #include <limits.h>
 //}}}
-
 //{{{  static tables
 #define CTX_UNUSED {0,64}
 #define CTX_UNDEF  {0,63}
@@ -1500,8 +1499,8 @@ static int dumpPOC (sDecoder* decoder) {
   printf ("- pocType %d\n", (int)activeSPS->pocType);
   printf ("- numRefFramesPocCycle %d\n", (int)activeSPS->numRefFramesPocCycle);
   printf ("- delta_pic_order_always_zero_flag %d\n", (int)activeSPS->delta_pic_order_always_zero_flag);
-  printf ("- offset_for_non_ref_pic %d\n", (int)activeSPS->offset_for_non_ref_pic);
-  printf ("- offset_for_top_to_bottom_field %d\n", (int)activeSPS->offset_for_top_to_bottom_field);
+  printf ("- offsetNonRefPic %d\n", (int)activeSPS->offsetNonRefPic);
+  printf ("- offsetTopBotField %d\n", (int)activeSPS->offsetTopBotField);
   printf ("- offset_for_ref_frame[0] %d\n", (int)activeSPS->offset_for_ref_frame[0]);
   printf ("- offset_for_ref_frame[1] %d\n", (int)activeSPS->offset_for_ref_frame[1]);
 
@@ -1827,224 +1826,6 @@ static void initRefPicture (sSlice* slice, sDecoder* decoder) {
 //}}}
 
 //{{{
-static void readSliceHeader (sDecoder* decoder, sSlice* slice) {
-
-  byte partitionIndex = assignSE2dp[slice->datadpMode][SE_HEADER];
-  sDataPartition* dataPartition = &(slice->dps[partitionIndex]);
-  sBitStream* s = dataPartition->s;
-
-  // Get first_mb_in_slice
-  slice->startMbNum = readUeV ("SLC first_mb_in_slice", s);
-
-  int tmp = readUeV ("SLC sliceType", s);
-  if (tmp > 4)
-    tmp -= 5;
-  decoder->type = slice->sliceType = (eSliceType)tmp;
-
-  slice->ppsId = readUeV ("SLC ppsId", s);
-
-  if (decoder->sepColourPlaneFlag)
-    slice->colourPlaneId = readUv (2, "SLC colourPlaneId", s);
-  else
-    slice->colourPlaneId = PLANE_Y;
-  }
-//}}}
-//{{{
-static void readRestSliceHeader (sDecoder* decoder, sSlice* slice) {
-
-  sSPS* activeSPS = decoder->activeSPS;
-
-  byte partitionIndex = assignSE2dp[slice->datadpMode][SE_HEADER];
-  sDataPartition* dataPartition = &(slice->dps[partitionIndex]);
-  sBitStream* s = dataPartition->s;
-  slice->frameNum = readUv (activeSPS->log2_max_frame_num_minus4 + 4, "SLC frameNum", s);
-
-  if (slice->idrFlag) {
-    decoder->preFrameNum = slice->frameNum;
-    decoder->lastRefPicPoc = 0;
-    }
-
-  if (activeSPS->frameMbOnlyFlag) {
-    decoder->structure = FRAME;
-    slice->fieldPicFlag = 0;
-    }
-  else {
-    slice->fieldPicFlag = readU1 ("SLC fieldPicFlag", s);
-    if (slice->fieldPicFlag) {
-      slice->botFieldFlag = (byte)readU1 ("SLC botFieldFlag", s);
-      decoder->structure = slice->botFieldFlag ? BotField : TopField;
-      }
-    else {
-      decoder->structure = FRAME;
-      slice->botFieldFlag = FALSE;
-      }
-    }
-
-  slice->structure = (ePicStructure)decoder->structure;
-  slice->mbAffFrameFlag = (activeSPS->mb_adaptive_frame_field_flag && (slice->fieldPicFlag == 0));
-
-  if (slice->idrFlag)
-    slice->idrPicId = readUeV ("SLC idrPicId", s);
-
-  //{{{  picOrderCount
-  if (activeSPS->pocType == 0) {
-    slice->picOrderCountLsb =
-      readUv (activeSPS->log2_max_pic_order_cnt_lsb_minus4 + 4, "SLC picOrderCountLsb", s);
-    if (decoder->activePPS->botFieldPicOrderFramePresent  == 1 &&
-        !slice->fieldPicFlag )
-      slice->deletaPicOrderCountBot = readSeV ("SLC deletaPicOrderCountBot", s);
-    else
-      slice->deletaPicOrderCountBot = 0;
-    }
-
-  if (activeSPS->pocType == 1) {
-    if (!activeSPS->delta_pic_order_always_zero_flag) {
-      slice->deltaPicOrderCount[0] = readSeV ("SLC deltaPicOrderCount[0]", s);
-      if ((decoder->activePPS->botFieldPicOrderFramePresent == 1) && !slice->fieldPicFlag)
-        slice->deltaPicOrderCount[1] = readSeV ("SLC deltaPicOrderCount[1]", s);
-      else
-        slice->deltaPicOrderCount[1] = 0;  // set to zero if not in stream
-      }
-    else {
-      slice->deltaPicOrderCount[0] = 0;
-      slice->deltaPicOrderCount[1] = 0;
-      }
-    }
-  //}}}
-
-  if (decoder->activePPS->redundantPicCountPresent)
-    slice->redundantPicCount = readUeV ("SLC redundantPicCount", s);
-
-  if (slice->sliceType == B_SLICE)
-    slice->directSpatialMvPredFlag = readU1 ("SLC directSpatialMvPredFlag", s);
-
-  slice->numRefIndexActive[LIST_0] = decoder->activePPS->numRefIndexL0defaultActiveMinus1 + 1;
-  slice->numRefIndexActive[LIST_1] = decoder->activePPS->numRefIndexL1defaultActiveMinus1 + 1;
-
-  if ((slice->sliceType == P_SLICE) || (slice->sliceType == SP_SLICE) || (slice->sliceType == B_SLICE)) {
-    int num_ref_idx_override_flag = readU1 ("SLC num_ref_idx_override_flag", s);
-    if (num_ref_idx_override_flag) {
-      slice->numRefIndexActive[LIST_0] = 1 + readUeV ("SLC num_ref_idx_l0_active_minus1", s);
-      if (slice->sliceType == B_SLICE)
-        slice->numRefIndexActive[LIST_1] = 1 + readUeV ("SLC num_ref_idx_l1_active_minus1", s);
-      }
-    }
-  if (slice->sliceType != B_SLICE)
-    slice->numRefIndexActive[LIST_1] = 0;
-  ref_pic_list_reordering (slice);
-  //{{{  weightedPred
-  slice->weightedPredFlag = (unsigned short)((slice->sliceType == P_SLICE || slice->sliceType == SP_SLICE)
-                              ? decoder->activePPS->weightedPredFlag
-                              : ((slice->sliceType == B_SLICE) && (decoder->activePPS->weightedBiPredIdc == 1)));
-
-  slice->weightedBiPredIdc =
-    (unsigned short)((slice->sliceType == B_SLICE) && (decoder->activePPS->weightedBiPredIdc > 0));
-
-  if ((decoder->activePPS->weightedPredFlag &&
-      ((slice->sliceType == P_SLICE) || (slice->sliceType == SP_SLICE))) ||
-      ((decoder->activePPS->weightedBiPredIdc == 1) && (slice->sliceType == B_SLICE)))
-    pred_weight_table (slice);
-  //}}}
-
-  if (slice->refId)
-    dec_ref_pic_marking (decoder, s, slice);
-
-  if (decoder->activePPS->entropyCodingMode &&
-      (slice->sliceType != I_SLICE) && (slice->sliceType != SI_SLICE))
-    slice->modelNum = readUeV ("SLC cabac_init_idc", s);
-  else
-    slice->modelNum = 0;
-  //{{{  qp
-  slice->sliceQpDelta = readSeV ("SLC sliceQpDelta", s);
-  slice->qp = 26 + decoder->activePPS->picInitQpMinus26 + slice->sliceQpDelta;
-
-  if (slice->sliceType == SP_SLICE || slice->sliceType == SI_SLICE) {
-    if (slice->sliceType == SP_SLICE)
-      slice->spSwitch = readU1 ("SLC sp_for_switch_flag", s);
-    slice->sliceQsDelta = readSeV ("SLC sliceQsDelta", s);
-    slice->qs = 26 + decoder->activePPS->picInitQsMinus26 + slice->sliceQsDelta;
-    }
-  //}}}
-
-  if (decoder->activePPS->deblockFilterControlPresent) {
-    slice->DFDisableIdc = (short) readUeV ("SLC disable_deblocking_filter_idc", s);
-    if (slice->DFDisableIdc != 1) {
-      slice->DFAlphaC0Offset = (short)(2 * readSeV ("SLC slice_alpha_c0_offset_div2", s));
-      slice->DFBetaOffset = (short)(2 * readSeV ("SLC slice_beta_offset_div2", s));
-      }
-    else
-      slice->DFAlphaC0Offset = slice->DFBetaOffset = 0;
-    }
-  else
-    slice->DFDisableIdc = slice->DFAlphaC0Offset = slice->DFBetaOffset = 0;
-
-  // The conformance point for intra profiles is without deblocking, but decoders are still recommended to filter the output.
-  // We allow in the decoder config to skip the loop filtering. This is achieved by modifying the parameters here.
-  if (isHiIntraOnlyProfile (activeSPS->profileIdc, activeSPS->constrained_set3_flag) &&
-      (decoder->param.intraProfileDeblocking == 0)) {
-    slice->DFDisableIdc = 1;
-    slice->DFAlphaC0Offset = slice->DFBetaOffset = 0;
-    }
-
-  //{{{  sliceGroup
-  if (decoder->activePPS->numSliceGroupsMinus1>0 && decoder->activePPS->sliceGroupMapType>=3 &&
-      decoder->activePPS->sliceGroupMapType <= 5) {
-    int len = (activeSPS->pic_height_in_map_units_minus1+1) * (activeSPS->pic_width_in_mbs_minus1+1)/
-              (decoder->activePPS->sliceGroupChangeRateMius1 + 1);
-    if (((activeSPS->pic_height_in_map_units_minus1+1) * (activeSPS->pic_width_in_mbs_minus1+1))%
-          (decoder->activePPS->sliceGroupChangeRateMius1 + 1))
-      len += 1;
-
-    len = ceilLog2 (len+1);
-    slice->sliceGroupChangeCycle = readUv (len, "SLC sliceGroupChangeCycle", s);
-    }
-  //}}}
-
-  decoder->picHeightInMbs = decoder->frameHeightMbs / ( 1 + slice->fieldPicFlag );
-  decoder->picSizeInMbs = decoder->picWidthMbs * decoder->picHeightInMbs;
-  decoder->frameSizeMbs = decoder->picWidthMbs * decoder->frameHeightMbs;
-  }
-//}}}
-//{{{
-static void useParameterSet (sDecoder* decoder, sSlice* slice) {
-
-  sPPS* pps = &decoder->pps[slice->ppsId];
-  if (!pps->valid)
-    printf ("useParameterSet - invalid PPS id:%d\n", slice->ppsId);
-
-  sSPS* sps = &decoder->sps[pps->spsId];
-  if (!sps->valid)
-    printf ("useParameterSet - no SPS id:%d:%d\n", slice->ppsId, pps->spsId);
-
-  // In theory, and with a well-designed software, the lines above are everything necessary.
-  // In practice, we need to patch many values
-  // in decoder-> (but no more in input. -- these have been taken care of)
-  // Set Sequence Parameter Stuff first
-  if (sps->pocType > 2)
-    error ("invalid SPS pocType");
-  if (sps->pocType == 1)
-    if (sps->numRefFramesPocCycle >= MAX_NUM_REF_FRAMES_PIC_ORDER)
-      error ("numRefFramesPocCycle too large");
-
-  activateSPS (decoder, sps);
-  activatePPS (decoder, pps);
-
-  // slice->datadpMode is set by read_new_slice (NALU first byte available there)
-  if (pps->entropyCodingMode == (Boolean)CAVLC) {
-    slice->nalStartcode = vlcStartcodeFollows;
-    for (int i = 0; i < 3; i++)
-      slice->dps[i].readSyntaxElement = readSyntaxElementVLC;
-    }
-  else {
-    slice->nalStartcode = cabac_startcode_follows;
-    for (int i = 0; i < 3; i++)
-      slice->dps[i].readSyntaxElement = readSyntaxElementCABAC;
-    }
-  decoder->type = slice->sliceType;
-  }
-//}}}
-
-//{{{
 static int isNewPicture (sPicture* picture, sSlice* slice, sOldSlice* oldSlice) {
 
   int result = (NULL == picture);
@@ -2294,6 +2075,45 @@ static void initPicture (sDecoder* decoder, sSlice* slice) {
     }
   }
 //}}}
+
+//{{{
+static void useParameterSet (sDecoder* decoder, sSlice* slice) {
+
+  sPPS* pps = &decoder->pps[slice->ppsId];
+  if (!pps->valid)
+    printf ("useParameterSet - invalid PPS id:%d\n", slice->ppsId);
+
+  sSPS* sps = &decoder->sps[pps->spsId];
+  if (!sps->valid)
+    printf ("useParameterSet - no SPS id:%d:%d\n", slice->ppsId, pps->spsId);
+
+  // In theory, and with a well-designed software, the lines above are everything necessary.
+  // In practice, we need to patch many values
+  // in decoder-> (but no more in input. -- these have been taken care of)
+  // Set Sequence Parameter Stuff first
+  if (sps->pocType > 2)
+    error ("invalid SPS pocType");
+  if (sps->pocType == 1)
+    if (sps->numRefFramesPocCycle >= MAX_NUM_REF_FRAMES_PIC_ORDER)
+      error ("numRefFramesPocCycle too large");
+
+  activateSPS (decoder, sps);
+  activatePPS (decoder, pps);
+
+  // slice->datadpMode is set by read_new_slice (NALU first byte available there)
+  if (pps->entropyCodingMode == (Boolean)CAVLC) {
+    slice->nalStartcode = vlcStartcodeFollows;
+    for (int i = 0; i < 3; i++)
+      slice->dps[i].readSyntaxElement = readSyntaxElementVLC;
+    }
+  else {
+    slice->nalStartcode = cabac_startcode_follows;
+    for (int i = 0; i < 3; i++)
+      slice->dps[i].readSyntaxElement = readSyntaxElementCABAC;
+    }
+  decoder->type = slice->sliceType;
+  }
+//}}}
 //{{{
 static void initPictureDecoding (sDecoder* decoder) {
 
@@ -2333,6 +2153,188 @@ static void initPictureDecoding (sDecoder* decoder) {
       deblockMode = 0;
 
   decoder->deblockMode = deblockMode;
+  }
+//}}}
+//{{{
+static void readSliceHeader (sDecoder* decoder, sSlice* slice) {
+// Some syntax sliceHeader depends on parameterSet depends on parameterSetID of the slice header
+// - read the ppsId of the slice header first, then setup the active parameter sets
+// read the rest of the slice header
+
+  // read front of sliceHeader
+  byte partitionIndex = assignSE2dp[slice->datadpMode][SE_HEADER];
+  sDataPartition* dataPartition = &(slice->dps[partitionIndex]);
+  sBitStream* s = dataPartition->s;
+
+  // Get first_mb_in_slice
+  slice->startMbNum = readUeV ("SLC first_mb_in_slice", s);
+
+  int tmp = readUeV ("SLC sliceType", s);
+  if (tmp > 4)
+    tmp -= 5;
+  slice->sliceType = (eSliceType)tmp;
+  decoder->type = slice->sliceType;
+
+  slice->ppsId = readUeV ("SLC ppsId", s);
+
+  if (decoder->sepColourPlaneFlag)
+    slice->colourPlaneId = readUv (2, "SLC colourPlaneId", s);
+  else
+    slice->colourPlaneId = PLANE_Y;
+
+  // setup parameterSet
+  useParameterSet (decoder, slice);
+  slice->activeSPS = decoder->activeSPS;
+  slice->activePPS = decoder->activePPS;
+  slice->transform8x8Mode = decoder->activePPS->transform8x8modeFlag;
+  slice->chroma444notSeparate = (decoder->activeSPS->chromaFormatIdc == YUV444) && !decoder->sepColourPlaneFlag;
+
+  // read rest of sliceHeader
+  sSPS* activeSPS = decoder->activeSPS;
+  slice->frameNum = readUv (activeSPS->log2_max_frame_num_minus4 + 4, "SLC frameNum", s);
+  if (slice->idrFlag) {
+    decoder->preFrameNum = slice->frameNum;
+    decoder->lastRefPicPoc = 0;
+    }
+  //{{{  read field/frame stuff
+  if (activeSPS->frameMbOnlyFlag) {
+    decoder->structure = FRAME;
+    slice->fieldPicFlag = 0;
+    }
+  else {
+    slice->fieldPicFlag = readU1 ("SLC fieldPicFlag", s);
+    if (slice->fieldPicFlag) {
+      slice->botFieldFlag = (byte)readU1 ("SLC botFieldFlag", s);
+      decoder->structure = slice->botFieldFlag ? BotField : TopField;
+      }
+    else {
+      decoder->structure = FRAME;
+      slice->botFieldFlag = FALSE;
+      }
+    }
+
+  slice->structure = (ePicStructure)decoder->structure;
+  slice->mbAffFrameFlag = (activeSPS->mb_adaptive_frame_field_flag && (slice->fieldPicFlag == 0));
+  //}}}
+
+  if (slice->idrFlag)
+    slice->idrPicId = readUeV ("SLC idrPicId", s);
+  //{{{  read picOrderCount
+  if (activeSPS->pocType == 0) {
+    slice->picOrderCountLsb =
+      readUv (activeSPS->log2_max_pic_order_cnt_lsb_minus4 + 4, "SLC picOrderCountLsb", s);
+    if (decoder->activePPS->botFieldPicOrderFramePresent  == 1 &&
+        !slice->fieldPicFlag )
+      slice->deletaPicOrderCountBot = readSeV ("SLC deletaPicOrderCountBot", s);
+    else
+      slice->deletaPicOrderCountBot = 0;
+    }
+
+  if (activeSPS->pocType == 1) {
+    if (!activeSPS->delta_pic_order_always_zero_flag) {
+      slice->deltaPicOrderCount[0] = readSeV ("SLC deltaPicOrderCount[0]", s);
+      if ((decoder->activePPS->botFieldPicOrderFramePresent == 1) && !slice->fieldPicFlag)
+        slice->deltaPicOrderCount[1] = readSeV ("SLC deltaPicOrderCount[1]", s);
+      else
+        slice->deltaPicOrderCount[1] = 0;  // set to zero if not in stream
+      }
+    else {
+      slice->deltaPicOrderCount[0] = 0;
+      slice->deltaPicOrderCount[1] = 0;
+      }
+    }
+  //}}}
+
+  if (decoder->activePPS->redundantPicCountPresent)
+    slice->redundantPicCount = readUeV ("SLC redundantPicCount", s);
+
+  if (slice->sliceType == B_SLICE)
+    slice->directSpatialMvPredFlag = readU1 ("SLC directSpatialMvPredFlag", s);
+
+  slice->numRefIndexActive[LIST_0] = decoder->activePPS->numRefIndexL0defaultActiveMinus1 + 1;
+  slice->numRefIndexActive[LIST_1] = decoder->activePPS->numRefIndexL1defaultActiveMinus1 + 1;
+
+  if ((slice->sliceType == P_SLICE) || (slice->sliceType == SP_SLICE) || (slice->sliceType == B_SLICE)) {
+    int num_ref_idx_override_flag = readU1 ("SLC num_ref_idx_override_flag", s);
+    if (num_ref_idx_override_flag) {
+      slice->numRefIndexActive[LIST_0] = 1 + readUeV ("SLC num_ref_idx_l0_active_minus1", s);
+      if (slice->sliceType == B_SLICE)
+        slice->numRefIndexActive[LIST_1] = 1 + readUeV ("SLC num_ref_idx_l1_active_minus1", s);
+      }
+    }
+  if (slice->sliceType != B_SLICE)
+    slice->numRefIndexActive[LIST_1] = 0;
+  ref_pic_list_reordering (slice);
+  //{{{  read weightedPred
+  slice->weightedPredFlag = (unsigned short)((slice->sliceType == P_SLICE || slice->sliceType == SP_SLICE)
+                              ? decoder->activePPS->weightedPredFlag
+                              : ((slice->sliceType == B_SLICE) && (decoder->activePPS->weightedBiPredIdc == 1)));
+
+  slice->weightedBiPredIdc =
+    (unsigned short)((slice->sliceType == B_SLICE) && (decoder->activePPS->weightedBiPredIdc > 0));
+
+  if ((decoder->activePPS->weightedPredFlag &&
+      ((slice->sliceType == P_SLICE) || (slice->sliceType == SP_SLICE))) ||
+      ((decoder->activePPS->weightedBiPredIdc == 1) && (slice->sliceType == B_SLICE)))
+    pred_weight_table (slice);
+  //}}}
+
+  if (slice->refId)
+    decRefPicMarking (decoder, s, slice);
+
+  if (decoder->activePPS->entropyCodingMode &&
+      (slice->sliceType != I_SLICE) && (slice->sliceType != SI_SLICE))
+    slice->modelNum = readUeV ("SLC cabac_init_idc", s);
+  else
+    slice->modelNum = 0;
+  //{{{  read qp
+  slice->sliceQpDelta = readSeV ("SLC sliceQpDelta", s);
+  slice->qp = 26 + decoder->activePPS->picInitQpMinus26 + slice->sliceQpDelta;
+
+  if (slice->sliceType == SP_SLICE || slice->sliceType == SI_SLICE) {
+    if (slice->sliceType == SP_SLICE)
+      slice->spSwitch = readU1 ("SLC sp_for_switch_flag", s);
+    slice->sliceQsDelta = readSeV ("SLC sliceQsDelta", s);
+    slice->qs = 26 + decoder->activePPS->picInitQsMinus26 + slice->sliceQsDelta;
+    }
+  //}}}
+
+  if (decoder->activePPS->deblockFilterControlPresent) {
+    slice->DFDisableIdc = (short)readUeV ("SLC disable_deblocking_filter_idc", s);
+    if (slice->DFDisableIdc != 1) {
+      slice->DFAlphaC0Offset = (short)(2 * readSeV ("SLC slice_alpha_c0_offset_div2", s));
+      slice->DFBetaOffset = (short)(2 * readSeV ("SLC slice_beta_offset_div2", s));
+      }
+    else
+      slice->DFAlphaC0Offset = slice->DFBetaOffset = 0;
+    }
+  else
+    slice->DFDisableIdc = slice->DFAlphaC0Offset = slice->DFBetaOffset = 0;
+
+  // The conformance point for intra profiles is without deblocking, but decoders are still recommended to filter the output.
+  // We allow in the decoder config to skip the loop filtering. This is achieved by modifying the parameters here.
+  if (isHiIntraOnlyProfile (activeSPS->profileIdc, activeSPS->constrained_set3_flag) &&
+      (decoder->param.intraProfileDeblocking == 0)) {
+    slice->DFDisableIdc = 1;
+    slice->DFAlphaC0Offset = slice->DFBetaOffset = 0;
+    }
+  //{{{  read sliceGroup
+  if (decoder->activePPS->numSliceGroupsMinus1>0 && decoder->activePPS->sliceGroupMapType>=3 &&
+      decoder->activePPS->sliceGroupMapType <= 5) {
+    int len = (activeSPS->pic_height_in_map_units_minus1+1) * (activeSPS->pic_width_in_mbs_minus1+1)/
+              (decoder->activePPS->sliceGroupChangeRateMius1 + 1);
+    if (((activeSPS->pic_height_in_map_units_minus1+1) * (activeSPS->pic_width_in_mbs_minus1+1))%
+          (decoder->activePPS->sliceGroupChangeRateMius1 + 1))
+      len += 1;
+
+    len = ceilLog2 (len+1);
+    slice->sliceGroupChangeCycle = readUv (len, "SLC sliceGroupChangeCycle", s);
+    }
+  //}}}
+
+  decoder->picHeightInMbs = decoder->frameHeightMbs / ( 1 + slice->fieldPicFlag );
+  decoder->picSizeInMbs = decoder->picWidthMbs * decoder->picHeightInMbs;
+  decoder->frameSizeMbs = decoder->picWidthMbs * decoder->frameHeightMbs;
   }
 //}}}
 
@@ -2439,18 +2441,7 @@ static int readNextSlice (sSlice* slice) {
         s->bitStreamOffset = s->readLen = 0;
         memcpy (s->bitStreamBuffer, &nalu->buf[1], nalu->len-1);
         s->codeLen = s->bitStreamLen = RBSPtoSODB (s->bitStreamBuffer, nalu->len - 1);
-
-        // Some syntax sliceHeader depends on parameterSet depends on parameterSetID of the slice header
-        // - read the ppsId of the slice header first, then setup the active parameter sets
-        // read the rest of the slice header
         readSliceHeader (decoder, slice);
-        useParameterSet (decoder, slice);
-        slice->activeSPS = decoder->activeSPS;
-        slice->activePPS = decoder->activePPS;
-        slice->transform8x8Mode = decoder->activePPS->transform8x8modeFlag;
-        slice->chroma444notSeparate = (decoder->activeSPS->chromaFormatIdc == YUV444) &&
-                                      !decoder->sepColourPlaneFlag;
-        readRestSliceHeader (decoder, slice);
 
         if (decoder->param.sliceDebug) {
           if (nalu->unitType == NALU_TYPE_IDR)
@@ -2513,14 +2504,7 @@ static int readNextSlice (sSlice* slice) {
         s->bitStreamOffset = s->readLen = 0;
         memcpy (s->bitStreamBuffer, &nalu->buf[1], nalu->len - 1);
         s->codeLen = s->bitStreamLen = RBSPtoSODB (s->bitStreamBuffer, nalu->len-1);
-
         readSliceHeader (decoder, slice);
-        useParameterSet (decoder, slice);
-        slice->activeSPS = decoder->activeSPS;
-        slice->activePPS = decoder->activePPS;
-        slice->transform8x8Mode = decoder->activePPS->transform8x8modeFlag;
-        slice->chroma444notSeparate = (decoder->activeSPS->chromaFormatIdc == YUV444) && !decoder->sepColourPlaneFlag;
-        readRestSliceHeader (decoder, slice);
         assignQuantParams (slice);
 
         if (isNewPicture (decoder->picture, slice, decoder->oldSlice)) {
@@ -2696,35 +2680,35 @@ static void decodeSlice (sSlice* slice) {
 //}}}
 
 //{{{
-unsigned ceilLog2 (unsigned uiVal) {
+unsigned ceilLog2 (unsigned value) {
 
-  unsigned uiRet = 0;
+  unsigned result = 0;
 
-  unsigned uiTmp = uiVal - 1;
-  while (uiTmp != 0) {
-    uiTmp >>= 1;
-    uiRet++;
+  unsigned temp = value - 1;
+  while (!temp) {
+    temp >>= 1;
+    result++;
     }
 
-  return uiRet;
+  return result;
   }
 //}}}
 //{{{
-unsigned ceilLog2sf (unsigned uiVal) {
+unsigned ceilLog2sf (unsigned value) {
 
-  unsigned uiRet = 0;
+  unsigned result = 0;
 
-  unsigned uiTmp = uiVal - 1;
-  while (uiTmp > 0) {
-    uiTmp >>= 1;
-    uiRet++;
+  unsigned temp = value - 1;
+  while (temp > 0) {
+    temp >>= 1;
+    result++;
     }
 
-  return uiRet;
+  return result;
   }
 //}}}
 //{{{
-void dec_ref_pic_marking (sDecoder* decoder, sBitStream* s, sSlice* slice) {
+void decRefPicMarking (sDecoder* decoder, sBitStream* s, sSlice* slice) {
 
   // free old buffer content
   while (slice->decRefPicMarkingBuffer) {
@@ -2787,37 +2771,35 @@ void decodePOC (sDecoder* decoder, sSlice* slice) {
         decoder->PrevPicOrderCntMsb = 0;
         decoder->PrevPicOrderCntLsb = 0;
         }
-      else {
-        if (decoder->lastHasMmco5) {
-          if (decoder->lastPicBotField) {
-            decoder->PrevPicOrderCntMsb = 0;
-            decoder->PrevPicOrderCntLsb = 0;
-            }
-          else {
-            decoder->PrevPicOrderCntMsb = 0;
-            decoder->PrevPicOrderCntLsb = slice->topPoc;
-            }
+      else if (decoder->lastHasMmco5) {
+        if (decoder->lastPicBotField) {
+          decoder->PrevPicOrderCntMsb = 0;
+          decoder->PrevPicOrderCntLsb = 0;
+          }
+        else {
+          decoder->PrevPicOrderCntMsb = 0;
+          decoder->PrevPicOrderCntLsb = slice->topPoc;
           }
         }
 
       // Calculate the MSBs of current picture
-      if (slice->picOrderCountLsb  <  decoder->PrevPicOrderCntLsb  &&
-          (decoder->PrevPicOrderCntLsb - slice->picOrderCountLsb ) >= (maxPicOrderCntLsb/2))
+      if (slice->picOrderCountLsb < decoder->PrevPicOrderCntLsb  &&
+          (decoder->PrevPicOrderCntLsb - slice->picOrderCountLsb) >= maxPicOrderCntLsb/2)
         slice->PicOrderCntMsb = decoder->PrevPicOrderCntMsb + maxPicOrderCntLsb;
       else if (slice->picOrderCountLsb > decoder->PrevPicOrderCntLsb &&
-               (slice->picOrderCountLsb - decoder->PrevPicOrderCntLsb) > (maxPicOrderCntLsb/2))
+               (slice->picOrderCountLsb - decoder->PrevPicOrderCntLsb) > maxPicOrderCntLsb/2)
         slice->PicOrderCntMsb = decoder->PrevPicOrderCntMsb - maxPicOrderCntLsb;
       else
         slice->PicOrderCntMsb = decoder->PrevPicOrderCntMsb;
 
       // 2nd
       if (slice->fieldPicFlag == 0) {
-        //frame pixelPos
+        // frame pixelPos
         slice->topPoc = slice->PicOrderCntMsb + slice->picOrderCountLsb;
         slice->botPoc = slice->topPoc + slice->deletaPicOrderCountBot;
         slice->thisPoc = slice->framePoc = (slice->topPoc < slice->botPoc) ? slice->topPoc : slice->botPoc;
         }
-      else if (slice->botFieldFlag == FALSE) // top field
+      else if (!slice->botFieldFlag) // top field
         slice->thisPoc= slice->topPoc = slice->PicOrderCntMsb + slice->picOrderCountLsb;
       else // bottom field
         slice->thisPoc= slice->botPoc = slice->PicOrderCntMsb + slice->picOrderCountLsb;
@@ -2837,7 +2819,8 @@ void decodePOC (sDecoder* decoder, sSlice* slice) {
     case 1: // POC MODE 1
       // 1st
       if (slice->idrFlag) {
-        decoder->FrameNumOffset=0;     //  first pixelPos of IDRGOP,
+        // first pixelPos of IDRGOP,
+        decoder->FrameNumOffset = 0;
         if (slice->frameNum)
           error ("frameNum not equal to zero in IDR picture");
         }
@@ -2847,7 +2830,7 @@ void decodePOC (sDecoder* decoder, sSlice* slice) {
           decoder->PreviousFrameNum = 0;
           }
         if (slice->frameNum<decoder->PreviousFrameNum)
-          //not first pixelPos of IDRGOP
+          // not first pixelPos of IDRGOP
           decoder->FrameNumOffset = decoder->PreviousFrameNumOffset + decoder->maxFrameNum;
         else
           decoder->FrameNumOffset = decoder->PreviousFrameNumOffset;
@@ -2862,35 +2845,35 @@ void decodePOC (sDecoder* decoder, sSlice* slice) {
         slice->AbsFrameNum--;
 
       // 3rd
-      decoder->ExpectedDeltaPerPicOrderCntCycle = 0;
+      decoder->expectedDeltaPerPOCcycle = 0;
       if (activeSPS->numRefFramesPocCycle)
         for (int i = 0; i < (int)activeSPS->numRefFramesPocCycle; i++)
-          decoder->ExpectedDeltaPerPicOrderCntCycle += activeSPS->offset_for_ref_frame[i];
+          decoder->expectedDeltaPerPOCcycle += activeSPS->offset_for_ref_frame[i];
 
       if (slice->AbsFrameNum) {
-        decoder->PicOrderCntCycleCnt = (slice->AbsFrameNum-1) / activeSPS->numRefFramesPocCycle;
-        decoder->FrameNumInPicOrderCntCycle = (slice->AbsFrameNum-1) % activeSPS->numRefFramesPocCycle;
-        decoder->ExpectedPicOrderCnt =
-          decoder->PicOrderCntCycleCnt*decoder->ExpectedDeltaPerPicOrderCntCycle;
-        for (int i = 0; i <= (int)decoder->FrameNumInPicOrderCntCycle; i++)
-          decoder->ExpectedPicOrderCnt += activeSPS->offset_for_ref_frame[i];
+        decoder->POCcycleCount = (slice->AbsFrameNum-1) / activeSPS->numRefFramesPocCycle;
+        decoder->frameNumPOCcycle = (slice->AbsFrameNum-1) % activeSPS->numRefFramesPocCycle;
+        decoder->expectedPOC =
+          decoder->POCcycleCount*decoder->expectedDeltaPerPOCcycle;
+        for (int i = 0; i <= (int)decoder->frameNumPOCcycle; i++)
+          decoder->expectedPOC += activeSPS->offset_for_ref_frame[i];
         }
       else
-        decoder->ExpectedPicOrderCnt = 0;
+        decoder->expectedPOC = 0;
 
       if (!slice->refId)
-        decoder->ExpectedPicOrderCnt += activeSPS->offset_for_non_ref_pic;
+        decoder->expectedPOC += activeSPS->offsetNonRefPic;
 
       if (slice->fieldPicFlag == 0) {
         // frame pixelPos
-        slice->topPoc = decoder->ExpectedPicOrderCnt + slice->deltaPicOrderCount[0];
-        slice->botPoc = slice->topPoc + activeSPS->offset_for_top_to_bottom_field + slice->deltaPicOrderCount[1];
-        slice->thisPoc = slice->framePoc = (slice->topPoc < slice->botPoc)? slice->topPoc : slice->botPoc; // POC200301
+        slice->topPoc = decoder->expectedPOC + slice->deltaPicOrderCount[0];
+        slice->botPoc = slice->topPoc + activeSPS->offsetTopBotField + slice->deltaPicOrderCount[1];
+        slice->thisPoc = slice->framePoc = (slice->topPoc < slice->botPoc)? slice->topPoc : slice->botPoc;
         }
-      else if (slice->botFieldFlag == FALSE) // top field
-        slice->thisPoc = slice->topPoc = decoder->ExpectedPicOrderCnt + slice->deltaPicOrderCount[0];
+      else if (!slice->botFieldFlag) // top field
+        slice->thisPoc = slice->topPoc = decoder->expectedPOC + slice->deltaPicOrderCount[0];
       else // bottom field
-        slice->thisPoc = slice->botPoc = decoder->ExpectedPicOrderCnt + activeSPS->offset_for_top_to_bottom_field + slice->deltaPicOrderCount[0];
+        slice->thisPoc = slice->botPoc = decoder->expectedPOC + activeSPS->offsetTopBotField + slice->deltaPicOrderCount[0];
       slice->framePoc=slice->thisPoc;
 
       decoder->PreviousFrameNum=slice->frameNum;
@@ -2919,20 +2902,20 @@ void decodePOC (sDecoder* decoder, sSlice* slice) {
 
         slice->AbsFrameNum = decoder->FrameNumOffset+slice->frameNum;
         if (!slice->refId)
-          slice->thisPoc = (2*slice->AbsFrameNum - 1);
+          slice->thisPoc = 2*slice->AbsFrameNum - 1;
         else
-          slice->thisPoc = (2*slice->AbsFrameNum);
+          slice->thisPoc = 2*slice->AbsFrameNum;
 
         if (slice->fieldPicFlag == 0)
           slice->topPoc = slice->botPoc = slice->framePoc = slice->thisPoc;
-        else if (slice->botFieldFlag == FALSE)
+        else if (!slice->botFieldFlag)
           slice->topPoc = slice->framePoc = slice->thisPoc;
         else
           slice->botPoc = slice->framePoc = slice->thisPoc;
         }
 
-      decoder->PreviousFrameNum=slice->frameNum;
-      decoder->PreviousFrameNumOffset=decoder->FrameNumOffset;
+      decoder->PreviousFrameNum = slice->frameNum;
+      decoder->PreviousFrameNumOffset = decoder->FrameNumOffset;
       break;
     //}}}
     //{{{

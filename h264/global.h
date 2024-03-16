@@ -175,8 +175,8 @@ typedef struct {
   unsigned int pocType;
   unsigned int log2_max_pic_order_cnt_lsb_minus4; // ue(v)
   Boolean  delta_pic_order_always_zero_flag;      // u(1)
-  int      offset_for_non_ref_pic;                // se(v)
-  int      offset_for_top_to_bottom_field;        // se(v)
+  int      offsetNonRefPic;                // se(v)
+  int      offsetTopBotField;        // se(v)
 
   unsigned int numRefFramesPocCycle;          // ue(v)
   int      offset_for_ref_frame[MAX_NUM_REF_FRAMES_PIC_ORDER]; // se(v)
@@ -889,9 +889,9 @@ typedef struct Decoder {
   unsigned int PrevPicOrderCntLsb;
 
   // for POC mode 1:
-  signed int   ExpectedPicOrderCnt, PicOrderCntCycleCnt, FrameNumInPicOrderCntCycle;
+  signed int   expectedPOC, POCcycleCount, frameNumPOCcycle;
   unsigned int PreviousFrameNum, FrameNumOffset;
-  int          ExpectedDeltaPerPicOrderCntCycle;
+  int          expectedDeltaPerPOCcycle;
   int          thisPoc;
   int          PreviousFrameNumOffset;
 
@@ -1053,8 +1053,8 @@ static inline int isHiIntraOnlyProfile (unsigned int profileIdc, Boolean constra
 
   extern sSlice* allocSlice (sDecoder* decoder);
 
-  extern unsigned ceilLog2 (unsigned uiVal);
-  extern unsigned ceilLog2sf (unsigned uiVal);
+  extern unsigned ceilLog2 (unsigned value);
+  extern unsigned ceilLog2sf (unsigned value);
 
   // For 4:4:4 independent mode
   extern void changePlaneJV (sDecoder* decoder, int nplane, sSlice *slice);

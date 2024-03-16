@@ -319,8 +319,8 @@ static int isEqualSPS (sSPS* sps1, sSPS* sps2) {
     equal &= (sps1->log2_max_pic_order_cnt_lsb_minus4 == sps2->log2_max_pic_order_cnt_lsb_minus4);
   else if( sps1->pocType == 1) {
     equal &= (sps1->delta_pic_order_always_zero_flag == sps2->delta_pic_order_always_zero_flag);
-    equal &= (sps1->offset_for_non_ref_pic == sps2->offset_for_non_ref_pic);
-    equal &= (sps1->offset_for_top_to_bottom_field == sps2->offset_for_top_to_bottom_field);
+    equal &= (sps1->offsetNonRefPic == sps2->offsetNonRefPic);
+    equal &= (sps1->offsetTopBotField == sps2->offsetTopBotField);
     equal &= (sps1->numRefFramesPocCycle == sps2->numRefFramesPocCycle);
     if (!equal)
       return equal;
@@ -524,8 +524,8 @@ static void readSPS (sDecoder* decoder, sDataPartition* dataPartition, sSPS* sps
     sps->log2_max_pic_order_cnt_lsb_minus4 = readUeV ("SPS log2_max_pic_order_cnt_lsb_minus4", s);
   else if (sps->pocType == 1) {
     sps->delta_pic_order_always_zero_flag = readU1 ("SPS delta_pic_order_always_zero_flag", s);
-    sps->offset_for_non_ref_pic = readSeV ("SPS offset_for_non_ref_pic", s);
-    sps->offset_for_top_to_bottom_field = readSeV ("SPS offset_for_top_to_bottom_field", s);
+    sps->offsetNonRefPic = readSeV ("SPS offsetNonRefPic", s);
+    sps->offsetTopBotField = readSeV ("SPS offsetTopBotField", s);
     sps->numRefFramesPocCycle = readUeV ("SPS numRefFramesPocCycle", s);
     for (unsigned int i = 0; i < sps->numRefFramesPocCycle; i++)
       sps->offset_for_ref_frame[i] = readSeV ("SPS offset_for_ref_frame[i]", s);

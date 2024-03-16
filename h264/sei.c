@@ -693,8 +693,7 @@ static void process_recovery_point_info (byte* payload, int size, sDecoder* deco
   }
 //}}}
 //{{{
-static void process_dec_ref_pic_marking_repetition_info (byte* payload, int size,
-                                                           sDecoder* decoder, sSlice *slice) {
+static void process_dec_ref_pic_marking_repetition_info (byte* payload, int size, sDecoder* decoder, sSlice *slice) {
   int original_idr_flag, original_frame_num;
   int original_field_pic_flag;
 
@@ -721,7 +720,7 @@ static void process_dec_ref_pic_marking_repetition_info (byte* payload, int size
   printf ("original_idr_flag = %d\n", original_idr_flag);
   printf ("original_frame_num = %d\n", original_frame_num);
 
-  // we need to save everything that is probably overwritten in dec_ref_pic_marking()
+  // we need to save everything that is probably overwritten in decRefPicMarking()
   old_drpm = slice->decRefPicMarkingBuffer;
   old_idr_flag = slice->idrFlag;
 
@@ -732,7 +731,7 @@ static void process_dec_ref_pic_marking_repetition_info (byte* payload, int size
   // set new initial values
   slice->idrFlag = original_idr_flag;
   slice->decRefPicMarkingBuffer = NULL;
-  dec_ref_pic_marking (decoder, buf, slice);
+  decRefPicMarking (decoder, buf, slice);
   //{{{  print out decoded values
   //if (decoder->idrFlag)
   //{
