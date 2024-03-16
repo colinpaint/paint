@@ -257,6 +257,10 @@ void initGlobalBuffers (sDecoder* decoder) {
 
   // allocate memory in structure decoder
   if (decoder->coding->sepColourPlaneFlag) {
+    decoder->coding->intraBlock = NULL;
+    decoder->coding->predMode = NULL;
+    decoder->coding->siBlock = NULL;
+
     for (unsigned i = 0; i < MAX_PLANE; ++i)
       decoder->coding->mbDataJV[i] = (sMacroblock*)calloc (decoder->coding->frameSizeMbs, sizeof(sMacroblock));
     for (unsigned i = 0; i < MAX_PLANE; ++i)
@@ -265,13 +269,11 @@ void initGlobalBuffers (sDecoder* decoder) {
       getMem2D (&(decoder->coding->predModeJV[i]), 4*decoder->coding->frameHeightMbs, 4*decoder->coding->picWidthMbs);
     for (unsigned i = 0; i < MAX_PLANE; ++i)
       getMem2Dint (&(decoder->coding->siBlockJV[i]), decoder->coding->frameHeightMbs, decoder->coding->picWidthMbs);
-    decoder->coding->intraBlock = NULL;
-    decoder->coding->predMode = NULL;
-    decoder->coding->siBlock = NULL;
     }
   else {
     decoder->coding->mbData = (sMacroblock*)calloc (decoder->coding->frameSizeMbs, sizeof(sMacroblock));
     decoder->coding->intraBlock = (char*)calloc (decoder->coding->frameSizeMbs, sizeof(char));
+
     getMem2D (&(decoder->coding->predMode), 4*decoder->coding->frameHeightMbs, 4*decoder->coding->picWidthMbs);
     getMem2Dint (&(decoder->coding->siBlock), decoder->coding->frameHeightMbs, decoder->coding->picWidthMbs);
     }
