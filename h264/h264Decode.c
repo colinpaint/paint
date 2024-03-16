@@ -279,34 +279,37 @@ void freeLayerBuffers (sDecoder* decoder) {
 
   // CAVLC free mem
   if (coding->nzCoeff) {
-    free_mem4D(coding->nzCoeff);
+    free_mem4D (coding->nzCoeff);
     coding->nzCoeff = NULL;
     }
 
   // free mem, allocated for structure decoder
   if ((coding->sepColourPlaneFlag != 0) ) {
-    for (int i = 0; i<MAX_PLANE; i++) {
+    for (int i = 0; i < MAX_PLANE; i++) {
       free (coding->mbDataJV[i]);
       coding->mbDataJV[i] = NULL;
-      free_mem2Dint(coding->siBlockJV[i]);
+
+      free_mem2Dint (coding->siBlockJV[i]);
       coding->siBlockJV[i] = NULL;
-      free_mem2D(coding->predModeJV[i]);
+
+      free_mem2D (coding->predModeJV[i]);
       coding->predModeJV[i] = NULL;
+
       free (coding->intraBlockJV[i]);
       coding->intraBlockJV[i] = NULL;
       }
     }
   else {
     if (coding->mbData != NULL) {
-      free(coding->mbData);
+      free (coding->mbData);
       coding->mbData = NULL;
       }
     if (coding->siBlock) {
-      free_mem2Dint(coding->siBlock);
+      free_mem2Dint (coding->siBlock);
       coding->siBlock = NULL;
       }
     if (coding->predMode) {
-      free_mem2D(coding->predMode);
+      free_mem2D (coding->predMode);
       coding->predMode = NULL;
       }
     if (coding->intraBlock) {
@@ -316,7 +319,7 @@ void freeLayerBuffers (sDecoder* decoder) {
     }
 
   if (coding->picPos) {
-    free(coding->picPos);
+    free (coding->picPos);
     coding->picPos = NULL;
     }
 
@@ -328,38 +331,31 @@ void freeLayerBuffers (sDecoder* decoder) {
 //{{{
 void initGlobalBuffers (sDecoder* decoder) {
 
-  sCoding *coding = decoder->coding;
-  sBlockPos* picPos;
+  sCoding* coding = decoder->coding;
 
   if (decoder->globalInitDone)
     freeLayerBuffers (decoder);
 
   // allocate memory in structure decoder
-  if (coding->sepColourPlaneFlag != 0) {
+  if (coding->sepColourPlaneFlag != 0)
     for (int i = 0; i < MAX_PLANE; ++i )
-      if (((coding->mbDataJV[i]) = (sMacroblock*)calloc(coding->frameSizeMbs, sizeof(sMacroblock))) == NULL)
-        no_mem_exit ("initGlobalBuffers: coding->mbDataJV");
-    coding->mbData = NULL;
-    }
-  else if (((coding->mbData) = (sMacroblock*)calloc (coding->frameSizeMbs, sizeof(sMacroblock))) == NULL)
-    no_mem_exit ("initGlobalBuffers: coding->mbData");
+      coding->mbDataJV[i] = (sMacroblock*)calloc (coding->frameSizeMbs, sizeof(sMacroblock));
+  else 
+    coding->mbData = (sMacroblock*)calloc (coding->frameSizeMbs, sizeof(sMacroblock));
 
   if (coding->sepColourPlaneFlag != 0) {
     for (int i = 0; i < MAX_PLANE; ++i )
-      if (((coding->intraBlockJV[i]) = (char*) calloc(coding->frameSizeMbs, sizeof(char))) == NULL)
-        no_mem_exit ("initGlobalBuffers: coding->intraBlockJV");
+      coding->intraBlockJV[i] = (char*)calloc (coding->frameSizeMbs, sizeof(char));
     coding->intraBlock = NULL;
     }
-  else if (((coding->intraBlock) = (char*)calloc (coding->frameSizeMbs, sizeof(char))) == NULL)
-    no_mem_exit ("initGlobalBuffers: coding->intraBlock");
+  else 
+    coding->intraBlock = (char*)calloc (coding->frameSizeMbs, sizeof(char));
 
-  if (((coding->picPos) = (sBlockPos*)calloc(coding->frameSizeMbs + 1, sizeof(sBlockPos))) == NULL)
-    no_mem_exit ("initGlobalBuffers: picPos");
-
-  picPos = coding->picPos;
+  coding->picPos = (sBlockPos*)calloc (coding->frameSizeMbs + 1, sizeof(sBlockPos));
+  sBlockPos* blockPos = coding->picPos;
   for (int i = 0; i < (int) coding->frameSizeMbs + 1;++i) {
-    picPos[i].x = (short)(i % coding->picWidthMbs);
-    picPos[i].y = (short)(i / coding->picWidthMbs);
+    blockPos[i].x = (short)(i % coding->picWidthMbs);
+    blockPos[i].y = (short)(i / coding->picWidthMbs);
     }
 
   if( (coding->sepColourPlaneFlag != 0)) {

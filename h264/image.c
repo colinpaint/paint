@@ -1441,6 +1441,7 @@ static void setupBuffers (sDecoder* decoder) {
     decoder->qpPerMatrix = decoder->coding->qpPerMatrix;
     decoder->qpRemMatrix = decoder->coding->qpRemMatrix;
     decoder->oldFrameSizeMbs = decoder->coding->oldFrameSizeMbs;
+
     decoder->layerInitDone = 1;
     }
   }
