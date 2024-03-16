@@ -717,28 +717,29 @@ static void setup_mb_pos_info (sMacroblock* mb) {
 void startMacroblock (sSlice* slice, sMacroblock** mb) {
 
   sDecoder* decoder = slice->decoder;
-  int mb_nr = slice->mbIndex;
+  int mbIndex = slice->mbIndex;
 
-  *mb = &slice->mbData[mb_nr];
+  *mb = &slice->mbData[mbIndex];
   (*mb)->slice = slice;
   (*mb)->decoder   = decoder;
-  (*mb)->mbIndexX = mb_nr;
+  (*mb)->mbIndexX = mbIndex;
 
-  /* Update coordinates of the current macroblock */
+  // Update coordinates of the current macroblock
   if (slice->mbAffFrameFlag) {
-    (*mb)->mb.x = (short) (   (mb_nr) % ((2*decoder->width) / MB_BLOCK_SIZE));
-    (*mb)->mb.y = (short) (2*((mb_nr) / ((2*decoder->width) / MB_BLOCK_SIZE)));
+    (*mb)->mb.x = (short) (   (mbIndex) % ((2*decoder->width) / MB_BLOCK_SIZE));
+    (*mb)->mb.y = (short) (2*((mbIndex) / ((2*decoder->width) / MB_BLOCK_SIZE)));
     (*mb)->mb.y += ((*mb)->mb.x & 0x01);
     (*mb)->mb.x >>= 1;
     }
   else
-    (*mb)->mb = decoder->picPos[mb_nr];
+    (*mb)->mb = decoder->picPos[mbIndex];
 
-  /* Define pixel/block positions */
+  // Define pixel/block positions
   setup_mb_pos_info (*mb);
 
   // reset intra mode
   (*mb)->isIntraBlock = FALSE;
+
   // reset mode info
   (*mb)->mbType = 0;
   (*mb)->deltaQuant = 0;
@@ -790,19 +791,15 @@ void startMacroblock (sSlice* slice, sMacroblock** mb) {
 //{{{
 Boolean exitMacroblock (sSlice* slice, int eos_bit) {
 
-  sDecoder* decoder = slice->decoder;
-
-  //! The if() statement below resembles the original code, which tested
-  //! decoder->mbIndex == decoder->picSizeInMbs.  Both is, of course, nonsense
-  //! In an error prone environment, one can only be sure to have a new
-  //! picture by checking the tr of the next slice header!
-
-  // printf ("exitMacroblock: FmoGetLastMBOfPicture %d, decoder->mbIndex %d\n", FmoGetLastMBOfPicture(), decoder->mbIndex);
+  // The if() statement below resembles the original code, which tested
+  // decoder->mbIndex == decoder->picSizeInMbs.  Both is, of course, nonsense
+  // In an error prone environment, one can only be sure to have a new
+  // picture by checking the tr of the next slice header!
   ++(slice->numDecodedMbs);
 
-  if (slice->mbIndex == decoder->picSizeInMbs - 1) //if (decoder->numDecodedMbs == decoder->picSizeInMbs)
+  sDecoder* decoder = slice->decoder;
+  if (slice->mbIndex == decoder->picSizeInMbs - 1) 
     return TRUE;
-    // ask for last mb in the slice  CAVLC
   else {
     slice->mbIndex = FmoGetNextMBNr (decoder, slice->mbIndex);
     if (slice->mbIndex == -1) {
@@ -811,12 +808,14 @@ Boolean exitMacroblock (sSlice* slice, int eos_bit) {
       return TRUE;
       }
 
-    if (slice->nalStartcode(slice, eos_bit) == FALSE)
+    if (slice->nalStartcode (slice, eos_bit) == FALSE)
       return FALSE;
-    if (slice->sliceType == I_SLICE  ||
-        slice->sliceType == SI_SLICE ||
-        decoder->activePPS->entropyCodingMode == (Boolean)CABAC)
+
+    if ((slice->sliceType == I_SLICE)  ||
+        (slice->sliceType == SI_SLICE) ||
+        (decoder->activePPS->entropyCodingMode == (Boolean)CABAC))
       return TRUE;
+
     if (slice->codCount <= 0)
       return TRUE;
 

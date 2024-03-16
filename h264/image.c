@@ -1195,7 +1195,7 @@ static const char INIT_FLD_LAST_P[3][22][15][2] =
 //}}}
 
 //{{{
-static void ref_pic_list_reordering (sSlice* slice) {
+static void refPicListReorder (sSlice* slice) {
 
   byte partitionIndex = assignSE2dp[slice->datadpMode][SE_HEADER];
   sDataPartition* dataPartition = &(slice->dps[partitionIndex]);
@@ -2264,7 +2264,7 @@ static void readSliceHeader (sDecoder* decoder, sSlice* slice) {
     }
   if (slice->sliceType != B_SLICE)
     slice->numRefIndexActive[LIST_1] = 0;
-  ref_pic_list_reordering (slice);
+  refPicListReorder (slice);
   //{{{  read weightedPred
   slice->weightedPredFlag = (unsigned short)((slice->sliceType == P_SLICE || slice->sliceType == SP_SLICE)
                               ? decoder->activePPS->weightedPredFlag
@@ -2278,7 +2278,6 @@ static void readSliceHeader (sDecoder* decoder, sSlice* slice) {
       ((decoder->activePPS->weightedBiPredIdc == 1) && (slice->sliceType == B_SLICE)))
     pred_weight_table (slice);
   //}}}
-
   if (slice->refId)
     decRefPicMarking (decoder, s, slice);
 
@@ -2393,6 +2392,48 @@ static void copySliceInfo (sSlice* slice, sOldSlice* oldSlice) {
     }
   }
 //}}}
+//{{{
+static void decodeSlice (sSlice* slice) {
+
+  Boolean endOfSlice = FALSE;
+
+  slice->codCount=-1;
+
+  sDecoder* decoder = slice->decoder;
+  if (decoder->sepColourPlaneFlag)
+    changePlaneJV (decoder, slice->colourPlaneId, slice);
+  else {
+    slice->mbData = decoder->mbData;
+    slice->picture = decoder->picture;
+    slice->siBlock = decoder->siBlock;
+    slice->predMode = decoder->predMode;
+    slice->intraBlock = decoder->intraBlock;
+    }
+
+  if (slice->sliceType == B_SLICE)
+    computeColocated (slice, slice->listX);
+
+  if ((slice->sliceType != I_SLICE) && (slice->sliceType != SI_SLICE))
+    initRefPicture (slice, decoder);
+
+  // loop over macroblocks
+  while (endOfSlice == FALSE) {
+    sMacroblock* mb;
+    startMacroblock (slice, &mb);
+    slice->readMacroblock (mb);
+    decodeMacroblock (mb, slice->picture);
+
+    if (slice->mbAffFrameFlag && mb->mbField) {
+      slice->numRefIndexActive[LIST_0] >>= 1;
+      slice->numRefIndexActive[LIST_1] >>= 1;
+      }
+
+    ercWriteMBMODEandMV (mb);
+    endOfSlice = exitMacroblock (slice, !slice->mbAffFrameFlag || (slice->mbIndex % 2));
+    }
+  }
+//}}}
+
 //{{{
 static int readNextSlice (sSlice* slice) {
 
@@ -2635,47 +2676,6 @@ static int readNextSlice (sSlice* slice) {
     }
 
   return curHeader;
-  }
-//}}}
-//{{{
-static void decodeSlice (sSlice* slice) {
-
-  Boolean endOfSlice = FALSE;
-
-  slice->codCount=-1;
-
-  sDecoder* decoder = slice->decoder;
-  if (decoder->sepColourPlaneFlag)
-    changePlaneJV (decoder, slice->colourPlaneId, slice);
-  else {
-    slice->mbData = decoder->mbData;
-    slice->picture = decoder->picture;
-    slice->siBlock = decoder->siBlock;
-    slice->predMode = decoder->predMode;
-    slice->intraBlock = decoder->intraBlock;
-    }
-
-  if (slice->sliceType == B_SLICE)
-    computeColocated (slice, slice->listX);
-
-  if ((slice->sliceType != I_SLICE) && (slice->sliceType != SI_SLICE))
-    initRefPicture (slice, decoder);
-
-  // loop over macroblocks
-  while (endOfSlice == FALSE) {
-    sMacroblock* mb;
-    startMacroblock (slice, &mb);
-    slice->readMacroblock (mb);
-    decodeMacroblock (mb, slice->picture);
-
-    if (slice->mbAffFrameFlag && mb->mbField) {
-      slice->numRefIndexActive[LIST_0] >>= 1;
-      slice->numRefIndexActive[LIST_1] >>= 1;
-      }
-
-    ercWriteMBMODEandMV (mb);
-    endOfSlice = exitMacroblock (slice, !slice->mbAffFrameFlag || (slice->mbIndex % 2));
-    }
   }
 //}}}
 
