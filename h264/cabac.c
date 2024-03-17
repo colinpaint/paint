@@ -1262,7 +1262,7 @@ static int read_and_store_CBP_block_bit_444 (sMacroblock* mb, sDecodingEnv*  dec
       cbp_bit = biarDecodeSymbol (decodingEnv, textureContext->bcbp_contexts[type2ctx_bcbp[type]] + ctx);
     }
   }
-  else if( (decoder->sepColourPlaneFlag != 0) ) {
+  else if( (decoder->coding.sepColourPlaneFlag != 0) ) {
     if (type!=LUMA_8x8)
     {
       //--- get bits from neighbouring blocks ---
@@ -1826,7 +1826,7 @@ void readIPCMcabac (sSlice* slice, sDataPartition* dataPartition) {
 
   // read chroma values
   bitdepth = decoder->bitdepthChroma;
-  if ((picture->chromaFormatIdc != YUV400) && (decoder->sepColourPlaneFlag == 0)) {
+  if ((picture->chromaFormatIdc != YUV400) && (decoder->coding.sepColourPlaneFlag == 0)) {
     for (uv = 1; uv < 3; ++uv) {
       for(i = 0; i < decoder->mbCrSizeY; ++i) {
         for(j = 0; j < decoder->mbCrSizeX; ++j) {

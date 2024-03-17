@@ -104,7 +104,7 @@ static void readCompCoef4x4cabac (sMacroblock* mb, sSyntaxElement* se, eColorPla
   int i, j;
   int64 *cbp_blk = &mb->cbpStructure[plane].blk;
 
-  if( plane == PLANE_Y || (decoder->sepColourPlaneFlag != 0) )
+  if( plane == PLANE_Y || (decoder->coding.sepColourPlaneFlag != 0) )
     se->context = (IS_I16MB(mb) ? LUMA_16AC: LUMA_4x4);
   else if (plane == PLANE_U)
     se->context = (IS_I16MB(mb) ? CB_16AC: CB_4x4);
@@ -179,7 +179,7 @@ static void read_comp_coeff_4x4_CABAC_ls (sMacroblock* mb, sSyntaxElement* se, e
   int blockY, blockX;
   int64 *cbp_blk = &mb->cbpStructure[plane].blk;
 
-  if( plane == PLANE_Y || (decoder->sepColourPlaneFlag != 0) )
+  if( plane == PLANE_Y || (decoder->coding.sepColourPlaneFlag != 0) )
     se->context = (IS_I16MB(mb) ? LUMA_16AC: LUMA_4x4);
   else if (plane == PLANE_U)
     se->context = (IS_I16MB(mb) ? CB_16AC: CB_4x4);
@@ -199,7 +199,7 @@ static void readCompCoeff8x8_CABAC (sMacroblock* mb, sSyntaxElement* se, eColorP
   if (mb->cbp & (1<<b8))  // are there any coefficients in the current block
   {
     sDecoder* decoder = mb->decoder;
-    int transform_pl = (decoder->sepColourPlaneFlag != 0) ? mb->slice->colourPlaneId : plane;
+    int transform_pl = (decoder->coding.sepColourPlaneFlag != 0) ? mb->slice->colourPlaneId : plane;
 
     int** tcoeffs;
     int i,j,k;
@@ -229,7 +229,7 @@ static void readCompCoeff8x8_CABAC (sMacroblock* mb, sSyntaxElement* se, eColorP
     mb->subblockX = boff_x; // position for coeff_count ctx
     mb->subblockY = boff_y; // position for coeff_count ctx
 
-    if (plane==PLANE_Y || (decoder->sepColourPlaneFlag != 0))
+    if (plane==PLANE_Y || (decoder->coding.sepColourPlaneFlag != 0))
       se->context = LUMA_8x8;
     else if (plane==PLANE_U)
       se->context = CB_8x8;
@@ -322,7 +322,7 @@ static void readCompCoeff8x8_CABAC_lossless (sMacroblock* mb, sSyntaxElement* se
     mb->subblockX = boff_x; // position for coeff_count ctx
     mb->subblockY = boff_y; // position for coeff_count ctx
 
-    if (plane==PLANE_Y || (decoder->sepColourPlaneFlag != 0))
+    if (plane==PLANE_Y || (decoder->coding.sepColourPlaneFlag != 0))
       se->context = LUMA_8x8;
     else if (plane==PLANE_U)
       se->context = CB_8x8;
@@ -401,7 +401,7 @@ static void read_CBP_and_coeffs_from_NAL_CABAC_420 (sMacroblock* mb) {
 
   int qp_per, qp_rem;
   sDecoder* decoder = mb->decoder;
-  int smb = ((decoder->type==SP_SLICE) && (mb->isIntraBlock == FALSE)) || (decoder->type == SI_SLICE && mb->mbType == SI4MB);
+  int smb = ((decoder->coding.type==SP_SLICE) && (mb->isIntraBlock == FALSE)) || (decoder->coding.type == SI_SLICE && mb->mbType == SI4MB);
 
   int qp_per_uv[2];
   int qp_rem_uv[2];
@@ -1074,7 +1074,7 @@ static void read_CBP_and_coeffs_from_NAL_CABAC_444 (sMacroblock* mb)
         se.type = SE_LUM_DC_INTRA;
         dataPartition = &(slice->dps[dpMap[se.type]]);
 
-        if( (decoder->sepColourPlaneFlag != 0) )
+        if( (decoder->coding.sepColourPlaneFlag != 0) )
           se.context = LUMA_16DC;
         else
           se.context = (uv==0) ? CB_16DC : CR_16DC;
@@ -1535,7 +1535,7 @@ void set_read_CBP_and_coeffs_cabac(sSlice* slice)
   switch (slice->decoder->activeSPS->chromaFormatIdc)
   {
   case YUV444:
-    if (slice->decoder->sepColourPlaneFlag == 0)
+    if (slice->decoder->coding.sepColourPlaneFlag == 0)
       slice->readCBPcoeffs = read_CBP_and_coeffs_from_NAL_CABAC_444;
     else
       slice->readCBPcoeffs = read_CBP_and_coeffs_from_NAL_CABAC_400;

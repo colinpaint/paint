@@ -43,124 +43,119 @@ static void updateMaxValue (sFrameFormat* format) {
 static void setCodingParam (sSPS* sps, sDecoder* decoder) {
 
   // maximum vertical motion vector range in luma quarter pixel units
-  sCoding* coding = decoder->coding;
-  coding->profileIdc = sps->profileIdc;
-  coding->losslessQpPrimeFlag = sps->losslessQpPrimeFlag;
+  decoder->coding.profileIdc = sps->profileIdc;
+  decoder->coding.losslessQpPrimeFlag = sps->losslessQpPrimeFlag;
   if (sps->levelIdc <= 10)
-    coding->maxVmvR = 64 * 4;
+    decoder->coding.maxVmvR = 64 * 4;
   else if (sps->levelIdc <= 20)
-    coding->maxVmvR = 128 * 4;
+    decoder->coding.maxVmvR = 128 * 4;
   else if (sps->levelIdc <= 30)
-    coding->maxVmvR = 256 * 4;
+    decoder->coding.maxVmvR = 256 * 4;
   else
-    coding->maxVmvR = 512 * 4; // 512 pixels in quarter pixels
+    decoder->coding.maxVmvR = 512 * 4; // 512 pixels in quarter pixels
 
   // Fidelity Range Extensions stuff (part 1)
-  coding->bitdepthChroma = 0;
-  coding->widthCr = 0;
-  coding->heightCr = 0;
-  coding->bitdepthLuma = (short)(sps->bit_depth_luma_minus8 + 8);
-  coding->bitdepthScale[0] = 1 << sps->bit_depth_luma_minus8;
+  decoder->coding.bitdepthChroma = 0;
+  decoder->coding.widthCr = 0;
+  decoder->coding.heightCr = 0;
+  decoder->coding.bitdepthLuma = (short)(sps->bit_depth_luma_minus8 + 8);
+  decoder->coding.bitdepthScale[0] = 1 << sps->bit_depth_luma_minus8;
   if (sps->chromaFormatIdc != YUV400) {
-    coding->bitdepthChroma = (short) (sps->bit_depth_chroma_minus8 + 8);
-    coding->bitdepthScale[1] = 1 << sps->bit_depth_chroma_minus8;
+    decoder->coding.bitdepthChroma = (short) (sps->bit_depth_chroma_minus8 + 8);
+    decoder->coding.bitdepthScale[1] = 1 << sps->bit_depth_chroma_minus8;
     }
 
-  coding->maxFrameNum = 1 << (sps->log2_max_frame_num_minus4+4);
-  coding->picWidthMbs = (sps->pic_width_in_mbs_minus1 +1);
-  coding->picHeightMapUnits = (sps->pic_height_in_map_units_minus1 +1);
-  coding->frameHeightMbs = (2 - sps->frameMbOnlyFlag) * coding->picHeightMapUnits;
-  coding->frameSizeMbs = coding->picWidthMbs * coding->frameHeightMbs;
+  decoder->coding.maxFrameNum = 1 << (sps->log2_max_frame_num_minus4+4);
+  decoder->coding.picWidthMbs = (sps->pic_width_in_mbs_minus1 +1);
+  decoder->coding.picHeightMapUnits = (sps->pic_height_in_map_units_minus1 +1);
+  decoder->coding.frameHeightMbs = (2 - sps->frameMbOnlyFlag) * decoder->coding.picHeightMapUnits;
+  decoder->coding.frameSizeMbs = decoder->coding.picWidthMbs * decoder->coding.frameHeightMbs;
 
-  decoder->yuvFormat = sps->chromaFormatIdc;
-  decoder->sepColourPlaneFlag = sps->sepColourPlaneFlag;
-  if (decoder->sepColourPlaneFlag )
-    coding->ChromaArrayType = 0;
-  else
-    coding->ChromaArrayType = sps->chromaFormatIdc;
+  decoder->coding.yuvFormat = sps->chromaFormatIdc;
+  decoder->coding.sepColourPlaneFlag = sps->sepColourPlaneFlag;
 
-  coding->width = coding->picWidthMbs * MB_BLOCK_SIZE;
-  coding->height = coding->frameHeightMbs * MB_BLOCK_SIZE;
+  decoder->coding.width = decoder->coding.picWidthMbs * MB_BLOCK_SIZE;
+  decoder->coding.height = decoder->coding.frameHeightMbs * MB_BLOCK_SIZE;
 
-  coding->iLumaPadX = MCBUF_LUMA_PAD_X;
-  coding->iLumaPadY = MCBUF_LUMA_PAD_Y;
-  coding->iChromaPadX = MCBUF_CHROMA_PAD_X;
-  coding->iChromaPadY = MCBUF_CHROMA_PAD_Y;
+  decoder->coding.iLumaPadX = MCBUF_LUMA_PAD_X;
+  decoder->coding.iLumaPadY = MCBUF_LUMA_PAD_Y;
+  decoder->coding.iChromaPadX = MCBUF_CHROMA_PAD_X;
+  decoder->coding.iChromaPadY = MCBUF_CHROMA_PAD_Y;
 
   if (sps->chromaFormatIdc == YUV420) {
-    coding->widthCr  = (coding->width  >> 1);
-    coding->heightCr = (coding->height >> 1);
+    decoder->coding.widthCr  = (decoder->coding.width  >> 1);
+    decoder->coding.heightCr = (decoder->coding.height >> 1);
     }
   else if (sps->chromaFormatIdc == YUV422) {
-    coding->widthCr  = (coding->width >> 1);
-    coding->heightCr = coding->height;
-    coding->iChromaPadY = MCBUF_CHROMA_PAD_Y*2;
+    decoder->coding.widthCr  = (decoder->coding.width >> 1);
+    decoder->coding.heightCr = decoder->coding.height;
+    decoder->coding.iChromaPadY = MCBUF_CHROMA_PAD_Y*2;
     }
   else if (sps->chromaFormatIdc == YUV444) {
-    coding->widthCr = coding->width;
-    coding->heightCr = coding->height;
-    coding->iChromaPadX = coding->iLumaPadX;
-    coding->iChromaPadY = coding->iLumaPadY;
+    decoder->coding.widthCr = decoder->coding.width;
+    decoder->coding.heightCr = decoder->coding.height;
+    decoder->coding.iChromaPadX = decoder->coding.iLumaPadX;
+    decoder->coding.iChromaPadY = decoder->coding.iLumaPadY;
     }
 
   //pel bitdepth init
-  coding->bitdepthLumeQpScale = 6 * (coding->bitdepthLuma - 8);
+  decoder->coding.bitdepthLumeQpScale = 6 * (decoder->coding.bitdepthLuma - 8);
 
-  if (coding->bitdepthLuma > coding->bitdepthChroma || sps->chromaFormatIdc == YUV400)
-    coding->picUnitBitSizeDisk = (coding->bitdepthLuma > 8)? 16:8;
+  if (decoder->coding.bitdepthLuma > decoder->coding.bitdepthChroma || sps->chromaFormatIdc == YUV400)
+    decoder->coding.picUnitBitSizeDisk = (decoder->coding.bitdepthLuma > 8)? 16:8;
   else
-    coding->picUnitBitSizeDisk = (coding->bitdepthChroma > 8)? 16:8;
-  coding->dcPredValueComp[0] = 1 << (coding->bitdepthLuma - 1);
-  coding->maxPelValueComp[0] = (1 << coding->bitdepthLuma) - 1;
-  coding->mbSize[0][0] = coding->mbSize[0][1] = MB_BLOCK_SIZE;
+    decoder->coding.picUnitBitSizeDisk = (decoder->coding.bitdepthChroma > 8)? 16:8;
+  decoder->coding.dcPredValueComp[0] = 1 << (decoder->coding.bitdepthLuma - 1);
+  decoder->coding.maxPelValueComp[0] = (1 << decoder->coding.bitdepthLuma) - 1;
+  decoder->coding.mbSize[0][0] = decoder->coding.mbSize[0][1] = MB_BLOCK_SIZE;
 
   if (sps->chromaFormatIdc != YUV400) {
     // for chrominance part
-    coding->bitdepthChromaQpScale = 6 * (coding->bitdepthChroma - 8);
-    coding->dcPredValueComp[1] = (1 << (coding->bitdepthChroma - 1));
-    coding->dcPredValueComp[2] = coding->dcPredValueComp[1];
-    coding->maxPelValueComp[1] = (1 << coding->bitdepthChroma) - 1;
-    coding->maxPelValueComp[2] = (1 << coding->bitdepthChroma) - 1;
-    coding->numBlock8x8uv = (1 << sps->chromaFormatIdc) & (~(0x1));
-    coding->numUvBlocks = (coding->numBlock8x8uv >> 1);
-    coding->numCdcCoeff = (coding->numBlock8x8uv << 1);
-    coding->mbSize[1][0] = coding->mbSize[2][0] = coding->mbCrSizeX  = (sps->chromaFormatIdc==YUV420 || sps->chromaFormatIdc==YUV422)?  8 : 16;
-    coding->mbSize[1][1] = coding->mbSize[2][1] = coding->mbCrSizeY  = (sps->chromaFormatIdc==YUV444 || sps->chromaFormatIdc==YUV422)? 16 :  8;
+    decoder->coding.bitdepthChromaQpScale = 6 * (decoder->coding.bitdepthChroma - 8);
+    decoder->coding.dcPredValueComp[1] = (1 << (decoder->coding.bitdepthChroma - 1));
+    decoder->coding.dcPredValueComp[2] = decoder->coding.dcPredValueComp[1];
+    decoder->coding.maxPelValueComp[1] = (1 << decoder->coding.bitdepthChroma) - 1;
+    decoder->coding.maxPelValueComp[2] = (1 << decoder->coding.bitdepthChroma) - 1;
+    decoder->coding.numBlock8x8uv = (1 << sps->chromaFormatIdc) & (~(0x1));
+    decoder->coding.numUvBlocks = (decoder->coding.numBlock8x8uv >> 1);
+    decoder->coding.numCdcCoeff = (decoder->coding.numBlock8x8uv << 1);
+    decoder->coding.mbSize[1][0] = decoder->coding.mbSize[2][0] = decoder->coding.mbCrSizeX  = (sps->chromaFormatIdc==YUV420 || sps->chromaFormatIdc==YUV422)?  8 : 16;
+    decoder->coding.mbSize[1][1] = decoder->coding.mbSize[2][1] = decoder->coding.mbCrSizeY  = (sps->chromaFormatIdc==YUV444 || sps->chromaFormatIdc==YUV422)? 16 :  8;
 
-    coding->subpelX = coding->mbCrSizeX == 8 ? 7 : 3;
-    coding->subpelY = coding->mbCrSizeY == 8 ? 7 : 3;
-    coding->shiftpelX = coding->mbCrSizeX == 8 ? 3 : 2;
-    coding->shiftpelY = coding->mbCrSizeY == 8 ? 3 : 2;
-    coding->totalScale = coding->shiftpelX + coding->shiftpelY;
+    decoder->coding.subpelX = decoder->coding.mbCrSizeX == 8 ? 7 : 3;
+    decoder->coding.subpelY = decoder->coding.mbCrSizeY == 8 ? 7 : 3;
+    decoder->coding.shiftpelX = decoder->coding.mbCrSizeX == 8 ? 3 : 2;
+    decoder->coding.shiftpelY = decoder->coding.mbCrSizeY == 8 ? 3 : 2;
+    decoder->coding.totalScale = decoder->coding.shiftpelX + decoder->coding.shiftpelY;
     }
   else {
-    coding->bitdepthChromaQpScale = 0;
-    coding->maxPelValueComp[1] = 0;
-    coding->maxPelValueComp[2] = 0;
-    coding->numBlock8x8uv = 0;
-    coding->numUvBlocks = 0;
-    coding->numCdcCoeff = 0;
-    coding->mbSize[1][0] = coding->mbSize[2][0] = coding->mbCrSizeX  = 0;
-    coding->mbSize[1][1] = coding->mbSize[2][1] = coding->mbCrSizeY  = 0;
-    coding->subpelX = 0;
-    coding->subpelY = 0;
-    coding->shiftpelX = 0;
-    coding->shiftpelY = 0;
-    coding->totalScale = 0;
+    decoder->coding.bitdepthChromaQpScale = 0;
+    decoder->coding.maxPelValueComp[1] = 0;
+    decoder->coding.maxPelValueComp[2] = 0;
+    decoder->coding.numBlock8x8uv = 0;
+    decoder->coding.numUvBlocks = 0;
+    decoder->coding.numCdcCoeff = 0;
+    decoder->coding.mbSize[1][0] = decoder->coding.mbSize[2][0] = decoder->coding.mbCrSizeX  = 0;
+    decoder->coding.mbSize[1][1] = decoder->coding.mbSize[2][1] = decoder->coding.mbCrSizeY  = 0;
+    decoder->coding.subpelX = 0;
+    decoder->coding.subpelY = 0;
+    decoder->coding.shiftpelX = 0;
+    decoder->coding.shiftpelY = 0;
+    decoder->coding.totalScale = 0;
     }
 
-  coding->mbCrSize = coding->mbCrSizeX * coding->mbCrSizeY;
-  coding->mbSizeBlock[0][0] = coding->mbSizeBlock[0][1] = coding->mbSize[0][0] >> 2;
-  coding->mbSizeBlock[1][0] = coding->mbSizeBlock[2][0] = coding->mbSize[1][0] >> 2;
-  coding->mbSizeBlock[1][1] = coding->mbSizeBlock[2][1] = coding->mbSize[1][1] >> 2;
+  decoder->coding.mbCrSize = decoder->coding.mbCrSizeX * decoder->coding.mbCrSizeY;
+  decoder->coding.mbSizeBlock[0][0] = decoder->coding.mbSizeBlock[0][1] = decoder->coding.mbSize[0][0] >> 2;
+  decoder->coding.mbSizeBlock[1][0] = decoder->coding.mbSizeBlock[2][0] = decoder->coding.mbSize[1][0] >> 2;
+  decoder->coding.mbSizeBlock[1][1] = decoder->coding.mbSizeBlock[2][1] = decoder->coding.mbSize[1][1] >> 2;
 
-  coding->mbSizeShift[0][0] = coding->mbSizeShift[0][1] = ceilLog2sf (coding->mbSize[0][0]);
-  coding->mbSizeShift[1][0] = coding->mbSizeShift[2][0] = ceilLog2sf (coding->mbSize[1][0]);
-  coding->mbSizeShift[1][1] = coding->mbSizeShift[2][1] = ceilLog2sf (coding->mbSize[1][1]);
+  decoder->coding.mbSizeShift[0][0] = decoder->coding.mbSizeShift[0][1] = ceilLog2sf (decoder->coding.mbSize[0][0]);
+  decoder->coding.mbSizeShift[1][0] = decoder->coding.mbSizeShift[2][0] = ceilLog2sf (decoder->coding.mbSize[1][0]);
+  decoder->coding.mbSizeShift[1][1] = decoder->coding.mbSizeShift[2][1] = ceilLog2sf (decoder->coding.mbSize[1][1]);
   }
 //}}}
 //{{{
-static void resetFormatInfo (sSPS* sps, sDecoder* decoder, sFrameFormat* source, sFrameFormat* output) {
+static void setFormatInfo (sSPS* sps, sDecoder* decoder, sFrameFormat* source, sFrameFormat* output) {
 
   static const int SubWidthC[4] = { 1, 2, 2, 1};
   static const int SubHeightC[4] = { 1, 2, 1, 1};
@@ -245,11 +240,11 @@ static void resetFormatInfo (sSPS* sps, sDecoder* decoder, sFrameFormat* source,
     printf ("-> profile:%d %dx%d %dx%d ",
             sps->profileIdc, source->width[0], source->height[0], decoder->width, decoder->height);
 
-    if (decoder->yuvFormat == YUV400)
+    if (decoder->coding.yuvFormat == YUV400)
       printf ("4:0:0");
-    else if (decoder->yuvFormat == YUV420)
+    else if (decoder->coding.yuvFormat == YUV420)
       printf ("4:2:0");
-    else if (decoder->yuvFormat == YUV422)
+    else if (decoder->coding.yuvFormat == YUV422)
       printf ("4:2:2");
     else
       printf ("4:4:4");
@@ -603,11 +598,7 @@ void processSPS (sDecoder* decoder, sNalu* nalu) {
 
     makeSPSavailable (decoder, sps->spsId, sps);
 
-    decoder->sepColourPlaneFlag = sps->sepColourPlaneFlag;
-    if (decoder->sepColourPlaneFlag )
-      decoder->ChromaArrayType = 0;
-    else
-      decoder->ChromaArrayType = sps->chromaFormatIdc;
+    decoder->coding.sepColourPlaneFlag = sps->sepColourPlaneFlag;
     }
 
   freeDataPartitions (dataPartition, 1);
@@ -640,7 +631,7 @@ void activateSPS (sDecoder* decoder, sSPS* sps) {
       }
     }
 
-  resetFormatInfo (sps, decoder, &decoder->param.source, &decoder->param.output);
+  setFormatInfo (sps, decoder, &decoder->param.source, &decoder->param.output);
   }
 //}}}
 

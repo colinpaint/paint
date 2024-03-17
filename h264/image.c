@@ -1623,12 +1623,12 @@ static void errorTracking (sDecoder* decoder, sSlice* slice) {
   if (!slice->redundantPicCount)
     decoder->isPrimaryOk = decoder->isReduncantOk = 1;
 
-  if (!slice->redundantPicCount && (decoder->type != I_SLICE)) {
+  if (!slice->redundantPicCount && (decoder->coding.type != I_SLICE)) {
     for (int i = 0; i < slice->numRefIndexActive[LIST_0];++i)
       if (!slice->refFlag[i])  // any reference of primary slice is incorrect
         decoder->isPrimaryOk = 0; // primary slice is incorrect
     }
-  else if (slice->redundantPicCount && (decoder->type != I_SLICE))
+  else if (slice->redundantPicCount && (decoder->coding.type != I_SLICE))
     // reference of redundant slice is incorrect
     if (!slice->refFlag[slice->redundantSliceRefIndex])
       // redundant slice is incorrect
@@ -1681,7 +1681,7 @@ static void ercWriteMBMODEandMV (sMacroblock* mb) {
 
   sObjectBuffer* currRegion = decoder->ercObjectList + (currMBNum << 2);
 
-  if (decoder->type != B_SLICE) {
+  if (decoder->coding.type != B_SLICE) {
     //{{{  non-B frame
     for (int i = 0; i < 4; ++i) {
       sObjectBuffer* pRegion = currRegion + i;
@@ -1760,7 +1760,7 @@ static void initRefPicture (sSlice* slice, sDecoder* decoder) {
   sPicture* vidRefPicture = decoder->noReferencePicture;
   int noRef = slice->framePoc < decoder->recoveryPoc;
 
-  if (decoder->sepColourPlaneFlag) {
+  if (decoder->coding.sepColourPlaneFlag) {
     switch (slice->colourPlaneId) {
       case 0:
         for (int j = 0; j < 6; j++) {
@@ -1971,9 +1971,9 @@ static void initPicture (sDecoder* decoder, sSlice* slice) {
     }
 
   //decoder->sliceNum=0;
-  if (decoder->type > SI_SLICE) {
+  if (decoder->coding.type > SI_SLICE) {
     setEcFlag (decoder, SE_PTYPE);
-    decoder->type = P_SLICE;  // concealed element
+    decoder->coding.type = P_SLICE;  // concealed element
     }
 
   // CAVLC init
@@ -1982,7 +1982,7 @@ static void initPicture (sDecoder* decoder, sSlice* slice) {
 
   // Set the sliceNum member of each MB to -1, to ensure correct when packet loss occurs
   // TO set sMacroblock Map (mark all MBs as 'have to be concealed')
-  if (decoder->sepColourPlaneFlag) {
+  if (decoder->coding.sepColourPlaneFlag) {
     for (int nplane = 0; nplane < MAX_PLANE; ++nplane ) {
       sMacroblock* mb = decoder->mbDataJV[nplane];
       char* intraBlock = decoder->intraBlockJV[nplane];
@@ -2004,7 +2004,7 @@ static void initPicture (sDecoder* decoder, sSlice* slice) {
     memset (decoder->predMode[0], DC_PRED, 16 * decoder->frameHeightMbs * decoder->picWidthMbs * sizeof(char));
     }
 
-  picture->sliceType = decoder->type;
+  picture->sliceType = decoder->coding.type;
   picture->usedForReference = (slice->refId != 0);
   picture->idrFlag = slice->idrFlag;
   picture->noOutputPriorPicFlag = slice->noOutputPriorPicFlag;
@@ -2033,7 +2033,7 @@ static void initPicture (sDecoder* decoder, sSlice* slice) {
     picture->frameCropBot = activeSPS->frameCropBot;
     }
 
-  if (decoder->sepColourPlaneFlag) {
+  if (decoder->coding.sepColourPlaneFlag) {
     decoder->decPictureJV[0] = decoder->picture;
     decoder->decPictureJV[1] = allocPicture (decoder, (ePicStructure) slice->structure, decoder->width, decoder->height, decoder->widthCr, decoder->heightCr, 1);
     copyDecPictureJV (decoder, decoder->decPictureJV[1], decoder->decPictureJV[0] );
@@ -2078,7 +2078,7 @@ static void useParameterSet (sDecoder* decoder, sSlice* slice) {
     for (int i = 0; i < 3; i++)
       slice->dps[i].readSyntaxElement = readSyntaxElementCABAC;
     }
-  decoder->type = slice->sliceType;
+  decoder->coding.type = slice->sliceType;
   }
 //}}}
 //{{{
@@ -2110,7 +2110,7 @@ static void initPictureDecoding (sDecoder* decoder) {
   decoder->picHeightInMbs = decoder->frameHeightMbs / (1 + slice->fieldPicFlag);
   decoder->picSizeInMbs = decoder->picWidthMbs * decoder->picHeightInMbs;
   decoder->frameSizeMbs = decoder->picWidthMbs * decoder->frameHeightMbs;
-  decoder->structure = slice->structure;
+  decoder->coding.structure = slice->structure;
   initFmo (decoder, slice);
 
   updatePicNum (slice);
@@ -2141,11 +2141,11 @@ static void readSliceHeader (sDecoder* decoder, sSlice* slice) {
   if (tmp > 4)
     tmp -= 5;
   slice->sliceType = (eSliceType)tmp;
-  decoder->type = slice->sliceType;
+  decoder->coding.type = slice->sliceType;
 
   slice->ppsId = readUeV ("SLC ppsId", s);
 
-  if (decoder->sepColourPlaneFlag)
+  if (decoder->coding.sepColourPlaneFlag)
     slice->colourPlaneId = readUv (2, "SLC colourPlaneId", s);
   else
     slice->colourPlaneId = PLANE_Y;
@@ -2155,7 +2155,7 @@ static void readSliceHeader (sDecoder* decoder, sSlice* slice) {
   slice->activeSPS = decoder->activeSPS;
   slice->activePPS = decoder->activePPS;
   slice->transform8x8Mode = decoder->activePPS->transform8x8modeFlag;
-  slice->chroma444notSeparate = (decoder->activeSPS->chromaFormatIdc == YUV444) && !decoder->sepColourPlaneFlag;
+  slice->chroma444notSeparate = (decoder->activeSPS->chromaFormatIdc == YUV444) && !decoder->coding.sepColourPlaneFlag;
 
   // read rest of sliceHeader
   sSPS* activeSPS = decoder->activeSPS;
@@ -2166,22 +2166,22 @@ static void readSliceHeader (sDecoder* decoder, sSlice* slice) {
     }
   //{{{  read field/frame stuff
   if (activeSPS->frameMbOnlyFlag) {
-    decoder->structure = FRAME;
+    decoder->coding.structure = FRAME;
     slice->fieldPicFlag = 0;
     }
   else {
     slice->fieldPicFlag = readU1 ("SLC fieldPicFlag", s);
     if (slice->fieldPicFlag) {
       slice->botFieldFlag = (byte)readU1 ("SLC botFieldFlag", s);
-      decoder->structure = slice->botFieldFlag ? BotField : TopField;
+      decoder->coding.structure = slice->botFieldFlag ? BotField : TopField;
       }
     else {
-      decoder->structure = FRAME;
+      decoder->coding.structure = FRAME;
       slice->botFieldFlag = FALSE;
       }
     }
 
-  slice->structure = (ePicStructure)decoder->structure;
+  slice->structure = (ePicStructure)decoder->coding.structure;
   slice->mbAffFrameFlag = (activeSPS->mb_adaptive_frame_field_flag && (slice->fieldPicFlag == 0));
   //}}}
 
@@ -2368,7 +2368,7 @@ static void decodeSlice (sSlice* slice) {
   slice->codCount=-1;
 
   sDecoder* decoder = slice->decoder;
-  if (decoder->sepColourPlaneFlag)
+  if (decoder->coding.sepColourPlaneFlag)
     changePlaneJV (decoder, slice->colourPlaneId, slice);
   else {
     slice->mbData = decoder->mbData;
@@ -2464,7 +2464,7 @@ static int readNextSlice (sSlice* slice) {
 
         // if primary slice is replaced with redundant slice, set the correct image type
         if (slice->redundantPicCount && !decoder->isPrimaryOk && decoder->isReduncantOk)
-          decoder->picture->sliceType = decoder->type;
+          decoder->picture->sliceType = decoder->coding.type;
 
         if (isNewPicture (decoder->picture, slice, decoder->oldSlice)) {
           if (!decoder->picSliceIndex)
@@ -2902,7 +2902,7 @@ void endDecodeFrame (sDecoder* decoder) {
   // return if the last picture has already been finished
   if (!decoder->picture ||
       ((decoder->numDecodedMbs != decoder->picSizeInMbs) &&
-       ((decoder->yuvFormat != YUV444) || !decoder->sepColourPlaneFlag)))
+       ((decoder->coding.yuvFormat != YUV444) || !decoder->coding.sepColourPlaneFlag)))
     return;
 
   //{{{  error conceal
@@ -2957,7 +2957,7 @@ void endDecodeFrame (sDecoder* decoder) {
   //}}}
   if (!decoder->deblockMode &&
       (decoder->deblockEnable & (1 << decoder->picture->usedForReference))) {
-    if (decoder->sepColourPlaneFlag) {
+    if (decoder->coding.sepColourPlaneFlag) {
       //{{{  deblockJV
       int colourPlaneId = decoder->sliceList[0]->colourPlaneId;
       for (int nplane = 0; nplane < MAX_PLANE; ++nplane) {
@@ -2972,12 +2972,12 @@ void endDecodeFrame (sDecoder* decoder) {
     else
       deblockPicture (decoder, decoder->picture);
     }
-  else if (decoder->sepColourPlaneFlag)
+  else if (decoder->coding.sepColourPlaneFlag)
     makeFramePictureJV (decoder);
 
   if (decoder->picture->mbAffFrameFlag)
     mbAffPostProc (decoder);
-  if (decoder->structure != FRAME)
+  if (decoder->coding.structure != FRAME)
      decoder->idrFrameNum /= 2;
   if (decoder->picture->usedForReference)
     padPicture (decoder, decoder->picture);

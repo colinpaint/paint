@@ -1180,7 +1180,7 @@ void setSliceMethods (sSlice* slice) {
 
   set_intra_prediction_modes (slice);
 
-  if (slice->decoder->activeSPS->chromaFormatIdc==YUV444 && (slice->decoder->sepColourPlaneFlag == 0) )
+  if (slice->decoder->activeSPS->chromaFormatIdc==YUV444 && (slice->decoder->coding.sepColourPlaneFlag == 0) )
     slice->readCoef4x4cavlc = readCoef4x4cavlc444;
   else
     slice->readCoef4x4cavlc = readCoef4x4cavlc;
@@ -1251,7 +1251,7 @@ static void init_cur_imgy (sDecoder* decoder, sSlice* slice, int plane) {
 // this is intended to make get_block_luma faster, but I'm still performing
 // this at the MB level, and it really should be done at the slice level
 
-  if (decoder->sepColourPlaneFlag == 0) {
+  if (decoder->coding.sepColourPlaneFlag == 0) {
     sPicture* vidref = decoder->noReferencePicture;
     int noref = (slice->framePoc < decoder->recoveryPoc);
 

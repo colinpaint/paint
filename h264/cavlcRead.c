@@ -555,7 +555,7 @@ static void readCompCoef4x4cavlc (sMacroblock* mb, eColorPlane plane,
   sSlice* slice = mb->slice;
   sDecoder* decoder = mb->decoder;
 
-  const byte (*pos_scan4x4)[2] = ((decoder->structure == FRAME) && (!mb->mbField)) ? SNGL_SCAN : FIELD_SCAN;
+  const byte (*pos_scan4x4)[2] = ((decoder->coding.structure == FRAME) && (!mb->mbField)) ? SNGL_SCAN : FIELD_SCAN;
   const byte *pos_scan_4x4 = pos_scan4x4[0];
   int start_scan = IS_I16MB(mb) ? 1 : 0;
   int64 *cur_cbp = &mb->cbpStructure[plane].blk;
@@ -622,7 +622,7 @@ static void read_comp_coeff_4x4_CAVLC_ls (sMacroblock* mb, eColorPlane plane,
   sSlice* slice = mb->slice;
   sDecoder* decoder = mb->decoder;
 
-  const byte (*pos_scan4x4)[2] = ((decoder->structure == FRAME) && (!mb->mbField)) ? SNGL_SCAN : FIELD_SCAN;
+  const byte (*pos_scan4x4)[2] = ((decoder->coding.structure == FRAME) && (!mb->mbField)) ? SNGL_SCAN : FIELD_SCAN;
   int start_scan = IS_I16MB(mb) ? 1 : 0;
   int64* cur_cbp = &mb->cbpStructure[plane].blk;
 
@@ -684,7 +684,7 @@ static void readCompCoef8x8cavlc (sMacroblock* mb, eColorPlane plane,
   sSlice* slice = mb->slice;
   sDecoder* decoder = mb->decoder;
 
-  const byte (*pos_scan8x8)[2] = ((decoder->structure == FRAME) && (!mb->mbField)) ? SNGL_SCAN8x8 : FIELD_SCAN8x8;
+  const byte (*pos_scan8x8)[2] = ((decoder->coding.structure == FRAME) && (!mb->mbField)) ? SNGL_SCAN8x8 : FIELD_SCAN8x8;
   int start_scan = IS_I16MB(mb) ? 1 : 0;
   int64 *cur_cbp = &mb->cbpStructure[plane].blk;
   int coef_ctr, cur_context;
@@ -751,7 +751,7 @@ static void read_comp_coeff_8x8_CAVLC_ls (sMacroblock* mb, eColorPlane plane,
   sSlice* slice = mb->slice;
   sDecoder* decoder = mb->decoder;
 
-  const byte (*pos_scan8x8)[2] = ((decoder->structure == FRAME) && (!mb->mbField)) ? SNGL_SCAN8x8 : FIELD_SCAN8x8;
+  const byte (*pos_scan8x8)[2] = ((decoder->coding.structure == FRAME) && (!mb->mbField)) ? SNGL_SCAN8x8 : FIELD_SCAN8x8;
   int start_scan = IS_I16MB(mb) ? 1 : 0;
   int64*cur_cbp = &mb->cbpStructure[plane].blk;
 
@@ -830,7 +830,7 @@ static void read_CBP_and_coeffs_from_NAL_CAVLC_400 (sMacroblock* mb) {
   int (*InvLevelScale4x4)[4] = NULL;
   int (*InvLevelScale8x8)[8] = NULL;
   // select scan type
-  const byte (*pos_scan4x4)[2] = ((decoder->structure == FRAME) && (!mb->mbField)) ? SNGL_SCAN : FIELD_SCAN;
+  const byte (*pos_scan4x4)[2] = ((decoder->coding.structure == FRAME) && (!mb->mbField)) ? SNGL_SCAN : FIELD_SCAN;
   const byte *pos_scan_4x4 = pos_scan4x4[0];
 
   // read CBP if not new intra mode
@@ -965,7 +965,7 @@ static void read_CBP_and_coeffs_from_NAL_CAVLC_422 (sMacroblock* mb) {
   int (*InvLevelScale4x4)[4] = NULL;
   int (*InvLevelScale8x8)[8] = NULL;
   // select scan type
-  const byte (*pos_scan4x4)[2] = ((decoder->structure == FRAME) && (!mb->mbField)) ? SNGL_SCAN : FIELD_SCAN;
+  const byte (*pos_scan4x4)[2] = ((decoder->coding.structure == FRAME) && (!mb->mbField)) ? SNGL_SCAN : FIELD_SCAN;
   const byte *pos_scan_4x4 = pos_scan4x4[0];
 
   // read CBP if not new intra mode
@@ -1234,7 +1234,7 @@ static void read_CBP_and_coeffs_from_NAL_CAVLC_444 (sMacroblock* mb) {
   int (*InvLevelScale4x4)[4] = NULL;
   int (*InvLevelScale8x8)[8] = NULL;
   // select scan type
-  const byte (*pos_scan4x4)[2] = ((decoder->structure == FRAME) && (!mb->mbField)) ? SNGL_SCAN : FIELD_SCAN;
+  const byte (*pos_scan4x4)[2] = ((decoder->coding.structure == FRAME) && (!mb->mbField)) ? SNGL_SCAN : FIELD_SCAN;
   const byte *pos_scan_4x4 = pos_scan4x4[0];
 
   // read CBP if not new intra mode
@@ -1398,7 +1398,7 @@ static void read_CBP_and_coeffs_from_NAL_CAVLC_420 (sMacroblock* mb) {
 
   int qp_per, qp_rem;
   sDecoder* decoder = mb->decoder;
-  int smb = ((decoder->type==SP_SLICE) && (mb->isIntraBlock == FALSE)) || (decoder->type == SI_SLICE && mb->mbType == SI4MB);
+  int smb = ((decoder->coding.type==SP_SLICE) && (mb->isIntraBlock == FALSE)) || (decoder->coding.type == SI_SLICE && mb->mbType == SI4MB);
 
   int uv;
   int qp_per_uv[2];
@@ -1415,7 +1415,7 @@ static void read_CBP_and_coeffs_from_NAL_CAVLC_420 (sMacroblock* mb) {
   int (*InvLevelScale4x4)[4] = NULL;
   int (*InvLevelScale8x8)[8] = NULL;
   // select scan type
-  const byte (*pos_scan4x4)[2] = ((decoder->structure == FRAME) && (!mb->mbField)) ? SNGL_SCAN : FIELD_SCAN;
+  const byte (*pos_scan4x4)[2] = ((decoder->coding.structure == FRAME) && (!mb->mbField)) ? SNGL_SCAN : FIELD_SCAN;
   const byte *pos_scan_4x4 = pos_scan4x4[0];
 
   // read CBP if not new intra mode
@@ -1630,7 +1630,7 @@ void set_read_CBP_and_coeffs_cavlc (sSlice* slice) {
 
   switch (slice->decoder->activeSPS->chromaFormatIdc) {
     case YUV444:
-      if (slice->decoder->sepColourPlaneFlag == 0)
+      if (slice->decoder->coding.sepColourPlaneFlag == 0)
         slice->readCBPcoeffs = read_CBP_and_coeffs_from_NAL_CAVLC_444;
       else
         slice->readCBPcoeffs = read_CBP_and_coeffs_from_NAL_CAVLC_400;

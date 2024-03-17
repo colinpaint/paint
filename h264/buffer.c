@@ -706,12 +706,12 @@ sPicture* allocPicture (sDecoder* decoder, ePicStructure structure,
   s->iLumaPadX = decoder->iLumaPadX;
   s->iChromaPadY = decoder->iChromaPadY;
   s->iChromaPadX = decoder->iChromaPadX;
-  s->sepColourPlaneFlag = decoder->sepColourPlaneFlag;
+  s->sepColourPlaneFlag = decoder->coding.sepColourPlaneFlag;
 
   getMem2Dmp (&s->mvInfo, (sizeY >> BLOCK_SHIFT), (sizeX >> BLOCK_SHIFT));
   allocPicMotion (&s->motion , (sizeY >> BLOCK_SHIFT), (sizeX >> BLOCK_SHIFT));
 
-  if (decoder->sepColourPlaneFlag != 0)
+  if (decoder->coding.sepColourPlaneFlag != 0)
     for (int nplane = 0; nplane < MAX_PLANE; nplane++) {
       getMem2Dmp (&s->JVmv_info[nplane], (sizeY >> BLOCK_SHIFT), (sizeX >> BLOCK_SHIFT));
       allocPicMotion (&s->JVmotion[nplane] , (sizeY >> BLOCK_SHIFT), (sizeX >> BLOCK_SHIFT));
@@ -1895,7 +1895,7 @@ void initImage (sDecoder* decoder, sImage* image, sSPS* sps) {
     }
   else {
     getMem2Dpel (&(image->frm_data[0]), decoder->height, decoder->width);
-    if (decoder->yuvFormat != YUV400) {
+    if (decoder->coding.yuvFormat != YUV400) {
       getMem2Dpel (&(image->frm_data[1]), decoder->heightCr, decoder->widthCr);
       getMem2Dpel (&(image->frm_data[2]), decoder->heightCr, decoder->widthCr);
       if (sizeof(sPixel) == sizeof(unsigned char)) {
@@ -1917,7 +1917,7 @@ void initImage (sDecoder* decoder, sImage* image, sSPS* sps) {
   if (!decoder->activeSPS->frameMbOnlyFlag) {
     // allocate memory for field reference frame buffers
     init_top_bot_planes (image->frm_data[0], decoder->height, &(image->top_data[0]), &(image->bot_data[0]));
-    if (decoder->yuvFormat != YUV400) {
+    if (decoder->coding.yuvFormat != YUV400) {
       init_top_bot_planes (image->frm_data[1], decoder->heightCr, &(image->top_data[1]), &(image->bot_data[1]));
       init_top_bot_planes (image->frm_data[2], decoder->heightCr, &(image->top_data[2]), &(image->bot_data[2]));
       }
@@ -1927,7 +1927,7 @@ void initImage (sDecoder* decoder, sImage* image, sSPS* sps) {
 //{{{
 void freeImage (sDecoder* decoder, sImage* image) {
 
-  if (decoder->sepColourPlaneFlag ) {
+  if (decoder->coding.sepColourPlaneFlag ) {
     for (int nplane = 0; nplane < MAX_PLANE; nplane++ ) {
       if (image->frm_data[nplane]) {
         free_mem2Dpel (image->frm_data[nplane]);      // free ref frame buffers

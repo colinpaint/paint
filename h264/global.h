@@ -702,9 +702,35 @@ typedef struct Slice {
   void (*linfoCbpInter) (int, int, int*, int*);
   } sSlice;
 //}}}
+//{{{  sParam
+typedef struct Param {
+  int vlcDebug;
+  int naluDebug;
+  int sliceDebug;
+  int spsDebug;
+  int ppsDebug;
+  int seiDebug;
+
+  int refOffset;
+  int pocScale;
+  int refPocGap;
+  int pocGap;
+  int concealMode;
+  int intraProfileDeblocking; // Loop filter usage determined by flags and parameters in s
+
+  sFrameFormat source;
+  sFrameFormat output;
+  int dpbPlus[2];
+  } sParam;
+//}}}
 //{{{  sCoding
 typedef struct CodingParam {
   int profileIdc;
+  int structure;           // Identify picture structure type
+  int yuvFormat;
+  int sepColourPlaneFlag;
+  int type;                // image type INTER/INTRA
+
   int width;
   int height;
   int widthCr;   // width chroma
@@ -753,27 +779,6 @@ typedef struct CodingParam {
   int totalScale;
   } sCoding;
 //}}}
-//{{{  sParam
-typedef struct Param {
-  int vlcDebug;
-  int naluDebug;
-  int sliceDebug;
-  int spsDebug;
-  int ppsDebug;
-  int seiDebug;
-
-  int refOffset;
-  int pocScale;
-  int refPocGap;
-  int pocGap;
-  int concealMode;
-  int intraProfileDeblocking; // Loop filter usage determined by flags and parameters in s
-
-  sFrameFormat source;
-  sFrameFormat output;
-  int dpbPlus[2];
-  } sParam;
-//}}}
 //{{{  sDecoder
 typedef struct Decoder {
   sParam       param;
@@ -814,35 +819,27 @@ typedef struct Decoder {
   int          newFrame;
 
   struct DPB*  dpb;
-  sCoding*     coding;
-  struct OldSlice* oldSlice;
 
-  // current picture property
   int          picSliceIndex;
   int          numDecodedMbs;
   int          numDecodedSlices;
   int          numAllocatedSlices;
-
   sSlice**     sliceList;
+  sSlice*      nextSlice;           // pointer to first sSlice of next picture;
+  struct OldSlice* oldSlice;
 
-  int          structure;           // Identify picture structure type
-  int          yuvFormat;
-  int          sepColourPlaneFlag;
-  int          type;                // image type INTER/INTRA
+  sCoding      coding;
   sBlockPos*   picPos;
   byte****     nzCoeff;
 
+  sMacroblock* mbData;              // array containing all MBs of a whole frame
+  sMacroblock* mbDataJV[MAX_PLANE]; // mbData to be used for 4:4:4 independent mode
   char*        intraBlock;
   char*        intraBlockJV[MAX_PLANE];
   byte**       predMode;            // prediction type [90][74]
   byte**       predModeJV[MAX_PLANE];
   int**        siBlock;
   int**        siBlockJV[MAX_PLANE];
-
-  sSlice*      nextSlice;           // pointer to first sSlice of next picture;
-  sMacroblock* mbData;              // array containing all MBs of a whole frame
-  sMacroblock* mbDataJV[MAX_PLANE]; // mbData to be used for 4:4:4 independent mode
-  int          ChromaArrayType;
 
   // picture error conceal
   // concealHead points to first node in list, concealTail points to
