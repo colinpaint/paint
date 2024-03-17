@@ -1429,7 +1429,6 @@ static void setupBuffers (sDecoder* decoder) {
     decoder->siBlock = NULL;
     }
   else {
-    decoder->mbData = decoder->coding->mbData;
     decoder->intraBlock = decoder->coding->intraBlock;
     decoder->predMode = decoder->coding->predMode;
     decoder->siBlock = decoder->coding->siBlock;
@@ -1437,8 +1436,6 @@ static void setupBuffers (sDecoder* decoder) {
 
   decoder->picPos = decoder->coding->picPos;
   decoder->nzCoeff = decoder->coding->nzCoeff;
-  decoder->qpPerMatrix = decoder->coding->qpPerMatrix;
-  decoder->qpRemMatrix = decoder->coding->qpRemMatrix;
   decoder->oldFrameSizeMbs = decoder->coding->oldFrameSizeMbs;
   }
 //}}}

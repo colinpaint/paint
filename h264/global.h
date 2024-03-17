@@ -755,7 +755,6 @@ typedef struct CodingParam {
   int totalScale;
   unsigned int oldFrameSizeMbs;
 
-  sMacroblock* mbData;               // array containing all MBs of a whole frame
   sMacroblock* mbDataJV[MAX_PLANE]; // mbData to be used for 4:4:4 independent mode
 
   char*        intraBlock;
@@ -767,8 +766,6 @@ typedef struct CodingParam {
 
   int**        siBlock;
   int**        siBlockJV[MAX_PLANE];
-  int*         qpPerMatrix;
-  int*         qpRemMatrix;
   } sCoding;
 //}}}
 //{{{  sLayer

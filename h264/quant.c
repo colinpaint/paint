@@ -148,31 +148,31 @@ static void CalculateQuant8x8Param (sSlice* slice) {
 //}}}
 
 //{{{
-void allocQuant (sCoding* coding) {
+void allocQuant (sDecoder* decoder) {
 // alloc quant matrices
 
-  int bitdepth_qp_scale = imax (coding->bitdepthLumeQpScale, coding->bitdepthChromaQpScale);
+  int bitdepth_qp_scale = imax (decoder->bitdepthLumeQpScale, decoder->bitdepthChromaQpScale);
 
-  if (!coding->qpPerMatrix)
-    coding->qpPerMatrix = (int*)malloc ((MAX_QP + 1 + bitdepth_qp_scale)*sizeof(int));
+  if (!decoder->qpPerMatrix)
+    decoder->qpPerMatrix = (int*)malloc ((MAX_QP + 1 + bitdepth_qp_scale)*sizeof(int));
 
-  if (!coding->qpRemMatrix)
-    coding->qpRemMatrix = (int*)malloc ((MAX_QP + 1 + bitdepth_qp_scale)*sizeof(int));
+  if (!decoder->qpRemMatrix)
+    decoder->qpRemMatrix = (int*)malloc ((MAX_QP + 1 + bitdepth_qp_scale)*sizeof(int));
 
   for (int i = 0; i < MAX_QP + bitdepth_qp_scale + 1; i++) {
-    coding->qpPerMatrix[i] = i / 6;
-    coding->qpRemMatrix[i] = i % 6;
+    decoder->qpPerMatrix[i] = i / 6;
+    decoder->qpRemMatrix[i] = i % 6;
     }
   }
 //}}}
 //{{{
-void freeQuant (sCoding* coding) {
+void freeQuant (sDecoder* decoder) {
 
-  free (coding->qpPerMatrix);
-  coding->qpPerMatrix = NULL;
+  free (decoder->qpPerMatrix);
+  decoder->qpPerMatrix = NULL;
 
-  free (coding->qpRemMatrix);
-  coding->qpRemMatrix = NULL;
+  free (decoder->qpRemMatrix);
+  decoder->qpRemMatrix = NULL;
   }
 //}}}
 

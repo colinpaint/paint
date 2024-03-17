@@ -253,11 +253,8 @@ void initFrext (sDecoder* decoder) {
 //{{{
 void initGlobalBuffers (sDecoder* decoder) {
 
-  //freeLayerBuffers (decoder);
-
   // alloc coding
   if (decoder->coding->sepColourPlaneFlag) {
-    decoder->coding->mbData = NULL;
     decoder->coding->intraBlock = NULL;
     decoder->coding->predMode = NULL;
     decoder->coding->siBlock = NULL;
@@ -277,8 +274,8 @@ void initGlobalBuffers (sDecoder* decoder) {
     }
   else {
     printf ("--- initGlobalBuffers\n");
-    if (!decoder->coding->mbData)
-      decoder->coding->mbData = (sMacroblock*)calloc (decoder->coding->frameSizeMbs, sizeof(sMacroblock));
+    if (!decoder->mbData)
+      decoder->mbData = (sMacroblock*)calloc (decoder->coding->frameSizeMbs, sizeof(sMacroblock));
     if (!decoder->coding->intraBlock)
       decoder->coding->intraBlock = (char*)calloc (decoder->coding->frameSizeMbs, sizeof(char));
 
@@ -302,7 +299,7 @@ void initGlobalBuffers (sDecoder* decoder) {
     getMem4D (&(decoder->coding->nzCoeff), decoder->coding->frameSizeMbs, 3, BLOCK_SIZE, BLOCK_SIZE);
 
   // alloc quant
-  allocQuant (decoder->coding);
+  allocQuant (decoder);
 
   decoder->coding->oldFrameSizeMbs = decoder->coding->frameSizeMbs;
   }
@@ -334,8 +331,8 @@ void freeLayerBuffers (sDecoder* decoder) {
       }
     }
   else {
-    free (decoder->coding->mbData);
-    decoder->coding->mbData = NULL;
+    free (decoder->mbData);
+    decoder->mbData = NULL;
 
     free_mem2Dint (decoder->coding->siBlock);
     decoder->coding->siBlock = NULL;
@@ -356,7 +353,7 @@ void freeLayerBuffers (sDecoder* decoder) {
   decoder->coding->nzCoeff = NULL;
 
   // free quant
-  freeQuant (decoder->coding);
+  freeQuant (decoder);
   }
 //}}}
 
