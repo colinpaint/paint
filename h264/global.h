@@ -742,8 +742,8 @@ typedef struct CodingParam {
   int bitdepthScale[2];
   int bitdepthLumeQpScale;
   int bitdepthChromaQpScale;
-  unsigned int dcPredValueComp[MAX_PLANE]; // component value for DC prediction (depends on component pel bit depth)
   int maxPelValueComp[MAX_PLANE];          // max value that one picture element (pixel) can take (depends on pic_unit_bitdepth)
+  unsigned int dcPredValueComp[MAX_PLANE]; // component value for DC prediction (depends on component pel bit depth)
 
   int losslessQpPrimeFlag;
   int numBlock8x8uv;
@@ -754,12 +754,11 @@ typedef struct CodingParam {
   int mbCrSizeXblock;
   int mbCrSizeYblock;
   int mbCrSize;
-  int mbSize[3][2];      // component macroblock dimensions
+  int mbSize[3][2];       // component macroblock dimensions
   int mbSizeBlock[3][2];  // component macroblock dimensions
   int mbSizeShift[3][2];
 
-  int maxVmvR;                  // maximum vertical motion vector range in luma quarter frame pixel units for the current levelIdc
-  int ChromaArrayType;
+  int maxVmvR;            // maximum vertical motion vector range in luma quarter frame pixel units for the current levelIdc
   int maxFrameNum;
 
   unsigned int picWidthMbs;
@@ -828,6 +827,55 @@ typedef struct Decoder {
   sSlice*      nextSlice;           // pointer to first sSlice of next picture;
   struct OldSlice* oldSlice;
 
+  // coding stuff
+  int width;
+  int height;
+  int widthCr;
+  int heightCr;
+
+  int picDiskUnitSize;
+  int picUnitBitSizeDisk;
+  short bitdepthLuma;
+  short bitdepthChroma;
+  int bitdepthScale[2];
+  int bitdepthLumeQpScale;
+  int bitdepthChromaQpScale;
+  int maxPelValueComp[MAX_PLANE];
+  unsigned int dcPredValueComp[MAX_PLANE];
+
+  int losslessQpPrimeFlag;
+  int numBlock8x8uv;
+  int numUvBlocks;
+  int numCdcCoeff;
+  int mbCrSizeX;
+  int mbCrSizeY;
+  int mbCrSizeXblock;
+  int mbCrSizeYblock;
+  int mbCrSize;
+  int mbSize[3][2];
+  int mbSizeBlock[3][2];
+  int mbSizeShift[3][2];
+
+  int maxFrameNum;
+  int maxVmvR;
+
+  unsigned int picWidthMbs;
+  unsigned int picHeightMapUnits;
+  unsigned int frameHeightMbs;
+  unsigned int frameSizeMbs;
+  unsigned int oldFrameSizeMbs;
+
+  int iLumaPadX;
+  int iLumaPadY;
+  int iChromaPadX;
+  int iChromaPadY;
+
+  int subpelX;
+  int subpelY;
+  int shiftpelX;
+  int shiftpelY;
+  int totalScale;
+
   // sCoding
   sCoding      coding;
   sBlockPos*   picPos;
@@ -838,7 +886,7 @@ typedef struct Decoder {
   byte**       predMode;            // prediction type [90][74]
   int**        siBlock;
 
-  sMacroblock* mbDataJV[MAX_PLANE]; 
+  sMacroblock* mbDataJV[MAX_PLANE];
   char*        intraBlockJV[MAX_PLANE];
   byte**       predModeJV[MAX_PLANE];
   int**        siBlockJV[MAX_PLANE];
@@ -912,58 +960,8 @@ typedef struct Decoder {
   int                  deblockMode;  // 0: deblock in picture, 1: deblock in slice;
   sDecodedPic*         decOutputPic;
 
-  int   iLumaPadX;
-  int   iLumaPadY;
-  int   iChromaPadX;
-  int   iChromaPadY;
-
   // control;
   int   deblockEnable;
-
-  int   width;
-  int   height;
-  int   widthCr;
-  int   heightCr;
-
-  // Fidelity Range Extensions Stuff
-  int   picUnitBitSizeDisk;
-  short bitdepthLuma;
-  short bitdepthChroma;
-  int   bitdepthScale[2];
-  int   bitdepthLumeQpScale;
-  int   bitdepthChromaQpScale;
-  unsigned int dcPredValueComp[MAX_PLANE]; // component value for DC prediction (depends on component pel bit depth)
-  int  maxPelValueComp[MAX_PLANE];          // max value that one picture element (pixel) can take (depends on pic_unit_bitdepth)
-
-  int picDiskUnitSize;
-
-  int losslessQpPrimeFlag;
-  int numBlock8x8uv;
-  int numUvBlocks;
-  int numCdcCoeff;
-  int mbCrSizeX;
-  int mbCrSizeY;
-  int mbCrSizeXblock;
-  int mbCrSizeYblock;
-  int mbCrSize;
-  int mbSize[3][2];
-  int mbSizeBlock[3][2];
-  int mbSizeShift[3][2];
-  int subpelX;
-  int subpelY;
-  int shiftpelX;
-  int shiftpelY;
-  int totalScale;
-  int maxFrameNum;
-
-  unsigned int picWidthMbs;
-  unsigned int picHeightMapUnits;
-  unsigned int frameHeightMbs;
-  unsigned int frameSizeMbs;
-  unsigned int oldFrameSizeMbs;
-
-  // maximum vertical motion vector range in luma quarter frame pixel units for the current levelIdc
-  int maxVmvR;
 
   // virtual methods
   void (*getNeighbour) (sMacroblock*, int, int, int[2], sPixelPos*);

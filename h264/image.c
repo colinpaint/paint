@@ -1647,7 +1647,7 @@ static void reorderLists (sSlice* slice) {
       if (decoder->nonConformingStream)
         printf ("RefPicList0[%d] no refPic\n", slice->numRefIndexActive[LIST_0]-1);
       else
-        error ("RefPicList0[num_ref_idx_l0_active_minus1] no refPic");
+        printf ("RefPicList0[num_ref_idx_l0_active_minus1] no refPic");
       }
 
     // that's a definition
@@ -1661,7 +1661,7 @@ static void reorderLists (sSlice* slice) {
       if (decoder->nonConformingStream)
         printf ("RefPicList1[%d] no refPic\n", slice->numRefIndexActive[LIST_1] - 1);
       else
-        error ("RefPicList1[num_ref_idx_l1_active_minus1] no refPic");
+        printf ("RefPicList1[num_ref_idx_l1_active_minus1] no refPic");
       }
 
     // that's a definition
