@@ -25,7 +25,7 @@ static inline void* mem_calloc (size_t nitems, size_t size) {
 //}}}
 //{{{
 static inline void memFree (void *a) {
-  free_pointer (a);
+  free (a);
   }
 //}}}
 

@@ -1246,14 +1246,14 @@ static int read_and_store_CBP_block_bit_444 (sMacroblock* mb, sDecodingEnv*  dec
         if(mbData[block_b.mbIndex].mbType==IPCM)
           upper_bit=1;
         else
-          upper_bit = get_bit(mbData[block_b.mbIndex].cbpStructure[0].bits, bit + bit_pos_b);
+          upper_bit = getBit (mbData[block_b.mbIndex].cbpStructure[0].bits, bit + bit_pos_b);
       }
 
       if (block_a.available) {
         if(mbData[block_a.mbIndex].mbType==IPCM)
           left_bit=1;
         else
-          left_bit = get_bit(mbData[block_a.mbIndex].cbpStructure[0].bits, bit + bit_pos_a);
+          left_bit = getBit (mbData[block_a.mbIndex].cbpStructure[0].bits, bit + bit_pos_a);
       }
 
 
@@ -1270,7 +1270,7 @@ static int read_and_store_CBP_block_bit_444 (sMacroblock* mb, sDecodingEnv*  dec
         if(mbData[block_b.mbIndex].mbType==IPCM)
           upper_bit = 1;
         else
-          upper_bit = get_bit(mbData[block_b.mbIndex].cbpStructure[0].bits,bit+bit_pos_b);
+          upper_bit = getBit(mbData[block_b.mbIndex].cbpStructure[0].bits,bit+bit_pos_b);
       }
 
 
@@ -1278,7 +1278,7 @@ static int read_and_store_CBP_block_bit_444 (sMacroblock* mb, sDecodingEnv*  dec
         if(mbData[block_a.mbIndex].mbType==IPCM)
           left_bit = 1;
         else
-          left_bit = get_bit(mbData[block_a.mbIndex].cbpStructure[0].bits,bit+bit_pos_a);
+          left_bit = getBit(mbData[block_a.mbIndex].cbpStructure[0].bits,bit+bit_pos_a);
       }
 
 
@@ -1296,17 +1296,17 @@ static int read_and_store_CBP_block_bit_444 (sMacroblock* mb, sDecodingEnv*  dec
         upper_bit = 0;
       else {
         if(type==LUMA_8x8)
-          upper_bit = get_bit(mbData[block_b.mbIndex].cbpStructure[0].bits_8x8, bit + bit_pos_b);
+          upper_bit = getBit(mbData[block_b.mbIndex].cbpStructure[0].bits_8x8, bit + bit_pos_b);
         else if (type==CB_8x8)
-          upper_bit = get_bit(mbData[block_b.mbIndex].cbpStructure[1].bits_8x8, bit + bit_pos_b);
+          upper_bit = getBit(mbData[block_b.mbIndex].cbpStructure[1].bits_8x8, bit + bit_pos_b);
         else if (type==CR_8x8)
-          upper_bit = get_bit(mbData[block_b.mbIndex].cbpStructure[2].bits_8x8, bit + bit_pos_b);
+          upper_bit = getBit(mbData[block_b.mbIndex].cbpStructure[2].bits_8x8, bit + bit_pos_b);
         else if ((type==CB_4x4)||(type==CB_4x8)||(type==CB_8x4)||(type==CB_16AC)||(type==CB_16DC))
-          upper_bit = get_bit(mbData[block_b.mbIndex].cbpStructure[1].bits,bit+bit_pos_b);
+          upper_bit = getBit(mbData[block_b.mbIndex].cbpStructure[1].bits,bit+bit_pos_b);
         else if ((type==CR_4x4)||(type==CR_4x8)||(type==CR_8x4)||(type==CR_16AC)||(type==CR_16DC))
-          upper_bit = get_bit(mbData[block_b.mbIndex].cbpStructure[2].bits,bit+bit_pos_b);
+          upper_bit = getBit(mbData[block_b.mbIndex].cbpStructure[2].bits,bit+bit_pos_b);
         else
-          upper_bit = get_bit(mbData[block_b.mbIndex].cbpStructure[0].bits,bit+bit_pos_b);
+          upper_bit = getBit(mbData[block_b.mbIndex].cbpStructure[0].bits,bit+bit_pos_b);
         }
       }
 
@@ -1319,17 +1319,17 @@ static int read_and_store_CBP_block_bit_444 (sMacroblock* mb, sDecodingEnv*  dec
         left_bit=0;
       else {
         if(type==LUMA_8x8)
-          left_bit = get_bit(mbData[block_a.mbIndex].cbpStructure[0].bits_8x8,bit+bit_pos_a);
+          left_bit = getBit(mbData[block_a.mbIndex].cbpStructure[0].bits_8x8,bit+bit_pos_a);
         else if (type==CB_8x8)
-          left_bit = get_bit(mbData[block_a.mbIndex].cbpStructure[1].bits_8x8,bit+bit_pos_a);
+          left_bit = getBit(mbData[block_a.mbIndex].cbpStructure[1].bits_8x8,bit+bit_pos_a);
         else if (type==CR_8x8)
-          left_bit = get_bit(mbData[block_a.mbIndex].cbpStructure[2].bits_8x8,bit+bit_pos_a);
+          left_bit = getBit(mbData[block_a.mbIndex].cbpStructure[2].bits_8x8,bit+bit_pos_a);
         else if ((type==CB_4x4)||(type==CB_4x8)||(type==CB_8x4)||(type==CB_16AC)||(type==CB_16DC))
-          left_bit = get_bit(mbData[block_a.mbIndex].cbpStructure[1].bits,bit+bit_pos_a);
+          left_bit = getBit(mbData[block_a.mbIndex].cbpStructure[1].bits,bit+bit_pos_a);
         else if ((type==CR_4x4)||(type==CR_4x8)||(type==CR_8x4)||(type==CR_16AC)||(type==CR_16DC))
-          left_bit = get_bit(mbData[block_a.mbIndex].cbpStructure[2].bits,bit+bit_pos_a);
+          left_bit = getBit(mbData[block_a.mbIndex].cbpStructure[2].bits,bit+bit_pos_a);
         else
-          left_bit = get_bit(mbData[block_a.mbIndex].cbpStructure[0].bits,bit+bit_pos_a);
+          left_bit = getBit(mbData[block_a.mbIndex].cbpStructure[0].bits,bit+bit_pos_a);
         }
       }
 
@@ -1395,7 +1395,7 @@ static inline int set_cbp_bit_ac(sMacroblock *neighbor_mb, sPixelPos *block) {
     return 1;
   else {
     int bit_pos = 1 + (block->y << 2) + block->x;
-    return get_bit(neighbor_mb->cbpStructure[0].bits, bit_pos);
+    return getBit(neighbor_mb->cbpStructure[0].bits, bit_pos);
     }
   }
 //}}}
@@ -1582,14 +1582,14 @@ static int read_and_store_CBP_block_bit_normal (sMacroblock* mb, sDecodingEnv*  
       if(mbData[block_b.mbIndex].mbType==IPCM)
         upper_bit = 1;
       else
-        upper_bit = get_bit(mbData[block_b.mbIndex].cbpStructure[0].bits, bit);
+        upper_bit = getBit(mbData[block_b.mbIndex].cbpStructure[0].bits, bit);
       }
 
     if (block_a.available) {
       if(mbData[block_a.mbIndex].mbType==IPCM)
         left_bit = 1;
       else
-        left_bit = get_bit(mbData[block_a.mbIndex].cbpStructure[0].bits, bit);
+        left_bit = getBit(mbData[block_a.mbIndex].cbpStructure[0].bits, bit);
       }
 
     ctx = 2 * upper_bit + left_bit;
@@ -1623,7 +1623,7 @@ static int read_and_store_CBP_block_bit_normal (sMacroblock* mb, sDecodingEnv*  
         upper_bit=1;
       else {
         int bit_pos_b = 4*block_b.y + block_b.x;
-        upper_bit = get_bit(mbData[block_b.mbIndex].cbpStructure[0].bits, bit + bit_pos_b);
+        upper_bit = getBit(mbData[block_b.mbIndex].cbpStructure[0].bits, bit + bit_pos_b);
         }
       }
 
@@ -1632,7 +1632,7 @@ static int read_and_store_CBP_block_bit_normal (sMacroblock* mb, sDecodingEnv*  
         left_bit=1;
       else {
         int bit_pos_a = 4*block_a.y + block_a.x;
-        left_bit = get_bit(mbData[block_a.mbIndex].cbpStructure[0].bits,bit + bit_pos_a);
+        left_bit = getBit(mbData[block_a.mbIndex].cbpStructure[0].bits,bit + bit_pos_a);
         }
       }
 
