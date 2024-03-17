@@ -719,7 +719,6 @@ typedef struct CodingParam {
   unsigned int dcPredValueComp[MAX_PLANE]; // component value for DC prediction (depends on component pel bit depth)
   int maxPelValueComp[MAX_PLANE];          // max value that one picture element (pixel) can take (depends on pic_unit_bitdepth)
 
-  int yuvFormat;
   int losslessQpPrimeFlag;
   int numBlock8x8uv;
   int numUvBlocks;
@@ -734,7 +733,6 @@ typedef struct CodingParam {
   int mbSizeShift[3][2];
 
   int maxVmvR;                  // maximum vertical motion vector range in luma quarter frame pixel units for the current levelIdc
-  int sepColourPlaneFlag;
   int ChromaArrayType;
   int maxFrameNum;
 
@@ -826,18 +824,20 @@ typedef struct Decoder {
   int          numAllocatedSlices;
 
   sSlice**     sliceList;
-  char*        intraBlock;
-  char*        intraBlockJV[MAX_PLANE];
-
-  int          type;                // image type INTER/INTRA
-  byte**       predMode;            // prediction type [90][74]
-  byte**       predModeJV[MAX_PLANE];
-  byte****     nzCoeff;
-  int**        siBlock;
-  int**        siBlockJV[MAX_PLANE];
-  sBlockPos*   picPos;
 
   int          structure;           // Identify picture structure type
+  int          yuvFormat;
+  int          sepColourPlaneFlag;
+  int          type;                // image type INTER/INTRA
+  sBlockPos*   picPos;
+  byte****     nzCoeff;
+
+  char*        intraBlock;
+  char*        intraBlockJV[MAX_PLANE];
+  byte**       predMode;            // prediction type [90][74]
+  byte**       predModeJV[MAX_PLANE];
+  int**        siBlock;
+  int**        siBlockJV[MAX_PLANE];
 
   sSlice*      nextSlice;           // pointer to first sSlice of next picture;
   sMacroblock* mbData;              // array containing all MBs of a whole frame
@@ -936,11 +936,8 @@ typedef struct Decoder {
   unsigned int dcPredValueComp[MAX_PLANE]; // component value for DC prediction (depends on component pel bit depth)
   int  maxPelValueComp[MAX_PLANE];          // max value that one picture element (pixel) can take (depends on pic_unit_bitdepth)
 
-  int sepColourPlaneFlag;
   int picDiskUnitSize;
 
-  int profileIdc;
-  int yuvFormat;
   int losslessQpPrimeFlag;
   int numBlock8x8uv;
   int numUvBlocks;
@@ -1033,7 +1030,7 @@ static inline int isHiIntraOnlyProfile (unsigned int profileIdc, Boolean constra
   extern void freeDecodedPictures (sDecodedPic* decodedPic);
   extern void clearDecodedPictures (sDecoder* decoder);
 
-  extern void setGlobalCodingProgram (sDecoder* decoder, sCoding* coding);
+  extern void setGlobalCodingProgram (sDecoder* decoder);
 //{{{
 #ifdef __cplusplus
 }

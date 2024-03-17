@@ -40,9 +40,10 @@ static void updateMaxValue (sFrameFormat* format) {
   }
 //}}}
 //{{{
-static void setCodingParam (sSPS* sps, sCoding* coding) {
+static void setCodingParam (sSPS* sps, sDecoder* decoder) {
 
   // maximum vertical motion vector range in luma quarter pixel units
+  sCoding* coding = decoder->coding;
   coding->profileIdc = sps->profileIdc;
   coding->losslessQpPrimeFlag = sps->losslessQpPrimeFlag;
   if (sps->levelIdc <= 10)
@@ -71,9 +72,9 @@ static void setCodingParam (sSPS* sps, sCoding* coding) {
   coding->frameHeightMbs = (2 - sps->frameMbOnlyFlag) * coding->picHeightMapUnits;
   coding->frameSizeMbs = coding->picWidthMbs * coding->frameHeightMbs;
 
-  coding->yuvFormat=sps->chromaFormatIdc;
-  coding->sepColourPlaneFlag = sps->sepColourPlaneFlag;
-  if (coding->sepColourPlaneFlag )
+  decoder->yuvFormat = sps->chromaFormatIdc;
+  decoder->sepColourPlaneFlag = sps->sepColourPlaneFlag;
+  if (decoder->sepColourPlaneFlag )
     coding->ChromaArrayType = 0;
   else
     coding->ChromaArrayType = sps->chromaFormatIdc;
@@ -602,7 +603,6 @@ void processSPS (sDecoder* decoder, sNalu* nalu) {
 
     makeSPSavailable (decoder, sps->spsId, sps);
 
-    decoder->profileIdc = sps->profileIdc;
     decoder->sepColourPlaneFlag = sps->sepColourPlaneFlag;
     if (decoder->sepColourPlaneFlag )
       decoder->ChromaArrayType = 0;
@@ -623,8 +623,8 @@ void activateSPS (sDecoder* decoder, sSPS* sps) {
     decoder->activeSPS = sps;
 
     if (isBLprofile (sps->profileIdc) && !decoder->dpb->initDone)
-      setCodingParam (sps, decoder->coding);
-    setGlobalCodingProgram (decoder, decoder->coding);
+      setCodingParam (sps, decoder);
+    setGlobalCodingProgram (decoder);
 
     initGlobalBuffers (decoder);
     if (!decoder->noOutputPriorPicFlag)

@@ -130,8 +130,8 @@ static void freeDecoder (sDecoder* decoder) {
   free (decoder->dpb);
   decoder->dpb = NULL;
 
-  free (decoder->coding);
-  decoder->coding = NULL;
+  free (decoder);
+  decoder = NULL;
 
   free (decoder->oldSlice);
   decoder->oldSlice = NULL;
@@ -254,7 +254,7 @@ void initFrext (sDecoder* decoder) {
 void initGlobalBuffers (sDecoder* decoder) {
 
   // alloc coding
-  if (decoder->coding->sepColourPlaneFlag) {
+  if (decoder->sepColourPlaneFlag) {
     for (unsigned i = 0; i < MAX_PLANE; ++i)
       if (!decoder->mbDataJV[i])
         decoder->mbDataJV[i] = (sMacroblock*)calloc (decoder->frameSizeMbs, sizeof(sMacroblock));
@@ -263,27 +263,27 @@ void initGlobalBuffers (sDecoder* decoder) {
         decoder->intraBlockJV[i] = (char*)calloc (decoder->frameSizeMbs, sizeof(char));
     for (unsigned i = 0; i < MAX_PLANE; ++i)
       if (!decoder->predModeJV[i])
-       getMem2D (&(decoder->predModeJV[i]), 4*decoder->frameHeightMbs, 4*decoder->coding->picWidthMbs);
+       getMem2D (&(decoder->predModeJV[i]), 4*decoder->frameHeightMbs, 4*decoder->picWidthMbs);
     for (unsigned i = 0; i < MAX_PLANE; ++i)
       if (!decoder->siBlockJV[i])
-        getMem2Dint (&(decoder->siBlockJV[i]), decoder->frameHeightMbs, decoder->coding->picWidthMbs);
+        getMem2Dint (&(decoder->siBlockJV[i]), decoder->frameHeightMbs, decoder->picWidthMbs);
     }
   else {
     printf ("--- initGlobalBuffers\n");
     if (!decoder->mbData)
-      decoder->mbData = (sMacroblock*)calloc (decoder->coding->frameSizeMbs, sizeof(sMacroblock));
+      decoder->mbData = (sMacroblock*)calloc (decoder->frameSizeMbs, sizeof(sMacroblock));
     if (!decoder->intraBlock)
-      decoder->intraBlock = (char*)calloc (decoder->coding->frameSizeMbs, sizeof(char));
+      decoder->intraBlock = (char*)calloc (decoder->frameSizeMbs, sizeof(char));
 
     if (!decoder->predMode)
-      getMem2D (&(decoder->predMode), 4*decoder->coding->frameHeightMbs, 4*decoder->coding->picWidthMbs);
+      getMem2D (&(decoder->predMode), 4*decoder->frameHeightMbs, 4*decoder->picWidthMbs);
     if (!decoder->siBlock)
-      getMem2Dint (&(decoder->siBlock), decoder->coding->frameHeightMbs, decoder->coding->picWidthMbs);
+      getMem2Dint (&(decoder->siBlock), decoder->frameHeightMbs, decoder->picWidthMbs);
     }
 
   // alloc picPos
   if (!decoder->picPos)
-    decoder->picPos = (sBlockPos*)calloc (decoder->coding->frameSizeMbs + 1, sizeof(sBlockPos));
+    decoder->picPos = (sBlockPos*)calloc (decoder->frameSizeMbs + 1, sizeof(sBlockPos));
   sBlockPos* blockPos = decoder->picPos;
   for (unsigned i = 0; i < decoder->frameSizeMbs+1; ++i) {
     blockPos[i].x = (short)(i % decoder->picWidthMbs);
@@ -311,7 +311,7 @@ void freeGlobalBuffers (sDecoder* decoder) {
 void freeLayerBuffers (sDecoder* decoder) {
 
   // free coding
-  if (decoder->coding->sepColourPlaneFlag) {
+  if (decoder->sepColourPlaneFlag) {
     for (int i = 0; i < MAX_PLANE; i++) {
       free (decoder->mbDataJV[i]);
       decoder->mbDataJV[i] = NULL;
@@ -412,7 +412,9 @@ void freeDecodedPictures (sDecodedPic* decodedPic) {
 //}}}
 
 //{{{
-void setGlobalCodingProgram (sDecoder* decoder, sCoding* coding) {
+void setGlobalCodingProgram (sDecoder* decoder) {
+
+  sCoding* coding = decoder->coding;
 
   decoder->bitdepthChroma = 0;
   decoder->widthCr = 0;
@@ -432,8 +434,6 @@ void setGlobalCodingProgram (sDecoder* decoder, sCoding* coding) {
   decoder->frameHeightMbs = coding->frameHeightMbs;
   decoder->frameSizeMbs = coding->frameSizeMbs;
 
-  decoder->yuvFormat = coding->yuvFormat;
-  decoder->sepColourPlaneFlag = coding->sepColourPlaneFlag;
   decoder->ChromaArrayType = coding->ChromaArrayType;
 
   decoder->width = coding->width;
