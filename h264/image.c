@@ -1416,34 +1416,30 @@ static void resetMb (sMacroblock* mb) {
 //{{{
 static void setupBuffers (sDecoder* decoder) {
 
-  if (!decoder->layerInitDone) {
-    if (decoder->coding->sepColourPlaneFlag) {
-      for (int i = 0; i < MAX_PLANE; i++ ) {
-        decoder->mbDataJV[i] = decoder->coding->mbDataJV[i];
-        decoder->intraBlockJV[i] = decoder->coding->intraBlockJV[i];
-        decoder->predModeJV[i] = decoder->coding->predModeJV[i];
-        decoder->siBlockJV[i] = decoder->coding->siBlockJV[i];
-        }
-      decoder->mbData = NULL;
-      decoder->intraBlock = NULL;
-      decoder->predMode = NULL;
-      decoder->siBlock = NULL;
+  if (decoder->coding->sepColourPlaneFlag) {
+    for (int i = 0; i < MAX_PLANE; i++ ) {
+      decoder->mbDataJV[i] = decoder->coding->mbDataJV[i];
+      decoder->intraBlockJV[i] = decoder->coding->intraBlockJV[i];
+      decoder->predModeJV[i] = decoder->coding->predModeJV[i];
+      decoder->siBlockJV[i] = decoder->coding->siBlockJV[i];
       }
-    else {
-      decoder->mbData = decoder->coding->mbData;
-      decoder->intraBlock = decoder->coding->intraBlock;
-      decoder->predMode = decoder->coding->predMode;
-      decoder->siBlock = decoder->coding->siBlock;
-      }
-
-    decoder->picPos = decoder->coding->picPos;
-    decoder->nzCoeff = decoder->coding->nzCoeff;
-    decoder->qpPerMatrix = decoder->coding->qpPerMatrix;
-    decoder->qpRemMatrix = decoder->coding->qpRemMatrix;
-    decoder->oldFrameSizeMbs = decoder->coding->oldFrameSizeMbs;
-
-    decoder->layerInitDone = 1;
+    decoder->mbData = NULL;
+    decoder->intraBlock = NULL;
+    decoder->predMode = NULL;
+    decoder->siBlock = NULL;
     }
+  else {
+    decoder->mbData = decoder->coding->mbData;
+    decoder->intraBlock = decoder->coding->intraBlock;
+    decoder->predMode = decoder->coding->predMode;
+    decoder->siBlock = decoder->coding->siBlock;
+    }
+
+  decoder->picPos = decoder->coding->picPos;
+  decoder->nzCoeff = decoder->coding->nzCoeff;
+  decoder->qpPerMatrix = decoder->coding->qpPerMatrix;
+  decoder->qpRemMatrix = decoder->coding->qpRemMatrix;
+  decoder->oldFrameSizeMbs = decoder->coding->oldFrameSizeMbs;
   }
 //}}}
 //{{{

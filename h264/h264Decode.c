@@ -31,7 +31,7 @@ void error (char* text) {
   }
 //}}}
 //{{{
-static void resetDpb (sDecoder* decoder, sDPB* dpb ) {
+static void resetDpb (sDecoder* decoder, sDPB* dpb) {
 
   dpb->decoder = decoder;
   dpb->initDone = 0;
@@ -121,6 +121,7 @@ static void freeSlice (sSlice *slice) {
   slice = NULL;
   }
 //}}}
+
 //{{{
 static void freeDecoder (sDecoder* decoder) {
 
@@ -153,6 +154,40 @@ static void freeDecoder (sDecoder* decoder) {
   decoder->nextPPS = NULL;
 
   free (decoder);
+  }
+//}}}
+
+//{{{
+sDataPartition* allocDataPartitions (int n) {
+
+  sDataPartition* dataPartitions = (sDataPartition*)calloc (n, sizeof(sDataPartition));
+  if (!dataPartitions)
+    error ("allocDataPartitions: Memory allocation for Data dataPartition failed");
+
+  for (int i = 0; i < n; ++i) {
+    // loop over all dataPartitions
+    sDataPartition* dataPartition = &(dataPartitions[i]);
+    dataPartition->s = (sBitStream*)calloc(1, sizeof(sBitStream));
+    if (dataPartition->s == NULL)
+      error ("allocDataPartitions: Memory allocation for sBitStream failed");
+
+    dataPartition->s->bitStreamBuffer = (byte*)calloc(MAX_CODED_FRAME_SIZE, sizeof(byte));
+    if (dataPartition->s->bitStreamBuffer == NULL)
+      error ("allocDataPartitions: Memory allocation for bitStreamBuffer failed");
+    }
+
+  return dataPartitions;
+  }
+//}}}
+//{{{
+void freeDataPartitions (sDataPartition* dataPartitions, int n) {
+
+  for (int i = 0; i < n; ++i) {
+    free (dataPartitions[i].s->bitStreamBuffer);
+    free (dataPartitions[i].s);
+    }
+
+  free (dataPartitions);
   }
 //}}}
 
@@ -215,80 +250,60 @@ void initFrext (sDecoder* decoder) {
   decoder->mbSizeShift[1][1] = decoder->mbSizeShift[2][1] = ceilLog2sf (decoder->mbSize[1][1]);
   }
 //}}}
-
-//{{{
-sDataPartition* allocDataPartitions (int n) {
-
-  sDataPartition* dataPartitions = (sDataPartition*)calloc (n, sizeof(sDataPartition));
-  if (!dataPartitions)
-    error ("allocDataPartitions: Memory allocation for Data dataPartition failed");
-
-  for (int i = 0; i < n; ++i) {
-    // loop over all dataPartitions
-    sDataPartition* dataPartition = &(dataPartitions[i]);
-    dataPartition->s = (sBitStream*)calloc(1, sizeof(sBitStream));
-    if (dataPartition->s == NULL)
-      error ("allocDataPartitions: Memory allocation for sBitStream failed");
-
-    dataPartition->s->bitStreamBuffer = (byte*)calloc(MAX_CODED_FRAME_SIZE, sizeof(byte));
-    if (dataPartition->s->bitStreamBuffer == NULL)
-      error ("allocDataPartitions: Memory allocation for bitStreamBuffer failed");
-    }
-
-  return dataPartitions;
-  }
-//}}}
-//{{{
-void freeDataPartitions (sDataPartition* dataPartitions, int n) {
-
-  for (int i = 0; i < n; ++i) {
-    free (dataPartitions[i].s->bitStreamBuffer);
-    free (dataPartitions[i].s);
-    }
-
-  free (dataPartitions);
-  }
-//}}}
-
 //{{{
 void initGlobalBuffers (sDecoder* decoder) {
 
-  freeLayerBuffers (decoder);
+  //freeLayerBuffers (decoder);
 
-  // allocate memory in structure decoder
+  // alloc coding
   if (decoder->coding->sepColourPlaneFlag) {
+    decoder->coding->mbData = NULL;
     decoder->coding->intraBlock = NULL;
     decoder->coding->predMode = NULL;
     decoder->coding->siBlock = NULL;
 
     for (unsigned i = 0; i < MAX_PLANE; ++i)
-      decoder->coding->mbDataJV[i] = (sMacroblock*)calloc (decoder->coding->frameSizeMbs, sizeof(sMacroblock));
+      if (!decoder->coding->mbDataJV[i])
+        decoder->coding->mbDataJV[i] = (sMacroblock*)calloc (decoder->coding->frameSizeMbs, sizeof(sMacroblock));
     for (unsigned i = 0; i < MAX_PLANE; ++i)
-      decoder->coding->intraBlockJV[i] = (char*)calloc (decoder->coding->frameSizeMbs, sizeof(char));
+      if (!decoder->coding->intraBlockJV[i])
+        decoder->coding->intraBlockJV[i] = (char*)calloc (decoder->coding->frameSizeMbs, sizeof(char));
     for (unsigned i = 0; i < MAX_PLANE; ++i)
-      getMem2D (&(decoder->coding->predModeJV[i]), 4*decoder->coding->frameHeightMbs, 4*decoder->coding->picWidthMbs);
+      if (!decoder->coding->predModeJV[i])
+       getMem2D (&(decoder->coding->predModeJV[i]), 4*decoder->coding->frameHeightMbs, 4*decoder->coding->picWidthMbs);
     for (unsigned i = 0; i < MAX_PLANE; ++i)
-      getMem2Dint (&(decoder->coding->siBlockJV[i]), decoder->coding->frameHeightMbs, decoder->coding->picWidthMbs);
+      if (!decoder->coding->siBlockJV[i])
+        getMem2Dint (&(decoder->coding->siBlockJV[i]), decoder->coding->frameHeightMbs, decoder->coding->picWidthMbs);
     }
   else {
-    printf ("------ initGlobalBuffers\n");
-    decoder->coding->mbData = (sMacroblock*)calloc (decoder->coding->frameSizeMbs, sizeof(sMacroblock));
-    decoder->coding->intraBlock = (char*)calloc (decoder->coding->frameSizeMbs, sizeof(char));
+    printf ("--- initGlobalBuffers\n");
+    if (!decoder->coding->mbData)
+      decoder->coding->mbData = (sMacroblock*)calloc (decoder->coding->frameSizeMbs, sizeof(sMacroblock));
+    if (!decoder->coding->intraBlock)
+      decoder->coding->intraBlock = (char*)calloc (decoder->coding->frameSizeMbs, sizeof(char));
 
-    getMem2D (&(decoder->coding->predMode), 4*decoder->coding->frameHeightMbs, 4*decoder->coding->picWidthMbs);
-    getMem2Dint (&(decoder->coding->siBlock), decoder->coding->frameHeightMbs, decoder->coding->picWidthMbs);
+    if (!decoder->coding->predMode)
+      getMem2D (&(decoder->coding->predMode), 4*decoder->coding->frameHeightMbs, 4*decoder->coding->picWidthMbs);
+    if (!decoder->coding->siBlock)
+      getMem2Dint (&(decoder->coding->siBlock), decoder->coding->frameHeightMbs, decoder->coding->picWidthMbs);
     }
 
-  decoder->coding->picPos = (sBlockPos*)calloc (decoder->coding->frameSizeMbs + 1, sizeof(sBlockPos));
+  // alloc picPos
+  if (!decoder->coding->picPos)
+    decoder->coding->picPos = (sBlockPos*)calloc (decoder->coding->frameSizeMbs + 1, sizeof(sBlockPos));
   sBlockPos* blockPos = decoder->coding->picPos;
   for (unsigned i = 0; i < decoder->coding->frameSizeMbs+1; ++i) {
     blockPos[i].x = (short)(i % decoder->coding->picWidthMbs);
     blockPos[i].y = (short)(i / decoder->coding->picWidthMbs);
     }
 
-  getMem4D (&(decoder->coding->nzCoeff), decoder->coding->frameSizeMbs, 3, BLOCK_SIZE, BLOCK_SIZE);
+  // alloc cabac
+  if (!decoder->coding->nzCoeff)
+    getMem4D (&(decoder->coding->nzCoeff), decoder->coding->frameSizeMbs, 3, BLOCK_SIZE, BLOCK_SIZE);
 
+  // alloc quant
   allocQuant (decoder->coding);
+
   decoder->coding->oldFrameSizeMbs = decoder->coding->frameSizeMbs;
   }
 //}}}
@@ -302,9 +317,7 @@ void freeGlobalBuffers (sDecoder* decoder) {
 //{{{
 void freeLayerBuffers (sDecoder* decoder) {
 
-  free_mem4D (decoder->coding->nzCoeff);
-  decoder->coding->nzCoeff = NULL;
-
+  // free coding
   if (decoder->coding->sepColourPlaneFlag) {
     for (int i = 0; i < MAX_PLANE; i++) {
       free (decoder->coding->mbDataJV[i]);
@@ -334,9 +347,15 @@ void freeLayerBuffers (sDecoder* decoder) {
     decoder->coding->intraBlock = NULL;
     }
 
+  // free picPos
   free (decoder->coding->picPos);
   decoder->coding->picPos = NULL;
 
+  // free cabac
+  free_mem4D (decoder->coding->nzCoeff);
+  decoder->coding->nzCoeff = NULL;
+
+  // free quant
   freeQuant (decoder->coding);
   }
 //}}}
@@ -515,7 +534,6 @@ sDecoder* openDecoder (sParam* param, byte* chunk, size_t chunkSize) {
   resetDpb (decoder, decoder->dpb);
 
   decoder->coding = (sCoding*)calloc (1, sizeof(sCoding));
-  decoder->layerInitDone = 0;
 
   decoder->decOutputPic = (sDecodedPic*)calloc (1, sizeof(sDecodedPic));
   allocOutput (decoder);

@@ -149,18 +149,15 @@ static void CalculateQuant8x8Param (sSlice* slice) {
 
 //{{{
 void allocQuant (sCoding* coding) {
+// alloc quant matrices
 
   int bitdepth_qp_scale = imax (coding->bitdepthLumeQpScale, coding->bitdepthChromaQpScale);
 
-  // We should allocate memory outside of this process since maybe we will have a change of SPS
-  // and we may need to recreate these. Currently should only support same bitdepth
-  if (coding->qpPerMatrix == NULL)
-    if ((coding->qpPerMatrix = (int*)malloc((MAX_QP + 1 + bitdepth_qp_scale)*sizeof(int))) == NULL)
-      no_mem_exit ("init_qp_process: coding->qpPerMatrix");
+  if (!coding->qpPerMatrix)
+    coding->qpPerMatrix = (int*)malloc ((MAX_QP + 1 + bitdepth_qp_scale)*sizeof(int));
 
-  if (coding->qpRemMatrix == NULL)
-    if ((coding->qpRemMatrix = (int*)malloc((MAX_QP + 1 + bitdepth_qp_scale)*sizeof(int))) == NULL)
-      no_mem_exit ("init_qp_process: coding->qpRemMatrix");
+  if (!coding->qpRemMatrix)
+    coding->qpRemMatrix = (int*)malloc ((MAX_QP + 1 + bitdepth_qp_scale)*sizeof(int));
 
   for (int i = 0; i < MAX_QP + bitdepth_qp_scale + 1; i++) {
     coding->qpPerMatrix[i] = i / 6;
@@ -171,15 +168,11 @@ void allocQuant (sCoding* coding) {
 //{{{
 void freeQuant (sCoding* coding) {
 
-  if (coding->qpPerMatrix != NULL) {
-    free (coding->qpPerMatrix);
-    coding->qpPerMatrix = NULL;
-    }
+  free (coding->qpPerMatrix);
+  coding->qpPerMatrix = NULL;
 
-  if (coding->qpRemMatrix != NULL) {
-    free (coding->qpRemMatrix);
-    coding->qpRemMatrix = NULL;
-    }
+  free (coding->qpRemMatrix);
+  coding->qpRemMatrix = NULL;
   }
 //}}}
 

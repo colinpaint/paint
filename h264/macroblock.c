@@ -134,10 +134,10 @@ static void GetMotionVectorPredictorMBAFF (sMacroblock* mb, sPixelPos* block,
 
     switch (mvPredType) {
       case MVPRED_MEDIAN:
-        if(!(block[1].available || block[2].available))
+        if (!(block[1].available || block[2].available))
           pred_vec = mv_a;
         else
-          pred_vec = imedian(mv_a, mv_b, mv_c);
+          pred_vec = imedian (mv_a, mv_b, mv_c);
         break;
       case MVPRED_L:
         pred_vec = mv_a;
@@ -153,9 +153,9 @@ static void GetMotionVectorPredictorMBAFF (sMacroblock* mb, sPixelPos* block,
         }
 
     if (hv == 0)
-      pmv->mvX = (short) pred_vec;
+      pmv->mvX = (short)pred_vec;
     else
-      pmv->mvY = (short) pred_vec;
+      pmv->mvY = (short)pred_vec;
     }
   }
 //}}}
@@ -215,21 +215,17 @@ static void GetMotionVectorPredictorNormal (sMacroblock* mb, sPixelPos* block,
         sMotionVec *mv_b = block[1].available ? &mvInfo[block[1].posY][block[1].posX].mv[list] : (sMotionVec *) &zero_mv;
         sMotionVec *mv_c = block[2].available ? &mvInfo[block[2].posY][block[2].posX].mv[list] : (sMotionVec *) &zero_mv;
 
-        pmv->mvX = (short) imedian(mv_a->mvX, mv_b->mvX, mv_c->mvX);
-        pmv->mvY = (short) imedian(mv_a->mvY, mv_b->mvY, mv_c->mvY);
+        pmv->mvX = (short)imedian (mv_a->mvX, mv_b->mvX, mv_c->mvX);
+        pmv->mvY = (short)imedian (mv_a->mvY, mv_b->mvY, mv_c->mvY);
       }
       break;
     //}}}
     //{{{
     case MVPRED_L:
       if (block[0].available)
-      {
         *pmv = mvInfo[block[0].posY][block[0].posX].mv[list];
-      }
       else
-      {
         *pmv = zero_mv;
-      }
       break;
     //}}}
     //{{{
