@@ -204,7 +204,8 @@ static void set_chroma_vector (sMacroblock* mb)
     }
   }
 
-  slice->max_mb_vmv_r = (slice->structure != FRAME || ( mb->mbField )) ? decoder->maxVmvR >> 1 : decoder->maxVmvR;
+  slice->max_mb_vmv_r = (slice->structure != FRAME || ( mb->mbField )) ? decoder->coding.maxVmvR >> 1 : 
+                                                                         decoder->coding.maxVmvR;
 }
 //}}}
 

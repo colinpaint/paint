@@ -955,12 +955,12 @@ static void readPcavlcMacroblock (sMacroblock* mb) {
         }
       else if (slice->codCount > 0 && ((mbNum & 0x01) == 0)) {
         // check left macroblock pair first
-        if (isMbAvailable(mbNum - 2, mb) && ((mbNum % (decoder->picWidthMbs * 2))!=0))
+        if (isMbAvailable(mbNum - 2, mb) && ((mbNum % (decoder->coding.picWidthMbs * 2))!=0))
           mb->mbField = decoder->mbData[mbNum-2].mbField;
         else {
           // check top macroblock pair
-          if (isMbAvailable (mbNum - 2*decoder->picWidthMbs, mb))
-            mb->mbField = decoder->mbData[mbNum - 2*decoder->picWidthMbs].mbField;
+          if (isMbAvailable (mbNum - 2*decoder->coding.picWidthMbs, mb))
+            mb->mbField = decoder->mbData[mbNum - 2*decoder->coding.picWidthMbs].mbField;
           else
             mb->mbField = FALSE;
           }
@@ -1103,12 +1103,12 @@ static void readBcavlcMacroblock (sMacroblock* mb) {
         }
       else if ((slice->codCount > 0) && ((mbNum & 0x01) == 0)) {
         // check left macroblock pair first
-        if (isMbAvailable (mbNum - 2, mb) && ((mbNum % (decoder->picWidthMbs * 2))!=0))
+        if (isMbAvailable (mbNum - 2, mb) && ((mbNum % (decoder->coding.picWidthMbs * 2))!=0))
           mb->mbField = decoder->mbData[mbNum-2].mbField;
         else {
           // check top macroblock pair
-          if (isMbAvailable (mbNum - 2*decoder->picWidthMbs, mb))
-            mb->mbField = decoder->mbData[mbNum-2*decoder->picWidthMbs].mbField;
+          if (isMbAvailable (mbNum - 2*decoder->coding.picWidthMbs, mb))
+            mb->mbField = decoder->mbData[mbNum-2*decoder->coding.picWidthMbs].mbField;
           else
             mb->mbField = FALSE;
           }

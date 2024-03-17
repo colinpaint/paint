@@ -30,7 +30,7 @@ static void FmoGenerateType1MapUnitMap (sDecoder* decoder, unsigned PicSizeInMap
   unsigned i;
   for( i = 0; i < PicSizeInMapUnits; i++ )
     decoder->mapUnitToSliceGroupMap[i] = 
-      ((i%decoder->picWidthMbs) + (((i/decoder->picWidthMbs)*(pps->numSliceGroupsMinus1+1))/2))
+      ((i%decoder->coding.picWidthMbs) + (((i/decoder->coding.picWidthMbs)*(pps->numSliceGroupsMinus1+1))/2))
       % (pps->numSliceGroupsMinus1+1);
   }
 //}}}
@@ -47,13 +47,13 @@ static void FmoGenerateType2MapUnitMap (sDecoder* decoder, unsigned PicSizeInMap
     decoder->mapUnitToSliceGroupMap[ i ] = pps->numSliceGroupsMinus1;
 
   for (iGroup = pps->numSliceGroupsMinus1 - 1 ; iGroup >= 0; iGroup--) {
-    yTopLeft = pps->topLeft[ iGroup ] / decoder->picWidthMbs;
-    xTopLeft = pps->topLeft[ iGroup ] % decoder->picWidthMbs;
-    yBottomRight = pps->botRight[ iGroup ] / decoder->picWidthMbs;
-    xBottomRight = pps->botRight[ iGroup ] % decoder->picWidthMbs;
+    yTopLeft = pps->topLeft[ iGroup ] / decoder->coding.picWidthMbs;
+    xTopLeft = pps->topLeft[ iGroup ] % decoder->coding.picWidthMbs;
+    yBottomRight = pps->botRight[ iGroup ] / decoder->coding.picWidthMbs;
+    xBottomRight = pps->botRight[ iGroup ] % decoder->coding.picWidthMbs;
     for (y = yTopLeft; y <= yBottomRight; y++ )
       for (x = xTopLeft; x <= xBottomRight; x++ )
-        decoder->mapUnitToSliceGroupMap[ y * decoder->picWidthMbs + x ] = iGroup;
+        decoder->mapUnitToSliceGroupMap[ y * decoder->coding.picWidthMbs + x ] = iGroup;
     }
   }
 //}}}
@@ -72,8 +72,8 @@ static void FmoGenerateType3MapUnitMap (sDecoder* decoder, unsigned PicSizeInMap
   for (i = 0; i < PicSizeInMapUnits; i++ )
     decoder->mapUnitToSliceGroupMap[i] = 2;
 
-  x = (decoder->picWidthMbs - pps->sliceGroupChangeDirectionFlag) / 2;
-  y = (decoder->picHeightMapUnits - pps->sliceGroupChangeDirectionFlag) / 2;
+  x = (decoder->coding.picWidthMbs - pps->sliceGroupChangeDirectionFlag) / 2;
+  y = (decoder->coding.picHeightMapUnits - pps->sliceGroupChangeDirectionFlag) / 2;
 
   leftBound = x;
   topBound = y;
@@ -84,9 +84,9 @@ static void FmoGenerateType3MapUnitMap (sDecoder* decoder, unsigned PicSizeInMap
   yDir = pps->sliceGroupChangeDirectionFlag;
 
   for( k = 0; k < PicSizeInMapUnits; k += mapUnitVacant ) {
-    mapUnitVacant = ( decoder->mapUnitToSliceGroupMap[ y * decoder->picWidthMbs + x ]  ==  2 );
+    mapUnitVacant = ( decoder->mapUnitToSliceGroupMap[ y * decoder->coding.picWidthMbs + x ]  ==  2 );
     if( mapUnitVacant )
-       decoder->mapUnitToSliceGroupMap[ y * decoder->picWidthMbs + x ] = ( k >= mapUnitsInSliceGroup0 );
+       decoder->mapUnitToSliceGroupMap[ y * decoder->coding.picWidthMbs + x ] = ( k >= mapUnitsInSliceGroup0 );
 
     if( xDir  ==  -1  &&  x  ==  leftBound ) {
       leftBound = imax( leftBound - 1, 0 );
@@ -95,7 +95,7 @@ static void FmoGenerateType3MapUnitMap (sDecoder* decoder, unsigned PicSizeInMap
       yDir = 2 * pps->sliceGroupChangeDirectionFlag - 1;
       }
     else if (xDir  ==  1  &&  x  ==  rightBound ) {
-      rightBound = imin( rightBound + 1, (int)decoder->picWidthMbs - 1 );
+      rightBound = imin( rightBound + 1, (int)decoder->coding.picWidthMbs - 1 );
       x = rightBound;
       xDir = 0;
       yDir = 1 - 2 * pps->sliceGroupChangeDirectionFlag;
@@ -107,7 +107,7 @@ static void FmoGenerateType3MapUnitMap (sDecoder* decoder, unsigned PicSizeInMap
       yDir = 0;
       }
     else if (yDir  ==  1  &&  y  ==  bottomBound ) {
-      bottomBound = imin( bottomBound + 1, (int)decoder->picHeightMapUnits - 1 );
+      bottomBound = imin( bottomBound + 1, (int)decoder->coding.picHeightMapUnits - 1 );
       y = bottomBound;
       xDir = 2 * pps->sliceGroupChangeDirectionFlag - 1;
       yDir = 0;
@@ -150,12 +150,12 @@ static void FmoGenerateType5MapUnitMap (sDecoder* decoder, unsigned PicSizeInMap
 
   unsigned i,j, k = 0;
 
-  for( j = 0; j < decoder->picWidthMbs; j++ )
-    for( i = 0; i < decoder->picHeightMapUnits; i++ )
+  for( j = 0; j < decoder->coding.picWidthMbs; j++ )
+    for( i = 0; i < decoder->coding.picHeightMapUnits; i++ )
         if( k++ < sizeOfUpperLeftGroup )
-            decoder->mapUnitToSliceGroupMap[ i * decoder->picWidthMbs + j ] = pps->sliceGroupChangeDirectionFlag;
+            decoder->mapUnitToSliceGroupMap[ i * decoder->coding.picWidthMbs + j ] = pps->sliceGroupChangeDirectionFlag;
         else
-            decoder->mapUnitToSliceGroupMap[ i * decoder->picWidthMbs + j ] = 1 - pps->sliceGroupChangeDirectionFlag;
+            decoder->mapUnitToSliceGroupMap[ i * decoder->coding.picWidthMbs + j ] = 1 - pps->sliceGroupChangeDirectionFlag;
 
   }
 //}}}
@@ -257,7 +257,8 @@ static int FmoGenerateMbToSliceGroupMap (sDecoder* decoder, sSlice *slice) {
       }
     else {
       for (unsigned i = 0; i < decoder->picSizeInMbs; i++)
-        decoder->mbToSliceGroupMap[i] = decoder->mapUnitToSliceGroupMap[(i/(2*decoder->picWidthMbs))*decoder->picWidthMbs+(i%decoder->picWidthMbs)];
+        decoder->mbToSliceGroupMap[i] = decoder->mapUnitToSliceGroupMap[(i/(2*decoder->coding.picWidthMbs)) *
+                                        decoder->coding.picWidthMbs + (i%decoder->coding.picWidthMbs)];
       }
 
   return 0;

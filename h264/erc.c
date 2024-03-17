@@ -1888,7 +1888,7 @@ void concealLostFrames (sDPB* dpb, sSlice *slice)
     decoder->earlierMissingPoc = 0;
   }
   else
-    UnusedShortTermFrameNum = (decoder->preFrameNum + 1) % decoder->maxFrameNum;
+    UnusedShortTermFrameNum = (decoder->preFrameNum + 1) % decoder->coding.maxFrameNum;
 
   CurrFrameNum = slice->frameNum;
 
@@ -1934,7 +1934,7 @@ void concealLostFrames (sDPB* dpb, sSlice *slice)
     picture=NULL;
 
     decoder->preFrameNum = UnusedShortTermFrameNum;
-    UnusedShortTermFrameNum = (UnusedShortTermFrameNum + 1) % decoder->maxFrameNum;
+    UnusedShortTermFrameNum = (UnusedShortTermFrameNum + 1) % decoder->coding.maxFrameNum;
 
     // update reference flags and set current flag.
     for(i=16;i>0;i--)

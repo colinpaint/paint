@@ -843,7 +843,6 @@ typedef struct Decoder {
   int maxPelValueComp[MAX_PLANE];
   unsigned int dcPredValueComp[MAX_PLANE];
 
-  int losslessQpPrimeFlag;
   int numBlock8x8uv;
   int numUvBlocks;
   int numCdcCoeff;
@@ -855,26 +854,6 @@ typedef struct Decoder {
   int mbSize[3][2];
   int mbSizeBlock[3][2];
   int mbSizeShift[3][2];
-
-  int maxFrameNum;
-  int maxVmvR;
-
-  unsigned int picWidthMbs;
-  unsigned int picHeightMapUnits;
-  unsigned int frameHeightMbs;
-  unsigned int frameSizeMbs;
-  unsigned int oldFrameSizeMbs;
-
-  int iLumaPadX;
-  int iLumaPadY;
-  int iChromaPadX;
-  int iChromaPadY;
-
-  int subpelX;
-  int subpelY;
-  int shiftpelX;
-  int shiftpelY;
-  int totalScale;
 
   // sCoding
   sCoding      coding;

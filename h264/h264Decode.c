@@ -218,11 +218,11 @@ void initFrext (sDecoder* decoder) {
     decoder->mbSize[1][0] = decoder->mbSize[2][0] = decoder->mbCrSizeX  = (decoder->activeSPS->chromaFormatIdc==YUV420 || decoder->activeSPS->chromaFormatIdc==YUV422)?  8 : 16;
     decoder->mbSize[1][1] = decoder->mbSize[2][1] = decoder->mbCrSizeY  = (decoder->activeSPS->chromaFormatIdc==YUV444 || decoder->activeSPS->chromaFormatIdc==YUV422)? 16 :  8;
 
-    decoder->subpelX = decoder->mbCrSizeX == 8 ? 7 : 3;
-    decoder->subpelY = decoder->mbCrSizeY == 8 ? 7 : 3;
-    decoder->shiftpelX = decoder->mbCrSizeX == 8 ? 3 : 2;
-    decoder->shiftpelY = decoder->mbCrSizeY == 8 ? 3 : 2;
-    decoder->totalScale = decoder->shiftpelX + decoder->shiftpelY;
+    decoder->coding.subpelX = decoder->mbCrSizeX == 8 ? 7 : 3;
+    decoder->coding.subpelY = decoder->mbCrSizeY == 8 ? 7 : 3;
+    decoder->coding.shiftpelX = decoder->mbCrSizeX == 8 ? 3 : 2;
+    decoder->coding.shiftpelY = decoder->mbCrSizeY == 8 ? 3 : 2;
+    decoder->coding.totalScale = decoder->coding.shiftpelX + decoder->coding.shiftpelY;
     }
   else {
     decoder->bitdepthChromaQpScale = 0;
@@ -233,11 +233,11 @@ void initFrext (sDecoder* decoder) {
     decoder->numCdcCoeff = 0;
     decoder->mbSize[1][0] = decoder->mbSize[2][0] = decoder->mbCrSizeX  = 0;
     decoder->mbSize[1][1] = decoder->mbSize[2][1] = decoder->mbCrSizeY  = 0;
-    decoder->subpelX = 0;
-    decoder->subpelY = 0;
-    decoder->shiftpelX = 0;
-    decoder->shiftpelY = 0;
-    decoder->totalScale = 0;
+    decoder->coding.subpelX = 0;
+    decoder->coding.subpelY = 0;
+    decoder->coding.shiftpelX = 0;
+    decoder->coding.shiftpelY = 0;
+    decoder->coding.totalScale = 0;
     }
 
   decoder->mbCrSize = decoder->mbCrSizeX * decoder->mbCrSizeY;
@@ -257,47 +257,45 @@ void initGlobalBuffers (sDecoder* decoder) {
   if (decoder->coding.sepColourPlaneFlag) {
     for (unsigned i = 0; i < MAX_PLANE; ++i)
       if (!decoder->mbDataJV[i])
-        decoder->mbDataJV[i] = (sMacroblock*)calloc (decoder->frameSizeMbs, sizeof(sMacroblock));
+        decoder->mbDataJV[i] = (sMacroblock*)calloc (decoder->coding.frameSizeMbs, sizeof(sMacroblock));
     for (unsigned i = 0; i < MAX_PLANE; ++i)
       if (!decoder->intraBlockJV[i])
-        decoder->intraBlockJV[i] = (char*)calloc (decoder->frameSizeMbs, sizeof(char));
+        decoder->intraBlockJV[i] = (char*)calloc (decoder->coding.frameSizeMbs, sizeof(char));
     for (unsigned i = 0; i < MAX_PLANE; ++i)
       if (!decoder->predModeJV[i])
-       getMem2D (&(decoder->predModeJV[i]), 4*decoder->frameHeightMbs, 4*decoder->picWidthMbs);
+       getMem2D (&(decoder->predModeJV[i]), 4*decoder->coding.frameHeightMbs, 4*decoder->coding.picWidthMbs);
     for (unsigned i = 0; i < MAX_PLANE; ++i)
       if (!decoder->siBlockJV[i])
-        getMem2Dint (&(decoder->siBlockJV[i]), decoder->frameHeightMbs, decoder->picWidthMbs);
+        getMem2Dint (&(decoder->siBlockJV[i]), decoder->coding.frameHeightMbs, decoder->coding.picWidthMbs);
     }
   else {
     printf ("--- initGlobalBuffers\n");
     if (!decoder->mbData)
-      decoder->mbData = (sMacroblock*)calloc (decoder->frameSizeMbs, sizeof(sMacroblock));
+      decoder->mbData = (sMacroblock*)calloc (decoder->coding.frameSizeMbs, sizeof(sMacroblock));
     if (!decoder->intraBlock)
-      decoder->intraBlock = (char*)calloc (decoder->frameSizeMbs, sizeof(char));
+      decoder->intraBlock = (char*)calloc (decoder->coding.frameSizeMbs, sizeof(char));
 
     if (!decoder->predMode)
-      getMem2D (&(decoder->predMode), 4*decoder->frameHeightMbs, 4*decoder->picWidthMbs);
+      getMem2D (&(decoder->predMode), 4*decoder->coding.frameHeightMbs, 4*decoder->coding.picWidthMbs);
     if (!decoder->siBlock)
-      getMem2Dint (&(decoder->siBlock), decoder->frameHeightMbs, decoder->picWidthMbs);
+      getMem2Dint (&(decoder->siBlock), decoder->coding.frameHeightMbs, decoder->coding.picWidthMbs);
     }
 
   // alloc picPos
   if (!decoder->picPos)
-    decoder->picPos = (sBlockPos*)calloc (decoder->frameSizeMbs + 1, sizeof(sBlockPos));
+    decoder->picPos = (sBlockPos*)calloc (decoder->coding.frameSizeMbs + 1, sizeof(sBlockPos));
   sBlockPos* blockPos = decoder->picPos;
-  for (unsigned i = 0; i < decoder->frameSizeMbs+1; ++i) {
-    blockPos[i].x = (short)(i % decoder->picWidthMbs);
-    blockPos[i].y = (short)(i / decoder->picWidthMbs);
+  for (unsigned i = 0; i < decoder->coding.frameSizeMbs+1; ++i) {
+    blockPos[i].x = (short)(i % decoder->coding.picWidthMbs);
+    blockPos[i].y = (short)(i / decoder->coding.picWidthMbs);
     }
 
   // alloc cabac
   if (!decoder->nzCoeff)
-    getMem4D (&(decoder->nzCoeff), decoder->frameSizeMbs, 3, BLOCK_SIZE, BLOCK_SIZE);
+    getMem4D (&(decoder->nzCoeff), decoder->coding.frameSizeMbs, 3, BLOCK_SIZE, BLOCK_SIZE);
 
   // alloc quant
   allocQuant (decoder);
-
-  decoder->oldFrameSizeMbs = decoder->frameSizeMbs;
   }
 //}}}
 //{{{
@@ -419,8 +417,6 @@ void setGlobalCodingProgram (sDecoder* decoder) {
   decoder->bitdepthChroma = 0;
   decoder->widthCr = 0;
   decoder->heightCr = 0;
-  decoder->losslessQpPrimeFlag = coding->losslessQpPrimeFlag;
-  decoder->maxVmvR = coding->maxVmvR;
 
   // Fidelity Range Extensions stuff (part 1)
   decoder->bitdepthLuma = coding->bitdepthLuma;
@@ -428,18 +424,12 @@ void setGlobalCodingProgram (sDecoder* decoder) {
   decoder->bitdepthChroma = coding->bitdepthChroma;
   decoder->bitdepthScale[1] = coding->bitdepthScale[1];
 
-  decoder->maxFrameNum = coding->maxFrameNum;
-  decoder->picWidthMbs = coding->picWidthMbs;
-  decoder->picHeightMapUnits = coding->picHeightMapUnits;
-  decoder->frameHeightMbs = coding->frameHeightMbs;
-  decoder->frameSizeMbs = coding->frameSizeMbs;
-
   decoder->width = coding->width;
   decoder->height = coding->height;
-  decoder->iLumaPadX = MCBUF_LUMA_PAD_X;
-  decoder->iLumaPadY = MCBUF_LUMA_PAD_Y;
-  decoder->iChromaPadX = MCBUF_CHROMA_PAD_X;
-  decoder->iChromaPadY = MCBUF_CHROMA_PAD_Y;
+  decoder->coding.iLumaPadX = MCBUF_LUMA_PAD_X;
+  decoder->coding.iLumaPadY = MCBUF_LUMA_PAD_Y;
+  decoder->coding.iChromaPadX = MCBUF_CHROMA_PAD_X;
+  decoder->coding.iChromaPadY = MCBUF_CHROMA_PAD_Y;
 
   if (decoder->coding.yuvFormat == YUV420) {
     decoder->widthCr = (decoder->width  >> 1);
@@ -448,14 +438,14 @@ void setGlobalCodingProgram (sDecoder* decoder) {
   else if (decoder->coding.yuvFormat == YUV422) {
     decoder->widthCr = (decoder->width >> 1);
     decoder->heightCr = decoder->height;
-    decoder->iChromaPadY = MCBUF_CHROMA_PAD_Y*2;
+    decoder->coding.iChromaPadY = MCBUF_CHROMA_PAD_Y*2;
     }
   else if (decoder->coding.yuvFormat == YUV444) {
     //YUV444
     decoder->widthCr = decoder->width;
     decoder->heightCr = decoder->height;
-    decoder->iChromaPadX = decoder->iLumaPadX;
-    decoder->iChromaPadY = decoder->iLumaPadY;
+    decoder->coding.iChromaPadX = decoder->coding.iLumaPadX;
+    decoder->coding.iChromaPadY = decoder->coding.iLumaPadY;
     }
 
   initFrext (decoder);
@@ -493,7 +483,6 @@ sDecoder* openDecoder (sParam* param, byte* chunk, size_t chunkSize) {
   decoder->numAllocatedSlices = MAX_NUM_DECSLICES;
   decoder->nextSlice = NULL;
   initOldSlice (decoder->oldSlice);
-  decoder->oldFrameSizeMbs = (unsigned int) -1;
 
   decoder->coding.type = I_SLICE;
   decoder->picture = NULL;
@@ -516,10 +505,10 @@ sDecoder* openDecoder (sParam* param, byte* chunk, size_t chunkSize) {
   decoder->pendingOut = NULL;
   decoder->pendingOutState = FRAME;
 
-  decoder->iLumaPadX = MCBUF_LUMA_PAD_X;
-  decoder->iLumaPadY = MCBUF_LUMA_PAD_Y;
-  decoder->iChromaPadX = MCBUF_CHROMA_PAD_X;
-  decoder->iChromaPadY = MCBUF_CHROMA_PAD_Y;
+  decoder->coding.iLumaPadX = MCBUF_LUMA_PAD_X;
+  decoder->coding.iLumaPadY = MCBUF_LUMA_PAD_Y;
+  decoder->coding.iChromaPadX = MCBUF_CHROMA_PAD_X;
+  decoder->coding.iChromaPadY = MCBUF_CHROMA_PAD_Y;
 
   decoder->dpb = (sDPB*)calloc (1, sizeof(sDPB));
   resetDpb (decoder, decoder->dpb);

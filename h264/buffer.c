@@ -103,7 +103,7 @@ static void unmarkLongTermFieldRefFrameIndex (sDPB* dpb, ePicStructure structure
 
   assert (structure!=FRAME);
   if (curr_pic_num < 0)
-    curr_pic_num += (2 * decoder->maxFrameNum);
+    curr_pic_num += (2 * decoder->coding.maxFrameNum);
 
   for (unsigned i = 0; i < dpb->longTermRefFramesInBuffer; i++) {
     if (dpb->fsLongTermRef[i]->longTermFrameIndex == longTermFrameIndex) {
@@ -693,19 +693,19 @@ sPicture* allocPicture (sDecoder* decoder, ePicStructure structure,
   s->picSizeInMbs = (sizeX*sizeY)/256;
   s->imgUV = NULL;
 
-  getMem2Dpel_pad (&(s->imgY), sizeY, sizeX, decoder->iLumaPadY, decoder->iLumaPadX);
-  s->iLumaStride = sizeX + 2 * decoder->iLumaPadX;
-  s->iLumaExpandedHeight = sizeY + 2 * decoder->iLumaPadY;
+  getMem2Dpel_pad (&(s->imgY), sizeY, sizeX, decoder->coding.iLumaPadY, decoder->coding.iLumaPadX);
+  s->iLumaStride = sizeX + 2 * decoder->coding.iLumaPadX;
+  s->iLumaExpandedHeight = sizeY + 2 * decoder->coding.iLumaPadY;
 
   if (activeSPS->chromaFormatIdc != YUV400)
-    getMem3Dpel_pad (&(s->imgUV), 2, sizeYcr, sizeXcr, decoder->iChromaPadY, decoder->iChromaPadX);
+    getMem3Dpel_pad (&(s->imgUV), 2, sizeYcr, sizeXcr, decoder->coding.iChromaPadY, decoder->coding.iChromaPadX);
 
-  s->iChromaStride = sizeXcr + 2*decoder->iChromaPadX;
-  s->iChromaExpandedHeight = sizeYcr + 2*decoder->iChromaPadY;
-  s->iLumaPadY = decoder->iLumaPadY;
-  s->iLumaPadX = decoder->iLumaPadX;
-  s->iChromaPadY = decoder->iChromaPadY;
-  s->iChromaPadX = decoder->iChromaPadX;
+  s->iChromaStride = sizeXcr + 2*decoder->coding.iChromaPadX;
+  s->iChromaExpandedHeight = sizeYcr + 2*decoder->coding.iChromaPadY;
+  s->iLumaPadY = decoder->coding.iLumaPadY;
+  s->iLumaPadX = decoder->coding.iLumaPadX;
+  s->iChromaPadY = decoder->coding.iChromaPadY;
+  s->iChromaPadX = decoder->coding.iChromaPadX;
   s->sepColourPlaneFlag = decoder->coding.sepColourPlaneFlag;
 
   getMem2Dmp (&s->mvInfo, (sizeY >> BLOCK_SHIFT), (sizeX >> BLOCK_SHIFT));
@@ -811,7 +811,7 @@ void fillFrameNumGap (sDecoder* decoder, sSlice* slice) {
 
   printf ("A gap in frame number is found, try to fill it.\n");
 
-  int unusedShortTermFrameNum = (decoder->preFrameNum + 1) % decoder->maxFrameNum;
+  int unusedShortTermFrameNum = (decoder->preFrameNum + 1) % decoder->coding.maxFrameNum;
   int curFrameNum = slice->frameNum;
 
   sPicture* picture = NULL;
@@ -835,7 +835,7 @@ void fillFrameNumGap (sDecoder* decoder, sSlice* slice) {
     storePictureDpb (slice->dpb, picture);
 
     decoder->preFrameNum = unusedShortTermFrameNum;
-    unusedShortTermFrameNum = (unusedShortTermFrameNum + 1) % decoder->maxFrameNum;
+    unusedShortTermFrameNum = (unusedShortTermFrameNum + 1) % decoder->coding.maxFrameNum;
     }
 
   slice->deltaPicOrderCount[0] = tmp1;
@@ -2013,11 +2013,11 @@ void reorderRefPicList (sSlice* slice, int curList) {
   int refIdxLX = 0;
 
   if (slice->structure==FRAME) {
-    maxPicNum = decoder->maxFrameNum;
+    maxPicNum = decoder->coding.maxFrameNum;
     currPicNum = slice->frameNum;
     }
   else {
-    maxPicNum = 2 * decoder->maxFrameNum;
+    maxPicNum = 2 * decoder->coding.maxFrameNum;
     currPicNum = 2 * slice->frameNum + 1;
     }
 

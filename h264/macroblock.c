@@ -450,7 +450,7 @@ void updateQp (sMacroblock* mb, int qp) {
   mb->qpScaled[0] = qp + decoder->bitdepthLumeQpScale;
   set_chroma_qp (mb);
 
-  mb->isLossless = (Boolean)((mb->qpScaled[0] == 0) && (decoder->losslessQpPrimeFlag == 1));
+  mb->isLossless = (Boolean)((mb->qpScaled[0] == 0) && (decoder->coding.losslessQpPrimeFlag == 1));
   set_read_comp_coeff_cavlc (mb);
   set_read_comp_coeff_cabac (mb);
   }

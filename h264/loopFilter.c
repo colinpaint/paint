@@ -1825,7 +1825,7 @@ void deblockPicture (sDecoder* decoder, sPicture* p) {
 static void initNeighbours (sDecoder* decoder) {
 
   int size = decoder->picSizeInMbs;
-  int width = decoder->picWidthMbs;
+  int width = decoder->coding.picWidthMbs;
   int height = decoder->picHeightInMbs;
 
   // do the top left corner

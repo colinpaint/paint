@@ -1478,7 +1478,7 @@ static int dumpPOC (sDecoder* decoder) {
   printf ("- deltaPicOrderCount[0] %d\n", (int)decoder->sliceList[0]->deltaPicOrderCount[0]);
   printf ("- deltaPicOrderCount[1] %d\n", (int)decoder->sliceList[0]->deltaPicOrderCount[1]);
   printf ("- idrFlag %d\n", (int)decoder->sliceList[0]->idrFlag);
-  printf ("- maxFrameNum %d\n", (int)decoder->maxFrameNum);
+  printf ("- maxFrameNum %d\n", (int)decoder->coding.maxFrameNum);
 
   return 0;
   }
@@ -1873,24 +1873,24 @@ static void initPicture (sDecoder* decoder, sSlice* slice) {
   sDPB* dpb = slice->dpb;
   sSPS* activeSPS = decoder->activeSPS;
 
-  decoder->picHeightInMbs = decoder->frameHeightMbs / (slice->fieldPicFlag+1);
-  decoder->picSizeInMbs = decoder->picWidthMbs * decoder->picHeightInMbs;
-  decoder->frameSizeMbs = decoder->picWidthMbs * decoder->frameHeightMbs;
+  decoder->picHeightInMbs = decoder->coding.frameHeightMbs / (slice->fieldPicFlag+1);
+  decoder->picSizeInMbs = decoder->coding.picWidthMbs * decoder->picHeightInMbs;
+  decoder->coding.frameSizeMbs = decoder->coding.picWidthMbs * decoder->coding.frameHeightMbs;
 
   if (decoder->picture) // slice loss
     endDecodeFrame (decoder);
 
   if (decoder->recoveryPoint)
-    decoder->recoveryFrameNum = (slice->frameNum + decoder->recoveryFrameCount) % decoder->maxFrameNum;
+    decoder->recoveryFrameNum = (slice->frameNum + decoder->recoveryFrameCount) % decoder->coding.maxFrameNum;
   if (slice->idrFlag)
     decoder->recoveryFrameNum = slice->frameNum;
   if (!decoder->recoveryPoint &&
       (slice->frameNum != decoder->preFrameNum) &&
-      (slice->frameNum != (decoder->preFrameNum + 1) % decoder->maxFrameNum)) {
+      (slice->frameNum != (decoder->preFrameNum + 1) % decoder->coding.maxFrameNum)) {
     if (!activeSPS->gaps_in_frame_num_value_allowed_flag) {
       // picture error conceal
       if (decoder->param.concealMode) {
-        if ((slice->frameNum) < ((decoder->preFrameNum + 1) % decoder->maxFrameNum)) {
+        if ((slice->frameNum) < ((decoder->preFrameNum + 1) % decoder->coding.maxFrameNum)) {
           /* Conceal lost IDR frames and any frames immediately following the IDR.
           // Use frame copy for these since lists cannot be formed correctly for motion copy*/
           decoder->concealMode = 1;
@@ -1988,7 +1988,7 @@ static void initPicture (sDecoder* decoder, sSlice* slice) {
       char* intraBlock = decoder->intraBlockJV[nplane];
       for (int i = 0; i < (int)decoder->picSizeInMbs; ++i)
         resetMb (mb++);
-      memset (decoder->predModeJV[nplane][0], DC_PRED, 16 * decoder->frameHeightMbs * decoder->picWidthMbs * sizeof(char));
+      memset (decoder->predModeJV[nplane][0], DC_PRED, 16 * decoder->coding.frameHeightMbs * decoder->coding.picWidthMbs * sizeof(char));
       if (decoder->activePPS->constrainedIntraPredFlag)
         for (int i = 0; i < (int)decoder->picSizeInMbs; ++i)
           intraBlock[i] = 1;
@@ -2001,7 +2001,7 @@ static void initPicture (sDecoder* decoder, sSlice* slice) {
     if (decoder->activePPS->constrainedIntraPredFlag)
       for (int i = 0; i < (int)decoder->picSizeInMbs; ++i)
         decoder->intraBlock[i] = 1;
-    memset (decoder->predMode[0], DC_PRED, 16 * decoder->frameHeightMbs * decoder->picWidthMbs * sizeof(char));
+    memset (decoder->predMode[0], DC_PRED, 16 * decoder->coding.frameHeightMbs * decoder->coding.picWidthMbs * sizeof(char));
     }
 
   picture->sliceType = decoder->coding.type;
@@ -2014,7 +2014,7 @@ static void initPicture (sDecoder* decoder, sSlice* slice) {
   slice->decRefPicMarkingBuffer = NULL;
 
   picture->mbAffFrameFlag = slice->mbAffFrameFlag;
-  picture->picWidthMbs = decoder->picWidthMbs;
+  picture->picWidthMbs = decoder->coding.picWidthMbs;
 
   decoder->getMbBlockPos = picture->mbAffFrameFlag ? getMbBlockPosMbaff : getMbBlockPosNormal;
   decoder->getNeighbour = picture->mbAffFrameFlag ? getAffNeighbour : getNonAffNeighbour;
@@ -2107,9 +2107,9 @@ static void initPictureDecoding (sDecoder* decoder) {
   if (slice->idrFlag)
     decoder->idrFrameNum = 0;
 
-  decoder->picHeightInMbs = decoder->frameHeightMbs / (1 + slice->fieldPicFlag);
-  decoder->picSizeInMbs = decoder->picWidthMbs * decoder->picHeightInMbs;
-  decoder->frameSizeMbs = decoder->picWidthMbs * decoder->frameHeightMbs;
+  decoder->picHeightInMbs = decoder->coding.frameHeightMbs / (1 + slice->fieldPicFlag);
+  decoder->picSizeInMbs = decoder->coding.picWidthMbs * decoder->picHeightInMbs;
+  decoder->coding.frameSizeMbs = decoder->coding.picWidthMbs * decoder->coding.frameHeightMbs;
   decoder->coding.structure = slice->structure;
   initFmo (decoder, slice);
 
@@ -2299,9 +2299,9 @@ static void readSliceHeader (sDecoder* decoder, sSlice* slice) {
     }
   //}}}
 
-  decoder->picHeightInMbs = decoder->frameHeightMbs / ( 1 + slice->fieldPicFlag );
-  decoder->picSizeInMbs = decoder->picWidthMbs * decoder->picHeightInMbs;
-  decoder->frameSizeMbs = decoder->picWidthMbs * decoder->frameHeightMbs;
+  decoder->picHeightInMbs = decoder->coding.frameHeightMbs / ( 1 + slice->fieldPicFlag );
+  decoder->picSizeInMbs = decoder->coding.picWidthMbs * decoder->picHeightInMbs;
+  decoder->coding.frameSizeMbs = decoder->coding.picWidthMbs * decoder->coding.frameHeightMbs;
   }
 //}}}
 
@@ -2770,7 +2770,7 @@ void decodePOC (sDecoder* decoder, sSlice* slice) {
           }
         if (slice->frameNum<decoder->PreviousFrameNum)
           // not first pixelPos of IDRGOP
-          decoder->FrameNumOffset = decoder->PreviousFrameNumOffset + decoder->maxFrameNum;
+          decoder->FrameNumOffset = decoder->PreviousFrameNumOffset + decoder->coding.maxFrameNum;
         else
           decoder->FrameNumOffset = decoder->PreviousFrameNumOffset;
         }
@@ -2835,7 +2835,7 @@ void decodePOC (sDecoder* decoder, sSlice* slice) {
           }
 
         if (slice->frameNum<decoder->PreviousFrameNum)
-          decoder->FrameNumOffset = decoder->PreviousFrameNumOffset + decoder->maxFrameNum;
+          decoder->FrameNumOffset = decoder->PreviousFrameNumOffset + decoder->coding.maxFrameNum;
         else
           decoder->FrameNumOffset = decoder->PreviousFrameNumOffset;
 
@@ -2885,13 +2885,13 @@ void initOldSlice (sOldSlice* oldSlice) {
 void padPicture (sDecoder* decoder, sPicture* picture) {
 
   padBuf (*picture->imgY, picture->sizeX, picture->sizeY,
-           picture->iLumaStride, decoder->iLumaPadX, decoder->iLumaPadY);
+           picture->iLumaStride, decoder->coding.iLumaPadX, decoder->coding.iLumaPadY);
 
   if (picture->chromaFormatIdc != YUV400) {
     padBuf (*picture->imgUV[0], picture->sizeXcr, picture->sizeYcr,
-            picture->iChromaStride, decoder->iChromaPadX, decoder->iChromaPadY);
+            picture->iChromaStride, decoder->coding.iChromaPadX, decoder->coding.iChromaPadY);
     padBuf (*picture->imgUV[1], picture->sizeXcr, picture->sizeYcr,
-            picture->iChromaStride, decoder->iChromaPadX, decoder->iChromaPadY);
+            picture->iChromaStride, decoder->coding.iChromaPadX, decoder->coding.iChromaPadY);
     }
   }
 //}}}
@@ -3156,10 +3156,10 @@ int decodeFrame (sDecoder* decoder) {
 
     else {
       if (decoder->sliceList[decoder->picSliceIndex-1]->mbAffFrameFlag)
-        decoder->sliceList[decoder->picSliceIndex-1]->endMbNumPlus1 = decoder->frameSizeMbs / 2;
+        decoder->sliceList[decoder->picSliceIndex-1]->endMbNumPlus1 = decoder->coding.frameSizeMbs / 2;
       else
         decoder->sliceList[decoder->picSliceIndex-1]->endMbNumPlus1 =
-          decoder->frameSizeMbs / (decoder->sliceList[decoder->picSliceIndex-1]->fieldPicFlag + 1);
+          decoder->coding.frameSizeMbs / (decoder->sliceList[decoder->picSliceIndex-1]->fieldPicFlag + 1);
 
       decoder->newFrame = 1;
 
