@@ -73,7 +73,6 @@ static void update_direct_mv_info_temporal (sMacroblock* mb) {
 
             if (slice->mbAffFrameFlag) {
               //{{{
-              assert (decoder->activeSPS->direct_8x8_inference_flag);
               if (!mb->mbField && ((slice->listX[LIST_1][0]->iCodingType==FRAME_MB_PAIR_CODING && slice->listX[LIST_1][0]->motion.mbField[mb->mbIndexX]) ||
                 (slice->listX[LIST_1][0]->iCodingType==FIELD_CODING))) {
                 if (iabs(picture->poc - slice->listX[LIST_1+4][0]->poc)> iabs(picture->poc -slice->listX[LIST_1+2][0]->poc) )
@@ -298,8 +297,8 @@ int get_colocated_info_8x8 (sMacroblock* mb, sPicture* list1, int i, int j) {
     sSlice* slice = mb->slice;
     sDecoder* decoder = mb->decoder;
     if ((slice->mbAffFrameFlag) ||
-        (!decoder->activeSPS->frameMbOnlyFlag && 
-        ((!slice->structure && list1->iCodingType == FIELD_CODING) || 
+        (!decoder->activeSPS->frameMbOnlyFlag &&
+        ((!slice->structure && list1->iCodingType == FIELD_CODING) ||
         (slice->structure!=list1->structure && list1->codedFrame)))) {
       int jj = RSD(j);
       int ii = RSD(i);
@@ -1604,7 +1603,6 @@ static void get_block_chroma (sPicture* curRef, int x_pos, int y_pos, int subpel
     x_pos = x_pos >> shiftpelX;
     y_pos = y_pos >> shiftpelY;
     //clip MV;
-    assert(vert_block_size <=decoder->iChromaPadY && blockSizeX<=decoder->iChromaPadX);
     x_pos = iClip3(-decoder->coding.iChromaPadX, maxold_x, x_pos); //16
     y_pos = iClip3(-decoder->coding.iChromaPadY, maxold_y, y_pos); //8
     img1 = &curRef->imgUV[0][y_pos][x_pos];
@@ -2268,11 +2266,10 @@ static void perform_mc_bi (sMacroblock* mb, eColorPlane plane, sPicture* picture
 }
 //}}}
 //{{{
-void perform_mc (sMacroblock* mb, eColorPlane plane, sPicture* picture, 
+void perform_mc (sMacroblock* mb, eColorPlane plane, sPicture* picture,
                  int predDir, int i, int j, int blockSizeX, int blockSizeY) {
 
   sSlice* slice = mb->slice;
-  assert (predDir<=2);
   if (predDir != 2) {
     if (slice->weightedPredFlag)
       perform_mc_single_wp(mb, plane, picture, predDir, i, j, blockSizeX, blockSizeY);
