@@ -282,22 +282,22 @@ void initGlobalBuffers (sDecoder* decoder) {
     }
 
   // alloc picPos
-  if (!decoder->coding->picPos)
-    decoder->coding->picPos = (sBlockPos*)calloc (decoder->coding->frameSizeMbs + 1, sizeof(sBlockPos));
-  sBlockPos* blockPos = decoder->coding->picPos;
-  for (unsigned i = 0; i < decoder->coding->frameSizeMbs+1; ++i) {
-    blockPos[i].x = (short)(i % decoder->coding->picWidthMbs);
-    blockPos[i].y = (short)(i / decoder->coding->picWidthMbs);
+  if (!decoder->picPos)
+    decoder->picPos = (sBlockPos*)calloc (decoder->coding->frameSizeMbs + 1, sizeof(sBlockPos));
+  sBlockPos* blockPos = decoder->picPos;
+  for (unsigned i = 0; i < decoder->frameSizeMbs+1; ++i) {
+    blockPos[i].x = (short)(i % decoder->picWidthMbs);
+    blockPos[i].y = (short)(i / decoder->picWidthMbs);
     }
 
   // alloc cabac
-  if (!decoder->coding->nzCoeff)
-    getMem4D (&(decoder->coding->nzCoeff), decoder->coding->frameSizeMbs, 3, BLOCK_SIZE, BLOCK_SIZE);
+  if (!decoder->nzCoeff)
+    getMem4D (&(decoder->nzCoeff), decoder->frameSizeMbs, 3, BLOCK_SIZE, BLOCK_SIZE);
 
   // alloc quant
   allocQuant (decoder);
 
-  decoder->coding->oldFrameSizeMbs = decoder->coding->frameSizeMbs;
+  decoder->oldFrameSizeMbs = decoder->frameSizeMbs;
   }
 //}}}
 //{{{
@@ -341,12 +341,12 @@ void freeLayerBuffers (sDecoder* decoder) {
     }
 
   // free picPos
-  free (decoder->coding->picPos);
-  decoder->coding->picPos = NULL;
+  free (decoder->picPos);
+  decoder->picPos = NULL;
 
   // free cabac
-  free_mem4D (decoder->coding->nzCoeff);
-  decoder->coding->nzCoeff = NULL;
+  free_mem4D (decoder->nzCoeff);
+  decoder->nzCoeff = NULL;
 
   // free quant
   freeQuant (decoder);

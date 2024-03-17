@@ -1413,26 +1413,6 @@ static void resetMb (sMacroblock* mb) {
   mb->sliceNum = -1;
   }
 //}}}
-//{{{
-static void setupBuffers (sDecoder* decoder) {
-
-  if (decoder->coding->sepColourPlaneFlag) {
-    for (int i = 0; i < MAX_PLANE; i++ ) {
-      decoder->mbDataJV[i] = decoder->coding->mbDataJV[i];
-      decoder->intraBlockJV[i] = decoder->coding->intraBlockJV[i];
-      decoder->predModeJV[i] = decoder->coding->predModeJV[i];
-      decoder->siBlockJV[i] = decoder->coding->siBlockJV[i];
-      }
-    decoder->mbData = NULL;
-    decoder->intraBlock = NULL;
-    decoder->predMode = NULL;
-    decoder->siBlock = NULL;
-    }
-
-  decoder->picPos = decoder->coding->picPos;
-  decoder->nzCoeff = decoder->coding->nzCoeff;
-  decoder->oldFrameSizeMbs = decoder->coding->oldFrameSizeMbs;
-  }
 //}}}
 //{{{
 static void padBuf (sPixel* pixel, int width, int height, int stride, int padx, int pady) {
@@ -1899,8 +1879,6 @@ static void initPicture (sDecoder* decoder, sSlice* slice) {
 
   if (decoder->picture) // slice loss
     endDecodeFrame (decoder);
-
-  setupBuffers (decoder);
 
   if (decoder->recoveryPoint)
     decoder->recoveryFrameNum = (slice->frameNum + decoder->recoveryFrameCount) % decoder->maxFrameNum;

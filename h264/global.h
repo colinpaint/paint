@@ -753,15 +753,10 @@ typedef struct CodingParam {
   int shiftpelX;
   int shiftpelY;
   int totalScale;
-  unsigned int oldFrameSizeMbs;
 
   sMacroblock* mbDataJV[MAX_PLANE]; // mbData to be used for 4:4:4 independent mode
-
   char*        intraBlockJV[MAX_PLANE];
-  sBlockPos*   picPos;
   byte**       predModeJV[MAX_PLANE];
-  byte****     nzCoeff;
-
   int**        siBlockJV[MAX_PLANE];
   } sCoding;
 //}}}
