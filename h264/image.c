@@ -2124,7 +2124,7 @@ static void initPictureDecoding (sDecoder* decoder) {
     error ("initPictureDecoding - MAX_NUM_SLICES exceeded");
 
   sSlice* slice = decoder->sliceList[0];
-  if (decoder->nextPPS->valid && 
+  if (decoder->nextPPS->valid &&
       (decoder->nextPPS->ppsId == slice->ppsId)) {
     if (decoder->param.sliceDebug)
       printf ("--- initPictureDecoding - switch PPS\n");
@@ -2435,7 +2435,6 @@ static void decodeSlice (sSlice* slice) {
     }
   }
 //}}}
-
 //{{{
 static int readNextSlice (sSlice* slice) {
 
@@ -2681,34 +2680,6 @@ static int readNextSlice (sSlice* slice) {
   }
 //}}}
 
-//{{{
-unsigned ceilLog2 (unsigned value) {
-
-  unsigned result = 0;
-
-  unsigned temp = value - 1;
-  while (!temp) {
-    temp >>= 1;
-    result++;
-    }
-
-  return result;
-  }
-//}}}
-//{{{
-unsigned ceilLog2sf (unsigned value) {
-
-  unsigned result = 0;
-
-  unsigned temp = value - 1;
-  while (temp > 0) {
-    temp >>= 1;
-    result++;
-    }
-
-  return result;
-  }
-//}}}
 //{{{
 void decRefPicMarking (sDecoder* decoder, sBitStream* s, sSlice* slice) {
 

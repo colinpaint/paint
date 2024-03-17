@@ -3,49 +3,50 @@
 #include <limits.h>
 
 //{{{
-static inline short smin(short a, short b)
+static inline short smin (short a, short b)
 {
   return (short) (((a) < (b)) ? (a) : (b));
 }
 //}}}
 //{{{
-static inline short smax(short a, short b)
+static inline short smax (short a, short b)
 {
   return (short) (((a) > (b)) ? (a) : (b));
 }
 //}}}
 //{{{
-static inline int imin(int a, int b)
+static inline int imin (int a, int b)
 {
   return ((a) < (b)) ? (a) : (b);
 }
 //}}}
 //{{{
-static inline long lmin(long a, long b)
+static inline long lmin( long a, long b)
 {
   return ((a) < (b)) ? (a) : (b);
 }
 //}}}
 //{{{
-static inline int imin3(int a, int b, int c)
+static inline int imin3 (int a, int b, int c)
 {
   return ((a) < (b)) ? imin(a, c) : imin(b, c);
 }
 //}}}
 //{{{
-static inline int imax(int a, int b)
+static inline int imax (int a, int b)
 {
   return ((a) > (b)) ? (a) : (b);
 }
 //}}}
 //{{{
-static inline long lmax(long a, long b)
+static inline long lmax (long a, long b)
 {
   return ((a) > (b)) ? (a) : (b);
 }
 //}}}
+
 //{{{
-static inline int imedian(int a,int b,int c)
+static inline int imedian (int a,int b,int c)
 {
   if (a > b) // a > b
   {
@@ -68,49 +69,51 @@ static inline int imedian(int a,int b,int c)
 }
 //}}}
 //{{{
-static inline int imedian_old(int a, int b, int c)
+static inline int imedian_old (int a, int b, int c)
 {
   return (a + b + c - imin(a, imin(b, c)) - imax(a, imax(b ,c)));
 }
 //}}}
+
 //{{{
-static inline double dmin(double a, double b)
+static inline double dmin (double a, double b)
 {
   return ((a) < (b)) ? (a) : (b);
 }
 //}}}
 //{{{
-static inline double dmax(double a, double b)
+static inline double dmax (double a, double b)
 {
   return ((a) > (b)) ? (a) : (b);
 }
 //}}}
 //{{{
-static inline int64 i64min(int64 a, int64 b)
+static inline int64 i64min (int64 a, int64 b)
 {
   return ((a) < (b)) ? (a) : (b);
 }
 //}}}
 //{{{
-static inline int64 i64max(int64 a, int64 b)
+static inline int64 i64max (int64 a, int64 b)
 {
   return ((a) > (b)) ? (a) : (b);
 }
 //}}}
 //{{{
-static inline distblk distblkmin(distblk a, distblk b)
+static inline distblk distblkmin (distblk a, distblk b)
 {
   return ((a) < (b)) ? (a) : (b);
 }
 //}}}
 //{{{
-static inline distblk distblkmax(distblk a, distblk b)
+static inline distblk distblkmax (distblk a, distblk b)
 {
   return ((a) > (b)) ? (a) : (b);
 }
 //}}}
+
 //{{{
-static inline short sabs(short x)
+static inline short sabs (short x)
 {
   static const short SHORT_BITS = (sizeof(short) * CHAR_BIT) - 1;
   short y = (short) (x >> SHORT_BITS);
@@ -118,7 +121,7 @@ static inline short sabs(short x)
 }
 //}}}
 //{{{
-static inline int iabs(int x)
+static inline int iabs (int x)
 {
   static const int INT_BITS = (sizeof(int) * CHAR_BIT) - 1;
   int y = x >> INT_BITS;
@@ -126,13 +129,13 @@ static inline int iabs(int x)
 }
 //}}}
 //{{{
-static inline double dabs(double x)
+static inline double dabs (double x)
 {
   return ((x) < 0) ? -(x) : (x);
 }
 //}}}
 //{{{
-static inline int64 i64abs(int64 x)
+static inline int64 i64abs (int64 x)
 {
   static const int64 INT64_BITS = (sizeof(int64) * CHAR_BIT) - 1;
   int64 y = x >> INT64_BITS;
@@ -140,79 +143,82 @@ static inline int64 i64abs(int64 x)
 }
 //}}}
 //{{{
-static inline double dabs2(double x)
+static inline double dabs2 (double x)
 {
   return (x) * (x);
 }
 //}}}
 //{{{
-static inline int iabs2(int x)
+static inline int iabs2 (int x)
 {
   return (x) * (x);
 }
 //}}}
 //{{{
-static inline int64 i64abs2(int64 x)
+static inline int64 i64abs2 (int64 x)
 {
   return (x) * (x);
 }
 //}}}
+
 //{{{
-static inline int isign(int x)
+static inline int isign (int x)
 {
   return ( (x > 0) - (x < 0));
 }
 //}}}
 //{{{
-static inline int isignab(int a, int b)
+static inline int isignab (int a, int b)
 {
   return ((b) < 0) ? -iabs(a) : iabs(a);
 }
 //}}}
+
 //{{{
-static inline int rshift_rnd(int x, int a)
+static inline int rshift_rnd (int x, int a)
 {
   return (a > 0) ? ((x + (1 << (a-1) )) >> a) : (x << (-a));
 }
 //}}}
 //{{{
-static inline unsigned long rshift_rnd_ul(unsigned long x, int a)
+static inline unsigned long rshift_rnd_ul (unsigned long x, int a)
 {
   return (a > 0) ? ((x + (1 << (a-1) )) >> a) : (x << (-a));
 }
 //}}}
 //{{{
-static inline int rshift_rnd_sign(int x, int a)
+static inline int rshift_rnd_sign (int x, int a)
 {
   return (x > 0) ? ( ( x + (1 << (a-1)) ) >> a ) : (-( ( iabs(x) + (1 << (a-1)) ) >> a ));
 }
 //}}}
 //{{{
-static inline unsigned int rshift_rnd_us(unsigned int x, unsigned int a)
+static inline unsigned int rshift_rnd_us (unsigned int x, unsigned int a)
 {
   return (a > 0) ? ((x + (1 << (a-1))) >> a) : x;
 }
 //}}}
 //{{{
-static inline int rshift_rnd_sf(int x, int a)
+static inline int rshift_rnd_sf (int x, int a)
 {
   return ((x + (1 << (a-1) )) >> a);
 }
 //}}}
 //{{{
-static inline int shift_off_sf(int x, int o, int a)
+static inline int shift_off_sf (int x, int o, int a)
 {
   return ((x + o) >> a);
 }
 //}}}
 //{{{
-static inline unsigned int rshift_rnd_us_sf(unsigned int x, unsigned int a)
+static inline unsigned int rshift_rnd_us_sf (unsigned int x, unsigned int a)
 {
   return ((x + (1 << (a-1))) >> a);
 }
 //}}}
+
 //{{{
-static inline int iClip1(int high, int x)
+static inline int iClip1 (int high, int x)
 {
   x = imax(x, 0);
   x = imin(x, high);
@@ -221,7 +227,7 @@ static inline int iClip1(int high, int x)
 }
 //}}}
 //{{{
-static inline long lClip1(long high, long x)
+static inline long lClip1 (long high, long x)
 {
   x = lmax(x, 0);
   x = lmin(x, high);
@@ -230,7 +236,7 @@ static inline long lClip1(long high, long x)
 }
 //}}}
 //{{{
-static inline int iClip3(int low, int high, int x)
+static inline int iClip3 (int low, int high, int x)
 {
   x = imax(x, low);
   x = imin(x, high);
@@ -239,7 +245,7 @@ static inline int iClip3(int low, int high, int x)
 }
 //}}}
 //{{{
-static inline long lClip3(long low, long high, long x)
+static inline long lClip3 (long low, long high, long x)
 {
   x = lmax(x, low);
   x = lmin(x, high);
@@ -248,7 +254,7 @@ static inline long lClip3(long low, long high, long x)
 }
 //}}}
 //{{{
-static inline short sClip3(short low, short high, short x)
+static inline short sClip3 (short low, short high, short x)
 {
   x = smax(x, low);
   x = smin(x, high);
@@ -257,7 +263,7 @@ static inline short sClip3(short low, short high, short x)
 }
 //}}}
 //{{{
-static inline double dClip3(double low, double high, double x)
+static inline double dClip3 (double low, double high, double x)
 {
   x = dmax(x, low);
   x = dmin(x, high);
@@ -269,7 +275,7 @@ static inline double dClip3(double low, double high, double x)
 
 //{{{
 //{{{
-static inline int RSD(int x)
+static inline int RSD (int x)
 {
  return ((x&2)?(x|1):(x&(~1)));
 }
@@ -380,4 +386,33 @@ static inline int is_intra_mb(short mbType)
   #undef static
   #undef inline
 #endif
+//}}}
+
+//{{{
+static inline unsigned ceilLog2 (unsigned value) {
+
+  unsigned result = 0;
+
+  unsigned temp = value - 1;
+  while (!temp) {
+    temp >>= 1;
+    result++;
+    }
+
+  return result;
+  }
+//}}}
+//{{{
+static inline unsigned ceilLog2sf (unsigned value) {
+
+  unsigned result = 0;
+
+  unsigned temp = value - 1;
+  while (temp > 0) {
+    temp >>= 1;
+    result++;
+    }
+
+  return result;
+  }
 //}}}
