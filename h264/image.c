@@ -2418,6 +2418,28 @@ static int readNextSlice (sSlice* slice) {
 
   process_nalu:
     switch (nalu->unitType) {
+      //{{{
+      case NALU_TYPE_SPS:
+        if (decoder->param.spsDebug)
+          printf ("SPS id:%d:%d len:%d ", slice->refId, slice->sliceType, nalu->len);
+        processSPS (decoder, nalu);
+        break;
+      //}}}
+      //{{{
+      case NALU_TYPE_PPS:
+        if (decoder->param.spsDebug)
+          printf ("PPS id:%d:%d len:%d ", slice->refId, slice->sliceType, nalu->len);
+        processPPS (decoder, nalu);
+        break;
+      //}}}
+      //{{{
+      case NALU_TYPE_SEI:
+        if (decoder->param.seiDebug)
+          printf ("IDR id:%d:%d len:%d\n", slice->refId, slice->sliceType, nalu->len);
+        processSEI (nalu->buf, nalu->len, decoder, slice);
+        break;
+      //}}}
+
       case NALU_TYPE_SLICE:
       //{{{
       case NALU_TYPE_IDR:
@@ -2490,6 +2512,7 @@ static int readNextSlice (sSlice* slice) {
         decoder->recoveryPoint = 0;
         return curHeader;
       //}}}
+
       //{{{
       case NALU_TYPE_DPA:
         printf ("DPA id:%d:%d len:%d\n", slice->refId, slice->sliceType, nalu->len);
@@ -2606,27 +2629,7 @@ static int readNextSlice (sSlice* slice) {
         printf ("dataPartitionC without dataPartitonA\n");
         break;
       //}}}
-      //{{{
-      case NALU_TYPE_SEI:
-        if (decoder->param.seiDebug)
-          printf ("IDR id:%d:%d len:%d\n", slice->refId, slice->sliceType, nalu->len);
-        processSEI (nalu->buf, nalu->len, decoder, slice);
-        break;
-      //}}}
-      //{{{
-      case NALU_TYPE_PPS:
-        if (decoder->param.spsDebug)
-          printf ("PPS id:%d:%d len:%d\n", slice->refId, slice->sliceType, nalu->len);
-        processPPS (decoder, nalu);
-        break;
-      //}}}
-      //{{{
-      case NALU_TYPE_SPS:
-        if (decoder->param.spsDebug)
-          printf ("SPS id:%d:%d len:%d\n", slice->refId, slice->sliceType, nalu->len);
-        processSPS (decoder, nalu);
-        break;
-      //}}}
+
       case NALU_TYPE_AUD: break;
       case NALU_TYPE_EOSEQ: break;
       case NALU_TYPE_EOSTREAM: break;
