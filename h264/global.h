@@ -828,17 +828,19 @@ typedef struct Decoder {
   sSlice*      nextSlice;           // pointer to first sSlice of next picture;
   struct OldSlice* oldSlice;
 
+  // sCoding
   sCoding      coding;
   sBlockPos*   picPos;
   byte****     nzCoeff;
 
   sMacroblock* mbData;              // array containing all MBs of a whole frame
-  sMacroblock* mbDataJV[MAX_PLANE]; // mbData to be used for 4:4:4 independent mode
   char*        intraBlock;
-  char*        intraBlockJV[MAX_PLANE];
   byte**       predMode;            // prediction type [90][74]
-  byte**       predModeJV[MAX_PLANE];
   int**        siBlock;
+
+  sMacroblock* mbDataJV[MAX_PLANE]; 
+  char*        intraBlockJV[MAX_PLANE];
+  byte**       predModeJV[MAX_PLANE];
   int**        siBlockJV[MAX_PLANE];
 
   // picture error conceal
