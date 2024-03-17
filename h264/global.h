@@ -757,14 +757,11 @@ typedef struct CodingParam {
 
   sMacroblock* mbDataJV[MAX_PLANE]; // mbData to be used for 4:4:4 independent mode
 
-  char*        intraBlock;
   char*        intraBlockJV[MAX_PLANE];
   sBlockPos*   picPos;
-  byte**       predMode;             // prediction type [90][74]
   byte**       predModeJV[MAX_PLANE];
   byte****     nzCoeff;
 
-  int**        siBlock;
   int**        siBlockJV[MAX_PLANE];
   } sCoding;
 //}}}

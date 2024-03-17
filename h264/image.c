@@ -1428,11 +1428,6 @@ static void setupBuffers (sDecoder* decoder) {
     decoder->predMode = NULL;
     decoder->siBlock = NULL;
     }
-  else {
-    decoder->intraBlock = decoder->coding->intraBlock;
-    decoder->predMode = decoder->coding->predMode;
-    decoder->siBlock = decoder->coding->siBlock;
-    }
 
   decoder->picPos = decoder->coding->picPos;
   decoder->nzCoeff = decoder->coding->nzCoeff;

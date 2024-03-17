@@ -255,10 +255,6 @@ void initGlobalBuffers (sDecoder* decoder) {
 
   // alloc coding
   if (decoder->coding->sepColourPlaneFlag) {
-    decoder->coding->intraBlock = NULL;
-    decoder->coding->predMode = NULL;
-    decoder->coding->siBlock = NULL;
-
     for (unsigned i = 0; i < MAX_PLANE; ++i)
       if (!decoder->coding->mbDataJV[i])
         decoder->coding->mbDataJV[i] = (sMacroblock*)calloc (decoder->coding->frameSizeMbs, sizeof(sMacroblock));
@@ -276,13 +272,13 @@ void initGlobalBuffers (sDecoder* decoder) {
     printf ("--- initGlobalBuffers\n");
     if (!decoder->mbData)
       decoder->mbData = (sMacroblock*)calloc (decoder->coding->frameSizeMbs, sizeof(sMacroblock));
-    if (!decoder->coding->intraBlock)
-      decoder->coding->intraBlock = (char*)calloc (decoder->coding->frameSizeMbs, sizeof(char));
+    if (!decoder->intraBlock)
+      decoder->intraBlock = (char*)calloc (decoder->coding->frameSizeMbs, sizeof(char));
 
-    if (!decoder->coding->predMode)
-      getMem2D (&(decoder->coding->predMode), 4*decoder->coding->frameHeightMbs, 4*decoder->coding->picWidthMbs);
-    if (!decoder->coding->siBlock)
-      getMem2Dint (&(decoder->coding->siBlock), decoder->coding->frameHeightMbs, decoder->coding->picWidthMbs);
+    if (!decoder->predMode)
+      getMem2D (&(decoder->predMode), 4*decoder->coding->frameHeightMbs, 4*decoder->coding->picWidthMbs);
+    if (!decoder->siBlock)
+      getMem2Dint (&(decoder->siBlock), decoder->coding->frameHeightMbs, decoder->coding->picWidthMbs);
     }
 
   // alloc picPos
@@ -334,14 +330,14 @@ void freeLayerBuffers (sDecoder* decoder) {
     free (decoder->mbData);
     decoder->mbData = NULL;
 
-    free_mem2Dint (decoder->coding->siBlock);
-    decoder->coding->siBlock = NULL;
+    free_mem2Dint (decoder->siBlock);
+    decoder->siBlock = NULL;
 
-    free_mem2D (decoder->coding->predMode);
-    decoder->coding->predMode = NULL;
+    free_mem2D (decoder->predMode);
+    decoder->predMode = NULL;
 
-    free (decoder->coding->intraBlock);
-    decoder->coding->intraBlock = NULL;
+    free (decoder->intraBlock);
+    decoder->intraBlock = NULL;
     }
 
   // free picPos
