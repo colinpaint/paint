@@ -753,20 +753,7 @@ typedef struct CodingParam {
   int shiftpelX;
   int shiftpelY;
   int totalScale;
-
-  sMacroblock* mbDataJV[MAX_PLANE]; // mbData to be used for 4:4:4 independent mode
-  char*        intraBlockJV[MAX_PLANE];
-  byte**       predModeJV[MAX_PLANE];
-  int**        siBlockJV[MAX_PLANE];
   } sCoding;
-//}}}
-//{{{  sLayer
-typedef struct LayerParam {
-  struct Decoder*  decoder;
-  sCoding*         coding;
-  sSPS*            sps;
-  struct DPB*      dpb;
-  } sLayer;
 //}}}
 //{{{  sParam
 typedef struct Param {
@@ -829,7 +816,6 @@ typedef struct Decoder {
   int          newFrame;
 
   struct DPB*  dpb;
-  sLayer*      layer;
   sCoding*     coding;
   struct OldSlice* oldSlice;
 
@@ -919,14 +905,13 @@ typedef struct Decoder {
   int                  pendingOutState;
   int                  recoveryFlag;
 
-  // FMO
-  int* mbToSliceGroupMap;
-  int* mapUnitToSliceGroupMap;
-  int  sliceGroupsNum;  // the number of slice groups -1 (0 == scan order, 7 == maximum)
+  // fmo
+  int*                 mbToSliceGroupMap;
+  int*                 mapUnitToSliceGroupMap;
+  int                  sliceGroupsNum;  // the number of slice groups -1 (0 == scan order, 7 == maximum)
 
-  int          deblockMode;  // 0: deblock in picture, 1: deblock in slice;
-  sImage       tempData3;
-  sDecodedPic* decOutputPic;
+  int                  deblockMode;  // 0: deblock in picture, 1: deblock in slice;
+  sDecodedPic*         decOutputPic;
 
   int   iLumaPadX;
   int   iLumaPadY;

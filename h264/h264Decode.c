@@ -256,17 +256,17 @@ void initGlobalBuffers (sDecoder* decoder) {
   // alloc coding
   if (decoder->coding->sepColourPlaneFlag) {
     for (unsigned i = 0; i < MAX_PLANE; ++i)
-      if (!decoder->coding->mbDataJV[i])
-        decoder->coding->mbDataJV[i] = (sMacroblock*)calloc (decoder->coding->frameSizeMbs, sizeof(sMacroblock));
+      if (!decoder->mbDataJV[i])
+        decoder->mbDataJV[i] = (sMacroblock*)calloc (decoder->frameSizeMbs, sizeof(sMacroblock));
     for (unsigned i = 0; i < MAX_PLANE; ++i)
-      if (!decoder->coding->intraBlockJV[i])
-        decoder->coding->intraBlockJV[i] = (char*)calloc (decoder->coding->frameSizeMbs, sizeof(char));
+      if (!decoder->intraBlockJV[i])
+        decoder->intraBlockJV[i] = (char*)calloc (decoder->frameSizeMbs, sizeof(char));
     for (unsigned i = 0; i < MAX_PLANE; ++i)
-      if (!decoder->coding->predModeJV[i])
-       getMem2D (&(decoder->coding->predModeJV[i]), 4*decoder->coding->frameHeightMbs, 4*decoder->coding->picWidthMbs);
+      if (!decoder->predModeJV[i])
+       getMem2D (&(decoder->predModeJV[i]), 4*decoder->frameHeightMbs, 4*decoder->coding->picWidthMbs);
     for (unsigned i = 0; i < MAX_PLANE; ++i)
-      if (!decoder->coding->siBlockJV[i])
-        getMem2Dint (&(decoder->coding->siBlockJV[i]), decoder->coding->frameHeightMbs, decoder->coding->picWidthMbs);
+      if (!decoder->siBlockJV[i])
+        getMem2Dint (&(decoder->siBlockJV[i]), decoder->frameHeightMbs, decoder->coding->picWidthMbs);
     }
   else {
     printf ("--- initGlobalBuffers\n");
@@ -313,17 +313,17 @@ void freeLayerBuffers (sDecoder* decoder) {
   // free coding
   if (decoder->coding->sepColourPlaneFlag) {
     for (int i = 0; i < MAX_PLANE; i++) {
-      free (decoder->coding->mbDataJV[i]);
-      decoder->coding->mbDataJV[i] = NULL;
+      free (decoder->mbDataJV[i]);
+      decoder->mbDataJV[i] = NULL;
 
-      free_mem2Dint (decoder->coding->siBlockJV[i]);
-      decoder->coding->siBlockJV[i] = NULL;
+      free_mem2Dint (decoder->siBlockJV[i]);
+      decoder->siBlockJV[i] = NULL;
 
-      free_mem2D (decoder->coding->predModeJV[i]);
-      decoder->coding->predModeJV[i] = NULL;
+      free_mem2D (decoder->predModeJV[i]);
+      decoder->predModeJV[i] = NULL;
 
-      free (decoder->coding->intraBlockJV[i]);
-      decoder->coding->intraBlockJV[i] = NULL;
+      free (decoder->intraBlockJV[i]);
+      decoder->intraBlockJV[i] = NULL;
       }
     }
   else {
