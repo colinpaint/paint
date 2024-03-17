@@ -2475,8 +2475,8 @@ static int readNextSlice (sSlice* slice) {
             printf ("IDR");
           else
             printf ("SLC");
-          printf (":%d id:%d:%d frame:%d %s\n",
-                  nalu->len, slice->refId, slice->sliceType,
+          printf (" id:%d:%d len:%d frame:%d %s\n",
+                  slice->refId, slice->sliceType, nalu->len,
                   slice->frameNum, slice->fieldPicFlag ? "field":"");
           }
         assignQuantParams (slice);
