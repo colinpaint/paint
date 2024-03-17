@@ -619,7 +619,7 @@ typedef struct Slice {
   sTextureInfoContexts* textureContext;  // pointer to struct of context models for use in CABAC
 
   int   mvscale[6][MAX_REFERENCE_PICTURES];
-  int   ref_pic_list_reordering_flag[2];
+  int   refPicReorderFlag[2];
   int*  modification_of_pic_nums_idc[2];
   int*  abs_diff_pic_num_minus1[2];
   int*  long_term_pic_idx[2];

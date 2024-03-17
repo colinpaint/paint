@@ -269,7 +269,6 @@ void initGlobalBuffers (sDecoder* decoder) {
         getMem2Dint (&(decoder->siBlockJV[i]), decoder->coding.frameHeightMbs, decoder->coding.picWidthMbs);
     }
   else {
-    printf ("--- initGlobalBuffers\n");
     if (!decoder->mbData)
       decoder->mbData = (sMacroblock*)calloc (decoder->coding.frameSizeMbs, sizeof(sMacroblock));
     if (!decoder->intraBlock)
@@ -282,15 +281,16 @@ void initGlobalBuffers (sDecoder* decoder) {
     }
 
   // alloc picPos
-  if (!decoder->picPos)
+  if (!decoder->picPos) {
     decoder->picPos = (sBlockPos*)calloc (decoder->coding.frameSizeMbs + 1, sizeof(sBlockPos));
-  sBlockPos* blockPos = decoder->picPos;
-  for (unsigned i = 0; i < decoder->coding.frameSizeMbs+1; ++i) {
-    blockPos[i].x = (short)(i % decoder->coding.picWidthMbs);
-    blockPos[i].y = (short)(i / decoder->coding.picWidthMbs);
+    sBlockPos* blockPos = decoder->picPos;
+    for (unsigned i = 0; i < decoder->coding.frameSizeMbs+1; ++i) {
+      blockPos[i].x = (short)(i % decoder->coding.picWidthMbs);
+      blockPos[i].y = (short)(i / decoder->coding.picWidthMbs);
+      }
     }
 
-  // alloc cabac
+  // alloc cavlc
   if (!decoder->nzCoeff)
     getMem4D (&(decoder->nzCoeff), decoder->coding.frameSizeMbs, 3, BLOCK_SIZE, BLOCK_SIZE);
 
@@ -342,7 +342,7 @@ void freeLayerBuffers (sDecoder* decoder) {
   free (decoder->picPos);
   decoder->picPos = NULL;
 
-  // free cabac
+  // free cavlc
   free_mem4D (decoder->nzCoeff);
   decoder->nzCoeff = NULL;
 

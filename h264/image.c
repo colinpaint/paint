@@ -1204,7 +1204,7 @@ static void refPicListReorder (sSlice* slice) {
   alloc_ref_pic_list_reordering_buffer (slice);
   if (slice->sliceType != I_SLICE &&
       slice->sliceType != SI_SLICE) {
-    int val = slice->ref_pic_list_reordering_flag[LIST_0] =
+    int val = slice->refPicReorderFlag[LIST_0] =
       readU1 ("SLC ref_pic_list_reordering_flag_l0", s);
 
     if (val) {
@@ -1226,7 +1226,7 @@ static void refPicListReorder (sSlice* slice) {
     }
 
   if (slice->sliceType == B_SLICE) {
-    int val = slice->ref_pic_list_reordering_flag[LIST_1] =
+    int val = slice->refPicReorderFlag[LIST_1] =
       readU1 ("SLC ref_pic_list_reordering_flag_l1", s);
     if (val) {
       int i = 0;
@@ -1413,7 +1413,7 @@ static void resetMb (sMacroblock* mb) {
   mb->sliceNum = -1;
   }
 //}}}
-//}}}
+
 //{{{
 static void padBuf (sPixel* pixel, int width, int height, int stride, int padx, int pady) {
 
@@ -1641,31 +1641,24 @@ static void reorderLists (sSlice* slice) {
   sDecoder* decoder = slice->decoder;
 
   if ((slice->sliceType != I_SLICE) && (slice->sliceType != SI_SLICE)) {
-    if (slice->ref_pic_list_reordering_flag[LIST_0])
+    if (slice->refPicReorderFlag[LIST_0])
       reorderRefPicList (slice, LIST_0);
-    if (decoder->noReferencePicture == slice->listX[0][slice->numRefIndexActive[LIST_0]-1]) {
-      if (decoder->nonConformingStream)
-        printf ("RefPicList0[%d] no refPic\n", slice->numRefIndexActive[LIST_0]-1);
-      else
-        printf ("RefPicList0[num_ref_idx_l0_active_minus1] no refPic");
-      }
-
-    // that's a definition
-    slice->listXsize[0] = (char) slice->numRefIndexActive[LIST_0];
+    if (decoder->noReferencePicture == slice->listX[0][slice->numRefIndexActive[LIST_0]-1])
+      printf ("--- refPicList0[%d] no refPic %s\n",
+              slice->numRefIndexActive[LIST_0]-1, decoder->nonConformingStream ? "conform":"");
+    else // that's a definition
+      slice->listXsize[0] = (char) slice->numRefIndexActive[LIST_0];
     }
 
   if (slice->sliceType == B_SLICE) {
-    if (slice->ref_pic_list_reordering_flag[LIST_1])
+    if (slice->refPicReorderFlag[LIST_1])
       reorderRefPicList (slice, LIST_1);
-    if (decoder->noReferencePicture == slice->listX[1][slice->numRefIndexActive[LIST_1]-1]) {
-      if (decoder->nonConformingStream)
-        printf ("RefPicList1[%d] no refPic\n", slice->numRefIndexActive[LIST_1] - 1);
-      else
-        printf ("RefPicList1[num_ref_idx_l1_active_minus1] no refPic");
-      }
-
-    // that's a definition
-    slice->listXsize[1] = (char)slice->numRefIndexActive[LIST_1];
+    if (decoder->noReferencePicture == slice->listX[1][slice->numRefIndexActive[LIST_1]-1])
+      printf ("--- refPicList1[%d] no refPic %s\n",
+              slice->numRefIndexActive[LIST_0] - 1, decoder->nonConformingStream ? "conform" : "");
+    else
+      // that's a definition
+      slice->listXsize[1] = (char)slice->numRefIndexActive[LIST_1];
     }
 
   freeRefPicListReorderingBuffer (slice);
@@ -1677,7 +1670,7 @@ static void ercWriteMBMODEandMV (sMacroblock* mb) {
   sDecoder* decoder = mb->decoder;
   int currMBNum = mb->mbIndexX; //decoder->currentSlice->mbIndex;
   sPicture* picture = decoder->picture;
-  int mbx = xPosMB(currMBNum, picture->sizeX), mby = yPosMB(currMBNum, picture->sizeX);
+  int mbx = xPosMB (currMBNum, picture->sizeX), mby = yPosMB(currMBNum, picture->sizeX);
 
   sObjectBuffer* currRegion = decoder->ercObjectList + (currMBNum << 2);
 
@@ -1685,7 +1678,7 @@ static void ercWriteMBMODEandMV (sMacroblock* mb) {
     //{{{  non-B frame
     for (int i = 0; i < 4; ++i) {
       sObjectBuffer* pRegion = currRegion + i;
-      pRegion->regionMode = (mb->mbType  ==I16MB  ? REGMODE_INTRA :
+      pRegion->regionMode = (mb->mbType ==I16MB  ? REGMODE_INTRA :
                                mb->b8mode[i] == IBLOCK ? REGMODE_INTRA_8x8  :
                                  mb->b8mode[i] == 0 ? REGMODE_INTER_COPY :
                                    mb->b8mode[i] == 1 ? REGMODE_INTER_PRED :
@@ -2125,9 +2118,10 @@ static void initPictureDecoding (sDecoder* decoder) {
 //}}}
 //{{{
 static void readSliceHeader (sDecoder* decoder, sSlice* slice) {
-// Some syntax sliceHeader depends on parameterSet depends on parameterSetID of the slice header
-// - read the ppsId of the slice header first, then setup the active parameter sets
-// read the rest of the slice header
+// Some sliceHeader syntax depends on parameterSet depends on parameterSetID of the slice header
+// - read the ppsId of the slice header first
+//   - then setup the active parameter sets
+// - read the rest of the slice header
 
   // read front of sliceHeader
   byte partitionIndex = assignSE2dp[slice->datadpMode][SE_HEADER];
@@ -2278,8 +2272,10 @@ static void readSliceHeader (sDecoder* decoder, sSlice* slice) {
   else
     slice->DFDisableIdc = slice->DFAlphaC0Offset = slice->DFBetaOffset = 0;
 
-  // The conformance point for intra profiles is without deblocking, but decoders are still recommended to filter the output.
-  // We allow in the decoder config to skip the loop filtering. This is achieved by modifying the parameters here.
+  // The conformance point for intra profiles is without deblocking
+  // but decoders are still recommended to filter the output
+  // We allow in the decoder config to skip the loop filtering
+  // This is achieved by modifying the parameters here.
   if (isHiIntraOnlyProfile (activeSPS->profileIdc, activeSPS->constrained_set3_flag) &&
       (decoder->param.intraProfileDeblocking == 0)) {
     slice->DFDisableIdc = 1;
@@ -2288,6 +2284,7 @@ static void readSliceHeader (sDecoder* decoder, sSlice* slice) {
   //{{{  read sliceGroup
   if (decoder->activePPS->numSliceGroupsMinus1>0 && decoder->activePPS->sliceGroupMapType>=3 &&
       decoder->activePPS->sliceGroupMapType <= 5) {
+
     int len = (activeSPS->pic_height_in_map_units_minus1+1) * (activeSPS->pic_width_in_mbs_minus1+1)/
               (decoder->activePPS->sliceGroupChangeRateMius1 + 1);
     if (((activeSPS->pic_height_in_map_units_minus1+1) * (activeSPS->pic_width_in_mbs_minus1+1))%
