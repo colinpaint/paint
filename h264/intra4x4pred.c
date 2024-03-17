@@ -123,7 +123,7 @@ static int intra4x4_dc_pred (sMacroblock *mb,
   else //if (!block_available_up && !block_available_left)
   {
     // top left corner, nothing to predict from
-    s0 = decoder->dcPredValueComp[plane];
+    s0 = decoder->coding.dcPredValueComp[plane];
   }
 
   for (j=joff; j < joff + BLOCK_SIZE; ++j)
@@ -922,7 +922,7 @@ static int intra4x4_dc_pred_mbaff (sMacroblock *mb,
   else //if (!block_available_up && !block_available_left)
   {
     // top left corner, nothing to predict from
-    s0 = decoder->dcPredValueComp[plane];
+    s0 = decoder->coding.dcPredValueComp[plane];
   }
 
   for (j=joff; j < joff + BLOCK_SIZE; ++j)

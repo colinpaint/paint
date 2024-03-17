@@ -162,7 +162,7 @@ static void pixMeanInterpolateBlock (sDecoder* decoder, sPixel *src[], sPixel *b
       if ( srcCounter > 0 )
         block[ k + column ] = (sPixel)(tmp/srcCounter);
       else
-        block[ k + column ] = (sPixel) (blockSize == 8 ? decoder->dcPredValueComp[1] : decoder->dcPredValueComp[0]);
+        block[ k + column ] = (sPixel) (blockSize == 8 ? decoder->coding.dcPredValueComp[1] : decoder->coding.dcPredValueComp[0]);
     }
     k += frameWidth;
   }
@@ -810,7 +810,7 @@ static void buildPredRegionYUV (sDecoder* decoder, int *mv, int x, int y, sPixel
         tmp_block,
         picture->iLumaStride,picture->size_x_m1,
         (mb->mbField) ? (picture->sizeY >> 1) - 1 : picture->size_y_m1,tmp_res,
-        decoder->maxPelValueComp[PLANE_Y],(sPixel) decoder->dcPredValueComp[PLANE_Y], mb);
+        decoder->coding.maxPelValueComp[PLANE_Y],(sPixel) decoder->coding.dcPredValueComp[PLANE_Y], mb);
 
       for(ii=0;ii<BLOCK_SIZE;ii++)
         for(jj=0;jj<MB_BLOCK_SIZE/BLOCK_SIZE;jj++)
@@ -1392,7 +1392,7 @@ static void buildPredblockRegionYUV (sDecoder* decoder, int *mv,
   vec1_y = y*mv_mul + mv[1];
   get_block_luma(slice->listX[list][ref_frame],  vec1_x, vec1_y, BLOCK_SIZE, BLOCK_SIZE, tmp_block,
     picture->iLumaStride,picture->size_x_m1, (mb->mbField) ? (picture->sizeY >> 1) - 1 : picture->size_y_m1,slice->tmp_res,
-    decoder->maxPelValueComp[PLANE_Y],(sPixel) decoder->dcPredValueComp[PLANE_Y], mb);
+    decoder->coding.maxPelValueComp[PLANE_Y],(sPixel) decoder->coding.dcPredValueComp[PLANE_Y], mb);
 
   for(jj=0;jj<MB_BLOCK_SIZE/BLOCK_SIZE;jj++)
     for(ii=0;ii<BLOCK_SIZE;ii++)

@@ -387,14 +387,14 @@ static void concealIPCMcoeffs (sMacroblock* mb) {
   sDecoder* decoder = mb->decoder;
   for (int i = 0; i < MB_BLOCK_SIZE; ++i)
     for (int j = 0; j < MB_BLOCK_SIZE; ++j)
-      slice->cof[0][i][j] = decoder->dcPredValueComp[0];
+      slice->cof[0][i][j] = decoder->coding.dcPredValueComp[0];
 
   sPicture* picture = slice->picture;
   if ((picture->chromaFormatIdc != YUV400) && (decoder->coding.sepColourPlaneFlag == 0))
     for (int k = 0; k < 2; ++k)
       for (int i = 0; i < decoder->mbCrSizeY; ++i)
         for (int j = 0; j < decoder->mbCrSizeX; ++j)
-          slice->cof[k][i][j] = decoder->dcPredValueComp[k];
+          slice->cof[k][i][j] = decoder->coding.dcPredValueComp[k];
   }
 //}}}
 //{{{

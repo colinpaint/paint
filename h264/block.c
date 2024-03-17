@@ -35,7 +35,7 @@ void itrans4x4 (sMacroblock* mb, eColorPlane plane, int ioff, int joff) {
   int** mbRess = slice->mbRess[plane];
   inverse4x4 (slice->cof[plane],mbRess,joff,ioff);
 
-  sample_reconstruct (&slice->mbRec[plane][joff], &slice->mbPred[plane][joff], &mbRess[joff], ioff, ioff, BLOCK_SIZE, BLOCK_SIZE, mb->decoder->maxPelValueComp[plane], DQ_BITS);
+  sample_reconstruct (&slice->mbRec[plane][joff], &slice->mbPred[plane][joff], &mbRess[joff], ioff, ioff, BLOCK_SIZE, BLOCK_SIZE, mb->decoder->coding.maxPelValueComp[plane], DQ_BITS);
   }
 //}}}
 //{{{
@@ -47,7 +47,7 @@ void itrans4x4_ls (sMacroblock* mb, eColorPlane plane, int ioff, int joff) {
   int** mbRess = slice->mbRess [plane];
 
   sDecoder* decoder = mb->decoder;
-  int max_imgpel_value = decoder->maxPelValueComp[plane];
+  int max_imgpel_value = decoder->coding.maxPelValueComp[plane];
   for (int j = joff; j < joff + BLOCK_SIZE; ++j)
     for (int i = ioff; i < ioff + BLOCK_SIZE; ++i)
       mbRec[j][i] = (sPixel) iClip1(max_imgpel_value, mbPred[j][i] + mbRess[j][i]);
@@ -302,7 +302,7 @@ void itrans_sp (sMacroblock* mb, eColorPlane plane, int ioff, int joff) {
   sPixel** mbRec = slice->mbRec[plane];
   int** mbRess = slice->mbRess[plane];
   int** cof = slice->cof[plane];
-  int max_imgpel_value = decoder->maxPelValueComp[plane];
+  int max_imgpel_value = decoder->coding.maxPelValueComp[plane];
 
   const int (*InvLevelScale4x4)[4] = dequant_coef[qp_rem];
   const int (*InvLevelScale4x4SP)[4] = dequant_coef[qp_rem_sp];
@@ -501,7 +501,7 @@ void iMBtrans4x4 (sMacroblock* mb, eColorPlane plane, int smb) {
         inverse4x4 (cof, mbRess, jj, 12);
         }
       }
-    sample_reconstruct (slice->mbRec[plane], slice->mbPred[plane], mbRess, 0, 0, MB_BLOCK_SIZE, MB_BLOCK_SIZE, mb->decoder->maxPelValueComp[plane], DQ_BITS);
+    sample_reconstruct (slice->mbRec[plane], slice->mbPred[plane], mbRess, 0, 0, MB_BLOCK_SIZE, MB_BLOCK_SIZE, mb->decoder->coding.maxPelValueComp[plane], DQ_BITS);
     }
 
   // construct picture from 4x4 blocks
@@ -581,7 +581,7 @@ void iTransform (sMacroblock* mb, eColorPlane plane, int smb) {
             itrans4x4 (mb, uv, *x_pos  , *y_pos  );
             }
           sample_reconstruct (mbRec, slice->mbPred[uv], slice->mbRess[uv], 0, 0,
-            decoder->mbSize[1][0], decoder->mbSize[1][1], mb->decoder->maxPelValueComp[uv], DQ_BITS);
+            decoder->mbSize[1][0], decoder->mbSize[1][1], mb->decoder->coding.maxPelValueComp[uv], DQ_BITS);
           }
         else {
           for (int b8 = 0; b8 < (decoder->numUvBlocks); ++b8) {

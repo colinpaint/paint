@@ -57,15 +57,15 @@ static void clearPicture (sDecoder* decoder, sPicture* p) {
 
   for (int i = 0; i < p->sizeY; i++)
     for (int j = 0; j < p->sizeX; j++)
-      p->imgY[i][j] = (sPixel)decoder->dcPredValueComp[0];
+      p->imgY[i][j] = (sPixel)decoder->coding.dcPredValueComp[0];
 
   for (int i = 0; i < p->sizeYcr;i++)
     for (int j = 0; j < p->sizeXcr; j++)
-      p->imgUV[0][i][j] = (sPixel)decoder->dcPredValueComp[1];
+      p->imgUV[0][i][j] = (sPixel)decoder->coding.dcPredValueComp[1];
 
   for (int i = 0; i < p->sizeYcr;i++)
     for (int j = 0; j < p->sizeXcr; j++)
-      p->imgUV[1][i][j] = (sPixel)decoder->dcPredValueComp[2];
+      p->imgUV[1][i][j] = (sPixel)decoder->coding.dcPredValueComp[2];
   }
 //}}}
 //{{{

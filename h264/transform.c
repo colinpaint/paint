@@ -566,10 +566,10 @@ void itrans8x8 (sMacroblock *mb, eColorPlane plane, int ioff, int joff) {
   int** m7 = slice->mbRess[plane];
 
   if (mb->isLossless == TRUE)
-    recon8x8_lossless (&m7[joff], &slice->mbRec[plane][joff], &slice->mbPred[plane][joff], mb->decoder->maxPelValueComp[plane], ioff);
+    recon8x8_lossless (&m7[joff], &slice->mbRec[plane][joff], &slice->mbPred[plane][joff], mb->decoder->coding.maxPelValueComp[plane], ioff);
   else {
     inverse8x8 (&m7[joff], &m7[joff], ioff);
-    recon8x8 (&m7[joff], &slice->mbRec[plane][joff], &slice->mbPred[plane][joff], mb->decoder->maxPelValueComp[plane], ioff);
+    recon8x8 (&m7[joff], &slice->mbRec[plane][joff], &slice->mbPred[plane][joff], mb->decoder->coding.maxPelValueComp[plane], ioff);
    }
   }
 //}}}

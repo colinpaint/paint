@@ -779,7 +779,7 @@ typedef struct CodingParam {
   } sCoding;
 //}}}
 //{{{  sDecoder
-typedef struct Decoder {
+typedef struct  Decoder {
   sParam       param;
 
   // debug
@@ -840,8 +840,6 @@ typedef struct Decoder {
   int bitdepthScale[2];
   int bitdepthLumeQpScale;
   int bitdepthChromaQpScale;
-  int maxPelValueComp[MAX_PLANE];
-  unsigned int dcPredValueComp[MAX_PLANE];
 
   int numBlock8x8uv;
   int numUvBlocks;

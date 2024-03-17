@@ -201,17 +201,17 @@ void initFrext (sDecoder* decoder) {
     decoder->picUnitBitSizeDisk = (decoder->bitdepthLuma > 8)? 16:8;
   else
     decoder->picUnitBitSizeDisk = (decoder->bitdepthChroma > 8)? 16:8;
-  decoder->dcPredValueComp[0] = 1<<(decoder->bitdepthLuma - 1);
-  decoder->maxPelValueComp[0] = (1<<decoder->bitdepthLuma) - 1;
+  decoder->coding.dcPredValueComp[0] = 1<<(decoder->bitdepthLuma - 1);
+  decoder->coding.maxPelValueComp[0] = (1<<decoder->bitdepthLuma) - 1;
   decoder->mbSize[0][0] = decoder->mbSize[0][1] = MB_BLOCK_SIZE;
 
   if (decoder->activeSPS->chromaFormatIdc != YUV400) {
     // for chrominance part
     decoder->bitdepthChromaQpScale = 6 * (decoder->bitdepthChroma - 8);
-    decoder->dcPredValueComp[1] = (1 << (decoder->bitdepthChroma - 1));
-    decoder->dcPredValueComp[2] = decoder->dcPredValueComp[1];
-    decoder->maxPelValueComp[1] = (1 << decoder->bitdepthChroma) - 1;
-    decoder->maxPelValueComp[2] = (1 << decoder->bitdepthChroma) - 1;
+    decoder->coding.dcPredValueComp[1] = (1 << (decoder->bitdepthChroma - 1));
+    decoder->coding.dcPredValueComp[2] = decoder->coding.dcPredValueComp[1];
+    decoder->coding.maxPelValueComp[1] = (1 << decoder->bitdepthChroma) - 1;
+    decoder->coding.maxPelValueComp[2] = (1 << decoder->bitdepthChroma) - 1;
     decoder->numBlock8x8uv = (1 << decoder->activeSPS->chromaFormatIdc) & (~(0x1));
     decoder->numUvBlocks = (decoder->numBlock8x8uv >> 1);
     decoder->numCdcCoeff = (decoder->numBlock8x8uv << 1);
@@ -226,8 +226,8 @@ void initFrext (sDecoder* decoder) {
     }
   else {
     decoder->bitdepthChromaQpScale = 0;
-    decoder->maxPelValueComp[1] = 0;
-    decoder->maxPelValueComp[2] = 0;
+    decoder->coding.maxPelValueComp[1] = 0;
+    decoder->coding.maxPelValueComp[2] = 0;
     decoder->numBlock8x8uv = 0;
     decoder->numUvBlocks = 0;
     decoder->numCdcCoeff = 0;

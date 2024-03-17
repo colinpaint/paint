@@ -1905,7 +1905,7 @@ void initImage (sDecoder* decoder, sImage* image, sSPS* sps) {
       else {
         sPixel mean_val;
         for (int k = 1; k < 3; k++) {
-          mean_val = (sPixel) ((decoder->maxPelValueComp[k] + 1) >> 1);
+          mean_val = (sPixel) ((decoder->coding.maxPelValueComp[k] + 1) >> 1);
           for (int j = 0; j < decoder->heightCr; j++)
             for (int i = 0; i < decoder->widthCr; i++)
               image->frm_data[k][j][i] = mean_val;
