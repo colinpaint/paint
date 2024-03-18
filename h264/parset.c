@@ -808,14 +808,20 @@ static void readPPS (sDecoder* decoder, sDataPartition* dataPartition, sPPS* pps
     pps->secondChromaQpIndexOffset = pps->chromaQpIndexOffset;
 
   if (decoder->param.ppsDebug)
-    printf ("-> ppsId:%d spsId:%d%s%s%s%s%s%s L:%d:%d\n",
+    printf ("-> ppsId:%d spsId:%d %d:%d%s%s%s%s%s%s%s%s%s%s grp:%d L:%d:%d\n",
             pps->ppsId, pps->spsId,
+            pps->picInitQpMinus26, pps->picInitQsMinus26,
             pps->entropyCodingMode ? " cabac":" cavlc",
             pps->deblockFilterControlPresent ? " deblock":"",
             pps->numSliceGroupsMinus1 ? " numSliceGroups":"",
             pps->constrainedIntraPredFlag ? " constrainedIntraPred":"",
             pps->redundantPicCountPresent ? " redundant":"",
-            pps->botFieldPicOrderFramePresent ? " botFieldPicOrderFrame":"",
+            pps->botFieldPicOrderFramePresent ? " botField":"",
+            pps->weightedPredFlag ? " pred":"",
+            pps->weightedBiPredIdc ? " biPred":"",
+            pps->constrainedIntraPredFlag ? " intraPredFlag":"",
+            pps->redundantPicCountPresent ? " redund":"",
+            pps->numSliceGroupsMinus1,
             pps->numRefIndexL0defaultActiveMinus1, pps->numRefIndexL1defaultActiveMinus1);
 
   pps->valid = TRUE;
