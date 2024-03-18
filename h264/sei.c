@@ -419,23 +419,17 @@ static void process_scene_information (byte* payload, int size, sDecoder* decode
 //{{{
 static void process_user_data_unregistered_info (byte* payload, int size, sDecoder* decoder) {
 
-  int offset = 0;
-  byte payload_byte;
-
-  assert (size>=16);
-
   if (decoder->param.seiDebug) {
-    printf ("User data unregistered SEI\n");
-    printf ("uuid_iso_11578 = 0x");
-    for (offset = 0; offset < 16; offset++)
-      printf ("%02x",payload[offset]);
+    printf ("SEI - unregistered\n");
+
+    for (int i = 0; i < size; i++)
+      printf (" %02x",payload[i]);
     printf ("\n");
 
-    while (offset < size) {
-      payload_byte = payload[offset];
-      offset ++;
-      printf ("Unreg data payload_byte = %d\n", payload_byte);
-      }
+    for (int i = 0; i < size; i++)
+      if (payload[i] >= 0x20 && payload[i] <= 0x7f)
+        printf ("%c",payload[i]);
+    printf ("\n");
     }
   }
 //}}}

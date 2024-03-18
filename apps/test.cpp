@@ -1079,7 +1079,7 @@ public:
       param.spsDebug = 1;
       param.ppsDebug = 1;
       param.sliceDebug = 1;
-      //param.seiDebug = 1;
+      param.seiDebug = 1;
       param.pocScale = 2;
       param.pocGap = 2;
       param.refPocGap = 2;
