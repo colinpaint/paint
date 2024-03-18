@@ -14,4 +14,4 @@ extern void checkZeroByteVCL (sDecoder* decoder, sNalu* nalu);
 extern void checkZeroByteNonVCL (sDecoder* decoder, sNalu* nalu);
 
 extern int readNextNalu (sDecoder* decoder, sNalu* nalu);
-extern int RBSPtoSODB (byte* bitStreamBuffer, int last_byte_pos);
+extern int RBSPtoSODB (byte* bitStreamBuffer, int lastBytePos);

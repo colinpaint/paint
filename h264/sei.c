@@ -437,26 +437,27 @@ static void process_user_data_unregistered_info (byte* payload, int size, sDecod
 static void process_user_data_registered_itu_t_t35_info (byte* payload, int size, sDecoder* decoder) {
 
   int offset = 0;
-  byte itu_t_t35_country_code, itu_t_t35_country_code_extension_byte, payload_byte;
-
-  itu_t_t35_country_code = payload[offset];
+  int itu_t_t35_country_code = payload[offset];
   offset++;
 
-  if (decoder->param.seiDebug)
-    printf ("SEI User data ITU-T T.35 country_code %d\n", itu_t_t35_country_code);
+  if (decoder->param.seiDebug) {
+    printf ("SEI - ITU-T T.35 countryCode:%d\n", itu_t_t35_country_code);
 
-  if (itu_t_t35_country_code == 0xFF) {
-    itu_t_t35_country_code_extension_byte = payload[offset];
-    offset++;
-    if (decoder->param.seiDebug)
-      printf (" ITU_T_T35_COUNTRY_CODE_EXTENSION_BYTE %d\n", itu_t_t35_country_code_extension_byte);
-    }
+    if (itu_t_t35_country_code == 0xFF) {
+      int itu_t_t35_country_code_extension_byte = payload[offset];
+      offset++;
+      if (decoder->param.seiDebug)
+        printf ("ITU_T_T35_COUNTRY_CODE_EXTENSION_BYTE:%d\n", itu_t_t35_country_code_extension_byte);
+      }
 
-  while (offset < size) {
-    payload_byte = payload[offset];
-    offset ++;
-    if (decoder->param.seiDebug)
-      printf ("itu_t_t35 payload_byte %d\n", payload_byte);
+    for (int i = offset; i < size; i++)
+      printf (" %02x",payload[i]);
+    printf ("\n");
+
+    for (int i = offset; i < size; i++)
+      if (payload[i] >= 0x20 && payload[i] <= 0x7f)
+        printf ("%c",payload[i]);
+    printf ("\n");
     }
   }
 //}}}

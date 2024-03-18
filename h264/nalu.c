@@ -372,25 +372,24 @@ int readNextNalu (sDecoder* decoder, sNalu* nalu) {
 //}}}
 
 //{{{
-int RBSPtoSODB (byte* bitStreamBuffer, int last_byte_pos) {
+int RBSPtoSODB (byte* bitStreamBuffer, int lastBytePos) {
 // rawByteSequencePayload to stringOfDataBits
 
   // find trailing 1
   int bitOffset = 0;
-  int ctr_bit = (bitStreamBuffer[last_byte_pos-1] & (0x01 << bitOffset));
-  while (ctr_bit == 0) {
+  int controlBit = (bitStreamBuffer[lastBytePos-1] & (0x01 << bitOffset));
+  while (!controlBit) {
     // find trailing 1 bit
     ++bitOffset;
     if (bitOffset == 8) {
-      if (last_byte_pos == 0)
-        printf (" Panic: All zero data sequence in RBSP \n");
-      assert (last_byte_pos != 0);
-      --last_byte_pos;
+      if (!lastBytePos)
+        printf ("--- RBSPtoSODB All zero data sequence in RBSP\n");
+      --lastBytePos;
       bitOffset = 0;
       }
-    ctr_bit = bitStreamBuffer[last_byte_pos - 1] & (0x01 << bitOffset);
+    controlBit = bitStreamBuffer[lastBytePos - 1] & (0x01 << bitOffset);
     }
 
-  return last_byte_pos;
+  return lastBytePos;
   }
 //}}}

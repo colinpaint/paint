@@ -207,10 +207,10 @@ int GetVLCSymbol_IntraMode (byte buffer[], int totalBitOffset, int* info, int by
   int byteoffset = (totalBitOffset >> 3);        // byte from start of buffer
   int bitOffset   = (7 - (totalBitOffset & 0x07)); // bit from start of byte
   byte *cur_byte  = &(buffer[byteoffset]);
-  int ctr_bit     = (*cur_byte & (0x01 << bitOffset));      // control bit for current bit posision
+  int controlBit     = (*cur_byte & (0x01 << bitOffset));      // control bit for current bit posision
 
   //First bit
-  if (ctr_bit) {
+  if (controlBit) {
     *info = 0;
     return 1;
     }
@@ -239,10 +239,10 @@ int moreRbspData (byte buffer[], int totalBitOffset,int bytecount) {
     int bitOffset   = (7 - (totalBitOffset & 0x07));      // bit from start of byte
     byte *cur_byte  = &(buffer[byteoffset]);
     // read one bit
-    int ctr_bit     = ctr_bit = ((*cur_byte)>> (bitOffset--)) & 0x01;      // control bit for current bit posision
+    int controlBit     = controlBit = ((*cur_byte)>> (bitOffset--)) & 0x01;      // control bit for current bit posision
 
     // a stop bit has to be one
-    if (ctr_bit==0)
+    if (controlBit==0)
       return TRUE;
     else {
       int cnt = 0;
