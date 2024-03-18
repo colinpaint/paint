@@ -454,7 +454,7 @@ static void readSPS (sDecoder* decoder, sDataPartition* dataPartition, sSPS* sps
 
   sBitStream* s = dataPartition->s;
   sps->profileIdc = readUv (8, "SPS profileIdc", s);
-  if ((sps->profileIdc != BASELINE) && (sps->profileIdc != MAIN) && (sps->profileIdc != EXTENDED) && 
+  if ((sps->profileIdc != BASELINE) && (sps->profileIdc != MAIN) && (sps->profileIdc != EXTENDED) &&
       (sps->profileIdc != FREXT_HP) && (sps->profileIdc != FREXT_Hi10P) &&
       (sps->profileIdc != FREXT_Hi422) && (sps->profileIdc != FREXT_Hi444) &&
       (sps->profileIdc != FREXT_CAVLC444))
@@ -569,7 +569,7 @@ static void readSPS (sDecoder* decoder, sDataPartition* dataPartition, sSPS* sps
   }
 //}}}
 //{{{
-static void makeSPSavailable (sDecoder* decoder, int id, sSPS* sps) {
+static void setSPSbyId (sDecoder* decoder, int id, sSPS* sps) {
 
   assert (sps->valid == TRUE);
   memcpy (&decoder->sps[id], sps, sizeof(sSPS));
@@ -577,7 +577,7 @@ static void makeSPSavailable (sDecoder* decoder, int id, sSPS* sps) {
 //}}}
 
 //{{{
-void processSPS (sDecoder* decoder, sNalu* nalu) {
+void readNaluSPS (sDecoder* decoder, sNalu* nalu) {
 
   sDataPartition* dataPartition = allocDataPartitions (1);
   dataPartition->s->errorFlag = 0;
@@ -598,7 +598,7 @@ void processSPS (sDecoder* decoder, sNalu* nalu) {
         }
       }
 
-    makeSPSavailable (decoder, sps->spsId, sps);
+    setSPSbyId (decoder, sps->spsId, sps);
 
     decoder->coding.sepColourPlaneFlag = sps->sepColourPlaneFlag;
     }
@@ -856,9 +856,8 @@ sPPS* allocPPS() {
    free (pps);
    }
 //}}}
-
 //{{{
-void makePPSavailable (sDecoder* decoder, int id, sPPS* pps) {
+void setPPSbyId (sDecoder* decoder, int id, sPPS* pps) {
 
   if (decoder->pps[id].valid && decoder->pps[id].sliceGroupId)
     free (decoder->pps[id].sliceGroupId);
@@ -870,8 +869,9 @@ void makePPSavailable (sDecoder* decoder, int id, sPPS* pps) {
   pps->sliceGroupId = NULL;
   }
 //}}}
+
 //{{{
-void processPPS (sDecoder* decoder, sNalu* nalu) {
+void readNaluPPS (sDecoder* decoder, sNalu* nalu) {
 
   sDataPartition* dataPartition = allocDataPartitions (1);
   dataPartition->s->errorFlag = 0;
@@ -893,7 +893,7 @@ void processPPS (sDecoder* decoder, sNalu* nalu) {
       }
     }
 
-  makePPSavailable (decoder, pps->ppsId, pps);
+  setPPSbyId (decoder, pps->ppsId, pps);
   freeDataPartitions (dataPartition, 1);
   freePPS (pps);
   }

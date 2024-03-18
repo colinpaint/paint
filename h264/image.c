@@ -2091,7 +2091,7 @@ static void initPictureDecoding (sDecoder* decoder) {
     sPPS pps;
     memcpy (&pps, &(decoder->pps[slice->ppsId]), sizeof (sPPS));
     decoder->pps[slice->ppsId].sliceGroupId = NULL;
-    makePPSavailable (decoder, decoder->nextPPS->ppsId, decoder->nextPPS);
+    setPPSbyId (decoder, decoder->nextPPS->ppsId, decoder->nextPPS);
     memcpy (decoder->nextPPS, &pps, sizeof (sPPS));
     pps.sliceGroupId = NULL;
     }
@@ -2422,14 +2422,14 @@ static int readNextSlice (sSlice* slice) {
       case NALU_TYPE_SPS:
         if (decoder->param.spsDebug)
           printf ("SPS id:%d:%d len:%d ", slice->refId, slice->sliceType, nalu->len);
-        processSPS (decoder, nalu);
+        readNaluSPS (decoder, nalu);
         break;
       //}}}
       //{{{
       case NALU_TYPE_PPS:
         if (decoder->param.spsDebug)
           printf ("PPS id:%d:%d len:%d ", slice->refId, slice->sliceType, nalu->len);
-        processPPS (decoder, nalu);
+        readNaluPPS (decoder, nalu);
         break;
       //}}}
       //{{{
@@ -3094,7 +3094,7 @@ int decodeFrame (sDecoder* decoder) {
   int curHeader = 0;
   if (decoder->newFrame) {
     if (decoder->nextPPS->valid) {
-      makePPSavailable (decoder, decoder->nextPPS->ppsId, decoder->nextPPS);
+      setPPSbyId (decoder, decoder->nextPPS->ppsId, decoder->nextPPS);
       decoder->nextPPS->valid = 0;
       }
 
