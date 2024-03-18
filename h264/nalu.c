@@ -295,36 +295,36 @@ static int getNALU (sAnnexB* annexB, sDecoder* decoder, sNalu* nalu) {
 //}}}
 //{{{
 static int NALUtoRBSP (sNalu* nalu) {
-// networkAbstractionLayerUnit to rawByteSequencePayload
+// NetworkAbstractionLayerUnit to RawByteSequencePayload
 
   byte* bitStreamBuffer = nalu->buf;
-  int end_bytepos = nalu->len;
-  if (end_bytepos < 1) {
-    nalu->len = end_bytepos;
+  int endBytePos = nalu->len;
+  if (endBytePos < 1) {
+    nalu->len = endBytePos;
     return nalu->len;
     }
 
   int count = 0;
   int j = 1;
-  for (int i = 1; i < end_bytepos; ++i) {
+  for (int i = 1; i < endBytePos; ++i) {
     // in NAL unit, 0x000000, 0x000001 or 0x000002 shall not occur at any byte-aligned position
-    if (count == ZEROBYTES_SHORTSTARTCODE && bitStreamBuffer[i] < 0x03) {
+    if ((count == ZEROBYTES_SHORTSTARTCODE) && (bitStreamBuffer[i] < 0x03)) {
       nalu->len = -1;
       return nalu->len;
       }
 
-    if (count == ZEROBYTES_SHORTSTARTCODE && bitStreamBuffer[i] == 0x03) {
+    if ((count == ZEROBYTES_SHORTSTARTCODE) && (bitStreamBuffer[i] == 0x03)) {
       // check the 4th byte after 0x000003,
       // except when cabac_zero_word is used
       // , in which case the last three bytes of this NAL unit must be 0x000003
-      if ((i < end_bytepos-1) && (bitStreamBuffer[i+1] > 0x03)) {
+      if ((i < endBytePos-1) && (bitStreamBuffer[i+1] > 0x03)) {
         nalu->len = -1;
         return nalu->len;
         }
 
       // if cabac_zero_word, final byte of NALunit(0x03) is discarded
       // and the last two bytes of RBSP must be 0x0000
-      if (i == end_bytepos-1) {
+      if (i == endBytePos-1) {
         nalu->len = j;
         return nalu->len;
         }
@@ -373,7 +373,7 @@ int readNextNalu (sDecoder* decoder, sNalu* nalu) {
 
 //{{{
 int RBSPtoSODB (byte* bitStreamBuffer, int lastBytePos) {
-// rawByteSequencePayload to stringOfDataBits
+// RawByteSequencePayload to StringOfDataBits
 
   // find trailing 1
   int bitOffset = 0;
