@@ -1315,7 +1315,7 @@ void processSEI (byte* msg, int size, sDecoder* decoder, sSlice* slice) {
         process_reserved_info (msg+offset, payload_size, decoder); break;
       }
     offset += payload_size;
-    } while (msg[offset] != 0x80);    // more_rbsp_data()  msg[offset] != 0x80
+    } while (msg[offset] != 0x80);    // moreRbspData()  msg[offset] != 0x80
 
   // ignore the trailing bits rbsp_trailing_bits();
   assert(msg[offset] == 0x80);      // this is the trailing bits

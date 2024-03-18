@@ -735,38 +735,48 @@ static void readPPS (sDecoder* decoder, sDataPartition* dataPartition, sPPS* pps
   if (pps->numSliceGroupsMinus1 > 0) {
     //{{{  FMO
     pps->sliceGroupMapType = readUeV ("PPS sliceGroupMapType", s);
-    if (!pps->sliceGroupMapType) {
-      for (unsigned i = 0; i <= pps->numSliceGroupsMinus1; i++)
-        pps->runLengthMinus1 [i] = readUeV ("PPS runLengthMinus1 [i]", s);
-      }
-    else if (pps->sliceGroupMapType == 2) {
-      for (unsigned i = 0; i < pps->numSliceGroupsMinus1; i++) {
-        //! JVT-F078: avoid reference of SPS by using ue(v) instead of u(v)
-        pps->topLeft [i] = readUeV ("PPS topLeft [i]", s);
-        pps->botRight [i] = readUeV ("PPS botRight [i]", s);
+
+    switch (pps->sliceGroupMapType) {
+      case 0: {
+        for (unsigned i = 0; i <= pps->numSliceGroupsMinus1; i++)
+          pps->runLengthMinus1 [i] = readUeV ("PPS runLengthMinus1 [i]", s);
+        break;
         }
-      }
-    else if (pps->sliceGroupMapType == 3 ||
-             pps->sliceGroupMapType == 4 ||
-             pps->sliceGroupMapType == 5) {
-      pps->sliceGroupChangeDirectionFlag =
-        readU1 ("PPS sliceGroupChangeDirectionFlag", s);
-      pps->sliceGroupChangeRateMius1 =
-        readUeV ("PPS sliceGroupChangeRateMius1", s);
-      }
-    else if (pps->sliceGroupMapType == 6) {
-      int NumberBitsPerSliceGroupId;
-      if (pps->numSliceGroupsMinus1+1 >4)
-        NumberBitsPerSliceGroupId = 3;
-      else if (pps->numSliceGroupsMinus1+1 > 2)
-        NumberBitsPerSliceGroupId = 2;
-      else
-        NumberBitsPerSliceGroupId = 1;
-      pps->picSizeMapUnitsMinus1 = readUeV ("PPS picSizeMapUnitsMinus1", s);
-      if ((pps->sliceGroupId = calloc (pps->picSizeMapUnitsMinus1+1, 1)) == NULL)
-        no_mem_exit ("readPPS sliceGroupId");
-      for (unsigned i = 0; i <= pps->picSizeMapUnitsMinus1; i++)
-        pps->sliceGroupId[i] = (byte)readUv (NumberBitsPerSliceGroupId, "sliceGroupId[i]", s);
+
+      case 2: {
+        for (unsigned i = 0; i < pps->numSliceGroupsMinus1; i++) {
+          //! JVT-F078: avoid reference of SPS by using ue(v) instead of u(v)
+          pps->topLeft [i] = readUeV ("PPS topLeft [i]", s);
+          pps->botRight [i] = readUeV ("PPS botRight [i]", s);
+          }
+        break;
+        }
+
+      case 3:
+      case 4:
+      case 5:
+        pps->sliceGroupChangeDirectionFlag = readU1 ("PPS sliceGroupChangeDirectionFlag", s);
+        pps->sliceGroupChangeRateMius1 = readUeV ("PPS sliceGroupChangeRateMius1", s);
+        break;
+
+      case 6: {
+        int NumberBitsPerSliceGroupId;
+        if (pps->numSliceGroupsMinus1+1 >4)
+          NumberBitsPerSliceGroupId = 3;
+        else if (pps->numSliceGroupsMinus1+1 > 2)
+          NumberBitsPerSliceGroupId = 2;
+        else
+          NumberBitsPerSliceGroupId = 1;
+
+        pps->picSizeMapUnitsMinus1 = readUeV ("PPS picSizeMapUnitsMinus1", s);
+        if ((pps->sliceGroupId = calloc (pps->picSizeMapUnitsMinus1+1, 1)) == NULL)
+          no_mem_exit ("readPPS sliceGroupId");
+        for (unsigned i = 0; i <= pps->picSizeMapUnitsMinus1; i++)
+          pps->sliceGroupId[i] = (byte)readUv (NumberBitsPerSliceGroupId, "sliceGroupId[i]", s);
+        break;
+        }
+
+      default:;
       }
     }
     //}}}
@@ -782,12 +792,13 @@ static void readPPS (sDecoder* decoder, sDataPartition* dataPartition, sPPS* pps
   pps->constrainedIntraPredFlag = readU1 ("PPS constrainedIntraPredFlag", s);
   pps->redundantPicCountPresent = readU1 ("PPS redundantPicCountPresent", s);
 
-  if (more_rbsp_data (s->bitStreamBuffer, s->bitStreamOffset,s->bitStreamLen)) {
-    //{{{  more_data_in_rbsp
+  int more = moreRbspData (s->bitStreamBuffer, s->bitStreamOffset,s->bitStreamLen);
+  if (more) {
+    //{{{  more data in rbsp
     // Fidelity Range Extensions Stuff
     pps->transform8x8modeFlag = readU1 ("PPS transform8x8modeFlag", s);
-    pps->picScalingMatrixPresentFlag = readU1 ("PPS picScalingMatrixPresentFlag", s);
 
+    pps->picScalingMatrixPresentFlag = readU1 ("PPS picScalingMatrixPresentFlag", s);
     if (pps->picScalingMatrixPresentFlag) {
       chromaFormatIdc = decoder->sps[pps->spsId].chromaFormatIdc;
       n_ScalingList = 6 + ((chromaFormatIdc != YUV444) ? 2 : 6) * pps->transform8x8modeFlag;
@@ -808,19 +819,18 @@ static void readPPS (sDecoder* decoder, sDataPartition* dataPartition, sPPS* pps
     pps->secondChromaQpIndexOffset = pps->chromaQpIndexOffset;
 
   if (decoder->param.ppsDebug)
-    printf ("-> ppsId:%d spsId:%d %d:%d%s%s%s%s%s%s%s%s%s%s grp:%d L:%d:%d\n",
+    printf ("-> ppsId:%d spsId:%d %d:%d%s%s%s%s%s%s%s%s%s grp:%d L:%d:%d\n",
             pps->ppsId, pps->spsId,
             pps->picInitQpMinus26, pps->picInitQsMinus26,
             pps->entropyCodingMode ? " cabac":" cavlc",
             pps->deblockFilterControlPresent ? " deblock":"",
-            pps->numSliceGroupsMinus1 ? " numSliceGroups":"",
-            pps->constrainedIntraPredFlag ? " constrainedIntraPred":"",
-            pps->redundantPicCountPresent ? " redundant":"",
-            pps->botFieldPicOrderFramePresent ? " botField":"",
             pps->weightedPredFlag ? " pred":"",
             pps->weightedBiPredIdc ? " biPred":"",
-            pps->constrainedIntraPredFlag ? " intraPredFlag":"",
-            pps->redundantPicCountPresent ? " redund":"",
+            pps->constrainedIntraPredFlag ? " intraPred":"",
+            pps->redundantPicCountPresent ? " redundant":"",
+            pps->botFieldPicOrderFramePresent ? " botField":"",
+            more && pps->transform8x8modeFlag ? " t8x8":"",
+            more && pps->picScalingMatrixPresentFlag ? " scaling":"",
             pps->numSliceGroupsMinus1,
             pps->numRefIndexL0defaultActiveMinus1, pps->numRefIndexL1defaultActiveMinus1);
 

@@ -229,7 +229,7 @@ int GetVLCSymbol_IntraMode (byte buffer[], int totbitoffset, int* info, int byte
   }
 //}}}
 //{{{
-int more_rbsp_data (byte buffer[], int totbitoffset,int bytecount) {
+int moreRbspData (byte buffer[], int totbitoffset,int bytecount) {
 
   // there is more until we're in the last byte
   long byteoffset = (totbitoffset >> 3);      // byte from start of buffer
@@ -261,7 +261,7 @@ int vlcStartcodeFollows (sSlice* slice, int dummy) {
   sBitStream* s = dataPartition->s;
   byte* buf = s->bitStreamBuffer;
 
-  return !(more_rbsp_data (buf, s->bitStreamOffset,s->bitStreamLen));
+  return !(moreRbspData (buf, s->bitStreamOffset,s->bitStreamLen));
   }
 //}}}
 //{{{

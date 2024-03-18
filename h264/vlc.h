@@ -76,7 +76,7 @@ extern int readsSyntaxElement_VLC (sSyntaxElement* se, sBitStream* s);
 extern int readSyntaxElementVLC (sMacroblock* mb, sSyntaxElement* se, sDataPartition* dataPartition);
 extern int readsSyntaxElement_Intra4x4PredictionMode (sSyntaxElement* se, sBitStream* s);
 extern int GetVLCSymbol_IntraMode (byte buffer[], int totbitoffset, int* info, int bytecount);
-extern int more_rbsp_data (byte buffer[], int totbitoffset, int bytecount);
+extern int moreRbspData (byte buffer[], int totbitoffset, int bytecount);
 extern int vlcStartcodeFollows (sSlice* slice, int dummy);
 extern int GetVLCSymbol (byte buffer[], int totbitoffset, int* info, int bytecount);
 
