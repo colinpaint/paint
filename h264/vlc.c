@@ -202,12 +202,12 @@ int readsSyntaxElement_Intra4x4PredictionMode (sSyntaxElement* se, sBitStream* s
   }
 //}}}
 //{{{
-int GetVLCSymbol_IntraMode (byte buffer[], int totbitoffset, int* info, int bytecount) {
+int GetVLCSymbol_IntraMode (byte buffer[], int totalBitOffset, int* info, int bytecount) {
 
-  int byteoffset = (totbitoffset >> 3);        // byte from start of buffer
-  int bitoffset   = (7 - (totbitoffset & 0x07)); // bit from start of byte
+  int byteoffset = (totalBitOffset >> 3);        // byte from start of buffer
+  int bitOffset   = (7 - (totalBitOffset & 0x07)); // bit from start of byte
   byte *cur_byte  = &(buffer[byteoffset]);
-  int ctr_bit     = (*cur_byte & (0x01 << bitoffset));      // control bit for current bit posision
+  int ctr_bit     = (*cur_byte & (0x01 << bitOffset));      // control bit for current bit posision
 
   //First bit
   if (ctr_bit) {
@@ -219,7 +219,7 @@ int GetVLCSymbol_IntraMode (byte buffer[], int totbitoffset, int* info, int byte
     return -1;
   else {
     int inf = (*(cur_byte) << 8) + *(cur_byte + 1);
-    inf <<= (sizeof(byte) * 8) - bitoffset;
+    inf <<= (sizeof(byte) * 8) - bitOffset;
     inf = inf & 0xFFFF;
     inf >>= (sizeof(byte) * 8) * 2 - 3;
     *info = inf;
@@ -229,25 +229,25 @@ int GetVLCSymbol_IntraMode (byte buffer[], int totbitoffset, int* info, int byte
   }
 //}}}
 //{{{
-int moreRbspData (byte buffer[], int totbitoffset,int bytecount) {
+int moreRbspData (byte buffer[], int totalBitOffset,int bytecount) {
 
   // there is more until we're in the last byte
-  long byteoffset = (totbitoffset >> 3);      // byte from start of buffer
+  long byteoffset = (totalBitOffset >> 3);      // byte from start of buffer
   if (byteoffset < (bytecount - 1))
     return TRUE;
   else {
-    int bitoffset   = (7 - (totbitoffset & 0x07));      // bit from start of byte
+    int bitOffset   = (7 - (totalBitOffset & 0x07));      // bit from start of byte
     byte *cur_byte  = &(buffer[byteoffset]);
     // read one bit
-    int ctr_bit     = ctr_bit = ((*cur_byte)>> (bitoffset--)) & 0x01;      // control bit for current bit posision
+    int ctr_bit     = ctr_bit = ((*cur_byte)>> (bitOffset--)) & 0x01;      // control bit for current bit posision
 
     // a stop bit has to be one
     if (ctr_bit==0)
       return TRUE;
     else {
       int cnt = 0;
-      while (bitoffset>=0 && !cnt)
-        cnt |= ((*cur_byte)>> (bitoffset--)) & 0x01;   // set up control bit
+      while (bitOffset>=0 && !cnt)
+        cnt |= ((*cur_byte)>> (bitOffset--)) & 0x01;   // set up control bit
       return (cnt);
       }
     }
@@ -265,24 +265,24 @@ int vlcStartcodeFollows (sSlice* slice, int dummy) {
   }
 //}}}
 //{{{
-int GetVLCSymbol (byte buffer[], int totbitoffset, int* info, int bytecount) {
+int GetVLCSymbol (byte buffer[], int totalBitOffset, int* info, int bytecount) {
 
-  long byteoffset = (totbitoffset >> 3);         // byte from start of buffer
-  int bitoffset  = (7 - (totbitoffset & 0x07)); // bit from start of byte
-  int bitcounter = 1;
-  int len        = 0;
-  byte* cur_byte  = &(buffer[byteoffset]);
-  int ctr_bit    = ((*cur_byte) >> (bitoffset)) & 0x01;  // control bit for current bit posision
+  long byteoffset = totalBitOffset >> 3;        // byte from start of buffer
+  int bitOffset  = 7 - (totalBitOffset & 0x07); // bit from start of byte
+  int bitCounter = 1;
+  int len = 0;
+  byte* curByte  = &(buffer[byteoffset]);
+  int controlBit = ((*curByte) >> (bitOffset)) & 0x01;  // control bit for current bit posision
 
-  while (ctr_bit == 0) {
+  while (controlBit == 0) {
     // find leading 1 bit
     len++;
-    bitcounter++;
-    bitoffset--;
-    bitoffset &= 0x07;
-    cur_byte  += (bitoffset == 7);
-    byteoffset+= (bitoffset == 7);
-    ctr_bit    = ((*cur_byte) >> (bitoffset)) & 0x01;
+    bitCounter++;
+    bitOffset--;
+    bitOffset &= 0x07;
+    curByte += (bitOffset == 7);
+    byteoffset += (bitOffset == 7);
+    controlBit = ((*curByte) >> bitOffset) & 0x01;
     }
 
   if (byteoffset + ((len + 7) >> 3) > bytecount)
@@ -290,16 +290,16 @@ int GetVLCSymbol (byte buffer[], int totbitoffset, int* info, int bytecount) {
 
   int inf = 0;                          // shortest possible code is 1, then info is always 0
   while (len--) {
-    bitoffset --;
-    bitoffset &= 0x07;
-    cur_byte  += (bitoffset == 7);
-    bitcounter++;
+    bitOffset--;
+    bitOffset &= 0x07;
+    curByte += (bitOffset == 7);
+    bitCounter++;
     inf <<= 1;
-    inf |= ((*cur_byte) >> (bitoffset)) & 0x01;
+    inf |= ((*curByte) >> (bitOffset)) & 0x01;
     }
 
   *info = inf;
-  return bitcounter;           // return absolute offset in bit from start of frame
+  return bitCounter;           // return absolute offset in bit from start of frame
   }
 //}}}
 
@@ -317,7 +317,7 @@ static int code_from_bitstream_2d (sSyntaxElement* se, sBitStream* s, const byte
   int* bitStreamOffset = &s->bitStreamOffset;
   byte* buf = &s->bitStreamBuffer[*bitStreamOffset >> 3];
 
-  // Apply bitoffset to three bytes (maximum that may be traversed by ShowBitsThres)
+  // Apply bitOffset to three bytes (maximum that may be traversed by ShowBitsThres)
   // Even at the end of a stream we will still be pulling out of allocated memory as alloc is done by MAX_CODED_FRAME_SIZE
   unsigned int inf = ((*buf) << 16) + (*(buf + 1) << 8) + *(buf + 2);
   // Offset is constant so apply before extracting different numbers of bits
@@ -801,54 +801,54 @@ int readsSyntaxElement_Run (sSyntaxElement* se, sBitStream* s)
 //}}}
 
 //{{{
-int GetBits (byte buffer[], int totbitoffset, int* info, int bitcount, int numbits) {
+int GetBits (byte buffer[], int totalBitOffset, int* info, int bitCount, int numBits) {
 
-  if ((totbitoffset + numbits ) > bitcount)
+  if ((totalBitOffset + numBits) > bitCount)
     return -1;
 
-  int bitoffset  = 7 - (totbitoffset & 0x07); // bit from start of byte
-  int byteoffset = (totbitoffset >> 3); // byte from start of buffer
-  int bitcounter = numbits;
-  byte* curbyte  = &(buffer[byteoffset]);
+  int bitOffset  = 7 - (totalBitOffset & 0x07); // bit from start of byte
+  int byteOffset = totalBitOffset >> 3;       // byte from start of buffer
+  int bitCounter = numBits;
+  byte* curByte = &(buffer[byteOffset]);
 
   int inf = 0;
-  while (numbits--) {
+  while (numBits--) {
     inf <<=1;
-    inf |= ((*curbyte)>> (bitoffset--)) & 0x01;
-    if (bitoffset == -1) {
-      // Move onto next byte to get all of numbits
-      curbyte++;
-      bitoffset = 7;
+    inf |= ((*curByte)>> (bitOffset--)) & 0x01;
+    if (bitOffset == -1) {
+      // Move onto next byte to get all of numBits
+      curByte++;
+      bitOffset = 7;
       }
 
     // Above conditional could also be avoided using the following:
-    // curbyte   -= (bitoffset >> 3);
-    // bitoffset &= 0x07;
+    // curbyte   -= (bitOffset >> 3);
+    // bitOffset &= 0x07;
     }
-  *info = inf;
 
-  return bitcounter;           // return absolute offset in bit from start of frame
+  *info = inf;
+  return bitCounter;           // return absolute offset in bit from start of frame
   }
 //}}}
 //{{{
-int ShowBits (byte buffer[], int totbitoffset, int bitcount, int numbits) {
+int ShowBits (byte buffer[], int totalBitOffset, int bitCount, int numBits) {
 
-  if ((totbitoffset + numbits )  > bitcount)
+  if ((totalBitOffset + numBits) > bitCount)
     return -1;
 
-  int bitoffset = 7 - (totbitoffset & 0x07); // bit from start of byte
-  int byteoffset = (totbitoffset >> 3); // byte from start of buffer
-  byte* curbyte = &(buffer[byteoffset]);
+  int bitOffset = 7 - (totalBitOffset & 0x07); // bit from start of byte
+  int byteOffset = totalBitOffset >> 3;      // byte from start of buffer
+  byte* curByte = &(buffer[byteOffset]);
 
   int inf = 0;
-  while (numbits--) {
-    inf <<=1;
-    inf |= ((*curbyte)>> (bitoffset--)) & 0x01;
+  while (numBits--) {
+    inf <<= 1;
+    inf |= ((*curByte)>> (bitOffset--)) & 0x01;
 
-    if (bitoffset == -1 ) {
+    if (bitOffset == -1 ) {
       // Move onto next byte to get all of numbits
-      curbyte++;
-      bitoffset = 7;
+      curByte++;
+      bitOffset = 7;
       }
     }
 

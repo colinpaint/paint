@@ -2083,10 +2083,10 @@ static void initPictureDecoding (sDecoder* decoder) {
     error ("initPictureDecoding - MAX_NUM_SLICES exceeded");
 
   sSlice* slice = decoder->sliceList[0];
-  if (decoder->nextPPS->valid &&
-      (decoder->nextPPS->ppsId == slice->ppsId)) {
+  if (decoder->nextPPS->valid && (decoder->nextPPS->ppsId == slice->ppsId)) {
     if (decoder->param.sliceDebug)
-      printf ("--- initPictureDecoding - switch PPS\n");
+      printf ("--- initPictureDecoding - switching PPS - nextPPS:%d == slicePPS:%d\n",
+              decoder->nextPPS->ppsId, slice->ppsId);
 
     sPPS pps;
     memcpy (&pps, &(decoder->pps[slice->ppsId]), sizeof (sPPS));
@@ -2475,9 +2475,10 @@ static int readNextSlice (sSlice* slice) {
             printf ("IDR");
           else
             printf ("SLC");
-          printf (" id:%d:%d len:%d frame:%d %s\n",
-                  slice->refId, slice->sliceType, nalu->len,
-                  slice->frameNum, slice->fieldPicFlag ? "field":"");
+          printf (" %5d:%d:%d:%s frame:%d ppsId:%d%s\n",
+                  nalu->len, slice->refId, slice->sliceType,
+                  slice->sliceType == 0 ? "P":(slice->sliceType == 1 ? "B":(slice->sliceType == 2 ? "I":"?")),
+                  slice->frameNum, slice->ppsId, slice->fieldPicFlag ? " field":"");
           }
         assignQuantParams (slice);
 

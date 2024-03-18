@@ -1803,7 +1803,7 @@ void readIPCMcabac (sSlice* slice, sDataPartition* dataPartition) {
   int val = 0;
 
   int bits_read = 0;
-  int bitoffset, bitdepth;
+  int bitOffset, bitdepth;
   int uv, i, j;
 
   while (dep->DbitsLeft >= 8) {
@@ -1812,15 +1812,15 @@ void readIPCMcabac (sSlice* slice, sDataPartition* dataPartition) {
     (*dep->Dcodestrm_len)--;
     }
 
-  bitoffset = (*dep->Dcodestrm_len) << 3;
+  bitOffset = (*dep->Dcodestrm_len) << 3;
 
   // read luma values
   bitdepth = decoder->bitdepthLuma;
   for ( i = 0; i < MB_BLOCK_SIZE; ++i) {
     for(j = 0; j < MB_BLOCK_SIZE; ++j) {
-      bits_read += GetBits(buf, bitoffset, &val, BitstreamLengthInBits, bitdepth);
+      bits_read += GetBits(buf, bitOffset, &val, BitstreamLengthInBits, bitdepth);
       slice->cof[0][i][j] = val;
-      bitoffset += bitdepth;
+      bitOffset += bitdepth;
       }
     }
 
@@ -1830,9 +1830,9 @@ void readIPCMcabac (sSlice* slice, sDataPartition* dataPartition) {
     for (uv = 1; uv < 3; ++uv) {
       for(i = 0; i < decoder->mbCrSizeY; ++i) {
         for(j = 0; j < decoder->mbCrSizeX; ++j) {
-          bits_read += GetBits(buf, bitoffset, &val, BitstreamLengthInBits, bitdepth);
+          bits_read += GetBits(buf, bitOffset, &val, BitstreamLengthInBits, bitdepth);
           slice->cof[uv][i][j] = val;
-          bitoffset += bitdepth;
+          bitOffset += bitdepth;
           }
          }
       }

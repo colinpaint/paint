@@ -75,10 +75,10 @@ extern void linfo_levrun_c2x2 (int len, int info, int* level, int* irun);
 extern int readsSyntaxElement_VLC (sSyntaxElement* se, sBitStream* s);
 extern int readSyntaxElementVLC (sMacroblock* mb, sSyntaxElement* se, sDataPartition* dataPartition);
 extern int readsSyntaxElement_Intra4x4PredictionMode (sSyntaxElement* se, sBitStream* s);
-extern int GetVLCSymbol_IntraMode (byte buffer[], int totbitoffset, int* info, int bytecount);
-extern int moreRbspData (byte buffer[], int totbitoffset, int bytecount);
+extern int GetVLCSymbol_IntraMode (byte buffer[], int totalBitOffset, int* info, int bytecount);
+extern int moreRbspData (byte buffer[], int totalBitOffset, int bytecount);
 extern int vlcStartcodeFollows (sSlice* slice, int dummy);
-extern int GetVLCSymbol (byte buffer[], int totbitoffset, int* info, int bytecount);
+extern int GetVLCSymbol (byte buffer[], int totalBitOffset, int* info, int bytecount);
 
 extern int readsSyntaxElement_FLC (sSyntaxElement* se, sBitStream* s);
 extern int readsSyntaxElement_NumCoeffTrailingOnes (sSyntaxElement* se,  sBitStream* s, char* type);
@@ -89,5 +89,5 @@ extern int readsSyntaxElement_TotalZeros (sSyntaxElement* se, sBitStream* s);
 extern int readsSyntaxElement_TotalZerosChromaDC (sDecoder* decoder, sSyntaxElement* se, sBitStream* s);
 extern int readsSyntaxElement_Run (sSyntaxElement* se, sBitStream* s);
 
-extern int GetBits (byte buffer[], int totbitoffset, int* info, int bitcount, int numbits);
-extern int ShowBits (byte buffer[], int totbitoffset, int bitcount, int numbits);
+extern int GetBits (byte buffer[], int totalBitOffset, int* info, int bitCount, int numBits);
+extern int ShowBits (byte buffer[], int totalBitOffset, int bitCount, int numBits);

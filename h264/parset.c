@@ -454,8 +454,7 @@ static void readSPS (sDecoder* decoder, sDataPartition* dataPartition, sSPS* sps
 
   sBitStream* s = dataPartition->s;
   sps->profileIdc = readUv (8, "SPS profileIdc", s);
-  if ((sps->profileIdc != BASELINE) && (sps->profileIdc != MAIN) &&
-      (sps->profileIdc != EXTENDED) &&
+  if ((sps->profileIdc != BASELINE) && (sps->profileIdc != MAIN) && (sps->profileIdc != EXTENDED) && 
       (sps->profileIdc != FREXT_HP) && (sps->profileIdc != FREXT_Hi10P) &&
       (sps->profileIdc != FREXT_Hi422) && (sps->profileIdc != FREXT_Hi444) &&
       (sps->profileIdc != FREXT_CAVLC444))
@@ -480,12 +479,13 @@ static void readSPS (sDecoder* decoder, sDataPartition* dataPartition, sSPS* sps
   sps->losslessQpPrimeFlag = 0;
   sps->sepColourPlaneFlag = 0;
 
+  //{{{  read fidelity range
   if ((sps->profileIdc == FREXT_HP) ||
       (sps->profileIdc == FREXT_Hi10P) ||
       (sps->profileIdc == FREXT_Hi422) ||
       (sps->profileIdc == FREXT_Hi444) ||
       (sps->profileIdc == FREXT_CAVLC444)) {
-    //{{{  read fidelity range
+    // read fidelity range
     sps->chromaFormatIdc = readUeV ("SPS chromaFormatIdc", s);
     if (sps->chromaFormatIdc == YUV444)
       sps->sepColourPlaneFlag = readU1 ("SPS sepColourPlaneFlag", s);
@@ -511,10 +511,9 @@ static void readSPS (sDecoder* decoder, sDataPartition* dataPartition, sSPS* sps
         }
       }
     }
-    //}}}
-
+  //}}}
   sps->log2_max_frame_num_minus4 = readUeV ("SPS log2_max_frame_num_minus4", s);
-
+  //{{{  read POC
   sps->pocType = readUeV ("SPS pocType", s);
   if (!sps->pocType)
     sps->log2_max_pic_order_cnt_lsb_minus4 = readUeV ("SPS log2_max_pic_order_cnt_lsb_minus4", s);
@@ -526,6 +525,7 @@ static void readSPS (sDecoder* decoder, sDataPartition* dataPartition, sSPS* sps
     for (unsigned int i = 0; i < sps->numRefFramesPocCycle; i++)
       sps->offset_for_ref_frame[i] = readSeV ("SPS offset_for_ref_frame[i]", s);
     }
+  //}}}
 
   sps->numRefFrames = readUeV ("SPS numRefFrames", s);
   sps->gaps_in_frame_num_value_allowed_flag = readU1 ("SPS gaps_in_frame_num_value_allowed_flag", s);
@@ -539,6 +539,7 @@ static void readSPS (sDecoder* decoder, sDataPartition* dataPartition, sSPS* sps
 
   sps->direct_8x8_inference_flag = readU1 ("SPS direct_8x8_inference_flag", s);
 
+  //{{{  read crop
   sps->frameCropFlag = readU1 ("SPS frameCropFlag", s);
   if (sps->frameCropFlag) {
     sps->frameCropLeft = readUeV ("SPS frameCropLeft", s);
@@ -546,6 +547,7 @@ static void readSPS (sDecoder* decoder, sDataPartition* dataPartition, sSPS* sps
     sps->frameCropTop = readUeV ("SPS frameCropTop", s);
     sps->frameCropBot = readUeV ("SPS frameCropBot", s);
     }
+  //}}}
   sps->vui_parameters_present_flag = (Boolean)readU1 ("SPS vui_parameters_present_flag", s);
 
   initVUI (sps);
