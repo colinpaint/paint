@@ -423,12 +423,10 @@ static void process_user_data_unregistered_info (byte* payload, int size, sDecod
     printf ("SEI - unregistered\n");
 
     for (int i = 0; i < size; i++)
-      printf (" %02x",payload[i]);
-    printf ("\n");
-
-    for (int i = 0; i < size; i++)
       if (payload[i] >= 0x20 && payload[i] <= 0x7f)
         printf ("%c",payload[i]);
+      else
+        printf (" %02x",payload[i]);
     printf ("\n");
     }
   }
@@ -441,22 +439,20 @@ static void process_user_data_registered_itu_t_t35_info (byte* payload, int size
   offset++;
 
   if (decoder->param.seiDebug) {
-    printf ("SEI - ITU-T T.35 countryCode:%d\n", itu_t_t35_country_code);
+    printf ("SEI - ITU-T:%d", itu_t_t35_country_code);
 
     if (itu_t_t35_country_code == 0xFF) {
       int itu_t_t35_country_code_extension_byte = payload[offset];
       offset++;
       if (decoder->param.seiDebug)
-        printf ("ITU_T_T35_COUNTRY_CODE_EXTENSION_BYTE:%d\n", itu_t_t35_country_code_extension_byte);
+        printf (" ext:%d", itu_t_t35_country_code_extension_byte);
       }
-
-    for (int i = offset; i < size; i++)
-      printf (" %02x",payload[i]);
-    printf ("\n");
 
     for (int i = offset; i < size; i++)
       if (payload[i] >= 0x20 && payload[i] <= 0x7f)
         printf ("%c",payload[i]);
+      else
+        printf (" %02x",payload[i]);
     printf ("\n");
     }
   }
@@ -569,8 +565,8 @@ static void process_picture_timing_info (byte* payload, int size, sDecoder* deco
       for (int i = 0; i < numClockTs; i++) {
         //{{{  print
         int clock_timestamp_flag = readU1 ("SEI clock_timestamp_flag", buf);
-        printf ("clock_timestamp_flag = %d\n", clock_timestamp_flag);
         if (clock_timestamp_flag) {
+          printf (" clockTs\n");
           int ct_type = readUv (2, "SEI ct_type", buf);
           int nuit_field_based_flag = readU1 ("SEI nuit_field_based_flag", buf);
           int counting_type = readUv (5, "SEI counting_type", buf);
