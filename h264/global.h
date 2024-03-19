@@ -828,20 +828,16 @@ typedef struct  Decoder {
   sSlice*      nextSlice;           // pointer to first sSlice of next picture;
   struct OldSlice* oldSlice;
 
+  int picDiskUnitSize;
+
   // coding duplicates
   int width;
   int height;
   int widthCr;
   int heightCr;
-
-  int picDiskUnitSize;
-
   short bitDepthLuma;
   short bitDepthChroma;
   int bitDepthScale[2];
-  int bitDepthLumaQpScale;
-  int bitDepthChromaQpScale;
-
   int mbCrSizeX;
   int mbCrSizeY;
   int mbCrSizeXblock;

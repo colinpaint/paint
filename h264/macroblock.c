@@ -435,9 +435,9 @@ void set_chroma_qp (sMacroblock* mb) {
   sDecoder* decoder = mb->decoder;
   sPicture* picture = mb->slice->picture;
   for (int i = 0; i < 2; ++i) {
-    mb->qpc[i] = iClip3 (-decoder->bitDepthChromaQpScale, 51, mb->qp + picture->chromaQpOffset[i] );
+    mb->qpc[i] = iClip3 (-decoder->coding.bitDepthChromaQpScale, 51, mb->qp + picture->chromaQpOffset[i] );
     mb->qpc[i] = mb->qpc[i] < 0 ? mb->qpc[i] : QP_SCALE_CR[mb->qpc[i]];
-    mb->qpScaled[i+1] = mb->qpc[i] + decoder->bitDepthChromaQpScale;
+    mb->qpScaled[i+1] = mb->qpc[i] + decoder->coding.bitDepthChromaQpScale;
   }
 }
 //}}}
@@ -447,7 +447,7 @@ void updateQp (sMacroblock* mb, int qp) {
   sDecoder* decoder = mb->decoder;
 
   mb->qp = qp;
-  mb->qpScaled[0] = qp + decoder->bitDepthLumaQpScale;
+  mb->qpScaled[0] = qp + decoder->coding.bitDepthLumaQpScale;
   set_chroma_qp (mb);
 
   mb->isLossless = (Boolean)((mb->qpScaled[0] == 0) && (decoder->coding.losslessQpPrimeFlag == 1));
@@ -472,14 +472,14 @@ void readDeltaQuant (sSyntaxElement* se, sDataPartition *dataPartition, sMacrobl
 
   dataPartition->readSyntaxElement(mb, se, dataPartition);
   mb->deltaQuant = (short) se->value1;
-  if ((mb->deltaQuant < -(26 + decoder->bitDepthLumaQpScale/2)) ||
-      (mb->deltaQuant > (25 + decoder->bitDepthLumaQpScale/2))) {
+  if ((mb->deltaQuant < -(26 + decoder->coding.bitDepthLumaQpScale/2)) ||
+      (mb->deltaQuant > (25 + decoder->coding.bitDepthLumaQpScale/2))) {
     printf("mb_qp_delta is out of range (%d)\n", mb->deltaQuant);
-    mb->deltaQuant = iClip3(-(26 + decoder->bitDepthLumaQpScale/2), (25 + decoder->bitDepthLumaQpScale/2), mb->deltaQuant);
+    mb->deltaQuant = iClip3(-(26 + decoder->coding.bitDepthLumaQpScale/2), (25 + decoder->coding.bitDepthLumaQpScale/2), mb->deltaQuant);
     //error ("mb_qp_delta is out of range", 500);
     }
 
-  slice->qp = ((slice->qp + mb->deltaQuant + 52 + 2*decoder->bitDepthLumaQpScale) % (52+decoder->bitDepthLumaQpScale)) - decoder->bitDepthLumaQpScale;
+  slice->qp = ((slice->qp + mb->deltaQuant + 52 + 2*decoder->coding.bitDepthLumaQpScale) % (52+decoder->coding.bitDepthLumaQpScale)) - decoder->coding.bitDepthLumaQpScale;
   updateQp (mb, slice->qp);
   }
 //}}}
