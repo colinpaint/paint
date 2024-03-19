@@ -151,7 +151,7 @@ static void CalculateQuant8x8Param (sSlice* slice) {
 void allocQuant (sDecoder* decoder) {
 // alloc quant matrices
 
-  int bitdepth_qp_scale = imax (decoder->bitdepthLumeQpScale, decoder->bitdepthChromaQpScale);
+  int bitdepth_qp_scale = imax (decoder->bitdepthLumaQpScale, decoder->bitdepthChromaQpScale);
 
   if (!decoder->qpPerMatrix)
     decoder->qpPerMatrix = (int*)malloc ((MAX_QP + 1 + bitdepth_qp_scale)*sizeof(int));

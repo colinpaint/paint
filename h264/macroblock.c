@@ -447,7 +447,7 @@ void updateQp (sMacroblock* mb, int qp) {
   sDecoder* decoder = mb->decoder;
 
   mb->qp = qp;
-  mb->qpScaled[0] = qp + decoder->bitdepthLumeQpScale;
+  mb->qpScaled[0] = qp + decoder->bitdepthLumaQpScale;
   set_chroma_qp (mb);
 
   mb->isLossless = (Boolean)((mb->qpScaled[0] == 0) && (decoder->coding.losslessQpPrimeFlag == 1));
@@ -472,14 +472,14 @@ void readDeltaQuant (sSyntaxElement* se, sDataPartition *dataPartition, sMacrobl
 
   dataPartition->readSyntaxElement(mb, se, dataPartition);
   mb->deltaQuant = (short) se->value1;
-  if ((mb->deltaQuant < -(26 + decoder->bitdepthLumeQpScale/2)) ||
-      (mb->deltaQuant > (25 + decoder->bitdepthLumeQpScale/2))) {
+  if ((mb->deltaQuant < -(26 + decoder->bitdepthLumaQpScale/2)) ||
+      (mb->deltaQuant > (25 + decoder->bitdepthLumaQpScale/2))) {
     printf("mb_qp_delta is out of range (%d)\n", mb->deltaQuant);
-    mb->deltaQuant = iClip3(-(26 + decoder->bitdepthLumeQpScale/2), (25 + decoder->bitdepthLumeQpScale/2), mb->deltaQuant);
+    mb->deltaQuant = iClip3(-(26 + decoder->bitdepthLumaQpScale/2), (25 + decoder->bitdepthLumaQpScale/2), mb->deltaQuant);
     //error ("mb_qp_delta is out of range", 500);
     }
 
-  slice->qp = ((slice->qp + mb->deltaQuant + 52 + 2*decoder->bitdepthLumeQpScale) % (52+decoder->bitdepthLumeQpScale)) - decoder->bitdepthLumeQpScale;
+  slice->qp = ((slice->qp + mb->deltaQuant + 52 + 2*decoder->bitdepthLumaQpScale) % (52+decoder->bitdepthLumaQpScale)) - decoder->bitdepthLumaQpScale;
   updateQp (mb, slice->qp);
   }
 //}}}

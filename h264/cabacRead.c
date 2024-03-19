@@ -1109,8 +1109,8 @@ static void read_CBP_and_coeffs_from_NAL_CABAC_444 (sMacroblock* mb)
 
     updateQp(mb, slice->qp);
 
-    qp_per = decoder->qpPerMatrix[ (slice->qp + decoder->bitdepthLumeQpScale) ];
-    qp_rem = decoder->qpRemMatrix[ (slice->qp + decoder->bitdepthLumeQpScale) ];
+    qp_per = decoder->qpPerMatrix[ (slice->qp + decoder->bitdepthLumaQpScale) ];
+    qp_rem = decoder->qpRemMatrix[ (slice->qp + decoder->bitdepthLumaQpScale) ];
 
     //init constants for every chroma qp offset
     qp_per_uv[uv] = decoder->qpPerMatrix[ (mb->qpc[uv] + decoder->bitdepthChromaQpScale) ];

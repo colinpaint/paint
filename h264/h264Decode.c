@@ -195,7 +195,7 @@ void freeDataPartitions (sDataPartition* dataPartitions, int n) {
 void initFrext (sDecoder* decoder) {
 
   // pel bitdepth init
-  decoder->bitdepthLumeQpScale = 6 * (decoder->bitdepthLuma - 8);
+  decoder->bitdepthLumaQpScale = 6 * (decoder->bitdepthLuma - 8);
 
   if(decoder->bitdepthLuma > decoder->bitdepthChroma || decoder->activeSPS->chromaFormatIdc == YUV400)
     decoder->picUnitBitSizeDisk = (decoder->bitdepthLuma > 8)? 16:8;

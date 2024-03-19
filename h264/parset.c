@@ -99,7 +99,7 @@ static void setCodingParam (sDecoder* decoder, sSPS* sps) {
     }
 
   //pel bitdepth init
-  decoder->coding.bitdepthLumeQpScale = 6 * (decoder->coding.bitdepthLuma - 8);
+  decoder->coding.bitdepthLumaQpScale = 6 * (decoder->coding.bitdepthLuma - 8);
 
   if (decoder->coding.bitdepthLuma > decoder->coding.bitdepthChroma || sps->chromaFormatIdc == YUV400)
     decoder->coding.picUnitBitSizeDisk = (decoder->coding.bitdepthLuma > 8)? 16:8;
