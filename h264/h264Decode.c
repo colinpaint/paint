@@ -198,9 +198,9 @@ void initFrext (sDecoder* decoder) {
   decoder->bitDepthLumaQpScale = 6 * (decoder->bitDepthLuma - 8);
 
   if(decoder->bitDepthLuma > decoder->bitDepthChroma || decoder->activeSPS->chromaFormatIdc == YUV400)
-    decoder->picUnitBitSizeDisk = (decoder->bitDepthLuma > 8)? 16:8;
+    decoder->coding.picUnitBitSizeDisk = (decoder->bitDepthLuma > 8)? 16:8;
   else
-    decoder->picUnitBitSizeDisk = (decoder->bitDepthChroma > 8)? 16:8;
+    decoder->coding.picUnitBitSizeDisk = (decoder->bitDepthChroma > 8)? 16:8;
   decoder->coding.dcPredValueComp[0] = 1<<(decoder->bitDepthLuma - 1);
   decoder->coding.maxPelValueComp[0] = (1<<decoder->bitDepthLuma) - 1;
   decoder->mbSize[0][0] = decoder->mbSize[0][1] = MB_BLOCK_SIZE;
@@ -212,9 +212,9 @@ void initFrext (sDecoder* decoder) {
     decoder->coding.dcPredValueComp[2] = decoder->coding.dcPredValueComp[1];
     decoder->coding.maxPelValueComp[1] = (1 << decoder->bitDepthChroma) - 1;
     decoder->coding.maxPelValueComp[2] = (1 << decoder->bitDepthChroma) - 1;
-    decoder->numBlock8x8uv = (1 << decoder->activeSPS->chromaFormatIdc) & (~(0x1));
-    decoder->numUvBlocks = (decoder->numBlock8x8uv >> 1);
-    decoder->numCdcCoeff = (decoder->numBlock8x8uv << 1);
+    decoder->coding.numBlock8x8uv = (1 << decoder->activeSPS->chromaFormatIdc) & (~(0x1));
+    decoder->coding.numUvBlocks = (decoder->coding.numBlock8x8uv >> 1);
+    decoder->coding.numCdcCoeff = (decoder->coding.numBlock8x8uv << 1);
     decoder->mbSize[1][0] = decoder->mbSize[2][0] = decoder->mbCrSizeX  = (decoder->activeSPS->chromaFormatIdc==YUV420 || decoder->activeSPS->chromaFormatIdc==YUV422)?  8 : 16;
     decoder->mbSize[1][1] = decoder->mbSize[2][1] = decoder->mbCrSizeY  = (decoder->activeSPS->chromaFormatIdc==YUV444 || decoder->activeSPS->chromaFormatIdc==YUV422)? 16 :  8;
 
@@ -228,9 +228,9 @@ void initFrext (sDecoder* decoder) {
     decoder->bitDepthChromaQpScale = 0;
     decoder->coding.maxPelValueComp[1] = 0;
     decoder->coding.maxPelValueComp[2] = 0;
-    decoder->numBlock8x8uv = 0;
-    decoder->numUvBlocks = 0;
-    decoder->numCdcCoeff = 0;
+    decoder->coding.numBlock8x8uv = 0;
+    decoder->coding.numUvBlocks = 0;
+    decoder->coding.numCdcCoeff = 0;
     decoder->mbSize[1][0] = decoder->mbSize[2][0] = decoder->mbCrSizeX  = 0;
     decoder->mbSize[1][1] = decoder->mbSize[2][1] = decoder->mbCrSizeY  = 0;
     decoder->coding.subpelX = 0;

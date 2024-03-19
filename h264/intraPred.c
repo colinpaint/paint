@@ -3629,7 +3629,7 @@ static void intrapred_chroma_dc (sMacroblock* mb)
   // DC prediction
   // Note that unlike what is stated in many presentations and papers, this mode does not operate
   // the same way as I_16x16 DC prediction.
-  for(b8 = 0; b8 < (decoder->numUvBlocks) ;++b8)
+  for(b8 = 0; b8 < (decoder->coding.numUvBlocks) ;++b8)
   {
     for (b4 = 0; b4 < 4; ++b4)
     {
@@ -3963,7 +3963,7 @@ static void intra_pred_chroma_mbaff (sMacroblock* mb)
         sPixel** imgUV1 = picture->imgUV[1];
         sPixel** mb_pred0 = slice->mbPred[0 + 1];
         sPixel** mb_pred1 = slice->mbPred[1 + 1];
-        for(b8 = 0; b8 < (decoder->numUvBlocks) ;++b8)
+        for(b8 = 0; b8 < (decoder->coding.numUvBlocks) ;++b8)
         {
           for (b4 = 0; b4 < 4; ++b4)
           {

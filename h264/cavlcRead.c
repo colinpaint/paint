@@ -196,7 +196,7 @@ void readCoef4x4cavlc (sMacroblock* mb, int block_type,
     //}}}
     //{{{
     case CHROMA_DC:
-      max_coeff_num = decoder->numCdcCoeff;
+      max_coeff_num = decoder->coding.numCdcCoeff;
       cdc = 1;
       dptype = (mb->isIntraBlock == TRUE) ? SE_CHR_DC_INTRA : SE_CHR_DC_INTER;
       decoder->nzCoeff[mb_nr][0][j][i] = 0;
@@ -408,7 +408,7 @@ void readCoef4x4cavlc444 (sMacroblock* mb, int block_type,
     //}}}
     //{{{
     case CHROMA_DC:
-      max_coeff_num = decoder->numCdcCoeff;
+      max_coeff_num = decoder->coding.numCdcCoeff;
       cdc = 1;
       dptype = (mb->isIntraBlock == TRUE) ? SE_CHR_DC_INTRA : SE_CHR_DC_INTER;
       decoder->nzCoeff[mb_nr][0][j][i] = 0;
@@ -1156,8 +1156,8 @@ static void read_CBP_and_coeffs_from_NAL_CAVLC_422 (sMacroblock* mb) {
     memset (decoder->nzCoeff [mb_nr ][1][0], 0, 2 * BLOCK_PIXELS * sizeof(byte));
   else {
     if(mb->isLossless == FALSE) {
-      for (b8=0; b8 < decoder->numBlock8x8uv; ++b8) {
-        mb->isVblock = uv = (b8 > ((decoder->numUvBlocks) - 1 ));
+      for (b8=0; b8 < decoder->coding.numBlock8x8uv; ++b8) {
+        mb->isVblock = uv = (b8 > ((decoder->coding.numUvBlocks) - 1 ));
         InvLevelScale4x4 = intra ? slice->InvLevelScale4x4_Intra[PLANE_U + uv][qp_rem_uv[uv]] : slice->InvLevelScale4x4_Inter[PLANE_U + uv][qp_rem_uv[uv]];
 
         for (b4=0; b4 < 4; ++b4) {
@@ -1182,8 +1182,8 @@ static void read_CBP_and_coeffs_from_NAL_CAVLC_422 (sMacroblock* mb) {
         }
       }
     else {
-      for (b8=0; b8 < decoder->numBlock8x8uv; ++b8) {
-        mb->isVblock = uv = (b8 > ((decoder->numUvBlocks) - 1 ));
+      for (b8=0; b8 < decoder->coding.numBlock8x8uv; ++b8) {
+        mb->isVblock = uv = (b8 > ((decoder->coding.numUvBlocks) - 1 ));
         for (b4=0; b4 < 4; ++b4) {
           i = cofuv_blk_x[1][b8][b4];
           j = cofuv_blk_y[1][b8][b4];
@@ -1564,8 +1564,8 @@ static void read_CBP_and_coeffs_from_NAL_CAVLC_420 (sMacroblock* mb) {
     memset(decoder->nzCoeff [mb_nr ][1][0], 0, 2 * BLOCK_PIXELS * sizeof(byte));
   else {
     if(mb->isLossless == FALSE) {
-      for (b8=0; b8 < decoder->numBlock8x8uv; ++b8) {
-        mb->isVblock = uv = (b8 > ((decoder->numUvBlocks) - 1 ));
+      for (b8=0; b8 < decoder->coding.numBlock8x8uv; ++b8) {
+        mb->isVblock = uv = (b8 > ((decoder->coding.numUvBlocks) - 1 ));
         InvLevelScale4x4 = intra ? slice->InvLevelScale4x4_Intra[PLANE_U + uv][qp_rem_uv[uv]] : slice->InvLevelScale4x4_Inter[PLANE_U + uv][qp_rem_uv[uv]];
 
         for (b4=0; b4 < 4; ++b4) {
@@ -1586,8 +1586,8 @@ static void read_CBP_and_coeffs_from_NAL_CAVLC_420 (sMacroblock* mb) {
       }
     }
     else {
-      for (b8=0; b8 < decoder->numBlock8x8uv; ++b8) {
-        mb->isVblock = uv = (b8 > ((decoder->numUvBlocks) - 1 ));
+      for (b8=0; b8 < decoder->coding.numBlock8x8uv; ++b8) {
+        mb->isVblock = uv = (b8 > ((decoder->coding.numUvBlocks) - 1 ));
         for (b4=0; b4 < 4; ++b4) {
           i = cofuv_blk_x[0][b8][b4];
           j = cofuv_blk_y[0][b8][b4];

@@ -842,7 +842,7 @@ static void buildPredRegionYUV (sDecoder* decoder, int *mv, int x, int y, sPixel
 
     for(uv=0;uv<2;uv++)
     {
-      for (b8=0;b8<(decoder->numUvBlocks);b8++)
+      for (b8=0;b8<(decoder->coding.numUvBlocks);b8++)
       {
         for(b4=0;b4<4;b4++)
         {

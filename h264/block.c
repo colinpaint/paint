@@ -572,7 +572,7 @@ void iTransform (sMacroblock* mb, eColorPlane plane, int smb) {
       if (!smb && (mb->cbp >> 4)) {
         if (mb->isLossless == FALSE) {
           const unsigned char *x_pos, *y_pos;
-          for (int b8 = 0; b8 < (decoder->numUvBlocks); ++b8) {
+          for (int b8 = 0; b8 < (decoder->coding.numUvBlocks); ++b8) {
             x_pos = subblk_offset_x[1][b8];
             y_pos = subblk_offset_y[1][b8];
             itrans4x4 (mb, uv, *x_pos++, *y_pos++);
@@ -584,7 +584,7 @@ void iTransform (sMacroblock* mb, eColorPlane plane, int smb) {
             decoder->mbSize[1][0], decoder->mbSize[1][1], mb->decoder->coding.maxPelValueComp[uv], DQ_BITS);
           }
         else {
-          for (int b8 = 0; b8 < (decoder->numUvBlocks); ++b8) {
+          for (int b8 = 0; b8 < (decoder->coding.numUvBlocks); ++b8) {
             const unsigned char* x_pos = subblk_offset_x[1][b8];
             const unsigned char* y_pos = subblk_offset_y[1][b8];
             for (int i = 0 ; i < decoder->mbCrSizeY ; i ++)

@@ -581,7 +581,7 @@ static void read_CBP_and_coeffs_from_NAL_CABAC_420 (sMacroblock* mb) {
       else
         se.reading = readRunLevel_CABAC;
 
-      for(k = 0; (k < (decoder->numCdcCoeff + 1)) && (level != 0); ++k) {
+      for(k = 0; (k < (decoder->coding.numCdcCoeff + 1)) && (level != 0); ++k) {
         dataPartition->readSyntaxElement (mb, &se, dataPartition);
         level = se.value1;
 
@@ -638,8 +638,8 @@ static void read_CBP_and_coeffs_from_NAL_CABAC_420 (sMacroblock* mb) {
       int b4, b8, uv, k;
       int** cof;
       sCBPStructure  *cbpStructure = &mb->cbpStructure[0];
-      for (b8=0; b8 < decoder->numBlock8x8uv; ++b8) {
-        mb->isVblock = uv = (b8 > ((decoder->numUvBlocks) - 1 ));
+      for (b8=0; b8 < decoder->coding.numBlock8x8uv; ++b8) {
+        mb->isVblock = uv = (b8 > ((decoder->coding.numUvBlocks) - 1 ));
         InvLevelScale4x4 = intra ? slice->InvLevelScale4x4_Intra[uv + 1][qp_rem_uv[uv]] : slice->InvLevelScale4x4_Inter[uv + 1][qp_rem_uv[uv]];
         cof = slice->cof[uv + 1];
 
@@ -674,8 +674,8 @@ static void read_CBP_and_coeffs_from_NAL_CABAC_420 (sMacroblock* mb) {
       sCBPStructure  *cbpStructure = &mb->cbpStructure[0];
       int b4, b8, k;
       int uv;
-      for (b8 = 0; b8 < decoder->numBlock8x8uv; ++b8) {
-        mb->isVblock = uv = (b8 > ((decoder->numUvBlocks) - 1 ));
+      for (b8 = 0; b8 < decoder->coding.numBlock8x8uv; ++b8) {
+        mb->isVblock = uv = (b8 > ((decoder->coding.numUvBlocks) - 1 ));
 
         for (b4 = 0; b4 < 4; ++b4) {
           i = cofuv_blk_x[yuv][b8][b4];
@@ -1452,9 +1452,9 @@ static void read_CBP_and_coeffs_from_NAL_CABAC_422 (sMacroblock* mb)
       if(mb->isLossless == FALSE)
       {
         sCBPStructure  *cbpStructure = &mb->cbpStructure[0];
-        for (b8=0; b8 < decoder->numBlock8x8uv; ++b8)
+        for (b8=0; b8 < decoder->coding.numBlock8x8uv; ++b8)
         {
-          mb->isVblock = uv = (b8 > ((decoder->numUvBlocks) - 1 ));
+          mb->isVblock = uv = (b8 > ((decoder->coding.numUvBlocks) - 1 ));
           InvLevelScale4x4 = intra ? slice->InvLevelScale4x4_Intra[uv + 1][qp_rem_uv[uv]] : slice->InvLevelScale4x4_Inter[uv + 1][qp_rem_uv[uv]];
 
           for (b4 = 0; b4 < 4; ++b4)
@@ -1491,9 +1491,9 @@ static void read_CBP_and_coeffs_from_NAL_CABAC_422 (sMacroblock* mb)
       else
       {
         sCBPStructure  *cbpStructure = &mb->cbpStructure[0];
-        for (b8=0; b8 < decoder->numBlock8x8uv; ++b8)
+        for (b8=0; b8 < decoder->coding.numBlock8x8uv; ++b8)
         {
-          mb->isVblock = uv = (b8 > ((decoder->numUvBlocks) - 1 ));
+          mb->isVblock = uv = (b8 > ((decoder->coding.numUvBlocks) - 1 ));
 
           for (b4=0; b4 < 4; ++b4)
           {
@@ -1526,7 +1526,7 @@ static void read_CBP_and_coeffs_from_NAL_CABAC_422 (sMacroblock* mb)
           }
         }
       } //for (b4=0; b4 < 4; b4++)
-    } //for (b8=0; b8 < decoder->numBlock8x8uv; b8++)
+    } //for (b8=0; b8 < decoder->coding.numBlock8x8uv; b8++)
   } //if (picture->chromaFormatIdc != YUV400)
 }
 

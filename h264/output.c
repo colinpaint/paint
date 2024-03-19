@@ -19,11 +19,11 @@ static void allocDecodedPicBuffers (sDecoder* decoder, sDecodedPic* decodedPic, 
     decodedPic->vBuf = decodedPic->uBuf + ((frameSize - lumaSize)>>1);
 
     decodedPic->yuvFormat = p->chromaFormatIdc;
-    decodedPic->bitDepth = decoder->picUnitBitSizeDisk;
+    decodedPic->bitDepth = decoder->coding.picUnitBitSizeDisk;
     decodedPic->width = lumaSizeX;
     decodedPic->height = lumaSizeY;
 
-    int symbolSizeInBytes = (decoder->picUnitBitSizeDisk + 7) >> 3;
+    int symbolSizeInBytes = (decoder->coding.picUnitBitSizeDisk + 7) >> 3;
     decodedPic->yStride = lumaSizeX * symbolSizeInBytes;
     decodedPic->uvStride = chromaSizeX * symbolSizeInBytes;
     }
@@ -90,7 +90,7 @@ static void writeOutPicture (sDecoder* decoder, sPicture* p) {
   else
     cropLeft = cropRight = cropTop = cropBottom = 0;
 
-  int symbolSizeInBytes = ((decoder->picUnitBitSizeDisk+7) >> 3);
+  int symbolSizeInBytes = (decoder->coding.picUnitBitSizeDisk+7) >> 3;
   int chromaSizeX =  p->sizeXcr- p->frameCropLeft -p->frameCropRight;
   int chromaSizeY = p->sizeYcr - ( 2 - p->frameMbOnlyFlag ) * p->frameCropTop -( 2 - p->frameMbOnlyFlag ) * p->frameCropBot;
   int lumaSizeX = p->sizeX - cropLeft - cropRight;

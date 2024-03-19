@@ -1676,7 +1676,7 @@ void intra_cr_decoding (sMacroblock* mb, int yuv)
 
     if ((!(mb->mbType == SI4MB) && (mb->cbp >> 4)) )
     {
-      for (b8 = 0; b8 < (decoder->numUvBlocks); b8++)
+      for (b8 = 0; b8 < (decoder->coding.numUvBlocks); b8++)
       {
         for(b4 = 0; b4 < 4; b4++)
         {
@@ -1704,7 +1704,7 @@ void intra_cr_decoding (sMacroblock* mb, int yuv)
     }
     else
     {
-      for (b8 = 0; b8 < (decoder->numUvBlocks); b8++)
+      for (b8 = 0; b8 < (decoder->coding.numUvBlocks); b8++)
       {
         for(b4 = 0; b4 < 4; b4++)
         {

@@ -745,10 +745,11 @@ typedef struct CodingParam {
   int maxPelValueComp[MAX_PLANE];          // max value that one picture element (pixel) can take (depends on pic_unit_bitDepth)
   unsigned int dcPredValueComp[MAX_PLANE]; // component value for DC prediction (depends on component pel bit depth)
 
-  int losslessQpPrimeFlag;
-  int numBlock8x8uv;
   int numUvBlocks;
   int numCdcCoeff;
+  int numBlock8x8uv;
+  int losslessQpPrimeFlag;
+
   int mbCrSizeX;
   int mbCrSizeY;
   int mbCrSizeXblock;
@@ -827,14 +828,13 @@ typedef struct  Decoder {
   sSlice*      nextSlice;           // pointer to first sSlice of next picture;
   struct OldSlice* oldSlice;
 
-  // coding stuff
+  // coding duplicates
   int width;
   int height;
   int widthCr;
   int heightCr;
 
   int picDiskUnitSize;
-  int picUnitBitSizeDisk;
 
   short bitDepthLuma;
   short bitDepthChroma;
@@ -842,9 +842,6 @@ typedef struct  Decoder {
   int bitDepthLumaQpScale;
   int bitDepthChromaQpScale;
 
-  int numBlock8x8uv;
-  int numUvBlocks;
-  int numCdcCoeff;
   int mbCrSizeX;
   int mbCrSizeY;
   int mbCrSizeXblock;
