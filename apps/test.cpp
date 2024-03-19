@@ -950,18 +950,18 @@ public:
 
       sParam param;
       memset (&param, 0, sizeof(sParam));
-      param.spsDebug = 1;
-      param.ppsDebug = 1;
-      param.sliceDebug = 1;
-      //param.seiDebug = 1;
-      //param.vlcDebug = 1;
-      //param.naluDebug = 1;
       param.pocScale = 2;
       param.pocGap = 2;
       param.refPocGap = 2;
       param.dpbPlus[0] = 1;
       param.intraProfileDeblocking = 1;
       sDecoder* decoder = openDecoder (&param, h264Chunk, h264ChunkSize);
+      decoder->param.spsDebug = 1;
+      decoder->param.ppsDebug = 1;
+      decoder->param.seiDebug = 1;
+      decoder->param.sliceDebug = 1;
+      //decoder->param.vlcDebug = 1;
+      //decoder->param.naluDebug = 1;
 
       sDecodedPic* decodedPic;
       int ret = 0;
@@ -1047,7 +1047,14 @@ public:
   cApp::cOptions* getOptions() { return mOptions; }
   cFilePlayer* getFilePlayer() { return mFilePlayer; }
   cVideoFrame* getVideoFrame() { return mFilePlayer ? mFilePlayer->getVideoFrame() : mVideoFrame; }
-  void togglePlay() { mPlaying = !mPlaying; }
+  //{{{
+  void togglePlay() { 
+    if (mFilePlayer)
+      mFilePlayer->togglePlay();
+    else
+      mPlaying = !mPlaying; 
+    }
+  //}}}
 
   //{{{
   void addH264File (const string& fileName) {
@@ -1081,16 +1088,17 @@ public:
 
       sParam param;
       memset (&param, 0, sizeof(sParam));
-      param.spsDebug = 1;
-      param.ppsDebug = 1;
-      param.sliceDebug = 1;
-      param.seiDebug = 1;
       param.pocScale = 2;
       param.pocGap = 2;
       param.refPocGap = 2;
       param.dpbPlus[0] = 1;
       param.intraProfileDeblocking = 1;
+
       sDecoder* decoder = openDecoder (&param, chunk, fileSize);
+      decoder->param.spsDebug = 1;
+      decoder->param.ppsDebug = 1;
+      decoder->param.seiDebug = 1;
+      decoder->param.sliceDebug = 1;
 
       int ret = 0;
       do {
@@ -1436,7 +1444,7 @@ private:
     //}}}
     const vector<sActionKey> kActionKeys = {
     //  alt    control shift  ImGuiKey             function
-      { false, false,  false, ImGuiKey_Space,      [this,&testApp]{ testApp.getFilePlayer()->togglePlay(); }},
+      { false, false,  false, ImGuiKey_Space,      [this,&testApp]{ testApp.togglePlay(); }},
 
       { false, false,  false, ImGuiKey_LeftArrow,  [this,&testApp]{ testApp.getFilePlayer()->skipPlay (-90000/25); }},
       { false, false,  false, ImGuiKey_RightArrow, [this,&testApp]{ testApp.getFilePlayer()->skipPlay (90000/25); }},
