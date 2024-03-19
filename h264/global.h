@@ -835,6 +835,7 @@ typedef struct  Decoder {
 
   int picDiskUnitSize;
   int picUnitBitSizeDisk;
+
   short bitDepthLuma;
   short bitDepthChroma;
   int bitDepthScale[2];
