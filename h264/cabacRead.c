@@ -597,7 +597,6 @@ static void read_CBP_and_coeffs_from_NAL_CABAC_420 (sMacroblock* mb) {
           // bug early when testing in error prone environments (or when testing NAL
           // functionality).
 
-          assert (coef_ctr < decoder->numCdcCoeff);
           slice->cofu[coef_ctr] = level;
           }
         }
@@ -1371,9 +1370,8 @@ static void read_CBP_and_coeffs_from_NAL_CABAC_422 (sMacroblock* mb)
             if (level != 0) {
               cbpStructure->blk |= ((int64)0xff0000) << (ll<<2) ;
               coef_ctr += se.value2 + 1;
-              assert (coef_ctr < decoder->numCdcCoeff);
-              i0=SCAN_YUV422[coef_ctr][0];
-              j0=SCAN_YUV422[coef_ctr][1];
+              i0 = SCAN_YUV422[coef_ctr][0];
+              j0 = SCAN_YUV422[coef_ctr][1];
 
               m3[i0][j0]=level;
             }

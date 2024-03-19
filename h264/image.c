@@ -2134,17 +2134,15 @@ static void readSliceHeader (sDecoder* decoder, sSlice* slice) {
     }
 
   slice->structure = (ePicStructure)decoder->coding.structure;
-  slice->mbAffFrameFlag = (activeSPS->mb_adaptive_frame_field_flag && (slice->fieldPicFlag == 0));
+  slice->mbAffFrameFlag = activeSPS->mb_adaptive_frame_field_flag && !slice->fieldPicFlag;
   //}}}
 
   if (slice->idrFlag)
     slice->idrPicId = readUeV ("SLC idrPicId", s);
   //{{{  read picOrderCount
   if (activeSPS->pocType == 0) {
-    slice->picOrderCountLsb =
-      readUv (activeSPS->log2_max_pic_order_cnt_lsb_minus4 + 4, "SLC picOrderCountLsb", s);
-    if (decoder->activePPS->botFieldPicOrderFramePresent  == 1 &&
-        !slice->fieldPicFlag )
+    slice->picOrderCountLsb = readUv (activeSPS->log2_max_pic_order_cnt_lsb_minus4 + 4, "SLC picOrderCountLsb", s);
+    if ((decoder->activePPS->botFieldPicOrderFramePresent == 1) && !slice->fieldPicFlag)
       slice->deletaPicOrderCountBot = readSeV ("SLC deletaPicOrderCountBot", s);
     else
       slice->deletaPicOrderCountBot = 0;

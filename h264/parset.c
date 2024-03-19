@@ -557,8 +557,11 @@ static void readSPS (sDecoder* decoder, sDataPartition* dataPartition, sSPS* sps
     printf ("-> id:%d refFrames:%d pocType:%d mbs:%dx%d",
             sps->spsId, sps->numRefFrames,  sps->pocType,
             sps->pic_width_in_mbs_minus1, sps->pic_height_in_map_units_minus1);
-    if (sps->frameMbOnlyFlag)
+    if (sps->frameMbOnlyFlag) {
       printf (" frame");
+      if (sps->mb_adaptive_frame_field_flag)
+        printf (" adapt");
+      }
     if (sps->frameCropFlag)
       printf (" crop:%d:%d:%d:%d",
               sps->frameCropLeft, sps->frameCropRight, sps->frameCropTop, sps->frameCropBot);

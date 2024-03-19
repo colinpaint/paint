@@ -1404,17 +1404,17 @@ static void deblockMb (sDecoder* decoder, sPicture* p, int mbIndex) {
     mb->DeblockCall = 0;
 
   else {
-    int           edge;
+    int edge;
     byte Strength[16];
-    short         mb_x, mb_y;
-    int           filterNon8x8LumaEdgesFlag[4] = {1,1,1,1};
-    int           filterLeftMbEdgeFlag;
-    int           filterTopMbEdgeFlag;
-    int           edge_cr;
+    short mb_x, mb_y;
+    int filterNon8x8LumaEdgesFlag[4] = {1,1,1,1};
+    int filterLeftMbEdgeFlag;
+    int filterTopMbEdgeFlag;
+    int edge_cr;
 
-    sPixel    ** imgY = p->imgY;
-    sPixel  ** *imgUV = p->imgUV;
-    sSlice * slice = mb->slice;
+    sPixel** imgY = p->imgY;
+    sPixel*** imgUV = p->imgUV;
+    sSlice* slice = mb->slice;
     int mvLimit = ((p->structure!=FRAME) || (p->mbAffFrameFlag && mb->mbField)) ? 2 : 4;
     sSPS* activeSPS = decoder->activeSPS;
 
@@ -1423,8 +1423,7 @@ static void deblockMb (sDecoder* decoder, sPicture* p, int mbIndex) {
     if (mb->mbType == I8MB)
       assert(mb->lumaTransformSize8x8flag);
 
-    filterNon8x8LumaEdgesFlag[1] =
-      filterNon8x8LumaEdgesFlag[3] = !(mb->lumaTransformSize8x8flag);
+    filterNon8x8LumaEdgesFlag[1] = filterNon8x8LumaEdgesFlag[3] = !(mb->lumaTransformSize8x8flag);
 
     filterLeftMbEdgeFlag = (mb_x != 0);
     filterTopMbEdgeFlag  = (mb_y != 0);
@@ -1432,7 +1431,7 @@ static void deblockMb (sDecoder* decoder, sPicture* p, int mbIndex) {
     if (p->mbAffFrameFlag && mb_y == MB_BLOCK_SIZE && mb->mbField)
       filterTopMbEdgeFlag = 0;
 
-    if (mb->DFDisableIdc==2) {
+    if (mb->DFDisableIdc == 2) {
       // don't filter at slice boundaries
       filterLeftMbEdgeFlag = mb->mbAvailA;
       // if this the bottom of a frame macroblock pair then always filter the top edge
@@ -1449,21 +1448,24 @@ static void deblockMb (sDecoder* decoder, sPicture* p, int mbIndex) {
         if (filterNon8x8LumaEdgesFlag[edge] == 0 && activeSPS->chromaFormatIdc != YUV444)
           continue;
         else if (edge > 0) {
-          if (((mb->mbType == PSKIP && slice->sliceType == P_SLICE) || (mb->mbType == P16x16) || (mb->mbType == P16x8)))
+          if ((mb->mbType == PSKIP && slice->sliceType == P_SLICE) ||
+              (mb->mbType == P16x16) || (mb->mbType == P16x8))
             continue;
-          else if ((edge & 0x01) && ((mb->mbType == P8x16) || (slice->sliceType == B_SLICE && mb->mbType == BSKIP_DIRECT && activeSPS->direct_8x8_inference_flag)))
+          else if ((edge & 0x01) && ((mb->mbType == P8x16) ||
+                   (slice->sliceType == B_SLICE && 
+                    mb->mbType == BSKIP_DIRECT && 
+                    activeSPS->direct_8x8_inference_flag)))
             continue;
           }
         }
 
-      if (edge || filterLeftMbEdgeFlag ) {
+      if (edge || filterLeftMbEdgeFlag) {
         // Strength for 4 blks in 1 stripe
         get_strength_ver_MBAff (Strength, mb, edge << 2, mvLimit, p);
-
         if  (Strength[0] != 0 || Strength[1] != 0 || Strength[2] != 0 || Strength[3] !=0 ||
-        Strength[4] != 0 || Strength[5] != 0 || Strength[6] != 0 || Strength[7] !=0 ||
-        Strength[8] != 0 || Strength[9] != 0 || Strength[10] != 0 || Strength[11] !=0 ||
-        Strength[12] != 0 || Strength[13] != 0 || Strength[14] != 0 || Strength[15] !=0 ) {
+             Strength[4] != 0 || Strength[5] != 0 || Strength[6] != 0 || Strength[7] !=0 ||
+             Strength[8] != 0 || Strength[9] != 0 || Strength[10] != 0 || Strength[11] !=0 ||
+             Strength[12] != 0 || Strength[13] != 0 || Strength[14] != 0 || Strength[15] !=0 ) {
           // only if one of the 16 Strength bytes is != 0
           if (filterNon8x8LumaEdgesFlag[edge]) {
             decoder->edgeLoopLumaV (PLANE_Y, imgY, Strength, mb, edge << 2);
@@ -1481,7 +1483,7 @@ static void deblockMb (sDecoder* decoder, sPicture* p, int mbIndex) {
             }
           }
         }
-      }//end edge
+      }
 
     // horizontal deblocking
     for (edge = 0; edge < 4 ; ++edge ) {
@@ -1500,21 +1502,20 @@ static void deblockMb (sDecoder* decoder, sPicture* p, int mbIndex) {
       if (edge || filterTopMbEdgeFlag ) {
         // Strength for 4 blks in 1 stripe
         get_strength_hor_MBAff (Strength, mb, edge << 2, mvLimit, p);
-
         if  (Strength[0] != 0 || Strength[1] != 0 || Strength[2] != 0 || Strength[3] !=0 ||
-        Strength[4] != 0 || Strength[5] != 0 || Strength[6] != 0 || Strength[7] !=0 ||
-        Strength[8] != 0 || Strength[9] != 0 || Strength[10] != 0 || Strength[11] !=0 ||
-        Strength[12] != 0 || Strength[13] != 0 || Strength[14] != 0 || Strength[15] !=0 ) {
+             Strength[4] != 0 || Strength[5] != 0 || Strength[6] != 0 || Strength[7] !=0 ||
+             Strength[8] != 0 || Strength[9] != 0 || Strength[10] != 0 || Strength[11] !=0 ||
+             Strength[12] != 0 || Strength[13] != 0 || Strength[14] != 0 || Strength[15] !=0 ) {
           // only if one of the 16 Strength bytes is != 0
           if (filterNon8x8LumaEdgesFlag[edge]) {
             decoder->edgeLoopLumaH (PLANE_Y, imgY, Strength, mb, edge << 2, p) ;
              if(slice->chroma444notSeparate) {
-              decoder->edgeLoopLumaH(PLANE_U, imgUV[0], Strength, mb, edge << 2, p);
-              decoder->edgeLoopLumaH(PLANE_V, imgUV[1], Strength, mb, edge << 2, p);
+              decoder->edgeLoopLumaH (PLANE_U, imgUV[0], Strength, mb, edge << 2, p);
+              decoder->edgeLoopLumaH (PLANE_V, imgUV[1], Strength, mb, edge << 2, p);
               }
             }
 
-          if (activeSPS->chromaFormatIdc == YUV420 || activeSPS->chromaFormatIdc == YUV422) {
+          if ((activeSPS->chromaFormatIdc == YUV420) || (activeSPS->chromaFormatIdc == YUV422)) {
             edge_cr = chroma_edge[1][edge][p->chromaFormatIdc];
             if ((imgUV != NULL) && (edge_cr >= 0)) {
               decoder->edgeLoopChromaH (imgUV[0], Strength, mb, edge_cr, 0, p);
@@ -1524,23 +1525,22 @@ static void deblockMb (sDecoder* decoder, sPicture* p, int mbIndex) {
           }
 
         if (!edge && !mb->mbField && mb->mixedModeEdgeFlag) {
-          //slice->mixedModeEdgeFlag)
           // this is the extra horizontal edge between a frame macroblock pair and a field above it
           mb->DeblockCall = 2;
           get_strength_hor_MBAff (Strength, mb, MB_BLOCK_SIZE, mvLimit, p); // Strength for 4 blks in 1 stripe
 
           {
             if (filterNon8x8LumaEdgesFlag[edge]) {
-              decoder->edgeLoopLumaH(PLANE_Y, imgY, Strength, mb, MB_BLOCK_SIZE, p) ;
-              if(slice->chroma444notSeparate) {
-                decoder->edgeLoopLumaH(PLANE_U, imgUV[0], Strength, mb, MB_BLOCK_SIZE, p) ;
-                decoder->edgeLoopLumaH(PLANE_V, imgUV[1], Strength, mb, MB_BLOCK_SIZE, p) ;
+              decoder->edgeLoopLumaH (PLANE_Y, imgY, Strength, mb, MB_BLOCK_SIZE, p) ;
+              if (slice->chroma444notSeparate) {
+                decoder->edgeLoopLumaH (PLANE_U, imgUV[0], Strength, mb, MB_BLOCK_SIZE, p) ;
+                decoder->edgeLoopLumaH (PLANE_V, imgUV[1], Strength, mb, MB_BLOCK_SIZE, p) ;
                 }
               }
 
-            if (activeSPS->chromaFormatIdc == YUV420 || activeSPS->chromaFormatIdc == YUV422) {
+            if ((activeSPS->chromaFormatIdc == YUV420) || (activeSPS->chromaFormatIdc == YUV422)) {
               edge_cr = chroma_edge[1][edge][p->chromaFormatIdc];
-              if ((imgUV != NULL) && (edge_cr >= 0)) {
+              if (imgUV && (edge_cr >= 0)) {
                 decoder->edgeLoopChromaH (imgUV[0], Strength, mb, MB_BLOCK_SIZE, 0, p) ;
                 decoder->edgeLoopChromaH (imgUV[1], Strength, mb, MB_BLOCK_SIZE, 1, p) ;
                 }
@@ -1549,7 +1549,7 @@ static void deblockMb (sDecoder* decoder, sPicture* p, int mbIndex) {
           mb->DeblockCall = 1;
           }
         }
-      }//end edge
+      }
 
     mb->DeblockCall = 0;
     }
@@ -1565,15 +1565,15 @@ static void getDeblockStrength (sDecoder* decoder, sPicture* p, int mbIndex) {
     mb->DeblockCall = 0;
 
   else {
-    int           edge;
-    short         mb_x, mb_y;
-    int           filterNon8x8LumaEdgesFlag[4] = {1,1,1,1};
-    int           filterLeftMbEdgeFlag;
-    int           filterTopMbEdgeFlag;
+    int edge;
+    short mb_x, mb_y;
+    int filterNon8x8LumaEdgesFlag[4] = {1,1,1,1};
+    int filterLeftMbEdgeFlag;
+    int filterTopMbEdgeFlag;
 
-    sSlice * slice = mb->slice;
+    sSlice* slice = mb->slice;
     int mvLimit = ((p->structure!=FRAME) || (p->mbAffFrameFlag && mb->mbField)) ? 2 : 4;
-    sSPS *activeSPS = decoder->activeSPS;
+    sSPS* activeSPS = decoder->activeSPS;
 
     mb->DeblockCall = 1;
     getMbPos (decoder, mbIndex, decoder->mbSize[IS_LUMA], &mb_x, &mb_y);
@@ -1632,21 +1632,20 @@ static void getDeblockStrength (sDecoder* decoder, sPicture* p, int mbIndex) {
           continue;
         else if (edge > 0) {
           if (((mb->mbType == PSKIP && slice->sliceType == P_SLICE) ||
-               (mb->mbType == P16x16) ||
-               (mb->mbType == P8x16)))
+               (mb->mbType == P16x16) || (mb->mbType == P8x16)))
             continue;
           else if ((edge & 0x01) &&
                    ((mb->mbType == P16x8) ||
-                    (slice->sliceType == B_SLICE &&
-                     mb->mbType == BSKIP_DIRECT &&
-                     activeSPS->direct_8x8_inference_flag)))
+                     (slice->sliceType == B_SLICE &&
+                      mb->mbType == BSKIP_DIRECT &&
+                      activeSPS->direct_8x8_inference_flag)))
             continue;
           }
         }
 
       if (edge || filterTopMbEdgeFlag )
         decoder->getStrengthH (mb, edge, mvLimit, p);
-      }//end edge
+      }
 
     mb->DeblockCall = 0;
     }
@@ -1662,12 +1661,13 @@ static void performDeblock (sDecoder* decoder, sPicture* p, int mbIndex) {
     mb->DeblockCall = 0;
 
   else {
-    int           edge;
-    short         mb_x, mb_y;
-    int           filterNon8x8LumaEdgesFlag[4] = {1,1,1,1};
-    int           filterLeftMbEdgeFlag;
-    int           filterTopMbEdgeFlag;
-    int           edge_cr;
+    int edge;
+    short mb_x, mb_y;
+    int filterNon8x8LumaEdgesFlag[4] = {1,1,1,1};
+    int filterLeftMbEdgeFlag;
+    int filterTopMbEdgeFlag;
+    int edge_cr;
+
     sPixel** imgY = p->imgY;
     sPixel** *imgUV = p->imgUV;
     sSlice* slice = mb->slice;
@@ -1680,8 +1680,7 @@ static void performDeblock (sDecoder* decoder, sPicture* p, int mbIndex) {
     if (mb->mbType == I8MB)
       assert (mb->lumaTransformSize8x8flag);
 
-    filterNon8x8LumaEdgesFlag[1] =
-      filterNon8x8LumaEdgesFlag[3] = !(mb->lumaTransformSize8x8flag);
+    filterNon8x8LumaEdgesFlag[1] = filterNon8x8LumaEdgesFlag[3] = !(mb->lumaTransformSize8x8flag);
 
     filterLeftMbEdgeFlag = (mb_x != 0);
     filterTopMbEdgeFlag  = (mb_y != 0);
@@ -1697,7 +1696,7 @@ static void performDeblock (sDecoder* decoder, sPicture* p, int mbIndex) {
       }
 
     if (p->mbAffFrameFlag == 1)
-      CheckAvailabilityOfNeighborsMBAFF(mb);
+      CheckAvailabilityOfNeighborsMBAFF (mb);
 
     // Vertical deblocking
     for (edge = 0; edge < 4 ; ++edge ) {
@@ -1720,8 +1719,8 @@ static void performDeblock (sDecoder* decoder, sPicture* p, int mbIndex) {
           if (filterNon8x8LumaEdgesFlag[edge]) {
             decoder->edgeLoopLumaV (PLANE_Y, imgY, Strength, mb, edge << 2);
             if(slice->chroma444notSeparate) {
-              decoder->edgeLoopLumaV(PLANE_U, imgUV[0], Strength, mb, edge << 2);
-              decoder->edgeLoopLumaV(PLANE_V, imgUV[1], Strength, mb, edge << 2);
+              decoder->edgeLoopLumaV (PLANE_U, imgUV[0], Strength, mb, edge << 2);
+              decoder->edgeLoopLumaV (PLANE_V, imgUV[1], Strength, mb, edge << 2);
               }
             }
           if (activeSPS->chromaFormatIdc == YUV420 || activeSPS->chromaFormatIdc == YUV422) {
@@ -1799,7 +1798,7 @@ static void performDeblock (sDecoder* decoder, sPicture* p, int mbIndex) {
           mb->DeblockCall = 1;
           }
         }
-      }//end edge
+      }
 
     mb->DeblockCall = 0;
     }
@@ -1808,10 +1807,9 @@ static void performDeblock (sDecoder* decoder, sPicture* p, int mbIndex) {
 //{{{
 void deblockPicture (sDecoder* decoder, sPicture* p) {
 
-  if (p->mbAffFrameFlag) {
+  if (p->mbAffFrameFlag)
     for (unsigned i = 0; i < p->picSizeInMbs; ++i)
       deblockMb (decoder, p, i) ;
-    }
   else {
     for (unsigned i = 0; i < p->picSizeInMbs; ++i)
       getDeblockStrength (decoder, p, i ) ;
