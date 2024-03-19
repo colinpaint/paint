@@ -119,7 +119,7 @@ static void edge_loop_luma_ver_MBAff (eColorPlane plane, sPixel** img,
   sPixelPos pixP, pixQ;
 
   sDecoder* decoder = mbQ->decoder;
-  int bitDepthScale = plane ? decoder->bitDepthScale[IS_CHROMA] : decoder->bitDepthScale[IS_LUMA];
+  int bitDepthScale = plane ? decoder->coding.bitDepthScale[IS_CHROMA] : decoder->coding.bitDepthScale[IS_LUMA];
   int max_imgpel_value = decoder->coding.maxPelValueComp[plane];
 
   int AlphaC0Offset = mbQ->DFAlphaC0Offset;
@@ -219,7 +219,7 @@ static void edge_loop_luma_hor_MBAff (eColorPlane plane, sPixel** img, byte* Str
   sPixelPos pixP, pixQ;
 
   sDecoder* decoder = mbQ->decoder;
-  int      bitDepthScale = plane? decoder->bitDepthScale[IS_CHROMA] : decoder->bitDepthScale[IS_LUMA];
+  int      bitDepthScale = plane? decoder->coding.bitDepthScale[IS_CHROMA] : decoder->coding.bitDepthScale[IS_LUMA];
   int      max_imgpel_value = decoder->coding.maxPelValueComp[plane];
 
   getAffNeighbour(mbQ, 0, yQ - 1, decoder->mbSize[IS_LUMA], &pixP);
@@ -328,7 +328,7 @@ static void edge_loop_chroma_ver_MBAff (sPixel** img, byte *Strength, sMacrobloc
   int      QP;
   int      xQ = edge, yQ;
   sPixelPos pixP, pixQ;
-  int      bitDepthScale = decoder->bitDepthScale[IS_CHROMA];
+  int      bitDepthScale = decoder->coding.bitDepthScale[IS_CHROMA];
   int      max_imgpel_value = decoder->coding.maxPelValueComp[uv + 1];
 
   int      AlphaC0Offset = mbQ->DFAlphaC0Offset;
@@ -389,7 +389,7 @@ static void edge_loop_chroma_hor_MBAff (sPixel** img, byte *Strength, sMacrobloc
   int PelNum = pelnum_cr[1][p->chromaFormatIdc];
   int yQ = (edge < MB_BLOCK_SIZE? edge : 1);
   sPixelPos pixP, pixQ;
-  int bitDepthScale = decoder->bitDepthScale[IS_CHROMA];
+  int bitDepthScale = decoder->coding.bitDepthScale[IS_CHROMA];
   int max_imgpel_value = decoder->coding.maxPelValueComp[uv + 1];
 
   int AlphaC0Offset = mbQ->DFAlphaC0Offset;
@@ -1078,7 +1078,7 @@ static void edge_loop_luma_ver (eColorPlane plane, sPixel** img, byte* Strength,
 
   sMacroblock* MbP = get_non_aff_neighbour_luma (mb, edge - 1, 0);
   if (MbP || (mb->DFDisableIdc == 0)) {
-    int bitDepthScale   = plane ? decoder->bitDepthScale[IS_CHROMA] : decoder->bitDepthScale[IS_LUMA];
+    int bitDepthScale   = plane ? decoder->coding.bitDepthScale[IS_CHROMA] : decoder->coding.bitDepthScale[IS_LUMA];
 
     // Average QP of the two blocks
     int QP = plane? ((MbP->qpc[plane-1] + mb->qpc[plane-1] + 1) >> 1) : (MbP->qp + mb->qp + 1) >> 1;
@@ -1219,7 +1219,7 @@ static void edge_loop_luma_hor (eColorPlane plane, sPixel** img, byte* Strength,
   sMacroblock *MbP = get_non_aff_neighbour_luma (mb, 0, ypos);
 
   if (MbP || (mb->DFDisableIdc == 0)) {
-    int bitDepthScale = plane ? decoder->bitDepthScale[IS_CHROMA] : decoder->bitDepthScale[IS_LUMA];
+    int bitDepthScale = plane ? decoder->coding.bitDepthScale[IS_CHROMA] : decoder->coding.bitDepthScale[IS_LUMA];
 
     // Average QP of the two blocks
     int QP = plane? ((MbP->qpc[plane-1] + mb->qpc[plane-1] + 1) >> 1) : (MbP->qp + mb->qp + 1) >> 1;
@@ -1264,7 +1264,7 @@ static void edge_loop_chroma_ver (sPixel** img, byte* Strength, sMacroblock* mb,
   sMacroblock* MbP = get_non_aff_neighbour_chroma (mb,xQ,yQ,block_width,block_height);
 
   if (MbP || (mb->DFDisableIdc == 0)) {
-    int bitDepthScale   = decoder->bitDepthScale[IS_CHROMA];
+    int bitDepthScale   = decoder->coding.bitDepthScale[IS_CHROMA];
     int max_imgpel_value = decoder->coding.maxPelValueComp[uv + 1];
     int AlphaC0Offset = mb->DFAlphaC0Offset;
     int BetaOffset = mb->DFBetaOffset;
@@ -1327,7 +1327,7 @@ static void edge_loop_chroma_hor (sPixel** img, byte* Strength, sMacroblock* mb,
   sMacroblock* MbP = get_non_aff_neighbour_chroma (mb, xQ, yQ, block_width, block_height);
 
   if (MbP || (mb->DFDisableIdc == 0)) {
-    int bitDepthScale = decoder->bitDepthScale[IS_CHROMA];
+    int bitDepthScale = decoder->coding.bitDepthScale[IS_CHROMA];
     int max_imgpel_value = decoder->coding.maxPelValueComp[uv + 1];
 
     int AlphaC0Offset = mb->DFAlphaC0Offset;

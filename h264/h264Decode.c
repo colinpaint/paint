@@ -420,9 +420,7 @@ void setGlobalCodingProgram (sDecoder* decoder) {
 
   // Fidelity Range Extensions stuff (part 1)
   decoder->bitDepthLuma = coding->bitDepthLuma;
-  decoder->bitDepthScale[0] = coding->bitDepthScale[0];
   decoder->bitDepthChroma = coding->bitDepthChroma;
-  decoder->bitDepthScale[1] = coding->bitDepthScale[1];
 
   decoder->width = coding->width;
   decoder->height = coding->height;

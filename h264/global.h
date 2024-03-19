@@ -837,7 +837,7 @@ typedef struct  Decoder {
   int heightCr;
   short bitDepthLuma;
   short bitDepthChroma;
-  int bitDepthScale[2];
+  //int bitDepthScale[2];
   int mbCrSizeX;
   int mbCrSizeY;
   int mbCrSizeXblock;
