@@ -710,6 +710,7 @@ typedef struct Param {
   int spsDebug;
   int ppsDebug;
   int seiDebug;
+  int deblock;
 
   int refOffset;
   int pocScale;
@@ -722,6 +723,15 @@ typedef struct Param {
   sFrameFormat output;
   int dpbPlus[2];
   } sParam;
+//}}}
+//{{{  sInfo
+typedef struct Info {
+  TIME_T  startTime;
+  TIME_T  endTime;
+  int     took;
+  char    sliceTypeStr[9];
+  char    text[80];
+  } sInfo;
 //}}}
 //{{{  sCoding
 typedef struct CodingParam {
@@ -782,11 +792,7 @@ typedef struct CodingParam {
 //{{{  sDecoder
 typedef struct  Decoder {
   sParam       param;
-
-  // debug
-  TIME_T       startTime;
-  TIME_T       endTime;
-  char         sliceTypeStr[9];
+  sInfo        info;
 
   // nalu
   int          gotLastNalu;

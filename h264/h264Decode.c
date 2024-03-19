@@ -465,6 +465,9 @@ sDecoder* openDecoder (sParam* param, byte* chunk, size_t chunkSize) {
   decoder->refPocGap = param->refPocGap;
   decoder->pocGap = param->pocGap;
 
+  decoder->info.took = 0;
+  strcpy (decoder->info.text, "info");
+
   // init nalu, annexB
   decoder->nalu = allocNALU (MAX_CODED_FRAME_SIZE);
   decoder->nextPPS = allocPPS();
