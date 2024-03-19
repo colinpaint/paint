@@ -127,10 +127,8 @@ static void processUserDataT35 (byte* payload, int size, sDecoder* decoder) {
     printf(" ITU-T:%d", itu_t_t35_country_code);
 
     if (itu_t_t35_country_code == 0xFF) {
-      int itu_t_t35_country_code_extension_byte = payload[offset];
-      offset++;
-      if (decoder->param.seiDebug)
-        printf (" ext:%d - ", itu_t_t35_country_code_extension_byte);
+      int itu_t_t35_country_code_extension_byte = payload[offset++];
+      printf (" ext:%d - ", itu_t_t35_country_code_extension_byte);
       }
 
     for (int i = offset; i < size; i++)
