@@ -103,6 +103,368 @@ typedef struct {
 //}}}
 
 //{{{
+static void processUserDataUnregistered (byte* payload, int size, sDecoder* decoder) {
+
+  if (decoder->param.seiDebug) {
+    printf (" unregistered - ");
+
+    for (int i = 0; i < size; i++)
+      if (payload[i] >= 0x20 && payload[i] <= 0x7f)
+        printf ("%c",payload[i]);
+      else
+        printf ("<%02x>",payload[i]);
+
+    printf ("\n");
+    }
+  }
+//}}}
+//{{{
+static void processUserDataT35 (byte* payload, int size, sDecoder* decoder) {
+
+  if (decoder->param.seiDebug) {
+    int offset = 0;
+    int itu_t_t35_country_code = payload[offset++];
+    printf(" ITU-T:%d", itu_t_t35_country_code);
+
+    if (itu_t_t35_country_code == 0xFF) {
+      int itu_t_t35_country_code_extension_byte = payload[offset];
+      offset++;
+      if (decoder->param.seiDebug)
+        printf (" ext:%d - ", itu_t_t35_country_code_extension_byte);
+      }
+
+    for (int i = offset; i < size; i++)
+      if (payload[i] >= 0x20 && payload[i] <= 0x7f)
+        printf ("%c",payload[i]);
+      else
+        printf ("<%02x>",payload[i]);
+
+    printf ("\n");
+    }
+  }
+//}}}
+//{{{
+static void processReserved (byte* payload, int size, sDecoder* decoder) {
+
+  if (decoder->param.seiDebug) {
+    printf (" Reserved - ");
+
+    for (int i = 0; i < size; i++)
+      if (payload[i] >= 0x20 && payload[i] <= 0x7f)
+        printf ("%c",payload[i]);
+      else
+        printf ("<%02x>",payload[i]);
+
+    printf ("\n");
+    }
+  }
+//}}}
+
+//{{{
+static void processPictureTiming (byte* payload, int size, sDecoder* decoder) {
+
+  sSPS* activeSPS = decoder->activeSPS;
+  if (!activeSPS) {
+    if (decoder->param.seiDebug)
+      printf (" pictureTiming with no active SPS\n");
+    return;
+    }
+
+  sBitStream* buf = malloc (sizeof(sBitStream));
+  buf->bitStreamBuffer = payload;
+  buf->bitStreamOffset = 0;
+  buf->bitStreamLen = size;
+
+  if (decoder->param.seiDebug)
+    printf (" picture timing");
+
+  int cpb_removal_len = 24;
+  int dpb_output_len = 24;
+
+  Boolean CpbDpbDelaysPresentFlag = (Boolean)(activeSPS->vui_parameters_present_flag &&
+                                     ((activeSPS->vui_seq_parameters.nal_hrd_parameters_present_flag != 0) ||
+                                      (activeSPS->vui_seq_parameters.vcl_hrd_parameters_present_flag != 0)));
+
+  if (CpbDpbDelaysPresentFlag) {
+    if (activeSPS->vui_parameters_present_flag) {
+      if (activeSPS->vui_seq_parameters.nal_hrd_parameters_present_flag) {
+        cpb_removal_len = activeSPS->vui_seq_parameters.nal_hrd_parameters.cpb_removal_delay_length_minus1 + 1;
+        dpb_output_len  = activeSPS->vui_seq_parameters.nal_hrd_parameters.dpb_output_delay_length_minus1  + 1;
+        }
+      else if (activeSPS->vui_seq_parameters.vcl_hrd_parameters_present_flag) {
+        cpb_removal_len = activeSPS->vui_seq_parameters.vcl_hrd_parameters.cpb_removal_delay_length_minus1 + 1;
+        dpb_output_len = activeSPS->vui_seq_parameters.vcl_hrd_parameters.dpb_output_delay_length_minus1  + 1;
+        }
+      }
+
+    if ((activeSPS->vui_seq_parameters.nal_hrd_parameters_present_flag) ||
+        (activeSPS->vui_seq_parameters.vcl_hrd_parameters_present_flag)) {
+      int cpb_removal_delay, dpb_output_delay;
+      cpb_removal_delay = readUv (cpb_removal_len, "SEI cpb_removal_delay", buf);
+      dpb_output_delay = readUv (dpb_output_len,  "SEI dpb_output_delay", buf);
+      if (decoder->param.seiDebug) {
+        printf ("cpb_removal_delay %d\n", cpb_removal_delay);
+        printf ("dpb_output_delay %d\n", dpb_output_delay);
+        }
+      }
+    }
+
+  int pic_struct_present_flag, pic_struct;
+  if (!activeSPS->vui_parameters_present_flag)
+    pic_struct_present_flag = 0;
+  else
+    pic_struct_present_flag = activeSPS->vui_seq_parameters.pic_struct_present_flag;
+
+  int numClockTs = 0;
+  if (pic_struct_present_flag) {
+    pic_struct = readUv (4, "SEI pic_struct" , buf);
+    switch (pic_struct) {
+      case 0:
+      case 1:
+      //{{{
+      case 2:
+        numClockTs = 1;
+        break;
+      //}}}
+      case 3:
+      case 4:
+      //{{{
+      case 7:
+        numClockTs = 2;
+        break;
+      //}}}
+      case 5:
+      case 6:
+      //{{{
+      case 8:
+        numClockTs = 3;
+        break;
+      //}}}
+      //{{{
+      default:
+        error ("reserved pic_struct used, can't determine numClockTs");
+      //}}}
+      }
+
+    if (decoder->param.seiDebug)
+      for (int i = 0; i < numClockTs; i++) {
+        //{{{  print
+        int clock_timestamp_flag = readU1 ("SEI clock_timestamp_flag", buf);
+        if (clock_timestamp_flag) {
+          printf (" clockTs\n");
+          int ct_type = readUv (2, "SEI ct_type", buf);
+          int nuit_field_based_flag = readU1 ("SEI nuit_field_based_flag", buf);
+          int counting_type = readUv (5, "SEI counting_type", buf);
+          int full_timestamp_flag = readU1 ("SEI full_timestamp_flag", buf);
+          int discontinuity_flag = readU1 ("SEI discontinuity_flag", buf);
+          int cnt_dropped_flag = readU1 ("SEI cnt_dropped_flag", buf);
+          int nframes = readUv (8, "SEI nframes", buf);
+
+          printf ("ct_type = %d\n",ct_type);
+          printf ("nuit_field_based_flag = %d\n",nuit_field_based_flag);
+          printf ("full_timestamp_flag = %d\n",full_timestamp_flag);
+          printf ("discontinuity_flag = %d\n",discontinuity_flag);
+          printf ("cnt_dropped_flag = %d\n",cnt_dropped_flag);
+          printf ("nframes = %d\n",nframes);
+
+          if (full_timestamp_flag) {
+            int seconds_value = readUv (6, "SEI seconds_value", buf);
+            int minutes_value = readUv (6, "SEI minutes_value", buf);
+            int hours_value = readUv (5, "SEI hours_value", buf);
+            printf ("seconds_value = %d\n", seconds_value);
+            printf ("minutes_value= %d\n", minutes_value);
+            printf ("hours_value = %d\n", hours_value);
+            }
+          else {
+            int seconds_flag = readU1 ("SEI seconds_flag", buf);
+            printf ("seconds_flag = %d\n",seconds_flag);
+            if (seconds_flag) {
+              int seconds_value = readUv (6, "SEI seconds_value", buf);
+              int minutes_flag = readU1 ("SEI minutes_flag", buf);
+              printf ("seconds_value = %d\n",seconds_value);
+              printf ("minutes_flag = %d\n",minutes_flag);
+              if(minutes_flag) {
+                int minutes_value = readUv(6, "SEI minutes_value", buf);
+                int hours_flag = readU1 ("SEI hours_flag", buf);
+                printf ("minutes_value = %d\n",minutes_value);
+                printf ("hours_flag = %d\n",hours_flag);
+                if (hours_flag) {
+                  int hours_value = readUv (5, "SEI hours_value", buf);
+                  printf ("hours_value = %d\n",hours_value);
+                  }
+                }
+              }
+            }
+
+          int time_offset_length;
+          int time_offset;
+          if (activeSPS->vui_seq_parameters.vcl_hrd_parameters_present_flag)
+            time_offset_length = activeSPS->vui_seq_parameters.vcl_hrd_parameters.time_offset_length;
+          else if (activeSPS->vui_seq_parameters.nal_hrd_parameters_present_flag)
+            time_offset_length = activeSPS->vui_seq_parameters.nal_hrd_parameters.time_offset_length;
+          else
+            time_offset_length = 24;
+          if (time_offset_length)
+            time_offset = readIv (time_offset_length, "SEI time_offset", buf);
+          else
+            time_offset = 0;
+          printf ("time_offset   = %d\n", time_offset);
+          }
+        }
+        //}}}
+    }
+
+  free (buf);
+  }
+//}}}
+//{{{
+static void processPanScan (byte* payload, int size, sDecoder* decoder) {
+
+  sBitStream* buf = malloc (sizeof(sBitStream));
+  buf->bitStreamBuffer = payload;
+  buf->bitStreamOffset = 0;
+  buf->bitStreamLen = size;
+
+  int pan_scan_rect_id = readUeV ("SEI pan_scan_rect_id", buf);
+  int pan_scan_rect_cancel_flag = readU1 ("SEI pan_scan_rect_cancel_flag", buf);
+  if (!pan_scan_rect_cancel_flag) {
+    int pan_scan_cnt_minus1 = readUeV ("SEI pan_scan_cnt_minus1", buf);
+    for (int i = 0; i <= pan_scan_cnt_minus1; i++) {
+      int pan_scan_rect_left_offset = readSeV ("SEI pan_scan_rect_left_offset", buf);
+      int pan_scan_rect_right_offset = readSeV ("SEI pan_scan_rect_right_offset", buf);
+      int pan_scan_rect_top_offset = readSeV ("SEI pan_scan_rect_top_offset", buf);
+      int pan_scan_rect_bottom_offset = readSeV ("SEI pan_scan_rect_bottom_offset", buf);
+      if (decoder->param.seiDebug)
+        printf (" panScan %d/%d id:%d left:%d right:%d top:%d bot:%d\n",
+                i, pan_scan_cnt_minus1, pan_scan_rect_id,
+                pan_scan_rect_left_offset, pan_scan_rect_right_offset,
+                pan_scan_rect_top_offset, pan_scan_rect_bottom_offset);
+      }
+    int pan_scan_rect_repetition_period = readUeV ("SEI pan_scan_rect_repetition_period", buf);
+    }
+
+  free (buf);
+  }
+//}}}
+//{{{
+static void processRecoveryPoint (byte* payload, int size, sDecoder* decoder) {
+
+  sBitStream* buf = malloc(sizeof(sBitStream));
+  buf->bitStreamBuffer = payload;
+  buf->bitStreamOffset = 0;
+  buf->bitStreamLen = size;
+
+  int recoveryFrameCount = readUeV ("SEI recoveryFrameCount", buf);
+  int exact_match_flag = readU1 ("SEI exact_match_flag", buf);
+  int broken_link_flag = readU1 ("SEI broken_link_flag", buf);
+  int changing_slice_group_idc = readUv (2, "SEI changing_slice_group_idc", buf);
+
+  decoder->recoveryPoint = 1;
+  decoder->recoveryFrameCount = recoveryFrameCount;
+  if (decoder->param.seiDebug)
+    printf (" recoveryPoint recoveryFrameCount %d exact_match %d broken_link %d changing_slice_group_idc %d\n",
+            recoveryFrameCount, exact_match_flag, broken_link_flag, changing_slice_group_idc);
+
+  free (buf);
+  }
+//}}}
+//{{{
+static void processDecRefPicMarkingRepetition (byte* payload, int size, sDecoder* decoder, sSlice *slice) {
+  int original_idr_flag, original_frame_num;
+  int original_field_pic_flag;
+
+  sDecodedRefPicMarking *tmp_drpm;
+  sDecodedRefPicMarking *old_drpm;
+  int old_idr_flag, old_no_output_of_prior_pics_flag, old_long_term_reference_flag , old_adaptive_ref_pic_buffering_flag;
+
+  sBitStream* buf = malloc (sizeof(sBitStream));
+  buf->bitStreamBuffer = payload;
+  buf->bitStreamOffset = 0;
+  buf->bitStreamLen = size;
+
+  original_idr_flag = readU1 ("SEI original_idr_flag", buf);
+  original_frame_num = readUeV ("SEI original_frame_num", buf);
+
+  int original_bottom_field_flag = 0;
+  if (!decoder->activeSPS->frameMbOnlyFlag) {
+    original_field_pic_flag = readU1 ("SEI original_field_pic_flag", buf);
+    if (original_field_pic_flag)
+      original_bottom_field_flag = readU1 ("SEI original_bottom_field_flag", buf);
+    }
+
+  printf ("SEI Decoded Picture Buffer Management Repetition\n");
+  printf ("original_idr_flag = %d\n", original_idr_flag);
+  printf ("original_frame_num = %d\n", original_frame_num);
+
+  // we need to save everything that is probably overwritten in decRefPicMarking()
+  old_drpm = slice->decRefPicMarkingBuffer;
+  old_idr_flag = slice->idrFlag;
+
+  old_no_output_of_prior_pics_flag = slice->noOutputPriorPicFlag; //decoder->noOutputPriorPicFlag;
+  old_long_term_reference_flag = slice->longTermRefFlag;
+  old_adaptive_ref_pic_buffering_flag = slice->adaptiveRefPicBufferingFlag;
+
+  // set new initial values
+  slice->idrFlag = original_idr_flag;
+  slice->decRefPicMarkingBuffer = NULL;
+  decRefPicMarking (decoder, buf, slice);
+  //{{{  print out decoded values
+  //if (decoder->idrFlag)
+  //{
+    //printf("noOutputPriorPicFlag = %d\n", decoder->noOutputPriorPicFlag);
+    //printf("longTermRefFlag     = %d\n", decoder->longTermRefFlag);
+  //}
+  //else
+  //{
+    //printf("adaptiveRefPicBufferingFlag  = %d\n", decoder->adaptiveRefPicBufferingFlag);
+    //if (decoder->adaptiveRefPicBufferingFlag)
+    //{
+      //tmp_drpm=decoder->decRefPicMarkingBuffer;
+      //while (tmp_drpm != NULL)
+      //{
+        //printf("memManagement  = %d\n", tmp_drpm->memManagement);
+
+        //if ((tmp_drpm->memManagement==1)||(tmp_drpm->memManagement==3))
+        //{
+          //printf("diffPicNumMinus1        = %d\n", tmp_drpm->diffPicNumMinus1);
+        //}
+        //if (tmp_drpm->memManagement==2)
+        //{
+          //printf("longTermPicNum                    = %d\n", tmp_drpm->longTermPicNum);
+        //}
+        //if ((tmp_drpm->memManagement==3)||(tmp_drpm->memManagement==6))
+        //{
+          //printf("longTermFrameIndex                  = %d\n", tmp_drpm->longTermFrameIndex);
+        //}
+        //if (tmp_drpm->memManagement==4)
+        //{
+          //printf("max_long_term_pic_idx_plus1          = %d\n", tmp_drpm->maxLongTermFrameIndexPlus1);
+        //}
+        //tmp_drpm = tmp_drpm->Next;
+      //}
+    //}
+  //}
+  //}}}
+
+  while (slice->decRefPicMarkingBuffer) {
+    tmp_drpm = slice->decRefPicMarkingBuffer;
+    slice->decRefPicMarkingBuffer = tmp_drpm->next;
+    free (tmp_drpm);
+    }
+
+  // restore old values in decoder
+  slice->decRefPicMarkingBuffer = old_drpm;
+  slice->idrFlag = old_idr_flag;
+  slice->noOutputPriorPicFlag = old_no_output_of_prior_pics_flag;
+  decoder->noOutputPriorPicFlag = slice->noOutputPriorPicFlag;
+  slice->longTermRefFlag = old_long_term_reference_flag;
+  slice->adaptiveRefPicBufferingFlag = old_adaptive_ref_pic_buffering_flag;
+
+  free (buf);
+  }
+//}}}
+
+//{{{
 static void process_spare_pic (byte* payload, int size, sDecoder* decoder) {
 
   int x,y;
@@ -412,369 +774,6 @@ static void process_scene_information (byte* payload, int size, sDecoder* decode
     if (scene_transition_type > 3 )
       printf ("second_scene_id %d\n", second_scene_id);
     }
-  free (buf);
-  }
-//}}}
-
-//{{{
-static void process_user_data_unregistered_info (byte* payload, int size, sDecoder* decoder) {
-
-  if (decoder->param.seiDebug) {
-    printf ("SEI - unregistered\n");
-
-    for (int i = 0; i < size; i++)
-      if (payload[i] >= 0x20 && payload[i] <= 0x7f)
-        printf ("%c",payload[i]);
-      else
-        printf (" %02x",payload[i]);
-    printf ("\n");
-    }
-  }
-//}}}
-//{{{
-static void process_user_data_registered_itu_t_t35_info (byte* payload, int size, sDecoder* decoder) {
-
-  int offset = 0;
-  int itu_t_t35_country_code = payload[offset];
-  offset++;
-
-  if (decoder->param.seiDebug) {
-    printf ("SEI - ITU-T:%d", itu_t_t35_country_code);
-
-    if (itu_t_t35_country_code == 0xFF) {
-      int itu_t_t35_country_code_extension_byte = payload[offset];
-      offset++;
-      if (decoder->param.seiDebug)
-        printf (" ext:%d", itu_t_t35_country_code_extension_byte);
-      }
-
-    for (int i = offset; i < size; i++)
-      if (payload[i] >= 0x20 && payload[i] <= 0x7f)
-        printf ("%c",payload[i]);
-      else
-        printf (" %02x",payload[i]);
-    printf ("\n");
-    }
-  }
-//}}}
-//{{{
-static void process_reserved_info (byte* payload, int size, sDecoder* decoder) {
-
-  int offset = 0;
-  byte payload_byte;
-
-  if (decoder->param.seiDebug) {
-    printf ("SEI Reserved\n");
-
-    while (offset < size) {
-      payload_byte = payload[offset];
-      offset++;
-      printf ("reserved_sei_message_payload_byte = %d\n", payload_byte);
-      }
-    }
-  }
-//}}}
-
-//{{{
-static void process_picture_timing_info (byte* payload, int size, sDecoder* decoder) {
-
-  sSPS* activeSPS = decoder->activeSPS;
-  if (!activeSPS) {
-    if (decoder->param.seiDebug)
-      printf ("SEI pictureTiming with no active SPS\n");
-    return;
-    }
-
-  sBitStream* buf = malloc (sizeof(sBitStream));
-  buf->bitStreamBuffer = payload;
-  buf->bitStreamOffset = 0;
-  buf->bitStreamLen = size;
-
-  if (decoder->param.seiDebug)
-    printf ("SEI Picture timing\n");
-
-  int cpb_removal_len = 24;
-  int dpb_output_len = 24;
-
-  Boolean CpbDpbDelaysPresentFlag = (Boolean)(activeSPS->vui_parameters_present_flag &&
-                                     ((activeSPS->vui_seq_parameters.nal_hrd_parameters_present_flag != 0) ||
-                                      (activeSPS->vui_seq_parameters.vcl_hrd_parameters_present_flag != 0)));
-
-  if (CpbDpbDelaysPresentFlag) {
-    if (activeSPS->vui_parameters_present_flag) {
-      if (activeSPS->vui_seq_parameters.nal_hrd_parameters_present_flag) {
-        cpb_removal_len = activeSPS->vui_seq_parameters.nal_hrd_parameters.cpb_removal_delay_length_minus1 + 1;
-        dpb_output_len  = activeSPS->vui_seq_parameters.nal_hrd_parameters.dpb_output_delay_length_minus1  + 1;
-        }
-      else if (activeSPS->vui_seq_parameters.vcl_hrd_parameters_present_flag) {
-        cpb_removal_len = activeSPS->vui_seq_parameters.vcl_hrd_parameters.cpb_removal_delay_length_minus1 + 1;
-        dpb_output_len = activeSPS->vui_seq_parameters.vcl_hrd_parameters.dpb_output_delay_length_minus1  + 1;
-        }
-      }
-
-    if ((activeSPS->vui_seq_parameters.nal_hrd_parameters_present_flag) ||
-        (activeSPS->vui_seq_parameters.vcl_hrd_parameters_present_flag)) {
-      int cpb_removal_delay, dpb_output_delay;
-      cpb_removal_delay = readUv (cpb_removal_len, "SEI cpb_removal_delay", buf);
-      dpb_output_delay = readUv (dpb_output_len,  "SEI dpb_output_delay", buf);
-      if (decoder->param.seiDebug) {
-        printf ("cpb_removal_delay %d\n", cpb_removal_delay);
-        printf ("dpb_output_delay %d\n", dpb_output_delay);
-        }
-      }
-    }
-
-  int pic_struct_present_flag, pic_struct;
-  if (!activeSPS->vui_parameters_present_flag)
-    pic_struct_present_flag = 0;
-  else
-    pic_struct_present_flag = activeSPS->vui_seq_parameters.pic_struct_present_flag;
-
-  int numClockTs = 0;
-  if (pic_struct_present_flag) {
-    pic_struct = readUv (4, "SEI pic_struct" , buf);
-    switch (pic_struct) {
-      case 0:
-      case 1:
-      //{{{
-      case 2:
-        numClockTs = 1;
-        break;
-      //}}}
-      case 3:
-      case 4:
-      //{{{
-      case 7:
-        numClockTs = 2;
-        break;
-      //}}}
-      case 5:
-      case 6:
-      //{{{
-      case 8:
-        numClockTs = 3;
-        break;
-      //}}}
-      //{{{
-      default:
-        error ("reserved pic_struct used, can't determine numClockTs");
-      //}}}
-      }
-
-    if (decoder->param.seiDebug)
-      for (int i = 0; i < numClockTs; i++) {
-        //{{{  print
-        int clock_timestamp_flag = readU1 ("SEI clock_timestamp_flag", buf);
-        if (clock_timestamp_flag) {
-          printf (" clockTs\n");
-          int ct_type = readUv (2, "SEI ct_type", buf);
-          int nuit_field_based_flag = readU1 ("SEI nuit_field_based_flag", buf);
-          int counting_type = readUv (5, "SEI counting_type", buf);
-          int full_timestamp_flag = readU1 ("SEI full_timestamp_flag", buf);
-          int discontinuity_flag = readU1 ("SEI discontinuity_flag", buf);
-          int cnt_dropped_flag = readU1 ("SEI cnt_dropped_flag", buf);
-          int nframes = readUv (8, "SEI nframes", buf);
-
-          printf ("ct_type = %d\n",ct_type);
-          printf ("nuit_field_based_flag = %d\n",nuit_field_based_flag);
-          printf ("full_timestamp_flag = %d\n",full_timestamp_flag);
-          printf ("discontinuity_flag = %d\n",discontinuity_flag);
-          printf ("cnt_dropped_flag = %d\n",cnt_dropped_flag);
-          printf ("nframes = %d\n",nframes);
-
-          if (full_timestamp_flag) {
-            int seconds_value = readUv (6, "SEI seconds_value", buf);
-            int minutes_value = readUv (6, "SEI minutes_value", buf);
-            int hours_value = readUv (5, "SEI hours_value", buf);
-            printf ("seconds_value = %d\n", seconds_value);
-            printf ("minutes_value= %d\n", minutes_value);
-            printf ("hours_value = %d\n", hours_value);
-            }
-          else {
-            int seconds_flag = readU1 ("SEI seconds_flag", buf);
-            printf ("seconds_flag = %d\n",seconds_flag);
-            if (seconds_flag) {
-              int seconds_value = readUv (6, "SEI seconds_value", buf);
-              int minutes_flag = readU1 ("SEI minutes_flag", buf);
-              printf ("seconds_value = %d\n",seconds_value);
-              printf ("minutes_flag = %d\n",minutes_flag);
-              if(minutes_flag) {
-                int minutes_value = readUv(6, "SEI minutes_value", buf);
-                int hours_flag = readU1 ("SEI hours_flag", buf);
-                printf ("minutes_value = %d\n",minutes_value);
-                printf ("hours_flag = %d\n",hours_flag);
-                if (hours_flag) {
-                  int hours_value = readUv (5, "SEI hours_value", buf);
-                  printf ("hours_value = %d\n",hours_value);
-                  }
-                }
-              }
-            }
-
-          int time_offset_length;
-          int time_offset;
-          if (activeSPS->vui_seq_parameters.vcl_hrd_parameters_present_flag)
-            time_offset_length = activeSPS->vui_seq_parameters.vcl_hrd_parameters.time_offset_length;
-          else if (activeSPS->vui_seq_parameters.nal_hrd_parameters_present_flag)
-            time_offset_length = activeSPS->vui_seq_parameters.nal_hrd_parameters.time_offset_length;
-          else
-            time_offset_length = 24;
-          if (time_offset_length)
-            time_offset = readIv (time_offset_length, "SEI time_offset", buf);
-          else
-            time_offset = 0;
-          printf ("time_offset   = %d\n", time_offset);
-          }
-        }
-        //}}}
-    }
-
-  free (buf);
-  }
-//}}}
-//{{{
-static void process_pan_scan_rect_info (byte* payload, int size, sDecoder* decoder) {
-
-  sBitStream* buf = malloc (sizeof(sBitStream));
-  buf->bitStreamBuffer = payload;
-  buf->bitStreamOffset = 0;
-  buf->bitStreamLen = size;
-
-  int pan_scan_rect_id = readUeV ("SEI pan_scan_rect_id", buf);
-  int pan_scan_rect_cancel_flag = readU1 ("SEI pan_scan_rect_cancel_flag", buf);
-  if (!pan_scan_rect_cancel_flag) {
-    int pan_scan_cnt_minus1 = readUeV ("SEI pan_scan_cnt_minus1", buf);
-    for (int i = 0; i <= pan_scan_cnt_minus1; i++) {
-      int pan_scan_rect_left_offset = readSeV ("SEI pan_scan_rect_left_offset", buf);
-      int pan_scan_rect_right_offset = readSeV ("SEI pan_scan_rect_right_offset", buf);
-      int pan_scan_rect_top_offset = readSeV ("SEI pan_scan_rect_top_offset", buf);
-      int pan_scan_rect_bottom_offset = readSeV ("SEI pan_scan_rect_bottom_offset", buf);
-      if (decoder->param.seiDebug)
-        printf ("SEI Pan scan %d/%d id %d left_offset %d right_offset %d top_offset %d bottom_offset %d\n",
-                i, pan_scan_cnt_minus1, pan_scan_rect_id,
-                pan_scan_rect_left_offset, pan_scan_rect_right_offset,
-                pan_scan_rect_top_offset, pan_scan_rect_bottom_offset);
-      }
-    int pan_scan_rect_repetition_period = readUeV ("SEI pan_scan_rect_repetition_period", buf);
-    }
-
-  free (buf);
-  }
-//}}}
-//{{{
-static void process_recovery_point_info (byte* payload, int size, sDecoder* decoder) {
-
-  sBitStream* buf = malloc(sizeof(sBitStream));
-  buf->bitStreamBuffer = payload;
-  buf->bitStreamOffset = 0;
-  buf->bitStreamLen = size;
-
-  int recoveryFrameCount = readUeV ("SEI recoveryFrameCount", buf);
-  int exact_match_flag = readU1 ("SEI exact_match_flag", buf);
-  int broken_link_flag = readU1 ("SEI broken_link_flag", buf);
-  int changing_slice_group_idc = readUv (2, "SEI changing_slice_group_idc", buf);
-
-  decoder->recoveryPoint = 1;
-  decoder->recoveryFrameCount = recoveryFrameCount;
-  if (decoder->param.seiDebug)
-    printf ("SEI Recovery point recoveryFrameCount %d exact_match %d broken_link %d changing_slice_group_idc %d\n",
-            recoveryFrameCount, exact_match_flag, broken_link_flag, changing_slice_group_idc);
-
-  free (buf);
-  }
-//}}}
-//{{{
-static void process_dec_ref_pic_marking_repetition_info (byte* payload, int size, sDecoder* decoder, sSlice *slice) {
-  int original_idr_flag, original_frame_num;
-  int original_field_pic_flag;
-
-  sDecodedRefPicMarking *tmp_drpm;
-  sDecodedRefPicMarking *old_drpm;
-  int old_idr_flag, old_no_output_of_prior_pics_flag, old_long_term_reference_flag , old_adaptive_ref_pic_buffering_flag;
-
-  sBitStream* buf = malloc (sizeof(sBitStream));
-  buf->bitStreamBuffer = payload;
-  buf->bitStreamOffset = 0;
-  buf->bitStreamLen = size;
-
-  original_idr_flag = readU1 ("SEI original_idr_flag", buf);
-  original_frame_num = readUeV ("SEI original_frame_num", buf);
-
-  int original_bottom_field_flag = 0;
-  if (!decoder->activeSPS->frameMbOnlyFlag) {
-    original_field_pic_flag = readU1 ("SEI original_field_pic_flag", buf);
-    if (original_field_pic_flag)
-      original_bottom_field_flag = readU1 ("SEI original_bottom_field_flag", buf);
-    }
-
-  printf ("SEI Decoded Picture Buffer Management Repetition\n");
-  printf ("original_idr_flag = %d\n", original_idr_flag);
-  printf ("original_frame_num = %d\n", original_frame_num);
-
-  // we need to save everything that is probably overwritten in decRefPicMarking()
-  old_drpm = slice->decRefPicMarkingBuffer;
-  old_idr_flag = slice->idrFlag;
-
-  old_no_output_of_prior_pics_flag = slice->noOutputPriorPicFlag; //decoder->noOutputPriorPicFlag;
-  old_long_term_reference_flag = slice->longTermRefFlag;
-  old_adaptive_ref_pic_buffering_flag = slice->adaptiveRefPicBufferingFlag;
-
-  // set new initial values
-  slice->idrFlag = original_idr_flag;
-  slice->decRefPicMarkingBuffer = NULL;
-  decRefPicMarking (decoder, buf, slice);
-  //{{{  print out decoded values
-  //if (decoder->idrFlag)
-  //{
-    //printf("noOutputPriorPicFlag = %d\n", decoder->noOutputPriorPicFlag);
-    //printf("longTermRefFlag     = %d\n", decoder->longTermRefFlag);
-  //}
-  //else
-  //{
-    //printf("adaptiveRefPicBufferingFlag  = %d\n", decoder->adaptiveRefPicBufferingFlag);
-    //if (decoder->adaptiveRefPicBufferingFlag)
-    //{
-      //tmp_drpm=decoder->decRefPicMarkingBuffer;
-      //while (tmp_drpm != NULL)
-      //{
-        //printf("memManagement  = %d\n", tmp_drpm->memManagement);
-
-        //if ((tmp_drpm->memManagement==1)||(tmp_drpm->memManagement==3))
-        //{
-          //printf("diffPicNumMinus1        = %d\n", tmp_drpm->diffPicNumMinus1);
-        //}
-        //if (tmp_drpm->memManagement==2)
-        //{
-          //printf("longTermPicNum                    = %d\n", tmp_drpm->longTermPicNum);
-        //}
-        //if ((tmp_drpm->memManagement==3)||(tmp_drpm->memManagement==6))
-        //{
-          //printf("longTermFrameIndex                  = %d\n", tmp_drpm->longTermFrameIndex);
-        //}
-        //if (tmp_drpm->memManagement==4)
-        //{
-          //printf("max_long_term_pic_idx_plus1          = %d\n", tmp_drpm->maxLongTermFrameIndexPlus1);
-        //}
-        //tmp_drpm = tmp_drpm->Next;
-      //}
-    //}
-  //}
-  //}}}
-
-  while (slice->decRefPicMarkingBuffer) {
-    tmp_drpm = slice->decRefPicMarkingBuffer;
-    slice->decRefPicMarkingBuffer = tmp_drpm->next;
-    free (tmp_drpm);
-    }
-
-  // restore old values in decoder
-  slice->decRefPicMarkingBuffer = old_drpm;
-  slice->idrFlag = old_idr_flag;
-  slice->noOutputPriorPicFlag = old_no_output_of_prior_pics_flag;
-  decoder->noOutputPriorPicFlag = slice->noOutputPriorPicFlag;
-  slice->longTermRefFlag = old_long_term_reference_flag;
-  slice->adaptiveRefPicBufferingFlag = old_adaptive_ref_pic_buffering_flag;
-
   free (buf);
   }
 //}}}
@@ -1255,19 +1254,19 @@ void processSEI (byte* msg, int size, sDecoder* decoder, sSlice* slice) {
       case  SEI_BUFFERING_PERIOD:
         process_buffering_period_info (msg+offset, payload_size, decoder); break;
       case  SEI_PIC_TIMING:
-        process_picture_timing_info (msg+offset, payload_size, decoder); break;
+        processPictureTiming (msg+offset, payload_size, decoder); break;
       case  SEI_PAN_SCAN_RECT:
-        process_pan_scan_rect_info (msg+offset, payload_size, decoder); break;
+        processPanScan (msg+offset, payload_size, decoder); break;
       case  SEI_FILLER_PAYLOAD:
         process_filler_payload_info (msg+offset, payload_size, decoder); break;
       case  SEI_USER_DATA_REGISTERED_ITU_T_T35:
-        process_user_data_registered_itu_t_t35_info (msg+offset, payload_size, decoder); break;
+        processUserDataT35 (msg+offset, payload_size, decoder); break;
       case  SEI_USER_DATA_UNREGISTERED:
-        process_user_data_unregistered_info (msg+offset, payload_size, decoder); break;
+        processUserDataUnregistered (msg+offset, payload_size, decoder); break;
       case  SEI_RECOVERY_POINT:
-        process_recovery_point_info (msg+offset, payload_size, decoder); break;
+        processRecoveryPoint (msg+offset, payload_size, decoder); break;
       case  SEI_DEC_REF_PIC_MARKING_REPETITION:
-        process_dec_ref_pic_marking_repetition_info (msg+offset, payload_size, decoder, slice); break;
+        processDecRefPicMarkingRepetition (msg+offset, payload_size, decoder, slice); break;
       case  SEI_SPARE_PIC:
         process_spare_pic (msg+offset, payload_size, decoder); break;
       case  SEI_SCENE_INFO:
@@ -1303,7 +1302,7 @@ void processSEI (byte* msg, int size, sDecoder* decoder, sSlice* slice) {
       case  SEI_GREEN_METADATA:
         process_green_metadata_info (msg+offset, payload_size, decoder); break;
       default:
-        process_reserved_info (msg+offset, payload_size, decoder); break;
+        processReserved (msg+offset, payload_size, decoder); break;
       }
     offset += payload_size;
     } while (msg[offset] != 0x80);    // moreRbspData()  msg[offset] != 0x80

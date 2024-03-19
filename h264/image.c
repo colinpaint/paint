@@ -2318,7 +2318,7 @@ static void initSlice (sDecoder* decoder, sSlice* slice) {
   if (!(slice->redundantPicCount && (decoder->prevFrameNum == slice->frameNum)))
     for (int i = 16; i > 0; i--)
       slice->refFlag[i] = slice->refFlag[i-1];
-  slice->refFlag[0] = slice->redundantPicCount == 0 ? decoder->isPrimaryOk : decoder->isReduncantOk;
+  slice->refFlag[0] = (slice->redundantPicCount == 0) ? decoder->isPrimaryOk : decoder->isReduncantOk;
 
   if (!slice->activeSPS->chromaFormatIdc ||
       (slice->activeSPS->chromaFormatIdc == 3)) {
@@ -2421,21 +2421,21 @@ static int readNextSlice (sSlice* slice) {
       //{{{
       case NALU_TYPE_SPS:
         if (decoder->param.spsDebug)
-          printf ("SPS id:%d:%d len:%d ", slice->refId, slice->sliceType, nalu->len);
+          printf ("SPS %2d:%d:%d ", nalu->len, slice->refId, slice->sliceType);
         readNaluSPS (decoder, nalu);
         break;
       //}}}
       //{{{
       case NALU_TYPE_PPS:
         if (decoder->param.spsDebug)
-          printf ("PPS id:%d:%d len:%d ", slice->refId, slice->sliceType, nalu->len);
+          printf ("PPS %2d:%d:%d ", nalu->len, slice->refId, slice->sliceType);
         readNaluPPS (decoder, nalu);
         break;
       //}}}
       //{{{
       case NALU_TYPE_SEI:
         if (decoder->param.seiDebug)
-          printf ("IDR id:%d:%d len:%d\n", slice->refId, slice->sliceType, nalu->len);
+          printf ("SEI %2d:%d:%d ", nalu->len, slice->refId, slice->sliceType);
         processSEI (nalu->buf, nalu->len, decoder, slice);
         break;
       //}}}
@@ -2475,10 +2475,10 @@ static int readNextSlice (sSlice* slice) {
             printf ("IDR");
           else
             printf ("SLC");
-          printf (" %5d:%d:%d:%s frame:%d ppsId:%d%s\n",
+          printf (" %5d:%d:%d:%s frame:%d%s ppsId:%d\n",
                   nalu->len, slice->refId, slice->sliceType,
                   slice->sliceType == 0 ? "P":(slice->sliceType == 1 ? "B":(slice->sliceType == 2 ? "I":"?")),
-                  slice->frameNum, slice->ppsId, slice->fieldPicFlag ? " field":"");
+                  slice->frameNum, slice->fieldPicFlag ? " field":"", slice->ppsId);
           }
         assignQuantParams (slice);
 

@@ -829,9 +829,9 @@ static void readPPS (sDecoder* decoder, sDataPartition* dataPartition, sPPS* pps
             pps->weightedPredFlag ? " pred":"",
             pps->weightedBiPredIdc ? " biPred":"",
             pps->constrainedIntraPredFlag ? " intraPred":"",
-            pps->redundantPicCountPresent ? " redundant":"",
+            pps->redundantPicCountPresent ? " red":"",
             pps->botFieldPicOrderFramePresent ? " botField":"",
-            more && pps->transform8x8modeFlag ? " t8x8":"",
+            more && pps->transform8x8modeFlag ? " 8x8":"",
             more && pps->picScalingMatrixPresentFlag ? " scaling":"",
             pps->numSliceGroupsMinus1,
             pps->numRefIndexL0defaultActiveMinus1, pps->numRefIndexL1defaultActiveMinus1);
