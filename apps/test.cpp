@@ -877,14 +877,8 @@ public:
   cTransportStream::cService* getService() { return mService; }
   int64_t getPlayPts() const { return mPlayPts; }
   cVideoFrame* getVideoFrame() { return mVideoFrame; }
-  bool getDeblock() const { return mDeblock; }
-  string getInfo() const { return ""; }
+  sDecoder* getDecoder() { return mDecoder; }
 
-  //{{{
-  void toggleDeblock() {
-    mDeblock = !mDeblock;
-    }
-  //}}}
   void togglePlay() { mPlaying = !mPlaying; }
   void skipPlay (int64_t skipPts) { (void)skipPts; }
   //{{{
@@ -963,18 +957,18 @@ public:
       param.refPocGap = 2;
       param.dpbPlus[0] = 1;
       param.intraProfileDeblocking = 1;
-      sDecoder* decoder = openDecoder (&param, h264Chunk, h264ChunkSize);
-      decoder->param.spsDebug = 1;
-      decoder->param.ppsDebug = 1;
-      decoder->param.seiDebug = 1;
-      decoder->param.sliceDebug = 1;
-      //decoder->param.vlcDebug = 1;
-      //decoder->param.naluDebug = 1;
+      mDecoder = openDecoder (&param, h264Chunk, h264ChunkSize);
+      mDecoder->param.spsDebug = 1;
+      mDecoder->param.ppsDebug = 1;
+      mDecoder->param.seiDebug = 1;
+      mDecoder->param.sliceDebug = 1;
+      //mDecoder->param.vlcDebug = 1;
+      //mDecoder->param.naluDebug = 1;
 
       sDecodedPic* decodedPic;
       int ret = 0;
       do {
-        ret = decodeOneFrame (decoder, &decodedPic);
+        ret = decodeOneFrame (mDecoder, &decodedPic);
         if (ret == DEC_EOS || ret == DEC_SUCCEED)
           outputPicList (decodedPic);
         else
@@ -985,9 +979,9 @@ public:
 
         } while (ret == DEC_SUCCEED);
 
-      finishDecoder (decoder, &decodedPic);
+      finishDecoder (mDecoder, &decodedPic);
       outputPicList (decodedPic);
-      closeDecoder (decoder);
+      closeDecoder (mDecoder);
 
       delete[] h264Chunk;
 
@@ -1041,6 +1035,7 @@ private:
   int64_t mPlayPts = -1;
   bool mPlaying = true;
 
+  sDecoder* mDecoder = nullptr;
   bool mDeblock = true;
 
   size_t mOutputFrame = 0;
@@ -1057,18 +1052,7 @@ public:
   cApp::cOptions* getOptions() { return mOptions; }
   cFilePlayer* getFilePlayer() { return mFilePlayer; }
   cVideoFrame* getVideoFrame() { return mFilePlayer ? mFilePlayer->getVideoFrame() : mVideoFrame; }
-  //{{{
-  bool getDeblock() const {
-    return mFilePlayer ? mFilePlayer->getDeblock() :
-                         (mDecoder ? mDecoder->param.deblock : true);
-    }
-  //}}}
-  //{{{
-  string getInfo() const {
-    return mFilePlayer ? mFilePlayer->getInfo() :
-                         (mDecoder ? mDecoder->info.text : "");
-    }
-  //}}}
+  sDecoder* getDecoder() { return mFilePlayer ? mFilePlayer->getDecoder() : mDecoder; }
 
   //{{{
   void togglePlay() {
@@ -1076,14 +1060,6 @@ public:
       mFilePlayer->togglePlay();
     else
       mPlaying = !mPlaying;
-    }
-  //}}}
-  //{{{
-  void toggleDeblock() {
-    if (mFilePlayer)
-      mFilePlayer->toggleDeblock();
-    else
-      mDecoder->param.deblock = !(mDecoder->param.deblock);
     }
   //}}}
 
@@ -1459,15 +1435,17 @@ public:
     ImGui::SameLine();
     ImGui::TextUnformatted (fmt::format("{}:fps", static_cast<uint32_t>(ImGui::GetIO().Framerate)).c_str());
     //}}}
-    //{{{  draw deblock button
-    ImGui::SameLine();
-    if (toggleButton ("deblock", testApp.getDeblock()))
-      testApp.toggleDeblock();
-    //}}}
-    //{{{  draw info
-    ImGui::SameLine();
-    ImGui::TextUnformatted (testApp.getInfo().c_str());
-    //}}}
+    if (testApp.getDecoder()) {
+      //{{{  draw deblock button
+      ImGui::SameLine();
+      if (toggleButton ("deblock", testApp.getDecoder()->param.deblock))
+        testApp.getDecoder()->param.deblock = !testApp.getDecoder()->param.deblock;
+      //}}}
+      //{{{  draw info
+      ImGui::SameLine();
+      ImGui::TextUnformatted (testApp.getDecoder()->info.text);
+      //}}}
+      }
 
     ImGui::EndChild();
     ImGui::End();
