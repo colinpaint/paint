@@ -1195,6 +1195,98 @@ static const char INIT_FLD_LAST_P[3][22][15][2] =
 //}}}
 
 //{{{
+static void resetMb (sMacroblock* mb) {
+
+  mb->errorFlag = 1;
+  mb->dplFlag = 0;
+  mb->sliceNum = -1;
+  }
+//}}}
+//{{{
+static void ercWriteMBMODEandMV (sMacroblock* mb) {
+
+  sDecoder* decoder = mb->decoder;
+  int curMbNum = mb->mbIndexX;
+  sPicture* picture = decoder->picture;
+
+  int mbx = xPosMB (curMbNum, picture->sizeX), mby = yPosMB(curMbNum, picture->sizeX);
+  sObjectBuffer* curRegion = decoder->ercObjectList + (curMbNum << 2);
+
+  if (decoder->coding.type != B_SLICE) {
+    //{{{  non-B frame
+    for (int i = 0; i < 4; ++i) {
+      sObjectBuffer* region = curRegion + i;
+      region->regionMode = (mb->mbType ==I16MB  ? REGMODE_INTRA :
+                              mb->b8mode[i] == IBLOCK ? REGMODE_INTRA_8x8  :
+                                mb->b8mode[i] == 0 ? REGMODE_INTER_COPY :
+                                  mb->b8mode[i] == 1 ? REGMODE_INTER_PRED :
+                                    REGMODE_INTER_PRED_8x8);
+
+      if (!mb->b8mode[i] || mb->b8mode[i] == IBLOCK) {
+        // INTRA OR COPY
+        region->mv[0] = 0;
+        region->mv[1] = 0;
+        region->mv[2] = 0;
+        }
+      else {
+        int ii = 4*mbx + (i & 0x01)*2;// + BLOCK_SIZE;
+        int jj = 4*mby + (i >> 1  )*2;
+        if (mb->b8mode[i]>=5 && mb->b8mode[i] <= 7) {
+          // SMALL BLOCKS
+          region->mv[0] = (picture->mvInfo[jj][ii].mv[LIST_0].mvX + picture->mvInfo[jj][ii + 1].mv[LIST_0].mvX + picture->mvInfo[jj + 1][ii].mv[LIST_0].mvX + picture->mvInfo[jj + 1][ii + 1].mv[LIST_0].mvX + 2)/4;
+          region->mv[1] = (picture->mvInfo[jj][ii].mv[LIST_0].mvY + picture->mvInfo[jj][ii + 1].mv[LIST_0].mvY + picture->mvInfo[jj + 1][ii].mv[LIST_0].mvY + picture->mvInfo[jj + 1][ii + 1].mv[LIST_0].mvY + 2)/4;
+          }
+        else {
+          // 16x16, 16x8, 8x16, 8x8
+          region->mv[0] = picture->mvInfo[jj][ii].mv[LIST_0].mvX;
+          region->mv[1] = picture->mvInfo[jj][ii].mv[LIST_0].mvY;
+          }
+
+        mb->slice->ercMvPerMb += iabs (region->mv[0]) + iabs (region->mv[1]);
+        region->mv[2] = picture->mvInfo[jj][ii].refIndex[LIST_0];
+        }
+      }
+    }
+    //}}}
+  else {
+    //{{{  B-frame
+    for (int i = 0; i < 4; ++i) {
+      int ii = 4*mbx + (i%2) * 2;
+      int jj = 4*mby + (i/2) * 2;
+
+      sObjectBuffer* region = curRegion + i;
+      region->regionMode = (mb->mbType == I16MB  ? REGMODE_INTRA :
+                             mb->b8mode[i] == IBLOCK ? REGMODE_INTRA_8x8 :
+                               REGMODE_INTER_PRED_8x8);
+
+      if (mb->mbType == I16MB || mb->b8mode[i] == IBLOCK) {
+        // INTRA
+        region->mv[0] = 0;
+        region->mv[1] = 0;
+        region->mv[2] = 0;
+        }
+      else {
+        int idx = (picture->mvInfo[jj][ii].refIndex[0] < 0) ? 1 : 0;
+        region->mv[0] = (picture->mvInfo[jj][ii].mv[idx].mvX +
+                         picture->mvInfo[jj][ii+1].mv[idx].mvX +
+                         picture->mvInfo[jj+1][ii].mv[idx].mvX +
+                         picture->mvInfo[jj+1][ii+1].mv[idx].mvX + 2)/4;
+
+        region->mv[1] = (picture->mvInfo[jj][ii].mv[idx].mvY +
+                         picture->mvInfo[jj][ii+1].mv[idx].mvY +
+                         picture->mvInfo[jj+1][ii].mv[idx].mvY +
+                         picture->mvInfo[jj+1][ii+1].mv[idx].mvY + 2)/4;
+        mb->slice->ercMvPerMb += iabs (region->mv[0]) + iabs (region->mv[1]);
+
+        region->mv[2] = (picture->mvInfo[jj][ii].refIndex[idx]);
+        }
+      }
+    }
+    //}}}
+  }
+//}}}
+
+//{{{
 static void refPicListReorder (sSlice* slice) {
 
   byte partitionIndex = assignSE2dp[slice->datadpMode][SE_HEADER];
@@ -1405,14 +1497,6 @@ static void initContexts (sSlice* slice) {
     }
   }
 //}}}
-//{{{
-static void resetMb (sMacroblock* mb) {
-
-  mb->errorFlag = 1;
-  mb->dplFlag = 0;
-  mb->sliceNum = -1;
-  }
-//}}}
 
 //{{{
 static void padBuf (sPixel* pixel, int width, int height, int stride, int padx, int pady) {
@@ -1442,16 +1526,16 @@ static void padBuf (sPixel* pixel, int width, int height, int stride, int padx, 
   }
 //}}}
 //{{{
-static void copyPOC (sSlice* fromSlice, sSlice* slice) {
+static void copyPOC (sSlice* fromSlice, sSlice* toSlice) {
 
-  slice->topPoc = fromSlice->topPoc;
-  slice->botPoc = fromSlice->botPoc;
-  slice->thisPoc = fromSlice->thisPoc;
-  slice->framePoc = fromSlice->framePoc;
+  toSlice->topPoc = fromSlice->topPoc;
+  toSlice->botPoc = fromSlice->botPoc;
+  toSlice->thisPoc = fromSlice->thisPoc;
+  toSlice->framePoc = fromSlice->framePoc;
   }
 //}}}
 //{{{
-static int dumpPOC (sDecoder* decoder) {
+static void dumpPOC (sDecoder* decoder) {
 
   sSPS* activeSPS = decoder->activeSPS;
 
@@ -1479,52 +1563,9 @@ static int dumpPOC (sDecoder* decoder) {
   printf ("- deltaPicOrderCount[1] %d\n", (int)decoder->sliceList[0]->deltaPicOrderCount[1]);
   printf ("- idrFlag %d\n", (int)decoder->sliceList[0]->idrFlag);
   printf ("- maxFrameNum %d\n", (int)decoder->coding.maxFrameNum);
-
-  return 0;
   }
 //}}}
 
-//{{{
-static void updateMbAff (sPixel** pixel, sPixel (*temp)[16], int x0, int width, int height) {
-
-  sPixel (*temp_evn)[16] = temp;
-  sPixel (*temp_odd)[16] = temp + height;
-  sPixel** temp_img = pixel;
-
-  for (int y = 0; y < 2 * height; ++y)
-    memcpy (*temp++, (*temp_img++ + x0), width * sizeof(sPixel));
-
-  for (int y = 0; y < height; ++y) {
-    memcpy ((*pixel++ + x0), *temp_evn++, width * sizeof(sPixel));
-    memcpy ((*pixel++ + x0), *temp_odd++, width * sizeof(sPixel));
-    }
-  }
-//}}}
-//{{{
-static void mbAffPostProc (sDecoder* decoder) {
-
-  sPixel tempBuffer[32][16];
-  sPicture* picture = decoder->picture;
-  sPixel** imgY = picture->imgY;
-  sPixel*** imgUV = picture->imgUV;
-
-  short x0;
-  short y0;
-  for (short i = 0; i < (int)picture->picSizeInMbs; i += 2) {
-    if (picture->motion.mbField[i]) {
-      getMbPos (decoder, i, decoder->mbSize[IS_LUMA], &x0, &y0);
-      updateMbAff (imgY + y0, tempBuffer, x0, MB_BLOCK_SIZE, MB_BLOCK_SIZE);
-
-      if (picture->chromaFormatIdc != YUV400) {
-        x0 = (short)((x0 * decoder->mbCrSizeX) >> 4);
-        y0 = (short)((y0 * decoder->mbCrSizeY) >> 4);
-        updateMbAff (imgUV[0] + y0, tempBuffer, x0, decoder->mbCrSizeX, decoder->mbCrSizeY);
-        updateMbAff (imgUV[1] + y0, tempBuffer, x0, decoder->mbCrSizeX, decoder->mbCrSizeY);
-        }
-      }
-    }
-  }
-//}}}
 //{{{
 static void fillWpParam (sSlice* slice) {
 
@@ -1618,24 +1659,6 @@ static void fillWpParam (sSlice* slice) {
   }
 //}}}
 //{{{
-static void errorTracking (sDecoder* decoder, sSlice* slice) {
-
-  if (!slice->redundantPicCount)
-    decoder->isPrimaryOk = decoder->isReduncantOk = 1;
-
-  if (!slice->redundantPicCount && (decoder->coding.type != I_SLICE)) {
-    for (int i = 0; i < slice->numRefIndexActive[LIST_0];++i)
-      if (!slice->refFlag[i])  // any reference of primary slice is incorrect
-        decoder->isPrimaryOk = 0; // primary slice is incorrect
-    }
-  else if (slice->redundantPicCount && (decoder->coding.type != I_SLICE))
-    // reference of redundant slice is incorrect
-    if (!slice->refFlag[slice->redundantSliceRefIndex])
-      // redundant slice is incorrect
-      decoder->isReduncantOk = 0;
-  }
-//}}}
-//{{{
 static void reorderLists (sSlice* slice) {
 
   sDecoder* decoder = slice->decoder;
@@ -1662,89 +1685,6 @@ static void reorderLists (sSlice* slice) {
     }
 
   freeRefPicListReorderingBuffer (slice);
-  }
-//}}}
-//{{{
-static void ercWriteMBMODEandMV (sMacroblock* mb) {
-
-  sDecoder* decoder = mb->decoder;
-  int currMBNum = mb->mbIndexX; //decoder->currentSlice->mbIndex;
-  sPicture* picture = decoder->picture;
-  int mbx = xPosMB (currMBNum, picture->sizeX), mby = yPosMB(currMBNum, picture->sizeX);
-
-  sObjectBuffer* currRegion = decoder->ercObjectList + (currMBNum << 2);
-
-  if (decoder->coding.type != B_SLICE) {
-    //{{{  non-B frame
-    for (int i = 0; i < 4; ++i) {
-      sObjectBuffer* pRegion = currRegion + i;
-      pRegion->regionMode = (mb->mbType ==I16MB  ? REGMODE_INTRA :
-                               mb->b8mode[i] == IBLOCK ? REGMODE_INTRA_8x8  :
-                                 mb->b8mode[i] == 0 ? REGMODE_INTER_COPY :
-                                   mb->b8mode[i] == 1 ? REGMODE_INTER_PRED :
-                                     REGMODE_INTER_PRED_8x8);
-
-      if (!mb->b8mode[i] || mb->b8mode[i] == IBLOCK) {
-        // INTRA OR COPY
-        pRegion->mv[0] = 0;
-        pRegion->mv[1] = 0;
-        pRegion->mv[2] = 0;
-        }
-      else {
-        int ii = 4*mbx + (i & 0x01)*2;// + BLOCK_SIZE;
-        int jj = 4*mby + (i >> 1  )*2;
-        if (mb->b8mode[i]>=5 && mb->b8mode[i] <= 7) {
-          // SMALL BLOCKS
-          pRegion->mv[0] = (picture->mvInfo[jj][ii].mv[LIST_0].mvX + picture->mvInfo[jj][ii + 1].mv[LIST_0].mvX + picture->mvInfo[jj + 1][ii].mv[LIST_0].mvX + picture->mvInfo[jj + 1][ii + 1].mv[LIST_0].mvX + 2)/4;
-          pRegion->mv[1] = (picture->mvInfo[jj][ii].mv[LIST_0].mvY + picture->mvInfo[jj][ii + 1].mv[LIST_0].mvY + picture->mvInfo[jj + 1][ii].mv[LIST_0].mvY + picture->mvInfo[jj + 1][ii + 1].mv[LIST_0].mvY + 2)/4;
-          }
-        else {
-          // 16x16, 16x8, 8x16, 8x8
-          pRegion->mv[0] = picture->mvInfo[jj][ii].mv[LIST_0].mvX;
-          pRegion->mv[1] = picture->mvInfo[jj][ii].mv[LIST_0].mvY;
-          }
-
-        mb->slice->ercMvPerMb += iabs(pRegion->mv[0]) + iabs(pRegion->mv[1]);
-        pRegion->mv[2] = picture->mvInfo[jj][ii].refIndex[LIST_0];
-        }
-      }
-    }
-    //}}}
-  else {
-    //{{{  B-frame
-    for (int i = 0; i < 4; ++i) {
-      int ii = 4*mbx + (i%2) * 2;
-      int jj = 4*mby + (i/2) * 2;
-
-      sObjectBuffer* pRegion = currRegion + i;
-      pRegion->regionMode = (mb->mbType == I16MB  ? REGMODE_INTRA :
-                               mb->b8mode[i] == IBLOCK ? REGMODE_INTRA_8x8 :
-                                 REGMODE_INTER_PRED_8x8);
-
-      if (mb->mbType == I16MB || mb->b8mode[i] == IBLOCK) {
-        // INTRA
-        pRegion->mv[0] = 0;
-        pRegion->mv[1] = 0;
-        pRegion->mv[2] = 0;
-        }
-      else {
-        int idx = (picture->mvInfo[jj][ii].refIndex[0] < 0) ? 1 : 0;
-        pRegion->mv[0] = (picture->mvInfo[jj][ii].mv[idx].mvX +
-                          picture->mvInfo[jj][ii+1].mv[idx].mvX +
-                          picture->mvInfo[jj+1][ii].mv[idx].mvX +
-                          picture->mvInfo[jj+1][ii+1].mv[idx].mvX + 2)/4;
-
-        pRegion->mv[1] = (picture->mvInfo[jj][ii].mv[idx].mvY +
-                          picture->mvInfo[jj][ii+1].mv[idx].mvY +
-                          picture->mvInfo[jj+1][ii].mv[idx].mvY +
-                          picture->mvInfo[jj+1][ii+1].mv[idx].mvY + 2)/4;
-        mb->slice->ercMvPerMb += iabs(pRegion->mv[0]) + iabs(pRegion->mv[1]);
-
-        pRegion->mv[2]  = (picture->mvInfo[jj][ii].refIndex[idx]);
-        }
-      }
-    }
-    //}}}
   }
 //}}}
 //{{{
@@ -1784,6 +1724,66 @@ static void initRefPicture (sSlice* slice, sDecoder* decoder) {
         }
       }
     }
+  }
+//}}}
+
+//{{{
+static void updateMbAff (sPixel** pixel, sPixel (*temp)[16], int x0, int width, int height) {
+
+  sPixel (*temp_evn)[16] = temp;
+  sPixel (*temp_odd)[16] = temp + height;
+  sPixel** temp_img = pixel;
+
+  for (int y = 0; y < 2 * height; ++y)
+    memcpy (*temp++, (*temp_img++ + x0), width * sizeof(sPixel));
+
+  for (int y = 0; y < height; ++y) {
+    memcpy ((*pixel++ + x0), *temp_evn++, width * sizeof(sPixel));
+    memcpy ((*pixel++ + x0), *temp_odd++, width * sizeof(sPixel));
+    }
+  }
+//}}}
+//{{{
+static void mbAffPostProc (sDecoder* decoder) {
+
+  sPixel tempBuffer[32][16];
+  sPicture* picture = decoder->picture;
+  sPixel** imgY = picture->imgY;
+  sPixel*** imgUV = picture->imgUV;
+
+  short x0;
+  short y0;
+  for (short i = 0; i < (int)picture->picSizeInMbs; i += 2) {
+    if (picture->motion.mbField[i]) {
+      getMbPos (decoder, i, decoder->mbSize[IS_LUMA], &x0, &y0);
+      updateMbAff (imgY + y0, tempBuffer, x0, MB_BLOCK_SIZE, MB_BLOCK_SIZE);
+
+      if (picture->chromaFormatIdc != YUV400) {
+        x0 = (short)((x0 * decoder->mbCrSizeX) >> 4);
+        y0 = (short)((y0 * decoder->mbCrSizeY) >> 4);
+        updateMbAff (imgUV[0] + y0, tempBuffer, x0, decoder->mbCrSizeX, decoder->mbCrSizeY);
+        updateMbAff (imgUV[1] + y0, tempBuffer, x0, decoder->mbCrSizeX, decoder->mbCrSizeY);
+        }
+      }
+    }
+  }
+//}}}
+//{{{
+static void errorTracking (sDecoder* decoder, sSlice* slice) {
+
+  if (!slice->redundantPicCount)
+    decoder->isPrimaryOk = decoder->isReduncantOk = 1;
+
+  if (!slice->redundantPicCount && (decoder->coding.type != I_SLICE)) {
+    for (int i = 0; i < slice->numRefIndexActive[LIST_0];++i)
+      if (!slice->refFlag[i])  // any reference of primary slice is incorrect
+        decoder->isPrimaryOk = 0; // primary slice is incorrect
+    }
+  else if (slice->redundantPicCount && (decoder->coding.type != I_SLICE))
+    // reference of redundant slice is incorrect
+    if (!slice->refFlag[slice->redundantSliceRefIndex])
+      // redundant slice is incorrect
+      decoder->isReduncantOk = 0;
   }
 //}}}
 
@@ -2075,48 +2075,6 @@ static void useParameterSet (sDecoder* decoder, sSlice* slice) {
   }
 //}}}
 //{{{
-static void initPictureDecoding (sDecoder* decoder) {
-
-  int deblockMode = 1;
-
-  if (decoder->picSliceIndex >= MAX_NUM_SLICES)
-    error ("initPictureDecoding - MAX_NUM_SLICES exceeded");
-
-  sSlice* slice = decoder->sliceList[0];
-  if (decoder->nextPPS->valid && (decoder->nextPPS->ppsId == slice->ppsId)) {
-    if (decoder->param.sliceDebug)
-      printf ("--- initPictureDecoding - switching PPS - nextPPS:%d == slicePPS:%d\n",
-              decoder->nextPPS->ppsId, slice->ppsId);
-
-    sPPS pps;
-    memcpy (&pps, &(decoder->pps[slice->ppsId]), sizeof (sPPS));
-    decoder->pps[slice->ppsId].sliceGroupId = NULL;
-    setPPSbyId (decoder, decoder->nextPPS->ppsId, decoder->nextPPS);
-    memcpy (decoder->nextPPS, &pps, sizeof (sPPS));
-    pps.sliceGroupId = NULL;
-    }
-
-  useParameterSet (decoder, slice);
-  if (slice->idrFlag)
-    decoder->idrFrameNum = 0;
-
-  decoder->picHeightInMbs = decoder->coding.frameHeightMbs / (1 + slice->fieldPicFlag);
-  decoder->picSizeInMbs = decoder->coding.picWidthMbs * decoder->picHeightInMbs;
-  decoder->coding.frameSizeMbs = decoder->coding.picWidthMbs * decoder->coding.frameHeightMbs;
-  decoder->coding.structure = slice->structure;
-  initFmo (decoder, slice);
-
-  updatePicNum (slice);
-
-  initDeblock (decoder, slice->mbAffFrameFlag);
-  for (int j = 0; j < decoder->picSliceIndex; j++)
-    if (decoder->sliceList[j]->DFDisableIdc != 1)
-      deblockMode = 0;
-
-  decoder->deblockMode = deblockMode;
-  }
-//}}}
-//{{{
 static void readSliceHeader (sDecoder* decoder, sSlice* slice) {
 // Some sliceHeader syntax depends on parameterSet depends on parameterSetID of the slice header
 // - read the ppsId of the slice header first
@@ -2301,7 +2259,48 @@ static void readSliceHeader (sDecoder* decoder, sSlice* slice) {
   decoder->coding.frameSizeMbs = decoder->coding.picWidthMbs * decoder->coding.frameHeightMbs;
   }
 //}}}
+//{{{
+static void initPictureDecoding (sDecoder* decoder) {
 
+  int deblockMode = 1;
+
+  if (decoder->picSliceIndex >= MAX_NUM_SLICES)
+    error ("initPictureDecoding - MAX_NUM_SLICES exceeded");
+
+  sSlice* slice = decoder->sliceList[0];
+  if (decoder->nextPPS->valid && (decoder->nextPPS->ppsId == slice->ppsId)) {
+    if (decoder->param.sliceDebug)
+      printf ("--- initPictureDecoding - switching PPS - nextPPS:%d == slicePPS:%d\n",
+              decoder->nextPPS->ppsId, slice->ppsId);
+
+    sPPS pps;
+    memcpy (&pps, &(decoder->pps[slice->ppsId]), sizeof (sPPS));
+    decoder->pps[slice->ppsId].sliceGroupId = NULL;
+    setPPSbyId (decoder, decoder->nextPPS->ppsId, decoder->nextPPS);
+    memcpy (decoder->nextPPS, &pps, sizeof (sPPS));
+    pps.sliceGroupId = NULL;
+    }
+
+  useParameterSet (decoder, slice);
+  if (slice->idrFlag)
+    decoder->idrFrameNum = 0;
+
+  decoder->picHeightInMbs = decoder->coding.frameHeightMbs / (1 + slice->fieldPicFlag);
+  decoder->picSizeInMbs = decoder->coding.picWidthMbs * decoder->picHeightInMbs;
+  decoder->coding.frameSizeMbs = decoder->coding.picWidthMbs * decoder->coding.frameHeightMbs;
+  decoder->coding.structure = slice->structure;
+  initFmo (decoder, slice);
+
+  updatePicNum (slice);
+
+  initDeblock (decoder, slice->mbAffFrameFlag);
+  for (int j = 0; j < decoder->picSliceIndex; j++)
+    if (decoder->sliceList[j]->DFDisableIdc != 1)
+      deblockMode = 0;
+
+  decoder->deblockMode = deblockMode;
+  }
+//}}}
 //{{{
 static void initSlice (sDecoder* decoder, sSlice* slice) {
 
@@ -2357,6 +2356,7 @@ static void copySliceInfo (sSlice* slice, sOldSlice* oldSlice) {
     }
   }
 //}}}
+
 //{{{
 static void decodeSlice (sSlice* slice) {
 
