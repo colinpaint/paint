@@ -971,6 +971,10 @@ public:
           outputPicList (decodedPic);
         else
           cLog::log (LOGERROR, "decoding  failed");
+
+        while (!mPlaying)
+          this_thread::sleep_for (1ms);
+
         } while (ret == DEC_SUCCEED);
 
       finishDecoder (decoder, &decodedPic);
@@ -1043,6 +1047,7 @@ public:
   cApp::cOptions* getOptions() { return mOptions; }
   cFilePlayer* getFilePlayer() { return mFilePlayer; }
   cVideoFrame* getVideoFrame() { return mFilePlayer ? mFilePlayer->getVideoFrame() : mVideoFrame; }
+  void togglePlay() { mPlaying = !mPlaying; }
 
   //{{{
   void addH264File (const string& fileName) {
@@ -1095,6 +1100,10 @@ public:
           outputPicList (decodedPic);
         else
           cLog::log (LOGERROR, "decoding  failed");
+
+        while (!mPlaying)
+          this_thread::sleep_for (1ms);
+
         } while (ret == DEC_SUCCEED);
 
       sDecodedPic* decodedPic;
@@ -1161,6 +1170,7 @@ private:
 
   cApp::cOptions* mOptions;
   cFilePlayer* mFilePlayer = nullptr;
+  bool mPlaying = true;
 
   size_t mOutputFrame = 0;
   array <cSoftVideoFrame*,kVideoFrames> mVideoFrames = { nullptr };

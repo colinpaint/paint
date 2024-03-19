@@ -9,8 +9,9 @@
 //}}}
 
 //{{{
-static void read_comp_coeff_4x4_smb_CABAC (sMacroblock* mb, sSyntaxElement* se, eColorPlane plane, int blockY, int blockX, int start_scan, int64 *cbp_blk)
-{
+static void read_comp_coeff_4x4_smb_CABAC (sMacroblock* mb, sSyntaxElement* se, eColorPlane plane, 
+                                           int blockY, int blockX, int start_scan, int64 *cbp_blk) {
+
   int i,j,k;
   int i0, j0;
   int level = 1;
@@ -22,22 +23,15 @@ static void read_comp_coeff_4x4_smb_CABAC (sMacroblock* mb, sSyntaxElement* se, 
   const byte *pos_scan_4x4 = pos_scan4x4[0];
   int** cof = slice->cof[plane];
 
-  for (j = blockY; j < blockY + BLOCK_SIZE_8x8; j += 4)
-  {
+  for (j = blockY; j < blockY + BLOCK_SIZE_8x8; j += 4) {
     mb->subblockY = j; // position for coeff_count ctx
-
-    for (i = blockX; i < blockX + BLOCK_SIZE_8x8; i += 4)
-    {
+    for (i = blockX; i < blockX + BLOCK_SIZE_8x8; i += 4) {
       mb->subblockX = i; // position for coeff_count ctx
       pos_scan_4x4 = pos_scan4x4[start_scan];
       level = 1;
 
-      if (start_scan == 0)
-      {
-        /*
-        * make distinction between INTRA and INTER coded
-        * luminance coefficients
-        */
+      if (start_scan == 0) {
+        // make distinction between INTRA and INTER coded luminance coefficients
         se->type = (mb->isIntraBlock ? SE_LUM_DC_INTRA : SE_LUM_DC_INTER);
         dataPartition = &(slice->dps[dpMap[se->type]]);
         if (dataPartition->s->errorFlag)
@@ -45,25 +39,20 @@ static void read_comp_coeff_4x4_smb_CABAC (sMacroblock* mb, sSyntaxElement* se, 
         else
           se->reading = readRunLevel_CABAC;
 
-        dataPartition->readSyntaxElement(mb, se, dataPartition);
+        dataPartition->readSyntaxElement (mb, se, dataPartition);
         level = se->value1;
 
-        if (level != 0)    /* leave if level == 0 */
-        {
+        if (level != 0) {
+           /* leave if level == 0 */
           pos_scan_4x4 += 2 * se->value2;
-
           i0 = *pos_scan_4x4++;
           j0 = *pos_scan_4x4++;
-
           *cbp_blk |= i64_power2(j + (i >> 2)) ;
-          //cof[j + j0][i + i0]= rshift_rnd_sf((level * InvLevelScale4x4[j0][i0]) << qp_per, 4);
           cof[j + j0][i + i0]= level;
-          //slice->fcf[plane][j + j0][i + i0]= level;
+          }
         }
-      }
 
-      if (level != 0)
-      {
+      if (level != 0) {
         // make distinction between INTRA and INTER coded luminance coefficients
         se->type = (mb->isIntraBlock ? SE_LUM_AC_INTRA : SE_LUM_AC_INTER);
         dataPartition = &(slice->dps[dpMap[se->type]]);
@@ -73,30 +62,26 @@ static void read_comp_coeff_4x4_smb_CABAC (sMacroblock* mb, sSyntaxElement* se, 
         else
           se->reading = readRunLevel_CABAC;
 
-        for(k = 1; (k < 17) && (level != 0); ++k)
-        {
-          dataPartition->readSyntaxElement(mb, se, dataPartition);
+        for(k = 1; (k < 17) && (level != 0); ++k) {
+          dataPartition->readSyntaxElement (mb, se, dataPartition);
           level = se->value1;
 
-          if (level != 0)    /* leave if level == 0 */
-          {
+          if (level != 0) {   /* leave if level == 0 */
             pos_scan_4x4 += 2 * se->value2;
-
             i0 = *pos_scan_4x4++;
             j0 = *pos_scan_4x4++;
-
             cof[j + j0][i + i0] = level;
-            //slice->fcf[plane][j + j0][i + i0]= level;
+            }
           }
         }
       }
     }
   }
-}
 //}}}
 //{{{
-static void readCompCoef4x4cabac (sMacroblock* mb, sSyntaxElement* se, eColorPlane plane, int (*InvLevelScale4x4)[4], int qp_per, int cbp)
-{
+static void readCompCoef4x4cabac (sMacroblock* mb, sSyntaxElement* se, eColorPlane plane,
+                                  int (*InvLevelScale4x4)[4], int qp_per, int cbp) {
+
   sSlice* slice = mb->slice;
   sDecoder* decoder = mb->decoder;
   int start_scan = IS_I16MB (mb)? 1 : 0;
@@ -111,23 +96,18 @@ static void readCompCoef4x4cabac (sMacroblock* mb, sSyntaxElement* se, eColorPla
   else
     se->context = (IS_I16MB(mb) ? CR_16AC: CR_4x4);
 
-  for (blockY = 0; blockY < MB_BLOCK_SIZE; blockY += BLOCK_SIZE_8x8) /* all modes */
-  {
+  for (blockY = 0; blockY < MB_BLOCK_SIZE; blockY += BLOCK_SIZE_8x8) {
+    /* all modes */
     int** cof = &slice->cof[plane][blockY];
-    for (blockX = 0; blockX < MB_BLOCK_SIZE; blockX += BLOCK_SIZE_8x8)
-    {
-      if (cbp & (1 << ((blockY >> 2) + (blockX >> 3))))  // are there any coeff in current block at all
-      {
+    for (blockX = 0; blockX < MB_BLOCK_SIZE; blockX += BLOCK_SIZE_8x8) {
+      if (cbp & (1 << ((blockY >> 2) + (blockX >> 3)))) {  
+        // are there any coeff in current block at all
         read_comp_coeff_4x4_smb_CABAC (mb, se, plane, blockY, blockX, start_scan, cbp_blk);
-
-        if (start_scan == 0)
-        {
-          for (j = 0; j < BLOCK_SIZE_8x8; ++j)
-          {
-            int *coef = &cof[j][blockX];
+        if (start_scan == 0) {
+          for (j = 0; j < BLOCK_SIZE_8x8; ++j) {
+            int* coef = &cof[j][blockX];
             int jj = j & 0x03;
-            for (i = 0; i < BLOCK_SIZE_8x8; i+=4)
-            {
+            for (i = 0; i < BLOCK_SIZE_8x8; i+=4) {
               if (*coef)
                 *coef = rshift_rnd_sf((*coef * InvLevelScale4x4[jj][0]) << qp_per, 4);
               coef++;
@@ -140,17 +120,14 @@ static void readCompCoef4x4cabac (sMacroblock* mb, sSyntaxElement* se, eColorPla
               if (*coef)
                 *coef = rshift_rnd_sf((*coef * InvLevelScale4x4[jj][3]) << qp_per, 4);
               coef++;
+              }
             }
           }
-        }
-        else
-        {
-          for (j = 0; j < BLOCK_SIZE_8x8; ++j)
-          {
-            int *coef = &cof[j][blockX];
+        else {
+          for (j = 0; j < BLOCK_SIZE_8x8; ++j) {
+            int* coef = &cof[j][blockX];
             int jj = j & 0x03;
-            for (i = 0; i < BLOCK_SIZE_8x8; i += 4)
-            {
+            for (i = 0; i < BLOCK_SIZE_8x8; i += 4) {
               if ((jj != 0) && *coef)
                 *coef= rshift_rnd_sf((*coef * InvLevelScale4x4[jj][0]) << qp_per, 4);
               coef++;
@@ -163,13 +140,13 @@ static void readCompCoef4x4cabac (sMacroblock* mb, sSyntaxElement* se, eColorPla
               if (*coef)
                 *coef= rshift_rnd_sf((*coef * InvLevelScale4x4[jj][3]) << qp_per, 4);
               coef++;
+              }
             }
           }
         }
       }
     }
   }
-}
 //}}}
 //{{{
 static void read_comp_coeff_4x4_CABAC_ls (sMacroblock* mb, sSyntaxElement* se, eColorPlane plane, int (*InvLevelScale4x4)[4], int qp_per, int cbp)
@@ -665,7 +642,7 @@ static void read_CBP_and_coeffs_from_NAL_CABAC_420 (sMacroblock* mb) {
 
               cof[(j<<2) + j0][(i<<2) + i0] = rshift_rnd_sf((level * InvLevelScale4x4[j0][i0])<<qp_per_uv[uv], 4);
               }
-            } 
+            }
           }
         }
       }
@@ -699,7 +676,7 @@ static void read_CBP_and_coeffs_from_NAL_CABAC_420 (sMacroblock* mb) {
             }
           }
         }
-      } 
+      }
     }
   }
 //}}}
