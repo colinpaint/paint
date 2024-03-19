@@ -830,13 +830,11 @@ typedef struct  Decoder {
 
   int picDiskUnitSize;
 
-  // coding duplicates
+  // sCoding duplicates
   int width;
   int height;
   int widthCr;
   int heightCr;
-  short bitDepthLuma;
-  short bitDepthChroma;
   int mbCrSizeX;
   int mbCrSizeY;
   int mbCrSizeXblock;
@@ -845,6 +843,8 @@ typedef struct  Decoder {
   int mbSize[3][2];
   int mbSizeBlock[3][2];
   int mbSizeShift[3][2];
+  short bitDepthLuma;
+  short bitDepthChroma;
 
   // sCoding
   sCoding      coding;
