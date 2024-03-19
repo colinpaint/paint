@@ -437,14 +437,14 @@ static void readIPCMcoeffs (sSlice* slice, sDataPartition* dataPartition) {
       }
 
     //read luma and chroma IPCM coefficients
-    se.len = decoder->bitdepthLuma;
+    se.len = decoder->bitDepthLuma;
     for (int i = 0; i < MB_BLOCK_SIZE;++i)
       for (int j = 0; j < MB_BLOCK_SIZE;++j) {
         readsSyntaxElement_FLC (&se, dataPartition->s);
         slice->cof[0][i][j] = se.value1;
         }
 
-    se.len = decoder->bitdepthChroma;
+    se.len = decoder->bitDepthChroma;
     sPicture* picture = slice->picture;
     if ((picture->chromaFormatIdc != YUV400) && (decoder->coding.sepColourPlaneFlag == 0)) {
       for (int i = 0; i < decoder->mbCrSizeY; ++i)

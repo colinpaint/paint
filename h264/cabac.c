@@ -1803,7 +1803,7 @@ void readIPCMcabac (sSlice* slice, sDataPartition* dataPartition) {
   int val = 0;
 
   int bits_read = 0;
-  int bitOffset, bitdepth;
+  int bitOffset, bitDepth;
   int uv, i, j;
 
   while (dep->DbitsLeft >= 8) {
@@ -1815,24 +1815,24 @@ void readIPCMcabac (sSlice* slice, sDataPartition* dataPartition) {
   bitOffset = (*dep->Dcodestrm_len) << 3;
 
   // read luma values
-  bitdepth = decoder->bitdepthLuma;
+  bitDepth = decoder->bitDepthLuma;
   for ( i = 0; i < MB_BLOCK_SIZE; ++i) {
     for(j = 0; j < MB_BLOCK_SIZE; ++j) {
-      bits_read += GetBits(buf, bitOffset, &val, BitstreamLengthInBits, bitdepth);
+      bits_read += GetBits(buf, bitOffset, &val, BitstreamLengthInBits, bitDepth);
       slice->cof[0][i][j] = val;
-      bitOffset += bitdepth;
+      bitOffset += bitDepth;
       }
     }
 
   // read chroma values
-  bitdepth = decoder->bitdepthChroma;
+  bitDepth = decoder->bitDepthChroma;
   if ((picture->chromaFormatIdc != YUV400) && (decoder->coding.sepColourPlaneFlag == 0)) {
     for (uv = 1; uv < 3; ++uv) {
       for(i = 0; i < decoder->mbCrSizeY; ++i) {
         for(j = 0; j < decoder->mbCrSizeX; ++j) {
-          bits_read += GetBits(buf, bitOffset, &val, BitstreamLengthInBits, bitdepth);
+          bits_read += GetBits(buf, bitOffset, &val, BitstreamLengthInBits, bitDepth);
           slice->cof[uv][i][j] = val;
-          bitOffset += bitdepth;
+          bitOffset += bitDepth;
           }
          }
       }

@@ -55,14 +55,14 @@ static void setCodingParam (sDecoder* decoder, sSPS* sps) {
     decoder->coding.maxVmvR = 512 * 4; // 512 pixels in quarter pixels
 
   // Fidelity Range Extensions stuff (part 1)
-  decoder->coding.bitdepthChroma = 0;
+  decoder->coding.bitDepthChroma = 0;
   decoder->coding.widthCr = 0;
   decoder->coding.heightCr = 0;
-  decoder->coding.bitdepthLuma = (short)(sps->bit_depth_luma_minus8 + 8);
-  decoder->coding.bitdepthScale[0] = 1 << sps->bit_depth_luma_minus8;
+  decoder->coding.bitDepthLuma = (short)(sps->bit_depth_luma_minus8 + 8);
+  decoder->coding.bitDepthScale[0] = 1 << sps->bit_depth_luma_minus8;
   if (sps->chromaFormatIdc != YUV400) {
-    decoder->coding.bitdepthChroma = (short) (sps->bit_depth_chroma_minus8 + 8);
-    decoder->coding.bitdepthScale[1] = 1 << sps->bit_depth_chroma_minus8;
+    decoder->coding.bitDepthChroma = (short) (sps->bit_depth_chroma_minus8 + 8);
+    decoder->coding.bitDepthScale[1] = 1 << sps->bit_depth_chroma_minus8;
     }
 
   decoder->coding.maxFrameNum = 1 << (sps->log2_max_frame_num_minus4+4);
@@ -98,24 +98,24 @@ static void setCodingParam (sDecoder* decoder, sSPS* sps) {
     decoder->coding.iChromaPadY = decoder->coding.iLumaPadY;
     }
 
-  //pel bitdepth init
-  decoder->coding.bitdepthLumaQpScale = 6 * (decoder->coding.bitdepthLuma - 8);
+  //pel bitDepth init
+  decoder->coding.bitDepthLumaQpScale = 6 * (decoder->coding.bitDepthLuma - 8);
 
-  if (decoder->coding.bitdepthLuma > decoder->coding.bitdepthChroma || sps->chromaFormatIdc == YUV400)
-    decoder->coding.picUnitBitSizeDisk = (decoder->coding.bitdepthLuma > 8)? 16:8;
+  if (decoder->coding.bitDepthLuma > decoder->coding.bitDepthChroma || sps->chromaFormatIdc == YUV400)
+    decoder->coding.picUnitBitSizeDisk = (decoder->coding.bitDepthLuma > 8)? 16:8;
   else
-    decoder->coding.picUnitBitSizeDisk = (decoder->coding.bitdepthChroma > 8)? 16:8;
-  decoder->coding.dcPredValueComp[0] = 1 << (decoder->coding.bitdepthLuma - 1);
-  decoder->coding.maxPelValueComp[0] = (1 << decoder->coding.bitdepthLuma) - 1;
+    decoder->coding.picUnitBitSizeDisk = (decoder->coding.bitDepthChroma > 8)? 16:8;
+  decoder->coding.dcPredValueComp[0] = 1 << (decoder->coding.bitDepthLuma - 1);
+  decoder->coding.maxPelValueComp[0] = (1 << decoder->coding.bitDepthLuma) - 1;
   decoder->coding.mbSize[0][0] = decoder->coding.mbSize[0][1] = MB_BLOCK_SIZE;
 
   if (sps->chromaFormatIdc != YUV400) {
     // for chrominance part
-    decoder->coding.bitdepthChromaQpScale = 6 * (decoder->coding.bitdepthChroma - 8);
-    decoder->coding.dcPredValueComp[1] = (1 << (decoder->coding.bitdepthChroma - 1));
+    decoder->coding.bitDepthChromaQpScale = 6 * (decoder->coding.bitDepthChroma - 8);
+    decoder->coding.dcPredValueComp[1] = (1 << (decoder->coding.bitDepthChroma - 1));
     decoder->coding.dcPredValueComp[2] = decoder->coding.dcPredValueComp[1];
-    decoder->coding.maxPelValueComp[1] = (1 << decoder->coding.bitdepthChroma) - 1;
-    decoder->coding.maxPelValueComp[2] = (1 << decoder->coding.bitdepthChroma) - 1;
+    decoder->coding.maxPelValueComp[1] = (1 << decoder->coding.bitDepthChroma) - 1;
+    decoder->coding.maxPelValueComp[2] = (1 << decoder->coding.bitDepthChroma) - 1;
     decoder->coding.numBlock8x8uv = (1 << sps->chromaFormatIdc) & (~(0x1));
     decoder->coding.numUvBlocks = (decoder->coding.numBlock8x8uv >> 1);
     decoder->coding.numCdcCoeff = (decoder->coding.numBlock8x8uv << 1);
@@ -129,7 +129,7 @@ static void setCodingParam (sDecoder* decoder, sSPS* sps) {
     decoder->coding.totalScale = decoder->coding.shiftpelX + decoder->coding.shiftpelY;
     }
   else {
-    decoder->coding.bitdepthChromaQpScale = 0;
+    decoder->coding.bitDepthChromaQpScale = 0;
     decoder->coding.maxPelValueComp[1] = 0;
     decoder->coding.maxPelValueComp[2] = 0;
     decoder->coding.numBlock8x8uv = 0;
@@ -211,9 +211,9 @@ static void setFormatInfo (sDecoder* decoder, sSPS* sps, sFrameFormat* source, s
   output->mbWidth = output->width[0]  / MB_BLOCK_SIZE;
   output->mbHeight = output->height[0] / MB_BLOCK_SIZE;
 
-  output->bitDepth[0] = source->bitDepth[0] = decoder->bitdepthLuma;
-  output->bitDepth[1] = source->bitDepth[1] = decoder->bitdepthChroma;
-  output->bitDepth[2] = source->bitDepth[2] = decoder->bitdepthChroma;
+  output->bitDepth[0] = source->bitDepth[0] = decoder->bitDepthLuma;
+  output->bitDepth[1] = source->bitDepth[1] = decoder->bitDepthChroma;
+  output->bitDepth[2] = source->bitDepth[2] = decoder->bitDepthChroma;
   output->picDiskUnitSize = (imax(output->bitDepth[0], output->bitDepth[1]) > 8) ? 16 : 8;
   output->pic_unit_size_shift3 = output->picDiskUnitSize >> 3;
 

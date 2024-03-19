@@ -1109,12 +1109,12 @@ static void read_CBP_and_coeffs_from_NAL_CABAC_444 (sMacroblock* mb)
 
     updateQp(mb, slice->qp);
 
-    qp_per = decoder->qpPerMatrix[ (slice->qp + decoder->bitdepthLumaQpScale) ];
-    qp_rem = decoder->qpRemMatrix[ (slice->qp + decoder->bitdepthLumaQpScale) ];
+    qp_per = decoder->qpPerMatrix[ (slice->qp + decoder->bitDepthLumaQpScale) ];
+    qp_rem = decoder->qpRemMatrix[ (slice->qp + decoder->bitDepthLumaQpScale) ];
 
     //init constants for every chroma qp offset
-    qp_per_uv[uv] = decoder->qpPerMatrix[ (mb->qpc[uv] + decoder->bitdepthChromaQpScale) ];
-    qp_rem_uv[uv] = decoder->qpRemMatrix[ (mb->qpc[uv] + decoder->bitdepthChromaQpScale) ];
+    qp_per_uv[uv] = decoder->qpPerMatrix[ (mb->qpc[uv] + decoder->bitDepthChromaQpScale) ];
+    qp_rem_uv[uv] = decoder->qpRemMatrix[ (mb->qpc[uv] + decoder->bitDepthChromaQpScale) ];
 
     InvLevelScale4x4 = intra? slice->InvLevelScale4x4_Intra[uv + 1][qp_rem_uv[uv]] : slice->InvLevelScale4x4_Inter[uv + 1][qp_rem_uv[uv]];
 
@@ -1338,8 +1338,8 @@ static void read_CBP_and_coeffs_from_NAL_CABAC_422 (sMacroblock* mb)
         int** imgcof = slice->cof[uv + 1];
         int m3[2][4] = {{0,0,0,0},{0,0,0,0}};
         int m4[2][4] = {{0,0,0,0},{0,0,0,0}};
-        int qp_per_uv_dc = decoder->qpPerMatrix[ (mb->qpc[uv] + 3 + decoder->bitdepthChromaQpScale) ];       //for YUV422 only
-        int qp_rem_uv_dc = decoder->qpRemMatrix[ (mb->qpc[uv] + 3 + decoder->bitdepthChromaQpScale) ];       //for YUV422 only
+        int qp_per_uv_dc = decoder->qpPerMatrix[ (mb->qpc[uv] + 3 + decoder->bitDepthChromaQpScale) ];       //for YUV422 only
+        int qp_rem_uv_dc = decoder->qpRemMatrix[ (mb->qpc[uv] + 3 + decoder->bitDepthChromaQpScale) ];       //for YUV422 only
         if (intra)
           InvLevelScale4x4 = slice->InvLevelScale4x4_Intra[uv + 1][qp_rem_uv_dc];
         else

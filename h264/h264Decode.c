@@ -194,24 +194,24 @@ void freeDataPartitions (sDataPartition* dataPartitions, int n) {
 //{{{
 void initFrext (sDecoder* decoder) {
 
-  // pel bitdepth init
-  decoder->bitdepthLumaQpScale = 6 * (decoder->bitdepthLuma - 8);
+  // pel bitDepth init
+  decoder->bitDepthLumaQpScale = 6 * (decoder->bitDepthLuma - 8);
 
-  if(decoder->bitdepthLuma > decoder->bitdepthChroma || decoder->activeSPS->chromaFormatIdc == YUV400)
-    decoder->picUnitBitSizeDisk = (decoder->bitdepthLuma > 8)? 16:8;
+  if(decoder->bitDepthLuma > decoder->bitDepthChroma || decoder->activeSPS->chromaFormatIdc == YUV400)
+    decoder->picUnitBitSizeDisk = (decoder->bitDepthLuma > 8)? 16:8;
   else
-    decoder->picUnitBitSizeDisk = (decoder->bitdepthChroma > 8)? 16:8;
-  decoder->coding.dcPredValueComp[0] = 1<<(decoder->bitdepthLuma - 1);
-  decoder->coding.maxPelValueComp[0] = (1<<decoder->bitdepthLuma) - 1;
+    decoder->picUnitBitSizeDisk = (decoder->bitDepthChroma > 8)? 16:8;
+  decoder->coding.dcPredValueComp[0] = 1<<(decoder->bitDepthLuma - 1);
+  decoder->coding.maxPelValueComp[0] = (1<<decoder->bitDepthLuma) - 1;
   decoder->mbSize[0][0] = decoder->mbSize[0][1] = MB_BLOCK_SIZE;
 
   if (decoder->activeSPS->chromaFormatIdc != YUV400) {
     // for chrominance part
-    decoder->bitdepthChromaQpScale = 6 * (decoder->bitdepthChroma - 8);
-    decoder->coding.dcPredValueComp[1] = (1 << (decoder->bitdepthChroma - 1));
+    decoder->bitDepthChromaQpScale = 6 * (decoder->bitDepthChroma - 8);
+    decoder->coding.dcPredValueComp[1] = (1 << (decoder->bitDepthChroma - 1));
     decoder->coding.dcPredValueComp[2] = decoder->coding.dcPredValueComp[1];
-    decoder->coding.maxPelValueComp[1] = (1 << decoder->bitdepthChroma) - 1;
-    decoder->coding.maxPelValueComp[2] = (1 << decoder->bitdepthChroma) - 1;
+    decoder->coding.maxPelValueComp[1] = (1 << decoder->bitDepthChroma) - 1;
+    decoder->coding.maxPelValueComp[2] = (1 << decoder->bitDepthChroma) - 1;
     decoder->numBlock8x8uv = (1 << decoder->activeSPS->chromaFormatIdc) & (~(0x1));
     decoder->numUvBlocks = (decoder->numBlock8x8uv >> 1);
     decoder->numCdcCoeff = (decoder->numBlock8x8uv << 1);
@@ -225,7 +225,7 @@ void initFrext (sDecoder* decoder) {
     decoder->coding.totalScale = decoder->coding.shiftpelX + decoder->coding.shiftpelY;
     }
   else {
-    decoder->bitdepthChromaQpScale = 0;
+    decoder->bitDepthChromaQpScale = 0;
     decoder->coding.maxPelValueComp[1] = 0;
     decoder->coding.maxPelValueComp[2] = 0;
     decoder->numBlock8x8uv = 0;
@@ -414,15 +414,15 @@ void setGlobalCodingProgram (sDecoder* decoder) {
 
   sCoding* coding = &decoder->coding;
 
-  decoder->bitdepthChroma = 0;
+  decoder->bitDepthChroma = 0;
   decoder->widthCr = 0;
   decoder->heightCr = 0;
 
   // Fidelity Range Extensions stuff (part 1)
-  decoder->bitdepthLuma = coding->bitdepthLuma;
-  decoder->bitdepthScale[0] = coding->bitdepthScale[0];
-  decoder->bitdepthChroma = coding->bitdepthChroma;
-  decoder->bitdepthScale[1] = coding->bitdepthScale[1];
+  decoder->bitDepthLuma = coding->bitDepthLuma;
+  decoder->bitDepthScale[0] = coding->bitDepthScale[0];
+  decoder->bitDepthChroma = coding->bitDepthChroma;
+  decoder->bitDepthScale[1] = coding->bitDepthScale[1];
 
   decoder->width = coding->width;
   decoder->height = coding->height;

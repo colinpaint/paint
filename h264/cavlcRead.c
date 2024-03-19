@@ -1089,8 +1089,8 @@ static void read_CBP_and_coeffs_from_NAL_CAVLC_422 (sMacroblock* mb) {
         int** imgcof = slice->cof[PLANE_U + uv];
         int m3[2][4] = {{0,0,0,0},{0,0,0,0}};
         int m4[2][4] = {{0,0,0,0},{0,0,0,0}};
-        int qp_per_uv_dc = decoder->qpPerMatrix[ (mb->qpc[uv] + 3 + decoder->bitdepthChromaQpScale) ];       //for YUV422 only
-        int qp_rem_uv_dc = decoder->qpRemMatrix[ (mb->qpc[uv] + 3 + decoder->bitdepthChromaQpScale) ];       //for YUV422 only
+        int qp_per_uv_dc = decoder->qpPerMatrix[ (mb->qpc[uv] + 3 + decoder->bitDepthChromaQpScale) ];       //for YUV422 only
+        int qp_rem_uv_dc = decoder->qpRemMatrix[ (mb->qpc[uv] + 3 + decoder->bitDepthChromaQpScale) ];       //for YUV422 only
         if (intra)
           InvLevelScale4x4 = slice->InvLevelScale4x4_Intra[PLANE_U + uv][qp_rem_uv_dc];
         else

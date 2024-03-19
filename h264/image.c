@@ -1387,7 +1387,7 @@ static void pred_weight_table (sSlice* slice) {
     if (luma_weight_flag_l0) {
       slice->wpWeight[LIST_0][i][0] = readSeV ("SLC luma_weight_l0", s);
       slice->wpOffset[LIST_0][i][0] = readSeV ("SLC luma_offset_l0", s);
-      slice->wpOffset[LIST_0][i][0] = slice->wpOffset[LIST_0][i][0]<<(decoder->bitdepthLuma - 8);
+      slice->wpOffset[LIST_0][i][0] = slice->wpOffset[LIST_0][i][0]<<(decoder->bitDepthLuma - 8);
       }
     else {
       slice->wpWeight[LIST_0][i][0] = 1 << slice->lumaLog2weightDenom;
@@ -1400,7 +1400,7 @@ static void pred_weight_table (sSlice* slice) {
         if (chroma_weight_flag_l0) {
           slice->wpWeight[LIST_0][i][j] = readSeV("SLC chroma_weight_l0", s);
           slice->wpOffset[LIST_0][i][j] = readSeV("SLC chroma_offset_l0", s);
-          slice->wpOffset[LIST_0][i][j] = slice->wpOffset[LIST_0][i][j]<<(decoder->bitdepthChroma-8);
+          slice->wpOffset[LIST_0][i][j] = slice->wpOffset[LIST_0][i][j]<<(decoder->bitDepthChroma-8);
           }
         else {
           slice->wpWeight[LIST_0][i][j] = 1<<slice->chromaLog2weightDenom;
@@ -1417,7 +1417,7 @@ static void pred_weight_table (sSlice* slice) {
       if (luma_weight_flag_l1) {
         slice->wpWeight[LIST_1][i][0] = readSeV ("SLC luma_weight_l1", s);
         slice->wpOffset[LIST_1][i][0] = readSeV ("SLC luma_offset_l1", s);
-        slice->wpOffset[LIST_1][i][0] = slice->wpOffset[LIST_1][i][0]<<(decoder->bitdepthLuma-8);
+        slice->wpOffset[LIST_1][i][0] = slice->wpOffset[LIST_1][i][0]<<(decoder->bitDepthLuma-8);
         }
       else {
         slice->wpWeight[LIST_1][i][0] = 1<<slice->lumaLog2weightDenom;
@@ -1430,7 +1430,7 @@ static void pred_weight_table (sSlice* slice) {
           if (chroma_weight_flag_l1) {
             slice->wpWeight[LIST_1][i][j] = readSeV("SLC chroma_weight_l1", s);
             slice->wpOffset[LIST_1][i][j] = readSeV("SLC chroma_offset_l1", s);
-            slice->wpOffset[LIST_1][i][j] = slice->wpOffset[LIST_1][i][j]<<(decoder->bitdepthChroma-8);
+            slice->wpOffset[LIST_1][i][j] = slice->wpOffset[LIST_1][i][j]<<(decoder->bitDepthChroma-8);
             }
           else {
             slice->wpWeight[LIST_1][i][j] = 1<<slice->chromaLog2weightDenom;

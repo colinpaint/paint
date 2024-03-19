@@ -6127,7 +6127,7 @@ static void *stbi__psd_load(stbi__context *s, int *x, int *y, int *comp, int req
    int pixelCount;
    int channelCount, compression;
    int channel, i;
-   int bitdepth;
+   int bitDepth;
    int w,h;
    stbi_uc *out;
    STBI_NOTUSED(ri);
@@ -6156,8 +6156,8 @@ static void *stbi__psd_load(stbi__context *s, int *x, int *y, int *comp, int req
    if (w > STBI_MAX_DIMENSIONS) return stbi__errpuc("too large","Very large image (corrupt?)");
 
    // Make sure the depth is 8 bits.
-   bitdepth = stbi__get16be(s);
-   if (bitdepth != 8 && bitdepth != 16)
+   bitDepth = stbi__get16be(s);
+   if (bitDepth != 8 && bitDepth != 16)
       return stbi__errpuc("unsupported bit depth", "PSD bit depth is not 8 or 16 bit");
 
    // Make sure the color mode is RGB.
@@ -6196,7 +6196,7 @@ static void *stbi__psd_load(stbi__context *s, int *x, int *y, int *comp, int req
 
    // Create the destination image.
 
-   if (!compression && bitdepth == 16 && bpc == 16) {
+   if (!compression && bitDepth == 16 && bpc == 16) {
       out = (stbi_uc *) stbi__malloc_mad3(8, w, h, 0);
       ri->bits_per_channel = 16;
    } else
@@ -6248,7 +6248,7 @@ static void *stbi__psd_load(stbi__context *s, int *x, int *y, int *comp, int req
       for (channel = 0; channel < 4; channel++) {
          if (channel >= channelCount) {
             // Fill this channel with default data.
-            if (bitdepth == 16 && bpc == 16) {
+            if (bitDepth == 16 && bpc == 16) {
                stbi__uint16 *q = ((stbi__uint16 *) out) + channel;
                stbi__uint16 val = channel == 3 ? 65535 : 0;
                for (i = 0; i < pixelCount; i++, q += 4)
@@ -6266,7 +6266,7 @@ static void *stbi__psd_load(stbi__context *s, int *x, int *y, int *comp, int req
                   *q = (stbi__uint16) stbi__get16be(s);
             } else {
                stbi_uc *p = out+channel;
-               if (bitdepth == 16) {  // input bpc
+               if (bitDepth == 16) {  // input bpc
                   for (i = 0; i < pixelCount; i++, p += 4)
                      *p = (stbi_uc) (stbi__get16be(s) >> 8);
                } else {
