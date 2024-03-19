@@ -2699,7 +2699,6 @@ void decRefPicMarking (sDecoder* decoder, sBitStream* s, sSlice* slice) {
 //{{{
 void decodePOC (sDecoder* decoder, sSlice* slice) {
 
-  // for POC mode 0:
   sSPS* activeSPS = decoder->activeSPS;
   unsigned int maxPicOrderCntLsb = (1<<(activeSPS->log2_max_pic_order_cnt_lsb_minus4+4));
 
@@ -2746,7 +2745,7 @@ void decodePOC (sDecoder* decoder, sSlice* slice) {
       slice->framePoc = slice->thisPoc;
 
       decoder->thisPoc = slice->thisPoc;
-      decoder->PreviousFrameNum = slice->frameNum;
+      decoder->previousFrameNum = slice->frameNum;
 
       if (slice->refId) {
         decoder->PrevPicOrderCntLsb = slice->picOrderCountLsb;
@@ -2760,34 +2759,33 @@ void decodePOC (sDecoder* decoder, sSlice* slice) {
       // 1st
       if (slice->idrFlag) {
         // first pixelPos of IDRGOP,
-        decoder->FrameNumOffset = 0;
+        decoder->frameNumOffset = 0;
         if (slice->frameNum)
-          error ("frameNum not equal to zero in IDR picture");
+          error ("frameNum nonZero IDR picture");
         }
       else {
         if (decoder->lastHasMmco5) {
-          decoder->PreviousFrameNumOffset = 0;
-          decoder->PreviousFrameNum = 0;
+          decoder->previousFrameNumOffset = 0;
+          decoder->previousFrameNum = 0;
           }
-        if (slice->frameNum<decoder->PreviousFrameNum)
-          // not first pixelPos of IDRGOP
-          decoder->FrameNumOffset = decoder->PreviousFrameNumOffset + decoder->coding.maxFrameNum;
+        if (slice->frameNum<decoder->previousFrameNum) // not first pixelPos of IDRGOP
+          decoder->frameNumOffset = decoder->previousFrameNumOffset + decoder->coding.maxFrameNum;
         else
-          decoder->FrameNumOffset = decoder->PreviousFrameNumOffset;
+          decoder->frameNumOffset = decoder->previousFrameNumOffset;
         }
 
       // 2nd
       if (activeSPS->numRefFramesPocCycle)
-        slice->AbsFrameNum = decoder->FrameNumOffset+slice->frameNum;
+        slice->AbsFrameNum = decoder->frameNumOffset + slice->frameNum;
       else
-        slice->AbsFrameNum=0;
-      if ((!slice->refId) && slice->AbsFrameNum > 0)
+        slice->AbsFrameNum = 0;
+      if (!slice->refId && (slice->AbsFrameNum > 0))
         slice->AbsFrameNum--;
 
       // 3rd
       decoder->expectedDeltaPerPOCcycle = 0;
       if (activeSPS->numRefFramesPocCycle)
-        for (int i = 0; i < (int)activeSPS->numRefFramesPocCycle; i++)
+        for (unsigned i = 0; i < activeSPS->numRefFramesPocCycle; i++)
           decoder->expectedDeltaPerPOCcycle += activeSPS->offset_for_ref_frame[i];
 
       if (slice->AbsFrameNum) {
@@ -2795,7 +2793,7 @@ void decodePOC (sDecoder* decoder, sSlice* slice) {
         decoder->frameNumPOCcycle = (slice->AbsFrameNum-1) % activeSPS->numRefFramesPocCycle;
         decoder->expectedPOC =
           decoder->POCcycleCount*decoder->expectedDeltaPerPOCcycle;
-        for (int i = 0; i <= (int)decoder->frameNumPOCcycle; i++)
+        for (int i = 0; i <= decoder->frameNumPOCcycle; i++)
           decoder->expectedPOC += activeSPS->offset_for_ref_frame[i];
         }
       else
@@ -2808,7 +2806,7 @@ void decodePOC (sDecoder* decoder, sSlice* slice) {
         // frame pixelPos
         slice->topPoc = decoder->expectedPOC + slice->deltaPicOrderCount[0];
         slice->botPoc = slice->topPoc + activeSPS->offsetTopBotField + slice->deltaPicOrderCount[1];
-        slice->thisPoc = slice->framePoc = (slice->topPoc < slice->botPoc)? slice->topPoc : slice->botPoc;
+        slice->thisPoc = slice->framePoc = (slice->topPoc < slice->botPoc) ? slice->topPoc : slice->botPoc;
         }
       else if (!slice->botFieldFlag) // top field
         slice->thisPoc = slice->topPoc = decoder->expectedPOC + slice->deltaPicOrderCount[0];
@@ -2816,31 +2814,31 @@ void decodePOC (sDecoder* decoder, sSlice* slice) {
         slice->thisPoc = slice->botPoc = decoder->expectedPOC + activeSPS->offsetTopBotField + slice->deltaPicOrderCount[0];
       slice->framePoc=slice->thisPoc;
 
-      decoder->PreviousFrameNum=slice->frameNum;
-      decoder->PreviousFrameNumOffset = decoder->FrameNumOffset;
+      decoder->previousFrameNum = slice->frameNum;
+      decoder->previousFrameNumOffset = decoder->frameNumOffset;
       break;
     //}}}
     //{{{
     case 2: // POC MODE 2
       if (slice->idrFlag) {
         // IDR picture, first pixelPos of IDRGOP,
-        decoder->FrameNumOffset = 0;
+        decoder->frameNumOffset = 0;
         slice->thisPoc = slice->framePoc = slice->topPoc = slice->botPoc = 0;
         if (slice->frameNum)
           error ("frameNum not equal to zero in IDR picture");
         }
       else {
         if (decoder->lastHasMmco5) {
-          decoder->PreviousFrameNum = 0;
-          decoder->PreviousFrameNumOffset = 0;
+          decoder->previousFrameNum = 0;
+          decoder->previousFrameNumOffset = 0;
           }
 
-        if (slice->frameNum<decoder->PreviousFrameNum)
-          decoder->FrameNumOffset = decoder->PreviousFrameNumOffset + decoder->coding.maxFrameNum;
+        if (slice->frameNum<decoder->previousFrameNum)
+          decoder->frameNumOffset = decoder->previousFrameNumOffset + decoder->coding.maxFrameNum;
         else
-          decoder->FrameNumOffset = decoder->PreviousFrameNumOffset;
+          decoder->frameNumOffset = decoder->previousFrameNumOffset;
 
-        slice->AbsFrameNum = decoder->FrameNumOffset+slice->frameNum;
+        slice->AbsFrameNum = decoder->frameNumOffset+slice->frameNum;
         if (!slice->refId)
           slice->thisPoc = 2*slice->AbsFrameNum - 1;
         else
@@ -2854,8 +2852,8 @@ void decodePOC (sDecoder* decoder, sSlice* slice) {
           slice->botPoc = slice->framePoc = slice->thisPoc;
         }
 
-      decoder->PreviousFrameNum = slice->frameNum;
-      decoder->PreviousFrameNumOffset = decoder->FrameNumOffset;
+      decoder->previousFrameNum = slice->frameNum;
+      decoder->previousFrameNumOffset = decoder->frameNumOffset;
       break;
     //}}}
     //{{{

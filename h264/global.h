@@ -890,10 +890,10 @@ typedef struct  Decoder {
 
   // for POC mode 1:
   signed int   expectedPOC, POCcycleCount, frameNumPOCcycle;
-  unsigned int PreviousFrameNum, FrameNumOffset;
+  unsigned int previousFrameNum, frameNumOffset;
   int          expectedDeltaPerPOCcycle;
   int          thisPoc;
-  int          PreviousFrameNumOffset;
+  int          previousFrameNumOffset;
 
   unsigned int picHeightInMbs;
   unsigned int picSizeInMbs;

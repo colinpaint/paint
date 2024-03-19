@@ -40,7 +40,7 @@ static void updateMaxValue (sFrameFormat* format) {
   }
 //}}}
 //{{{
-static void setCodingParam (sSPS* sps, sDecoder* decoder) {
+static void setCodingParam (sDecoder* decoder, sSPS* sps) {
 
   // maximum vertical motion vector range in luma quarter pixel units
   decoder->coding.profileIdc = sps->profileIdc;
@@ -155,7 +155,7 @@ static void setCodingParam (sSPS* sps, sDecoder* decoder) {
   }
 //}}}
 //{{{
-static void setFormatInfo (sSPS* sps, sDecoder* decoder, sFrameFormat* source, sFrameFormat* output) {
+static void setFormatInfo (sDecoder* decoder, sSPS* sps, sFrameFormat* source, sFrameFormat* output) {
 
   static const int SubWidthC[4] = { 1, 2, 2, 1};
   static const int SubHeightC[4] = { 1, 2, 1, 1};
@@ -616,7 +616,7 @@ void activateSPS (sDecoder* decoder, sSPS* sps) {
     decoder->activeSPS = sps;
 
     if (isBLprofile (sps->profileIdc) && !decoder->dpb->initDone)
-      setCodingParam (sps, decoder);
+      setCodingParam (decoder, sps);
     setGlobalCodingProgram (decoder);
 
     initGlobalBuffers (decoder);
@@ -633,7 +633,7 @@ void activateSPS (sDecoder* decoder, sSPS* sps) {
       }
     }
 
-  setFormatInfo (sps, decoder, &decoder->param.source, &decoder->param.output);
+  setFormatInfo (decoder, sps, &decoder->param.source, &decoder->param.output);
   }
 //}}}
 
