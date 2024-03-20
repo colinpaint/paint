@@ -6,6 +6,50 @@
 //}}}
 
 //{{{
+static void dumpNalu (sNalu* nalu) {
+
+  switch (nalu->unitType) {
+    case NALU_TYPE_IDR:
+      printf ("IDR");
+      break;
+    case NALU_TYPE_SLICE:
+      printf ("SLC");
+      break;
+    case NALU_TYPE_SPS:
+      printf ("SPS");
+      break;
+    case NALU_TYPE_PPS:
+      printf ("PPS");
+      break;
+    case NALU_TYPE_SEI:
+      printf ("SEI");
+      break;
+    case NALU_TYPE_DPA:
+      printf ("DPA");
+      break;
+    case NALU_TYPE_DPB:
+      printf ("DPB");
+      break;
+    case NALU_TYPE_DPC:
+      printf ("DPC");
+      break;
+    case NALU_TYPE_AUD:
+      printf ("AUD");
+      break;
+    case NALU_TYPE_FILL:
+      printf ("FIL");
+      break;
+    default:
+      break;
+    }
+
+  printf (" %c:%d:%d:%d:%d\n",
+          nalu->startCodeLen == 4 ? 'l':'s', nalu->forbiddenBit, nalu->refId, nalu->unitType, nalu->len);
+
+  }
+//}}}
+
+//{{{
 sAnnexB* allocAnnexB (sDecoder* decoder) {
 
   sAnnexB* annexB = (sAnnexB*)calloc (1, sizeof(sAnnexB));
@@ -233,9 +277,7 @@ static int getNALU (sAnnexB* annexB, sDecoder* decoder, sNalu* nalu) {
       annexB->nextStartCodeBytes = 0;
 
       if (decoder->param.naluDebug)
-        printf ("last %sNALU %d::%d:%d len:%d, \n",
-                nalu->startCodeLen == 4 ? "l":"s",
-                nalu->forbiddenBit, nalu->refId, nalu->unitType, nalu->len);
+        dumpNalu (nalu);
 
       return (naluBufCount - 1);
       }
@@ -282,13 +324,7 @@ static int getNALU (sAnnexB* annexB, sDecoder* decoder, sNalu* nalu) {
   nalu->lostPackets = 0;
 
   if (decoder->param.naluDebug)
-    printf ("%sNALU %d::%d:%d len:%d, \n",
-            nalu->startCodeLen == 4 ? "l":"s",
-            nalu->forbiddenBit,
-            nalu->refId,
-            nalu->unitType,
-            nalu->len
-            );
+    dumpNalu (nalu);
 
   return naluBufCount;
   }
