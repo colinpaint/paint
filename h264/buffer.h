@@ -316,6 +316,6 @@ extern void reorderRefPicList (sSlice* slice, int curList);
 extern void init_mbaff_lists (sDecoder* decoder, sSlice* slice);
 extern sPicture* get_short_term_pic (sSlice* slice, sDPB* dpb, int picNum);
 
-extern void alloc_ref_pic_list_reordering_buffer (sSlice* slice);
+extern void allocRefPicListReordeBuffer (sSlice* slice);
 extern void freeRefPicListReorderingBuffer (sSlice* slice);
 extern void computeColocated (sSlice* slice, sPicture** listX[6]);

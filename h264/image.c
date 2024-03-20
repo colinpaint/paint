@@ -1287,63 +1287,6 @@ static void ercWriteMBMODEandMV (sMacroblock* mb) {
 //}}}
 
 //{{{
-static void refPicListReorder (sSlice* slice) {
-
-  byte partitionIndex = assignSE2dp[slice->datadpMode][SE_HEADER];
-  sDataPartition* dataPartition = &(slice->dps[partitionIndex]);
-  sBitStream* s = dataPartition->s;
-
-  alloc_ref_pic_list_reordering_buffer (slice);
-  if (slice->sliceType != I_SLICE &&
-      slice->sliceType != SI_SLICE) {
-    int val = slice->refPicReorderFlag[LIST_0] =
-      readU1 ("SLC ref_pic_list_reordering_flag_l0", s);
-
-    if (val) {
-      int i = 0;
-      do {
-        val = slice->modification_of_pic_nums_idc[LIST_0][i] =
-          readUeV("SLC modification_of_pic_nums_idc_l0", s);
-        if (val==0 || val==1)
-          slice->abs_diff_pic_num_minus1[LIST_0][i] =
-            readUeV ("SLC abs_diff_pic_num_minus1_l0", s);
-        else {
-          if (val == 2)
-            slice->long_term_pic_idx[LIST_0][i] =
-              readUeV ("SLC long_term_pic_idx_l0", s);
-          }
-        i++;
-        } while (val != 3);
-      }
-    }
-
-  if (slice->sliceType == B_SLICE) {
-    int val = slice->refPicReorderFlag[LIST_1] =
-      readU1 ("SLC ref_pic_list_reordering_flag_l1", s);
-    if (val) {
-      int i = 0;
-      do {
-        val = slice->modification_of_pic_nums_idc[LIST_1][i] =
-          readUeV ("SLC modification_of_pic_nums_idc_l1", s);
-        if (val == 0 || val == 1)
-          slice->abs_diff_pic_num_minus1[LIST_1][i] =
-            readUeV ("SLC abs_diff_pic_num_minus1_l1", s);
-        else {
-          if (val == 2)
-            slice->long_term_pic_idx[LIST_1][i] =
-              readUeV ("SLC long_term_pic_idx_l1", s);
-          }
-        i++;
-        } while (val != 3);
-      }
-    }
-
-  // set reference index of redundant slices.
-  if (slice->redundantPicCount && (slice->sliceType != I_SLICE) )
-    slice->redundantSliceRefIndex = slice->abs_diff_pic_num_minus1[LIST_0][0] + 1;
-  }
-//}}}
-//{{{
 static void reset_WPParam (sSlice* slice) {
 
   for (int i = 0; i < MAX_REFERENCE_PICTURES; i++) {
@@ -2182,7 +2125,43 @@ static void readSliceHeader (sDecoder* decoder, sSlice* slice) {
     }
   if (slice->sliceType != B_SLICE)
     slice->numRefIndexActive[LIST_1] = 0;
-  refPicListReorder (slice);
+  //{{{  refPicList reorder
+  allocRefPicListReordeBuffer (slice);
+
+  if ((slice->sliceType != I_SLICE) && (slice->sliceType != SI_SLICE)) {
+    int value = slice->refPicReorderFlag[LIST_0] = readU1 ("SLC refPicReorderL0", s);
+    if (value) {
+      int i = 0;
+      do {
+        value = slice->modPicNumsIdc[LIST_0][i] = readUeV("SLC modPicNumsIdcl0", s);
+        if ((value == 0) || (value == 1))
+          slice->absDiffPicNumMinus1[LIST_0][i] = readUeV ("SLC absDiffPicNumMinus1L0", s);
+        else if (value == 2)
+          slice->longTermPicIndex[LIST_0][i] = readUeV ("SLC longTermPicIndexL0", s);
+        i++;
+        } while (value != 3);
+      }
+    }
+
+  if (slice->sliceType == B_SLICE) {
+    int value = slice->refPicReorderFlag[LIST_1] = readU1 ("SLC refPicReorderL1", s);
+    if (value) {
+      int i = 0;
+      do {
+        value = slice->modPicNumsIdc[LIST_1][i] = readUeV ("SLC modPicNumsIdcl1", s);
+        if ((value == 0) || (value == 1))
+          slice->absDiffPicNumMinus1[LIST_1][i] = readUeV ("SLC absDiffPicNumMinus1L1", s);
+        else if (value == 2)
+          slice->longTermPicIndex[LIST_1][i] = readUeV ("SLC longTermPicIndexL1", s);
+        i++;
+        } while (value != 3);
+      }
+    }
+
+  // set reference index of redundant slices.
+  if (slice->redundantPicCount && (slice->sliceType != I_SLICE) )
+    slice->redundantSliceRefIndex = slice->absDiffPicNumMinus1[LIST_0][0] + 1;
+  //}}}
   //{{{  read weightedPred
   slice->weightedPredFlag = (unsigned short)((slice->sliceType == P_SLICE || slice->sliceType == SP_SLICE)
                               ? decoder->activePPS->weightedPredFlag
@@ -3056,9 +3035,11 @@ void endDecodeFrame (sDecoder* decoder) {
     if (decoder->param.outDebug) {
       //{{{  print outDebug
       printf ("-> %d %d:%d:%02d %s ->%s-> poc:%d pic:%d",
-              decoder->decodeFrameNum, decoder->numDecodedSlices, 
-              decoder->numDecodedMbs, qp, decoder->info.tookStr, 
-              decoder->info.sliceStr, pocNum, picNum);
+              decoder->decodeFrameNum, 
+              decoder->numDecodedSlices, decoder->numDecodedMbs, qp,
+              decoder->info.tookStr, 
+              decoder->info.sliceStr,
+              pocNum, picNum);
 
       // count numOutputFrames
       int numOutputFrames = 0;

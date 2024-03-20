@@ -535,8 +535,8 @@ typedef struct OldSlice {
   unsigned picOrderCountLsb;
   int      deltaPicOrderCountBot;
   int      deltaPicOrderCount[2];
-  byte     botFieldFlag;
-  byte     idrFlag;
+  int      botFieldFlag;
+  int      idrFlag;
   int      idrPicId;
   int      ppsId;
   } sOldSlice;
@@ -559,12 +559,12 @@ typedef struct Slice {
   int botPoc;   // poc of bottom field of frame
   int framePoc; // poc of this frame
 
-  // poc mode 0
+  // pocMode 0
   unsigned int picOrderCountLsb;
   int deletaPicOrderCountBot;
   signed int PicOrderCntMsb;
 
-  // poc mode 1
+  // pocMode 1
   int deltaPicOrderCount[2];
   unsigned int AbsFrameNum;
   int thisPoc;
@@ -581,7 +581,7 @@ typedef struct Slice {
   int           directSpatialMvPredFlag; // Indicator for direct mode type (1 for Spatial, 0 for Temporal)
   int           numRefIndexActive[2];    // number of available list references
 
-  int           errorFlag;       // 0 if the dps[0] contains valid information
+  int           errorFlag;   // 0 if the dps[0] contains valid information
   int           qp;
   int           sliceQpDelta;
   int           qs;
@@ -595,7 +595,7 @@ typedef struct Slice {
   int           startMbNum;  // MUST be set by NAL even in case of errorFlag == 1
   int           endMbNumPlus1;
   int           maxDataPartitions;
-  int           datadpMode;       // data dping mode
+  int           datadpMode;  // data dping mode
   int           curHeader;
   int           nextHeader;
   int           lastDquant;
@@ -620,9 +620,9 @@ typedef struct Slice {
 
   int   mvscale[6][MAX_REFERENCE_PICTURES];
   int   refPicReorderFlag[2];
-  int*  modification_of_pic_nums_idc[2];
-  int*  abs_diff_pic_num_minus1[2];
-  int*  long_term_pic_idx[2];
+  int*  modPicNumsIdc[2];
+  int*  absDiffPicNumMinus1[2];
+  int*  longTermPicIndex[2];
 
   short DFDisableIdc;      // Disable deblocking filter on slice
   short DFAlphaC0Offset;   // Alpha and C0 offset for filtering slice
@@ -714,8 +714,8 @@ typedef struct CodingParam {
   // size
   int width;
   int height;
-  int widthCr;   
-  int heightCr;  
+  int widthCr;
+  int heightCr;
 
   int iLumaPadX;
   int iLumaPadY;
@@ -796,7 +796,7 @@ typedef struct Info {
   } sInfo;
 //}}}
 //{{{  sDecoder
-typedef struct  Decoder {
+typedef struct Decoder {
   sParam       param;
   sInfo        info;
 

@@ -214,8 +214,7 @@ static void setFormatInfo (sDecoder* decoder, sSPS* sps, sFrameFormat* source, s
   output->bitDepth[0] = source->bitDepth[0] = decoder->bitDepthLuma;
   output->bitDepth[1] = source->bitDepth[1] = decoder->bitDepthChroma;
   output->bitDepth[2] = source->bitDepth[2] = decoder->bitDepthChroma;
-  output->picDiskUnitSize = (imax(output->bitDepth[0], output->bitDepth[1]) > 8) ? 16 : 8;
-  output->pic_unit_size_shift3 = output->picDiskUnitSize >> 3;
+  output->picDiskUnitSize = (imax (output->bitDepth[0], output->bitDepth[1]) > 8) ? 16 : 8;
 
   output->frameRate = source->frameRate;
   output->colourModel = source->colourModel;

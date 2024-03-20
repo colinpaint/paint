@@ -2002,9 +2002,9 @@ static void reorderLongTerm (sSlice* slice, sPicture** RefPicListX,
 //{{{
 void reorderRefPicList (sSlice* slice, int curList) {
 
-  int* modification_of_pic_nums_idc = slice->modification_of_pic_nums_idc[curList];
-  int* abs_diff_pic_num_minus1 = slice->abs_diff_pic_num_minus1[curList];
-  int* long_term_pic_idx = slice->long_term_pic_idx[curList];
+  int* modPicNumsIdc = slice->modPicNumsIdc[curList];
+  int* absDiffPicNumMinus1 = slice->absDiffPicNumMinus1[curList];
+  int* longTermPicIndex = slice->longTermPicIndex[curList];
   int num_ref_idx_lX_active_minus1 = slice->numRefIndexActive[curList] - 1;
 
   sDecoder* decoder = slice->decoder;
@@ -2023,22 +2023,22 @@ void reorderRefPicList (sSlice* slice, int curList) {
 
   picNumLXPred = currPicNum;
 
-  for (int i = 0; modification_of_pic_nums_idc[i] != 3; i++) {
-    if (modification_of_pic_nums_idc[i]>3)
-      error ("Invalid modification_of_pic_nums_idc command");
+  for (int i = 0; modPicNumsIdc[i] != 3; i++) {
+    if (modPicNumsIdc[i]>3)
+      error ("Invalid modPicNumsIdc command");
 
-    if (modification_of_pic_nums_idc[i] < 2) {
-      if (modification_of_pic_nums_idc[i] == 0) {
-        if (picNumLXPred - (abs_diff_pic_num_minus1[i] + 1) < 0)
-          picNumLXNoWrap = picNumLXPred - (abs_diff_pic_num_minus1[i] + 1) + maxPicNum;
+    if (modPicNumsIdc[i] < 2) {
+      if (modPicNumsIdc[i] == 0) {
+        if (picNumLXPred - (absDiffPicNumMinus1[i] + 1) < 0)
+          picNumLXNoWrap = picNumLXPred - (absDiffPicNumMinus1[i] + 1) + maxPicNum;
         else
-          picNumLXNoWrap = picNumLXPred - (abs_diff_pic_num_minus1[i] + 1);
+          picNumLXNoWrap = picNumLXPred - (absDiffPicNumMinus1[i] + 1);
         }
       else {
-        if( picNumLXPred + (abs_diff_pic_num_minus1[i] + 1)  >=  maxPicNum )
-          picNumLXNoWrap = picNumLXPred + (abs_diff_pic_num_minus1[i] + 1) - maxPicNum;
+        if( picNumLXPred + (absDiffPicNumMinus1[i] + 1)  >=  maxPicNum )
+          picNumLXNoWrap = picNumLXPred + (absDiffPicNumMinus1[i] + 1) - maxPicNum;
         else
-          picNumLXNoWrap = picNumLXPred + (abs_diff_pic_num_minus1[i] + 1);
+          picNumLXNoWrap = picNumLXPred + (absDiffPicNumMinus1[i] + 1);
         }
       picNumLXPred = picNumLXNoWrap;
 
@@ -2050,7 +2050,7 @@ void reorderRefPicList (sSlice* slice, int curList) {
       reorderShortTerm (slice, curList, num_ref_idx_lX_active_minus1, picNumLX, &refIdxLX);
       }
     else
-      reorderLongTerm (slice, slice->listX[curList], num_ref_idx_lX_active_minus1, long_term_pic_idx[i], &refIdxLX);
+      reorderLongTerm (slice, slice->listX[curList], num_ref_idx_lX_active_minus1, longTermPicIndex[i], &refIdxLX);
     }
 
   // that's a definition
@@ -2380,63 +2380,63 @@ void init_mbaff_lists (sDecoder* decoder, sSlice* slice) {
 //}}}
 
 //{{{
-void alloc_ref_pic_list_reordering_buffer (sSlice* slice) {
+void allocRefPicListReordeBuffer (sSlice* slice) {
 
   if (slice->sliceType != I_SLICE && slice->sliceType != SI_SLICE) {
     int size = slice->numRefIndexActive[LIST_0] + 1;
-    if ((slice->modification_of_pic_nums_idc[LIST_0] = calloc (size ,sizeof(int))) == NULL)
-       no_mem_exit ("alloc_ref_pic_list_reordering_buffer: modification_of_pic_nums_idc_l0");
-    if ((slice->abs_diff_pic_num_minus1[LIST_0] = calloc (size,sizeof(int))) == NULL)
-       no_mem_exit ("alloc_ref_pic_list_reordering_buffer: abs_diff_pic_num_minus1_l0");
-    if ((slice->long_term_pic_idx[LIST_0] = calloc (size,sizeof(int))) == NULL)
-       no_mem_exit ("alloc_ref_pic_list_reordering_buffer: long_term_pic_idx_l0");
+    if ((slice->modPicNumsIdc[LIST_0] = calloc (size ,sizeof(int))) == NULL)
+       no_mem_exit ("allocRefPicListReordeBuffer: modification_of_pic_nums_idc_l0");
+    if ((slice->absDiffPicNumMinus1[LIST_0] = calloc (size,sizeof(int))) == NULL)
+       no_mem_exit ("allocRefPicListReordeBuffer: abs_diff_pic_num_minus1_l0");
+    if ((slice->longTermPicIndex[LIST_0] = calloc (size,sizeof(int))) == NULL)
+       no_mem_exit ("allocRefPicListReordeBuffer: long_term_pic_idx_l0");
     }
   else {
-    slice->modification_of_pic_nums_idc[LIST_0] = NULL;
-    slice->abs_diff_pic_num_minus1[LIST_0] = NULL;
-    slice->long_term_pic_idx[LIST_0] = NULL;
+    slice->modPicNumsIdc[LIST_0] = NULL;
+    slice->absDiffPicNumMinus1[LIST_0] = NULL;
+    slice->longTermPicIndex[LIST_0] = NULL;
     }
 
   if (slice->sliceType == B_SLICE) {
     int size = slice->numRefIndexActive[LIST_1] + 1;
-    if ((slice->modification_of_pic_nums_idc[LIST_1] = calloc (size,sizeof(int))) == NULL)
-      no_mem_exit ("alloc_ref_pic_list_reordering_buffer: modification_of_pic_nums_idc_l1");
-    if ((slice->abs_diff_pic_num_minus1[LIST_1] = calloc (size,sizeof(int))) == NULL)
-      no_mem_exit ("alloc_ref_pic_list_reordering_buffer: abs_diff_pic_num_minus1_l1");
-    if ((slice->long_term_pic_idx[LIST_1] = calloc (size,sizeof(int))) == NULL)
-      no_mem_exit ("alloc_ref_pic_list_reordering_buffer: long_term_pic_idx_l1");
+    if ((slice->modPicNumsIdc[LIST_1] = calloc (size,sizeof(int))) == NULL)
+      no_mem_exit ("allocRefPicListReordeBuffer: modification_of_pic_nums_idc_l1");
+    if ((slice->absDiffPicNumMinus1[LIST_1] = calloc (size,sizeof(int))) == NULL)
+      no_mem_exit ("allocRefPicListReordeBuffer: abs_diff_pic_num_minus1_l1");
+    if ((slice->longTermPicIndex[LIST_1] = calloc (size,sizeof(int))) == NULL)
+      no_mem_exit ("allocRefPicListReordeBuffer: long_term_pic_idx_l1");
     }
   else {
-    slice->modification_of_pic_nums_idc[LIST_1] = NULL;
-    slice->abs_diff_pic_num_minus1[LIST_1] = NULL;
-    slice->long_term_pic_idx[LIST_1] = NULL;
+    slice->modPicNumsIdc[LIST_1] = NULL;
+    slice->absDiffPicNumMinus1[LIST_1] = NULL;
+    slice->longTermPicIndex[LIST_1] = NULL;
     }
   }
 //}}}
 //{{{
 void freeRefPicListReorderingBuffer (sSlice* slice) {
 
-  if (slice->modification_of_pic_nums_idc[LIST_0])
-    free(slice->modification_of_pic_nums_idc[LIST_0]);
-  if (slice->abs_diff_pic_num_minus1[LIST_0])
-    free(slice->abs_diff_pic_num_minus1[LIST_0]);
-  if (slice->long_term_pic_idx[LIST_0])
-    free(slice->long_term_pic_idx[LIST_0]);
+  if (slice->modPicNumsIdc[LIST_0])
+    free(slice->modPicNumsIdc[LIST_0]);
+  if (slice->absDiffPicNumMinus1[LIST_0])
+    free(slice->absDiffPicNumMinus1[LIST_0]);
+  if (slice->longTermPicIndex[LIST_0])
+    free(slice->longTermPicIndex[LIST_0]);
 
-  slice->modification_of_pic_nums_idc[LIST_0] = NULL;
-  slice->abs_diff_pic_num_minus1[LIST_0] = NULL;
-  slice->long_term_pic_idx[LIST_0] = NULL;
+  slice->modPicNumsIdc[LIST_0] = NULL;
+  slice->absDiffPicNumMinus1[LIST_0] = NULL;
+  slice->longTermPicIndex[LIST_0] = NULL;
 
-  if (slice->modification_of_pic_nums_idc[LIST_1])
-    free(slice->modification_of_pic_nums_idc[LIST_1]);
-  if (slice->abs_diff_pic_num_minus1[LIST_1])
-    free(slice->abs_diff_pic_num_minus1[LIST_1]);
-  if (slice->long_term_pic_idx[LIST_1])
-    free(slice->long_term_pic_idx[LIST_1]);
+  if (slice->modPicNumsIdc[LIST_1])
+    free(slice->modPicNumsIdc[LIST_1]);
+  if (slice->absDiffPicNumMinus1[LIST_1])
+    free(slice->absDiffPicNumMinus1[LIST_1]);
+  if (slice->longTermPicIndex[LIST_1])
+    free(slice->longTermPicIndex[LIST_1]);
 
-  slice->modification_of_pic_nums_idc[LIST_1] = NULL;
-  slice->abs_diff_pic_num_minus1[LIST_1] = NULL;
-  slice->long_term_pic_idx[LIST_1] = NULL;
+  slice->modPicNumsIdc[LIST_1] = NULL;
+  slice->absDiffPicNumMinus1[LIST_1] = NULL;
+  slice->longTermPicIndex[LIST_1] = NULL;
   }
 //}}}
 //{{{
