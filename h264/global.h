@@ -702,37 +702,6 @@ typedef struct Slice {
   void (*linfoCbpInter) (int, int, int*, int*);
   } sSlice;
 //}}}
-//{{{  sParam
-typedef struct Param {
-  int vlcDebug;
-  int naluDebug;
-  int sliceDebug;
-  int spsDebug;
-  int ppsDebug;
-  int seiDebug;
-  int deblock;
-
-  int refOffset;
-  int pocScale;
-  int refPocGap;
-  int pocGap;
-  int concealMode;
-  int intraProfileDeblocking; // Loop filter usage determined by flags and parameters in s
-
-  sFrameFormat source;
-  sFrameFormat output;
-  int dpbPlus[2];
-  } sParam;
-//}}}
-//{{{  sInfo
-typedef struct Info {
-  TIME_T  startTime;
-  TIME_T  endTime;
-  int     took;
-  char    sliceTypeStr[9];
-  char    text[80];
-  } sInfo;
-//}}}
 //{{{  sCoding
 typedef struct CodingParam {
   int profileIdc;
@@ -788,6 +757,39 @@ typedef struct CodingParam {
   int shiftpelY;
   int totalScale;
   } sCoding;
+//}}}
+//{{{  sParam
+typedef struct Param {
+  int naluDebug;
+  int vlcDebug;
+  int sliceDebug;
+  int spsDebug;
+  int ppsDebug;
+  int seiDebug;
+  int outDebug;
+  int deblock;
+
+  int refOffset;
+  int pocScale;
+  int refPocGap;
+  int pocGap;
+  int concealMode;
+  int intraProfileDeblocking; // Loop filter usage determined by flags and parameters in s
+
+  sFrameFormat source;
+  sFrameFormat output;
+  int dpbPlus[2];
+  } sParam;
+//}}}
+//{{{  sInfo
+typedef struct Info {
+  TIME_T  startTime;
+  TIME_T  endTime;
+  int     took;
+
+  char    sliceStr[9];
+  char    tookStr[80];
+  } sInfo;
 //}}}
 //{{{  sDecoder
 typedef struct  Decoder {
@@ -880,8 +882,6 @@ typedef struct  Decoder {
 
   int          nonConformingStream;
   int          lastRefPicPoc;
-  int          refPocGap;
-  int          pocGap;
 
   // for POC mode 0:
   signed int   PrevPicOrderCntMsb;
@@ -953,26 +953,27 @@ typedef struct  Decoder {
 
 static const sMotionVec zero_mv = {0, 0};
 //{{{
-static inline int isBLprofile (unsigned int profileIdc) {
-  return profileIdc == FREXT_CAVLC444 || profileIdc == BASELINE ||
-         profileIdc == MAIN || profileIdc == EXTENDED ||
-         profileIdc == FREXT_HP || profileIdc == FREXT_Hi10P ||
-         profileIdc == FREXT_Hi422 || profileIdc == FREXT_Hi444;
+static inline int isBLprofile (unsigned profileIdc) {
+  return profileIdc == FREXT_CAVLC444 || (profileIdc == BASELINE) ||
+         profileIdc == MAIN || (profileIdc == EXTENDED) ||
+         profileIdc == FREXT_HP || (profileIdc == FREXT_Hi10P) ||
+         profileIdc == FREXT_Hi422 || (profileIdc == FREXT_Hi444);
 }
 //}}}
 //{{{
-static inline int isFrextProfile (unsigned int profileIdc) {
+static inline int isFrextProfile (unsigned profileIdc) {
   // we allow all FRExt tools, when no profile is active
-  return profileIdc == NO_PROFILE || profileIdc == FREXT_HP ||
-         profileIdc == FREXT_Hi10P || profileIdc == FREXT_Hi422 ||
-         profileIdc == FREXT_Hi444 || profileIdc == FREXT_CAVLC444;
+  return (profileIdc == NO_PROFILE) || (profileIdc == FREXT_HP) ||
+         (profileIdc == FREXT_Hi10P) || (profileIdc == FREXT_Hi422) ||
+         (profileIdc == FREXT_Hi444) || (profileIdc == FREXT_CAVLC444);
 }
 //}}}
 //{{{
-static inline int isHiIntraOnlyProfile (unsigned int profileIdc, Boolean constrained_set3_flag) {
-  return (((profileIdc == FREXT_Hi10P)||(profileIdc == FREXT_Hi422) ||
+static inline int isHiIntraOnlyProfile (unsigned profileIdc, Boolean constrained_set3_flag) {
+  return (((profileIdc == FREXT_Hi10P) || 
+           (profileIdc == FREXT_Hi422) || 
            (profileIdc == FREXT_Hi444)) && constrained_set3_flag) ||
-         (profileIdc == FREXT_CAVLC444);
+           (profileIdc == FREXT_CAVLC444);
 }
 //}}}
 

@@ -1683,9 +1683,9 @@ static sPicture* get_pic_from_dpb (sDPB* dpb, int missingpoc, unsigned int *pos)
   int i, concealfrom = 0;
 
   if(decoder->concealMode == 1)
-    concealfrom = missingpoc - decoder->pocGap;
+    concealfrom = missingpoc - decoder->param.pocGap;
   else if (decoder->concealMode == 2)
-    concealfrom = missingpoc + decoder->pocGap;
+    concealfrom = missingpoc + decoder->param.pocGap;
 
   for(i = usedSize; i >= 0; i--)
   {
@@ -1884,7 +1884,7 @@ void concealLostFrames (sDPB* dpb, sSlice *slice)
     // Conceals an IDR frame loss. Uses the reference frame in the previous
     // GOP for conceal.
     UnusedShortTermFrameNum = 0;
-    decoder->lastRefPicPoc = -decoder->pocGap;
+    decoder->lastRefPicPoc = -decoder->param.pocGap;
     decoder->earlierMissingPoc = 0;
   }
   else
@@ -1908,7 +1908,7 @@ void concealLostFrames (sDPB* dpb, sSlice *slice)
 
     slice->frameNum = UnusedShortTermFrameNum;
 
-    picture->topPoc = decoder->lastRefPicPoc + decoder->refPocGap;
+    picture->topPoc = decoder->lastRefPicPoc + decoder->param.refPocGap;
     picture->botPoc = picture->topPoc;
     picture->framePoc = picture->topPoc;
     picture->poc = picture->topPoc;
@@ -1978,11 +1978,11 @@ void conceal_non_ref_pics (sDPB* dpb, int diff)
   for(i=0;i<dpb->size-diff;i++)
   {
     dpb->usedSize = dpb->size;
-    if((decoder->dpbPoc[i+1] - decoder->dpbPoc[i]) > decoder->pocGap)
+    if((decoder->dpbPoc[i+1] - decoder->dpbPoc[i]) > decoder->param.pocGap)
     {
       conceal_to_picture = allocPicture(decoder, FRAME, decoder->width, decoder->height, decoder->widthCr, decoder->heightCr, 1);
 
-      missingpoc = decoder->dpbPoc[i] + decoder->pocGap;
+      missingpoc = decoder->dpbPoc[i] + decoder->param.pocGap;
       // Diagnostics
       // printf("\n missingpoc = %d\n",missingpoc);
 
@@ -2054,7 +2054,7 @@ void write_lost_non_ref_pic (sDPB* dpb, int poc) {
   sDecoder* decoder = dpb->decoder;
   sFrameStore concealment_fs;
   if (poc > 0) {
-    if ((poc - dpb->lastOutputPoc) > decoder->pocGap) {
+    if ((poc - dpb->lastOutputPoc) > decoder->param.pocGap) {
       concealment_fs.frame = decoder->concealHead->picture;
       concealment_fs.is_output = 0;
       concealment_fs.isReference = 0;

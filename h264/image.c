@@ -2425,7 +2425,7 @@ static int readNextSlice (sSlice* slice) {
       //}}}
       //{{{
       case NALU_TYPE_PPS:
-        if (decoder->param.spsDebug)
+        if (decoder->param.ppsDebug)
           printf ("PPS %2d:%d:%d ", nalu->len, slice->refId, slice->sliceType);
         readNaluPPS (decoder, nalu);
         break;
@@ -2995,83 +2995,84 @@ void endDecodeFrame (sDecoder* decoder) {
     decoder->preFrameNum = 0;
 
   if (structure == TopField || structure == FRAME) {
-    //{{{  sliceTypeStr
+    //{{{
     if (sliceType == I_SLICE && isIdr)
-      strcpy (decoder->info.sliceTypeStr, "IDR");
+      strcpy (decoder->info.sliceStr, "IDR");
 
     else if (sliceType == I_SLICE)
-      strcpy (decoder->info.sliceTypeStr, " I ");
+      strcpy (decoder->info.sliceStr, " I ");
 
     else if (sliceType == P_SLICE)
-      strcpy (decoder->info.sliceTypeStr, " P ");
+      strcpy (decoder->info.sliceStr, " P ");
 
     else if (sliceType == SP_SLICE)
-      strcpy (decoder->info.sliceTypeStr, "SP ");
+      strcpy (decoder->info.sliceStr, "SP ");
 
     else if  (sliceType == SI_SLICE)
-      strcpy (decoder->info.sliceTypeStr, "SI ");
+      strcpy (decoder->info.sliceStr, "SI ");
 
     else if (refpic)
-      strcpy (decoder->info.sliceTypeStr, " B ");
+      strcpy (decoder->info.sliceStr, " B ");
 
     else
-      strcpy (decoder->info.sliceTypeStr, " b ");
+      strcpy (decoder->info.sliceStr, " b ");
 
     if (structure == FRAME)
-      strncat (decoder->info.sliceTypeStr, "    ", 8 - strlen (decoder->info.sliceTypeStr));
+      strncat (decoder->info.sliceStr, "    ", 8 - strlen (decoder->info.sliceStr));
 
-    decoder->info.sliceTypeStr[3] = 0;
+    decoder->info.sliceStr[3] = 0;
     }
     //}}}
   else if (structure == BotField) {
-    //{{{  sliceTypeStr
+    //{{{
     if (sliceType == I_SLICE && isIdr)
-      strncat (decoder->info.sliceTypeStr, "|IDR", 8-strlen (decoder->info.sliceTypeStr));
+      strncat (decoder->info.sliceStr, "|IDR", 8-strlen (decoder->info.sliceStr));
 
     else if (sliceType == I_SLICE)
-      strncat (decoder->info.sliceTypeStr, "| I ", 8-strlen (decoder->info.sliceTypeStr));
+      strncat (decoder->info.sliceStr, "| I ", 8-strlen (decoder->info.sliceStr));
 
     else if (sliceType == P_SLICE)
-      strncat (decoder->info.sliceTypeStr, "| P ", 8-strlen (decoder->info.sliceTypeStr));
+      strncat (decoder->info.sliceStr, "| P ", 8-strlen (decoder->info.sliceStr));
 
     else if (sliceType == SP_SLICE)
-      strncat (decoder->info.sliceTypeStr, "|SP ", 8-strlen (decoder->info.sliceTypeStr));
+      strncat (decoder->info.sliceStr, "|SP ", 8-strlen (decoder->info.sliceStr));
 
     else if  (sliceType == SI_SLICE)
-      strncat (decoder->info.sliceTypeStr, "|SI ", 8-strlen (decoder->info.sliceTypeStr));
+      strncat (decoder->info.sliceStr, "|SI ", 8-strlen (decoder->info.sliceStr));
 
     else if (refpic)
-      strncat (decoder->info.sliceTypeStr, "| B ", 8-strlen (decoder->info.sliceTypeStr));
+      strncat (decoder->info.sliceStr, "| B ", 8-strlen (decoder->info.sliceStr));
 
     else
-      strncat (decoder->info.sliceTypeStr, "| b ", 8-strlen (decoder->info.sliceTypeStr));
+      strncat (decoder->info.sliceStr, "| b ", 8-strlen (decoder->info.sliceStr));
 
-    decoder->info.sliceTypeStr[8] = 0;
+    decoder->info.sliceStr[8] = 0;
     }
     //}}}
   if ((structure == FRAME) || structure == BotField) {
-    //{{{  print frame debug
-    gettime (&(decoder->info.endTime));
-    decoder->info.took = (int)timenorm (timediff (&(decoder->info.startTime), &(decoder->info.endTime)));
-    printf ("-> %d %d:%d:%02d %2dms",
-            decoder->decodeFrameNum, decoder->numDecodedSlices, decoder->numDecodedMbs, qp, decoder->info.took);
-    printf (" ->%s-> poc:%d pic:%d", decoder->info.sliceTypeStr, pocNum, picNum);
+    gettime (&decoder->info.endTime);
+    decoder->info.took = (int)timenorm (timediff (&decoder->info.startTime, &decoder->info.endTime));
+    sprintf (decoder->info.tookStr, "took:%d", decoder->info.took);
+    if (decoder->param.outDebug) {
+      //{{{  print outDebug
+      printf ("-> %d %d:%d:%02d %sms ->%s-> poc:%d pic:%d",
+              decoder->decodeFrameNum, decoder->numDecodedSlices, decoder->numDecodedMbs, qp,
+              decoder->info.tookStr, decoder->info.sliceStr, pocNum, picNum);
 
-    // count numOutputFrames
-    int numOutputFrames = 0;
-    sDecodedPic* pic = decoder->decOutputPic;
-    while (pic) {
-      if (pic->valid)
-        numOutputFrames++;
-      pic = pic->next;
+      // count numOutputFrames
+      int numOutputFrames = 0;
+      sDecodedPic* pic = decoder->decOutputPic;
+      while (pic) {
+        if (pic->valid)
+          numOutputFrames++;
+        pic = pic->next;
+        }
+      if (numOutputFrames)
+        printf (" -> %d\n", numOutputFrames);
+      else
+        printf ("\n");
       }
-    if (numOutputFrames)
-      printf (" -> %d\n", numOutputFrames);
-    else
-      printf ("\n");
-
-    sprintf (decoder->info.text, "took:%d", decoder->info.took);
-    //}}}
+      //}}}
 
     // I or P pictures ?
     if (sliceType == I_SLICE || sliceType == SI_SLICE || sliceType == P_SLICE || refpic)

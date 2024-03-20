@@ -39,6 +39,7 @@
   #define OPENFLAGS_WRITE _O_WRONLY|_O_CREAT|_O_BINARY|_O_TRUNC
   #define OPEN_PERMISSIONS _S_IREAD | _S_IWRITE
   #define OPENFLAGS_READ  _O_RDONLY|_O_BINARY
+
   //#define  inline   _inline
   #define forceinline __forceinline
   //}}}
@@ -95,7 +96,7 @@
 #endif
 //}}}
   extern void gettime (TIME_T* time);
-  extern void init_time(void);
+  extern void initTime();
   extern int64 timediff (TIME_T* start, TIME_T* end);
   extern int64 timenorm (int64 cur_time);
 //{{{

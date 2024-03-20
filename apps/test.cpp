@@ -876,6 +876,7 @@ public:
   string getFileName() const { return mFileName; }
   cTransportStream::cService* getService() { return mService; }
   int64_t getPlayPts() const { return mPlayPts; }
+
   cVideoFrame* getVideoFrame() { return mVideoFrame; }
   sDecoder* getDecoder() { return mDecoder; }
 
@@ -949,21 +950,20 @@ public:
       //}}}
       cLog::log (LOGINFO, fmt::format ("read:{} size:{} idr:{}", mFileName, h264ChunkSize, gotIDR));
 
-      sParam param;
-      memset (&param, 0, sizeof(sParam));
+      sParam param = { 0 };
+      param.spsDebug = 1;
+      param.ppsDebug = 1;
+      param.sliceDebug = 1;
+      param.outDebug = 1;
       param.deblock = 1;
+
       param.pocScale = 2;
       param.pocGap = 2;
       param.refPocGap = 2;
       param.dpbPlus[0] = 1;
       param.intraProfileDeblocking = 1;
+
       mDecoder = openDecoder (&param, h264Chunk, h264ChunkSize);
-      mDecoder->param.spsDebug = 1;
-      mDecoder->param.ppsDebug = 1;
-      mDecoder->param.seiDebug = 1;
-      mDecoder->param.sliceDebug = 1;
-      //mDecoder->param.vlcDebug = 1;
-      //mDecoder->param.naluDebug = 1;
 
       sDecodedPic* decodedPic;
       int ret = 0;
@@ -1051,6 +1051,7 @@ public:
 
   cApp::cOptions* getOptions() { return mOptions; }
   cFilePlayer* getFilePlayer() { return mFilePlayer; }
+
   cVideoFrame* getVideoFrame() { return mFilePlayer ? mFilePlayer->getVideoFrame() : mVideoFrame; }
   sDecoder* getDecoder() { return mFilePlayer ? mFilePlayer->getDecoder() : mDecoder; }
 
@@ -1093,20 +1094,19 @@ public:
       cLog::log (LOGINFO, fmt::format ("file read {} {}", fileSize, bytesRead));
       //}}}
 
-      sParam param;
-      memset (&param, 0, sizeof(sParam));
+      sParam param = { 0 };
+      param.spsDebug = 1;
+      param.ppsDebug = 1;
+      param.sliceDebug = 1;
+      param.outDebug = 1;
       param.deblock = 1;
+
       param.pocScale = 2;
       param.pocGap = 2;
       param.refPocGap = 2;
       param.dpbPlus[0] = 1;
       param.intraProfileDeblocking = 1;
-
       mDecoder = openDecoder (&param, chunk, fileSize);
-      mDecoder->param.spsDebug = 1;
-      mDecoder->param.ppsDebug = 1;
-      mDecoder->param.seiDebug = 1;
-      mDecoder->param.sliceDebug = 1;
 
       int ret = 0;
       do {
@@ -1441,9 +1441,48 @@ public:
       if (toggleButton ("deblock", testApp.getDecoder()->param.deblock))
         testApp.getDecoder()->param.deblock = !testApp.getDecoder()->param.deblock;
       //}}}
-      //{{{  draw info
+      //{{{  draw NALUdebug button
       ImGui::SameLine();
-      ImGui::TextUnformatted (testApp.getDecoder()->info.text);
+      if (toggleButton ("nalu", testApp.getDecoder()->param.naluDebug))
+        testApp.getDecoder()->param.naluDebug = !testApp.getDecoder()->param.naluDebug;
+      //}}}
+      //{{{  draw VLCdebug button
+      ImGui::SameLine();
+      if (toggleButton ("vlc", testApp.getDecoder()->param.vlcDebug))
+        testApp.getDecoder()->param.vlcDebug = !testApp.getDecoder()->param.vlcDebug;
+      //}}}
+      //{{{  draw SPSdebug button
+      ImGui::SameLine();
+      if (toggleButton ("sps", testApp.getDecoder()->param.spsDebug))
+        testApp.getDecoder()->param.spsDebug = !testApp.getDecoder()->param.spsDebug;
+      //}}}
+      //{{{  draw PPSdebug button
+      ImGui::SameLine();
+      if (toggleButton ("pps", testApp.getDecoder()->param.ppsDebug))
+        testApp.getDecoder()->param.ppsDebug = !testApp.getDecoder()->param.ppsDebug;
+      //}}}
+      //{{{  draw SEIdebug button
+      ImGui::SameLine();
+      if (toggleButton ("sei", testApp.getDecoder()->param.seiDebug))
+        testApp.getDecoder()->param.seiDebug = !testApp.getDecoder()->param.seiDebug;
+      //}}}
+      //{{{  draw sliceDebug button
+      ImGui::SameLine();
+      if (toggleButton ("slc", testApp.getDecoder()->param.sliceDebug))
+        testApp.getDecoder()->param.sliceDebug = !testApp.getDecoder()->param.sliceDebug;
+      //}}}
+      //{{{  draw outDebug button
+      ImGui::SameLine();
+      if (toggleButton ("out", testApp.getDecoder()->param.outDebug))
+        testApp.getDecoder()->param.outDebug = !testApp.getDecoder()->param.outDebug;
+      //}}}
+      //{{{  draw sliceStr
+      ImGui::SameLine();
+      ImGui::TextUnformatted (testApp.getDecoder()->info.sliceStr);
+      //}}}
+      //{{{  draw tookStr
+      ImGui::SameLine();
+      ImGui::TextUnformatted (testApp.getDecoder()->info.tookStr);
       //}}}
       }
 

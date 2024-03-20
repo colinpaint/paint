@@ -457,16 +457,14 @@ sDecoder* openDecoder (sParam* param, byte* chunk, size_t chunkSize) {
   sDecoder* decoder = (sDecoder*)calloc (1, sizeof(sDecoder));
   gDecoder = decoder;
 
-  init_time();
+  initTime();
 
   // init param
   memcpy (&(decoder->param), param, sizeof(sParam));
   decoder->concealMode = param->concealMode;
-  decoder->refPocGap = param->refPocGap;
-  decoder->pocGap = param->pocGap;
 
   decoder->info.took = 0;
-  strcpy (decoder->info.text, "info");
+  strcpy (decoder->info.tookStr, "info");
 
   // init nalu, annexB
   decoder->nalu = allocNALU (MAX_CODED_FRAME_SIZE);
