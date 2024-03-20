@@ -95,10 +95,10 @@
   extern "C" {
 #endif
 //}}}
-  extern void gettime (TIME_T* time);
+  extern void getTime (TIME_T* time);
   extern void initTime();
-  extern int64 timediff (TIME_T* start, TIME_T* end);
-  extern int64 timenorm (int64 cur_time);
+  extern int64 timeDiff (TIME_T* start, TIME_T* end);
+  extern int64 timeNorm (int64 cur_time);
 //{{{
 #ifdef __cplusplus
   }

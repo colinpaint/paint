@@ -705,16 +705,24 @@ typedef struct Slice {
 //{{{  sCoding
 typedef struct CodingParam {
   int profileIdc;
+
   int structure;           // Identify picture structure type
   int yuvFormat;
   int sepColourPlaneFlag;
   int type;                // image type INTER/INTRA
 
+  // size
   int width;
   int height;
-  int widthCr;   // width chroma
-  int heightCr;  // height chroma
+  int widthCr;   
+  int heightCr;  
 
+  int iLumaPadX;
+  int iLumaPadY;
+  int iChromaPadX;
+  int iChromaPadY;
+
+  // bits
   int picUnitBitSizeDisk;
   short bitDepthLuma;
   short bitDepthChroma;
@@ -729,6 +737,12 @@ typedef struct CodingParam {
   int numBlock8x8uv;
   int losslessQpPrimeFlag;
 
+  // macroblocks
+  unsigned int picWidthMbs;
+  unsigned int picHeightMapUnits;
+  unsigned int frameHeightMbs;
+  unsigned int frameSizeMbs;
+
   int mbCrSizeX;
   int mbCrSizeY;
   int mbCrSizeXblock;
@@ -738,18 +752,8 @@ typedef struct CodingParam {
   int mbSizeBlock[3][2];  // component macroblock dimensions
   int mbSizeShift[3][2];
 
-  int maxVmvR;            // maximum vertical motion vector range in luma quarter frame pixel units for the current levelIdc
+  int maxVmvR;            // maximum vertical motion vector range in lumaQuarterFrame pixel units
   int maxFrameNum;
-
-  unsigned int picWidthMbs;
-  unsigned int picHeightMapUnits;
-  unsigned int frameHeightMbs;
-  unsigned int frameSizeMbs;
-
-  int iLumaPadX;
-  int iLumaPadY;
-  int iChromaPadX;
-  int iChromaPadY;
 
   int subpelX;
   int subpelY;
@@ -970,8 +974,8 @@ static inline int isFrextProfile (unsigned profileIdc) {
 //}}}
 //{{{
 static inline int isHiIntraOnlyProfile (unsigned profileIdc, Boolean constrained_set3_flag) {
-  return (((profileIdc == FREXT_Hi10P) || 
-           (profileIdc == FREXT_Hi422) || 
+  return (((profileIdc == FREXT_Hi10P) ||
+           (profileIdc == FREXT_Hi422) ||
            (profileIdc == FREXT_Hi444)) && constrained_set3_flag) ||
            (profileIdc == FREXT_CAVLC444);
 }

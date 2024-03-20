@@ -1920,7 +1920,7 @@ static void initPicture (sDecoder* decoder, sSlice* slice) {
     decoder->lastRefPicPoc = slice->framePoc;
 
   if ((slice->structure == FRAME) || (slice->structure == TopField))
-    gettime (&(decoder->info.startTime));
+    getTime (&(decoder->info.startTime));
 
   picture = decoder->picture = allocPicture (decoder, slice->structure, decoder->width, decoder->height, decoder->widthCr, decoder->heightCr, 1);
   picture->topPoc = slice->topPoc;
@@ -3050,14 +3050,15 @@ void endDecodeFrame (sDecoder* decoder) {
     }
     //}}}
   if ((structure == FRAME) || structure == BotField) {
-    gettime (&decoder->info.endTime);
-    decoder->info.took = (int)timenorm (timediff (&decoder->info.startTime, &decoder->info.endTime));
-    sprintf (decoder->info.tookStr, "took:%d", decoder->info.took);
+    getTime (&decoder->info.endTime);
+    decoder->info.took = (int)timeNorm (timeDiff (&decoder->info.startTime, &decoder->info.endTime));
+    sprintf (decoder->info.tookStr, "%dms", decoder->info.took);
     if (decoder->param.outDebug) {
       //{{{  print outDebug
-      printf ("-> %d %d:%d:%02d %sms ->%s-> poc:%d pic:%d",
-              decoder->decodeFrameNum, decoder->numDecodedSlices, decoder->numDecodedMbs, qp,
-              decoder->info.tookStr, decoder->info.sliceStr, pocNum, picNum);
+      printf ("-> %d %d:%d:%02d %s ->%s-> poc:%d pic:%d",
+              decoder->decodeFrameNum, decoder->numDecodedSlices, 
+              decoder->numDecodedMbs, qp, decoder->info.tookStr, 
+              decoder->info.sliceStr, pocNum, picNum);
 
       // count numOutputFrames
       int numOutputFrames = 0;
@@ -3068,9 +3069,9 @@ void endDecodeFrame (sDecoder* decoder) {
         pic = pic->next;
         }
       if (numOutputFrames)
-        printf (" -> %d\n", numOutputFrames);
-      else
-        printf ("\n");
+        printf (" -> %d", numOutputFrames);
+
+      printf ("\n");
       }
       //}}}
 
