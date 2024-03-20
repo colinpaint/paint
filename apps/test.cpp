@@ -1436,11 +1436,6 @@ public:
     ImGui::TextUnformatted (fmt::format("{}:fps", static_cast<uint32_t>(ImGui::GetIO().Framerate)).c_str());
     //}}}
     if (testApp.getDecoder()) {
-      //{{{  draw deblock button
-      ImGui::SameLine();
-      if (toggleButton ("deblock", testApp.getDecoder()->param.deblock))
-        testApp.getDecoder()->param.deblock = !testApp.getDecoder()->param.deblock;
-      //}}}
       //{{{  draw NALUdebug button
       ImGui::SameLine();
       if (toggleButton ("nalu", testApp.getDecoder()->param.naluDebug))
@@ -1476,13 +1471,18 @@ public:
       if (toggleButton ("out", testApp.getDecoder()->param.outDebug))
         testApp.getDecoder()->param.outDebug = !testApp.getDecoder()->param.outDebug;
       //}}}
-      //{{{  draw sliceStr
+      //{{{  draw deblock button
       ImGui::SameLine();
-      ImGui::TextUnformatted (testApp.getDecoder()->info.sliceStr);
+      if (toggleButton ("deblock", testApp.getDecoder()->param.deblock))
+        testApp.getDecoder()->param.deblock = !testApp.getDecoder()->param.deblock;
       //}}}
       //{{{  draw tookStr
       ImGui::SameLine();
       ImGui::TextUnformatted (testApp.getDecoder()->info.tookStr);
+      //}}}
+      //{{{  draw sliceStr
+      ImGui::SameLine();
+      ImGui::TextUnformatted (testApp.getDecoder()->info.sliceStr);
       //}}}
       }
 
