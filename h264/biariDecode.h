@@ -1,9 +1,9 @@
 #pragma once
 
-extern void aridecoStartDecoding (sDecodingEnv* decodingEnv, unsigned char* code_buffer, int firstbyte, int* codeLen);
-extern int aridecoBitsRead (sDecodingEnv* decodingEnv);
+extern void aridecoStartDecoding (sDecodeEnv* decodeEnv, unsigned char* code_buffer, int firstbyte, int* codeLen);
+extern int aridecoBitsRead (sDecodeEnv* decodeEnv);
 
-extern unsigned int biarDecodeSymbol (sDecodingEnv* dep, sBiContextType* biContext);
-extern unsigned int biariDecodeSymbolEqProb (sDecodingEnv* decodingEnv);
-extern unsigned int biariDecodeFinal (sDecodingEnv* decodingEnv);
+extern unsigned int biarDecodeSymbol (sDecodeEnv* dep, sBiContextType* biContext);
+extern unsigned int biariDecodeSymbolEqProb (sDecodeEnv* decodeEnv);
+extern unsigned int biariDecodeFinal (sDecodeEnv* decodeEnv);
 extern void biariInitContext (int qp, sBiContextType* context, const char* ini);

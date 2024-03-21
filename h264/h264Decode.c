@@ -52,7 +52,7 @@ sSlice* allocSlice (sDecoder* decoder) {
   slice->maxDataPartitions = 3;  // assume dataPartition worst case
   slice->dataPartitions = allocDataPartitions (slice->maxDataPartitions);
 
-  getMem2Dwp (&(slice->WPParam), 2, MAX_REFERENCE_PICTURES);
+  getMem2Dwp (&(slice->wpParam), 2, MAX_REFERENCE_PICTURES);
   getMem3Dint (&(slice->wpWeight), 2, MAX_REFERENCE_PICTURES, 3);
   getMem3Dint (&(slice->wpOffset), 6, MAX_REFERENCE_PICTURES, 3);
   getMem4Dint (&(slice->wbpWeight), 6, MAX_REFERENCE_PICTURES, MAX_REFERENCE_PICTURES, 3);
@@ -93,7 +93,7 @@ static void freeSlice (sSlice *slice) {
   free_mem3Dpel (slice->mbRec);
   free_mem3Dpel (slice->mbPred);
 
-  free_mem2Dwp (slice->WPParam);
+  free_mem2Dwp (slice->wpParam);
   free_mem3Dint (slice->wpWeight);
   free_mem3Dint (slice->wpOffset);
   free_mem4Dint (slice->wbpWeight);

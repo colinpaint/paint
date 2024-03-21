@@ -391,17 +391,17 @@ typedef struct {
 //}}}
 
 struct Macroblock;
-//{{{  sDecodingEnv
+//{{{  sDecodeEnv
 typedef struct {
-  unsigned int Drange;
-  unsigned int Dvalue;
-  int          DbitsLeft;
-  byte*        Dcodestrm;
-  int*         Dcodestrm_len;
-  } sDecodingEnv;
+  unsigned int range;
+  unsigned int value;
+  int          bitsLeft;
+  byte*        codeStream;
+  int*         codeStreamLen;
+  } sDecodeEnv;
 //}}}
 //{{{  sBitStream
-typedef struct BitStream {
+typedef struct {
   // CAVLC Decoding
   byte* bitStreamBuffer;    // actual codebuffer for read bytes
   int   bitStreamOffset; // actual position in the codebuffer, bit-oriented, CAVLC only
@@ -428,13 +428,13 @@ typedef struct SyntaxElement {
   void (*mapping) (int, int, int*, int*);
 
   // CABAC actual coding method of each individual syntax element type
-  void (*reading) (struct Macroblock*, struct SyntaxElement*, sDecodingEnv*);
+  void (*reading) (struct Macroblock*, struct SyntaxElement*, sDecodeEnv*);
   } sSyntaxElement;
 //}}}
 //{{{  sDataPartition
 typedef struct DataPartition {
   sBitStream*  s;
-  sDecodingEnv deCabac;
+  sDecodeEnv deCabac;
   int (*readSyntaxElement) (struct Macroblock*, struct SyntaxElement*, struct DataPartition*);
   } sDataPartition;
 //}}}
@@ -497,7 +497,7 @@ typedef struct {
   } sBlockPos;
 //}}}
 //{{{  sPixelPos
-typedef struct PixelPos {
+typedef struct {
   int   available;
   int   mbIndex;
   short x;
@@ -507,7 +507,7 @@ typedef struct PixelPos {
   } sPixelPos;
 //}}}
 //{{{  sCBPStructure
-typedef struct CBPStructure {
+typedef struct  {
   int64 blk;
   int64 bits;
   int64 bits_8x8;
@@ -600,7 +600,7 @@ typedef struct Macroblock {
   void (*iTrans4x4) (struct Macroblock*, eColorPlane, int, int);
   void (*iTrans8x8) (struct Macroblock*, eColorPlane, int, int);
   void (*GetMVPredictor) (struct Macroblock*, sPixelPos*, sMotionVec*, short, struct PicMotion**, int, int, int, int, int);
-  int  (*readStoreCBPblockBit) (struct Macroblock*, sDecodingEnv*, int);
+  int  (*readStoreCBPblockBit) (struct Macroblock*, sDecodeEnv*, int);
   char (*readRefPictureIndex) (struct Macroblock*, struct SyntaxElement*, struct DataPartition*, char, int);
   void (*readCompCoef4x4cabac) (struct Macroblock*, struct SyntaxElement*, eColorPlane, int(*)[4], int, int);
   void (*readCompCoef8x8cabac) (struct Macroblock*, struct SyntaxElement*, eColorPlane);
@@ -609,7 +609,7 @@ typedef struct Macroblock {
   } sMacroblock;
 //}}}
 //{{{  sWPParam
-typedef struct WPParam {
+typedef struct {
   short weight[3];
   short offset[3];
   } sWPParam;
@@ -798,7 +798,7 @@ typedef struct Slice {
   unsigned short weightedBiPredIdc;
   unsigned short lumaLog2weightDenom;
   unsigned short chromaLog2weightDenom;
-  sWPParam** WPParam;     // wp parameters in [list][index]
+  sWPParam** wpParam;     // wp parameters in [list][index]
   int***     wpWeight;   // weight in [list][index][component] order
   int***     wpOffset;   // offset in [list][index][component] order
   int****    wbpWeight;  // weight in [list][fw_index][bw_index][component] order

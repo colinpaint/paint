@@ -94,10 +94,10 @@ static const byte* pos2ctx_last    [] = {pos2ctx_last4x4, pos2ctx_last4x4, pos2c
 //}}}
 
 //{{{
-static unsigned int unary_bin_max_decode (sDecodingEnv* decodingEnv, sBiContextType* ctx,
+static unsigned int unary_bin_max_decode (sDecodeEnv* decodeEnv, sBiContextType* ctx,
                                           int ctx_offset, unsigned int max_symbol) {
 
-  unsigned int symbol =  biarDecodeSymbol (decodingEnv, ctx );
+  unsigned int symbol =  biarDecodeSymbol (decodeEnv, ctx );
 
   if (symbol == 0 || (max_symbol == 0))
     return symbol;
@@ -106,7 +106,7 @@ static unsigned int unary_bin_max_decode (sDecodingEnv* decodingEnv, sBiContextT
     ctx += ctx_offset;
     symbol = 0;
     do {
-      l = biarDecodeSymbol(decodingEnv, ctx);
+      l = biarDecodeSymbol(decodeEnv, ctx);
       ++symbol;
       }
     while( (l != 0) && (symbol < max_symbol) );
@@ -118,9 +118,9 @@ static unsigned int unary_bin_max_decode (sDecodingEnv* decodingEnv, sBiContextT
   }
 //}}}
 //{{{
-static unsigned int unary_bin_decode (sDecodingEnv* decodingEnv, sBiContextType* ctx, int ctx_offset) {
+static unsigned int unary_bin_decode (sDecodeEnv* decodeEnv, sBiContextType* ctx, int ctx_offset) {
 
-  unsigned int symbol = biarDecodeSymbol(decodingEnv, ctx );
+  unsigned int symbol = biarDecodeSymbol(decodeEnv, ctx );
 
   if (symbol == 0)
     return 0;
@@ -129,7 +129,7 @@ static unsigned int unary_bin_decode (sDecodingEnv* decodingEnv, sBiContextType*
     ctx += ctx_offset;;
     symbol = 0;
     do {
-      l = biarDecodeSymbol(decodingEnv, ctx);
+      l = biarDecodeSymbol(decodeEnv, ctx);
       ++symbol;
       }
     while (l != 0);
@@ -139,14 +139,14 @@ static unsigned int unary_bin_decode (sDecodingEnv* decodingEnv, sBiContextType*
   }
 //}}}
 //{{{
-static unsigned int exp_golomb_decode_eq_prob (sDecodingEnv* decodingEnv, int k) {
+static unsigned int exp_golomb_decode_eq_prob (sDecodeEnv* decodeEnv, int k) {
 
   unsigned int l;
   int symbol = 0;
   int binary_symbol = 0;
 
   do {
-    l = biariDecodeSymbolEqProb(decodingEnv);
+    l = biariDecodeSymbolEqProb(decodeEnv);
     if (l == 1) {
       symbol += (1<<k);
       ++k;
@@ -155,16 +155,16 @@ static unsigned int exp_golomb_decode_eq_prob (sDecodingEnv* decodingEnv, int k)
 
   while (k--)
     // next binary part
-    if (biariDecodeSymbolEqProb(decodingEnv)==1)
+    if (biariDecodeSymbolEqProb(decodeEnv)==1)
       binary_symbol |= (1<<k);
 
   return (unsigned int) (symbol + binary_symbol);
   }
 //}}}
 //{{{
-static unsigned int unary_exp_golomb_level_decode (sDecodingEnv* decodingEnv, sBiContextType* ctx) {
+static unsigned int unary_exp_golomb_level_decode (sDecodeEnv* decodeEnv, sBiContextType* ctx) {
 
-  unsigned int symbol = biarDecodeSymbol (decodingEnv, ctx );
+  unsigned int symbol = biarDecodeSymbol (decodeEnv, ctx );
 
   if (symbol == 0)
     return 0;
@@ -173,21 +173,21 @@ static unsigned int unary_exp_golomb_level_decode (sDecodingEnv* decodingEnv, sB
     unsigned int exp_start = 13;
     symbol = 0;
     do {
-      l = biarDecodeSymbol (decodingEnv, ctx);
+      l = biarDecodeSymbol (decodeEnv, ctx);
       ++symbol;
       ++k;
       } while((l != 0) && (k != exp_start));
 
     if (l != 0)
-      symbol += exp_golomb_decode_eq_prob (decodingEnv,0)+1;
+      symbol += exp_golomb_decode_eq_prob (decodeEnv,0)+1;
     return symbol;
     }
   }
 //}}}
 //{{{
-static unsigned int unary_exp_golomb_mv_decode (sDecodingEnv* decodingEnv, sBiContextType* ctx, unsigned int max_bin) {
+static unsigned int unary_exp_golomb_mv_decode (sDecodeEnv* decodeEnv, sBiContextType* ctx, unsigned int max_bin) {
 
-  unsigned int symbol = biarDecodeSymbol (decodingEnv, ctx );
+  unsigned int symbol = biarDecodeSymbol (decodeEnv, ctx );
 
   if (symbol == 0)
     return 0;
@@ -199,7 +199,7 @@ static unsigned int unary_exp_golomb_mv_decode (sDecodingEnv* decodingEnv, sBiCo
     symbol = 0;
     ++ctx;
     do {
-      l = biarDecodeSymbol (decodingEnv, ctx);
+      l = biarDecodeSymbol (decodeEnv, ctx);
       if ((++bin) == 2)
         ctx++;
       if (bin == max_bin)
@@ -208,7 +208,7 @@ static unsigned int unary_exp_golomb_mv_decode (sDecodingEnv* decodingEnv, sBiCo
       ++k;
       } while ((l != 0) && (k != exp_start));
     if (l != 0)
-      symbol += exp_golomb_decode_eq_prob (decodingEnv, 3) + 1;
+      symbol += exp_golomb_decode_eq_prob (decodeEnv, 3) + 1;
 
     return symbol;
     }
@@ -222,8 +222,8 @@ int cabacStartCode (sSlice* slice, int eos_bit) {
   if (eos_bit) {
     const byte* dpMap = assignSE2dp[slice->dataDpMode];
     sDataPartition* dataPartition = &(slice->dataPartitions[dpMap[SE_MBTYPE]]);
-    sDecodingEnv* decodingEnv = &(dataPartition->deCabac);
-    bit = biariDecodeFinal (decodingEnv);
+    sDecodeEnv* decodeEnv = &(dataPartition->deCabac);
+    bit = biariDecodeFinal (decodeEnv);
     }
   else
     bit = 0;
@@ -291,7 +291,7 @@ void deleteTextureInfoContexts (sTextureInfoContexts* contexts) {
 //}}}
 
 //{{{
-void readFieldModeInfo_CABAC (sMacroblock* mb, sSyntaxElement* se, sDecodingEnv* decodingEnv) {
+void readFieldModeInfo_CABAC (sMacroblock* mb, sSyntaxElement* se, sDecodeEnv* decodeEnv) {
 
   sSlice* slice = mb->slice;
   sMotionInfoContexts *ctx  = slice->motionInfoContexts;
@@ -299,7 +299,7 @@ void readFieldModeInfo_CABAC (sMacroblock* mb, sSyntaxElement* se, sDecodingEnv*
   int b = mb->mbAvailB ? slice->mbData[mb->mbIndexB].mbField : 0;
   int act_ctx = a + b;
 
-  se->value1 = biarDecodeSymbol (decodingEnv, &ctx->mb_aff_contexts[act_ctx]);
+  se->value1 = biarDecodeSymbol (decodeEnv, &ctx->mb_aff_contexts[act_ctx]);
   }
 //}}}
 
@@ -310,11 +310,11 @@ int check_next_mb_and_get_field_mode_CABAC_p_slice (sSlice* slice, sSyntaxElemen
   sDecoder* decoder = slice->decoder;
   sBiContextType* mb_type_ctx_copy[3];
   sBiContextType* mb_aff_ctx_copy;
-  sDecodingEnv* decodingEnv_copy;
+  sDecodeEnv* decodingEnv_copy;
   sMotionInfoContexts* motionInfoContexts  = slice->motionInfoContexts;
 
   int length;
-  sDecodingEnv* decodingEnv = &(act_dp->deCabac);
+  sDecodeEnv* decodeEnv = &(act_dp->deCabac);
 
   int skip = 0;
   int field = 0;
@@ -336,26 +336,26 @@ int check_next_mb_and_get_field_mode_CABAC_p_slice (sSlice* slice, sSyntaxElemen
   checkNeighbourCabac (mb);
 
   // create
-  decodingEnv_copy = (sDecodingEnv*) calloc(1, sizeof(sDecodingEnv) );
+  decodingEnv_copy = (sDecodeEnv*) calloc(1, sizeof(sDecodeEnv) );
   for (i = 0; i < 3;++i)
     mb_type_ctx_copy[i] = (sBiContextType*) calloc(NUM_MB_TYPE_CTX, sizeof(sBiContextType) );
   mb_aff_ctx_copy = (sBiContextType*) calloc(NUM_MB_AFF_CTX, sizeof(sBiContextType) );
 
   // copy
-  memcpy (decodingEnv_copy,decodingEnv,sizeof(sDecodingEnv));
-  length = *(decodingEnv_copy->Dcodestrm_len) = *(decodingEnv->Dcodestrm_len);
+  memcpy (decodingEnv_copy,decodeEnv,sizeof(sDecodeEnv));
+  length = *(decodingEnv_copy->codeStreamLen) = *(decodeEnv->codeStreamLen);
   for (i=0;i<3;++i)
     memcpy (mb_type_ctx_copy[i], motionInfoContexts->mb_type_contexts[i],NUM_MB_TYPE_CTX*sizeof(sBiContextType) );
   memcpy (mb_aff_ctx_copy, motionInfoContexts->mb_aff_contexts,NUM_MB_AFF_CTX*sizeof(sBiContextType) );
 
   // check_next_mb
   slice->lastDquant = 0;
-  read_skip_flag_CABAC_p_slice (mb, se, decodingEnv);
+  read_skip_flag_CABAC_p_slice (mb, se, decodeEnv);
 
   skip = (se->value1 == 0);
 
   if (!skip) {
-    readFieldModeInfo_CABAC (mb, se,decodingEnv);
+    readFieldModeInfo_CABAC (mb, se,decodeEnv);
     field = se->value1;
     slice->mbData[slice->mbIndex-1].mbField = field;
    }
@@ -363,8 +363,8 @@ int check_next_mb_and_get_field_mode_CABAC_p_slice (sSlice* slice, sSyntaxElemen
   // reset
   slice->mbIndex--;
 
-  memcpy(decodingEnv,decodingEnv_copy,sizeof(sDecodingEnv));
-  *(decodingEnv->Dcodestrm_len) = length;
+  memcpy(decodeEnv,decodingEnv_copy,sizeof(sDecodeEnv));
+  *(decodeEnv->codeStreamLen) = length;
   for (i = 0; i < 3; ++i)
     memcpy (motionInfoContexts->mb_type_contexts[i], mb_type_ctx_copy[i], NUM_MB_TYPE_CTX * sizeof(sBiContextType));
   memcpy (motionInfoContexts->mb_aff_contexts, mb_aff_ctx_copy, NUM_MB_AFF_CTX * sizeof(sBiContextType));
@@ -386,10 +386,10 @@ int check_next_mb_and_get_field_mode_CABAC_b_slice (sSlice* slice, sSyntaxElemen
   sDecoder* decoder = slice->decoder;
   sBiContextType* mb_type_ctx_copy[3];
   sBiContextType* mb_aff_ctx_copy;
-  sDecodingEnv* decodingEnv_copy;
+  sDecodeEnv* decodingEnv_copy;
 
   int length;
-  sDecodingEnv* decodingEnv = &(act_dp->deCabac);
+  sDecodeEnv* decodeEnv = &(act_dp->deCabac);
   sMotionInfoContexts* motionInfoContexts = slice->motionInfoContexts;
 
   int skip = 0;
@@ -413,14 +413,14 @@ int check_next_mb_and_get_field_mode_CABAC_b_slice (sSlice* slice, sSyntaxElemen
   checkNeighbourCabac (mb);
 
   // create
-  decodingEnv_copy = (sDecodingEnv*) calloc(1, sizeof(sDecodingEnv) );
+  decodingEnv_copy = (sDecodeEnv*) calloc(1, sizeof(sDecodeEnv) );
   for (i = 0; i < 3; ++i)
     mb_type_ctx_copy[i] = (sBiContextType*)calloc (NUM_MB_TYPE_CTX, sizeof(sBiContextType) );
   mb_aff_ctx_copy = (sBiContextType*)calloc (NUM_MB_AFF_CTX, sizeof(sBiContextType) );
 
   //copy
-  memcpy (decodingEnv_copy, decodingEnv, sizeof(sDecodingEnv));
-  length = *(decodingEnv_copy->Dcodestrm_len) = *(decodingEnv->Dcodestrm_len);
+  memcpy (decodingEnv_copy, decodeEnv, sizeof(sDecodeEnv));
+  length = *(decodingEnv_copy->codeStreamLen) = *(decodeEnv->codeStreamLen);
 
   for (i = 0; i < 3;++i)
     memcpy (mb_type_ctx_copy[i], motionInfoContexts->mb_type_contexts[i], NUM_MB_TYPE_CTX * sizeof(sBiContextType) );
@@ -428,11 +428,11 @@ int check_next_mb_and_get_field_mode_CABAC_b_slice (sSlice* slice, sSyntaxElemen
 
   //  check_next_mb
   slice->lastDquant = 0;
-  read_skip_flag_CABAC_b_slice (mb, se, decodingEnv);
+  read_skip_flag_CABAC_b_slice (mb, se, decodeEnv);
 
   skip = (se->value1 == 0 && se->value2 == 0);
   if (!skip) {
-    readFieldModeInfo_CABAC (mb, se,decodingEnv);
+    readFieldModeInfo_CABAC (mb, se,decodeEnv);
     field = se->value1;
     slice->mbData[slice->mbIndex-1].mbField = field;
     }
@@ -440,8 +440,8 @@ int check_next_mb_and_get_field_mode_CABAC_b_slice (sSlice* slice, sSyntaxElemen
   // reset
   slice->mbIndex--;
 
-  memcpy(decodingEnv,decodingEnv_copy,sizeof(sDecodingEnv));
-  *(decodingEnv->Dcodestrm_len) = length;
+  memcpy(decodeEnv,decodingEnv_copy,sizeof(sDecodeEnv));
+  *(decodeEnv->codeStreamLen) = length;
 
   for (i = 0; i < 3; ++i)
     memcpy (motionInfoContexts->mb_type_contexts[i], mb_type_ctx_copy[i], NUM_MB_TYPE_CTX * sizeof(sBiContextType) );
@@ -460,7 +460,7 @@ int check_next_mb_and_get_field_mode_CABAC_b_slice (sSlice* slice, sSyntaxElemen
 //}}}
 
 //{{{
-void read_MVD_CABAC (sMacroblock* mb, sSyntaxElement *se, sDecodingEnv* decodingEnv) {
+void read_MVD_CABAC (sMacroblock* mb, sSyntaxElement *se, sDecodeEnv* decodeEnv) {
 
   int* mbSize = mb->decoder->mbSize[IS_LUMA];
   sSlice* slice = mb->slice;
@@ -490,13 +490,13 @@ void read_MVD_CABAC (sMacroblock* mb, sSyntaxElement *se, sDecodingEnv* decoding
 
   se->context = a;
 
-  act_sym = biarDecodeSymbol (decodingEnv, ctx->mv_res_contexts[0] + a );
+  act_sym = biarDecodeSymbol (decodeEnv, ctx->mv_res_contexts[0] + a );
 
   if (act_sym != 0) {
     a = 5 * k;
-    act_sym = unary_exp_golomb_mv_decode (decodingEnv, ctx->mv_res_contexts[1] + a, 3) + 1;
+    act_sym = unary_exp_golomb_mv_decode (decodeEnv, ctx->mv_res_contexts[1] + a, 3) + 1;
 
-    if(biariDecodeSymbolEqProb (decodingEnv))
+    if(biariDecodeSymbolEqProb (decodeEnv))
       act_sym = -act_sym;
     }
 
@@ -504,7 +504,7 @@ void read_MVD_CABAC (sMacroblock* mb, sSyntaxElement *se, sDecodingEnv* decoding
   }
 //}}}
 //{{{
-void read_mvd_CABAC_mbaff (sMacroblock* mb, sSyntaxElement *se, sDecodingEnv* decodingEnv) {
+void read_mvd_CABAC_mbaff (sMacroblock* mb, sSyntaxElement *se, sDecodeEnv* decodeEnv) {
 
   sDecoder* decoder = mb->decoder;
   sSlice* slice = mb->slice;
@@ -550,11 +550,11 @@ void read_mvd_CABAC_mbaff (sMacroblock* mb, sSyntaxElement *se, sDecodingEnv* de
     act_ctx = 5 * k + 2;
   se->context = act_ctx;
 
-  act_sym = biarDecodeSymbol (decodingEnv, &ctx->mv_res_contexts[0][act_ctx] );
+  act_sym = biarDecodeSymbol (decodeEnv, &ctx->mv_res_contexts[0][act_ctx] );
   if (act_sym != 0) {
     act_ctx = 5 * k;
-    act_sym = unary_exp_golomb_mv_decode (decodingEnv, ctx->mv_res_contexts[1] + act_ctx, 3) + 1;
-    if (biariDecodeSymbolEqProb (decodingEnv))
+    act_sym = unary_exp_golomb_mv_decode (decodeEnv, ctx->mv_res_contexts[1] + act_ctx, 3) + 1;
+    if (biariDecodeSymbolEqProb (decodeEnv))
       act_sym = -act_sym;
     }
 
@@ -562,7 +562,7 @@ void read_mvd_CABAC_mbaff (sMacroblock* mb, sSyntaxElement *se, sDecodingEnv* de
   }
 //}}}
 //{{{
-void readB8_typeInfo_CABAC_p_slice (sMacroblock* mb, sSyntaxElement *se, sDecodingEnv* decodingEnv) {
+void readB8_typeInfo_CABAC_p_slice (sMacroblock* mb, sSyntaxElement *se, sDecodeEnv* decodeEnv) {
 
   sSlice* slice = mb->slice;
   int act_sym = 0;
@@ -570,11 +570,11 @@ void readB8_typeInfo_CABAC_p_slice (sMacroblock* mb, sSyntaxElement *se, sDecodi
   sMotionInfoContexts *ctx = slice->motionInfoContexts;
   sBiContextType *b8_type_contexts = &ctx->b8_type_contexts[0][1];
 
-  if (biarDecodeSymbol (decodingEnv, b8_type_contexts++))
+  if (biarDecodeSymbol (decodeEnv, b8_type_contexts++))
     act_sym = 0;
   else {
-    if (biarDecodeSymbol (decodingEnv, ++b8_type_contexts))
-      act_sym = (biarDecodeSymbol (decodingEnv, ++b8_type_contexts))? 2: 3;
+    if (biarDecodeSymbol (decodeEnv, ++b8_type_contexts))
+      act_sym = (biarDecodeSymbol (decodeEnv, ++b8_type_contexts))? 2: 3;
     else
       act_sym = 1;
     }
@@ -583,39 +583,39 @@ void readB8_typeInfo_CABAC_p_slice (sMacroblock* mb, sSyntaxElement *se, sDecodi
   }
 //}}}
 //{{{
-void readB8_typeInfo_CABAC_b_slice (sMacroblock* mb, sSyntaxElement *se, sDecodingEnv* decodingEnv) {
+void readB8_typeInfo_CABAC_b_slice (sMacroblock* mb, sSyntaxElement *se, sDecodeEnv* decodeEnv) {
 
   sSlice* slice = mb->slice;
   int act_sym = 0;
 
   sMotionInfoContexts* ctx = slice->motionInfoContexts;
   sBiContextType* b8_type_contexts = ctx->b8_type_contexts[1];
-  if (biarDecodeSymbol (decodingEnv, b8_type_contexts++)) {
-    if (biarDecodeSymbol (decodingEnv, b8_type_contexts++)) {
-      if (biarDecodeSymbol (decodingEnv, b8_type_contexts++)) {
-        if (biarDecodeSymbol (decodingEnv, b8_type_contexts)) {
+  if (biarDecodeSymbol (decodeEnv, b8_type_contexts++)) {
+    if (biarDecodeSymbol (decodeEnv, b8_type_contexts++)) {
+      if (biarDecodeSymbol (decodeEnv, b8_type_contexts++)) {
+        if (biarDecodeSymbol (decodeEnv, b8_type_contexts)) {
           act_sym = 10;
-          if (biarDecodeSymbol (decodingEnv, b8_type_contexts))
+          if (biarDecodeSymbol (decodeEnv, b8_type_contexts))
             act_sym++;
           }
         else {
           act_sym = 6;
-          if (biarDecodeSymbol (decodingEnv, b8_type_contexts))
+          if (biarDecodeSymbol (decodeEnv, b8_type_contexts))
             act_sym += 2;
-          if (biarDecodeSymbol (decodingEnv, b8_type_contexts))
+          if (biarDecodeSymbol (decodeEnv, b8_type_contexts))
             act_sym++;
           }
         }
       else {
         act_sym = 2;
-        if (biarDecodeSymbol (decodingEnv, b8_type_contexts))
+        if (biarDecodeSymbol (decodeEnv, b8_type_contexts))
           act_sym += 2;
-        if (biarDecodeSymbol (decodingEnv, b8_type_contexts))
+        if (biarDecodeSymbol (decodeEnv, b8_type_contexts))
           act_sym ++;
         }
       }
     else
-      act_sym = (biarDecodeSymbol (decodingEnv, ++b8_type_contexts)) ? 1: 0;
+      act_sym = (biarDecodeSymbol (decodeEnv, ++b8_type_contexts)) ? 1: 0;
     ++act_sym;
     }
   else
@@ -625,33 +625,33 @@ void readB8_typeInfo_CABAC_b_slice (sMacroblock* mb, sSyntaxElement *se, sDecodi
   }
 //}}}
 //{{{
-void read_skip_flag_CABAC_p_slice (sMacroblock* mb, sSyntaxElement *se, sDecodingEnv* decodingEnv) {
+void read_skip_flag_CABAC_p_slice (sMacroblock* mb, sSyntaxElement *se, sDecodeEnv* decodeEnv) {
 
   int a = (mb->mbCabacLeft != NULL) ? (mb->mbCabacLeft->skipFlag == 0) : 0;
   int b = (mb->mbCabacUp   != NULL) ? (mb->mbCabacUp  ->skipFlag == 0) : 0;
 
   sBiContextType *mb_type_contexts = &mb->slice->motionInfoContexts->mb_type_contexts[1][a + b];
-  se->value1 = biarDecodeSymbol (decodingEnv, mb_type_contexts) != 1;
+  se->value1 = biarDecodeSymbol (decodeEnv, mb_type_contexts) != 1;
 
   if (!se->value1)
     mb->slice->lastDquant = 0;
   }
 //}}}
 //{{{
-void read_skip_flag_CABAC_b_slice (sMacroblock* mb, sSyntaxElement *se, sDecodingEnv* decodingEnv) {
+void read_skip_flag_CABAC_b_slice (sMacroblock* mb, sSyntaxElement *se, sDecodeEnv* decodeEnv) {
 
   int a = (mb->mbCabacLeft != NULL) ? (mb->mbCabacLeft->skipFlag == 0) : 0;
   int b = (mb->mbCabacUp != NULL) ? (mb->mbCabacUp->skipFlag == 0) : 0;
   sBiContextType* mb_type_contexts = &mb->slice->motionInfoContexts->mb_type_contexts[2][7 + a + b];
 
-  se->value1 = se->value2 = (biarDecodeSymbol (decodingEnv, mb_type_contexts) != 1);
+  se->value1 = se->value2 = (biarDecodeSymbol (decodeEnv, mb_type_contexts) != 1);
   if (!se->value1)
     mb->slice->lastDquant = 0;
   }
 //}}}
 
 //{{{
-void readMB_transform_size_flag_CABAC (sMacroblock* mb, sSyntaxElement *se, sDecodingEnv* decodingEnv) {
+void readMB_transform_size_flag_CABAC (sMacroblock* mb, sSyntaxElement *se, sDecodeEnv* decodeEnv) {
 
   sSlice* slice = mb->slice;
   sTextureInfoContexts*ctx = slice->textureInfoContexts;
@@ -659,12 +659,12 @@ void readMB_transform_size_flag_CABAC (sMacroblock* mb, sSyntaxElement *se, sDec
   int b = (mb->mbCabacUp   == NULL) ? 0 : mb->mbCabacUp->lumaTransformSize8x8flag;
   int a = (mb->mbCabacLeft == NULL) ? 0 : mb->mbCabacLeft->lumaTransformSize8x8flag;
 
-  int act_sym = biarDecodeSymbol (decodingEnv, ctx->transform_size_contexts + a + b );
+  int act_sym = biarDecodeSymbol (decodeEnv, ctx->transform_size_contexts + a + b );
   se->value1 = act_sym;
   }
 //}}}
 //{{{
-void readMB_typeInfo_CABAC_i_slice (sMacroblock* mb, sSyntaxElement *se, sDecodingEnv* decodingEnv) {
+void readMB_typeInfo_CABAC_i_slice (sMacroblock* mb, sSyntaxElement *se, sDecodeEnv* decodeEnv) {
 
   sSlice* slice = mb->slice;
   sMotionInfoContexts *ctx = slice->motionInfoContexts;
@@ -684,37 +684,37 @@ void readMB_typeInfo_CABAC_i_slice (sMacroblock* mb, sSyntaxElement *se, sDecodi
       a = (((mb->mbCabacLeft)->mbType != I4MB && mb->mbCabacLeft->mbType != I8MB) ? 1 : 0 );
 
     act_ctx = a + b;
-    act_sym = biarDecodeSymbol(decodingEnv, ctx->mb_type_contexts[0] + act_ctx);
+    act_sym = biarDecodeSymbol(decodeEnv, ctx->mb_type_contexts[0] + act_ctx);
     se->context = act_ctx; // store context
 
     if (act_sym==0) // 4x4 Intra
       curr_mb_type = act_sym;
     else {
       // 16x16 Intra
-      mode_sym = biariDecodeFinal(decodingEnv);
+      mode_sym = biariDecodeFinal(decodeEnv);
       if(mode_sym == 1)
         curr_mb_type = 25;
       else {
         act_sym = 1;
         act_ctx = 4;
-        mode_sym =  biarDecodeSymbol(decodingEnv, ctx->mb_type_contexts[0] + act_ctx ); // decoding of AC/no AC
+        mode_sym =  biarDecodeSymbol(decodeEnv, ctx->mb_type_contexts[0] + act_ctx ); // decoding of AC/no AC
         act_sym += mode_sym*12;
         act_ctx = 5;
         // decoding of cbp: 0,1,2
-        mode_sym =  biarDecodeSymbol(decodingEnv, ctx->mb_type_contexts[0] + act_ctx );
+        mode_sym =  biarDecodeSymbol(decodeEnv, ctx->mb_type_contexts[0] + act_ctx );
         if (mode_sym!=0) {
           act_ctx=6;
-          mode_sym = biarDecodeSymbol(decodingEnv, ctx->mb_type_contexts[0] + act_ctx );
+          mode_sym = biarDecodeSymbol(decodeEnv, ctx->mb_type_contexts[0] + act_ctx );
           act_sym+=4;
           if (mode_sym!=0)
             act_sym+=4;
         }
         // decoding of I pred-mode: 0,1,2,3
         act_ctx = 7;
-        mode_sym =  biarDecodeSymbol(decodingEnv, ctx->mb_type_contexts[0] + act_ctx );
+        mode_sym =  biarDecodeSymbol(decodeEnv, ctx->mb_type_contexts[0] + act_ctx );
         act_sym += mode_sym*2;
         act_ctx = 8;
-        mode_sym =  biarDecodeSymbol(decodingEnv, ctx->mb_type_contexts[0] + act_ctx );
+        mode_sym =  biarDecodeSymbol(decodeEnv, ctx->mb_type_contexts[0] + act_ctx );
         act_sym += mode_sym;
         curr_mb_type = act_sym;
         }
@@ -731,7 +731,7 @@ void readMB_typeInfo_CABAC_i_slice (sMacroblock* mb, sSyntaxElement *se, sDecodi
       a = (( (mb->mbCabacLeft)->mbType != SI4MB) ? 1 : 0 );
 
     act_ctx = a + b;
-    act_sym = biarDecodeSymbol(decodingEnv, ctx->mb_type_contexts[1] + act_ctx);
+    act_sym = biarDecodeSymbol(decodeEnv, ctx->mb_type_contexts[1] + act_ctx);
     se->context = act_ctx; // store context
 
     if (act_sym==0) //  SI 4x4 Intra
@@ -745,27 +745,27 @@ void readMB_typeInfo_CABAC_i_slice (sMacroblock* mb, sSyntaxElement *se, sDecodi
         a = (( (mb->mbCabacLeft)->mbType != I4MB) ? 1 : 0 );
 
       act_ctx = a + b;
-      act_sym = biarDecodeSymbol(decodingEnv, ctx->mb_type_contexts[0] + act_ctx);
+      act_sym = biarDecodeSymbol(decodeEnv, ctx->mb_type_contexts[0] + act_ctx);
       se->context = act_ctx; // store context
 
       if (act_sym==0) // 4x4 Intra
         curr_mb_type = 1;
       else {
         // 16x16 Intra
-        mode_sym = biariDecodeFinal(decodingEnv);
+        mode_sym = biariDecodeFinal(decodeEnv);
         if( mode_sym==1 )
           curr_mb_type = 26;
         else {
           act_sym = 2;
           act_ctx = 4;
-          mode_sym =  biarDecodeSymbol(decodingEnv, ctx->mb_type_contexts[0] + act_ctx ); // decoding of AC/no AC
+          mode_sym =  biarDecodeSymbol(decodeEnv, ctx->mb_type_contexts[0] + act_ctx ); // decoding of AC/no AC
           act_sym += mode_sym*12;
           act_ctx = 5;
           // decoding of cbp: 0,1,2
-          mode_sym =  biarDecodeSymbol(decodingEnv, ctx->mb_type_contexts[0] + act_ctx );
+          mode_sym =  biarDecodeSymbol(decodeEnv, ctx->mb_type_contexts[0] + act_ctx );
           if (mode_sym!=0) {
             act_ctx=6;
-            mode_sym = biarDecodeSymbol(decodingEnv, ctx->mb_type_contexts[0] + act_ctx );
+            mode_sym = biarDecodeSymbol(decodeEnv, ctx->mb_type_contexts[0] + act_ctx );
             act_sym+=4;
             if (mode_sym!=0)
               act_sym+=4;
@@ -773,10 +773,10 @@ void readMB_typeInfo_CABAC_i_slice (sMacroblock* mb, sSyntaxElement *se, sDecodi
 
           // decoding of I pred-mode: 0,1,2,3
           act_ctx = 7;
-          mode_sym =  biarDecodeSymbol(decodingEnv, ctx->mb_type_contexts[0] + act_ctx );
+          mode_sym =  biarDecodeSymbol(decodeEnv, ctx->mb_type_contexts[0] + act_ctx );
           act_sym += mode_sym*2;
           act_ctx = 8;
-          mode_sym =  biarDecodeSymbol(decodingEnv, ctx->mb_type_contexts[0] + act_ctx );
+          mode_sym =  biarDecodeSymbol(decodeEnv, ctx->mb_type_contexts[0] + act_ctx );
           act_sym += mode_sym;
           curr_mb_type = act_sym;
           }
@@ -789,7 +789,7 @@ void readMB_typeInfo_CABAC_i_slice (sMacroblock* mb, sSyntaxElement *se, sDecodi
   }
 //}}}
 //{{{
-void readMB_typeInfo_CABAC_p_slice (sMacroblock* mb, sSyntaxElement *se, sDecodingEnv* decodingEnv) {
+void readMB_typeInfo_CABAC_p_slice (sMacroblock* mb, sSyntaxElement *se, sDecodeEnv* decodeEnv) {
 
   sSlice* slice = mb->slice;
   sMotionInfoContexts *ctx = slice->motionInfoContexts;
@@ -800,21 +800,21 @@ void readMB_typeInfo_CABAC_p_slice (sMacroblock* mb, sSyntaxElement *se, sDecodi
   int curr_mb_type;
 
   sBiContextType* mb_type_contexts = ctx->mb_type_contexts[1];
-  if (biarDecodeSymbol (decodingEnv, &mb_type_contexts[4] )) {
-    if (biarDecodeSymbol (decodingEnv, &mb_type_contexts[7] ))
+  if (biarDecodeSymbol (decodeEnv, &mb_type_contexts[4] )) {
+    if (biarDecodeSymbol (decodeEnv, &mb_type_contexts[7] ))
       act_sym = 7;
     else
       act_sym = 6;
     }
   else {
-    if (biarDecodeSymbol (decodingEnv, &mb_type_contexts[5] )) {
-      if (biarDecodeSymbol (decodingEnv, &mb_type_contexts[7] ))
+    if (biarDecodeSymbol (decodeEnv, &mb_type_contexts[5] )) {
+      if (biarDecodeSymbol (decodeEnv, &mb_type_contexts[7] ))
         act_sym = 2;
       else
         act_sym = 3;
     }
     else {
-      if (biarDecodeSymbol (decodingEnv, &mb_type_contexts[6] ))
+      if (biarDecodeSymbol (decodeEnv, &mb_type_contexts[6] ))
         act_sym = 4;
       else
         act_sym = 1;
@@ -825,29 +825,29 @@ void readMB_typeInfo_CABAC_p_slice (sMacroblock* mb, sSyntaxElement *se, sDecodi
     curr_mb_type = act_sym;
   else  {
     // additional info for 16x16 Intra-mode
-    mode_sym = biariDecodeFinal (decodingEnv);
+    mode_sym = biariDecodeFinal (decodeEnv);
     if( mode_sym==1 )
       curr_mb_type = 31;
     else {
       act_ctx = 8;
-      mode_sym =  biarDecodeSymbol (decodingEnv, mb_type_contexts + act_ctx ); // decoding of AC/no AC
+      mode_sym =  biarDecodeSymbol (decodeEnv, mb_type_contexts + act_ctx ); // decoding of AC/no AC
       act_sym += mode_sym*12;
 
       // decoding of cbp: 0,1,2
       act_ctx = 9;
-      mode_sym = biarDecodeSymbol (decodingEnv, mb_type_contexts + act_ctx );
+      mode_sym = biarDecodeSymbol (decodeEnv, mb_type_contexts + act_ctx );
       if (mode_sym != 0) {
         act_sym+=4;
-        mode_sym = biarDecodeSymbol (decodingEnv, mb_type_contexts + act_ctx );
+        mode_sym = biarDecodeSymbol (decodeEnv, mb_type_contexts + act_ctx );
         if (mode_sym != 0)
           act_sym+=4;
         }
 
       // decoding of I pred-mode: 0,1,2,3
       act_ctx = 10;
-      mode_sym = biarDecodeSymbol (decodingEnv, mb_type_contexts + act_ctx );
+      mode_sym = biarDecodeSymbol (decodeEnv, mb_type_contexts + act_ctx );
       act_sym += mode_sym*2;
-      mode_sym = biarDecodeSymbol (decodingEnv, mb_type_contexts + act_ctx );
+      mode_sym = biarDecodeSymbol (decodeEnv, mb_type_contexts + act_ctx );
       act_sym += mode_sym;
       curr_mb_type = act_sym;
       }
@@ -857,7 +857,7 @@ void readMB_typeInfo_CABAC_p_slice (sMacroblock* mb, sSyntaxElement *se, sDecodi
   }
 //}}}
 //{{{
-void readMB_typeInfo_CABAC_b_slice (sMacroblock* mb, sSyntaxElement *se, sDecodingEnv* decodingEnv) {
+void readMB_typeInfo_CABAC_b_slice (sMacroblock* mb, sSyntaxElement *se, sDecodeEnv* decodeEnv) {
 
   sSlice* slice = mb->slice;
   sMotionInfoContexts *ctx = slice->motionInfoContexts;
@@ -877,15 +877,15 @@ void readMB_typeInfo_CABAC_b_slice (sMacroblock* mb, sSyntaxElement *se, sDecodi
 
   act_ctx = a + b;
 
-  if (biarDecodeSymbol (decodingEnv, &mb_type_contexts[act_ctx])) {
-    if (biarDecodeSymbol (decodingEnv, &mb_type_contexts[4])) {
-      if (biarDecodeSymbol (decodingEnv, &mb_type_contexts[5])) {
+  if (biarDecodeSymbol (decodeEnv, &mb_type_contexts[act_ctx])) {
+    if (biarDecodeSymbol (decodeEnv, &mb_type_contexts[4])) {
+      if (biarDecodeSymbol (decodeEnv, &mb_type_contexts[5])) {
         act_sym = 12;
-        if (biarDecodeSymbol (decodingEnv, &mb_type_contexts[6]))
+        if (biarDecodeSymbol (decodeEnv, &mb_type_contexts[6]))
           act_sym += 8;
-        if (biarDecodeSymbol (decodingEnv, &mb_type_contexts[6]))
+        if (biarDecodeSymbol (decodeEnv, &mb_type_contexts[6]))
           act_sym += 4;
-        if (biarDecodeSymbol (decodingEnv, &mb_type_contexts[6]))
+        if (biarDecodeSymbol (decodeEnv, &mb_type_contexts[6]))
           act_sym += 2;
 
         if (act_sym == 24)
@@ -895,22 +895,22 @@ void readMB_typeInfo_CABAC_b_slice (sMacroblock* mb, sSyntaxElement *se, sDecodi
         else {
           if (act_sym == 22)
             act_sym = 23;
-          if (biarDecodeSymbol (decodingEnv, &mb_type_contexts[6]))
+          if (biarDecodeSymbol (decodeEnv, &mb_type_contexts[6]))
             act_sym += 1;
           }
         }
       else {
         act_sym = 3;
-        if (biarDecodeSymbol (decodingEnv, &mb_type_contexts[6]))
+        if (biarDecodeSymbol (decodeEnv, &mb_type_contexts[6]))
           act_sym += 4;
-        if (biarDecodeSymbol (decodingEnv, &mb_type_contexts[6]))
+        if (biarDecodeSymbol (decodeEnv, &mb_type_contexts[6]))
           act_sym += 2;
-        if (biarDecodeSymbol (decodingEnv, &mb_type_contexts[6]))
+        if (biarDecodeSymbol (decodeEnv, &mb_type_contexts[6]))
           act_sym += 1;
         }
       }
     else {
-      if (biarDecodeSymbol (decodingEnv, &mb_type_contexts[6]))
+      if (biarDecodeSymbol (decodeEnv, &mb_type_contexts[6]))
         act_sym=2;
       else
         act_sym=1;
@@ -923,30 +923,30 @@ void readMB_typeInfo_CABAC_b_slice (sMacroblock* mb, sSyntaxElement *se, sDecodi
     curr_mb_type = act_sym;
   else  {
     // additional info for 16x16 Intra-mode
-    mode_sym = biariDecodeFinal(decodingEnv);
+    mode_sym = biariDecodeFinal(decodeEnv);
     if( mode_sym == 1 )
       curr_mb_type = 48;
     else {
       mb_type_contexts = ctx->mb_type_contexts[1];
       act_ctx = 8;
-      mode_sym =  biarDecodeSymbol(decodingEnv, mb_type_contexts + act_ctx ); // decoding of AC/no AC
+      mode_sym =  biarDecodeSymbol(decodeEnv, mb_type_contexts + act_ctx ); // decoding of AC/no AC
       act_sym += mode_sym*12;
 
       // decoding of cbp: 0,1,2
       act_ctx = 9;
-      mode_sym = biarDecodeSymbol(decodingEnv, mb_type_contexts + act_ctx );
+      mode_sym = biarDecodeSymbol(decodeEnv, mb_type_contexts + act_ctx );
       if (mode_sym != 0) {
         act_sym+=4;
-        mode_sym = biarDecodeSymbol(decodingEnv, mb_type_contexts + act_ctx );
+        mode_sym = biarDecodeSymbol(decodeEnv, mb_type_contexts + act_ctx );
         if (mode_sym != 0)
           act_sym+=4;
         }
 
       // decoding of I pred-mode: 0,1,2,3
       act_ctx = 10;
-      mode_sym = biarDecodeSymbol(decodingEnv, mb_type_contexts + act_ctx );
+      mode_sym = biarDecodeSymbol(decodeEnv, mb_type_contexts + act_ctx );
       act_sym += mode_sym*2;
-      mode_sym = biarDecodeSymbol(decodingEnv, mb_type_contexts + act_ctx );
+      mode_sym = biarDecodeSymbol(decodeEnv, mb_type_contexts + act_ctx );
       act_sym += mode_sym;
       curr_mb_type = act_sym;
       }
@@ -957,26 +957,26 @@ void readMB_typeInfo_CABAC_b_slice (sMacroblock* mb, sSyntaxElement *se, sDecodi
 //}}}
 
 //{{{
-void readIntraPredMode_CABAC (sMacroblock* mb, sSyntaxElement *se, sDecodingEnv* decodingEnv) {
+void readIntraPredMode_CABAC (sMacroblock* mb, sSyntaxElement *se, sDecodeEnv* decodeEnv) {
 
   sSlice* slice = mb->slice;
   sTextureInfoContexts *ctx     = slice->textureInfoContexts;
 
   // use_most_probable_mode
-  int act_sym = biarDecodeSymbol(decodingEnv, ctx->ipr_contexts);
+  int act_sym = biarDecodeSymbol(decodeEnv, ctx->ipr_contexts);
 
   // remaining_mode_selector
   if (act_sym == 1)
     se->value1 = -1;
   else {
-    se->value1  = (biarDecodeSymbol(decodingEnv, ctx->ipr_contexts + 1)     );
-    se->value1 |= (biarDecodeSymbol(decodingEnv, ctx->ipr_contexts + 1) << 1);
-    se->value1 |= (biarDecodeSymbol(decodingEnv, ctx->ipr_contexts + 1) << 2);
+    se->value1  = (biarDecodeSymbol(decodeEnv, ctx->ipr_contexts + 1)     );
+    se->value1 |= (biarDecodeSymbol(decodeEnv, ctx->ipr_contexts + 1) << 1);
+    se->value1 |= (biarDecodeSymbol(decodeEnv, ctx->ipr_contexts + 1) << 2);
     }
   }
 //}}}
 //{{{
-void readRefFrame_CABAC (sMacroblock* mb, sSyntaxElement *se, sDecodingEnv* decodingEnv) {
+void readRefFrame_CABAC (sMacroblock* mb, sSyntaxElement *se, sDecodeEnv* decodeEnv) {
 
   sSlice* slice = mb->slice;
   sDecoder* decoder = mb->decoder;
@@ -1022,11 +1022,11 @@ void readRefFrame_CABAC (sMacroblock* mb, sSyntaxElement *se, sDecodingEnv* deco
   act_ctx = a + b;
   se->context = act_ctx; // store context
 
-  act_sym = biarDecodeSymbol(decodingEnv,ctx->ref_no_contexts[addctx] + act_ctx );
+  act_sym = biarDecodeSymbol(decodeEnv,ctx->ref_no_contexts[addctx] + act_ctx );
 
   if (act_sym != 0) {
     act_ctx = 4;
-    act_sym = unary_bin_decode(decodingEnv,ctx->ref_no_contexts[addctx] + act_ctx,1);
+    act_sym = unary_bin_decode(decodeEnv,ctx->ref_no_contexts[addctx] + act_ctx,1);
     ++act_sym;
     }
 
@@ -1034,17 +1034,17 @@ void readRefFrame_CABAC (sMacroblock* mb, sSyntaxElement *se, sDecodingEnv* deco
   }
 //}}}
 //{{{
-void read_dQuant_CABAC (sMacroblock* mb, sSyntaxElement* se, sDecodingEnv* decodingEnv) {
+void read_dQuant_CABAC (sMacroblock* mb, sSyntaxElement* se, sDecodeEnv* decodeEnv) {
 
   sSlice* slice = mb->slice;
   sMotionInfoContexts* ctx = slice->motionInfoContexts;
   int* dquant = &se->value1;
   int act_ctx = (slice->lastDquant != 0) ? 1 : 0;
-  int act_sym = biarDecodeSymbol (decodingEnv, ctx->delta_qp_contexts + act_ctx);
+  int act_sym = biarDecodeSymbol (decodeEnv, ctx->delta_qp_contexts + act_ctx);
 
   if (act_sym != 0) {
     act_ctx = 2;
-    act_sym = unary_bin_decode (decodingEnv, ctx->delta_qp_contexts + act_ctx, 1);
+    act_sym = unary_bin_decode (decodeEnv, ctx->delta_qp_contexts + act_ctx, 1);
     ++act_sym;
     *dquant = (act_sym + 1) >> 1;
     if ((act_sym & 0x01)==0)                           // lsb is signed bit
@@ -1057,7 +1057,7 @@ void read_dQuant_CABAC (sMacroblock* mb, sSyntaxElement* se, sDecodingEnv* decod
   }
 //}}}
 //{{{
-void read_CBP_CABAC (sMacroblock* mb, sSyntaxElement* se, sDecodingEnv* decodingEnv) {
+void read_CBP_CABAC (sMacroblock* mb, sSyntaxElement* se, sDecodeEnv* decodeEnv) {
 
   sDecoder* decoder = mb->decoder;
   sPicture* picture = mb->slice->picture;
@@ -1107,7 +1107,7 @@ void read_CBP_CABAC (sMacroblock* mb, sSyntaxElement* se, sDecodingEnv* decoding
 
       curr_cbp_ctx = a + b;
       mask = (1 << (mb_y + (mb_x >> 1)));
-      cbp_bit = biarDecodeSymbol(decodingEnv, ctx->cbp_contexts[0] + curr_cbp_ctx );
+      cbp_bit = biarDecodeSymbol(decodeEnv, ctx->cbp_contexts[0] + curr_cbp_ctx );
       if (cbp_bit)
         cbp += mask;
       }
@@ -1131,7 +1131,7 @@ void read_CBP_CABAC (sMacroblock* mb, sSyntaxElement* se, sDecodingEnv* decoding
       }
 
     curr_cbp_ctx = a + b;
-    cbp_bit = biarDecodeSymbol(decodingEnv, ctx->cbp_contexts[1] + curr_cbp_ctx );
+    cbp_bit = biarDecodeSymbol(decodeEnv, ctx->cbp_contexts[1] + curr_cbp_ctx );
 
     // CABAC decoding for BinIdx 1
     if (cbp_bit) { // set the chroma bits
@@ -1151,7 +1151,7 @@ void read_CBP_CABAC (sMacroblock* mb, sSyntaxElement* se, sDecodingEnv* decoding
         }
 
       curr_cbp_ctx = a + b;
-      cbp_bit = biarDecodeSymbol(decodingEnv, ctx->cbp_contexts[2] + curr_cbp_ctx );
+      cbp_bit = biarDecodeSymbol(decodeEnv, ctx->cbp_contexts[2] + curr_cbp_ctx );
       cbp += (cbp_bit == 1) ? 32 : 16;
       }
     }
@@ -1163,7 +1163,7 @@ void read_CBP_CABAC (sMacroblock* mb, sSyntaxElement* se, sDecodingEnv* decoding
   }
 //}}}
 //{{{
-void readCIPredMode_CABAC (sMacroblock* mb, sSyntaxElement *se, sDecodingEnv* decodingEnv) {
+void readCIPredMode_CABAC (sMacroblock* mb, sSyntaxElement *se, sDecodeEnv* decodeEnv) {
 
   sSlice* slice = mb->slice;
 
@@ -1177,15 +1177,15 @@ void readCIPredMode_CABAC (sMacroblock* mb, sSyntaxElement *se, sDecodingEnv* de
   int a = (MbLeft != NULL) ? (((MbLeft->cPredMode != 0) && (MbLeft->mbType != IPCM)) ? 1 : 0) : 0;
   int act_ctx = a + b;
 
-  *act_sym = biarDecodeSymbol(decodingEnv, ctx->cipr_contexts + act_ctx );
+  *act_sym = biarDecodeSymbol(decodeEnv, ctx->cipr_contexts + act_ctx );
 
   if (*act_sym != 0)
-    *act_sym = unary_bin_max_decode(decodingEnv, ctx->cipr_contexts + 3, 0, 1) + 1;
+    *act_sym = unary_bin_max_decode(decodeEnv, ctx->cipr_contexts + 3, 0, 1) + 1;
   }
 //}}}
 
 //{{{
-static int read_and_store_CBP_block_bit_444 (sMacroblock* mb, sDecodingEnv*  decodingEnv, int type) {
+static int read_and_store_CBP_block_bit_444 (sMacroblock* mb, sDecodeEnv*  decodeEnv, int type) {
 
   sSlice* slice = mb->slice;
   sDecoder* decoder = mb->decoder;
@@ -1258,7 +1258,7 @@ static int read_and_store_CBP_block_bit_444 (sMacroblock* mb, sDecodingEnv*  dec
 
       ctx = 2 * upper_bit + left_bit;
       //===== encode symbol =====
-      cbp_bit = biarDecodeSymbol (decodingEnv, textureInfoContexts->bcbp_contexts[type2ctx_bcbp[type]] + ctx);
+      cbp_bit = biarDecodeSymbol (decodeEnv, textureInfoContexts->bcbp_contexts[type2ctx_bcbp[type]] + ctx);
     }
   }
   else if( (decoder->coding.sepColourPlaneFlag != 0) ) {
@@ -1283,7 +1283,7 @@ static int read_and_store_CBP_block_bit_444 (sMacroblock* mb, sDecodingEnv*  dec
 
       ctx = 2 * upper_bit + left_bit;
       //===== encode symbol =====
-      cbp_bit = biarDecodeSymbol (decodingEnv, textureInfoContexts->bcbp_contexts[type2ctx_bcbp[type]] + ctx);
+      cbp_bit = biarDecodeSymbol (decodeEnv, textureInfoContexts->bcbp_contexts[type2ctx_bcbp[type]] + ctx);
     }
   }
   else {
@@ -1334,7 +1334,7 @@ static int read_and_store_CBP_block_bit_444 (sMacroblock* mb, sDecodingEnv*  dec
 
     ctx = 2 * upper_bit + left_bit;
     //===== encode symbol =====
-    cbp_bit = biarDecodeSymbol (decodingEnv, textureInfoContexts->bcbp_contexts[type2ctx_bcbp[type]] + ctx);
+    cbp_bit = biarDecodeSymbol (decodeEnv, textureInfoContexts->bcbp_contexts[type2ctx_bcbp[type]] + ctx);
     }
 
   //--- set bits for current block ---
@@ -1399,7 +1399,7 @@ static inline int set_cbp_bit_ac(sMacroblock *neighbor_mb, sPixelPos *block) {
   }
 //}}}
 //{{{
-static int read_and_store_CBP_block_bit_normal (sMacroblock* mb, sDecodingEnv*  decodingEnv, int type) {
+static int read_and_store_CBP_block_bit_normal (sMacroblock* mb, sDecodeEnv*  decodeEnv, int type) {
 
   sSlice* slice = mb->slice;
   sDecoder* decoder = mb->decoder;
@@ -1426,7 +1426,7 @@ static int read_and_store_CBP_block_bit_normal (sMacroblock* mb, sDecodingEnv*  
 
     ctx = 2 * upper_bit + left_bit;
     //===== encode symbol =====
-    cbp_bit = biarDecodeSymbol (decodingEnv, textureInfoContexts->bcbp_contexts[type2ctx_bcbp[type]] + ctx);
+    cbp_bit = biarDecodeSymbol (decodeEnv, textureInfoContexts->bcbp_contexts[type2ctx_bcbp[type]] + ctx);
 
     //--- set bits for current block ---
 
@@ -1455,7 +1455,7 @@ static int read_and_store_CBP_block_bit_normal (sMacroblock* mb, sDecodingEnv*  
 
     ctx = 2 * upper_bit + left_bit;
     //===== encode symbol =====
-    cbp_bit = biarDecodeSymbol (decodingEnv, textureInfoContexts->bcbp_contexts[type2ctx_bcbp[type]] + ctx);
+    cbp_bit = biarDecodeSymbol (decodeEnv, textureInfoContexts->bcbp_contexts[type2ctx_bcbp[type]] + ctx);
 
     if (cbp_bit) {
       //--- set bits for current block ---
@@ -1486,7 +1486,7 @@ static int read_and_store_CBP_block_bit_normal (sMacroblock* mb, sDecodingEnv*  
 
     ctx = 2 * upper_bit + left_bit;
     //===== encode symbol =====
-    cbp_bit = biarDecodeSymbol (decodingEnv, textureInfoContexts->bcbp_contexts[type2ctx_bcbp[type]] + ctx);
+    cbp_bit = biarDecodeSymbol (decodeEnv, textureInfoContexts->bcbp_contexts[type2ctx_bcbp[type]] + ctx);
 
     if (cbp_bit) {
       //--- set bits for current block ---
@@ -1517,7 +1517,7 @@ static int read_and_store_CBP_block_bit_normal (sMacroblock* mb, sDecodingEnv*  
 
     ctx = 2 * upper_bit + left_bit;
     //===== encode symbol =====
-    cbp_bit = biarDecodeSymbol (decodingEnv, textureInfoContexts->bcbp_contexts[type2ctx_bcbp[type]] + ctx);
+    cbp_bit = biarDecodeSymbol (decodeEnv, textureInfoContexts->bcbp_contexts[type2ctx_bcbp[type]] + ctx);
 
     if (cbp_bit) {
       //--- set bits for current block ---
@@ -1546,7 +1546,7 @@ static int read_and_store_CBP_block_bit_normal (sMacroblock* mb, sDecodingEnv*  
 
     ctx = 2 * upper_bit + left_bit;
     //===== encode symbol =====
-    cbp_bit = biarDecodeSymbol (decodingEnv, textureInfoContexts->bcbp_contexts[type2ctx_bcbp[type]] + ctx);
+    cbp_bit = biarDecodeSymbol (decodeEnv, textureInfoContexts->bcbp_contexts[type2ctx_bcbp[type]] + ctx);
 
     if (cbp_bit) {
       //--- set bits for current block ---
@@ -1593,7 +1593,7 @@ static int read_and_store_CBP_block_bit_normal (sMacroblock* mb, sDecodingEnv*  
 
     ctx = 2 * upper_bit + left_bit;
     //===== encode symbol =====
-    cbp_bit = biarDecodeSymbol (decodingEnv, textureInfoContexts->bcbp_contexts[type2ctx_bcbp[type]] + ctx);
+    cbp_bit = biarDecodeSymbol (decodeEnv, textureInfoContexts->bcbp_contexts[type2ctx_bcbp[type]] + ctx);
 
     if (cbp_bit) {
       //--- set bits for current block ---
@@ -1637,7 +1637,7 @@ static int read_and_store_CBP_block_bit_normal (sMacroblock* mb, sDecodingEnv*  
 
     ctx = 2 * upper_bit + left_bit;
     //===== encode symbol =====
-    cbp_bit = biarDecodeSymbol (decodingEnv, textureInfoContexts->bcbp_contexts[type2ctx_bcbp[type]] + ctx);
+    cbp_bit = biarDecodeSymbol (decodeEnv, textureInfoContexts->bcbp_contexts[type2ctx_bcbp[type]] + ctx);
 
     if (cbp_bit) {
       //--- set bits for current block ---
@@ -1660,7 +1660,7 @@ void set_read_and_store_CBP (sMacroblock** mb, int chromaFormatIdc) {
 //}}}
 
 //{{{
-static int read_significance_map (sMacroblock* mb, sDecodingEnv*  decodingEnv, int type, int coeff[]) {
+static int read_significance_map (sMacroblock* mb, sDecodeEnv*  decodeEnv, int type, int coeff[]) {
 
   sSlice* slice = mb->slice;
   int fld    = ( slice->structure!=FRAME || mb->mbField );
@@ -1684,11 +1684,11 @@ static int read_significance_map (sMacroblock* mb, sDecodingEnv*  decodingEnv, i
   for (i=i0; i < i1; ++i){
     // if last coeff is reached, it has to be significant
     //--- read significance symbol ---
-    if (biarDecodeSymbol (decodingEnv, map_ctx + pos2ctx_Map[i])) {
+    if (biarDecodeSymbol (decodeEnv, map_ctx + pos2ctx_Map[i])) {
       *(coeff++) = 1;
       ++coefCount;
       //--- read last coefficient symbol ---
-      if (biarDecodeSymbol (decodingEnv, last_ctx + pos2ctx_Last[i])) {
+      if (biarDecodeSymbol (decodeEnv, last_ctx + pos2ctx_Last[i])) {
         memset(coeff, 0, (i1 - i) * sizeof(int));
         return coefCount;
         }
@@ -1707,7 +1707,7 @@ static int read_significance_map (sMacroblock* mb, sDecodingEnv*  decodingEnv, i
   }
 //}}}
 //{{{
-static void read_significant_coefficients (sDecodingEnv* decodingEnv, sTextureInfoContexts* textureInfoContexts,
+static void read_significant_coefficients (sDecodeEnv* decodeEnv, sTextureInfoContexts* textureInfoContexts,
                                            int type, int* coeff) {
 
   sBiContextType *one_contexts = textureInfoContexts->one_contexts[type2ctx_one[type]];
@@ -1721,17 +1721,17 @@ static void read_significant_coefficients (sDecodingEnv* decodingEnv, sTextureIn
 
   for (; i>=0; i--) {
     if (*cof != 0) {
-      *cof += biarDecodeSymbol (decodingEnv, one_contexts + c1);
+      *cof += biarDecodeSymbol (decodeEnv, one_contexts + c1);
 
       if (*cof == 2) {
-        *cof += unary_exp_golomb_level_decode (decodingEnv, abs_contexts + c2);
+        *cof += unary_exp_golomb_level_decode (decodeEnv, abs_contexts + c2);
         c2 = imin (++c2, max_type);
         c1 = 0;
         }
       else if (c1)
         c1 = imin (++c1, 4);
 
-      if (biariDecodeSymbolEqProb(decodingEnv))
+      if (biariDecodeSymbolEqProb(decodeEnv))
         *cof = - *cof;
       }
     cof--;
@@ -1739,7 +1739,7 @@ static void read_significant_coefficients (sDecodingEnv* decodingEnv, sTextureIn
   }
 //}}}
 //{{{
-void readRunLevel_CABAC (sMacroblock* mb, sSyntaxElement  *se, sDecodingEnv* decodingEnv) {
+void readRunLevel_CABAC (sMacroblock* mb, sSyntaxElement  *se, sDecodeEnv* decodeEnv) {
 
   sSlice* slice = mb->slice;
   int  *coefCount = &slice->coefCount;
@@ -1748,12 +1748,12 @@ void readRunLevel_CABAC (sMacroblock* mb, sSyntaxElement  *se, sDecodingEnv* dec
   //--- read coefficients for whole block ---
   if (*coefCount < 0) {
     //===== decode CBP-BIT =====
-    if ((*coefCount = mb->readStoreCBPblockBit (mb, decodingEnv, se->context) ) != 0) {
+    if ((*coefCount = mb->readStoreCBPblockBit (mb, decodeEnv, se->context) ) != 0) {
       //===== decode significance map =====
-      *coefCount = read_significance_map (mb, decodingEnv, se->context, coeff);
+      *coefCount = read_significance_map (mb, decodeEnv, se->context, coeff);
 
       //===== decode significant coefficients =====
-      read_significant_coefficients    (decodingEnv, slice->textureInfoContexts, se->context, coeff);
+      read_significant_coefficients    (decodeEnv, slice->textureInfoContexts, se->context, coeff);
       }
     }
 
@@ -1775,14 +1775,14 @@ void readRunLevel_CABAC (sMacroblock* mb, sSyntaxElement  *se, sDecodingEnv* dec
 //{{{
 int readSyntaxElementCABAC (sMacroblock* mb, sSyntaxElement* se, sDataPartition* this_dataPart) {
 
-  sDecodingEnv* decodingEnv = &(this_dataPart->deCabac);
-  int curr_len = aridecoBitsRead(decodingEnv);
+  sDecodeEnv* decodeEnv = &(this_dataPart->deCabac);
+  int curr_len = aridecoBitsRead(decodeEnv);
 
   // perform the actual decoding by calling the appropriate method
-  se->reading(mb, se, decodingEnv);
+  se->reading(mb, se, decodeEnv);
 
-  //read again and minus curr_len = aridecoBitsRead(decodingEnv); from above
-  se->len = (aridecoBitsRead(decodingEnv) - curr_len);
+  //read again and minus curr_len = aridecoBitsRead(decodeEnv); from above
+  se->len = (aridecoBitsRead(decodeEnv) - curr_len);
 
   return (se->len);
   }
@@ -1795,7 +1795,7 @@ void readIPCMcabac (sSlice* slice, sDataPartition* dataPartition) {
   sPicture* picture = slice->picture;
 
   sBitStream* s = dataPartition->s;
-  sDecodingEnv* dep = &(dataPartition->deCabac);
+  sDecodeEnv* dep = &(dataPartition->deCabac);
   byte* buf = s->bitStreamBuffer;
   int BitstreamLengthInBits = (dataPartition->s->bitStreamLen << 3) + 7;
 
@@ -1805,13 +1805,13 @@ void readIPCMcabac (sSlice* slice, sDataPartition* dataPartition) {
   int bitOffset, bitDepth;
   int uv, i, j;
 
-  while (dep->DbitsLeft >= 8) {
-    dep->Dvalue >>= 8;
-    dep->DbitsLeft -= 8;
-    (*dep->Dcodestrm_len)--;
+  while (dep->bitsLeft >= 8) {
+    dep->value >>= 8;
+    dep->bitsLeft -= 8;
+    (*dep->codeStreamLen)--;
     }
 
-  bitOffset = (*dep->Dcodestrm_len) << 3;
+  bitOffset = (*dep->codeStreamLen) << 3;
 
   // read luma values
   bitDepth = decoder->bitDepthLuma;
@@ -1837,8 +1837,8 @@ void readIPCMcabac (sSlice* slice, sDataPartition* dataPartition) {
       }
     }
 
-  (*dep->Dcodestrm_len) += ( bits_read >> 3);
+  (*dep->codeStreamLen) += ( bits_read >> 3);
   if (bits_read & 7)
-    ++(*dep->Dcodestrm_len);
+    ++(*dep->codeStreamLen);
   }
 //}}}

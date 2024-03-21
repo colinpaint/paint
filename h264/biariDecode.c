@@ -112,103 +112,103 @@ static const byte renorm_table_32[32] = {
 //}}}
 
 //{{{
-static inline unsigned int getByte (sDecodingEnv* decodingEnv) {
-  return decodingEnv->Dcodestrm[(*decodingEnv->Dcodestrm_len)++];
+static inline unsigned int getByte (sDecodeEnv* decodeEnv) {
+  return decodeEnv->codeStream[(*decodeEnv->codeStreamLen)++];
   }
 //}}}
 //{{{
-static inline unsigned int getWord (sDecodingEnv* decodingEnv) {
+static inline unsigned int getWord (sDecodeEnv* decodeEnv) {
 
-  int* len = decodingEnv->Dcodestrm_len;
-  byte* p_code_strm = &decodingEnv->Dcodestrm[*len];
+  int* len = decodeEnv->codeStreamLen;
+  byte* p_code_strm = &decodeEnv->codeStream[*len];
   *len += 2;
 
   return (*p_code_strm << 8) | *(p_code_strm + 1);
   }
 //}}}
 //{{{
-void aridecoStartDecoding (sDecodingEnv* decodingEnv, unsigned char* code_buffer, int firstbyte, int* codeLen) {
+void aridecoStartDecoding (sDecodeEnv* decodeEnv, unsigned char* code_buffer, int firstbyte, int* codeLen) {
 
-  decodingEnv->Dcodestrm = code_buffer;
-  decodingEnv->Dcodestrm_len = codeLen;
-  *decodingEnv->Dcodestrm_len = firstbyte;
+  decodeEnv->codeStream = code_buffer;
+  decodeEnv->codeStreamLen = codeLen;
+  *decodeEnv->codeStreamLen = firstbyte;
 
-  decodingEnv->Dvalue = getByte (decodingEnv);
+  decodeEnv->value = getByte (decodeEnv);
   // lookahead of 2 bytes: always make sure that s buffer
   // contains 2 more bytes than actual s
-  decodingEnv->Dvalue = (decodingEnv->Dvalue << 16) | getWord (decodingEnv); 
-  decodingEnv->DbitsLeft = 15;
-  decodingEnv->Drange = HALF;
+  decodeEnv->value = (decodeEnv->value << 16) | getWord (decodeEnv); 
+  decodeEnv->bitsLeft = 15;
+  decodeEnv->range = HALF;
   }
 //}}}
 //{{{
-int aridecoBitsRead (sDecodingEnv* decodingEnv) {
-  return ((*decodingEnv->Dcodestrm_len) << 3) - decodingEnv->DbitsLeft;
+int aridecoBitsRead (sDecodeEnv* decodeEnv) {
+  return ((*decodeEnv->codeStreamLen) << 3) - decodeEnv->bitsLeft;
   }
 //}}}
 
 //{{{
-unsigned int biarDecodeSymbol (sDecodingEnv* decodingEnv, sBiContextType* biContext) {
+unsigned int biarDecodeSymbol (sDecodeEnv* decodeEnv, sBiContextType* biContext) {
 
   unsigned int bit = biContext->MPS;
-  unsigned int* value = &decodingEnv->Dvalue;
-  unsigned int* range = &decodingEnv->Drange;
+  unsigned int* value = &decodeEnv->value;
+  unsigned int* range = &decodeEnv->range;
 
   uint16* state = &biContext->state;
   unsigned int rLPS = rLPS_table_64x4[*state][(*range >> 6) & 0x03];
-  int* DbitsLeft = &decodingEnv->DbitsLeft;
+  int* bitsLeft = &decodeEnv->bitsLeft;
 
   *range -= rLPS;
-  if (*value < (*range << *DbitsLeft)) {
+  if (*value < (*range << *bitsLeft)) {
     // MPS
     *state = AC_next_state_MPS_64[*state]; // next state
     if (*range >= QUARTER)
       return (bit);
     else {
       *range <<= 1;
-      (*DbitsLeft)--;
+      (*bitsLeft)--;
       }
     }
 
   else {
     // LPS
     int renorm = renorm_table_32[(rLPS >> 3) & 0x1F];
-    *value -= (*range << *DbitsLeft);
+    *value -= (*range << *bitsLeft);
     *range = (rLPS << renorm);
-    (*DbitsLeft) -= renorm;
+    (*bitsLeft) -= renorm;
     bit ^= 0x01;
     if (!(*state))  // switch meaning of MPS if necessary
       biContext->MPS ^= 0x01;
     *state = AC_next_state_LPS_64[*state]; // next state
     }
 
-  if (*DbitsLeft > 0 )
+  if (*bitsLeft > 0 )
     return (bit);
   else {
     *value <<= 16;
     // lookahead of 2 bytes: always make sure that s buffer
     // contains 2 more bytes than actual s
-    *value |=  getWord (decodingEnv);
-    (*DbitsLeft) += 16;
+    *value |=  getWord (decodeEnv);
+    (*bitsLeft) += 16;
     return bit;
     }
   }
 //}}}
 //{{{
-unsigned int biariDecodeSymbolEqProb (sDecodingEnv* decodingEnv) {
+unsigned int biariDecodeSymbolEqProb (sDecodeEnv* decodeEnv) {
 
   int tmp_value;
-  unsigned int* value = &decodingEnv->Dvalue;
+  unsigned int* value = &decodeEnv->value;
 
-  int* DbitsLeft = &decodingEnv->DbitsLeft;
-  if (--(*DbitsLeft) == 0) {
+  int* bitsLeft = &decodeEnv->bitsLeft;
+  if (--(*bitsLeft) == 0) {
     // lookahead of 2 bytes: always make sure that s buffer
     // contains 2 more bytes than actual s
-    *value = (*value << 16) | getWord (decodingEnv);
-    *DbitsLeft = 16;
+    *value = (*value << 16) | getWord (decodeEnv);
+    *bitsLeft = 16;
     }
 
-  tmp_value = *value - (decodingEnv->Drange << *DbitsLeft);
+  tmp_value = *value - (decodeEnv->range << *bitsLeft);
   if (tmp_value < 0)
     return 0;
   else {
@@ -218,26 +218,26 @@ unsigned int biariDecodeSymbolEqProb (sDecodingEnv* decodingEnv) {
   }
 //}}}
 //{{{
-unsigned int biariDecodeFinal (sDecodingEnv* decodingEnv) {
+unsigned int biariDecodeFinal (sDecodeEnv* decodeEnv) {
 
-  unsigned int range  = decodingEnv->Drange - 2;
+  unsigned int range  = decodeEnv->range - 2;
 
-  int value = decodingEnv->Dvalue;
-  value -= (range << decodingEnv->DbitsLeft);
+  int value = decodeEnv->value;
+  value -= (range << decodeEnv->bitsLeft);
   if (value < 0) {
     if (range >= QUARTER) {
-      decodingEnv->Drange = range;
+      decodeEnv->range = range;
       return 0;
       }
     else {
-      decodingEnv->Drange = (range << 1);
-      if (--(decodingEnv->DbitsLeft) > 0)
+      decodeEnv->range = (range << 1);
+      if (--(decodeEnv->bitsLeft) > 0)
         return 0;
       else {
         // lookahead of 2 bytes: always make sure that s buffer
         // contains 2 more bytes than actual s
-        decodingEnv->Dvalue = (decodingEnv->Dvalue << 16) | getWord (decodingEnv);
-        decodingEnv->DbitsLeft = 16;
+        decodeEnv->value = (decodeEnv->value << 16) | getWord (decodeEnv);
+        decodeEnv->bitsLeft = 16;
         return 0;
         }
       }

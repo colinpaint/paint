@@ -8,27 +8,27 @@ extern void deleteTextureInfoContexts (sTextureInfoContexts* contexts);
 
 extern void cabacNewSlice (sSlice* slice);
 
-extern void readMB_typeInfo_CABAC_i_slice (sMacroblock* mb, sSyntaxElement* se, sDecodingEnv* decodingEnv);
-extern void readMB_typeInfo_CABAC_p_slice (sMacroblock* mb, sSyntaxElement* se, sDecodingEnv* decodingEnv);
-extern void readMB_typeInfo_CABAC_b_slice (sMacroblock* mb, sSyntaxElement* se, sDecodingEnv* decodingEnv);
-extern void readB8_typeInfo_CABAC_p_slice (sMacroblock* mb, sSyntaxElement* se, sDecodingEnv* decodingEnv);
-extern void readB8_typeInfo_CABAC_b_slice (sMacroblock* mb, sSyntaxElement* se, sDecodingEnv* decodingEnv);
+extern void readMB_typeInfo_CABAC_i_slice (sMacroblock* mb, sSyntaxElement* se, sDecodeEnv* decodeEnv);
+extern void readMB_typeInfo_CABAC_p_slice (sMacroblock* mb, sSyntaxElement* se, sDecodeEnv* decodeEnv);
+extern void readMB_typeInfo_CABAC_b_slice (sMacroblock* mb, sSyntaxElement* se, sDecodeEnv* decodeEnv);
+extern void readB8_typeInfo_CABAC_p_slice (sMacroblock* mb, sSyntaxElement* se, sDecodeEnv* decodeEnv);
+extern void readB8_typeInfo_CABAC_b_slice (sMacroblock* mb, sSyntaxElement* se, sDecodeEnv* decodeEnv);
 
-extern void readIntraPredMode_CABAC (sMacroblock* mb, sSyntaxElement* se, sDecodingEnv* decodingEnv);
-extern void readRefFrame_CABAC (sMacroblock* mb, sSyntaxElement* se, sDecodingEnv* decodingEnv);
+extern void readIntraPredMode_CABAC (sMacroblock* mb, sSyntaxElement* se, sDecodeEnv* decodeEnv);
+extern void readRefFrame_CABAC (sMacroblock* mb, sSyntaxElement* se, sDecodeEnv* decodeEnv);
 
-extern void read_MVD_CABAC (sMacroblock* mb, sSyntaxElement* se, sDecodingEnv* decodingEnv);
-extern void read_mvd_CABAC_mbaff (sMacroblock* mb, sSyntaxElement* se, sDecodingEnv* decodingEnv);
-extern void read_CBP_CABAC (sMacroblock* mb, sSyntaxElement* se, sDecodingEnv* decodingEnv);
+extern void read_MVD_CABAC (sMacroblock* mb, sSyntaxElement* se, sDecodeEnv* decodeEnv);
+extern void read_mvd_CABAC_mbaff (sMacroblock* mb, sSyntaxElement* se, sDecodeEnv* decodeEnv);
+extern void read_CBP_CABAC (sMacroblock* mb, sSyntaxElement* se, sDecodeEnv* decodeEnv);
 
-extern void readRunLevel_CABAC (sMacroblock* mb, sSyntaxElement* se, sDecodingEnv* decodingEnv);
-extern void read_dQuant_CABAC (sMacroblock* mb, sSyntaxElement* se, sDecodingEnv* decodingEnv);
-extern void readCIPredMode_CABAC (sMacroblock* mb, sSyntaxElement* se, sDecodingEnv* decodingEnv);
+extern void readRunLevel_CABAC (sMacroblock* mb, sSyntaxElement* se, sDecodeEnv* decodeEnv);
+extern void read_dQuant_CABAC (sMacroblock* mb, sSyntaxElement* se, sDecodeEnv* decodeEnv);
+extern void readCIPredMode_CABAC (sMacroblock* mb, sSyntaxElement* se, sDecodeEnv* decodeEnv);
 
-extern void read_skip_flag_CABAC_p_slice (sMacroblock* mb, sSyntaxElement* se, sDecodingEnv* decodingEnv);
-extern void read_skip_flag_CABAC_b_slice (sMacroblock* mb, sSyntaxElement* se, sDecodingEnv* decodingEnv);
-extern void readFieldModeInfo_CABAC (sMacroblock* mb, sSyntaxElement* se, sDecodingEnv* decodingEnv);
-extern void readMB_transform_size_flag_CABAC (sMacroblock* mb, sSyntaxElement* se, sDecodingEnv* decodingEnv);
+extern void read_skip_flag_CABAC_p_slice (sMacroblock* mb, sSyntaxElement* se, sDecodeEnv* decodeEnv);
+extern void read_skip_flag_CABAC_b_slice (sMacroblock* mb, sSyntaxElement* se, sDecodeEnv* decodeEnv);
+extern void readFieldModeInfo_CABAC (sMacroblock* mb, sSyntaxElement* se, sDecodeEnv* decodeEnv);
+extern void readMB_transform_size_flag_CABAC (sMacroblock* mb, sSyntaxElement* se, sDecodeEnv* decodeEnv);
 
 extern void readIPCMcabac (sSlice* slice, sDataPartition* dataPartition);
 extern int cabacStartCode (sSlice* slice, int eos_bit);
