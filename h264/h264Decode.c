@@ -50,7 +50,7 @@ sSlice* allocSlice (sDecoder* decoder) {
   slice->textureContext = createContextsTextureInfo();
 
   slice->maxDataPartitions = 3;  // assume dataPartition worst case
-  slice->dps = allocDataPartitions (slice->maxDataPartitions);
+  slice->dataPartitions = allocDataPartitions (slice->maxDataPartitions);
 
   getMem2Dwp (&(slice->WPParam), 2, MAX_REFERENCE_PICTURES);
   getMem3Dint (&(slice->wpWeight), 2, MAX_REFERENCE_PICTURES, 3);
@@ -98,7 +98,7 @@ static void freeSlice (sSlice *slice) {
   free_mem3Dint (slice->wpOffset);
   free_mem4Dint (slice->wbpWeight);
 
-  freeDataPartitions (slice->dps, 3);
+  freeDataPartitions (slice->dataPartitions, 3);
 
   // delete all context models
   delete_contexts_MotionInfo (slice->motionContext);

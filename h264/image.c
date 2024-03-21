@@ -1154,29 +1154,85 @@ static const char INIT_FLD_LAST_P[3][22][15][2] =
 //}}}
 
 //{{{
-#define IBIARI_CTX_INIT2(ii,jj,ctx,tab,num, qp) { \
-  for (i = 0; i < ii; ++i) \
+static void initContexts (sSlice* slice) {
+
+  //{{{
+  #define IBIARI_CTX_INIT2(ii,jj,ctx,tab,num, qp) { \
+    for (i = 0; i < ii; ++i) \
+      for (j = 0; j < jj; ++j) \
+        biariInitContext (qp, &(ctx[i][j]), tab ## _I[num][i][j]); \
+    }
+  //}}}
+  //{{{
+  #define PBIARI_CTX_INIT2(ii,jj,ctx,tab,num, qp) { \
+    for (i = 0; i < ii; ++i) \
+      for (j = 0; j < jj; ++j) \
+        biariInitContext (qp, &(ctx[i][j]), tab ## _P[num][i][j]); \
+    }
+  //}}}
+  //{{{
+  #define IBIARI_CTX_INIT1(jj,ctx,tab,num, qp) { \
     for (j = 0; j < jj; ++j) \
-      biariInitContext (qp, &(ctx[i][j]), tab ## _I[num][i][j]); \
-  }
-//}}}
-//{{{
-#define PBIARI_CTX_INIT2(ii,jj,ctx,tab,num, qp) { \
-  for (i = 0; i < ii; ++i) \
+      biariInitContext (qp, &(ctx[j]), tab ## _I[num][0][j]); \
+    }
+  //}}}
+  //{{{
+  #define PBIARI_CTX_INIT1(jj,ctx,tab,num, qp) { \
     for (j = 0; j < jj; ++j) \
-      biariInitContext (qp, &(ctx[i][j]), tab ## _P[num][i][j]); \
-  }
-//}}}
-//{{{
-#define IBIARI_CTX_INIT1(jj,ctx,tab,num, qp) { \
-  for (j = 0; j < jj; ++j) \
-    biariInitContext (qp, &(ctx[j]), tab ## _I[num][0][j]); \
-  }
-//}}}
-//{{{
-#define PBIARI_CTX_INIT1(jj,ctx,tab,num, qp) { \
-  for (j = 0; j < jj; ++j) \
-    biariInitContext (qp, &(ctx[j]), tab ## _P[num][0][j]); \
+      biariInitContext (qp, &(ctx[j]), tab ## _P[num][0][j]); \
+    }
+  //}}}
+
+  sMotionInfoContexts* mc = slice->motionContext;
+  sTextureInfoContexts* tc = slice->textureContext;
+
+  int i, j;
+  int qp = imax (0, slice->qp);
+  int modelNum = slice->modelNum;
+
+  // motion coding contexts
+  if ((slice->sliceType == I_SLICE) || (slice->sliceType == SI_SLICE)) {
+    IBIARI_CTX_INIT2 (3, NUM_MB_TYPE_CTX,   mc->mb_type_contexts,     INIT_MB_TYPE,    modelNum, qp);
+    IBIARI_CTX_INIT2 (2, NUM_B8_TYPE_CTX,   mc->b8_type_contexts,     INIT_B8_TYPE,    modelNum, qp);
+    IBIARI_CTX_INIT2 (2, NUM_MV_RES_CTX,    mc->mv_res_contexts,      INIT_MV_RES,     modelNum, qp);
+    IBIARI_CTX_INIT2 (2, NUM_REF_NO_CTX,    mc->ref_no_contexts,      INIT_REF_NO,     modelNum, qp);
+    IBIARI_CTX_INIT1 (   NUM_DELTA_QP_CTX,  mc->delta_qp_contexts,    INIT_DELTA_QP,   modelNum, qp);
+    IBIARI_CTX_INIT1 (   NUM_MB_AFF_CTX,    mc->mb_aff_contexts,      INIT_MB_AFF,     modelNum, qp);
+
+    // texture coding contexts
+    IBIARI_CTX_INIT1 (   NUM_TRANSFORM_SIZE_CTX, tc->transform_size_contexts, INIT_TRANSFORM_SIZE, modelNum, qp);
+    IBIARI_CTX_INIT1 (                 NUM_IPR_CTX,  tc->ipr_contexts,     INIT_IPR,       modelNum, qp);
+    IBIARI_CTX_INIT1 (                 NUM_CIPR_CTX, tc->cipr_contexts,    INIT_CIPR,      modelNum, qp);
+    IBIARI_CTX_INIT2 (3,               NUM_CBP_CTX,  tc->cbp_contexts,     INIT_CBP,       modelNum, qp);
+    IBIARI_CTX_INIT2 (NUM_BLOCK_TYPES, NUM_BCBP_CTX, tc->bcbp_contexts,    INIT_BCBP,      modelNum, qp);
+    IBIARI_CTX_INIT2 (NUM_BLOCK_TYPES, NUM_MAP_CTX,  tc->map_contexts[0],  INIT_MAP,       modelNum, qp);
+    IBIARI_CTX_INIT2 (NUM_BLOCK_TYPES, NUM_MAP_CTX,  tc->map_contexts[1],  INIT_FLD_MAP,   modelNum, qp);
+    IBIARI_CTX_INIT2 (NUM_BLOCK_TYPES, NUM_LAST_CTX, tc->last_contexts[1], INIT_FLD_LAST,  modelNum, qp);
+    IBIARI_CTX_INIT2 (NUM_BLOCK_TYPES, NUM_LAST_CTX, tc->last_contexts[0], INIT_LAST,      modelNum, qp);
+    IBIARI_CTX_INIT2 (NUM_BLOCK_TYPES, NUM_ONE_CTX,  tc->one_contexts,     INIT_ONE,       modelNum, qp);
+    IBIARI_CTX_INIT2 (NUM_BLOCK_TYPES, NUM_ABS_CTX,  tc->abs_contexts,     INIT_ABS,       modelNum, qp);
+    }
+  else {
+    PBIARI_CTX_INIT2 (3, NUM_MB_TYPE_CTX,   mc->mb_type_contexts,     INIT_MB_TYPE,    modelNum, qp);
+    PBIARI_CTX_INIT2 (2, NUM_B8_TYPE_CTX,   mc->b8_type_contexts,     INIT_B8_TYPE,    modelNum, qp);
+    PBIARI_CTX_INIT2 (2, NUM_MV_RES_CTX,    mc->mv_res_contexts,      INIT_MV_RES,     modelNum, qp);
+    PBIARI_CTX_INIT2 (2, NUM_REF_NO_CTX,    mc->ref_no_contexts,      INIT_REF_NO,     modelNum, qp);
+    PBIARI_CTX_INIT1 (   NUM_DELTA_QP_CTX,  mc->delta_qp_contexts,    INIT_DELTA_QP,   modelNum, qp);
+    PBIARI_CTX_INIT1 (   NUM_MB_AFF_CTX,    mc->mb_aff_contexts,      INIT_MB_AFF,     modelNum, qp);
+
+    // texture coding contexts
+    PBIARI_CTX_INIT1 (   NUM_TRANSFORM_SIZE_CTX, tc->transform_size_contexts, INIT_TRANSFORM_SIZE, modelNum, qp);
+    PBIARI_CTX_INIT1 (                 NUM_IPR_CTX,  tc->ipr_contexts,     INIT_IPR,       modelNum, qp);
+    PBIARI_CTX_INIT1 (                 NUM_CIPR_CTX, tc->cipr_contexts,    INIT_CIPR,      modelNum, qp);
+    PBIARI_CTX_INIT2 (3,               NUM_CBP_CTX,  tc->cbp_contexts,     INIT_CBP,       modelNum, qp);
+    PBIARI_CTX_INIT2 (NUM_BLOCK_TYPES, NUM_BCBP_CTX, tc->bcbp_contexts,    INIT_BCBP,      modelNum, qp);
+    PBIARI_CTX_INIT2 (NUM_BLOCK_TYPES, NUM_MAP_CTX,  tc->map_contexts[0],  INIT_MAP,       modelNum, qp);
+    PBIARI_CTX_INIT2 (NUM_BLOCK_TYPES, NUM_MAP_CTX,  tc->map_contexts[1],  INIT_FLD_MAP,   modelNum, qp);
+    PBIARI_CTX_INIT2 (NUM_BLOCK_TYPES, NUM_LAST_CTX, tc->last_contexts[1], INIT_FLD_LAST,  modelNum, qp);
+    PBIARI_CTX_INIT2 (NUM_BLOCK_TYPES, NUM_LAST_CTX, tc->last_contexts[0], INIT_LAST,      modelNum, qp);
+    PBIARI_CTX_INIT2 (NUM_BLOCK_TYPES, NUM_ONE_CTX,  tc->one_contexts,     INIT_ONE,       modelNum, qp);
+    PBIARI_CTX_INIT2 (NUM_BLOCK_TYPES, NUM_ABS_CTX,  tc->abs_contexts,     INIT_ABS,       modelNum, qp);
+    }
   }
 //}}}
 
@@ -1281,61 +1337,6 @@ static void resetWpParam (sSlice* slice) {
       slice->wpWeight[0][i][comp] = 1 << logWeightDenom;
       slice->wpWeight[1][i][comp] = 1 << logWeightDenom;
       }
-    }
-  }
-//}}}
-//{{{
-static void initContexts (sSlice* slice) {
-
-  sMotionInfoContexts*  mc = slice->motionContext;
-  sTextureInfoContexts* tc = slice->textureContext;
-
-  int i, j;
-  int qp = imax(0, slice->qp); //decoder->qp);
-  int modelNum = slice->modelNum;
-
-  //--- motion coding contexts ---
-  if ((slice->sliceType == I_SLICE)||(slice->sliceType == SI_SLICE)) {
-    IBIARI_CTX_INIT2 (3, NUM_MB_TYPE_CTX,   mc->mb_type_contexts,     INIT_MB_TYPE,    modelNum, qp);
-    IBIARI_CTX_INIT2 (2, NUM_B8_TYPE_CTX,   mc->b8_type_contexts,     INIT_B8_TYPE,    modelNum, qp);
-    IBIARI_CTX_INIT2 (2, NUM_MV_RES_CTX,    mc->mv_res_contexts,      INIT_MV_RES,     modelNum, qp);
-    IBIARI_CTX_INIT2 (2, NUM_REF_NO_CTX,    mc->ref_no_contexts,      INIT_REF_NO,     modelNum, qp);
-    IBIARI_CTX_INIT1 (   NUM_DELTA_QP_CTX,  mc->delta_qp_contexts,    INIT_DELTA_QP,   modelNum, qp);
-    IBIARI_CTX_INIT1 (   NUM_MB_AFF_CTX,    mc->mb_aff_contexts,      INIT_MB_AFF,     modelNum, qp);
-
-    //--- texture coding contexts ---
-    IBIARI_CTX_INIT1 (   NUM_TRANSFORM_SIZE_CTX, tc->transform_size_contexts, INIT_TRANSFORM_SIZE, modelNum, qp);
-    IBIARI_CTX_INIT1 (                 NUM_IPR_CTX,  tc->ipr_contexts,     INIT_IPR,       modelNum, qp);
-    IBIARI_CTX_INIT1 (                 NUM_CIPR_CTX, tc->cipr_contexts,    INIT_CIPR,      modelNum, qp);
-    IBIARI_CTX_INIT2 (3,               NUM_CBP_CTX,  tc->cbp_contexts,     INIT_CBP,       modelNum, qp);
-    IBIARI_CTX_INIT2 (NUM_BLOCK_TYPES, NUM_BCBP_CTX, tc->bcbp_contexts,    INIT_BCBP,      modelNum, qp);
-    IBIARI_CTX_INIT2 (NUM_BLOCK_TYPES, NUM_MAP_CTX,  tc->map_contexts[0],  INIT_MAP,       modelNum, qp);
-    IBIARI_CTX_INIT2 (NUM_BLOCK_TYPES, NUM_MAP_CTX,  tc->map_contexts[1],  INIT_FLD_MAP,   modelNum, qp);
-    IBIARI_CTX_INIT2 (NUM_BLOCK_TYPES, NUM_LAST_CTX, tc->last_contexts[1], INIT_FLD_LAST,  modelNum, qp);
-    IBIARI_CTX_INIT2 (NUM_BLOCK_TYPES, NUM_LAST_CTX, tc->last_contexts[0], INIT_LAST,      modelNum, qp);
-    IBIARI_CTX_INIT2 (NUM_BLOCK_TYPES, NUM_ONE_CTX,  tc->one_contexts,     INIT_ONE,       modelNum, qp);
-    IBIARI_CTX_INIT2 (NUM_BLOCK_TYPES, NUM_ABS_CTX,  tc->abs_contexts,     INIT_ABS,       modelNum, qp);
-    }
-  else {
-    PBIARI_CTX_INIT2 (3, NUM_MB_TYPE_CTX,   mc->mb_type_contexts,     INIT_MB_TYPE,    modelNum, qp);
-    PBIARI_CTX_INIT2 (2, NUM_B8_TYPE_CTX,   mc->b8_type_contexts,     INIT_B8_TYPE,    modelNum, qp);
-    PBIARI_CTX_INIT2 (2, NUM_MV_RES_CTX,    mc->mv_res_contexts,      INIT_MV_RES,     modelNum, qp);
-    PBIARI_CTX_INIT2 (2, NUM_REF_NO_CTX,    mc->ref_no_contexts,      INIT_REF_NO,     modelNum, qp);
-    PBIARI_CTX_INIT1 (   NUM_DELTA_QP_CTX,  mc->delta_qp_contexts,    INIT_DELTA_QP,   modelNum, qp);
-    PBIARI_CTX_INIT1 (   NUM_MB_AFF_CTX,    mc->mb_aff_contexts,      INIT_MB_AFF,     modelNum, qp);
-
-    //--- texture coding contexts ---
-    PBIARI_CTX_INIT1 (   NUM_TRANSFORM_SIZE_CTX, tc->transform_size_contexts, INIT_TRANSFORM_SIZE, modelNum, qp);
-    PBIARI_CTX_INIT1 (                 NUM_IPR_CTX,  tc->ipr_contexts,     INIT_IPR,       modelNum, qp);
-    PBIARI_CTX_INIT1 (                 NUM_CIPR_CTX, tc->cipr_contexts,    INIT_CIPR,      modelNum, qp);
-    PBIARI_CTX_INIT2 (3,               NUM_CBP_CTX,  tc->cbp_contexts,     INIT_CBP,       modelNum, qp);
-    PBIARI_CTX_INIT2 (NUM_BLOCK_TYPES, NUM_BCBP_CTX, tc->bcbp_contexts,    INIT_BCBP,      modelNum, qp);
-    PBIARI_CTX_INIT2 (NUM_BLOCK_TYPES, NUM_MAP_CTX,  tc->map_contexts[0],  INIT_MAP,       modelNum, qp);
-    PBIARI_CTX_INIT2 (NUM_BLOCK_TYPES, NUM_MAP_CTX,  tc->map_contexts[1],  INIT_FLD_MAP,   modelNum, qp);
-    PBIARI_CTX_INIT2 (NUM_BLOCK_TYPES, NUM_LAST_CTX, tc->last_contexts[1], INIT_FLD_LAST,  modelNum, qp);
-    PBIARI_CTX_INIT2 (NUM_BLOCK_TYPES, NUM_LAST_CTX, tc->last_contexts[0], INIT_LAST,      modelNum, qp);
-    PBIARI_CTX_INIT2 (NUM_BLOCK_TYPES, NUM_ONE_CTX,  tc->one_contexts,     INIT_ONE,       modelNum, qp);
-    PBIARI_CTX_INIT2 (NUM_BLOCK_TYPES, NUM_ABS_CTX,  tc->abs_contexts,     INIT_ABS,       modelNum, qp);
     }
   }
 //}}}
@@ -1872,29 +1873,29 @@ static void useParameterSet (sDecoder* decoder, sSlice* slice) {
   activateSPS (decoder, sps);
   activatePPS (decoder, pps);
 
-  // slice->datadpMode is set by read_new_slice (NALU first byte available there)
+  // slice->dataDpMode is set by read_new_slice (NALU first byte available there)
   if (pps->entropyCodingMode == (Boolean)CAVLC) {
     slice->nalStartCode = vlcStartCode;
     for (int i = 0; i < 3; i++)
-      slice->dps[i].readSyntaxElement = readSyntaxElementVLC;
+      slice->dataPartitions[i].readSyntaxElement = readSyntaxElementVLC;
     }
   else {
     slice->nalStartCode = cabacStartCode;
     for (int i = 0; i < 3; i++)
-      slice->dps[i].readSyntaxElement = readSyntaxElementCABAC;
+      slice->dataPartitions[i].readSyntaxElement = readSyntaxElementCABAC;
     }
   decoder->coding.type = slice->sliceType;
   }
 //}}}
 //{{{
-static void readSliceHeader (sDecoder* decoder, sSlice* slice) {
-// Some sliceHeader syntax depends on parameterSet depends on parameterSetID of the slice header
+static void readSlice (sDecoder* decoder, sSlice* slice) {
+// Some slice syntax depends on parameterSet depends on parameterSetID of the slice header
 // - read the ppsId of the slice header first
 //   - then setup the active parameter sets
 // - read the rest of the slice header
 
-  byte partitionIndex = assignSE2dp[slice->datadpMode][SE_HEADER];
-  sDataPartition* dataPartition = &(slice->dps[partitionIndex]);
+  byte partitionIndex = assignSE2dp[slice->dataDpMode][SE_HEADER];
+  sDataPartition* dataPartition = &(slice->dataPartitions[partitionIndex]);
   sBitStream* s = dataPartition->s;
 
   slice->startMbNum = readUeV ("SLC first_mb_in_slice", s);
@@ -2156,20 +2157,20 @@ static void readSliceHeader (sDecoder* decoder, sSlice* slice) {
     //}}}
   if (isHiIntraOnlyProfile (activeSPS->profileIdc, activeSPS->constrainedSet3flag) &&
       !decoder->param.intraProfileDeblocking) {
-    //{{{  hIintra deblock special case
+    //{{{  hiIintra deblock 
     slice->DFDisableIdc = 1;
     slice->DFAlphaC0Offset = 0;
     slice->DFBetaOffset = 0;
     }
     //}}}
   //{{{  read sliceGroup
-  if (decoder->activePPS->numSliceGroupsMinus1>0 && decoder->activePPS->sliceGroupMapType>=3 &&
-      decoder->activePPS->sliceGroupMapType <= 5) {
-
-    int len = (activeSPS->pic_height_in_map_units_minus1+1) * (activeSPS->pic_width_in_mbs_minus1+1)/
-              (decoder->activePPS->sliceGroupChangeRateMius1 + 1);
-    if (((activeSPS->pic_height_in_map_units_minus1+1) * (activeSPS->pic_width_in_mbs_minus1+1))%
-          (decoder->activePPS->sliceGroupChangeRateMius1 + 1))
+  if ((decoder->activePPS->numSliceGroupsMinus1 > 0) && 
+      (decoder->activePPS->sliceGroupMapType >= 3) &&
+      (decoder->activePPS->sliceGroupMapType <= 5)) {
+    int len = (activeSPS->pic_height_in_map_units_minus1+1) * (activeSPS->pic_width_in_mbs_minus1+1) /
+                (decoder->activePPS->sliceGroupChangeRateMius1 + 1);
+    if (((activeSPS->pic_height_in_map_units_minus1+1) * (activeSPS->pic_width_in_mbs_minus1+1)) %
+        (decoder->activePPS->sliceGroupChangeRateMius1 + 1))
       len += 1;
 
     len = ceilLog2 (len+1);
@@ -2383,15 +2384,16 @@ static int readNextSlice (sSlice* slice) {
 
         slice->idrFlag = nalu->unitType == NALU_TYPE_IDR;
         slice->refId = nalu->refId;
-        slice->datadpMode = PAR_DP_1;
+        slice->dataDpMode = PAR_DP_1;
         slice->maxDataPartitions = 1;
-
-        sBitStream* s = slice->dps[0].s;
+        sBitStream* s = slice->dataPartitions[0].s;
         s->errorFlag = 0;
-        s->bitStreamOffset = s->readLen = 0;
+        s->bitStreamOffset = 0;
+        s->readLen = 0;
         memcpy (s->bitStreamBuffer, &nalu->buf[1], nalu->len-1);
         s->codeLen = s->bitStreamLen = RBSPtoSODB (s->bitStreamBuffer, nalu->len - 1);
-        readSliceHeader (decoder, slice);
+        readSlice (decoder, slice);
+        assignQuantParams (slice);
 
         if (decoder->param.sliceDebug) {
           if (nalu->unitType == NALU_TYPE_IDR)
@@ -2403,7 +2405,6 @@ static int readNextSlice (sSlice* slice) {
                   slice->sliceType == 0 ? "P":(slice->sliceType == 1 ? "B":(slice->sliceType == 2 ? "I":"?")),
                   slice->frameNum, slice->fieldPicFlag ? " field":"", slice->ppsId);
           }
-        assignQuantParams (slice);
 
         // if primary slice is replaced with redundant slice, set the correct image type
         if (slice->redundantPicCount && !decoder->isPrimaryOk && decoder->isReduncantOk)
@@ -2430,7 +2431,7 @@ static int readNextSlice (sSlice* slice) {
           int byteStartPosition = s->bitStreamOffset / 8;
           if (s->bitStreamOffset % 8)
             ++byteStartPosition;
-          aridecoStartDecoding (&slice->dps[0].deCabac, s->bitStreamBuffer, byteStartPosition, &s->readLen);
+          aridecoStartDecoding (&slice->dataPartitions[0].deCabac, s->bitStreamBuffer, byteStartPosition, &s->readLen);
           }
 
         decoder->recoveryPoint = 0;
@@ -2444,19 +2445,19 @@ static int readNextSlice (sSlice* slice) {
         if (!decoder->recoveryPointFound)
           break;
 
-        // read DP_A
+        // read dataPartition A
         slice->idrFlag = FALSE;
         slice->refId = nalu->refId;
         slice->noDataPartitionB = 1;
         slice->noDataPartitionC = 1;
-        slice->datadpMode = PAR_DP_3;
+        slice->dataDpMode = PAR_DP_3;
         slice->maxDataPartitions = 3;
-        s = slice->dps[0].s;
+        s = slice->dataPartitions[0].s;
         s->errorFlag = 0;
         s->bitStreamOffset = s->readLen = 0;
         memcpy (s->bitStreamBuffer, &nalu->buf[1], nalu->len - 1);
         s->codeLen = s->bitStreamLen = RBSPtoSODB (s->bitStreamBuffer, nalu->len-1);
-        readSliceHeader (decoder, slice);
+        readSlice (decoder, slice);
         assignQuantParams (slice);
 
         if (isNewPicture (decoder->picture, slice, decoder->oldSlice)) {
@@ -2486,7 +2487,7 @@ static int readNextSlice (sSlice* slice) {
 
         if (NALU_TYPE_DPB == nalu->unitType) {
           //{{{  got nalu dataPartitionB
-          s = slice->dps[1].s;
+          s = slice->dataPartitions[1].s;
           s->errorFlag = 0;
           s->bitStreamOffset = s->readLen = 0;
           memcpy (s->bitStreamBuffer, &nalu->buf[1], nalu->len-1);
@@ -2514,7 +2515,7 @@ static int readNextSlice (sSlice* slice) {
 
         if (NALU_TYPE_DPC == nalu->unitType) {
           //{{{  got nalu dataPartitionC
-          s = slice->dps[2].s;
+          s = slice->dataPartitions[2].s;
           s->errorFlag = 0;
           s->bitStreamOffset = s->readLen = 0;
           memcpy (s->bitStreamBuffer, &nalu->buf[1], nalu->len-1);

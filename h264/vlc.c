@@ -256,8 +256,8 @@ int moreRbspData (byte buffer[], int totalBitOffset,int bytecount) {
 //{{{
 int vlcStartCode (sSlice* slice, int dummy) {
 
-  byte partitionIndex = assignSE2dp[slice->datadpMode][SE_MBTYPE];
-  sDataPartition* dataPartition = &(slice->dps[partitionIndex]);
+  byte partitionIndex = assignSE2dp[slice->dataDpMode][SE_MBTYPE];
+  sDataPartition* dataPartition = &(slice->dataPartitions[partitionIndex]);
   sBitStream* s = dataPartition->s;
   byte* buf = s->bitStreamBuffer;
 

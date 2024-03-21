@@ -460,7 +460,7 @@ void readDeltaQuant (sSyntaxElement* se, sDataPartition *dataPartition, sMacrobl
 
   se->type = type;
 
-  dataPartition = &(slice->dps[dpMap[se->type]]);
+  dataPartition = &(slice->dataPartitions[dpMap[se->type]]);
 
   if (decoder->activePPS->entropyCodingMode == (Boolean)CAVLC || dataPartition->s->errorFlag)
     se->mapping = linfo_se;
@@ -1012,7 +1012,7 @@ static void readMotionInfoP (sMacroblock* mb){
 
   sSyntaxElement se;
   sDataPartition* dataPartition = NULL;
-  const byte* dpMap = assignSE2dp[slice->datadpMode];
+  const byte* dpMap = assignSE2dp[slice->dataDpMode];
   short partmode = ((mb->mbType == P8x8) ? 4 : mb->mbType);
   int step_h0 = BLOCK_STEP [partmode][0];
   int step_v0 = BLOCK_STEP [partmode][1];
@@ -1027,7 +1027,7 @@ static void readMotionInfoP (sMacroblock* mb){
 
   //=====  READ REFERENCE PICTURE INDICES =====
   se.type = SE_REFFRAME;
-  dataPartition = &(slice->dps[dpMap[SE_REFFRAME]]);
+  dataPartition = &(slice->dataPartitions[dpMap[SE_REFFRAME]]);
 
   //  For LIST_0, if multiple ref. pictures, read LIST_0 reference picture indices for the MB
   prepareListforRefIdx (mb, &se, dataPartition, slice->numRefIndexActive[LIST_0], (mb->mbType != P8x8) || (!slice->allrefzero));
@@ -1035,7 +1035,7 @@ static void readMotionInfoP (sMacroblock* mb){
 
   //=====  READ MOTION VECTORS =====
   se.type = SE_MVD;
-  dataPartition = &(slice->dps[dpMap[SE_MVD]]);
+  dataPartition = &(slice->dataPartitions[dpMap[SE_MVD]]);
   if (decoder->activePPS->entropyCodingMode == (Boolean) CAVLC || dataPartition->s->errorFlag)
     se.mapping = linfo_se;
   else
@@ -1065,7 +1065,7 @@ static void readMotionInfoB (sMacroblock* mb) {
   sPicture* picture = slice->picture;
   sSyntaxElement se;
   sDataPartition* dataPartition = NULL;
-  const byte* dpMap = assignSE2dp[slice->datadpMode];
+  const byte* dpMap = assignSE2dp[slice->dataDpMode];
   int partmode = (mb->mbType == P8x8) ? 4 : mb->mbType;
   int step_h0 = BLOCK_STEP [partmode][0];
   int step_v0 = BLOCK_STEP [partmode][1];
@@ -1081,7 +1081,7 @@ static void readMotionInfoB (sMacroblock* mb) {
 
   //=====  READ REFERENCE PICTURE INDICES =====
   se.type = SE_REFFRAME;
-  dataPartition = &(slice->dps[dpMap[SE_REFFRAME]]);
+  dataPartition = &(slice->dataPartitions[dpMap[SE_REFFRAME]]);
 
   //  For LIST_0, if multiple ref. pictures, read LIST_0 reference picture indices for the MB
   prepareListforRefIdx (mb, &se, dataPartition, slice->numRefIndexActive[LIST_0], TRUE);
@@ -1093,7 +1093,7 @@ static void readMotionInfoB (sMacroblock* mb) {
 
   //=====  READ MOTION VECTORS =====
   se.type = SE_MVD;
-  dataPartition = &(slice->dps[dpMap[SE_MVD]]);
+  dataPartition = &(slice->dataPartitions[dpMap[SE_MVD]]);
   if (decoder->activePPS->entropyCodingMode == (Boolean)CAVLC || dataPartition->s->errorFlag)
     se.mapping = linfo_se;
   else

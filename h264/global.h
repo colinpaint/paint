@@ -581,7 +581,7 @@ typedef struct Slice {
   int           directSpatialMvPredFlag; // Indicator for direct mode type (1 for Spatial, 0 for Temporal)
   int           numRefIndexActive[2];    // number of available list references
 
-  int           errorFlag;   // 0 if the dps[0] contains valid information
+  int           errorFlag;   // 0 if the dataPartitons[0] contains valid information
   int           qp;
   int           sliceQpDelta;
   int           qs;
@@ -595,7 +595,7 @@ typedef struct Slice {
   int           startMbNum;  // MUST be set by NAL even in case of errorFlag == 1
   int           endMbNumPlus1;
   int           maxDataPartitions;
-  int           datadpMode;  // data dping mode
+  int           dataDpMode;  // data dping mode
   int           curHeader;
   int           nextHeader;
   int           lastDquant;
@@ -614,9 +614,9 @@ typedef struct Slice {
   char listXsize[6];
   struct Picture** listX[6];
 
-  sDataPartition*       dps;  // array of dps
+  sDataPartition*       dataPartitions; // array of dataPartition
   sMotionInfoContexts*  motionContext;  // pointer to struct of context models for use in CABAC
-  sTextureInfoContexts* textureContext;  // pointer to struct of context models for use in CABAC
+  sTextureInfoContexts* textureContext; // pointer to struct of context models for use in CABAC
 
   int   mvscale[6][MAX_REFERENCE_PICTURES];
   int   refPicReorderFlag[2];
@@ -958,7 +958,7 @@ static const sMotionVec zero_mv = {0, 0};
 //{{{
 static inline int isBLprofile (unsigned profileIdc) {
   return (profileIdc == BASELINE) ||
-         (profileIdc == MAIN) || 
+         (profileIdc == MAIN) ||
          (profileIdc == EXTENDED) ||
          (profileIdc == FREXT_CAVLC444) ||
          (profileIdc == FREXT_HP) || (profileIdc == FREXT_Hi10P) ||
@@ -968,7 +968,7 @@ static inline int isBLprofile (unsigned profileIdc) {
 //{{{
 static inline int isFrextProfile (unsigned profileIdc) {
   // we allow all FRExt tools, when no profile is active
-  return (profileIdc == NO_PROFILE) || 
+  return (profileIdc == NO_PROFILE) ||
          (profileIdc == FREXT_HP) ||
          (profileIdc == FREXT_Hi10P) || (profileIdc == FREXT_Hi422) ||
          (profileIdc == FREXT_Hi444) || (profileIdc == FREXT_CAVLC444);
@@ -976,8 +976,8 @@ static inline int isFrextProfile (unsigned profileIdc) {
 //}}}
 //{{{
 static inline int isHiIntraOnlyProfile (unsigned profileIdc, Boolean constrainedSet3flag) {
-  return (((profileIdc == FREXT_Hi10P) || 
-           (profileIdc == FREXT_Hi422) || 
+  return (((profileIdc == FREXT_Hi10P) ||
+           (profileIdc == FREXT_Hi422) ||
            (profileIdc == FREXT_Hi444)) && constrainedSet3flag) ||
          (profileIdc == FREXT_CAVLC444);
   }

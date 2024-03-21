@@ -12,16 +12,7 @@
   #include <sys/types.h>
   #include <sys/stat.h>
   #include <windows.h>
-
-  #if (_MSC_VER < 1400)
-    typedef int   intptr_t;
-  #else
-    #include <crtdefs.h>
-  #endif
-
-  #if defined(OPENMP)
-    #include <omp.h>
-  #endif
+  #include <crtdefs.h>
 
   #define strcasecmp _strcmpi
   #define strncasecmp _strnicmp
@@ -42,8 +33,7 @@
 
   //#define  inline   _inline
   #define forceinline __forceinline
-  //}}}
-  //{{{  windows 64bit
+
   typedef __int64 int64;
   typedef unsigned __int64   uint64;
   #define FORMAT_OFF_T "I64d"
@@ -60,13 +50,10 @@
   #include <time.h>
   #include <stdint.h>
 
-  #if defined(OPENMP)
-    #include <omp.h>
-  #endif
-
   #define TIMEB    timeb
   #define TIME_T   struct timeval
   #define tell(fd) lseek(fd, 0, SEEK_CUR)
+
   #define OPENFLAGS_WRITE O_WRONLY|O_CREAT|O_TRUNC
   #define OPENFLAGS_READ  O_RDONLY
   #define OPEN_PERMISSIONS S_IRUSR | S_IWUSR
@@ -78,8 +65,7 @@
   #endif
 
   #define forceinline inline
-  //}}}
-  //{{{  linux 64bit
+
   typedef long long int64;
   typedef unsigned long long  uint64;
   #define FORMAT_OFF_T "lld"
@@ -90,17 +76,7 @@
   //}}}
 #endif
 
-//{{{
-#ifdef __cplusplus
-  extern "C" {
-#endif
-//}}}
-  extern void getTime (TIME_T* time);
-  extern void initTime();
-  extern int64 timeDiff (TIME_T* start, TIME_T* end);
-  extern int64 timeNorm (int64 cur_time);
-//{{{
-#ifdef __cplusplus
-  }
-#endif
-//}}}
+extern void getTime (TIME_T* time);
+extern void initTime();
+extern int64 timeDiff (TIME_T* start, TIME_T* end);
+extern int64 timeNorm (int64 cur_time);
