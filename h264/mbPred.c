@@ -1,6 +1,6 @@
 //{{{  includes
 #include "global.h"
-#include "elements.h"
+#include "syntaxElement.h"
 
 #include "block.h"
 #include "buffer.h"
@@ -17,6 +17,7 @@
 #include "quant.h"
 #include "mbPred.h"
 //}}}
+static const sMotionVec zero_mv = {0, 0};
 
 //{{{
 int mb_pred_intra4x4 (sMacroblock* mb, eColorPlane plane, sPixel** pixel, sPicture* picture)
@@ -204,7 +205,7 @@ static void set_chroma_vector (sMacroblock* mb)
     }
   }
 
-  slice->maxMbVmvR = (slice->structure != FRAME || ( mb->mbField )) ? decoder->coding.maxVmvR >> 1 : 
+  slice->maxMbVmvR = (slice->structure != FRAME || ( mb->mbField )) ? decoder->coding.maxVmvR >> 1 :
                                                                          decoder->coding.maxVmvR;
 }
 //}}}

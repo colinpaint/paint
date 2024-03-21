@@ -1,6 +1,6 @@
 //{{{  includes
 #include "global.h"
-#include "elements.h"
+#include "syntaxElement.h"
 
 #include "macroblock.h"
 #include "vlc.h"

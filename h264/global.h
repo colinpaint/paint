@@ -168,6 +168,7 @@ typedef enum {
   } eWeightedPredictionType;
 //}}}
 //}}}
+
 //{{{  sAnnexB
 typedef struct AnnexB {
   byte*  buffer;
@@ -1089,7 +1090,6 @@ typedef struct Decoder {
   } sDecoder;
 //}}}
 
-static const sMotionVec zero_mv = {0, 0};
 //{{{
 static inline int isBLprofile (unsigned profileIdc) {
   return (profileIdc == BASELINE) ||

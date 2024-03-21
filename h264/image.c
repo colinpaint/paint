@@ -1,7 +1,7 @@
 //{{{  includes
 #include "global.h"
 #include "memory.h"
-#include "elements.h"
+#include "syntaxElement.h"
 #include "defines.h"
 
 #include "image.h"
@@ -1245,7 +1245,7 @@ static void resetMb (sMacroblock* mb) {
   }
 //}}}
 //{{{
-static void ercWriteMBMODEandMV (sMacroblock* mb) {
+static void ercWriteMBmodeMV (sMacroblock* mb) {
 
   sDecoder* decoder = mb->decoder;
   int curMbNum = mb->mbIndexX;
@@ -2317,7 +2317,7 @@ static void decodeSlice (sSlice* slice) {
       slice->numRefIndexActive[LIST_1] >>= 1;
       }
 
-    ercWriteMBMODEandMV (mb);
+    ercWriteMBmodeMV (mb);
     endOfSlice = exitMacroblock (slice, !slice->mbAffFrameFlag || (slice->mbIndex % 2));
     }
   }
@@ -3004,7 +3004,7 @@ void endDecodeFrame (sDecoder* decoder) {
       //}}}
 
     // I or P pictures ?
-    if (sliceType == I_SLICE || sliceType == SI_SLICE || sliceType == P_SLICE || refpic)
+    if ((sliceType == I_SLICE) || (sliceType == SI_SLICE) || (sliceType == P_SLICE) || refpic)
       ++(decoder->idrFrameNum);
     (decoder->decodeFrameNum)++;
     }

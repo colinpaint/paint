@@ -2,7 +2,7 @@
 #include <math.h>
 
 #include "global.h"
-#include "elements.h"
+#include "syntaxElement.h"
 
 #include "block.h"
 #include "buffer.h"
@@ -19,8 +19,7 @@
 #include "mbPred.h"
 #include "intraPred.h"
 //}}}
-extern void readCoef4x4cavlc (sMacroblock* mb, int block_type, int i, int j, int levarr[16], int runarr[16], int *number_coefficients);
-extern void readCoef4x4cavlc444 (sMacroblock* mb, int block_type, int i, int j, int levarr[16], int runarr[16], int *number_coefficients);
+static const sMotionVec zero_mv = {0, 0};
 
 //{{{
 static void GetMotionVectorPredictorMBAFF (sMacroblock* mb, sPixelPos* block,

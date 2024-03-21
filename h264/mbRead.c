@@ -2,7 +2,7 @@
 #include <math.h>
 
 #include "global.h"
-#include "elements.h"
+#include "syntaxElement.h"
 
 #include "block.h"
 #include "buffer.h"
@@ -18,6 +18,7 @@
 #include "quant.h"
 #include "mbPred.h"
 //}}}
+static const sMotionVec zero_mv = {0, 0};
 
 //{{{
 static void read_ipred_8x8_modes_mbaff (sMacroblock* mb) {

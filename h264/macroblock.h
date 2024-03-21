@@ -124,6 +124,9 @@ static const unsigned char cofuv_blk_y[3][8][4] = {
 };
 //}}}
 
+extern void readCoef4x4cavlc (sMacroblock* mb, int block_type, int i, int j, int levarr[16], int runarr[16], int *number_coefficients);
+extern void readCoef4x4cavlc444 (sMacroblock* mb, int block_type, int i, int j, int levarr[16], int runarr[16], int *number_coefficients);
+
 extern void setReadMacroblock (sSlice* slice);
 extern void set_read_CBP_and_coeffs_cavlc (sSlice* slice);
 extern void set_read_comp_coeff_cavlc (sMacroblock* mb);

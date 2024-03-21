@@ -3,7 +3,7 @@
 #include "memory.h"
 
 #include "cabac.h"
-#include "elements.h"
+#include "syntaxElement.h"
 #include "image.h"
 #include "biariDecode.h"
 #include "mbAccess.h"

@@ -8,6 +8,7 @@
 #include "mbAccess.h"
 #include "macroblock.h"
 //}}}
+static const sMotionVec zero_mv = {0, 0};
 
 //{{{
 int allocPred (sSlice* slice) {
