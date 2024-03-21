@@ -124,6 +124,10 @@ static const unsigned char cofuv_blk_y[3][8][4] = {
 };
 //}}}
 
+extern void setReadMacroblock (sSlice* slice);
+extern void set_read_CBP_and_coeffs_cavlc (sSlice* slice);
+extern void set_read_comp_coeff_cavlc (sMacroblock* mb);
+
 extern int get_colocated_info_8x8 (sMacroblock* mb, sPicture* list1, int i, int j);
 extern int get_colocated_info_4x4 (sMacroblock* mb, sPicture* list1, int i, int j);
 

@@ -17,13 +17,10 @@
 #include "mcPred.h"
 #include "quant.h"
 #include "mbPred.h"
+#include "intraPred.h"
 //}}}
 extern void readCoef4x4cavlc (sMacroblock* mb, int block_type, int i, int j, int levarr[16], int runarr[16], int *number_coefficients);
 extern void readCoef4x4cavlc444 (sMacroblock* mb, int block_type, int i, int j, int levarr[16], int runarr[16], int *number_coefficients);
-extern void set_intra_prediction_modes (sSlice* slice);
-extern void setReadMacroblock (sSlice* slice);
-extern void set_read_CBP_and_coeffs_cavlc (sSlice* slice);
-extern void set_read_comp_coeff_cavlc (sMacroblock* mb);
 
 //{{{
 static void GetMotionVectorPredictorMBAFF (sMacroblock* mb, sPixelPos* block,
@@ -794,7 +791,7 @@ Boolean exitMacroblock (sSlice* slice, int eos_bit) {
   ++(slice->numDecodedMbs);
 
   sDecoder* decoder = slice->decoder;
-  if (slice->mbIndex == decoder->picSizeInMbs - 1) 
+  if (slice->mbIndex == decoder->picSizeInMbs - 1)
     return TRUE;
   else {
     slice->mbIndex = FmoGetNextMBNr (decoder, slice->mbIndex);
