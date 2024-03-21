@@ -957,8 +957,10 @@ typedef struct Decoder {
 static const sMotionVec zero_mv = {0, 0};
 //{{{
 static inline int isBLprofile (unsigned profileIdc) {
-  return (profileIdc == FREXT_CAVLC444) || (profileIdc == BASELINE) ||
-         (profileIdc == MAIN) || (profileIdc == EXTENDED) ||
+  return (profileIdc == BASELINE) ||
+         (profileIdc == MAIN) || 
+         (profileIdc == EXTENDED) ||
+         (profileIdc == FREXT_CAVLC444) ||
          (profileIdc == FREXT_HP) || (profileIdc == FREXT_Hi10P) ||
          (profileIdc == FREXT_Hi422) || (profileIdc == FREXT_Hi444);
 }
@@ -966,17 +968,19 @@ static inline int isBLprofile (unsigned profileIdc) {
 //{{{
 static inline int isFrextProfile (unsigned profileIdc) {
   // we allow all FRExt tools, when no profile is active
-  return (profileIdc == NO_PROFILE) || (profileIdc == FREXT_HP) ||
+  return (profileIdc == NO_PROFILE) || 
+         (profileIdc == FREXT_HP) ||
          (profileIdc == FREXT_Hi10P) || (profileIdc == FREXT_Hi422) ||
          (profileIdc == FREXT_Hi444) || (profileIdc == FREXT_CAVLC444);
 }
 //}}}
 //{{{
 static inline int isHiIntraOnlyProfile (unsigned profileIdc, Boolean constrainedSet3flag) {
-  return (((profileIdc == FREXT_Hi10P) || (profileIdc == FREXT_Hi422) || (profileIdc == FREXT_Hi444)) &&
-          constrainedSet3flag) ||
+  return (((profileIdc == FREXT_Hi10P) || 
+           (profileIdc == FREXT_Hi422) || 
+           (profileIdc == FREXT_Hi444)) && constrainedSet3flag) ||
          (profileIdc == FREXT_CAVLC444);
-}
+  }
 //}}}
 
 //{{{
