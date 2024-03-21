@@ -36,7 +36,7 @@ void freePred (sSlice* slice) {
 //}}}
 
 //{{{
-static void update_direct_mv_info_temporal (sMacroblock* mb) {
+static void update_direct_mv_info_temporal (sMacroBlock* mb) {
 
   sDecoder* decoder = mb->decoder;
   sSlice* slice = mb->slice;
@@ -272,7 +272,7 @@ static inline void update_neighbor_mvs (sPicMotionParam** motion, const sPicMoti
   }
 //}}}
 //{{{
-int get_colocated_info_4x4 (sMacroblock* mb, sPicture* list1, int i, int j) {
+int get_colocated_info_4x4 (sMacroBlock* mb, sPicture* list1, int i, int j) {
 
   if (list1->isLongTerm)
     return 1;
@@ -290,7 +290,7 @@ int get_colocated_info_4x4 (sMacroblock* mb, sPicture* list1, int i, int j) {
   }
 //}}}
 //{{{
-int get_colocated_info_8x8 (sMacroblock* mb, sPicture* list1, int i, int j) {
+int get_colocated_info_8x8 (sMacroBlock* mb, sPicture* list1, int i, int j) {
 
   if (list1->isLongTerm)
     return 1;
@@ -356,7 +356,7 @@ int get_colocated_info_8x8 (sMacroblock* mb, sPicture* list1, int i, int j) {
 //}}}
 
 //{{{
-static void update_direct_mv_info_spatial_8x8 (sMacroblock* mb)
+static void update_direct_mv_info_spatial_8x8 (sMacroBlock* mb)
 {
   Boolean has_direct = (mb->b8mode[0] == 0) | (mb->b8mode[1] == 0) | (mb->b8mode[2] == 0) | (mb->b8mode[3] == 0);
 
@@ -515,7 +515,7 @@ static void update_direct_mv_info_spatial_8x8 (sMacroblock* mb)
 }
 //}}}
 //{{{
-static void update_direct_mv_info_spatial_4x4 (sMacroblock* mb)
+static void update_direct_mv_info_spatial_4x4 (sMacroBlock* mb)
 {
   Boolean has_direct = (mb->b8mode[0] == 0) | (mb->b8mode[1] == 0) | (mb->b8mode[2] == 0) | (mb->b8mode[3] == 0);
 
@@ -1425,7 +1425,7 @@ static void get_luma_31 (sPixel** block, sPixel** curPixelY, int blockSizeY, int
 //}}}
 //{{{
 void get_block_luma (sPicture* curRef, int x_pos, int y_pos, int blockSizeX, int blockSizeY, sPixel** block,
-                    int shift_x, int maxold_x, int maxold_y, int** tempRes, int max_imgpel_value, sPixel no_ref_value, sMacroblock* mb)
+                    int shift_x, int maxold_x, int maxold_y, int** tempRes, int max_imgpel_value, sPixel no_ref_value, sMacroBlock* mb)
 {
   if (curRef->noRef) {
     //printf("list[ref_frame] is equal to 'no reference picture' before RAP\n");
@@ -1644,7 +1644,7 @@ static void get_block_chroma (sPicture* curRef, int x_pos, int y_pos, int subpel
 }
 //}}}
 //{{{
-void intra_cr_decoding (sMacroblock* mb, int yuv)
+void intra_cr_decoding (sMacroBlock* mb, int yuv)
 {
   sDecoder* decoder = mb->decoder;
   sSlice* slice = mb->slice;
@@ -1736,7 +1736,7 @@ static inline void set_direct_references (const sPixelPos* mb, char* l0_rFrame, 
 }
 //}}}
 //{{{
-static void set_direct_references_mb_field (const sPixelPos* mb, char* l0_rFrame, char* l1_rFrame, sPicMotionParam** mvInfo, sMacroblock *mbData)
+static void set_direct_references_mb_field (const sPixelPos* mb, char* l0_rFrame, char* l1_rFrame, sPicMotionParam** mvInfo, sMacroBlock *mbData)
 {
   if (mb->available)
   {
@@ -1760,7 +1760,7 @@ static void set_direct_references_mb_field (const sPixelPos* mb, char* l0_rFrame
 }
 //}}}
 //{{{
-static void set_direct_references_mb_frame (const sPixelPos* mb, char* l0_rFrame, char* l1_rFrame, sPicMotionParam** mvInfo, sMacroblock *mbData)
+static void set_direct_references_mb_frame (const sPixelPos* mb, char* l0_rFrame, char* l1_rFrame, sPicMotionParam** mvInfo, sMacroBlock *mbData)
 {
   if (mb->available)
   {
@@ -1784,7 +1784,7 @@ static void set_direct_references_mb_frame (const sPixelPos* mb, char* l0_rFrame
 }
 //}}}
 //{{{
-void prepare_direct_params (sMacroblock* mb, sPicture* picture, sMotionVec* pmvl0, sMotionVec *pmvl1, char *l0_rFrame, char *l1_rFrame)
+void prepare_direct_params (sMacroBlock* mb, sPicture* picture, sMotionVec* pmvl0, sMotionVec *pmvl1, char *l0_rFrame, char *l1_rFrame)
 {
   sSlice* slice = mb->slice;
   char l0_refA, l0_refB, l0_refC;
@@ -1846,7 +1846,7 @@ static inline int check_vert_mv (int llimit, int vec1_y,int rlimit) {
   }
 //}}}
 //{{{
-static void perform_mc_single_wp (sMacroblock* mb, eColorPlane plane, sPicture* picture, int predDir, int i, int j, int blockSizeX, int blockSizeY)
+static void perform_mc_single_wp (sMacroBlock* mb, eColorPlane plane, sPicture* picture, int predDir, int i, int j, int blockSizeX, int blockSizeY)
 {
   sDecoder* decoder = mb->decoder;
   sSlice* slice = mb->slice;
@@ -1939,7 +1939,7 @@ static void perform_mc_single_wp (sMacroblock* mb, eColorPlane plane, sPicture* 
 }
 //}}}
 //{{{
-static void perform_mc_single (sMacroblock* mb, eColorPlane plane, sPicture* picture, int predDir, int i, int j, int blockSizeX, int blockSizeY)
+static void perform_mc_single (sMacroBlock* mb, eColorPlane plane, sPicture* picture, int predDir, int i, int j, int blockSizeX, int blockSizeY)
 {
   sDecoder* decoder = mb->decoder;
   sSlice* slice = mb->slice;
@@ -2017,7 +2017,7 @@ static void perform_mc_single (sMacroblock* mb, eColorPlane plane, sPicture* pic
 }
 //}}}
 //{{{
-static void perform_mc_bi_wp (sMacroblock* mb, eColorPlane plane, sPicture* picture, int i, int j, int blockSizeX, int blockSizeY)
+static void perform_mc_bi_wp (sMacroBlock* mb, eColorPlane plane, sPicture* picture, int i, int j, int blockSizeX, int blockSizeY)
 {
   static const int mv_mul = 16;
   int  vec1_x, vec1_y, vec2_x, vec2_y;
@@ -2154,7 +2154,7 @@ static void perform_mc_bi_wp (sMacroblock* mb, eColorPlane plane, sPicture* pict
 }
 //}}}
 //{{{
-static void perform_mc_bi (sMacroblock* mb, eColorPlane plane, sPicture* picture, int i, int j, int blockSizeX, int blockSizeY)
+static void perform_mc_bi (sMacroBlock* mb, eColorPlane plane, sPicture* picture, int i, int j, int blockSizeX, int blockSizeY)
 {
   static const int mv_mul = 16;
   int vec1_x=0, vec1_y=0, vec2_x=0, vec2_y=0;
@@ -2267,7 +2267,7 @@ static void perform_mc_bi (sMacroblock* mb, eColorPlane plane, sPicture* picture
 }
 //}}}
 //{{{
-void perform_mc (sMacroblock* mb, eColorPlane plane, sPicture* picture,
+void perform_mc (sMacroBlock* mb, eColorPlane plane, sPicture* picture,
                  int predDir, int i, int j, int blockSizeX, int blockSizeY) {
 
   sSlice* slice = mb->slice;

@@ -184,7 +184,7 @@ int readsSyntaxElement_VLC (sSyntaxElement* se, sBitStream* s) {
 }
 //}}}
 //{{{
-int readSyntaxElementVLC (sMacroblock* mb, sSyntaxElement* se, sDataPartition* dataPartition) {
+int readSyntaxElementVLC (sMacroBlock* mb, sSyntaxElement* se, sDataPartition* dataPartition) {
   return (readsSyntaxElement_VLC(se, dataPartition->s));
   }
 //}}}

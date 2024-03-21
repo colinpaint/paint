@@ -9,7 +9,7 @@
 //}}}
 
 //{{{
-static void read_comp_coeff_4x4_smb_CABAC (sMacroblock* mb, sSyntaxElement* se, eColorPlane plane, 
+static void read_comp_coeff_4x4_smb_CABAC (sMacroBlock* mb, sSyntaxElement* se, eColorPlane plane, 
                                            int blockY, int blockX, int start_scan, int64 *cbp_blk) {
 
   int i,j,k;
@@ -79,7 +79,7 @@ static void read_comp_coeff_4x4_smb_CABAC (sMacroblock* mb, sSyntaxElement* se, 
   }
 //}}}
 //{{{
-static void readCompCoef4x4cabac (sMacroblock* mb, sSyntaxElement* se, eColorPlane plane,
+static void readCompCoef4x4cabac (sMacroBlock* mb, sSyntaxElement* se, eColorPlane plane,
                                   int (*InvLevelScale4x4)[4], int qp_per, int cbp) {
 
   sSlice* slice = mb->slice;
@@ -149,7 +149,7 @@ static void readCompCoef4x4cabac (sMacroblock* mb, sSyntaxElement* se, eColorPla
   }
 //}}}
 //{{{
-static void read_comp_coeff_4x4_CABAC_ls (sMacroblock* mb, sSyntaxElement* se, eColorPlane plane, int (*InvLevelScale4x4)[4], int qp_per, int cbp)
+static void read_comp_coeff_4x4_CABAC_ls (sMacroBlock* mb, sSyntaxElement* se, eColorPlane plane, int (*InvLevelScale4x4)[4], int qp_per, int cbp)
 {
   sDecoder* decoder = mb->decoder;
   int start_scan = IS_I16MB (mb)? 1 : 0;
@@ -171,7 +171,7 @@ static void read_comp_coeff_4x4_CABAC_ls (sMacroblock* mb, sSyntaxElement* se, e
 //}}}
 
 //{{{
-static void readCompCoeff8x8_CABAC (sMacroblock* mb, sSyntaxElement* se, eColorPlane plane, int b8)
+static void readCompCoeff8x8_CABAC (sMacroBlock* mb, sSyntaxElement* se, eColorPlane plane, int b8)
 {
   if (mb->cbp & (1<<b8))  // are there any coefficients in the current block
   {
@@ -270,7 +270,7 @@ static void readCompCoeff8x8_CABAC (sMacroblock* mb, sSyntaxElement* se, eColorP
 }
 //}}}
 //{{{
-static void readCompCoeff8x8_CABAC_lossless (sMacroblock* mb, sSyntaxElement* se, eColorPlane plane, int b8)
+static void readCompCoeff8x8_CABAC_lossless (sMacroBlock* mb, sSyntaxElement* se, eColorPlane plane, int b8)
 {
   if (mb->cbp & (1<<b8))  // are there any coefficients in the current block
   {
@@ -344,7 +344,7 @@ static void readCompCoeff8x8_CABAC_lossless (sMacroblock* mb, sSyntaxElement* se
 //}}}
 
 //{{{
-static void read_comp_coeff_8x8_MB_CABAC (sMacroblock* mb, sSyntaxElement* se, eColorPlane plane) {
+static void read_comp_coeff_8x8_MB_CABAC (sMacroBlock* mb, sSyntaxElement* se, eColorPlane plane) {
 
   //======= 8x8 transform size & CABAC ========
   readCompCoeff8x8_CABAC (mb, se, plane, 0);
@@ -354,7 +354,7 @@ static void read_comp_coeff_8x8_MB_CABAC (sMacroblock* mb, sSyntaxElement* se, e
   }
 //}}}
 //{{{
-static void read_comp_coeff_8x8_MB_CABAC_ls (sMacroblock* mb, sSyntaxElement* se, eColorPlane plane) {
+static void read_comp_coeff_8x8_MB_CABAC_ls (sMacroBlock* mb, sSyntaxElement* se, eColorPlane plane) {
 
   //======= 8x8 transform size & CABAC ========
   readCompCoeff8x8_CABAC_lossless (mb, se, plane, 0);
@@ -365,7 +365,7 @@ static void read_comp_coeff_8x8_MB_CABAC_ls (sMacroblock* mb, sSyntaxElement* se
 //}}}
 
 //{{{
-static void read_CBP_and_coeffs_from_NAL_CABAC_420 (sMacroblock* mb) {
+static void read_CBP_and_coeffs_from_NAL_CABAC_420 (sMacroBlock* mb) {
 
   int i,j;
   int level;
@@ -536,7 +536,7 @@ static void read_CBP_and_coeffs_from_NAL_CABAC_420 (sMacroblock* mb) {
 
   // chroma DC coeff
   if(cbp>15) {
-    sCBPStructure  *cbpStructure = &mb->cbpStructure[0];
+    sCbpStructure  *cbpStructure = &mb->cbpStructure[0];
     int uv, ll, k, coef_ctr;
 
     for (ll = 0; ll < 3; ll += 2) {
@@ -613,7 +613,7 @@ static void read_CBP_and_coeffs_from_NAL_CABAC_420 (sMacroblock* mb) {
     if (mb->isLossless == FALSE) {
       int b4, b8, uv, k;
       int** cof;
-      sCBPStructure  *cbpStructure = &mb->cbpStructure[0];
+      sCbpStructure  *cbpStructure = &mb->cbpStructure[0];
       for (b8=0; b8 < decoder->coding.numBlock8x8uv; ++b8) {
         mb->isVblock = uv = (b8 > ((decoder->coding.numUvBlocks) - 1 ));
         InvLevelScale4x4 = intra ? slice->InvLevelScale4x4_Intra[uv + 1][qp_rem_uv[uv]] : slice->InvLevelScale4x4_Inter[uv + 1][qp_rem_uv[uv]];
@@ -647,7 +647,7 @@ static void read_CBP_and_coeffs_from_NAL_CABAC_420 (sMacroblock* mb) {
         }
       }
     else {
-      sCBPStructure  *cbpStructure = &mb->cbpStructure[0];
+      sCbpStructure  *cbpStructure = &mb->cbpStructure[0];
       int b4, b8, k;
       int uv;
       for (b8 = 0; b8 < decoder->coding.numBlock8x8uv; ++b8) {
@@ -681,7 +681,7 @@ static void read_CBP_and_coeffs_from_NAL_CABAC_420 (sMacroblock* mb) {
   }
 //}}}
 //{{{
-static void read_CBP_and_coeffs_from_NAL_CABAC_400 (sMacroblock* mb)
+static void read_CBP_and_coeffs_from_NAL_CABAC_400 (sMacroBlock* mb)
 {
   int k;
   int level;
@@ -850,7 +850,7 @@ static void read_CBP_and_coeffs_from_NAL_CABAC_400 (sMacroblock* mb)
 }
 //}}}
 //{{{
-static void read_CBP_and_coeffs_from_NAL_CABAC_444 (sMacroblock* mb)
+static void read_CBP_and_coeffs_from_NAL_CABAC_444 (sMacroBlock* mb)
 {
   int i, k;
   int level;
@@ -1108,7 +1108,7 @@ static void read_CBP_and_coeffs_from_NAL_CABAC_444 (sMacroblock* mb)
 }
 //}}}
 //{{{
-static void read_CBP_and_coeffs_from_NAL_CABAC_422 (sMacroblock* mb)
+static void read_CBP_and_coeffs_from_NAL_CABAC_422 (sMacroBlock* mb)
 {
   int i,j,k;
   int level;
@@ -1168,7 +1168,7 @@ static void read_CBP_and_coeffs_from_NAL_CABAC_422 (sMacroblock* mb)
     else
       se.reading = read_CBP_CABAC;
 
-    dataPartition->readSyntaxElement(mb, &se, dataPartition);
+    dataPartition->readSyntaxElement (mb, &se, dataPartition);
     mb->cbp = cbp = se.value1;
 
 
@@ -1324,7 +1324,7 @@ static void read_CBP_and_coeffs_from_NAL_CABAC_422 (sMacroblock* mb)
 
         //===================== CHROMA DC YUV422 ======================
         {
-          sCBPStructure  *cbpStructure = &mb->cbpStructure[0];
+          sCbpStructure  *cbpStructure = &mb->cbpStructure[0];
           coef_ctr=-1;
           level=1;
           for(k=0;(k<9)&&(level!=0);++k)
@@ -1426,7 +1426,7 @@ static void read_CBP_and_coeffs_from_NAL_CABAC_422 (sMacroblock* mb)
 
       if(mb->isLossless == FALSE)
       {
-        sCBPStructure  *cbpStructure = &mb->cbpStructure[0];
+        sCbpStructure  *cbpStructure = &mb->cbpStructure[0];
         for (b8=0; b8 < decoder->coding.numBlock8x8uv; ++b8)
         {
           mb->isVblock = uv = (b8 > ((decoder->coding.numUvBlocks) - 1 ));
@@ -1465,7 +1465,7 @@ static void read_CBP_and_coeffs_from_NAL_CABAC_422 (sMacroblock* mb)
       }
       else
       {
-        sCBPStructure  *cbpStructure = &mb->cbpStructure[0];
+        sCbpStructure  *cbpStructure = &mb->cbpStructure[0];
         for (b8=0; b8 < decoder->coding.numBlock8x8uv; ++b8)
         {
           mb->isVblock = uv = (b8 > ((decoder->coding.numUvBlocks) - 1 ));
@@ -1533,7 +1533,7 @@ void set_read_CBP_and_coeffs_cabac(sSlice* slice)
 //}}}
 
 //{{{
-void set_read_comp_coeff_cabac (sMacroblock* mb) {
+void set_read_comp_coeff_cabac (sMacroBlock* mb) {
 
   if (mb->isLossless == FALSE) {
     mb->readCompCoef4x4cabac = readCompCoef4x4cabac;

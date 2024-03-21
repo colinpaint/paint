@@ -73,7 +73,7 @@ static inline int compare_mvs (const sMotionVec* mv0, const sMotionVec* mv1, int
   }
 //}}}
 //{{{
-static sMacroblock* get_non_aff_neighbour_luma (sMacroblock* mb, int xN, int yN) {
+static sMacroBlock* get_non_aff_neighbour_luma (sMacroBlock* mb, int xN, int yN) {
 
   if (xN < 0)
     return (mb->mbLeft);
@@ -84,7 +84,7 @@ static sMacroblock* get_non_aff_neighbour_luma (sMacroblock* mb, int xN, int yN)
   }
 //}}}
 //{{{
-static sMacroblock* get_non_aff_neighbour_chroma (sMacroblock* mb, int xN, int yN,
+static sMacroBlock* get_non_aff_neighbour_chroma (sMacroBlock* mb, int xN, int yN,
                                                  int block_width,int block_height) {
   if (xN < 0) {
     if (yN < block_height)
@@ -108,7 +108,7 @@ static sMacroblock* get_non_aff_neighbour_chroma (sMacroblock* mb, int xN, int y
 // mbaff
 //{{{
 static void edge_loop_luma_ver_MBAff (eColorPlane plane, sPixel** img,
-                                      byte* Strength, sMacroblock* mbQ, int edge) {
+                                      byte* Strength, sMacroBlock* mbQ, int edge) {
 
   int      pel, Strng ;
   sPixel   L2 = 0, L1, L0, R0, R1, R2 = 0;
@@ -125,7 +125,7 @@ static void edge_loop_luma_ver_MBAff (eColorPlane plane, sPixel** img,
   int AlphaC0Offset = mbQ->deblockFilterC0offset;
   int BetaOffset = mbQ->deblockFilterBetaOffset;
 
-  sMacroblock*MbP;
+  sMacroBlock*MbP;
   sPixel* SrcPtrP, *SrcPtrQ;
 
   for (pel = 0 ; pel < MB_BLOCK_SIZE ; ++pel ) {
@@ -207,7 +207,7 @@ static void edge_loop_luma_ver_MBAff (eColorPlane plane, sPixel** img,
   }
 //}}}
 //{{{
-static void edge_loop_luma_hor_MBAff (eColorPlane plane, sPixel** img, byte* Strength, sMacroblock* mbQ,
+static void edge_loop_luma_hor_MBAff (eColorPlane plane, sPixel** img, byte* Strength, sMacroBlock* mbQ,
                                       int edge, sPicture *p)
 {
   int      width = p->iLumaStride; //p->sizeX;
@@ -228,7 +228,7 @@ static void edge_loop_luma_hor_MBAff (eColorPlane plane, sPixel** img, byte* Str
     int AlphaC0Offset = mbQ->deblockFilterC0offset;
     int BetaOffset = mbQ->deblockFilterBetaOffset;
 
-    sMacroblock *MbP = &(decoder->mbData[pixP.mbIndex]);
+    sMacroBlock *MbP = &(decoder->mbData[pixP.mbIndex]);
 
     int incQ    = ((MbP->mbField && !mbQ->mbField) ? 2 * width : width);
     int incP    = ((mbQ->mbField && !MbP->mbField) ? 2 * width : width);
@@ -314,7 +314,7 @@ static void edge_loop_luma_hor_MBAff (eColorPlane plane, sPixel** img, byte* Str
 }
 //}}}
 //{{{
-static void edge_loop_chroma_ver_MBAff (sPixel** img, byte *Strength, sMacroblock* mbQ,
+static void edge_loop_chroma_ver_MBAff (sPixel** img, byte *Strength, sMacroBlock* mbQ,
                                         int edge, int uv, sPicture *p) {
 
   int      pel, Strng ;
@@ -333,7 +333,7 @@ static void edge_loop_chroma_ver_MBAff (sPixel** img, byte *Strength, sMacrobloc
 
   int      AlphaC0Offset = mbQ->deblockFilterC0offset;
   int      BetaOffset    = mbQ->deblockFilterBetaOffset;
-  sMacroblock *MbP;
+  sMacroBlock *MbP;
   sPixel   *SrcPtrP, *SrcPtrQ;
 
   for (pel = 0 ; pel < PelNum ; ++pel ) {
@@ -383,7 +383,7 @@ static void edge_loop_chroma_ver_MBAff (sPixel** img, byte *Strength, sMacrobloc
   }
 //}}}
 //{{{
-static void edge_loop_chroma_hor_MBAff (sPixel** img, byte *Strength, sMacroblock* mbQ, int edge, int uv, sPicture *p)
+static void edge_loop_chroma_hor_MBAff (sPixel** img, byte *Strength, sMacroBlock* mbQ, int edge, int uv, sPicture *p)
 {
   sDecoder* decoder = mbQ->decoder;
   int PelNum = pelnum_cr[1][p->chromaFormatIdc];
@@ -400,7 +400,7 @@ static void edge_loop_chroma_hor_MBAff (sPixel** img, byte *Strength, sMacrobloc
   getAffNeighbour (mbQ, 0, yQ, decoder->mbSize[IS_CHROMA], &pixQ);
 
   if (pixP.available || (mbQ->deblockFilterDisableIdc == 0)) {
-    sMacroblock* MbP = &(decoder->mbData[pixP.mbIndex]);
+    sMacroBlock* MbP = &(decoder->mbData[pixP.mbIndex]);
     int incQ = ((MbP->mbField && !mbQ->mbField) ? 2 * width : width);
     int incP = ((mbQ->mbField  && !MbP->mbField) ? 2 * width : width);
 
@@ -452,7 +452,7 @@ static void edge_loop_chroma_hor_MBAff (sPixel** img, byte *Strength, sMacrobloc
   }
 //}}}
 //{{{
-static void get_strength_ver_MBAff (byte* Strength, sMacroblock* mb, int edge, int mvlimit, sPicture* p) {
+static void get_strength_ver_MBAff (byte* Strength, sMacroBlock* mb, int edge, int mvlimit, sPicture* p) {
 
   short  blkP, blkQ, idx;
   int    StrValue, i;
@@ -461,7 +461,7 @@ static void get_strength_ver_MBAff (byte* Strength, sMacroblock* mb, int edge, i
   sDecoder* decoder = mb->decoder;
   sBlockPos *picPos = decoder->picPos;
 
-  sMacroblock* MbP;
+  sMacroBlock* MbP;
   if ((p->sliceType==SP_SLICE)||(p->sliceType==SI_SLICE) ) {
     for (idx = 0; idx < MB_BLOCK_SIZE; ++idx ) {
       getAffNeighbour(mb, edge - 1, idx, decoder->mbSize[IS_LUMA], &pixP);
@@ -621,14 +621,14 @@ static void get_strength_ver_MBAff (byte* Strength, sMacroblock* mb, int edge, i
   }
 //}}}
 //{{{
-static void get_strength_hor_MBAff (byte* Strength, sMacroblock* mb, int edge, int mvlimit, sPicture* p) {
+static void get_strength_hor_MBAff (byte* Strength, sMacroBlock* mb, int edge, int mvlimit, sPicture* p) {
 
   short  blkP, blkQ, idx;
   short  blk_x, blk_x2, blk_y, blk_y2 ;
   int    StrValue, i;
   int    xQ, yQ = (edge < MB_BLOCK_SIZE ? edge : 1);
   short  mb_x, mb_y;
-  sMacroblock *MbP;
+  sMacroBlock *MbP;
   sPixelPos pixP;
   sDecoder* decoder = mb->decoder;
   sBlockPos *picPos = decoder->picPos;
@@ -744,7 +744,7 @@ static void set_loop_filter_functions_mbaff (sDecoder* decoder) {
 
 // normal
 //{{{
-static void get_strength_ver (sMacroblock* mb, int edge, int mvLimit, sPicture* p)
+static void get_strength_ver (sMacroBlock* mb, int edge, int mvLimit, sPicture* p)
 {
   byte *Strength = mb->strengthV[edge];
   sSlice* slice = mb->slice;
@@ -758,9 +758,9 @@ static void get_strength_ver (sMacroblock* mb, int edge, int mvLimit, sPicture* 
   }
   else {
     if (mb->isIntraBlock == FALSE) {
-      sMacroblock *MbP;
+      sMacroBlock *MbP;
       int xQ = (edge << 2) - 1;
-      sMacroblock *neighbour = get_non_aff_neighbour_luma (mb, xQ, 0);
+      sMacroBlock *neighbour = get_non_aff_neighbour_luma (mb, xQ, 0);
       MbP = (edge) ? mb : neighbour;
 
       if (edge || MbP->isIntraBlock == FALSE) {
@@ -853,7 +853,7 @@ static void get_strength_ver (sMacroblock* mb, int edge, int mvLimit, sPicture* 
 }
 //}}}
 //{{{
-static void get_strength_hor (sMacroblock* mb, int edge, int mvLimit, sPicture* p) {
+static void get_strength_hor (sMacroBlock* mb, int edge, int mvLimit, sPicture* p) {
 
   byte  *Strength = mb->strengthH[edge];
   int    StrValue, i;
@@ -868,9 +868,9 @@ static void get_strength_hor (sMacroblock* mb, int edge, int mvLimit, sPicture* 
     }
   else {
     if (mb->isIntraBlock == FALSE) {
-      sMacroblock* MbP;
+      sMacroBlock* MbP;
       int yQ = (edge < BLOCK_SIZE ? (edge << 2) - 1: 0);
-      sMacroblock* neighbor = get_non_aff_neighbour_luma(mb, 0, yQ);
+      sMacroBlock* neighbor = get_non_aff_neighbour_luma(mb, 0, yQ);
       MbP = (edge) ? mb : neighbor;
       if (edge || MbP->isIntraBlock == FALSE) {
         if (edge && (slice->sliceType == P_SLICE && mb->mbType == PSKIP))
@@ -1072,11 +1072,11 @@ static void luma_ver_deblock_normal (sPixel** pixel, int pos_x1,
   }
 //}}}
 //{{{
-static void edge_loop_luma_ver (eColorPlane plane, sPixel** img, byte* Strength, sMacroblock* mb, int edge) {
+static void edge_loop_luma_ver (eColorPlane plane, sPixel** img, byte* Strength, sMacroBlock* mb, int edge) {
 
   sDecoder* decoder = mb->decoder;
 
-  sMacroblock* MbP = get_non_aff_neighbour_luma (mb, edge - 1, 0);
+  sMacroBlock* MbP = get_non_aff_neighbour_luma (mb, edge - 1, 0);
   if (MbP || (mb->deblockFilterDisableIdc == 0)) {
     int bitDepthScale   = plane ? decoder->coding.bitDepthScale[IS_CHROMA] : decoder->coding.bitDepthScale[IS_LUMA];
 
@@ -1211,12 +1211,12 @@ static void luma_hor_deblock_normal (sPixel* imgP, sPixel* imgQ, int width,
 //}}}
 //{{{
 static void edge_loop_luma_hor (eColorPlane plane, sPixel** img, byte* Strength,
-                                sMacroblock* mb, int edge, sPicture *p) {
+                                sMacroBlock* mb, int edge, sPicture *p) {
 
   sDecoder* decoder = mb->decoder;
 
   int ypos = (edge < MB_BLOCK_SIZE ? edge - 1: 0);
-  sMacroblock *MbP = get_non_aff_neighbour_luma (mb, 0, ypos);
+  sMacroBlock *MbP = get_non_aff_neighbour_luma (mb, 0, ypos);
 
   if (MbP || (mb->deblockFilterDisableIdc == 0)) {
     int bitDepthScale = plane ? decoder->coding.bitDepthScale[IS_CHROMA] : decoder->coding.bitDepthScale[IS_LUMA];
@@ -1251,7 +1251,7 @@ static void edge_loop_luma_hor (eColorPlane plane, sPixel** img, byte* Strength,
 }
 //}}}
 //{{{
-static void edge_loop_chroma_ver (sPixel** img, byte* Strength, sMacroblock* mb,
+static void edge_loop_chroma_ver (sPixel** img, byte* Strength, sMacroBlock* mb,
                                   int edge, int uv, sPicture *p) {
 
   sDecoder* decoder = mb->decoder;
@@ -1261,7 +1261,7 @@ static void edge_loop_chroma_ver (sPixel** img, byte* Strength, sMacroblock* mb,
   int xQ = edge - 1;
   int yQ = 0;
 
-  sMacroblock* MbP = get_non_aff_neighbour_chroma (mb,xQ,yQ,block_width,block_height);
+  sMacroBlock* MbP = get_non_aff_neighbour_chroma (mb,xQ,yQ,block_width,block_height);
 
   if (MbP || (mb->deblockFilterDisableIdc == 0)) {
     int bitDepthScale   = decoder->coding.bitDepthScale[IS_CHROMA];
@@ -1315,7 +1315,7 @@ static void edge_loop_chroma_ver (sPixel** img, byte* Strength, sMacroblock* mb,
   }
 //}}}
 //{{{
-static void edge_loop_chroma_hor (sPixel** img, byte* Strength, sMacroblock* mb,
+static void edge_loop_chroma_hor (sPixel** img, byte* Strength, sMacroBlock* mb,
                                   int edge, int uv, sPicture *p) {
 
   sDecoder* decoder = mb->decoder;
@@ -1324,7 +1324,7 @@ static void edge_loop_chroma_hor (sPixel** img, byte* Strength, sMacroblock* mb,
   int xQ = 0;
   int yQ = (edge < 16 ? edge - 1: 0);
 
-  sMacroblock* MbP = get_non_aff_neighbour_chroma (mb, xQ, yQ, block_width, block_height);
+  sMacroBlock* MbP = get_non_aff_neighbour_chroma (mb, xQ, yQ, block_width, block_height);
 
   if (MbP || (mb->deblockFilterDisableIdc == 0)) {
     int bitDepthScale = decoder->coding.bitDepthScale[IS_CHROMA];
@@ -1397,7 +1397,7 @@ static void set_loop_filter_functions_normal (sDecoder* decoder) {
 //{{{
 static void deblockMb (sDecoder* decoder, sPicture* p, int mbIndex) {
 
-  sMacroblock* mb = &(decoder->mbData[mbIndex]) ; // current Mb
+  sMacroBlock* mb = &(decoder->mbData[mbIndex]) ; // current Mb
 
   // return, if filter is disabled
   if (mb->deblockFilterDisableIdc == 1)
@@ -1558,7 +1558,7 @@ static void deblockMb (sDecoder* decoder, sPicture* p, int mbIndex) {
 //{{{
 static void getDeblockStrength (sDecoder* decoder, sPicture* p, int mbIndex) {
 
-  sMacroblock* mb = &(decoder->mbData[mbIndex]) ; // current Mb
+  sMacroBlock* mb = &(decoder->mbData[mbIndex]) ; // current Mb
 
   // return, if filter is disabled
   if (mb->deblockFilterDisableIdc == 1)
@@ -1654,7 +1654,7 @@ static void getDeblockStrength (sDecoder* decoder, sPicture* p, int mbIndex) {
 //{{{
 static void performDeblock (sDecoder* decoder, sPicture* p, int mbIndex) {
 
-  sMacroblock* mb = &(decoder->mbData[mbIndex]) ; // current Mb
+  sMacroBlock* mb = &(decoder->mbData[mbIndex]) ; // current Mb
 
   // return, if filter is disabled
   if (mb->deblockFilterDisableIdc == 1)
@@ -1827,7 +1827,7 @@ static void initNeighbours (sDecoder* decoder) {
   int height = decoder->picHeightInMbs;
 
   // do the top left corner
-  sMacroblock* mb = &decoder->mbData[0];
+  sMacroBlock* mb = &decoder->mbData[0];
   mb->mbUp = NULL;
   mb->mbLeft = NULL;
   mb++;

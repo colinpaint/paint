@@ -20,7 +20,7 @@
 static const sMotionVec zero_mv = {0, 0};
 
 //{{{
-int mb_pred_intra4x4 (sMacroblock* mb, eColorPlane plane, sPixel** pixel, sPicture* picture)
+int mb_pred_intra4x4 (sMacroBlock* mb, eColorPlane plane, sPixel** pixel, sPicture* picture)
 {
   sSlice* slice = mb->slice;
   int yuv = picture->chromaFormatIdc - 1;
@@ -65,7 +65,7 @@ int mb_pred_intra4x4 (sMacroblock* mb, eColorPlane plane, sPixel** pixel, sPictu
 }
 //}}}
 //{{{
-int mb_pred_intra16x16 (sMacroblock* mb, eColorPlane plane, sPicture* picture)
+int mb_pred_intra16x16 (sMacroBlock* mb, eColorPlane plane, sPicture* picture)
 {
   int yuv = picture->chromaFormatIdc - 1;
 
@@ -86,7 +86,7 @@ int mb_pred_intra16x16 (sMacroblock* mb, eColorPlane plane, sPicture* picture)
 }
 //}}}
 //{{{
-int mb_pred_intra8x8 (sMacroblock* mb, eColorPlane plane, sPixel** pixel, sPicture* picture)
+int mb_pred_intra8x8 (sMacroBlock* mb, eColorPlane plane, sPixel** pixel, sPicture* picture)
 {
   sSlice* slice = mb->slice;
   int yuv = picture->chromaFormatIdc - 1;
@@ -122,7 +122,7 @@ int mb_pred_intra8x8 (sMacroblock* mb, eColorPlane plane, sPixel** pixel, sPictu
 //}}}
 
 //{{{
-static void set_chroma_vector (sMacroblock* mb)
+static void set_chroma_vector (sMacroBlock* mb)
 {
   sSlice* slice = mb->slice;
   sDecoder* decoder = mb->decoder;
@@ -211,7 +211,7 @@ static void set_chroma_vector (sMacroblock* mb)
 //}}}
 
 //{{{
-int mb_pred_skip (sMacroblock* mb, eColorPlane plane, sPixel** pixel, sPicture* picture)
+int mb_pred_skip (sMacroBlock* mb, eColorPlane plane, sPixel** pixel, sPicture* picture)
 {
   sSlice* slice = mb->slice;
   sDecoder* decoder = mb->decoder;
@@ -231,7 +231,7 @@ int mb_pred_skip (sMacroblock* mb, eColorPlane plane, sPixel** pixel, sPicture* 
 }
 //}}}
 //{{{
-int mb_pred_sp_skip (sMacroblock* mb, eColorPlane plane, sPicture* picture)
+int mb_pred_sp_skip (sMacroBlock* mb, eColorPlane plane, sPicture* picture)
 {
   set_chroma_vector(mb);
 
@@ -242,7 +242,7 @@ int mb_pred_sp_skip (sMacroblock* mb, eColorPlane plane, sPicture* picture)
 //}}}
 
 //{{{
-int mb_pred_p_inter8x8 (sMacroblock* mb, eColorPlane plane, sPicture* picture)
+int mb_pred_p_inter8x8 (sMacroBlock* mb, eColorPlane plane, sPicture* picture)
 {
   int block8x8;   // needed for ABT
   int i=0, j=0,k;
@@ -280,7 +280,7 @@ int mb_pred_p_inter8x8 (sMacroblock* mb, eColorPlane plane, sPicture* picture)
 }
 //}}}
 //{{{
-int mb_pred_p_inter16x16 (sMacroblock* mb, eColorPlane plane, sPicture* picture)
+int mb_pred_p_inter16x16 (sMacroBlock* mb, eColorPlane plane, sPicture* picture)
 {
   sSlice* slice = mb->slice;
   int smb = (slice->sliceType == SP_SLICE);
@@ -295,7 +295,7 @@ int mb_pred_p_inter16x16 (sMacroblock* mb, eColorPlane plane, sPicture* picture)
 }
 //}}}
 //{{{
-int mb_pred_p_inter16x8 (sMacroblock* mb, eColorPlane plane, sPicture* picture)
+int mb_pred_p_inter16x8 (sMacroBlock* mb, eColorPlane plane, sPicture* picture)
 {
   sSlice* slice = mb->slice;
   int smb = (slice->sliceType == SP_SLICE);
@@ -312,7 +312,7 @@ int mb_pred_p_inter16x8 (sMacroblock* mb, eColorPlane plane, sPicture* picture)
 }
 //}}}
 //{{{
-int mb_pred_p_inter8x16 (sMacroblock* mb, eColorPlane plane, sPicture* picture)
+int mb_pred_p_inter8x16 (sMacroBlock* mb, eColorPlane plane, sPicture* picture)
 {
   sSlice* slice = mb->slice;
   int smb = (slice->sliceType == SP_SLICE);
@@ -339,7 +339,7 @@ static inline void update_neighbor_mvs (sPicMotionParam** motion, const sPicMoti
 //}}}
 
 //{{{
-int mb_pred_b_d8x8temporal (sMacroblock* mb, eColorPlane plane, sPixel** pixel, sPicture* picture)
+int mb_pred_b_d8x8temporal (sMacroBlock* mb, eColorPlane plane, sPixel** pixel, sPicture* picture)
 {
   short refIndex;
   int refList;
@@ -550,7 +550,7 @@ int mb_pred_b_d8x8temporal (sMacroblock* mb, eColorPlane plane, sPixel** pixel, 
 }
 //}}}
 //{{{
-int mb_pred_b_d4x4temporal (sMacroblock* mb, eColorPlane plane, sPixel** pixel, sPicture* picture)
+int mb_pred_b_d4x4temporal (sMacroBlock* mb, eColorPlane plane, sPixel** pixel, sPicture* picture)
 {
   short refIndex;
   int refList;
@@ -677,7 +677,7 @@ int mb_pred_b_d4x4temporal (sMacroblock* mb, eColorPlane plane, sPixel** pixel, 
 //}}}
 
 //{{{
-int mb_pred_b_d8x8spatial (sMacroblock* mb, eColorPlane plane, sPixel** pixel, sPicture* picture)
+int mb_pred_b_d8x8spatial (sMacroBlock* mb, eColorPlane plane, sPixel** pixel, sPicture* picture)
 {
   char l0_rFrame = -1, l1_rFrame = -1;
   sMotionVec pmvl0 = zero_mv, pmvl1 = zero_mv;
@@ -902,7 +902,7 @@ int mb_pred_b_d8x8spatial (sMacroblock* mb, eColorPlane plane, sPixel** pixel, s
 }
 //}}}
 //{{{
-int mb_pred_b_d4x4spatial (sMacroblock* mb, eColorPlane plane, sPixel** pixel, sPicture* picture)
+int mb_pred_b_d4x4spatial (sMacroBlock* mb, eColorPlane plane, sPixel** pixel, sPicture* picture)
 {
   char l0_rFrame = -1, l1_rFrame = -1;
   sMotionVec pmvl0 = zero_mv, pmvl1 = zero_mv;
@@ -1090,7 +1090,7 @@ int mb_pred_b_d4x4spatial (sMacroblock* mb, eColorPlane plane, sPixel** pixel, s
 }
 //}}}
 //{{{
-int mb_pred_b_inter8x8 (sMacroblock* mb, eColorPlane plane, sPicture* picture)
+int mb_pred_b_inter8x8 (sMacroBlock* mb, eColorPlane plane, sPicture* picture)
 {
   char l0_rFrame = -1, l1_rFrame = -1;
   sMotionVec pmvl0 = zero_mv, pmvl1 = zero_mv;
@@ -1214,7 +1214,7 @@ int mb_pred_b_inter8x8 (sMacroblock* mb, eColorPlane plane, sPicture* picture)
 //}}}
 
 //{{{
-int mb_pred_ipcm (sMacroblock* mb)
+int mb_pred_ipcm (sMacroBlock* mb)
 {
   sDecoder* decoder = mb->decoder;
   sSlice* slice = mb->slice;

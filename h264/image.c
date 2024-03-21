@@ -1237,7 +1237,7 @@ static void initContexts (sSlice* slice) {
 //}}}
 
 //{{{
-static void resetMb (sMacroblock* mb) {
+static void resetMb (sMacroBlock* mb) {
 
   mb->errorFlag = 1;
   mb->dplFlag = 0;
@@ -1245,7 +1245,7 @@ static void resetMb (sMacroblock* mb) {
   }
 //}}}
 //{{{
-static void ercWriteMBmodeMV (sMacroblock* mb) {
+static void ercWriteMBmodeMV (sMacroBlock* mb) {
 
   sDecoder* decoder = mb->decoder;
   int curMbNum = mb->mbIndexX;
@@ -1787,10 +1787,10 @@ static void initPicture (sDecoder* decoder, sSlice* slice) {
     memset (decoder->nzCoeff[0][0][0], -1, decoder->picSizeInMbs * 48 *sizeof(byte)); // 3 * 4 * 4
 
   // Set the sliceNum member of each MB to -1, to ensure correct when packet loss occurs
-  // TO set sMacroblock Map (mark all MBs as 'have to be concealed')
+  // TO set sMacroBlock Map (mark all MBs as 'have to be concealed')
   if (decoder->coding.sepColourPlaneFlag) {
     for (int nplane = 0; nplane < MAX_PLANE; ++nplane ) {
-      sMacroblock* mb = decoder->mbDataJV[nplane];
+      sMacroBlock* mb = decoder->mbDataJV[nplane];
       char* intraBlock = decoder->intraBlockJV[nplane];
       for (int i = 0; i < (int)decoder->picSizeInMbs; ++i)
         resetMb (mb++);
@@ -1801,7 +1801,7 @@ static void initPicture (sDecoder* decoder, sSlice* slice) {
       }
     }
   else {
-    sMacroblock* mb = decoder->mbData;
+    sMacroBlock* mb = decoder->mbData;
     for (int i = 0; i < (int)decoder->picSizeInMbs; ++i)
       resetMb (mb++);
     if (decoder->activePPS->constrainedIntraPredFlag)
@@ -2307,7 +2307,7 @@ static void decodeSlice (sSlice* slice) {
 
   // loop over macroblocks
   while (endOfSlice == FALSE) {
-    sMacroblock* mb;
+    sMacroBlock* mb;
     startMacroblock (slice, &mb);
     slice->readMacroblock (mb);
     decodeMacroblock (mb, slice->picture);

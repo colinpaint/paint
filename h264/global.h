@@ -391,7 +391,7 @@ typedef struct {
   } sPPS;
 //}}}
 
-struct Macroblock;
+struct MacroBlock;
 //{{{  sDecodeEnv
 typedef struct {
   unsigned int range;
@@ -429,14 +429,14 @@ typedef struct SyntaxElement {
   void (*mapping) (int, int, int*, int*);
 
   // CABAC actual coding method of each individual syntax element type
-  void (*reading) (struct Macroblock*, struct SyntaxElement*, sDecodeEnv*);
+  void (*reading) (struct MacroBlock*, struct SyntaxElement*, sDecodeEnv*);
   } sSyntaxElement;
 //}}}
 //{{{  sDataPartition
 typedef struct DataPartition {
   sBitStream*  s;
   sDecodeEnv deCabac;
-  int (*readSyntaxElement) (struct Macroblock*, struct SyntaxElement*, struct DataPartition*);
+  int (*readSyntaxElement) (struct MacroBlock*, struct SyntaxElement*, struct DataPartition*);
   } sDataPartition;
 //}}}
 
@@ -507,12 +507,12 @@ typedef struct {
   short posY;
   } sPixelPos;
 //}}}
-//{{{  sCBPStructure
+//{{{  sCbpStructure
 typedef struct  {
   int64 blk;
   int64 bits;
   int64 bits_8x8;
-  } sCBPStructure;
+  } sCbpStructure;
 //}}}
 //{{{  sMotionVec
 typedef struct {
@@ -520,8 +520,8 @@ typedef struct {
   short mvY;
   } sMotionVec;
 //}}}
-//{{{  sMacroblock
-typedef struct Macroblock {
+//{{{  sMacroBlock
+typedef struct MacroBlock {
   struct Decoder* decoder;
   struct Slice*   slice;
 
@@ -563,17 +563,17 @@ typedef struct Macroblock {
   short   deltaQuant;        // for rate control
   short   listOffset;
 
-  struct Macroblock* mbCabacUp;   // pointer to neighboring MB (CABAC)
-  struct Macroblock* mbCabacLeft; // pointer to neighboring MB (CABAC)
+  struct MacroBlock* mbCabacUp;   // pointer to neighboring MB (CABAC)
+  struct MacroBlock* mbCabacLeft; // pointer to neighboring MB (CABAC)
 
-  struct Macroblock* mbUp;    // neighbors for loopfilter
-  struct Macroblock* mbLeft;  // neighbors for loopfilter
+  struct MacroBlock* mbUp;    // neighbors for loopfilter
+  struct MacroBlock* mbLeft;  // neighbors for loopfilter
 
   // some storage of macroblock syntax elements for global access
   short   mbType;
   short   mvd[2][BLOCK_MULTIPLE][BLOCK_MULTIPLE][2];      //!< indices correspond to [forw,backw][blockY][blockX][x,y]
   int     cbp;
-  sCBPStructure  cbpStructure[3];
+  sCbpStructure  cbpStructure[3];
 
   int   i16mode;
   char  b8mode[4];
@@ -598,16 +598,16 @@ typedef struct Macroblock {
   Boolean noMbPartLessThan8x8Flag;
 
   // virtual methods
-  void (*iTrans4x4) (struct Macroblock*, eColorPlane, int, int);
-  void (*iTrans8x8) (struct Macroblock*, eColorPlane, int, int);
-  void (*GetMVPredictor) (struct Macroblock*, sPixelPos*, sMotionVec*, short, struct PicMotion**, int, int, int, int, int);
-  int  (*readStoreCBPblockBit) (struct Macroblock*, sDecodeEnv*, int);
-  char (*readRefPictureIndex) (struct Macroblock*, struct SyntaxElement*, struct DataPartition*, char, int);
-  void (*readCompCoef4x4cabac) (struct Macroblock*, struct SyntaxElement*, eColorPlane, int(*)[4], int, int);
-  void (*readCompCoef8x8cabac) (struct Macroblock*, struct SyntaxElement*, eColorPlane);
-  void (*readCompCoef4x4cavlc) (struct Macroblock*, eColorPlane, int(*)[4], int, int, byte**);
-  void (*readCompCoef8x8cavlc) (struct Macroblock*, eColorPlane, int(*)[8], int, int, byte**);
-  } sMacroblock;
+  void (*iTrans4x4) (struct MacroBlock*, eColorPlane, int, int);
+  void (*iTrans8x8) (struct MacroBlock*, eColorPlane, int, int);
+  void (*GetMVPredictor) (struct MacroBlock*, sPixelPos*, sMotionVec*, short, struct PicMotion**, int, int, int, int, int);
+  int  (*readStoreCBPblockBit) (struct MacroBlock*, sDecodeEnv*, int);
+  char (*readRefPictureIndex) (struct MacroBlock*, struct SyntaxElement*, struct DataPartition*, char, int);
+  void (*readCompCoef4x4cabac) (struct MacroBlock*, struct SyntaxElement*, eColorPlane, int(*)[4], int, int);
+  void (*readCompCoef8x8cabac) (struct MacroBlock*, struct SyntaxElement*, eColorPlane);
+  void (*readCompCoef4x4cavlc) (struct MacroBlock*, eColorPlane, int(*)[4], int, int, byte**);
+  void (*readCompCoef8x8cavlc) (struct MacroBlock*, eColorPlane, int(*)[8], int, int, byte**);
+  } sMacroBlock;
 //}}}
 //{{{  sWpParam
 typedef struct {
@@ -812,7 +812,7 @@ typedef struct Slice {
   int refFlag[17]; // 0: i-th previous frame is incorrect
 
   int ercMvPerMb;
-  sMacroblock* mbData;
+  sMacroBlock* mbData;
   struct Picture* picture;
 
   int**  siBlock;
@@ -823,17 +823,17 @@ typedef struct Slice {
   // virtual methods
   int  (*nalStartCode) (struct Slice*, int);
   void (*initLists) (struct Slice*);
-  void (*readCBPcoeffs) (sMacroblock*);
-  int  (*decodeComponenet) (sMacroblock*, eColorPlane, sPixel**, struct Picture*);
-  void (*nalReadMotionInfo) (sMacroblock*);
-  void (*readMacroblock) (sMacroblock*);
-  void (*interpretMbMode) (sMacroblock*);
-  void (*intraPredChroma) (sMacroblock*);
-  int  (*intraPred4x4) (sMacroblock*, eColorPlane, int, int, int, int);
-  int  (*intraPred8x8) (sMacroblock*, eColorPlane, int, int);
-  int  (*intraPred16x16) (sMacroblock*, eColorPlane plane, int);
-  void (*updateDirectMvInfo) (sMacroblock*);
-  void (*readCoef4x4cavlc) (sMacroblock*, int, int, int, int[16], int[16], int*);
+  void (*readCBPcoeffs) (sMacroBlock*);
+  int  (*decodeComponenet) (sMacroBlock*, eColorPlane, sPixel**, struct Picture*);
+  void (*nalReadMotionInfo) (sMacroBlock*);
+  void (*readMacroblock) (sMacroBlock*);
+  void (*interpretMbMode) (sMacroBlock*);
+  void (*intraPredChroma) (sMacroBlock*);
+  int  (*intraPred4x4) (sMacroBlock*, eColorPlane, int, int, int, int);
+  int  (*intraPred8x8) (sMacroBlock*, eColorPlane, int, int);
+  int  (*intraPred16x16) (sMacroBlock*, eColorPlane plane, int);
+  void (*updateDirectMvInfo) (sMacroBlock*);
+  void (*readCoef4x4cavlc) (sMacroBlock*, int, int, int, int[16], int[16], int*);
   void (*linfoCbpIntra) (int, int, int*, int*);
   void (*linfoCbpInter) (int, int, int*, int*);
   } sSlice;
@@ -1018,12 +1018,12 @@ typedef struct Decoder {
   sBlockPos*   picPos;
   byte****     nzCoeff;
 
-  sMacroblock* mbData;              // array containing all MBs of a whole frame
+  sMacroBlock* mbData;              // array containing all MBs of a whole frame
   char*        intraBlock;
   byte**       predMode;            // prediction type [90][74]
   int**        siBlock;
 
-  sMacroblock* mbDataJV[MAX_PLANE];
+  sMacroBlock* mbDataJV[MAX_PLANE];
   char*        intraBlockJV[MAX_PLANE];
   byte**       predModeJV[MAX_PLANE];
   int**        siBlockJV[MAX_PLANE];
@@ -1079,14 +1079,14 @@ typedef struct Decoder {
 
 
   // virtual methods
-  void (*getNeighbour) (sMacroblock*, int, int, int[2], sPixelPos*);
+  void (*getNeighbour) (sMacroBlock*, int, int, int[2], sPixelPos*);
   void (*getMbBlockPos) (sBlockPos*, int, short*, short*);
-  void (*getStrengthV) (sMacroblock*, int, int, struct Picture*);
-  void (*getStrengthH) (sMacroblock*, int, int, struct Picture*);
-  void (*edgeLoopLumaV) (eColorPlane, sPixel**, byte*, sMacroblock*, int);
-  void (*edgeLoopLumaH) (eColorPlane, sPixel**, byte*, sMacroblock*, int, struct Picture*);
-  void (*edgeLoopChromaV) (sPixel**, byte*, sMacroblock*, int, int, struct Picture*);
-  void (*edgeLoopChromaH) (sPixel**, byte*, sMacroblock*, int, int, struct Picture*);
+  void (*getStrengthV) (sMacroBlock*, int, int, struct Picture*);
+  void (*getStrengthH) (sMacroBlock*, int, int, struct Picture*);
+  void (*edgeLoopLumaV) (eColorPlane, sPixel**, byte*, sMacroBlock*, int);
+  void (*edgeLoopLumaH) (eColorPlane, sPixel**, byte*, sMacroBlock*, int, struct Picture*);
+  void (*edgeLoopChromaV) (sPixel**, byte*, sMacroBlock*, int, int, struct Picture*);
+  void (*edgeLoopChromaH) (sPixel**, byte*, sMacroBlock*, int, int, struct Picture*);
   } sDecoder;
 //}}}
 

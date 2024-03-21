@@ -257,7 +257,7 @@ void initGlobalBuffers (sDecoder* decoder) {
   if (decoder->coding.sepColourPlaneFlag) {
     for (unsigned i = 0; i < MAX_PLANE; ++i)
       if (!decoder->mbDataJV[i])
-        decoder->mbDataJV[i] = (sMacroblock*)calloc (decoder->coding.frameSizeMbs, sizeof(sMacroblock));
+        decoder->mbDataJV[i] = (sMacroBlock*)calloc (decoder->coding.frameSizeMbs, sizeof(sMacroBlock));
     for (unsigned i = 0; i < MAX_PLANE; ++i)
       if (!decoder->intraBlockJV[i])
         decoder->intraBlockJV[i] = (char*)calloc (decoder->coding.frameSizeMbs, sizeof(char));
@@ -270,7 +270,7 @@ void initGlobalBuffers (sDecoder* decoder) {
     }
   else {
     if (!decoder->mbData)
-      decoder->mbData = (sMacroblock*)calloc (decoder->coding.frameSizeMbs, sizeof(sMacroblock));
+      decoder->mbData = (sMacroBlock*)calloc (decoder->coding.frameSizeMbs, sizeof(sMacroBlock));
     if (!decoder->intraBlock)
       decoder->intraBlock = (char*)calloc (decoder->coding.frameSizeMbs, sizeof(char));
 

@@ -51,7 +51,7 @@
  *
 ** *********************************************************************
  */
-static int intra4x4_dc_pred (sMacroblock *mb,
+static int intra4x4_dc_pred (sMacroBlock *mb,
                             eColorPlane plane,
                             int ioff,
                             int joff)
@@ -148,7 +148,7 @@ static int intra4x4_dc_pred (sMacroblock *mb,
  *
 ** *********************************************************************
  */
-static int intra4x4_vert_pred (sMacroblock *mb,    //!< current macroblock
+static int intra4x4_vert_pred (sMacroBlock *mb,    //!< current macroblock
                                      eColorPlane plane,         //!< current image plane
                                      int ioff,              //!< pixel offset X within MB
                                      int joff)              //!< pixel offset Y within MB
@@ -206,7 +206,7 @@ static int intra4x4_vert_pred (sMacroblock *mb,    //!< current macroblock
  *
 ** *********************************************************************
  */
-static int intra4x4_hor_pred (sMacroblock *mb,
+static int intra4x4_hor_pred (sMacroBlock *mb,
                                     eColorPlane plane,
                                     int ioff,
                                     int joff)
@@ -280,7 +280,7 @@ static int intra4x4_hor_pred (sMacroblock *mb,
  *
 ** *********************************************************************
  */
-static int intra4x4_diag_down_right_pred (sMacroblock *mb,    //!< current macroblock
+static int intra4x4_diag_down_right_pred (sMacroBlock *mb,    //!< current macroblock
                                                 eColorPlane plane,         //!< current image plane
                                                 int ioff,              //!< pixel offset X within MB
                                                 int joff)              //!< pixel offset Y within MB
@@ -364,7 +364,7 @@ static int intra4x4_diag_down_right_pred (sMacroblock *mb,    //!< current macro
  *
 ** *********************************************************************
  */
-static int intra4x4_diag_down_left_pred (sMacroblock *mb,    //!< current macroblock
+static int intra4x4_diag_down_left_pred (sMacroBlock *mb,    //!< current macroblock
                                         eColorPlane plane,         //!< current image plane
                                         int ioff,              //!< pixel offset X within MB
                                         int joff)              //!< pixel offset Y within MB
@@ -451,7 +451,7 @@ static int intra4x4_diag_down_left_pred (sMacroblock *mb,    //!< current macrob
  *
 ** *********************************************************************
  */
-static int intra4x4_vert_right_pred (sMacroblock *mb,    //!< current macroblock
+static int intra4x4_vert_right_pred (sMacroBlock *mb,    //!< current macroblock
                                     eColorPlane plane,         //!< current image plane
                                     int ioff,              //!< pixel offset X within MB
                                     int joff)              //!< pixel offset Y within MB
@@ -536,7 +536,7 @@ static int intra4x4_vert_right_pred (sMacroblock *mb,    //!< current macroblock
  *
 ** *********************************************************************
  */
-static int intra4x4_vert_left_pred (sMacroblock *mb,    //!< current macroblock
+static int intra4x4_vert_left_pred (sMacroBlock *mb,    //!< current macroblock
                                           eColorPlane plane,         //!< current image plane
                                           int ioff,              //!< pixel offset X within MB
                                           int joff)              //!< pixel offset Y within MB
@@ -625,7 +625,7 @@ static int intra4x4_vert_left_pred (sMacroblock *mb,    //!< current macroblock
  *
 ** *********************************************************************
  */
-static int intra4x4_hor_up_pred (sMacroblock *mb,    //!< current macroblock
+static int intra4x4_hor_up_pred (sMacroBlock *mb,    //!< current macroblock
                                 eColorPlane plane,         //!< current image plane
                                 int ioff,              //!< pixel offset X within MB
                                 int joff)              //!< pixel offset Y within MB
@@ -697,7 +697,7 @@ static int intra4x4_hor_up_pred (sMacroblock *mb,    //!< current macroblock
  *
 ** *********************************************************************
  */
-static int intra4x4_hor_down_pred (sMacroblock *mb,    //!< current macroblock
+static int intra4x4_hor_down_pred (sMacroBlock *mb,    //!< current macroblock
                                          eColorPlane plane,         //!< current image plane
                                          int ioff,              //!< pixel offset X within MB
                                          int joff)              //!< pixel offset Y within MB
@@ -784,7 +784,7 @@ static int intra4x4_hor_down_pred (sMacroblock *mb,    //!< current macroblock
  *    SEARCH_SYNC   search next sync element as errors while decoding occured
 ** *********************************************************************
  */
-int intra_pred_4x4_normal (sMacroblock *mb,    //!< current macroblock
+int intra_pred_4x4_normal (sMacroBlock *mb,    //!< current macroblock
                           eColorPlane plane,         //!< current image plane
                           int ioff,              //!< pixel offset X within MB
                           int joff,              //!< pixel offset Y within MB
@@ -850,7 +850,7 @@ int intra_pred_4x4_normal (sMacroblock *mb,    //!< current macroblock
  *
 ** *********************************************************************
  */
-static int intra4x4_dc_pred_mbaff (sMacroblock *mb,
+static int intra4x4_dc_pred_mbaff (sMacroBlock *mb,
                                    eColorPlane plane,
                                    int ioff,
                                    int joff)
@@ -947,7 +947,7 @@ static int intra4x4_dc_pred_mbaff (sMacroblock *mb,
  *
 ** *********************************************************************
  */
-static int intra4x4_vert_pred_mbaff (sMacroblock *mb,    //!< current macroblock
+static int intra4x4_vert_pred_mbaff (sMacroBlock *mb,    //!< current macroblock
                                      eColorPlane plane,         //!< current image plane
                                      int ioff,              //!< pixel offset X within MB
                                      int joff)              //!< pixel offset Y within MB
@@ -1005,7 +1005,7 @@ static int intra4x4_vert_pred_mbaff (sMacroblock *mb,    //!< current macroblock
  *
 ** *********************************************************************
  */
-static int intra4x4_hor_pred_mbaff (sMacroblock *mb,
+static int intra4x4_hor_pred_mbaff (sMacroBlock *mb,
                                     eColorPlane plane,
                                     int ioff,
                                     int joff)
@@ -1062,7 +1062,7 @@ static int intra4x4_hor_pred_mbaff (sMacroblock *mb,
  *
 ** *********************************************************************
  */
-static int intra4x4_diag_down_right_pred_mbaff (sMacroblock *mb,    //!< current macroblock
+static int intra4x4_diag_down_right_pred_mbaff (sMacroBlock *mb,    //!< current macroblock
                                                       eColorPlane plane,         //!< current image plane
                                                       int ioff,              //!< pixel offset X within MB
                                                       int joff)              //!< pixel offset Y within MB
@@ -1151,7 +1151,7 @@ static int intra4x4_diag_down_right_pred_mbaff (sMacroblock *mb,    //!< current
  *
 ** *********************************************************************
  */
-static int intra4x4_diag_down_left_pred_mbaff (sMacroblock *mb,    //!< current macroblock
+static int intra4x4_diag_down_left_pred_mbaff (sMacroBlock *mb,    //!< current macroblock
                                         eColorPlane plane,         //!< current image plane
                                         int ioff,              //!< pixel offset X within MB
                                         int joff)              //!< pixel offset Y within MB
@@ -1233,7 +1233,7 @@ static int intra4x4_diag_down_left_pred_mbaff (sMacroblock *mb,    //!< current 
  *
 ** *********************************************************************
  */
-static int intra4x4_vert_right_pred_mbaff (sMacroblock *mb,    //!< current macroblock
+static int intra4x4_vert_right_pred_mbaff (sMacroBlock *mb,    //!< current macroblock
                                           eColorPlane plane,         //!< current image plane
                                           int ioff,              //!< pixel offset X within MB
                                           int joff)              //!< pixel offset Y within MB
@@ -1324,7 +1324,7 @@ static int intra4x4_vert_right_pred_mbaff (sMacroblock *mb,    //!< current macr
  *
 ** *********************************************************************
  */
-static int intra4x4_vert_left_pred_mbaff (sMacroblock *mb,    //!< current macroblock
+static int intra4x4_vert_left_pred_mbaff (sMacroBlock *mb,    //!< current macroblock
                                           eColorPlane plane,         //!< current image plane
                                           int ioff,              //!< pixel offset X within MB
                                           int joff)              //!< pixel offset Y within MB
@@ -1407,7 +1407,7 @@ static int intra4x4_vert_left_pred_mbaff (sMacroblock *mb,    //!< current macro
  *
 ** *********************************************************************
  */
-static int intra4x4_hor_up_pred_mbaff (sMacroblock *mb,    //!< current macroblock
+static int intra4x4_hor_up_pred_mbaff (sMacroBlock *mb,    //!< current macroblock
                                       eColorPlane plane,         //!< current image plane
                                       int ioff,              //!< pixel offset X within MB
                                       int joff)              //!< pixel offset Y within MB
@@ -1483,7 +1483,7 @@ static int intra4x4_hor_up_pred_mbaff (sMacroblock *mb,    //!< current macroblo
  *
 ** *********************************************************************
  */
-static int intra4x4_hor_down_pred_mbaff (sMacroblock *mb,    //!< current macroblock
+static int intra4x4_hor_down_pred_mbaff (sMacroBlock *mb,    //!< current macroblock
                                          eColorPlane plane,         //!< current image plane
                                          int ioff,              //!< pixel offset X within MB
                                          int joff)              //!< pixel offset Y within MB
@@ -1575,7 +1575,7 @@ static int intra4x4_hor_down_pred_mbaff (sMacroblock *mb,    //!< current macrob
  *    SEARCH_SYNC   search next sync element as errors while decoding occured
 ** *********************************************************************
  */
-int intra_pred_4x4_mbaff (sMacroblock *mb,    //!< current macroblock
+int intra_pred_4x4_mbaff (sMacroBlock *mb,    //!< current macroblock
                         eColorPlane plane,         //!< current image plane
                         int ioff,              //!< pixel offset X within MB
                         int joff,              //!< pixel offset Y within MB

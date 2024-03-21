@@ -29,7 +29,7 @@ static void sample_reconstruct (sPixel** curImg, sPixel** mpr, int** mbRess, int
 //}}}
 
 //{{{
-void itrans4x4 (sMacroblock* mb, eColorPlane plane, int ioff, int joff) {
+void itrans4x4 (sMacroBlock* mb, eColorPlane plane, int ioff, int joff) {
 
   sSlice* slice = mb->slice;
   int** mbRess = slice->mbRess[plane];
@@ -39,7 +39,7 @@ void itrans4x4 (sMacroblock* mb, eColorPlane plane, int ioff, int joff) {
   }
 //}}}
 //{{{
-void itrans4x4_ls (sMacroblock* mb, eColorPlane plane, int ioff, int joff) {
+void itrans4x4_ls (sMacroBlock* mb, eColorPlane plane, int ioff, int joff) {
 
   sSlice* slice = mb->slice;
   sPixel** mbPred = slice->mbPred[plane];
@@ -55,7 +55,7 @@ void itrans4x4_ls (sMacroblock* mb, eColorPlane plane, int ioff, int joff) {
 //}}}
 
 //{{{
-void Inv_Residual_trans_4x4 (sMacroblock* mb, eColorPlane plane, int ioff, int joff) {
+void Inv_Residual_trans_4x4 (sMacroBlock* mb, eColorPlane plane, int ioff, int joff) {
 
   sSlice* slice = mb->slice;
   sPixel** mbPred = slice->mbPred[plane];
@@ -107,7 +107,7 @@ void Inv_Residual_trans_4x4 (sMacroblock* mb, eColorPlane plane, int ioff, int j
   }
 //}}}
 //{{{
-void Inv_Residual_trans_8x8 (sMacroblock* mb, eColorPlane plane, int ioff, int joff) {
+void Inv_Residual_trans_8x8 (sMacroBlock* mb, eColorPlane plane, int ioff, int joff) {
 
   sSlice* slice = mb->slice;
   sPixel** mbPred = slice->mbPred[plane];
@@ -167,7 +167,7 @@ void Inv_Residual_trans_8x8 (sMacroblock* mb, eColorPlane plane, int ioff, int j
   }
 //}}}
 //{{{
-void Inv_Residual_trans_16x16 (sMacroblock* mb, eColorPlane plane) {
+void Inv_Residual_trans_16x16 (sMacroBlock* mb, eColorPlane plane) {
 
   sSlice* slice = mb->slice;
   sPixel** mbPred = slice->mbPred[plane];
@@ -212,7 +212,7 @@ void Inv_Residual_trans_16x16 (sMacroblock* mb, eColorPlane plane) {
   }
 //}}}
 //{{{
-void Inv_Residual_trans_Chroma (sMacroblock* mb, int uv) {
+void Inv_Residual_trans_Chroma (sMacroBlock* mb, int uv) {
 
   sSlice* slice = mb->slice;
   int** mbRess = slice->mbRess[uv+1];
@@ -249,7 +249,7 @@ void Inv_Residual_trans_Chroma (sMacroblock* mb, int uv) {
 //}}}
 
 //{{{
-void itrans_2 (sMacroblock* mb, eColorPlane plane) {
+void itrans_2 (sMacroBlock* mb, eColorPlane plane) {
 
   sSlice* slice = mb->slice;
   sDecoder* decoder = mb->decoder;
@@ -286,7 +286,7 @@ void itrans_2 (sMacroblock* mb, eColorPlane plane) {
   }
 //}}}
 //{{{
-void itrans_sp (sMacroblock* mb, eColorPlane plane, int ioff, int joff) {
+void itrans_sp (sMacroBlock* mb, eColorPlane plane, int ioff, int joff) {
 
   sDecoder* decoder = mb->decoder;
   sSlice* slice = mb->slice;
@@ -351,7 +351,7 @@ void itrans_sp (sMacroblock* mb, eColorPlane plane, int ioff, int joff) {
   }
 //}}}
 //{{{
-void itrans_sp_cr (sMacroblock* mb, int uv) {
+void itrans_sp_cr (sMacroBlock* mb, int uv) {
 
   sSlice* slice = mb->slice;
   sDecoder* decoder = mb->decoder;
@@ -444,7 +444,7 @@ void itrans_sp_cr (sMacroblock* mb, int uv) {
   }
 //}}}
 //{{{
-void iMBtrans4x4 (sMacroblock* mb, eColorPlane plane, int smb) {
+void iMBtrans4x4 (sMacroBlock* mb, eColorPlane plane, int smb) {
 
   sSlice* slice = mb->slice;
   sPicture* picture = mb->slice->picture;
@@ -509,7 +509,7 @@ void iMBtrans4x4 (sMacroblock* mb, eColorPlane plane, int smb) {
   }
 //}}}
 //{{{
-void iMBtrans8x8 (sMacroblock* mb, eColorPlane plane) {
+void iMBtrans8x8 (sMacroBlock* mb, eColorPlane plane) {
 
   //sDecoder* decoder = mb->decoder;
   sPicture* picture = mb->slice->picture;
@@ -540,7 +540,7 @@ void iMBtrans8x8 (sMacroblock* mb, eColorPlane plane) {
   }
 //}}}
 //{{{
-void iTransform (sMacroblock* mb, eColorPlane plane, int smb) {
+void iTransform (sMacroBlock* mb, eColorPlane plane, int smb) {
 
   sSlice* slice = mb->slice;
   sDecoder* decoder = mb->decoder;
@@ -651,7 +651,7 @@ void copy_Image_16x16 (sPixel** imgBuf1, sPixel** imgBuf2, int off1, int off2) {
 //}}}
 
 //{{{
-int CheckVertMV (sMacroblock* mb, int vec1_y, int blockSizeY) {
+int CheckVertMV (sMacroBlock* mb, int vec1_y, int blockSizeY) {
 
   sDecoder* decoder = mb->decoder;
   sPicture* picture = mb->slice->picture;

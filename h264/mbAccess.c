@@ -6,7 +6,7 @@
 //}}}
 
 //{{{
-Boolean isMbAvailable (int mbIndex, sMacroblock* mb) {
+Boolean isMbAvailable (int mbIndex, sMacroBlock* mb) {
 
   sSlice* slice = mb->slice;
   if ((mbIndex < 0) || (mbIndex > ((int)slice->picture->picSizeInMbs - 1)))
@@ -21,7 +21,7 @@ Boolean isMbAvailable (int mbIndex, sMacroblock* mb) {
   }
 //}}}
 //{{{
-void CheckAvailabilityOfNeighbors (sMacroblock* mb) {
+void CheckAvailabilityOfNeighbors (sMacroBlock* mb) {
 
   sSlice* slice = mb->slice;
   sPicture* picture = slice->picture; //decoder->picture;
@@ -60,7 +60,7 @@ void CheckAvailabilityOfNeighbors (sMacroblock* mb) {
 //}}}
 
 //{{{
-void CheckAvailabilityOfNeighborsNormal (sMacroblock* mb) {
+void CheckAvailabilityOfNeighborsNormal (sMacroBlock* mb) {
 
   sSlice* slice = mb->slice;
   sPicture* picture = slice->picture; //decoder->picture;
@@ -92,7 +92,7 @@ void getMbBlockPosNormal (sBlockPos* picPos, int mbIndex, short* x, short* y) {
 //}}}
 
 //{{{
-void CheckAvailabilityOfNeighborsMBAFF (sMacroblock* mb) {
+void CheckAvailabilityOfNeighborsMBAFF (sMacroBlock* mb) {
 
   sSlice* slice = mb->slice;
   sPicture* picture = slice->picture; 
@@ -134,7 +134,7 @@ void getMbPos (sDecoder* decoder, int mbIndex, int mbSize[2], short* x, short* y
 //}}}
 
 //{{{
-void getNonAffNeighbour (sMacroblock* mb, int xN, int yN, int mbSize[2], sPixelPos* pixelPos) {
+void getNonAffNeighbour (sMacroBlock* mb, int xN, int yN, int mbSize[2], sPixelPos* pixelPos) {
 
   int maxW = mbSize[0];
   int maxH = mbSize[1];
@@ -180,7 +180,7 @@ void getNonAffNeighbour (sMacroblock* mb, int xN, int yN, int mbSize[2], sPixelP
   }
 //}}}
 //{{{
-void getAffNeighbour (sMacroblock* mb, int xN, int yN, int mbSize[2], sPixelPos* pixelPos) {
+void getAffNeighbour (sMacroBlock* mb, int xN, int yN, int mbSize[2], sPixelPos* pixelPos) {
 
   sDecoder* decoder = mb->decoder;
   int maxW, maxH;
@@ -454,7 +454,7 @@ void getAffNeighbour (sMacroblock* mb, int xN, int yN, int mbSize[2], sPixelPos*
   }
 //}}}
 //{{{
-void get4x4Neighbour (sMacroblock* mb, int blockX, int blockY, int mbSize[2], sPixelPos* pixelPos) {
+void get4x4Neighbour (sMacroBlock* mb, int blockX, int blockY, int mbSize[2], sPixelPos* pixelPos) {
 
   mb->decoder->getNeighbour (mb, blockX, blockY, mbSize, pixelPos);
   if (pixelPos->available) {
@@ -466,7 +466,7 @@ void get4x4Neighbour (sMacroblock* mb, int blockX, int blockY, int mbSize[2], sP
   }
 //}}}
 //{{{
-void get4x4NeighbourBase (sMacroblock* mb, int blockX, int blockY, int mbSize[2], sPixelPos* pixelPos) {
+void get4x4NeighbourBase (sMacroBlock* mb, int blockX, int blockY, int mbSize[2], sPixelPos* pixelPos) {
 
   mb->decoder->getNeighbour (mb, blockX, blockY, mbSize, pixelPos);
   if (pixelPos->available) {

@@ -221,7 +221,7 @@ static void ercPixConcealIMB (sDecoder* decoder, sPixel* currFrame, int row, int
 /*!
 ** **********************************************************************
  * \brief
- *      This function checks the neighbors of a sMacroblock for usability in
+ *      This function checks the neighbors of a sMacroBlock for usability in
  *      conceal. First the OK macroblocks are marked, and if there is not
  *      enough of them, then the CONCEALED ones as well.
  *      A "1" in the the output array means reliable, a "0" non reliable MB.
@@ -775,7 +775,7 @@ static void buildPredRegionYUV (sDecoder* decoder, int *mv, int x, int y, sPixel
   int mb_nr = y/16*(decoder->width/16)+x/16; ///slice->mbIndex;
   int** tempRes = NULL;
 
-  sMacroblock* mb = &decoder->mbData[mb_nr];   // intialization code deleted, see below, StW
+  sMacroBlock* mb = &decoder->mbData[mb_nr];   // intialization code deleted, see below, StW
   slice = mb->slice;
   tempRes = slice->tempRes;
 
@@ -1370,7 +1370,7 @@ static void buildPredblockRegionYUV (sDecoder* decoder, int *mv,
   int ref_frame = mv[2];
   int mb_nr = mbIndex;
 
-  sMacroblock* mb = &decoder->mbData[mb_nr];   // intialization code deleted, see below, StW
+  sMacroBlock* mb = &decoder->mbData[mb_nr];   // intialization code deleted, see below, StW
   sSlice* slice = mb->slice;
 
   getMem2Dpel(&tmp_block, MB_BLOCK_SIZE, MB_BLOCK_SIZE);

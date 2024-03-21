@@ -124,30 +124,30 @@ static const unsigned char cofuv_blk_y[3][8][4] = {
 };
 //}}}
 
-extern void readCoef4x4cavlc (sMacroblock* mb, int block_type, int i, int j, int levarr[16], int runarr[16], int *number_coefficients);
-extern void readCoef4x4cavlc444 (sMacroblock* mb, int block_type, int i, int j, int levarr[16], int runarr[16], int *number_coefficients);
+extern void readCoef4x4cavlc (sMacroBlock* mb, int block_type, int i, int j, int levarr[16], int runarr[16], int *number_coefficients);
+extern void readCoef4x4cavlc444 (sMacroBlock* mb, int block_type, int i, int j, int levarr[16], int runarr[16], int *number_coefficients);
 
 extern void setReadMacroblock (sSlice* slice);
 extern void set_read_CBP_and_coeffs_cavlc (sSlice* slice);
-extern void set_read_comp_coeff_cavlc (sMacroblock* mb);
+extern void set_read_comp_coeff_cavlc (sMacroBlock* mb);
 
-extern int get_colocated_info_8x8 (sMacroblock* mb, sPicture* list1, int i, int j);
-extern int get_colocated_info_4x4 (sMacroblock* mb, sPicture* list1, int i, int j);
+extern int get_colocated_info_8x8 (sMacroBlock* mb, sPicture* list1, int i, int j);
+extern int get_colocated_info_4x4 (sMacroBlock* mb, sPicture* list1, int i, int j);
 
-extern void set_read_comp_coeff_cabac (sMacroblock* mb);
-extern void set_read_comp_coeff_cavlc (sMacroblock* mb);
+extern void set_read_comp_coeff_cabac (sMacroBlock* mb);
+extern void set_read_comp_coeff_cavlc (sMacroBlock* mb);
 
 extern void setSliceMethods (sSlice* slice);
 extern void setup_slice_methods_mbaff (sSlice* slice);
 
-extern void getNeighbours (sMacroblock* mb, sPixelPos *block, int mb_x, int mb_y, int blockshape_x);
+extern void getNeighbours (sMacroBlock* mb, sPixelPos *block, int mb_x, int mb_y, int blockshape_x);
 
-extern void startMacroblock (sSlice* slice, sMacroblock** mb);
-extern int decodeMacroblock (sMacroblock* mb, sPicture* picture);
+extern void startMacroblock (sSlice* slice, sMacroBlock** mb);
+extern int decodeMacroblock (sMacroBlock* mb, sPicture* picture);
 extern Boolean exitMacroblock (sSlice* slice, int eos_bit);
 
-extern void updateQp (sMacroblock* mb, int qp);
+extern void updateQp (sMacroBlock* mb, int qp);
 
-extern void checkDpNeighbours (sMacroblock* mb);
-extern void readDeltaQuant (sSyntaxElement* se, sDataPartition *dataPartition, sMacroblock* mb,
+extern void checkDpNeighbours (sMacroBlock* mb);
+extern void readDeltaQuant (sSyntaxElement* se, sDataPartition *dataPartition, sMacroBlock* mb,
                             const byte* dpMap, int type);

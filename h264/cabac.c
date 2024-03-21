@@ -233,7 +233,7 @@ int cabacStartCode (sSlice* slice, int eos_bit) {
 //}}}
 
 //{{{
-void checkNeighbourCabac (sMacroblock* mb) {
+void checkNeighbourCabac (sMacroBlock* mb) {
 
   sDecoder* decoder = mb->decoder;
   sPixelPos up, left;
@@ -291,7 +291,7 @@ void deleteTextureInfoContexts (sTextureInfoContexts* contexts) {
 //}}}
 
 //{{{
-void readFieldModeInfo_CABAC (sMacroblock* mb, sSyntaxElement* se, sDecodeEnv* decodeEnv) {
+void readFieldModeInfo_CABAC (sMacroBlock* mb, sSyntaxElement* se, sDecodeEnv* decodeEnv) {
 
   sSlice* slice = mb->slice;
   sMotionInfoContexts *ctx  = slice->motionInfoContexts;
@@ -319,7 +319,7 @@ int check_next_mb_and_get_field_mode_CABAC_p_slice (sSlice* slice, sSyntaxElemen
   int skip = 0;
   int field = 0;
   int i;
-  sMacroblock* mb;
+  sMacroBlock* mb;
 
   // get next MB
   ++slice->mbIndex;
@@ -396,7 +396,7 @@ int check_next_mb_and_get_field_mode_CABAC_b_slice (sSlice* slice, sSyntaxElemen
   int field = 0;
   int i;
 
-  sMacroblock* mb;
+  sMacroBlock* mb;
 
   // get next MB
   ++slice->mbIndex;
@@ -460,7 +460,7 @@ int check_next_mb_and_get_field_mode_CABAC_b_slice (sSlice* slice, sSyntaxElemen
 //}}}
 
 //{{{
-void read_MVD_CABAC (sMacroblock* mb, sSyntaxElement *se, sDecodeEnv* decodeEnv) {
+void read_MVD_CABAC (sMacroBlock* mb, sSyntaxElement *se, sDecodeEnv* decodeEnv) {
 
   int* mbSize = mb->decoder->mbSize[IS_LUMA];
   sSlice* slice = mb->slice;
@@ -504,7 +504,7 @@ void read_MVD_CABAC (sMacroblock* mb, sSyntaxElement *se, sDecodeEnv* decodeEnv)
   }
 //}}}
 //{{{
-void read_mvd_CABAC_mbaff (sMacroblock* mb, sSyntaxElement *se, sDecodeEnv* decodeEnv) {
+void read_mvd_CABAC_mbaff (sMacroBlock* mb, sSyntaxElement *se, sDecodeEnv* decodeEnv) {
 
   sDecoder* decoder = mb->decoder;
   sSlice* slice = mb->slice;
@@ -562,7 +562,7 @@ void read_mvd_CABAC_mbaff (sMacroblock* mb, sSyntaxElement *se, sDecodeEnv* deco
   }
 //}}}
 //{{{
-void readB8_typeInfo_CABAC_p_slice (sMacroblock* mb, sSyntaxElement *se, sDecodeEnv* decodeEnv) {
+void readB8_typeInfo_CABAC_p_slice (sMacroBlock* mb, sSyntaxElement *se, sDecodeEnv* decodeEnv) {
 
   sSlice* slice = mb->slice;
   int act_sym = 0;
@@ -583,7 +583,7 @@ void readB8_typeInfo_CABAC_p_slice (sMacroblock* mb, sSyntaxElement *se, sDecode
   }
 //}}}
 //{{{
-void readB8_typeInfo_CABAC_b_slice (sMacroblock* mb, sSyntaxElement *se, sDecodeEnv* decodeEnv) {
+void readB8_typeInfo_CABAC_b_slice (sMacroBlock* mb, sSyntaxElement *se, sDecodeEnv* decodeEnv) {
 
   sSlice* slice = mb->slice;
   int act_sym = 0;
@@ -625,7 +625,7 @@ void readB8_typeInfo_CABAC_b_slice (sMacroblock* mb, sSyntaxElement *se, sDecode
   }
 //}}}
 //{{{
-void read_skip_flag_CABAC_p_slice (sMacroblock* mb, sSyntaxElement *se, sDecodeEnv* decodeEnv) {
+void read_skip_flag_CABAC_p_slice (sMacroBlock* mb, sSyntaxElement *se, sDecodeEnv* decodeEnv) {
 
   int a = (mb->mbCabacLeft != NULL) ? (mb->mbCabacLeft->skipFlag == 0) : 0;
   int b = (mb->mbCabacUp   != NULL) ? (mb->mbCabacUp  ->skipFlag == 0) : 0;
@@ -638,7 +638,7 @@ void read_skip_flag_CABAC_p_slice (sMacroblock* mb, sSyntaxElement *se, sDecodeE
   }
 //}}}
 //{{{
-void read_skip_flag_CABAC_b_slice (sMacroblock* mb, sSyntaxElement *se, sDecodeEnv* decodeEnv) {
+void read_skip_flag_CABAC_b_slice (sMacroBlock* mb, sSyntaxElement *se, sDecodeEnv* decodeEnv) {
 
   int a = (mb->mbCabacLeft != NULL) ? (mb->mbCabacLeft->skipFlag == 0) : 0;
   int b = (mb->mbCabacUp != NULL) ? (mb->mbCabacUp->skipFlag == 0) : 0;
@@ -651,7 +651,7 @@ void read_skip_flag_CABAC_b_slice (sMacroblock* mb, sSyntaxElement *se, sDecodeE
 //}}}
 
 //{{{
-void readMB_transform_size_flag_CABAC (sMacroblock* mb, sSyntaxElement *se, sDecodeEnv* decodeEnv) {
+void readMB_transform_size_flag_CABAC (sMacroBlock* mb, sSyntaxElement *se, sDecodeEnv* decodeEnv) {
 
   sSlice* slice = mb->slice;
   sTextureInfoContexts*ctx = slice->textureInfoContexts;
@@ -664,7 +664,7 @@ void readMB_transform_size_flag_CABAC (sMacroblock* mb, sSyntaxElement *se, sDec
   }
 //}}}
 //{{{
-void readMB_typeInfo_CABAC_i_slice (sMacroblock* mb, sSyntaxElement *se, sDecodeEnv* decodeEnv) {
+void readMB_typeInfo_CABAC_i_slice (sMacroBlock* mb, sSyntaxElement *se, sDecodeEnv* decodeEnv) {
 
   sSlice* slice = mb->slice;
   sMotionInfoContexts *ctx = slice->motionInfoContexts;
@@ -789,7 +789,7 @@ void readMB_typeInfo_CABAC_i_slice (sMacroblock* mb, sSyntaxElement *se, sDecode
   }
 //}}}
 //{{{
-void readMB_typeInfo_CABAC_p_slice (sMacroblock* mb, sSyntaxElement *se, sDecodeEnv* decodeEnv) {
+void readMB_typeInfo_CABAC_p_slice (sMacroBlock* mb, sSyntaxElement *se, sDecodeEnv* decodeEnv) {
 
   sSlice* slice = mb->slice;
   sMotionInfoContexts *ctx = slice->motionInfoContexts;
@@ -857,7 +857,7 @@ void readMB_typeInfo_CABAC_p_slice (sMacroblock* mb, sSyntaxElement *se, sDecode
   }
 //}}}
 //{{{
-void readMB_typeInfo_CABAC_b_slice (sMacroblock* mb, sSyntaxElement *se, sDecodeEnv* decodeEnv) {
+void readMB_typeInfo_CABAC_b_slice (sMacroBlock* mb, sSyntaxElement *se, sDecodeEnv* decodeEnv) {
 
   sSlice* slice = mb->slice;
   sMotionInfoContexts *ctx = slice->motionInfoContexts;
@@ -957,7 +957,7 @@ void readMB_typeInfo_CABAC_b_slice (sMacroblock* mb, sSyntaxElement *se, sDecode
 //}}}
 
 //{{{
-void readIntraPredMode_CABAC (sMacroblock* mb, sSyntaxElement *se, sDecodeEnv* decodeEnv) {
+void readIntraPredMode_CABAC (sMacroBlock* mb, sSyntaxElement *se, sDecodeEnv* decodeEnv) {
 
   sSlice* slice = mb->slice;
   sTextureInfoContexts *ctx     = slice->textureInfoContexts;
@@ -976,13 +976,13 @@ void readIntraPredMode_CABAC (sMacroblock* mb, sSyntaxElement *se, sDecodeEnv* d
   }
 //}}}
 //{{{
-void readRefFrame_CABAC (sMacroblock* mb, sSyntaxElement *se, sDecodeEnv* decodeEnv) {
+void readRefFrame_CABAC (sMacroBlock* mb, sSyntaxElement *se, sDecodeEnv* decodeEnv) {
 
   sSlice* slice = mb->slice;
   sDecoder* decoder = mb->decoder;
   sPicture* picture = slice->picture;
   sMotionInfoContexts *ctx = slice->motionInfoContexts;
-  sMacroblock *neighborMB = NULL;
+  sMacroBlock *neighborMB = NULL;
 
   int   addctx  = 0;
   int   a = 0, b = 0;
@@ -1034,7 +1034,7 @@ void readRefFrame_CABAC (sMacroblock* mb, sSyntaxElement *se, sDecodeEnv* decode
   }
 //}}}
 //{{{
-void read_dQuant_CABAC (sMacroblock* mb, sSyntaxElement* se, sDecodeEnv* decodeEnv) {
+void read_dQuant_CABAC (sMacroBlock* mb, sSyntaxElement* se, sDecodeEnv* decodeEnv) {
 
   sSlice* slice = mb->slice;
   sMotionInfoContexts* ctx = slice->motionInfoContexts;
@@ -1057,13 +1057,13 @@ void read_dQuant_CABAC (sMacroblock* mb, sSyntaxElement* se, sDecodeEnv* decodeE
   }
 //}}}
 //{{{
-void read_CBP_CABAC (sMacroblock* mb, sSyntaxElement* se, sDecodeEnv* decodeEnv) {
+void read_CBP_CABAC (sMacroBlock* mb, sSyntaxElement* se, sDecodeEnv* decodeEnv) {
 
   sDecoder* decoder = mb->decoder;
   sPicture* picture = mb->slice->picture;
   sSlice* slice = mb->slice;
   sTextureInfoContexts *ctx = slice->textureInfoContexts;
-  sMacroblock *neighborMB = NULL;
+  sMacroBlock *neighborMB = NULL;
 
   int mb_x, mb_y;
   int a = 0, b = 0;
@@ -1163,15 +1163,15 @@ void read_CBP_CABAC (sMacroblock* mb, sSyntaxElement* se, sDecodeEnv* decodeEnv)
   }
 //}}}
 //{{{
-void readCIPredMode_CABAC (sMacroblock* mb, sSyntaxElement *se, sDecodeEnv* decodeEnv) {
+void readCIPredMode_CABAC (sMacroBlock* mb, sSyntaxElement *se, sDecodeEnv* decodeEnv) {
 
   sSlice* slice = mb->slice;
 
   sTextureInfoContexts* ctx = slice->textureInfoContexts;
   int* act_sym  = &se->value1;
 
-  sMacroblock* MbUp = mb->mbCabacUp;
-  sMacroblock* MbLeft = mb->mbCabacLeft;
+  sMacroBlock* MbUp = mb->mbCabacUp;
+  sMacroBlock* MbLeft = mb->mbCabacLeft;
 
   int b = (MbUp != NULL)   ? (((MbUp->cPredMode   != 0) && (MbUp->mbType != IPCM)) ? 1 : 0) : 0;
   int a = (MbLeft != NULL) ? (((MbLeft->cPredMode != 0) && (MbLeft->mbType != IPCM)) ? 1 : 0) : 0;
@@ -1185,13 +1185,13 @@ void readCIPredMode_CABAC (sMacroblock* mb, sSyntaxElement *se, sDecodeEnv* deco
 //}}}
 
 //{{{
-static int read_and_store_CBP_block_bit_444 (sMacroblock* mb, sDecodeEnv*  decodeEnv, int type) {
+static int read_and_store_CBP_block_bit_444 (sMacroBlock* mb, sDecodeEnv*  decodeEnv, int type) {
 
   sSlice* slice = mb->slice;
   sDecoder* decoder = mb->decoder;
   sPicture* picture = slice->picture;
   sTextureInfoContexts *textureInfoContexts = slice->textureInfoContexts;
-  sMacroblock *mbData = slice->mbData;
+  sMacroBlock *mbData = slice->mbData;
   int y_ac        = (type==LUMA_16AC || type==LUMA_8x8 || type==LUMA_8x4 || type==LUMA_4x8 || type==LUMA_4x4
                     || type==CB_16AC || type==CB_8x8 || type==CB_8x4 || type==CB_4x8 || type==CB_4x4
                     || type==CR_16AC || type==CR_8x8 || type==CR_8x4 || type==CR_4x8 || type==CR_4x4);
@@ -1341,7 +1341,7 @@ static int read_and_store_CBP_block_bit_444 (sMacroblock* mb, sDecodeEnv*  decod
   bit = (y_dc ? 0 : y_ac ? 1 + j + (i >> 2) : u_dc ? 17 : v_dc ? 18 : u_ac ? 19 + j + (i >> 2) : 35 + j + (i >> 2));
 
   if (cbp_bit) {
-    sCBPStructure  *cbpStructure = mb->cbpStructure;
+    sCbpStructure  *cbpStructure = mb->cbpStructure;
     if (type==LUMA_8x8) {
       cbpStructure[0].bits |= ((int64) 0x33 << bit   );
       if (picture->chromaFormatIdc==YUV444)
@@ -1379,7 +1379,7 @@ static int read_and_store_CBP_block_bit_444 (sMacroblock* mb, sDecodeEnv*  decod
   }
 //}}}
 //{{{
-static inline int set_cbp_bit(sMacroblock *neighbor_mb) {
+static inline int set_cbp_bit(sMacroBlock *neighbor_mb) {
 
   if(neighbor_mb->mbType == IPCM)
     return 1;
@@ -1388,7 +1388,7 @@ static inline int set_cbp_bit(sMacroblock *neighbor_mb) {
   }
 //}}}
 //{{{
-static inline int set_cbp_bit_ac(sMacroblock *neighbor_mb, sPixelPos *block) {
+static inline int set_cbp_bit_ac(sMacroBlock *neighbor_mb, sPixelPos *block) {
 
   if (neighbor_mb->mbType == IPCM)
     return 1;
@@ -1399,13 +1399,13 @@ static inline int set_cbp_bit_ac(sMacroblock *neighbor_mb, sPixelPos *block) {
   }
 //}}}
 //{{{
-static int read_and_store_CBP_block_bit_normal (sMacroblock* mb, sDecodeEnv*  decodeEnv, int type) {
+static int read_and_store_CBP_block_bit_normal (sMacroBlock* mb, sDecodeEnv*  decodeEnv, int type) {
 
   sSlice* slice = mb->slice;
   sDecoder* decoder = mb->decoder;
   sTextureInfoContexts *textureInfoContexts = slice->textureInfoContexts;
   int cbp_bit     = 1;  // always one for 8x8 mode
-  sMacroblock *mbData = slice->mbData;
+  sMacroBlock *mbData = slice->mbData;
 
   if (type==LUMA_16DC) {
     int upper_bit   = 1;
@@ -1650,7 +1650,7 @@ static int read_and_store_CBP_block_bit_normal (sMacroblock* mb, sDecodeEnv*  de
   }
 //}}}
 //{{{
-void set_read_and_store_CBP (sMacroblock** mb, int chromaFormatIdc) {
+void set_read_and_store_CBP (sMacroBlock** mb, int chromaFormatIdc) {
 
   if (chromaFormatIdc == YUV444)
     (*mb)->readStoreCBPblockBit = read_and_store_CBP_block_bit_444;
@@ -1660,7 +1660,7 @@ void set_read_and_store_CBP (sMacroblock** mb, int chromaFormatIdc) {
 //}}}
 
 //{{{
-static int read_significance_map (sMacroblock* mb, sDecodeEnv*  decodeEnv, int type, int coeff[]) {
+static int read_significance_map (sMacroBlock* mb, sDecodeEnv*  decodeEnv, int type, int coeff[]) {
 
   sSlice* slice = mb->slice;
   int fld    = ( slice->structure!=FRAME || mb->mbField );
@@ -1739,7 +1739,7 @@ static void read_significant_coefficients (sDecodeEnv* decodeEnv, sTextureInfoCo
   }
 //}}}
 //{{{
-void readRunLevel_CABAC (sMacroblock* mb, sSyntaxElement  *se, sDecodeEnv* decodeEnv) {
+void readRunLevel_CABAC (sMacroBlock* mb, sSyntaxElement  *se, sDecodeEnv* decodeEnv) {
 
   sSlice* slice = mb->slice;
   int  *coefCount = &slice->coefCount;
@@ -1773,7 +1773,7 @@ void readRunLevel_CABAC (sMacroblock* mb, sSyntaxElement  *se, sDecodeEnv* decod
   }
 //}}}
 //{{{
-int readSyntaxElementCABAC (sMacroblock* mb, sSyntaxElement* se, sDataPartition* this_dataPart) {
+int readSyntaxElementCABAC (sMacroBlock* mb, sSyntaxElement* se, sDataPartition* this_dataPart) {
 
   sDecodeEnv* decodeEnv = &(this_dataPart->deCabac);
   int curr_len = aridecoBitsRead(decodeEnv);

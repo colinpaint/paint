@@ -22,7 +22,7 @@
 static const sMotionVec zero_mv = {0, 0};
 
 //{{{
-static void GetMotionVectorPredictorMBAFF (sMacroblock* mb, sPixelPos* block,
+static void GetMotionVectorPredictorMBAFF (sMacroBlock* mb, sPixelPos* block,
                                            sMotionVec *pmv, short  ref_frame, sPicMotionParam** mvInfo,
                                            int list, int mb_x, int mb_y, int blockshape_x, int blockshape_y) {
 
@@ -156,7 +156,7 @@ static void GetMotionVectorPredictorMBAFF (sMacroblock* mb, sPixelPos* block,
   }
 //}}}
 //{{{
-static void GetMotionVectorPredictorNormal (sMacroblock* mb, sPixelPos* block,
+static void GetMotionVectorPredictorNormal (sMacroBlock* mb, sPixelPos* block,
                                             sMotionVec *pmv, short  ref_frame, sPicMotionParam** mvInfo,
                                             int list, int mb_x, int mb_y, int blockshape_x, int blockshape_y) {
   int mvPredType = MVPRED_MEDIAN;
@@ -248,7 +248,7 @@ static void GetMotionVectorPredictorNormal (sMacroblock* mb, sPixelPos* block,
   }
 //}}}
 //{{{
-static void init_motion_vector_prediction (sMacroblock* mb, int mbAffFrameFlag) {
+static void init_motion_vector_prediction (sMacroBlock* mb, int mbAffFrameFlag) {
 
   if (mbAffFrameFlag)
     mb->GetMVPredictor = GetMotionVectorPredictorMBAFF;
@@ -258,7 +258,7 @@ static void init_motion_vector_prediction (sMacroblock* mb, int mbAffFrameFlag) 
 //}}}
 
 //{{{
-static int decodeComponentI (sMacroblock* mb, eColorPlane plane, sPixel** pixel, sPicture* picture)
+static int decodeComponentI (sMacroBlock* mb, eColorPlane plane, sPixel** pixel, sPicture* picture)
 {
   //For residual DPCM
   mb->ipmode_DPCM = NO_INTRA_PMODE;
@@ -275,7 +275,7 @@ static int decodeComponentI (sMacroblock* mb, eColorPlane plane, sPixel** pixel,
   }
 //}}}
 //{{{
-static int decodeComponentP (sMacroblock* mb, eColorPlane plane, sPixel** pixel, sPicture* picture)
+static int decodeComponentP (sMacroBlock* mb, eColorPlane plane, sPixel** pixel, sPicture* picture)
 {
   //For residual DPCM
   mb->ipmode_DPCM = NO_INTRA_PMODE;
@@ -302,7 +302,7 @@ static int decodeComponentP (sMacroblock* mb, eColorPlane plane, sPixel** pixel,
   }
 //}}}
 //{{{
-static int decodeComponentSP (sMacroblock* mb, eColorPlane plane, sPixel** pixel, sPicture* picture)
+static int decodeComponentSP (sMacroBlock* mb, eColorPlane plane, sPixel** pixel, sPicture* picture)
 {
   //For residual DPCM
   mb->ipmode_DPCM = NO_INTRA_PMODE;
@@ -330,7 +330,7 @@ static int decodeComponentSP (sMacroblock* mb, eColorPlane plane, sPixel** pixel
   }
 //}}}
 //{{{
-static int decodeComponentB (sMacroblock* mb, eColorPlane plane, sPixel** pixel, sPicture* picture)
+static int decodeComponentB (sMacroBlock* mb, eColorPlane plane, sPixel** pixel, sPicture* picture)
 {
   //For residual DPCM
   mb->ipmode_DPCM = NO_INTRA_PMODE;
@@ -377,7 +377,7 @@ static int BType2CtxRef (int btype) {
   }
 //}}}
 //{{{
-static char readRefPictureIdxVLC (sMacroblock* mb, sSyntaxElement* se,
+static char readRefPictureIdxVLC (sMacroBlock* mb, sSyntaxElement* se,
                                    sDataPartition* dataPartition, char b8mode, int list) {
 
   se->context = BType2CtxRef (b8mode);
@@ -387,7 +387,7 @@ static char readRefPictureIdxVLC (sMacroblock* mb, sSyntaxElement* se,
   }
 //}}}
 //{{{
-static char readRefPictureIdxFLC (sMacroblock* mb, sSyntaxElement* se, sDataPartition* dataPartition, char b8mode, int list)
+static char readRefPictureIdxFLC (sMacroBlock* mb, sSyntaxElement* se, sDataPartition* dataPartition, char b8mode, int list)
 {
   se->context = BType2CtxRef (b8mode);
   se->len = 1;
@@ -398,13 +398,13 @@ static char readRefPictureIdxFLC (sMacroblock* mb, sSyntaxElement* se, sDataPart
   }
 //}}}
 //{{{
-static char readRefPictureIdxNull (sMacroblock* mb, sSyntaxElement* se, sDataPartition* dataPartition, char b8mode, int list)
+static char readRefPictureIdxNull (sMacroBlock* mb, sSyntaxElement* se, sDataPartition* dataPartition, char b8mode, int list)
 {
   return 0;
 }
 //}}}
 //{{{
-static void prepareListforRefIdx (sMacroblock* mb, sSyntaxElement* se,
+static void prepareListforRefIdx (sMacroBlock* mb, sSyntaxElement* se,
                                   sDataPartition *dataPartition, int numRefIndexActive, int refidx_present) {
 
   if (numRefIndexActive > 1) {
@@ -426,7 +426,7 @@ static void prepareListforRefIdx (sMacroblock* mb, sSyntaxElement* se,
 //}}}
 
 //{{{
-void set_chroma_qp (sMacroblock* mb) {
+void set_chroma_qp (sMacroBlock* mb) {
 
   sDecoder* decoder = mb->decoder;
   sPicture* picture = mb->slice->picture;
@@ -438,7 +438,7 @@ void set_chroma_qp (sMacroblock* mb) {
 }
 //}}}
 //{{{
-void updateQp (sMacroblock* mb, int qp) {
+void updateQp (sMacroBlock* mb, int qp) {
 
   sDecoder* decoder = mb->decoder;
 
@@ -452,7 +452,7 @@ void updateQp (sMacroblock* mb, int qp) {
   }
 //}}}
 //{{{
-void readDeltaQuant (sSyntaxElement* se, sDataPartition *dataPartition, sMacroblock* mb, const byte *dpMap, int type)
+void readDeltaQuant (sSyntaxElement* se, sDataPartition *dataPartition, sMacroBlock* mb, const byte *dpMap, int type)
 {
   sSlice* slice = mb->slice;
   sDecoder* decoder = mb->decoder;
@@ -481,8 +481,8 @@ void readDeltaQuant (sSyntaxElement* se, sDataPartition *dataPartition, sMacrobl
 //}}}
 
 //{{{
-static void readMBRefPictureIdx (sSyntaxElement* se, sDataPartition *dataPartition,
-                                 sMacroblock* mb, sPicMotionParam** mvInfo,
+static void readMBRefPictureIdx (sSyntaxElement* se, sDataPartition* dataPartition,
+                                 sMacroBlock* mb, sPicMotionParam** mvInfo,
                                  int list, int step_v0, int step_h0) {
 
   if (mb->mbType == 1) {
@@ -555,7 +555,7 @@ static void readMBRefPictureIdx (sSyntaxElement* se, sDataPartition *dataPartiti
   }
 //}}}
 //{{{
-static void readMBMotionVectors (sSyntaxElement* se, sDataPartition *dataPartition, sMacroblock* mb,
+static void readMBMotionVectors (sSyntaxElement* se, sDataPartition* dataPartition, sMacroBlock* mb,
                                  int list, int step_h0, int step_v0) {
 
   if (mb->mbType == 1) {
@@ -673,7 +673,7 @@ static void readMBMotionVectors (sSyntaxElement* se, sDataPartition *dataPartiti
   }
 //}}}
 //{{{
-void invScaleCoeff (sMacroblock* mb, int level, int run, int qp_per, int i, int j, int i0, int j0, int coef_ctr, const byte (*pos_scan4x4)[2], int (*InvLevelScale4x4)[4])
+void invScaleCoeff (sMacroBlock* mb, int level, int run, int qp_per, int i, int j, int i0, int j0, int coef_ctr, const byte (*pos_scan4x4)[2], int (*InvLevelScale4x4)[4])
 {
   if (level != 0) {
     /* leave if level == 0 */
@@ -688,7 +688,7 @@ void invScaleCoeff (sMacroblock* mb, int level, int run, int qp_per, int i, int 
   }
 //}}}
 //{{{
-static void setup_mb_pos_info (sMacroblock* mb) {
+static void setup_mb_pos_info (sMacroBlock* mb) {
 
   int mb_x = mb->mb.x;
   int mb_y = mb->mb.y;
@@ -706,7 +706,7 @@ static void setup_mb_pos_info (sMacroblock* mb) {
 //}}}
 
 //{{{
-void startMacroblock (sSlice* slice, sMacroblock** mb) {
+void startMacroblock (sSlice* slice, sMacroBlock** mb) {
 
   sDecoder* decoder = slice->decoder;
   int mbIndex = slice->mbIndex;
@@ -756,7 +756,7 @@ void startMacroblock (sSlice* slice, sMacroblock** mb) {
       memset ((*mb)->mvd[0][0][0], 0, 2 * MB_BLOCK_dpS * 2 * sizeof(short));
     }
 
-  memset ((*mb)->cbpStructure, 0, 3 * sizeof(sCBPStructure));
+  memset ((*mb)->cbpStructure, 0, 3 * sizeof(sCbpStructure));
 
   // initialize slice->mbRess
   if (slice->isResetCoef == FALSE) {
@@ -817,7 +817,7 @@ Boolean exitMacroblock (sSlice* slice, int eos_bit) {
 //}}}
 
 //{{{
-static void interpretMbModeP (sMacroblock* mb) {
+static void interpretMbModeP (sMacroBlock* mb) {
 
   static const short ICBPTAB[6] = {0,16,32,15,31,47};
 
@@ -857,7 +857,7 @@ static void interpretMbModeP (sMacroblock* mb) {
   }
 //}}}
 //{{{
-static void interpretMbModeI (sMacroblock* mb) {
+static void interpretMbModeI (sMacroBlock* mb) {
 
   static const short ICBPTAB[6] = {0,16,32,15,31,47};
 
@@ -887,7 +887,7 @@ static void interpretMbModeI (sMacroblock* mb) {
   }
 //}}}
 //{{{
-static void interpretMbModeB (sMacroblock* mb) {
+static void interpretMbModeB (sMacroBlock* mb) {
 
   //{{{
   static const char offset2pdir16x16[12] = {
@@ -966,7 +966,7 @@ static void interpretMbModeB (sMacroblock* mb) {
   }
 //}}}
 //{{{
-static void interpretMbModeSI (sMacroblock* mb) {
+static void interpretMbModeSI (sMacroBlock* mb) {
 
   //sDecoder* decoder = mb->decoder;
   const int ICBPTAB[6] = {0,16,32,15,31,47};
@@ -1004,7 +1004,7 @@ static void interpretMbModeSI (sMacroblock* mb) {
   }
 //}}}
 //{{{
-static void readMotionInfoP (sMacroblock* mb){
+static void readMotionInfoP (sMacroBlock* mb){
 
   sDecoder* decoder = mb->decoder;
   sSlice* slice = mb->slice;
@@ -1057,7 +1057,7 @@ static void readMotionInfoP (sMacroblock* mb){
   }
 //}}}
 //{{{
-static void readMotionInfoB (sMacroblock* mb) {
+static void readMotionInfoB (sMacroBlock* mb) {
 
   sSlice* slice = mb->slice;
   sDecoder* decoder = mb->decoder;
@@ -1196,7 +1196,7 @@ void setSliceMethods (sSlice* slice) {
 //}}}
 
 //{{{
-void getNeighbours (sMacroblock* mb, sPixelPos* block, int mb_x, int mb_y, int blockshape_x) {
+void getNeighbours (sMacroBlock* mb, sPixelPos* block, int mb_x, int mb_y, int blockshape_x) {
 
   int* mbSize = mb->decoder->mbSize[IS_LUMA];
 
@@ -1225,7 +1225,7 @@ void getNeighbours (sMacroblock* mb, sPixelPos* block, int mb_x, int mb_y, int b
   }
 //}}}
 //{{{
-void checkDpNeighbours (sMacroblock* mb) {
+void checkDpNeighbours (sMacroBlock* mb) {
 
   sDecoder* decoder = mb->decoder;
   sPixelPos up, left;
@@ -1319,7 +1319,7 @@ void makeFramePictureJV (sDecoder* decoder) {
 //}}}
 
 //{{{
-int decodeMacroblock (sMacroblock* mb, sPicture* picture) {
+int decodeMacroblock (sMacroBlock* mb, sPicture* picture) {
 
   sSlice* slice = mb->slice;
   sDecoder* decoder = mb->decoder;

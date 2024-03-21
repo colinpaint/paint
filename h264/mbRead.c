@@ -21,7 +21,7 @@
 static const sMotionVec zero_mv = {0, 0};
 
 //{{{
-static void read_ipred_8x8_modes_mbaff (sMacroblock* mb) {
+static void read_ipred_8x8_modes_mbaff (sMacroBlock* mb) {
 
   int bi, bj, bx, by, dec;
   sSlice* slice = mb->slice;
@@ -81,7 +81,7 @@ static void read_ipred_8x8_modes_mbaff (sMacroblock* mb) {
   }
 //}}}
 //{{{
-static void read_ipred_8x8_modes (sMacroblock* mb) {
+static void read_ipred_8x8_modes (sMacroBlock* mb) {
 
   int b8, bi, bj, bx, by, dec;
   sSlice* slice = mb->slice;
@@ -145,7 +145,7 @@ static void read_ipred_8x8_modes (sMacroblock* mb) {
 }
 //}}}
 //{{{
-static void read_ipred_4x4_modes_mbaff (sMacroblock* mb) {
+static void read_ipred_4x4_modes_mbaff (sMacroBlock* mb) {
 
   int b8,i,j,bi,bj,bx,by;
   sSyntaxElement se;
@@ -214,7 +214,7 @@ static void read_ipred_4x4_modes_mbaff (sMacroblock* mb) {
   }
 //}}}
 //{{{
-static void read_ipred_4x4_modes (sMacroblock* mb) {
+static void read_ipred_4x4_modes (sMacroBlock* mb) {
 
   sSlice* slice = mb->slice;
   const byte* dpMap = assignSE2dp[slice->dataDpMode];
@@ -289,7 +289,7 @@ static void read_ipred_4x4_modes (sMacroblock* mb) {
   }
 //}}}
 //{{{
-static void readIpredModes (sMacroblock* mb) {
+static void readIpredModes (sMacroBlock* mb) {
 
   sSlice* slice = mb->slice;
   sPicture* picture = slice->picture;
@@ -343,7 +343,7 @@ static void resetMvInfo (sPicMotionParam* mvInfo, int slice_no) {
   }
 //}}}
 //{{{
-static void initMacroblock (sMacroblock* mb) {
+static void initMacroblock (sMacroBlock* mb) {
 
   sSlice* slice = mb->slice;
   sPicMotionParam** mvInfo = &slice->picture->mvInfo[mb->blockY];
@@ -363,7 +363,7 @@ static void initMacroblock (sMacroblock* mb) {
   }
 //}}}
 //{{{
-static void initMacroblockDirect (sMacroblock* mb) {
+static void initMacroblockDirect (sMacroBlock* mb) {
 
   int slice_no = mb->slice->curSliceIndex;
   sPicMotionParam** mvInfo = &mb->slice->picture->mvInfo[mb->blockY];
@@ -382,7 +382,7 @@ static void initMacroblockDirect (sMacroblock* mb) {
 //}}}
 
 //{{{
-static void concealIPCMcoeffs (sMacroblock* mb) {
+static void concealIPCMcoeffs (sMacroBlock* mb) {
 
   sSlice* slice = mb->slice;
   sDecoder* decoder = mb->decoder;
@@ -465,7 +465,7 @@ static void readIPCMcoeffs (sSlice* slice, sDataPartition* dataPartition) {
 //}}}
 
 //{{{
-static void SetB8Mode (sMacroblock* mb, int value, int i) {
+static void SetB8Mode (sMacroBlock* mb, int value, int i) {
 
   sSlice* slice = mb->slice;
   static const char p_v2b8 [ 5] = {4, 5, 6, 7, IBLOCK};
@@ -485,7 +485,7 @@ static void SetB8Mode (sMacroblock* mb, int value, int i) {
 //}}}
 
 //{{{
-static void resetCoeffs (sMacroblock* mb) {
+static void resetCoeffs (sMacroBlock* mb) {
 
   sDecoder* decoder = mb->decoder;
 
@@ -494,7 +494,7 @@ static void resetCoeffs (sMacroblock* mb) {
   }
 //}}}
 //{{{
-static void fieldFlagInference (sMacroblock* mb) {
+static void fieldFlagInference (sMacroBlock* mb) {
 
   sDecoder* decoder = mb->decoder;
   if (mb->mbAvailA)
@@ -506,7 +506,7 @@ static void fieldFlagInference (sMacroblock* mb) {
 //}}}
 
 //{{{
-static void skipMacroblocks (sMacroblock* mb) {
+static void skipMacroblocks (sMacroBlock* mb) {
 
   sMotionVec pred_mv;
   int zeroMotionAbove;
@@ -621,7 +621,7 @@ static void resetMvInfoList (sPicMotionParam* mvInfo, int list, int sliceNum) {
   }
 //}}}
 //{{{
-static void initMacroblockBasic (sMacroblock* mb) {
+static void initMacroblockBasic (sMacroBlock* mb) {
 
   sPicMotionParam** mvInfo = &mb->slice->picture->mvInfo[mb->blockY];
   int slice_no = mb->slice->curSliceIndex;
@@ -637,7 +637,7 @@ static void initMacroblockBasic (sMacroblock* mb) {
   }
 //}}}
 //{{{
-static void readSkipMacroblock (sMacroblock* mb) {
+static void readSkipMacroblock (sMacroBlock* mb) {
 
   mb->lumaTransformSize8x8flag = FALSE;
   if (mb->decoder->activePPS->constrainedIntraPredFlag) {
@@ -651,7 +651,7 @@ static void readSkipMacroblock (sMacroblock* mb) {
 //}}}
 
 //{{{
-static void readIntraMacroblock (sMacroblock* mb) {
+static void readIntraMacroblock (sMacroBlock* mb) {
 
   mb->noMbPartLessThan8x8Flag = TRUE;
 
@@ -664,7 +664,7 @@ static void readIntraMacroblock (sMacroblock* mb) {
   }
 //}}}
 //{{{
-static void readIntra4x4macroblocCavlc (sMacroblock* mb, const byte* dpMap)
+static void readIntra4x4macroblocCavlc (sMacroBlock* mb, const byte* dpMap)
 {
   sSlice* slice = mb->slice;
 
@@ -694,7 +694,7 @@ static void readIntra4x4macroblocCavlc (sMacroblock* mb, const byte* dpMap)
   }
 //}}}
 //{{{
-static void readIntra4x4macroblockCabac (sMacroblock* mb, const byte* dpMap) {
+static void readIntra4x4macroblockCabac (sMacroBlock* mb, const byte* dpMap) {
 
 
   // transform size flag for INTRA_4x4 and INTRA_8x8 modes
@@ -730,7 +730,7 @@ static void readIntra4x4macroblockCabac (sMacroblock* mb, const byte* dpMap) {
 //}}}
 
 //{{{
-static void readInterMacroblock (sMacroblock* mb) {
+static void readInterMacroblock (sMacroBlock* mb) {
 
   sSlice* slice = mb->slice;
 
@@ -747,7 +747,7 @@ static void readInterMacroblock (sMacroblock* mb) {
   }
 //}}}
 //{{{
-static void readIPCMmacroblock (sMacroblock* mb, const byte* dpMap) {
+static void readIPCMmacroblock (sMacroBlock* mb, const byte* dpMap) {
 
   sSlice* slice = mb->slice;
   mb->noMbPartLessThan8x8Flag = TRUE;
@@ -766,7 +766,7 @@ static void readIPCMmacroblock (sMacroblock* mb, const byte* dpMap) {
   }
 //}}}
 //{{{
-static void readI8x8macroblock (sMacroblock* mb, sDataPartition* dataPartition, sSyntaxElement* se) {
+static void readI8x8macroblock (sMacroBlock* mb, sDataPartition* dataPartition, sSyntaxElement* se) {
 
   int i;
   sSlice* slice = mb->slice;
@@ -797,7 +797,7 @@ static void readI8x8macroblock (sMacroblock* mb, sDataPartition* dataPartition, 
 //}}}
 
 //{{{
-static void readIcavlcMacroblock (sMacroblock* mb) {
+static void readIcavlcMacroblock (sMacroBlock* mb) {
 
   sSlice* slice = mb->slice;
 
@@ -846,7 +846,7 @@ static void readIcavlcMacroblock (sMacroblock* mb) {
   }
 //}}}
 //{{{
-static void readPcavlcMacroblock (sMacroblock* mb) {
+static void readPcavlcMacroblock (sMacroBlock* mb) {
 
   sSlice* slice = mb->slice;
   sSyntaxElement se;
@@ -898,7 +898,7 @@ static void readPcavlcMacroblock (sMacroblock* mb) {
     }
   else {
     sDecoder* decoder = mb->decoder;
-    sMacroblock* topMB = NULL;
+    sMacroBlock* topMB = NULL;
     int  prevMbSkipped = 0;
     sPicture* picture = slice->picture;
     sPicMotionParamsOld* motion = &picture->motion;
@@ -999,7 +999,7 @@ static void readPcavlcMacroblock (sMacroblock* mb) {
   }
 //}}}
 //{{{
-static void readBcavlcMacroblock (sMacroblock* mb) {
+static void readBcavlcMacroblock (sMacroBlock* mb) {
 
   sDecoder* decoder = mb->decoder;
   sSlice* slice = mb->slice;
@@ -1048,7 +1048,7 @@ static void readBcavlcMacroblock (sMacroblock* mb) {
     slice->interpretMbMode (mb);
     }
   else {
-    sMacroblock* topMB = NULL;
+    sMacroBlock* topMB = NULL;
     int prevMbSkipped = 0;
     sPicture* picture = slice->picture;
     sPicMotionParamsOld* motion = &picture->motion;
@@ -1163,7 +1163,7 @@ static void readBcavlcMacroblock (sMacroblock* mb) {
 //}}}
 
 //{{{
-static void readIcabacMacroblock (sMacroblock* mb) {
+static void readIcabacMacroblock (sMacroBlock* mb) {
 
   sSlice* slice = mb->slice;
 
@@ -1250,7 +1250,7 @@ static void readIcabacMacroblock (sMacroblock* mb) {
   }
 //}}}
 //{{{
-static void readPcabacMacroblock (sMacroblock* mb)
+static void readPcabacMacroblock (sMacroBlock* mb)
 {
   sSlice* slice = mb->slice;
   sDecoder* decoder = mb->decoder;
@@ -1296,7 +1296,7 @@ static void readPcabacMacroblock (sMacroblock* mb)
     }
 
   else {
-    sMacroblock* topMB = NULL;
+    sMacroBlock* topMB = NULL;
     int prevMbSkipped = 0;
     int checkBot, readBot, readTop;
     sPicture* picture = slice->picture;
@@ -1397,7 +1397,7 @@ static void readPcabacMacroblock (sMacroblock* mb)
   }
 //}}}
 //{{{
-static void readBcabacMacroblock (sMacroblock* mb) {
+static void readBcabacMacroblock (sMacroBlock* mb) {
 
   sSlice* slice = mb->slice;
   sDecoder* decoder = mb->decoder;
@@ -1447,7 +1447,7 @@ static void readBcabacMacroblock (sMacroblock* mb) {
     slice->interpretMbMode (mb);
     }
   else {
-    sMacroblock* topMB = NULL;
+    sMacroBlock* topMB = NULL;
     int  prevMbSkipped = 0;
     int  checkBot, readBot, readTop;
     sPicture* picture = slice->picture;
