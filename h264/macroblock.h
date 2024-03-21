@@ -128,14 +128,14 @@ extern void readCoef4x4cavlc (sMacroBlock* mb, int block_type, int i, int j, int
 extern void readCoef4x4cavlc444 (sMacroBlock* mb, int block_type, int i, int j, int levarr[16], int runarr[16], int *number_coefficients);
 
 extern void setReadMacroblock (sSlice* slice);
-extern void set_read_CBP_and_coeffs_cavlc (sSlice* slice);
-extern void set_read_comp_coeff_cavlc (sMacroBlock* mb);
+extern void setReadCbpCoefCavlc (sSlice* slice);
+extern void setReadCompCoefCavlc (sMacroBlock* mb);
 
 extern int get_colocated_info_8x8 (sMacroBlock* mb, sPicture* list1, int i, int j);
 extern int get_colocated_info_4x4 (sMacroBlock* mb, sPicture* list1, int i, int j);
 
 extern void set_read_comp_coeff_cabac (sMacroBlock* mb);
-extern void set_read_comp_coeff_cavlc (sMacroBlock* mb);
+extern void setReadCompCoefCavlc (sMacroBlock* mb);
 
 extern void setSliceMethods (sSlice* slice);
 extern void setup_slice_methods_mbaff (sSlice* slice);

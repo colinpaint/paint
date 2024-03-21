@@ -359,7 +359,7 @@ static void initMacroblock (sMacroBlock* mb) {
     }
 
   set_read_comp_coeff_cabac (mb);
-  set_read_comp_coeff_cavlc (mb);
+  setReadCompCoefCavlc (mb);
   }
 //}}}
 //{{{
@@ -369,7 +369,7 @@ static void initMacroblockDirect (sMacroBlock* mb) {
   sPicMotionParam** mvInfo = &mb->slice->picture->mvInfo[mb->blockY];
 
   set_read_comp_coeff_cabac (mb);
-  set_read_comp_coeff_cavlc (mb);
+  setReadCompCoefCavlc (mb);
 
   int i = mb->blockX;
   for (int j = 0; j < BLOCK_SIZE; ++j) {

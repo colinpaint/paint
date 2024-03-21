@@ -447,7 +447,7 @@ void updateQp (sMacroBlock* mb, int qp) {
   set_chroma_qp (mb);
 
   mb->isLossless = (Boolean)((mb->qpScaled[0] == 0) && (decoder->coding.losslessQpPrimeFlag == 1));
-  set_read_comp_coeff_cavlc (mb);
+  setReadCompCoefCavlc (mb);
   set_read_comp_coeff_cabac (mb);
   }
 //}}}
@@ -1186,7 +1186,7 @@ void setSliceMethods (sSlice* slice) {
       set_read_CBP_and_coeffs_cabac (slice);
       break;
     case CAVLC:
-      set_read_CBP_and_coeffs_cavlc (slice);
+      setReadCbpCoefCavlc (slice);
       break;
     default:
       printf ("Unsupported entropy coding mode\n");

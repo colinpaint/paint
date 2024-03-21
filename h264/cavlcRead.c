@@ -814,15 +814,16 @@ static void read_CBP_and_coeffs_from_NAL_CAVLC_400 (sMacroBlock* mb) {
   int k;
   int mb_nr = mb->mbIndexX;
   int cbp;
-  sSyntaxElement se;
-  sDataPartition *dataPartition = NULL;
+
   sSlice* slice = mb->slice;
-  const byte *dpMap = assignSE2dp[slice->dataDpMode];
   int i0, j0;
 
   int levarr[16], runarr[16], numcoeff;
   int qp_per, qp_rem;
 
+  sSyntaxElement se;
+  sDataPartition* dataPartition = NULL;
+  const byte* dpMap = assignSE2dp[slice->dataDpMode];
   sDecoder* decoder = mb->decoder;
   int intra = (mb->isIntraBlock == TRUE);
   int need_transform_size_flag;
@@ -885,7 +886,7 @@ static void read_CBP_and_coeffs_from_NAL_CAVLC_400 (sMacroBlock* mb) {
   else  {
     //{{{  read DC coeffs for new intra modes
     cbp = mb->cbp;
-    readDeltaQuant(&se, dataPartition, mb, dpMap, SE_DELTA_QUANT_INTRA);
+    readDeltaQuant (&se, dataPartition, mb, dpMap, SE_DELTA_QUANT_INTRA);
     if (slice->dataDpMode) {
       if (slice->noDataPartitionB) {
         mb->errorFlag  = 1;
@@ -898,7 +899,7 @@ static void read_CBP_and_coeffs_from_NAL_CAVLC_400 (sMacroBlock* mb) {
 
     if (!mb->dplFlag) {
       pos_scan_4x4 = pos_scan4x4[0];
-      slice->readCoef4x4cavlc(mb, LUMA_INTRA16x16DC, 0, 0, levarr, runarr, &numcoeff);
+      slice->readCoef4x4cavlc (mb, LUMA_INTRA16x16DC, 0, 0, levarr, runarr, &numcoeff);
       for(k = 0; k < numcoeff; ++k) {
         if (levarr[k] != 0) {
           // leave if level == 0
@@ -938,6 +939,9 @@ static void read_CBP_and_coeffs_from_NAL_CAVLC_400 (sMacroBlock* mb) {
 //{{{
 static void read_CBP_and_coeffs_from_NAL_CAVLC_422 (sMacroBlock* mb) {
 
+  sDecoder* decoder = mb->decoder;
+  sSlice* slice = mb->slice;
+
   int i,j,k;
   int mb_nr = mb->mbIndexX;
   int cbp;
@@ -947,8 +951,6 @@ static void read_CBP_and_coeffs_from_NAL_CAVLC_422 (sMacroBlock* mb) {
   int levarr[16], runarr[16], numcoeff;
 
   int qp_per, qp_rem;
-  sDecoder* decoder = mb->decoder;
-  sSlice* slice = mb->slice;
 
   int uv;
   int qp_per_uv[2];
@@ -957,7 +959,6 @@ static void read_CBP_and_coeffs_from_NAL_CAVLC_422 (sMacroBlock* mb) {
   int intra = (mb->isIntraBlock == TRUE);
 
   int b4;
-  //sPicture* picture = slice->picture;
   int m6[4];
 
   int need_transform_size_flag;
@@ -1002,7 +1003,7 @@ static void read_CBP_and_coeffs_from_NAL_CAVLC_422 (sMacroBlock* mb) {
       //}}}
     if (cbp != 0) {
       //{{{  Delta quant only if nonzero coeffs
-      readDeltaQuant(&se, dataPartition, mb, dpMap, ((mb->isIntraBlock == FALSE)) ? SE_DELTA_QUANT_INTER : SE_DELTA_QUANT_INTRA);
+      readDeltaQuant (&se, dataPartition, mb, dpMap, ((mb->isIntraBlock == FALSE)) ? SE_DELTA_QUANT_INTER : SE_DELTA_QUANT_INTRA);
 
       if (slice->dataDpMode) {
         if ((mb->isIntraBlock == FALSE) && slice->noDataPartitionC )
@@ -1210,29 +1211,30 @@ static void read_CBP_and_coeffs_from_NAL_CAVLC_422 (sMacroBlock* mb) {
 //{{{
 static void read_CBP_and_coeffs_from_NAL_CAVLC_444 (sMacroBlock* mb) {
 
+  sSlice* slice = mb->slice;
+
   int i,k;
   int mb_nr = mb->mbIndexX;
   int cbp;
-  sSyntaxElement se;
-  sDataPartition *dataPartition = NULL;
-  sSlice* slice = mb->slice;
-  const byte *dpMap = assignSE2dp[slice->dataDpMode];
   int coef_ctr, i0, j0;
   int levarr[16], runarr[16], numcoeff;
 
   int qp_per, qp_rem;
-  sDecoder* decoder = mb->decoder;
-
   int uv;
   int qp_per_uv[3];
   int qp_rem_uv[3];
+  int need_transform_size_flag;
+
+  sSyntaxElement se;
+  sDataPartition *dataPartition = NULL;
+  const byte* dpMap = assignSE2dp[slice->dataDpMode];
+  sDecoder* decoder = mb->decoder;
 
   int intra = (mb->isIntraBlock == TRUE);
 
-  int need_transform_size_flag;
-
   int (*InvLevelScale4x4)[4] = NULL;
   int (*InvLevelScale8x8)[8] = NULL;
+
   // select scan type
   const byte (*pos_scan4x4)[2] = ((decoder->coding.structure == FRAME) && (!mb->mbField)) ? SNGL_SCAN : FIELD_SCAN;
   const byte *pos_scan_4x4 = pos_scan4x4[0];
@@ -1266,7 +1268,7 @@ static void read_CBP_and_coeffs_from_NAL_CAVLC_444 (sMacroBlock* mb) {
 
     // Delta quant only if nonzero coeffs
     if (cbp !=0) {
-      readDeltaQuant(&se, dataPartition, mb, dpMap, ((mb->isIntraBlock == FALSE)) ? SE_DELTA_QUANT_INTER : SE_DELTA_QUANT_INTRA);
+      readDeltaQuant (&se, dataPartition, mb, dpMap, ((mb->isIntraBlock == FALSE)) ? SE_DELTA_QUANT_INTER : SE_DELTA_QUANT_INTRA);
 
       if (slice->dataDpMode) {
         if ((mb->isIntraBlock == FALSE) && slice->noDataPartitionC )
@@ -1289,7 +1291,7 @@ static void read_CBP_and_coeffs_from_NAL_CAVLC_444 (sMacroBlock* mb) {
   else {
     //{{{  read DC coeffs for new intra modes
     cbp = mb->cbp;
-    readDeltaQuant(&se, dataPartition, mb, dpMap, SE_DELTA_QUANT_INTRA);
+    readDeltaQuant (&se, dataPartition, mb, dpMap, SE_DELTA_QUANT_INTRA);
     if (slice->dataDpMode) {
       if (slice->noDataPartitionB) {
         mb->errorFlag  = 1;
@@ -1385,20 +1387,23 @@ static void read_CBP_and_coeffs_from_NAL_CAVLC_444 (sMacroBlock* mb) {
 //{{{
 static void read_CBP_and_coeffs_from_NAL_CAVLC_420 (sMacroBlock* mb) {
 
+  sSlice* slice = mb->slice;
+
   int i,j,k;
   int mb_nr = mb->mbIndexX;
   int cbp;
-  sSyntaxElement se;
-  sDataPartition *dataPartition = NULL;
-  sSlice* slice = mb->slice;
-  const byte *dpMap = assignSE2dp[slice->dataDpMode];
   int coef_ctr, i0, j0, b8;
   int ll;
   int levarr[16], runarr[16], numcoeff;
 
   int qp_per, qp_rem;
+
+  sSyntaxElement se;
+  sDataPartition* dataPartition = NULL;
+  const byte* dpMap = assignSE2dp[slice->dataDpMode];
   sDecoder* decoder = mb->decoder;
-  int smb = ((decoder->coding.type==SP_SLICE) && (mb->isIntraBlock == FALSE)) || (decoder->coding.type == SI_SLICE && mb->mbType == SI4MB);
+  int smb = ((decoder->coding.type == SP_SLICE) && (mb->isIntraBlock == FALSE)) || 
+            ((decoder->coding.type == SI_SLICE) && (mb->mbType == SI4MB));
 
   int uv;
   int qp_per_uv[2];
@@ -1436,7 +1441,7 @@ static void read_CBP_and_coeffs_from_NAL_CAVLC_420 (sMacroBlock* mb) {
       && slice->transform8x8Mode);
     if (need_transform_size_flag) {
       //{{{  Transform size flag for INTER MBs
-      se.type   =  SE_HEADER;
+      se.type =  SE_HEADER;
       dataPartition = &(slice->dataPartitions[dpMap[SE_HEADER]]);
       // read CAVLC transform_size_8x8_flag
       se.len = 1;
@@ -1613,7 +1618,7 @@ static void read_CBP_and_coeffs_from_NAL_CAVLC_420 (sMacroBlock* mb) {
 //}}}
 
 //{{{
-void set_read_comp_coeff_cavlc (sMacroBlock* mb) {
+void setReadCompCoefCavlc (sMacroBlock* mb) {
 
   if (mb->isLossless == FALSE) {
     mb->readCompCoef4x4cavlc = readCompCoef4x4cavlc;
@@ -1626,7 +1631,7 @@ void set_read_comp_coeff_cavlc (sMacroBlock* mb) {
   }
 //}}}
 //{{{
-void set_read_CBP_and_coeffs_cavlc (sSlice* slice) {
+void setReadCbpCoefCavlc (sSlice* slice) {
 
   switch (slice->decoder->activeSPS->chromaFormatIdc) {
     case YUV444:
