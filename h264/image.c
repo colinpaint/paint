@@ -1151,47 +1151,33 @@ static const char INIT_FLD_LAST_P[3][22][15][2] =
   }
 };
 //}}}
+//}}}
 
 //{{{
-#define IBIARI_CTX_INIT2(ii,jj,ctx,tab,num, qp) \
-{ \
-  for (i=0; i<ii; ++i) \
-  for (j=0; j<jj; ++j) \
-  { \
-  biariInitContext (qp, &(ctx[i][j]), tab ## _I[num][i][j]); \
-  } \
-}
+#define IBIARI_CTX_INIT2(ii,jj,ctx,tab,num, qp) { \
+  for (i = 0; i < ii; ++i) \
+    for (j = 0; j < jj; ++j) \
+      biariInitContext (qp, &(ctx[i][j]), tab ## _I[num][i][j]); \
+  }
 //}}}
 //{{{
-#define PBIARI_CTX_INIT2(ii,jj,ctx,tab,num, qp) \
-{ \
-  for (i=0; i<ii; ++i) \
-  for (j=0; j<jj; ++j) \
-  { \
-  biariInitContext (qp, &(ctx[i][j]), tab ## _P[num][i][j]); \
-  } \
-}
+#define PBIARI_CTX_INIT2(ii,jj,ctx,tab,num, qp) { \
+  for (i = 0; i < ii; ++i) \
+    for (j = 0; j < jj; ++j) \
+      biariInitContext (qp, &(ctx[i][j]), tab ## _P[num][i][j]); \
+  }
 //}}}
 //{{{
-#define IBIARI_CTX_INIT1(jj,ctx,tab,num, qp) \
-{ \
-  for (j=0; j<jj; ++j) \
-  { \
-  biariInitContext (qp, &(ctx[j]), tab ## _I[num][0][j]); \
-  } \
-}
+#define IBIARI_CTX_INIT1(jj,ctx,tab,num, qp) { \
+  for (j = 0; j < jj; ++j) \
+    biariInitContext (qp, &(ctx[j]), tab ## _I[num][0][j]); \
+  }
 //}}}
 //{{{
-#define PBIARI_CTX_INIT1(jj,ctx,tab,num, qp) \
-{ \
-  { \
-  for (j=0; j<jj; ++j) \
-  { \
-  biariInitContext (qp, &(ctx[j]), tab ## _P[num][0][j]); \
-  } \
-  } \
-}
-//}}}
+#define PBIARI_CTX_INIT1(jj,ctx,tab,num, qp) { \
+  for (j = 0; j < jj; ++j) \
+    biariInitContext (qp, &(ctx[j]), tab ## _P[num][0][j]); \
+  }
 //}}}
 
 //{{{
@@ -1475,37 +1461,6 @@ static void copyPOC (sSlice* fromSlice, sSlice* toSlice) {
   toSlice->botPoc = fromSlice->botPoc;
   toSlice->thisPoc = fromSlice->thisPoc;
   toSlice->framePoc = fromSlice->framePoc;
-  }
-//}}}
-//{{{
-static void dumpPOC (sDecoder* decoder) {
-
-  sSPS* activeSPS = decoder->activeSPS;
-
-  printf ("POC locals\n");
-  printf ("- topPoc %d\n", (int)decoder->sliceList[0]->topPoc);
-  printf ("- botPoc %d\n", (int)decoder->sliceList[0]->botPoc);
-  printf ("- frameNum %d\n", (int)decoder->sliceList[0]->frameNum);
-  printf ("- fieldPicFlag %d\n", (int)decoder->sliceList[0]->fieldPicFlag);
-  printf ("- botFieldFlag %d\n", (int)decoder->sliceList[0]->botFieldFlag);
-
-  printf ("POC in SPS\n");
-  printf ("- log2_max_frame_num_minus4 %d\n", (int)activeSPS->log2_max_frame_num_minus4);         // POC200301
-  printf ("- log2_max_pic_order_cnt_lsb_minus4 %d\n", (int)activeSPS->log2_max_pic_order_cnt_lsb_minus4);
-  printf ("- pocType %d\n", (int)activeSPS->pocType);
-  printf ("- numRefFramesPocCycle %d\n", (int)activeSPS->numRefFramesPocCycle);
-  printf ("- delta_pic_order_always_zero_flag %d\n", (int)activeSPS->delta_pic_order_always_zero_flag);
-  printf ("- offsetNonRefPic %d\n", (int)activeSPS->offsetNonRefPic);
-  printf ("- offsetTopBotField %d\n", (int)activeSPS->offsetTopBotField);
-  printf ("- offset_for_ref_frame[0] %d\n", (int)activeSPS->offset_for_ref_frame[0]);
-  printf ("- offset_for_ref_frame[1] %d\n", (int)activeSPS->offset_for_ref_frame[1]);
-
-  printf ("POC in sliceHeader\n");
-  printf ("- botFieldPicOrderFramePresent %d\n", (int)decoder->activePPS->botFieldPicOrderFramePresent);
-  printf ("- deltaPicOrderCount[0] %d\n", (int)decoder->sliceList[0]->deltaPicOrderCount[0]);
-  printf ("- deltaPicOrderCount[1] %d\n", (int)decoder->sliceList[0]->deltaPicOrderCount[1]);
-  printf ("- idrFlag %d\n", (int)decoder->sliceList[0]->idrFlag);
-  printf ("- maxFrameNum %d\n", (int)decoder->coding.maxFrameNum);
   }
 //}}}
 
