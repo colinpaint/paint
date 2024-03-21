@@ -157,7 +157,7 @@ typedef struct {
   Boolean  constrained_set0_flag;     // u(1)
   Boolean  constrained_set1_flag;     // u(1)
   Boolean  constrained_set2_flag;     // u(1)
-  Boolean  constrained_set3_flag;     // u(1)
+  Boolean  constrainedSet3flag;     // u(1)
   unsigned int levelIdc;              // u(8)
   unsigned int spsId;                 // ue(v)
   unsigned int chromaFormatIdc;       // ue(v)
@@ -817,21 +817,40 @@ typedef struct Decoder {
   sPPS*        activePPS;
   sPPS*        nextPPS;
 
-  // recovery
-  int          recoveryPoint;
-  int          recoveryPointFound;
-  int          recoveryFrameCount;
-  int          recoveryFrameNum;
-  int          recoveryPoc;
-
   int          decodeFrameNum;
   int          idrFrameNum;
   unsigned int preFrameNum;  // last decoded slice. For detecting gap in frameNum.
   unsigned int prevFrameNum; // number of previous slice
   int          newFrame;
 
-  struct DPB*  dpb;
+  int          nonConformingStream;
+  int          deblockEnable;
+  int          deblockMode;  // 0: deblock in picture, 1: deblock in slice;
 
+  // recovery
+  int          recoveryPoint;
+  int          recoveryPointFound;
+  int          recoveryFrameCount;
+  int          recoveryFrameNum;
+  int          recoveryPoc;
+  int                  recoveryFlag;
+
+
+  // output
+  struct DPB*     dpb;
+  int             lastHasMmco5;
+  int             dpbPoc[100];
+  struct Picture* picture;
+  struct Picture* decPictureJV[MAX_PLANE];  // picture to be used during 4:4:4 independent mode decoding
+  struct Picture* noReferencePicture;       // dummy storable picture for recovery point
+  struct FrameStore* lastOutFramestore;
+
+  sDecodedPic*       decOutputPic;
+  struct FrameStore* outBuffer;
+  struct Picture*    pendingOut;
+  int                pendingOutState;
+
+  // slice
   int          picSliceIndex;
   int          numDecodedMbs;
   int          numDecodedSlices;
@@ -873,25 +892,15 @@ typedef struct Decoder {
   byte**       predModeJV[MAX_PLANE];
   int**        siBlockJV[MAX_PLANE];
 
-  // picture error conceal
-  // concealHead points to first node in list, concealTail points to
-  // last node in list. Initialize both to NULL, meaning no nodes in list yet
-  struct ConcealNode* concealHead;
-  struct ConcealNode* concealTail;
-  int          concealMode;
-  int          earlierMissingPoc;
-  unsigned int concealFrame;
-  int          idrConcealFlag;
-  int          concealSliceType;
-
-  int          nonConformingStream;
+  // POC
   int          lastRefPicPoc;
 
-  // for POC mode 0:
+  // - POC mode 0:
   signed int   PrevPicOrderCntMsb;
   unsigned int PrevPicOrderCntLsb;
+  int          lastPicBotField;
 
-  // for POC mode 1:
+  // - POC mode 1:
   signed int   expectedPOC, POCcycleCount, frameNumPOCcycle;
   unsigned int previousFrameNum, frameNumOffset;
   int          expectedDeltaPerPOCcycle;
@@ -903,9 +912,6 @@ typedef struct Decoder {
 
   int          noOutputPriorPicFlag;
 
-  int          lastHasMmco5;
-  int          lastPicBotField;
-
   // non-zero: i-th previous frame is correct
   int          isPrimaryOk;    // if primary frame is correct, 0: incorrect
   int          isReduncantOk;  // if redundant frame is correct, 0:incorrect
@@ -913,35 +919,28 @@ typedef struct Decoder {
   int*         qpPerMatrix;
   int*         qpRemMatrix;
 
-  int          dpbPoc[100];
-
-  // slice pictures
-  struct Picture* picture;
-  struct Picture* decPictureJV[MAX_PLANE];  // picture to be used during 4:4:4 independent mode decoding
-  struct Picture* noReferencePicture;       // dummy storable picture for recovery point
-  struct FrameStore* lastOutFramestore;
-
   // Error parameters
   struct ObjectBuffer* ercObjectList;
   struct ErcVariables* ercErrorVar;
   int                  ercMvPerMb;
   int                  ecFlag[SE_MAX_ELEMENTS];  // array to set errorconcealment
 
-  struct FrameStore*   outBuffer;
-  struct Picture*      pendingOut;
-  int                  pendingOutState;
-  int                  recoveryFlag;
-
   // fmo
   int*                 mbToSliceGroupMap;
   int*                 mapUnitToSliceGroupMap;
   int                  sliceGroupsNum;  // the number of slice groups -1 (0 == scan order, 7 == maximum)
 
-  int                  deblockMode;  // 0: deblock in picture, 1: deblock in slice;
-  sDecodedPic*         decOutputPic;
+  // picture error conceal
+  // concealHead points to first node in list, concealTail points to last node in list
+  // Initialize both to NULL, meaning no nodes in list yet
+  struct ConcealNode* concealHead;
+  struct ConcealNode* concealTail;
+  int          concealMode;
+  int          earlierMissingPoc;
+  unsigned int concealFrame;
+  int          idrConcealFlag;
+  int          concealSliceType;
 
-  // control;
-  int   deblockEnable;
 
   // virtual methods
   void (*getNeighbour) (sMacroblock*, int, int, int[2], sPixelPos*);
@@ -958,10 +957,10 @@ typedef struct Decoder {
 static const sMotionVec zero_mv = {0, 0};
 //{{{
 static inline int isBLprofile (unsigned profileIdc) {
-  return profileIdc == FREXT_CAVLC444 || (profileIdc == BASELINE) ||
-         profileIdc == MAIN || (profileIdc == EXTENDED) ||
-         profileIdc == FREXT_HP || (profileIdc == FREXT_Hi10P) ||
-         profileIdc == FREXT_Hi422 || (profileIdc == FREXT_Hi444);
+  return (profileIdc == FREXT_CAVLC444) || (profileIdc == BASELINE) ||
+         (profileIdc == MAIN) || (profileIdc == EXTENDED) ||
+         (profileIdc == FREXT_HP) || (profileIdc == FREXT_Hi10P) ||
+         (profileIdc == FREXT_Hi422) || (profileIdc == FREXT_Hi444);
 }
 //}}}
 //{{{
@@ -973,11 +972,10 @@ static inline int isFrextProfile (unsigned profileIdc) {
 }
 //}}}
 //{{{
-static inline int isHiIntraOnlyProfile (unsigned profileIdc, Boolean constrained_set3_flag) {
-  return (((profileIdc == FREXT_Hi10P) ||
-           (profileIdc == FREXT_Hi422) ||
-           (profileIdc == FREXT_Hi444)) && constrained_set3_flag) ||
-           (profileIdc == FREXT_CAVLC444);
+static inline int isHiIntraOnlyProfile (unsigned profileIdc, Boolean constrainedSet3flag) {
+  return (((profileIdc == FREXT_Hi10P) || (profileIdc == FREXT_Hi422) || (profileIdc == FREXT_Hi444)) &&
+          constrainedSet3flag) ||
+         (profileIdc == FREXT_CAVLC444);
 }
 //}}}
 
@@ -1008,7 +1006,7 @@ static inline int isHiIntraOnlyProfile (unsigned profileIdc, Boolean constrained
   extern void freeDecodedPictures (sDecodedPic* decodedPic);
   extern void clearDecodedPictures (sDecoder* decoder);
 
-  extern void setGlobalCodingProgram (sDecoder* decoder);
+  extern void setCoding (sDecoder* decoder);
 //{{{
 #ifdef __cplusplus
 }

@@ -875,10 +875,12 @@ public:
 
   string getFileName() const { return mFileName; }
   cTransportStream::cService* getService() { return mService; }
-  int64_t getPlayPts() const { return mPlayPts; }
 
-  cVideoFrame* getVideoFrame() { return mVideoFrame; }
   sDecoder* getDecoder() { return mDecoder; }
+  cVideoFrame* getVideoFrame() { return mVideoFrame; }
+
+  bool getPlaying() const { return mPlaying; }
+  int64_t getPlayPts() const { return mPlayPts; }
 
   void togglePlay() { mPlaying = !mPlaying; }
   void skipPlay (int64_t skipPts) { (void)skipPts; }
@@ -1052,9 +1054,10 @@ public:
   cApp::cOptions* getOptions() { return mOptions; }
   cFilePlayer* getFilePlayer() { return mFilePlayer; }
 
-  cVideoFrame* getVideoFrame() { return mFilePlayer ? mFilePlayer->getVideoFrame() : mVideoFrame; }
   sDecoder* getDecoder() { return mFilePlayer ? mFilePlayer->getDecoder() : mDecoder; }
+  cVideoFrame* getVideoFrame() { return mFilePlayer ? mFilePlayer->getVideoFrame() : mVideoFrame; }
 
+  bool getPlaying() { return mFilePlayer ? mFilePlayer->getPlaying() : mPlaying; }
   //{{{
   void togglePlay() {
     if (mFilePlayer)
@@ -1197,203 +1200,6 @@ private:
   };
 //}}}
 //{{{
-class cView {
-public:
-  cView() {}
-  ~cView() = default;
-
-  void draw (cTestApp& testApp, cTextureShader* videoShader) {
-    float layoutScale;
-    cVec2 layoutPos = getLayout (0, 1, layoutScale);
-    float viewportWidth = ImGui::GetWindowWidth();
-    float viewportHeight = ImGui::GetWindowHeight();
-    mSize = {layoutScale * viewportWidth, layoutScale * viewportHeight};
-    mTL = {(layoutPos.x * viewportWidth) - mSize.x*0.5f, (layoutPos.y * viewportHeight) - mSize.y*0.5f};
-    mBR = {(layoutPos.x * viewportWidth) + mSize.x*0.5f, (layoutPos.y * viewportHeight) + mSize.y*0.5f};
-
-    ImGui::SetCursorPos (mTL);
-    ImGui::BeginChild ("view", mSize,
-                       ImGuiChildFlags_None,
-                       ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse |
-                       ImGuiWindowFlags_NoBackground);
-
-    cVideoFrame* videoFrame = testApp.getVideoFrame();
-    if (videoFrame) {
-      //{{{  draw video
-      cMat4x4 model = cMat4x4();
-      model.setTranslate ({(layoutPos.x - (0.5f * layoutScale)) * viewportWidth,
-                           ((1.f-layoutPos.y) - (0.5f * layoutScale)) * viewportHeight});
-      model.size ({layoutScale * viewportWidth / videoFrame->getWidth(),
-                   layoutScale * viewportHeight / videoFrame->getHeight()});
-      cMat4x4 projection (0.f,viewportWidth, 0.f,viewportHeight, -1.f,1.f);
-      videoShader->use();
-      videoShader->setModelProjection (model, projection);
-
-      // texture
-      cTexture& texture = videoFrame->getTexture (testApp.getGraphics());
-      texture.setSource();
-
-      // ensure quad is created
-      if (!mVideoQuad)
-        mVideoQuad = testApp.getGraphics().createQuad (videoFrame->getSize());
-
-      // draw quad
-      mVideoQuad->draw();
-      //}}}
-      //{{{  draw frameInfo
-      string title = fmt::format ("seqPts:{} {:4d} {:5d} {}",
-                                  getPtsString (videoFrame->getPts()),
-                                  videoFrame->getPtsDuration(),
-                                  videoFrame->getPesSize(),
-                                  videoFrame->getFrameInfo()
-                                  );
-
-      ImVec2 pos = { ImGui::GetTextLineHeight(), mSize.y - 3 * ImGui::GetTextLineHeight()};
-      ImGui::SetCursorPos (pos);
-      ImGui::TextColored ({0.f,0.f,0.f,1.f}, title.c_str());
-      ImGui::SetCursorPos (pos - ImVec2(2.f,2.f));
-      ImGui::TextColored ({1.f, 1.f,1.f,1.f}, title.c_str());
-      //}}}
-      }
-
-    if (testApp.getFilePlayer()) {
-      ImGui::PushFont (testApp.getLargeFont());
-      //{{{  title
-      string title = testApp.getFilePlayer()->getFileName();
-      ImVec2 pos = {ImGui::GetTextLineHeight() * 0.25f, 0.f};
-      ImGui::SetCursorPos (pos);
-      ImGui::TextColored ({0.f,0.f,0.f,1.f}, title.c_str());
-      ImGui::SetCursorPos (pos - ImVec2(2.f,2.f));
-      ImGui::TextColored ({1.f, 1.f,1.f,1.f}, title.c_str());
-      //}}}
-      //{{{  playPts
-      string ptsString = getPtsString (testApp.getFilePlayer()->getPlayPts());
-      pos = ImVec2 (mSize - ImVec2(ImGui::GetTextLineHeight() * 7.f, ImGui::GetTextLineHeight()));
-      ImGui::SetCursorPos (pos);
-      ImGui::TextColored ({0.f,0.f,0.f,1.f}, ptsString.c_str());
-      ImGui::SetCursorPos (pos - ImVec2(2.f,2.f));
-      ImGui::TextColored ({1.f,1.f,1.f,1.f}, ptsString.c_str());
-      //}}}
-      ImGui::PopFont();
-      }
-
-    ImGui::EndChild();
-    }
-
-private:
-  //{{{
-  cVec2 getLayout (size_t index, size_t numViews, float& scale) {
-  // return layout scale, and position as fraction of viewPort
-
-    scale = (numViews <= 1) ? 1.f :
-              ((numViews <= 4) ? 1.f/2.f :
-                ((numViews <= 9) ? 1.f/3.f :
-                  ((numViews <= 16) ? 1.f/4.f : 1.f/5.f)));
-
-    switch (numViews) {
-      //{{{
-      case 2: // 2x1
-        switch (index) {
-          case 0: return { 1.f / 4.f, 0.5f };
-          case 1: return { 3.f / 4.f, 0.5f };
-          }
-        return { 0.5f, 0.5f };
-      //}}}
-
-      case 3:
-      //{{{
-      case 4: // 2x2
-        switch (index) {
-          case 0: return { 1.f / 4.f, 1.f / 4.f };
-          case 1: return { 3.f / 4.f, 1.f / 4.f };
-
-          case 2: return { 1.f / 4.f, 3.f / 4.f };
-          case 3: return { 3.f / 4.f, 3.f / 4.f };
-          }
-        return { 0.5f, 0.5f };
-      //}}}
-
-      case 5:
-      //{{{
-      case 6: // 3x2
-        switch (index) {
-          case 0: return { 1.f / 6.f, 2.f / 6.f };
-          case 1: return { 3.f / 6.f, 2.f / 6.f };
-          case 2: return { 5.f / 6.f, 2.f / 6.f };
-
-          case 3: return { 1.f / 6.f, 4.f / 6.f };
-          case 4: return { 3.f / 6.f, 4.f / 6.f };
-          case 5: return { 5.f / 6.f, 4.f / 6.f };
-          }
-        return { 0.5f, 0.5f };
-      //}}}
-
-      case 7:
-      case 8:
-      //{{{
-      case 9: // 3x3
-        switch (index) {
-          case 0: return { 1.f / 6.f, 1.f / 6.f };
-          case 1: return { 3.f / 6.f, 1.f / 6.f };
-          case 2: return { 5.f / 6.f, 1.f / 6.f };
-
-          case 3: return { 1.f / 6.f, 0.5f };
-          case 4: return { 3.f / 6.f, 0.5f };
-          case 5: return { 5.f / 6.f, 0.5f };
-
-          case 6: return { 1.f / 6.f, 5.f / 6.f };
-          case 7: return { 3.f / 6.f, 5.f / 6.f };
-          case 8: return { 5.f / 6.f, 5.f / 6.f };
-          }
-        return { 0.5f, 0.5f };
-      //}}}
-
-      case 10:
-      case 11:
-      case 12:
-      case 13:
-      case 14:
-      case 15:
-      //{{{
-      case 16: // 4x4
-        switch (index) {
-          case  0: return { 1.f / 8.f, 1.f / 8.f };
-          case  1: return { 3.f / 8.f, 1.f / 8.f };
-          case  2: return { 5.f / 8.f, 1.f / 8.f };
-          case  3: return { 7.f / 8.f, 1.f / 8.f };
-
-          case  4: return { 1.f / 8.f, 3.f / 8.f };
-          case  5: return { 3.f / 8.f, 3.f / 8.f };
-          case  6: return { 5.f / 8.f, 3.f / 8.f };
-          case  7: return { 7.f / 8.f, 3.f / 8.f };
-
-          case  8: return { 1.f / 8.f, 5.f / 8.f };
-          case  9: return { 3.f / 8.f, 5.f / 8.f };
-          case 10: return { 5.f / 8.f, 5.f / 8.f };
-          case 11: return { 7.f / 8.f, 5.f / 8.f };
-
-          case 12: return { 1.f / 8.f, 7.f / 8.f };
-          case 13: return { 3.f / 8.f, 7.f / 8.f };
-          case 14: return { 5.f / 8.f, 7.f / 8.f };
-          case 15: return { 7.f / 8.f, 7.f / 8.f };
-          }
-        return { 0.5f, 0.5f };
-      //}}}
-
-      default: // 1x1
-        return { 0.5f, 0.5f };
-      }
-    }
-  //}}}
-
-  // video
-  ImVec2 mSize;
-  ImVec2 mTL;
-  ImVec2 mBR;
-  cQuad* mVideoQuad = nullptr;
-  };
-//}}}
-//{{{
 class cTestUI : public cApp::iUI {
 public:
   virtual ~cTestUI() = default;
@@ -1434,6 +1240,11 @@ public:
     //{{{  draw frameRate info
     ImGui::SameLine();
     ImGui::TextUnformatted (fmt::format("{}:fps", static_cast<uint32_t>(ImGui::GetIO().Framerate)).c_str());
+    //}}}
+    //{{{  draw play button
+    ImGui::SameLine();
+    if (toggleButton ("play", testApp.getPlaying()))
+      testApp.togglePlay();
     //}}}
     if (testApp.getDecoder()) {
       //{{{  draw NALUdebug button
@@ -1492,6 +1303,210 @@ public:
     }
 
 private:
+  //{{{
+  class cView {
+  public:
+    cView() {}
+    ~cView() = default;
+
+    void draw (cTestApp& testApp, cTextureShader* videoShader) {
+      float layoutScale;
+      cVec2 layoutPos = getLayout (0, 1, layoutScale);
+      float viewportWidth = ImGui::GetWindowWidth();
+      float viewportHeight = ImGui::GetWindowHeight();
+      mSize = {layoutScale * viewportWidth, layoutScale * viewportHeight};
+      mTL = {(layoutPos.x * viewportWidth) - mSize.x*0.5f, (layoutPos.y * viewportHeight) - mSize.y*0.5f};
+      mBR = {(layoutPos.x * viewportWidth) + mSize.x*0.5f, (layoutPos.y * viewportHeight) + mSize.y*0.5f};
+
+      ImGui::SetCursorPos (mTL);
+      ImGui::BeginChild ("view", mSize,
+                         ImGuiChildFlags_None,
+                         ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse |
+                         ImGuiWindowFlags_NoBackground);
+
+      cVideoFrame* videoFrame = testApp.getVideoFrame();
+      if (videoFrame) {
+        //{{{  draw video
+        cMat4x4 model = cMat4x4();
+        model.setTranslate ({(layoutPos.x - (0.5f * layoutScale)) * viewportWidth,
+                             ((1.f-layoutPos.y) - (0.5f * layoutScale)) * viewportHeight});
+        model.size ({layoutScale * viewportWidth / videoFrame->getWidth(),
+                     layoutScale * viewportHeight / videoFrame->getHeight()});
+        cMat4x4 projection (0.f,viewportWidth, 0.f,viewportHeight, -1.f,1.f);
+        videoShader->use();
+        videoShader->setModelProjection (model, projection);
+
+        // texture
+        cTexture& texture = videoFrame->getTexture (testApp.getGraphics());
+        texture.setSource();
+
+        // ensure quad is created
+        if (!mVideoQuad)
+          mVideoQuad = testApp.getGraphics().createQuad (videoFrame->getSize());
+
+        // draw quad
+        mVideoQuad->draw();
+        //}}}
+        //{{{  draw frameInfo
+        string title = fmt::format ("seqPts:{} {:4d} {:5d} {}",
+                                    getPtsString (videoFrame->getPts()),
+                                    videoFrame->getPtsDuration(),
+                                    videoFrame->getPesSize(),
+                                    videoFrame->getFrameInfo()
+                                    );
+
+        ImVec2 pos = { ImGui::GetTextLineHeight(), mSize.y - 3 * ImGui::GetTextLineHeight()};
+        ImGui::SetCursorPos (pos);
+        ImGui::TextColored ({0.f,0.f,0.f,1.f}, title.c_str());
+        ImGui::SetCursorPos (pos - ImVec2(2.f,2.f));
+        ImGui::TextColored ({1.f, 1.f,1.f,1.f}, title.c_str());
+        //}}}
+        }
+
+      if (testApp.getFilePlayer()) {
+        ImGui::PushFont (testApp.getLargeFont());
+        //{{{  title
+        string title = testApp.getFilePlayer()->getFileName();
+        ImVec2 pos = {ImGui::GetTextLineHeight() * 0.25f, 0.f};
+        ImGui::SetCursorPos (pos);
+        ImGui::TextColored ({0.f,0.f,0.f,1.f}, title.c_str());
+        ImGui::SetCursorPos (pos - ImVec2(2.f,2.f));
+        ImGui::TextColored ({1.f, 1.f,1.f,1.f}, title.c_str());
+        //}}}
+        //{{{  playPts
+        string ptsString = getPtsString (testApp.getFilePlayer()->getPlayPts());
+        pos = ImVec2 (mSize - ImVec2(ImGui::GetTextLineHeight() * 7.f, ImGui::GetTextLineHeight()));
+        ImGui::SetCursorPos (pos);
+        ImGui::TextColored ({0.f,0.f,0.f,1.f}, ptsString.c_str());
+        ImGui::SetCursorPos (pos - ImVec2(2.f,2.f));
+        ImGui::TextColored ({1.f,1.f,1.f,1.f}, ptsString.c_str());
+        //}}}
+        ImGui::PopFont();
+        }
+
+      // invisbleButton over view sub area
+      ImGui::SetCursorPos ({0.f,0.f});
+      ImVec2 viewSubSize = mSize -
+        ImVec2(0.f, ImGui::GetTextLineHeight() * ((layoutPos.y + (layoutScale/2.f) >= 0.99f) ? 3.f : 1.5f));
+      if (ImGui::InvisibleButton ("view", viewSubSize))
+        testApp.togglePlay();
+
+      ImGui::EndChild();
+      }
+
+  private:
+    //{{{
+    cVec2 getLayout (size_t index, size_t numViews, float& scale) {
+    // return layout scale, and position as fraction of viewPort
+
+      scale = (numViews <= 1) ? 1.f :
+                ((numViews <= 4) ? 1.f/2.f :
+                  ((numViews <= 9) ? 1.f/3.f :
+                    ((numViews <= 16) ? 1.f/4.f : 1.f/5.f)));
+
+      switch (numViews) {
+        //{{{
+        case 2: // 2x1
+          switch (index) {
+            case 0: return { 1.f / 4.f, 0.5f };
+            case 1: return { 3.f / 4.f, 0.5f };
+            }
+          return { 0.5f, 0.5f };
+        //}}}
+
+        case 3:
+        //{{{
+        case 4: // 2x2
+          switch (index) {
+            case 0: return { 1.f / 4.f, 1.f / 4.f };
+            case 1: return { 3.f / 4.f, 1.f / 4.f };
+
+            case 2: return { 1.f / 4.f, 3.f / 4.f };
+            case 3: return { 3.f / 4.f, 3.f / 4.f };
+            }
+          return { 0.5f, 0.5f };
+        //}}}
+
+        case 5:
+        //{{{
+        case 6: // 3x2
+          switch (index) {
+            case 0: return { 1.f / 6.f, 2.f / 6.f };
+            case 1: return { 3.f / 6.f, 2.f / 6.f };
+            case 2: return { 5.f / 6.f, 2.f / 6.f };
+
+            case 3: return { 1.f / 6.f, 4.f / 6.f };
+            case 4: return { 3.f / 6.f, 4.f / 6.f };
+            case 5: return { 5.f / 6.f, 4.f / 6.f };
+            }
+          return { 0.5f, 0.5f };
+        //}}}
+
+        case 7:
+        case 8:
+        //{{{
+        case 9: // 3x3
+          switch (index) {
+            case 0: return { 1.f / 6.f, 1.f / 6.f };
+            case 1: return { 3.f / 6.f, 1.f / 6.f };
+            case 2: return { 5.f / 6.f, 1.f / 6.f };
+
+            case 3: return { 1.f / 6.f, 0.5f };
+            case 4: return { 3.f / 6.f, 0.5f };
+            case 5: return { 5.f / 6.f, 0.5f };
+
+            case 6: return { 1.f / 6.f, 5.f / 6.f };
+            case 7: return { 3.f / 6.f, 5.f / 6.f };
+            case 8: return { 5.f / 6.f, 5.f / 6.f };
+            }
+          return { 0.5f, 0.5f };
+        //}}}
+
+        case 10:
+        case 11:
+        case 12:
+        case 13:
+        case 14:
+        case 15:
+        //{{{
+        case 16: // 4x4
+          switch (index) {
+            case  0: return { 1.f / 8.f, 1.f / 8.f };
+            case  1: return { 3.f / 8.f, 1.f / 8.f };
+            case  2: return { 5.f / 8.f, 1.f / 8.f };
+            case  3: return { 7.f / 8.f, 1.f / 8.f };
+
+            case  4: return { 1.f / 8.f, 3.f / 8.f };
+            case  5: return { 3.f / 8.f, 3.f / 8.f };
+            case  6: return { 5.f / 8.f, 3.f / 8.f };
+            case  7: return { 7.f / 8.f, 3.f / 8.f };
+
+            case  8: return { 1.f / 8.f, 5.f / 8.f };
+            case  9: return { 3.f / 8.f, 5.f / 8.f };
+            case 10: return { 5.f / 8.f, 5.f / 8.f };
+            case 11: return { 7.f / 8.f, 5.f / 8.f };
+
+            case 12: return { 1.f / 8.f, 7.f / 8.f };
+            case 13: return { 3.f / 8.f, 7.f / 8.f };
+            case 14: return { 5.f / 8.f, 7.f / 8.f };
+            case 15: return { 7.f / 8.f, 7.f / 8.f };
+            }
+          return { 0.5f, 0.5f };
+        //}}}
+
+        default: // 1x1
+          return { 0.5f, 0.5f };
+        }
+      }
+    //}}}
+
+    // video
+    ImVec2 mSize;
+    ImVec2 mTL;
+    ImVec2 mBR;
+    cQuad* mVideoQuad = nullptr;
+    };
+  //}}}
   //{{{
   void keyboard (cTestApp& testApp) {
 

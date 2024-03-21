@@ -2211,7 +2211,7 @@ static void readSliceHeader (sDecoder* decoder, sSlice* slice) {
   // but decoders are still recommended to filter the output
   // We allow in the decoder config to skip the loop filtering
   // This is achieved by modifying the parameters here.
-  if (isHiIntraOnlyProfile (activeSPS->profileIdc, activeSPS->constrained_set3_flag) &&
+  if (isHiIntraOnlyProfile (activeSPS->profileIdc, activeSPS->constrainedSet3flag) &&
       (decoder->param.intraProfileDeblocking == 0)) {
     slice->DFDisableIdc = 1;
     slice->DFAlphaC0Offset = slice->DFBetaOffset = 0;

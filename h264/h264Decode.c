@@ -410,7 +410,7 @@ void freeDecodedPictures (sDecodedPic* decodedPic) {
 //}}}
 
 //{{{
-void setGlobalCodingProgram (sDecoder* decoder) {
+void setCoding (sDecoder* decoder) {
 
   sCoding* coding = &decoder->coding;
 
@@ -430,11 +430,11 @@ void setGlobalCodingProgram (sDecoder* decoder) {
   decoder->coding.iChromaPadY = MCBUF_CHROMA_PAD_Y;
 
   if (decoder->coding.yuvFormat == YUV420) {
-    decoder->widthCr = (decoder->width  >> 1);
-    decoder->heightCr = (decoder->height >> 1);
+    decoder->widthCr = decoder->width >> 1;
+    decoder->heightCr = decoder->height >> 1;
     }
   else if (decoder->coding.yuvFormat == YUV422) {
-    decoder->widthCr = (decoder->width >> 1);
+    decoder->widthCr = decoder->width >> 1;
     decoder->heightCr = decoder->height;
     decoder->coding.iChromaPadY = MCBUF_CHROMA_PAD_Y*2;
     }

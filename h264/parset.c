@@ -462,7 +462,7 @@ static void readSPS (sDecoder* decoder, sDataPartition* dataPartition, sSPS* sps
   sps->constrained_set0_flag = readU1 ("SPS constrained_set0_flag", s);
   sps->constrained_set1_flag = readU1 ("SPS constrained_set1_flag", s);
   sps->constrained_set2_flag = readU1 ("SPS constrained_set2_flag", s);
-  sps->constrained_set3_flag = readU1 ("SPS constrained_set3_flag", s);
+  sps->constrainedSet3flag = readU1 ("SPS constrainedSet3flag", s);
 
   int reserved_zero = readUv (4, "SPS reserved_zero_4bits", s);
   if (reserved_zero)
@@ -619,7 +619,7 @@ void activateSPS (sDecoder* decoder, sSPS* sps) {
 
     if (isBLprofile (sps->profileIdc) && !decoder->dpb->initDone)
       setCodingParam (decoder, sps);
-    setGlobalCodingProgram (decoder);
+    setCoding (decoder);
 
     initGlobalBuffers (decoder);
     if (!decoder->noOutputPriorPicFlag)

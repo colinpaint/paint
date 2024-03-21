@@ -892,7 +892,6 @@ namespace {
         ImVec2 viewSubSize = mSize -
           ImVec2(0.f, ImGui::GetTextLineHeight() * ((layoutPos.y + (layoutScale/2.f) >= 0.99f) ? 3.f : 1.5f));
         if (ImGui::InvisibleButton (fmt::format ("viewBox##{}", mService.getSid()).c_str(), viewSubSize)) {
-
           //{{{  hit view, select action
           if (mSelect == eUnselected)
             mSelect = eSelected;
