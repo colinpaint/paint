@@ -101,7 +101,7 @@ static const byte AC_next_state_LPS_64[64] = {
   };
 //}}}
 //{{{
-static const byte renorm_table_32[32] = { 
+static const byte renorm_table_32[32] = {
   6,
   5,
   4,4,
@@ -126,6 +126,7 @@ static inline unsigned int getWord (sDecodeEnv* decodeEnv) {
   return (*p_code_strm << 8) | *(p_code_strm + 1);
   }
 //}}}
+
 //{{{
 void aridecoStartDecoding (sDecodeEnv* decodeEnv, unsigned char* code_buffer, int firstbyte, int* codeLen) {
 
@@ -136,7 +137,7 @@ void aridecoStartDecoding (sDecodeEnv* decodeEnv, unsigned char* code_buffer, in
   decodeEnv->value = getByte (decodeEnv);
   // lookahead of 2 bytes: always make sure that s buffer
   // contains 2 more bytes than actual s
-  decodeEnv->value = (decodeEnv->value << 16) | getWord (decodeEnv); 
+  decodeEnv->value = (decodeEnv->value << 16) | getWord (decodeEnv);
   decodeEnv->bitsLeft = 15;
   decodeEnv->range = HALF;
   }
@@ -202,8 +203,7 @@ unsigned int biariDecodeSymbolEqProb (sDecodeEnv* decodeEnv) {
 
   int* bitsLeft = &decodeEnv->bitsLeft;
   if (--(*bitsLeft) == 0) {
-    // lookahead of 2 bytes: always make sure that s buffer
-    // contains 2 more bytes than actual s
+    // lookahead of 2 bytes: always make sure that s buffer contains 2 more bytes than actual s
     *value = (*value << 16) | getWord (decodeEnv);
     *bitsLeft = 16;
     }
@@ -234,8 +234,7 @@ unsigned int biariDecodeFinal (sDecodeEnv* decodeEnv) {
       if (--(decodeEnv->bitsLeft) > 0)
         return 0;
       else {
-        // lookahead of 2 bytes: always make sure that s buffer
-        // contains 2 more bytes than actual s
+        // lookahead of 2 bytes: always make sure that s buffer contains 2 more bytes than actual s
         decodeEnv->value = (decodeEnv->value << 16) | getWord (decodeEnv);
         decodeEnv->bitsLeft = 16;
         return 0;
@@ -258,7 +257,7 @@ void biariInitContext (int qp, sBiContextType* context, const char* ini) {
     context->MPS = 1;
     }
   else {
-    pstate = imax( 1, pstate);
+    pstate = imax (1, pstate);
     context->state = (uint16)(63 - pstate);
     context->MPS = 0;
     }
