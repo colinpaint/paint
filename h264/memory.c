@@ -85,22 +85,22 @@ void free_mem3Dmp (sPicMotionParam** *array3D)
 //}}}
 
 //{{{
-int getMem2Dwp (sWPParam** *array2D, int dim0, int dim1) {
+int getMem2Dwp (sWpParam** *array2D, int dim0, int dim1) {
 
   int i;
-  if ((*array2D    = (sWPParam**)memAlloc(dim0 *      sizeof(sWPParam*))) == NULL)
+  if ((*array2D    = (sWpParam**)memAlloc(dim0 *      sizeof(sWpParam*))) == NULL)
     no_mem_exit("getMem2Dwp: array2D");
-  if ((*(*array2D) = (sWPParam* )mem_calloc(dim0 * dim1,sizeof(sWPParam ))) == NULL)
+  if ((*(*array2D) = (sWpParam* )mem_calloc(dim0 * dim1,sizeof(sWpParam ))) == NULL)
     no_mem_exit("getMem2Dwp: array2D");
 
   for (i = 1 ; i < dim0; i++)
     (*array2D)[i] =  (*array2D)[i-1] + dim1;
 
-  return dim0 * (sizeof(sWPParam*) + dim1 * sizeof(sWPParam));
+  return dim0 * (sizeof(sWpParam*) + dim1 * sizeof(sWpParam));
   }
 //}}}
 //{{{
-void free_mem2Dwp (sWPParam** array2D) {
+void free_mem2Dwp (sWpParam** array2D) {
 
   if (array2D) {
     if (*array2D)

@@ -1387,8 +1387,8 @@ static void fillWpParam (sSlice* slice) {
     if (slice->activePPS->weightedBiPredIdc == 2) {
       slice->lumaLog2weightDenom = 5;
       slice->chromaLog2weightDenom = 5;
-      slice->wp_round_luma = 16;
-      slice->wp_round_chroma = 16;
+      slice->wpRoundLuma = 16;
+      slice->wpRoundChroma = 16;
       for (int i = 0; i < MAX_REFERENCE_PICTURES; ++i)
         for (int comp = 0; comp < 3; ++comp) {
           int logWeightDenom = !comp ? slice->lumaLog2weightDenom : slice->chromaLog2weightDenom;
@@ -1654,7 +1654,7 @@ static void copyDecPictureJV (sDecoder* decoder, sPicture* dst, sPicture* src) {
   dst->idrFlag = src->idrFlag;
   dst->noOutputPriorPicFlag = src->noOutputPriorPicFlag;
   dst->longTermRefFlag = src->longTermRefFlag;
-  dst->adaptiveRefPicBufferingFlag = src->adaptiveRefPicBufferingFlag;
+  dst->adaptRefPicBufFlag = src->adaptRefPicBufFlag;
   dst->decRefPicMarkingBuffer = src->decRefPicMarkingBuffer;
   dst->mbAffFrameFlag = src->mbAffFrameFlag;
   dst->picWidthMbs = src->picWidthMbs;
@@ -1815,7 +1815,7 @@ static void initPicture (sDecoder* decoder, sSlice* slice) {
   picture->idrFlag = slice->idrFlag;
   picture->noOutputPriorPicFlag = slice->noOutputPriorPicFlag;
   picture->longTermRefFlag = slice->longTermRefFlag;
-  picture->adaptiveRefPicBufferingFlag = slice->adaptiveRefPicBufferingFlag;
+  picture->adaptRefPicBufFlag = slice->adaptRefPicBufFlag;
   picture->decRefPicMarkingBuffer = slice->decRefPicMarkingBuffer;
   slice->decRefPicMarkingBuffer = NULL;
 
@@ -2042,11 +2042,11 @@ static void readSlice (sDecoder* decoder, sSlice* slice) {
        ((slice->sliceType == P_SLICE) || (slice->sliceType == SP_SLICE))) ||
       ((decoder->activePPS->weightedBiPredIdc == 1) && (slice->sliceType == B_SLICE))) {
     slice->lumaLog2weightDenom = (unsigned short) readUeV ("SLC lumaLog2weightDenom", s);
-    slice->wp_round_luma = slice->lumaLog2weightDenom ? 1 << (slice->lumaLog2weightDenom - 1) : 0;
+    slice->wpRoundLuma = slice->lumaLog2weightDenom ? 1 << (slice->lumaLog2weightDenom - 1) : 0;
 
     if (activeSPS->chromaFormatIdc) {
       slice->chromaLog2weightDenom = (unsigned short) readUeV ("SLC chromaLog2weightDenom", s);
-      slice->wp_round_chroma = slice->chromaLog2weightDenom ? 1 << (slice->chromaLog2weightDenom - 1) : 0;
+      slice->wpRoundChroma = slice->chromaLog2weightDenom ? 1 << (slice->chromaLog2weightDenom - 1) : 0;
       }
 
     resetWpParam (slice);
@@ -2139,28 +2139,28 @@ static void readSlice (sDecoder* decoder, sSlice* slice) {
 
   if (decoder->activePPS->deblockFilterControlPresent) {
     //{{{  read deblockFilter params
-    slice->DFDisableIdc = (short)readUeV ("SLC disable_deblocking_filter_idc", s);
-    if (slice->DFDisableIdc != 1) {
-      slice->DFAlphaC0Offset = (short)(2 * readSeV ("SLC slice_alpha_c0_offset_div2", s));
-      slice->DFBetaOffset = (short)(2 * readSeV ("SLC slice_beta_offset_div2", s));
+    slice->deblockFilterDisableIdc = (short)readUeV ("SLC disable_deblocking_filter_idc", s);
+    if (slice->deblockFilterDisableIdc != 1) {
+      slice->deblockFilterC0offset = (short)(2 * readSeV ("SLC slice_alpha_c0_offset_div2", s));
+      slice->deblockFilterBetaOffset = (short)(2 * readSeV ("SLC slice_beta_offset_div2", s));
       }
     else
-      slice->DFAlphaC0Offset = slice->DFBetaOffset = 0;
+      slice->deblockFilterC0offset = slice->deblockFilterBetaOffset = 0;
     }
     //}}}
   else {
     //{{{  enable deblockFilter
-    slice->DFDisableIdc = 0;
-    slice->DFAlphaC0Offset = 0;
-    slice->DFBetaOffset = 0;
+    slice->deblockFilterDisableIdc = 0;
+    slice->deblockFilterC0offset = 0;
+    slice->deblockFilterBetaOffset = 0;
     }
     //}}}
   if (isHiIntraOnlyProfile (activeSPS->profileIdc, activeSPS->constrainedSet3flag) &&
       !decoder->param.intraProfileDeblocking) {
     //{{{  hiIintra deblock 
-    slice->DFDisableIdc = 1;
-    slice->DFAlphaC0Offset = 0;
-    slice->DFBetaOffset = 0;
+    slice->deblockFilterDisableIdc = 1;
+    slice->deblockFilterC0offset = 0;
+    slice->deblockFilterBetaOffset = 0;
     }
     //}}}
   //{{{  read sliceGroup
@@ -2219,7 +2219,7 @@ static void initPictureDecoding (sDecoder* decoder) {
 
   initDeblock (decoder, slice->mbAffFrameFlag);
   for (int j = 0; j < decoder->picSliceIndex; j++)
-    if (decoder->sliceList[j]->DFDisableIdc != 1)
+    if (decoder->sliceList[j]->deblockFilterDisableIdc != 1)
       deblockMode = 0;
 
   decoder->deblockMode = deblockMode;
@@ -2587,8 +2587,8 @@ void decRefPicMarking (sDecoder* decoder, sBitStream* s, sSlice* slice) {
     slice->longTermRefFlag = readU1 ("SLC longTermRefFlag", s);
     }
   else {
-    slice->adaptiveRefPicBufferingFlag = readU1 ("SLC adaptiveRefPicBufferingFlag", s);
-    if (slice->adaptiveRefPicBufferingFlag) {
+    slice->adaptRefPicBufFlag = readU1 ("SLC adaptRefPicBufFlag", s);
+    if (slice->adaptRefPicBufFlag) {
       // read Memory Management Control Operation
       int val;
       do {

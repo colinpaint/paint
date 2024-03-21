@@ -823,7 +823,7 @@ void fillFrameNumGap (sDecoder* decoder, sSlice* slice) {
     picture->non_existing = 1;
     picture->is_output = 1;
     picture->usedForReference = 1;
-    picture->adaptiveRefPicBufferingFlag = 0;
+    picture->adaptRefPicBufFlag = 0;
 
     slice->frameNum = unusedShortTermFrameNum;
     if (activeSPS->pocType != 0)
@@ -1147,7 +1147,7 @@ static void adaptiveMemoryManagement (sDPB* dpb, sPicture* p) {
   decoder->lastHasMmco5 = 0;
 
   assert (!p->idrFlag);
-  assert (p->adaptiveRefPicBufferingFlag);
+  assert (p->adaptRefPicBufFlag);
 
   while (p->decRefPicMarkingBuffer) {
     tmp_drpm = p->decRefPicMarkingBuffer;
@@ -1698,7 +1698,7 @@ void storePictureDpb (sDPB* dpb, sPicture* p) {
     }
   else {
     // adaptive memory management
-    if (p->usedForReference && (p->adaptiveRefPicBufferingFlag))
+    if (p->usedForReference && (p->adaptRefPicBufFlag))
       adaptiveMemoryManagement (dpb, p);
     }
 
@@ -1725,7 +1725,7 @@ void storePictureDpb (sDPB* dpb, sPicture* p) {
   // this is a frame or a field which has no stored complementary field sliding window, if necessary
   if ((!p->idrFlag) &&
       (p->usedForReference &&
-      (!p->adaptiveRefPicBufferingFlag)))
+      (!p->adaptRefPicBufFlag)))
     slidingWindowMemoryManagement (dpb, p);
 
   // picture error conceal

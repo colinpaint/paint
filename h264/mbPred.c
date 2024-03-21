@@ -136,9 +136,9 @@ static void set_chroma_vector (sMacroblock* mb)
         for(k = 0; k < slice->listXsize[l]; k++)
         {
           if(slice->structure != slice->listX[l][k]->structure)
-            slice->chroma_vector_adjustment[l][k] = -2;
+            slice->chromaVectorAdjust[l][k] = -2;
           else
-            slice->chroma_vector_adjustment[l][k] = 0;
+            slice->chromaVectorAdjust[l][k] = 0;
         }
       }
     }
@@ -150,9 +150,9 @@ static void set_chroma_vector (sMacroblock* mb)
         for(k = 0; k < slice->listXsize[l]; k++)
         {
           if (slice->structure != slice->listX[l][k]->structure)
-            slice->chroma_vector_adjustment[l][k] = 2;
+            slice->chromaVectorAdjust[l][k] = 2;
           else
-            slice->chroma_vector_adjustment[l][k] = 0;
+            slice->chromaVectorAdjust[l][k] = 0;
         }
       }
     }
@@ -163,7 +163,7 @@ static void set_chroma_vector (sMacroblock* mb)
       {
         for(k = 0; k < slice->listXsize[l]; k++)
         {
-          slice->chroma_vector_adjustment[l][k] = 0;
+          slice->chromaVectorAdjust[l][k] = 0;
         }
       }
     }
@@ -184,11 +184,11 @@ static void set_chroma_vector (sMacroblock* mb)
         for(k = 0; k < slice->listXsize[l]; k++)
         {
           if(mb_nr == 0 && slice->listX[l][k]->structure == BotField)
-            slice->chroma_vector_adjustment[l][k] = -2;
+            slice->chromaVectorAdjust[l][k] = -2;
           else if(mb_nr == 1 && slice->listX[l][k]->structure == TopField)
-            slice->chroma_vector_adjustment[l][k] = 2;
+            slice->chromaVectorAdjust[l][k] = 2;
           else
-            slice->chroma_vector_adjustment[l][k] = 0;
+            slice->chromaVectorAdjust[l][k] = 0;
         }
       }
     }
@@ -198,13 +198,13 @@ static void set_chroma_vector (sMacroblock* mb)
       {
         for(k = 0; k < slice->listXsize[l]; k++)
         {
-          slice->chroma_vector_adjustment[l][k] = 0;
+          slice->chromaVectorAdjust[l][k] = 0;
         }
       }
     }
   }
 
-  slice->max_mb_vmv_r = (slice->structure != FRAME || ( mb->mbField )) ? decoder->coding.maxVmvR >> 1 : 
+  slice->maxMbVmvR = (slice->structure != FRAME || ( mb->mbField )) ? decoder->coding.maxVmvR >> 1 : 
                                                                          decoder->coding.maxVmvR;
 }
 //}}}

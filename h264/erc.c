@@ -773,11 +773,11 @@ static void buildPredRegionYUV (sDecoder* decoder, int *mv, int x, int y, sPixel
 
   int ref_frame = imax (mv[2], 0); // !!KS: quick fix, we sometimes seem to get negative refPic here, so restrict to zero and above
   int mb_nr = y/16*(decoder->width/16)+x/16; ///slice->mbIndex;
-  int** tmp_res = NULL;
+  int** tempRes = NULL;
 
   sMacroblock* mb = &decoder->mbData[mb_nr];   // intialization code deleted, see below, StW
   slice = mb->slice;
-  tmp_res = slice->tmp_res;
+  tempRes = slice->tempRes;
 
   // This should be allocated only once.
   getMem2Dpel(&tmp_block, MB_BLOCK_SIZE, MB_BLOCK_SIZE);
@@ -809,7 +809,7 @@ static void buildPredRegionYUV (sDecoder* decoder, int *mv, int x, int y, sPixel
       get_block_luma(slice->listX[0][ref_frame], vec1_x, vec1_y, BLOCK_SIZE, BLOCK_SIZE,
         tmp_block,
         picture->iLumaStride,picture->size_x_m1,
-        (mb->mbField) ? (picture->sizeY >> 1) - 1 : picture->size_y_m1,tmp_res,
+        (mb->mbField) ? (picture->sizeY >> 1) - 1 : picture->size_y_m1,tempRes,
         decoder->coding.maxPelValueComp[PLANE_Y],(sPixel) decoder->coding.dcPredValueComp[PLANE_Y], mb);
 
       for(ii=0;ii<BLOCK_SIZE;ii++)
@@ -1391,7 +1391,7 @@ static void buildPredblockRegionYUV (sDecoder* decoder, int *mv,
   vec1_x = x*mv_mul + mv[0];
   vec1_y = y*mv_mul + mv[1];
   get_block_luma(slice->listX[list][ref_frame],  vec1_x, vec1_y, BLOCK_SIZE, BLOCK_SIZE, tmp_block,
-    picture->iLumaStride,picture->size_x_m1, (mb->mbField) ? (picture->sizeY >> 1) - 1 : picture->size_y_m1,slice->tmp_res,
+    picture->iLumaStride,picture->size_x_m1, (mb->mbField) ? (picture->sizeY >> 1) - 1 : picture->size_y_m1,slice->tempRes,
     decoder->coding.maxPelValueComp[PLANE_Y],(sPixel) decoder->coding.dcPredValueComp[PLANE_Y], mb);
 
   for(jj=0;jj<MB_BLOCK_SIZE/BLOCK_SIZE;jj++)
@@ -1542,7 +1542,7 @@ static void copy_to_conceal (sPicture *src, sPicture *dst, sDecoder* decoder)
 
   dst->noOutputPriorPicFlag = src->noOutputPriorPicFlag;
   dst->longTermRefFlag = src->longTermRefFlag;
-  dst->adaptiveRefPicBufferingFlag = src->adaptiveRefPicBufferingFlag = 0;
+  dst->adaptRefPicBufFlag = src->adaptRefPicBufFlag = 0;
   dst->chromaFormatIdc = src->chromaFormatIdc;
   dst->frameMbOnlyFlag = src->frameMbOnlyFlag;
   dst->frameCropFlag = src->frameCropFlag;
@@ -1904,7 +1904,7 @@ void concealLostFrames (sDPB* dpb, sSlice *slice)
     picture->usedForReference = 1;
     picture->concealed_pic = 1;
 
-    picture->adaptiveRefPicBufferingFlag = 0;
+    picture->adaptRefPicBufFlag = 0;
 
     slice->frameNum = UnusedShortTermFrameNum;
 

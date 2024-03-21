@@ -8,7 +8,7 @@ extern void freePred (sSlice* slice);
 extern void get_block_luma (sPicture* curRef, int x_pos, int y_pos,
                             int blockSizeX, int blockSizeY, sPixel** block,
                             int shift_x, int maxold_x, int maxold_y,
-                            int** tmp_res, int max_imgpel_value,
+                            int** tempRes, int max_imgpel_value,
                             sPixel no_ref_value, sMacroblock* mb);
 
 extern void intra_cr_decoding (sMacroblock* mb, int yuv);

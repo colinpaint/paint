@@ -752,12 +752,12 @@ void startMacroblock (sSlice* slice, sMacroblock** mb) {
   // Reset syntax element entries in MB struct
   if (slice->sliceType != I_SLICE) {
     if (slice->sliceType != B_SLICE)
-      memset((*mb)->mvd[0][0][0], 0, MB_BLOCK_dpS * 2 * sizeof(short));
+      memset ((*mb)->mvd[0][0][0], 0, MB_BLOCK_dpS * 2 * sizeof(short));
     else
-      memset((*mb)->mvd[0][0][0], 0, 2 * MB_BLOCK_dpS * 2 * sizeof(short));
+      memset ((*mb)->mvd[0][0][0], 0, 2 * MB_BLOCK_dpS * 2 * sizeof(short));
     }
 
-  memset((*mb)->cbpStructure, 0, 3 * sizeof(sCBPStructure));
+  memset ((*mb)->cbpStructure, 0, 3 * sizeof(sCBPStructure));
 
   // initialize slice->mbRess
   if (slice->isResetCoef == FALSE) {
@@ -774,9 +774,9 @@ void startMacroblock (sSlice* slice, sMacroblock** mb) {
     }
 
   // store filtering parameters for this MB
-  (*mb)->DFDisableIdc = slice->DFDisableIdc;
-  (*mb)->DFAlphaC0Offset = slice->DFAlphaC0Offset;
-  (*mb)->DFBetaOffset = slice->DFBetaOffset;
+  (*mb)->deblockFilterDisableIdc = slice->deblockFilterDisableIdc;
+  (*mb)->deblockFilterC0offset = slice->deblockFilterC0offset;
+  (*mb)->deblockFilterBetaOffset = slice->deblockFilterBetaOffset;
   (*mb)->listOffset = 0;
   (*mb)->mixedModeEdgeFlag = 0;
   }
@@ -1127,7 +1127,7 @@ void setSliceMethods (sSlice* slice) {
     case P_SLICE:
       slice->interpretMbMode = interpretMbModeP;
       slice->nalReadMotionInfo = readMotionInfoP;
-      slice->decodeOneComponent = decodeComponentP;
+      slice->decodeComponenet = decodeComponentP;
       slice->updateDirectMvInfo = NULL;
       slice->initLists = initListsSliceP;
       break;
@@ -1136,7 +1136,7 @@ void setSliceMethods (sSlice* slice) {
     case SP_SLICE:
       slice->interpretMbMode = interpretMbModeP;
       slice->nalReadMotionInfo = readMotionInfoP;
-      slice->decodeOneComponent = decodeComponentSP;
+      slice->decodeComponenet = decodeComponentSP;
       slice->updateDirectMvInfo = NULL;
       slice->initLists = initListsSliceP;
       break;
@@ -1145,7 +1145,7 @@ void setSliceMethods (sSlice* slice) {
     case B_SLICE:
       slice->interpretMbMode = interpretMbModeB;
       slice->nalReadMotionInfo = readMotionInfoB;
-      slice->decodeOneComponent = decodeComponentB;
+      slice->decodeComponenet = decodeComponentB;
       update_direct_types (slice);
       slice->initLists  = initListsSliceB;
       break;
@@ -1154,7 +1154,7 @@ void setSliceMethods (sSlice* slice) {
     case I_SLICE:
       slice->interpretMbMode = interpretMbModeI;
       slice->nalReadMotionInfo = NULL;
-      slice->decodeOneComponent = decodeComponentI;
+      slice->decodeComponenet = decodeComponentI;
       slice->updateDirectMvInfo = NULL;
       slice->initLists = initListsSliceI;
       break;
@@ -1163,7 +1163,7 @@ void setSliceMethods (sSlice* slice) {
     case SI_SLICE:
       slice->interpretMbMode = interpretMbModeSI;
       slice->nalReadMotionInfo = NULL;
-      slice->decodeOneComponent = decodeComponentI;
+      slice->decodeComponenet = decodeComponentI;
       slice->updateDirectMvInfo = NULL;
       slice->initLists = initListsSliceI;
       break;
@@ -1328,22 +1328,22 @@ int decodeMacroblock (sMacroblock* mb, sPicture* picture) {
   if (slice->chroma444notSeparate) {
     if (!mb->isIntraBlock) {
       init_cur_imgy (decoder, slice, PLANE_Y);
-      slice->decodeOneComponent (mb, PLANE_Y, picture->imgY, picture);
+      slice->decodeComponenet (mb, PLANE_Y, picture->imgY, picture);
       init_cur_imgy (decoder, slice, PLANE_U);
-      slice->decodeOneComponent (mb, PLANE_U, picture->imgUV[0], picture);
+      slice->decodeComponenet (mb, PLANE_U, picture->imgUV[0], picture);
       init_cur_imgy (decoder, slice, PLANE_V);
-      slice->decodeOneComponent (mb, PLANE_V, picture->imgUV[1], picture);
+      slice->decodeComponenet (mb, PLANE_V, picture->imgUV[1], picture);
       }
     else {
-      slice->decodeOneComponent (mb, PLANE_Y, picture->imgY, picture);
-      slice->decodeOneComponent (mb, PLANE_U, picture->imgUV[0], picture);
-      slice->decodeOneComponent (mb, PLANE_V, picture->imgUV[1], picture);
+      slice->decodeComponenet (mb, PLANE_Y, picture->imgY, picture);
+      slice->decodeComponenet (mb, PLANE_U, picture->imgUV[0], picture);
+      slice->decodeComponenet (mb, PLANE_V, picture->imgUV[1], picture);
       }
     slice->isResetCoef = FALSE;
     slice->isResetCoefCr = FALSE;
     }
   else
-    slice->decodeOneComponent(mb, PLANE_Y, picture->imgY, picture);
+    slice->decodeComponenet(mb, PLANE_Y, picture->imgY, picture);
 
   return 0;
   }

@@ -580,9 +580,9 @@ typedef struct Macroblock {
   char  ipmode_DPCM;
   char  cPredMode;       //!< chroma intra prediction mode
   char  skipFlag;
-  short DFDisableIdc;
-  short DFAlphaC0Offset;
-  short DFBetaOffset;
+  short deblockFilterDisableIdc;
+  short deblockFilterC0offset;
+  short deblockFilterBetaOffset;
 
   Boolean mbField;
 
@@ -608,11 +608,11 @@ typedef struct Macroblock {
   void (*readCompCoef8x8cavlc) (struct Macroblock*, eColorPlane, int(*)[8], int, int, byte**);
   } sMacroblock;
 //}}}
-//{{{  sWPParam
+//{{{  sWpParam
 typedef struct {
   short weight[3];
   short offset[3];
-  } sWPParam;
+  } sWpParam;
 //}}}
 //{{{  sImage
 typedef struct Image {
@@ -742,7 +742,7 @@ typedef struct Slice {
   int redundantSliceRefIndex;     // reference index of redundant slice
   int noOutputPriorPicFlag;
   int longTermRefFlag;
-  int adaptiveRefPicBufferingFlag;
+  int adaptRefPicBufFlag;
   sDecodedRefPicMarking* decRefPicMarkingBuffer; // stores the memory management control operations
 
   char listXsize[6];
@@ -758,10 +758,11 @@ typedef struct Slice {
   int*  absDiffPicNumMinus1[2];
   int*  longTermPicIndex[2];
 
-  short DFDisableIdc;      // Disable deblocking filter on slice
-  short DFAlphaC0Offset;   // Alpha and C0 offset for filtering slice
-  short DFBetaOffset;      // Beta offset for filtering slice
-  int   ppsId;             // the ID of the picture parameter set the slice is reffering to
+  short deblockFilterDisableIdc; // Disable deblocking filter on slice
+  short deblockFilterC0offset;   // Alpha and C0 offset for filtering slice
+  short deblockFilterBetaOffset; // Beta offset for filtering slice
+
+  int   ppsId;             // ID of picture parameter set the slice is referring to
   int   noDataPartitionB;  // non-zero, if data dataPartition B is lost
   int   noDataPartitionC;  // non-zero, if data dataPartition C is lost
 
@@ -774,11 +775,11 @@ typedef struct Slice {
   int***    fcf;
   int       cofu[16];
 
-  sPixel**  tmp_block_l0;
-  sPixel**  tmp_block_l1;
-  int**     tmp_res;
-  sPixel**  tmp_block_l2;
-  sPixel**  tmp_block_l3;
+  int**     tempRes;
+  sPixel**  tempBlockL0;
+  sPixel**  tempBlockL1;
+  sPixel**  tempBlockL2;
+  sPixel**  tempBlockL3;
 
   // Scaling matrix info
   int InvLevelScale4x4_Intra[3][6][4][4];
@@ -798,16 +799,16 @@ typedef struct Slice {
   unsigned short weightedBiPredIdc;
   unsigned short lumaLog2weightDenom;
   unsigned short chromaLog2weightDenom;
-  sWPParam** wpParam;     // wp parameters in [list][index]
+  sWpParam** wpParam;    // wp parameters in [list][index]
   int***     wpWeight;   // weight in [list][index][component] order
   int***     wpOffset;   // offset in [list][index][component] order
   int****    wbpWeight;  // weight in [list][fw_index][bw_index][component] order
-  short      wp_round_luma;
-  short      wp_round_chroma;
+  short      wpRoundLuma;
+  short      wpRoundChroma;
 
   // for signalling to the neighbour logic that this is a deblocker call
-  int max_mb_vmv_r;      // maximum vertical motion vector range in luma quarter pixel units for the current levelIdc
-  int refFlag[17];       // 0: i-th previous frame is incorrect
+  int maxMbVmvR;   // maximum vertical motion vector range in luma quarter pixel units for the current levelIdc
+  int refFlag[17]; // 0: i-th previous frame is incorrect
 
   int ercMvPerMb;
   sMacroblock* mbData;
@@ -816,13 +817,13 @@ typedef struct Slice {
   int**  siBlock;
   byte** predMode;
   char*  intraBlock;
-  char   chroma_vector_adjustment[6][32];
+  char   chromaVectorAdjust[6][32];
 
   // virtual methods
   int  (*nalStartCode) (struct Slice*, int);
   void (*initLists) (struct Slice*);
   void (*readCBPcoeffs) (sMacroblock*);
-  int  (*decodeOneComponent) (sMacroblock*, eColorPlane, sPixel**, struct Picture*);
+  int  (*decodeComponenet) (sMacroblock*, eColorPlane, sPixel**, struct Picture*);
   void (*nalReadMotionInfo) (sMacroblock*);
   void (*readMacroblock) (sMacroblock*);
   void (*interpretMbMode) (sMacroblock*);
@@ -967,7 +968,7 @@ typedef struct Decoder {
   int          recoveryFrameCount;
   int          recoveryFrameNum;
   int          recoveryPoc;
-  int                  recoveryFlag;
+  int          recoveryFlag;
 
 
   // output
