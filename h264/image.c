@@ -1690,6 +1690,7 @@ static void updateMbAff (sPixel** pixel, sPixel (*temp)[16], int x0, int width, 
 static void mbAffPostProc (sDecoder* decoder) {
 
   sPixel tempBuffer[32][16];
+
   sPicture* picture = decoder->picture;
   sPixel** imgY = picture->imgY;
   sPixel*** imgUV = picture->imgUV;
@@ -1751,14 +1752,14 @@ static int isNewPicture (sPicture* picture, sSlice* slice, sOldSlice* oldSlice) 
   sDecoder* decoder = slice->decoder;
   if (!decoder->activeSPS->pocType) {
     result |= (oldSlice->picOrderCountLsb != slice->picOrderCountLsb);
-    if (decoder->activePPS->botFieldPicOrderFramePresent  ==  1 &&  !slice->fieldPicFlag )
+    if ((decoder->activePPS->botFieldPicOrderFramePresent == 1) && !slice->fieldPicFlag)
       result |= (oldSlice->deltaPicOrderCountBot != slice->deletaPicOrderCountBot);
     }
 
   if (decoder->activeSPS->pocType == 1) {
     if (!decoder->activeSPS->delta_pic_order_always_zero_flag) {
       result |= (oldSlice->deltaPicOrderCount[0] != slice->deltaPicOrderCount[0]);
-      if (decoder->activePPS->botFieldPicOrderFramePresent  ==  1 &&  !slice->fieldPicFlag )
+      if ((decoder->activePPS->botFieldPicOrderFramePresent == 1) && !slice->fieldPicFlag)
         result |= (oldSlice->deltaPicOrderCount[1] != slice->deltaPicOrderCount[1]);
       }
     }
@@ -1859,11 +1860,11 @@ static void initPicture (sDecoder* decoder, sSlice* slice) {
   if (decoder->recoveryFrameNum == (int)slice->frameNum && decoder->recoveryPoc == 0x7fffffff)
     decoder->recoveryPoc = slice->framePoc;
 
-  if(slice->refId)
+  if (slice->refId)
     decoder->lastRefPicPoc = slice->framePoc;
 
   if ((slice->structure == FRAME) || (slice->structure == TopField))
-    getTime (&(decoder->info.startTime));
+    getTime (&decoder->info.startTime);
 
   picture = decoder->picture = allocPicture (decoder, slice->structure, decoder->width, decoder->height, decoder->widthCr, decoder->heightCr, 1);
   picture->topPoc = slice->topPoc;
@@ -3035,9 +3036,9 @@ void endDecodeFrame (sDecoder* decoder) {
     if (decoder->param.outDebug) {
       //{{{  print outDebug
       printf ("-> %d %d:%d:%02d %s ->%s-> poc:%d pic:%d",
-              decoder->decodeFrameNum, 
+              decoder->decodeFrameNum,
               decoder->numDecodedSlices, decoder->numDecodedMbs, qp,
-              decoder->info.tookStr, 
+              decoder->info.tookStr,
               decoder->info.sliceStr,
               pocNum, picNum);
 
