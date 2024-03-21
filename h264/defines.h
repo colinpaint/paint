@@ -30,8 +30,6 @@ typedef int32  transpel;  // transformed coefficient type
   #define MAXINT64   0x7fffffffffffffff
 #endif
 
-#define SSE_MEMORY_ALIGNMENT    16
-
 #define MAX_NUM_SLICES          50
 #define MAX_REFERENCE_PICTURES  32       // H.264 allows 32 fields
 #define MAX_CODED_FRAME_SIZE    8000000  // bytes for one frame
@@ -52,13 +50,8 @@ typedef enum {
   FREXT_Hi10P    = 110,      // YUV 4:2:0/10 "High 10"
   FREXT_Hi422    = 122,      // YUV 4:2:2/10 "High 4:2:2"
   FREXT_Hi444    = 244,      // YUV 4:4:4/14 "High 4:4:4"
-  MVC_HIGH       = 118,      // YUV 4:2:0/8  "Multiview High"
-  STEREO_HIGH    = 128       // YUV 4:2:0/8  "Stereo High"
   } ProfileIDC;
 //}}}
-
-#define FILE_NAME_SIZE  255
-#define INPUT_TEXT_SIZE 1024
 
 #define NUM_BLOCK_TYPES 22
 
@@ -174,7 +167,6 @@ typedef enum {
 #define RUNBEFORE_NUM_M1 6
 
 // Quantization parameter range
-#define MIN_QP           0
 #define MAX_QP           51
 //{{{  enum 4x4 intra prediction modes
 typedef enum {
@@ -230,9 +222,7 @@ typedef enum {
 //}}}
 
 #define MAX_PLANE                 3
-#define LAMBDA_ACCURACY_BITS      16
 #define INVALIDINDEX              (-135792468)
-#define RC_MAX_TEMPORAL_LEVELS    5
 
 // Start code and Emulation Prevention need this to be defined in identical manner at encoder and decoder
 #define ZEROBYTES_SHORTSTARTCODE  2 //indicates the number of zero bytes in the short start-code prefix
