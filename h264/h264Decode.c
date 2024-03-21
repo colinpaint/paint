@@ -46,8 +46,8 @@ sSlice* allocSlice (sDecoder* decoder) {
     error ("allocSlice failed");
 
   // create all context models
-  slice->motionContext = createContextsMotionInfo();
-  slice->textureContext = createContextsTextureInfo();
+  slice->motionInfoContexts = createMotionInfoContexts();
+  slice->textureInfoContexts = createTextureInfoContexts();
 
   slice->maxDataPartitions = 3;  // assume dataPartition worst case
   slice->dataPartitions = allocDataPartitions (slice->maxDataPartitions);
@@ -101,8 +101,8 @@ static void freeSlice (sSlice *slice) {
   freeDataPartitions (slice->dataPartitions, 3);
 
   // delete all context models
-  delete_contexts_MotionInfo (slice->motionContext);
-  delete_contexts_TextureInfo (slice->textureContext);
+  deleteMotionInfoContexts (slice->motionInfoContexts);
+  deleteTextureInfoContexts (slice->textureInfoContexts);
 
   for (int i = 0; i<6; i++) {
     if (slice->listX[i]) {
@@ -112,9 +112,9 @@ static void freeSlice (sSlice *slice) {
     }
 
   while (slice->decRefPicMarkingBuffer) {
-    sDecodedRefPicMarking* tmp_drpm = slice->decRefPicMarkingBuffer;
-    slice->decRefPicMarkingBuffer = tmp_drpm->next;
-    free (tmp_drpm);
+    sDecodedRefPicMarking* tempDrpm = slice->decRefPicMarkingBuffer;
+    slice->decRefPicMarkingBuffer = tempDrpm->next;
+    free (tempDrpm);
     }
 
   free (slice);

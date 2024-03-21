@@ -1183,8 +1183,8 @@ static void initContexts (sSlice* slice) {
     }
   //}}}
 
-  sMotionInfoContexts* mc = slice->motionContext;
-  sTextureInfoContexts* tc = slice->textureContext;
+  sMotionInfoContexts* mc = slice->motionInfoContexts;
+  sTextureInfoContexts* tc = slice->textureInfoContexts;
 
   int i, j;
   int qp = imax (0, slice->qp);

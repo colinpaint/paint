@@ -615,8 +615,8 @@ typedef struct Slice {
   struct Picture** listX[6];
 
   sDataPartition*       dataPartitions; // array of dataPartition
-  sMotionInfoContexts*  motionContext;  // pointer to struct of context models for use in CABAC
-  sTextureInfoContexts* textureContext; // pointer to struct of context models for use in CABAC
+  sMotionInfoContexts*  motionInfoContexts;  // pointer to struct of context models for use in CABAC
+  sTextureInfoContexts* textureInfoContexts; // pointer to struct of context models for use in CABAC
 
   int   mvscale[6][MAX_REFERENCE_PICTURES];
   int   refPicReorderFlag[2];
