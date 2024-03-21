@@ -1,22 +1,34 @@
 #pragma once
-#ifdef TRACE
-  #undef TRACE
-#endif
 
-#if defined _DEBUG
-  #define TRACE           0     //!< 0:Trace off 1:Trace on 2:detailed CABAC context information
+#define IMGTYPE           0    // Define sPixel size type. 0 implies byte (cannot handle >8 bit depths) and 1 implies unsigned short
+
+typedef unsigned char  byte;   // byte type definition
+typedef unsigned char  uint8;  // type definition for unsigned char (same as byte, 8 bits)
+typedef unsigned short uint16; // type definition for unsigned short (16 bits)
+typedef unsigned int   uint32; // type definition for unsigned int (32 bits)
+
+typedef char  int8;
+typedef short int16;
+typedef int   int32;
+
+typedef byte   sPixel;    // pixel type
+typedef uint16 distpel;   // distortion type (for pixels)
+typedef int32  distblk;   // distortion type (for sMacroblock)
+typedef int32  transpel;  // transformed coefficient type
+
+//! Boolean Type
+#ifdef FALSE
+  #define Boolean int
 #else
-  #define TRACE           0     //!< 0:Trace off 1:Trace on 2:detailed CABAC context information
+  typedef enum {
+    FALSE,
+    TRUE
+    } Boolean;
 #endif
 
-#define IMGTYPE                 0  // Define sPixel size type. 0 implies byte (cannot handle >8 bit depths) and 1 implies unsigned short
-#define ENABLE_HIGH444_CTX      1  // Enables High 444 profile context types for CABAC.
-#define JCOST_CALC_SCALEUP      1  // 1: J = (D<<LAMBDA_ACCURACY_BITS)+Lambda*R; 0: J = D + ((Lambda*R+Rounding)>>LAMBDA_ACCURACY_BITS)
-#define SIMULCAST_ENABLE        0  // to test the decoder
-
-#define MVC_INIT_VIEW_ID        -1
-
-#include "typedefs.h"
+#ifndef MAXINT64
+  #define MAXINT64   0x7fffffffffffffff
+#endif
 
 #define SSE_MEMORY_ALIGNMENT    16
 
@@ -48,11 +60,7 @@ typedef enum {
 #define FILE_NAME_SIZE  255
 #define INPUT_TEXT_SIZE 1024
 
-#if (ENABLE_HIGH444_CTX == 1)
-  #define NUM_BLOCK_TYPES 22
-#else
-  #define NUM_BLOCK_TYPES 10
-#endif
+#define NUM_BLOCK_TYPES 22
 
 #define BLOCK_SHIFT            2
 #define BLOCK_SIZE             4
