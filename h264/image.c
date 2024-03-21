@@ -1340,44 +1340,6 @@ static void resetWpParam (sSlice* slice) {
     }
   }
 //}}}
-
-//{{{
-static void padBuf (sPixel* pixel, int width, int height, int stride, int padx, int pady) {
-
-  int pad_width = padx + width;
-  memset (pixel - padx, *pixel, padx * sizeof(sPixel));
-  memset (pixel + width, *(pixel + width - 1), padx * sizeof(sPixel));
-
-  sPixel* line0 = pixel - padx;
-  sPixel* line = line0 - pady * stride;
-  for (int j = -pady; j < 0; j++) {
-    memcpy (line, line0, stride * sizeof(sPixel));
-    line += stride;
-    }
-
-  for (int j = 1; j < height; j++) {
-    line += stride;
-    memset (line, *(line + padx), padx * sizeof(sPixel));
-    memset (line + pad_width, *(line + pad_width - 1), padx * sizeof(sPixel));
-    }
-
-  line0 = line + stride;
-  for (int j = height; j < height + pady; j++) {
-    memcpy (line0,  line, stride * sizeof(sPixel));
-    line0 += stride;
-    }
-  }
-//}}}
-//{{{
-static void copyPOC (sSlice* fromSlice, sSlice* toSlice) {
-
-  toSlice->topPoc = fromSlice->topPoc;
-  toSlice->botPoc = fromSlice->botPoc;
-  toSlice->thisPoc = fromSlice->thisPoc;
-  toSlice->framePoc = fromSlice->framePoc;
-  }
-//}}}
-
 //{{{
 static void fillWpParam (sSlice* slice) {
 
@@ -1470,6 +1432,44 @@ static void fillWpParam (sSlice* slice) {
     }
   }
 //}}}
+
+//{{{
+static void padBuf (sPixel* pixel, int width, int height, int stride, int padx, int pady) {
+
+  int pad_width = padx + width;
+  memset (pixel - padx, *pixel, padx * sizeof(sPixel));
+  memset (pixel + width, *(pixel + width - 1), padx * sizeof(sPixel));
+
+  sPixel* line0 = pixel - padx;
+  sPixel* line = line0 - pady * stride;
+  for (int j = -pady; j < 0; j++) {
+    memcpy (line, line0, stride * sizeof(sPixel));
+    line += stride;
+    }
+
+  for (int j = 1; j < height; j++) {
+    line += stride;
+    memset (line, *(line + padx), padx * sizeof(sPixel));
+    memset (line + pad_width, *(line + pad_width - 1), padx * sizeof(sPixel));
+    }
+
+  line0 = line + stride;
+  for (int j = height; j < height + pady; j++) {
+    memcpy (line0,  line, stride * sizeof(sPixel));
+    line0 += stride;
+    }
+  }
+//}}}
+//{{{
+static void copyPOC (sSlice* fromSlice, sSlice* toSlice) {
+
+  toSlice->topPoc = fromSlice->topPoc;
+  toSlice->botPoc = fromSlice->botPoc;
+  toSlice->thisPoc = fromSlice->thisPoc;
+  toSlice->framePoc = fromSlice->framePoc;
+  }
+//}}}
+
 //{{{
 static void reorderLists (sSlice* slice) {
 
@@ -2157,14 +2157,14 @@ static void readSlice (sDecoder* decoder, sSlice* slice) {
     //}}}
   if (isHiIntraOnlyProfile (activeSPS->profileIdc, activeSPS->constrainedSet3flag) &&
       !decoder->param.intraProfileDeblocking) {
-    //{{{  hiIintra deblock 
+    //{{{  hiIintra deblock
     slice->deblockFilterDisableIdc = 1;
     slice->deblockFilterC0offset = 0;
     slice->deblockFilterBetaOffset = 0;
     }
     //}}}
   //{{{  read sliceGroup
-  if ((decoder->activePPS->numSliceGroupsMinus1 > 0) && 
+  if ((decoder->activePPS->numSliceGroupsMinus1 > 0) &&
       (decoder->activePPS->sliceGroupMapType >= 3) &&
       (decoder->activePPS->sliceGroupMapType <= 5)) {
     int len = (activeSPS->pic_height_in_map_units_minus1+1) * (activeSPS->pic_width_in_mbs_minus1+1) /
