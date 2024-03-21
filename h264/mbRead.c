@@ -18,7 +18,7 @@
 #include "quant.h"
 #include "mbPred.h"
 //}}}
-static const sMotionVec zero_mv = {0, 0};
+static const sMotionVec kZeroMv = {0, 0};
 
 //{{{
 static void read_ipred_8x8_modes_mbaff (sMacroBlock* mb) {
@@ -335,8 +335,8 @@ static void resetMvInfo (sPicMotionParam* mvInfo, int slice_no) {
 
   mvInfo->refPic[LIST_0] = NULL;
   mvInfo->refPic[LIST_1] = NULL;
-  mvInfo->mv[LIST_0] = zero_mv;
-  mvInfo->mv[LIST_1] = zero_mv;
+  mvInfo->mv[LIST_0] = kZeroMv;
+  mvInfo->mv[LIST_1] = kZeroMv;
   mvInfo->refIndex[LIST_0] = -1;
   mvInfo->refIndex[LIST_1] = -1;
   mvInfo->slice_no = slice_no;
@@ -588,7 +588,7 @@ static void skipMacroblocks (sMacroBlock* mb) {
       for (i = mb->blockX; i < mb->blockX + BLOCK_SIZE; ++i) {
         mvInfo = &dec_mv_info[j][i];
         mvInfo->refPic[LIST_0] = slicePic;
-        mvInfo->mv [LIST_0] = zero_mv;
+        mvInfo->mv [LIST_0] = kZeroMv;
         mvInfo->refIndex[LIST_0] = 0;
         }
       }
@@ -615,7 +615,7 @@ static void skipMacroblocks (sMacroBlock* mb) {
 static void resetMvInfoList (sPicMotionParam* mvInfo, int list, int sliceNum) {
 
   mvInfo->refPic[list] = NULL;
-  mvInfo->mv[list] = zero_mv;
+  mvInfo->mv[list] = kZeroMv;
   mvInfo->refIndex[list] = -1;
   mvInfo->slice_no = sliceNum;
   }

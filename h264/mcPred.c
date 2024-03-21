@@ -8,7 +8,7 @@
 #include "mbAccess.h"
 #include "macroblock.h"
 //}}}
-static const sMotionVec zero_mv = {0, 0};
+static const sMotionVec kZeroMv = {0, 0};
 
 //{{{
 int allocPred (sSlice* slice) {
@@ -126,8 +126,8 @@ static void update_direct_mv_info_temporal (sMacroBlock* mb) {
                   sPicMotionParam *mvInfo = &picture->mvInfo[j4][i4];
                   mvInfo->refPic[LIST_0] = list0[0];
                   mvInfo->refPic[LIST_1] = list1[0];
-                  mvInfo->mv [LIST_0] = zero_mv;
-                  mvInfo->mv [LIST_1] = zero_mv;
+                  mvInfo->mv [LIST_0] = kZeroMv;
+                  mvInfo->mv [LIST_1] = kZeroMv;
                   mvInfo->refIndex [LIST_0] = 0;
                   mvInfo->refIndex [LIST_1] = 0;
                   }
@@ -240,7 +240,7 @@ static void update_direct_mv_info_temporal (sMacroBlock* mb) {
                     if (mv_scale == 9999 || slice->listX[LIST_0+listOffset][mapped_idx]->isLongTerm) {
                       mvInfo->mv[LIST_0].mvX = colocated->mv[refList].mvX;
                       mvInfo->mv[LIST_0].mvY = (short) mvY;
-                      mvInfo->mv[LIST_1] = zero_mv;
+                      mvInfo->mv[LIST_1] = kZeroMv;
                       }
                     else {
                       mvInfo->mv[LIST_0].mvX = (short)((mv_scale * colocated->mv[refList].mvX + 128 ) >> 8);
@@ -403,8 +403,8 @@ static void update_direct_mv_info_spatial_8x8 (sMacroBlock* mb)
             {
               mvInfo->refPic[LIST_0] = list0[0];
               mvInfo->refPic[LIST_1] = list1[0];
-              mvInfo->mv[LIST_0] = zero_mv;
-              mvInfo->mv[LIST_1] = zero_mv;
+              mvInfo->mv[LIST_0] = kZeroMv;
+              mvInfo->mv[LIST_1] = kZeroMv;
               mvInfo->refIndex[LIST_0] = 0;
               mvInfo->refIndex[LIST_1] = -1;
             }
@@ -413,7 +413,7 @@ static void update_direct_mv_info_spatial_8x8 (sMacroBlock* mb)
               mvInfo->refPic[LIST_0] = list0[(short) l0_rFrame];
               mvInfo->refPic[LIST_1] = NULL;
               mvInfo->mv[LIST_0] = pmvl0;
-              mvInfo->mv[LIST_1] = zero_mv;
+              mvInfo->mv[LIST_1] = kZeroMv;
               mvInfo->refIndex[LIST_0] = l0_rFrame;
               mvInfo->refIndex[LIST_1] = -1;
             }
@@ -424,8 +424,8 @@ static void update_direct_mv_info_spatial_8x8 (sMacroBlock* mb)
             {
               mvInfo->refPic[LIST_0] = NULL;
               mvInfo->refPic[LIST_1] = list1[0];
-              mvInfo->mv[LIST_0] = zero_mv;
-              mvInfo->mv[LIST_1] = zero_mv;
+              mvInfo->mv[LIST_0] = kZeroMv;
+              mvInfo->mv[LIST_1] = kZeroMv;
               mvInfo->refIndex[LIST_0] = -1;
               mvInfo->refIndex[LIST_1] = 0;
             }
@@ -433,7 +433,7 @@ static void update_direct_mv_info_spatial_8x8 (sMacroBlock* mb)
             {
               mvInfo->refPic[LIST_0] = NULL;
               mvInfo->refPic[LIST_1] = list1[(short) l1_rFrame];
-              mvInfo->mv[LIST_0] = zero_mv;
+              mvInfo->mv[LIST_0] = kZeroMv;
               mvInfo->mv[LIST_1] = pmvl1;
               mvInfo->refIndex[LIST_0] = -1;
               mvInfo->refIndex[LIST_1] = l1_rFrame;
@@ -444,7 +444,7 @@ static void update_direct_mv_info_spatial_8x8 (sMacroBlock* mb)
             if  (l0_rFrame == 0)
             {
               mvInfo->refPic[LIST_0] = list0[0];
-              mvInfo->mv[LIST_0] = zero_mv;
+              mvInfo->mv[LIST_0] = kZeroMv;
               mvInfo->refIndex[LIST_0] = 0;
             }
             else
@@ -457,7 +457,7 @@ static void update_direct_mv_info_spatial_8x8 (sMacroBlock* mb)
             if  (l1_rFrame == 0)
             {
               mvInfo->refPic[LIST_1] = list1[0];
-              mvInfo->mv[LIST_1] = zero_mv;
+              mvInfo->mv[LIST_1] = kZeroMv;
               mvInfo->refIndex[LIST_1] = 0;
             }
             else
@@ -474,8 +474,8 @@ static void update_direct_mv_info_spatial_8x8 (sMacroBlock* mb)
           {
             mvInfo->refPic[LIST_0] = list0[0];
             mvInfo->refPic[LIST_1] = list1[0];
-            mvInfo->mv[LIST_0] = zero_mv;
-            mvInfo->mv[LIST_1] = zero_mv;
+            mvInfo->mv[LIST_0] = kZeroMv;
+            mvInfo->mv[LIST_1] = kZeroMv;
             mvInfo->refIndex[LIST_0] = 0;
             mvInfo->refIndex[LIST_1] = 0;
           }
@@ -483,7 +483,7 @@ static void update_direct_mv_info_spatial_8x8 (sMacroBlock* mb)
           {
             mvInfo->refPic[LIST_0] = NULL;
             mvInfo->refPic[LIST_1] = list1[(short) l1_rFrame];
-            mvInfo->mv[LIST_0] = zero_mv;
+            mvInfo->mv[LIST_0] = kZeroMv;
             mvInfo->mv[LIST_1] = pmvl1;
             mvInfo->refIndex[LIST_0] = -1;
             mvInfo->refIndex[LIST_1] = l1_rFrame;
@@ -494,7 +494,7 @@ static void update_direct_mv_info_spatial_8x8 (sMacroBlock* mb)
             mvInfo->refPic[LIST_1] = NULL;
 
             mvInfo->mv[LIST_0] = pmvl0;
-            mvInfo->mv[LIST_1] = zero_mv;
+            mvInfo->mv[LIST_1] = kZeroMv;
             mvInfo->refIndex[LIST_0] = l0_rFrame;
             mvInfo->refIndex[LIST_1] = -1;
           }
@@ -560,8 +560,8 @@ static void update_direct_mv_info_spatial_4x4 (sMacroBlock* mb)
                 {
                   mvInfo->refPic[LIST_0] = list0[0];
                   mvInfo->refPic[LIST_1] = NULL;
-                  mvInfo->mv[LIST_0] = zero_mv;
-                  mvInfo->mv[LIST_1] = zero_mv;
+                  mvInfo->mv[LIST_0] = kZeroMv;
+                  mvInfo->mv[LIST_1] = kZeroMv;
                   mvInfo->refIndex[LIST_0] = 0;
                   mvInfo->refIndex[LIST_1] = -1;
                 }
@@ -570,7 +570,7 @@ static void update_direct_mv_info_spatial_4x4 (sMacroBlock* mb)
                   mvInfo->refPic[LIST_0] = list0[(short) l0_rFrame];
                   mvInfo->refPic[LIST_1] = NULL;
                   mvInfo->mv[LIST_0] = pmvl0;
-                  mvInfo->mv[LIST_1] = zero_mv;
+                  mvInfo->mv[LIST_1] = kZeroMv;
                   mvInfo->refIndex[LIST_0] = l0_rFrame;
                   mvInfo->refIndex[LIST_1] = -1;
                 }
@@ -581,8 +581,8 @@ static void update_direct_mv_info_spatial_4x4 (sMacroBlock* mb)
                 {
                   mvInfo->refPic[LIST_0] = NULL;
                   mvInfo->refPic[LIST_1] = list1[0];
-                  mvInfo->mv[LIST_0] = zero_mv;
-                  mvInfo->mv[LIST_1] = zero_mv;
+                  mvInfo->mv[LIST_0] = kZeroMv;
+                  mvInfo->mv[LIST_1] = kZeroMv;
                   mvInfo->refIndex[LIST_0] = -1;
                   mvInfo->refIndex[LIST_1] = 0;
                 }
@@ -590,7 +590,7 @@ static void update_direct_mv_info_spatial_4x4 (sMacroBlock* mb)
                 {
                   mvInfo->refPic[LIST_0] = NULL;
                   mvInfo->refPic[LIST_1] = list1[(short) l1_rFrame];
-                  mvInfo->mv[LIST_0] = zero_mv;
+                  mvInfo->mv[LIST_0] = kZeroMv;
                   mvInfo->mv[LIST_1] = pmvl1;
                   mvInfo->refIndex[LIST_0] = -1;
                   mvInfo->refIndex[LIST_1] = l1_rFrame;
@@ -601,7 +601,7 @@ static void update_direct_mv_info_spatial_4x4 (sMacroBlock* mb)
                 if (l0_rFrame == 0 && ((is_not_moving)))
                 {
                   mvInfo->refPic[LIST_0] = list0[0];
-                  mvInfo->mv[LIST_0] = zero_mv;
+                  mvInfo->mv[LIST_0] = kZeroMv;
                   mvInfo->refIndex[LIST_0] = 0;
                 }
                 else
@@ -614,7 +614,7 @@ static void update_direct_mv_info_spatial_4x4 (sMacroBlock* mb)
                 if  (l1_rFrame == 0 && ((is_not_moving)))
                 {
                   mvInfo->refPic[LIST_1] = list1[0];
-                  mvInfo->mv[LIST_1] = zero_mv;
+                  mvInfo->mv[LIST_1] = kZeroMv;
                   mvInfo->refIndex[LIST_1]    = 0;
                 }
                 else
@@ -633,8 +633,8 @@ static void update_direct_mv_info_spatial_4x4 (sMacroBlock* mb)
               {
                 mvInfo->refPic[LIST_0] = list0[0];
                 mvInfo->refPic[LIST_1] = list1[0];
-                mvInfo->mv[LIST_0] = zero_mv;
-                mvInfo->mv[LIST_1] = zero_mv;
+                mvInfo->mv[LIST_0] = kZeroMv;
+                mvInfo->mv[LIST_1] = kZeroMv;
                 mvInfo->refIndex[LIST_0] = 0;
                 mvInfo->refIndex[LIST_1] = 0;
               }
@@ -643,7 +643,7 @@ static void update_direct_mv_info_spatial_4x4 (sMacroBlock* mb)
                 mvInfo->refPic[LIST_0] = list0[(short) l0_rFrame];
                 mvInfo->refPic[LIST_1] = NULL;
                 mvInfo->mv[LIST_0] = pmvl0;
-                mvInfo->mv[LIST_1] = zero_mv;
+                mvInfo->mv[LIST_1] = kZeroMv;
                 mvInfo->refIndex[LIST_0] = l0_rFrame;
                 mvInfo->refIndex[LIST_1] = -1;
               }
@@ -651,7 +651,7 @@ static void update_direct_mv_info_spatial_4x4 (sMacroBlock* mb)
               {
                 mvInfo->refPic[LIST_0] = NULL;
                 mvInfo->refPic[LIST_1] = list1[(short) l1_rFrame];
-                mvInfo->mv[LIST_0] = zero_mv;
+                mvInfo->mv[LIST_0] = kZeroMv;
                 mvInfo->mv[LIST_1] = pmvl1;
                 mvInfo->refIndex[LIST_0] = -1;
                 mvInfo->refIndex[LIST_1] = l1_rFrame;

@@ -19,7 +19,7 @@
 #include "mbPred.h"
 #include "intraPred.h"
 //}}}
-static const sMotionVec zero_mv = {0, 0};
+static const sMotionVec kZeroMv = {0, 0};
 
 //{{{
 static void GetMotionVectorPredictorMBAFF (sMacroBlock* mb, sPixelPos* block,
@@ -203,13 +203,13 @@ static void GetMotionVectorPredictorNormal (sMacroBlock* mb, sPixelPos* block,
         if (block[0].available)
           *pmv = mvInfo[block[0].posY][block[0].posX].mv[list];
         else
-          *pmv = zero_mv;
+          *pmv = kZeroMv;
       }
       else
       {
-        sMotionVec *mv_a = block[0].available ? &mvInfo[block[0].posY][block[0].posX].mv[list] : (sMotionVec *) &zero_mv;
-        sMotionVec *mv_b = block[1].available ? &mvInfo[block[1].posY][block[1].posX].mv[list] : (sMotionVec *) &zero_mv;
-        sMotionVec *mv_c = block[2].available ? &mvInfo[block[2].posY][block[2].posX].mv[list] : (sMotionVec *) &zero_mv;
+        sMotionVec *mv_a = block[0].available ? &mvInfo[block[0].posY][block[0].posX].mv[list] : (sMotionVec *) &kZeroMv;
+        sMotionVec *mv_b = block[1].available ? &mvInfo[block[1].posY][block[1].posX].mv[list] : (sMotionVec *) &kZeroMv;
+        sMotionVec *mv_c = block[2].available ? &mvInfo[block[2].posY][block[2].posX].mv[list] : (sMotionVec *) &kZeroMv;
 
         pmv->mvX = (short)imedian (mv_a->mvX, mv_b->mvX, mv_c->mvX);
         pmv->mvY = (short)imedian (mv_a->mvY, mv_b->mvY, mv_c->mvY);
@@ -221,7 +221,7 @@ static void GetMotionVectorPredictorNormal (sMacroBlock* mb, sPixelPos* block,
       if (block[0].available)
         *pmv = mvInfo[block[0].posY][block[0].posX].mv[list];
       else
-        *pmv = zero_mv;
+        *pmv = kZeroMv;
       break;
     //}}}
     //{{{
@@ -229,7 +229,7 @@ static void GetMotionVectorPredictorNormal (sMacroBlock* mb, sPixelPos* block,
       if (block[1].available)
         *pmv = mvInfo[block[1].posY][block[1].posX].mv[list];
       else
-        *pmv = zero_mv;
+        *pmv = kZeroMv;
       break;
     //}}}
     //{{{
@@ -237,7 +237,7 @@ static void GetMotionVectorPredictorNormal (sMacroBlock* mb, sPixelPos* block,
       if (block[2].available)
         *pmv = mvInfo[block[2].posY][block[2].posX].mv[list];
       else
-        *pmv = zero_mv;
+        *pmv = kZeroMv;
       break;
     //}}}
     //{{{
