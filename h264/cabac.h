@@ -31,7 +31,7 @@ extern void readFieldModeInfo_CABAC (sMacroblock* mb, sSyntaxElement* se, sDecod
 extern void readMB_transform_size_flag_CABAC (sMacroblock* mb, sSyntaxElement* se, sDecodingEnv* decodingEnv);
 
 extern void readIPCMcabac (sSlice* slice, sDataPartition* dataPartition);
-extern int cabac_startcode_follows (sSlice* slice, int eos_bit);
+extern int cabacStartCode (sSlice* slice, int eos_bit);
 extern int readSyntaxElementCABAC (sMacroblock* mb, sSyntaxElement* se, sDataPartition* this_dataPart);
 
 extern int check_next_mb_and_get_field_mode_CABAC_p_slice (sSlice* slice, sSyntaxElement* se, sDataPartition* act_dp);

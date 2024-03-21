@@ -216,7 +216,7 @@ static unsigned int unary_exp_golomb_mv_decode (sDecodingEnv* decodingEnv, sBiCo
 //}}}
 
 //{{{
-int cabac_startcode_follows (sSlice* slice, int eos_bit) {
+int cabacStartCode (sSlice* slice, int eos_bit) {
 
   unsigned int  bit;
   if (eos_bit) {

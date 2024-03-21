@@ -1874,12 +1874,12 @@ static void useParameterSet (sDecoder* decoder, sSlice* slice) {
 
   // slice->datadpMode is set by read_new_slice (NALU first byte available there)
   if (pps->entropyCodingMode == (Boolean)CAVLC) {
-    slice->nalStartcode = vlcStartcodeFollows;
+    slice->nalStartCode = vlcStartCode;
     for (int i = 0; i < 3; i++)
       slice->dps[i].readSyntaxElement = readSyntaxElementVLC;
     }
   else {
-    slice->nalStartcode = cabac_startcode_follows;
+    slice->nalStartCode = cabacStartCode;
     for (int i = 0; i < 3; i++)
       slice->dps[i].readSyntaxElement = readSyntaxElementCABAC;
     }

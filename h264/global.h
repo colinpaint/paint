@@ -685,7 +685,7 @@ typedef struct Slice {
   char   chroma_vector_adjustment[6][32];
 
   // virtual methods
-  int  (*nalStartcode) (struct Slice*, int);
+  int  (*nalStartCode) (struct Slice*, int);
   void (*initLists) (struct Slice*);
   void (*readCBPcoeffs) (sMacroblock*);
   int  (*decodeOneComponent) (sMacroblock*, eColorPlane, sPixel**, struct Picture*);

@@ -254,7 +254,7 @@ int moreRbspData (byte buffer[], int totalBitOffset,int bytecount) {
   }
 //}}}
 //{{{
-int vlcStartcodeFollows (sSlice* slice, int dummy) {
+int vlcStartCode (sSlice* slice, int dummy) {
 
   byte partitionIndex = assignSE2dp[slice->datadpMode][SE_MBTYPE];
   sDataPartition* dataPartition = &(slice->dps[partitionIndex]);

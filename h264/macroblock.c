@@ -800,11 +800,11 @@ Boolean exitMacroblock (sSlice* slice, int eos_bit) {
     slice->mbIndex = FmoGetNextMBNr (decoder, slice->mbIndex);
     if (slice->mbIndex == -1) {
       // End of sSlice group, MUST be end of slice
-      assert (slice->nalStartcode (slice, eos_bit) == TRUE);
+      assert (slice->nalStartCode (slice, eos_bit) == TRUE);
       return TRUE;
       }
 
-    if (slice->nalStartcode (slice, eos_bit) == FALSE)
+    if (slice->nalStartCode (slice, eos_bit) == FALSE)
       return FALSE;
 
     if ((slice->sliceType == I_SLICE)  ||
@@ -838,8 +838,8 @@ static void interpretMbModeP (sMacroblock* mb) {
   else if (mbmode == 6) {
     mb->isIntraBlock = TRUE;
     mb->mbType = I4MB;
-    memset(mb->b8mode, IBLOCK, 4 * sizeof(char));
-    memset(mb->b8pdir,     -1, 4 * sizeof(char));
+    memset (mb->b8mode, IBLOCK, 4 * sizeof(char));
+    memset (mb->b8pdir,     -1, 4 * sizeof(char));
     }
   else if (mbmode == 31) {
     mb->isIntraBlock = TRUE;
@@ -847,16 +847,16 @@ static void interpretMbModeP (sMacroblock* mb) {
     mb->cbp = -1;
     mb->i16mode = 0;
 
-    memset(mb->b8mode, 0, 4 * sizeof(char));
-    memset(mb->b8pdir,-1, 4 * sizeof(char));
+    memset (mb->b8mode, 0, 4 * sizeof(char));
+    memset (mb->b8pdir,-1, 4 * sizeof(char));
     }
   else {
     mb->isIntraBlock = TRUE;
     mb->mbType = I16MB;
     mb->cbp = ICBPTAB[((mbmode-7))>>2];
     mb->i16mode = ((mbmode-7)) & 0x03;
-    memset(mb->b8mode, 0, 4 * sizeof(char));
-    memset(mb->b8pdir,-1, 4 * sizeof(char));
+    memset (mb->b8mode, 0, 4 * sizeof(char));
+    memset (mb->b8pdir,-1, 4 * sizeof(char));
     }
   }
 //}}}
@@ -933,8 +933,8 @@ static void interpretMbModeB (sMacroblock* mb) {
   else if ((mbtype > 23) && (mbtype < 48) ) { // intra16x16
     mb->isIntraBlock = TRUE;
     mbmode = I16MB;
-    memset(mb->b8mode,  0, 4 * sizeof(char));
-    memset(mb->b8pdir, -1, 4 * sizeof(char));
+    memset (mb->b8mode,  0, 4 * sizeof(char));
+    memset (mb->b8pdir, -1, 4 * sizeof(char));
     mb->cbp = (int) ICBPTAB[(mbtype-24)>>2];
     mb->i16mode = (mbtype-24) & 0x03;
     }
@@ -1014,11 +1014,11 @@ static void readMotionInfoP (sMacroblock* mb){
   sSlice* slice = mb->slice;
 
   sSyntaxElement se;
-  sDataPartition *dataPartition = NULL;
-  const byte *dpMap       = assignSE2dp[slice->datadpMode];
-  short partmode        = ((mb->mbType == P8x8) ? 4 : mb->mbType);
-  int step_h0         = BLOCK_STEP [partmode][0];
-  int step_v0         = BLOCK_STEP [partmode][1];
+  sDataPartition* dataPartition = NULL;
+  const byte* dpMap = assignSE2dp[slice->datadpMode];
+  short partmode = ((mb->mbType == P8x8) ? 4 : mb->mbType);
+  int step_h0 = BLOCK_STEP [partmode][0];
+  int step_v0 = BLOCK_STEP [partmode][1];
 
   int j4;
   sPicture* picture = slice->picture;
