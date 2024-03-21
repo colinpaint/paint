@@ -164,31 +164,30 @@ static unsigned int exp_golomb_decode_eq_prob (sDecodingEnv* decodingEnv, int k)
 //{{{
 static unsigned int unary_exp_golomb_level_decode (sDecodingEnv* decodingEnv, sBiContextType* ctx) {
 
-  unsigned int symbol = biarDecodeSymbol(decodingEnv, ctx );
+  unsigned int symbol = biarDecodeSymbol (decodingEnv, ctx );
 
-  if (symbol==0)
+  if (symbol == 0)
     return 0;
   else {
     unsigned int l, k = 1;
     unsigned int exp_start = 13;
     symbol = 0;
     do {
-      l = biarDecodeSymbol(decodingEnv, ctx);
+      l = biarDecodeSymbol (decodingEnv, ctx);
       ++symbol;
       ++k;
       } while((l != 0) && (k != exp_start));
 
     if (l != 0)
-      symbol += exp_golomb_decode_eq_prob(decodingEnv,0)+1;
+      symbol += exp_golomb_decode_eq_prob (decodingEnv,0)+1;
     return symbol;
     }
   }
 //}}}
 //{{{
-static unsigned int unary_exp_golomb_mv_decode (sDecodingEnv* decodingEnv, sBiContextType* ctx,
-                                               unsigned int max_bin) {
+static unsigned int unary_exp_golomb_mv_decode (sDecodingEnv* decodingEnv, sBiContextType* ctx, unsigned int max_bin) {
 
-  unsigned int symbol = biarDecodeSymbol(decodingEnv, ctx );
+  unsigned int symbol = biarDecodeSymbol (decodingEnv, ctx );
 
   if (symbol == 0)
     return 0;
@@ -197,18 +196,19 @@ static unsigned int unary_exp_golomb_mv_decode (sDecodingEnv* decodingEnv, sBiCo
     unsigned int exp_start = 8;
     unsigned int l,k = 1;
     unsigned int bin = 1;
-    symbol=0;
+    symbol = 0;
     ++ctx;
     do {
-      l=biarDecodeSymbol(decodingEnv, ctx);
-      if ((++bin)==2) ctx++;
-      if (bin==max_bin)
+      l = biarDecodeSymbol (decodingEnv, ctx);
+      if ((++bin) == 2) 
+        ctx++;
+      if (bin == max_bin)
         ++ctx;
       ++symbol;
       ++k;
       } while ((l != 0) && (k != exp_start));
-    if (l!=0)
-      symbol += exp_golomb_decode_eq_prob (decodingEnv,3) + 1;
+    if (l != 0)
+      symbol += exp_golomb_decode_eq_prob (decodingEnv, 3) + 1;
 
     return symbol;
     }
@@ -218,12 +218,12 @@ static unsigned int unary_exp_golomb_mv_decode (sDecodingEnv* decodingEnv, sBiCo
 //{{{
 int cabacStartCode (sSlice* slice, int eos_bit) {
 
-  unsigned int  bit;
+  unsigned int bit;
   if (eos_bit) {
-    const byte* dpMap    = assignSE2dp[slice->dataDpMode];
+    const byte* dpMap = assignSE2dp[slice->dataDpMode];
     sDataPartition* dataPartition = &(slice->dataPartitions[dpMap[SE_MBTYPE]]);
     sDecodingEnv* decodingEnv = &(dataPartition->deCabac);
-    bit = biariDecodeFinal (decodingEnv); //GB
+    bit = biariDecodeFinal (decodingEnv); 
     }
   else
     bit = 0;
@@ -286,7 +286,7 @@ void delete_contexts_MotionInfo (sMotionInfoContexts* deco_ctx) {
 //}}}
 //{{{
 void delete_contexts_TextureInfo (sTextureInfoContexts* deco_ctx) {
-  free( deco_ctx );
+  free (deco_ctx);
   }
 //}}}
 
@@ -316,12 +316,12 @@ int check_next_mb_and_get_field_mode_CABAC_p_slice (sSlice* slice, sSyntaxElemen
   int length;
   sDecodingEnv* decodingEnv = &(act_dp->deCabac);
 
-  int skip   = 0;
-  int field  = 0;
+  int skip = 0;
+  int field = 0;
   int i;
   sMacroblock* mb;
 
-  //get next MB
+  // get next MB
   ++slice->mbIndex;
 
   mb = &slice->mbData[slice->mbIndex];
@@ -335,24 +335,24 @@ int check_next_mb_and_get_field_mode_CABAC_p_slice (sSlice* slice, sSyntaxElemen
   CheckAvailabilityOfNeighborsMBAFF (mb);
   checkNeighbourCabac (mb);
 
-  //create
+  // create
   decodingEnv_copy = (sDecodingEnv*) calloc(1, sizeof(sDecodingEnv) );
-  for (i=0;i<3;++i)
+  for (i = 0; i < 3;++i)
     mb_type_ctx_copy[i] = (sBiContextType*) calloc(NUM_MB_TYPE_CTX, sizeof(sBiContextType) );
   mb_aff_ctx_copy = (sBiContextType*) calloc(NUM_MB_AFF_CTX, sizeof(sBiContextType) );
 
-  //copy
-  memcpy(decodingEnv_copy,decodingEnv,sizeof(sDecodingEnv));
+  // copy
+  memcpy (decodingEnv_copy,decodingEnv,sizeof(sDecodingEnv));
   length = *(decodingEnv_copy->Dcodestrm_len) = *(decodingEnv->Dcodestrm_len);
   for (i=0;i<3;++i)
-    memcpy(mb_type_ctx_copy[i], motionContext->mb_type_contexts[i],NUM_MB_TYPE_CTX*sizeof(sBiContextType) );
-  memcpy(mb_aff_ctx_copy, motionContext->mb_aff_contexts,NUM_MB_AFF_CTX*sizeof(sBiContextType) );
+    memcpy (mb_type_ctx_copy[i], motionContext->mb_type_contexts[i],NUM_MB_TYPE_CTX*sizeof(sBiContextType) );
+  memcpy (mb_aff_ctx_copy, motionContext->mb_aff_contexts,NUM_MB_AFF_CTX*sizeof(sBiContextType) );
 
-  //check_next_mb
+  // check_next_mb
   slice->lastDquant = 0;
   read_skip_flag_CABAC_p_slice (mb, se, decodingEnv);
 
-  skip = (se->value1==0);
+  skip = (se->value1 == 0);
 
   if (!skip) {
     readFieldModeInfo_CABAC (mb, se,decodingEnv);
@@ -365,15 +365,15 @@ int check_next_mb_and_get_field_mode_CABAC_p_slice (sSlice* slice, sSyntaxElemen
 
   memcpy(decodingEnv,decodingEnv_copy,sizeof(sDecodingEnv));
   *(decodingEnv->Dcodestrm_len) = length;
-  for (i=0;i<3;++i)
-    memcpy(motionContext->mb_type_contexts[i],mb_type_ctx_copy[i], NUM_MB_TYPE_CTX*sizeof(sBiContextType) );
-  memcpy( motionContext->mb_aff_contexts,mb_aff_ctx_copy,NUM_MB_AFF_CTX*sizeof(sBiContextType) );
+  for (i = 0; i < 3; ++i)
+    memcpy (motionContext->mb_type_contexts[i], mb_type_ctx_copy[i], NUM_MB_TYPE_CTX * sizeof(sBiContextType));
+  memcpy (motionContext->mb_aff_contexts, mb_aff_ctx_copy, NUM_MB_AFF_CTX * sizeof(sBiContextType));
 
   checkNeighbourCabac (mb);
 
   // delete
   free (decodingEnv_copy);
-  for (i = 0; i < 3;++i)
+  for (i = 0; i < 3; ++i)
     free (mb_type_ctx_copy[i]);
   free (mb_aff_ctx_copy);
 
@@ -381,8 +381,7 @@ int check_next_mb_and_get_field_mode_CABAC_p_slice (sSlice* slice, sSyntaxElemen
   }
 //}}}
 //{{{
-int check_next_mb_and_get_field_mode_CABAC_b_slice (sSlice* slice, sSyntaxElement *se,
-                                                    sDataPartition  *act_dp) {
+int check_next_mb_and_get_field_mode_CABAC_b_slice (sSlice* slice, sSyntaxElement *se, sDataPartition  *act_dp) {
 
   sDecoder* decoder = slice->decoder;
   sBiContextType* mb_type_ctx_copy[3];
@@ -424,14 +423,14 @@ int check_next_mb_and_get_field_mode_CABAC_b_slice (sSlice* slice, sSyntaxElemen
   length = *(decodingEnv_copy->Dcodestrm_len) = *(decodingEnv->Dcodestrm_len);
 
   for (i = 0; i < 3;++i)
-    memcpy (mb_type_ctx_copy[i], motionContext->mb_type_contexts[i],NUM_MB_TYPE_CTX*sizeof(sBiContextType) );
-  memcpy (mb_aff_ctx_copy, motionContext->mb_aff_contexts,NUM_MB_AFF_CTX*sizeof(sBiContextType) );
+    memcpy (mb_type_ctx_copy[i], motionContext->mb_type_contexts[i], NUM_MB_TYPE_CTX * sizeof(sBiContextType) );
+  memcpy (mb_aff_ctx_copy, motionContext->mb_aff_contexts, NUM_MB_AFF_CTX * sizeof(sBiContextType) );
 
   //  check_next_mb
   slice->lastDquant = 0;
   read_skip_flag_CABAC_b_slice (mb, se, decodingEnv);
 
-  skip = (se->value1==0 && se->value2==0);
+  skip = (se->value1 == 0 && se->value2 == 0);
   if (!skip) {
     readFieldModeInfo_CABAC (mb, se,decodingEnv);
     field = se->value1;
@@ -445,14 +444,14 @@ int check_next_mb_and_get_field_mode_CABAC_b_slice (sSlice* slice, sSyntaxElemen
   *(decodingEnv->Dcodestrm_len) = length;
 
   for (i = 0; i < 3; ++i)
-    memcpy (motionContext->mb_type_contexts[i],mb_type_ctx_copy[i], NUM_MB_TYPE_CTX * sizeof(sBiContextType) );
+    memcpy (motionContext->mb_type_contexts[i], mb_type_ctx_copy[i], NUM_MB_TYPE_CTX * sizeof(sBiContextType) );
   memcpy( motionContext->mb_aff_contexts, mb_aff_ctx_copy, NUM_MB_AFF_CTX * sizeof(sBiContextType) );
 
   checkNeighbourCabac (mb);
 
   // delete
   free (decodingEnv_copy);
-  for (i = 0; i < 3;++i)
+  for (i = 0; i < 3; ++i)
     free (mb_type_ctx_copy[i]);
   free (mb_aff_ctx_copy);
 
@@ -551,11 +550,11 @@ void read_mvd_CABAC_mbaff (sMacroblock* mb, sSyntaxElement *se, sDecodingEnv* de
     act_ctx = 5 * k + 2;
   se->context = act_ctx;
 
-  act_sym = biarDecodeSymbol(decodingEnv,&ctx->mv_res_contexts[0][act_ctx] );
+  act_sym = biarDecodeSymbol (decodingEnv, &ctx->mv_res_contexts[0][act_ctx] );
   if (act_sym != 0) {
     act_ctx = 5 * k;
-    act_sym = unary_exp_golomb_mv_decode(decodingEnv, ctx->mv_res_contexts[1] + act_ctx, 3) + 1;
-    if (biariDecodeSymbolEqProb(decodingEnv))
+    act_sym = unary_exp_golomb_mv_decode (decodingEnv, ctx->mv_res_contexts[1] + act_ctx, 3) + 1;
+    if (biariDecodeSymbolEqProb (decodingEnv))
       act_sym = -act_sym;
     }
 
@@ -632,7 +631,7 @@ void read_skip_flag_CABAC_p_slice (sMacroblock* mb, sSyntaxElement *se, sDecodin
   int b = (mb->mbCabacUp   != NULL) ? (mb->mbCabacUp  ->skipFlag == 0) : 0;
 
   sBiContextType *mb_type_contexts = &mb->slice->motionContext->mb_type_contexts[1][a + b];
-  se->value1 = (biarDecodeSymbol(decodingEnv, mb_type_contexts) != 1);
+  se->value1 = biarDecodeSymbol (decodingEnv, mb_type_contexts) != 1;
 
   if (!se->value1)
     mb->slice->lastDquant = 0;
@@ -642,8 +641,8 @@ void read_skip_flag_CABAC_p_slice (sMacroblock* mb, sSyntaxElement *se, sDecodin
 void read_skip_flag_CABAC_b_slice (sMacroblock* mb, sSyntaxElement *se, sDecodingEnv* decodingEnv) {
 
   int a = (mb->mbCabacLeft != NULL) ? (mb->mbCabacLeft->skipFlag == 0) : 0;
-  int b = (mb->mbCabacUp   != NULL) ? (mb->mbCabacUp  ->skipFlag == 0) : 0;
-  sBiContextType *mb_type_contexts = &mb->slice->motionContext->mb_type_contexts[2][7 + a + b];
+  int b = (mb->mbCabacUp != NULL) ? (mb->mbCabacUp->skipFlag == 0) : 0;
+  sBiContextType* mb_type_contexts = &mb->slice->motionContext->mb_type_contexts[2][7 + a + b];
 
   se->value1 = se->value2 = (biarDecodeSymbol (decodingEnv, mb_type_contexts) != 1);
   if (!se->value1)
