@@ -1273,100 +1273,13 @@ static void ercWriteMBMODEandMV (sMacroblock* mb) {
 //}}}
 
 //{{{
-static void reset_WPParam (sSlice* slice) {
+static void resetWpParam (sSlice* slice) {
 
   for (int i = 0; i < MAX_REFERENCE_PICTURES; i++) {
     for (int comp = 0; comp < 3; comp++) {
-      int logWeightDenom = (comp == 0) ? slice->lumaLog2weightDenom :
-                                           slice->chromaLog2weightDenom;
+      int logWeightDenom = (comp == 0) ? slice->lumaLog2weightDenom : slice->chromaLog2weightDenom;
       slice->wpWeight[0][i][comp] = 1 << logWeightDenom;
       slice->wpWeight[1][i][comp] = 1 << logWeightDenom;
-      }
-    }
-  }
-//}}}
-//{{{
-static void pred_weight_table (sSlice* slice) {
-
-  sDecoder* decoder = slice->decoder;
-  sSPS* activeSPS = decoder->activeSPS;
-
-  byte partitionIndex = assignSE2dp[slice->datadpMode][SE_HEADER];
-  sDataPartition* dataPartition = &(slice->dps[partitionIndex]);
-  sBitStream* s = dataPartition->s;
-
-  int luma_weight_flag_l0, luma_weight_flag_l1, chroma_weight_flag_l0, chroma_weight_flag_l1;
-
-  slice->lumaLog2weightDenom =
-    (unsigned short) readUeV ("SLC lumaLog2weightDenom", s);
-  slice->wp_round_luma =
-    slice->lumaLog2weightDenom ? 1<<(slice->lumaLog2weightDenom - 1) : 0;
-
-  if (0 != activeSPS->chromaFormatIdc) {
-    slice->chromaLog2weightDenom =
-      (unsigned short) readUeV ("SLC chromaLog2weightDenom", s);
-    slice->wp_round_chroma =
-      slice->chromaLog2weightDenom ? 1<<(slice->chromaLog2weightDenom - 1) : 0;
-    }
-
-  reset_WPParam (slice);
-
-  for (int i = 0; i < slice->numRefIndexActive[LIST_0]; i++) {
-    luma_weight_flag_l0 = readU1 ("SLC luma_weight_flag_l0", s);
-    if (luma_weight_flag_l0) {
-      slice->wpWeight[LIST_0][i][0] = readSeV ("SLC luma_weight_l0", s);
-      slice->wpOffset[LIST_0][i][0] = readSeV ("SLC luma_offset_l0", s);
-      slice->wpOffset[LIST_0][i][0] = slice->wpOffset[LIST_0][i][0]<<(decoder->bitDepthLuma - 8);
-      }
-    else {
-      slice->wpWeight[LIST_0][i][0] = 1 << slice->lumaLog2weightDenom;
-      slice->wpOffset[LIST_0][i][0] = 0;
-      }
-
-    if (activeSPS->chromaFormatIdc != 0) {
-      chroma_weight_flag_l0 = readU1 ("SLC chroma_weight_flag_l0", s);
-      for (int j = 1; j<3; j++) {
-        if (chroma_weight_flag_l0) {
-          slice->wpWeight[LIST_0][i][j] = readSeV("SLC chroma_weight_l0", s);
-          slice->wpOffset[LIST_0][i][j] = readSeV("SLC chroma_offset_l0", s);
-          slice->wpOffset[LIST_0][i][j] = slice->wpOffset[LIST_0][i][j]<<(decoder->bitDepthChroma-8);
-          }
-        else {
-          slice->wpWeight[LIST_0][i][j] = 1<<slice->chromaLog2weightDenom;
-          slice->wpOffset[LIST_0][i][j] = 0;
-          }
-        }
-      }
-    }
-
-  if ((slice->sliceType == B_SLICE) &&
-      decoder->activePPS->weightedBiPredIdc == 1) {
-    for (int i = 0; i < slice->numRefIndexActive[LIST_1]; i++) {
-      luma_weight_flag_l1 = readU1("SLC luma_weight_flag_l1", s);
-      if (luma_weight_flag_l1) {
-        slice->wpWeight[LIST_1][i][0] = readSeV ("SLC luma_weight_l1", s);
-        slice->wpOffset[LIST_1][i][0] = readSeV ("SLC luma_offset_l1", s);
-        slice->wpOffset[LIST_1][i][0] = slice->wpOffset[LIST_1][i][0]<<(decoder->bitDepthLuma-8);
-        }
-      else {
-        slice->wpWeight[LIST_1][i][0] = 1<<slice->lumaLog2weightDenom;
-        slice->wpOffset[LIST_1][i][0] = 0;
-        }
-
-      if (activeSPS->chromaFormatIdc != 0) {
-        chroma_weight_flag_l1 = readU1 ("SLC chroma_weight_flag_l1", s);
-        for (int j = 1; j < 3; j++) {
-          if (chroma_weight_flag_l1) {
-            slice->wpWeight[LIST_1][i][j] = readSeV("SLC chroma_weight_l1", s);
-            slice->wpOffset[LIST_1][i][j] = readSeV("SLC chroma_offset_l1", s);
-            slice->wpOffset[LIST_1][i][j] = slice->wpOffset[LIST_1][i][j]<<(decoder->bitDepthChroma-8);
-            }
-          else {
-            slice->wpWeight[LIST_1][i][j] = 1<<slice->chromaLog2weightDenom;
-            slice->wpOffset[LIST_1][i][j] = 0;
-            }
-          }
-        }
       }
     }
   }
@@ -1980,12 +1893,10 @@ static void readSliceHeader (sDecoder* decoder, sSlice* slice) {
 //   - then setup the active parameter sets
 // - read the rest of the slice header
 
-  // read front of sliceHeader
   byte partitionIndex = assignSE2dp[slice->datadpMode][SE_HEADER];
   sDataPartition* dataPartition = &(slice->dps[partitionIndex]);
   sBitStream* s = dataPartition->s;
 
-  // Get first_mb_in_slice
   slice->startMbNum = readUeV ("SLC first_mb_in_slice", s);
 
   int tmp = readUeV ("SLC sliceType", s);
@@ -2008,7 +1919,6 @@ static void readSliceHeader (sDecoder* decoder, sSlice* slice) {
   slice->transform8x8Mode = decoder->activePPS->transform8x8modeFlag;
   slice->chroma444notSeparate = (decoder->activeSPS->chromaFormatIdc == YUV444) && !decoder->coding.sepColourPlaneFlag;
 
-  // read rest of sliceHeader
   sSPS* activeSPS = decoder->activeSPS;
   slice->frameNum = readUv (activeSPS->log2_max_frame_num_minus4 + 4, "SLC frameNum", s);
   if (slice->idrFlag) {
@@ -2020,6 +1930,7 @@ static void readSliceHeader (sDecoder* decoder, sSlice* slice) {
     decoder->coding.structure = FRAME;
     slice->fieldPicFlag = 0;
     }
+
   else {
     slice->fieldPicFlag = readU1 ("SLC fieldPicFlag", s);
     if (slice->fieldPicFlag) {
@@ -2068,9 +1979,9 @@ static void readSliceHeader (sDecoder* decoder, sSlice* slice) {
   if (slice->sliceType == B_SLICE)
     slice->directSpatialMvPredFlag = readU1 ("SLC directSpatialMvPredFlag", s);
 
+  // read refPics
   slice->numRefIndexActive[LIST_0] = decoder->activePPS->numRefIndexL0defaultActiveMinus1 + 1;
   slice->numRefIndexActive[LIST_1] = decoder->activePPS->numRefIndexL1defaultActiveMinus1 + 1;
-
   if ((slice->sliceType == P_SLICE) || (slice->sliceType == SP_SLICE) || (slice->sliceType == B_SLICE)) {
     int num_ref_idx_override_flag = readU1 ("SLC num_ref_idx_override_flag", s);
     if (num_ref_idx_override_flag) {
@@ -2119,18 +2030,92 @@ static void readSliceHeader (sDecoder* decoder, sSlice* slice) {
     slice->redundantSliceRefIndex = slice->absDiffPicNumMinus1[LIST_0][0] + 1;
   //}}}
   //{{{  read weightedPred
-  slice->weightedPredFlag = (unsigned short)((slice->sliceType == P_SLICE || slice->sliceType == SP_SLICE)
+  slice->weightedPredFlag = (unsigned short)(((slice->sliceType == P_SLICE) || (slice->sliceType == SP_SLICE))
                               ? decoder->activePPS->weightedPredFlag
                               : ((slice->sliceType == B_SLICE) && (decoder->activePPS->weightedBiPredIdc == 1)));
 
-  slice->weightedBiPredIdc =
-    (unsigned short)((slice->sliceType == B_SLICE) && (decoder->activePPS->weightedBiPredIdc > 0));
+  slice->weightedBiPredIdc = (unsigned short)((slice->sliceType == B_SLICE) &&
+                                              (decoder->activePPS->weightedBiPredIdc > 0));
 
   if ((decoder->activePPS->weightedPredFlag &&
-      ((slice->sliceType == P_SLICE) || (slice->sliceType == SP_SLICE))) ||
-      ((decoder->activePPS->weightedBiPredIdc == 1) && (slice->sliceType == B_SLICE)))
-    pred_weight_table (slice);
+       ((slice->sliceType == P_SLICE) || (slice->sliceType == SP_SLICE))) ||
+      ((decoder->activePPS->weightedBiPredIdc == 1) && (slice->sliceType == B_SLICE))) {
+    slice->lumaLog2weightDenom = (unsigned short) readUeV ("SLC lumaLog2weightDenom", s);
+    slice->wp_round_luma = slice->lumaLog2weightDenom ? 1 << (slice->lumaLog2weightDenom - 1) : 0;
+
+    if (activeSPS->chromaFormatIdc) {
+      slice->chromaLog2weightDenom = (unsigned short) readUeV ("SLC chromaLog2weightDenom", s);
+      slice->wp_round_chroma = slice->chromaLog2weightDenom ? 1 << (slice->chromaLog2weightDenom - 1) : 0;
+      }
+
+    resetWpParam (slice);
+
+    for (int i = 0; i < slice->numRefIndexActive[LIST_0]; i++) {
+      //{{{  read l0 weights
+      int luma_weight_flag_l0 = readU1 ("SLC luma_weight_flag_l0", s);
+      if (luma_weight_flag_l0) {
+        slice->wpWeight[LIST_0][i][0] = readSeV ("SLC luma_weight_l0", s);
+        slice->wpOffset[LIST_0][i][0] = readSeV ("SLC luma_offset_l0", s);
+        slice->wpOffset[LIST_0][i][0] = slice->wpOffset[LIST_0][i][0] << (decoder->bitDepthLuma - 8);
+        }
+      else {
+        slice->wpWeight[LIST_0][i][0] = 1 << slice->lumaLog2weightDenom;
+        slice->wpOffset[LIST_0][i][0] = 0;
+        }
+
+      if (activeSPS->chromaFormatIdc) {
+        // l0 chroma weights
+        int chroma_weight_flag_l0 = readU1 ("SLC chroma_weight_flag_l0", s);
+        for (int j = 1; j<3; j++) {
+          if (chroma_weight_flag_l0) {
+            slice->wpWeight[LIST_0][i][j] = readSeV ("SLC chroma_weight_l0", s);
+            slice->wpOffset[LIST_0][i][j] = readSeV ("SLC chroma_offset_l0", s);
+            slice->wpOffset[LIST_0][i][j] = slice->wpOffset[LIST_0][i][j] << (decoder->bitDepthChroma-8);
+            }
+          else {
+            slice->wpWeight[LIST_0][i][j] = 1 << slice->chromaLog2weightDenom;
+            slice->wpOffset[LIST_0][i][j] = 0;
+            }
+          }
+        }
+      }
+      //}}}
+
+    if ((slice->sliceType == B_SLICE) && decoder->activePPS->weightedBiPredIdc == 1) {
+      for (int i = 0; i < slice->numRefIndexActive[LIST_1]; i++) {
+        //{{{  read l1 weights
+        int luma_weight_flag_l1 = readU1 ("SLC luma_weight_flag_l1", s);
+        if (luma_weight_flag_l1) {
+          slice->wpWeight[LIST_1][i][0] = readSeV ("SLC luma_weight_l1", s);
+          slice->wpOffset[LIST_1][i][0] = readSeV ("SLC luma_offset_l1", s);
+          slice->wpOffset[LIST_1][i][0] = slice->wpOffset[LIST_1][i][0] << (decoder->bitDepthLuma-8);
+          }
+        else {
+          slice->wpWeight[LIST_1][i][0] = 1 << slice->lumaLog2weightDenom;
+          slice->wpOffset[LIST_1][i][0] = 0;
+          }
+
+        if (activeSPS->chromaFormatIdc) {
+          // l1 chroma weights
+          int chroma_weight_flag_l1 = readU1 ("SLC chroma_weight_flag_l1", s);
+          for (int j = 1; j < 3; j++) {
+            if (chroma_weight_flag_l1) {
+              slice->wpWeight[LIST_1][i][j] = readSeV("SLC chroma_weight_l1", s);
+              slice->wpOffset[LIST_1][i][j] = readSeV("SLC chroma_offset_l1", s);
+              slice->wpOffset[LIST_1][i][j] = slice->wpOffset[LIST_1][i][j]<<(decoder->bitDepthChroma-8);
+              }
+            else {
+              slice->wpWeight[LIST_1][i][j] = 1 << slice->chromaLog2weightDenom;
+              slice->wpOffset[LIST_1][i][j] = 0;
+              }
+            }
+          }
+        }
+        //}}}
+      }
+    }
   //}}}
+
   if (slice->refId)
     decRefPicMarking (decoder, s, slice);
 
@@ -2152,6 +2137,7 @@ static void readSliceHeader (sDecoder* decoder, sSlice* slice) {
   //}}}
 
   if (decoder->activePPS->deblockFilterControlPresent) {
+    //{{{  read deblockFilter params
     slice->DFDisableIdc = (short)readUeV ("SLC disable_deblocking_filter_idc", s);
     if (slice->DFDisableIdc != 1) {
       slice->DFAlphaC0Offset = (short)(2 * readSeV ("SLC slice_alpha_c0_offset_div2", s));
@@ -2160,18 +2146,22 @@ static void readSliceHeader (sDecoder* decoder, sSlice* slice) {
     else
       slice->DFAlphaC0Offset = slice->DFBetaOffset = 0;
     }
-  else
-    slice->DFDisableIdc = slice->DFAlphaC0Offset = slice->DFBetaOffset = 0;
-
-  // The conformance point for intra profiles is without deblocking
-  // but decoders are still recommended to filter the output
-  // We allow in the decoder config to skip the loop filtering
-  // This is achieved by modifying the parameters here.
-  if (isHiIntraOnlyProfile (activeSPS->profileIdc, activeSPS->constrainedSet3flag) &&
-      (decoder->param.intraProfileDeblocking == 0)) {
-    slice->DFDisableIdc = 1;
-    slice->DFAlphaC0Offset = slice->DFBetaOffset = 0;
+    //}}}
+  else {
+    //{{{  enable deblockFilter
+    slice->DFDisableIdc = 0;
+    slice->DFAlphaC0Offset = 0;
+    slice->DFBetaOffset = 0;
     }
+    //}}}
+  if (isHiIntraOnlyProfile (activeSPS->profileIdc, activeSPS->constrainedSet3flag) &&
+      !decoder->param.intraProfileDeblocking) {
+    //{{{  hIintra deblock special case
+    slice->DFDisableIdc = 1;
+    slice->DFAlphaC0Offset = 0;
+    slice->DFBetaOffset = 0;
+    }
+    //}}}
   //{{{  read sliceGroup
   if (decoder->activePPS->numSliceGroupsMinus1>0 && decoder->activePPS->sliceGroupMapType>=3 &&
       decoder->activePPS->sliceGroupMapType <= 5) {
