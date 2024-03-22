@@ -47,7 +47,7 @@ typedef enum {
 
 //{{{  enum eDataPartitionType
 typedef enum {
-  eDataPartition1, // no dataPartiton 
+  eDataPartition1, // no dataPartiton
   eDataPartition3  // 3 dataPartitions
   } eDataPartitionType;
 //}}}
@@ -59,7 +59,7 @@ typedef enum {
   eFrameMbPairCoding = 3
  } eCodingType;
 //}}}
-//{{{  enum eSeType - definition of H.264 syntax elements
+//{{{  enum eSyntaxElementType 
 typedef enum {
   SE_HEADER,
   SE_PTYPE,
@@ -80,7 +80,7 @@ typedef enum {
   SE_BFRAME,
   SE_EOS,
   SE_MAX_ELEMENTS = 20
-  } eSeType;
+  } eSyntaxElementType;
 //}}}
 
 //}}}
@@ -108,18 +108,12 @@ typedef enum {
   eNumSliceTypes = 5
   } eSliceType;
 //}}}
-//{{{  enum eMotionEstimationLevel
+//{{{  enum eMotionEstimation
 typedef enum {
-  F_PEL,   // Full Pel refinement
-  H_PEL,   // Half Pel refinement
-  Q_PEL    // Quarter Pel refinement
-  } eMotionEstimationLevel;
-//}}}
-//{{{  enum refAccess
-typedef enum {
-  FAST_ACCESS = 0, // Fast/safe reference access
-  UMV_ACCESS = 1   // unconstrained reference access
-  } eRefAccessType;
+  eFullPel,
+  eHalfPel,
+  eQuarterPel
+  } eMotionEstimation;
 //}}}
 //{{{  enum eComponentType
 typedef enum {
