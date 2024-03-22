@@ -18,13 +18,6 @@
 #include "sps.h"
 #include "pps.h"
 //}}}
-//{{{  enum eColorComponent
-typedef enum {
-  LumaComp = 0,
-  CrComp = 1,
-  CbComp = 2
-  } eColorComponent;
-//}}}
 //{{{  enum eColorPlane
 typedef enum {
   // YUV
@@ -32,6 +25,13 @@ typedef enum {
   PLANE_U = 1,  // PLANE_Cb
   PLANE_V = 2,  // PLANE_Cr
   } eColorPlane;
+//}}}
+//{{{  enum eColorComponent
+typedef enum {
+  LumaComp = 0,
+  CrComp = 1,
+  CbComp = 2
+  } eColorComponent;
 //}}}
 //{{{  enum ePicStructure
 typedef enum {
@@ -715,21 +715,6 @@ typedef struct Decoder {
   int          recoveryPoc;
   int          recoveryFlag;
 
-
-  // output
-  struct DPB*     dpb;
-  int             lastHasMmco5;
-  int             dpbPoc[100];
-  struct Picture* picture;
-  struct Picture* decPictureJV[MAX_PLANE];  // picture to be used during 4:4:4 independent mode decoding
-  struct Picture* noReferencePicture;       // dummy storable picture for recovery point
-  struct FrameStore* lastOutFramestore;
-
-  sDecodedPic*       decOutputPic;
-  struct FrameStore* outBuffer;
-  struct Picture*    pendingOut;
-  int                pendingOutState;
-
   // slice
   int          picSliceIndex;
   int          numDecodedMbs;
@@ -740,6 +725,19 @@ typedef struct Decoder {
   struct OldSlice* oldSlice;
 
   int picDiskUnitSize;
+
+  // output
+  struct DPB*        dpb;
+  int                lastHasMmco5;
+  int                dpbPoc[100];
+  struct Picture*    picture;
+  struct Picture*    decPictureJV[MAX_PLANE];  // picture to be used during 4:4:4 independent mode decoding
+  struct Picture*    noReferencePicture;       // dummy storable picture for recovery point
+  struct FrameStore* lastOutFramestore;
+  sDecodedPic*       decOutputPic;
+  struct FrameStore* outBuffer;
+  struct Picture*    pendingOut;
+  int                pendingOutState;
 
   // sCoding duplicates
   int width;
@@ -761,12 +759,10 @@ typedef struct Decoder {
   sCoding      coding;
   sBlockPos*   picPos;
   byte****     nzCoeff;
-
   sMacroBlock* mbData;              // array containing all MBs of a whole frame
   char*        intraBlock;
   byte**       predMode;            // prediction type [90][74]
   int**        siBlock;
-
   sMacroBlock* mbDataJV[MAX_PLANE];
   char*        intraBlockJV[MAX_PLANE];
   byte**       predModeJV[MAX_PLANE];
@@ -775,12 +771,12 @@ typedef struct Decoder {
   // POC
   int          lastRefPicPoc;
 
-  // - POC mode 0:
+  // - mode 0:
   signed int   prevPocMsb;
   unsigned int prevPocLsb;
   int          lastPicBotField;
 
-  // - POC mode 1:
+  // - mode 1:
   signed int   expectedPOC, pocCycleCount, frameNumPocCycle;
   unsigned int previousFrameNum;
   unsigned int frameNumOffset;
@@ -794,36 +790,35 @@ typedef struct Decoder {
   int          noOutputPriorPicFlag;
 
   // non-zero: i-th previous frame is correct
-  int          isPrimaryOk;    // if primary frame is correct, 0: incorrect
-  int          isRedundantOk;  // if redundant frame is correct, 0:incorrect
+  int  isPrimaryOk;    // if primary frame is correct, 0: incorrect
+  int  isRedundantOk;  // if redundant frame is correct, 0:incorrect
 
-  int*         qpPerMatrix;
-  int*         qpRemMatrix;
+  int* qpPerMatrix;
+  int* qpRemMatrix;
 
   // Error parameters
   struct ObjectBuffer* ercObjectList;
   struct ErcVariables* ercErrorVar;
-  int                  ercMvPerMb;
-  int                  ecFlag[SE_MAX_ELEMENTS];  // array to set errorconcealment
+  int  ercMvPerMb;
+  int  ecFlag[SE_MAX_ELEMENTS];  // array to set errorconcealment
 
   // fmo
-  int*                 mbToSliceGroupMap;
-  int*                 mapUnitToSliceGroupMap;
-  int                  sliceGroupsNum;  // the number of slice groups -1 (0 == scan order, 7 == maximum)
+  int* mbToSliceGroupMap;
+  int* mapUnitToSliceGroupMap;
+  int  sliceGroupsNum;  // the number of slice groups -1 (0 == scan order, 7 == maximum)
 
   // picture error conceal
   // concealHead points to first node in list, concealTail points to last node in list
   // Initialize both to NULL, meaning no nodes in list yet
   struct ConcealNode* concealHead;
   struct ConcealNode* concealTail;
-  int          concealMode;
-  int          earlierMissingPoc;
-  unsigned int concealFrame;
-  int          idrConcealFlag;
-  int          concealSliceType;
+  int                 concealMode;
+  int                 earlierMissingPoc;
+  unsigned int        concealFrame;
+  int                 idrConcealFlag;
+  int                 concealSliceType;
 
-
-  // virtual methods
+  // virtual functions
   void (*getNeighbour) (sMacroBlock*, int, int, int[2], sPixelPos*);
   void (*getMbBlockPos) (sBlockPos*, int, short*, short*);
   void (*getStrengthV) (sMacroBlock*, int, int, struct Picture*);
