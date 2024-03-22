@@ -38,7 +38,7 @@ static void read_ipred_8x8_modes_mbaff (sMacroBlock* mb) {
   se.type = SE_INTRAPREDMODE;
   sDataPartition* dataPartition = &(slice->dataPartitions[dpMap[SE_INTRAPREDMODE]]);
 
-  if (!(decoder->activePPS->entropyCodingMode == (Boolean)CAVLC || dataPartition->s->errorFlag))
+  if (!(decoder->activePPS->entropyCodingMode == (Boolean)eCavlc || dataPartition->s->errorFlag))
     se.reading = readIntraPredMode_CABAC;
 
   for (int b8 = 0; b8 < 4; ++b8)  {
@@ -49,7 +49,7 @@ static void read_ipred_8x8_modes_mbaff (sMacroBlock* mb) {
     bx = ((b8 & 0x01) << 1);
     bi = mb->blockX + bx;
     // get from stream
-    if (decoder->activePPS->entropyCodingMode == (Boolean)CAVLC || dataPartition->s->errorFlag)
+    if (decoder->activePPS->entropyCodingMode == (Boolean)eCavlc || dataPartition->s->errorFlag)
       readsSyntaxElement_Intra4x4PredictionMode (&se, dataPartition->s);
     else {
       se.context = b8 << 2;
@@ -98,7 +98,7 @@ static void read_ipred_8x8_modes (sMacroBlock* mb) {
   sSyntaxElement se;
   se.type = SE_INTRAPREDMODE;
   sDataPartition* dataPartition = &(slice->dataPartitions[dpMap[SE_INTRAPREDMODE]]);
-  if (!(decoder->activePPS->entropyCodingMode == (Boolean)CAVLC || dataPartition->s->errorFlag))
+  if (!(decoder->activePPS->entropyCodingMode == (Boolean)eCavlc || dataPartition->s->errorFlag))
     se.reading = readIntraPredMode_CABAC;
 
   get4x4Neighbour (mb, -1,  0, decoder->mbSize[IS_LUMA], &left_mb);
@@ -112,7 +112,7 @@ static void read_ipred_8x8_modes (sMacroBlock* mb) {
     bi = mb->blockX + bx;
 
     //get from stream
-    if (decoder->activePPS->entropyCodingMode == (Boolean)CAVLC || dataPartition->s->errorFlag)
+    if (decoder->activePPS->entropyCodingMode == (Boolean)eCavlc || dataPartition->s->errorFlag)
       readsSyntaxElement_Intra4x4PredictionMode (&se, dataPartition->s);
     else {
       se.context = (b8 << 2);
@@ -162,7 +162,7 @@ static void read_ipred_4x4_modes_mbaff (sMacroBlock* mb) {
 
   se.type = SE_INTRAPREDMODE;
   sDataPartition* dataPartition = &(slice->dataPartitions[dpMap[SE_INTRAPREDMODE]]);
-  if (!(decoder->activePPS->entropyCodingMode == (Boolean)CAVLC || dataPartition->s->errorFlag))
+  if (!(decoder->activePPS->entropyCodingMode == (Boolean)eCavlc || dataPartition->s->errorFlag))
     se.reading = readIntraPredMode_CABAC;
 
   for (b8 = 0; b8 < 4; ++b8) { //loop 8x8 blocks
@@ -174,7 +174,7 @@ static void read_ipred_4x4_modes_mbaff (sMacroBlock* mb) {
         bx = ((b8 & 1) << 1) + i;
         bi = mb->blockX + bx;
         //get from stream
-        if (decoder->activePPS->entropyCodingMode == (Boolean)CAVLC || dataPartition->s->errorFlag)
+        if (decoder->activePPS->entropyCodingMode == (Boolean)eCavlc || dataPartition->s->errorFlag)
           readsSyntaxElement_Intra4x4PredictionMode (&se, dataPartition->s);
         else {
           se.context = (b8<<2) + (j<<1) +i;
@@ -192,7 +192,7 @@ static void read_ipred_4x4_modes_mbaff (sMacroBlock* mb) {
 
         // !! KS: not sure if the following is still correct...
         ts = ls = 0;   // Check to see if the neighboring block is SI
-        if (slice->sliceType == SI_SLICE) { // need support for MBINTLC1
+        if (slice->sliceType == eSIslice) { // need support for MBINTLC1
           if (left_block.available)
             if (slice->siBlock [picPos[left_block.mbIndex].y][picPos[left_block.mbIndex].x])
               ls = 1;
@@ -231,7 +231,7 @@ static void read_ipred_4x4_modes (sMacroBlock* mb) {
   sSyntaxElement se;
   se.type = SE_INTRAPREDMODE;
   sDataPartition* dataPartition = &(slice->dataPartitions[dpMap[SE_INTRAPREDMODE]]);
-  if (!(decoder->activePPS->entropyCodingMode == (Boolean)CAVLC || dataPartition->s->errorFlag))
+  if (!(decoder->activePPS->entropyCodingMode == (Boolean)eCavlc || dataPartition->s->errorFlag))
     se.reading = readIntraPredMode_CABAC;
 
   get4x4Neighbour (mb, -1,  0, decoder->mbSize[IS_LUMA], &left_mb);
@@ -248,7 +248,7 @@ static void read_ipred_4x4_modes (sMacroBlock* mb) {
         int bi = mb->blockX + bx;
 
         // get from stream
-        if (decoder->activePPS->entropyCodingMode == (Boolean)CAVLC || dataPartition->s->errorFlag)
+        if (decoder->activePPS->entropyCodingMode == (Boolean)eCavlc || dataPartition->s->errorFlag)
           readsSyntaxElement_Intra4x4PredictionMode (&se, dataPartition->s);
         else {
           se.context=(b8<<2) + (j<<1) +i;
@@ -266,7 +266,7 @@ static void read_ipred_4x4_modes (sMacroBlock* mb) {
 
         int ts = 0;
         int ls = 0;   // Check to see if the neighboring block is SI
-        if (slice->sliceType == SI_SLICE) {
+        if (slice->sliceType == eSIslice) {
           //{{{  need support for MBINTLC1
           if (left_block.available)
             if (slice->siBlock [picPos[left_block.mbIndex].y][picPos[left_block.mbIndex].x])
@@ -316,7 +316,7 @@ static void readIpredModes (sMacroBlock* mb) {
     se.type = SE_INTRAPREDMODE;
     dataPartition = &(slice->dataPartitions[dpMap[SE_INTRAPREDMODE]]);
 
-    if (decoder->activePPS->entropyCodingMode == (Boolean)CAVLC || dataPartition->s->errorFlag)
+    if (decoder->activePPS->entropyCodingMode == (Boolean)eCavlc || dataPartition->s->errorFlag)
       se.mapping = linfo_ue;
     else
       se.reading = readCIPredMode_CABAC;
@@ -402,9 +402,9 @@ static void concealIPCMcoeffs (sMacroBlock* mb) {
 static void initIPCMdecoding (sSlice* slice) {
 
   int dpNum;
-  if (slice->dataDpMode == PAR_DP_1)
+  if (slice->dataDpMode == eDataPartition1)
     dpNum = 1;
-  else if (slice->dataDpMode == PAR_DP_3)
+  else if (slice->dataDpMode == eDataPartition3)
     dpNum = 3;
   else {
     printf ("dataPartition Mode is not supported\n");
@@ -423,9 +423,9 @@ static void readIPCMcoeffs (sSlice* slice, sDataPartition* dataPartition) {
 
   sDecoder* decoder = slice->decoder;
 
-  //For CABAC, we don't need to read bits to let stream byte aligned
+  //For eCabac, we don't need to read bits to let stream byte aligned
   //  because we have variable for integer bytes position
-  if (decoder->activePPS->entropyCodingMode == (Boolean)CABAC) {
+  if (decoder->activePPS->entropyCodingMode == (Boolean)eCabac) {
     readIPCMcabac (slice, dataPartition);
     initIPCMdecoding (slice);
     }
@@ -473,7 +473,7 @@ static void SetB8Mode (sMacroBlock* mb, int value, int i) {
   static const char b_v2b8 [14] = {0, 4, 4, 4, 5, 6, 5, 6, 5, 6, 7, 7, 7, IBLOCK};
   static const char b_v2pd [14] = {2, 0, 1, 2, 0, 0, 1, 1, 2, 2, 0, 1, 2, -1};
 
-  if (slice->sliceType == B_SLICE) {
+  if (slice->sliceType == eBslice) {
     mb->b8mode[i] = b_v2b8[value];
     mb->b8pdir[i] = b_v2pd[value];
     }
@@ -489,7 +489,7 @@ static void resetCoeffs (sMacroBlock* mb) {
 
   sDecoder* decoder = mb->decoder;
 
-  if (decoder->activePPS->entropyCodingMode == (Boolean)CAVLC)
+  if (decoder->activePPS->entropyCodingMode == (Boolean)eCavlc)
     memset (decoder->nzCoeff[mb->mbIndexX][0][0], 0, 3 * BLOCK_PIXELS * sizeof(byte));
   }
 //}}}
@@ -674,7 +674,7 @@ static void readIntra4x4macroblocCavlc (sMacroBlock* mb, const byte* dpMap)
     sDataPartition* dataPartition = &(slice->dataPartitions[dpMap[SE_HEADER]]);
     se.type = SE_HEADER;
 
-    // read CAVLC transform_size_8x8_flag
+    // read eCavlc transform_size_8x8_flag
     se.len = (int64)1;
     readsSyntaxElement_FLC (&se, dataPartition->s);
 
@@ -705,7 +705,7 @@ static void readIntra4x4macroblockCabac (sMacroBlock* mb, const byte* dpMap) {
     se.type = SE_HEADER;
     se.reading = readMB_transform_size_flag_CABAC;
 
-    // read CAVLC transform_size_8x8_flag
+    // read eCavlc transform_size_8x8_flag
     if (dataPartition->s->errorFlag) {
       se.len = (int64) 1;
       readsSyntaxElement_FLC (&se, dataPartition->s);
@@ -1223,7 +1223,7 @@ static void readIcabacMacroblock (sMacroBlock* mb) {
       dataPartition = &(slice->dataPartitions[dpMap[SE_HEADER]]);
       se.reading = readMB_transform_size_flag_CABAC;
 
-      // read CAVLC transform_size_8x8_flag
+      // read eCavlc transform_size_8x8_flag
       if (dataPartition->s->errorFlag) {
         se.len = (int64) 1;
         readsSyntaxElement_FLC (&se, dataPartition->s);
@@ -1568,17 +1568,17 @@ static void readBcabacMacroblock (sMacroBlock* mb) {
 //{{{
 void setReadMacroblock (sSlice* slice) {
 
-  if (slice->decoder->activePPS->entropyCodingMode == (Boolean)CABAC) {
+  if (slice->decoder->activePPS->entropyCodingMode == (Boolean)eCabac) {
     switch (slice->sliceType) {
-      case P_SLICE:
-      case SP_SLICE:
+      case ePslice:
+      case eSPslice:
         slice->readMacroblock = readPcabacMacroblock;
         break;
-      case B_SLICE:
+      case eBslice:
         slice->readMacroblock = readBcabacMacroblock;
         break;
-      case I_SLICE:
-      case SI_SLICE:
+      case eIslice:
+      case eSIslice:
         slice->readMacroblock = readIcabacMacroblock;
         break;
       default:
@@ -1589,15 +1589,15 @@ void setReadMacroblock (sSlice* slice) {
 
   else {
     switch (slice->sliceType) {
-      case P_SLICE:
-      case SP_SLICE:
+      case ePslice:
+      case eSPslice:
         slice->readMacroblock = readPcavlcMacroblock;
         break;
-      case B_SLICE:
+      case eBslice:
         slice->readMacroblock = readBcavlcMacroblock;
         break;
-      case I_SLICE:
-      case SI_SLICE:
+      case eIslice:
+      case eSIslice:
         slice->readMacroblock = readIcavlcMacroblock;
         break;
       default:

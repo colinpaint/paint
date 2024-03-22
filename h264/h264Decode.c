@@ -85,7 +85,7 @@ sSlice* allocSlice (sDecoder* decoder) {
 //{{{
 static void freeSlice (sSlice *slice) {
 
-  if (slice->sliceType != I_SLICE && slice->sliceType != SI_SLICE)
+  if (slice->sliceType != eIslice && slice->sliceType != eSIslice)
     freeRefPicListReorderingBuffer (slice);
 
   freePred (slice);
@@ -484,7 +484,7 @@ sDecoder* openDecoder (sParam* param, byte* chunk, size_t chunkSize) {
   decoder->nextSlice = NULL;
   initOldSlice (decoder->oldSlice);
 
-  decoder->coding.type = I_SLICE;
+  decoder->coding.type = eIslice;
   decoder->picture = NULL;
   decoder->mbToSliceGroupMap = NULL;
   decoder->mapUnitToSliceGroupMap = NULL;
@@ -503,7 +503,7 @@ sDecoder* openDecoder (sParam* param, byte* chunk, size_t chunkSize) {
 
   decoder->outBuffer = NULL;
   decoder->pendingOut = NULL;
-  decoder->pendingOutState = FRAME;
+  decoder->pendingOutState = eFrame;
 
   decoder->coding.iLumaPadX = MCBUF_LUMA_PAD_X;
   decoder->coding.iLumaPadY = MCBUF_LUMA_PAD_Y;

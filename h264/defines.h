@@ -42,7 +42,7 @@ typedef int32  transpel;  // transformed coefficient type
 //{{{  AVC Profile IDC definitions
 typedef enum {
   NO_PROFILE     =  0,       // disable profile checking for experimental coding (enables FRExt, but disables MV)
-  FREXT_CAVLC444 = 44,       // YUV 4:4:4/14 "CAVLC 4:4:4"
+  FREXT_CAVLC444 = 44,       // YUV 4:4:4/14 "eCavlc 4:4:4"
   BASELINE       = 66,       // YUV 4:2:0/8  "Baseline"
   MAIN           = 77,       // YUV 4:2:0/8  "Main"
   EXTENDED       = 88,       // YUV 4:2:0/8  "Extended"
@@ -160,7 +160,7 @@ typedef enum {
 #define DQ_BITS_8        6
 
 #define IS_I16MB(MB)     ((MB)->mbType == I16MB || (MB)->mbType == IPCM)
-#define IS_DIRECT(MB)    ((MB)->mbType == 0 && (slice->sliceType == B_SLICE ))
+#define IS_DIRECT(MB)    ((MB)->mbType == 0 && (slice->sliceType == eBslice ))
 
 #define TOTRUN_NUM       15
 #define RUNBEFORE_NUM    7

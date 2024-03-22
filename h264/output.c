@@ -130,7 +130,7 @@ static void writeOutPicture (sDecoder* decoder, sPicture* p) {
 //{{{
 static void flushPendingOut (sDecoder* decoder) {
 
-  if (decoder->pendingOutState != FRAME)
+  if (decoder->pendingOutState != eFrame)
     writeOutPicture (decoder, decoder->pendingOut);
 
   if (decoder->pendingOut->imgY) {
@@ -143,14 +143,14 @@ static void flushPendingOut (sDecoder* decoder) {
     decoder->pendingOut->imgUV = NULL;
     }
 
-  decoder->pendingOutState = FRAME;
+  decoder->pendingOutState = eFrame;
   }
 //}}}
 
 //{{{
 static void writePicture (sDecoder* decoder, sPicture* p, int realStructure) {
 
-  if (realStructure == FRAME) {
+  if (realStructure == eFrame) {
     flushPendingOut (decoder);
     writeOutPicture (decoder, p);
     return;
@@ -162,7 +162,7 @@ static void writePicture (sDecoder* decoder, sPicture* p, int realStructure) {
     return;
     }
 
-  if (decoder->pendingOutState == FRAME) {
+  if (decoder->pendingOutState == eFrame) {
     //{{{  output frame
     decoder->pendingOut->sizeX = p->sizeX;
     decoder->pendingOut->sizeY = p->sizeY;
@@ -184,7 +184,7 @@ static void writePicture (sDecoder* decoder, sPicture* p, int realStructure) {
     clearPicture (decoder, decoder->pendingOut);
 
     // copy first field
-    int add = (realStructure == TopField) ? 0 : 1;
+    int add = (realStructure == eTopField) ? 0 : 1;
     for (int i = 0; i < decoder->pendingOut->sizeY; i += 2)
       memcpy (decoder->pendingOut->imgY[(i+add)], p->imgY[(i+add)], p->sizeX * sizeof(sPixel));
     for (int i = 0; i < decoder->pendingOut->sizeYcr; i += 2) {
@@ -211,7 +211,7 @@ static void writePicture (sDecoder* decoder, sPicture* p, int realStructure) {
       }
 
     // copy second field
-    int add = (realStructure == TopField) ? 0 : 1;
+    int add = (realStructure == eTopField) ? 0 : 1;
     for (int i = 0; i < decoder->pendingOut->sizeY; i+=2)
       memcpy (decoder->pendingOut->imgY[(i+add)], p->imgY[(i+add)], p->sizeX * sizeof(sPixel));
 
@@ -232,19 +232,19 @@ static void writeUnpairedField (sDecoder* decoder, sFrameStore* frameStore) {
   if (frameStore->isUsed & 0x01) {
     // we have a top field, construct an empty bottom field
     sPicture* p = frameStore->topField;
-    frameStore->botField = allocPicture (decoder, BotField,
+    frameStore->botField = allocPicture (decoder, eBotField,
                                          p->sizeX, 2 * p->sizeY, p->sizeXcr, 2 * p->sizeYcr, 1);
     frameStore->botField->chromaFormatIdc = p->chromaFormatIdc;
 
     clearPicture (decoder, frameStore->botField);
     dpbCombineField (decoder, frameStore);
-    writePicture (decoder, frameStore->frame, TopField);
+    writePicture (decoder, frameStore->frame, eTopField);
     }
 
   if (frameStore->isUsed & 0x02) {
     // we have a bottom field, construct an empty top field
     sPicture* p = frameStore->botField;
-    frameStore->topField = allocPicture (decoder, TopField, p->sizeX, 2*p->sizeY, p->sizeXcr, 2*p->sizeYcr, 1);
+    frameStore->topField = allocPicture (decoder, eTopField, p->sizeX, 2*p->sizeY, p->sizeXcr, 2*p->sizeYcr, 1);
     frameStore->topField->chromaFormatIdc = p->chromaFormatIdc;
     clearPicture (decoder, frameStore->topField);
 
@@ -257,7 +257,7 @@ static void writeUnpairedField (sDecoder* decoder, sFrameStore* frameStore) {
       }
 
     dpbCombineField (decoder, frameStore);
-    writePicture (decoder, frameStore->frame, BotField);
+    writePicture (decoder, frameStore->frame, eBotField);
     }
 
   frameStore->isUsed = 3;
@@ -303,22 +303,22 @@ void freeOutput (sDecoder* decoder) {
 //{{{
 void directOutput (sDecoder* decoder, sPicture* picture) {
 
-  if (picture->picStructure == FRAME) {
+  if (picture->picStructure == eFrame) {
     // we have a frame (or complementary field pair), so output it directly
     flushDirectOutput (decoder);
-    writePicture (decoder, picture, FRAME);
+    writePicture (decoder, picture, eFrame);
     freePicture (picture);
     return;
     }
 
-  if (picture->picStructure == TopField) {
+  if (picture->picStructure == eTopField) {
     if (decoder->outBuffer->isUsed & 1)
       flushDirectOutput (decoder);
     decoder->outBuffer->topField = picture;
     decoder->outBuffer->isUsed |= 1;
     }
 
-  if (picture->picStructure == BotField) {
+  if (picture->picStructure == eBotField) {
     if (decoder->outBuffer->isUsed & 2)
       flushDirectOutput (decoder);
     decoder->outBuffer->botField = picture;
@@ -328,7 +328,7 @@ void directOutput (sDecoder* decoder, sPicture* picture) {
   if (decoder->outBuffer->isUsed == 3) {
     // we have both fields, so output them
     dpbCombineField (decoder, decoder->outBuffer);
-    writePicture (decoder, decoder->outBuffer->frame, FRAME);
+    writePicture (decoder, decoder->outBuffer->frame, eFrame);
     freePicture (decoder->outBuffer->frame);
 
     decoder->outBuffer->frame = NULL;
@@ -354,7 +354,7 @@ void writeStoredFrame (sDecoder* decoder, sFrameStore* frameStore) {
     if (frameStore->recoveryFrame)
       decoder->recoveryFlag = 1;
     if ((!decoder->nonConformingStream) || decoder->recoveryFlag)
-      writePicture (decoder, frameStore->frame, FRAME);
+      writePicture (decoder, frameStore->frame, eFrame);
     }
 
   frameStore->is_output = 1;

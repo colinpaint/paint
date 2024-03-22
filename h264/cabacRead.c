@@ -19,7 +19,7 @@ static void read_comp_coeff_4x4_smb_CABAC (sMacroBlock* mb, sSyntaxElement* se, 
   sSlice* slice = mb->slice;
   const byte *dpMap = assignSE2dp[slice->dataDpMode];
 
-  const byte (*pos_scan4x4)[2] = ((slice->picStructure == FRAME) && (!mb->mbField)) ? SNGL_SCAN : FIELD_SCAN;
+  const byte (*pos_scan4x4)[2] = ((slice->picStructure == eFrame) && (!mb->mbField)) ? SNGL_SCAN : FIELD_SCAN;
   const byte *pos_scan_4x4 = pos_scan4x4[0];
   int** cof = slice->cof[plane];
 
@@ -191,7 +191,7 @@ static void readCompCoeff8x8_CABAC (sMacroBlock* mb, sSyntaxElement* se, eColorP
     int64 *cur_cbp = &mb->cbpStructure[plane].blk;
 
     // select scan type
-    const byte (*pos_scan8x8) = ((slice->picStructure == FRAME) && (!mb->mbField)) ? SNGL_SCAN8x8[0] : FIELD_SCAN8x8[0];
+    const byte (*pos_scan8x8) = ((slice->picStructure == eFrame) && (!mb->mbField)) ? SNGL_SCAN8x8[0] : FIELD_SCAN8x8[0];
 
     int qp_per = decoder->qpPerMatrix[ mb->qpScaled[plane] ];
     int qp_rem = decoder->qpRemMatrix[ mb->qpScaled[plane] ];
@@ -289,7 +289,7 @@ static void readCompCoeff8x8_CABAC_lossless (sMacroBlock* mb, sSyntaxElement* se
     int64 *cur_cbp = &mb->cbpStructure[plane].blk;
 
     // select scan type
-    const byte (*pos_scan8x8) = ((slice->picStructure == FRAME) && (!mb->mbField)) ? SNGL_SCAN8x8[0] : FIELD_SCAN8x8[0];
+    const byte (*pos_scan8x8) = ((slice->picStructure == eFrame) && (!mb->mbField)) ? SNGL_SCAN8x8[0] : FIELD_SCAN8x8[0];
 
     // === set offset in current macroblock ===
     boff_x = (b8&0x01) << 3;
@@ -346,7 +346,7 @@ static void readCompCoeff8x8_CABAC_lossless (sMacroBlock* mb, sSyntaxElement* se
 //{{{
 static void read_comp_coeff_8x8_MB_CABAC (sMacroBlock* mb, sSyntaxElement* se, eColorPlane plane) {
 
-  //======= 8x8 transform size & CABAC ========
+  //======= 8x8 transform size & eCabac ========
   readCompCoeff8x8_CABAC (mb, se, plane, 0);
   readCompCoeff8x8_CABAC (mb, se, plane, 1);
   readCompCoeff8x8_CABAC (mb, se, plane, 2);
@@ -356,7 +356,7 @@ static void read_comp_coeff_8x8_MB_CABAC (sMacroBlock* mb, sSyntaxElement* se, e
 //{{{
 static void read_comp_coeff_8x8_MB_CABAC_ls (sMacroBlock* mb, sSyntaxElement* se, eColorPlane plane) {
 
-  //======= 8x8 transform size & CABAC ========
+  //======= 8x8 transform size & eCabac ========
   readCompCoeff8x8_CABAC_lossless (mb, se, plane, 0);
   readCompCoeff8x8_CABAC_lossless (mb, se, plane, 1);
   readCompCoeff8x8_CABAC_lossless (mb, se, plane, 2);
@@ -378,7 +378,7 @@ static void read_CBP_and_coeffs_from_NAL_CABAC_420 (sMacroBlock* mb) {
 
   int qp_per, qp_rem;
   sDecoder* decoder = mb->decoder;
-  int smb = ((decoder->coding.type==SP_SLICE) && (mb->isIntraBlock == FALSE)) || (decoder->coding.type == SI_SLICE && mb->mbType == SI4MB);
+  int smb = ((decoder->coding.type==eSPslice) && (mb->isIntraBlock == FALSE)) || (decoder->coding.type == eSIslice && mb->mbType == SI4MB);
 
   int qp_per_uv[2];
   int qp_rem_uv[2];
@@ -391,7 +391,7 @@ static void read_CBP_and_coeffs_from_NAL_CABAC_420 (sMacroBlock* mb) {
   int (*InvLevelScale4x4)[4] = NULL;
 
   // select scan type
-  const byte (*pos_scan4x4)[2] = ((slice->picStructure == FRAME) && (!mb->mbField)) ? SNGL_SCAN : FIELD_SCAN;
+  const byte (*pos_scan4x4)[2] = ((slice->picStructure == eFrame) && (!mb->mbField)) ? SNGL_SCAN : FIELD_SCAN;
   const byte *pos_scan_4x4 = pos_scan4x4[0];
 
   if (!IS_I16MB (mb)) {
@@ -429,7 +429,7 @@ static void read_CBP_and_coeffs_from_NAL_CABAC_420 (sMacroBlock* mb) {
       dataPartition = &(slice->dataPartitions[dpMap[SE_HEADER]]);
       se.reading = readMB_transform_size_flag_CABAC;
 
-      // read CAVLC transform_size_8x8_flag
+      // read eCavlc transform_size_8x8_flag
       if (dataPartition->s->errorFlag) {
         se.len = 1;
         readsSyntaxElement_FLC(&se, dataPartition->s);
@@ -520,7 +520,7 @@ static void read_CBP_and_coeffs_from_NAL_CABAC_420 (sMacroBlock* mb) {
   // luma coefficients
   if (cbp) {
     if(mb->lumaTransformSize8x8flag)
-      //======= 8x8 transform size & CABAC ========
+      //======= 8x8 transform size & eCabac ========
       mb->readCompCoef8x8cabac (mb, &se, PLANE_Y);
     else {
       InvLevelScale4x4 = intra? slice->InvLevelScale4x4_Intra[slice->colourPlaneId][qp_rem] : slice->InvLevelScale4x4_Inter[slice->colourPlaneId][qp_rem];
@@ -701,7 +701,7 @@ static void read_CBP_and_coeffs_from_NAL_CABAC_400 (sMacroBlock* mb)
 
   int (*InvLevelScale4x4)[4] = NULL;
   // select scan type
-  const byte (*pos_scan4x4)[2] = ((slice->picStructure == FRAME) && (!mb->mbField)) ? SNGL_SCAN : FIELD_SCAN;
+  const byte (*pos_scan4x4)[2] = ((slice->picStructure == eFrame) && (!mb->mbField)) ? SNGL_SCAN : FIELD_SCAN;
   const byte *pos_scan_4x4 = pos_scan4x4[0];
 
 
@@ -741,7 +741,7 @@ static void read_CBP_and_coeffs_from_NAL_CABAC_400 (sMacroBlock* mb)
       dataPartition = &(slice->dataPartitions[dpMap[SE_HEADER]]);
       se.reading = readMB_transform_size_flag_CABAC;
 
-      // read CAVLC transform_size_8x8_flag
+      // read eCavlc transform_size_8x8_flag
       if (dataPartition->s->errorFlag) {
         se.len = 1;
         readsSyntaxElement_FLC(&se, dataPartition->s);
@@ -835,11 +835,11 @@ static void read_CBP_and_coeffs_from_NAL_CABAC_400 (sMacroBlock* mb)
   qp_per = decoder->qpPerMatrix[ mb->qpScaled[PLANE_Y] ];
   qp_rem = decoder->qpRemMatrix[ mb->qpScaled[PLANE_Y] ];
 
-  //======= Other Modes & CABAC ========
+  //======= Other Modes & eCabac ========
   //------------------------------------
   if (cbp)  {
     if(mb->lumaTransformSize8x8flag)  {
-      //======= 8x8 transform size & CABAC ========
+      //======= 8x8 transform size & eCabac ========
       mb->readCompCoef8x8cabac (mb, &se, PLANE_Y);
     }
     else {
@@ -875,7 +875,7 @@ static void read_CBP_and_coeffs_from_NAL_CABAC_444 (sMacroBlock* mb)
 
   int (*InvLevelScale4x4)[4] = NULL;
   // select scan type
-  const byte (*pos_scan4x4)[2] = ((slice->picStructure == FRAME) && (!mb->mbField)) ? SNGL_SCAN : FIELD_SCAN;
+  const byte (*pos_scan4x4)[2] = ((slice->picStructure == eFrame) && (!mb->mbField)) ? SNGL_SCAN : FIELD_SCAN;
   const byte *pos_scan_4x4 = pos_scan4x4[0];
 
   // QPI
@@ -923,7 +923,7 @@ static void read_CBP_and_coeffs_from_NAL_CABAC_444 (sMacroBlock* mb)
       dataPartition = &(slice->dataPartitions[dpMap[SE_HEADER]]);
       se.reading = readMB_transform_size_flag_CABAC;
 
-      // read CAVLC transform_size_8x8_flag
+      // read eCavlc transform_size_8x8_flag
       if (dataPartition->s->errorFlag) {
         se.len = 1;
         readsSyntaxElement_FLC(&se, dataPartition->s);
@@ -1029,12 +1029,12 @@ static void read_CBP_and_coeffs_from_NAL_CABAC_444 (sMacroBlock* mb)
 
   // luma coefficients
   {
-    //======= Other Modes & CABAC ========
+    //======= Other Modes & eCabac ========
     //------------------------------------
     if (cbp)
     {
       if(mb->lumaTransformSize8x8flag)
-        //======= 8x8 transform size & CABAC ========
+        //======= 8x8 transform size & eCabac ========
         mb->readCompCoef8x8cabac (mb, &se, PLANE_Y);
       else
         mb->readCompCoef4x4cabac (mb, &se, PLANE_Y, InvLevelScale4x4, qp_per, cbp);
@@ -1077,7 +1077,7 @@ static void read_CBP_and_coeffs_from_NAL_CABAC_444 (sMacroBlock* mb)
             //slice->fcf[uv + 1][j0<<2][i0<<2] = level;
           }
         } //k loop
-      } // else CAVLC
+      } // else eCavlc
 
       if(mb->isLossless == FALSE)
         itrans_2(mb, (eColorPlane) (uv + 1)); // transform new intra DC
@@ -1097,7 +1097,7 @@ static void read_CBP_and_coeffs_from_NAL_CABAC_444 (sMacroBlock* mb)
     {
       if (cbp) {
         if(mb->lumaTransformSize8x8flag) {
-          //======= 8x8 transform size & CABAC ========
+          //======= 8x8 transform size & eCabac ========
           mb->readCompCoef8x8cabac (mb, &se, (eColorPlane) (PLANE_U + uv));
         }
         else //4x4
@@ -1138,7 +1138,7 @@ static void read_CBP_and_coeffs_from_NAL_CABAC_422 (sMacroBlock* mb)
 
   int (*InvLevelScale4x4)[4] = NULL;
   // select scan type
-  const byte (*pos_scan4x4)[2] = ((slice->picStructure == FRAME) && (!mb->mbField)) ? SNGL_SCAN : FIELD_SCAN;
+  const byte (*pos_scan4x4)[2] = ((slice->picStructure == eFrame) && (!mb->mbField)) ? SNGL_SCAN : FIELD_SCAN;
   const byte *pos_scan_4x4 = pos_scan4x4[0];
 
   // QPI
@@ -1186,7 +1186,7 @@ static void read_CBP_and_coeffs_from_NAL_CABAC_422 (sMacroBlock* mb)
       dataPartition = &(slice->dataPartitions[dpMap[SE_HEADER]]);
       se.reading = readMB_transform_size_flag_CABAC;
 
-      // read CAVLC transform_size_8x8_flag
+      // read eCavlc transform_size_8x8_flag
       if (dataPartition->s->errorFlag) {
         se.len = 1;
         readsSyntaxElement_FLC(&se, dataPartition->s);
@@ -1291,11 +1291,11 @@ static void read_CBP_and_coeffs_from_NAL_CABAC_422 (sMacroBlock* mb)
 
   // luma coefficients
   {
-    //======= Other Modes & CABAC ========
+    //======= Other Modes & eCabac ========
     //------------------------------------
     if (cbp) {
       if(mb->lumaTransformSize8x8flag) {
-        //======= 8x8 transform size & CABAC ========
+        //======= 8x8 transform size & eCabac ========
         mb->readCompCoef8x8cabac (mb, &se, PLANE_Y);
       }
       else

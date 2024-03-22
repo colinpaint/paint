@@ -1192,7 +1192,7 @@ static void initContexts (sSlice* slice) {
   int modelNum = slice->modelNum;
 
   // motion coding contexts
-  if ((slice->sliceType == I_SLICE) || (slice->sliceType == SI_SLICE)) {
+  if ((slice->sliceType == eIslice) || (slice->sliceType == eSIslice)) {
     IBIARI_CTX_INIT2 (3, NUM_MB_TYPE_CTX,   mc->mbTypeContexts,     INIT_MB_TYPE,    modelNum, qp);
     IBIARI_CTX_INIT2 (2, NUM_B8_TYPE_CTX,   mc->b8_type_contexts,     INIT_B8_TYPE,    modelNum, qp);
     IBIARI_CTX_INIT2 (2, NUM_MV_RES_CTX,    mc->mvResContexts,      INIT_MV_RES,     modelNum, qp);
@@ -1255,7 +1255,7 @@ static void ercWriteMBmodeMV (sMacroBlock* mb) {
   int mbx = xPosMB (curMbNum, picture->sizeX), mby = yPosMB(curMbNum, picture->sizeX);
   sObjectBuffer* curRegion = decoder->ercObjectList + (curMbNum << 2);
 
-  if (decoder->coding.type != B_SLICE) {
+  if (decoder->coding.type != eBslice) {
     //{{{  non-B frame
     for (int i = 0; i < 4; ++i) {
       sObjectBuffer* region = curRegion + i;
@@ -1344,7 +1344,7 @@ static void resetWpParam (sSlice* slice) {
 //{{{
 static void fillWpParam (sSlice* slice) {
 
-  if (slice->sliceType == B_SLICE) {
+  if (slice->sliceType == eBslice) {
     int maxL0Ref = slice->numRefIndexActive[LIST_0];
     int maxL1Ref = slice->numRefIndexActive[LIST_1];
     if (slice->activePPS->weightedBiPredIdc == 2) {
@@ -1476,7 +1476,7 @@ static void reorderLists (sSlice* slice) {
 
   sDecoder* decoder = slice->decoder;
 
-  if ((slice->sliceType != I_SLICE) && (slice->sliceType != SI_SLICE)) {
+  if ((slice->sliceType != eIslice) && (slice->sliceType != eSIslice)) {
     if (slice->refPicReorderFlag[LIST_0])
       reorderRefPicList (slice, LIST_0);
     if (decoder->noReferencePicture == slice->listX[0][slice->numRefIndexActive[LIST_0]-1])
@@ -1486,7 +1486,7 @@ static void reorderLists (sSlice* slice) {
       slice->listXsize[0] = (char) slice->numRefIndexActive[LIST_0];
     }
 
-  if (slice->sliceType == B_SLICE) {
+  if (slice->sliceType == eBslice) {
     if (slice->refPicReorderFlag[LIST_1])
       reorderRefPicList (slice, LIST_1);
     if (decoder->noReferencePicture == slice->listX[1][slice->numRefIndexActive[LIST_1]-1])
@@ -1523,7 +1523,7 @@ static void initRefPicture (sSlice* slice, sDecoder* decoder) {
     }
 
   else {
-    int totalLists = slice->mbAffFrameFlag ? 6 : (slice->sliceType == B_SLICE ? 2 : 1);
+    int totalLists = slice->mbAffFrameFlag ? 6 : (slice->sliceType == eBslice ? 2 : 1);
     for (int j = 0; j < totalLists; j++) {
       // note that if we always set this to MAX_LIST_SIZE, we avoid crashes with invalid refIndex being set
       // since currently this is done at the slice level, it seems safe to do so.
@@ -1715,7 +1715,7 @@ static void initPicture (sDecoder* decoder, sSlice* slice) {
   if (slice->refId)
     decoder->lastRefPicPoc = slice->framePoc;
 
-  if ((slice->picStructure == FRAME) || (slice->picStructure == TopField))
+  if ((slice->picStructure == eFrame) || (slice->picStructure == eTopField))
     getTime (&decoder->info.startTime);
 
   picture = decoder->picture = allocPicture (decoder, slice->picStructure, decoder->width, decoder->height, decoder->widthCr, decoder->heightCr, 1);
@@ -1726,8 +1726,8 @@ static void initPicture (sDecoder* decoder, sSlice* slice) {
   picture->sliceQpDelta = slice->sliceQpDelta;
   picture->chromaQpOffset[0] = decoder->activePPS->chromaQpIndexOffset;
   picture->chromaQpOffset[1] = decoder->activePPS->secondChromaQpIndexOffset;
-  picture->iCodingType = slice->picStructure == FRAME ?
-    (slice->mbAffFrameFlag? FRAME_MB_PAIR_CODING:FRAME_CODING) : FIELD_CODING;
+  picture->iCodingType = slice->picStructure == eFrame ?
+    (slice->mbAffFrameFlag? eFrameMbPairCoding:eFrameCoding) : eFieldCoding;
 
   // reset all variables of the error conceal instance before decoding of every frame.
   // here the third parameter should, if perfectly, be equal to the number of slices per frame.
@@ -1737,19 +1737,19 @@ static void initPicture (sDecoder* decoder, sSlice* slice) {
   decoder->ercMvPerMb = 0;
   switch (slice->picStructure ) {
     //{{{
-    case TopField:
+    case eTopField:
       picture->poc = slice->topPoc;
       decoder->idrFrameNum *= 2;
       break;
     //}}}
     //{{{
-    case BotField:
+    case eBotField:
       picture->poc = slice->botPoc;
       decoder->idrFrameNum = decoder->idrFrameNum * 2 + 1;
       break;
     //}}}
     //{{{
-    case FRAME:
+    case eFrame:
       picture->poc = slice->framePoc;
       break;
     //}}}
@@ -1759,13 +1759,13 @@ static void initPicture (sDecoder* decoder, sSlice* slice) {
     //}}}
     }
 
-  if (decoder->coding.type > SI_SLICE) {
+  if (decoder->coding.type > eSIslice) {
     setEcFlag (decoder, SE_PTYPE);
-    decoder->coding.type = P_SLICE;  // concealed element
+    decoder->coding.type = ePslice;  // concealed element
     }
 
-  // CAVLC init
-  if (decoder->activePPS->entropyCodingMode == (Boolean)CAVLC)
+  // eCavlc init
+  if (decoder->activePPS->entropyCodingMode == (Boolean)eCavlc)
     memset (decoder->nzCoeff[0][0][0], -1, decoder->picSizeInMbs * 48 *sizeof(byte)); // 3 * 4 * 4
 
   // Set the sliceNum member of each MB to -1, to ensure correct when packet loss occurs
@@ -1810,7 +1810,7 @@ static void initPicture (sDecoder* decoder, sSlice* slice) {
   picture->picNum = slice->frameNum;
   picture->frameNum = slice->frameNum;
   picture->recoveryFrame = (unsigned int)((int)slice->frameNum == decoder->recoveryFrameNum);
-  picture->codedFrame = (slice->picStructure == FRAME);
+  picture->codedFrame = (slice->picStructure == eFrame);
   picture->chromaFormatIdc = activeSPS->chromaFormatIdc;
   picture->frameMbOnlyFlag = activeSPS->frameMbOnlyFlag;
   picture->cropFlag = activeSPS->cropFlag;
@@ -1856,7 +1856,7 @@ static void useParameterSet (sDecoder* decoder, sSlice* slice) {
   activatePPS (decoder, pps);
 
   // slice->dataDpMode is set by read_new_slice (NALU first byte available there)
-  if (pps->entropyCodingMode == (Boolean)CAVLC) {
+  if (pps->entropyCodingMode == (Boolean)eCavlc) {
     slice->nalStartCode = vlcStartCode;
     for (int i = 0; i < 3; i++)
       slice->dataPartitions[i].readSyntaxElement = readSyntaxElementVLC;
@@ -1910,7 +1910,7 @@ static void readSlice (sDecoder* decoder, sSlice* slice) {
     }
   //{{{  read field/frame stuff
   if (activeSPS->frameMbOnlyFlag) {
-    decoder->coding.picStructure = FRAME;
+    decoder->coding.picStructure = eFrame;
     slice->fieldPicFlag = 0;
     }
 
@@ -1918,10 +1918,10 @@ static void readSlice (sDecoder* decoder, sSlice* slice) {
     slice->fieldPicFlag = readU1 ("SLC fieldPicFlag", s);
     if (slice->fieldPicFlag) {
       slice->botFieldFlag = (byte)readU1 ("SLC botFieldFlag", s);
-      decoder->coding.picStructure = slice->botFieldFlag ? BotField : TopField;
+      decoder->coding.picStructure = slice->botFieldFlag ? eBotField : eTopField;
       }
     else {
-      decoder->coding.picStructure = FRAME;
+      decoder->coding.picStructure = eFrame;
       slice->botFieldFlag = FALSE;
       }
     }
@@ -1959,26 +1959,26 @@ static void readSlice (sDecoder* decoder, sSlice* slice) {
   if (decoder->activePPS->redundantPicCountPresent)
     slice->redundantPicCount = readUeV ("SLC redundantPicCount", s);
 
-  if (slice->sliceType == B_SLICE)
+  if (slice->sliceType == eBslice)
     slice->directSpatialMvPredFlag = readU1 ("SLC directSpatialMvPredFlag", s);
 
   // read refPics
   slice->numRefIndexActive[LIST_0] = decoder->activePPS->numRefIndexL0defaultActiveMinus1 + 1;
   slice->numRefIndexActive[LIST_1] = decoder->activePPS->numRefIndexL1defaultActiveMinus1 + 1;
-  if ((slice->sliceType == P_SLICE) || (slice->sliceType == SP_SLICE) || (slice->sliceType == B_SLICE)) {
+  if ((slice->sliceType == ePslice) || (slice->sliceType == eSPslice) || (slice->sliceType == eBslice)) {
     int num_ref_idx_override_flag = readU1 ("SLC num_ref_idx_override_flag", s);
     if (num_ref_idx_override_flag) {
       slice->numRefIndexActive[LIST_0] = 1 + readUeV ("SLC num_ref_idx_l0_active_minus1", s);
-      if (slice->sliceType == B_SLICE)
+      if (slice->sliceType == eBslice)
         slice->numRefIndexActive[LIST_1] = 1 + readUeV ("SLC num_ref_idx_l1_active_minus1", s);
       }
     }
-  if (slice->sliceType != B_SLICE)
+  if (slice->sliceType != eBslice)
     slice->numRefIndexActive[LIST_1] = 0;
   //{{{  refPicList reorder
   allocRefPicListReordeBuffer (slice);
 
-  if ((slice->sliceType != I_SLICE) && (slice->sliceType != SI_SLICE)) {
+  if ((slice->sliceType != eIslice) && (slice->sliceType != eSIslice)) {
     int value = slice->refPicReorderFlag[LIST_0] = readU1 ("SLC refPicReorderL0", s);
     if (value) {
       int i = 0;
@@ -1993,7 +1993,7 @@ static void readSlice (sDecoder* decoder, sSlice* slice) {
       }
     }
 
-  if (slice->sliceType == B_SLICE) {
+  if (slice->sliceType == eBslice) {
     int value = slice->refPicReorderFlag[LIST_1] = readU1 ("SLC refPicReorderL1", s);
     if (value) {
       int i = 0;
@@ -2009,20 +2009,20 @@ static void readSlice (sDecoder* decoder, sSlice* slice) {
     }
 
   // set reference index of redundant slices.
-  if (slice->redundantPicCount && (slice->sliceType != I_SLICE) )
+  if (slice->redundantPicCount && (slice->sliceType != eIslice) )
     slice->redundantSliceRefIndex = slice->absDiffPicNumMinus1[LIST_0][0] + 1;
   //}}}
   //{{{  read weightedPred
-  slice->weightedPredFlag = (unsigned short)(((slice->sliceType == P_SLICE) || (slice->sliceType == SP_SLICE))
+  slice->weightedPredFlag = (unsigned short)(((slice->sliceType == ePslice) || (slice->sliceType == eSPslice))
                               ? decoder->activePPS->weightedPredFlag
-                              : ((slice->sliceType == B_SLICE) && (decoder->activePPS->weightedBiPredIdc == 1)));
+                              : ((slice->sliceType == eBslice) && (decoder->activePPS->weightedBiPredIdc == 1)));
 
-  slice->weightedBiPredIdc = (unsigned short)((slice->sliceType == B_SLICE) &&
+  slice->weightedBiPredIdc = (unsigned short)((slice->sliceType == eBslice) &&
                                               (decoder->activePPS->weightedBiPredIdc > 0));
 
   if ((decoder->activePPS->weightedPredFlag &&
-       ((slice->sliceType == P_SLICE) || (slice->sliceType == SP_SLICE))) ||
-      ((decoder->activePPS->weightedBiPredIdc == 1) && (slice->sliceType == B_SLICE))) {
+       ((slice->sliceType == ePslice) || (slice->sliceType == eSPslice))) ||
+      ((decoder->activePPS->weightedBiPredIdc == 1) && (slice->sliceType == eBslice))) {
     slice->lumaLog2weightDenom = (unsigned short) readUeV ("SLC lumaLog2weightDenom", s);
     slice->wpRoundLuma = slice->lumaLog2weightDenom ? 1 << (slice->lumaLog2weightDenom - 1) : 0;
 
@@ -2064,7 +2064,7 @@ static void readSlice (sDecoder* decoder, sSlice* slice) {
       }
       //}}}
 
-    if ((slice->sliceType == B_SLICE) && decoder->activePPS->weightedBiPredIdc == 1) {
+    if ((slice->sliceType == eBslice) && decoder->activePPS->weightedBiPredIdc == 1) {
       for (int i = 0; i < slice->numRefIndexActive[LIST_1]; i++) {
         //{{{  read l1 weights
         int luma_weight_flag_l1 = readU1 ("SLC luma_weight_flag_l1", s);
@@ -2103,7 +2103,7 @@ static void readSlice (sDecoder* decoder, sSlice* slice) {
     decRefPicMarking (decoder, s, slice);
 
   if (decoder->activePPS->entropyCodingMode &&
-      (slice->sliceType != I_SLICE) && (slice->sliceType != SI_SLICE))
+      (slice->sliceType != eIslice) && (slice->sliceType != eSIslice))
     slice->modelNum = readUeV ("SLC cabac_init_idc", s);
   else
     slice->modelNum = 0;
@@ -2111,8 +2111,8 @@ static void readSlice (sDecoder* decoder, sSlice* slice) {
   slice->sliceQpDelta = readSeV ("SLC sliceQpDelta", s);
   slice->qp = 26 + decoder->activePPS->picInitQpMinus26 + slice->sliceQpDelta;
 
-  if (slice->sliceType == SP_SLICE || slice->sliceType == SI_SLICE) {
-    if (slice->sliceType == SP_SLICE)
+  if (slice->sliceType == eSPslice || slice->sliceType == eSIslice) {
+    if (slice->sliceType == eSPslice)
       slice->spSwitch = readU1 ("SLC sp_for_switch_flag", s);
     slice->sliceQsDelta = readSeV ("SLC sliceQsDelta", s);
     slice->qs = 26 + decoder->activePPS->picInitQsMinus26 + slice->sliceQsDelta;
@@ -2216,7 +2216,7 @@ static void initSlice (sDecoder* decoder, sSlice* slice) {
   slice->initLists (slice);
   reorderLists (slice);
 
-  if (slice->picStructure == FRAME)
+  if (slice->picStructure == eFrame)
     init_mbaff_lists (decoder, slice);
 
   // update reference flags and set current decoder->refFlag
@@ -2281,10 +2281,10 @@ static void decodeSlice (sSlice* slice) {
     slice->intraBlock = decoder->intraBlock;
     }
 
-  if (slice->sliceType == B_SLICE)
+  if (slice->sliceType == eBslice)
     computeColocated (slice, slice->listX);
 
-  if ((slice->sliceType != I_SLICE) && (slice->sliceType != SI_SLICE))
+  if ((slice->sliceType != eIslice) && (slice->sliceType != eSIslice))
     initRefPicture (slice, decoder);
 
   // loop over macroblocks
@@ -2365,7 +2365,7 @@ static int readNextSlice (sSlice* slice) {
 
         slice->idrFlag = nalu->unitType == NALU_TYPE_IDR;
         slice->refId = nalu->refId;
-        slice->dataDpMode = PAR_DP_1;
+        slice->dataDpMode = eDataPartition1;
         slice->maxDataPartitions = 1;
         sBitStream* s = slice->dataPartitions[0].s;
         s->errorFlag = 0;
@@ -2440,7 +2440,7 @@ static int readNextSlice (sSlice* slice) {
         slice->refId = nalu->refId;
         slice->noDataPartitionB = 1;
         slice->noDataPartitionC = 1;
-        slice->dataDpMode = PAR_DP_3;
+        slice->dataDpMode = eDataPartition3;
         slice->maxDataPartitions = 3;
         s = slice->dataPartitions[0].s;
         s->errorFlag = 0;
@@ -2470,7 +2470,7 @@ static int readNextSlice (sSlice* slice) {
         // need to read the slice ID, which depends on the value of redundantPicCountPresent
         int slice_id_a = readUeV ("NALU: DP_A slice_id", s);
         if (decoder->activePPS->entropyCodingMode)
-          error ("dataPartition with CABAC not allowed");
+          error ("dataPartition with eCabac not allowed");
 
         if (!readNextNalu (decoder, nalu))
           return curHeader;
@@ -2859,7 +2859,7 @@ void endDecodeFrame (sDecoder* decoder) {
 
     // call the right error conceal function depending on the frame type.
     decoder->ercMvPerMb /= decoder->picture->picSizeInMbs;
-    if (decoder->picture->sliceType == I_SLICE || decoder->picture->sliceType == SI_SLICE) // I-frame
+    if (decoder->picture->sliceType == eIslice || decoder->picture->sliceType == eSIslice) // I-frame
       ercConcealIntraFrame (decoder, &recfr,
                             decoder->picture->sizeX, decoder->picture->sizeY, decoder->ercErrorVar);
     else
@@ -2891,7 +2891,7 @@ void endDecodeFrame (sDecoder* decoder) {
 
   if (decoder->picture->mbAffFrameFlag)
     mbAffPostProc (decoder);
-  if (decoder->coding.picStructure != FRAME)
+  if (decoder->coding.picStructure != eFrame)
      decoder->idrFrameNum /= 2;
   if (decoder->picture->usedForReference)
     padPicture (decoder, decoder->picture);
@@ -2910,21 +2910,21 @@ void endDecodeFrame (sDecoder* decoder) {
   if (decoder->lastHasMmco5)
     decoder->preFrameNum = 0;
 
-  if (picStructure == TopField || picStructure == FRAME) {
+  if (picStructure == eTopField || picStructure == eFrame) {
     //{{{
-    if (sliceType == I_SLICE && isIdr)
+    if (sliceType == eIslice && isIdr)
       strcpy (decoder->info.sliceStr, "IDR");
 
-    else if (sliceType == I_SLICE)
+    else if (sliceType == eIslice)
       strcpy (decoder->info.sliceStr, " I ");
 
-    else if (sliceType == P_SLICE)
+    else if (sliceType == ePslice)
       strcpy (decoder->info.sliceStr, " P ");
 
-    else if (sliceType == SP_SLICE)
+    else if (sliceType == eSPslice)
       strcpy (decoder->info.sliceStr, "SP ");
 
-    else if  (sliceType == SI_SLICE)
+    else if  (sliceType == eSIslice)
       strcpy (decoder->info.sliceStr, "SI ");
 
     else if (refpic)
@@ -2933,27 +2933,27 @@ void endDecodeFrame (sDecoder* decoder) {
     else
       strcpy (decoder->info.sliceStr, " b ");
 
-    if (picStructure == FRAME)
+    if (picStructure == eFrame)
       strncat (decoder->info.sliceStr, "    ", 8 - strlen (decoder->info.sliceStr));
 
     decoder->info.sliceStr[3] = 0;
     }
     //}}}
-  else if (picStructure == BotField) {
+  else if (picStructure == eBotField) {
     //{{{
-    if (sliceType == I_SLICE && isIdr)
+    if (sliceType == eIslice && isIdr)
       strncat (decoder->info.sliceStr, "|IDR", 8-strlen (decoder->info.sliceStr));
 
-    else if (sliceType == I_SLICE)
+    else if (sliceType == eIslice)
       strncat (decoder->info.sliceStr, "| I ", 8-strlen (decoder->info.sliceStr));
 
-    else if (sliceType == P_SLICE)
+    else if (sliceType == ePslice)
       strncat (decoder->info.sliceStr, "| P ", 8-strlen (decoder->info.sliceStr));
 
-    else if (sliceType == SP_SLICE)
+    else if (sliceType == eSPslice)
       strncat (decoder->info.sliceStr, "|SP ", 8-strlen (decoder->info.sliceStr));
 
-    else if  (sliceType == SI_SLICE)
+    else if  (sliceType == eSIslice)
       strncat (decoder->info.sliceStr, "|SI ", 8-strlen (decoder->info.sliceStr));
 
     else if (refpic)
@@ -2965,7 +2965,7 @@ void endDecodeFrame (sDecoder* decoder) {
     decoder->info.sliceStr[8] = 0;
     }
     //}}}
-  if ((picStructure == FRAME) || picStructure == BotField) {
+  if ((picStructure == eFrame) || picStructure == eBotField) {
     getTime (&decoder->info.endTime);
     decoder->info.took = (int)timeNorm (timeDiff (&decoder->info.startTime, &decoder->info.endTime));
     sprintf (decoder->info.tookStr, "%dms", decoder->info.took);
@@ -2994,7 +2994,7 @@ void endDecodeFrame (sDecoder* decoder) {
       //}}}
 
     // I or P pictures ?
-    if ((sliceType == I_SLICE) || (sliceType == SI_SLICE) || (sliceType == P_SLICE) || refpic)
+    if ((sliceType == eIslice) || (sliceType == eSIslice) || (sliceType == ePslice) || refpic)
       ++(decoder->idrFrameNum);
     (decoder->decodeFrameNum)++;
     }
@@ -3050,12 +3050,12 @@ int decodeFrame (sDecoder* decoder) {
     if (!slice->redundantPicCount)
       decoder->isPrimaryOk = decoder->isRedundantOk = 1;
 
-    if (!slice->redundantPicCount && (decoder->coding.type != I_SLICE)) {
+    if (!slice->redundantPicCount && (decoder->coding.type != eIslice)) {
       for (int i = 0; i < slice->numRefIndexActive[LIST_0];++i)
         if (!slice->refFlag[i]) // reference primary slice incorrect, primary slice incorrect
           decoder->isPrimaryOk = 0;
       }
-    else if (slice->redundantPicCount && (decoder->coding.type != I_SLICE)) // reference redundant slice incorrect
+    else if (slice->redundantPicCount && (decoder->coding.type != eIslice)) // reference redundant slice incorrect
       if (!slice->refFlag[slice->redundantSliceRefIndex]) // redundant slice is incorrect
         decoder->isRedundantOk = 0;
 
@@ -3116,8 +3116,8 @@ int decodeFrame (sDecoder* decoder) {
       }
       //}}}
 
-    if (((slice->activePPS->weightedBiPredIdc > 0) && (slice->sliceType == B_SLICE)) ||
-        (slice->activePPS->weightedPredFlag && (slice->sliceType != I_SLICE)))
+    if (((slice->activePPS->weightedBiPredIdc > 0) && (slice->sliceType == eBslice)) ||
+        (slice->activePPS->weightedPredFlag && (slice->sliceType != eIslice)))
       fillWpParam (slice);
 
     if (((curHeader == SOP) || (curHeader == SOS)) && !slice->errorFlag)

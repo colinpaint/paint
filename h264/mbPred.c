@@ -129,7 +129,7 @@ static void set_chroma_vector (sMacroBlock* mb)
 
   if (!slice->mbAffFrameFlag)
   {
-    if(slice->picStructure == TopField)
+    if(slice->picStructure == eTopField)
     {
       int k,l;
       for (l = LIST_0; l <= (LIST_1); l++)
@@ -143,7 +143,7 @@ static void set_chroma_vector (sMacroBlock* mb)
         }
       }
     }
-    else if(slice->picStructure == BotField)
+    else if(slice->picStructure == eBotField)
     {
       int k,l;
       for (l = LIST_0; l <= (LIST_1); l++)
@@ -184,9 +184,9 @@ static void set_chroma_vector (sMacroBlock* mb)
       {
         for(k = 0; k < slice->listXsize[l]; k++)
         {
-          if(mb_nr == 0 && slice->listX[l][k]->picStructure == BotField)
+          if(mb_nr == 0 && slice->listX[l][k]->picStructure == eBotField)
             slice->chromaVectorAdjust[l][k] = -2;
-          else if(mb_nr == 1 && slice->listX[l][k]->picStructure == TopField)
+          else if(mb_nr == 1 && slice->listX[l][k]->picStructure == eTopField)
             slice->chromaVectorAdjust[l][k] = 2;
           else
             slice->chromaVectorAdjust[l][k] = 0;
@@ -205,7 +205,7 @@ static void set_chroma_vector (sMacroBlock* mb)
     }
   }
 
-  slice->maxMbVmvR = (slice->picStructure != FRAME || ( mb->mbField )) ? decoder->coding.maxVmvR >> 1 :
+  slice->maxMbVmvR = (slice->picStructure != eFrame || ( mb->mbField )) ? decoder->coding.maxVmvR >> 1 :
                                                                          decoder->coding.maxVmvR;
 }
 //}}}
@@ -248,7 +248,7 @@ int mb_pred_p_inter8x8 (sMacroBlock* mb, eColorPlane plane, sPicture* picture)
   int i=0, j=0,k;
 
   sSlice* slice = mb->slice;
-  int smb = slice->sliceType == SP_SLICE && (mb->isIntraBlock == FALSE);
+  int smb = slice->sliceType == eSPslice && (mb->isIntraBlock == FALSE);
 
   set_chroma_vector(mb);
 
@@ -283,7 +283,7 @@ int mb_pred_p_inter8x8 (sMacroBlock* mb, eColorPlane plane, sPicture* picture)
 int mb_pred_p_inter16x16 (sMacroBlock* mb, eColorPlane plane, sPicture* picture)
 {
   sSlice* slice = mb->slice;
-  int smb = (slice->sliceType == SP_SLICE);
+  int smb = (slice->sliceType == eSPslice);
 
   set_chroma_vector(mb);
   perform_mc (mb, plane, picture, mb->b8pdir[0], 0, 0, MB_BLOCK_SIZE, MB_BLOCK_SIZE);
@@ -298,7 +298,7 @@ int mb_pred_p_inter16x16 (sMacroBlock* mb, eColorPlane plane, sPicture* picture)
 int mb_pred_p_inter16x8 (sMacroBlock* mb, eColorPlane plane, sPicture* picture)
 {
   sSlice* slice = mb->slice;
-  int smb = (slice->sliceType == SP_SLICE);
+  int smb = (slice->sliceType == eSPslice);
 
   set_chroma_vector(mb);
 
@@ -315,7 +315,7 @@ int mb_pred_p_inter16x8 (sMacroBlock* mb, eColorPlane plane, sPicture* picture)
 int mb_pred_p_inter8x16 (sMacroBlock* mb, eColorPlane plane, sPicture* picture)
 {
   sSlice* slice = mb->slice;
-  int smb = (slice->sliceType == SP_SLICE);
+  int smb = (slice->sliceType == eSPslice);
 
   set_chroma_vector(mb);
 
@@ -372,8 +372,8 @@ int mb_pred_b_d8x8temporal (sMacroBlock* mb, eColorPlane plane, sPixel** pixel, 
         colocated = &list1[0]->JVmv_info[mb->slice->colourPlaneId][RSD(j6)][RSD(i4)];
       if (slice->mbAffFrameFlag) {
         assert(decoder->activeSPS->direct_8x8_inference_flag);
-        if (!mb->mbField && ((slice->listX[LIST_1][0]->iCodingType==FRAME_MB_PAIR_CODING && slice->listX[LIST_1][0]->motion.mbField[mb->mbIndexX]) ||
-            (slice->listX[LIST_1][0]->iCodingType==FIELD_CODING))) {
+        if (!mb->mbField && ((slice->listX[LIST_1][0]->iCodingType==eFrameMbPairCoding && slice->listX[LIST_1][0]->motion.mbField[mb->mbIndexX]) ||
+            (slice->listX[LIST_1][0]->iCodingType==eFieldCoding))) {
           if (iabs(picture->poc - slice->listX[LIST_1+4][0]->poc) > iabs(picture->poc -slice->listX[LIST_1+2][0]->poc))
             colocated = decoder->activeSPS->direct_8x8_inference_flag
                           ? &slice->listX[LIST_1+2][0]->mvInfo[RSD(j6) >> 1][RSD(i4)]
@@ -385,7 +385,7 @@ int mb_pred_b_d8x8temporal (sMacroBlock* mb, eColorPlane plane, sPixel** pixel, 
           }
         }
       else if (!decoder->activeSPS->frameMbOnlyFlag &&
-               (!slice->fieldPicFlag && slice->listX[LIST_1][0]->iCodingType != FRAME_CODING)) {
+               (!slice->fieldPicFlag && slice->listX[LIST_1][0]->iCodingType != eFrameCoding)) {
         if (iabs(picture->poc - list1[0]->botField->poc)> iabs(picture->poc -list1[0]->topField->poc) )
           colocated = decoder->activeSPS->direct_8x8_inference_flag ?
             &list1[0]->topField->mvInfo[RSD(j6)>>1][RSD(i4)] : &list1[0]->topField->mvInfo[j6>>1][i4];
@@ -395,7 +395,7 @@ int mb_pred_b_d8x8temporal (sMacroBlock* mb, eColorPlane plane, sPixel** pixel, 
         }
       else if (!decoder->activeSPS->frameMbOnlyFlag && slice->fieldPicFlag &&
                slice->picStructure != list1[0]->picStructure && list1[0]->codedFrame) {
-        if (slice->picStructure == TopField)
+        if (slice->picStructure == eTopField)
           colocated = decoder->activeSPS->direct_8x8_inference_flag
                         ? &list1[0]->frame->topField->mvInfo[RSD(j6)][RSD(i4)]
                         : &list1[0]->frame->topField->mvInfo[j6][i4];
@@ -421,11 +421,11 @@ int mb_pred_b_d8x8temporal (sMacroBlock* mb, eColorPlane plane, sPixel** pixel, 
         int mapped_idx = 0;
         int iref;
         if ((slice->mbAffFrameFlag &&
-            ((mb->mbField && colocated->refPic[refList]->picStructure == FRAME) ||
-             (!mb->mbField && colocated->refPic[refList]->picStructure != FRAME))) ||
+            ((mb->mbField && colocated->refPic[refList]->picStructure == eFrame) ||
+             (!mb->mbField && colocated->refPic[refList]->picStructure != eFrame))) ||
              (!slice->mbAffFrameFlag && ((slice->fieldPicFlag == 0 &&
-               colocated->refPic[refList]->picStructure != FRAME) ||
-             (slice->fieldPicFlag==1 && colocated->refPic[refList]->picStructure == FRAME)))) {
+               colocated->refPic[refList]->picStructure != eFrame) ||
+             (slice->fieldPicFlag==1 && colocated->refPic[refList]->picStructure == eFrame)))) {
           for (iref = 0; iref < imin(slice->numRefIndexActive[LIST_0], slice->listXsize[LIST_0 + listOffset]);iref++) {
             if(slice->listX[LIST_0 + listOffset][iref]->topField == colocated->refPic[refList] ||
               slice->listX[LIST_0 + listOffset][iref]->botField == colocated->refPic[refList] ||
@@ -455,11 +455,11 @@ int mb_pred_b_d8x8temporal (sMacroBlock* mb, eColorPlane plane, sPixel** pixel, 
         if (INVALIDINDEX != mapped_idx) {
           int mv_scale = slice->mvscale[LIST_0 + listOffset][mapped_idx];
           int mvY = colocated->mv[refList].mvY;
-          if ((slice->mbAffFrameFlag && !mb->mbField && colocated->refPic[refList]->picStructure!=FRAME) ||
-              (!slice->mbAffFrameFlag && slice->fieldPicFlag==0 && colocated->refPic[refList]->picStructure!=FRAME) )
+          if ((slice->mbAffFrameFlag && !mb->mbField && colocated->refPic[refList]->picStructure!=eFrame) ||
+              (!slice->mbAffFrameFlag && slice->fieldPicFlag==0 && colocated->refPic[refList]->picStructure!=eFrame) )
             mvY *= 2;
-          else if ((slice->mbAffFrameFlag && mb->mbField && colocated->refPic[refList]->picStructure==FRAME) ||
-                   (!slice->mbAffFrameFlag && slice->fieldPicFlag==1 && colocated->refPic[refList]->picStructure==FRAME) )
+          else if ((slice->mbAffFrameFlag && mb->mbField && colocated->refPic[refList]->picStructure==eFrame) ||
+                   (!slice->mbAffFrameFlag && slice->fieldPicFlag==1 && colocated->refPic[refList]->picStructure==eFrame) )
             mvY /= 2;
 
           // In such case, an array is needed for each different reference.
@@ -1142,17 +1142,17 @@ int mb_pred_ipcm (sMacroBlock* mb) {
   // for deblocking filter
   updateQp (mb, 0);
 
-  // for CAVLC: Set the nzCoeff to 16.
-  // These parameters are to be used in CAVLC decoding of neighbour blocks
+  // for eCavlc: Set the nzCoeff to 16.
+  // These parameters are to be used in eCavlc decoding of neighbour blocks
   memset (decoder->nzCoeff[mb->mbIndexX][0][0], 16, 3 * BLOCK_PIXELS * sizeof(byte));
 
-  // for CABAC decoding of MB skip flag
+  // for eCabac decoding of MB skip flag
   mb->skipFlag = 0;
 
-  //for deblocking filter CABAC
+  //for deblocking filter eCabac
   mb->cbpStructure[0].blk = 0xFFFF;
 
-  //For CABAC decoding of Dquant
+  //For eCabac decoding of Dquant
   slice->lastDquant = 0;
   slice->isResetCoef = FALSE;
   slice->isResetCoefCr = FALSE;

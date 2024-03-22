@@ -20,7 +20,7 @@ static int predict_nnz (sMacroBlock* mb, int block_type, int i,int j) {
   int cnt = 0;
   sSlice* slice = mb->slice;
   if ((mb->isIntraBlock == TRUE) && pixelPos.available &&
-      decoder->activePPS->constrainedIntraPredFlag && (slice->dataDpMode == PAR_DP_3)) {
+      decoder->activePPS->constrainedIntraPredFlag && (slice->dataDpMode == eDataPartition3)) {
     pixelPos.available &= slice->intraBlock[pixelPos.mbIndex];
     if (!pixelPos.available)
       ++cnt;
@@ -59,7 +59,7 @@ static int predict_nnz (sMacroBlock* mb, int block_type, int i,int j) {
   get4x4Neighbour (mb, i, j - 1, decoder->mbSize[IS_LUMA], &pixelPos);
 
   if ((mb->isIntraBlock == TRUE) && pixelPos.available &&
-      decoder->activePPS->constrainedIntraPredFlag && (slice->dataDpMode == PAR_DP_3)) {
+      decoder->activePPS->constrainedIntraPredFlag && (slice->dataDpMode == eDataPartition3)) {
     pixelPos.available &= slice->intraBlock[pixelPos.mbIndex];
     if (!pixelPos.available)
       ++cnt;
@@ -118,7 +118,7 @@ static int predict_nnz_chroma (sMacroBlock* mb, int i,int j) {
     get4x4Neighbour (mb, ((i&0x01)<<2) - 1, j, decoder->mbSize[IS_CHROMA], &pixelPos);
 
     if ((mb->isIntraBlock == TRUE) && pixelPos.available &&
-        decoder->activePPS->constrainedIntraPredFlag && (slice->dataDpMode==PAR_DP_3)) {
+        decoder->activePPS->constrainedIntraPredFlag && (slice->dataDpMode==eDataPartition3)) {
       pixelPos.available &= slice->intraBlock[pixelPos.mbIndex];
       if (!pixelPos.available)
         ++cnt;
@@ -133,7 +133,7 @@ static int predict_nnz_chroma (sMacroBlock* mb, int i,int j) {
     get4x4Neighbour (mb, ((i&0x01)<<2), j - 1, decoder->mbSize[IS_CHROMA], &pixelPos);
 
     if ((mb->isIntraBlock == TRUE) && pixelPos.available &&
-        decoder->activePPS->constrainedIntraPredFlag && (slice->dataDpMode==PAR_DP_3)) {
+        decoder->activePPS->constrainedIntraPredFlag && (slice->dataDpMode==eDataPartition3)) {
       pixelPos.available &= slice->intraBlock[pixelPos.mbIndex];
       if (!pixelPos.available)
         ++cnt;
@@ -555,7 +555,7 @@ static void readCompCoef4x4cavlc (sMacroBlock* mb, eColorPlane plane,
   sSlice* slice = mb->slice;
   sDecoder* decoder = mb->decoder;
 
-  const byte (*pos_scan4x4)[2] = ((decoder->coding.picStructure == FRAME) && (!mb->mbField)) ? SNGL_SCAN : FIELD_SCAN;
+  const byte (*pos_scan4x4)[2] = ((decoder->coding.picStructure == eFrame) && (!mb->mbField)) ? SNGL_SCAN : FIELD_SCAN;
   const byte *pos_scan_4x4 = pos_scan4x4[0];
   int start_scan = IS_I16MB(mb) ? 1 : 0;
   int64 *cur_cbp = &mb->cbpStructure[plane].blk;
@@ -622,7 +622,7 @@ static void read_comp_coeff_4x4_CAVLC_ls (sMacroBlock* mb, eColorPlane plane,
   sSlice* slice = mb->slice;
   sDecoder* decoder = mb->decoder;
 
-  const byte (*pos_scan4x4)[2] = ((decoder->coding.picStructure == FRAME) && (!mb->mbField)) ? SNGL_SCAN : FIELD_SCAN;
+  const byte (*pos_scan4x4)[2] = ((decoder->coding.picStructure == eFrame) && (!mb->mbField)) ? SNGL_SCAN : FIELD_SCAN;
   int start_scan = IS_I16MB(mb) ? 1 : 0;
   int64* cur_cbp = &mb->cbpStructure[plane].blk;
 
@@ -684,7 +684,7 @@ static void readCompCoef8x8cavlc (sMacroBlock* mb, eColorPlane plane,
   sSlice* slice = mb->slice;
   sDecoder* decoder = mb->decoder;
 
-  const byte (*pos_scan8x8)[2] = ((decoder->coding.picStructure == FRAME) && (!mb->mbField)) ? SNGL_SCAN8x8 : FIELD_SCAN8x8;
+  const byte (*pos_scan8x8)[2] = ((decoder->coding.picStructure == eFrame) && (!mb->mbField)) ? SNGL_SCAN8x8 : FIELD_SCAN8x8;
   int start_scan = IS_I16MB(mb) ? 1 : 0;
   int64 *cur_cbp = &mb->cbpStructure[plane].blk;
   int coef_ctr, cur_context;
@@ -720,7 +720,7 @@ static void readCompCoef8x8cavlc (sMacroBlock* mb, eColorPlane plane,
             for (int k = 0; k < numcoeff; ++k) {
               if (levarr[k] != 0) {
                 coef_ctr += runarr[k] + 1;
-                // do same as CABAC for deblocking: any coeff in the 8x8 marks all the 4x4s
+                // do same as eCabac for deblocking: any coeff in the 8x8 marks all the 4x4s
                 //as containing coefficients
                 *cur_cbp |= 51 << (block_y4 + blockX);
                 int b4 = (coef_ctr << 2) + 2*(j - blockY) + (i - blockX);
@@ -751,7 +751,7 @@ static void read_comp_coeff_8x8_CAVLC_ls (sMacroBlock* mb, eColorPlane plane,
   sSlice* slice = mb->slice;
   sDecoder* decoder = mb->decoder;
 
-  const byte (*pos_scan8x8)[2] = ((decoder->coding.picStructure == FRAME) && (!mb->mbField)) ? SNGL_SCAN8x8 : FIELD_SCAN8x8;
+  const byte (*pos_scan8x8)[2] = ((decoder->coding.picStructure == eFrame) && (!mb->mbField)) ? SNGL_SCAN8x8 : FIELD_SCAN8x8;
   int start_scan = IS_I16MB(mb) ? 1 : 0;
   int64*cur_cbp = &mb->cbpStructure[plane].blk;
 
@@ -785,7 +785,7 @@ static void read_comp_coeff_8x8_CAVLC_ls (sMacroBlock* mb, eColorPlane plane,
             for (int k = 0; k < numcoeff; ++k) {
               if (levarr[k] != 0) {
                 coef_ctr += runarr[k]+1;
-                // do same as CABAC for deblocking: any coeff in the 8x8 marks all the 4x4s
+                // do same as eCabac for deblocking: any coeff in the 8x8 marks all the 4x4s
                 // as containing coefficients
                 *cur_cbp |= 51 << ((blockY<<2) + blockX);
                 int b4 = 2*(j-blockY)+(i-blockX);
@@ -831,7 +831,7 @@ static void read_CBP_and_coeffs_from_NAL_CAVLC_400 (sMacroBlock* mb) {
   int (*InvLevelScale4x4)[4] = NULL;
   int (*InvLevelScale8x8)[8] = NULL;
   // select scan type
-  const byte (*pos_scan4x4)[2] = ((decoder->coding.picStructure == FRAME) && (!mb->mbField)) ? SNGL_SCAN : FIELD_SCAN;
+  const byte (*pos_scan4x4)[2] = ((decoder->coding.picStructure == eFrame) && (!mb->mbField)) ? SNGL_SCAN : FIELD_SCAN;
   const byte *pos_scan_4x4 = pos_scan4x4[0];
 
   // read CBP if not new intra mode
@@ -852,7 +852,7 @@ static void read_CBP_and_coeffs_from_NAL_CAVLC_400 (sMacroBlock* mb) {
                                && slice->transform8x8Mode);
 
     if (need_transform_size_flag) {
-      //{{{  read CAVLC transform_size_8x8_flag
+      //{{{  read eCavlc transform_size_8x8_flag
       se.type   =  SE_HEADER;
       dataPartition = &(slice->dataPartitions[dpMap[SE_HEADER]]);
       se.len = 1;
@@ -966,7 +966,7 @@ static void read_CBP_and_coeffs_from_NAL_CAVLC_422 (sMacroBlock* mb) {
   int (*InvLevelScale4x4)[4] = NULL;
   int (*InvLevelScale8x8)[8] = NULL;
   // select scan type
-  const byte (*pos_scan4x4)[2] = ((decoder->coding.picStructure == FRAME) && (!mb->mbField)) ? SNGL_SCAN : FIELD_SCAN;
+  const byte (*pos_scan4x4)[2] = ((decoder->coding.picStructure == eFrame) && (!mb->mbField)) ? SNGL_SCAN : FIELD_SCAN;
   const byte *pos_scan_4x4 = pos_scan4x4[0];
 
   // read CBP if not new intra mode
@@ -995,7 +995,7 @@ static void read_CBP_and_coeffs_from_NAL_CAVLC_422 (sMacroBlock* mb) {
       se.type   =  SE_HEADER;
       dataPartition = &(slice->dataPartitions[dpMap[SE_HEADER]]);
 
-      // read CAVLC transform_size_8x8_flag
+      // read eCavlc transform_size_8x8_flag
       se.len = 1;
       readsSyntaxElement_FLC(&se, dataPartition->s);
       mb->lumaTransformSize8x8flag = (Boolean) se.value1;
@@ -1236,7 +1236,7 @@ static void read_CBP_and_coeffs_from_NAL_CAVLC_444 (sMacroBlock* mb) {
   int (*InvLevelScale8x8)[8] = NULL;
 
   // select scan type
-  const byte (*pos_scan4x4)[2] = ((decoder->coding.picStructure == FRAME) && (!mb->mbField)) ? SNGL_SCAN : FIELD_SCAN;
+  const byte (*pos_scan4x4)[2] = ((decoder->coding.picStructure == eFrame) && (!mb->mbField)) ? SNGL_SCAN : FIELD_SCAN;
   const byte *pos_scan_4x4 = pos_scan4x4[0];
 
   // read CBP if not new intra mode
@@ -1260,7 +1260,7 @@ static void read_CBP_and_coeffs_from_NAL_CAVLC_444 (sMacroBlock* mb) {
     if (need_transform_size_flag) {
       se.type   =  SE_HEADER;
       dataPartition = &(slice->dataPartitions[dpMap[SE_HEADER]]);
-      // read CAVLC transform_size_8x8_flag
+      // read eCavlc transform_size_8x8_flag
       se.len = 1;
       readsSyntaxElement_FLC(&se, dataPartition->s);
       mb->lumaTransformSize8x8flag = (Boolean) se.value1;
@@ -1402,8 +1402,8 @@ static void read_CBP_and_coeffs_from_NAL_CAVLC_420 (sMacroBlock* mb) {
   sDataPartition* dataPartition = NULL;
   const byte* dpMap = assignSE2dp[slice->dataDpMode];
   sDecoder* decoder = mb->decoder;
-  int smb = ((decoder->coding.type == SP_SLICE) && (mb->isIntraBlock == FALSE)) || 
-            ((decoder->coding.type == SI_SLICE) && (mb->mbType == SI4MB));
+  int smb = ((decoder->coding.type == eSPslice) && (mb->isIntraBlock == FALSE)) || 
+            ((decoder->coding.type == eSIslice) && (mb->mbType == SI4MB));
 
   int uv;
   int qp_per_uv[2];
@@ -1420,7 +1420,7 @@ static void read_CBP_and_coeffs_from_NAL_CAVLC_420 (sMacroBlock* mb) {
   int (*InvLevelScale4x4)[4] = NULL;
   int (*InvLevelScale8x8)[8] = NULL;
   // select scan type
-  const byte (*pos_scan4x4)[2] = ((decoder->coding.picStructure == FRAME) && (!mb->mbField)) ? SNGL_SCAN : FIELD_SCAN;
+  const byte (*pos_scan4x4)[2] = ((decoder->coding.picStructure == eFrame) && (!mb->mbField)) ? SNGL_SCAN : FIELD_SCAN;
   const byte *pos_scan_4x4 = pos_scan4x4[0];
 
   // read CBP if not new intra mode
@@ -1443,7 +1443,7 @@ static void read_CBP_and_coeffs_from_NAL_CAVLC_420 (sMacroBlock* mb) {
       //{{{  Transform size flag for INTER MBs
       se.type =  SE_HEADER;
       dataPartition = &(slice->dataPartitions[dpMap[SE_HEADER]]);
-      // read CAVLC transform_size_8x8_flag
+      // read eCavlc transform_size_8x8_flag
       se.len = 1;
       readsSyntaxElement_FLC(&se, dataPartition->s);
       mb->lumaTransformSize8x8flag = (Boolean) se.value1;

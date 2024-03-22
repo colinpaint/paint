@@ -20,12 +20,6 @@
 #define ET_SIZE 300      //!< size of error text buffer
 //}}}
 //{{{  enums
-//{{{  enum eDecoderStatus
-typedef enum {
-  DEC_OPENED = 0,
-  DEC_STOPPED,
-  } eDecoderStatus;
-//}}}
 //{{{  enum eColorComponent
 typedef enum {
   LumaComp = 0,
@@ -53,16 +47,16 @@ typedef enum {
 
 //{{{  enum eDataPartitionType
 typedef enum {
-  PAR_DP_1,   //!< no data dping is supported
-  PAR_DP_3    //!< data dping with 3 dps
+  eDataPartition1, // no dataPartiton 
+  eDataPartition3  // 3 dataPartitions
   } eDataPartitionType;
 //}}}
 //{{{  enum eCodingType
 typedef enum {
-  FRAME_CODING         = 0,
-  FIELD_CODING         = 1,
-  ADAPTIVE_CODING      = 2,
-  FRAME_MB_PAIR_CODING = 3
+  eFrameCoding       = 0,
+  eFieldCoding       = 1,
+  eAdaptiveCoding    = 2,
+  eFrameMbPairCoding = 3
  } eCodingType;
 //}}}
 //{{{  enum eSeType - definition of H.264 syntax elements
@@ -89,45 +83,29 @@ typedef enum {
   } eSeType;
 //}}}
 
-//{{{  enum eSliceMode
-typedef enum {
-  NO_SLICES,
-  FIXED_MB,
-  FIXED_RATE,
-  CALL_BACK
-  } eSliceMode;
 //}}}
-//{{{  enum eSymbolMode
+//{{{  enum eSymbolType
 typedef enum {
-  CAVLC,
-  CABAC
-  } eSymbolMode;
-//}}}
-//{{{  enum eSearchType
-typedef enum {
-  FULL_SEARCH      = -1,
-  FAST_FULL_SEARCH =  0,
-  UM_HEX           =  1,
-  UM_HEX_SIMPLE    =  2,
-  EPZS             =  3
-  } eSearchType;
+  eCavlc,
+  eCabac
+  } eSymbolType;
 //}}}
 //{{{  enum ePicStructure
 typedef enum {
-  FRAME,
-  TopField,
-  BotField
+  eFrame,
+  eTopField,
+  eBotField
   } ePicStructure;
 //}}}
 
 //{{{  enum eSliceType
 typedef enum {
-  P_SLICE = 0,
-  B_SLICE = 1,
-  I_SLICE = 2,
-  SP_SLICE = 3,
-  SI_SLICE = 4,
-  NUM_SLICE_TYPES = 5
+  ePslice = 0,
+  eBslice = 1,
+  eIslice = 2,
+  eSPslice = 3,
+  eSIslice = 4,
+  eNumSliceTypes = 5
   } eSliceType;
 //}}}
 //{{{  enum eMotionEstimationLevel
@@ -403,15 +381,15 @@ typedef struct {
 //}}}
 //{{{  sBitStream
 typedef struct {
-  // CAVLC Decoding
+  // eCavlc Decoding
   byte* bitStreamBuffer;    // actual codebuffer for read bytes
-  int   bitStreamOffset; // actual position in the codebuffer, bit-oriented, CAVLC only
-  int   bitStreamLen;    // over codebuffer lnegth, byte oriented, CAVLC only
+  int   bitStreamOffset; // actual position in the codebuffer, bit-oriented, eCavlc only
+  int   bitStreamLen;    // over codebuffer lnegth, byte oriented, eCavlc only
   int   errorFlag;       // error indication, 0: no error, else unspecified error
 
-  // CABAC Decoding
-  int   readLen;         // actual position in the codebuffer, CABAC only
-  int   codeLen;         // overall codebuffer length, CABAC only
+  // eCabac Decoding
+  int   readLen;         // actual position in the codebuffer, eCabac only
+  int   codeLen;         // overall codebuffer length, eCabac only
   } sBitStream;
 //}}}
 //{{{  sSyntaxElement
@@ -420,15 +398,15 @@ typedef struct SyntaxElement {
   int           value1;      // numerical value of syntax element
   int           value2;      // for blocked symbols, e.g. run/level
   int           len;         // length of code
-  int           inf;         // info part of CAVLC code
-  unsigned int  bitpattern;  // CAVLC bitpattern
-  int           context;     // CABAC context
-  int           k;           // CABAC context for coeff_count,uv
+  int           inf;         // info part of eCavlc code
+  unsigned int  bitpattern;  // eCavlc bitpattern
+  int           context;     // eCabac context
+  int           k;           // eCabac context for coeff_count,uv
 
-  // CAVLC mapping to syntaxElement
+  // eCavlc mapping to syntaxElement
   void (*mapping) (int, int, int*, int*);
 
-  // CABAC actual coding method of each individual syntax element type
+  // eCabac actual coding method of each individual syntax element type
   void (*reading) (struct MacroBlock*, struct SyntaxElement*, sDecodeEnv*);
   } sSyntaxElement;
 //}}}
@@ -563,8 +541,8 @@ typedef struct MacroBlock {
   short   deltaQuant;        // for rate control
   short   listOffset;
 
-  struct MacroBlock* mbCabacUp;   // pointer to neighboring MB (CABAC)
-  struct MacroBlock* mbCabacLeft; // pointer to neighboring MB (CABAC)
+  struct MacroBlock* mbCabacUp;   // pointer to neighboring MB (eCabac)
+  struct MacroBlock* mbCabacLeft; // pointer to neighboring MB (eCabac)
 
   struct MacroBlock* mbUp;    // neighbors for loopfilter
   struct MacroBlock* mbLeft;  // neighbors for loopfilter
@@ -750,8 +728,8 @@ typedef struct Slice {
   struct Picture** listX[6];
 
   sDataPartition*       dataPartitions; // array of dataPartition
-  sMotionInfoContexts*  motionInfoContexts;  // pointer to struct of context models for use in CABAC
-  sTextureInfoContexts* textureInfoContexts; // pointer to struct of context models for use in CABAC
+  sMotionInfoContexts*  motionInfoContexts;  // pointer to struct of context models for use in eCabac
+  sTextureInfoContexts* textureInfoContexts; // pointer to struct of context models for use in eCabac
 
   int   mvscale[6][MAX_REFERENCE_PICTURES];
   int   refPicReorderFlag[2];

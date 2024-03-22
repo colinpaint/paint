@@ -408,7 +408,7 @@ static void prepareListforRefIdx (sMacroBlock* mb, sSyntaxElement* se,
                                   sDataPartition *dataPartition, int numRefIndexActive, int refidx_present) {
 
   if (numRefIndexActive > 1) {
-    if (mb->decoder->activePPS->entropyCodingMode == (Boolean) CAVLC || dataPartition->s->errorFlag) {
+    if (mb->decoder->activePPS->entropyCodingMode == (Boolean) eCavlc || dataPartition->s->errorFlag) {
       se->mapping = linfo_ue;
       if (refidx_present)
         mb->readRefPictureIndex = (numRefIndexActive == 2) ? readRefPictureIdxFLC : readRefPictureIdxVLC;
@@ -461,7 +461,7 @@ void readDeltaQuant (sSyntaxElement* se, sDataPartition *dataPartition, sMacroBl
 
   dataPartition = &(slice->dataPartitions[dpMap[se->type]]);
 
-  if (decoder->activePPS->entropyCodingMode == (Boolean)CAVLC || dataPartition->s->errorFlag)
+  if (decoder->activePPS->entropyCodingMode == (Boolean)eCavlc || dataPartition->s->errorFlag)
     se->mapping = linfo_se;
   else
     se->reading= read_dQuant_CABAC;
@@ -749,8 +749,8 @@ void startMacroblock (sSlice* slice, sMacroBlock** mb) {
   set_read_and_store_CBP (mb, slice->activeSPS->chromaFormatIdc);
 
   // Reset syntax element entries in MB struct
-  if (slice->sliceType != I_SLICE) {
-    if (slice->sliceType != B_SLICE)
+  if (slice->sliceType != eIslice) {
+    if (slice->sliceType != eBslice)
       memset ((*mb)->mvd[0][0][0], 0, MB_BLOCK_dpS * 2 * sizeof(short));
     else
       memset ((*mb)->mvd[0][0][0], 0, 2 * MB_BLOCK_dpS * 2 * sizeof(short));
@@ -803,9 +803,9 @@ Boolean exitMacroblock (sSlice* slice, int eos_bit) {
     if (slice->nalStartCode (slice, eos_bit) == FALSE)
       return FALSE;
 
-    if ((slice->sliceType == I_SLICE)  ||
-        (slice->sliceType == SI_SLICE) ||
-        (decoder->activePPS->entropyCodingMode == (Boolean)CABAC))
+    if ((slice->sliceType == eIslice)  ||
+        (slice->sliceType == eSIslice) ||
+        (decoder->activePPS->entropyCodingMode == (Boolean)eCabac))
       return TRUE;
 
     if (slice->codCount <= 0)
@@ -1035,7 +1035,7 @@ static void readMotionInfoP (sMacroBlock* mb){
   //=====  READ MOTION VECTORS =====
   se.type = SE_MVD;
   dataPartition = &(slice->dataPartitions[dpMap[SE_MVD]]);
-  if (decoder->activePPS->entropyCodingMode == (Boolean) CAVLC || dataPartition->s->errorFlag)
+  if (decoder->activePPS->entropyCodingMode == (Boolean) eCavlc || dataPartition->s->errorFlag)
     se.mapping = linfo_se;
   else
     se.reading = slice->mbAffFrameFlag ? read_mvd_CABAC_mbaff : read_MVD_CABAC;
@@ -1093,7 +1093,7 @@ static void readMotionInfoB (sMacroBlock* mb) {
   //=====  READ MOTION VECTORS =====
   se.type = SE_MVD;
   dataPartition = &(slice->dataPartitions[dpMap[SE_MVD]]);
-  if (decoder->activePPS->entropyCodingMode == (Boolean)CAVLC || dataPartition->s->errorFlag)
+  if (decoder->activePPS->entropyCodingMode == (Boolean)eCavlc || dataPartition->s->errorFlag)
     se.mapping = linfo_se;
   else
     se.reading = slice->mbAffFrameFlag ? read_mvd_CABAC_mbaff : read_MVD_CABAC;
@@ -1123,7 +1123,7 @@ void setSliceMethods (sSlice* slice) {
 
   switch (slice->sliceType) {
     //{{{
-    case P_SLICE:
+    case ePslice:
       slice->interpretMbMode = interpretMbModeP;
       slice->nalReadMotionInfo = readMotionInfoP;
       slice->decodeComponenet = decodeComponentP;
@@ -1132,7 +1132,7 @@ void setSliceMethods (sSlice* slice) {
       break;
     //}}}
     //{{{
-    case SP_SLICE:
+    case eSPslice:
       slice->interpretMbMode = interpretMbModeP;
       slice->nalReadMotionInfo = readMotionInfoP;
       slice->decodeComponenet = decodeComponentSP;
@@ -1141,7 +1141,7 @@ void setSliceMethods (sSlice* slice) {
       break;
     //}}}
     //{{{
-    case B_SLICE:
+    case eBslice:
       slice->interpretMbMode = interpretMbModeB;
       slice->nalReadMotionInfo = readMotionInfoB;
       slice->decodeComponenet = decodeComponentB;
@@ -1150,7 +1150,7 @@ void setSliceMethods (sSlice* slice) {
       break;
     //}}}
     //{{{
-    case I_SLICE:
+    case eIslice:
       slice->interpretMbMode = interpretMbModeI;
       slice->nalReadMotionInfo = NULL;
       slice->decodeComponenet = decodeComponentI;
@@ -1159,7 +1159,7 @@ void setSliceMethods (sSlice* slice) {
       break;
     //}}}
     //{{{
-    case SI_SLICE:
+    case eSIslice:
       slice->interpretMbMode = interpretMbModeSI;
       slice->nalReadMotionInfo = NULL;
       slice->decodeComponenet = decodeComponentI;
@@ -1182,10 +1182,10 @@ void setSliceMethods (sSlice* slice) {
     slice->readCoef4x4cavlc = readCoef4x4cavlc;
 
   switch (slice->decoder->activePPS->entropyCodingMode) {
-    case CABAC:
+    case eCabac:
       set_read_CBP_and_coeffs_cabac (slice);
       break;
-    case CAVLC:
+    case eCavlc:
       setReadCbpCoefCavlc (slice);
       break;
     default:

@@ -675,7 +675,7 @@ void readMB_typeInfo_CABAC_i_slice (sMacroBlock* mb, sSyntaxElement* se, sDecode
   int mode_sym;
   int curr_mb_type = 0;
 
-  if (slice->sliceType == I_SLICE)  {
+  if (slice->sliceType == eIslice)  {
     //{{{  INTRA-frame
     if (mb->mbCabacUp)
       b = (((mb->mbCabacUp)->mbType != I4MB && mb->mbCabacUp->mbType != I8MB) ? 1 : 0 );
@@ -721,7 +721,7 @@ void readMB_typeInfo_CABAC_i_slice (sMacroBlock* mb, sSyntaxElement* se, sDecode
       }
     }
     //}}}
-  else if(slice->sliceType == SI_SLICE)  {
+  else if(slice->sliceType == eSIslice)  {
     //{{{  SI-frame
     // special context's for SI4MB
     if (mb->mbCabacUp)
@@ -1113,7 +1113,7 @@ void read_CBP_CABAC (sMacroBlock* mb, sSyntaxElement* se, sDecodeEnv* decodeEnv)
     }
 
   if ((picture->chromaFormatIdc != YUV400) && (picture->chromaFormatIdc != YUV444)) {
-    // coding of chroma part CABAC decoding for BinIdx 0
+    // coding of chroma part eCabac decoding for BinIdx 0
     b = 0;
     neighborMB = mb->mbCabacUp;
     if (neighborMB != NULL)
@@ -1129,7 +1129,7 @@ void read_CBP_CABAC (sMacroBlock* mb, sSyntaxElement* se, sDecodeEnv* decodeEnv)
     curr_cbp_ctx = a + b;
     cbp_bit = biarDecodeSymbol(decodeEnv, ctx->cbp_contexts[1] + curr_cbp_ctx );
 
-    // CABAC decoding for BinIdx 1
+    // eCabac decoding for BinIdx 1
     if (cbp_bit) {
       // set the chroma bits
       b = 0;
@@ -1657,7 +1657,7 @@ void set_read_and_store_CBP (sMacroBlock** mb, int chromaFormatIdc) {
 static int read_significance_map (sMacroBlock* mb, sDecodeEnv*  decodeEnv, int type, int coeff[]) {
 
   sSlice* slice = mb->slice;
-  int fld    = ( slice->picStructure!=FRAME || mb->mbField );
+  int fld    = ( slice->picStructure!=eFrame || mb->mbField );
   const byte *pos2ctx_Map = (fld) ? pos2ctx_map_int[type] : pos2ctx_map[type];
   const byte *pos2ctx_Last = pos2ctx_last[type];
 
