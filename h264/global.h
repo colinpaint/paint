@@ -684,7 +684,7 @@ typedef struct Slice {
   int           codCount;    // Current count of number of skipped macroblocks in a row
   int           allrefzero;
 
-  int           mbAffFrameFlag;
+  int           mbAffFrame;
   int           directSpatialMvPredFlag; // Indicator for direct mode type (1 for Spatial, 0 for Temporal)
   int           numRefIndexActive[2];    // number of available list references
 

@@ -1372,8 +1372,7 @@ static void fillWpParam (sSlice* slice) {
             }
           else if (slice->activePPS->weightedBiPredIdc == 2) {
             int td = iClip3(-128,127,slice->listX[LIST_1][j]->poc - slice->listX[LIST_0][i]->poc);
-            if (!td ||
-                slice->listX[LIST_1][j]->isLongTerm || slice->listX[LIST_0][i]->isLongTerm) {
+            if (!td || slice->listX[LIST_1][j]->isLongTerm || slice->listX[LIST_0][i]->isLongTerm) {
               slice->wbpWeight[0][i][j][comp] = 32;
               slice->wbpWeight[1][i][j][comp] = 32;
               }
@@ -1393,7 +1392,7 @@ static void fillWpParam (sSlice* slice) {
             }
           }
 
-    if (slice->mbAffFrameFlag)
+    if (slice->mbAffFrame)
       for (int i = 0; i < 2 * maxL0Ref; ++i)
         for (int j = 0; j < 2 * maxL1Ref; ++j)
           for (int comp = 0; comp<3; ++comp)
@@ -1407,15 +1406,13 @@ static void fillWpParam (sSlice* slice) {
                 }
               else if (slice->activePPS->weightedBiPredIdc == 2) {
                 int td = iClip3 (-128, 127, slice->listX[k+LIST_1][j]->poc - slice->listX[k+LIST_0][i]->poc);
-                if (!td ||
-                    slice->listX[k+LIST_1][j]->isLongTerm ||
-                    slice->listX[k+LIST_0][i]->isLongTerm) {
+                if (!td || slice->listX[k+LIST_1][j]->isLongTerm || slice->listX[k+LIST_0][i]->isLongTerm) {
                   slice->wbpWeight[k+0][i][j][comp] = 32;
                   slice->wbpWeight[k+1][i][j][comp] = 32;
                   }
                 else {
-                  int tb = iClip3(-128,127, ((k == 2) ? slice->topPoc :
-                                                    slice->botPoc) - slice->listX[k+LIST_0][i]->poc);
+                  int tb = iClip3 (-128,127, 
+                               ((k == 2) ? slice->topPoc : slice->botPoc) - slice->listX[k+LIST_0][i]->poc);
                   int tx = (16384 + iabs(td/2)) / td;
                   int distScaleFactor = iClip3 (-1024, 1023, (tx*tb + 32 )>>6);
                   slice->wbpWeight[k+1][i][j][comp] = distScaleFactor >> 2;
@@ -1523,7 +1520,7 @@ static void initRefPicture (sSlice* slice, sDecoder* decoder) {
     }
 
   else {
-    int totalLists = slice->mbAffFrameFlag ? 6 : (slice->sliceType == eBslice ? 2 : 1);
+    int totalLists = slice->mbAffFrame ? 6 : (slice->sliceType == eBslice ? 2 : 1);
     for (int j = 0; j < totalLists; j++) {
       // note that if we always set this to MAX_LIST_SIZE, we avoid crashes with invalid refIndex being set
       // since currently this is done at the slice level, it seems safe to do so.
@@ -1639,7 +1636,7 @@ static void copyDecPictureJV (sDecoder* decoder, sPicture* dst, sPicture* src) {
   dst->longTermRefFlag = src->longTermRefFlag;
   dst->adaptRefPicBufFlag = src->adaptRefPicBufFlag;
   dst->decRefPicMarkingBuffer = src->decRefPicMarkingBuffer;
-  dst->mbAffFrameFlag = src->mbAffFrameFlag;
+  dst->mbAffFrame = src->mbAffFrame;
   dst->picWidthMbs = src->picWidthMbs;
   dst->picNum  = src->picNum;
   dst->frameNum = src->frameNum;
@@ -1727,7 +1724,7 @@ static void initPicture (sDecoder* decoder, sSlice* slice) {
   picture->chromaQpOffset[0] = decoder->activePPS->chromaQpIndexOffset;
   picture->chromaQpOffset[1] = decoder->activePPS->secondChromaQpIndexOffset;
   picture->iCodingType = slice->picStructure == eFrame ?
-    (slice->mbAffFrameFlag? eFrameMbPairCoding:eFrameCoding) : eFieldCoding;
+    (slice->mbAffFrame? eFrameMbPairCoding:eFrameCoding) : eFieldCoding;
 
   // reset all variables of the error conceal instance before decoding of every frame.
   // here the third parameter should, if perfectly, be equal to the number of slices per frame.
@@ -1801,11 +1798,11 @@ static void initPicture (sDecoder* decoder, sSlice* slice) {
   picture->decRefPicMarkingBuffer = slice->decRefPicMarkingBuffer;
   slice->decRefPicMarkingBuffer = NULL;
 
-  picture->mbAffFrameFlag = slice->mbAffFrameFlag;
+  picture->mbAffFrame = slice->mbAffFrame;
   picture->picWidthMbs = decoder->coding.picWidthMbs;
 
-  decoder->getMbBlockPos = picture->mbAffFrameFlag ? getMbBlockPosMbaff : getMbBlockPosNormal;
-  decoder->getNeighbour = picture->mbAffFrameFlag ? getAffNeighbour : getNonAffNeighbour;
+  decoder->getMbBlockPos = picture->mbAffFrame ? getMbBlockPosMbaff : getMbBlockPosNormal;
+  decoder->getNeighbour = picture->mbAffFrame ? getAffNeighbour : getNonAffNeighbour;
 
   picture->picNum = slice->frameNum;
   picture->frameNum = slice->frameNum;
@@ -1927,7 +1924,7 @@ static void readSlice (sDecoder* decoder, sSlice* slice) {
     }
 
   slice->picStructure = (ePicStructure)decoder->coding.picStructure;
-  slice->mbAffFrameFlag = activeSPS->mbAffFlag && !slice->fieldPicFlag;
+  slice->mbAffFrame = activeSPS->mbAffFlag && !slice->fieldPicFlag;
   //}}}
 
   if (slice->idrFlag)
@@ -2199,7 +2196,7 @@ static void initPictureDecoding (sDecoder* decoder) {
 
   updatePicNum (slice);
 
-  initDeblock (decoder, slice->mbAffFrameFlag);
+  initDeblock (decoder, slice->mbAffFrame);
   for (int j = 0; j < decoder->picSliceIndex; j++)
     if (decoder->sliceList[j]->deblockFilterDisableIdc != 1)
       deblockMode = 0;
@@ -2268,7 +2265,7 @@ static void decodeSlice (sSlice* slice) {
 
   Boolean endOfSlice = FALSE;
 
-  slice->codCount=-1;
+  slice->codCount = -1;
 
   sDecoder* decoder = slice->decoder;
   if (decoder->coding.sepColourPlaneFlag)
@@ -2288,19 +2285,19 @@ static void decodeSlice (sSlice* slice) {
     initRefPicture (slice, decoder);
 
   // loop over macroblocks
-  while (endOfSlice == FALSE) {
+  while (!endOfSlice) {
     sMacroBlock* mb;
     startMacroblock (slice, &mb);
     slice->readMacroblock (mb);
     decodeMacroblock (mb, slice->picture);
 
-    if (slice->mbAffFrameFlag && mb->mbField) {
+    if (slice->mbAffFrame && mb->mbField) {
       slice->numRefIndexActive[LIST_0] >>= 1;
       slice->numRefIndexActive[LIST_1] >>= 1;
       }
 
     ercWriteMBmodeMV (mb);
-    endOfSlice = exitMacroblock (slice, !slice->mbAffFrameFlag || (slice->mbIndex % 2));
+    endOfSlice = exitMacroblock (slice, !slice->mbAffFrame || (slice->mbIndex % 2));
     }
   }
 //}}}
@@ -2391,7 +2388,7 @@ static int readNextSlice (sSlice* slice) {
                     (slice->sliceType == 1 ? "B":
                       (slice->sliceType == 2 ? "I" : "?")),
                   slice->frameNum,
-                  slice->mbAffFrameFlag ? " mbAff":"",
+                  slice->mbAffFrame ? " mbAff":"",
                   slice->fieldPicFlag ? " field":"",
                   slice->ppsId);
           }
@@ -2412,7 +2409,7 @@ static int readNextSlice (sSlice* slice) {
 
         setSliceMethods (slice);
 
-        if (slice->mbAffFrameFlag)
+        if (slice->mbAffFrame)
           slice->mbIndex = slice->startMbNum << 1;
         else
           slice->mbIndex = slice->startMbNum;
@@ -2462,7 +2459,7 @@ static int readNextSlice (sSlice* slice) {
         setSliceMethods (slice);
 
         // From here on, decoder->activeSPS, decoder->activePPS and the slice header are valid
-        if (slice->mbAffFrameFlag)
+        if (slice->mbAffFrame)
           slice->mbIndex = slice->startMbNum << 1;
         else
           slice->mbIndex = slice->startMbNum;
@@ -2831,7 +2828,7 @@ void endDecodeFrame (sDecoder* decoder) {
   int ercSegment = 0;
 
   // mark the start of the first segment
-  if (!decoder->picture->mbAffFrameFlag) {
+  if (!decoder->picture->mbAffFrame) {
     int i;
     ercStartSegment (0, ercSegment, 0 , decoder->ercErrorVar);
     // generate the segments according to the macroblock map
@@ -2889,7 +2886,7 @@ void endDecodeFrame (sDecoder* decoder) {
   else if (decoder->coding.sepColourPlaneFlag)
     makeFramePictureJV (decoder);
 
-  if (decoder->picture->mbAffFrameFlag)
+  if (decoder->picture->mbAffFrame)
     mbAffPostProc (decoder);
   if (decoder->coding.picStructure != eFrame)
      decoder->idrFrameNum /= 2;
@@ -3083,7 +3080,7 @@ int decodeFrame (sDecoder* decoder) {
       }
 
     else {
-      if (decoder->sliceList[decoder->picSliceIndex-1]->mbAffFrameFlag)
+      if (decoder->sliceList[decoder->picSliceIndex-1]->mbAffFrame)
         decoder->sliceList[decoder->picSliceIndex-1]->endMbNumPlus1 = decoder->coding.frameSizeMbs / 2;
       else
         decoder->sliceList[decoder->picSliceIndex-1]->endMbNumPlus1 =

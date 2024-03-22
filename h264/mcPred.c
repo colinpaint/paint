@@ -49,7 +49,7 @@ static void update_direct_mv_info_temporal (sMacroBlock* mb) {
   int j4, i4;
 
   sPicture* picture = slice->picture;
-  int listOffset = mb->listOffset; // ((slice->mbAffFrameFlag)&&(mb->mbField))? (mb_nr&0x01) ? 4 : 2 : 0;
+  int listOffset = mb->listOffset; // ((slice->mbAffFrame)&&(mb->mbField))? (mb_nr&0x01) ? 4 : 2 : 0;
   sPicture** list0 = slice->listX[LIST_0 + listOffset];
   sPicture** list1 = slice->listX[LIST_1 + listOffset];
 
@@ -72,7 +72,7 @@ static void update_direct_mv_info_temporal (sMacroBlock* mb) {
                                            &list1[0]->mvInfo[RSD(mb->blockYaff + j0)][RSD(i0)] :
                                            &list1[0]->mvInfo[mb->blockYaff + j0][i0];
 
-            if (slice->mbAffFrameFlag) {
+            if (slice->mbAffFrame) {
               //{{{
               if (!mb->mbField && ((slice->listX[LIST_1][0]->iCodingType==eFrameMbPairCoding && slice->listX[LIST_1][0]->motion.mbField[mb->mbIndexX]) ||
                 (slice->listX[LIST_1][0]->iCodingType==eFieldCoding))) {
@@ -135,9 +135,9 @@ static void update_direct_mv_info_temporal (sMacroBlock* mb) {
               }
               //}}}
             else {
-              if ((slice->mbAffFrameFlag && ( (mb->mbField && colocated->refPic[refList]->picStructure==eFrame) ||
+              if ((slice->mbAffFrame && ( (mb->mbField && colocated->refPic[refList]->picStructure==eFrame) ||
                   (!mb->mbField && colocated->refPic[refList]->picStructure!=eFrame))) ||
-                  (!slice->mbAffFrameFlag && ((slice->fieldPicFlag==0 && colocated->refPic[refList]->picStructure!=eFrame)||
+                  (!slice->mbAffFrame && ((slice->fieldPicFlag==0 && colocated->refPic[refList]->picStructure!=eFrame)||
                   (slice->fieldPicFlag==1 && colocated->refPic[refList]->picStructure==eFrame))) ) {
                 //{{{  Frame with field co-located
                 for (iref = 0;
@@ -186,7 +186,7 @@ static void update_direct_mv_info_temporal (sMacroBlock* mb) {
                       &list1[0]->mvInfo[j6][i4];
                     sPicMotionParam* mvInfo = &picture->mvInfo[j4][i4];
                     int mvY;
-                    if (slice->mbAffFrameFlag) {
+                    if (slice->mbAffFrame) {
                       if (!mb->mbField && ((slice->listX[LIST_1][0]->iCodingType==eFrameMbPairCoding && slice->listX[LIST_1][0]->motion.mbField[mb->mbIndexX]) ||
                           (slice->listX[LIST_1][0]->iCodingType==eFieldCoding))) {
                         if (iabs(picture->poc - slice->listX[LIST_1+4][0]->poc)> iabs(picture->poc -slice->listX[LIST_1+2][0]->poc) )
@@ -225,11 +225,11 @@ static void update_direct_mv_info_temporal (sMacroBlock* mb) {
                       }
 
                     mvY = colocated->mv[refList].mvY;
-                    if ((slice->mbAffFrameFlag && !mb->mbField && colocated->refPic[refList]->picStructure!=eFrame) ||
-                        (!slice->mbAffFrameFlag && slice->fieldPicFlag==0 && colocated->refPic[refList]->picStructure!=eFrame))
+                    if ((slice->mbAffFrame && !mb->mbField && colocated->refPic[refList]->picStructure!=eFrame) ||
+                        (!slice->mbAffFrame && slice->fieldPicFlag==0 && colocated->refPic[refList]->picStructure!=eFrame))
                       mvY *= 2;
-                    else if ((slice->mbAffFrameFlag && mb->mbField && colocated->refPic[refList]->picStructure==eFrame) ||
-                             (!slice->mbAffFrameFlag && slice->fieldPicFlag==1 && colocated->refPic[refList]->picStructure==eFrame))
+                    else if ((slice->mbAffFrame && mb->mbField && colocated->refPic[refList]->picStructure==eFrame) ||
+                             (!slice->mbAffFrame && slice->fieldPicFlag==1 && colocated->refPic[refList]->picStructure==eFrame))
                       mvY /= 2;
 
                     mv_scale = slice->mvscale[LIST_0 + listOffset][mapped_idx];
@@ -297,7 +297,7 @@ int get_colocated_info_8x8 (sMacroBlock* mb, sPicture* list1, int i, int j) {
   else {
     sSlice* slice = mb->slice;
     sDecoder* decoder = mb->decoder;
-    if ((slice->mbAffFrameFlag) ||
+    if ((slice->mbAffFrame) ||
         (!decoder->activeSPS->frameMbOnlyFlag &&
         ((!slice->picStructure && list1->iCodingType == eFieldCoding) ||
         (slice->picStructure!=list1->picStructure && list1->codedFrame)))) {
@@ -315,9 +315,9 @@ int get_colocated_info_8x8 (sMacroBlock* mb, sPicture* list1, int i, int j) {
            fs = list1->botField->mvInfo[jj] + ii;
         }
       else {
-        if( (slice->mbAffFrameFlag && ((!mb->mbField && list1->motion.mbField[mb->mbIndexX]) ||
+        if( (slice->mbAffFrame && ((!mb->mbField && list1->motion.mbField[mb->mbIndexX]) ||
           (!mb->mbField && list1->iCodingType == eFieldCoding)))
-          || (!slice->mbAffFrameFlag)) {
+          || (!slice->mbAffFrame)) {
           if (iabs(slice->picture->poc - list1->botField->poc)> iabs(slice->picture->poc -list1->topField->poc) )
             fs = list1->topField->mvInfo[jdiv] + ii;
           else
@@ -369,7 +369,7 @@ static void update_direct_mv_info_spatial_8x8 (sMacroBlock* mb)
     int j4, i4;
     sPicture* picture = slice->picture;
 
-    int listOffset = mb->listOffset; // ((slice->mbAffFrameFlag)&&(mb->mbField))? (mb_nr&0x01) ? 4 : 2 : 0;
+    int listOffset = mb->listOffset; // ((slice->mbAffFrame)&&(mb->mbField))? (mb_nr&0x01) ? 4 : 2 : 0;
     sPicture** list0 = slice->listX[LIST_0 + listOffset];
     sPicture** list1 = slice->listX[LIST_1 + listOffset];
 
@@ -528,7 +528,7 @@ static void update_direct_mv_info_spatial_4x4 (sMacroBlock* mb)
     int j4, i4;
     sPicture* picture = decoder->picture;
 
-    int listOffset = mb->listOffset; // ((slice->mbAffFrameFlag)&&(mb->mbField))? (mb_nr&0x01) ? 4 : 2 : 0;
+    int listOffset = mb->listOffset; // ((slice->mbAffFrame)&&(mb->mbField))? (mb_nr&0x01) ? 4 : 2 : 0;
     sPicture** list0 = slice->listX[LIST_0 + listOffset];
     sPicture** list1 = slice->listX[LIST_1 + listOffset];
 
@@ -1795,7 +1795,7 @@ void prepare_direct_params (sMacroBlock* mb, sPicture* picture, sMotionVec* pmvl
 
   getNeighbours (mb, pixelPos, 0, 0, 16);
 
-  if (!slice->mbAffFrameFlag) {
+  if (!slice->mbAffFrame) {
     set_direct_references (&pixelPos[0], &l0_refA, &l1_refA, mvInfo);
     set_direct_references (&pixelPos[1], &l0_refB, &l1_refB, mvInfo);
     set_direct_references (&pixelPos[2], &l0_refC, &l1_refC, mvInfo);

@@ -248,9 +248,9 @@ static void GetMotionVectorPredictorNormal (sMacroBlock* mb, sPixelPos* block,
   }
 //}}}
 //{{{
-static void init_motion_vector_prediction (sMacroBlock* mb, int mbAffFrameFlag) {
+static void init_motion_vector_prediction (sMacroBlock* mb, int mbAffFrame) {
 
-  if (mbAffFrameFlag)
+  if (mbAffFrame)
     mb->GetMVPredictor = GetMotionVectorPredictorMBAFF;
   else
     mb->GetMVPredictor = GetMotionVectorPredictorNormal;
@@ -717,7 +717,7 @@ void startMacroblock (sSlice* slice, sMacroBlock** mb) {
   (*mb)->mbIndexX = mbIndex;
 
   // Update coordinates of the current macroblock
-  if (slice->mbAffFrameFlag) {
+  if (slice->mbAffFrame) {
     (*mb)->mb.x = (short) (   (mbIndex) % ((2*decoder->width) / MB_BLOCK_SIZE));
     (*mb)->mb.y = (short) (2*((mbIndex) / ((2*decoder->width) / MB_BLOCK_SIZE)));
     (*mb)->mb.y += ((*mb)->mb.x & 0x01);
@@ -745,7 +745,7 @@ void startMacroblock (sSlice* slice, sMacroBlock** mb) {
   CheckAvailabilityOfNeighbors (*mb);
 
   // Select appropriate MV predictor function
-  init_motion_vector_prediction (*mb, slice->mbAffFrameFlag);
+  init_motion_vector_prediction (*mb, slice->mbAffFrame);
   set_read_and_store_CBP (mb, slice->activeSPS->chromaFormatIdc);
 
   // Reset syntax element entries in MB struct
@@ -1038,7 +1038,7 @@ static void readMotionInfoP (sMacroBlock* mb){
   if (decoder->activePPS->entropyCodingMode == (Boolean) eCavlc || dataPartition->s->errorFlag)
     se.mapping = linfo_se;
   else
-    se.reading = slice->mbAffFrameFlag ? read_mvd_CABAC_mbaff : read_MVD_CABAC;
+    se.reading = slice->mbAffFrame ? read_mvd_CABAC_mbaff : read_MVD_CABAC;
 
   // LIST_0 Motion vectors
   readMBMotionVectors (&se, dataPartition, mb, LIST_0, step_h0, step_v0);
@@ -1096,7 +1096,7 @@ static void readMotionInfoB (sMacroBlock* mb) {
   if (decoder->activePPS->entropyCodingMode == (Boolean)eCavlc || dataPartition->s->errorFlag)
     se.mapping = linfo_se;
   else
-    se.reading = slice->mbAffFrameFlag ? read_mvd_CABAC_mbaff : read_MVD_CABAC;
+    se.reading = slice->mbAffFrame ? read_mvd_CABAC_mbaff : read_MVD_CABAC;
 
   // LIST_0 Motion vectors
   readMBMotionVectors (&se, dataPartition, mb, LIST_0, step_h0, step_v0);

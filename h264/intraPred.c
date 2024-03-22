@@ -4202,7 +4202,7 @@ static void intraPredChroma (sMacroBlock* mb)
 //{{{
 void set_intra_prediction_modes (sSlice *slice) {
 
-  if (slice->mbAffFrameFlag) {
+  if (slice->mbAffFrame) {
     slice->intraPred4x4 = intra_pred_4x4_mbaff;
     slice->intraPred8x8 = intra_pred_8x8_mbaff;
     slice->intraPred16x16 = intra_pred_16x16_mbaff;

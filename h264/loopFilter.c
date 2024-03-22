@@ -556,9 +556,9 @@ static void get_strength_ver_MBAff (byte* Strength, sMacroBlock* mb, int edge, i
         mb->mixedModeEdgeFlag = (byte) (mb->mbField != MbP->mbField);
 
         // Start with Strength=3. or Strength=4 for Mb-edge
-        Strength[idx] = (edge == 0 && (((!p->mbAffFrameFlag && (p->picStructure==eFrame)) ||
-                         (p->mbAffFrameFlag && !MbP->mbField && !mb->mbField)) ||
-                         ((p->mbAffFrameFlag || (p->picStructure!=eFrame))))) ? 4 : 3;
+        Strength[idx] = (edge == 0 && (((!p->mbAffFrame && (p->picStructure==eFrame)) ||
+                         (p->mbAffFrame && !MbP->mbField && !mb->mbField)) ||
+                         ((p->mbAffFrame || (p->picStructure!=eFrame))))) ? 4 : 3;
 
         if (mb->isIntraBlock == FALSE && MbP->isIntraBlock == FALSE) {
           if (((mb->cbpStructure[0].blk & i64_power2(blkQ)) != 0) || ((MbP->cbpStructure[0].blk & i64_power2(blkP)) != 0))
@@ -1415,7 +1415,7 @@ static void deblockMb (sDecoder* decoder, sPicture* p, int mbIndex) {
     sPixel** imgY = p->imgY;
     sPixel*** imgUV = p->imgUV;
     sSlice* slice = mb->slice;
-    int mvLimit = ((p->picStructure!=eFrame) || (p->mbAffFrameFlag && mb->mbField)) ? 2 : 4;
+    int mvLimit = ((p->picStructure!=eFrame) || (p->mbAffFrame && mb->mbField)) ? 2 : 4;
     sSPS* activeSPS = decoder->activeSPS;
 
     mb->DeblockCall = 1;
@@ -1428,17 +1428,17 @@ static void deblockMb (sDecoder* decoder, sPicture* p, int mbIndex) {
     filterLeftMbEdgeFlag = (mb_x != 0);
     filterTopMbEdgeFlag  = (mb_y != 0);
 
-    if (p->mbAffFrameFlag && mb_y == MB_BLOCK_SIZE && mb->mbField)
+    if (p->mbAffFrame && mb_y == MB_BLOCK_SIZE && mb->mbField)
       filterTopMbEdgeFlag = 0;
 
     if (mb->deblockFilterDisableIdc == 2) {
       // don't filter at slice boundaries
       filterLeftMbEdgeFlag = mb->mbAvailA;
       // if this the bottom of a frame macroblock pair then always filter the top edge
-      filterTopMbEdgeFlag  = (p->mbAffFrameFlag && !mb->mbField && (mbIndex & 0x01)) ? 1 : mb->mbAvailB;
+      filterTopMbEdgeFlag  = (p->mbAffFrame && !mb->mbField && (mbIndex & 0x01)) ? 1 : mb->mbAvailB;
       }
 
-    if (p->mbAffFrameFlag == 1)
+    if (p->mbAffFrame == 1)
       CheckAvailabilityOfNeighborsMBAFF (mb);
 
     // Vertical deblocking
@@ -1572,7 +1572,7 @@ static void getDeblockStrength (sDecoder* decoder, sPicture* p, int mbIndex) {
     int filterTopMbEdgeFlag;
 
     sSlice* slice = mb->slice;
-    int mvLimit = ((p->picStructure!=eFrame) || (p->mbAffFrameFlag && mb->mbField)) ? 2 : 4;
+    int mvLimit = ((p->picStructure!=eFrame) || (p->mbAffFrame && mb->mbField)) ? 2 : 4;
     sSPS* activeSPS = decoder->activeSPS;
 
     mb->DeblockCall = 1;
@@ -1587,17 +1587,17 @@ static void getDeblockStrength (sDecoder* decoder, sPicture* p, int mbIndex) {
     filterLeftMbEdgeFlag = (mb_x != 0);
     filterTopMbEdgeFlag  = (mb_y != 0);
 
-    if (p->mbAffFrameFlag && mb_y == MB_BLOCK_SIZE && mb->mbField)
+    if (p->mbAffFrame && mb_y == MB_BLOCK_SIZE && mb->mbField)
       filterTopMbEdgeFlag = 0;
 
     if (mb->deblockFilterDisableIdc==2) {
       // don't filter at slice boundaries
       filterLeftMbEdgeFlag = mb->mbAvailA;
       // if this the bottom of a frame macroblock pair then always filter the top edge
-      filterTopMbEdgeFlag = (p->mbAffFrameFlag && !mb->mbField && (mbIndex & 0x01)) ? 1 : mb->mbAvailB;
+      filterTopMbEdgeFlag = (p->mbAffFrame && !mb->mbField && (mbIndex & 0x01)) ? 1 : mb->mbAvailB;
       }
 
-    if (p->mbAffFrameFlag == 1)
+    if (p->mbAffFrame == 1)
       CheckAvailabilityOfNeighborsMBAFF (mb);
 
     // Vertical deblocking
@@ -1671,7 +1671,7 @@ static void performDeblock (sDecoder* decoder, sPicture* p, int mbIndex) {
     sPixel** imgY = p->imgY;
     sPixel** *imgUV = p->imgUV;
     sSlice* slice = mb->slice;
-    int mvLimit = ((p->picStructure!=eFrame) || (p->mbAffFrameFlag && mb->mbField)) ? 2 : 4;
+    int mvLimit = ((p->picStructure!=eFrame) || (p->mbAffFrame && mb->mbField)) ? 2 : 4;
     sSPS* activeSPS = decoder->activeSPS;
 
     mb->DeblockCall = 1;
@@ -1685,17 +1685,17 @@ static void performDeblock (sDecoder* decoder, sPicture* p, int mbIndex) {
     filterLeftMbEdgeFlag = (mb_x != 0);
     filterTopMbEdgeFlag  = (mb_y != 0);
 
-    if (p->mbAffFrameFlag && mb_y == MB_BLOCK_SIZE && mb->mbField)
+    if (p->mbAffFrame && mb_y == MB_BLOCK_SIZE && mb->mbField)
       filterTopMbEdgeFlag = 0;
 
     if (mb->deblockFilterDisableIdc==2) {
       // don't filter at slice boundaries
       filterLeftMbEdgeFlag = mb->mbAvailA;
       // if this the bottom of a frame macroblock pair then always filter the top edge
-      filterTopMbEdgeFlag  = (p->mbAffFrameFlag && !mb->mbField && (mbIndex & 0x01)) ? 1 : mb->mbAvailB;
+      filterTopMbEdgeFlag  = (p->mbAffFrame && !mb->mbField && (mbIndex & 0x01)) ? 1 : mb->mbAvailB;
       }
 
-    if (p->mbAffFrameFlag == 1)
+    if (p->mbAffFrame == 1)
       CheckAvailabilityOfNeighborsMBAFF (mb);
 
     // Vertical deblocking
@@ -1807,7 +1807,7 @@ static void performDeblock (sDecoder* decoder, sPicture* p, int mbIndex) {
 //{{{
 void deblockPicture (sDecoder* decoder, sPicture* p) {
 
-  if (p->mbAffFrameFlag)
+  if (p->mbAffFrame)
     for (unsigned i = 0; i < p->picSizeInMbs; ++i)
       deblockMb (decoder, p, i) ;
   else {
@@ -1858,7 +1858,7 @@ static void initNeighbours (sDecoder* decoder) {
   }
 //}}}
 //{{{
-void initDeblock (sDecoder* decoder, int mbAffFrameFlag) {
+void initDeblock (sDecoder* decoder, int mbAffFrame) {
 
   if (decoder->coding.yuvFormat == YUV444 && decoder->coding.sepColourPlaneFlag) {
     changePlaneJV (decoder, PLANE_Y, NULL);
@@ -1875,7 +1875,7 @@ void initDeblock (sDecoder* decoder, int mbAffFrameFlag) {
   else
     initNeighbours (decoder);
 
-  if (mbAffFrameFlag == 1)
+  if (mbAffFrame == 1)
     set_loop_filter_functions_mbaff (decoder);
   else
     set_loop_filter_functions_normal (decoder);

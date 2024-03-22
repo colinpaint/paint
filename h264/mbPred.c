@@ -127,7 +127,7 @@ static void set_chroma_vector (sMacroBlock* mb)
   sSlice* slice = mb->slice;
   sDecoder* decoder = mb->decoder;
 
-  if (!slice->mbAffFrameFlag)
+  if (!slice->mbAffFrame)
   {
     if(slice->picStructure == eTopField)
     {
@@ -370,7 +370,7 @@ int mb_pred_b_d8x8temporal (sMacroBlock* mb, eColorPlane plane, sPixel** pixel, 
       colocated = &list1[0]->mvInfo[RSD(j6)][RSD(i4)];
       if(mb->decoder->coding.sepColourPlaneFlag && mb->decoder->coding.yuvFormat==YUV444)
         colocated = &list1[0]->JVmv_info[mb->slice->colourPlaneId][RSD(j6)][RSD(i4)];
-      if (slice->mbAffFrameFlag) {
+      if (slice->mbAffFrame) {
         assert(decoder->activeSPS->direct_8x8_inference_flag);
         if (!mb->mbField && ((slice->listX[LIST_1][0]->iCodingType==eFrameMbPairCoding && slice->listX[LIST_1][0]->motion.mbField[mb->mbIndexX]) ||
             (slice->listX[LIST_1][0]->iCodingType==eFieldCoding))) {
@@ -420,10 +420,10 @@ int mb_pred_b_d8x8temporal (sMacroBlock* mb, eColorPlane plane, sPixel** pixel, 
         // co-located skip or inter mode
         int mapped_idx = 0;
         int iref;
-        if ((slice->mbAffFrameFlag &&
+        if ((slice->mbAffFrame &&
             ((mb->mbField && colocated->refPic[refList]->picStructure == eFrame) ||
              (!mb->mbField && colocated->refPic[refList]->picStructure != eFrame))) ||
-             (!slice->mbAffFrameFlag && ((slice->fieldPicFlag == 0 &&
+             (!slice->mbAffFrame && ((slice->fieldPicFlag == 0 &&
                colocated->refPic[refList]->picStructure != eFrame) ||
              (slice->fieldPicFlag==1 && colocated->refPic[refList]->picStructure == eFrame)))) {
           for (iref = 0; iref < imin(slice->numRefIndexActive[LIST_0], slice->listXsize[LIST_0 + listOffset]);iref++) {
@@ -455,11 +455,11 @@ int mb_pred_b_d8x8temporal (sMacroBlock* mb, eColorPlane plane, sPixel** pixel, 
         if (INVALIDINDEX != mapped_idx) {
           int mv_scale = slice->mvscale[LIST_0 + listOffset][mapped_idx];
           int mvY = colocated->mv[refList].mvY;
-          if ((slice->mbAffFrameFlag && !mb->mbField && colocated->refPic[refList]->picStructure!=eFrame) ||
-              (!slice->mbAffFrameFlag && slice->fieldPicFlag==0 && colocated->refPic[refList]->picStructure!=eFrame) )
+          if ((slice->mbAffFrame && !mb->mbField && colocated->refPic[refList]->picStructure!=eFrame) ||
+              (!slice->mbAffFrame && slice->fieldPicFlag==0 && colocated->refPic[refList]->picStructure!=eFrame) )
             mvY *= 2;
-          else if ((slice->mbAffFrameFlag && mb->mbField && colocated->refPic[refList]->picStructure==eFrame) ||
-                   (!slice->mbAffFrameFlag && slice->fieldPicFlag==1 && colocated->refPic[refList]->picStructure==eFrame) )
+          else if ((slice->mbAffFrame && mb->mbField && colocated->refPic[refList]->picStructure==eFrame) ||
+                   (!slice->mbAffFrame && slice->fieldPicFlag==1 && colocated->refPic[refList]->picStructure==eFrame) )
             mvY /= 2;
 
           // In such case, an array is needed for each different reference.

@@ -294,7 +294,7 @@ static void readIpredModes (sMacroBlock* mb) {
   sSlice* slice = mb->slice;
   sPicture* picture = slice->picture;
 
-  if (slice->mbAffFrameFlag) {
+  if (slice->mbAffFrame) {
     if (mb->mbType == I8MB)
       read_ipred_8x8_modes_mbaff(mb);
     else if (mb->mbType == I4MB)
@@ -526,7 +526,7 @@ static void skipMacroblocks (sMacroBlock* mb) {
   sMotionVec* b_mv = NULL;
 
   getNeighbours (mb, neighbourMb, 0, 0, MB_BLOCK_SIZE);
-  if (slice->mbAffFrameFlag == 0) {
+  if (slice->mbAffFrame == 0) {
     if (neighbourMb[0].available) {
       a_mv = &picture->mvInfo[neighbourMb[0].posY][neighbourMb[0].posX].mv[LIST_0];
       a_mv_y = a_mv->mvY;
@@ -818,7 +818,7 @@ static void readIcavlcMacroblock (sMacroBlock* mb) {
   se.mapping = linfo_ue;
 
   // read MB aff
-  if (slice->mbAffFrameFlag && (mbNum & 0x01) == 0) {
+  if (slice->mbAffFrame && (mbNum & 0x01) == 0) {
     se.len = (int64) 1;
     readsSyntaxElement_FLC (&se, dataPartition->s);
     mb->mbField = (Boolean)se.value1;
@@ -832,7 +832,7 @@ static void readIcavlcMacroblock (sMacroBlock* mb) {
     mb->errorFlag = 0;
 
   motion->mbField[mbNum] = (byte) mb->mbField;
-  mb->blockYaff = ((slice->mbAffFrameFlag) && (mb->mbField)) ? (mbNum & 0x01) ? (mb->blockY - 4)>>1 : mb->blockY >> 1 : mb->blockY;
+  mb->blockYaff = ((slice->mbAffFrame) && (mb->mbField)) ? (mbNum & 0x01) ? (mb->blockY - 4)>>1 : mb->blockY >> 1 : mb->blockY;
   slice->siBlock[mb->mb.y][mb->mb.x] = 0;
   slice->interpretMbMode (mb);
 
@@ -854,7 +854,7 @@ static void readPcavlcMacroblock (sMacroBlock* mb) {
 
   const byte* dpMap = assignSE2dp[slice->dataDpMode];
 
-  if (slice->mbAffFrameFlag == 0) {
+  if (slice->mbAffFrame == 0) {
     sPicture* picture = slice->picture;
     sPicMotionParamsOld* motion = &picture->motion;
 
@@ -1007,7 +1007,7 @@ static void readBcavlcMacroblock (sMacroBlock* mb) {
   sSyntaxElement se;
   const byte* dpMap = assignSE2dp[slice->dataDpMode];
 
-  if (slice->mbAffFrameFlag == 0) {
+  if (slice->mbAffFrame == 0) {
     sPicture* picture = slice->picture;
     sPicMotionParamsOld *motion = &picture->motion;
 
@@ -1122,7 +1122,7 @@ static void readBcavlcMacroblock (sMacroBlock* mb) {
     mb->blockYaff = (mb->mbField) ? (mbNum & 0x01) ? (mb->blockY - 4)>>1 : mb->blockY >> 1 : mb->blockY;
     slice->siBlock[mb->mb.y][mb->mb.x] = 0;
     slice->interpretMbMode (mb);
-    if (slice->mbAffFrameFlag) {
+    if (slice->mbAffFrame) {
       if (mb->mbField) {
         slice->numRefIndexActive[LIST_0] <<=1;
         slice->numRefIndexActive[LIST_1] <<=1;
@@ -1185,7 +1185,7 @@ static void readIcabacMacroblock (sMacroBlock* mb) {
     se.mapping = linfo_ue;
 
   // read MB aff
-  if (slice->mbAffFrameFlag && (mbNum & 0x01)==0) {
+  if (slice->mbAffFrame && (mbNum & 0x01)==0) {
     if (dataPartition->s->errorFlag) {
       se.len = (int64)1;
       readsSyntaxElement_FLC (&se, dataPartition->s);
@@ -1208,7 +1208,7 @@ static void readIcabacMacroblock (sMacroBlock* mb) {
     mb->errorFlag = 0;
 
   motion->mbField[mbNum] = (byte) mb->mbField;
-  mb->blockYaff = ((slice->mbAffFrameFlag) && (mb->mbField)) ? (mbNum & 0x01) ? (mb->blockY - 4)>>1 : mb->blockY >> 1 : mb->blockY;
+  mb->blockYaff = ((slice->mbAffFrame) && (mb->mbField)) ? (mbNum & 0x01) ? (mb->blockY - 4)>>1 : mb->blockY >> 1 : mb->blockY;
   slice->siBlock[mb->mb.y][mb->mb.x] = 0;
   slice->interpretMbMode (mb);
 
@@ -1258,7 +1258,7 @@ static void readPcabacMacroblock (sMacroBlock* mb)
   sSyntaxElement se;
   const byte* dpMap = assignSE2dp[slice->dataDpMode];
 
-  if (slice->mbAffFrameFlag == 0) {
+  if (slice->mbAffFrame == 0) {
     sPicture* picture = slice->picture;
     sPicMotionParamsOld* motion = &picture->motion;
 
@@ -1406,7 +1406,7 @@ static void readBcabacMacroblock (sMacroBlock* mb) {
 
   const byte* dpMap = assignSE2dp[slice->dataDpMode];
 
-  if (slice->mbAffFrameFlag == 0) {
+  if (slice->mbAffFrame == 0) {
     sPicture* picture = slice->picture;
     sPicMotionParamsOld* motion = &picture->motion;
 

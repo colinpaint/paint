@@ -3,4 +3,4 @@
 #include "buffer.h"
 
 extern void deblockPicture (sDecoder* decoder, sPicture* p) ;
-extern void initDeblock (sDecoder* decoder, int mbAffFrameFlag);
+extern void initDeblock (sDecoder* decoder, int mbAffFrame);

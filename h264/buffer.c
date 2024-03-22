@@ -321,7 +321,7 @@ static void dpbSplitField (sDecoder* decoder, sFrameStore* frameStore) {
                                     = frame->longTermFrameIndex;
 
     fsTop->codedFrame = fsBot->codedFrame = 1;
-    fsTop->mbAffFrameFlag = fsBot->mbAffFrameFlag = frame->mbAffFrameFlag;
+    fsTop->mbAffFrame = fsBot->mbAffFrame = frame->mbAffFrame;
 
     frame->topField = fsTop;
     frame->botField = fsBot;
@@ -349,7 +349,7 @@ static void dpbSplitField (sDecoder* decoder, sFrameStore* frameStore) {
     }
 
   if (!frame->frameMbOnlyFlag) {
-    if (frame->mbAffFrameFlag) {
+    if (frame->mbAffFrame) {
       sPicMotionParamsOld* frm_motion = &frame->motion;
       for (int j = 0 ; j < (frame->sizeY >> 3); j++) {
         int jj = (j >> 2)*8 + (j & 0x03);
@@ -399,7 +399,7 @@ static void dpbSplitField (sDecoder* decoder, sFrameStore* frameStore) {
         int ii = RSD(i);
         int idiv = (i >> 2);
         int currentmb = twosz16 * (jdiv >> 1)+ (idiv)*2 + (jdiv & 0x01);
-        if (!frame->mbAffFrameFlag  || !frame->motion.mbField[currentmb]) {
+        if (!frame->mbAffFrame  || !frame->motion.mbField[currentmb]) {
           fsTop->mvInfo[j][i].mv[LIST_0] = fsBot->mvInfo[j][i].mv[LIST_0] = frame->mvInfo[jj][ii].mv[LIST_0];
           fsTop->mvInfo[j][i].mv[LIST_1] = fsBot->mvInfo[j][i].mv[LIST_1] = frame->mvInfo[jj][ii].mv[LIST_1];
 
@@ -744,7 +744,7 @@ sPicture* allocPicture (sDecoder* decoder, ePicStructure picStructure,
 
   s->decRefPicMarkingBuffer = NULL;
   s->codedFrame  = 0;
-  s->mbAffFrameFlag  = 0;
+  s->mbAffFrame  = 0;
   s->topPoc = s->botPoc = s->poc = 0;
 
   if (!decoder->activeSPS->frameMbOnlyFlag && picStructure != eFrame)
@@ -2444,7 +2444,7 @@ void computeColocated (sSlice* slice, sPicture** listX[6]) {
 
   sDecoder* decoder = slice->decoder;
   if (slice->directSpatialMvPredFlag == 0) {
-    for (int j = 0; j < 2 + (slice->mbAffFrameFlag * 4); j += 2) {
+    for (int j = 0; j < 2 + (slice->mbAffFrame * 4); j += 2) {
       for (int i = 0; i < slice->listXsize[j];i++) {
         int iTRb;
         if (j == 0)
