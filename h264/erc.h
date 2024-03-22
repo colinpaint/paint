@@ -23,7 +23,7 @@ typedef struct frame_s {
   } frame;
 //}}}
 //{{{
-//! region structure stores information about a region that is needed for conceal
+//! region picStructure stores information about a region that is needed for conceal
 typedef struct ObjectBuffer {
   byte regionMode;  //!< region mode as above
   int xMin;         //!< X coordinate of the pixel position of the top-left corner of the region
@@ -40,7 +40,7 @@ typedef struct ErcSegment {
 } sErcSegment;
 //}}}
 //{{{
-/* Error detector & conceal instance data structure */
+/* Error detector & conceal instance data picStructure */
 typedef struct ErcVariables {
   /*  Number of macroblocks (size or size/4 of the arrays) */
   int   nOfMBs;

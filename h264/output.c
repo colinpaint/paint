@@ -303,7 +303,7 @@ void freeOutput (sDecoder* decoder) {
 //{{{
 void directOutput (sDecoder* decoder, sPicture* picture) {
 
-  if (picture->structure == FRAME) {
+  if (picture->picStructure == FRAME) {
     // we have a frame (or complementary field pair), so output it directly
     flushDirectOutput (decoder);
     writePicture (decoder, picture, FRAME);
@@ -311,14 +311,14 @@ void directOutput (sDecoder* decoder, sPicture* picture) {
     return;
     }
 
-  if (picture->structure == TopField) {
+  if (picture->picStructure == TopField) {
     if (decoder->outBuffer->isUsed & 1)
       flushDirectOutput (decoder);
     decoder->outBuffer->topField = picture;
     decoder->outBuffer->isUsed |= 1;
     }
 
-  if (picture->structure == BotField) {
+  if (picture->picStructure == BotField) {
     if (decoder->outBuffer->isUsed & 2)
       flushDirectOutput (decoder);
     decoder->outBuffer->botField = picture;

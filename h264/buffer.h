@@ -17,7 +17,7 @@ typedef struct PicMotion {
 //}}}
 //{{{  sPicture
 typedef struct Picture {
-  ePicStructure structure;
+  ePicStructure picStructure;
 
   int         poc;
   int         topPoc;

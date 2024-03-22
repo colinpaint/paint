@@ -556,9 +556,9 @@ static void get_strength_ver_MBAff (byte* Strength, sMacroBlock* mb, int edge, i
         mb->mixedModeEdgeFlag = (byte) (mb->mbField != MbP->mbField);
 
         // Start with Strength=3. or Strength=4 for Mb-edge
-        Strength[idx] = (edge == 0 && (((!p->mbAffFrameFlag && (p->structure==FRAME)) ||
+        Strength[idx] = (edge == 0 && (((!p->mbAffFrameFlag && (p->picStructure==FRAME)) ||
                          (p->mbAffFrameFlag && !MbP->mbField && !mb->mbField)) ||
-                         ((p->mbAffFrameFlag || (p->structure!=FRAME))))) ? 4 : 3;
+                         ((p->mbAffFrameFlag || (p->picStructure!=FRAME))))) ? 4 : 3;
 
         if (mb->isIntraBlock == FALSE && MbP->isIntraBlock == FALSE) {
           if (((mb->cbpStructure[0].blk & i64_power2(blkQ)) != 0) || ((MbP->cbpStructure[0].blk & i64_power2(blkP)) != 0))
@@ -862,7 +862,7 @@ static void get_strength_hor (sMacroBlock* mb, int edge, int mvLimit, sPicture* 
 
   if ((slice->sliceType==SP_SLICE)||(slice->sliceType==SI_SLICE) ) {
     // Set strength to either 3 or 4 regardless of pixel position
-    StrValue = (edge == 0 && (((p->structure==FRAME)))) ? 4 : 3;
+    StrValue = (edge == 0 && (((p->picStructure==FRAME)))) ? 4 : 3;
     for (i = 0; i < BLOCK_SIZE; i++)
       Strength[i] = StrValue;
     }
@@ -943,14 +943,14 @@ static void get_strength_hor (sMacroBlock* mb, int edge, int mvLimit, sPicture* 
         }
       else {
         // Start with Strength=3. or Strength=4 for Mb-edge
-        StrValue = (edge == 0 && (p->structure == FRAME)) ? 4 : 3;
+        StrValue = (edge == 0 && (p->picStructure == FRAME)) ? 4 : 3;
         for (i = 0; i < BLOCK_SIZE; i ++ )
           Strength[i] = StrValue;
         }
       }
     else {
       // Start with Strength=3. or Strength=4 for Mb-edge
-      StrValue = (edge == 0 && (p->structure == FRAME)) ? 4 : 3;
+      StrValue = (edge == 0 && (p->picStructure == FRAME)) ? 4 : 3;
       for (i = 0; i < BLOCK_SIZE; i ++ )
         Strength[i] = StrValue;
        }
@@ -1415,7 +1415,7 @@ static void deblockMb (sDecoder* decoder, sPicture* p, int mbIndex) {
     sPixel** imgY = p->imgY;
     sPixel*** imgUV = p->imgUV;
     sSlice* slice = mb->slice;
-    int mvLimit = ((p->structure!=FRAME) || (p->mbAffFrameFlag && mb->mbField)) ? 2 : 4;
+    int mvLimit = ((p->picStructure!=FRAME) || (p->mbAffFrameFlag && mb->mbField)) ? 2 : 4;
     sSPS* activeSPS = decoder->activeSPS;
 
     mb->DeblockCall = 1;
@@ -1572,7 +1572,7 @@ static void getDeblockStrength (sDecoder* decoder, sPicture* p, int mbIndex) {
     int filterTopMbEdgeFlag;
 
     sSlice* slice = mb->slice;
-    int mvLimit = ((p->structure!=FRAME) || (p->mbAffFrameFlag && mb->mbField)) ? 2 : 4;
+    int mvLimit = ((p->picStructure!=FRAME) || (p->mbAffFrameFlag && mb->mbField)) ? 2 : 4;
     sSPS* activeSPS = decoder->activeSPS;
 
     mb->DeblockCall = 1;
@@ -1671,7 +1671,7 @@ static void performDeblock (sDecoder* decoder, sPicture* p, int mbIndex) {
     sPixel** imgY = p->imgY;
     sPixel** *imgUV = p->imgUV;
     sSlice* slice = mb->slice;
-    int mvLimit = ((p->structure!=FRAME) || (p->mbAffFrameFlag && mb->mbField)) ? 2 : 4;
+    int mvLimit = ((p->picStructure!=FRAME) || (p->mbAffFrameFlag && mb->mbField)) ? 2 : 4;
     sSPS* activeSPS = decoder->activeSPS;
 
     mb->DeblockCall = 1;

@@ -741,7 +741,7 @@ static int edgeDistortion (int predBlocks[], int currYBlockNum, sPixel *predMB,
 *      when the pixel positions to be copied from is not full pixel (any 1/4 pixel position).
 *      It copies the resulting pixel vlaues into predMB.
 * \param decoder
-*      The pointer of Decoder structure of current frame
+*      The pointer of Decoder picStructure of current frame
 * \param mv
 *      The pointer of the predicted MV of the current (being concealed) MB
 * \param x
@@ -1587,7 +1587,7 @@ static void copy_to_conceal (sPicture *src, sPicture *dst, sDecoder* decoder)
 
     if(decoder->concealSliceType == B_SLICE)
     {
-      init_lists_for_non_reference_loss (decoder->dpb, dst->sliceType, decoder->sliceList[0]->structure);
+      init_lists_for_non_reference_loss (decoder->dpb, dst->sliceType, decoder->sliceList[0]->picStructure);
     }
     else
       decoder->sliceList[0]->initLists(decoder->sliceList[0]); //decoder->currentSlice);

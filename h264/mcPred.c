@@ -103,10 +103,10 @@ static void update_direct_mv_info_temporal (sMacroBlock* mb) {
               //}}}
             else if (!decoder->activeSPS->frameMbOnlyFlag &&
                      slice->fieldPicFlag &&
-                     slice->structure != list1[0]->structure &&
+                     slice->picStructure != list1[0]->picStructure &&
                      list1[0]->codedFrame) {
               //{{{
-              if (slice->structure == TopField)
+              if (slice->picStructure == TopField)
                 colocated = decoder->activeSPS->direct_8x8_inference_flag ?
                   &list1[0]->frame->topField->mvInfo[RSD(mb->blockYaff + j0)][RSD(i0)] :
                   &list1[0]->frame->topField->mvInfo[mb->blockYaff + j0][i0];
@@ -135,10 +135,10 @@ static void update_direct_mv_info_temporal (sMacroBlock* mb) {
               }
               //}}}
             else {
-              if ((slice->mbAffFrameFlag && ( (mb->mbField && colocated->refPic[refList]->structure==FRAME) ||
-                  (!mb->mbField && colocated->refPic[refList]->structure!=FRAME))) ||
-                  (!slice->mbAffFrameFlag && ((slice->fieldPicFlag==0 && colocated->refPic[refList]->structure!=FRAME)||
-                  (slice->fieldPicFlag==1 && colocated->refPic[refList]->structure==FRAME))) ) {
+              if ((slice->mbAffFrameFlag && ( (mb->mbField && colocated->refPic[refList]->picStructure==FRAME) ||
+                  (!mb->mbField && colocated->refPic[refList]->picStructure!=FRAME))) ||
+                  (!slice->mbAffFrameFlag && ((slice->fieldPicFlag==0 && colocated->refPic[refList]->picStructure!=FRAME)||
+                  (slice->fieldPicFlag==1 && colocated->refPic[refList]->picStructure==FRAME))) ) {
                 //{{{  Frame with field co-located
                 for (iref = 0;
                      iref < imin(slice->numRefIndexActive[LIST_0], slice->listXsize[LIST_0 + listOffset]);
@@ -147,7 +147,7 @@ static void update_direct_mv_info_temporal (sMacroBlock* mb) {
                     slice->listX[LIST_0 + listOffset][iref]->botField == colocated->refPic[refList] ||
                     slice->listX[LIST_0 + listOffset][iref]->frame == colocated->refPic[refList] )
                   {
-                    if ((slice->fieldPicFlag==1) && (slice->listX[LIST_0 + listOffset][iref]->structure != slice->structure))
+                    if ((slice->fieldPicFlag==1) && (slice->listX[LIST_0 + listOffset][iref]->picStructure != slice->picStructure))
                       mapped_idx=INVALIDINDEX;
                     else {
                       mapped_idx = iref;
@@ -213,8 +213,8 @@ static void update_direct_mv_info_temporal (sMacroBlock* mb) {
                       }
                     else if (!decoder->activeSPS->frameMbOnlyFlag &&
                              slice->fieldPicFlag &&
-                             slice->structure!=list1[0]->structure && list1[0]->codedFrame) {
-                      if (slice->structure == TopField)
+                             slice->picStructure!=list1[0]->picStructure && list1[0]->codedFrame) {
+                      if (slice->picStructure == TopField)
                         colocated = decoder->activeSPS->direct_8x8_inference_flag ?
                           &list1[0]->frame->topField->mvInfo[RSD(j6)][RSD(i4)] :
                           &list1[0]->frame->topField->mvInfo[j6][i4];
@@ -225,11 +225,11 @@ static void update_direct_mv_info_temporal (sMacroBlock* mb) {
                       }
 
                     mvY = colocated->mv[refList].mvY;
-                    if ((slice->mbAffFrameFlag && !mb->mbField && colocated->refPic[refList]->structure!=FRAME) ||
-                        (!slice->mbAffFrameFlag && slice->fieldPicFlag==0 && colocated->refPic[refList]->structure!=FRAME))
+                    if ((slice->mbAffFrameFlag && !mb->mbField && colocated->refPic[refList]->picStructure!=FRAME) ||
+                        (!slice->mbAffFrameFlag && slice->fieldPicFlag==0 && colocated->refPic[refList]->picStructure!=FRAME))
                       mvY *= 2;
-                    else if ((slice->mbAffFrameFlag && mb->mbField && colocated->refPic[refList]->structure==FRAME) ||
-                             (!slice->mbAffFrameFlag && slice->fieldPicFlag==1 && colocated->refPic[refList]->structure==FRAME))
+                    else if ((slice->mbAffFrameFlag && mb->mbField && colocated->refPic[refList]->picStructure==FRAME) ||
+                             (!slice->mbAffFrameFlag && slice->fieldPicFlag==1 && colocated->refPic[refList]->picStructure==FRAME))
                       mvY /= 2;
 
                     mv_scale = slice->mvscale[LIST_0 + listOffset][mapped_idx];
@@ -299,8 +299,8 @@ int get_colocated_info_8x8 (sMacroBlock* mb, sPicture* list1, int i, int j) {
     sDecoder* decoder = mb->decoder;
     if ((slice->mbAffFrameFlag) ||
         (!decoder->activeSPS->frameMbOnlyFlag &&
-        ((!slice->structure && list1->iCodingType == FIELD_CODING) ||
-        (slice->structure!=list1->structure && list1->codedFrame)))) {
+        ((!slice->picStructure && list1->iCodingType == FIELD_CODING) ||
+        (slice->picStructure!=list1->picStructure && list1->codedFrame)))) {
       int jj = RSD(j);
       int ii = RSD(i);
       int jdiv = (jj>>1);
@@ -308,8 +308,8 @@ int get_colocated_info_8x8 (sMacroBlock* mb, sPicture* list1, int i, int j) {
 
       sPicMotionParam* fs = &list1->mvInfo[jj][ii];
 
-      if (slice->fieldPicFlag && slice->structure!=list1->structure && list1->codedFrame) {
-         if (slice->structure == TopField)
+      if (slice->fieldPicFlag && slice->picStructure!=list1->picStructure && list1->codedFrame) {
+         if (slice->picStructure == TopField)
            fs = list1->topField->mvInfo[jj] + ii;
          else
            fs = list1->botField->mvInfo[jj] + ii;

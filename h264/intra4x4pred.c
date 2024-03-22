@@ -39,7 +39,7 @@
  *    makes and returns 4x4 DC prediction mode
  *
  * \param mb
- *    current MB structure
+ *    current MB picStructure
  * \param plane
  *    color plane
  * \param ioff
@@ -193,7 +193,7 @@ static int intra4x4_vert_pred (sMacroBlock *mb,    //!< current macroblock
  *    makes and returns 4x4 horizontal prediction mode
  *
  * \param mb
- *    current MB structure
+ *    current MB picStructure
  * \param plane
  *    color plane
  * \param ioff
@@ -838,7 +838,7 @@ int intra_pred_4x4_normal (sMacroBlock *mb,    //!< current macroblock
  *    makes and returns 4x4 DC prediction mode
  *
  * \param mb
- *    current MB structure
+ *    current MB picStructure
  * \param plane
  *    color plane
  * \param ioff
@@ -992,7 +992,7 @@ static int intra4x4_vert_pred_mbaff (sMacroBlock *mb,    //!< current macroblock
  *    makes and returns 4x4 horizontal prediction mode
  *
  * \param mb
- *    current MB structure
+ *    current MB picStructure
  * \param plane
  *    color plane
  * \param ioff

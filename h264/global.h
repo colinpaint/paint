@@ -721,16 +721,16 @@ typedef struct Slice {
   int           sliceQpDelta;
   int           qs;
   int           sliceQsDelta;
-  int           sliceType;   // slice type
-  int           modelNum;    // cabac model number
-  unsigned int  frameNum;    // frameNum for this frame
+  int           sliceType;    // slice type
+  int           modelNum;     // cabac model number
+  unsigned int  frameNum;     // frameNum for this frame
   unsigned int  fieldPicFlag;
   byte          botFieldFlag;
-  ePicStructure structure;   // Identify picture structure type
-  int           startMbNum;  // MUST be set by NAL even in case of errorFlag == 1
+  ePicStructure picStructure; // Identify picture picStructure type
+  int           startMbNum;   // MUST be set by NAL even in case of errorFlag == 1
   int           endMbNumPlus1;
   int           maxDataPartitions;
-  int           dataDpMode;  // data dping mode
+  int           dataDpMode;   // data dping mode
   int           curHeader;
   int           nextHeader;
   int           lastDquant;
@@ -842,7 +842,7 @@ typedef struct Slice {
 typedef struct CodingParam {
   int profileIdc;
 
-  int structure;           // Identify picture structure type
+  int picStructure;           // Identify picture picStructure type
   int yuvFormat;
   int sepColourPlaneFlag;
   int type;                // image type INTER/INTRA

@@ -1657,7 +1657,7 @@ void set_read_and_store_CBP (sMacroBlock** mb, int chromaFormatIdc) {
 static int read_significance_map (sMacroBlock* mb, sDecodeEnv*  decodeEnv, int type, int coeff[]) {
 
   sSlice* slice = mb->slice;
-  int fld    = ( slice->structure!=FRAME || mb->mbField );
+  int fld    = ( slice->picStructure!=FRAME || mb->mbField );
   const byte *pos2ctx_Map = (fld) ? pos2ctx_map_int[type] : pos2ctx_map[type];
   const byte *pos2ctx_Last = pos2ctx_last[type];
 

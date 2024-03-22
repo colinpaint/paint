@@ -129,28 +129,28 @@ static void set_chroma_vector (sMacroBlock* mb)
 
   if (!slice->mbAffFrameFlag)
   {
-    if(slice->structure == TopField)
+    if(slice->picStructure == TopField)
     {
       int k,l;
       for (l = LIST_0; l <= (LIST_1); l++)
       {
         for(k = 0; k < slice->listXsize[l]; k++)
         {
-          if(slice->structure != slice->listX[l][k]->structure)
+          if(slice->picStructure != slice->listX[l][k]->picStructure)
             slice->chromaVectorAdjust[l][k] = -2;
           else
             slice->chromaVectorAdjust[l][k] = 0;
         }
       }
     }
-    else if(slice->structure == BotField)
+    else if(slice->picStructure == BotField)
     {
       int k,l;
       for (l = LIST_0; l <= (LIST_1); l++)
       {
         for(k = 0; k < slice->listXsize[l]; k++)
         {
-          if (slice->structure != slice->listX[l][k]->structure)
+          if (slice->picStructure != slice->listX[l][k]->picStructure)
             slice->chromaVectorAdjust[l][k] = 2;
           else
             slice->chromaVectorAdjust[l][k] = 0;
@@ -184,9 +184,9 @@ static void set_chroma_vector (sMacroBlock* mb)
       {
         for(k = 0; k < slice->listXsize[l]; k++)
         {
-          if(mb_nr == 0 && slice->listX[l][k]->structure == BotField)
+          if(mb_nr == 0 && slice->listX[l][k]->picStructure == BotField)
             slice->chromaVectorAdjust[l][k] = -2;
-          else if(mb_nr == 1 && slice->listX[l][k]->structure == TopField)
+          else if(mb_nr == 1 && slice->listX[l][k]->picStructure == TopField)
             slice->chromaVectorAdjust[l][k] = 2;
           else
             slice->chromaVectorAdjust[l][k] = 0;
@@ -205,7 +205,7 @@ static void set_chroma_vector (sMacroBlock* mb)
     }
   }
 
-  slice->maxMbVmvR = (slice->structure != FRAME || ( mb->mbField )) ? decoder->coding.maxVmvR >> 1 :
+  slice->maxMbVmvR = (slice->picStructure != FRAME || ( mb->mbField )) ? decoder->coding.maxVmvR >> 1 :
                                                                          decoder->coding.maxVmvR;
 }
 //}}}
@@ -394,8 +394,8 @@ int mb_pred_b_d8x8temporal (sMacroBlock* mb, eColorPlane plane, sPixel** pixel, 
             &list1[0]->botField->mvInfo[RSD(j6)>>1][RSD(i4)] : &list1[0]->botField->mvInfo[j6>>1][i4];
         }
       else if (!decoder->activeSPS->frameMbOnlyFlag && slice->fieldPicFlag &&
-               slice->structure != list1[0]->structure && list1[0]->codedFrame) {
-        if (slice->structure == TopField)
+               slice->picStructure != list1[0]->picStructure && list1[0]->codedFrame) {
+        if (slice->picStructure == TopField)
           colocated = decoder->activeSPS->direct_8x8_inference_flag
                         ? &list1[0]->frame->topField->mvInfo[RSD(j6)][RSD(i4)]
                         : &list1[0]->frame->topField->mvInfo[j6][i4];
@@ -421,16 +421,16 @@ int mb_pred_b_d8x8temporal (sMacroBlock* mb, eColorPlane plane, sPixel** pixel, 
         int mapped_idx = 0;
         int iref;
         if ((slice->mbAffFrameFlag &&
-            ((mb->mbField && colocated->refPic[refList]->structure == FRAME) ||
-             (!mb->mbField && colocated->refPic[refList]->structure != FRAME))) ||
+            ((mb->mbField && colocated->refPic[refList]->picStructure == FRAME) ||
+             (!mb->mbField && colocated->refPic[refList]->picStructure != FRAME))) ||
              (!slice->mbAffFrameFlag && ((slice->fieldPicFlag == 0 &&
-               colocated->refPic[refList]->structure != FRAME) ||
-             (slice->fieldPicFlag==1 && colocated->refPic[refList]->structure == FRAME)))) {
+               colocated->refPic[refList]->picStructure != FRAME) ||
+             (slice->fieldPicFlag==1 && colocated->refPic[refList]->picStructure == FRAME)))) {
           for (iref = 0; iref < imin(slice->numRefIndexActive[LIST_0], slice->listXsize[LIST_0 + listOffset]);iref++) {
             if(slice->listX[LIST_0 + listOffset][iref]->topField == colocated->refPic[refList] ||
               slice->listX[LIST_0 + listOffset][iref]->botField == colocated->refPic[refList] ||
               slice->listX[LIST_0 + listOffset][iref]->frame == colocated->refPic[refList]) {
-              if ((slice->fieldPicFlag == 1) && (slice->listX[LIST_0 + listOffset][iref]->structure != slice->structure))
+              if ((slice->fieldPicFlag == 1) && (slice->listX[LIST_0 + listOffset][iref]->picStructure != slice->picStructure))
                 mapped_idx = INVALIDINDEX;
               else {
                 mapped_idx = iref;
@@ -455,11 +455,11 @@ int mb_pred_b_d8x8temporal (sMacroBlock* mb, eColorPlane plane, sPixel** pixel, 
         if (INVALIDINDEX != mapped_idx) {
           int mv_scale = slice->mvscale[LIST_0 + listOffset][mapped_idx];
           int mvY = colocated->mv[refList].mvY;
-          if ((slice->mbAffFrameFlag && !mb->mbField && colocated->refPic[refList]->structure!=FRAME) ||
-              (!slice->mbAffFrameFlag && slice->fieldPicFlag==0 && colocated->refPic[refList]->structure!=FRAME) )
+          if ((slice->mbAffFrameFlag && !mb->mbField && colocated->refPic[refList]->picStructure!=FRAME) ||
+              (!slice->mbAffFrameFlag && slice->fieldPicFlag==0 && colocated->refPic[refList]->picStructure!=FRAME) )
             mvY *= 2;
-          else if ((slice->mbAffFrameFlag && mb->mbField && colocated->refPic[refList]->structure==FRAME) ||
-                   (!slice->mbAffFrameFlag && slice->fieldPicFlag==1 && colocated->refPic[refList]->structure==FRAME) )
+          else if ((slice->mbAffFrameFlag && mb->mbField && colocated->refPic[refList]->picStructure==FRAME) ||
+                   (!slice->mbAffFrameFlag && slice->fieldPicFlag==1 && colocated->refPic[refList]->picStructure==FRAME) )
             mvY /= 2;
 
           // In such case, an array is needed for each different reference.

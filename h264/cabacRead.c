@@ -19,7 +19,7 @@ static void read_comp_coeff_4x4_smb_CABAC (sMacroBlock* mb, sSyntaxElement* se, 
   sSlice* slice = mb->slice;
   const byte *dpMap = assignSE2dp[slice->dataDpMode];
 
-  const byte (*pos_scan4x4)[2] = ((slice->structure == FRAME) && (!mb->mbField)) ? SNGL_SCAN : FIELD_SCAN;
+  const byte (*pos_scan4x4)[2] = ((slice->picStructure == FRAME) && (!mb->mbField)) ? SNGL_SCAN : FIELD_SCAN;
   const byte *pos_scan_4x4 = pos_scan4x4[0];
   int** cof = slice->cof[plane];
 
@@ -191,7 +191,7 @@ static void readCompCoeff8x8_CABAC (sMacroBlock* mb, sSyntaxElement* se, eColorP
     int64 *cur_cbp = &mb->cbpStructure[plane].blk;
 
     // select scan type
-    const byte (*pos_scan8x8) = ((slice->structure == FRAME) && (!mb->mbField)) ? SNGL_SCAN8x8[0] : FIELD_SCAN8x8[0];
+    const byte (*pos_scan8x8) = ((slice->picStructure == FRAME) && (!mb->mbField)) ? SNGL_SCAN8x8[0] : FIELD_SCAN8x8[0];
 
     int qp_per = decoder->qpPerMatrix[ mb->qpScaled[plane] ];
     int qp_rem = decoder->qpRemMatrix[ mb->qpScaled[plane] ];
@@ -289,7 +289,7 @@ static void readCompCoeff8x8_CABAC_lossless (sMacroBlock* mb, sSyntaxElement* se
     int64 *cur_cbp = &mb->cbpStructure[plane].blk;
 
     // select scan type
-    const byte (*pos_scan8x8) = ((slice->structure == FRAME) && (!mb->mbField)) ? SNGL_SCAN8x8[0] : FIELD_SCAN8x8[0];
+    const byte (*pos_scan8x8) = ((slice->picStructure == FRAME) && (!mb->mbField)) ? SNGL_SCAN8x8[0] : FIELD_SCAN8x8[0];
 
     // === set offset in current macroblock ===
     boff_x = (b8&0x01) << 3;
@@ -391,7 +391,7 @@ static void read_CBP_and_coeffs_from_NAL_CABAC_420 (sMacroBlock* mb) {
   int (*InvLevelScale4x4)[4] = NULL;
 
   // select scan type
-  const byte (*pos_scan4x4)[2] = ((slice->structure == FRAME) && (!mb->mbField)) ? SNGL_SCAN : FIELD_SCAN;
+  const byte (*pos_scan4x4)[2] = ((slice->picStructure == FRAME) && (!mb->mbField)) ? SNGL_SCAN : FIELD_SCAN;
   const byte *pos_scan_4x4 = pos_scan4x4[0];
 
   if (!IS_I16MB (mb)) {
@@ -701,7 +701,7 @@ static void read_CBP_and_coeffs_from_NAL_CABAC_400 (sMacroBlock* mb)
 
   int (*InvLevelScale4x4)[4] = NULL;
   // select scan type
-  const byte (*pos_scan4x4)[2] = ((slice->structure == FRAME) && (!mb->mbField)) ? SNGL_SCAN : FIELD_SCAN;
+  const byte (*pos_scan4x4)[2] = ((slice->picStructure == FRAME) && (!mb->mbField)) ? SNGL_SCAN : FIELD_SCAN;
   const byte *pos_scan_4x4 = pos_scan4x4[0];
 
 
@@ -875,7 +875,7 @@ static void read_CBP_and_coeffs_from_NAL_CABAC_444 (sMacroBlock* mb)
 
   int (*InvLevelScale4x4)[4] = NULL;
   // select scan type
-  const byte (*pos_scan4x4)[2] = ((slice->structure == FRAME) && (!mb->mbField)) ? SNGL_SCAN : FIELD_SCAN;
+  const byte (*pos_scan4x4)[2] = ((slice->picStructure == FRAME) && (!mb->mbField)) ? SNGL_SCAN : FIELD_SCAN;
   const byte *pos_scan_4x4 = pos_scan4x4[0];
 
   // QPI
@@ -1138,7 +1138,7 @@ static void read_CBP_and_coeffs_from_NAL_CABAC_422 (sMacroBlock* mb)
 
   int (*InvLevelScale4x4)[4] = NULL;
   // select scan type
-  const byte (*pos_scan4x4)[2] = ((slice->structure == FRAME) && (!mb->mbField)) ? SNGL_SCAN : FIELD_SCAN;
+  const byte (*pos_scan4x4)[2] = ((slice->picStructure == FRAME) && (!mb->mbField)) ? SNGL_SCAN : FIELD_SCAN;
   const byte *pos_scan_4x4 = pos_scan4x4[0];
 
   // QPI

@@ -1715,10 +1715,10 @@ static void initPicture (sDecoder* decoder, sSlice* slice) {
   if (slice->refId)
     decoder->lastRefPicPoc = slice->framePoc;
 
-  if ((slice->structure == FRAME) || (slice->structure == TopField))
+  if ((slice->picStructure == FRAME) || (slice->picStructure == TopField))
     getTime (&decoder->info.startTime);
 
-  picture = decoder->picture = allocPicture (decoder, slice->structure, decoder->width, decoder->height, decoder->widthCr, decoder->heightCr, 1);
+  picture = decoder->picture = allocPicture (decoder, slice->picStructure, decoder->width, decoder->height, decoder->widthCr, decoder->heightCr, 1);
   picture->topPoc = slice->topPoc;
   picture->botPoc = slice->botPoc;
   picture->framePoc = slice->framePoc;
@@ -1726,7 +1726,7 @@ static void initPicture (sDecoder* decoder, sSlice* slice) {
   picture->sliceQpDelta = slice->sliceQpDelta;
   picture->chromaQpOffset[0] = decoder->activePPS->chromaQpIndexOffset;
   picture->chromaQpOffset[1] = decoder->activePPS->secondChromaQpIndexOffset;
-  picture->iCodingType = slice->structure == FRAME ?
+  picture->iCodingType = slice->picStructure == FRAME ?
     (slice->mbAffFrameFlag? FRAME_MB_PAIR_CODING:FRAME_CODING) : FIELD_CODING;
 
   // reset all variables of the error conceal instance before decoding of every frame.
@@ -1735,7 +1735,7 @@ static void initPicture (sDecoder* decoder, sSlice* slice) {
   ercReset (decoder->ercErrorVar, decoder->picSizeInMbs, decoder->picSizeInMbs, picture->sizeX);
 
   decoder->ercMvPerMb = 0;
-  switch (slice->structure ) {
+  switch (slice->picStructure ) {
     //{{{
     case TopField:
       picture->poc = slice->topPoc;
@@ -1755,11 +1755,10 @@ static void initPicture (sDecoder* decoder, sSlice* slice) {
     //}}}
     //{{{
     default:
-      error ("decoder->structure not initialized");
+      error ("decoder->picStructure not initialized");
     //}}}
     }
 
-  //decoder->sliceNum=0;
   if (decoder->coding.type > SI_SLICE) {
     setEcFlag (decoder, SE_PTYPE);
     decoder->coding.type = P_SLICE;  // concealed element
@@ -1811,7 +1810,7 @@ static void initPicture (sDecoder* decoder, sSlice* slice) {
   picture->picNum = slice->frameNum;
   picture->frameNum = slice->frameNum;
   picture->recoveryFrame = (unsigned int)((int)slice->frameNum == decoder->recoveryFrameNum);
-  picture->codedFrame = (slice->structure == FRAME);
+  picture->codedFrame = (slice->picStructure == FRAME);
   picture->chromaFormatIdc = activeSPS->chromaFormatIdc;
   picture->frameMbOnlyFlag = activeSPS->frameMbOnlyFlag;
   picture->cropFlag = activeSPS->cropFlag;
@@ -1824,9 +1823,9 @@ static void initPicture (sDecoder* decoder, sSlice* slice) {
 
   if (decoder->coding.sepColourPlaneFlag) {
     decoder->decPictureJV[0] = decoder->picture;
-    decoder->decPictureJV[1] = allocPicture (decoder, (ePicStructure) slice->structure, decoder->width, decoder->height, decoder->widthCr, decoder->heightCr, 1);
+    decoder->decPictureJV[1] = allocPicture (decoder, (ePicStructure) slice->picStructure, decoder->width, decoder->height, decoder->widthCr, decoder->heightCr, 1);
     copyDecPictureJV (decoder, decoder->decPictureJV[1], decoder->decPictureJV[0] );
-    decoder->decPictureJV[2] = allocPicture (decoder, (ePicStructure) slice->structure, decoder->width, decoder->height, decoder->widthCr, decoder->heightCr, 1);
+    decoder->decPictureJV[2] = allocPicture (decoder, (ePicStructure) slice->picStructure, decoder->width, decoder->height, decoder->widthCr, decoder->heightCr, 1);
     copyDecPictureJV (decoder, decoder->decPictureJV[2], decoder->decPictureJV[0] );
     }
   }
@@ -1911,7 +1910,7 @@ static void readSlice (sDecoder* decoder, sSlice* slice) {
     }
   //{{{  read field/frame stuff
   if (activeSPS->frameMbOnlyFlag) {
-    decoder->coding.structure = FRAME;
+    decoder->coding.picStructure = FRAME;
     slice->fieldPicFlag = 0;
     }
 
@@ -1919,15 +1918,15 @@ static void readSlice (sDecoder* decoder, sSlice* slice) {
     slice->fieldPicFlag = readU1 ("SLC fieldPicFlag", s);
     if (slice->fieldPicFlag) {
       slice->botFieldFlag = (byte)readU1 ("SLC botFieldFlag", s);
-      decoder->coding.structure = slice->botFieldFlag ? BotField : TopField;
+      decoder->coding.picStructure = slice->botFieldFlag ? BotField : TopField;
       }
     else {
-      decoder->coding.structure = FRAME;
+      decoder->coding.picStructure = FRAME;
       slice->botFieldFlag = FALSE;
       }
     }
 
-  slice->structure = (ePicStructure)decoder->coding.structure;
+  slice->picStructure = (ePicStructure)decoder->coding.picStructure;
   slice->mbAffFrameFlag = activeSPS->mbAffFlag && !slice->fieldPicFlag;
   //}}}
 
@@ -2195,7 +2194,7 @@ static void initPictureDecoding (sDecoder* decoder) {
   decoder->picHeightInMbs = decoder->coding.frameHeightMbs / (1 + slice->fieldPicFlag);
   decoder->picSizeInMbs = decoder->coding.picWidthMbs * decoder->picHeightInMbs;
   decoder->coding.frameSizeMbs = decoder->coding.picWidthMbs * decoder->coding.frameHeightMbs;
-  decoder->coding.structure = slice->structure;
+  decoder->coding.picStructure = slice->picStructure;
   initFmo (decoder, slice);
 
   updatePicNum (slice);
@@ -2217,7 +2216,7 @@ static void initSlice (sDecoder* decoder, sSlice* slice) {
   slice->initLists (slice);
   reorderLists (slice);
 
-  if (slice->structure == FRAME)
+  if (slice->picStructure == FRAME)
     init_mbaff_lists (decoder, slice);
 
   // update reference flags and set current decoder->refFlag
@@ -2391,7 +2390,7 @@ static int readNextSlice (sSlice* slice) {
                   (slice->sliceType == 0) ? "P":
                     (slice->sliceType == 1 ? "B":
                       (slice->sliceType == 2 ? "I" : "?")),
-                  slice->frameNum, 
+                  slice->frameNum,
                   slice->mbAffFrameFlag ? " mbAff":"",
                   slice->fieldPicFlag ? " field":"",
                   slice->ppsId);
@@ -2892,12 +2891,12 @@ void endDecodeFrame (sDecoder* decoder) {
 
   if (decoder->picture->mbAffFrameFlag)
     mbAffPostProc (decoder);
-  if (decoder->coding.structure != FRAME)
+  if (decoder->coding.picStructure != FRAME)
      decoder->idrFrameNum /= 2;
   if (decoder->picture->usedForReference)
     padPicture (decoder, decoder->picture);
 
-  int structure = decoder->picture->structure;
+  int picStructure = decoder->picture->picStructure;
   int sliceType = decoder->picture->sliceType;
   int pocNum = decoder->picture->framePoc;
   int refpic = decoder->picture->usedForReference;
@@ -2911,7 +2910,7 @@ void endDecodeFrame (sDecoder* decoder) {
   if (decoder->lastHasMmco5)
     decoder->preFrameNum = 0;
 
-  if (structure == TopField || structure == FRAME) {
+  if (picStructure == TopField || picStructure == FRAME) {
     //{{{
     if (sliceType == I_SLICE && isIdr)
       strcpy (decoder->info.sliceStr, "IDR");
@@ -2934,13 +2933,13 @@ void endDecodeFrame (sDecoder* decoder) {
     else
       strcpy (decoder->info.sliceStr, " b ");
 
-    if (structure == FRAME)
+    if (picStructure == FRAME)
       strncat (decoder->info.sliceStr, "    ", 8 - strlen (decoder->info.sliceStr));
 
     decoder->info.sliceStr[3] = 0;
     }
     //}}}
-  else if (structure == BotField) {
+  else if (picStructure == BotField) {
     //{{{
     if (sliceType == I_SLICE && isIdr)
       strncat (decoder->info.sliceStr, "|IDR", 8-strlen (decoder->info.sliceStr));
@@ -2966,7 +2965,7 @@ void endDecodeFrame (sDecoder* decoder) {
     decoder->info.sliceStr[8] = 0;
     }
     //}}}
-  if ((structure == FRAME) || structure == BotField) {
+  if ((picStructure == FRAME) || picStructure == BotField) {
     getTime (&decoder->info.endTime);
     decoder->info.took = (int)timeNorm (timeDiff (&decoder->info.startTime, &decoder->info.endTime));
     sprintf (decoder->info.tookStr, "%dms", decoder->info.took);
