@@ -1005,14 +1005,14 @@ typedef struct Decoder {
   int          lastRefPicPoc;
 
   // - POC mode 0:
-  signed int   PrevPicOrderCntMsb;
-  unsigned int PrevPicOrderCntLsb;
+  signed int   prevPocMsb;
+  unsigned int prevPocLsb;
   int          lastPicBotField;
 
   // - POC mode 1:
-  signed int   expectedPOC, POCcycleCount, frameNumPOCcycle;
+  signed int   expectedPOC, pocCycleCount, frameNumPocCycle;
   unsigned int previousFrameNum, frameNumOffset;
-  int          expectedDeltaPerPOCcycle;
+  int          expectedDeltaPerPocCycle;
   int          thisPoc;
   int          previousFrameNumOffset;
 

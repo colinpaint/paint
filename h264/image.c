@@ -2618,29 +2618,29 @@ void decodePOC (sDecoder* decoder, sSlice* slice) {
     case 0: // POC MODE 0
       // 1st
       if (slice->idrFlag) {
-        decoder->PrevPicOrderCntMsb = 0;
-        decoder->PrevPicOrderCntLsb = 0;
+        decoder->prevPocMsb = 0;
+        decoder->prevPocLsb = 0;
         }
       else if (decoder->lastHasMmco5) {
         if (decoder->lastPicBotField) {
-          decoder->PrevPicOrderCntMsb = 0;
-          decoder->PrevPicOrderCntLsb = 0;
+          decoder->prevPocMsb = 0;
+          decoder->prevPocLsb = 0;
           }
         else {
-          decoder->PrevPicOrderCntMsb = 0;
-          decoder->PrevPicOrderCntLsb = slice->topPoc;
+          decoder->prevPocMsb = 0;
+          decoder->prevPocLsb = slice->topPoc;
           }
         }
 
       // Calculate the MSBs of current picture
-      if (slice->picOrderCountLsb < decoder->PrevPicOrderCntLsb  &&
-          (decoder->PrevPicOrderCntLsb - slice->picOrderCountLsb) >= maxPicOrderCntLsb/2)
-        slice->PicOrderCntMsb = decoder->PrevPicOrderCntMsb + maxPicOrderCntLsb;
-      else if (slice->picOrderCountLsb > decoder->PrevPicOrderCntLsb &&
-               (slice->picOrderCountLsb - decoder->PrevPicOrderCntLsb) > maxPicOrderCntLsb/2)
-        slice->PicOrderCntMsb = decoder->PrevPicOrderCntMsb - maxPicOrderCntLsb;
+      if (slice->picOrderCountLsb < decoder->prevPocLsb  &&
+          (decoder->prevPocLsb - slice->picOrderCountLsb) >= maxPicOrderCntLsb/2)
+        slice->PicOrderCntMsb = decoder->prevPocMsb + maxPicOrderCntLsb;
+      else if (slice->picOrderCountLsb > decoder->prevPocLsb &&
+               (slice->picOrderCountLsb - decoder->prevPocLsb) > maxPicOrderCntLsb/2)
+        slice->PicOrderCntMsb = decoder->prevPocMsb - maxPicOrderCntLsb;
       else
-        slice->PicOrderCntMsb = decoder->PrevPicOrderCntMsb;
+        slice->PicOrderCntMsb = decoder->prevPocMsb;
 
       // 2nd
       if (slice->fieldPicFlag == 0) {
@@ -2659,8 +2659,8 @@ void decodePOC (sDecoder* decoder, sSlice* slice) {
       decoder->previousFrameNum = slice->frameNum;
 
       if (slice->refId) {
-        decoder->PrevPicOrderCntLsb = slice->picOrderCountLsb;
-        decoder->PrevPicOrderCntMsb = slice->PicOrderCntMsb;
+        decoder->prevPocLsb = slice->picOrderCountLsb;
+        decoder->prevPocMsb = slice->PicOrderCntMsb;
         }
 
       break;
@@ -2694,17 +2694,17 @@ void decodePOC (sDecoder* decoder, sSlice* slice) {
         slice->AbsFrameNum--;
 
       // 3rd
-      decoder->expectedDeltaPerPOCcycle = 0;
+      decoder->expectedDeltaPerPocCycle = 0;
       if (activeSPS->numRefFramesPocCycle)
         for (unsigned i = 0; i < activeSPS->numRefFramesPocCycle; i++)
-          decoder->expectedDeltaPerPOCcycle += activeSPS->offset_for_ref_frame[i];
+          decoder->expectedDeltaPerPocCycle += activeSPS->offset_for_ref_frame[i];
 
       if (slice->AbsFrameNum) {
-        decoder->POCcycleCount = (slice->AbsFrameNum-1) / activeSPS->numRefFramesPocCycle;
-        decoder->frameNumPOCcycle = (slice->AbsFrameNum-1) % activeSPS->numRefFramesPocCycle;
+        decoder->pocCycleCount = (slice->AbsFrameNum-1) / activeSPS->numRefFramesPocCycle;
+        decoder->frameNumPocCycle = (slice->AbsFrameNum-1) % activeSPS->numRefFramesPocCycle;
         decoder->expectedPOC =
-          decoder->POCcycleCount*decoder->expectedDeltaPerPOCcycle;
-        for (int i = 0; i <= decoder->frameNumPOCcycle; i++)
+          decoder->pocCycleCount*decoder->expectedDeltaPerPocCycle;
+        for (int i = 0; i <= decoder->frameNumPocCycle; i++)
           decoder->expectedPOC += activeSPS->offset_for_ref_frame[i];
         }
       else
