@@ -653,12 +653,12 @@ void dpbCombineField (sDecoder* decoder, sFrameStore* frameStore) {
   frameStore->frame->codedFrame = 0;
 
   frameStore->frame->chromaFormatIdc = frameStore->topField->chromaFormatIdc;
-  frameStore->frame->frameCropFlag = frameStore->topField->frameCropFlag;
-  if (frameStore->frame->frameCropFlag) {
-    frameStore->frame->frameCropTop = frameStore->topField->frameCropTop;
-    frameStore->frame->frameCropBot = frameStore->topField->frameCropBot;
-    frameStore->frame->frameCropLeft = frameStore->topField->frameCropLeft;
-    frameStore->frame->frameCropRight = frameStore->topField->frameCropRight;
+  frameStore->frame->cropFlag = frameStore->topField->cropFlag;
+  if (frameStore->frame->cropFlag) {
+    frameStore->frame->cropTop = frameStore->topField->cropTop;
+    frameStore->frame->cropBot = frameStore->topField->cropBot;
+    frameStore->frame->cropLeft = frameStore->topField->cropLeft;
+    frameStore->frame->cropRight = frameStore->topField->cropRight;
     }
 
   frameStore->topField->frame = frameStore->botField->frame = frameStore->frame;

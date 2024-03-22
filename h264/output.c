@@ -81,18 +81,18 @@ static void writeOutPicture (sDecoder* decoder, sPicture* p) {
   int cropRight;
   int cropTop;
   int cropBottom;
-  if (p->frameCropFlag) {
-    cropLeft = SubWidthC [p->chromaFormatIdc] * p->frameCropLeft;
-    cropRight = SubWidthC [p->chromaFormatIdc] * p->frameCropRight;
-    cropTop = SubHeightC[p->chromaFormatIdc] * ( 2 - p->frameMbOnlyFlag ) * p->frameCropTop;
-    cropBottom = SubHeightC[p->chromaFormatIdc] * ( 2 - p->frameMbOnlyFlag ) * p->frameCropBot;
+  if (p->cropFlag) {
+    cropLeft = SubWidthC [p->chromaFormatIdc] * p->cropLeft;
+    cropRight = SubWidthC [p->chromaFormatIdc] * p->cropRight;
+    cropTop = SubHeightC[p->chromaFormatIdc] * ( 2 - p->frameMbOnlyFlag ) * p->cropTop;
+    cropBottom = SubHeightC[p->chromaFormatIdc] * ( 2 - p->frameMbOnlyFlag ) * p->cropBot;
     }
   else
     cropLeft = cropRight = cropTop = cropBottom = 0;
 
   int symbolSizeInBytes = (decoder->coding.picUnitBitSizeDisk+7) >> 3;
-  int chromaSizeX =  p->sizeXcr- p->frameCropLeft -p->frameCropRight;
-  int chromaSizeY = p->sizeYcr - ( 2 - p->frameMbOnlyFlag ) * p->frameCropTop -( 2 - p->frameMbOnlyFlag ) * p->frameCropBot;
+  int chromaSizeX =  p->sizeXcr- p->cropLeft -p->cropRight;
+  int chromaSizeY = p->sizeYcr - ( 2 - p->frameMbOnlyFlag ) * p->cropTop -( 2 - p->frameMbOnlyFlag ) * p->cropBot;
   int lumaSizeX = p->sizeX - cropLeft - cropRight;
   int lumaSizeY = p->sizeY - cropTop - cropBottom;
   int lumaSize = lumaSizeX * lumaSizeY * symbolSizeInBytes;
@@ -111,10 +111,10 @@ static void writeOutPicture (sDecoder* decoder, sPicture* p) {
            p->sizeX, p->sizeY, symbolSizeInBytes,
            cropLeft, cropRight, cropTop, cropBottom, decodedPic->yStride);
 
-  cropLeft = p->frameCropLeft;
-  cropRight = p->frameCropRight;
-  cropTop = (2 - p->frameMbOnlyFlag) * p->frameCropTop;
-  cropBottom = (2 - p->frameMbOnlyFlag) * p->frameCropBot;
+  cropLeft = p->cropLeft;
+  cropRight = p->cropRight;
+  cropTop = (2 - p->frameMbOnlyFlag) * p->cropTop;
+  cropBottom = (2 - p->frameMbOnlyFlag) * p->cropBot;
 
   img2buf (p->imgUV[0],
            (decodedPic->valid == 1) ? decodedPic->uBuf : decodedPic->uBuf + chromaSizeX * symbolSizeInBytes,
@@ -171,12 +171,12 @@ static void writePicture (sDecoder* decoder, sPicture* p, int realStructure) {
     decoder->pendingOut->chromaFormatIdc = p->chromaFormatIdc;
 
     decoder->pendingOut->frameMbOnlyFlag = p->frameMbOnlyFlag;
-    decoder->pendingOut->frameCropFlag = p->frameCropFlag;
-    if (decoder->pendingOut->frameCropFlag) {
-      decoder->pendingOut->frameCropLeft = p->frameCropLeft;
-      decoder->pendingOut->frameCropRight = p->frameCropRight;
-      decoder->pendingOut->frameCropTop = p->frameCropTop;
-      decoder->pendingOut->frameCropBot = p->frameCropBot;
+    decoder->pendingOut->cropFlag = p->cropFlag;
+    if (decoder->pendingOut->cropFlag) {
+      decoder->pendingOut->cropLeft = p->cropLeft;
+      decoder->pendingOut->cropRight = p->cropRight;
+      decoder->pendingOut->cropTop = p->cropTop;
+      decoder->pendingOut->cropBot = p->cropBot;
       }
 
     getMem2Dpel (&(decoder->pendingOut->imgY), decoder->pendingOut->sizeY, decoder->pendingOut->sizeX);
@@ -199,12 +199,12 @@ static void writePicture (sDecoder* decoder, sPicture* p, int realStructure) {
     if ((decoder->pendingOut->sizeX!=p->sizeX) ||
         (decoder->pendingOut->sizeY!= p->sizeY) ||
         (decoder->pendingOut->frameMbOnlyFlag != p->frameMbOnlyFlag) ||
-        (decoder->pendingOut->frameCropFlag != p->frameCropFlag) ||
-        (decoder->pendingOut->frameCropFlag &&
-         ((decoder->pendingOut->frameCropLeft != p->frameCropLeft) ||
-          (decoder->pendingOut->frameCropRight != p->frameCropRight) ||
-          (decoder->pendingOut->frameCropTop != p->frameCropTop) ||
-          (decoder->pendingOut->frameCropBot != p->frameCropBot)))) {
+        (decoder->pendingOut->cropFlag != p->cropFlag) ||
+        (decoder->pendingOut->cropFlag &&
+         ((decoder->pendingOut->cropLeft != p->cropLeft) ||
+          (decoder->pendingOut->cropRight != p->cropRight) ||
+          (decoder->pendingOut->cropTop != p->cropTop) ||
+          (decoder->pendingOut->cropBot != p->cropBot)))) {
       flushPendingOut (decoder);
       writePicture (decoder, p, realStructure);
       return;
@@ -248,12 +248,12 @@ static void writeUnpairedField (sDecoder* decoder, sFrameStore* frameStore) {
     frameStore->topField->chromaFormatIdc = p->chromaFormatIdc;
     clearPicture (decoder, frameStore->topField);
 
-    frameStore->topField->frameCropFlag = frameStore->botField->frameCropFlag;
-    if (frameStore->topField->frameCropFlag) {
-      frameStore->topField->frameCropTop = frameStore->botField->frameCropTop;
-      frameStore->topField->frameCropBot = frameStore->botField->frameCropBot;
-      frameStore->topField->frameCropLeft = frameStore->botField->frameCropLeft;
-      frameStore->topField->frameCropRight = frameStore->botField->frameCropRight;
+    frameStore->topField->cropFlag = frameStore->botField->cropFlag;
+    if (frameStore->topField->cropFlag) {
+      frameStore->topField->cropTop = frameStore->botField->cropTop;
+      frameStore->topField->cropBot = frameStore->botField->cropBot;
+      frameStore->topField->cropLeft = frameStore->botField->cropLeft;
+      frameStore->topField->cropRight = frameStore->botField->cropRight;
       }
 
     dpbCombineField (decoder, frameStore);

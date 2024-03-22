@@ -826,7 +826,7 @@ static void process_motion_constrained_slice_group_set_info (byte* payload, int 
   }
 //}}}
 //{{{
-static void process_film_grain_characteristics_info (byte* payload, int size, sDecoder* decoder) {
+static void processFilmGrain (byte* payload, int size, sDecoder* decoder) {
 
   int film_grain_characteristics_cancel_flag;
   int model_id, separate_colour_description_present_flag;
@@ -901,7 +901,7 @@ static void process_film_grain_characteristics_info (byte* payload, int size, sD
   }
 //}}}
 //{{{
-static void process_deblocking_filter_display_preference_info (byte* payload, int size, sDecoder* decoder) {
+static void processDeblockFilterDisplayPref (byte* payload, int size, sDecoder* decoder) {
 
   sBitStream* buf = malloc (sizeof(sBitStream));
   buf->bitStreamBuffer = payload;
@@ -924,7 +924,7 @@ static void process_deblocking_filter_display_preference_info (byte* payload, in
   }
 //}}}
 //{{{
-static void process_stereo_video_info_info (byte* payload, int size, sDecoder* decoder) {
+static void processStereoVideo (byte* payload, int size, sDecoder* decoder) {
 
   sBitStream* buf = malloc (sizeof(sBitStream));
   buf->bitStreamBuffer = payload;
@@ -953,7 +953,7 @@ static void process_stereo_video_info_info (byte* payload, int size, sDecoder* d
   }
 //}}}
 //{{{
-static void process_buffering_period_info (byte* payload, int size, sDecoder* decoder) {
+static void processBufferingPeriod (byte* payload, int size, sDecoder* decoder) {
 
   sBitStream* buf = malloc (sizeof(sBitStream));
   buf->bitStreamBuffer = payload;
@@ -1180,7 +1180,7 @@ void processSEI (byte* msg, int size, sDecoder* decoder, sSlice* slice) {
 
     switch (payload_type) {
       case  SEI_BUFFERING_PERIOD:
-        process_buffering_period_info (msg+offset, payload_size, decoder); break;
+        processBufferingPeriod (msg+offset, payload_size, decoder); break;
       case  SEI_PIC_TIMING:
         processPictureTiming (msg+offset, payload_size, decoder); break;
       case  SEI_PAN_SCAN_RECT:
@@ -1218,11 +1218,11 @@ void processSEI (byte* msg, int size, sDecoder* decoder, sSlice* slice) {
       case  SEI_MOTION_CONSTRAINED_SLICE_GROUP_SET:
         process_motion_constrained_slice_group_set_info (msg+offset, payload_size, decoder); break;
       case  SEI_FILM_GRAIN_CHARACTERISTICS:
-        process_film_grain_characteristics_info (msg+offset, payload_size, decoder); break;
+        processFilmGrain (msg+offset, payload_size, decoder); break;
       case  SEI_DEBLOCKING_FILTER_DISPLAY_PREFERENCE:
-        process_deblocking_filter_display_preference_info (msg+offset, payload_size, decoder); break;
+        processDeblockFilterDisplayPref (msg+offset, payload_size, decoder); break;
       case  SEI_STEREO_VIDEO_INFO:
-        process_stereo_video_info_info  (msg+offset, payload_size, decoder); break;
+        processStereoVideo  (msg+offset, payload_size, decoder); break;
       case  SEI_POST_FILTER_HINTS:
         process_post_filter_hints_info (msg+offset, payload_size, decoder); break;
       case  SEI_FRAME_PACKING_ARRANGEMENT:

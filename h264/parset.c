@@ -162,11 +162,11 @@ static void setFormatInfo (sDecoder* decoder, sSPS* sps, sFrameFormat* source, s
 
   // cropping for luma
   int cropLeft, cropRight, cropTop, cropBot;
-  if (sps->frameCropFlag) {
-    cropLeft = SubWidthC [sps->chromaFormatIdc] * sps->frameCropLeft;
-    cropRight = SubWidthC [sps->chromaFormatIdc] * sps->frameCropRight;
-    cropTop = SubHeightC[sps->chromaFormatIdc] * ( 2 - sps->frameMbOnlyFlag ) *  sps->frameCropTop;
-    cropBot = SubHeightC[sps->chromaFormatIdc] * ( 2 - sps->frameMbOnlyFlag ) *  sps->frameCropBot;
+  if (sps->cropFlag) {
+    cropLeft = SubWidthC [sps->chromaFormatIdc] * sps->cropLeft;
+    cropRight = SubWidthC [sps->chromaFormatIdc] * sps->cropRight;
+    cropTop = SubHeightC[sps->chromaFormatIdc] * ( 2 - sps->frameMbOnlyFlag ) *  sps->cropTop;
+    cropBot = SubHeightC[sps->chromaFormatIdc] * ( 2 - sps->frameMbOnlyFlag ) *  sps->cropBot;
     }
   else
     cropLeft = cropRight = cropTop = cropBot = 0;
@@ -175,11 +175,11 @@ static void setFormatInfo (sDecoder* decoder, sSPS* sps, sFrameFormat* source, s
   source->height[0] = decoder->height - cropTop - cropBot;
 
   // cropping for chroma
-  if (sps->frameCropFlag) {
-    cropLeft = sps->frameCropLeft;
-    cropRight = sps->frameCropRight;
-    cropTop = (2 - sps->frameMbOnlyFlag) * sps->frameCropTop;
-    cropBot = (2 - sps->frameMbOnlyFlag) * sps->frameCropBot;
+  if (sps->cropFlag) {
+    cropLeft = sps->cropLeft;
+    cropRight = sps->cropRight;
+    cropTop = (2 - sps->frameMbOnlyFlag) * sps->cropTop;
+    cropBot = (2 - sps->frameMbOnlyFlag) * sps->cropBot;
     }
   else
     cropLeft = cropRight = cropTop = cropBot = 0;
@@ -333,21 +333,28 @@ static int isEqualSPS (sSPS* sps1, sSPS* sps2) {
     equal;
 
   if (!sps1->frameMbOnlyFlag)
-    equal &= (sps1->mb_adaptive_frame_field_flag == sps2->mb_adaptive_frame_field_flag);
+    equal &= (sps1->mbAffFlag == sps2->mbAffFlag);
   equal &= (sps1->direct_8x8_inference_flag == sps2->direct_8x8_inference_flag);
-  equal &= (sps1->frameCropFlag == sps2->frameCropFlag);
+  equal &= (sps1->cropFlag == sps2->cropFlag);
   if (!equal)
     return equal;
 
-  if (sps1->frameCropFlag) {
-    equal &= (sps1->frameCropLeft == sps2->frameCropLeft);
-    equal &= (sps1->frameCropRight == sps2->frameCropRight);
-    equal &= (sps1->frameCropTop == sps2->frameCropTop);
-    equal &= (sps1->frameCropBot == sps2->frameCropBot);
+  if (sps1->cropFlag) {
+    equal &= (sps1->cropLeft == sps2->cropLeft);
+    equal &= (sps1->cropRight == sps2->cropRight);
+    equal &= (sps1->cropTop == sps2->cropTop);
+    equal &= (sps1->cropBot == sps2->cropBot);
     }
   equal &= (sps1->vui_parameters_present_flag == sps2->vui_parameters_present_flag);
 
   return equal;
+  }
+//}}}
+//{{{
+static void setSPSbyId (sDecoder* decoder, int id, sSPS* sps) {
+
+  assert (sps->valid == TRUE);
+  memcpy (&decoder->sps[id], sps, sizeof(sSPS));
   }
 //}}}
 //{{{
@@ -534,17 +541,17 @@ static void readSPS (sDecoder* decoder, sDataPartition* dataPartition, sSPS* sps
 
   sps->frameMbOnlyFlag = readU1 ("SPS frameMbOnlyFlag", s);
   if (!sps->frameMbOnlyFlag)
-    sps->mb_adaptive_frame_field_flag = readU1 ("SPS mb_adaptive_frame_field_flag", s);
+    sps->mbAffFlag = readU1 ("SPS mbAffFlag", s);
 
   sps->direct_8x8_inference_flag = readU1 ("SPS direct_8x8_inference_flag", s);
 
   //{{{  read crop
-  sps->frameCropFlag = readU1 ("SPS frameCropFlag", s);
-  if (sps->frameCropFlag) {
-    sps->frameCropLeft = readUeV ("SPS frameCropLeft", s);
-    sps->frameCropRight = readUeV ("SPS frameCropRight", s);
-    sps->frameCropTop = readUeV ("SPS frameCropTop", s);
-    sps->frameCropBot = readUeV ("SPS frameCropBot", s);
+  sps->cropFlag = readU1 ("SPS cropFlag", s);
+  if (sps->cropFlag) {
+    sps->cropLeft = readUeV ("SPS cropLeft", s);
+    sps->cropRight = readUeV ("SPS cropRight", s);
+    sps->cropTop = readUeV ("SPS cropTop", s);
+    sps->cropBot = readUeV ("SPS cropBot", s);
     }
   //}}}
   sps->vui_parameters_present_flag = (Boolean)readU1 ("SPS vui_parameters_present_flag", s);
@@ -556,25 +563,18 @@ static void readSPS (sDecoder* decoder, sDataPartition* dataPartition, sSPS* sps
     printf ("-> id:%d refFrames:%d pocType:%d mbs:%dx%d",
             sps->spsId, sps->numRefFrames,  sps->pocType,
             sps->pic_width_in_mbs_minus1, sps->pic_height_in_map_units_minus1);
+    if (sps->cropFlag)
+      printf (" crop:%d:%d:%d:%d",
+              sps->cropLeft, sps->cropRight, sps->cropTop, sps->cropBot);
     if (sps->frameMbOnlyFlag) {
       printf (" frame");
-      if (sps->mb_adaptive_frame_field_flag)
-        printf (" adapt");
+      if (sps->mbAffFlag)
+        printf (" mbAff");
       }
-    if (sps->frameCropFlag)
-      printf (" crop:%d:%d:%d:%d",
-              sps->frameCropLeft, sps->frameCropRight, sps->frameCropTop, sps->frameCropBot);
     printf ("\n");
     }
 
   sps->valid = TRUE;
-  }
-//}}}
-//{{{
-static void setSPSbyId (sDecoder* decoder, int id, sSPS* sps) {
-
-  assert (sps->valid == TRUE);
-  memcpy (&decoder->sps[id], sps, sizeof(sSPS));
   }
 //}}}
 
@@ -633,6 +633,11 @@ void activateSPS (sDecoder* decoder, sSPS* sps) {
       ercReset (decoder->ercErrorVar, decoder->picSizeInMbs, decoder->picSizeInMbs, decoder->picture->sizeX);
       decoder->ercMvPerMb = 0;
       }
+
+    if (sps->frameMbOnlyFlag) 
+      sprintf (decoder->info.spsStr, "frame%s", sps->mbAffFlag ? " mbAff":"");
+    else
+      strcpy (decoder->info.spsStr, "");
     }
 
   setFormatInfo (decoder, sps, &decoder->param.source, &decoder->param.output);
@@ -640,6 +645,22 @@ void activateSPS (sDecoder* decoder, sSPS* sps) {
 //}}}
 
 // PPS
+//{{{
+sPPS* allocPPS() {
+
+  sPPS* pps = calloc (1, sizeof (sPPS));
+  pps->sliceGroupId = NULL;
+  return pps;
+  }
+//}}}
+//{{{
+ void freePPS (sPPS* pps) {
+
+   if (!pps->sliceGroupId)
+     free (pps->sliceGroupId);
+   free (pps);
+   }
+//}}}
 //{{{
 static int isEqualPPS (sPPS* pps1, sPPS* pps2) {
 
@@ -718,21 +739,25 @@ static int isEqualPPS (sPPS* pps1, sPPS* pps2) {
   }
 //}}}
 //{{{
-static void readPPS (sDecoder* decoder, sDataPartition* dataPartition, sPPS* pps) {
+void setPPSbyId (sDecoder* decoder, int id, sPPS* pps) {
 
-  unsigned n_ScalingList;
-  int chromaFormatIdc;
+  if (decoder->pps[id].valid && decoder->pps[id].sliceGroupId)
+    free (decoder->pps[id].sliceGroupId);
+  memcpy (&decoder->pps[id], pps, sizeof (sPPS));
+
+  // we can simply use the memory provided with the pps.
+  // the PPS is destroyed after this function call, will not try to free if pps->sliceGroupId == NULL
+  decoder->pps[id].sliceGroupId = pps->sliceGroupId;
+  pps->sliceGroupId = NULL;
+  }
+//}}}
+//{{{
+static void readPPS (sDecoder* decoder, sDataPartition* dataPartition, sPPS* pps) {
 
   sBitStream* s = dataPartition->s;
   pps->ppsId = readUeV ("PPS ppsId", s);
   pps->spsId = readUeV ("PPS spsId", s);
   pps->entropyCodingMode = readU1 ("PPS entropyCodingMode", s);
-
-  // Note: as per JVT-F078 the following bit is unconditional.  If F078 is not accepted, then
-  // one has to fetch the correct SPS to check whether the bit is present (hopefully there is
-  // no consistency problem :-(
-  // The current encoder code handles this in the same way.  When you change this, don't forget
-  // the encoder!  StW, 12/8/02
   pps->botFieldPicOrderFramePresent = readU1 ("PPS botFieldPicOrderFramePresent", s);
   pps->numSliceGroupsMinus1 = readUeV ("PPS numSliceGroupsMinus1", s);
 
@@ -804,8 +829,8 @@ static void readPPS (sDecoder* decoder, sDataPartition* dataPartition, sPPS* pps
 
     pps->picScalingMatrixPresentFlag = readU1 ("PPS picScalingMatrixPresentFlag", s);
     if (pps->picScalingMatrixPresentFlag) {
-      chromaFormatIdc = decoder->sps[pps->spsId].chromaFormatIdc;
-      n_ScalingList = 6 + ((chromaFormatIdc != YUV444) ? 2 : 6) * pps->transform8x8modeFlag;
+      int chromaFormatIdc = decoder->sps[pps->spsId].chromaFormatIdc;
+      unsigned n_ScalingList = 6 + ((chromaFormatIdc != YUV444) ? 2 : 6) * pps->transform8x8modeFlag;
       for (unsigned i = 0; i < n_ScalingList; i++) {
         pps->picScalingListPresentFlag[i]= readU1 ("PPS picScalingListPresentFlag", s);
         if (pps->picScalingListPresentFlag[i]) {
@@ -839,36 +864,6 @@ static void readPPS (sDecoder* decoder, sDataPartition* dataPartition, sPPS* pps
             pps->numRefIndexL0defaultActiveMinus1, pps->numRefIndexL1defaultActiveMinus1);
 
   pps->valid = TRUE;
-  }
-//}}}
-
-//{{{
-sPPS* allocPPS() {
-
-  sPPS* pps = calloc (1, sizeof (sPPS));
-  pps->sliceGroupId = NULL;
-  return pps;
-  }
-//}}}
-//{{{
- void freePPS (sPPS* pps) {
-
-   if (!pps->sliceGroupId)
-     free (pps->sliceGroupId);
-   free (pps);
-   }
-//}}}
-//{{{
-void setPPSbyId (sDecoder* decoder, int id, sPPS* pps) {
-
-  if (decoder->pps[id].valid && decoder->pps[id].sliceGroupId)
-    free (decoder->pps[id].sliceGroupId);
-  memcpy (&decoder->pps[id], pps, sizeof (sPPS));
-
-  // we can simply use the memory provided with the pps.
-  // the PPS is destroyed after this function call, will not try to free if pps->sliceGroupId == NULL
-  decoder->pps[id].sliceGroupId = pps->sliceGroupId;
-  pps->sliceGroupId = NULL;
   }
 //}}}
 

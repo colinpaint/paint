@@ -67,11 +67,11 @@ typedef struct Picture {
 
   eYuvFormat  chromaFormatIdc;
   int         frameMbOnlyFlag;
-  int         frameCropFlag;
-  int         frameCropLeft;
-  int         frameCropRight;
-  int         frameCropTop;
-  int         frameCropBot;
+  int         cropFlag;
+  int         cropLeft;
+  int         cropRight;
+  int         cropTop;
+  int         cropBot;
   int         qp;
   int         chromaQpOffset[2];
   int         sliceQpDelta;

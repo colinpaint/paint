@@ -251,7 +251,7 @@ static int FmoGenerateMbToSliceGroupMap (sDecoder* decoder, sSlice *slice) {
       *mbToSliceGroupMap++ = *mapUnitToSliceGroupMap++;
     }
   else
-    if (sps->mb_adaptive_frame_field_flag  &&  (!slice->fieldPicFlag)) {
+    if (sps->mbAffFlag  &&  (!slice->fieldPicFlag)) {
       for (unsigned i = 0; i < decoder->picSizeInMbs; i++)
         decoder->mbToSliceGroupMap[i] = decoder->mapUnitToSliceGroupMap[i/2];
       }

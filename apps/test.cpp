@@ -1291,6 +1291,10 @@ public:
       ImGui::SameLine();
       ImGui::TextUnformatted (testApp.getDecoder()->info.tookStr);
       //}}}
+      //{{{  draw spsStr
+      ImGui::SameLine();
+      ImGui::TextUnformatted (testApp.getDecoder()->info.spsStr);
+      //}}}
       //{{{  draw sliceStr
       ImGui::SameLine();
       ImGui::TextUnformatted (testApp.getDecoder()->info.sliceStr);

@@ -1664,11 +1664,11 @@ static void copyDecPictureJV (sDecoder* decoder, sPicture* dst, sPicture* src) {
   dst->codedFrame = src->codedFrame;
   dst->chromaFormatIdc = src->chromaFormatIdc;
   dst->frameMbOnlyFlag = src->frameMbOnlyFlag;
-  dst->frameCropFlag = src->frameCropFlag;
-  dst->frameCropLeft = src->frameCropLeft;
-  dst->frameCropRight = src->frameCropRight;
-  dst->frameCropTop = src->frameCropTop;
-  dst->frameCropBot = src->frameCropBot;
+  dst->cropFlag = src->cropFlag;
+  dst->cropLeft = src->cropLeft;
+  dst->cropRight = src->cropRight;
+  dst->cropTop = src->cropTop;
+  dst->cropBot = src->cropBot;
   }
 //}}}
 //{{{
@@ -1831,12 +1831,12 @@ static void initPicture (sDecoder* decoder, sSlice* slice) {
   picture->codedFrame = (slice->structure == FRAME);
   picture->chromaFormatIdc = activeSPS->chromaFormatIdc;
   picture->frameMbOnlyFlag = activeSPS->frameMbOnlyFlag;
-  picture->frameCropFlag = activeSPS->frameCropFlag;
-  if (picture->frameCropFlag) {
-    picture->frameCropLeft = activeSPS->frameCropLeft;
-    picture->frameCropRight = activeSPS->frameCropRight;
-    picture->frameCropTop = activeSPS->frameCropTop;
-    picture->frameCropBot = activeSPS->frameCropBot;
+  picture->cropFlag = activeSPS->cropFlag;
+  if (picture->cropFlag) {
+    picture->cropLeft = activeSPS->cropLeft;
+    picture->cropRight = activeSPS->cropRight;
+    picture->cropTop = activeSPS->cropTop;
+    picture->cropBot = activeSPS->cropBot;
     }
 
   if (decoder->coding.sepColourPlaneFlag) {
@@ -1945,7 +1945,7 @@ static void readSlice (sDecoder* decoder, sSlice* slice) {
     }
 
   slice->structure = (ePicStructure)decoder->coding.structure;
-  slice->mbAffFrameFlag = activeSPS->mb_adaptive_frame_field_flag && !slice->fieldPicFlag;
+  slice->mbAffFrameFlag = activeSPS->mbAffFlag && !slice->fieldPicFlag;
   //}}}
 
   if (slice->idrFlag)

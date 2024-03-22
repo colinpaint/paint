@@ -1545,11 +1545,11 @@ static void copy_to_conceal (sPicture *src, sPicture *dst, sDecoder* decoder)
   dst->adaptRefPicBufFlag = src->adaptRefPicBufFlag = 0;
   dst->chromaFormatIdc = src->chromaFormatIdc;
   dst->frameMbOnlyFlag = src->frameMbOnlyFlag;
-  dst->frameCropFlag = src->frameCropFlag;
-  dst->frameCropLeft = src->frameCropLeft;
-  dst->frameCropRight = src->frameCropRight;
-  dst->frameCropBot = src->frameCropBot;
-  dst->frameCropTop = src->frameCropTop;
+  dst->cropFlag = src->cropFlag;
+  dst->cropLeft = src->cropLeft;
+  dst->cropRight = src->cropRight;
+  dst->cropBot = src->cropBot;
+  dst->cropTop = src->cropTop;
 
   dst->qp = src->qp;
   dst->sliceQpDelta = src->sliceQpDelta;

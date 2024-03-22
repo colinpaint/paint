@@ -323,14 +323,14 @@ typedef struct {
   unsigned int pic_height_in_map_units_minus1;    // ue(v)
 
   Boolean  frameMbOnlyFlag;                 // u(1)
-  Boolean  mb_adaptive_frame_field_flag;    // u(1)
+  Boolean  mbAffFlag;    // u(1)
   Boolean  direct_8x8_inference_flag;       // u(1)
 
-  Boolean  frameCropFlag;                   // u(1)
-  unsigned int frameCropLeft;               // ue(v)
-  unsigned int frameCropRight;              // ue(v)
-  unsigned int frameCropTop;                // ue(v)
-  unsigned int frameCropBot;                // ue(v)
+  Boolean  cropFlag;                   // u(1)
+  unsigned int cropLeft;               // ue(v)
+  unsigned int cropRight;              // ue(v)
+  unsigned int cropTop;                // ue(v)
+  unsigned int cropBot;                // ue(v)
 
   Boolean  vui_parameters_present_flag;     // u(1)
   sVUI     vui_seq_parameters;              // sVUI
@@ -927,6 +927,7 @@ typedef struct Info {
   TIME_T  endTime;
   int     took;
 
+  char    spsStr[10];
   char    sliceStr[9];
   char    tookStr[80];
   } sInfo;
