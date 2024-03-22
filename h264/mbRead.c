@@ -25,7 +25,7 @@ static void read_ipred_8x8_modes_mbaff (sMacroBlock* mb) {
 
   int bi, bj, bx, by, dec;
   sSlice* slice = mb->slice;
-  const byte* dpMap = assignSE2dp[slice->dataDpMode];
+  const byte* dpMap = assignSE2dp[slice->dataPartitionMode];
   sDecoder* decoder = mb->decoder;
 
   int mostProbableIntraPredMode;
@@ -85,7 +85,7 @@ static void read_ipred_8x8_modes (sMacroBlock* mb) {
 
   int b8, bi, bj, bx, by, dec;
   sSlice* slice = mb->slice;
-  const byte* dpMap = assignSE2dp[slice->dataDpMode];
+  const byte* dpMap = assignSE2dp[slice->dataPartitionMode];
   sDecoder* decoder = mb->decoder;
 
   int mostProbableIntraPredMode;
@@ -150,7 +150,7 @@ static void read_ipred_4x4_modes_mbaff (sMacroBlock* mb) {
   int b8,i,j,bi,bj,bx,by;
   sSyntaxElement se;
   sSlice* slice = mb->slice;
-  const byte *dpMap = assignSE2dp[slice->dataDpMode];
+  const byte *dpMap = assignSE2dp[slice->dataPartitionMode];
   sDecoder *decoder = mb->decoder;
   sBlockPos *picPos = decoder->picPos;
 
@@ -217,7 +217,7 @@ static void read_ipred_4x4_modes_mbaff (sMacroBlock* mb) {
 static void read_ipred_4x4_modes (sMacroBlock* mb) {
 
   sSlice* slice = mb->slice;
-  const byte* dpMap = assignSE2dp[slice->dataDpMode];
+  const byte* dpMap = assignSE2dp[slice->dataPartitionMode];
   sDecoder* decoder = mb->decoder;
   sBlockPos* picPos = decoder->picPos;
 
@@ -310,7 +310,7 @@ static void readIpredModes (sMacroBlock* mb) {
   if ((picture->chromaFormatIdc != YUV400) && (picture->chromaFormatIdc != YUV444)) {
     sSyntaxElement se;
     sDataPartition* dataPartition;
-    const byte* dpMap = assignSE2dp[slice->dataDpMode];
+    const byte* dpMap = assignSE2dp[slice->dataPartitionMode];
     sDecoder* decoder = mb->decoder;
 
     se.type = SE_INTRAPREDMODE;
@@ -402,9 +402,9 @@ static void concealIPCMcoeffs (sMacroBlock* mb) {
 static void initIPCMdecoding (sSlice* slice) {
 
   int dpNum;
-  if (slice->dataDpMode == eDataPartition1)
+  if (slice->dataPartitionMode == eDataPartition1)
     dpNum = 1;
-  else if (slice->dataDpMode == eDataPartition3)
+  else if (slice->dataPartitionMode == eDataPartition3)
     dpNum = 3;
   else {
     printf ("dataPartition Mode is not supported\n");
@@ -757,7 +757,7 @@ static void readIPCMmacroblock (sMacroBlock* mb, const byte* dpMap) {
 
   // here dataPartition is assigned with the same dataPartition as SE_MBTYPE, because IPCM syntax is in the
   // same category as MBTYPE
-  if (slice->dataDpMode && slice->noDataPartitionB )
+  if (slice->dataPartitionMode && slice->noDataPartitionB )
     concealIPCMcoeffs (mb);
   else {
     sDataPartition* dataPartition = &(slice->dataPartitions[dpMap[SE_LUM_DC_INTRA]]);
@@ -804,7 +804,7 @@ static void readIcavlcMacroblock (sMacroBlock* mb) {
   sSyntaxElement se;
   int mbNum = mb->mbIndexX;
 
-  const byte* dpMap = assignSE2dp[slice->dataDpMode];
+  const byte* dpMap = assignSE2dp[slice->dataPartitionMode];
   sPicture* picture = slice->picture;
   sPicMotionParamsOld* motion = &picture->motion;
 
@@ -852,7 +852,7 @@ static void readPcavlcMacroblock (sMacroBlock* mb) {
   sSyntaxElement se;
   int mbNum = mb->mbIndexX;
 
-  const byte* dpMap = assignSE2dp[slice->dataDpMode];
+  const byte* dpMap = assignSE2dp[slice->dataPartitionMode];
 
   if (slice->mbAffFrame == 0) {
     sPicture* picture = slice->picture;
@@ -1005,7 +1005,7 @@ static void readBcavlcMacroblock (sMacroBlock* mb) {
   sSlice* slice = mb->slice;
   int mbNum = mb->mbIndexX;
   sSyntaxElement se;
-  const byte* dpMap = assignSE2dp[slice->dataDpMode];
+  const byte* dpMap = assignSE2dp[slice->dataPartitionMode];
 
   if (slice->mbAffFrame == 0) {
     sPicture* picture = slice->picture;
@@ -1170,7 +1170,7 @@ static void readIcabacMacroblock (sMacroBlock* mb) {
   sSyntaxElement se;
   int mbNum = mb->mbIndexX;
 
-  const byte* dpMap = assignSE2dp[slice->dataDpMode];
+  const byte* dpMap = assignSE2dp[slice->dataPartitionMode];
   sPicture* picture = slice->picture;
   sPicMotionParamsOld* motion = &picture->motion;
 
@@ -1256,7 +1256,7 @@ static void readPcabacMacroblock (sMacroBlock* mb)
   sDecoder* decoder = mb->decoder;
   int mbNum = mb->mbIndexX;
   sSyntaxElement se;
-  const byte* dpMap = assignSE2dp[slice->dataDpMode];
+  const byte* dpMap = assignSE2dp[slice->dataPartitionMode];
 
   if (slice->mbAffFrame == 0) {
     sPicture* picture = slice->picture;
@@ -1404,7 +1404,7 @@ static void readBcabacMacroblock (sMacroBlock* mb) {
   int mbNum = mb->mbIndexX;
   sSyntaxElement se;
 
-  const byte* dpMap = assignSE2dp[slice->dataDpMode];
+  const byte* dpMap = assignSE2dp[slice->dataPartitionMode];
 
   if (slice->mbAffFrame == 0) {
     sPicture* picture = slice->picture;

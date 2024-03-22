@@ -1011,7 +1011,7 @@ static void readMotionInfoP (sMacroBlock* mb){
 
   sSyntaxElement se;
   sDataPartition* dataPartition = NULL;
-  const byte* dpMap = assignSE2dp[slice->dataDpMode];
+  const byte* dpMap = assignSE2dp[slice->dataPartitionMode];
   short partmode = ((mb->mbType == P8x8) ? 4 : mb->mbType);
   int step_h0 = BLOCK_STEP [partmode][0];
   int step_v0 = BLOCK_STEP [partmode][1];
@@ -1064,7 +1064,7 @@ static void readMotionInfoB (sMacroBlock* mb) {
   sPicture* picture = slice->picture;
   sSyntaxElement se;
   sDataPartition* dataPartition = NULL;
-  const byte* dpMap = assignSE2dp[slice->dataDpMode];
+  const byte* dpMap = assignSE2dp[slice->dataPartitionMode];
   int partmode = (mb->mbType == P8x8) ? 4 : mb->mbType;
   int step_h0 = BLOCK_STEP [partmode][0];
   int step_v0 = BLOCK_STEP [partmode][1];
@@ -1117,7 +1117,7 @@ static void readMotionInfoB (sMacroBlock* mb) {
   }
 //}}}
 //{{{
-void setSliceMethods (sSlice* slice) {
+void setSliceFunctions (sSlice* slice) {
 
   setReadMacroblock (slice);
 

@@ -17,7 +17,7 @@ static void read_comp_coeff_4x4_smb_CABAC (sMacroBlock* mb, sSyntaxElement* se, 
   int level = 1;
   sDataPartition *dataPartition;
   sSlice* slice = mb->slice;
-  const byte *dpMap = assignSE2dp[slice->dataDpMode];
+  const byte *dpMap = assignSE2dp[slice->dataPartitionMode];
 
   const byte (*pos_scan4x4)[2] = ((slice->picStructure == eFrame) && (!mb->mbField)) ? SNGL_SCAN : FIELD_SCAN;
   const byte *pos_scan_4x4 = pos_scan4x4[0];
@@ -184,7 +184,7 @@ static void readCompCoeff8x8_CABAC (sMacroBlock* mb, sSyntaxElement* se, eColorP
 
     sDataPartition *dataPartition;
     sSlice* slice = mb->slice;
-    const byte *dpMap = assignSE2dp[slice->dataDpMode];
+    const byte *dpMap = assignSE2dp[slice->dataPartitionMode];
     int boff_x, boff_y;
 
     int64 cbp_mask = (int64) 51 << (4 * b8 - 2 * (b8 & 0x01)); // corresponds to 110011, as if all four 4x4 blocks contain coeff, shifted to block position
@@ -282,7 +282,7 @@ static void readCompCoeff8x8_CABAC_lossless (sMacroBlock* mb, sSyntaxElement* se
 
     sDataPartition *dataPartition;
     sSlice* slice = mb->slice;
-    const byte *dpMap = assignSE2dp[slice->dataDpMode];
+    const byte *dpMap = assignSE2dp[slice->dataPartitionMode];
     int boff_x, boff_y;
 
     int64 cbp_mask = (int64) 51 << (4 * b8 - 2 * (b8 & 0x01)); // corresponds to 110011, as if all four 4x4 blocks contain coeff, shifted to block position
@@ -373,7 +373,7 @@ static void read_CBP_and_coeffs_from_NAL_CABAC_420 (sMacroBlock* mb) {
   sSyntaxElement se;
   sDataPartition *dataPartition = NULL;
   sSlice* slice = mb->slice;
-  const byte *dpMap = assignSE2dp[slice->dataDpMode];
+  const byte *dpMap = assignSE2dp[slice->dataPartitionMode];
   int i0, j0;
 
   int qp_per, qp_rem;
@@ -445,7 +445,7 @@ static void read_CBP_and_coeffs_from_NAL_CABAC_420 (sMacroBlock* mb) {
     if (cbp !=0) {
       readDeltaQuant(&se, dataPartition, mb, dpMap, ((mb->isIntraBlock == FALSE)) ? SE_DELTA_QUANT_INTER : SE_DELTA_QUANT_INTRA);
 
-      if (slice->dataDpMode) {
+      if (slice->dataPartitionMode) {
         if ((mb->isIntraBlock == FALSE) && slice->noDataPartitionC )
           mb->dplFlag = 1;
 
@@ -467,7 +467,7 @@ static void read_CBP_and_coeffs_from_NAL_CABAC_420 (sMacroBlock* mb) {
     // read DC coeffs for new intra modes
     cbp = mb->cbp;
     readDeltaQuant(&se, dataPartition, mb, dpMap, SE_DELTA_QUANT_INTRA);
-    if (slice->dataDpMode) {
+    if (slice->dataPartitionMode) {
       if (slice->noDataPartitionB) {
         mb->errorFlag  = 1;
         mb->dplFlag = 1;
@@ -689,7 +689,7 @@ static void read_CBP_and_coeffs_from_NAL_CABAC_400 (sMacroBlock* mb)
   sSyntaxElement se;
   sDataPartition *dataPartition = NULL;
   sSlice* slice = mb->slice;
-  const byte *dpMap = assignSE2dp[slice->dataDpMode];
+  const byte *dpMap = assignSE2dp[slice->dataPartitionMode];
   int i0, j0;
 
   int qp_per, qp_rem;
@@ -758,7 +758,7 @@ static void read_CBP_and_coeffs_from_NAL_CABAC_400 (sMacroBlock* mb)
     {
       readDeltaQuant(&se, dataPartition, mb, dpMap, ((mb->isIntraBlock == FALSE)) ? SE_DELTA_QUANT_INTER : SE_DELTA_QUANT_INTRA);
 
-      if (slice->dataDpMode)  {
+      if (slice->dataPartitionMode)  {
         if ((mb->isIntraBlock == FALSE) && slice->noDataPartitionC )
           mb->dplFlag = 1;
 
@@ -781,7 +781,7 @@ static void read_CBP_and_coeffs_from_NAL_CABAC_400 (sMacroBlock* mb)
     cbp = mb->cbp;
     readDeltaQuant(&se, dataPartition, mb, dpMap, SE_DELTA_QUANT_INTRA);
 
-    if (slice->dataDpMode) {
+    if (slice->dataPartitionMode) {
       if (slice->noDataPartitionB) {
         mb->errorFlag  = 1;
         mb->dplFlag = 1;
@@ -858,7 +858,7 @@ static void read_CBP_and_coeffs_from_NAL_CABAC_444 (sMacroBlock* mb)
   sSyntaxElement se;
   sDataPartition *dataPartition = NULL;
   sSlice* slice = mb->slice;
-  const byte *dpMap = assignSE2dp[slice->dataDpMode];
+  const byte *dpMap = assignSE2dp[slice->dataPartitionMode];
   int coef_ctr, i0, j0;
 
   int qp_per, qp_rem;
@@ -940,7 +940,7 @@ static void read_CBP_and_coeffs_from_NAL_CABAC_444 (sMacroBlock* mb)
     {
       readDeltaQuant(&se, dataPartition, mb, dpMap, ((mb->isIntraBlock == FALSE)) ? SE_DELTA_QUANT_INTER : SE_DELTA_QUANT_INTRA);
 
-      if (slice->dataDpMode) {
+      if (slice->dataPartitionMode) {
         if ((mb->isIntraBlock == FALSE) && slice->noDataPartitionC )
           mb->dplFlag = 1;
 
@@ -964,7 +964,7 @@ static void read_CBP_and_coeffs_from_NAL_CABAC_444 (sMacroBlock* mb)
 
     readDeltaQuant(&se, dataPartition, mb, dpMap, SE_DELTA_QUANT_INTRA);
 
-    if (slice->dataDpMode) {
+    if (slice->dataPartitionMode) {
       if (slice->noDataPartitionB) {
         mb->errorFlag  = 1;
         mb->dplFlag = 1;
@@ -1116,7 +1116,7 @@ static void read_CBP_and_coeffs_from_NAL_CABAC_422 (sMacroBlock* mb)
   sSyntaxElement se;
   sDataPartition *dataPartition = NULL;
   sSlice* slice = mb->slice;
-  const byte *dpMap = assignSE2dp[slice->dataDpMode];
+  const byte *dpMap = assignSE2dp[slice->dataPartitionMode];
   int coef_ctr, i0, j0, b8;
   int ll;
 
@@ -1202,7 +1202,7 @@ static void read_CBP_and_coeffs_from_NAL_CABAC_422 (sMacroBlock* mb)
     if (cbp !=0) {
       readDeltaQuant(&se, dataPartition, mb, dpMap, ((mb->isIntraBlock == FALSE)) ? SE_DELTA_QUANT_INTER : SE_DELTA_QUANT_INTRA);
 
-      if (slice->dataDpMode)
+      if (slice->dataPartitionMode)
       {
         if ((mb->isIntraBlock == FALSE) && slice->noDataPartitionC )
           mb->dplFlag = 1;
@@ -1227,7 +1227,7 @@ static void read_CBP_and_coeffs_from_NAL_CABAC_422 (sMacroBlock* mb)
 
     readDeltaQuant(&se, dataPartition, mb, dpMap, SE_DELTA_QUANT_INTRA);
 
-    if (slice->dataDpMode) {
+    if (slice->dataPartitionMode) {
       if (slice->noDataPartitionB) {
         mb->errorFlag  = 1;
         mb->dplFlag = 1;

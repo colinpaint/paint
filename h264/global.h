@@ -13,13 +13,11 @@
 #include "defines.h"
 #include "functions.h"
 #include "frame.h"
+
+#include "nalu.h"
+#include "sps.h"
+#include "pps.h"
 //}}}
-//{{{  defines
-#define MAX_PPS  256
-#define MAX_NUM_REF_FRAMES_PIC_ORDER  256
-#define ET_SIZE 300      //!< size of error text buffer
-//}}}
-//{{{  enums
 //{{{  enum eColorComponent
 typedef enum {
   LumaComp = 0,
@@ -35,31 +33,20 @@ typedef enum {
   PLANE_V = 2,  // PLANE_Cr
   } eColorPlane;
 //}}}
-//{{{  enum ePredList
+//{{{  enum ePicStructure
 typedef enum {
-  LIST_0 = 0,
-  LIST_1 = 1,
-  BI_PRED = 2,
-  BI_PRED_L0 = 3,
-  BI_PRED_L1 = 4
-  } ePredList;
+  eFrame,
+  eTopField,
+  eBotField
+  } ePicStructure;
 //}}}
-
 //{{{  enum eDataPartitionType
 typedef enum {
   eDataPartition1, // no dataPartiton
   eDataPartition3  // 3 dataPartitions
   } eDataPartitionType;
 //}}}
-//{{{  enum eCodingType
-typedef enum {
-  eFrameCoding       = 0,
-  eFieldCoding       = 1,
-  eAdaptiveCoding    = 2,
-  eFrameMbPairCoding = 3
- } eCodingType;
-//}}}
-//{{{  enum eSyntaxElementType 
+//{{{  enum eSyntaxElementType
 typedef enum {
   SE_HEADER,
   SE_PTYPE,
@@ -82,22 +69,29 @@ typedef enum {
   SE_MAX_ELEMENTS = 20
   } eSyntaxElementType;
 //}}}
-
-//}}}
 //{{{  enum eSymbolType
 typedef enum {
   eCavlc,
   eCabac
   } eSymbolType;
 //}}}
-//{{{  enum ePicStructure
+//{{{  enum eCodingType
 typedef enum {
-  eFrame,
-  eTopField,
-  eBotField
-  } ePicStructure;
+  eFrameCoding       = 0,
+  eFieldCoding       = 1,
+  eAdaptiveCoding    = 2,
+  eFrameMbPairCoding = 3
+ } eCodingType;
 //}}}
-
+//{{{  enum ePredList
+typedef enum {
+  LIST_0 = 0,
+  LIST_1 = 1,
+  BI_PRED = 2,
+  BI_PRED_L0 = 3,
+  BI_PRED_L1 = 4
+  } ePredList;
+//}}}
 //{{{  enum eSliceType
 typedef enum {
   ePslice = 0,
@@ -138,229 +132,6 @@ typedef enum {
   WP_MCPREC_MINUS_PLUS0 = 8,
   WP_REGULAR =            9
   } eWeightedPredictionType;
-//}}}
-//}}}
-
-//{{{  sAnnexB
-typedef struct AnnexB {
-  byte*  buffer;
-  size_t bufferSize;
-  byte*  bufferPtr;
-  size_t bytesInBuffer;
-
-  int    isFirstByteStreamNALU;
-  int    nextStartCodeBytes;
-  byte*  naluBuffer;
-  } sAnnexB;
-//}}}
-//{{{  enum eNaluType
-typedef enum {
-  NALU_TYPE_SLICE    = 1,
-  NALU_TYPE_DPA      = 2,
-  NALU_TYPE_DPB      = 3,
-  NALU_TYPE_DPC      = 4,
-  NALU_TYPE_IDR      = 5,
-  NALU_TYPE_SEI      = 6,
-  NALU_TYPE_SPS      = 7,
-  NALU_TYPE_PPS      = 8,
-
-  NALU_TYPE_AUD      = 9,
-  NALU_TYPE_EOSEQ    = 10,
-  NALU_TYPE_EOSTREAM = 11,
-  NALU_TYPE_FILL     = 12,
-  NALU_TYPE_PREFIX   = 14,
-  NALU_TYPE_SUB_SPS  = 15,
-  NALU_TYPE_SLC_EXT  = 20,
-  NALU_TYPE_VDRD     = 24  // View and Dependency Representation Delimiter NAL Unit
-  } eNaluType;
-//}}}
-//{{{  enum eNalRefIdc
-typedef enum {
-  NALU_PRIORITY_HIGHEST     = 3,
-  NALU_PRIORITY_HIGH        = 2,
-  NALU_PRIORITY_LOW         = 1,
-  NALU_PRIORITY_DISPOSABLE  = 0
-  } eNalRefIdc;
-//}}}
-//{{{  sNalu
-typedef struct Nalu {
-  int        startCodeLen; // 4 for parameter sets and first slice in picture, 3 for everything else (suggested)
-  unsigned   len;          // Length of the NAL unit (Excluding the start code, which does not belong to the NALU)
-  unsigned   maxSize;      // NAL Unit Buffer size
-  int        forbiddenBit; // should be always FALSE
-  eNaluType  unitType;     // NALU_TYPE_xxxx
-  eNalRefIdc refId;        // NALU_PRIORITY_xxxx
-  byte*      buf;          // contains the first byte followed by the EBSP
-  uint16     lostPackets;  // true, if packet loss is detected
-  } sNalu;
-//}}}
-//{{{  sHRD
-typedef struct {
-  unsigned int cpb_cnt_minus1;             // ue(v)
-  unsigned int bit_rate_scale;             // u(4)
-  unsigned int cpb_size_scale;             // u(4)
-  unsigned int bit_rate_value_minus1[32];  // ue(v)
-  unsigned int cpb_size_value_minus1[32];  // ue(v)
-  unsigned int cbr_flag[32];               // u(1)
-  unsigned int initial_cpb_removal_delay_length_minus1;  // u(5)
-  unsigned int cpb_removal_delay_length_minus1;          // u(5)
-  unsigned int dpb_output_delay_length_minus1;           // u(5)
-  unsigned int time_offset_length;                       // u(5)
-  } sHRD;
-//}}}
-//{{{  sVUI
-typedef struct {
-  Boolean      aspect_ratio_info_present_flag;       // u(1)
-  unsigned int aspect_ratio_idc;                     // u(8)
-
-  unsigned short sar_width;                          // u(16)
-  unsigned short sar_height;                         // u(16)
-
-  Boolean      overscan_info_present_flag;           // u(1)
-  Boolean      overscan_appropriate_flag;            // u(1)
-
-  Boolean      video_signal_type_present_flag;       // u(1)
-  unsigned int video_format;                         // u(3)
-  Boolean      video_full_range_flag;                // u(1)
-
-  Boolean      colour_description_present_flag;      // u(1)
-  unsigned int colour_primaries;                     // u(8)
-  unsigned int transfer_characteristics;             // u(8)
-  unsigned int matrix_coefficients;                  // u(8)
-  Boolean      chroma_location_info_present_flag;    // u(1)
-  unsigned int chroma_sample_loc_type_top_field;     // ue(v)
-  unsigned int chroma_sample_loc_type_bottom_field;  // ue(v)
-
-  Boolean      timing_info_present_flag;             // u(1)
-  unsigned int num_units_in_tick;                    // u(32)
-  unsigned int time_scale;                           // u(32)
-  Boolean      fixed_frame_rate_flag;                // u(1)
-
-  Boolean      nal_hrd_parameters_present_flag;      // u(1)
-  sHRD         nal_hrd_parameters;                   // hrd_paramters_t
-
-  Boolean      vcl_hrd_parameters_present_flag;      // u(1)
-  sHRD         vcl_hrd_parameters;                   // hrd_paramters_t
-
-  // if ((nal_hrd_parameters_present_flag || (vcl_hrd_parameters_present_flag))
-  Boolean      low_delay_hrd_flag;                      // u(1)
-  Boolean      pic_struct_present_flag;                 // u(1)
-  Boolean      bitstream_restriction_flag;              // u(1)
-  Boolean      motion_vectors_over_pic_boundaries_flag; // u(1)
-
-  unsigned int max_bytes_per_pic_denom;                 // ue(v)
-  unsigned int max_bits_per_mb_denom;                   // ue(v)
-  unsigned int log2_max_mv_length_vertical;             // ue(v)
-  unsigned int log2_max_mv_length_horizontal;           // ue(v)
-  unsigned int num_reorder_frames;                      // ue(v)
-  unsigned int max_dec_frame_buffering;                 // ue(v)
-  } sVUI;
-//}}}
-//{{{  sSPS
-typedef struct {
-  Boolean  valid;
-
-  unsigned int profileIdc;            // u(8)
-  Boolean  constrained_set0_flag;     // u(1)
-  Boolean  constrained_set1_flag;     // u(1)
-  Boolean  constrained_set2_flag;     // u(1)
-  Boolean  constrainedSet3flag;     // u(1)
-  unsigned int levelIdc;              // u(8)
-  unsigned int spsId;                 // ue(v)
-  unsigned int chromaFormatIdc;       // ue(v)
-
-  Boolean  seq_scaling_matrix_present_flag;   // u(1)
-  int      seq_scaling_list_present_flag[12]; // u(1)
-  int      scalingList4x4[6][16];             // se(v)
-  int      scalingList8x8[6][64];             // se(v)
-  Boolean  useDefaultScalingMatrix4x4Flag[6];
-  Boolean  useDefaultScalingMatrix8x8Flag[6];
-
-  unsigned int bit_depth_luma_minus8;             // ue(v)
-  unsigned int bit_depth_chroma_minus8;           // ue(v)
-  unsigned int log2_max_frame_num_minus4;         // ue(v)
-  unsigned int pocType;
-  unsigned int log2_max_pic_order_cnt_lsb_minus4; // ue(v)
-  Boolean  delta_pic_order_always_zero_flag;      // u(1)
-  int      offsetNonRefPic;                // se(v)
-  int      offsetTopBotField;        // se(v)
-
-  unsigned int numRefFramesPocCycle;          // ue(v)
-  int      offset_for_ref_frame[MAX_NUM_REF_FRAMES_PIC_ORDER]; // se(v)
-  unsigned int numRefFrames;                      // ue(v)
-
-  Boolean  gaps_in_frame_num_value_allowed_flag;  // u(1)
-
-  unsigned int pic_width_in_mbs_minus1;           // ue(v)
-  unsigned int pic_height_in_map_units_minus1;    // ue(v)
-
-  Boolean  frameMbOnlyFlag;                 // u(1)
-  Boolean  mbAffFlag;    // u(1)
-  Boolean  direct_8x8_inference_flag;       // u(1)
-
-  Boolean  cropFlag;                   // u(1)
-  unsigned int cropLeft;               // ue(v)
-  unsigned int cropRight;              // ue(v)
-  unsigned int cropTop;                // ue(v)
-  unsigned int cropBot;                // ue(v)
-
-  Boolean  vui_parameters_present_flag;     // u(1)
-  sVUI     vui_seq_parameters;              // sVUI
-
-  unsigned sepColourPlaneFlag;              // u(1)
-  int      losslessQpPrimeFlag;
-  } sSPS;
-//}}}
-//{{{  sPPS
-typedef struct {
-  Boolean   valid;
-
-  unsigned int ppsId;                         // ue(v)
-  unsigned int spsId;                         // ue(v)
-  Boolean   entropyCodingMode;                // u(1)
-  Boolean   transform8x8modeFlag;             // u(1)
-
-  Boolean   picScalingMatrixPresentFlag;      // u(1)
-  int       picScalingListPresentFlag[12];    // u(1)
-  int       scalingList4x4[6][16];            // se(v)
-  int       scalingList8x8[6][64];            // se(v)
-  Boolean   useDefaultScalingMatrix4x4Flag[6];
-  Boolean   useDefaultScalingMatrix8x8Flag[6];
-
-  // pocType < 2 in the sequence parameter set
-  Boolean      botFieldPicOrderFramePresent;  // u(1)
-  unsigned int numSliceGroupsMinus1;          // ue(v)
-
-  unsigned int sliceGroupMapType;             // ue(v)
-  // sliceGroupMapType 0
-  unsigned int runLengthMinus1[8];            // ue(v)
-  // sliceGroupMapType 2
-  unsigned int topLeft[8];                    // ue(v)
-  unsigned int botRight[8];                   // ue(v)
-  // sliceGroupMapType 3 || 4 || 5
-  Boolean   sliceGroupChangeDirectionFlag;    // u(1)
-  unsigned int sliceGroupChangeRateMius1;     // ue(v)
-  // sliceGroupMapType 6
-  unsigned int picSizeMapUnitsMinus1;         // ue(v)
-  byte*     sliceGroupId;                     // complete MBAmap u(v)
-
-  int       numRefIndexL0defaultActiveMinus1; // ue(v)
-  int       numRefIndexL1defaultActiveMinus1; // ue(v)
-
-  Boolean   weightedPredFlag;                 // u(1)
-  unsigned int  weightedBiPredIdc;            // u(2)
-  int       picInitQpMinus26;                 // se(v)
-  int       picInitQsMinus26;                 // se(v)
-  int       chromaQpIndexOffset;              // se(v)
-  int       cbQpIndexOffset;                  // se(v)
-  int       crQpIndexOffset;                  // se(v)
-  int       secondChromaQpIndexOffset;        // se(v)
-
-  Boolean   deblockFilterControlPresent;      // u(1)
-  Boolean   constrainedIntraPredFlag;         // u(1)
-  Boolean   redundantPicCountPresent;         // u(1)
-  Boolean   vuiPicParamFlag;                  // u(1)
-  } sPPS;
 //}}}
 
 struct MacroBlock;
@@ -702,7 +473,7 @@ typedef struct Slice {
   int           startMbNum;   // MUST be set by NAL even in case of errorFlag == 1
   int           endMbNumPlus1;
   int           maxDataPartitions;
-  int           dataDpMode;   // data dping mode
+  int           dataPartitionMode;   // data dping mode
   int           curHeader;
   int           nextHeader;
   int           lastDquant;
@@ -1011,7 +782,8 @@ typedef struct Decoder {
 
   // - POC mode 1:
   signed int   expectedPOC, pocCycleCount, frameNumPocCycle;
-  unsigned int previousFrameNum, frameNumOffset;
+  unsigned int previousFrameNum;
+  unsigned int frameNumOffset;
   int          expectedDeltaPerPocCycle;
   int          thisPoc;
   int          previousFrameNumOffset;

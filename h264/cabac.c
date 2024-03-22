@@ -225,7 +225,7 @@ int cabacStartCode (sSlice* slice, int eos_bit) {
 
   unsigned int bit;
   if (eos_bit) {
-    const byte* dpMap = assignSE2dp[slice->dataDpMode];
+    const byte* dpMap = assignSE2dp[slice->dataPartitionMode];
     sDataPartition* dataPartition = &slice->dataPartitions[dpMap[SE_MBTYPE]];
     sDecodeEnv* decodeEnv = &dataPartition->deCabac;
     bit = biariDecodeFinal (decodeEnv);
