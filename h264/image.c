@@ -2353,7 +2353,7 @@ static int readNextSlice (sSlice* slice) {
         if (decoder->recoveryPoint || nalu->unitType == NALU_TYPE_IDR) {
           if (!decoder->recoveryPointFound) {
             if (nalu->unitType != NALU_TYPE_IDR) {
-              printf ("decoding without IDR\n");
+              printf ("-> decoding without IDR");
               decoder->nonConformingStream = 1;
               }
             else
@@ -2361,7 +2361,6 @@ static int readNextSlice (sSlice* slice) {
             }
           decoder->recoveryPointFound = 1;
           }
-
         if (!decoder->recoveryPointFound)
           break;
 
@@ -2374,20 +2373,30 @@ static int readNextSlice (sSlice* slice) {
         s->bitStreamOffset = 0;
         s->readLen = 0;
         memcpy (s->bitStreamBuffer, &nalu->buf[1], nalu->len-1);
-        s->codeLen = s->bitStreamLen = RBSPtoSODB (s->bitStreamBuffer, nalu->len - 1);
+        s->bitStreamLen = RBSPtoSODB (s->bitStreamBuffer, nalu->len - 1);
+        s->codeLen = s->bitStreamLen;
+
         readSlice (decoder, slice);
         assignQuantParams (slice);
 
         if (decoder->param.sliceDebug) {
+          //{{{  print sliceDebug
           if (nalu->unitType == NALU_TYPE_IDR)
             printf ("IDR");
           else
             printf ("SLC");
-          printf (" %5d:%d:%d:%s frame:%d%s ppsId:%d\n",
+
+          printf (" %5d:%d:%d:%s frame:%d%s%s ppsId:%d\n",
                   nalu->len, slice->refId, slice->sliceType,
-                  slice->sliceType == 0 ? "P":(slice->sliceType == 1 ? "B":(slice->sliceType == 2 ? "I":"?")),
-                  slice->frameNum, slice->fieldPicFlag ? " field":"", slice->ppsId);
+                  (slice->sliceType == 0) ? "P":
+                    (slice->sliceType == 1 ? "B":
+                      (slice->sliceType == 2 ? "I" : "?")),
+                  slice->frameNum, 
+                  slice->mbAffFrameFlag ? " mbAff":"",
+                  slice->fieldPicFlag ? " field":"",
+                  slice->ppsId);
           }
+          //}}}
 
         // if primary slice is replaced with redundant slice, set the correct image type
         if (slice->redundantPicCount && !decoder->isPrimaryOk && decoder->isRedundantOk)
@@ -2404,7 +2413,6 @@ static int readNextSlice (sSlice* slice) {
 
         setSliceMethods (slice);
 
-        // decoder->activeSPS, decoder->activePPS, sliceHeader valid
         if (slice->mbAffFrameFlag)
           slice->mbIndex = slice->startMbNum << 1;
         else
