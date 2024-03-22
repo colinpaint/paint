@@ -3,7 +3,7 @@
 #include "memory.h"
 
 #include "image.h"
-#include "parset.h"
+#include "sps.h"
 #include "nalu.h"
 #include "fmo.h"
 #include "cabac.h"
@@ -13,17 +13,37 @@
 //}}}
 
 //{{{
-static const byte ZZ_SCAN[16] = {
-  0,  1,  4,  8,  5,  2,  3,  6,  9, 12, 13, 10,  7, 11, 14, 15
-  };
-//}}}
-//{{{
-static const byte ZZ_SCAN8[64] = {
-  0,  1,  8, 16,  9,  2,  3, 10, 17, 24, 32, 25, 18, 11,  4,  5,
-  12, 19, 26, 33, 40, 48, 41, 34, 27, 20, 13,  6,  7, 14, 21, 28,
-  35, 42, 49, 56, 57, 50, 43, 36, 29, 22, 15, 23, 30, 37, 44, 51,
-  58, 59, 52, 45, 38, 31, 39, 46, 53, 60, 61, 54, 47, 55, 62, 63
-  };
+// syntax for scaling list matrix values
+static void scalingList (int* scalingList, int scalingListSize, Boolean* useDefaultScalingMatrix, sBitStream* s) {
+
+  //{{{
+  static const byte ZZ_SCAN[16] = {
+    0,  1,  4,  8,  5,  2,  3,  6,  9, 12, 13, 10,  7, 11, 14, 15
+    };
+  //}}}
+  //{{{
+  static const byte ZZ_SCAN8[64] = {
+    0,  1,  8, 16,  9,  2,  3, 10, 17, 24, 32, 25, 18, 11,  4,  5,
+    12, 19, 26, 33, 40, 48, 41, 34, 27, 20, 13,  6,  7, 14, 21, 28,
+    35, 42, 49, 56, 57, 50, 43, 36, 29, 22, 15, 23, 30, 37, 44, 51,
+    58, 59, 52, 45, 38, 31, 39, 46, 53, 60, 61, 54, 47, 55, 62, 63
+    };
+  //}}}
+
+  int lastScale = 8;
+  int nextScale = 8;
+  for (int j = 0; j < scalingListSize; j++) {
+    int scanj = (scalingListSize == 16) ? ZZ_SCAN[j] : ZZ_SCAN8[j];
+    if (nextScale != 0) {
+      int delta_scale = readSeV ("   : delta_sl   ", s);
+      nextScale = (lastScale + delta_scale + 256) % 256;
+      *useDefaultScalingMatrix = (Boolean)(scanj == 0 && nextScale == 0);
+      }
+
+    scalingList[scanj] = (nextScale == 0) ? lastScale : nextScale;
+    lastScale = scalingList[scanj];
+    }
+  }
 //}}}
 
 //{{{
@@ -253,27 +273,7 @@ static void setFormatInfo (sDecoder* decoder, sSPS* sps, sFrameFormat* source, s
     //}}}
   }
 //}}}
-//{{{
-// syntax for scaling list matrix values
-static void scalingList (int* scalingList, int scalingListSize, Boolean* useDefaultScalingMatrix, sBitStream* s) {
 
-  int lastScale = 8;
-  int nextScale = 8;
-  for (int j = 0; j < scalingListSize; j++) {
-    int scanj = (scalingListSize == 16) ? ZZ_SCAN[j]:ZZ_SCAN8[j];
-    if (nextScale != 0) {
-      int delta_scale = readSeV ("   : delta_sl   ", s);
-      nextScale = (lastScale + delta_scale + 256) % 256;
-      *useDefaultScalingMatrix = (Boolean)(scanj == 0 && nextScale == 0);
-      }
-
-    scalingList[scanj] = (nextScale == 0) ? lastScale : nextScale;
-    lastScale = scalingList[scanj];
-    }
-  }
-//}}}
-
-// SPS
 //{{{
 static sSPS* allocSPS() {
 
@@ -473,7 +473,7 @@ static void readSPS (sDecoder* decoder, sDataPartition* dataPartition, sSPS* sps
 
   int reserved_zero = readUv (4, "SPS reserved_zero_4bits", s);
   if (reserved_zero)
-    printf ("reserved_zero flag not 0\n");
+    printf ("-> reserved_zero flag nonZero");
 
   sps->levelIdc = readUv (8, "SPS levelIdc", s);
   sps->spsId = readUeV ("SPS spsId", s);
@@ -590,15 +590,13 @@ void readNaluSPS (sDecoder* decoder, sNalu* nalu) {
   sSPS* sps = allocSPS();
   readSPS (decoder, dataPartition, sps);
   if (sps->valid) {
-    if (decoder->activeSPS) {
-      if (sps->spsId == decoder->activeSPS->spsId) {
+    if (decoder->activeSPS)
+      if (sps->spsId == decoder->activeSPS->spsId)
         if (!isEqualSPS (sps, decoder->activeSPS))   {
           if (decoder->picture)
             endDecodeFrame (decoder);
           decoder->activeSPS = NULL;
           }
-        }
-      }
 
     setSPSbyId (decoder, sps->spsId, sps);
 
@@ -634,274 +632,12 @@ void activateSPS (sDecoder* decoder, sSPS* sps) {
       decoder->ercMvPerMb = 0;
       }
 
-    if (sps->frameMbOnlyFlag) 
+    if (sps->frameMbOnlyFlag)
       sprintf (decoder->info.spsStr, "frame%s", sps->mbAffFlag ? " mbAff":"");
     else
       strcpy (decoder->info.spsStr, "");
     }
 
   setFormatInfo (decoder, sps, &decoder->param.source, &decoder->param.output);
-  }
-//}}}
-
-// PPS
-//{{{
-sPPS* allocPPS() {
-
-  sPPS* pps = calloc (1, sizeof (sPPS));
-  pps->sliceGroupId = NULL;
-  return pps;
-  }
-//}}}
-//{{{
- void freePPS (sPPS* pps) {
-
-   if (!pps->sliceGroupId)
-     free (pps->sliceGroupId);
-   free (pps);
-   }
-//}}}
-//{{{
-static int isEqualPPS (sPPS* pps1, sPPS* pps2) {
-
-  if (!pps1->valid || !pps2->valid)
-    return 0;
-
-  int equal = 1;
-  equal &= (pps1->ppsId == pps2->ppsId);
-  equal &= (pps1->spsId == pps2->spsId);
-  equal &= (pps1->entropyCodingMode == pps2->entropyCodingMode);
-  equal &= (pps1->botFieldPicOrderFramePresent == pps2->botFieldPicOrderFramePresent);
-  equal &= (pps1->numSliceGroupsMinus1 == pps2->numSliceGroupsMinus1);
-  if (!equal)
-    return equal;
-
-  if (pps1->numSliceGroupsMinus1 > 0) {
-    equal &= (pps1->sliceGroupMapType == pps2->sliceGroupMapType);
-    if (!equal)
-      return equal;
-    if (pps1->sliceGroupMapType == 0) {
-      for (unsigned i = 0; i <= pps1->numSliceGroupsMinus1; i++)
-        equal &= (pps1->runLengthMinus1[i] == pps2->runLengthMinus1[i]);
-      }
-    else if (pps1->sliceGroupMapType == 2) {
-      for (unsigned i = 0; i < pps1->numSliceGroupsMinus1; i++) {
-        equal &= (pps1->topLeft[i] == pps2->topLeft[i]);
-        equal &= (pps1->botRight[i] == pps2->botRight[i]);
-        }
-      }
-    else if (pps1->sliceGroupMapType == 3 ||
-             pps1->sliceGroupMapType == 4 ||
-             pps1->sliceGroupMapType == 5) {
-      equal &= (pps1->sliceGroupChangeDirectionFlag == pps2->sliceGroupChangeDirectionFlag);
-      equal &= (pps1->sliceGroupChangeRateMius1 == pps2->sliceGroupChangeRateMius1);
-      }
-    else if (pps1->sliceGroupMapType == 6) {
-      equal &= (pps1->picSizeMapUnitsMinus1 == pps2->picSizeMapUnitsMinus1);
-      if (!equal)
-        return equal;
-      for (unsigned i = 0; i <= pps1->picSizeMapUnitsMinus1; i++)
-        equal &= (pps1->sliceGroupId[i] == pps2->sliceGroupId[i]);
-      }
-    }
-
-  equal &= (pps1->weightedPredFlag == pps2->weightedPredFlag);
-  equal &= (pps1->picInitQpMinus26 == pps2->picInitQpMinus26);
-  equal &= (pps1->picInitQsMinus26 == pps2->picInitQsMinus26);
-  equal &= (pps1->weightedBiPredIdc == pps2->weightedBiPredIdc);
-  equal &= (pps1->chromaQpIndexOffset == pps2->chromaQpIndexOffset);
-  equal &= (pps1->constrainedIntraPredFlag == pps2->constrainedIntraPredFlag);
-  equal &= (pps1->redundantPicCountPresent == pps2->redundantPicCountPresent);
-  equal &= (pps1->deblockFilterControlPresent == pps2->deblockFilterControlPresent);
-  equal &= (pps1->numRefIndexL0defaultActiveMinus1 == pps2->numRefIndexL0defaultActiveMinus1);
-  equal &= (pps1->numRefIndexL1defaultActiveMinus1 == pps2->numRefIndexL1defaultActiveMinus1);
-  if (!equal)
-    return equal;
-
-  equal &= (pps1->transform8x8modeFlag == pps2->transform8x8modeFlag);
-  equal &= (pps1->picScalingMatrixPresentFlag == pps2->picScalingMatrixPresentFlag);
-  if (pps1->picScalingMatrixPresentFlag) {
-    for (unsigned i = 0; i < (6 + ((unsigned)pps1->transform8x8modeFlag << 1)); i++) {
-      equal &= (pps1->picScalingListPresentFlag[i] == pps2->picScalingListPresentFlag[i]);
-      if (pps1->picScalingListPresentFlag[i]) {
-        if (i < 6)
-          for (int j = 0; j < 16; j++)
-            equal &= (pps1->scalingList4x4[i][j] == pps2->scalingList4x4[i][j]);
-        else
-          for (int j = 0; j < 64; j++)
-            equal &= (pps1->scalingList8x8[i-6][j] == pps2->scalingList8x8[i-6][j]);
-        }
-      }
-    }
-  equal &= (pps1->secondChromaQpIndexOffset == pps2->secondChromaQpIndexOffset);
-
-  return equal;
-  }
-//}}}
-//{{{
-void setPPSbyId (sDecoder* decoder, int id, sPPS* pps) {
-
-  if (decoder->pps[id].valid && decoder->pps[id].sliceGroupId)
-    free (decoder->pps[id].sliceGroupId);
-  memcpy (&decoder->pps[id], pps, sizeof (sPPS));
-
-  // we can simply use the memory provided with the pps.
-  // the PPS is destroyed after this function call, will not try to free if pps->sliceGroupId == NULL
-  decoder->pps[id].sliceGroupId = pps->sliceGroupId;
-  pps->sliceGroupId = NULL;
-  }
-//}}}
-//{{{
-static void readPPS (sDecoder* decoder, sDataPartition* dataPartition, sPPS* pps) {
-
-  sBitStream* s = dataPartition->s;
-  pps->ppsId = readUeV ("PPS ppsId", s);
-  pps->spsId = readUeV ("PPS spsId", s);
-  pps->entropyCodingMode = readU1 ("PPS entropyCodingMode", s);
-  pps->botFieldPicOrderFramePresent = readU1 ("PPS botFieldPicOrderFramePresent", s);
-  pps->numSliceGroupsMinus1 = readUeV ("PPS numSliceGroupsMinus1", s);
-
-  if (pps->numSliceGroupsMinus1 > 0) {
-    //{{{  FMO
-    pps->sliceGroupMapType = readUeV ("PPS sliceGroupMapType", s);
-
-    switch (pps->sliceGroupMapType) {
-      case 0: {
-        for (unsigned i = 0; i <= pps->numSliceGroupsMinus1; i++)
-          pps->runLengthMinus1 [i] = readUeV ("PPS runLengthMinus1 [i]", s);
-        break;
-        }
-
-      case 2: {
-        for (unsigned i = 0; i < pps->numSliceGroupsMinus1; i++) {
-          //! JVT-F078: avoid reference of SPS by using ue(v) instead of u(v)
-          pps->topLeft [i] = readUeV ("PPS topLeft [i]", s);
-          pps->botRight [i] = readUeV ("PPS botRight [i]", s);
-          }
-        break;
-        }
-
-      case 3:
-      case 4:
-      case 5:
-        pps->sliceGroupChangeDirectionFlag = readU1 ("PPS sliceGroupChangeDirectionFlag", s);
-        pps->sliceGroupChangeRateMius1 = readUeV ("PPS sliceGroupChangeRateMius1", s);
-        break;
-
-      case 6: {
-        int NumberBitsPerSliceGroupId;
-        if (pps->numSliceGroupsMinus1+1 >4)
-          NumberBitsPerSliceGroupId = 3;
-        else if (pps->numSliceGroupsMinus1+1 > 2)
-          NumberBitsPerSliceGroupId = 2;
-        else
-          NumberBitsPerSliceGroupId = 1;
-
-        pps->picSizeMapUnitsMinus1 = readUeV ("PPS picSizeMapUnitsMinus1", s);
-        if ((pps->sliceGroupId = calloc (pps->picSizeMapUnitsMinus1+1, 1)) == NULL)
-          no_mem_exit ("readPPS sliceGroupId");
-        for (unsigned i = 0; i <= pps->picSizeMapUnitsMinus1; i++)
-          pps->sliceGroupId[i] = (byte)readUv (NumberBitsPerSliceGroupId, "sliceGroupId[i]", s);
-        break;
-        }
-
-      default:;
-      }
-    }
-    //}}}
-
-  pps->numRefIndexL0defaultActiveMinus1 = readUeV ("PPS numRefIndexL0defaultActiveMinus1", s);
-  pps->numRefIndexL1defaultActiveMinus1 = readUeV ("PPS numRefIndexL1defaultActiveMinus1", s);
-  pps->weightedPredFlag = readU1 ("PPS weightedPredFlag", s);
-  pps->weightedBiPredIdc = readUv (2, "PPS weightedBiPredIdc", s);
-  pps->picInitQpMinus26 = readSeV ("PPS picInitQpMinus26", s);
-  pps->picInitQsMinus26 = readSeV ("PPS picInitQsMinus26", s);
-  pps->chromaQpIndexOffset = readSeV ("PPS chromaQpIndexOffset", s);
-  pps->deblockFilterControlPresent = readU1 ("PPS deblockFilterControlPresent" , s);
-  pps->constrainedIntraPredFlag = readU1 ("PPS constrainedIntraPredFlag", s);
-  pps->redundantPicCountPresent = readU1 ("PPS redundantPicCountPresent", s);
-
-  int more = moreRbspData (s->bitStreamBuffer, s->bitStreamOffset,s->bitStreamLen);
-  if (more) {
-    //{{{  more data in rbsp
-    // Fidelity Range Extensions Stuff
-    pps->transform8x8modeFlag = readU1 ("PPS transform8x8modeFlag", s);
-
-    pps->picScalingMatrixPresentFlag = readU1 ("PPS picScalingMatrixPresentFlag", s);
-    if (pps->picScalingMatrixPresentFlag) {
-      int chromaFormatIdc = decoder->sps[pps->spsId].chromaFormatIdc;
-      unsigned n_ScalingList = 6 + ((chromaFormatIdc != YUV444) ? 2 : 6) * pps->transform8x8modeFlag;
-      for (unsigned i = 0; i < n_ScalingList; i++) {
-        pps->picScalingListPresentFlag[i]= readU1 ("PPS picScalingListPresentFlag", s);
-        if (pps->picScalingListPresentFlag[i]) {
-          if (i < 6)
-            scalingList (pps->scalingList4x4[i], 16, &pps->useDefaultScalingMatrix4x4Flag[i], s);
-          else
-            scalingList (pps->scalingList8x8[i-6], 64, &pps->useDefaultScalingMatrix8x8Flag[i-6], s);
-          }
-        }
-      }
-    pps->secondChromaQpIndexOffset = readSeV ("PPS secondChromaQpIndexOffset", s);
-    }
-    //}}}
-  else
-    pps->secondChromaQpIndexOffset = pps->chromaQpIndexOffset;
-
-  if (decoder->param.ppsDebug)
-    printf ("-> ppsId:%d spsId:%d %d:%d%s%s%s%s%s%s%s%s%s grp:%d L:%d:%d\n",
-            pps->ppsId, pps->spsId,
-            pps->picInitQpMinus26, pps->picInitQsMinus26,
-            pps->entropyCodingMode ? " cabac":" cavlc",
-            pps->deblockFilterControlPresent ? " deblock":"",
-            pps->weightedPredFlag ? " pred":"",
-            pps->weightedBiPredIdc ? " biPred":"",
-            pps->constrainedIntraPredFlag ? " intraPred":"",
-            pps->redundantPicCountPresent ? " red":"",
-            pps->botFieldPicOrderFramePresent ? " botField":"",
-            more && pps->transform8x8modeFlag ? " 8x8":"",
-            more && pps->picScalingMatrixPresentFlag ? " scaling":"",
-            pps->numSliceGroupsMinus1,
-            pps->numRefIndexL0defaultActiveMinus1, pps->numRefIndexL1defaultActiveMinus1);
-
-  pps->valid = TRUE;
-  }
-//}}}
-
-//{{{
-void readNaluPPS (sDecoder* decoder, sNalu* nalu) {
-
-  sDataPartition* dataPartition = allocDataPartitions (1);
-  dataPartition->s->errorFlag = 0;
-  dataPartition->s->readLen = dataPartition->s->bitStreamOffset = 0;
-  memcpy (dataPartition->s->bitStreamBuffer, &nalu->buf[1], nalu->len - 1);
-  dataPartition->s->codeLen = dataPartition->s->bitStreamLen = RBSPtoSODB (dataPartition->s->bitStreamBuffer, nalu->len-1);
-
-  sPPS* pps = allocPPS();
-  readPPS (decoder, dataPartition, pps);
-  if (decoder->activePPS) {
-    if (pps->ppsId == decoder->activePPS->ppsId) {
-      if (!isEqualPPS (pps, decoder->activePPS)) {
-        // copy to next PPS;
-        memcpy (decoder->nextPPS, decoder->activePPS, sizeof (sPPS));
-        if (decoder->picture)
-          endDecodeFrame (decoder);
-        decoder->activePPS = NULL;
-        }
-      }
-    }
-
-  setPPSbyId (decoder, pps->ppsId, pps);
-  freeDataPartitions (dataPartition, 1);
-  freePPS (pps);
-  }
-//}}}
-//{{{
-void activatePPS (sDecoder* decoder, sPPS* pps) {
-
-  if (decoder->activePPS != pps) {
-    if (decoder->picture) // only on slice loss
-      endDecodeFrame (decoder);
-    decoder->activePPS = pps;
-    }
   }
 //}}}
