@@ -458,9 +458,9 @@ typedef struct {
 #define NUM_TRANSFORM_SIZE_CTX 3
 
 typedef struct {
-  sBiContextType mb_type_contexts[3][NUM_MB_TYPE_CTX];
+  sBiContextType mbTypeContexts[3][NUM_MB_TYPE_CTX];
   sBiContextType b8_type_contexts[2][NUM_B8_TYPE_CTX];
-  sBiContextType mv_res_contexts[2][NUM_MV_RES_CTX];
+  sBiContextType mvResContexts[2][NUM_MV_RES_CTX];
   sBiContextType ref_no_contexts[2][NUM_REF_NO_CTX];
   sBiContextType delta_qp_contexts[NUM_DELTA_QP_CTX];
   sBiContextType mb_aff_contexts[NUM_MB_AFF_CTX];
@@ -1051,7 +1051,7 @@ typedef struct Decoder {
 
   // non-zero: i-th previous frame is correct
   int          isPrimaryOk;    // if primary frame is correct, 0: incorrect
-  int          isReduncantOk;  // if redundant frame is correct, 0:incorrect
+  int          isRedundantOk;  // if redundant frame is correct, 0:incorrect
 
   int*         qpPerMatrix;
   int*         qpRemMatrix;

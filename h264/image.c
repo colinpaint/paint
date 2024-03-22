@@ -1193,9 +1193,9 @@ static void initContexts (sSlice* slice) {
 
   // motion coding contexts
   if ((slice->sliceType == I_SLICE) || (slice->sliceType == SI_SLICE)) {
-    IBIARI_CTX_INIT2 (3, NUM_MB_TYPE_CTX,   mc->mb_type_contexts,     INIT_MB_TYPE,    modelNum, qp);
+    IBIARI_CTX_INIT2 (3, NUM_MB_TYPE_CTX,   mc->mbTypeContexts,     INIT_MB_TYPE,    modelNum, qp);
     IBIARI_CTX_INIT2 (2, NUM_B8_TYPE_CTX,   mc->b8_type_contexts,     INIT_B8_TYPE,    modelNum, qp);
-    IBIARI_CTX_INIT2 (2, NUM_MV_RES_CTX,    mc->mv_res_contexts,      INIT_MV_RES,     modelNum, qp);
+    IBIARI_CTX_INIT2 (2, NUM_MV_RES_CTX,    mc->mvResContexts,      INIT_MV_RES,     modelNum, qp);
     IBIARI_CTX_INIT2 (2, NUM_REF_NO_CTX,    mc->ref_no_contexts,      INIT_REF_NO,     modelNum, qp);
     IBIARI_CTX_INIT1 (   NUM_DELTA_QP_CTX,  mc->delta_qp_contexts,    INIT_DELTA_QP,   modelNum, qp);
     IBIARI_CTX_INIT1 (   NUM_MB_AFF_CTX,    mc->mb_aff_contexts,      INIT_MB_AFF,     modelNum, qp);
@@ -1214,9 +1214,9 @@ static void initContexts (sSlice* slice) {
     IBIARI_CTX_INIT2 (NUM_BLOCK_TYPES, NUM_ABS_CTX,  tc->abs_contexts,     INIT_ABS,       modelNum, qp);
     }
   else {
-    PBIARI_CTX_INIT2 (3, NUM_MB_TYPE_CTX,   mc->mb_type_contexts,     INIT_MB_TYPE,    modelNum, qp);
+    PBIARI_CTX_INIT2 (3, NUM_MB_TYPE_CTX,   mc->mbTypeContexts,     INIT_MB_TYPE,    modelNum, qp);
     PBIARI_CTX_INIT2 (2, NUM_B8_TYPE_CTX,   mc->b8_type_contexts,     INIT_B8_TYPE,    modelNum, qp);
-    PBIARI_CTX_INIT2 (2, NUM_MV_RES_CTX,    mc->mv_res_contexts,      INIT_MV_RES,     modelNum, qp);
+    PBIARI_CTX_INIT2 (2, NUM_MV_RES_CTX,    mc->mvResContexts,      INIT_MV_RES,     modelNum, qp);
     PBIARI_CTX_INIT2 (2, NUM_REF_NO_CTX,    mc->ref_no_contexts,      INIT_REF_NO,     modelNum, qp);
     PBIARI_CTX_INIT1 (   NUM_DELTA_QP_CTX,  mc->delta_qp_contexts,    INIT_DELTA_QP,   modelNum, qp);
     PBIARI_CTX_INIT1 (   NUM_MB_AFF_CTX,    mc->mb_aff_contexts,      INIT_MB_AFF,     modelNum, qp);
@@ -1580,24 +1580,6 @@ static void mbAffPostProc (sDecoder* decoder) {
         }
       }
     }
-  }
-//}}}
-//{{{
-static void errorTracking (sDecoder* decoder, sSlice* slice) {
-
-  if (!slice->redundantPicCount)
-    decoder->isPrimaryOk = decoder->isReduncantOk = 1;
-
-  if (!slice->redundantPicCount && (decoder->coding.type != I_SLICE)) {
-    for (int i = 0; i < slice->numRefIndexActive[LIST_0];++i)
-      if (!slice->refFlag[i])  // any reference of primary slice is incorrect
-        decoder->isPrimaryOk = 0; // primary slice is incorrect
-    }
-  else if (slice->redundantPicCount && (decoder->coding.type != I_SLICE))
-    // reference of redundant slice is incorrect
-    if (!slice->refFlag[slice->redundantSliceRefIndex])
-      // redundant slice is incorrect
-      decoder->isReduncantOk = 0;
   }
 //}}}
 
@@ -2242,7 +2224,7 @@ static void initSlice (sDecoder* decoder, sSlice* slice) {
   if (!(slice->redundantPicCount && (decoder->prevFrameNum == slice->frameNum)))
     for (int i = 16; i > 0; i--)
       slice->refFlag[i] = slice->refFlag[i-1];
-  slice->refFlag[0] = (slice->redundantPicCount == 0) ? decoder->isPrimaryOk : decoder->isReduncantOk;
+  slice->refFlag[0] = (slice->redundantPicCount == 0) ? decoder->isPrimaryOk : decoder->isRedundantOk;
 
   if (!slice->activeSPS->chromaFormatIdc ||
       (slice->activeSPS->chromaFormatIdc == 3)) {
@@ -2408,7 +2390,7 @@ static int readNextSlice (sSlice* slice) {
           }
 
         // if primary slice is replaced with redundant slice, set the correct image type
-        if (slice->redundantPicCount && !decoder->isPrimaryOk && decoder->isReduncantOk)
+        if (slice->redundantPicCount && !decoder->isPrimaryOk && decoder->isRedundantOk)
           decoder->picture->sliceType = decoder->coding.type;
 
         if (isNewPicture (decoder->picture, slice, decoder->oldSlice)) {
@@ -3057,16 +3039,25 @@ int decodeFrame (sDecoder* decoder) {
 
     curHeader = readNextSlice (slice);
     slice->curHeader = curHeader;
+    //{{{  manage primary, redundant slices
+    if (!slice->redundantPicCount)
+      decoder->isPrimaryOk = decoder->isRedundantOk = 1;
 
-    // error tracking of primary and redundant slices.
-    errorTracking (decoder, slice);
-    //{{{  manage primary and redundant slices
-    // If primary and redundant are received and primary is correct
-    //   discard the redundant
-    // else,
-    //   primary slice will be replaced with redundant slice.
-    if (slice->frameNum == decoder->prevFrameNum &&
-        slice->redundantPicCount && decoder->isPrimaryOk && curHeader != EOS)
+    if (!slice->redundantPicCount && (decoder->coding.type != I_SLICE)) {
+      for (int i = 0; i < slice->numRefIndexActive[LIST_0];++i)
+        if (!slice->refFlag[i]) // reference primary slice incorrect, primary slice incorrect
+          decoder->isPrimaryOk = 0;
+      }
+    else if (slice->redundantPicCount && (decoder->coding.type != I_SLICE)) // reference redundant slice incorrect
+      if (!slice->refFlag[slice->redundantSliceRefIndex]) // redundant slice is incorrect
+        decoder->isRedundantOk = 0;
+
+    // If primary and redundant received, primary is correct
+    //   discard redundant
+    // else
+    //   primary slice replaced with redundant slice.
+    if ((slice->frameNum == decoder->prevFrameNum) &&
+        slice->redundantPicCount && decoder->isPrimaryOk && (curHeader != EOS))
       continue;
 
     if (((curHeader != SOP) && (curHeader != EOS)) ||
