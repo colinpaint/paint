@@ -1561,7 +1561,7 @@ static void mbAffPostProc (sDecoder* decoder) {
   sPixel** imgY = picture->imgY;
   sPixel*** imgUV = picture->imgUV;
 
-  for (short i = 0; i < (int)picture->picSizeInMbs; i += 2) {
+  for (unsigned i = 0; i < picture->picSizeInMbs; i += 2) {
     if (picture->motion.mbField[i]) {
       short x0;
       short y0;
