@@ -112,15 +112,15 @@ static const byte renorm_table_32[32] = {
 //}}}
 
 //{{{
-static inline unsigned int getByte (sDecodeEnv* decodeEnv) {
-  return decodeEnv->codeStream[(*decodeEnv->codeStreamLen)++];
+static unsigned int getByte (sCabacDecodeEnv* cabacDecodeEnv) {
+  return cabacDecodeEnv->codeStream[(*cabacDecodeEnv->codeStreamLen)++];
   }
 //}}}
 //{{{
-static inline unsigned int getWord (sDecodeEnv* decodeEnv) {
+static unsigned int getWord (sCabacDecodeEnv* cabacDecodeEnv) {
 
-  int* len = decodeEnv->codeStreamLen;
-  byte* p_code_strm = &decodeEnv->codeStream[*len];
+  int* len = cabacDecodeEnv->codeStreamLen;
+  byte* p_code_strm = &cabacDecodeEnv->codeStream[*len];
   *len += 2;
 
   return (*p_code_strm << 8) | *(p_code_strm + 1);
@@ -128,36 +128,36 @@ static inline unsigned int getWord (sDecodeEnv* decodeEnv) {
 //}}}
 
 //{{{
-void arithmeticDecodeStartDecoding (sDecodeEnv* decodeEnv, unsigned char* code_buffer, int firstbyte, int* codeLen) {
+void arithmeticDecodeStartDecoding (sCabacDecodeEnv* cabacDecodeEnv, unsigned char* code_buffer, int firstbyte, int* codeLen) {
 
-  decodeEnv->codeStream = code_buffer;
-  decodeEnv->codeStreamLen = codeLen;
-  *decodeEnv->codeStreamLen = firstbyte;
+  cabacDecodeEnv->codeStream = code_buffer;
+  cabacDecodeEnv->codeStreamLen = codeLen;
+  *cabacDecodeEnv->codeStreamLen = firstbyte;
 
-  decodeEnv->value = getByte (decodeEnv);
+  cabacDecodeEnv->value = getByte (cabacDecodeEnv);
   // lookahead of 2 bytes: always make sure that s buffer
   // contains 2 more bytes than actual s
-  decodeEnv->value = (decodeEnv->value << 16) | getWord (decodeEnv);
-  decodeEnv->bitsLeft = 15;
-  decodeEnv->range = HALF;
+  cabacDecodeEnv->value = (cabacDecodeEnv->value << 16) | getWord (cabacDecodeEnv);
+  cabacDecodeEnv->bitsLeft = 15;
+  cabacDecodeEnv->range = HALF;
   }
 //}}}
 //{{{
-int arithmeticDecodeBitsRead (sDecodeEnv* decodeEnv) {
-  return ((*decodeEnv->codeStreamLen) << 3) - decodeEnv->bitsLeft;
+int arithmeticDecodeBitsRead (sCabacDecodeEnv* cabacDecodeEnv) {
+  return ((*cabacDecodeEnv->codeStreamLen) << 3) - cabacDecodeEnv->bitsLeft;
   }
 //}}}
 
 //{{{
-unsigned int binaryArithmeticDecodeSymbol (sDecodeEnv* decodeEnv, sBiContextType* biContext) {
+unsigned int binaryArithmeticDecodeSymbol (sCabacDecodeEnv* cabacDecodeEnv, sBiContextType* biContext) {
 
   unsigned int bit = biContext->MPS;
-  unsigned int* value = &decodeEnv->value;
-  unsigned int* range = &decodeEnv->range;
+  unsigned int* value = &cabacDecodeEnv->value;
+  unsigned int* range = &cabacDecodeEnv->range;
 
   uint16* state = &biContext->state;
   unsigned int rLPS = rLPS_table_64x4[*state][(*range >> 6) & 0x03];
-  int* bitsLeft = &decodeEnv->bitsLeft;
+  int* bitsLeft = &cabacDecodeEnv->bitsLeft;
 
   *range -= rLPS;
   if (*value < (*range << *bitsLeft)) {
@@ -189,26 +189,26 @@ unsigned int binaryArithmeticDecodeSymbol (sDecodeEnv* decodeEnv, sBiContextType
     *value <<= 16;
     // lookahead of 2 bytes: always make sure that s buffer
     // contains 2 more bytes than actual s
-    *value |=  getWord (decodeEnv);
+    *value |=  getWord (cabacDecodeEnv);
     (*bitsLeft) += 16;
     return bit;
     }
   }
 //}}}
 //{{{
-unsigned int binaryArithmeticDecodeSymbolEqProb (sDecodeEnv* decodeEnv) {
+unsigned int binaryArithmeticDecodeSymbolEqProb (sCabacDecodeEnv* cabacDecodeEnv) {
 
   int tmp_value;
-  unsigned int* value = &decodeEnv->value;
+  unsigned int* value = &cabacDecodeEnv->value;
 
-  int* bitsLeft = &decodeEnv->bitsLeft;
+  int* bitsLeft = &cabacDecodeEnv->bitsLeft;
   if (--(*bitsLeft) == 0) {
     // lookahead of 2 bytes: always make sure that s buffer contains 2 more bytes than actual s
-    *value = (*value << 16) | getWord (decodeEnv);
+    *value = (*value << 16) | getWord (cabacDecodeEnv);
     *bitsLeft = 16;
     }
 
-  tmp_value = *value - (decodeEnv->range << *bitsLeft);
+  tmp_value = *value - (cabacDecodeEnv->range << *bitsLeft);
   if (tmp_value < 0)
     return 0;
   else {
@@ -218,25 +218,25 @@ unsigned int binaryArithmeticDecodeSymbolEqProb (sDecodeEnv* decodeEnv) {
   }
 //}}}
 //{{{
-unsigned int binaryArithmeticDecodeFinal (sDecodeEnv* decodeEnv) {
+unsigned int binaryArithmeticDecodeFinal (sCabacDecodeEnv* cabacDecodeEnv) {
 
-  unsigned int range  = decodeEnv->range - 2;
+  unsigned int range  = cabacDecodeEnv->range - 2;
 
-  int value = decodeEnv->value;
-  value -= (range << decodeEnv->bitsLeft);
+  int value = cabacDecodeEnv->value;
+  value -= (range << cabacDecodeEnv->bitsLeft);
   if (value < 0) {
     if (range >= QUARTER) {
-      decodeEnv->range = range;
+      cabacDecodeEnv->range = range;
       return 0;
       }
     else {
-      decodeEnv->range = (range << 1);
-      if (--(decodeEnv->bitsLeft) > 0)
+      cabacDecodeEnv->range = (range << 1);
+      if (--(cabacDecodeEnv->bitsLeft) > 0)
         return 0;
       else {
         // lookahead of 2 bytes: always make sure that s buffer contains 2 more bytes than actual s
-        decodeEnv->value = (decodeEnv->value << 16) | getWord (decodeEnv);
-        decodeEnv->bitsLeft = 16;
+        cabacDecodeEnv->value = (cabacDecodeEnv->value << 16) | getWord (cabacDecodeEnv);
+        cabacDecodeEnv->bitsLeft = 16;
         return 0;
         }
       }

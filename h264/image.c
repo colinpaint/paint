@@ -2560,13 +2560,13 @@ static int readSlice (sSlice* slice) {
 
         readSliceHeader (decoder, slice);
         if (decoder->param.sliceDebug) {
-          //{{{  print next slice debug
+          //{{{  print slice debug
           if (nalu->unitType == NALU_TYPE_IDR)
             printf ("IDR");
           else
             printf ("SLC");
 
-          printf (":%5d:%d %c ppsId:%d frame:%d%s%s\n",
+          printf (":%5d:%d %c -> pps:%d frameNum:%d%s%s\n",
                   nalu->len, slice->refId,
                   slice->sliceType ? (slice->sliceType == 1) ? 'B' : ((slice->sliceType == 2) ? 'I' : '?') : 'P',
                   slice->ppsId,
@@ -2577,7 +2577,7 @@ static int readSlice (sSlice* slice) {
           }
           //}}}
 
-        // if primary slice is replaced with redundant slice, set the correct image type
+        // if primary slice replaced by redundant slice, set correct image type
         if (slice->redundantPicCount && !decoder->isPrimaryOk && decoder->isRedundantOk)
           decoder->picture->sliceType = decoder->coding.type;
         if (isNewPicture (decoder->picture, slice, decoder->oldSlice)) {
@@ -2601,7 +2601,7 @@ static int readSlice (sSlice* slice) {
           int byteStartPosition = s->bitStreamOffset / 8;
           if (s->bitStreamOffset % 8)
             ++byteStartPosition;
-          arithmeticDecodeStartDecoding (&slice->dataPartitions[0].deCabac, s->bitStreamBuffer,
+          arithmeticDecodeStartDecoding (&slice->dataPartitions[0].cabacDecodeEnv, s->bitStreamBuffer,
                                          byteStartPosition, &s->readLen);
           }
 

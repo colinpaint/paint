@@ -414,7 +414,7 @@ static void initIPCMdecoding (sSlice* slice) {
   for (int i = 0; i < dpNum;++i) {
     sBitStream* stream = slice->dataPartitions[i].s;
     int byteStartPosition = stream->readLen;
-    arithmeticDecodeStartDecoding (&slice->dataPartitions[i].deCabac, stream->bitStreamBuffer, byteStartPosition, &stream->readLen);
+    arithmeticDecodeStartDecoding (&slice->dataPartitions[i].cabacDecodeEnv, stream->bitStreamBuffer, byteStartPosition, &stream->readLen);
     }
   }
 //}}}

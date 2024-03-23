@@ -135,14 +135,14 @@ typedef enum {
 //}}}
 
 struct MacroBlock;
-//{{{  sDecodeEnv
+//{{{  sCabacDecodeEnv
 typedef struct {
   unsigned int range;
   unsigned int value;
   int          bitsLeft;
   byte*        codeStream;
   int*         codeStreamLen;
-  } sDecodeEnv;
+  } sCabacDecodeEnv;
 //}}}
 //{{{  sBitStream
 typedef struct {
@@ -172,13 +172,13 @@ typedef struct SyntaxElement {
   void (*mapping) (int, int, int*, int*);
 
   // eCabac actual coding method of each individual syntax element type
-  void (*reading) (struct MacroBlock*, struct SyntaxElement*, sDecodeEnv*);
+  void (*reading) (struct MacroBlock*, struct SyntaxElement*, sCabacDecodeEnv*);
   } sSyntaxElement;
 //}}}
 //{{{  sDataPartition
 typedef struct DataPartition {
-  sBitStream*  s;
-  sDecodeEnv deCabac;
+  sBitStream* s;
+  sCabacDecodeEnv cabacDecodeEnv;
 
   int (*readSyntaxElement) (struct MacroBlock*, struct SyntaxElement*, struct DataPartition*);
   } sDataPartition;
@@ -344,7 +344,7 @@ typedef struct MacroBlock {
   void (*iTrans4x4) (struct MacroBlock*, eColorPlane, int, int);
   void (*iTrans8x8) (struct MacroBlock*, eColorPlane, int, int);
   void (*GetMVPredictor) (struct MacroBlock*, sPixelPos*, sMotionVec*, short, struct PicMotion**, int, int, int, int, int);
-  int  (*readStoreCBPblockBit) (struct MacroBlock*, sDecodeEnv*, int);
+  int  (*readStoreCBPblockBit) (struct MacroBlock*, sCabacDecodeEnv*, int);
   char (*readRefPictureIndex) (struct MacroBlock*, struct SyntaxElement*, struct DataPartition*, char, int);
   void (*readCompCoef4x4cabac) (struct MacroBlock*, struct SyntaxElement*, eColorPlane, int(*)[4], int, int);
   void (*readCompCoef8x8cabac) (struct MacroBlock*, struct SyntaxElement*, eColorPlane);
