@@ -179,12 +179,12 @@ typedef struct SyntaxElement {
 typedef struct DataPartition {
   sBitStream*  s;
   sDecodeEnv deCabac;
+
   int (*readSyntaxElement) (struct MacroBlock*, struct SyntaxElement*, struct DataPartition*);
   } sDataPartition;
 //}}}
 
 //{{{  sBiContextType
-//! struct for context management
 typedef struct {
   uint16        state; // index into state-table CP
   unsigned char MPS;   // least probable symbol 0/1 CP
