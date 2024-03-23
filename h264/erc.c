@@ -890,7 +890,7 @@ static void buildPredRegionYUV (sDecoder* decoder, int *mv, int x, int y, sPixel
     }
   }
   // We should allocate this memory only once.
-  free_mem2Dpel(tmp_block);
+  freeMem2Dpel(tmp_block);
 }
 //}}}
 //{{{
@@ -1222,7 +1222,7 @@ int ercConcealInterFrame (frame *recfr, sObjectBuffer *object_list,
         predMB = (sPixel*)malloc (256 * sizeof (sPixel));
 
       if (predMB == NULL )
-        no_mem_exit ("ercConcealInterFrame: predMB");
+        noMemoryExit ("ercConcealInterFrame: predMB");
 
       lastRow = (int) (picSizeY>>4);
       lastColumn = (int) (picSizeX>>4);
@@ -1462,7 +1462,7 @@ static void buildPredblockRegionYUV (sDecoder* decoder, int *mv,
 
     }
   }
-  free_mem2Dpel(tmp_block);
+  freeMem2Dpel(tmp_block);
 }
 //}}}
 //{{{
@@ -1772,10 +1772,10 @@ void init_lists_for_non_reference_loss (sDPB* dpb, int currSliceType, ePicStruct
 
   unsigned i;
   int j;
-  int maxFrameNum = 1 << (activeSPS->log2_max_frame_num_minus4 + 4);
+  int maxFrameNum = 1 << (activeSPS->log2maxFrameNumMinus4 + 4);
 
   int list0idx = 0;
-  int list0idx_1 = 0;
+  int list0index1 = 0;
   sPicture* tmp_s;
 
   if (currPicStructure == eFrame) {
@@ -1810,22 +1810,22 @@ void init_lists_for_non_reference_loss (sDPB* dpb, int currSliceType, ePicStruct
             decoder->sliceList[0]->listX[0][list0idx++] = dpb->fs[i]->frame;
 
       qsort ((void *)decoder->sliceList[0]->listX[0], list0idx, sizeof(sPicture*), compare_pic_by_poc_desc);
-      list0idx_1 = list0idx;
+      list0index1 = list0idx;
       for (i = 0; i < dpb->usedSize; i++)
         if (dpb->fs[i]->concealment_reference == 1)
           if (decoder->earlierMissingPoc < dpb->fs[i]->frame->poc)
             decoder->sliceList[0]->listX[0][list0idx++] = dpb->fs[i]->frame;
 
-      qsort ((void *)&decoder->sliceList[0]->listX[0][list0idx_1], list0idx-list0idx_1, sizeof(sPicture*), compare_pic_by_poc_asc);
-      for (j = 0; j < list0idx_1; j++)
-        decoder->sliceList[0]->listX[1][list0idx-list0idx_1+j]=decoder->sliceList[0]->listX[0][j];
-      for (j = list0idx_1; j < list0idx; j++)
-        decoder->sliceList[0]->listX[1][j-list0idx_1]=decoder->sliceList[0]->listX[0][j];
+      qsort ((void *)&decoder->sliceList[0]->listX[0][list0index1], list0idx-list0index1, sizeof(sPicture*), compare_pic_by_poc_asc);
+      for (j = 0; j < list0index1; j++)
+        decoder->sliceList[0]->listX[1][list0idx-list0index1+j]=decoder->sliceList[0]->listX[0][j];
+      for (j = list0index1; j < list0idx; j++)
+        decoder->sliceList[0]->listX[1][j-list0index1]=decoder->sliceList[0]->listX[0][j];
 
       decoder->sliceList[0]->listXsize[0] = decoder->sliceList[0]->listXsize[1] = (char) list0idx;
 
-      qsort ((void*)&decoder->sliceList[0]->listX[0][(short) decoder->sliceList[0]->listXsize[0]], list0idx-decoder->sliceList[0]->listXsize[0], sizeof(sPicture*), compare_pic_by_lt_pic_num_asc);
-      qsort ((void*)&decoder->sliceList[0]->listX[1][(short) decoder->sliceList[0]->listXsize[0]], list0idx-decoder->sliceList[0]->listXsize[0], sizeof(sPicture*), compare_pic_by_lt_pic_num_asc);
+      qsort ((void*)&decoder->sliceList[0]->listX[0][(short) decoder->sliceList[0]->listXsize[0]], list0idx-decoder->sliceList[0]->listXsize[0], sizeof(sPicture*), comparePicByLtPicNumAsc);
+      qsort ((void*)&decoder->sliceList[0]->listX[1][(short) decoder->sliceList[0]->listXsize[0]], list0idx-decoder->sliceList[0]->listXsize[0], sizeof(sPicture*), comparePicByLtPicNumAsc);
       decoder->sliceList[0]->listXsize[0] = decoder->sliceList[0]->listXsize[1] = (char) list0idx;
       }
     }
@@ -2102,7 +2102,7 @@ void ercInit (sDecoder* decoder, int pic_sizex, int pic_sizey, int flag) {
   ercClose(decoder, decoder->ercErrorVar);
   decoder->ercObjectList = (sObjectBuffer*)calloc ((pic_sizex * pic_sizey) >> 6, sizeof(sObjectBuffer));
   if (decoder->ercObjectList == NULL)
-    no_mem_exit ("ercInit: ercObjectList");
+    noMemoryExit ("ercInit: ercObjectList");
 
   // the error conceal instance is allocated
   decoder->ercErrorVar = ercOpen();
@@ -2117,7 +2117,7 @@ sErcVariables* ercOpen() {
   sErcVariables *errorVar = NULL;
   errorVar = (sErcVariables*)malloc (sizeof(sErcVariables));
   if ( errorVar == NULL )
-    no_mem_exit("ercOpen: errorVar");
+    noMemoryExit("ercOpen: errorVar");
 
   errorVar->nOfMBs = 0;
   errorVar->segments = NULL;
@@ -2161,25 +2161,25 @@ void ercReset (sErcVariables *errorVar, int nOfMBs, int numOfSegments, int picSi
       //{{{  allocate conditions, first frame, or frame size is changed)
       errorVar->segments = (sErcSegment*)malloc (numOfSegments*sizeof(sErcSegment) );
       if ( errorVar->segments == NULL)
-        no_mem_exit ("ercReset: errorVar->segments");
+        noMemoryExit ("ercReset: errorVar->segments");
       memset (errorVar->segments, 0, numOfSegments*sizeof(sErcSegment));
       errorVar->nOfSegments = numOfSegments;
 
       errorVar->yCondition = (char*)malloc (4*nOfMBs*sizeof(char) );
       if (errorVar->yCondition == NULL )
-        no_mem_exit ("ercReset: errorVar->yCondition");
+        noMemoryExit ("ercReset: errorVar->yCondition");
 
       errorVar->prevFrameYCondition = (char*)malloc (4*nOfMBs*sizeof(char) );
       if (errorVar->prevFrameYCondition == NULL )
-        no_mem_exit ("ercReset: errorVar->prevFrameYCondition");
+        noMemoryExit ("ercReset: errorVar->prevFrameYCondition");
 
       errorVar->uCondition = (char*)malloc (nOfMBs*sizeof(char) );
       if (errorVar->uCondition == NULL )
-        no_mem_exit ("ercReset: errorVar->uCondition");
+        noMemoryExit ("ercReset: errorVar->uCondition");
 
       errorVar->vCondition = (char*)malloc (nOfMBs*sizeof(char) );
       if (errorVar->vCondition == NULL )
-        no_mem_exit ("ercReset: errorVar->vCondition");
+        noMemoryExit ("ercReset: errorVar->vCondition");
 
       errorVar->nOfMBs = nOfMBs;
       }
@@ -2201,7 +2201,7 @@ void ercReset (sErcVariables *errorVar, int nOfMBs, int numOfSegments, int picSi
       errorVar->segments = NULL;
       errorVar->segments = (sErcSegment*)malloc (numOfSegments*sizeof(sErcSegment) );
       if (errorVar->segments == NULL)
-        no_mem_exit("ercReset: errorVar->segments");
+        noMemoryExit("ercReset: errorVar->segments");
       errorVar->nOfSegments = numOfSegments;
       }
 

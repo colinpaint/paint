@@ -282,7 +282,7 @@ void itrans_2 (sMacroBlock* mb, eColorPlane plane) {
     cof[j<<2][12] = rshift_rnd((( M4[j][3] * invLevelScale) << qp_per), 6);
     }
 
-  free_mem2Dint(M4);
+  freeMem2Dint(M4);
   }
 //}}}
 //{{{
@@ -347,7 +347,7 @@ void itrans_sp (sMacroBlock* mb, eColorPlane plane, int ioff, int joff) {
     mbRec[j][ioff+ 3] = (sPixel) iClip1(max_imgpel_value,rshift_rnd_sf(mbRess[j][ioff+ 3], DQ_BITS));
     }
 
-  free_mem2Dint (PBlock);
+  freeMem2Dint (PBlock);
   }
 //}}}
 //{{{
@@ -440,7 +440,7 @@ void itrans_sp_cr (sMacroBlock* mb, int uv) {
   cof[4][0] = (mp1[0] - mp1[1] + mp1[2] - mp1[3]) >> 1;
   cof[4][4] = (mp1[0] - mp1[1] - mp1[2] + mp1[3]) >> 1;
 
-  free_mem2Dint(PBlock);
+  freeMem2Dint(PBlock);
   }
 //}}}
 //{{{

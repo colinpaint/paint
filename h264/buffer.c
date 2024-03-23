@@ -217,7 +217,7 @@ void allocPicMotion (sPicMotionParamsOld* motion, int sizeY, int sizeX) {
 
   motion->mbField = calloc (sizeY * sizeX, sizeof(byte));
   if (motion->mbField == NULL)
-    no_mem_exit ("allocPicture: motion->mbField");
+    noMemoryExit ("allocPicture: motion->mbField");
   }
 //}}}
 //{{{
@@ -236,7 +236,7 @@ sFrameStore* allocFrameStore() {
 
   sFrameStore* fs = calloc (1, sizeof(sFrameStore));
   if (!fs)
-    no_mem_exit ("alloc_frame_store: f");
+    noMemoryExit ("alloc_frame_store: f");
 
   fs->isUsed = 0;
   fs->isReference = 0;
@@ -683,7 +683,7 @@ sPicture* allocPicture (sDecoder* decoder, ePicStructure picStructure,
 
   sPicture* s = calloc (1, sizeof(sPicture));
   if (!s)
-    no_mem_exit ("allocPicture failed");
+    noMemoryExit ("allocPicture failed");
 
   if (picStructure != eFrame) {
     sizeY /= 2;
@@ -693,12 +693,12 @@ sPicture* allocPicture (sDecoder* decoder, ePicStructure picStructure,
   s->picSizeInMbs = (sizeX*sizeY)/256;
   s->imgUV = NULL;
 
-  getMem2Dpel_pad (&(s->imgY), sizeY, sizeX, decoder->coding.iLumaPadY, decoder->coding.iLumaPadX);
+  getMem2DpelPad (&(s->imgY), sizeY, sizeX, decoder->coding.iLumaPadY, decoder->coding.iLumaPadX);
   s->iLumaStride = sizeX + 2 * decoder->coding.iLumaPadX;
   s->iLumaExpandedHeight = sizeY + 2 * decoder->coding.iLumaPadY;
 
   if (activeSPS->chromaFormatIdc != YUV400)
-    getMem3Dpel_pad (&(s->imgUV), 2, sizeYcr, sizeXcr, decoder->coding.iChromaPadY, decoder->coding.iChromaPadX);
+    getMem3DpelPad (&(s->imgUV), 2, sizeYcr, sizeXcr, decoder->coding.iChromaPadY, decoder->coding.iChromaPadX);
 
   s->iChromaStride = sizeXcr + 2*decoder->coding.iChromaPadX;
   s->iChromaExpandedHeight = sizeYcr + 2*decoder->coding.iChromaPadY;
@@ -752,7 +752,7 @@ sPicture* allocPicture (sDecoder* decoder, ePicStructure picStructure,
       for (int i = 0; i < 2; i++) {
         s->listX[j][i] = calloc (MAX_LIST_SIZE, sizeof (sPicture*)); // +1 for reordering
         if (!s->listX[j][i])
-          no_mem_exit ("allocPicture: s->listX[i]");
+          noMemoryExit ("allocPicture: s->listX[i]");
         }
 
   return s;
@@ -763,7 +763,7 @@ void freePicture (sPicture* p) {
 
   if (p) {
     if (p->mvInfo) {
-      free_mem2Dmp (p->mvInfo);
+      freeMem2Dmp (p->mvInfo);
       p->mvInfo = NULL;
       }
     freePicMotion (&p->motion);
@@ -771,7 +771,7 @@ void freePicture (sPicture* p) {
     if ((p->sepColourPlaneFlag != 0) ) {
       for (int nplane = 0; nplane < MAX_PLANE; nplane++ ) {
         if (p->JVmv_info[nplane]) {
-          free_mem2Dmp (p->JVmv_info[nplane]);
+          freeMem2Dmp (p->JVmv_info[nplane]);
           p->JVmv_info[nplane] = NULL;
           }
         freePicMotion (&p->JVmotion[nplane]);
@@ -779,12 +779,12 @@ void freePicture (sPicture* p) {
       }
 
     if (p->imgY) {
-      free_mem2Dpel_pad (p->imgY, p->iLumaPadY, p->iLumaPadX);
+      freeMem2DpelPad (p->imgY, p->iLumaPadY, p->iLumaPadX);
       p->imgY = NULL;
       }
 
     if (p->imgUV) {
-      free_mem3Dpel_pad (p->imgUV, 2, p->iChromaPadY, p->iChromaPadX);
+      freeMem3DpelPad (p->imgUV, 2, p->iChromaPadY, p->iChromaPadX);
       p->imgUV = NULL;
       }
 
@@ -1041,15 +1041,15 @@ void initDpb (sDecoder* decoder, sDPB* dpb, int type) {
 
   dpb->fs = calloc (dpb->size, sizeof (sFrameStore*));
   if (!dpb->fs)
-    no_mem_exit ("initDpb: dpb->fs");
+    noMemoryExit ("initDpb: dpb->fs");
 
   dpb->fsRef = calloc (dpb->size, sizeof (sFrameStore*));
   if (!dpb->fsRef)
-    no_mem_exit ("initDpb: dpb->fsRef");
+    noMemoryExit ("initDpb: dpb->fsRef");
 
   dpb->fsLongTermRef = calloc (dpb->size, sizeof (sFrameStore*));
   if (!dpb->fsLongTermRef)
-    no_mem_exit ("initDpb: dpb->fsLongTermRef");
+    noMemoryExit ("initDpb: dpb->fsLongTermRef");
 
   for (unsigned i = 0; i < dpb->size; i++) {
     dpb->fs[i] = allocFrameStore();
@@ -1086,15 +1086,15 @@ void reInitDpb (sDecoder* decoder, sDPB* dpb, int type) {
 
     dpb->fs = realloc (dpb->fs, dpbSize * sizeof (sFrameStore*));
     if (!dpb->fs)
-      no_mem_exit ("reInitDpb: dpb->fs");
+      noMemoryExit ("reInitDpb: dpb->fs");
 
     dpb->fsRef = realloc(dpb->fsRef, dpbSize * sizeof (sFrameStore*));
     if (!dpb->fsRef)
-      no_mem_exit ("reInitDpb: dpb->fsRef");
+      noMemoryExit ("reInitDpb: dpb->fsRef");
 
     dpb->fsLongTermRef = realloc(dpb->fsLongTermRef, dpbSize * sizeof (sFrameStore*));
     if (!dpb->fsLongTermRef)
-      no_mem_exit ("reInitDpb: dpb->fsLongTermRef");
+      noMemoryExit ("reInitDpb: dpb->fsLongTermRef");
 
     for (int i = dpb->size; i < dpbSize; i++) {
       dpb->fs[i] = allocFrameStore();
@@ -1916,10 +1916,10 @@ void initImage (sDecoder* decoder, sImage* image, sSPS* sps) {
 
   if (!decoder->activeSPS->frameMbOnlyFlag) {
     // allocate memory for field reference frame buffers
-    init_top_bot_planes (image->frm_data[0], decoder->height, &(image->top_data[0]), &(image->bot_data[0]));
+    initTopBotPlanes (image->frm_data[0], decoder->height, &(image->top_data[0]), &(image->bot_data[0]));
     if (decoder->coding.yuvFormat != YUV400) {
-      init_top_bot_planes (image->frm_data[1], decoder->heightCr, &(image->top_data[1]), &(image->bot_data[1]));
-      init_top_bot_planes (image->frm_data[2], decoder->heightCr, &(image->top_data[2]), &(image->bot_data[2]));
+      initTopBotPlanes (image->frm_data[1], decoder->heightCr, &(image->top_data[1]), &(image->bot_data[1]));
+      initTopBotPlanes (image->frm_data[2], decoder->heightCr, &(image->top_data[2]), &(image->bot_data[2]));
       }
     }
   }
@@ -1930,7 +1930,7 @@ void freeImage (sDecoder* decoder, sImage* image) {
   if (decoder->coding.sepColourPlaneFlag ) {
     for (int nplane = 0; nplane < MAX_PLANE; nplane++ ) {
       if (image->frm_data[nplane]) {
-        free_mem2Dpel (image->frm_data[nplane]);      // free ref frame buffers
+        freeMem2Dpel (image->frm_data[nplane]);      // free ref frame buffers
         image->frm_data[nplane] = NULL;
         }
       }
@@ -1938,27 +1938,27 @@ void freeImage (sDecoder* decoder, sImage* image) {
 
   else {
     if (image->frm_data[0]) {
-      free_mem2Dpel (image->frm_data[0]);      // free ref frame buffers
+      freeMem2Dpel (image->frm_data[0]);      // free ref frame buffers
       image->frm_data[0] = NULL;
       }
 
     if (image->format.yuvFormat != YUV400) {
       if (image->frm_data[1]) {
-        free_mem2Dpel (image->frm_data[1]);
+        freeMem2Dpel (image->frm_data[1]);
         image->frm_data[1] = NULL;
         }
       if (image->frm_data[2]) {
-        free_mem2Dpel (image->frm_data[2]);
+        freeMem2Dpel (image->frm_data[2]);
         image->frm_data[2] = NULL;
         }
       }
     }
 
   if (!decoder->activeSPS->frameMbOnlyFlag) {
-    free_top_bot_planes(image->top_data[0], image->bot_data[0]);
+    freeTopBotPlanes (image->top_data[0], image->bot_data[0]);
     if (image->format.yuvFormat != YUV400) {
-      free_top_bot_planes (image->top_data[1], image->bot_data[1]);
-      free_top_bot_planes (image->top_data[2], image->bot_data[2]);
+      freeTopBotPlanes (image->top_data[1], image->bot_data[1]);
+      freeTopBotPlanes (image->top_data[2], image->bot_data[2]);
       }
     }
   }
@@ -1966,37 +1966,37 @@ void freeImage (sDecoder* decoder, sImage* image) {
 
 // slice
 //{{{
-static void reorderShortTerm (sSlice* slice, int curList, int num_ref_idx_lX_active_minus1, int picNumLX, int *refIdxLX) {
+static void reorderShortTerm (sSlice* slice, int curList, int numRefIndexIXactiveMinus1, int picNumLX, int *refIdxLX) {
 
-  sPicture** RefPicListX = slice->listX[curList];
-  sPicture* picLX = get_short_term_pic (slice, slice->dpb, picNumLX);
+  sPicture** refPicListX = slice->listX[curList];
+  sPicture* picLX = getShortTermPic (slice, slice->dpb, picNumLX);
 
-  for (int cIdx = num_ref_idx_lX_active_minus1+1; cIdx > *refIdxLX; cIdx--)
-    RefPicListX[cIdx] = RefPicListX[cIdx - 1];
-  RefPicListX[(*refIdxLX)++] = picLX;
+  for (int cIdx = numRefIndexIXactiveMinus1+1; cIdx > *refIdxLX; cIdx--)
+    refPicListX[cIdx] = refPicListX[cIdx - 1];
+  refPicListX[(*refIdxLX)++] = picLX;
 
   int nIdx = *refIdxLX;
-  for (int cIdx = *refIdxLX; cIdx <= num_ref_idx_lX_active_minus1+1; cIdx++)
-    if (RefPicListX[cIdx])
-      if ((RefPicListX[cIdx]->isLongTerm) || (RefPicListX[cIdx]->picNum != picNumLX))
-        RefPicListX[nIdx++] = RefPicListX[ cIdx ];
+  for (int cIdx = *refIdxLX; cIdx <= numRefIndexIXactiveMinus1+1; cIdx++)
+    if (refPicListX[cIdx])
+      if ((refPicListX[cIdx]->isLongTerm) || (refPicListX[cIdx]->picNum != picNumLX))
+        refPicListX[nIdx++] = refPicListX[ cIdx ];
   }
 //}}}
 //{{{
-static void reorderLongTerm (sSlice* slice, sPicture** RefPicListX,
-                             int num_ref_idx_lX_active_minus1, int LongTermPicNum, int *refIdxLX) {
+static void reorderLongTerm (sSlice* slice, sPicture** refPicListX,
+                             int numRefIndexIXactiveMinus1, int LongTermPicNum, int *refIdxLX) {
 
   sPicture* picLX = get_long_term_pic (slice, slice->dpb, LongTermPicNum);
 
-  for (int cIdx = num_ref_idx_lX_active_minus1+1; cIdx > *refIdxLX; cIdx--)
-    RefPicListX[cIdx] = RefPicListX[cIdx - 1];
-  RefPicListX[(*refIdxLX)++] = picLX;
+  for (int cIdx = numRefIndexIXactiveMinus1+1; cIdx > *refIdxLX; cIdx--)
+    refPicListX[cIdx] = refPicListX[cIdx - 1];
+  refPicListX[(*refIdxLX)++] = picLX;
 
   int nIdx = *refIdxLX;
-  for (int cIdx = *refIdxLX; cIdx <= num_ref_idx_lX_active_minus1+1; cIdx++)
-    if (RefPicListX[cIdx])
-      if ((!RefPicListX[cIdx]->isLongTerm ) || (RefPicListX[cIdx]->longTermPicNum != LongTermPicNum))
-        RefPicListX[nIdx++] = RefPicListX[cIdx];
+  for (int cIdx = *refIdxLX; cIdx <= numRefIndexIXactiveMinus1+1; cIdx++)
+    if (refPicListX[cIdx])
+      if ((!refPicListX[cIdx]->isLongTerm ) || (refPicListX[cIdx]->longTermPicNum != LongTermPicNum))
+        refPicListX[nIdx++] = refPicListX[cIdx];
   }
 //}}}
 //{{{
@@ -2005,7 +2005,7 @@ void reorderRefPicList (sSlice* slice, int curList) {
   int* modPicNumsIdc = slice->modPicNumsIdc[curList];
   int* absDiffPicNumMinus1 = slice->absDiffPicNumMinus1[curList];
   int* longTermPicIndex = slice->longTermPicIndex[curList];
-  int num_ref_idx_lX_active_minus1 = slice->numRefIndexActive[curList] - 1;
+  int numRefIndexIXactiveMinus1 = slice->numRefIndexActive[curList] - 1;
 
   sDecoder* decoder = slice->decoder;
 
@@ -2047,14 +2047,14 @@ void reorderRefPicList (sSlice* slice, int curList) {
       else
         picNumLX = picNumLXNoWrap;
 
-      reorderShortTerm (slice, curList, num_ref_idx_lX_active_minus1, picNumLX, &refIdxLX);
+      reorderShortTerm (slice, curList, numRefIndexIXactiveMinus1, picNumLX, &refIdxLX);
       }
     else
-      reorderLongTerm (slice, slice->listX[curList], num_ref_idx_lX_active_minus1, longTermPicIndex[i], &refIdxLX);
+      reorderLongTerm (slice, slice->listX[curList], numRefIndexIXactiveMinus1, longTermPicIndex[i], &refIdxLX);
     }
 
   // that's a definition
-  slice->listXsize[curList] = (char)(num_ref_idx_lX_active_minus1 + 1);
+  slice->listXsize[curList] = (char)(numRefIndexIXactiveMinus1 + 1);
   }
 //}}}
 
@@ -2066,12 +2066,12 @@ void updatePicNum (sSlice* slice) {
 
   int addTop = 0;
   int addBot = 0;
-  int maxFrameNum = 1 << (activeSPS->log2_max_frame_num_minus4 + 4);
+  int maxFrameNum = 1 << (activeSPS->log2maxFrameNumMinus4 + 4);
 
   sDPB* dpb = slice->dpb;
   if (slice->picStructure == eFrame) {
     for (unsigned int i = 0; i < dpb->refFramesInBuffer; i++) {
-      if (dpb->fsRef[i]->isUsed==3 ) {
+      if (dpb->fsRef[i]->isUsed == 3 ) {
         if ((dpb->fsRef[i]->frame->usedForReference)&&(!dpb->fsRef[i]->frame->isLongTerm)) {
           if (dpb->fsRef[i]->frameNum > slice->frameNum )
             dpb->fsRef[i]->frameNumWrap = dpb->fsRef[i]->frameNum - maxFrameNum;
@@ -2084,7 +2084,7 @@ void updatePicNum (sSlice* slice) {
 
     // update longTermPicNum
     for (unsigned int i = 0; i < dpb->longTermRefFramesInBuffer; i++) {
-      if (dpb->fsLongTermRef[i]->isUsed==3) {
+      if (dpb->fsLongTermRef[i]->isUsed == 3) {
         if (dpb->fsLongTermRef[i]->frame->isLongTerm)
           dpb->fsLongTermRef[i]->frame->longTermPicNum = dpb->fsLongTermRef[i]->frame->longTermFrameIndex;
         }
@@ -2124,7 +2124,7 @@ void updatePicNum (sSlice* slice) {
   }
 //}}}
 //{{{
-sPicture* get_short_term_pic (sSlice* slice, sDPB* dpb, int picNum) {
+sPicture* getShortTermPic (sSlice* slice, sDPB* dpb, int picNum) {
 
   for (unsigned i = 0; i < dpb->refFramesInBuffer; i++) {
     if (slice->picStructure == eFrame) {
@@ -2160,7 +2160,7 @@ void initListsSliceP (sSlice* slice) {
   sDPB* dpb = slice->dpb;
 
   int list0idx = 0;
-  int listltidx = 0;
+  int listLtIndex = 0;
   sFrameStore** fsList0;
   sFrameStore** fsListLongTerm;
 
@@ -2170,7 +2170,7 @@ void initListsSliceP (sSlice* slice) {
         if ((dpb->fsRef[i]->frame->usedForReference) && (!dpb->fsRef[i]->frame->isLongTerm))
           slice->listX[0][list0idx++] = dpb->fsRef[i]->frame;
 
-    // order list 0 by PicNum
+    // order list 0 by picNum
     qsort ((void *)slice->listX[0], list0idx, sizeof(sPicture*), compare_pic_by_pic_num_desc);
     slice->listXsize[0] = (char) list0idx;
 
@@ -2179,16 +2179,16 @@ void initListsSliceP (sSlice* slice) {
       if (dpb->fsLongTermRef[i]->isUsed == 3)
         if (dpb->fsLongTermRef[i]->frame->isLongTerm)
           slice->listX[0][list0idx++] = dpb->fsLongTermRef[i]->frame;
-    qsort ((void*)&slice->listX[0][(short) slice->listXsize[0]], list0idx - slice->listXsize[0], sizeof(sPicture*), compare_pic_by_lt_pic_num_asc);
+    qsort ((void*)&slice->listX[0][(short)slice->listXsize[0]], list0idx - slice->listXsize[0], sizeof(sPicture*), comparePicByLtPicNumAsc);
     slice->listXsize[0] = (char) list0idx;
     }
   else {
     fsList0 = calloc (dpb->size, sizeof(sFrameStore*));
     if (!fsList0)
-      no_mem_exit ("initLists: fsList0");
+      noMemoryExit ("initLists: fsList0");
     fsListLongTerm = calloc (dpb->size, sizeof(sFrameStore*));
     if (!fsListLongTerm)
-      no_mem_exit("initLists: fsListLongTerm");
+      noMemoryExit ("initLists: fsListLongTerm");
 
     for (unsigned int i = 0; i < dpb->refFramesInBuffer; i++)
       if (dpb->fsRef[i]->isReference)
@@ -2199,9 +2199,9 @@ void initListsSliceP (sSlice* slice) {
 
     // long term handling
     for (unsigned int i = 0; i < dpb->longTermRefFramesInBuffer; i++)
-      fsListLongTerm[listltidx++] = dpb->fsLongTermRef[i];
-    qsort ((void*)fsListLongTerm, listltidx, sizeof(sFrameStore*), compare_fs_by_lt_pic_idx_asc);
-    genPicListFromFrameList (slice->picStructure, fsListLongTerm, listltidx, slice->listX[0], &slice->listXsize[0], 1);
+      fsListLongTerm[listLtIndex++] = dpb->fsLongTermRef[i];
+    qsort ((void*)fsListLongTerm, listLtIndex, sizeof(sFrameStore*), compareFsbyLtPicIndexAsc);
+    genPicListFromFrameList (slice->picStructure, fsListLongTerm, listLtIndex, slice->listX[0], &slice->listXsize[0], 1);
 
     free (fsList0);
     free (fsListLongTerm);
@@ -2229,8 +2229,8 @@ void initListsSliceB (sSlice* slice) {
   int j;
 
   int list0idx = 0;
-  int list0idx_1 = 0;
-  int listltidx = 0;
+  int list0index1 = 0;
+  int listLtIndex = 0;
 
   sFrameStore** fsList0;
   sFrameStore** fs_list1;
@@ -2241,24 +2241,24 @@ void initListsSliceB (sSlice* slice) {
     //{{{  frame
     for (i = 0; i < dpb->refFramesInBuffer; i++)
       if (dpb->fsRef[i]->isUsed==3)
-        if ((dpb->fsRef[i]->frame->usedForReference)&&(!dpb->fsRef[i]->frame->isLongTerm))
-          if (slice->framePoc >= dpb->fsRef[i]->frame->poc) //!KS use >= for error conceal
+        if ((dpb->fsRef[i]->frame->usedForReference) && (!dpb->fsRef[i]->frame->isLongTerm))
+          if (slice->framePoc >= dpb->fsRef[i]->frame->poc) // !KS use >= for error conceal
             slice->listX[0][list0idx++] = dpb->fsRef[i]->frame;
-    qsort ((void *)slice->listX[0], list0idx, sizeof(sPicture*), compare_pic_by_poc_desc);
+    qsort ((void*)slice->listX[0], list0idx, sizeof(sPicture*), compare_pic_by_poc_desc);
 
     // get the backward reference picture (POC>current POC) in list0;
-    list0idx_1 = list0idx;
+    list0index1 = list0idx;
     for (i = 0; i < dpb->refFramesInBuffer; i++)
       if (dpb->fsRef[i]->isUsed==3)
         if ((dpb->fsRef[i]->frame->usedForReference)&&(!dpb->fsRef[i]->frame->isLongTerm))
           if (slice->framePoc < dpb->fsRef[i]->frame->poc)
             slice->listX[0][list0idx++] = dpb->fsRef[i]->frame;
-    qsort ((void*)&slice->listX[0][list0idx_1], list0idx-list0idx_1, sizeof(sPicture*), compare_pic_by_poc_asc);
+    qsort ((void*)&slice->listX[0][list0index1], list0idx-list0index1, sizeof(sPicture*), compare_pic_by_poc_asc);
 
-    for (j = 0; j < list0idx_1; j++)
-      slice->listX[1][list0idx-list0idx_1+j]=slice->listX[0][j];
-    for (j = list0idx_1; j < list0idx; j++)
-      slice->listX[1][j-list0idx_1] = slice->listX[0][j];
+    for (j = 0; j < list0index1; j++)
+      slice->listX[1][list0idx-list0index1+j]=slice->listX[0][j];
+    for (j = list0index1; j < list0idx; j++)
+      slice->listX[1][j-list0index1] = slice->listX[0][j];
     slice->listXsize[0] = slice->listXsize[1] = (char) list0idx;
 
     // long term handling
@@ -2270,8 +2270,8 @@ void initListsSliceB (sSlice* slice) {
           }
         }
       }
-    qsort ((void *)&slice->listX[0][(short) slice->listXsize[0]], list0idx - slice->listXsize[0], sizeof(sPicture*), compare_pic_by_lt_pic_num_asc);
-    qsort ((void *)&slice->listX[1][(short) slice->listXsize[0]], list0idx - slice->listXsize[0], sizeof(sPicture*), compare_pic_by_lt_pic_num_asc);
+    qsort ((void *)&slice->listX[0][(short) slice->listXsize[0]], list0idx - slice->listXsize[0], sizeof(sPicture*), comparePicByLtPicNumAsc);
+    qsort ((void *)&slice->listX[1][(short) slice->listXsize[0]], list0idx - slice->listXsize[0], sizeof(sPicture*), comparePicByLtPicNumAsc);
     slice->listXsize[0] = slice->listXsize[1] = (char)list0idx;
     }
     //}}}
@@ -2287,19 +2287,19 @@ void initListsSliceB (sSlice* slice) {
       if (dpb->fsRef[i]->isUsed)
         if (slice->thisPoc >= dpb->fsRef[i]->poc)
           fsList0[list0idx++] = dpb->fsRef[i];
-    qsort ((void *)fsList0, list0idx, sizeof(sFrameStore*), compare_fs_by_poc_desc);
+    qsort ((void*)fsList0, list0idx, sizeof(sFrameStore*), compare_fs_by_poc_desc);
 
-    list0idx_1 = list0idx;
+    list0index1 = list0idx;
     for (i = 0; i < dpb->refFramesInBuffer; i++)
       if (dpb->fsRef[i]->isUsed)
         if (slice->thisPoc < dpb->fsRef[i]->poc)
           fsList0[list0idx++] = dpb->fsRef[i];
-    qsort ((void*)&fsList0[list0idx_1], list0idx-list0idx_1, sizeof(sFrameStore*), compare_fs_by_poc_asc);
+    qsort ((void*)&fsList0[list0index1], list0idx-list0index1, sizeof(sFrameStore*), compareFsByPocAsc);
 
-    for (j = 0; j < list0idx_1; j++)
-      fs_list1[list0idx-list0idx_1+j]=fsList0[j];
-    for (j = list0idx_1; j < list0idx; j++)
-      fs_list1[j-list0idx_1]=fsList0[j];
+    for (j = 0; j < list0index1; j++)
+      fs_list1[list0idx-list0index1+j]=fsList0[j];
+    for (j = list0index1; j < list0idx; j++)
+      fs_list1[j-list0index1]=fsList0[j];
 
     slice->listXsize[0] = 0;
     slice->listXsize[1] = 0;
@@ -2308,11 +2308,11 @@ void initListsSliceB (sSlice* slice) {
 
     // long term handling
     for (i = 0; i < dpb->longTermRefFramesInBuffer; i++)
-      fsListLongTerm[listltidx++] = dpb->fsLongTermRef[i];
+      fsListLongTerm[listLtIndex++] = dpb->fsLongTermRef[i];
 
-    qsort ((void*)fsListLongTerm, listltidx, sizeof(sFrameStore*), compare_fs_by_lt_pic_idx_asc);
-    genPicListFromFrameList (slice->picStructure, fsListLongTerm, listltidx, slice->listX[0], &slice->listXsize[0], 1);
-    genPicListFromFrameList (slice->picStructure, fsListLongTerm, listltidx, slice->listX[1], &slice->listXsize[1], 1);
+    qsort ((void*)fsListLongTerm, listLtIndex, sizeof(sFrameStore*), compareFsbyLtPicIndexAsc);
+    genPicListFromFrameList (slice->picStructure, fsListLongTerm, listLtIndex, slice->listX[0], &slice->listXsize[0], 1);
+    genPicListFromFrameList (slice->picStructure, fsListLongTerm, listLtIndex, slice->listX[1], &slice->listXsize[1], 1);
 
     free (fsList0);
     free (fs_list1);
@@ -2358,7 +2358,7 @@ void init_mbaff_lists (sDecoder* decoder, sSlice* slice) {
   for (int i = 2; i < 6; i++) {
     for (unsigned j = 0; j < MAX_LIST_SIZE; j++)
       slice->listX[i][j] = decoder->noReferencePicture;
-    slice->listXsize[i]=0;
+    slice->listXsize[i] = 0;
     }
 
   for (int i = 0; i < slice->listXsize[0]; i++) {
@@ -2385,11 +2385,11 @@ void allocRefPicListReordeBuffer (sSlice* slice) {
   if (slice->sliceType != eIslice && slice->sliceType != eSIslice) {
     int size = slice->numRefIndexActive[LIST_0] + 1;
     if ((slice->modPicNumsIdc[LIST_0] = calloc (size ,sizeof(int))) == NULL)
-       no_mem_exit ("allocRefPicListReordeBuffer: modification_of_pic_nums_idc_l0");
+       noMemoryExit ("allocRefPicListReordeBuffer: modification_of_pic_nums_idc_l0");
     if ((slice->absDiffPicNumMinus1[LIST_0] = calloc (size,sizeof(int))) == NULL)
-       no_mem_exit ("allocRefPicListReordeBuffer: abs_diff_pic_num_minus1_l0");
+       noMemoryExit ("allocRefPicListReordeBuffer: abs_diff_pic_num_minus1_l0");
     if ((slice->longTermPicIndex[LIST_0] = calloc (size,sizeof(int))) == NULL)
-       no_mem_exit ("allocRefPicListReordeBuffer: long_term_pic_idx_l0");
+       noMemoryExit ("allocRefPicListReordeBuffer: long_term_pic_idx_l0");
     }
   else {
     slice->modPicNumsIdc[LIST_0] = NULL;
@@ -2400,11 +2400,11 @@ void allocRefPicListReordeBuffer (sSlice* slice) {
   if (slice->sliceType == eBslice) {
     int size = slice->numRefIndexActive[LIST_1] + 1;
     if ((slice->modPicNumsIdc[LIST_1] = calloc (size,sizeof(int))) == NULL)
-      no_mem_exit ("allocRefPicListReordeBuffer: modification_of_pic_nums_idc_l1");
+      noMemoryExit ("allocRefPicListReordeBuffer: modification_of_pic_nums_idc_l1");
     if ((slice->absDiffPicNumMinus1[LIST_1] = calloc (size,sizeof(int))) == NULL)
-      no_mem_exit ("allocRefPicListReordeBuffer: abs_diff_pic_num_minus1_l1");
+      noMemoryExit ("allocRefPicListReordeBuffer: abs_diff_pic_num_minus1_l1");
     if ((slice->longTermPicIndex[LIST_1] = calloc (size,sizeof(int))) == NULL)
-      no_mem_exit ("allocRefPicListReordeBuffer: long_term_pic_idx_l1");
+      noMemoryExit ("allocRefPicListReordeBuffer: long_term_pic_idx_l1");
     }
   else {
     slice->modPicNumsIdc[LIST_1] = NULL;
@@ -2417,22 +2417,22 @@ void allocRefPicListReordeBuffer (sSlice* slice) {
 void freeRefPicListReorderingBuffer (sSlice* slice) {
 
   if (slice->modPicNumsIdc[LIST_0])
-    free(slice->modPicNumsIdc[LIST_0]);
+    free (slice->modPicNumsIdc[LIST_0]);
   if (slice->absDiffPicNumMinus1[LIST_0])
-    free(slice->absDiffPicNumMinus1[LIST_0]);
+    free (slice->absDiffPicNumMinus1[LIST_0]);
   if (slice->longTermPicIndex[LIST_0])
-    free(slice->longTermPicIndex[LIST_0]);
+    free (slice->longTermPicIndex[LIST_0]);
 
   slice->modPicNumsIdc[LIST_0] = NULL;
   slice->absDiffPicNumMinus1[LIST_0] = NULL;
   slice->longTermPicIndex[LIST_0] = NULL;
 
   if (slice->modPicNumsIdc[LIST_1])
-    free(slice->modPicNumsIdc[LIST_1]);
+    free (slice->modPicNumsIdc[LIST_1]);
   if (slice->absDiffPicNumMinus1[LIST_1])
-    free(slice->absDiffPicNumMinus1[LIST_1]);
+    free (slice->absDiffPicNumMinus1[LIST_1]);
   if (slice->longTermPicIndex[LIST_1])
-    free(slice->longTermPicIndex[LIST_1]);
+    free (slice->longTermPicIndex[LIST_1]);
 
   slice->modPicNumsIdc[LIST_1] = NULL;
   slice->absDiffPicNumMinus1[LIST_1] = NULL;

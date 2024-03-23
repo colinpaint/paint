@@ -2,7 +2,7 @@
 #include "global.h"
 #include "memory.h"
 
-#include "biariDecode.h"
+#include "binaryArithmeticDecode.h"
 //}}}
 
 //{{{  defines
@@ -128,7 +128,7 @@ static inline unsigned int getWord (sDecodeEnv* decodeEnv) {
 //}}}
 
 //{{{
-void aridecoStartDecoding (sDecodeEnv* decodeEnv, unsigned char* code_buffer, int firstbyte, int* codeLen) {
+void arithmeticDecodeStartDecoding (sDecodeEnv* decodeEnv, unsigned char* code_buffer, int firstbyte, int* codeLen) {
 
   decodeEnv->codeStream = code_buffer;
   decodeEnv->codeStreamLen = codeLen;
@@ -143,13 +143,13 @@ void aridecoStartDecoding (sDecodeEnv* decodeEnv, unsigned char* code_buffer, in
   }
 //}}}
 //{{{
-int aridecoBitsRead (sDecodeEnv* decodeEnv) {
+int arithmeticDecodeBitsRead (sDecodeEnv* decodeEnv) {
   return ((*decodeEnv->codeStreamLen) << 3) - decodeEnv->bitsLeft;
   }
 //}}}
 
 //{{{
-unsigned int biarDecodeSymbol (sDecodeEnv* decodeEnv, sBiContextType* biContext) {
+unsigned int binaryArithmeticDecodeSymbol (sDecodeEnv* decodeEnv, sBiContextType* biContext) {
 
   unsigned int bit = biContext->MPS;
   unsigned int* value = &decodeEnv->value;
@@ -196,7 +196,7 @@ unsigned int biarDecodeSymbol (sDecodeEnv* decodeEnv, sBiContextType* biContext)
   }
 //}}}
 //{{{
-unsigned int biariDecodeSymbolEqProb (sDecodeEnv* decodeEnv) {
+unsigned int binaryArithmeticDecodeSymbolEqProb (sDecodeEnv* decodeEnv) {
 
   int tmp_value;
   unsigned int* value = &decodeEnv->value;
@@ -218,7 +218,7 @@ unsigned int biariDecodeSymbolEqProb (sDecodeEnv* decodeEnv) {
   }
 //}}}
 //{{{
-unsigned int biariDecodeFinal (sDecodeEnv* decodeEnv) {
+unsigned int binaryArithmeticDecodeFinal (sDecodeEnv* decodeEnv) {
 
   unsigned int range  = decodeEnv->range - 2;
 
@@ -247,7 +247,7 @@ unsigned int biariDecodeFinal (sDecodeEnv* decodeEnv) {
 //}}}
 
 //{{{
-void biariInitContext (int qp, sBiContextType* context, const char* ini) {
+void binaryArithmeticInitContext (int qp, sBiContextType* context, const char* ini) {
 
   int pstate = ((ini[0] * qp) >> 4) + ini[1];
 

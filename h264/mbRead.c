@@ -12,7 +12,7 @@
 #include "vlc.h"
 #include "image.h"
 #include "mbAccess.h"
-#include "biariDecode.h"
+#include "binaryArithmeticDecode.h"
 #include "transform.h"
 #include "mcPred.h"
 #include "quant.h"
@@ -414,7 +414,7 @@ static void initIPCMdecoding (sSlice* slice) {
   for (int i = 0; i < dpNum;++i) {
     sBitStream* stream = slice->dataPartitions[i].s;
     int byteStartPosition = stream->readLen;
-    aridecoStartDecoding (&slice->dataPartitions[i].deCabac, stream->bitStreamBuffer, byteStartPosition, &stream->readLen);
+    arithmeticDecodeStartDecoding (&slice->dataPartitions[i].deCabac, stream->bitStreamBuffer, byteStartPosition, &stream->readLen);
     }
   }
 //}}}

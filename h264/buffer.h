@@ -157,7 +157,7 @@ static inline int compare_pic_by_pic_num_desc (const void* arg1, const void* arg
 //}}}
 //{{{
 // compares two stored pictures by picture number for qsort in descending order
-static inline int compare_pic_by_lt_pic_num_asc (const void* arg1, const void* arg2 )
+static inline int comparePicByLtPicNumAsc (const void* arg1, const void* arg2 )
 {
   int long_term_pic_num1 = (*(sPicture**)arg1)->longTermPicNum;
   int long_term_pic_num2 = (*(sPicture**)arg2)->longTermPicNum;
@@ -186,7 +186,7 @@ static inline int compare_fs_by_frame_num_desc (const void* arg1, const void* ar
 //}}}
 //{{{
 // compares two frame stores by lt_pic_num for qsort in descending order
-static inline int compare_fs_by_lt_pic_idx_asc (const void* arg1, const void* arg2 )
+static inline int compareFsbyLtPicIndexAsc (const void* arg1, const void* arg2 )
 {
   int long_term_frame_idx1 = (*(sFrameStore**)arg1)->longTermFrameIndex;
   int long_term_frame_idx2 = (*(sFrameStore**)arg2)->longTermFrameIndex;
@@ -231,7 +231,7 @@ static inline int compare_pic_by_poc_desc (const void* arg1, const void* arg2 )
 //}}}
 //{{{
 // compares two frame stores by poc for qsort in ascending order
-static inline int compare_fs_by_poc_asc (const void* arg1, const void* arg2 )
+static inline int compareFsByPocAsc (const void* arg1, const void* arg2 )
 {
   int poc1 = (*(sFrameStore**)arg1)->poc;
   int poc2 = (*(sFrameStore**)arg2)->poc;
@@ -314,7 +314,7 @@ extern void updatePicNum (sSlice* slice);
 extern void dpbCombineField (sDecoder* decoder, sFrameStore* frameStore);
 extern void reorderRefPicList (sSlice* slice, int curList);
 extern void init_mbaff_lists (sDecoder* decoder, sSlice* slice);
-extern sPicture* get_short_term_pic (sSlice* slice, sDPB* dpb, int picNum);
+extern sPicture* getShortTermPic (sSlice* slice, sDPB* dpb, int picNum);
 
 extern void allocRefPicListReordeBuffer (sSlice* slice);
 extern void freeRefPicListReorderingBuffer (sSlice* slice);

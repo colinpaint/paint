@@ -91,12 +91,12 @@ sNalu* allocNALU (int buffersize) {
 
   sNalu* nalu = (sNalu*)calloc (1, sizeof(sNalu));
   if (nalu == NULL)
-    no_mem_exit ("AllocNALU");
+    noMemoryExit ("AllocNALU");
 
   nalu->buf = (byte*)calloc (buffersize, sizeof (byte));
   if (nalu->buf == NULL) {
     free (nalu);
-    no_mem_exit ("AllocNALU buffer");
+    noMemoryExit ("AllocNALU buffer");
     }
   nalu->maxSize = buffersize;
 

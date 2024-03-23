@@ -104,7 +104,7 @@ static void writeOutPicture (sDecoder* decoder, sPicture* p) {
   decodedPic->valid = 1;
   decodedPic->poc = p->framePoc;
   if (!decodedPic->yBuf)
-    no_mem_exit ("writeOutPicture: buf");
+    noMemoryExit ("writeOutPicture: buf");
 
   img2buf (p->imgY,
            (decodedPic->valid == 1) ? decodedPic->yBuf : decodedPic->yBuf + lumaSizeX * symbolSizeInBytes,
@@ -134,12 +134,12 @@ static void flushPendingOut (sDecoder* decoder) {
     writeOutPicture (decoder, decoder->pendingOut);
 
   if (decoder->pendingOut->imgY) {
-    free_mem2Dpel (decoder->pendingOut->imgY);
+    freeMem2Dpel (decoder->pendingOut->imgY);
     decoder->pendingOut->imgY = NULL;
     }
 
   if (decoder->pendingOut->imgUV) {
-    free_mem3Dpel (decoder->pendingOut->imgUV);
+    freeMem3Dpel (decoder->pendingOut->imgUV);
     decoder->pendingOut->imgUV = NULL;
     }
 

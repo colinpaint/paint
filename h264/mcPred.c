@@ -27,11 +27,11 @@ int allocPred (sSlice* slice) {
 //{{{
 void freePred (sSlice* slice) {
 
-  free_mem2Dint (slice->tempRes);
-  free_mem2Dpel (slice->tempBlockL0);
-  free_mem2Dpel (slice->tempBlockL1);
-  free_mem2Dpel (slice->tempBlockL2);
-  free_mem2Dpel (slice->tempBlockL3);
+  freeMem2Dint (slice->tempRes);
+  freeMem2Dpel (slice->tempBlockL0);
+  freeMem2Dpel (slice->tempBlockL1);
+  freeMem2Dpel (slice->tempBlockL2);
+  freeMem2Dpel (slice->tempBlockL3);
   }
 //}}}
 

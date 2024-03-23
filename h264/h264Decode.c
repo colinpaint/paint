@@ -70,7 +70,7 @@ sSlice* allocSlice (sDecoder* decoder) {
   for (int i = 0; i < 6; i++) {
     slice->listX[i] = calloc (MAX_LIST_SIZE, sizeof (sPicture*)); // +1 for reordering
     if (!slice->listX[i])
-      no_mem_exit ("allocSlice - slice->listX[i]");
+      noMemoryExit ("allocSlice - slice->listX[i]");
     }
 
   for (int j = 0; j < 6; j++) {
@@ -89,15 +89,15 @@ static void freeSlice (sSlice *slice) {
     freeRefPicListReorderingBuffer (slice);
 
   freePred (slice);
-  free_mem3Dint (slice->cof);
-  free_mem3Dint (slice->mbRess);
-  free_mem3Dpel (slice->mbRec);
-  free_mem3Dpel (slice->mbPred);
+  freeMem3Dint (slice->cof);
+  freeMem3Dint (slice->mbRess);
+  freeMem3Dpel (slice->mbRec);
+  freeMem3Dpel (slice->mbPred);
 
-  free_mem2Dwp (slice->wpParam);
-  free_mem3Dint (slice->wpWeight);
-  free_mem3Dint (slice->wpOffset);
-  free_mem4Dint (slice->wbpWeight);
+  freeMem2Dwp (slice->wpParam);
+  freeMem3Dint (slice->wpWeight);
+  freeMem3Dint (slice->wpOffset);
+  freeMem4Dint (slice->wbpWeight);
 
   freeDataPartitions (slice->dataPartitions, 3);
 
@@ -315,10 +315,10 @@ void freeLayerBuffers (sDecoder* decoder) {
       free (decoder->mbDataJV[i]);
       decoder->mbDataJV[i] = NULL;
 
-      free_mem2Dint (decoder->siBlockJV[i]);
+      freeMem2Dint (decoder->siBlockJV[i]);
       decoder->siBlockJV[i] = NULL;
 
-      free_mem2D (decoder->predModeJV[i]);
+      freeMem2D (decoder->predModeJV[i]);
       decoder->predModeJV[i] = NULL;
 
       free (decoder->intraBlockJV[i]);
@@ -329,10 +329,10 @@ void freeLayerBuffers (sDecoder* decoder) {
     free (decoder->mbData);
     decoder->mbData = NULL;
 
-    free_mem2Dint (decoder->siBlock);
+    freeMem2Dint (decoder->siBlock);
     decoder->siBlock = NULL;
 
-    free_mem2D (decoder->predMode);
+    freeMem2D (decoder->predMode);
     decoder->predMode = NULL;
 
     free (decoder->intraBlock);
@@ -344,7 +344,7 @@ void freeLayerBuffers (sDecoder* decoder) {
   decoder->picPos = NULL;
 
   // free cavlc
-  free_mem4D (decoder->nzCoeff);
+  freeMem4D (decoder->nzCoeff);
   decoder->nzCoeff = NULL;
 
   // free quant

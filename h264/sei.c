@@ -556,7 +556,7 @@ static void process_spare_pic (byte* payload, int size, sDecoder* decoder) {
       }
     }
 
-  free_mem3D (map);
+  freeMem3D (map);
   free (buf);
   }
 //}}}
@@ -1100,7 +1100,7 @@ static void process_post_filter_hints_info (byte* payload, int size, sDecoder* d
 
   printf ("additional_extension_flag %d \n", additional_extension_flag);
 
-  free_mem3Dint (filter_hint);
+  freeMem3Dint (filter_hint);
   free( buf);
   }
 //}}}

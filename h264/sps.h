@@ -89,7 +89,7 @@ typedef struct {
 
   unsigned int bit_depth_luma_minus8;             // ue(v)
   unsigned int bit_depth_chroma_minus8;           // ue(v)
-  unsigned int log2_max_frame_num_minus4;         // ue(v)
+  unsigned int log2maxFrameNumMinus4;         // ue(v)
   unsigned int pocType;
   unsigned int log2_max_pic_order_cnt_lsb_minus4; // ue(v)
   Boolean  delta_pic_order_always_zero_flag;      // u(1)

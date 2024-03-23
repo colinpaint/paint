@@ -200,7 +200,7 @@ static void readPPS (sDecoder* decoder, sDataPartition* dataPartition, sPPS* pps
 
         pps->picSizeMapUnitsMinus1 = readUeV ("PPS picSizeMapUnitsMinus1", s);
         if ((pps->sliceGroupId = calloc (pps->picSizeMapUnitsMinus1+1, 1)) == NULL)
-          no_mem_exit ("readPPS sliceGroupId");
+          noMemoryExit ("readPPS sliceGroupId");
         for (unsigned i = 0; i <= pps->picSizeMapUnitsMinus1; i++)
           pps->sliceGroupId[i] = (byte)readUv (NumberBitsPerSliceGroupId, "sliceGroupId[i]", s);
         break;

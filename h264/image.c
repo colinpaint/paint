@@ -14,7 +14,7 @@
 #include "mbAccess.h"
 #include "macroblock.h"
 #include "loopfilter.h"
-#include "biariDecode.h"
+#include "binaryArithmeticDecode.h"
 #include "cabac.h"
 #include "vlc.h"
 #include "quant.h"
@@ -1161,26 +1161,26 @@ static void initContexts (sSlice* slice) {
   #define IBIARI_CTX_INIT2(ii,jj,ctx,tab,num, qp) { \
     for (i = 0; i < ii; ++i) \
       for (j = 0; j < jj; ++j) \
-        biariInitContext (qp, &(ctx[i][j]), tab ## _I[num][i][j]); \
+        binaryArithmeticInitContext (qp, &(ctx[i][j]), tab ## _I[num][i][j]); \
     }
   //}}}
   //{{{
   #define PBIARI_CTX_INIT2(ii,jj,ctx,tab,num, qp) { \
     for (i = 0; i < ii; ++i) \
       for (j = 0; j < jj; ++j) \
-        biariInitContext (qp, &(ctx[i][j]), tab ## _P[num][i][j]); \
+        binaryArithmeticInitContext (qp, &(ctx[i][j]), tab ## _P[num][i][j]); \
     }
   //}}}
   //{{{
   #define IBIARI_CTX_INIT1(jj,ctx,tab,num, qp) { \
     for (j = 0; j < jj; ++j) \
-      biariInitContext (qp, &(ctx[j]), tab ## _I[num][0][j]); \
+      binaryArithmeticInitContext (qp, &(ctx[j]), tab ## _I[num][0][j]); \
     }
   //}}}
   //{{{
   #define PBIARI_CTX_INIT1(jj,ctx,tab,num, qp) { \
     for (j = 0; j < jj; ++j) \
-      biariInitContext (qp, &(ctx[j]), tab ## _P[num][0][j]); \
+      binaryArithmeticInitContext (qp, &(ctx[j]), tab ## _P[num][0][j]); \
     }
   //}}}
 
@@ -2245,7 +2245,7 @@ static void readSlice (sDecoder* decoder, sSlice* slice) {
   slice->chroma444notSeparate = (decoder->activeSPS->chromaFormatIdc == YUV444) && !decoder->coding.sepColourPlaneFlag;
 
   sSPS* activeSPS = decoder->activeSPS;
-  slice->frameNum = readUv (activeSPS->log2_max_frame_num_minus4 + 4, "SLC frameNum", s);
+  slice->frameNum = readUv (activeSPS->log2maxFrameNumMinus4 + 4, "SLC frameNum", s);
   if (slice->idrFlag) {
     decoder->preFrameNum = slice->frameNum;
     decoder->lastRefPicPoc = 0;
@@ -2602,7 +2602,7 @@ static int readNextSlice (sSlice* slice) {
           int byteStartPosition = s->bitStreamOffset / 8;
           if (s->bitStreamOffset % 8)
             ++byteStartPosition;
-          aridecoStartDecoding (&slice->dataPartitions[0].deCabac, s->bitStreamBuffer, byteStartPosition, &s->readLen);
+          arithmeticDecodeStartDecoding (&slice->dataPartitions[0].deCabac, s->bitStreamBuffer, byteStartPosition, &s->readLen);
           }
 
         decoder->recoveryPoint = 0;

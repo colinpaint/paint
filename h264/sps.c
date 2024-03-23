@@ -85,7 +85,7 @@ static void setCodingParam (sDecoder* decoder, sSPS* sps) {
     decoder->coding.bitDepthScale[1] = 1 << sps->bit_depth_chroma_minus8;
     }
 
-  decoder->coding.maxFrameNum = 1 << (sps->log2_max_frame_num_minus4+4);
+  decoder->coding.maxFrameNum = 1 << (sps->log2maxFrameNumMinus4+4);
   decoder->coding.picWidthMbs = (sps->pic_width_in_mbs_minus1 +1);
   decoder->coding.picHeightMapUnits = (sps->pic_height_in_map_units_minus1 +1);
   decoder->coding.frameHeightMbs = (2 - sps->frameMbOnlyFlag) * decoder->coding.picHeightMapUnits;
@@ -279,7 +279,7 @@ static sSPS* allocSPS() {
 
    sSPS* p = calloc (1, sizeof (sSPS));
    if (!p)
-     no_mem_exit ("allocSPS");
+     noMemoryExit ("allocSPS");
 
    return p;
    }
@@ -305,7 +305,7 @@ static int isEqualSPS (sSPS* sps1, sSPS* sps2) {
   equal &= (sps1->constrained_set1_flag == sps2->constrained_set1_flag);
   equal &= (sps1->constrained_set2_flag == sps2->constrained_set2_flag);
 
-  equal &= (sps1->log2_max_frame_num_minus4 == sps2->log2_max_frame_num_minus4);
+  equal &= (sps1->log2maxFrameNumMinus4 == sps2->log2maxFrameNumMinus4);
   equal &= (sps1->pocType == sps2->pocType);
   if (!equal)
     return equal;
@@ -518,7 +518,7 @@ static void readSPS (sDecoder* decoder, sDataPartition* dataPartition, sSPS* sps
       }
     }
   //}}}
-  sps->log2_max_frame_num_minus4 = readUeV ("SPS log2_max_frame_num_minus4", s);
+  sps->log2maxFrameNumMinus4 = readUeV ("SPS log2maxFrameNumMinus4", s);
   //{{{  read POC
   sps->pocType = readUeV ("SPS pocType", s);
   if (!sps->pocType)

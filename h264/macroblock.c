@@ -12,7 +12,7 @@
 #include "vlc.h"
 #include "image.h"
 #include "mbAccess.h"
-#include "biariDecode.h"
+#include "binaryArithmeticDecode.h"
 #include "transform.h"
 #include "mcPred.h"
 #include "quant.h"
