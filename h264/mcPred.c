@@ -87,8 +87,8 @@ static void update_direct_mv_info_temporal (sMacroBlock* mb) {
                 }
               }
               //}}}
-            else if (!decoder->activeSPS->frameMbOnlyFlag &&
-                     !slice->fieldPicFlag &&
+            else if (!decoder->activeSPS->frameMbOnly &&
+                     !slice->fieldPic &&
                      slice->listX[LIST_1][0]->iCodingType != eFrameCoding) {
               //{{{
               if (iabs(picture->poc - list1[0]->botField->poc) > iabs(picture->poc -list1[0]->topField->poc) )
@@ -101,8 +101,8 @@ static void update_direct_mv_info_temporal (sMacroBlock* mb) {
                   &list1[0]->botField->mvInfo[(mb->blockYaff + j0)>>1][i0];
               }
               //}}}
-            else if (!decoder->activeSPS->frameMbOnlyFlag &&
-                     slice->fieldPicFlag &&
+            else if (!decoder->activeSPS->frameMbOnly &&
+                     slice->fieldPic &&
                      slice->picStructure != list1[0]->picStructure &&
                      list1[0]->codedFrame) {
               //{{{
@@ -137,8 +137,8 @@ static void update_direct_mv_info_temporal (sMacroBlock* mb) {
             else {
               if ((slice->mbAffFrame && ( (mb->mbField && colocated->refPic[refList]->picStructure==eFrame) ||
                   (!mb->mbField && colocated->refPic[refList]->picStructure!=eFrame))) ||
-                  (!slice->mbAffFrame && ((slice->fieldPicFlag==0 && colocated->refPic[refList]->picStructure!=eFrame)||
-                  (slice->fieldPicFlag==1 && colocated->refPic[refList]->picStructure==eFrame))) ) {
+                  (!slice->mbAffFrame && ((slice->fieldPic==0 && colocated->refPic[refList]->picStructure!=eFrame)||
+                  (slice->fieldPic==1 && colocated->refPic[refList]->picStructure==eFrame))) ) {
                 //{{{  Frame with field co-located
                 for (iref = 0;
                      iref < imin(slice->numRefIndexActive[LIST_0], slice->listXsize[LIST_0 + listOffset]);
@@ -147,7 +147,7 @@ static void update_direct_mv_info_temporal (sMacroBlock* mb) {
                     slice->listX[LIST_0 + listOffset][iref]->botField == colocated->refPic[refList] ||
                     slice->listX[LIST_0 + listOffset][iref]->frame == colocated->refPic[refList] )
                   {
-                    if ((slice->fieldPicFlag==1) && (slice->listX[LIST_0 + listOffset][iref]->picStructure != slice->picStructure))
+                    if ((slice->fieldPic==1) && (slice->listX[LIST_0 + listOffset][iref]->picStructure != slice->picStructure))
                       mapped_idx=INVALIDINDEX;
                     else {
                       mapped_idx = iref;
@@ -199,8 +199,8 @@ static void update_direct_mv_info_temporal (sMacroBlock* mb) {
                             &slice->listX[LIST_1+4][0]->mvInfo[j6>>1][i4];
                         }
                       }
-                    else if (!decoder->activeSPS->frameMbOnlyFlag &&
-                             !slice->fieldPicFlag &&
+                    else if (!decoder->activeSPS->frameMbOnly &&
+                             !slice->fieldPic &&
                              slice->listX[LIST_1][0]->iCodingType!=eFrameCoding) {
                       if (iabs(picture->poc - list1[0]->botField->poc) > iabs(picture->poc -list1[0]->topField->poc) )
                         colocated = decoder->activeSPS->direct_8x8_inference_flag ?
@@ -211,8 +211,8 @@ static void update_direct_mv_info_temporal (sMacroBlock* mb) {
                           &list1[0]->botField->mvInfo[RSD(j6)>>1][RSD(i4)] :
                           &list1[0]->botField->mvInfo[(j6)>>1][i4];
                       }
-                    else if (!decoder->activeSPS->frameMbOnlyFlag &&
-                             slice->fieldPicFlag &&
+                    else if (!decoder->activeSPS->frameMbOnly &&
+                             slice->fieldPic &&
                              slice->picStructure!=list1[0]->picStructure && list1[0]->codedFrame) {
                       if (slice->picStructure == eTopField)
                         colocated = decoder->activeSPS->direct_8x8_inference_flag ?
@@ -226,10 +226,10 @@ static void update_direct_mv_info_temporal (sMacroBlock* mb) {
 
                     mvY = colocated->mv[refList].mvY;
                     if ((slice->mbAffFrame && !mb->mbField && colocated->refPic[refList]->picStructure!=eFrame) ||
-                        (!slice->mbAffFrame && slice->fieldPicFlag==0 && colocated->refPic[refList]->picStructure!=eFrame))
+                        (!slice->mbAffFrame && slice->fieldPic==0 && colocated->refPic[refList]->picStructure!=eFrame))
                       mvY *= 2;
                     else if ((slice->mbAffFrame && mb->mbField && colocated->refPic[refList]->picStructure==eFrame) ||
-                             (!slice->mbAffFrame && slice->fieldPicFlag==1 && colocated->refPic[refList]->picStructure==eFrame))
+                             (!slice->mbAffFrame && slice->fieldPic==1 && colocated->refPic[refList]->picStructure==eFrame))
                       mvY /= 2;
 
                     mv_scale = slice->mvscale[LIST_0 + listOffset][mapped_idx];
@@ -298,7 +298,7 @@ int get_colocated_info_8x8 (sMacroBlock* mb, sPicture* list1, int i, int j) {
     sSlice* slice = mb->slice;
     sDecoder* decoder = mb->decoder;
     if ((slice->mbAffFrame) ||
-        (!decoder->activeSPS->frameMbOnlyFlag &&
+        (!decoder->activeSPS->frameMbOnly &&
         ((!slice->picStructure && list1->iCodingType == eFieldCoding) ||
         (slice->picStructure!=list1->picStructure && list1->codedFrame)))) {
       int jj = RSD(j);
@@ -308,7 +308,7 @@ int get_colocated_info_8x8 (sMacroBlock* mb, sPicture* list1, int i, int j) {
 
       sPicMotionParam* fs = &list1->mvInfo[jj][ii];
 
-      if (slice->fieldPicFlag && slice->picStructure!=list1->picStructure && list1->codedFrame) {
+      if (slice->fieldPic && slice->picStructure!=list1->picStructure && list1->codedFrame) {
          if (slice->picStructure == eTopField)
            fs = list1->topField->mvInfo[jj] + ii;
          else

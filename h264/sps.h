@@ -91,7 +91,7 @@ typedef struct {
   unsigned int bit_depth_chroma_minus8;           // ue(v)
   unsigned int log2maxFrameNumMinus4;         // ue(v)
   unsigned int pocType;
-  unsigned int log2_max_pic_order_cnt_lsb_minus4; // ue(v)
+  unsigned int log2maxPocLsbMinus4; // ue(v)
   Boolean  delta_pic_order_always_zero_flag;      // u(1)
   int      offsetNonRefPic;                       // se(v)
   int      offsetTopBotField;                     // se(v)
@@ -105,7 +105,7 @@ typedef struct {
   unsigned int pic_width_in_mbs_minus1;           // ue(v)
   unsigned int pic_height_in_map_units_minus1;    // ue(v)
 
-  Boolean  frameMbOnlyFlag;             // u(1)
+  Boolean  frameMbOnly;             // u(1)
   Boolean  mbAffFlag;                   // u(1)
   Boolean  direct_8x8_inference_flag;   // u(1)
 

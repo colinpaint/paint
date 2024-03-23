@@ -407,13 +407,13 @@ typedef struct DecodedRefPicMarking {
 //}}}
 //{{{  sOldSlice
 typedef struct OldSlice {
-  unsigned fieldPicFlag;
+  unsigned fieldPic;
   unsigned frameNum;
   int      nalRefIdc;
   unsigned picOrderCountLsb;
   int      deltaPicOrderCountBot;
   int      deltaPicOrderCount[2];
-  int      botFieldFlag;
+  int      botField;
   int      idrFlag;
   int      idrPicId;
   int      ppsId;
@@ -467,8 +467,8 @@ typedef struct Slice {
   int           sliceType;    // slice type
   int           modelNum;     // cabac model number
   unsigned int  frameNum;     // frameNum for this frame
-  unsigned int  fieldPicFlag;
-  byte          botFieldFlag;
+  unsigned int  fieldPic;
+  byte          botField;
   ePicStructure picStructure; // Identify picture picStructure type
   int           startMbNum;   // MUST be set by NAL even in case of errorFlag == 1
   int           endMbNumPlus1;
@@ -585,7 +585,7 @@ typedef struct Slice {
 typedef struct CodingParam {
   int profileIdc;
 
-  int picStructure;           // Identify picture picStructure type
+  ePicStructure picStructure;  
   int yuvFormat;
   int sepColourPlaneFlag;
   int type;                // image type INTER/INTRA

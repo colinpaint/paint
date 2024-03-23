@@ -384,8 +384,8 @@ int mb_pred_b_d8x8temporal (sMacroBlock* mb, eColorPlane plane, sPixel** pixel, 
                           : &slice->listX[LIST_1+4][0]->mvInfo[j6 >> 1][i4];
           }
         }
-      else if (!decoder->activeSPS->frameMbOnlyFlag &&
-               (!slice->fieldPicFlag && slice->listX[LIST_1][0]->iCodingType != eFrameCoding)) {
+      else if (!decoder->activeSPS->frameMbOnly &&
+               (!slice->fieldPic && slice->listX[LIST_1][0]->iCodingType != eFrameCoding)) {
         if (iabs(picture->poc - list1[0]->botField->poc)> iabs(picture->poc -list1[0]->topField->poc) )
           colocated = decoder->activeSPS->direct_8x8_inference_flag ?
             &list1[0]->topField->mvInfo[RSD(j6)>>1][RSD(i4)] : &list1[0]->topField->mvInfo[j6>>1][i4];
@@ -393,7 +393,7 @@ int mb_pred_b_d8x8temporal (sMacroBlock* mb, eColorPlane plane, sPixel** pixel, 
           colocated = decoder->activeSPS->direct_8x8_inference_flag ?
             &list1[0]->botField->mvInfo[RSD(j6)>>1][RSD(i4)] : &list1[0]->botField->mvInfo[j6>>1][i4];
         }
-      else if (!decoder->activeSPS->frameMbOnlyFlag && slice->fieldPicFlag &&
+      else if (!decoder->activeSPS->frameMbOnly && slice->fieldPic &&
                slice->picStructure != list1[0]->picStructure && list1[0]->codedFrame) {
         if (slice->picStructure == eTopField)
           colocated = decoder->activeSPS->direct_8x8_inference_flag
@@ -423,14 +423,14 @@ int mb_pred_b_d8x8temporal (sMacroBlock* mb, eColorPlane plane, sPixel** pixel, 
         if ((slice->mbAffFrame &&
             ((mb->mbField && colocated->refPic[refList]->picStructure == eFrame) ||
              (!mb->mbField && colocated->refPic[refList]->picStructure != eFrame))) ||
-             (!slice->mbAffFrame && ((slice->fieldPicFlag == 0 &&
+             (!slice->mbAffFrame && ((slice->fieldPic == 0 &&
                colocated->refPic[refList]->picStructure != eFrame) ||
-             (slice->fieldPicFlag==1 && colocated->refPic[refList]->picStructure == eFrame)))) {
+             (slice->fieldPic==1 && colocated->refPic[refList]->picStructure == eFrame)))) {
           for (iref = 0; iref < imin(slice->numRefIndexActive[LIST_0], slice->listXsize[LIST_0 + listOffset]);iref++) {
             if(slice->listX[LIST_0 + listOffset][iref]->topField == colocated->refPic[refList] ||
               slice->listX[LIST_0 + listOffset][iref]->botField == colocated->refPic[refList] ||
               slice->listX[LIST_0 + listOffset][iref]->frame == colocated->refPic[refList]) {
-              if ((slice->fieldPicFlag == 1) && (slice->listX[LIST_0 + listOffset][iref]->picStructure != slice->picStructure))
+              if ((slice->fieldPic == 1) && (slice->listX[LIST_0 + listOffset][iref]->picStructure != slice->picStructure))
                 mapped_idx = INVALIDINDEX;
               else {
                 mapped_idx = iref;
@@ -456,10 +456,10 @@ int mb_pred_b_d8x8temporal (sMacroBlock* mb, eColorPlane plane, sPixel** pixel, 
           int mv_scale = slice->mvscale[LIST_0 + listOffset][mapped_idx];
           int mvY = colocated->mv[refList].mvY;
           if ((slice->mbAffFrame && !mb->mbField && colocated->refPic[refList]->picStructure!=eFrame) ||
-              (!slice->mbAffFrame && slice->fieldPicFlag==0 && colocated->refPic[refList]->picStructure!=eFrame) )
+              (!slice->mbAffFrame && slice->fieldPic==0 && colocated->refPic[refList]->picStructure!=eFrame) )
             mvY *= 2;
           else if ((slice->mbAffFrame && mb->mbField && colocated->refPic[refList]->picStructure==eFrame) ||
-                   (!slice->mbAffFrame && slice->fieldPicFlag==1 && colocated->refPic[refList]->picStructure==eFrame) )
+                   (!slice->mbAffFrame && slice->fieldPic==1 && colocated->refPic[refList]->picStructure==eFrame) )
             mvY /= 2;
 
           // In such case, an array is needed for each different reference.

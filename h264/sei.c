@@ -379,7 +379,7 @@ static void processDecRefPicMarkingRepetition (byte* payload, int size, sDecoder
   int original_frame_num = readUeV ("SEI original_frame_num", buf);
 
   int original_bottom_field_flag = 0;
-  if (!decoder->activeSPS->frameMbOnlyFlag) {
+  if (!decoder->activeSPS->frameMbOnly) {
     int original_field_pic_flag = readU1 ("SEI original_field_pic_flag", buf);
     if (original_field_pic_flag)
       original_bottom_field_flag = readU1 ("SEI original_bottom_field_flag", buf);

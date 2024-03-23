@@ -84,15 +84,15 @@ static void writeOutPicture (sDecoder* decoder, sPicture* p) {
   if (p->cropFlag) {
     cropLeft = SubWidthC [p->chromaFormatIdc] * p->cropLeft;
     cropRight = SubWidthC [p->chromaFormatIdc] * p->cropRight;
-    cropTop = SubHeightC[p->chromaFormatIdc] * ( 2 - p->frameMbOnlyFlag ) * p->cropTop;
-    cropBottom = SubHeightC[p->chromaFormatIdc] * ( 2 - p->frameMbOnlyFlag ) * p->cropBot;
+    cropTop = SubHeightC[p->chromaFormatIdc] * ( 2 - p->frameMbOnly ) * p->cropTop;
+    cropBottom = SubHeightC[p->chromaFormatIdc] * ( 2 - p->frameMbOnly ) * p->cropBot;
     }
   else
     cropLeft = cropRight = cropTop = cropBottom = 0;
 
   int symbolSizeInBytes = (decoder->coding.picUnitBitSizeDisk+7) >> 3;
   int chromaSizeX =  p->sizeXcr- p->cropLeft -p->cropRight;
-  int chromaSizeY = p->sizeYcr - ( 2 - p->frameMbOnlyFlag ) * p->cropTop -( 2 - p->frameMbOnlyFlag ) * p->cropBot;
+  int chromaSizeY = p->sizeYcr - ( 2 - p->frameMbOnly ) * p->cropTop -( 2 - p->frameMbOnly ) * p->cropBot;
   int lumaSizeX = p->sizeX - cropLeft - cropRight;
   int lumaSizeY = p->sizeY - cropTop - cropBottom;
   int lumaSize = lumaSizeX * lumaSizeY * symbolSizeInBytes;
@@ -113,8 +113,8 @@ static void writeOutPicture (sDecoder* decoder, sPicture* p) {
 
   cropLeft = p->cropLeft;
   cropRight = p->cropRight;
-  cropTop = (2 - p->frameMbOnlyFlag) * p->cropTop;
-  cropBottom = (2 - p->frameMbOnlyFlag) * p->cropBot;
+  cropTop = (2 - p->frameMbOnly) * p->cropTop;
+  cropBottom = (2 - p->frameMbOnly) * p->cropBot;
 
   img2buf (p->imgUV[0],
            (decodedPic->valid == 1) ? decodedPic->uBuf : decodedPic->uBuf + chromaSizeX * symbolSizeInBytes,
@@ -170,7 +170,7 @@ static void writePicture (sDecoder* decoder, sPicture* p, int realStructure) {
     decoder->pendingOut->sizeYcr = p->sizeYcr;
     decoder->pendingOut->chromaFormatIdc = p->chromaFormatIdc;
 
-    decoder->pendingOut->frameMbOnlyFlag = p->frameMbOnlyFlag;
+    decoder->pendingOut->frameMbOnly = p->frameMbOnly;
     decoder->pendingOut->cropFlag = p->cropFlag;
     if (decoder->pendingOut->cropFlag) {
       decoder->pendingOut->cropLeft = p->cropLeft;
@@ -198,7 +198,7 @@ static void writePicture (sDecoder* decoder, sPicture* p, int realStructure) {
   else {
     if ((decoder->pendingOut->sizeX!=p->sizeX) ||
         (decoder->pendingOut->sizeY!= p->sizeY) ||
-        (decoder->pendingOut->frameMbOnlyFlag != p->frameMbOnlyFlag) ||
+        (decoder->pendingOut->frameMbOnly != p->frameMbOnly) ||
         (decoder->pendingOut->cropFlag != p->cropFlag) ||
         (decoder->pendingOut->cropFlag &&
          ((decoder->pendingOut->cropLeft != p->cropLeft) ||

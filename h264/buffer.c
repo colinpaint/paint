@@ -283,7 +283,7 @@ static void dpbSplitField (sDecoder* decoder, sFrameStore* frameStore) {
   sPicture* frame = frameStore->frame;
 
   frameStore->poc = frame->poc;
-  if (!frame->frameMbOnlyFlag) {
+  if (!frame->frameMbOnly) {
     fsTop = frameStore->topField = allocPicture (decoder, eTopField,
                                                    frame->sizeX, frame->sizeY, frame->sizeXcr,
                                                    frame->sizeYcr, 1);
@@ -348,7 +348,7 @@ static void dpbSplitField (sDecoder* decoder, sFrameStore* frameStore) {
     frame->frame = frame;
     }
 
-  if (!frame->frameMbOnlyFlag) {
+  if (!frame->frameMbOnly) {
     if (frame->mbAffFrame) {
       sPicMotionParamsOld* frm_motion = &frame->motion;
       for (int j = 0 ; j < (frame->sizeY >> 3); j++) {
@@ -747,7 +747,7 @@ sPicture* allocPicture (sDecoder* decoder, ePicStructure picStructure,
   s->mbAffFrame  = 0;
   s->topPoc = s->botPoc = s->poc = 0;
 
-  if (!decoder->activeSPS->frameMbOnlyFlag && picStructure != eFrame)
+  if (!decoder->activeSPS->frameMbOnly && picStructure != eFrame)
     for (int j = 0; j < MAX_NUM_SLICES; j++)
       for (int i = 0; i < 2; i++) {
         s->listX[j][i] = calloc (MAX_LIST_SIZE, sizeof (sPicture*)); // +1 for reordering
@@ -888,7 +888,7 @@ static void dumpDpb (sDPB* dpb) {
 //{{{
 static int getDpbSize (sDecoder* decoder, sSPS *activeSPS) {
 
-  int pic_size_mb = (activeSPS->pic_width_in_mbs_minus1 + 1) * (activeSPS->pic_height_in_map_units_minus1 + 1) * (activeSPS->frameMbOnlyFlag?1:2);
+  int pic_size_mb = (activeSPS->pic_width_in_mbs_minus1 + 1) * (activeSPS->pic_height_in_map_units_minus1 + 1) * (activeSPS->frameMbOnly?1:2);
   int size = 0;
 
   switch (activeSPS->levelIdc) {
@@ -1914,7 +1914,7 @@ void initImage (sDecoder* decoder, sImage* image, sSPS* sps) {
       }
     }
 
-  if (!decoder->activeSPS->frameMbOnlyFlag) {
+  if (!decoder->activeSPS->frameMbOnly) {
     // allocate memory for field reference frame buffers
     initTopBotPlanes (image->frm_data[0], decoder->height, &(image->top_data[0]), &(image->bot_data[0]));
     if (decoder->coding.yuvFormat != YUV400) {
@@ -1954,7 +1954,7 @@ void freeImage (sDecoder* decoder, sImage* image) {
       }
     }
 
-  if (!decoder->activeSPS->frameMbOnlyFlag) {
+  if (!decoder->activeSPS->frameMbOnly) {
     freeTopBotPlanes (image->top_data[0], image->bot_data[0]);
     if (image->format.yuvFormat != YUV400) {
       freeTopBotPlanes (image->top_data[1], image->bot_data[1]);

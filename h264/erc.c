@@ -1544,7 +1544,7 @@ static void copy_to_conceal (sPicture *src, sPicture *dst, sDecoder* decoder)
   dst->longTermRefFlag = src->longTermRefFlag;
   dst->adaptRefPicBufFlag = src->adaptRefPicBufFlag = 0;
   dst->chromaFormatIdc = src->chromaFormatIdc;
-  dst->frameMbOnlyFlag = src->frameMbOnlyFlag;
+  dst->frameMbOnly = src->frameMbOnly;
   dst->cropFlag = src->cropFlag;
   dst->cropLeft = src->cropLeft;
   dst->cropRight = src->cropRight;

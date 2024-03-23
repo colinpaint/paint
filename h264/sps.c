@@ -88,7 +88,7 @@ static void setCodingParam (sDecoder* decoder, sSPS* sps) {
   decoder->coding.maxFrameNum = 1 << (sps->log2maxFrameNumMinus4+4);
   decoder->coding.picWidthMbs = (sps->pic_width_in_mbs_minus1 +1);
   decoder->coding.picHeightMapUnits = (sps->pic_height_in_map_units_minus1 +1);
-  decoder->coding.frameHeightMbs = (2 - sps->frameMbOnlyFlag) * decoder->coding.picHeightMapUnits;
+  decoder->coding.frameHeightMbs = (2 - sps->frameMbOnly) * decoder->coding.picHeightMapUnits;
   decoder->coding.frameSizeMbs = decoder->coding.picWidthMbs * decoder->coding.frameHeightMbs;
 
   decoder->coding.yuvFormat = sps->chromaFormatIdc;
@@ -185,8 +185,8 @@ static void setFormatInfo (sDecoder* decoder, sSPS* sps, sFrameFormat* source, s
   if (sps->cropFlag) {
     cropLeft = SubWidthC [sps->chromaFormatIdc] * sps->cropLeft;
     cropRight = SubWidthC [sps->chromaFormatIdc] * sps->cropRight;
-    cropTop = SubHeightC[sps->chromaFormatIdc] * ( 2 - sps->frameMbOnlyFlag ) *  sps->cropTop;
-    cropBot = SubHeightC[sps->chromaFormatIdc] * ( 2 - sps->frameMbOnlyFlag ) *  sps->cropBot;
+    cropTop = SubHeightC[sps->chromaFormatIdc] * ( 2 - sps->frameMbOnly ) *  sps->cropTop;
+    cropBot = SubHeightC[sps->chromaFormatIdc] * ( 2 - sps->frameMbOnly ) *  sps->cropBot;
     }
   else
     cropLeft = cropRight = cropTop = cropBot = 0;
@@ -198,8 +198,8 @@ static void setFormatInfo (sDecoder* decoder, sSPS* sps, sFrameFormat* source, s
   if (sps->cropFlag) {
     cropLeft = sps->cropLeft;
     cropRight = sps->cropRight;
-    cropTop = (2 - sps->frameMbOnlyFlag) * sps->cropTop;
-    cropBot = (2 - sps->frameMbOnlyFlag) * sps->cropBot;
+    cropTop = (2 - sps->frameMbOnly) * sps->cropTop;
+    cropBot = (2 - sps->frameMbOnly) * sps->cropBot;
     }
   else
     cropLeft = cropRight = cropTop = cropBot = 0;
@@ -311,7 +311,7 @@ static int isEqualSPS (sSPS* sps1, sSPS* sps2) {
     return equal;
 
   if (sps1->pocType == 0)
-    equal &= (sps1->log2_max_pic_order_cnt_lsb_minus4 == sps2->log2_max_pic_order_cnt_lsb_minus4);
+    equal &= (sps1->log2maxPocLsbMinus4 == sps2->log2maxPocLsbMinus4);
   else if( sps1->pocType == 1) {
     equal &= (sps1->delta_pic_order_always_zero_flag == sps2->delta_pic_order_always_zero_flag);
     equal &= (sps1->offsetNonRefPic == sps2->offsetNonRefPic);
@@ -328,11 +328,11 @@ static int isEqualSPS (sSPS* sps1, sSPS* sps2) {
   equal &= (sps1->gaps_in_frame_num_value_allowed_flag == sps2->gaps_in_frame_num_value_allowed_flag);
   equal &= (sps1->pic_width_in_mbs_minus1 == sps2->pic_width_in_mbs_minus1);
   equal &= (sps1->pic_height_in_map_units_minus1 == sps2->pic_height_in_map_units_minus1);
-  equal &= (sps1->frameMbOnlyFlag == sps2->frameMbOnlyFlag);
+  equal &= (sps1->frameMbOnly == sps2->frameMbOnly);
   if (!equal) return
     equal;
 
-  if (!sps1->frameMbOnlyFlag)
+  if (!sps1->frameMbOnly)
     equal &= (sps1->mbAffFlag == sps2->mbAffFlag);
   equal &= (sps1->direct_8x8_inference_flag == sps2->direct_8x8_inference_flag);
   equal &= (sps1->cropFlag == sps2->cropFlag);
@@ -522,7 +522,7 @@ static void readSPS (sDecoder* decoder, sDataPartition* dataPartition, sSPS* sps
   //{{{  read POC
   sps->pocType = readUeV ("SPS pocType", s);
   if (!sps->pocType)
-    sps->log2_max_pic_order_cnt_lsb_minus4 = readUeV ("SPS log2_max_pic_order_cnt_lsb_minus4", s);
+    sps->log2maxPocLsbMinus4 = readUeV ("SPS log2maxPocLsbMinus4", s);
   else if (sps->pocType == 1) {
     sps->delta_pic_order_always_zero_flag = readU1 ("SPS delta_pic_order_always_zero_flag", s);
     sps->offsetNonRefPic = readSeV ("SPS offsetNonRefPic", s);
@@ -539,8 +539,8 @@ static void readSPS (sDecoder* decoder, sDataPartition* dataPartition, sSPS* sps
   sps->pic_width_in_mbs_minus1 = readUeV ("SPS pic_width_in_mbs_minus1", s);
   sps->pic_height_in_map_units_minus1 = readUeV ("SPS pic_height_in_map_units_minus1", s);
 
-  sps->frameMbOnlyFlag = readU1 ("SPS frameMbOnlyFlag", s);
-  if (!sps->frameMbOnlyFlag)
+  sps->frameMbOnly = readU1 ("SPS frameMbOnly", s);
+  if (!sps->frameMbOnly)
     sps->mbAffFlag = readU1 ("SPS mbAffFlag", s);
 
   sps->direct_8x8_inference_flag = readU1 ("SPS direct_8x8_inference_flag", s);
@@ -566,7 +566,7 @@ static void readSPS (sDecoder* decoder, sDataPartition* dataPartition, sSPS* sps
     if (sps->cropFlag)
       printf (" crop:%d:%d:%d:%d",
               sps->cropLeft, sps->cropRight, sps->cropTop, sps->cropBot);
-    if (sps->frameMbOnlyFlag) {
+    if (sps->frameMbOnly) {
       printf (" frame");
       if (sps->mbAffFlag)
         printf (" mbAff");
@@ -632,7 +632,7 @@ void activateSPS (sDecoder* decoder, sSPS* sps) {
       decoder->ercMvPerMb = 0;
       }
 
-    if (sps->frameMbOnlyFlag)
+    if (sps->frameMbOnly)
       sprintf (decoder->info.spsStr, "frame%s", sps->mbAffFlag ? " mbAff":"");
     else
       strcpy (decoder->info.spsStr, "");

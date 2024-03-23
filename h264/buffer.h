@@ -66,7 +66,7 @@ typedef struct Picture {
   int         adaptRefPicBufFlag;
 
   eYuvFormat  chromaFormatIdc;
-  int         frameMbOnlyFlag;
+  int         frameMbOnly;
   int         cropFlag;
   int         cropLeft;
   int         cropRight;

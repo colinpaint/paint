@@ -244,14 +244,14 @@ static int FmoGenerateMbToSliceGroupMap (sDecoder* decoder, sSlice *slice) {
     }
 
   sSPS* sps = decoder->activeSPS;
-  if ((sps->frameMbOnlyFlag)|| slice->fieldPicFlag) {
+  if ((sps->frameMbOnly)|| slice->fieldPic) {
     int *mbToSliceGroupMap = decoder->mbToSliceGroupMap;
     int *mapUnitToSliceGroupMap = decoder->mapUnitToSliceGroupMap;
     for (unsigned i = 0; i < decoder->picSizeInMbs; i++)
       *mbToSliceGroupMap++ = *mapUnitToSliceGroupMap++;
     }
   else
-    if (sps->mbAffFlag  &&  (!slice->fieldPicFlag)) {
+    if (sps->mbAffFlag  &&  (!slice->fieldPic)) {
       for (unsigned i = 0; i < decoder->picSizeInMbs; i++)
         decoder->mbToSliceGroupMap[i] = decoder->mapUnitToSliceGroupMap[i/2];
       }
