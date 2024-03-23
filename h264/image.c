@@ -1459,7 +1459,7 @@ static void padBuf (sPixel* pixel, int width, int height, int stride, int padx, 
   }
 //}}}
 //{{{
-static void copyPOC (sSlice* fromSlice, sSlice* toSlice) {
+static void copyPoc (sSlice* fromSlice, sSlice* toSlice) {
 
   toSlice->topPoc = fromSlice->topPoc;
   toSlice->botPoc = fromSlice->botPoc;
@@ -1556,17 +1556,18 @@ static void updateMbAff (sPixel** pixel, sPixel (*temp)[16], int x0, int width, 
 //{{{
 static void mbAffPostProc (sDecoder* decoder) {
 
-  sPixel tempBuffer[32][16];
-
   sPicture* picture = decoder->picture;
+
   sPixel** imgY = picture->imgY;
   sPixel*** imgUV = picture->imgUV;
 
-  short x0;
-  short y0;
   for (short i = 0; i < (int)picture->picSizeInMbs; i += 2) {
     if (picture->motion.mbField[i]) {
+      short x0;
+      short y0;
       getMbPos (decoder, i, decoder->mbSize[IS_LUMA], &x0, &y0);
+
+      sPixel tempBuffer[32][16];
       updateMbAff (imgY + y0, tempBuffer, x0, MB_BLOCK_SIZE, MB_BLOCK_SIZE);
 
       if (picture->chromaFormatIdc != YUV400) {
@@ -3070,7 +3071,7 @@ int decodeFrame (sDecoder* decoder) {
        slice->curSliceIndex = (short)decoder->picSliceIndex;
        decoder->picture->maxSliceId = (short)imax (slice->curSliceIndex, decoder->picture->maxSliceId);
        if (decoder->picSliceIndex > 0) {
-         copyPOC (*(decoder->sliceList), slice);
+         copyPoc (*(decoder->sliceList), slice);
          decoder->sliceList[decoder->picSliceIndex-1]->endMbNumPlus1 = slice->startMbNum;
          }
 
