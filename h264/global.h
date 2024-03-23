@@ -250,12 +250,12 @@ typedef struct {
   short posY;
   } sPixelPos;
 //}}}
-//{{{  sCbpStructure
+//{{{  sCodedBlockPattern
 typedef struct  {
   int64 blk;
   int64 bits;
   int64 bits_8x8;
-  } sCbpStructure;
+  } sCodedBlockPattern;
 //}}}
 //{{{  sMotionVec
 typedef struct {
@@ -315,14 +315,14 @@ typedef struct MacroBlock {
   // some storage of macroblock syntax elements for global access
   short   mbType;
   short   mvd[2][BLOCK_MULTIPLE][BLOCK_MULTIPLE][2];      //!< indices correspond to [forw,backw][blockY][blockX][x,y]
-  int     cbp;
-  sCbpStructure  cbpStructure[3];
+  int     codedBlockPattern;
+  sCodedBlockPattern codedBlockPatterns[3];
 
   int   i16mode;
   char  b8mode[4];
   char  b8pdir[4];
   char  ipmode_DPCM;
-  char  cPredMode;       //!< chroma intra prediction mode
+  char  cPredMode;       // chroma intra prediction mode
   char  skipFlag;
   short deblockFilterDisableIdc;
   short deblockFilterC0offset;

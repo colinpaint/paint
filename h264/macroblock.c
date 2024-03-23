@@ -682,7 +682,7 @@ void invScaleCoeff (sMacroBlock* mb, int level, int run, int qp_per, int i, int 
     i0 = pos_scan4x4[coef_ctr][0];
     j0 = pos_scan4x4[coef_ctr][1];
 
-    mb->cbpStructure[0].blk |= i64_power2((j << 2) + i) ;
+    mb->codedBlockPatterns[0].blk |= i64power2((j << 2) + i) ;
     mb->slice->cof[0][(j<<2) + j0][(i<<2) + i0]= rshift_rnd_sf((level * InvLevelScale4x4[j0][i0]) << qp_per, 4);
     }
   }
@@ -735,14 +735,14 @@ void startMacroblock (sSlice* slice, sMacroBlock** mb) {
   // reset mode info
   (*mb)->mbType = 0;
   (*mb)->deltaQuant = 0;
-  (*mb)->cbp = 0;
+  (*mb)->codedBlockPattern = 0;
   (*mb)->cPredMode = DC_PRED_8;
 
   // Save the slice number of this macroblock. When the macroblock below
   // is coded it will use this to decide if prediction for above is possible
   (*mb)->sliceNum = (short) slice->curSliceIndex;
 
-  CheckAvailabilityOfNeighbors (*mb);
+  checkNeighbours (*mb);
 
   // Select appropriate MV predictor function
   init_motion_vector_prediction (*mb, slice->mbAffFrame);
@@ -756,7 +756,7 @@ void startMacroblock (sSlice* slice, sMacroBlock** mb) {
       memset ((*mb)->mvd[0][0][0], 0, 2 * MB_BLOCK_dpS * 2 * sizeof(short));
     }
 
-  memset ((*mb)->cbpStructure, 0, 3 * sizeof(sCbpStructure));
+  memset ((*mb)->codedBlockPatterns, 0, 3 * sizeof(sCodedBlockPattern));
 
   // initialize slice->mbRess
   if (slice->isResetCoef == FALSE) {
@@ -840,7 +840,7 @@ static void interpretMbModeP (sMacroBlock* mb) {
   else if (mbmode == 31) {
     mb->isIntraBlock = TRUE;
     mb->mbType = IPCM;
-    mb->cbp = -1;
+    mb->codedBlockPattern = -1;
     mb->i16mode = 0;
 
     memset (mb->b8mode, 0, 4 * sizeof(char));
@@ -849,7 +849,7 @@ static void interpretMbModeP (sMacroBlock* mb) {
   else {
     mb->isIntraBlock = TRUE;
     mb->mbType = I16MB;
-    mb->cbp = ICBPTAB[((mbmode-7))>>2];
+    mb->codedBlockPattern = ICBPTAB[((mbmode-7))>>2];
     mb->i16mode = ((mbmode-7)) & 0x03;
     memset (mb->b8mode, 0, 4 * sizeof(char));
     memset (mb->b8pdir,-1, 4 * sizeof(char));
@@ -871,7 +871,7 @@ static void interpretMbModeI (sMacroBlock* mb) {
   else if (mbmode == 25) {
     mb->isIntraBlock = TRUE;
     mb->mbType=IPCM;
-    mb->cbp= -1;
+    mb->codedBlockPattern= -1;
     mb->i16mode = 0;
     memset (mb->b8mode, 0,4 * sizeof(char));
     memset (mb->b8pdir,-1,4 * sizeof(char));
@@ -879,7 +879,7 @@ static void interpretMbModeI (sMacroBlock* mb) {
   else {
     mb->isIntraBlock = TRUE;
     mb->mbType = I16MB;
-    mb->cbp= ICBPTAB[(mbmode-1)>>2];
+    mb->codedBlockPattern= ICBPTAB[(mbmode-1)>>2];
     mb->i16mode = (mbmode-1) & 0x03;
     memset (mb->b8mode, 0, 4 * sizeof(char));
     memset (mb->b8pdir,-1, 4 * sizeof(char));
@@ -931,7 +931,7 @@ static void interpretMbModeB (sMacroBlock* mb) {
     mbmode = I16MB;
     memset (mb->b8mode,  0, 4 * sizeof(char));
     memset (mb->b8pdir, -1, 4 * sizeof(char));
-    mb->cbp = (int) ICBPTAB[(mbtype-24)>>2];
+    mb->codedBlockPattern = (int) ICBPTAB[(mbtype-24)>>2];
     mb->i16mode = (mbtype-24) & 0x03;
     }
   else if (mbtype == 22) // 8x8(+split)
@@ -946,7 +946,7 @@ static void interpretMbModeB (sMacroBlock* mb) {
     mbmode = IPCM;
     memset (mb->b8mode, 0,4 * sizeof(char));
     memset (mb->b8pdir,-1,4 * sizeof(char));
-    mb->cbp= -1;
+    mb->codedBlockPattern= -1;
     mb->i16mode = 0;
     }
   else if ((mbtype & 0x01) == 0) { // 16x8
@@ -988,7 +988,7 @@ static void interpretMbModeSI (sMacroBlock* mb) {
   else if (mbmode == 26) {
     mb->isIntraBlock = TRUE;
     mb->mbType = IPCM;
-    mb->cbp= -1;
+    mb->codedBlockPattern= -1;
     mb->i16mode = 0;
     memset (mb->b8mode,0,4 * sizeof(char));
     memset (mb->b8pdir,-1,4 * sizeof(char));
@@ -996,7 +996,7 @@ static void interpretMbModeSI (sMacroBlock* mb) {
   else {
     mb->isIntraBlock = TRUE;
     mb->mbType = I16MB;
-    mb->cbp= ICBPTAB[(mbmode-2)>>2];
+    mb->codedBlockPattern= ICBPTAB[(mbmode-2)>>2];
     mb->i16mode = (mbmode-2) & 0x03;
     memset (mb->b8mode,0,4 * sizeof(char));
     memset (mb->b8pdir,-1,4 * sizeof(char));

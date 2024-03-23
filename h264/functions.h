@@ -172,7 +172,7 @@ static const int64 po2[64] =
    0x1000000000000000,0x2000000000000000,0x4000000000000000,(int64)0x8000000000000000};
 //}}}
 //{{{
-static inline int64 i64_power2 (int x) {
+static inline int64 i64power2 (int x) {
   return ((x > 63) ? 0 : po2[x]);
   }
 //}}}

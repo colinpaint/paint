@@ -21,7 +21,7 @@ Boolean isMbAvailable (int mbIndex, sMacroBlock* mb) {
   }
 //}}}
 //{{{
-void CheckAvailabilityOfNeighbors (sMacroBlock* mb) {
+void checkNeighbours (sMacroBlock* mb) {
 
   sSlice* slice = mb->slice;
   sPicture* picture = slice->picture; //decoder->picture;
@@ -92,7 +92,7 @@ void getMbBlockPosNormal (sBlockPos* picPos, int mbIndex, short* x, short* y) {
 //}}}
 
 //{{{
-void CheckAvailabilityOfNeighborsMBAFF (sMacroBlock* mb) {
+void checkNeighboursMbAff (sMacroBlock* mb) {
 
   sSlice* slice = mb->slice;
   sPicture* picture = slice->picture; 

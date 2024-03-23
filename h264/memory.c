@@ -114,31 +114,31 @@ void freeMem2Dwp (sWpParam** array2D) {
 /*!
 ** **********************************************************************
  * \brief
- *    Allocate 2D memory array -> sPicturePtr array2D[dim0][dim1]
+ *    Allocate 2D memory array -> sPicture* array2D[dim0][dim1]
  *
  * \par Output:
  *    memory size in bytes
 ** **********************************************************************/
-int getMem2Dspp (sPicturePtr** *array2D, int dim0, int dim1)
+int getMem2Dspp (sPicture*** *array2D, int dim0, int dim1)
 {
   int i;
 
-  if((*array2D    = (sPicturePtr**)memAlloc(dim0 *      sizeof(sPicturePtr*))) == NULL)
+  if((*array2D    = (sPicture***)memAlloc(dim0 *      sizeof(sPicture**))) == NULL)
     noMemoryExit("getMem2Dspp: array2D");
-  if((*(*array2D) = (sPicturePtr* )mem_calloc(dim0 * dim1,sizeof(sPicturePtr ))) == NULL)
+  if((*(*array2D) = (sPicture** )mem_calloc(dim0 * dim1,sizeof(sPicture* ))) == NULL)
     noMemoryExit("getMem2Dspp: array2D");
 
   for(i = 1 ; i < dim0; i++)
     (*array2D)[i] =  (*array2D)[i-1] + dim1;
 
-  return dim0 * (sizeof(sPicturePtr*) + dim1 * sizeof(sPicturePtr));
+  return dim0 * (sizeof(sPicture**) + dim1 * sizeof(sPicture*));
 }
 //}}}
 //{{{
-int getMem3Dspp (sPicturePtr** **array3D, int dim0, int dim1, int dim2) {
+int getMem3Dspp (sPicture*** **array3D, int dim0, int dim1, int dim2) {
 
-  int i, mem_size = dim0 * sizeof(sPicturePtr**);
-  if (((*array3D) = (sPicturePtr***)memAlloc(dim0 * sizeof(sPicturePtr**))) == NULL)
+  int i, mem_size = dim0 * sizeof(sPicture***);
+  if (((*array3D) = (sPicture****)memAlloc(dim0 * sizeof(sPicture***))) == NULL)
     noMemoryExit("getMem3Dspp: array3D");
 
   mem_size += getMem2Dspp(*array3D, dim0 * dim1, dim2);
@@ -240,7 +240,7 @@ int getMem7Dmv (sMotionVec******** array7D, int dim0, int dim1, int dim2, int di
 //}}}
 
 //{{{
-void freeMem2Dspp (sPicturePtr** array2D)
+void freeMem2Dspp (sPicture*** array2D)
 {
   if (array2D)
   {
@@ -252,7 +252,7 @@ void freeMem2Dspp (sPicturePtr** array2D)
 
 //}}}
 //{{{
-void freeMem3Dspp (sPicturePtr** *array3D)
+void freeMem3Dspp (sPicture*** *array3D)
 {
   if (array3D)
   {

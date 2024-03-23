@@ -11,13 +11,13 @@
 //{{{
 static void readCompCoef8x8cabacLossless (sMacroBlock* mb, sSyntaxElement* se, eColorPlane plane, int b8) {
 
-  if (mb->cbp & (1 << b8)) {
+  if (mb->codedBlockPattern & (1 << b8)) {
     // are there any coefficients in the current block
     sDecoder* decoder = mb->decoder;
     sSlice* slice = mb->slice;
 
     int64 cbp_mask = (int64) 51 << (4 * b8 - 2 * (b8 & 0x01)); // corresponds to 110011, as if all four 4x4 blocks contain coeff, shifted to block position
-    int64 *cur_cbp = &mb->cbpStructure[plane].blk;
+    int64 *cur_cbp = &mb->codedBlockPatterns[plane].blk;
 
     // select scan type
     const byte (*pos_scan8x8) = ((slice->picStructure == eFrame) && (!mb->mbField)) ? SNGL_SCAN8x8[0] : FIELD_SCAN8x8[0];
@@ -108,7 +108,7 @@ static void readCompCoefx4smbCabac (sMacroBlock* mb, sSyntaxElement* se, eColorP
           pos_scan_4x4 += 2 * se->value2;
           i0 = *pos_scan_4x4++;
           j0 = *pos_scan_4x4++;
-          *cbp_blk |= i64_power2(j + (i >> 2)) ;
+          *cbp_blk |= i64power2(j + (i >> 2)) ;
           cof[j + j0][i + i0]= level;
           }
         }
@@ -139,7 +139,7 @@ static void readCompCoefx4smbCabac (sMacroBlock* mb, sSyntaxElement* se, eColorP
 //}}}
 //{{{
 static void readCompCoef4x4cabacLossless (sMacroBlock* mb, sSyntaxElement* se, eColorPlane plane,
-                                          int (*InvLevelScale4x4)[4], int qp_per, int cbp) {
+                                          int (*InvLevelScale4x4)[4], int qp_per, int codedBlockPattern) {
 
   sDecoder* decoder = mb->decoder;
   int start_scan = IS_I16MB (mb)? 1 : 0;
@@ -151,23 +151,23 @@ static void readCompCoef4x4cabacLossless (sMacroBlock* mb, sSyntaxElement* se, e
   else
     se->context = (IS_I16MB(mb) ? CR_16AC: CR_4x4);
 
-  int64* cbp_blk = &mb->cbpStructure[plane].blk;
+  int64* cbp_blk = &mb->codedBlockPatterns[plane].blk;
   for (int blockY = 0; blockY < MB_BLOCK_SIZE; blockY += BLOCK_SIZE_8x8) /* all modes */
     for (int blockX = 0; blockX < MB_BLOCK_SIZE; blockX += BLOCK_SIZE_8x8)
-      if (cbp & (1 << ((blockY >> 2) + (blockX >> 3))))  // are there any coeff in current block at all
+      if (codedBlockPattern & (1 << ((blockY >> 2) + (blockX >> 3))))  // are there any coeff in current block at all
         readCompCoefx4smbCabac (mb, se, plane, blockY, blockX, start_scan, cbp_blk);
   }
 //}}}
 //{{{
 static void readCompCoef4x4cabac (sMacroBlock* mb, sSyntaxElement* se, eColorPlane plane,
-                                  int (*InvLevelScale4x4)[4], int qp_per, int cbp) {
+                                  int (*InvLevelScale4x4)[4], int qp_per, int codedBlockPattern) {
 
   sSlice* slice = mb->slice;
   sDecoder* decoder = mb->decoder;
   int start_scan = IS_I16MB (mb)? 1 : 0;
   int blockY, blockX;
   int i, j;
-  int64 *cbp_blk = &mb->cbpStructure[plane].blk;
+  int64 *cbp_blk = &mb->codedBlockPatterns[plane].blk;
 
   if (plane == PLANE_Y || (decoder->coding.sepColourPlaneFlag != 0))
     se->context = (IS_I16MB(mb) ? LUMA_16AC: LUMA_4x4);
@@ -180,7 +180,7 @@ static void readCompCoef4x4cabac (sMacroBlock* mb, sSyntaxElement* se, eColorPla
     /* all modes */
     int** cof = &slice->cof[plane][blockY];
     for (blockX = 0; blockX < MB_BLOCK_SIZE; blockX += BLOCK_SIZE_8x8) {
-      if (cbp & (1 << ((blockY >> 2) + (blockX >> 3)))) {
+      if (codedBlockPattern & (1 << ((blockY >> 2) + (blockX >> 3)))) {
         // are there any coeff in current block at all
         readCompCoefx4smbCabac (mb, se, plane, blockY, blockX, start_scan, cbp_blk);
         if (start_scan == 0) {
@@ -231,7 +231,7 @@ static void readCompCoef4x4cabac (sMacroBlock* mb, sSyntaxElement* se, eColorPla
 //{{{
 static void readCompCoef8x8cabac (sMacroBlock* mb, sSyntaxElement* se, eColorPlane plane, int b8) {
 
-  if (mb->cbp & (1<<b8)) {
+  if (mb->codedBlockPattern & (1<<b8)) {
     // are there any coefficients in the current block
     sDecoder* decoder = mb->decoder;
     int transform_pl = (decoder->coding.sepColourPlaneFlag != 0) ? mb->slice->colourPlaneId : plane;
@@ -243,7 +243,7 @@ static void readCompCoef8x8cabac (sMacroBlock* mb, sSyntaxElement* se, eColorPla
     sSlice* slice = mb->slice;
 
     int64 cbp_mask = (int64) 51 << (4 * b8 - 2 * (b8 & 0x01)); // corresponds to 110011, as if all four 4x4 blocks contain coeff, shifted to block position
-    int64* cur_cbp = &mb->cbpStructure[plane].blk;
+    int64* cur_cbp = &mb->codedBlockPatterns[plane].blk;
 
     // select scan type
     const byte (*pos_scan8x8) = ((slice->picStructure == eFrame) && (!mb->mbField)) ? SNGL_SCAN8x8[0] : FIELD_SCAN8x8[0];
@@ -334,7 +334,7 @@ static void readCbpCoefsFromNaluCabac400 (sMacroBlock* mb) {
 
   int k;
   int level;
-  int cbp;
+  int codedBlockPattern;
   const byte *dpMap = assignSE2dp[slice->dataPartitionMode];
   int i0, j0;
   int qp_per, qp_rem;
@@ -366,14 +366,14 @@ static void readCbpCoefsFromNaluCabac400 (sMacroBlock* mb) {
       se.reading = read_CBP_CABAC;
 
     dataPartition->readSyntaxElement(mb, &se, dataPartition);
-    mb->cbp = cbp = se.value1;
+    mb->codedBlockPattern = codedBlockPattern = se.value1;
 
     //============= Transform size flag for INTER MBs =============
     need_transform_size_flag = (((mb->mbType >= 1 && mb->mbType <= 3)||
       (IS_DIRECT(mb) && decoder->activeSPS->direct_8x8_inference_flag) ||
       (mb->noMbPartLessThan8x8Flag))
       && mb->mbType != I8MB && mb->mbType != I4MB
-      && (mb->cbp&15)
+      && (mb->codedBlockPattern&15)
       && slice->transform8x8Mode);
 
     if (need_transform_size_flag) {
@@ -392,7 +392,7 @@ static void readCbpCoefsFromNaluCabac400 (sMacroBlock* mb) {
       }
 
     // Delta quant only if nonzero coeffs
-    if (cbp !=0 ) {
+    if (codedBlockPattern !=0 ) {
       readDeltaQuant (&se, dataPartition, mb, dpMap, ((mb->isIntraBlock == FALSE)) ? SE_DELTA_QUANT_INTER : SE_DELTA_QUANT_INTRA);
       if (slice->dataPartitionMode)  {
         if ((mb->isIntraBlock == FALSE) && slice->noDataPartitionC )
@@ -406,15 +406,15 @@ static void readCbpCoefsFromNaluCabac400 (sMacroBlock* mb) {
         // check for prediction from neighbours
         checkDpNeighbours (mb);
         if (mb->dplFlag) {
-          cbp = 0;
-          mb->cbp = cbp;
+          codedBlockPattern = 0;
+          mb->codedBlockPattern = codedBlockPattern;
           }
         }
       }
     }
   else {
     //{{{  read DC coeffs for new intra modes
-    cbp = mb->cbp;
+    codedBlockPattern = mb->codedBlockPattern;
     readDeltaQuant (&se, dataPartition, mb, dpMap, SE_DELTA_QUANT_INTRA);
 
     if (slice->dataPartitionMode) {
@@ -424,7 +424,7 @@ static void readCbpCoefsFromNaluCabac400 (sMacroBlock* mb) {
        }
        checkDpNeighbours (mb);
       if (mb->dplFlag)
-        mb->cbp = cbp = 0;
+        mb->codedBlockPattern = codedBlockPattern = 0;
       }
 
     if (!mb->dplFlag) {
@@ -468,12 +468,12 @@ static void readCbpCoefsFromNaluCabac400 (sMacroBlock* mb) {
   qp_per = decoder->qpPerMatrix[ mb->qpScaled[PLANE_Y] ];
   qp_rem = decoder->qpRemMatrix[ mb->qpScaled[PLANE_Y] ];
 
-  if (cbp)  {
+  if (codedBlockPattern)  {
     if (mb->lumaTransformSize8x8flag) // 8x8 transform size & eCabac
       mb->readCompCoef8x8cabac (mb, &se, PLANE_Y);
     else {
       InvLevelScale4x4 = intra? slice->InvLevelScale4x4_Intra[slice->colourPlaneId][qp_rem] : slice->InvLevelScale4x4_Inter[slice->colourPlaneId][qp_rem];
-      mb->readCompCoef4x4cabac (mb, &se, PLANE_Y, InvLevelScale4x4, qp_per, cbp);
+      mb->readCompCoef4x4cabac (mb, &se, PLANE_Y, InvLevelScale4x4, qp_per, codedBlockPattern);
       }
     }
   }
@@ -486,7 +486,7 @@ static void readCbpCoefsFromNaluCabac444 (sMacroBlock* mb) {
 
   int i, k;
   int level;
-  int cbp;
+  int codedBlockPattern;
   const byte *dpMap = assignSE2dp[slice->dataPartitionMode];
   int coef_ctr, i0, j0;
   int qp_per, qp_rem;
@@ -527,14 +527,14 @@ static void readCbpCoefsFromNaluCabac444 (sMacroBlock* mb) {
       se.reading = read_CBP_CABAC;
 
     dataPartition->readSyntaxElement(mb, &se, dataPartition);
-    mb->cbp = cbp = se.value1;
+    mb->codedBlockPattern = codedBlockPattern = se.value1;
 
     // Transform size flag for INTER MBs
     need_transform_size_flag = (((mb->mbType >= 1 && mb->mbType <= 3)||
       (IS_DIRECT(mb) && decoder->activeSPS->direct_8x8_inference_flag) ||
       (mb->noMbPartLessThan8x8Flag))
       && mb->mbType != I8MB && mb->mbType != I4MB
-      && (mb->cbp&15)
+      && (mb->codedBlockPattern&15)
       && slice->transform8x8Mode);
 
     if (need_transform_size_flag) {
@@ -552,7 +552,7 @@ static void readCbpCoefsFromNaluCabac444 (sMacroBlock* mb) {
       mb->lumaTransformSize8x8flag = (Boolean) se.value1;
       }
 
-    if (cbp !=0 ) {
+    if (codedBlockPattern !=0 ) {
       readDeltaQuant (&se, dataPartition, mb, dpMap,
                       ((mb->isIntraBlock == FALSE)) ? SE_DELTA_QUANT_INTER : SE_DELTA_QUANT_INTRA);
 
@@ -568,15 +568,15 @@ static void readCbpCoefsFromNaluCabac444 (sMacroBlock* mb) {
         // check for prediction from neighbours
         checkDpNeighbours (mb);
         if (mb->dplFlag) {
-          cbp = 0;
-          mb->cbp = cbp;
+          codedBlockPattern = 0;
+          mb->codedBlockPattern = codedBlockPattern;
           }
        }
       }
     }
   else {
     // read DC coeffs for new intra modes
-    cbp = mb->cbp;
+    codedBlockPattern = mb->codedBlockPattern;
     readDeltaQuant (&se, dataPartition, mb, dpMap, SE_DELTA_QUANT_INTRA);
     if (slice->dataPartitionMode) {
       if (slice->noDataPartitionB) {
@@ -585,7 +585,7 @@ static void readCbpCoefsFromNaluCabac444 (sMacroBlock* mb) {
         }
       checkDpNeighbours (mb);
       if (mb->dplFlag)
-        mb->cbp = cbp = 0;
+        mb->codedBlockPattern = codedBlockPattern = 0;
       }
 
     if (!mb->dplFlag) {
@@ -636,11 +636,11 @@ static void readCbpCoefsFromNaluCabac444 (sMacroBlock* mb) {
 
   // luma coefficients
     {
-    if (cbp) {
+    if (codedBlockPattern) {
       if (mb->lumaTransformSize8x8flag) // 8x8 transform size & eCabac
         mb->readCompCoef8x8cabac (mb, &se, PLANE_Y);
       else
-        mb->readCompCoef4x4cabac (mb, &se, PLANE_Y, InvLevelScale4x4, qp_per, cbp);
+        mb->readCompCoef4x4cabac (mb, &se, PLANE_Y, InvLevelScale4x4, qp_per, codedBlockPattern);
       }
     }
 
@@ -695,11 +695,11 @@ static void readCbpCoefsFromNaluCabac444 (sMacroBlock* mb) {
     InvLevelScale4x4 = intra? slice->InvLevelScale4x4_Intra[uv + 1][qp_rem_uv[uv]] : slice->InvLevelScale4x4_Inter[uv + 1][qp_rem_uv[uv]];
 
       {
-      if (cbp) {
+      if (codedBlockPattern) {
         if (mb->lumaTransformSize8x8flag) // 8x8 transform size & eCabac
           mb->readCompCoef8x8cabac (mb, &se, (eColorPlane) (PLANE_U + uv));
         else //4x4
-          mb->readCompCoef4x4cabac (mb, &se, (eColorPlane) (PLANE_U + uv), InvLevelScale4x4,  qp_per_uv[uv], cbp);
+          mb->readCompCoef4x4cabac (mb, &se, (eColorPlane) (PLANE_U + uv), InvLevelScale4x4,  qp_per_uv[uv], codedBlockPattern);
         }
       }
     }
@@ -713,7 +713,7 @@ static void readCbpCoefsFromNaluCabac422 (sMacroBlock* mb) {
 
   int i,j,k;
   int level;
-  int cbp;
+  int codedBlockPattern;
   const byte *dpMap = assignSE2dp[slice->dataPartitionMode];
   int coef_ctr, i0, j0, b8;
   int ll;
@@ -743,7 +743,7 @@ static void readCbpCoefsFromNaluCabac422 (sMacroBlock* mb) {
   sSyntaxElement se;
   sDataPartition *dataPartition = NULL;
   if (!IS_I16MB (mb)) {
-    // cbp
+    // codedBlockPattern
     se.type = (mb->mbType == I4MB || mb->mbType == SI4MB || mb->mbType == I8MB)
                 ? SE_CBP_INTRA
                 : SE_CBP_INTER;
@@ -756,14 +756,14 @@ static void readCbpCoefsFromNaluCabac422 (sMacroBlock* mb) {
     else
       se.reading = read_CBP_CABAC;
     dataPartition->readSyntaxElement (mb, &se, dataPartition);
-    mb->cbp = cbp = se.value1;
+    mb->codedBlockPattern = codedBlockPattern = se.value1;
 
     // Transform size flag for INTER MBs
     need_transform_size_flag = (((mb->mbType >= 1 && mb->mbType <= 3)||
       (IS_DIRECT(mb) && decoder->activeSPS->direct_8x8_inference_flag) ||
       (mb->noMbPartLessThan8x8Flag))
       && mb->mbType != I8MB && mb->mbType != I4MB
-      && (mb->cbp&15)
+      && (mb->codedBlockPattern&15)
       && slice->transform8x8Mode);
 
     if (need_transform_size_flag) {
@@ -782,7 +782,7 @@ static void readCbpCoefsFromNaluCabac422 (sMacroBlock* mb) {
       }
 
     // Delta quant only if nonzero coeffs
-    if (cbp != 0) {
+    if (codedBlockPattern != 0) {
       readDeltaQuant (&se, dataPartition, mb, dpMap, ((mb->isIntraBlock == FALSE)) ? SE_DELTA_QUANT_INTER : SE_DELTA_QUANT_INTRA);
       if (slice->dataPartitionMode) {
         if ((mb->isIntraBlock == FALSE) && slice->noDataPartitionC)
@@ -795,15 +795,15 @@ static void readCbpCoefsFromNaluCabac422 (sMacroBlock* mb) {
         // check for prediction from neighbours
         checkDpNeighbours (mb);
         if (mb->dplFlag) {
-          cbp = 0;
-          mb->cbp = cbp;
+          codedBlockPattern = 0;
+          mb->codedBlockPattern = codedBlockPattern;
           }
         }
       }
     }
   else {
     //{{{  read DC coeffs for new intra modes
-    cbp = mb->cbp;
+    codedBlockPattern = mb->codedBlockPattern;
     readDeltaQuant (&se, dataPartition, mb, dpMap, SE_DELTA_QUANT_INTRA);
 
     if (slice->dataPartitionMode) {
@@ -813,7 +813,7 @@ static void readCbpCoefsFromNaluCabac422 (sMacroBlock* mb) {
         }
       checkDpNeighbours (mb);
       if (mb->dplFlag)
-        mb->cbp = cbp = 0;
+        mb->codedBlockPattern = codedBlockPattern = 0;
       }
 
     if (!mb->dplFlag) {
@@ -864,15 +864,15 @@ static void readCbpCoefsFromNaluCabac422 (sMacroBlock* mb) {
   InvLevelScale4x4 = intra? slice->InvLevelScale4x4_Intra[slice->colourPlaneId][qp_rem] : slice->InvLevelScale4x4_Inter[slice->colourPlaneId][qp_rem];
 
   // luma coefficients
-  if (cbp) {
+  if (codedBlockPattern) {
     if (mb->lumaTransformSize8x8flag)
       mb->readCompCoef8x8cabac (mb, &se, PLANE_Y);
     else
-      mb->readCompCoef4x4cabac (mb, &se, PLANE_Y, InvLevelScale4x4, qp_per, cbp);
+      mb->readCompCoef4x4cabac (mb, &se, PLANE_Y, InvLevelScale4x4, qp_per, codedBlockPattern);
     }
 
   // chroma DC coeff
-  if (cbp > 15) {
+  if (codedBlockPattern > 15) {
     for (ll = 0; ll < 3; ll += 2) {
       int (*InvLevelScale4x4)[4] = NULL;
       uv = ll>>1;
@@ -890,7 +890,7 @@ static void readCbpCoefsFromNaluCabac422 (sMacroBlock* mb) {
 
         // CHROMA DC YUV422
         {
-          sCbpStructure* cbpStructure = &mb->cbpStructure[0];
+          sCodedBlockPattern* codedBlockPatterns = &mb->codedBlockPatterns[0];
           coef_ctr = -1;
           level = 1;
           for (k = 0; (k < 9) && (level != 0); ++k) {
@@ -907,7 +907,7 @@ static void readCbpCoefsFromNaluCabac422 (sMacroBlock* mb) {
 
             level = se.value1;
             if (level != 0) {
-              cbpStructure->blk |= ((int64)0xff0000) << (ll<<2) ;
+              codedBlockPatterns->blk |= ((int64)0xff0000) << (ll<<2) ;
               coef_ctr += se.value2 + 1;
               i0 = SCAN_YUV422[coef_ctr][0];
               j0 = SCAN_YUV422[coef_ctr][1];
@@ -955,7 +955,7 @@ static void readCbpCoefsFromNaluCabac422 (sMacroBlock* mb) {
     }
 
   //{{{  chroma AC coeff, all zero fram start_scan
-  if (cbp <= 31) {
+  if (codedBlockPattern <= 31) {
     }
   else {
     {
@@ -968,7 +968,7 @@ static void readCbpCoefsFromNaluCabac422 (sMacroBlock* mb) {
         se.reading = readRunLevel_CABAC;
 
       if (mb->isLossless == FALSE) {
-        sCbpStructure* cbpStructure = &mb->cbpStructure[0];
+        sCodedBlockPattern* codedBlockPatterns = &mb->codedBlockPatterns[0];
         for (b8 = 0; b8 < decoder->coding.numBlock8x8uv; ++b8) {
           mb->isVblock = uv = (b8 > ((decoder->coding.numUvBlocks) - 1 ));
           InvLevelScale4x4 = intra ? slice->InvLevelScale4x4_Intra[uv + 1][qp_rem_uv[uv]] : slice->InvLevelScale4x4_Inter[uv + 1][qp_rem_uv[uv]];
@@ -985,7 +985,7 @@ static void readCbpCoefsFromNaluCabac422 (sMacroBlock* mb) {
               level = se.value1;
 
               if (level != 0) {
-                cbpStructure->blk |= i64_power2(cbp_blk_chroma[b8][b4]);
+                codedBlockPatterns->blk |= i64power2(cbp_blk_chroma[b8][b4]);
                 pos_scan_4x4 += (se.value2 << 1);
                 i0 = *pos_scan_4x4++;
                 j0 = *pos_scan_4x4++;
@@ -996,7 +996,7 @@ static void readCbpCoefsFromNaluCabac422 (sMacroBlock* mb) {
          }
         }
       else {
-        sCbpStructure* cbpStructure = &mb->cbpStructure[0];
+        sCodedBlockPattern* codedBlockPatterns = &mb->codedBlockPatterns[0];
         for (b8 = 0; b8 < decoder->coding.numBlock8x8uv; ++b8) {
           mb->isVblock = uv = (b8 > ((decoder->coding.numUvBlocks) - 1 ));
           for (b4=0; b4 < 4; ++b4) {
@@ -1013,7 +1013,7 @@ static void readCbpCoefsFromNaluCabac422 (sMacroBlock* mb) {
               dataPartition->readSyntaxElement (mb, &se, dataPartition);
               level = se.value1;
               if (level != 0) {
-                cbpStructure->blk |= i64_power2(cbp_blk_chroma[b8][b4]);
+                codedBlockPatterns->blk |= i64power2(cbp_blk_chroma[b8][b4]);
                 pos_scan_4x4 += (se.value2 << 1);
                 i0 = *pos_scan_4x4++;
                 j0 = *pos_scan_4x4++;
@@ -1033,7 +1033,7 @@ static void readCbpCoefsFromNaluCabac420 (sMacroBlock* mb) {
 
   int i,j;
   int level;
-  int cbp;
+  int codedBlockPattern;
   sSlice* slice = mb->slice;
   const byte *dpMap = assignSE2dp[slice->dataPartitionMode];
   int i0, j0;
@@ -1074,14 +1074,14 @@ static void readCbpCoefsFromNaluCabac420 (sMacroBlock* mb) {
     else
       se.reading = read_CBP_CABAC;
     dataPartition->readSyntaxElement(mb, &se, dataPartition);
-    mb->cbp = cbp = se.value1;
+    mb->codedBlockPattern = codedBlockPattern = se.value1;
 
     // Transform size flag for INTER MBs
     need_transform_size_flag = (((mb->mbType >= 1 && mb->mbType <= 3)||
       (IS_DIRECT(mb) && decoder->activeSPS->direct_8x8_inference_flag) ||
       (mb->noMbPartLessThan8x8Flag))
       && mb->mbType != I8MB && mb->mbType != I4MB
-      && (mb->cbp&15)
+      && (mb->codedBlockPattern&15)
       && slice->transform8x8Mode);
 
     if (need_transform_size_flag) {
@@ -1100,7 +1100,7 @@ static void readCbpCoefsFromNaluCabac420 (sMacroBlock* mb) {
       }
 
     //{{{  Delta quant only if nonzero coeffs
-    if (cbp !=0) {
+    if (codedBlockPattern !=0) {
       readDeltaQuant (&se, dataPartition, mb, dpMap, ((mb->isIntraBlock == FALSE)) ? SE_DELTA_QUANT_INTER : SE_DELTA_QUANT_INTRA);
       if (slice->dataPartitionMode) {
         if ((mb->isIntraBlock == FALSE) && slice->noDataPartitionC )
@@ -1113,8 +1113,8 @@ static void readCbpCoefsFromNaluCabac420 (sMacroBlock* mb) {
         // check for prediction from neighbours
         checkDpNeighbours (mb);
         if (mb->dplFlag) {
-          cbp = 0;
-          mb->cbp = cbp;
+          codedBlockPattern = 0;
+          mb->codedBlockPattern = codedBlockPattern;
           }
         }
       }
@@ -1122,7 +1122,7 @@ static void readCbpCoefsFromNaluCabac420 (sMacroBlock* mb) {
     }
   else {
     //{{{  read DC coeffs for new intra modes
-    cbp = mb->cbp;
+    codedBlockPattern = mb->codedBlockPattern;
     readDeltaQuant(&se, dataPartition, mb, dpMap, SE_DELTA_QUANT_INTRA);
     if (slice->dataPartitionMode) {
       if (slice->noDataPartitionB) {
@@ -1131,7 +1131,7 @@ static void readCbpCoefsFromNaluCabac420 (sMacroBlock* mb) {
       }
       checkDpNeighbours (mb);
       if (mb->dplFlag)
-        mb->cbp = cbp = 0;
+        mb->codedBlockPattern = codedBlockPattern = 0;
       }
     //}}}
 
@@ -1169,12 +1169,12 @@ static void readCbpCoefsFromNaluCabac420 (sMacroBlock* mb) {
   qp_rem = decoder->qpRemMatrix[mb->qpScaled[slice->colourPlaneId] ];
 
   // luma coefficients
-  if (cbp) {
+  if (codedBlockPattern) {
     if(mb->lumaTransformSize8x8flag) // 8x8 transform size & eCabac
       mb->readCompCoef8x8cabac (mb, &se, PLANE_Y);
     else {
       InvLevelScale4x4 = intra? slice->InvLevelScale4x4_Intra[slice->colourPlaneId][qp_rem] : slice->InvLevelScale4x4_Inter[slice->colourPlaneId][qp_rem];
-      mb->readCompCoef4x4cabac (mb, &se, PLANE_Y, InvLevelScale4x4, qp_per, cbp);
+      mb->readCompCoef4x4cabac (mb, &se, PLANE_Y, InvLevelScale4x4, qp_per, codedBlockPattern);
       }
     }
 
@@ -1184,8 +1184,8 @@ static void readCbpCoefsFromNaluCabac420 (sMacroBlock* mb) {
     qp_rem_uv[i] = decoder->qpRemMatrix[ mb->qpScaled[i + 1] ];
     }
   //{{{  chroma DC coeff
-  if (cbp > 15) {
-    sCbpStructure* cbpStructure = &mb->cbpStructure[0];
+  if (codedBlockPattern > 15) {
+    sCodedBlockPattern* codedBlockPatterns = &mb->codedBlockPatterns[0];
     int uv, ll, k, coef_ctr;
 
     for (ll = 0; ll < 3; ll += 2) {
@@ -1210,7 +1210,7 @@ static void readCbpCoefsFromNaluCabac420 (sMacroBlock* mb) {
         dataPartition->readSyntaxElement (mb, &se, dataPartition);
         level = se.value1;
         if (level != 0) {
-          cbpStructure->blk |= 0xf0000 << (ll<<1) ;
+          codedBlockPatterns->blk |= 0xf0000 << (ll<<1) ;
           coef_ctr += se.value2 + 1;
           // Bug: slice->cofu has only 4 entries, hence coef_ctr MUST be <4 (which is
           // caught by the assert().  If it is bigger than 4, it starts patching the
@@ -1244,7 +1244,7 @@ static void readCbpCoefsFromNaluCabac420 (sMacroBlock* mb) {
     }
   //}}}
   //{{{  chroma AC coeff, all zero fram start_scan
-  if (cbp > 31) {
+  if (codedBlockPattern > 31) {
     se.context = CHROMA_AC;
     se.type = (mb->isIntraBlock ? SE_CHR_AC_INTRA : SE_CHR_AC_INTER);
     dataPartition = &(slice->dataPartitions[dpMap[se.type]]);
@@ -1256,7 +1256,7 @@ static void readCbpCoefsFromNaluCabac420 (sMacroBlock* mb) {
     if (mb->isLossless == FALSE) {
       int b4, b8, uv, k;
       int** cof;
-      sCbpStructure  *cbpStructure = &mb->cbpStructure[0];
+      sCodedBlockPattern  *codedBlockPatterns = &mb->codedBlockPatterns[0];
       for (b8=0; b8 < decoder->coding.numBlock8x8uv; ++b8) {
         mb->isVblock = uv = (b8 > ((decoder->coding.numUvBlocks) - 1 ));
         InvLevelScale4x4 = intra ? slice->InvLevelScale4x4_Intra[uv + 1][qp_rem_uv[uv]] : slice->InvLevelScale4x4_Inter[uv + 1][qp_rem_uv[uv]];
@@ -1277,7 +1277,7 @@ static void readCbpCoefsFromNaluCabac420 (sMacroBlock* mb) {
             level = se.value1;
 
             if (level != 0) {
-              cbpStructure->blk |= i64_power2(cbp_blk_chroma[b8][b4]);
+              codedBlockPatterns->blk |= i64power2(cbp_blk_chroma[b8][b4]);
               pos_scan_4x4 += (se.value2 << 1);
 
               i0 = *pos_scan_4x4++;
@@ -1290,7 +1290,7 @@ static void readCbpCoefsFromNaluCabac420 (sMacroBlock* mb) {
         }
       }
     else {
-      sCbpStructure* cbpStructure = &mb->cbpStructure[0];
+      sCodedBlockPattern* codedBlockPatterns = &mb->codedBlockPatterns[0];
       int b4, b8, k;
       int uv;
       for (b8 = 0; b8 < decoder->coding.numBlock8x8uv; ++b8) {
@@ -1307,7 +1307,7 @@ static void readCbpCoefsFromNaluCabac420 (sMacroBlock* mb) {
             level = se.value1;
 
             if (level != 0) {
-              cbpStructure->blk |= i64_power2(cbp_blk_chroma[b8][b4]);
+              codedBlockPatterns->blk |= i64power2(cbp_blk_chroma[b8][b4]);
               pos_scan_4x4 += (se.value2 << 1);
               i0 = *pos_scan_4x4++;
               j0 = *pos_scan_4x4++;

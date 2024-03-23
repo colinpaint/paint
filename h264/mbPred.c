@@ -59,7 +59,7 @@ int mb_pred_intra4x4 (sMacroBlock* mb, eColorPlane plane, sPixel** pixel, sPictu
   if ((picture->chromaFormatIdc != YUV400) && (picture->chromaFormatIdc != YUV444))
     intra_cr_decoding(mb, yuv);
 
-  if (mb->cbp != 0)
+  if (mb->codedBlockPattern != 0)
     slice->isResetCoef = FALSE;
   return 1;
 }
@@ -102,7 +102,7 @@ int mb_pred_intra8x8 (sMacroBlock* mb, eColorPlane plane, sPixel** pixel, sPictu
 
     //PREDICTION
     slice->intraPred8x8(mb, plane, ioff, joff);
-    if (mb->cbp & (1 << block8x8))
+    if (mb->codedBlockPattern & (1 << block8x8))
       mb->iTrans8x8    (mb, plane, ioff,joff);      // use inverse integer transform and make 8x8 block m7 from prediction block mpr
     else
       icopy8x8(mb, plane, ioff,joff);
@@ -115,7 +115,7 @@ int mb_pred_intra8x8 (sMacroBlock* mb, eColorPlane plane, sPixel** pixel, sPictu
     intra_cr_decoding(mb, yuv);
   }
 
-  if (mb->cbp != 0)
+  if (mb->codedBlockPattern != 0)
     slice->isResetCoef = FALSE;
   return 1;
 }
@@ -274,7 +274,7 @@ int mb_pred_p_inter8x8 (sMacroBlock* mb, eColorPlane plane, sPicture* picture)
 
   iTransform (mb, plane, smb);
 
-  if (mb->cbp != 0)
+  if (mb->codedBlockPattern != 0)
     slice->isResetCoef = FALSE;
   return 1;
 }
@@ -289,7 +289,7 @@ int mb_pred_p_inter16x16 (sMacroBlock* mb, eColorPlane plane, sPicture* picture)
   perform_mc (mb, plane, picture, mb->b8pdir[0], 0, 0, MB_BLOCK_SIZE, MB_BLOCK_SIZE);
   iTransform (mb, plane, smb);
 
-  if (mb->cbp != 0)
+  if (mb->codedBlockPattern != 0)
     slice->isResetCoef = FALSE;
   return 1;
 }
@@ -306,7 +306,7 @@ int mb_pred_p_inter16x8 (sMacroBlock* mb, eColorPlane plane, sPicture* picture)
   perform_mc(mb, plane, picture, mb->b8pdir[2], 0, 2, MB_BLOCK_SIZE, BLOCK_SIZE_8x8);
   iTransform(mb, plane, smb);
 
-  if (mb->cbp != 0)
+  if (mb->codedBlockPattern != 0)
     slice->isResetCoef = FALSE;
   return 1;
 }
@@ -323,7 +323,7 @@ int mb_pred_p_inter8x16 (sMacroBlock* mb, eColorPlane plane, sPicture* picture)
   perform_mc(mb, plane, picture, mb->b8pdir[1], 2, 0, BLOCK_SIZE_8x8, MB_BLOCK_SIZE);
   iTransform(mb, plane, smb);
 
-  if (mb->cbp != 0)
+  if (mb->codedBlockPattern != 0)
     slice->isResetCoef = FALSE;
   return 1;
 }
@@ -495,7 +495,7 @@ int mb_pred_b_d8x8temporal (sMacroBlock* mb, eColorPlane plane, sPixel** pixel, 
       }
     }
 
-  if (mb->cbp == 0) {
+  if (mb->codedBlockPattern == 0) {
     copy_Image_16x16 (&pixel[mb->pixY], slice->mbPred[plane], mb->pixX, 0);
 
     if ((picture->chromaFormatIdc != YUV400) && (picture->chromaFormatIdc != YUV444)) {
@@ -617,7 +617,7 @@ int mb_pred_b_d4x4temporal (sMacroBlock* mb, eColorPlane plane, sPixel** pixel, 
     }
   }
 
-  if (mb->cbp == 0)
+  if (mb->codedBlockPattern == 0)
   {
     copy_Image_16x16(&pixel[mb->pixY], slice->mbPred[plane], mb->pixX, 0);
 
@@ -806,7 +806,7 @@ int mb_pred_b_d8x8spatial (sMacroBlock* mb, eColorPlane plane, sPixel** pixel, s
     perform_mc (mb, plane, picture, predDir, 0, 0, MB_BLOCK_SIZE, MB_BLOCK_SIZE);
     }
 
-  if (mb->cbp == 0) {
+  if (mb->codedBlockPattern == 0) {
     copy_Image_16x16 (&pixel[mb->pixY], slice->mbPred[plane], mb->pixX, 0);
     if ((picture->chromaFormatIdc != YUV400) && (picture->chromaFormatIdc != YUV444)) {
       copy_Image (&picture->imgUV[0][mb->piccY], slice->mbPred[1], mb->pixcX, 0, decoder->mbSize[1][0], decoder->mbSize[1][1]);
@@ -990,7 +990,7 @@ int mb_pred_b_d4x4spatial (sMacroBlock* mb, eColorPlane plane, sPixel** pixel, s
     }
   }
 
-  if (mb->cbp == 0)
+  if (mb->codedBlockPattern == 0)
   {
     copy_Image_16x16(&pixel[mb->pixY], slice->mbPred[plane], mb->pixX, 0);
 
@@ -1114,7 +1114,7 @@ int mb_pred_b_inter8x8 (sMacroBlock* mb, eColorPlane plane, sPicture* picture)
   }
 
   iTransform(mb, plane, 0);
-  if (mb->cbp != 0)
+  if (mb->codedBlockPattern != 0)
     slice->isResetCoef = FALSE;
   return 1;
 }
@@ -1150,7 +1150,7 @@ int mb_pred_ipcm (sMacroBlock* mb) {
   mb->skipFlag = 0;
 
   //for deblocking filter eCabac
-  mb->cbpStructure[0].blk = 0xFFFF;
+  mb->codedBlockPatterns[0].blk = 0xFFFF;
 
   //For eCabac decoding of Dquant
   slice->lastDquant = 0;

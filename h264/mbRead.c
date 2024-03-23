@@ -576,7 +576,7 @@ static void skipMacroblocks (sMacroBlock* mb) {
   zeroMotionAbove = !neighbourMb[1].available ?
                      1 : (b_ref_idx==0 && b_mv->mvX == 0 && b_mv_y == 0) ? 1 : 0;
 
-  mb->cbp = 0;
+  mb->codedBlockPattern = 0;
   resetCoeffs (mb);
 
   if (zeroMotionAbove || zeroMotionLeft) {
@@ -1149,7 +1149,7 @@ static void readBcavlcMacroblock (sMacroBlock* mb) {
 
     initMacroblockDirect (mb);
     if (slice->codCount >= 0) {
-      mb->cbp = 0;
+      mb->codedBlockPattern = 0;
       resetCoeffs (mb);
       }
     else
@@ -1425,7 +1425,7 @@ static void readBcabacMacroblock (sMacroBlock* mb) {
 
     mb->mbType  = (short)se.value1;
     mb->skipFlag = (char)(!(se.value1));
-    mb->cbp = se.value2;
+    mb->codedBlockPattern = se.value2;
     if (!dataPartition->s->errorFlag)
       mb->errorFlag = 0;
 
@@ -1480,7 +1480,7 @@ static void readBcabacMacroblock (sMacroBlock* mb) {
     dataPartition->readSyntaxElement (mb, &se, dataPartition);
     mb->mbType = (short)se.value1;
     mb->skipFlag = (char)(!(se.value1));
-    mb->cbp = se.value2;
+    mb->codedBlockPattern = se.value2;
     if (!dataPartition->s->errorFlag)
       mb->errorFlag = 0;
     if (se.value1 == 0 && se.value2 == 0)
@@ -1552,7 +1552,7 @@ static void readBcabacMacroblock (sMacroBlock* mb) {
     initMacroblockDirect (mb);
     if (slice->codCount >= 0) {
       slice->isResetCoef = TRUE;
-      mb->cbp = 0;
+      mb->codedBlockPattern = 0;
       slice->codCount = -1;
       }
     else // read CBP and Coeffs

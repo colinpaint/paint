@@ -491,7 +491,7 @@ static void get_strength_ver_MBAff (byte* Strength, sMacroBlock* mb, int edge, i
           blkQ = (short) ((idx & 0xFFFC) + (edge >> 2));
           blkP = (short) ((pixP.y & 0xFFFC) + (pixP.x >> 2));
 
-          if (((mb->cbpStructure[0].blk & i64_power2(blkQ)) != 0) || ((MbP->cbpStructure[0].blk & i64_power2(blkP)) != 0))
+          if (((mb->codedBlockPatterns[0].blk & i64power2(blkQ)) != 0) || ((MbP->codedBlockPatterns[0].blk & i64power2(blkP)) != 0))
             StrValue = 2;
           else if (edge && ((mb->mbType == 1)  || (mb->mbType == 2)))
             StrValue = 0; // if internal edge of certain types, we already know StrValue should be 0
@@ -504,10 +504,10 @@ static void get_strength_ver_MBAff (byte* Strength, sMacroBlock* mb, int edge, i
 
             sPicMotionParam *mv_info_p = &p->mvInfo[blk_y ][blk_x ];
             sPicMotionParam *mv_info_q = &p->mvInfo[blk_y2][blk_x2];
-            sPicturePtr ref_p0 = mv_info_p->refPic[LIST_0];
-            sPicturePtr ref_q0 = mv_info_q->refPic[LIST_0];
-            sPicturePtr ref_p1 = mv_info_p->refPic[LIST_1];
-            sPicturePtr ref_q1 = mv_info_q->refPic[LIST_1];
+            sPicture* ref_p0 = mv_info_p->refPic[LIST_0];
+            sPicture* ref_q0 = mv_info_q->refPic[LIST_0];
+            sPicture* ref_p1 = mv_info_p->refPic[LIST_1];
+            sPicture* ref_q1 = mv_info_q->refPic[LIST_1];
 
             if  (((ref_p0==ref_q0) && (ref_p1==ref_q1))||((ref_p0==ref_q1) && (ref_p1==ref_q0))) {
               // L0 and L1 reference pictures of p0 are different; q0 as well
@@ -561,7 +561,7 @@ static void get_strength_ver_MBAff (byte* Strength, sMacroBlock* mb, int edge, i
                          ((p->mbAffFrame || (p->picStructure!=eFrame))))) ? 4 : 3;
 
         if (mb->isIntraBlock == FALSE && MbP->isIntraBlock == FALSE) {
-          if (((mb->cbpStructure[0].blk & i64_power2(blkQ)) != 0) || ((MbP->cbpStructure[0].blk & i64_power2(blkP)) != 0))
+          if (((mb->codedBlockPatterns[0].blk & i64power2(blkQ)) != 0) || ((MbP->codedBlockPatterns[0].blk & i64power2(blkP)) != 0))
             Strength[idx] = 2 ;
           else {
             // if no coefs, but vector difference >= 1 set Strength=1
@@ -579,10 +579,10 @@ static void get_strength_ver_MBAff (byte* Strength, sMacroBlock* mb, int edge, i
 
                 sPicMotionParam *mv_info_p = &p->mvInfo[blk_y ][blk_x ];
                 sPicMotionParam *mv_info_q = &p->mvInfo[blk_y2][blk_x2];
-                sPicturePtr ref_p0 = mv_info_p->refPic[LIST_0];
-                sPicturePtr ref_q0 = mv_info_q->refPic[LIST_0];
-                sPicturePtr ref_p1 = mv_info_p->refPic[LIST_1];
-                sPicturePtr ref_q1 = mv_info_q->refPic[LIST_1];
+                sPicture* ref_p0 = mv_info_p->refPic[LIST_0];
+                sPicture* ref_q0 = mv_info_q->refPic[LIST_0];
+                sPicture* ref_p1 = mv_info_p->refPic[LIST_1];
+                sPicture* ref_q1 = mv_info_q->refPic[LIST_1];
 
                 if (((ref_p0==ref_q0) && (ref_p1==ref_q1))||((ref_p0==ref_q1) && (ref_p1==ref_q0))) {
                   Strength[idx] = 0;
@@ -668,7 +668,7 @@ static void get_strength_hor_MBAff (byte* Strength, sMacroBlock* mb, int edge, i
         getAffNeighbour(mb, xQ, yQ - 1, decoder->mbSize[IS_LUMA], &pixP);
         blkQ = (short) ((yQ & 0xFFFC) + (xQ >> 2));
         blkP = (short) ((pixP.y & 0xFFFC) + (pixP.x >> 2));
-        if (((mb->cbpStructure[0].blk & i64_power2(blkQ)) != 0) || ((MbP->cbpStructure[0].blk & i64_power2(blkP)) != 0))
+        if (((mb->codedBlockPatterns[0].blk & i64power2(blkQ)) != 0) || ((MbP->codedBlockPatterns[0].blk & i64power2(blkP)) != 0))
           StrValue = 2;
         else {
           // if no coefs, but vector difference >= 1 set Strength=1
@@ -686,10 +686,10 @@ static void get_strength_hor_MBAff (byte* Strength, sMacroBlock* mb, int edge, i
             {
               sPicMotionParam *mv_info_p = &p->mvInfo[blk_y ][blk_x ];
               sPicMotionParam *mv_info_q = &p->mvInfo[blk_y2][blk_x2];
-              sPicturePtr ref_p0 = mv_info_p->refPic[LIST_0];
-              sPicturePtr ref_q0 = mv_info_q->refPic[LIST_0];
-              sPicturePtr ref_p1 = mv_info_p->refPic[LIST_1];
-              sPicturePtr ref_q1 = mv_info_q->refPic[LIST_1];
+              sPicture* ref_p0 = mv_info_p->refPic[LIST_0];
+              sPicture* ref_q0 = mv_info_q->refPic[LIST_0];
+              sPicture* ref_p1 = mv_info_p->refPic[LIST_1];
+              sPicture* ref_q1 = mv_info_q->refPic[LIST_1];
 
               if (((ref_p0==ref_q0) && (ref_p1==ref_q1)) ||
                 ((ref_p0==ref_q1) && (ref_p1==ref_q0))) {
@@ -772,7 +772,7 @@ static void get_strength_ver (sMacroBlock* mb, int edge, int mvLimit, sPicture* 
           for (idx = 0 ; idx < MB_BLOCK_SIZE ; idx += BLOCK_SIZE ) {
             blkQ = idx + (edge);
             blkP = idx + (get_x_luma(xQ) >> 2);
-            if ((mb->cbpStructure[0].blk & (i64_power2(blkQ) | i64_power2(blkP))) != 0)
+            if ((mb->codedBlockPatterns[0].blk & (i64power2(blkQ) | i64power2(blkP))) != 0)
               StrValue = 2;
             else
               StrValue = 0; // if internal edge of certain types, then we already know StrValue should be 0
@@ -789,7 +789,7 @@ static void get_strength_ver (sMacroBlock* mb, int edge, int mvLimit, sPicture* 
           for (idx = 0 ; idx < MB_BLOCK_SIZE ; idx += BLOCK_SIZE ) {
             blkQ = idx  + (edge);
             blkP = idx  + (get_x_luma(xQ) >> 2);
-            if (((mb->cbpStructure[0].blk & i64_power2(blkQ)) != 0) || ((MbP->cbpStructure[0].blk & i64_power2(blkP)) != 0))
+            if (((mb->codedBlockPatterns[0].blk & i64power2(blkQ)) != 0) || ((MbP->codedBlockPatterns[0].blk & i64power2(blkP)) != 0))
               StrValue = 2;
             else {
               // for everything else, if no coefs, but vector difference >= 1 set Strength=1
@@ -799,10 +799,10 @@ static void get_strength_ver (sMacroBlock* mb, int edge, int mvLimit, sPicture* 
               int blk_x2 = (short)(get_pos_x_luma(neighbour, xQ)      ) >> 2;
               sPicMotionParam *mv_info_p = &p->mvInfo[blk_y ][blk_x ];
               sPicMotionParam *mv_info_q = &p->mvInfo[blk_y2][blk_x2];
-              sPicturePtr ref_p0 = mv_info_p->refPic[LIST_0];
-              sPicturePtr ref_q0 = mv_info_q->refPic[LIST_0];
-              sPicturePtr ref_p1 = mv_info_p->refPic[LIST_1];
-              sPicturePtr ref_q1 = mv_info_q->refPic[LIST_1];
+              sPicture* ref_p0 = mv_info_p->refPic[LIST_0];
+              sPicture* ref_q0 = mv_info_q->refPic[LIST_0];
+              sPicture* ref_p1 = mv_info_p->refPic[LIST_1];
+              sPicture* ref_q1 = mv_info_q->refPic[LIST_1];
 
               if  (((ref_p0==ref_q0) && (ref_p1==ref_q1)) || ((ref_p0==ref_q1) && (ref_p1==ref_q0))) {
                 // L0 and L1 reference pictures of p0 are different; q0 as well
@@ -881,7 +881,7 @@ static void get_strength_hor (sMacroBlock* mb, int edge, int mvLimit, sPicture* 
           for (idx = 0 ; idx < BLOCK_SIZE ; idx ++ ) {
             blkQ = (yQ + 1) + idx;
             blkP = (get_y_luma(yQ) & 0xFFFC) + idx;
-            if ((mb->cbpStructure[0].blk & (i64_power2(blkQ) | i64_power2(blkP))) != 0)
+            if ((mb->codedBlockPatterns[0].blk & (i64power2(blkQ) | i64power2(blkP))) != 0)
               StrValue = 2;
             else
               StrValue = 0; // if internal edge of certain types, we already know StrValue should be 0
@@ -897,7 +897,7 @@ static void get_strength_hor (sMacroBlock* mb, int edge, int mvLimit, sPicture* 
           for (idx = 0 ; idx < BLOCK_SIZE ; idx ++) {
             blkQ = (yQ + 1) + idx;
             blkP = (get_y_luma(yQ) & 0xFFFC) + idx;
-            if (((mb->cbpStructure[0].blk & i64_power2(blkQ)) != 0) || ((MbP->cbpStructure[0].blk & i64_power2(blkP)) != 0))
+            if (((mb->codedBlockPatterns[0].blk & i64power2(blkQ)) != 0) || ((MbP->codedBlockPatterns[0].blk & i64power2(blkP)) != 0))
               StrValue = 2;
             else {
               // for everything else, if no coefs, but vector difference >= 1 set Strength=1
@@ -909,10 +909,10 @@ static void get_strength_hor (sMacroBlock* mb, int edge, int mvLimit, sPicture* 
               sPicMotionParam* mv_info_p = &p->mvInfo[blk_y ][blk_x ];
               sPicMotionParam* mv_info_q = &p->mvInfo[blk_y2][blk_x2];
 
-              sPicturePtr ref_p0 = mv_info_p->refPic[LIST_0];
-              sPicturePtr ref_q0 = mv_info_q->refPic[LIST_0];
-              sPicturePtr ref_p1 = mv_info_p->refPic[LIST_1];
-              sPicturePtr ref_q1 = mv_info_q->refPic[LIST_1];
+              sPicture* ref_p0 = mv_info_p->refPic[LIST_0];
+              sPicture* ref_q0 = mv_info_q->refPic[LIST_0];
+              sPicture* ref_p1 = mv_info_p->refPic[LIST_1];
+              sPicture* ref_q1 = mv_info_q->refPic[LIST_1];
 
               if  (((ref_p0==ref_q0) && (ref_p1==ref_q1)) || ((ref_p0==ref_q1) && (ref_p1==ref_q0))) {
                 // L0 and L1 reference pictures of p0 are different; q0 as well
@@ -1439,12 +1439,12 @@ static void deblockMb (sDecoder* decoder, sPicture* p, int mbIndex) {
       }
 
     if (p->mbAffFrame == 1)
-      CheckAvailabilityOfNeighborsMBAFF (mb);
+      checkNeighboursMbAff (mb);
 
     // Vertical deblocking
     for (edge = 0; edge < 4 ; ++edge ) {
-      // If cbp == 0 then deblocking for some macroblock types could be skipped
-      if (mb->cbp == 0 && (slice->sliceType == eSliceP || slice->sliceType == eSliceB)) {
+      // If codedBlockPattern == 0 then deblocking for some macroblock types could be skipped
+      if (mb->codedBlockPattern == 0 && (slice->sliceType == eSliceP || slice->sliceType == eSliceB)) {
         if (filterNon8x8LumaEdgesFlag[edge] == 0 && activeSPS->chromaFormatIdc != YUV444)
           continue;
         else if (edge > 0) {
@@ -1487,8 +1487,8 @@ static void deblockMb (sDecoder* decoder, sPicture* p, int mbIndex) {
 
     // horizontal deblocking
     for (edge = 0; edge < 4 ; ++edge ) {
-      // If cbp == 0 then deblocking for some macroblock types could be skipped
-      if (mb->cbp == 0 && (slice->sliceType == eSliceP || slice->sliceType == eSliceB)) {
+      // If codedBlockPattern == 0 then deblocking for some macroblock types could be skipped
+      if (mb->codedBlockPattern == 0 && (slice->sliceType == eSliceP || slice->sliceType == eSliceB)) {
         if (filterNon8x8LumaEdgesFlag[edge] == 0 && activeSPS->chromaFormatIdc==YUV420)
           continue;
         else if (edge > 0) {
@@ -1598,12 +1598,12 @@ static void getDeblockStrength (sDecoder* decoder, sPicture* p, int mbIndex) {
       }
 
     if (p->mbAffFrame == 1)
-      CheckAvailabilityOfNeighborsMBAFF (mb);
+      checkNeighboursMbAff (mb);
 
     // Vertical deblocking
     for (edge = 0; edge < 4 ; ++edge ) {
-      // If cbp == 0 then deblocking for some macroblock types could be skipped
-      if (mb->cbp == 0 && (slice->sliceType == eSliceP || slice->sliceType == eSliceB)) {
+      // If codedBlockPattern == 0 then deblocking for some macroblock types could be skipped
+      if (mb->codedBlockPattern == 0 && (slice->sliceType == eSliceP || slice->sliceType == eSliceB)) {
         if (filterNon8x8LumaEdgesFlag[edge] == 0 && activeSPS->chromaFormatIdc != YUV444)
           continue;
         else if (edge > 0) {
@@ -1626,8 +1626,8 @@ static void getDeblockStrength (sDecoder* decoder, sPicture* p, int mbIndex) {
 
     // horizontal deblocking
     for (edge = 0; edge < 4 ; ++edge ) {
-      // If cbp == 0 then deblocking for some macroblock types could be skipped
-      if (mb->cbp == 0 && (slice->sliceType == eSliceP || slice->sliceType == eSliceB)) {
+      // If codedBlockPattern == 0 then deblocking for some macroblock types could be skipped
+      if (mb->codedBlockPattern == 0 && (slice->sliceType == eSliceP || slice->sliceType == eSliceB)) {
         if (filterNon8x8LumaEdgesFlag[edge] == 0 && activeSPS->chromaFormatIdc==YUV420)
           continue;
         else if (edge > 0) {
@@ -1696,12 +1696,12 @@ static void performDeblock (sDecoder* decoder, sPicture* p, int mbIndex) {
       }
 
     if (p->mbAffFrame == 1)
-      CheckAvailabilityOfNeighborsMBAFF (mb);
+      checkNeighboursMbAff (mb);
 
     // Vertical deblocking
     for (edge = 0; edge < 4 ; ++edge ) {
-      // If cbp == 0 then deblocking for some macroblock types could be skipped
-      if (mb->cbp == 0 && (slice->sliceType == eSliceP || slice->sliceType == eSliceB)) {
+      // If codedBlockPattern == 0 then deblocking for some macroblock types could be skipped
+      if (mb->codedBlockPattern == 0 && (slice->sliceType == eSliceP || slice->sliceType == eSliceB)) {
         if (filterNon8x8LumaEdgesFlag[edge] == 0 && activeSPS->chromaFormatIdc != YUV444)
           continue;
         else if (edge > 0) {
@@ -1736,8 +1736,8 @@ static void performDeblock (sDecoder* decoder, sPicture* p, int mbIndex) {
 
     // horizontal deblocking
     for (edge = 0; edge < 4 ; ++edge ) {
-      // If cbp == 0 then deblocking for some macroblock types could be skipped
-      if (mb->cbp == 0 && (slice->sliceType == eSliceP || slice->sliceType == eSliceB)) {
+      // If codedBlockPattern == 0 then deblocking for some macroblock types could be skipped
+      if (mb->codedBlockPattern == 0 && (slice->sliceType == eSliceP || slice->sliceType == eSliceB)) {
         if (filterNon8x8LumaEdgesFlag[edge] == 0 && activeSPS->chromaFormatIdc==YUV420)
           continue;
         else if (edge > 0) {

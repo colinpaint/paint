@@ -104,11 +104,11 @@ extern void freeMem5Dmv (sMotionVec ** ***array2D);
 extern void freeMem6Dmv (sMotionVec** ****array2D);
 extern void freeMem7Dmv (sMotionVec** *****array7D);
 
-extern int getMem2Dspp (sPicturePtr ** *array3D, int dim0, int dim1);
-extern int getMem3Dspp (sPicturePtr** **array3D, int dim0, int dim1, int dim2);
+extern int getMem2Dspp (sPicture* ** *array3D, int dim0, int dim1);
+extern int getMem3Dspp (sPicture*** **array3D, int dim0, int dim1, int dim2);
 
-extern void freeMem2Dspp (sPicturePtr ** array2D);
-extern void freeMem3Dspp (sPicturePtr** *array2D);
+extern void freeMem2Dspp (sPicture* ** array2D);
+extern void freeMem3Dspp (sPicture*** *array2D);
 
 extern void freeMem2D (byte     ** array2D);
 extern void freeMem3D (byte    ** *array3D);

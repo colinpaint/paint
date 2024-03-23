@@ -92,7 +92,6 @@ typedef struct Picture {
   struct Picture** listX[MAX_NUM_SLICES][2];
   } sPicture;
 //}}}
-typedef sPicture* sPicturePtr;
 //{{{  sFrameStore
 typedef struct FrameStore {
   int       isUsed;                // 0=empty; 1=top; 2=bottom; 3=both fields (or frame)
@@ -118,7 +117,7 @@ typedef struct FrameStore {
   sPicture* botField;
   } sFrameStore;
 //}}}
-//{{{  sDPB
+//{{{  sDPB - DecodedPictureBuffer
 typedef struct DPB {
   sDecoder*    decoder;
 
@@ -142,52 +141,56 @@ typedef struct DPB {
 
 //{{{
 // compares two stored pictures by picture number for qsort in descending order
-static inline int compare_pic_by_pic_num_desc (const void* arg1, const void* arg2 )
-{
+static int compare_pic_by_pic_num_desc (const void* arg1, const void* arg2) {
+
   int pic_num1 = (*(sPicture**)arg1)->picNum;
   int pic_num2 = (*(sPicture**)arg2)->picNum;
 
   if (pic_num1 < pic_num2)
     return 1;
+
   if (pic_num1 > pic_num2)
     return -1;
   else
     return 0;
-}
+  }
 //}}}
 //{{{
 // compares two stored pictures by picture number for qsort in descending order
-static inline int comparePicByLtPicNumAsc (const void* arg1, const void* arg2 )
-{
+static int comparePicByLtPicNumAsc (const void* arg1, const void* arg2) {
+
   int long_term_pic_num1 = (*(sPicture**)arg1)->longTermPicNum;
   int long_term_pic_num2 = (*(sPicture**)arg2)->longTermPicNum;
 
-  if ( long_term_pic_num1 < long_term_pic_num2)
+  if (long_term_pic_num1 < long_term_pic_num2)
     return -1;
+
   if ( long_term_pic_num1 > long_term_pic_num2)
     return 1;
   else
     return 0;
-}
+  }
 //}}}
 //{{{
 // compares two frame stores by picNum for qsort in descending order
-static inline int compare_fs_by_frame_num_desc (const void* arg1, const void* arg2 )
-{
+static int compare_fs_by_frame_num_desc (const void* arg1, const void* arg2) {
+
   int frame_num_wrap1 = (*(sFrameStore**)arg1)->frameNumWrap;
   int frame_num_wrap2 = (*(sFrameStore**)arg2)->frameNumWrap;
+
   if ( frame_num_wrap1 < frame_num_wrap2)
     return 1;
+
   if ( frame_num_wrap1 > frame_num_wrap2)
     return -1;
   else
     return 0;
-}
+  }
 //}}}
 //{{{
 // compares two frame stores by lt_pic_num for qsort in descending order
-static inline int compareFsbyLtPicIndexAsc (const void* arg1, const void* arg2 )
-{
+static int compareFsbyLtPicIndexAsc (const void* arg1, const void* arg2) {
+
   int long_term_frame_idx1 = (*(sFrameStore**)arg1)->longTermFrameIndex;
   int long_term_frame_idx2 = (*(sFrameStore**)arg2)->longTermFrameIndex;
 
@@ -197,12 +200,12 @@ static inline int compareFsbyLtPicIndexAsc (const void* arg1, const void* arg2 )
     return 1;
   else
     return 0;
-}
+  }
 //}}}
 //{{{
 // compares two stored pictures by poc for qsort in ascending order
-static inline int compare_pic_by_poc_asc (const void* arg1, const void* arg2 )
-{
+static int compare_pic_by_poc_asc (const void* arg1, const void* arg2) {
+
   int poc1 = (*(sPicture**)arg1)->poc;
   int poc2 = (*(sPicture**)arg2)->poc;
 
@@ -212,12 +215,12 @@ static inline int compare_pic_by_poc_asc (const void* arg1, const void* arg2 )
     return 1;
   else
     return 0;
-}
+  }
 //}}}
 //{{{
 // compares two stored pictures by poc for qsort in descending order
-static inline int compare_pic_by_poc_desc (const void* arg1, const void* arg2 )
-{
+static int compare_pic_by_poc_desc (const void* arg1, const void* arg2) {
+
   int poc1 = (*(sPicture**)arg1)->poc;
   int poc2 = (*(sPicture**)arg2)->poc;
 
@@ -227,12 +230,12 @@ static inline int compare_pic_by_poc_desc (const void* arg1, const void* arg2 )
     return -1;
   else
     return 0;
-}
+  }
 //}}}
 //{{{
 // compares two frame stores by poc for qsort in ascending order
-static inline int compareFsByPocAsc (const void* arg1, const void* arg2 )
-{
+static int compareFsByPocAsc (const void* arg1, const void* arg2) {
+
   int poc1 = (*(sFrameStore**)arg1)->poc;
   int poc2 = (*(sFrameStore**)arg2)->poc;
 
@@ -242,12 +245,12 @@ static inline int compareFsByPocAsc (const void* arg1, const void* arg2 )
     return 1;
   else
     return 0;
-}
+  }
 //}}}
 //{{{
 // compares two frame stores by poc for qsort in descending order
-static inline int compare_fs_by_poc_desc (const void* arg1, const void* arg2 )
-{
+static int compare_fs_by_poc_desc (const void* arg1, const void* arg2) {
+
   int poc1 = (*(sFrameStore**)arg1)->poc;
   int poc2 = (*(sFrameStore**)arg2)->poc;
 
@@ -257,22 +260,10 @@ static inline int compare_fs_by_poc_desc (const void* arg1, const void* arg2 )
     return -1;
   else
     return 0;
-}
+  }
 //}}}
-//{{{
-// returns true, if picture is short term reference picture
-static inline int is_short_ref (sPicture* s)
-{
-  return ((s->usedForReference) && (!(s->isLongTerm)));
-}
-//}}}
-//{{{
-// returns true, if picture is long term reference picture
-static inline int is_long_ref (sPicture* s)
-{
-  return ((s->usedForReference) && (s->isLongTerm));
-}
-//}}}
+static int isLongRef (sPicture* s) { return s->usedForReference && s->isLongTerm; }
+static int isShortRef (sPicture* s) { return s->usedForReference && !s->isLongTerm; }
 
 extern sFrameStore* allocFrameStore();
 extern void freeFrameStore (sFrameStore* frameStore);

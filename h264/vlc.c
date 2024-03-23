@@ -91,35 +91,35 @@ void linfo_se (int len, int info, int* value1, int* dummy) {
   }
 //}}}
 //{{{
-void linfo_cbp_intra_normal (int len, int info,int* cbp, int* dummy) {
+void linfo_cbp_intra_normal (int len, int info,int* codedBlockPattern, int* dummy) {
 
   int cbp_idx;
   linfo_ue (len, info, &cbp_idx, dummy);
-  *cbp = NCBP[1][cbp_idx][0];
+  *codedBlockPattern = NCBP[1][cbp_idx][0];
   }
 //}}}
 //{{{
-void linfo_cbp_intra_other (int len, int info, int* cbp, int* dummy) {
+void linfo_cbp_intra_other (int len, int info, int* codedBlockPattern, int* dummy) {
 
   int cbp_idx;
   linfo_ue(len, info, &cbp_idx, dummy);
-  *cbp = NCBP[0][cbp_idx][0];
+  *codedBlockPattern = NCBP[0][cbp_idx][0];
   }
 //}}}
 //{{{
-void linfo_cbp_inter_normal (int len, int info, int* cbp, int* dummy) {
+void linfo_cbp_inter_normal (int len, int info, int* codedBlockPattern, int* dummy) {
 
   int cbp_idx;
   linfo_ue (len, info, &cbp_idx, dummy);
-  *cbp = NCBP[1][cbp_idx][1];
+  *codedBlockPattern = NCBP[1][cbp_idx][1];
   }
 //}}}
 //{{{
-void linfo_cbp_inter_other (int len, int info, int* cbp, int *dummy) {
+void linfo_cbp_inter_other (int len, int info, int* codedBlockPattern, int *dummy) {
 
   int cbp_idx;
   linfo_ue (len, info, &cbp_idx, dummy);
-  *cbp = NCBP[0][cbp_idx][1];
+  *codedBlockPattern = NCBP[0][cbp_idx][1];
   }
 //}}}
 //{{{
@@ -352,7 +352,7 @@ int readsSyntaxElement_FLC (sSyntaxElement* se, sBitStream* s)
 {
   int BitstreamLengthInBits  = (s->bitStreamLen << 3) + 7;
 
-  if ((GetBits(s->bitStreamBuffer, s->bitStreamOffset, &(se->inf), BitstreamLengthInBits, se->len)) < 0)
+  if ((getBits(s->bitStreamBuffer, s->bitStreamOffset, &(se->inf), BitstreamLengthInBits, se->len)) < 0)
     return -1;
 
   se->value1 = se->inf;
@@ -801,7 +801,7 @@ int readsSyntaxElement_Run (sSyntaxElement* se, sBitStream* s)
 //}}}
 
 //{{{
-int GetBits (byte buffer[], int totalBitOffset, int* info, int bitCount, int numBits) {
+int getBits (byte buffer[], int totalBitOffset, int* info, int bitCount, int numBits) {
 
   if ((totalBitOffset + numBits) > bitCount)
     return -1;

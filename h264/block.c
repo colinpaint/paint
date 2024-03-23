@@ -468,25 +468,25 @@ void iMBtrans4x4 (sMacroBlock* mb, eColorPlane plane, int smb) {
     int** mbRess = slice->mbRess[plane];
 
     if (mb->isIntraBlock == FALSE) {
-      if (mb->cbp & 0x01) {
+      if (mb->codedBlockPattern & 0x01) {
         inverse4x4 (cof, mbRess, 0, 0);
         inverse4x4 (cof, mbRess, 0, 4);
         inverse4x4 (cof, mbRess, 4, 0);
         inverse4x4 (cof, mbRess, 4, 4);
         }
-      if (mb->cbp & 0x02) {
+      if (mb->codedBlockPattern & 0x02) {
         inverse4x4 (cof, mbRess, 0, 8);
         inverse4x4 (cof, mbRess, 0, 12);
         inverse4x4 (cof, mbRess, 4, 8);
         inverse4x4 (cof, mbRess, 4, 12);
         }
-      if (mb->cbp & 0x04) {
+      if (mb->codedBlockPattern & 0x04) {
         inverse4x4 (cof, mbRess, 8, 0);
         inverse4x4 (cof, mbRess, 8, 4);
         inverse4x4 (cof, mbRess, 12, 0);
         inverse4x4 (cof, mbRess, 12, 4);
         }
-      if (mb->cbp & 0x08) {
+      if (mb->codedBlockPattern & 0x08) {
         inverse4x4 (cof, mbRess, 8, 8);
         inverse4x4 (cof, mbRess, 8, 12);
         inverse4x4 (cof, mbRess, 12, 8);
@@ -516,22 +516,22 @@ void iMBtrans8x8 (sMacroBlock* mb, eColorPlane plane) {
   sPixel** curr_img = plane ? picture->imgUV[plane - 1]: picture->imgY;
 
   // Perform 8x8 idct
-  if (mb->cbp & 0x01)
+  if (mb->codedBlockPattern & 0x01)
     itrans8x8 (mb, plane, 0, 0);
   else
     icopy8x8 (mb, plane, 0, 0);
 
-  if (mb->cbp & 0x02)
+  if (mb->codedBlockPattern & 0x02)
     itrans8x8 (mb, plane, 8, 0);
   else
     icopy8x8 (mb, plane, 8, 0);
 
-  if (mb->cbp & 0x04)
+  if (mb->codedBlockPattern & 0x04)
     itrans8x8 (mb, plane, 0, 8);
   else
     icopy8x8 (mb, plane, 0, 8);
 
-  if (mb->cbp & 0x08)
+  if (mb->codedBlockPattern & 0x08)
     itrans8x8 (mb, plane, 8, 8);
   else
     icopy8x8 (mb, plane, 8, 8);
@@ -548,7 +548,7 @@ void iTransform (sMacroBlock* mb, eColorPlane plane, int smb) {
   sPixel** curr_img;
   int uv = plane-1;
 
-  if ((mb->cbp & 15) != 0 || smb) {
+  if ((mb->codedBlockPattern & 15) != 0 || smb) {
     if (mb->lumaTransformSize8x8flag == 0)
       iMBtrans4x4 (mb, plane, smb);
     else
@@ -569,7 +569,7 @@ void iTransform (sMacroBlock* mb, eColorPlane plane, int smb) {
     for (uv = PLANE_U; uv <= PLANE_V; ++uv) {
       curUV = &picture->imgUV[uv - 1][mb->piccY];
       mbRec = slice->mbRec[uv];
-      if (!smb && (mb->cbp >> 4)) {
+      if (!smb && (mb->codedBlockPattern >> 4)) {
         if (mb->isLossless == FALSE) {
           const unsigned char *x_pos, *y_pos;
           for (int b8 = 0; b8 < (decoder->coding.numUvBlocks); ++b8) {

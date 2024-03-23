@@ -65,10 +65,10 @@ extern int readIv (int LenInBits, char* label, sBitStream* s);
 
 extern void linfo_ue (int len, int info, int* value1, int* dummy);
 extern void linfo_se (int len, int info, int* value1, int* dummy);
-extern void linfo_cbp_intra_normal (int len, int info,int* cbp, int* dummy);
-extern void linfo_cbp_inter_normal (int len, int info, int* cbp, int* dummy);
-extern void linfo_cbp_intra_other (int len, int info, int* cbp, int* dummy);
-extern void linfo_cbp_inter_other (int len, int info, int* cbp, int* dummy);
+extern void linfo_cbp_intra_normal (int len, int info,int* codedBlockPattern, int* dummy);
+extern void linfo_cbp_inter_normal (int len, int info, int* codedBlockPattern, int* dummy);
+extern void linfo_cbp_intra_other (int len, int info, int* codedBlockPattern, int* dummy);
+extern void linfo_cbp_inter_other (int len, int info, int* codedBlockPattern, int* dummy);
 extern void linfo_levrun_inter (int len, int info, int* level, int* irun);
 extern void linfo_levrun_c2x2 (int len, int info, int* level, int* irun);
 
@@ -89,5 +89,5 @@ extern int readsSyntaxElement_TotalZeros (sSyntaxElement* se, sBitStream* s);
 extern int readsSyntaxElement_TotalZerosChromaDC (sDecoder* decoder, sSyntaxElement* se, sBitStream* s);
 extern int readsSyntaxElement_Run (sSyntaxElement* se, sBitStream* s);
 
-extern int GetBits (byte buffer[], int totalBitOffset, int* info, int bitCount, int numBits);
+extern int getBits (byte buffer[], int totalBitOffset, int* info, int bitCount, int numBits);
 extern int ShowBits (byte buffer[], int totalBitOffset, int bitCount, int numBits);

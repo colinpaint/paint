@@ -1315,7 +1315,7 @@ static void genPicListFromFrameList (ePicStructure currStructure, sFrameStore** 
   int top_idx = 0;
   int bot_idx = 0;
 
-  int (*is_ref)(sPicture*s) = (long_term) ? is_long_ref : is_short_ref;
+  int (*is_ref)(sPicture*s) = (long_term) ? isLongRef : isShortRef;
 
   if (currStructure == eTopField) {
     while ((top_idx<list_idx)||(bot_idx<list_idx)) {

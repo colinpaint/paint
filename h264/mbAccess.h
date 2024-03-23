@@ -1,7 +1,7 @@
 #pragma once
 
-extern void CheckAvailabilityOfNeighbors (sMacroBlock* mb);
-extern void CheckAvailabilityOfNeighborsMBAFF (sMacroBlock* mb);
+extern void checkNeighbours (sMacroBlock* mb);
+extern void checkNeighboursMbAff (sMacroBlock* mb);
 extern void CheckAvailabilityOfNeighborsNormal (sMacroBlock* mb);
 
 extern void getAffNeighbour (sMacroBlock* mb, int xN, int yN, int mbSize[2], sPixelPos *pixelPos);
