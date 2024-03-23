@@ -2212,7 +2212,7 @@ void padPicture (sDecoder* decoder, sPicture* picture) {
 //}}}
 
 //{{{
-static void readSlice (sDecoder* decoder, sSlice* slice) {
+static void readSliceHeader (sDecoder* decoder, sSlice* slice) {
 // Some slice syntax depends on parameterSet depends on parameterSetID of the slice header
 // - read the ppsId of the slice header first
 //   - then setup the active parameter sets
@@ -2508,7 +2508,7 @@ static void readSlice (sDecoder* decoder, sSlice* slice) {
   }
 //}}}
 //{{{
-static int readNextSlice (sSlice* slice) {
+static int readSlice (sSlice* slice) {
 
   sDecoder* decoder = slice->decoder;
 
@@ -2517,7 +2517,7 @@ static int readNextSlice (sSlice* slice) {
   for (;;) {
     sNalu* nalu = decoder->nalu;
     if (!decoder->pendingNalu) {
-      if (!readNextNalu (decoder, nalu))
+      if (!readNalu (decoder, nalu))
         return EOS;
       }
     else {
@@ -2556,8 +2556,8 @@ static int readNextSlice (sSlice* slice) {
         s->bitStreamLen = RBSPtoSODB (s->bitStreamBuffer, nalu->len - 1);
         s->codeLen = s->bitStreamLen;
 
-        readSlice (decoder, slice);
-        assignQuantParams (slice);
+        readSliceHeader (decoder, slice);
+        useQuantParams (slice);
 
         if (decoder->param.sliceDebug) {
           //{{{  print nextSlice debug
@@ -2650,8 +2650,8 @@ static int readNextSlice (sSlice* slice) {
         s->bitStreamOffset = s->readLen = 0;
         memcpy (s->bitStreamBuffer, &nalu->buf[1], nalu->len - 1);
         s->codeLen = s->bitStreamLen = RBSPtoSODB (s->bitStreamBuffer, nalu->len-1);
-        readSlice (decoder, slice);
-        assignQuantParams (slice);
+        readSliceHeader (decoder, slice);
+        useQuantParams (slice);
 
         if (isNewPicture (decoder->picture, slice, decoder->oldSlice)) {
           if (!decoder->picSliceIndex)
@@ -2675,7 +2675,7 @@ static int readNextSlice (sSlice* slice) {
         if (decoder->activePPS->entropyCodingMode)
           error ("dataPartition with eCabac not allowed");
 
-        if (!readNextNalu (decoder, nalu))
+        if (!readNalu (decoder, nalu))
           return curHeader;
 
         if (NALU_TYPE_DPB == nalu->unitType) {
@@ -2698,7 +2698,7 @@ static int readNextSlice (sSlice* slice) {
               readUeV ("NALU dataPartitionB redundantPicCount", s);
 
             // we're finished with dataPartitionB, so let's continue with next dataPartition
-            if (!readNextNalu (decoder, nalu))
+            if (!readNalu (decoder, nalu))
               return curHeader;
             }
           }
@@ -3040,7 +3040,7 @@ int decodeFrame (sDecoder* decoder) {
     slice->isResetCoef = FALSE;
     slice->isResetCoefCr = FALSE;
 
-    curHeader = readNextSlice (slice);
+    curHeader = readSlice (slice);
     slice->curHeader = curHeader;
     //{{{  manage primary, redundant slices
     if (!slice->redundantPicCount)

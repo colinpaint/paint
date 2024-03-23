@@ -382,11 +382,11 @@ static int NALUtoRBSP (sNalu* nalu) {
   }
 //}}}
 //{{{
-int readNextNalu (sDecoder* decoder, sNalu* nalu) {
+int readNalu (sDecoder* decoder, sNalu* nalu) {
 
   int ret = getNALU (decoder->annexB, decoder, nalu);
   if (ret < 0)
-    error ("Error while getting the NALU in file format exit\n");
+    error ("error getting NALU");
   if (ret == 0)
     return 0;
 
@@ -394,10 +394,9 @@ int readNextNalu (sDecoder* decoder, sNalu* nalu) {
   // If current NALU is a VCL NALU, we can't tell whether it is the first VCL NALU at this point,
   // so only non-VCL NAL unit is checked here.
   checkZeroByteNonVCL (decoder, nalu);
-
   ret = NALUtoRBSP (nalu);
   if (ret < 0)
-    error ("Invalid startcode emulation prevention");
+    error ("NALU invalid startcode");
 
   // Got a NALU
   if (nalu->forbiddenBit)

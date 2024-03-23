@@ -177,7 +177,7 @@ void freeQuant (sDecoder* decoder) {
 //}}}
 
 //{{{
-void assignQuantParams (sSlice* slice) {
+void useQuantParams (sSlice* slice) {
 
   sSPS* sps = slice->activeSPS;
   sPPS* pps = slice->activePPS;
@@ -279,6 +279,7 @@ void assignQuantParams (sSlice* slice) {
     }
 
   CalculateQuant4x4Param (slice);
+
   if (pps->transform8x8modeFlag)
     CalculateQuant8x8Param (slice);
   }

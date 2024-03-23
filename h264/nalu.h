@@ -65,5 +65,5 @@ extern void freeNALU (sNalu* n);
 extern void checkZeroByteVCL (struct Decoder* decoder, sNalu* nalu);
 extern void checkZeroByteNonVCL (struct Decoder* decoder, sNalu* nalu);
 
-extern int readNextNalu (struct Decoder* decoder, sNalu* nalu);
+extern int readNalu (struct Decoder* decoder, sNalu* nalu);
 extern int RBSPtoSODB (byte* bitStreamBuffer, int lastBytePos);
