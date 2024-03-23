@@ -93,7 +93,7 @@ static int predict_nnz (sMacroBlock* mb, int block_type, int i,int j) {
       //}}}
       }
 
-  if (cnt==2) {
+  if (cnt == 2) {
     ++pred_nnz;
     pred_nnz >>= 1;
     }
@@ -1402,8 +1402,8 @@ static void read_CBP_and_coeffs_from_NAL_CAVLC_420 (sMacroBlock* mb) {
   sDataPartition* dataPartition = NULL;
   const byte* dpMap = assignSE2dp[slice->dataPartitionMode];
   sDecoder* decoder = mb->decoder;
-  int smb = ((decoder->coding.type == eSPslice) && (mb->isIntraBlock == FALSE)) || 
-            ((decoder->coding.type == eSIslice) && (mb->mbType == SI4MB));
+  int smb = ((decoder->coding.type == eSliceSP) && (mb->isIntraBlock == FALSE)) ||
+            ((decoder->coding.type == eSliceSI) && (mb->mbType == SI4MB));
 
   int uv;
   int qp_per_uv[2];

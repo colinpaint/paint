@@ -2382,7 +2382,7 @@ void init_mbaff_lists (sDecoder* decoder, sSlice* slice) {
 //{{{
 void allocRefPicListReordeBuffer (sSlice* slice) {
 
-  if (slice->sliceType != eIslice && slice->sliceType != eSIslice) {
+  if (slice->sliceType != eSliceI && slice->sliceType != eSliceSI) {
     int size = slice->numRefIndexActive[LIST_0] + 1;
     if ((slice->modPicNumsIdc[LIST_0] = calloc (size ,sizeof(int))) == NULL)
        noMemoryExit ("allocRefPicListReordeBuffer: modification_of_pic_nums_idc_l0");
@@ -2397,7 +2397,7 @@ void allocRefPicListReordeBuffer (sSlice* slice) {
     slice->longTermPicIndex[LIST_0] = NULL;
     }
 
-  if (slice->sliceType == eBslice) {
+  if (slice->sliceType == eSliceB) {
     int size = slice->numRefIndexActive[LIST_1] + 1;
     if ((slice->modPicNumsIdc[LIST_1] = calloc (size,sizeof(int))) == NULL)
       noMemoryExit ("allocRefPicListReordeBuffer: modification_of_pic_nums_idc_l1");

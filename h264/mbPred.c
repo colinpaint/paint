@@ -248,7 +248,7 @@ int mb_pred_p_inter8x8 (sMacroBlock* mb, eColorPlane plane, sPicture* picture)
   int i=0, j=0,k;
 
   sSlice* slice = mb->slice;
-  int smb = slice->sliceType == eSPslice && (mb->isIntraBlock == FALSE);
+  int smb = slice->sliceType == eSliceSP && (mb->isIntraBlock == FALSE);
 
   set_chroma_vector(mb);
 
@@ -283,7 +283,7 @@ int mb_pred_p_inter8x8 (sMacroBlock* mb, eColorPlane plane, sPicture* picture)
 int mb_pred_p_inter16x16 (sMacroBlock* mb, eColorPlane plane, sPicture* picture)
 {
   sSlice* slice = mb->slice;
-  int smb = (slice->sliceType == eSPslice);
+  int smb = (slice->sliceType == eSliceSP);
 
   set_chroma_vector(mb);
   perform_mc (mb, plane, picture, mb->b8pdir[0], 0, 0, MB_BLOCK_SIZE, MB_BLOCK_SIZE);
@@ -298,7 +298,7 @@ int mb_pred_p_inter16x16 (sMacroBlock* mb, eColorPlane plane, sPicture* picture)
 int mb_pred_p_inter16x8 (sMacroBlock* mb, eColorPlane plane, sPicture* picture)
 {
   sSlice* slice = mb->slice;
-  int smb = (slice->sliceType == eSPslice);
+  int smb = (slice->sliceType == eSliceSP);
 
   set_chroma_vector(mb);
 
@@ -315,7 +315,7 @@ int mb_pred_p_inter16x8 (sMacroBlock* mb, eColorPlane plane, sPicture* picture)
 int mb_pred_p_inter8x16 (sMacroBlock* mb, eColorPlane plane, sPicture* picture)
 {
   sSlice* slice = mb->slice;
-  int smb = (slice->sliceType == eSPslice);
+  int smb = (slice->sliceType == eSliceSP);
 
   set_chroma_vector(mb);
 

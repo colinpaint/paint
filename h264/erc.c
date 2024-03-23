@@ -1509,7 +1509,7 @@ static sPicture* get_last_ref_pic_from_dpb (sDPB* dpb)
     {
       if (((dpb->fs[i]->frame->usedForReference) &&
         (!dpb->fs[i]->frame->isLongTerm)) /*||  ((dpb->fs[i]->frame->usedForReference==0)
-                                           && (dpb->fs[i]->frame->sliceType == ePslice))*/ )
+                                           && (dpb->fs[i]->frame->sliceType == eSliceP))*/ )
       {
         return dpb->fs[i]->frame;
       }
@@ -1583,9 +1583,9 @@ static void copy_to_conceal (sPicture *src, sPicture *dst, sDecoder* decoder)
     dst->picSizeInMbs = src->picSizeInMbs;
     mbWidth = dst->picWidthMbs;
     mbHeight = (dst->picSizeInMbs)/(dst->picWidthMbs);
-    scale = (decoder->concealSliceType == eBslice) ? 2 : 1;
+    scale = (decoder->concealSliceType == eSliceB) ? 2 : 1;
 
-    if(decoder->concealSliceType == eBslice)
+    if(decoder->concealSliceType == eSliceB)
     {
       init_lists_for_non_reference_loss (decoder->dpb, dst->sliceType, decoder->sliceList[0]->picStructure);
     }
@@ -1671,7 +1671,7 @@ static void copy_prev_pic_to_concealed_pic (sPicture *picture, sDPB* dpb)
   assert(refPic != NULL);
 
   /* copy all the struc from this to current conceal pic */
-  decoder->concealSliceType = ePslice;
+  decoder->concealSliceType = eSliceP;
   copy_to_conceal(refPic, picture, decoder);
 }
 //}}}
@@ -1790,7 +1790,7 @@ void init_lists_for_non_reference_loss (sDPB* dpb, int currSliceType, ePicStruct
       }
     }
 
-  if (currSliceType == ePslice) {
+  if (currSliceType == eSliceP) {
     // Calculate FrameNumWrap and PicNum
     if (currPicStructure == eFrame) {
       for (i = 0; i < dpb->usedSize; i++)
@@ -1802,7 +1802,7 @@ void init_lists_for_non_reference_loss (sDPB* dpb, int currSliceType, ePicStruct
       }
     }
 
-  if (currSliceType == eBslice) {
+  if (currSliceType == eSliceB) {
     if (currPicStructure == eFrame) {
       for (i = 0; i < dpb->usedSize; i++)
         if (dpb->fs[i]->concealment_reference == 1)
@@ -1919,7 +1919,7 @@ void concealLostFrames (sDPB* dpb, sSlice *slice)
     //if (UnusedShortTermFrameNum == 0)
     if(decoder->idrConcealFlag == 1)
     {
-      picture->sliceType = eIslice;
+      picture->sliceType = eSliceI;
       picture->idrFlag = TRUE;
       flushDpb(dpb);
       picture->topPoc= 0;
@@ -2002,7 +2002,7 @@ void conceal_non_ref_pics (sDPB* dpb, int diff)
         decoder->concealFrame = conceal_from_picture->frameNum + 1;
 
         update_ref_list_for_concealment (dpb);
-        decoder->concealSliceType = eBslice;
+        decoder->concealSliceType = eSliceB;
         copy_to_conceal (conceal_from_picture, conceal_to_picture, decoder);
         concealment_ptr = init_node (conceal_to_picture, missingpoc );
         add_node (decoder, concealment_ptr);

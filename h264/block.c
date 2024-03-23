@@ -291,7 +291,7 @@ void itrans_sp (sMacroBlock* mb, eColorPlane plane, int ioff, int joff) {
   sDecoder* decoder = mb->decoder;
   sSlice* slice = mb->slice;
 
-  int qp = (slice->sliceType == eSIslice) ? slice->qs : slice->qp;
+  int qp = (slice->sliceType == eSliceSI) ? slice->qs : slice->qp;
   int qp_per = decoder->qpPerMatrix[qp];
   int qp_rem = decoder->qpRemMatrix[qp];
   int qp_per_sp = decoder->qpPerMatrix[slice->qs];
@@ -318,7 +318,7 @@ void itrans_sp (sMacroBlock* mb, eColorPlane plane, int ioff, int joff) {
 
   forward4x4 (PBlock, PBlock, 0, 0);
 
-  if (slice->spSwitch || slice->sliceType == eSIslice) {
+  if (slice->spSwitch || slice->sliceType == eSliceSI) {
     for (int j = 0; j < BLOCK_SIZE;++j)
       for (int i = 0; i < BLOCK_SIZE;++i) {
         // recovering coefficient since they are already dequantized earlier
@@ -366,7 +366,7 @@ void itrans_sp_cr (sMacroBlock* mb, int uv) {
   int qp_rem_sp = decoder->qpRemMatrix[((slice->qs < 0 ? slice->qs : QP_SCALE_CR[slice->qs]))];
   int q_bits_sp = Q_BITS + qp_per_sp;
 
-  if (slice->sliceType == eSIslice) {
+  if (slice->sliceType == eSliceSI) {
     qp_per = qp_per_sp;
     qp_rem = qp_rem_sp;
     }
@@ -387,7 +387,7 @@ void itrans_sp_cr (sMacroBlock* mb, int uv) {
   mp1[2] = (PBlock[0][0] + PBlock[4][0] - PBlock[0][4] - PBlock[4][4]);
   mp1[3] = (PBlock[0][0] - PBlock[4][0] - PBlock[0][4] + PBlock[4][4]);
 
-  if (slice->spSwitch || slice->sliceType == eSIslice) {
+  if (slice->spSwitch || slice->sliceType == eSliceSI) {
     for (int n2 = 0; n2 < 2; ++n2 )
       for (int n1 = 0; n1 < 2; ++n1 ) {
         // quantization fo predicted block

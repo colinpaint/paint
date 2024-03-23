@@ -192,7 +192,7 @@ static void read_ipred_4x4_modes_mbaff (sMacroBlock* mb) {
 
         // !! KS: not sure if the following is still correct...
         ts = ls = 0;   // Check to see if the neighboring block is SI
-        if (slice->sliceType == eSIslice) { // need support for MBINTLC1
+        if (slice->sliceType == eSliceSI) { // need support for MBINTLC1
           if (left_block.available)
             if (slice->siBlock [picPos[left_block.mbIndex].y][picPos[left_block.mbIndex].x])
               ls = 1;
@@ -266,7 +266,7 @@ static void read_ipred_4x4_modes (sMacroBlock* mb) {
 
         int ts = 0;
         int ls = 0;   // Check to see if the neighboring block is SI
-        if (slice->sliceType == eSIslice) {
+        if (slice->sliceType == eSliceSI) {
           //{{{  need support for MBINTLC1
           if (left_block.available)
             if (slice->siBlock [picPos[left_block.mbIndex].y][picPos[left_block.mbIndex].x])
@@ -358,7 +358,7 @@ static void initMacroblock (sMacroBlock* mb) {
     resetMvInfo (*(mvInfo++) + i, slice_no);
     }
 
-  set_read_comp_coeff_cabac (mb);
+  setReadCompCabac (mb);
   setReadCompCoefCavlc (mb);
   }
 //}}}
@@ -368,7 +368,7 @@ static void initMacroblockDirect (sMacroBlock* mb) {
   int slice_no = mb->slice->curSliceIndex;
   sPicMotionParam** mvInfo = &mb->slice->picture->mvInfo[mb->blockY];
 
-  set_read_comp_coeff_cabac (mb);
+  setReadCompCabac (mb);
   setReadCompCoefCavlc (mb);
 
   int i = mb->blockX;
@@ -473,7 +473,7 @@ static void SetB8Mode (sMacroBlock* mb, int value, int i) {
   static const char b_v2b8 [14] = {0, 4, 4, 4, 5, 6, 5, 6, 5, 6, 7, 7, 7, IBLOCK};
   static const char b_v2pd [14] = {2, 0, 1, 2, 0, 0, 1, 1, 2, 2, 0, 1, 2, -1};
 
-  if (slice->sliceType == eBslice) {
+  if (slice->sliceType == eSliceB) {
     mb->b8mode[i] = b_v2b8[value];
     mb->b8pdir[i] = b_v2pd[value];
     }
@@ -1570,15 +1570,15 @@ void setReadMacroblock (sSlice* slice) {
 
   if (slice->decoder->activePPS->entropyCodingMode == (Boolean)eCabac) {
     switch (slice->sliceType) {
-      case ePslice:
-      case eSPslice:
+      case eSliceP:
+      case eSliceSP:
         slice->readMacroblock = readPcabacMacroblock;
         break;
-      case eBslice:
+      case eSliceB:
         slice->readMacroblock = readBcabacMacroblock;
         break;
-      case eIslice:
-      case eSIslice:
+      case eSliceI:
+      case eSliceSI:
         slice->readMacroblock = readIcabacMacroblock;
         break;
       default:
@@ -1589,15 +1589,15 @@ void setReadMacroblock (sSlice* slice) {
 
   else {
     switch (slice->sliceType) {
-      case ePslice:
-      case eSPslice:
+      case eSliceP:
+      case eSliceSP:
         slice->readMacroblock = readPcavlcMacroblock;
         break;
-      case eBslice:
+      case eSliceB:
         slice->readMacroblock = readBcavlcMacroblock;
         break;
-      case eIslice:
-      case eSIslice:
+      case eSliceI:
+      case eSliceSI:
         slice->readMacroblock = readIcavlcMacroblock;
         break;
       default:

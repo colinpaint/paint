@@ -1891,7 +1891,7 @@ static void perform_mc_single_wp (sMacroBlock* mb, eColorPlane plane, sPicture* 
 
   {
     int alpha_l0, wpOffset, wp_denom;
-    if (mb->mbField && ((decoder->activePPS->weightedPredFlag&&(type==ePslice|| type == eSPslice))||(decoder->activePPS->weightedBiPredIdc==1 && (type==eBslice))))
+    if (mb->mbField && ((decoder->activePPS->weightedPredFlag&&(type==eSliceP|| type == eSliceSP))||(decoder->activePPS->weightedBiPredIdc==1 && (type==eSliceB))))
       ref_idx_wp >>=1;
     alpha_l0  = slice->wpWeight[predDir][ref_idx_wp][plane];
     wpOffset = slice->wpOffset[predDir][ref_idx_wp][plane];

@@ -462,7 +462,7 @@ static void get_strength_ver_MBAff (byte* Strength, sMacroBlock* mb, int edge, i
   sBlockPos *picPos = decoder->picPos;
 
   sMacroBlock* MbP;
-  if ((p->sliceType==eSPslice)||(p->sliceType==eSIslice) ) {
+  if ((p->sliceType==eSliceSP)||(p->sliceType==eSliceSI) ) {
     for (idx = 0; idx < MB_BLOCK_SIZE; ++idx ) {
       getAffNeighbour(mb, edge - 1, idx, decoder->mbSize[IS_LUMA], &pixP);
       blkQ = (short) ((idx & 0xFFFC) + (edge >> 2));
@@ -633,7 +633,7 @@ static void get_strength_hor_MBAff (byte* Strength, sMacroBlock* mb, int edge, i
   sDecoder* decoder = mb->decoder;
   sBlockPos *picPos = decoder->picPos;
 
-  if ((p->sliceType==eSPslice)||(p->sliceType==eSIslice) ) {
+  if ((p->sliceType==eSliceSP)||(p->sliceType==eSliceSI) ) {
     for (idx = 0; idx < MB_BLOCK_SIZE; idx += BLOCK_SIZE) {
       xQ = idx;
       getAffNeighbour(mb, xQ, yQ - 1, decoder->mbSize[IS_LUMA], &pixP);
@@ -751,7 +751,7 @@ static void get_strength_ver (sMacroBlock* mb, int edge, int mvLimit, sPicture* 
   int     StrValue, i;
   sBlockPos *picPos = mb->decoder->picPos;
 
-  if ((slice->sliceType==eSPslice)||(slice->sliceType==eSIslice) ) {
+  if ((slice->sliceType==eSliceSP)||(slice->sliceType==eSliceSI) ) {
     // Set strength to either 3 or 4 regardless of pixel position
     StrValue = (edge == 0) ? 4 : 3;
     for (i = 0; i < BLOCK_SIZE; i ++ ) Strength[i] = StrValue;
@@ -764,7 +764,7 @@ static void get_strength_ver (sMacroBlock* mb, int edge, int mvLimit, sPicture* 
       MbP = (edge) ? mb : neighbour;
 
       if (edge || MbP->isIntraBlock == FALSE) {
-        if (edge && (slice->sliceType == ePslice && mb->mbType == PSKIP))
+        if (edge && (slice->sliceType == eSliceP && mb->mbType == PSKIP))
           for (i = 0; i < BLOCK_SIZE; i ++ )
             Strength[i] = 0;
         else  if (edge && ((mb->mbType == P16x16)  || (mb->mbType == P16x8))) {
@@ -860,7 +860,7 @@ static void get_strength_hor (sMacroBlock* mb, int edge, int mvLimit, sPicture* 
   sSlice* slice = mb->slice;
   sBlockPos *picPos = mb->decoder->picPos;
 
-  if ((slice->sliceType==eSPslice)||(slice->sliceType==eSIslice) ) {
+  if ((slice->sliceType==eSliceSP)||(slice->sliceType==eSliceSI) ) {
     // Set strength to either 3 or 4 regardless of pixel position
     StrValue = (edge == 0 && (((p->picStructure==eFrame)))) ? 4 : 3;
     for (i = 0; i < BLOCK_SIZE; i++)
@@ -873,7 +873,7 @@ static void get_strength_hor (sMacroBlock* mb, int edge, int mvLimit, sPicture* 
       sMacroBlock* neighbor = get_non_aff_neighbour_luma(mb, 0, yQ);
       MbP = (edge) ? mb : neighbor;
       if (edge || MbP->isIntraBlock == FALSE) {
-        if (edge && (slice->sliceType == ePslice && mb->mbType == PSKIP))
+        if (edge && (slice->sliceType == eSliceP && mb->mbType == PSKIP))
           for (i = 0; i < BLOCK_SIZE; i ++)
             Strength[i] = 0;
         else if (edge && ((mb->mbType == P16x16)  || (mb->mbType == P8x16))) {
@@ -1444,15 +1444,15 @@ static void deblockMb (sDecoder* decoder, sPicture* p, int mbIndex) {
     // Vertical deblocking
     for (edge = 0; edge < 4 ; ++edge ) {
       // If cbp == 0 then deblocking for some macroblock types could be skipped
-      if (mb->cbp == 0 && (slice->sliceType == ePslice || slice->sliceType == eBslice)) {
+      if (mb->cbp == 0 && (slice->sliceType == eSliceP || slice->sliceType == eSliceB)) {
         if (filterNon8x8LumaEdgesFlag[edge] == 0 && activeSPS->chromaFormatIdc != YUV444)
           continue;
         else if (edge > 0) {
-          if ((mb->mbType == PSKIP && slice->sliceType == ePslice) ||
+          if ((mb->mbType == PSKIP && slice->sliceType == eSliceP) ||
               (mb->mbType == P16x16) || (mb->mbType == P16x8))
             continue;
           else if ((edge & 0x01) && ((mb->mbType == P8x16) ||
-                   (slice->sliceType == eBslice && 
+                   (slice->sliceType == eSliceB && 
                     mb->mbType == BSKIP_DIRECT && 
                     activeSPS->direct_8x8_inference_flag)))
             continue;
@@ -1488,13 +1488,13 @@ static void deblockMb (sDecoder* decoder, sPicture* p, int mbIndex) {
     // horizontal deblocking
     for (edge = 0; edge < 4 ; ++edge ) {
       // If cbp == 0 then deblocking for some macroblock types could be skipped
-      if (mb->cbp == 0 && (slice->sliceType == ePslice || slice->sliceType == eBslice)) {
+      if (mb->cbp == 0 && (slice->sliceType == eSliceP || slice->sliceType == eSliceB)) {
         if (filterNon8x8LumaEdgesFlag[edge] == 0 && activeSPS->chromaFormatIdc==YUV420)
           continue;
         else if (edge > 0) {
-          if (((mb->mbType == PSKIP && slice->sliceType == ePslice) || (mb->mbType == P16x16) || (mb->mbType == P8x16)))
+          if (((mb->mbType == PSKIP && slice->sliceType == eSliceP) || (mb->mbType == P16x16) || (mb->mbType == P8x16)))
             continue;
-          else if ((edge & 0x01) && ((mb->mbType == P16x8) || (slice->sliceType == eBslice && mb->mbType == BSKIP_DIRECT && activeSPS->direct_8x8_inference_flag)))
+          else if ((edge & 0x01) && ((mb->mbType == P16x8) || (slice->sliceType == eSliceB && mb->mbType == BSKIP_DIRECT && activeSPS->direct_8x8_inference_flag)))
             continue;
           }
         }
@@ -1603,17 +1603,17 @@ static void getDeblockStrength (sDecoder* decoder, sPicture* p, int mbIndex) {
     // Vertical deblocking
     for (edge = 0; edge < 4 ; ++edge ) {
       // If cbp == 0 then deblocking for some macroblock types could be skipped
-      if (mb->cbp == 0 && (slice->sliceType == ePslice || slice->sliceType == eBslice)) {
+      if (mb->cbp == 0 && (slice->sliceType == eSliceP || slice->sliceType == eSliceB)) {
         if (filterNon8x8LumaEdgesFlag[edge] == 0 && activeSPS->chromaFormatIdc != YUV444)
           continue;
         else if (edge > 0) {
-          if (((mb->mbType == PSKIP && slice->sliceType == ePslice) ||
+          if (((mb->mbType == PSKIP && slice->sliceType == eSliceP) ||
                (mb->mbType == P16x16) ||
                (mb->mbType == P16x8)))
             continue;
           else if ((edge & 0x01) &&
                    ((mb->mbType == P8x16) ||
-                   (slice->sliceType == eBslice &&
+                   (slice->sliceType == eSliceB &&
                     mb->mbType == BSKIP_DIRECT && activeSPS->direct_8x8_inference_flag)))
             continue;
           }
@@ -1627,16 +1627,16 @@ static void getDeblockStrength (sDecoder* decoder, sPicture* p, int mbIndex) {
     // horizontal deblocking
     for (edge = 0; edge < 4 ; ++edge ) {
       // If cbp == 0 then deblocking for some macroblock types could be skipped
-      if (mb->cbp == 0 && (slice->sliceType == ePslice || slice->sliceType == eBslice)) {
+      if (mb->cbp == 0 && (slice->sliceType == eSliceP || slice->sliceType == eSliceB)) {
         if (filterNon8x8LumaEdgesFlag[edge] == 0 && activeSPS->chromaFormatIdc==YUV420)
           continue;
         else if (edge > 0) {
-          if (((mb->mbType == PSKIP && slice->sliceType == ePslice) ||
+          if (((mb->mbType == PSKIP && slice->sliceType == eSliceP) ||
                (mb->mbType == P16x16) || (mb->mbType == P8x16)))
             continue;
           else if ((edge & 0x01) &&
                    ((mb->mbType == P16x8) ||
-                     (slice->sliceType == eBslice &&
+                     (slice->sliceType == eSliceB &&
                       mb->mbType == BSKIP_DIRECT &&
                       activeSPS->direct_8x8_inference_flag)))
             continue;
@@ -1701,13 +1701,13 @@ static void performDeblock (sDecoder* decoder, sPicture* p, int mbIndex) {
     // Vertical deblocking
     for (edge = 0; edge < 4 ; ++edge ) {
       // If cbp == 0 then deblocking for some macroblock types could be skipped
-      if (mb->cbp == 0 && (slice->sliceType == ePslice || slice->sliceType == eBslice)) {
+      if (mb->cbp == 0 && (slice->sliceType == eSliceP || slice->sliceType == eSliceB)) {
         if (filterNon8x8LumaEdgesFlag[edge] == 0 && activeSPS->chromaFormatIdc != YUV444)
           continue;
         else if (edge > 0) {
-          if (((mb->mbType == PSKIP && slice->sliceType == ePslice) || (mb->mbType == P16x16) || (mb->mbType == P16x8)))
+          if (((mb->mbType == PSKIP && slice->sliceType == eSliceP) || (mb->mbType == P16x16) || (mb->mbType == P16x8)))
             continue;
-          else if ((edge & 0x01) && ((mb->mbType == P8x16) || (slice->sliceType == eBslice && mb->mbType == BSKIP_DIRECT && activeSPS->direct_8x8_inference_flag)))
+          else if ((edge & 0x01) && ((mb->mbType == P8x16) || (slice->sliceType == eSliceB && mb->mbType == BSKIP_DIRECT && activeSPS->direct_8x8_inference_flag)))
             continue;
           }
         }
@@ -1737,13 +1737,13 @@ static void performDeblock (sDecoder* decoder, sPicture* p, int mbIndex) {
     // horizontal deblocking
     for (edge = 0; edge < 4 ; ++edge ) {
       // If cbp == 0 then deblocking for some macroblock types could be skipped
-      if (mb->cbp == 0 && (slice->sliceType == ePslice || slice->sliceType == eBslice)) {
+      if (mb->cbp == 0 && (slice->sliceType == eSliceP || slice->sliceType == eSliceB)) {
         if (filterNon8x8LumaEdgesFlag[edge] == 0 && activeSPS->chromaFormatIdc==YUV420)
           continue;
         else if (edge > 0) {
-          if (((mb->mbType == PSKIP && slice->sliceType == ePslice) || (mb->mbType == P16x16) || (mb->mbType == P8x16)))
+          if (((mb->mbType == PSKIP && slice->sliceType == eSliceP) || (mb->mbType == P16x16) || (mb->mbType == P8x16)))
             continue;
-          else if ((edge & 0x01) && ((mb->mbType == P16x8) || (slice->sliceType == eBslice && mb->mbType == BSKIP_DIRECT && activeSPS->direct_8x8_inference_flag)))
+          else if ((edge & 0x01) && ((mb->mbType == P16x8) || (slice->sliceType == eSliceB && mb->mbType == BSKIP_DIRECT && activeSPS->direct_8x8_inference_flag)))
             continue;
           }
         }

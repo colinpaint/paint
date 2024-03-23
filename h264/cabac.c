@@ -675,7 +675,7 @@ void readMB_typeInfo_CABAC_i_slice (sMacroBlock* mb, sSyntaxElement* se, sDecode
   int mode_sym;
   int curr_mb_type = 0;
 
-  if (slice->sliceType == eIslice)  {
+  if (slice->sliceType == eSliceI)  {
     //{{{  INTRA-frame
     if (mb->mbCabacUp)
       b = (((mb->mbCabacUp)->mbType != I4MB && mb->mbCabacUp->mbType != I8MB) ? 1 : 0 );
@@ -721,7 +721,7 @@ void readMB_typeInfo_CABAC_i_slice (sMacroBlock* mb, sSyntaxElement* se, sDecode
       }
     }
     //}}}
-  else if(slice->sliceType == eSIslice)  {
+  else if(slice->sliceType == eSliceSI)  {
     //{{{  SI-frame
     // special context's for SI4MB
     if (mb->mbCabacUp)

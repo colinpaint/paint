@@ -83,31 +83,31 @@ typedef enum {
   eFrameMbPairCoding = 3
  } eCodingType;
 //}}}
-//{{{  enum ePredList
+//{{{  enum ePredListType
 typedef enum {
   LIST_0 = 0,
   LIST_1 = 1,
   BI_PRED = 2,
   BI_PRED_L0 = 3,
   BI_PRED_L1 = 4
-  } ePredList;
+  } ePredListType;
 //}}}
 //{{{  enum eSliceType
 typedef enum {
-  ePslice = 0,
-  eBslice = 1,
-  eIslice = 2,
-  eSPslice = 3,
-  eSIslice = 4,
-  eNumSliceTypes = 5
+  eSliceP = 0,
+  eSliceB = 1,
+  eSliceI = 2,
+  eSliceSP = 3,
+  eSliceSI = 4,
+  eSliceNumTypes = 5
   } eSliceType;
 //}}}
-//{{{  enum eMotionEstimation
+//{{{  enum eMotionEstimationType
 typedef enum {
   eFullPel,
   eHalfPel,
   eQuarterPel
-  } eMotionEstimation;
+  } eMotionEstimationType;
 //}}}
 //{{{  enum eComponentType
 typedef enum {
@@ -147,14 +147,14 @@ typedef struct {
 //{{{  sBitStream
 typedef struct {
   // eCavlc Decoding
-  byte* bitStreamBuffer;    // actual codebuffer for read bytes
-  int   bitStreamOffset; // actual position in the codebuffer, bit-oriented, eCavlc only
-  int   bitStreamLen;    // over codebuffer lnegth, byte oriented, eCavlc only
-  int   errorFlag;       // error indication, 0: no error, else unspecified error
+  byte* bitStreamBuffer; // codebuffer for read bytes
+  int   bitStreamOffset; // position in the codebuffer, bit-oriented
+  int   bitStreamLen;    // over codebuffer length, byte oriented
+  int   errorFlag;       // error, 0: no error, else unspecified error
 
   // eCabac Decoding
-  int   readLen;         // actual position in the codebuffer, eCabac only
-  int   codeLen;         // overall codebuffer length, eCabac only
+  int   readLen;         // position in the codebuffer
+  int   codeLen;         // overall codebuffer length
   } sBitStream;
 //}}}
 //{{{  sSyntaxElement

@@ -134,7 +134,7 @@ extern void setReadCompCoefCavlc (sMacroBlock* mb);
 extern int get_colocated_info_8x8 (sMacroBlock* mb, sPicture* list1, int i, int j);
 extern int get_colocated_info_4x4 (sMacroBlock* mb, sPicture* list1, int i, int j);
 
-extern void set_read_comp_coeff_cabac (sMacroBlock* mb);
+extern void setReadCompCabac (sMacroBlock* mb);
 extern void setReadCompCoefCavlc (sMacroBlock* mb);
 
 extern void setSliceFunctions (sSlice* slice);
