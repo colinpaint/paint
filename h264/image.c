@@ -2250,7 +2250,7 @@ static void readSliceHeader (sDecoder* decoder, sSlice* slice) {
     decoder->preFrameNum = slice->frameNum;
     decoder->lastRefPicPoc = 0;
     }
-  //{{{  read field/frame 
+  //{{{  read field/frame
   if (activeSPS->frameMbOnly) {
     slice->fieldPic = 0;
     decoder->coding.picStructure = eFrame;
@@ -2545,7 +2545,7 @@ static int readSlice (sSlice* slice) {
         if (!decoder->recoveryPointFound)
           break;
 
-        // read next slice header
+        // read slice header
         slice->idrFlag = (nalu->unitType == NALU_TYPE_IDR);
         slice->refId = nalu->refId;
         slice->dataPartitionMode = eDataPartition1;
@@ -2557,6 +2557,7 @@ static int readSlice (sSlice* slice) {
         memcpy (s->bitStreamBuffer, &nalu->buf[1], nalu->len-1);
         s->bitStreamLen = RBSPtoSODB (s->bitStreamBuffer, nalu->len - 1);
         s->codeLen = s->bitStreamLen;
+
         readSliceHeader (decoder, slice);
         if (decoder->param.sliceDebug) {
           //{{{  print next slice debug
@@ -2565,15 +2566,14 @@ static int readSlice (sSlice* slice) {
           else
             printf ("SLC");
 
-          printf (" %5d:%d:%d:%s frame:%d%s%s ppsId:%d\n",
-                  nalu->len, slice->refId, slice->sliceType,
-                  (slice->sliceType == 0) ? "P":
-                    (slice->sliceType == 1 ? "B":
-                      (slice->sliceType == 2 ? "I" : "?")),
+          printf (":%5d:%d %c ppsId:%d frame:%d%s%s\n",
+                  nalu->len, slice->refId,
+                  slice->sliceType ? (slice->sliceType == 1) ? 'B' : ((slice->sliceType == 2) ? 'I' : '?') : 'P',
+                  slice->ppsId,
                   slice->frameNum,
-                  slice->mbAffFrame ? " mbAff":"",
                   slice->fieldPic ? " field":"",
-                  slice->ppsId);
+                  slice->mbAffFrame ? " mbAff":""
+                  );
           }
           //}}}
 
@@ -2601,7 +2601,7 @@ static int readSlice (sSlice* slice) {
           int byteStartPosition = s->bitStreamOffset / 8;
           if (s->bitStreamOffset % 8)
             ++byteStartPosition;
-          arithmeticDecodeStartDecoding (&slice->dataPartitions[0].deCabac, s->bitStreamBuffer, 
+          arithmeticDecodeStartDecoding (&slice->dataPartitions[0].deCabac, s->bitStreamBuffer,
                                          byteStartPosition, &s->readLen);
           }
 
@@ -2613,7 +2613,7 @@ static int readSlice (sSlice* slice) {
       //{{{
       case NALU_TYPE_SPS:
         if (decoder->param.spsDebug)
-          printf ("SPS %2d:%d:%d ", nalu->len, slice->refId, slice->sliceType);
+          printf ("SPS:%d ", nalu->len);
 
         readNaluSPS (decoder, nalu);
         break;
@@ -2621,7 +2621,7 @@ static int readSlice (sSlice* slice) {
       //{{{
       case NALU_TYPE_PPS:
         if (decoder->param.ppsDebug)
-          printf ("PPS %2d:%d:%d ", nalu->len, slice->refId, slice->sliceType);
+          printf ("PPS:%d ", nalu->len);
 
         readNaluPPS (decoder, nalu);
         break;
@@ -2629,7 +2629,7 @@ static int readSlice (sSlice* slice) {
       //{{{
       case NALU_TYPE_SEI:
         if (decoder->param.seiDebug)
-          printf ("SEI %2d:%d:%d ", nalu->len, slice->refId, slice->sliceType);
+          printf ("SEI:%d ", nalu->len);
 
         processSEI (nalu->buf, nalu->len, decoder, slice);
         break;
