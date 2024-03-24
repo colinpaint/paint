@@ -676,7 +676,7 @@ void dpbCombineField (sDecoder* decoder, sFrameStore* frameStore) {
 sPicture* allocPicture (sDecoder* decoder, ePicStructure picStructure,
                         int sizeX, int sizeY, int sizeXcr, int sizeYcr, int is_output) {
 
-  sSPS* activeSPS = decoder->activeSPS;
+  sSps* activeSps = decoder->activeSps;
   //printf ("Allocating (%s) picture (x=%d, y=%d, x_cr=%d, y_cr=%d)\n",
   //        (type == eFrame)?"eFrame":(type == eTopField)?"eTopField":"eBotField",
   //        sizeX, sizeY, sizeXcr, sizeYcr);
@@ -697,7 +697,7 @@ sPicture* allocPicture (sDecoder* decoder, ePicStructure picStructure,
   s->iLumaStride = sizeX + 2 * decoder->coding.iLumaPadX;
   s->iLumaExpandedHeight = sizeY + 2 * decoder->coding.iLumaPadY;
 
-  if (activeSPS->chromaFormatIdc != YUV400)
+  if (activeSps->chromaFormatIdc != YUV400)
     getMem3DpelPad (&(s->imgUV), 2, sizeYcr, sizeXcr, decoder->coding.iChromaPadY, decoder->coding.iChromaPadX);
 
   s->iChromaStride = sizeXcr + 2*decoder->coding.iChromaPadX;
@@ -747,7 +747,7 @@ sPicture* allocPicture (sDecoder* decoder, ePicStructure picStructure,
   s->mbAffFrame  = 0;
   s->topPoc = s->botPoc = s->poc = 0;
 
-  if (!decoder->activeSPS->frameMbOnly && picStructure != eFrame)
+  if (!decoder->activeSps->frameMbOnly && picStructure != eFrame)
     for (int j = 0; j < MAX_NUM_SLICES; j++)
       for (int i = 0; i < 2; i++) {
         s->listX[j][i] = calloc (MAX_LIST_SIZE, sizeof (sPicture*)); // +1 for reordering
@@ -803,7 +803,7 @@ void freePicture (sPicture* p) {
 //{{{
 void fillFrameNumGap (sDecoder* decoder, sSlice* slice) {
 
-  sSPS* activeSPS = decoder->activeSPS;
+  sSps* activeSps = decoder->activeSps;
 
   int tmp1 = slice->deltaPicOrderCount[0];
   int tmp2 = slice->deltaPicOrderCount[1];
@@ -826,7 +826,7 @@ void fillFrameNumGap (sDecoder* decoder, sSlice* slice) {
     picture->adaptRefPicBufFlag = 0;
 
     slice->frameNum = unusedShortTermFrameNum;
-    if (activeSPS->pocType != 0)
+    if (activeSps->pocType != 0)
       decodePOC (decoder, decoder->sliceList[0]);
     picture->topPoc = slice->topPoc;
     picture->botPoc = slice->botPoc;
@@ -893,12 +893,12 @@ static void checkNumDpbFrames (sDPB* dpb) {
   }
 //}}}
 //{{{
-static int getDpbSize (sDecoder* decoder, sSPS *activeSPS) {
+static int getDpbSize (sDecoder* decoder, sSps *activeSps) {
 
-  int pic_size_mb = (activeSPS->pic_width_in_mbs_minus1 + 1) * (activeSPS->pic_height_in_map_units_minus1 + 1) * (activeSPS->frameMbOnly?1:2);
+  int pic_size_mb = (activeSps->pic_width_in_mbs_minus1 + 1) * (activeSps->pic_height_in_map_units_minus1 + 1) * (activeSps->frameMbOnly?1:2);
   int size = 0;
 
-  switch (activeSPS->levelIdc) {
+  switch (activeSps->levelIdc) {
     //{{{
     case 0:
       // if there is no level defined, we expect experimental usage and return a DPB size of 16
@@ -916,7 +916,7 @@ static int getDpbSize (sDecoder* decoder, sSPS *activeSPS) {
     //}}}
     //{{{
     case 11:
-      if (!isFrextProfile(activeSPS->profileIdc) && (activeSPS->constrainedSet3flag == 1))
+      if (!isFrextProfile(activeSps->profileIdc) && (activeSps->constrainedSet3flag == 1))
         size = 396;
       else
         size = 900;
@@ -1009,12 +1009,12 @@ static int getDpbSize (sDecoder* decoder, sSPS *activeSPS) {
   size /= pic_size_mb;
     size = imin( size, 16);
 
-  if (activeSPS->vui_parameters_present_flag && activeSPS->vui_seq_parameters.bitstream_restriction_flag) {
+  if (activeSps->vui_parameters_present_flag && activeSps->vui_seq_parameters.bitstream_restriction_flag) {
     int size_vui;
-    if ((int)activeSPS->vui_seq_parameters.max_dec_frame_buffering > size)
+    if ((int)activeSps->vui_seq_parameters.max_dec_frame_buffering > size)
       error ("max_dec_frame_buffering larger than MaxDpbSize");
 
-    size_vui = imax (1, activeSPS->vui_seq_parameters.max_dec_frame_buffering);
+    size_vui = imax (1, activeSps->vui_seq_parameters.max_dec_frame_buffering);
 #ifdef _DEBUG
     if(size_vui < size)
       printf("Warning: max_dec_frame_buffering(%d) is less than DPB size(%d) calculated from Profile/Level.\n", size_vui, size);
@@ -1554,16 +1554,16 @@ void getSmallestPoc (sDPB* dpb, int* poc, int* pos) {
 //{{{
 void initDpb (sDecoder* decoder, sDPB* dpb, int type) {
 
-  sSPS* activeSPS = decoder->activeSPS;
+  sSps* activeSps = decoder->activeSps;
 
   dpb->decoder = decoder;
   if (dpb->initDone)
     freeDpb (dpb);
 
-  dpb->size = getDpbSize (decoder, activeSPS) + decoder->param.dpbPlus[type == 2 ? 1 : 0];
-  dpb->numRefFrames = activeSPS->numRefFrames;
+  dpb->size = getDpbSize (decoder, activeSps) + decoder->param.dpbPlus[type == 2 ? 1 : 0];
+  dpb->numRefFrames = activeSps->numRefFrames;
 
-  if (dpb->size < activeSPS->numRefFrames)
+  if (dpb->size < activeSps->numRefFrames)
     error ("DPB size at specified level is smaller than the specified number of reference frames\n");
 
   dpb->usedSize = 0;
@@ -1609,12 +1609,12 @@ void initDpb (sDecoder* decoder, sDPB* dpb, int type) {
 //{{{
 void reInitDpb (sDecoder* decoder, sDPB* dpb, int type) {
 
-  sSPS* activeSPS = decoder->activeSPS;
-  int dpbSize = getDpbSize (decoder, activeSPS) + decoder->param.dpbPlus[type == 2 ? 1 : 0];
-  dpb->numRefFrames = activeSPS->numRefFrames;
+  sSps* activeSps = decoder->activeSps;
+  int dpbSize = getDpbSize (decoder, activeSps) + decoder->param.dpbPlus[type == 2 ? 1 : 0];
+  dpb->numRefFrames = activeSps->numRefFrames;
 
   if (dpbSize > (int)dpb->size) {
-    if (dpb->size < activeSPS->numRefFrames)
+    if (dpb->size < activeSps->numRefFrames)
       error ("DPB size at specified level is smaller than the specified number of reference frames\n");
 
     dpb->fs = realloc (dpb->fs, dpbSize * sizeof (sFrameStore*));
@@ -1868,7 +1868,7 @@ void freeDpb (sDPB* dpb) {
 
 // image
 //{{{
-void initImage (sDecoder* decoder, sImage* image, sSPS* sps) {
+void initImage (sDecoder* decoder, sImage* image, sSps* sps) {
 
   // allocate memory for reference frame buffers: image->frm_data
   image->format = decoder->param.output;
@@ -1913,7 +1913,7 @@ void initImage (sDecoder* decoder, sImage* image, sSPS* sps) {
       }
     }
 
-  if (!decoder->activeSPS->frameMbOnly) {
+  if (!decoder->activeSps->frameMbOnly) {
     // allocate memory for field reference frame buffers
     initTopBotPlanes (image->frm_data[0], decoder->height, &(image->top_data[0]), &(image->bot_data[0]));
     if (decoder->coding.yuvFormat != YUV400) {
@@ -1953,7 +1953,7 @@ void freeImage (sDecoder* decoder, sImage* image) {
       }
     }
 
-  if (!decoder->activeSPS->frameMbOnly) {
+  if (!decoder->activeSps->frameMbOnly) {
     freeTopBotPlanes (image->top_data[0], image->bot_data[0]);
     if (image->format.yuvFormat != YUV400) {
       freeTopBotPlanes (image->top_data[1], image->bot_data[1]);
@@ -2061,11 +2061,11 @@ void reorderRefPicList (sSlice* slice, int curList) {
 void updatePicNum (sSlice* slice) {
 
   sDecoder* decoder = slice->decoder;
-  sSPS* activeSPS = decoder->activeSPS;
+  sSps* activeSps = decoder->activeSps;
 
   int addTop = 0;
   int addBot = 0;
-  int maxFrameNum = 1 << (activeSPS->log2maxFrameNumMinus4 + 4);
+  int maxFrameNum = 1 << (activeSps->log2maxFrameNumMinus4 + 4);
 
   sDPB* dpb = slice->dpb;
   if (slice->picStructure == eFrame) {

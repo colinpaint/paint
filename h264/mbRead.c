@@ -38,7 +38,7 @@ static void read_ipred_8x8_modes_mbaff (sMacroBlock* mb) {
   se.type = SE_INTRAPREDMODE;
   sDataPartition* dataPartition = &(slice->dataPartitions[dpMap[SE_INTRAPREDMODE]]);
 
-  if (!(decoder->activePPS->entropyCoding == eCavlc || dataPartition->s->errorFlag))
+  if (!(decoder->activePps->entropyCoding == eCavlc || dataPartition->s->errorFlag))
     se.reading = readIntraPredMode_CABAC;
 
   for (int b8 = 0; b8 < 4; ++b8)  {
@@ -49,7 +49,7 @@ static void read_ipred_8x8_modes_mbaff (sMacroBlock* mb) {
     bx = ((b8 & 0x01) << 1);
     bi = mb->blockX + bx;
     // get from stream
-    if (decoder->activePPS->entropyCoding == eCavlc || dataPartition->s->errorFlag)
+    if (decoder->activePps->entropyCoding == eCavlc || dataPartition->s->errorFlag)
       readsSyntaxElement_Intra4x4PredictionMode (&se, dataPartition->s);
     else {
       se.context = b8 << 2;
@@ -60,7 +60,7 @@ static void read_ipred_8x8_modes_mbaff (sMacroBlock* mb) {
     get4x4Neighbour (mb, (bx << 2),     (by << 2) - 1, decoder->mbSize[eLuma], &top_block );
 
     // get from array and decode
-    if (decoder->activePPS->hasConstrainedIntraPred) {
+    if (decoder->activePps->hasConstrainedIntraPred) {
       left_block.available = left_block.available ? slice->intraBlock[left_block.mbIndex] : 0;
       top_block.available = top_block.available  ? slice->intraBlock[top_block.mbIndex]  : 0;
       }
@@ -98,7 +98,7 @@ static void read_ipred_8x8_modes (sMacroBlock* mb) {
   sSyntaxElement se;
   se.type = SE_INTRAPREDMODE;
   sDataPartition* dataPartition = &(slice->dataPartitions[dpMap[SE_INTRAPREDMODE]]);
-  if (!(decoder->activePPS->entropyCoding == eCavlc || dataPartition->s->errorFlag))
+  if (!(decoder->activePps->entropyCoding == eCavlc || dataPartition->s->errorFlag))
     se.reading = readIntraPredMode_CABAC;
 
   get4x4Neighbour (mb, -1,  0, decoder->mbSize[eLuma], &left_mb);
@@ -112,7 +112,7 @@ static void read_ipred_8x8_modes (sMacroBlock* mb) {
     bi = mb->blockX + bx;
 
     //get from stream
-    if (decoder->activePPS->entropyCoding == eCavlc || dataPartition->s->errorFlag)
+    if (decoder->activePps->entropyCoding == eCavlc || dataPartition->s->errorFlag)
       readsSyntaxElement_Intra4x4PredictionMode (&se, dataPartition->s);
     else {
       se.context = (b8 << 2);
@@ -123,7 +123,7 @@ static void read_ipred_8x8_modes (sMacroBlock* mb) {
     get4x4Neighbour (mb, bx << 2, (by << 2) - 1, decoder->mbSize[eLuma], &top_block);
 
     // get from array and decode
-    if (decoder->activePPS->hasConstrainedIntraPred) {
+    if (decoder->activePps->hasConstrainedIntraPred) {
       left_block.available = left_block.available ? slice->intraBlock[left_block.mbIndex] : 0;
       top_block.available = top_block.available  ? slice->intraBlock[top_block.mbIndex] : 0;
     }
@@ -162,7 +162,7 @@ static void read_ipred_4x4_modes_mbaff (sMacroBlock* mb) {
 
   se.type = SE_INTRAPREDMODE;
   sDataPartition* dataPartition = &(slice->dataPartitions[dpMap[SE_INTRAPREDMODE]]);
-  if (!(decoder->activePPS->entropyCoding == eCavlc || dataPartition->s->errorFlag))
+  if (!(decoder->activePps->entropyCoding == eCavlc || dataPartition->s->errorFlag))
     se.reading = readIntraPredMode_CABAC;
 
   for (b8 = 0; b8 < 4; ++b8) { //loop 8x8 blocks
@@ -174,7 +174,7 @@ static void read_ipred_4x4_modes_mbaff (sMacroBlock* mb) {
         bx = ((b8 & 1) << 1) + i;
         bi = mb->blockX + bx;
         //get from stream
-        if (decoder->activePPS->entropyCoding == eCavlc || dataPartition->s->errorFlag)
+        if (decoder->activePps->entropyCoding == eCavlc || dataPartition->s->errorFlag)
           readsSyntaxElement_Intra4x4PredictionMode (&se, dataPartition->s);
         else {
           se.context = (b8<<2) + (j<<1) +i;
@@ -185,7 +185,7 @@ static void read_ipred_4x4_modes_mbaff (sMacroBlock* mb) {
         get4x4Neighbour (mb, (bx<<2),     (by<<2) - 1, decoder->mbSize[eLuma], &top_block );
 
         // get from array and decode
-        if (decoder->activePPS->hasConstrainedIntraPred) {
+        if (decoder->activePps->hasConstrainedIntraPred) {
           left_block.available = left_block.available ? slice->intraBlock[left_block.mbIndex] : 0;
           top_block.available = top_block.available  ? slice->intraBlock[top_block.mbIndex]  : 0;
           }
@@ -231,7 +231,7 @@ static void read_ipred_4x4_modes (sMacroBlock* mb) {
   sSyntaxElement se;
   se.type = SE_INTRAPREDMODE;
   sDataPartition* dataPartition = &(slice->dataPartitions[dpMap[SE_INTRAPREDMODE]]);
-  if (!(decoder->activePPS->entropyCoding == eCavlc || dataPartition->s->errorFlag))
+  if (!(decoder->activePps->entropyCoding == eCavlc || dataPartition->s->errorFlag))
     se.reading = readIntraPredMode_CABAC;
 
   get4x4Neighbour (mb, -1,  0, decoder->mbSize[eLuma], &left_mb);
@@ -248,7 +248,7 @@ static void read_ipred_4x4_modes (sMacroBlock* mb) {
         int bi = mb->blockX + bx;
 
         // get from stream
-        if (decoder->activePPS->entropyCoding == eCavlc || dataPartition->s->errorFlag)
+        if (decoder->activePps->entropyCoding == eCavlc || dataPartition->s->errorFlag)
           readsSyntaxElement_Intra4x4PredictionMode (&se, dataPartition->s);
         else {
           se.context=(b8<<2) + (j<<1) +i;
@@ -259,7 +259,7 @@ static void read_ipred_4x4_modes (sMacroBlock* mb) {
         get4x4Neighbour(mb, (bx<<2), (by<<2) - 1, decoder->mbSize[eLuma], &top_block );
 
         //get from array and decode
-        if (decoder->activePPS->hasConstrainedIntraPred) {
+        if (decoder->activePps->hasConstrainedIntraPred) {
           left_block.available = left_block.available ? slice->intraBlock[left_block.mbIndex] : 0;
           top_block.available = top_block.available  ? slice->intraBlock[top_block.mbIndex]  : 0;
           }
@@ -316,7 +316,7 @@ static void readIpredModes (sMacroBlock* mb) {
     se.type = SE_INTRAPREDMODE;
     dataPartition = &(slice->dataPartitions[dpMap[SE_INTRAPREDMODE]]);
 
-    if (decoder->activePPS->entropyCoding == eCavlc || dataPartition->s->errorFlag)
+    if (decoder->activePps->entropyCoding == eCavlc || dataPartition->s->errorFlag)
       se.mapping = linfo_ue;
     else
       se.reading = readCIPredMode_CABAC;
@@ -425,7 +425,7 @@ static void readIPCMcoeffs (sSlice* slice, sDataPartition* dataPartition) {
 
   //For eCabac, we don't need to read bits to let stream byte aligned
   //  because we have variable for integer bytes position
-  if (decoder->activePPS->entropyCoding == eCabac) {
+  if (decoder->activePps->entropyCoding == eCabac) {
     readIPCMcabac (slice, dataPartition);
     initIPCMdecoding (slice);
     }
@@ -489,7 +489,7 @@ static void resetCoeffs (sMacroBlock* mb) {
 
   sDecoder* decoder = mb->decoder;
 
-  if (decoder->activePPS->entropyCoding == eCavlc)
+  if (decoder->activePps->entropyCoding == eCavlc)
     memset (decoder->nzCoeff[mb->mbIndexX][0][0], 0, 3 * BLOCK_PIXELS * sizeof(byte));
   }
 //}}}
@@ -640,7 +640,7 @@ static void initMacroblockBasic (sMacroBlock* mb) {
 static void readSkipMacroblock (sMacroBlock* mb) {
 
   mb->lumaTransformSize8x8flag = FALSE;
-  if (mb->decoder->activePPS->hasConstrainedIntraPred) {
+  if (mb->decoder->activePps->hasConstrainedIntraPred) {
     int mbNum = mb->mbIndexX;
     mb->slice->intraBlock[mbNum] = 0;
     }
@@ -736,7 +736,7 @@ static void readInterMacroblock (sMacroBlock* mb) {
 
   mb->noMbPartLessThan8x8Flag = TRUE;
   mb->lumaTransformSize8x8flag = FALSE;
-  if (mb->decoder->activePPS->hasConstrainedIntraPred) {
+  if (mb->decoder->activePps->hasConstrainedIntraPred) {
     int mbNum = mb->mbIndexX;
     slice->intraBlock[mbNum] = 0;
     }
@@ -780,14 +780,14 @@ static void readI8x8macroblock (sMacroBlock* mb, sDataPartition* dataPartition, 
     SetB8Mode (mb, se->value1, i);
 
     // set noMbPartLessThan8x8Flag for P8x8 mode
-    mb->noMbPartLessThan8x8Flag &= (mb->b8mode[i] == 0 && slice->activeSPS->direct_8x8_inference_flag) ||
+    mb->noMbPartLessThan8x8Flag &= (mb->b8mode[i] == 0 && slice->activeSps->direct_8x8_inference_flag) ||
       (mb->b8mode[i] == 4);
     }
 
   initMacroblock (mb);
   slice->nalReadMotionInfo (mb);
 
-  if (mb->decoder->activePPS->hasConstrainedIntraPred) {
+  if (mb->decoder->activePps->hasConstrainedIntraPred) {
     int mbNum = mb->mbIndexX;
     slice->intraBlock[mbNum] = 0;
     }
@@ -1142,9 +1142,9 @@ static void readBcavlcMacroblock (sMacroBlock* mb) {
     }
   else if (mb->mbType == BSKIP_DIRECT) {
     // init noMbPartLessThan8x8Flag
-    mb->noMbPartLessThan8x8Flag = (!(slice->activeSPS->direct_8x8_inference_flag))? FALSE: TRUE;
+    mb->noMbPartLessThan8x8Flag = (!(slice->activeSps->direct_8x8_inference_flag))? FALSE: TRUE;
     mb->lumaTransformSize8x8flag = FALSE;
-    if(decoder->activePPS->hasConstrainedIntraPred)
+    if(decoder->activePps->hasConstrainedIntraPred)
       slice->intraBlock[mbNum] = 0;
 
     initMacroblockDirect (mb);
@@ -1542,11 +1542,11 @@ static void readBcabacMacroblock (sMacroBlock* mb) {
     }
   else if (mb->mbType == BSKIP_DIRECT) {
     //init noMbPartLessThan8x8Flag
-    mb->noMbPartLessThan8x8Flag = (!(slice->activeSPS->direct_8x8_inference_flag))? FALSE: TRUE;
+    mb->noMbPartLessThan8x8Flag = (!(slice->activeSps->direct_8x8_inference_flag))? FALSE: TRUE;
 
     // transform size flag for INTRA_4x4 and INTRA_8x8 modes
     mb->lumaTransformSize8x8flag = FALSE;
-    if(decoder->activePPS->hasConstrainedIntraPred)
+    if(decoder->activePps->hasConstrainedIntraPred)
       slice->intraBlock[mbNum] = 0;
 
     initMacroblockDirect (mb);
@@ -1568,7 +1568,7 @@ static void readBcabacMacroblock (sMacroBlock* mb) {
 //{{{
 void setReadMacroblock (sSlice* slice) {
 
-  if (slice->decoder->activePPS->entropyCoding == eCabac) {
+  if (slice->decoder->activePps->entropyCoding == eCabac) {
     switch (slice->sliceType) {
       case eSliceP:
       case eSliceSP:

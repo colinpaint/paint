@@ -1737,7 +1737,7 @@ static void update_ref_list_for_concealment (sDPB* dpb) {
     if (dpb->fs[i]->concealment_reference)
       dpb->fsRef[j++] = dpb->fs[i];
 
-  dpb->refFramesInBuffer = decoder->activePPS->numRefIndexL0defaultActiveMinus1;
+  dpb->refFramesInBuffer = decoder->activePps->numRefIndexL0defaultActiveMinus1;
   }
 //}}}
 
@@ -1768,11 +1768,11 @@ struct ConcealNode * init_node (sPicture* picture, int missingpoc ) {
 void init_lists_for_non_reference_loss (sDPB* dpb, int currSliceType, ePicStructure currPicStructure)
 {
   sDecoder* decoder = dpb->decoder;
-  sSPS *activeSPS = decoder->activeSPS;
+  sSps *activeSps = decoder->activeSps;
 
   unsigned i;
   int j;
-  int maxFrameNum = 1 << (activeSPS->log2maxFrameNumMinus4 + 4);
+  int maxFrameNum = 1 << (activeSps->log2maxFrameNumMinus4 + 4);
 
   int list0idx = 0;
   int list0index1 = 0;
@@ -1845,8 +1845,8 @@ void init_lists_for_non_reference_loss (sDPB* dpb, int currSliceType, ePicStruct
     }
 
   // set max size
-  decoder->sliceList[0]->listXsize[0] = (char) imin (decoder->sliceList[0]->listXsize[0], (int)activeSPS->numRefFrames);
-  decoder->sliceList[0]->listXsize[1] = (char) imin (decoder->sliceList[0]->listXsize[1], (int)activeSPS->numRefFrames);
+  decoder->sliceList[0]->listXsize[0] = (char) imin (decoder->sliceList[0]->listXsize[0], (int)activeSps->numRefFrames);
+  decoder->sliceList[0]->listXsize[1] = (char) imin (decoder->sliceList[0]->listXsize[1], (int)activeSps->numRefFrames);
   decoder->sliceList[0]->listXsize[1] = 0;
 
   // set the unused list entries to NULL

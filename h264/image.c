@@ -1346,7 +1346,7 @@ static void fillWpParam (sSlice* slice) {
   if (slice->sliceType == eSliceB) {
     int maxL0Ref = slice->numRefIndexActive[LIST_0];
     int maxL1Ref = slice->numRefIndexActive[LIST_1];
-    if (slice->activePPS->weightedBiPredIdc == 2) {
+    if (slice->activePps->weightedBiPredIdc == 2) {
       slice->lumaLog2weightDenom = 5;
       slice->chromaLog2weightDenom = 5;
       slice->wpRoundLuma = 16;
@@ -1365,11 +1365,11 @@ static void fillWpParam (sSlice* slice) {
       for (int j = 0; j < maxL1Ref; ++j)
         for (int comp = 0; comp < 3; ++comp) {
           int logWeightDenom = !comp ? slice->lumaLog2weightDenom : slice->chromaLog2weightDenom;
-          if (slice->activePPS->weightedBiPredIdc == 1) {
+          if (slice->activePps->weightedBiPredIdc == 1) {
             slice->wbpWeight[0][i][j][comp] = slice->wpWeight[0][i][comp];
             slice->wbpWeight[1][i][j][comp] = slice->wpWeight[1][j][comp];
             }
-          else if (slice->activePPS->weightedBiPredIdc == 2) {
+          else if (slice->activePps->weightedBiPredIdc == 2) {
             int td = iClip3(-128,127,slice->listX[LIST_1][j]->poc - slice->listX[LIST_0][i]->poc);
             if (!td || slice->listX[LIST_1][j]->isLongTerm || slice->listX[LIST_0][i]->isLongTerm) {
               slice->wbpWeight[0][i][j][comp] = 32;
@@ -1399,11 +1399,11 @@ static void fillWpParam (sSlice* slice) {
               slice->wpOffset[k+0][i][comp] = slice->wpOffset[0][i>>1][comp];
               slice->wpOffset[k+1][j][comp] = slice->wpOffset[1][j>>1][comp];
               int logWeightDenom = !comp ? slice->lumaLog2weightDenom : slice->chromaLog2weightDenom;
-              if (slice->activePPS->weightedBiPredIdc == 1) {
+              if (slice->activePps->weightedBiPredIdc == 1) {
                 slice->wbpWeight[k+0][i][j][comp] = slice->wpWeight[0][i>>1][comp];
                 slice->wbpWeight[k+1][i][j][comp] = slice->wpWeight[1][j>>1][comp];
                 }
-              else if (slice->activePPS->weightedBiPredIdc == 2) {
+              else if (slice->activePps->weightedBiPredIdc == 2) {
                 int td = iClip3 (-128, 127, slice->listX[k+LIST_1][j]->poc - slice->listX[k+LIST_0][i]->poc);
                 if (!td || slice->listX[k+LIST_1][j]->isLongTerm || slice->listX[k+LIST_0][i]->isLongTerm) {
                   slice->wbpWeight[k+0][i][j][comp] = 32;
@@ -1619,7 +1619,7 @@ static void mbAffPostProc (sDecoder* decoder) {
 static void initPicture (sDecoder* decoder, sSlice* slice) {
 
   sDPB* dpb = slice->dpb;
-  sSPS* activeSPS = decoder->activeSPS;
+  sSps* activeSps = decoder->activeSps;
 
   decoder->picHeightInMbs = decoder->coding.frameHeightMbs / (slice->fieldPic+1);
   decoder->picSizeInMbs = decoder->coding.picWidthMbs * decoder->picHeightInMbs;
@@ -1635,7 +1635,7 @@ static void initPicture (sDecoder* decoder, sSlice* slice) {
   if (!decoder->recoveryPoint &&
       (slice->frameNum != decoder->preFrameNum) &&
       (slice->frameNum != (decoder->preFrameNum + 1) % decoder->coding.maxFrameNum)) {
-    if (!activeSPS->gaps_in_frame_num_value_allowed_flag) {
+    if (!activeSps->gaps_in_frame_num_value_allowed_flag) {
       //{{{  picture error conceal
       if (decoder->param.concealMode) {
         if ((slice->frameNum) < ((decoder->preFrameNum + 1) % decoder->coding.maxFrameNum)) {
@@ -1682,8 +1682,8 @@ static void initPicture (sDecoder* decoder, sSlice* slice) {
   picture->framePoc = slice->framePoc;
   picture->qp = slice->qp;
   picture->sliceQpDelta = slice->sliceQpDelta;
-  picture->chromaQpOffset[0] = decoder->activePPS->chromaQpOffset;
-  picture->chromaQpOffset[1] = decoder->activePPS->chromaQpOffset2;
+  picture->chromaQpOffset[0] = decoder->activePps->chromaQpOffset;
+  picture->chromaQpOffset[1] = decoder->activePps->chromaQpOffset2;
   picture->iCodingType = slice->picStructure == eFrame ?
     (slice->mbAffFrame? eFrameMbPairCoding:eFrameCoding) : eFieldCoding;
 
@@ -1723,7 +1723,7 @@ static void initPicture (sDecoder* decoder, sSlice* slice) {
     }
 
   // cavlc init
-  if (decoder->activePPS->entropyCoding == eCavlc)
+  if (decoder->activePps->entropyCoding == eCavlc)
     memset (decoder->nzCoeff[0][0][0], -1, decoder->picSizeInMbs * 48 *sizeof(byte)); // 3 * 4 * 4
 
   // Set the sliceNum member of each MB to -1, to ensure correct when packet loss occurs
@@ -1735,7 +1735,7 @@ static void initPicture (sDecoder* decoder, sSlice* slice) {
       for (int i = 0; i < (int)decoder->picSizeInMbs; ++i)
         resetMb (mb++);
       memset (decoder->predModeJV[nplane][0], DC_PRED, 16 * decoder->coding.frameHeightMbs * decoder->coding.picWidthMbs * sizeof(char));
-      if (decoder->activePPS->hasConstrainedIntraPred)
+      if (decoder->activePps->hasConstrainedIntraPred)
         for (int i = 0; i < (int)decoder->picSizeInMbs; ++i)
           intraBlock[i] = 1;
       }
@@ -1744,7 +1744,7 @@ static void initPicture (sDecoder* decoder, sSlice* slice) {
     sMacroBlock* mb = decoder->mbData;
     for (int i = 0; i < (int)decoder->picSizeInMbs; ++i)
       resetMb (mb++);
-    if (decoder->activePPS->hasConstrainedIntraPred)
+    if (decoder->activePps->hasConstrainedIntraPred)
       for (int i = 0; i < (int)decoder->picSizeInMbs; ++i)
         decoder->intraBlock[i] = 1;
     memset (decoder->predMode[0], DC_PRED, 16 * decoder->coding.frameHeightMbs * decoder->coding.picWidthMbs * sizeof(char));
@@ -1769,14 +1769,14 @@ static void initPicture (sDecoder* decoder, sSlice* slice) {
   picture->frameNum = slice->frameNum;
   picture->recoveryFrame = (unsigned int)((int)slice->frameNum == decoder->recoveryFrameNum);
   picture->codedFrame = (slice->picStructure == eFrame);
-  picture->chromaFormatIdc = activeSPS->chromaFormatIdc;
-  picture->frameMbOnly = activeSPS->frameMbOnly;
-  picture->cropFlag = activeSPS->cropFlag;
+  picture->chromaFormatIdc = activeSps->chromaFormatIdc;
+  picture->frameMbOnly = activeSps->frameMbOnly;
+  picture->cropFlag = activeSps->cropFlag;
   if (picture->cropFlag) {
-    picture->cropLeft = activeSPS->cropLeft;
-    picture->cropRight = activeSPS->cropRight;
-    picture->cropTop = activeSPS->cropTop;
-    picture->cropBot = activeSPS->cropBot;
+    picture->cropLeft = activeSps->cropLeft;
+    picture->cropRight = activeSps->cropRight;
+    picture->cropTop = activeSps->cropTop;
+    picture->cropBot = activeSps->cropBot;
     }
 
   if (decoder->coding.isSeperateColourPlane) {
@@ -1791,11 +1791,11 @@ static void initPicture (sDecoder* decoder, sSlice* slice) {
 //{{{
 static void useParameterSet (sDecoder* decoder, sSlice* slice) {
 
-  sPPS* pps = &decoder->pps[slice->ppsId];
+  sPps* pps = &decoder->pps[slice->ppsId];
   if (!pps->valid)
     printf ("useParameterSet - invalid PPSid:%d\n", slice->ppsId);
 
-  sSPS* sps = &decoder->sps[pps->spsId];
+  sSps* sps = &decoder->sps[pps->spsId];
   if (!sps->valid)
     printf ("useParameterSet - no SPSid:%d:%d\n", slice->ppsId, pps->spsId);
 
@@ -1809,8 +1809,8 @@ static void useParameterSet (sDecoder* decoder, sSlice* slice) {
     if (sps->numRefFramesPocCycle >= MAX_NUM_REF_FRAMES_PIC_ORDER)
       error ("numRefFramesPocCycle too large");
 
-  activateSPS (decoder, sps);
-  activatePPS (decoder, pps);
+  activateSps (decoder, sps);
+  activatePps (decoder, pps);
 
   // slice->dataPartitionMode is set by read_new_slice (NALU first byte available there)
   if (pps->entropyCoding == eCavlc) {
@@ -1836,16 +1836,16 @@ static void initPictureDecode (sDecoder* decoder) {
     error ("initPictureDecode - MAX_NUM_SLICES exceeded");
 
   sSlice* slice = decoder->sliceList[0];
-  if (decoder->nextPPS->valid && (decoder->nextPPS->ppsId == slice->ppsId)) {
+  if (decoder->nextPps->valid && (decoder->nextPps->ppsId == slice->ppsId)) {
     if (decoder->param.sliceDebug)
-      printf ("--- initPictureDecode - switching PPS - nextPPS:%d == slicePPS:%d\n",
-              decoder->nextPPS->ppsId, slice->ppsId);
+      printf ("--- initPictureDecode - switching PPS - nextPps:%d == slicePPS:%d\n",
+              decoder->nextPps->ppsId, slice->ppsId);
 
-    sPPS pps;
-    memcpy (&pps, &decoder->pps[slice->ppsId], sizeof (sPPS));
+    sPps pps;
+    memcpy (&pps, &decoder->pps[slice->ppsId], sizeof (sPps));
     decoder->pps[slice->ppsId].sliceGroupId = NULL;
-    setPPSbyId (decoder, decoder->nextPPS->ppsId, decoder->nextPPS);
-    memcpy (decoder->nextPPS, &pps, sizeof (sPPS));
+    setPpsById (decoder, decoder->nextPps->ppsId, decoder->nextPps);
+    memcpy (decoder->nextPps, &pps, sizeof (sPps));
     pps.sliceGroupId = NULL;
     }
 
@@ -1873,8 +1873,8 @@ static void initPictureDecode (sDecoder* decoder) {
 //{{{
 static void initSlice (sDecoder* decoder, sSlice* slice) {
 
-  decoder->activeSPS = slice->activeSPS;
-  decoder->activePPS = slice->activePPS;
+  decoder->activeSps = slice->activeSps;
+  decoder->activePps = slice->activePps;
 
   slice->initLists (slice);
   reorderLists (slice);
@@ -1888,8 +1888,8 @@ static void initSlice (sDecoder* decoder, sSlice* slice) {
       slice->refFlag[i] = slice->refFlag[i-1];
   slice->refFlag[0] = (slice->redundantPicCount == 0) ? decoder->isPrimaryOk : decoder->isRedundantOk;
 
-  if (!slice->activeSPS->chromaFormatIdc ||
-      (slice->activeSPS->chromaFormatIdc == 3)) {
+  if (!slice->activeSps->chromaFormatIdc ||
+      (slice->activeSps->chromaFormatIdc == 3)) {
     slice->linfoCbpIntra = linfo_cbp_intra_other;
     slice->linfoCbpInter = linfo_cbp_inter_other;
     }
@@ -1915,11 +1915,11 @@ static void copySliceInfo (sSlice* slice, sOldSlice* oldSlice) {
   if (slice->isIDR)
     oldSlice->idrPicId = slice->idrPicId;
 
-  if (slice->decoder->activeSPS->pocType == 0) {
+  if (slice->decoder->activeSps->pocType == 0) {
     oldSlice->picOrderCountLsb = slice->picOrderCountLsb;
     oldSlice->deltaPicOrderCountBot = slice->deletaPicOrderCountBot;
     }
-  else if (slice->decoder->activeSPS->pocType == 1) {
+  else if (slice->decoder->activeSps->pocType == 1) {
     oldSlice->deltaPicOrderCount[0] = slice->deltaPicOrderCount[0];
     oldSlice->deltaPicOrderCount[1] = slice->deltaPicOrderCount[1];
     }
@@ -1977,10 +1977,10 @@ void decRefPicMarking (sDecoder* decoder, sBitStream* s, sSlice* slice) {
 //{{{
 void decodePOC (sDecoder* decoder, sSlice* slice) {
 
-  sSPS* activeSPS = decoder->activeSPS;
-  unsigned int maxPicOrderCntLsb = (1<<(activeSPS->log2maxPocLsbMinus4+4));
+  sSps* activeSps = decoder->activeSps;
+  unsigned int maxPicOrderCntLsb = (1<<(activeSps->log2maxPocLsbMinus4+4));
 
-  switch (activeSPS->pocType) {
+  switch (activeSps->pocType) {
     //{{{
     case 0: // POC MODE 0
       // 1st
@@ -2053,7 +2053,7 @@ void decodePOC (sDecoder* decoder, sSlice* slice) {
         }
 
       // 2nd
-      if (activeSPS->numRefFramesPocCycle)
+      if (activeSps->numRefFramesPocCycle)
         slice->AbsFrameNum = decoder->frameNumOffset + slice->frameNum;
       else
         slice->AbsFrameNum = 0;
@@ -2062,34 +2062,34 @@ void decodePOC (sDecoder* decoder, sSlice* slice) {
 
       // 3rd
       decoder->expectedDeltaPerPocCycle = 0;
-      if (activeSPS->numRefFramesPocCycle)
-        for (unsigned i = 0; i < activeSPS->numRefFramesPocCycle; i++)
-          decoder->expectedDeltaPerPocCycle += activeSPS->offset_for_ref_frame[i];
+      if (activeSps->numRefFramesPocCycle)
+        for (unsigned i = 0; i < activeSps->numRefFramesPocCycle; i++)
+          decoder->expectedDeltaPerPocCycle += activeSps->offset_for_ref_frame[i];
 
       if (slice->AbsFrameNum) {
-        decoder->pocCycleCount = (slice->AbsFrameNum-1) / activeSPS->numRefFramesPocCycle;
-        decoder->frameNumPocCycle = (slice->AbsFrameNum-1) % activeSPS->numRefFramesPocCycle;
+        decoder->pocCycleCount = (slice->AbsFrameNum-1) / activeSps->numRefFramesPocCycle;
+        decoder->frameNumPocCycle = (slice->AbsFrameNum-1) % activeSps->numRefFramesPocCycle;
         decoder->expectedPOC =
           decoder->pocCycleCount*decoder->expectedDeltaPerPocCycle;
         for (int i = 0; i <= decoder->frameNumPocCycle; i++)
-          decoder->expectedPOC += activeSPS->offset_for_ref_frame[i];
+          decoder->expectedPOC += activeSps->offset_for_ref_frame[i];
         }
       else
         decoder->expectedPOC = 0;
 
       if (!slice->refId)
-        decoder->expectedPOC += activeSPS->offsetNonRefPic;
+        decoder->expectedPOC += activeSps->offsetNonRefPic;
 
       if (slice->fieldPic == 0) {
         // frame pixelPos
         slice->topPoc = decoder->expectedPOC + slice->deltaPicOrderCount[0];
-        slice->botPoc = slice->topPoc + activeSPS->offsetTopBotField + slice->deltaPicOrderCount[1];
+        slice->botPoc = slice->topPoc + activeSps->offsetTopBotField + slice->deltaPicOrderCount[1];
         slice->thisPoc = slice->framePoc = (slice->topPoc < slice->botPoc) ? slice->topPoc : slice->botPoc;
         }
       else if (!slice->botField) // top field
         slice->thisPoc = slice->topPoc = decoder->expectedPOC + slice->deltaPicOrderCount[0];
       else // bottom field
-        slice->thisPoc = slice->botPoc = decoder->expectedPOC + activeSPS->offsetTopBotField + slice->deltaPicOrderCount[0];
+        slice->thisPoc = slice->botPoc = decoder->expectedPOC + activeSps->offsetTopBotField + slice->deltaPicOrderCount[0];
       slice->framePoc=slice->thisPoc;
 
       decoder->previousFrameNum = slice->frameNum;
@@ -2193,16 +2193,16 @@ static int isNewPicture (sPicture* picture, sSlice* slice, sOldSlice* oldSlice) 
 
   sDecoder* decoder = slice->decoder;
 
-  if (!decoder->activeSPS->pocType) {
+  if (!decoder->activeSps->pocType) {
     result |= (oldSlice->picOrderCountLsb != slice->picOrderCountLsb);
-    if ((decoder->activePPS->botFieldFrame == 1) && !slice->fieldPic)
+    if ((decoder->activePps->botFieldFrame == 1) && !slice->fieldPic)
       result |= (oldSlice->deltaPicOrderCountBot != slice->deletaPicOrderCountBot);
     }
 
-  if (decoder->activeSPS->pocType == 1) {
-    if (!decoder->activeSPS->deltaPicOrderAlwaysZero) {
+  if (decoder->activeSps->pocType == 1) {
+    if (!decoder->activeSps->deltaPicOrderAlwaysZero) {
       result |= (oldSlice->deltaPicOrderCount[0] != slice->deltaPicOrderCount[0]);
-      if ((decoder->activePPS->botFieldFrame == 1) && !slice->fieldPic)
+      if ((decoder->activePps->botFieldFrame == 1) && !slice->fieldPic)
         result |= (oldSlice->deltaPicOrderCount[1] != slice->deltaPicOrderCount[1]);
       }
     }
@@ -2238,19 +2238,19 @@ static void readSliceHeader (sDecoder* decoder, sSlice* slice) {
 
   // setup parameterSet
   useParameterSet (decoder, slice);
-  slice->activeSPS = decoder->activeSPS;
-  slice->activePPS = decoder->activePPS;
-  slice->transform8x8Mode = decoder->activePPS->hasTransform8x8mode;
-  slice->chroma444notSeparate = (decoder->activeSPS->chromaFormatIdc == YUV444) && !decoder->coding.isSeperateColourPlane;
+  slice->activeSps = decoder->activeSps;
+  slice->activePps = decoder->activePps;
+  slice->transform8x8Mode = decoder->activePps->hasTransform8x8mode;
+  slice->chroma444notSeparate = (decoder->activeSps->chromaFormatIdc == YUV444) && !decoder->coding.isSeperateColourPlane;
 
-  sSPS* activeSPS = decoder->activeSPS;
-  slice->frameNum = readUv (activeSPS->log2maxFrameNumMinus4 + 4, "SLC frameNum", s);
+  sSps* activeSps = decoder->activeSps;
+  slice->frameNum = readUv (activeSps->log2maxFrameNumMinus4 + 4, "SLC frameNum", s);
   if (slice->isIDR) {
     decoder->preFrameNum = slice->frameNum;
     decoder->lastRefPicPoc = 0;
     }
   //{{{  read field/frame
-  if (activeSPS->frameMbOnly) {
+  if (activeSps->frameMbOnly) {
     slice->fieldPic = 0;
     decoder->coding.picStructure = eFrame;
     }
@@ -2268,24 +2268,24 @@ static void readSliceHeader (sDecoder* decoder, sSlice* slice) {
     }
 
   slice->picStructure = decoder->coding.picStructure;
-  slice->mbAffFrame = activeSPS->mbAffFlag && !slice->fieldPic;
+  slice->mbAffFrame = activeSps->mbAffFlag && !slice->fieldPic;
   //}}}
 
   if (slice->isIDR)
     slice->idrPicId = readUeV ("SLC idrPicId", s);
   //{{{  read picOrderCount
-  if (activeSPS->pocType == 0) {
-    slice->picOrderCountLsb = readUv (activeSPS->log2maxPocLsbMinus4 + 4, "SLC picOrderCountLsb", s);
-    if ((decoder->activePPS->botFieldFrame == 1) && !slice->fieldPic)
+  if (activeSps->pocType == 0) {
+    slice->picOrderCountLsb = readUv (activeSps->log2maxPocLsbMinus4 + 4, "SLC picOrderCountLsb", s);
+    if ((decoder->activePps->botFieldFrame == 1) && !slice->fieldPic)
       slice->deletaPicOrderCountBot = readSeV ("SLC deletaPicOrderCountBot", s);
     else
       slice->deletaPicOrderCountBot = 0;
     }
 
-  if (activeSPS->pocType == 1) {
-    if (!activeSPS->deltaPicOrderAlwaysZero) {
+  if (activeSps->pocType == 1) {
+    if (!activeSps->deltaPicOrderAlwaysZero) {
       slice->deltaPicOrderCount[0] = readSeV ("SLC deltaPicOrderCount[0]", s);
-      if ((decoder->activePPS->botFieldFrame == 1) && !slice->fieldPic)
+      if ((decoder->activePps->botFieldFrame == 1) && !slice->fieldPic)
         slice->deltaPicOrderCount[1] = readSeV ("SLC deltaPicOrderCount[1]", s);
       else
         slice->deltaPicOrderCount[1] = 0;  // set to zero if not in stream
@@ -2297,15 +2297,15 @@ static void readSliceHeader (sDecoder* decoder, sSlice* slice) {
     }
   //}}}
 
-  if (decoder->activePPS->redundantPicCountPresent)
+  if (decoder->activePps->redundantPicCountPresent)
     slice->redundantPicCount = readUeV ("SLC redundantPicCount", s);
 
   if (slice->sliceType == eSliceB)
     slice->directSpatialMvPredFlag = readU1 ("SLC directSpatialMvPredFlag", s);
 
   // read refPics
-  slice->numRefIndexActive[LIST_0] = decoder->activePPS->numRefIndexL0defaultActiveMinus1 + 1;
-  slice->numRefIndexActive[LIST_1] = decoder->activePPS->numRefIndexL1defaultActiveMinus1 + 1;
+  slice->numRefIndexActive[LIST_0] = decoder->activePps->numRefIndexL0defaultActiveMinus1 + 1;
+  slice->numRefIndexActive[LIST_1] = decoder->activePps->numRefIndexL1defaultActiveMinus1 + 1;
   if ((slice->sliceType == eSliceP) || (slice->sliceType == eSliceSP) || (slice->sliceType == eSliceB)) {
     int num_ref_idx_override_flag = readU1 ("SLC num_ref_idx_override_flag", s);
     if (num_ref_idx_override_flag) {
@@ -2355,19 +2355,19 @@ static void readSliceHeader (sDecoder* decoder, sSlice* slice) {
   //}}}
   //{{{  read weightedPred
   slice->hasWeightedPred = (unsigned short)(((slice->sliceType == eSliceP) || (slice->sliceType == eSliceSP))
-                              ? decoder->activePPS->hasWeightedPred
-                              : ((slice->sliceType == eSliceB) && (decoder->activePPS->weightedBiPredIdc == 1)));
+                              ? decoder->activePps->hasWeightedPred
+                              : ((slice->sliceType == eSliceB) && (decoder->activePps->weightedBiPredIdc == 1)));
 
   slice->weightedBiPredIdc = (unsigned short)((slice->sliceType == eSliceB) &&
-                                              (decoder->activePPS->weightedBiPredIdc > 0));
+                                              (decoder->activePps->weightedBiPredIdc > 0));
 
-  if ((decoder->activePPS->hasWeightedPred &&
+  if ((decoder->activePps->hasWeightedPred &&
        ((slice->sliceType == eSliceP) || (slice->sliceType == eSliceSP))) ||
-      ((decoder->activePPS->weightedBiPredIdc == 1) && (slice->sliceType == eSliceB))) {
+      ((decoder->activePps->weightedBiPredIdc == 1) && (slice->sliceType == eSliceB))) {
     slice->lumaLog2weightDenom = (unsigned short) readUeV ("SLC lumaLog2weightDenom", s);
     slice->wpRoundLuma = slice->lumaLog2weightDenom ? 1 << (slice->lumaLog2weightDenom - 1) : 0;
 
-    if (activeSPS->chromaFormatIdc) {
+    if (activeSps->chromaFormatIdc) {
       slice->chromaLog2weightDenom = (unsigned short) readUeV ("SLC chromaLog2weightDenom", s);
       slice->wpRoundChroma = slice->chromaLog2weightDenom ? 1 << (slice->chromaLog2weightDenom - 1) : 0;
       }
@@ -2387,7 +2387,7 @@ static void readSliceHeader (sDecoder* decoder, sSlice* slice) {
         slice->wpOffset[LIST_0][i][0] = 0;
         }
 
-      if (activeSPS->chromaFormatIdc) {
+      if (activeSps->chromaFormatIdc) {
         // l0 chroma weights
         int chroma_weight_flag_l0 = readU1 ("SLC chroma_weight_flag_l0", s);
         for (int j = 1; j<3; j++) {
@@ -2405,7 +2405,7 @@ static void readSliceHeader (sDecoder* decoder, sSlice* slice) {
       }
       //}}}
 
-    if ((slice->sliceType == eSliceB) && decoder->activePPS->weightedBiPredIdc == 1) {
+    if ((slice->sliceType == eSliceB) && decoder->activePps->weightedBiPredIdc == 1) {
       for (int i = 0; i < slice->numRefIndexActive[LIST_1]; i++) {
         //{{{  read l1 weights
         int luma_weight_flag_l1 = readU1 ("SLC luma_weight_flag_l1", s);
@@ -2419,7 +2419,7 @@ static void readSliceHeader (sDecoder* decoder, sSlice* slice) {
           slice->wpOffset[LIST_1][i][0] = 0;
           }
 
-        if (activeSPS->chromaFormatIdc) {
+        if (activeSps->chromaFormatIdc) {
           // l1 chroma weights
           int chroma_weight_flag_l1 = readU1 ("SLC chroma_weight_flag_l1", s);
           for (int j = 1; j < 3; j++) {
@@ -2443,24 +2443,24 @@ static void readSliceHeader (sDecoder* decoder, sSlice* slice) {
   if (slice->refId)
     decRefPicMarking (decoder, s, slice);
 
-  if (decoder->activePPS->entropyCoding &&
+  if (decoder->activePps->entropyCoding &&
       (slice->sliceType != eSliceI) && (slice->sliceType != eSliceSI))
     slice->modelNum = readUeV ("SLC cabac_init_idc", s);
   else
     slice->modelNum = 0;
   //{{{  read qp
   slice->sliceQpDelta = readSeV ("SLC sliceQpDelta", s);
-  slice->qp = 26 + decoder->activePPS->picInitQpMinus26 + slice->sliceQpDelta;
+  slice->qp = 26 + decoder->activePps->picInitQpMinus26 + slice->sliceQpDelta;
 
   if (slice->sliceType == eSliceSP || slice->sliceType == eSliceSI) {
     if (slice->sliceType == eSliceSP)
       slice->spSwitch = readU1 ("SLC sp_for_switch_flag", s);
     slice->sliceQsDelta = readSeV ("SLC sliceQsDelta", s);
-    slice->qs = 26 + decoder->activePPS->picInitQsMinus26 + slice->sliceQsDelta;
+    slice->qs = 26 + decoder->activePps->picInitQsMinus26 + slice->sliceQsDelta;
     }
   //}}}
 
-  if (decoder->activePPS->hasDeblockFilterControl) {
+  if (decoder->activePps->hasDeblockFilterControl) {
     //{{{  read deblockFilter params
     slice->deblockFilterDisableIdc = (short)readUeV ("SLC disable_deblocking_filter_idc", s);
     if (slice->deblockFilterDisableIdc != 1) {
@@ -2478,7 +2478,7 @@ static void readSliceHeader (sDecoder* decoder, sSlice* slice) {
     slice->deblockFilterBetaOffset = 0;
     }
     //}}}
-  if (isHiIntraOnlyProfile (activeSPS->profileIdc, activeSPS->constrainedSet3flag) &&
+  if (isHiIntraOnlyProfile (activeSps->profileIdc, activeSps->constrainedSet3flag) &&
       !decoder->param.intraProfileDeblocking) {
     //{{{  hiIintra deblock
     slice->deblockFilterDisableIdc = 1;
@@ -2487,13 +2487,13 @@ static void readSliceHeader (sDecoder* decoder, sSlice* slice) {
     }
     //}}}
   //{{{  read sliceGroup
-  if ((decoder->activePPS->numSliceGroupsMinus1 > 0) &&
-      (decoder->activePPS->sliceGroupMapType >= 3) &&
-      (decoder->activePPS->sliceGroupMapType <= 5)) {
-    int len = (activeSPS->pic_height_in_map_units_minus1+1) * (activeSPS->pic_width_in_mbs_minus1+1) /
-                (decoder->activePPS->sliceGroupChangeRateMius1 + 1);
-    if (((activeSPS->pic_height_in_map_units_minus1+1) * (activeSPS->pic_width_in_mbs_minus1+1)) %
-        (decoder->activePPS->sliceGroupChangeRateMius1 + 1))
+  if ((decoder->activePps->numSliceGroupsMinus1 > 0) &&
+      (decoder->activePps->sliceGroupMapType >= 3) &&
+      (decoder->activePps->sliceGroupMapType <= 5)) {
+    int len = (activeSps->pic_height_in_map_units_minus1+1) * (activeSps->pic_width_in_mbs_minus1+1) /
+                (decoder->activePps->sliceGroupChangeRateMius1 + 1);
+    if (((activeSps->pic_height_in_map_units_minus1+1) * (activeSps->pic_width_in_mbs_minus1+1)) %
+        (decoder->activePps->sliceGroupChangeRateMius1 + 1))
       len += 1;
 
     len = ceilLog2 (len+1);
@@ -2599,7 +2599,7 @@ static int readSlice (sSlice* slice) {
         else
           slice->mbIndex = slice->startMbNum;
 
-        if (decoder->activePPS->entropyCoding) {
+        if (decoder->activePps->entropyCoding) {
           int byteStartPosition = s->bitStreamOffset / 8;
           if (s->bitStreamOffset % 8)
             ++byteStartPosition;
@@ -2613,15 +2613,15 @@ static int readSlice (sSlice* slice) {
       //}}}
 
       case NALU_TYPE_SPS:
-        readNaluSPS (decoder, nalu);
+        readNaluSps (decoder, nalu);
         break;
 
       case NALU_TYPE_PPS:
-        readNaluPPS (decoder, nalu);
+        readNaluPps (decoder, nalu);
         break;
 
       case NALU_TYPE_SEI:
-        processSEI (nalu->buf, nalu->len, decoder, slice);
+        processSei (nalu->buf, nalu->len, decoder, slice);
         break;
 
       //{{{
@@ -2663,7 +2663,7 @@ static int readSlice (sSlice* slice) {
 
         // need to read the slice ID, which depends on the value of redundantPicCountPresent
         int slice_id_a = readUeV ("NALU: DP_A slice_id", s);
-        if (decoder->activePPS->entropyCoding)
+        if (decoder->activePps->entropyCoding)
           error ("dataPartition with eCabac not allowed");
 
         if (!readNalu (decoder, nalu))
@@ -2685,7 +2685,7 @@ static int readSlice (sSlice* slice) {
             slice->noDataPartitionC = 1;
             }
           else {
-            if (decoder->activePPS->redundantPicCountPresent)
+            if (decoder->activePps->redundantPicCountPresent)
               readUeV ("NALU dataPartitionB redundantPicCount", s);
 
             // we're finished with dataPartitionB, so let's continue with next dataPartition
@@ -2712,7 +2712,7 @@ static int readSlice (sSlice* slice) {
             slice->noDataPartitionC = 1;
             }
 
-          if (decoder->activePPS->redundantPicCountPresent)
+          if (decoder->activePps->redundantPicCountPresent)
             readUeV ("NALU:SLICE_C redudand_pic_cnt", s);
           }
           //}}}
@@ -2982,9 +2982,9 @@ int decodeFrame (sDecoder* decoder) {
 
   int curHeader = 0;
   if (decoder->newFrame) {
-    if (decoder->nextPPS->valid) {
-      setPPSbyId (decoder, decoder->nextPPS->ppsId, decoder->nextPPS);
-      decoder->nextPPS->valid = 0;
+    if (decoder->nextPps->valid) {
+      setPpsById (decoder, decoder->nextPps->ppsId, decoder->nextPps);
+      decoder->nextPps->valid = 0;
       }
 
     // get firstSlice from sliceList;
@@ -3080,15 +3080,15 @@ int decodeFrame (sDecoder* decoder) {
     curHeader = slice->curHeader;
     initSlice (decoder, slice);
 
-    if (slice->activePPS->entropyCoding) {
+    if (slice->activePps->entropyCoding) {
       //{{{  init cabac
       initContexts (slice);
       cabacNewSlice (slice);
       }
       //}}}
 
-    if (((slice->activePPS->weightedBiPredIdc > 0) && (slice->sliceType == eSliceB)) ||
-        (slice->activePPS->hasWeightedPred && (slice->sliceType != eSliceI)))
+    if (((slice->activePps->weightedBiPredIdc > 0) && (slice->sliceType == eSliceB)) ||
+        (slice->activePps->hasWeightedPred && (slice->sliceType != eSliceI)))
       fillWpParam (slice);
 
     if (((curHeader == eSOP) || (curHeader == eSOS)) && !slice->errorFlag)

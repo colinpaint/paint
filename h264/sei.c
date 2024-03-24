@@ -161,8 +161,8 @@ static void processReserved (byte* payload, int size, sDecoder* decoder) {
 //{{{
 static void processPictureTiming (byte* payload, int size, sDecoder* decoder) {
 
-  sSPS* activeSPS = decoder->activeSPS;
-  if (!activeSPS) {
+  sSps* activeSps = decoder->activeSps;
+  if (!activeSps) {
     if (decoder->param.seiDebug)
       printf ("pictureTiming - no active SPS\n");
     return;
@@ -178,24 +178,24 @@ static void processPictureTiming (byte* payload, int size, sDecoder* decoder) {
 
     int cpb_removal_len = 24;
     int dpb_output_len = 24;
-    Boolean cpbDpb = (Boolean)(activeSPS->vui_parameters_present_flag &&
-                               (activeSPS->vui_seq_parameters.nal_hrd_parameters_present_flag ||
-                                activeSPS->vui_seq_parameters.vcl_hrd_parameters_present_flag));
+    Boolean cpbDpb = (Boolean)(activeSps->vui_parameters_present_flag &&
+                               (activeSps->vui_seq_parameters.nal_hrd_parameters_present_flag ||
+                                activeSps->vui_seq_parameters.vcl_hrd_parameters_present_flag));
 
     if (cpbDpb) {
-      if (activeSPS->vui_parameters_present_flag) {
-        if (activeSPS->vui_seq_parameters.nal_hrd_parameters_present_flag) {
-          cpb_removal_len = activeSPS->vui_seq_parameters.nal_hrd_parameters.cpb_removal_delay_length_minus1 + 1;
-          dpb_output_len  = activeSPS->vui_seq_parameters.nal_hrd_parameters.dpb_output_delay_length_minus1  + 1;
+      if (activeSps->vui_parameters_present_flag) {
+        if (activeSps->vui_seq_parameters.nal_hrd_parameters_present_flag) {
+          cpb_removal_len = activeSps->vui_seq_parameters.nal_hrd_parameters.cpb_removal_delay_length_minus1 + 1;
+          dpb_output_len  = activeSps->vui_seq_parameters.nal_hrd_parameters.dpb_output_delay_length_minus1  + 1;
           }
-        else if (activeSPS->vui_seq_parameters.vcl_hrd_parameters_present_flag) {
-          cpb_removal_len = activeSPS->vui_seq_parameters.vcl_hrd_parameters.cpb_removal_delay_length_minus1 + 1;
-          dpb_output_len = activeSPS->vui_seq_parameters.vcl_hrd_parameters.dpb_output_delay_length_minus1  + 1;
+        else if (activeSps->vui_seq_parameters.vcl_hrd_parameters_present_flag) {
+          cpb_removal_len = activeSps->vui_seq_parameters.vcl_hrd_parameters.cpb_removal_delay_length_minus1 + 1;
+          dpb_output_len = activeSps->vui_seq_parameters.vcl_hrd_parameters.dpb_output_delay_length_minus1  + 1;
           }
         }
 
-      if ((activeSPS->vui_seq_parameters.nal_hrd_parameters_present_flag) ||
-          (activeSPS->vui_seq_parameters.vcl_hrd_parameters_present_flag)) {
+      if ((activeSps->vui_seq_parameters.nal_hrd_parameters_present_flag) ||
+          (activeSps->vui_seq_parameters.vcl_hrd_parameters_present_flag)) {
         int cpb_removal_delay, dpb_output_delay;
         cpb_removal_delay = readUv (cpb_removal_len, "SEI cpb_removal_delay", buf);
         dpb_output_delay = readUv (dpb_output_len,  "SEI dpb_output_delay", buf);
@@ -207,10 +207,10 @@ static void processPictureTiming (byte* payload, int size, sDecoder* decoder) {
       }
 
     int pic_struct_present_flag, pic_struct;
-    if (!activeSPS->vui_parameters_present_flag)
+    if (!activeSps->vui_parameters_present_flag)
       pic_struct_present_flag = 0;
     else
-      pic_struct_present_flag = activeSPS->vui_seq_parameters.pic_struct_present_flag;
+      pic_struct_present_flag = activeSps->vui_seq_parameters.pic_struct_present_flag;
 
     int numClockTs = 0;
     if (pic_struct_present_flag) {
@@ -295,10 +295,10 @@ static void processPictureTiming (byte* payload, int size, sDecoder* decoder) {
 
             int time_offset_length;
             int time_offset;
-            if (activeSPS->vui_seq_parameters.vcl_hrd_parameters_present_flag)
-              time_offset_length = activeSPS->vui_seq_parameters.vcl_hrd_parameters.time_offset_length;
-            else if (activeSPS->vui_seq_parameters.nal_hrd_parameters_present_flag)
-              time_offset_length = activeSPS->vui_seq_parameters.nal_hrd_parameters.time_offset_length;
+            if (activeSps->vui_seq_parameters.vcl_hrd_parameters_present_flag)
+              time_offset_length = activeSps->vui_seq_parameters.vcl_hrd_parameters.time_offset_length;
+            else if (activeSps->vui_seq_parameters.nal_hrd_parameters_present_flag)
+              time_offset_length = activeSps->vui_seq_parameters.nal_hrd_parameters.time_offset_length;
             else
               time_offset_length = 24;
             if (time_offset_length)
@@ -379,7 +379,7 @@ static void processDecRefPicMarkingRepetition (byte* payload, int size, sDecoder
   int original_frame_num = readUeV ("SEI original_frame_num", buf);
 
   int original_bottom_field_flag = 0;
-  if (!decoder->activeSPS->frameMbOnly) {
+  if (!decoder->activeSps->frameMbOnly) {
     int original_field_pic_flag = readU1 ("SEI original_field_pic_flag", buf);
     if (original_field_pic_flag)
       original_bottom_field_flag = readU1 ("SEI original_bottom_field_flag", buf);
@@ -961,8 +961,8 @@ static void processBufferingPeriod (byte* payload, int size, sDecoder* decoder) 
   buf->bitStreamLen = size;
 
   int spsId = readUeV ("SEI spsId", buf);
-  sSPS* sps = &decoder->sps[spsId];
-  activateSPS (decoder, sps);
+  sSps* sps = &decoder->sps[spsId];
+  activateSps (decoder, sps);
 
   if (decoder->param.seiDebug)
     printf ("buffering\n");
@@ -1158,7 +1158,7 @@ static void process_green_metadata_info (byte* payload, int size, sDecoder* deco
 //}}}
 
 //{{{
-void processSEI (byte* msg, int naluLen, sDecoder* decoder, sSlice* slice) {
+void processSei (byte* msg, int naluLen, sDecoder* decoder, sSlice* slice) {
 
   if (decoder->param.seiDebug)
     printf ("SEI:%d -> ", naluLen);

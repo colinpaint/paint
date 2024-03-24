@@ -371,36 +371,36 @@ int mb_pred_b_d8x8temporal (sMacroBlock* mb, eColorPlane plane, sPixel** pixel, 
       if(mb->decoder->coding.isSeperateColourPlane && mb->decoder->coding.yuvFormat==YUV444)
         colocated = &list1[0]->JVmv_info[mb->slice->colourPlaneId][RSD(j6)][RSD(i4)];
       if (slice->mbAffFrame) {
-        assert(decoder->activeSPS->direct_8x8_inference_flag);
+        assert(decoder->activeSps->direct_8x8_inference_flag);
         if (!mb->mbField && ((slice->listX[LIST_1][0]->iCodingType==eFrameMbPairCoding && slice->listX[LIST_1][0]->motion.mbField[mb->mbIndexX]) ||
             (slice->listX[LIST_1][0]->iCodingType==eFieldCoding))) {
           if (iabs(picture->poc - slice->listX[LIST_1+4][0]->poc) > iabs(picture->poc -slice->listX[LIST_1+2][0]->poc))
-            colocated = decoder->activeSPS->direct_8x8_inference_flag
+            colocated = decoder->activeSps->direct_8x8_inference_flag
                           ? &slice->listX[LIST_1+2][0]->mvInfo[RSD(j6) >> 1][RSD(i4)]
                           : &slice->listX[LIST_1+2][0]->mvInfo[j6 >> 1][i4];
           else
-            colocated = decoder->activeSPS->direct_8x8_inference_flag
+            colocated = decoder->activeSps->direct_8x8_inference_flag
                           ? &slice->listX[LIST_1+4][0]->mvInfo[RSD(j6) >> 1][RSD(i4)]
                           : &slice->listX[LIST_1+4][0]->mvInfo[j6 >> 1][i4];
           }
         }
-      else if (!decoder->activeSPS->frameMbOnly &&
+      else if (!decoder->activeSps->frameMbOnly &&
                (!slice->fieldPic && slice->listX[LIST_1][0]->iCodingType != eFrameCoding)) {
         if (iabs(picture->poc - list1[0]->botField->poc)> iabs(picture->poc -list1[0]->topField->poc) )
-          colocated = decoder->activeSPS->direct_8x8_inference_flag ?
+          colocated = decoder->activeSps->direct_8x8_inference_flag ?
             &list1[0]->topField->mvInfo[RSD(j6)>>1][RSD(i4)] : &list1[0]->topField->mvInfo[j6>>1][i4];
         else
-          colocated = decoder->activeSPS->direct_8x8_inference_flag ?
+          colocated = decoder->activeSps->direct_8x8_inference_flag ?
             &list1[0]->botField->mvInfo[RSD(j6)>>1][RSD(i4)] : &list1[0]->botField->mvInfo[j6>>1][i4];
         }
-      else if (!decoder->activeSPS->frameMbOnly && slice->fieldPic &&
+      else if (!decoder->activeSps->frameMbOnly && slice->fieldPic &&
                slice->picStructure != list1[0]->picStructure && list1[0]->codedFrame) {
         if (slice->picStructure == eTopField)
-          colocated = decoder->activeSPS->direct_8x8_inference_flag
+          colocated = decoder->activeSps->direct_8x8_inference_flag
                         ? &list1[0]->frame->topField->mvInfo[RSD(j6)][RSD(i4)]
                         : &list1[0]->frame->topField->mvInfo[j6][i4];
         else
-          colocated = decoder->activeSPS->direct_8x8_inference_flag
+          colocated = decoder->activeSps->direct_8x8_inference_flag
                         ? &list1[0]->frame->botField->mvInfo[RSD(j6)][RSD(i4)]
                         : &list1[0]->frame->botField->mvInfo[j6][i4];
         }
@@ -1052,7 +1052,7 @@ int mb_pred_b_inter8x8 (sMacroBlock* mb, eColorPlane plane, sPicture* picture)
       int k_start = (block8x8 << 2);
       int k_end = k_start;
 
-      if (decoder->activeSPS->direct_8x8_inference_flag) {
+      if (decoder->activeSps->direct_8x8_inference_flag) {
         blockSizeX = SMB_BLOCK_SIZE;
         blockSizeY = SMB_BLOCK_SIZE;
         k_end ++;

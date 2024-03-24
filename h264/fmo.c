@@ -9,7 +9,7 @@
 static void FmoGenerateType0MapUnitMap (sDecoder* decoder, unsigned PicSizeInMapUnits ) {
 // Generate interleaved slice group map type MapUnit map (type 0)
 
-  sPPS* pps = decoder->activePPS;
+  sPps* pps = decoder->activePps;
   unsigned iGroup, j;
   unsigned i = 0;
   do {
@@ -25,7 +25,7 @@ static void FmoGenerateType0MapUnitMap (sDecoder* decoder, unsigned PicSizeInMap
 // Generate dispersed slice group map type MapUnit map (type 1)
 static void FmoGenerateType1MapUnitMap (sDecoder* decoder, unsigned PicSizeInMapUnits ) {
 
-  sPPS* pps = decoder->activePPS;
+  sPps* pps = decoder->activePps;
   unsigned i;
   for( i = 0; i < PicSizeInMapUnits; i++ )
     decoder->mapUnitToSliceGroupMap[i] = 
@@ -37,7 +37,7 @@ static void FmoGenerateType1MapUnitMap (sDecoder* decoder, unsigned PicSizeInMap
 // Generate foreground with left-over slice group map type MapUnit map (type 2)
 static void FmoGenerateType2MapUnitMap (sDecoder* decoder, unsigned PicSizeInMapUnits ) {
 
-  sPPS* pps = decoder->activePPS;
+  sPps* pps = decoder->activePps;
   int iGroup;
   unsigned i, x, y;
   unsigned yTopLeft, xTopLeft, yBottomRight, xBottomRight;
@@ -60,7 +60,7 @@ static void FmoGenerateType2MapUnitMap (sDecoder* decoder, unsigned PicSizeInMap
 // Generate box-out slice group map type MapUnit map (type 3)
 static void FmoGenerateType3MapUnitMap (sDecoder* decoder, unsigned PicSizeInMapUnits, sSlice* slice) {
 
-  sPPS* pps = decoder->activePPS;
+  sPps* pps = decoder->activePps;
   unsigned i, k;
   int leftBound, topBound, rightBound, bottomBound;
   int x, y, xDir, yDir;
@@ -122,7 +122,7 @@ static void FmoGenerateType3MapUnitMap (sDecoder* decoder, unsigned PicSizeInMap
 static void FmoGenerateType4MapUnitMap (sDecoder* decoder, unsigned PicSizeInMapUnits, sSlice* slice) {
 // Generate raster scan slice group map type MapUnit map (type 4)
 
-  sPPS* pps = decoder->activePPS;
+  sPps* pps = decoder->activePps;
 
   unsigned mapUnitsInSliceGroup0 = imin((pps->sliceGroupChangeRateMius1 + 1) * slice->sliceGroupChangeCycle, PicSizeInMapUnits);
   unsigned sizeOfUpperLeftGroup = pps->sliceGroupChangeDirectionFlag ? ( PicSizeInMapUnits - mapUnitsInSliceGroup0 ) : mapUnitsInSliceGroup0;
@@ -140,7 +140,7 @@ static void FmoGenerateType4MapUnitMap (sDecoder* decoder, unsigned PicSizeInMap
 // Generate wipe slice group map type MapUnit map (type 5) *
 static void FmoGenerateType5MapUnitMap (sDecoder* decoder, unsigned PicSizeInMapUnits, sSlice* slice ) {
 
-  sPPS* pps = decoder->activePPS;
+  sPps* pps = decoder->activePps;
 
   unsigned mapUnitsInSliceGroup0 = 
     imin((pps->sliceGroupChangeRateMius1 + 1) * slice->sliceGroupChangeCycle, PicSizeInMapUnits);
@@ -162,7 +162,7 @@ static void FmoGenerateType5MapUnitMap (sDecoder* decoder, unsigned PicSizeInMap
 static void FmoGenerateType6MapUnitMap (sDecoder* decoder, unsigned PicSizeInMapUnits ) {
 // Generate explicit slice group map type MapUnit map (type 6)
 
-  sPPS* pps = decoder->activePPS;
+  sPps* pps = decoder->activePps;
   unsigned i;
   for (i = 0; i < PicSizeInMapUnits; i++)
     decoder->mapUnitToSliceGroupMap[i] = pps->sliceGroupId[i];
@@ -173,8 +173,8 @@ static int FmoGenerateMapUnitToSliceGroupMap (sDecoder* decoder, sSlice* slice) 
 // Generates decoder->mapUnitToSliceGroupMap
 // Has to be called every time a new Picture Parameter Set is used
 
-  sSPS* sps = decoder->activeSPS;
-  sPPS* pps = decoder->activePPS;
+  sSps* sps = decoder->activeSps;
+  sPps* pps = decoder->activePps;
 
   unsigned int NumSliceGroupMapUnits;
 
@@ -242,7 +242,7 @@ static int FmoGenerateMbToSliceGroupMap (sDecoder* decoder, sSlice *slice) {
     exit (-1);
     }
 
-  sSPS* sps = decoder->activeSPS;
+  sSps* sps = decoder->activeSps;
   if ((sps->frameMbOnly)|| slice->fieldPic) {
     int *mbToSliceGroupMap = decoder->mbToSliceGroupMap;
     int *mapUnitToSliceGroupMap = decoder->mapUnitToSliceGroupMap;
@@ -267,7 +267,7 @@ static int FmoGenerateMbToSliceGroupMap (sDecoder* decoder, sSlice *slice) {
 //{{{
 int initFmo (sDecoder* decoder, sSlice* slice) {
 
-  sPPS* pps = decoder->activePPS;
+  sPps* pps = decoder->activePps;
 
   FmoGenerateMapUnitToSliceGroupMap (decoder, slice);
   FmoGenerateMbToSliceGroupMap (decoder, slice);

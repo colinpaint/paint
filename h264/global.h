@@ -629,8 +629,8 @@ typedef struct OldSlice {
 typedef struct Slice {
   struct Decoder* decoder;
 
-  sPPS* activePPS;
-  sSPS* activeSPS;
+  sPps* activePps;
+  sSps* activeSps;
   struct DPB* dpb;
 
   int isIDR;
@@ -894,14 +894,14 @@ typedef struct Decoder {
   sAnnexB*     annexB;
 
   // sps
-  int          gotSPS;
-  sSPS         sps[32];
-  sSPS*        activeSPS;
+  int          gotPps;
+  sSps         sps[32];
+  sSps*        activeSps;
 
   // pps
-  sPPS         pps[MAX_PPS];
-  sPPS*        activePPS;
-  sPPS*        nextPPS;
+  sPps         pps[MAX_PPS];
+  sPps*        activePps;
+  sPps*        nextPps;
 
   int          decodeFrameNum;
   int          idrFrameNum;

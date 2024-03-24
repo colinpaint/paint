@@ -67,7 +67,7 @@ typedef struct {
   } sVUI;
 //}}}
 
-// sSPS
+// sSps
 typedef struct {
   Boolean  valid;
 
@@ -120,8 +120,8 @@ typedef struct {
 
   unsigned isSeperateColourPlane;          // u(1)
   int      losslessQpPrimeFlag;
-  } sSPS;
+  } sSps;
 
 struct Decoder;
-extern void readNaluSPS (struct Decoder* decoder, sNalu* nalu);
-extern void activateSPS (struct Decoder* decoder, sSPS* sps);
+extern void readNaluSps (struct Decoder* decoder, sNalu* nalu);
+extern void activateSps (struct Decoder* decoder, sSps* sps);

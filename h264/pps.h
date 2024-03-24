@@ -4,7 +4,7 @@
 
 #define MAX_PPS  256
 
-// sPPS
+// sPps
 typedef struct {
   Boolean   valid;
 
@@ -53,12 +53,12 @@ typedef struct {
   Boolean   hasConstrainedIntraPred;         // u(1)
   Boolean   redundantPicCountPresent;         // u(1)
   Boolean   vuiPicParamFlag;                  // u(1)
-  } sPPS;
+  } sPps;
 
 struct Decoder;
-extern sPPS* allocPPS();
-extern void freePPS (sPPS* pps);
+extern sPps* allocPps();
+extern void freePps (sPps* pps);
 
-extern void setPPSbyId (struct Decoder* decoder, int id, sPPS* pps);
-extern void readNaluPPS (struct Decoder* decoder, sNalu* nalu);
-extern void activatePPS (struct Decoder* decoder, sPPS* pps);
+extern void setPpsById (struct Decoder* decoder, int id, sPps* pps);
+extern void readNaluPps (struct Decoder* decoder, sNalu* nalu);
+extern void activatePps (struct Decoder* decoder, sPps* pps);

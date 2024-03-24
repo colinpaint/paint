@@ -151,8 +151,8 @@ static void freeDecoder (sDecoder* decoder) {
   decoder->nalu = NULL;
 
   freeDecodedPictures (decoder->decOutputPic);
-  freePPS (decoder->nextPPS);
-  decoder->nextPPS = NULL;
+  freePps (decoder->nextPps);
+  decoder->nextPps = NULL;
 
   free (decoder);
   }
@@ -198,7 +198,7 @@ void initFrext (sDecoder* decoder) {
   // pel bitDepth init
   decoder->coding.bitDepthLumaQpScale = 6 * (decoder->bitDepthLuma - 8);
 
-  if(decoder->bitDepthLuma > decoder->bitDepthChroma || decoder->activeSPS->chromaFormatIdc == YUV400)
+  if(decoder->bitDepthLuma > decoder->bitDepthChroma || decoder->activeSps->chromaFormatIdc == YUV400)
     decoder->coding.picUnitBitSizeDisk = (decoder->bitDepthLuma > 8)? 16:8;
   else
     decoder->coding.picUnitBitSizeDisk = (decoder->bitDepthChroma > 8)? 16:8;
@@ -206,18 +206,18 @@ void initFrext (sDecoder* decoder) {
   decoder->coding.maxPelValueComp[0] = (1<<decoder->bitDepthLuma) - 1;
   decoder->mbSize[0][0] = decoder->mbSize[0][1] = MB_BLOCK_SIZE;
 
-  if (decoder->activeSPS->chromaFormatIdc != YUV400) {
+  if (decoder->activeSps->chromaFormatIdc != YUV400) {
     // for chrominance part
     decoder->coding.bitDepthChromaQpScale = 6 * (decoder->bitDepthChroma - 8);
     decoder->coding.dcPredValueComp[1] = (1 << (decoder->bitDepthChroma - 1));
     decoder->coding.dcPredValueComp[2] = decoder->coding.dcPredValueComp[1];
     decoder->coding.maxPelValueComp[1] = (1 << decoder->bitDepthChroma) - 1;
     decoder->coding.maxPelValueComp[2] = (1 << decoder->bitDepthChroma) - 1;
-    decoder->coding.numBlock8x8uv = (1 << decoder->activeSPS->chromaFormatIdc) & (~(0x1));
+    decoder->coding.numBlock8x8uv = (1 << decoder->activeSps->chromaFormatIdc) & (~(0x1));
     decoder->coding.numUvBlocks = (decoder->coding.numBlock8x8uv >> 1);
     decoder->coding.numCdcCoeff = (decoder->coding.numBlock8x8uv << 1);
-    decoder->mbSize[1][0] = decoder->mbSize[2][0] = decoder->mbCrSizeX  = (decoder->activeSPS->chromaFormatIdc==YUV420 || decoder->activeSPS->chromaFormatIdc==YUV422)?  8 : 16;
-    decoder->mbSize[1][1] = decoder->mbSize[2][1] = decoder->mbCrSizeY  = (decoder->activeSPS->chromaFormatIdc==YUV444 || decoder->activeSPS->chromaFormatIdc==YUV422)? 16 :  8;
+    decoder->mbSize[1][0] = decoder->mbSize[2][0] = decoder->mbCrSizeX  = (decoder->activeSps->chromaFormatIdc==YUV420 || decoder->activeSps->chromaFormatIdc==YUV422)?  8 : 16;
+    decoder->mbSize[1][1] = decoder->mbSize[2][1] = decoder->mbCrSizeY  = (decoder->activeSps->chromaFormatIdc==YUV444 || decoder->activeSps->chromaFormatIdc==YUV422)? 16 :  8;
 
     decoder->coding.subpelX = decoder->mbCrSizeX == 8 ? 7 : 3;
     decoder->coding.subpelY = decoder->mbCrSizeY == 8 ? 7 : 3;
@@ -466,7 +466,7 @@ sDecoder* openDecoder (sParam* param, byte* chunk, size_t chunkSize) {
 
   // init nalu, annexB
   decoder->nalu = allocNALU (MAX_CODED_FRAME_SIZE);
-  decoder->nextPPS = allocPPS();
+  decoder->nextPps = allocPps();
   decoder->annexB = allocAnnexB (decoder);
   openAnnexB (decoder->annexB, chunk, chunkSize);
 

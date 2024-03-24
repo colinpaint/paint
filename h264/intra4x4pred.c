@@ -74,7 +74,7 @@ static int intra4x4_dc_pred (sMacroBlock *mb,
   getNonAffNeighbour(mb, ioff - 1, joff   , decoder->mbSize[eLuma], &pix_a);
   getNonAffNeighbour(mb, ioff    , joff -1, decoder->mbSize[eLuma], &pix_b);
 
-  if (decoder->activePPS->hasConstrainedIntraPred)
+  if (decoder->activePps->hasConstrainedIntraPred)
   {
     block_available_left = pix_a.available ? slice->intraBlock [pix_a.mbIndex] : 0;
     block_available_up   = pix_b.available ? slice->intraBlock [pix_b.mbIndex] : 0;
@@ -161,7 +161,7 @@ static int intra4x4_vert_pred (sMacroBlock *mb,    //!< current macroblock
 
   getNonAffNeighbour(mb, ioff, joff - 1 , decoder->mbSize[eLuma], &pix_b);
 
-  if (decoder->activePPS->hasConstrainedIntraPred)
+  if (decoder->activePps->hasConstrainedIntraPred)
   {
     block_available_up = pix_b.available ? slice->intraBlock [pix_b.mbIndex] : 0;
   }
@@ -220,7 +220,7 @@ static int intra4x4_hor_pred (sMacroBlock *mb,
 
   getNonAffNeighbour(mb, ioff - 1 , joff, decoder->mbSize[eLuma], &pix_a);
 
-  if (decoder->activePPS->hasConstrainedIntraPred)
+  if (decoder->activePps->hasConstrainedIntraPred)
   {
     block_available_left = pix_a.available ? slice->intraBlock[pix_a.mbIndex]: 0;
   }
@@ -303,7 +303,7 @@ static int intra4x4_diag_down_right_pred (sMacroBlock *mb,    //!< current macro
   getNonAffNeighbour(mb, ioff    , joff -1 , decoder->mbSize[eLuma], &pix_b);
   getNonAffNeighbour(mb, ioff -1 , joff -1 , decoder->mbSize[eLuma], &pix_d);
 
-  if (decoder->activePPS->hasConstrainedIntraPred)
+  if (decoder->activePps->hasConstrainedIntraPred)
   {
     block_available_left     = pix_a.available ? slice->intraBlock [pix_a.mbIndex]: 0;
     block_available_up       = pix_b.available ? slice->intraBlock [pix_b.mbIndex] : 0;
@@ -382,7 +382,7 @@ static int intra4x4_diag_down_left_pred (sMacroBlock *mb,    //!< current macrob
 
   pix_c.available = pix_c.available && !((ioff==4) && ((joff==4)||(joff==12)));
 
-  if (decoder->activePPS->hasConstrainedIntraPred)
+  if (decoder->activePps->hasConstrainedIntraPred)
   {
     block_available_up       = pix_b.available ? slice->intraBlock [pix_b.mbIndex] : 0;
     block_available_up_right = pix_c.available ? slice->intraBlock [pix_c.mbIndex] : 0;
@@ -469,7 +469,7 @@ static int intra4x4_vert_right_pred (sMacroBlock *mb,    //!< current macroblock
   getNonAffNeighbour(mb, ioff    , joff -1 , decoder->mbSize[eLuma], &pix_b);
   getNonAffNeighbour(mb, ioff -1 , joff -1 , decoder->mbSize[eLuma], &pix_d);
 
-  if (decoder->activePPS->hasConstrainedIntraPred)
+  if (decoder->activePps->hasConstrainedIntraPred)
   {
     block_available_left     = pix_a.available ? slice->intraBlock[pix_a.mbIndex]: 0;
     block_available_up       = pix_b.available ? slice->intraBlock [pix_b.mbIndex] : 0;
@@ -554,7 +554,7 @@ static int intra4x4_vert_left_pred (sMacroBlock *mb,    //!< current macroblock
 
   pix_c.available = pix_c.available && !((ioff==4) && ((joff==4)||(joff==12)));
 
-  if (decoder->activePPS->hasConstrainedIntraPred)
+  if (decoder->activePps->hasConstrainedIntraPred)
   {
     block_available_up       = pix_b.available ? slice->intraBlock [pix_b.mbIndex] : 0;
     block_available_up_right = pix_c.available ? slice->intraBlock [pix_c.mbIndex] : 0;
@@ -639,7 +639,7 @@ static int intra4x4_hor_up_pred (sMacroBlock *mb,    //!< current macroblock
 
   getNonAffNeighbour(mb, ioff -1 , joff, decoder->mbSize[eLuma], &pix_a);
 
-  if (decoder->activePPS->hasConstrainedIntraPred)
+  if (decoder->activePps->hasConstrainedIntraPred)
   {
     block_available_left = pix_a.available ? slice->intraBlock[pix_a.mbIndex]: 0;
   }
@@ -715,7 +715,7 @@ static int intra4x4_hor_down_pred (sMacroBlock *mb,    //!< current macroblock
   getNonAffNeighbour(mb, ioff    , joff -1 , decoder->mbSize[eLuma], &pix_b);
   getNonAffNeighbour(mb, ioff -1 , joff -1 , decoder->mbSize[eLuma], &pix_d);
 
-  if (decoder->activePPS->hasConstrainedIntraPred)
+  if (decoder->activePps->hasConstrainedIntraPred)
   {
     block_available_left    = pix_a.available ? slice->intraBlock [pix_a.mbIndex]: 0;
     block_available_up      = pix_b.available ? slice->intraBlock [pix_b.mbIndex] : 0;
@@ -875,7 +875,7 @@ static int intra4x4_dc_pred_mbaff (sMacroBlock *mb,
   }
   getAffNeighbour(mb, ioff    , joff -1 , decoder->mbSize[eLuma], &pix_b);
 
-  if (decoder->activePPS->hasConstrainedIntraPred)
+  if (decoder->activePps->hasConstrainedIntraPred)
   {
     for (i=0, block_available_left=1; i<4;++i)
       block_available_left  &= pix_a[i].available ? slice->intraBlock[pix_a[i].mbIndex]: 0;
@@ -960,7 +960,7 @@ static int intra4x4_vert_pred_mbaff (sMacroBlock *mb,    //!< current macroblock
 
   getAffNeighbour(mb, ioff, joff - 1 , decoder->mbSize[eLuma], &pix_b);
 
-  if (decoder->activePPS->hasConstrainedIntraPred)
+  if (decoder->activePps->hasConstrainedIntraPred)
   {
     block_available_up = pix_b.available ? slice->intraBlock [pix_b.mbIndex] : 0;
   }
@@ -1027,7 +1027,7 @@ static int intra4x4_hor_pred_mbaff (sMacroBlock *mb,
     getAffNeighbour(mb, ioff -1 , joff +i , decoder->mbSize[eLuma], &pix_a[i]);
   }
 
-  if (decoder->activePPS->hasConstrainedIntraPred)
+  if (decoder->activePps->hasConstrainedIntraPred)
   {
     for (i=0, block_available_left=1; i<4;++i)
       block_available_left  &= pix_a[i].available ? slice->intraBlock[pix_a[i].mbIndex]: 0;
@@ -1090,7 +1090,7 @@ static int intra4x4_diag_down_right_pred_mbaff (sMacroBlock *mb,    //!< current
   getAffNeighbour(mb, ioff    , joff -1 , decoder->mbSize[eLuma], &pix_b);
   getAffNeighbour(mb, ioff -1 , joff -1 , decoder->mbSize[eLuma], &pix_d);
 
-  if (decoder->activePPS->hasConstrainedIntraPred)
+  if (decoder->activePps->hasConstrainedIntraPred)
   {
     for (i=0, block_available_left=1; i<4;++i)
       block_available_left  &= pix_a[i].available ? slice->intraBlock[pix_a[i].mbIndex]: 0;
@@ -1169,7 +1169,7 @@ static int intra4x4_diag_down_left_pred_mbaff (sMacroBlock *mb,    //!< current 
 
   pix_c.available = pix_c.available && !((ioff==4) && ((joff==4)||(joff==12)));
 
-  if (decoder->activePPS->hasConstrainedIntraPred)
+  if (decoder->activePps->hasConstrainedIntraPred)
   {
     block_available_up       = pix_b.available ? slice->intraBlock [pix_b.mbIndex] : 0;
     block_available_up_right = pix_c.available ? slice->intraBlock [pix_c.mbIndex] : 0;
@@ -1261,7 +1261,7 @@ static int intra4x4_vert_right_pred_mbaff (sMacroBlock *mb,    //!< current macr
   getAffNeighbour(mb, ioff    , joff -1 , decoder->mbSize[eLuma], &pix_b);
   getAffNeighbour(mb, ioff -1 , joff -1 , decoder->mbSize[eLuma], &pix_d);
 
-  if (decoder->activePPS->hasConstrainedIntraPred)
+  if (decoder->activePps->hasConstrainedIntraPred)
   {
     for (i=0, block_available_left=1; i<4;++i)
       block_available_left  &= pix_a[i].available ? slice->intraBlock[pix_a[i].mbIndex]: 0;
@@ -1342,7 +1342,7 @@ static int intra4x4_vert_left_pred_mbaff (sMacroBlock *mb,    //!< current macro
 
   pix_c.available = pix_c.available && !((ioff==4) && ((joff==4)||(joff==12)));
 
-  if (decoder->activePPS->hasConstrainedIntraPred)
+  if (decoder->activePps->hasConstrainedIntraPred)
   {
     block_available_up       = pix_b.available ? slice->intraBlock [pix_b.mbIndex] : 0;
     block_available_up_right = pix_c.available ? slice->intraBlock [pix_c.mbIndex] : 0;
@@ -1429,7 +1429,7 @@ static int intra4x4_hor_up_pred_mbaff (sMacroBlock *mb,    //!< current macroblo
     getAffNeighbour(mb, ioff -1 , joff +i , decoder->mbSize[eLuma], &pix_a[i]);
   }
 
-  if (decoder->activePPS->hasConstrainedIntraPred)
+  if (decoder->activePps->hasConstrainedIntraPred)
   {
     for (i=0, block_available_left=1; i<4;++i)
       block_available_left  &= pix_a[i].available ? slice->intraBlock[pix_a[i].mbIndex]: 0;
@@ -1511,7 +1511,7 @@ static int intra4x4_hor_down_pred_mbaff (sMacroBlock *mb,    //!< current macrob
   getAffNeighbour(mb, ioff    , joff -1 , decoder->mbSize[eLuma], &pix_b);
   getAffNeighbour(mb, ioff -1 , joff -1 , decoder->mbSize[eLuma], &pix_d);
 
-  if (decoder->activePPS->hasConstrainedIntraPred)
+  if (decoder->activePps->hasConstrainedIntraPred)
   {
     for (i=0, block_available_left=1; i<4;++i)
       block_available_left  &= pix_a[i].available ? slice->intraBlock[pix_a[i].mbIndex]: 0;

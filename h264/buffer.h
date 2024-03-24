@@ -286,7 +286,7 @@ extern void storePictureDpb (sDPB* dpb, sPicture* p);
 extern void removeFrameDpb (sDPB* dpb, int pos);
 extern void freeDpb (sDPB* dpb);
 
-extern void initImage (sDecoder* decoder, sImage* image, sSPS *sps);
+extern void initImage (sDecoder* decoder, sImage* image, sSps *sps);
 extern void freeImage (sDecoder* decoder, sImage* image);
 
 extern void initListsSliceI (sSlice* slice);

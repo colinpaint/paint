@@ -370,7 +370,7 @@ static void readCbpCoefsFromNaluCabac400 (sMacroBlock* mb) {
 
     //============= Transform size flag for INTER MBs =============
     need_transform_size_flag = (((mb->mbType >= 1 && mb->mbType <= 3)||
-      (IS_DIRECT(mb) && decoder->activeSPS->direct_8x8_inference_flag) ||
+      (IS_DIRECT(mb) && decoder->activeSps->direct_8x8_inference_flag) ||
       (mb->noMbPartLessThan8x8Flag))
       && mb->mbType != I8MB && mb->mbType != I4MB
       && (mb->codedBlockPattern&15)
@@ -531,7 +531,7 @@ static void readCbpCoefsFromNaluCabac444 (sMacroBlock* mb) {
 
     // Transform size flag for INTER MBs
     need_transform_size_flag = (((mb->mbType >= 1 && mb->mbType <= 3)||
-      (IS_DIRECT(mb) && decoder->activeSPS->direct_8x8_inference_flag) ||
+      (IS_DIRECT(mb) && decoder->activeSps->direct_8x8_inference_flag) ||
       (mb->noMbPartLessThan8x8Flag))
       && mb->mbType != I8MB && mb->mbType != I4MB
       && (mb->codedBlockPattern&15)
@@ -760,7 +760,7 @@ static void readCbpCoefsFromNaluCabac422 (sMacroBlock* mb) {
 
     // Transform size flag for INTER MBs
     need_transform_size_flag = (((mb->mbType >= 1 && mb->mbType <= 3)||
-      (IS_DIRECT(mb) && decoder->activeSPS->direct_8x8_inference_flag) ||
+      (IS_DIRECT(mb) && decoder->activeSps->direct_8x8_inference_flag) ||
       (mb->noMbPartLessThan8x8Flag))
       && mb->mbType != I8MB && mb->mbType != I4MB
       && (mb->codedBlockPattern&15)
@@ -1078,7 +1078,7 @@ static void readCbpCoefsFromNaluCabac420 (sMacroBlock* mb) {
 
     // Transform size flag for INTER MBs
     need_transform_size_flag = (((mb->mbType >= 1 && mb->mbType <= 3)||
-      (IS_DIRECT(mb) && decoder->activeSPS->direct_8x8_inference_flag) ||
+      (IS_DIRECT(mb) && decoder->activeSps->direct_8x8_inference_flag) ||
       (mb->noMbPartLessThan8x8Flag))
       && mb->mbType != I8MB && mb->mbType != I4MB
       && (mb->codedBlockPattern&15)
@@ -1324,7 +1324,7 @@ static void readCbpCoefsFromNaluCabac420 (sMacroBlock* mb) {
 //{{{
 void setReadCbpCoefsCabac (sSlice* slice) {
 
-  switch (slice->decoder->activeSPS->chromaFormatIdc) {
+  switch (slice->decoder->activeSps->chromaFormatIdc) {
     case YUV444:
       if (slice->decoder->coding.isSeperateColourPlane == 0)
         slice->readCBPcoeffs = readCbpCoefsFromNaluCabac444;

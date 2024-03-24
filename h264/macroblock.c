@@ -352,13 +352,13 @@ static int decodeComponentB (sMacroBlock* mb, eColorPlane plane, sPixel** pixel,
   else if (mb->mbType == BSKIP_DIRECT) {
     sSlice* slice = mb->slice;
     if (slice->directSpatialMvPredFlag == 0) {
-      if (slice->activeSPS->direct_8x8_inference_flag)
+      if (slice->activeSps->direct_8x8_inference_flag)
         mb_pred_b_d8x8temporal (mb, plane, pixel, picture);
       else
         mb_pred_b_d4x4temporal (mb, plane, pixel, picture);
       }
     else {
-      if (slice->activeSPS->direct_8x8_inference_flag)
+      if (slice->activeSps->direct_8x8_inference_flag)
         mb_pred_b_d8x8spatial (mb, plane, pixel, picture);
       else
         mb_pred_b_d4x4spatial (mb, plane, pixel, picture);
@@ -408,7 +408,7 @@ static void prepareListforRefIdx (sMacroBlock* mb, sSyntaxElement* se,
                                   sDataPartition *dataPartition, int numRefIndexActive, int refidx_present) {
 
   if (numRefIndexActive > 1) {
-    if (mb->decoder->activePPS->entropyCoding == eCavlc || dataPartition->s->errorFlag) {
+    if (mb->decoder->activePps->entropyCoding == eCavlc || dataPartition->s->errorFlag) {
       se->mapping = linfo_ue;
       if (refidx_present)
         mb->readRefPictureIndex = (numRefIndexActive == 2) ? readRefPictureIdxFLC : readRefPictureIdxVLC;
@@ -461,7 +461,7 @@ void readDeltaQuant (sSyntaxElement* se, sDataPartition *dataPartition, sMacroBl
 
   dataPartition = &(slice->dataPartitions[dpMap[se->type]]);
 
-  if (decoder->activePPS->entropyCoding == eCavlc || dataPartition->s->errorFlag)
+  if (decoder->activePps->entropyCoding == eCavlc || dataPartition->s->errorFlag)
     se->mapping = linfo_se;
   else
     se->reading= read_dQuant_CABAC;
@@ -746,7 +746,7 @@ void startMacroblock (sSlice* slice, sMacroBlock** mb) {
 
   // Select appropriate MV predictor function
   init_motion_vector_prediction (*mb, slice->mbAffFrame);
-  setReadStoreCodedBlockPattern (mb, slice->activeSPS->chromaFormatIdc);
+  setReadStoreCodedBlockPattern (mb, slice->activeSps->chromaFormatIdc);
 
   // Reset syntax element entries in MB struct
   if (slice->sliceType != eSliceI) {
@@ -805,7 +805,7 @@ Boolean exitMacroblock (sSlice* slice, int eos_bit) {
 
     if ((slice->sliceType == eSliceI)  ||
         (slice->sliceType == eSliceSI) ||
-        (decoder->activePPS->entropyCoding == eCabac))
+        (decoder->activePps->entropyCoding == eCabac))
       return TRUE;
 
     if (slice->codCount <= 0)
@@ -1035,7 +1035,7 @@ static void readMotionInfoP (sMacroBlock* mb){
   //=====  READ MOTION VECTORS =====
   se.type = SE_MVD;
   dataPartition = &(slice->dataPartitions[dpMap[SE_MVD]]);
-  if (decoder->activePPS->entropyCoding == eCavlc || dataPartition->s->errorFlag)
+  if (decoder->activePps->entropyCoding == eCavlc || dataPartition->s->errorFlag)
     se.mapping = linfo_se;
   else
     se.reading = slice->mbAffFrame ? read_mvd_CABAC_mbaff : read_MVD_CABAC;
@@ -1093,7 +1093,7 @@ static void readMotionInfoB (sMacroBlock* mb) {
   //=====  READ MOTION VECTORS =====
   se.type = SE_MVD;
   dataPartition = &(slice->dataPartitions[dpMap[SE_MVD]]);
-  if (decoder->activePPS->entropyCoding == eCavlc || dataPartition->s->errorFlag)
+  if (decoder->activePps->entropyCoding == eCavlc || dataPartition->s->errorFlag)
     se.mapping = linfo_se;
   else
     se.reading = slice->mbAffFrame ? read_mvd_CABAC_mbaff : read_MVD_CABAC;
@@ -1176,12 +1176,12 @@ void setSliceFunctions (sSlice* slice) {
 
   set_intra_prediction_modes (slice);
 
-  if (slice->decoder->activeSPS->chromaFormatIdc==YUV444 && (slice->decoder->coding.isSeperateColourPlane == 0) )
+  if (slice->decoder->activeSps->chromaFormatIdc==YUV444 && (slice->decoder->coding.isSeperateColourPlane == 0) )
     slice->readCoef4x4cavlc = readCoef4x4cavlc444;
   else
     slice->readCoef4x4cavlc = readCoef4x4cavlc;
 
-  switch (slice->decoder->activePPS->entropyCoding) {
+  switch (slice->decoder->activePps->entropyCoding) {
     case eCabac:
       setReadCbpCoefsCabac (slice);
       break;
@@ -1232,7 +1232,7 @@ void checkDpNeighbours (sMacroBlock* mb) {
   decoder->getNeighbour (mb, -1,  0, decoder->mbSize[1], &left);
   decoder->getNeighbour (mb,  0, -1, decoder->mbSize[1], &up);
 
-  if ((mb->isIntraBlock == FALSE) || (!(decoder->activePPS->hasConstrainedIntraPred)) ) {
+  if ((mb->isIntraBlock == FALSE) || (!(decoder->activePps->hasConstrainedIntraPred)) ) {
     if (left.available)
       mb->dplFlag |= decoder->mbData[left.mbIndex].dplFlag;
     if (up.available)

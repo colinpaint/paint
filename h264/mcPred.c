@@ -68,7 +68,7 @@ static void update_direct_mv_info_temporal (sMacroBlock* mb) {
             int refIndex;
             int mapped_idx = -1, iref;
 
-            sPicMotionParam* colocated = decoder->activeSPS->direct_8x8_inference_flag ?
+            sPicMotionParam* colocated = decoder->activeSps->direct_8x8_inference_flag ?
                                            &list1[0]->mvInfo[RSD(mb->blockYaff + j0)][RSD(i0)] :
                                            &list1[0]->mvInfo[mb->blockYaff + j0][i0];
 
@@ -77,41 +77,41 @@ static void update_direct_mv_info_temporal (sMacroBlock* mb) {
               if (!mb->mbField && ((slice->listX[LIST_1][0]->iCodingType==eFrameMbPairCoding && slice->listX[LIST_1][0]->motion.mbField[mb->mbIndexX]) ||
                 (slice->listX[LIST_1][0]->iCodingType==eFieldCoding))) {
                 if (iabs(picture->poc - slice->listX[LIST_1+4][0]->poc)> iabs(picture->poc -slice->listX[LIST_1+2][0]->poc) )
-                  colocated = decoder->activeSPS->direct_8x8_inference_flag ?
+                  colocated = decoder->activeSps->direct_8x8_inference_flag ?
                     &slice->listX[LIST_1+2][0]->mvInfo[RSD(mb->blockYaff + j0)>>1][RSD(i0)] :
                     &slice->listX[LIST_1+2][0]->mvInfo[(mb->blockYaff + j0)>>1][i0];
                 else
-                  colocated = decoder->activeSPS->direct_8x8_inference_flag ?
+                  colocated = decoder->activeSps->direct_8x8_inference_flag ?
                     &slice->listX[LIST_1+4][0]->mvInfo[RSD(mb->blockYaff + j0)>>1][RSD(i0)] :
                     &slice->listX[LIST_1+4][0]->mvInfo[(mb->blockYaff + j0)>>1][i0];
                 }
               }
               //}}}
-            else if (!decoder->activeSPS->frameMbOnly &&
+            else if (!decoder->activeSps->frameMbOnly &&
                      !slice->fieldPic &&
                      slice->listX[LIST_1][0]->iCodingType != eFrameCoding) {
               //{{{
               if (iabs(picture->poc - list1[0]->botField->poc) > iabs(picture->poc -list1[0]->topField->poc) )
-                colocated = decoder->activeSPS->direct_8x8_inference_flag ?
+                colocated = decoder->activeSps->direct_8x8_inference_flag ?
                   &list1[0]->topField->mvInfo[RSD(mb->blockYaff + j0)>>1][RSD(i0)] :
                   &list1[0]->topField->mvInfo[(mb->blockYaff + j0)>>1][i0];
               else
-                colocated = decoder->activeSPS->direct_8x8_inference_flag ?
+                colocated = decoder->activeSps->direct_8x8_inference_flag ?
                   &list1[0]->botField->mvInfo[RSD(mb->blockYaff + j0)>>1][RSD(i0)] :
                   &list1[0]->botField->mvInfo[(mb->blockYaff + j0)>>1][i0];
               }
               //}}}
-            else if (!decoder->activeSPS->frameMbOnly &&
+            else if (!decoder->activeSps->frameMbOnly &&
                      slice->fieldPic &&
                      slice->picStructure != list1[0]->picStructure &&
                      list1[0]->codedFrame) {
               //{{{
               if (slice->picStructure == eTopField)
-                colocated = decoder->activeSPS->direct_8x8_inference_flag ?
+                colocated = decoder->activeSps->direct_8x8_inference_flag ?
                   &list1[0]->frame->topField->mvInfo[RSD(mb->blockYaff + j0)][RSD(i0)] :
                   &list1[0]->frame->topField->mvInfo[mb->blockYaff + j0][i0];
               else
-                colocated = decoder->activeSPS->direct_8x8_inference_flag ?
+                colocated = decoder->activeSps->direct_8x8_inference_flag ?
                   &list1[0]->frame->botField->mvInfo[RSD(mb->blockYaff + j0)][RSD(i0)] :
                   &list1[0]->frame->botField->mvInfo[mb->blockYaff + j0][i0];
               }
@@ -181,7 +181,7 @@ static void update_direct_mv_info_temporal (sMacroBlock* mb) {
                   j6 = mb->blockYaff + j;
 
                   for (i4 = i0; i4 < i0 + step_h0; ++i4) {
-                    sPicMotionParam* colocated = decoder->activeSPS->direct_8x8_inference_flag ?
+                    sPicMotionParam* colocated = decoder->activeSps->direct_8x8_inference_flag ?
                       &list1[0]->mvInfo[RSD(j6)][RSD(i4)] :
                       &list1[0]->mvInfo[j6][i4];
                     sPicMotionParam* mvInfo = &picture->mvInfo[j4][i4];
@@ -190,36 +190,36 @@ static void update_direct_mv_info_temporal (sMacroBlock* mb) {
                       if (!mb->mbField && ((slice->listX[LIST_1][0]->iCodingType==eFrameMbPairCoding && slice->listX[LIST_1][0]->motion.mbField[mb->mbIndexX]) ||
                           (slice->listX[LIST_1][0]->iCodingType==eFieldCoding))) {
                         if (iabs(picture->poc - slice->listX[LIST_1+4][0]->poc)> iabs(picture->poc -slice->listX[LIST_1+2][0]->poc) )
-                          colocated = decoder->activeSPS->direct_8x8_inference_flag ?
+                          colocated = decoder->activeSps->direct_8x8_inference_flag ?
                             &slice->listX[LIST_1+2][0]->mvInfo[RSD(j6)>>1][RSD(i4)] :
                             &slice->listX[LIST_1+2][0]->mvInfo[j6>>1][i4];
                         else
-                          colocated = decoder->activeSPS->direct_8x8_inference_flag ?
+                          colocated = decoder->activeSps->direct_8x8_inference_flag ?
                             &slice->listX[LIST_1+4][0]->mvInfo[RSD(j6)>>1][RSD(i4)] :
                             &slice->listX[LIST_1+4][0]->mvInfo[j6>>1][i4];
                         }
                       }
-                    else if (!decoder->activeSPS->frameMbOnly &&
+                    else if (!decoder->activeSps->frameMbOnly &&
                              !slice->fieldPic &&
                              slice->listX[LIST_1][0]->iCodingType!=eFrameCoding) {
                       if (iabs(picture->poc - list1[0]->botField->poc) > iabs(picture->poc -list1[0]->topField->poc) )
-                        colocated = decoder->activeSPS->direct_8x8_inference_flag ?
+                        colocated = decoder->activeSps->direct_8x8_inference_flag ?
                           &list1[0]->topField->mvInfo[RSD(j6)>>1][RSD(i4)] :
                           &list1[0]->topField->mvInfo[(j6)>>1][i4];
                       else
-                        colocated = decoder->activeSPS->direct_8x8_inference_flag ?
+                        colocated = decoder->activeSps->direct_8x8_inference_flag ?
                           &list1[0]->botField->mvInfo[RSD(j6)>>1][RSD(i4)] :
                           &list1[0]->botField->mvInfo[(j6)>>1][i4];
                       }
-                    else if (!decoder->activeSPS->frameMbOnly &&
+                    else if (!decoder->activeSps->frameMbOnly &&
                              slice->fieldPic &&
                              slice->picStructure!=list1[0]->picStructure && list1[0]->codedFrame) {
                       if (slice->picStructure == eTopField)
-                        colocated = decoder->activeSPS->direct_8x8_inference_flag ?
+                        colocated = decoder->activeSps->direct_8x8_inference_flag ?
                           &list1[0]->frame->topField->mvInfo[RSD(j6)][RSD(i4)] :
                           &list1[0]->frame->topField->mvInfo[j6][i4];
                       else
-                        colocated = decoder->activeSPS->direct_8x8_inference_flag ?
+                        colocated = decoder->activeSps->direct_8x8_inference_flag ?
                           &list1[0]->frame->botField->mvInfo[RSD(j6)][RSD(i4)] :
                           &list1[0]->frame->botField->mvInfo[j6][i4];
                       }
@@ -298,7 +298,7 @@ int get_colocated_info_8x8 (sMacroBlock* mb, sPicture* list1, int i, int j) {
     sSlice* slice = mb->slice;
     sDecoder* decoder = mb->decoder;
     if ((slice->mbAffFrame) ||
-        (!decoder->activeSPS->frameMbOnly &&
+        (!decoder->activeSps->frameMbOnly &&
         ((!slice->picStructure && list1->iCodingType == eFieldCoding) ||
         (slice->picStructure!=list1->picStructure && list1->codedFrame)))) {
       int jj = RSD(j);
@@ -676,7 +676,7 @@ static void update_direct_mv_info_spatial_4x4 (sMacroBlock* mb)
 //{{{
 void update_direct_types (sSlice* slice)
 {
-  if (slice->activeSPS->direct_8x8_inference_flag)
+  if (slice->activeSps->direct_8x8_inference_flag)
     slice->updateDirectMvInfo =
       slice->directSpatialMvPredFlag ? update_direct_mv_info_spatial_8x8 :
                                                update_direct_mv_info_temporal;
@@ -1850,7 +1850,7 @@ static void perform_mc_single_wp (sMacroBlock* mb, eColorPlane plane, sPicture* 
 {
   sDecoder* decoder = mb->decoder;
   sSlice* slice = mb->slice;
-  sSPS *activeSPS = slice->activeSPS;
+  sSps *activeSps = slice->activeSps;
   sPixel** tempBlockL0 = slice->tempBlockL0;
   sPixel** tempBlockL1 = slice->tempBlockL1;
   static const int mv_mul = 16; // 4 * 4
@@ -1891,7 +1891,7 @@ static void perform_mc_single_wp (sMacroBlock* mb, eColorPlane plane, sPicture* 
 
   {
     int alpha_l0, wpOffset, wp_denom;
-    if (mb->mbField && ((decoder->activePPS->hasWeightedPred&&(type==eSliceP|| type == eSliceSP))||(decoder->activePPS->weightedBiPredIdc==1 && (type==eSliceB))))
+    if (mb->mbField && ((decoder->activePps->hasWeightedPred&&(type==eSliceP|| type == eSliceSP))||(decoder->activePps->weightedBiPredIdc==1 && (type==eSliceB))))
       ref_idx_wp >>=1;
     alpha_l0  = slice->wpWeight[predDir][ref_idx_wp][plane];
     wpOffset = slice->wpOffset[predDir][ref_idx_wp][plane];
@@ -1902,7 +1902,7 @@ static void perform_mc_single_wp (sMacroBlock* mb, eColorPlane plane, sPicture* 
   if ((chromaFormatIdc != YUV400) && (chromaFormatIdc != YUV444) )
   {
     int ioff_cr,joff_cr,block_size_x_cr,block_size_y_cr;
-    int vec1_y_cr = vec1_y + ((activeSPS->chromaFormatIdc == 1)? slice->chromaVectorAdjust[listOffset + predDir][refIndex] : 0);
+    int vec1_y_cr = vec1_y + ((activeSps->chromaFormatIdc == 1)? slice->chromaVectorAdjust[listOffset + predDir][refIndex] : 0);
     int totalScale = decoder->coding.totalScale;
     int maxold_x = picture->size_x_cr_m1;
     int maxold_y = (mb->mbField) ? (picture->sizeYcr >> 1) - 1 : picture->size_y_cr_m1;
@@ -1943,7 +1943,7 @@ static void perform_mc_single (sMacroBlock* mb, eColorPlane plane, sPicture* pic
 {
   sDecoder* decoder = mb->decoder;
   sSlice* slice = mb->slice;
-  sSPS *activeSPS = slice->activeSPS;
+  sSps *activeSps = slice->activeSps;
   sPixel** tempBlockL0 = slice->tempBlockL0;
   sPixel** tempBlockL1 = slice->tempBlockL1;
   static const int mv_mul = 16; // 4 * 4
@@ -1985,7 +1985,7 @@ static void perform_mc_single (sMacroBlock* mb, eColorPlane plane, sPicture* pic
   if ((chromaFormatIdc != YUV400) && (chromaFormatIdc != YUV444) )
   {
     int ioff_cr,joff_cr,block_size_x_cr,block_size_y_cr;
-    int vec1_y_cr = vec1_y + ((activeSPS->chromaFormatIdc == 1)? slice->chromaVectorAdjust[listOffset + predDir][refIndex] : 0);
+    int vec1_y_cr = vec1_y + ((activeSps->chromaFormatIdc == 1)? slice->chromaVectorAdjust[listOffset + predDir][refIndex] : 0);
     int totalScale = decoder->coding.totalScale;
     int maxold_x = picture->size_x_cr_m1;
     int maxold_y = (mb->mbField) ? (picture->sizeYcr >> 1) - 1 : picture->size_y_cr_m1;
@@ -2024,7 +2024,7 @@ static void perform_mc_bi_wp (sMacroBlock* mb, eColorPlane plane, sPicture* pict
   sDecoder* decoder = mb->decoder;
   sSlice* slice = mb->slice;
 
-  int weightedBiPredIdc = decoder->activePPS->weightedBiPredIdc;
+  int weightedBiPredIdc = decoder->activePps->weightedBiPredIdc;
   int blockYaff = mb->blockYaff;
   int i4 = mb->blockX + i;
   int j4 = mb->blockY + j;
@@ -2220,7 +2220,7 @@ static void perform_mc_bi (sMacroBlock* mb, eColorPlane plane, sPicture* picture
   if ((chromaFormatIdc != YUV400) && (chromaFormatIdc != YUV444) )
   {
     int ioff_cr, joff_cr,block_size_y_cr,block_size_x_cr,vec2_y_cr,vec1_y_cr;
-    int chromaFormatIdc = decoder->activeSPS->chromaFormatIdc;
+    int chromaFormatIdc = decoder->activeSps->chromaFormatIdc;
     int maxold_x = picture->size_x_cr_m1;
     int maxold_y = (mb->mbField) ? (picture->sizeYcr >> 1) - 1 : picture->size_y_cr_m1;
     int shiftpelX = decoder->coding.shiftpelX;

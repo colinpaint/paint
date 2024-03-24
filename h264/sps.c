@@ -60,7 +60,7 @@ static void updateMaxValue (sFrameFormat* format) {
   }
 //}}}
 //{{{
-static void setCodingParam (sDecoder* decoder, sSPS* sps) {
+static void setCodingParam (sDecoder* decoder, sSps* sps) {
 
   // maximum vertical motion vector range in luma quarter pixel units
   decoder->coding.profileIdc = sps->profileIdc;
@@ -175,7 +175,7 @@ static void setCodingParam (sDecoder* decoder, sSPS* sps) {
   }
 //}}}
 //{{{
-static void setFormatInfo (sDecoder* decoder, sSPS* sps, sFrameFormat* source, sFrameFormat* output) {
+static void setFormatInfo (sDecoder* decoder, sSps* sps, sFrameFormat* source, sFrameFormat* output) {
 
   static const int SubWidthC[4] = { 1, 2, 2, 1};
   static const int SubHeightC[4] = { 1, 2, 1, 1};
@@ -253,9 +253,9 @@ static void setFormatInfo (sDecoder* decoder, sSPS* sps, sFrameFormat* source, s
   updateMaxValue (source);
   updateMaxValue (output);
 
-  if (!decoder->gotSPS) {
+  if (!decoder->gotPps) {
     //{{{  print profile info
-    decoder->gotSPS = 1;
+    decoder->gotPps = 1;
     printf ("-> profile:%d %dx%d %dx%d ",
             sps->profileIdc, source->width[0], source->height[0], decoder->width, decoder->height);
 
@@ -275,24 +275,24 @@ static void setFormatInfo (sDecoder* decoder, sSPS* sps, sFrameFormat* source, s
 //}}}
 
 //{{{
-static sSPS* allocSPS() {
+static sSps* allocSps() {
 
-   sSPS* p = calloc (1, sizeof (sSPS));
+   sSps* p = calloc (1, sizeof (sSps));
    if (!p)
-     noMemoryExit ("allocSPS");
+     noMemoryExit ("allocSps");
 
    return p;
    }
 //}}}
 //{{{
-static void freeSPS (sSPS* sps) {
+static void freeSps (sSps* sps) {
 
   assert (sps);
   free (sps);
   }
 //}}}
 //{{{
-static int isEqualSPS (sSPS* sps1, sSPS* sps2) {
+static int isEqualSps (sSps* sps1, sSps* sps2) {
 
   int equal = 1;
   if ((!sps1->valid) || (!sps2->valid))
@@ -351,19 +351,19 @@ static int isEqualSPS (sSPS* sps1, sSPS* sps2) {
   }
 //}}}
 //{{{
-static void setSPSbyId (sDecoder* decoder, int id, sSPS* sps) {
+static void setSpsById (sDecoder* decoder, int id, sSps* sps) {
 
   assert (sps->valid == TRUE);
-  memcpy (&decoder->sps[id], sps, sizeof(sSPS));
+  memcpy (&decoder->sps[id], sps, sizeof(sSps));
   }
 //}}}
 //{{{
-static void initVUI (sSPS* sps) {
+static void initVui (sSps* sps) {
   sps->vui_seq_parameters.matrix_coefficients = 2;
   }
 //}}}
 //{{{
-static void readHRD (sDataPartition* dataPartition, sHRD* hrd) {
+static void readHrd (sDataPartition* dataPartition, sHRD* hrd) {
 
   sBitStream *s = dataPartition->s;
   hrd->cpb_cnt_minus1 = readUeV ("VUI cpb_cnt_minus1", s);
@@ -385,7 +385,7 @@ static void readHRD (sDataPartition* dataPartition, sHRD* hrd) {
   }
 //}}}
 //{{{
-static void readVUI (sDataPartition* dataPartition, sSPS* sps) {
+static void readVui (sDataPartition* dataPartition, sSps* sps) {
 
   sBitStream* s = dataPartition->s;
   if (sps->vui_parameters_present_flag) {
@@ -429,12 +429,12 @@ static void readVUI (sDataPartition* dataPartition, sSPS* sps) {
 
     sps->vui_seq_parameters.nal_hrd_parameters_present_flag = readU1 ("VUI nal_hrd_parameters_present_flag", s);
     if (sps->vui_seq_parameters.nal_hrd_parameters_present_flag)
-      readHRD (dataPartition, &(sps->vui_seq_parameters.nal_hrd_parameters));
+      readHrd (dataPartition, &(sps->vui_seq_parameters.nal_hrd_parameters));
 
     sps->vui_seq_parameters.vcl_hrd_parameters_present_flag = readU1 ("VUI vcl_hrd_parameters_present_flag", s);
 
     if (sps->vui_seq_parameters.vcl_hrd_parameters_present_flag)
-      readHRD (dataPartition, &(sps->vui_seq_parameters.vcl_hrd_parameters));
+      readHrd (dataPartition, &(sps->vui_seq_parameters.vcl_hrd_parameters));
 
     if (sps->vui_seq_parameters.nal_hrd_parameters_present_flag ||
         sps->vui_seq_parameters.vcl_hrd_parameters_present_flag)
@@ -456,7 +456,7 @@ static void readVUI (sDataPartition* dataPartition, sSPS* sps) {
   }
 //}}}
 //{{{
-static void readSPS (sDecoder* decoder, sDataPartition* dataPartition, sSPS* sps, int naluLen) {
+static void readSps (sDecoder* decoder, sDataPartition* dataPartition, sSps* sps, int naluLen) {
 
   sBitStream* s = dataPartition->s;
   sps->profileIdc = readUv (8, "SPS profileIdc", s);
@@ -555,8 +555,8 @@ static void readSPS (sDecoder* decoder, sDataPartition* dataPartition, sSPS* sps
   //}}}
   sps->vui_parameters_present_flag = (Boolean)readU1 ("SPS vui_parameters_present_flag", s);
 
-  initVUI (sps);
-  readVUI (dataPartition, sps);
+  initVui (sps);
+  readVui (dataPartition, sps);
 
   if (decoder->param.spsDebug) {
     //{{{  print debug
@@ -578,7 +578,7 @@ static void readSPS (sDecoder* decoder, sDataPartition* dataPartition, sSPS* sps
 //}}}
 
 //{{{
-void readNaluSPS (sDecoder* decoder, sNalu* nalu) {
+void readNaluSps (sDecoder* decoder, sNalu* nalu) {
 
   sDataPartition* dataPartition = allocDataPartitions (1);
   dataPartition->s->errorFlag = 0;
@@ -586,33 +586,33 @@ void readNaluSPS (sDecoder* decoder, sNalu* nalu) {
   memcpy (dataPartition->s->bitStreamBuffer, &nalu->buf[1], nalu->len-1);
   dataPartition->s->codeLen = dataPartition->s->bitStreamLen = RBSPtoSODB (dataPartition->s->bitStreamBuffer, nalu->len-1);
 
-  sSPS* sps = allocSPS();
-  readSPS (decoder, dataPartition, sps, nalu->len);
+  sSps* sps = allocSps();
+  readSps (decoder, dataPartition, sps, nalu->len);
   if (sps->valid) {
-    if (decoder->activeSPS)
-      if (sps->spsId == decoder->activeSPS->spsId)
-        if (!isEqualSPS (sps, decoder->activeSPS))   {
+    if (decoder->activeSps)
+      if (sps->spsId == decoder->activeSps->spsId)
+        if (!isEqualSps (sps, decoder->activeSps))   {
           if (decoder->picture)
             endDecodeFrame (decoder);
-          decoder->activeSPS = NULL;
+          decoder->activeSps = NULL;
           }
 
-    setSPSbyId (decoder, sps->spsId, sps);
+    setSpsById (decoder, sps->spsId, sps);
 
     decoder->coding.isSeperateColourPlane = sps->isSeperateColourPlane;
     }
 
   freeDataPartitions (dataPartition, 1);
-  freeSPS (sps);
+  freeSps (sps);
   }
 //}}}
 //{{{
-void activateSPS (sDecoder* decoder, sSPS* sps) {
+void activateSps (sDecoder* decoder, sSps* sps) {
 
-  if (decoder->activeSPS != sps) {
+  if (decoder->activeSps != sps) {
     if (decoder->picture) // slice loss
       endDecodeFrame (decoder);
-    decoder->activeSPS = sps;
+    decoder->activeSps = sps;
 
     if (isBLprofile (sps->profileIdc) && !decoder->dpb->initDone)
       setCodingParam (decoder, sps);
