@@ -44,7 +44,7 @@ typedef int32  transpel;  // transformed coefficient type
 #define MCBUF_CHROMA_PAD_X      16
 #define MCBUF_CHROMA_PAD_Y      8
 
-#define NUM_BLOCK_TYPES 22
+#define NUM_BLOCK_TYPES        22
 
 #define BLOCK_SHIFT            2
 #define BLOCK_SIZE             4
@@ -56,7 +56,7 @@ typedef int32  transpel;  // transformed coefficient type
 #define MB_PIXELS_SHIFT        8  // log2(MB_BLOCK_SIZE * MB_BLOCK_SIZE)
 #define MB_BLOCK_SHIFT         4
 #define BLOCK_MULTIPLE         4  // (MB_BLOCK_SIZE/BLOCK_SIZE)
-#define MB_BLOCK_dpS   16  // (BLOCK_MULTIPLE * BLOCK_MULTIPLE)
+#define MB_BLOCK_dpS          16  // (BLOCK_MULTIPLE * BLOCK_MULTIPLE)
 #define BLOCK_CONTEXT         64  // (4 * MB_BLOCK_dpS)
 
 // These variables relate to the subpel accuracy supported by the software (1/4)
@@ -82,8 +82,8 @@ typedef int32  transpel;  // transformed coefficient type
 // Quantization parameter range
 #define MAX_QP           51
 
-#define MAX_PLANE                 3
-#define INVALIDINDEX              (-135792468)
+#define MAX_PLANE        3
+#define INVALIDINDEX     (-135792468)
 
 // Start code and Emulation Prevention need this to be defined in identical manner at encoder and decoder
 #define ZEROBYTES_SHORTSTARTCODE  2 //indicates the number of zero bytes in the short start-code prefix
@@ -874,11 +874,11 @@ typedef struct Param {
 typedef struct Info {
   TIME_T  startTime;
   TIME_T  endTime;
-  int     took;
 
-  char    spsStr[10];
-  char    sliceStr[9];
-  char    tookStr[80];
+  char    sliceTypeStr[9];
+  char    spsStr[64];
+  char    sliceStr[64];
+  char    outStr[64];
   } sInfo;
 //}}}
 //{{{  sDecoder

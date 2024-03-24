@@ -1287,9 +1287,9 @@ public:
       if (toggleButton ("deblock", testApp.getDecoder()->param.deblock))
         testApp.getDecoder()->param.deblock = !testApp.getDecoder()->param.deblock;
       //}}}
-      //{{{  draw tookStr
+      //{{{  draw outStr
       ImGui::SameLine();
-      ImGui::TextUnformatted (testApp.getDecoder()->info.tookStr);
+      ImGui::TextUnformatted (testApp.getDecoder()->info.outStr);
       //}}}
       //{{{  draw spsStr
       ImGui::SameLine();
@@ -1298,6 +1298,10 @@ public:
       //{{{  draw sliceStr
       ImGui::SameLine();
       ImGui::TextUnformatted (testApp.getDecoder()->info.sliceStr);
+      //}}}
+      //{{{  draw sliceTypeStr
+      ImGui::SameLine();
+      ImGui::TextUnformatted (testApp.getDecoder()->info.sliceTypeStr);
       //}}}
       }
 

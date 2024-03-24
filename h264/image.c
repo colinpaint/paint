@@ -2544,7 +2544,7 @@ static int readSlice (sSlice* slice) {
         if (!decoder->recoveryPointFound)
           break;
 
-        // read slice header
+        // read sliceHeader
         slice->isIDR = (nalu->unitType == NALU_TYPE_IDR);
         slice->refId = nalu->refId;
         slice->dataPartitionMode = eDataPartition1;
@@ -2565,14 +2565,17 @@ static int readSlice (sSlice* slice) {
           else
             printf ("SLC");
 
-          printf (":%5d:%d %c -> pps:%d frameNum:%d%s%s\n",
+          sprintf (decoder->info.sliceStr, "pps:%d frameNum:%d%s%s",
+                   slice->ppsId,
+                   slice->frameNum,
+                   slice->fieldPic ? " field":"",
+                   slice->mbAffFrame ? " mbAff":""
+                   );
+
+          printf (":%5d:%d %c -> %s\n",
                   nalu->len, slice->refId,
                   slice->sliceType ? (slice->sliceType == 1) ? 'B' : ((slice->sliceType == 2) ? 'I' : '?') : 'P',
-                  slice->ppsId,
-                  slice->frameNum,
-                  slice->fieldPic ? " field":"",
-                  slice->mbAffFrame ? " mbAff":""
-                  );
+                  decoder->info.sliceStr);
           }
           //}}}
 
@@ -2609,21 +2612,17 @@ static int readSlice (sSlice* slice) {
         return curHeader;
       //}}}
 
-      //{{{
       case NALU_TYPE_SPS:
         readNaluSPS (decoder, nalu);
         break;
-      //}}}
-      //{{{
+
       case NALU_TYPE_PPS:
         readNaluPPS (decoder, nalu);
         break;
-      //}}}
-      //{{{
+
       case NALU_TYPE_SEI:
         processSEI (nalu->buf, nalu->len, decoder, slice);
         break;
-      //}}}
 
       //{{{
       case NALU_TYPE_DPA:
@@ -2741,14 +2740,13 @@ static int readSlice (sSlice* slice) {
       //}}}
 
       case NALU_TYPE_AUD: break;
+      case NALU_TYPE_FILL: break;
       case NALU_TYPE_EOSEQ: break;
       case NALU_TYPE_EOSTREAM: break;
-      case NALU_TYPE_FILL: break;
-      //{{{
+
       default:
-        printf ("NALU - unknown type %d, len %d\n", (int) nalu->unitType, (int) nalu->len);
+        printf ("NALU:%d unknown:%d\n", nalu->len, nalu->unitType);
         break;
-      //}}}
       }
     }
 
@@ -2901,69 +2899,54 @@ void endDecodeFrame (sDecoder* decoder) {
   if (picStructure == eTopField || picStructure == eFrame) {
     //{{{
     if (sliceType == eSliceI && isIdr)
-      strcpy (decoder->info.sliceStr, "IDR");
-
+      strcpy (decoder->info.sliceTypeStr, "IDR");
     else if (sliceType == eSliceI)
-      strcpy (decoder->info.sliceStr, " I ");
-
+      strcpy (decoder->info.sliceTypeStr, " I ");
     else if (sliceType == eSliceP)
-      strcpy (decoder->info.sliceStr, " P ");
-
+      strcpy (decoder->info.sliceTypeStr, " P ");
     else if (sliceType == eSliceSP)
-      strcpy (decoder->info.sliceStr, "SP ");
-
+      strcpy (decoder->info.sliceTypeStr, "SP ");
     else if  (sliceType == eSliceSI)
-      strcpy (decoder->info.sliceStr, "SI ");
-
+      strcpy (decoder->info.sliceTypeStr, "SI ");
     else if (refpic)
-      strcpy (decoder->info.sliceStr, " B ");
-
+      strcpy (decoder->info.sliceTypeStr, " B ");
     else
-      strcpy (decoder->info.sliceStr, " b ");
-
+      strcpy (decoder->info.sliceTypeStr, " b ");
     if (picStructure == eFrame)
-      strncat (decoder->info.sliceStr, "    ", 8 - strlen (decoder->info.sliceStr));
-
-    decoder->info.sliceStr[3] = 0;
+      strncat (decoder->info.sliceTypeStr, "    ", 8 - strlen (decoder->info.sliceTypeStr));
+    decoder->info.sliceTypeStr[3] = 0;
     }
     //}}}
   else if (picStructure == eBotField) {
     //{{{
     if (sliceType == eSliceI && isIdr)
-      strncat (decoder->info.sliceStr, "|IDR", 8-strlen (decoder->info.sliceStr));
-
+      strncat (decoder->info.sliceTypeStr, "|IDR", 8-strlen (decoder->info.sliceTypeStr));
     else if (sliceType == eSliceI)
-      strncat (decoder->info.sliceStr, "| I ", 8-strlen (decoder->info.sliceStr));
-
+      strncat (decoder->info.sliceTypeStr, "| I ", 8-strlen (decoder->info.sliceTypeStr));
     else if (sliceType == eSliceP)
-      strncat (decoder->info.sliceStr, "| P ", 8-strlen (decoder->info.sliceStr));
-
+      strncat (decoder->info.sliceTypeStr, "| P ", 8-strlen (decoder->info.sliceTypeStr));
     else if (sliceType == eSliceSP)
-      strncat (decoder->info.sliceStr, "|SP ", 8-strlen (decoder->info.sliceStr));
-
+      strncat (decoder->info.sliceTypeStr, "|SP ", 8-strlen (decoder->info.sliceTypeStr));
     else if  (sliceType == eSliceSI)
-      strncat (decoder->info.sliceStr, "|SI ", 8-strlen (decoder->info.sliceStr));
-
+      strncat (decoder->info.sliceTypeStr, "|SI ", 8-strlen (decoder->info.sliceTypeStr));
     else if (refpic)
-      strncat (decoder->info.sliceStr, "| B ", 8-strlen (decoder->info.sliceStr));
-
+      strncat (decoder->info.sliceTypeStr, "| B ", 8-strlen (decoder->info.sliceTypeStr));
     else
-      strncat (decoder->info.sliceStr, "| b ", 8-strlen (decoder->info.sliceStr));
-
-    decoder->info.sliceStr[8] = 0;
+      strncat (decoder->info.sliceTypeStr, "| b ", 8-strlen (decoder->info.sliceTypeStr));
+    decoder->info.sliceTypeStr[8] = 0;
     }
     //}}}
   if ((picStructure == eFrame) || picStructure == eBotField) {
     getTime (&decoder->info.endTime);
-    decoder->info.took = (int)timeNorm (timeDiff (&decoder->info.startTime, &decoder->info.endTime));
-    sprintf (decoder->info.tookStr, "%dms", decoder->info.took);
+    sprintf (decoder->info.outStr, "%dms", 
+             timeNorm (timeDiff (&decoder->info.startTime, &decoder->info.endTime)));
     if (decoder->param.outDebug) {
       //{{{  print outDebug
       printf ("-> %d %d:%d:%02d %s ->%s-> poc:%d pic:%d",
               decoder->decodeFrameNum,
               decoder->numDecodedSlices, decoder->numDecodedMbs, qp,
-              decoder->info.tookStr,
-              decoder->info.sliceStr,
+              decoder->info.outStr,
+              decoder->info.sliceTypeStr,
               pocNum, picNum);
 
       // count numOutputFrames

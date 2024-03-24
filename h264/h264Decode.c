@@ -464,45 +464,20 @@ sDecoder* openDecoder (sParam* param, byte* chunk, size_t chunkSize) {
   memcpy (&(decoder->param), param, sizeof(sParam));
   decoder->concealMode = param->concealMode;
 
-  decoder->info.took = 0;
-  strcpy (decoder->info.tookStr, "info");
-
   // init nalu, annexB
   decoder->nalu = allocNALU (MAX_CODED_FRAME_SIZE);
   decoder->nextPPS = allocPPS();
-  decoder->gotSPS = 0;
   decoder->annexB = allocAnnexB (decoder);
   openAnnexB (decoder->annexB, chunk, chunkSize);
-  decoder->gotLastNalu = 0;
-  decoder->naluCount = 0;
-  decoder->pendingNalu = NULL;
 
   // init slice
-  decoder->oldSlice = (sOldSlice*)calloc (1, sizeof(sOldSlice));
   decoder->sliceList = (sSlice**)calloc (MAX_NUM_DECSLICES, sizeof(sSlice*));
   decoder->numAllocatedSlices = MAX_NUM_DECSLICES;
-  decoder->nextSlice = NULL;
+  decoder->oldSlice = (sOldSlice*)calloc(1, sizeof(sOldSlice));
   initOldSlice (decoder->oldSlice);
-
   decoder->coding.sliceType = eSliceI;
-  decoder->picture = NULL;
-  decoder->mbToSliceGroupMap = NULL;
-  decoder->mapUnitToSliceGroupMap = NULL;
-
-  decoder->recoveryFlag = 0;
-  decoder->recoveryPoint = 0;
-  decoder->recoveryPointFound = 0;
-  decoder->recoveryPoc = 0x7fffffff; /* set to a max value */
-
-  decoder->decodeFrameNum = 0;
-  decoder->idrFrameNum = 0;
-  decoder->newFrame = 0;
-  decoder->prevFrameNum = 0;
-
+  decoder->recoveryPoc = 0x7fffffff; 
   decoder->deblockEnable = 0x3;
-
-  decoder->outBuffer = NULL;
-  decoder->pendingOut = NULL;
   decoder->pendingOutState = eFrame;
 
   decoder->coding.iLumaPadX = MCBUF_LUMA_PAD_X;
