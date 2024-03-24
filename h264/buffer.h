@@ -4,91 +4,91 @@
 #define MAX_LIST_SIZE 33
 //{{{  sPicMotionParamsOld
 typedef struct PicMotionParamOld {
-  byte*  mbField;      // field macroblock indicator
+  byte* mbField; // field macroblock indicator
   } sPicMotionParamsOld;
 //}}}
 //{{{  sPicMotionParam
 typedef struct PicMotion {
-  struct Picture* refPic[2];  // referrence picture pointer
-  sMotionVec           mv[2];       // motion vector
-  char                    refIndex[2];  // reference picture   [list][subblockY][subblockX]
-  byte                    slice_no;
+  struct Picture* refPic[2];   // referrence picture pointer
+  sMotionVec      mv[2];       // motion vector
+  char            refIndex[2]; // reference picture   [list][subblockY][subblockX]
+  byte            slice_no;
   } sPicMotionParam;
 //}}}
 //{{{  sPicture
 typedef struct Picture {
   ePicStructure picStructure;
 
-  int         poc;
-  int         topPoc;
-  int         botPoc;
-  int         framePoc;
+  int          poc;
+  int          topPoc;
+  int          botPoc;
+  int          framePoc;
   unsigned int frameNum;
   unsigned int recoveryFrame;
 
-  int         picNum;
-  int         longTermPicNum;
-  int         longTermFrameIndex;
+  int          picNum;
+  int          longTermPicNum;
+  int          longTermFrameIndex;
 
-  byte        isLongTerm;
-  int         usedForReference;
-  int         is_output;
-  int         non_existing;
-  int         isSeperateColourPlane;
+  byte         isLongTerm;
+  int          usedForReference;
+  int          is_output;
+  int          non_existing;
+  int          isSeperateColourPlane;
 
-  short       maxSliceId;
+  short        maxSliceId;
 
-  int         sizeX, sizeY, sizeXcr, sizeYcr;
-  int         size_x_m1, size_y_m1, size_x_cr_m1, size_y_cr_m1;
-  int         codedFrame;
-  int         mbAffFrame;
-  unsigned    picWidthMbs;
-  unsigned    picSizeInMbs;
-  int         iLumaPadY, iLumaPadX;
-  int         iChromaPadY, iChromaPadX;
+  int          sizeX, sizeY, sizeXcr, sizeYcr;
+  int          size_x_m1, size_y_m1, size_x_cr_m1, size_y_cr_m1;
+  int          codedFrame;
+  int          mbAffFrame;
+  unsigned     picWidthMbs;
+  unsigned     picSizeInMbs;
+  int          iLumaPadY, iLumaPadX;
+  int          iChromaPadY, iChromaPadX;
 
-  sPixel**    imgY;
-  sPixel***   imgUV;
+  sPixel**     imgY;
+  sPixel***    imgUV;
 
   struct PicMotion** mvInfo;
   struct PicMotion** JVmv_info[MAX_PLANE];
   struct PicMotionParamOld  motion;
   struct PicMotionParamOld  JVmotion[MAX_PLANE]; // Motion info for 4:4:4 independent mode decoding
 
-  struct Picture* topField;     // for mb aff, if frame for referencing the top field
+  struct Picture* topField;  // for mb aff, if frame for referencing the top field
   struct Picture* botField;  // for mb aff, if frame for referencing the bottom field
-  struct Picture* frame;         // for mb aff, if field for referencing the combined frame
+  struct Picture* frame;     // for mb aff, if field for referencing the combined frame
 
-  int         sliceType;
-  int         isIDR;
-  int         noOutputPriorPicFlag;
-  int         longTermRefFlag;
-  int         adaptRefPicBufFlag;
+  int          sliceType;
+  int          isIDR;
+  int          noOutputPriorPicFlag;
+  int          longTermRefFlag;
+  int          adaptRefPicBufFlag;
 
-  eYuvFormat  chromaFormatIdc;
-  int         frameMbOnly;
-  int         cropFlag;
-  int         cropLeft;
-  int         cropRight;
-  int         cropTop;
-  int         cropBot;
-  int         qp;
-  int         chromaQpOffset[2];
-  int         sliceQpDelta;
+  eYuvFormat   chromaFormatIdc;
+  int          frameMbOnly;
+  int          cropFlag;
+  int          cropLeft;
+  int          cropRight;
+  int          cropTop;
+  int          cropBot;
+  int          qp;
+  int          chromaQpOffset[2];
+  int          sliceQpDelta;
   sDecodedRefPicMarking* decRefPicMarkingBuffer;  // stores the memory management control operations
 
   // picture error conceal
-  int         concealed_pic;
-  int         proc_flag;
-  int         iLumaStride;
-  int         iChromaStride;
-  int         iLumaExpandedHeight;
-  int         iChromaExpandedHeight;
-  sPixel**    curPixelY;               // for more efficient get_block_luma
-  int         noRef;
-  int         iCodingType;
+  int          concealed_pic;
+  int          proc_flag;
+  int          iLumaStride;
+  int          iChromaStride;
+  int          iLumaExpandedHeight;
+  int          iChromaExpandedHeight;
+  sPixel**     curPixelY;               // for more efficient get_block_luma
+  int          noRef;
+  int          iCodingType;
 
-  char listXsize[MAX_NUM_SLICES][2];
+  char             listXsize[MAX_NUM_SLICES][2];
   struct Picture** listX[MAX_NUM_SLICES][2];
   } sPicture;
 //}}}
