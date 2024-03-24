@@ -1799,16 +1799,6 @@ static void useParameterSet (sDecoder* decoder, sSlice* slice) {
   if (!sps->valid)
     printf ("useParameterSet - no SPSid:%d:%d\n", slice->ppsId, pps->spsId);
 
-  // In theory, and with a well-designed software, the lines above are everything necessary.
-  // In practice, we need to patch many values
-  // in decoder-> (but no more in input. -- these have been taken care of)
-  // Set Sequence Parameter Stuff first
-  if (sps->pocType > 2)
-    error ("invalid SPS pocType");
-  if (sps->pocType == 1)
-    if (sps->numRefFramesPocCycle >= MAX_NUM_REF_FRAMES_PIC_ORDER)
-      error ("numRefFramesPocCycle too large");
-
   activateSps (decoder, sps);
   activatePps (decoder, pps);
 

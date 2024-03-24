@@ -47,22 +47,6 @@ static void scalingList (int* scalingList, int scalingListSize, Boolean* useDefa
 //}}}
 
 //{{{
-sPps* allocPps() {
-
-  sPps* pps = calloc (1, sizeof (sPps));
-  pps->sliceGroupId = NULL;
-  return pps;
-  }
-//}}}
-//{{{
- void freePps (sPps* pps) {
-
-   if (!pps->sliceGroupId)
-     free (pps->sliceGroupId);
-   free (pps);
-   }
-//}}}
-//{{{
 static int isEqualPps (sPps* pps1, sPps* pps2) {
 
   if (!pps1->valid || !pps2->valid)
@@ -139,7 +123,6 @@ static int isEqualPps (sPps* pps1, sPps* pps2) {
   return equal;
   }
 //}}}
-
 //{{{
 static void readPps (sDecoder* decoder, sDataPartition* dataPartition, sPps* pps, int naluLen) {
 // read PPS from NALU
@@ -261,13 +244,44 @@ static void readPps (sDecoder* decoder, sDataPartition* dataPartition, sPps* pps
 //}}}
 
 //{{{
+sPps* allocPps() {
+
+  sPps* pps = calloc (1, sizeof (sPps));
+  pps->sliceGroupId = NULL;
+  return pps;
+  }
+//}}}
+//{{{
+ void freePps (sPps* pps) {
+
+   if (!pps->sliceGroupId)
+     free (pps->sliceGroupId);
+   free (pps);
+   }
+//}}}
+
+//{{{
+void setPpsById (sDecoder* decoder, int id, sPps* pps) {
+
+  if (decoder->pps[id].valid && decoder->pps[id].sliceGroupId)
+    free (decoder->pps[id].sliceGroupId);
+  memcpy (&decoder->pps[id], pps, sizeof (sPps));
+
+  // we can simply use the memory provided with the pps.
+  // the PPS is destroyed after this function call, will not try to free if pps->sliceGroupId == NULL
+  decoder->pps[id].sliceGroupId = pps->sliceGroupId;
+  pps->sliceGroupId = NULL;
+  }
+//}}}
+//{{{
 void readNaluPps (sDecoder* decoder, sNalu* nalu) {
 
   sDataPartition* dataPartition = allocDataPartitions (1);
   dataPartition->s->errorFlag = 0;
   dataPartition->s->readLen = dataPartition->s->bitStreamOffset = 0;
   memcpy (dataPartition->s->bitStreamBuffer, &nalu->buf[1], nalu->len - 1);
-  dataPartition->s->codeLen = dataPartition->s->bitStreamLen = RBSPtoSODB (dataPartition->s->bitStreamBuffer, nalu->len-1);
+  dataPartition->s->bitStreamLen = RBSPtoSODB (dataPartition->s->bitStreamBuffer, nalu->len-1);
+  dataPartition->s->codeLen = dataPartition->s->bitStreamLen;
 
   sPps* pps = allocPps();
   readPps (decoder, dataPartition, pps, nalu->len);
@@ -286,19 +300,6 @@ void readNaluPps (sDecoder* decoder, sNalu* nalu) {
   setPpsById (decoder, pps->ppsId, pps);
   freeDataPartitions (dataPartition, 1);
   freePps (pps);
-  }
-//}}}
-//{{{
-void setPpsById (sDecoder* decoder, int id, sPps* pps) {
-
-  if (decoder->pps[id].valid && decoder->pps[id].sliceGroupId)
-    free (decoder->pps[id].sliceGroupId);
-  memcpy (&decoder->pps[id], pps, sizeof (sPps));
-
-  // we can simply use the memory provided with the pps.
-  // the PPS is destroyed after this function call, will not try to free if pps->sliceGroupId == NULL
-  decoder->pps[id].sliceGroupId = pps->sliceGroupId;
-  pps->sliceGroupId = NULL;
   }
 //}}}
 //{{{

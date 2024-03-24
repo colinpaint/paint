@@ -275,23 +275,6 @@ static void setFormatInfo (sDecoder* decoder, sSps* sps, sFrameFormat* source, s
 //}}}
 
 //{{{
-static sSps* allocSps() {
-
-   sSps* p = calloc (1, sizeof (sSps));
-   if (!p)
-     noMemoryExit ("allocSps");
-
-   return p;
-   }
-//}}}
-//{{{
-static void freeSps (sSps* sps) {
-
-  assert (sps);
-  free (sps);
-  }
-//}}}
-//{{{
 static int isEqualSps (sSps* sps1, sSps* sps2) {
 
   int equal = 1;
@@ -348,13 +331,6 @@ static int isEqualSps (sSps* sps1, sSps* sps2) {
   equal &= (sps1->vui_parameters_present_flag == sps2->vui_parameters_present_flag);
 
   return equal;
-  }
-//}}}
-//{{{
-static void setSpsById (sDecoder* decoder, int id, sSps* sps) {
-
-  assert (sps->valid == TRUE);
-  memcpy (&decoder->sps[id], sps, sizeof(sSps));
   }
 //}}}
 //{{{
@@ -574,6 +550,30 @@ static void readSps (sDecoder* decoder, sDataPartition* dataPartition, sSps* sps
     //}}}
 
   sps->valid = TRUE;
+  }
+//}}}
+
+//{{{
+static sSps* allocSps() {
+
+   sSps* p = calloc (1, sizeof (sSps));
+   if (!p)
+     noMemoryExit ("allocSps");
+
+   return p;
+   }
+//}}}
+//{{{
+static void freeSps (sSps* sps) {
+
+  assert (sps);
+  free (sps);
+  }
+//}}}
+
+//{{{
+static void setSpsById (sDecoder* decoder, int id, sSps* sps) {
+  memcpy (&decoder->sps[id], sps, sizeof(sSps));
   }
 //}}}
 
