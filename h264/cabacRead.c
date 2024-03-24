@@ -31,7 +31,7 @@ static void readCompCoef8x8cabacLossless (sMacroBlock* mb, sSyntaxElement* se, e
     mb->subblockY = boff_y; // position for coeff_count ctx
 
     sDataPartition* dataPartition;
-    const byte* dpMap = assignSE2dp[slice->dataPartitionMode];
+    const byte* dpMap = kSyntaxElementToDataPartitionIndex[slice->dataPartitionMode];
     if (plane == PLANE_Y || (decoder->coding.isSeperateColourPlane != 0))
       se->context = LUMA_8x8;
     else if (plane==PLANE_U)
@@ -80,7 +80,7 @@ static void readCompCoefx4smbCabac (sMacroBlock* mb, sSyntaxElement* se, eColorP
   int level = 1;
   sDataPartition *dataPartition;
   sSlice* slice = mb->slice;
-  const byte *dpMap = assignSE2dp[slice->dataPartitionMode];
+  const byte *dpMap = kSyntaxElementToDataPartitionIndex[slice->dataPartitionMode];
 
   const byte (*pos_scan4x4)[2] = ((slice->picStructure == eFrame) && (!mb->mbField)) ? SNGL_SCAN : FIELD_SCAN;
   const byte *pos_scan_4x4 = pos_scan4x4[0];
@@ -262,7 +262,7 @@ static void readCompCoef8x8cabac (sMacroBlock* mb, sSyntaxElement* se, eColorPla
     mb->subblockY = boff_y; // position for coeff_count ctx
 
     sDataPartition* dataPartition;
-    const byte* dpMap = assignSE2dp[slice->dataPartitionMode];
+    const byte* dpMap = kSyntaxElementToDataPartitionIndex[slice->dataPartitionMode];
 
     if (plane == PLANE_Y || (decoder->coding.isSeperateColourPlane != 0))
       se->context = LUMA_8x8;
@@ -335,7 +335,7 @@ static void readCbpCoefsFromNaluCabac400 (sMacroBlock* mb) {
   int k;
   int level;
   int codedBlockPattern;
-  const byte *dpMap = assignSE2dp[slice->dataPartitionMode];
+  const byte *dpMap = kSyntaxElementToDataPartitionIndex[slice->dataPartitionMode];
   int i0, j0;
   int qp_per, qp_rem;
   int intra = (mb->isIntraBlock == TRUE);
@@ -487,7 +487,7 @@ static void readCbpCoefsFromNaluCabac444 (sMacroBlock* mb) {
   int i, k;
   int level;
   int codedBlockPattern;
-  const byte *dpMap = assignSE2dp[slice->dataPartitionMode];
+  const byte *dpMap = kSyntaxElementToDataPartitionIndex[slice->dataPartitionMode];
   int coef_ctr, i0, j0;
   int qp_per, qp_rem;
   int uv;
@@ -714,7 +714,7 @@ static void readCbpCoefsFromNaluCabac422 (sMacroBlock* mb) {
   int i,j,k;
   int level;
   int codedBlockPattern;
-  const byte *dpMap = assignSE2dp[slice->dataPartitionMode];
+  const byte *dpMap = kSyntaxElementToDataPartitionIndex[slice->dataPartitionMode];
   int coef_ctr, i0, j0, b8;
   int ll;
   int qp_per, qp_rem;
@@ -1035,7 +1035,7 @@ static void readCbpCoefsFromNaluCabac420 (sMacroBlock* mb) {
   int level;
   int codedBlockPattern;
   sSlice* slice = mb->slice;
-  const byte *dpMap = assignSE2dp[slice->dataPartitionMode];
+  const byte *dpMap = kSyntaxElementToDataPartitionIndex[slice->dataPartitionMode];
   int i0, j0;
 
   int qp_per, qp_rem;

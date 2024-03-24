@@ -226,7 +226,7 @@ int cabacStartCode (sSlice* slice, int eos_bit) {
 
   unsigned int bit;
   if (eos_bit) {
-    const byte* dpMap = assignSE2dp[slice->dataPartitionMode];
+    const byte* dpMap = kSyntaxElementToDataPartitionIndex[slice->dataPartitionMode];
     sDataPartition* dataPartition = &slice->dataPartitions[dpMap[SE_MBTYPE]];
     sCabacDecodeEnv* cabacDecodeEnv = &dataPartition->cabacDecodeEnv;
     bit = binaryArithmeticDecodeFinal (cabacDecodeEnv);

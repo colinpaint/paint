@@ -37,12 +37,10 @@
 #define SE_EOS               19
 #define SE_MAX_ELEMENTS      20
 
-#define NO_EC               0   //!< no error conceal necessary
-#define EC_REQ              1   //!< error conceal required
-#define EC_SYNC             2   //!< search and sync on next header element
-#define MAXdpMODES   2
+#define NO_EC                0   // no error conceal necessary
+#define EC_REQ               1   // error conceal required
 
-//{{{  maximum possible dataPartition modes as defined in assignSE2dp[][]
+//{{{  maximum possible dataPartition modes as defined in kSyntaxElementToDataPartitionIndex[][]
 
 /*!
  *  \brief  lookup-table to assign different elements to dataPartition
@@ -68,7 +66,7 @@
  *          outlined in document Q15-J-23.
  */
 //}}}
-static const byte assignSE2dp[][SE_MAX_ELEMENTS] = {
+static const byte kSyntaxElementToDataPartitionIndex[][SE_MAX_ELEMENTS] = {
   // 0  1  2  3  4  5  6  7  8  9 10 11 12 13 14 15 16 17 18 19    // element number (do not uncomment)
   {  0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 }, // all elements in one dataPartition no data dping
   {  0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 0, 2, 2, 2, 2, 0, 0, 0, 0 }  // three dps per slice

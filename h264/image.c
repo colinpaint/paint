@@ -2217,7 +2217,7 @@ static void readSliceHeader (sDecoder* decoder, sSlice* slice) {
 //   - then setup the active parameter sets
 // - read the rest of the slice header
 
-  byte partitionIndex = assignSE2dp[slice->dataPartitionMode][SE_HEADER];
+  byte partitionIndex = kSyntaxElementToDataPartitionIndex[slice->dataPartitionMode][SE_HEADER];
   sDataPartition* dataPartition = &slice->dataPartitions[partitionIndex];
   sBitStream* s = dataPartition->s;
 

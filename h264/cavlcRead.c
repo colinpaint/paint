@@ -220,7 +220,7 @@ void readCoef4x4cavlc (sMacroBlock* mb, int block_type,
 
   sSyntaxElement se;
   se.type = dptype;
-  const byte* dpMap = assignSE2dp[slice->dataPartitionMode];
+  const byte* dpMap = kSyntaxElementToDataPartitionIndex[slice->dataPartitionMode];
   sDataPartition* dataPartition = &(slice->dataPartitions[dpMap[dptype]]);
   sBitStream* s = dataPartition->s;
 
@@ -432,7 +432,7 @@ void readCoef4x4cavlc444 (sMacroBlock* mb, int block_type,
 
   sSyntaxElement se;
   se.type = dptype;
-  const byte* dpMap = assignSE2dp[slice->dataPartitionMode];
+  const byte* dpMap = kSyntaxElementToDataPartitionIndex[slice->dataPartitionMode];
   sDataPartition* dataPartition = &(slice->dataPartitions[dpMap[dptype]]);
   sBitStream* s = dataPartition->s;
 
@@ -823,7 +823,7 @@ static void read_CBP_and_coeffs_from_NAL_CAVLC_400 (sMacroBlock* mb) {
 
   sSyntaxElement se;
   sDataPartition* dataPartition = NULL;
-  const byte* dpMap = assignSE2dp[slice->dataPartitionMode];
+  const byte* dpMap = kSyntaxElementToDataPartitionIndex[slice->dataPartitionMode];
   sDecoder* decoder = mb->decoder;
   int intra = (mb->isIntraBlock == TRUE);
   int need_transform_size_flag;
@@ -971,7 +971,7 @@ static void read_CBP_and_coeffs_from_NAL_CAVLC_422 (sMacroBlock* mb) {
 
   // read CBP if not new intra mode
   sSyntaxElement se;
-  const byte* dpMap = assignSE2dp[slice->dataPartitionMode];
+  const byte* dpMap = kSyntaxElementToDataPartitionIndex[slice->dataPartitionMode];
   sDataPartition* dataPartition = NULL;
 
   if (!IS_I16MB (mb)) {
@@ -1227,7 +1227,7 @@ static void read_CBP_and_coeffs_from_NAL_CAVLC_444 (sMacroBlock* mb) {
 
   sSyntaxElement se;
   sDataPartition *dataPartition = NULL;
-  const byte* dpMap = assignSE2dp[slice->dataPartitionMode];
+  const byte* dpMap = kSyntaxElementToDataPartitionIndex[slice->dataPartitionMode];
   sDecoder* decoder = mb->decoder;
 
   int intra = (mb->isIntraBlock == TRUE);
@@ -1400,7 +1400,7 @@ static void read_CBP_and_coeffs_from_NAL_CAVLC_420 (sMacroBlock* mb) {
 
   sSyntaxElement se;
   sDataPartition* dataPartition = NULL;
-  const byte* dpMap = assignSE2dp[slice->dataPartitionMode];
+  const byte* dpMap = kSyntaxElementToDataPartitionIndex[slice->dataPartitionMode];
   sDecoder* decoder = mb->decoder;
   int smb = ((decoder->coding.sliceType == eSliceSP) && (mb->isIntraBlock == FALSE)) ||
             ((decoder->coding.sliceType == eSliceSI) && (mb->mbType == SI4MB));

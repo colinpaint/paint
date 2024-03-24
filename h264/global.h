@@ -679,7 +679,7 @@ typedef struct Slice {
   int           startMbNum;   // MUST be set by NAL even in case of errorFlag == 1
   int           endMbNumPlus1;
   int           maxDataPartitions;
-  int           dataPartitionMode;   // data dping mode
+  int           dataPartitionMode;   // dataPartition mode
   int           curHeader;
   int           nextHeader;
   int           lastDquant;
