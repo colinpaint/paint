@@ -11,19 +11,10 @@ typedef struct {
   unsigned int ppsId;                         // ue(v)
   unsigned int spsId;                         // ue(v)
   int entropyCoding;                          // u(1)
-  Boolean   hasTransform8x8mode;              // u(1)
 
-  Boolean   hasPicScalingMatrix;              // u(1)
-  int       picScalingListPresentFlag[12];    // u(1)
-  int       scalingList4x4[6][16];            // se(v)
-  int       scalingList8x8[6][64];            // se(v)
-  Boolean   useDefaultScalingMatrix4x4Flag[6];
-  Boolean   useDefaultScalingMatrix8x8Flag[6];
-
-  // pocType < 2 in the sequence parameter set
   Boolean      botFieldFrame;                 // u(1)
-  unsigned int numSliceGroupsMinus1;          // ue(v)
 
+  unsigned int numSliceGroupsMinus1;          // ue(v)
   unsigned int sliceGroupMapType;             // ue(v)
   // sliceGroupMapType 0
   unsigned int runLengthMinus1[8];            // ue(v)
@@ -40,25 +31,32 @@ typedef struct {
   int       numRefIndexL0defaultActiveMinus1; // ue(v)
   int       numRefIndexL1defaultActiveMinus1; // ue(v)
 
-  Boolean   hasWeightedPred;                 // u(1)
+  Boolean   hasWeightedPred;                  // u(1)
   unsigned int  weightedBiPredIdc;            // u(2)
+
   int       picInitQpMinus26;                 // se(v)
   int       picInitQsMinus26;                 // se(v)
-  int       chromaQpOffset;              // se(v)
-  int       cbQpIndexOffset;                  // se(v)
-  int       crQpIndexOffset;                  // se(v)
-  int       chromaQpOffset2;        // se(v)
+  int       chromaQpOffset;                   // se(v)
+  int       chromaQpOffset2;                  // se(v)
 
-  Boolean   hasDeblockFilterControl;      // u(1)
-  Boolean   hasConstrainedIntraPred;         // u(1)
+  Boolean   hasDeblockFilterControl;          // u(1)
+  Boolean   hasConstrainedIntraPred;          // u(1)
   Boolean   redundantPicCountPresent;         // u(1)
-  Boolean   vuiPicParamFlag;                  // u(1)
+
+  Boolean   hasTransform8x8mode;              // u(1)
+
+  Boolean   hasPicScalingMatrix;              // u(1)
+  int       picScalingListPresentFlag[12];    // u(1)
+  int       scalingList4x4[6][16];            // se(v)
+  int       scalingList8x8[6][64];            // se(v)
+  Boolean   useDefaultScalingMatrix4x4Flag[6];
+  Boolean   useDefaultScalingMatrix8x8Flag[6];
   } sPps;
 
 struct Decoder;
 extern sPps* allocPps();
 extern void freePps (sPps* pps);
 
-extern void setPpsById (struct Decoder* decoder, int id, sPps* pps);
 extern void readNaluPps (struct Decoder* decoder, sNalu* nalu);
+extern void setPpsById (struct Decoder* decoder, int id, sPps* pps);
 extern void activatePps (struct Decoder* decoder, sPps* pps);

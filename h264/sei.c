@@ -1239,7 +1239,5 @@ void processSei (byte* msg, int naluLen, sDecoder* decoder, sSlice* slice) {
     } while (msg[offset] != 0x80);    // moreRbspData()  msg[offset] != 0x80
 
   // ignore the trailing bits rbsp_trailing_bits();
-  assert(msg[offset] == 0x80);      // this is the trailing bits
-  assert (offset+1 == size );
   }
 //}}}

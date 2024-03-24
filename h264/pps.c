@@ -139,19 +139,7 @@ static int isEqualPps (sPps* pps1, sPps* pps2) {
   return equal;
   }
 //}}}
-//{{{
-void setPpsById (sDecoder* decoder, int id, sPps* pps) {
 
-  if (decoder->pps[id].valid && decoder->pps[id].sliceGroupId)
-    free (decoder->pps[id].sliceGroupId);
-  memcpy (&decoder->pps[id], pps, sizeof (sPps));
-
-  // we can simply use the memory provided with the pps.
-  // the PPS is destroyed after this function call, will not try to free if pps->sliceGroupId == NULL
-  decoder->pps[id].sliceGroupId = pps->sliceGroupId;
-  pps->sliceGroupId = NULL;
-  }
-//}}}
 //{{{
 static void readPps (sDecoder* decoder, sDataPartition* dataPartition, sPps* pps, int naluLen) {
 // read PPS from NALU
@@ -251,7 +239,7 @@ static void readPps (sDecoder* decoder, sDataPartition* dataPartition, sPps* pps
 
   if (decoder->param.ppsDebug)
     //{{{  print debug
-    printf ("PPS:%d:%d -> sps:%d%s%s sliceGroup:%d L:%d:%d%s%s%s%s%s%s%s\n",
+    printf ("PPS:%d:%d -> sps:%d%s%s sliceGroups:%d L:%d:%d%s%s%s%s%s%s biPredIdc:%d\n",
             pps->ppsId, naluLen,
             pps->spsId,
             pps->entropyCoding ? " cabac":" cavlc",
@@ -260,11 +248,11 @@ static void readPps (sDecoder* decoder, sDataPartition* dataPartition, sPps* pps
             pps->numRefIndexL0defaultActiveMinus1, pps->numRefIndexL1defaultActiveMinus1,
             pps->hasDeblockFilterControl ? " deblock":"",
             pps->hasWeightedPred ? " pred":"",
-            pps->weightedBiPredIdc ? " biPred":"",
-            pps->hasConstrainedIntraPred ? " intraPred":"",
-            pps->redundantPicCountPresent ? " red":"",
-            fidelityRange && pps->hasTransform8x8mode ? " transform8x8":"",
-            fidelityRange && pps->hasPicScalingMatrix ? " scalingMatrix":""
+            pps->hasConstrainedIntraPred ? " intra":"",
+            pps->redundantPicCountPresent ? " redundant":"",
+            fidelityRange && pps->hasTransform8x8mode ? " 8x8":"",
+            fidelityRange && pps->hasPicScalingMatrix ? " scaling":"",
+            pps->weightedBiPredIdc
             );
     //}}}
 
@@ -298,6 +286,19 @@ void readNaluPps (sDecoder* decoder, sNalu* nalu) {
   setPpsById (decoder, pps->ppsId, pps);
   freeDataPartitions (dataPartition, 1);
   freePps (pps);
+  }
+//}}}
+//{{{
+void setPpsById (sDecoder* decoder, int id, sPps* pps) {
+
+  if (decoder->pps[id].valid && decoder->pps[id].sliceGroupId)
+    free (decoder->pps[id].sliceGroupId);
+  memcpy (&decoder->pps[id], pps, sizeof (sPps));
+
+  // we can simply use the memory provided with the pps.
+  // the PPS is destroyed after this function call, will not try to free if pps->sliceGroupId == NULL
+  decoder->pps[id].sliceGroupId = pps->sliceGroupId;
+  pps->sliceGroupId = NULL;
   }
 //}}}
 //{{{
