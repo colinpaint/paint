@@ -241,7 +241,7 @@ int cabacStartCode (sSlice* slice, int eos_bit) {
 void checkNeighbourCabac (sMacroBlock* mb) {
 
   sDecoder* decoder = mb->decoder;
-  int* mbSize = decoder->mbSize[IS_LUMA];
+  int* mbSize = decoder->mbSize[eLuma];
 
   sPixelPos up;
   decoder->getNeighbour (mb,  0, -1, mbSize, &up);
@@ -460,7 +460,7 @@ int check_next_mb_and_get_field_mode_CABAC_b_slice (sSlice* slice, sSyntaxElemen
 //{{{
 void read_MVD_CABAC (sMacroBlock* mb, sSyntaxElement* se, sCabacDecodeEnv* cabacDecodeEnv) {
 
-  int* mbSize = mb->decoder->mbSize[IS_LUMA];
+  int* mbSize = mb->decoder->mbSize[eLuma];
   sSlice* slice = mb->slice;
   sMotionInfoContexts* ctx = slice->motionInfoContexts;
   int i = mb->subblockX;
@@ -515,7 +515,7 @@ void read_mvd_CABAC_mbaff (sMacroBlock* mb, sSyntaxElement* se, sCabacDecodeEnv*
   int k = (se->value2 >> 1); // MVD component
 
   sPixelPos block_a, block_b;
-  get4x4NeighbourBase (mb, i - 1, j    , decoder->mbSize[IS_LUMA], &block_a);
+  get4x4NeighbourBase (mb, i - 1, j    , decoder->mbSize[eLuma], &block_a);
   if (block_a.available) {
     a = iabs (slice->mbData[block_a.mbIndex].mvd[list_idx][block_a.y][block_a.x][k]);
     if (slice->mbAffFrame && (k == 1)) {
@@ -526,7 +526,7 @@ void read_mvd_CABAC_mbaff (sMacroBlock* mb, sSyntaxElement* se, sCabacDecodeEnv*
       }
     }
 
-  get4x4NeighbourBase(mb, i    , j - 1, decoder->mbSize[IS_LUMA], &block_b);
+  get4x4NeighbourBase(mb, i    , j - 1, decoder->mbSize[eLuma], &block_b);
   if (block_b.available) {
     b = iabs(slice->mbData[block_b.mbIndex].mvd[list_idx][block_b.y][block_b.x][k]);
     if (slice->mbAffFrame && (k==1)) {
@@ -985,8 +985,8 @@ void readRefFrame_CABAC (sMacroBlock* mb, sSyntaxElement* se, sCabacDecodeEnv* c
   int list = se->value2;
 
   sPixelPos block_a, block_b;
-  get4x4Neighbour (mb, mb->subblockX - 1, mb->subblockY    , decoder->mbSize[IS_LUMA], &block_a);
-  get4x4Neighbour (mb, mb->subblockX,     mb->subblockY - 1, decoder->mbSize[IS_LUMA], &block_b);
+  get4x4Neighbour (mb, mb->subblockX - 1, mb->subblockY    , decoder->mbSize[eLuma], &block_a);
+  get4x4Neighbour (mb, mb->subblockX,     mb->subblockY - 1, decoder->mbSize[eLuma], &block_b);
 
   if (block_b.available) {
     int b8b = ((block_b.x >> 1) & 0x01) + (block_b.y & 0x02);
@@ -1084,7 +1084,7 @@ void read_CBP_CABAC (sMacroBlock* mb, sSyntaxElement* se, sCabacDecodeEnv* cabac
         b = ((codedBlockPattern & (1 << (mb_x /2 ))) == 0) ? 2: 0;
 
       if (mb_x == 0) {
-        get4x4Neighbour (mb, (mb_x<<2) - 1, (mb_y << 2), decoder->mbSize[IS_LUMA], &block_a);
+        get4x4Neighbour (mb, (mb_x<<2) - 1, (mb_y << 2), decoder->mbSize[eLuma], &block_a);
         if (block_a.available) {
           if (slice->mbData[block_a.mbIndex].mbType==IPCM)
             a = 0;
@@ -1202,28 +1202,28 @@ static int readStoreCbpBlockBit444 (sMacroBlock* mb, sCabacDecodeEnv*  cabacDeco
 
   sPixelPos block_a, block_b;
   if (y_ac) {
-    get4x4Neighbour (mb, i - 1, j    , decoder->mbSize[IS_LUMA], &block_a);
-    get4x4Neighbour (mb, i    , j - 1, decoder->mbSize[IS_LUMA], &block_b);
+    get4x4Neighbour (mb, i - 1, j    , decoder->mbSize[eLuma], &block_a);
+    get4x4Neighbour (mb, i    , j - 1, decoder->mbSize[eLuma], &block_b);
     if (block_a.available)
         bit_pos_a = 4*block_a.y + block_a.x;
     if (block_b.available)
       bit_pos_b = 4*block_b.y + block_b.x;
     }
   else if (y_dc) {
-    get4x4Neighbour(mb, i - 1, j    , decoder->mbSize[IS_LUMA], &block_a);
-    get4x4Neighbour(mb, i    , j - 1, decoder->mbSize[IS_LUMA], &block_b);
+    get4x4Neighbour(mb, i - 1, j    , decoder->mbSize[eLuma], &block_a);
+    get4x4Neighbour(mb, i    , j - 1, decoder->mbSize[eLuma], &block_b);
     }
   else if (u_ac||v_ac) {
-    get4x4Neighbour(mb, i - 1, j    , decoder->mbSize[IS_CHROMA], &block_a);
-    get4x4Neighbour(mb, i    , j - 1, decoder->mbSize[IS_CHROMA], &block_b);
+    get4x4Neighbour(mb, i - 1, j    , decoder->mbSize[eChroma], &block_a);
+    get4x4Neighbour(mb, i    , j - 1, decoder->mbSize[eChroma], &block_b);
     if (block_a.available)
       bit_pos_a = 4*block_a.y + block_a.x;
     if (block_b.available)
       bit_pos_b = 4*block_b.y + block_b.x;
     }
   else {
-    get4x4Neighbour(mb, i - 1, j    , decoder->mbSize[IS_CHROMA], &block_a);
-    get4x4Neighbour(mb, i    , j - 1, decoder->mbSize[IS_CHROMA], &block_b);
+    get4x4Neighbour(mb, i - 1, j    , decoder->mbSize[eChroma], &block_a);
+    get4x4Neighbour(mb, i    , j - 1, decoder->mbSize[eChroma], &block_b);
     }
 
   if (picture->chromaFormatIdc!=YUV444) {
@@ -1404,8 +1404,8 @@ static int readStoreCbpBlockBitNormal (sMacroBlock* mb, sCabacDecodeEnv* cabacDe
     int ctx;
 
     sPixelPos block_a, block_b;
-    get4x4NeighbourBase (mb, -1,  0, decoder->mbSize[IS_LUMA], &block_a);
-    get4x4NeighbourBase (mb,  0, -1, decoder->mbSize[IS_LUMA], &block_b);
+    get4x4NeighbourBase (mb, -1,  0, decoder->mbSize[eLuma], &block_a);
+    get4x4NeighbourBase (mb,  0, -1, decoder->mbSize[eLuma], &block_b);
 
     //--- get bits from neighboring blocks ---
     if (block_b.available)
@@ -1435,8 +1435,8 @@ static int readStoreCbpBlockBitNormal (sMacroBlock* mb, sCabacDecodeEnv* cabacDe
     int ctx;
 
     sPixelPos block_a, block_b;
-    get4x4NeighbourBase (mb, i - 1, j    , decoder->mbSize[IS_LUMA], &block_a);
-    get4x4NeighbourBase (mb, i    , j - 1, decoder->mbSize[IS_LUMA], &block_b);
+    get4x4NeighbourBase (mb, i - 1, j    , decoder->mbSize[eLuma], &block_a);
+    get4x4NeighbourBase (mb, i    , j - 1, decoder->mbSize[eLuma], &block_b);
 
     // get bits from neighboring blocks ---
     if (block_b.available)
@@ -1468,8 +1468,8 @@ static int readStoreCbpBlockBitNormal (sMacroBlock* mb, sCabacDecodeEnv* cabacDe
 
     sPixelPos block_a, block_b;
 
-    get4x4NeighbourBase (mb, i - 1, j    , decoder->mbSize[IS_LUMA], &block_a);
-    get4x4NeighbourBase (mb, i    , j - 1, decoder->mbSize[IS_LUMA], &block_b);
+    get4x4NeighbourBase (mb, i - 1, j    , decoder->mbSize[eLuma], &block_a);
+    get4x4NeighbourBase (mb, i    , j - 1, decoder->mbSize[eLuma], &block_b);
 
     // get bits from neighboring blocks ---
     if (block_b.available)
@@ -1501,8 +1501,8 @@ static int readStoreCbpBlockBitNormal (sMacroBlock* mb, sCabacDecodeEnv* cabacDe
 
     sPixelPos block_a, block_b;
 
-    get4x4NeighbourBase(mb, i - 1, j    , decoder->mbSize[IS_LUMA], &block_a);
-    get4x4NeighbourBase(mb, i    , j - 1, decoder->mbSize[IS_LUMA], &block_b);
+    get4x4NeighbourBase(mb, i - 1, j    , decoder->mbSize[eLuma], &block_a);
+    get4x4NeighbourBase(mb, i    , j - 1, decoder->mbSize[eLuma], &block_b);
 
     // get bits from neighboring blocks ---
     if (block_b.available)
@@ -1532,8 +1532,8 @@ static int readStoreCbpBlockBitNormal (sMacroBlock* mb, sCabacDecodeEnv* cabacDe
     int left_bit = default_bit;
 
     sPixelPos block_a, block_b;
-    get4x4NeighbourBase (mb, i - 1, j    , decoder->mbSize[IS_LUMA], &block_a);
-    get4x4NeighbourBase (mb, i    , j - 1, decoder->mbSize[IS_LUMA], &block_b);
+    get4x4NeighbourBase (mb, i - 1, j    , decoder->mbSize[eLuma], &block_a);
+    get4x4NeighbourBase (mb, i    , j - 1, decoder->mbSize[eLuma], &block_b);
 
     // get bits from neighboring blocks ---
     if (block_b.available)
@@ -1574,8 +1574,8 @@ static int readStoreCbpBlockBitNormal (sMacroBlock* mb, sCabacDecodeEnv* cabacDe
     int left_bit = default_bit;
 
     sPixelPos block_a, block_b;
-    get4x4NeighbourBase (mb, i - 1, j    , decoder->mbSize[IS_CHROMA], &block_a);
-    get4x4NeighbourBase (mb, i    , j - 1, decoder->mbSize[IS_CHROMA], &block_b);
+    get4x4NeighbourBase (mb, i - 1, j    , decoder->mbSize[eChroma], &block_a);
+    get4x4NeighbourBase (mb, i    , j - 1, decoder->mbSize[eChroma], &block_b);
 
     //--- get bits from neighboring blocks ---
     if (block_b.available) {
@@ -1614,8 +1614,8 @@ static int readStoreCbpBlockBitNormal (sMacroBlock* mb, sCabacDecodeEnv* cabacDe
     int left_bit = default_bit;
 
     sPixelPos block_a, block_b;
-    get4x4NeighbourBase (mb, i - 1, j    , decoder->mbSize[IS_CHROMA], &block_a);
-    get4x4NeighbourBase (mb, i    , j - 1, decoder->mbSize[IS_CHROMA], &block_b);
+    get4x4NeighbourBase (mb, i - 1, j    , decoder->mbSize[eChroma], &block_a);
+    get4x4NeighbourBase (mb, i    , j - 1, decoder->mbSize[eChroma], &block_b);
 
     // get bits from neighboring blocks ---
     if (block_b.available) {

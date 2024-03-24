@@ -46,8 +46,8 @@ int mb_pred_intra4x4 (sMacroBlock* mb, eColorPlane plane, sPixel** pixel, sPictu
 
       // PREDICTION
       //===== INTRA PREDICTION =====
-      if (slice->intraPred4x4(mb, plane, ioff,joff,i4,j4) == SEARCH_SYNC)  /* make 4x4 prediction block mpr from given prediction decoder->mb_mode */
-        return SEARCH_SYNC;                   /* bit error */
+      if (slice->intraPred4x4(mb, plane, ioff,joff,i4,j4) == eSearchSync)  /* make 4x4 prediction block mpr from given prediction decoder->mb_mode */
+        return eSearchSync;                   /* bit error */
       // =============== 4x4 itrans ================
       // -------------------------------------------
       mb->iTrans4x4  (mb, plane, ioff, joff);

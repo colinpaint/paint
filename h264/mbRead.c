@@ -56,8 +56,8 @@ static void read_ipred_8x8_modes_mbaff (sMacroBlock* mb) {
       dataPartition->readSyntaxElement (mb, &se, dataPartition);
       }
 
-    get4x4Neighbour (mb, (bx << 2) - 1, (by << 2),     decoder->mbSize[IS_LUMA], &left_block);
-    get4x4Neighbour (mb, (bx << 2),     (by << 2) - 1, decoder->mbSize[IS_LUMA], &top_block );
+    get4x4Neighbour (mb, (bx << 2) - 1, (by << 2),     decoder->mbSize[eLuma], &left_block);
+    get4x4Neighbour (mb, (bx << 2),     (by << 2) - 1, decoder->mbSize[eLuma], &top_block );
 
     // get from array and decode
     if (decoder->activePPS->hasConstrainedIntraPred) {
@@ -101,8 +101,8 @@ static void read_ipred_8x8_modes (sMacroBlock* mb) {
   if (!(decoder->activePPS->entropyCoding == eCavlc || dataPartition->s->errorFlag))
     se.reading = readIntraPredMode_CABAC;
 
-  get4x4Neighbour (mb, -1,  0, decoder->mbSize[IS_LUMA], &left_mb);
-  get4x4Neighbour (mb,  0, -1, decoder->mbSize[IS_LUMA], &top_mb );
+  get4x4Neighbour (mb, -1,  0, decoder->mbSize[eLuma], &left_mb);
+  get4x4Neighbour (mb,  0, -1, decoder->mbSize[eLuma], &top_mb );
 
   for(b8 = 0; b8 < 4; ++b8) { //loop 8x8 blocks
     by = (b8 & 0x02);
@@ -119,8 +119,8 @@ static void read_ipred_8x8_modes (sMacroBlock* mb) {
       dataPartition->readSyntaxElement(mb, &se, dataPartition);
     }
 
-    get4x4Neighbour (mb, (bx << 2) - 1, by << 2, decoder->mbSize[IS_LUMA], &left_block);
-    get4x4Neighbour (mb, bx << 2, (by << 2) - 1, decoder->mbSize[IS_LUMA], &top_block);
+    get4x4Neighbour (mb, (bx << 2) - 1, by << 2, decoder->mbSize[eLuma], &left_block);
+    get4x4Neighbour (mb, bx << 2, (by << 2) - 1, decoder->mbSize[eLuma], &top_block);
 
     // get from array and decode
     if (decoder->activePPS->hasConstrainedIntraPred) {
@@ -181,8 +181,8 @@ static void read_ipred_4x4_modes_mbaff (sMacroBlock* mb) {
           dataPartition->readSyntaxElement (mb, &se, dataPartition);
           }
 
-        get4x4Neighbour (mb, (bx<<2) - 1, (by<<2),     decoder->mbSize[IS_LUMA], &left_block);
-        get4x4Neighbour (mb, (bx<<2),     (by<<2) - 1, decoder->mbSize[IS_LUMA], &top_block );
+        get4x4Neighbour (mb, (bx<<2) - 1, (by<<2),     decoder->mbSize[eLuma], &left_block);
+        get4x4Neighbour (mb, (bx<<2),     (by<<2) - 1, decoder->mbSize[eLuma], &top_block );
 
         // get from array and decode
         if (decoder->activePPS->hasConstrainedIntraPred) {
@@ -234,8 +234,8 @@ static void read_ipred_4x4_modes (sMacroBlock* mb) {
   if (!(decoder->activePPS->entropyCoding == eCavlc || dataPartition->s->errorFlag))
     se.reading = readIntraPredMode_CABAC;
 
-  get4x4Neighbour (mb, -1,  0, decoder->mbSize[IS_LUMA], &left_mb);
-  get4x4Neighbour (mb,  0, -1, decoder->mbSize[IS_LUMA], &top_mb );
+  get4x4Neighbour (mb, -1,  0, decoder->mbSize[eLuma], &left_mb);
+  get4x4Neighbour (mb,  0, -1, decoder->mbSize[eLuma], &top_mb );
 
   for (int b8 = 0; b8 < 4; ++b8) {
     // loop 8x8 blocks
@@ -255,8 +255,8 @@ static void read_ipred_4x4_modes (sMacroBlock* mb) {
           dataPartition->readSyntaxElement (mb, &se, dataPartition);
           }
 
-        get4x4Neighbour(mb, (bx<<2) - 1, (by<<2), decoder->mbSize[IS_LUMA], &left_block);
-        get4x4Neighbour(mb, (bx<<2), (by<<2) - 1, decoder->mbSize[IS_LUMA], &top_block );
+        get4x4Neighbour(mb, (bx<<2) - 1, (by<<2), decoder->mbSize[eLuma], &left_block);
+        get4x4Neighbour(mb, (bx<<2), (by<<2) - 1, decoder->mbSize[eLuma], &top_block );
 
         //get from array and decode
         if (decoder->activePPS->hasConstrainedIntraPred) {

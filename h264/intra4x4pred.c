@@ -47,7 +47,7 @@
  * \param joff
  *    pixel offset Y within MB
  * \return
- *    DECODING_OK   decoding of intra prediction mode was successful            \n
+ *    eDecodingOk   decoding of intra prediction mode was successful            \n
  *
 ** *********************************************************************
  */
@@ -71,8 +71,8 @@ static int intra4x4_dc_pred (sMacroBlock *mb,
 
   sPixel** mbPred = slice->mbPred[plane];
 
-  getNonAffNeighbour(mb, ioff - 1, joff   , decoder->mbSize[IS_LUMA], &pix_a);
-  getNonAffNeighbour(mb, ioff    , joff -1, decoder->mbSize[IS_LUMA], &pix_b);
+  getNonAffNeighbour(mb, ioff - 1, joff   , decoder->mbSize[eLuma], &pix_a);
+  getNonAffNeighbour(mb, ioff    , joff -1, decoder->mbSize[eLuma], &pix_b);
 
   if (decoder->activePPS->hasConstrainedIntraPred)
   {
@@ -134,7 +134,7 @@ static int intra4x4_dc_pred (sMacroBlock *mb,
     mbPred[j][ioff + 2] = (sPixel) s0;
     mbPred[j][ioff + 3] = (sPixel) s0;
   }
-  return DECODING_OK;
+  return eDecodingOk;
 }
 //}}}
 //{{{
@@ -144,7 +144,7 @@ static int intra4x4_dc_pred (sMacroBlock *mb,
  *    makes and returns 4x4 vertical prediction mode
  *
  * \return
- *    DECODING_OK   decoding of intra prediction mode was successful            \n
+ *    eDecodingOk   decoding of intra prediction mode was successful            \n
  *
 ** *********************************************************************
  */
@@ -159,7 +159,7 @@ static int intra4x4_vert_pred (sMacroBlock *mb,    //!< current macroblock
   int block_available_up;
   sPixelPos pix_b;
 
-  getNonAffNeighbour(mb, ioff, joff - 1 , decoder->mbSize[IS_LUMA], &pix_b);
+  getNonAffNeighbour(mb, ioff, joff - 1 , decoder->mbSize[eLuma], &pix_b);
 
   if (decoder->activePPS->hasConstrainedIntraPred)
   {
@@ -183,7 +183,7 @@ static int intra4x4_vert_pred (sMacroBlock *mb,    //!< current macroblock
     memcpy(&(mbPred[joff++][ioff]), imgY, BLOCK_SIZE * sizeof(sPixel));
     memcpy(&(mbPred[joff  ][ioff]), imgY, BLOCK_SIZE * sizeof(sPixel));
   }
-  return DECODING_OK;
+  return eDecodingOk;
 }
 //}}}
 //{{{
@@ -202,7 +202,7 @@ static int intra4x4_vert_pred (sMacroBlock *mb,    //!< current macroblock
  *    pixel offset Y within MB
  *
  * \return
- *    DECODING_OK   decoding of intra prediction mode was successful
+ *    eDecodingOk   decoding of intra prediction mode was successful
  *
 ** *********************************************************************
  */
@@ -218,7 +218,7 @@ static int intra4x4_hor_pred (sMacroBlock *mb,
 
   int block_available_left;
 
-  getNonAffNeighbour(mb, ioff - 1 , joff, decoder->mbSize[IS_LUMA], &pix_a);
+  getNonAffNeighbour(mb, ioff - 1 , joff, decoder->mbSize[eLuma], &pix_a);
 
   if (decoder->activePPS->hasConstrainedIntraPred)
   {
@@ -266,7 +266,7 @@ static int intra4x4_hor_pred (sMacroBlock *mb,
   }
 #endif
 
-  return DECODING_OK;
+  return eDecodingOk;
 }
 //}}}
 //{{{
@@ -276,7 +276,7 @@ static int intra4x4_hor_pred (sMacroBlock *mb,
  *    makes and returns 4x4 diagonal down right prediction mode
  *
  * \return
- *    DECODING_OK   decoding of intra prediction mode was successful            \n
+ *    eDecodingOk   decoding of intra prediction mode was successful            \n
  *
 ** *********************************************************************
  */
@@ -299,9 +299,9 @@ static int intra4x4_diag_down_right_pred (sMacroBlock *mb,    //!< current macro
 
   sPixel** mbPred = slice->mbPred[plane];
 
-  getNonAffNeighbour(mb, ioff -1 , joff    , decoder->mbSize[IS_LUMA], &pix_a);
-  getNonAffNeighbour(mb, ioff    , joff -1 , decoder->mbSize[IS_LUMA], &pix_b);
-  getNonAffNeighbour(mb, ioff -1 , joff -1 , decoder->mbSize[IS_LUMA], &pix_d);
+  getNonAffNeighbour(mb, ioff -1 , joff    , decoder->mbSize[eLuma], &pix_a);
+  getNonAffNeighbour(mb, ioff    , joff -1 , decoder->mbSize[eLuma], &pix_b);
+  getNonAffNeighbour(mb, ioff -1 , joff -1 , decoder->mbSize[eLuma], &pix_d);
 
   if (decoder->activePPS->hasConstrainedIntraPred)
   {
@@ -350,7 +350,7 @@ static int intra4x4_diag_down_right_pred (sMacroBlock *mb,    //!< current macro
     memcpy(&mbPred[joff  ][ioff], &PredPixel[0], 4 * sizeof(sPixel));
   }
 
-  return DECODING_OK;
+  return eDecodingOk;
 }
 //}}}
 //{{{
@@ -360,7 +360,7 @@ static int intra4x4_diag_down_right_pred (sMacroBlock *mb,    //!< current macro
  *    makes and returns 4x4 diagonal down left prediction mode
  *
  * \return
- *    DECODING_OK   decoding of intra prediction mode was successful            \n
+ *    eDecodingOk   decoding of intra prediction mode was successful            \n
  *
 ** *********************************************************************
  */
@@ -377,8 +377,8 @@ static int intra4x4_diag_down_left_pred (sMacroBlock *mb,    //!< current macrob
   int block_available_up;
   int block_available_up_right;
 
-  getNonAffNeighbour(mb, ioff    , joff - 1, decoder->mbSize[IS_LUMA], &pix_b);
-  getNonAffNeighbour(mb, ioff + 4, joff - 1, decoder->mbSize[IS_LUMA], &pix_c);
+  getNonAffNeighbour(mb, ioff    , joff - 1, decoder->mbSize[eLuma], &pix_b);
+  getNonAffNeighbour(mb, ioff + 4, joff - 1, decoder->mbSize[eLuma], &pix_c);
 
   pix_c.available = pix_c.available && !((ioff==4) && ((joff==4)||(joff==12)));
 
@@ -437,7 +437,7 @@ static int intra4x4_diag_down_left_pred (sMacroBlock *mb,    //!< current macrob
     memcpy(&mbPred[joff  ][ioff], &PredPixel[3], 4 * sizeof(sPixel));
   }
 
-  return DECODING_OK;
+  return eDecodingOk;
 }
 //}}}
 //{{{
@@ -447,7 +447,7 @@ static int intra4x4_diag_down_left_pred (sMacroBlock *mb,    //!< current macrob
  *    makes and returns 4x4 vertical right prediction mode
  *
  * \return
- *    DECODING_OK   decoding of intra prediction mode was successful            \n
+ *    eDecodingOk   decoding of intra prediction mode was successful            \n
  *
 ** *********************************************************************
  */
@@ -465,9 +465,9 @@ static int intra4x4_vert_right_pred (sMacroBlock *mb,    //!< current macroblock
   int block_available_left;
   int block_available_up_left;
 
-  getNonAffNeighbour(mb, ioff -1 , joff    , decoder->mbSize[IS_LUMA], &pix_a);
-  getNonAffNeighbour(mb, ioff    , joff -1 , decoder->mbSize[IS_LUMA], &pix_b);
-  getNonAffNeighbour(mb, ioff -1 , joff -1 , decoder->mbSize[IS_LUMA], &pix_d);
+  getNonAffNeighbour(mb, ioff -1 , joff    , decoder->mbSize[eLuma], &pix_a);
+  getNonAffNeighbour(mb, ioff    , joff -1 , decoder->mbSize[eLuma], &pix_b);
+  getNonAffNeighbour(mb, ioff -1 , joff -1 , decoder->mbSize[eLuma], &pix_d);
 
   if (decoder->activePPS->hasConstrainedIntraPred)
   {
@@ -522,7 +522,7 @@ static int intra4x4_vert_right_pred (sMacroBlock *mb,    //!< current macroblock
 
   }
 
-  return DECODING_OK;
+  return eDecodingOk;
 }
 //}}}
 //{{{
@@ -532,7 +532,7 @@ static int intra4x4_vert_right_pred (sMacroBlock *mb,    //!< current macroblock
  *    makes and returns 4x4 vertical left prediction mode
  *
  * \return
- *    DECODING_OK   decoding of intra prediction mode was successful            \n
+ *    eDecodingOk   decoding of intra prediction mode was successful            \n
  *
 ** *********************************************************************
  */
@@ -549,8 +549,8 @@ static int intra4x4_vert_left_pred (sMacroBlock *mb,    //!< current macroblock
   int block_available_up;
   int block_available_up_right;
 
-  getNonAffNeighbour(mb, ioff    , joff -1 , decoder->mbSize[IS_LUMA], &pix_b);
-  getNonAffNeighbour(mb, ioff +4 , joff -1 , decoder->mbSize[IS_LUMA], &pix_c);
+  getNonAffNeighbour(mb, ioff    , joff -1 , decoder->mbSize[eLuma], &pix_b);
+  getNonAffNeighbour(mb, ioff +4 , joff -1 , decoder->mbSize[eLuma], &pix_c);
 
   pix_c.available = pix_c.available && !((ioff==4) && ((joff==4)||(joff==12)));
 
@@ -611,7 +611,7 @@ static int intra4x4_vert_left_pred (sMacroBlock *mb,    //!< current macroblock
     memcpy(&mbPred[joff++][ioff], &PredPixel[1], 4 * sizeof(sPixel));
     memcpy(&mbPred[joff  ][ioff], &PredPixel[6], 4 * sizeof(sPixel));
   }
-  return DECODING_OK;
+  return eDecodingOk;
 }
 //}}}
 //{{{
@@ -621,7 +621,7 @@ static int intra4x4_vert_left_pred (sMacroBlock *mb,    //!< current macroblock
  *    makes and returns 4x4 horizontal up prediction mode
  *
  * \return
- *    DECODING_OK   decoding of intra prediction mode was successful            \n
+ *    eDecodingOk   decoding of intra prediction mode was successful            \n
  *
 ** *********************************************************************
  */
@@ -637,7 +637,7 @@ static int intra4x4_hor_up_pred (sMacroBlock *mb,    //!< current macroblock
 
   int block_available_left;
 
-  getNonAffNeighbour(mb, ioff -1 , joff, decoder->mbSize[IS_LUMA], &pix_a);
+  getNonAffNeighbour(mb, ioff -1 , joff, decoder->mbSize[eLuma], &pix_a);
 
   if (decoder->activePPS->hasConstrainedIntraPred)
   {
@@ -683,7 +683,7 @@ static int intra4x4_hor_up_pred (sMacroBlock *mb,    //!< current macroblock
     memcpy(&mbPred[joff++][ioff], &PredPixel[6], 4 * sizeof(sPixel));
   }
 
-  return DECODING_OK;
+  return eDecodingOk;
 }
 //}}}
 //{{{
@@ -693,7 +693,7 @@ static int intra4x4_hor_up_pred (sMacroBlock *mb,    //!< current macroblock
  *    makes and returns 4x4 horizontal down prediction mode
  *
  * \return
- *    DECODING_OK   decoding of intra prediction mode was successful            \n
+ *    eDecodingOk   decoding of intra prediction mode was successful            \n
  *
 ** *********************************************************************
  */
@@ -711,9 +711,9 @@ static int intra4x4_hor_down_pred (sMacroBlock *mb,    //!< current macroblock
   int block_available_left;
   int block_available_up_left;
 
-  getNonAffNeighbour(mb, ioff -1 , joff    , decoder->mbSize[IS_LUMA], &pix_a);
-  getNonAffNeighbour(mb, ioff    , joff -1 , decoder->mbSize[IS_LUMA], &pix_b);
-  getNonAffNeighbour(mb, ioff -1 , joff -1 , decoder->mbSize[IS_LUMA], &pix_d);
+  getNonAffNeighbour(mb, ioff -1 , joff    , decoder->mbSize[eLuma], &pix_a);
+  getNonAffNeighbour(mb, ioff    , joff -1 , decoder->mbSize[eLuma], &pix_b);
+  getNonAffNeighbour(mb, ioff -1 , joff -1 , decoder->mbSize[eLuma], &pix_d);
 
   if (decoder->activePPS->hasConstrainedIntraPred)
   {
@@ -770,7 +770,7 @@ static int intra4x4_hor_down_pred (sMacroBlock *mb,    //!< current macroblock
     memcpy(&mbPred[joff  ][ioff], &PredPixel[0], 4 * sizeof(sPixel));
   }
 
-  return DECODING_OK;
+  return eDecodingOk;
 }
 //}}}
 //{{{
@@ -780,8 +780,8 @@ static int intra4x4_hor_down_pred (sMacroBlock *mb,    //!< current macroblock
  *    makes and returns 4x4 intra prediction blocks
  *
  * \return
- *    DECODING_OK   decoding of intra prediction mode was successful            \n
- *    SEARCH_SYNC   search next sync element as errors while decoding occured
+ *    eDecodingOk   decoding of intra prediction mode was successful            \n
+ *    eSearchSync   search next sync element as errors while decoding occured
 ** *********************************************************************
  */
 int intra_pred_4x4_normal (sMacroBlock *mb,    //!< current macroblock
@@ -825,7 +825,7 @@ int intra_pred_4x4_normal (sMacroBlock *mb,    //!< current macroblock
     return (intra4x4_hor_down_pred(mb, plane, ioff, joff));
   default:
     printf("Error: illegal intra_4x4 prediction mode: %d\n", (int) predmode);
-    return SEARCH_SYNC;
+    return eSearchSync;
     break;
   }
 }
@@ -846,7 +846,7 @@ int intra_pred_4x4_normal (sMacroBlock *mb,    //!< current macroblock
  * \param joff
  *    pixel offset Y within MB
  * \return
- *    DECODING_OK   decoding of intra prediction mode was successful            \n
+ *    eDecodingOk   decoding of intra prediction mode was successful            \n
  *
 ** *********************************************************************
  */
@@ -871,9 +871,9 @@ static int intra4x4_dc_pred_mbaff (sMacroBlock *mb,
 
   for (i=0;i<4;++i)
   {
-    getAffNeighbour(mb, ioff - 1, joff + i, decoder->mbSize[IS_LUMA], &pix_a[i]);
+    getAffNeighbour(mb, ioff - 1, joff + i, decoder->mbSize[eLuma], &pix_a[i]);
   }
-  getAffNeighbour(mb, ioff    , joff -1 , decoder->mbSize[IS_LUMA], &pix_b);
+  getAffNeighbour(mb, ioff    , joff -1 , decoder->mbSize[eLuma], &pix_b);
 
   if (decoder->activePPS->hasConstrainedIntraPred)
   {
@@ -933,7 +933,7 @@ static int intra4x4_dc_pred_mbaff (sMacroBlock *mb,
     mbPred[j][ioff + 2] = (sPixel) s0;
     mbPred[j][ioff + 3] = (sPixel) s0;
   }
-  return DECODING_OK;
+  return eDecodingOk;
 }
 //}}}
 //{{{
@@ -943,7 +943,7 @@ static int intra4x4_dc_pred_mbaff (sMacroBlock *mb,
  *    makes and returns 4x4 vertical prediction mode
  *
  * \return
- *    DECODING_OK   decoding of intra prediction mode was successful            \n
+ *    eDecodingOk   decoding of intra prediction mode was successful            \n
  *
 ** *********************************************************************
  */
@@ -958,7 +958,7 @@ static int intra4x4_vert_pred_mbaff (sMacroBlock *mb,    //!< current macroblock
   int block_available_up;
   sPixelPos pix_b;
 
-  getAffNeighbour(mb, ioff, joff - 1 , decoder->mbSize[IS_LUMA], &pix_b);
+  getAffNeighbour(mb, ioff, joff - 1 , decoder->mbSize[eLuma], &pix_b);
 
   if (decoder->activePPS->hasConstrainedIntraPred)
   {
@@ -982,7 +982,7 @@ static int intra4x4_vert_pred_mbaff (sMacroBlock *mb,    //!< current macroblock
     memcpy(&(mbPred[joff++][ioff]), imgY, BLOCK_SIZE * sizeof(sPixel));
     memcpy(&(mbPred[joff  ][ioff]), imgY, BLOCK_SIZE * sizeof(sPixel));
   }
-  return DECODING_OK;
+  return eDecodingOk;
 }
 //}}}
 //{{{
@@ -1001,7 +1001,7 @@ static int intra4x4_vert_pred_mbaff (sMacroBlock *mb,    //!< current macroblock
  *    pixel offset Y within MB
  *
  * \return
- *    DECODING_OK   decoding of intra prediction mode was successful
+ *    eDecodingOk   decoding of intra prediction mode was successful
  *
 ** *********************************************************************
  */
@@ -1024,7 +1024,7 @@ static int intra4x4_hor_pred_mbaff (sMacroBlock *mb,
 
   for (i=0;i<4;++i)
   {
-    getAffNeighbour(mb, ioff -1 , joff +i , decoder->mbSize[IS_LUMA], &pix_a[i]);
+    getAffNeighbour(mb, ioff -1 , joff +i , decoder->mbSize[eLuma], &pix_a[i]);
   }
 
   if (decoder->activePPS->hasConstrainedIntraPred)
@@ -1048,7 +1048,7 @@ static int intra4x4_hor_pred_mbaff (sMacroBlock *mb,
       predrow[i]= prediction; /* store predicted 4x4 block */
   }
 
-  return DECODING_OK;
+  return eDecodingOk;
 }
 //}}}
 //{{{
@@ -1058,7 +1058,7 @@ static int intra4x4_hor_pred_mbaff (sMacroBlock *mb,
  *    makes and returns 4x4 diagonal down right prediction mode
  *
  * \return
- *    DECODING_OK   decoding of intra prediction mode was successful            \n
+ *    eDecodingOk   decoding of intra prediction mode was successful            \n
  *
 ** *********************************************************************
  */
@@ -1084,11 +1084,11 @@ static int intra4x4_diag_down_right_pred_mbaff (sMacroBlock *mb,    //!< current
 
   for (i=0;i<4;++i)
   {
-    getAffNeighbour(mb, ioff -1 , joff +i , decoder->mbSize[IS_LUMA], &pix_a[i]);
+    getAffNeighbour(mb, ioff -1 , joff +i , decoder->mbSize[eLuma], &pix_a[i]);
   }
 
-  getAffNeighbour(mb, ioff    , joff -1 , decoder->mbSize[IS_LUMA], &pix_b);
-  getAffNeighbour(mb, ioff -1 , joff -1 , decoder->mbSize[IS_LUMA], &pix_d);
+  getAffNeighbour(mb, ioff    , joff -1 , decoder->mbSize[eLuma], &pix_b);
+  getAffNeighbour(mb, ioff -1 , joff -1 , decoder->mbSize[eLuma], &pix_d);
 
   if (decoder->activePPS->hasConstrainedIntraPred)
   {
@@ -1137,7 +1137,7 @@ static int intra4x4_diag_down_right_pred_mbaff (sMacroBlock *mb,    //!< current
     memcpy(&mbPred[joff  ][ioff], &PredPixel[0], 4 * sizeof(sPixel));
   }
 
-  return DECODING_OK;
+  return eDecodingOk;
 }
 //}}}
 //{{{
@@ -1147,7 +1147,7 @@ static int intra4x4_diag_down_right_pred_mbaff (sMacroBlock *mb,    //!< current
  *    makes and returns 4x4 diagonal down left prediction mode
  *
  * \return
- *    DECODING_OK   decoding of intra prediction mode was successful            \n
+ *    eDecodingOk   decoding of intra prediction mode was successful            \n
  *
 ** *********************************************************************
  */
@@ -1164,8 +1164,8 @@ static int intra4x4_diag_down_left_pred_mbaff (sMacroBlock *mb,    //!< current 
   int block_available_up;
   int block_available_up_right;
 
-  getAffNeighbour(mb, ioff    , joff - 1, decoder->mbSize[IS_LUMA], &pix_b);
-  getAffNeighbour(mb, ioff + 4, joff - 1, decoder->mbSize[IS_LUMA], &pix_c);
+  getAffNeighbour(mb, ioff    , joff - 1, decoder->mbSize[eLuma], &pix_b);
+  getAffNeighbour(mb, ioff + 4, joff - 1, decoder->mbSize[eLuma], &pix_c);
 
   pix_c.available = pix_c.available && !((ioff==4) && ((joff==4)||(joff==12)));
 
@@ -1219,7 +1219,7 @@ static int intra4x4_diag_down_left_pred_mbaff (sMacroBlock *mb,    //!< current 
     memcpy(&mbPred[joff  ][ioff], &PredPixel[3], 4 * sizeof(sPixel));
   }
 
-  return DECODING_OK;
+  return eDecodingOk;
 }
 //}}}
 //{{{
@@ -1229,7 +1229,7 @@ static int intra4x4_diag_down_left_pred_mbaff (sMacroBlock *mb,    //!< current 
  *    makes and returns 4x4 vertical right prediction mode
  *
  * \return
- *    DECODING_OK   decoding of intra prediction mode was successful            \n
+ *    eDecodingOk   decoding of intra prediction mode was successful            \n
  *
 ** *********************************************************************
  */
@@ -1255,11 +1255,11 @@ static int intra4x4_vert_right_pred_mbaff (sMacroBlock *mb,    //!< current macr
 
   for (i=0;i<4;++i)
   {
-    getAffNeighbour(mb, ioff -1 , joff +i , decoder->mbSize[IS_LUMA], &pix_a[i]);
+    getAffNeighbour(mb, ioff -1 , joff +i , decoder->mbSize[eLuma], &pix_a[i]);
   }
 
-  getAffNeighbour(mb, ioff    , joff -1 , decoder->mbSize[IS_LUMA], &pix_b);
-  getAffNeighbour(mb, ioff -1 , joff -1 , decoder->mbSize[IS_LUMA], &pix_d);
+  getAffNeighbour(mb, ioff    , joff -1 , decoder->mbSize[eLuma], &pix_b);
+  getAffNeighbour(mb, ioff -1 , joff -1 , decoder->mbSize[eLuma], &pix_d);
 
   if (decoder->activePPS->hasConstrainedIntraPred)
   {
@@ -1310,7 +1310,7 @@ static int intra4x4_vert_right_pred_mbaff (sMacroBlock *mb,    //!< current macr
 
   }
 
-  return DECODING_OK;
+  return eDecodingOk;
 }
 //}}}
 //{{{
@@ -1320,7 +1320,7 @@ static int intra4x4_vert_right_pred_mbaff (sMacroBlock *mb,    //!< current macr
  *    makes and returns 4x4 vertical left prediction mode
  *
  * \return
- *    DECODING_OK   decoding of intra prediction mode was successful            \n
+ *    eDecodingOk   decoding of intra prediction mode was successful            \n
  *
 ** *********************************************************************
  */
@@ -1337,8 +1337,8 @@ static int intra4x4_vert_left_pred_mbaff (sMacroBlock *mb,    //!< current macro
   int block_available_up;
   int block_available_up_right;
 
-  getAffNeighbour(mb, ioff    , joff -1 , decoder->mbSize[IS_LUMA], &pix_b);
-  getAffNeighbour(mb, ioff +4 , joff -1 , decoder->mbSize[IS_LUMA], &pix_c);
+  getAffNeighbour(mb, ioff    , joff -1 , decoder->mbSize[eLuma], &pix_b);
+  getAffNeighbour(mb, ioff +4 , joff -1 , decoder->mbSize[eLuma], &pix_c);
 
   pix_c.available = pix_c.available && !((ioff==4) && ((joff==4)||(joff==12)));
 
@@ -1393,7 +1393,7 @@ static int intra4x4_vert_left_pred_mbaff (sMacroBlock *mb,    //!< current macro
     memcpy(&mbPred[joff++][ioff], &PredPixel[1], 4 * sizeof(sPixel));
     memcpy(&mbPred[joff  ][ioff], &PredPixel[6], 4 * sizeof(sPixel));
   }
-  return DECODING_OK;
+  return eDecodingOk;
 }
 //}}}
 //{{{
@@ -1403,7 +1403,7 @@ static int intra4x4_vert_left_pred_mbaff (sMacroBlock *mb,    //!< current macro
  *    makes and returns 4x4 horizontal up prediction mode
  *
  * \return
- *    DECODING_OK   decoding of intra prediction mode was successful            \n
+ *    eDecodingOk   decoding of intra prediction mode was successful            \n
  *
 ** *********************************************************************
  */
@@ -1426,7 +1426,7 @@ static int intra4x4_hor_up_pred_mbaff (sMacroBlock *mb,    //!< current macroblo
 
   for (i=0;i<4;++i)
   {
-    getAffNeighbour(mb, ioff -1 , joff +i , decoder->mbSize[IS_LUMA], &pix_a[i]);
+    getAffNeighbour(mb, ioff -1 , joff +i , decoder->mbSize[eLuma], &pix_a[i]);
   }
 
   if (decoder->activePPS->hasConstrainedIntraPred)
@@ -1469,7 +1469,7 @@ static int intra4x4_hor_up_pred_mbaff (sMacroBlock *mb,    //!< current macroblo
     memcpy(&mbPred[joff++][ioff], &PredPixel[6], 4 * sizeof(sPixel));
   }
 
-  return DECODING_OK;
+  return eDecodingOk;
 }
 //}}}
 //{{{
@@ -1479,7 +1479,7 @@ static int intra4x4_hor_up_pred_mbaff (sMacroBlock *mb,    //!< current macroblo
  *    makes and returns 4x4 horizontal down prediction mode
  *
  * \return
- *    DECODING_OK   decoding of intra prediction mode was successful            \n
+ *    eDecodingOk   decoding of intra prediction mode was successful            \n
  *
 ** *********************************************************************
  */
@@ -1505,11 +1505,11 @@ static int intra4x4_hor_down_pred_mbaff (sMacroBlock *mb,    //!< current macrob
 
   for (i=0;i<4;++i)
   {
-    getAffNeighbour(mb, ioff -1 , joff +i , decoder->mbSize[IS_LUMA], &pix_a[i]);
+    getAffNeighbour(mb, ioff -1 , joff +i , decoder->mbSize[eLuma], &pix_a[i]);
   }
 
-  getAffNeighbour(mb, ioff    , joff -1 , decoder->mbSize[IS_LUMA], &pix_b);
-  getAffNeighbour(mb, ioff -1 , joff -1 , decoder->mbSize[IS_LUMA], &pix_d);
+  getAffNeighbour(mb, ioff    , joff -1 , decoder->mbSize[eLuma], &pix_b);
+  getAffNeighbour(mb, ioff -1 , joff -1 , decoder->mbSize[eLuma], &pix_d);
 
   if (decoder->activePPS->hasConstrainedIntraPred)
   {
@@ -1561,7 +1561,7 @@ static int intra4x4_hor_down_pred_mbaff (sMacroBlock *mb,    //!< current macrob
     memcpy(&mbPred[joff  ][ioff], &PredPixel[0], 4 * sizeof(sPixel));
   }
 
-  return DECODING_OK;
+  return eDecodingOk;
 }
 //}}}
 //{{{
@@ -1571,8 +1571,8 @@ static int intra4x4_hor_down_pred_mbaff (sMacroBlock *mb,    //!< current macrob
  *    makes and returns 4x4 intra prediction blocks
  *
  * \return
- *    DECODING_OK   decoding of intra prediction mode was successful            \n
- *    SEARCH_SYNC   search next sync element as errors while decoding occured
+ *    eDecodingOk   decoding of intra prediction mode was successful            \n
+ *    eSearchSync   search next sync element as errors while decoding occured
 ** *********************************************************************
  */
 int intra_pred_4x4_mbaff (sMacroBlock *mb,    //!< current macroblock
@@ -1616,7 +1616,7 @@ int intra_pred_4x4_mbaff (sMacroBlock *mb,    //!< current macroblock
     return (intra4x4_hor_down_pred_mbaff(mb, plane, ioff, joff));
   default:
     printf("Error: illegal intra_4x4 prediction mode: %d\n", (int) predmode);
-    return SEARCH_SYNC;
+    return eSearchSync;
     break;
   }
 }

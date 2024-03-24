@@ -119,7 +119,7 @@ static void edge_loop_luma_ver_MBAff (eColorPlane plane, sPixel** img,
   sPixelPos pixP, pixQ;
 
   sDecoder* decoder = mbQ->decoder;
-  int bitDepthScale = plane ? decoder->coding.bitDepthScale[IS_CHROMA] : decoder->coding.bitDepthScale[IS_LUMA];
+  int bitDepthScale = plane ? decoder->coding.bitDepthScale[eChroma] : decoder->coding.bitDepthScale[eLuma];
   int max_imgpel_value = decoder->coding.maxPelValueComp[plane];
 
   int AlphaC0Offset = mbQ->deblockFilterC0offset;
@@ -129,11 +129,11 @@ static void edge_loop_luma_ver_MBAff (eColorPlane plane, sPixel** img,
   sPixel* SrcPtrP, *SrcPtrQ;
 
   for (pel = 0 ; pel < MB_BLOCK_SIZE ; ++pel ) {
-    getAffNeighbour (mbQ, edge - 1, pel, decoder->mbSize[IS_LUMA], &pixP);
+    getAffNeighbour (mbQ, edge - 1, pel, decoder->mbSize[eLuma], &pixP);
 
     if  (pixP.available || (mbQ->deblockFilterDisableIdc == 0)) {
       if ((Strng = Strength[pel]) != 0) {
-        getAffNeighbour (mbQ, edge, pel, decoder->mbSize[IS_LUMA], &pixQ);
+        getAffNeighbour (mbQ, edge, pel, decoder->mbSize[eLuma], &pixQ);
 
         MbP = &(decoder->mbData[pixP.mbIndex]);
         SrcPtrQ = &(img[pixQ.posY][pixQ.posX]);
@@ -219,10 +219,10 @@ static void edge_loop_luma_hor_MBAff (eColorPlane plane, sPixel** img, byte* Str
   sPixelPos pixP, pixQ;
 
   sDecoder* decoder = mbQ->decoder;
-  int      bitDepthScale = plane? decoder->coding.bitDepthScale[IS_CHROMA] : decoder->coding.bitDepthScale[IS_LUMA];
+  int      bitDepthScale = plane? decoder->coding.bitDepthScale[eChroma] : decoder->coding.bitDepthScale[eLuma];
   int      max_imgpel_value = decoder->coding.maxPelValueComp[plane];
 
-  getAffNeighbour(mbQ, 0, yQ - 1, decoder->mbSize[IS_LUMA], &pixP);
+  getAffNeighbour(mbQ, 0, yQ - 1, decoder->mbSize[eLuma], &pixP);
 
   if (pixP.available || (mbQ->deblockFilterDisableIdc == 0)) {
     int AlphaC0Offset = mbQ->deblockFilterC0offset;
@@ -241,7 +241,7 @@ static void edge_loop_luma_hor_MBAff (eColorPlane plane, sPixel** img, byte* Str
     int Beta    = BETA_TABLE [indexB] * bitDepthScale;
     if ((Alpha | Beta )!= 0) {
       const byte* ClipTab = CLIP_TAB[indexA];
-      getAffNeighbour(mbQ, 0, yQ, decoder->mbSize[IS_LUMA], &pixQ);
+      getAffNeighbour(mbQ, 0, yQ, decoder->mbSize[eLuma], &pixQ);
 
       for (pel = 0 ; pel < PelNum ; ++pel ) {
         if ((Strng = Strength[pel]) != 0) {
@@ -328,7 +328,7 @@ static void edge_loop_chroma_ver_MBAff (sPixel** img, byte *Strength, sMacroBloc
   int      QP;
   int      xQ = edge, yQ;
   sPixelPos pixP, pixQ;
-  int      bitDepthScale = decoder->coding.bitDepthScale[IS_CHROMA];
+  int      bitDepthScale = decoder->coding.bitDepthScale[eChroma];
   int      max_imgpel_value = decoder->coding.maxPelValueComp[uv + 1];
 
   int      AlphaC0Offset = mbQ->deblockFilterC0offset;
@@ -338,8 +338,8 @@ static void edge_loop_chroma_ver_MBAff (sPixel** img, byte *Strength, sMacroBloc
 
   for (pel = 0 ; pel < PelNum ; ++pel ) {
     yQ = pel;
-    getAffNeighbour(mbQ, xQ, yQ, decoder->mbSize[IS_CHROMA], &pixQ);
-    getAffNeighbour(mbQ, xQ - 1, yQ, decoder->mbSize[IS_CHROMA], &pixP);
+    getAffNeighbour(mbQ, xQ, yQ, decoder->mbSize[eChroma], &pixQ);
+    getAffNeighbour(mbQ, xQ - 1, yQ, decoder->mbSize[eChroma], &pixP);
     MbP = &(decoder->mbData[pixP.mbIndex]);
     StrengthIdx = (PelNum == 8) ? ((mbQ->mbField && !MbP->mbField) ? pel << 1 :((pel >> 1) << 2) + (pel & 0x01)) : pel;
 
@@ -389,15 +389,15 @@ static void edge_loop_chroma_hor_MBAff (sPixel** img, byte *Strength, sMacroBloc
   int PelNum = pelnum_cr[1][p->chromaFormatIdc];
   int yQ = (edge < MB_BLOCK_SIZE? edge : 1);
   sPixelPos pixP, pixQ;
-  int bitDepthScale = decoder->coding.bitDepthScale[IS_CHROMA];
+  int bitDepthScale = decoder->coding.bitDepthScale[eChroma];
   int max_imgpel_value = decoder->coding.maxPelValueComp[uv + 1];
 
   int AlphaC0Offset = mbQ->deblockFilterC0offset;
   int BetaOffset    = mbQ->deblockFilterBetaOffset;
   int width = p->iChromaStride; //p->sizeXcr;
 
-  getAffNeighbour (mbQ, 0, yQ - 1, decoder->mbSize[IS_CHROMA], &pixP);
-  getAffNeighbour (mbQ, 0, yQ, decoder->mbSize[IS_CHROMA], &pixQ);
+  getAffNeighbour (mbQ, 0, yQ - 1, decoder->mbSize[eChroma], &pixP);
+  getAffNeighbour (mbQ, 0, yQ, decoder->mbSize[eChroma], &pixQ);
 
   if (pixP.available || (mbQ->deblockFilterDisableIdc == 0)) {
     sMacroBlock* MbP = &(decoder->mbData[pixP.mbIndex]);
@@ -464,7 +464,7 @@ static void get_strength_ver_MBAff (byte* Strength, sMacroBlock* mb, int edge, i
   sMacroBlock* MbP;
   if ((p->sliceType==eSliceSP)||(p->sliceType==eSliceSI) ) {
     for (idx = 0; idx < MB_BLOCK_SIZE; ++idx ) {
-      getAffNeighbour(mb, edge - 1, idx, decoder->mbSize[IS_LUMA], &pixP);
+      getAffNeighbour(mb, edge - 1, idx, decoder->mbSize[eLuma], &pixP);
       blkQ = (short) ((idx & 0xFFFC) + (edge >> 2));
       blkP = (short) ((pixP.y & 0xFFFC) + (pixP.x >> 2));
       MbP = &(decoder->mbData[pixP.mbIndex]);
@@ -473,7 +473,7 @@ static void get_strength_ver_MBAff (byte* Strength, sMacroBlock* mb, int edge, i
       }
     }
   else {
-    getAffNeighbour (mb, edge - 1, 0, decoder->mbSize[IS_LUMA], &pixP);
+    getAffNeighbour (mb, edge - 1, 0, decoder->mbSize[eLuma], &pixP);
 
     MbP = &(decoder->mbData[pixP.mbIndex]);
     // Neighboring Frame MBs
@@ -549,7 +549,7 @@ static void get_strength_ver_MBAff (byte* Strength, sMacroBlock* mb, int edge, i
       }
     else {
       for (idx = 0; idx < MB_BLOCK_SIZE; ++idx ) {
-        getAffNeighbour(mb, edge - 1, idx, decoder->mbSize[IS_LUMA], &pixP);
+        getAffNeighbour(mb, edge - 1, idx, decoder->mbSize[eLuma], &pixP);
         blkQ = (short) ((idx & 0xFFFC) + (edge >> 2));
         blkP = (short) ((pixP.y & 0xFFFC) + (pixP.x >> 2));
         MbP = &(decoder->mbData[pixP.mbIndex]);
@@ -636,7 +636,7 @@ static void get_strength_hor_MBAff (byte* Strength, sMacroBlock* mb, int edge, i
   if ((p->sliceType==eSliceSP)||(p->sliceType==eSliceSI) ) {
     for (idx = 0; idx < MB_BLOCK_SIZE; idx += BLOCK_SIZE) {
       xQ = idx;
-      getAffNeighbour(mb, xQ, yQ - 1, decoder->mbSize[IS_LUMA], &pixP);
+      getAffNeighbour(mb, xQ, yQ - 1, decoder->mbSize[eLuma], &pixP);
 
       blkQ = (short) ((yQ & 0xFFFC) + (xQ >> 2));
       blkP = (short) ((pixP.y & 0xFFFC) + (pixP.x >> 2));
@@ -653,7 +653,7 @@ static void get_strength_hor_MBAff (byte* Strength, sMacroBlock* mb, int edge, i
       }
     }
   else {
-    getAffNeighbour(mb, 0, yQ - 1, decoder->mbSize[IS_LUMA], &pixP);
+    getAffNeighbour(mb, 0, yQ - 1, decoder->mbSize[eLuma], &pixP);
     MbP = &(decoder->mbData[pixP.mbIndex]);
     mb->mixedModeEdgeFlag = (byte) (mb->mbField != MbP->mbField);
 
@@ -665,7 +665,7 @@ static void get_strength_hor_MBAff (byte* Strength, sMacroBlock* mb, int edge, i
     else {
       for (idx = 0; idx < MB_BLOCK_SIZE; idx += BLOCK_SIZE ) {
         xQ = idx;
-        getAffNeighbour(mb, xQ, yQ - 1, decoder->mbSize[IS_LUMA], &pixP);
+        getAffNeighbour(mb, xQ, yQ - 1, decoder->mbSize[eLuma], &pixP);
         blkQ = (short) ((yQ & 0xFFFC) + (xQ >> 2));
         blkP = (short) ((pixP.y & 0xFFFC) + (pixP.x >> 2));
         if (((mb->codedBlockPatterns[0].blk & i64power2(blkQ)) != 0) || ((MbP->codedBlockPatterns[0].blk & i64power2(blkP)) != 0))
@@ -1078,7 +1078,7 @@ static void edge_loop_luma_ver (eColorPlane plane, sPixel** img, byte* Strength,
 
   sMacroBlock* MbP = get_non_aff_neighbour_luma (mb, edge - 1, 0);
   if (MbP || (mb->deblockFilterDisableIdc == 0)) {
-    int bitDepthScale   = plane ? decoder->coding.bitDepthScale[IS_CHROMA] : decoder->coding.bitDepthScale[IS_LUMA];
+    int bitDepthScale   = plane ? decoder->coding.bitDepthScale[eChroma] : decoder->coding.bitDepthScale[eLuma];
 
     // Average QP of the two blocks
     int QP = plane? ((MbP->qpc[plane-1] + mb->qpc[plane-1] + 1) >> 1) : (MbP->qp + mb->qp + 1) >> 1;
@@ -1219,7 +1219,7 @@ static void edge_loop_luma_hor (eColorPlane plane, sPixel** img, byte* Strength,
   sMacroBlock *MbP = get_non_aff_neighbour_luma (mb, 0, ypos);
 
   if (MbP || (mb->deblockFilterDisableIdc == 0)) {
-    int bitDepthScale = plane ? decoder->coding.bitDepthScale[IS_CHROMA] : decoder->coding.bitDepthScale[IS_LUMA];
+    int bitDepthScale = plane ? decoder->coding.bitDepthScale[eChroma] : decoder->coding.bitDepthScale[eLuma];
 
     // Average QP of the two blocks
     int QP = plane? ((MbP->qpc[plane-1] + mb->qpc[plane-1] + 1) >> 1) : (MbP->qp + mb->qp + 1) >> 1;
@@ -1264,7 +1264,7 @@ static void edge_loop_chroma_ver (sPixel** img, byte* Strength, sMacroBlock* mb,
   sMacroBlock* MbP = get_non_aff_neighbour_chroma (mb,xQ,yQ,block_width,block_height);
 
   if (MbP || (mb->deblockFilterDisableIdc == 0)) {
-    int bitDepthScale   = decoder->coding.bitDepthScale[IS_CHROMA];
+    int bitDepthScale   = decoder->coding.bitDepthScale[eChroma];
     int max_imgpel_value = decoder->coding.maxPelValueComp[uv + 1];
     int AlphaC0Offset = mb->deblockFilterC0offset;
     int BetaOffset = mb->deblockFilterBetaOffset;
@@ -1327,7 +1327,7 @@ static void edge_loop_chroma_hor (sPixel** img, byte* Strength, sMacroBlock* mb,
   sMacroBlock* MbP = get_non_aff_neighbour_chroma (mb, xQ, yQ, block_width, block_height);
 
   if (MbP || (mb->deblockFilterDisableIdc == 0)) {
-    int bitDepthScale = decoder->coding.bitDepthScale[IS_CHROMA];
+    int bitDepthScale = decoder->coding.bitDepthScale[eChroma];
     int max_imgpel_value = decoder->coding.maxPelValueComp[uv + 1];
 
     int AlphaC0Offset = mb->deblockFilterC0offset;
@@ -1419,7 +1419,7 @@ static void deblockMb (sDecoder* decoder, sPicture* p, int mbIndex) {
     sSPS* activeSPS = decoder->activeSPS;
 
     mb->DeblockCall = 1;
-    getMbPos (decoder, mbIndex, decoder->mbSize[IS_LUMA], &mb_x, &mb_y);
+    getMbPos (decoder, mbIndex, decoder->mbSize[eLuma], &mb_x, &mb_y);
     if (mb->mbType == I8MB)
       assert(mb->lumaTransformSize8x8flag);
 
@@ -1576,7 +1576,7 @@ static void getDeblockStrength (sDecoder* decoder, sPicture* p, int mbIndex) {
     sSPS* activeSPS = decoder->activeSPS;
 
     mb->DeblockCall = 1;
-    getMbPos (decoder, mbIndex, decoder->mbSize[IS_LUMA], &mb_x, &mb_y);
+    getMbPos (decoder, mbIndex, decoder->mbSize[eLuma], &mb_x, &mb_y);
 
     if (mb->mbType == I8MB)
       assert(mb->lumaTransformSize8x8flag);
@@ -1675,7 +1675,7 @@ static void performDeblock (sDecoder* decoder, sPicture* p, int mbIndex) {
     sSPS* activeSPS = decoder->activeSPS;
 
     mb->DeblockCall = 1;
-    getMbPos (decoder, mbIndex, decoder->mbSize[IS_LUMA], &mb_x, &mb_y);
+    getMbPos (decoder, mbIndex, decoder->mbSize[eLuma], &mb_x, &mb_y);
 
     if (mb->mbType == I8MB)
       assert (mb->lumaTransformSize8x8flag);

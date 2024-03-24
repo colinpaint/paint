@@ -15,7 +15,7 @@ static int predict_nnz (sMacroBlock* mb, int block_type, int i,int j) {
 
   // left block
   sPixelPos pixelPos;
-  get4x4Neighbour (mb, i - 1, j, decoder->mbSize[IS_LUMA], &pixelPos);
+  get4x4Neighbour (mb, i - 1, j, decoder->mbSize[eLuma], &pixelPos);
 
   int cnt = 0;
   sSlice* slice = mb->slice;
@@ -56,7 +56,7 @@ static int predict_nnz (sMacroBlock* mb, int block_type, int i,int j) {
     }
 
   // top block
-  get4x4Neighbour (mb, i, j - 1, decoder->mbSize[IS_LUMA], &pixelPos);
+  get4x4Neighbour (mb, i, j - 1, decoder->mbSize[eLuma], &pixelPos);
 
   if ((mb->isIntraBlock == TRUE) && pixelPos.available &&
       decoder->activePPS->hasConstrainedIntraPred && (slice->dataPartitionMode == eDataPartition3)) {
@@ -115,7 +115,7 @@ static int predict_nnz_chroma (sMacroBlock* mb, int i,int j) {
 
     //YUV420 and YUV422
     // left block
-    get4x4Neighbour (mb, ((i&0x01)<<2) - 1, j, decoder->mbSize[IS_CHROMA], &pixelPos);
+    get4x4Neighbour (mb, ((i&0x01)<<2) - 1, j, decoder->mbSize[eChroma], &pixelPos);
 
     if ((mb->isIntraBlock == TRUE) && pixelPos.available &&
         decoder->activePPS->hasConstrainedIntraPred && (slice->dataPartitionMode==eDataPartition3)) {
@@ -130,7 +130,7 @@ static int predict_nnz_chroma (sMacroBlock* mb, int i,int j) {
       }
 
     // top block
-    get4x4Neighbour (mb, ((i&0x01)<<2), j - 1, decoder->mbSize[IS_CHROMA], &pixelPos);
+    get4x4Neighbour (mb, ((i&0x01)<<2), j - 1, decoder->mbSize[eChroma], &pixelPos);
 
     if ((mb->isIntraBlock == TRUE) && pixelPos.available &&
         decoder->activePPS->hasConstrainedIntraPred && (slice->dataPartitionMode==eDataPartition3)) {

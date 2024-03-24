@@ -220,7 +220,7 @@ static void LowPassForIntra8x8PredVer (sPixel* PredPel, int block_up_left, int b
  *    makes and returns 8x8 DC prediction mode
  *
  * \return
- *    DECODING_OK   decoding of intra prediction mode was successful            \n
+ *    eDecodingOk   decoding of intra prediction mode was successful            \n
  *
 ** *********************************************************************
  */
@@ -247,7 +247,7 @@ static int intra8x8_dc_pred (sMacroBlock * mb,
   int block_available_up_right;
 
   sPixel** mpr = slice->mbPred[plane];
-  int *mbSize = decoder->mbSize[IS_LUMA];
+  int *mbSize = decoder->mbSize[eLuma];
 
   for (int i=0; i<25;i++) PredPel[i]=0;
 
@@ -356,7 +356,7 @@ static int intra8x8_dc_pred (sMacroBlock * mb,
   for(j = joff + 1; j < joff + BLOCK_SIZE_8x8; j++)
     memcpy(&mpr[j][ioff], &mpr[j - 1][ioff], BLOCK_SIZE_8x8 * sizeof(sPixel));
 
-  return DECODING_OK;
+  return eDecodingOk;
 }
 //}}}
 //{{{
@@ -366,7 +366,7 @@ static int intra8x8_dc_pred (sMacroBlock * mb,
  *    makes and returns 8x8 vertical prediction mode
  *
  * \return
- *    DECODING_OK   decoding of intra prediction mode was successful            \n
+ *    eDecodingOk   decoding of intra prediction mode was successful            \n
  *
 ** *********************************************************************
  */
@@ -392,7 +392,7 @@ static int intra8x8_vert_pred (sMacroBlock* mb,
 
 
   sPixel** mpr = slice->mbPred[plane];
-  int *mbSize = decoder->mbSize[IS_LUMA];
+  int *mbSize = decoder->mbSize[eLuma];
 
   for (int i=0; i<25;i++) PredPel[i]=0;
 
@@ -464,7 +464,7 @@ static int intra8x8_vert_pred (sMacroBlock* mb,
     memcpy(&mpr[i][ioff], &PredPel[1], BLOCK_SIZE_8x8 * sizeof(sPixel));
   }
 
-  return DECODING_OK;
+  return eDecodingOk;
 }
 //}}}
 //{{{
@@ -474,7 +474,7 @@ static int intra8x8_vert_pred (sMacroBlock* mb,
  *    makes and returns 8x8 horizontal prediction mode
  *
  * \return
- *    DECODING_OK   decoding of intra prediction mode was successful            \n
+ *    eDecodingOk   decoding of intra prediction mode was successful            \n
  *
 ** *********************************************************************
  */
@@ -506,7 +506,7 @@ static int intra8x8_hor_pred (sMacroBlock* mb,
 #endif
   int jpos;
   sPixel** mpr = slice->mbPred[plane];
-  int *mbSize = decoder->mbSize[IS_LUMA];
+  int *mbSize = decoder->mbSize[eLuma];
 
   getNonAffNeighbour(mb, ioff - 1, joff    , mbSize, &pix_a);
   getNonAffNeighbour(mb, ioff    , joff - 1, mbSize, &pix_b);
@@ -575,7 +575,7 @@ static int intra8x8_hor_pred (sMacroBlock* mb,
 #endif
   }
 
-  return DECODING_OK;
+  return eDecodingOk;
 }
 //}}}
 //{{{
@@ -585,7 +585,7 @@ static int intra8x8_hor_pred (sMacroBlock* mb,
  *    makes and returns 8x8 diagonal down right prediction mode
  *
  * \return
- *    DECODING_OK   decoding of intra prediction mode was successful            \n
+ *    eDecodingOk   decoding of intra prediction mode was successful            \n
  *
 ** *********************************************************************
  */
@@ -611,7 +611,7 @@ static int intra8x8_diag_down_right_pred (sMacroBlock* mb,
 
   sPixel *pred_pels;
   sPixel** mbPred = &slice->mbPred[plane][joff];
-  int *mbSize = decoder->mbSize[IS_LUMA];
+  int *mbSize = decoder->mbSize[eLuma];
 
   for (int i=0; i<25;i++) PredPel[i]=0;
 
@@ -724,7 +724,7 @@ static int intra8x8_diag_down_right_pred (sMacroBlock* mb,
   memcpy((*mbPred++) + ioff, pred_pels--, 8 * sizeof(sPixel));
   memcpy((*mbPred  ) + ioff, pred_pels  , 8 * sizeof(sPixel));
 
-  return DECODING_OK;
+  return eDecodingOk;
 }
 //}}}
 //{{{
@@ -734,7 +734,7 @@ static int intra8x8_diag_down_right_pred (sMacroBlock* mb,
  *    makes and returns 8x8 diagonal down left prediction mode
  *
  * \return
- *    DECODING_OK   decoding of intra prediction mode was successful            \n
+ *    eDecodingOk   decoding of intra prediction mode was successful            \n
  *
 ** *********************************************************************
  */
@@ -762,7 +762,7 @@ static int intra8x8_diag_down_left_pred (sMacroBlock* mb,
   for (int i=0; i<25;i++) PredPel[i]=0;
 
   sPixel** mbPred = &slice->mbPred[plane][joff];
-  int *mbSize = decoder->mbSize[IS_LUMA];
+  int *mbSize = decoder->mbSize[eLuma];
 
   getNonAffNeighbour(mb, ioff - 1, joff    , mbSize, &pix_a);
   getNonAffNeighbour(mb, ioff    , joff - 1, mbSize, &pix_b);
@@ -873,7 +873,7 @@ static int intra8x8_diag_down_left_pred (sMacroBlock* mb,
   memcpy((*mbPred++) + ioff, Pred++, 8 * sizeof(sPixel));
   memcpy((*mbPred  ) + ioff, Pred  , 8 * sizeof(sPixel));
 
-  return DECODING_OK;
+  return eDecodingOk;
 }
 //}}}
 //{{{
@@ -883,7 +883,7 @@ static int intra8x8_diag_down_left_pred (sMacroBlock* mb,
  *    makes and returns 8x8 vertical right prediction mode
  *
  * \return
- *    DECODING_OK   decoding of intra prediction mode was successful            \n
+ *    eDecodingOk   decoding of intra prediction mode was successful            \n
  *
 ** *********************************************************************
  */
@@ -911,7 +911,7 @@ static int intra8x8_vert_right_pred (sMacroBlock* mb,
 
   sPixel *pred_pels;
   sPixel** mbPred = &slice->mbPred[plane][joff];
-  int *mbSize = decoder->mbSize[IS_LUMA];
+  int *mbSize = decoder->mbSize[eLuma];
 
   getNonAffNeighbour(mb, ioff - 1, joff    , mbSize, &pix_a);
   getNonAffNeighbour(mb, ioff    , joff - 1, mbSize, &pix_b);
@@ -1028,7 +1028,7 @@ static int intra8x8_vert_right_pred (sMacroBlock* mb,
   memcpy((*mbPred++) + ioff, &PredArray[ 0], 8 * sizeof(sPixel));
   memcpy((*mbPred  ) + ioff, &PredArray[11], 8 * sizeof(sPixel));
 
-  return DECODING_OK;
+  return eDecodingOk;
 }
 //}}}
 //{{{
@@ -1038,7 +1038,7 @@ static int intra8x8_vert_right_pred (sMacroBlock* mb,
  *    makes and returns 8x8 vertical left prediction mode
  *
  * \return
- *    DECODING_OK   decoding of intra prediction mode was successful            \n
+ *    eDecodingOk   decoding of intra prediction mode was successful            \n
  *
 ** *********************************************************************
  */
@@ -1064,7 +1064,7 @@ static int intra8x8_vert_left_pred (sMacroBlock* mb,
   int block_available_up_right;
 
   sPixel** mbPred = &slice->mbPred[plane][joff];
-  int *mbSize = decoder->mbSize[IS_LUMA];
+  int *mbSize = decoder->mbSize[eLuma];
 
   for (int i=0; i<25;i++) PredPel[i]=0;
 
@@ -1181,7 +1181,7 @@ static int intra8x8_vert_left_pred (sMacroBlock* mb,
   memcpy((*mbPred++) + ioff, &PredArray[ 3], 8 * sizeof(sPixel));
   memcpy((*mbPred  ) + ioff, &PredArray[14], 8 * sizeof(sPixel));
 
-  return DECODING_OK;
+  return eDecodingOk;
 }
 //}}}
 //{{{
@@ -1191,7 +1191,7 @@ static int intra8x8_vert_left_pred (sMacroBlock* mb,
  *    makes and returns 8x8 horizontal up prediction mode
  *
  * \return
- *    DECODING_OK   decoding of intra prediction mode was successful            \n
+ *    eDecodingOk   decoding of intra prediction mode was successful            \n
  *
 ** *********************************************************************
  */
@@ -1220,7 +1220,7 @@ static int intra8x8_hor_up_pred (sMacroBlock* mb,
   for (int i=0; i<25;i++) PredPel[i]=0;
 
   sPixel** mpr = slice->mbPred[plane];
-  int *mbSize = decoder->mbSize[IS_LUMA];
+  int *mbSize = decoder->mbSize[eLuma];
 
   getNonAffNeighbour(mb, ioff - 1, joff    , mbSize, &pix_a);
   getNonAffNeighbour(mb, ioff    , joff - 1, mbSize, &pix_b);
@@ -1335,7 +1335,7 @@ static int intra8x8_hor_up_pred (sMacroBlock* mb,
   memcpy(&mpr[jpos6][ioff], &PredArray[12], 8 * sizeof(sPixel));
   memcpy(&mpr[jpos7][ioff], &PredArray[14], 8 * sizeof(sPixel));
 
-  return DECODING_OK;
+  return eDecodingOk;
 }
 //}}}
 //{{{
@@ -1345,7 +1345,7 @@ static int intra8x8_hor_up_pred (sMacroBlock* mb,
  *    makes and returns 8x8 horizontal down prediction mode
  *
  * \return
- *    DECODING_OK   decoding of intra prediction mode was successful            \n
+ *    eDecodingOk   decoding of intra prediction mode was successful            \n
  *
 ** *********************************************************************
  */
@@ -1371,7 +1371,7 @@ static int intra8x8_hor_down_pred (sMacroBlock* mb,
 
   sPixel *pred_pels;
   sPixel** mbPred = &slice->mbPred[plane][joff];
-  int *mbSize = decoder->mbSize[IS_LUMA];
+  int *mbSize = decoder->mbSize[eLuma];
 
   for (int i=0; i<25;i++) PredPel[i]=0;
 
@@ -1498,7 +1498,7 @@ static int intra8x8_hor_down_pred (sMacroBlock* mb,
   pred_pels -= 2;
   memcpy((*mbPred  ) + ioff, pred_pels, 8 * sizeof(sPixel));
 
-  return DECODING_OK;
+  return eDecodingOk;
 }
 //}}}
 //{{{
@@ -1558,7 +1558,7 @@ static int intra_pred_8x8_normal (sMacroBlock* mb,
     return (intra8x8_hor_down_pred(mb, plane, ioff, joff));
   default:
     printf("Error: illegal intra_8x8 prediction mode: %d\n", (int) predmode);
-    return SEARCH_SYNC;
+    return eSearchSync;
     break;
   }
 }
@@ -1587,7 +1587,7 @@ static int intra8x8_dc_pred_mbaff (sMacroBlock* mb, eColorPlane plane, int ioff,
   for (int i=0; i<25;i++) PredPel[i]=0;
 
   sPixel** mpr = slice->mbPred[plane];
-  int *mbSize = decoder->mbSize[IS_LUMA];
+  int *mbSize = decoder->mbSize[eLuma];
 
   for (i=0;i<8;i++)
   {
@@ -1695,7 +1695,7 @@ static int intra8x8_dc_pred_mbaff (sMacroBlock* mb, eColorPlane plane, int ioff,
     for(i = ioff; i < ioff + BLOCK_SIZE_8x8; i++)
       mpr[j][i] = (sPixel) s0;
 
-  return DECODING_OK;
+  return eDecodingOk;
 }
 //}}}
 //{{{
@@ -1705,7 +1705,7 @@ static int intra8x8_dc_pred_mbaff (sMacroBlock* mb, eColorPlane plane, int ioff,
  *    makes and returns 8x8 vertical prediction mode
  *
  * \return
- *    DECODING_OK   decoding of intra_prediction mode was successful            \n
+ *    eDecodingOk   decoding of intra_prediction mode was successful            \n
  *
 ** *********************************************************************
  */
@@ -1732,7 +1732,7 @@ static int intra8x8_vert_pred_mbaff (sMacroBlock* mb,
   for (int i=0; i<25;i++) PredPel[i]=0;
 
   sPixel** mpr = slice->mbPred[plane];
-  int *mbSize = decoder->mbSize[IS_LUMA];
+  int *mbSize = decoder->mbSize[eLuma];
 
   for (i=0;i<8;i++)
   {
@@ -1807,7 +1807,7 @@ static int intra8x8_vert_pred_mbaff (sMacroBlock* mb,
     memcpy(&mpr[i][ioff], &PredPel[1], BLOCK_SIZE_8x8 * sizeof(sPixel));
   }
 
-  return DECODING_OK;
+  return eDecodingOk;
 }
 //}}}
 //{{{
@@ -1817,7 +1817,7 @@ static int intra8x8_vert_pred_mbaff (sMacroBlock* mb,
  *    makes and returns 8x8 horizontal prediction mode
  *
  * \return
- *    DECODING_OK   decoding of intra_prediction mode was successful            \n
+ *    eDecodingOk   decoding of intra_prediction mode was successful            \n
  *
 ** *********************************************************************
  */
@@ -1849,7 +1849,7 @@ static int intra8x8_hor_pred_mbaff (sMacroBlock* mb,
 #endif
   int jpos;
   sPixel** mpr = slice->mbPred[plane];
-  int *mbSize = decoder->mbSize[IS_LUMA];
+  int *mbSize = decoder->mbSize[eLuma];
 
   for (i=0;i<8;i++)
   {
@@ -1924,7 +1924,7 @@ static int intra8x8_hor_pred_mbaff (sMacroBlock* mb,
 #endif
   }
 
-  return DECODING_OK;
+  return eDecodingOk;
 }
 //}}}
 //{{{
@@ -1934,7 +1934,7 @@ static int intra8x8_hor_pred_mbaff (sMacroBlock* mb,
  *    makes and returns 8x8 diagonal down right prediction mode
  *
  * \return
- *    DECODING_OK   decoding of intra prediction mode was successful            \n
+ *    eDecodingOk   decoding of intra prediction mode was successful            \n
  *
 ** *********************************************************************
  */
@@ -1961,7 +1961,7 @@ static int intra8x8_diag_down_right_pred_mbaff (sMacroBlock* mb,
   int block_available_up_right;
 
   sPixel** mpr = slice->mbPred[plane];
-  int *mbSize = decoder->mbSize[IS_LUMA];
+  int *mbSize = decoder->mbSize[eLuma];
 
   for (int i=0; i<25;i++) PredPel[i]=0;
 
@@ -2075,7 +2075,7 @@ static int intra8x8_diag_down_right_pred_mbaff (sMacroBlock* mb,
   memcpy(&mpr[joff++][ioff], &PredArray[1], 8 * sizeof(sPixel));
   memcpy(&mpr[joff  ][ioff], &PredArray[0], 8 * sizeof(sPixel));
 
-  return DECODING_OK;
+  return eDecodingOk;
 }
 //}}}
 //{{{
@@ -2085,7 +2085,7 @@ static int intra8x8_diag_down_right_pred_mbaff (sMacroBlock* mb,
  *    makes and returns 8x8 diagonal down left prediction mode
  *
  * \return
- *    DECODING_OK   decoding of intra prediction mode was successful            \n
+ *    eDecodingOk   decoding of intra prediction mode was successful            \n
  *
 ** *********************************************************************
  */
@@ -2112,7 +2112,7 @@ static int intra8x8_diag_down_left_pred_mbaff (sMacroBlock* mb,
   int block_available_up_right;
 
   sPixel** mpr = slice->mbPred[plane];
-  int *mbSize = decoder->mbSize[IS_LUMA];
+  int *mbSize = decoder->mbSize[eLuma];
 
   for (int i=0; i<25;i++) PredPel[i]=0;
 
@@ -2228,7 +2228,7 @@ static int intra8x8_diag_down_left_pred_mbaff (sMacroBlock* mb,
   memcpy(&mpr[joff++][ioff], Pred++, 8 * sizeof(sPixel));
   memcpy(&mpr[joff  ][ioff], Pred  , 8 * sizeof(sPixel));
 
-  return DECODING_OK;
+  return eDecodingOk;
 }
 //}}}
 //{{{
@@ -2238,7 +2238,7 @@ static int intra8x8_diag_down_left_pred_mbaff (sMacroBlock* mb,
  *    makes and returns 8x8 vertical right prediction mode
  *
  * \return
- *    DECODING_OK   decoding of intra prediction mode was successful            \n
+ *    eDecodingOk   decoding of intra prediction mode was successful            \n
  *
 ** *********************************************************************
  */
@@ -2264,7 +2264,7 @@ static int intra8x8_vert_right_pred_mbaff (sMacroBlock* mb,
   int block_available_up_right;
 
   sPixel** mpr = slice->mbPred[plane];
-  int *mbSize = decoder->mbSize[IS_LUMA];
+  int *mbSize = decoder->mbSize[eLuma];
 
   for (int i=0; i<25;i++) PredPel[i]=0;
 
@@ -2385,7 +2385,7 @@ static int intra8x8_vert_right_pred_mbaff (sMacroBlock* mb,
   memcpy(&mpr[joff++][ioff], &PredArray[ 0], 8 * sizeof(sPixel));
   memcpy(&mpr[joff  ][ioff], &PredArray[11], 8 * sizeof(sPixel));
 
-  return DECODING_OK;
+  return eDecodingOk;
 }
 //}}}
 //{{{
@@ -2395,7 +2395,7 @@ static int intra8x8_vert_right_pred_mbaff (sMacroBlock* mb,
  *    makes and returns 8x8 vertical left prediction mode
  *
  * \return
- *    DECODING_OK   decoding of intra prediction mode was successful            \n
+ *    eDecodingOk   decoding of intra prediction mode was successful            \n
  *
 ** *********************************************************************
  */
@@ -2422,7 +2422,7 @@ static int intra8x8_vert_left_pred_mbaff (sMacroBlock* mb,
   int block_available_up_right;
 
   sPixel** mpr = slice->mbPred[plane];
-  int *mbSize = decoder->mbSize[IS_LUMA];
+  int *mbSize = decoder->mbSize[eLuma];
 
   for (int i=0; i<25;i++) PredPel[i]=0;
 
@@ -2542,7 +2542,7 @@ static int intra8x8_vert_left_pred_mbaff (sMacroBlock* mb,
   memcpy(&mpr[joff++][ioff], &PredArray[ 3], 8 * sizeof(sPixel));
   memcpy(&mpr[joff  ][ioff], &PredArray[14], 8 * sizeof(sPixel));
 
-  return DECODING_OK;
+  return eDecodingOk;
 }
 //}}}
 //{{{
@@ -2552,7 +2552,7 @@ static int intra8x8_vert_left_pred_mbaff (sMacroBlock* mb,
  *    makes and returns 8x8 horizontal up prediction mode
  *
  * \return
- *    DECODING_OK   decoding of intra prediction mode was successful            \n
+ *    eDecodingOk   decoding of intra prediction mode was successful            \n
  *
 ** *********************************************************************
  */
@@ -2580,7 +2580,7 @@ static int intra8x8_hor_up_pred_mbaff (sMacroBlock* mb,
   int jpos4 = joff + 4, jpos5 = joff + 5, jpos6 = joff + 6, jpos7 = joff + 7;
 
   sPixel** mpr = slice->mbPred[plane];
-  int *mbSize = decoder->mbSize[IS_LUMA];
+  int *mbSize = decoder->mbSize[eLuma];
 
   for (int i=0; i<25;i++) PredPel[i]=0;
 
@@ -2700,7 +2700,7 @@ static int intra8x8_hor_up_pred_mbaff (sMacroBlock* mb,
   memcpy(&mpr[jpos6][ioff], &PredArray[12], 8 * sizeof(sPixel));
   memcpy(&mpr[jpos7][ioff], &PredArray[14], 8 * sizeof(sPixel));
 
-  return DECODING_OK;
+  return eDecodingOk;
 }
 //}}}
 //{{{
@@ -2710,7 +2710,7 @@ static int intra8x8_hor_up_pred_mbaff (sMacroBlock* mb,
  *    makes and returns 8x8 horizontal down prediction mode
  *
  * \return
- *    DECODING_OK   decoding of intra prediction mode was successful            \n
+ *    eDecodingOk   decoding of intra prediction mode was successful            \n
  *
 ** *********************************************************************
  */
@@ -2738,7 +2738,7 @@ static int intra8x8_hor_down_pred_mbaff (sMacroBlock* mb,
   int jpos4 = joff + 4, jpos5 = joff + 5, jpos6 = joff + 6, jpos7 = joff + 7;
 
   sPixel** mpr = slice->mbPred[plane];
-  int *mbSize = decoder->mbSize[IS_LUMA];
+  int *mbSize = decoder->mbSize[eLuma];
 
   for (int i=0; i<25;i++) PredPel[i]=0;
 
@@ -2858,7 +2858,7 @@ static int intra8x8_hor_down_pred_mbaff (sMacroBlock* mb,
   memcpy(&mpr[jpos6][ioff], &PredArray[ 2], 8 * sizeof(sPixel));
   memcpy(&mpr[jpos7][ioff], &PredArray[ 0], 8 * sizeof(sPixel));
 
-  return DECODING_OK;
+  return eDecodingOk;
 }
 //}}}
 //{{{
@@ -2918,7 +2918,7 @@ static int intra_pred_8x8_mbaff (sMacroBlock* mb,
     return (intra8x8_hor_down_pred_mbaff(mb, plane, ioff, joff));
   default:
     printf("Error: illegal intra_8x8 prediction mode: %d\n", (int) predmode);
-    return SEARCH_SYNC;
+    return eSearchSync;
     break;
   }
 }
@@ -2931,7 +2931,7 @@ static int intra_pred_8x8_mbaff (sMacroBlock* mb,
  *    makes and returns 16x16 DC prediction mode
  *
  * \return
- *    DECODING_OK   decoding of intra_prediction mode was successful            \n
+ *    eDecodingOk   decoding of intra_prediction mode was successful            \n
  *
 ** *********************************************************************
  */
@@ -2951,8 +2951,8 @@ static int intra16x16_dc_pred (sMacroBlock* mb, eColorPlane plane)
 
   int up_avail, left_avail;
 
-  getNonAffNeighbour(mb,   -1,   0, decoder->mbSize[IS_LUMA], &a);
-  getNonAffNeighbour(mb,    0,  -1, decoder->mbSize[IS_LUMA], &b);
+  getNonAffNeighbour(mb,   -1,   0, decoder->mbSize[eLuma], &a);
+  getNonAffNeighbour(mb,    0,  -1, decoder->mbSize[eLuma], &b);
 
   if (!decoder->activePPS->hasConstrainedIntraPred)
   {
@@ -3010,7 +3010,7 @@ static int intra16x16_dc_pred (sMacroBlock* mb, eColorPlane plane)
 #endif
   }
 
-  return DECODING_OK;
+  return eDecodingOk;
 
 }
 //}}}
@@ -3021,7 +3021,7 @@ static int intra16x16_dc_pred (sMacroBlock* mb, eColorPlane plane)
  *    makes and returns 16x16 vertical prediction mode
  *
  * \return
- *    DECODING_OK   decoding of intra prediction mode was successful            \n
+ *    eDecodingOk   decoding of intra prediction mode was successful            \n
  *
 ** *********************************************************************
  */
@@ -3038,7 +3038,7 @@ static int intra16x16_vert_pred (sMacroBlock* mb, eColorPlane plane)
 
   int up_avail;
 
-  getNonAffNeighbour(mb,    0,   -1, decoder->mbSize[IS_LUMA], &b);
+  getNonAffNeighbour(mb,    0,   -1, decoder->mbSize[eLuma], &b);
 
   if (!decoder->activePPS->hasConstrainedIntraPred)
   {
@@ -3064,7 +3064,7 @@ static int intra16x16_vert_pred (sMacroBlock* mb, eColorPlane plane)
     }
   }
 
-  return DECODING_OK;
+  return eDecodingOk;
 }
 //}}}
 //{{{
@@ -3074,7 +3074,7 @@ static int intra16x16_vert_pred (sMacroBlock* mb, eColorPlane plane)
  *    makes and returns 16x16 horizontal prediction mode
  *
  * \return
- *    DECODING_OK   decoding of intra prediction mode was successful            \n
+ *    eDecodingOk   decoding of intra prediction mode was successful            \n
  *
 ** *********************************************************************
  */
@@ -3093,7 +3093,7 @@ static int intra16x16_hor_pred (sMacroBlock* mb, eColorPlane plane)
 
   int left_avail;
 
-  getNonAffNeighbour(mb, -1,  0, decoder->mbSize[IS_LUMA], &a);
+  getNonAffNeighbour(mb, -1,  0, decoder->mbSize[eLuma], &a);
 
   if (!decoder->activePPS->hasConstrainedIntraPred)
   {
@@ -3132,7 +3132,7 @@ static int intra16x16_hor_pred (sMacroBlock* mb, eColorPlane plane)
 #endif
   }
 
-  return DECODING_OK;
+  return eDecodingOk;
 }
 //}}}
 //{{{
@@ -3142,7 +3142,7 @@ static int intra16x16_hor_pred (sMacroBlock* mb, eColorPlane plane)
  *    makes and returns 16x16 horizontal prediction mode
  *
  * \return
- *    DECODING_OK   decoding of intra prediction mode was successful            \n
+ *    eDecodingOk   decoding of intra prediction mode was successful            \n
  *
 ** *********************************************************************
  */
@@ -3166,9 +3166,9 @@ static int intra16x16_plane_pred (sMacroBlock* mb, eColorPlane plane)
 
   int up_avail, left_avail, left_up_avail;
 
-  getNonAffNeighbour(mb, -1,  -1, decoder->mbSize[IS_LUMA], &d);
-  getNonAffNeighbour(mb, -1,   0, decoder->mbSize[IS_LUMA], &a);
-  getNonAffNeighbour(mb,  0,  -1, decoder->mbSize[IS_LUMA], &b);
+  getNonAffNeighbour(mb, -1,  -1, decoder->mbSize[eLuma], &d);
+  getNonAffNeighbour(mb, -1,   0, decoder->mbSize[eLuma], &a);
+  getNonAffNeighbour(mb,  0,  -1, decoder->mbSize[eLuma], &b);
 
   if (!decoder->activePPS->hasConstrainedIntraPred)
   {
@@ -3215,7 +3215,7 @@ static int intra16x16_plane_pred (sMacroBlock* mb, eColorPlane plane)
     }
   }// store plane prediction
 
-  return DECODING_OK;
+  return eDecodingOk;
 }
 //}}}
 //{{{
@@ -3237,7 +3237,7 @@ static int intra_pred_16x16_normal (sMacroBlock* mb, eColorPlane plane, int pred
   default:
     {                                    // indication of fault in s,exit
       printf("illegal 16x16 intra prediction mode input: %d\n",predmode);
-      return SEARCH_SYNC;
+      return eSearchSync;
     }
   }
 }
@@ -3251,7 +3251,7 @@ static int intra_pred_16x16_normal (sMacroBlock* mb, eColorPlane plane, int pred
  *    makes and returns 16x16 DC prediction mode
  *
  * \return
- *    DECODING_OK   decoding of intra prediction mode was successful            \n
+ *    eDecodingOk   decoding of intra prediction mode was successful            \n
  *
 ** *********************************************************************
  */
@@ -3276,9 +3276,9 @@ static int intra16x16_dc_pred_mbaff (sMacroBlock* mb, eColorPlane plane)
 
   for (i=0;i<17;++i)
   {
-    getAffNeighbour(mb, -1,  i-1, decoder->mbSize[IS_LUMA], &left[i]);
+    getAffNeighbour(mb, -1,  i-1, decoder->mbSize[eLuma], &left[i]);
   }
-  getAffNeighbour(mb,    0,   -1, decoder->mbSize[IS_LUMA], &b);
+  getAffNeighbour(mb,    0,   -1, decoder->mbSize[eLuma], &b);
 
   if (!decoder->activePPS->hasConstrainedIntraPred)
   {
@@ -3320,7 +3320,7 @@ static int intra16x16_dc_pred_mbaff (sMacroBlock* mb, eColorPlane plane)
 #endif
   }
 
-  return DECODING_OK;
+  return eDecodingOk;
 }
 //}}}
 //{{{
@@ -3330,7 +3330,7 @@ static int intra16x16_dc_pred_mbaff (sMacroBlock* mb, eColorPlane plane)
  *    makes and returns 16x16 vertical prediction mode
  *
  * \return
- *    DECODING_OK   decoding of intra prediction mode was successful            \n
+ *    eDecodingOk   decoding of intra prediction mode was successful            \n
  *
 ** *********************************************************************
  */
@@ -3347,7 +3347,7 @@ static int intra16x16_vert_pred_mbaff (sMacroBlock* mb, eColorPlane plane)
 
   int up_avail;
 
-  getAffNeighbour(mb,    0,   -1, decoder->mbSize[IS_LUMA], &b);
+  getAffNeighbour(mb,    0,   -1, decoder->mbSize[eLuma], &b);
 
   if (!decoder->activePPS->hasConstrainedIntraPred)
   {
@@ -3373,7 +3373,7 @@ static int intra16x16_vert_pred_mbaff (sMacroBlock* mb, eColorPlane plane)
     }
   }
 
-  return DECODING_OK;
+  return eDecodingOk;
 }
 //}}}
 //{{{
@@ -3383,7 +3383,7 @@ static int intra16x16_vert_pred_mbaff (sMacroBlock* mb, eColorPlane plane)
  *    makes and returns 16x16 horizontal prediction mode
  *
  * \return
- *    DECODING_OK   decoding of intra prediction mode was successful            \n
+ *    eDecodingOk   decoding of intra prediction mode was successful            \n
  *
 ** *********************************************************************
  */
@@ -3403,7 +3403,7 @@ static int intra16x16_hor_pred_mbaff (sMacroBlock* mb, eColorPlane plane)
 
   for (i=0;i<17;++i)
   {
-    getAffNeighbour(mb, -1,  i-1, decoder->mbSize[IS_LUMA], &left[i]);
+    getAffNeighbour(mb, -1,  i-1, decoder->mbSize[eLuma], &left[i]);
   }
 
   if (!decoder->activePPS->hasConstrainedIntraPred)
@@ -3426,7 +3426,7 @@ static int intra16x16_hor_pred_mbaff (sMacroBlock* mb, eColorPlane plane)
       mbPred[j][i]= prediction; // store predicted 16x16 block
   }
 
-  return DECODING_OK;
+  return eDecodingOk;
 }
 //}}}
 //{{{
@@ -3436,7 +3436,7 @@ static int intra16x16_hor_pred_mbaff (sMacroBlock* mb, eColorPlane plane)
  *    makes and returns 16x16 horizontal prediction mode
  *
  * \return
- *    DECODING_OK   decoding of intra prediction mode was successful            \n
+ *    eDecodingOk   decoding of intra prediction mode was successful            \n
  *
 ** *********************************************************************
  */
@@ -3462,9 +3462,9 @@ static int intra16x16_plane_pred_mbaff (sMacroBlock* mb, eColorPlane plane)
 
   for (i=0;i<17; ++i)
   {
-    getAffNeighbour(mb, -1,  i-1, decoder->mbSize[IS_LUMA], &left[i]);
+    getAffNeighbour(mb, -1,  i-1, decoder->mbSize[eLuma], &left[i]);
   }
-  getAffNeighbour(mb,    0,   -1, decoder->mbSize[IS_LUMA], &b);
+  getAffNeighbour(mb,    0,   -1, decoder->mbSize[eLuma], &b);
 
   if (!decoder->activePPS->hasConstrainedIntraPred)
   {
@@ -3505,7 +3505,7 @@ static int intra16x16_plane_pred_mbaff (sMacroBlock* mb, eColorPlane plane)
     }
   }// store plane prediction
 
-  return DECODING_OK;
+  return eDecodingOk;
 }
 //}}}
 //{{{
@@ -3528,7 +3528,7 @@ static int intra_pred_16x16_mbaff (sMacroBlock* mb, eColorPlane plane, int predm
   default:
     {                                    // indication of fault in s,exit
       printf("illegal 16x16 intra prediction mode input: %d\n",predmode);
-      return SEARCH_SYNC;
+      return eSearchSync;
     }
   }
 }
@@ -3612,8 +3612,8 @@ static void intrapred_chroma_dc (sMacroBlock* mb)
   sPixel** mb_pred1 = slice->mbPred[1 + 1];
 
 
-  getNonAffNeighbour(mb, -1,  0, decoder->mbSize[IS_CHROMA], &left);
-  getNonAffNeighbour(mb,  0, -1, decoder->mbSize[IS_CHROMA], &up);
+  getNonAffNeighbour(mb, -1,  0, decoder->mbSize[eChroma], &left);
+  getNonAffNeighbour(mb,  0, -1, decoder->mbSize[eChroma], &up);
 
   if (!decoder->activePPS->hasConstrainedIntraPred)
   {
@@ -3691,7 +3691,7 @@ static void intrapred_chroma_hor (sMacroBlock* mb)
   sPixelPos a;  //!< pixel positions p(-1, -1..16)
   int left_avail;
 
-  getNonAffNeighbour(mb, -1, 0, decoder->mbSize[IS_CHROMA], &a);
+  getNonAffNeighbour(mb, -1, 0, decoder->mbSize[eChroma], &a);
 
   if (!decoder->activePPS->hasConstrainedIntraPred)
     left_avail = a.available;
@@ -3749,7 +3749,7 @@ static void intrapred_chroma_ver (sMacroBlock* mb)
   int up_avail;
   int cr_MB_x = decoder->mbCrSizeX;
   int cr_MB_y = decoder->mbCrSizeY;
-  getNonAffNeighbour(mb, 0, -1, decoder->mbSize[IS_CHROMA], &up);
+  getNonAffNeighbour(mb, 0, -1, decoder->mbSize[eChroma], &up);
 
   if (!decoder->activePPS->hasConstrainedIntraPred)
     up_avail      = up.available;
@@ -3785,9 +3785,9 @@ static void intrapred_chroma_plane (sMacroBlock* mb)
   sPixelPos left;  //!< pixel positions p(-1, -1..16)
   int up_avail, left_avail, left_up_avail;
 
-  getNonAffNeighbour(mb, -1, -1, decoder->mbSize[IS_CHROMA], &up_left);
-  getNonAffNeighbour(mb, -1,  0, decoder->mbSize[IS_CHROMA], &left);
-  getNonAffNeighbour(mb,  0, -1, decoder->mbSize[IS_CHROMA], &up);
+  getNonAffNeighbour(mb, -1, -1, decoder->mbSize[eChroma], &up_left);
+  getNonAffNeighbour(mb, -1,  0, decoder->mbSize[eChroma], &left);
+  getNonAffNeighbour(mb,  0, -1, decoder->mbSize[eChroma], &up);
 
   if (!decoder->activePPS->hasConstrainedIntraPred)
   {
@@ -3936,8 +3936,8 @@ static void intra_pred_chroma_mbaff (sMacroBlock* mb)
       int cr_MB_y2 = (cr_MB_y >> 1);
 
       for (i=0; i < cr_MB_y + 1 ; ++i)
-        getAffNeighbour(mb, -1, i-1, decoder->mbSize[IS_CHROMA], &left[i]);
-      getAffNeighbour(mb, 0, -1, decoder->mbSize[IS_CHROMA], &up);
+        getAffNeighbour(mb, -1, i-1, decoder->mbSize[eChroma], &left[i]);
+      getAffNeighbour(mb, 0, -1, decoder->mbSize[eChroma], &up);
 
       if (!decoder->activePPS->hasConstrainedIntraPred)
       {
@@ -4026,7 +4026,7 @@ static void intra_pred_chroma_mbaff (sMacroBlock* mb)
       int cr_MB_y2 = (cr_MB_y >> 1);
 
       for (i=0; i < cr_MB_y + 1 ; ++i)
-        getAffNeighbour(mb, -1, i-1, decoder->mbSize[IS_CHROMA], &left[i]);
+        getAffNeighbour(mb, -1, i-1, decoder->mbSize[eChroma], &left[i]);
 
       if (!decoder->activePPS->hasConstrainedIntraPred)
       {
@@ -4072,7 +4072,7 @@ static void intra_pred_chroma_mbaff (sMacroBlock* mb)
       int cr_MB_x = decoder->mbCrSizeX;
       int cr_MB_y = decoder->mbCrSizeY;
 
-      getAffNeighbour(mb, 0, -1, decoder->mbSize[IS_CHROMA], &up);
+      getAffNeighbour(mb, 0, -1, decoder->mbSize[eChroma], &up);
 
       if (!decoder->activePPS->hasConstrainedIntraPred)
         up_avail      = up.available;
@@ -4108,8 +4108,8 @@ static void intra_pred_chroma_mbaff (sMacroBlock* mb)
       int cr_MB_x2 = (cr_MB_x >> 1);
 
       for (i=0; i < cr_MB_y + 1 ; ++i)
-        getAffNeighbour(mb, -1, i-1, decoder->mbSize[IS_CHROMA], &left[i]);
-      getAffNeighbour(mb, 0, -1, decoder->mbSize[IS_CHROMA], &up);
+        getAffNeighbour(mb, -1, i-1, decoder->mbSize[eChroma], &left[i]);
+      getAffNeighbour(mb, 0, -1, decoder->mbSize[eChroma], &up);
 
       if (!decoder->activePPS->hasConstrainedIntraPred)
       {

@@ -1564,7 +1564,7 @@ static void mbAffPostProc (sDecoder* decoder) {
     if (picture->motion.mbField[i]) {
       short x0;
       short y0;
-      getMbPos (decoder, i, decoder->mbSize[IS_LUMA], &x0, &y0);
+      getMbPos (decoder, i, decoder->mbSize[eLuma], &x0, &y0);
 
       sPixel tempBuffer[32][16];
       updateMbAff (imgY + y0, tempBuffer, x0, MB_BLOCK_SIZE, MB_BLOCK_SIZE);
@@ -1580,6 +1580,45 @@ static void mbAffPostProc (sDecoder* decoder) {
   }
 //}}}
 
+//{{{
+static void useParameterSet (sDecoder* decoder, sSlice* slice) {
+
+  sPPS* pps = &decoder->pps[slice->ppsId];
+  if (!pps->valid)
+    printf ("useParameterSet - invalid PPSid:%d\n", slice->ppsId);
+
+  sSPS* sps = &decoder->sps[pps->spsId];
+  if (!sps->valid)
+    printf ("useParameterSet - no SPSid:%d:%d\n", slice->ppsId, pps->spsId);
+
+  // In theory, and with a well-designed software, the lines above are everything necessary.
+  // In practice, we need to patch many values
+  // in decoder-> (but no more in input. -- these have been taken care of)
+  // Set Sequence Parameter Stuff first
+  if (sps->pocType > 2)
+    error ("invalid SPS pocType");
+  if (sps->pocType == 1)
+    if (sps->numRefFramesPocCycle >= MAX_NUM_REF_FRAMES_PIC_ORDER)
+      error ("numRefFramesPocCycle too large");
+
+  activateSPS (decoder, sps);
+  activatePPS (decoder, pps);
+
+  // slice->dataPartitionMode is set by read_new_slice (NALU first byte available there)
+  if (pps->entropyCoding == eCavlc) {
+    slice->nalStartCode = vlcStartCode;
+    for (int i = 0; i < 3; i++)
+      slice->dataPartitions[i].readSyntaxElement = readSyntaxElementVLC;
+    }
+  else {
+    slice->nalStartCode = cabacStartCode;
+    for (int i = 0; i < 3; i++)
+      slice->dataPartitions[i].readSyntaxElement = readSyntaxElementCABAC;
+    }
+
+  decoder->coding.sliceType = slice->sliceType;
+  }
+//}}}
 //{{{
 static int isNewPicture (sPicture* picture, sSlice* slice, sOldSlice* oldSlice) {
 
@@ -1674,7 +1713,7 @@ static void initPicture (sDecoder* decoder, sSlice* slice) {
       (slice->frameNum != decoder->preFrameNum) &&
       (slice->frameNum != (decoder->preFrameNum + 1) % decoder->coding.maxFrameNum)) {
     if (!activeSPS->gaps_in_frame_num_value_allowed_flag) {
-      // picture error conceal
+      //{{{  picture error conceal
       if (decoder->param.concealMode) {
         if ((slice->frameNum) < ((decoder->preFrameNum + 1) % decoder->coding.maxFrameNum)) {
           /* Conceal lost IDR frames and any frames immediately following the IDR.
@@ -1696,6 +1735,7 @@ static void initPicture (sDecoder* decoder, sSlice* slice) {
         // Advanced Error Concealment would be called here to combat unintentional loss of pictures
         error ("initPicture - unintentional loss of picture\n");
       }
+      //}}}
     if (!decoder->concealMode)
       fillFrameNumGap (decoder, slice);
     }
@@ -1708,10 +1748,8 @@ static void initPicture (sDecoder* decoder, sSlice* slice) {
 
   if (decoder->recoveryFrameNum == (int)slice->frameNum && decoder->recoveryPoc == 0x7fffffff)
     decoder->recoveryPoc = slice->framePoc;
-
   if (slice->refId)
     decoder->lastRefPicPoc = slice->framePoc;
-
   if ((slice->picStructure == eFrame) || (slice->picStructure == eTopField))
     getTime (&decoder->info.startTime);
 
@@ -1761,7 +1799,7 @@ static void initPicture (sDecoder* decoder, sSlice* slice) {
     decoder->coding.sliceType = eSliceP;  // concealed element
     }
 
-  // eCavlc init
+  // cavlc init
   if (decoder->activePPS->entropyCoding == eCavlc)
     memset (decoder->nzCoeff[0][0][0], -1, decoder->picSizeInMbs * 48 *sizeof(byte)); // 3 * 4 * 4
 
@@ -1827,57 +1865,18 @@ static void initPicture (sDecoder* decoder, sSlice* slice) {
     }
   }
 //}}}
-
 //{{{
-static void useParameterSet (sDecoder* decoder, sSlice* slice) {
-
-  sPPS* pps = &decoder->pps[slice->ppsId];
-  if (!pps->valid)
-    printf ("useParameterSet - invalid PPS id:%d\n", slice->ppsId);
-
-  sSPS* sps = &decoder->sps[pps->spsId];
-  if (!sps->valid)
-    printf ("useParameterSet - no SPS id:%d:%d\n", slice->ppsId, pps->spsId);
-
-  // In theory, and with a well-designed software, the lines above are everything necessary.
-  // In practice, we need to patch many values
-  // in decoder-> (but no more in input. -- these have been taken care of)
-  // Set Sequence Parameter Stuff first
-  if (sps->pocType > 2)
-    error ("invalid SPS pocType");
-  if (sps->pocType == 1)
-    if (sps->numRefFramesPocCycle >= MAX_NUM_REF_FRAMES_PIC_ORDER)
-      error ("numRefFramesPocCycle too large");
-
-  activateSPS (decoder, sps);
-  activatePPS (decoder, pps);
-
-  // slice->dataPartitionMode is set by read_new_slice (NALU first byte available there)
-  if (pps->entropyCoding == eCavlc) {
-    slice->nalStartCode = vlcStartCode;
-    for (int i = 0; i < 3; i++)
-      slice->dataPartitions[i].readSyntaxElement = readSyntaxElementVLC;
-    }
-  else {
-    slice->nalStartCode = cabacStartCode;
-    for (int i = 0; i < 3; i++)
-      slice->dataPartitions[i].readSyntaxElement = readSyntaxElementCABAC;
-    }
-  decoder->coding.sliceType = slice->sliceType;
-  }
-//}}}
-//{{{
-static void initPictureDecoding (sDecoder* decoder) {
+static void initPictureDecode (sDecoder* decoder) {
 
   int deblockMode = 1;
 
   if (decoder->picSliceIndex >= MAX_NUM_SLICES)
-    error ("initPictureDecoding - MAX_NUM_SLICES exceeded");
+    error ("initPictureDecode - MAX_NUM_SLICES exceeded");
 
   sSlice* slice = decoder->sliceList[0];
   if (decoder->nextPPS->valid && (decoder->nextPPS->ppsId == slice->ppsId)) {
     if (decoder->param.sliceDebug)
-      printf ("--- initPictureDecoding - switching PPS - nextPPS:%d == slicePPS:%d\n",
+      printf ("--- initPictureDecode - switching PPS - nextPPS:%d == slicePPS:%d\n",
               decoder->nextPPS->ppsId, slice->ppsId);
 
     sPPS pps;
@@ -1908,6 +1907,7 @@ static void initPictureDecoding (sDecoder* decoder) {
   decoder->deblockMode = deblockMode;
   }
 //}}}
+
 //{{{
 static void initSlice (sDecoder* decoder, sSlice* slice) {
 
@@ -2518,7 +2518,7 @@ static int readSlice (sSlice* slice) {
     sNalu* nalu = decoder->nalu;
     if (!decoder->pendingNalu) {
       if (!readNalu (decoder, nalu))
-        return EOS;
+        return eEOS;
       }
     else {
       nalu = decoder->pendingNalu;
@@ -2583,11 +2583,11 @@ static int readSlice (sSlice* slice) {
         if (isNewPicture (decoder->picture, slice, decoder->oldSlice)) {
           if (!decoder->picSliceIndex)
             initPicture (decoder, slice);
-          curHeader = SOP;
+          curHeader = eSOP;
           checkZeroByteVCL (decoder, nalu);
           }
         else
-          curHeader = SOS;
+          curHeader = eSOS;
 
         useQuantParams (slice);
         setSliceFunctions (slice);
@@ -2650,11 +2650,11 @@ static int readSlice (sSlice* slice) {
         if (isNewPicture (decoder->picture, slice, decoder->oldSlice)) {
           if (!decoder->picSliceIndex)
             initPicture (decoder, slice);
-          curHeader = SOP;
+          curHeader = eSOP;
           checkZeroByteVCL (decoder, nalu);
           }
         else
-          curHeader = SOS;
+          curHeader = eSOS;
 
         useQuantParams (slice);
         setSliceFunctions (slice);
@@ -3015,10 +3015,10 @@ int decodeFrame (sDecoder* decoder) {
     initPicture (decoder, slice);
 
     decoder->picSliceIndex++;
-    curHeader = SOS;
+    curHeader = eSOS;
     }
 
-  while ((curHeader != SOP) && (curHeader != EOS)) {
+  while ((curHeader != eSOP) && (curHeader != eEOS)) {
     //{{{  no pending slices
     if (!decoder->sliceList[decoder->picSliceIndex])
       decoder->sliceList[decoder->picSliceIndex] = allocSlice (decoder);
@@ -3053,11 +3053,11 @@ int decodeFrame (sDecoder* decoder) {
     // else
     //   primary slice replaced with redundant slice.
     if ((slice->frameNum == decoder->prevFrameNum) &&
-        slice->redundantPicCount && decoder->isPrimaryOk && (curHeader != EOS))
+        slice->redundantPicCount && decoder->isPrimaryOk && (curHeader != eEOS))
       continue;
 
-    if (((curHeader != SOP) && (curHeader != EOS)) ||
-        ((curHeader == SOP) && !decoder->picSliceIndex)) {
+    if (((curHeader != eSOP) && (curHeader != eEOS)) ||
+        ((curHeader == eSOP) && !decoder->picSliceIndex)) {
        slice->curSliceIndex = (short)decoder->picSliceIndex;
        decoder->picture->maxSliceId = (short)imax (slice->curSliceIndex, decoder->picture->maxSliceId);
        if (decoder->picSliceIndex > 0) {
@@ -3068,7 +3068,7 @@ int decodeFrame (sDecoder* decoder) {
        decoder->picSliceIndex++;
        if (decoder->picSliceIndex >= decoder->numAllocatedSlices)
          error ("decodeFrame - sliceList numAllocationSlices too small");
-      curHeader = SOS;
+      curHeader = eSOS;
       }
 
     else {
@@ -3092,7 +3092,7 @@ int decodeFrame (sDecoder* decoder) {
 
   // decode slices
   ret = curHeader;
-  initPictureDecoding (decoder);
+  initPictureDecode (decoder);
   for (int sliceIndex = 0; sliceIndex < decoder->picSliceIndex; sliceIndex++) {
     sSlice* slice = decoder->sliceList[sliceIndex];
     curHeader = slice->curHeader;
@@ -3109,7 +3109,7 @@ int decodeFrame (sDecoder* decoder) {
         (slice->activePPS->hasWeightedPred && (slice->sliceType != eSliceI)))
       fillWpParam (slice);
 
-    if (((curHeader == SOP) || (curHeader == SOS)) && !slice->errorFlag)
+    if (((curHeader == eSOP) || (curHeader == eSOS)) && !slice->errorFlag)
       decodeSlice (slice);
 
     decoder->ercMvPerMb += slice->ercMvPerMb;

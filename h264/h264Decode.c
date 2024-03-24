@@ -525,9 +525,9 @@ int decodeOneFrame (sDecoder* decoder, sDecodedPic** decPicList) {
   clearDecodedPics (decoder);
 
   int iRet = decodeFrame (decoder);
-  if (iRet == SOP)
+  if (iRet == eSOP)
     iRet = DEC_SUCCEED;
-  else if (iRet == EOS)
+  else if (iRet == eEOS)
     iRet = DEC_EOS;
   else
     iRet |= DEC_ERRMASK;

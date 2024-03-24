@@ -132,12 +132,6 @@ typedef enum {
   FREXT_Hi444    = 244, // YUV 4:4:4/14 "High 4:4:4"
   } eAvcProfileIDC;
 //}}}
-//{{{  enum eDirectModes
-typedef enum {
-  DIR_TEMPORAL = 0, //!< Temporal Direct Mode
-  DIR_SPATIAL  = 1 //!< Spatial Direct Mode
-  } eDirectModes;
-//}}}
 //{{{  enum eCAVLCBlockTypes
 typedef enum {
   LUMA              =  0,
@@ -216,17 +210,16 @@ typedef enum {
 //}}}
 //{{{  enum eStartEnd
 typedef enum {
-  EOS = 1,    //!< End Of Sequence
-  SOP = 2,    //!< Start Of Picture
-  SOS = 3,     //!< Start Of sSlice
-  SOS_CONT = 4
+  eEOS = 1, // End Of Sequence
+  eSOP = 2, // Start Of Picture
+  eSOS = 3, // Start Of sSlice
   } eStartEnd;
 //}}}
 //{{{  enum eDecodeResult
 typedef enum {
-  DECODING_OK     = 0,
-  SEARCH_SYNC     = 1,
-  PICTURE_DECODED = 2
+  eDecodingOk     = 0,
+  eSearchSync     = 1,
+  ePictureDecoded = 2
   } eDecodeResult;
 //}}}
 
@@ -240,15 +233,15 @@ typedef enum {
 //}}}
 //{{{  enum eComponentType
 typedef enum {
-  IS_LUMA = 0,
-  IS_CHROMA = 1
+  eLuma =   0,
+  eChroma = 1
   } eComponentType;
 //}}}
 //{{{  enum eColorComponent
 typedef enum {
-  LumaComp = 0,
-  CrComp = 1,
-  CbComp = 2
+  eLumaComp = 0,
+  eCrComp   = 1,
+  eCbComp   = 2
   } eColorComponent;
 //}}}
 //{{{  enum ePicStructure
@@ -265,6 +258,7 @@ typedef enum {
   } eDataPartitionType;
 //}}}
 //{{{  enum eSyntaxElementType
+// almost the same as syntaxElements.h but not quite
 typedef enum {
   SE_HEADER,
   SE_PTYPE,

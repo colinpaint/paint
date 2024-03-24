@@ -1198,7 +1198,7 @@ void setSliceFunctions (sSlice* slice) {
 //{{{
 void getNeighbours (sMacroBlock* mb, sPixelPos* block, int mb_x, int mb_y, int blockshape_x) {
 
-  int* mbSize = mb->decoder->mbSize[IS_LUMA];
+  int* mbSize = mb->decoder->mbSize[eLuma];
 
   get4x4Neighbour (mb, mb_x - 1, mb_y, mbSize, block);
   get4x4Neighbour (mb, mb_x, mb_y - 1, mbSize, block + 1);

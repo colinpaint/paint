@@ -814,7 +814,7 @@ static void buildPredRegionYUV (sDecoder* decoder, int *mv, int x, int y, sPixel
 
       for(ii=0;ii<BLOCK_SIZE;ii++)
         for(jj=0;jj<MB_BLOCK_SIZE/BLOCK_SIZE;jj++)
-          slice->mbPred[LumaComp][jj+joff][ii+ioff]=tmp_block[jj][ii];
+          slice->mbPred[eLumaComp][jj+joff][ii+ioff]=tmp_block[jj][ii];
     }
   }
 
@@ -823,7 +823,7 @@ static void buildPredRegionYUV (sDecoder* decoder, int *mv, int x, int y, sPixel
   {
     for (i = 0; i < 16; i++)
     {
-      pMB[j*16+i] = slice->mbPred[LumaComp][j][i];
+      pMB[j*16+i] = slice->mbPred[eLumaComp][j][i];
     }
   }
   pMB += 256;
@@ -1396,14 +1396,14 @@ static void buildPredblockRegionYUV (sDecoder* decoder, int *mv,
 
   for(jj=0;jj<MB_BLOCK_SIZE/BLOCK_SIZE;jj++)
     for(ii=0;ii<BLOCK_SIZE;ii++)
-      slice->mbPred[LumaComp][jj][ii]=tmp_block[jj][ii];
+      slice->mbPred[eLumaComp][jj][ii]=tmp_block[jj][ii];
 
 
   for (j = 0; j < 4; j++)
   {
     for (i = 0; i < 4; i++)
     {
-      pMB[j*4+i] = slice->mbPred[LumaComp][j][i];
+      pMB[j*4+i] = slice->mbPred[eLumaComp][j][i];
     }
   }
   pMB += 16;
