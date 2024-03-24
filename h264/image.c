@@ -2565,7 +2565,7 @@ static int readSlice (sSlice* slice) {
           else
             printf ("SLC");
 
-          sprintf (decoder->debug.sliceStr, "pps:%d frameNum:%d%s%s",
+          sprintf (decoder->debug.sliceStr, "pps:%d frameNum:%2d%s%s",
                    slice->ppsId,
                    slice->frameNum,
                    slice->fieldPic ? " field":"",
