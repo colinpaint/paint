@@ -1289,19 +1289,19 @@ public:
       //}}}
       //{{{  draw outStr
       ImGui::SameLine();
-      ImGui::TextUnformatted (testApp.getDecoder()->info.outStr);
+      ImGui::TextUnformatted (testApp.getDecoder()->debug.outStr);
       //}}}
       //{{{  draw spsStr
       ImGui::SameLine();
-      ImGui::TextUnformatted (testApp.getDecoder()->info.spsStr);
+      ImGui::TextUnformatted (testApp.getDecoder()->debug.spsStr);
       //}}}
       //{{{  draw sliceStr
       ImGui::SameLine();
-      ImGui::TextUnformatted (testApp.getDecoder()->info.sliceStr);
+      ImGui::TextUnformatted (testApp.getDecoder()->debug.sliceStr);
       //}}}
       //{{{  draw sliceTypeStr
       ImGui::SameLine();
-      ImGui::TextUnformatted (testApp.getDecoder()->info.sliceTypeStr);
+      ImGui::TextUnformatted (testApp.getDecoder()->debug.sliceTypeStr);
       //}}}
       }
 

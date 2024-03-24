@@ -870,8 +870,8 @@ typedef struct Param {
   int dpbPlus[2];
   } sParam;
 //}}}
-//{{{  sInfo
-typedef struct Info {
+//{{{
+typedef struct {
   TIME_T  startTime;
   TIME_T  endTime;
 
@@ -879,12 +879,12 @@ typedef struct Info {
   char    spsStr[64];
   char    sliceStr[64];
   char    outStr[64];
-  } sInfo;
+  } sDebug;
 //}}}
 //{{{  sDecoder
 typedef struct Decoder {
   sParam       param;
-  sInfo        info;
+  sDebug       debug;
 
   // nalu
   int          gotLastNalu;

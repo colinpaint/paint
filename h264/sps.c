@@ -631,7 +631,7 @@ void activateSPS (sDecoder* decoder, sSPS* sps) {
       decoder->ercMvPerMb = 0;
       }
 
-    sprintf (decoder->info.spsStr, "%s", sps->frameMbOnly ? (sps->mbAffFlag ? " mbAff":" frame") : "");
+    sprintf (decoder->debug.spsStr, "%s", sps->frameMbOnly ? (sps->mbAffFlag ? " mbAff":" frame") : "");
     }
 
   setFormatInfo (decoder, sps, &decoder->param.source, &decoder->param.output);
