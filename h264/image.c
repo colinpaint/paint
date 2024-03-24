@@ -1880,7 +1880,7 @@ static void initSlice (sDecoder* decoder, sSlice* slice) {
   reorderLists (slice);
 
   if (slice->picStructure == eFrame)
-    init_mbaff_lists (decoder, slice);
+    initMbAffLists (decoder, slice);
 
   // update reference flags and set current decoder->refFlag
   if (!(slice->redundantPicCount && (decoder->prevFrameNum == slice->frameNum)))

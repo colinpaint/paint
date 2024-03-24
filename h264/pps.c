@@ -251,7 +251,7 @@ static void readPPS (sDecoder* decoder, sDataPartition* dataPartition, sPPS* pps
 
   if (decoder->param.ppsDebug)
     //{{{  print debug
-    printf ("PPS:%d:%d -> sps:%d%s%s grp:%d L:%d:%d%s%s%s%s%s%s%s\n",
+    printf ("PPS:%d:%d -> sps:%d%s%s sliceGroup:%d L:%d:%d%s%s%s%s%s%s%s\n",
             pps->ppsId, naluLen,
             pps->spsId,
             pps->entropyCoding ? " cabac":" cavlc",

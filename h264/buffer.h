@@ -276,19 +276,11 @@ extern void fillFrameNumGap (sDecoder* decoder, sSlice *slice);
 
 extern void updateRefList (sDPB* dpb);
 extern void updateLongTermRefList (sDPB* dpb);
-extern void mm_mark_current_picture_long_term (sDPB* dpb, sPicture* p, int longTermFrameIndex);
-extern void mm_unmark_short_term_for_reference (sDPB* dpb, sPicture* p, int diffPicNumMinus1);
-extern void mm_unmark_long_term_for_reference (sDPB* dpb, sPicture *p, int longTermPicNum);
-extern void mm_assign_long_term_frame_idx (sDPB* dpb, sPicture* p, int diffPicNumMinus1, int longTermFrameIndex);
-extern void mm_update_max_long_term_frame_idx (sDPB* dpb, int maxLongTermFrameIndexPlus1);
-extern void mm_unmark_all_short_term_for_reference (sDPB* dpb);
-extern void mm_unmark_all_long_term_for_reference (sDPB* dpb);
-extern void get_smallest_poc (sDPB* dpb, int *poc,int * pos);
+extern void getSmallestPoc (sDPB* dpb, int *poc,int * pos);
 
 extern void initDpb (sDecoder* decoder, sDPB* dpb, int type);
 extern void reInitDpb (sDecoder* decoder, sDPB* dpb, int type);
 extern void flushDpb (sDPB* dpb);
-
 extern int removeUnusedDpb (sDPB* dpb);
 extern void storePictureDpb (sDPB* dpb, sPicture* p);
 extern void removeFrameDpb (sDPB* dpb, int pos);
@@ -304,7 +296,7 @@ extern void updatePicNum (sSlice* slice);
 
 extern void dpbCombineField (sDecoder* decoder, sFrameStore* frameStore);
 extern void reorderRefPicList (sSlice* slice, int curList);
-extern void init_mbaff_lists (sDecoder* decoder, sSlice* slice);
+extern void initMbAffLists (sDecoder* decoder, sSlice* slice);
 extern sPicture* getShortTermPic (sSlice* slice, sDPB* dpb, int picNum);
 
 extern void allocRefPicListReordeBuffer (sSlice* slice);
