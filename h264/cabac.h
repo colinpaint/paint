@@ -39,6 +39,6 @@ extern int check_next_mb_and_get_field_mode_CABAC_b_slice (sSlice* slice, sSynta
 
 extern void checkNeighbourCabac (sMacroBlock* mb);
 
-extern void set_read_and_store_CBP (sMacroBlock** mb, int chromaFormatIdc);
+extern void setReadStoreCodedBlockPattern (sMacroBlock** mb, int chromaFormatIdc);
 extern void setReadCbpCoefsCabac (sSlice* slice);
 extern void setReadCompCabac (sMacroBlock* mb);

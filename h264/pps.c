@@ -71,8 +71,8 @@ static int isEqualPPS (sPPS* pps1, sPPS* pps2) {
   int equal = 1;
   equal &= (pps1->ppsId == pps2->ppsId);
   equal &= (pps1->spsId == pps2->spsId);
-  equal &= (pps1->entropyCodingMode == pps2->entropyCodingMode);
-  equal &= (pps1->botFieldPicOrderFramePresent == pps2->botFieldPicOrderFramePresent);
+  equal &= (pps1->entropyCoding == pps2->entropyCoding);
+  equal &= (pps1->botFieldFrame == pps2->botFieldFrame);
   equal &= (pps1->numSliceGroupsMinus1 == pps2->numSliceGroupsMinus1);
   if (!equal)
     return equal;
@@ -106,23 +106,23 @@ static int isEqualPPS (sPPS* pps1, sPPS* pps2) {
       }
     }
 
-  equal &= (pps1->weightedPredFlag == pps2->weightedPredFlag);
+  equal &= (pps1->hasWeightedPred == pps2->hasWeightedPred);
   equal &= (pps1->picInitQpMinus26 == pps2->picInitQpMinus26);
   equal &= (pps1->picInitQsMinus26 == pps2->picInitQsMinus26);
   equal &= (pps1->weightedBiPredIdc == pps2->weightedBiPredIdc);
   equal &= (pps1->chromaQpIndexOffset == pps2->chromaQpIndexOffset);
-  equal &= (pps1->constrainedIntraPredFlag == pps2->constrainedIntraPredFlag);
+  equal &= (pps1->hasConstrainedIntraPred == pps2->hasConstrainedIntraPred);
   equal &= (pps1->redundantPicCountPresent == pps2->redundantPicCountPresent);
-  equal &= (pps1->deblockFilterControlPresent == pps2->deblockFilterControlPresent);
+  equal &= (pps1->hasDeblockFilterControl == pps2->hasDeblockFilterControl);
   equal &= (pps1->numRefIndexL0defaultActiveMinus1 == pps2->numRefIndexL0defaultActiveMinus1);
   equal &= (pps1->numRefIndexL1defaultActiveMinus1 == pps2->numRefIndexL1defaultActiveMinus1);
   if (!equal)
     return equal;
 
-  equal &= (pps1->transform8x8modeFlag == pps2->transform8x8modeFlag);
-  equal &= (pps1->picScalingMatrixPresentFlag == pps2->picScalingMatrixPresentFlag);
-  if (pps1->picScalingMatrixPresentFlag) {
-    for (unsigned i = 0; i < (6 + ((unsigned)pps1->transform8x8modeFlag << 1)); i++) {
+  equal &= (pps1->hasTransform8x8mode == pps2->hasTransform8x8mode);
+  equal &= (pps1->hasPicScalingMatrix == pps2->hasPicScalingMatrix);
+  if (pps1->hasPicScalingMatrix) {
+    for (unsigned i = 0; i < (6 + ((unsigned)pps1->hasTransform8x8mode << 1)); i++) {
       equal &= (pps1->picScalingListPresentFlag[i] == pps2->picScalingListPresentFlag[i]);
       if (pps1->picScalingListPresentFlag[i]) {
         if (i < 6)
@@ -153,13 +153,16 @@ void setPPSbyId (sDecoder* decoder, int id, sPPS* pps) {
   }
 //}}}
 //{{{
-static void readPPS (sDecoder* decoder, sDataPartition* dataPartition, sPPS* pps) {
+static void readPPS (sDecoder* decoder, sDataPartition* dataPartition, sPPS* pps, int naluLen) {
+// read PPS from NALU
 
   sBitStream* s = dataPartition->s;
+
   pps->ppsId = readUeV ("PPS ppsId", s);
   pps->spsId = readUeV ("PPS spsId", s);
-  pps->entropyCodingMode = readU1 ("PPS entropyCodingMode", s);
-  pps->botFieldPicOrderFramePresent = readU1 ("PPS botFieldPicOrderFramePresent", s);
+
+  pps->entropyCoding = readU1 ("PPS entropyCoding", s);
+  pps->botFieldFrame = readU1 ("PPS botFieldFrame", s);
   pps->numSliceGroupsMinus1 = readUeV ("PPS numSliceGroupsMinus1", s);
 
   if (pps->numSliceGroupsMinus1 > 0) {
@@ -175,7 +178,6 @@ static void readPPS (sDecoder* decoder, sDataPartition* dataPartition, sPPS* pps
 
       case 2: {
         for (unsigned i = 0; i < pps->numSliceGroupsMinus1; i++) {
-          //! JVT-F078: avoid reference of SPS by using ue(v) instead of u(v)
           pps->topLeft [i] = readUeV ("PPS topLeft [i]", s);
           pps->botRight [i] = readUeV ("PPS botRight [i]", s);
           }
@@ -199,8 +201,7 @@ static void readPPS (sDecoder* decoder, sDataPartition* dataPartition, sPPS* pps
           NumberBitsPerSliceGroupId = 1;
 
         pps->picSizeMapUnitsMinus1 = readUeV ("PPS picSizeMapUnitsMinus1", s);
-        if ((pps->sliceGroupId = calloc (pps->picSizeMapUnitsMinus1+1, 1)) == NULL)
-          noMemoryExit ("readPPS sliceGroupId");
+        pps->sliceGroupId = calloc (pps->picSizeMapUnitsMinus1+1, 1);
         for (unsigned i = 0; i <= pps->picSizeMapUnitsMinus1; i++)
           pps->sliceGroupId[i] = (byte)readUv (NumberBitsPerSliceGroupId, "sliceGroupId[i]", s);
         break;
@@ -213,25 +214,26 @@ static void readPPS (sDecoder* decoder, sDataPartition* dataPartition, sPPS* pps
 
   pps->numRefIndexL0defaultActiveMinus1 = readUeV ("PPS numRefIndexL0defaultActiveMinus1", s);
   pps->numRefIndexL1defaultActiveMinus1 = readUeV ("PPS numRefIndexL1defaultActiveMinus1", s);
-  pps->weightedPredFlag = readU1 ("PPS weightedPredFlag", s);
+
+  pps->hasWeightedPred = readU1 ("PPS hasWeightedPred", s);
   pps->weightedBiPredIdc = readUv (2, "PPS weightedBiPredIdc", s);
+
   pps->picInitQpMinus26 = readSeV ("PPS picInitQpMinus26", s);
   pps->picInitQsMinus26 = readSeV ("PPS picInitQsMinus26", s);
+
   pps->chromaQpIndexOffset = readSeV ("PPS chromaQpIndexOffset", s);
-  pps->deblockFilterControlPresent = readU1 ("PPS deblockFilterControlPresent" , s);
-  pps->constrainedIntraPredFlag = readU1 ("PPS constrainedIntraPredFlag", s);
+
+  pps->hasDeblockFilterControl = readU1 ("PPS hasDeblockFilterControl" , s);
+  pps->hasConstrainedIntraPred = readU1 ("PPS hasConstrainedIntraPred", s);
   pps->redundantPicCountPresent = readU1 ("PPS redundantPicCountPresent", s);
 
-  int more = moreRbspData (s->bitStreamBuffer, s->bitStreamOffset,s->bitStreamLen);
-  if (more) {
-    //{{{  more data in rbsp
-    // Fidelity Range Extensions Stuff
-    pps->transform8x8modeFlag = readU1 ("PPS transform8x8modeFlag", s);
-
-    pps->picScalingMatrixPresentFlag = readU1 ("PPS picScalingMatrixPresentFlag", s);
-    if (pps->picScalingMatrixPresentFlag) {
+  int fidelityRange = moreRbspData (s->bitStreamBuffer, s->bitStreamOffset,s->bitStreamLen);
+  if (fidelityRange) {
+    pps->hasTransform8x8mode = readU1 ("PPS hasTransform8x8mode", s);
+    pps->hasPicScalingMatrix = readU1 ("PPS hasPicScalingMatrix", s);
+    if (pps->hasPicScalingMatrix) {
       int chromaFormatIdc = decoder->sps[pps->spsId].chromaFormatIdc;
-      unsigned n_ScalingList = 6 + ((chromaFormatIdc != YUV444) ? 2 : 6) * pps->transform8x8modeFlag;
+      unsigned n_ScalingList = 6 + ((chromaFormatIdc != YUV444) ? 2 : 6) * pps->hasTransform8x8mode;
       for (unsigned i = 0; i < n_ScalingList; i++) {
         pps->picScalingListPresentFlag[i]= readU1 ("PPS picScalingListPresentFlag", s);
         if (pps->picScalingListPresentFlag[i]) {
@@ -244,25 +246,27 @@ static void readPPS (sDecoder* decoder, sDataPartition* dataPartition, sPPS* pps
       }
     pps->secondChromaQpIndexOffset = readSeV ("PPS secondChromaQpIndexOffset", s);
     }
-    //}}}
   else
     pps->secondChromaQpIndexOffset = pps->chromaQpIndexOffset;
 
   if (decoder->param.ppsDebug)
-    printf ("-> ppsId:%d spsId:%d %d:%d%s%s%s%s%s%s%s%s%s grp:%d L:%d:%d\n",
-            pps->ppsId, pps->spsId,
-            pps->picInitQpMinus26, pps->picInitQsMinus26,
-            pps->entropyCodingMode ? " cabac":" cavlc",
-            pps->deblockFilterControlPresent ? " deblock":"",
-            pps->weightedPredFlag ? " pred":"",
-            pps->weightedBiPredIdc ? " biPred":"",
-            pps->constrainedIntraPredFlag ? " intraPred":"",
-            pps->redundantPicCountPresent ? " red":"",
-            pps->botFieldPicOrderFramePresent ? " botField":"",
-            more && pps->transform8x8modeFlag ? " 8x8":"",
-            more && pps->picScalingMatrixPresentFlag ? " scaling":"",
+    //{{{  print debug
+    printf ("PPS:%d:%d -> sps:%d%s%s grp:%d L:%d:%d%s%s%s%s%s%s%s\n",
+            pps->ppsId, naluLen,
+            pps->spsId,
+            pps->entropyCoding ? " cabac":" cavlc",
+            pps->botFieldFrame ? " botField":"",
             pps->numSliceGroupsMinus1,
-            pps->numRefIndexL0defaultActiveMinus1, pps->numRefIndexL1defaultActiveMinus1);
+            pps->numRefIndexL0defaultActiveMinus1, pps->numRefIndexL1defaultActiveMinus1,
+            pps->hasDeblockFilterControl ? " deblock":"",
+            pps->hasWeightedPred ? " pred":"",
+            pps->weightedBiPredIdc ? " biPred":"",
+            pps->hasConstrainedIntraPred ? " intraPred":"",
+            pps->redundantPicCountPresent ? " red":"",
+            fidelityRange && pps->hasTransform8x8mode ? " transform8x8":"",
+            fidelityRange && pps->hasPicScalingMatrix ? " scalingMatrix":""
+            );
+    //}}}
 
   pps->valid = TRUE;
   }
@@ -278,7 +282,7 @@ void readNaluPPS (sDecoder* decoder, sNalu* nalu) {
   dataPartition->s->codeLen = dataPartition->s->bitStreamLen = RBSPtoSODB (dataPartition->s->bitStreamBuffer, nalu->len-1);
 
   sPPS* pps = allocPPS();
-  readPPS (decoder, dataPartition, pps);
+  readPPS (decoder, dataPartition, pps, nalu->len);
   if (decoder->activePPS) {
     if (pps->ppsId == decoder->activePPS->ppsId) {
       if (!isEqualPPS (pps, decoder->activePPS)) {

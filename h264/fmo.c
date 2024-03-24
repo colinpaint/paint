@@ -1,7 +1,6 @@
 //{{{  includes
 #include "global.h"
 #include "syntaxElement.h"
-#include "defines.h"
 #include "fmo.h"
 //}}}
 //#define PRINT_FMO_MAPS

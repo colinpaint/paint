@@ -665,18 +665,17 @@ void readMB_typeInfo_CABAC_i_slice (sMacroBlock* mb, sSyntaxElement* se, sCabacD
   sSlice* slice = mb->slice;
   sMotionInfoContexts* context = slice->motionInfoContexts;
 
-  int a = 0;
-  int b = 0;
   int actContext;
   int actSym;
   int modeSym;
   int curMbType = 0;
 
+  int a = 0;
+  int b = 0;
   if (slice->sliceType == eSliceI)  {
     //{{{  INTRA-frame
     if (mb->mbCabacUp)
       b = (((mb->mbCabacUp)->mbType != I4MB && mb->mbCabacUp->mbType != I8MB) ? 1 : 0 );
-
     if (mb->mbCabacLeft)
       a = (((mb->mbCabacLeft)->mbType != I4MB && mb->mbCabacLeft->mbType != I8MB) ? 1 : 0 );
 
@@ -723,7 +722,6 @@ void readMB_typeInfo_CABAC_i_slice (sMacroBlock* mb, sSyntaxElement* se, sCabacD
     // special context's for SI4MB
     if (mb->mbCabacUp)
       b = ((mb->mbCabacUp)->mbType != SI4MB) ? 1 : 0;
-
     if (mb->mbCabacLeft)
       a = ((mb->mbCabacLeft)->mbType != SI4MB) ? 1 : 0;
 
@@ -868,11 +866,9 @@ void readMB_typeInfo_CABAC_b_slice (sMacroBlock* mb, sSyntaxElement* se, sCabacD
   int b = 0;
   if (mb->mbCabacUp)
     b = ((mb->mbCabacUp)->mbType != 0) ? 1 : 0;
-
   int a = 0;
   if (mb->mbCabacLeft)
     a = ((mb->mbCabacLeft)->mbType != 0) ? 1 : 0;
-
   actContext = a + b;
 
   if (binaryArithmeticDecodeSymbol (cabacDecodeEnv, &mbTypeContexts[actContext])) {
@@ -993,7 +989,7 @@ void readRefFrame_CABAC (sMacroBlock* mb, sSyntaxElement* se, sCabacDecodeEnv* c
   get4x4Neighbour (mb, mb->subblockX,     mb->subblockY - 1, decoder->mbSize[IS_LUMA], &block_b);
 
   if (block_b.available) {
-    int b8b = ((block_b.x >> 1) & 0x01)+(block_b.y & 0x02);
+    int b8b = ((block_b.x >> 1) & 0x01) + (block_b.y & 0x02);
     neighborMB = &slice->mbData[block_b.mbIndex];
     if (!((neighborMB->mbType==IPCM) || IS_DIRECT(neighborMB) ||
         (neighborMB->b8mode[b8b]==0 && neighborMB->b8pdir[b8b] == 2))) {
@@ -1005,7 +1001,7 @@ void readRefFrame_CABAC (sMacroBlock* mb, sSyntaxElement* se, sCabacDecodeEnv* c
     }
 
   if (block_a.available) {
-    int b8a = ((block_a.x >> 1) & 0x01)+(block_a.y & 0x02);
+    int b8a = ((block_a.x >> 1) & 0x01) + (block_a.y & 0x02);
     neighborMB = &slice->mbData[block_a.mbIndex];
     if (!((neighborMB->mbType==IPCM) || IS_DIRECT(neighborMB) ||
         (neighborMB->b8mode[b8a]==0 && neighborMB->b8pdir[b8a]==2))) {
@@ -1067,7 +1063,7 @@ void read_CBP_CABAC (sMacroBlock* mb, sSyntaxElement* se, sCabacDecodeEnv* cabac
   int a = 0, b = 0;
   int curr_cbp_ctx;
   int codedBlockPattern = 0;
-  int cbp_bit;
+  int codedBlockPatternBit;
   int mask;
   sPixelPos block_a;
 
@@ -1103,8 +1099,8 @@ void read_CBP_CABAC (sMacroBlock* mb, sSyntaxElement* se, sCabacDecodeEnv* cabac
 
       curr_cbp_ctx = a + b;
       mask = (1 << (mb_y + (mb_x >> 1)));
-      cbp_bit = binaryArithmeticDecodeSymbol(cabacDecodeEnv, ctx->cbp_contexts[0] + curr_cbp_ctx );
-      if (cbp_bit)
+      codedBlockPatternBit = binaryArithmeticDecodeSymbol(cabacDecodeEnv, ctx->cbp_contexts[0] + curr_cbp_ctx );
+      if (codedBlockPatternBit)
         codedBlockPattern += mask;
       }
     }
@@ -1124,10 +1120,10 @@ void read_CBP_CABAC (sMacroBlock* mb, sSyntaxElement* se, sCabacDecodeEnv* cabac
         a = 1;
 
     curr_cbp_ctx = a + b;
-    cbp_bit = binaryArithmeticDecodeSymbol(cabacDecodeEnv, ctx->cbp_contexts[1] + curr_cbp_ctx );
+    codedBlockPatternBit = binaryArithmeticDecodeSymbol(cabacDecodeEnv, ctx->cbp_contexts[1] + curr_cbp_ctx );
 
     // eCabac decoding for BinIdx 1
-    if (cbp_bit) {
+    if (codedBlockPatternBit) {
       // set the chroma bits
       b = 0;
       neighborMB = mb->mbCabacUp;
@@ -1142,8 +1138,8 @@ void read_CBP_CABAC (sMacroBlock* mb, sSyntaxElement* se, sCabacDecodeEnv* cabac
           a = 1;
 
       curr_cbp_ctx = a + b;
-      cbp_bit = binaryArithmeticDecodeSymbol(cabacDecodeEnv, ctx->cbp_contexts[2] + curr_cbp_ctx );
-      codedBlockPattern += (cbp_bit == 1) ? 32 : 16;
+      codedBlockPatternBit = binaryArithmeticDecodeSymbol(cabacDecodeEnv, ctx->cbp_contexts[2] + curr_cbp_ctx );
+      codedBlockPattern += (codedBlockPatternBit == 1) ? 32 : 16;
       }
     }
 
@@ -1199,7 +1195,7 @@ static int readStoreCbpBlockBit444 (sMacroBlock* mb, sCabacDecodeEnv*  cabacDeco
   int default_bit = (mb->isIntraBlock ? 1 : 0);
   int upper_bit   = default_bit;
   int left_bit    = default_bit;
-  int cbp_bit     = 1;  // always one for 8x8 mode
+  int codedBlockPatternBit     = 1;  // always one for 8x8 mode
   int ctx;
   int bit_pos_a   = 0;
   int bit_pos_b   = 0;
@@ -1250,7 +1246,7 @@ static int readStoreCbpBlockBit444 (sMacroBlock* mb, sCabacDecodeEnv*  cabacDeco
 
       ctx = 2 * upper_bit + left_bit;
       // encode symbol =====
-      cbp_bit = binaryArithmeticDecodeSymbol (cabacDecodeEnv, textureInfoContexts->bcbp_contexts[type2ctx_bcbp[type]] + ctx);
+      codedBlockPatternBit = binaryArithmeticDecodeSymbol (cabacDecodeEnv, textureInfoContexts->bcbp_contexts[type2ctx_bcbp[type]] + ctx);
       }
     }
   else if( (decoder->coding.sepColourPlaneFlag != 0) ) {
@@ -1274,7 +1270,7 @@ static int readStoreCbpBlockBit444 (sMacroBlock* mb, sCabacDecodeEnv*  cabacDeco
 
       ctx = 2 * upper_bit + left_bit;
       //===== encode symbol =====
-      cbp_bit = binaryArithmeticDecodeSymbol (cabacDecodeEnv, textureInfoContexts->bcbp_contexts[type2ctx_bcbp[type]] + ctx);
+      codedBlockPatternBit = binaryArithmeticDecodeSymbol (cabacDecodeEnv, textureInfoContexts->bcbp_contexts[type2ctx_bcbp[type]] + ctx);
       }
     }
 
@@ -1328,12 +1324,12 @@ static int readStoreCbpBlockBit444 (sMacroBlock* mb, sCabacDecodeEnv*  cabacDeco
 
     ctx = 2 * upper_bit + left_bit;
     // encode symbol
-    cbp_bit = binaryArithmeticDecodeSymbol (cabacDecodeEnv, textureInfoContexts->bcbp_contexts[type2ctx_bcbp[type]] + ctx);
+    codedBlockPatternBit = binaryArithmeticDecodeSymbol (cabacDecodeEnv, textureInfoContexts->bcbp_contexts[type2ctx_bcbp[type]] + ctx);
     }
 
   // set bits for current block ---
   bit = (y_dc ? 0 : y_ac ? 1 + j + (i >> 2) : u_dc ? 17 : v_dc ? 18 : u_ac ? 19 + j + (i >> 2) : 35 + j + (i >> 2));
-  if (cbp_bit) {
+  if (codedBlockPatternBit) {
     sCodedBlockPattern * codedBlockPatterns = mb->codedBlockPatterns;
     if (type == LUMA_8x8) {
       codedBlockPatterns[0].bits |= ((int64) 0x33 << bit);
@@ -1368,11 +1364,11 @@ static int readStoreCbpBlockBit444 (sMacroBlock* mb, sCabacDecodeEnv*  cabacDeco
       codedBlockPatterns[0].bits |= i64power2 (bit);
     }
 
-  return cbp_bit;
+  return codedBlockPatternBit;
   }
 //}}}
 //{{{
-static inline int set_cbp_bit (sMacroBlock* neighbor_mb) {
+static int setCodedBlockPatternBit (sMacroBlock* neighbor_mb) {
 
   if (neighbor_mb->mbType == IPCM)
     return 1;
@@ -1381,7 +1377,7 @@ static inline int set_cbp_bit (sMacroBlock* neighbor_mb) {
   }
 //}}}
 //{{{
-static inline int set_cbp_bit_ac (sMacroBlock* neighbor_mb, sPixelPos* block) {
+static int setCodedBlockPatternBitAC (sMacroBlock* neighbor_mb, sPixelPos* block) {
 
   if (neighbor_mb->mbType == IPCM)
     return 1;
@@ -1400,7 +1396,7 @@ static int readStoreCbpBlockBitNormal (sMacroBlock* mb, sCabacDecodeEnv* cabacDe
 
   sTextureInfoContexts* textureInfoContexts = slice->textureInfoContexts;
 
-  int cbp_bit = 1;  // always one for 8x8 mode
+  int codedBlockPatternBit = 1;  // always one for 8x8 mode
   if (type == LUMA_16DC) {
     //{{{  luma_16dc
     int upper_bit = 1;
@@ -1413,18 +1409,18 @@ static int readStoreCbpBlockBitNormal (sMacroBlock* mb, sCabacDecodeEnv* cabacDe
 
     //--- get bits from neighboring blocks ---
     if (block_b.available)
-      upper_bit = set_cbp_bit(&mbData[block_b.mbIndex]);
+      upper_bit = setCodedBlockPatternBit (&mbData[block_b.mbIndex]);
 
     if (block_a.available)
-      left_bit = set_cbp_bit(&mbData[block_a.mbIndex]);
+      left_bit = setCodedBlockPatternBit (&mbData[block_a.mbIndex]);
 
     ctx = 2 * upper_bit + left_bit;
 
     // encode symbol =====
-    cbp_bit = binaryArithmeticDecodeSymbol (cabacDecodeEnv, textureInfoContexts->bcbp_contexts[type2ctx_bcbp[type]] + ctx);
+    codedBlockPatternBit = binaryArithmeticDecodeSymbol (cabacDecodeEnv, textureInfoContexts->bcbp_contexts[type2ctx_bcbp[type]] + ctx);
 
     // set bits for current block ---
-    if (cbp_bit)
+    if (codedBlockPatternBit)
       mb->codedBlockPatterns[0].bits |= 1;
     }
     //}}}
@@ -1444,16 +1440,16 @@ static int readStoreCbpBlockBitNormal (sMacroBlock* mb, sCabacDecodeEnv* cabacDe
 
     // get bits from neighboring blocks ---
     if (block_b.available)
-      upper_bit = set_cbp_bit_ac (&mbData[block_b.mbIndex], &block_b);
+      upper_bit = setCodedBlockPatternBitAC (&mbData[block_b.mbIndex], &block_b);
     if (block_a.available)
-      left_bit = set_cbp_bit_ac (&mbData[block_a.mbIndex], &block_a);
+      left_bit = setCodedBlockPatternBitAC (&mbData[block_a.mbIndex], &block_a);
 
     ctx = 2 * upper_bit + left_bit;
 
     // encode symbol =====
-    cbp_bit = binaryArithmeticDecodeSymbol (cabacDecodeEnv, textureInfoContexts->bcbp_contexts[type2ctx_bcbp[type]] + ctx);
+    codedBlockPatternBit = binaryArithmeticDecodeSymbol (cabacDecodeEnv, textureInfoContexts->bcbp_contexts[type2ctx_bcbp[type]] + ctx);
 
-    if (cbp_bit) {
+    if (codedBlockPatternBit) {
       // set bits for current block ---
       bit = 1 + j + (i >> 2);
       mb->codedBlockPatterns[0].bits |= i64power2(bit);
@@ -1477,16 +1473,16 @@ static int readStoreCbpBlockBitNormal (sMacroBlock* mb, sCabacDecodeEnv* cabacDe
 
     // get bits from neighboring blocks ---
     if (block_b.available)
-      upper_bit = set_cbp_bit_ac (&mbData[block_b.mbIndex], &block_b);
+      upper_bit = setCodedBlockPatternBitAC (&mbData[block_b.mbIndex], &block_b);
 
     if (block_a.available)
-      left_bit = set_cbp_bit_ac (&mbData[block_a.mbIndex], &block_a);
+      left_bit = setCodedBlockPatternBitAC (&mbData[block_a.mbIndex], &block_a);
 
     ctx = 2 * upper_bit + left_bit;
     // encode symbol =====
-    cbp_bit = binaryArithmeticDecodeSymbol (cabacDecodeEnv, textureInfoContexts->bcbp_contexts[type2ctx_bcbp[type]] + ctx);
+    codedBlockPatternBit = binaryArithmeticDecodeSymbol (cabacDecodeEnv, textureInfoContexts->bcbp_contexts[type2ctx_bcbp[type]] + ctx);
 
-    if (cbp_bit) {
+    if (codedBlockPatternBit) {
       // set bits for current block ---
       bit = 1 + j + (i >> 2);
       mb->codedBlockPatterns[0].bits |= ((int64) 0x03 << bit   );
@@ -1510,16 +1506,16 @@ static int readStoreCbpBlockBitNormal (sMacroBlock* mb, sCabacDecodeEnv* cabacDe
 
     // get bits from neighboring blocks ---
     if (block_b.available)
-      upper_bit = set_cbp_bit_ac(&mbData[block_b.mbIndex], &block_b);
+      upper_bit = setCodedBlockPatternBitAC (&mbData[block_b.mbIndex], &block_b);
 
     if (block_a.available)
-      left_bit = set_cbp_bit_ac(&mbData[block_a.mbIndex], &block_a);
+      left_bit = setCodedBlockPatternBitAC (&mbData[block_a.mbIndex], &block_a);
 
     ctx = 2 * upper_bit + left_bit;
     // encode symbol =====
-    cbp_bit = binaryArithmeticDecodeSymbol (cabacDecodeEnv, textureInfoContexts->bcbp_contexts[type2ctx_bcbp[type]] + ctx);
+    codedBlockPatternBit = binaryArithmeticDecodeSymbol (cabacDecodeEnv, textureInfoContexts->bcbp_contexts[type2ctx_bcbp[type]] + ctx);
 
-    if (cbp_bit) {
+    if (codedBlockPatternBit) {
       // set bits for current block ---
       bit = 1 + j + (i >> 2);
       mb->codedBlockPatterns[0].bits   |= ((int64) 0x11 << bit   );
@@ -1541,16 +1537,16 @@ static int readStoreCbpBlockBitNormal (sMacroBlock* mb, sCabacDecodeEnv* cabacDe
 
     // get bits from neighboring blocks ---
     if (block_b.available)
-      upper_bit = set_cbp_bit_ac(&mbData[block_b.mbIndex], &block_b);
+      upper_bit = setCodedBlockPatternBitAC (&mbData[block_b.mbIndex], &block_b);
 
     if (block_a.available)
-      left_bit = set_cbp_bit_ac(&mbData[block_a.mbIndex], &block_a);
+      left_bit = setCodedBlockPatternBitAC (&mbData[block_a.mbIndex], &block_a);
 
     int ctx = 2 * upper_bit + left_bit;
     // encode symbol =====
-    cbp_bit = binaryArithmeticDecodeSymbol (cabacDecodeEnv, textureInfoContexts->bcbp_contexts[type2ctx_bcbp[type]] + ctx);
+    codedBlockPatternBit = binaryArithmeticDecodeSymbol (cabacDecodeEnv, textureInfoContexts->bcbp_contexts[type2ctx_bcbp[type]] + ctx);
 
-    if (cbp_bit) {
+    if (codedBlockPatternBit) {
       // set bits for current block ---
       bit = 1 + j + (i >> 2);
       mb->codedBlockPatterns[0].bits   |= i64power2(bit);
@@ -1598,9 +1594,9 @@ static int readStoreCbpBlockBitNormal (sMacroBlock* mb, sCabacDecodeEnv* cabacDe
 
     int ctx = 2 * upper_bit + left_bit;
     // encode symbol =====
-    cbp_bit = binaryArithmeticDecodeSymbol (cabacDecodeEnv, textureInfoContexts->bcbp_contexts[type2ctx_bcbp[type]] + ctx);
+    codedBlockPatternBit = binaryArithmeticDecodeSymbol (cabacDecodeEnv, textureInfoContexts->bcbp_contexts[type2ctx_bcbp[type]] + ctx);
 
-    if (cbp_bit) {
+    if (codedBlockPatternBit) {
       // set bits for current block ---
       bit = (u_dc ? 17 : 18);
       mb->codedBlockPatterns[0].bits   |= i64power2(bit);
@@ -1643,8 +1639,8 @@ static int readStoreCbpBlockBitNormal (sMacroBlock* mb, sCabacDecodeEnv* cabacDe
     int ctx = 2 * upper_bit + left_bit;
 
     // encode symbol
-    cbp_bit = binaryArithmeticDecodeSymbol (cabacDecodeEnv, textureInfoContexts->bcbp_contexts[type2ctx_bcbp[type]] + ctx);
-    if (cbp_bit) {
+    codedBlockPatternBit = binaryArithmeticDecodeSymbol (cabacDecodeEnv, textureInfoContexts->bcbp_contexts[type2ctx_bcbp[type]] + ctx);
+    if (codedBlockPatternBit) {
       // set bits for current block ---
       bit = (u_ac ? 19 + j + (i >> 2) : 35 + j + (i >> 2));
       mb->codedBlockPatterns[0].bits   |= i64power2(bit);
@@ -1652,11 +1648,11 @@ static int readStoreCbpBlockBitNormal (sMacroBlock* mb, sCabacDecodeEnv* cabacDe
     }
     //}}}
 
-  return cbp_bit;
+  return codedBlockPatternBit;
   }
 //}}}
 //{{{
-void set_read_and_store_CBP (sMacroBlock** mb, int chromaFormatIdc) {
+void setReadStoreCodedBlockPattern (sMacroBlock** mb, int chromaFormatIdc) {
 
   if (chromaFormatIdc == YUV444)
     (*mb)->readStoreCBPblockBit = readStoreCbpBlockBit444;
@@ -1751,21 +1747,21 @@ void readRunLevel_CABAC (sMacroBlock* mb, sSyntaxElement* se, sCabacDecodeEnv* c
   int* coefCount = &slice->coefCount;
   int* coeff = slice->coeff;
 
-  // read coefficients for whole block ---
+  // read coefficients for whole block
   if (*coefCount < 0) {
-    // decode CBP-BIT =====
+    // decode CBP-BIT
     if ((*coefCount = mb->readStoreCBPblockBit (mb, cabacDecodeEnv, se->context) ) != 0) {
-      // decode significance map =====
+      // decode significance map
       *coefCount = read_significance_map (mb, cabacDecodeEnv, se->context, coeff);
 
-      // decode significant coefficients =====
-      read_significant_coefficients    (cabacDecodeEnv, slice->textureInfoContexts, se->context, coeff);
+      // decode significant coefficients
+      read_significant_coefficients (cabacDecodeEnv, slice->textureInfoContexts, se->context, coeff);
       }
     }
 
-  // set run and level ---
+  // set run and level
   if (*coefCount) {
-    // set run and level (coefficient) ---
+    // set run and level (coefficient)
     for (se->value2 = 0; coeff[slice->pos] == 0; ++slice->pos, ++se->value2);
     se->value1 = coeff[slice->pos++];
     }
@@ -1773,7 +1769,7 @@ void readRunLevel_CABAC (sMacroBlock* mb, sSyntaxElement* se, sCabacDecodeEnv* c
     // set run and level (EOB) ---
     se->value1 = se->value2 = 0;
 
-  // decrement coefficient counter and re-set position ---
+  // decrement coefficient counter and re-set position
   if ((*coefCount)-- == 0)
     slice->pos = 0;
   }

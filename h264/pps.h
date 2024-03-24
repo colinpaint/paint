@@ -1,5 +1,5 @@
 #pragma once
-#include "defines.h"
+#include "global.h"
 #include "nalu.h"
 
 #define MAX_PPS  256
@@ -10,10 +10,10 @@ typedef struct {
 
   unsigned int ppsId;                         // ue(v)
   unsigned int spsId;                         // ue(v)
-  Boolean   entropyCodingMode;                // u(1)
-  Boolean   transform8x8modeFlag;             // u(1)
+  int entropyCoding;                          // u(1)
+  Boolean   hasTransform8x8mode;              // u(1)
 
-  Boolean   picScalingMatrixPresentFlag;      // u(1)
+  Boolean   hasPicScalingMatrix;              // u(1)
   int       picScalingListPresentFlag[12];    // u(1)
   int       scalingList4x4[6][16];            // se(v)
   int       scalingList8x8[6][64];            // se(v)
@@ -21,7 +21,7 @@ typedef struct {
   Boolean   useDefaultScalingMatrix8x8Flag[6];
 
   // pocType < 2 in the sequence parameter set
-  Boolean      botFieldPicOrderFramePresent;  // u(1)
+  Boolean      botFieldFrame;                 // u(1)
   unsigned int numSliceGroupsMinus1;          // ue(v)
 
   unsigned int sliceGroupMapType;             // ue(v)
@@ -40,7 +40,7 @@ typedef struct {
   int       numRefIndexL0defaultActiveMinus1; // ue(v)
   int       numRefIndexL1defaultActiveMinus1; // ue(v)
 
-  Boolean   weightedPredFlag;                 // u(1)
+  Boolean   hasWeightedPred;                 // u(1)
   unsigned int  weightedBiPredIdc;            // u(2)
   int       picInitQpMinus26;                 // se(v)
   int       picInitQsMinus26;                 // se(v)
@@ -49,8 +49,8 @@ typedef struct {
   int       crQpIndexOffset;                  // se(v)
   int       secondChromaQpIndexOffset;        // se(v)
 
-  Boolean   deblockFilterControlPresent;      // u(1)
-  Boolean   constrainedIntraPredFlag;         // u(1)
+  Boolean   hasDeblockFilterControl;      // u(1)
+  Boolean   hasConstrainedIntraPred;         // u(1)
   Boolean   redundantPicCountPresent;         // u(1)
   Boolean   vuiPicParamFlag;                  // u(1)
   } sPPS;

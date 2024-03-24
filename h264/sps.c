@@ -313,7 +313,7 @@ static int isEqualSPS (sSPS* sps1, sSPS* sps2) {
   if (sps1->pocType == 0)
     equal &= (sps1->log2maxPocLsbMinus4 == sps2->log2maxPocLsbMinus4);
   else if( sps1->pocType == 1) {
-    equal &= (sps1->delta_pic_order_always_zero_flag == sps2->delta_pic_order_always_zero_flag);
+    equal &= (sps1->deltaPicOrderAlwaysZero == sps2->deltaPicOrderAlwaysZero);
     equal &= (sps1->offsetNonRefPic == sps2->offsetNonRefPic);
     equal &= (sps1->offsetTopBotField == sps2->offsetTopBotField);
     equal &= (sps1->numRefFramesPocCycle == sps2->numRefFramesPocCycle);
@@ -456,7 +456,7 @@ static void readVUI (sDataPartition* dataPartition, sSPS* sps) {
   }
 //}}}
 //{{{
-static void readSPS (sDecoder* decoder, sDataPartition* dataPartition, sSPS* sps) {
+static void readSPS (sDecoder* decoder, sDataPartition* dataPartition, sSPS* sps, int naluLen) {
 
   sBitStream* s = dataPartition->s;
   sps->profileIdc = readUv (8, "SPS profileIdc", s);
@@ -470,10 +470,7 @@ static void readSPS (sDecoder* decoder, sDataPartition* dataPartition, sSPS* sps
   sps->constrained_set1_flag = readU1 ("SPS constrained_set1_flag", s);
   sps->constrained_set2_flag = readU1 ("SPS constrained_set2_flag", s);
   sps->constrainedSet3flag = readU1 ("SPS constrainedSet3flag", s);
-
   int reserved_zero = readUv (4, "SPS reserved_zero_4bits", s);
-  if (reserved_zero)
-    printf ("-> reserved_zero flag nonZero");
 
   sps->levelIdc = readUv (8, "SPS levelIdc", s);
   sps->spsId = readUeV ("SPS spsId", s);
@@ -521,10 +518,12 @@ static void readSPS (sDecoder* decoder, sDataPartition* dataPartition, sSPS* sps
   sps->log2maxFrameNumMinus4 = readUeV ("SPS log2maxFrameNumMinus4", s);
   //{{{  read POC
   sps->pocType = readUeV ("SPS pocType", s);
-  if (!sps->pocType)
+
+  if (sps->pocType == 0)
     sps->log2maxPocLsbMinus4 = readUeV ("SPS log2maxPocLsbMinus4", s);
+
   else if (sps->pocType == 1) {
-    sps->delta_pic_order_always_zero_flag = readU1 ("SPS delta_pic_order_always_zero_flag", s);
+    sps->deltaPicOrderAlwaysZero = readU1 ("SPS deltaPicOrderAlwaysZero", s);
     sps->offsetNonRefPic = readSeV ("SPS offsetNonRefPic", s);
     sps->offsetTopBotField = readSeV ("SPS offsetTopBotField", s);
     sps->numRefFramesPocCycle = readUeV ("SPS numRefFramesPocCycle", s);
@@ -560,19 +559,19 @@ static void readSPS (sDecoder* decoder, sDataPartition* dataPartition, sSPS* sps
   readVUI (dataPartition, sps);
 
   if (decoder->param.spsDebug) {
-    printf ("-> id:%d refFrames:%d pocType:%d mbs:%dx%d",
-            sps->spsId, sps->numRefFrames,  sps->pocType,
+    //{{{  print debug
+    printf ("SPS:%d:%d -> refFrames:%d pocType:%d mb:%dx%d",
+            sps->spsId, naluLen,
+            sps->numRefFrames, sps->pocType,
             sps->pic_width_in_mbs_minus1, sps->pic_height_in_map_units_minus1);
+
     if (sps->cropFlag)
       printf (" crop:%d:%d:%d:%d",
               sps->cropLeft, sps->cropRight, sps->cropTop, sps->cropBot);
-    if (sps->frameMbOnly) {
-      printf (" frame");
-      if (sps->mbAffFlag)
-        printf (" mbAff");
-      }
-    printf ("\n");
+
+    printf ("%s%s\n", sps->frameMbOnly ?" frame":"", sps->mbAffFlag ? " mbAff":"");
     }
+    //}}}
 
   sps->valid = TRUE;
   }
@@ -588,7 +587,7 @@ void readNaluSPS (sDecoder* decoder, sNalu* nalu) {
   dataPartition->s->codeLen = dataPartition->s->bitStreamLen = RBSPtoSODB (dataPartition->s->bitStreamBuffer, nalu->len-1);
 
   sSPS* sps = allocSPS();
-  readSPS (decoder, dataPartition, sps);
+  readSPS (decoder, dataPartition, sps, nalu->len);
   if (sps->valid) {
     if (decoder->activeSPS)
       if (sps->spsId == decoder->activeSPS->spsId)

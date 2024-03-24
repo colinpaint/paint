@@ -182,7 +182,7 @@ void useQuantParams (sSlice* slice) {
   sSPS* sps = slice->activeSPS;
   sPPS* pps = slice->activePPS;
 
-  if (!pps->picScalingMatrixPresentFlag && !sps->seq_scaling_matrix_present_flag) {
+  if (!pps->hasPicScalingMatrix && !sps->seq_scaling_matrix_present_flag) {
     for (int i = 0; i < 12; i++)
       slice->qmatrix[i] = (i < 6) ? quant_org : quant8_org;
     }
@@ -228,7 +228,7 @@ void useQuantParams (sSlice* slice) {
         }
       }
       //}}}
-    if (pps->picScalingMatrixPresentFlag) {
+    if (pps->hasPicScalingMatrix) {
       //{{{  then check pps
       for (int i = 0; i < n_ScalingList; i++) {
         if (i < 6) {
@@ -280,7 +280,7 @@ void useQuantParams (sSlice* slice) {
 
   CalculateQuant4x4Param (slice);
 
-  if (pps->transform8x8modeFlag)
+  if (pps->hasTransform8x8mode)
     CalculateQuant8x8Param (slice);
   }
 //}}}

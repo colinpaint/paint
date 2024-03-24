@@ -1,5 +1,5 @@
 #pragma once
-#include "defines.h"
+#include "global.h"
 #include "nalu.h"
 
 #define MAX_NUM_REF_FRAMES_PIC_ORDER  256
@@ -92,7 +92,7 @@ typedef struct {
   unsigned int log2maxFrameNumMinus4;         // ue(v)
   unsigned int pocType;
   unsigned int log2maxPocLsbMinus4; // ue(v)
-  Boolean  delta_pic_order_always_zero_flag;      // u(1)
+  Boolean  deltaPicOrderAlwaysZero;      // u(1)
   int      offsetNonRefPic;                       // se(v)
   int      offsetTopBotField;                     // se(v)
 

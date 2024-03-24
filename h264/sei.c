@@ -106,7 +106,7 @@ typedef struct {
 static void processUserDataUnregistered (byte* payload, int size, sDecoder* decoder) {
 
   if (decoder->param.seiDebug) {
-    printf ("-> unregistered - ");
+    printf ("unregistered - ");
 
     for (int i = 0; i < size; i++)
       if (payload[i] >= 0x20 && payload[i] <= 0x7f)
@@ -124,7 +124,7 @@ static void processUserDataT35 (byte* payload, int size, sDecoder* decoder) {
   if (decoder->param.seiDebug) {
     int offset = 0;
     int itu_t_t35_country_code = payload[offset++];
-    printf("-> ITU-T:%d", itu_t_t35_country_code);
+    printf("ITU-T:%d", itu_t_t35_country_code);
 
     if (itu_t_t35_country_code == 0xFF) {
       int itu_t_t35_country_code_extension_byte = payload[offset++];
@@ -145,7 +145,7 @@ static void processUserDataT35 (byte* payload, int size, sDecoder* decoder) {
 static void processReserved (byte* payload, int size, sDecoder* decoder) {
 
   if (decoder->param.seiDebug) {
-    printf ("-> reserved - ");
+    printf ("reserved - ");
 
     for (int i = 0; i < size; i++)
       if (payload[i] >= 0x20 && payload[i] <= 0x7f)
@@ -164,7 +164,7 @@ static void processPictureTiming (byte* payload, int size, sDecoder* decoder) {
   sSPS* activeSPS = decoder->activeSPS;
   if (!activeSPS) {
     if (decoder->param.seiDebug)
-      printf ("-> pictureTiming - no active SPS\n");
+      printf ("pictureTiming - no active SPS\n");
     return;
     }
 
@@ -174,7 +174,7 @@ static void processPictureTiming (byte* payload, int size, sDecoder* decoder) {
   buf->bitStreamLen = size;
 
   if (decoder->param.seiDebug) {
-    printf ("-> pictureTiming");
+    printf ("pictureTiming");
 
     int cpb_removal_len = 24;
     int dpb_output_len = 24;
@@ -334,7 +334,7 @@ static void processPanScan (byte* payload, int size, sDecoder* decoder) {
       int pan_scan_rect_top_offset = readSeV ("SEI pan_scan_rect_top_offset", buf);
       int pan_scan_rect_bottom_offset = readSeV ("SEI pan_scan_rect_bottom_offset", buf);
       if (decoder->param.seiDebug)
-        printf ("-> panScan %d/%d id:%d left:%d right:%d top:%d bot:%d\n",
+        printf ("panScan %d/%d id:%d left:%d right:%d top:%d bot:%d\n",
                 i, pan_scan_cnt_minus1, pan_scan_rect_id,
                 pan_scan_rect_left_offset, pan_scan_rect_right_offset,
                 pan_scan_rect_top_offset, pan_scan_rect_bottom_offset);
@@ -362,7 +362,7 @@ static void processRecoveryPoint (byte* payload, int size, sDecoder* decoder) {
   decoder->recoveryFrameCount = recoveryFrameCount;
 
   if (decoder->param.seiDebug)
-    printf ("-> recovery - frame:%d exact:%d broken:%d changing:%d\n",
+    printf ("recovery - frame:%d exact:%d broken:%d changing:%d\n",
             recoveryFrameCount, exact_match_flag, broken_link_flag, changing_slice_group_idc);
   free (buf);
   }
@@ -386,7 +386,7 @@ static void processDecRefPicMarkingRepetition (byte* payload, int size, sDecoder
     }
 
   if (decoder->param.seiDebug)
-    printf ("-> decPicRepetition orig:%d:%d", original_idr_flag, original_frame_num);
+    printf ("decPicRepetition orig:%d:%d", original_idr_flag, original_frame_num);
 
   free (buf);
   }
@@ -414,7 +414,7 @@ static void process_spare_pic (byte* payload, int size, sDecoder* decoder) {
   target_frame_num = readUeV ("SEI target_frame_num", buf);
   num_spare_pics = 1 + readUeV ("SEI num_spare_pics_minus1", buf);
   if (decoder->param.seiDebug)
-    printf ("-> sparePicture target_frame_num:%d num_spare_pics:%d\n",
+    printf ("sparePicture target_frame_num:%d num_spare_pics:%d\n",
             target_frame_num, num_spare_pics);
 
   getMem3D (&map, num_spare_pics, decoder->height >> 4, decoder->width >> 4);
@@ -581,7 +581,7 @@ static void process_subsequence_info (byte* payload, int size, sDecoder* decoder
     sub_seq_frame_num = readUeV("SEI sub_seq_frame_num", buf);
 
   if (decoder->param.seiDebug) {
-    printf ("-> Sub-sequence information\n");
+    printf ("Sub-sequence information\n");
     printf ("sub_seq_layer_num = %d\n", sub_seq_layer_num );
     printf ("sub_seq_id = %d\n", sub_seq_id);
     printf ("first_ref_pic_flag = %d\n", first_ref_pic_flag);
@@ -609,7 +609,7 @@ static void process_subsequence_layer_characteristics_info (byte* payload, int s
   num_sub_layers = 1 + readUeV("SEI num_sub_layers_minus1", buf);
 
   if (decoder->param.seiDebug)
-    printf ("-> Sub-sequence layer characteristics num_sub_layers_minus1 %ld\n", num_sub_layers - 1);
+    printf ("Sub-sequence layer characteristics num_sub_layers_minus1 %ld\n", num_sub_layers - 1);
   for (int i = 0; i < num_sub_layers; i++) {
     accurate_statistics_flag = readU1 ("SEI accurate_statistics_flag", buf);
     average_bit_rate = readUv (16,"SEI average_bit_rate", buf);
@@ -638,7 +638,7 @@ static void process_subsequence_characteristics_info (byte* payload, int size, s
   int duration_flag = readU1 ("SEI duration_flag", buf);
 
   if (decoder->param.seiDebug) {
-    printf ("-> Sub-sequence characteristics\n");
+    printf ("Sub-sequence characteristics\n");
     printf ("sub_seq_layer_num %d\n", sub_seq_layer_num );
     printf ("sub_seq_id %d\n", sub_seq_id);
     printf ("duration_flag %d\n", duration_flag);
@@ -696,7 +696,7 @@ static void process_scene_information (byte* payload, int size, sDecoder* decode
     second_scene_id = readUeV ("SEI scene_transition_type", buf);
 
   if (decoder->param.seiDebug) {
-    printf ("-> SceneInformation\n");
+    printf ("SceneInformation\n");
     printf ("scene_transition_type %d\n", scene_transition_type);
     printf ("scene_id %d\n", scene_id);
     if (scene_transition_type > 3 )
@@ -715,7 +715,7 @@ static void process_filler_payload_info (byte* payload, int size, sDecoder* deco
        payload_cnt++;
 
   if (decoder->param.seiDebug) {
-    printf ("-> FillerPayload\n");
+    printf ("FillerPayload\n");
     if (payload_cnt == size)
       printf ("read %d bytes of filler payload\n", payload_cnt);
     else
@@ -732,7 +732,7 @@ static void process_full_frame_freeze_info (byte* payload, int size, sDecoder* d
   buf->bitStreamLen = size;
 
   int full_frame_freeze_repetition_period = readUeV ("SEI full_frame_freeze_repetition_period", buf);
-  printf ("-> full_frame_freeze_repetition_period = %d\n", full_frame_freeze_repetition_period);
+  printf ("full_frame_freeze_repetition_period = %d\n", full_frame_freeze_repetition_period);
 
   free (buf);
   }
@@ -740,7 +740,7 @@ static void process_full_frame_freeze_info (byte* payload, int size, sDecoder* d
 //{{{
 static void process_full_frame_freeze_release_info (byte* payload, int size, sDecoder* decoder) {
 
-  printf ("-> full-frame freeze release SEI\n");
+  printf ("full-frame freeze release SEI\n");
   if (size)
     printf ("payload size should be zero, but is %d bytes.\n", size);
   }
@@ -755,7 +755,7 @@ static void process_full_frame_snapshot_info (byte* payload, int size, sDecoder*
 
   int snapshot_id = readUeV ("SEI snapshot_id", buf);
 
-  printf ("-> Full-frame snapshot\n");
+  printf ("Full-frame snapshot\n");
   printf ("snapshot_id = %d\n", snapshot_id);
   free (buf);
   }
@@ -771,7 +771,7 @@ static void process_progressive_refinement_start_info (byte* payload, int size, 
 
   int progressive_refinement_id   = readUeV("SEI progressive_refinement_id"  , buf);
   int num_refinement_steps_minus1 = readUeV("SEI num_refinement_steps_minus1", buf);
-  printf ("-> Progressive refinement segment start\n");
+  printf ("Progressive refinement segment start\n");
   printf ("progressive_refinement_id   = %d\n", progressive_refinement_id);
   printf ("num_refinement_steps_minus1 = %d\n", num_refinement_steps_minus1);
 
@@ -787,7 +787,7 @@ static void process_progressive_refinement_end_info (byte* payload, int size, sD
   buf->bitStreamLen = size;
 
   int progressive_refinement_id   = readUeV ("SEI progressive_refinement_id"  , buf);
-  printf ("-> progressive refinement segment end\n");
+  printf ("progressive refinement segment end\n");
   printf ("progressive_refinement_id:%d\n", progressive_refinement_id);
   free (buf);
 }
@@ -803,7 +803,7 @@ static void process_motion_constrained_slice_group_set_info (byte* payload, int 
 
   int numSliceGroupsMinus1 = readUeV ("SEI numSliceGroupsMinus1" , buf);
   int sliceGroupSize = ceilLog2 (numSliceGroupsMinus1 + 1);
-  printf ("-> Motion-constrained slice group set\n");
+  printf ("Motion-constrained slice group set\n");
   printf ("numSliceGroupsMinus1 = %d\n", numSliceGroupsMinus1);
 
   for (int i = 0; i <= numSliceGroupsMinus1; i++) {
@@ -843,7 +843,7 @@ static void processFilmGrain (byte* payload, int size, sDecoder* decoder) {
   buf->bitStreamLen = size;
 
   film_grain_characteristics_cancel_flag = readU1 ("SEI film_grain_characteristics_cancel_flag", buf);
-  printf ("-> film_grain_characteristics_cancel_flag = %d\n", film_grain_characteristics_cancel_flag);
+  printf ("film_grain_characteristics_cancel_flag = %d\n", film_grain_characteristics_cancel_flag);
   if (!film_grain_characteristics_cancel_flag) {
     model_id = readUv(2, "SEI model_id", buf);
     separate_colour_description_present_flag = readU1("SEI separate_colour_description_present_flag", buf);
@@ -909,7 +909,7 @@ static void processDeblockFilterDisplayPref (byte* payload, int size, sDecoder* 
   buf->bitStreamLen = size;
 
   int deblocking_display_preference_cancel_flag = readU1("SEI deblocking_display_preference_cancel_flag", buf);
-  printf ("-> deblocking_display_preference_cancel_flag = %d\n", deblocking_display_preference_cancel_flag);
+  printf ("deblocking_display_preference_cancel_flag = %d\n", deblocking_display_preference_cancel_flag);
   if (!deblocking_display_preference_cancel_flag) {
     int display_prior_to_deblocking_preferred_flag = readU1("SEI display_prior_to_deblocking_preferred_flag", buf);
     int dec_frame_buffering_constraint_flag = readU1("SEI dec_frame_buffering_constraint_flag", buf);
@@ -932,7 +932,7 @@ static void processStereoVideo (byte* payload, int size, sDecoder* decoder) {
   buf->bitStreamLen = size;
 
   int field_views_flags = readU1 ("SEI field_views_flags", buf);
-  printf ("-> field_views_flags = %d\n", field_views_flags);
+  printf ("field_views_flags = %d\n", field_views_flags);
   if (field_views_flags) {
     int top_field_is_left_view_flag = readU1 ("SEI top_field_is_left_view_flag", buf);
     printf ("top_field_is_left_view_flag = %d\n", top_field_is_left_view_flag);
@@ -965,7 +965,7 @@ static void processBufferingPeriod (byte* payload, int size, sDecoder* decoder) 
   activateSPS (decoder, sps);
 
   if (decoder->param.seiDebug)
-    printf ("-> buffering\n");
+    printf ("buffering\n");
 
   // Note: NalHrdBpPresentFlag and CpbDpbDelaysPresentFlag can also be set "by some means not specified in this Recommendation | International Standard"
   if (sps->vui_parameters_present_flag) {
@@ -1007,7 +1007,7 @@ static void process_frame_packing_arrangement_info (byte* payload, int size, sDe
   buf->bitStreamOffset = 0;
   buf->bitStreamLen = size;
 
-  printf ("-> Frame packing arrangement\n");
+  printf ("Frame packing arrangement\n");
 
   seiFramePackingArrangement.frame_packing_arrangement_id =
     (unsigned int)readUeV( "SEI frame_packing_arrangement_id", buf);
@@ -1089,7 +1089,7 @@ static void process_post_filter_hints_info (byte* payload, int size, sDecoder* d
 
   unsigned int additional_extension_flag = readU1("SEI additional_extension_flag", buf); // interpret post-filter hint SEI here
 
-  printf ("-> Post-filter hint\n");
+  printf ("Post-filter hint\n");
   printf ("post_filter_hint_size_y %d \n", filter_hint_size_y);
   printf ("post_filter_hint_size_x %d \n", filter_hint_size_x);
   printf ("post_filter_hint_type %d \n",   filter_hint_type);
@@ -1112,7 +1112,7 @@ static void process_green_metadata_info (byte* payload, int size, sDecoder* deco
   buf->bitStreamOffset = 0;
   buf->bitStreamLen = size;
 
-  printf ("-> GreenMetadataInfo\n");
+  printf ("GreenMetadataInfo\n");
 
   Green_metadata_information_struct seiGreenMetadataInfo;
   seiGreenMetadataInfo.green_metadata_type = (unsigned char)readUv(8, "SEI green_metadata_type", buf);
@@ -1158,81 +1158,84 @@ static void process_green_metadata_info (byte* payload, int size, sDecoder* deco
 //}}}
 
 //{{{
-void processSEI (byte* msg, int size, sDecoder* decoder, sSlice* slice) {
+void processSEI (byte* msg, int naluLen, sDecoder* decoder, sSlice* slice) {
+
+  if (decoder->param.seiDebug)
+    printf ("SEI:%d -> ", naluLen);
 
   int offset = 1;
   do {
-    int payload_type = 0;
-    byte tmp_byte = msg[offset++];
-    while (tmp_byte == 0xFF) {
-      payload_type += 255;
-      tmp_byte = msg[offset++];
+    int payloadType = 0;
+    byte tempByte = msg[offset++];
+    while (tempByte == 0xFF) {
+      payloadType += 255;
+      tempByte = msg[offset++];
       }
-    payload_type += tmp_byte;   // this is the last byte
+    payloadType += tempByte;
 
-    int payload_size = 0;
-    tmp_byte = msg[offset++];
-    while (tmp_byte == 0xFF) {
-      payload_size += 255;
-      tmp_byte = msg[offset++];
+    int payloadSize = 0;
+    tempByte = msg[offset++];
+    while (tempByte == 0xFF) {
+      payloadSize += 255;
+      tempByte = msg[offset++];
       }
-    payload_size += tmp_byte;   // this is the last byte
+    payloadSize += tempByte;
 
-    switch (payload_type) {
+    switch (payloadType) {
       case  SEI_BUFFERING_PERIOD:
-        processBufferingPeriod (msg+offset, payload_size, decoder); break;
+        processBufferingPeriod (msg+offset, payloadSize, decoder); break;
       case  SEI_PIC_TIMING:
-        processPictureTiming (msg+offset, payload_size, decoder); break;
+        processPictureTiming (msg+offset, payloadSize, decoder); break;
       case  SEI_PAN_SCAN_RECT:
-        processPanScan (msg+offset, payload_size, decoder); break;
+        processPanScan (msg+offset, payloadSize, decoder); break;
       case  SEI_FILLER_PAYLOAD:
-        process_filler_payload_info (msg+offset, payload_size, decoder); break;
+        process_filler_payload_info (msg+offset, payloadSize, decoder); break;
       case  SEI_USER_DATA_REGISTERED_ITU_T_T35:
-        processUserDataT35 (msg+offset, payload_size, decoder); break;
+        processUserDataT35 (msg+offset, payloadSize, decoder); break;
       case  SEI_USER_DATA_UNREGISTERED:
-        processUserDataUnregistered (msg+offset, payload_size, decoder); break;
+        processUserDataUnregistered (msg+offset, payloadSize, decoder); break;
       case  SEI_RECOVERY_POINT:
-        processRecoveryPoint (msg+offset, payload_size, decoder); break;
+        processRecoveryPoint (msg+offset, payloadSize, decoder); break;
       case  SEI_DEC_REF_PIC_MARKING_REPETITION:
-        processDecRefPicMarkingRepetition (msg+offset, payload_size, decoder, slice); break;
+        processDecRefPicMarkingRepetition (msg+offset, payloadSize, decoder, slice); break;
       case  SEI_SPARE_PIC:
-        process_spare_pic (msg+offset, payload_size, decoder); break;
+        process_spare_pic (msg+offset, payloadSize, decoder); break;
       case  SEI_SCENE_INFO:
-        process_scene_information (msg+offset, payload_size, decoder); break;
+        process_scene_information (msg+offset, payloadSize, decoder); break;
       case  SEI_SUB_SEQ_INFO:
-        process_subsequence_info (msg+offset, payload_size, decoder); break;
+        process_subsequence_info (msg+offset, payloadSize, decoder); break;
       case  SEI_SUB_SEQ_LAYER_CHARACTERISTICS:
-        process_subsequence_layer_characteristics_info (msg+offset, payload_size, decoder); break;
+        process_subsequence_layer_characteristics_info (msg+offset, payloadSize, decoder); break;
       case  SEI_SUB_SEQ_CHARACTERISTICS:
-        process_subsequence_characteristics_info (msg+offset, payload_size, decoder); break;
+        process_subsequence_characteristics_info (msg+offset, payloadSize, decoder); break;
       case  SEI_FULL_FRAME_FREEZE:
-        process_full_frame_freeze_info (msg+offset, payload_size, decoder); break;
+        process_full_frame_freeze_info (msg+offset, payloadSize, decoder); break;
       case  SEI_FULL_FRAME_FREEZE_RELEASE:
-        process_full_frame_freeze_release_info (msg+offset, payload_size, decoder); break;
+        process_full_frame_freeze_release_info (msg+offset, payloadSize, decoder); break;
       case  SEI_FULL_FRAME_SNAPSHOT:
-        process_full_frame_snapshot_info (msg+offset, payload_size, decoder); break;
+        process_full_frame_snapshot_info (msg+offset, payloadSize, decoder); break;
       case  SEI_PROGRESSIVE_REFINEMENT_SEGMENT_START:
-        process_progressive_refinement_start_info (msg+offset, payload_size, decoder); break;
+        process_progressive_refinement_start_info (msg+offset, payloadSize, decoder); break;
       case  SEI_PROGRESSIVE_REFINEMENT_SEGMENT_END:
-        process_progressive_refinement_end_info (msg+offset, payload_size, decoder); break;
+        process_progressive_refinement_end_info (msg+offset, payloadSize, decoder); break;
       case  SEI_MOTION_CONSTRAINED_SLICE_GROUP_SET:
-        process_motion_constrained_slice_group_set_info (msg+offset, payload_size, decoder); break;
+        process_motion_constrained_slice_group_set_info (msg+offset, payloadSize, decoder); break;
       case  SEI_FILM_GRAIN_CHARACTERISTICS:
-        processFilmGrain (msg+offset, payload_size, decoder); break;
+        processFilmGrain (msg+offset, payloadSize, decoder); break;
       case  SEI_DEBLOCKING_FILTER_DISPLAY_PREFERENCE:
-        processDeblockFilterDisplayPref (msg+offset, payload_size, decoder); break;
+        processDeblockFilterDisplayPref (msg+offset, payloadSize, decoder); break;
       case  SEI_STEREO_VIDEO_INFO:
-        processStereoVideo  (msg+offset, payload_size, decoder); break;
+        processStereoVideo  (msg+offset, payloadSize, decoder); break;
       case  SEI_POST_FILTER_HINTS:
-        process_post_filter_hints_info (msg+offset, payload_size, decoder); break;
+        process_post_filter_hints_info (msg+offset, payloadSize, decoder); break;
       case  SEI_FRAME_PACKING_ARRANGEMENT:
-        process_frame_packing_arrangement_info (msg+offset, payload_size, decoder); break;
+        process_frame_packing_arrangement_info (msg+offset, payloadSize, decoder); break;
       case  SEI_GREEN_METADATA:
-        process_green_metadata_info (msg+offset, payload_size, decoder); break;
+        process_green_metadata_info (msg+offset, payloadSize, decoder); break;
       default:
-        processReserved (msg+offset, payload_size, decoder); break;
+        processReserved (msg+offset, payloadSize, decoder); break;
       }
-    offset += payload_size;
+    offset += payloadSize;
     } while (msg[offset] != 0x80);    // moreRbspData()  msg[offset] != 0x80
 
   // ignore the trailing bits rbsp_trailing_bits();

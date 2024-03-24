@@ -20,7 +20,7 @@ static int predict_nnz (sMacroBlock* mb, int block_type, int i,int j) {
   int cnt = 0;
   sSlice* slice = mb->slice;
   if ((mb->isIntraBlock == TRUE) && pixelPos.available &&
-      decoder->activePPS->constrainedIntraPredFlag && (slice->dataPartitionMode == eDataPartition3)) {
+      decoder->activePPS->hasConstrainedIntraPred && (slice->dataPartitionMode == eDataPartition3)) {
     pixelPos.available &= slice->intraBlock[pixelPos.mbIndex];
     if (!pixelPos.available)
       ++cnt;
@@ -59,7 +59,7 @@ static int predict_nnz (sMacroBlock* mb, int block_type, int i,int j) {
   get4x4Neighbour (mb, i, j - 1, decoder->mbSize[IS_LUMA], &pixelPos);
 
   if ((mb->isIntraBlock == TRUE) && pixelPos.available &&
-      decoder->activePPS->constrainedIntraPredFlag && (slice->dataPartitionMode == eDataPartition3)) {
+      decoder->activePPS->hasConstrainedIntraPred && (slice->dataPartitionMode == eDataPartition3)) {
     pixelPos.available &= slice->intraBlock[pixelPos.mbIndex];
     if (!pixelPos.available)
       ++cnt;
@@ -118,7 +118,7 @@ static int predict_nnz_chroma (sMacroBlock* mb, int i,int j) {
     get4x4Neighbour (mb, ((i&0x01)<<2) - 1, j, decoder->mbSize[IS_CHROMA], &pixelPos);
 
     if ((mb->isIntraBlock == TRUE) && pixelPos.available &&
-        decoder->activePPS->constrainedIntraPredFlag && (slice->dataPartitionMode==eDataPartition3)) {
+        decoder->activePPS->hasConstrainedIntraPred && (slice->dataPartitionMode==eDataPartition3)) {
       pixelPos.available &= slice->intraBlock[pixelPos.mbIndex];
       if (!pixelPos.available)
         ++cnt;
@@ -133,7 +133,7 @@ static int predict_nnz_chroma (sMacroBlock* mb, int i,int j) {
     get4x4Neighbour (mb, ((i&0x01)<<2), j - 1, decoder->mbSize[IS_CHROMA], &pixelPos);
 
     if ((mb->isIntraBlock == TRUE) && pixelPos.available &&
-        decoder->activePPS->constrainedIntraPredFlag && (slice->dataPartitionMode==eDataPartition3)) {
+        decoder->activePPS->hasConstrainedIntraPred && (slice->dataPartitionMode==eDataPartition3)) {
       pixelPos.available &= slice->intraBlock[pixelPos.mbIndex];
       if (!pixelPos.available)
         ++cnt;

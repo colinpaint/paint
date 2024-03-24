@@ -9,8 +9,221 @@
 #include <time.h>
 #include <sys/timeb.h>
 
+//{{{  defines
+#define IMGTYPE           0    // Define sPixel size type. 0 implies byte (cannot handle >8 bit depths) and 1 implies unsigned short
+
+typedef unsigned char  byte;   // byte type definition
+typedef unsigned char  uint8;  // type definition for unsigned char (same as byte, 8 bits)
+typedef unsigned short uint16; // type definition for unsigned short (16 bits)
+typedef unsigned int   uint32; // type definition for unsigned int (32 bits)
+
+typedef char  int8;
+typedef short int16;
+typedef int   int32;
+
+typedef byte   sPixel;    // pixel type
+typedef uint16 distpel;   // distortion type (for pixels)
+typedef int32  distblk;   // distortion type (for sMacroBlock)
+typedef int32  transpel;  // transformed coefficient type
+
+//! Boolean Type
+#ifdef FALSE
+  #define Boolean int
+#else
+  typedef enum {
+    FALSE,
+    TRUE
+    } Boolean;
+#endif
+
+#define MAX_NUM_SLICES          8
+#define MAX_REFERENCE_PICTURES  32       // H.264 allows 32 fields
+#define MAX_CODED_FRAME_SIZE    8000000  // bytes for one frame
+#define MAX_NUM_DECSLICES       16
+#define MCBUF_LUMA_PAD_X        32
+#define MCBUF_LUMA_PAD_Y        12
+#define MCBUF_CHROMA_PAD_X      16
+#define MCBUF_CHROMA_PAD_Y      8
+
+//{{{  AVC Profile IDC definitions
+typedef enum {
+  NO_PROFILE     = 0,   // disable profile checking for experimental coding (enables FRExt, but disables MV)
+  FREXT_CAVLC444 = 44,  // YUV 4:4:4/14 "eCavlc 4:4:4"
+  BASELINE       = 66,  // YUV 4:2:0/8  "Baseline"
+  MAIN           = 77,  // YUV 4:2:0/8  "Main"
+  EXTENDED       = 88,  // YUV 4:2:0/8  "Extended"
+  FREXT_HP       = 100, // YUV 4:2:0/8  "High"
+  FREXT_Hi10P    = 110, // YUV 4:2:0/10 "High 10"
+  FREXT_Hi422    = 122, // YUV 4:2:2/10 "High 4:2:2"
+  FREXT_Hi444    = 244, // YUV 4:4:4/14 "High 4:4:4"
+  } eProfileIDC;
+//}}}
+
+#define NUM_BLOCK_TYPES 22
+
+#define BLOCK_SHIFT            2
+#define BLOCK_SIZE             4
+#define BLOCK_SIZE_8x8         8
+#define SMB_BLOCK_SIZE         8
+#define BLOCK_PIXELS          16
+#define MB_BLOCK_SIZE         16
+#define MB_PIXELS            256  // MB_BLOCK_SIZE * MB_BLOCK_SIZE
+#define MB_PIXELS_SHIFT        8  // log2(MB_BLOCK_SIZE * MB_BLOCK_SIZE)
+#define MB_BLOCK_SHIFT         4
+#define BLOCK_MULTIPLE         4  // (MB_BLOCK_SIZE/BLOCK_SIZE)
+#define MB_BLOCK_dpS   16  // (BLOCK_MULTIPLE * BLOCK_MULTIPLE)
+#define BLOCK_CONTEXT         64  // (4 * MB_BLOCK_dpS)
+
+// These variables relate to the subpel accuracy supported by the software (1/4)
+#define BLOCK_SIZE_SP         16  // BLOCK_SIZE << 2
+#define BLOCK_SIZE_8x8_SP     32  // BLOCK_SIZE8x8 << 2
+
+//{{{  Available MB modes
+typedef enum {
+  PSKIP        =  0,
+  BSKIP_DIRECT =  0,
+  P16x16       =  1,
+  P16x8        =  2,
+  P8x16        =  3,
+  SMB8x8       =  4,
+  SMB8x4       =  5,
+  SMB4x8       =  6,
+  SMB4x4       =  7,
+  P8x8         =  8,
+  I4MB         =  9,
+  I16MB        = 10,
+  IBLOCK       = 11,
+  SI4MB        = 12,
+  I8MB         = 13,
+  IPCM         = 14,
+  MAXMODE      = 15
+  } eMBModeTypes;
+//}}}
+
+// number of intra prediction modes
+#define NO_INTRA_PMODE   9
+//{{{  enum DirectModes
+typedef enum {
+  DIR_TEMPORAL = 0, //!< Temporal Direct Mode
+  DIR_SPATIAL  = 1 //!< Spatial Direct Mode
+  } eDirectModes;
+//}}}
+//{{{  enum CAVLCBlockTypes
+typedef enum {
+  LUMA              =  0,
+  LUMA_INTRA16x16DC =  1,
+  LUMA_INTRA16x16AC =  2,
+  CB                =  3,
+  CB_INTRA16x16DC   =  4,
+  CB_INTRA16x16AC   =  5,
+  CR                =  8,
+  CR_INTRA16x16DC   =  9,
+  CR_INTRA16x16AC   = 10
+  } CAVLCBlockTypes;
+//}}}
+//{{{  enum CABACBlockTypes
+typedef enum {
+  LUMA_16DC     =   0,
+  LUMA_16AC     =   1,
+  LUMA_8x8      =   2,
+  LUMA_8x4      =   3,
+  LUMA_4x8      =   4,
+  LUMA_4x4      =   5,
+  CHROMA_DC     =   6,
+  CHROMA_AC     =   7,
+  CHROMA_DC_2x4 =   8,
+  CHROMA_DC_4x4 =   9,
+  CB_16DC       =  10,
+  CB_16AC       =  11,
+  CB_8x8        =  12,
+  CB_8x4        =  13,
+  CB_4x8        =  14,
+  CB_4x4        =  15,
+  CR_16DC       =  16,
+  CR_16AC       =  17,
+  CR_8x8        =  18,
+  CR_8x4        =  19,
+  CR_4x8        =  20,
+  CR_4x4        =  21
+  } CABACBlockTypes;
+//}}}
+
+// Macro defines
+#define Q_BITS           15
+#define DQ_BITS          6
+#define Q_BITS_8         16
+#define DQ_BITS_8        6
+
+#define IS_I16MB(MB)     ((MB)->mbType == I16MB || (MB)->mbType == IPCM)
+#define IS_DIRECT(MB)    ((MB)->mbType == 0 && (slice->sliceType == eSliceB ))
+
+#define TOTRUN_NUM       15
+#define RUNBEFORE_NUM    7
+#define RUNBEFORE_NUM_M1 6
+
+// Quantization parameter range
+#define MAX_QP           51
+//{{{  enum 4x4 intra prediction modes
+typedef enum {
+  VERT_PRED            = 0,
+  HOR_PRED             = 1,
+  DC_PRED              = 2,
+  DIAG_DOWN_LEFT_PRED  = 3,
+  DIAG_DOWN_RIGHT_PRED = 4,
+  VERT_RIGHT_PRED      = 5,
+  HOR_DOWN_PRED        = 6,
+  VERT_LEFT_PRED       = 7,
+  HOR_UP_PRED          = 8
+  } eI4x4PredModes;
+//}}}
+//{{{  enum 16x16 intra prediction modes
+typedef enum {
+  VERT_PRED_16   = 0,
+  HOR_PRED_16    = 1,
+  DC_PRED_16     = 2,
+  PLANE_16       = 3
+  } eI16x16PredModes;
+//}}}
+//{{{  enum 8x8 chroma intra prediction modes
+typedef enum {
+  DC_PRED_8     =  0,
+  HOR_PRED_8    =  1,
+  VERT_PRED_8   =  2,
+  PLANE_8       =  3
+  } eI8x8PredModes;
+//}}}
+//{{{  enum StartEnd
+typedef enum {
+  EOS = 1,    //!< End Of Sequence
+  SOP = 2,    //!< Start Of Picture
+  SOS = 3,     //!< Start Of sSlice
+  SOS_CONT = 4
+  } eStartEnd;
+//}}}
+//{{{  enum MV Prediction types
+typedef enum {
+  MVPRED_MEDIAN   = 0,
+  MVPRED_L        = 1,
+  MVPRED_U        = 2,
+  MVPRED_UR       = 3
+  } eMVPredTypes;
+//}}}
+//{{{  enum DecRet
+typedef enum {
+  DECODING_OK     = 0,
+  SEARCH_SYNC     = 1,
+  PICTURE_DECODED = 2
+  } eDecRet;
+//}}}
+
+#define MAX_PLANE                 3
+#define INVALIDINDEX              (-135792468)
+
+// Start code and Emulation Prevention need this to be defined in identical manner at encoder and decoder
+#define ZEROBYTES_SHORTSTARTCODE  2 //indicates the number of zero bytes in the short start-code prefix
+//}}}
+
 #include "win32.h"
-#include "defines.h"
 #include "functions.h"
 #include "frame.h"
 
@@ -18,6 +231,7 @@
 #include "sps.h"
 #include "pps.h"
 //}}}
+
 //{{{  enum eColorPlane
 typedef enum {
   // YUV
@@ -25,6 +239,12 @@ typedef enum {
   PLANE_U = 1,  // PLANE_Cb
   PLANE_V = 2,  // PLANE_Cr
   } eColorPlane;
+//}}}
+//{{{  enum eComponentType
+typedef enum {
+  IS_LUMA = 0,
+  IS_CHROMA = 1
+  } eComponentType;
 //}}}
 //{{{  enum eColorComponent
 typedef enum {
@@ -35,9 +255,9 @@ typedef enum {
 //}}}
 //{{{  enum ePicStructure
 typedef enum {
-  eFrame,
-  eTopField,
-  eBotField
+  eFrame    = 0,
+  eTopField = 1,
+  eBotField = 2
   } ePicStructure;
 //}}}
 //{{{  enum eDataPartitionType
@@ -69,11 +289,11 @@ typedef enum {
   SE_MAX_ELEMENTS = 20
   } eSyntaxElementType;
 //}}}
-//{{{  enum eSymbolType
+//{{{  enum eEntropyCodingType
 typedef enum {
-  eCavlc,
-  eCabac
-  } eSymbolType;
+  eCavlc = 0,
+  eCabac = 1
+  } eEntropyCodingType;
 //}}}
 //{{{  enum eCodingType
 typedef enum {
@@ -94,11 +314,11 @@ typedef enum {
 //}}}
 //{{{  enum eSliceType
 typedef enum {
-  eSliceP = 0,
-  eSliceB = 1,
-  eSliceI = 2,
-  eSliceSP = 3,
-  eSliceSI = 4,
+  eSliceP        = 0,
+  eSliceB        = 1,
+  eSliceI        = 2,
+  eSliceSP       = 3,
+  eSliceSI       = 4,
   eSliceNumTypes = 5
   } eSliceType;
 //}}}
@@ -108,12 +328,6 @@ typedef enum {
   eHalfPel,
   eQuarterPel
   } eMotionEstimationType;
-//}}}
-//{{{  enum eComponentType
-typedef enum {
-  IS_LUMA = 0,
-  IS_CHROMA = 1
-  } eComponentType;
 //}}}
 //{{{  enum eRcModelType
 typedef enum {
@@ -135,15 +349,6 @@ typedef enum {
 //}}}
 
 struct MacroBlock;
-//{{{  sCabacDecodeEnv
-typedef struct {
-  unsigned int range;
-  unsigned int value;
-  int          bitsLeft;
-  byte*        codeStream;
-  int*         codeStreamLen;
-  } sCabacDecodeEnv;
-//}}}
 //{{{  sBitStream
 typedef struct {
   // eCavlc Decoding
@@ -156,6 +361,15 @@ typedef struct {
   int   readLen;         // position in the codebuffer
   int   codeLen;         // overall codebuffer length
   } sBitStream;
+//}}}
+//{{{  sCabacDecodeEnv
+typedef struct {
+  unsigned int range;
+  unsigned int value;
+  int          bitsLeft;
+  byte*        codeStream;
+  int*         codeStreamLen;
+  } sCabacDecodeEnv;
 //}}}
 //{{{  sSyntaxElement
 typedef struct SyntaxElement {
@@ -539,7 +753,7 @@ typedef struct Slice {
   int pos;
 
   // weighted prediction
-  unsigned short weightedPredFlag;
+  unsigned short hasWeightedPred;
   unsigned short weightedBiPredIdc;
   unsigned short lumaLog2weightDenom;
   unsigned short chromaLog2weightDenom;
@@ -585,7 +799,7 @@ typedef struct Slice {
 typedef struct CodingParam {
   int profileIdc;
 
-  ePicStructure picStructure;  
+  ePicStructure picStructure;
   int yuvFormat;
   int sepColourPlaneFlag;
   int type;                // image type INTER/INTRA
@@ -877,15 +1091,15 @@ static inline int isHiIntraOnlyProfile (unsigned profileIdc, Boolean constrained
 
   extern sSlice* allocSlice (sDecoder* decoder);
 
-  // For 4:4:4 independent mode
-  extern void changePlaneJV (sDecoder* decoder, int nplane, sSlice *slice);
-  extern void makeFramePictureJV (sDecoder* decoder );
-
   extern sDecodedPic* allocDecodedPicture (sDecodedPic* decodedPic);
   extern void freeDecodedPictures (sDecodedPic* decodedPic);
   extern void clearDecodedPictures (sDecoder* decoder);
 
   extern void setCoding (sDecoder* decoder);
+
+  // For 4:4:4 independent mode
+  extern void changePlaneJV (sDecoder* decoder, int nplane, sSlice *slice);
+  extern void makeFramePictureJV (sDecoder* decoder );
 //{{{
 #ifdef __cplusplus
 }
