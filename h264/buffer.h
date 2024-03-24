@@ -34,7 +34,7 @@ typedef struct Picture {
   int         usedForReference;
   int         is_output;
   int         non_existing;
-  int         sepColourPlaneFlag;
+  int         isSeperateColourPlane;
 
   short       maxSliceId;
 
@@ -60,7 +60,7 @@ typedef struct Picture {
   struct Picture* frame;         // for mb aff, if field for referencing the combined frame
 
   int         sliceType;
-  int         idrFlag;
+  int         isIDR;
   int         noOutputPriorPicFlag;
   int         longTermRefFlag;
   int         adaptRefPicBufFlag;

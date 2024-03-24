@@ -368,7 +368,7 @@ int mb_pred_b_d8x8temporal (sMacroBlock* mb, eColorPlane plane, sPixel** pixel, 
       j6   = mb->blockYaff + j;
       mvInfo = &picture->mvInfo[j4][i4];
       colocated = &list1[0]->mvInfo[RSD(j6)][RSD(i4)];
-      if(mb->decoder->coding.sepColourPlaneFlag && mb->decoder->coding.yuvFormat==YUV444)
+      if(mb->decoder->coding.isSeperateColourPlane && mb->decoder->coding.yuvFormat==YUV444)
         colocated = &list1[0]->JVmv_info[mb->slice->colourPlaneId][RSD(j6)][RSD(i4)];
       if (slice->mbAffFrame) {
         assert(decoder->activeSPS->direct_8x8_inference_flag);
@@ -544,7 +544,7 @@ int mb_pred_b_d4x4temporal (sMacroBlock* mb, eColorPlane plane, sPixel** pixel, 
       int j6   = mb->blockYaff + j;
       sPicMotionParam *mvInfo = &picture->mvInfo[j4][i4];
       sPicMotionParam *colocated = &list1[0]->mvInfo[j6][i4];
-      if(mb->decoder->coding.sepColourPlaneFlag && mb->decoder->coding.yuvFormat==YUV444)
+      if(mb->decoder->coding.isSeperateColourPlane && mb->decoder->coding.yuvFormat==YUV444)
         colocated = &list1[0]->JVmv_info[mb->slice->colourPlaneId][RSD(j6)][RSD(i4)];
       assert (predDir<=2);
 
@@ -1133,7 +1133,7 @@ int mb_pred_ipcm (sMacroBlock* mb) {
     for (int j = 0;j < MB_BLOCK_SIZE ; ++j)
       picture->imgY[mb->pixY + i][mb->pixX + j] = (sPixel) slice->cof[0][i][j];
 
-  if ((picture->chromaFormatIdc != YUV400) && (decoder->coding.sepColourPlaneFlag == 0))
+  if ((picture->chromaFormatIdc != YUV400) && (decoder->coding.isSeperateColourPlane == 0))
     for (int k = 0; k < 2; ++k)
       for(int i = 0; i < decoder->mbCrSizeY; ++i)
         for (int j = 0; j < decoder->mbCrSizeX; ++j)

@@ -1538,7 +1538,7 @@ static void copy_to_conceal (sPicture *src, sPicture *dst, sDecoder* decoder)
 
   dst->sliceType = src->sliceType = decoder->concealSliceType;
 
-  dst->idrFlag = FALSE; //since we do not want to clears the ref list
+  dst->isIDR = FALSE; //since we do not want to clears the ref list
 
   dst->noOutputPriorPicFlag = src->noOutputPriorPicFlag;
   dst->longTermRefFlag = src->longTermRefFlag;
@@ -1920,7 +1920,7 @@ void concealLostFrames (sDPB* dpb, sSlice *slice)
     if(decoder->idrConcealFlag == 1)
     {
       picture->sliceType = eSliceI;
-      picture->idrFlag = TRUE;
+      picture->isIDR = TRUE;
       flushDpb(dpb);
       picture->topPoc= 0;
       picture->botPoc=picture->topPoc;

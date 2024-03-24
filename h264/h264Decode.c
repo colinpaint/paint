@@ -255,7 +255,7 @@ void initFrext (sDecoder* decoder) {
 void initGlobalBuffers (sDecoder* decoder) {
 
   // alloc coding
-  if (decoder->coding.sepColourPlaneFlag) {
+  if (decoder->coding.isSeperateColourPlane) {
     for (unsigned i = 0; i < MAX_PLANE; ++i)
       if (!decoder->mbDataJV[i])
         decoder->mbDataJV[i] = (sMacroBlock*)calloc (decoder->coding.frameSizeMbs, sizeof(sMacroBlock));
@@ -310,7 +310,7 @@ void freeGlobalBuffers (sDecoder* decoder) {
 void freeLayerBuffers (sDecoder* decoder) {
 
   // free coding
-  if (decoder->coding.sepColourPlaneFlag) {
+  if (decoder->coding.isSeperateColourPlane) {
     for (int i = 0; i < MAX_PLANE; i++) {
       free (decoder->mbDataJV[i]);
       decoder->mbDataJV[i] = NULL;
@@ -484,7 +484,7 @@ sDecoder* openDecoder (sParam* param, byte* chunk, size_t chunkSize) {
   decoder->nextSlice = NULL;
   initOldSlice (decoder->oldSlice);
 
-  decoder->coding.type = eSliceI;
+  decoder->coding.sliceType = eSliceI;
   decoder->picture = NULL;
   decoder->mbToSliceGroupMap = NULL;
   decoder->mapUnitToSliceGroupMap = NULL;

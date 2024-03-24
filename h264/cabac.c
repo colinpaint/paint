@@ -1249,7 +1249,7 @@ static int readStoreCbpBlockBit444 (sMacroBlock* mb, sCabacDecodeEnv*  cabacDeco
       codedBlockPatternBit = binaryArithmeticDecodeSymbol (cabacDecodeEnv, textureInfoContexts->bcbp_contexts[type2ctx_bcbp[type]] + ctx);
       }
     }
-  else if( (decoder->coding.sepColourPlaneFlag != 0) ) {
+  else if( (decoder->coding.isSeperateColourPlane != 0) ) {
     if (type != LUMA_8x8) {
       // get bits from neighbouring blocks ---
       if (block_b.available) {
@@ -1824,7 +1824,7 @@ void readIPCMcabac (sSlice* slice, sDataPartition* dataPartition) {
 
   // read chroma values
   bitDepth = decoder->bitDepthChroma;
-  if ((picture->chromaFormatIdc != YUV400) && (decoder->coding.sepColourPlaneFlag == 0)) {
+  if ((picture->chromaFormatIdc != YUV400) && (decoder->coding.isSeperateColourPlane == 0)) {
     for (int uv = 1; uv < 3; ++uv) {
       for (int i = 0; i < decoder->mbCrSizeY; ++i) {
         for (int j = 0; j < decoder->mbCrSizeX; ++j) {

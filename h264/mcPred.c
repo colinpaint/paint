@@ -338,7 +338,7 @@ int get_colocated_info_8x8 (sMacroBlock* mb, sPicture* list1, int i, int j) {
       sPicMotionParam *fs = &list1->mvInfo[RSD(j)][RSD(i)];
 
       int moving;
-      if (mb->decoder->coding.sepColourPlaneFlag && mb->decoder->coding.yuvFormat==YUV444)
+      if (mb->decoder->coding.isSeperateColourPlane && mb->decoder->coding.yuvFormat==YUV444)
         fs = &list1->JVmv_info[mb->slice->colourPlaneId][RSD(j)][RSD(i)];
 
       moving = !((((fs->refIndex[LIST_0] == 0)
@@ -1433,7 +1433,7 @@ void get_block_luma (sPicture* curRef, int x_pos, int y_pos, int blockSizeX, int
   }
   else
   {
-    sPixel** curPixelY = (mb->decoder->coding.sepColourPlaneFlag && mb->slice->colourPlaneId>PLANE_Y)? curRef->imgUV[mb->slice->colourPlaneId-1] : curRef->curPixelY;
+    sPixel** curPixelY = (mb->decoder->coding.isSeperateColourPlane && mb->slice->colourPlaneId>PLANE_Y)? curRef->imgUV[mb->slice->colourPlaneId-1] : curRef->curPixelY;
     int dx = (x_pos & 3);
     int dy = (y_pos & 3);
     x_pos >>= 2;

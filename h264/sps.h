@@ -118,7 +118,7 @@ typedef struct {
   Boolean  vui_parameters_present_flag; // u(1)
   sVUI     vui_seq_parameters;          // sVUI
 
-  unsigned sepColourPlaneFlag;          // u(1)
+  unsigned isSeperateColourPlane;          // u(1)
   int      losslessQpPrimeFlag;
   } sSPS;
 

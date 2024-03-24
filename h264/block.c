@@ -254,7 +254,7 @@ void itrans_2 (sMacroBlock* mb, eColorPlane plane) {
   sSlice* slice = mb->slice;
   sDecoder* decoder = mb->decoder;
 
-  int transform_pl = (decoder->coding.sepColourPlaneFlag != 0) ? PLANE_Y : plane;
+  int transform_pl = (decoder->coding.isSeperateColourPlane != 0) ? PLANE_Y : plane;
   int** cof = slice->cof[transform_pl];
 
   int qpScaled = mb->qpScaled[transform_pl];

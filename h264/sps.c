@@ -92,7 +92,7 @@ static void setCodingParam (sDecoder* decoder, sSPS* sps) {
   decoder->coding.frameSizeMbs = decoder->coding.picWidthMbs * decoder->coding.frameHeightMbs;
 
   decoder->coding.yuvFormat = sps->chromaFormatIdc;
-  decoder->coding.sepColourPlaneFlag = sps->sepColourPlaneFlag;
+  decoder->coding.isSeperateColourPlane = sps->isSeperateColourPlane;
 
   decoder->coding.width = decoder->coding.picWidthMbs * MB_BLOCK_SIZE;
   decoder->coding.height = decoder->coding.frameHeightMbs * MB_BLOCK_SIZE;
@@ -480,7 +480,7 @@ static void readSPS (sDecoder* decoder, sDataPartition* dataPartition, sSPS* sps
   sps->bit_depth_luma_minus8 = 0;
   sps->bit_depth_chroma_minus8 = 0;
   sps->losslessQpPrimeFlag = 0;
-  sps->sepColourPlaneFlag = 0;
+  sps->isSeperateColourPlane = 0;
 
   //{{{  read fidelity range
   if ((sps->profileIdc == FREXT_HP) ||
@@ -491,7 +491,7 @@ static void readSPS (sDecoder* decoder, sDataPartition* dataPartition, sSPS* sps
     // read fidelity range
     sps->chromaFormatIdc = readUeV ("SPS chromaFormatIdc", s);
     if (sps->chromaFormatIdc == YUV444)
-      sps->sepColourPlaneFlag = readU1 ("SPS sepColourPlaneFlag", s);
+      sps->isSeperateColourPlane = readU1 ("SPS isSeperateColourPlane", s);
     sps->bit_depth_luma_minus8 = readUeV ("SPS bit_depth_luma_minus8", s);
     sps->bit_depth_chroma_minus8 = readUeV ("SPS bit_depth_chroma_minus8", s);
     if ((sps->bit_depth_luma_minus8+8 > sizeof(sPixel)*8) ||
@@ -599,7 +599,7 @@ void readNaluSPS (sDecoder* decoder, sNalu* nalu) {
 
     setSPSbyId (decoder, sps->spsId, sps);
 
-    decoder->coding.sepColourPlaneFlag = sps->sepColourPlaneFlag;
+    decoder->coding.isSeperateColourPlane = sps->isSeperateColourPlane;
     }
 
   freeDataPartitions (dataPartition, 1);

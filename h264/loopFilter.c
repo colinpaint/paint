@@ -1860,7 +1860,7 @@ static void initNeighbours (sDecoder* decoder) {
 //{{{
 void initDeblock (sDecoder* decoder, int mbAffFrame) {
 
-  if (decoder->coding.yuvFormat == YUV444 && decoder->coding.sepColourPlaneFlag) {
+  if (decoder->coding.yuvFormat == YUV444 && decoder->coding.isSeperateColourPlane) {
     changePlaneJV (decoder, PLANE_Y, NULL);
     initNeighbours (decoder);
 

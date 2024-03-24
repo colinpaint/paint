@@ -1254,7 +1254,7 @@ static void ercWriteMBmodeMV (sMacroBlock* mb) {
   int mbx = xPosMB (curMbNum, picture->sizeX), mby = yPosMB(curMbNum, picture->sizeX);
   sObjectBuffer* curRegion = decoder->ercObjectList + (curMbNum << 2);
 
-  if (decoder->coding.type != eSliceB) {
+  if (decoder->coding.sliceType != eSliceB) {
     //{{{  non-B frame
     for (int i = 0; i < 4; ++i) {
       sObjectBuffer* region = curRegion + i;
@@ -1502,7 +1502,7 @@ static void initRefPicture (sSlice* slice, sDecoder* decoder) {
   sPicture* vidRefPicture = decoder->noReferencePicture;
   int noRef = slice->framePoc < decoder->recoveryPoc;
 
-  if (decoder->coding.sepColourPlaneFlag) {
+  if (decoder->coding.isSeperateColourPlane) {
     switch (slice->colourPlaneId) {
       case 0:
         for (int j = 0; j < 6; j++) {
@@ -1593,9 +1593,9 @@ static int isNewPicture (sPicture* picture, sSlice* slice, sOldSlice* oldSlice) 
     result |= (oldSlice->botField != slice->botField);
 
   result |= (oldSlice->nalRefIdc != slice->refId) && (!oldSlice->nalRefIdc || !slice->refId);
-  result |= (oldSlice->idrFlag != slice->idrFlag);
+  result |= (oldSlice->isIDR != slice->isIDR);
 
-  if (slice->idrFlag && oldSlice->idrFlag)
+  if (slice->isIDR && oldSlice->isIDR)
     result |= (oldSlice->idrPicId != slice->idrPicId);
 
   sDecoder* decoder = slice->decoder;
@@ -1631,7 +1631,7 @@ static void copyDecPictureJV (sDecoder* decoder, sPicture* dst, sPicture* src) {
 
   dst->sliceType = src->sliceType;
   dst->usedForReference = src->usedForReference;
-  dst->idrFlag = src->idrFlag;
+  dst->isIDR = src->isIDR;
   dst->noOutputPriorPicFlag = src->noOutputPriorPicFlag;
   dst->longTermRefFlag = src->longTermRefFlag;
   dst->adaptRefPicBufFlag = src->adaptRefPicBufFlag;
@@ -1668,7 +1668,7 @@ static void initPicture (sDecoder* decoder, sSlice* slice) {
 
   if (decoder->recoveryPoint)
     decoder->recoveryFrameNum = (slice->frameNum + decoder->recoveryFrameCount) % decoder->coding.maxFrameNum;
-  if (slice->idrFlag)
+  if (slice->isIDR)
     decoder->recoveryFrameNum = slice->frameNum;
   if (!decoder->recoveryPoint &&
       (slice->frameNum != decoder->preFrameNum) &&
@@ -1756,9 +1756,9 @@ static void initPicture (sDecoder* decoder, sSlice* slice) {
     //}}}
     }
 
-  if (decoder->coding.type > eSliceSI) {
+  if (decoder->coding.sliceType > eSliceSI) {
     setEcFlag (decoder, SE_PTYPE);
-    decoder->coding.type = eSliceP;  // concealed element
+    decoder->coding.sliceType = eSliceP;  // concealed element
     }
 
   // eCavlc init
@@ -1767,7 +1767,7 @@ static void initPicture (sDecoder* decoder, sSlice* slice) {
 
   // Set the sliceNum member of each MB to -1, to ensure correct when packet loss occurs
   // TO set sMacroBlock Map (mark all MBs as 'have to be concealed')
-  if (decoder->coding.sepColourPlaneFlag) {
+  if (decoder->coding.isSeperateColourPlane) {
     for (int nplane = 0; nplane < MAX_PLANE; ++nplane ) {
       sMacroBlock* mb = decoder->mbDataJV[nplane];
       char* intraBlock = decoder->intraBlockJV[nplane];
@@ -1789,9 +1789,9 @@ static void initPicture (sDecoder* decoder, sSlice* slice) {
     memset (decoder->predMode[0], DC_PRED, 16 * decoder->coding.frameHeightMbs * decoder->coding.picWidthMbs * sizeof(char));
     }
 
-  picture->sliceType = decoder->coding.type;
+  picture->sliceType = decoder->coding.sliceType;
   picture->usedForReference = (slice->refId != 0);
-  picture->idrFlag = slice->idrFlag;
+  picture->isIDR = slice->isIDR;
   picture->noOutputPriorPicFlag = slice->noOutputPriorPicFlag;
   picture->longTermRefFlag = slice->longTermRefFlag;
   picture->adaptRefPicBufFlag = slice->adaptRefPicBufFlag;
@@ -1818,7 +1818,7 @@ static void initPicture (sDecoder* decoder, sSlice* slice) {
     picture->cropBot = activeSPS->cropBot;
     }
 
-  if (decoder->coding.sepColourPlaneFlag) {
+  if (decoder->coding.isSeperateColourPlane) {
     decoder->decPictureJV[0] = decoder->picture;
     decoder->decPictureJV[1] = allocPicture (decoder, (ePicStructure) slice->picStructure, decoder->width, decoder->height, decoder->widthCr, decoder->heightCr, 1);
     copyDecPictureJV (decoder, decoder->decPictureJV[1], decoder->decPictureJV[0] );
@@ -1863,7 +1863,7 @@ static void useParameterSet (sDecoder* decoder, sSlice* slice) {
     for (int i = 0; i < 3; i++)
       slice->dataPartitions[i].readSyntaxElement = readSyntaxElementCABAC;
     }
-  decoder->coding.type = slice->sliceType;
+  decoder->coding.sliceType = slice->sliceType;
   }
 //}}}
 //{{{
@@ -1889,7 +1889,7 @@ static void initPictureDecoding (sDecoder* decoder) {
     }
 
   useParameterSet (decoder, slice);
-  if (slice->idrFlag)
+  if (slice->isIDR)
     decoder->idrFrameNum = 0;
 
   decoder->picHeightInMbs = decoder->coding.frameHeightMbs / (1 + slice->fieldPic);
@@ -1949,8 +1949,8 @@ static void copySliceInfo (sSlice* slice, sOldSlice* oldSlice) {
 
   oldSlice->nalRefIdc = slice->refId;
 
-  oldSlice->idrFlag = (byte)slice->idrFlag;
-  if (slice->idrFlag)
+  oldSlice->isIDR = (byte)slice->isIDR;
+  if (slice->isIDR)
     oldSlice->idrPicId = slice->idrPicId;
 
   if (slice->decoder->activeSPS->pocType == 0) {
@@ -1974,7 +1974,7 @@ void decRefPicMarking (sDecoder* decoder, sBitStream* s, sSlice* slice) {
     free (tmp_drpm);
     }
 
-  if (slice->idrFlag) {
+  if (slice->isIDR) {
     slice->noOutputPriorPicFlag = readU1 ("SLC noOutputPriorPicFlag", s);
     decoder->noOutputPriorPicFlag = slice->noOutputPriorPicFlag;
     slice->longTermRefFlag = readU1 ("SLC longTermRefFlag", s);
@@ -2022,7 +2022,7 @@ void decodePOC (sDecoder* decoder, sSlice* slice) {
     //{{{
     case 0: // POC MODE 0
       // 1st
-      if (slice->idrFlag) {
+      if (slice->isIDR) {
         decoder->prevPocMsb = 0;
         decoder->prevPocLsb = 0;
         }
@@ -2073,7 +2073,7 @@ void decodePOC (sDecoder* decoder, sSlice* slice) {
     //{{{
     case 1: // POC MODE 1
       // 1st
-      if (slice->idrFlag) {
+      if (slice->isIDR) {
         // first pixelPos of IDRGOP,
         decoder->frameNumOffset = 0;
         if (slice->frameNum)
@@ -2136,7 +2136,7 @@ void decodePOC (sDecoder* decoder, sSlice* slice) {
     //}}}
     //{{{
     case 2: // POC MODE 2
-      if (slice->idrFlag) {
+      if (slice->isIDR) {
         // IDR picture, first pixelPos of IDRGOP,
         decoder->frameNumOffset = 0;
         slice->thisPoc = slice->framePoc = slice->topPoc = slice->botPoc = 0;
@@ -2188,7 +2188,7 @@ void initOldSlice (sOldSlice* oldSlice) {
   oldSlice->frameNum = INT_MAX;
 
   oldSlice->nalRefIdc = INT_MAX;
-  oldSlice->idrFlag = FALSE;
+  oldSlice->isIDR = FALSE;
 
   oldSlice->picOrderCountLsb = UINT_MAX;
   oldSlice->deltaPicOrderCountBot = INT_MAX;
@@ -2228,11 +2228,11 @@ static void readSliceHeader (sDecoder* decoder, sSlice* slice) {
   if (tmp > 4)
     tmp -= 5;
   slice->sliceType = (eSliceType)tmp;
-  decoder->coding.type = slice->sliceType;
+  decoder->coding.sliceType = slice->sliceType;
 
   slice->ppsId = readUeV ("SLC ppsId", s);
 
-  if (decoder->coding.sepColourPlaneFlag)
+  if (decoder->coding.isSeperateColourPlane)
     slice->colourPlaneId = readUv (2, "SLC colourPlaneId", s);
   else
     slice->colourPlaneId = PLANE_Y;
@@ -2242,11 +2242,11 @@ static void readSliceHeader (sDecoder* decoder, sSlice* slice) {
   slice->activeSPS = decoder->activeSPS;
   slice->activePPS = decoder->activePPS;
   slice->transform8x8Mode = decoder->activePPS->hasTransform8x8mode;
-  slice->chroma444notSeparate = (decoder->activeSPS->chromaFormatIdc == YUV444) && !decoder->coding.sepColourPlaneFlag;
+  slice->chroma444notSeparate = (decoder->activeSPS->chromaFormatIdc == YUV444) && !decoder->coding.isSeperateColourPlane;
 
   sSPS* activeSPS = decoder->activeSPS;
   slice->frameNum = readUv (activeSPS->log2maxFrameNumMinus4 + 4, "SLC frameNum", s);
-  if (slice->idrFlag) {
+  if (slice->isIDR) {
     decoder->preFrameNum = slice->frameNum;
     decoder->lastRefPicPoc = 0;
     }
@@ -2272,7 +2272,7 @@ static void readSliceHeader (sDecoder* decoder, sSlice* slice) {
   slice->mbAffFrame = activeSPS->mbAffFlag && !slice->fieldPic;
   //}}}
 
-  if (slice->idrFlag)
+  if (slice->isIDR)
     slice->idrPicId = readUeV ("SLC idrPicId", s);
   //{{{  read picOrderCount
   if (activeSPS->pocType == 0) {
@@ -2546,7 +2546,7 @@ static int readSlice (sSlice* slice) {
           break;
 
         // read slice header
-        slice->idrFlag = (nalu->unitType == NALU_TYPE_IDR);
+        slice->isIDR = (nalu->unitType == NALU_TYPE_IDR);
         slice->refId = nalu->refId;
         slice->dataPartitionMode = eDataPartition1;
         slice->maxDataPartitions = 1;
@@ -2579,7 +2579,7 @@ static int readSlice (sSlice* slice) {
 
         // if primary slice replaced by redundant slice, set correct image type
         if (slice->redundantPicCount && !decoder->isPrimaryOk && decoder->isRedundantOk)
-          decoder->picture->sliceType = decoder->coding.type;
+          decoder->picture->sliceType = decoder->coding.sliceType;
         if (isNewPicture (decoder->picture, slice, decoder->oldSlice)) {
           if (!decoder->picSliceIndex)
             initPicture (decoder, slice);
@@ -2634,7 +2634,7 @@ static int readSlice (sSlice* slice) {
           break;
 
         // read dataPartition A
-        slice->idrFlag = FALSE;
+        slice->isIDR = FALSE;
         slice->refId = nalu->refId;
         slice->noDataPartitionB = 1;
         slice->noDataPartitionC = 1;
@@ -2764,7 +2764,7 @@ static void decodeSlice (sSlice* slice) {
   slice->codCount = -1;
 
   sDecoder* decoder = slice->decoder;
-  if (decoder->coding.sepColourPlaneFlag)
+  if (decoder->coding.isSeperateColourPlane)
     changePlaneJV (decoder, slice->colourPlaneId, slice);
   else {
     slice->mbData = decoder->mbData;
@@ -2804,7 +2804,7 @@ void endDecodeFrame (sDecoder* decoder) {
   // return if the last picture has already been finished
   if (!decoder->picture ||
       ((decoder->numDecodedMbs != decoder->picSizeInMbs) &&
-       ((decoder->coding.yuvFormat != YUV444) || !decoder->coding.sepColourPlaneFlag)))
+       ((decoder->coding.yuvFormat != YUV444) || !decoder->coding.isSeperateColourPlane)))
     return;
 
   //{{{  error conceal
@@ -2860,7 +2860,7 @@ void endDecodeFrame (sDecoder* decoder) {
   if (!decoder->deblockMode &&
       decoder->param.deblock &&
       (decoder->deblockEnable & (1 << decoder->picture->usedForReference))) {
-    if (decoder->coding.sepColourPlaneFlag) {
+    if (decoder->coding.isSeperateColourPlane) {
       //{{{  deblockJV
       int colourPlaneId = decoder->sliceList[0]->colourPlaneId;
       for (int nplane = 0; nplane < MAX_PLANE; ++nplane) {
@@ -2875,7 +2875,7 @@ void endDecodeFrame (sDecoder* decoder) {
     else
       deblockPicture (decoder, decoder->picture);
     }
-  else if (decoder->coding.sepColourPlaneFlag)
+  else if (decoder->coding.isSeperateColourPlane)
     makeFramePictureJV (decoder);
 
   if (decoder->picture->mbAffFrame)
@@ -2891,7 +2891,7 @@ void endDecodeFrame (sDecoder* decoder) {
   int refpic = decoder->picture->usedForReference;
   int qp = decoder->picture->qp;
   int picNum = decoder->picture->picNum;
-  int isIdr = decoder->picture->idrFlag;
+  int isIdr = decoder->picture->isIDR;
   int chromaFormatIdc = decoder->picture->chromaFormatIdc;
   storePictureDpb (decoder->dpb, decoder->picture);
   decoder->picture = NULL;
@@ -3039,12 +3039,12 @@ int decodeFrame (sDecoder* decoder) {
     if (!slice->redundantPicCount)
       decoder->isPrimaryOk = decoder->isRedundantOk = 1;
 
-    if (!slice->redundantPicCount && (decoder->coding.type != eSliceI)) {
+    if (!slice->redundantPicCount && (decoder->coding.sliceType != eSliceI)) {
       for (int i = 0; i < slice->numRefIndexActive[LIST_0];++i)
         if (!slice->refFlag[i]) // reference primary slice incorrect, primary slice incorrect
           decoder->isPrimaryOk = 0;
       }
-    else if (slice->redundantPicCount && (decoder->coding.type != eSliceI)) // reference redundant slice incorrect
+    else if (slice->redundantPicCount && (decoder->coding.sliceType != eSliceI)) // reference redundant slice incorrect
       if (!slice->refFlag[slice->redundantSliceRefIndex]) // redundant slice is incorrect
         decoder->isRedundantOk = 0;
 

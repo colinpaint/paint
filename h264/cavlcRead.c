@@ -1402,8 +1402,8 @@ static void read_CBP_and_coeffs_from_NAL_CAVLC_420 (sMacroBlock* mb) {
   sDataPartition* dataPartition = NULL;
   const byte* dpMap = assignSE2dp[slice->dataPartitionMode];
   sDecoder* decoder = mb->decoder;
-  int smb = ((decoder->coding.type == eSliceSP) && (mb->isIntraBlock == FALSE)) ||
-            ((decoder->coding.type == eSliceSI) && (mb->mbType == SI4MB));
+  int smb = ((decoder->coding.sliceType == eSliceSP) && (mb->isIntraBlock == FALSE)) ||
+            ((decoder->coding.sliceType == eSliceSI) && (mb->mbType == SI4MB));
 
   int uv;
   int qp_per_uv[2];
@@ -1635,7 +1635,7 @@ void setReadCbpCoefCavlc (sSlice* slice) {
 
   switch (slice->decoder->activeSPS->chromaFormatIdc) {
     case YUV444:
-      if (slice->decoder->coding.sepColourPlaneFlag == 0)
+      if (slice->decoder->coding.isSeperateColourPlane == 0)
         slice->readCBPcoeffs = read_CBP_and_coeffs_from_NAL_CAVLC_444;
       else
         slice->readCBPcoeffs = read_CBP_and_coeffs_from_NAL_CAVLC_400;

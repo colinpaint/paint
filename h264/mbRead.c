@@ -391,7 +391,7 @@ static void concealIPCMcoeffs (sMacroBlock* mb) {
       slice->cof[0][i][j] = decoder->coding.dcPredValueComp[0];
 
   sPicture* picture = slice->picture;
-  if ((picture->chromaFormatIdc != YUV400) && (decoder->coding.sepColourPlaneFlag == 0))
+  if ((picture->chromaFormatIdc != YUV400) && (decoder->coding.isSeperateColourPlane == 0))
     for (int k = 0; k < 2; ++k)
       for (int i = 0; i < decoder->mbCrSizeY; ++i)
         for (int j = 0; j < decoder->mbCrSizeX; ++j)
@@ -447,7 +447,7 @@ static void readIPCMcoeffs (sSlice* slice, sDataPartition* dataPartition) {
 
     se.len = decoder->bitDepthChroma;
     sPicture* picture = slice->picture;
-    if ((picture->chromaFormatIdc != YUV400) && (decoder->coding.sepColourPlaneFlag == 0)) {
+    if ((picture->chromaFormatIdc != YUV400) && (decoder->coding.isSeperateColourPlane == 0)) {
       for (int i = 0; i < decoder->mbCrSizeY; ++i)
         for (int j = 0; j < decoder->mbCrSizeX; ++j) {
           readsSyntaxElement_FLC (&se, dataPartition->s);

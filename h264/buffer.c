@@ -706,12 +706,12 @@ sPicture* allocPicture (sDecoder* decoder, ePicStructure picStructure,
   s->iLumaPadX = decoder->coding.iLumaPadX;
   s->iChromaPadY = decoder->coding.iChromaPadY;
   s->iChromaPadX = decoder->coding.iChromaPadX;
-  s->sepColourPlaneFlag = decoder->coding.sepColourPlaneFlag;
+  s->isSeperateColourPlane = decoder->coding.isSeperateColourPlane;
 
   getMem2Dmp (&s->mvInfo, (sizeY >> BLOCK_SHIFT), (sizeX >> BLOCK_SHIFT));
   allocPicMotion (&s->motion , (sizeY >> BLOCK_SHIFT), (sizeX >> BLOCK_SHIFT));
 
-  if (decoder->coding.sepColourPlaneFlag != 0)
+  if (decoder->coding.isSeperateColourPlane != 0)
     for (int nplane = 0; nplane < MAX_PLANE; nplane++) {
       getMem2Dmp (&s->JVmv_info[nplane], (sizeY >> BLOCK_SHIFT), (sizeX >> BLOCK_SHIFT));
       allocPicMotion (&s->JVmotion[nplane] , (sizeY >> BLOCK_SHIFT), (sizeX >> BLOCK_SHIFT));
@@ -768,7 +768,7 @@ void freePicture (sPicture* p) {
       }
     freePicMotion (&p->motion);
 
-    if ((p->sepColourPlaneFlag != 0) ) {
+    if ((p->isSeperateColourPlane != 0) ) {
       for (int nplane = 0; nplane < MAX_PLANE; nplane++ ) {
         if (p->JVmv_info[nplane]) {
           freeMem2Dmp (p->JVmv_info[nplane]);
@@ -1146,7 +1146,7 @@ static void adaptiveMemoryManagement (sDPB* dpb, sPicture* p) {
 
   decoder->lastHasMmco5 = 0;
 
-  assert (!p->idrFlag);
+  assert (!p->isIDR);
   assert (p->adaptRefPicBufFlag);
 
   while (p->decRefPicMarkingBuffer) {
@@ -1234,7 +1234,7 @@ static void adaptiveMemoryManagement (sDPB* dpb, sPicture* p) {
 //{{{
 static void slidingWindowMemoryManagement (sDPB* dpb, sPicture* p) {
 
-  assert (!p->idrFlag);
+  assert (!p->isIDR);
 
   // if this is a reference pic with sliding window, unmark first ref frame
   if (dpb->refFramesInBuffer == imax (1, dpb->numRefFrames) - dpb->longTermRefFramesInBuffer) {
@@ -1691,7 +1691,7 @@ void storePictureDpb (sDPB* dpb, sPicture* p) {
   decoder->lastHasMmco5 = 0;
   decoder->lastPicBotField = (p->picStructure == eBotField);
 
-  if (p->idrFlag) {
+  if (p->isIDR) {
     idrMemoryManagement (dpb, p);
     // picture error conceal
     memset (decoder->dpbPoc, 0, sizeof(int)*100);
@@ -1723,7 +1723,7 @@ void storePictureDpb (sDPB* dpb, sPicture* p) {
     }
 
   // this is a frame or a field which has no stored complementary field sliding window, if necessary
-  if ((!p->idrFlag) &&
+  if ((!p->isIDR) &&
       (p->usedForReference &&
       (!p->adaptRefPicBufFlag)))
     slidingWindowMemoryManagement (dpb, p);
@@ -1771,7 +1771,7 @@ void storePictureDpb (sDPB* dpb, sPicture* p) {
   insertPictureDpb (decoder, dpb->fs[dpb->usedSize],p);
 
   // picture error conceal
-  if (p->idrFlag)
+  if (p->isIDR)
     decoder->earlierMissingPoc = 0;
 
   if (p->picStructure != eFrame)
@@ -1889,7 +1889,7 @@ void initImage (sDecoder* decoder, sImage* image, sSPS* sps) {
   image->top_stride[0] = image->bot_stride[0] = image->frm_stride[0] << 1;
   image->top_stride[1] = image->top_stride[2] = image->bot_stride[1] = image->bot_stride[2] = image->frm_stride[1] << 1;
 
-  if (sps->sepColourPlaneFlag) {
+  if (sps->isSeperateColourPlane) {
     for (int nplane = 0; nplane < MAX_PLANE; nplane++ )
       getMem2Dpel (&(image->frm_data[nplane]), decoder->height, decoder->width);
     }
@@ -1927,7 +1927,7 @@ void initImage (sDecoder* decoder, sImage* image, sSPS* sps) {
 //{{{
 void freeImage (sDecoder* decoder, sImage* image) {
 
-  if (decoder->coding.sepColourPlaneFlag ) {
+  if (decoder->coding.isSeperateColourPlane ) {
     for (int nplane = 0; nplane < MAX_PLANE; nplane++ ) {
       if (image->frm_data[nplane]) {
         freeMem2Dpel (image->frm_data[nplane]);      // free ref frame buffers
