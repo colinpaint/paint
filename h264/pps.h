@@ -44,10 +44,10 @@ typedef struct {
   unsigned int  weightedBiPredIdc;            // u(2)
   int       picInitQpMinus26;                 // se(v)
   int       picInitQsMinus26;                 // se(v)
-  int       chromaQpIndexOffset;              // se(v)
+  int       chromaQpOffset;              // se(v)
   int       cbQpIndexOffset;                  // se(v)
   int       crQpIndexOffset;                  // se(v)
-  int       secondChromaQpIndexOffset;        // se(v)
+  int       chromaQpOffset2;        // se(v)
 
   Boolean   hasDeblockFilterControl;      // u(1)
   Boolean   hasConstrainedIntraPred;         // u(1)

@@ -1535,6 +1535,41 @@ static void initRefPicture (sSlice* slice, sDecoder* decoder) {
     }
   }
 //}}}
+//{{{
+static void copyDecPictureJV (sDecoder* decoder, sPicture* dst, sPicture* src) {
+
+  dst->poc = src->poc;
+  dst->topPoc = src->topPoc;
+  dst->botPoc = src->botPoc;
+  dst->framePoc = src->framePoc;
+
+  dst->qp = src->qp;
+  dst->sliceQpDelta = src->sliceQpDelta;
+  dst->chromaQpOffset[0] = src->chromaQpOffset[0];
+  dst->chromaQpOffset[1] = src->chromaQpOffset[1];
+
+  dst->sliceType = src->sliceType;
+  dst->usedForReference = src->usedForReference;
+  dst->isIDR = src->isIDR;
+  dst->noOutputPriorPicFlag = src->noOutputPriorPicFlag;
+  dst->longTermRefFlag = src->longTermRefFlag;
+  dst->adaptRefPicBufFlag = src->adaptRefPicBufFlag;
+  dst->decRefPicMarkingBuffer = src->decRefPicMarkingBuffer;
+  dst->mbAffFrame = src->mbAffFrame;
+  dst->picWidthMbs = src->picWidthMbs;
+  dst->picNum  = src->picNum;
+  dst->frameNum = src->frameNum;
+  dst->recoveryFrame = src->recoveryFrame;
+  dst->codedFrame = src->codedFrame;
+  dst->chromaFormatIdc = src->chromaFormatIdc;
+  dst->frameMbOnly = src->frameMbOnly;
+  dst->cropFlag = src->cropFlag;
+  dst->cropLeft = src->cropLeft;
+  dst->cropRight = src->cropRight;
+  dst->cropTop = src->cropTop;
+  dst->cropBot = src->cropBot;
+  }
+//}}}
 
 //{{{
 static void updateMbAff (sPixel** pixel, sPixel (*temp)[16], int x0, int width, int height) {
@@ -1581,119 +1616,7 @@ static void mbAffPostProc (sDecoder* decoder) {
 //}}}
 
 //{{{
-static void useParameterSet (sDecoder* decoder, sSlice* slice) {
-
-  sPPS* pps = &decoder->pps[slice->ppsId];
-  if (!pps->valid)
-    printf ("useParameterSet - invalid PPSid:%d\n", slice->ppsId);
-
-  sSPS* sps = &decoder->sps[pps->spsId];
-  if (!sps->valid)
-    printf ("useParameterSet - no SPSid:%d:%d\n", slice->ppsId, pps->spsId);
-
-  // In theory, and with a well-designed software, the lines above are everything necessary.
-  // In practice, we need to patch many values
-  // in decoder-> (but no more in input. -- these have been taken care of)
-  // Set Sequence Parameter Stuff first
-  if (sps->pocType > 2)
-    error ("invalid SPS pocType");
-  if (sps->pocType == 1)
-    if (sps->numRefFramesPocCycle >= MAX_NUM_REF_FRAMES_PIC_ORDER)
-      error ("numRefFramesPocCycle too large");
-
-  activateSPS (decoder, sps);
-  activatePPS (decoder, pps);
-
-  // slice->dataPartitionMode is set by read_new_slice (NALU first byte available there)
-  if (pps->entropyCoding == eCavlc) {
-    slice->nalStartCode = vlcStartCode;
-    for (int i = 0; i < 3; i++)
-      slice->dataPartitions[i].readSyntaxElement = readSyntaxElementVLC;
-    }
-  else {
-    slice->nalStartCode = cabacStartCode;
-    for (int i = 0; i < 3; i++)
-      slice->dataPartitions[i].readSyntaxElement = readSyntaxElementCABAC;
-    }
-
-  decoder->coding.sliceType = slice->sliceType;
-  }
-//}}}
-//{{{
-static int isNewPicture (sPicture* picture, sSlice* slice, sOldSlice* oldSlice) {
-
-  int result = (NULL == picture);
-
-  result |= (oldSlice->ppsId != slice->ppsId);
-  result |= (oldSlice->frameNum != slice->frameNum);
-  result |= (oldSlice->fieldPic != slice->fieldPic);
-
-  if (slice->fieldPic && oldSlice->fieldPic)
-    result |= (oldSlice->botField != slice->botField);
-
-  result |= (oldSlice->nalRefIdc != slice->refId) && (!oldSlice->nalRefIdc || !slice->refId);
-  result |= (oldSlice->isIDR != slice->isIDR);
-
-  if (slice->isIDR && oldSlice->isIDR)
-    result |= (oldSlice->idrPicId != slice->idrPicId);
-
-  sDecoder* decoder = slice->decoder;
-  if (!decoder->activeSPS->pocType) {
-    result |= (oldSlice->picOrderCountLsb != slice->picOrderCountLsb);
-    if ((decoder->activePPS->botFieldFrame == 1) && !slice->fieldPic)
-      result |= (oldSlice->deltaPicOrderCountBot != slice->deletaPicOrderCountBot);
-    }
-
-  if (decoder->activeSPS->pocType == 1) {
-    if (!decoder->activeSPS->deltaPicOrderAlwaysZero) {
-      result |= (oldSlice->deltaPicOrderCount[0] != slice->deltaPicOrderCount[0]);
-      if ((decoder->activePPS->botFieldFrame == 1) && !slice->fieldPic)
-        result |= (oldSlice->deltaPicOrderCount[1] != slice->deltaPicOrderCount[1]);
-      }
-    }
-
-  return result;
-  }
-//}}}
-//{{{
-static void copyDecPictureJV (sDecoder* decoder, sPicture* dst, sPicture* src) {
-
-  dst->poc = src->poc;
-  dst->topPoc = src->topPoc;
-  dst->botPoc = src->botPoc;
-  dst->framePoc = src->framePoc;
-
-  dst->qp = src->qp;
-  dst->sliceQpDelta = src->sliceQpDelta;
-  dst->chromaQpOffset[0] = src->chromaQpOffset[0];
-  dst->chromaQpOffset[1] = src->chromaQpOffset[1];
-
-  dst->sliceType = src->sliceType;
-  dst->usedForReference = src->usedForReference;
-  dst->isIDR = src->isIDR;
-  dst->noOutputPriorPicFlag = src->noOutputPriorPicFlag;
-  dst->longTermRefFlag = src->longTermRefFlag;
-  dst->adaptRefPicBufFlag = src->adaptRefPicBufFlag;
-  dst->decRefPicMarkingBuffer = src->decRefPicMarkingBuffer;
-  dst->mbAffFrame = src->mbAffFrame;
-  dst->picWidthMbs = src->picWidthMbs;
-  dst->picNum  = src->picNum;
-  dst->frameNum = src->frameNum;
-  dst->recoveryFrame = src->recoveryFrame;
-  dst->codedFrame = src->codedFrame;
-  dst->chromaFormatIdc = src->chromaFormatIdc;
-  dst->frameMbOnly = src->frameMbOnly;
-  dst->cropFlag = src->cropFlag;
-  dst->cropLeft = src->cropLeft;
-  dst->cropRight = src->cropRight;
-  dst->cropTop = src->cropTop;
-  dst->cropBot = src->cropBot;
-  }
-//}}}
-//{{{
 static void initPicture (sDecoder* decoder, sSlice* slice) {
-
-  sPicture* picture = NULL;
 
   sDPB* dpb = slice->dpb;
   sSPS* activeSPS = decoder->activeSPS;
@@ -1753,14 +1676,14 @@ static void initPicture (sDecoder* decoder, sSlice* slice) {
   if ((slice->picStructure == eFrame) || (slice->picStructure == eTopField))
     getTime (&decoder->info.startTime);
 
-  picture = decoder->picture = allocPicture (decoder, slice->picStructure, decoder->width, decoder->height, decoder->widthCr, decoder->heightCr, 1);
+  sPicture* picture = decoder->picture = allocPicture (decoder, slice->picStructure, decoder->width, decoder->height, decoder->widthCr, decoder->heightCr, 1);
   picture->topPoc = slice->topPoc;
   picture->botPoc = slice->botPoc;
   picture->framePoc = slice->framePoc;
   picture->qp = slice->qp;
   picture->sliceQpDelta = slice->sliceQpDelta;
-  picture->chromaQpOffset[0] = decoder->activePPS->chromaQpIndexOffset;
-  picture->chromaQpOffset[1] = decoder->activePPS->secondChromaQpIndexOffset;
+  picture->chromaQpOffset[0] = decoder->activePPS->chromaQpOffset;
+  picture->chromaQpOffset[1] = decoder->activePPS->chromaQpOffset2;
   picture->iCodingType = slice->picStructure == eFrame ?
     (slice->mbAffFrame? eFrameMbPairCoding:eFrameCoding) : eFieldCoding;
 
@@ -1863,6 +1786,45 @@ static void initPicture (sDecoder* decoder, sSlice* slice) {
     decoder->decPictureJV[2] = allocPicture (decoder, (ePicStructure) slice->picStructure, decoder->width, decoder->height, decoder->widthCr, decoder->heightCr, 1);
     copyDecPictureJV (decoder, decoder->decPictureJV[2], decoder->decPictureJV[0] );
     }
+  }
+//}}}
+//{{{
+static void useParameterSet (sDecoder* decoder, sSlice* slice) {
+
+  sPPS* pps = &decoder->pps[slice->ppsId];
+  if (!pps->valid)
+    printf ("useParameterSet - invalid PPSid:%d\n", slice->ppsId);
+
+  sSPS* sps = &decoder->sps[pps->spsId];
+  if (!sps->valid)
+    printf ("useParameterSet - no SPSid:%d:%d\n", slice->ppsId, pps->spsId);
+
+  // In theory, and with a well-designed software, the lines above are everything necessary.
+  // In practice, we need to patch many values
+  // in decoder-> (but no more in input. -- these have been taken care of)
+  // Set Sequence Parameter Stuff first
+  if (sps->pocType > 2)
+    error ("invalid SPS pocType");
+  if (sps->pocType == 1)
+    if (sps->numRefFramesPocCycle >= MAX_NUM_REF_FRAMES_PIC_ORDER)
+      error ("numRefFramesPocCycle too large");
+
+  activateSPS (decoder, sps);
+  activatePPS (decoder, pps);
+
+  // slice->dataPartitionMode is set by read_new_slice (NALU first byte available there)
+  if (pps->entropyCoding == eCavlc) {
+    slice->nalStartCode = vlcStartCode;
+    for (int i = 0; i < 3; i++)
+      slice->dataPartitions[i].readSyntaxElement = readSyntaxElementVLC;
+    }
+  else {
+    slice->nalStartCode = cabacStartCode;
+    for (int i = 0; i < 3; i++)
+      slice->dataPartitions[i].readSyntaxElement = readSyntaxElementCABAC;
+    }
+
+  decoder->coding.sliceType = slice->sliceType;
   }
 //}}}
 //{{{
@@ -2211,6 +2173,43 @@ void padPicture (sDecoder* decoder, sPicture* picture) {
   }
 //}}}
 
+//{{{
+static int isNewPicture (sPicture* picture, sSlice* slice, sOldSlice* oldSlice) {
+
+  int result = (NULL == picture);
+
+  result |= (oldSlice->ppsId != slice->ppsId);
+  result |= (oldSlice->frameNum != slice->frameNum);
+  result |= (oldSlice->fieldPic != slice->fieldPic);
+
+  if (slice->fieldPic && oldSlice->fieldPic)
+    result |= (oldSlice->botField != slice->botField);
+
+  result |= (oldSlice->nalRefIdc != slice->refId) && (!oldSlice->nalRefIdc || !slice->refId);
+  result |= (oldSlice->isIDR != slice->isIDR);
+
+  if (slice->isIDR && oldSlice->isIDR)
+    result |= (oldSlice->idrPicId != slice->idrPicId);
+
+  sDecoder* decoder = slice->decoder;
+
+  if (!decoder->activeSPS->pocType) {
+    result |= (oldSlice->picOrderCountLsb != slice->picOrderCountLsb);
+    if ((decoder->activePPS->botFieldFrame == 1) && !slice->fieldPic)
+      result |= (oldSlice->deltaPicOrderCountBot != slice->deletaPicOrderCountBot);
+    }
+
+  if (decoder->activeSPS->pocType == 1) {
+    if (!decoder->activeSPS->deltaPicOrderAlwaysZero) {
+      result |= (oldSlice->deltaPicOrderCount[0] != slice->deltaPicOrderCount[0]);
+      if ((decoder->activePPS->botFieldFrame == 1) && !slice->fieldPic)
+        result |= (oldSlice->deltaPicOrderCount[1] != slice->deltaPicOrderCount[1]);
+      }
+    }
+
+  return result;
+  }
+//}}}
 //{{{
 static void readSliceHeader (sDecoder* decoder, sSlice* slice) {
 // Some slice syntax depends on parameterSet depends on parameterSetID of the slice header

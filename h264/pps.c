@@ -110,7 +110,7 @@ static int isEqualPPS (sPPS* pps1, sPPS* pps2) {
   equal &= (pps1->picInitQpMinus26 == pps2->picInitQpMinus26);
   equal &= (pps1->picInitQsMinus26 == pps2->picInitQsMinus26);
   equal &= (pps1->weightedBiPredIdc == pps2->weightedBiPredIdc);
-  equal &= (pps1->chromaQpIndexOffset == pps2->chromaQpIndexOffset);
+  equal &= (pps1->chromaQpOffset == pps2->chromaQpOffset);
   equal &= (pps1->hasConstrainedIntraPred == pps2->hasConstrainedIntraPred);
   equal &= (pps1->redundantPicCountPresent == pps2->redundantPicCountPresent);
   equal &= (pps1->hasDeblockFilterControl == pps2->hasDeblockFilterControl);
@@ -134,7 +134,7 @@ static int isEqualPPS (sPPS* pps1, sPPS* pps2) {
         }
       }
     }
-  equal &= (pps1->secondChromaQpIndexOffset == pps2->secondChromaQpIndexOffset);
+  equal &= (pps1->chromaQpOffset2 == pps2->chromaQpOffset2);
 
   return equal;
   }
@@ -221,7 +221,7 @@ static void readPPS (sDecoder* decoder, sDataPartition* dataPartition, sPPS* pps
   pps->picInitQpMinus26 = readSeV ("PPS picInitQpMinus26", s);
   pps->picInitQsMinus26 = readSeV ("PPS picInitQsMinus26", s);
 
-  pps->chromaQpIndexOffset = readSeV ("PPS chromaQpIndexOffset", s);
+  pps->chromaQpOffset = readSeV ("PPS chromaQpOffset", s);
 
   pps->hasDeblockFilterControl = readU1 ("PPS hasDeblockFilterControl" , s);
   pps->hasConstrainedIntraPred = readU1 ("PPS hasConstrainedIntraPred", s);
@@ -244,10 +244,10 @@ static void readPPS (sDecoder* decoder, sDataPartition* dataPartition, sPPS* pps
           }
         }
       }
-    pps->secondChromaQpIndexOffset = readSeV ("PPS secondChromaQpIndexOffset", s);
+    pps->chromaQpOffset2 = readSeV ("PPS chromaQpOffset2", s);
     }
   else
-    pps->secondChromaQpIndexOffset = pps->chromaQpIndexOffset;
+    pps->chromaQpOffset2 = pps->chromaQpOffset;
 
   if (decoder->param.ppsDebug)
     //{{{  print debug
