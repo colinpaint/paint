@@ -1838,8 +1838,7 @@ static void initPictureDecode (sDecoder* decoder) {
   sSlice* slice = decoder->sliceList[0];
   if (decoder->nextPps->valid && (decoder->nextPps->ppsId == slice->ppsId)) {
     if (decoder->param.sliceDebug)
-      printf ("--- initPictureDecode - switching PPS - nextPps:%d == slicePPS:%d\n",
-              decoder->nextPps->ppsId, slice->ppsId);
+      printf ("--- initPictureDecode - switching to pps:%d\n", slice->ppsId);
 
     sPps pps;
     memcpy (&pps, &decoder->pps[slice->ppsId], sizeof (sPps));
