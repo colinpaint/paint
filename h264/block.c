@@ -15,7 +15,7 @@
 //}}}
 
 //{{{
-static void sample_reconstruct (sPixel** curImg, sPixel** mpr, int** mbRess, int mb_x,
+static void sampleReconstruct (sPixel** curImg, sPixel** mpr, int** mbRess, int mb_x,
                                 int opix_x, int width, int height, int max_imgpel_value, int dq_bits) {
 
   for (int j = 0; j < height; j++) {
@@ -35,7 +35,7 @@ void itrans4x4 (sMacroBlock* mb, eColorPlane plane, int ioff, int joff) {
   int** mbRess = slice->mbRess[plane];
   inverse4x4 (slice->cof[plane],mbRess,joff,ioff);
 
-  sample_reconstruct (&slice->mbRec[plane][joff], &slice->mbPred[plane][joff], &mbRess[joff], ioff, ioff, BLOCK_SIZE, BLOCK_SIZE, mb->decoder->coding.maxPelValueComp[plane], DQ_BITS);
+  sampleReconstruct (&slice->mbRec[plane][joff], &slice->mbPred[plane][joff], &mbRess[joff], ioff, ioff, BLOCK_SIZE, BLOCK_SIZE, mb->decoder->coding.maxPelValueComp[plane], DQ_BITS);
   }
 //}}}
 //{{{
@@ -501,7 +501,7 @@ void iMBtrans4x4 (sMacroBlock* mb, eColorPlane plane, int smb) {
         inverse4x4 (cof, mbRess, jj, 12);
         }
       }
-    sample_reconstruct (slice->mbRec[plane], slice->mbPred[plane], mbRess, 0, 0, MB_BLOCK_SIZE, MB_BLOCK_SIZE, mb->decoder->coding.maxPelValueComp[plane], DQ_BITS);
+    sampleReconstruct (slice->mbRec[plane], slice->mbPred[plane], mbRess, 0, 0, MB_BLOCK_SIZE, MB_BLOCK_SIZE, mb->decoder->coding.maxPelValueComp[plane], DQ_BITS);
     }
 
   // construct picture from 4x4 blocks
@@ -511,7 +511,6 @@ void iMBtrans4x4 (sMacroBlock* mb, eColorPlane plane, int smb) {
 //{{{
 void iMBtrans8x8 (sMacroBlock* mb, eColorPlane plane) {
 
-  //sDecoder* decoder = mb->decoder;
   sPicture* picture = mb->slice->picture;
   sPixel** curr_img = plane ? picture->imgUV[plane - 1]: picture->imgY;
 
@@ -542,9 +541,10 @@ void iMBtrans8x8 (sMacroBlock* mb, eColorPlane plane) {
 //{{{
 void iTransform (sMacroBlock* mb, eColorPlane plane, int smb) {
 
-  sSlice* slice = mb->slice;
   sDecoder* decoder = mb->decoder;
+  sSlice* slice = mb->slice;
   sPicture* picture = slice->picture;
+
   sPixel** curr_img;
   int uv = plane-1;
 
@@ -580,7 +580,7 @@ void iTransform (sMacroBlock* mb, eColorPlane plane, int smb) {
             itrans4x4 (mb, uv, *x_pos++, *y_pos++);
             itrans4x4 (mb, uv, *x_pos  , *y_pos  );
             }
-          sample_reconstruct (mbRec, slice->mbPred[uv], slice->mbRess[uv], 0, 0,
+          sampleReconstruct (mbRec, slice->mbPred[uv], slice->mbRess[uv], 0, 0,
             decoder->mbSize[1][0], decoder->mbSize[1][1], mb->decoder->coding.maxPelValueComp[uv], DQ_BITS);
           }
         else {
@@ -621,20 +621,20 @@ void iTransform (sMacroBlock* mb, eColorPlane plane, int smb) {
 //{{{
 void copyImage4x4 (sPixel** imgBuf1, sPixel** imgBuf2, int off1, int off2) {
 
-  memcpy ((*imgBuf1++ + off1), (*imgBuf2++ + off2), BLOCK_SIZE * sizeof (sPixel));
-  memcpy ((*imgBuf1++ + off1), (*imgBuf2++ + off2), BLOCK_SIZE * sizeof (sPixel));
-  memcpy ((*imgBuf1++ + off1), (*imgBuf2++ + off2), BLOCK_SIZE * sizeof (sPixel));
-  memcpy ((*imgBuf1   + off1), (*imgBuf2   + off2), BLOCK_SIZE * sizeof (sPixel));
+  memcpy (*imgBuf1++ + off1, *imgBuf2++ + off2, BLOCK_SIZE * sizeof (sPixel));
+  memcpy (*imgBuf1++ + off1, *imgBuf2++ + off2, BLOCK_SIZE * sizeof (sPixel));
+  memcpy (*imgBuf1++ + off1, *imgBuf2++ + off2, BLOCK_SIZE * sizeof (sPixel));
+  memcpy (*imgBuf1   + off1, *imgBuf2   + off2, BLOCK_SIZE * sizeof (sPixel));
   }
 //}}}
 //{{{
 void copyImage8x8 (sPixel** imgBuf1, sPixel** imgBuf2, int off1, int off2) {
 
   for (int j = 0; j < BLOCK_SIZE_8x8; j+=4) {
-    memcpy ((*imgBuf1++ + off1), (*imgBuf2++ + off2), BLOCK_SIZE_8x8 * sizeof (sPixel));
-    memcpy ((*imgBuf1++ + off1), (*imgBuf2++ + off2), BLOCK_SIZE_8x8 * sizeof (sPixel));
-    memcpy ((*imgBuf1++ + off1), (*imgBuf2++ + off2), BLOCK_SIZE_8x8 * sizeof (sPixel));
-    memcpy ((*imgBuf1++ + off1), (*imgBuf2++ + off2), BLOCK_SIZE_8x8 * sizeof (sPixel));
+    memcpy (*imgBuf1++ + off1, *imgBuf2++ + off2, BLOCK_SIZE_8x8 * sizeof (sPixel));
+    memcpy (*imgBuf1++ + off1, *imgBuf2++ + off2, BLOCK_SIZE_8x8 * sizeof (sPixel));
+    memcpy (*imgBuf1++ + off1, *imgBuf2++ + off2, BLOCK_SIZE_8x8 * sizeof (sPixel));
+    memcpy (*imgBuf1++ + off1, *imgBuf2++ + off2, BLOCK_SIZE_8x8 * sizeof (sPixel));
     }
   }
 //}}}
@@ -642,11 +642,18 @@ void copyImage8x8 (sPixel** imgBuf1, sPixel** imgBuf2, int off1, int off2) {
 void copyImage16x16 (sPixel** imgBuf1, sPixel** imgBuf2, int off1, int off2) {
 
   for (int j = 0; j < MB_BLOCK_SIZE; j += 4) {
-    memcpy ((*imgBuf1++ + off1), (*imgBuf2++ + off2), MB_BLOCK_SIZE * sizeof (sPixel));
-    memcpy ((*imgBuf1++ + off1), (*imgBuf2++ + off2), MB_BLOCK_SIZE * sizeof (sPixel));
-    memcpy ((*imgBuf1++ + off1), (*imgBuf2++ + off2), MB_BLOCK_SIZE * sizeof (sPixel));
-    memcpy ((*imgBuf1++ + off1), (*imgBuf2++ + off2), MB_BLOCK_SIZE * sizeof (sPixel));
+    memcpy (*imgBuf1++ + off1, *imgBuf2++ + off2, MB_BLOCK_SIZE * sizeof (sPixel));
+    memcpy (*imgBuf1++ + off1, *imgBuf2++ + off2, MB_BLOCK_SIZE * sizeof (sPixel));
+    memcpy (*imgBuf1++ + off1, *imgBuf2++ + off2, MB_BLOCK_SIZE * sizeof (sPixel));
+    memcpy (*imgBuf1++ + off1, *imgBuf2++ + off2, MB_BLOCK_SIZE * sizeof (sPixel));
     }
+  }
+//}}}
+//{{{
+void copyImage (sPixel** imgBuf1, sPixel** imgBuf2, int off1, int off2, int width, int height) {
+
+  for (int j = 0; j < height; ++j)
+    memcpy (*imgBuf1++ + off1, *imgBuf2++ + off2, width * sizeof (sPixel));
   }
 //}}}
 
@@ -659,16 +666,10 @@ int CheckVertMV (sMacroBlock* mb, int vec1_y, int blockSizeY) {
   int y_pos = vec1_y>>2;
   int maxold_y = (mb->mbField) ? (picture->sizeY >> 1) - 1 : picture->sizeYm1;
 
-  if (y_pos < (-decoder->coding.iLumaPadY + 2) || y_pos > (maxold_y + decoder->coding.iLumaPadY - blockSizeY - 2))
+  if (y_pos < (-decoder->coding.iLumaPadY + 2) || 
+      y_pos > (maxold_y + decoder->coding.iLumaPadY - blockSizeY - 2))
     return 1;
   else
     return 0;
-  }
-//}}}
-//{{{
-void copyImage (sPixel** imgBuf1, sPixel** imgBuf2, int off1, int off2, int width, int height) {
-
-  for (int j = 0; j < height; ++j)
-    memcpy ((*imgBuf1++ + off1), (*imgBuf2++ + off2), width * sizeof (sPixel));
   }
 //}}}
