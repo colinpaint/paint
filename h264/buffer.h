@@ -267,8 +267,8 @@ static inline int isShortRef (sPicture* s) { return s->usedForReference && !s->i
 
 extern sFrameStore* allocFrameStore();
 extern void freeFrameStore (sFrameStore* frameStore);
-extern void unmark_for_reference( sFrameStore* frameStore);
-extern void unmark_for_long_term_reference (sFrameStore* frameStore);
+extern void unmarkForRef( sFrameStore* frameStore);
+extern void unmarkForLongTermRef (sFrameStore* frameStore);
 
 extern sPicture* allocPicture (sDecoder* decoder, ePicStructure type, int sizeX, int sizeY, int sizeXcr, int sizeYcr, int is_output);
 extern void freePicture (sPicture* p);
@@ -294,11 +294,11 @@ extern void initListsSliceP (sSlice* slice);
 extern void initListsSliceB (sSlice* slice);
 extern void updatePicNum (sSlice* slice);
 
-extern void dpbCombineField (sDecoder* decoder, sFrameStore* frameStore);
 extern void reorderRefPicList (sSlice* slice, int curList);
 extern void initMbAffLists (sDecoder* decoder, sSlice* slice);
 extern sPicture* getShortTermPic (sSlice* slice, sDPB* dpb, int picNum);
 
-extern void allocRefPicListReorderBuffer (sSlice* slice);
-extern void freeRefPicListReorderingBuffer (sSlice* slice);
 extern void computeColocated (sSlice* slice, sPicture** listX[6]);
+
+extern void allocRefPicListReorderBuffer (sSlice* slice);
+extern void freeRefPicListReorderBuffer (sSlice* slice);

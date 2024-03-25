@@ -2049,7 +2049,7 @@ void sliding_window_poc_management (sDPB* dpb, sPicture *p)
 ************************************************************************
 */
 
-void write_lost_non_ref_pic (sDPB* dpb, int poc) {
+void writeLostNonRefPic (sDPB* dpb, int poc) {
 
   sDecoder* decoder = dpb->decoder;
   sFrameStore concealment_fs;
@@ -2075,7 +2075,7 @@ void write_lost_non_ref_pic (sDPB* dpb, int poc) {
 *
 ************************************************************************
 */
-void write_lost_ref_after_idr (sDPB* dpb, int pos) {
+void writeLostRefAfterIdr (sDPB* dpb, int pos) {
 
   sDecoder* decoder = dpb->decoder;
   int temp = 1;

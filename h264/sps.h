@@ -123,5 +123,5 @@ typedef struct {
   } sSps;
 
 struct Decoder;
-extern void readNaluSps (struct Decoder* decoder, sNalu* nalu);
+extern void readSpsFromNalu (struct Decoder* decoder, sNalu* nalu);
 extern void useSps (struct Decoder* decoder, sSps* sps);

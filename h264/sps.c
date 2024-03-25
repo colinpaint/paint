@@ -578,7 +578,7 @@ static void setSpsById (sDecoder* decoder, int id, sSps* sps) {
 //}}}
 
 //{{{
-void readNaluSps (sDecoder* decoder, sNalu* nalu) {
+void readSpsFromNalu (sDecoder* decoder, sNalu* nalu) {
 
   sDataPartition* dataPartition = allocDataPartitions (1);
   dataPartition->s->errorFlag = 0;

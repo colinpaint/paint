@@ -274,7 +274,7 @@ void setPpsById (sDecoder* decoder, int id, sPps* pps) {
   }
 //}}}
 //{{{
-void readNaluPps (sDecoder* decoder, sNalu* nalu) {
+void readPpsFromNalu (sDecoder* decoder, sNalu* nalu) {
 
   sDataPartition* dataPartition = allocDataPartitions (1);
   dataPartition->s->errorFlag = 0;
