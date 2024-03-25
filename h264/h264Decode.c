@@ -530,9 +530,9 @@ void closeDecoder (sDecoder* decoder) {
   ercClose (decoder, decoder->ercErrorVar);
 
   for (unsigned i = 0; i < MAX_PPS; i++) {
-    if (decoder->pps[i].valid && decoder->pps[i].sliceGroupId)
+    if (decoder->pps[i].ok && decoder->pps[i].sliceGroupId)
       free (decoder->pps[i].sliceGroupId);
-    decoder->pps[i].valid = FALSE;
+    decoder->pps[i].ok = FALSE;
     }
 
   freeDpb (decoder->dpb);

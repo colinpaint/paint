@@ -426,7 +426,7 @@ static void readVui (sDataPartition* dataPartition, sSps* sps) {
   }
 //}}}
 //{{{
-static void readSps (sDecoder* decoder, sDataPartition* dataPartition, sSps* sps, int naluLen) {
+static void readSpsFromStream (sDecoder* decoder, sDataPartition* dataPartition, sSps* sps, int naluLen) {
 
   sBitStream* s = dataPartition->s;
   sps->profileIdc = readUv (8, "SPS profileIdc", s);
@@ -543,13 +543,12 @@ static void readSps (sDecoder* decoder, sDataPartition* dataPartition, sSps* sps
     }
     //}}}
 
-  sps->valid = TRUE;
+  sps->ok = TRUE;
   }
 //}}}
 
 //{{{
 void readNaluSps (sDecoder* decoder, sNalu* nalu) {
-// could check for change in sps by id
 
   sDataPartition* dataPartition = allocDataPartitions (1);
   dataPartition->s->errorFlag = 0;
@@ -558,9 +557,10 @@ void readNaluSps (sDecoder* decoder, sNalu* nalu) {
   dataPartition->s->codeLen = dataPartition->s->bitStreamLen = RBSPtoSODB (dataPartition->s->bitStreamBuffer, nalu->len-1);
 
   sSps sps = { 0 };
-  readSps (decoder, dataPartition, &sps, nalu->len);
+  readSpsFromStream (decoder, dataPartition, &sps, nalu->len);
   freeDataPartitions (dataPartition, 1);
 
+  // could check for change in sps by id
   memcpy (&decoder->sps[sps.id], &sps, sizeof(sSps));
   }
 //}}}

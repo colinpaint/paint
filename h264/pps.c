@@ -123,7 +123,7 @@ static void scalingList (int* scalingList, int scalingListSize, Boolean* useDefa
   }
 //}}}
 //{{{
-static void readPps (sDecoder* decoder, sDataPartition* dataPartition, sPps* pps, int naluLen) {
+static void readPpsFromStream (sDecoder* decoder, sDataPartition* dataPartition, sPps* pps, int naluLen) {
 // read PPS from NALU
 
   sBitStream* s = dataPartition->s;
@@ -238,13 +238,12 @@ static void readPps (sDecoder* decoder, sDataPartition* dataPartition, sPps* pps
             );
     //}}}
 
-  pps->valid = TRUE;
+  pps->ok = TRUE;
   }
 //}}}
 
 //{{{
 void readNaluPps (sDecoder* decoder, sNalu* nalu) {
-// could check for change in pps by id
 
   sDataPartition* dataPartition = allocDataPartitions (1);
   dataPartition->s->errorFlag = 0;
@@ -254,14 +253,15 @@ void readNaluPps (sDecoder* decoder, sNalu* nalu) {
   dataPartition->s->codeLen = dataPartition->s->bitStreamLen;
 
   sPps pps = { 0 };
-  readPps (decoder, dataPartition, &pps, nalu->len);
+  readPpsFromStream (decoder, dataPartition, &pps, nalu->len);
   freeDataPartitions (dataPartition, 1);
 
-  // free any sliceGroupId calloc
-  if (decoder->pps[pps.id].valid && decoder->pps[pps.id].sliceGroupId)
+  // could check for change in pps by id
+  // - free any sliceGroupId calloc
+  if (decoder->pps[pps.id].ok && decoder->pps[pps.id].sliceGroupId)
     free (decoder->pps[pps.id].sliceGroupId);
 
-  // takes ownership, if any, of pps->sliceGroupId calloc
+  // - takes ownership, if any, of pps->sliceGroupId calloc
   memcpy (&decoder->pps[pps.id], &pps, sizeof (sPps));
   }
 //}}}
