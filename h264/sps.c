@@ -607,7 +607,7 @@ void readNaluSps (sDecoder* decoder, sNalu* nalu) {
   }
 //}}}
 //{{{
-void activateSps (sDecoder* decoder, sSps* sps) {
+void useSps (sDecoder* decoder, sSps* sps) {
 
   if (decoder->activeSps != sps) {
     if (decoder->picture) // slice loss

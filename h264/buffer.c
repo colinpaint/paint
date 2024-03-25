@@ -2170,7 +2170,7 @@ void initListsSliceP (sSlice* slice) {
           slice->listX[0][list0idx++] = dpb->fsRef[i]->frame;
 
     // order list 0 by picNum
-    qsort ((void *)slice->listX[0], list0idx, sizeof(sPicture*), compare_pic_by_pic_num_desc);
+    qsort ((void *)slice->listX[0], list0idx, sizeof(sPicture*), comparePicByPicNumDescending);
     slice->listXsize[0] = (char) list0idx;
 
     // long term handling
@@ -2178,7 +2178,7 @@ void initListsSliceP (sSlice* slice) {
       if (dpb->fsLongTermRef[i]->isUsed == 3)
         if (dpb->fsLongTermRef[i]->frame->isLongTerm)
           slice->listX[0][list0idx++] = dpb->fsLongTermRef[i]->frame;
-    qsort ((void*)&slice->listX[0][(short)slice->listXsize[0]], list0idx - slice->listXsize[0], sizeof(sPicture*), comparePicByLtPicNumAsc);
+    qsort ((void*)&slice->listX[0][(short)slice->listXsize[0]], list0idx - slice->listXsize[0], sizeof(sPicture*), comparePicByLtPicNumAscending);
     slice->listXsize[0] = (char) list0idx;
     }
   else {
@@ -2192,14 +2192,14 @@ void initListsSliceP (sSlice* slice) {
     for (unsigned int i = 0; i < dpb->refFramesInBuffer; i++)
       if (dpb->fsRef[i]->isReference)
         fsList0[list0idx++] = dpb->fsRef[i];
-    qsort ((void*)fsList0, list0idx, sizeof(sFrameStore*), compare_fs_by_frame_num_desc);
+    qsort ((void*)fsList0, list0idx, sizeof(sFrameStore*), compareFsByFrameNumDescending);
     slice->listXsize[0] = 0;
     genPicListFromFrameList(slice->picStructure, fsList0, list0idx, slice->listX[0], &slice->listXsize[0], 0);
 
     // long term handling
     for (unsigned int i = 0; i < dpb->longTermRefFramesInBuffer; i++)
       fsListLongTerm[listLtIndex++] = dpb->fsLongTermRef[i];
-    qsort ((void*)fsListLongTerm, listLtIndex, sizeof(sFrameStore*), compareFsbyLtPicIndexAsc);
+    qsort ((void*)fsListLongTerm, listLtIndex, sizeof(sFrameStore*), compareFsByLongTermPicIndexAscending);
     genPicListFromFrameList (slice->picStructure, fsListLongTerm, listLtIndex, slice->listX[0], &slice->listXsize[0], 1);
 
     free (fsList0);
@@ -2243,7 +2243,7 @@ void initListsSliceB (sSlice* slice) {
         if ((dpb->fsRef[i]->frame->usedForReference) && (!dpb->fsRef[i]->frame->isLongTerm))
           if (slice->framePoc >= dpb->fsRef[i]->frame->poc) // !KS use >= for error conceal
             slice->listX[0][list0idx++] = dpb->fsRef[i]->frame;
-    qsort ((void*)slice->listX[0], list0idx, sizeof(sPicture*), compare_pic_by_poc_desc);
+    qsort ((void*)slice->listX[0], list0idx, sizeof(sPicture*), comparePicByPocDescending);
 
     // get the backward reference picture (POC>current POC) in list0;
     list0index1 = list0idx;
@@ -2252,7 +2252,7 @@ void initListsSliceB (sSlice* slice) {
         if ((dpb->fsRef[i]->frame->usedForReference)&&(!dpb->fsRef[i]->frame->isLongTerm))
           if (slice->framePoc < dpb->fsRef[i]->frame->poc)
             slice->listX[0][list0idx++] = dpb->fsRef[i]->frame;
-    qsort ((void*)&slice->listX[0][list0index1], list0idx-list0index1, sizeof(sPicture*), compare_pic_by_poc_asc);
+    qsort ((void*)&slice->listX[0][list0index1], list0idx-list0index1, sizeof(sPicture*), compareFsByPocAscending);
 
     for (j = 0; j < list0index1; j++)
       slice->listX[1][list0idx-list0index1+j]=slice->listX[0][j];
@@ -2269,8 +2269,8 @@ void initListsSliceB (sSlice* slice) {
           }
         }
       }
-    qsort ((void *)&slice->listX[0][(short) slice->listXsize[0]], list0idx - slice->listXsize[0], sizeof(sPicture*), comparePicByLtPicNumAsc);
-    qsort ((void *)&slice->listX[1][(short) slice->listXsize[0]], list0idx - slice->listXsize[0], sizeof(sPicture*), comparePicByLtPicNumAsc);
+    qsort ((void *)&slice->listX[0][(short) slice->listXsize[0]], list0idx - slice->listXsize[0], sizeof(sPicture*), comparePicByLtPicNumAscending);
+    qsort ((void *)&slice->listX[1][(short) slice->listXsize[0]], list0idx - slice->listXsize[0], sizeof(sPicture*), comparePicByLtPicNumAscending);
     slice->listXsize[0] = slice->listXsize[1] = (char)list0idx;
     }
     //}}}
@@ -2286,14 +2286,14 @@ void initListsSliceB (sSlice* slice) {
       if (dpb->fsRef[i]->isUsed)
         if (slice->thisPoc >= dpb->fsRef[i]->poc)
           fsList0[list0idx++] = dpb->fsRef[i];
-    qsort ((void*)fsList0, list0idx, sizeof(sFrameStore*), compare_fs_by_poc_desc);
+    qsort ((void*)fsList0, list0idx, sizeof(sFrameStore*), compareFsByPocDescending);
 
     list0index1 = list0idx;
     for (i = 0; i < dpb->refFramesInBuffer; i++)
       if (dpb->fsRef[i]->isUsed)
         if (slice->thisPoc < dpb->fsRef[i]->poc)
           fsList0[list0idx++] = dpb->fsRef[i];
-    qsort ((void*)&fsList0[list0index1], list0idx-list0index1, sizeof(sFrameStore*), compareFsByPocAsc);
+    qsort ((void*)&fsList0[list0index1], list0idx-list0index1, sizeof(sFrameStore*), compareFsByPocAscending);
 
     for (j = 0; j < list0index1; j++)
       fs_list1[list0idx-list0index1+j]=fsList0[j];
@@ -2309,7 +2309,7 @@ void initListsSliceB (sSlice* slice) {
     for (i = 0; i < dpb->longTermRefFramesInBuffer; i++)
       fsListLongTerm[listLtIndex++] = dpb->fsLongTermRef[i];
 
-    qsort ((void*)fsListLongTerm, listLtIndex, sizeof(sFrameStore*), compareFsbyLtPicIndexAsc);
+    qsort ((void*)fsListLongTerm, listLtIndex, sizeof(sFrameStore*), compareFsByLongTermPicIndexAscending);
     genPicListFromFrameList (slice->picStructure, fsListLongTerm, listLtIndex, slice->listX[0], &slice->listXsize[0], 1);
     genPicListFromFrameList (slice->picStructure, fsListLongTerm, listLtIndex, slice->listX[1], &slice->listXsize[1], 1);
 
@@ -2379,16 +2379,16 @@ void initMbAffLists (sDecoder* decoder, sSlice* slice) {
 //}}}
 
 //{{{
-void allocRefPicListReordeBuffer (sSlice* slice) {
+void allocRefPicListReorderBuffer (sSlice* slice) {
 
   if (slice->sliceType != eSliceI && slice->sliceType != eSliceSI) {
     int size = slice->numRefIndexActive[LIST_0] + 1;
     if ((slice->modPicNumsIdc[LIST_0] = calloc (size ,sizeof(int))) == NULL)
-       noMemoryExit ("allocRefPicListReordeBuffer: modification_of_pic_nums_idc_l0");
+       noMemoryExit ("allocRefPicListReorderBuffer: modification_of_pic_nums_idc_l0");
     if ((slice->absDiffPicNumMinus1[LIST_0] = calloc (size,sizeof(int))) == NULL)
-       noMemoryExit ("allocRefPicListReordeBuffer: abs_diff_pic_num_minus1_l0");
+       noMemoryExit ("allocRefPicListReorderBuffer: abs_diff_pic_num_minus1_l0");
     if ((slice->longTermPicIndex[LIST_0] = calloc (size,sizeof(int))) == NULL)
-       noMemoryExit ("allocRefPicListReordeBuffer: long_term_pic_idx_l0");
+       noMemoryExit ("allocRefPicListReorderBuffer: long_term_pic_idx_l0");
     }
   else {
     slice->modPicNumsIdc[LIST_0] = NULL;
@@ -2399,11 +2399,11 @@ void allocRefPicListReordeBuffer (sSlice* slice) {
   if (slice->sliceType == eSliceB) {
     int size = slice->numRefIndexActive[LIST_1] + 1;
     if ((slice->modPicNumsIdc[LIST_1] = calloc (size,sizeof(int))) == NULL)
-      noMemoryExit ("allocRefPicListReordeBuffer: modification_of_pic_nums_idc_l1");
+      noMemoryExit ("allocRefPicListReorderBuffer: modification_of_pic_nums_idc_l1");
     if ((slice->absDiffPicNumMinus1[LIST_1] = calloc (size,sizeof(int))) == NULL)
-      noMemoryExit ("allocRefPicListReordeBuffer: abs_diff_pic_num_minus1_l1");
+      noMemoryExit ("allocRefPicListReorderBuffer: abs_diff_pic_num_minus1_l1");
     if ((slice->longTermPicIndex[LIST_1] = calloc (size,sizeof(int))) == NULL)
-      noMemoryExit ("allocRefPicListReordeBuffer: long_term_pic_idx_l1");
+      noMemoryExit ("allocRefPicListReorderBuffer: long_term_pic_idx_l1");
     }
   else {
     slice->modPicNumsIdc[LIST_1] = NULL;

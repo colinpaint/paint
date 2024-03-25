@@ -1789,18 +1789,18 @@ static void initPicture (sDecoder* decoder, sSlice* slice) {
   }
 //}}}
 //{{{
-static void useParameterSet (sDecoder* decoder, sSlice* slice) {
+static void useParameterSets (sDecoder* decoder, sSlice* slice) {
 
   sPps* pps = &decoder->pps[slice->ppsId];
   if (!pps->valid)
-    printf ("useParameterSet - invalid PPSid:%d\n", slice->ppsId);
+    printf ("useParameterSets - invalid PPSid:%d\n", slice->ppsId);
 
   sSps* sps = &decoder->sps[pps->spsId];
   if (!sps->valid)
-    printf ("useParameterSet - no SPSid:%d:%d\n", slice->ppsId, pps->spsId);
+    printf ("useParameterSets - no SPSid:%d:%d\n", slice->ppsId, pps->spsId);
 
-  activateSps (decoder, sps);
-  activatePps (decoder, pps);
+  useSps (decoder, sps);
+  usePps (decoder, pps);
 
   // slice->dataPartitionMode is set by read_new_slice (NALU first byte available there)
   if (pps->entropyCoding == eCavlc) {
@@ -1838,7 +1838,7 @@ static void initPictureDecode (sDecoder* decoder) {
     pps.sliceGroupId = NULL;
     }
 
-  useParameterSet (decoder, slice);
+  useParameterSets (decoder, slice);
   if (slice->isIDR)
     decoder->idrFrameNum = 0;
 
@@ -2226,7 +2226,7 @@ static void readSliceHeader (sDecoder* decoder, sSlice* slice) {
     slice->colourPlaneId = PLANE_Y;
 
   // setup parameterSet
-  useParameterSet (decoder, slice);
+  useParameterSets (decoder, slice);
   slice->activeSps = decoder->activeSps;
   slice->activePps = decoder->activePps;
   slice->transform8x8Mode = decoder->activePps->hasTransform8x8mode;
@@ -2306,7 +2306,7 @@ static void readSliceHeader (sDecoder* decoder, sSlice* slice) {
   if (slice->sliceType != eSliceB)
     slice->numRefIndexActive[LIST_1] = 0;
   //{{{  refPicList reorder
-  allocRefPicListReordeBuffer (slice);
+  allocRefPicListReorderBuffer (slice);
 
   if ((slice->sliceType != eSliceI) && (slice->sliceType != eSliceSI)) {
     int value = slice->refPicReorderFlag[LIST_0] = readU1 ("SLC refPicReorderL0", s);
@@ -2983,7 +2983,7 @@ int decodeFrame (sDecoder* decoder) {
     decoder->nextSlice = slice;
     slice = decoder->sliceList[decoder->picSliceIndex];
 
-    useParameterSet (decoder, slice);
+    useParameterSets (decoder, slice);
     initPicture (decoder, slice);
 
     decoder->picSliceIndex++;
