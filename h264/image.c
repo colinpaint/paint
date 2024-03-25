@@ -1549,7 +1549,7 @@ static void copyDecPictureJV (sDecoder* decoder, sPicture* dst, sPicture* src) {
   dst->chromaQpOffset[1] = src->chromaQpOffset[1];
 
   dst->sliceType = src->sliceType;
-  dst->usedForReference = src->usedForReference;
+  dst->usedForRef = src->usedForRef;
   dst->isIDR = src->isIDR;
   dst->noOutputPriorPicFlag = src->noOutputPriorPicFlag;
   dst->longTermRefFlag = src->longTermRefFlag;
@@ -1751,7 +1751,7 @@ static void initPicture (sDecoder* decoder, sSlice* slice) {
     }
 
   picture->sliceType = decoder->coding.sliceType;
-  picture->usedForReference = (slice->refId != 0);
+  picture->usedForRef = (slice->refId != 0);
   picture->isIDR = slice->isIDR;
   picture->noOutputPriorPicFlag = slice->noOutputPriorPicFlag;
   picture->longTermRefFlag = slice->longTermRefFlag;
@@ -2845,7 +2845,7 @@ void endDecodeFrame (sDecoder* decoder) {
   //}}}
   if (!decoder->deblockMode &&
       decoder->param.deblock &&
-      (decoder->deblockEnable & (1 << decoder->picture->usedForReference))) {
+      (decoder->deblockEnable & (1 << decoder->picture->usedForRef))) {
     if (decoder->coding.isSeperateColourPlane) {
       //{{{  deblockJV
       int colourPlaneId = decoder->sliceList[0]->colourPlaneId;
@@ -2868,13 +2868,13 @@ void endDecodeFrame (sDecoder* decoder) {
     mbAffPostProc (decoder);
   if (decoder->coding.picStructure != eFrame)
      decoder->idrFrameNum /= 2;
-  if (decoder->picture->usedForReference)
+  if (decoder->picture->usedForRef)
     padPicture (decoder, decoder->picture);
 
   int picStructure = decoder->picture->picStructure;
   int sliceType = decoder->picture->sliceType;
   int pocNum = decoder->picture->framePoc;
-  int refpic = decoder->picture->usedForReference;
+  int refpic = decoder->picture->usedForRef;
   int qp = decoder->picture->qp;
   int picNum = decoder->picture->picNum;
   int isIdr = decoder->picture->isIDR;

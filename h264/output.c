@@ -357,6 +357,6 @@ void writeStoredFrame (sDecoder* decoder, sFrameStore* frameStore) {
       writePicture (decoder, frameStore->frame, eFrame);
     }
 
-  frameStore->is_output = 1;
+  frameStore->isOutput = 1;
   }
 //}}}

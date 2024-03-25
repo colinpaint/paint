@@ -2,91 +2,97 @@
 #include "global.h"
 
 #define MAX_LIST_SIZE 33
-//{{{  sPicMotionParamsOld
-typedef struct PicMotionParamOld {
+//{{{  sPicMotionOld
+typedef struct PicMotionOld {
   byte* mbField; // field macroblock indicator
-  } sPicMotionParamsOld;
+  } sPicMotionOld;
 //}}}
-//{{{  sPicMotionParam
+//{{{  sPicMotion
 typedef struct PicMotion {
   struct Picture* refPic[2];   // referrence picture pointer
   sMotionVec      mv[2];       // motion vector
   char            refIndex[2]; // reference picture   [list][subblockY][subblockX]
   byte            slice_no;
-  } sPicMotionParam;
+  } sPicMotion;
 //}}}
 //{{{  sPicture
 typedef struct Picture {
   ePicStructure picStructure;
 
-  int          poc;
-  int          topPoc;
-  int          botPoc;
-  int          framePoc;
-  unsigned int frameNum;
-  unsigned int recoveryFrame;
+  int           poc;
+  int           topPoc;
+  int           botPoc;
+  int           framePoc;
+  unsigned int  frameNum;
+  unsigned int  recoveryFrame;
 
-  int          picNum;
-  int          longTermPicNum;
-  int          longTermFrameIndex;
+  int           picNum;
+  int           longTermPicNum;
+  int           longTermFrameIndex;
 
-  byte         isLongTerm;
-  int          usedForReference;
-  int          is_output;
-  int          non_existing;
-  int          isSeperateColourPlane;
+  byte          isLongTerm;
+  int           usedForRef;
+  int           isOutput;
+  int           non_existing; 
+  int           isSeperateColourPlane;
 
-  short        maxSliceId;
+  short         maxSliceId;
 
-  int          sizeX, sizeY, sizeXcr, sizeYcr;
-  int          size_x_m1, size_y_m1, size_x_cr_m1, size_y_cr_m1;
-  int          codedFrame;
-  int          mbAffFrame;
-  unsigned     picWidthMbs;
-  unsigned     picSizeInMbs;
-  int          iLumaPadY, iLumaPadX;
-  int          iChromaPadY, iChromaPadX;
+  int           sizeX;
+  int           sizeY;
+  int           sizeXcr;
+  int           sizeYcr;
+  int           sizeXm1, sizeYm1, sizeXCrm1, sizeYCrm1;
+  int           codedFrame;
+  int           mbAffFrame;
+  unsigned      picWidthMbs;
+  unsigned      picSizeInMbs;
+  int           iLumaPadX;
+  int           iLumaPadY;
+  int           iChromaPadX;
+  int           iChromaPadY;
 
-  sPixel**     imgY;
-  sPixel***    imgUV;
+  sPixel**      imgY;
+  sPixel***     imgUV;
 
-  struct PicMotion** mvInfo;
-  struct PicMotion** JVmv_info[MAX_PLANE];
-  struct PicMotionParamOld  motion;
-  struct PicMotionParamOld  JVmotion[MAX_PLANE]; // Motion info for 4:4:4 independent mode decoding
-
+  struct Picture* frame;     // for mb aff, if field for referencing the combined frame
   struct Picture* topField;  // for mb aff, if frame for referencing the top field
   struct Picture* botField;  // for mb aff, if frame for referencing the bottom field
-  struct Picture* frame;     // for mb aff, if field for referencing the combined frame
 
-  int          sliceType;
-  int          isIDR;
-  int          noOutputPriorPicFlag;
-  int          longTermRefFlag;
-  int          adaptRefPicBufFlag;
+  sPicMotion**  mvInfo;
+  sPicMotionOld motion;
 
-  eYuvFormat   chromaFormatIdc;
-  int          frameMbOnly;
-  int          cropFlag;
-  int          cropLeft;
-  int          cropRight;
-  int          cropTop;
-  int          cropBot;
-  int          qp;
-  int          chromaQpOffset[2];
-  int          sliceQpDelta;
+  sPicMotion**  JVmv_info[MAX_PLANE];
+  sPicMotionOld JVmotion[MAX_PLANE]; // Motion info for 4:4:4 independent mode decoding
+
+  int           sliceType;
+  int           isIDR;
+  int           noOutputPriorPicFlag;
+  int           longTermRefFlag;
+  int           adaptRefPicBufFlag;
+
+  eYuvFormat    chromaFormatIdc;
+  int           frameMbOnly;
+  int           cropFlag;
+  int           cropLeft;
+  int           cropRight;
+  int           cropTop;
+  int           cropBot;
+  int           qp;
+  int           chromaQpOffset[2];
+  int           sliceQpDelta;
   sDecodedRefPicMarking* decRefPicMarkingBuffer;  // stores the memory management control operations
 
   // picture error conceal
-  int          concealed_pic;
-  int          proc_flag;
-  int          iLumaStride;
-  int          iChromaStride;
-  int          iLumaExpandedHeight;
-  int          iChromaExpandedHeight;
-  sPixel**     curPixelY;               // for more efficient get_block_luma
-  int          noRef;
-  int          iCodingType;
+  int           concealedPic;
+  int           procFlag;
+  int           iLumaStride;
+  int           iChromaStride;
+  int           iLumaExpandedHeight;
+  int           iChromaExpandedHeight;
+  sPixel**      curPixelY;               // for more efficient get_block_luma
+  int           noRef;
+  int           iCodingType;
 
   char             listXsize[MAX_NUM_SLICES][2];
   struct Picture** listX[MAX_NUM_SLICES][2];
@@ -94,46 +100,47 @@ typedef struct Picture {
 //}}}
 //{{{  sFrameStore
 typedef struct FrameStore {
-  int       isUsed;                // 0=empty; 1=top; 2=bottom; 3=both fields (or frame)
-  int       isReference;           // 0=not used for ref; 1=top used; 2=bottom used; 3=both fields (or frame) used
-  int       isLongTerm;           // 0=not used for ref; 1=top used; 2=bottom used; 3=both fields (or frame) used
-  int       isOrigReference;      // original marking by nalRefIdc: 0=not used for ref; 1=top used; 2=bottom used; 3=both fields (or frame) used
+  int       isUsed;        // 0=empty; 1=top; 2=bottom; 3=both fields (or frame)
+  int       isRef;   // 0=not used for ref; 1=top used; 2=bottom used; 3=both fields (or frame) used
+  int       isLongTerm;    // 0=not used for ref; 1=top used; 2=bottom used; 3=both fields (or frame) used
+  int       isOriginalRef; // original marking by nalRefIdc: 0=not used for ref; 1=top used; 2=bottom used; 3=both fields (or frame) used
 
-  int       is_non_existent;
+  int       isNonExistent;
 
   unsigned  frameNum;
   unsigned  recoveryFrame;
 
   int       frameNumWrap;
   int       longTermFrameIndex;
-  int       is_output;
+  int       isOutput;
   int       poc;
 
   // picture error conceal
-  int concealment_reference;
+  int       concealRef;
 
   sPicture* frame;
   sPicture* topField;
   sPicture* botField;
   } sFrameStore;
 //}}}
-//{{{  sDPB - DecodedPictureBuffer
+//{{{  sDPB
+// DecodedPictureBuffer
 typedef struct DPB {
-  sDecoder*    decoder;
+  sDecoder*     decoder;
 
   sFrameStore** fs;
   sFrameStore** fsRef;
   sFrameStore** fsLongTermRef;
 
-  unsigned size;
-  unsigned usedSize;
-  unsigned refFramesInBuffer;
-  unsigned longTermRefFramesInBuffer;
+  unsigned      size;
+  unsigned      usedSize;
+  unsigned      refFramesInBuffer;
+  unsigned      longTermRefFramesInBuffer;
 
-  int lastOutputPoc;
-  int maxLongTermPicIndex;
-  int initDone;
-  int numRefFrames;
+  int           lastOutputPoc;
+  int           maxLongTermPicIndex;
+  int           initDone;
+  int           numRefFrames;
 
   sFrameStore* lastPicture;
   } sDPB;
@@ -143,13 +150,13 @@ typedef struct DPB {
 // compares two stored pictures by picture number for qsort in descending order
 static inline int comparePicByPicNumDescending (const void* arg1, const void* arg2) {
 
-  int pic_num1 = (*(sPicture**)arg1)->picNum;
-  int pic_num2 = (*(sPicture**)arg2)->picNum;
+  int picNum1 = (*(sPicture**)arg1)->picNum;
+  int picNum2 = (*(sPicture**)arg2)->picNum;
 
-  if (pic_num1 < pic_num2)
+  if (picNum1 < picNum2)
     return 1;
 
-  if (pic_num1 > pic_num2)
+  if (picNum1 > picNum2)
     return -1;
   else
     return 0;
@@ -159,13 +166,13 @@ static inline int comparePicByPicNumDescending (const void* arg1, const void* ar
 // compares two stored pictures by picture number for qsort in descending order
 static inline int comparePicByLtPicNumAscending (const void* arg1, const void* arg2) {
 
-  int long_term_pic_num1 = (*(sPicture**)arg1)->longTermPicNum;
-  int long_term_pic_num2 = (*(sPicture**)arg2)->longTermPicNum;
+  int longTermPicNum1 = (*(sPicture**)arg1)->longTermPicNum;
+  int longTermPicNum2 = (*(sPicture**)arg2)->longTermPicNum;
 
-  if (long_term_pic_num1 < long_term_pic_num2)
+  if (longTermPicNum1 < longTermPicNum2)
     return -1;
 
-  if ( long_term_pic_num1 > long_term_pic_num2)
+  if (longTermPicNum1 > longTermPicNum2)
     return 1;
   else
     return 0;
@@ -175,13 +182,13 @@ static inline int comparePicByLtPicNumAscending (const void* arg1, const void* a
 // compares two frame stores by picNum for qsort in descending order
 static inline int compareFsByFrameNumDescending (const void* arg1, const void* arg2) {
 
-  int frame_num_wrap1 = (*(sFrameStore**)arg1)->frameNumWrap;
-  int frame_num_wrap2 = (*(sFrameStore**)arg2)->frameNumWrap;
+  int frameNumWrap1 = (*(sFrameStore**)arg1)->frameNumWrap;
+  int frameNumWrap2 = (*(sFrameStore**)arg2)->frameNumWrap;
 
-  if ( frame_num_wrap1 < frame_num_wrap2)
+  if (frameNumWrap1 < frameNumWrap2)
     return 1;
 
-  if ( frame_num_wrap1 > frame_num_wrap2)
+  if (frameNumWrap1 > frameNumWrap2)
     return -1;
   else
     return 0;
@@ -191,12 +198,12 @@ static inline int compareFsByFrameNumDescending (const void* arg1, const void* a
 // compares two frame stores by lt_pic_num for qsort in descending order
 static inline int compareFsByLongTermPicIndexAscending (const void* arg1, const void* arg2) {
 
-  int long_term_frame_idx1 = (*(sFrameStore**)arg1)->longTermFrameIndex;
-  int long_term_frame_idx2 = (*(sFrameStore**)arg2)->longTermFrameIndex;
+  int longTermFrameIndex1 = (*(sFrameStore**)arg1)->longTermFrameIndex;
+  int longTermFrameIndex2 = (*(sFrameStore**)arg2)->longTermFrameIndex;
 
-  if ( long_term_frame_idx1 < long_term_frame_idx2)
+  if (longTermFrameIndex1 < longTermFrameIndex2)
     return -1;
-  else if ( long_term_frame_idx1 > long_term_frame_idx2)
+  else if (longTermFrameIndex1 > longTermFrameIndex2)
     return 1;
   else
     return 0;
@@ -262,16 +269,18 @@ static inline int compareFsByPocDescending (const void* arg1, const void* arg2) 
     return 0;
   }
 //}}}
-static inline int isLongRef (sPicture* s) { return s->usedForReference && s->isLongTerm; }
-static inline int isShortRef (sPicture* s) { return s->usedForReference && !s->isLongTerm; }
+static inline int isLongRef (sPicture* picture) { return picture->usedForRef && picture->isLongTerm; }
+static inline int isShortRef (sPicture* picture) { return picture->usedForRef && !picture->isLongTerm; }
 
-extern sFrameStore* allocFrameStore();
-extern void freeFrameStore (sFrameStore* frameStore);
 extern void unmarkForRef( sFrameStore* frameStore);
 extern void unmarkForLongTermRef (sFrameStore* frameStore);
 
-extern sPicture* allocPicture (sDecoder* decoder, ePicStructure type, int sizeX, int sizeY, int sizeXcr, int sizeYcr, int is_output);
-extern void freePicture (sPicture* p);
+extern sFrameStore* allocFrameStore();
+extern void freeFrameStore (sFrameStore* frameStore);
+extern void dpbCombineFields (sDecoder* decoder, sFrameStore* frameStore);
+
+extern sPicture* allocPicture (sDecoder* decoder, ePicStructure type, int sizeX, int sizeY, int sizeXcr, int sizeYcr, int isOutput);
+extern void freePicture (sPicture* picture);
 extern void fillFrameNumGap (sDecoder* decoder, sSlice *slice);
 
 extern void updateRefList (sDPB* dpb);

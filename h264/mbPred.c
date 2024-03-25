@@ -330,7 +330,7 @@ int mb_pred_p_inter8x16 (sMacroBlock* mb, eColorPlane plane, sPicture* picture)
 //}}}
 
 //{{{
-static inline void update_neighbor_mvs (sPicMotionParam** motion, const sPicMotionParam* mvInfo, int i4)
+static inline void update_neighbor_mvs (sPicMotion** motion, const sPicMotion* mvInfo, int i4)
 {
   (*motion++)[i4 + 1] = *mvInfo;
   (*motion  )[i4    ] = *mvInfo;
@@ -348,7 +348,7 @@ int mb_pred_b_d8x8temporal (sMacroBlock* mb, eColorPlane plane, sPixel** pixel, 
   int block8x8;   // needed for ABT
   sSlice* slice = mb->slice;
   sDecoder* decoder = mb->decoder;
-  sPicMotionParam *mvInfo = NULL, *colocated = NULL;
+  sPicMotion *mvInfo = NULL, *colocated = NULL;
 
   int listOffset = mb->listOffset;
   sPicture** list0 = slice->listX[LIST_0 + listOffset];
@@ -542,8 +542,8 @@ int mb_pred_b_d4x4temporal (sMacroBlock* mb, eColorPlane plane, sPixel** pixel, 
       int i4   = mb->blockX + i;
       int j4   = mb->blockY + j;
       int j6   = mb->blockYaff + j;
-      sPicMotionParam *mvInfo = &picture->mvInfo[j4][i4];
-      sPicMotionParam *colocated = &list1[0]->mvInfo[j6][i4];
+      sPicMotion *mvInfo = &picture->mvInfo[j4][i4];
+      sPicMotion *colocated = &list1[0]->mvInfo[j6][i4];
       if(mb->decoder->coding.isSeperateColourPlane && mb->decoder->coding.yuvFormat==YUV444)
         colocated = &list1[0]->JVmv_info[mb->slice->colourPlaneId][RSD(j6)][RSD(i4)];
       assert (predDir<=2);
@@ -647,7 +647,7 @@ int mb_pred_b_d8x8spatial (sMacroBlock* mb, eColorPlane plane, sPixel** pixel, s
   sSlice* slice = mb->slice;
   sDecoder* decoder = mb->decoder;
 
-  sPicMotionParam* mvInfo;
+  sPicMotion* mvInfo;
   int listOffset = mb->listOffset;
   sPicture** list0 = slice->listX[LIST_0 + listOffset];
   sPicture** list1 = slice->listX[LIST_1 + listOffset];
@@ -831,7 +831,7 @@ int mb_pred_b_d4x4spatial (sMacroBlock* mb, eColorPlane plane, sPixel** pixel, s
   sSlice* slice = mb->slice;
   sDecoder* decoder = mb->decoder;
 
-  sPicMotionParam *mvInfo;
+  sPicMotion *mvInfo;
   int listOffset = mb->listOffset;
   sPicture** list0 = slice->listX[LIST_0 + listOffset];
   sPicture** list1 = slice->listX[LIST_1 + listOffset];
@@ -1070,7 +1070,7 @@ int mb_pred_b_inter8x8 (sMacroBlock* mb, eColorPlane plane, sPicture* picture)
           int j  = ((decode_block_scan[k] >> 2) & 3);
           int i4  = mb->blockX + i;
           int j4  = mb->blockY + j;
-          sPicMotionParam *mvInfo = &picture->mvInfo[j4][i4];
+          sPicMotion *mvInfo = &picture->mvInfo[j4][i4];
 
           assert (predDir<=2);
 
@@ -1095,7 +1095,7 @@ int mb_pred_b_inter8x8 (sMacroBlock* mb, eColorPlane plane, sPicture* picture)
           int j = ((decode_block_scan[k] >> 2) & 3);
           int i4   = mb->blockX + i;
           int j4   = mb->blockY + j;
-          sPicMotionParam *mvInfo = &picture->mvInfo[j4][i4];
+          sPicMotion *mvInfo = &picture->mvInfo[j4][i4];
 
           assert (predDir<=2);
 

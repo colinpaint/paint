@@ -2661,12 +2661,12 @@ void av_url_split(char *proto,         int proto_size,
  * @param ic        the context to analyze
  * @param index     index of the stream to dump information about
  * @param url       the URL to print, such as source or destination file
- * @param is_output Select whether the specified context is an input(0) or output(1)
+ * @param isOutput Select whether the specified context is an input(0) or output(1)
  */
 void av_dump_format(AVFormatContext *ic,
                     int index,
                     const char *url,
-                    int is_output);
+                    int isOutput);
 
 
 #define AV_FRAME_FILENAME_FLAGS_MULTIPLE 1 ///< Allow multiple %d

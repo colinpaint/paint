@@ -331,7 +331,7 @@ static void readIpredModes (sMacroBlock* mb) {
 //}}}
 
 //{{{
-static void resetMvInfo (sPicMotionParam* mvInfo, int slice_no) {
+static void resetMvInfo (sPicMotion* mvInfo, int slice_no) {
 
   mvInfo->refPic[LIST_0] = NULL;
   mvInfo->refPic[LIST_1] = NULL;
@@ -346,7 +346,7 @@ static void resetMvInfo (sPicMotionParam* mvInfo, int slice_no) {
 static void initMacroblock (sMacroBlock* mb) {
 
   sSlice* slice = mb->slice;
-  sPicMotionParam** mvInfo = &slice->picture->mvInfo[mb->blockY];
+  sPicMotion** mvInfo = &slice->picture->mvInfo[mb->blockY];
   int slice_no = slice->curSliceIndex;
 
   // reset vectors and pred. modes
@@ -366,7 +366,7 @@ static void initMacroblock (sMacroBlock* mb) {
 static void initMacroblockDirect (sMacroBlock* mb) {
 
   int slice_no = mb->slice->curSliceIndex;
-  sPicMotionParam** mvInfo = &mb->slice->picture->mvInfo[mb->blockY];
+  sPicMotion** mvInfo = &mb->slice->picture->mvInfo[mb->blockY];
 
   setReadCompCabac (mb);
   setReadCompCoefCavlc (mb);
@@ -580,9 +580,9 @@ static void skipMacroblocks (sMacroBlock* mb) {
   resetCoeffs (mb);
 
   if (zeroMotionAbove || zeroMotionLeft) {
-    sPicMotionParam** dec_mv_info = &picture->mvInfo[img_block_y];
+    sPicMotion** dec_mv_info = &picture->mvInfo[img_block_y];
     sPicture* slicePic = slice->listX[listOffset][0];
-    sPicMotionParam* mvInfo = NULL;
+    sPicMotion* mvInfo = NULL;
 
     for (j = 0; j < BLOCK_SIZE; ++j) {
       for (i = mb->blockX; i < mb->blockX + BLOCK_SIZE; ++i) {
@@ -594,8 +594,8 @@ static void skipMacroblocks (sMacroBlock* mb) {
       }
     }
   else {
-    sPicMotionParam** dec_mv_info = &picture->mvInfo[img_block_y];
-    sPicMotionParam* mvInfo = NULL;
+    sPicMotion** dec_mv_info = &picture->mvInfo[img_block_y];
+    sPicMotion* mvInfo = NULL;
     sPicture* slicePic = slice->listX[listOffset][0];
     mb->GetMVPredictor (mb, neighbourMb, &pred_mv, 0, picture->mvInfo, LIST_0, 0, 0, MB_BLOCK_SIZE, MB_BLOCK_SIZE);
 
@@ -612,7 +612,7 @@ static void skipMacroblocks (sMacroBlock* mb) {
   }
 //}}}
 //{{{
-static void resetMvInfoList (sPicMotionParam* mvInfo, int list, int sliceNum) {
+static void resetMvInfoList (sPicMotion* mvInfo, int list, int sliceNum) {
 
   mvInfo->refPic[list] = NULL;
   mvInfo->mv[list] = kZeroMv;
@@ -623,7 +623,7 @@ static void resetMvInfoList (sPicMotionParam* mvInfo, int list, int sliceNum) {
 //{{{
 static void initMacroblockBasic (sMacroBlock* mb) {
 
-  sPicMotionParam** mvInfo = &mb->slice->picture->mvInfo[mb->blockY];
+  sPicMotion** mvInfo = &mb->slice->picture->mvInfo[mb->blockY];
   int slice_no = mb->slice->curSliceIndex;
 
   // reset vectors and pred. modes
@@ -806,7 +806,7 @@ static void readIcavlcMacroblock (sMacroBlock* mb) {
 
   const byte* dpMap = kSyntaxElementToDataPartitionIndex[slice->dataPartitionMode];
   sPicture* picture = slice->picture;
-  sPicMotionParamsOld* motion = &picture->motion;
+  sPicMotionOld* motion = &picture->motion;
 
   mb->mbField = ((mbNum & 0x01) == 0)? FALSE : slice->mbData[mbNum-1].mbField;
 
@@ -856,7 +856,7 @@ static void readPcavlcMacroblock (sMacroBlock* mb) {
 
   if (slice->mbAffFrame == 0) {
     sPicture* picture = slice->picture;
-    sPicMotionParamsOld* motion = &picture->motion;
+    sPicMotionOld* motion = &picture->motion;
 
     mb->mbField = FALSE;
     updateQp (mb, slice->qp);
@@ -901,7 +901,7 @@ static void readPcavlcMacroblock (sMacroBlock* mb) {
     sMacroBlock* topMB = NULL;
     int  prevMbSkipped = 0;
     sPicture* picture = slice->picture;
-    sPicMotionParamsOld* motion = &picture->motion;
+    sPicMotionOld* motion = &picture->motion;
 
     if (mbNum & 0x01) {
       topMB= &decoder->mbData[mbNum-1];
@@ -1009,7 +1009,7 @@ static void readBcavlcMacroblock (sMacroBlock* mb) {
 
   if (slice->mbAffFrame == 0) {
     sPicture* picture = slice->picture;
-    sPicMotionParamsOld *motion = &picture->motion;
+    sPicMotionOld *motion = &picture->motion;
 
     mb->mbField = FALSE;
     updateQp(mb, slice->qp);
@@ -1051,7 +1051,7 @@ static void readBcavlcMacroblock (sMacroBlock* mb) {
     sMacroBlock* topMB = NULL;
     int prevMbSkipped = 0;
     sPicture* picture = slice->picture;
-    sPicMotionParamsOld* motion = &picture->motion;
+    sPicMotionOld* motion = &picture->motion;
 
     if (mbNum & 0x01) {
       topMB = &decoder->mbData[mbNum-1];
@@ -1172,7 +1172,7 @@ static void readIcabacMacroblock (sMacroBlock* mb) {
 
   const byte* dpMap = kSyntaxElementToDataPartitionIndex[slice->dataPartitionMode];
   sPicture* picture = slice->picture;
-  sPicMotionParamsOld* motion = &picture->motion;
+  sPicMotionOld* motion = &picture->motion;
 
   mb->mbField = ((mbNum & 0x01) == 0) ? FALSE : slice->mbData[mbNum-1].mbField;
 
@@ -1260,7 +1260,7 @@ static void readPcabacMacroblock (sMacroBlock* mb)
 
   if (slice->mbAffFrame == 0) {
     sPicture* picture = slice->picture;
-    sPicMotionParamsOld* motion = &picture->motion;
+    sPicMotionOld* motion = &picture->motion;
 
     mb->mbField = FALSE;
     updateQp (mb, slice->qp);
@@ -1300,7 +1300,7 @@ static void readPcabacMacroblock (sMacroBlock* mb)
     int prevMbSkipped = 0;
     int checkBot, readBot, readTop;
     sPicture* picture = slice->picture;
-    sPicMotionParamsOld* motion = &picture->motion;
+    sPicMotionOld* motion = &picture->motion;
     if (mbNum & 0x01) {
       topMB = &decoder->mbData[mbNum-1];
       prevMbSkipped = (topMB->mbType == 0);
@@ -1408,7 +1408,7 @@ static void readBcabacMacroblock (sMacroBlock* mb) {
 
   if (slice->mbAffFrame == 0) {
     sPicture* picture = slice->picture;
-    sPicMotionParamsOld* motion = &picture->motion;
+    sPicMotionOld* motion = &picture->motion;
 
     mb->mbField = FALSE;
     updateQp(mb, slice->qp);
@@ -1451,7 +1451,7 @@ static void readBcabacMacroblock (sMacroBlock* mb) {
     int  prevMbSkipped = 0;
     int  checkBot, readBot, readTop;
     sPicture* picture = slice->picture;
-    sPicMotionParamsOld* motion = &picture->motion;
+    sPicMotionOld* motion = &picture->motion;
 
     if (mbNum & 0x01) {
       topMB = &decoder->mbData[mbNum-1];
