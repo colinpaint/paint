@@ -1789,10 +1789,10 @@ static void initPicture (sDecoder* decoder, sSlice* slice) {
 //{{{
 static void useParameterSets (sDecoder* decoder, sSlice* slice) {
 
-  if (!decoder->pps[slice->ppsId].valid) 
+  if (!decoder->pps[slice->ppsId].valid)
     printf ("useParameterSets - no pps - slice pps:%d\n", slice->ppsId);
   else if (!decoder->sps[decoder->pps[slice->ppsId].spsId].valid)
-    printf ("useParameterSets - no sps - slice pps:%d sps:%d\n", 
+    printf ("useParameterSets - no sps - slice pps:%d sps:%d\n",
             slice->ppsId, decoder->pps[slice->ppsId].spsId);
 
   useSps (decoder, &decoder->sps[decoder->pps[slice->ppsId].spsId]);
@@ -2225,16 +2225,16 @@ static void readSliceHeader (sDecoder* decoder, sSlice* slice) {
   slice->activeSps = decoder->activeSps;
   slice->activePps = decoder->activePps;
   slice->transform8x8Mode = decoder->activePps->hasTransform8x8mode;
-  slice->chroma444notSeparate = (decoder->activeSps->chromaFormatIdc == YUV444) && !decoder->coding.isSeperateColourPlane;
+  slice->chroma444notSeparate = (decoder->activeSps->chromaFormatIdc == YUV444) && 
+                                !decoder->coding.isSeperateColourPlane;
 
-  sSps* activeSps = decoder->activeSps;
-  slice->frameNum = readUv (activeSps->log2maxFrameNumMinus4 + 4, "SLC frameNum", s);
+  slice->frameNum = readUv (decoder->activeSps->log2maxFrameNumMinus4 + 4, "SLC frameNum", s);
   if (slice->isIDR) {
     decoder->preFrameNum = slice->frameNum;
     decoder->lastRefPicPoc = 0;
     }
   //{{{  read field/frame
-  if (activeSps->frameMbOnly) {
+  if (decoder->activeSps->frameMbOnly) {
     slice->fieldPic = 0;
     decoder->coding.picStructure = eFrame;
     }
@@ -2252,22 +2252,22 @@ static void readSliceHeader (sDecoder* decoder, sSlice* slice) {
     }
 
   slice->picStructure = decoder->coding.picStructure;
-  slice->mbAffFrame = activeSps->mbAffFlag && !slice->fieldPic;
+  slice->mbAffFrame = decoder->activeSps->mbAffFlag && !slice->fieldPic;
   //}}}
 
   if (slice->isIDR)
     slice->idrPicId = readUeV ("SLC idrPicId", s);
   //{{{  read picOrderCount
-  if (activeSps->pocType == 0) {
-    slice->picOrderCountLsb = readUv (activeSps->log2maxPocLsbMinus4 + 4, "SLC picOrderCountLsb", s);
+  if (decoder->activeSps->pocType == 0) {
+    slice->picOrderCountLsb = readUv (decoder->activeSps->log2maxPocLsbMinus4 + 4, "SLC picOrderCountLsb", s);
     if ((decoder->activePps->botFieldFrame == 1) && !slice->fieldPic)
       slice->deletaPicOrderCountBot = readSeV ("SLC deletaPicOrderCountBot", s);
     else
       slice->deletaPicOrderCountBot = 0;
     }
 
-  if (activeSps->pocType == 1) {
-    if (!activeSps->deltaPicOrderAlwaysZero) {
+  if (decoder->activeSps->pocType == 1) {
+    if (!decoder->activeSps->deltaPicOrderAlwaysZero) {
       slice->deltaPicOrderCount[0] = readSeV ("SLC deltaPicOrderCount[0]", s);
       if ((decoder->activePps->botFieldFrame == 1) && !slice->fieldPic)
         slice->deltaPicOrderCount[1] = readSeV ("SLC deltaPicOrderCount[1]", s);
@@ -2350,7 +2350,7 @@ static void readSliceHeader (sDecoder* decoder, sSlice* slice) {
       ((decoder->activePps->weightedBiPredIdc == 1) && (slice->sliceType == eSliceB))) {
     slice->lumaLog2weightDenom = (unsigned short) readUeV ("SLC lumaLog2weightDenom", s);
 
-    if (activeSps->chromaFormatIdc)
+    if (decoder->activeSps->chromaFormatIdc)
       slice->chromaLog2weightDenom = (unsigned short) readUeV ("SLC chromaLog2weightDenom", s);
 
     resetWeightedPredParam (slice);
@@ -2368,7 +2368,7 @@ static void readSliceHeader (sDecoder* decoder, sSlice* slice) {
         slice->weightedPredOffset[LIST_0][i][0] = 0;
         }
 
-      if (activeSps->chromaFormatIdc) {
+      if (decoder->activeSps->chromaFormatIdc) {
         // l0 chroma weights
         int chroma_weight_flag_l0 = readU1 ("SLC chroma_weight_flag_l0", s);
         for (int j = 1; j<3; j++) {
@@ -2400,7 +2400,7 @@ static void readSliceHeader (sDecoder* decoder, sSlice* slice) {
           slice->weightedPredOffset[LIST_1][i][0] = 0;
           }
 
-        if (activeSps->chromaFormatIdc) {
+        if (decoder->activeSps->chromaFormatIdc) {
           // l1 chroma weights
           int chroma_weight_flag_l1 = readU1 ("SLC chroma_weight_flag_l1", s);
           for (int j = 1; j < 3; j++) {
@@ -2459,7 +2459,7 @@ static void readSliceHeader (sDecoder* decoder, sSlice* slice) {
     slice->deblockFilterBetaOffset = 0;
     }
     //}}}
-  if (isHiIntraOnlyProfile (activeSps->profileIdc, activeSps->constrainedSet3flag) &&
+  if (isHiIntraOnlyProfile (decoder->activeSps->profileIdc, decoder->activeSps->constrainedSet3flag) &&
       !decoder->param.intraProfileDeblocking) {
     //{{{  hiIintra deblock
     slice->deblockFilterDisableIdc = 1;
@@ -2471,10 +2471,12 @@ static void readSliceHeader (sDecoder* decoder, sSlice* slice) {
   if ((decoder->activePps->numSliceGroupsMinus1 > 0) &&
       (decoder->activePps->sliceGroupMapType >= 3) &&
       (decoder->activePps->sliceGroupMapType <= 5)) {
-    int len = (activeSps->pic_height_in_map_units_minus1+1) * (activeSps->pic_width_in_mbs_minus1+1) /
-                (decoder->activePps->sliceGroupChangeRateMius1 + 1);
-    if (((activeSps->pic_height_in_map_units_minus1+1) * (activeSps->pic_width_in_mbs_minus1+1)) %
-        (decoder->activePps->sliceGroupChangeRateMius1 + 1))
+    int len = (decoder->activeSps->pic_height_in_map_units_minus1 + 1) * 
+                (decoder->activeSps->pic_width_in_mbs_minus1 + 1) /
+                  (decoder->activePps->sliceGroupChangeRateMius1 + 1);
+    if (((decoder->activeSps->pic_height_in_map_units_minus1 + 1) * 
+          (decoder->activeSps->pic_width_in_mbs_minus1 + 1)) %
+            (decoder->activePps->sliceGroupChangeRateMius1 + 1))
       len += 1;
 
     len = ceilLog2 (len+1);
