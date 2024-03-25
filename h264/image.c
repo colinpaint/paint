@@ -1617,7 +1617,6 @@ static void mbAffPostProc (sDecoder* decoder) {
 static void initPicture (sDecoder* decoder, sSlice* slice) {
 
   sDPB* dpb = slice->dpb;
-  sSps* activeSps = decoder->activeSps;
 
   decoder->picHeightInMbs = decoder->coding.frameHeightMbs / (slice->fieldPic+1);
   decoder->picSizeInMbs = decoder->coding.picWidthMbs * decoder->picHeightInMbs;
@@ -1633,7 +1632,7 @@ static void initPicture (sDecoder* decoder, sSlice* slice) {
   if (!decoder->recoveryPoint &&
       (slice->frameNum != decoder->preFrameNum) &&
       (slice->frameNum != (decoder->preFrameNum + 1) % decoder->coding.maxFrameNum)) {
-    if (!activeSps->gaps_in_frame_num_value_allowed_flag) {
+    if (!decoder->activeSps->gaps_in_frame_num_value_allowed_flag) {
       //{{{  picture error conceal
       if (decoder->param.concealMode) {
         if ((slice->frameNum) < ((decoder->preFrameNum + 1) % decoder->coding.maxFrameNum)) {
@@ -1767,14 +1766,14 @@ static void initPicture (sDecoder* decoder, sSlice* slice) {
   picture->frameNum = slice->frameNum;
   picture->recoveryFrame = (unsigned int)((int)slice->frameNum == decoder->recoveryFrameNum);
   picture->codedFrame = (slice->picStructure == eFrame);
-  picture->chromaFormatIdc = activeSps->chromaFormatIdc;
-  picture->frameMbOnly = activeSps->frameMbOnly;
-  picture->cropFlag = activeSps->cropFlag;
+  picture->chromaFormatIdc = decoder->activeSps->chromaFormatIdc;
+  picture->frameMbOnly = decoder->activeSps->frameMbOnly;
+  picture->cropFlag = decoder->activeSps->cropFlag;
   if (picture->cropFlag) {
-    picture->cropLeft = activeSps->cropLeft;
-    picture->cropRight = activeSps->cropRight;
-    picture->cropTop = activeSps->cropTop;
-    picture->cropBot = activeSps->cropBot;
+    picture->cropLeft = decoder->activeSps->cropLeft;
+    picture->cropRight = decoder->activeSps->cropRight;
+    picture->cropTop = decoder->activeSps->cropTop;
+    picture->cropBot = decoder->activeSps->cropBot;
     }
 
   if (decoder->coding.isSeperateColourPlane) {
@@ -1961,10 +1960,9 @@ void decRefPicMarking (sDecoder* decoder, sBitStream* s, sSlice* slice) {
 //{{{
 void decodePOC (sDecoder* decoder, sSlice* slice) {
 
-  sSps* activeSps = decoder->activeSps;
-  unsigned int maxPicOrderCntLsb = (1<<(activeSps->log2maxPocLsbMinus4+4));
+  unsigned int maxPicOrderCntLsb = (1 << (decoder->activeSps->log2maxPocLsbMinus4+4));
 
-  switch (activeSps->pocType) {
+  switch (decoder->activeSps->pocType) {
     //{{{
     case 0: // POC MODE 0
       // 1st
@@ -2037,7 +2035,7 @@ void decodePOC (sDecoder* decoder, sSlice* slice) {
         }
 
       // 2nd
-      if (activeSps->numRefFramesPocCycle)
+      if (decoder->activeSps->numRefFramesPocCycle)
         slice->AbsFrameNum = decoder->frameNumOffset + slice->frameNum;
       else
         slice->AbsFrameNum = 0;
@@ -2046,34 +2044,34 @@ void decodePOC (sDecoder* decoder, sSlice* slice) {
 
       // 3rd
       decoder->expectedDeltaPerPocCycle = 0;
-      if (activeSps->numRefFramesPocCycle)
-        for (unsigned i = 0; i < activeSps->numRefFramesPocCycle; i++)
-          decoder->expectedDeltaPerPocCycle += activeSps->offset_for_ref_frame[i];
+      if (decoder->activeSps->numRefFramesPocCycle)
+        for (unsigned i = 0; i < decoder->activeSps->numRefFramesPocCycle; i++)
+          decoder->expectedDeltaPerPocCycle += decoder->activeSps->offset_for_ref_frame[i];
 
       if (slice->AbsFrameNum) {
-        decoder->pocCycleCount = (slice->AbsFrameNum-1) / activeSps->numRefFramesPocCycle;
-        decoder->frameNumPocCycle = (slice->AbsFrameNum-1) % activeSps->numRefFramesPocCycle;
+        decoder->pocCycleCount = (slice->AbsFrameNum-1) / decoder->activeSps->numRefFramesPocCycle;
+        decoder->frameNumPocCycle = (slice->AbsFrameNum-1) % decoder->activeSps->numRefFramesPocCycle;
         decoder->expectedPOC =
           decoder->pocCycleCount*decoder->expectedDeltaPerPocCycle;
         for (int i = 0; i <= decoder->frameNumPocCycle; i++)
-          decoder->expectedPOC += activeSps->offset_for_ref_frame[i];
+          decoder->expectedPOC += decoder->activeSps->offset_for_ref_frame[i];
         }
       else
         decoder->expectedPOC = 0;
 
       if (!slice->refId)
-        decoder->expectedPOC += activeSps->offsetNonRefPic;
+        decoder->expectedPOC += decoder->activeSps->offsetNonRefPic;
 
       if (slice->fieldPic == 0) {
         // frame pixelPos
         slice->topPoc = decoder->expectedPOC + slice->deltaPicOrderCount[0];
-        slice->botPoc = slice->topPoc + activeSps->offsetTopBotField + slice->deltaPicOrderCount[1];
+        slice->botPoc = slice->topPoc + decoder->activeSps->offsetTopBotField + slice->deltaPicOrderCount[1];
         slice->thisPoc = slice->framePoc = (slice->topPoc < slice->botPoc) ? slice->topPoc : slice->botPoc;
         }
       else if (!slice->botField) // top field
         slice->thisPoc = slice->topPoc = decoder->expectedPOC + slice->deltaPicOrderCount[0];
       else // bottom field
-        slice->thisPoc = slice->botPoc = decoder->expectedPOC + activeSps->offsetTopBotField + slice->deltaPicOrderCount[0];
+        slice->thisPoc = slice->botPoc = decoder->expectedPOC + decoder->activeSps->offsetTopBotField + slice->deltaPicOrderCount[0];
       slice->framePoc=slice->thisPoc;
 
       decoder->previousFrameNum = slice->frameNum;
@@ -2225,7 +2223,7 @@ static void readSliceHeader (sDecoder* decoder, sSlice* slice) {
   slice->activeSps = decoder->activeSps;
   slice->activePps = decoder->activePps;
   slice->transform8x8Mode = decoder->activePps->hasTransform8x8mode;
-  slice->chroma444notSeparate = (decoder->activeSps->chromaFormatIdc == YUV444) && 
+  slice->chroma444notSeparate = (decoder->activeSps->chromaFormatIdc == YUV444) &&
                                 !decoder->coding.isSeperateColourPlane;
 
   slice->frameNum = readUv (decoder->activeSps->log2maxFrameNumMinus4 + 4, "SLC frameNum", s);
@@ -2471,10 +2469,10 @@ static void readSliceHeader (sDecoder* decoder, sSlice* slice) {
   if ((decoder->activePps->numSliceGroupsMinus1 > 0) &&
       (decoder->activePps->sliceGroupMapType >= 3) &&
       (decoder->activePps->sliceGroupMapType <= 5)) {
-    int len = (decoder->activeSps->pic_height_in_map_units_minus1 + 1) * 
+    int len = (decoder->activeSps->pic_height_in_map_units_minus1 + 1) *
                 (decoder->activeSps->pic_width_in_mbs_minus1 + 1) /
                   (decoder->activePps->sliceGroupChangeRateMius1 + 1);
-    if (((decoder->activeSps->pic_height_in_map_units_minus1 + 1) * 
+    if (((decoder->activeSps->pic_height_in_map_units_minus1 + 1) *
           (decoder->activeSps->pic_width_in_mbs_minus1 + 1)) %
             (decoder->activePps->sliceGroupChangeRateMius1 + 1))
       len += 1;
