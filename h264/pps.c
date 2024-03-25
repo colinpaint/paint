@@ -286,14 +286,12 @@ void readNaluPps (sDecoder* decoder, sNalu* nalu) {
   sPps pps = { 0 };
   readPps (decoder, dataPartition, &pps, nalu->len);
   if (decoder->activePps) {
-    if (pps.id == decoder->activePps->id) {
-      if (!isEqualPps (&pps, decoder->activePps)) {
-        // copy to next PPS;
-        memcpy (decoder->nextPps, decoder->activePps, sizeof (sPps));
-        if (decoder->picture)
-          endDecodeFrame (decoder);
-        decoder->activePps = NULL;
-        }
+    if (!isEqualPps (&pps, decoder->activePps)) {
+      // copy to next PPS;
+      memcpy (decoder->nextPps, decoder->activePps, sizeof (sPps));
+      if (decoder->picture)
+        endDecodeFrame (decoder);
+      decoder->activePps = NULL;
       }
     }
 
