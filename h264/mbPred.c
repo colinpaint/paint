@@ -28,7 +28,7 @@ int mb_pred_intra4x4 (sMacroBlock* mb, eColorPlane plane, sPixel** pixel, sPictu
   int j_pos, i_pos;
   int ioff,joff;
   int block8x8;   // needed for ABT
-  mb->iTrans4x4 = (mb->isLossless == FALSE) ? itrans4x4 : Inv_Residual_trans_4x4;
+  mb->iTrans4x4 = (mb->isLossless == FALSE) ? itrans4x4 : invResidualTrans4x4;
 
   for (block8x8 = 0; block8x8 < 4; block8x8++)
   {
@@ -92,7 +92,7 @@ int mb_pred_intra8x8 (sMacroBlock* mb, eColorPlane plane, sPixel** pixel, sPictu
   int yuv = picture->chromaFormatIdc - 1;
 
   int block8x8;   // needed for ABT
-  mb->iTrans8x8 = (mb->isLossless == FALSE) ? itrans8x8 : Inv_Residual_trans_8x8;
+  mb->iTrans8x8 = (mb->isLossless == FALSE) ? itrans8x8 : invResidualTrans8x8;
 
   for (block8x8 = 0; block8x8 < 4; block8x8++)
   {

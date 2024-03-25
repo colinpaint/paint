@@ -1666,7 +1666,7 @@ void intra_cr_decoding (sMacroBlock* mb, int yuv)
     if(mb->isLossless)
     {
       if ((mb->cPredMode == VERT_PRED_8)||(mb->cPredMode == HOR_PRED_8))
-        Inv_Residual_trans_Chroma(mb, uv) ;
+        invResidualTransChroma (mb, uv) ;
       else
       {
         for(j=0;j<decoder->mbCrSizeY;j++)
