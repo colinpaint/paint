@@ -278,8 +278,9 @@ void readPpsFromNalu (sDecoder* decoder, sNalu* nalu) {
 
   sPps* pps = calloc(1, sizeof(sPps));
   readPps (decoder, dataPartition, pps, nalu->len);
+  freeDataPartitions (dataPartition, 1);
 
-  if (decoder->activePps) 
+  if (decoder->activePps)
     if (!isEqualPps (pps, decoder->activePps)) {
       // copy to next PPS;
       memcpy (decoder->nextPps, decoder->activePps, sizeof (sPps));
@@ -289,7 +290,6 @@ void readPpsFromNalu (sDecoder* decoder, sNalu* nalu) {
       }
 
   setPpsById (decoder, pps->id, pps);
-  freeDataPartitions (dataPartition, 1);
 
   if (!pps->sliceGroupId)
     free (pps->sliceGroupId);
