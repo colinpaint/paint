@@ -1789,19 +1789,16 @@ static void initPicture (sDecoder* decoder, sSlice* slice) {
 //{{{
 static void useParameterSets (sDecoder* decoder, sSlice* slice) {
 
-  sPps* pps = &decoder->pps[slice->ppsId];
-  if (!pps->valid)
-    printf ("useParameterSets - invalid PPSid:%d\n", slice->ppsId);
+  if (!decoder->pps[slice->ppsId].valid) 
+    printf ("useParameterSets - no pps - slice pps:%d\n", slice->ppsId);
+  else if (!decoder->sps[decoder->pps[slice->ppsId].spsId].valid)
+    printf ("useParameterSets - no sps - slice pps:%d sps:%d\n", 
+            slice->ppsId, decoder->pps[slice->ppsId].spsId);
 
-  sSps* sps = &decoder->sps[pps->spsId];
-  if (!sps->valid)
-    printf ("useParameterSets - no SPSid:%d:%d\n", slice->ppsId, pps->spsId);
+  useSps (decoder, &decoder->sps[decoder->pps[slice->ppsId].spsId]);
+  usePps (decoder, &decoder->pps[slice->ppsId]);
 
-  useSps (decoder, sps);
-  usePps (decoder, pps);
-
-  // slice->dataPartitionMode is set by read_new_slice (NALU first byte available there)
-  if (pps->entropyCoding == eCavlc) {
+  if (decoder->pps[slice->ppsId].entropyCoding == eCavlc) {
     slice->nalStartCode = vlcStartCode;
     for (int i = 0; i < 3; i++)
       slice->dataPartitions[i].readSyntaxElement = readSyntaxElementVLC;
@@ -2353,7 +2350,7 @@ static void readSliceHeader (sDecoder* decoder, sSlice* slice) {
       ((decoder->activePps->weightedBiPredIdc == 1) && (slice->sliceType == eSliceB))) {
     slice->lumaLog2weightDenom = (unsigned short) readUeV ("SLC lumaLog2weightDenom", s);
 
-    if (activeSps->chromaFormatIdc) 
+    if (activeSps->chromaFormatIdc)
       slice->chromaLog2weightDenom = (unsigned short) readUeV ("SLC chromaLog2weightDenom", s);
 
     resetWeightedPredParam (slice);
