@@ -178,7 +178,7 @@ static int FmoGenerateMapUnitToSliceGroupMap (sDecoder* decoder, sSlice* slice) 
 
   unsigned int NumSliceGroupMapUnits;
 
-  NumSliceGroupMapUnits = (sps->pic_height_in_map_units_minus1+1)* (sps->pic_width_in_mbs_minus1+1);
+  NumSliceGroupMapUnits = (sps->picHeightMapUnitsMinus1+1)* (sps->picWidthMbsMinus1+1);
 
   if (pps->sliceGroupMapType == 6)
     if ((pps->picSizeMapUnitsMinus1 + 1) != NumSliceGroupMapUnits)

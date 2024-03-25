@@ -1454,7 +1454,7 @@ static void deblockMb (sDecoder* decoder, sPicture* p, int mbIndex) {
           else if ((edge & 0x01) && ((mb->mbType == P8x16) ||
                    (slice->sliceType == eSliceB && 
                     mb->mbType == BSKIP_DIRECT && 
-                    activeSps->direct_8x8_inference_flag)))
+                    activeSps->isDirect8x8inference)))
             continue;
           }
         }
@@ -1494,7 +1494,7 @@ static void deblockMb (sDecoder* decoder, sPicture* p, int mbIndex) {
         else if (edge > 0) {
           if (((mb->mbType == PSKIP && slice->sliceType == eSliceP) || (mb->mbType == P16x16) || (mb->mbType == P8x16)))
             continue;
-          else if ((edge & 0x01) && ((mb->mbType == P16x8) || (slice->sliceType == eSliceB && mb->mbType == BSKIP_DIRECT && activeSps->direct_8x8_inference_flag)))
+          else if ((edge & 0x01) && ((mb->mbType == P16x8) || (slice->sliceType == eSliceB && mb->mbType == BSKIP_DIRECT && activeSps->isDirect8x8inference)))
             continue;
           }
         }
@@ -1614,7 +1614,7 @@ static void getDeblockStrength (sDecoder* decoder, sPicture* p, int mbIndex) {
           else if ((edge & 0x01) &&
                    ((mb->mbType == P8x16) ||
                    (slice->sliceType == eSliceB &&
-                    mb->mbType == BSKIP_DIRECT && activeSps->direct_8x8_inference_flag)))
+                    mb->mbType == BSKIP_DIRECT && activeSps->isDirect8x8inference)))
             continue;
           }
         }
@@ -1638,7 +1638,7 @@ static void getDeblockStrength (sDecoder* decoder, sPicture* p, int mbIndex) {
                    ((mb->mbType == P16x8) ||
                      (slice->sliceType == eSliceB &&
                       mb->mbType == BSKIP_DIRECT &&
-                      activeSps->direct_8x8_inference_flag)))
+                      activeSps->isDirect8x8inference)))
             continue;
           }
         }
@@ -1707,7 +1707,7 @@ static void performDeblock (sDecoder* decoder, sPicture* p, int mbIndex) {
         else if (edge > 0) {
           if (((mb->mbType == PSKIP && slice->sliceType == eSliceP) || (mb->mbType == P16x16) || (mb->mbType == P16x8)))
             continue;
-          else if ((edge & 0x01) && ((mb->mbType == P8x16) || (slice->sliceType == eSliceB && mb->mbType == BSKIP_DIRECT && activeSps->direct_8x8_inference_flag)))
+          else if ((edge & 0x01) && ((mb->mbType == P8x16) || (slice->sliceType == eSliceB && mb->mbType == BSKIP_DIRECT && activeSps->isDirect8x8inference)))
             continue;
           }
         }
@@ -1743,7 +1743,7 @@ static void performDeblock (sDecoder* decoder, sPicture* p, int mbIndex) {
         else if (edge > 0) {
           if (((mb->mbType == PSKIP && slice->sliceType == eSliceP) || (mb->mbType == P16x16) || (mb->mbType == P8x16)))
             continue;
-          else if ((edge & 0x01) && ((mb->mbType == P16x8) || (slice->sliceType == eSliceB && mb->mbType == BSKIP_DIRECT && activeSps->direct_8x8_inference_flag)))
+          else if ((edge & 0x01) && ((mb->mbType == P16x8) || (slice->sliceType == eSliceB && mb->mbType == BSKIP_DIRECT && activeSps->isDirect8x8inference)))
             continue;
           }
         }

@@ -780,7 +780,7 @@ static void readI8x8macroblock (sMacroBlock* mb, sDataPartition* dataPartition, 
     SetB8Mode (mb, se->value1, i);
 
     // set noMbPartLessThan8x8Flag for P8x8 mode
-    mb->noMbPartLessThan8x8Flag &= (mb->b8mode[i] == 0 && slice->activeSps->direct_8x8_inference_flag) ||
+    mb->noMbPartLessThan8x8Flag &= (mb->b8mode[i] == 0 && slice->activeSps->isDirect8x8inference) ||
       (mb->b8mode[i] == 4);
     }
 
@@ -1142,7 +1142,7 @@ static void readBcavlcMacroblock (sMacroBlock* mb) {
     }
   else if (mb->mbType == BSKIP_DIRECT) {
     // init noMbPartLessThan8x8Flag
-    mb->noMbPartLessThan8x8Flag = (!(slice->activeSps->direct_8x8_inference_flag))? FALSE: TRUE;
+    mb->noMbPartLessThan8x8Flag = (!(slice->activeSps->isDirect8x8inference))? FALSE: TRUE;
     mb->lumaTransformSize8x8flag = FALSE;
     if(decoder->activePps->hasConstrainedIntraPred)
       slice->intraBlock[mbNum] = 0;
@@ -1542,7 +1542,7 @@ static void readBcabacMacroblock (sMacroBlock* mb) {
     }
   else if (mb->mbType == BSKIP_DIRECT) {
     //init noMbPartLessThan8x8Flag
-    mb->noMbPartLessThan8x8Flag = (!(slice->activeSps->direct_8x8_inference_flag))? FALSE: TRUE;
+    mb->noMbPartLessThan8x8Flag = (!(slice->activeSps->isDirect8x8inference))? FALSE: TRUE;
 
     // transform size flag for INTRA_4x4 and INTRA_8x8 modes
     mb->lumaTransformSize8x8flag = FALSE;

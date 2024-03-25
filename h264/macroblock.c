@@ -352,13 +352,13 @@ static int decodeComponentB (sMacroBlock* mb, eColorPlane plane, sPixel** pixel,
   else if (mb->mbType == BSKIP_DIRECT) {
     sSlice* slice = mb->slice;
     if (slice->directSpatialMvPredFlag == 0) {
-      if (slice->activeSps->direct_8x8_inference_flag)
+      if (slice->activeSps->isDirect8x8inference)
         mb_pred_b_d8x8temporal (mb, plane, pixel, picture);
       else
         mb_pred_b_d4x4temporal (mb, plane, pixel, picture);
       }
     else {
-      if (slice->activeSps->direct_8x8_inference_flag)
+      if (slice->activeSps->isDirect8x8inference)
         mb_pred_b_d8x8spatial (mb, plane, pixel, picture);
       else
         mb_pred_b_d4x4spatial (mb, plane, pixel, picture);
@@ -446,7 +446,7 @@ void updateQp (sMacroBlock* mb, int qp) {
   mb->qpScaled[0] = qp + decoder->coding.bitDepthLumaQpScale;
   set_chroma_qp (mb);
 
-  mb->isLossless = (Boolean)((mb->qpScaled[0] == 0) && (decoder->coding.losslessQpPrimeFlag == 1));
+  mb->isLossless = (Boolean)((mb->qpScaled[0] == 0) && (decoder->coding.useLosslessQpPrime == 1));
   setReadCompCoefCavlc (mb);
   setReadCompCabac (mb);
   }

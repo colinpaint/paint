@@ -81,12 +81,12 @@ typedef struct {
   unsigned int id;                     // ue(v)
   unsigned int chromaFormatIdc;        // ue(v)
 
-  Boolean  seq_scaling_matrix_present_flag;   // u(1)
-  int      seq_scaling_list_present_flag[12]; // u(1)
+  Boolean  hasSeqScalingMatrix;   // u(1)
+  int      hasSeqScalingList[12]; // u(1)
   int      scalingList4x4[6][16];             // se(v)
   int      scalingList8x8[6][64];             // se(v)
-  Boolean  useDefaultScalingMatrix4x4Flag[6];
-  Boolean  useDefaultScalingMatrix8x8Flag[6];
+  Boolean  useDefaultScalingMatrix4x4[6];
+  Boolean  useDefaultScalingMatrix8x8[6];
 
   unsigned int bit_depth_luma_minus8;          // ue(v)
   unsigned int bit_depth_chroma_minus8;        // ue(v)
@@ -100,14 +100,14 @@ typedef struct {
   unsigned int numRefFramesPocCycle;           // ue(v)
   int      offsetForRefFrame[MAX_REF_FRAMES_POC]; // se(v)
   unsigned int numRefFrames;                   // ue(v)
-  Boolean  gapsInFrameNumValueAllowedFlag;     // u(1)
+  Boolean  allowGapsFrameNum;     // u(1)
 
-  unsigned int pic_width_in_mbs_minus1;        // ue(v)
-  unsigned int pic_height_in_map_units_minus1; // ue(v)
+  unsigned int picWidthMbsMinus1;        // ue(v)
+  unsigned int picHeightMapUnitsMinus1; // ue(v)
 
   Boolean  frameMbOnly;                 // u(1)
   Boolean  mbAffFlag;                   // u(1)
-  Boolean  direct_8x8_inference_flag;   // u(1)
+  Boolean  isDirect8x8inference;   // u(1)
 
   Boolean  cropFlag;                    // u(1)
   unsigned int cropLeft;                // ue(v)
@@ -115,11 +115,11 @@ typedef struct {
   unsigned int cropTop;                 // ue(v)
   unsigned int cropBot;                 // ue(v)
 
-  Boolean  vui_parameters_present_flag; // u(1)
-  sVUI     vui_seq_parameters;          // sVUI
+  Boolean  hasVui;                      // u(1)
+  sVUI     vuiSeqParams;                // sVUI
 
   unsigned isSeperateColourPlane;       // u(1)
-  int      losslessQpPrimeFlag;
+  int      useLosslessQpPrime;
   } sSps;
 
 struct Decoder;

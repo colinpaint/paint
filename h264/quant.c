@@ -182,17 +182,17 @@ void useQuantParams (sSlice* slice) {
   sSps* sps = slice->activeSps;
   sPps* pps = slice->activePps;
 
-  if (!pps->hasPicScalingMatrix && !sps->seq_scaling_matrix_present_flag) {
+  if (!pps->hasPicScalingMatrix && !sps->hasSeqScalingMatrix) {
     for (int i = 0; i < 12; i++)
       slice->qmatrix[i] = (i < 6) ? quant_org : quant8_org;
     }
   else {
     int n_ScalingList = (sps->chromaFormatIdc != YUV444) ? 8 : 12;
-    if (sps->seq_scaling_matrix_present_flag) {
+    if (sps->hasSeqScalingMatrix) {
       //{{{  check sps first
       for (int i = 0; i < n_ScalingList; i++) {
         if (i < 6) {
-          if (!sps->seq_scaling_list_present_flag[i]) {
+          if (!sps->hasSeqScalingList[i]) {
             // fall-back rule A
             if (i == 0)
               slice->qmatrix[i] = quant_intra_default;
@@ -202,14 +202,14 @@ void useQuantParams (sSlice* slice) {
               slice->qmatrix[i] = slice->qmatrix[i-1];
             }
           else {
-            if (sps->useDefaultScalingMatrix4x4Flag[i])
+            if (sps->useDefaultScalingMatrix4x4[i])
               slice->qmatrix[i] = (i<3) ? quant_intra_default : quant_inter_default;
             else
               slice->qmatrix[i] = sps->scalingList4x4[i];
           }
         }
         else {
-          if (!sps->seq_scaling_list_present_flag[i]) {
+          if (!sps->hasSeqScalingList[i]) {
             // fall-back rule A
             if (i == 6)
               slice->qmatrix[i] = quant8_intra_default;
@@ -219,7 +219,7 @@ void useQuantParams (sSlice* slice) {
               slice->qmatrix[i] = slice->qmatrix[i-2];
             }
           else {
-            if (sps->useDefaultScalingMatrix8x8Flag[i-6])
+            if (sps->useDefaultScalingMatrix8x8[i-6])
               slice->qmatrix[i] = (i==6 || i==8 || i==10) ? quant8_intra_default:quant8_inter_default;
             else
               slice->qmatrix[i] = sps->scalingList8x8[i-6];
@@ -235,11 +235,11 @@ void useQuantParams (sSlice* slice) {
           if (!pps->picScalingListPresentFlag[i]) {
             // fall-back rule B
             if (i == 0) {
-              if (!sps->seq_scaling_matrix_present_flag)
+              if (!sps->hasSeqScalingMatrix)
                 slice->qmatrix[i] = quant_intra_default;
               }
             else if (i == 3) {
-              if (!sps->seq_scaling_matrix_present_flag)
+              if (!sps->hasSeqScalingMatrix)
                 slice->qmatrix[i] = quant_inter_default;
               }
             else
@@ -256,11 +256,11 @@ void useQuantParams (sSlice* slice) {
           if (!pps->picScalingListPresentFlag[i]) {
             // fall-back rule B
             if (i == 6) {
-              if (!sps->seq_scaling_matrix_present_flag)
+              if (!sps->hasSeqScalingMatrix)
                 slice->qmatrix[i] = quant8_intra_default;
               }
             else if (i == 7) {
-              if (!sps->seq_scaling_matrix_present_flag)
+              if (!sps->hasSeqScalingMatrix)
                 slice->qmatrix[i] = quant8_inter_default;
               }
             else

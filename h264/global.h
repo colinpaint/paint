@@ -820,7 +820,7 @@ typedef struct CodingParam {
   int numUvBlocks;
   int numCdcCoeff;
   int numBlock8x8uv;
-  int losslessQpPrimeFlag;
+  int useLosslessQpPrime;
 
   // macroblocks
   unsigned int picWidthMbs;
@@ -901,7 +901,6 @@ typedef struct Decoder {
   // pps
   sPps         pps[MAX_PPS];
   sPps*        activePps;
-  sPps*        nextPps;
 
   int          decodeFrameNum;
   int          idrFrameNum;

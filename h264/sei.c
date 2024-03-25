@@ -178,24 +178,24 @@ static void processPictureTiming (byte* payload, int size, sDecoder* decoder) {
 
     int cpb_removal_len = 24;
     int dpb_output_len = 24;
-    Boolean cpbDpb = (Boolean)(activeSps->vui_parameters_present_flag &&
-                               (activeSps->vui_seq_parameters.nal_hrd_parameters_present_flag ||
-                                activeSps->vui_seq_parameters.vcl_hrd_parameters_present_flag));
+    Boolean cpbDpb = (Boolean)(activeSps->hasVui &&
+                               (activeSps->vuiSeqParams.nal_hrd_parameters_present_flag ||
+                                activeSps->vuiSeqParams.vcl_hrd_parameters_present_flag));
 
     if (cpbDpb) {
-      if (activeSps->vui_parameters_present_flag) {
-        if (activeSps->vui_seq_parameters.nal_hrd_parameters_present_flag) {
-          cpb_removal_len = activeSps->vui_seq_parameters.nal_hrd_parameters.cpb_removal_delay_length_minus1 + 1;
-          dpb_output_len  = activeSps->vui_seq_parameters.nal_hrd_parameters.dpb_output_delay_length_minus1  + 1;
+      if (activeSps->hasVui) {
+        if (activeSps->vuiSeqParams.nal_hrd_parameters_present_flag) {
+          cpb_removal_len = activeSps->vuiSeqParams.nal_hrd_parameters.cpb_removal_delay_length_minus1 + 1;
+          dpb_output_len  = activeSps->vuiSeqParams.nal_hrd_parameters.dpb_output_delay_length_minus1  + 1;
           }
-        else if (activeSps->vui_seq_parameters.vcl_hrd_parameters_present_flag) {
-          cpb_removal_len = activeSps->vui_seq_parameters.vcl_hrd_parameters.cpb_removal_delay_length_minus1 + 1;
-          dpb_output_len = activeSps->vui_seq_parameters.vcl_hrd_parameters.dpb_output_delay_length_minus1  + 1;
+        else if (activeSps->vuiSeqParams.vcl_hrd_parameters_present_flag) {
+          cpb_removal_len = activeSps->vuiSeqParams.vcl_hrd_parameters.cpb_removal_delay_length_minus1 + 1;
+          dpb_output_len = activeSps->vuiSeqParams.vcl_hrd_parameters.dpb_output_delay_length_minus1  + 1;
           }
         }
 
-      if ((activeSps->vui_seq_parameters.nal_hrd_parameters_present_flag) ||
-          (activeSps->vui_seq_parameters.vcl_hrd_parameters_present_flag)) {
+      if ((activeSps->vuiSeqParams.nal_hrd_parameters_present_flag) ||
+          (activeSps->vuiSeqParams.vcl_hrd_parameters_present_flag)) {
         int cpb_removal_delay, dpb_output_delay;
         cpb_removal_delay = readUv (cpb_removal_len, "SEI cpb_removal_delay", buf);
         dpb_output_delay = readUv (dpb_output_len,  "SEI dpb_output_delay", buf);
@@ -207,10 +207,10 @@ static void processPictureTiming (byte* payload, int size, sDecoder* decoder) {
       }
 
     int pic_struct_present_flag, pic_struct;
-    if (!activeSps->vui_parameters_present_flag)
+    if (!activeSps->hasVui)
       pic_struct_present_flag = 0;
     else
-      pic_struct_present_flag = activeSps->vui_seq_parameters.pic_struct_present_flag;
+      pic_struct_present_flag = activeSps->vuiSeqParams.pic_struct_present_flag;
 
     int numClockTs = 0;
     if (pic_struct_present_flag) {
@@ -295,10 +295,10 @@ static void processPictureTiming (byte* payload, int size, sDecoder* decoder) {
 
             int time_offset_length;
             int time_offset;
-            if (activeSps->vui_seq_parameters.vcl_hrd_parameters_present_flag)
-              time_offset_length = activeSps->vui_seq_parameters.vcl_hrd_parameters.time_offset_length;
-            else if (activeSps->vui_seq_parameters.nal_hrd_parameters_present_flag)
-              time_offset_length = activeSps->vui_seq_parameters.nal_hrd_parameters.time_offset_length;
+            if (activeSps->vuiSeqParams.vcl_hrd_parameters_present_flag)
+              time_offset_length = activeSps->vuiSeqParams.vcl_hrd_parameters.time_offset_length;
+            else if (activeSps->vuiSeqParams.nal_hrd_parameters_present_flag)
+              time_offset_length = activeSps->vuiSeqParams.nal_hrd_parameters.time_offset_length;
             else
               time_offset_length = 24;
             if (time_offset_length)
@@ -968,13 +968,13 @@ static void processBufferingPeriod (byte* payload, int size, sDecoder* decoder) 
     printf ("buffering\n");
 
   // Note: NalHrdBpPresentFlag and CpbDpbDelaysPresentFlag can also be set "by some means not specified in this Recommendation | International Standard"
-  if (sps->vui_parameters_present_flag) {
+  if (sps->hasVui) {
     int initial_cpb_removal_delay;
     int initial_cpb_removal_delay_offset;
-    if (sps->vui_seq_parameters.nal_hrd_parameters_present_flag) {
-      for (unsigned k = 0; k < sps->vui_seq_parameters.nal_hrd_parameters.cpb_cnt_minus1+1; k++) {
-        initial_cpb_removal_delay = readUv(sps->vui_seq_parameters.nal_hrd_parameters.initial_cpb_removal_delay_length_minus1+1, "SEI initial_cpb_removal_delay"        , buf);
-        initial_cpb_removal_delay_offset = readUv(sps->vui_seq_parameters.nal_hrd_parameters.initial_cpb_removal_delay_length_minus1+1, "SEI initial_cpb_removal_delay_offset" , buf);
+    if (sps->vuiSeqParams.nal_hrd_parameters_present_flag) {
+      for (unsigned k = 0; k < sps->vuiSeqParams.nal_hrd_parameters.cpb_cnt_minus1+1; k++) {
+        initial_cpb_removal_delay = readUv(sps->vuiSeqParams.nal_hrd_parameters.initial_cpb_removal_delay_length_minus1+1, "SEI initial_cpb_removal_delay"        , buf);
+        initial_cpb_removal_delay_offset = readUv(sps->vuiSeqParams.nal_hrd_parameters.initial_cpb_removal_delay_length_minus1+1, "SEI initial_cpb_removal_delay_offset" , buf);
         if (decoder->param.seiDebug) {
           printf ("nal initial_cpb_removal_delay[%d] = %d\n", k, initial_cpb_removal_delay);
           printf ("nal initial_cpb_removal_delay_offset[%d] = %d\n", k, initial_cpb_removal_delay_offset);
@@ -982,10 +982,10 @@ static void processBufferingPeriod (byte* payload, int size, sDecoder* decoder) 
         }
       }
 
-    if (sps->vui_seq_parameters.vcl_hrd_parameters_present_flag) {
-      for (unsigned k = 0; k < sps->vui_seq_parameters.vcl_hrd_parameters.cpb_cnt_minus1+1; k++) {
-        initial_cpb_removal_delay = readUv(sps->vui_seq_parameters.vcl_hrd_parameters.initial_cpb_removal_delay_length_minus1+1, "SEI initial_cpb_removal_delay"        , buf);
-        initial_cpb_removal_delay_offset = readUv(sps->vui_seq_parameters.vcl_hrd_parameters.initial_cpb_removal_delay_length_minus1+1, "SEI initial_cpb_removal_delay_offset" , buf);
+    if (sps->vuiSeqParams.vcl_hrd_parameters_present_flag) {
+      for (unsigned k = 0; k < sps->vuiSeqParams.vcl_hrd_parameters.cpb_cnt_minus1+1; k++) {
+        initial_cpb_removal_delay = readUv(sps->vuiSeqParams.vcl_hrd_parameters.initial_cpb_removal_delay_length_minus1+1, "SEI initial_cpb_removal_delay"        , buf);
+        initial_cpb_removal_delay_offset = readUv(sps->vuiSeqParams.vcl_hrd_parameters.initial_cpb_removal_delay_length_minus1+1, "SEI initial_cpb_removal_delay_offset" , buf);
         if (decoder->param.seiDebug) {
           printf ("vcl initial_cpb_removal_delay[%d] = %d\n", k, initial_cpb_removal_delay);
           printf ("vcl initial_cpb_removal_delay_offset[%d] = %d\n", k, initial_cpb_removal_delay_offset);

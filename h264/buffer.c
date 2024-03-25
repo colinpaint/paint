@@ -895,7 +895,7 @@ static void checkNumDpbFrames (sDPB* dpb) {
 //{{{
 static int getDpbSize (sDecoder* decoder, sSps *activeSps) {
 
-  int pic_size_mb = (activeSps->pic_width_in_mbs_minus1 + 1) * (activeSps->pic_height_in_map_units_minus1 + 1) * (activeSps->frameMbOnly?1:2);
+  int pic_size_mb = (activeSps->picWidthMbsMinus1 + 1) * (activeSps->picHeightMapUnitsMinus1 + 1) * (activeSps->frameMbOnly?1:2);
   int size = 0;
 
   switch (activeSps->levelIdc) {
@@ -1009,12 +1009,12 @@ static int getDpbSize (sDecoder* decoder, sSps *activeSps) {
   size /= pic_size_mb;
     size = imin( size, 16);
 
-  if (activeSps->vui_parameters_present_flag && activeSps->vui_seq_parameters.bitstream_restriction_flag) {
+  if (activeSps->hasVui && activeSps->vuiSeqParams.bitstream_restriction_flag) {
     int size_vui;
-    if ((int)activeSps->vui_seq_parameters.max_dec_frame_buffering > size)
+    if ((int)activeSps->vuiSeqParams.max_dec_frame_buffering > size)
       error ("max_dec_frame_buffering larger than MaxDpbSize");
 
-    size_vui = imax (1, activeSps->vui_seq_parameters.max_dec_frame_buffering);
+    size_vui = imax (1, activeSps->vuiSeqParams.max_dec_frame_buffering);
 #ifdef _DEBUG
     if(size_vui < size)
       printf("Warning: max_dec_frame_buffering(%d) is less than DPB size(%d) calculated from Profile/Level.\n", size_vui, size);

@@ -1635,7 +1635,7 @@ static void initPicture (sDecoder* decoder, sSlice* slice) {
   if (!decoder->recoveryPoint &&
       (slice->frameNum != decoder->preFrameNum) &&
       (slice->frameNum != (decoder->preFrameNum + 1) % decoder->coding.maxFrameNum)) {
-    if (!activeSps->gapsInFrameNumValueAllowedFlag) {
+    if (!activeSps->allowGapsFrameNum) {
       //{{{  picture error conceal
       if (decoder->param.concealMode) {
         if ((slice->frameNum) < ((decoder->preFrameNum + 1) % decoder->coding.maxFrameNum)) {
@@ -1826,18 +1826,6 @@ static void initPictureDecode (sDecoder* decoder) {
     error ("initPictureDecode - MAX_NUM_SLICES exceeded");
 
   sSlice* slice = decoder->sliceList[0];
-  if (decoder->nextPps->valid && (decoder->nextPps->id == slice->ppsId)) {
-    if (decoder->param.sliceDebug)
-      printf ("---------> initPictureDecode switching to pps:%d\n", slice->ppsId);
-
-    sPps pps;
-    memcpy (&pps, &decoder->pps[slice->ppsId], sizeof (sPps));
-    decoder->pps[slice->ppsId].sliceGroupId = NULL;
-    setPpsById (decoder, decoder->nextPps->id, decoder->nextPps);
-    memcpy (decoder->nextPps, &pps, sizeof (sPps));
-    pps.sliceGroupId = NULL;
-    }
-
   useParameterSet (decoder, slice);
   if (slice->isIDR)
     decoder->idrFrameNum = 0;
@@ -2469,7 +2457,7 @@ static void readSliceHeader (sDecoder* decoder, sSlice* slice) {
     //}}}
   if (isHiIntraOnlyProfile (activeSps->profileIdc, activeSps->constrainedSet3flag) &&
       !decoder->param.intraProfileDeblocking) {
-    //{{{  hiIintra deblock
+    //{{{  hiIntra deblock
     slice->deblockFilterDisableIdc = 1;
     slice->deblockFilterC0offset = 0;
     slice->deblockFilterBetaOffset = 0;
@@ -2479,9 +2467,9 @@ static void readSliceHeader (sDecoder* decoder, sSlice* slice) {
   if ((decoder->activePps->numSliceGroupsMinus1 > 0) &&
       (decoder->activePps->sliceGroupMapType >= 3) &&
       (decoder->activePps->sliceGroupMapType <= 5)) {
-    int len = (activeSps->pic_height_in_map_units_minus1+1) * (activeSps->pic_width_in_mbs_minus1+1) /
+    int len = (activeSps->picHeightMapUnitsMinus1+1) * (activeSps->picWidthMbsMinus1+1) /
                 (decoder->activePps->sliceGroupChangeRateMius1 + 1);
-    if (((activeSps->pic_height_in_map_units_minus1+1) * (activeSps->pic_width_in_mbs_minus1+1)) %
+    if (((activeSps->picHeightMapUnitsMinus1+1) * (activeSps->picWidthMbsMinus1+1)) %
         (decoder->activePps->sliceGroupChangeRateMius1 + 1))
       len += 1;
 
@@ -2498,9 +2486,9 @@ static void readSliceHeader (sDecoder* decoder, sSlice* slice) {
 //{{{
 static int readSlice (sSlice* slice) {
 
-  sDecoder* decoder = slice->decoder;
-
   int curHeader = 0;
+
+  sDecoder* decoder = slice->decoder;
 
   for (;;) {
     sNalu* nalu = decoder->nalu;
@@ -2971,18 +2959,12 @@ int decodeFrame (sDecoder* decoder) {
 
   int curHeader = 0;
   if (decoder->newFrame) {
-    if (decoder->nextPps->valid) {
-      printf ("-------- > decodeFrame - newFrame\n");
-      setPpsById (decoder, decoder->nextPps->id, decoder->nextPps);
-      decoder->nextPps->valid = 0;
-      }
-
     // get firstSlice from sliceList;
     sSlice* slice = decoder->sliceList[decoder->picSliceIndex];
     decoder->sliceList[decoder->picSliceIndex] = decoder->nextSlice;
     decoder->nextSlice = slice;
-    slice = decoder->sliceList[decoder->picSliceIndex];
 
+    slice = decoder->sliceList[decoder->picSliceIndex];
     useParameterSet (decoder, slice);
     initPicture (decoder, slice);
 

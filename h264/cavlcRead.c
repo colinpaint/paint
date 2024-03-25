@@ -845,7 +845,7 @@ static void read_CBP_and_coeffs_from_NAL_CAVLC_400 (sMacroBlock* mb) {
 
     // Transform size flag for INTER MBs
     need_transform_size_flag = (((mb->mbType >= 1 && mb->mbType <= 3)||
-                                 (IS_DIRECT(mb) && decoder->activeSps->direct_8x8_inference_flag) ||
+                                 (IS_DIRECT(mb) && decoder->activeSps->isDirect8x8inference) ||
                                  (mb->noMbPartLessThan8x8Flag))
                                && mb->mbType != I8MB && mb->mbType != I4MB
                                && (mb->codedBlockPattern&15)
@@ -984,7 +984,7 @@ static void read_CBP_and_coeffs_from_NAL_CAVLC_422 (sMacroBlock* mb) {
     mb->codedBlockPattern = codedBlockPattern = se.value1;
 
     need_transform_size_flag = (((mb->mbType >= 1 && mb->mbType <= 3)||
-      (IS_DIRECT(mb) && decoder->activeSps->direct_8x8_inference_flag) ||
+      (IS_DIRECT(mb) && decoder->activeSps->isDirect8x8inference) ||
       (mb->noMbPartLessThan8x8Flag))
       && mb->mbType != I8MB && mb->mbType != I4MB
       && (mb->codedBlockPattern&15)
@@ -1251,7 +1251,7 @@ static void read_CBP_and_coeffs_from_NAL_CAVLC_444 (sMacroBlock* mb) {
 
     //============= Transform size flag for INTER MBs =============
     need_transform_size_flag = (((mb->mbType >= 1 && mb->mbType <= 3)||
-      (IS_DIRECT(mb) && decoder->activeSps->direct_8x8_inference_flag) ||
+      (IS_DIRECT(mb) && decoder->activeSps->isDirect8x8inference) ||
       (mb->noMbPartLessThan8x8Flag))
       && mb->mbType != I8MB && mb->mbType != I4MB
       && (mb->codedBlockPattern&15)
@@ -1434,7 +1434,7 @@ static void read_CBP_and_coeffs_from_NAL_CAVLC_420 (sMacroBlock* mb) {
     mb->codedBlockPattern = codedBlockPattern = se.value1;
 
     need_transform_size_flag = (((mb->mbType >= 1 && mb->mbType <= 3)||
-      (IS_DIRECT(mb) && decoder->activeSps->direct_8x8_inference_flag) ||
+      (IS_DIRECT(mb) && decoder->activeSps->isDirect8x8inference) ||
       (mb->noMbPartLessThan8x8Flag))
       && mb->mbType != I8MB && mb->mbType != I4MB
       && (mb->codedBlockPattern&15)

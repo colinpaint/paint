@@ -151,9 +151,6 @@ static void freeDecoder (sDecoder* decoder) {
   decoder->nalu = NULL;
 
   freeDecodedPictures (decoder->decOutputPic);
-  freePps (decoder->nextPps);
-  decoder->nextPps = NULL;
-
   free (decoder);
   }
 //}}}
@@ -466,7 +463,6 @@ sDecoder* openDecoder (sParam* param, byte* chunk, size_t chunkSize) {
 
   // init nalu, annexB
   decoder->nalu = allocNALU (MAX_CODED_FRAME_SIZE);
-  decoder->nextPps = allocPps();
   decoder->annexB = allocAnnexB (decoder);
   openAnnexB (decoder->annexB, chunk, chunkSize);
 

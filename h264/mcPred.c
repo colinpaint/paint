@@ -68,7 +68,7 @@ static void update_direct_mv_info_temporal (sMacroBlock* mb) {
             int refIndex;
             int mapped_idx = -1, iref;
 
-            sPicMotion* colocated = decoder->activeSps->direct_8x8_inference_flag ?
+            sPicMotion* colocated = decoder->activeSps->isDirect8x8inference ?
                                            &list1[0]->mvInfo[RSD(mb->blockYaff + j0)][RSD(i0)] :
                                            &list1[0]->mvInfo[mb->blockYaff + j0][i0];
 
@@ -77,11 +77,11 @@ static void update_direct_mv_info_temporal (sMacroBlock* mb) {
               if (!mb->mbField && ((slice->listX[LIST_1][0]->iCodingType==eFrameMbPairCoding && slice->listX[LIST_1][0]->motion.mbField[mb->mbIndexX]) ||
                 (slice->listX[LIST_1][0]->iCodingType==eFieldCoding))) {
                 if (iabs(picture->poc - slice->listX[LIST_1+4][0]->poc)> iabs(picture->poc -slice->listX[LIST_1+2][0]->poc) )
-                  colocated = decoder->activeSps->direct_8x8_inference_flag ?
+                  colocated = decoder->activeSps->isDirect8x8inference ?
                     &slice->listX[LIST_1+2][0]->mvInfo[RSD(mb->blockYaff + j0)>>1][RSD(i0)] :
                     &slice->listX[LIST_1+2][0]->mvInfo[(mb->blockYaff + j0)>>1][i0];
                 else
-                  colocated = decoder->activeSps->direct_8x8_inference_flag ?
+                  colocated = decoder->activeSps->isDirect8x8inference ?
                     &slice->listX[LIST_1+4][0]->mvInfo[RSD(mb->blockYaff + j0)>>1][RSD(i0)] :
                     &slice->listX[LIST_1+4][0]->mvInfo[(mb->blockYaff + j0)>>1][i0];
                 }
@@ -92,11 +92,11 @@ static void update_direct_mv_info_temporal (sMacroBlock* mb) {
                      slice->listX[LIST_1][0]->iCodingType != eFrameCoding) {
               //{{{
               if (iabs(picture->poc - list1[0]->botField->poc) > iabs(picture->poc -list1[0]->topField->poc) )
-                colocated = decoder->activeSps->direct_8x8_inference_flag ?
+                colocated = decoder->activeSps->isDirect8x8inference ?
                   &list1[0]->topField->mvInfo[RSD(mb->blockYaff + j0)>>1][RSD(i0)] :
                   &list1[0]->topField->mvInfo[(mb->blockYaff + j0)>>1][i0];
               else
-                colocated = decoder->activeSps->direct_8x8_inference_flag ?
+                colocated = decoder->activeSps->isDirect8x8inference ?
                   &list1[0]->botField->mvInfo[RSD(mb->blockYaff + j0)>>1][RSD(i0)] :
                   &list1[0]->botField->mvInfo[(mb->blockYaff + j0)>>1][i0];
               }
@@ -107,11 +107,11 @@ static void update_direct_mv_info_temporal (sMacroBlock* mb) {
                      list1[0]->codedFrame) {
               //{{{
               if (slice->picStructure == eTopField)
-                colocated = decoder->activeSps->direct_8x8_inference_flag ?
+                colocated = decoder->activeSps->isDirect8x8inference ?
                   &list1[0]->frame->topField->mvInfo[RSD(mb->blockYaff + j0)][RSD(i0)] :
                   &list1[0]->frame->topField->mvInfo[mb->blockYaff + j0][i0];
               else
-                colocated = decoder->activeSps->direct_8x8_inference_flag ?
+                colocated = decoder->activeSps->isDirect8x8inference ?
                   &list1[0]->frame->botField->mvInfo[RSD(mb->blockYaff + j0)][RSD(i0)] :
                   &list1[0]->frame->botField->mvInfo[mb->blockYaff + j0][i0];
               }
@@ -181,7 +181,7 @@ static void update_direct_mv_info_temporal (sMacroBlock* mb) {
                   j6 = mb->blockYaff + j;
 
                   for (i4 = i0; i4 < i0 + step_h0; ++i4) {
-                    sPicMotion* colocated = decoder->activeSps->direct_8x8_inference_flag ?
+                    sPicMotion* colocated = decoder->activeSps->isDirect8x8inference ?
                       &list1[0]->mvInfo[RSD(j6)][RSD(i4)] :
                       &list1[0]->mvInfo[j6][i4];
                     sPicMotion* mvInfo = &picture->mvInfo[j4][i4];
@@ -190,11 +190,11 @@ static void update_direct_mv_info_temporal (sMacroBlock* mb) {
                       if (!mb->mbField && ((slice->listX[LIST_1][0]->iCodingType==eFrameMbPairCoding && slice->listX[LIST_1][0]->motion.mbField[mb->mbIndexX]) ||
                           (slice->listX[LIST_1][0]->iCodingType==eFieldCoding))) {
                         if (iabs(picture->poc - slice->listX[LIST_1+4][0]->poc)> iabs(picture->poc -slice->listX[LIST_1+2][0]->poc) )
-                          colocated = decoder->activeSps->direct_8x8_inference_flag ?
+                          colocated = decoder->activeSps->isDirect8x8inference ?
                             &slice->listX[LIST_1+2][0]->mvInfo[RSD(j6)>>1][RSD(i4)] :
                             &slice->listX[LIST_1+2][0]->mvInfo[j6>>1][i4];
                         else
-                          colocated = decoder->activeSps->direct_8x8_inference_flag ?
+                          colocated = decoder->activeSps->isDirect8x8inference ?
                             &slice->listX[LIST_1+4][0]->mvInfo[RSD(j6)>>1][RSD(i4)] :
                             &slice->listX[LIST_1+4][0]->mvInfo[j6>>1][i4];
                         }
@@ -203,11 +203,11 @@ static void update_direct_mv_info_temporal (sMacroBlock* mb) {
                              !slice->fieldPic &&
                              slice->listX[LIST_1][0]->iCodingType!=eFrameCoding) {
                       if (iabs(picture->poc - list1[0]->botField->poc) > iabs(picture->poc -list1[0]->topField->poc) )
-                        colocated = decoder->activeSps->direct_8x8_inference_flag ?
+                        colocated = decoder->activeSps->isDirect8x8inference ?
                           &list1[0]->topField->mvInfo[RSD(j6)>>1][RSD(i4)] :
                           &list1[0]->topField->mvInfo[(j6)>>1][i4];
                       else
-                        colocated = decoder->activeSps->direct_8x8_inference_flag ?
+                        colocated = decoder->activeSps->isDirect8x8inference ?
                           &list1[0]->botField->mvInfo[RSD(j6)>>1][RSD(i4)] :
                           &list1[0]->botField->mvInfo[(j6)>>1][i4];
                       }
@@ -215,11 +215,11 @@ static void update_direct_mv_info_temporal (sMacroBlock* mb) {
                              slice->fieldPic &&
                              slice->picStructure!=list1[0]->picStructure && list1[0]->codedFrame) {
                       if (slice->picStructure == eTopField)
-                        colocated = decoder->activeSps->direct_8x8_inference_flag ?
+                        colocated = decoder->activeSps->isDirect8x8inference ?
                           &list1[0]->frame->topField->mvInfo[RSD(j6)][RSD(i4)] :
                           &list1[0]->frame->topField->mvInfo[j6][i4];
                       else
-                        colocated = decoder->activeSps->direct_8x8_inference_flag ?
+                        colocated = decoder->activeSps->isDirect8x8inference ?
                           &list1[0]->frame->botField->mvInfo[RSD(j6)][RSD(i4)] :
                           &list1[0]->frame->botField->mvInfo[j6][i4];
                       }
@@ -676,7 +676,7 @@ static void update_direct_mv_info_spatial_4x4 (sMacroBlock* mb)
 //{{{
 void update_direct_types (sSlice* slice)
 {
-  if (slice->activeSps->direct_8x8_inference_flag)
+  if (slice->activeSps->isDirect8x8inference)
     slice->updateDirectMvInfo =
       slice->directSpatialMvPredFlag ? update_direct_mv_info_spatial_8x8 :
                                                update_direct_mv_info_temporal;
