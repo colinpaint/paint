@@ -8,7 +8,7 @@
 typedef struct {
   Boolean   valid;
 
-  unsigned  ppsId;                            // ue(v)
+  unsigned  id;                               // ue(v)
   unsigned  spsId;                            // ue(v)
   int       entropyCoding;                    // u(1)
   Boolean   botFieldFrame;                    // u(1)
@@ -54,9 +54,6 @@ typedef struct {
   } sPps;
 
 struct Decoder;
-
-extern sPps* allocPps();
-extern void freePps (sPps* pps);
 
 extern void setPpsById (struct Decoder* decoder, int id, sPps* pps);
 extern void readPpsFromNalu (struct Decoder* decoder, sNalu* nalu);

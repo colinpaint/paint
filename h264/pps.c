@@ -53,7 +53,7 @@ static int isEqualPps (sPps* pps1, sPps* pps2) {
     return 0;
 
   int equal = 1;
-  equal &= (pps1->ppsId == pps2->ppsId);
+  equal &= (pps1->id == pps2->id);
   equal &= (pps1->spsId == pps2->spsId);
   equal &= (pps1->entropyCoding == pps2->entropyCoding);
   equal &= (pps1->botFieldFrame == pps2->botFieldFrame);
@@ -129,7 +129,7 @@ static void readPps (sDecoder* decoder, sDataPartition* dataPartition, sPps* pps
 
   sBitStream* s = dataPartition->s;
 
-  pps->ppsId = readUeV ("PPS ppsId", s);
+  pps->id = readUeV ("PPS id", s);
   pps->spsId = readUeV ("PPS spsId", s);
 
   pps->entropyCoding = readU1 ("PPS entropyCoding", s);
@@ -223,7 +223,7 @@ static void readPps (sDecoder* decoder, sDataPartition* dataPartition, sPps* pps
   if (decoder->param.ppsDebug)
     //{{{  print debug
     printf ("PPS:%d:%d -> sps:%d%s%s sliceGroups:%d L:%d:%d%s%s%s%s%s%s biPredIdc:%d\n",
-            pps->ppsId, naluLen,
+            pps->id, naluLen,
             pps->spsId,
             pps->entropyCoding ? " cabac":" cavlc",
             pps->botFieldFrame ? " botField":"",
@@ -241,23 +241,6 @@ static void readPps (sDecoder* decoder, sDataPartition* dataPartition, sPps* pps
 
   pps->valid = TRUE;
   }
-//}}}
-
-//{{{
-sPps* allocPps() {
-
-  sPps* pps = calloc (1, sizeof (sPps));
-  pps->sliceGroupId = NULL;
-  return pps;
-  }
-//}}}
-//{{{
- void freePps (sPps* pps) {
-
-   if (!pps->sliceGroupId)
-     free (pps->sliceGroupId);
-   free (pps);
-   }
 //}}}
 
 //{{{
@@ -283,10 +266,10 @@ void readPpsFromNalu (sDecoder* decoder, sNalu* nalu) {
   dataPartition->s->bitStreamLen = RBSPtoSODB (dataPartition->s->bitStreamBuffer, nalu->len-1);
   dataPartition->s->codeLen = dataPartition->s->bitStreamLen;
 
-  sPps* pps = allocPps();
+  sPps* pps = calloc(1, sizeof(sPps));
   readPps (decoder, dataPartition, pps, nalu->len);
   if (decoder->activePps) {
-    if (pps->ppsId == decoder->activePps->ppsId) {
+    if (pps->id == decoder->activePps->id) {
       if (!isEqualPps (pps, decoder->activePps)) {
         // copy to next PPS;
         memcpy (decoder->nextPps, decoder->activePps, sizeof (sPps));
@@ -297,9 +280,12 @@ void readPpsFromNalu (sDecoder* decoder, sNalu* nalu) {
       }
     }
 
-  setPpsById (decoder, pps->ppsId, pps);
+  setPpsById (decoder, pps->id, pps);
   freeDataPartitions (dataPartition, 1);
-  freePps (pps);
+
+  if (!pps->sliceGroupId)
+    free (pps->sliceGroupId);
+  free (pps);
   }
 //}}}
 //{{{

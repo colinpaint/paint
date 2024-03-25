@@ -1820,14 +1820,14 @@ static void initPictureDecode (sDecoder* decoder) {
     error ("initPictureDecode - MAX_NUM_SLICES exceeded");
 
   sSlice* slice = decoder->sliceList[0];
-  if (decoder->nextPps->valid && (decoder->nextPps->ppsId == slice->ppsId)) {
+  if (decoder->nextPps->valid && (decoder->nextPps->id == slice->ppsId)) {
     if (decoder->param.sliceDebug)
       printf ("---------> initPictureDecode switching to pps:%d\n", slice->ppsId);
 
     sPps pps;
     memcpy (&pps, &decoder->pps[slice->ppsId], sizeof (sPps));
     decoder->pps[slice->ppsId].sliceGroupId = NULL;
-    setPpsById (decoder, decoder->nextPps->ppsId, decoder->nextPps);
+    setPpsById (decoder, decoder->nextPps->id, decoder->nextPps);
     memcpy (decoder->nextPps, &pps, sizeof (sPps));
     pps.sliceGroupId = NULL;
     }
@@ -2965,7 +2965,7 @@ int decodeFrame (sDecoder* decoder) {
   if (decoder->newFrame) {
     if (decoder->nextPps->valid) {
       printf ("-------- > decodeFrame - newFrame\n");
-      setPpsById (decoder, decoder->nextPps->ppsId, decoder->nextPps);
+      setPpsById (decoder, decoder->nextPps->id, decoder->nextPps);
       decoder->nextPps->valid = 0;
       }
 
