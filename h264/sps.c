@@ -13,39 +13,64 @@
 //}}}
 
 //{{{
-// syntax for scaling list matrix values
-static void scalingList (int* scalingList, int scalingListSize, Boolean* useDefaultScalingMatrix, sBitStream* s) {
+static int isEqual (sSps* sps1, sSps* sps2) {
 
-  //{{{
-  static const byte ZZ_SCAN[16] = {
-    0,  1,  4,  8,  5,  2,  3,  6,  9, 12, 13, 10,  7, 11, 14, 15
-    };
-  //}}}
-  //{{{
-  static const byte ZZ_SCAN8[64] = {
-    0,  1,  8, 16,  9,  2,  3, 10, 17, 24, 32, 25, 18, 11,  4,  5,
-    12, 19, 26, 33, 40, 48, 41, 34, 27, 20, 13,  6,  7, 14, 21, 28,
-    35, 42, 49, 56, 57, 50, 43, 36, 29, 22, 15, 23, 30, 37, 44, 51,
-    58, 59, 52, 45, 38, 31, 39, 46, 53, 60, 61, 54, 47, 55, 62, 63
-    };
-  //}}}
+  int equal = 1;
+  if ((!sps1->valid) || (!sps2->valid))
+    return 0;
 
-  int lastScale = 8;
-  int nextScale = 8;
-  for (int j = 0; j < scalingListSize; j++) {
-    int scanj = (scalingListSize == 16) ? ZZ_SCAN[j] : ZZ_SCAN8[j];
-    if (nextScale != 0) {
-      int delta_scale = readSeV ("   : delta_sl   ", s);
-      nextScale = (lastScale + delta_scale + 256) % 256;
-      *useDefaultScalingMatrix = (Boolean)(scanj == 0 && nextScale == 0);
-      }
+  equal &= (sps1->spsId == sps2->spsId);
+  equal &= (sps1->levelIdc == sps2->levelIdc);
+  equal &= (sps1->profileIdc == sps2->profileIdc);
+  equal &= (sps1->constrained_set0_flag == sps2->constrained_set0_flag);
+  equal &= (sps1->constrained_set1_flag == sps2->constrained_set1_flag);
+  equal &= (sps1->constrained_set2_flag == sps2->constrained_set2_flag);
 
-    scalingList[scanj] = (nextScale == 0) ? lastScale : nextScale;
-    lastScale = scalingList[scanj];
+  equal &= (sps1->log2maxFrameNumMinus4 == sps2->log2maxFrameNumMinus4);
+  equal &= (sps1->pocType == sps2->pocType);
+  if (!equal)
+    return equal;
+
+  if (sps1->pocType == 0)
+    equal &= (sps1->log2maxPocLsbMinus4 == sps2->log2maxPocLsbMinus4);
+  else if( sps1->pocType == 1) {
+    equal &= (sps1->deltaPicOrderAlwaysZero == sps2->deltaPicOrderAlwaysZero);
+    equal &= (sps1->offsetNonRefPic == sps2->offsetNonRefPic);
+    equal &= (sps1->offsetTopBotField == sps2->offsetTopBotField);
+    equal &= (sps1->numRefFramesPocCycle == sps2->numRefFramesPocCycle);
+    if (!equal)
+      return equal;
+
+    for (unsigned i = 0 ; i < sps1->numRefFramesPocCycle ;i ++)
+      equal &= (sps1->offsetRefFrame[i] == sps2->offsetRefFrame[i]);
     }
+
+  equal &= (sps1->numRefFrames == sps2->numRefFrames);
+  equal &= (sps1->gapsFrameNumAllowed == sps2->gapsFrameNumAllowed);
+  equal &= (sps1->pic_width_in_mbs_minus1 == sps2->pic_width_in_mbs_minus1);
+  equal &= (sps1->pic_height_in_map_units_minus1 == sps2->pic_height_in_map_units_minus1);
+  equal &= (sps1->frameMbOnly == sps2->frameMbOnly);
+  if (!equal) return
+    equal;
+
+  if (!sps1->frameMbOnly)
+    equal &= (sps1->mbAffFlag == sps2->mbAffFlag);
+  equal &= (sps1->direct_8x8_inference_flag == sps2->direct_8x8_inference_flag);
+  equal &= (sps1->cropFlag == sps2->cropFlag);
+  if (!equal)
+    return equal;
+
+  if (sps1->cropFlag) {
+    equal &= (sps1->cropLeft == sps2->cropLeft);
+    equal &= (sps1->cropRight == sps2->cropRight);
+    equal &= (sps1->cropTop == sps2->cropTop);
+    equal &= (sps1->cropBot == sps2->cropBot);
+    }
+  equal &= (sps1->vui_parameters_present_flag == sps2->vui_parameters_present_flag);
+
+  return equal;
   }
 //}}}
-
 //{{{
 static void updateMaxValue (sFrameFormat* format) {
 
@@ -273,66 +298,40 @@ static void setFormatInfo (sDecoder* decoder, sSps* sps, sFrameFormat* source, s
     //}}}
   }
 //}}}
-
 //{{{
-static int isEqualSps (sSps* sps1, sSps* sps2) {
+// syntax for scaling list matrix values
+static void scalingList (int* scalingList, int scalingListSize, Boolean* useDefaultScalingMatrix, sBitStream* s) {
 
-  int equal = 1;
-  if ((!sps1->valid) || (!sps2->valid))
-    return 0;
+  //{{{
+  static const byte ZZ_SCAN[16] = {
+    0,  1,  4,  8,  5,  2,  3,  6,  9, 12, 13, 10,  7, 11, 14, 15
+    };
+  //}}}
+  //{{{
+  static const byte ZZ_SCAN8[64] = {
+    0,  1,  8, 16,  9,  2,  3, 10, 17, 24, 32, 25, 18, 11,  4,  5,
+    12, 19, 26, 33, 40, 48, 41, 34, 27, 20, 13,  6,  7, 14, 21, 28,
+    35, 42, 49, 56, 57, 50, 43, 36, 29, 22, 15, 23, 30, 37, 44, 51,
+    58, 59, 52, 45, 38, 31, 39, 46, 53, 60, 61, 54, 47, 55, 62, 63
+    };
+  //}}}
 
-  equal &= (sps1->spsId == sps2->spsId);
-  equal &= (sps1->levelIdc == sps2->levelIdc);
-  equal &= (sps1->profileIdc == sps2->profileIdc);
-  equal &= (sps1->constrained_set0_flag == sps2->constrained_set0_flag);
-  equal &= (sps1->constrained_set1_flag == sps2->constrained_set1_flag);
-  equal &= (sps1->constrained_set2_flag == sps2->constrained_set2_flag);
+  int lastScale = 8;
+  int nextScale = 8;
+  for (int j = 0; j < scalingListSize; j++) {
+    int scanj = (scalingListSize == 16) ? ZZ_SCAN[j] : ZZ_SCAN8[j];
+    if (nextScale != 0) {
+      int delta_scale = readSeV ("   : delta_sl   ", s);
+      nextScale = (lastScale + delta_scale + 256) % 256;
+      *useDefaultScalingMatrix = (Boolean)(scanj == 0 && nextScale == 0);
+      }
 
-  equal &= (sps1->log2maxFrameNumMinus4 == sps2->log2maxFrameNumMinus4);
-  equal &= (sps1->pocType == sps2->pocType);
-  if (!equal)
-    return equal;
-
-  if (sps1->pocType == 0)
-    equal &= (sps1->log2maxPocLsbMinus4 == sps2->log2maxPocLsbMinus4);
-  else if( sps1->pocType == 1) {
-    equal &= (sps1->deltaPicOrderAlwaysZero == sps2->deltaPicOrderAlwaysZero);
-    equal &= (sps1->offsetNonRefPic == sps2->offsetNonRefPic);
-    equal &= (sps1->offsetTopBotField == sps2->offsetTopBotField);
-    equal &= (sps1->numRefFramesPocCycle == sps2->numRefFramesPocCycle);
-    if (!equal)
-      return equal;
-
-    for (unsigned i = 0 ; i < sps1->numRefFramesPocCycle ;i ++)
-      equal &= (sps1->offset_for_ref_frame[i] == sps2->offset_for_ref_frame[i]);
+    scalingList[scanj] = (nextScale == 0) ? lastScale : nextScale;
+    lastScale = scalingList[scanj];
     }
-
-  equal &= (sps1->numRefFrames == sps2->numRefFrames);
-  equal &= (sps1->gaps_in_frame_num_value_allowed_flag == sps2->gaps_in_frame_num_value_allowed_flag);
-  equal &= (sps1->pic_width_in_mbs_minus1 == sps2->pic_width_in_mbs_minus1);
-  equal &= (sps1->pic_height_in_map_units_minus1 == sps2->pic_height_in_map_units_minus1);
-  equal &= (sps1->frameMbOnly == sps2->frameMbOnly);
-  if (!equal) return
-    equal;
-
-  if (!sps1->frameMbOnly)
-    equal &= (sps1->mbAffFlag == sps2->mbAffFlag);
-  equal &= (sps1->direct_8x8_inference_flag == sps2->direct_8x8_inference_flag);
-  equal &= (sps1->cropFlag == sps2->cropFlag);
-  if (!equal)
-    return equal;
-
-  if (sps1->cropFlag) {
-    equal &= (sps1->cropLeft == sps2->cropLeft);
-    equal &= (sps1->cropRight == sps2->cropRight);
-    equal &= (sps1->cropTop == sps2->cropTop);
-    equal &= (sps1->cropBot == sps2->cropBot);
-    }
-  equal &= (sps1->vui_parameters_present_flag == sps2->vui_parameters_present_flag);
-
-  return equal;
   }
 //}}}
+
 //{{{
 static void initVui (sSps* sps) {
   sps->vui_seq_parameters.matrix_coefficients = 2;
@@ -504,12 +503,12 @@ static void readSps (sDecoder* decoder, sDataPartition* dataPartition, sSps* sps
     sps->offsetTopBotField = readSeV ("SPS offsetTopBotField", s);
     sps->numRefFramesPocCycle = readUeV ("SPS numRefFramesPocCycle", s);
     for (unsigned int i = 0; i < sps->numRefFramesPocCycle; i++)
-      sps->offset_for_ref_frame[i] = readSeV ("SPS offset_for_ref_frame[i]", s);
+      sps->offsetRefFrame[i] = readSeV ("SPS offsetRefFrame[i]", s);
     }
   //}}}
 
   sps->numRefFrames = readUeV ("SPS numRefFrames", s);
-  sps->gaps_in_frame_num_value_allowed_flag = readU1 ("SPS gaps_in_frame_num_value_allowed_flag", s);
+  sps->gapsFrameNumAllowed = readU1 ("SPS gapsFrameNumAllowed", s);
 
   sps->pic_width_in_mbs_minus1 = readUeV ("SPS pic_width_in_mbs_minus1", s);
   sps->pic_height_in_map_units_minus1 = readUeV ("SPS pic_height_in_map_units_minus1", s);
@@ -562,31 +561,20 @@ void readSpsFromNalu (sDecoder* decoder, sNalu* nalu) {
   memcpy (dataPartition->s->bitStreamBuffer, &nalu->buf[1], nalu->len-1);
   dataPartition->s->codeLen = dataPartition->s->bitStreamLen = RBSPtoSODB (dataPartition->s->bitStreamBuffer, nalu->len-1);
 
-  sSps* sps = calloc (1, sizeof (sSps));
-  readSps (decoder, dataPartition, sps, nalu->len);
-  if (sps->valid) {
-    if (decoder->activeSps)
-      if (sps->spsId == decoder->activeSps->spsId)
-        if (!isEqualSps (sps, decoder->activeSps))   {
-          if (decoder->picture)
-            endDecodeFrame (decoder);
-          decoder->activeSps = NULL;
-          }
-
-    memcpy (&decoder->sps[sps->spsId], sps, sizeof(sSps));
-    decoder->coding.isSeperateColourPlane = sps->isSeperateColourPlane;
-    }
-
+  sSps sps = { 0 };
+  readSps (decoder, dataPartition, &sps, nalu->len);
   freeDataPartitions (dataPartition, 1);
-  free (sps);
+
+  memcpy (&decoder->sps[sps.spsId], &sps, sizeof(sSps));
   }
 //}}}
 //{{{
 void useSps (sDecoder* decoder, sSps* sps) {
 
   if (decoder->activeSps != sps) {
-    if (decoder->picture) // slice loss
+    if (decoder->picture)
       endDecodeFrame (decoder);
+
     decoder->activeSps = sps;
 
     if (isBLprofile (sps->profileIdc) && !decoder->dpb->initDone)
@@ -594,9 +582,9 @@ void useSps (sDecoder* decoder, sSps* sps) {
     setCoding (decoder);
 
     initGlobalBuffers (decoder);
+
     if (!decoder->noOutputPriorPicFlag)
       flushDpb (decoder->dpb);
-
     initDpb (decoder, decoder->dpb, 0);
 
     // enable error conceal

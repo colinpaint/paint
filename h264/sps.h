@@ -2,8 +2,8 @@
 #include "global.h"
 #include "nalu.h"
 
-#define MAX_SPS 4
-#define MAX_NUM_REF_FRAMES_PIC_ORDER  256
+#define MAX_SPS            4
+#define MAX_REF_FRAMES_POC 16
 
 //{{{  sHRD
 typedef struct {
@@ -72,14 +72,14 @@ typedef struct {
 typedef struct {
   Boolean  valid;
 
-  unsigned int profileIdc;            // u(8)
-  Boolean  constrained_set0_flag;     // u(1)
-  Boolean  constrained_set1_flag;     // u(1)
-  Boolean  constrained_set2_flag;     // u(1)
-  Boolean  constrainedSet3flag;       // u(1)
-  unsigned int levelIdc;              // u(8)
-  unsigned int spsId;                 // ue(v)
-  unsigned int chromaFormatIdc;       // ue(v)
+  unsigned int profileIdc;             // u(8)
+  Boolean  constrained_set0_flag;      // u(1)
+  Boolean  constrained_set1_flag;      // u(1)
+  Boolean  constrained_set2_flag;      // u(1)
+  Boolean  constrainedSet3flag;        // u(1)
+  unsigned int levelIdc;               // u(8)
+  unsigned int spsId;                  // ue(v)
+  unsigned int chromaFormatIdc;        // ue(v)
 
   Boolean  seq_scaling_matrix_present_flag;   // u(1)
   int      seq_scaling_list_present_flag[12]; // u(1)
@@ -88,25 +88,24 @@ typedef struct {
   Boolean  useDefaultScalingMatrix4x4Flag[6];
   Boolean  useDefaultScalingMatrix8x8Flag[6];
 
-  unsigned int bit_depth_luma_minus8;             // ue(v)
-  unsigned int bit_depth_chroma_minus8;           // ue(v)
-  unsigned int log2maxFrameNumMinus4;         // ue(v)
+  unsigned int bit_depth_luma_minus8;          // ue(v)
+  unsigned int bit_depth_chroma_minus8;        // ue(v)
+  unsigned int log2maxFrameNumMinus4;          // ue(v)
   unsigned int pocType;
-  unsigned int log2maxPocLsbMinus4; // ue(v)
-  Boolean  deltaPicOrderAlwaysZero;      // u(1)
-  int      offsetNonRefPic;                       // se(v)
-  int      offsetTopBotField;                     // se(v)
+  unsigned int log2maxPocLsbMinus4;            // ue(v)
+  Boolean  deltaPicOrderAlwaysZero;            // u(1)
+  int      offsetNonRefPic;                    // se(v)
+  int      offsetTopBotField;                  // se(v)
 
-  unsigned int numRefFramesPocCycle;          // ue(v)
-  int      offset_for_ref_frame[MAX_NUM_REF_FRAMES_PIC_ORDER]; // se(v)
-  unsigned int numRefFrames;                      // ue(v)
+  unsigned int numRefFramesPocCycle;           // ue(v)
+  int      offsetRefFrame[MAX_REF_FRAMES_POC]; // se(v)
+  unsigned int numRefFrames;                   // ue(v)
+  Boolean  gapsFrameNumAllowed;                // u(1)
 
-  Boolean  gaps_in_frame_num_value_allowed_flag;  // u(1)
+  unsigned int pic_width_in_mbs_minus1;        // ue(v)
+  unsigned int pic_height_in_map_units_minus1; // ue(v)
 
-  unsigned int pic_width_in_mbs_minus1;           // ue(v)
-  unsigned int pic_height_in_map_units_minus1;    // ue(v)
-
-  Boolean  frameMbOnly;             // u(1)
+  Boolean  frameMbOnly;                 // u(1)
   Boolean  mbAffFlag;                   // u(1)
   Boolean  direct_8x8_inference_flag;   // u(1)
 
@@ -119,10 +118,11 @@ typedef struct {
   Boolean  vui_parameters_present_flag; // u(1)
   sVUI     vui_seq_parameters;          // sVUI
 
-  unsigned isSeperateColourPlane;          // u(1)
+  unsigned isSeperateColourPlane;       // u(1)
   int      losslessQpPrimeFlag;
   } sSps;
 
 struct Decoder;
+
 extern void readSpsFromNalu (struct Decoder* decoder, sNalu* nalu);
 extern void useSps (struct Decoder* decoder, sSps* sps);

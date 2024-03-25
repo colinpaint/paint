@@ -1632,7 +1632,7 @@ static void initPicture (sDecoder* decoder, sSlice* slice) {
   if (!decoder->recoveryPoint &&
       (slice->frameNum != decoder->preFrameNum) &&
       (slice->frameNum != (decoder->preFrameNum + 1) % decoder->coding.maxFrameNum)) {
-    if (!decoder->activeSps->gaps_in_frame_num_value_allowed_flag) {
+    if (!decoder->activeSps->gapsFrameNumAllowed) {
       //{{{  picture error conceal
       if (decoder->param.concealMode) {
         if ((slice->frameNum) < ((decoder->preFrameNum + 1) % decoder->coding.maxFrameNum)) {
@@ -2046,7 +2046,7 @@ void decodePOC (sDecoder* decoder, sSlice* slice) {
       decoder->expectedDeltaPerPocCycle = 0;
       if (decoder->activeSps->numRefFramesPocCycle)
         for (unsigned i = 0; i < decoder->activeSps->numRefFramesPocCycle; i++)
-          decoder->expectedDeltaPerPocCycle += decoder->activeSps->offset_for_ref_frame[i];
+          decoder->expectedDeltaPerPocCycle += decoder->activeSps->offsetRefFrame[i];
 
       if (slice->AbsFrameNum) {
         decoder->pocCycleCount = (slice->AbsFrameNum-1) / decoder->activeSps->numRefFramesPocCycle;
@@ -2054,7 +2054,7 @@ void decodePOC (sDecoder* decoder, sSlice* slice) {
         decoder->expectedPOC =
           decoder->pocCycleCount*decoder->expectedDeltaPerPocCycle;
         for (int i = 0; i <= decoder->frameNumPocCycle; i++)
-          decoder->expectedPOC += decoder->activeSps->offset_for_ref_frame[i];
+          decoder->expectedPOC += decoder->activeSps->offsetRefFrame[i];
         }
       else
         decoder->expectedPOC = 0;
