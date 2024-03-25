@@ -263,8 +263,8 @@ static inline int compare_fs_by_poc_desc (const void* arg1, const void* arg2) {
     return 0;
   }
 //}}}
-static inline int isLongRef (sPicture* s) { return s->usedForReference && s->isLongTerm; }
-static inline int isShortRef (sPicture* s) { return s->usedForReference && !s->isLongTerm; }
+static inline int isLongRef (sPicture* picture) { return picture->usedForReference && picture->isLongTerm; }
+static inline int isShortRef (sPicture* picture) { return picture->usedForReference && !picture->isLongTerm; }
 
 extern sFrameStore* allocFrameStore();
 extern void freeFrameStore (sFrameStore* frameStore);

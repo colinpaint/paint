@@ -58,6 +58,5 @@ struct Decoder;
 extern sPps* allocPps();
 extern void freePps (sPps* pps);
 
-extern void setPpsById (struct Decoder* decoder, int id, sPps* pps);
 extern void readNaluPps (struct Decoder* decoder, sNalu* nalu);
 extern void usePps (struct Decoder* decoder, sPps* pps);

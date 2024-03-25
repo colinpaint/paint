@@ -549,6 +549,7 @@ static void readSps (sDecoder* decoder, sDataPartition* dataPartition, sSps* sps
 
 //{{{
 void readNaluSps (sDecoder* decoder, sNalu* nalu) {
+// could check for change in sps by id
 
   sDataPartition* dataPartition = allocDataPartitions (1);
   dataPartition->s->errorFlag = 0;

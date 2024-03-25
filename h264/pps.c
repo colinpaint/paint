@@ -261,20 +261,8 @@ sPps* allocPps() {
 //}}}
 
 //{{{
-void setPpsById (sDecoder* decoder, int id, sPps* pps) {
-
-  if (decoder->pps[id].valid && decoder->pps[id].sliceGroupId)
-    free (decoder->pps[id].sliceGroupId);
-
-  // take ownership, if any, of pps->sliceGroupId
-  memcpy (&decoder->pps[id], pps, sizeof (sPps));
-
-  // stop any free
-  pps->sliceGroupId = NULL;
-  }
-//}}}
-//{{{
 void readNaluPps (sDecoder* decoder, sNalu* nalu) {
+// could check for change in pps by id
 
   sDataPartition* dataPartition = allocDataPartitions (1);
   dataPartition->s->errorFlag = 0;
@@ -287,7 +275,12 @@ void readNaluPps (sDecoder* decoder, sNalu* nalu) {
   readPps (decoder, dataPartition, &pps, nalu->len);
   freeDataPartitions (dataPartition, 1);
 
-  setPpsById (decoder, pps.id, &pps);
+  // free any sliceGroupId calloc
+  if (decoder->pps[pps.id].valid && decoder->pps[pps.id].sliceGroupId)
+    free (decoder->pps[pps.id].sliceGroupId);
+
+  // takes ownership, if any, of pps->sliceGroupId calloc
+  memcpy (&decoder->pps[pps.id], &pps, sizeof (sPps));
   }
 //}}}
 //{{{
