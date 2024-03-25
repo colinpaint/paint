@@ -1789,7 +1789,7 @@ static void initPicture (sDecoder* decoder, sSlice* slice) {
 static void useParameterSets (sDecoder* decoder, sSlice* slice) {
 
   if (!decoder->pps[slice->ppsId].valid)
-    printf ("useParameterSets - no pps - slice pps:%d\n", slice->ppsId);
+    printf ("useParameterSets - no slice pps:%d\n", slice->ppsId);
   else if (!decoder->sps[decoder->pps[slice->ppsId].spsId].valid)
     printf ("useParameterSets - no sps - slice pps:%d sps:%d\n",
             slice->ppsId, decoder->pps[slice->ppsId].spsId);
