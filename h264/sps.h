@@ -78,7 +78,7 @@ typedef struct {
   Boolean  constrained_set2_flag;      // u(1)
   Boolean  constrainedSet3flag;        // u(1)
   unsigned int levelIdc;               // u(8)
-  unsigned int spsId;                  // ue(v)
+  unsigned int id;                     // ue(v)
   unsigned int chromaFormatIdc;        // ue(v)
 
   Boolean  seq_scaling_matrix_present_flag;   // u(1)
@@ -98,9 +98,9 @@ typedef struct {
   int      offsetTopBotField;                  // se(v)
 
   unsigned int numRefFramesPocCycle;           // ue(v)
-  int      offsetRefFrame[MAX_REF_FRAMES_POC]; // se(v)
+  int      offsetForRefFrame[MAX_REF_FRAMES_POC]; // se(v)
   unsigned int numRefFrames;                   // ue(v)
-  Boolean  gapsFrameNumAllowed;                // u(1)
+  Boolean  gapsInFrameNumValueAllowedFlag;     // u(1)
 
   unsigned int pic_width_in_mbs_minus1;        // ue(v)
   unsigned int pic_height_in_map_units_minus1; // ue(v)
@@ -124,5 +124,5 @@ typedef struct {
 
 struct Decoder;
 
-extern void readSpsFromNalu (struct Decoder* decoder, sNalu* nalu);
+extern void readNaluSps (struct Decoder* decoder, sNalu* nalu);
 extern void useSps (struct Decoder* decoder, sSps* sps);

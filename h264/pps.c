@@ -45,6 +45,7 @@ static void scalingList (int* scalingList, int scalingListSize, Boolean* useDefa
     }
   }
 //}}}
+
 //{{{
 static int isEqualPps (sPps* pps1, sPps* pps2) {
 
@@ -243,19 +244,64 @@ static void readPps (sDecoder* decoder, sDataPartition* dataPartition, sPps* pps
 //}}}
 
 //{{{
+sPps* allocPps() {
+
+  sPps* pps = calloc (1, sizeof (sPps));
+  pps->sliceGroupId = NULL;
+  return pps;
+  }
+//}}}
+//{{{
+ void freePps (sPps* pps) {
+
+   if (!pps->sliceGroupId)
+     free (pps->sliceGroupId);
+   free (pps);
+   }
+//}}}
+
+//{{{
 void setPpsById (sDecoder* decoder, int id, sPps* pps) {
 
   if (decoder->pps[id].valid && decoder->pps[id].sliceGroupId)
     free (decoder->pps[id].sliceGroupId);
-
-  // decoder->pps[id] takes ownership of any pps->sliceGroupId calloc
   memcpy (&decoder->pps[id], pps, sizeof (sPps));
 
-  // set pps->sliceGroupId to NULL to caller free
+  // we can simply use the memory provided with the pps.
+  // the PPS is destroyed after this function call, will not try to free if pps->sliceGroupId == NULL
+  decoder->pps[id].sliceGroupId = pps->sliceGroupId;
   pps->sliceGroupId = NULL;
   }
 //}}}
+//{{{
+void readNaluPps (sDecoder* decoder, sNalu* nalu) {
 
+  sDataPartition* dataPartition = allocDataPartitions (1);
+  dataPartition->s->errorFlag = 0;
+  dataPartition->s->readLen = dataPartition->s->bitStreamOffset = 0;
+  memcpy (dataPartition->s->bitStreamBuffer, &nalu->buf[1], nalu->len - 1);
+  dataPartition->s->bitStreamLen = RBSPtoSODB (dataPartition->s->bitStreamBuffer, nalu->len-1);
+  dataPartition->s->codeLen = dataPartition->s->bitStreamLen;
+
+  sPps* pps = allocPps();
+  readPps (decoder, dataPartition, pps, nalu->len);
+  if (decoder->activePps) {
+    if (pps->id == decoder->activePps->id) {
+      if (!isEqualPps (pps, decoder->activePps)) {
+        // copy to next PPS;
+        memcpy (decoder->nextPps, decoder->activePps, sizeof (sPps));
+        if (decoder->picture)
+          endDecodeFrame (decoder);
+        decoder->activePps = NULL;
+        }
+      }
+    }
+
+  setPpsById (decoder, pps->id, pps);
+  freeDataPartitions (dataPartition, 1);
+  freePps (pps);
+  }
+//}}}
 //{{{
 void usePps (sDecoder* decoder, sPps* pps) {
 
@@ -264,33 +310,5 @@ void usePps (sDecoder* decoder, sPps* pps) {
       endDecodeFrame (decoder);
     decoder->activePps = pps;
     }
-  }
-//}}}
-//{{{
-void readPpsFromNalu (sDecoder* decoder, sNalu* nalu) {
-
-  // set up dataPartiton
-  sDataPartition* dataPartition = allocDataPartitions (1);
-  dataPartition->s->errorFlag = 0;
-  dataPartition->s->readLen = dataPartition->s->bitStreamOffset = 0;
-  memcpy (dataPartition->s->bitStreamBuffer, &nalu->buf[1], nalu->len - 1);
-  dataPartition->s->bitStreamLen = RBSPtoSODB (dataPartition->s->bitStreamBuffer, nalu->len-1);
-  dataPartition->s->codeLen = dataPartition->s->bitStreamLen;
-
-  // read pps from Nalu
-  sPps pps = { 0 };
-  readPps (decoder, dataPartition, &pps, nalu->len);
-  freeDataPartitions (dataPartition, 1);
-
-  if (decoder->activePps)
-    if (!isEqualPps (&pps, decoder->activePps)) {
-      // copy to nextPps
-      memcpy (decoder->nextPps, decoder->activePps, sizeof (sPps));
-      if (decoder->picture)
-        endDecodeFrame (decoder);
-      decoder->activePps = NULL;
-      }
-
-  setPpsById (decoder, pps.id, &pps);
   }
 //}}}

@@ -19,7 +19,7 @@ static int isEqualSps (sSps* sps1, sSps* sps2) {
   if ((!sps1->valid) || (!sps2->valid))
     return 0;
 
-  equal &= (sps1->spsId == sps2->spsId);
+  equal &= (sps1->id == sps2->id);
   equal &= (sps1->levelIdc == sps2->levelIdc);
   equal &= (sps1->profileIdc == sps2->profileIdc);
   equal &= (sps1->constrained_set0_flag == sps2->constrained_set0_flag);
@@ -42,11 +42,11 @@ static int isEqualSps (sSps* sps1, sSps* sps2) {
       return equal;
 
     for (unsigned i = 0 ; i < sps1->numRefFramesPocCycle ;i ++)
-      equal &= (sps1->offsetRefFrame[i] == sps2->offsetRefFrame[i]);
+      equal &= (sps1->offsetForRefFrame[i] == sps2->offsetForRefFrame[i]);
     }
 
   equal &= (sps1->numRefFrames == sps2->numRefFrames);
-  equal &= (sps1->gapsFrameNumAllowed == sps2->gapsFrameNumAllowed);
+  equal &= (sps1->gapsInFrameNumValueAllowedFlag == sps2->gapsInFrameNumValueAllowedFlag);
   equal &= (sps1->pic_width_in_mbs_minus1 == sps2->pic_width_in_mbs_minus1);
   equal &= (sps1->pic_height_in_map_units_minus1 == sps2->pic_height_in_map_units_minus1);
   equal &= (sps1->frameMbOnly == sps2->frameMbOnly);
@@ -443,7 +443,7 @@ static void readSps (sDecoder* decoder, sDataPartition* dataPartition, sSps* sps
   int reserved_zero = readUv (4, "SPS reserved_zero_4bits", s);
 
   sps->levelIdc = readUv (8, "SPS levelIdc", s);
-  sps->spsId = readUeV ("SPS spsId", s);
+  sps->id = readUeV ("SPS id", s);
 
   // Fidelity Range Extensions stuff
   sps->chromaFormatIdc = 1;
@@ -498,12 +498,12 @@ static void readSps (sDecoder* decoder, sDataPartition* dataPartition, sSps* sps
     sps->offsetTopBotField = readSeV ("SPS offsetTopBotField", s);
     sps->numRefFramesPocCycle = readUeV ("SPS numRefFramesPocCycle", s);
     for (unsigned int i = 0; i < sps->numRefFramesPocCycle; i++)
-      sps->offsetRefFrame[i] = readSeV ("SPS offsetRefFrame[i]", s);
+      sps->offsetForRefFrame[i] = readSeV ("SPS offsetRefFrame[i]", s);
     }
   //}}}
 
   sps->numRefFrames = readUeV ("SPS numRefFrames", s);
-  sps->gapsFrameNumAllowed = readU1 ("SPS gapsFrameNumAllowed", s);
+  sps->gapsInFrameNumValueAllowedFlag = readU1 ("SPS gapsInFrameNumValueAllowedFlag", s);
 
   sps->pic_width_in_mbs_minus1 = readUeV ("SPS pic_width_in_mbs_minus1", s);
   sps->pic_height_in_map_units_minus1 = readUeV ("SPS pic_height_in_map_units_minus1", s);
@@ -531,7 +531,7 @@ static void readSps (sDecoder* decoder, sDataPartition* dataPartition, sSps* sps
   if (decoder->param.spsDebug) {
     //{{{  print debug
     printf ("SPS:%d:%d -> refFrames:%d pocType:%d mb:%dx%d",
-            sps->spsId, naluLen,
+            sps->id, naluLen,
             sps->numRefFrames, sps->pocType,
             sps->pic_width_in_mbs_minus1, sps->pic_height_in_map_units_minus1);
 
@@ -548,7 +548,7 @@ static void readSps (sDecoder* decoder, sDataPartition* dataPartition, sSps* sps
 //}}}
 
 //{{{
-void readSpsFromNalu (sDecoder* decoder, sNalu* nalu) {
+void readNaluSps (sDecoder* decoder, sNalu* nalu) {
 
   sDataPartition* dataPartition = allocDataPartitions (1);
   dataPartition->s->errorFlag = 0;
@@ -560,7 +560,7 @@ void readSpsFromNalu (sDecoder* decoder, sNalu* nalu) {
   readSps (decoder, dataPartition, &sps, nalu->len);
   freeDataPartitions (dataPartition, 1);
 
-  memcpy (&decoder->sps[sps.spsId], &sps, sizeof(sSps));
+  memcpy (&decoder->sps[sps.id], &sps, sizeof(sSps));
   }
 //}}}
 //{{{

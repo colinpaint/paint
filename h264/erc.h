@@ -90,8 +90,8 @@ extern void init_lists_for_non_reference_loss (sDPB* dpb, int , ePicStructure );
 extern void concealLostFrames (sDPB* dpb, sSlice *slice);
 extern void conceal_non_ref_pics (sDPB* dpb, int diff);
 extern void sliding_window_poc_management (sDPB* dpb, sPicture *p);
-extern void writeLostNonRefPic (sDPB* dpb, int poc);
-extern void writeLostRefAfterIdr (sDPB* dpb, int pos);
+extern void write_lost_non_ref_pic (sDPB* dpb, int poc);
+extern void write_lost_ref_after_idr (sDPB* dpb, int pos);
 
 void ercInit (sDecoder* decoder, int pic_sizex, int pic_sizey, int flag);
 sErcVariables* ercOpen();

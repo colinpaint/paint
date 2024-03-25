@@ -32,27 +32,27 @@ void freeTopBotPlanes (sPixel** imgTopField, sPixel** imgBotField)
 //}}}
 
 //{{{
-int getMem2Dmp (sPicMotion** *array2D, int dim0, int dim1)
+int getMem2Dmp (sPicMotionParam** *array2D, int dim0, int dim1)
 {
   int i;
 
-  if((*array2D    = (sPicMotion**)memAlloc(dim0 *      sizeof(sPicMotion*))) == NULL)
+  if((*array2D    = (sPicMotionParam**)memAlloc(dim0 *      sizeof(sPicMotionParam*))) == NULL)
     noMemoryExit("getMem2Dmp: array2D");
-  if((*(*array2D) = (sPicMotion* )mem_calloc(dim0 * dim1, sizeof(sPicMotion ))) == NULL)
+  if((*(*array2D) = (sPicMotionParam* )mem_calloc(dim0 * dim1, sizeof(sPicMotionParam ))) == NULL)
     noMemoryExit("getMem2Dmp: array2D");
 
   for(i = 1 ; i < dim0; i++)
     (*array2D)[i] =  (*array2D)[i-1] + dim1;
 
-  return dim0 * (sizeof(sPicMotion*) + dim1 * sizeof(sPicMotion));
+  return dim0 * (sizeof(sPicMotionParam*) + dim1 * sizeof(sPicMotionParam));
 }
 //}}}
 //{{{
-int getMem3Dmp (sPicMotion** **array3D, int dim0, int dim1, int dim2)
+int getMem3Dmp (sPicMotionParam** **array3D, int dim0, int dim1, int dim2)
 {
-  int i, mem_size = dim0 * sizeof(sPicMotion**);
+  int i, mem_size = dim0 * sizeof(sPicMotionParam**);
 
-  if(((*array3D) = (sPicMotion***)memAlloc(dim0 * sizeof(sPicMotion**))) == NULL)
+  if(((*array3D) = (sPicMotionParam***)memAlloc(dim0 * sizeof(sPicMotionParam**))) == NULL)
     noMemoryExit("getMem3Dmp: array3D");
 
   mem_size += getMem2Dmp(*array3D, dim0 * dim1, dim2);
@@ -64,7 +64,7 @@ int getMem3Dmp (sPicMotion** **array3D, int dim0, int dim1, int dim2)
 }
 //}}}
 //{{{
-void freeMem2Dmp (sPicMotion** array2D)
+void freeMem2Dmp (sPicMotionParam** array2D)
 {
   if (array2D) {
     if (*array2D)
@@ -74,7 +74,7 @@ void freeMem2Dmp (sPicMotion** array2D)
   }
 //}}}
 //{{{
-void freeMem3Dmp (sPicMotion** *array3D)
+void freeMem3Dmp (sPicMotionParam** *array3D)
 {
   if (array3D)
   {
@@ -85,22 +85,22 @@ void freeMem3Dmp (sPicMotion** *array3D)
 //}}}
 
 //{{{
-int getMem2Dwp (sWeightedPredParam** *array2D, int dim0, int dim1) {
+int getMem2Dwp (sWpParam** *array2D, int dim0, int dim1) {
 
   int i;
-  if ((*array2D    = (sWeightedPredParam**)memAlloc(dim0 *      sizeof(sWeightedPredParam*))) == NULL)
+  if ((*array2D    = (sWpParam**)memAlloc(dim0 *      sizeof(sWpParam*))) == NULL)
     noMemoryExit("getMem2Dwp: array2D");
-  if ((*(*array2D) = (sWeightedPredParam* )mem_calloc(dim0 * dim1,sizeof(sWeightedPredParam ))) == NULL)
+  if ((*(*array2D) = (sWpParam* )mem_calloc(dim0 * dim1,sizeof(sWpParam ))) == NULL)
     noMemoryExit("getMem2Dwp: array2D");
 
   for (i = 1 ; i < dim0; i++)
     (*array2D)[i] =  (*array2D)[i-1] + dim1;
 
-  return dim0 * (sizeof(sWeightedPredParam*) + dim1 * sizeof(sWeightedPredParam));
+  return dim0 * (sizeof(sWpParam*) + dim1 * sizeof(sWpParam));
   }
 //}}}
 //{{{
-void freeMem2Dwp (sWeightedPredParam** array2D) {
+void freeMem2Dwp (sWpParam** array2D) {
 
   if (array2D) {
     if (*array2D)

@@ -2,7 +2,7 @@
 #include "global.h"
 #include "nalu.h"
 
-#define MAX_PPS 4
+#define MAX_PPS  256
 
 // sPps
 typedef struct {
@@ -44,9 +44,9 @@ typedef struct {
   Boolean   hasTransform8x8mode;              // u(1)
 
   Boolean   hasPicScalingMatrix;              // u(1)
-    int       picScalingListPresentFlag[12];    // u(1)
-    int       scalingList4x4[6][16];            // se(v)
-    int       scalingList8x8[6][64];            // se(v)
+    int       picScalingListPresentFlag[12];  // u(1)
+    int       scalingList4x4[6][16];          // se(v)
+    int       scalingList8x8[6][64];          // se(v)
     Boolean   useDefaultScalingMatrix4x4Flag[6];
     Boolean   useDefaultScalingMatrix8x8Flag[6];
 
@@ -55,6 +55,9 @@ typedef struct {
 
 struct Decoder;
 
+extern sPps* allocPps();
+extern void freePps (sPps* pps);
+
 extern void setPpsById (struct Decoder* decoder, int id, sPps* pps);
-extern void readPpsFromNalu (struct Decoder* decoder, sNalu* nalu);
+extern void readNaluPps (struct Decoder* decoder, sNalu* nalu);
 extern void usePps (struct Decoder* decoder, sPps* pps);

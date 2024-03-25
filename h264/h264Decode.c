@@ -53,9 +53,10 @@ sSlice* allocSlice (sDecoder* decoder) {
   slice->maxDataPartitions = 3;  // assume dataPartition worst case
   slice->dataPartitions = allocDataPartitions (slice->maxDataPartitions);
 
-  getMem3Dint (&(slice->weightedPredWeight), 2, MAX_REFERENCE_PICTURES, 3);
-  getMem3Dint (&(slice->weightedPredOffset), 6, MAX_REFERENCE_PICTURES, 3);
-  getMem4Dint (&(slice->weightedBiPredWeight), 6, MAX_REFERENCE_PICTURES, MAX_REFERENCE_PICTURES, 3);
+  getMem2Dwp (&(slice->wpParam), 2, MAX_REFERENCE_PICTURES);
+  getMem3Dint (&(slice->wpWeight), 2, MAX_REFERENCE_PICTURES, 3);
+  getMem3Dint (&(slice->wpOffset), 6, MAX_REFERENCE_PICTURES, 3);
+  getMem4Dint (&(slice->wbpWeight), 6, MAX_REFERENCE_PICTURES, MAX_REFERENCE_PICTURES, 3);
   getMem3Dpel (&(slice->mbPred), MAX_PLANE, MB_BLOCK_SIZE, MB_BLOCK_SIZE);
   getMem3Dpel (&(slice->mbRec), MAX_PLANE, MB_BLOCK_SIZE, MB_BLOCK_SIZE);
   getMem3Dint (&(slice->mbRess), MAX_PLANE, MB_BLOCK_SIZE, MB_BLOCK_SIZE);
@@ -85,7 +86,7 @@ sSlice* allocSlice (sDecoder* decoder) {
 static void freeSlice (sSlice *slice) {
 
   if (slice->sliceType != eSliceI && slice->sliceType != eSliceSI)
-    freeRefPicListReorderBuffer (slice);
+    freeRefPicListReorderingBuffer (slice);
 
   freePred (slice);
   freeMem3Dint (slice->cof);
@@ -93,9 +94,10 @@ static void freeSlice (sSlice *slice) {
   freeMem3Dpel (slice->mbRec);
   freeMem3Dpel (slice->mbPred);
 
-  freeMem3Dint (slice->weightedPredWeight);
-  freeMem3Dint (slice->weightedPredOffset);
-  freeMem4Dint (slice->weightedBiPredWeight);
+  freeMem2Dwp (slice->wpParam);
+  freeMem3Dint (slice->wpWeight);
+  freeMem3Dint (slice->wpOffset);
+  freeMem4Dint (slice->wbpWeight);
 
   freeDataPartitions (slice->dataPartitions, 3);
 
@@ -149,11 +151,7 @@ static void freeDecoder (sDecoder* decoder) {
   decoder->nalu = NULL;
 
   freeDecodedPictures (decoder->decOutputPic);
-  
-  if (!decoder->nextPps->sliceGroupId)
-    free (decoder->nextPps->sliceGroupId);
-  free (decoder->nextPps);
-
+  freePps (decoder->nextPps);
   decoder->nextPps = NULL;
 
   free (decoder);
@@ -468,7 +466,7 @@ sDecoder* openDecoder (sParam* param, byte* chunk, size_t chunkSize) {
 
   // init nalu, annexB
   decoder->nalu = allocNALU (MAX_CODED_FRAME_SIZE);
-  decoder->nextPps = calloc (1, sizeof(sPps));
+  decoder->nextPps = allocPps();
   decoder->annexB = allocAnnexB (decoder);
   openAnnexB (decoder->annexB, chunk, chunkSize);
 

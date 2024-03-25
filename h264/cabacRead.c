@@ -458,7 +458,7 @@ static void readCbpCoefsFromNaluCabac400 (sMacroBlock* mb) {
           }
         }
       if (mb->isLossless == FALSE)
-        itrans2 (mb, (eColorPlane) slice->colourPlaneId);// transform new intra DC
+        itrans_2(mb, (eColorPlane) slice->colourPlaneId);// transform new intra DC
       }
     }
     //}}}
@@ -617,7 +617,7 @@ static void readCbpCoefsFromNaluCabac444 (sMacroBlock* mb) {
         }
 
       if (mb->isLossless == FALSE)
-        itrans2 (mb, (eColorPlane) slice->colourPlaneId);// transform new intra DC
+        itrans_2 (mb, (eColorPlane) slice->colourPlaneId);// transform new intra DC
       }
     }
 
@@ -679,7 +679,7 @@ static void readCbpCoefsFromNaluCabac444 (sMacroBlock* mb) {
         } // else eCavlc
 
       if(mb->isLossless == FALSE)
-        itrans2 (mb, (eColorPlane) (uv + 1)); // transform new intra DC
+        itrans_2(mb, (eColorPlane) (uv + 1)); // transform new intra DC
       } //IS_I16MB
       //}}}
 
@@ -845,7 +845,7 @@ static void readCbpCoefsFromNaluCabac422 (sMacroBlock* mb) {
         }
 
       if (mb->isLossless == FALSE)
-        itrans2 (mb, (eColorPlane) slice->colourPlaneId); // transform new intra DC
+        itrans_2 (mb, (eColorPlane) slice->colourPlaneId); // transform new intra DC
       }
     }
     //}}}
@@ -1160,7 +1160,7 @@ static void readCbpCoefsFromNaluCabac420 (sMacroBlock* mb) {
           }
         }
       if (mb->isLossless == FALSE)
-        itrans2 (mb, (eColorPlane) slice->colourPlaneId);// transform new intra DC
+        itrans_2(mb, (eColorPlane) slice->colourPlaneId);// transform new intra DC
       }
     }
 

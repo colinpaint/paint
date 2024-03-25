@@ -23,7 +23,7 @@ static const sMotionVec kZeroMv = {0, 0};
 
 //{{{
 static void GetMotionVectorPredictorMBAFF (sMacroBlock* mb, sPixelPos* block,
-                                           sMotionVec *pmv, short  ref_frame, sPicMotion** mvInfo,
+                                           sMotionVec *pmv, short  ref_frame, sPicMotionParam** mvInfo,
                                            int list, int mb_x, int mb_y, int blockshape_x, int blockshape_y) {
 
   int mv_a, mv_b, mv_c, pred_vec=0;
@@ -157,7 +157,7 @@ static void GetMotionVectorPredictorMBAFF (sMacroBlock* mb, sPixelPos* block,
 //}}}
 //{{{
 static void GetMotionVectorPredictorNormal (sMacroBlock* mb, sPixelPos* block,
-                                            sMotionVec *pmv, short  ref_frame, sPicMotion** mvInfo,
+                                            sMotionVec *pmv, short  ref_frame, sPicMotionParam** mvInfo,
                                             int list, int mb_x, int mb_y, int blockshape_x, int blockshape_y) {
   int mvPredType = MVPRED_MEDIAN;
 
@@ -482,7 +482,7 @@ void readDeltaQuant (sSyntaxElement* se, sDataPartition *dataPartition, sMacroBl
 
 //{{{
 static void readMBRefPictureIdx (sSyntaxElement* se, sDataPartition* dataPartition,
-                                 sMacroBlock* mb, sPicMotion** mvInfo,
+                                 sMacroBlock* mb, sPicMotionParam** mvInfo,
                                  int list, int step_v0, int step_h0) {
 
   if (mb->mbType == 1) {
@@ -494,7 +494,7 @@ static void readMBRefPictureIdx (sSyntaxElement* se, sDataPartition* dataPartiti
         char* refIndex = &mvInfo[j][mb->blockX].refIndex[list];
         for (int i = 0; i < step_h0; ++i) {
           *refIndex = refframe;
-          refIndex += sizeof(sPicMotion);
+          refIndex += sizeof(sPicMotionParam);
           }
         }
       }
@@ -510,7 +510,7 @@ static void readMBRefPictureIdx (sSyntaxElement* se, sDataPartition* dataPartiti
           char *refIndex = &mvInfo[j][mb->blockX].refIndex[list];
           for (int i = 0; i < step_h0; ++i) {
             *refIndex = refframe;
-            refIndex += sizeof(sPicMotion);
+            refIndex += sizeof(sPicMotionParam);
             }
           }
         }
@@ -527,7 +527,7 @@ static void readMBRefPictureIdx (sSyntaxElement* se, sDataPartition* dataPartiti
           char *refIndex = &mvInfo[j][mb->blockX + i0].refIndex[list];
           for (int i = 0; i < step_h0; ++i) {
             *refIndex = refframe;
-            refIndex += sizeof(sPicMotion);
+            refIndex += sizeof(sPicMotionParam);
             }
           }
         }
@@ -545,7 +545,7 @@ static void readMBRefPictureIdx (sSyntaxElement* se, sDataPartition* dataPartiti
             char *refIndex = &mvInfo[j][mb->blockX + i0].refIndex[list];
             for (int i = 0; i < step_h0; ++i) {
               *refIndex = refframe;
-              refIndex += sizeof(sPicMotion);
+              refIndex += sizeof(sPicMotionParam);
               }
             }
           }
@@ -565,7 +565,7 @@ static void readMBMotionVectors (sSyntaxElement* se, sDataPartition* dataPartiti
       short curr_mvd[2];
       sMotionVec pred_mv, curr_mv;
       short (*mvd)[4][2];
-      sPicMotion** mvInfo = mb->slice->picture->mvInfo;
+      sPicMotionParam** mvInfo = mb->slice->picture->mvInfo;
       sPixelPos block[4]; // neighbor blocks
       mb->subblockX = 0; // position used for context determination
       mb->subblockY = 0; // position used for context determination
@@ -592,7 +592,7 @@ static void readMBMotionVectors (sSyntaxElement* se, sDataPartition* dataPartiti
       curr_mv.mvY = (short)(curr_mvd[1] + pred_mv.mvY);  // compute motion vector y
 
       for (jj = j4; jj < j4 + step_v0; ++jj) {
-        sPicMotion *mvinfo = mvInfo[jj] + i4;
+        sPicMotionParam *mvinfo = mvInfo[jj] + i4;
         for (ii = i4; ii < i4 + step_h0; ++ii)
           (mvinfo++)->mv[list] = curr_mv;
         }
@@ -613,7 +613,7 @@ static void readMBMotionVectors (sSyntaxElement* se, sDataPartition* dataPartiti
     short curr_mvd[2];
     sMotionVec pred_mv, curr_mv;
     short (*mvd)[4][2];
-    sPicMotion** mvInfo = mb->slice->picture->mvInfo;
+    sPicMotionParam** mvInfo = mb->slice->picture->mvInfo;
     sPixelPos block[4]; // neighbor blocks
 
     int i, j, i0, j0, kk, k;
@@ -650,7 +650,7 @@ static void readMBMotionVectors (sSyntaxElement* se, sDataPartition* dataPartiti
               curr_mv.mvY = (short)(curr_mvd[1] + pred_mv.mvY);  // compute motion vector
 
               for(jj = j4; jj < j4 + step_v; ++jj) {
-                sPicMotion *mvinfo = mvInfo[jj] + i4;
+                sPicMotionParam *mvinfo = mvInfo[jj] + i4;
                 for(ii = i4; ii < i4 + step_h; ++ii)
                   (mvinfo++)->mv[list] = curr_mv;
                 }
@@ -1018,11 +1018,11 @@ static void readMotionInfoP (sMacroBlock* mb){
 
   int j4;
   sPicture* picture = slice->picture;
-  sPicMotion *mvInfo = NULL;
+  sPicMotionParam *mvInfo = NULL;
 
   int listOffset = mb->listOffset;
   sPicture** list0 = slice->listX[LIST_0 + listOffset];
-  sPicMotion** p_mv_info = &picture->mvInfo[mb->blockY];
+  sPicMotionParam** p_mv_info = &picture->mvInfo[mb->blockY];
 
   //=====  READ REFERENCE PICTURE INDICES =====
   se.type = SE_REFFRAME;
@@ -1073,7 +1073,7 @@ static void readMotionInfoB (sMacroBlock* mb) {
   int listOffset = mb->listOffset;
   sPicture** list0 = slice->listX[LIST_0 + listOffset];
   sPicture** list1 = slice->listX[LIST_1 + listOffset];
-  sPicMotion** p_mv_info = &picture->mvInfo[mb->blockY];
+  sPicMotionParam** p_mv_info = &picture->mvInfo[mb->blockY];
 
   if (mb->mbType == P8x8)
     slice->updateDirectMvInfo(mb);
@@ -1107,7 +1107,7 @@ static void readMotionInfoB (sMacroBlock* mb) {
   // record reference picture Ids for deblocking decisions
   for (j4 = 0; j4 < 4; ++j4) {
     for (i4 = mb->blockX; i4 < mb->blockX + 4; ++i4) {
-      sPicMotion *mvInfo = &p_mv_info[j4][i4];
+      sPicMotionParam *mvInfo = &p_mv_info[j4][i4];
       short refIndex = mvInfo->refIndex[LIST_0];
       mvInfo->refPic[LIST_0] = (refIndex >= 0) ? list0[refIndex] : NULL;
       refIndex = mvInfo->refIndex[LIST_1];
@@ -1300,8 +1300,8 @@ void makeFramePictureJV (sDecoder* decoder) {
   decoder->picture = decoder->decPictureJV[0];
 
   // copy;
-  if (decoder->picture->usedForRef) {
-    int nsize = (decoder->picture->sizeY/BLOCK_SIZE)*(decoder->picture->sizeX/BLOCK_SIZE)*sizeof(sPicMotion);
+  if (decoder->picture->usedForReference) {
+    int nsize = (decoder->picture->sizeY/BLOCK_SIZE)*(decoder->picture->sizeX/BLOCK_SIZE)*sizeof(sPicMotionParam);
     memcpy (&(decoder->picture->JVmv_info[PLANE_Y][0][0]), &(decoder->decPictureJV[PLANE_Y]->mvInfo[0][0]), nsize);
     memcpy (&(decoder->picture->JVmv_info[PLANE_U][0][0]), &(decoder->decPictureJV[PLANE_U]->mvInfo[0][0]), nsize);
     memcpy (&(decoder->picture->JVmv_info[PLANE_V][0][0]), &(decoder->decPictureJV[PLANE_V]->mvInfo[0][0]), nsize);
