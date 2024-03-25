@@ -554,30 +554,6 @@ static void readSps (sDecoder* decoder, sDataPartition* dataPartition, sSps* sps
 //}}}
 
 //{{{
-static sSps* allocSps() {
-
-   sSps* p = calloc (1, sizeof (sSps));
-   if (!p)
-     noMemoryExit ("allocSps");
-
-   return p;
-   }
-//}}}
-//{{{
-static void freeSps (sSps* sps) {
-
-  assert (sps);
-  free (sps);
-  }
-//}}}
-
-//{{{
-static void setSpsById (sDecoder* decoder, int id, sSps* sps) {
-  memcpy (&decoder->sps[id], sps, sizeof(sSps));
-  }
-//}}}
-
-//{{{
 void readSpsFromNalu (sDecoder* decoder, sNalu* nalu) {
 
   sDataPartition* dataPartition = allocDataPartitions (1);
@@ -586,7 +562,7 @@ void readSpsFromNalu (sDecoder* decoder, sNalu* nalu) {
   memcpy (dataPartition->s->bitStreamBuffer, &nalu->buf[1], nalu->len-1);
   dataPartition->s->codeLen = dataPartition->s->bitStreamLen = RBSPtoSODB (dataPartition->s->bitStreamBuffer, nalu->len-1);
 
-  sSps* sps = allocSps();
+  sSps* sps = calloc (1, sizeof (sSps));
   readSps (decoder, dataPartition, sps, nalu->len);
   if (sps->valid) {
     if (decoder->activeSps)
@@ -597,13 +573,12 @@ void readSpsFromNalu (sDecoder* decoder, sNalu* nalu) {
           decoder->activeSps = NULL;
           }
 
-    setSpsById (decoder, sps->spsId, sps);
-
+    memcpy (&decoder->sps[sps->spsId], sps, sizeof(sSps));
     decoder->coding.isSeperateColourPlane = sps->isSeperateColourPlane;
     }
 
   freeDataPartitions (dataPartition, 1);
-  freeSps (sps);
+  free (sps);
   }
 //}}}
 //{{{

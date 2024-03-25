@@ -892,7 +892,7 @@ typedef struct Decoder {
 
   // sps
   int          gotPps;
-  sSps         sps[32];
+  sSps         sps[MAX_SPS];
   sSps*        activeSps;
 
   // pps

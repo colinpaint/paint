@@ -2,7 +2,7 @@
 #include "global.h"
 #include "nalu.h"
 
-#define MAX_PPS  256
+#define MAX_PPS 4
 
 // sPps
 typedef struct {

@@ -2,6 +2,7 @@
 #include "global.h"
 #include "nalu.h"
 
+#define MAX_SPS 4
 #define MAX_NUM_REF_FRAMES_PIC_ORDER  256
 
 //{{{  sHRD
