@@ -333,11 +333,6 @@ static void scalingList (int* scalingList, int scalingListSize, Boolean* useDefa
 //}}}
 
 //{{{
-static void initVui (sSps* sps) {
-  sps->vui_seq_parameters.matrix_coefficients = 2;
-  }
-//}}}
-//{{{
 static void readHrd (sDataPartition* dataPartition, sHRD* hrd) {
 
   sBitStream *s = dataPartition->s;
@@ -530,7 +525,7 @@ static void readSps (sDecoder* decoder, sDataPartition* dataPartition, sSps* sps
   //}}}
   sps->vui_parameters_present_flag = (Boolean)readU1 ("SPS vui_parameters_present_flag", s);
 
-  initVui (sps);
+  sps->vui_seq_parameters.matrix_coefficients = 2;
   readVui (dataPartition, sps);
 
   if (decoder->param.spsDebug) {
