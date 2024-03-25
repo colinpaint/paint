@@ -2,18 +2,18 @@
 #include "global.h"
 
 #define MAX_LIST_SIZE 33
-//{{{  sPicMotionParamsOld
-typedef struct PicMotionParamOld {
+//{{{  sPicMotionOld
+typedef struct PicMotionOld {
   byte* mbField; // field macroblock indicator
-  } sPicMotionParamsOld;
+  } sPicMotionOld;
 //}}}
-//{{{  sPicMotionParam
+//{{{  sPicMotion
 typedef struct PicMotion {
   struct Picture* refPic[2];   // referrence picture pointer
   sMotionVec      mv[2];       // motion vector
   char            refIndex[2]; // reference picture   [list][subblockY][subblockX]
   byte            slice_no;
-  } sPicMotionParam;
+  } sPicMotion;
 //}}}
 //{{{  sPicture
 typedef struct Picture {
@@ -50,10 +50,10 @@ typedef struct Picture {
   sPixel**     imgY;
   sPixel***    imgUV;
 
-  struct PicMotion** mvInfo;
-  struct PicMotion** JVmv_info[MAX_PLANE];
-  struct PicMotionParamOld  motion;
-  struct PicMotionParamOld  JVmotion[MAX_PLANE]; // Motion info for 4:4:4 independent mode decoding
+  sPicMotion** mvInfo;
+  sPicMotionOld motion;
+  sPicMotion** JVmv_info[MAX_PLANE];
+  sPicMotionOld JVmotion[MAX_PLANE]; // Motion info for 4:4:4 independent mode decoding
 
   struct Picture* topField;  // for mb aff, if frame for referencing the top field
   struct Picture* botField;  // for mb aff, if frame for referencing the bottom field
@@ -99,7 +99,7 @@ typedef struct FrameStore {
   int       isLongTerm;           // 0=not used for ref; 1=top used; 2=bottom used; 3=both fields (or frame) used
   int       isOrigReference;      // original marking by nalRefIdc: 0=not used for ref; 1=top used; 2=bottom used; 3=both fields (or frame) used
 
-  int       is_non_existent;
+  int       isNonExistent;
 
   unsigned  frameNum;
   unsigned  recoveryFrame;
@@ -110,14 +110,15 @@ typedef struct FrameStore {
   int       poc;
 
   // picture error conceal
-  int concealment_reference;
+  int concealRef;
 
   sPicture* frame;
   sPicture* topField;
   sPicture* botField;
   } sFrameStore;
 //}}}
-//{{{  sDPB - DecodedPictureBuffer
+//{{{  sDPB
+// DecodedPictureBuffer
 typedef struct DPB {
   sDecoder*    decoder;
 

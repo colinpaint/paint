@@ -1734,7 +1734,7 @@ static void update_ref_list_for_concealment (sDPB* dpb) {
 
   unsigned j = 0;
   for (unsigned i = 0; i < dpb->usedSize; i++)
-    if (dpb->fs[i]->concealment_reference)
+    if (dpb->fs[i]->concealRef)
       dpb->fsRef[j++] = dpb->fs[i];
 
   dpb->refFramesInBuffer = decoder->activePps->numRefIndexL0defaultActiveMinus1;
@@ -1780,7 +1780,7 @@ void init_lists_for_non_reference_loss (sDPB* dpb, int currSliceType, ePicStruct
 
   if (currPicStructure == eFrame) {
     for (i = 0; i < dpb->refFramesInBuffer; i++) {
-      if (dpb->fs[i]->concealment_reference == 1) {
+      if (dpb->fs[i]->concealRef == 1) {
         if (dpb->fs[i]->frameNum > decoder->concealFrame)
           dpb->fsRef[i]->frameNumWrap = dpb->fs[i]->frameNum - maxFrameNum;
         else
@@ -1794,7 +1794,7 @@ void init_lists_for_non_reference_loss (sDPB* dpb, int currSliceType, ePicStruct
     // Calculate FrameNumWrap and PicNum
     if (currPicStructure == eFrame) {
       for (i = 0; i < dpb->usedSize; i++)
-        if (dpb->fs[i]->concealment_reference == 1)
+        if (dpb->fs[i]->concealRef == 1)
           decoder->sliceList[0]->listX[0][list0idx++] = dpb->fs[i]->frame;
       // order list 0 by PicNum
       qsort ((void *)decoder->sliceList[0]->listX[0], list0idx, sizeof(sPicture*), compare_pic_by_pic_num_desc);
@@ -1805,14 +1805,14 @@ void init_lists_for_non_reference_loss (sDPB* dpb, int currSliceType, ePicStruct
   if (currSliceType == eSliceB) {
     if (currPicStructure == eFrame) {
       for (i = 0; i < dpb->usedSize; i++)
-        if (dpb->fs[i]->concealment_reference == 1)
+        if (dpb->fs[i]->concealRef == 1)
           if (decoder->earlierMissingPoc > dpb->fs[i]->frame->poc)
             decoder->sliceList[0]->listX[0][list0idx++] = dpb->fs[i]->frame;
 
       qsort ((void *)decoder->sliceList[0]->listX[0], list0idx, sizeof(sPicture*), compare_pic_by_poc_desc);
       list0index1 = list0idx;
       for (i = 0; i < dpb->usedSize; i++)
-        if (dpb->fs[i]->concealment_reference == 1)
+        if (dpb->fs[i]->concealRef == 1)
           if (decoder->earlierMissingPoc < dpb->fs[i]->frame->poc)
             decoder->sliceList[0]->listX[0][list0idx++] = dpb->fs[i]->frame;
 

@@ -32,27 +32,27 @@ void freeTopBotPlanes (sPixel** imgTopField, sPixel** imgBotField)
 //}}}
 
 //{{{
-int getMem2Dmp (sPicMotionParam** *array2D, int dim0, int dim1)
+int getMem2Dmp (sPicMotion** *array2D, int dim0, int dim1)
 {
   int i;
 
-  if((*array2D    = (sPicMotionParam**)memAlloc(dim0 *      sizeof(sPicMotionParam*))) == NULL)
+  if((*array2D    = (sPicMotion**)memAlloc(dim0 *      sizeof(sPicMotion*))) == NULL)
     noMemoryExit("getMem2Dmp: array2D");
-  if((*(*array2D) = (sPicMotionParam* )mem_calloc(dim0 * dim1, sizeof(sPicMotionParam ))) == NULL)
+  if((*(*array2D) = (sPicMotion* )mem_calloc(dim0 * dim1, sizeof(sPicMotion ))) == NULL)
     noMemoryExit("getMem2Dmp: array2D");
 
   for(i = 1 ; i < dim0; i++)
     (*array2D)[i] =  (*array2D)[i-1] + dim1;
 
-  return dim0 * (sizeof(sPicMotionParam*) + dim1 * sizeof(sPicMotionParam));
+  return dim0 * (sizeof(sPicMotion*) + dim1 * sizeof(sPicMotion));
 }
 //}}}
 //{{{
-int getMem3Dmp (sPicMotionParam** **array3D, int dim0, int dim1, int dim2)
+int getMem3Dmp (sPicMotion** **array3D, int dim0, int dim1, int dim2)
 {
-  int i, mem_size = dim0 * sizeof(sPicMotionParam**);
+  int i, mem_size = dim0 * sizeof(sPicMotion**);
 
-  if(((*array3D) = (sPicMotionParam***)memAlloc(dim0 * sizeof(sPicMotionParam**))) == NULL)
+  if(((*array3D) = (sPicMotion***)memAlloc(dim0 * sizeof(sPicMotion**))) == NULL)
     noMemoryExit("getMem3Dmp: array3D");
 
   mem_size += getMem2Dmp(*array3D, dim0 * dim1, dim2);
@@ -64,7 +64,7 @@ int getMem3Dmp (sPicMotionParam** **array3D, int dim0, int dim1, int dim2)
 }
 //}}}
 //{{{
-void freeMem2Dmp (sPicMotionParam** array2D)
+void freeMem2Dmp (sPicMotion** array2D)
 {
   if (array2D) {
     if (*array2D)
@@ -74,7 +74,7 @@ void freeMem2Dmp (sPicMotionParam** array2D)
   }
 //}}}
 //{{{
-void freeMem3Dmp (sPicMotionParam** *array3D)
+void freeMem3Dmp (sPicMotion** *array3D)
 {
   if (array3D)
   {

@@ -502,8 +502,8 @@ static void get_strength_ver_MBAff (byte* Strength, sMacroBlock* mb, int edge, i
             int blk_y2 = (pixP.posY >> 2);
             int blk_x2 = (pixP.posX >> 2);
 
-            sPicMotionParam *mv_info_p = &p->mvInfo[blk_y ][blk_x ];
-            sPicMotionParam *mv_info_q = &p->mvInfo[blk_y2][blk_x2];
+            sPicMotion *mv_info_p = &p->mvInfo[blk_y ][blk_x ];
+            sPicMotion *mv_info_q = &p->mvInfo[blk_y2][blk_x2];
             sPicture* ref_p0 = mv_info_p->refPic[LIST_0];
             sPicture* ref_q0 = mv_info_q->refPic[LIST_0];
             sPicture* ref_p1 = mv_info_p->refPic[LIST_1];
@@ -577,8 +577,8 @@ static void get_strength_ver_MBAff (byte* Strength, sMacroBlock* mb, int edge, i
                 int blk_y2 = (pixP.posY >> 2);
                 int blk_x2 = (pixP.posX >> 2);
 
-                sPicMotionParam *mv_info_p = &p->mvInfo[blk_y ][blk_x ];
-                sPicMotionParam *mv_info_q = &p->mvInfo[blk_y2][blk_x2];
+                sPicMotion *mv_info_p = &p->mvInfo[blk_y ][blk_x ];
+                sPicMotion *mv_info_q = &p->mvInfo[blk_y2][blk_x2];
                 sPicture* ref_p0 = mv_info_p->refPic[LIST_0];
                 sPicture* ref_q0 = mv_info_q->refPic[LIST_0];
                 sPicture* ref_p1 = mv_info_p->refPic[LIST_1];
@@ -684,8 +684,8 @@ static void get_strength_hor_MBAff (byte* Strength, sMacroBlock* mb, int edge, i
             blk_x2 = (short) (pixP.posX >> 2);
 
             {
-              sPicMotionParam *mv_info_p = &p->mvInfo[blk_y ][blk_x ];
-              sPicMotionParam *mv_info_q = &p->mvInfo[blk_y2][blk_x2];
+              sPicMotion *mv_info_p = &p->mvInfo[blk_y ][blk_x ];
+              sPicMotion *mv_info_q = &p->mvInfo[blk_y2][blk_x2];
               sPicture* ref_p0 = mv_info_p->refPic[LIST_0];
               sPicture* ref_q0 = mv_info_q->refPic[LIST_0];
               sPicture* ref_p1 = mv_info_p->refPic[LIST_1];
@@ -797,8 +797,8 @@ static void get_strength_ver (sMacroBlock* mb, int edge, int mvLimit, sPicture* 
               int blk_x  = blockPos.x + (blkQ  & 3);
               int blk_y2 = (short)(get_pos_y_luma(neighbour,  0) + idx) >> 2;
               int blk_x2 = (short)(get_pos_x_luma(neighbour, xQ)      ) >> 2;
-              sPicMotionParam *mv_info_p = &p->mvInfo[blk_y ][blk_x ];
-              sPicMotionParam *mv_info_q = &p->mvInfo[blk_y2][blk_x2];
+              sPicMotion *mv_info_p = &p->mvInfo[blk_y ][blk_x ];
+              sPicMotion *mv_info_q = &p->mvInfo[blk_y2][blk_x2];
               sPicture* ref_p0 = mv_info_p->refPic[LIST_0];
               sPicture* ref_q0 = mv_info_q->refPic[LIST_0];
               sPicture* ref_p1 = mv_info_p->refPic[LIST_1];
@@ -906,8 +906,8 @@ static void get_strength_hor (sMacroBlock* mb, int edge, int mvLimit, sPicture* 
               int blk_y2 = get_pos_y_luma(neighbor,yQ) >> 2;
               int blk_x2 = ((short)(get_pos_x_luma(neighbor,0)) >> 2) + idx;
 
-              sPicMotionParam* mv_info_p = &p->mvInfo[blk_y ][blk_x ];
-              sPicMotionParam* mv_info_q = &p->mvInfo[blk_y2][blk_x2];
+              sPicMotion* mv_info_p = &p->mvInfo[blk_y ][blk_x ];
+              sPicMotion* mv_info_q = &p->mvInfo[blk_y2][blk_x2];
 
               sPicture* ref_p0 = mv_info_p->refPic[LIST_0];
               sPicture* ref_q0 = mv_info_q->refPic[LIST_0];

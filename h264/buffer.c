@@ -213,7 +213,7 @@ static int outputDpbFrame (sDPB* dpb) {
 
 // picMotion
 //{{{
-void allocPicMotion (sPicMotionParamsOld* motion, int sizeY, int sizeX) {
+void allocPicMotion (sPicMotionOld* motion, int sizeY, int sizeX) {
 
   motion->mbField = calloc (sizeY * sizeX, sizeof(byte));
   if (motion->mbField == NULL)
@@ -221,7 +221,7 @@ void allocPicMotion (sPicMotionParamsOld* motion, int sizeY, int sizeX) {
   }
 //}}}
 //{{{
-void freePicMotion (sPicMotionParamsOld* motion) {
+void freePicMotion (sPicMotionOld* motion) {
 
   if (motion->mbField) {
     free (motion->mbField);
@@ -350,7 +350,7 @@ static void dpbSplitField (sDecoder* decoder, sFrameStore* frameStore) {
 
   if (!frame->frameMbOnly) {
     if (frame->mbAffFrame) {
-      sPicMotionParamsOld* frm_motion = &frame->motion;
+      sPicMotionOld* frm_motion = &frame->motion;
       for (int j = 0 ; j < (frame->sizeY >> 3); j++) {
         int jj = (j >> 2)*8 + (j & 0x03);
         int jj4 = jj + 4;
@@ -1731,7 +1731,7 @@ void storePictureDpb (sDPB* dpb, sPicture* p) {
   if (decoder->concealMode != 0)
     for (unsigned i = 0; i < dpb->size; i++)
       if (dpb->fs[i]->isReference)
-        dpb->fs[i]->concealment_reference = 1;
+        dpb->fs[i]->concealRef = 1;
 
   // first try to remove unused frames
   if (dpb->usedSize == dpb->size) {

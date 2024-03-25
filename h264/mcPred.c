@@ -68,7 +68,7 @@ static void update_direct_mv_info_temporal (sMacroBlock* mb) {
             int refIndex;
             int mapped_idx = -1, iref;
 
-            sPicMotionParam* colocated = decoder->activeSps->direct_8x8_inference_flag ?
+            sPicMotion* colocated = decoder->activeSps->direct_8x8_inference_flag ?
                                            &list1[0]->mvInfo[RSD(mb->blockYaff + j0)][RSD(i0)] :
                                            &list1[0]->mvInfo[mb->blockYaff + j0][i0];
 
@@ -123,7 +123,7 @@ static void update_direct_mv_info_temporal (sMacroBlock* mb) {
               //{{{
               for (j4 = mb->blockY + j0; j4 < mb->blockY + j0 + step_v0; ++j4) {
                 for (i4 = i0; i4 < i0 + step_h0; ++i4) {
-                  sPicMotionParam *mvInfo = &picture->mvInfo[j4][i4];
+                  sPicMotion *mvInfo = &picture->mvInfo[j4][i4];
                   mvInfo->refPic[LIST_0] = list0[0];
                   mvInfo->refPic[LIST_1] = list1[0];
                   mvInfo->mv [LIST_0] = kZeroMv;
@@ -181,10 +181,10 @@ static void update_direct_mv_info_temporal (sMacroBlock* mb) {
                   j6 = mb->blockYaff + j;
 
                   for (i4 = i0; i4 < i0 + step_h0; ++i4) {
-                    sPicMotionParam* colocated = decoder->activeSps->direct_8x8_inference_flag ?
+                    sPicMotion* colocated = decoder->activeSps->direct_8x8_inference_flag ?
                       &list1[0]->mvInfo[RSD(j6)][RSD(i4)] :
                       &list1[0]->mvInfo[j6][i4];
-                    sPicMotionParam* mvInfo = &picture->mvInfo[j4][i4];
+                    sPicMotion* mvInfo = &picture->mvInfo[j4][i4];
                     int mvY;
                     if (slice->mbAffFrame) {
                       if (!mb->mbField && ((slice->listX[LIST_1][0]->iCodingType==eFrameMbPairCoding && slice->listX[LIST_1][0]->motion.mbField[mb->mbIndexX]) ||
@@ -264,7 +264,7 @@ static void update_direct_mv_info_temporal (sMacroBlock* mb) {
   }
 //}}}
 //{{{
-static inline void update_neighbor_mvs (sPicMotionParam** motion, const sPicMotionParam* mvInfo, int i4) {
+static inline void update_neighbor_mvs (sPicMotion** motion, const sPicMotion* mvInfo, int i4) {
 
   (*motion++)[i4 + 1] = *mvInfo;
   (*motion  )[i4    ] = *mvInfo;
@@ -277,7 +277,7 @@ int get_colocated_info_4x4 (sMacroBlock* mb, sPicture* list1, int i, int j) {
   if (list1->isLongTerm)
     return 1;
   else {
-    sPicMotionParam *fs = &list1->mvInfo[j][i];
+    sPicMotion *fs = &list1->mvInfo[j][i];
     int moving = !((((fs->refIndex[LIST_0] == 0) &&
                      (iabs(fs->mv[LIST_0].mvX)>>1 == 0) &&
                      (iabs(fs->mv[LIST_0].mvY)>>1 == 0))) ||
@@ -306,7 +306,7 @@ int get_colocated_info_8x8 (sMacroBlock* mb, sPicture* list1, int i, int j) {
       int jdiv = (jj>>1);
       int moving;
 
-      sPicMotionParam* fs = &list1->mvInfo[jj][ii];
+      sPicMotion* fs = &list1->mvInfo[jj][ii];
 
       if (slice->fieldPic && slice->picStructure!=list1->picStructure && list1->codedFrame) {
          if (slice->picStructure == eTopField)
@@ -335,7 +335,7 @@ int get_colocated_info_8x8 (sMacroBlock* mb, sPicture* list1, int i, int j) {
       return moving;
       }
     else {
-      sPicMotionParam *fs = &list1->mvInfo[RSD(j)][RSD(i)];
+      sPicMotion *fs = &list1->mvInfo[RSD(j)][RSD(i)];
 
       int moving;
       if (mb->decoder->coding.isSeperateColourPlane && mb->decoder->coding.yuvFormat==YUV444)
@@ -376,7 +376,7 @@ static void update_direct_mv_info_spatial_8x8 (sMacroBlock* mb)
     char  l0_rFrame, l1_rFrame;
     sMotionVec pmvl0, pmvl1;
     int is_not_moving;
-    sPicMotionParam *mvInfo = NULL;
+    sPicMotion *mvInfo = NULL;
 
     prepare_direct_params(mb, picture, &pmvl0, &pmvl1, &l0_rFrame, &l1_rFrame);
 
@@ -548,7 +548,7 @@ static void update_direct_mv_info_spatial_4x4 (sMacroBlock* mb)
 
           for(i4 = mb->blockX + i; i4 < mb->blockX + i + 2; ++i4)
           {
-            sPicMotionParam *mvInfo = &picture->mvInfo[j4][i4];
+            sPicMotion *mvInfo = &picture->mvInfo[j4][i4];
             //===== DIRECT PREDICTION =====
             if (l0_rFrame == 0 || l1_rFrame == 0)
             {
@@ -1720,7 +1720,7 @@ void intra_cr_decoding (sMacroBlock* mb, int yuv)
 //}}}
 
 //{{{
-static inline void set_direct_references (const sPixelPos* mb, char* l0_rFrame, char* l1_rFrame, sPicMotionParam** mvInfo)
+static inline void set_direct_references (const sPixelPos* mb, char* l0_rFrame, char* l1_rFrame, sPicMotion** mvInfo)
 {
   if (mb->available)
   {
@@ -1736,7 +1736,7 @@ static inline void set_direct_references (const sPixelPos* mb, char* l0_rFrame, 
 }
 //}}}
 //{{{
-static void set_direct_references_mb_field (const sPixelPos* mb, char* l0_rFrame, char* l1_rFrame, sPicMotionParam** mvInfo, sMacroBlock *mbData)
+static void set_direct_references_mb_field (const sPixelPos* mb, char* l0_rFrame, char* l1_rFrame, sPicMotion** mvInfo, sMacroBlock *mbData)
 {
   if (mb->available)
   {
@@ -1760,7 +1760,7 @@ static void set_direct_references_mb_field (const sPixelPos* mb, char* l0_rFrame
 }
 //}}}
 //{{{
-static void set_direct_references_mb_frame (const sPixelPos* mb, char* l0_rFrame, char* l1_rFrame, sPicMotionParam** mvInfo, sMacroBlock *mbData)
+static void set_direct_references_mb_frame (const sPixelPos* mb, char* l0_rFrame, char* l1_rFrame, sPicMotion** mvInfo, sMacroBlock *mbData)
 {
   if (mb->available)
   {
@@ -1789,7 +1789,7 @@ void prepare_direct_params (sMacroBlock* mb, sPicture* picture, sMotionVec* pmvl
   sSlice* slice = mb->slice;
   char l0_refA, l0_refB, l0_refC;
   char l1_refA, l1_refB, l1_refC;
-  sPicMotionParam** mvInfo = picture->mvInfo;
+  sPicMotion** mvInfo = picture->mvInfo;
 
   sPixelPos pixelPos[4];
 
@@ -1862,7 +1862,7 @@ static void perform_mc_single_wp (sMacroBlock* mb, eColorPlane plane, sPicture* 
   //===== Single List Prediction =====
   int ioff = (i << 2);
   int joff = (j << 2);
-  sPicMotionParam *mvInfo = &picture->mvInfo[j4][i4];
+  sPicMotion *mvInfo = &picture->mvInfo[j4][i4];
   short       refIndex = mvInfo->refIndex[predDir];
   short       ref_idx_wp = refIndex;
   sMotionVec *mv_array = &mvInfo->mv[predDir];
@@ -1953,7 +1953,7 @@ static void perform_mc_single (sMacroBlock* mb, eColorPlane plane, sPicture* pic
   //===== Single List Prediction =====
   int ioff = (i << 2);
   int joff = (j << 2);
-  sPicMotionParam *mvInfo = &picture->mvInfo[j4][i4];
+  sPicMotion *mvInfo = &picture->mvInfo[j4][i4];
   sMotionVec *mv_array = &mvInfo->mv[predDir];
   short          refIndex =  mvInfo->refIndex[predDir];
   int listOffset = mb->listOffset;
@@ -2032,7 +2032,7 @@ static void perform_mc_bi_wp (sMacroBlock* mb, eColorPlane plane, sPicture* pict
   int joff = (j << 2);
   int chromaFormatIdc = picture->chromaFormatIdc;
   int listOffset = mb->listOffset;
-  sPicMotionParam *mvInfo = &picture->mvInfo[j4][i4];
+  sPicMotion *mvInfo = &picture->mvInfo[j4][i4];
   sMotionVec *l0_mv_array = &mvInfo->mv[LIST_0];
   sMotionVec *l1_mv_array = &mvInfo->mv[LIST_1];
   short l0_refframe = mvInfo->refIndex[LIST_0];
@@ -2167,7 +2167,7 @@ static void perform_mc_bi (sMacroBlock* mb, eColorPlane plane, sPicture* picture
   int ioff = (i << 2);
   int joff = (j << 2);
   int chromaFormatIdc = picture->chromaFormatIdc;
-  sPicMotionParam *mvInfo = &picture->mvInfo[j4][i4];
+  sPicMotion *mvInfo = &picture->mvInfo[j4][i4];
   sMotionVec *l0_mv_array = &mvInfo->mv[LIST_0];
   sMotionVec *l1_mv_array = &mvInfo->mv[LIST_1];
   short l0_refframe = mvInfo->refIndex[LIST_0];
