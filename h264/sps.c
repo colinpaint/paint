@@ -13,63 +13,63 @@
 //}}}
 
 //{{{
-static int isEqualSps (sSps* sps1, sSps* sps2) {
+//static int isEqualSps (sSps* sps1, sSps* sps2) {
 
-  int equal = 1;
-  if ((!sps1->valid) || (!sps2->valid))
-    return 0;
+  //int equal = 1;
+  //if ((!sps1->valid) || (!sps2->valid))
+    //return 0;
 
-  equal &= (sps1->id == sps2->id);
-  equal &= (sps1->levelIdc == sps2->levelIdc);
-  equal &= (sps1->profileIdc == sps2->profileIdc);
-  equal &= (sps1->constrained_set0_flag == sps2->constrained_set0_flag);
-  equal &= (sps1->constrained_set1_flag == sps2->constrained_set1_flag);
-  equal &= (sps1->constrained_set2_flag == sps2->constrained_set2_flag);
+  //equal &= (sps1->id == sps2->id);
+  //equal &= (sps1->levelIdc == sps2->levelIdc);
+  //equal &= (sps1->profileIdc == sps2->profileIdc);
+  //equal &= (sps1->constrained_set0_flag == sps2->constrained_set0_flag);
+  //equal &= (sps1->constrained_set1_flag == sps2->constrained_set1_flag);
+  //equal &= (sps1->constrained_set2_flag == sps2->constrained_set2_flag);
 
-  equal &= (sps1->log2maxFrameNumMinus4 == sps2->log2maxFrameNumMinus4);
-  equal &= (sps1->pocType == sps2->pocType);
-  if (!equal)
-    return equal;
+  //equal &= (sps1->log2maxFrameNumMinus4 == sps2->log2maxFrameNumMinus4);
+  //equal &= (sps1->pocType == sps2->pocType);
+  //if (!equal)
+    //return equal;
 
-  if (sps1->pocType == 0)
-    equal &= (sps1->log2maxPocLsbMinus4 == sps2->log2maxPocLsbMinus4);
-  else if( sps1->pocType == 1) {
-    equal &= (sps1->deltaPicOrderAlwaysZero == sps2->deltaPicOrderAlwaysZero);
-    equal &= (sps1->offsetNonRefPic == sps2->offsetNonRefPic);
-    equal &= (sps1->offsetTopBotField == sps2->offsetTopBotField);
-    equal &= (sps1->numRefFramesPocCycle == sps2->numRefFramesPocCycle);
-    if (!equal)
-      return equal;
+  //if (sps1->pocType == 0)
+    //equal &= (sps1->log2maxPocLsbMinus4 == sps2->log2maxPocLsbMinus4);
+  //else if( sps1->pocType == 1) {
+    //equal &= (sps1->deltaPicOrderAlwaysZero == sps2->deltaPicOrderAlwaysZero);
+    //equal &= (sps1->offsetNonRefPic == sps2->offsetNonRefPic);
+    //equal &= (sps1->offsetTopBotField == sps2->offsetTopBotField);
+    //equal &= (sps1->numRefFramesPocCycle == sps2->numRefFramesPocCycle);
+    //if (!equal)
+      //return equal;
 
-    for (unsigned i = 0 ; i < sps1->numRefFramesPocCycle ;i ++)
-      equal &= (sps1->offsetForRefFrame[i] == sps2->offsetForRefFrame[i]);
-    }
+    //for (unsigned i = 0 ; i < sps1->numRefFramesPocCycle ;i ++)
+      //equal &= (sps1->offsetForRefFrame[i] == sps2->offsetForRefFrame[i]);
+    //}
 
-  equal &= (sps1->numRefFrames == sps2->numRefFrames);
-  equal &= (sps1->allowGapsFrameNum == sps2->allowGapsFrameNum);
-  equal &= (sps1->picWidthMbsMinus1 == sps2->picWidthMbsMinus1);
-  equal &= (sps1->picHeightMapUnitsMinus1 == sps2->picHeightMapUnitsMinus1);
-  equal &= (sps1->frameMbOnly == sps2->frameMbOnly);
-  if (!equal) return
-    equal;
+  //equal &= (sps1->numRefFrames == sps2->numRefFrames);
+  //equal &= (sps1->allowGapsFrameNum == sps2->allowGapsFrameNum);
+  //equal &= (sps1->picWidthMbsMinus1 == sps2->picWidthMbsMinus1);
+  //equal &= (sps1->picHeightMapUnitsMinus1 == sps2->picHeightMapUnitsMinus1);
+  //equal &= (sps1->frameMbOnly == sps2->frameMbOnly);
+  //if (!equal) return
+    //equal;
 
-  if (!sps1->frameMbOnly)
-    equal &= (sps1->mbAffFlag == sps2->mbAffFlag);
-  equal &= (sps1->isDirect8x8inference == sps2->isDirect8x8inference);
-  equal &= (sps1->cropFlag == sps2->cropFlag);
-  if (!equal)
-    return equal;
+  //if (!sps1->frameMbOnly)
+    //equal &= (sps1->mbAffFlag == sps2->mbAffFlag);
+  //equal &= (sps1->isDirect8x8inference == sps2->isDirect8x8inference);
+  //equal &= (sps1->cropFlag == sps2->cropFlag);
+  //if (!equal)
+    //return equal;
 
-  if (sps1->cropFlag) {
-    equal &= (sps1->cropLeft == sps2->cropLeft);
-    equal &= (sps1->cropRight == sps2->cropRight);
-    equal &= (sps1->cropTop == sps2->cropTop);
-    equal &= (sps1->cropBot == sps2->cropBot);
-    }
-  equal &= (sps1->hasVui == sps2->hasVui);
+  //if (sps1->cropFlag) {
+    //equal &= (sps1->cropLeft == sps2->cropLeft);
+    //equal &= (sps1->cropRight == sps2->cropRight);
+    //equal &= (sps1->cropTop == sps2->cropTop);
+    //equal &= (sps1->cropBot == sps2->cropBot);
+    //}
+  //equal &= (sps1->hasVui == sps2->hasVui);
 
-  return equal;
-  }
+  //return equal;
+  //}
 //}}}
 //{{{
 static void updateMaxValue (sFrameFormat* format) {

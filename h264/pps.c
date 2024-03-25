@@ -13,6 +13,83 @@
 //}}}
 
 //{{{
+//static int isEqualPps (sPps* pps1, sPps* pps2) {
+
+  //if (!pps1->valid || !pps2->valid)
+    //return 0;
+
+  //int equal = 1;
+  //equal &= (pps1->id == pps2->id);
+  //equal &= (pps1->spsId == pps2->spsId);
+  //equal &= (pps1->entropyCoding == pps2->entropyCoding);
+  //equal &= (pps1->botFieldFrame == pps2->botFieldFrame);
+  //equal &= (pps1->numSliceGroupsMinus1 == pps2->numSliceGroupsMinus1);
+  //if (!equal)
+    //return equal;
+
+  //if (pps1->numSliceGroupsMinus1 > 0) {
+    //equal &= (pps1->sliceGroupMapType == pps2->sliceGroupMapType);
+    //if (!equal)
+      //return equal;
+    //if (pps1->sliceGroupMapType == 0) {
+      //for (unsigned i = 0; i <= pps1->numSliceGroupsMinus1; i++)
+        //equal &= (pps1->runLengthMinus1[i] == pps2->runLengthMinus1[i]);
+      //}
+    //else if (pps1->sliceGroupMapType == 2) {
+      //for (unsigned i = 0; i < pps1->numSliceGroupsMinus1; i++) {
+        //equal &= (pps1->topLeft[i] == pps2->topLeft[i]);
+        //equal &= (pps1->botRight[i] == pps2->botRight[i]);
+        //}
+      //}
+    //else if (pps1->sliceGroupMapType == 3 ||
+             //pps1->sliceGroupMapType == 4 ||
+             //pps1->sliceGroupMapType == 5) {
+      //equal &= (pps1->sliceGroupChangeDirectionFlag == pps2->sliceGroupChangeDirectionFlag);
+      //equal &= (pps1->sliceGroupChangeRateMius1 == pps2->sliceGroupChangeRateMius1);
+      //}
+    //else if (pps1->sliceGroupMapType == 6) {
+      //equal &= (pps1->picSizeMapUnitsMinus1 == pps2->picSizeMapUnitsMinus1);
+      //if (!equal)
+        //return equal;
+      //for (unsigned i = 0; i <= pps1->picSizeMapUnitsMinus1; i++)
+        //equal &= (pps1->sliceGroupId[i] == pps2->sliceGroupId[i]);
+      //}
+    //}
+
+  //equal &= (pps1->hasWeightedPred == pps2->hasWeightedPred);
+  //equal &= (pps1->picInitQpMinus26 == pps2->picInitQpMinus26);
+  //equal &= (pps1->picInitQsMinus26 == pps2->picInitQsMinus26);
+  //equal &= (pps1->weightedBiPredIdc == pps2->weightedBiPredIdc);
+  //equal &= (pps1->chromaQpOffset == pps2->chromaQpOffset);
+  //equal &= (pps1->hasConstrainedIntraPred == pps2->hasConstrainedIntraPred);
+  //equal &= (pps1->redundantPicCountPresent == pps2->redundantPicCountPresent);
+  //equal &= (pps1->hasDeblockFilterControl == pps2->hasDeblockFilterControl);
+  //equal &= (pps1->numRefIndexL0defaultActiveMinus1 == pps2->numRefIndexL0defaultActiveMinus1);
+  //equal &= (pps1->numRefIndexL1defaultActiveMinus1 == pps2->numRefIndexL1defaultActiveMinus1);
+  //if (!equal)
+    //return equal;
+
+  //equal &= (pps1->hasTransform8x8mode == pps2->hasTransform8x8mode);
+  //equal &= (pps1->hasPicScalingMatrix == pps2->hasPicScalingMatrix);
+  //if (pps1->hasPicScalingMatrix) {
+    //for (unsigned i = 0; i < (6 + ((unsigned)pps1->hasTransform8x8mode << 1)); i++) {
+      //equal &= (pps1->picScalingListPresentFlag[i] == pps2->picScalingListPresentFlag[i]);
+      //if (pps1->picScalingListPresentFlag[i]) {
+        //if (i < 6)
+          //for (int j = 0; j < 16; j++)
+            //equal &= (pps1->scalingList4x4[i][j] == pps2->scalingList4x4[i][j]);
+        //else
+          //for (int j = 0; j < 64; j++)
+            //equal &= (pps1->scalingList8x8[i-6][j] == pps2->scalingList8x8[i-6][j]);
+        //}
+      //}
+    //}
+  //equal &= (pps1->chromaQpOffset2 == pps2->chromaQpOffset2);
+
+  //return equal;
+  //}
+//}}}
+//{{{
 // syntax for scaling list matrix values
 static void scalingList (int* scalingList, int scalingListSize, Boolean* useDefaultScalingMatrix, sBitStream* s) {
 
@@ -43,84 +120,6 @@ static void scalingList (int* scalingList, int scalingListSize, Boolean* useDefa
     scalingList[scanj] = (nextScale == 0) ? lastScale : nextScale;
     lastScale = scalingList[scanj];
     }
-  }
-//}}}
-
-//{{{
-static int isEqualPps (sPps* pps1, sPps* pps2) {
-
-  if (!pps1->valid || !pps2->valid)
-    return 0;
-
-  int equal = 1;
-  equal &= (pps1->id == pps2->id);
-  equal &= (pps1->spsId == pps2->spsId);
-  equal &= (pps1->entropyCoding == pps2->entropyCoding);
-  equal &= (pps1->botFieldFrame == pps2->botFieldFrame);
-  equal &= (pps1->numSliceGroupsMinus1 == pps2->numSliceGroupsMinus1);
-  if (!equal)
-    return equal;
-
-  if (pps1->numSliceGroupsMinus1 > 0) {
-    equal &= (pps1->sliceGroupMapType == pps2->sliceGroupMapType);
-    if (!equal)
-      return equal;
-    if (pps1->sliceGroupMapType == 0) {
-      for (unsigned i = 0; i <= pps1->numSliceGroupsMinus1; i++)
-        equal &= (pps1->runLengthMinus1[i] == pps2->runLengthMinus1[i]);
-      }
-    else if (pps1->sliceGroupMapType == 2) {
-      for (unsigned i = 0; i < pps1->numSliceGroupsMinus1; i++) {
-        equal &= (pps1->topLeft[i] == pps2->topLeft[i]);
-        equal &= (pps1->botRight[i] == pps2->botRight[i]);
-        }
-      }
-    else if (pps1->sliceGroupMapType == 3 ||
-             pps1->sliceGroupMapType == 4 ||
-             pps1->sliceGroupMapType == 5) {
-      equal &= (pps1->sliceGroupChangeDirectionFlag == pps2->sliceGroupChangeDirectionFlag);
-      equal &= (pps1->sliceGroupChangeRateMius1 == pps2->sliceGroupChangeRateMius1);
-      }
-    else if (pps1->sliceGroupMapType == 6) {
-      equal &= (pps1->picSizeMapUnitsMinus1 == pps2->picSizeMapUnitsMinus1);
-      if (!equal)
-        return equal;
-      for (unsigned i = 0; i <= pps1->picSizeMapUnitsMinus1; i++)
-        equal &= (pps1->sliceGroupId[i] == pps2->sliceGroupId[i]);
-      }
-    }
-
-  equal &= (pps1->hasWeightedPred == pps2->hasWeightedPred);
-  equal &= (pps1->picInitQpMinus26 == pps2->picInitQpMinus26);
-  equal &= (pps1->picInitQsMinus26 == pps2->picInitQsMinus26);
-  equal &= (pps1->weightedBiPredIdc == pps2->weightedBiPredIdc);
-  equal &= (pps1->chromaQpOffset == pps2->chromaQpOffset);
-  equal &= (pps1->hasConstrainedIntraPred == pps2->hasConstrainedIntraPred);
-  equal &= (pps1->redundantPicCountPresent == pps2->redundantPicCountPresent);
-  equal &= (pps1->hasDeblockFilterControl == pps2->hasDeblockFilterControl);
-  equal &= (pps1->numRefIndexL0defaultActiveMinus1 == pps2->numRefIndexL0defaultActiveMinus1);
-  equal &= (pps1->numRefIndexL1defaultActiveMinus1 == pps2->numRefIndexL1defaultActiveMinus1);
-  if (!equal)
-    return equal;
-
-  equal &= (pps1->hasTransform8x8mode == pps2->hasTransform8x8mode);
-  equal &= (pps1->hasPicScalingMatrix == pps2->hasPicScalingMatrix);
-  if (pps1->hasPicScalingMatrix) {
-    for (unsigned i = 0; i < (6 + ((unsigned)pps1->hasTransform8x8mode << 1)); i++) {
-      equal &= (pps1->picScalingListPresentFlag[i] == pps2->picScalingListPresentFlag[i]);
-      if (pps1->picScalingListPresentFlag[i]) {
-        if (i < 6)
-          for (int j = 0; j < 16; j++)
-            equal &= (pps1->scalingList4x4[i][j] == pps2->scalingList4x4[i][j]);
-        else
-          for (int j = 0; j < 64; j++)
-            equal &= (pps1->scalingList8x8[i-6][j] == pps2->scalingList8x8[i-6][j]);
-        }
-      }
-    }
-  equal &= (pps1->chromaQpOffset2 == pps2->chromaQpOffset2);
-
-  return equal;
   }
 //}}}
 //{{{
@@ -241,23 +240,6 @@ static void readPps (sDecoder* decoder, sDataPartition* dataPartition, sPps* pps
 
   pps->valid = TRUE;
   }
-//}}}
-
-//{{{
-sPps* allocPps() {
-
-  sPps* pps = calloc (1, sizeof (sPps));
-  pps->sliceGroupId = NULL;
-  return pps;
-  }
-//}}}
-//{{{
- void freePps (sPps* pps) {
-
-   if (!pps->sliceGroupId)
-     free (pps->sliceGroupId);
-   free (pps);
-   }
 //}}}
 
 //{{{
