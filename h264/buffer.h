@@ -3,7 +3,7 @@
 
 #define MAX_LIST_SIZE 33
 //{{{  sPicMotionOld
-typedef struct PicMotionOld {
+typedef struct {
   byte* mbField; // field macroblock indicator
   } sPicMotionOld;
 //}}}
