@@ -247,10 +247,11 @@ void setPpsById (sDecoder* decoder, int id, sPps* pps) {
 
   if (decoder->pps[id].valid && decoder->pps[id].sliceGroupId)
     free (decoder->pps[id].sliceGroupId);
+
+  // decoder->pps[id] takes ownership of any pps->sliceGroupId calloc
   memcpy (&decoder->pps[id], pps, sizeof (sPps));
 
-  // take ownership of pps->sliceGroupId, set to NULL to stop free by caller
-  decoder->pps[id].sliceGroupId = pps->sliceGroupId;
+  // set pps->sliceGroupId to NULL to caller free
   pps->sliceGroupId = NULL;
   }
 //}}}
