@@ -1683,22 +1683,22 @@ void intra_cr_decoding (sMacroBlock* mb, int yuv)
         {
           joff = subblk_offset_y[yuv][b8][b4];
           ioff = subblk_offset_x[yuv][b8][b4];
-          mb->iTrans4x4(mb, (eColorPlane) (uv + 1), ioff, joff);
-          copy_Image_4x4(&curUV[mb->piccY + joff], &(slice->mbRec[uv + 1][joff]), mb->pixcX + ioff, ioff);
+          mb->iTrans4x4 (mb, (eColorPlane) (uv + 1), ioff, joff);
+          copyImage4x4 (&curUV[mb->piccY + joff], &(slice->mbRec[uv + 1][joff]), mb->pixcX + ioff, ioff);
         }
       }
       slice->isResetCoefCr = FALSE;
     }
     else if (mb->mbType == SI4MB)
     {
-      itrans_sp_cr(mb, uv);
+      itransSpCr (mb, uv);
 
       for (joff  = 0; joff < 8; joff += 4)
       {
         for(ioff = 0; ioff < 8;ioff+=4)
         {
           mb->iTrans4x4 (mb, (eColorPlane) (uv + 1), ioff, joff);
-          copy_Image_4x4 (&curUV[mb->piccY + joff], &(slice->mbRec[uv + 1][joff]), mb->pixcX + ioff, ioff);
+          copyImage4x4 (&curUV[mb->piccY + joff], &(slice->mbRec[uv + 1][joff]), mb->pixcX + ioff, ioff);
         }
       }
       slice->isResetCoefCr = FALSE;
@@ -1711,7 +1711,7 @@ void intra_cr_decoding (sMacroBlock* mb, int yuv)
         {
           joff = subblk_offset_y[yuv][b8][b4];
           ioff = subblk_offset_x[yuv][b8][b4];
-          copy_Image_4x4(&curUV[mb->piccY + joff], &(slice->mbPred[uv + 1][joff]), mb->pixcX + ioff, ioff);
+          copyImage4x4 (&curUV[mb->piccY + joff], &(slice->mbPred[uv + 1][joff]), mb->pixcX + ioff, ioff);
         }
       }
     }
