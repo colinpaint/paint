@@ -45,7 +45,6 @@ static void scalingList (int* scalingList, int scalingListSize, Boolean* useDefa
     }
   }
 //}}}
-
 //{{{
 static int isEqualPps (sPps* pps1, sPps* pps2) {
 
@@ -256,6 +255,17 @@ void setPpsById (sDecoder* decoder, int id, sPps* pps) {
   pps->sliceGroupId = NULL;
   }
 //}}}
+
+//{{{
+void usePps (sDecoder* decoder, sPps* pps) {
+
+  if (decoder->activePps != pps) {
+    if (decoder->picture) // only on slice loss
+      endDecodeFrame (decoder);
+    decoder->activePps = pps;
+    }
+  }
+//}}}
 //{{{
 void readPpsFromNalu (sDecoder* decoder, sNalu* nalu) {
 
@@ -268,17 +278,15 @@ void readPpsFromNalu (sDecoder* decoder, sNalu* nalu) {
 
   sPps* pps = calloc(1, sizeof(sPps));
   readPps (decoder, dataPartition, pps, nalu->len);
-  if (decoder->activePps) {
-    if (pps->id == decoder->activePps->id) {
-      if (!isEqualPps (pps, decoder->activePps)) {
-        // copy to next PPS;
-        memcpy (decoder->nextPps, decoder->activePps, sizeof (sPps));
-        if (decoder->picture)
-          endDecodeFrame (decoder);
-        decoder->activePps = NULL;
-        }
+
+  if (decoder->activePps) 
+    if (!isEqualPps (pps, decoder->activePps)) {
+      // copy to next PPS;
+      memcpy (decoder->nextPps, decoder->activePps, sizeof (sPps));
+      if (decoder->picture)
+        endDecodeFrame (decoder);
+      decoder->activePps = NULL;
       }
-    }
 
   setPpsById (decoder, pps->id, pps);
   freeDataPartitions (dataPartition, 1);
@@ -286,15 +294,5 @@ void readPpsFromNalu (sDecoder* decoder, sNalu* nalu) {
   if (!pps->sliceGroupId)
     free (pps->sliceGroupId);
   free (pps);
-  }
-//}}}
-//{{{
-void usePps (sDecoder* decoder, sPps* pps) {
-
-  if (decoder->activePps != pps) {
-    if (decoder->picture) // only on slice loss
-      endDecodeFrame (decoder);
-    decoder->activePps = pps;
-    }
   }
 //}}}
