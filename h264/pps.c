@@ -284,7 +284,7 @@ void readPpsFromNalu (sDecoder* decoder, sNalu* nalu) {
 
   if (decoder->activePps)
     if (!isEqualPps (&pps, decoder->activePps)) {
-      // copy to next PPS;
+      // copy to nextPps
       memcpy (decoder->nextPps, decoder->activePps, sizeof (sPps));
       if (decoder->picture)
         endDecodeFrame (decoder);
@@ -292,7 +292,5 @@ void readPpsFromNalu (sDecoder* decoder, sNalu* nalu) {
       }
 
   setPpsById (decoder, pps.id, &pps);
-  if (!pps.sliceGroupId)
-    free (pps.sliceGroupId);
   }
 //}}}

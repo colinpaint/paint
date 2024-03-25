@@ -13,7 +13,7 @@
 //}}}
 
 //{{{
-static int isEqual (sSps* sps1, sSps* sps2) {
+static int isEqualSps (sSps* sps1, sSps* sps2) {
 
   int equal = 1;
   if ((!sps1->valid) || (!sps2->valid))
