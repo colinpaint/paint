@@ -265,11 +265,11 @@ void setPpsById (sDecoder* decoder, int id, sPps* pps) {
 
   if (decoder->pps[id].valid && decoder->pps[id].sliceGroupId)
     free (decoder->pps[id].sliceGroupId);
+
+  // take ownership, if any, of pps->sliceGroupId
   memcpy (&decoder->pps[id], pps, sizeof (sPps));
 
-  // we can simply use the memory provided with the pps.
-  // the PPS is destroyed after this function call, will not try to free if pps->sliceGroupId == NULL
-  decoder->pps[id].sliceGroupId = pps->sliceGroupId;
+  // stop any free
   pps->sliceGroupId = NULL;
   }
 //}}}
@@ -283,11 +283,11 @@ void readNaluPps (sDecoder* decoder, sNalu* nalu) {
   dataPartition->s->bitStreamLen = RBSPtoSODB (dataPartition->s->bitStreamBuffer, nalu->len-1);
   dataPartition->s->codeLen = dataPartition->s->bitStreamLen;
 
-  sPps* pps = allocPps();
-  readPps (decoder, dataPartition, pps, nalu->len);
+  sPps pps = { 0 };
+  readPps (decoder, dataPartition, &pps, nalu->len);
   if (decoder->activePps) {
-    if (pps->id == decoder->activePps->id) {
-      if (!isEqualPps (pps, decoder->activePps)) {
+    if (pps.id == decoder->activePps->id) {
+      if (!isEqualPps (&pps, decoder->activePps)) {
         // copy to next PPS;
         memcpy (decoder->nextPps, decoder->activePps, sizeof (sPps));
         if (decoder->picture)
@@ -297,9 +297,8 @@ void readNaluPps (sDecoder* decoder, sNalu* nalu) {
       }
     }
 
-  setPpsById (decoder, pps->id, pps);
+  setPpsById (decoder, pps.id, &pps);
   freeDataPartitions (dataPartition, 1);
-  freePps (pps);
   }
 //}}}
 //{{{
