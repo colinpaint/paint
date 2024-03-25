@@ -5,11 +5,7 @@
 #include "image.h"
 #include "pps.h"
 #include "nalu.h"
-#include "fmo.h"
-#include "cabac.h"
 #include "vlc.h"
-#include "buffer.h"
-#include "erc.h"
 //}}}
 
 //{{{
