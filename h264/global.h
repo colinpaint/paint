@@ -558,11 +558,11 @@ typedef struct MacroBlock {
   void (*readCompCoef8x8cavlc) (struct MacroBlock*, eColorPlane, int(*)[8], int, int, byte**);
   } sMacroBlock;
 //}}}
-//{{{  sWpParam
+//{{{  sWeightedPredParam
 typedef struct {
   short weight[3];
   short offset[3];
-  } sWpParam;
+  } sWeightedPredParam;
 //}}}
 //{{{  sImage
 typedef struct Image {
@@ -744,17 +744,14 @@ typedef struct Slice {
   int coefCount;
   int pos;
 
-  // weighted prediction
+  // weightedPrediction
   unsigned short hasWeightedPred;
   unsigned short weightedBiPredIdc;
   unsigned short lumaLog2weightDenom;
   unsigned short chromaLog2weightDenom;
-  sWpParam** wpParam;    // wp parameters in [list][index]
-  int***     wpWeight;   // weight in [list][index][component] order
-  int***     wpOffset;   // offset in [list][index][component] order
-  int****    wbpWeight;  // weight in [list][fw_index][bw_index][component] order
-  short      wpRoundLuma;
-  short      wpRoundChroma;
+  int***     weightedPredWeight;          // weight in [list][index][component] order
+  int***     weightedPredOffset;          // offset in [list][index][component] order
+  int****    weightedBiPredWeight;        // weight in [list][fw_index][bw_index][component] order
 
   // for signalling to the neighbour logic that this is a deblocker call
   int maxMbVmvR;   // maximum vertical motion vector range in luma quarter pixel units for the current levelIdc

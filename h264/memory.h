@@ -88,7 +88,7 @@ extern int getMem3Dodouble (double** **array2D, int dim0, int dim1, int dim2, in
 extern int getMem2Doint (int** *array2D, int dim0, int dim1, int offset);
 extern int getMem3Doint (int** **array3D, int dim0, int dim1, int dim2, int offset);
 
-extern int getMem2Dwp (sWpParam** *array2D, int dim0, int dim1);
+extern int getMem2Dwp (sWeightedPredParam** *array2D, int dim0, int dim1);
 
 extern int get_offset_mem2Dshort(short** *array2D, int rows, int columns, int offset_y, int offset_x);
 
@@ -159,7 +159,7 @@ extern void freeMem3Doint (int** *array3D, int rows, int columns, int offset);
 extern int  initTopBotPlanes (sPixel** imgFrame, int height, sPixel** *imgTopField, sPixel** *imgBotField);
 extern void freeTopBotPlanes (sPixel** imgTopField, sPixel** imgBotField);
 
-extern void freeMem2Dwp (sWpParam** array2D);
+extern void freeMem2Dwp (sWeightedPredParam** array2D);
 
 extern void copy2DImage (sPixel** dst_img, sPixel** src_img, int sizeX, int sizeY);
 extern int  malloc_mem2Dpel_2SLayers (sPixel** *buf0, int imgtype0, sPixel** *buf1, int imgtype1, int height, int width);
