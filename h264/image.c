@@ -1946,7 +1946,7 @@ static void reorderLists (sSlice* slice) {
       slice->listXsize[1] = (char)slice->numRefIndexActive[LIST_1];
     }
 
-  freeRefPicListReorderingBuffer (slice);
+  freeRefPicListReorderBuffer (slice);
   }
 //}}}
 //{{{

@@ -777,66 +777,66 @@ typedef struct Slice {
   void (*linfoCbpInter) (int, int, int*, int*);
   } sSlice;
 //}}}
-//{{{  sCoding
-typedef struct CodingParam {
-  int profileIdc;
+ //{{{  sCoding
+ typedef struct CodingParam {
+   int profileIdc;
 
-  ePicStructure picStructure;
-  int yuvFormat;
-  int isSeperateColourPlane;
-  int sliceType;                // image type INTER/INTRA
+   ePicStructure picStructure;
+   int yuvFormat;
+   int isSeperateColourPlane;
+   int sliceType;                // image type INTER/INTRA
 
-  // size
-  int width;
-  int height;
-  int widthCr;
-  int heightCr;
+   // size
+   int width;
+   int height;
+   int widthCr;
+   int heightCr;
 
-  int lumaPadX;
-  int lumaPadY;
-  int chromaPadX;
-  int chromaPadY;
+   int lumaPadX;
+   int lumaPadY;
+   int chromaPadX;
+   int chromaPadY;
 
-  // bits
-  int picUnitBitSizeDisk;
-  short bitDepthLuma;
-  short bitDepthChroma;
-  int bitDepthScale[2];
-  int bitDepthLumaQpScale;
-  int bitDepthChromaQpScale;
-  int maxPelValueComp[MAX_PLANE];          // max value that one picture element (pixel) can take (depends on pic_unit_bitDepth)
-  unsigned int dcPredValueComp[MAX_PLANE]; // component value for DC prediction (depends on component pel bit depth)
+   // bits
+   int picUnitBitSizeDisk;
+   short bitDepthLuma;
+   short bitDepthChroma;
+   int bitDepthScale[2];
+   int bitDepthLumaQpScale;
+   int bitDepthChromaQpScale;
+   int maxPelValueComp[MAX_PLANE];          // max value that one picture element (pixel) can take (depends on pic_unit_bitDepth)
+   unsigned int dcPredValueComp[MAX_PLANE]; // component value for DC prediction (depends on component pel bit depth)
 
-  int numUvBlocks;
-  int numCdcCoeff;
-  int numBlock8x8uv;
-  int useLosslessQpPrime;
+   int numUvBlocks;
+   int numCdcCoeff;
+   int numBlock8x8uv;
+   int useLosslessQpPrime;
 
-  // macroblocks
-  unsigned int picWidthMbs;
-  unsigned int picHeightMapUnits;
-  unsigned int frameHeightMbs;
-  unsigned int frameSizeMbs;
+   // macroblocks
+   unsigned int picWidthMbs;
+   unsigned int picHeightMapUnits;
+   unsigned int frameHeightMbs;
+   unsigned int frameSizeMbs;
 
-  int mbCrSizeX;
-  int mbCrSizeY;
-  int mbCrSizeXblock;
-  int mbCrSizeYblock;
-  int mbCrSize;
-  int mbSize[3][2];       // component macroblock dimensions
-  int mbSizeBlock[3][2];  // component macroblock dimensions
-  int mbSizeShift[3][2];
+   int mbCrSizeX;
+   int mbCrSizeY;
+   int mbCrSizeXblock;
+   int mbCrSizeYblock;
+   int mbCrSize;
+   int mbSize[3][2];       // component macroblock dimensions
+   int mbSizeBlock[3][2];  // component macroblock dimensions
+   int mbSizeShift[3][2];
 
-  int maxVmvR;            // maximum vertical motion vector range in lumaQuarterFrame pixel units
-  int maxFrameNum;
+   int maxVmvR;            // maximum vertical motion vector range in lumaQuarterFrame pixel units
+   int maxFrameNum;
 
-  int subpelX;
-  int subpelY;
-  int shiftpelX;
-  int shiftpelY;
-  int totalScale;
-  } sCoding;
-//}}}
+   int subpelX;
+   int subpelY;
+   int shiftpelX;
+   int shiftpelY;
+   int totalScale;
+   } sCoding;
+ //}}}
 //{{{  sParam
 typedef struct Param {
   int naluDebug;
@@ -1033,16 +1033,17 @@ static inline int isBLprofile (unsigned profileIdc) {
          (profileIdc == FREXT_CAVLC444) ||
          (profileIdc == FREXT_HP) || (profileIdc == FREXT_Hi10P) ||
          (profileIdc == FREXT_Hi422) || (profileIdc == FREXT_Hi444);
-}
+  }
 //}}}
 //{{{
 static inline int isFrextProfile (unsigned profileIdc) {
-  // we allow all FRExt tools, when no profile is active
+// we allow all FRExt tools, when no profile is active
+
   return (profileIdc == NO_PROFILE) ||
          (profileIdc == FREXT_HP) ||
          (profileIdc == FREXT_Hi10P) || (profileIdc == FREXT_Hi422) ||
          (profileIdc == FREXT_Hi444) || (profileIdc == FREXT_CAVLC444);
-}
+  }
 //}}}
 //{{{
 static inline int isHiIntraOnlyProfile (unsigned profileIdc, Boolean constrainedSet3flag) {

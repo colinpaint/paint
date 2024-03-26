@@ -1797,7 +1797,7 @@ void init_lists_for_non_reference_loss (sDPB* dpb, int currSliceType, ePicStruct
         if (dpb->fs[i]->concealRef == 1)
           decoder->sliceList[0]->listX[0][list0idx++] = dpb->fs[i]->frame;
       // order list 0 by PicNum
-      qsort ((void *)decoder->sliceList[0]->listX[0], list0idx, sizeof(sPicture*), compare_pic_by_pic_num_desc);
+      qsort ((void *)decoder->sliceList[0]->listX[0], list0idx, sizeof(sPicture*), comparePicByPicNumDescending);
       decoder->sliceList[0]->listXsize[0] = (char) list0idx;
       }
     }
@@ -1809,23 +1809,26 @@ void init_lists_for_non_reference_loss (sDPB* dpb, int currSliceType, ePicStruct
           if (decoder->earlierMissingPoc > dpb->fs[i]->frame->poc)
             decoder->sliceList[0]->listX[0][list0idx++] = dpb->fs[i]->frame;
 
-      qsort ((void *)decoder->sliceList[0]->listX[0], list0idx, sizeof(sPicture*), compare_pic_by_poc_desc);
+      qsort ((void *)decoder->sliceList[0]->listX[0], list0idx, sizeof(sPicture*), comparePicByPocdesc);
       list0index1 = list0idx;
       for (i = 0; i < dpb->usedSize; i++)
         if (dpb->fs[i]->concealRef == 1)
           if (decoder->earlierMissingPoc < dpb->fs[i]->frame->poc)
             decoder->sliceList[0]->listX[0][list0idx++] = dpb->fs[i]->frame;
 
-      qsort ((void *)&decoder->sliceList[0]->listX[0][list0index1], list0idx-list0index1, sizeof(sPicture*), compare_pic_by_poc_asc);
+      qsort ((void*)&decoder->sliceList[0]->listX[0][list0index1], list0idx-list0index1, 
+             sizeof(sPicture*), comparePicByPocAscending);
       for (j = 0; j < list0index1; j++)
-        decoder->sliceList[0]->listX[1][list0idx-list0index1+j]=decoder->sliceList[0]->listX[0][j];
+        decoder->sliceList[0]->listX[1][list0idx-list0index1+j] = decoder->sliceList[0]->listX[0][j];
       for (j = list0index1; j < list0idx; j++)
         decoder->sliceList[0]->listX[1][j-list0index1]=decoder->sliceList[0]->listX[0][j];
 
       decoder->sliceList[0]->listXsize[0] = decoder->sliceList[0]->listXsize[1] = (char) list0idx;
 
-      qsort ((void*)&decoder->sliceList[0]->listX[0][(short) decoder->sliceList[0]->listXsize[0]], list0idx-decoder->sliceList[0]->listXsize[0], sizeof(sPicture*), comparePicByLtPicNumAsc);
-      qsort ((void*)&decoder->sliceList[0]->listX[1][(short) decoder->sliceList[0]->listXsize[0]], list0idx-decoder->sliceList[0]->listXsize[0], sizeof(sPicture*), comparePicByLtPicNumAsc);
+      qsort ((void*)&decoder->sliceList[0]->listX[0][(short) decoder->sliceList[0]->listXsize[0]], list0idx-decoder->sliceList[0]->listXsize[0], 
+             sizeof(sPicture*), comparePicByLtPicNumAscending);
+      qsort ((void*)&decoder->sliceList[0]->listX[1][(short) decoder->sliceList[0]->listXsize[0]], list0idx-decoder->sliceList[0]->listXsize[0], 
+             sizeof(sPicture*), comparePicByLtPicNumAscending);
       decoder->sliceList[0]->listXsize[0] = decoder->sliceList[0]->listXsize[1] = (char) list0idx;
       }
     }

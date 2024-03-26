@@ -85,7 +85,7 @@ sSlice* allocSlice (sDecoder* decoder) {
 static void freeSlice (sSlice *slice) {
 
   if (slice->sliceType != eSliceI && slice->sliceType != eSliceSI)
-    freeRefPicListReorderingBuffer (slice);
+    freeRefPicListReorderBuffer (slice);
 
   freePred (slice);
   freeMem3Dint (slice->cof);
