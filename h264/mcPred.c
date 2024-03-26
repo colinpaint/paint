@@ -702,7 +702,7 @@ static void mc_prediction (sPixel** mbPred, sPixel** block, int blockSizeY, int 
 //{{{
 static void weighted_mc_prediction (sPixel** mbPred, sPixel** block,
                                     int blockSizeY, int blockSizeX,
-                                    int ioff, int wp_scale, int wpOffset,
+                                    int ioff, int wp_scale, int weightedPredOffset,
                                     int weight_denom, int color_clip)
 {
   int i, j;
@@ -712,7 +712,7 @@ static void weighted_mc_prediction (sPixel** mbPred, sPixel** block,
   {
     for(i = 0; i < blockSizeX; i++)
     {
-      result = rshift_rnd((wp_scale * block[j][i]), weight_denom) + wpOffset;
+      result = rshift_rnd((wp_scale * block[j][i]), weight_denom) + weightedPredOffset;
       mbPred[j][i + ioff] = (sPixel)iClip3(0, color_clip, result);
     }
   }
@@ -753,7 +753,7 @@ static void weighted_bi_prediction (sPixel *mbPred,
                                     int blockSizeX,
                                     int wp_scale_l0,
                                     int wp_scale_l1,
-                                    int wpOffset,
+                                    int weightedPredOffset,
                                     int weight_denom,
                                     int color_clip)
 {
@@ -766,7 +766,7 @@ static void weighted_bi_prediction (sPixel *mbPred,
     {
       result = rshift_rnd_sf((wp_scale_l0 * *(block_l0++) + wp_scale_l1 * *(block_l1++)),  weight_denom);
 
-      *(mbPred++) = (sPixel) iClip1(color_clip, result + wpOffset);
+      *(mbPred++) = (sPixel) iClip1(color_clip, result + weightedPredOffset);
     }
     mbPred += row_inc;
     block_l0 += row_inc;
@@ -1890,13 +1890,13 @@ static void perform_mc_single_wp (sMacroBlock* mb, eColorPlane plane, sPicture* 
     get_block_luma(list, vec1_x, vec1_y, blockSizeX, blockSizeY, tempBlockL0,shift_x,maxold_x,maxold_y,tempRes,max_imgpel_value,no_ref_value, mb);
 
   {
-    int alpha_l0, wpOffset, wp_denom;
+    int alpha_l0, weightedPredOffset, wp_denom;
     if (mb->mbField && ((decoder->activePps->hasWeightedPred&&(type==eSliceP|| type == eSliceSP))||(decoder->activePps->weightedBiPredIdc==1 && (type==eSliceB))))
       ref_idx_wp >>=1;
-    alpha_l0  = slice->wpWeight[predDir][ref_idx_wp][plane];
-    wpOffset = slice->wpOffset[predDir][ref_idx_wp][plane];
+    alpha_l0  = slice->weightedPredWeight[predDir][ref_idx_wp][plane];
+    weightedPredOffset = slice->weightedPredOffset[predDir][ref_idx_wp][plane];
     wp_denom  = plane > 0 ? slice->chromaLog2weightDenom : slice->lumaLog2weightDenom;
-    weighted_mc_prediction(&slice->mbPred[plane][joff], tempBlockL0, blockSizeY, blockSizeX, ioff, alpha_l0, wpOffset, wp_denom, max_imgpel_value);
+    weighted_mc_prediction(&slice->mbPred[plane][joff], tempBlockL0, blockSizeY, blockSizeX, ioff, alpha_l0, weightedPredOffset, wp_denom, max_imgpel_value);
   }
 
   if ((chromaFormatIdc != YUV400) && (chromaFormatIdc != YUV444) )
@@ -1929,8 +1929,8 @@ static void perform_mc_single_wp (sMacroBlock* mb, eColorPlane plane, sPicture* 
     }
     no_ref_value = (sPixel)decoder->coding.dcPredValueComp[1];
     {
-      int *weight = slice->wpWeight[predDir][ref_idx_wp];
-      int *offset = slice->wpOffset[predDir][ref_idx_wp];
+      int *weight = slice->weightedPredWeight[predDir][ref_idx_wp];
+      int *offset = slice->weightedPredOffset[predDir][ref_idx_wp];
       get_block_chroma(list,vec1_x,vec1_y_cr,decoder->coding.subpelX,decoder->coding.subpelY,maxold_x,maxold_y,block_size_x_cr,block_size_y_cr,decoder->coding.shiftpelX,decoder->coding.shiftpelY,&tempBlockL0[0][0],&tempBlockL1[0][0] ,totalScale,no_ref_value,decoder);
       weighted_mc_prediction(&slice->mbPred[1][joff_cr], tempBlockL0, block_size_y_cr, block_size_x_cr, ioff_cr, weight[1], offset[1], chroma_log2_weight, decoder->coding.maxPelValueComp[1]);
       weighted_mc_prediction(&slice->mbPred[2][joff_cr], tempBlockL1, block_size_y_cr, block_size_x_cr, ioff_cr, weight[2], offset[2], chroma_log2_weight, decoder->coding.maxPelValueComp[2]);
@@ -2043,10 +2043,10 @@ static void perform_mc_bi_wp (sMacroBlock* mb, eColorPlane plane, sPicture* pict
 
   /// WP Parameters
   int wt_list_offset = (weightedBiPredIdc==2)? listOffset : 0;
-  int *weight0 = slice->wbpWeight[LIST_0 + wt_list_offset][l0_ref_idx][l1_ref_idx];
-  int *weight1 = slice->wbpWeight[LIST_1 + wt_list_offset][l0_ref_idx][l1_ref_idx];
-  int *offset0 = slice->wpOffset[LIST_0 + wt_list_offset][l0_ref_idx];
-  int *offset1 = slice->wpOffset[LIST_1 + wt_list_offset][l1_ref_idx];
+  int *weight0 = slice->weightedBiPredWeight[LIST_0 + wt_list_offset][l0_ref_idx][l1_ref_idx];
+  int *weight1 = slice->weightedBiPredWeight[LIST_1 + wt_list_offset][l0_ref_idx][l1_ref_idx];
+  int *offset0 = slice->weightedPredOffset[LIST_0 + wt_list_offset][l0_ref_idx];
+  int *offset1 = slice->weightedPredOffset[LIST_1 + wt_list_offset][l1_ref_idx];
   int maxold_y = (mb->mbField) ? (picture->sizeY >> 1) - 1 : picture->size_y_m1;
   int pady = decoder->coding.lumaPadY;
   int rlimit = maxold_y + pady - blockSizeY - 2;
@@ -2062,7 +2062,7 @@ static void perform_mc_bi_wp (sMacroBlock* mb, eColorPlane plane, sPicture* pict
   sPixel *block2 = tempBlockL2[0];
   sPixel** tempBlockL3 = slice->tempBlockL3;
   sPixel *block3 = tempBlockL3[0];
-  int wpOffset;
+  int weightedPredOffset;
   int wp_denom;
 
   // vars for get_block_luma
@@ -2095,9 +2095,9 @@ static void perform_mc_bi_wp (sMacroBlock* mb, eColorPlane plane, sPicture* pict
     get_block_luma(list1, vec2_x, vec2_y, blockSizeX, blockSizeY, tempBlockL1,shift_x,maxold_x,maxold_y,tempRes,max_imgpel_value,no_ref_value, mb);
 
 
-  wpOffset = ((offset0[plane] + offset1[plane] + 1) >>1);
+  weightedPredOffset = ((offset0[plane] + offset1[plane] + 1) >>1);
   wp_denom  = plane > 0 ? slice->chromaLog2weightDenom : slice->lumaLog2weightDenom;
-  weighted_bi_prediction(&slice->mbPred[plane][joff][ioff], block0, block1, blockSizeY, blockSizeX, weight0[plane], weight1[plane], wpOffset, wp_denom + 1, max_imgpel_value);
+  weighted_bi_prediction(&slice->mbPred[plane][joff][ioff], block0, block1, blockSizeY, blockSizeX, weight0[plane], weight1[plane], weightedPredOffset, wp_denom + 1, max_imgpel_value);
 
   if ((chromaFormatIdc != YUV400) && (chromaFormatIdc != YUV444) )
   {
@@ -2144,12 +2144,12 @@ static void perform_mc_bi_wp (sMacroBlock* mb, eColorPlane plane, sPicture* pict
     }
     no_ref_value = (sPixel)decoder->coding.dcPredValueComp[1];
 
-    wpOffset = ((offset0[1] + offset1[1] + 1) >>1);
+    weightedPredOffset = ((offset0[1] + offset1[1] + 1) >>1);
     get_block_chroma(list0,vec1_x,vec1_y_cr,subpelX,subpelY,maxold_x,maxold_y,block_size_x_cr,block_size_y_cr,shiftpelX,shiftpelY,block0,block2 ,totalScale,no_ref_value,decoder);
     get_block_chroma(list1,vec2_x,vec2_y_cr,subpelX,subpelY,maxold_x,maxold_y,block_size_x_cr,block_size_y_cr,shiftpelX,shiftpelY,block1,block3 ,totalScale,no_ref_value,decoder);
-    weighted_bi_prediction(&slice->mbPred[1][joff_cr][ioff_cr],block0,block1,block_size_y_cr,block_size_x_cr,weight0[1],weight1[1],wpOffset,chroma_log2,decoder->coding.maxPelValueComp[1]);
-    wpOffset = ((offset0[2] + offset1[2] + 1) >>1);
-    weighted_bi_prediction(&slice->mbPred[2][joff_cr][ioff_cr],block2,block3,block_size_y_cr,block_size_x_cr,weight0[2],weight1[2],wpOffset,chroma_log2,decoder->coding.maxPelValueComp[2]);
+    weighted_bi_prediction(&slice->mbPred[1][joff_cr][ioff_cr],block0,block1,block_size_y_cr,block_size_x_cr,weight0[1],weight1[1],weightedPredOffset,chroma_log2,decoder->coding.maxPelValueComp[1]);
+    weightedPredOffset = ((offset0[2] + offset1[2] + 1) >>1);
+    weighted_bi_prediction(&slice->mbPred[2][joff_cr][ioff_cr],block2,block3,block_size_y_cr,block_size_x_cr,weight0[2],weight1[2],weightedPredOffset,chroma_log2,decoder->coding.maxPelValueComp[2]);
   }
 }
 //}}}

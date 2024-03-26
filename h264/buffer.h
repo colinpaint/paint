@@ -75,7 +75,7 @@ typedef struct Picture {
   int           qp;
   int           chromaQpOffset[2];
   int           sliceQpDelta;
-  sDecodedRefPicMark* decRefPicMarkingBuffer;  // stores the memory management control operations
+  sDecodedRefPicMark* decRefPicMarkBuffer;  // stores the memory management control operations
 
   // picture error conceal
   int           lumaStride;

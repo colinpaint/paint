@@ -53,9 +53,9 @@ sSlice* allocSlice (sDecoder* decoder) {
   slice->maxDataPartitions = 3;  // assume dataPartition worst case
   slice->dataPartitions = allocDataPartitions (slice->maxDataPartitions);
 
-  getMem3Dint (&(slice->wpWeight), 2, MAX_REFERENCE_PICTURES, 3);
-  getMem3Dint (&(slice->wpOffset), 6, MAX_REFERENCE_PICTURES, 3);
-  getMem4Dint (&(slice->wbpWeight), 6, MAX_REFERENCE_PICTURES, MAX_REFERENCE_PICTURES, 3);
+  getMem3Dint (&(slice->weightedPredWeight), 2, MAX_REFERENCE_PICTURES, 3);
+  getMem3Dint (&(slice->weightedPredOffset), 6, MAX_REFERENCE_PICTURES, 3);
+  getMem4Dint (&(slice->weightedBiPredWeight), 6, MAX_REFERENCE_PICTURES, MAX_REFERENCE_PICTURES, 3);
   getMem3Dpel (&(slice->mbPred), MAX_PLANE, MB_BLOCK_SIZE, MB_BLOCK_SIZE);
   getMem3Dpel (&(slice->mbRec), MAX_PLANE, MB_BLOCK_SIZE, MB_BLOCK_SIZE);
   getMem3Dint (&(slice->mbRess), MAX_PLANE, MB_BLOCK_SIZE, MB_BLOCK_SIZE);
@@ -93,9 +93,9 @@ static void freeSlice (sSlice *slice) {
   freeMem3Dpel (slice->mbRec);
   freeMem3Dpel (slice->mbPred);
 
-  freeMem3Dint (slice->wpWeight);
-  freeMem3Dint (slice->wpOffset);
-  freeMem4Dint (slice->wbpWeight);
+  freeMem3Dint (slice->weightedPredWeight);
+  freeMem3Dint (slice->weightedPredOffset);
+  freeMem4Dint (slice->weightedBiPredWeight);
 
   freeDataPartitions (slice->dataPartitions, 3);
 
@@ -110,9 +110,9 @@ static void freeSlice (sSlice *slice) {
       }
     }
 
-  while (slice->decRefPicMarkingBuffer) {
-    sDecodedRefPicMark* tempDrpm = slice->decRefPicMarkingBuffer;
-    slice->decRefPicMarkingBuffer = tempDrpm->next;
+  while (slice->decRefPicMarkBuffer) {
+    sDecodedRefPicMark* tempDrpm = slice->decRefPicMarkBuffer;
+    slice->decRefPicMarkBuffer = tempDrpm->next;
     free (tempDrpm);
     }
 
@@ -343,121 +343,6 @@ void freeDecodedPictures (sDecodedPic* decodedPic) {
     free (decodedPic);
     decodedPic = nextDecodedPicture;
    }
-  }
-//}}}
-
-//{{{
-void setCoding (sDecoder* decoder) {
-
-  decoder->bitDepthChroma = 0;
-  decoder->widthCr = 0;
-  decoder->heightCr = 0;
-
-  // fidelity Range Extensions stuff
-  decoder->width = decoder->coding.width;
-  decoder->height = decoder->coding.height;
-  decoder->bitDepthLuma = decoder->coding.bitDepthLuma;
-  decoder->bitDepthChroma = decoder->coding.bitDepthChroma;
-
-  decoder->coding.lumaPadX = MCBUF_LUMA_PAD_X;
-  decoder->coding.lumaPadY = MCBUF_LUMA_PAD_Y;
-  decoder->coding.chromaPadX = MCBUF_CHROMA_PAD_X;
-  decoder->coding.chromaPadY = MCBUF_CHROMA_PAD_Y;
-
-  if (decoder->coding.yuvFormat == YUV420) {
-    //{{{  yuv420
-    decoder->widthCr = decoder->width >> 1;
-    decoder->heightCr = decoder->height >> 1;
-    }
-    //}}}
-  else if (decoder->coding.yuvFormat == YUV422) {
-    //{{{  yuv422
-    decoder->widthCr = decoder->width >> 1;
-    decoder->heightCr = decoder->height;
-    decoder->coding.chromaPadY = MCBUF_CHROMA_PAD_Y*2;
-    }
-    //}}}
-  else if (decoder->coding.yuvFormat == YUV444) {
-    //{{{  yuv444
-    decoder->widthCr = decoder->width;
-    decoder->heightCr = decoder->height;
-    decoder->coding.chromaPadX = decoder->coding.lumaPadX;
-    decoder->coding.chromaPadY = decoder->coding.lumaPadY;
-    }
-    //}}}
-
-  // pel bitDepth init
-  decoder->coding.bitDepthLumaQpScale = 6 * (decoder->bitDepthLuma - 8);
-
-  if ((decoder->bitDepthLuma > decoder->bitDepthChroma) || 
-      (decoder->activeSps->chromaFormatIdc == YUV400))
-    decoder->coding.picUnitBitSizeDisk = (decoder->bitDepthLuma > 8)? 16:8;
-  else
-    decoder->coding.picUnitBitSizeDisk = (decoder->bitDepthChroma > 8)? 16:8;
-
-  decoder->coding.dcPredValueComp[0] = 1<<(decoder->bitDepthLuma - 1);
-  decoder->coding.maxPelValueComp[0] = (1<<decoder->bitDepthLuma) - 1;
-  decoder->mbSize[0][0] = decoder->mbSize[0][1] = MB_BLOCK_SIZE;
-
-  if (decoder->activeSps->chromaFormatIdc == YUV400) {
-    //{{{  yuv400
-    decoder->coding.bitDepthChromaQpScale = 0;
-
-    decoder->coding.maxPelValueComp[1] = 0;
-    decoder->coding.maxPelValueComp[2] = 0;
-
-    decoder->coding.numBlock8x8uv = 0;
-    decoder->coding.numUvBlocks = 0;
-    decoder->coding.numCdcCoeff = 0;
-
-    decoder->mbSize[1][0] = decoder->mbSize[2][0] = decoder->mbCrSizeX  = 0;
-    decoder->mbSize[1][1] = decoder->mbSize[2][1] = decoder->mbCrSizeY  = 0;
-
-    decoder->coding.subpelX = 0;
-    decoder->coding.subpelY = 0;
-    decoder->coding.shiftpelX = 0;
-    decoder->coding.shiftpelY = 0;
-
-    decoder->coding.totalScale = 0;
-    }
-    //}}}
-  else {
-    //{{{  not yuv400
-    decoder->coding.bitDepthChromaQpScale = 6 * (decoder->bitDepthChroma - 8);
-
-    decoder->coding.dcPredValueComp[1] = 1 << (decoder->bitDepthChroma - 1);
-    decoder->coding.dcPredValueComp[2] = decoder->coding.dcPredValueComp[1];
-    decoder->coding.maxPelValueComp[1] = (1 << decoder->bitDepthChroma) - 1;
-    decoder->coding.maxPelValueComp[2] = (1 << decoder->bitDepthChroma) - 1;
-
-    decoder->coding.numBlock8x8uv = (1 << decoder->activeSps->chromaFormatIdc) & (~(0x1));
-    decoder->coding.numUvBlocks = decoder->coding.numBlock8x8uv >> 1;
-    decoder->coding.numCdcCoeff = decoder->coding.numBlock8x8uv << 1;
-
-    decoder->mbSize[1][0] = decoder->mbSize[2][0] = 
-      decoder->mbCrSizeX = (decoder->activeSps->chromaFormatIdc == YUV420 || 
-                            decoder->activeSps->chromaFormatIdc == YUV422) ? 8 : 16;
-    decoder->mbSize[1][1] = decoder->mbSize[2][1] = 
-      decoder->mbCrSizeY = (decoder->activeSps->chromaFormatIdc == YUV444 || 
-                            decoder->activeSps->chromaFormatIdc == YUV422) ? 16 : 8;
-
-    decoder->coding.subpelX = decoder->mbCrSizeX == 8 ? 7 : 3;
-    decoder->coding.subpelY = decoder->mbCrSizeY == 8 ? 7 : 3;
-    decoder->coding.shiftpelX = decoder->mbCrSizeX == 8 ? 3 : 2;
-    decoder->coding.shiftpelY = decoder->mbCrSizeY == 8 ? 3 : 2;
-
-    decoder->coding.totalScale = decoder->coding.shiftpelX + decoder->coding.shiftpelY;
-    }
-    //}}}
-
-  decoder->mbCrSize = decoder->mbCrSizeX * decoder->mbCrSizeY;
-  decoder->mbSizeBlock[0][0] = decoder->mbSizeBlock[0][1] = decoder->mbSize[0][0] >> 2;
-  decoder->mbSizeBlock[1][0] = decoder->mbSizeBlock[2][0] = decoder->mbSize[1][0] >> 2;
-  decoder->mbSizeBlock[1][1] = decoder->mbSizeBlock[2][1] = decoder->mbSize[1][1] >> 2;
-
-  decoder->mbSizeShift[0][0] = decoder->mbSizeShift[0][1] = ceilLog2sf (decoder->mbSize[0][0]);
-  decoder->mbSizeShift[1][0] = decoder->mbSizeShift[2][0] = ceilLog2sf (decoder->mbSize[1][0]);
-  decoder->mbSizeShift[1][1] = decoder->mbSizeShift[2][1] = ceilLog2sf (decoder->mbSize[1][1]);
   }
 //}}}
 

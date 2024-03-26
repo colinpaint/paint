@@ -72,9 +72,6 @@ typedef int32  transpel;  // transformed coefficient type
 #define Q_BITS_8         16
 #define DQ_BITS_8        6
 
-#define IS_I16MB(MB)     ((MB)->mbType == I16MB || (MB)->mbType == IPCM)
-#define IS_DIRECT(MB)    ((MB)->mbType == 0 && (slice->sliceType == eSliceB ))
-
 #define TOTRUN_NUM       15
 #define RUNBEFORE_NUM    7
 #define RUNBEFORE_NUM_M1 6
@@ -624,6 +621,8 @@ typedef struct Slice {
   sSps* activeSps;
   struct DPB* dpb;
 
+  eSliceType    sliceType;
+
   int isIDR;
   int idrPicId;
   int refId;
@@ -661,12 +660,13 @@ typedef struct Slice {
   int           sliceQpDelta;
   int           qs;
   int           sliceQsDelta;
-  int           sliceType;
+
   int           modelNum;     // cabac model number
   unsigned int  frameNum;
+
+  ePicStructure picStructure;
   unsigned int  fieldPic;
   byte          botField;
-  ePicStructure picStructure;
   int           startMbNum;   // MUST be set by NAL even in case of errorFlag == 1
   int           endMbNumPlus1;
   int           maxDataPartitions;
@@ -684,7 +684,7 @@ typedef struct Slice {
   int noOutputPriorPicFlag;
   int longTermRefFlag;
   int adaptRefPicBufFlag;
-  sDecodedRefPicMark* decRefPicMarkingBuffer; // stores memory management control operations
+  sDecodedRefPicMark* decRefPicMarkBuffer; // stores memory management control operations
 
   char listXsize[6];
   struct Picture** listX[6];
@@ -740,9 +740,9 @@ typedef struct Slice {
   unsigned short weightedBiPredIdc;
   unsigned short lumaLog2weightDenom;
   unsigned short chromaLog2weightDenom;
-  int***         wpWeight;   // weight in [list][index][component] order
-  int***         wpOffset;   // offset in [list][index][component] order
-  int****        wbpWeight;  // weight in [list][fw_index][bw_index][component] order
+  int***         weightedPredWeight;   // weight in [list][index][component] order
+  int***         weightedPredOffset;   // offset in [list][index][component] order
+  int****        weightedBiPredWeight;  // weight in [list][fw_index][bw_index][component] order
   short          wpRoundLuma;
   short          wpRoundChroma;
 
@@ -777,66 +777,66 @@ typedef struct Slice {
   void (*linfoCbpInter) (int, int, int*, int*);
   } sSlice;
 //}}}
- //{{{  sCoding
- typedef struct CodingParam {
-   int profileIdc;
+//{{{  sCoding
+typedef struct CodingParam {
+  int profileIdc;
 
-   ePicStructure picStructure;
-   int yuvFormat;
-   int isSeperateColourPlane;
-   int sliceType;                // image type INTER/INTRA
+  ePicStructure picStructure;
+  int yuvFormat;
+  int isSeperateColourPlane;
+  eSliceType sliceType;
 
-   // size
-   int width;
-   int height;
-   int widthCr;
-   int heightCr;
+  // size
+  int width;
+  int height;
+  int widthCr;
+  int heightCr;
 
-   int lumaPadX;
-   int lumaPadY;
-   int chromaPadX;
-   int chromaPadY;
+  int lumaPadX;
+  int lumaPadY;
+  int chromaPadX;
+  int chromaPadY;
 
-   // bits
-   int picUnitBitSizeDisk;
-   short bitDepthLuma;
-   short bitDepthChroma;
-   int bitDepthScale[2];
-   int bitDepthLumaQpScale;
-   int bitDepthChromaQpScale;
-   int maxPelValueComp[MAX_PLANE];          // max value that one picture element (pixel) can take (depends on pic_unit_bitDepth)
-   unsigned int dcPredValueComp[MAX_PLANE]; // component value for DC prediction (depends on component pel bit depth)
+  // bits
+  int picUnitBitSizeDisk;
+  short bitDepthLuma;
+  short bitDepthChroma;
+  int bitDepthScale[2];
+  int bitDepthLumaQpScale;
+  int bitDepthChromaQpScale;
+  int maxPelValueComp[MAX_PLANE];          // max value that one picture element (pixel) can take (depends on pic_unit_bitDepth)
+  unsigned int dcPredValueComp[MAX_PLANE]; // component value for DC prediction (depends on component pel bit depth)
 
-   int numUvBlocks;
-   int numCdcCoeff;
-   int numBlock8x8uv;
-   int useLosslessQpPrime;
+  int numUvBlocks;
+  int numCdcCoeff;
+  int numBlock8x8uv;
+  int useLosslessQpPrime;
 
-   // macroblocks
-   unsigned int picWidthMbs;
-   unsigned int picHeightMapUnits;
-   unsigned int frameHeightMbs;
-   unsigned int frameSizeMbs;
+  // macroblocks
+  unsigned int picWidthMbs;
+  unsigned int picHeightMapUnits;
+  unsigned int frameHeightMbs;
+  unsigned int frameSizeMbs;
 
-   int mbCrSizeX;
-   int mbCrSizeY;
-   int mbCrSizeXblock;
-   int mbCrSizeYblock;
-   int mbCrSize;
-   int mbSize[3][2];       // component macroblock dimensions
-   int mbSizeBlock[3][2];  // component macroblock dimensions
-   int mbSizeShift[3][2];
+  int mbCrSizeX;
+  int mbCrSizeY;
+  int mbCrSizeXblock;
+  int mbCrSizeYblock;
+  int mbCrSize;
+  int mbSize[3][2];       // component macroblock dimensions
+  int mbSizeBlock[3][2];  // component macroblock dimensions
+  int mbSizeShift[3][2];
 
-   int maxVmvR;            // maximum vertical motion vector range in lumaQuarterFrame pixel units
-   int maxFrameNum;
+  int maxVmvR;            // maximum vertical motion vector range in lumaQuarterFrame pixel units
+  int maxFrameNum;
 
-   int subpelX;
-   int subpelY;
-   int shiftpelX;
-   int shiftpelY;
-   int totalScale;
-   } sCoding;
- //}}}
+  int subpelX;
+  int subpelY;
+  int shiftpelX;
+  int shiftpelY;
+  int totalScale;
+  } sCoding;
+//}}}
 //{{{  sParam
 typedef struct Param {
   int naluDebug;
@@ -1076,8 +1076,6 @@ static inline int isHiIntraOnlyProfile (unsigned profileIdc, Boolean constrained
   extern sDecodedPic* allocDecodedPicture (sDecodedPic* decodedPic);
   extern void freeDecodedPictures (sDecodedPic* decodedPic);
   extern void clearDecodedPictures (sDecoder* decoder);
-
-  extern void setCoding (sDecoder* decoder);
 
   // For 4:4:4 independent mode
   extern void changePlaneJV (sDecoder* decoder, int nplane, sSlice *slice);

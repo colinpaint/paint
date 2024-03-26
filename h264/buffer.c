@@ -742,7 +742,7 @@ sPicture* allocPicture (sDecoder* decoder, ePicStructure picStructure,
   s->botField = decoder->noReferencePicture;
   s->frame = decoder->noReferencePicture;
 
-  s->decRefPicMarkingBuffer = NULL;
+  s->decRefPicMarkBuffer = NULL;
   s->codedFrame  = 0;
   s->mbAffFrame  = 0;
   s->topPoc = s->botPoc = s->poc = 0;
@@ -1280,8 +1280,8 @@ static void adaptiveMemoryManagement (sDPB* dpb, sPicture* p) {
   assert (!p->isIDR);
   assert (p->adaptRefPicBufFlag);
 
-  while (p->decRefPicMarkingBuffer) {
-    tmp_drpm = p->decRefPicMarkingBuffer;
+  while (p->decRefPicMarkBuffer) {
+    tmp_drpm = p->decRefPicMarkBuffer;
     switch (tmp_drpm->memManagement) {
       //{{{
       case 0:
@@ -1332,7 +1332,7 @@ static void adaptiveMemoryManagement (sDPB* dpb, sPicture* p) {
         error ("invalid memManagement in buffer");
       //}}}
       }
-    p->decRefPicMarkingBuffer = tmp_drpm->next;
+    p->decRefPicMarkBuffer = tmp_drpm->next;
     free (tmp_drpm);
     }
 

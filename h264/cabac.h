@@ -1,7 +1,10 @@
 #pragma once
 #include "global.h"
 
-extern sMotionContexts*  createMotionInfoContexts();
+#define IS_I16MB(MB)     (((MB)->mbType == I16MB) || ((MB)->mbType == IPCM))
+#define IS_DIRECT(MB)    (((MB)->mbType == 0) && (slice->sliceType == eSliceB))
+
+extern sMotionContexts* createMotionInfoContexts();
 extern sTextureContexts* createTextureInfoContexts();
 extern void deleteMotionInfoContexts (sMotionContexts* contexts);
 extern void deleteTextureInfoContexts (sTextureContexts* contexts);
@@ -34,8 +37,8 @@ extern void readIPCMcabac (sSlice* slice, sDataPartition* dataPartition);
 extern int cabacStartCode (sSlice* slice, int eos_bit);
 extern int readSyntaxElementCABAC (sMacroBlock* mb, sSyntaxElement* se, sDataPartition* this_dataPart);
 
-extern int check_next_mb_and_get_field_mode_CABAC_p_slice (sSlice* slice, sSyntaxElement* se, sDataPartition* act_dp);
-extern int check_next_mb_and_get_field_mode_CABAC_b_slice (sSlice* slice, sSyntaxElement* se, sDataPartition* act_dp);
+extern int checkNextMbGetFieldModeCabacSliceP (sSlice* slice, sSyntaxElement* se, sDataPartition* act_dp);
+extern int checkNextMbGetFieldModeCabacSliceB (sSlice* slice, sSyntaxElement* se, sDataPartition* act_dp);
 
 extern void checkNeighbourCabac (sMacroBlock* mb);
 

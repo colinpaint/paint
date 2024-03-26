@@ -3,6 +3,7 @@
 #include "syntaxElement.h"
 
 #include "macroblock.h"
+#include "cabac.h"
 #include "vlc.h"
 #include "transform.h"
 #include "mbAccess.h"

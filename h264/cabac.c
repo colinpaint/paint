@@ -305,7 +305,7 @@ void readFieldModeInfo_CABAC (sMacroBlock* mb, sSyntaxElement* se, sCabacDecodeE
 //}}}
 
 //{{{
-int check_next_mb_and_get_field_mode_CABAC_p_slice (sSlice* slice, sSyntaxElement* se,
+int checkNextMbGetFieldModeCabacSliceP (sSlice* slice, sSyntaxElement* se,
                                                     sDataPartition* act_dp) {
 
   sDecoder* decoder = slice->decoder;
@@ -380,7 +380,7 @@ int check_next_mb_and_get_field_mode_CABAC_p_slice (sSlice* slice, sSyntaxElemen
   }
 //}}}
 //{{{
-int check_next_mb_and_get_field_mode_CABAC_b_slice (sSlice* slice, sSyntaxElement* se, sDataPartition  *act_dp) {
+int checkNextMbGetFieldModeCabacSliceB (sSlice* slice, sSyntaxElement* se, sDataPartition  *act_dp) {
 
   sDecoder* decoder = slice->decoder;
   sBiContext* mb_type_ctx_copy[3];
@@ -991,7 +991,7 @@ void readRefFrame_CABAC (sMacroBlock* mb, sSyntaxElement* se, sCabacDecodeEnv* c
   if (block_b.available) {
     int b8b = ((block_b.x >> 1) & 0x01) + (block_b.y & 0x02);
     neighborMB = &slice->mbData[block_b.mbIndex];
-    if (!((neighborMB->mbType==IPCM) || IS_DIRECT(neighborMB) ||
+    if (!((neighborMB->mbType == IPCM) || IS_DIRECT(neighborMB) ||
         (neighborMB->b8mode[b8b]==0 && neighborMB->b8pdir[b8b] == 2))) {
       if (slice->mbAffFrame && (mb->mbField == FALSE) && (neighborMB->mbField == TRUE))
         b = (picture->mvInfo[block_b.posY][block_b.posX].refIndex[list] > 1 ? 2 : 0);
