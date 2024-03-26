@@ -210,7 +210,7 @@ static void edge_loop_luma_ver_MBAff (eColorPlane plane, sPixel** img,
 static void edge_loop_luma_hor_MBAff (eColorPlane plane, sPixel** img, byte* Strength, sMacroBlock* mbQ,
                                       int edge, sPicture *p)
 {
-  int      width = p->iLumaStride; //p->sizeX;
+  int      width = p->lumaStride; //p->sizeX;
   int      pel, Strng ;
   int      PelNum = plane? pelnum_cr[1][p->chromaFormatIdc] : MB_BLOCK_SIZE;
 
@@ -394,7 +394,7 @@ static void edge_loop_chroma_hor_MBAff (sPixel** img, byte *Strength, sMacroBloc
 
   int AlphaC0Offset = mbQ->deblockFilterC0offset;
   int BetaOffset    = mbQ->deblockFilterBetaOffset;
-  int width = p->iChromaStride; //p->sizeXcr;
+  int width = p->chromaStride; //p->sizeXcr;
 
   getAffNeighbour (mbQ, 0, yQ - 1, decoder->mbSize[eChroma], &pixP);
   getAffNeighbour (mbQ, 0, yQ, decoder->mbSize[eChroma], &pixQ);
@@ -1233,7 +1233,7 @@ static void edge_loop_luma_hor (eColorPlane plane, sPixel** img, byte* Strength,
     if ((Alpha | Beta) != 0) {
       const byte* ClipTab = CLIP_TAB[indexA];
       int max_imgpel_value = decoder->coding.maxPelValueComp[plane];
-      int width = p->iLumaStride;
+      int width = p->lumaStride;
 
       sPixel* imgP = &img[get_pos_y_luma(MbP, ypos)][get_pos_x_luma(MbP, 0)];
       sPixel* imgQ = imgP + width;
@@ -1332,7 +1332,7 @@ static void edge_loop_chroma_hor (sPixel** img, byte* Strength, sMacroBlock* mb,
 
     int AlphaC0Offset = mb->deblockFilterC0offset;
     int BetaOffset = mb->deblockFilterBetaOffset;
-    int width = p->iChromaStride; //p->sizeXcr;
+    int width = p->chromaStride; //p->sizeXcr;
 
     // Average QP of the two blocks
     int QP = (MbP->qpc[uv] + mb->qpc[uv] + 1) >> 1;

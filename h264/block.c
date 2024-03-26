@@ -659,7 +659,7 @@ int CheckVertMV (sMacroBlock* mb, int vec1_y, int blockSizeY) {
   int y_pos = vec1_y>>2;
   int maxold_y = (mb->mbField) ? (picture->sizeY >> 1) - 1 : picture->size_y_m1;
 
-  if (y_pos < (-decoder->coding.iLumaPadY + 2) || y_pos > (maxold_y + decoder->coding.iLumaPadY - blockSizeY - 2))
+  if (y_pos < (-decoder->coding.lumaPadY + 2) || y_pos > (maxold_y + decoder->coding.lumaPadY - blockSizeY - 2))
     return 1;
   else
     return 0;

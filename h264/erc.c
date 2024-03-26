@@ -808,7 +808,7 @@ static void buildPredRegionYUV (sDecoder* decoder, int *mv, int x, int y, sPixel
 
       get_block_luma(slice->listX[0][ref_frame], vec1_x, vec1_y, BLOCK_SIZE, BLOCK_SIZE,
         tmp_block,
-        picture->iLumaStride,picture->size_x_m1,
+        picture->lumaStride,picture->size_x_m1,
         (mb->mbField) ? (picture->sizeY >> 1) - 1 : picture->size_y_m1,tempRes,
         decoder->coding.maxPelValueComp[PLANE_Y],(sPixel) decoder->coding.dcPredValueComp[PLANE_Y], mb);
 
@@ -1391,7 +1391,7 @@ static void buildPredblockRegionYUV (sDecoder* decoder, int *mv,
   vec1_x = x*mv_mul + mv[0];
   vec1_y = y*mv_mul + mv[1];
   get_block_luma(slice->listX[list][ref_frame],  vec1_x, vec1_y, BLOCK_SIZE, BLOCK_SIZE, tmp_block,
-    picture->iLumaStride,picture->size_x_m1, (mb->mbField) ? (picture->sizeY >> 1) - 1 : picture->size_y_m1,slice->tempRes,
+    picture->lumaStride,picture->size_x_m1, (mb->mbField) ? (picture->sizeY >> 1) - 1 : picture->size_y_m1,slice->tempRes,
     decoder->coding.maxPelValueComp[PLANE_Y],(sPixel) decoder->coding.dcPredValueComp[PLANE_Y], mb);
 
   for(jj=0;jj<MB_BLOCK_SIZE/BLOCK_SIZE;jj++)
@@ -1899,10 +1899,9 @@ void concealLostFrames (sDPB* dpb, sSlice *slice)
     picture->codedFrame = 1;
     picture->picNum = UnusedShortTermFrameNum;
     picture->frameNum = UnusedShortTermFrameNum;
-    picture->non_existing = 0;
-    picture->is_output = 0;
+    picture->nonExisting = 0;
+    picture->isOutput = 0;
     picture->usedForReference = 1;
-    picture->concealed_pic = 1;
 
     picture->adaptRefPicBufFlag = 0;
 
@@ -2056,7 +2055,7 @@ void write_lost_non_ref_pic (sDPB* dpb, int poc) {
   if (poc > 0) {
     if ((poc - dpb->lastOutputPoc) > decoder->param.pocGap) {
       concealment_fs.frame = decoder->concealHead->picture;
-      concealment_fs.is_output = 0;
+      concealment_fs.isOutput = 0;
       concealment_fs.isReference = 0;
       concealment_fs.isUsed = 3;
 

@@ -792,10 +792,10 @@ typedef struct CodingParam {
   int widthCr;
   int heightCr;
 
-  int iLumaPadX;
-  int iLumaPadY;
-  int iChromaPadX;
-  int iChromaPadY;
+  int lumaPadX;
+  int lumaPadY;
+  int chromaPadX;
+  int chromaPadY;
 
   // bits
   int picUnitBitSizeDisk;

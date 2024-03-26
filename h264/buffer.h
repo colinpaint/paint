@@ -19,77 +19,79 @@ typedef struct PicMotion {
 typedef struct Picture {
   ePicStructure picStructure;
 
-  int          poc;
-  int          topPoc;
-  int          botPoc;
-  int          framePoc;
-  unsigned int frameNum;
-  unsigned int recoveryFrame;
+  int           poc;
+  int           topPoc;
+  int           botPoc;
+  int           framePoc;
+  unsigned int  frameNum;
+  unsigned int  recoveryFrame;
 
-  int          picNum;
-  int          longTermPicNum;
-  int          longTermFrameIndex;
+  int           picNum;
+  int           longTermPicNum;
+  int           longTermFrameIndex;
 
-  byte         isLongTerm;
-  int          usedForReference;
-  int          is_output;
-  int          non_existing;
-  int          isSeperateColourPlane;
+  byte          isLongTerm;
+  int           usedForReference;
+  int           isOutput;
+  int           nonExisting;
+  int           isSeperateColourPlane;
 
-  short        maxSliceId;
+  short         maxSliceId;
 
-  int          sizeX, sizeY, sizeXcr, sizeYcr;
-  int          size_x_m1, size_y_m1, size_x_cr_m1, size_y_cr_m1;
-  int          codedFrame;
-  int          mbAffFrame;
-  unsigned     picWidthMbs;
-  unsigned     picSizeInMbs;
-  int          iLumaPadY, iLumaPadX;
-  int          iChromaPadY, iChromaPadX;
+  int           sizeX, sizeY, sizeXcr, sizeYcr;
+  int           size_x_m1, size_y_m1, size_x_cr_m1, size_y_cr_m1;
+  int           codedFrame;
+  int           mbAffFrame;
+  unsigned      picWidthMbs;
+  unsigned      picSizeInMbs;
+  int           lumaPadX;
+  int           lumaPadY;
+  int           chromaPadX;
+  int           chromaPadY;
 
-  sPixel**     imgY;
-  sPixel***    imgUV;
-
-  sPicMotion** mvInfo;
+  sPixel**      imgY;
+  sPixel***     imgUV;
+  sPicMotion**  mvInfo;
   sPicMotionOld motion;
-  sPicMotion** JVmv_info[MAX_PLANE];
-  sPicMotionOld JVmotion[MAX_PLANE]; // Motion info for 4:4:4 independent mode decoding
-
   struct Picture* topField;  // for mb aff, if frame for referencing the top field
   struct Picture* botField;  // for mb aff, if frame for referencing the bottom field
   struct Picture* frame;     // for mb aff, if field for referencing the combined frame
 
-  int          sliceType;
-  int          isIDR;
-  int          noOutputPriorPicFlag;
-  int          longTermRefFlag;
-  int          adaptRefPicBufFlag;
+  int           isIDR;
+  int           sliceType;
+  int           longTermRefFlag;
+  int           adaptRefPicBufFlag;
+  int           noOutputPriorPicFlag;
 
-  eYuvFormat   chromaFormatIdc;
-  int          frameMbOnly;
-  int          cropFlag;
-  int          cropLeft;
-  int          cropRight;
-  int          cropTop;
-  int          cropBot;
-  int          qp;
-  int          chromaQpOffset[2];
-  int          sliceQpDelta;
+  eYuvFormat    chromaFormatIdc;
+  int           frameMbOnly;
+
+  int           cropFlag;
+  int           cropLeft;
+  int           cropRight;
+  int           cropTop;
+  int           cropBot;
+
+  int           qp;
+  int           chromaQpOffset[2];
+  int           sliceQpDelta;
   sDecodedRefPicMarking* decRefPicMarkingBuffer;  // stores the memory management control operations
 
   // picture error conceal
-  int          concealed_pic;
-  int          proc_flag;
-  int          iLumaStride;
-  int          iChromaStride;
-  int          iLumaExpandedHeight;
-  int          iChromaExpandedHeight;
-  sPixel**     curPixelY;               // for more efficient get_block_luma
-  int          noRef;
-  int          iCodingType;
+  int           lumaStride;
+  int           chromaStride;
+  int           lumaExpandedHeight;
+  int           chromaExpandedHeight;
+  sPixel**      curPixelY;               // for more efficient get_block_luma
+  int           noRef;
+  int           codingType;
 
-  char             listXsize[MAX_NUM_SLICES][2];
+  char          listXsize[MAX_NUM_SLICES][2];
   struct Picture** listX[MAX_NUM_SLICES][2];
+
+  // Motion info for 4:4:4 independent mode decoding
+  sPicMotion**  mvInfoJV[MAX_PLANE];
+  sPicMotionOld motionJV[MAX_PLANE]; 
   } sPicture;
 //}}}
 //{{{  sFrameStore
@@ -106,7 +108,7 @@ typedef struct FrameStore {
 
   int       frameNumWrap;
   int       longTermFrameIndex;
-  int       is_output;
+  int       isOutput;
   int       poc;
 
   // picture error conceal
@@ -271,7 +273,7 @@ extern void freeFrameStore (sFrameStore* frameStore);
 extern void unmark_for_reference( sFrameStore* frameStore);
 extern void unmark_for_long_term_reference (sFrameStore* frameStore);
 
-extern sPicture* allocPicture (sDecoder* decoder, ePicStructure type, int sizeX, int sizeY, int sizeXcr, int sizeYcr, int is_output);
+extern sPicture* allocPicture (sDecoder* decoder, ePicStructure type, int sizeX, int sizeY, int sizeXcr, int sizeYcr, int isOutput);
 extern void freePicture (sPicture* p);
 extern void fillFrameNumGap (sDecoder* decoder, sSlice *slice);
 

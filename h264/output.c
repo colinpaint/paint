@@ -74,7 +74,7 @@ static void writeOutPicture (sDecoder* decoder, sPicture* p) {
   static const int SubWidthC [4]= { 1, 2, 2, 1 };
   static const int SubHeightC [4]= { 1, 2, 1, 1 };
 
-  if (p->non_existing)
+  if (p->nonExisting)
     return;
 
   int cropLeft;
@@ -357,6 +357,6 @@ void writeStoredFrame (sDecoder* decoder, sFrameStore* frameStore) {
       writePicture (decoder, frameStore->frame, eFrame);
     }
 
-  frameStore->is_output = 1;
+  frameStore->isOutput = 1;
   }
 //}}}

@@ -1184,13 +1184,13 @@ static void padBuf (sPixel* pixel, int width, int height, int stride, int padx, 
 void padPicture (sDecoder* decoder, sPicture* picture) {
 
   padBuf (*picture->imgY, picture->sizeX, picture->sizeY,
-           picture->iLumaStride, decoder->coding.iLumaPadX, decoder->coding.iLumaPadY);
+           picture->lumaStride, decoder->coding.lumaPadX, decoder->coding.lumaPadY);
 
   if (picture->chromaFormatIdc != YUV400) {
     padBuf (*picture->imgUV[0], picture->sizeXcr, picture->sizeYcr,
-            picture->iChromaStride, decoder->coding.iChromaPadX, decoder->coding.iChromaPadY);
+            picture->chromaStride, decoder->coding.chromaPadX, decoder->coding.chromaPadY);
     padBuf (*picture->imgUV[1], picture->sizeXcr, picture->sizeYcr,
-            picture->iChromaStride, decoder->coding.iChromaPadX, decoder->coding.iChromaPadY);
+            picture->chromaStride, decoder->coding.chromaPadX, decoder->coding.chromaPadY);
     }
   }
 //}}}
@@ -1641,10 +1641,10 @@ static void setCodingParam (sDecoder* decoder, sSps* sps) {
   decoder->coding.width = decoder->coding.picWidthMbs * MB_BLOCK_SIZE;
   decoder->coding.height = decoder->coding.frameHeightMbs * MB_BLOCK_SIZE;
 
-  decoder->coding.iLumaPadX = MCBUF_LUMA_PAD_X;
-  decoder->coding.iLumaPadY = MCBUF_LUMA_PAD_Y;
-  decoder->coding.iChromaPadX = MCBUF_CHROMA_PAD_X;
-  decoder->coding.iChromaPadY = MCBUF_CHROMA_PAD_Y;
+  decoder->coding.lumaPadX = MCBUF_LUMA_PAD_X;
+  decoder->coding.lumaPadY = MCBUF_LUMA_PAD_Y;
+  decoder->coding.chromaPadX = MCBUF_CHROMA_PAD_X;
+  decoder->coding.chromaPadY = MCBUF_CHROMA_PAD_Y;
 
   if (sps->chromaFormatIdc == YUV420) {
     decoder->coding.widthCr  = (decoder->coding.width  >> 1);
@@ -1653,13 +1653,13 @@ static void setCodingParam (sDecoder* decoder, sSps* sps) {
   else if (sps->chromaFormatIdc == YUV422) {
     decoder->coding.widthCr  = (decoder->coding.width >> 1);
     decoder->coding.heightCr = decoder->coding.height;
-    decoder->coding.iChromaPadY = MCBUF_CHROMA_PAD_Y*2;
+    decoder->coding.chromaPadY = MCBUF_CHROMA_PAD_Y*2;
     }
   else if (sps->chromaFormatIdc == YUV444) {
     decoder->coding.widthCr = decoder->coding.width;
     decoder->coding.heightCr = decoder->coding.height;
-    decoder->coding.iChromaPadX = decoder->coding.iLumaPadX;
-    decoder->coding.iChromaPadY = decoder->coding.iLumaPadY;
+    decoder->coding.chromaPadX = decoder->coding.lumaPadX;
+    decoder->coding.chromaPadY = decoder->coding.lumaPadY;
     }
 
   //pel bitDepth init
@@ -2313,7 +2313,7 @@ static void initPicture (sDecoder* decoder, sSlice* slice) {
   picture->sliceQpDelta = slice->sliceQpDelta;
   picture->chromaQpOffset[0] = decoder->activePps->chromaQpOffset;
   picture->chromaQpOffset[1] = decoder->activePps->chromaQpOffset2;
-  picture->iCodingType = slice->picStructure == eFrame ?
+  picture->codingType = slice->picStructure == eFrame ?
     (slice->mbAffFrame? eFrameMbPairCoding:eFrameCoding) : eFieldCoding;
 
   // reset all variables of the error conceal instance before decoding of every frame.

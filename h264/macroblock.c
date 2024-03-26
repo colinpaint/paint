@@ -1302,9 +1302,9 @@ void makeFramePictureJV (sDecoder* decoder) {
   // copy;
   if (decoder->picture->usedForReference) {
     int nsize = (decoder->picture->sizeY/BLOCK_SIZE)*(decoder->picture->sizeX/BLOCK_SIZE)*sizeof(sPicMotion);
-    memcpy (&(decoder->picture->JVmv_info[PLANE_Y][0][0]), &(decoder->decPictureJV[PLANE_Y]->mvInfo[0][0]), nsize);
-    memcpy (&(decoder->picture->JVmv_info[PLANE_U][0][0]), &(decoder->decPictureJV[PLANE_U]->mvInfo[0][0]), nsize);
-    memcpy (&(decoder->picture->JVmv_info[PLANE_V][0][0]), &(decoder->decPictureJV[PLANE_V]->mvInfo[0][0]), nsize);
+    memcpy (&(decoder->picture->mvInfoJV[PLANE_Y][0][0]), &(decoder->decPictureJV[PLANE_Y]->mvInfo[0][0]), nsize);
+    memcpy (&(decoder->picture->mvInfoJV[PLANE_U][0][0]), &(decoder->decPictureJV[PLANE_U]->mvInfo[0][0]), nsize);
+    memcpy (&(decoder->picture->mvInfoJV[PLANE_V][0][0]), &(decoder->decPictureJV[PLANE_V]->mvInfo[0][0]), nsize);
     }
 
   // This could be done with pointers and seems not necessary

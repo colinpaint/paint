@@ -420,10 +420,10 @@ void setCoding (sDecoder* decoder) {
 
   decoder->width = coding->width;
   decoder->height = coding->height;
-  decoder->coding.iLumaPadX = MCBUF_LUMA_PAD_X;
-  decoder->coding.iLumaPadY = MCBUF_LUMA_PAD_Y;
-  decoder->coding.iChromaPadX = MCBUF_CHROMA_PAD_X;
-  decoder->coding.iChromaPadY = MCBUF_CHROMA_PAD_Y;
+  decoder->coding.lumaPadX = MCBUF_LUMA_PAD_X;
+  decoder->coding.lumaPadY = MCBUF_LUMA_PAD_Y;
+  decoder->coding.chromaPadX = MCBUF_CHROMA_PAD_X;
+  decoder->coding.chromaPadY = MCBUF_CHROMA_PAD_Y;
 
   if (decoder->coding.yuvFormat == YUV420) {
     decoder->widthCr = decoder->width >> 1;
@@ -432,14 +432,14 @@ void setCoding (sDecoder* decoder) {
   else if (decoder->coding.yuvFormat == YUV422) {
     decoder->widthCr = decoder->width >> 1;
     decoder->heightCr = decoder->height;
-    decoder->coding.iChromaPadY = MCBUF_CHROMA_PAD_Y*2;
+    decoder->coding.chromaPadY = MCBUF_CHROMA_PAD_Y*2;
     }
   else if (decoder->coding.yuvFormat == YUV444) {
     //YUV444
     decoder->widthCr = decoder->width;
     decoder->heightCr = decoder->height;
-    decoder->coding.iChromaPadX = decoder->coding.iLumaPadX;
-    decoder->coding.iChromaPadY = decoder->coding.iLumaPadY;
+    decoder->coding.chromaPadX = decoder->coding.lumaPadX;
+    decoder->coding.chromaPadY = decoder->coding.lumaPadY;
     }
 
   initFrext (decoder);
@@ -474,10 +474,10 @@ sDecoder* openDecoder (sParam* param, byte* chunk, size_t chunkSize) {
   decoder->deblockEnable = 0x3;
   decoder->pendingOutState = eFrame;
 
-  decoder->coding.iLumaPadX = MCBUF_LUMA_PAD_X;
-  decoder->coding.iLumaPadY = MCBUF_LUMA_PAD_Y;
-  decoder->coding.iChromaPadX = MCBUF_CHROMA_PAD_X;
-  decoder->coding.iChromaPadY = MCBUF_CHROMA_PAD_Y;
+  decoder->coding.lumaPadX = MCBUF_LUMA_PAD_X;
+  decoder->coding.lumaPadY = MCBUF_LUMA_PAD_Y;
+  decoder->coding.chromaPadX = MCBUF_CHROMA_PAD_X;
+  decoder->coding.chromaPadY = MCBUF_CHROMA_PAD_Y;
 
   decoder->dpb = (sDPB*)calloc (1, sizeof(sDPB));
   resetDpb (decoder, decoder->dpb);

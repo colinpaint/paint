@@ -242,7 +242,7 @@ sFrameStore* allocFrameStore() {
   fs->isReference = 0;
   fs->isLongTerm = 0;
   fs->isOrigReference = 0;
-  fs->is_output = 0;
+  fs->isOutput = 0;
   fs->frame = NULL;;
   fs->topField = NULL;
   fs->botField = NULL;
@@ -334,7 +334,7 @@ static void dpbSplitField (sDecoder* decoder, sFrameStore* frameStore) {
     fsBot->botField = fsBot;
 
     fsTop->chromaFormatIdc = fsBot->chromaFormatIdc = frame->chromaFormatIdc;
-    fsTop->iCodingType = fsBot->iCodingType = frame->iCodingType;
+    fsTop->codingType = fsBot->codingType = frame->codingType;
     if (frame->usedForReference)  {
       padPicture (decoder, fsTop);
       padPicture (decoder, fsBot);
@@ -432,7 +432,7 @@ static void dpb_combine_field (sDecoder* decoder, sFrameStore* frameStore) {
 
   dpbCombineField (decoder, frameStore);
 
-  frameStore->frame->iCodingType = frameStore->topField->iCodingType; //eFieldCoding;
+  frameStore->frame->codingType = frameStore->topField->codingType; //eFieldCoding;
    //! Use inference flag to remap mvs/references
 
   //! Generate Frame parameters from field information.
@@ -545,7 +545,7 @@ static void insertPictureDpb (sDecoder* decoder, sFrameStore* fs, sPicture* p) {
 
   fs->frameNum = p->picNum;
   fs->recoveryFrame = p->recoveryFrame;
-  fs->is_output = p->is_output;
+  fs->isOutput = p->isOutput;
   }
 //}}}
 //{{{
@@ -674,7 +674,7 @@ void dpbCombineField (sDecoder* decoder, sFrameStore* frameStore) {
 // picture
 //{{{
 sPicture* allocPicture (sDecoder* decoder, ePicStructure picStructure,
-                        int sizeX, int sizeY, int sizeXcr, int sizeYcr, int is_output) {
+                        int sizeX, int sizeY, int sizeXcr, int sizeYcr, int isOutput) {
 
   sSps* activeSps = decoder->activeSps;
   //printf ("Allocating (%s) picture (x=%d, y=%d, x_cr=%d, y_cr=%d)\n",
@@ -693,19 +693,19 @@ sPicture* allocPicture (sDecoder* decoder, ePicStructure picStructure,
   s->picSizeInMbs = (sizeX*sizeY)/256;
   s->imgUV = NULL;
 
-  getMem2DpelPad (&(s->imgY), sizeY, sizeX, decoder->coding.iLumaPadY, decoder->coding.iLumaPadX);
-  s->iLumaStride = sizeX + 2 * decoder->coding.iLumaPadX;
-  s->iLumaExpandedHeight = sizeY + 2 * decoder->coding.iLumaPadY;
+  getMem2DpelPad (&(s->imgY), sizeY, sizeX, decoder->coding.lumaPadY, decoder->coding.lumaPadX);
+  s->lumaStride = sizeX + 2 * decoder->coding.lumaPadX;
+  s->lumaExpandedHeight = sizeY + 2 * decoder->coding.lumaPadY;
 
   if (activeSps->chromaFormatIdc != YUV400)
-    getMem3DpelPad (&(s->imgUV), 2, sizeYcr, sizeXcr, decoder->coding.iChromaPadY, decoder->coding.iChromaPadX);
+    getMem3DpelPad (&(s->imgUV), 2, sizeYcr, sizeXcr, decoder->coding.chromaPadY, decoder->coding.chromaPadX);
 
-  s->iChromaStride = sizeXcr + 2*decoder->coding.iChromaPadX;
-  s->iChromaExpandedHeight = sizeYcr + 2*decoder->coding.iChromaPadY;
-  s->iLumaPadY = decoder->coding.iLumaPadY;
-  s->iLumaPadX = decoder->coding.iLumaPadX;
-  s->iChromaPadY = decoder->coding.iChromaPadY;
-  s->iChromaPadX = decoder->coding.iChromaPadX;
+  s->chromaStride = sizeXcr + 2*decoder->coding.chromaPadX;
+  s->chromaExpandedHeight = sizeYcr + 2*decoder->coding.chromaPadY;
+  s->lumaPadY = decoder->coding.lumaPadY;
+  s->lumaPadX = decoder->coding.lumaPadX;
+  s->chromaPadY = decoder->coding.chromaPadY;
+  s->chromaPadX = decoder->coding.chromaPadX;
   s->isSeperateColourPlane = decoder->coding.isSeperateColourPlane;
 
   getMem2Dmp (&s->mvInfo, (sizeY >> BLOCK_SHIFT), (sizeX >> BLOCK_SHIFT));
@@ -713,8 +713,8 @@ sPicture* allocPicture (sDecoder* decoder, ePicStructure picStructure,
 
   if (decoder->coding.isSeperateColourPlane != 0)
     for (int nplane = 0; nplane < MAX_PLANE; nplane++) {
-      getMem2Dmp (&s->JVmv_info[nplane], (sizeY >> BLOCK_SHIFT), (sizeX >> BLOCK_SHIFT));
-      allocPicMotion (&s->JVmotion[nplane] , (sizeY >> BLOCK_SHIFT), (sizeX >> BLOCK_SHIFT));
+      getMem2Dmp (&s->mvInfoJV[nplane], (sizeY >> BLOCK_SHIFT), (sizeX >> BLOCK_SHIFT));
+      allocPicMotion (&s->motionJV[nplane] , (sizeY >> BLOCK_SHIFT), (sizeX >> BLOCK_SHIFT));
       }
 
   s->picNum = 0;
@@ -723,8 +723,8 @@ sPicture* allocPicture (sDecoder* decoder, ePicStructure picStructure,
   s->longTermPicNum = 0;
   s->usedForReference  = 0;
   s->isLongTerm = 0;
-  s->non_existing = 0;
-  s->is_output = 0;
+  s->nonExisting = 0;
+  s->isOutput = 0;
   s->maxSliceId = 0;
 
   s->picStructure = picStructure;
@@ -770,21 +770,21 @@ void freePicture (sPicture* p) {
 
     if ((p->isSeperateColourPlane != 0) ) {
       for (int nplane = 0; nplane < MAX_PLANE; nplane++ ) {
-        if (p->JVmv_info[nplane]) {
-          freeMem2Dmp (p->JVmv_info[nplane]);
-          p->JVmv_info[nplane] = NULL;
+        if (p->mvInfoJV[nplane]) {
+          freeMem2Dmp (p->mvInfoJV[nplane]);
+          p->mvInfoJV[nplane] = NULL;
           }
-        freePicMotion (&p->JVmotion[nplane]);
+        freePicMotion (&p->motionJV[nplane]);
         }
       }
 
     if (p->imgY) {
-      freeMem2DpelPad (p->imgY, p->iLumaPadY, p->iLumaPadX);
+      freeMem2DpelPad (p->imgY, p->lumaPadY, p->lumaPadX);
       p->imgY = NULL;
       }
 
     if (p->imgUV) {
-      freeMem3DpelPad (p->imgUV, 2, p->iChromaPadY, p->iChromaPadX);
+      freeMem3DpelPad (p->imgUV, 2, p->chromaPadY, p->chromaPadX);
       p->imgUV = NULL;
       }
 
@@ -820,8 +820,8 @@ void fillFrameNumGap (sDecoder* decoder, sSlice* slice) {
     picture->codedFrame = 1;
     picture->picNum = unusedShortTermFrameNum;
     picture->frameNum = unusedShortTermFrameNum;
-    picture->non_existing = 1;
-    picture->is_output = 1;
+    picture->nonExisting = 1;
+    picture->isOutput = 1;
     picture->usedForReference = 1;
     picture->adaptRefPicBufFlag = 0;
 
@@ -874,10 +874,10 @@ static void dumpDpb (sDPB* dpb) {
       printf ("ref (%d) ", dpb->fs[i]->isReference);
     if (dpb->fs[i]->isLongTerm)
       printf ("lt_ref (%d) ", dpb->fs[i]->isReference);
-    if (dpb->fs[i]->is_output)
+    if (dpb->fs[i]->isOutput)
       printf ("out  ");
     if (dpb->fs[i]->isUsed == 3)
-      if (dpb->fs[i]->frame->non_existing)
+      if (dpb->fs[i]->frame->nonExisting)
         printf ("ne  ");
 
     printf ("\n");
@@ -1543,7 +1543,7 @@ void getSmallestPoc (sDPB* dpb, int* poc, int* pos) {
   *pos = -1;
   *poc = INT_MAX;
   for (uint32 i = 0; i < dpb->usedSize; i++) {
-    if ((*poc > dpb->fs[i]->poc)&&(!dpb->fs[i]->is_output)) {
+    if ((*poc > dpb->fs[i]->poc)&&(!dpb->fs[i]->isOutput)) {
       *poc = dpb->fs[i]->poc;
       *pos = i;
       }
@@ -1668,7 +1668,7 @@ int removeUnusedDpb (sDPB* dpb) {
 
   // check for frames that were already output and no longer used for reference
   for (uint32 i = 0; i < dpb->usedSize; i++) {
-    if (dpb->fs[i]->is_output && (!isReference(dpb->fs[i]))) {
+    if (dpb->fs[i]->isOutput && (!isReference(dpb->fs[i]))) {
       removeFrameDpb(dpb, i);
       return 1;
       }

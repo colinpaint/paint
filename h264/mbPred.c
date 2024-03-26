@@ -369,11 +369,11 @@ int mb_pred_b_d8x8temporal (sMacroBlock* mb, eColorPlane plane, sPixel** pixel, 
       mvInfo = &picture->mvInfo[j4][i4];
       colocated = &list1[0]->mvInfo[RSD(j6)][RSD(i4)];
       if(mb->decoder->coding.isSeperateColourPlane && mb->decoder->coding.yuvFormat==YUV444)
-        colocated = &list1[0]->JVmv_info[mb->slice->colourPlaneId][RSD(j6)][RSD(i4)];
+        colocated = &list1[0]->mvInfoJV[mb->slice->colourPlaneId][RSD(j6)][RSD(i4)];
       if (slice->mbAffFrame) {
         assert(decoder->activeSps->isDirect8x8inference);
-        if (!mb->mbField && ((slice->listX[LIST_1][0]->iCodingType==eFrameMbPairCoding && slice->listX[LIST_1][0]->motion.mbField[mb->mbIndexX]) ||
-            (slice->listX[LIST_1][0]->iCodingType==eFieldCoding))) {
+        if (!mb->mbField && ((slice->listX[LIST_1][0]->codingType==eFrameMbPairCoding && slice->listX[LIST_1][0]->motion.mbField[mb->mbIndexX]) ||
+            (slice->listX[LIST_1][0]->codingType==eFieldCoding))) {
           if (iabs(picture->poc - slice->listX[LIST_1+4][0]->poc) > iabs(picture->poc -slice->listX[LIST_1+2][0]->poc))
             colocated = decoder->activeSps->isDirect8x8inference
                           ? &slice->listX[LIST_1+2][0]->mvInfo[RSD(j6) >> 1][RSD(i4)]
@@ -385,7 +385,7 @@ int mb_pred_b_d8x8temporal (sMacroBlock* mb, eColorPlane plane, sPixel** pixel, 
           }
         }
       else if (!decoder->activeSps->frameMbOnly &&
-               (!slice->fieldPic && slice->listX[LIST_1][0]->iCodingType != eFrameCoding)) {
+               (!slice->fieldPic && slice->listX[LIST_1][0]->codingType != eFrameCoding)) {
         if (iabs(picture->poc - list1[0]->botField->poc)> iabs(picture->poc -list1[0]->topField->poc) )
           colocated = decoder->activeSps->isDirect8x8inference ?
             &list1[0]->topField->mvInfo[RSD(j6)>>1][RSD(i4)] : &list1[0]->topField->mvInfo[j6>>1][i4];
@@ -545,7 +545,7 @@ int mb_pred_b_d4x4temporal (sMacroBlock* mb, eColorPlane plane, sPixel** pixel, 
       sPicMotion *mvInfo = &picture->mvInfo[j4][i4];
       sPicMotion *colocated = &list1[0]->mvInfo[j6][i4];
       if(mb->decoder->coding.isSeperateColourPlane && mb->decoder->coding.yuvFormat==YUV444)
-        colocated = &list1[0]->JVmv_info[mb->slice->colourPlaneId][RSD(j6)][RSD(i4)];
+        colocated = &list1[0]->mvInfoJV[mb->slice->colourPlaneId][RSD(j6)][RSD(i4)];
       assert (predDir<=2);
 
       refList = (colocated->refIndex[LIST_0]== -1 ? LIST_1 : LIST_0);

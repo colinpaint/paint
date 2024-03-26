@@ -74,8 +74,8 @@ static void update_direct_mv_info_temporal (sMacroBlock* mb) {
 
             if (slice->mbAffFrame) {
               //{{{
-              if (!mb->mbField && ((slice->listX[LIST_1][0]->iCodingType==eFrameMbPairCoding && slice->listX[LIST_1][0]->motion.mbField[mb->mbIndexX]) ||
-                (slice->listX[LIST_1][0]->iCodingType==eFieldCoding))) {
+              if (!mb->mbField && ((slice->listX[LIST_1][0]->codingType==eFrameMbPairCoding && slice->listX[LIST_1][0]->motion.mbField[mb->mbIndexX]) ||
+                (slice->listX[LIST_1][0]->codingType==eFieldCoding))) {
                 if (iabs(picture->poc - slice->listX[LIST_1+4][0]->poc)> iabs(picture->poc -slice->listX[LIST_1+2][0]->poc) )
                   colocated = decoder->activeSps->isDirect8x8inference ?
                     &slice->listX[LIST_1+2][0]->mvInfo[RSD(mb->blockYaff + j0)>>1][RSD(i0)] :
@@ -89,7 +89,7 @@ static void update_direct_mv_info_temporal (sMacroBlock* mb) {
               //}}}
             else if (!decoder->activeSps->frameMbOnly &&
                      !slice->fieldPic &&
-                     slice->listX[LIST_1][0]->iCodingType != eFrameCoding) {
+                     slice->listX[LIST_1][0]->codingType != eFrameCoding) {
               //{{{
               if (iabs(picture->poc - list1[0]->botField->poc) > iabs(picture->poc -list1[0]->topField->poc) )
                 colocated = decoder->activeSps->isDirect8x8inference ?
@@ -187,8 +187,8 @@ static void update_direct_mv_info_temporal (sMacroBlock* mb) {
                     sPicMotion* mvInfo = &picture->mvInfo[j4][i4];
                     int mvY;
                     if (slice->mbAffFrame) {
-                      if (!mb->mbField && ((slice->listX[LIST_1][0]->iCodingType==eFrameMbPairCoding && slice->listX[LIST_1][0]->motion.mbField[mb->mbIndexX]) ||
-                          (slice->listX[LIST_1][0]->iCodingType==eFieldCoding))) {
+                      if (!mb->mbField && ((slice->listX[LIST_1][0]->codingType==eFrameMbPairCoding && slice->listX[LIST_1][0]->motion.mbField[mb->mbIndexX]) ||
+                          (slice->listX[LIST_1][0]->codingType==eFieldCoding))) {
                         if (iabs(picture->poc - slice->listX[LIST_1+4][0]->poc)> iabs(picture->poc -slice->listX[LIST_1+2][0]->poc) )
                           colocated = decoder->activeSps->isDirect8x8inference ?
                             &slice->listX[LIST_1+2][0]->mvInfo[RSD(j6)>>1][RSD(i4)] :
@@ -201,7 +201,7 @@ static void update_direct_mv_info_temporal (sMacroBlock* mb) {
                       }
                     else if (!decoder->activeSps->frameMbOnly &&
                              !slice->fieldPic &&
-                             slice->listX[LIST_1][0]->iCodingType!=eFrameCoding) {
+                             slice->listX[LIST_1][0]->codingType!=eFrameCoding) {
                       if (iabs(picture->poc - list1[0]->botField->poc) > iabs(picture->poc -list1[0]->topField->poc) )
                         colocated = decoder->activeSps->isDirect8x8inference ?
                           &list1[0]->topField->mvInfo[RSD(j6)>>1][RSD(i4)] :
@@ -299,7 +299,7 @@ int get_colocated_info_8x8 (sMacroBlock* mb, sPicture* list1, int i, int j) {
     sDecoder* decoder = mb->decoder;
     if ((slice->mbAffFrame) ||
         (!decoder->activeSps->frameMbOnly &&
-        ((!slice->picStructure && list1->iCodingType == eFieldCoding) ||
+        ((!slice->picStructure && list1->codingType == eFieldCoding) ||
         (slice->picStructure!=list1->picStructure && list1->codedFrame)))) {
       int jj = RSD(j);
       int ii = RSD(i);
@@ -316,7 +316,7 @@ int get_colocated_info_8x8 (sMacroBlock* mb, sPicture* list1, int i, int j) {
         }
       else {
         if( (slice->mbAffFrame && ((!mb->mbField && list1->motion.mbField[mb->mbIndexX]) ||
-          (!mb->mbField && list1->iCodingType == eFieldCoding)))
+          (!mb->mbField && list1->codingType == eFieldCoding)))
           || (!slice->mbAffFrame)) {
           if (iabs(slice->picture->poc - list1->botField->poc)> iabs(slice->picture->poc -list1->topField->poc) )
             fs = list1->topField->mvInfo[jdiv] + ii;
@@ -339,7 +339,7 @@ int get_colocated_info_8x8 (sMacroBlock* mb, sPicture* list1, int i, int j) {
 
       int moving;
       if (mb->decoder->coding.isSeperateColourPlane && mb->decoder->coding.yuvFormat==YUV444)
-        fs = &list1->JVmv_info[mb->slice->colourPlaneId][RSD(j)][RSD(i)];
+        fs = &list1->mvInfoJV[mb->slice->colourPlaneId][RSD(j)][RSD(i)];
 
       moving = !((((fs->refIndex[LIST_0] == 0)
         &&  (iabs(fs->mv[LIST_0].mvX)>>1 == 0)
@@ -1442,7 +1442,7 @@ void get_block_luma (sPicture* curRef, int x_pos, int y_pos, int blockSizeX, int
     y_pos = iClip3(-10, maxold_y+2, y_pos);
 
     if (dx == 0 && dy == 0)
-      get_block_00(&block[0][0], &curPixelY[y_pos][x_pos], curRef->iLumaStride, blockSizeY);
+      get_block_00(&block[0][0], &curPixelY[y_pos][x_pos], curRef->lumaStride, blockSizeY);
     else
     { /* other positions */
       if (dy == 0) /* No vertical interpolation */
@@ -1591,7 +1591,7 @@ static void get_block_chroma (sPicture* curRef, int x_pos, int y_pos, int subpel
 {
   sPixel *img1,*img2;
   short dx,dy;
-  int span = curRef->iChromaStride;
+  int span = curRef->chromaStride;
   if (curRef->noRef) {
     //printf("list[ref_frame] is equal to 'no reference picture' before RAP\n");
     memset(block1,no_ref_value,vert_block_size * blockSizeX * sizeof(sPixel));
@@ -1604,8 +1604,8 @@ static void get_block_chroma (sPicture* curRef, int x_pos, int y_pos, int subpel
     x_pos = x_pos >> shiftpelX;
     y_pos = y_pos >> shiftpelY;
     //clip MV;
-    x_pos = iClip3(-decoder->coding.iChromaPadX, maxold_x, x_pos); //16
-    y_pos = iClip3(-decoder->coding.iChromaPadY, maxold_y, y_pos); //8
+    x_pos = iClip3(-decoder->coding.chromaPadX, maxold_x, x_pos); //16
+    y_pos = iClip3(-decoder->coding.chromaPadY, maxold_y, y_pos); //8
     img1 = &curRef->imgUV[0][y_pos][x_pos];
     img2 = &curRef->imgUV[1][y_pos][x_pos];
 
@@ -1872,7 +1872,7 @@ static void perform_mc_single_wp (sMacroBlock* mb, eColorPlane plane, sPicture* 
   // vars for get_block_luma
   int maxold_x = picture->size_x_m1;
   int maxold_y = (mb->mbField) ? (picture->sizeY >> 1) - 1 : picture->size_y_m1;
-  int shift_x  = picture->iLumaStride;
+  int shift_x  = picture->lumaStride;
   int** tempRes = slice->tempRes;
   int max_imgpel_value = decoder->coding.maxPelValueComp[plane];
   sPixel no_ref_value = (sPixel) decoder->coding.dcPredValueComp[plane];
@@ -1881,7 +1881,7 @@ static void perform_mc_single_wp (sMacroBlock* mb, eColorPlane plane, sPicture* 
   check_motion_vector_range(mv_array, slice);
   vec1_x = i4 * mv_mul + mv_array->mvX;
   vec1_y = (mb->blockYaff + j) * mv_mul + mv_array->mvY;
-  if(blockSizeY > (decoder->coding.iLumaPadY-4) && CheckVertMV(mb, vec1_y, blockSizeY))
+  if(blockSizeY > (decoder->coding.lumaPadY-4) && CheckVertMV(mb, vec1_y, blockSizeY))
   {
     get_block_luma(list, vec1_x, vec1_y, blockSizeX, BLOCK_SIZE_8x8, tempBlockL0, shift_x,maxold_x,maxold_y,tempRes,max_imgpel_value,no_ref_value, mb);
     get_block_luma(list, vec1_x, vec1_y+BLOCK_SIZE_8x8_SP, blockSizeX, blockSizeY-BLOCK_SIZE_8x8, tempBlockL0+BLOCK_SIZE_8x8, shift_x,maxold_x,maxold_y,tempRes,max_imgpel_value,no_ref_value, mb);
@@ -1962,7 +1962,7 @@ static void perform_mc_single (sMacroBlock* mb, eColorPlane plane, sPicture* pic
   // vars for get_block_luma
   int maxold_x = picture->size_x_m1;
   int maxold_y = (mb->mbField) ? (picture->sizeY >> 1) - 1 : picture->size_y_m1;
-  int shift_x  = picture->iLumaStride;
+  int shift_x  = picture->lumaStride;
   int** tempRes = slice->tempRes;
   int max_imgpel_value = decoder->coding.maxPelValueComp[plane];
   sPixel no_ref_value = (sPixel) decoder->coding.dcPredValueComp[plane];
@@ -1972,7 +1972,7 @@ static void perform_mc_single (sMacroBlock* mb, eColorPlane plane, sPicture* pic
   vec1_x = i4 * mv_mul + mv_array->mvX;
   vec1_y = (mb->blockYaff + j) * mv_mul + mv_array->mvY;
 
-  if (blockSizeY > (decoder->coding.iLumaPadY-4) && CheckVertMV(mb, vec1_y, blockSizeY))
+  if (blockSizeY > (decoder->coding.lumaPadY-4) && CheckVertMV(mb, vec1_y, blockSizeY))
   {
     get_block_luma(list, vec1_x, vec1_y, blockSizeX, BLOCK_SIZE_8x8, tempBlockL0, shift_x,maxold_x,maxold_y,tempRes,max_imgpel_value,no_ref_value, mb);
     get_block_luma(list, vec1_x, vec1_y+BLOCK_SIZE_8x8_SP, blockSizeX, blockSizeY-BLOCK_SIZE_8x8, tempBlockL0+BLOCK_SIZE_8x8, shift_x,maxold_x,maxold_y,tempRes,max_imgpel_value,no_ref_value, mb);
@@ -2048,7 +2048,7 @@ static void perform_mc_bi_wp (sMacroBlock* mb, eColorPlane plane, sPicture* pict
   int *offset0 = slice->wpOffset[LIST_0 + wt_list_offset][l0_ref_idx];
   int *offset1 = slice->wpOffset[LIST_1 + wt_list_offset][l1_ref_idx];
   int maxold_y = (mb->mbField) ? (picture->sizeY >> 1) - 1 : picture->size_y_m1;
-  int pady = decoder->coding.iLumaPadY;
+  int pady = decoder->coding.lumaPadY;
   int rlimit = maxold_y + pady - blockSizeY - 2;
   int llimit = 2 - pady;
   int big_blocky = blockSizeY > (pady - 4);
@@ -2067,7 +2067,7 @@ static void perform_mc_bi_wp (sMacroBlock* mb, eColorPlane plane, sPicture* pict
 
   // vars for get_block_luma
   int maxold_x = picture->size_x_m1;
-  int shift_x  = picture->iLumaStride;
+  int shift_x  = picture->lumaStride;
   int** tempRes = slice->tempRes;
   int max_imgpel_value = decoder->coding.maxPelValueComp[plane];
   sPixel no_ref_value = (sPixel) decoder->coding.dcPredValueComp[plane];
@@ -2175,7 +2175,7 @@ static void perform_mc_bi (sMacroBlock* mb, eColorPlane plane, sPicture* picture
   int listOffset = mb->listOffset;
 
   int maxold_y = (mb->mbField) ? (picture->sizeY >> 1) - 1 : picture->size_y_m1;
-  int pady = decoder->coding.iLumaPadY;
+  int pady = decoder->coding.lumaPadY;
   int rlimit = maxold_y + pady - blockSizeY - 2;
   int llimit = 2 - pady;
   int big_blocky = blockSizeY > (pady - 4);
@@ -2191,7 +2191,7 @@ static void perform_mc_bi (sMacroBlock* mb, eColorPlane plane, sPicture* picture
   sPixel *block3 = tempBlockL3[0];
   // vars for get_block_luma
   int maxold_x = picture->size_x_m1;
-  int shift_x  = picture->iLumaStride;
+  int shift_x  = picture->lumaStride;
   int** tempRes = slice->tempRes;
   int max_imgpel_value = decoder->coding.maxPelValueComp[plane];
   sPixel no_ref_value = (sPixel) decoder->coding.dcPredValueComp[plane];
