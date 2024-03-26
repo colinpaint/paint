@@ -962,7 +962,7 @@ static void processBufferingPeriod (byte* payload, int size, sDecoder* decoder) 
 
   int spsId = readUeV ("SEI spsId", buf);
   sSps* sps = &decoder->sps[spsId];
-  useSps (decoder, sps);
+  //useSps (decoder, sps);
 
   if (decoder->param.seiDebug)
     printf ("buffering\n");

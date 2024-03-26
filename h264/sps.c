@@ -10,289 +10,63 @@
 //}}}
 
 //{{{
-//static int isEqualSps (sSps* sps1, sSps* sps2) {
+static int isEqualSps (sSps* sps1, sSps* sps2) {
 
-  //int equal = 1;
-  //if ((!sps1->valid) || (!sps2->valid))
-    //return 0;
+  int equal = 1;
+  if ((!sps1->ok) || (!sps2->ok))
+    return 0;
 
-  //equal &= (sps1->id == sps2->id);
-  //equal &= (sps1->levelIdc == sps2->levelIdc);
-  //equal &= (sps1->profileIdc == sps2->profileIdc);
-  //equal &= (sps1->constrained_set0_flag == sps2->constrained_set0_flag);
-  //equal &= (sps1->constrained_set1_flag == sps2->constrained_set1_flag);
-  //equal &= (sps1->constrained_set2_flag == sps2->constrained_set2_flag);
+  equal &= (sps1->id == sps2->id);
+  equal &= (sps1->levelIdc == sps2->levelIdc);
+  equal &= (sps1->profileIdc == sps2->profileIdc);
 
-  //equal &= (sps1->log2maxFrameNumMinus4 == sps2->log2maxFrameNumMinus4);
-  //equal &= (sps1->pocType == sps2->pocType);
-  //if (!equal)
-    //return equal;
+  equal &= (sps1->constrained_set0_flag == sps2->constrained_set0_flag);
+  equal &= (sps1->constrained_set1_flag == sps2->constrained_set1_flag);
+  equal &= (sps1->constrained_set2_flag == sps2->constrained_set2_flag);
 
-  //if (sps1->pocType == 0)
-    //equal &= (sps1->log2maxPocLsbMinus4 == sps2->log2maxPocLsbMinus4);
-  //else if( sps1->pocType == 1) {
-    //equal &= (sps1->deltaPicOrderAlwaysZero == sps2->deltaPicOrderAlwaysZero);
-    //equal &= (sps1->offsetNonRefPic == sps2->offsetNonRefPic);
-    //equal &= (sps1->offsetTopBotField == sps2->offsetTopBotField);
-    //equal &= (sps1->numRefFramesPocCycle == sps2->numRefFramesPocCycle);
-    //if (!equal)
-      //return equal;
+  equal &= (sps1->log2maxFrameNumMinus4 == sps2->log2maxFrameNumMinus4);
+  equal &= (sps1->pocType == sps2->pocType);
+  if (!equal)
+    return equal;
 
-    //for (unsigned i = 0 ; i < sps1->numRefFramesPocCycle ;i ++)
-      //equal &= (sps1->offsetForRefFrame[i] == sps2->offsetForRefFrame[i]);
-    //}
+  if (sps1->pocType == 0)
+    equal &= (sps1->log2maxPocLsbMinus4 == sps2->log2maxPocLsbMinus4);
+  else if (sps1->pocType == 1) {
+    equal &= (sps1->deltaPicOrderAlwaysZero == sps2->deltaPicOrderAlwaysZero);
+    equal &= (sps1->offsetNonRefPic == sps2->offsetNonRefPic);
+    equal &= (sps1->offsetTopBotField == sps2->offsetTopBotField);
+    equal &= (sps1->numRefFramesPocCycle == sps2->numRefFramesPocCycle);
+    if (!equal)
+      return equal;
 
-  //equal &= (sps1->numRefFrames == sps2->numRefFrames);
-  //equal &= (sps1->allowGapsFrameNum == sps2->allowGapsFrameNum);
-  //equal &= (sps1->picWidthMbsMinus1 == sps2->picWidthMbsMinus1);
-  //equal &= (sps1->picHeightMapUnitsMinus1 == sps2->picHeightMapUnitsMinus1);
-  //equal &= (sps1->frameMbOnly == sps2->frameMbOnly);
-  //if (!equal) return
-    //equal;
-
-  //if (!sps1->frameMbOnly)
-    //equal &= (sps1->mbAffFlag == sps2->mbAffFlag);
-  //equal &= (sps1->isDirect8x8inference == sps2->isDirect8x8inference);
-  //equal &= (sps1->cropFlag == sps2->cropFlag);
-  //if (!equal)
-    //return equal;
-
-  //if (sps1->cropFlag) {
-    //equal &= (sps1->cropLeft == sps2->cropLeft);
-    //equal &= (sps1->cropRight == sps2->cropRight);
-    //equal &= (sps1->cropTop == sps2->cropTop);
-    //equal &= (sps1->cropBot == sps2->cropBot);
-    //}
-  //equal &= (sps1->hasVui == sps2->hasVui);
-
-  //return equal;
-  //}
-//}}}
-//{{{
-static void updateMaxValue (sFrameFormat* format) {
-
-  format->max_value[0] = (1 << format->bitDepth[0]) - 1;
-  format->max_value_sq[0] = format->max_value[0] * format->max_value[0];
-
-  format->max_value[1] = (1 << format->bitDepth[1]) - 1;
-  format->max_value_sq[1] = format->max_value[1] * format->max_value[1];
-
-  format->max_value[2] = (1 << format->bitDepth[2]) - 1;
-  format->max_value_sq[2] = format->max_value[2] * format->max_value[2];
-  }
-//}}}
-//{{{
-static void setCodingParam (sDecoder* decoder, sSps* sps) {
-
-  // maximum vertical motion vector range in luma quarter pixel units
-  decoder->coding.profileIdc = sps->profileIdc;
-  decoder->coding.useLosslessQpPrime = sps->useLosslessQpPrime;
-  if (sps->levelIdc <= 10)
-    decoder->coding.maxVmvR = 64 * 4;
-  else if (sps->levelIdc <= 20)
-    decoder->coding.maxVmvR = 128 * 4;
-  else if (sps->levelIdc <= 30)
-    decoder->coding.maxVmvR = 256 * 4;
-  else
-    decoder->coding.maxVmvR = 512 * 4; // 512 pixels in quarter pixels
-
-  // Fidelity Range Extensions stuff (part 1)
-  decoder->coding.bitDepthChroma = 0;
-  decoder->coding.widthCr = 0;
-  decoder->coding.heightCr = 0;
-  decoder->coding.bitDepthLuma = (short)(sps->bit_depth_luma_minus8 + 8);
-  decoder->coding.bitDepthScale[0] = 1 << sps->bit_depth_luma_minus8;
-  if (sps->chromaFormatIdc != YUV400) {
-    decoder->coding.bitDepthChroma = (short) (sps->bit_depth_chroma_minus8 + 8);
-    decoder->coding.bitDepthScale[1] = 1 << sps->bit_depth_chroma_minus8;
+    for (unsigned i = 0 ; i < sps1->numRefFramesPocCycle ;i ++)
+      equal &= (sps1->offsetForRefFrame[i] == sps2->offsetForRefFrame[i]);
     }
 
-  decoder->coding.maxFrameNum = 1 << (sps->log2maxFrameNumMinus4+4);
-  decoder->coding.picWidthMbs = (sps->picWidthMbsMinus1 +1);
-  decoder->coding.picHeightMapUnits = (sps->picHeightMapUnitsMinus1 +1);
-  decoder->coding.frameHeightMbs = (2 - sps->frameMbOnly) * decoder->coding.picHeightMapUnits;
-  decoder->coding.frameSizeMbs = decoder->coding.picWidthMbs * decoder->coding.frameHeightMbs;
+  equal &= (sps1->numRefFrames == sps2->numRefFrames);
+  equal &= (sps1->allowGapsFrameNum == sps2->allowGapsFrameNum);
+  equal &= (sps1->picWidthMbsMinus1 == sps2->picWidthMbsMinus1);
+  equal &= (sps1->picHeightMapUnitsMinus1 == sps2->picHeightMapUnitsMinus1);
+  equal &= (sps1->frameMbOnly == sps2->frameMbOnly);
+  if (!equal) return
+    equal;
 
-  decoder->coding.yuvFormat = sps->chromaFormatIdc;
-  decoder->coding.isSeperateColourPlane = sps->isSeperateColourPlane;
+  if (!sps1->frameMbOnly)
+    equal &= (sps1->mbAffFlag == sps2->mbAffFlag);
+  equal &= (sps1->isDirect8x8inference == sps2->isDirect8x8inference);
+  equal &= (sps1->cropFlag == sps2->cropFlag);
+  if (!equal)
+    return equal;
 
-  decoder->coding.width = decoder->coding.picWidthMbs * MB_BLOCK_SIZE;
-  decoder->coding.height = decoder->coding.frameHeightMbs * MB_BLOCK_SIZE;
-
-  decoder->coding.iLumaPadX = MCBUF_LUMA_PAD_X;
-  decoder->coding.iLumaPadY = MCBUF_LUMA_PAD_Y;
-  decoder->coding.iChromaPadX = MCBUF_CHROMA_PAD_X;
-  decoder->coding.iChromaPadY = MCBUF_CHROMA_PAD_Y;
-
-  if (sps->chromaFormatIdc == YUV420) {
-    decoder->coding.widthCr  = (decoder->coding.width  >> 1);
-    decoder->coding.heightCr = (decoder->coding.height >> 1);
+  if (sps1->cropFlag) {
+    equal &= (sps1->cropLeft == sps2->cropLeft);
+    equal &= (sps1->cropRight == sps2->cropRight);
+    equal &= (sps1->cropTop == sps2->cropTop);
+    equal &= (sps1->cropBot == sps2->cropBot);
     }
-  else if (sps->chromaFormatIdc == YUV422) {
-    decoder->coding.widthCr  = (decoder->coding.width >> 1);
-    decoder->coding.heightCr = decoder->coding.height;
-    decoder->coding.iChromaPadY = MCBUF_CHROMA_PAD_Y*2;
-    }
-  else if (sps->chromaFormatIdc == YUV444) {
-    decoder->coding.widthCr = decoder->coding.width;
-    decoder->coding.heightCr = decoder->coding.height;
-    decoder->coding.iChromaPadX = decoder->coding.iLumaPadX;
-    decoder->coding.iChromaPadY = decoder->coding.iLumaPadY;
-    }
+  equal &= (sps1->hasVui == sps2->hasVui);
 
-  //pel bitDepth init
-  decoder->coding.bitDepthLumaQpScale = 6 * (decoder->coding.bitDepthLuma - 8);
-
-  if (decoder->coding.bitDepthLuma > decoder->coding.bitDepthChroma || sps->chromaFormatIdc == YUV400)
-    decoder->coding.picUnitBitSizeDisk = (decoder->coding.bitDepthLuma > 8)? 16:8;
-  else
-    decoder->coding.picUnitBitSizeDisk = (decoder->coding.bitDepthChroma > 8)? 16:8;
-  decoder->coding.dcPredValueComp[0] = 1 << (decoder->coding.bitDepthLuma - 1);
-  decoder->coding.maxPelValueComp[0] = (1 << decoder->coding.bitDepthLuma) - 1;
-  decoder->coding.mbSize[0][0] = decoder->coding.mbSize[0][1] = MB_BLOCK_SIZE;
-
-  if (sps->chromaFormatIdc != YUV400) {
-    // for chrominance part
-    decoder->coding.bitDepthChromaQpScale = 6 * (decoder->coding.bitDepthChroma - 8);
-    decoder->coding.dcPredValueComp[1] = (1 << (decoder->coding.bitDepthChroma - 1));
-    decoder->coding.dcPredValueComp[2] = decoder->coding.dcPredValueComp[1];
-    decoder->coding.maxPelValueComp[1] = (1 << decoder->coding.bitDepthChroma) - 1;
-    decoder->coding.maxPelValueComp[2] = (1 << decoder->coding.bitDepthChroma) - 1;
-    decoder->coding.numBlock8x8uv = (1 << sps->chromaFormatIdc) & (~(0x1));
-    decoder->coding.numUvBlocks = (decoder->coding.numBlock8x8uv >> 1);
-    decoder->coding.numCdcCoeff = (decoder->coding.numBlock8x8uv << 1);
-    decoder->coding.mbSize[1][0] = decoder->coding.mbSize[2][0] = decoder->coding.mbCrSizeX  = (sps->chromaFormatIdc==YUV420 || sps->chromaFormatIdc==YUV422)?  8 : 16;
-    decoder->coding.mbSize[1][1] = decoder->coding.mbSize[2][1] = decoder->coding.mbCrSizeY  = (sps->chromaFormatIdc==YUV444 || sps->chromaFormatIdc==YUV422)? 16 :  8;
-
-    decoder->coding.subpelX = decoder->coding.mbCrSizeX == 8 ? 7 : 3;
-    decoder->coding.subpelY = decoder->coding.mbCrSizeY == 8 ? 7 : 3;
-    decoder->coding.shiftpelX = decoder->coding.mbCrSizeX == 8 ? 3 : 2;
-    decoder->coding.shiftpelY = decoder->coding.mbCrSizeY == 8 ? 3 : 2;
-    decoder->coding.totalScale = decoder->coding.shiftpelX + decoder->coding.shiftpelY;
-    }
-  else {
-    decoder->coding.bitDepthChromaQpScale = 0;
-    decoder->coding.maxPelValueComp[1] = 0;
-    decoder->coding.maxPelValueComp[2] = 0;
-    decoder->coding.numBlock8x8uv = 0;
-    decoder->coding.numUvBlocks = 0;
-    decoder->coding.numCdcCoeff = 0;
-    decoder->coding.mbSize[1][0] = decoder->coding.mbSize[2][0] = decoder->coding.mbCrSizeX  = 0;
-    decoder->coding.mbSize[1][1] = decoder->coding.mbSize[2][1] = decoder->coding.mbCrSizeY  = 0;
-    decoder->coding.subpelX = 0;
-    decoder->coding.subpelY = 0;
-    decoder->coding.shiftpelX = 0;
-    decoder->coding.shiftpelY = 0;
-    decoder->coding.totalScale = 0;
-    }
-
-  decoder->coding.mbCrSize = decoder->coding.mbCrSizeX * decoder->coding.mbCrSizeY;
-  decoder->coding.mbSizeBlock[0][0] = decoder->coding.mbSizeBlock[0][1] = decoder->coding.mbSize[0][0] >> 2;
-  decoder->coding.mbSizeBlock[1][0] = decoder->coding.mbSizeBlock[2][0] = decoder->coding.mbSize[1][0] >> 2;
-  decoder->coding.mbSizeBlock[1][1] = decoder->coding.mbSizeBlock[2][1] = decoder->coding.mbSize[1][1] >> 2;
-
-  decoder->coding.mbSizeShift[0][0] = decoder->coding.mbSizeShift[0][1] = ceilLog2sf (decoder->coding.mbSize[0][0]);
-  decoder->coding.mbSizeShift[1][0] = decoder->coding.mbSizeShift[2][0] = ceilLog2sf (decoder->coding.mbSize[1][0]);
-  decoder->coding.mbSizeShift[1][1] = decoder->coding.mbSizeShift[2][1] = ceilLog2sf (decoder->coding.mbSize[1][1]);
-  }
-//}}}
-//{{{
-static void setFormatInfo (sDecoder* decoder, sSps* sps, sFrameFormat* source, sFrameFormat* output) {
-
-  static const int SubWidthC[4] = { 1, 2, 2, 1};
-  static const int SubHeightC[4] = { 1, 2, 1, 1};
-
-  // cropping for luma
-  int cropLeft, cropRight, cropTop, cropBot;
-  if (sps->cropFlag) {
-    cropLeft = SubWidthC [sps->chromaFormatIdc] * sps->cropLeft;
-    cropRight = SubWidthC [sps->chromaFormatIdc] * sps->cropRight;
-    cropTop = SubHeightC[sps->chromaFormatIdc] * ( 2 - sps->frameMbOnly ) *  sps->cropTop;
-    cropBot = SubHeightC[sps->chromaFormatIdc] * ( 2 - sps->frameMbOnly ) *  sps->cropBot;
-    }
-  else
-    cropLeft = cropRight = cropTop = cropBot = 0;
-
-  source->width[0] = decoder->width - cropLeft - cropRight;
-  source->height[0] = decoder->height - cropTop - cropBot;
-
-  // cropping for chroma
-  if (sps->cropFlag) {
-    cropLeft = sps->cropLeft;
-    cropRight = sps->cropRight;
-    cropTop = (2 - sps->frameMbOnly) * sps->cropTop;
-    cropBot = (2 - sps->frameMbOnly) * sps->cropBot;
-    }
-  else
-    cropLeft = cropRight = cropTop = cropBot = 0;
-
-  source->width[1] = decoder->widthCr - cropLeft - cropRight;
-  source->width[2] = source->width[1];
-  source->height[1] = decoder->heightCr - cropTop - cropBot;
-  source->height[2] = source->height[1];
-
-  output->width[0] = decoder->width;
-  source->width[1] = decoder->widthCr;
-  source->width[2] = decoder->widthCr;
-  output->height[0] = decoder->height;
-  output->height[1] = decoder->heightCr;
-  output->height[2] = decoder->heightCr;
-
-  source->sizeCmp[0] = source->width[0] * source->height[0];
-  source->sizeCmp[1] = source->width[1] * source->height[1];
-  source->sizeCmp[2] = source->sizeCmp[1];
-  source->size = source->sizeCmp[0] + source->sizeCmp[1] + source->sizeCmp[2];
-  source->mbWidth = source->width[0]  / MB_BLOCK_SIZE;
-  source->mbHeight = source->height[0] / MB_BLOCK_SIZE;
-
-  // output size (excluding padding)
-  output->sizeCmp[0] = output->width[0] * output->height[0];
-  output->sizeCmp[1] = output->width[1] * output->height[1];
-  output->sizeCmp[2] = output->sizeCmp[1];
-  output->size = output->sizeCmp[0] + output->sizeCmp[1] + output->sizeCmp[2];
-  output->mbWidth = output->width[0]  / MB_BLOCK_SIZE;
-  output->mbHeight = output->height[0] / MB_BLOCK_SIZE;
-
-  output->bitDepth[0] = source->bitDepth[0] = decoder->bitDepthLuma;
-  output->bitDepth[1] = source->bitDepth[1] = decoder->bitDepthChroma;
-  output->bitDepth[2] = source->bitDepth[2] = decoder->bitDepthChroma;
-  output->picDiskUnitSize = (imax (output->bitDepth[0], output->bitDepth[1]) > 8) ? 16 : 8;
-
-  output->frameRate = source->frameRate;
-  output->colourModel = source->colourModel;
-  output->yuvFormat = source->yuvFormat = sps->chromaFormatIdc;
-
-  output->autoCropBot = cropBot;
-  output->autoCropRight = cropRight;
-  output->autoCropBotCr = (cropBot * decoder->mbCrSizeY) / MB_BLOCK_SIZE;
-  output->autoCropRightCr = (cropRight * decoder->mbCrSizeX) / MB_BLOCK_SIZE;
-
-  source->autoCropBot = output->autoCropBot;
-  source->autoCropRight = output->autoCropRight;
-  source->autoCropBotCr = output->autoCropBotCr;
-  source->autoCropRightCr = output->autoCropRightCr;
-
-  updateMaxValue (source);
-  updateMaxValue (output);
-
-  if (!decoder->gotPps) {
-    //{{{  print profile info
-    decoder->gotPps = 1;
-    printf ("-> profile:%d %dx%d %dx%d ",
-            sps->profileIdc, source->width[0], source->height[0], decoder->width, decoder->height);
-
-    if (decoder->coding.yuvFormat == YUV400)
-      printf ("4:0:0");
-    else if (decoder->coding.yuvFormat == YUV420)
-      printf ("4:2:0");
-    else if (decoder->coding.yuvFormat == YUV422)
-      printf ("4:2:2");
-    else
-      printf ("4:4:4");
-
-    printf (" %d:%d:%d\n", source->bitDepth[0], source->bitDepth[1], source->bitDepth[2]);
-    }
-    //}}}
+  return equal;
   }
 //}}}
 //{{{
@@ -330,7 +104,7 @@ static void scalingList (int* scalingList, int scalingListSize, Boolean* useDefa
 //}}}
 
 //{{{
-static void readHrd (sDataPartition* dataPartition, sHRD* hrd) {
+static void readHrdFromStream (sDataPartition* dataPartition, sHRD* hrd) {
 
   sBitStream *s = dataPartition->s;
   hrd->cpb_cnt_minus1 = readUeV ("VUI cpb_cnt_minus1", s);
@@ -352,7 +126,7 @@ static void readHrd (sDataPartition* dataPartition, sHRD* hrd) {
   }
 //}}}
 //{{{
-static void readVui (sDataPartition* dataPartition, sSps* sps) {
+static void readVuiFromStream (sDataPartition* dataPartition, sSps* sps) {
 
   sBitStream* s = dataPartition->s;
   if (sps->hasVui) {
@@ -396,12 +170,12 @@ static void readVui (sDataPartition* dataPartition, sSps* sps) {
 
     sps->vuiSeqParams.nal_hrd_parameters_present_flag = readU1 ("VUI nal_hrd_parameters_present_flag", s);
     if (sps->vuiSeqParams.nal_hrd_parameters_present_flag)
-      readHrd (dataPartition, &(sps->vuiSeqParams.nal_hrd_parameters));
+      readHrdFromStream (dataPartition, &(sps->vuiSeqParams.nal_hrd_parameters));
 
     sps->vuiSeqParams.vcl_hrd_parameters_present_flag = readU1 ("VUI vcl_hrd_parameters_present_flag", s);
 
     if (sps->vuiSeqParams.vcl_hrd_parameters_present_flag)
-      readHrd (dataPartition, &(sps->vuiSeqParams.vcl_hrd_parameters));
+      readHrdFromStream (dataPartition, &(sps->vuiSeqParams.vcl_hrd_parameters));
 
     if (sps->vuiSeqParams.nal_hrd_parameters_present_flag ||
         sps->vuiSeqParams.vcl_hrd_parameters_present_flag)
@@ -523,7 +297,7 @@ static void readSpsFromStream (sDecoder* decoder, sDataPartition* dataPartition,
   sps->hasVui = (Boolean)readU1 ("SPS hasVui", s);
 
   sps->vuiSeqParams.matrix_coefficients = 2;
-  readVui (dataPartition, sps);
+  readVuiFromStream (dataPartition, sps);
 
   if (decoder->param.spsDebug) {
     //{{{  print debug
@@ -557,39 +331,10 @@ void readNaluSps (sDecoder* decoder, sNalu* nalu) {
   readSpsFromStream (decoder, dataPartition, &sps, nalu->len);
   freeDataPartitions (dataPartition, 1);
 
-  // could check for change in sps by id
+  if (decoder->sps[sps.id].ok)
+    if (!isEqualSps (&decoder->sps[sps.id], &sps))
+      printf ("-----> readNaluSps new sps id:%d\n", sps.id);
+
   memcpy (&decoder->sps[sps.id], &sps, sizeof(sSps));
-  }
-//}}}
-//{{{
-void useSps (sDecoder* decoder, sSps* sps) {
-
-  if (decoder->activeSps != sps) {
-    if (decoder->picture)
-      endDecodeFrame (decoder);
-
-    decoder->activeSps = sps;
-
-    if (isBLprofile (sps->profileIdc) && !decoder->dpb->initDone)
-      setCodingParam (decoder, sps);
-    setCoding (decoder);
-
-    initGlobalBuffers (decoder);
-
-    if (!decoder->noOutputPriorPicFlag)
-      flushDpb (decoder->dpb);
-    initDpb (decoder, decoder->dpb, 0);
-
-    // enable error conceal
-    ercInit (decoder, decoder->width, decoder->height, 1);
-    if (decoder->picture) {
-      ercReset (decoder->ercErrorVar, decoder->picSizeInMbs, decoder->picSizeInMbs, decoder->picture->sizeX);
-      decoder->ercMvPerMb = 0;
-      }
-
-    sprintf (decoder->debug.spsStr, "%s", sps->frameMbOnly ? (sps->mbAffFlag ? " mbAff":" frame") : "");
-    }
-
-  setFormatInfo (decoder, sps, &decoder->param.source, &decoder->param.output);
   }
 //}}}

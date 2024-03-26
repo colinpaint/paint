@@ -135,4 +135,3 @@ typedef struct {
 struct Decoder;
 
 extern void readNaluSps (struct Decoder* decoder, sNalu* nalu);
-extern void useSps (struct Decoder* decoder, sSps* sps);

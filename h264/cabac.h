@@ -1,10 +1,10 @@
 #pragma once
 #include "global.h"
 
-extern sMotionInfoContexts*  createMotionInfoContexts();
-extern sTextureInfoContexts* createTextureInfoContexts();
-extern void deleteMotionInfoContexts (sMotionInfoContexts* contexts);
-extern void deleteTextureInfoContexts (sTextureInfoContexts* contexts);
+extern sMotionContexts*  createMotionInfoContexts();
+extern sTextureContexts* createTextureInfoContexts();
+extern void deleteMotionInfoContexts (sMotionContexts* contexts);
+extern void deleteTextureInfoContexts (sTextureContexts* contexts);
 
 extern void cabacNewSlice (sSlice* slice);
 

@@ -149,7 +149,7 @@ int arithmeticDecodeBitsRead (sCabacDecodeEnv* cabacDecodeEnv) {
 //}}}
 
 //{{{
-unsigned int binaryArithmeticDecodeSymbol (sCabacDecodeEnv* cabacDecodeEnv, sBiContextType* biContext) {
+unsigned int binaryArithmeticDecodeSymbol (sCabacDecodeEnv* cabacDecodeEnv, sBiContext* biContext) {
 
   unsigned int bit = biContext->MPS;
   unsigned int* value = &cabacDecodeEnv->value;
@@ -247,7 +247,7 @@ unsigned int binaryArithmeticDecodeFinal (sCabacDecodeEnv* cabacDecodeEnv) {
 //}}}
 
 //{{{
-void binaryArithmeticInitContext (int qp, sBiContextType* context, const char* ini) {
+void binaryArithmeticInitContext (int qp, sBiContext* context, const char* ini) {
 
   int pstate = ((ini[0] * qp) >> 4) + ini[1];
 

@@ -14,7 +14,7 @@ typedef struct {
 
   unsigned int numSliceGroupsMinus1;          // ue(v)
   unsigned int sliceGroupMapType;             // ue(v)
-  //{{{  optional sliceGroupMapType fields 
+  //{{{  optional sliceGroupMapType fields
   // sliceGroupMapType 0
   unsigned int runLengthMinus1[8];            // ue(v)
   // sliceGroupMapType 2
@@ -59,4 +59,3 @@ typedef struct {
 struct Decoder;
 
 extern void readNaluPps (struct Decoder* decoder, sNalu* nalu);
-extern void usePps (struct Decoder* decoder, sPps* pps);

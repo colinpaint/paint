@@ -95,7 +95,7 @@ typedef int32  transpel;  // transformed coefficient type
 #include "sps.h"
 #include "pps.h"
 
-//{{{  enum eMBModeTypes
+//{{{  enum eMBModeType
 typedef enum {
   PSKIP        =  0,
   BSKIP_DIRECT =  0,
@@ -114,7 +114,7 @@ typedef enum {
   I8MB         = 13,
   IPCM         = 14,
   MAXMODE      = 15
-  } eMBModeTypes;
+  } eMBModeType;
 //}}}
 #include "functions.h"
 //}}}
@@ -132,82 +132,6 @@ typedef enum {
   FREXT_Hi444    = 244, // YUV 4:4:4/14 "High 4:4:4"
   } eAvcProfileIDC;
 //}}}
-//{{{  enum eCAVLCBlockTypes
-typedef enum {
-  LUMA              =  0,
-  LUMA_INTRA16x16DC =  1,
-  LUMA_INTRA16x16AC =  2,
-  CB                =  3,
-  CB_INTRA16x16DC   =  4,
-  CB_INTRA16x16AC   =  5,
-  CR                =  8,
-  CR_INTRA16x16DC   =  9,
-  CR_INTRA16x16AC   = 10
-  } eCAVLCBlockTypes;
-//}}}
-//{{{  enum eCABACBlockTypes
-typedef enum {
-  LUMA_16DC     =   0,
-  LUMA_16AC     =   1,
-  LUMA_8x8      =   2,
-  LUMA_8x4      =   3,
-  LUMA_4x8      =   4,
-  LUMA_4x4      =   5,
-  CHROMA_DC     =   6,
-  CHROMA_AC     =   7,
-  CHROMA_DC_2x4 =   8,
-  CHROMA_DC_4x4 =   9,
-  CB_16DC       =  10,
-  CB_16AC       =  11,
-  CB_8x8        =  12,
-  CB_8x4        =  13,
-  CB_4x8        =  14,
-  CB_4x4        =  15,
-  CR_16DC       =  16,
-  CR_16AC       =  17,
-  CR_8x8        =  18,
-  CR_8x4        =  19,
-  CR_4x8        =  20,
-  CR_4x4        =  21
-  } eCABACBlockTypes;
-//}}}
-//{{{  enum eI4x4PredModes
-typedef enum {
-  VERT_PRED            = 0,
-  HOR_PRED             = 1,
-  DC_PRED              = 2,
-  DIAG_DOWN_LEFT_PRED  = 3,
-  DIAG_DOWN_RIGHT_PRED = 4,
-  VERT_RIGHT_PRED      = 5,
-  HOR_DOWN_PRED        = 6,
-  VERT_LEFT_PRED       = 7,
-  HOR_UP_PRED          = 8
-  } eI4x4PredModes;
-//}}}
-//{{{  enum eI8x8PredModes
-typedef enum {
-  DC_PRED_8     =  0,
-  HOR_PRED_8    =  1,
-  VERT_PRED_8   =  2,
-  PLANE_8       =  3
-  } eI8x8PredModes;
-//}}}
-//{{{  enum eI16x16PredModes
-typedef enum {
-  VERT_PRED_16   = 0,
-  HOR_PRED_16    = 1,
-  DC_PRED_16     = 2,
-  PLANE_16       = 3
-  } eI16x16PredModes;
-//}}}
-//{{{  enum eMvPredTypes
-typedef enum {
-  MVPRED_MEDIAN   = 0,
-  MVPRED_L        = 1,
-  MVPRED_U        = 2,
-  MVPRED_UR       = 3
-  } eMvPredTypes;
-//}}}
 //{{{  enum eStartEnd
 typedef enum {
   eEOS = 1, // End Of Sequence
@@ -222,7 +146,6 @@ typedef enum {
   ePictureDecoded = 2
   } eDecodeResult;
 //}}}
-
 //{{{  enum eColorPlane
 typedef enum {
   // YUV
@@ -339,7 +262,85 @@ typedef enum {
   WP_REGULAR =            9
   } eWeightedPredictionType;
 //}}}
+//{{{  enum eCavlcBlockType
+typedef enum {
+  LUMA              =  0,
+  LUMA_INTRA16x16DC =  1,
+  LUMA_INTRA16x16AC =  2,
+  CB                =  3,
+  CB_INTRA16x16DC   =  4,
+  CB_INTRA16x16AC   =  5,
+  CR                =  8,
+  CR_INTRA16x16DC   =  9,
+  CR_INTRA16x16AC   = 10
+  } eCavlcBlockType;
+//}}}
+//{{{  enum eCabacBlockType
+typedef enum {
+  LUMA_16DC     =   0,
+  LUMA_16AC     =   1,
+  LUMA_8x8      =   2,
+  LUMA_8x4      =   3,
+  LUMA_4x8      =   4,
+  LUMA_4x4      =   5,
+  CHROMA_DC     =   6,
+  CHROMA_AC     =   7,
+  CHROMA_DC_2x4 =   8,
+  CHROMA_DC_4x4 =   9,
+  CB_16DC       =  10,
+  CB_16AC       =  11,
+  CB_8x8        =  12,
+  CB_8x4        =  13,
+  CB_4x8        =  14,
+  CB_4x4        =  15,
+  CR_16DC       =  16,
+  CR_16AC       =  17,
+  CR_8x8        =  18,
+  CR_8x4        =  19,
+  CR_4x8        =  20,
+  CR_4x4        =  21
+  } eCabacBlockType;
+//}}}
+//{{{  enum eI4x4PredMode
+typedef enum {
+  VERT_PRED            = 0,
+  HOR_PRED             = 1,
+  DC_PRED              = 2,
+  DIAG_DOWN_LEFT_PRED  = 3,
+  DIAG_DOWN_RIGHT_PRED = 4,
+  VERT_RIGHT_PRED      = 5,
+  HOR_DOWN_PRED        = 6,
+  VERT_LEFT_PRED       = 7,
+  HOR_UP_PRED          = 8
+  } eI4x4PredMode;
+//}}}
+//{{{  enum eI8x8PredMode
+typedef enum {
+  DC_PRED_8     =  0,
+  HOR_PRED_8    =  1,
+  VERT_PRED_8   =  2,
+  PLANE_8       =  3
+  } eI8x8PredMode;
+//}}}
+//{{{  enum eI16x16PredMode
+typedef enum {
+  VERT_PRED_16   = 0,
+  HOR_PRED_16    = 1,
+  DC_PRED_16     = 2,
+  PLANE_16       = 3
+  } eI16x16PredMode;
+//}}}
+//{{{  enum eMvPredType
+typedef enum {
+  MVPRED_MEDIAN   = 0,
+  MVPRED_L        = 1,
+  MVPRED_U        = 2,
+  MVPRED_UR       = 3
+  } eMvPredType;
+//}}}
 
+struct Picture;
+struct PicMotion;
 struct MacroBlock;
 //{{{  sBitStream
 typedef struct {
@@ -389,57 +390,53 @@ typedef struct DataPartition {
   int (*readSyntaxElement) (struct MacroBlock*, struct SyntaxElement*, struct DataPartition*);
   } sDataPartition;
 //}}}
-
-//{{{  sBiContextType
+//{{{  sBiContext
 typedef struct {
   uint16        state; // index into state-table CP
   unsigned char MPS;   // least probable symbol 0/1 CP
   unsigned char dummy; // for alignment
-  } sBiContextType;
+  } sBiContext;
 //}}}
-//{{{  sMotionInfoContexts
-#define NUM_MB_TYPE_CTX  11
-#define NUM_B8_TYPE_CTX  9
-#define NUM_MV_RES_CTX   10
-#define NUM_REF_NO_CTX   6
-#define NUM_DELTA_QP_CTX 4
-#define NUM_MB_AFF_CTX 4
+//{{{  sMotionContexts
+#define NUM_MB_TYPE_CTX        11
+#define NUM_B8_TYPE_CTX        9
+#define NUM_MV_RES_CTX         10
+#define NUM_REF_NO_CTX         6
+#define NUM_DELTA_QP_CTX       4
+#define NUM_MB_AFF_CTX         4
 #define NUM_TRANSFORM_SIZE_CTX 3
 
 typedef struct {
-  sBiContextType mbTypeContexts[3][NUM_MB_TYPE_CTX];
-  sBiContextType b8_type_contexts[2][NUM_B8_TYPE_CTX];
-  sBiContextType mvResContexts[2][NUM_MV_RES_CTX];
-  sBiContextType ref_no_contexts[2][NUM_REF_NO_CTX];
-  sBiContextType delta_qp_contexts[NUM_DELTA_QP_CTX];
-  sBiContextType mb_aff_contexts[NUM_MB_AFF_CTX];
-  } sMotionInfoContexts;
+  sBiContext mbTypeContexts[3][NUM_MB_TYPE_CTX];
+  sBiContext b8TypeContexts[2][NUM_B8_TYPE_CTX];
+  sBiContext mvResContexts[2][NUM_MV_RES_CTX];
+  sBiContext refNoContexts[2][NUM_REF_NO_CTX];
+  sBiContext deltaQpContexts[NUM_DELTA_QP_CTX];
+  sBiContext mbAffContexts[NUM_MB_AFF_CTX];
+  } sMotionContexts;
 //}}}
-//{{{  sTextureInfoContexts
-#define NUM_IPR_CTX    2
-#define NUM_CIPR_CTX   4
-#define NUM_CBP_CTX    4
-#define NUM_BCBP_CTX   4
+//{{{  sTextureContexts
+#define NUM_IPR_CTX   2
+#define NUM_CIPR_CTX  4
+#define NUM_CBP_CTX   4
+#define NUM_BCBP_CTX  4
 #define NUM_MAP_CTX   15
 #define NUM_LAST_CTX  15
-#define NUM_ONE_CTX    5
-#define NUM_ABS_CTX    5
+#define NUM_ONE_CTX   5
+#define NUM_ABS_CTX   5
 
 typedef struct {
-  sBiContextType transform_size_contexts[NUM_TRANSFORM_SIZE_CTX];
-  sBiContextType ipr_contexts[NUM_IPR_CTX];
-  sBiContextType cipr_contexts[NUM_CIPR_CTX];
-  sBiContextType cbp_contexts[3][NUM_CBP_CTX];
-  sBiContextType bcbp_contexts[NUM_BLOCK_TYPES][NUM_BCBP_CTX];
-  sBiContextType map_contexts[2][NUM_BLOCK_TYPES][NUM_MAP_CTX];
-  sBiContextType last_contexts[2][NUM_BLOCK_TYPES][NUM_LAST_CTX];
-  sBiContextType one_contexts[NUM_BLOCK_TYPES][NUM_ONE_CTX];
-  sBiContextType abs_contexts[NUM_BLOCK_TYPES][NUM_ABS_CTX];
-  } sTextureInfoContexts;
+  sBiContext transformSizeContexts[NUM_TRANSFORM_SIZE_CTX];
+  sBiContext iprContexts[NUM_IPR_CTX];
+  sBiContext ciprContexts[NUM_CIPR_CTX];
+  sBiContext cbpContexts[3][NUM_CBP_CTX];
+  sBiContext bcbpContexts[NUM_BLOCK_TYPES][NUM_BCBP_CTX];
+  sBiContext mapContexts[2][NUM_BLOCK_TYPES][NUM_MAP_CTX];
+  sBiContext lastContexts[2][NUM_BLOCK_TYPES][NUM_LAST_CTX];
+  sBiContext oneContexts[NUM_BLOCK_TYPES][NUM_ONE_CTX];
+  sBiContext absContexts[NUM_BLOCK_TYPES][NUM_ABS_CTX];
+  } sTextureContexts;
 //}}}
-
-struct Picture;
-struct PicMotion;
 //{{{  sBlockPos
 typedef struct {
   short x;
@@ -664,16 +661,16 @@ typedef struct Slice {
   int           sliceQpDelta;
   int           qs;
   int           sliceQsDelta;
-  int           sliceType;    // slice type
+  int           sliceType;
   int           modelNum;     // cabac model number
-  unsigned int  frameNum;     // frameNum for this frame
+  unsigned int  frameNum;
   unsigned int  fieldPic;
   byte          botField;
-  ePicStructure picStructure; // Identify picture picStructure type
+  ePicStructure picStructure;
   int           startMbNum;   // MUST be set by NAL even in case of errorFlag == 1
   int           endMbNumPlus1;
   int           maxDataPartitions;
-  int           dataPartitionMode;   // dataPartition mode
+  int           dataPartitionMode;
   int           curHeader;
   int           nextHeader;
   int           lastDquant;
@@ -681,20 +678,20 @@ typedef struct Slice {
   // slice header information;
   int colourPlaneId;             // colourPlaneId of the current coded slice
   int redundantPicCount;
-  int spSwitch;                   // 1 for switching sp, 0 for normal sp
+  int spSwitch;                  // 1 for switching sp, 0 for normal sp
   int sliceGroupChangeCycle;
-  int redundantSliceRefIndex;     // reference index of redundant slice
+  int redundantSliceRefIndex;    // reference index of redundant slice
   int noOutputPriorPicFlag;
   int longTermRefFlag;
   int adaptRefPicBufFlag;
-  sDecodedRefPicMarking* decRefPicMarkingBuffer; // stores the memory management control operations
+  sDecodedRefPicMarking* decRefPicMarkingBuffer; // stores memory management control operations
 
   char listXsize[6];
   struct Picture** listX[6];
 
   sDataPartition*       dataPartitions; // array of dataPartition
-  sMotionInfoContexts*  motionInfoContexts;  // pointer to struct of context models for use in eCabac
-  sTextureInfoContexts* textureInfoContexts; // pointer to struct of context models for use in eCabac
+  sMotionContexts*  motionInfoContexts;  // pointer to struct of context models for use in eCabac
+  sTextureContexts* textureInfoContexts; // pointer to struct of context models for use in eCabac
 
   int   mvscale[6][MAX_REFERENCE_PICTURES];
   int   refPicReorderFlag[2];

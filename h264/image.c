@@ -1154,6 +1154,269 @@ static const char INIT_FLD_LAST_P[3][22][15][2] =
 //}}}
 
 //{{{
+static void padBuf (sPixel* pixel, int width, int height, int stride, int padx, int pady) {
+
+  int pad_width = padx + width;
+  memset (pixel - padx, *pixel, padx * sizeof(sPixel));
+  memset (pixel + width, *(pixel + width - 1), padx * sizeof(sPixel));
+
+  sPixel* line0 = pixel - padx;
+  sPixel* line = line0 - pady * stride;
+  for (int j = -pady; j < 0; j++) {
+    memcpy (line, line0, stride * sizeof(sPixel));
+    line += stride;
+    }
+
+  for (int j = 1; j < height; j++) {
+    line += stride;
+    memset (line, *(line + padx), padx * sizeof(sPixel));
+    memset (line + pad_width, *(line + pad_width - 1), padx * sizeof(sPixel));
+    }
+
+  line0 = line + stride;
+  for (int j = height; j < height + pady; j++) {
+    memcpy (line0,  line, stride * sizeof(sPixel));
+    line0 += stride;
+    }
+  }
+//}}}
+//{{{
+void padPicture (sDecoder* decoder, sPicture* picture) {
+
+  padBuf (*picture->imgY, picture->sizeX, picture->sizeY,
+           picture->iLumaStride, decoder->coding.iLumaPadX, decoder->coding.iLumaPadY);
+
+  if (picture->chromaFormatIdc != YUV400) {
+    padBuf (*picture->imgUV[0], picture->sizeXcr, picture->sizeYcr,
+            picture->iChromaStride, decoder->coding.iChromaPadX, decoder->coding.iChromaPadY);
+    padBuf (*picture->imgUV[1], picture->sizeXcr, picture->sizeYcr,
+            picture->iChromaStride, decoder->coding.iChromaPadX, decoder->coding.iChromaPadY);
+    }
+  }
+//}}}
+
+//{{{
+static void copyPoc (sSlice* fromSlice, sSlice* toSlice) {
+
+  toSlice->topPoc = fromSlice->topPoc;
+  toSlice->botPoc = fromSlice->botPoc;
+  toSlice->thisPoc = fromSlice->thisPoc;
+  toSlice->framePoc = fromSlice->framePoc;
+  }
+//}}}
+//{{{
+void decodePOC (sDecoder* decoder, sSlice* slice) {
+
+  sSps* activeSps = decoder->activeSps;
+  unsigned int maxPicOrderCntLsb = (1<<(activeSps->log2maxPocLsbMinus4+4));
+
+  switch (activeSps->pocType) {
+    //{{{
+    case 0: // POC MODE 0
+      // 1st
+      if (slice->isIDR) {
+        decoder->prevPocMsb = 0;
+        decoder->prevPocLsb = 0;
+        }
+      else if (decoder->lastHasMmco5) {
+        if (decoder->lastPicBotField) {
+          decoder->prevPocMsb = 0;
+          decoder->prevPocLsb = 0;
+          }
+        else {
+          decoder->prevPocMsb = 0;
+          decoder->prevPocLsb = slice->topPoc;
+          }
+        }
+
+      // Calculate the MSBs of current picture
+      if (slice->picOrderCountLsb < decoder->prevPocLsb  &&
+          (decoder->prevPocLsb - slice->picOrderCountLsb) >= maxPicOrderCntLsb/2)
+        slice->PicOrderCntMsb = decoder->prevPocMsb + maxPicOrderCntLsb;
+      else if (slice->picOrderCountLsb > decoder->prevPocLsb &&
+               (slice->picOrderCountLsb - decoder->prevPocLsb) > maxPicOrderCntLsb/2)
+        slice->PicOrderCntMsb = decoder->prevPocMsb - maxPicOrderCntLsb;
+      else
+        slice->PicOrderCntMsb = decoder->prevPocMsb;
+
+      // 2nd
+      if (slice->fieldPic == 0) {
+        // frame pixelPos
+        slice->topPoc = slice->PicOrderCntMsb + slice->picOrderCountLsb;
+        slice->botPoc = slice->topPoc + slice->deletaPicOrderCountBot;
+        slice->thisPoc = slice->framePoc = (slice->topPoc < slice->botPoc) ? slice->topPoc : slice->botPoc;
+        }
+      else if (!slice->botField) // top field
+        slice->thisPoc= slice->topPoc = slice->PicOrderCntMsb + slice->picOrderCountLsb;
+      else // bottom field
+        slice->thisPoc= slice->botPoc = slice->PicOrderCntMsb + slice->picOrderCountLsb;
+      slice->framePoc = slice->thisPoc;
+
+      decoder->thisPoc = slice->thisPoc;
+      decoder->previousFrameNum = slice->frameNum;
+
+      if (slice->refId) {
+        decoder->prevPocLsb = slice->picOrderCountLsb;
+        decoder->prevPocMsb = slice->PicOrderCntMsb;
+        }
+
+      break;
+    //}}}
+    //{{{
+    case 1: // POC MODE 1
+      // 1st
+      if (slice->isIDR) {
+        // first pixelPos of IDRGOP,
+        decoder->frameNumOffset = 0;
+        if (slice->frameNum)
+          error ("frameNum nonZero IDR picture");
+        }
+      else {
+        if (decoder->lastHasMmco5) {
+          decoder->previousFrameNumOffset = 0;
+          decoder->previousFrameNum = 0;
+          }
+        if (slice->frameNum<decoder->previousFrameNum) // not first pixelPos of IDRGOP
+          decoder->frameNumOffset = decoder->previousFrameNumOffset + decoder->coding.maxFrameNum;
+        else
+          decoder->frameNumOffset = decoder->previousFrameNumOffset;
+        }
+
+      // 2nd
+      if (activeSps->numRefFramesPocCycle)
+        slice->AbsFrameNum = decoder->frameNumOffset + slice->frameNum;
+      else
+        slice->AbsFrameNum = 0;
+      if (!slice->refId && (slice->AbsFrameNum > 0))
+        slice->AbsFrameNum--;
+
+      // 3rd
+      decoder->expectedDeltaPerPocCycle = 0;
+      if (activeSps->numRefFramesPocCycle)
+        for (unsigned i = 0; i < activeSps->numRefFramesPocCycle; i++)
+          decoder->expectedDeltaPerPocCycle += activeSps->offsetForRefFrame[i];
+
+      if (slice->AbsFrameNum) {
+        decoder->pocCycleCount = (slice->AbsFrameNum-1) / activeSps->numRefFramesPocCycle;
+        decoder->frameNumPocCycle = (slice->AbsFrameNum-1) % activeSps->numRefFramesPocCycle;
+        decoder->expectedPOC =
+          decoder->pocCycleCount*decoder->expectedDeltaPerPocCycle;
+        for (int i = 0; i <= decoder->frameNumPocCycle; i++)
+          decoder->expectedPOC += activeSps->offsetForRefFrame[i];
+        }
+      else
+        decoder->expectedPOC = 0;
+
+      if (!slice->refId)
+        decoder->expectedPOC += activeSps->offsetNonRefPic;
+
+      if (slice->fieldPic == 0) {
+        // frame pixelPos
+        slice->topPoc = decoder->expectedPOC + slice->deltaPicOrderCount[0];
+        slice->botPoc = slice->topPoc + activeSps->offsetTopBotField + slice->deltaPicOrderCount[1];
+        slice->thisPoc = slice->framePoc = (slice->topPoc < slice->botPoc) ? slice->topPoc : slice->botPoc;
+        }
+      else if (!slice->botField) // top field
+        slice->thisPoc = slice->topPoc = decoder->expectedPOC + slice->deltaPicOrderCount[0];
+      else // bottom field
+        slice->thisPoc = slice->botPoc = decoder->expectedPOC + activeSps->offsetTopBotField + slice->deltaPicOrderCount[0];
+      slice->framePoc=slice->thisPoc;
+
+      decoder->previousFrameNum = slice->frameNum;
+      decoder->previousFrameNumOffset = decoder->frameNumOffset;
+      break;
+    //}}}
+    //{{{
+    case 2: // POC MODE 2
+      if (slice->isIDR) {
+        // IDR picture, first pixelPos of IDRGOP,
+        decoder->frameNumOffset = 0;
+        slice->thisPoc = slice->framePoc = slice->topPoc = slice->botPoc = 0;
+        if (slice->frameNum)
+          error ("frameNum not equal to zero in IDR picture");
+        }
+      else {
+        if (decoder->lastHasMmco5) {
+          decoder->previousFrameNum = 0;
+          decoder->previousFrameNumOffset = 0;
+          }
+
+        if (slice->frameNum<decoder->previousFrameNum)
+          decoder->frameNumOffset = decoder->previousFrameNumOffset + decoder->coding.maxFrameNum;
+        else
+          decoder->frameNumOffset = decoder->previousFrameNumOffset;
+
+        slice->AbsFrameNum = decoder->frameNumOffset+slice->frameNum;
+        if (!slice->refId)
+          slice->thisPoc = 2*slice->AbsFrameNum - 1;
+        else
+          slice->thisPoc = 2*slice->AbsFrameNum;
+
+        if (slice->fieldPic == 0)
+          slice->topPoc = slice->botPoc = slice->framePoc = slice->thisPoc;
+        else if (!slice->botField)
+          slice->topPoc = slice->framePoc = slice->thisPoc;
+        else
+          slice->botPoc = slice->framePoc = slice->thisPoc;
+        }
+
+      decoder->previousFrameNum = slice->frameNum;
+      decoder->previousFrameNumOffset = decoder->frameNumOffset;
+      break;
+    //}}}
+    //{{{
+    default:
+      error ("unknown POC type");
+      break;
+    //}}}
+    }
+  }
+//}}}
+
+//{{{
+static void copySliceInfo (sSlice* slice, sOldSlice* oldSlice) {
+
+  oldSlice->ppsId = slice->ppsId;
+  oldSlice->frameNum = slice->frameNum;
+  oldSlice->fieldPic = slice->fieldPic;
+
+  if (slice->fieldPic)
+    oldSlice->botField = slice->botField;
+
+  oldSlice->nalRefIdc = slice->refId;
+
+  oldSlice->isIDR = (byte)slice->isIDR;
+  if (slice->isIDR)
+    oldSlice->idrPicId = slice->idrPicId;
+
+  if (slice->decoder->activeSps->pocType == 0) {
+    oldSlice->picOrderCountLsb = slice->picOrderCountLsb;
+    oldSlice->deltaPicOrderCountBot = slice->deletaPicOrderCountBot;
+    }
+  else if (slice->decoder->activeSps->pocType == 1) {
+    oldSlice->deltaPicOrderCount[0] = slice->deltaPicOrderCount[0];
+    oldSlice->deltaPicOrderCount[1] = slice->deltaPicOrderCount[1];
+    }
+  }
+//}}}
+//{{{
+void initOldSlice (sOldSlice* oldSlice) {
+
+  oldSlice->fieldPic = 0;
+  oldSlice->ppsId = INT_MAX;
+  oldSlice->frameNum = INT_MAX;
+
+  oldSlice->nalRefIdc = INT_MAX;
+  oldSlice->isIDR = FALSE;
+
+  oldSlice->picOrderCountLsb = UINT_MAX;
+  oldSlice->deltaPicOrderCountBot = INT_MAX;
+  oldSlice->deltaPicOrderCount[0] = INT_MAX;
+  oldSlice->deltaPicOrderCount[1] = INT_MAX;
+  }
+//}}}
+
+//{{{
 static void initContexts (sSlice* slice) {
 
   //{{{
@@ -1183,8 +1446,8 @@ static void initContexts (sSlice* slice) {
     }
   //}}}
 
-  sMotionInfoContexts* mc = slice->motionInfoContexts;
-  sTextureInfoContexts* tc = slice->textureInfoContexts;
+  sMotionContexts* mc = slice->motionInfoContexts;
+  sTextureContexts* tc = slice->textureInfoContexts;
 
   int i, j;
   int qp = imax (0, slice->qp);
@@ -1193,45 +1456,45 @@ static void initContexts (sSlice* slice) {
   // motion coding contexts
   if ((slice->sliceType == eSliceI) || (slice->sliceType == eSliceSI)) {
     IBIARI_CTX_INIT2 (3, NUM_MB_TYPE_CTX,   mc->mbTypeContexts,     INIT_MB_TYPE,    modelNum, qp);
-    IBIARI_CTX_INIT2 (2, NUM_B8_TYPE_CTX,   mc->b8_type_contexts,     INIT_B8_TYPE,    modelNum, qp);
+    IBIARI_CTX_INIT2 (2, NUM_B8_TYPE_CTX,   mc->b8TypeContexts,     INIT_B8_TYPE,    modelNum, qp);
     IBIARI_CTX_INIT2 (2, NUM_MV_RES_CTX,    mc->mvResContexts,      INIT_MV_RES,     modelNum, qp);
-    IBIARI_CTX_INIT2 (2, NUM_REF_NO_CTX,    mc->ref_no_contexts,      INIT_REF_NO,     modelNum, qp);
-    IBIARI_CTX_INIT1 (   NUM_DELTA_QP_CTX,  mc->delta_qp_contexts,    INIT_DELTA_QP,   modelNum, qp);
-    IBIARI_CTX_INIT1 (   NUM_MB_AFF_CTX,    mc->mb_aff_contexts,      INIT_MB_AFF,     modelNum, qp);
+    IBIARI_CTX_INIT2 (2, NUM_REF_NO_CTX,    mc->refNoContexts,      INIT_REF_NO,     modelNum, qp);
+    IBIARI_CTX_INIT1 (   NUM_DELTA_QP_CTX,  mc->deltaQpContexts,    INIT_DELTA_QP,   modelNum, qp);
+    IBIARI_CTX_INIT1 (   NUM_MB_AFF_CTX,    mc->mbAffContexts,      INIT_MB_AFF,     modelNum, qp);
 
     // texture coding contexts
-    IBIARI_CTX_INIT1 (   NUM_TRANSFORM_SIZE_CTX, tc->transform_size_contexts, INIT_TRANSFORM_SIZE, modelNum, qp);
-    IBIARI_CTX_INIT1 (                 NUM_IPR_CTX,  tc->ipr_contexts,     INIT_IPR,       modelNum, qp);
-    IBIARI_CTX_INIT1 (                 NUM_CIPR_CTX, tc->cipr_contexts,    INIT_CIPR,      modelNum, qp);
-    IBIARI_CTX_INIT2 (3,               NUM_CBP_CTX,  tc->cbp_contexts,     INIT_CBP,       modelNum, qp);
-    IBIARI_CTX_INIT2 (NUM_BLOCK_TYPES, NUM_BCBP_CTX, tc->bcbp_contexts,    INIT_BCBP,      modelNum, qp);
-    IBIARI_CTX_INIT2 (NUM_BLOCK_TYPES, NUM_MAP_CTX,  tc->map_contexts[0],  INIT_MAP,       modelNum, qp);
-    IBIARI_CTX_INIT2 (NUM_BLOCK_TYPES, NUM_MAP_CTX,  tc->map_contexts[1],  INIT_FLD_MAP,   modelNum, qp);
-    IBIARI_CTX_INIT2 (NUM_BLOCK_TYPES, NUM_LAST_CTX, tc->last_contexts[1], INIT_FLD_LAST,  modelNum, qp);
-    IBIARI_CTX_INIT2 (NUM_BLOCK_TYPES, NUM_LAST_CTX, tc->last_contexts[0], INIT_LAST,      modelNum, qp);
-    IBIARI_CTX_INIT2 (NUM_BLOCK_TYPES, NUM_ONE_CTX,  tc->one_contexts,     INIT_ONE,       modelNum, qp);
-    IBIARI_CTX_INIT2 (NUM_BLOCK_TYPES, NUM_ABS_CTX,  tc->abs_contexts,     INIT_ABS,       modelNum, qp);
+    IBIARI_CTX_INIT1 (   NUM_TRANSFORM_SIZE_CTX, tc->transformSizeContexts, INIT_TRANSFORM_SIZE, modelNum, qp);
+    IBIARI_CTX_INIT1 (                 NUM_IPR_CTX,  tc->iprContexts,     INIT_IPR,       modelNum, qp);
+    IBIARI_CTX_INIT1 (                 NUM_CIPR_CTX, tc->ciprContexts,    INIT_CIPR,      modelNum, qp);
+    IBIARI_CTX_INIT2 (3,               NUM_CBP_CTX,  tc->cbpContexts,     INIT_CBP,       modelNum, qp);
+    IBIARI_CTX_INIT2 (NUM_BLOCK_TYPES, NUM_BCBP_CTX, tc->bcbpContexts,    INIT_BCBP,      modelNum, qp);
+    IBIARI_CTX_INIT2 (NUM_BLOCK_TYPES, NUM_MAP_CTX,  tc->mapContexts[0],  INIT_MAP,       modelNum, qp);
+    IBIARI_CTX_INIT2 (NUM_BLOCK_TYPES, NUM_MAP_CTX,  tc->mapContexts[1],  INIT_FLD_MAP,   modelNum, qp);
+    IBIARI_CTX_INIT2 (NUM_BLOCK_TYPES, NUM_LAST_CTX, tc->lastContexts[1], INIT_FLD_LAST,  modelNum, qp);
+    IBIARI_CTX_INIT2 (NUM_BLOCK_TYPES, NUM_LAST_CTX, tc->lastContexts[0], INIT_LAST,      modelNum, qp);
+    IBIARI_CTX_INIT2 (NUM_BLOCK_TYPES, NUM_ONE_CTX,  tc->oneContexts,     INIT_ONE,       modelNum, qp);
+    IBIARI_CTX_INIT2 (NUM_BLOCK_TYPES, NUM_ABS_CTX,  tc->absContexts,     INIT_ABS,       modelNum, qp);
     }
   else {
     PBIARI_CTX_INIT2 (3, NUM_MB_TYPE_CTX,   mc->mbTypeContexts,     INIT_MB_TYPE,    modelNum, qp);
-    PBIARI_CTX_INIT2 (2, NUM_B8_TYPE_CTX,   mc->b8_type_contexts,     INIT_B8_TYPE,    modelNum, qp);
+    PBIARI_CTX_INIT2 (2, NUM_B8_TYPE_CTX,   mc->b8TypeContexts,     INIT_B8_TYPE,    modelNum, qp);
     PBIARI_CTX_INIT2 (2, NUM_MV_RES_CTX,    mc->mvResContexts,      INIT_MV_RES,     modelNum, qp);
-    PBIARI_CTX_INIT2 (2, NUM_REF_NO_CTX,    mc->ref_no_contexts,      INIT_REF_NO,     modelNum, qp);
-    PBIARI_CTX_INIT1 (   NUM_DELTA_QP_CTX,  mc->delta_qp_contexts,    INIT_DELTA_QP,   modelNum, qp);
-    PBIARI_CTX_INIT1 (   NUM_MB_AFF_CTX,    mc->mb_aff_contexts,      INIT_MB_AFF,     modelNum, qp);
+    PBIARI_CTX_INIT2 (2, NUM_REF_NO_CTX,    mc->refNoContexts,      INIT_REF_NO,     modelNum, qp);
+    PBIARI_CTX_INIT1 (   NUM_DELTA_QP_CTX,  mc->deltaQpContexts,    INIT_DELTA_QP,   modelNum, qp);
+    PBIARI_CTX_INIT1 (   NUM_MB_AFF_CTX,    mc->mbAffContexts,      INIT_MB_AFF,     modelNum, qp);
 
     // texture coding contexts
-    PBIARI_CTX_INIT1 (   NUM_TRANSFORM_SIZE_CTX, tc->transform_size_contexts, INIT_TRANSFORM_SIZE, modelNum, qp);
-    PBIARI_CTX_INIT1 (                 NUM_IPR_CTX,  tc->ipr_contexts,     INIT_IPR,       modelNum, qp);
-    PBIARI_CTX_INIT1 (                 NUM_CIPR_CTX, tc->cipr_contexts,    INIT_CIPR,      modelNum, qp);
-    PBIARI_CTX_INIT2 (3,               NUM_CBP_CTX,  tc->cbp_contexts,     INIT_CBP,       modelNum, qp);
-    PBIARI_CTX_INIT2 (NUM_BLOCK_TYPES, NUM_BCBP_CTX, tc->bcbp_contexts,    INIT_BCBP,      modelNum, qp);
-    PBIARI_CTX_INIT2 (NUM_BLOCK_TYPES, NUM_MAP_CTX,  tc->map_contexts[0],  INIT_MAP,       modelNum, qp);
-    PBIARI_CTX_INIT2 (NUM_BLOCK_TYPES, NUM_MAP_CTX,  tc->map_contexts[1],  INIT_FLD_MAP,   modelNum, qp);
-    PBIARI_CTX_INIT2 (NUM_BLOCK_TYPES, NUM_LAST_CTX, tc->last_contexts[1], INIT_FLD_LAST,  modelNum, qp);
-    PBIARI_CTX_INIT2 (NUM_BLOCK_TYPES, NUM_LAST_CTX, tc->last_contexts[0], INIT_LAST,      modelNum, qp);
-    PBIARI_CTX_INIT2 (NUM_BLOCK_TYPES, NUM_ONE_CTX,  tc->one_contexts,     INIT_ONE,       modelNum, qp);
-    PBIARI_CTX_INIT2 (NUM_BLOCK_TYPES, NUM_ABS_CTX,  tc->abs_contexts,     INIT_ABS,       modelNum, qp);
+    PBIARI_CTX_INIT1 (   NUM_TRANSFORM_SIZE_CTX, tc->transformSizeContexts, INIT_TRANSFORM_SIZE, modelNum, qp);
+    PBIARI_CTX_INIT1 (                 NUM_IPR_CTX,  tc->iprContexts,     INIT_IPR,       modelNum, qp);
+    PBIARI_CTX_INIT1 (                 NUM_CIPR_CTX, tc->ciprContexts,    INIT_CIPR,      modelNum, qp);
+    PBIARI_CTX_INIT2 (3,               NUM_CBP_CTX,  tc->cbpContexts,     INIT_CBP,       modelNum, qp);
+    PBIARI_CTX_INIT2 (NUM_BLOCK_TYPES, NUM_BCBP_CTX, tc->bcbpContexts,    INIT_BCBP,      modelNum, qp);
+    PBIARI_CTX_INIT2 (NUM_BLOCK_TYPES, NUM_MAP_CTX,  tc->mapContexts[0],  INIT_MAP,       modelNum, qp);
+    PBIARI_CTX_INIT2 (NUM_BLOCK_TYPES, NUM_MAP_CTX,  tc->mapContexts[1],  INIT_FLD_MAP,   modelNum, qp);
+    PBIARI_CTX_INIT2 (NUM_BLOCK_TYPES, NUM_LAST_CTX, tc->lastContexts[1], INIT_FLD_LAST,  modelNum, qp);
+    PBIARI_CTX_INIT2 (NUM_BLOCK_TYPES, NUM_LAST_CTX, tc->lastContexts[0], INIT_LAST,      modelNum, qp);
+    PBIARI_CTX_INIT2 (NUM_BLOCK_TYPES, NUM_ONE_CTX,  tc->oneContexts,     INIT_ONE,       modelNum, qp);
+    PBIARI_CTX_INIT2 (NUM_BLOCK_TYPES, NUM_ABS_CTX,  tc->absContexts,     INIT_ABS,       modelNum, qp);
     }
   }
 //}}}
@@ -1327,21 +1590,236 @@ static void ercWriteMBmodeMV (sMacroBlock* mb) {
     //}}}
   }
 //}}}
-
 //{{{
-static void resetWpParam (sSlice* slice) {
+static void updateMaxValue (sFrameFormat* format) {
 
-  for (int i = 0; i < MAX_REFERENCE_PICTURES; i++) {
-    for (int comp = 0; comp < 3; comp++) {
-      int logWeightDenom = (comp == 0) ? slice->lumaLog2weightDenom : slice->chromaLog2weightDenom;
-      slice->wpWeight[0][i][comp] = 1 << logWeightDenom;
-      slice->wpWeight[1][i][comp] = 1 << logWeightDenom;
-      }
-    }
+  format->max_value[0] = (1 << format->bitDepth[0]) - 1;
+  format->max_value_sq[0] = format->max_value[0] * format->max_value[0];
+
+  format->max_value[1] = (1 << format->bitDepth[1]) - 1;
+  format->max_value_sq[1] = format->max_value[1] * format->max_value[1];
+
+  format->max_value[2] = (1 << format->bitDepth[2]) - 1;
+  format->max_value_sq[2] = format->max_value[2] * format->max_value[2];
   }
 //}}}
 //{{{
-static void fillWpParam (sSlice* slice) {
+static void setCodingParam (sDecoder* decoder, sSps* sps) {
+
+  // maximum vertical motion vector range in luma quarter pixel units
+  decoder->coding.profileIdc = sps->profileIdc;
+  decoder->coding.useLosslessQpPrime = sps->useLosslessQpPrime;
+  if (sps->levelIdc <= 10)
+    decoder->coding.maxVmvR = 64 * 4;
+  else if (sps->levelIdc <= 20)
+    decoder->coding.maxVmvR = 128 * 4;
+  else if (sps->levelIdc <= 30)
+    decoder->coding.maxVmvR = 256 * 4;
+  else
+    decoder->coding.maxVmvR = 512 * 4; // 512 pixels in quarter pixels
+
+  // Fidelity Range Extensions stuff (part 1)
+  decoder->coding.bitDepthChroma = 0;
+  decoder->coding.widthCr = 0;
+  decoder->coding.heightCr = 0;
+  decoder->coding.bitDepthLuma = (short)(sps->bit_depth_luma_minus8 + 8);
+  decoder->coding.bitDepthScale[0] = 1 << sps->bit_depth_luma_minus8;
+  if (sps->chromaFormatIdc != YUV400) {
+    decoder->coding.bitDepthChroma = (short) (sps->bit_depth_chroma_minus8 + 8);
+    decoder->coding.bitDepthScale[1] = 1 << sps->bit_depth_chroma_minus8;
+    }
+
+  decoder->coding.maxFrameNum = 1 << (sps->log2maxFrameNumMinus4+4);
+  decoder->coding.picWidthMbs = (sps->picWidthMbsMinus1 +1);
+  decoder->coding.picHeightMapUnits = (sps->picHeightMapUnitsMinus1 +1);
+  decoder->coding.frameHeightMbs = (2 - sps->frameMbOnly) * decoder->coding.picHeightMapUnits;
+  decoder->coding.frameSizeMbs = decoder->coding.picWidthMbs * decoder->coding.frameHeightMbs;
+
+  decoder->coding.yuvFormat = sps->chromaFormatIdc;
+  decoder->coding.isSeperateColourPlane = sps->isSeperateColourPlane;
+
+  decoder->coding.width = decoder->coding.picWidthMbs * MB_BLOCK_SIZE;
+  decoder->coding.height = decoder->coding.frameHeightMbs * MB_BLOCK_SIZE;
+
+  decoder->coding.iLumaPadX = MCBUF_LUMA_PAD_X;
+  decoder->coding.iLumaPadY = MCBUF_LUMA_PAD_Y;
+  decoder->coding.iChromaPadX = MCBUF_CHROMA_PAD_X;
+  decoder->coding.iChromaPadY = MCBUF_CHROMA_PAD_Y;
+
+  if (sps->chromaFormatIdc == YUV420) {
+    decoder->coding.widthCr  = (decoder->coding.width  >> 1);
+    decoder->coding.heightCr = (decoder->coding.height >> 1);
+    }
+  else if (sps->chromaFormatIdc == YUV422) {
+    decoder->coding.widthCr  = (decoder->coding.width >> 1);
+    decoder->coding.heightCr = decoder->coding.height;
+    decoder->coding.iChromaPadY = MCBUF_CHROMA_PAD_Y*2;
+    }
+  else if (sps->chromaFormatIdc == YUV444) {
+    decoder->coding.widthCr = decoder->coding.width;
+    decoder->coding.heightCr = decoder->coding.height;
+    decoder->coding.iChromaPadX = decoder->coding.iLumaPadX;
+    decoder->coding.iChromaPadY = decoder->coding.iLumaPadY;
+    }
+
+  //pel bitDepth init
+  decoder->coding.bitDepthLumaQpScale = 6 * (decoder->coding.bitDepthLuma - 8);
+
+  if (decoder->coding.bitDepthLuma > decoder->coding.bitDepthChroma || sps->chromaFormatIdc == YUV400)
+    decoder->coding.picUnitBitSizeDisk = (decoder->coding.bitDepthLuma > 8)? 16:8;
+  else
+    decoder->coding.picUnitBitSizeDisk = (decoder->coding.bitDepthChroma > 8)? 16:8;
+  decoder->coding.dcPredValueComp[0] = 1 << (decoder->coding.bitDepthLuma - 1);
+  decoder->coding.maxPelValueComp[0] = (1 << decoder->coding.bitDepthLuma) - 1;
+  decoder->coding.mbSize[0][0] = decoder->coding.mbSize[0][1] = MB_BLOCK_SIZE;
+
+  if (sps->chromaFormatIdc != YUV400) {
+    // for chrominance part
+    decoder->coding.bitDepthChromaQpScale = 6 * (decoder->coding.bitDepthChroma - 8);
+    decoder->coding.dcPredValueComp[1] = (1 << (decoder->coding.bitDepthChroma - 1));
+    decoder->coding.dcPredValueComp[2] = decoder->coding.dcPredValueComp[1];
+    decoder->coding.maxPelValueComp[1] = (1 << decoder->coding.bitDepthChroma) - 1;
+    decoder->coding.maxPelValueComp[2] = (1 << decoder->coding.bitDepthChroma) - 1;
+    decoder->coding.numBlock8x8uv = (1 << sps->chromaFormatIdc) & (~(0x1));
+    decoder->coding.numUvBlocks = (decoder->coding.numBlock8x8uv >> 1);
+    decoder->coding.numCdcCoeff = (decoder->coding.numBlock8x8uv << 1);
+    decoder->coding.mbSize[1][0] = decoder->coding.mbSize[2][0] = decoder->coding.mbCrSizeX  = (sps->chromaFormatIdc==YUV420 || sps->chromaFormatIdc==YUV422)?  8 : 16;
+    decoder->coding.mbSize[1][1] = decoder->coding.mbSize[2][1] = decoder->coding.mbCrSizeY  = (sps->chromaFormatIdc==YUV444 || sps->chromaFormatIdc==YUV422)? 16 :  8;
+
+    decoder->coding.subpelX = decoder->coding.mbCrSizeX == 8 ? 7 : 3;
+    decoder->coding.subpelY = decoder->coding.mbCrSizeY == 8 ? 7 : 3;
+    decoder->coding.shiftpelX = decoder->coding.mbCrSizeX == 8 ? 3 : 2;
+    decoder->coding.shiftpelY = decoder->coding.mbCrSizeY == 8 ? 3 : 2;
+    decoder->coding.totalScale = decoder->coding.shiftpelX + decoder->coding.shiftpelY;
+    }
+  else {
+    decoder->coding.bitDepthChromaQpScale = 0;
+    decoder->coding.maxPelValueComp[1] = 0;
+    decoder->coding.maxPelValueComp[2] = 0;
+    decoder->coding.numBlock8x8uv = 0;
+    decoder->coding.numUvBlocks = 0;
+    decoder->coding.numCdcCoeff = 0;
+    decoder->coding.mbSize[1][0] = decoder->coding.mbSize[2][0] = decoder->coding.mbCrSizeX  = 0;
+    decoder->coding.mbSize[1][1] = decoder->coding.mbSize[2][1] = decoder->coding.mbCrSizeY  = 0;
+    decoder->coding.subpelX = 0;
+    decoder->coding.subpelY = 0;
+    decoder->coding.shiftpelX = 0;
+    decoder->coding.shiftpelY = 0;
+    decoder->coding.totalScale = 0;
+    }
+
+  decoder->coding.mbCrSize = decoder->coding.mbCrSizeX * decoder->coding.mbCrSizeY;
+  decoder->coding.mbSizeBlock[0][0] = decoder->coding.mbSizeBlock[0][1] = decoder->coding.mbSize[0][0] >> 2;
+  decoder->coding.mbSizeBlock[1][0] = decoder->coding.mbSizeBlock[2][0] = decoder->coding.mbSize[1][0] >> 2;
+  decoder->coding.mbSizeBlock[1][1] = decoder->coding.mbSizeBlock[2][1] = decoder->coding.mbSize[1][1] >> 2;
+
+  decoder->coding.mbSizeShift[0][0] = decoder->coding.mbSizeShift[0][1] = ceilLog2sf (decoder->coding.mbSize[0][0]);
+  decoder->coding.mbSizeShift[1][0] = decoder->coding.mbSizeShift[2][0] = ceilLog2sf (decoder->coding.mbSize[1][0]);
+  decoder->coding.mbSizeShift[1][1] = decoder->coding.mbSizeShift[2][1] = ceilLog2sf (decoder->coding.mbSize[1][1]);
+  }
+//}}}
+//{{{
+static void setFormatInfo (sDecoder* decoder, sSps* sps, sFrameFormat* source, sFrameFormat* output) {
+
+  static const int SubWidthC[4] = { 1, 2, 2, 1};
+  static const int SubHeightC[4] = { 1, 2, 1, 1};
+
+  // cropping for luma
+  int cropLeft, cropRight, cropTop, cropBot;
+  if (sps->cropFlag) {
+    cropLeft = SubWidthC [sps->chromaFormatIdc] * sps->cropLeft;
+    cropRight = SubWidthC [sps->chromaFormatIdc] * sps->cropRight;
+    cropTop = SubHeightC[sps->chromaFormatIdc] * ( 2 - sps->frameMbOnly ) *  sps->cropTop;
+    cropBot = SubHeightC[sps->chromaFormatIdc] * ( 2 - sps->frameMbOnly ) *  sps->cropBot;
+    }
+  else
+    cropLeft = cropRight = cropTop = cropBot = 0;
+
+  source->width[0] = decoder->width - cropLeft - cropRight;
+  source->height[0] = decoder->height - cropTop - cropBot;
+
+  // cropping for chroma
+  if (sps->cropFlag) {
+    cropLeft = sps->cropLeft;
+    cropRight = sps->cropRight;
+    cropTop = (2 - sps->frameMbOnly) * sps->cropTop;
+    cropBot = (2 - sps->frameMbOnly) * sps->cropBot;
+    }
+  else
+    cropLeft = cropRight = cropTop = cropBot = 0;
+
+  source->width[1] = decoder->widthCr - cropLeft - cropRight;
+  source->width[2] = source->width[1];
+  source->height[1] = decoder->heightCr - cropTop - cropBot;
+  source->height[2] = source->height[1];
+
+  output->width[0] = decoder->width;
+  source->width[1] = decoder->widthCr;
+  source->width[2] = decoder->widthCr;
+  output->height[0] = decoder->height;
+  output->height[1] = decoder->heightCr;
+  output->height[2] = decoder->heightCr;
+
+  source->sizeCmp[0] = source->width[0] * source->height[0];
+  source->sizeCmp[1] = source->width[1] * source->height[1];
+  source->sizeCmp[2] = source->sizeCmp[1];
+  source->size = source->sizeCmp[0] + source->sizeCmp[1] + source->sizeCmp[2];
+  source->mbWidth = source->width[0]  / MB_BLOCK_SIZE;
+  source->mbHeight = source->height[0] / MB_BLOCK_SIZE;
+
+  // output size (excluding padding)
+  output->sizeCmp[0] = output->width[0] * output->height[0];
+  output->sizeCmp[1] = output->width[1] * output->height[1];
+  output->sizeCmp[2] = output->sizeCmp[1];
+  output->size = output->sizeCmp[0] + output->sizeCmp[1] + output->sizeCmp[2];
+  output->mbWidth = output->width[0]  / MB_BLOCK_SIZE;
+  output->mbHeight = output->height[0] / MB_BLOCK_SIZE;
+
+  output->bitDepth[0] = source->bitDepth[0] = decoder->bitDepthLuma;
+  output->bitDepth[1] = source->bitDepth[1] = decoder->bitDepthChroma;
+  output->bitDepth[2] = source->bitDepth[2] = decoder->bitDepthChroma;
+  output->picDiskUnitSize = (imax (output->bitDepth[0], output->bitDepth[1]) > 8) ? 16 : 8;
+
+  output->frameRate = source->frameRate;
+  output->colourModel = source->colourModel;
+  output->yuvFormat = source->yuvFormat = sps->chromaFormatIdc;
+
+  output->autoCropBot = cropBot;
+  output->autoCropRight = cropRight;
+  output->autoCropBotCr = (cropBot * decoder->mbCrSizeY) / MB_BLOCK_SIZE;
+  output->autoCropRightCr = (cropRight * decoder->mbCrSizeX) / MB_BLOCK_SIZE;
+
+  source->autoCropBot = output->autoCropBot;
+  source->autoCropRight = output->autoCropRight;
+  source->autoCropBotCr = output->autoCropBotCr;
+  source->autoCropRightCr = output->autoCropRightCr;
+
+  updateMaxValue (source);
+  updateMaxValue (output);
+
+  if (!decoder->gotPps) {
+    //{{{  print profile info
+    decoder->gotPps = 1;
+    printf ("-> profile:%d %dx%d %dx%d ",
+            sps->profileIdc, source->width[0], source->height[0], decoder->width, decoder->height);
+
+    if (decoder->coding.yuvFormat == YUV400)
+      printf ("4:0:0");
+    else if (decoder->coding.yuvFormat == YUV420)
+      printf ("4:2:0");
+    else if (decoder->coding.yuvFormat == YUV422)
+      printf ("4:2:2");
+    else
+      printf ("4:4:4");
+
+    printf (" %d:%d:%d\n", source->bitDepth[0], source->bitDepth[1], source->bitDepth[2]);
+    }
+    //}}}
+  }
+//}}}
+
+//{{{
+static void fillWeightedPredParam (sSlice* slice) {
 
   if (slice->sliceType == eSliceB) {
     int maxL0Ref = slice->numRefIndexActive[LIST_0];
@@ -1429,41 +1907,16 @@ static void fillWpParam (sSlice* slice) {
     }
   }
 //}}}
-
 //{{{
-static void padBuf (sPixel* pixel, int width, int height, int stride, int padx, int pady) {
+static void resetWeightedPredParam (sSlice* slice) {
 
-  int pad_width = padx + width;
-  memset (pixel - padx, *pixel, padx * sizeof(sPixel));
-  memset (pixel + width, *(pixel + width - 1), padx * sizeof(sPixel));
-
-  sPixel* line0 = pixel - padx;
-  sPixel* line = line0 - pady * stride;
-  for (int j = -pady; j < 0; j++) {
-    memcpy (line, line0, stride * sizeof(sPixel));
-    line += stride;
+  for (int i = 0; i < MAX_REFERENCE_PICTURES; i++) {
+    for (int comp = 0; comp < 3; comp++) {
+      int logWeightDenom = (comp == 0) ? slice->lumaLog2weightDenom : slice->chromaLog2weightDenom;
+      slice->wpWeight[0][i][comp] = 1 << logWeightDenom;
+      slice->wpWeight[1][i][comp] = 1 << logWeightDenom;
+      }
     }
-
-  for (int j = 1; j < height; j++) {
-    line += stride;
-    memset (line, *(line + padx), padx * sizeof(sPixel));
-    memset (line + pad_width, *(line + pad_width - 1), padx * sizeof(sPixel));
-    }
-
-  line0 = line + stride;
-  for (int j = height; j < height + pady; j++) {
-    memcpy (line0,  line, stride * sizeof(sPixel));
-    line0 += stride;
-    }
-  }
-//}}}
-//{{{
-static void copyPoc (sSlice* fromSlice, sSlice* toSlice) {
-
-  toSlice->topPoc = fromSlice->topPoc;
-  toSlice->botPoc = fromSlice->botPoc;
-  toSlice->thisPoc = fromSlice->thisPoc;
-  toSlice->framePoc = fromSlice->framePoc;
   }
 //}}}
 
@@ -1615,6 +2068,182 @@ static void mbAffPostProc (sDecoder* decoder) {
   }
 //}}}
 
+//{{{
+static void endDecodeFrame (sDecoder* decoder) {
+
+  // return if the last picture has already been finished
+  if (!decoder->picture ||
+      ((decoder->numDecodedMbs != decoder->picSizeInMbs) &&
+       ((decoder->coding.yuvFormat != YUV444) || !decoder->coding.isSeperateColourPlane)))
+    return;
+
+  //{{{  error conceal
+  frame recfr;
+  recfr.decoder = decoder;
+  recfr.yptr = &decoder->picture->imgY[0][0];
+  if (decoder->picture->chromaFormatIdc != YUV400) {
+    recfr.uptr = &decoder->picture->imgUV[0][0][0];
+    recfr.vptr = &decoder->picture->imgUV[1][0][0];
+    }
+
+  // this is always true at the beginning of a picture
+  int ercSegment = 0;
+
+  // mark the start of the first segment
+  if (!decoder->picture->mbAffFrame) {
+    int i;
+    ercStartSegment (0, ercSegment, 0 , decoder->ercErrorVar);
+    // generate the segments according to the macroblock map
+    for (i = 1; i < (int)(decoder->picture->picSizeInMbs); ++i) {
+      if (decoder->mbData[i].errorFlag != decoder->mbData[i-1].errorFlag) {
+        ercStopSegment (i-1, ercSegment, 0, decoder->ercErrorVar); //! stop current segment
+
+        // mark current segment as lost or OK
+        if(decoder->mbData[i-1].errorFlag)
+          ercMarksegmentLost (decoder->picture->sizeX, decoder->ercErrorVar);
+        else
+          ercMarksegmentOK (decoder->picture->sizeX, decoder->ercErrorVar);
+
+        ++ercSegment;  //! next segment
+        ercStartSegment (i, ercSegment, 0 , decoder->ercErrorVar); //! start new segment
+        }
+      }
+
+    // mark end of the last segment
+    ercStopSegment (decoder->picture->picSizeInMbs-1, ercSegment, 0, decoder->ercErrorVar);
+    if (decoder->mbData[i-1].errorFlag)
+      ercMarksegmentLost (decoder->picture->sizeX, decoder->ercErrorVar);
+    else
+      ercMarksegmentOK (decoder->picture->sizeX, decoder->ercErrorVar);
+
+    // call the right error conceal function depending on the frame type.
+    decoder->ercMvPerMb /= decoder->picture->picSizeInMbs;
+    if (decoder->picture->sliceType == eSliceI || decoder->picture->sliceType == eSliceSI) // I-frame
+      ercConcealIntraFrame (decoder, &recfr,
+                            decoder->picture->sizeX, decoder->picture->sizeY, decoder->ercErrorVar);
+    else
+      ercConcealInterFrame (&recfr, decoder->ercObjectList,
+                            decoder->picture->sizeX, decoder->picture->sizeY, decoder->ercErrorVar,
+                            decoder->picture->chromaFormatIdc);
+    }
+  //}}}
+  if (!decoder->deblockMode &&
+      decoder->param.deblock &&
+      (decoder->deblockEnable & (1 << decoder->picture->usedForReference))) {
+    if (decoder->coding.isSeperateColourPlane) {
+      //{{{  deblockJV
+      int colourPlaneId = decoder->sliceList[0]->colourPlaneId;
+      for (int nplane = 0; nplane < MAX_PLANE; ++nplane) {
+        decoder->sliceList[0]->colourPlaneId = nplane;
+        changePlaneJV (decoder, nplane, NULL );
+        deblockPicture (decoder, decoder->picture);
+        }
+      decoder->sliceList[0]->colourPlaneId = colourPlaneId;
+      makeFramePictureJV (decoder);
+      }
+      //}}}
+    else
+      deblockPicture (decoder, decoder->picture);
+    }
+  else if (decoder->coding.isSeperateColourPlane)
+    makeFramePictureJV (decoder);
+
+  if (decoder->picture->mbAffFrame)
+    mbAffPostProc (decoder);
+  if (decoder->coding.picStructure != eFrame)
+     decoder->idrFrameNum /= 2;
+  if (decoder->picture->usedForReference)
+    padPicture (decoder, decoder->picture);
+
+  int picStructure = decoder->picture->picStructure;
+  int sliceType = decoder->picture->sliceType;
+  int pocNum = decoder->picture->framePoc;
+  int refpic = decoder->picture->usedForReference;
+  int qp = decoder->picture->qp;
+  int picNum = decoder->picture->picNum;
+  int isIdr = decoder->picture->isIDR;
+  int chromaFormatIdc = decoder->picture->chromaFormatIdc;
+  storePictureDpb (decoder->dpb, decoder->picture);
+  decoder->picture = NULL;
+
+  if (decoder->lastHasMmco5)
+    decoder->preFrameNum = 0;
+
+  if (picStructure == eTopField || picStructure == eFrame) {
+    //{{{
+    if (sliceType == eSliceI && isIdr)
+      strcpy (decoder->debug.sliceTypeStr, "IDR");
+    else if (sliceType == eSliceI)
+      strcpy (decoder->debug.sliceTypeStr, " I ");
+    else if (sliceType == eSliceP)
+      strcpy (decoder->debug.sliceTypeStr, " P ");
+    else if (sliceType == eSliceSP)
+      strcpy (decoder->debug.sliceTypeStr, "SP ");
+    else if  (sliceType == eSliceSI)
+      strcpy (decoder->debug.sliceTypeStr, "SI ");
+    else if (refpic)
+      strcpy (decoder->debug.sliceTypeStr, " B ");
+    else
+      strcpy (decoder->debug.sliceTypeStr, " b ");
+    if (picStructure == eFrame)
+      strncat (decoder->debug.sliceTypeStr, "    ", 8 - strlen (decoder->debug.sliceTypeStr));
+    decoder->debug.sliceTypeStr[3] = 0;
+    }
+    //}}}
+  else if (picStructure == eBotField) {
+    //{{{
+    if (sliceType == eSliceI && isIdr)
+      strncat (decoder->debug.sliceTypeStr, "|IDR", 8-strlen (decoder->debug.sliceTypeStr));
+    else if (sliceType == eSliceI)
+      strncat (decoder->debug.sliceTypeStr, "| I ", 8-strlen (decoder->debug.sliceTypeStr));
+    else if (sliceType == eSliceP)
+      strncat (decoder->debug.sliceTypeStr, "| P ", 8-strlen (decoder->debug.sliceTypeStr));
+    else if (sliceType == eSliceSP)
+      strncat (decoder->debug.sliceTypeStr, "|SP ", 8-strlen (decoder->debug.sliceTypeStr));
+    else if  (sliceType == eSliceSI)
+      strncat (decoder->debug.sliceTypeStr, "|SI ", 8-strlen (decoder->debug.sliceTypeStr));
+    else if (refpic)
+      strncat (decoder->debug.sliceTypeStr, "| B ", 8-strlen (decoder->debug.sliceTypeStr));
+    else
+      strncat (decoder->debug.sliceTypeStr, "| b ", 8-strlen (decoder->debug.sliceTypeStr));
+    decoder->debug.sliceTypeStr[8] = 0;
+    }
+    //}}}
+  if ((picStructure == eFrame) || picStructure == eBotField) {
+    getTime (&decoder->debug.endTime);
+    sprintf (decoder->debug.outStr, "%3dms",
+             (int)timeNorm (timeDiff (&decoder->debug.startTime, &decoder->debug.endTime)));
+    if (decoder->param.outDebug) {
+      //{{{  print outDebug
+      printf ("-> %d %d:%d:%02d %s ->%s-> poc:%d pic:%d",
+              decoder->decodeFrameNum,
+              decoder->numDecodedSlices, decoder->numDecodedMbs, qp,
+              decoder->debug.outStr,
+              decoder->debug.sliceTypeStr,
+              pocNum, picNum);
+
+      // count numOutputFrames
+      int numOutputFrames = 0;
+      sDecodedPic* pic = decoder->decOutputPic;
+      while (pic) {
+        if (pic->valid)
+          numOutputFrames++;
+        pic = pic->next;
+        }
+      if (numOutputFrames)
+        printf (" -> %d", numOutputFrames);
+
+      printf ("\n");
+      }
+      //}}}
+
+    // I or P pictures ?
+    if ((sliceType == eSliceI) || (sliceType == eSliceSI) || (sliceType == eSliceP) || refpic)
+      ++(decoder->idrFrameNum);
+    (decoder->decodeFrameNum)++;
+    }
+  }
+//}}}
 //{{{
 static void initPicture (sDecoder* decoder, sSlice* slice) {
 
@@ -1798,9 +2427,44 @@ static void useParameterSet (sDecoder* decoder, sSlice* slice) {
   sSps* sps = &decoder->sps[pps->spsId];
   if (!sps->ok)
     printf ("useParameterSet - invalid spsId:%d ppsId:%d\n", slice->ppsId, pps->spsId);
+  if (sps != decoder->activeSps) {
+    //{{{  new sps
+    if (decoder->picture)
+      endDecodeFrame (decoder);
 
-  useSps (decoder, sps);
-  usePps (decoder, pps);
+    decoder->activeSps = sps;
+
+    if (isBLprofile(sps->profileIdc) && !decoder->dpb->initDone)
+      setCodingParam (decoder, sps);
+    setCoding (decoder);
+
+    initGlobalBuffers (decoder);
+
+    if (!decoder->noOutputPriorPicFlag)
+      flushDpb (decoder->dpb);
+    initDpb (decoder, decoder->dpb, 0);
+
+    // enable error conceal
+    ercInit (decoder, decoder->width, decoder->height, 1);
+    if (decoder->picture) {
+      ercReset (decoder->ercErrorVar, decoder->picSizeInMbs, decoder->picSizeInMbs, decoder->picture->sizeX);
+      decoder->ercMvPerMb = 0;
+      }
+
+    setFormatInfo (decoder, sps, &decoder->param.source, &decoder->param.output);
+
+    sprintf (decoder->debug.spsStr, "%s", sps->frameMbOnly ? (sps->mbAffFlag ? " mbAff" : " frame") : "");
+    }
+    //}}}
+
+  if (pps != decoder->activePps) {
+    //{{{  new pps
+    if (decoder->picture) // only on slice loss
+      endDecodeFrame (decoder);
+
+    decoder->activePps = pps;
+    }
+    //}}}
 
   // slice->dataPartitionMode is set by read_new_slice (NALU first byte available there)
   if (pps->entropyCoding == eCavlc) {
@@ -1876,35 +2540,46 @@ static void initSlice (sDecoder* decoder, sSlice* slice) {
     }
   }
 //}}}
+
 //{{{
-static void copySliceInfo (sSlice* slice, sOldSlice* oldSlice) {
+static int isNewPicture (sPicture* picture, sSlice* slice, sOldSlice* oldSlice) {
 
-  oldSlice->ppsId = slice->ppsId;
-  oldSlice->frameNum = slice->frameNum;
-  oldSlice->fieldPic = slice->fieldPic;
+  int result = (NULL == picture);
 
-  if (slice->fieldPic)
-    oldSlice->botField = slice->botField;
+  result |= (oldSlice->ppsId != slice->ppsId);
+  result |= (oldSlice->frameNum != slice->frameNum);
+  result |= (oldSlice->fieldPic != slice->fieldPic);
 
-  oldSlice->nalRefIdc = slice->refId;
+  if (slice->fieldPic && oldSlice->fieldPic)
+    result |= (oldSlice->botField != slice->botField);
 
-  oldSlice->isIDR = (byte)slice->isIDR;
-  if (slice->isIDR)
-    oldSlice->idrPicId = slice->idrPicId;
+  result |= (oldSlice->nalRefIdc != slice->refId) && (!oldSlice->nalRefIdc || !slice->refId);
+  result |= (oldSlice->isIDR != slice->isIDR);
 
-  if (slice->decoder->activeSps->pocType == 0) {
-    oldSlice->picOrderCountLsb = slice->picOrderCountLsb;
-    oldSlice->deltaPicOrderCountBot = slice->deletaPicOrderCountBot;
+  if (slice->isIDR && oldSlice->isIDR)
+    result |= (oldSlice->idrPicId != slice->idrPicId);
+
+  sDecoder* decoder = slice->decoder;
+
+  if (!decoder->activeSps->pocType) {
+    result |= (oldSlice->picOrderCountLsb != slice->picOrderCountLsb);
+    if ((decoder->activePps->botFieldFrame == 1) && !slice->fieldPic)
+      result |= (oldSlice->deltaPicOrderCountBot != slice->deletaPicOrderCountBot);
     }
-  else if (slice->decoder->activeSps->pocType == 1) {
-    oldSlice->deltaPicOrderCount[0] = slice->deltaPicOrderCount[0];
-    oldSlice->deltaPicOrderCount[1] = slice->deltaPicOrderCount[1];
+
+  if (decoder->activeSps->pocType == 1) {
+    if (!decoder->activeSps->deltaPicOrderAlwaysZero) {
+      result |= (oldSlice->deltaPicOrderCount[0] != slice->deltaPicOrderCount[0]);
+      if ((decoder->activePps->botFieldFrame == 1) && !slice->fieldPic)
+        result |= (oldSlice->deltaPicOrderCount[1] != slice->deltaPicOrderCount[1]);
+      }
     }
+
+  return result;
   }
 //}}}
-
 //{{{
-void decRefPicMarking (sDecoder* decoder, sBitStream* s, sSlice* slice) {
+static void decRefPicMarking (sDecoder* decoder, sBitStream* s, sSlice* slice) {
 
   // free old buffer content
   while (slice->decRefPicMarkingBuffer) {
@@ -1949,242 +2624,6 @@ void decRefPicMarking (sDecoder* decoder, sBitStream* s, sSlice* slice) {
         } while (val != 0);
       }
     }
-  }
-//}}}
-//{{{
-void decodePOC (sDecoder* decoder, sSlice* slice) {
-
-  sSps* activeSps = decoder->activeSps;
-  unsigned int maxPicOrderCntLsb = (1<<(activeSps->log2maxPocLsbMinus4+4));
-
-  switch (activeSps->pocType) {
-    //{{{
-    case 0: // POC MODE 0
-      // 1st
-      if (slice->isIDR) {
-        decoder->prevPocMsb = 0;
-        decoder->prevPocLsb = 0;
-        }
-      else if (decoder->lastHasMmco5) {
-        if (decoder->lastPicBotField) {
-          decoder->prevPocMsb = 0;
-          decoder->prevPocLsb = 0;
-          }
-        else {
-          decoder->prevPocMsb = 0;
-          decoder->prevPocLsb = slice->topPoc;
-          }
-        }
-
-      // Calculate the MSBs of current picture
-      if (slice->picOrderCountLsb < decoder->prevPocLsb  &&
-          (decoder->prevPocLsb - slice->picOrderCountLsb) >= maxPicOrderCntLsb/2)
-        slice->PicOrderCntMsb = decoder->prevPocMsb + maxPicOrderCntLsb;
-      else if (slice->picOrderCountLsb > decoder->prevPocLsb &&
-               (slice->picOrderCountLsb - decoder->prevPocLsb) > maxPicOrderCntLsb/2)
-        slice->PicOrderCntMsb = decoder->prevPocMsb - maxPicOrderCntLsb;
-      else
-        slice->PicOrderCntMsb = decoder->prevPocMsb;
-
-      // 2nd
-      if (slice->fieldPic == 0) {
-        // frame pixelPos
-        slice->topPoc = slice->PicOrderCntMsb + slice->picOrderCountLsb;
-        slice->botPoc = slice->topPoc + slice->deletaPicOrderCountBot;
-        slice->thisPoc = slice->framePoc = (slice->topPoc < slice->botPoc) ? slice->topPoc : slice->botPoc;
-        }
-      else if (!slice->botField) // top field
-        slice->thisPoc= slice->topPoc = slice->PicOrderCntMsb + slice->picOrderCountLsb;
-      else // bottom field
-        slice->thisPoc= slice->botPoc = slice->PicOrderCntMsb + slice->picOrderCountLsb;
-      slice->framePoc = slice->thisPoc;
-
-      decoder->thisPoc = slice->thisPoc;
-      decoder->previousFrameNum = slice->frameNum;
-
-      if (slice->refId) {
-        decoder->prevPocLsb = slice->picOrderCountLsb;
-        decoder->prevPocMsb = slice->PicOrderCntMsb;
-        }
-
-      break;
-    //}}}
-    //{{{
-    case 1: // POC MODE 1
-      // 1st
-      if (slice->isIDR) {
-        // first pixelPos of IDRGOP,
-        decoder->frameNumOffset = 0;
-        if (slice->frameNum)
-          error ("frameNum nonZero IDR picture");
-        }
-      else {
-        if (decoder->lastHasMmco5) {
-          decoder->previousFrameNumOffset = 0;
-          decoder->previousFrameNum = 0;
-          }
-        if (slice->frameNum<decoder->previousFrameNum) // not first pixelPos of IDRGOP
-          decoder->frameNumOffset = decoder->previousFrameNumOffset + decoder->coding.maxFrameNum;
-        else
-          decoder->frameNumOffset = decoder->previousFrameNumOffset;
-        }
-
-      // 2nd
-      if (activeSps->numRefFramesPocCycle)
-        slice->AbsFrameNum = decoder->frameNumOffset + slice->frameNum;
-      else
-        slice->AbsFrameNum = 0;
-      if (!slice->refId && (slice->AbsFrameNum > 0))
-        slice->AbsFrameNum--;
-
-      // 3rd
-      decoder->expectedDeltaPerPocCycle = 0;
-      if (activeSps->numRefFramesPocCycle)
-        for (unsigned i = 0; i < activeSps->numRefFramesPocCycle; i++)
-          decoder->expectedDeltaPerPocCycle += activeSps->offsetForRefFrame[i];
-
-      if (slice->AbsFrameNum) {
-        decoder->pocCycleCount = (slice->AbsFrameNum-1) / activeSps->numRefFramesPocCycle;
-        decoder->frameNumPocCycle = (slice->AbsFrameNum-1) % activeSps->numRefFramesPocCycle;
-        decoder->expectedPOC =
-          decoder->pocCycleCount*decoder->expectedDeltaPerPocCycle;
-        for (int i = 0; i <= decoder->frameNumPocCycle; i++)
-          decoder->expectedPOC += activeSps->offsetForRefFrame[i];
-        }
-      else
-        decoder->expectedPOC = 0;
-
-      if (!slice->refId)
-        decoder->expectedPOC += activeSps->offsetNonRefPic;
-
-      if (slice->fieldPic == 0) {
-        // frame pixelPos
-        slice->topPoc = decoder->expectedPOC + slice->deltaPicOrderCount[0];
-        slice->botPoc = slice->topPoc + activeSps->offsetTopBotField + slice->deltaPicOrderCount[1];
-        slice->thisPoc = slice->framePoc = (slice->topPoc < slice->botPoc) ? slice->topPoc : slice->botPoc;
-        }
-      else if (!slice->botField) // top field
-        slice->thisPoc = slice->topPoc = decoder->expectedPOC + slice->deltaPicOrderCount[0];
-      else // bottom field
-        slice->thisPoc = slice->botPoc = decoder->expectedPOC + activeSps->offsetTopBotField + slice->deltaPicOrderCount[0];
-      slice->framePoc=slice->thisPoc;
-
-      decoder->previousFrameNum = slice->frameNum;
-      decoder->previousFrameNumOffset = decoder->frameNumOffset;
-      break;
-    //}}}
-    //{{{
-    case 2: // POC MODE 2
-      if (slice->isIDR) {
-        // IDR picture, first pixelPos of IDRGOP,
-        decoder->frameNumOffset = 0;
-        slice->thisPoc = slice->framePoc = slice->topPoc = slice->botPoc = 0;
-        if (slice->frameNum)
-          error ("frameNum not equal to zero in IDR picture");
-        }
-      else {
-        if (decoder->lastHasMmco5) {
-          decoder->previousFrameNum = 0;
-          decoder->previousFrameNumOffset = 0;
-          }
-
-        if (slice->frameNum<decoder->previousFrameNum)
-          decoder->frameNumOffset = decoder->previousFrameNumOffset + decoder->coding.maxFrameNum;
-        else
-          decoder->frameNumOffset = decoder->previousFrameNumOffset;
-
-        slice->AbsFrameNum = decoder->frameNumOffset+slice->frameNum;
-        if (!slice->refId)
-          slice->thisPoc = 2*slice->AbsFrameNum - 1;
-        else
-          slice->thisPoc = 2*slice->AbsFrameNum;
-
-        if (slice->fieldPic == 0)
-          slice->topPoc = slice->botPoc = slice->framePoc = slice->thisPoc;
-        else if (!slice->botField)
-          slice->topPoc = slice->framePoc = slice->thisPoc;
-        else
-          slice->botPoc = slice->framePoc = slice->thisPoc;
-        }
-
-      decoder->previousFrameNum = slice->frameNum;
-      decoder->previousFrameNumOffset = decoder->frameNumOffset;
-      break;
-    //}}}
-    //{{{
-    default:
-      error ("unknown POC type");
-      break;
-    //}}}
-    }
-  }
-//}}}
-//{{{
-void initOldSlice (sOldSlice* oldSlice) {
-
-  oldSlice->fieldPic = 0;
-  oldSlice->ppsId = INT_MAX;
-  oldSlice->frameNum = INT_MAX;
-
-  oldSlice->nalRefIdc = INT_MAX;
-  oldSlice->isIDR = FALSE;
-
-  oldSlice->picOrderCountLsb = UINT_MAX;
-  oldSlice->deltaPicOrderCountBot = INT_MAX;
-  oldSlice->deltaPicOrderCount[0] = INT_MAX;
-  oldSlice->deltaPicOrderCount[1] = INT_MAX;
-  }
-//}}}
-//{{{
-void padPicture (sDecoder* decoder, sPicture* picture) {
-
-  padBuf (*picture->imgY, picture->sizeX, picture->sizeY,
-           picture->iLumaStride, decoder->coding.iLumaPadX, decoder->coding.iLumaPadY);
-
-  if (picture->chromaFormatIdc != YUV400) {
-    padBuf (*picture->imgUV[0], picture->sizeXcr, picture->sizeYcr,
-            picture->iChromaStride, decoder->coding.iChromaPadX, decoder->coding.iChromaPadY);
-    padBuf (*picture->imgUV[1], picture->sizeXcr, picture->sizeYcr,
-            picture->iChromaStride, decoder->coding.iChromaPadX, decoder->coding.iChromaPadY);
-    }
-  }
-//}}}
-
-//{{{
-static int isNewPicture (sPicture* picture, sSlice* slice, sOldSlice* oldSlice) {
-
-  int result = (NULL == picture);
-
-  result |= (oldSlice->ppsId != slice->ppsId);
-  result |= (oldSlice->frameNum != slice->frameNum);
-  result |= (oldSlice->fieldPic != slice->fieldPic);
-
-  if (slice->fieldPic && oldSlice->fieldPic)
-    result |= (oldSlice->botField != slice->botField);
-
-  result |= (oldSlice->nalRefIdc != slice->refId) && (!oldSlice->nalRefIdc || !slice->refId);
-  result |= (oldSlice->isIDR != slice->isIDR);
-
-  if (slice->isIDR && oldSlice->isIDR)
-    result |= (oldSlice->idrPicId != slice->idrPicId);
-
-  sDecoder* decoder = slice->decoder;
-
-  if (!decoder->activeSps->pocType) {
-    result |= (oldSlice->picOrderCountLsb != slice->picOrderCountLsb);
-    if ((decoder->activePps->botFieldFrame == 1) && !slice->fieldPic)
-      result |= (oldSlice->deltaPicOrderCountBot != slice->deletaPicOrderCountBot);
-    }
-
-  if (decoder->activeSps->pocType == 1) {
-    if (!decoder->activeSps->deltaPicOrderAlwaysZero) {
-      result |= (oldSlice->deltaPicOrderCount[0] != slice->deltaPicOrderCount[0]);
-      if ((decoder->activePps->botFieldFrame == 1) && !slice->fieldPic)
-        result |= (oldSlice->deltaPicOrderCount[1] != slice->deltaPicOrderCount[1]);
-      }
-    }
-
-  return result;
   }
 //}}}
 //{{{
@@ -2349,7 +2788,7 @@ static void readSliceHeader (sDecoder* decoder, sSlice* slice) {
       slice->wpRoundChroma = slice->chromaLog2weightDenom ? 1 << (slice->chromaLog2weightDenom - 1) : 0;
       }
 
-    resetWpParam (slice);
+    resetWeightedPredParam (slice);
 
     for (int i = 0; i < slice->numRefIndexActive[LIST_0]; i++) {
       //{{{  read l0 weights
@@ -2773,182 +3212,6 @@ static void decodeSlice (sSlice* slice) {
 //}}}
 
 //{{{
-void endDecodeFrame (sDecoder* decoder) {
-
-  // return if the last picture has already been finished
-  if (!decoder->picture ||
-      ((decoder->numDecodedMbs != decoder->picSizeInMbs) &&
-       ((decoder->coding.yuvFormat != YUV444) || !decoder->coding.isSeperateColourPlane)))
-    return;
-
-  //{{{  error conceal
-  frame recfr;
-  recfr.decoder = decoder;
-  recfr.yptr = &decoder->picture->imgY[0][0];
-  if (decoder->picture->chromaFormatIdc != YUV400) {
-    recfr.uptr = &decoder->picture->imgUV[0][0][0];
-    recfr.vptr = &decoder->picture->imgUV[1][0][0];
-    }
-
-  // this is always true at the beginning of a picture
-  int ercSegment = 0;
-
-  // mark the start of the first segment
-  if (!decoder->picture->mbAffFrame) {
-    int i;
-    ercStartSegment (0, ercSegment, 0 , decoder->ercErrorVar);
-    // generate the segments according to the macroblock map
-    for (i = 1; i < (int)(decoder->picture->picSizeInMbs); ++i) {
-      if (decoder->mbData[i].errorFlag != decoder->mbData[i-1].errorFlag) {
-        ercStopSegment (i-1, ercSegment, 0, decoder->ercErrorVar); //! stop current segment
-
-        // mark current segment as lost or OK
-        if(decoder->mbData[i-1].errorFlag)
-          ercMarksegmentLost (decoder->picture->sizeX, decoder->ercErrorVar);
-        else
-          ercMarksegmentOK (decoder->picture->sizeX, decoder->ercErrorVar);
-
-        ++ercSegment;  //! next segment
-        ercStartSegment (i, ercSegment, 0 , decoder->ercErrorVar); //! start new segment
-        }
-      }
-
-    // mark end of the last segment
-    ercStopSegment (decoder->picture->picSizeInMbs-1, ercSegment, 0, decoder->ercErrorVar);
-    if (decoder->mbData[i-1].errorFlag)
-      ercMarksegmentLost (decoder->picture->sizeX, decoder->ercErrorVar);
-    else
-      ercMarksegmentOK (decoder->picture->sizeX, decoder->ercErrorVar);
-
-    // call the right error conceal function depending on the frame type.
-    decoder->ercMvPerMb /= decoder->picture->picSizeInMbs;
-    if (decoder->picture->sliceType == eSliceI || decoder->picture->sliceType == eSliceSI) // I-frame
-      ercConcealIntraFrame (decoder, &recfr,
-                            decoder->picture->sizeX, decoder->picture->sizeY, decoder->ercErrorVar);
-    else
-      ercConcealInterFrame (&recfr, decoder->ercObjectList,
-                            decoder->picture->sizeX, decoder->picture->sizeY, decoder->ercErrorVar,
-                            decoder->picture->chromaFormatIdc);
-    }
-  //}}}
-  if (!decoder->deblockMode &&
-      decoder->param.deblock &&
-      (decoder->deblockEnable & (1 << decoder->picture->usedForReference))) {
-    if (decoder->coding.isSeperateColourPlane) {
-      //{{{  deblockJV
-      int colourPlaneId = decoder->sliceList[0]->colourPlaneId;
-      for (int nplane = 0; nplane < MAX_PLANE; ++nplane) {
-        decoder->sliceList[0]->colourPlaneId = nplane;
-        changePlaneJV (decoder, nplane, NULL );
-        deblockPicture (decoder, decoder->picture);
-        }
-      decoder->sliceList[0]->colourPlaneId = colourPlaneId;
-      makeFramePictureJV (decoder);
-      }
-      //}}}
-    else
-      deblockPicture (decoder, decoder->picture);
-    }
-  else if (decoder->coding.isSeperateColourPlane)
-    makeFramePictureJV (decoder);
-
-  if (decoder->picture->mbAffFrame)
-    mbAffPostProc (decoder);
-  if (decoder->coding.picStructure != eFrame)
-     decoder->idrFrameNum /= 2;
-  if (decoder->picture->usedForReference)
-    padPicture (decoder, decoder->picture);
-
-  int picStructure = decoder->picture->picStructure;
-  int sliceType = decoder->picture->sliceType;
-  int pocNum = decoder->picture->framePoc;
-  int refpic = decoder->picture->usedForReference;
-  int qp = decoder->picture->qp;
-  int picNum = decoder->picture->picNum;
-  int isIdr = decoder->picture->isIDR;
-  int chromaFormatIdc = decoder->picture->chromaFormatIdc;
-  storePictureDpb (decoder->dpb, decoder->picture);
-  decoder->picture = NULL;
-
-  if (decoder->lastHasMmco5)
-    decoder->preFrameNum = 0;
-
-  if (picStructure == eTopField || picStructure == eFrame) {
-    //{{{
-    if (sliceType == eSliceI && isIdr)
-      strcpy (decoder->debug.sliceTypeStr, "IDR");
-    else if (sliceType == eSliceI)
-      strcpy (decoder->debug.sliceTypeStr, " I ");
-    else if (sliceType == eSliceP)
-      strcpy (decoder->debug.sliceTypeStr, " P ");
-    else if (sliceType == eSliceSP)
-      strcpy (decoder->debug.sliceTypeStr, "SP ");
-    else if  (sliceType == eSliceSI)
-      strcpy (decoder->debug.sliceTypeStr, "SI ");
-    else if (refpic)
-      strcpy (decoder->debug.sliceTypeStr, " B ");
-    else
-      strcpy (decoder->debug.sliceTypeStr, " b ");
-    if (picStructure == eFrame)
-      strncat (decoder->debug.sliceTypeStr, "    ", 8 - strlen (decoder->debug.sliceTypeStr));
-    decoder->debug.sliceTypeStr[3] = 0;
-    }
-    //}}}
-  else if (picStructure == eBotField) {
-    //{{{
-    if (sliceType == eSliceI && isIdr)
-      strncat (decoder->debug.sliceTypeStr, "|IDR", 8-strlen (decoder->debug.sliceTypeStr));
-    else if (sliceType == eSliceI)
-      strncat (decoder->debug.sliceTypeStr, "| I ", 8-strlen (decoder->debug.sliceTypeStr));
-    else if (sliceType == eSliceP)
-      strncat (decoder->debug.sliceTypeStr, "| P ", 8-strlen (decoder->debug.sliceTypeStr));
-    else if (sliceType == eSliceSP)
-      strncat (decoder->debug.sliceTypeStr, "|SP ", 8-strlen (decoder->debug.sliceTypeStr));
-    else if  (sliceType == eSliceSI)
-      strncat (decoder->debug.sliceTypeStr, "|SI ", 8-strlen (decoder->debug.sliceTypeStr));
-    else if (refpic)
-      strncat (decoder->debug.sliceTypeStr, "| B ", 8-strlen (decoder->debug.sliceTypeStr));
-    else
-      strncat (decoder->debug.sliceTypeStr, "| b ", 8-strlen (decoder->debug.sliceTypeStr));
-    decoder->debug.sliceTypeStr[8] = 0;
-    }
-    //}}}
-  if ((picStructure == eFrame) || picStructure == eBotField) {
-    getTime (&decoder->debug.endTime);
-    sprintf (decoder->debug.outStr, "%3dms",
-             (int)timeNorm (timeDiff (&decoder->debug.startTime, &decoder->debug.endTime)));
-    if (decoder->param.outDebug) {
-      //{{{  print outDebug
-      printf ("-> %d %d:%d:%02d %s ->%s-> poc:%d pic:%d",
-              decoder->decodeFrameNum,
-              decoder->numDecodedSlices, decoder->numDecodedMbs, qp,
-              decoder->debug.outStr,
-              decoder->debug.sliceTypeStr,
-              pocNum, picNum);
-
-      // count numOutputFrames
-      int numOutputFrames = 0;
-      sDecodedPic* pic = decoder->decOutputPic;
-      while (pic) {
-        if (pic->valid)
-          numOutputFrames++;
-        pic = pic->next;
-        }
-      if (numOutputFrames)
-        printf (" -> %d", numOutputFrames);
-
-      printf ("\n");
-      }
-      //}}}
-
-    // I or P pictures ?
-    if ((sliceType == eSliceI) || (sliceType == eSliceSI) || (sliceType == eSliceP) || refpic)
-      ++(decoder->idrFrameNum);
-    (decoder->decodeFrameNum)++;
-    }
-  }
-//}}}
-//{{{
 int decodeFrame (sDecoder* decoder) {
 
   int ret = 0;
@@ -3061,7 +3324,7 @@ int decodeFrame (sDecoder* decoder) {
 
     if (((slice->activePps->weightedBiPredIdc > 0) && (slice->sliceType == eSliceB)) ||
         (slice->activePps->hasWeightedPred && (slice->sliceType != eSliceI)))
-      fillWpParam (slice);
+      fillWeightedPredParam (slice);
 
     if (((curHeader == eSOP) || (curHeader == eSOS)) && !slice->errorFlag)
       decodeSlice (slice);
