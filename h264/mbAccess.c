@@ -60,7 +60,7 @@ void checkNeighbours (sMacroBlock* mb) {
 //}}}
 
 //{{{
-void CheckAvailabilityOfNeighborsNormal (sMacroBlock* mb) {
+void checkNeighboursNormal (sMacroBlock* mb) {
 
   sSlice* slice = mb->slice;
   sPicture* picture = slice->picture; //decoder->picture;
