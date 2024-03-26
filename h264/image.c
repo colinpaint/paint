@@ -1508,13 +1508,13 @@ static void resetMb (sMacroBlock* mb) {
   }
 //}}}
 //{{{
-static void ercWriteMBmodeMV (sMacroBlock* mb) {
+static void ercWriteMbModeMv (sMacroBlock* mb) {
 
   sDecoder* decoder = mb->decoder;
   int curMbNum = mb->mbIndexX;
   sPicture* picture = decoder->picture;
 
-  int mbx = xPosMB (curMbNum, picture->sizeX), mby = yPosMB(curMbNum, picture->sizeX);
+  int mbx = xPosMB (curMbNum, picture->sizeX), mby = yPosMB (curMbNum, picture->sizeX);
   sObjectBuffer* curRegion = decoder->ercObjectList + (curMbNum << 2);
 
   if (decoder->coding.sliceType != eSliceB) {
@@ -3205,7 +3205,7 @@ static void decodeSlice (sSlice* slice) {
       slice->numRefIndexActive[LIST_1] >>= 1;
       }
 
-    ercWriteMBmodeMV (mb);
+    ercWriteMbModeMv (mb);
     endOfSlice = exitMacroblock (slice, !slice->mbAffFrame || (slice->mbIndex % 2));
     }
   }
