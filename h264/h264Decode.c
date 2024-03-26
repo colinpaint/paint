@@ -188,65 +188,6 @@ void freeDataPartitions (sDataPartition* dataPartitions, int n) {
 //}}}
 
 //{{{
-void initFrext (sDecoder* decoder) {
-
-  // pel bitDepth init
-  decoder->coding.bitDepthLumaQpScale = 6 * (decoder->bitDepthLuma - 8);
-
-  if(decoder->bitDepthLuma > decoder->bitDepthChroma || decoder->activeSps->chromaFormatIdc == YUV400)
-    decoder->coding.picUnitBitSizeDisk = (decoder->bitDepthLuma > 8)? 16:8;
-  else
-    decoder->coding.picUnitBitSizeDisk = (decoder->bitDepthChroma > 8)? 16:8;
-  decoder->coding.dcPredValueComp[0] = 1<<(decoder->bitDepthLuma - 1);
-  decoder->coding.maxPelValueComp[0] = (1<<decoder->bitDepthLuma) - 1;
-  decoder->mbSize[0][0] = decoder->mbSize[0][1] = MB_BLOCK_SIZE;
-
-  if (decoder->activeSps->chromaFormatIdc != YUV400) {
-    // for chrominance part
-    decoder->coding.bitDepthChromaQpScale = 6 * (decoder->bitDepthChroma - 8);
-    decoder->coding.dcPredValueComp[1] = (1 << (decoder->bitDepthChroma - 1));
-    decoder->coding.dcPredValueComp[2] = decoder->coding.dcPredValueComp[1];
-    decoder->coding.maxPelValueComp[1] = (1 << decoder->bitDepthChroma) - 1;
-    decoder->coding.maxPelValueComp[2] = (1 << decoder->bitDepthChroma) - 1;
-    decoder->coding.numBlock8x8uv = (1 << decoder->activeSps->chromaFormatIdc) & (~(0x1));
-    decoder->coding.numUvBlocks = (decoder->coding.numBlock8x8uv >> 1);
-    decoder->coding.numCdcCoeff = (decoder->coding.numBlock8x8uv << 1);
-    decoder->mbSize[1][0] = decoder->mbSize[2][0] = decoder->mbCrSizeX  = (decoder->activeSps->chromaFormatIdc==YUV420 || decoder->activeSps->chromaFormatIdc==YUV422)?  8 : 16;
-    decoder->mbSize[1][1] = decoder->mbSize[2][1] = decoder->mbCrSizeY  = (decoder->activeSps->chromaFormatIdc==YUV444 || decoder->activeSps->chromaFormatIdc==YUV422)? 16 :  8;
-
-    decoder->coding.subpelX = decoder->mbCrSizeX == 8 ? 7 : 3;
-    decoder->coding.subpelY = decoder->mbCrSizeY == 8 ? 7 : 3;
-    decoder->coding.shiftpelX = decoder->mbCrSizeX == 8 ? 3 : 2;
-    decoder->coding.shiftpelY = decoder->mbCrSizeY == 8 ? 3 : 2;
-    decoder->coding.totalScale = decoder->coding.shiftpelX + decoder->coding.shiftpelY;
-    }
-  else {
-    decoder->coding.bitDepthChromaQpScale = 0;
-    decoder->coding.maxPelValueComp[1] = 0;
-    decoder->coding.maxPelValueComp[2] = 0;
-    decoder->coding.numBlock8x8uv = 0;
-    decoder->coding.numUvBlocks = 0;
-    decoder->coding.numCdcCoeff = 0;
-    decoder->mbSize[1][0] = decoder->mbSize[2][0] = decoder->mbCrSizeX  = 0;
-    decoder->mbSize[1][1] = decoder->mbSize[2][1] = decoder->mbCrSizeY  = 0;
-    decoder->coding.subpelX = 0;
-    decoder->coding.subpelY = 0;
-    decoder->coding.shiftpelX = 0;
-    decoder->coding.shiftpelY = 0;
-    decoder->coding.totalScale = 0;
-    }
-
-  decoder->mbCrSize = decoder->mbCrSizeX * decoder->mbCrSizeY;
-  decoder->mbSizeBlock[0][0] = decoder->mbSizeBlock[0][1] = decoder->mbSize[0][0] >> 2;
-  decoder->mbSizeBlock[1][0] = decoder->mbSizeBlock[2][0] = decoder->mbSize[1][0] >> 2;
-  decoder->mbSizeBlock[1][1] = decoder->mbSizeBlock[2][1] = decoder->mbSize[1][1] >> 2;
-
-  decoder->mbSizeShift[0][0] = decoder->mbSizeShift[0][1] = ceilLog2sf (decoder->mbSize[0][0]);
-  decoder->mbSizeShift[1][0] = decoder->mbSizeShift[2][0] = ceilLog2sf (decoder->mbSize[1][0]);
-  decoder->mbSizeShift[1][1] = decoder->mbSizeShift[2][1] = ceilLog2sf (decoder->mbSize[1][1]);
-  }
-//}}}
-//{{{
 void initGlobalBuffers (sDecoder* decoder) {
 
   // alloc coding
@@ -408,41 +349,115 @@ void freeDecodedPictures (sDecodedPic* decodedPic) {
 //{{{
 void setCoding (sDecoder* decoder) {
 
-  sCoding* coding = &decoder->coding;
-
   decoder->bitDepthChroma = 0;
   decoder->widthCr = 0;
   decoder->heightCr = 0;
 
-  // Fidelity Range Extensions stuff (part 1)
-  decoder->bitDepthLuma = coding->bitDepthLuma;
-  decoder->bitDepthChroma = coding->bitDepthChroma;
+  // fidelity Range Extensions stuff
+  decoder->width = decoder->coding.width;
+  decoder->height = decoder->coding.height;
+  decoder->bitDepthLuma = decoder->coding.bitDepthLuma;
+  decoder->bitDepthChroma = decoder->coding.bitDepthChroma;
 
-  decoder->width = coding->width;
-  decoder->height = coding->height;
   decoder->coding.lumaPadX = MCBUF_LUMA_PAD_X;
   decoder->coding.lumaPadY = MCBUF_LUMA_PAD_Y;
   decoder->coding.chromaPadX = MCBUF_CHROMA_PAD_X;
   decoder->coding.chromaPadY = MCBUF_CHROMA_PAD_Y;
 
   if (decoder->coding.yuvFormat == YUV420) {
+    //{{{  yuv420
     decoder->widthCr = decoder->width >> 1;
     decoder->heightCr = decoder->height >> 1;
     }
+    //}}}
   else if (decoder->coding.yuvFormat == YUV422) {
+    //{{{  yuv422
     decoder->widthCr = decoder->width >> 1;
     decoder->heightCr = decoder->height;
     decoder->coding.chromaPadY = MCBUF_CHROMA_PAD_Y*2;
     }
+    //}}}
   else if (decoder->coding.yuvFormat == YUV444) {
-    //YUV444
+    //{{{  yuv444
     decoder->widthCr = decoder->width;
     decoder->heightCr = decoder->height;
     decoder->coding.chromaPadX = decoder->coding.lumaPadX;
     decoder->coding.chromaPadY = decoder->coding.lumaPadY;
     }
+    //}}}
 
-  initFrext (decoder);
+  // pel bitDepth init
+  decoder->coding.bitDepthLumaQpScale = 6 * (decoder->bitDepthLuma - 8);
+
+  if ((decoder->bitDepthLuma > decoder->bitDepthChroma) || 
+      (decoder->activeSps->chromaFormatIdc == YUV400))
+    decoder->coding.picUnitBitSizeDisk = (decoder->bitDepthLuma > 8)? 16:8;
+  else
+    decoder->coding.picUnitBitSizeDisk = (decoder->bitDepthChroma > 8)? 16:8;
+
+  decoder->coding.dcPredValueComp[0] = 1<<(decoder->bitDepthLuma - 1);
+  decoder->coding.maxPelValueComp[0] = (1<<decoder->bitDepthLuma) - 1;
+  decoder->mbSize[0][0] = decoder->mbSize[0][1] = MB_BLOCK_SIZE;
+
+  if (decoder->activeSps->chromaFormatIdc == YUV400) {
+    //{{{  yuv400
+    decoder->coding.bitDepthChromaQpScale = 0;
+
+    decoder->coding.maxPelValueComp[1] = 0;
+    decoder->coding.maxPelValueComp[2] = 0;
+
+    decoder->coding.numBlock8x8uv = 0;
+    decoder->coding.numUvBlocks = 0;
+    decoder->coding.numCdcCoeff = 0;
+
+    decoder->mbSize[1][0] = decoder->mbSize[2][0] = decoder->mbCrSizeX  = 0;
+    decoder->mbSize[1][1] = decoder->mbSize[2][1] = decoder->mbCrSizeY  = 0;
+
+    decoder->coding.subpelX = 0;
+    decoder->coding.subpelY = 0;
+    decoder->coding.shiftpelX = 0;
+    decoder->coding.shiftpelY = 0;
+
+    decoder->coding.totalScale = 0;
+    }
+    //}}}
+  else {
+    //{{{  not yuv400
+    decoder->coding.bitDepthChromaQpScale = 6 * (decoder->bitDepthChroma - 8);
+
+    decoder->coding.dcPredValueComp[1] = 1 << (decoder->bitDepthChroma - 1);
+    decoder->coding.dcPredValueComp[2] = decoder->coding.dcPredValueComp[1];
+    decoder->coding.maxPelValueComp[1] = (1 << decoder->bitDepthChroma) - 1;
+    decoder->coding.maxPelValueComp[2] = (1 << decoder->bitDepthChroma) - 1;
+
+    decoder->coding.numBlock8x8uv = (1 << decoder->activeSps->chromaFormatIdc) & (~(0x1));
+    decoder->coding.numUvBlocks = decoder->coding.numBlock8x8uv >> 1;
+    decoder->coding.numCdcCoeff = decoder->coding.numBlock8x8uv << 1;
+
+    decoder->mbSize[1][0] = decoder->mbSize[2][0] = 
+      decoder->mbCrSizeX = (decoder->activeSps->chromaFormatIdc == YUV420 || 
+                            decoder->activeSps->chromaFormatIdc == YUV422) ? 8 : 16;
+    decoder->mbSize[1][1] = decoder->mbSize[2][1] = 
+      decoder->mbCrSizeY = (decoder->activeSps->chromaFormatIdc == YUV444 || 
+                            decoder->activeSps->chromaFormatIdc == YUV422) ? 16 : 8;
+
+    decoder->coding.subpelX = decoder->mbCrSizeX == 8 ? 7 : 3;
+    decoder->coding.subpelY = decoder->mbCrSizeY == 8 ? 7 : 3;
+    decoder->coding.shiftpelX = decoder->mbCrSizeX == 8 ? 3 : 2;
+    decoder->coding.shiftpelY = decoder->mbCrSizeY == 8 ? 3 : 2;
+
+    decoder->coding.totalScale = decoder->coding.shiftpelX + decoder->coding.shiftpelY;
+    }
+    //}}}
+
+  decoder->mbCrSize = decoder->mbCrSizeX * decoder->mbCrSizeY;
+  decoder->mbSizeBlock[0][0] = decoder->mbSizeBlock[0][1] = decoder->mbSize[0][0] >> 2;
+  decoder->mbSizeBlock[1][0] = decoder->mbSizeBlock[2][0] = decoder->mbSize[1][0] >> 2;
+  decoder->mbSizeBlock[1][1] = decoder->mbSizeBlock[2][1] = decoder->mbSize[1][1] >> 2;
+
+  decoder->mbSizeShift[0][0] = decoder->mbSizeShift[0][1] = ceilLog2sf (decoder->mbSize[0][0]);
+  decoder->mbSizeShift[1][0] = decoder->mbSizeShift[2][0] = ceilLog2sf (decoder->mbSize[1][0]);
+  decoder->mbSizeShift[1][1] = decoder->mbSizeShift[2][1] = ceilLog2sf (decoder->mbSize[1][1]);
   }
 //}}}
 
@@ -470,7 +485,7 @@ sDecoder* openDecoder (sParam* param, byte* chunk, size_t chunkSize) {
   decoder->oldSlice = (sOldSlice*)calloc(1, sizeof(sOldSlice));
   initOldSlice (decoder->oldSlice);
   decoder->coding.sliceType = eSliceI;
-  decoder->recoveryPoc = 0x7fffffff; 
+  decoder->recoveryPoc = 0x7fffffff;
   decoder->deblockEnable = 0x3;
   decoder->pendingOutState = eFrame;
 

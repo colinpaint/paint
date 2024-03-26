@@ -2436,8 +2436,8 @@ static void useParameterSet (sDecoder* decoder, sSlice* slice) {
 
     if (isBLprofile(sps->profileIdc) && !decoder->dpb->initDone)
       setCodingParam (decoder, sps);
-    setCoding (decoder);
 
+    setCoding (decoder);
     initGlobalBuffers (decoder);
 
     if (!decoder->noOutputPriorPicFlag)
@@ -2452,8 +2452,7 @@ static void useParameterSet (sDecoder* decoder, sSlice* slice) {
       }
 
     setFormatInfo (decoder, sps, &decoder->param.source, &decoder->param.output);
-
-    sprintf (decoder->debug.spsStr, "%s", sps->frameMbOnly ? (sps->mbAffFlag ? " mbAff" : " frame") : "");
+    sprintf (decoder->debug.spsStr, "%s", sps->frameMbOnly ? (sps->mbAffFlag ? " mbAff" : " frame") : "field");
     }
     //}}}
 
