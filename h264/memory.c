@@ -84,31 +84,6 @@ void freeMem3Dmp (sPicMotion** *array3D)
 }
 //}}}
 
-//{{{
-int getMem2Dwp (sWpParam** *array2D, int dim0, int dim1) {
-
-  int i;
-  if ((*array2D    = (sWpParam**)memAlloc(dim0 *      sizeof(sWpParam*))) == NULL)
-    noMemoryExit("getMem2Dwp: array2D");
-  if ((*(*array2D) = (sWpParam* )mem_calloc(dim0 * dim1,sizeof(sWpParam ))) == NULL)
-    noMemoryExit("getMem2Dwp: array2D");
-
-  for (i = 1 ; i < dim0; i++)
-    (*array2D)[i] =  (*array2D)[i-1] + dim1;
-
-  return dim0 * (sizeof(sWpParam*) + dim1 * sizeof(sWpParam));
-  }
-//}}}
-//{{{
-void freeMem2Dwp (sWpParam** array2D) {
-
-  if (array2D) {
-    if (*array2D)
-      memFree (*array2D);
-    memFree (array2D);
-    }
-  }
-//}}}
 
 //{{{
 /*!

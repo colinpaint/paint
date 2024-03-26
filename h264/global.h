@@ -558,12 +558,6 @@ typedef struct MacroBlock {
   void (*readCompCoef8x8cavlc) (struct MacroBlock*, eColorPlane, int(*)[8], int, int, byte**);
   } sMacroBlock;
 //}}}
-//{{{  sWpParam
-typedef struct {
-  short weight[3];
-  short offset[3];
-  } sWpParam;
-//}}}
 //{{{  sImage
 typedef struct Image {
   sFrameFormat format;                 // image format
@@ -612,7 +606,7 @@ typedef struct DecodedRefPicMarking {
   } sDecodedRefPicMarking;
 //}}}
 //{{{  sOldSlice
-typedef struct OldSlice {
+typedef struct {
   unsigned fieldPic;
   unsigned frameNum;
   int      nalRefIdc;
@@ -744,30 +738,29 @@ typedef struct Slice {
   int coefCount;
   int pos;
 
-  // weighted prediction
+  // weighted pred
   unsigned short hasWeightedPred;
   unsigned short weightedBiPredIdc;
   unsigned short lumaLog2weightDenom;
   unsigned short chromaLog2weightDenom;
-  sWpParam** wpParam;    // wp parameters in [list][index]
-  int***     wpWeight;   // weight in [list][index][component] order
-  int***     wpOffset;   // offset in [list][index][component] order
-  int****    wbpWeight;  // weight in [list][fw_index][bw_index][component] order
-  short      wpRoundLuma;
-  short      wpRoundChroma;
+  int***         wpWeight;   // weight in [list][index][component] order
+  int***         wpOffset;   // offset in [list][index][component] order
+  int****        wbpWeight;  // weight in [list][fw_index][bw_index][component] order
+  short          wpRoundLuma;
+  short          wpRoundChroma;
 
   // for signalling to the neighbour logic that this is a deblocker call
-  int maxMbVmvR;   // maximum vertical motion vector range in luma quarter pixel units for the current levelIdc
-  int refFlag[17]; // 0: i-th previous frame is incorrect
+  int            maxMbVmvR;   // maximum vertical motion vector range in luma quarter pixel units for the current levelIdc
+  int            refFlag[17]; // 0: i-th previous frame is incorrect
 
-  int ercMvPerMb;
-  sMacroBlock* mbData;
+  int             ercMvPerMb;
+  sMacroBlock*    mbData;
   struct Picture* picture;
 
-  int**  siBlock;
-  byte** predMode;
-  char*  intraBlock;
-  char   chromaVectorAdjust[6][32];
+  int**           siBlock;
+  byte**          predMode;
+  char*           intraBlock;
+  char            chromaVectorAdjust[6][32];
 
   // virtual methods
   int  (*nalStartCode) (struct Slice*, int);
@@ -870,7 +863,7 @@ typedef struct Param {
   int dpbPlus[2];
   } sParam;
 //}}}
-//{{{
+//{{{  sDebug
 typedef struct {
   TIME_T  startTime;
   TIME_T  endTime;
@@ -927,7 +920,7 @@ typedef struct Decoder {
   int          numAllocatedSlices;
   sSlice**     sliceList;
   sSlice*      nextSlice;           // pointer to first sSlice of next picture;
-  struct OldSlice* oldSlice;
+  sOldSlice*   oldSlice;
 
   int picDiskUnitSize;
 
