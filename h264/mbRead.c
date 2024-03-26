@@ -1347,7 +1347,7 @@ static void readPcabacMacroblock (sMacroBlock* mb)
       }
 
     if (checkBot)
-      check_next_mb_and_get_field_mode_CABAC_p_slice (slice, &se, dataPartition);
+      checkNextMbGetFieldModeCabacSliceP (slice, &se, dataPartition);
 
     // update the list offset;
     mb->listOffset = (mb->mbField)? ((mbNum & 0x01)? 4 : 2) : 0;
@@ -1501,7 +1501,7 @@ static void readBcabacMacroblock (sMacroBlock* mb) {
       mb->mbField = (Boolean)se.value1;
       }
     if (checkBot)
-      check_next_mb_and_get_field_mode_CABAC_b_slice (slice, &se, dataPartition);
+      checkNextMbGetFieldModeCabacSliceB (slice, &se, dataPartition);
 
     //update the list offset;
     mb->listOffset = (mb->mbField)? ((mbNum & 0x01)? 4: 2): 0;
