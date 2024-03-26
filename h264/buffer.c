@@ -22,12 +22,12 @@ static int isReference (sFrameStore* frameStore) {
     if (frameStore->frame->usedForReference)
       return 1;
 
-  if (frameStore->isUsed & 1) // top field
+  if (frameStore->isUsed & 1) // topField
     if (frameStore->topField)
       if (frameStore->topField->usedForReference)
         return 1;
 
-  if (frameStore->isUsed & 2) // bottom field
+  if (frameStore->isUsed & 2) // botField
     if (frameStore->botField)
       if (frameStore->botField->usedForReference)
         return 1;
@@ -42,12 +42,12 @@ static int isShortTermReference (sFrameStore* frameStore) {
     if ((frameStore->frame->usedForReference) && (!frameStore->frame->isLongTerm))
       return 1;
 
-  if (frameStore->isUsed & 1) // top field
+  if (frameStore->isUsed & 1) // topField
     if (frameStore->topField)
       if ((frameStore->topField->usedForReference) && (!frameStore->topField->isLongTerm))
         return 1;
 
-  if (frameStore->isUsed & 2) // bottom field
+  if (frameStore->isUsed & 2) // botField
     if (frameStore->botField)
       if ((frameStore->botField->usedForReference) && (!frameStore->botField->isLongTerm))
         return 1;
@@ -62,12 +62,12 @@ static int isLongTermReference (sFrameStore* frameStore) {
     if ((frameStore->frame->usedForReference) && (frameStore->frame->isLongTerm))
       return 1;
 
-  if (frameStore->isUsed & 1) // top field
+  if (frameStore->isUsed & 1) // topField
     if (frameStore->topField)
       if ((frameStore->topField->usedForReference) && (frameStore->topField->isLongTerm))
         return 1;
 
-  if (frameStore->isUsed & 2) // bottom field
+  if (frameStore->isUsed & 2) // botField
     if (frameStore->botField)
       if ((frameStore->botField->usedForReference) && (frameStore->botField->isLongTerm))
         return 1;
@@ -101,7 +101,7 @@ static void unmarkLongTermFieldRefFrameIndex (sDPB* dpb, ePicStructure picStruct
 
   sDecoder* decoder = dpb->decoder;
 
-  assert (picStructure!=eFrame);
+  assert (picStructure != eFrame);
   if (curr_pic_num < 0)
     curr_pic_num += (2 * decoder->coding.maxFrameNum);
 
@@ -109,23 +109,23 @@ static void unmarkLongTermFieldRefFrameIndex (sDPB* dpb, ePicStructure picStruct
     if (dpb->fsLongTermRef[i]->longTermFrameIndex == longTermFrameIndex) {
       if (picStructure == eTopField) {
         if (dpb->fsLongTermRef[i]->isLongTerm == 3)
-          unmarkForLongTermRef(dpb->fsLongTermRef[i]);
+          unmarkForLongTermRef (dpb->fsLongTermRef[i]);
         else {
           if (dpb->fsLongTermRef[i]->isLongTerm == 1)
-            unmarkForLongTermRef(dpb->fsLongTermRef[i]);
+            unmarkForLongTermRef (dpb->fsLongTermRef[i]);
           else {
             if (mark_current) {
               if (dpb->lastPicture) {
                 if ((dpb->lastPicture != dpb->fsLongTermRef[i]) ||
                     dpb->lastPicture->frameNum != curr_frame_num)
-                  unmarkForLongTermRef(dpb->fsLongTermRef[i]);
+                  unmarkForLongTermRef (dpb->fsLongTermRef[i]);
                 }
               else
-                unmarkForLongTermRef(dpb->fsLongTermRef[i]);
+                unmarkForLongTermRef (dpb->fsLongTermRef[i]);
             }
             else {
               if ((dpb->fsLongTermRef[i]->frameNum) != (unsigned)(curr_pic_num >> 1))
-                unmarkForLongTermRef(dpb->fsLongTermRef[i]);
+                unmarkForLongTermRef (dpb->fsLongTermRef[i]);
               }
             }
           }
@@ -133,23 +133,23 @@ static void unmarkLongTermFieldRefFrameIndex (sDPB* dpb, ePicStructure picStruct
 
       if (picStructure == eBotField) {
         if (dpb->fsLongTermRef[i]->isLongTerm == 3)
-          unmarkForLongTermRef(dpb->fsLongTermRef[i]);
+          unmarkForLongTermRef (dpb->fsLongTermRef[i]);
         else {
           if (dpb->fsLongTermRef[i]->isLongTerm == 2)
-            unmarkForLongTermRef(dpb->fsLongTermRef[i]);
+            unmarkForLongTermRef (dpb->fsLongTermRef[i]);
           else {
             if (mark_current) {
               if (dpb->lastPicture) {
                 if ((dpb->lastPicture != dpb->fsLongTermRef[i]) ||
                     dpb->lastPicture->frameNum != curr_frame_num)
-                  unmarkForLongTermRef(dpb->fsLongTermRef[i]);
+                  unmarkForLongTermRef (dpb->fsLongTermRef[i]);
                 }
               else
-                unmarkForLongTermRef(dpb->fsLongTermRef[i]);
+                unmarkForLongTermRef (dpb->fsLongTermRef[i]);
               }
             else {
               if ((dpb->fsLongTermRef[i]->frameNum) != (unsigned)(curr_pic_num >> 1))
-                unmarkForLongTermRef(dpb->fsLongTermRef[i]);
+                unmarkForLongTermRef (dpb->fsLongTermRef[i]);
               }
             }
           }
@@ -214,19 +214,14 @@ static int outputDpbFrame (sDPB* dpb) {
 // picMotion
 //{{{
 void allocPicMotion (sPicMotionOld* motion, int sizeY, int sizeX) {
-
   motion->mbField = calloc (sizeY * sizeX, sizeof(byte));
-  if (motion->mbField == NULL)
-    noMemoryExit ("allocPicture: motion->mbField");
   }
 //}}}
 //{{{
 void freePicMotion (sPicMotionOld* motion) {
 
-  if (motion->mbField) {
-    free (motion->mbField);
-    motion->mbField = NULL;
-    }
+  free (motion->mbField);
+  motion->mbField = NULL;
   }
 //}}}
 
@@ -235,8 +230,6 @@ void freePicMotion (sPicMotionOld* motion) {
 sFrameStore* allocFrameStore() {
 
   sFrameStore* fs = calloc (1, sizeof(sFrameStore));
-  if (!fs)
-    noMemoryExit ("alloc_frame_store: f");
 
   fs->isUsed = 0;
   fs->isReference = 0;
@@ -290,7 +283,6 @@ static void dpbSplitField (sDecoder* decoder, sFrameStore* frameStore) {
     fsBot = frameStore->botField = allocPicture (decoder, eBotField,
                                                       frame->sizeX, frame->sizeY,
                                                       frame->sizeXcr, frame->sizeYcr, 1);
-
     for (int i = 0; i < (frame->sizeY >> 1); i++)
       memcpy (fsTop->imgY[i], frame->imgY[i*2], frame->sizeX*sizeof(sPixel));
 
@@ -317,8 +309,8 @@ static void dpbSplitField (sDecoder* decoder, sFrameStore* frameStore) {
     fsTop->usedForReference = fsBot->usedForReference = frame->usedForReference;
     fsTop->isLongTerm = fsBot->isLongTerm = frame->isLongTerm;
     frameStore->longTermFrameIndex = fsTop->longTermFrameIndex
-                                    = fsBot->longTermFrameIndex
-                                    = frame->longTermFrameIndex;
+                                   = fsBot->longTermFrameIndex
+                                   = frame->longTermFrameIndex;
 
     fsTop->codedFrame = fsBot->codedFrame = 1;
     fsTop->mbAffFrame = fsBot->mbAffFrame = frame->mbAffFrame;
@@ -446,14 +438,14 @@ static void dpb_combine_field (sDecoder* decoder, sFrameStore* frameStore) {
       frameStore->frame->mvInfo[jj][i].refIndex[LIST_0] = frameStore->topField->mvInfo[j][i].refIndex[LIST_0];
       frameStore->frame->mvInfo[jj][i].refIndex[LIST_1] = frameStore->topField->mvInfo[j][i].refIndex[LIST_1];
 
-      /* bug: top field list doesnot exist.*/
+      // bug: top field list doesnot exist.*/
       int l = frameStore->topField->mvInfo[j][i].slice_no;
       int k = frameStore->topField->mvInfo[j][i].refIndex[LIST_0];
       frameStore->frame->mvInfo[jj][i].refPic[LIST_0] = k>=0? frameStore->topField->listX[l][LIST_0][k]: NULL;
       k = frameStore->topField->mvInfo[j][i].refIndex[LIST_1];
       frameStore->frame->mvInfo[jj][i].refPic[LIST_1] = k>=0? frameStore->topField->listX[l][LIST_1][k]: NULL;
 
-      //! association with id already known for fields.
+      // association with id already known for fields.
       frameStore->frame->mvInfo[jj4][i].mv[LIST_0] = frameStore->botField->mvInfo[j][i].mv[LIST_0];
       frameStore->frame->mvInfo[jj4][i].mv[LIST_1] = frameStore->botField->mvInfo[j][i].mv[LIST_1];
 
@@ -471,12 +463,6 @@ static void dpb_combine_field (sDecoder* decoder, sFrameStore* frameStore) {
 //}}}
 //{{{
 static void insertPictureDpb (sDecoder* decoder, sFrameStore* fs, sPicture* p) {
-
-  //  printf ("insert (%s) pic with frameNum #%d, poc %d\n",
-  //          (p->picStructure == eFrame)?"eFrame":(p->picStructure == eTopField)?"eTopField":"eBotField",
-  //          p->picNum, p->poc);
-  assert (p != NULL);
-  assert (fs != NULL);
 
   switch (p->picStructure) {
     //{{{
@@ -569,7 +555,7 @@ void unmarkForRef (sFrameStore* frameStore) {
 
   frameStore->isReference = 0;
 
-  if(frameStore->frame)
+  if (frameStore->frame)
     freePicMotion (&frameStore->frame->motion);
 
   if (frameStore->topField)
@@ -1117,7 +1103,7 @@ static void unmarkLongTermFrameForRefByFrameIndex (sDPB* dpb, int longTermFrameI
   for (uint32 i = 0; i < dpb->longTermRefFramesInBuffer; i++)
     if (dpb->fsLongTermRef[i]->longTermFrameIndex == longTermFrameIndex)
       unmarkForLongTermRef (dpb->fsLongTermRef[i]);
-}
+  }
 //}}}
 //{{{
 static void unmarkLongTermForRef (sDPB* dpb, sPicture* p, int longTermPicNum) {
@@ -1165,7 +1151,7 @@ static void unmarkShortTermForRef (sDPB* dpb, sPicture* p, int diffPicNumMinus1)
 
   for (uint32 i = 0; i < dpb->refFramesInBuffer; i++) {
     if (p->picStructure == eFrame) {
-      if ((dpb->fsRef[i]->isReference==3) && (dpb->fsRef[i]->isLongTerm==0)) {
+      if ((dpb->fsRef[i]->isReference == 3) && (dpb->fsRef[i]->isLongTerm == 0)) {
         if (dpb->fsRef[i]->frame->picNum == picNumX) {
           unmarkForRef(dpb->fsRef[i]);
           return;
@@ -2178,7 +2164,7 @@ void initListsSliceP (sSlice* slice) {
       if (dpb->fsLongTermRef[i]->isUsed == 3)
         if (dpb->fsLongTermRef[i]->frame->isLongTerm)
           slice->listX[0][list0idx++] = dpb->fsLongTermRef[i]->frame;
-    qsort ((void*)&slice->listX[0][(short)slice->listXsize[0]], list0idx - slice->listXsize[0], 
+    qsort ((void*)&slice->listX[0][(short)slice->listXsize[0]], list0idx - slice->listXsize[0],
            sizeof(sPicture*), comparePicByLtPicNumAscending);
     slice->listXsize[0] = (char) list0idx;
     }
@@ -2270,9 +2256,9 @@ void initListsSliceB (sSlice* slice) {
           }
         }
       }
-    qsort ((void *)&slice->listX[0][(short) slice->listXsize[0]], list0idx - slice->listXsize[0], 
+    qsort ((void *)&slice->listX[0][(short) slice->listXsize[0]], list0idx - slice->listXsize[0],
            sizeof(sPicture*), comparePicByLtPicNumAscending);
-    qsort ((void *)&slice->listX[1][(short) slice->listXsize[0]], list0idx - slice->listXsize[0], 
+    qsort ((void *)&slice->listX[1][(short) slice->listXsize[0]], list0idx - slice->listXsize[0],
            sizeof(sPicture*), comparePicByLtPicNumAscending);
     slice->listXsize[0] = slice->listXsize[1] = (char)list0idx;
     }
