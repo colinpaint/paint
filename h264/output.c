@@ -53,7 +53,7 @@ static void img2buf (sPixel** imgX, unsigned char* buf,
 //{{{
 static void clearPicture (sDecoder* decoder, sPicture* p) {
 
-  printf ("-------------------- clearPicture -----------------\n");
+  printf ("-------- clearPicture\n");
 
   for (int i = 0; i < p->sizeY; i++)
     for (int j = 0; j < p->sizeX; j++)
