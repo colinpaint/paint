@@ -1451,50 +1451,50 @@ static void initContexts (sSlice* slice) {
 
   int i, j;
   int qp = imax (0, slice->qp);
-  int modelNum = slice->modelNum;
+  int cabacInitIdc = slice->cabacInitIdc;
 
   // motion coding contexts
   if ((slice->sliceType == eSliceI) || (slice->sliceType == eSliceSI)) {
-    IBIARI_CTX_INIT2 (3, NUM_MB_TYPE_CTX,   mc->mbTypeContexts,     INIT_MB_TYPE,    modelNum, qp);
-    IBIARI_CTX_INIT2 (2, NUM_B8_TYPE_CTX,   mc->b8TypeContexts,     INIT_B8_TYPE,    modelNum, qp);
-    IBIARI_CTX_INIT2 (2, NUM_MV_RES_CTX,    mc->mvResContexts,      INIT_MV_RES,     modelNum, qp);
-    IBIARI_CTX_INIT2 (2, NUM_REF_NO_CTX,    mc->refNoContexts,      INIT_REF_NO,     modelNum, qp);
-    IBIARI_CTX_INIT1 (   NUM_DELTA_QP_CTX,  mc->deltaQpContexts,    INIT_DELTA_QP,   modelNum, qp);
-    IBIARI_CTX_INIT1 (   NUM_MB_AFF_CTX,    mc->mbAffContexts,      INIT_MB_AFF,     modelNum, qp);
+    IBIARI_CTX_INIT2 (3, NUM_MB_TYPE_CTX,   mc->mbTypeContexts,     INIT_MB_TYPE,    cabacInitIdc, qp);
+    IBIARI_CTX_INIT2 (2, NUM_B8_TYPE_CTX,   mc->b8TypeContexts,     INIT_B8_TYPE,    cabacInitIdc, qp);
+    IBIARI_CTX_INIT2 (2, NUM_MV_RES_CTX,    mc->mvResContexts,      INIT_MV_RES,     cabacInitIdc, qp);
+    IBIARI_CTX_INIT2 (2, NUM_REF_NO_CTX,    mc->refNoContexts,      INIT_REF_NO,     cabacInitIdc, qp);
+    IBIARI_CTX_INIT1 (   NUM_DELTA_QP_CTX,  mc->deltaQpContexts,    INIT_DELTA_QP,   cabacInitIdc, qp);
+    IBIARI_CTX_INIT1 (   NUM_MB_AFF_CTX,    mc->mbAffContexts,      INIT_MB_AFF,     cabacInitIdc, qp);
 
     // texture coding contexts
-    IBIARI_CTX_INIT1 (   NUM_TRANSFORM_SIZE_CTX, tc->transformSizeContexts, INIT_TRANSFORM_SIZE, modelNum, qp);
-    IBIARI_CTX_INIT1 (                 NUM_IPR_CTX,  tc->iprContexts,     INIT_IPR,       modelNum, qp);
-    IBIARI_CTX_INIT1 (                 NUM_CIPR_CTX, tc->ciprContexts,    INIT_CIPR,      modelNum, qp);
-    IBIARI_CTX_INIT2 (3,               NUM_CBP_CTX,  tc->cbpContexts,     INIT_CBP,       modelNum, qp);
-    IBIARI_CTX_INIT2 (NUM_BLOCK_TYPES, NUM_BCBP_CTX, tc->bcbpContexts,    INIT_BCBP,      modelNum, qp);
-    IBIARI_CTX_INIT2 (NUM_BLOCK_TYPES, NUM_MAP_CTX,  tc->mapContexts[0],  INIT_MAP,       modelNum, qp);
-    IBIARI_CTX_INIT2 (NUM_BLOCK_TYPES, NUM_MAP_CTX,  tc->mapContexts[1],  INIT_FLD_MAP,   modelNum, qp);
-    IBIARI_CTX_INIT2 (NUM_BLOCK_TYPES, NUM_LAST_CTX, tc->lastContexts[1], INIT_FLD_LAST,  modelNum, qp);
-    IBIARI_CTX_INIT2 (NUM_BLOCK_TYPES, NUM_LAST_CTX, tc->lastContexts[0], INIT_LAST,      modelNum, qp);
-    IBIARI_CTX_INIT2 (NUM_BLOCK_TYPES, NUM_ONE_CTX,  tc->oneContexts,     INIT_ONE,       modelNum, qp);
-    IBIARI_CTX_INIT2 (NUM_BLOCK_TYPES, NUM_ABS_CTX,  tc->absContexts,     INIT_ABS,       modelNum, qp);
+    IBIARI_CTX_INIT1 (   NUM_TRANSFORM_SIZE_CTX, tc->transformSizeContexts, INIT_TRANSFORM_SIZE, cabacInitIdc, qp);
+    IBIARI_CTX_INIT1 (                 NUM_IPR_CTX,  tc->iprContexts,     INIT_IPR,       cabacInitIdc, qp);
+    IBIARI_CTX_INIT1 (                 NUM_CIPR_CTX, tc->ciprContexts,    INIT_CIPR,      cabacInitIdc, qp);
+    IBIARI_CTX_INIT2 (3,               NUM_CBP_CTX,  tc->cbpContexts,     INIT_CBP,       cabacInitIdc, qp);
+    IBIARI_CTX_INIT2 (NUM_BLOCK_TYPES, NUM_BCBP_CTX, tc->bcbpContexts,    INIT_BCBP,      cabacInitIdc, qp);
+    IBIARI_CTX_INIT2 (NUM_BLOCK_TYPES, NUM_MAP_CTX,  tc->mapContexts[0],  INIT_MAP,       cabacInitIdc, qp);
+    IBIARI_CTX_INIT2 (NUM_BLOCK_TYPES, NUM_MAP_CTX,  tc->mapContexts[1],  INIT_FLD_MAP,   cabacInitIdc, qp);
+    IBIARI_CTX_INIT2 (NUM_BLOCK_TYPES, NUM_LAST_CTX, tc->lastContexts[1], INIT_FLD_LAST,  cabacInitIdc, qp);
+    IBIARI_CTX_INIT2 (NUM_BLOCK_TYPES, NUM_LAST_CTX, tc->lastContexts[0], INIT_LAST,      cabacInitIdc, qp);
+    IBIARI_CTX_INIT2 (NUM_BLOCK_TYPES, NUM_ONE_CTX,  tc->oneContexts,     INIT_ONE,       cabacInitIdc, qp);
+    IBIARI_CTX_INIT2 (NUM_BLOCK_TYPES, NUM_ABS_CTX,  tc->absContexts,     INIT_ABS,       cabacInitIdc, qp);
     }
   else {
-    PBIARI_CTX_INIT2 (3, NUM_MB_TYPE_CTX,   mc->mbTypeContexts,     INIT_MB_TYPE,    modelNum, qp);
-    PBIARI_CTX_INIT2 (2, NUM_B8_TYPE_CTX,   mc->b8TypeContexts,     INIT_B8_TYPE,    modelNum, qp);
-    PBIARI_CTX_INIT2 (2, NUM_MV_RES_CTX,    mc->mvResContexts,      INIT_MV_RES,     modelNum, qp);
-    PBIARI_CTX_INIT2 (2, NUM_REF_NO_CTX,    mc->refNoContexts,      INIT_REF_NO,     modelNum, qp);
-    PBIARI_CTX_INIT1 (   NUM_DELTA_QP_CTX,  mc->deltaQpContexts,    INIT_DELTA_QP,   modelNum, qp);
-    PBIARI_CTX_INIT1 (   NUM_MB_AFF_CTX,    mc->mbAffContexts,      INIT_MB_AFF,     modelNum, qp);
+    PBIARI_CTX_INIT2 (3, NUM_MB_TYPE_CTX,   mc->mbTypeContexts,     INIT_MB_TYPE,    cabacInitIdc, qp);
+    PBIARI_CTX_INIT2 (2, NUM_B8_TYPE_CTX,   mc->b8TypeContexts,     INIT_B8_TYPE,    cabacInitIdc, qp);
+    PBIARI_CTX_INIT2 (2, NUM_MV_RES_CTX,    mc->mvResContexts,      INIT_MV_RES,     cabacInitIdc, qp);
+    PBIARI_CTX_INIT2 (2, NUM_REF_NO_CTX,    mc->refNoContexts,      INIT_REF_NO,     cabacInitIdc, qp);
+    PBIARI_CTX_INIT1 (   NUM_DELTA_QP_CTX,  mc->deltaQpContexts,    INIT_DELTA_QP,   cabacInitIdc, qp);
+    PBIARI_CTX_INIT1 (   NUM_MB_AFF_CTX,    mc->mbAffContexts,      INIT_MB_AFF,     cabacInitIdc, qp);
 
     // texture coding contexts
-    PBIARI_CTX_INIT1 (   NUM_TRANSFORM_SIZE_CTX, tc->transformSizeContexts, INIT_TRANSFORM_SIZE, modelNum, qp);
-    PBIARI_CTX_INIT1 (                 NUM_IPR_CTX,  tc->iprContexts,     INIT_IPR,       modelNum, qp);
-    PBIARI_CTX_INIT1 (                 NUM_CIPR_CTX, tc->ciprContexts,    INIT_CIPR,      modelNum, qp);
-    PBIARI_CTX_INIT2 (3,               NUM_CBP_CTX,  tc->cbpContexts,     INIT_CBP,       modelNum, qp);
-    PBIARI_CTX_INIT2 (NUM_BLOCK_TYPES, NUM_BCBP_CTX, tc->bcbpContexts,    INIT_BCBP,      modelNum, qp);
-    PBIARI_CTX_INIT2 (NUM_BLOCK_TYPES, NUM_MAP_CTX,  tc->mapContexts[0],  INIT_MAP,       modelNum, qp);
-    PBIARI_CTX_INIT2 (NUM_BLOCK_TYPES, NUM_MAP_CTX,  tc->mapContexts[1],  INIT_FLD_MAP,   modelNum, qp);
-    PBIARI_CTX_INIT2 (NUM_BLOCK_TYPES, NUM_LAST_CTX, tc->lastContexts[1], INIT_FLD_LAST,  modelNum, qp);
-    PBIARI_CTX_INIT2 (NUM_BLOCK_TYPES, NUM_LAST_CTX, tc->lastContexts[0], INIT_LAST,      modelNum, qp);
-    PBIARI_CTX_INIT2 (NUM_BLOCK_TYPES, NUM_ONE_CTX,  tc->oneContexts,     INIT_ONE,       modelNum, qp);
-    PBIARI_CTX_INIT2 (NUM_BLOCK_TYPES, NUM_ABS_CTX,  tc->absContexts,     INIT_ABS,       modelNum, qp);
+    PBIARI_CTX_INIT1 (   NUM_TRANSFORM_SIZE_CTX, tc->transformSizeContexts, INIT_TRANSFORM_SIZE, cabacInitIdc, qp);
+    PBIARI_CTX_INIT1 (                 NUM_IPR_CTX,  tc->iprContexts,     INIT_IPR,       cabacInitIdc, qp);
+    PBIARI_CTX_INIT1 (                 NUM_CIPR_CTX, tc->ciprContexts,    INIT_CIPR,      cabacInitIdc, qp);
+    PBIARI_CTX_INIT2 (3,               NUM_CBP_CTX,  tc->cbpContexts,     INIT_CBP,       cabacInitIdc, qp);
+    PBIARI_CTX_INIT2 (NUM_BLOCK_TYPES, NUM_BCBP_CTX, tc->bcbpContexts,    INIT_BCBP,      cabacInitIdc, qp);
+    PBIARI_CTX_INIT2 (NUM_BLOCK_TYPES, NUM_MAP_CTX,  tc->mapContexts[0],  INIT_MAP,       cabacInitIdc, qp);
+    PBIARI_CTX_INIT2 (NUM_BLOCK_TYPES, NUM_MAP_CTX,  tc->mapContexts[1],  INIT_FLD_MAP,   cabacInitIdc, qp);
+    PBIARI_CTX_INIT2 (NUM_BLOCK_TYPES, NUM_LAST_CTX, tc->lastContexts[1], INIT_FLD_LAST,  cabacInitIdc, qp);
+    PBIARI_CTX_INIT2 (NUM_BLOCK_TYPES, NUM_LAST_CTX, tc->lastContexts[0], INIT_LAST,      cabacInitIdc, qp);
+    PBIARI_CTX_INIT2 (NUM_BLOCK_TYPES, NUM_ONE_CTX,  tc->oneContexts,     INIT_ONE,       cabacInitIdc, qp);
+    PBIARI_CTX_INIT2 (NUM_BLOCK_TYPES, NUM_ABS_CTX,  tc->absContexts,     INIT_ABS,       cabacInitIdc, qp);
     }
   }
 //}}}
@@ -2051,7 +2051,7 @@ static void reorderLists (sSlice* slice) {
     if (decoder->noReferencePicture == slice->listX[0][slice->numRefIndexActive[LIST_0]-1])
       printf ("--- refPicList0[%d] no refPic %s\n",
               slice->numRefIndexActive[LIST_0]-1, decoder->nonConformingStream ? "conform":"");
-    else // that's a definition
+    else 
       slice->listXsize[0] = (char) slice->numRefIndexActive[LIST_0];
     }
 
@@ -2062,7 +2062,6 @@ static void reorderLists (sSlice* slice) {
       printf ("--- refPicList1[%d] no refPic %s\n",
               slice->numRefIndexActive[LIST_0] - 1, decoder->nonConformingStream ? "conform" : "");
     else
-      // that's a definition
       slice->listXsize[1] = (char)slice->numRefIndexActive[LIST_1];
     }
 
@@ -2976,9 +2975,9 @@ static void readSliceHeader (sDecoder* decoder, sSlice* slice) {
 
   if (decoder->activePps->entropyCoding &&
       (slice->sliceType != eSliceI) && (slice->sliceType != eSliceSI))
-    slice->modelNum = readUeV ("SLC cabac_init_idc", s);
+    slice->cabacInitIdc = readUeV ("SLC cabacInitIdc", s);
   else
-    slice->modelNum = 0;
+    slice->cabacInitIdc = 0;
   //{{{  read qp
   slice->sliceQpDelta = readSeV ("SLC sliceQpDelta", s);
   slice->qp = 26 + decoder->activePps->picInitQpMinus26 + slice->sliceQpDelta;

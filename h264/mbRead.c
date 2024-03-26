@@ -868,15 +868,15 @@ static void readPcavlcMacroblock (sMacroBlock* mb) {
 
     // VLC Non-Intra
     if (slice->codCount == -1) {
-      dataPartition->readSyntaxElement(mb, &se, dataPartition);
+      dataPartition->readSyntaxElement (mb, &se, dataPartition);
       slice->codCount = se.value1;
       }
 
     if (slice->codCount==0) {
       // read MB type
-      dataPartition->readSyntaxElement(mb, &se, dataPartition);
+      dataPartition->readSyntaxElement (mb, &se, dataPartition);
       ++(se.value1);
-      mb->mbType = (short) se.value1;
+      mb->mbType = (short)se.value1;
       if(!dataPartition->s->errorFlag)
         mb->errorFlag = 0;
       slice->codCount--;
@@ -926,7 +926,7 @@ static void readPcavlcMacroblock (sMacroBlock* mb) {
 
     if (slice->codCount == 0) {
       // read MB aff
-      if ((((mbNum & 0x01)==0) || ((mbNum & 0x01) && prevMbSkipped))) {
+      if ((((mbNum & 0x01) == 0) || ((mbNum & 0x01) && prevMbSkipped))) {
         se.len = (int64) 1;
         readsSyntaxElement_FLC (&se, dataPartition->s);
         mb->mbField = (Boolean)se.value1;
@@ -1073,9 +1073,9 @@ static void readBcavlcMacroblock (sMacroBlock* mb) {
       slice->codCount = se.value1;
       }
 
-    if (slice->codCount==0) {
+    if (slice->codCount == 0) {
       // read MB aff
-      if (((mbNum & 0x01)==0) || ((mbNum & 0x01) && prevMbSkipped)) {
+      if (((mbNum & 0x01) == 0) || ((mbNum & 0x01) && prevMbSkipped)) {
         se.len = (int64) 1;
         readsSyntaxElement_FLC (&se, dataPartition->s);
         mb->mbField = (Boolean)se.value1;

@@ -661,7 +661,7 @@ typedef struct Slice {
   int           qs;
   int           sliceQsDelta;
 
-  int           modelNum;     // cabac model number
+  int           cabacInitIdc;     // cabac model number
   unsigned int  frameNum;
 
   ePicStructure picStructure;
@@ -1074,8 +1074,8 @@ static inline int isHiIntraOnlyProfile (unsigned profileIdc, Boolean constrained
   extern sSlice* allocSlice (sDecoder* decoder);
 
   extern sDecodedPic* allocDecodedPicture (sDecodedPic* decodedPic);
-  extern void freeDecodedPictures (sDecodedPic* decodedPic);
   extern void clearDecodedPictures (sDecoder* decoder);
+  extern void freeDecodedPictures (sDecodedPic* decodedPic);
 
   // For 4:4:4 independent mode
   extern void changePlaneJV (sDecoder* decoder, int nplane, sSlice *slice);
