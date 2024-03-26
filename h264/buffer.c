@@ -1272,7 +1272,7 @@ static void mark_current_picture_long_term (sDPB* dpb, sPicture* p, int longTerm
 //{{{
 static void adaptiveMemoryManagement (sDPB* dpb, sPicture* p) {
 
-  sDecodedRefPicMarking* tmp_drpm;
+  sDecodedRefPicMark* tmp_drpm;
   sDecoder* decoder = dpb->decoder;
 
   decoder->lastHasMmco5 = 0;

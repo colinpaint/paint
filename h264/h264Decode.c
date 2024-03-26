@@ -111,7 +111,7 @@ static void freeSlice (sSlice *slice) {
     }
 
   while (slice->decRefPicMarkingBuffer) {
-    sDecodedRefPicMarking* tempDrpm = slice->decRefPicMarkingBuffer;
+    sDecodedRefPicMark* tempDrpm = slice->decRefPicMarkingBuffer;
     slice->decRefPicMarkingBuffer = tempDrpm->next;
     free (tempDrpm);
     }

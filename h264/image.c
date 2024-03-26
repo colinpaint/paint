@@ -2583,7 +2583,7 @@ static void decRefPicMarking (sDecoder* decoder, sBitStream* s, sSlice* slice) {
 
   // free old buffer content
   while (slice->decRefPicMarkingBuffer) {
-    sDecodedRefPicMarking* tmp_drpm = slice->decRefPicMarkingBuffer;
+    sDecodedRefPicMark* tmp_drpm = slice->decRefPicMarkingBuffer;
     slice->decRefPicMarkingBuffer = tmp_drpm->next;
     free (tmp_drpm);
     }
@@ -2599,7 +2599,7 @@ static void decRefPicMarking (sDecoder* decoder, sBitStream* s, sSlice* slice) {
       // read Memory Management Control Operation
       int val;
       do {
-        sDecodedRefPicMarking* tempDrpm = (sDecodedRefPicMarking*)calloc (1,sizeof (sDecodedRefPicMarking));
+        sDecodedRefPicMark* tempDrpm = (sDecodedRefPicMark*)calloc (1,sizeof (sDecodedRefPicMark));
         tempDrpm->next = NULL;
         val = tempDrpm->memManagement = readUeV ("SLC memManagement", s);
         if ((val == 1) || (val == 3))
@@ -2616,7 +2616,7 @@ static void decRefPicMarking (sDecoder* decoder, sBitStream* s, sSlice* slice) {
         if (!slice->decRefPicMarkingBuffer)
           slice->decRefPicMarkingBuffer = tempDrpm;
         else {
-          sDecodedRefPicMarking* tempDrpm2 = slice->decRefPicMarkingBuffer;
+          sDecodedRefPicMark* tempDrpm2 = slice->decRefPicMarkingBuffer;
           while (tempDrpm2->next)
             tempDrpm2 = tempDrpm2->next;
           tempDrpm2->next = tempDrpm;

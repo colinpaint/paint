@@ -591,16 +591,16 @@ typedef struct DecodedPic {
   struct DecodedPic* next;
   } sDecodedPic;
 //}}}
-//{{{  sDecodedRefPicMarking
-typedef struct DecodedRefPicMarking {
+//{{{  sDecodedRefPicMark
+typedef struct DecodedRefPicMark {
   int memManagement;
   int diffPicNumMinus1;
   int longTermPicNum;
   int longTermFrameIndex;
   int maxLongTermFrameIndexPlus1;
 
-  struct DecodedRefPicMarking* next;
-  } sDecodedRefPicMarking;
+  struct DecodedRefPicMark* next;
+  } sDecodedRefPicMark;
 //}}}
 //{{{  sOldSlice
 typedef struct {
@@ -684,7 +684,7 @@ typedef struct Slice {
   int noOutputPriorPicFlag;
   int longTermRefFlag;
   int adaptRefPicBufFlag;
-  sDecodedRefPicMarking* decRefPicMarkingBuffer; // stores memory management control operations
+  sDecodedRefPicMark* decRefPicMarkingBuffer; // stores memory management control operations
 
   char listXsize[6];
   struct Picture** listX[6];
