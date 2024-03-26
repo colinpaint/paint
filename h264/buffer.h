@@ -91,16 +91,15 @@ typedef struct Picture {
 
   // Motion info for 4:4:4 independent mode decoding
   sPicMotion**  mvInfoJV[MAX_PLANE];
-  sPicMotionOld motionJV[MAX_PLANE]; 
+  sPicMotionOld motionJV[MAX_PLANE];
   } sPicture;
 //}}}
 //{{{  sFrameStore
 typedef struct FrameStore {
-  int       isUsed;                // 0=empty; 1=top; 2=bottom; 3=both fields (or frame)
-  int       isReference;           // 0=not used for ref; 1=top used; 2=bottom used; 3=both fields (or frame) used
-  int       isLongTerm;           // 0=not used for ref; 1=top used; 2=bottom used; 3=both fields (or frame) used
-  int       isOrigReference;      // original marking by nalRefIdc: 0=not used for ref; 1=top used; 2=bottom used; 3=both fields (or frame) used
-
+  int       isUsed;          // 0=empty; 1=top; 2=bottom; 3=both fields (or frame)
+  int       isReference;     // 0=not used for ref; 1=top used; 2=bottom used; 3=both fields (or frame) used
+  int       isLongTerm;      // 0=not used for ref; 1=top used; 2=bottom used; 3=both fields (or frame) used
+  int       isOrigReference; // original marking by nalRefIdc: 0=not used for ref; 1=top used; 2=bottom used; 3=both fields (or frame) used
   int       isNonExistent;
 
   unsigned  frameNum;
@@ -111,8 +110,7 @@ typedef struct FrameStore {
   int       isOutput;
   int       poc;
 
-  // picture error conceal
-  int concealRef;
+  int       concealRef;
 
   sPicture* frame;
   sPicture* topField;

@@ -86,8 +86,8 @@ static int isEqualPps (sPps* pps1, sPps* pps2) {
   }
 //}}}
 //{{{
-// syntax for scaling list matrix values
 static void scalingList (int* scalingList, int scalingListSize, Boolean* useDefaultScalingMatrix, sBitStream* s) {
+// syntax for scaling list matrix values
 
   //{{{
   static const byte ZZ_SCAN[16] = {
