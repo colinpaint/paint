@@ -718,8 +718,8 @@ void startMacroblock (sSlice* slice, sMacroBlock** mb) {
 
   // Update coordinates of the current macroblock
   if (slice->mbAffFrame) {
-    (*mb)->mb.x = (short) (   (mbIndex) % ((2*decoder->width) / MB_BLOCK_SIZE));
-    (*mb)->mb.y = (short) (2*((mbIndex) / ((2*decoder->width) / MB_BLOCK_SIZE)));
+    (*mb)->mb.x = (short) (   (mbIndex) % ((2*decoder->coding.width) / MB_BLOCK_SIZE));
+    (*mb)->mb.y = (short) (2*((mbIndex) / ((2*decoder->coding.width) / MB_BLOCK_SIZE)));
     (*mb)->mb.y += ((*mb)->mb.x & 0x01);
     (*mb)->mb.x >>= 1;
     }
@@ -1309,8 +1309,8 @@ void makeFramePictureJV (sDecoder* decoder) {
 
   // This could be done with pointers and seems not necessary
   for (int uv = 0; uv < 2; uv++) {
-    for (int line = 0; line < decoder->height; line++) {
-      int nsize = sizeof(sPixel) * decoder->width;
+    for (int line = 0; line < decoder->coding.height; line++) {
+      int nsize = sizeof(sPixel) * decoder->coding.width;
       memcpy (decoder->picture->imgUV[uv][line], decoder->decPictureJV[uv+1]->imgY[line], nsize );
       }
     freePicture (decoder->decPictureJV[uv+1]);

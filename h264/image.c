@@ -1607,13 +1607,8 @@ static void updateMaxValue (sFrameFormat* format) {
 //{{{
 static void setCoding (sDecoder* decoder) {
 
-  decoder->bitDepthChroma = 0;
   decoder->widthCr = 0;
   decoder->heightCr = 0;
-
-  // fidelity Range Extensions stuff
-  decoder->width = decoder->coding.width;
-  decoder->height = decoder->coding.height;
   decoder->bitDepthLuma = decoder->coding.bitDepthLuma;
   decoder->bitDepthChroma = decoder->coding.bitDepthChroma;
 
@@ -1624,21 +1619,21 @@ static void setCoding (sDecoder* decoder) {
 
   if (decoder->coding.yuvFormat == YUV420) {
     //{{{  yuv420
-    decoder->widthCr = decoder->width >> 1;
-    decoder->heightCr = decoder->height >> 1;
+    decoder->widthCr = decoder->coding.width >> 1;
+    decoder->heightCr = decoder->coding.height >> 1;
     }
     //}}}
   else if (decoder->coding.yuvFormat == YUV422) {
     //{{{  yuv422
-    decoder->widthCr = decoder->width >> 1;
-    decoder->heightCr = decoder->height;
+    decoder->widthCr = decoder->coding.width >> 1;
+    decoder->heightCr = decoder->coding.height;
     decoder->coding.chromaPadY = MCBUF_CHROMA_PAD_Y*2;
     }
     //}}}
   else if (decoder->coding.yuvFormat == YUV444) {
     //{{{  yuv444
-    decoder->widthCr = decoder->width;
-    decoder->heightCr = decoder->height;
+    decoder->widthCr = decoder->coding.width;
+    decoder->heightCr = decoder->coding.height;
     decoder->coding.chromaPadX = decoder->coding.lumaPadX;
     decoder->coding.chromaPadY = decoder->coding.lumaPadY;
     }
@@ -1735,11 +1730,11 @@ static void setCodingParam (sDecoder* decoder, sSps* sps) {
     decoder->coding.maxVmvR = 512 * 4; // 512 pixels in quarter pixels
 
   // Fidelity Range Extensions stuff (part 1)
-  decoder->coding.bitDepthChroma = 0;
   decoder->coding.widthCr = 0;
   decoder->coding.heightCr = 0;
   decoder->coding.bitDepthLuma = (short)(sps->bit_depth_luma_minus8 + 8);
   decoder->coding.bitDepthScale[0] = 1 << sps->bit_depth_luma_minus8;
+  decoder->coding.bitDepthChroma = 0;
   if (sps->chromaFormatIdc != YUV400) {
     decoder->coding.bitDepthChroma = (short)(sps->bit_depth_chroma_minus8 + 8);
     decoder->coding.bitDepthScale[1] = 1 << sps->bit_depth_chroma_minus8;
@@ -1854,8 +1849,8 @@ static void setFormat (sDecoder* decoder, sSps* sps, sFrameFormat* source, sFram
   else
     cropLeft = cropRight = cropTop = cropBot = 0;
 
-  source->width[0] = decoder->width - cropLeft - cropRight;
-  source->height[0] = decoder->height - cropTop - cropBot;
+  source->width[0] = decoder->coding.width - cropLeft - cropRight;
+  source->height[0] = decoder->coding.height - cropTop - cropBot;
 
   // cropping for chroma
   if (sps->cropFlag) {
@@ -1873,10 +1868,10 @@ static void setFormat (sDecoder* decoder, sSps* sps, sFrameFormat* source, sFram
   source->height[1] = decoder->heightCr - cropTop - cropBot;
   source->height[2] = source->height[1];
 
-  output->width[0] = decoder->width;
+  output->width[0] = decoder->coding.width;
   source->width[1] = decoder->widthCr;
   source->width[2] = decoder->widthCr;
-  output->height[0] = decoder->height;
+  output->height[0] = decoder->coding.height;
   output->height[1] = decoder->heightCr;
   output->height[2] = decoder->heightCr;
 
@@ -1921,7 +1916,7 @@ static void setFormat (sDecoder* decoder, sSps* sps, sFrameFormat* source, sFram
     //{{{  print profile info
     decoder->gotPps = 1;
     printf ("-> profile:%d %dx%d %dx%d ",
-            sps->profileIdc, source->width[0], source->height[0], decoder->width, decoder->height);
+            sps->profileIdc, source->width[0], source->height[0], decoder->coding.width, decoder->coding.height);
 
     if (decoder->coding.yuvFormat == YUV400)
       printf ("4:0:0");
@@ -2424,7 +2419,7 @@ static void initPicture (sDecoder* decoder, sSlice* slice) {
   if ((slice->picStructure == eFrame) || (slice->picStructure == eTopField))
     getTime (&decoder->debug.startTime);
 
-  sPicture* picture = decoder->picture = allocPicture (decoder, slice->picStructure, decoder->width, decoder->height, decoder->widthCr, decoder->heightCr, 1);
+  sPicture* picture = decoder->picture = allocPicture (decoder, slice->picStructure, decoder->coding.width, decoder->coding.height, decoder->widthCr, decoder->heightCr, 1);
   picture->topPoc = slice->topPoc;
   picture->botPoc = slice->botPoc;
   picture->framePoc = slice->framePoc;
@@ -2529,9 +2524,9 @@ static void initPicture (sDecoder* decoder, sSlice* slice) {
 
   if (decoder->coding.isSeperateColourPlane) {
     decoder->decPictureJV[0] = decoder->picture;
-    decoder->decPictureJV[1] = allocPicture (decoder, (ePicStructure) slice->picStructure, decoder->width, decoder->height, decoder->widthCr, decoder->heightCr, 1);
+    decoder->decPictureJV[1] = allocPicture (decoder, (ePicStructure) slice->picStructure, decoder->coding.width, decoder->coding.height, decoder->widthCr, decoder->heightCr, 1);
     copyDecPictureJV (decoder, decoder->decPictureJV[1], decoder->decPictureJV[0] );
-    decoder->decPictureJV[2] = allocPicture (decoder, (ePicStructure) slice->picStructure, decoder->width, decoder->height, decoder->widthCr, decoder->heightCr, 1);
+    decoder->decPictureJV[2] = allocPicture (decoder, (ePicStructure) slice->picStructure, decoder->coding.width, decoder->coding.height, decoder->widthCr, decoder->heightCr, 1);
     copyDecPictureJV (decoder, decoder->decPictureJV[2], decoder->decPictureJV[0] );
     }
   }
@@ -2564,14 +2559,14 @@ static void useParameterSet (sDecoder* decoder, sSlice* slice) {
     initDpb (decoder, decoder->dpb, 0);
 
     // enable error conceal
-    ercInit (decoder, decoder->width, decoder->height, 1);
+    ercInit (decoder, decoder->coding.width, decoder->coding.height, 1);
     if (decoder->picture) {
       ercReset (decoder->ercErrorVar, decoder->picSizeInMbs, decoder->picSizeInMbs, decoder->picture->sizeX);
       decoder->ercMvPerMb = 0;
       }
 
     setFormat (decoder, sps, &decoder->param.source, &decoder->param.output);
-    sprintf (decoder->debug.spsStr, "sps:%s", 
+    sprintf (decoder->debug.spsStr, "sps:%s",
              sps->frameMbOnly ? (sps->mbAffFlag ? "mbAff" : "frame") : "field");
     }
     //}}}

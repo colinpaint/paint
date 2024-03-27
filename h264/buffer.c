@@ -796,7 +796,7 @@ void fillFrameNumGap (sDecoder* decoder, sSlice* slice) {
 
   sPicture* picture = NULL;
   while (curFrameNum != unusedShortTermFrameNum) {
-    picture = allocPicture (decoder, eFrame, decoder->width, decoder->height, decoder->widthCr, decoder->heightCr, 1);
+    picture = allocPicture (decoder, eFrame, decoder->coding.width, decoder->coding.height, decoder->widthCr, decoder->heightCr, 1);
     picture->codedFrame = 1;
     picture->picNum = unusedShortTermFrameNum;
     picture->frameNum = unusedShortTermFrameNum;
@@ -1572,7 +1572,7 @@ void initDpb (sDecoder* decoder, sDPB* dpb, int type) {
 
  /* allocate a dummy storable picture */
   if (!decoder->noReferencePicture) {
-    decoder->noReferencePicture = allocPicture (decoder, eFrame, decoder->width, decoder->height, decoder->widthCr, decoder->heightCr, 1);
+    decoder->noReferencePicture = allocPicture (decoder, eFrame, decoder->coding.width, decoder->coding.height, decoder->widthCr, decoder->heightCr, 1);
     decoder->noReferencePicture->topField = decoder->noReferencePicture;
     decoder->noReferencePicture->botField = decoder->noReferencePicture;
     decoder->noReferencePicture->frame = decoder->noReferencePicture;
@@ -1848,10 +1848,10 @@ void initImage (sDecoder* decoder, sImage* image, sSps* sps) {
 
   // allocate memory for reference frame buffers: image->frm_data
   image->format = decoder->param.output;
-  image->format.width[0]  = decoder->width;
+  image->format.width[0]  = decoder->coding.width;
   image->format.width[1]  = decoder->widthCr;
   image->format.width[2]  = decoder->widthCr;
-  image->format.height[0] = decoder->height;
+  image->format.height[0] = decoder->coding.height;
   image->format.height[1] = decoder->heightCr;
   image->format.height[2] = decoder->heightCr;
   image->format.yuvFormat  = (eYuvFormat)sps->chromaFormatIdc;
@@ -1859,17 +1859,17 @@ void initImage (sDecoder* decoder, sImage* image, sSps* sps) {
   image->format.autoCropRight = decoder->param.output.autoCropRight;
   image->format.autoCropBotCr = decoder->param.output.autoCropBotCr;
   image->format.autoCropRightCr = decoder->param.output.autoCropRightCr;
-  image->frm_stride[0] = decoder->width;
+  image->frm_stride[0] = decoder->coding.width;
   image->frm_stride[1] = image->frm_stride[2] = decoder->widthCr;
   image->top_stride[0] = image->bot_stride[0] = image->frm_stride[0] << 1;
   image->top_stride[1] = image->top_stride[2] = image->bot_stride[1] = image->bot_stride[2] = image->frm_stride[1] << 1;
 
   if (sps->isSeperateColourPlane) {
     for (int nplane = 0; nplane < MAX_PLANE; nplane++ )
-      getMem2Dpel (&(image->frm_data[nplane]), decoder->height, decoder->width);
+      getMem2Dpel (&(image->frm_data[nplane]), decoder->coding.height, decoder->coding.width);
     }
   else {
-    getMem2Dpel (&(image->frm_data[0]), decoder->height, decoder->width);
+    getMem2Dpel (&(image->frm_data[0]), decoder->coding.height, decoder->coding.width);
     if (decoder->coding.yuvFormat != YUV400) {
       getMem2Dpel (&(image->frm_data[1]), decoder->heightCr, decoder->widthCr);
       getMem2Dpel (&(image->frm_data[2]), decoder->heightCr, decoder->widthCr);
@@ -1891,7 +1891,7 @@ void initImage (sDecoder* decoder, sImage* image, sSps* sps) {
 
   if (!decoder->activeSps->frameMbOnly) {
     // allocate memory for field reference frame buffers
-    initTopBotPlanes (image->frm_data[0], decoder->height, &(image->top_data[0]), &(image->bot_data[0]));
+    initTopBotPlanes (image->frm_data[0], decoder->coding.height, &(image->top_data[0]), &(image->bot_data[0]));
     if (decoder->coding.yuvFormat != YUV400) {
       initTopBotPlanes (image->frm_data[1], decoder->heightCr, &(image->top_data[1]), &(image->bot_data[1]));
       initTopBotPlanes (image->frm_data[2], decoder->heightCr, &(image->top_data[2]), &(image->bot_data[2]));

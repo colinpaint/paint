@@ -417,7 +417,7 @@ static void process_spare_pic (byte* payload, int size, sDecoder* decoder) {
     printf ("sparePicture target_frame_num:%d num_spare_pics:%d\n",
             target_frame_num, num_spare_pics);
 
-  getMem3D (&map, num_spare_pics, decoder->height >> 4, decoder->width >> 4);
+  getMem3D (&map, num_spare_pics, decoder->coding.height >> 4, decoder->coding.width >> 4);
   for (int i = 0; i < num_spare_pics; i++) {
     if (i == 0) {
       CandidateSpareFrameNum = target_frame_num - 1;
@@ -436,15 +436,15 @@ static void process_spare_pic (byte* payload, int size, sDecoder* decoder) {
     switch (ref_area_indicator) {
       //{{{
       case 0: // The whole frame can serve as spare picture
-        for (y=0; y<decoder->height >> 4; y++)
-          for (x=0; x<decoder->width >> 4; x++)
+        for (y=0; y<decoder->coding.height >> 4; y++)
+          for (x=0; x<decoder->coding.width >> 4; x++)
             map[i][y][x] = 0;
         break;
       //}}}
       //{{{
       case 1: // The map is not compressed
-        for (y=0; y<decoder->height >> 4; y++)
-          for (x=0; x<decoder->width >> 4; x++)
+        for (y=0; y<decoder->coding.height >> 4; y++)
+          for (x=0; x<decoder->coding.width >> 4; x++)
             map[i][y][x] = (byte) readU1("SEI ref_mb_indicator", buf);
         break;
       //}}}
@@ -454,15 +454,15 @@ static void process_spare_pic (byte* payload, int size, sDecoder* decoder) {
         bit1 = 1;
         no_bit0 = -1;
 
-        x = ((decoder->width >> 4) - 1 ) / 2;
-        y = ((decoder->height >> 4) - 1 ) / 2;
+        x = ((decoder->coding.width >> 4) - 1 ) / 2;
+        y = ((decoder->coding.height >> 4) - 1 ) / 2;
         left = right = x;
         top = bottom = y;
         directx = 0;
         directy = 1;
 
-        for (m = 0; m < decoder->height >> 4; m++)
-          for (n = 0; n < decoder->width >> 4; n++) {
+        for (m = 0; m < decoder->coding.height >> 4; m++)
+          for (n = 0; n < decoder->coding.width >> 4; n++) {
             if (no_bit0 < 0)
               no_bit0 = readUeV ("SEI zero_run_length", buf);
             if (no_bit0>0)
@@ -494,7 +494,7 @@ static void process_spare_pic (byte* payload, int size, sDecoder* decoder) {
               //{{{
               if (x < right)
                 x++;
-              else if (x == (decoder->width >> 4) - 1) {
+              else if (x == (decoder->coding.width >> 4) - 1) {
                 y = top - 1;
                 top--;
                 directx = -1;
@@ -530,7 +530,7 @@ static void process_spare_pic (byte* payload, int size, sDecoder* decoder) {
               //{{{
               if (y < bottom)
                 y++;
-              else if (y == (decoder->height >> 4) - 1) {
+              else if (y == (decoder->coding.height >> 4) - 1) {
                 x = right+1;
                 right++;
                 directx = 0;

@@ -772,7 +772,7 @@ static void buildPredRegionYUV (sDecoder* decoder, int *mv, int x, int y, sPixel
   int yuv = picture->chromaFormatIdc - 1;
 
   int ref_frame = imax (mv[2], 0); // !!KS: quick fix, we sometimes seem to get negative refPic here, so restrict to zero and above
-  int mb_nr = y/16*(decoder->width/16)+x/16; ///slice->mbIndex;
+  int mb_nr = y/16*(decoder->coding.width/16)+x/16; ///slice->mbIndex;
   int** tempRes = NULL;
 
   sMacroBlock* mb = &decoder->mbData[mb_nr];   // intialization code deleted, see below, StW
@@ -1564,7 +1564,7 @@ static void copy_to_conceal (sPicture *src, sPicture *dst, sDecoder* decoder)
     dst->picWidthMbs = src->picWidthMbs;
     dst->picSizeInMbs = src->picSizeInMbs;
 
-    CopyImgData( src->imgY, src->imgUV, dst->imgY, dst->imgUV, decoder->width, decoder->height, decoder->widthCr, decoder->heightCr);
+    CopyImgData( src->imgY, src->imgUV, dst->imgY, dst->imgUV, decoder->coding.width, decoder->coding.height, decoder->widthCr, decoder->heightCr);
   }
 
   // Conceals the missing frame by motion vector copy conceal
@@ -1897,7 +1897,7 @@ void concealLostFrames (sDPB* dpb, sSlice *slice)
 
   while (CurrFrameNum != UnusedShortTermFrameNum)
   {
-    picture = allocPicture (decoder, eFrame, decoder->width, decoder->height, decoder->widthCr, decoder->heightCr, 1);
+    picture = allocPicture (decoder, eFrame, decoder->coding.width, decoder->coding.height, decoder->widthCr, decoder->heightCr, 1);
 
     picture->codedFrame = 1;
     picture->picNum = UnusedShortTermFrameNum;
@@ -1982,7 +1982,7 @@ void conceal_non_ref_pics (sDPB* dpb, int diff)
     dpb->usedSize = dpb->size;
     if((decoder->dpbPoc[i+1] - decoder->dpbPoc[i]) > decoder->param.pocGap)
     {
-      conceal_to_picture = allocPicture(decoder, eFrame, decoder->width, decoder->height, decoder->widthCr, decoder->heightCr, 1);
+      conceal_to_picture = allocPicture(decoder, eFrame, decoder->coding.width, decoder->coding.height, decoder->widthCr, decoder->heightCr, 1);
 
       missingpoc = decoder->dpbPoc[i] + decoder->param.pocGap;
       // Diagnostics
@@ -2082,7 +2082,7 @@ void write_lost_ref_after_idr (sDPB* dpb, int pos) {
   sDecoder* decoder = dpb->decoder;
   int temp = 1;
   if (decoder->lastOutFramestore->frame == NULL) {
-    decoder->lastOutFramestore->frame = allocPicture (decoder, eFrame, decoder->width, decoder->height,
+    decoder->lastOutFramestore->frame = allocPicture (decoder, eFrame, decoder->coding.width, decoder->coding.height,
                                                  decoder->widthCr, decoder->heightCr, 1);
     decoder->lastOutFramestore->isUsed = 3;
     }
