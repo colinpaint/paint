@@ -1291,13 +1291,13 @@ public:
       ImGui::SameLine();
       ImGui::TextUnformatted (testApp.getDecoder()->debug.outStr);
       //}}}
-      //{{{  draw sliceStr
-      ImGui::SameLine();
-      ImGui::TextUnformatted (testApp.getDecoder()->debug.sliceStr);
-      //}}}
       //{{{  draw spsStr
       ImGui::SameLine();
       ImGui::TextUnformatted (testApp.getDecoder()->debug.spsStr);
+      //}}}
+      //{{{  draw sliceStr
+      ImGui::SameLine();
+      ImGui::TextUnformatted (testApp.getDecoder()->debug.sliceStr);
       //}}}
       //{{{  draw sliceTypeStr
       ImGui::SameLine();

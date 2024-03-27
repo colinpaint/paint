@@ -272,18 +272,18 @@ extern void unmarkForRef( sFrameStore* frameStore);
 extern void unmarkForLongTermRef (sFrameStore* frameStore);
 
 extern sPicture* allocPicture (sDecoder* decoder, ePicStructure type, int sizeX, int sizeY, int sizeXcr, int sizeYcr, int isOutput);
-extern void freePicture (sPicture* p);
+extern void freePicture (sPicture* picture);
 extern void fillFrameNumGap (sDecoder* decoder, sSlice *slice);
 
 extern void updateRefList (sDPB* dpb);
 extern void updateLongTermRefList (sDPB* dpb);
-extern void getSmallestPoc (sDPB* dpb, int *poc,int * pos);
+extern void getSmallestPoc (sDPB* dpb, int* poc, int* pos);
 
 extern void initDpb (sDecoder* decoder, sDPB* dpb, int type);
 extern void reInitDpb (sDecoder* decoder, sDPB* dpb, int type);
 extern void flushDpb (sDPB* dpb);
 extern int removeUnusedDpb (sDPB* dpb);
-extern void storePictureDpb (sDPB* dpb, sPicture* p);
+extern void storePictureDpb (sDPB* dpb, sPicture* picture);
 extern void removeFrameDpb (sDPB* dpb, int pos);
 extern void freeDpb (sDPB* dpb);
 

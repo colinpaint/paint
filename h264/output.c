@@ -196,15 +196,12 @@ static void writePicture (sDecoder* decoder, sPicture* p, int realStructure) {
     }
     //}}}
   else {
-    if ((decoder->pendingOut->sizeX!=p->sizeX) ||
-        (decoder->pendingOut->sizeY!= p->sizeY) ||
+    if ((decoder->pendingOut->sizeX != p->sizeX) || (decoder->pendingOut->sizeY != p->sizeY) ||
         (decoder->pendingOut->frameMbOnly != p->frameMbOnly) ||
         (decoder->pendingOut->cropFlag != p->cropFlag) ||
         (decoder->pendingOut->cropFlag &&
-         ((decoder->pendingOut->cropLeft != p->cropLeft) ||
-          (decoder->pendingOut->cropRight != p->cropRight) ||
-          (decoder->pendingOut->cropTop != p->cropTop) ||
-          (decoder->pendingOut->cropBot != p->cropBot)))) {
+         ((decoder->pendingOut->cropLeft != p->cropLeft) || (decoder->pendingOut->cropRight != p->cropRight) ||
+          (decoder->pendingOut->cropTop != p->cropTop) || (decoder->pendingOut->cropBot != p->cropBot)))) {
       flushPendingOut (decoder);
       writePicture (decoder, p, realStructure);
       return;
@@ -231,10 +228,11 @@ static void writeUnpairedField (sDecoder* decoder, sFrameStore* frameStore) {
 
   if (frameStore->isUsed & 0x01) {
     // we have a top field, construct an empty bottom field
-    sPicture* p = frameStore->topField;
+    sPicture* picture = frameStore->topField;
     frameStore->botField = allocPicture (decoder, eBotField,
-                                         p->sizeX, 2 * p->sizeY, p->sizeXcr, 2 * p->sizeYcr, 1);
-    frameStore->botField->chromaFormatIdc = p->chromaFormatIdc;
+                                         picture->sizeX, 2 * picture->sizeY, 
+                                         picture->sizeXcr, 2 * picture->sizeYcr, 1);
+    frameStore->botField->chromaFormatIdc = picture->chromaFormatIdc;
 
     clearPicture (decoder, frameStore->botField);
     dpbCombineField (decoder, frameStore);
@@ -243,9 +241,10 @@ static void writeUnpairedField (sDecoder* decoder, sFrameStore* frameStore) {
 
   if (frameStore->isUsed & 0x02) {
     // we have a bottom field, construct an empty top field
-    sPicture* p = frameStore->botField;
-    frameStore->topField = allocPicture (decoder, eTopField, p->sizeX, 2*p->sizeY, p->sizeXcr, 2*p->sizeYcr, 1);
-    frameStore->topField->chromaFormatIdc = p->chromaFormatIdc;
+    sPicture* picture = frameStore->botField;
+    frameStore->topField = allocPicture (decoder, eTopField, picture->sizeX, 2*picture->sizeY, 
+                                         picture->sizeXcr, 2*picture->sizeYcr, 1);
+    frameStore->topField->chromaFormatIdc = picture->chromaFormatIdc;
     clearPicture (decoder, frameStore->topField);
 
     frameStore->topField->cropFlag = frameStore->botField->cropFlag;

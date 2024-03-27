@@ -2049,9 +2049,9 @@ static void reorderLists (sSlice* slice) {
     if (slice->refPicReorderFlag[LIST_0])
       reorderRefPicList (slice, LIST_0);
     if (decoder->noReferencePicture == slice->listX[0][slice->numRefIndexActive[LIST_0]-1])
-      printf ("--- refPicList0[%d] no refPic %s\n",
+      printf ("------ refPicList0[%d] no refPic %s\n",
               slice->numRefIndexActive[LIST_0]-1, decoder->nonConformingStream ? "conform":"");
-    else 
+    else
       slice->listXsize[0] = (char) slice->numRefIndexActive[LIST_0];
     }
 
@@ -2059,7 +2059,7 @@ static void reorderLists (sSlice* slice) {
     if (slice->refPicReorderFlag[LIST_1])
       reorderRefPicList (slice, LIST_1);
     if (decoder->noReferencePicture == slice->listX[1][slice->numRefIndexActive[LIST_1]-1])
-      printf ("--- refPicList1[%d] no refPic %s\n",
+      printf ("------ refPicList1[%d] no refPic %s\n",
               slice->numRefIndexActive[LIST_0] - 1, decoder->nonConformingStream ? "conform" : "");
     else
       slice->listXsize[1] = (char)slice->numRefIndexActive[LIST_1];
@@ -2546,6 +2546,7 @@ static void useParameterSet (sDecoder* decoder, sSlice* slice) {
   sSps* sps = &decoder->sps[pps->spsId];
   if (!sps->ok)
     printf ("useParameterSet - invalid spsId:%d ppsId:%d\n", slice->ppsId, pps->spsId);
+
   if (sps != decoder->activeSps) {
     //{{{  new sps
     if (decoder->picture)
@@ -2553,9 +2554,8 @@ static void useParameterSet (sDecoder* decoder, sSlice* slice) {
 
     decoder->activeSps = sps;
 
-    if (isBLprofile(sps->profileIdc) && !decoder->dpb->initDone)
+    if (isBLprofile (sps->profileIdc) && !decoder->dpb->initDone)
       setCodingParam (decoder, sps);
-
     setCoding (decoder);
     initGlobalBuffers (decoder);
 
@@ -2571,7 +2571,8 @@ static void useParameterSet (sDecoder* decoder, sSlice* slice) {
       }
 
     setFormat (decoder, sps, &decoder->param.source, &decoder->param.output);
-    sprintf (decoder->debug.spsStr, "%s", sps->frameMbOnly ? (sps->mbAffFlag ? " mbAff" : " frame") : "field");
+    sprintf (decoder->debug.spsStr, "sps:%s", 
+             sps->frameMbOnly ? (sps->mbAffFlag ? "mbAff" : "frame") : "field");
     }
     //}}}
 

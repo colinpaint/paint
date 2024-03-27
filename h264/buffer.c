@@ -663,13 +663,7 @@ sPicture* allocPicture (sDecoder* decoder, ePicStructure picStructure,
                         int sizeX, int sizeY, int sizeXcr, int sizeYcr, int isOutput) {
 
   sSps* activeSps = decoder->activeSps;
-  //printf ("Allocating (%s) picture (x=%d, y=%d, x_cr=%d, y_cr=%d)\n",
-  //        (type == eFrame)?"eFrame":(type == eTopField)?"eTopField":"eBotField",
-  //        sizeX, sizeY, sizeXcr, sizeYcr);
-
   sPicture* s = calloc (1, sizeof(sPicture));
-  if (!s)
-    noMemoryExit ("allocPicture failed");
 
   if (picStructure != eFrame) {
     sizeY /= 2;
@@ -745,44 +739,44 @@ sPicture* allocPicture (sDecoder* decoder, ePicStructure picStructure,
   }
 //}}}
 //{{{
-void freePicture (sPicture* p) {
+void freePicture (sPicture* picture) {
 
-  if (p) {
-    if (p->mvInfo) {
-      freeMem2Dmp (p->mvInfo);
-      p->mvInfo = NULL;
+  if (picture) {
+    if (picture->mvInfo) {
+      freeMem2Dmp (picture->mvInfo);
+      picture->mvInfo = NULL;
       }
-    freePicMotion (&p->motion);
+    freePicMotion (&picture->motion);
 
-    if ((p->isSeperateColourPlane != 0) ) {
+    if ((picture->isSeperateColourPlane != 0) ) {
       for (int nplane = 0; nplane < MAX_PLANE; nplane++ ) {
-        if (p->mvInfoJV[nplane]) {
-          freeMem2Dmp (p->mvInfoJV[nplane]);
-          p->mvInfoJV[nplane] = NULL;
+        if (picture->mvInfoJV[nplane]) {
+          freeMem2Dmp (picture->mvInfoJV[nplane]);
+          picture->mvInfoJV[nplane] = NULL;
           }
-        freePicMotion (&p->motionJV[nplane]);
+        freePicMotion (&picture->motionJV[nplane]);
         }
       }
 
-    if (p->imgY) {
-      freeMem2DpelPad (p->imgY, p->lumaPadY, p->lumaPadX);
-      p->imgY = NULL;
+    if (picture->imgY) {
+      freeMem2DpelPad (picture->imgY, picture->lumaPadY, picture->lumaPadX);
+      picture->imgY = NULL;
       }
 
-    if (p->imgUV) {
-      freeMem3DpelPad (p->imgUV, 2, p->chromaPadY, p->chromaPadX);
-      p->imgUV = NULL;
+    if (picture->imgUV) {
+      freeMem3DpelPad (picture->imgUV, 2, picture->chromaPadY, picture->chromaPadX);
+      picture->imgUV = NULL;
       }
 
     for (int j = 0; j < MAX_NUM_SLICES; j++)
       for (int i = 0; i < 2; i++)
-        if (p->listX[j][i]) {
-          free (p->listX[j][i]);
-          p->listX[j][i] = NULL;
+        if (picture->listX[j][i]) {
+          free (picture->listX[j][i]);
+          picture->listX[j][i] = NULL;
           }
 
-    free (p);
-    p = NULL;
+    free (picture);
+    picture = NULL;
     }
   }
 //}}}
@@ -1664,38 +1658,36 @@ int removeUnusedDpb (sDPB* dpb) {
   }
 //}}}
 //{{{
-void storePictureDpb (sDPB* dpb, sPicture* p) {
+void storePictureDpb (sDPB* dpb, sPicture* picture) {
 
   sDecoder* decoder = dpb->decoder;
   int poc, pos;
   // picture error conceal
 
-  //printf ("Storing (%s) non-ref pic with frameNum #%d\n",
-  //        (p->type == eFrame)?"eFrame":(p->type == eTopField)?"eTopField":"eBotField", p->picNum);
   // if frame, check for new store,
   decoder->lastHasMmco5 = 0;
-  decoder->lastPicBotField = (p->picStructure == eBotField);
+  decoder->lastPicBotField = (picture->picStructure == eBotField);
 
-  if (p->isIDR) {
-    idrMemoryManagement (dpb, p);
+  if (picture->isIDR) {
+    idrMemoryManagement (dpb, picture);
     // picture error conceal
     memset (decoder->dpbPoc, 0, sizeof(int)*100);
     }
   else {
     // adaptive memory management
-    if (p->usedForReference && (p->adaptRefPicBufFlag))
-      adaptiveMemoryManagement (dpb, p);
+    if (picture->usedForReference && (picture->adaptRefPicBufFlag))
+      adaptiveMemoryManagement (dpb, picture);
     }
 
-  if ((p->picStructure == eTopField) || (p->picStructure == eBotField)) {
+  if ((picture->picStructure == eTopField) || (picture->picStructure == eBotField)) {
     // check for frame store with same pic_number
     if (dpb->lastPicture) {
-      if ((int)dpb->lastPicture->frameNum == p->picNum) {
-        if (((p->picStructure == eTopField) && (dpb->lastPicture->isUsed == 2))||
-            ((p->picStructure == eBotField) && (dpb->lastPicture->isUsed == 1))) {
-          if ((p->usedForReference && (dpb->lastPicture->isOrigReference != 0)) ||
-              (!p->usedForReference && (dpb->lastPicture->isOrigReference == 0))) {
-            insertPictureDpb (decoder, dpb->lastPicture, p);
+      if ((int)dpb->lastPicture->frameNum == picture->picNum) {
+        if (((picture->picStructure == eTopField) && (dpb->lastPicture->isUsed == 2))||
+            ((picture->picStructure == eBotField) && (dpb->lastPicture->isUsed == 1))) {
+          if ((picture->usedForReference && (dpb->lastPicture->isOrigReference != 0)) ||
+              (!picture->usedForReference && (dpb->lastPicture->isOrigReference == 0))) {
+            insertPictureDpb (decoder, dpb->lastPicture, picture);
             updateRefList (dpb);
             updateLongTermRefList (dpb);
             dumpDpb (dpb);
@@ -1708,10 +1700,8 @@ void storePictureDpb (sDPB* dpb, sPicture* p) {
     }
 
   // this is a frame or a field which has no stored complementary field sliding window, if necessary
-  if ((!p->isIDR) &&
-      (p->usedForReference &&
-      (!p->adaptRefPicBufFlag)))
-    slidingWindowMemoryManagement (dpb, p);
+  if ((!picture->isIDR) && (picture->usedForReference && (!picture->adaptRefPicBufFlag)))
+    slidingWindowMemoryManagement (dpb, picture);
 
   // picture error conceal
   if (decoder->concealMode != 0)
@@ -1728,16 +1718,16 @@ void storePictureDpb (sDPB* dpb, sPicture* p) {
     removeUnusedDpb (dpb);
 
     if (decoder->concealMode != 0)
-      sliding_window_poc_management (dpb, p);
+      sliding_window_poc_management (dpb, picture);
     }
 
   // then output frames until one can be removed
   while (dpb->usedSize == dpb->size) {
     // non-reference frames may be output directly
-    if (!p->usedForReference) {
+    if (!picture->usedForReference) {
       getSmallestPoc (dpb, &poc, &pos);
-      if ((-1 == pos) || (p->poc < poc)) {
-        directOutput (decoder, p);
+      if ((-1 == pos) || (picture->poc < poc)) {
+        directOutput (decoder, picture);
         return;
         }
       }
@@ -1747,19 +1737,19 @@ void storePictureDpb (sDPB* dpb, sPicture* p) {
     }
 
   // check for duplicate frame number in short term reference buffer
-  if ((p->usedForReference) && (!p->isLongTerm))
+  if ((picture->usedForReference) && (!picture->isLongTerm))
     for (unsigned i = 0; i < dpb->refFramesInBuffer; i++)
-      if (dpb->fsRef[i]->frameNum == p->frameNum)
+      if (dpb->fsRef[i]->frameNum == picture->frameNum)
         error ("duplicate frameNum in short-term reference picture buffer");
 
   // store at end of buffer
-  insertPictureDpb (decoder, dpb->fs[dpb->usedSize],p);
+  insertPictureDpb (decoder, dpb->fs[dpb->usedSize], picture);
 
   // picture error conceal
-  if (p->isIDR)
+  if (picture->isIDR)
     decoder->earlierMissingPoc = 0;
 
-  if (p->picStructure != eFrame)
+  if (picture->picStructure != eFrame)
     dpb->lastPicture = dpb->fs[dpb->usedSize];
   else
     dpb->lastPicture = NULL;
@@ -1767,7 +1757,7 @@ void storePictureDpb (sDPB* dpb, sPicture* p) {
   dpb->usedSize++;
 
   if (decoder->concealMode != 0)
-    decoder->dpbPoc[dpb->usedSize-1] = p->poc;
+    decoder->dpbPoc[dpb->usedSize-1] = picture->poc;
 
   updateRefList (dpb);
   updateLongTermRefList (dpb);
