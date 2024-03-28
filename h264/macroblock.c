@@ -248,7 +248,7 @@ static void GetMotionVectorPredictorNormal (sMacroBlock* mb, sPixelPos* block,
   }
 //}}}
 //{{{
-static void init_motion_vector_prediction (sMacroBlock* mb, int mbAffFrame) {
+static void initMotionVectorPrediction (sMacroBlock* mb, int mbAffFrame) {
 
   if (mbAffFrame)
     mb->GetMVPredictor = GetMotionVectorPredictorMBAFF;
@@ -404,7 +404,7 @@ static char readRefPictureIdxNull (sMacroBlock* mb, sSyntaxElement* se, sDataPar
 }
 //}}}
 //{{{
-static void prepareListforRefIdx (sMacroBlock* mb, sSyntaxElement* se,
+static void prepareListforRefIndex (sMacroBlock* mb, sSyntaxElement* se,
                                   sDataPartition *dataPartition, int numRefIndexActive, int refidx_present) {
 
   if (numRefIndexActive > 1) {
@@ -426,7 +426,7 @@ static void prepareListforRefIdx (sMacroBlock* mb, sSyntaxElement* se,
 //}}}
 
 //{{{
-void set_chroma_qp (sMacroBlock* mb) {
+void setChromaQp (sMacroBlock* mb) {
 
   sDecoder* decoder = mb->decoder;
   sPicture* picture = mb->slice->picture;
@@ -444,7 +444,7 @@ void updateQp (sMacroBlock* mb, int qp) {
 
   mb->qp = qp;
   mb->qpScaled[0] = qp + decoder->coding.bitDepthLumaQpScale;
-  set_chroma_qp (mb);
+  setChromaQp (mb);
 
   mb->isLossless = (Boolean)((mb->qpScaled[0] == 0) && (decoder->coding.useLosslessQpPrime == 1));
   setReadCompCoefCavlc (mb);
@@ -688,7 +688,7 @@ void invScaleCoeff (sMacroBlock* mb, int level, int run, int qp_per, int i, int 
   }
 //}}}
 //{{{
-static void setup_mb_pos_info (sMacroBlock* mb) {
+static void setMbPosInfo (sMacroBlock* mb) {
 
   int mb_x = mb->mb.x;
   int mb_y = mb->mb.y;
@@ -727,7 +727,7 @@ void startMacroblock (sSlice* slice, sMacroBlock** mb) {
     (*mb)->mb = decoder->picPos[mbIndex];
 
   // Define pixel/block positions
-  setup_mb_pos_info (*mb);
+  setMbPosInfo (*mb);
 
   // reset intra mode
   (*mb)->isIntraBlock = FALSE;
@@ -745,7 +745,7 @@ void startMacroblock (sSlice* slice, sMacroBlock** mb) {
   checkNeighbours (*mb);
 
   // Select appropriate MV predictor function
-  init_motion_vector_prediction (*mb, slice->mbAffFrame);
+  initMotionVectorPrediction (*mb, slice->mbAffFrame);
   setReadStoreCodedBlockPattern (mb, slice->activeSps->chromaFormatIdc);
 
   // Reset syntax element entries in MB struct
@@ -1029,7 +1029,7 @@ static void readMotionInfoP (sMacroBlock* mb){
   dataPartition = &(slice->dataPartitions[dpMap[SE_REFFRAME]]);
 
   //  For LIST_0, if multiple ref. pictures, read LIST_0 reference picture indices for the MB
-  prepareListforRefIdx (mb, &se, dataPartition, slice->numRefIndexActive[LIST_0], (mb->mbType != P8x8) || (!slice->allrefzero));
+  prepareListforRefIndex (mb, &se, dataPartition, slice->numRefIndexActive[LIST_0], (mb->mbType != P8x8) || (!slice->allrefzero));
   readMBRefPictureIdx  (&se, dataPartition, mb, p_mv_info, LIST_0, step_v0, step_h0);
 
   //=====  READ MOTION VECTORS =====
@@ -1083,11 +1083,11 @@ static void readMotionInfoB (sMacroBlock* mb) {
   dataPartition = &(slice->dataPartitions[dpMap[SE_REFFRAME]]);
 
   //  For LIST_0, if multiple ref. pictures, read LIST_0 reference picture indices for the MB
-  prepareListforRefIdx (mb, &se, dataPartition, slice->numRefIndexActive[LIST_0], TRUE);
+  prepareListforRefIndex (mb, &se, dataPartition, slice->numRefIndexActive[LIST_0], TRUE);
   readMBRefPictureIdx (&se, dataPartition, mb, p_mv_info, LIST_0, step_v0, step_h0);
 
   //  For LIST_1, if multiple ref. pictures, read LIST_1 reference picture indices for the MB
-  prepareListforRefIdx (mb, &se, dataPartition, slice->numRefIndexActive[LIST_1], TRUE);
+  prepareListforRefIndex (mb, &se, dataPartition, slice->numRefIndexActive[LIST_1], TRUE);
   readMBRefPictureIdx (&se, dataPartition, mb, p_mv_info, LIST_1, step_v0, step_h0);
 
   //=====  READ MOTION VECTORS =====
@@ -1242,7 +1242,7 @@ void checkDpNeighbours (sMacroBlock* mb) {
 //}}}
 
 //{{{
-static void init_cur_imgy (sDecoder* decoder, sSlice* slice, int plane) {
+static void initCurImgY (sDecoder* decoder, sSlice* slice, int plane) {
 // probably a better way (or place) to do this, but I'm not sure what (where) it is [CJV]
 // this is intended to make get_block_luma faster, but I'm still performing
 // this at the MB level, and it really should be done at the slice level
@@ -1326,11 +1326,11 @@ int decodeMacroblock (sMacroBlock* mb, sPicture* picture) {
 
   if (slice->chroma444notSeparate) {
     if (!mb->isIntraBlock) {
-      init_cur_imgy (decoder, slice, PLANE_Y);
+      initCurImgY (decoder, slice, PLANE_Y);
       slice->decodeComponenet (mb, PLANE_Y, picture->imgY, picture);
-      init_cur_imgy (decoder, slice, PLANE_U);
+      initCurImgY (decoder, slice, PLANE_U);
       slice->decodeComponenet (mb, PLANE_U, picture->imgUV[0], picture);
-      init_cur_imgy (decoder, slice, PLANE_V);
+      initCurImgY (decoder, slice, PLANE_V);
       slice->decodeComponenet (mb, PLANE_V, picture->imgUV[1], picture);
       }
     else {

@@ -1417,7 +1417,7 @@ void initOldSlice (sOldSlice* oldSlice) {
 //}}}
 
 //{{{
-static void initContexts (sSlice* slice) {
+static void initCabacContexts (sSlice* slice) {
 
   //{{{
   #define IBIARI_CTX_INIT2(ii,jj,ctx,tab,num, qp) { \
@@ -2549,29 +2549,20 @@ static void useParameterSet (sDecoder* decoder, sSlice* slice) {
     setFormat (decoder, sps, &decoder->param.source, &decoder->param.output);
 
     // debug spsStr
-    sprintf (decoder->debug.spsStr, "sps:%s",
-             sps->frameMbOnly ? (sps->mbAffFlag ? "mbAff" : "frame") : "field");
+    sprintf (decoder->debug.spsStr, "sps -> profile:%d %dx%d %dx%d%s %d:%d:%d%s",
+             sps->profileIdc,
+             decoder->param.source.width[0], decoder->param.source.height[0],
+             decoder->coding.width, decoder->coding.height,
+             decoder->coding.yuvFormat == YUV400 ? " 4:0:0 " : 
+               decoder->coding.yuvFormat == YUV420 ? " 4:2:0" :
+                 decoder->coding.yuvFormat == YUV422 ? " 4:2:2" : " 4:4:4",
+             decoder->param.source.bitDepth[0],
+             decoder->param.source.bitDepth[1],
+             decoder->param.source.bitDepth[2],
+             sps->frameMbOnly ? (sps->mbAffFlag ? " mbAff" : " frame") : " field");
 
     // print profile debug
-    printf ("-> profile:%d %s %dx%d %dx%d ",
-            sps->profileIdc, 
-            decoder->debug.spsStr,
-            decoder->param.source.width[0], decoder->param.source.height[0],
-            decoder->coding.width, decoder->coding.height);
-
-    if (decoder->coding.yuvFormat == YUV400)
-      printf ("4:0:0");
-    else if (decoder->coding.yuvFormat == YUV420)
-      printf ("4:2:0");
-    else if (decoder->coding.yuvFormat == YUV422)
-      printf ("4:2:2");
-    else
-      printf ("4:4:4");
-
-    printf (" %d:%d:%d\n",
-            decoder->param.source.bitDepth[0],
-            decoder->param.source.bitDepth[1],
-            decoder->param.source.bitDepth[2]);
+    printf ("- > %s\n", decoder->debug.spsStr);
     }
     //}}}
 
@@ -2609,6 +2600,7 @@ static void initPictureDecode (sDecoder* decoder) {
 
   sSlice* slice = decoder->sliceList[0];
   useParameterSet (decoder, slice);
+
   if (slice->isIDR)
     decoder->idrFrameNum = 0;
 
@@ -3431,7 +3423,7 @@ int decodeFrame (sDecoder* decoder) {
 
     if (slice->activePps->entropyCoding) {
       //{{{  init cabac
-      initContexts (slice);
+      initCabacContexts (slice);
       cabacNewSlice (slice);
       }
       //}}}

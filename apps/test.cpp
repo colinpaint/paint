@@ -1226,14 +1226,18 @@ public:
     mView->draw (testApp, mVideoShader);
 
     // draw menu
-    ImGui::SetCursorPos ({0.f, ImGui::GetIO().DisplaySize.y - ImGui::GetTextLineHeight() * 1.5f});
-    ImGui::BeginChild ("menu", {0.f, ImGui::GetTextLineHeight() * 1.5f},
-                       ImGuiChildFlags_None,
-                       ImGuiWindowFlags_NoBackground);
+    ImGui::SetCursorPos ({0.f,ImGui::GetIO().DisplaySize.y - ImGui::GetTextLineHeight() * 2.5f});
+    ImGui::BeginChild ("menu", {0.f,ImGui::GetTextLineHeight() * 2.5f},
+                       ImGuiChildFlags_None, ImGuiWindowFlags_NoBackground);
 
-    ImGui::SetCursorPos ({0.f,0.f});
+    ImGui::SetCursorPos ({4.f,0.f});
+    if (testApp.getDecoder())
+      //{{{  draw spsStr
+      ImGui::TextUnformatted (testApp.getDecoder()->debug.spsStr);
+      //}}}
+
+    ImGui::SetCursorPos ({0.f,ImGui::GetTextLineHeight()});
     //{{{  draw fullScreen button
-    ImGui::SameLine();
     if (toggleButton ("full", testApp.getPlatform().getFullScreen()))
       testApp.getPlatform().toggleFullScreen();
     //}}}
@@ -1290,10 +1294,6 @@ public:
       //{{{  draw outStr
       ImGui::SameLine();
       ImGui::TextUnformatted (testApp.getDecoder()->debug.outStr);
-      //}}}
-      //{{{  draw spsStr
-      ImGui::SameLine();
-      ImGui::TextUnformatted (testApp.getDecoder()->debug.spsStr);
       //}}}
       //{{{  draw sliceStr
       ImGui::SameLine();
