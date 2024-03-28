@@ -1363,7 +1363,7 @@ private:
                                     videoFrame->getFrameInfo()
                                     );
 
-        ImVec2 pos = { ImGui::GetTextLineHeight(), mSize.y - 3 * ImGui::GetTextLineHeight()};
+        ImVec2 pos = { ImGui::GetTextLineHeight(), mSize.y - 3.5f * ImGui::GetTextLineHeight()};
         ImGui::SetCursorPos (pos);
         ImGui::TextColored ({0.f,0.f,0.f,1.f}, title.c_str());
         ImGui::SetCursorPos (pos - ImVec2(2.f,2.f));

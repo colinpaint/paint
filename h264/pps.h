@@ -56,6 +56,4 @@ typedef struct {
   int       chromaQpOffset2;                  // se(v)
   } sPps;
 
-struct Decoder;
-
 extern void readNaluPps (struct Decoder* decoder, sNalu* nalu);

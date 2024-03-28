@@ -132,6 +132,4 @@ typedef struct {
   //}}}
   } sSps;
 
-struct Decoder;
-
 extern void readNaluSps (struct Decoder* decoder, sNalu* nalu);
