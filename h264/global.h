@@ -336,57 +336,6 @@ typedef enum {
   } eMvPredType;
 //}}}
 
-struct Picture;
-struct PicMotion;
-struct MacroBlock;
-//{{{  sBitStream
-typedef struct {
-  // cavlc Decoding
-  byte* bitStreamBuffer; // codebuffer for read bytes
-  int   bitStreamOffset; // position in the codebuffer, bit-oriented
-  int   bitStreamLen;    // over codebuffer length, byte oriented
-  int   errorFlag;       // error, 0: no error, else unspecified error
-
-  // cabac Decoding
-  int   readLen;         // position in the codebuffer
-  int   codeLen;         // overall codebuffer length
-  } sBitStream;
-//}}}
-//{{{  sCabacDecodeEnv
-typedef struct {
-  unsigned int range;
-  unsigned int value;
-  int          bitsLeft;
-  byte*        codeStream;
-  int*         codeStreamLen;
-  } sCabacDecodeEnv;
-//}}}
-//{{{  sSyntaxElement
-typedef struct SyntaxElement {
-  int          type;        // type of syntax element for data part.
-  int          value1;      // numerical value of syntax element
-  int          value2;      // for blocked symbols, e.g. run/level
-  int          len;         // length of code
-  int          inf;         // info part of eCavlc code
-  unsigned int bitpattern;  // cavlc bitpattern
-  int          context;     // cabac context
-  int          k;           // cabac context for coeff_count,uv
-
-  // eCavlc mapping to syntaxElement
-  void (*mapping) (int, int, int*, int*);
-
-  // eCabac actual coding method of each individual syntax element type
-  void (*reading) (struct MacroBlock*, struct SyntaxElement*, sCabacDecodeEnv*);
-  } sSyntaxElement;
-//}}}
-//{{{  sDataPartition
-typedef struct DataPartition {
-  sBitStream* s;
-  sCabacDecodeEnv cabacDecodeEnv;
-
-  int (*readSyntaxElement) (struct MacroBlock*, struct SyntaxElement*, struct DataPartition*);
-  } sDataPartition;
-//}}}
 //{{{  sBiContext
 typedef struct {
   uint16        state; // index into state-table CP
@@ -456,6 +405,58 @@ typedef struct  {
   int64 bits;
   int64 bits8x8;
   } sCodedBlockPattern;
+//}}}
+
+struct Picture;
+struct PicMotion;
+struct MacroBlock;
+//{{{  sBitStream
+typedef struct {
+  // cavlc Decoding
+  byte* bitStreamBuffer; // codebuffer for read bytes
+  int   bitStreamOffset; // position in the codebuffer, bit-oriented
+  int   bitStreamLen;    // over codebuffer length, byte oriented
+  int   errorFlag;       // error, 0: no error, else unspecified error
+
+  // cabac Decoding
+  int   readLen;         // position in the codebuffer
+  int   codeLen;         // overall codebuffer length
+  } sBitStream;
+//}}}
+//{{{  sCabacDecodeEnv
+typedef struct {
+  unsigned int range;
+  unsigned int value;
+  int          bitsLeft;
+  byte*        codeStream;
+  int*         codeStreamLen;
+  } sCabacDecodeEnv;
+//}}}
+//{{{  sSyntaxElement
+typedef struct SyntaxElement {
+  int          type;        // type of syntax element for data part.
+  int          value1;      // numerical value of syntax element
+  int          value2;      // for blocked symbols, e.g. run/level
+  int          len;         // length of code
+  int          inf;         // info part of eCavlc code
+  unsigned int bitpattern;  // cavlc bitpattern
+  int          context;     // cabac context
+  int          k;           // cabac context for coeff_count,uv
+
+  // eCavlc mapping to syntaxElement
+  void (*mapping) (int, int, int*, int*);
+
+  // eCabac actual coding method of each individual syntax element type
+  void (*reading) (struct MacroBlock*, struct SyntaxElement*, sCabacDecodeEnv*);
+  } sSyntaxElement;
+//}}}
+//{{{  sDataPartition
+typedef struct DataPartition {
+  sBitStream* s;
+  sCabacDecodeEnv cabacDecodeEnv;
+
+  int (*readSyntaxElement) (struct MacroBlock*, struct SyntaxElement*, struct DataPartition*);
+  } sDataPartition;
 //}}}
 //{{{  sMotionVec
 typedef struct {

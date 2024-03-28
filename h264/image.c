@@ -1937,16 +1937,17 @@ static void setCodingParam (sDecoder* decoder, sSps* sps) {
 //{{{
 static void setFormat (sDecoder* decoder, sSps* sps, sFrameFormat* source, sFrameFormat* output) {
 
-  static const int SubWidthC[4] = { 1, 2, 2, 1};
-  static const int SubHeightC[4] = { 1, 2, 1, 1};
+  static const int kSubWidthC[4] = { 1, 2, 2, 1};
+  static const int kSubHeightC[4] = { 1, 2, 1, 1};
 
+  // source
   //{{{  crop
   int cropLeft, cropRight, cropTop, cropBot;
   if (sps->cropFlag) {
-    cropLeft = SubWidthC [sps->chromaFormatIdc] * sps->cropLeft;
-    cropRight = SubWidthC [sps->chromaFormatIdc] * sps->cropRight;
-    cropTop = SubHeightC[sps->chromaFormatIdc] * ( 2 - sps->frameMbOnly ) *  sps->cropTop;
-    cropBot = SubHeightC[sps->chromaFormatIdc] * ( 2 - sps->frameMbOnly ) *  sps->cropBot;
+    cropLeft = kSubWidthC [sps->chromaFormatIdc] * sps->cropLeft;
+    cropRight = kSubWidthC [sps->chromaFormatIdc] * sps->cropRight;
+    cropTop = kSubHeightC[sps->chromaFormatIdc] * ( 2 - sps->frameMbOnly ) *  sps->cropTop;
+    cropBot = kSubHeightC[sps->chromaFormatIdc] * ( 2 - sps->frameMbOnly ) *  sps->cropBot;
     }
   else
     cropLeft = cropRight = cropTop = cropBot = 0;
@@ -1964,18 +1965,14 @@ static void setFormat (sDecoder* decoder, sSps* sps, sFrameFormat* source, sFram
   else
     cropLeft = cropRight = cropTop = cropBot = 0;
   //}}}
-
   source->width[1] = decoder->widthCr - cropLeft - cropRight;
   source->width[2] = source->width[1];
   source->height[1] = decoder->heightCr - cropTop - cropBot;
   source->height[2] = source->height[1];
 
-  output->width[0] = decoder->coding.width;
+  // ????
   source->width[1] = decoder->widthCr;
   source->width[2] = decoder->widthCr;
-  output->height[0] = decoder->coding.height;
-  output->height[1] = decoder->heightCr;
-  output->height[2] = decoder->heightCr;
 
   source->sizeCmp[0] = source->width[0] * source->height[0];
   source->sizeCmp[1] = source->width[1] * source->height[1];
@@ -1983,6 +1980,12 @@ static void setFormat (sDecoder* decoder, sSps* sps, sFrameFormat* source, sFram
   source->size = source->sizeCmp[0] + source->sizeCmp[1] + source->sizeCmp[2];
   source->mbWidth = source->width[0]  / MB_BLOCK_SIZE;
   source->mbHeight = source->height[0] / MB_BLOCK_SIZE;
+
+  // output
+  output->width[0] = decoder->coding.width;
+  output->height[0] = decoder->coding.height;
+  output->height[1] = decoder->heightCr;
+  output->height[2] = decoder->heightCr;
 
   // output size (excluding padding)
   output->sizeCmp[0] = output->width[0] * output->height[0];
@@ -1995,6 +1998,7 @@ static void setFormat (sDecoder* decoder, sSps* sps, sFrameFormat* source, sFram
   output->bitDepth[0] = source->bitDepth[0] = decoder->bitDepthLuma;
   output->bitDepth[1] = source->bitDepth[1] = decoder->bitDepthChroma;
   output->bitDepth[2] = source->bitDepth[2] = decoder->bitDepthChroma;
+
   output->picDiskUnitSize = (imax (output->bitDepth[0], output->bitDepth[1]) > 8) ? 16 : 8;
 
   output->frameRate = source->frameRate;
