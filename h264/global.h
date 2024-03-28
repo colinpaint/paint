@@ -341,13 +341,13 @@ struct PicMotion;
 struct MacroBlock;
 //{{{  sBitStream
 typedef struct {
-  // eCavlc Decoding
+  // cavlc Decoding
   byte* bitStreamBuffer; // codebuffer for read bytes
   int   bitStreamOffset; // position in the codebuffer, bit-oriented
   int   bitStreamLen;    // over codebuffer length, byte oriented
   int   errorFlag;       // error, 0: no error, else unspecified error
 
-  // eCabac Decoding
+  // cabac Decoding
   int   readLen;         // position in the codebuffer
   int   codeLen;         // overall codebuffer length
   } sBitStream;
@@ -363,14 +363,14 @@ typedef struct {
 //}}}
 //{{{  sSyntaxElement
 typedef struct SyntaxElement {
-  int           type;        // type of syntax element for data part.
-  int           value1;      // numerical value of syntax element
-  int           value2;      // for blocked symbols, e.g. run/level
-  int           len;         // length of code
-  int           inf;         // info part of eCavlc code
-  unsigned int  bitpattern;  // eCavlc bitpattern
-  int           context;     // eCabac context
-  int           k;           // eCabac context for coeff_count,uv
+  int          type;        // type of syntax element for data part.
+  int          value1;      // numerical value of syntax element
+  int          value2;      // for blocked symbols, e.g. run/level
+  int          len;         // length of code
+  int          inf;         // info part of eCavlc code
+  unsigned int bitpattern;  // cavlc bitpattern
+  int          context;     // cabac context
+  int          k;           // cabac context for coeff_count,uv
 
   // eCavlc mapping to syntaxElement
   void (*mapping) (int, int, int*, int*);

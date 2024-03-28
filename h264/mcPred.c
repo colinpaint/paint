@@ -264,7 +264,7 @@ static void update_direct_mv_info_temporal (sMacroBlock* mb) {
   }
 //}}}
 //{{{
-static inline void update_neighbor_mvs (sPicMotion** motion, const sPicMotion* mvInfo, int i4) {
+static inline void updateNeighbourMvs (sPicMotion** motion, const sPicMotion* mvInfo, int i4) {
 
   (*motion++)[i4 + 1] = *mvInfo;
   (*motion  )[i4    ] = *mvInfo;
@@ -508,7 +508,7 @@ static void update_direct_mv_info_spatial_8x8 (sMacroBlock* mb)
             mvInfo->refIndex[LIST_1] = l1_rFrame;
           }
         }
-        update_neighbor_mvs(&picture->mvInfo[j4], mvInfo, i4);
+        updateNeighbourMvs(&picture->mvInfo[j4], mvInfo, i4);
       }
     }
   }
