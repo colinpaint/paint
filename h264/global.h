@@ -454,7 +454,7 @@ typedef struct {
 typedef struct  {
   int64 blk;
   int64 bits;
-  int64 bits_8x8;
+  int64 bits8x8;
   } sCodedBlockPattern;
 //}}}
 //{{{  sMotionVec
@@ -521,11 +521,11 @@ typedef struct MacroBlock {
   int   i16mode;
   char  b8mode[4];
   char  b8pdir[4];
-  char  ipmode_DPCM;
-  char  cPredMode;       // chroma intra prediction mode
+  char  dpcmMode;
+  char  chromaPredMode;       // chroma intra prediction mode
   char  skipFlag;
   short deblockFilterDisableIdc;
-  short deblockFilterC0offset;
+  short deblockFilterC0Offset;
   short deblockFilterBetaOffset;
 
   Boolean mbField;
@@ -555,12 +555,14 @@ typedef struct MacroBlock {
 //{{{  sImage
 typedef struct Image {
   sFrameFormat format;                 // image format
+
   sPixel** frm_data[MAX_PLANE];        // Frame Data
   sPixel** top_data[MAX_PLANE];        // pointers to top field data
   sPixel** bot_data[MAX_PLANE];        // pointers to bottom field data
   sPixel** frm_data_buf[2][MAX_PLANE]; // Frame Data
   sPixel** top_data_buf[2][MAX_PLANE]; // pointers to top field data
   sPixel** bot_data_buf[2][MAX_PLANE]; // pointers to bottom field data
+
   int frm_stride[MAX_PLANE];
   int top_stride[MAX_PLANE];
   int bot_stride[MAX_PLANE];
@@ -592,6 +594,7 @@ typedef struct DecodedPic {
 typedef struct DecodedRefPicMark {
   int memManagement;
   int diffPicNumMinus1;
+
   int longTermPicNum;
   int longTermFrameIndex;
   int maxLongTermFrameIndexPlus1;
@@ -603,10 +606,13 @@ typedef struct DecodedRefPicMark {
 typedef struct {
   unsigned fieldPic;
   unsigned frameNum;
+
   int      nalRefIdc;
   unsigned picOrderCountLsb;
+
   int      deltaPicOrderCountBot;
   int      deltaPicOrderCount[2];
+
   int      botField;
   int      isIDR;
   int      idrPicId;
@@ -700,7 +706,7 @@ typedef struct Slice {
   int*  longTermPicIndex[2];
 
   short deblockFilterDisableIdc; // Disable deblocking filter on slice
-  short deblockFilterC0offset;   // Alpha and C0 offset for filtering slice
+  short deblockFilterC0Offset;   // Alpha and C0 offset for filtering slice
   short deblockFilterBetaOffset; // Beta offset for filtering slice
 
   int   ppsId;             // ID of picture parameter set the slice is referring to
@@ -778,7 +784,7 @@ typedef struct Slice {
   } sSlice;
 //}}}
 //{{{  sCoding
-typedef struct CodingParam {
+typedef struct {
   int profileIdc;
 
   ePicStructure picStructure;
@@ -884,7 +890,6 @@ typedef struct Decoder {
   sAnnexB*     annexB;
 
   // sps
-  int          gotPps;
   sSps         sps[32];
   sSps*        activeSps;
 

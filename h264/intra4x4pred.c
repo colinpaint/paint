@@ -793,7 +793,7 @@ int intra_pred_4x4_normal (sMacroBlock *mb,    //!< current macroblock
 {
   sDecoder* decoder = mb->decoder;
   byte predmode = decoder->predMode[img_block_y][img_block_x];
-  mb->ipmode_DPCM = predmode; //For residual DPCM
+  mb->dpcmMode = predmode; //For residual DPCM
 
   switch (predmode)
   {
@@ -1584,7 +1584,7 @@ int intra_pred_4x4_mbaff (sMacroBlock *mb,    //!< current macroblock
 {
   sDecoder* decoder = mb->decoder;
   byte predmode = decoder->predMode[img_block_y][img_block_x];
-  mb->ipmode_DPCM = predmode; //For residual DPCM
+  mb->dpcmMode = predmode; //For residual DPCM
 
   switch (predmode)
   {

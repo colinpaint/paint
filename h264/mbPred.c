@@ -70,7 +70,7 @@ int mb_pred_intra16x16 (sMacroBlock* mb, eColorPlane plane, sPicture* picture)
   int yuv = picture->chromaFormatIdc - 1;
 
   mb->slice->intraPred16x16(mb, plane, mb->i16mode);
-  mb->ipmode_DPCM = (char) mb->i16mode; //For residual DPCM
+  mb->dpcmMode = (char) mb->i16mode; //For residual DPCM
   // =============== 4x4 itrans ================
   // -------------------------------------------
   iMBtrans4x4(mb, plane, 0);

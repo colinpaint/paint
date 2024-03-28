@@ -322,9 +322,9 @@ static void readIpredModes (sMacroBlock* mb) {
       se.reading = readCIPredMode_CABAC;
 
     dataPartition->readSyntaxElement (mb, &se, dataPartition);
-    mb->cPredMode = (char)se.value1;
+    mb->chromaPredMode = (char)se.value1;
 
-    if (mb->cPredMode < DC_PRED_8 || mb->cPredMode > PLANE_8)
+    if (mb->chromaPredMode < DC_PRED_8 || mb->chromaPredMode > PLANE_8)
       error ("illegal chroma intra pred mode!\n");
     }
   }

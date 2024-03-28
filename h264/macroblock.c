@@ -261,7 +261,7 @@ static void init_motion_vector_prediction (sMacroBlock* mb, int mbAffFrame) {
 static int decodeComponentI (sMacroBlock* mb, eColorPlane plane, sPixel** pixel, sPicture* picture)
 {
   //For residual DPCM
-  mb->ipmode_DPCM = NO_INTRA_PMODE;
+  mb->dpcmMode = NO_INTRA_PMODE;
   if (mb->mbType == IPCM)
     mb_pred_ipcm (mb);
   else if (mb->mbType == I16MB)
@@ -278,7 +278,7 @@ static int decodeComponentI (sMacroBlock* mb, eColorPlane plane, sPixel** pixel,
 static int decodeComponentP (sMacroBlock* mb, eColorPlane plane, sPixel** pixel, sPicture* picture)
 {
   //For residual DPCM
-  mb->ipmode_DPCM = NO_INTRA_PMODE;
+  mb->dpcmMode = NO_INTRA_PMODE;
   if (mb->mbType == IPCM)
     mb_pred_ipcm (mb);
   else if (mb->mbType == I16MB)
@@ -305,7 +305,7 @@ static int decodeComponentP (sMacroBlock* mb, eColorPlane plane, sPixel** pixel,
 static int decodeComponentSP (sMacroBlock* mb, eColorPlane plane, sPixel** pixel, sPicture* picture)
 {
   //For residual DPCM
-  mb->ipmode_DPCM = NO_INTRA_PMODE;
+  mb->dpcmMode = NO_INTRA_PMODE;
 
   if (mb->mbType == IPCM)
     mb_pred_ipcm (mb);
@@ -333,7 +333,7 @@ static int decodeComponentSP (sMacroBlock* mb, eColorPlane plane, sPixel** pixel
 static int decodeComponentB (sMacroBlock* mb, eColorPlane plane, sPixel** pixel, sPicture* picture)
 {
   //For residual DPCM
-  mb->ipmode_DPCM = NO_INTRA_PMODE;
+  mb->dpcmMode = NO_INTRA_PMODE;
 
   if(mb->mbType == IPCM)
     mb_pred_ipcm (mb);
@@ -736,7 +736,7 @@ void startMacroblock (sSlice* slice, sMacroBlock** mb) {
   (*mb)->mbType = 0;
   (*mb)->deltaQuant = 0;
   (*mb)->codedBlockPattern = 0;
-  (*mb)->cPredMode = DC_PRED_8;
+  (*mb)->chromaPredMode = DC_PRED_8;
 
   // Save the slice number of this macroblock. When the macroblock below
   // is coded it will use this to decide if prediction for above is possible
@@ -774,7 +774,7 @@ void startMacroblock (sSlice* slice, sMacroBlock** mb) {
 
   // store filtering parameters for this MB
   (*mb)->deblockFilterDisableIdc = slice->deblockFilterDisableIdc;
-  (*mb)->deblockFilterC0offset = slice->deblockFilterC0offset;
+  (*mb)->deblockFilterC0Offset = slice->deblockFilterC0Offset;
   (*mb)->deblockFilterBetaOffset = slice->deblockFilterBetaOffset;
   (*mb)->listOffset = 0;
   (*mb)->mixedModeEdgeFlag = 0;

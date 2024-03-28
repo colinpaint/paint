@@ -1911,25 +1911,6 @@ static void setFormat (sDecoder* decoder, sSps* sps, sFrameFormat* source, sFram
 
   updateMaxValue (source);
   updateMaxValue (output);
-
-  if (!decoder->gotPps) {
-    //{{{  print profile info
-    decoder->gotPps = 1;
-    printf ("-> profile:%d %dx%d %dx%d ",
-            sps->profileIdc, source->width[0], source->height[0], decoder->coding.width, decoder->coding.height);
-
-    if (decoder->coding.yuvFormat == YUV400)
-      printf ("4:0:0");
-    else if (decoder->coding.yuvFormat == YUV420)
-      printf ("4:2:0");
-    else if (decoder->coding.yuvFormat == YUV422)
-      printf ("4:2:2");
-    else
-      printf ("4:4:4");
-
-    printf (" %d:%d:%d\n", source->bitDepth[0], source->bitDepth[1], source->bitDepth[2]);
-    }
-    //}}}
   }
 //}}}
 
@@ -2566,8 +2547,31 @@ static void useParameterSet (sDecoder* decoder, sSlice* slice) {
       }
 
     setFormat (decoder, sps, &decoder->param.source, &decoder->param.output);
+
+    // debug spsStr
     sprintf (decoder->debug.spsStr, "sps:%s",
              sps->frameMbOnly ? (sps->mbAffFlag ? "mbAff" : "frame") : "field");
+
+    // print profile debug
+    printf ("-> profile:%d %s %dx%d %dx%d ",
+            sps->profileIdc, 
+            decoder->debug.spsStr,
+            decoder->param.source.width[0], decoder->param.source.height[0],
+            decoder->coding.width, decoder->coding.height);
+
+    if (decoder->coding.yuvFormat == YUV400)
+      printf ("4:0:0");
+    else if (decoder->coding.yuvFormat == YUV420)
+      printf ("4:2:0");
+    else if (decoder->coding.yuvFormat == YUV422)
+      printf ("4:2:2");
+    else
+      printf ("4:4:4");
+
+    printf (" %d:%d:%d\n",
+            decoder->param.source.bitDepth[0],
+            decoder->param.source.bitDepth[1],
+            decoder->param.source.bitDepth[2]);
     }
     //}}}
 
@@ -2990,17 +2994,17 @@ static void readSliceHeader (sDecoder* decoder, sSlice* slice) {
     //{{{  read deblockFilter params
     slice->deblockFilterDisableIdc = (short)readUeV ("SLC disable_deblocking_filter_idc", s);
     if (slice->deblockFilterDisableIdc != 1) {
-      slice->deblockFilterC0offset = (short)(2 * readSeV ("SLC slice_alpha_c0_offset_div2", s));
+      slice->deblockFilterC0Offset = (short)(2 * readSeV ("SLC slice_alpha_c0_offset_div2", s));
       slice->deblockFilterBetaOffset = (short)(2 * readSeV ("SLC slice_beta_offset_div2", s));
       }
     else
-      slice->deblockFilterC0offset = slice->deblockFilterBetaOffset = 0;
+      slice->deblockFilterC0Offset = slice->deblockFilterBetaOffset = 0;
     }
     //}}}
   else {
     //{{{  enable deblockFilter
     slice->deblockFilterDisableIdc = 0;
-    slice->deblockFilterC0offset = 0;
+    slice->deblockFilterC0Offset = 0;
     slice->deblockFilterBetaOffset = 0;
     }
     //}}}
@@ -3008,7 +3012,7 @@ static void readSliceHeader (sDecoder* decoder, sSlice* slice) {
       !decoder->param.intraProfileDeblocking) {
     //{{{  hiIntra deblock
     slice->deblockFilterDisableIdc = 1;
-    slice->deblockFilterC0offset = 0;
+    slice->deblockFilterC0Offset = 0;
     slice->deblockFilterBetaOffset = 0;
     }
     //}}}

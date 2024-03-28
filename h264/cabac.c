@@ -1160,8 +1160,8 @@ void readCIPredMode_CABAC (sMacroBlock* mb, sSyntaxElement* se, sCabacDecodeEnv*
   sMacroBlock* MbUp = mb->mbCabacUp;
   sMacroBlock* MbLeft = mb->mbCabacLeft;
 
-  int b = (MbUp != NULL) ? (((MbUp->cPredMode   != 0) && (MbUp->mbType != IPCM)) ? 1 : 0) : 0;
-  int a = (MbLeft != NULL) ? (((MbLeft->cPredMode != 0) && (MbLeft->mbType != IPCM)) ? 1 : 0) : 0;
+  int b = (MbUp != NULL) ? (((MbUp->chromaPredMode   != 0) && (MbUp->mbType != IPCM)) ? 1 : 0) : 0;
+  int a = (MbLeft != NULL) ? (((MbLeft->chromaPredMode != 0) && (MbLeft->mbType != IPCM)) ? 1 : 0) : 0;
   int actContext = a + b;
 
   *actSym = binaryArithmeticDecodeSymbol (cabacDecodeEnv, context->ciprContexts + actContext );
@@ -1283,11 +1283,11 @@ static int readStoreCbpBlockBit444 (sMacroBlock* mb, sCabacDecodeEnv*  cabacDeco
         upper_bit = 0;
       else {
         if (type == LUMA_8x8)
-          upper_bit = getBit (mbData[block_b.mbIndex].codedBlockPatterns[0].bits_8x8, bit + bit_pos_b);
+          upper_bit = getBit (mbData[block_b.mbIndex].codedBlockPatterns[0].bits8x8, bit + bit_pos_b);
         else if (type == CB_8x8)
-          upper_bit = getBit (mbData[block_b.mbIndex].codedBlockPatterns[1].bits_8x8, bit + bit_pos_b);
+          upper_bit = getBit (mbData[block_b.mbIndex].codedBlockPatterns[1].bits8x8, bit + bit_pos_b);
         else if (type == CR_8x8)
-          upper_bit = getBit (mbData[block_b.mbIndex].codedBlockPatterns[2].bits_8x8, bit + bit_pos_b);
+          upper_bit = getBit (mbData[block_b.mbIndex].codedBlockPatterns[2].bits8x8, bit + bit_pos_b);
         else if ((type == CB_4x4)||(type == CB_4x8) || (type == CB_8x4) || (type == CB_16AC) || (type == CB_16DC))
           upper_bit = getBit (mbData[block_b.mbIndex].codedBlockPatterns[1].bits,bit+bit_pos_b);
         else if ((type == CR_4x4)||(type == CR_4x8) || (type == CR_8x4) || (type == CR_16AC)||(type == CR_16DC))
@@ -1306,11 +1306,11 @@ static int readStoreCbpBlockBit444 (sMacroBlock* mb, sCabacDecodeEnv*  cabacDeco
         left_bit = 0;
       else {
         if(type == LUMA_8x8)
-          left_bit = getBit (mbData[block_a.mbIndex].codedBlockPatterns[0].bits_8x8,bit+bit_pos_a);
+          left_bit = getBit (mbData[block_a.mbIndex].codedBlockPatterns[0].bits8x8,bit+bit_pos_a);
         else if (type == CB_8x8)
-          left_bit = getBit (mbData[block_a.mbIndex].codedBlockPatterns[1].bits_8x8,bit+bit_pos_a);
+          left_bit = getBit (mbData[block_a.mbIndex].codedBlockPatterns[1].bits8x8,bit+bit_pos_a);
         else if (type == CR_8x8)
-          left_bit = getBit (mbData[block_a.mbIndex].codedBlockPatterns[2].bits_8x8,bit+bit_pos_a);
+          left_bit = getBit (mbData[block_a.mbIndex].codedBlockPatterns[2].bits8x8,bit+bit_pos_a);
         else if ((type == CB_4x4) || (type == CB_4x8) ||
                  (type == CB_8x4) || (type == CB_16AC) || (type == CB_16DC))
           left_bit = getBit (mbData[block_a.mbIndex].codedBlockPatterns[1].bits,bit+bit_pos_a);
@@ -1334,14 +1334,14 @@ static int readStoreCbpBlockBit444 (sMacroBlock* mb, sCabacDecodeEnv*  cabacDeco
     if (type == LUMA_8x8) {
       codedBlockPatterns[0].bits |= ((int64) 0x33 << bit);
       if (picture->chromaFormatIdc == YUV444)
-        codedBlockPatterns[0].bits_8x8 |= ((int64) 0x33 << bit);
+        codedBlockPatterns[0].bits8x8 |= ((int64) 0x33 << bit);
       }
     else if (type == CB_8x8) {
-      codedBlockPatterns[1].bits_8x8 |= ((int64) 0x33 << bit);
+      codedBlockPatterns[1].bits8x8 |= ((int64) 0x33 << bit);
       codedBlockPatterns[1].bits |= ((int64) 0x33 << bit);
       }
     else if (type == CR_8x8) {
-      codedBlockPatterns[2].bits_8x8 |= ((int64) 0x33 << bit);
+      codedBlockPatterns[2].bits8x8 |= ((int64) 0x33 << bit);
       codedBlockPatterns[2].bits |= ((int64) 0x33 << bit);
       }
     else if (type == LUMA_8x4)

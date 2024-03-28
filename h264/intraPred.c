@@ -1526,7 +1526,7 @@ static int intra_pred_8x8_normal (sMacroBlock* mb,
   int blockY = (mb->blockY) + (joff >> 2);
   byte predmode = mb->slice->predMode[blockY][blockX];
 
-  mb->ipmode_DPCM = predmode;  //For residual DPCM
+  mb->dpcmMode = predmode;  //For residual DPCM
 
   switch (predmode)
   {
@@ -2886,7 +2886,7 @@ static int intra_pred_8x8_mbaff (sMacroBlock* mb,
   int blockY = (mb->blockY) + (joff >> 2);
   byte predmode = mb->slice->predMode[blockY][blockX];
 
-  mb->ipmode_DPCM = predmode;  //For residual DPCM
+  mb->dpcmMode = predmode;  //For residual DPCM
 
   switch (predmode)
   {
@@ -3923,7 +3923,7 @@ static void intra_pred_chroma_mbaff (sMacroBlock* mb)
     { {0, 1, 2, 3},{1, 1, 3, 3},{4, 5, 4, 5},{5, 5, 5, 5}}
   };
 
-  switch (mb->cPredMode)
+  switch (mb->chromaPredMode)
   {
   case DC_PRED_8:
     {
@@ -4178,7 +4178,7 @@ static void intra_pred_chroma_mbaff (sMacroBlock* mb)
  */
 static void intraPredChroma (sMacroBlock* mb)
 {
-  switch (mb->cPredMode)
+  switch (mb->chromaPredMode)
   {
   case DC_PRED_8:
     intrapred_chroma_dc(mb);

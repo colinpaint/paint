@@ -122,7 +122,7 @@ static void edge_loop_luma_ver_MBAff (eColorPlane plane, sPixel** img,
   int bitDepthScale = plane ? decoder->coding.bitDepthScale[eChroma] : decoder->coding.bitDepthScale[eLuma];
   int max_imgpel_value = decoder->coding.maxPelValueComp[plane];
 
-  int AlphaC0Offset = mbQ->deblockFilterC0offset;
+  int AlphaC0Offset = mbQ->deblockFilterC0Offset;
   int BetaOffset = mbQ->deblockFilterBetaOffset;
 
   sMacroBlock*MbP;
@@ -225,7 +225,7 @@ static void edge_loop_luma_hor_MBAff (eColorPlane plane, sPixel** img, byte* Str
   getAffNeighbour(mbQ, 0, yQ - 1, decoder->mbSize[eLuma], &pixP);
 
   if (pixP.available || (mbQ->deblockFilterDisableIdc == 0)) {
-    int AlphaC0Offset = mbQ->deblockFilterC0offset;
+    int AlphaC0Offset = mbQ->deblockFilterC0Offset;
     int BetaOffset = mbQ->deblockFilterBetaOffset;
 
     sMacroBlock *MbP = &(decoder->mbData[pixP.mbIndex]);
@@ -331,7 +331,7 @@ static void edge_loop_chroma_ver_MBAff (sPixel** img, byte *Strength, sMacroBloc
   int      bitDepthScale = decoder->coding.bitDepthScale[eChroma];
   int      max_imgpel_value = decoder->coding.maxPelValueComp[uv + 1];
 
-  int      AlphaC0Offset = mbQ->deblockFilterC0offset;
+  int      AlphaC0Offset = mbQ->deblockFilterC0Offset;
   int      BetaOffset    = mbQ->deblockFilterBetaOffset;
   sMacroBlock *MbP;
   sPixel   *SrcPtrP, *SrcPtrQ;
@@ -392,7 +392,7 @@ static void edge_loop_chroma_hor_MBAff (sPixel** img, byte *Strength, sMacroBloc
   int bitDepthScale = decoder->coding.bitDepthScale[eChroma];
   int max_imgpel_value = decoder->coding.maxPelValueComp[uv + 1];
 
-  int AlphaC0Offset = mbQ->deblockFilterC0offset;
+  int AlphaC0Offset = mbQ->deblockFilterC0Offset;
   int BetaOffset    = mbQ->deblockFilterBetaOffset;
   int width = p->chromaStride; //p->sizeXcr;
 
@@ -1082,7 +1082,7 @@ static void edge_loop_luma_ver (eColorPlane plane, sPixel** img, byte* Strength,
 
     // Average QP of the two blocks
     int QP = plane? ((MbP->qpc[plane-1] + mb->qpc[plane-1] + 1) >> 1) : (MbP->qp + mb->qp + 1) >> 1;
-    int indexA = iClip3 (0, MAX_QP, QP + mb->deblockFilterC0offset);
+    int indexA = iClip3 (0, MAX_QP, QP + mb->deblockFilterC0Offset);
     int indexB = iClip3 (0, MAX_QP, QP + mb->deblockFilterBetaOffset);
 
     int Alpha = ALPHA_TABLE[indexA] * bitDepthScale;
@@ -1224,7 +1224,7 @@ static void edge_loop_luma_hor (eColorPlane plane, sPixel** img, byte* Strength,
     // Average QP of the two blocks
     int QP = plane? ((MbP->qpc[plane-1] + mb->qpc[plane-1] + 1) >> 1) : (MbP->qp + mb->qp + 1) >> 1;
 
-    int indexA = iClip3 (0, MAX_QP, QP + mb->deblockFilterC0offset);
+    int indexA = iClip3 (0, MAX_QP, QP + mb->deblockFilterC0Offset);
     int indexB = iClip3 (0, MAX_QP, QP + mb->deblockFilterBetaOffset);
 
     int Alpha = ALPHA_TABLE[indexA] * bitDepthScale;
@@ -1266,7 +1266,7 @@ static void edge_loop_chroma_ver (sPixel** img, byte* Strength, sMacroBlock* mb,
   if (MbP || (mb->deblockFilterDisableIdc == 0)) {
     int bitDepthScale   = decoder->coding.bitDepthScale[eChroma];
     int max_imgpel_value = decoder->coding.maxPelValueComp[uv + 1];
-    int AlphaC0Offset = mb->deblockFilterC0offset;
+    int AlphaC0Offset = mb->deblockFilterC0Offset;
     int BetaOffset = mb->deblockFilterBetaOffset;
 
     // Average QP of the two blocks
@@ -1330,7 +1330,7 @@ static void edge_loop_chroma_hor (sPixel** img, byte* Strength, sMacroBlock* mb,
     int bitDepthScale = decoder->coding.bitDepthScale[eChroma];
     int max_imgpel_value = decoder->coding.maxPelValueComp[uv + 1];
 
-    int AlphaC0Offset = mb->deblockFilterC0offset;
+    int AlphaC0Offset = mb->deblockFilterC0Offset;
     int BetaOffset = mb->deblockFilterBetaOffset;
     int width = p->chromaStride; //p->sizeXcr;
 

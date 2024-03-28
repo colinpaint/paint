@@ -64,7 +64,7 @@ void Inv_Residual_trans_4x4 (sMacroBlock* mb, eColorPlane plane, int ioff, int j
   int** cof = slice->cof[plane];
 
   int temp[4][4];
-  if (mb->ipmode_DPCM == VERT_PRED) {
+  if (mb->dpcmMode == VERT_PRED) {
     for (int i = 0; i<4; ++i) {
       temp[0][i] = cof[joff + 0][ioff + i];
       temp[1][i] = cof[joff + 1][ioff + i] + temp[0][i];
@@ -80,7 +80,7 @@ void Inv_Residual_trans_4x4 (sMacroBlock* mb, eColorPlane plane, int ioff, int j
       }
     }
 
-  else if (mb->ipmode_DPCM == HOR_PRED) {
+  else if (mb->dpcmMode == HOR_PRED) {
     for (int j = 0; j < 4; ++j) {
       temp[j][0] = cof[joff + j][ioff    ];
       temp[j][1] = cof[joff + j][ioff + 1] + temp[j][0];
@@ -115,7 +115,7 @@ void Inv_Residual_trans_8x8 (sMacroBlock* mb, eColorPlane plane, int ioff, int j
   int** mbRess = slice->mbRess[plane];
 
   int temp[8][8];
-  if (mb->ipmode_DPCM == VERT_PRED) {
+  if (mb->dpcmMode == VERT_PRED) {
     for (int i = 0; i < 8; ++i) {
       temp[0][i] = mbRess[joff + 0][ioff + i];
       temp[1][i] = mbRess[joff + 1][ioff + i] + temp[0][i];
@@ -137,7 +137,7 @@ void Inv_Residual_trans_8x8 (sMacroBlock* mb, eColorPlane plane, int ioff, int j
       mbRess[joff+7][ioff+i]=temp[7][i];
       }
     }
-  else if (mb->ipmode_DPCM == HOR_PRED) {
+  else if (mb->dpcmMode == HOR_PRED) {
     //HOR_PRED
     for (int i = 0; i < 8; ++i) {
       temp[i][0] = mbRess[joff + i][ioff + 0];
@@ -176,7 +176,7 @@ void Inv_Residual_trans_16x16 (sMacroBlock* mb, eColorPlane plane) {
   int** cof = slice->cof[plane];
 
   int temp[16][16];
-  if (mb->ipmode_DPCM == VERT_PRED_16) {
+  if (mb->dpcmMode == VERT_PRED_16) {
     for (int i = 0; i < MB_BLOCK_SIZE; ++i) {
       temp[0][i] = cof[0][i];
       for (int j = 1; j < MB_BLOCK_SIZE; j++)
@@ -188,7 +188,7 @@ void Inv_Residual_trans_16x16 (sMacroBlock* mb, eColorPlane plane) {
         mbRess[j][i]=temp[j][i];
     }
 
-  else if (mb->ipmode_DPCM == HOR_PRED_16) {
+  else if (mb->dpcmMode == HOR_PRED_16) {
     for (int j = 0; j < MB_BLOCK_SIZE; ++j) {
       temp[j][ 0] = cof[j][ 0  ];
       for (int i = 1; i < MB_BLOCK_SIZE; i++)
@@ -222,7 +222,7 @@ void Inv_Residual_trans_Chroma (sMacroBlock* mb, int uv) {
   int height = mb->decoder->mbCrSizeY;
 
   int temp[16][16];
-  if (mb->cPredMode == VERT_PRED_8) {
+  if (mb->chromaPredMode == VERT_PRED_8) {
     for (int i = 0; i < width; i++) {
       temp[0][i] = cof[0][i];
       for (int j = 1; j < height; j++)
