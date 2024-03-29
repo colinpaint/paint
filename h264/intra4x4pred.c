@@ -189,31 +189,28 @@ static int intra4x4_diag_down_right_pred (sMacroBlock* mb, eColorPlane plane, in
   getNonAffNeighbour(mb, ioff    , joff -1 , decoder->mbSize[eLuma], &pix_b);
   getNonAffNeighbour(mb, ioff -1 , joff -1 , decoder->mbSize[eLuma], &pix_d);
 
-  if (decoder->activePps->hasConstrainedIntraPred)
-  {
+  if (decoder->activePps->hasConstrainedIntraPred) {
     block_available_left     = pix_a.available ? slice->intraBlock [pix_a.mbIndex]: 0;
     block_available_up       = pix_b.available ? slice->intraBlock [pix_b.mbIndex] : 0;
     block_available_up_left  = pix_d.available ? slice->intraBlock [pix_d.mbIndex] : 0;
-  }
-  else
-  {
+    }
+  else {
     block_available_left     = pix_a.available;
     block_available_up       = pix_b.available;
     block_available_up_left  = pix_d.available;
-  }
+    }
 
   if ((!block_available_up)||(!block_available_left)||(!block_available_up_left))
     printf ("warning: Intra_4x4_Diagonal_Down_Right prediction mode not allowed at mb %d\n",(int) slice->mbIndex);
-  else
-  {
+  else {
     sPixel PredPixel[7];
     sPixel PredPel[13];
     sPixel** img_pred = &imgY[pix_a.posY];
     int pixX = pix_a.posX;
-    sPixel *pred_pel = &imgY[pix_b.posY][pix_b.posX];
+    sPixel* pred_pel = &imgY[pix_b.posY][pix_b.posX];
     // form predictor pels
     // P_A through P_D
-    memcpy(&PredPel[1], pred_pel, BLOCK_SIZE * sizeof(sPixel));
+    memcpy (&PredPel[1], pred_pel, BLOCK_SIZE * sizeof(sPixel));
 
     P_I = *(*(img_pred++) + pixX);
     P_J = *(*(img_pred++) + pixX);
@@ -230,14 +227,14 @@ static int intra4x4_diag_down_right_pred (sMacroBlock* mb, eColorPlane plane, in
     PredPixel[5] = (sPixel) ((P_A + 2*P_B + P_C + 2) >> 2);
     PredPixel[6] = (sPixel) ((P_B + 2*P_C + P_D + 2) >> 2);
 
-    memcpy(&mbPred[joff++][ioff], &PredPixel[3], 4 * sizeof(sPixel));
-    memcpy(&mbPred[joff++][ioff], &PredPixel[2], 4 * sizeof(sPixel));
-    memcpy(&mbPred[joff++][ioff], &PredPixel[1], 4 * sizeof(sPixel));
-    memcpy(&mbPred[joff  ][ioff], &PredPixel[0], 4 * sizeof(sPixel));
-  }
+    memcpy (&mbPred[joff++][ioff], &PredPixel[3], 4 * sizeof(sPixel));
+    memcpy (&mbPred[joff++][ioff], &PredPixel[2], 4 * sizeof(sPixel));
+    memcpy (&mbPred[joff++][ioff], &PredPixel[1], 4 * sizeof(sPixel));
+    memcpy (&mbPred[joff  ][ioff], &PredPixel[0], 4 * sizeof(sPixel));
+    }
 
   return eDecodingOk;
-}
+  }
 //}}}
 //{{{
 static int intra4x4_diag_down_left_pred (sMacroBlock* mb, eColorPlane plane, int ioff, int joff) {
@@ -258,11 +255,11 @@ static int intra4x4_diag_down_left_pred (sMacroBlock* mb, eColorPlane plane, int
   if (decoder->activePps->hasConstrainedIntraPred) {
     block_available_up       = pix_b.available ? slice->intraBlock [pix_b.mbIndex] : 0;
     block_available_up_right = pix_c.available ? slice->intraBlock [pix_c.mbIndex] : 0;
-  }
-  else {
+   }
+   else {
     block_available_up       = pix_b.available;
     block_available_up_right = pix_c.available;
-  }
+    }
 
   if (!block_available_up)
     printf ("warning: Intra_4x4_Diagonal_Down_Left prediction mode not allowed at mb %d\n", (int) slice->mbIndex);
@@ -272,7 +269,7 @@ static int intra4x4_diag_down_left_pred (sMacroBlock* mb, eColorPlane plane, int
 
     sPixel PredPixel[8];
     sPixel PredPel[25];
-    sPixel *pred_pel = &imgY[pix_b.posY][pix_b.posX];
+    sPixel* pred_pel = &imgY[pix_b.posY][pix_b.posX];
 
     // form predictor pels
     // P_A through P_D
@@ -281,9 +278,9 @@ static int intra4x4_diag_down_left_pred (sMacroBlock* mb, eColorPlane plane, int
 
     // P_E through P_H
     if (block_available_up_right)
-      memcpy(&PredPel[5], &imgY[pix_c.posY][pix_c.posX], BLOCK_SIZE * sizeof(sPixel));
+      memcpy (&PredPel[5], &imgY[pix_c.posY][pix_c.posX], BLOCK_SIZE * sizeof(sPixel));
     else
-      memset(&PredPel[5], PredPel[4], BLOCK_SIZE * sizeof(sPixel));
+      memset (&PredPel[5], PredPel[4], BLOCK_SIZE * sizeof(sPixel));
 
     PredPixel[0] = (sPixel) ((P_A + P_C + 2*(P_B) + 2) >> 2);
     PredPixel[1] = (sPixel) ((P_B + P_D + 2*(P_C) + 2) >> 2);
@@ -293,14 +290,14 @@ static int intra4x4_diag_down_left_pred (sMacroBlock* mb, eColorPlane plane, int
     PredPixel[5] = (sPixel) ((P_F + P_H + 2*(P_G) + 2) >> 2);
     PredPixel[6] = (sPixel) ((P_G + 3*(P_H) + 2) >> 2);
 
-    memcpy(&mbPred[joff++][ioff], &PredPixel[0], 4 * sizeof(sPixel));
-    memcpy(&mbPred[joff++][ioff], &PredPixel[1], 4 * sizeof(sPixel));
-    memcpy(&mbPred[joff++][ioff], &PredPixel[2], 4 * sizeof(sPixel));
-    memcpy(&mbPred[joff  ][ioff], &PredPixel[3], 4 * sizeof(sPixel));
-  }
+    memcpy (&mbPred[joff++][ioff], &PredPixel[0], 4 * sizeof(sPixel));
+    memcpy (&mbPred[joff++][ioff], &PredPixel[1], 4 * sizeof(sPixel));
+    memcpy (&mbPred[joff++][ioff], &PredPixel[2], 4 * sizeof(sPixel));
+    memcpy (&mbPred[joff  ][ioff], &PredPixel[3], 4 * sizeof(sPixel));
+   }
 
   return eDecodingOk;
-}
+  }
 //}}}
 //{{{
 static int intra4x4_vert_right_pred (sMacroBlock* mb, eColorPlane plane, int ioff, int joff) {
@@ -318,22 +315,20 @@ static int intra4x4_vert_right_pred (sMacroBlock* mb, eColorPlane plane, int iof
   getNonAffNeighbour(mb, ioff    , joff -1 , decoder->mbSize[eLuma], &pix_b);
   getNonAffNeighbour(mb, ioff -1 , joff -1 , decoder->mbSize[eLuma], &pix_d);
 
-  if (decoder->activePps->hasConstrainedIntraPred)
-  {
+  if (decoder->activePps->hasConstrainedIntraPred) {
     block_available_left     = pix_a.available ? slice->intraBlock[pix_a.mbIndex]: 0;
     block_available_up       = pix_b.available ? slice->intraBlock [pix_b.mbIndex] : 0;
     block_available_up_left  = pix_d.available ? slice->intraBlock [pix_d.mbIndex] : 0;
-  }
-  else
-  {
+    }
+  else {
     block_available_left     = pix_a.available;
     block_available_up       = pix_b.available;
     block_available_up_left  = pix_d.available;
-  }
+    }
 
   if ((!block_available_up)||(!block_available_left)||(!block_available_up_left))
     printf ("warning: Intra_4x4_Vertical_Right prediction mode not allowed at mb %d\n", (int) slice->mbIndex);
-  {
+  else {
     sPixel** imgY = (plane) ? slice->picture->imgUV[plane - 1] : slice->picture->imgY;
     sPixel** mbPred = slice->mbPred[plane];
     sPixel PredPixel[10];
@@ -341,11 +336,10 @@ static int intra4x4_vert_right_pred (sMacroBlock* mb, eColorPlane plane, int iof
 
     sPixel** img_pred = &imgY[pix_a.posY];
     int pixX = pix_a.posX;
-    sPixel *pred_pel = &imgY[pix_b.posY][pix_b.posX];
+    sPixel* pred_pel = &imgY[pix_b.posY][pix_b.posX];
     // form predictor pels
     // P_A through P_D
-    memcpy(&PredPel[1], pred_pel, BLOCK_SIZE * sizeof(sPixel));
-
+    memcpy (&PredPel[1], pred_pel, BLOCK_SIZE * sizeof(sPixel));
 
     P_I = *(*(img_pred++) + pixX);
     P_J = *(*(img_pred++) + pixX);
@@ -364,15 +358,14 @@ static int intra4x4_vert_right_pred (sMacroBlock* mb, eColorPlane plane, int iof
     PredPixel[8] = (sPixel) ((P_A + 2*P_B + P_C + 2) >> 2);
     PredPixel[9] = (sPixel) ((P_B + 2*P_C + P_D + 2) >> 2);
 
-    memcpy(&mbPred[joff++][ioff], &PredPixel[1], 4 * sizeof(sPixel));
-    memcpy(&mbPred[joff++][ioff], &PredPixel[6], 4 * sizeof(sPixel));
-    memcpy(&mbPred[joff++][ioff], &PredPixel[0], 4 * sizeof(sPixel));
-    memcpy(&mbPred[joff  ][ioff], &PredPixel[5], 4 * sizeof(sPixel));
-
-  }
+    memcpy (&mbPred[joff++][ioff], &PredPixel[1], 4 * sizeof(sPixel));
+    memcpy (&mbPred[joff++][ioff], &PredPixel[6], 4 * sizeof(sPixel));
+    memcpy (&mbPred[joff++][ioff], &PredPixel[0], 4 * sizeof(sPixel));
+    memcpy (&mbPred[joff  ][ioff], &PredPixel[5], 4 * sizeof(sPixel));
+    }
 
   return eDecodingOk;
-}
+  }
 //}}}
 //{{{
 static int intra4x4_vert_left_pred (sMacroBlock *mb, eColorPlane plane, int ioff, int joff) {
@@ -390,13 +383,11 @@ static int intra4x4_vert_left_pred (sMacroBlock *mb, eColorPlane plane, int ioff
 
   pix_c.available = pix_c.available && !((ioff==4) && ((joff==4)||(joff==12)));
 
-  if (decoder->activePps->hasConstrainedIntraPred)
-  {
+  if (decoder->activePps->hasConstrainedIntraPred) {
     block_available_up       = pix_b.available ? slice->intraBlock [pix_b.mbIndex] : 0;
     block_available_up_right = pix_c.available ? slice->intraBlock [pix_c.mbIndex] : 0;
   }
-  else
-  {
+  else {
     block_available_up       = pix_b.available;
     block_available_up_right = pix_c.available;
   }
@@ -404,8 +395,7 @@ static int intra4x4_vert_left_pred (sMacroBlock *mb, eColorPlane plane, int ioff
 
   if (!block_available_up)
     printf ("warning: Intra_4x4_Vertical_Left prediction mode not allowed at mb %d\n", (int) slice->mbIndex);
-  else
-  {
+  else {
     sPixel PredPixel[10];
     sPixel PredPel[13];
     sPixel** imgY = (plane) ? slice->picture->imgUV[plane - 1] : slice->picture->imgY;
@@ -438,9 +428,10 @@ static int intra4x4_vert_left_pred (sMacroBlock *mb, eColorPlane plane, int ioff
     memcpy(&mbPred[joff++][ioff], &PredPixel[5], 4 * sizeof(sPixel));
     memcpy(&mbPred[joff++][ioff], &PredPixel[1], 4 * sizeof(sPixel));
     memcpy(&mbPred[joff  ][ioff], &PredPixel[6], 4 * sizeof(sPixel));
-  }
+    }
+
   return eDecodingOk;
-}
+  }
 //}}}
 //{{{
 static int intra4x4_hor_up_pred (sMacroBlock* mb, eColorPlane plane, int ioff, int joff) {
@@ -461,8 +452,7 @@ static int intra4x4_hor_up_pred (sMacroBlock* mb, eColorPlane plane, int ioff, i
 
   if (!block_available_left)
     printf ("warning: Intra_4x4_Horizontal_Up prediction mode not allowed at mb %d\n",(int) slice->mbIndex);
-  else
-  {
+  else {
     sPixel PredPixel[10];
     sPixel PredPel[13];
     sPixel** imgY = (plane) ? slice->picture->imgUV[plane - 1] : slice->picture->imgY;
@@ -492,10 +482,10 @@ static int intra4x4_hor_up_pred (sMacroBlock* mb, eColorPlane plane, int ioff, i
     memcpy(&mbPred[joff++][ioff], &PredPixel[2], 4 * sizeof(sPixel));
     memcpy(&mbPred[joff++][ioff], &PredPixel[4], 4 * sizeof(sPixel));
     memcpy(&mbPred[joff++][ioff], &PredPixel[6], 4 * sizeof(sPixel));
-  }
+    }
 
   return eDecodingOk;
-}
+  }
 //}}}
 //{{{
 static int intra4x4_hor_down_pred (sMacroBlock* mb, eColorPlane plane, int ioff, int joff) {
@@ -513,23 +503,20 @@ static int intra4x4_hor_down_pred (sMacroBlock* mb, eColorPlane plane, int ioff,
   getNonAffNeighbour(mb, ioff    , joff -1 , decoder->mbSize[eLuma], &pix_b);
   getNonAffNeighbour(mb, ioff -1 , joff -1 , decoder->mbSize[eLuma], &pix_d);
 
-  if (decoder->activePps->hasConstrainedIntraPred)
-  {
-    block_available_left    = pix_a.available ? slice->intraBlock [pix_a.mbIndex]: 0;
-    block_available_up      = pix_b.available ? slice->intraBlock [pix_b.mbIndex] : 0;
+  if (decoder->activePps->hasConstrainedIntraPred) {
+    block_available_left = pix_a.available ? slice->intraBlock [pix_a.mbIndex]: 0;
+    block_available_up = pix_b.available ? slice->intraBlock [pix_b.mbIndex] : 0;
     block_available_up_left = pix_d.available ? slice->intraBlock [pix_d.mbIndex] : 0;
-  }
-  else
-  {
-    block_available_left     = pix_a.available;
-    block_available_up       = pix_b.available;
-    block_available_up_left  = pix_d.available;
-  }
+    }
+  else {
+    block_available_left = pix_a.available;
+    block_available_up = pix_b.available;
+    block_available_up_left = pix_d.available;
+    }
 
-  if ((!block_available_up)||(!block_available_left)||(!block_available_up_left))
+  if ((!block_available_up) || (!block_available_left) || (!block_available_up_left))
     printf ("warning: Intra_4x4_Horizontal_Down prediction mode not allowed at mb %d\n", (int) slice->mbIndex);
-  else
-  {
+  else {
     sPixel PredPixel[10];
     sPixel PredPel[13];
     sPixel** imgY = (plane) ? slice->picture->imgUV[plane - 1] : slice->picture->imgY;
@@ -537,18 +524,16 @@ static int intra4x4_hor_down_pred (sMacroBlock* mb, eColorPlane plane, int ioff,
 
     sPixel** img_pred = &imgY[pix_a.posY];
     int pixX = pix_a.posX;
-    sPixel *pred_pel = &imgY[pix_b.posY][pix_b.posX];
+    sPixel* pred_pel = &imgY[pix_b.posY][pix_b.posX];
 
     // form predictor pels
     // P_A through P_D
-    memcpy(&PredPel[1], pred_pel, BLOCK_SIZE * sizeof(sPixel));
-
+    memcpy (&PredPel[1], pred_pel, BLOCK_SIZE * sizeof(sPixel));
 
     P_I = *(*(img_pred++) + pixX);
     P_J = *(*(img_pred++) + pixX);
     P_K = *(*(img_pred++) + pixX);
     P_L = *(*(img_pred  ) + pixX);
-
     P_X = imgY[pix_d.posY][pix_d.posX];
 
     PredPixel[0] = (sPixel) ((P_K + P_L + 1) >> 1);
@@ -562,14 +547,14 @@ static int intra4x4_hor_down_pred (sMacroBlock* mb, eColorPlane plane, int ioff,
     PredPixel[8] = (sPixel) ((P_X + 2*P_A + P_B + 2) >> 2);
     PredPixel[9] = (sPixel) ((P_A + 2*P_B + P_C + 2) >> 2);
 
-    memcpy(&mbPred[joff++][ioff], &PredPixel[6], 4 * sizeof(sPixel));
-    memcpy(&mbPred[joff++][ioff], &PredPixel[4], 4 * sizeof(sPixel));
-    memcpy(&mbPred[joff++][ioff], &PredPixel[2], 4 * sizeof(sPixel));
-    memcpy(&mbPred[joff  ][ioff], &PredPixel[0], 4 * sizeof(sPixel));
-  }
+    memcpy (&mbPred[joff++][ioff], &PredPixel[6], 4 * sizeof(sPixel));
+    memcpy (&mbPred[joff++][ioff], &PredPixel[4], 4 * sizeof(sPixel));
+    memcpy (&mbPred[joff++][ioff], &PredPixel[2], 4 * sizeof(sPixel));
+    memcpy (&mbPred[joff  ][ioff], &PredPixel[0], 4 * sizeof(sPixel));
+    }
 
   return eDecodingOk;
-}
+  }
 //}}}
 //{{{
 int intra_pred_4x4_normal (sMacroBlock* mb, eColorPlane plane, int ioff, int joff,
@@ -579,40 +564,39 @@ int intra_pred_4x4_normal (sMacroBlock* mb, eColorPlane plane, int ioff, int jof
   byte predmode = decoder->predMode[img_block_y][img_block_x];
   mb->dpcmMode = predmode; //For residual DPCM
 
-  switch (predmode)
-  {
-  case DC_PRED:
-    return (intra4x4_dc_pred(mb, plane, ioff, joff));
-    break;
-  case VERT_PRED:
-    return (intra4x4_vert_pred(mb, plane, ioff, joff));
-    break;
-  case HOR_PRED:
-    return (intra4x4_hor_pred(mb, plane, ioff, joff));
-    break;
-  case DIAG_DOWN_RIGHT_PRED:
-    return (intra4x4_diag_down_right_pred(mb, plane, ioff, joff));
-    break;
-  case DIAG_DOWN_LEFT_PRED:
-    return (intra4x4_diag_down_left_pred(mb, plane, ioff, joff));
-    break;
-  case VERT_RIGHT_PRED:
-    return (intra4x4_vert_right_pred(mb, plane, ioff, joff));
-    break;
-  case VERT_LEFT_PRED:
-    return (intra4x4_vert_left_pred(mb, plane, ioff, joff));
-    break;
-  case HOR_UP_PRED:
-    return (intra4x4_hor_up_pred(mb, plane, ioff, joff));
-    break;
-  case HOR_DOWN_PRED:
-    return (intra4x4_hor_down_pred(mb, plane, ioff, joff));
-  default:
-    printf("Error: illegal intra_4x4 prediction mode: %d\n", (int) predmode);
-    return eSearchSync;
-    break;
+  switch (predmode) {
+    case DC_PRED:
+      return (intra4x4_dc_pred(mb, plane, ioff, joff));
+      break;
+    case VERT_PRED:
+      return (intra4x4_vert_pred(mb, plane, ioff, joff));
+      break;
+    case HOR_PRED:
+      return (intra4x4_hor_pred(mb, plane, ioff, joff));
+      break;
+    case DIAG_DOWN_RIGHT_PRED:
+      return (intra4x4_diag_down_right_pred(mb, plane, ioff, joff));
+      break;
+    case DIAG_DOWN_LEFT_PRED:
+      return (intra4x4_diag_down_left_pred(mb, plane, ioff, joff));
+      break;
+    case VERT_RIGHT_PRED:
+      return (intra4x4_vert_right_pred(mb, plane, ioff, joff));
+      break;
+    case VERT_LEFT_PRED:
+      return (intra4x4_vert_left_pred(mb, plane, ioff, joff));
+      break;
+    case HOR_UP_PRED:
+      return (intra4x4_hor_up_pred(mb, plane, ioff, joff));
+      break;
+    case HOR_DOWN_PRED:
+      return (intra4x4_hor_down_pred(mb, plane, ioff, joff));
+    default:
+      printf("Error: illegal intra_4x4 prediction mode: %d\n", (int) predmode);
+      return eSearchSync;
+      break;
+    }
   }
-}
 //}}}
 
 //{{{
@@ -633,9 +617,7 @@ static int intra4x4_dc_pred_mbaff (sMacroBlock* mb, eColorPlane plane, int ioff,
   sPixel** mbPred = slice->mbPred[plane];
 
   for (i=0;i<4;++i)
-  {
     getAffNeighbour(mb, ioff - 1, joff + i, decoder->mbSize[eLuma], &pix_a[i]);
-  }
   getAffNeighbour(mb, ioff    , joff -1 , decoder->mbSize[eLuma], &pix_b);
 
   if (decoder->activePps->hasConstrainedIntraPred)
@@ -668,25 +650,17 @@ static int intra4x4_dc_pred_mbaff (sMacroBlock* mb, eColorPlane plane, int ioff,
   }
 
   if (block_available_up && block_available_left)
-  {
     // no edge
     s0 = (s0 + 4)>>3;
-  }
   else if (!block_available_up && block_available_left)
-  {
     // upper edge
     s0 = (s0 + 2)>>2;
-  }
   else if (block_available_up && !block_available_left)
-  {
     // left edge
     s0 = (s0 + 2)>>2;
-  }
   else //if (!block_available_up && !block_available_left)
-  {
     // top left corner, nothing to predict from
     s0 = decoder->coding.dcPredValueComp[plane];
-  }
 
   for (j=joff; j < joff + BLOCK_SIZE; ++j)
   {
@@ -708,32 +682,26 @@ static int intra4x4_vert_pred_mbaff (sMacroBlock* mb, eColorPlane plane, int iof
   int block_available_up;
   sPixelPos pix_b;
 
-  getAffNeighbour(mb, ioff, joff - 1 , decoder->mbSize[eLuma], &pix_b);
+  getAffNeighbour (mb, ioff, joff - 1 , decoder->mbSize[eLuma], &pix_b);
 
   if (decoder->activePps->hasConstrainedIntraPred)
-  {
     block_available_up = pix_b.available ? slice->intraBlock [pix_b.mbIndex] : 0;
-  }
   else
-  {
     block_available_up = pix_b.available;
-  }
 
   if (!block_available_up)
-  {
     printf ("warning: Intra_4x4_Vertical prediction mode not allowed at mb %d\n", (int) slice->mbIndex);
-  }
-  else
-  {
+  else {
     sPixel** mbPred = slice->mbPred[plane];
     sPixel *imgY = (plane) ? &slice->picture->imgUV[plane - 1][pix_b.posY][pix_b.posX] : &slice->picture->imgY[pix_b.posY][pix_b.posX];
-    memcpy(&(mbPred[joff++][ioff]), imgY, BLOCK_SIZE * sizeof(sPixel));
-    memcpy(&(mbPred[joff++][ioff]), imgY, BLOCK_SIZE * sizeof(sPixel));
-    memcpy(&(mbPred[joff++][ioff]), imgY, BLOCK_SIZE * sizeof(sPixel));
-    memcpy(&(mbPred[joff  ][ioff]), imgY, BLOCK_SIZE * sizeof(sPixel));
-  }
+    memcpy (&(mbPred[joff++][ioff]), imgY, BLOCK_SIZE * sizeof(sPixel));
+    memcpy (&(mbPred[joff++][ioff]), imgY, BLOCK_SIZE * sizeof(sPixel));
+    memcpy (&(mbPred[joff++][ioff]), imgY, BLOCK_SIZE * sizeof(sPixel));
+    memcpy (&(mbPred[joff  ][ioff]), imgY, BLOCK_SIZE * sizeof(sPixel));
+    }
+
   return eDecodingOk;
-}
+  }
 //}}}
 //{{{
 static int intra4x4_hor_pred_mbaff (sMacroBlock* mb, eColorPlane plane, int ioff, int joff) {
@@ -751,33 +719,26 @@ static int intra4x4_hor_pred_mbaff (sMacroBlock* mb, eColorPlane plane, int ioff
   sPixel *predrow, prediction,** mbPred = slice->mbPred[plane];
 
   for (i=0;i<4;++i)
-  {
     getAffNeighbour(mb, ioff -1 , joff +i , decoder->mbSize[eLuma], &pix_a[i]);
-  }
 
   if (decoder->activePps->hasConstrainedIntraPred)
-  {
     for (i=0, block_available_left=1; i<4;++i)
       block_available_left  &= pix_a[i].available ? slice->intraBlock[pix_a[i].mbIndex]: 0;
-  }
   else
-  {
     block_available_left     = pix_a[0].available;
-  }
 
   if (!block_available_left)
     printf ("warning: Intra_4x4_Horizontal prediction mode not allowed at mb %d\n",(int) slice->mbIndex);
 
-  for(j=0;j<BLOCK_SIZE;++j)
-  {
+  for(j = 0; j < BLOCK_SIZE; ++j) {
     predrow = mbPred[j+joff];
     prediction = imgY[pix_a[j].posY][pix_a[j].posX];
-    for(i = ioff;i < ioff + BLOCK_SIZE;++i)
+    for (i = ioff; i < ioff + BLOCK_SIZE;++i)
       predrow[i]= prediction; /* store predicted 4x4 block */
-  }
+   }
 
   return eDecodingOk;
-}
+  }
 //}}}
 //{{{
 static int intra4x4_diag_down_right_pred_mbaff (sMacroBlock* mb, eColorPlane plane, int ioff, int joff) {
@@ -798,31 +759,26 @@ static int intra4x4_diag_down_right_pred_mbaff (sMacroBlock* mb, eColorPlane pla
   sPixel** mbPred = slice->mbPred[plane];
 
   for (i=0;i<4;++i)
-  {
     getAffNeighbour(mb, ioff -1 , joff +i , decoder->mbSize[eLuma], &pix_a[i]);
-  }
 
   getAffNeighbour(mb, ioff    , joff -1 , decoder->mbSize[eLuma], &pix_b);
   getAffNeighbour(mb, ioff -1 , joff -1 , decoder->mbSize[eLuma], &pix_d);
 
-  if (decoder->activePps->hasConstrainedIntraPred)
-  {
+  if (decoder->activePps->hasConstrainedIntraPred) {
     for (i=0, block_available_left=1; i<4;++i)
       block_available_left  &= pix_a[i].available ? slice->intraBlock[pix_a[i].mbIndex]: 0;
     block_available_up       = pix_b.available ? slice->intraBlock [pix_b.mbIndex] : 0;
     block_available_up_left  = pix_d.available ? slice->intraBlock [pix_d.mbIndex] : 0;
-  }
-  else
-  {
+    }
+  else {
     block_available_left     = pix_a[0].available;
     block_available_up       = pix_b.available;
     block_available_up_left  = pix_d.available;
-  }
+    }
 
   if ((!block_available_up)||(!block_available_left)||(!block_available_up_left))
     printf ("warning: Intra_4x4_Diagonal_Down_Right prediction mode not allowed at mb %d\n",(int) slice->mbIndex);
-  else
-  {
+  else {
     sPixel PredPixel[7];
     sPixel PredPel[13];
     sPixel *pred_pel = &imgY[pix_b.posY][pix_b.posX];
@@ -850,10 +806,10 @@ static int intra4x4_diag_down_right_pred_mbaff (sMacroBlock* mb, eColorPlane pla
     memcpy(&mbPred[joff++][ioff], &PredPixel[2], 4 * sizeof(sPixel));
     memcpy(&mbPred[joff++][ioff], &PredPixel[1], 4 * sizeof(sPixel));
     memcpy(&mbPred[joff  ][ioff], &PredPixel[0], 4 * sizeof(sPixel));
-  }
+    }
 
   return eDecodingOk;
-}
+  }
 //}}}
 //{{{
 static int intra4x4_diag_down_left_pred_mbaff (sMacroBlock* mb, eColorPlane plane, int ioff, int joff) {
@@ -871,21 +827,18 @@ static int intra4x4_diag_down_left_pred_mbaff (sMacroBlock* mb, eColorPlane plan
 
   pix_c.available = pix_c.available && !((ioff==4) && ((joff==4)||(joff==12)));
 
-  if (decoder->activePps->hasConstrainedIntraPred)
-  {
+  if (decoder->activePps->hasConstrainedIntraPred) {
     block_available_up       = pix_b.available ? slice->intraBlock [pix_b.mbIndex] : 0;
     block_available_up_right = pix_c.available ? slice->intraBlock [pix_c.mbIndex] : 0;
-  }
-  else
-  {
+    }
+  else {
     block_available_up       = pix_b.available;
     block_available_up_right = pix_c.available;
-  }
+    }
 
   if (!block_available_up)
     printf ("warning: Intra_4x4_Diagonal_Down_Left prediction mode not allowed at mb %d\n", (int) slice->mbIndex);
-  else
-  {
+  else {
     sPixel** imgY = (plane) ? slice->picture->imgUV[plane - 1] : slice->picture->imgY;
     sPixel** mbPred = slice->mbPred[plane];
 
@@ -899,13 +852,10 @@ static int intra4x4_diag_down_left_pred_mbaff (sMacroBlock* mb, eColorPlane plan
 
     // P_E through P_H
     if (block_available_up_right)
-    {
       memcpy(&PredPel[5], &imgY[pix_c.posY][pix_c.posX], BLOCK_SIZE * sizeof(sPixel));
-    }
-    else
-    {
+    else {
       P_E = P_F = P_G = P_H = P_D;
-    }
+      }
 
     PredPixel[0] = (sPixel) ((P_A + P_C + 2*(P_B) + 2) >> 2);
     PredPixel[1] = (sPixel) ((P_B + P_D + 2*(P_C) + 2) >> 2);
@@ -919,10 +869,10 @@ static int intra4x4_diag_down_left_pred_mbaff (sMacroBlock* mb, eColorPlane plan
     memcpy(&mbPred[joff++][ioff], &PredPixel[1], 4 * sizeof(sPixel));
     memcpy(&mbPred[joff++][ioff], &PredPixel[2], 4 * sizeof(sPixel));
     memcpy(&mbPred[joff  ][ioff], &PredPixel[3], 4 * sizeof(sPixel));
-  }
+    }
 
   return eDecodingOk;
-}
+  }
 //}}}
 //{{{
 static int intra4x4_vert_right_pred_mbaff (sMacroBlock* mb, eColorPlane plane, int ioff, int joff) {
@@ -943,30 +893,26 @@ static int intra4x4_vert_right_pred_mbaff (sMacroBlock* mb, eColorPlane plane, i
   sPixel** mbPred = slice->mbPred[plane];
 
   for (i=0;i<4;++i)
-  {
     getAffNeighbour(mb, ioff -1 , joff +i , decoder->mbSize[eLuma], &pix_a[i]);
-  }
 
   getAffNeighbour(mb, ioff    , joff -1 , decoder->mbSize[eLuma], &pix_b);
   getAffNeighbour(mb, ioff -1 , joff -1 , decoder->mbSize[eLuma], &pix_d);
 
-  if (decoder->activePps->hasConstrainedIntraPred)
-  {
+  if (decoder->activePps->hasConstrainedIntraPred) {
     for (i=0, block_available_left=1; i<4;++i)
       block_available_left  &= pix_a[i].available ? slice->intraBlock[pix_a[i].mbIndex]: 0;
     block_available_up       = pix_b.available ? slice->intraBlock [pix_b.mbIndex] : 0;
     block_available_up_left  = pix_d.available ? slice->intraBlock [pix_d.mbIndex] : 0;
-  }
-  else
-  {
+    }
+  else {
     block_available_left     = pix_a[0].available;
     block_available_up       = pix_b.available;
     block_available_up_left  = pix_d.available;
-  }
+    }
 
   if ((!block_available_up)||(!block_available_left)||(!block_available_up_left))
     printf ("warning: Intra_4x4_Vertical_Right prediction mode not allowed at mb %d\n", (int) slice->mbIndex);
-  {
+  else {
     sPixel PredPixel[10];
     sPixel PredPel[13];
     sPixel *pred_pel = &imgY[pix_b.posY][pix_b.posX];
@@ -974,11 +920,9 @@ static int intra4x4_vert_right_pred_mbaff (sMacroBlock* mb, eColorPlane plane, i
     // P_A through P_D
     memcpy(&PredPel[1], pred_pel, BLOCK_SIZE * sizeof(sPixel));
 
-
     P_I = imgY[pix_a[0].posY][pix_a[0].posX];
     P_J = imgY[pix_a[1].posY][pix_a[1].posX];
     P_K = imgY[pix_a[2].posY][pix_a[2].posX];
-
     P_X = imgY[pix_d.posY][pix_d.posX];
 
     PredPixel[0] = (sPixel) ((P_X + (P_I << 1) + P_J + 2) >> 2);
@@ -996,11 +940,10 @@ static int intra4x4_vert_right_pred_mbaff (sMacroBlock* mb, eColorPlane plane, i
     memcpy(&mbPred[joff++][ioff], &PredPixel[6], 4 * sizeof(sPixel));
     memcpy(&mbPred[joff++][ioff], &PredPixel[0], 4 * sizeof(sPixel));
     memcpy(&mbPred[joff  ][ioff], &PredPixel[5], 4 * sizeof(sPixel));
-
-  }
+    }
 
   return eDecodingOk;
-}
+  }
 //}}}
 //{{{
 static int intra4x4_vert_left_pred_mbaff (sMacroBlock* mb, eColorPlane plane, int ioff, int joff) {
@@ -1018,21 +961,20 @@ static int intra4x4_vert_left_pred_mbaff (sMacroBlock* mb, eColorPlane plane, in
 
   pix_c.available = pix_c.available && !((ioff==4) && ((joff==4)||(joff==12)));
 
-  if (decoder->activePps->hasConstrainedIntraPred)
-  {
+  if (decoder->activePps->hasConstrainedIntraPred) {
     block_available_up       = pix_b.available ? slice->intraBlock [pix_b.mbIndex] : 0;
     block_available_up_right = pix_c.available ? slice->intraBlock [pix_c.mbIndex] : 0;
-  }
+    }
   else
   {
     block_available_up       = pix_b.available;
     block_available_up_right = pix_c.available;
-  }
+    }
 
 
   if (!block_available_up)
     printf ("warning: Intra_4x4_Vertical_Left prediction mode not allowed at mb %d\n", (int) slice->mbIndex);
-  {
+  else {
     sPixel PredPixel[10];
     sPixel PredPel[13];
     sPixel** imgY = (plane) ? slice->picture->imgUV[plane - 1] : slice->picture->imgY;
@@ -1045,13 +987,10 @@ static int intra4x4_vert_left_pred_mbaff (sMacroBlock* mb, eColorPlane plane, in
 
     // P_E through P_H
     if (block_available_up_right)
-    {
       memcpy(&PredPel[5], &imgY[pix_c.posY][pix_c.posX], BLOCK_SIZE * sizeof(sPixel));
-    }
-    else
-    {
+    else {
       P_E = P_F = P_G = P_H = P_D;
-    }
+      }
 
     PredPixel[0] = (sPixel) ((P_A + P_B + 1) >> 1);
     PredPixel[1] = (sPixel) ((P_B + P_C + 1) >> 1);
@@ -1068,9 +1007,10 @@ static int intra4x4_vert_left_pred_mbaff (sMacroBlock* mb, eColorPlane plane, in
     memcpy(&mbPred[joff++][ioff], &PredPixel[5], 4 * sizeof(sPixel));
     memcpy(&mbPred[joff++][ioff], &PredPixel[1], 4 * sizeof(sPixel));
     memcpy(&mbPred[joff  ][ioff], &PredPixel[6], 4 * sizeof(sPixel));
-  }
+    }
+
   return eDecodingOk;
-}
+  }
 //}}}
 //{{{
 static int intra4x4_hor_up_pred_mbaff (sMacroBlock* mb, eColorPlane plane, int ioff, int joff) {
@@ -1088,24 +1028,17 @@ static int intra4x4_hor_up_pred_mbaff (sMacroBlock* mb, eColorPlane plane, int i
   sPixel** mbPred = slice->mbPred[plane];
 
   for (i=0;i<4;++i)
-  {
     getAffNeighbour(mb, ioff -1 , joff +i , decoder->mbSize[eLuma], &pix_a[i]);
-  }
 
   if (decoder->activePps->hasConstrainedIntraPred)
-  {
     for (i=0, block_available_left=1; i<4;++i)
-      block_available_left  &= pix_a[i].available ? slice->intraBlock[pix_a[i].mbIndex]: 0;
-  }
+      block_available_left &= pix_a[i].available ? slice->intraBlock[pix_a[i].mbIndex]: 0;
   else
-  {
-    block_available_left     = pix_a[0].available;
-  }
+    block_available_left = pix_a[0].available;
 
   if (!block_available_left)
     printf ("warning: Intra_4x4_Horizontal_Up prediction mode not allowed at mb %d\n",(int) slice->mbIndex);
-  else
-  {
+  else {
     sPixel PredPixel[10];
     sPixel PredPel[13];
 
@@ -1130,10 +1063,10 @@ static int intra4x4_hor_up_pred_mbaff (sMacroBlock* mb, eColorPlane plane, int i
     memcpy(&mbPred[joff++][ioff], &PredPixel[2], 4 * sizeof(sPixel));
     memcpy(&mbPred[joff++][ioff], &PredPixel[4], 4 * sizeof(sPixel));
     memcpy(&mbPred[joff++][ioff], &PredPixel[6], 4 * sizeof(sPixel));
-  }
+    }
 
   return eDecodingOk;
-}
+  }
 //}}}
 //{{{
 static int intra4x4_hor_down_pred_mbaff (sMacroBlock* mb, eColorPlane plane, int ioff, int joff) {
@@ -1154,31 +1087,26 @@ static int intra4x4_hor_down_pred_mbaff (sMacroBlock* mb, eColorPlane plane, int
   sPixel** mbPred = slice->mbPred[plane];
 
   for (i=0;i<4;++i)
-  {
     getAffNeighbour(mb, ioff -1 , joff +i , decoder->mbSize[eLuma], &pix_a[i]);
-  }
 
   getAffNeighbour(mb, ioff    , joff -1 , decoder->mbSize[eLuma], &pix_b);
   getAffNeighbour(mb, ioff -1 , joff -1 , decoder->mbSize[eLuma], &pix_d);
 
-  if (decoder->activePps->hasConstrainedIntraPred)
-  {
+  if (decoder->activePps->hasConstrainedIntraPred) {
     for (i=0, block_available_left=1; i<4;++i)
       block_available_left  &= pix_a[i].available ? slice->intraBlock[pix_a[i].mbIndex]: 0;
     block_available_up       = pix_b.available ? slice->intraBlock [pix_b.mbIndex] : 0;
     block_available_up_left  = pix_d.available ? slice->intraBlock [pix_d.mbIndex] : 0;
-  }
-  else
-  {
+    }
+  else {
     block_available_left     = pix_a[0].available;
     block_available_up       = pix_b.available;
     block_available_up_left  = pix_d.available;
-  }
+    }
 
   if ((!block_available_up)||(!block_available_left)||(!block_available_up_left))
     printf ("warning: Intra_4x4_Horizontal_Down prediction mode not allowed at mb %d\n", (int) slice->mbIndex);
-  else
-  {
+  else {
     sPixel PredPixel[10];
     sPixel PredPel[13];
     sPixel *pred_pel = &imgY[pix_b.posY][pix_b.posX];
@@ -1209,10 +1137,10 @@ static int intra4x4_hor_down_pred_mbaff (sMacroBlock* mb, eColorPlane plane, int
     memcpy(&mbPred[joff++][ioff], &PredPixel[4], 4 * sizeof(sPixel));
     memcpy(&mbPred[joff++][ioff], &PredPixel[2], 4 * sizeof(sPixel));
     memcpy(&mbPred[joff  ][ioff], &PredPixel[0], 4 * sizeof(sPixel));
-  }
+    }
 
   return eDecodingOk;
-}
+  }
 //}}}
 //{{{
 int intra_pred_4x4_mbaff (sMacroBlock* mb, eColorPlane plane, int ioff, int joff,
@@ -1222,38 +1150,37 @@ int intra_pred_4x4_mbaff (sMacroBlock* mb, eColorPlane plane, int ioff, int joff
   byte predmode = decoder->predMode[img_block_y][img_block_x];
   mb->dpcmMode = predmode; //For residual DPCM
 
-  switch (predmode)
-  {
-  case DC_PRED:
-    return (intra4x4_dc_pred_mbaff(mb, plane, ioff, joff));
-    break;
-  case VERT_PRED:
-    return (intra4x4_vert_pred_mbaff(mb, plane, ioff, joff));
-    break;
-  case HOR_PRED:
-    return (intra4x4_hor_pred_mbaff(mb, plane, ioff, joff));
-    break;
-  case DIAG_DOWN_RIGHT_PRED:
-    return (intra4x4_diag_down_right_pred_mbaff(mb, plane, ioff, joff));
-    break;
-  case DIAG_DOWN_LEFT_PRED:
-    return (intra4x4_diag_down_left_pred_mbaff(mb, plane, ioff, joff));
-    break;
-  case VERT_RIGHT_PRED:
-    return (intra4x4_vert_right_pred_mbaff(mb, plane, ioff, joff));
-    break;
-  case VERT_LEFT_PRED:
-    return (intra4x4_vert_left_pred_mbaff(mb, plane, ioff, joff));
-    break;
-  case HOR_UP_PRED:
-    return (intra4x4_hor_up_pred_mbaff(mb, plane, ioff, joff));
-    break;
-  case HOR_DOWN_PRED:
-    return (intra4x4_hor_down_pred_mbaff(mb, plane, ioff, joff));
-  default:
-    printf("Error: illegal intra_4x4 prediction mode: %d\n", (int) predmode);
-    return eSearchSync;
-    break;
+  switch (predmode) {
+    case DC_PRED:
+      return (intra4x4_dc_pred_mbaff(mb, plane, ioff, joff));
+      break;
+    case VERT_PRED:
+      return (intra4x4_vert_pred_mbaff(mb, plane, ioff, joff));
+      break;
+    case HOR_PRED:
+      return (intra4x4_hor_pred_mbaff(mb, plane, ioff, joff));
+      break;
+    case DIAG_DOWN_RIGHT_PRED:
+      return (intra4x4_diag_down_right_pred_mbaff(mb, plane, ioff, joff));
+      break;
+    case DIAG_DOWN_LEFT_PRED:
+      return (intra4x4_diag_down_left_pred_mbaff(mb, plane, ioff, joff));
+      break;
+    case VERT_RIGHT_PRED:
+      return (intra4x4_vert_right_pred_mbaff(mb, plane, ioff, joff));
+      break;
+    case VERT_LEFT_PRED:
+      return (intra4x4_vert_left_pred_mbaff(mb, plane, ioff, joff));
+      break;
+    case HOR_UP_PRED:
+      return (intra4x4_hor_up_pred_mbaff(mb, plane, ioff, joff));
+      break;
+    case HOR_DOWN_PRED:
+      return (intra4x4_hor_down_pred_mbaff(mb, plane, ioff, joff));
+    default:
+      printf("Error: illegal intra_4x4 prediction mode: %d\n", (int) predmode);
+      return eSearchSync;
+      break;
+    }
   }
-}
 //}}}
