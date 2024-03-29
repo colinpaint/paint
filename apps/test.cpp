@@ -1234,21 +1234,23 @@ public:
     if (testApp.getDecoder()) {
       //{{{  draw testApp info
       ImGui::SetCursorPos ({4.f,0.f});
-      ImGui::TextUnformatted (testApp.getDecoder()->debug.spsStr);
+      if (testApp.getDecoder()->param.spsDebug)
+        ImGui::TextUnformatted (testApp.getDecoder()->debug.spsStr);
 
       // 2nd line
       ImGui::SetCursorPos ({4.f,ImGui::GetTextLineHeight()});
-      ImGui::TextUnformatted (testApp.getDecoder()->debug.ppsStr);
+      if (testApp.getDecoder()->param.ppsDebug)
+        ImGui::TextUnformatted (testApp.getDecoder()->debug.ppsStr);
 
       // 3rd line - slice
       ImGui::SetCursorPos ({4.f,2.f*ImGui::GetTextLineHeight()});
-      ImGui::TextUnformatted (testApp.getDecoder()->debug.outStr);
-
-      ImGui::SameLine();
-      ImGui::TextUnformatted (testApp.getDecoder()->debug.sliceStr);
-
-      ImGui::SameLine();
-      ImGui::TextUnformatted (testApp.getDecoder()->debug.sliceTypeStr);
+      if (testApp.getDecoder()->param.sliceDebug) {
+        ImGui::TextUnformatted (testApp.getDecoder()->debug.outStr);
+        ImGui::SameLine();
+        ImGui::TextUnformatted (testApp.getDecoder()->debug.sliceStr);
+        ImGui::SameLine();
+        ImGui::TextUnformatted (testApp.getDecoder()->debug.sliceTypeStr);
+        }
       }
       //}}}
 

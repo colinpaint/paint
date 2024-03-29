@@ -2,7 +2,7 @@
 #include "global.h"
 #include "buffer.h"
 
-extern int allocPred (sSlice* slice);
+extern void allocPred (sSlice* slice);
 extern void freePred (sSlice* slice);
 
 extern void get_block_luma (sPicture* curRef, int x_pos, int y_pos,

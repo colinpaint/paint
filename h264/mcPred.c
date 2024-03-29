@@ -11,17 +11,14 @@
 static const sMotionVec kZeroMv = {0, 0};
 
 //{{{
-int allocPred (sSlice* slice) {
+void allocPred (sSlice* slice) {
 
-  int alloc_size = 0;
 
-  alloc_size += getMem2Dpel(&slice->tempBlockL0, MB_BLOCK_SIZE, MB_BLOCK_SIZE);
-  alloc_size += getMem2Dpel(&slice->tempBlockL1, MB_BLOCK_SIZE, MB_BLOCK_SIZE);
-  alloc_size += getMem2Dpel(&slice->tempBlockL2, MB_BLOCK_SIZE, MB_BLOCK_SIZE);
-  alloc_size += getMem2Dpel(&slice->tempBlockL3, MB_BLOCK_SIZE, MB_BLOCK_SIZE);
-  alloc_size += getMem2Dint(&slice->tempRes, MB_BLOCK_SIZE + 5, MB_BLOCK_SIZE + 5);
-
-  return (alloc_size);
+  getMem2Dpel(&slice->tempBlockL0, MB_BLOCK_SIZE, MB_BLOCK_SIZE);
+  getMem2Dpel(&slice->tempBlockL1, MB_BLOCK_SIZE, MB_BLOCK_SIZE);
+  getMem2Dpel(&slice->tempBlockL2, MB_BLOCK_SIZE, MB_BLOCK_SIZE);
+  getMem2Dpel(&slice->tempBlockL3, MB_BLOCK_SIZE, MB_BLOCK_SIZE);
+  getMem2Dint(&slice->tempRes, MB_BLOCK_SIZE + 5, MB_BLOCK_SIZE + 5);
   }
 //}}}
 //{{{
@@ -690,13 +687,8 @@ void update_direct_types (sSlice* slice)
 //{{{
 static void mc_prediction (sPixel** mbPred, sPixel** block, int blockSizeY, int blockSizeX, int ioff)
 {
-
-  int j;
-
-  for (j = 0; j < blockSizeY; j++)
-  {
+  for (int j = 0; j < blockSizeY; j++)
     memcpy(&mbPred[j][ioff], block[j], blockSizeX * sizeof(sPixel));
-  }
 }
 //}}}
 //{{{
@@ -765,7 +757,6 @@ static void weighted_bi_prediction (sPixel *mbPred,
     for(i = 0; i < blockSizeX; i++)
     {
       result = rshift_rnd_sf((wp_scale_l0 * *(block_l0++) + wp_scale_l1 * *(block_l1++)),  weight_denom);
-
       *(mbPred++) = (sPixel) iClip1(color_clip, result + weightedPredOffset);
     }
     mbPred += row_inc;
@@ -844,7 +835,6 @@ static void get_luma_20 (sPixel** block, sPixel** curPixelY, int blockSizeY, int
     for (i = 0; i < blockSizeX; i++)
     {
       result  = (*(p0++) + *(p5++)) - 5 * (*(p1++) + *(p4++)) + 20 * (*(p2++) + *(p3++));
-
       *orig_line++ = (sPixel) iClip1(max_imgpel_value, ((result + 16)>>5));
     }
   }
@@ -872,7 +862,6 @@ static void get_luma_30 (sPixel** block, sPixel** curPixelY, int blockSizeY, int
     for (i = 0; i < blockSizeX; i++)
     {
       result  = (*(p0++) + *(p5++)) - 5 * (*(p1++) + *(p4++)) + 20 * (*(p2++) + *(p3++));
-
       *orig_line = (sPixel) iClip1(max_imgpel_value, ((result + 16)>>5));
       *orig_line = (sPixel) ((*orig_line + *(cur_line++) + 1 ) >> 1);
       orig_line++;
@@ -902,7 +891,6 @@ static void get_luma_01 (sPixel** block, sPixel** curPixelY, int blockSizeY, int
     for (i = 0; i < blockSizeX; i++)
     {
       result  = (*(p0++) + *(p5++)) - 5 * (*(p1++) + *(p4++)) + 20 * (*(p2++) + *(p3++));
-
       *orig_line = (sPixel) iClip1(max_imgpel_value, ((result + 16)>>5));
       *orig_line = (sPixel) ((*orig_line + *(cur_line++) + 1 ) >> 1);
       orig_line++;
@@ -932,7 +920,6 @@ static void get_luma_02 (sPixel** block, sPixel** curPixelY, int blockSizeY, int
     for (i = 0; i < blockSizeX; i++)
     {
       result  = (*(p0++) + *(p5++)) - 5 * (*(p1++) + *(p4++)) + 20 * (*(p2++) + *(p3++));
-
       *orig_line++ = (sPixel) iClip1(max_imgpel_value, ((result + 16)>>5));
     }
     p0 = p1 - blockSizeX;
@@ -962,7 +949,6 @@ static void get_luma_03 (sPixel** block, sPixel** curPixelY, int blockSizeY, int
     for (i = 0; i < blockSizeX; i++)
     {
       result  = (*(p0++) + *(p5++)) - 5 * (*(p1++) + *(p4++)) + 20 * (*(p2++) + *(p3++));
-
       *orig_line = (sPixel) iClip1(max_imgpel_value, ((result + 16)>>5));
       *orig_line = (sPixel) ((*orig_line + *(cur_line++) + 1 ) >> 1);
       orig_line++;
@@ -1047,9 +1033,7 @@ static void get_luma_22 (sPixel** block, sPixel** curPixelY, int** tempRes, int 
     tmp_line  = tempRes[j];
 
     for (i = 0; i < blockSizeX; i++)
-    {
       *(tmp_line++) = (*(p0++) + *(p5++)) - 5 * (*(p1++) + *(p4++)) + 20 * (*(p2++) + *(p3++));
-    }
   }
 
   for (j = 0; j < blockSizeY; j++)
@@ -1065,7 +1049,6 @@ static void get_luma_22 (sPixel** block, sPixel** curPixelY, int** tempRes, int 
     for (i = 0; i < blockSizeX; i++)
     {
       result  = (*x0++ + *x5++) - 5 * (*x1++ + *x4++) + 20 * (*x2++ + *x3++);
-
       *(orig_line++) = (sPixel) iClip1(max_imgpel_value, ((result + 512)>>10));
     }
   }
@@ -1095,9 +1078,7 @@ static void get_luma_23 (sPixel** block, sPixel** curPixelY, int** tempRes, int 
     tmp_line  = tempRes[j];
 
     for (i = 0; i < blockSizeX; i++)
-    {
       *(tmp_line++) = (*(p0++) + *(p5++)) - 5 * (*(p1++) + *(p4++)) + 20 * (*(p2++) + *(p3++));
-    }
   }
 
   jj = 3;
@@ -1193,9 +1174,7 @@ static void get_luma_32 (sPixel** block, sPixel** curPixelY, int** tempRes, int 
     tmp_line  = tempRes[j];
 
     for (i = 0; i < blockSizeX + 5; i++)
-    {
       *(tmp_line++)  = (*(p0++) + *(p5++)) - 5 * (*(p1++) + *(p4++)) + 20 * (*(p2++) + *(p3++));
-    }
     p0 = p1 - (blockSizeX + 5);
   }
 
@@ -1245,7 +1224,6 @@ static void get_luma_33 (sPixel** block, sPixel** curPixelY, int blockSizeY, int
     for (i = 0; i < blockSizeX; i++)
     {
       result  = (*(p0++) + *(p5++)) - 5 * (*(p1++) + *(p4++)) + 20 * (*(p2++) + *(p3++));
-
       *(orig_line++) = (sPixel) iClip1(max_imgpel_value, ((result + 16)>>5));
     }
   }
@@ -1263,7 +1241,6 @@ static void get_luma_33 (sPixel** block, sPixel** curPixelY, int blockSizeY, int
     for (i = 0; i < blockSizeX; i++)
     {
       result  = (*(p0++) + *(p5++)) - 5 * (*(p1++) + *(p4++)) + 20 * (*(p2++) + *(p3++));
-
       *orig_line = (sPixel) ((*orig_line + iClip1(max_imgpel_value, ((result + 16) >> 5)) + 1) >> 1);
       orig_line++;
     }
@@ -1295,7 +1272,6 @@ static void get_luma_11 (sPixel** block, sPixel** curPixelY, int blockSizeY, int
     for (i = 0; i < blockSizeX; i++)
     {
       result  = (*(p0++) + *(p5++)) - 5 * (*(p1++) + *(p4++)) + 20 * (*(p2++) + *(p3++));
-
       *(orig_line++) = (sPixel) iClip1(max_imgpel_value, ((result + 16)>>5));
     }
   }
@@ -1313,7 +1289,6 @@ static void get_luma_11 (sPixel** block, sPixel** curPixelY, int blockSizeY, int
     for (i = 0; i < blockSizeX; i++)
     {
       result  = (*(p0++) + *(p5++)) - 5 * (*(p1++) + *(p4++)) + 20 * (*(p2++) + *(p3++));
-
       *orig_line = (sPixel) ((*orig_line + iClip1(max_imgpel_value, ((result + 16) >> 5)) + 1) >> 1);
       orig_line++;
     }
@@ -1346,7 +1321,6 @@ static void get_luma_13 (sPixel** block, sPixel** curPixelY, int blockSizeY, int
     for (i = 0; i < blockSizeX; i++)
     {
       result  = (*(p0++) + *(p5++)) - 5 * (*(p1++) + *(p4++)) + 20 * (*(p2++) + *(p3++));
-
       *(orig_line++) = (sPixel) iClip1(max_imgpel_value, ((result + 16)>>5));
     }
   }
@@ -1364,7 +1338,6 @@ static void get_luma_13 (sPixel** block, sPixel** curPixelY, int blockSizeY, int
     for (i = 0; i < blockSizeX; i++)
     {
       result  = (*(p0++) + *(p5++)) - 5 * (*(p1++) + *(p4++)) + 20 * (*(p2++) + *(p3++));
-
       *orig_line = (sPixel) ((*orig_line + iClip1(max_imgpel_value, ((result + 16) >> 5)) + 1) >> 1);
       orig_line++;
     }
@@ -1397,7 +1370,6 @@ static void get_luma_31 (sPixel** block, sPixel** curPixelY, int blockSizeY, int
     for (i = 0; i < blockSizeX; i++)
     {
       result  = (*(p0++) + *(p5++)) - 5 * (*(p1++) + *(p4++)) + 20 * (*(p2++) + *(p3++));
-
       *(orig_line++) = (sPixel) iClip1(max_imgpel_value, ((result + 16)>>5));
     }
   }
@@ -1415,7 +1387,6 @@ static void get_luma_31 (sPixel** block, sPixel** curPixelY, int blockSizeY, int
     for (i = 0; i < blockSizeX; i++)
     {
       result  = (*(p0++) + *(p5++)) - 5 * (*(p1++) + *(p4++)) + 20 * (*(p2++) + *(p3++));
-
       *orig_line = (sPixel) ((*orig_line + iClip1(max_imgpel_value, ((result + 16) >> 5)) + 1) >> 1);
       orig_line++;
     }
@@ -2271,6 +2242,7 @@ void perform_mc (sMacroBlock* mb, eColorPlane plane, sPicture* picture,
                  int predDir, int i, int j, int blockSizeX, int blockSizeY) {
 
   sSlice* slice = mb->slice;
+
   if (predDir != 2) {
     if (slice->hasWeightedPred)
       perform_mc_single_wp(mb, plane, picture, predDir, i, j, blockSizeX, blockSizeY);
