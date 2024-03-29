@@ -1360,18 +1360,18 @@ private:
         mVideoQuad->draw();
         //}}}
         //{{{  draw frameInfo
-        string title = fmt::format ("seqPts:{} {:4d} {:5d} {}",
-                                    getPtsString (videoFrame->getPts()),
-                                    videoFrame->getPtsDuration(),
-                                    videoFrame->getPesSize(),
-                                    videoFrame->getFrameInfo()
-                                    );
+        //string title = fmt::format ("seqPts:{} {:4d} {:5d} {}",
+                                    //getPtsString (videoFrame->getPts()),
+                                    //videoFrame->getPtsDuration(),
+                                    //videoFrame->getPesSize(),
+                                    //videoFrame->getFrameInfo()
+                                    //);
 
-        ImVec2 pos = { ImGui::GetTextLineHeight(), mSize.y - 4.5f * ImGui::GetTextLineHeight()};
-        ImGui::SetCursorPos (pos);
-        ImGui::TextColored ({0.f,0.f,0.f,1.f}, title.c_str());
-        ImGui::SetCursorPos (pos - ImVec2(2.f,2.f));
-        ImGui::TextColored ({1.f, 1.f,1.f,1.f}, title.c_str());
+        //ImVec2 pos = { ImGui::GetTextLineHeight(), mSize.y - 4.5f * ImGui::GetTextLineHeight()};
+        //ImGui::SetCursorPos (pos);
+        //ImGui::TextColored ({0.f,0.f,0.f,1.f}, title.c_str());
+        //ImGui::SetCursorPos (pos - ImVec2(2.f,2.f));
+        //ImGui::TextColored ({1.f, 1.f,1.f,1.f}, title.c_str());
         //}}}
         }
 
