@@ -1227,19 +1227,32 @@ public:
     mView->draw (testApp, mVideoShader);
 
     // draw menu
-    ImGui::SetCursorPos ({0.f,ImGui::GetIO().DisplaySize.y - ImGui::GetTextLineHeight() * 3.5f});
-    ImGui::BeginChild ("menu", {0.f,ImGui::GetTextLineHeight() * 3.5f},
+    ImGui::SetCursorPos ({0.f,ImGui::GetIO().DisplaySize.y - ImGui::GetTextLineHeight() * 4.5f});
+    ImGui::BeginChild ("menu", {0.f,ImGui::GetTextLineHeight() * 4.5f},
                        ImGuiChildFlags_None, ImGuiWindowFlags_NoBackground);
 
-    ImGui::SetCursorPos ({4.f,0.f});
-    if (testApp.getDecoder())
+    if (testApp.getDecoder()) {
+      //{{{  draw testApp info
+      ImGui::SetCursorPos ({4.f,0.f});
       ImGui::TextUnformatted (testApp.getDecoder()->debug.spsStr);
 
-    ImGui::SetCursorPos ({4.f,ImGui::GetTextLineHeight()});
-    if (testApp.getDecoder())
+      // 2nd line
+      ImGui::SetCursorPos ({4.f,ImGui::GetTextLineHeight()});
       ImGui::TextUnformatted (testApp.getDecoder()->debug.ppsStr);
 
-    ImGui::SetCursorPos ({0.f,2.f*ImGui::GetTextLineHeight()});
+      // 3rd line - slice
+      ImGui::SetCursorPos ({4.f,2.f*ImGui::GetTextLineHeight()});
+      ImGui::TextUnformatted (testApp.getDecoder()->debug.outStr);
+
+      ImGui::SameLine();
+      ImGui::TextUnformatted (testApp.getDecoder()->debug.sliceStr);
+
+      ImGui::SameLine();
+      ImGui::TextUnformatted (testApp.getDecoder()->debug.sliceTypeStr);
+      }
+      //}}}
+
+    ImGui::SetCursorPos ({0.f,3.f*ImGui::GetTextLineHeight()});
     //{{{  draw fullScreen button
     if (toggleButton ("full", testApp.getPlatform().getFullScreen()))
       testApp.getPlatform().toggleFullScreen();
@@ -1293,18 +1306,6 @@ public:
       ImGui::SameLine();
       if (toggleButton ("deblock", testApp.getDecoder()->param.deblock))
         testApp.getDecoder()->param.deblock = !testApp.getDecoder()->param.deblock;
-      //}}}
-      //{{{  draw outStr
-      ImGui::SameLine();
-      ImGui::TextUnformatted (testApp.getDecoder()->debug.outStr);
-      //}}}
-      //{{{  draw sliceStr
-      ImGui::SameLine();
-      ImGui::TextUnformatted (testApp.getDecoder()->debug.sliceStr);
-      //}}}
-      //{{{  draw sliceTypeStr
-      ImGui::SameLine();
-      ImGui::TextUnformatted (testApp.getDecoder()->debug.sliceTypeStr);
       //}}}
       }
 
