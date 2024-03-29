@@ -1204,6 +1204,7 @@ class cTestUI : public cApp::iUI {
 public:
   virtual ~cTestUI() = default;
 
+  //{{{
   void draw (cApp& app) {
     ImGui::SetKeyboardFocusHere();
     app.getGraphics().clear ({(int32_t)ImGui::GetIO().DisplaySize.x,
@@ -1226,17 +1227,19 @@ public:
     mView->draw (testApp, mVideoShader);
 
     // draw menu
-    ImGui::SetCursorPos ({0.f,ImGui::GetIO().DisplaySize.y - ImGui::GetTextLineHeight() * 2.5f});
-    ImGui::BeginChild ("menu", {0.f,ImGui::GetTextLineHeight() * 2.5f},
+    ImGui::SetCursorPos ({0.f,ImGui::GetIO().DisplaySize.y - ImGui::GetTextLineHeight() * 3.5f});
+    ImGui::BeginChild ("menu", {0.f,ImGui::GetTextLineHeight() * 3.5f},
                        ImGuiChildFlags_None, ImGuiWindowFlags_NoBackground);
 
     ImGui::SetCursorPos ({4.f,0.f});
     if (testApp.getDecoder())
-      //{{{  draw spsStr
       ImGui::TextUnformatted (testApp.getDecoder()->debug.spsStr);
-      //}}}
 
-    ImGui::SetCursorPos ({0.f,ImGui::GetTextLineHeight()});
+    ImGui::SetCursorPos ({4.f,ImGui::GetTextLineHeight()});
+    if (testApp.getDecoder())
+      ImGui::TextUnformatted (testApp.getDecoder()->debug.ppsStr);
+
+    ImGui::SetCursorPos ({0.f,2.f*ImGui::GetTextLineHeight()});
     //{{{  draw fullScreen button
     if (toggleButton ("full", testApp.getPlatform().getFullScreen()))
       testApp.getPlatform().toggleFullScreen();
@@ -1309,6 +1312,7 @@ public:
     ImGui::End();
     keyboard (testApp);
     }
+  //}}}
 
 private:
   //{{{
@@ -1363,7 +1367,7 @@ private:
                                     videoFrame->getFrameInfo()
                                     );
 
-        ImVec2 pos = { ImGui::GetTextLineHeight(), mSize.y - 3.5f * ImGui::GetTextLineHeight()};
+        ImVec2 pos = { ImGui::GetTextLineHeight(), mSize.y - 4.5f * ImGui::GetTextLineHeight()};
         ImGui::SetCursorPos (pos);
         ImGui::TextColored ({0.f,0.f,0.f,1.f}, title.c_str());
         ImGui::SetCursorPos (pos - ImVec2(2.f,2.f));

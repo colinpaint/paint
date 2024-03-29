@@ -25,7 +25,7 @@
 #include <math.h>
 #include <limits.h>
 //}}}
-//{{{  static tables
+//{{{  static const tables
 #define CTX_UNUSED {0,64}
 #define CTX_UNDEF  {0,63}
 
@@ -2553,7 +2553,7 @@ static void useParameterSet (sDecoder* decoder, sSlice* slice) {
     setFormat (decoder, sps, &decoder->param.source, &decoder->param.output);
 
     // debug spsStr
-    sprintf (decoder->debug.spsStr, "sps -> profile:%d %dx%d %dx%d%s %d:%d:%d%s",
+    sprintf (decoder->debug.spsStr, "-> profile:%d %dx%d %dx%d%s %d:%d:%d%s",
              sps->profileIdc,
              decoder->param.source.width[0], decoder->param.source.height[0],
              decoder->coding.width, decoder->coding.height,
@@ -2566,7 +2566,7 @@ static void useParameterSet (sDecoder* decoder, sSlice* slice) {
              sps->frameMbOnly ? (sps->mbAffFlag ? " mbAff" : " frame") : " field");
 
     // print profile debug
-    printf ("- > %s\n", decoder->debug.spsStr);
+    printf (" %s\n", decoder->debug.spsStr);
     }
     //}}}
 
@@ -2677,14 +2677,14 @@ static int isNewPicture (sPicture* picture, sSlice* slice, sOldSlice* oldSlice) 
 
   if (!decoder->activeSps->pocType) {
     result |= (oldSlice->picOrderCountLsb != slice->picOrderCountLsb);
-    if ((decoder->activePps->botFieldFrame == 1) && !slice->fieldPic)
+    if ((decoder->activePps->frameBotField == 1) && !slice->fieldPic)
       result |= (oldSlice->deltaPicOrderCountBot != slice->deletaPicOrderCountBot);
     }
 
   if (decoder->activeSps->pocType == 1) {
     if (!decoder->activeSps->deltaPicOrderAlwaysZero) {
       result |= (oldSlice->deltaPicOrderCount[0] != slice->deltaPicOrderCount[0]);
-      if ((decoder->activePps->botFieldFrame == 1) && !slice->fieldPic)
+      if ((decoder->activePps->frameBotField == 1) && !slice->fieldPic)
         result |= (oldSlice->deltaPicOrderCount[1] != slice->deltaPicOrderCount[1]);
       }
     }
@@ -2806,7 +2806,7 @@ static void readSliceHeader (sDecoder* decoder, sSlice* slice) {
   //{{{  read picOrderCount
   if (activeSps->pocType == 0) {
     slice->picOrderCountLsb = readUv (activeSps->log2maxPocLsbMinus4 + 4, "SLC picOrderCountLsb", s);
-    if ((decoder->activePps->botFieldFrame == 1) && !slice->fieldPic)
+    if ((decoder->activePps->frameBotField == 1) && !slice->fieldPic)
       slice->deletaPicOrderCountBot = readSeV ("SLC deletaPicOrderCountBot", s);
     else
       slice->deletaPicOrderCountBot = 0;
@@ -2815,7 +2815,7 @@ static void readSliceHeader (sDecoder* decoder, sSlice* slice) {
   if (activeSps->pocType == 1) {
     if (!activeSps->deltaPicOrderAlwaysZero) {
       slice->deltaPicOrderCount[0] = readSeV ("SLC deltaPicOrderCount[0]", s);
-      if ((decoder->activePps->botFieldFrame == 1) && !slice->fieldPic)
+      if ((decoder->activePps->frameBotField == 1) && !slice->fieldPic)
         slice->deltaPicOrderCount[1] = readSeV ("SLC deltaPicOrderCount[1]", s);
       else
         slice->deltaPicOrderCount[1] = 0;  // set to zero if not in stream

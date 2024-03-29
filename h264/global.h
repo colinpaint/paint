@@ -872,9 +872,10 @@ typedef struct {
   TIME_T  startTime;
   TIME_T  endTime;
 
-  char    sliceTypeStr[9];
-  char    spsStr[64];
+  char    spsStr[128];
+  char    ppsStr[128];
   char    sliceStr[64];
+  char    sliceTypeStr[9];
   char    outStr[64];
   } sDebug;
 //}}}

@@ -10,7 +10,7 @@ typedef struct {
   unsigned  id;                               // ue(v)
   unsigned  spsId;                            // ue(v)
   int       entropyCoding;                    // u(1)
-  Boolean   botFieldFrame;                    // u(1)
+  Boolean   frameBotField;                    // u(1)
 
   unsigned int numSliceGroupsMinus1;          // ue(v)
   unsigned int sliceGroupMapType;             // ue(v)

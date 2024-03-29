@@ -18,7 +18,7 @@ static int isEqualPps (sPps* pps1, sPps* pps2) {
   equal &= (pps1->id == pps2->id);
   equal &= (pps1->spsId == pps2->spsId);
   equal &= (pps1->entropyCoding == pps2->entropyCoding);
-  equal &= (pps1->botFieldFrame == pps2->botFieldFrame);
+  equal &= (pps1->frameBotField == pps2->frameBotField);
   equal &= (pps1->numSliceGroupsMinus1 == pps2->numSliceGroupsMinus1);
   if (!equal)
     return equal;
@@ -129,7 +129,7 @@ static void readPpsFromStream (sDecoder* decoder, sDataPartition* dataPartition,
   pps->spsId = readUeV ("PPS spsId", s);
 
   pps->entropyCoding = readU1 ("PPS entropyCoding", s);
-  pps->botFieldFrame = readU1 ("PPS botFieldFrame", s);
+  pps->frameBotField = readU1 ("PPS frameBotField", s);
   pps->numSliceGroupsMinus1 = readUeV ("PPS numSliceGroupsMinus1", s);
 
   if (pps->numSliceGroupsMinus1 > 0) {
@@ -218,21 +218,24 @@ static void readPpsFromStream (sDecoder* decoder, sDataPartition* dataPartition,
 
   if (decoder->param.ppsDebug)
     //{{{  print debug
-    printf ("PPS:%d:%d -> sps:%d%s%s sliceGroups:%d L:%d:%d%s%s%s%s%s%s biPredIdc:%d\n",
-            pps->id, naluLen,
-            pps->spsId,
-            pps->entropyCoding ? " cabac":" cavlc",
-            pps->botFieldFrame ? " botField":"",
-            pps->numSliceGroupsMinus1,
-            pps->numRefIndexL0defaultActiveMinus1, pps->numRefIndexL1defaultActiveMinus1,
-            pps->hasDeblockFilterControl ? " deblock":"",
-            pps->hasWeightedPred ? " pred":"",
-            pps->hasConstrainedIntraPred ? " intra":"",
-            pps->redundantPicCountPresent ? " redundant":"",
-            fidelityRange && pps->hasTransform8x8mode ? " 8x8":"",
-            fidelityRange && pps->hasPicScalingMatrix ? " scaling":"",
-            pps->weightedBiPredIdc
-            );
+    sprintf (decoder->debug.ppsStr,
+             "PPS:%d:%d -> sps:%d%s%s sliceGroups:%d L:%d:%d%s%s%s%s%s biPredIdc:%d%s\n",
+             pps->id, naluLen,
+             pps->spsId,
+             pps->entropyCoding ? " cabac":" cavlc",
+             pps->numSliceGroupsMinus1,
+             pps->numRefIndexL0defaultActiveMinus1, pps->numRefIndexL1defaultActiveMinus1,
+             pps->hasDeblockFilterControl ? " deblock":"",
+             pps->hasWeightedPred ? " pred":"",
+             pps->hasConstrainedIntraPred ? " intra":"",
+             pps->redundantPicCountPresent ? " redundant":"",
+             fidelityRange && pps->hasTransform8x8mode ? " 8x8":"",
+             fidelityRange && pps->hasPicScalingMatrix ? " scaling":"",
+             pps->weightedBiPredIdc,
+             pps->frameBotField ? " botField":""
+             );
+
+    printf ("%s\n", decoder->debug.ppsStr);
     //}}}
 
   pps->ok = TRUE;
