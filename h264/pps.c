@@ -125,7 +125,7 @@ static void readPpsFromStream (sDecoder* decoder, sDataPartition* dataPartition,
 
   sBitStream* s = dataPartition->s;
 
-  pps->id = readUeV ("PPS id", s);
+  pps->id = readUeV ("PPS ppsId", s);
   pps->spsId = readUeV ("PPS spsId", s);
 
   pps->entropyCoding = readU1 ("PPS entropyCoding", s);
@@ -196,6 +196,7 @@ static void readPpsFromStream (sDecoder* decoder, sDataPartition* dataPartition,
 
   int fidelityRange = moreRbspData (s->bitStreamBuffer, s->bitStreamOffset,s->bitStreamLen);
   if (fidelityRange) {
+    //{{{  read fidelity range
     pps->hasTransform8x8mode = readU1 ("PPS hasTransform8x8mode", s);
     pps->hasPicScalingMatrix = readU1 ("PPS hasPicScalingMatrix", s);
     if (pps->hasPicScalingMatrix) {
@@ -213,11 +214,11 @@ static void readPpsFromStream (sDecoder* decoder, sDataPartition* dataPartition,
       }
     pps->chromaQpOffset2 = readSeV ("PPS chromaQpOffset2", s);
     }
+    //}}}
   else
     pps->chromaQpOffset2 = pps->chromaQpOffset;
 
-  if (decoder->param.ppsDebug)
-    //{{{  print debug
+  if (decoder->param.ppsDebug) {
     sprintf (decoder->debug.ppsStr,
              "PPS:%d:%d -> sps:%d%s sliceGroups:%d L:%d:%d%s%s%s%s%s%s biPredIdc:%d%s\n",
              pps->id, naluLen,
@@ -234,9 +235,8 @@ static void readPpsFromStream (sDecoder* decoder, sDataPartition* dataPartition,
              pps->weightedBiPredIdc,
              pps->frameBotField ? " botField":""
              );
-
     printf ("%s\n", decoder->debug.ppsStr);
-    //}}}
+    }
 
   pps->ok = TRUE;
   }

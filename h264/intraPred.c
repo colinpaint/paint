@@ -52,12 +52,6 @@
 //}}}
 
 //{{{
-/*!
-** ***********************************************************************************
- * \brief
- *    Prefiltering for Intra8x8 prediction
-** ***********************************************************************************
- */
 static void LowPassForIntra8x8Pred (sPixel* PredPel, int block_up_left, int block_up, int block_left)
 {
   int i;
@@ -107,81 +101,61 @@ static void LowPassForIntra8x8Pred (sPixel* PredPel, int block_up_left, int bloc
 }
 //}}}
 //{{{
-/*!
-** ***********************************************************************************
- * \brief
- *    Prefiltering for Intra8x8 prediction (Horizontal)
-** ***********************************************************************************
- */
-static void LowPassForIntra8x8PredHor (sPixel* PredPel, int block_up_left, int block_up, int block_left)
-{
+static void LowPassForIntra8x8PredHor (sPixel* PredPel, int block_up_left, int block_up, int block_left) {
+
   int i;
+
   sPixel LoopArray[25];
+  memcpy (&LoopArray[0], &PredPel[0], 25 * sizeof(sPixel));
 
-  memcpy(&LoopArray[0], &PredPel[0], 25 * sizeof(sPixel));
-
-  if(block_up_left)
-  {
-    if(block_up && block_left)
+  if (block_up_left) {
+    if (block_up && block_left)
       LoopArray[0] = (sPixel) ((P_Q + (P_Z<<1) + P_A + 2)>>2);
-    else
-    {
-      if(block_up)
+    else {
+      if (block_up)
         LoopArray[0] = (sPixel) ((P_Z + (P_Z<<1) + P_A + 2)>>2);
       else if (block_left)
         LoopArray[0] = (sPixel) ((P_Z + (P_Z<<1) + P_Q + 2)>>2);
+      }
     }
-  }
 
-  if(block_up)
-  {
-    if(block_up_left)
+  if (block_up) {
+    if (block_up_left)
       LoopArray[1] = (sPixel) ((PredPel[0] + (PredPel[1]<<1) + PredPel[2] + 2)>>2);
     else
       LoopArray[1] = (sPixel) ((PredPel[1] + (PredPel[1]<<1) + PredPel[2] + 2)>>2);
 
-
-    for(i = 2; i <16; i++)
+    for (i = 2; i <16; i++)
       LoopArray[i] = (sPixel) ((PredPel[i-1] + (PredPel[i]<<1) + PredPel[i+1] + 2)>>2);
     LoopArray[16] = (sPixel) ((P_P + (P_P<<1) + P_O + 2)>>2);
+    }
+
+  memcpy (&PredPel[0], &LoopArray[0], 17 * sizeof(sPixel));
   }
-
-
-  memcpy(&PredPel[0], &LoopArray[0], 17 * sizeof(sPixel));
-}
 //}}}
 //{{{
-/*!
-** ***********************************************************************************
- * \brief
- *    Prefiltering for Intra8x8 prediction (Vertical)
-** ***********************************************************************************
- */
-static void LowPassForIntra8x8PredVer (sPixel* PredPel, int block_up_left, int block_up, int block_left)
-{
-  // These functions need some cleanup and can be further optimized.
-  // For convenience, let us copy all data for now. It is obvious that the filtering makes things a bit more "complex"
+static void LowPassForIntra8x8PredVer (sPixel* PredPel, int block_up_left, int block_up, int block_left) {
+// These functions need some cleanup and can be further optimized.
+// For convenience, let us copy all data for now. It is obvious that the filtering makes things a bit more "complex"
+
   int i;
   sPixel LoopArray[25];
 
-  memcpy(&LoopArray[0], &PredPel[0], 25 * sizeof(sPixel));
+  memcpy (&LoopArray[0], &PredPel[0], 25 * sizeof(sPixel));
 
-  if(block_up_left)
-  {
-    if(block_up && block_left)
+  if (block_up_left) {
+    if (block_up && block_left)
       LoopArray[0] = (sPixel) ((P_Q + (P_Z<<1) + P_A + 2)>>2);
-    else
-    {
-      if(block_up)
+    else {
+      if (block_up)
         LoopArray[0] = (sPixel) ((P_Z + (P_Z<<1) + P_A + 2)>>2);
       else if (block_left)
         LoopArray[0] = (sPixel) ((P_Z + (P_Z<<1) + P_Q + 2)>>2);
     }
   }
 
-  if(block_left)
-  {
-    if(block_up_left)
+  if (block_left) {
+    if (block_up_left)
       LoopArray[17] = (sPixel) ((P_Z + (P_Q<<1) + P_R + 2)>>2);
     else
       LoopArray[17] = (sPixel) ((P_Q + (P_Q<<1) + P_R + 2)>>2);
@@ -189,23 +163,13 @@ static void LowPassForIntra8x8PredVer (sPixel* PredPel, int block_up_left, int b
     for(i = 18; i <24; i++)
       LoopArray[i] = (sPixel) ((PredPel[i-1] + (PredPel[i]<<1) + PredPel[i+1] + 2)>>2);
     LoopArray[24] = (sPixel) ((P_W + (P_X<<1) + P_X + 2) >> 2);
-  }
+    }
 
   memcpy(&PredPel[0], &LoopArray[0], 25 * sizeof(sPixel));
-}
-
+  }
 //}}}
+
 //{{{
-/*!
-** *********************************************************************
- * \brief
- *    makes and returns 8x8 DC prediction mode
- *
- * \return
- *    eDecodingOk   decoding of intra prediction mode was successful            \n
- *
-** *********************************************************************
- */
 static int intra8x8_dc_pred (sMacroBlock * mb, eColorPlane plane, int ioff, int joff) {
 
   int i,j;
@@ -311,16 +275,6 @@ static int intra8x8_dc_pred (sMacroBlock * mb, eColorPlane plane, int ioff, int 
 }
 //}}}
 //{{{
-/*!
-** *********************************************************************
- * \brief
- *    makes and returns 8x8 vertical prediction mode
- *
- * \return
- *    eDecodingOk   decoding of intra prediction mode was successful            \n
- *
-** *********************************************************************
- */
 static int intra8x8_vert_pred (sMacroBlock* mb,
                                      eColorPlane plane,         //!< current image plane
                                      int ioff,              //!< pixel offset X within MB
@@ -397,16 +351,6 @@ static int intra8x8_vert_pred (sMacroBlock* mb,
 }
 //}}}
 //{{{
-/*!
-** *********************************************************************
- * \brief
- *    makes and returns 8x8 horizontal prediction mode
- *
- * \return
- *    eDecodingOk   decoding of intra prediction mode was successful            \n
- *
-** *********************************************************************
- */
 static int intra8x8_hor_pred (sMacroBlock* mb,
                                     eColorPlane plane,         //!< current image plane
                                     int ioff,              //!< pixel offset X within MB
@@ -489,16 +433,6 @@ static int intra8x8_hor_pred (sMacroBlock* mb,
 }
 //}}}
 //{{{
-/*!
-** *********************************************************************
- * \brief
- *    makes and returns 8x8 diagonal down right prediction mode
- *
- * \return
- *    eDecodingOk   decoding of intra prediction mode was successful            \n
- *
-** *********************************************************************
- */
 static int intra8x8_diag_down_right_pred (sMacroBlock* mb,
                                                 eColorPlane plane,         //!< current image plane
                                                 int ioff,              //!< pixel offset X within MB
@@ -616,16 +550,6 @@ static int intra8x8_diag_down_right_pred (sMacroBlock* mb,
 }
 //}}}
 //{{{
-/*!
-** *********************************************************************
- * \brief
- *    makes and returns 8x8 diagonal down left prediction mode
- *
- * \return
- *    eDecodingOk   decoding of intra prediction mode was successful            \n
- *
-** *********************************************************************
- */
 static int intra8x8_diag_down_left_pred (sMacroBlock* mb,
                                                eColorPlane plane,         //!< current image plane
                                                int ioff,              //!< pixel offset X within MB
@@ -745,16 +669,6 @@ static int intra8x8_diag_down_left_pred (sMacroBlock* mb,
 }
 //}}}
 //{{{
-/*!
-** *********************************************************************
- * \brief
- *    makes and returns 8x8 vertical right prediction mode
- *
- * \return
- *    eDecodingOk   decoding of intra prediction mode was successful            \n
- *
-** *********************************************************************
- */
 static int intra8x8_vert_right_pred (sMacroBlock* mb,
                                            eColorPlane plane,         //!< current image plane
                                            int ioff,              //!< pixel offset X within MB
@@ -880,16 +794,6 @@ static int intra8x8_vert_right_pred (sMacroBlock* mb,
 }
 //}}}
 //{{{
-/*!
-** *********************************************************************
- * \brief
- *    makes and returns 8x8 vertical left prediction mode
- *
- * \return
- *    eDecodingOk   decoding of intra prediction mode was successful            \n
- *
-** *********************************************************************
- */
 static int intra8x8_vert_left_pred (sMacroBlock* mb,
                                           eColorPlane plane,         //!< current image plane
                                           int ioff,              //!< pixel offset X within MB
@@ -1013,16 +917,6 @@ static int intra8x8_vert_left_pred (sMacroBlock* mb,
 }
 //}}}
 //{{{
-/*!
-** *********************************************************************
- * \brief
- *    makes and returns 8x8 horizontal up prediction mode
- *
- * \return
- *    eDecodingOk   decoding of intra prediction mode was successful            \n
- *
-** *********************************************************************
- */
 static int intra8x8_hor_up_pred (sMacroBlock* mb,
                                        eColorPlane plane,         //!< current image plane
                                        int ioff,              //!< pixel offset X within MB
@@ -1145,16 +1039,6 @@ static int intra8x8_hor_up_pred (sMacroBlock* mb,
 }
 //}}}
 //{{{
-/*!
-** *********************************************************************
- * \brief
- *    makes and returns 8x8 horizontal down prediction mode
- *
- * \return
- *    eDecodingOk   decoding of intra prediction mode was successful            \n
- *
-** *********************************************************************
- */
 static int intra8x8_hor_down_pred (sMacroBlock* mb,
                                          eColorPlane plane,         //!< current image plane
                                          int ioff,              //!< pixel offset X within MB
@@ -1288,20 +1172,6 @@ static int intra8x8_hor_down_pred (sMacroBlock* mb,
 }
 //}}}
 //{{{
-/*!
-** **********************************************************************
- * \brief
- *    Make intra 8x8 prediction according to all 9 prediction modes.
- *    The routine uses left and upper neighbouring points from
- *    previous coded blocks to do this (if available). Notice that
- *    inaccessible neighbouring points are signalled with a negative
- *    value in the predmode array .
- *
- *  \par Input:
- *     Starting point of current 8x8 block image position
- *
-** **********************************************************************
- */
 static int intra_pred_8x8_normal (sMacroBlock* mb,
                         eColorPlane plane,         //!< Current color plane
                         int ioff,              //!< ioff
@@ -1455,16 +1325,6 @@ static int intra8x8_dc_pred_mbaff (sMacroBlock* mb, eColorPlane plane, int ioff,
 }
 //}}}
 //{{{
-/*!
-** *********************************************************************
- * \brief
- *    makes and returns 8x8 vertical prediction mode
- *
- * \return
- *    eDecodingOk   decoding of intra_prediction mode was successful            \n
- *
-** *********************************************************************
- */
 static int intra8x8_vert_pred_mbaff (sMacroBlock* mb,
                                      eColorPlane plane,         //!< current image plane
                                      int ioff,              //!< pixel offset X within MB
@@ -1545,16 +1405,6 @@ static int intra8x8_vert_pred_mbaff (sMacroBlock* mb,
 }
 //}}}
 //{{{
-/*!
-** *********************************************************************
- * \brief
- *    makes and returns 8x8 horizontal prediction mode
- *
- * \return
- *    eDecodingOk   decoding of intra_prediction mode was successful            \n
- *
-** *********************************************************************
- */
 static int intra8x8_hor_pred_mbaff (sMacroBlock* mb,
                                     eColorPlane plane,         //!< current image plane
                                     int ioff,              //!< pixel offset X within MB
@@ -1641,16 +1491,6 @@ static int intra8x8_hor_pred_mbaff (sMacroBlock* mb,
 }
 //}}}
 //{{{
-                                    /*!
-** *********************************************************************
- * \brief
- *    makes and returns 8x8 diagonal down right prediction mode
- *
- * \return
- *    eDecodingOk   decoding of intra prediction mode was successful            \n
- *
-** *********************************************************************
- */
 static int intra8x8_diag_down_right_pred_mbaff (sMacroBlock* mb,
                                                 eColorPlane plane,         //!< current image plane
                                                 int ioff,              //!< pixel offset X within MB
@@ -1770,16 +1610,6 @@ static int intra8x8_diag_down_right_pred_mbaff (sMacroBlock* mb,
 }
 //}}}
 //{{{
-/*!
-** *********************************************************************
- * \brief
- *    makes and returns 8x8 diagonal down left prediction mode
- *
- * \return
- *    eDecodingOk   decoding of intra prediction mode was successful            \n
- *
-** *********************************************************************
- */
 static int intra8x8_diag_down_left_pred_mbaff (sMacroBlock* mb,
                                                eColorPlane plane,         //!< current image plane
                                                int ioff,              //!< pixel offset X within MB
@@ -1901,16 +1731,6 @@ static int intra8x8_diag_down_left_pred_mbaff (sMacroBlock* mb,
 }
 //}}}
 //{{{
-/*!
-** *********************************************************************
- * \brief
- *    makes and returns 8x8 vertical right prediction mode
- *
- * \return
- *    eDecodingOk   decoding of intra prediction mode was successful            \n
- *
-** *********************************************************************
- */
 static int intra8x8_vert_right_pred_mbaff (sMacroBlock* mb,
                                            eColorPlane plane,         //!< current image plane
                                            int ioff,              //!< pixel offset X within MB
@@ -2036,16 +1856,6 @@ static int intra8x8_vert_right_pred_mbaff (sMacroBlock* mb,
 }
 //}}}
 //{{{
-/*!
-** *********************************************************************
- * \brief
- *    makes and returns 8x8 vertical left prediction mode
- *
- * \return
- *    eDecodingOk   decoding of intra prediction mode was successful            \n
- *
-** *********************************************************************
- */
 static int intra8x8_vert_left_pred_mbaff (sMacroBlock* mb,
                                           eColorPlane plane,         //!< current image plane
                                           int ioff,              //!< pixel offset X within MB
@@ -2171,16 +1981,6 @@ static int intra8x8_vert_left_pred_mbaff (sMacroBlock* mb,
 }
 //}}}
 //{{{
-/*!
-** *********************************************************************
- * \brief
- *    makes and returns 8x8 horizontal up prediction mode
- *
- * \return
- *    eDecodingOk   decoding of intra prediction mode was successful            \n
- *
-** *********************************************************************
- */
 static int intra8x8_hor_up_pred_mbaff (sMacroBlock* mb,
                                        eColorPlane plane,         //!< current image plane
                                        int ioff,              //!< pixel offset X within MB
@@ -2307,16 +2107,6 @@ static int intra8x8_hor_up_pred_mbaff (sMacroBlock* mb,
 }
 //}}}
 //{{{
-/*!
-** *********************************************************************
- * \brief
- *    makes and returns 8x8 horizontal down prediction mode
- *
- * \return
- *    eDecodingOk   decoding of intra prediction mode was successful            \n
- *
-** *********************************************************************
- */
 static int intra8x8_hor_down_pred_mbaff (sMacroBlock* mb,
                                          eColorPlane plane,         //!< current image plane
                                          int ioff,              //!< pixel offset X within MB
@@ -2441,20 +2231,6 @@ static int intra8x8_hor_down_pred_mbaff (sMacroBlock* mb,
 }
 //}}}
 //{{{
-/*!
-** **********************************************************************
- * \brief
- *    Make intra 8x8 prediction according to all 9 prediction modes.
- *    The routine uses left and upper neighbouring points from
- *    previous coded blocks to do this (if available). Notice that
- *    inaccessible neighbouring points are signalled with a negative
- *    value in the predmode array .
- *
- *  \par Input:
- *     Starting point of current 8x8 block image position
- *
-** **********************************************************************
- */
 static int intra_pred_8x8_mbaff (sMacroBlock* mb,
                    eColorPlane plane,         //!< Current color plane
                    int ioff,              //!< ioff
@@ -2503,16 +2279,6 @@ static int intra_pred_8x8_mbaff (sMacroBlock* mb,
 //}}}
 
 //{{{
-/*!
-** *********************************************************************
- * \brief
- *    makes and returns 16x16 DC prediction mode
- *
- * \return
- *    eDecodingOk   decoding of intra_prediction mode was successful            \n
- *
-** *********************************************************************
- */
 static int intra16x16_dc_pred (sMacroBlock* mb, eColorPlane plane)
 {
   sSlice *slice = mb->slice;
@@ -2577,16 +2343,6 @@ static int intra16x16_dc_pred (sMacroBlock* mb, eColorPlane plane)
 }
 //}}}
 //{{{
-/*!
-** *********************************************************************
- * \brief
- *    makes and returns 16x16 vertical prediction mode
- *
- * \return
- *    eDecodingOk   decoding of intra prediction mode was successful            \n
- *
-** *********************************************************************
- */
 static int intra16x16_vert_pred (sMacroBlock* mb, eColorPlane plane)
 {
   sSlice *slice = mb->slice;
@@ -2626,16 +2382,6 @@ static int intra16x16_vert_pred (sMacroBlock* mb, eColorPlane plane)
 }
 //}}}
 //{{{
-/*!
-** *********************************************************************
- * \brief
- *    makes and returns 16x16 horizontal prediction mode
- *
- * \return
- *    eDecodingOk   decoding of intra prediction mode was successful            \n
- *
-** *********************************************************************
- */
 static int intra16x16_hor_pred (sMacroBlock* mb, eColorPlane plane)
 {
   sSlice *slice = mb->slice;
@@ -2675,16 +2421,6 @@ static int intra16x16_hor_pred (sMacroBlock* mb, eColorPlane plane)
 }
 //}}}
 //{{{
-/*!
-** *********************************************************************
- * \brief
- *    makes and returns 16x16 horizontal prediction mode
- *
- * \return
- *    eDecodingOk   decoding of intra prediction mode was successful            \n
- *
-** *********************************************************************
- */
 static int intra16x16_plane_pred (sMacroBlock* mb, eColorPlane plane)
 {
   sSlice *slice = mb->slice;
@@ -2830,7 +2566,7 @@ static int intra16x16_dc_pred_mbaff (sMacroBlock* mb, eColorPlane plane) {
   else if (up_avail && !left_avail)
     s0 = (s1 + 8)>>4;              // left edge
   else // top left corner, nothing to predict from
-    s0 = decoder->coding.dcPredValueComp[plane];  
+    s0 = decoder->coding.dcPredValueComp[plane];
 
   for (j = 0; j < MB_BLOCK_SIZE; ++j)
     memset (mbPred[j], s0, MB_BLOCK_SIZE * sizeof(sPixel));
@@ -2894,7 +2630,7 @@ static int intra16x16_hor_pred_mbaff (sMacroBlock* mb, eColorPlane plane) {
 
   if (!decoder->activePps->hasConstrainedIntraPred)
     left_avail    = left[1].available;
-  else 
+  else
     for (i = 1, left_avail = 1; i < 17; ++i)
       left_avail  &= left[i].available ? slice->intraBlock[left[i].mbIndex]: 0;
 
@@ -2940,7 +2676,7 @@ static int intra16x16_plane_pred_mbaff (sMacroBlock* mb, eColorPlane plane) {
     left_avail = left[1].available;
     left_up_avail = left[0].available;
     }
-  else { 
+  else {
     up_avail = b.available ? slice->intraBlock[b.mbIndex] : 0;
     for (i = 1, left_avail = 1; i < 17; ++i)
       left_avail  &= left[i].available ? slice->intraBlock[left[i].mbIndex]: 0;
@@ -3329,13 +3065,6 @@ static void intra_chroma_DC_all_mbaff (sPixel** curr_img, int up_avail, int left
 }
 //}}}
 //{{{
-/*!
-** **********************************************************************
- * \brief
- *    Chroma Intra prediction. Note that many operations can be moved
- *    outside since they are repeated for both components for no reason.
-** **********************************************************************
- */
 static void intra_pred_chroma_mbaff (sMacroBlock* mb) {
 
   sSlice *slice = mb->slice;
@@ -3612,13 +3341,6 @@ static void intra_pred_chroma_mbaff (sMacroBlock* mb) {
   }
 //}}}
 //{{{
-/*!
-** **********************************************************************
- * \brief
- *    Chroma Intra prediction. Note that many operations can be moved
- *    outside since they are repeated for both components for no reason.
-** **********************************************************************
- */
 static void intraPredChroma (sMacroBlock* mb) {
 
   switch (mb->chromaPredMode) {

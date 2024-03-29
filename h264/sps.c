@@ -200,6 +200,7 @@ static void readVuiFromStream (sDataPartition* dataPartition, sSps* sps) {
 static void readSpsFromStream (sDecoder* decoder, sDataPartition* dataPartition, sSps* sps, int naluLen) {
 
   sBitStream* s = dataPartition->s;
+
   sps->profileIdc = readUv (8, "SPS profileIdc", s);
   if ((sps->profileIdc != BASELINE) && (sps->profileIdc != MAIN) && (sps->profileIdc != EXTENDED) &&
       (sps->profileIdc != FREXT_HP) && (sps->profileIdc != FREXT_Hi10P) &&
@@ -214,7 +215,7 @@ static void readSpsFromStream (sDecoder* decoder, sDataPartition* dataPartition,
   int reserved_zero = readUv (4, "SPS reserved_zero_4bits", s);
 
   sps->levelIdc = readUv (8, "SPS levelIdc", s);
-  sps->id = readUeV ("SPS id", s);
+  sps->id = readUeV ("SPS spsId", s);
 
   // Fidelity Range Extensions stuff
   sps->chromaFormatIdc = 1;
