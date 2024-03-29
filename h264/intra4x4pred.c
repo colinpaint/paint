@@ -33,26 +33,8 @@
 //}}}
 
 //{{{
-/*!
-** *********************************************************************
- * \brief
- *    makes and returns 4x4 DC prediction mode
- *
- * \param mb
- *    current MB picStructure
- * \param plane
- *    color plane
- * \param ioff
- *    pixel offset X within MB
- * \param joff
- *    pixel offset Y within MB
- * \return
- *    eDecodingOk   decoding of intra prediction mode was successful            \n
- *
-** *********************************************************************
- */
-static int intra4x4_dc_pred (sMacroBlock* mb, eColorPlane plane, int ioff, int joff)
-{
+static int intra4x4_dc_pred (sMacroBlock* mb, eColorPlane plane, int ioff, int joff) {
+
   sSlice *slice = mb->slice;
   sDecoder* decoder = mb->decoder;
 
@@ -71,89 +53,67 @@ static int intra4x4_dc_pred (sMacroBlock* mb, eColorPlane plane, int ioff, int j
   getNonAffNeighbour(mb, ioff - 1, joff   , decoder->mbSize[eLuma], &pix_a);
   getNonAffNeighbour(mb, ioff    , joff -1, decoder->mbSize[eLuma], &pix_b);
 
-  if (decoder->activePps->hasConstrainedIntraPred)
-  {
+  if (decoder->activePps->hasConstrainedIntraPred) {
     block_available_left = pix_a.available ? slice->intraBlock [pix_a.mbIndex] : 0;
     block_available_up   = pix_b.available ? slice->intraBlock [pix_b.mbIndex] : 0;
-  }
-  else
-  {
+    }
+  else {
     block_available_left = pix_a.available;
     block_available_up   = pix_b.available;
-  }
+    }
 
   // form predictor pels
-  if (block_available_up)
-  {
+  if (block_available_up) {
     curpel = &imgY[pix_b.posY][pix_b.posX];
     s0 += *curpel++;
     s0 += *curpel++;
     s0 += *curpel++;
     s0 += *curpel;
-  }
+    }
 
-  if (block_available_left)
-  {
+  if (block_available_left) {
     sPixel** img_pred = &imgY[pix_a.posY];
     int posX = pix_a.posX;
     s0 += *(*(img_pred ++) + posX);
     s0 += *(*(img_pred ++) + posX);
     s0 += *(*(img_pred ++) + posX);
     s0 += *(*(img_pred   ) + posX);
-  }
+    }
 
   if (block_available_up && block_available_left)
-  {
     // no edge
     s0 = (s0 + 4)>>3;
-  }
   else if (!block_available_up && block_available_left)
-  {
     // upper edge
     s0 = (s0 + 2)>>2;
-  }
   else if (block_available_up && !block_available_left)
-  {
     // left edge
     s0 = (s0 + 2)>>2;
-  }
   else //if (!block_available_up && !block_available_left)
-  {
     // top left corner, nothing to predict from
     s0 = decoder->coding.dcPredValueComp[plane];
-  }
 
-  for (j=joff; j < joff + BLOCK_SIZE; ++j)
-  {
+  for (j=joff; j < joff + BLOCK_SIZE; ++j) {
     // store DC prediction
     mbPred[j][ioff    ] = (sPixel) s0;
     mbPred[j][ioff + 1] = (sPixel) s0;
     mbPred[j][ioff + 2] = (sPixel) s0;
     mbPred[j][ioff + 3] = (sPixel) s0;
-  }
+    }
+
   return eDecodingOk;
-}
+  }
 //}}}
 //{{{
-/*!
-** *********************************************************************
- * \brief
- *    makes and returns 4x4 vertical prediction mode
- *
- * \return
- *    eDecodingOk   decoding of intra prediction mode was successful            \n
- *
-** *********************************************************************
- */
-static int intra4x4_vert_pred (sMacroBlock* mb, eColorPlane plane, int ioff, int joff)
-{
+static int intra4x4_vert_pred (sMacroBlock* mb, eColorPlane plane, int ioff, int joff) {
+
   sSlice *slice = mb->slice;
   sDecoder* decoder = mb->decoder;
 
   int block_available_up;
   sPixelPos pix_b;
 
-  getNonAffNeighbour(mb, ioff, joff - 1 , decoder->mbSize[eLuma], &pix_b);
+  getNonAffNeighbour (mb, ioff, joff - 1 , decoder->mbSize[eLuma], &pix_b);
 
   if (decoder->activePps->hasConstrainedIntraPred)
     block_available_up = pix_b.available ? slice->intraBlock [pix_b.mbIndex] : 0;
@@ -162,40 +122,21 @@ static int intra4x4_vert_pred (sMacroBlock* mb, eColorPlane plane, int ioff, int
 
   if (!block_available_up)
     printf ("warning: Intra_4x4_Vertical prediction mode not allowed at mb %d\n", (int) slice->mbIndex);
-  else
-  {
+  else {
     sPixel** mbPred = slice->mbPred[plane];
-    sPixel *imgY = (plane) ? &slice->picture->imgUV[plane - 1][pix_b.posY][pix_b.posX] : &slice->picture->imgY[pix_b.posY][pix_b.posX];
-    memcpy(&(mbPred[joff++][ioff]), imgY, BLOCK_SIZE * sizeof(sPixel));
-    memcpy(&(mbPred[joff++][ioff]), imgY, BLOCK_SIZE * sizeof(sPixel));
-    memcpy(&(mbPred[joff++][ioff]), imgY, BLOCK_SIZE * sizeof(sPixel));
-    memcpy(&(mbPred[joff  ][ioff]), imgY, BLOCK_SIZE * sizeof(sPixel));
-  }
+    sPixel* imgY = plane ? &slice->picture->imgUV[plane - 1][pix_b.posY][pix_b.posX] : &slice->picture->imgY[pix_b.posY][pix_b.posX];
+    memcpy (&mbPred[joff++][ioff], imgY, BLOCK_SIZE * sizeof(sPixel));
+    memcpy (&mbPred[joff++][ioff], imgY, BLOCK_SIZE * sizeof(sPixel));
+    memcpy (&mbPred[joff++][ioff], imgY, BLOCK_SIZE * sizeof(sPixel));
+    memcpy (&mbPred[joff  ][ioff], imgY, BLOCK_SIZE * sizeof(sPixel));
+    }
+
   return eDecodingOk;
-}
+  }
 //}}}
 //{{{
-/*!
-** *********************************************************************
- * \brief
- *    makes and returns 4x4 horizontal prediction mode
- *
- * \param mb
- *    current MB picStructure
- * \param plane
- *    color plane
- * \param ioff
- *    pixel offset X within MB
- * \param joff
- *    pixel offset Y within MB
- *
- * \return
- *    eDecodingOk   decoding of intra prediction mode was successful
- *
-** *********************************************************************
- */
-static int intra4x4_hor_pred (sMacroBlock* mb, eColorPlane plane, int ioff, int joff)
-{
+static int intra4x4_hor_pred (sMacroBlock* mb, eColorPlane plane, int ioff, int joff) {
+
   sDecoder* decoder = mb->decoder;
   sSlice *slice = mb->slice;
 
@@ -212,60 +153,24 @@ static int intra4x4_hor_pred (sMacroBlock* mb, eColorPlane plane, int ioff, int 
 
   if (!block_available_left)
     printf ("warning: Intra_4x4_Horizontal prediction mode not allowed at mb %d\n",(int) slice->mbIndex);
-  else
-#if (IMGTYPE == 0)
-  {
-    sPixel** imgY = (plane) ? slice->picture->imgUV[plane - 1] : slice->picture->imgY;
+  else {
+    sPixel** imgY = plane ? slice->picture->imgUV[plane - 1] : slice->picture->imgY;
     sPixel** mbPred  =  &slice->mbPred[plane][joff];
     sPixel** img_pred =  &imgY[pix_a.posY];
     int posX = pix_a.posX;
 
-    memset((*(mbPred++) + ioff), *(*(img_pred++) + posX), BLOCK_SIZE * sizeof (sPixel));
-    memset((*(mbPred++) + ioff), *(*(img_pred++) + posX), BLOCK_SIZE * sizeof (sPixel));
-    memset((*(mbPred++) + ioff), *(*(img_pred++) + posX), BLOCK_SIZE * sizeof (sPixel));
-    memset((*(mbPred  ) + ioff), *(*(img_pred  ) + posX), BLOCK_SIZE * sizeof (sPixel));
-  }
-#else
-  {
-    int j;
-    int posY = pix_a.posY;
-    int posX = pix_a.posX;
-    sPixel *predrow, prediction;
-    sPixel** mbPred  =  &slice->mbPred[plane][joff];
-    sPixel** imgY = (plane) ? slice->picture->imgUV[plane - 1] : slice->picture->imgY;
-
-    for(j=0;j<BLOCK_SIZE;++j)
-    {
-      predrow = mbPred[j];
-      prediction = imgY[posY++][posX];
-      /* store predicted 4x4 block */
-      predrow[ioff    ]= prediction;
-      predrow[ioff + 1]= prediction;
-      predrow[ioff + 2]= prediction;
-      predrow[ioff + 3]= prediction;
+    memset ((*(mbPred++) + ioff), *(*(img_pred++) + posX), BLOCK_SIZE * sizeof (sPixel));
+    memset ((*(mbPred++) + ioff), *(*(img_pred++) + posX), BLOCK_SIZE * sizeof (sPixel));
+    memset ((*(mbPred++) + ioff), *(*(img_pred++) + posX), BLOCK_SIZE * sizeof (sPixel));
+    memset ((*(mbPred  ) + ioff), *(*(img_pred  ) + posX), BLOCK_SIZE * sizeof (sPixel));
     }
-  }
-#endif
 
   return eDecodingOk;
-}
+  }
 //}}}
 //{{{
-/*!
-** *********************************************************************
- * \brief
- *    makes and returns 4x4 diagonal down right prediction mode
- *
- * \return
- *    eDecodingOk   decoding of intra prediction mode was successful            \n
- *
-** *********************************************************************
- */
-static int intra4x4_diag_down_right_pred (sMacroBlock* mb, 
-                                                eColorPlane plane,         //!< current image plane
-                                                int ioff,              //!< pixel offset X within MB
-                                                int joff)              //!< pixel offset Y within MB
-{
+static int intra4x4_diag_down_right_pred (sMacroBlock* mb, eColorPlane plane, int ioff, int joff) {
+
   sSlice *slice = mb->slice;
   sDecoder* decoder = mb->decoder;
 
@@ -335,21 +240,8 @@ static int intra4x4_diag_down_right_pred (sMacroBlock* mb,
 }
 //}}}
 //{{{
-/*!
-** *********************************************************************
- * \brief
- *    makes and returns 4x4 diagonal down left prediction mode
- *
- * \return
- *    eDecodingOk   decoding of intra prediction mode was successful            \n
- *
-** *********************************************************************
- */
-static int intra4x4_diag_down_left_pred (sMacroBlock* mb,  
-                                        eColorPlane plane,         //!< current image plane
-                                        int ioff,              //!< pixel offset X within MB
-                                        int joff)              //!< pixel offset Y within MB
-{
+static int intra4x4_diag_down_left_pred (sMacroBlock* mb, eColorPlane plane, int ioff, int joff) {
+
   sSlice *slice = mb->slice;
   sDecoder* decoder = mb->decoder;
 
@@ -363,21 +255,18 @@ static int intra4x4_diag_down_left_pred (sMacroBlock* mb,
 
   pix_c.available = pix_c.available && !((ioff==4) && ((joff==4)||(joff==12)));
 
-  if (decoder->activePps->hasConstrainedIntraPred)
-  {
+  if (decoder->activePps->hasConstrainedIntraPred) {
     block_available_up       = pix_b.available ? slice->intraBlock [pix_b.mbIndex] : 0;
     block_available_up_right = pix_c.available ? slice->intraBlock [pix_c.mbIndex] : 0;
   }
-  else
-  {
+  else {
     block_available_up       = pix_b.available;
     block_available_up_right = pix_c.available;
   }
 
   if (!block_available_up)
     printf ("warning: Intra_4x4_Diagonal_Down_Left prediction mode not allowed at mb %d\n", (int) slice->mbIndex);
-  else
-  {
+  else {
     sPixel** imgY = (plane) ? slice->picture->imgUV[plane - 1] : slice->picture->imgY;
     sPixel** mbPred = slice->mbPred[plane];
 
@@ -392,17 +281,9 @@ static int intra4x4_diag_down_left_pred (sMacroBlock* mb,
 
     // P_E through P_H
     if (block_available_up_right)
-    {
       memcpy(&PredPel[5], &imgY[pix_c.posY][pix_c.posX], BLOCK_SIZE * sizeof(sPixel));
-    }
     else
-    {
-#if (IMGTYPE == 0)
       memset(&PredPel[5], PredPel[4], BLOCK_SIZE * sizeof(sPixel));
-#else
-      P_E = P_F = P_G = P_H = P_D;
-#endif
-    }
 
     PredPixel[0] = (sPixel) ((P_A + P_C + 2*(P_B) + 2) >> 2);
     PredPixel[1] = (sPixel) ((P_B + P_D + 2*(P_C) + 2) >> 2);
@@ -422,21 +303,8 @@ static int intra4x4_diag_down_left_pred (sMacroBlock* mb,
 }
 //}}}
 //{{{
-/*!
-** *********************************************************************
- * \brief
- *    makes and returns 4x4 vertical right prediction mode
- *
- * \return
- *    eDecodingOk   decoding of intra prediction mode was successful            \n
- *
-** *********************************************************************
- */
-static int intra4x4_vert_right_pred (sMacroBlock* mb, 
-                                    eColorPlane plane,         //!< current image plane
-                                    int ioff,              //!< pixel offset X within MB
-                                    int joff)              //!< pixel offset Y within MB
-{
+static int intra4x4_vert_right_pred (sMacroBlock* mb, eColorPlane plane, int ioff, int joff) {
+
   sSlice *slice = mb->slice;
   sDecoder* decoder = mb->decoder;
 
@@ -507,21 +375,8 @@ static int intra4x4_vert_right_pred (sMacroBlock* mb,
 }
 //}}}
 //{{{
-/*!
-** *********************************************************************
- * \brief
- *    makes and returns 4x4 vertical left prediction mode
- *
- * \return
- *    eDecodingOk   decoding of intra prediction mode was successful            \n
- *
-** *********************************************************************
- */
-static int intra4x4_vert_left_pred (sMacroBlock *mb,  
-                                          eColorPlane plane,         //!< current image plane
-                                          int ioff,              //!< pixel offset X within MB
-                                          int joff)              //!< pixel offset Y within MB
-{
+static int intra4x4_vert_left_pred (sMacroBlock *mb, eColorPlane plane, int ioff, int joff) {
+
   sSlice *slice = mb->slice;
   sDecoder* decoder = mb->decoder;
 
@@ -564,17 +419,9 @@ static int intra4x4_vert_left_pred (sMacroBlock *mb,
 
     // P_E through P_H
     if (block_available_up_right)
-    {
       memcpy(&PredPel[5], &imgY[pix_c.posY][pix_c.posX], BLOCK_SIZE * sizeof(sPixel));
-    }
     else
-    {
-#if (IMGTYPE == 0)
       memset(&PredPel[5], PredPel[4], BLOCK_SIZE * sizeof(sPixel));
-#else
-      P_E = P_F = P_G = P_H = P_D;
-#endif
-    }
 
     PredPixel[0] = (sPixel) ((P_A + P_B + 1) >> 1);
     PredPixel[1] = (sPixel) ((P_B + P_C + 1) >> 1);
@@ -596,21 +443,8 @@ static int intra4x4_vert_left_pred (sMacroBlock *mb,
 }
 //}}}
 //{{{
-/*!
-** *********************************************************************
- * \brief
- *    makes and returns 4x4 horizontal up prediction mode
- *
- * \return
- *    eDecodingOk   decoding of intra prediction mode was successful            \n
- *
-** *********************************************************************
- */
-static int intra4x4_hor_up_pred (sMacroBlock* mb,    
-                                eColorPlane plane,         //!< current image plane
-                                int ioff,              //!< pixel offset X within MB
-                                int joff)              //!< pixel offset Y within MB
-{
+static int intra4x4_hor_up_pred (sMacroBlock* mb, eColorPlane plane, int ioff, int joff) {
+
   sSlice *slice = mb->slice;
   sDecoder* decoder = mb->decoder;
 
@@ -664,21 +498,8 @@ static int intra4x4_hor_up_pred (sMacroBlock* mb,
 }
 //}}}
 //{{{
-/*!
-** *********************************************************************
- * \brief
- *    makes and returns 4x4 horizontal down prediction mode
- *
- * \return
- *    eDecodingOk   decoding of intra prediction mode was successful            \n
- *
-** *********************************************************************
- */
-static int intra4x4_hor_down_pred (sMacroBlock* mb,   
-                                         eColorPlane plane,         //!< current image plane
-                                         int ioff,              //!< pixel offset X within MB
-                                         int joff)              //!< pixel offset Y within MB
-{
+static int intra4x4_hor_down_pred (sMacroBlock* mb, eColorPlane plane, int ioff, int joff) {
+
   sSlice *slice = mb->slice;
   sDecoder* decoder = mb->decoder;
 
@@ -751,23 +572,9 @@ static int intra4x4_hor_down_pred (sMacroBlock* mb,
 }
 //}}}
 //{{{
-/*!
-** *********************************************************************
- * \brief
- *    makes and returns 4x4 intra prediction blocks
- *
- * \return
- *    eDecodingOk   decoding of intra prediction mode was successful            \n
- *    eSearchSync   search next sync element as errors while decoding occured
-** *********************************************************************
- */
-int intra_pred_4x4_normal (sMacroBlock* mb,   
-                          eColorPlane plane,         //!< current image plane
-                          int ioff,              //!< pixel offset X within MB
-                          int joff,              //!< pixel offset Y within MB
-                          int img_block_x,       //!< location of block X, multiples of 4
-                          int img_block_y)       //!< location of block Y, multiples of 4
-{
+int intra_pred_4x4_normal (sMacroBlock* mb, eColorPlane plane, int ioff, int joff,
+                          int img_block_x, int img_block_y) {
+
   sDecoder* decoder = mb->decoder;
   byte predmode = decoder->predMode[img_block_y][img_block_x];
   mb->dpcmMode = predmode; //For residual DPCM
@@ -809,29 +616,8 @@ int intra_pred_4x4_normal (sMacroBlock* mb,
 //}}}
 
 //{{{
-/*!
-** *********************************************************************
- * \brief
- *    makes and returns 4x4 DC prediction mode
- *
- * \param mb
- *    current MB picStructure
- * \param plane
- *    color plane
- * \param ioff
- *    pixel offset X within MB
- * \param joff
- *    pixel offset Y within MB
- * \return
- *    eDecodingOk   decoding of intra prediction mode was successful            \n
- *
-** *********************************************************************
- */
-static int intra4x4_dc_pred_mbaff (sMacroBlock* mb,
-                                   eColorPlane plane,
-                                   int ioff,
-                                   int joff)
-{
+static int intra4x4_dc_pred_mbaff (sMacroBlock* mb, eColorPlane plane, int ioff, int joff) {
+
   sSlice *slice = mb->slice;
   sDecoder* decoder = mb->decoder;
 
@@ -914,21 +700,8 @@ static int intra4x4_dc_pred_mbaff (sMacroBlock* mb,
 }
 //}}}
 //{{{
-/*!
-** *********************************************************************
- * \brief
- *    makes and returns 4x4 vertical prediction mode
- *
- * \return
- *    eDecodingOk   decoding of intra prediction mode was successful            \n
- *
-** *********************************************************************
- */
-static int intra4x4_vert_pred_mbaff (sMacroBlock* mb,    
-                                     eColorPlane plane,         //!< current image plane
-                                     int ioff,              //!< pixel offset X within MB
-                                     int joff)              //!< pixel offset Y within MB
-{
+static int intra4x4_vert_pred_mbaff (sMacroBlock* mb, eColorPlane plane, int ioff, int joff) {
+
   sSlice *slice = mb->slice;
   sDecoder* decoder = mb->decoder;
 
@@ -963,30 +736,8 @@ static int intra4x4_vert_pred_mbaff (sMacroBlock* mb,
 }
 //}}}
 //{{{
-/*!
-** *********************************************************************
- * \brief
- *    makes and returns 4x4 horizontal prediction mode
- *
- * \param mb
- *    current MB picStructure
- * \param plane
- *    color plane
- * \param ioff
- *    pixel offset X within MB
- * \param joff
- *    pixel offset Y within MB
- *
- * \return
- *    eDecodingOk   decoding of intra prediction mode was successful
- *
-** *********************************************************************
- */
-static int intra4x4_hor_pred_mbaff (sMacroBlock* mb,
-                                    eColorPlane plane,
-                                    int ioff,
-                                    int joff)
-{
+static int intra4x4_hor_pred_mbaff (sMacroBlock* mb, eColorPlane plane, int ioff, int joff) {
+
   sDecoder* decoder = mb->decoder;
   sSlice *slice = mb->slice;
 
@@ -1029,21 +780,8 @@ static int intra4x4_hor_pred_mbaff (sMacroBlock* mb,
 }
 //}}}
 //{{{
-/*!
-** *********************************************************************
- * \brief
- *    makes and returns 4x4 diagonal down right prediction mode
- *
- * \return
- *    eDecodingOk   decoding of intra prediction mode was successful            \n
- *
-** *********************************************************************
- */
-static int intra4x4_diag_down_right_pred_mbaff (sMacroBlock* mb, 
-                                                      eColorPlane plane,         //!< current image plane
-                                                      int ioff,              //!< pixel offset X within MB
-                                                      int joff)              //!< pixel offset Y within MB
-{
+static int intra4x4_diag_down_right_pred_mbaff (sMacroBlock* mb, eColorPlane plane, int ioff, int joff) {
+
   sSlice *slice = mb->slice;
   sDecoder* decoder = mb->decoder;
 
@@ -1118,21 +856,8 @@ static int intra4x4_diag_down_right_pred_mbaff (sMacroBlock* mb,
 }
 //}}}
 //{{{
-/*!
-** *********************************************************************
- * \brief
- *    makes and returns 4x4 diagonal down left prediction mode
- *
- * \return
- *    eDecodingOk   decoding of intra prediction mode was successful            \n
- *
-** *********************************************************************
- */
-static int intra4x4_diag_down_left_pred_mbaff (sMacroBlock* mb,  
-                                        eColorPlane plane,         //!< current image plane
-                                        int ioff,              //!< pixel offset X within MB
-                                        int joff)              //!< pixel offset Y within MB
-{
+static int intra4x4_diag_down_left_pred_mbaff (sMacroBlock* mb, eColorPlane plane, int ioff, int joff) {
+
   sSlice *slice = mb->slice;
   sDecoder* decoder = mb->decoder;
 
@@ -1200,21 +925,8 @@ static int intra4x4_diag_down_left_pred_mbaff (sMacroBlock* mb,
 }
 //}}}
 //{{{
-/*!
-** *********************************************************************
- * \brief
- *    makes and returns 4x4 vertical right prediction mode
- *
- * \return
- *    eDecodingOk   decoding of intra prediction mode was successful            \n
- *
-** *********************************************************************
- */
-static int intra4x4_vert_right_pred_mbaff (sMacroBlock* mb,   
-                                          eColorPlane plane,         //!< current image plane
-                                          int ioff,              //!< pixel offset X within MB
-                                          int joff)              //!< pixel offset Y within MB
-{
+static int intra4x4_vert_right_pred_mbaff (sMacroBlock* mb, eColorPlane plane, int ioff, int joff) {
+
   sSlice *slice = mb->slice;
   sDecoder* decoder = mb->decoder;
 
@@ -1291,21 +1003,8 @@ static int intra4x4_vert_right_pred_mbaff (sMacroBlock* mb,
 }
 //}}}
 //{{{
-/*!
-** *********************************************************************
- * \brief
- *    makes and returns 4x4 vertical left prediction mode
- *
- * \return
- *    eDecodingOk   decoding of intra prediction mode was successful            \n
- *
-** *********************************************************************
- */
-static int intra4x4_vert_left_pred_mbaff (sMacroBlock* mb,
-                                          eColorPlane plane,         //!< current image plane
-                                          int ioff,              //!< pixel offset X within MB
-                                          int joff)              //!< pixel offset Y within MB
-{
+static int intra4x4_vert_left_pred_mbaff (sMacroBlock* mb, eColorPlane plane, int ioff, int joff) {
+
   sSlice *slice = mb->slice;
   sDecoder* decoder = mb->decoder;
 
@@ -1374,21 +1073,8 @@ static int intra4x4_vert_left_pred_mbaff (sMacroBlock* mb,
 }
 //}}}
 //{{{
-/*!
-** *********************************************************************
- * \brief
- *    makes and returns 4x4 horizontal up prediction mode
- *
- * \return
- *    eDecodingOk   decoding of intra prediction mode was successful            \n
- *
-** *********************************************************************
- */
-static int intra4x4_hor_up_pred_mbaff (sMacroBlock* mb,   
-                                      eColorPlane plane,         //!< current image plane
-                                      int ioff,              //!< pixel offset X within MB
-                                      int joff)              //!< pixel offset Y within MB
-{
+static int intra4x4_hor_up_pred_mbaff (sMacroBlock* mb, eColorPlane plane, int ioff, int joff) {
+
   sSlice *slice = mb->slice;
   sDecoder* decoder = mb->decoder;
 
@@ -1450,21 +1136,8 @@ static int intra4x4_hor_up_pred_mbaff (sMacroBlock* mb,
 }
 //}}}
 //{{{
-/*!
-** *********************************************************************
- * \brief
- *    makes and returns 4x4 horizontal down prediction mode
- *
- * \return
- *    eDecodingOk   decoding of intra prediction mode was successful            \n
- *
-** *********************************************************************
- */
-static int intra4x4_hor_down_pred_mbaff (sMacroBlock* mb, 
-                                         eColorPlane plane,         //!< current image plane
-                                         int ioff,              //!< pixel offset X within MB
-                                         int joff)              //!< pixel offset Y within MB
-{
+static int intra4x4_hor_down_pred_mbaff (sMacroBlock* mb, eColorPlane plane, int ioff, int joff) {
+
   sSlice *slice = mb->slice;
   sDecoder* decoder = mb->decoder;
 
@@ -1542,23 +1215,9 @@ static int intra4x4_hor_down_pred_mbaff (sMacroBlock* mb,
 }
 //}}}
 //{{{
-/*!
-** *********************************************************************
- * \brief
- *    makes and returns 4x4 intra prediction blocks
- *
- * \return
- *    eDecodingOk   decoding of intra prediction mode was successful            \n
- *    eSearchSync   search next sync element as errors while decoding occured
-** *********************************************************************
- */
-int intra_pred_4x4_mbaff (sMacroBlock* mb,    
-                        eColorPlane plane,         //!< current image plane
-                        int ioff,              //!< pixel offset X within MB
-                        int joff,              //!< pixel offset Y within MB
-                        int img_block_x,       //!< location of block X, multiples of 4
-                        int img_block_y)       //!< location of block Y, multiples of 4
-{
+int intra_pred_4x4_mbaff (sMacroBlock* mb, eColorPlane plane, int ioff, int joff,
+                          int img_block_x, int img_block_y) {
+
   sDecoder* decoder = mb->decoder;
   byte predmode = decoder->predMode[img_block_y][img_block_x];
   mb->dpcmMode = predmode; //For residual DPCM

@@ -219,7 +219,7 @@ static void readPpsFromStream (sDecoder* decoder, sDataPartition* dataPartition,
   if (decoder->param.ppsDebug)
     //{{{  print debug
     sprintf (decoder->debug.ppsStr,
-             "PPS:%d:%d -> sps:%d%s%s sliceGroups:%d L:%d:%d%s%s%s%s%s biPredIdc:%d%s\n",
+             "PPS:%d:%d -> sps:%d%s sliceGroups:%d L:%d:%d%s%s%s%s%s%s biPredIdc:%d%s\n",
              pps->id, naluLen,
              pps->spsId,
              pps->entropyCoding ? " cabac":" cavlc",
@@ -260,8 +260,7 @@ void readNaluPps (sDecoder* decoder, sNalu* nalu) {
     if (!isEqualPps (&decoder->pps[pps.id], &pps))
       printf ("-----> readNaluPps new pps id:%d\n", pps.id);
 
-  // could check for change in pps by id
-  // - free any sliceGroupId calloc
+  // free any sliceGroupId calloc
   if (decoder->pps[pps.id].ok && decoder->pps[pps.id].sliceGroupId)
     free (decoder->pps[pps.id].sliceGroupId);
 
