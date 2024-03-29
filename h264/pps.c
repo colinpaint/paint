@@ -220,7 +220,7 @@ static void readPpsFromStream (sDecoder* decoder, sDataPartition* dataPartition,
 
   if (decoder->param.ppsDebug) {
     sprintf (decoder->debug.ppsStr,
-             "PPS:%d:%d -> sps:%d%s sliceGroups:%d L:%d:%d%s%s%s%s%s%s biPredIdc:%d%s\n",
+             "PPS:%d:%d -> sps:%d%s sliceGroups:%d L:%d:%d%s%s%s%s%s%s biPredIdc:%d%s",
              pps->id, naluLen,
              pps->spsId,
              pps->entropyCoding ? " cabac":" cavlc",
