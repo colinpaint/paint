@@ -9,8 +9,6 @@
 #include <sys/timeb.h>
 
 //{{{  defines
-#define IMGTYPE           0    // Define sPixel size type. 0 implies byte (cannot handle >8 bit depths) and 1 implies unsigned short
-
 typedef unsigned char  byte;   // byte type definition
 typedef unsigned char  uint8;  // type definition for unsigned char (same as byte, 8 bits)
 typedef unsigned short uint16; // type definition for unsigned short (16 bits)

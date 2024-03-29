@@ -275,11 +275,8 @@ static int intra8x8_dc_pred (sMacroBlock * mb, eColorPlane plane, int ioff, int 
 }
 //}}}
 //{{{
-static int intra8x8_vert_pred (sMacroBlock* mb,
-                                     eColorPlane plane,         //!< current image plane
-                                     int ioff,              //!< pixel offset X within MB
-                                     int joff)              //!< pixel offset Y within MB
-{
+static int intra8x8_vert_pred (sMacroBlock* mb, eColorPlane plane, int ioff, int joff) {
+
   sSlice *slice = mb->slice;
   sDecoder* decoder = mb->decoder;
 
@@ -351,11 +348,8 @@ static int intra8x8_vert_pred (sMacroBlock* mb,
 }
 //}}}
 //{{{
-static int intra8x8_hor_pred (sMacroBlock* mb,
-                                    eColorPlane plane,         //!< current image plane
-                                    int ioff,              //!< pixel offset X within MB
-                                    int joff)              //!< pixel offset Y within MB
-{
+static int intra8x8_hor_pred (sMacroBlock* mb, eColorPlane plane, int ioff, int joff) {
+
   sSlice *slice = mb->slice;
   sDecoder* decoder = mb->decoder;
 
@@ -433,11 +427,8 @@ static int intra8x8_hor_pred (sMacroBlock* mb,
 }
 //}}}
 //{{{
-static int intra8x8_diag_down_right_pred (sMacroBlock* mb,
-                                                eColorPlane plane,         //!< current image plane
-                                                int ioff,              //!< pixel offset X within MB
-                                                int joff)              //!< pixel offset Y within MB
-{
+static int intra8x8_diag_down_right_pred (sMacroBlock* mb, eColorPlane plane, int ioff, int joff) {
+
   sSlice *slice = mb->slice;
   sDecoder* decoder = mb->decoder;
 
@@ -550,11 +541,8 @@ static int intra8x8_diag_down_right_pred (sMacroBlock* mb,
 }
 //}}}
 //{{{
-static int intra8x8_diag_down_left_pred (sMacroBlock* mb,
-                                               eColorPlane plane,         //!< current image plane
-                                               int ioff,              //!< pixel offset X within MB
-                                               int joff)              //!< pixel offset Y within MB
-{
+static int intra8x8_diag_down_left_pred (sMacroBlock* mb, eColorPlane plane, int ioff, int joff) {
+
   sSlice *slice = mb->slice;
   sDecoder* decoder = mb->decoder;
 
@@ -669,11 +657,8 @@ static int intra8x8_diag_down_left_pred (sMacroBlock* mb,
 }
 //}}}
 //{{{
-static int intra8x8_vert_right_pred (sMacroBlock* mb,
-                                           eColorPlane plane,         //!< current image plane
-                                           int ioff,              //!< pixel offset X within MB
-                                           int joff)              //!< pixel offset Y within MB
-{
+static int intra8x8_vert_right_pred (sMacroBlock* mb, eColorPlane plane, int ioff, int joff) {
+
   sSlice *slice = mb->slice;
   sDecoder* decoder = mb->decoder;
 
@@ -794,11 +779,8 @@ static int intra8x8_vert_right_pred (sMacroBlock* mb,
 }
 //}}}
 //{{{
-static int intra8x8_vert_left_pred (sMacroBlock* mb,
-                                          eColorPlane plane,         //!< current image plane
-                                          int ioff,              //!< pixel offset X within MB
-                                          int joff)              //!< pixel offset Y within MB
-{
+static int intra8x8_vert_left_pred (sMacroBlock* mb, eColorPlane plane, int ioff, int joff) {
+
   sSlice *slice = mb->slice;
   sDecoder* decoder = mb->decoder;
 
@@ -917,11 +899,8 @@ static int intra8x8_vert_left_pred (sMacroBlock* mb,
 }
 //}}}
 //{{{
-static int intra8x8_hor_up_pred (sMacroBlock* mb,
-                                       eColorPlane plane,         //!< current image plane
-                                       int ioff,              //!< pixel offset X within MB
-                                       int joff)              //!< pixel offset Y within MB
-{
+static int intra8x8_hor_up_pred (sMacroBlock* mb, eColorPlane plane, int ioff, int joff) {
+
   sSlice *slice = mb->slice;
   sDecoder* decoder = mb->decoder;
 
@@ -1039,11 +1018,8 @@ static int intra8x8_hor_up_pred (sMacroBlock* mb,
 }
 //}}}
 //{{{
-static int intra8x8_hor_down_pred (sMacroBlock* mb,
-                                         eColorPlane plane,         //!< current image plane
-                                         int ioff,              //!< pixel offset X within MB
-                                         int joff)              //!< pixel offset Y within MB
-{
+static int intra8x8_hor_down_pred (sMacroBlock* mb, eColorPlane plane, int ioff, int joff) {
+
   sSlice *slice = mb->slice;
   sDecoder* decoder = mb->decoder;
 
@@ -1172,12 +1148,8 @@ static int intra8x8_hor_down_pred (sMacroBlock* mb,
 }
 //}}}
 //{{{
-static int intra_pred_8x8_normal (sMacroBlock* mb,
-                        eColorPlane plane,         //!< Current color plane
-                        int ioff,              //!< ioff
-                        int joff)              //!< joff
+static int intra_pred_8x8_normal (sMacroBlock* mb, eColorPlane plane, int ioff, int joff) {
 
-{
   int blockX = (mb->blockX) + (ioff >> 2);
   int blockY = (mb->blockY) + (joff >> 2);
   byte predmode = mb->slice->predMode[blockY][blockX];
