@@ -7,6 +7,8 @@
 // sPps
 typedef struct {
   Boolean   ok;
+  int       naluLen;
+
   unsigned  id;                               // ue(v)
   unsigned  spsId;                            // ue(v)
   int       entropyCoding;                    // u(1)
@@ -42,6 +44,7 @@ typedef struct {
   Boolean   hasConstrainedIntraPred;          // u(1)
   Boolean   redundantPicCountPresent;         // u(1)
 
+  Boolean   hasMoreData;
   Boolean   hasTransform8x8mode;              // u(1)
 
   Boolean   hasPicScalingMatrix;              // u(1)
@@ -49,6 +52,7 @@ typedef struct {
   int       picScalingListPresentFlag[12];  // u(1)
   int       scalingList4x4[6][16];          // se(v)
   int       scalingList8x8[6][64];          // se(v)
+
   Boolean   useDefaultScalingMatrix4x4Flag[6];
   Boolean   useDefaultScalingMatrix8x8Flag[6];
   //}}}
@@ -57,3 +61,15 @@ typedef struct {
   } sPps;
 
 extern void readNaluPps (struct Decoder* decoder, sNalu* nalu);
+
+//{{{
+#ifdef __cplusplus
+  extern "C" {
+#endif
+//}}}
+  extern void getPpsStr (sPps* pps, char* str);
+//{{{
+#ifdef __cplusplus
+  }
+#endif
+//}}}

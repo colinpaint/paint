@@ -71,6 +71,8 @@ typedef struct {
 // sSps
 typedef struct {
   Boolean  ok;
+  int      naluLen;
+
   unsigned int profileIdc;              // u(8)
   Boolean  constrained_set0_flag;       // u(1)
   Boolean  constrained_set1_flag;       // u(1)
@@ -133,3 +135,15 @@ typedef struct {
   } sSps;
 
 extern void readNaluSps (struct Decoder* decoder, sNalu* nalu);
+
+//{{{
+#ifdef __cplusplus
+  extern "C" {
+#endif
+//}}}
+  extern void getSpsStr (sSps* sps, char* str);
+//{{{
+#ifdef __cplusplus
+  }
+#endif
+//}}}

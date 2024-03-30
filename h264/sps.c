@@ -199,6 +199,8 @@ static void readVuiFromStream (sDataPartition* dataPartition, sSps* sps) {
 //{{{
 static void readSpsFromStream (sDecoder* decoder, sDataPartition* dataPartition, sSps* sps, int naluLen) {
 
+  sps->naluLen = naluLen;
+
   sBitStream* s = dataPartition->s;
 
   sps->profileIdc = readUv (8, "SPS profileIdc", s);
@@ -301,24 +303,30 @@ static void readSpsFromStream (sDecoder* decoder, sDataPartition* dataPartition,
   readVuiFromStream (dataPartition, sps);
 
   if (decoder->param.spsDebug) {
-    //{{{  print debug
-    printf ("SPS:%d:%d -> refFrames:%d pocType:%d mb:%dx%d",
-            sps->id, naluLen,
-            sps->numRefFrames, sps->pocType,
-            sps->picWidthMbsMinus1, sps->picHeightMapUnitsMinus1);
-
-    if (sps->cropFlag)
-      printf (" crop:%d:%d:%d:%d",
-              sps->cropLeft, sps->cropRight, sps->cropTop, sps->cropBot);
-
-    printf ("%s%s\n", sps->frameMbOnly ?" frame":"", sps->mbAffFlag ? " mbAff":"");
+    char str[128];
+    getSpsStr (sps, str);
+    printf ("%s\n", str);
     }
-    //}}}
 
   sps->ok = TRUE;
   }
 //}}}
 
+//{{{
+void getSpsStr (sSps* sps, char* str) {
+
+  sprintf (str, "SPS:%d:%d -> mb:%dx%d %d:%d:%d:%d refFrames:%d pocType:%d %s%s",
+           sps->id, sps->naluLen,
+           sps->picWidthMbsMinus1, sps->picHeightMapUnitsMinus1,
+           sps->cropLeft, sps->cropRight, sps->cropTop, sps->cropBot,
+           sps->numRefFrames, 
+           sps->pocType,
+           sps->frameMbOnly ?" frame":"", 
+           sps->mbAffFlag ? " mbAff":""
+           );
+
+  }
+//}}}
 //{{{
 void readNaluSps (sDecoder* decoder, sNalu* nalu) {
 

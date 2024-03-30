@@ -194,10 +194,11 @@ static void readPpsFromStream (sDecoder* decoder, sDataPartition* dataPartition,
   pps->hasConstrainedIntraPred = readU1 ("PPS hasConstrainedIntraPred", s);
   pps->redundantPicCountPresent = readU1 ("PPS redundantPicCountPresent", s);
 
-  int fidelityRange = moreRbspData (s->bitStreamBuffer, s->bitStreamOffset,s->bitStreamLen);
-  if (fidelityRange) {
+  pps->hasMoreData = moreRbspData (s->bitStreamBuffer, s->bitStreamOffset,s->bitStreamLen);
+  if (pps->hasMoreData) {
     //{{{  read fidelity range
     pps->hasTransform8x8mode = readU1 ("PPS hasTransform8x8mode", s);
+
     pps->hasPicScalingMatrix = readU1 ("PPS hasPicScalingMatrix", s);
     if (pps->hasPicScalingMatrix) {
       int chromaFormatIdc = decoder->sps[pps->spsId].chromaFormatIdc;
@@ -212,36 +213,45 @@ static void readPpsFromStream (sDecoder* decoder, sDataPartition* dataPartition,
           }
         }
       }
+
     pps->chromaQpOffset2 = readSeV ("PPS chromaQpOffset2", s);
     }
     //}}}
   else
     pps->chromaQpOffset2 = pps->chromaQpOffset;
 
+
   if (decoder->param.ppsDebug) {
-    sprintf (decoder->debug.ppsStr,
-             "PPS:%d:%d -> sps:%d%s sliceGroups:%d L:%d:%d%s%s%s%s%s%s biPredIdc:%d%s",
-             pps->id, naluLen,
-             pps->spsId,
-             pps->entropyCoding ? " cabac":" cavlc",
-             pps->numSliceGroupsMinus1,
-             pps->numRefIndexL0defaultActiveMinus1, pps->numRefIndexL1defaultActiveMinus1,
-             pps->hasDeblockFilterControl ? " deblock":"",
-             pps->hasWeightedPred ? " pred":"",
-             pps->hasConstrainedIntraPred ? " intra":"",
-             pps->redundantPicCountPresent ? " redundant":"",
-             fidelityRange && pps->hasTransform8x8mode ? " 8x8":"",
-             fidelityRange && pps->hasPicScalingMatrix ? " scaling":"",
-             pps->weightedBiPredIdc,
-             pps->frameBotField ? " botField":""
-             );
-    printf ("%s\n", decoder->debug.ppsStr);
+    char str[128];
+    getPpsStr (pps, str);
+    printf ("%s\n", str);
     }
 
   pps->ok = TRUE;
   }
 //}}}
 
+//{{{
+void getPpsStr (sPps* pps, char* str) {
+
+  sprintf (str, "PPS:%d:%d -> sps:%d%s sliceGroups:%d L:%d:%d%s%s%s%s%s%s biPredIdc:%d%s",
+           pps->id,
+           pps->naluLen,
+           pps->spsId,
+           pps->entropyCoding ? " cabac":" cavlc",
+           pps->numSliceGroupsMinus1,
+           pps->numRefIndexL0defaultActiveMinus1, pps->numRefIndexL1defaultActiveMinus1,
+           pps->hasDeblockFilterControl ? " deblock":"",
+           pps->hasWeightedPred ? " pred":"",
+           pps->hasConstrainedIntraPred ? " intra":"",
+           pps->redundantPicCountPresent ? " redundant":"",
+           pps->hasMoreData && pps->hasTransform8x8mode ? " 8x8":"",
+           pps->hasMoreData && pps->hasPicScalingMatrix ? " scaling":"",
+           pps->weightedBiPredIdc,
+           pps->frameBotField ? " botField":""
+           );
+  }
+//}}}
 //{{{
 void readNaluPps (sDecoder* decoder, sNalu* nalu) {
 
@@ -253,6 +263,7 @@ void readNaluPps (sDecoder* decoder, sNalu* nalu) {
   dataPartition->s->codeLen = dataPartition->s->bitStreamLen;
 
   sPps pps = { 0 };
+  pps.naluLen = nalu->len;
   readPpsFromStream (decoder, dataPartition, &pps, nalu->len);
   freeDataPartitions (dataPartition, 1);
 

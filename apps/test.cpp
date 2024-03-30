@@ -1227,34 +1227,33 @@ public:
     mView->draw (testApp, mVideoShader);
 
     // draw menu
-    ImGui::SetCursorPos ({0.f,ImGui::GetIO().DisplaySize.y - ImGui::GetTextLineHeight() * 4.5f});
-    ImGui::BeginChild ("menu", {0.f,ImGui::GetTextLineHeight() * 4.5f},
-                       ImGuiChildFlags_None, ImGuiWindowFlags_NoBackground);
+    float maxHeight = 5.5f * ImGui::GetTextLineHeight();
+    ImGui::SetCursorPos ({4.f,ImGui::GetIO().DisplaySize.y - maxHeight});
+    ImGui::BeginChild ("menu", {0.f, maxHeight}, ImGuiChildFlags_None, ImGuiWindowFlags_NoBackground);
 
     if (testApp.getDecoder()) {
       //{{{  draw testApp info
-      ImGui::SetCursorPos ({4.f,0.f});
-      if (testApp.getDecoder()->param.spsDebug)
-        ImGui::TextUnformatted (testApp.getDecoder()->debug.spsStr);
-
-      // 2nd line
-      ImGui::SetCursorPos ({4.f,ImGui::GetTextLineHeight()});
-      if (testApp.getDecoder()->param.ppsDebug)
-        ImGui::TextUnformatted (testApp.getDecoder()->debug.ppsStr);
-
-      // 3rd line - slice
-      ImGui::SetCursorPos ({4.f,2.f*ImGui::GetTextLineHeight()});
-      if (testApp.getDecoder()->param.sliceDebug) {
-        ImGui::TextUnformatted (testApp.getDecoder()->debug.outStr);
-        ImGui::SameLine();
-        ImGui::TextUnformatted (testApp.getDecoder()->debug.sliceStr);
-        ImGui::SameLine();
-        ImGui::TextUnformatted (testApp.getDecoder()->debug.sliceTypeStr);
+      if (testApp.getDecoder()->activeSps) {
+        char str[128];
+        getSpsStr (testApp.getDecoder()->activeSps, str);
+        ImGui::TextUnformatted (str);
         }
+
+      if (testApp.getDecoder()->activePps) {
+        char str[128];
+        getPpsStr (testApp.getDecoder()->activePps, str);
+        ImGui::TextUnformatted (str);
+        }
+
+      ImGui::TextUnformatted (testApp.getDecoder()->debug.outStr);
+      ImGui::SameLine();
+      ImGui::TextUnformatted (testApp.getDecoder()->debug.sliceStr);
+      ImGui::SameLine();
+      ImGui::TextUnformatted (testApp.getDecoder()->debug.sliceTypeStr);
       }
       //}}}
 
-    ImGui::SetCursorPos ({0.f,3.f*ImGui::GetTextLineHeight()});
+    ImGui::SetCursorPos ({0.f, maxHeight - 1.5f * ImGui::GetTextLineHeight()});
     //{{{  draw fullScreen button
     if (toggleButton ("full", testApp.getPlatform().getFullScreen()))
       testApp.getPlatform().toggleFullScreen();
@@ -1361,24 +1360,9 @@ private:
 
         // draw quad
         mVideoQuad->draw();
-        //}}}
-        //{{{  draw frameInfo
-        //string title = fmt::format ("seqPts:{} {:4d} {:5d} {}",
-                                    //getPtsString (videoFrame->getPts()),
-                                    //videoFrame->getPtsDuration(),
-                                    //videoFrame->getPesSize(),
-                                    //videoFrame->getFrameInfo()
-                                    //);
-
-        //ImVec2 pos = { ImGui::GetTextLineHeight(), mSize.y - 4.5f * ImGui::GetTextLineHeight()};
-        //ImGui::SetCursorPos (pos);
-        //ImGui::TextColored ({0.f,0.f,0.f,1.f}, title.c_str());
-        //ImGui::SetCursorPos (pos - ImVec2(2.f,2.f));
-        //ImGui::TextColored ({1.f, 1.f,1.f,1.f}, title.c_str());
-        //}}}
         }
 
-      if (testApp.getFilePlayer()) {
+        if (testApp.getFilePlayer()) {
         ImGui::PushFont (testApp.getLargeFont());
         //{{{  title
         string title = testApp.getFilePlayer()->getFileName();
@@ -1399,27 +1383,27 @@ private:
         ImGui::PopFont();
         }
 
-      // invisbleButton over view sub area
-      ImGui::SetCursorPos ({0.f,0.f});
-      ImVec2 viewSubSize = mSize -
+        // invisbleButton over view sub area
+        ImGui::SetCursorPos ({0.f,0.f});
+        ImVec2 viewSubSize = mSize -
         ImVec2(0.f, ImGui::GetTextLineHeight() * ((layoutPos.y + (layoutScale/2.f) >= 0.99f) ? 3.f : 1.5f));
-      if (ImGui::InvisibleButton ("view", viewSubSize))
+        if (ImGui::InvisibleButton ("view", viewSubSize))
         testApp.togglePlay();
 
-      ImGui::EndChild();
-      }
+        ImGui::EndChild();
+        }
 
-  private:
-    //{{{
-    cVec2 getLayout (size_t index, size_t numViews, float& scale) {
-    // return layout scale, and position as fraction of viewPort
+        private:
+        //{{{
+        cVec2 getLayout (size_t index, size_t numViews, float& scale) {
+        // return layout scale, and position as fraction of viewPort
 
-      scale = (numViews <= 1) ? 1.f :
+        scale = (numViews <= 1) ? 1.f :
                 ((numViews <= 4) ? 1.f/2.f :
                   ((numViews <= 9) ? 1.f/3.f :
                     ((numViews <= 16) ? 1.f/4.f : 1.f/5.f)));
 
-      switch (numViews) {
+        switch (numViews) {
         //{{{
         case 2: // 2x1
           switch (index) {
@@ -1512,16 +1496,16 @@ private:
         default: // 1x1
           return { 0.5f, 0.5f };
         }
-      }
-    //}}}
+        }
+        //}}}
 
-    // video
-    ImVec2 mSize;
-    ImVec2 mTL;
-    ImVec2 mBR;
-    cQuad* mVideoQuad = nullptr;
-    };
-  //}}}
+        // video
+        ImVec2 mSize;
+        ImVec2 mTL;
+        ImVec2 mBR;
+        cQuad* mVideoQuad = nullptr;
+        };
+        //}}}
   //{{{
   void keyboard (cTestApp& testApp) {
 
@@ -1571,7 +1555,7 @@ private:
   cView* mView;
   cTextureShader* mVideoShader = nullptr;
   };
-//}}}
+  //}}}
 
 // main
 int main (int numArgs, char* args[]) {
@@ -1602,3 +1586,4 @@ int main (int numArgs, char* args[]) {
 
   return EXIT_SUCCESS;
   }
+//}}}
