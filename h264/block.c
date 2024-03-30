@@ -39,7 +39,7 @@ void itrans4x4 (sMacroBlock* mb, eColorPlane plane, int ioff, int joff) {
   }
 //}}}
 //{{{
-void itrans4x4_ls (sMacroBlock* mb, eColorPlane plane, int ioff, int joff) {
+void itrans4x4Lossless (sMacroBlock* mb, eColorPlane plane, int ioff, int joff) {
 
   sSlice* slice = mb->slice;
   sPixel** mbPred = slice->mbPred[plane];
@@ -249,7 +249,7 @@ void invResidualTransChroma (sMacroBlock* mb, int uv) {
 //}}}
 
 //{{{
-void itrans_2 (sMacroBlock* mb, eColorPlane plane) {
+void itrans2 (sMacroBlock* mb, eColorPlane plane) {
 
   sSlice* slice = mb->slice;
   sDecoder* decoder = mb->decoder;
@@ -286,7 +286,7 @@ void itrans_2 (sMacroBlock* mb, eColorPlane plane) {
   }
 //}}}
 //{{{
-void itrans_sp (sMacroBlock* mb, eColorPlane plane, int ioff, int joff) {
+void itransSp (sMacroBlock* mb, eColorPlane plane, int ioff, int joff) {
 
   sDecoder* decoder = mb->decoder;
   sSlice* slice = mb->slice;
@@ -351,11 +351,13 @@ void itrans_sp (sMacroBlock* mb, eColorPlane plane, int ioff, int joff) {
   }
 //}}}
 //{{{
-void itrans_sp_cr (sMacroBlock* mb, int uv) {
+void itransSpChroma (sMacroBlock* mb, int uv) {
 
   sSlice* slice = mb->slice;
   sDecoder* decoder = mb->decoder;
+
   int mp1[BLOCK_SIZE];
+
   sPixel** mbPred = slice->mbPred[uv + 1];
   int** cof = slice->cof[uv + 1];
   int** PBlock = new_mem2Dint(MB_BLOCK_SIZE, MB_BLOCK_SIZE);
@@ -394,7 +396,7 @@ void itrans_sp_cr (sMacroBlock* mb, int uv) {
         int ilev = rshift_rnd_sf (iabs (mp1[n1+n2*2]) * quant_coef[qp_rem_sp][0][0], q_bits_sp + 1);
         // addition
         ilev = isignab (ilev, mp1[n1+n2*2]) + cof[n2<<2][n1<<2];
-        // dequantization
+        // dequanti  zation
         mp1[n1+n2*2] = ilev * dequant_coef[qp_rem_sp][0][0] << qp_per_sp;
         }
 
@@ -414,8 +416,8 @@ void itrans_sp_cr (sMacroBlock* mb, int uv) {
             }
     }
   else {
-    for (int n2=0; n2 < 2; ++n2 )
-      for (int n1=0; n1 < 2; ++n1 ) {
+    for (int n2 = 0; n2 < 2; ++n2 )
+      for (int n1 = 0; n1 < 2; ++n1 ) {
         int ilev = mp1[n1+n2*2] + (((cof[n2<<2][n1<<2] * dequant_coef[qp_rem][0][0] * A[0][0]) << qp_per) >> 5);
         ilev = isign (ilev) * rshift_rnd_sf (iabs(ilev) * quant_coef[qp_rem_sp][0][0], q_bits_sp + 1);
         mp1[n1+n2*2] = ilev * dequant_coef[qp_rem_sp][0][0] << qp_per_sp;
@@ -440,7 +442,7 @@ void itrans_sp_cr (sMacroBlock* mb, int uv) {
   cof[4][0] = (mp1[0] - mp1[1] + mp1[2] - mp1[3]) >> 1;
   cof[4][4] = (mp1[0] - mp1[1] - mp1[2] + mp1[3]) >> 1;
 
-  freeMem2Dint(PBlock);
+  freeMem2Dint (PBlock);
   }
 //}}}
 //{{{
@@ -453,7 +455,7 @@ void iMBtrans4x4 (sMacroBlock* mb, eColorPlane plane, int smb) {
   if (mb->isLossless && mb->mbType == I16MB)
     invResidualTrans16x16(mb, plane);
   else if (smb || mb->isLossless == TRUE) {
-    mb->iTrans4x4 = (smb) ? itrans_sp : ((mb->isLossless == FALSE) ? itrans4x4 : invResidualTrans4x4);
+    mb->iTrans4x4 = (smb) ? itransSp : ((mb->isLossless == FALSE) ? itrans4x4 : invResidualTrans4x4);
     for (int block8x8 = 0; block8x8 < MB_BLOCK_SIZE; block8x8 += 4) {
       for (int k = block8x8; k < block8x8 + 4; ++k ) {
         int jj = ((decode_block_scan[k] >> 2) & 3) << BLOCK_SHIFT;
@@ -591,18 +593,18 @@ void iTransform (sMacroBlock* mb, eColorPlane plane, int smb) {
               for (int j = 0 ; j < decoder->mbCrSizeX ; j ++)
                 slice->mbRess[uv][i][j] = slice->cof[uv][i][j] ;
 
-            itrans4x4_ls (mb, uv, *x_pos++, *y_pos++);
-            itrans4x4_ls (mb, uv, *x_pos++, *y_pos++);
-            itrans4x4_ls (mb, uv, *x_pos++, *y_pos++);
-            itrans4x4_ls (mb, uv, *x_pos  , *y_pos  );
+            itrans4x4Lossless (mb, uv, *x_pos++, *y_pos++);
+            itrans4x4Lossless (mb, uv, *x_pos++, *y_pos++);
+            itrans4x4Lossless (mb, uv, *x_pos++, *y_pos++);
+            itrans4x4Lossless (mb, uv, *x_pos  , *y_pos  );
             }
           }
         copyImage (curUV, mbRec, mb->pixcX, 0, decoder->mbSize[1][0], decoder->mbSize[1][1]);
         slice->isResetCoefCr = FALSE;
         }
       else if (smb) {
-        mb->iTrans4x4 = (mb->isLossless == FALSE) ? itrans4x4 : itrans4x4_ls;
-        itrans_sp_cr (mb, uv - 1);
+        mb->iTrans4x4 = (mb->isLossless == FALSE) ? itrans4x4 : itrans4x4Lossless;
+        itransSpChroma (mb, uv - 1);
 
         for (joff = 0; joff < decoder->mbCrSizeY; joff += BLOCK_SIZE)
           for(ioff = 0; ioff < decoder->mbCrSizeX ;ioff += BLOCK_SIZE)

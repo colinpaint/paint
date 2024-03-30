@@ -1630,7 +1630,7 @@ void intra_cr_decoding (sMacroBlock* mb, int yuv)
 
   for(uv = 0; uv < 2; uv++)
   {
-    mb->iTrans4x4 = (mb->isLossless == FALSE) ? itrans4x4 : itrans4x4_ls;
+    mb->iTrans4x4 = (mb->isLossless == FALSE) ? itrans4x4 : itrans4x4Lossless;
 
     curUV = picture->imgUV[uv];
 
@@ -1662,7 +1662,7 @@ void intra_cr_decoding (sMacroBlock* mb, int yuv)
     }
     else if (mb->mbType == SI4MB)
     {
-      itrans_sp_cr(mb, uv);
+      itransSpChroma(mb, uv);
 
       for (joff  = 0; joff < 8; joff += 4)
       {

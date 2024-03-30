@@ -84,7 +84,7 @@ static const byte decode_block_scan[16] = {0, 1, 4, 5, 2, 3, 6, 7, 8, 9, 12, 13,
 extern void iMBtrans4x4 (sMacroBlock* mb, eColorPlane plane, int smb);
 extern void iMBtrans8x8 (sMacroBlock* mb, eColorPlane plane);
 
-extern void itrans_sp_cr (sMacroBlock* mb, int uv);
+extern void itransSpChroma (sMacroBlock* mb, int uv);
 
 extern void invResidualTrans4x4 (sMacroBlock* mb, eColorPlane plane, int ioff, int joff);
 extern void invResidualTrans8x8 (sMacroBlock* mb, eColorPlane plane, int ioff,int joff);
@@ -92,9 +92,9 @@ extern void invResidualTrans16x16 (sMacroBlock* mb, eColorPlane plane);
 extern void invResidualTransChroma (sMacroBlock* mb, int uv);
 
 extern void itrans4x4 (sMacroBlock* mb, eColorPlane plane, int ioff, int joff);
-extern void itrans4x4_ls(sMacroBlock* mb, eColorPlane plane, int ioff, int joff);
-extern void itrans_sp (sMacroBlock* mb, eColorPlane plane, int ioff, int joff);
-extern void itrans_2 (sMacroBlock* mb, eColorPlane plane);
+extern void itrans4x4Lossless(sMacroBlock* mb, eColorPlane plane, int ioff, int joff);
+extern void itransSp (sMacroBlock* mb, eColorPlane plane, int ioff, int joff);
+extern void itrans2 (sMacroBlock* mb, eColorPlane plane);
 extern void iTransform (sMacroBlock* mb, eColorPlane plane, int smb);
 
 extern void copyImage (sPixel ** imgBuf1, sPixel ** imgBuf2, int off1, int off2, int width, int height);

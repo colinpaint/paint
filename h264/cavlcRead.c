@@ -913,7 +913,7 @@ static void read_CBP_and_coeffs_from_NAL_CAVLC_400 (sMacroBlock* mb) {
 
 
       if (mb->isLossless == FALSE)
-        itrans_2(mb, (eColorPlane) slice->colourPlaneId);// transform new intra DC
+        itrans2(mb, (eColorPlane) slice->colourPlaneId);// transform new intra DC
       }
     }
     //}}}
@@ -1054,7 +1054,7 @@ static void read_CBP_and_coeffs_from_NAL_CAVLC_422 (sMacroBlock* mb) {
           }
         }
       if (mb->isLossless == FALSE)
-        itrans_2(mb, (eColorPlane) slice->colourPlaneId);// transform new intra DC
+        itrans2(mb, (eColorPlane) slice->colourPlaneId);// transform new intra DC
       }
     }
     //}}}
@@ -1316,7 +1316,7 @@ static void read_CBP_and_coeffs_from_NAL_CAVLC_444 (sMacroBlock* mb) {
           }
         }
       if (mb->isLossless == FALSE)
-        itrans_2(mb, (eColorPlane) slice->colourPlaneId);// transform new intra DC
+        itrans2(mb, (eColorPlane) slice->colourPlaneId);// transform new intra DC
       }
     }
     //}}}
@@ -1366,7 +1366,7 @@ static void read_CBP_and_coeffs_from_NAL_CAVLC_444 (sMacroBlock* mb) {
         } //k loop
 
       if(mb->isLossless == FALSE)
-        itrans_2(mb, (eColorPlane) (uv)); // transform new intra DC
+        itrans2(mb, (eColorPlane) (uv)); // transform new intra DC
       } //IS_I16MB
 
     //init constants for every chroma qp offset
@@ -1501,7 +1501,7 @@ static void read_CBP_and_coeffs_from_NAL_CAVLC_420 (sMacroBlock* mb) {
         }
 
       if (mb->isLossless == FALSE)
-        itrans_2(mb, (eColorPlane) slice->colourPlaneId);// transform new intra DC
+        itrans2(mb, (eColorPlane) slice->colourPlaneId);// transform new intra DC
       }
     }
 
