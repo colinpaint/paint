@@ -1210,12 +1210,14 @@ public:
     //}}}
 
     // draw child menu
-    float menuHeight = 5.25f * ImGui::GetTextLineHeight();
+    float menuHeight = 6.25f * ImGui::GetTextLineHeight();
     ImGui::SetCursorPos ({3.f,ImGui::GetIO().DisplaySize.y - menuHeight});
     ImGui::BeginChild ("menu", {0.f,menuHeight}, ImGuiChildFlags_None, ImGuiWindowFlags_NoBackground);
     if (testApp.getDecoder()) {
       //{{{  draw decoder info
       ImGui::PushFont (testApp.getMonoFont());
+
+      ImGui::TextUnformatted (testApp.getDecoder()->debug.profileStr);
 
       if (testApp.getDecoder()->activeSps) {
         char str[128];

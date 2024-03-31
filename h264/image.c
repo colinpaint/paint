@@ -2549,8 +2549,7 @@ static void useParameterSet (sDecoder* decoder, sSlice* slice) {
     setFormat (decoder, sps, &decoder->param.source, &decoder->param.output);
 
     // debug spsStr
-    char str[128];
-    sprintf (str, "-> profile:%d %dx%d %dx%d%s %d:%d:%d%s",
+    sprintf (decoder->debug.profileStr, "profile:%d %dx%d %dx%d%s %d:%d:%d%s",
              sps->profileIdc,
              decoder->param.source.width[0], decoder->param.source.height[0],
              decoder->coding.width, decoder->coding.height,
@@ -2561,7 +2560,7 @@ static void useParameterSet (sDecoder* decoder, sSlice* slice) {
              sps->frameMbOnly ? (sps->mbAffFlag ? " mbAff" : " frame") : " field");
 
     // print profile debug
-    printf (" %s\n", str);
+    printf ("-> %s\n", decoder->debug.profileStr);
     }
     //}}}
 
