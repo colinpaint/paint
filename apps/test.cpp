@@ -994,35 +994,26 @@ public:
 
 private:
   //{{{
-  void outputPicList (sDecodedPic* pic) {
+  void outputPicList (sDecodedPic* decodedPic) {
 
-    while (pic && pic->ok) {
-      int width = pic->width * ((pic->bitDepth+7)>>3);
-      int height = pic->height;
-      int iStride = pic->yStride;
-
-      int iWidthUV = pic->width >> 1;
-      iWidthUV *= ((pic->bitDepth + 7) >> 3);
-      int iHeightUV = pic->height >> 1;
-      int iStrideUV = pic->uvStride;
-
-      //cLog::log (LOGINFO, fmt::format ("output {} {}x{}", mOutputFrame, width, height));
-
+    while (decodedPic && decodedPic->ok) {
       mVideoFrames[mOutputFrame % kVideoFrames]->releaseResources();
       cSoftVideoFrame* videoFrame = mVideoFrames[mOutputFrame % kVideoFrames];
-      videoFrame->setWidth (width);
-      videoFrame->setHeight (height);
-      videoFrame->mStrideY = iStride;
-      videoFrame->mStrideUV = iStrideUV;
+
+      videoFrame->setWidth (decodedPic->width * ((decodedPic->bitDepth + 7) >> 3));
+      videoFrame->setHeight (decodedPic->height);
+      videoFrame->mStrideY = decodedPic->yStride;
+      videoFrame->mStrideUV = decodedPic->uvStride;
       videoFrame->mInterlaced = 0;
       videoFrame->mTopFieldFirst = 0;
-      videoFrame->setPixels (pic->yBuf, pic->uBuf, pic->vBuf, iStride, iStrideUV, height);
+      videoFrame->setPixels (decodedPic->yBuf, decodedPic->uBuf, decodedPic->vBuf,
+                             decodedPic->yStride, decodedPic->uvStride, decodedPic->height);
       videoFrame->mTextureDirty = true;
       mVideoFrame = videoFrame;
 
       mOutputFrame++;
-      pic->ok = 0;
-      pic = pic->next;
+      decodedPic->ok = 0;
+      decodedPic = decodedPic->next;
       }
     }
   //}}}
@@ -1153,34 +1144,26 @@ public:
 
 private:
   //{{{
-  void outputPicList (sDecodedPic* decPic) {
+  void outputPicList (sDecodedPic* decodedPic) {
 
-    sDecodedPic* pPic = decPic;
-    while (pPic && pPic->ok) {
-      int width = pPic->width * ((pPic->bitDepth+7)>>3);
-      int height = pPic->height;
-      int iStride = pPic->yStride;
-
-      int iWidthUV = pPic->width >> 1;
-      iWidthUV *= ((pPic->bitDepth + 7) >> 3);
-      int iHeightUV = pPic->height >> 1;
-      int iStrideUV = pPic->uvStride;
-
+    while (decodedPic && decodedPic->ok) {
       mVideoFrames[mOutputFrame % kVideoFrames]->releaseResources();
       cSoftVideoFrame* videoFrame = mVideoFrames[mOutputFrame % kVideoFrames];
-      videoFrame->setWidth (width);
-      videoFrame->setHeight (height);
-      videoFrame->mStrideY = iStride;
-      videoFrame->mStrideUV = iStrideUV;
+
+      videoFrame->setWidth (decodedPic->width * ((decodedPic->bitDepth + 7) >> 3));
+      videoFrame->setHeight (decodedPic->height);
+      videoFrame->mStrideY = decodedPic->yStride;
+      videoFrame->mStrideUV = decodedPic->uvStride;
       videoFrame->mInterlaced = 0;
       videoFrame->mTopFieldFirst = 0;
-      videoFrame->setPixels (pPic->yBuf, pPic->uBuf, pPic->vBuf, iStride, iStrideUV, height);
+      videoFrame->setPixels (decodedPic->yBuf, decodedPic->uBuf, decodedPic->vBuf, 
+                             decodedPic->yStride, decodedPic->uvStride, decodedPic->height);
       videoFrame->mTextureDirty = true;
       mVideoFrame = videoFrame;
 
       mOutputFrame++;
-      pPic->ok = 0;
-      pPic = pPic->next;
+      decodedPic->ok = 0;
+      decodedPic = decodedPic->next;
       }
     }
   //}}}

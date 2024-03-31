@@ -870,9 +870,9 @@ typedef struct {
   TIME_T  startTime;
   TIME_T  endTime;
 
-  char    sliceStr[64];
   char    sliceTypeStr[9];
-  char    outStr[64];
+  char    sliceStr[128];
+  char    outStr[128];
   } sDebug;
 //}}}
 //{{{  sDecoder
