@@ -1209,7 +1209,7 @@ public:
     mView->draw (testApp, mVideoShader);
     //}}}
 
-    // draw child menu
+    // draw menu child
     float menuHeight = 6.25f * ImGui::GetTextLineHeight();
     ImGui::SetCursorPos ({3.f,ImGui::GetIO().DisplaySize.y - menuHeight});
     ImGui::BeginChild ("menu", {0.f,menuHeight}, ImGuiChildFlags_None, ImGuiWindowFlags_NoBackground);

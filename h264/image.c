@@ -3075,7 +3075,7 @@ static int readSlice (sSlice* slice) {
         decoder->recoveryPoint = 0;
 
         // debug
-        sprintf (decoder->debug.sliceStr, "%s:%d:%5d -> pps:%d frame:%2d %c %s%s",
+        sprintf (decoder->debug.sliceStr, "%s:%d:%6d -> pps:%d frame:%2d %c %s%s",
                  (nalu->unitType == NALU_TYPE_IDR) ? "IDR":"SLC", slice->refId, nalu->len,
                  slice->ppsId, slice->frameNum,
                  slice->sliceType ? (slice->sliceType == 1) ? 'B':((slice->sliceType == 2) ? 'I':'?'):'P',
