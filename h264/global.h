@@ -569,7 +569,7 @@ typedef struct Image {
 //}}}
 //{{{  sDecodedPic
 typedef struct DecodedPic {
-  int valid;
+  int ok;
 
   int yuvFormat; // 4:0:0, 4:2:0, 4:2:2, 4:4:4
   int bitDepth;

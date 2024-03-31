@@ -292,7 +292,7 @@ void freeLayerBuffers (sDecoder* decoder) {
 sDecodedPic* allocDecodedPicture (sDecodedPic* decodedPic) {
 
   sDecodedPic* prevDecodedPicture = NULL;
-  while (decodedPic && (decodedPic->valid)) {
+  while (decodedPic && (decodedPic->ok)) {
     prevDecodedPicture = decodedPic;
     decodedPic = decodedPic->next;
     }
@@ -311,7 +311,7 @@ void clearDecodedPics (sDecoder* decoder) {
   // find the head first;
   sDecodedPic* prevDecodedPicture = NULL;
   sDecodedPic* decodedPic = decoder->decOutputPic;
-  while (decodedPic && !decodedPic->valid) {
+  while (decodedPic && !decodedPic->ok) {
     prevDecodedPicture = decodedPic;
     decodedPic = decodedPic->next;
     }

@@ -101,13 +101,13 @@ static void writeOutPicture (sDecoder* decoder, sPicture* p) {
   sDecodedPic* decodedPic = allocDecodedPicture (decoder->decOutputPic);
   if (!decodedPic->yBuf || (decodedPic->bufSize < frameSize))
     allocDecodedPicBuffers (decoder, decodedPic, p, lumaSize, frameSize, lumaSizeX, lumaSizeY, chromaSizeX, chromaSizeY);
-  decodedPic->valid = 1;
+  decodedPic->ok = 1;
   decodedPic->poc = p->framePoc;
   if (!decodedPic->yBuf)
     noMemoryExit ("writeOutPicture: buf");
 
   img2buf (p->imgY,
-           (decodedPic->valid == 1) ? decodedPic->yBuf : decodedPic->yBuf + lumaSizeX * symbolSizeInBytes,
+           decodedPic->ok ? decodedPic->yBuf : decodedPic->yBuf + lumaSizeX * symbolSizeInBytes,
            p->sizeX, p->sizeY, symbolSizeInBytes,
            cropLeft, cropRight, cropTop, cropBottom, decodedPic->yStride);
 
@@ -117,12 +117,12 @@ static void writeOutPicture (sDecoder* decoder, sPicture* p) {
   cropBottom = (2 - p->frameMbOnly) * p->cropBot;
 
   img2buf (p->imgUV[0],
-           (decodedPic->valid == 1) ? decodedPic->uBuf : decodedPic->uBuf + chromaSizeX * symbolSizeInBytes,
+           decodedPic->ok ? decodedPic->uBuf : decodedPic->uBuf + chromaSizeX * symbolSizeInBytes,
            p->sizeXcr, p->sizeYcr, symbolSizeInBytes,
            cropLeft, cropRight, cropTop, cropBottom, decodedPic->uvStride);
 
   img2buf (p->imgUV[1],
-           (decodedPic->valid == 1) ? decodedPic->vBuf : decodedPic->vBuf + chromaSizeX * symbolSizeInBytes,
+           decodedPic->ok ? decodedPic->vBuf : decodedPic->vBuf + chromaSizeX * symbolSizeInBytes,
            p->sizeXcr, p->sizeYcr, symbolSizeInBytes,
            cropLeft, cropRight, cropTop, cropBottom, decodedPic->uvStride);
   }

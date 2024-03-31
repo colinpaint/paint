@@ -996,7 +996,7 @@ private:
   //{{{
   void outputPicList (sDecodedPic* pic) {
 
-    while (pic && pic->valid == 1) {
+    while (pic && pic->ok) {
       int width = pic->width * ((pic->bitDepth+7)>>3);
       int height = pic->height;
       int iStride = pic->yStride;
@@ -1021,7 +1021,7 @@ private:
       mVideoFrame = videoFrame;
 
       mOutputFrame++;
-      pic->valid = 0;
+      pic->ok = 0;
       pic = pic->next;
       }
     }
@@ -1156,7 +1156,7 @@ private:
   void outputPicList (sDecodedPic* decPic) {
 
     sDecodedPic* pPic = decPic;
-    while (pPic && pPic->valid == 1) {
+    while (pPic && pPic->ok) {
       int width = pPic->width * ((pPic->bitDepth+7)>>3);
       int height = pPic->height;
       int iStride = pPic->yStride;
@@ -1165,8 +1165,6 @@ private:
       iWidthUV *= ((pPic->bitDepth + 7) >> 3);
       int iHeightUV = pPic->height >> 1;
       int iStrideUV = pPic->uvStride;
-
-      //cLog::log (LOGINFO, fmt::format ("out {} {}x{}", mOutputFrame, width, height));
 
       mVideoFrames[mOutputFrame % kVideoFrames]->releaseResources();
       cSoftVideoFrame* videoFrame = mVideoFrames[mOutputFrame % kVideoFrames];
@@ -1181,7 +1179,7 @@ private:
       mVideoFrame = videoFrame;
 
       mOutputFrame++;
-      pPic->valid = 0;
+      pPic->ok = 0;
       pPic = pPic->next;
       }
     }
@@ -1229,11 +1227,10 @@ public:
     mView->draw (testApp, mVideoShader);
     //}}}
 
-    // draw menu
+    // draw child menu
     float menuHeight = 5.25f * ImGui::GetTextLineHeight();
     ImGui::SetCursorPos ({3.f,ImGui::GetIO().DisplaySize.y - menuHeight});
     ImGui::BeginChild ("menu", {0.f,menuHeight}, ImGuiChildFlags_None, ImGuiWindowFlags_NoBackground);
-
     if (testApp.getDecoder()) {
       //{{{  draw decoder info
       ImGui::PushFont (testApp.getMonoFont());
@@ -1257,7 +1254,6 @@ public:
       ImGui::PopFont();
       }
       //}}}
-
     ImGui::SetCursorPos ({0.f, menuHeight - 1.5f * ImGui::GetTextLineHeight()});
     //{{{  draw fullScreen button
     if (toggleButton ("full", testApp.getPlatform().getFullScreen()))
@@ -1314,8 +1310,8 @@ public:
         testApp.getDecoder()->param.deblock = !testApp.getDecoder()->param.deblock;
       //}}}
       }
-
     ImGui::EndChild();
+
     ImGui::End();
     keyboard (testApp);
     }

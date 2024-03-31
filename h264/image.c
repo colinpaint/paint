@@ -2309,32 +2309,28 @@ static void endDecodeFrame (sDecoder* decoder) {
     }
     //}}}
   if ((picStructure == eFrame) || picStructure == eBotField) {
+    //{{{  debug
     getTime (&decoder->debug.endTime);
-    sprintf (decoder->debug.outStr, "%d %d:%d:%02d %3dms ->%s-> poc:%d pic:%d",
+
+    // count numOutputFrames
+    int numOutputFrames = 0;
+    sDecodedPic* decodedPic = decoder->decOutputPic;
+    while (decodedPic) {
+      if (decodedPic->ok)
+        numOutputFrames++;
+      decodedPic = decodedPic->next;
+      }
+
+    sprintf (decoder->debug.outStr, "%d %d:%d:%02d %3dms ->%s-> poc:%d pic:%d -> %d",
              decoder->decodeFrameNum,
              decoder->numDecodedSlices, decoder->numDecodedMbs, qp,
              (int)timeNorm (timeDiff (&decoder->debug.startTime, &decoder->debug.endTime)),
              decoder->debug.sliceTypeStr,
-             pocNum, picNum);
+             pocNum, picNum, numOutputFrames);
 
-    if (decoder->param.outDebug) {
-      //{{{  print outDebug
-      printf ("-> %s", decoder->debug.outStr);
-
-      // count numOutputFrames
-      int numOutputFrames = 0;
-      sDecodedPic* pic = decoder->decOutputPic;
-      while (pic) {
-        if (pic->valid)
-          numOutputFrames++;
-        pic = pic->next;
-        }
-      if (numOutputFrames)
-        printf (" -> %d", numOutputFrames);
-
-      printf ("\n");
-      }
-      //}}}
+    if (decoder->param.outDebug)
+      printf ("-> %s\n", decoder->debug.outStr);
+    //}}}
 
     // I or P pictures ?
     if ((sliceType == eSliceI) || (sliceType == eSliceSI) || (sliceType == eSliceP) || refpic)
@@ -3039,14 +3035,12 @@ static int readSlice (sSlice* slice) {
 
   for (;;) {
     sNalu* nalu = decoder->nalu;
-    if (!decoder->pendingNalu) {
-      if (!readNalu (decoder, nalu))
-        return eEOS;
-      }
-    else {
+    if (decoder->pendingNalu) {
       nalu = decoder->pendingNalu;
       decoder->pendingNalu = NULL;
       }
+    else if (!readNalu (decoder, nalu))
+      return eEOS;
 
   processNalu:
     switch (nalu->unitType) {
