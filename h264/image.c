@@ -2549,18 +2549,17 @@ static void useParameterSet (sDecoder* decoder, sSlice* slice) {
     setFormat (decoder, sps, &decoder->param.source, &decoder->param.output);
 
     // debug spsStr
-    sprintf (decoder->debug.profileStr, "profile:%d %dx%d %dx%d%s %d:%d:%d%s",
-             sps->profileIdc,
+    sprintf (decoder->debug.profileStr, "profile:%d %dx%d %dx%d%s %d:%d:%d",
+             decoder->coding.profileIdc,
              decoder->param.source.width[0], decoder->param.source.height[0],
              decoder->coding.width, decoder->coding.height,
-             decoder->coding.yuvFormat == YUV400 ? " 4:0:0 " :
-               decoder->coding.yuvFormat == YUV420 ? " 4:2:0" :
-                 decoder->coding.yuvFormat == YUV422 ? " 4:2:2" : " 4:4:4",
-             decoder->param.source.bitDepth[0], decoder->param.source.bitDepth[1], decoder->param.source.bitDepth[2],
-             sps->frameMbOnly ? (sps->mbAffFlag ? " mbAff" : " frame") : " field");
+             decoder->coding.yuvFormat == YUV400 ? " 4:0:0 ":
+               decoder->coding.yuvFormat == YUV420 ? " 4:2:0":
+                 decoder->coding.yuvFormat == YUV422 ? " 4:2:2":" 4:4:4",
+             decoder->param.source.bitDepth[0], decoder->param.source.bitDepth[1], decoder->param.source.bitDepth[2]);
 
     // print profile debug
-    printf ("-> %s\n", decoder->debug.profileStr);
+    printf ("%s\n", decoder->debug.profileStr);
     }
     //}}}
 

@@ -309,14 +309,13 @@ static void readSpsFromStream (sDecoder* decoder, sDataPartition* dataPartition,
 //{{{
 void getSpsStr (sSps* sps, char* str) {
 
-  sprintf (str, "SPS:%d:%d -> mb:%dx%d %d:%d:%d:%d refFrames:%d pocType:%d %s%s",
+  sprintf (str, "SPS:%d:%d -> mb:%dx%d %d:%d:%d:%d refFrames:%d pocType:%d %s",
            sps->id, sps->naluLen,
            sps->picWidthMbsMinus1, sps->picHeightMapUnitsMinus1,
            sps->cropLeft, sps->cropRight, sps->cropTop, sps->cropBot,
            sps->numRefFrames,
            sps->pocType,
-           sps->frameMbOnly ?" frame":"",
-           sps->mbAffFlag ? " mbAff":""
+           sps->frameMbOnly ? (sps->mbAffFlag ? "mbAff":"frame"):"field"
            );
 
   }
