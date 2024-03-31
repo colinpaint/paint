@@ -867,13 +867,13 @@ typedef struct Param {
 //}}}
 //{{{  sDebug
 typedef struct {
-  TIME_T  startTime;
-  TIME_T  endTime;
+  TIME_T startTime;
+  TIME_T endTime;
 
-  char    profileStr[128];
-  char    sliceTypeStr[9];
-  char    sliceStr[128];
-  char    outStr[128];
+  char   profileStr[128];
+  char   sliceTypeStr[9];
+  char   sliceStr[128];
+  char   outStr[128];
   } sDebug;
 //}}}
 //{{{  sDecoder
