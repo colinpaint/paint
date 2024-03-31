@@ -3083,20 +3083,6 @@ static int readSlice (sSlice* slice) {
         s->codeLen = s->bitStreamLen;
 
         readSliceHeader (decoder, slice);
-        if (decoder->param.sliceDebug) {
-          //{{{  print slice debug
-          sprintf (decoder->debug.sliceStr, "%s:%d:%5d %c pps:%d frameNum:%2d%s%s",
-                   nalu->unitType == NALU_TYPE_IDR ? "IDR":"SLC", slice->refId, nalu->len,
-                   slice->sliceType ? (slice->sliceType == 1) ? 'B' : ((slice->sliceType == 2) ? 'I' : '?') : 'P',
-                   slice->ppsId,
-                   slice->frameNum,
-                   slice->fieldPic ? " field":"",
-                   slice->mbAffFrame ? " mbAff":""
-                   );
-
-          printf ("%s\n", decoder->debug.sliceStr);
-          }
-          //}}}
 
         // if primary slice replaced by redundant slice, set correct image type
         if (slice->redundantPicCount && !decoder->isPrimaryOk && decoder->isRedundantOk)
@@ -3127,6 +3113,15 @@ static int readSlice (sSlice* slice) {
           }
 
         decoder->recoveryPoint = 0;
+
+        // debug
+        sprintf (decoder->debug.sliceStr, "%s:%d:%5d -> pps:%d frame:%2d %c %s%s",
+                 (nalu->unitType == NALU_TYPE_IDR) ? "IDR":"SLC", slice->refId, nalu->len,
+                 slice->ppsId, slice->frameNum, 
+                 slice->sliceType ? (slice->sliceType == 1) ? 'B':((slice->sliceType == 2) ? 'I':'?'):'P',
+                 slice->fieldPic ? " field":"", slice->mbAffFrame ? " mbAff":"");
+        if (decoder->param.sliceDebug)
+          printf ("%s\n", decoder->debug.sliceStr);
 
         return curHeader;
       //}}}
