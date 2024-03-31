@@ -1204,13 +1204,12 @@ class cTestUI : public cApp::iUI {
 public:
   virtual ~cTestUI() = default;
 
-  //{{{
   void draw (cApp& app) {
     ImGui::SetKeyboardFocusHere();
     app.getGraphics().clear ({(int32_t)ImGui::GetIO().DisplaySize.x, (int32_t)ImGui::GetIO().DisplaySize.y});
 
     // draw UI
-    ImGui::SetNextWindowPos ({0.f,0.f});
+    //ImGui::SetNextWindowPos ({0.f,0.f});
     ImGui::SetNextWindowSize (ImGui::GetIO().DisplaySize);
     ImGui::Begin ("test", nullptr, ImGuiWindowFlags_NoTitleBar |
                                    ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove |
@@ -1219,10 +1218,14 @@ public:
 
     cTestApp& testApp = (cTestApp&)app;
     //{{{  draw view
+    // ensure videoShader
     if (!mVideoShader)
       mVideoShader = testApp.getGraphics().createTextureShader (cTexture::eYuv420);
+
+    // ensure view
     if (!mView)
       mView = new cView();
+
     mView->draw (testApp, mVideoShader);
     //}}}
 
@@ -1232,7 +1235,7 @@ public:
     ImGui::BeginChild ("menu", {0.f,menuHeight}, ImGuiChildFlags_None, ImGuiWindowFlags_NoBackground);
 
     if (testApp.getDecoder()) {
-      //{{{  draw testApp info
+      //{{{  draw decoder info
       ImGui::PushFont (testApp.getMonoFont());
 
       if (testApp.getDecoder()->activeSps) {
@@ -1316,7 +1319,6 @@ public:
     ImGui::End();
     keyboard (testApp);
     }
-  //}}}
 
 private:
   //{{{
@@ -1363,8 +1365,9 @@ private:
         // draw quad
         mVideoQuad->draw();
         }
+        //}}}
 
-        if (testApp.getFilePlayer()) {
+      if (testApp.getFilePlayer()) {
         ImGui::PushFont (testApp.getLargeFont());
         //{{{  title
         string title = testApp.getFilePlayer()->getFileName();
@@ -1385,129 +1388,130 @@ private:
         ImGui::PopFont();
         }
 
-        // invisbleButton over view sub area
-        ImGui::SetCursorPos ({0.f,0.f});
-        ImVec2 viewSubSize = mSize -
+      // invisbleButton over view sub area
+      ImGui::SetCursorPos ({0.f,0.f});
+      ImVec2 viewSubSize = mSize -
         ImVec2(0.f, ImGui::GetTextLineHeight() * ((layoutPos.y + (layoutScale/2.f) >= 0.99f) ? 3.f : 1.5f));
-        if (ImGui::InvisibleButton ("view", viewSubSize))
+
+      if (ImGui::InvisibleButton ("view", viewSubSize))
         testApp.togglePlay();
 
-        ImGui::EndChild();
+      ImGui::EndChild();
+      }
+
+  private:
+    //{{{
+    cVec2 getLayout (size_t index, size_t numViews, float& scale) {
+    // return layout scale, and position as fraction of viewPort
+
+    scale = (numViews <= 1) ? 1.f :
+            ((numViews <= 4) ? 1.f/2.f :
+              ((numViews <= 9) ? 1.f/3.f :
+                ((numViews <= 16) ? 1.f/4.f : 1.f/5.f)));
+
+    switch (numViews) {
+    //{{{
+    case 2: // 2x1
+      switch (index) {
+        case 0: return { 1.f / 4.f, 0.5f };
+        case 1: return { 3.f / 4.f, 0.5f };
         }
+      return { 0.5f, 0.5f };
+    //}}}
 
-        private:
-        //{{{
-        cVec2 getLayout (size_t index, size_t numViews, float& scale) {
-        // return layout scale, and position as fraction of viewPort
+    case 3:
+    //{{{
+    case 4: // 2x2
+      switch (index) {
+        case 0: return { 1.f / 4.f, 1.f / 4.f };
+        case 1: return { 3.f / 4.f, 1.f / 4.f };
 
-        scale = (numViews <= 1) ? 1.f :
-                ((numViews <= 4) ? 1.f/2.f :
-                  ((numViews <= 9) ? 1.f/3.f :
-                    ((numViews <= 16) ? 1.f/4.f : 1.f/5.f)));
-
-        switch (numViews) {
-        //{{{
-        case 2: // 2x1
-          switch (index) {
-            case 0: return { 1.f / 4.f, 0.5f };
-            case 1: return { 3.f / 4.f, 0.5f };
-            }
-          return { 0.5f, 0.5f };
-        //}}}
-
-        case 3:
-        //{{{
-        case 4: // 2x2
-          switch (index) {
-            case 0: return { 1.f / 4.f, 1.f / 4.f };
-            case 1: return { 3.f / 4.f, 1.f / 4.f };
-
-            case 2: return { 1.f / 4.f, 3.f / 4.f };
-            case 3: return { 3.f / 4.f, 3.f / 4.f };
-            }
-          return { 0.5f, 0.5f };
-        //}}}
-
-        case 5:
-        //{{{
-        case 6: // 3x2
-          switch (index) {
-            case 0: return { 1.f / 6.f, 2.f / 6.f };
-            case 1: return { 3.f / 6.f, 2.f / 6.f };
-            case 2: return { 5.f / 6.f, 2.f / 6.f };
-
-            case 3: return { 1.f / 6.f, 4.f / 6.f };
-            case 4: return { 3.f / 6.f, 4.f / 6.f };
-            case 5: return { 5.f / 6.f, 4.f / 6.f };
-            }
-          return { 0.5f, 0.5f };
-        //}}}
-
-        case 7:
-        case 8:
-        //{{{
-        case 9: // 3x3
-          switch (index) {
-            case 0: return { 1.f / 6.f, 1.f / 6.f };
-            case 1: return { 3.f / 6.f, 1.f / 6.f };
-            case 2: return { 5.f / 6.f, 1.f / 6.f };
-
-            case 3: return { 1.f / 6.f, 0.5f };
-            case 4: return { 3.f / 6.f, 0.5f };
-            case 5: return { 5.f / 6.f, 0.5f };
-
-            case 6: return { 1.f / 6.f, 5.f / 6.f };
-            case 7: return { 3.f / 6.f, 5.f / 6.f };
-            case 8: return { 5.f / 6.f, 5.f / 6.f };
-            }
-          return { 0.5f, 0.5f };
-        //}}}
-
-        case 10:
-        case 11:
-        case 12:
-        case 13:
-        case 14:
-        case 15:
-        //{{{
-        case 16: // 4x4
-          switch (index) {
-            case  0: return { 1.f / 8.f, 1.f / 8.f };
-            case  1: return { 3.f / 8.f, 1.f / 8.f };
-            case  2: return { 5.f / 8.f, 1.f / 8.f };
-            case  3: return { 7.f / 8.f, 1.f / 8.f };
-
-            case  4: return { 1.f / 8.f, 3.f / 8.f };
-            case  5: return { 3.f / 8.f, 3.f / 8.f };
-            case  6: return { 5.f / 8.f, 3.f / 8.f };
-            case  7: return { 7.f / 8.f, 3.f / 8.f };
-
-            case  8: return { 1.f / 8.f, 5.f / 8.f };
-            case  9: return { 3.f / 8.f, 5.f / 8.f };
-            case 10: return { 5.f / 8.f, 5.f / 8.f };
-            case 11: return { 7.f / 8.f, 5.f / 8.f };
-
-            case 12: return { 1.f / 8.f, 7.f / 8.f };
-            case 13: return { 3.f / 8.f, 7.f / 8.f };
-            case 14: return { 5.f / 8.f, 7.f / 8.f };
-            case 15: return { 7.f / 8.f, 7.f / 8.f };
-            }
-          return { 0.5f, 0.5f };
-        //}}}
-
-        default: // 1x1
-          return { 0.5f, 0.5f };
+        case 2: return { 1.f / 4.f, 3.f / 4.f };
+        case 3: return { 3.f / 4.f, 3.f / 4.f };
         }
-        }
-        //}}}
+      return { 0.5f, 0.5f };
+    //}}}
 
-        // video
-        ImVec2 mSize;
-        ImVec2 mTL;
-        ImVec2 mBR;
-        cQuad* mVideoQuad = nullptr;
-        };
-        //}}}
+    case 5:
+    //{{{
+    case 6: // 3x2
+      switch (index) {
+        case 0: return { 1.f / 6.f, 2.f / 6.f };
+        case 1: return { 3.f / 6.f, 2.f / 6.f };
+        case 2: return { 5.f / 6.f, 2.f / 6.f };
+
+        case 3: return { 1.f / 6.f, 4.f / 6.f };
+        case 4: return { 3.f / 6.f, 4.f / 6.f };
+        case 5: return { 5.f / 6.f, 4.f / 6.f };
+        }
+      return { 0.5f, 0.5f };
+    //}}}
+
+    case 7:
+    case 8:
+    //{{{
+    case 9: // 3x3
+      switch (index) {
+        case 0: return { 1.f / 6.f, 1.f / 6.f };
+        case 1: return { 3.f / 6.f, 1.f / 6.f };
+        case 2: return { 5.f / 6.f, 1.f / 6.f };
+
+        case 3: return { 1.f / 6.f, 0.5f };
+        case 4: return { 3.f / 6.f, 0.5f };
+        case 5: return { 5.f / 6.f, 0.5f };
+
+        case 6: return { 1.f / 6.f, 5.f / 6.f };
+        case 7: return { 3.f / 6.f, 5.f / 6.f };
+        case 8: return { 5.f / 6.f, 5.f / 6.f };
+        }
+      return { 0.5f, 0.5f };
+    //}}}
+
+    case 10:
+    case 11:
+    case 12:
+    case 13:
+    case 14:
+    case 15:
+    //{{{
+    case 16: // 4x4
+      switch (index) {
+        case  0: return { 1.f / 8.f, 1.f / 8.f };
+        case  1: return { 3.f / 8.f, 1.f / 8.f };
+        case  2: return { 5.f / 8.f, 1.f / 8.f };
+        case  3: return { 7.f / 8.f, 1.f / 8.f };
+
+        case  4: return { 1.f / 8.f, 3.f / 8.f };
+        case  5: return { 3.f / 8.f, 3.f / 8.f };
+        case  6: return { 5.f / 8.f, 3.f / 8.f };
+        case  7: return { 7.f / 8.f, 3.f / 8.f };
+
+        case  8: return { 1.f / 8.f, 5.f / 8.f };
+        case  9: return { 3.f / 8.f, 5.f / 8.f };
+        case 10: return { 5.f / 8.f, 5.f / 8.f };
+        case 11: return { 7.f / 8.f, 5.f / 8.f };
+
+        case 12: return { 1.f / 8.f, 7.f / 8.f };
+        case 13: return { 3.f / 8.f, 7.f / 8.f };
+        case 14: return { 5.f / 8.f, 7.f / 8.f };
+        case 15: return { 7.f / 8.f, 7.f / 8.f };
+        }
+      return { 0.5f, 0.5f };
+    //}}}
+
+    default: // 1x1
+      return { 0.5f, 0.5f };
+    }
+    }
+    //}}}
+
+    // video
+    ImVec2 mSize;
+    ImVec2 mTL;
+    ImVec2 mBR;
+    cQuad* mVideoQuad = nullptr;
+    };
+  //}}}
   //{{{
   void keyboard (cTestApp& testApp) {
 
@@ -1557,7 +1561,6 @@ private:
   cView* mView;
   cTextureShader* mVideoShader = nullptr;
   };
-  //}}}
 //}}}
 
 // main
@@ -1575,7 +1578,6 @@ int main (int numArgs, char* args[]) {
     }
   //}}}
 
-  // log
   cLog::init (LOGINFO);
   cLog::log (LOGNOTICE, fmt::format ("test {}", fileName));
 

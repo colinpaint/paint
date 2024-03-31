@@ -2986,7 +2986,7 @@ static void readSliceHeader (sDecoder* decoder, sSlice* slice) {
   //}}}
 
   if (decoder->activePps->hasDeblockFilterControl) {
-    //{{{  read deblockFilter params
+    //{{{  read deblockFilter 
     slice->deblockFilterDisableIdc = (short)readUeV ("SLC disable_deblocking_filter_idc", s);
     if (slice->deblockFilterDisableIdc != 1) {
       slice->deblockFilterC0Offset = (short)(2 * readSeV ("SLC slice_alpha_c0_offset_div2", s));
@@ -3049,7 +3049,7 @@ static int readSlice (sSlice* slice) {
       decoder->pendingNalu = NULL;
       }
 
-  process_nalu:
+  processNalu:
     switch (nalu->unitType) {
       case NALU_TYPE_SLICE:
       //{{{
@@ -3117,7 +3117,7 @@ static int readSlice (sSlice* slice) {
         // debug
         sprintf (decoder->debug.sliceStr, "%s:%d:%5d -> pps:%d frame:%2d %c %s%s",
                  (nalu->unitType == NALU_TYPE_IDR) ? "IDR":"SLC", slice->refId, nalu->len,
-                 slice->ppsId, slice->frameNum, 
+                 slice->ppsId, slice->frameNum,
                  slice->sliceType ? (slice->sliceType == 1) ? 'B':((slice->sliceType == 2) ? 'I':'?'):'P',
                  slice->fieldPic ? " field":"", slice->mbAffFrame ? " mbAff":"");
         if (decoder->param.sliceDebug)
@@ -3251,7 +3251,7 @@ static int readSlice (sSlice* slice) {
         // check if we read anything else than the expected dataPartitions
         if ((nalu->unitType != NALU_TYPE_DPB) &&
             (nalu->unitType != NALU_TYPE_DPC) && (!slice->noDataPartitionC))
-          goto process_nalu;
+          goto processNalu;
 
         return curHeader;
       //}}}

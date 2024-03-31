@@ -1066,7 +1066,6 @@ static inline int isHiIntraOnlyProfile (unsigned profileIdc, Boolean constrained
 
   extern void error (char* text);
 
-  extern void initFrext (sDecoder* decoder);
   extern void initGlobalBuffers (sDecoder* decoder);
   extern void freeGlobalBuffers (sDecoder* decoder);
   extern void freeLayerBuffers (sDecoder* decoder);
