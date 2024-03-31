@@ -967,12 +967,12 @@ public:
 
       mDecoder = openDecoder (&param, h264Chunk, h264ChunkSize);
 
-      sDecodedPic* decodedPic;
+      sDecodedPic* decodedPics;
       int ret = 0;
       do {
-        ret = decodeOneFrame (mDecoder, &decodedPic);
+        ret = decodeOneFrame (mDecoder, &decodedPics);
         if (ret == DEC_EOS || ret == DEC_SUCCEED)
-          outputPicList (decodedPic);
+          outputDecodedPics (decodedPics);
         else
           cLog::log (LOGERROR, "decoding  failed");
 
@@ -981,8 +981,8 @@ public:
 
         } while (ret == DEC_SUCCEED);
 
-      finishDecoder (mDecoder, &decodedPic);
-      outputPicList (decodedPic);
+      finishDecoder (mDecoder, &decodedPics);
+      outputDecodedPics (decodedPics);
       closeDecoder (mDecoder);
 
       delete[] h264Chunk;
@@ -994,7 +994,7 @@ public:
 
 private:
   //{{{
-  void outputPicList (sDecodedPic* decodedPic) {
+  void outputDecodedPics (sDecodedPic* decodedPic) {
 
     while (decodedPic && decodedPic->ok) {
       mVideoFrames[mOutputFrame % kVideoFrames]->releaseResources();
@@ -1103,11 +1103,11 @@ public:
       mDecoder = openDecoder (&param, chunk, fileSize);
 
       int ret = 0;
+      sDecodedPic* decodedPics;
       do {
-        sDecodedPic* decodedPic;
-        ret = decodeOneFrame (mDecoder,  &decodedPic);
+        ret = decodeOneFrame (mDecoder,  &decodedPics);
         if (ret == DEC_EOS || ret == DEC_SUCCEED)
-          outputPicList (decodedPic);
+          outputDecodedPics (decodedPics);
         else
           cLog::log (LOGERROR, "decoding  failed");
 
@@ -1116,9 +1116,8 @@ public:
 
         } while (ret == DEC_SUCCEED);
 
-      sDecodedPic* decodedPic;
-      finishDecoder (mDecoder, &decodedPic);
-      outputPicList (decodedPic);
+      finishDecoder (mDecoder, &decodedPics);
+      outputDecodedPics (decodedPics);
       closeDecoder (mDecoder);
 
       delete[] chunk;
@@ -1144,7 +1143,7 @@ public:
 
 private:
   //{{{
-  void outputPicList (sDecodedPic* decodedPic) {
+  void outputDecodedPics (sDecodedPic* decodedPic) {
 
     while (decodedPic && decodedPic->ok) {
       mVideoFrames[mOutputFrame % kVideoFrames]->releaseResources();
@@ -1156,7 +1155,7 @@ private:
       videoFrame->mStrideUV = decodedPic->uvStride;
       videoFrame->mInterlaced = 0;
       videoFrame->mTopFieldFirst = 0;
-      videoFrame->setPixels (decodedPic->yBuf, decodedPic->uBuf, decodedPic->vBuf, 
+      videoFrame->setPixels (decodedPic->yBuf, decodedPic->uBuf, decodedPic->vBuf,
                              decodedPic->yStride, decodedPic->uvStride, decodedPic->height);
       videoFrame->mTextureDirty = true;
       mVideoFrame = videoFrame;
