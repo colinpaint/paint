@@ -1694,19 +1694,6 @@ static void resetWeightedPredParam (sSlice* slice) {
 //}}}
 
 //{{{
-static void updateMaxValue (sFrameFormat* format) {
-
-  format->max_value[0] = (1 << format->bitDepth[0]) - 1;
-  format->max_value_sq[0] = format->max_value[0] * format->max_value[0];
-
-  format->max_value[1] = (1 << format->bitDepth[1]) - 1;
-  format->max_value_sq[1] = format->max_value[1] * format->max_value[1];
-
-  format->max_value[2] = (1 << format->bitDepth[2]) - 1;
-  format->max_value_sq[2] = format->max_value[2] * format->max_value[2];
-  }
-//}}}
-//{{{
 static void setCoding (sDecoder* decoder) {
 
   decoder->widthCr = 0;
@@ -1977,7 +1964,6 @@ static void setFormat (sDecoder* decoder, sSps* sps, sFrameFormat* source, sFram
   source->sizeCmp[0] = source->width[0] * source->height[0];
   source->sizeCmp[1] = source->width[1] * source->height[1];
   source->sizeCmp[2] = source->sizeCmp[1];
-  source->size = source->sizeCmp[0] + source->sizeCmp[1] + source->sizeCmp[2];
   source->mbWidth = source->width[0]  / MB_BLOCK_SIZE;
   source->mbHeight = source->height[0] / MB_BLOCK_SIZE;
 
@@ -1991,7 +1977,6 @@ static void setFormat (sDecoder* decoder, sSps* sps, sFrameFormat* source, sFram
   output->sizeCmp[0] = output->width[0] * output->height[0];
   output->sizeCmp[1] = output->width[1] * output->height[1];
   output->sizeCmp[2] = output->sizeCmp[1];
-  output->size = output->sizeCmp[0] + output->sizeCmp[1] + output->sizeCmp[2];
   output->mbWidth = output->width[0]  / MB_BLOCK_SIZE;
   output->mbHeight = output->height[0] / MB_BLOCK_SIZE;
 
@@ -1999,24 +1984,8 @@ static void setFormat (sDecoder* decoder, sSps* sps, sFrameFormat* source, sFram
   output->bitDepth[1] = source->bitDepth[1] = decoder->bitDepthChroma;
   output->bitDepth[2] = source->bitDepth[2] = decoder->bitDepthChroma;
 
-  output->picDiskUnitSize = (imax (output->bitDepth[0], output->bitDepth[1]) > 8) ? 16 : 8;
-
-  output->frameRate = source->frameRate;
   output->colourModel = source->colourModel;
   output->yuvFormat = source->yuvFormat = sps->chromaFormatIdc;
-
-  output->autoCropBot = cropBot;
-  output->autoCropRight = cropRight;
-  output->autoCropBotCr = (cropBot * decoder->mbCrSizeY) / MB_BLOCK_SIZE;
-  output->autoCropRightCr = (cropRight * decoder->mbCrSizeX) / MB_BLOCK_SIZE;
-
-  source->autoCropBot = output->autoCropBot;
-  source->autoCropRight = output->autoCropRight;
-  source->autoCropBotCr = output->autoCropBotCr;
-  source->autoCropRightCr = output->autoCropRightCr;
-
-  updateMaxValue (source);
-  updateMaxValue (output);
   }
 //}}}
 

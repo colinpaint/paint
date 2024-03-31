@@ -923,8 +923,6 @@ typedef struct Decoder {
   sSlice*      nextSlice;           // pointer to first sSlice of next picture;
   sOldSlice*   oldSlice;
 
-  int picDiskUnitSize;
-
   // output
   struct DPB*        dpb;
   int                lastHasMmco5;

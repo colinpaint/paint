@@ -131,13 +131,13 @@
  * @code
  * AVDictionary *options = NULL;
  * av_dict_set(&options, "video_size", "640x480", 0);
- * av_dict_set(&options, "pixel_format", "rgb24", 0);
+ * av_dict_set(&options, "pixelFormat", "rgb24", 0);
  *
  * if (avformat_open_input(&s, url, NULL, &options) < 0)
  *     abort();
  * av_dict_free(&options);
  * @endcode
- * This code passes the private options 'video_size' and 'pixel_format' to the
+ * This code passes the private options 'video_size' and 'pixelFormat' to the
  * demuxer. They would be necessary for e.g. the rawvideo demuxer, since it
  * cannot know how to interpret raw video data otherwise. If the format turns
  * out to be something different than raw video, those options will not be

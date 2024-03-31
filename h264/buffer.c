@@ -1855,10 +1855,6 @@ void initImage (sDecoder* decoder, sImage* image, sSps* sps) {
   image->format.height[1] = decoder->heightCr;
   image->format.height[2] = decoder->heightCr;
   image->format.yuvFormat  = (eYuvFormat)sps->chromaFormatIdc;
-  image->format.autoCropBot = decoder->param.output.autoCropBot;
-  image->format.autoCropRight = decoder->param.output.autoCropRight;
-  image->format.autoCropBotCr = decoder->param.output.autoCropBotCr;
-  image->format.autoCropRightCr = decoder->param.output.autoCropRightCr;
   image->frm_stride[0] = decoder->coding.width;
   image->frm_stride[1] = image->frm_stride[2] = decoder->widthCr;
   image->top_stride[0] = image->bot_stride[0] = image->frm_stride[0] << 1;

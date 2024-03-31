@@ -26,30 +26,16 @@ typedef enum {
   } ePixelFormat;
 
 typedef struct FrameFormat {
-  eYuvFormat yuvFormat;             // YUV format (0=4:0:0, 1=4:2:0, 2=4:2:2, 3=4:4:4)
-  eColorModel  colourModel;           // 4:4:4 format (0: YUV, 1: RGB, 2: XYZ)
-  ePixelFormat pixel_format;          // pixel format support for certain interleaved yuv sources
-  double       frameRate;            // frame rate
+  eYuvFormat yuvFormat;         // YUV format (0=4:0:0, 1=4:2:0, 2=4:2:2, 3=4:4:4)
+  eColorModel  colourModel;     // 4:4:4 format (0: YUV, 1: RGB, 2: XYZ)
+  ePixelFormat pixelFormat;     // pixel format support for certain interleaved yuv sources
 
-  int          width[3];              // component frame width
-  int          height[3];             // component frame height
+  int          width[3];        // component frame width
+  int          height[3];       // component frame height
 
-  int          autoCropRight;       // luma component auto crop right
-  int          autoCropBot;      // luma component auto crop bottom
-  int          autoCropRightCr;    // chroma component auto crop right
-  int          autoCropBotCr;   // chroma component auto crop bottom
-  int          width_crop;            // width after cropping consideration
-  int          height_crop;           // height after cropping consideration
+  int          mbWidth;         // luma component frame width
+  int          mbHeight;        // luma component frame height
 
-  int          mbWidth;              // luma component frame width
-  int          mbHeight;             // luma component frame height
-
-  int          sizeCmp[3];           // component sizes (width * height)
-  int          size;                  // total image size (sum of sizeCmp)
-
-  int          bitDepth[3];          // component bit depth
-  int          max_value[3];          // component max value
-  int          max_value_sq[3];       // component max value squared
-
-  int          picDiskUnitSize; // picture sample unit size on storage medium
+  int          sizeCmp[3];      // component sizes (width * height)
+  int          bitDepth[3];     // component bit depth
   } sFrameFormat;
