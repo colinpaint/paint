@@ -1796,10 +1796,10 @@ void readIPCMcabac (sSlice* slice, sDataPartition* dataPartition) {
   sDecoder* decoder = slice->decoder;
   sPicture* picture = slice->picture;
 
-  sBitStream* s = dataPartition->s;
+  sBitStream* s = dataPartition->stream;
   sCabacDecodeEnv* cabacDecodeEnv = &dataPartition->cabacDecodeEnv;
   byte* buf = s->bitStreamBuffer;
-  int bitStreamLengthInBits = (dataPartition->s->bitStreamLen << 3) + 7;
+  int bitStreamLengthInBits = (dataPartition->stream->bitStreamLen << 3) + 7;
 
   int val = 0;
   int bitsRead = 0;

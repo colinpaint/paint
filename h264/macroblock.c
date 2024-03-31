@@ -391,7 +391,7 @@ static char readRefPictureIdxFLC (sMacroBlock* mb, sSyntaxElement* se, sDataPart
 {
   se->context = BType2CtxRef (b8mode);
   se->len = 1;
-  readsSyntaxElement_FLC(se, dataPartition->s);
+  readsSyntaxElement_FLC(se, dataPartition->stream);
   se->value1 = 1 - se->value1;
 
   return (char)se->value1;
@@ -408,7 +408,7 @@ static void prepareListforRefIndex (sMacroBlock* mb, sSyntaxElement* se,
                                   sDataPartition *dataPartition, int numRefIndexActive, int refidx_present) {
 
   if (numRefIndexActive > 1) {
-    if (mb->decoder->activePps->entropyCoding == eCavlc || dataPartition->s->errorFlag) {
+    if (mb->decoder->activePps->entropyCoding == eCavlc || dataPartition->stream->errorFlag) {
       se->mapping = linfo_ue;
       if (refidx_present)
         mb->readRefPictureIndex = (numRefIndexActive == 2) ? readRefPictureIdxFLC : readRefPictureIdxVLC;
@@ -461,7 +461,7 @@ void readDeltaQuant (sSyntaxElement* se, sDataPartition *dataPartition, sMacroBl
 
   dataPartition = &(slice->dataPartitions[dpMap[se->type]]);
 
-  if (decoder->activePps->entropyCoding == eCavlc || dataPartition->s->errorFlag)
+  if (decoder->activePps->entropyCoding == eCavlc || dataPartition->stream->errorFlag)
     se->mapping = linfo_se;
   else
     se->reading= read_dQuant_CABAC;
@@ -1035,7 +1035,7 @@ static void readMotionInfoP (sMacroBlock* mb){
   //=====  READ MOTION VECTORS =====
   se.type = SE_MVD;
   dataPartition = &(slice->dataPartitions[dpMap[SE_MVD]]);
-  if (decoder->activePps->entropyCoding == eCavlc || dataPartition->s->errorFlag)
+  if (decoder->activePps->entropyCoding == eCavlc || dataPartition->stream->errorFlag)
     se.mapping = linfo_se;
   else
     se.reading = slice->mbAffFrame ? read_mvd_CABAC_mbaff : read_MVD_CABAC;
@@ -1093,7 +1093,7 @@ static void readMotionInfoB (sMacroBlock* mb) {
   //=====  READ MOTION VECTORS =====
   se.type = SE_MVD;
   dataPartition = &(slice->dataPartitions[dpMap[SE_MVD]]);
-  if (decoder->activePps->entropyCoding == eCavlc || dataPartition->s->errorFlag)
+  if (decoder->activePps->entropyCoding == eCavlc || dataPartition->stream->errorFlag)
     se.mapping = linfo_se;
   else
     se.reading = slice->mbAffFrame ? read_mvd_CABAC_mbaff : read_MVD_CABAC;

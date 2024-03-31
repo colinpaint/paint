@@ -163,12 +163,12 @@ sDataPartition* allocDataPartitions (int n) {
   for (int i = 0; i < n; ++i) {
     // loop over all dataPartitions
     sDataPartition* dataPartition = &(dataPartitions[i]);
-    dataPartition->s = (sBitStream*)calloc(1, sizeof(sBitStream));
-    if (dataPartition->s == NULL)
+    dataPartition->stream = (sBitStream*)calloc(1, sizeof(sBitStream));
+    if (dataPartition->stream == NULL)
       error ("allocDataPartitions: Memory allocation for sBitStream failed");
 
-    dataPartition->s->bitStreamBuffer = (byte*)calloc(MAX_CODED_FRAME_SIZE, sizeof(byte));
-    if (dataPartition->s->bitStreamBuffer == NULL)
+    dataPartition->stream->bitStreamBuffer = (byte*)calloc(MAX_CODED_FRAME_SIZE, sizeof(byte));
+    if (dataPartition->stream->bitStreamBuffer == NULL)
       error ("allocDataPartitions: Memory allocation for bitStreamBuffer failed");
     }
 
@@ -179,8 +179,8 @@ sDataPartition* allocDataPartitions (int n) {
 void freeDataPartitions (sDataPartition* dataPartitions, int n) {
 
   for (int i = 0; i < n; ++i) {
-    free (dataPartitions[i].s->bitStreamBuffer);
-    free (dataPartitions[i].s);
+    free (dataPartitions[i].stream->bitStreamBuffer);
+    free (dataPartitions[i].stream);
     }
 
   free (dataPartitions);

@@ -450,7 +450,7 @@ typedef struct SyntaxElement {
 //}}}
 //{{{  sDataPartition
 typedef struct DataPartition {
-  sBitStream* s;
+  sBitStream* stream;
   sCabacDecodeEnv cabacDecodeEnv;
 
   int (*readSyntaxElement) (struct MacroBlock*, struct SyntaxElement*, struct DataPartition*);

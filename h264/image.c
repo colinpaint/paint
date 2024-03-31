@@ -2746,9 +2746,8 @@ static void readSliceHeader (sDecoder* decoder, sSlice* slice) {
 //   - then setup the active parameter sets
 // - read the rest of the slice header
 
-  byte partitionIndex = kSyntaxElementToDataPartitionIndex[slice->dataPartitionMode][SE_HEADER];
-  sDataPartition* dataPartition = &slice->dataPartitions[partitionIndex];
-  sBitStream* s = dataPartition->s;
+  unsigned partitionIndex = kSyntaxElementToDataPartitionIndex[slice->dataPartitionMode][SE_HEADER];
+  sBitStream* s = slice->dataPartitions[partitionIndex].stream;
 
   slice->startMbNum = readUeV ("SLC first_mb_in_slice", s);
 
@@ -2986,7 +2985,7 @@ static void readSliceHeader (sDecoder* decoder, sSlice* slice) {
   //}}}
 
   if (decoder->activePps->hasDeblockFilterControl) {
-    //{{{  read deblockFilter 
+    //{{{  read deblockFilter
     slice->deblockFilterDisableIdc = (short)readUeV ("SLC disable_deblocking_filter_idc", s);
     if (slice->deblockFilterDisableIdc != 1) {
       slice->deblockFilterC0Offset = (short)(2 * readSeV ("SLC slice_alpha_c0_offset_div2", s));
@@ -3074,7 +3073,7 @@ static int readSlice (sSlice* slice) {
         slice->refId = nalu->refId;
         slice->dataPartitionMode = eDataPartition1;
         slice->maxDataPartitions = 1;
-        sBitStream* s = slice->dataPartitions[0].s;
+        sBitStream* s = slice->dataPartitions[0].stream;
         s->readLen = 0;
         s->errorFlag = 0;
         s->bitStreamOffset = 0;
@@ -3165,7 +3164,7 @@ static int readSlice (sSlice* slice) {
         slice->noDataPartitionC = 1;
         slice->dataPartitionMode = eDataPartition3;
         slice->maxDataPartitions = 3;
-        s = slice->dataPartitions[0].s;
+        s = slice->dataPartitions[0].stream;
         s->errorFlag = 0;
         s->bitStreamOffset = s->readLen = 0;
         memcpy (s->bitStreamBuffer, &nalu->buf[1], nalu->len - 1);
@@ -3198,7 +3197,7 @@ static int readSlice (sSlice* slice) {
 
         if (NALU_TYPE_DPB == nalu->unitType) {
           //{{{  got nalu dataPartitionB
-          s = slice->dataPartitions[1].s;
+          s = slice->dataPartitions[1].stream;
           s->errorFlag = 0;
           s->bitStreamOffset = s->readLen = 0;
           memcpy (s->bitStreamBuffer, &nalu->buf[1], nalu->len-1);
@@ -3226,7 +3225,7 @@ static int readSlice (sSlice* slice) {
 
         if (NALU_TYPE_DPC == nalu->unitType) {
           //{{{  got nalu dataPartitionC
-          s = slice->dataPartitions[2].s;
+          s = slice->dataPartitions[2].stream;
           s->errorFlag = 0;
           s->bitStreamOffset = s->readLen = 0;
           memcpy (s->bitStreamBuffer, &nalu->buf[1], nalu->len-1);

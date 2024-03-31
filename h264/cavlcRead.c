@@ -223,7 +223,7 @@ void readCoef4x4cavlc (sMacroBlock* mb, int block_type,
   se.type = dptype;
   const byte* dpMap = kSyntaxElementToDataPartitionIndex[slice->dataPartitionMode];
   sDataPartition* dataPartition = &(slice->dataPartitions[dpMap[dptype]]);
-  sBitStream* s = dataPartition->s;
+  sBitStream* s = dataPartition->stream;
 
   if (!cdc) {
     //{{{  luma or chroma AC
@@ -435,7 +435,7 @@ void readCoef4x4cavlc444 (sMacroBlock* mb, int block_type,
   se.type = dptype;
   const byte* dpMap = kSyntaxElementToDataPartitionIndex[slice->dataPartitionMode];
   sDataPartition* dataPartition = &(slice->dataPartitions[dpMap[dptype]]);
-  sBitStream* s = dataPartition->s;
+  sBitStream* s = dataPartition->stream;
 
   if (!cdc) {
     //{{{  luma or chroma AC
@@ -857,13 +857,13 @@ static void read_CBP_and_coeffs_from_NAL_CAVLC_400 (sMacroBlock* mb) {
       se.type   =  SE_HEADER;
       dataPartition = &(slice->dataPartitions[dpMap[SE_HEADER]]);
       se.len = 1;
-      readsSyntaxElement_FLC(&se, dataPartition->s);
+      readsSyntaxElement_FLC (&se, dataPartition->stream);
       mb->lumaTransformSize8x8flag = (Boolean) se.value1;
       }
       //}}}
-    if (codedBlockPattern !=0) {
+    if (codedBlockPattern != 0) {
       //{{{  Delta quant only if nonzero coeffs
-      readDeltaQuant(&se, dataPartition, mb, dpMap, ((mb->isIntraBlock == FALSE)) ? SE_DELTA_QUANT_INTER : SE_DELTA_QUANT_INTRA);
+      readDeltaQuant (&se, dataPartition, mb, dpMap, ((mb->isIntraBlock == FALSE)) ? SE_DELTA_QUANT_INTER : SE_DELTA_QUANT_INTRA);
 
       if (slice->dataPartitionMode) {
         if ((mb->isIntraBlock == FALSE) && slice->noDataPartitionC )
@@ -998,7 +998,7 @@ static void read_CBP_and_coeffs_from_NAL_CAVLC_422 (sMacroBlock* mb) {
 
       // read eCavlc transform_size_8x8_flag
       se.len = 1;
-      readsSyntaxElement_FLC(&se, dataPartition->s);
+      readsSyntaxElement_FLC(&se, dataPartition->stream);
       mb->lumaTransformSize8x8flag = (Boolean) se.value1;
       }
       //}}}
@@ -1263,8 +1263,8 @@ static void read_CBP_and_coeffs_from_NAL_CAVLC_444 (sMacroBlock* mb) {
       dataPartition = &(slice->dataPartitions[dpMap[SE_HEADER]]);
       // read eCavlc transform_size_8x8_flag
       se.len = 1;
-      readsSyntaxElement_FLC(&se, dataPartition->s);
-      mb->lumaTransformSize8x8flag = (Boolean) se.value1;
+      readsSyntaxElement_FLC (&se, dataPartition->stream);
+      mb->lumaTransformSize8x8flag = (Boolean)se.value1;
       }
 
     // Delta quant only if nonzero coeffs
@@ -1446,8 +1446,8 @@ static void read_CBP_and_coeffs_from_NAL_CAVLC_420 (sMacroBlock* mb) {
       dataPartition = &(slice->dataPartitions[dpMap[SE_HEADER]]);
       // read eCavlc transform_size_8x8_flag
       se.len = 1;
-      readsSyntaxElement_FLC(&se, dataPartition->s);
-      mb->lumaTransformSize8x8flag = (Boolean) se.value1;
+      readsSyntaxElement_FLC (&se, dataPartition->stream);
+      mb->lumaTransformSize8x8flag = (Boolean)se.value1;
       }
       //}}}
 

@@ -106,7 +106,7 @@ static void scalingList (int* scalingList, int scalingListSize, Boolean* useDefa
 //{{{
 static void readHrdFromStream (sDataPartition* dataPartition, sHRD* hrd) {
 
-  sBitStream *s = dataPartition->s;
+  sBitStream *s = dataPartition->stream;
   hrd->cpb_cnt_minus1 = readUeV ("VUI cpb_cnt_minus1", s);
   hrd->bit_rate_scale = readUv (4, "VUI bit_rate_scale", s);
   hrd->cpb_size_scale = readUv (4, "VUI cpb_size_scale", s);
@@ -128,7 +128,7 @@ static void readHrdFromStream (sDataPartition* dataPartition, sHRD* hrd) {
 //{{{
 static void readVuiFromStream (sDataPartition* dataPartition, sSps* sps) {
 
-  sBitStream* s = dataPartition->s;
+  sBitStream* s = dataPartition->stream;
   if (sps->hasVui) {
     sps->vuiSeqParams.aspect_ratio_info_present_flag = readU1 ("VUI aspect_ratio_info_present_flag", s);
     if (sps->vuiSeqParams.aspect_ratio_info_present_flag) {
@@ -201,7 +201,7 @@ static void readSpsFromStream (sDecoder* decoder, sDataPartition* dataPartition,
 
   sps->naluLen = naluLen;
 
-  sBitStream* s = dataPartition->s;
+  sBitStream* s = dataPartition->stream;
 
   sps->profileIdc = readUv (8, "SPS profileIdc", s);
   if ((sps->profileIdc != BASELINE) && (sps->profileIdc != MAIN) && (sps->profileIdc != EXTENDED) &&
@@ -325,10 +325,10 @@ void getSpsStr (sSps* sps, char* str) {
 int readNaluSps (sDecoder* decoder, sNalu* nalu) {
 
   sDataPartition* dataPartition = allocDataPartitions (1);
-  dataPartition->s->errorFlag = 0;
-  dataPartition->s->readLen = dataPartition->s->bitStreamOffset = 0;
-  memcpy (dataPartition->s->bitStreamBuffer, &nalu->buf[1], nalu->len-1);
-  dataPartition->s->codeLen = dataPartition->s->bitStreamLen = RBSPtoSODB (dataPartition->s->bitStreamBuffer, nalu->len-1);
+  dataPartition->stream->errorFlag = 0;
+  dataPartition->stream->readLen = dataPartition->stream->bitStreamOffset = 0;
+  memcpy (dataPartition->stream->bitStreamBuffer, &nalu->buf[1], nalu->len-1);
+  dataPartition->stream->codeLen = dataPartition->stream->bitStreamLen = RBSPtoSODB (dataPartition->stream->bitStreamBuffer, nalu->len-1);
 
   sSps sps = { 0 };
   readSpsFromStream (decoder, dataPartition, &sps, nalu->len);

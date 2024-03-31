@@ -97,7 +97,7 @@ static void readCompCoefx4smbCabac (sMacroBlock* mb, sSyntaxElement* se, eColorP
         // make distinction between INTRA and INTER coded luminance coefficients
         se->type = (mb->isIntraBlock ? SE_LUM_DC_INTRA : SE_LUM_DC_INTER);
         dataPartition = &(slice->dataPartitions[dpMap[se->type]]);
-        if (dataPartition->s->errorFlag)
+        if (dataPartition->stream->errorFlag)
           se->mapping = linfo_levrun_inter;
         else
           se->reading = readRunLevel_CABAC;
@@ -117,7 +117,7 @@ static void readCompCoefx4smbCabac (sMacroBlock* mb, sSyntaxElement* se, eColorP
         // make distinction between INTRA and INTER coded luminance coefficients
         se->type = (mb->isIntraBlock ? SE_LUM_AC_INTRA : SE_LUM_AC_INTER);
         dataPartition = &(slice->dataPartitions[dpMap[se->type]]);
-        if (dataPartition->s->errorFlag)
+        if (dataPartition->stream->errorFlag)
           se->mapping = linfo_levrun_inter;
         else
           se->reading = readRunLevel_CABAC;
@@ -357,7 +357,7 @@ static void readCbpCoefsFromNaluCabac400 (sMacroBlock* mb) {
 
     dataPartition = &(slice->dataPartitions[dpMap[se.type]]);
 
-    if (dataPartition->s->errorFlag) {
+    if (dataPartition->stream->errorFlag) {
       se.mapping = (mb->mbType == I4MB || mb->mbType == SI4MB || mb->mbType == I8MB)
         ? slice->linfoCbpIntra
         : slice->linfoCbpInter;
@@ -382,9 +382,9 @@ static void readCbpCoefsFromNaluCabac400 (sMacroBlock* mb) {
       se.reading = readMB_transform_size_flag_CABAC;
 
       // read eCavlc transform_size_8x8_flag
-      if (dataPartition->s->errorFlag) {
+      if (dataPartition->stream->errorFlag) {
         se.len = 1;
-        readsSyntaxElement_FLC(&se, dataPartition->s);
+        readsSyntaxElement_FLC(&se, dataPartition->stream);
         }
       else
         dataPartition->readSyntaxElement(mb, &se, dataPartition);
@@ -437,7 +437,7 @@ static void readCbpCoefsFromNaluCabac400 (sMacroBlock* mb) {
         se.context      = LUMA_16DC;
         se.type         = SE_LUM_DC_INTRA;
 
-        if (dataPartition->s->errorFlag)
+        if (dataPartition->stream->errorFlag)
           se.mapping = linfo_levrun_inter;
         else
           se.reading = readRunLevel_CABAC;
@@ -518,7 +518,7 @@ static void readCbpCoefsFromNaluCabac444 (sMacroBlock* mb) {
 
     dataPartition = &(slice->dataPartitions[dpMap[se.type]]);
 
-    if (dataPartition->s->errorFlag) {
+    if (dataPartition->stream->errorFlag) {
       se.mapping = (mb->mbType == I4MB || mb->mbType == SI4MB || mb->mbType == I8MB)
         ? slice->linfoCbpIntra
         : slice->linfoCbpInter;
@@ -543,9 +543,9 @@ static void readCbpCoefsFromNaluCabac444 (sMacroBlock* mb) {
       se.reading = readMB_transform_size_flag_CABAC;
 
       // read eCavlc transform_size_8x8_flag
-      if (dataPartition->s->errorFlag) {
+      if (dataPartition->stream->errorFlag) {
         se.len = 1;
-        readsSyntaxElement_FLC (&se, dataPartition->s);
+        readsSyntaxElement_FLC (&se, dataPartition->stream);
         }
       else
         dataPartition->readSyntaxElement (mb, &se, dataPartition);
@@ -597,7 +597,7 @@ static void readCbpCoefsFromNaluCabac444 (sMacroBlock* mb) {
         se.context = LUMA_16DC;
         se.type = SE_LUM_DC_INTRA;
 
-        if (dataPartition->s->errorFlag)
+        if (dataPartition->stream->errorFlag)
           se.mapping = linfo_levrun_inter;
         else
           se.reading = readRunLevel_CABAC;
@@ -657,7 +657,7 @@ static void readCbpCoefsFromNaluCabac444 (sMacroBlock* mb) {
         else
           se.context = (uv==0) ? CB_16DC : CR_16DC;
 
-        if (dataPartition->s->errorFlag)
+        if (dataPartition->stream->errorFlag)
           se.mapping = linfo_levrun_inter;
         else
           se.reading = readRunLevel_CABAC;
@@ -748,7 +748,7 @@ static void readCbpCoefsFromNaluCabac422 (sMacroBlock* mb) {
                 ? SE_CBP_INTRA
                 : SE_CBP_INTER;
     dataPartition = &(slice->dataPartitions[dpMap[se.type]]);
-    if (dataPartition->s->errorFlag) {
+    if (dataPartition->stream->errorFlag) {
       se.mapping = (mb->mbType == I4MB || mb->mbType == SI4MB || mb->mbType == I8MB)
                      ? slice->linfoCbpIntra
                      : slice->linfoCbpInter;
@@ -772,9 +772,9 @@ static void readCbpCoefsFromNaluCabac422 (sMacroBlock* mb) {
       se.reading = readMB_transform_size_flag_CABAC;
 
       // read eCavlc transform_size_8x8_flag
-      if (dataPartition->s->errorFlag) {
+      if (dataPartition->stream->errorFlag) {
         se.len = 1;
-        readsSyntaxElement_FLC (&se, dataPartition->s);
+        readsSyntaxElement_FLC (&se, dataPartition->stream);
         }
       else
         dataPartition->readSyntaxElement (mb, &se, dataPartition);
@@ -825,7 +825,7 @@ static void readCbpCoefsFromNaluCabac422 (sMacroBlock* mb) {
         se.context = LUMA_16DC;
         se.type = SE_LUM_DC_INTRA;
 
-        if (dataPartition->s->errorFlag)
+        if (dataPartition->stream->errorFlag)
           se.mapping = linfo_levrun_inter;
         else
           se.reading = readRunLevel_CABAC;
@@ -899,7 +899,7 @@ static void readCbpCoefsFromNaluCabac422 (sMacroBlock* mb) {
             mb->isVblock = ll;
 
             dataPartition = &(slice->dataPartitions[dpMap[se.type]]);
-            if (dataPartition->s->errorFlag)
+            if (dataPartition->stream->errorFlag)
               se.mapping = linfo_levrun_c2x2;
             else
               se.reading = readRunLevel_CABAC;
@@ -962,7 +962,7 @@ static void readCbpCoefsFromNaluCabac422 (sMacroBlock* mb) {
       se.context = CHROMA_AC;
       se.type = (mb->isIntraBlock ? SE_CHR_AC_INTRA : SE_CHR_AC_INTER);
       dataPartition = &(slice->dataPartitions[dpMap[se.type]]);
-      if (dataPartition->s->errorFlag)
+      if (dataPartition->stream->errorFlag)
         se.mapping = linfo_levrun_inter;
       else
         se.reading = readRunLevel_CABAC;
@@ -1067,7 +1067,7 @@ static void readCbpCoefsFromNaluCabac420 (sMacroBlock* mb) {
       : SE_CBP_INTER;
 
     dataPartition = &(slice->dataPartitions[dpMap[se.type]]);
-    if (dataPartition->s->errorFlag) {
+    if (dataPartition->stream->errorFlag) {
       se.mapping = (mb->mbType == I4MB || mb->mbType == SI4MB || mb->mbType == I8MB)
         ? slice->linfoCbpIntra
         : slice->linfoCbpInter;
@@ -1091,12 +1091,12 @@ static void readCbpCoefsFromNaluCabac420 (sMacroBlock* mb) {
       se.reading = readMB_transform_size_flag_CABAC;
 
       // read eCavlc transform_size_8x8_flag
-      if (dataPartition->s->errorFlag) {
+      if (dataPartition->stream->errorFlag) {
         se.len = 1;
-        readsSyntaxElement_FLC(&se, dataPartition->s);
+        readsSyntaxElement_FLC (&se, dataPartition->stream);
         }
       else
-        dataPartition->readSyntaxElement(mb, &se, dataPartition);
+        dataPartition->readSyntaxElement (mb, &se, dataPartition);
       mb->lumaTransformSize8x8flag = (Boolean) se.value1;
       }
 
@@ -1144,7 +1144,7 @@ static void readCbpCoefsFromNaluCabac420 (sMacroBlock* mb) {
       dataPartition = &(slice->dataPartitions[dpMap[se.type]]);
       se.context = LUMA_16DC;
       se.type = SE_LUM_DC_INTRA;
-      if (dataPartition->s->errorFlag)
+      if (dataPartition->stream->errorFlag)
         se.mapping = linfo_levrun_inter;
       else
         se.reading = readRunLevel_CABAC;
@@ -1202,7 +1202,7 @@ static void readCbpCoefsFromNaluCabac420 (sMacroBlock* mb) {
       se.context = CHROMA_DC;
       se.type = (intra ? SE_CHR_DC_INTRA : SE_CHR_DC_INTER);
       dataPartition = &(slice->dataPartitions[dpMap[se.type]]);
-      if (dataPartition->s->errorFlag)
+      if (dataPartition->stream->errorFlag)
         se.mapping = linfo_levrun_c2x2;
       else
         se.reading = readRunLevel_CABAC;
@@ -1249,7 +1249,7 @@ static void readCbpCoefsFromNaluCabac420 (sMacroBlock* mb) {
     se.context = CHROMA_AC;
     se.type = (mb->isIntraBlock ? SE_CHR_AC_INTRA : SE_CHR_AC_INTER);
     dataPartition = &(slice->dataPartitions[dpMap[se.type]]);
-    if (dataPartition->s->errorFlag)
+    if (dataPartition->stream->errorFlag)
       se.mapping = linfo_levrun_inter;
     else
       se.reading = readRunLevel_CABAC;

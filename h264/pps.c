@@ -123,7 +123,7 @@ static void scalingList (int* scalingList, int scalingListSize, Boolean* useDefa
 static void readPpsFromStream (sDecoder* decoder, sDataPartition* dataPartition, sPps* pps, int naluLen) {
 // read PPS from NALU
 
-  sBitStream* s = dataPartition->s;
+  sBitStream* s = dataPartition->stream;
 
   pps->id = readUeV ("PPS ppsId", s);
   pps->spsId = readUeV ("PPS spsId", s);
@@ -249,11 +249,11 @@ void getPpsStr (sPps* pps, char* str) {
 int readNaluPps (sDecoder* decoder, sNalu* nalu) {
 
   sDataPartition* dataPartition = allocDataPartitions (1);
-  dataPartition->s->errorFlag = 0;
-  dataPartition->s->readLen = dataPartition->s->bitStreamOffset = 0;
-  memcpy (dataPartition->s->bitStreamBuffer, &nalu->buf[1], nalu->len - 1);
-  dataPartition->s->bitStreamLen = RBSPtoSODB (dataPartition->s->bitStreamBuffer, nalu->len-1);
-  dataPartition->s->codeLen = dataPartition->s->bitStreamLen;
+  dataPartition->stream->errorFlag = 0;
+  dataPartition->stream->readLen = dataPartition->stream->bitStreamOffset = 0;
+  memcpy (dataPartition->stream->bitStreamBuffer, &nalu->buf[1], nalu->len - 1);
+  dataPartition->stream->bitStreamLen = RBSPtoSODB (dataPartition->stream->bitStreamBuffer, nalu->len-1);
+  dataPartition->stream->codeLen = dataPartition->stream->bitStreamLen;
 
   sPps pps = { 0 };
   pps.naluLen = nalu->len;
