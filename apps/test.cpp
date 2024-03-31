@@ -1207,8 +1207,7 @@ public:
   //{{{
   void draw (cApp& app) {
     ImGui::SetKeyboardFocusHere();
-    app.getGraphics().clear ({(int32_t)ImGui::GetIO().DisplaySize.x,
-                              (int32_t)ImGui::GetIO().DisplaySize.y});
+    app.getGraphics().clear ({(int32_t)ImGui::GetIO().DisplaySize.x, (int32_t)ImGui::GetIO().DisplaySize.y});
 
     // draw UI
     ImGui::SetNextWindowPos ({0.f,0.f});
@@ -1219,20 +1218,23 @@ public:
                                    ImGuiWindowFlags_NoBackground);
 
     cTestApp& testApp = (cTestApp&)app;
+    //{{{  draw view
     if (!mVideoShader)
       mVideoShader = testApp.getGraphics().createTextureShader (cTexture::eYuv420);
-
     if (!mView)
       mView = new cView();
     mView->draw (testApp, mVideoShader);
+    //}}}
 
     // draw menu
-    float maxHeight = 5.5f * ImGui::GetTextLineHeight();
-    ImGui::SetCursorPos ({4.f,ImGui::GetIO().DisplaySize.y - maxHeight});
-    ImGui::BeginChild ("menu", {0.f, maxHeight}, ImGuiChildFlags_None, ImGuiWindowFlags_NoBackground);
+    float menuHeight = 5.25f * ImGui::GetTextLineHeight();
+    ImGui::SetCursorPos ({3.f,ImGui::GetIO().DisplaySize.y - menuHeight});
+    ImGui::BeginChild ("menu", {0.f,menuHeight}, ImGuiChildFlags_None, ImGuiWindowFlags_NoBackground);
 
     if (testApp.getDecoder()) {
       //{{{  draw testApp info
+      ImGui::PushFont (testApp.getMonoFont());
+
       if (testApp.getDecoder()->activeSps) {
         char str[128];
         getSpsStr (testApp.getDecoder()->activeSps, str);
@@ -1245,15 +1247,15 @@ public:
         ImGui::TextUnformatted (str);
         }
 
-      ImGui::TextUnformatted (testApp.getDecoder()->debug.outStr);
-      ImGui::SameLine();
       ImGui::TextUnformatted (testApp.getDecoder()->debug.sliceStr);
       ImGui::SameLine();
-      ImGui::TextUnformatted (testApp.getDecoder()->debug.sliceTypeStr);
+      ImGui::TextUnformatted (testApp.getDecoder()->debug.outStr);
+
+      ImGui::PopFont();
       }
       //}}}
 
-    ImGui::SetCursorPos ({0.f, maxHeight - 1.5f * ImGui::GetTextLineHeight()});
+    ImGui::SetCursorPos ({0.f, menuHeight - 1.5f * ImGui::GetTextLineHeight()});
     //{{{  draw fullScreen button
     if (toggleButton ("full", testApp.getPlatform().getFullScreen()))
       testApp.getPlatform().toggleFullScreen();
@@ -1556,6 +1558,7 @@ private:
   cTextureShader* mVideoShader = nullptr;
   };
   //}}}
+//}}}
 
 // main
 int main (int numArgs, char* args[]) {
@@ -1586,4 +1589,3 @@ int main (int numArgs, char* args[]) {
 
   return EXIT_SUCCESS;
   }
-//}}}

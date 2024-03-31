@@ -870,7 +870,6 @@ typedef struct {
   TIME_T  startTime;
   TIME_T  endTime;
 
-  char    spsStr[128];
   char    sliceStr[64];
   char    sliceTypeStr[9];
   char    outStr[64];

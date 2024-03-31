@@ -2310,16 +2310,16 @@ static void endDecodeFrame (sDecoder* decoder) {
     //}}}
   if ((picStructure == eFrame) || picStructure == eBotField) {
     getTime (&decoder->debug.endTime);
-    sprintf (decoder->debug.outStr, "%3dms",
-             (int)timeNorm (timeDiff (&decoder->debug.startTime, &decoder->debug.endTime)));
+    sprintf (decoder->debug.outStr, "%d %d:%d:%02d %3dms ->%s-> poc:%d pic:%d",
+             decoder->decodeFrameNum,
+             decoder->numDecodedSlices, decoder->numDecodedMbs, qp,
+             (int)timeNorm (timeDiff (&decoder->debug.startTime, &decoder->debug.endTime)),
+             decoder->debug.sliceTypeStr,
+             pocNum, picNum);
+
     if (decoder->param.outDebug) {
       //{{{  print outDebug
-      printf ("-> %d %d:%d:%02d %s ->%s-> poc:%d pic:%d",
-              decoder->decodeFrameNum,
-              decoder->numDecodedSlices, decoder->numDecodedMbs, qp,
-              decoder->debug.outStr,
-              decoder->debug.sliceTypeStr,
-              pocNum, picNum);
+      printf ("-> %s", decoder->debug.outStr);
 
       // count numOutputFrames
       int numOutputFrames = 0;
@@ -2553,20 +2553,19 @@ static void useParameterSet (sDecoder* decoder, sSlice* slice) {
     setFormat (decoder, sps, &decoder->param.source, &decoder->param.output);
 
     // debug spsStr
-    sprintf (decoder->debug.spsStr, "-> profile:%d %dx%d %dx%d%s %d:%d:%d%s",
+    char str[128];
+    sprintf (str, "-> profile:%d %dx%d %dx%d%s %d:%d:%d%s",
              sps->profileIdc,
              decoder->param.source.width[0], decoder->param.source.height[0],
              decoder->coding.width, decoder->coding.height,
              decoder->coding.yuvFormat == YUV400 ? " 4:0:0 " :
                decoder->coding.yuvFormat == YUV420 ? " 4:2:0" :
                  decoder->coding.yuvFormat == YUV422 ? " 4:2:2" : " 4:4:4",
-             decoder->param.source.bitDepth[0],
-             decoder->param.source.bitDepth[1],
-             decoder->param.source.bitDepth[2],
+             decoder->param.source.bitDepth[0], decoder->param.source.bitDepth[1], decoder->param.source.bitDepth[2],
              sps->frameMbOnly ? (sps->mbAffFlag ? " mbAff" : " frame") : " field");
 
     // print profile debug
-    printf (" %s\n", decoder->debug.spsStr);
+    printf (" %s\n", str);
     }
     //}}}
 
@@ -3086,22 +3085,16 @@ static int readSlice (sSlice* slice) {
         readSliceHeader (decoder, slice);
         if (decoder->param.sliceDebug) {
           //{{{  print slice debug
-          if (nalu->unitType == NALU_TYPE_IDR)
-            printf ("IDR");
-          else
-            printf ("SLC");
-
-          sprintf (decoder->debug.sliceStr, "pps:%d frameNum:%2d%s%s",
+          sprintf (decoder->debug.sliceStr, "%s:%d:%5d %c pps:%d frameNum:%2d%s%s",
+                   nalu->unitType == NALU_TYPE_IDR ? "IDR":"SLC", slice->refId, nalu->len,
+                   slice->sliceType ? (slice->sliceType == 1) ? 'B' : ((slice->sliceType == 2) ? 'I' : '?') : 'P',
                    slice->ppsId,
                    slice->frameNum,
                    slice->fieldPic ? " field":"",
                    slice->mbAffFrame ? " mbAff":""
                    );
 
-          printf (":%5d:%d %c -> %s\n",
-                  nalu->len, slice->refId,
-                  slice->sliceType ? (slice->sliceType == 1) ? 'B' : ((slice->sliceType == 2) ? 'I' : '?') : 'P',
-                  decoder->debug.sliceStr);
+          printf ("%s\n", decoder->debug.sliceStr);
           }
           //}}}
 
