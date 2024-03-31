@@ -148,7 +148,7 @@ static void freeDecoder (sDecoder* decoder) {
   freeNALU (decoder->nalu);
   decoder->nalu = NULL;
 
-  freeDecodedPictures (decoder->decOutputPic);
+  freeDecodedPictures (decoder->outDecodedPics);
   free (decoder);
   }
 //}}}
@@ -310,20 +310,20 @@ void clearDecodedPics (sDecoder* decoder) {
 
   // find the head first;
   sDecodedPic* prevDecodedPicture = NULL;
-  sDecodedPic* decodedPic = decoder->decOutputPic;
+  sDecodedPic* decodedPic = decoder->outDecodedPics;
   while (decodedPic && !decodedPic->ok) {
     prevDecodedPicture = decodedPic;
     decodedPic = decodedPic->next;
     }
 
-  if (decodedPic && (decodedPic != decoder->decOutputPic)) {
+  if (decodedPic && (decodedPic != decoder->outDecodedPics)) {
     // move all nodes before decodedPic to the end;
     sDecodedPic* decodedPictureTail = decodedPic;
     while (decodedPictureTail->next)
       decodedPictureTail = decodedPictureTail->next;
 
-    decodedPictureTail->next = decoder->decOutputPic;
-    decoder->decOutputPic = decodedPic;
+    decodedPictureTail->next = decoder->outDecodedPics;
+    decoder->outDecodedPics = decodedPic;
     prevDecodedPicture->next = NULL;
     }
   }
@@ -382,7 +382,7 @@ sDecoder* openDecoder (sParam* param, byte* chunk, size_t chunkSize) {
   decoder->dpb = (sDPB*)calloc (1, sizeof(sDPB));
   resetDpb (decoder, decoder->dpb);
 
-  decoder->decOutputPic = (sDecodedPic*)calloc (1, sizeof(sDecodedPic));
+  decoder->outDecodedPics = (sDecodedPic*)calloc (1, sizeof(sDecodedPic));
   allocOutput (decoder);
 
   return decoder;
@@ -401,7 +401,7 @@ int decodeOneFrame (sDecoder* decoder, sDecodedPic** decPicList) {
   else
     iRet |= DEC_ERRMASK;
 
-  *decPicList = decoder->decOutputPic;
+  *decPicList = decoder->outDecodedPics;
   return iRet;
   }
 //}}}
@@ -415,7 +415,7 @@ void finishDecoder (sDecoder* decoder, sDecodedPic** decPicList) {
 
   decoder->newFrame = 0;
   decoder->prevFrameNum = 0;
-  *decPicList = decoder->decOutputPic;
+  *decPicList = decoder->outDecodedPics;
   }
 //}}}
 //{{{

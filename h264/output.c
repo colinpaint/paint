@@ -98,7 +98,7 @@ static void writeOutPicture (sDecoder* decoder, sPicture* p) {
   int lumaSize = lumaSizeX * lumaSizeY * symbolSizeInBytes;
   int frameSize = (lumaSizeX * lumaSizeY + 2 * (chromaSizeX * chromaSizeY)) * symbolSizeInBytes;
 
-  sDecodedPic* decodedPic = allocDecodedPicture (decoder->decOutputPic);
+  sDecodedPic* decodedPic = allocDecodedPicture (decoder->outDecodedPics);
   if (!decodedPic->yBuf || (decodedPic->bufSize < frameSize))
     allocDecodedPicBuffers (decoder, decodedPic, p, lumaSize, frameSize, lumaSizeX, lumaSizeY, chromaSizeX, chromaSizeY);
   decodedPic->ok = 1;

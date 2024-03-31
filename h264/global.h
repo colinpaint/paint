@@ -931,7 +931,7 @@ typedef struct Decoder {
   struct Picture*    decPictureJV[MAX_PLANE];  // picture to be used during 4:4:4 independent mode decoding
   struct Picture*    noReferencePicture;       // dummy storable picture for recovery point
   struct FrameStore* lastOutFramestore;
-  sDecodedPic*       decOutputPic;
+  sDecodedPic*       outDecodedPics;
   struct FrameStore* outBuffer;
   struct Picture*    pendingOut;
   int                pendingOutState;

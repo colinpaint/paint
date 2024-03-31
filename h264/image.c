@@ -2283,7 +2283,7 @@ static void endDecodeFrame (sDecoder* decoder) {
 
     // count numOutputFrames
     int numOutputFrames = 0;
-    sDecodedPic* decodedPic = decoder->decOutputPic;
+    sDecodedPic* decodedPic = decoder->outDecodedPics;
     while (decodedPic) {
       if (decodedPic->ok)
         numOutputFrames++;
