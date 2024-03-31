@@ -3138,13 +3138,26 @@ static int readSlice (sSlice* slice) {
         return curHeader;
       //}}}
 
+      //{{{
       case NALU_TYPE_SPS:
-        readNaluSps (decoder, nalu);
+        int spsId = readNaluSps (decoder, nalu);
+        if (decoder->param.spsDebug) {
+          char str[128];
+          getSpsStr (&decoder->sps[spsId], str);
+          printf ("%s\n", str);
+          }
         break;
-
+      //}}}
+      //{{{
       case NALU_TYPE_PPS:
-        readNaluPps (decoder, nalu);
+        int ppsId = readNaluPps (decoder, nalu);
+        if (decoder->param.ppsDebug) {
+          char str[128];
+          getPpsStr (&decoder->pps[ppsId], str);
+          printf ("%s\n", str);
+          }
         break;
+      //}}}
 
       case NALU_TYPE_SEI:
         processSei (nalu->buf, nalu->len, decoder, slice);

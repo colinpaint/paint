@@ -220,13 +220,6 @@ static void readPpsFromStream (sDecoder* decoder, sDataPartition* dataPartition,
   else
     pps->chromaQpOffset2 = pps->chromaQpOffset;
 
-
-  if (decoder->param.ppsDebug) {
-    char str[128];
-    getPpsStr (pps, str);
-    printf ("%s\n", str);
-    }
-
   pps->ok = TRUE;
   }
 //}}}
@@ -253,7 +246,7 @@ void getPpsStr (sPps* pps, char* str) {
   }
 //}}}
 //{{{
-void readNaluPps (sDecoder* decoder, sNalu* nalu) {
+int readNaluPps (sDecoder* decoder, sNalu* nalu) {
 
   sDataPartition* dataPartition = allocDataPartitions (1);
   dataPartition->s->errorFlag = 0;
@@ -277,5 +270,7 @@ void readNaluPps (sDecoder* decoder, sNalu* nalu) {
 
   // - takes ownership, if any, of pps->sliceGroupId calloc
   memcpy (&decoder->pps[pps.id], &pps, sizeof (sPps));
+
+  return pps.id;
   }
 //}}}

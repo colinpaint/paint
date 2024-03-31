@@ -302,12 +302,6 @@ static void readSpsFromStream (sDecoder* decoder, sDataPartition* dataPartition,
   sps->vuiSeqParams.matrix_coefficients = 2;
   readVuiFromStream (dataPartition, sps);
 
-  if (decoder->param.spsDebug) {
-    char str[128];
-    getSpsStr (sps, str);
-    printf ("%s\n", str);
-    }
-
   sps->ok = TRUE;
   }
 //}}}
@@ -319,16 +313,16 @@ void getSpsStr (sSps* sps, char* str) {
            sps->id, sps->naluLen,
            sps->picWidthMbsMinus1, sps->picHeightMapUnitsMinus1,
            sps->cropLeft, sps->cropRight, sps->cropTop, sps->cropBot,
-           sps->numRefFrames, 
+           sps->numRefFrames,
            sps->pocType,
-           sps->frameMbOnly ?" frame":"", 
+           sps->frameMbOnly ?" frame":"",
            sps->mbAffFlag ? " mbAff":""
            );
 
   }
 //}}}
 //{{{
-void readNaluSps (sDecoder* decoder, sNalu* nalu) {
+int readNaluSps (sDecoder* decoder, sNalu* nalu) {
 
   sDataPartition* dataPartition = allocDataPartitions (1);
   dataPartition->s->errorFlag = 0;
@@ -345,5 +339,7 @@ void readNaluSps (sDecoder* decoder, sNalu* nalu) {
       printf ("-----> readNaluSps new sps id:%d\n", sps.id);
 
   memcpy (&decoder->sps[sps.id], &sps, sizeof(sSps));
+
+  return sps.id;
   }
 //}}}

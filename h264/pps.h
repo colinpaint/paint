@@ -60,7 +60,7 @@ typedef struct {
   int       chromaQpOffset2;                  // se(v)
   } sPps;
 
-extern void readNaluPps (struct Decoder* decoder, sNalu* nalu);
+extern int readNaluPps (struct Decoder* decoder, sNalu* nalu);
 
 //{{{
 #ifdef __cplusplus
