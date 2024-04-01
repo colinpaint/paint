@@ -870,12 +870,13 @@ typedef struct {
   TIME_T  startTime;
   TIME_T  endTime;
 
-  eSliceType sliceType;
-  eSliceType outSliceType;
-
   char    profileStr[128];
+
+  eSliceType sliceType;
   char    sliceTypeStr[9];
   char    sliceStr[128];
+
+  eSliceType outSliceType;
   char    outStr[128];
   } sDebug;
 //}}}
