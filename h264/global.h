@@ -626,7 +626,7 @@ typedef struct Slice {
   sSps* activeSps;
   struct DPB* dpb;
 
-  eSliceType    sliceType;
+  eSliceType sliceType;
 
   int isIDR;
   int idrPicId;
@@ -869,6 +869,9 @@ typedef struct Param {
 typedef struct {
   TIME_T  startTime;
   TIME_T  endTime;
+
+  eSliceType sliceType;
+  eSliceType outSliceType;
 
   char    profileStr[128];
   char    sliceTypeStr[9];

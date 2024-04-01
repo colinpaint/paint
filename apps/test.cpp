@@ -1184,12 +1184,14 @@ class cTestUI : public cApp::iUI {
 public:
   virtual ~cTestUI() = default;
 
+  //{{{
   void draw (cApp& app) {
+
     ImGui::SetKeyboardFocusHere();
     app.getGraphics().clear ({(int32_t)ImGui::GetIO().DisplaySize.x, (int32_t)ImGui::GetIO().DisplaySize.y});
 
     // draw UI
-    //ImGui::SetNextWindowPos ({0.f,0.f});
+    ImGui::SetNextWindowPos ({0.f,0.f});
     ImGui::SetNextWindowSize (ImGui::GetIO().DisplaySize);
     ImGui::Begin ("test", nullptr, ImGuiWindowFlags_NoTitleBar |
                                    ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove |
@@ -1210,34 +1212,47 @@ public:
     //}}}
 
     // draw menu child
-    float menuHeight = 6.25f * ImGui::GetTextLineHeight();
+    float menuHeight = (2.5f + mDebugLines) * ImGui::GetTextLineHeight();
     ImGui::SetCursorPos ({3.f,ImGui::GetIO().DisplaySize.y - menuHeight});
     ImGui::BeginChild ("menu", {0.f,menuHeight}, ImGuiChildFlags_None, ImGuiWindowFlags_NoBackground);
-    if (testApp.getDecoder()) {
+
+    sDecoder* decoder = testApp.getDecoder();
+    if (decoder) {
       //{{{  draw decoder info
       ImGui::PushFont (testApp.getMonoFont());
 
-      ImGui::TextUnformatted (testApp.getDecoder()->debug.profileStr);
+      ImGui::TextColored (kWhite, decoder->debug.profileStr);
+      mDebugLines = 1;
 
-      if (testApp.getDecoder()->activeSps) {
-        char str[128];
-        getSpsStr (testApp.getDecoder()->activeSps, str);
-        ImGui::TextUnformatted (str);
+      char str[128];
+      int spsIndex = 0;
+      while (decoder->sps[spsIndex].ok) {
+        getSpsStr (&decoder->sps[spsIndex], str);
+        bool active = &decoder->sps[spsIndex] == decoder->activeSps;
+        ImGui::TextColored (active ? kYellow : kGrey, str);
+        mDebugLines++;
+        spsIndex++;
         }
 
-      if (testApp.getDecoder()->activePps) {
-        char str[128];
-        getPpsStr (testApp.getDecoder()->activePps, str);
-        ImGui::TextUnformatted (str);
+      int ppsIndex = 0;
+      while (decoder->pps[ppsIndex].ok) {
+        getPpsStr (&decoder->pps[ppsIndex], str);
+        bool active = &decoder->pps[ppsIndex] == decoder->activePps;
+        ImGui::TextColored (active ? kYellow : kGrey, str);
+        mDebugLines++;
+        ppsIndex++;
         }
 
-      ImGui::TextUnformatted (testApp.getDecoder()->debug.sliceStr);
+      ImGui::TextColored (getSliceColor (decoder->debug.sliceType), decoder->debug.sliceStr);
       ImGui::SameLine();
-      ImGui::TextUnformatted (testApp.getDecoder()->debug.outStr);
+      ImGui::TextColored (getSliceColor (decoder->debug.outSliceType), decoder->debug.outStr);
+      mDebugLines++;
 
       ImGui::PopFont();
       }
       //}}}
+
+    // menu line
     ImGui::SetCursorPos ({0.f, menuHeight - 1.5f * ImGui::GetTextLineHeight()});
     //{{{  draw fullScreen button
     if (toggleButton ("full", testApp.getPlatform().getFullScreen()))
@@ -1252,53 +1267,57 @@ public:
     if (toggleButton ("play", testApp.getPlaying()))
       testApp.togglePlay();
     //}}}
-    if (testApp.getDecoder()) {
-      //{{{  draw NALUdebug button
+
+    if (decoder) {
+      //{{{  h264 debug menu buttons
+      // draw NALUdebug button
       ImGui::SameLine();
-      if (toggleButton ("nalu", testApp.getDecoder()->param.naluDebug))
-        testApp.getDecoder()->param.naluDebug = !testApp.getDecoder()->param.naluDebug;
-      //}}}
-      //{{{  draw VLCdebug button
+      if (toggleButton ("nalu", decoder->param.naluDebug))
+        decoder->param.naluDebug = !decoder->param.naluDebug;
+
+      // draw VLCdebug button
       ImGui::SameLine();
-      if (toggleButton ("vlc", testApp.getDecoder()->param.vlcDebug))
-        testApp.getDecoder()->param.vlcDebug = !testApp.getDecoder()->param.vlcDebug;
-      //}}}
-      //{{{  draw SPSdebug button
+      if (toggleButton ("vlc", decoder->param.vlcDebug))
+        decoder->param.vlcDebug = !decoder->param.vlcDebug;
+
+      // draw SPSdebug button
       ImGui::SameLine();
-      if (toggleButton ("sps", testApp.getDecoder()->param.spsDebug))
-        testApp.getDecoder()->param.spsDebug = !testApp.getDecoder()->param.spsDebug;
-      //}}}
-      //{{{  draw PPSdebug button
+      if (toggleButton ("sps", decoder->param.spsDebug))
+        decoder->param.spsDebug = !decoder->param.spsDebug;
+
+      // draw PPSdebug button
       ImGui::SameLine();
-      if (toggleButton ("pps", testApp.getDecoder()->param.ppsDebug))
-        testApp.getDecoder()->param.ppsDebug = !testApp.getDecoder()->param.ppsDebug;
-      //}}}
-      //{{{  draw SEIdebug button
+      if (toggleButton ("pps", decoder->param.ppsDebug))
+        decoder->param.ppsDebug = !decoder->param.ppsDebug;
+
+      // draw SEIdebug button
       ImGui::SameLine();
-      if (toggleButton ("sei", testApp.getDecoder()->param.seiDebug))
-        testApp.getDecoder()->param.seiDebug = !testApp.getDecoder()->param.seiDebug;
-      //}}}
-      //{{{  draw sliceDebug button
+      if (toggleButton ("sei", decoder->param.seiDebug))
+        decoder->param.seiDebug = !decoder->param.seiDebug;
+
+      // draw sliceDebug button
       ImGui::SameLine();
-      if (toggleButton ("slc", testApp.getDecoder()->param.sliceDebug))
-        testApp.getDecoder()->param.sliceDebug = !testApp.getDecoder()->param.sliceDebug;
-      //}}}
-      //{{{  draw outDebug button
+      if (toggleButton ("slc", decoder->param.sliceDebug))
+        decoder->param.sliceDebug = !decoder->param.sliceDebug;
+
+      // draw outDebug button
       ImGui::SameLine();
-      if (toggleButton ("out", testApp.getDecoder()->param.outDebug))
-        testApp.getDecoder()->param.outDebug = !testApp.getDecoder()->param.outDebug;
-      //}}}
-      //{{{  draw deblock button
+      if (toggleButton ("out", decoder->param.outDebug))
+        decoder->param.outDebug = !decoder->param.outDebug;
+
+      // draw deblock button
       ImGui::SameLine();
-      if (toggleButton ("deblock", testApp.getDecoder()->param.deblock))
-        testApp.getDecoder()->param.deblock = !testApp.getDecoder()->param.deblock;
-      //}}}
+      if (toggleButton ("deblock", decoder->param.deblock))
+        decoder->param.deblock = !decoder->param.deblock;
       }
+      //}}}
+
     ImGui::EndChild();
 
     ImGui::End();
     keyboard (testApp);
     }
+  //}}}
 
 private:
   //{{{
@@ -1347,21 +1366,26 @@ private:
         }
         //}}}
 
-      if (testApp.getFilePlayer()) {
+      cFilePlayer* filePlayer = testApp.getFilePlayer();
+      if (filePlayer) {
         ImGui::PushFont (testApp.getLargeFont());
         //{{{  title
-        string title = testApp.getFilePlayer()->getFileName();
+        string title = filePlayer->getFileName();
+
         ImVec2 pos = {ImGui::GetTextLineHeight() * 0.25f, 0.f};
         ImGui::SetCursorPos (pos);
         ImGui::TextColored ({0.f,0.f,0.f,1.f}, title.c_str());
+
         ImGui::SetCursorPos (pos - ImVec2(2.f,2.f));
         ImGui::TextColored ({1.f, 1.f,1.f,1.f}, title.c_str());
         //}}}
         //{{{  playPts
-        string ptsString = getPtsString (testApp.getFilePlayer()->getPlayPts());
+        string ptsString = getPtsString (filePlayer->getPlayPts());
+
         pos = ImVec2 (mSize - ImVec2(ImGui::GetTextLineHeight() * 7.f, ImGui::GetTextLineHeight()));
         ImGui::SetCursorPos (pos);
         ImGui::TextColored ({0.f,0.f,0.f,1.f}, ptsString.c_str());
+
         ImGui::SetCursorPos (pos - ImVec2(2.f,2.f));
         ImGui::TextColored ({1.f,1.f,1.f,1.f}, ptsString.c_str());
         //}}}
@@ -1536,10 +1560,31 @@ private:
     ImGui::GetIO().InputQueueCharacters.resize (0);
     }
   //}}}
+  //{{{
+  ImVec4 getSliceColor (eSliceType sliceType) {
+    switch (sliceType) {
+      case eSliceSI :
+      case eSliceI : return kWhite;
+
+      case eSliceSP :
+      case eSliceP : return kMauve;
+
+      case eSliceB : return kBlue;
+      default: return kRed;
+      }
+    }
+  //}}}
+  static inline const ImVec4 kGrey =   {0.5f, 0.5f, 0.5f, 1.f};
+  static inline const ImVec4 kWhite =  {1.f,  1.f,  1.f,  1.f};
+  static inline const ImVec4 kYellow = {1.f,  1.f,  0.5f, 1.f};
+  static inline const ImVec4 kRed =    {1.f,  0.5f, 0.5f, 1.f};
+  static inline const ImVec4 kBlue =   {0.5f, 0.5f, 1.f,  1.f};
+  static inline const ImVec4 kMauve =  {1.f,  0.f,  0.5f, 1.f};
 
   // vars
   cView* mView;
   cTextureShader* mVideoShader = nullptr;
+  int mDebugLines = 3;
   };
 //}}}
 

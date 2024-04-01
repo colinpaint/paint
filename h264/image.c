@@ -2290,6 +2290,8 @@ static void endDecodeFrame (sDecoder* decoder) {
       decodedPic = decodedPic->next;
       }
 
+    decoder->debug.outSliceType = sliceType;
+
     sprintf (decoder->debug.outStr, "%d %d:%d:%02d %3dms ->%s-> poc:%d pic:%d -> %d",
              decoder->decodeFrameNum,
              decoder->numDecodedSlices, decoder->numDecodedMbs, qp,
@@ -3075,6 +3077,7 @@ static int readSlice (sSlice* slice) {
         decoder->recoveryPoint = 0;
 
         // debug
+        decoder->debug.sliceType = slice->sliceType;
         sprintf (decoder->debug.sliceStr, "%s:%d:%6d -> pps:%d frame:%2d %c %s%s",
                  (nalu->unitType == NALU_TYPE_IDR) ? "IDR":"SLC", slice->refId, nalu->len,
                  slice->ppsId, slice->frameNum,
