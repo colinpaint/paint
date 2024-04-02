@@ -5,7 +5,7 @@
 #define MAX_PPS  256
 
 // sPps
-typedef struct {
+struct sPps{
   bool   ok;
   int       naluLen;
 
@@ -58,7 +58,7 @@ typedef struct {
   //}}}
 
   int       chromaQpOffset2;                  // se(v)
-  } sPps;
+  };
 
-extern int readNaluPps (struct Decoder* decoder, sNalu* nalu);
+extern int readNaluPps (sDecoder* decoder, sNalu* nalu);
 extern void getPpsStr (sPps* pps, char* str);

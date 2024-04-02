@@ -69,7 +69,7 @@ typedef struct {
 //}}}
 
 // sSps
-typedef struct {
+struct sSps {
   bool  ok;
   int      naluLen;
 
@@ -132,7 +132,7 @@ typedef struct {
   bool  hasVui;                      // u(1)
   sVUI     vuiSeqParams;                // sVUI
   //}}}
-  } sSps;
+  };
 
-extern int readNaluSps (struct Decoder* decoder, sNalu* nalu);
+extern int readNaluSps (sDecoder* decoder, sNalu* nalu);
 extern void getSpsStr (sSps* sps, char* str);

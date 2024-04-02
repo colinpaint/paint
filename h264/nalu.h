@@ -1,7 +1,7 @@
 #pragma once
 #include "global.h"
 
-typedef struct AnnexB {
+struct sAnnexB {
   byte*  buffer;
   size_t bufferSize;
   byte*  bufferPtr;
@@ -10,7 +10,7 @@ typedef struct AnnexB {
   int    isFirstByteStreamNALU;
   int    nextStartCodeBytes;
   byte*  naluBuffer;
-  } sAnnexB;
+  };
 
 //{{{  enum eNaluType
 typedef enum {
@@ -52,8 +52,8 @@ typedef struct Nalu {
   uint16     lostPackets;  // true, if packet loss is detected
   } sNalu;
 
-struct Decoder;
-extern sAnnexB* allocAnnexB (struct Decoder* decoder);
+struct sDecoder;
+extern sAnnexB* allocAnnexB (sDecoder* decoder);
 extern void openAnnexB (sAnnexB* annexB, byte* chunk, size_t chunkSize);
 extern void resetAnnexB (sAnnexB* annexB);
 extern void freeAnnexB (sAnnexB** p_annexB);
@@ -61,8 +61,8 @@ extern void freeAnnexB (sAnnexB** p_annexB);
 extern sNalu* allocNALU (int);
 extern void freeNALU (sNalu* n);
 
-extern void checkZeroByteVCL (struct Decoder* decoder, sNalu* nalu);
-extern void checkZeroByteNonVCL (struct Decoder* decoder, sNalu* nalu);
+extern void checkZeroByteVCL (sDecoder* decoder, sNalu* nalu);
+extern void checkZeroByteNonVCL (sDecoder* decoder, sNalu* nalu);
 
-extern int readNalu (struct Decoder* decoder, sNalu* nalu);
+extern int readNalu (sDecoder* decoder, sNalu* nalu);
 extern int RBSPtoSODB (byte* bitStreamBuffer, int lastBytePos);

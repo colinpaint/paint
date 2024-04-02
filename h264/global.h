@@ -399,6 +399,7 @@ typedef struct  {
 struct Picture;
 struct PicMotion;
 struct MacroBlock;
+struct sDecoder;
 //{{{  sBitStream
 typedef struct {
   // cavlc Decoding
@@ -455,7 +456,7 @@ typedef struct {
 //}}}
 //{{{  sMacroBlock
 typedef struct MacroBlock {
-  struct Decoder* decoder;
+  sDecoder* decoder;
   struct Slice*   slice;
 
   int     mbIndexX;
@@ -611,7 +612,7 @@ typedef struct {
 //}}}
 //{{{  sSlice
 typedef struct Slice {
-  struct Decoder* decoder;
+  sDecoder* decoder;
 
   sPps* activePps;
   sSps* activeSps;
@@ -871,8 +872,8 @@ typedef struct {
   char    outStr[128];
   } sDebug;
 //}}}
-//{{{  sDecoder
-typedef struct Decoder {
+//{{{
+struct sDecoder {
   sParam       param;
   sDebug       debug;
 
@@ -1019,7 +1020,7 @@ typedef struct Decoder {
   void (*edgeLoopLumaH) (eColorPlane, sPixel**, byte*, sMacroBlock*, int, struct Picture*);
   void (*edgeLoopChromaV) (sPixel**, byte*, sMacroBlock*, int, int, struct Picture*);
   void (*edgeLoopChromaH) (sPixel**, byte*, sMacroBlock*, int, int, struct Picture*);
-  } sDecoder;
+  };
 //}}}
 
 //{{{

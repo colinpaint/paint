@@ -1,4 +1,5 @@
 #pragma once
+#include "global.h"
 #include "buffer.h"
 
 extern void decodePOC (sDecoder* decoder, sSlice* slice);
