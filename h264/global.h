@@ -325,14 +325,14 @@ typedef enum {
   } eMvPredType;
 //}}}
 
-//{{{  sBiContext
-typedef struct {
+//{{{
+struct sBiContext {
   uint16        state; // index into state-table CP
   unsigned char MPS;   // least probable symbol 0/1 CP
   unsigned char dummy; // for alignment
-  } sBiContext;
+  };
 //}}}
-//{{{  sMotionContexts
+//{{{  struct sMotionContexts
 #define NUM_MB_TYPE_CTX        11
 #define NUM_B8_TYPE_CTX        9
 #define NUM_MV_RES_CTX         10
@@ -341,16 +341,16 @@ typedef struct {
 #define NUM_MB_AFF_CTX         4
 #define NUM_TRANSFORM_SIZE_CTX 3
 
-typedef struct {
+struct sMotionContexts {
   sBiContext mbTypeContexts[3][NUM_MB_TYPE_CTX];
   sBiContext b8TypeContexts[2][NUM_B8_TYPE_CTX];
   sBiContext mvResContexts[2][NUM_MV_RES_CTX];
   sBiContext refNoContexts[2][NUM_REF_NO_CTX];
   sBiContext deltaQpContexts[NUM_DELTA_QP_CTX];
   sBiContext mbAffContexts[NUM_MB_AFF_CTX];
-  } sMotionContexts;
+  };
 //}}}
-//{{{  sTextureContexts
+//{{{  struct sTextureContexts
 #define NUM_IPR_CTX   2
 #define NUM_CIPR_CTX  4
 #define NUM_CBP_CTX   4
@@ -360,7 +360,7 @@ typedef struct {
 #define NUM_ONE_CTX   5
 #define NUM_ABS_CTX   5
 
-typedef struct {
+struct sTextureContexts {
   sBiContext transformSizeContexts[NUM_TRANSFORM_SIZE_CTX];
   sBiContext iprContexts[NUM_IPR_CTX];
   sBiContext ciprContexts[NUM_CIPR_CTX];
@@ -370,35 +370,36 @@ typedef struct {
   sBiContext lastContexts[2][NUM_BLOCK_TYPES][NUM_LAST_CTX];
   sBiContext oneContexts[NUM_BLOCK_TYPES][NUM_ONE_CTX];
   sBiContext absContexts[NUM_BLOCK_TYPES][NUM_ABS_CTX];
-  } sTextureContexts;
+  };
 //}}}
-//{{{  sBlockPos
-typedef struct {
+//{{{
+struct sBlockPos {
   short x;
   short y;
-  } sBlockPos;
+  };
 //}}}
-//{{{  sPixelPos
-typedef struct {
+//{{{
+struct sPixelPos {
   int   available;
   int   mbIndex;
   short x;
   short y;
   short posX;
   short posY;
-  } sPixelPos;
+  };
 //}}}
-//{{{  sCodedBlockPattern
-typedef struct  {
+//{{{
+struct sCodedBlockPattern {
   int64 blk;
   int64 bits;
   int64 bits8x8;
-  } sCodedBlockPattern;
+  };
 //}}}
 
-struct Picture;
+struct sFrameStore;
+struct sPicture;
 struct sDpb;
-struct PicMotion;
+struct sPicMotion;
 struct sMacroBlock;
 struct sSlice;
 struct sDecoder;
@@ -536,7 +537,7 @@ struct sMacroBlock {
   // virtual methods
   void (*iTrans4x4) (sMacroBlock*, eColorPlane, int, int);
   void (*iTrans8x8) (sMacroBlock*, eColorPlane, int, int);
-  void (*GetMVPredictor) (sMacroBlock*, sPixelPos*, sMotionVec*, short, struct PicMotion**, int, int, int, int, int);
+  void (*GetMVPredictor) (sMacroBlock*, sPixelPos*, sMotionVec*, short, sPicMotion**, int, int, int, int, int);
   int  (*readStoreCBPblockBit) (sMacroBlock*, sCabacDecodeEnv*, int);
   char (*readRefPictureIndex) (sMacroBlock*, struct SyntaxElement*, struct DataPartition*, char, int);
   void (*readCompCoef4x4cabac) (sMacroBlock*, struct SyntaxElement*, eColorPlane, int(*)[4], int, int);
@@ -545,8 +546,8 @@ struct sMacroBlock {
   void (*readCompCoef8x8cavlc) (sMacroBlock*, eColorPlane, int(*)[8], int, int, byte**);
   };
 //}}}
-//{{{  sImage
-typedef struct Image {
+//{{{
+struct sImage {
   sFrameFormat format;                 // image format
 
   sPixel** frm_data[MAX_PLANE];        // Frame Data
@@ -559,7 +560,7 @@ typedef struct Image {
   int frm_stride[MAX_PLANE];
   int top_stride[MAX_PLANE];
   int bot_stride[MAX_PLANE];
-  } sImage;
+  };
 //}}}
 //{{{  sDecodedPic
 typedef struct DecodedPic {
@@ -686,7 +687,7 @@ struct sSlice {
   sDecodedRefPicMark* decRefPicMarkBuffer; // stores memory management control operations
 
   char listXsize[6];
-  struct Picture** listX[6];
+  sPicture** listX[6];
 
   sDataPartition*       dataPartitions; // array of dataPartition
   sMotionContexts*  motionInfoContexts;  // pointer to struct of context models for use in eCabac
@@ -751,7 +752,7 @@ struct sSlice {
 
   int             ercMvPerMb;
   sMacroBlock*    mbData;
-  struct Picture* picture;
+  sPicture* picture;
 
   int**           siBlock;
   byte**          predMode;
@@ -762,7 +763,7 @@ struct sSlice {
   int  (*nalStartCode) (sSlice*, int);
   void (*initLists) (sSlice*);
   void (*readCBPcoeffs) (sMacroBlock*);
-  int  (*decodeComponenet) (sMacroBlock*, eColorPlane, sPixel**, struct Picture*);
+  int  (*decodeComponenet) (sMacroBlock*, eColorPlane, sPixel**, sPicture*);
   void (*nalReadMotionInfo) (sMacroBlock*);
   void (*readMacroblock) (sMacroBlock*);
   void (*interpretMbMode) (sMacroBlock*);
@@ -776,8 +777,8 @@ struct sSlice {
   void (*linfoCbpInter) (int, int, int*, int*);
   };
 //}}}
-//{{{  sCoding
-typedef struct {
+//{{{
+struct sCoding {
   int profileIdc;
 
   ePicStructure picStructure;
@@ -834,7 +835,7 @@ typedef struct {
   int shiftpelX;
   int shiftpelY;
   int totalScale;
-  } sCoding;
+  };
 //}}}
 //{{{
 struct sParam {
@@ -923,16 +924,16 @@ struct sDecoder {
 
   // output
   sDpb*        dpb;
-  int                lastHasMmco5;
-  int                dpbPoc[100];
-  struct Picture*    picture;
-  struct Picture*    decPictureJV[MAX_PLANE];  // picture to be used during 4:4:4 independent mode decoding
-  struct Picture*    noReferencePicture;       // dummy storable picture for recovery point
-  struct FrameStore* lastOutFramestore;
-  sDecodedPic*       outDecodedPics;
-  struct FrameStore* outBuffer;
-  struct Picture*    pendingOut;
-  int                pendingOutState;
+  int          lastHasMmco5;
+  int          dpbPoc[100];
+  sPicture*    picture;
+  sPicture*    decPictureJV[MAX_PLANE];  // picture to be used during 4:4:4 independent mode decoding
+  sPicture*    noReferencePicture;       // dummy storable picture for recovery point
+  sFrameStore* lastOutFramestore;
+  sDecodedPic* outDecodedPics;
+  sFrameStore* outBuffer;
+  sPicture*    pendingOut;
+  int          pendingOutState;
 
   // sCoding duplicates
   int width;
@@ -1016,12 +1017,12 @@ struct sDecoder {
   // virtual functions
   void (*getNeighbour) (sMacroBlock*, int, int, int[2], sPixelPos*);
   void (*getMbBlockPos) (sBlockPos*, int, short*, short*);
-  void (*getStrengthV) (sMacroBlock*, int, int, struct Picture*);
-  void (*getStrengthH) (sMacroBlock*, int, int, struct Picture*);
+  void (*getStrengthV) (sMacroBlock*, int, int, sPicture*);
+  void (*getStrengthH) (sMacroBlock*, int, int, sPicture*);
   void (*edgeLoopLumaV) (eColorPlane, sPixel**, byte*, sMacroBlock*, int);
-  void (*edgeLoopLumaH) (eColorPlane, sPixel**, byte*, sMacroBlock*, int, struct Picture*);
-  void (*edgeLoopChromaV) (sPixel**, byte*, sMacroBlock*, int, int, struct Picture*);
-  void (*edgeLoopChromaH) (sPixel**, byte*, sMacroBlock*, int, int, struct Picture*);
+  void (*edgeLoopLumaH) (eColorPlane, sPixel**, byte*, sMacroBlock*, int, sPicture*);
+  void (*edgeLoopChromaV) (sPixel**, byte*, sMacroBlock*, int, int, sPicture*);
+  void (*edgeLoopChromaH) (sPixel**, byte*, sMacroBlock*, int, int, sPicture*);
   };
 //}}}
 

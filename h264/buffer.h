@@ -2,21 +2,21 @@
 #include "global.h"
 
 #define MAX_LIST_SIZE 33
-//{{{  sPicMotionOld
-typedef struct {
+//{{{  
+struct sPicMotionOld {
   byte* mbField; // field macroblock indicator
-  } sPicMotionOld;
+  };
 //}}}
-//{{{  sPicMotion
-typedef struct PicMotion {
-  struct Picture* refPic[2];   // referrence picture pointer
-  sMotionVec      mv[2];       // motion vector
-  char            refIndex[2]; // reference picture   [list][subblockY][subblockX]
-  byte            slice_no;
-  } sPicMotion;
+//{{{  
+struct sPicMotion {
+  sPicture*  refPic[2];   // referrence picture pointer
+  sMotionVec mv[2];       // motion vector
+  char       refIndex[2]; // reference picture   [list][subblockY][subblockX]
+  byte       slice_no;
+  };
 //}}}
-//{{{  sPicture
-typedef struct Picture {
+//{{{  
+struct sPicture {
   ePicStructure picStructure;
 
   int           poc;
@@ -53,49 +53,49 @@ typedef struct Picture {
   sPixel***     imgUV;
   sPicMotion**  mvInfo;
   sPicMotionOld motion;
-  struct Picture* topField;  // for mb aff, if frame for referencing the top field
-  struct Picture* botField;  // for mb aff, if frame for referencing the bottom field
-  struct Picture* frame;     // for mb aff, if field for referencing the combined frame
+  sPicture*  topField;  // for mb aff, if frame for referencing the top field
+  sPicture*  botField;  // for mb aff, if frame for referencing the bottom field
+  sPicture*  frame;     // for mb aff, if field for referencing the combined frame
 
-  int           isIDR;
-  int           sliceType;
-  int           longTermRefFlag;
-  int           adaptRefPicBufFlag;
-  int           noOutputPriorPicFlag;
+  int        isIDR;
+  int        sliceType;
+  int        longTermRefFlag;
+  int        adaptRefPicBufFlag;
+  int        noOutputPriorPicFlag;
 
-  eYuvFormat    chromaFormatIdc;
-  int           frameMbOnly;
+  eYuvFormat chromaFormatIdc;
+  int        frameMbOnly;
 
-  int           cropFlag;
-  int           cropLeft;
-  int           cropRight;
-  int           cropTop;
-  int           cropBot;
+  int        cropFlag;
+  int        cropLeft;
+  int        cropRight;
+  int        cropTop;
+  int        cropBot;
 
-  int           qp;
-  int           chromaQpOffset[2];
-  int           sliceQpDelta;
+  int        qp;
+  int        chromaQpOffset[2];
+  int        sliceQpDelta;
   sDecodedRefPicMark* decRefPicMarkBuffer;  // stores the memory management control operations
 
   // picture error conceal
-  int           lumaStride;
-  int           chromaStride;
-  int           lumaExpandedHeight;
-  int           chromaExpandedHeight;
-  sPixel**      curPixelY;               // for more efficient get_block_luma
-  int           noRef;
-  int           codingType;
+  int        lumaStride;
+  int        chromaStride;
+  int        lumaExpandedHeight;
+  int        chromaExpandedHeight;
+  sPixel**   curPixelY;               // for more efficient get_block_luma
+  int        noRef;
+  int        codingType;
 
-  char          listXsize[MAX_NUM_SLICES][2];
-  struct Picture** listX[MAX_NUM_SLICES][2];
+  char       listXsize[MAX_NUM_SLICES][2];
+  sPicture** listX[MAX_NUM_SLICES][2];
 
   // Motion info for 4:4:4 independent mode decoding
   sPicMotion**  mvInfoJV[MAX_PLANE];
   sPicMotionOld motionJV[MAX_PLANE];
-  } sPicture;
+  };
 //}}}
-//{{{  sFrameStore
-typedef struct FrameStore {
+//{{{  
+struct sFrameStore {
   int       isUsed;          // 0=empty; 1=top; 2=bottom; 3=both fields (or frame)
   int       isReference;     // 0=not used for ref; 1=top used; 2=bottom used; 3=both fields (or frame) used
   int       isLongTerm;      // 0=not used for ref; 1=top used; 2=bottom used; 3=both fields (or frame) used
@@ -115,7 +115,7 @@ typedef struct FrameStore {
   sPicture* frame;
   sPicture* topField;
   sPicture* botField;
-  } sFrameStore;
+  };
 //}}}
 //{{{
 struct sDpb {
