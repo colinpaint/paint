@@ -456,7 +456,7 @@ typedef struct {
   short mvY;
   } sMotionVec;
 //}}}
-//{{{  
+//{{{
 struct sMacroBlock {
   sDecoder* decoder;
   sSlice*   slice;
@@ -836,8 +836,8 @@ typedef struct {
   int totalScale;
   } sCoding;
 //}}}
-//{{{  sParam
-typedef struct Param {
+//{{{
+struct sParam {
   int naluDebug;
   int vlcDebug;
   int sliceDebug;
@@ -857,10 +857,10 @@ typedef struct Param {
   sFrameFormat source;
   sFrameFormat output;
   int dpbPlus[2];
-  } sParam;
+  };
 //}}}
-//{{{  sDebug
-typedef struct {
+//{{{
+struct sDebug {
   TIME_T  startTime;
   TIME_T  endTime;
 
@@ -872,7 +872,7 @@ typedef struct {
 
   eSliceType outSliceType;
   char    outStr[128];
-  } sDebug;
+  };
 //}}}
 //{{{
 struct sDecoder {
